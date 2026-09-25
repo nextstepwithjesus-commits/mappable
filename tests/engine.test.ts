@@ -279,3 +279,19 @@ describe('родительный падеж имён', () => {
     expect(genitive('Мириам', 'f')).toBe('Мириам');
   });
 });
+
+describe('граница «не позже чем через N лет после X»', () => {
+  it('двигает только лицо, у которого записана, а не опору', () => {
+    const P = (id: string, extra: Partial<Person> = {}): Person => ({ id, name: id, sex: 'm', group: 'edomites', prominence: 1, ...extra });
+    const kings = Array.from({ length: 6 }, (_, i) => P(`k${i}`, { chrono: { born: { notAfter: { from: 'saul', years: 20 }, notBefore: { from: 'isav', years: 0 } } } }));
+    const g = buildGraph([
+      P('isav', { chrono: { born: { year: -2006 } } }),
+      P('saul', { chrono: { active: { from: -1050, to: -1010, refs: ['1Цар 13:1'] } } }),
+      ...kings,
+    ]);
+    const alone = solveChronology(buildGraph([P('saul', { chrono: { active: { from: -1050, to: -1010, refs: ['1Цар 13:1'] } } })]), epochs, 'mt-long');
+    const res = solveChronology(g, epochs, 'mt-long');
+    expect(Math.abs(res.persons.get('saul')!.b - alone.persons.get('saul')!.b)).toBeLessThan(2);
+    for (const k of kings) expect(res.persons.get(k.id)!.b).toBeLessThanOrEqual(res.persons.get('saul')!.b + 20.5);
+  });
+});
