@@ -80,7 +80,8 @@ export interface TimeOffset {
 
 export interface BornInput {
   year?: number; // явный исторический год
-  fatherAge?: number; // возраст отца при рождении (Быт 5, 11)
+  fatherAge?: number; // возраст отца при рождении (Быт 5, 11) — по основному тексту
+  fatherAgeBracket?: number; // число в [скобках] Синодального текста (греческое чтение), для альтернативной модели
   motherAge?: number; // возраст матери при рождении
   offset?: TimeOffset;
   range?: [number, number]; // допустимый интервал
@@ -92,6 +93,7 @@ export interface BornInput {
 export interface DiedInput {
   year?: number;
   age?: number; // прожил лет
+  ageBracket?: number; // число в [скобках] Синодального текста
   range?: [number, number];
   refs?: Ref[];
   cert?: Cert;
@@ -161,7 +163,7 @@ export interface Saying {
 }
 
 export interface Note {
-  kind: 'textual' | 'interpretation' | 'identification' | 'chronology';
+  kind: 'textual' | 'interpretation' | 'identification' | 'chronology' | 'bracket';
   text: string;
   refs?: Ref[];
 }
@@ -200,19 +202,31 @@ export interface Card {
   laterMentions?: Fact[]; // § 22
   scripture?: { first?: Ref; key?: Ref[]; all?: Ref[] }; // § 23
   notes?: Note[]; // § 24
+  /** Разделы (номера 1–24), о которых Писание, по проверке составителя, молчит. */
+  silent?: number[];
 }
+
+export type PersonKind =
+  | 'person'
+  | 'people' // народ или род, названный «сыном» в таблице народов (Быт 10)
+  | 'founder' // «отец» города (1 Пар 2:50–51)
+  | 'clan'; // род, названный по предку (Езд 2)
 
 export interface Person {
   id: string;
   name: string;
   disambig?: string;
   sex: Sex;
+  kind?: PersonKind; // по умолчанию 'person'
+  unnamed?: boolean; // безымянное звено: «Жена Лота»
   father?: string | null;
   mother?: string | null;
   parentRefs?: Ref[];
   parentCert?: Cert;
   /** Вид отцовства основного отца: по умолчанию кровный. */
   fatherKind?: 'natural' | 'legal';
+  /** Родословие может пропускать поколения между этим лицом и отцом (Исх 6:16–20, Руф 4:18–22, Мф 1). */
+  fatherGap?: boolean;
   /** Порядок рождения среди детей отца (1 — первенец), если известен или по порядку перечисления. */
   order?: number;
   otherParents?: OtherParent[];

@@ -2,7 +2,7 @@
  "id": "joseph",
  "name": "Линия Иосифа",
  "subtitle": "законная, царская",
- "basis": "Мф 1:1–16; до Авраама — Быт 5; 11; 1 Пар 1. Цари, опущенные Матфеем (Охозия, Иоас, Амасия; Иоаким), включены по 4 Цар и 1 Пар 3.",
+ "basis": "Мф 1:1–16; до Авраама — Быт 5; 11; 1 Пар 1 (Матфей начинает с Авраама). Охозия, Иоас и Амасия, опущенные в Мф 1:8, включены по 4 Цар и 1 Пар 3:11–12. Счёт Мф 1:17: Авраам…Давид (14), Соломон…Иоаким (14), Иехония…Иисус (14).",
  "refs": [
   "Мф 1:1-17",
   "Быт 5:1-32",
@@ -206,7 +206,8 @@
    "refs": [
     "Мф 1:2"
    ],
-   "flag": "in-text"
+   "flag": "in-text",
+   "mtGroup": 1
   },
   {
    "id": "isaak",
@@ -214,7 +215,8 @@
    "refs": [
     "Мф 1:2"
    ],
-   "flag": "in-text"
+   "flag": "in-text",
+   "mtGroup": 1
   },
   {
    "id": "iakov",
@@ -222,7 +224,8 @@
    "refs": [
     "Мф 1:2"
    ],
-   "flag": "in-text"
+   "flag": "in-text",
+   "mtGroup": 1
   },
   {
    "id": "iuda",
@@ -230,7 +233,8 @@
    "refs": [
     "Мф 1:2"
    ],
-   "flag": "in-text"
+   "flag": "in-text",
+   "mtGroup": 1
   },
   {
    "id": "fares",
@@ -238,7 +242,8 @@
    "refs": [
     "Мф 1:3"
    ],
-   "flag": "in-text"
+   "flag": "in-text",
+   "mtGroup": 1
   },
   {
    "id": "esrom",
@@ -246,7 +251,8 @@
    "refs": [
     "Мф 1:3"
    ],
-   "flag": "in-text"
+   "flag": "in-text",
+   "mtGroup": 1
   },
   {
    "id": "aram",
@@ -254,7 +260,8 @@
    "refs": [
     "Мф 1:3"
    ],
-   "flag": "in-text"
+   "flag": "in-text",
+   "mtGroup": 1
   },
   {
    "id": "aminadav",
@@ -262,7 +269,8 @@
    "refs": [
     "Мф 1:4"
    ],
-   "flag": "in-text"
+   "flag": "in-text",
+   "mtGroup": 1
   },
   {
    "id": "naasson",
@@ -270,7 +278,8 @@
    "refs": [
     "Мф 1:4"
    ],
-   "flag": "in-text"
+   "flag": "in-text",
+   "mtGroup": 1
   },
   {
    "id": "salmon",
@@ -278,7 +287,8 @@
    "refs": [
     "Мф 1:4"
    ],
-   "flag": "in-text"
+   "flag": "in-text",
+   "mtGroup": 1
   },
   {
    "id": "vooz",
@@ -286,7 +296,8 @@
    "refs": [
     "Мф 1:5"
    ],
-   "flag": "in-text"
+   "flag": "in-text",
+   "mtGroup": 1
   },
   {
    "id": "ovid",
@@ -294,7 +305,8 @@
    "refs": [
     "Мф 1:5"
    ],
-   "flag": "in-text"
+   "flag": "in-text",
+   "mtGroup": 1
   },
   {
    "id": "iessey",
@@ -302,7 +314,8 @@
    "refs": [
     "Мф 1:5"
    ],
-   "flag": "in-text"
+   "flag": "in-text",
+   "mtGroup": 1
   },
   {
    "id": "david",
@@ -310,7 +323,8 @@
    "refs": [
     "Мф 1:6"
    ],
-   "flag": "in-text"
+   "flag": "in-text",
+   "mtGroup": 1
   },
   {
    "id": "solomon",
@@ -318,7 +332,8 @@
    "refs": [
     "Мф 1:6"
    ],
-   "flag": "in-text"
+   "flag": "in-text",
+   "mtGroup": 2
   },
   {
    "id": "rovoam",
@@ -326,7 +341,8 @@
    "refs": [
     "Мф 1:7"
    ],
-   "flag": "in-text"
+   "flag": "in-text",
+   "mtGroup": 2
   },
   {
    "id": "aviya",
@@ -334,7 +350,8 @@
    "refs": [
     "Мф 1:7"
    ],
-   "flag": "in-text"
+   "flag": "in-text",
+   "mtGroup": 2
   },
   {
    "id": "asa",
@@ -342,7 +359,8 @@
    "refs": [
     "Мф 1:7"
    ],
-   "flag": "in-text"
+   "flag": "in-text",
+   "mtGroup": 2
   },
   {
    "id": "iosafat",
@@ -350,7 +368,8 @@
    "refs": [
     "Мф 1:8"
    ],
-   "flag": "in-text"
+   "flag": "in-text",
+   "mtGroup": 2
   },
   {
    "id": "ioram-syn-iosafata",
@@ -358,7 +377,8 @@
    "refs": [
     "Мф 1:8"
    ],
-   "flag": "in-text"
+   "flag": "in-text",
+   "mtGroup": 2
   },
   {
    "id": "okhoziya-syn-iorama",
@@ -390,7 +410,8 @@
    "refs": [
     "Мф 1:8"
    ],
-   "flag": "in-text"
+   "flag": "in-text",
+   "mtGroup": 2
   },
   {
    "id": "ioafam",
@@ -398,7 +419,8 @@
    "refs": [
     "Мф 1:9"
    ],
-   "flag": "in-text"
+   "flag": "in-text",
+   "mtGroup": 2
   },
   {
    "id": "akhaz",
@@ -406,7 +428,8 @@
    "refs": [
     "Мф 1:9"
    ],
-   "flag": "in-text"
+   "flag": "in-text",
+   "mtGroup": 2
   },
   {
    "id": "ezekiya",
@@ -414,7 +437,8 @@
    "refs": [
     "Мф 1:9"
    ],
-   "flag": "in-text"
+   "flag": "in-text",
+   "mtGroup": 2
   },
   {
    "id": "manassiya-tsar",
@@ -422,7 +446,8 @@
    "refs": [
     "Мф 1:10"
    ],
-   "flag": "in-text"
+   "flag": "in-text",
+   "mtGroup": 2
   },
   {
    "id": "amon-tsar",
@@ -430,7 +455,8 @@
    "refs": [
     "Мф 1:10"
    ],
-   "flag": "in-text"
+   "flag": "in-text",
+   "mtGroup": 2
   },
   {
    "id": "iosiya",
@@ -438,128 +464,146 @@
    "refs": [
     "Мф 1:10"
    ],
-   "flag": "in-text"
+   "flag": "in-text",
+   "mtGroup": 2
   },
   {
    "id": "ioakim-tsar",
    "refs": [
     "4Цар 23:34",
-    "1Пар 3:15-16"
+    "1Пар 3:15-16",
+    "Мф 1:11"
    ],
-   "flag": "omitted-by-mt"
+   "flag": "in-text",
+   "mt": 28,
+   "mtGroup": 2
   },
   {
    "id": "iekhoniya",
-   "mt": 28,
+   "mt": 29,
    "refs": [
     "Мф 1:11"
    ],
-   "flag": "in-text"
+   "flag": "in-text",
+   "mtGroup": 3
   },
   {
    "id": "salafiil",
-   "mt": 29,
-   "refs": [
-    "Мф 1:12"
-   ],
-   "flag": "in-text"
-  },
-  {
-   "id": "zorovavel",
    "mt": 30,
    "refs": [
     "Мф 1:12"
    ],
-   "flag": "in-text"
+   "flag": "in-text",
+   "mtGroup": 3
+  },
+  {
+   "id": "zorovavel",
+   "mt": 31,
+   "refs": [
+    "Мф 1:12"
+   ],
+   "flag": "in-text",
+   "mtGroup": 3
   },
   {
    "id": "aviud-syn-zorovavelya",
-   "mt": 31,
-   "refs": [
-    "Мф 1:13"
-   ],
-   "flag": "in-text"
-  },
-  {
-   "id": "eliakim-syn-aviuda",
    "mt": 32,
    "refs": [
     "Мф 1:13"
    ],
-   "flag": "in-text"
+   "flag": "in-text",
+   "mtGroup": 3
   },
   {
-   "id": "azor",
+   "id": "eliakim-syn-aviuda",
    "mt": 33,
    "refs": [
     "Мф 1:13"
    ],
-   "flag": "in-text"
+   "flag": "in-text",
+   "mtGroup": 3
+  },
+  {
+   "id": "azor",
+   "mt": 34,
+   "refs": [
+    "Мф 1:13"
+   ],
+   "flag": "in-text",
+   "mtGroup": 3
   },
   {
    "id": "sadok-syn-azora",
-   "mt": 34,
-   "refs": [
-    "Мф 1:14"
-   ],
-   "flag": "in-text"
-  },
-  {
-   "id": "akhim",
    "mt": 35,
    "refs": [
     "Мф 1:14"
    ],
-   "flag": "in-text"
+   "flag": "in-text",
+   "mtGroup": 3
   },
   {
-   "id": "eliud",
+   "id": "akhim",
    "mt": 36,
    "refs": [
     "Мф 1:14"
    ],
-   "flag": "in-text"
+   "flag": "in-text",
+   "mtGroup": 3
+  },
+  {
+   "id": "eliud",
+   "mt": 37,
+   "refs": [
+    "Мф 1:14"
+   ],
+   "flag": "in-text",
+   "mtGroup": 3
   },
   {
    "id": "eleazar-syn-eliuda",
-   "mt": 37,
-   "refs": [
-    "Мф 1:15"
-   ],
-   "flag": "in-text"
-  },
-  {
-   "id": "matfan",
    "mt": 38,
    "refs": [
     "Мф 1:15"
    ],
-   "flag": "in-text"
+   "flag": "in-text",
+   "mtGroup": 3
   },
   {
-   "id": "iakov-otets-iosifa",
+   "id": "matfan",
    "mt": 39,
    "refs": [
     "Мф 1:15"
    ],
-   "flag": "in-text"
+   "flag": "in-text",
+   "mtGroup": 3
+  },
+  {
+   "id": "iakov-otets-iosifa",
+   "mt": 40,
+   "refs": [
+    "Мф 1:15"
+   ],
+   "flag": "in-text",
+   "mtGroup": 3
   },
   {
    "id": "iosif-muzh-marii",
-   "mt": 40,
+   "mt": 41,
    "refs": [
     "Мф 1:16"
    ],
-   "flag": "in-text"
+   "flag": "in-text",
+   "mtGroup": 3
   },
   {
    "id": "iisus",
-   "mt": 41,
+   "mt": 42,
    "refs": [
     "Мф 1:16",
     "Лк 3:23"
    ],
-   "flag": "legal"
+   "flag": "legal",
+   "mtGroup": 3
   }
  ]
 }

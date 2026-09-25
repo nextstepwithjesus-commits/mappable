@@ -82,13 +82,13 @@ for (const file of allFiles.concat(targetFiles.filter((f) => !allFiles.includes(
 // ---------- проверки ----------
 const PERSON_KEYS = new Set([
   'id', 'name', 'disambig', 'sex', 'father', 'mother', 'parentRefs', 'parentCert', 'fatherKind', 'order',
-  'otherParents', 'spouses', 'kin', 'roles', 'group', 'prominence', 'chrono', 'card', 'unnamed',
+  'otherParents', 'spouses', 'kin', 'roles', 'group', 'prominence', 'chrono', 'card', 'unnamed', 'kind', 'fatherGap',
   '__file', '__vol',
 ]);
 const CARD_KEYS = new Set([
   'original', 'meaning', 'altNames', 'status', 'parentsNote', 'lineage', 'birth', 'spousesNote', 'childrenNote',
   'siblingsNote', 'kinNote', 'chronoNote', 'met', 'places', 'offices', 'events', 'sayings', 'withGod', 'death',
-  'messiahNote', 'laterMentions', 'scripture', 'notes',
+  'messiahNote', 'laterMentions', 'scripture', 'notes', 'silent',
 ]);
 const ROLES = new Set([
   'patriarch', 'forefather', 'matriarch', 'king', 'queen', 'queen-mother', 'prince', 'high-priest', 'priest', 'levite',
@@ -183,12 +183,31 @@ function checkYear(where: string, y: unknown) {
 
 const refExists = (id: string) => byId.has(id) || (volumeMode && regById.has(id));
 
+// словоформы текста (без вставок в скобках) для проверки имён
+const bibleWords = (() => {
+  const set = new Set<string>();
+  for (const t of bible.verses.values()) for (const w of norm(stripBrackets(t)).match(/[а-я]+(?:-[а-я]+)?/g) ?? []) set.add(w);
+  return [...set];
+})();
+const nameCache = new Map<string, boolean>();
+function nameInBible(name: string): boolean {
+  if (nameCache.has(name)) return nameCache.get(name)!;
+  const re = nameMatcher(name);
+  const ok = bibleWords.some((w) => re.test(' ' + w + ' '));
+  nameCache.set(name, ok);
+  return ok;
+}
+
 for (const [id, p] of byId) {
   if (!targetIds.has(id)) continue;
   const W = id;
   for (const k of Object.keys(p)) if (!PERSON_KEYS.has(k)) err(W, `неизвестное поле «${k}»`);
   if (!ID_RE.test(id)) err(W, 'id: только латиница в нижнем регистре, цифры и дефис');
-  if (typeof p.name !== 'string' || !/^[А-ЯЁа-яё]/.test(p.name)) err(W, 'name: имя по-русски обязательно');
+  if (typeof p.name !== 'string' || !/^[А-ЯЁ][А-ЯЁа-яё\- ]*$/.test(p.name)) err(W, 'name: имя по-русски, с прописной, только кириллица, дефис и пробел');
+  else if (!p.unnamed && !nameInBible(p.name)) warn(W, `форма имени «${p.name}» не найдена в Синодальном тексте`);
+  if (p.kind !== undefined && !['person', 'people', 'founder', 'clan'].includes(p.kind)) err(W, `kind «${p.kind}»`);
+  if (p.fatherGap !== undefined && typeof p.fatherGap !== 'boolean') err(W, 'fatherGap: true/false');
+  if (p.disambig !== undefined && /[A-Za-z]/.test(p.disambig.replace(/\d+:\d+/g, ''))) err(W, 'disambig: латиница в уточнении');
   if (p.sex !== 'm' && p.sex !== 'f') err(W, 'sex: «m» или «f»');
   if (!groupIds.has(p.group)) err(W, `group: неизвестная область «${p.group}» (см. data/groups.json)`);
   if (![1, 2, 3, 4, 5].includes(p.prominence as number)) err(W, 'prominence: целое 1–5');
@@ -267,6 +286,7 @@ for (const [id, p] of byId) {
       checkYear(`${W}.chrono.born.year`, b.year);
       if (b.fatherAge !== undefined && (typeof b.fatherAge !== 'number' || b.fatherAge < 5 || b.fatherAge > 600)) err(W, 'born.fatherAge вне 5–600');
       if (b.motherAge !== undefined && (typeof b.motherAge !== 'number' || b.motherAge < 5 || b.motherAge > 130)) err(W, 'born.motherAge вне 5–130');
+      if (b.fatherAgeBracket !== undefined && (typeof b.fatherAgeBracket !== 'number' || b.fatherAgeBracket < 5 || b.fatherAgeBracket > 600)) err(W, 'born.fatherAgeBracket вне 5–600');
       if (b.offset && (!refExists(b.offset.from) || typeof b.offset.years !== 'number')) err(W, 'born.offset: { from: id, years: число }');
       if (b.range) { checkYear(W, b.range[0]); checkYear(W, b.range[1]); if (b.range[0] > b.range[1]) err(W, 'born.range: начало > конца'); }
       const hasData = b.year !== undefined || b.fatherAge !== undefined || b.motherAge !== undefined || b.offset;
@@ -278,6 +298,7 @@ for (const [id, p] of byId) {
       const d = c.died;
       checkYear(`${W}.chrono.died.year`, d.year);
       if (d.age !== undefined && (typeof d.age !== 'number' || d.age < 0 || d.age > 1000)) err(W, 'died.age вне 0–1000');
+      if (d.ageBracket !== undefined && (typeof d.ageBracket !== 'number' || d.ageBracket < 0 || d.ageBracket > 1000)) err(W, 'died.ageBracket вне 0–1000');
       if (d.range) { checkYear(W, d.range[0]); checkYear(W, d.range[1]); if (d.range[0] > d.range[1]) err(W, 'died.range: начало > конца'); }
       if (d.year !== undefined || d.age !== undefined) checkRefs(`${W}.chrono.died`, d.refs);
       checkCert(`${W}.chrono.died`, d.cert);
@@ -365,11 +386,14 @@ for (const [id, p] of byId) {
     }
     (card.notes ?? []).forEach((n, i) => {
       const w = `${W}.card.notes[${i}]`;
-      if (!['textual', 'interpretation', 'identification', 'chronology'].includes(n.kind)) err(w, `kind «${n.kind}»`);
+      if (!['textual', 'interpretation', 'identification', 'chronology', 'bracket'].includes(n.kind)) err(w, `kind «${n.kind}»`);
       if (!n.text) err(w, 'text');
       if (n.refs) checkRefs(w, n.refs, false);
     });
-    const filled = Object.keys(card).length;
+    if (card.silent !== undefined) {
+      if (!Array.isArray(card.silent) || card.silent.some((n) => !Number.isInteger(n) || n < 1 || n > 24)) err(W, 'card.silent: номера разделов 1–24');
+    }
+    const filled = Object.keys(card).filter((k) => k !== 'silent').length;
     if (p.prominence >= 4 && filled < 10) warn(W, `значимость ${p.prominence}, а заполнено только ${filled} разделов карточки`);
   } else if (p.prominence >= 3) {
     warn(W, `значимость ${p.prominence} без карточки`);
@@ -407,6 +431,27 @@ for (const [id, p] of byId) {
     const key = `${norm(p.name)}|${p.father}`;
     if (seen.has(key) && (targetIds.has(id) || targetIds.has(seen.get(key)!))) warn(id, `возможный дубликат: «${seen.get(key)}» (то же имя и отец)`);
     else seen.set(key, id);
+  }
+}
+
+// ---------- линии Мессии ----------
+interface LineStep { id: string; refs: string[]; flag: string; mt?: number; lk?: number }
+const lineFiles = ['joseph', 'mary'];
+for (const lf of lineFiles) {
+  const line: { persons: LineStep[] } = JSON.parse(readFileSync(join(ROOT, `data/lines/${lf}.json`), 'utf8'));
+  line.persons.forEach((st, i) => checkRefs(`line:${lf}[${i}] ${st.id}`, st.refs));
+  if (volumeMode) continue;
+  for (let i = 1; i < line.persons.length; i++) {
+    const parentId = line.persons[i - 1].id;
+    const child = byId.get(line.persons[i].id);
+    const W = `line:${lf} ${parentId} → ${line.persons[i].id}`;
+    if (!byId.has(parentId)) { warn(W, `нет лица «${parentId}»`); continue; }
+    if (!child) { warn(W, `нет лица «${line.persons[i].id}»`); continue; }
+    const supported =
+      child.father === parentId ||
+      child.mother === parentId ||
+      (child.otherParents ?? []).some((o) => o.id === parentId);
+    if (!supported) err(W, 'шаг линии не подтверждён связью в данных (father / mother / otherParents)');
   }
 }
 
