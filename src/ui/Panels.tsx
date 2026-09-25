@@ -142,8 +142,8 @@ function IndexPanel() {
         ))}
       </div>
       <div class="search" style={{ margin: '0 0 12px' }}>
-        <label>Отобрать:</label>
-        <input value={filter} onInput={(e) => setFilter((e.target as HTMLInputElement).value)} />
+        <label for="idx-filter">Отобрать:</label>
+        <input id="idx-filter" value={filter} onInput={(e) => setFilter((e.target as HTMLInputElement).value)} />
       </div>
       <div class="idx">
         {shown.slice(0, letter || f ? 5000 : 900).map(([name, ids]) => {
@@ -212,8 +212,8 @@ function KinshipPanel() {
         {a && b && <button onClick={() => (panel.value = 'spread')}>открыть разворот двух карточек</button>}
       </div>
       <div class="search" style={{ margin: '0 0 10px' }}>
-        <label>Второе:</label>
-        <input value={q} onInput={(e) => setQ((e.target as HTMLInputElement).value)} placeholder="имя" />
+        <label for="kin-second">Второе:</label>
+        <input id="kin-second" value={q} onInput={(e) => setQ((e.target as HTMLInputElement).value)} placeholder="имя" />
       </div>
       {hits.length > 0 && (
         <ul style={{ padding: 0, margin: '0 0 12px' }}>

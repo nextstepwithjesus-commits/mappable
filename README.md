@@ -24,6 +24,7 @@ npm run -s data             # хронология и раскладка → src
 npm test                    # тесты движка
 npx vite build              # сборка сайта в dist/
 npm run -s accept           # десять сценариев приёмки в Chromium (снимки в docs/screens)
+npm run -s a11y             # доступность экранов (axe-core, WCAG 2.1 AA)
 npm run -s shots            # снимки экранов в обеих темах и трёх ширинах
 npm run -s perf             # замер на 5 000 синтетических лиц (docs/perf.md)
 npm run -s coverage         # покрытие родословных отрывков (docs/coverage.md)

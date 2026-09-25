@@ -159,6 +159,8 @@ function Search() {
         onFocus={() => setOpen(true)}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
         onKeyDown={onKey}
+        role="combobox"
+        aria-autocomplete="list"
         aria-controls="find-results"
         aria-expanded={open && !!q}
       />

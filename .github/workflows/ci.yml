@@ -52,6 +52,8 @@ jobs:
       - run: npx vite build
       - name: Сценарии приёмки
         run: npm run -s accept
+      - name: Доступность (axe-core, WCAG 2.1 AA)
+        run: npm run -s a11y
       - if: always()
         uses: actions/upload-artifact@v4
         with:
