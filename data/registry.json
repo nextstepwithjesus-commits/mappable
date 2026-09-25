@@ -317,8 +317,8 @@
     { "id": "mariya-mat-iakova", "name": "Мария", "disambig": "мать Иакова и Иосии", "owner": "16" },
     { "id": "iakov-menshiy", "name": "Иаков", "disambig": "меньший", "owner": "16" },
     { "id": "iosiya-syn-marii", "name": "Иосия", "disambig": "сын Марии", "owner": "16" },
-    { "id": "arkhelay", "name": "Архелай", "disambig": "сын Ирода Великого", "owner": "17" },
-    { "id": "filipp-brat-iroda", "name": "Филипп", "disambig": "брат Ирода Антипы", "owner": "17" },
+    { "id": "arkhelay", "name": "Архелай", "disambig": "сын царя Ирода", "owner": "17" },
+    { "id": "filipp-brat-iroda", "name": "Филипп", "disambig": "брат Ирода четвертовластника", "owner": "17" },
     { "id": "elishama-syn-ammiuda", "name": "Елишама", "disambig": "сын Аммиуда, начальник Ефремов", "owner": "09" },
     { "id": "ammiud-syn-laedana", "name": "Аммиуд", "disambig": "сын Лаедана, отец Елисамы", "owner": "09" },
     { "id": "aviezer-syn-galaada", "name": "Авиезер", "disambig": "сын Галаада (Иезер)", "owner": "09" }
