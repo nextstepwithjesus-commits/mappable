@@ -84,7 +84,11 @@ export interface BornInput {
   fatherAgeBracket?: number; // число в [скобках] Синодального текста (греческое чтение), для альтернативной модели
   motherAge?: number; // возраст матери при рождении
   offset?: TimeOffset;
-  range?: [number, number]; // допустимый интервал
+  /** Родился не позже, чем через `years` лет после рождения `from` (Кааф пришёл в Египет с Иаковом: не позже Иаков + 130). */
+  notAfter?: TimeOffset;
+  /** Родился не раньше, чем через `years` лет после рождения `from`. */
+  notBefore?: TimeOffset;
+  range?: [number, number]; // допустимый интервал в годах (только после Исхода: до него годы зависят от модели)
   refs?: Ref[];
   cert?: Cert;
   note?: string;

@@ -15,7 +15,8 @@
     "verse": "tsx tools/verse.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "append": "tsx tools/append.ts"
+    "append": "tsx tools/append.ts",
+    "layout": "tsx tools/build-data.ts"
   },
   "license": "UNLICENSED",
   "dependencies": {

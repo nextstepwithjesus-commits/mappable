@@ -287,7 +287,11 @@ for (const [id, p] of byId) {
       if (b.fatherAge !== undefined && (typeof b.fatherAge !== 'number' || b.fatherAge < 5 || b.fatherAge > 600)) err(W, 'born.fatherAge вне 5–600');
       if (b.motherAge !== undefined && (typeof b.motherAge !== 'number' || b.motherAge < 5 || b.motherAge > 130)) err(W, 'born.motherAge вне 5–130');
       if (b.fatherAgeBracket !== undefined && (typeof b.fatherAgeBracket !== 'number' || b.fatherAgeBracket < 5 || b.fatherAgeBracket > 600)) err(W, 'born.fatherAgeBracket вне 5–600');
-      if (b.offset && (!refExists(b.offset.from) || typeof b.offset.years !== 'number')) err(W, 'born.offset: { from: id, years: число }');
+      for (const k of ['offset', 'notAfter', 'notBefore'] as const) {
+        const o = b[k];
+        if (o && (!refExists(o.from) || typeof o.years !== 'number')) err(W, `born.${k}: { from: id, years: число }`);
+      }
+      if ((b.year !== undefined || b.range) && (b.year ?? b.range![1]) < -1446) warn(W, 'абсолютный год до Исхода: допустим, только если выведен от Исхода (Моисей, Аарон, Халев); иначе — fatherAge / offset / notAfter / notBefore / epoch');
       if (b.range) { checkYear(W, b.range[0]); checkYear(W, b.range[1]); if (b.range[0] > b.range[1]) err(W, 'born.range: начало > конца'); }
       const hasData = b.year !== undefined || b.fatherAge !== undefined || b.motherAge !== undefined || b.offset;
       if (hasData) checkRefs(`${W}.chrono.born`, b.refs);
