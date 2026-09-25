@@ -68,6 +68,13 @@ async function main() {
     await shot('05-synopsis', 1440, 900, theme, async (p) => {
       await p.click('.commands >> text=Синопсис');
     });
+    for (const [i, cmd] of (['Указатель', 'Главы', 'Сквозной раздел', 'Условные знаки', 'О карте'] as const).entries()) {
+      await shot(`09-panel-${i + 1}`, 1440, 900, theme, async (p) => {
+        await select(p, 'Давид');
+        await p.locator('.commands').getByText(cmd, { exact: true }).click();
+        await p.waitForTimeout(700);
+      });
+    }
     await shot('06-specimen', 1200, 1400, theme, async (p) => {
       await p.goto(`http://localhost:${PORT}/#/specimen`);
       await p.waitForTimeout(800);

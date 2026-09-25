@@ -19,6 +19,13 @@ import { toAstro, yearsWord } from './years.ts';
 /** Эпохи долгих жизней (Быт 5; 11): возраст матери за 60 там не противоречие. */
 const LONG_LIVES = new Set(['antediluvian', 'postdiluvian']);
 
+/** «1 поколение», «4 поколения», «5 поколений». */
+const gens = (n: number) => {
+  const a = n % 100;
+  const b = n % 10;
+  return `${n} ${a > 10 && a < 20 ? 'поколений' : b === 1 ? 'поколение' : b >= 2 && b <= 4 ? 'поколения' : 'поколений'}`;
+};
+
 export type ChronoModelId = 'mt-long' | 'mt-short' | 'lxx' | 'terah70';
 
 export interface ChronoModel {
@@ -175,7 +182,7 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
     if (diff !== null) {
       tensions.push({
         persons: who,
-        text: `${what}: числа текста расходятся на ${Math.round(Math.abs(diff))} лет с другими данными`,
+        text: `${what}: числа текста расходятся с другими данными на ${yearsWord(Math.round(Math.abs(diff)))}`,
         refs,
       });
     }
@@ -221,7 +228,7 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
     const cur = fixed.get(root);
     if (cur === undefined) fixed.set(root, { value: v, cls });
     else if (Math.abs(cur.value - v) > 2) {
-      tensions.push({ persons: [who], text: `Год расходится с другими числами текста на ${Math.round(Math.abs(cur.value - v))} лет`, refs });
+      tensions.push({ persons: [who], text: `Год расходится с другими числами текста на ${yearsWord(Math.round(Math.abs(cur.value - v)))}`, refs });
     }
   };
   if (modelAnchor) setFixed(modelAnchor.key, modelAnchor.value, 'exact', [], 'iakov');
@@ -297,7 +304,8 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
       const main = e.kind === 'father' || e.kind === 'mother';
       const w = (main ? 1 : 0.4) * (e.gap ? 0.25 : 1);
       const g0 = e.kind.endsWith('mother') ? n.g * 0.85 : n.g;
-      ineqs.push({ i: B(e.parent), j: B(id), delta: g0, w: w / (n.sigma * n.sigma), kind: 'eq' });
+      // «из сыновей X» и пропуск поколений: число поколений неизвестно — только «родился после», без притяжения к одному поколению
+      if (!e.gap) ineqs.push({ i: B(e.parent), j: B(id), delta: g0, w: w / (n.sigma * n.sigma), kind: 'eq' });
       ineqs.push({ i: B(e.parent), j: B(id), delta: e.kind.endsWith('mother') ? 14 : n.min, w: 50 / (n.sigma * n.sigma), kind: 'ge' });
       if (main && !e.gap) {
         // рождение при жизни матери и не позже года после смерти отца — граница твёрдая, как notAfter:
@@ -537,7 +545,7 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
         if (par.d !== null && me.b > par.d + 3 && (e.kind === 'father' || e.kind === 'mother') && !e.gap) {
           tensions.push({
             persons: [e.parent, id],
-            text: `${cName} не помещается в жизнь ${e.kind === 'father' ? 'отца' : 'матери'} (${pName}): при числах текста рождение приходится на ${Math.round(me.b - par.d)} лет позже смерти; вероятно, родословие сокращено`,
+            text: `${cName} не помещается в жизнь ${e.kind === 'father' ? 'отца' : 'матери'} (${pName}): при числах текста рождение приходится на ${yearsWord(Math.round(me.b - par.d))} позже смерти; вероятно, родословие сокращено`,
             refs: [...new Set(refs)],
           });
         }
@@ -547,7 +555,7 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
       if (par.d !== null && me.b > par.d + (e.kind === 'father' ? 1 : 0) + 0.5) {
         tensions.push({
           persons: [e.parent, id],
-          text: `${cName} рождается через ${Math.round(me.b - par.d)} лет после смерти ${e.kind === 'father' ? 'отца' : 'матери'} (${pName}) — по числам текста; вероятно, родословие сокращено или это более далёкий предок`,
+          text: `${cName} рождается через ${yearsWord(Math.round(me.b - par.d))} после смерти ${e.kind === 'father' ? 'отца' : 'матери'} (${pName}) — по числам текста; вероятно, родословие сокращено или это более далёкий предок`,
           refs: [...new Set(refs)],
         });
       } else if (e.kind === 'father' && age < 13) {
@@ -578,7 +586,7 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
             const names = chain.map((x) => g.persons.get(x)!.name).reverse();
             tensions.push({
               persons: [...chain].reverse(),
-              text: `${names[0]} → ${names[names.length - 1]}: ${steps} поколений на ${Math.round(me.b - pc.b)} лет (в среднем ${Math.round(avg)}); вероятно, родословие сокращено`,
+              text: `${names[0]} → ${names[names.length - 1]}: ${gens(steps)} на ${yearsWord(Math.round(me.b - pc.b))} (в среднем ${yearsWord(Math.round(avg))}); вероятно, родословие сокращено`,
               refs: [...new Set(chain.flatMap((x) => g.persons.get(x)!.parentRefs ?? []))].slice(0, 6),
             });
           }

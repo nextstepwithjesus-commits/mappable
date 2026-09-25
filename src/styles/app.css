@@ -1044,3 +1044,7 @@ a {
     display: none;
   }
 }
+
+.nobr {
+  white-space: nowrap;
+}

@@ -342,8 +342,15 @@ function ChapterPanel() {
       }
       if (!best) break;
       parts.push(renderBrackets(rest.slice(0, best.i)));
-      parts.push(<P id={best.id}>{rest.slice(best.i, best.i + best.len)}</P>);
-      rest = rest.slice(best.i + best.len);
+      // знак препинания после имени не отрывается от ссылки на новую строку
+      const tail = /^[,;:.!?»)]+/.exec(rest.slice(best.i + best.len))?.[0] ?? '';
+      parts.push(
+        <span class="nobr">
+          <P id={best.id}>{rest.slice(best.i, best.i + best.len)}</P>
+          {tail}
+        </span>,
+      );
+      rest = rest.slice(best.i + best.len + tail.length);
     }
     parts.push(renderBrackets(rest));
     return parts;
@@ -435,7 +442,8 @@ function SectionPanel() {
         const items = c && field ? field(c) : null;
         return (
           <div key={id} style={{ margin: '10px 0' }}>
-            <P id={id} /> <span class="muted">{byId.get(id)!.disambig}</span>
+            <P id={id} />
+            {byId.get(id)!.disambig ? <span class="muted">, {byId.get(id)!.disambig}</span> : null}
             {!c ? (
               <div class="muted">…</div>
             ) : items && items.length ? (

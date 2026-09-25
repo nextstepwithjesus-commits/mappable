@@ -238,3 +238,24 @@ describe('родство через термин Писания «сестра»
     expect(relate(g, 'david', 'saruiya').some((x) => x.term === 'брат')).toBe(true);
   });
 });
+
+describe('связь «из сыновей X»', () => {
+  const P = (id: string, name: string, extra: Partial<Person> = {}): Person => ({ id, name, sex: 'm', group: 'levi', prominence: 2, ...extra });
+  const g = buildGraph([
+    P('elitsafan', 'Елцафан'),
+    P('shemaiya', 'Шемаия', { otherParents: [{ id: 'elitsafan', role: 'father', kind: 'ancestor', refs: ['1Пар 15:8'], cert: 'scripture' }] }),
+  ]);
+  it('называется «потомок», а не «сын»', () => {
+    const r = relate(g, 'shemaiya', 'elitsafan');
+    expect(r[0]?.term).toBe('потомок');
+    expect(relate(g, 'elitsafan', 'shemaiya')[0]?.term).toBe('предок');
+  });
+  it('не притягивает год рождения к одному поколению после предка', () => {
+    const withYears = buildGraph([
+      P('elitsafan', 'Елцафан', { chrono: { born: { year: -1480 } } }),
+      P('shemaiya', 'Шемаия', { otherParents: [{ id: 'elitsafan', role: 'father', kind: 'ancestor', refs: ['1Пар 15:8'], cert: 'scripture' }], chrono: { active: { from: -1000, to: -1000, refs: ['1Пар 15:8'] } } }),
+    ]);
+    const res = solveChronology(withYears, epochs, 'mt-long');
+    expect(toHist(res.persons.get('shemaiya')!.b)).toBeGreaterThan(-1100);
+  });
+});

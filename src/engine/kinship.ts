@@ -29,19 +29,21 @@ interface Anc {
   dist: number;
   path: KinStep[]; // от лица вверх к предку
   interpretive: boolean;
+  /** на пути есть связь «из сыновей X» или пропуск поколений: число поколений неизвестно */
+  open: boolean;
 }
 
 /** Все предки с кратчайшими путями по каждой ветви (до maxDepth поколений). */
 function ancestors(g: Graph, id: string, maxDepth = 90): Map<string, Anc[]> {
   const out = new Map<string, Anc[]>();
-  out.set(id, [{ dist: 0, path: [], interpretive: false }]);
+  out.set(id, [{ dist: 0, path: [], interpretive: false, open: false }]);
   let frontier: { id: string; anc: Anc }[] = [{ id, anc: out.get(id)![0] }];
   for (let depth = 1; depth <= maxDepth && frontier.length; depth++) {
     const next: { id: string; anc: Anc }[] = [];
     for (const f of frontier) {
       for (const e of g.parentsOf.get(f.id) ?? []) {
         const interp = f.anc.interpretive || e.cert === 'interpretation' || e.kind.startsWith('other') || e.claim === 'legal';
-        const anc: Anc = { dist: depth, path: [...f.anc.path, { from: f.id, to: e.parent, kind: 'up', interpretive: interp }], interpretive: interp };
+        const anc: Anc = { dist: depth, path: [...f.anc.path, { from: f.id, to: e.parent, kind: 'up', interpretive: interp }], interpretive: interp, open: f.anc.open || e.gap };
         const list = out.get(e.parent);
         if (list) {
           // сохраняем разные ветви, но не больше трёх на предка
@@ -200,7 +202,7 @@ export function relate(g: Graph, aId: string, bId: string, maxResults = 6): Rela
   const pairs = common.filter(isMinimal).sort((x, y) => x.a.dist + x.b.dist - (y.a.dist + y.b.dist));
   const seen = new Set<string>();
   for (const x of pairs) {
-    const key = `${x.a.dist}/${x.b.dist}/${x.a.interpretive || x.b.interpretive}`;
+    const key = `${x.a.dist}/${x.b.dist}/${x.a.interpretive || x.b.interpretive}/${x.a.open || x.b.open}`;
     if (seen.has(key)) continue;
     seen.add(key);
     let half: 'paternal' | 'maternal' | undefined;
@@ -212,8 +214,15 @@ export function relate(g: Graph, aId: string, bId: string, maxResults = 6): Rela
       if (sameF && !sameM && fa.some((e) => e.kind === 'mother') && fb.some((e) => e.kind === 'mother')) half = 'paternal';
       if (sameM && !sameF && fa.some((e) => e.kind === 'father') && fb.some((e) => e.kind === 'father')) half = 'maternal';
     }
-    let term = bloodTerm(x.a.dist, x.b.dist, female, half);
     const cName = g.persons.get(x.c)!.name;
+    // при неизвестном числе поколений точное название родства не выводится
+    let term = x.a.open || x.b.open
+      ? x.b.dist === 0
+        ? 'потомок'
+        : x.a.dist === 0
+          ? 'предок'
+          : `родственник${female ? 'ца' : ''}: общий предок — ${cName}, число поколений не установлено`
+      : bloodTerm(x.a.dist, x.b.dist, female, half);
     if (!term) term = `родственник${female ? 'ца' : ''}: общий предок — ${cName}; ${x.a.dist} поколений вверх, ${x.b.dist} вниз`;
     const down = [...x.b.path].reverse().map((s) => ({ from: s.to, to: s.from, kind: 'down' as const, interpretive: s.interpretive }));
     out.push({
