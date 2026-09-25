@@ -4,7 +4,7 @@
  * служения пророков; события. Промежуток жизни выбранного лица проецируется столбцом через все ярусы.
  */
 import type { Sky, SkyState } from './sky.ts';
-import { byId, epochs, persons } from '../data/atlas.ts';
+import { byId, persons, type ModelData } from '../data/atlas.ts';
 import { toAstro } from '../engine/years.ts';
 
 interface Bar {
@@ -18,10 +18,11 @@ interface Bar {
 const FONT_SERIF = "'Literata Variable', Literata, Georgia, serif";
 const FONT_SANS = "'Jost Variable', Jost, sans-serif";
 
-let cache: { tiers: { name: string; bars: Bar[] }[] } | null = null;
+let cache: { model: string; tiers: { name: string; bars: Bar[] }[] } | null = null;
 
-function buildTiers() {
-  if (cache) return cache;
+function buildTiers(m: ModelData) {
+  if (cache && cache.model === m.id) return cache;
+  const epochs = m.epochs;
   const ep: Bar[] = epochs.map((e) => ({ id: e.id, label: e.name, t0: toAstro(e.start), t1: toAstro(e.end), soft: e.id === 'judges' || e.id === 'conquest' }));
   const judges: Bar[] = [];
   const judah: Bar[] = [];
@@ -38,6 +39,7 @@ function buildTiers() {
   }
   const events: Bar[] = epochs.flatMap((e) => e.events.map((ev, i) => ({ id: `${e.id}-${i}`, label: ev.text, t0: toAstro(ev.year), t1: toAstro(ev.year), soft: false })));
   cache = {
+    model: m.id,
     tiers: [
       { name: 'Эпохи', bars: ep },
       { name: 'Судьи', bars: judges },
@@ -64,7 +66,7 @@ function rowsOf(bars: Bar[]): Bar[][] {
 export function drawTiers(sky: Sky, s: SkyState) {
   const { ctx, cam, pal } = sky;
   const W = cam.w;
-  const { tiers } = buildTiers();
+  const { tiers } = buildTiers(s.model);
   const top = 30;
   const rowH = 17;
   let y = top;

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
-import { anchors, byId, epochs, graph, lines, modelInfo, persons, volumes, groupById, loadCard, builtAt } from '../data/atlas.ts';
+import { anchors, byId, graph, lines, modelInfo, persons, volumes, groupById, loadCard, builtAt } from '../data/atlas.ts';
 import { panel, selected, second, pickMode, model, modelId, epochMode, layers, lineFlip, sectionFocus } from '../state.ts';
 import { P, Refs, VerseInsert, refLabel, skyRef, plural, renderBrackets } from './common.tsx';
 import { relate } from '../engine/kinship.ts';
@@ -69,7 +69,7 @@ function EpochsPanel() {
           ярусы на небе
         </button>
       </div>
-      {epochs.map((e) => (
+      {model.value.epochs.map((e) => (
         <div key={e.id}>
           <h3>
             <button class="person" onClick={() => flyToYears(toAstro(e.start), Math.min(toAstro(e.end), 110))}>

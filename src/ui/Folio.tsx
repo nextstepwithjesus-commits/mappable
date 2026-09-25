@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
-import { byId, graph, groupById, loadCard, lineMembership, epochs, books } from '../data/atlas.ts';
+import { byId, graph, groupById, loadCard, lineMembership, books } from '../data/atlas.ts';
 import type { Card, Chrono, Fact, Cert } from '../data/types.ts';
 import { selected, second, pickMode, panel, model, showSchema } from '../state.ts';
 import { P, Refs, VerseInsert, Mark, roleText, refLabel, skyRef, plural } from './common.tsx';
@@ -300,7 +300,7 @@ export function buildSections(id: string, p: AtlasPerson, card: Card | null, m: 
       8,
       <>
         <p class="fact">
-          {c.cls === 'epochal' ? `Год не установлен; эпоха — ${epochs.find((e) => e.id === (p.epoch ?? c.epoch))?.name ?? '—'}` : birthLine(c.b, c.bLo, c.bHi, c.cls)}
+          {c.cls === 'epochal' ? `Год не установлен; эпоха — ${m.epochs.find((e) => e.id === (p.epoch ?? c.epoch))?.name ?? '—'}` : birthLine(c.b, c.bLo, c.bHi, c.cls)}
           <Mark calc={c.cls !== 'exact' && c.cls !== 'epochal'} />
         </p>
         {card?.birth?.place ? <p>Место: {card.birth.place}</p> : null}
@@ -623,7 +623,7 @@ function deathLine(b: number, d: number, cls: string): string {
 export function Masthead({ id }: { id: string }) {
   const p = byId.get(id)!;
   const c = model.value.chrono.get(id);
-  const ep = c ? epochs.find((e) => e.id === (p.epoch ?? c.epoch)) : null;
+  const ep = c ? model.value.epochs.find((e) => e.id === (p.epoch ?? c.epoch)) : null;
   const j = lineMembership.joseph.has(id);
   const mm = lineMembership.mary.has(id);
   return (
@@ -690,7 +690,7 @@ function LifeBar({ id }: { id: string }) {
     // эпохи — полосой с названиями
     ctx.font = `400 11px ${sans}`;
     ctx.textBaseline = 'alphabetic';
-    epochs.forEach((e, i) => {
+    model.value.epochs.forEach((e, i) => {
       const a = Math.max(0, x(toAstroYear(e.start)));
       const b = Math.min(w, x(toAstroYear(e.end)));
       if (b <= a) return;
@@ -826,7 +826,7 @@ function CanonStrip({ books: counts, first, keyRefs }: { books: Record<string, n
 function RelativeChrono({ id, m, note }: { id: string; m: ModelData; note?: Fact[] }) {
   const p = byId.get(id)!;
   const c = m.chrono.get(id)!;
-  const ep = epochs.find((e) => e.id === (p.epoch ?? c.epoch));
+  const ep = model.value.epochs.find((e) => e.id === (p.epoch ?? c.epoch));
   const dated = (x: string) => {
     const cc = m.chrono.get(x);
     return !!cc && (cc.cls === 'exact' || cc.cls === 'calculated');

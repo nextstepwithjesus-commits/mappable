@@ -9,63 +9,62 @@
  "persons": 531,
  "lanes": 78,
  "corridorWidth": 13,
- "crossings": 241,
- "corridorCrossings": 44,
- "dropLength": 1863,
+ "crossings": 229,
+ "corridorCrossings": 46,
+ "dropLength": 1883,
  "blocks": 98
 }
 ```
 
-Напряжений: 1
+Напряжений: 0
 
 ## Модель mt-short
 
 ```
 {
  "persons": 531,
- "lanes": 113,
+ "lanes": 107,
  "corridorWidth": 13,
- "crossings": 238,
+ "crossings": 234,
  "corridorCrossings": 59,
- "dropLength": 2075,
+ "dropLength": 2104,
  "blocks": 98
 }
 ```
 
-Напряжений: 1
+Напряжений: 0
 
 ## Модель lxx
 
 ```
 {
  "persons": 531,
- "lanes": 80,
+ "lanes": 79,
  "corridorWidth": 9,
- "crossings": 243,
- "corridorCrossings": 30,
- "dropLength": 1862,
+ "crossings": 235,
+ "corridorCrossings": 28,
+ "dropLength": 1875,
  "blocks": 98
 }
 ```
 
-Напряжений: 7
+Напряжений: 0
 
 ## Модель terah70
 
 ```
 {
  "persons": 531,
- "lanes": 76,
+ "lanes": 78,
  "corridorWidth": 15,
- "crossings": 239,
- "corridorCrossings": 54,
- "dropLength": 1866,
+ "crossings": 236,
+ "corridorCrossings": 52,
+ "dropLength": 1901,
  "blocks": 98
 }
 ```
 
-Напряжений: 1
+Напряжений: 0
 
 ## Хронологические напряжения (модель по умолчанию)
 
-- Ева было бы 130 лет при рождении Сиф (Быт 4:25; Быт 5:3; 1Пар 1:1; Лк 3:38)

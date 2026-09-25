@@ -95,6 +95,21 @@ describe('хронология: напряжения', () => {
   });
 });
 
+describe('хронология: модель чисел в скобках', () => {
+  it('держит недатированного сына при жизни отца и сдвигает допотопную эпоху вместе с сотворением', () => {
+    const base = genesisFixture().map((p) => (p.id === 'sif' ? { ...p, chrono: { ...p.chrono, born: { fatherAge: 130, fatherAgeBracket: 230, refs: ['Быт 5:3'] } } } : p));
+    const kain: Person = { id: 'kain', name: 'Каин', sex: 'm', father: 'adam', parentRefs: ['Быт 4:1'], group: 'cainites', prominence: 3, order: 1, chrono: { epoch: 'antediluvian' } };
+    const g = buildGraph([...base, kain]);
+    const res = solveChronology(g, epochs, 'lxx');
+    const adam = res.persons.get('adam')!;
+    const k = res.persons.get('kain')!;
+    expect(k.b).toBeLessThanOrEqual(adam.d! + 1);
+    expect(k.b).toBeGreaterThan(adam.b);
+    expect(res.persons.get('adam')!.epoch).toBe('antediluvian');
+    expect(res.tensions.filter((t) => t.persons.includes('kain')).length).toBe(0);
+  });
+});
+
 describe('раскладка', () => {
   const people: Person[] = [
     ...genesisFixture(),

@@ -14,7 +14,10 @@
  */
 import type { Person, Epoch } from '../data/types.ts';
 import { type Graph, fatherOf, motherOf, primaryChildren } from './graph.ts';
-import { toAstro } from './years.ts';
+import { toAstro, yearsWord } from './years.ts';
+
+/** Эпохи долгих жизней (Быт 5; 11): возраст матери за 60 там не противоречие. */
+const LONG_LIVES = new Set(['antediluvian', 'postdiluvian']);
 
 export type ChronoModelId = 'mt-long' | 'mt-short' | 'lxx' | 'terah70';
 
@@ -234,13 +237,35 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
     else priors.set(key, { lo: Math.max(cur.lo, lo), hi: Math.min(cur.hi, hi) < Math.max(cur.lo, lo) ? cur.hi : Math.min(cur.hi, hi), w: Math.max(cur.w, w) });
   };
 
+  // Границы двух первых эпох зависят от модели: в модели чисел в скобках сотворение на ~1 400 лет раньше.
+  // Поэтому они берутся из уже закреплённых лет (Адам, Потоп — 600-й год Ноя, Авраам), а не из data/epochs.json.
+  const fixedYear = (key: string): number | null => {
+    const { root, off } = rootOf(key);
+    const f = fixed.get(root);
+    return f ? f.value + off : null;
+  };
+  const creation = g.persons.has('adam') ? fixedYear(B('adam')) : null;
+  const noah = g.persons.has('noy') ? fixedYear(B('noy')) : null;
+  const flood = noah === null ? null : noah + 600;
+  const abram = g.persons.has('avraam') ? fixedYear(B('avraam')) : null;
+  const epochSpan = (e: Epoch): [number, number] => {
+    if (e.id === 'antediluvian' && creation !== null && flood !== null) return [creation, flood];
+    if (e.id === 'postdiluvian' && flood !== null && abram !== null) return [flood, abram];
+    return [toAstro(e.start), toAstro(e.end)];
+  };
+  const hist = (a: number) => (a <= 0 ? a - 1 : a);
+  const modelEpochs: Epoch[] = epochs.map((e) => {
+    const [lo, hi] = epochSpan(e);
+    return { ...e, start: hist(lo), end: hist(hi) };
+  });
+
   for (const id of g.order) {
     const p = g.persons.get(id)!;
     const c = p.chrono;
     // эпоха
     if (c?.epoch && epochById.has(c.epoch)) {
-      const e = epochById.get(c.epoch)!;
-      addPrior(B(id), toAstro(e.start) - 30, toAstro(e.end), 0.5);
+      const [lo, hi] = epochSpan(epochById.get(c.epoch)!);
+      addPrior(B(id), lo - 30, hi, 0.5);
     }
     // относительные границы
     // граница соблюдается жёстко (одностороннее ограничение), а слабое притяжение держит оценку с запасом от границы
@@ -275,8 +300,9 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
       ineqs.push({ i: B(e.parent), j: B(id), delta: g0, w: w / (n.sigma * n.sigma), kind: 'eq' });
       ineqs.push({ i: B(e.parent), j: B(id), delta: e.kind.endsWith('mother') ? 14 : n.min, w: 50 / (n.sigma * n.sigma), kind: 'ge' });
       if (main && !e.gap) {
-        // рождение при жизни матери и не позже года после смерти отца
-        ineqs.push({ i: B(id), j: D(e.parent), delta: e.kind === 'father' ? -1 : 0, w: 5 / (n.sigma * n.sigma), kind: 'ge' });
+        // рождение при жизни матери и не позже года после смерти отца — граница твёрдая, как notAfter:
+        // иначе в эпохах долгих жизней притяжение к середине эпохи уводит недатированного ребёнка за смерть родителя
+        ineqs.push({ i: B(id), j: D(e.parent), delta: e.kind === 'father' ? -1 : 0, w: 5, kind: 'ge' });
       }
     }
     // порядок братьев
@@ -444,7 +470,7 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
   for (const id of g.order) {
     const p = g.persons.get(id)!;
     const b = val(B(id))!;
-    const ep = epochAt(epochs, b);
+    const ep = epochAt(modelEpochs, b);
     const epochId = p.chrono?.epoch ?? ep?.id ?? null;
     const n = normFor(epochId);
     const k = cls.get(id)!;
@@ -503,6 +529,8 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
       const dated = (x: PersonChrono) => x.cls === 'exact' || x.cls === 'calculated';
       const pName = g.persons.get(e.parent)!.name;
       const cName = g.persons.get(id)!.name;
+      // имена в тексте напряжения — только в именительном падеже, в скобках: склонять библейские имена надёжно нельзя
+      const kidWord = g.persons.get(id)!.sex === 'f' ? 'дочери' : 'сына';
       const refs = [...e.refs, ...(g.persons.get(e.parent)!.chrono?.died?.refs ?? []), ...(g.persons.get(id)!.chrono?.born?.refs ?? [])];
       if (!dated(me) || !dated(par)) {
         // даже при оценочных датах: если возраст родителя при смерти задан текстом, а ребёнок никак не помещается
@@ -523,9 +551,9 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
           refs: [...new Set(refs)],
         });
       } else if (e.kind === 'father' && age < 13) {
-        tensions.push({ persons: [e.parent, id], text: `${pName} был бы ${Math.round(age)} лет при рождении ${cName} — по годам правления и возрасту при воцарении`, refs: [...new Set(refs)] });
-      } else if (e.kind === 'mother' && age > 60 && g.persons.get(id)!.chrono?.born?.motherAge === undefined) {
-        tensions.push({ persons: [e.parent, id], text: `${pName} было бы ${Math.round(age)} лет при рождении ${cName}`, refs: [...new Set(refs)] });
+        tensions.push({ persons: [e.parent, id], text: `Возраст отца (${pName}) при рождении ${kidWord} (${cName}) — ${yearsWord(Math.round(age))}: так выходит по годам правления и возрасту при воцарении`, refs: [...new Set(refs)] });
+      } else if (e.kind === 'mother' && age > 60 && !LONG_LIVES.has(me.epoch ?? '') && g.persons.get(id)!.chrono?.born?.motherAge === undefined) {
+        tensions.push({ persons: [e.parent, id], text: `Возраст матери (${pName}) при рождении ${kidWord} (${cName}) — ${yearsWord(Math.round(age))}`, refs: [...new Set(refs)] });
       }
     }
   }

@@ -9,7 +9,7 @@ import { timeToX, xToTime, hydrateScale, type TimeScale, T_START, T_END } from '
 import { buildRibbons, type Strand } from '../engine/ribbons.ts';
 import { toHist, toAstro } from '../engine/years.ts';
 import type { ModelData, NodeRow } from '../data/atlas.ts';
-import { byId, epochs, groupById, lines } from '../data/atlas.ts';
+import { byId, groupById, lines } from '../data/atlas.ts';
 
 export interface Palette {
   sky: string;
@@ -141,7 +141,7 @@ export class Sky {
         this.X0[i] = timeToX(this.scale, this.nodes[i].t0, lambda);
         this.X1[i] = timeToX(this.scale, this.nodes[i].t1, lambda);
       }
-      this.epochX = epochs.map((e) => ({ id: e.id, x0: timeToX(this.scale, toAstro(e.start), lambda), x1: timeToX(this.scale, toAstro(e.end), lambda), name: e.name, short: e.short }));
+      this.epochX = m.epochs.map((e) => ({ id: e.id, x0: timeToX(this.scale, toAstro(e.start), lambda), x1: timeToX(this.scale, toAstro(e.end), lambda), name: e.name, short: e.short }));
     }
   }
 
@@ -646,7 +646,7 @@ export class Sky {
     const tL = this.tOf(cam.wx(LETTER_W));
     const tR = this.tOf(cam.wx(W));
     const tC = this.tOf(cam.wx((LETTER_W + W) / 2));
-    const ep = epochs.find((e) => tC >= toAstro(e.start) && tC < toAstro(e.end));
+    const ep = this.model.epochs.find((e) => tC >= toAstro(e.start) && tC < toAstro(e.end));
     const span = (a: number, b: number) => {
       const ha = toHist(a);
       const hb = toHist(b);

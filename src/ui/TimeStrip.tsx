@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'preact/hooks';
 import { effect } from '@preact/signals';
-import { epochs, lines } from '../data/atlas.ts';
+import { lines } from '../data/atlas.ts';
 import { model, meridian, theme } from '../state.ts';
 import { skyRef, viewTick } from './common.tsx';
 import { toAstro, toHist } from '../engine/years.ts';
@@ -47,7 +47,7 @@ export function TimeStrip() {
       ctx.fillStyle = pal.sky;
       ctx.fillRect(0, 0, W, H);
       // эпохи
-      epochs.forEach((e, i) => {
+      model.value.epochs.forEach((e, i) => {
         const a = xOf(toAstro(e.start));
         const b = xOf(toAstro(e.end));
         ctx.fillStyle = i % 2 ? pal.band : pal.sky;
@@ -227,7 +227,7 @@ export function TimeStrip() {
       if (drag && !drag.moved) {
         const r = cv.getBoundingClientRect();
         const t = tOf(e.clientX - r.left);
-        const ep = epochs.find((x) => t >= toAstro(x.start) && t < toAstro(x.end));
+        const ep = model.value.epochs.find((x) => t >= toAstro(x.start) && t < toAstro(x.end));
         if (ep) {
           const span = toAstro(ep.end) - toAstro(ep.start);
           const pad = Math.max(10, span * 0.04);

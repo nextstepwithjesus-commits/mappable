@@ -78,6 +78,8 @@ export interface ModelData {
   laneMax: number;
   metrics: Record<string, number>;
   scale: { knots: number[]; xTrue: number[]; xDense: number[] };
+  /** Эпохи в годах этой модели: «Первозданный мир» и «От Потопа до Авраама» зависят от чисел Быт 5 и 11. */
+  epochs: Epoch[];
 }
 
 export interface LineFile {
@@ -145,6 +147,8 @@ export const persons: IdxPerson[] = R.persons.map((p) => ({
 }));
 export const byId = new Map(persons.map((p) => [p.id, p]));
 
+export const epochs = R.epochs as unknown as Epoch[];
+
 type RawModel = RawAtlas['models'][number];
 function decodeModel(m: RawModel): ModelData {
   const chrono = new Map<string, ChronoRow>();
@@ -164,9 +168,19 @@ function decodeModel(m: RawModel): ModelData {
       parentLane: n[5], layoutParent: idAt(n[6]), satelliteOf: idAt(n[7]), spine: !!n[8],
     };
   });
+  const hist = (a: number) => (a <= 0 ? a - 1 : a);
+  const adam = chrono.get('adam');
+  const noah = chrono.get('noy');
+  const abram = chrono.get('avraam');
+  const flood = noah && noah.cls === 'exact' ? noah.b + 600 : null; // Потоп — в 600-й год Ноя (Быт 7:6)
+  const modelEpochs = epochs.map((e) => {
+    if (e.id === 'antediluvian' && adam && flood !== null) return { ...e, start: hist(adam.b), end: hist(flood) };
+    if (e.id === 'postdiluvian' && abram && flood !== null) return { ...e, start: hist(flood), end: hist(abram.b) };
+    return e;
+  });
   return {
     id: m.id, chrono, tensions: m.tensions, nodes, nodeByPerson: new Map(nodes.filter((n) => !n.ghost).map((n) => [n.person, n])),
-    blocks: m.layout.blocks, laneMin: m.layout.laneMin, laneMax: m.layout.laneMax, metrics: m.layout.metrics, scale: m.scale,
+    blocks: m.layout.blocks, laneMin: m.layout.laneMin, laneMax: m.layout.laneMax, metrics: m.layout.metrics, scale: m.scale, epochs: modelEpochs,
   };
 }
 
@@ -194,7 +208,6 @@ export function loadModel(id: string): Promise<ModelData | null> {
 
 export const modelInfo = R.modelInfo as ChronoModel[];
 export const lines = R.lines as unknown as { joseph: LineFile; mary: LineFile };
-export const epochs = R.epochs as unknown as Epoch[];
 export const groups = R.groups as unknown as Group[];
 export const groupById = new Map(groups.map((g) => [g.id, g]));
 export const books = R.books as unknown as Book[];
