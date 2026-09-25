@@ -5,11 +5,12 @@
  */
 import { useEffect, useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
-import { byId, loadCard } from '../data/atlas.ts';
+import { byId, graph, loadCard } from '../data/atlas.ts';
+import { relate } from '../engine/kinship.ts';
 import type { Card } from '../data/types.ts';
 import { selected, second, panel, model } from '../state.ts';
 import { SECTIONS, PARTS, buildSections, Masthead } from './Folio.tsx';
-import { skyRef } from './common.tsx';
+import { P, skyRef } from './common.tsx';
 
 type St = 'content' | 'silent' | 'absent';
 const STATE_TEXT: Record<Exclude<St, 'content'>, string> = { silent: 'в Писании не сообщается', absent: 'раздел не составлен' };
@@ -115,7 +116,7 @@ export function Spread() {
           <div class="pg">
             <Masthead id={a} />
           </div>
-          <div class="spine" />
+          <KinSpine a={a} b={b} />
           <div class="pg">
             <Masthead id={b} />
           </div>
@@ -123,5 +124,41 @@ export function Spread() {
         {rows}
       </div>
     </section>
+  );
+}
+
+/** Цепочка родства между лицами разворота — в корешке, сверху вниз от левого лица к правому. */
+function KinSpine({ a, b }: { a: string; b: string }) {
+  const r = relate(graph, a, b, 1)[0];
+  if (!r) {
+    return (
+      <div class="spine kin">
+        <span class="none">родство в данных атласа не найдено</span>
+      </div>
+    );
+  }
+  const ids = [...new Set(r.steps.flatMap((s) => [s.from, s.to]))];
+  // длинная цепочка сокращается: три звена сверху, три снизу
+  const shown: (string | number)[] = ids.length > 8 ? [...ids.slice(0, 3), ids.length - 6, ...ids.slice(-3)] : ids;
+  return (
+    <div class="spine kin">
+      <p class="sent">
+        {r.sentence}
+        {r.interpretive ? ', по толкованию' : ''}
+      </p>
+      <ol class="chain">
+        {shown.map((x, i) =>
+          typeof x === 'number' ? (
+            <li key={`gap${i}`} class="gap">
+              ещё {x}
+            </li>
+          ) : (
+            <li key={x}>
+              <P id={x} />
+            </li>
+          ),
+        )}
+      </ol>
+    </div>
   );
 }

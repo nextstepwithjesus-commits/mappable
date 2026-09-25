@@ -243,7 +243,7 @@ export function buildSections(id: string, p: AtlasPerson, card: Card | null, m: 
             {o.script}
           </bdi>{' '}
           <i>{o.translit}</i>
-          {o.note ? <span class="muted">. {o.note}</span> : null}
+          {o.note ? <span class="muted">; {o.note}</span> : null}
           <abbr class="mark" title="справочный слой: не текст Синодального перевода">справ.</abbr>
         </p>
       ),
@@ -557,7 +557,7 @@ export function buildSections(id: string, p: AtlasPerson, card: Card | null, m: 
           {card.offices?.map((o, i) => (
             <li class="fact" key={i}>
               {o.title}
-              {o.note ? <span class="muted">. {o.note}</span> : null}
+              {o.note ? <span class="muted">; {o.note}</span> : null}
               <Refs refs={o.refs} owner={ns + `o16.${i}`} />
               <VerseInsert owner={ns + `o16.${i}`} refs={o.refs} />
             </li>

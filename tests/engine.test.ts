@@ -95,6 +95,30 @@ describe('хронология: напряжения', () => {
   });
 });
 
+describe('хронология: цепочки с пропуском поколений', () => {
+  it('разносит звенья Мф 1:13–15 поровну между опорами и не тянет потомка к далёкому предку', () => {
+    const P = (id: string, father: string | null, chrono: Person['chrono'], gap = true): Person => ({
+      id, name: id, sex: 'm', father, fatherGap: father ? gap : undefined, parentRefs: father ? ['Мф 1:13'] : undefined, group: 'g', prominence: 1, chrono,
+    });
+    const chain = ['aviud', 'eliakim', 'azor', 'sadok', 'akhim', 'eliud', 'eleazar', 'matfan'];
+    const persons: Person[] = [
+      P('zorovavel', null, { born: { year: -563, refs: ['Мф 1:12'] } }),
+      ...chain.map((id, k) => P(id, k ? chain[k - 1] : 'zorovavel', { epoch: k < 2 ? 'return' : 'intertestamental' })),
+      P('iakov-m', 'matfan', { born: { year: -61, refs: ['Мф 1:15'] } }), // не «iakov»: это опора модели
+      // «Шеломиф, сын Ицгара» (1 Пар 23:18) — потомок через века, служил при Давиде
+      P('itsgar', null, { born: { year: -1700, refs: ['Исх 6:18'] } }),
+      P('shelomif', 'itsgar', { epoch: 'united', active: { from: -971, to: -971, refs: ['1Пар 23:18'] } }),
+      P('iakhav', 'shelomif', { epoch: 'united', active: { from: -971, to: -971, refs: ['1Пар 24:22'] } }),
+    ];
+    const res = solveChronology(buildGraph(persons), epochs, 'mt-long');
+    const b = (id: string) => res.persons.get(id)!.b;
+    const seq = ['zorovavel', ...chain, 'iakov-m'];
+    const steps = seq.slice(1).map((id, k) => b(id) - b(seq[k]));
+    for (const d of steps) expect(Math.abs(d - (502 / 9))).toBeLessThan(6);
+    expect(toHist(Math.round(b('shelomif')))).toBeGreaterThan(-1060);
+  });
+});
+
 describe('хронология: модель чисел в скобках', () => {
   it('держит недатированного сына при жизни отца и сдвигает допотопную эпоху вместе с сотворением', () => {
     const base = genesisFixture().map((p) => (p.id === 'sif' ? { ...p, chrono: { ...p.chrono, born: { fatherAge: 130, fatherAgeBracket: 230, refs: ['Быт 5:3'] } } } : p));

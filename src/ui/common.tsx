@@ -1,3 +1,4 @@
+import { Fragment } from 'preact';
 import { signal } from '@preact/signals';
 import { useEffect, useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
@@ -86,19 +87,34 @@ export function P({ id, children }: { id: string; children?: ComponentChildren }
 const openRef = signal<string | null>(null);
 
 /** Ссылки на стихи; раскрываются вклейкой под абзацем (до 3 стихов). */
+const bookPart = (ref: string) => /^([1-4]?\s?[^\d\s]+)\s*(\d.*)$/.exec(ref);
+
+/** Ссылки подряд: «Быт 11:26; 17:5; 1 Пар 1:27» — книга не повторяется, если та же, что у предыдущей. */
 export function Refs({ refs, owner }: { refs?: string[]; owner: string }) {
   if (!refs || !refs.length) return null;
   return (
-    <>
-      {refs.map((r) => {
+    <span class="refs">
+      {refs.map((r, i) => {
         const key = `${owner}|${r}`;
+        const cur = bookPart(r);
+        const prev = i > 0 ? bookPart(refs[i - 1]) : null;
+        const short = cur && prev && cur[1].replace(/\s/g, '') === prev[1].replace(/\s/g, '');
+        const full = refLabel(r);
         return (
-          <button class="ref" aria-expanded={openRef.value === key} onClick={() => (openRef.value = openRef.value === key ? null : key)} key={r}>
-            {refLabel(r)}
-          </button>
+          <Fragment key={r}>
+            {i > 0 && <span class="refsep">; </span>}
+            <button
+              class="ref"
+              aria-label={short ? full : undefined}
+              aria-expanded={openRef.value === key}
+              onClick={() => (openRef.value = openRef.value === key ? null : key)}
+            >
+              {short ? cur![2].replace(/-/g, '–') : full}
+            </button>
+          </Fragment>
         );
       })}
-    </>
+    </span>
   );
 }
 

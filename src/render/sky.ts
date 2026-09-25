@@ -623,7 +623,10 @@ export class Sky {
         const y = cam.sy(n.lane);
         const r = starRadius(p.magnitude, zoomScale);
         ctx.font = labelFont(p.magnitude);
-        const tx = x + r + 3;
+        const nameW = ctx.measureText(p.name).width;
+        // у правого края подпись переходит влево от звезды, чтобы не обрезаться рамкой
+        const flip = x + r + 3 + nameW > cam.w - 6 && x - r - 3 - nameW > LETTER_W + 4;
+        const tx = flip ? x - r - 3 - nameW : x + r + 3;
         const ty = y - 3;
         const e = forced ? 1 : emph(p.id) * lit;
         ctx.strokeStyle = pal.halo;
@@ -632,10 +635,10 @@ export class Sky {
         ctx.strokeText(p.name, tx, ty);
         ctx.fillStyle = p.magnitude <= 2 || forced ? pal.ink : pal.ink2;
         ctx.fillText(p.name, tx, ty);
-        if (ky >= 18 && p.roles.length) {
+        if (ky >= 18 && p.roles.length && !flip) {
           const sig = roleSigla(p.roles);
           if (sig) {
-            const w = ctx.measureText(p.name).width;
+            const w = nameW;
             ctx.font = `italic 400 ${Math.max(10.5, LABEL_SIZE[Math.min(6, p.magnitude)] - 2)}px ${FONT_SERIF}`;
             ctx.strokeText(sig, tx + w + 4, ty);
             ctx.fillStyle = pal.ink3;
@@ -875,7 +878,7 @@ export class Sky {
     const W = cam.w;
     const H = cam.h;
     // верхняя кромка: годы
-    ctx.fillStyle = alpha(pal.sky, 0.94);
+    ctx.fillStyle = pal.sky;
     ctx.fillRect(0, 0, W, RULER_H);
     ctx.strokeStyle = pal.rule;
     ctx.lineWidth = 1;

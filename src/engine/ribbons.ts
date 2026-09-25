@@ -7,7 +7,9 @@
  *   В лицах нити стоят по обе стороны («бусина между нитями»), перекрещиваются между поколениями.
  *   Множитель r подбирается так, чтобы и при расхождении, и при схождении нить Иосифа была сверху.
  * — Раздельные участки: одна нить с мягкой волной A₂·sin(π·u) и плавным сведением к ±A на концах.
- * — Если поколения на экране ближе MIN_GEN_PX, коса заменяется двумя параллельными нитями (без ряби).
+ * — Если поколения на экране ближе MIN_GEN_PX, коса плавно заменяется двумя параллельными нитями,
+ *   а волна одиночной нити гаснет (без ряби). Порог считается по каждому поколению отдельно.
+ * — Смещение нити не больше радиуса кривизны средней линии: иначе на крутом повороте нить делает петлю.
  */
 
 export interface Pt {
@@ -66,12 +68,13 @@ interface Sample {
   u: number; // номер поколения в последовательности (дробный)
   nx: number; // нормаль
   ny: number;
+  rad: number; // радиус кривизны, px
 }
 
 function sampleSpline(pts: Pt[]): Sample[] {
   const out: Sample[] = [];
   if (pts.length === 0) return out;
-  if (pts.length === 1) return [{ x: pts[0].x, y: pts[0].y, u: 0, nx: 0, ny: -1 }];
+  if (pts.length === 1) return [{ x: pts[0].x, y: pts[0].y, u: 0, nx: 0, ny: -1, rad: Infinity }];
   for (let i = 0; i < pts.length - 1; i++) {
     const p0 = pts[Math.max(0, i - 1)];
     const p1 = pts[i];
@@ -81,7 +84,7 @@ function sampleSpline(pts: Pt[]): Sample[] {
     for (let k = 0; k < n; k++) {
       const s = k / SAMPLES;
       const q = catmullRom(p0, p1, p2, p3, s);
-      out.push({ x: q.x, y: q.y, u: i + s, nx: 0, ny: 0 });
+      out.push({ x: q.x, y: q.y, u: i + s, nx: 0, ny: 0, rad: Infinity });
     }
   }
   for (let i = 0; i < out.length; i++) {
@@ -94,7 +97,46 @@ function sampleSpline(pts: Pt[]): Sample[] {
     out[i].nx = dy / l;
     out[i].ny = -dx / l;
   }
+  // радиус кривизны: длина дуги между соседями, делённая на поворот касательной
+  for (let i = 1; i < out.length - 1; i++) {
+    const a = out[i - 1];
+    const b = out[i + 1];
+    let turn = Math.atan2(a.nx * b.ny - a.ny * b.nx, a.nx * b.nx + a.ny * b.ny);
+    turn = Math.abs(turn);
+    const arc = Math.hypot(out[i].x - a.x, out[i].y - a.y) + Math.hypot(b.x - out[i].x, b.y - out[i].y);
+    out[i].rad = turn > 1e-6 ? arc / turn : Infinity;
+  }
   return out;
+}
+
+/** Плавная ступень 0…1: 0 при шаге поколения ≤ MIN_GEN_PX / 2, 1 при ≥ MIN_GEN_PX. */
+function waveWeight(genPx: number): number {
+  const k = Math.max(0, Math.min(1, (genPx - MIN_GEN_PX / 2) / (MIN_GEN_PX / 2)));
+  return k * k * (3 - 2 * k);
+}
+
+/** Вес волны в каждом поколении: у узла — меньший из двух соседних шагов, между узлами — линейно. */
+function nodeWeights(pts: Pt[]): number[] {
+  const seg = pts.slice(1).map((p, i) => waveWeight(Math.hypot(p.x - pts[i].x, p.y - pts[i].y)));
+  return pts.map((_, i) => Math.min(seg[i - 1] ?? 1, seg[i] ?? 1));
+}
+
+/**
+ * Средняя линия там, где поколения на экране теснее порога, сглаживается по вертикали: соседние лица линии
+ * часто стоят в чередующихся полосах, и на обзорном масштабе нить иначе идёт мелким зигзагом.
+ * Концы участка не двигаются — это точки расхождения и схождения с другой линией.
+ */
+function smoothDense(pts: Pt[], w: number[]): Pt[] {
+  if (pts.length < 3) return pts;
+  let ys = pts.map((p) => p.y);
+  for (let it = 0; it < 4; it++) ys = ys.map((y, i) => (i === 0 || i === ys.length - 1 ? y : (ys[i - 1] + 2 * y + ys[i + 1]) / 4));
+  return pts.map((p, i) => (i === 0 || i === pts.length - 1 ? p : { x: p.x, y: p.y * w[i] + ys[i] * (1 - w[i]) }));
+}
+
+/** Смещение, ограниченное радиусом кривизны (петли на крутых поворотах). */
+function clampOff(off: number, s: Sample): number {
+  const lim = s.rad * 0.8;
+  return Math.max(-lim, Math.min(lim, off));
 }
 
 interface Run {
@@ -154,14 +196,17 @@ export function buildRibbons(inp: RibbonInput): Strand[] {
 
   for (let r = 0; r < runs.length; r++) {
     const run = runs[r];
-    const pts = run.ids.map((id) => inp.project(id)).filter((p): p is Pt => !!p);
-    if (pts.length < 1 || pts.length !== run.ids.length) continue;
+    const raw = run.ids.map((id) => inp.project(id)).filter((p): p is Pt => !!p);
+    if (raw.length < 1 || raw.length !== run.ids.length) continue;
+    const wN = nodeWeights(raw);
+    const pts = smoothDense(raw, wN);
     const samples = sampleSpline(pts);
+    const wAt = (u: number) => {
+      const i = Math.min(wN.length - 1, Math.floor(u));
+      const f = u - i;
+      return i + 1 < wN.length ? wN[i] * (1 - f) + wN[i + 1] * f : wN[i];
+    };
     if (run.kind === 'shared') {
-      // шаг поколения на экране
-      const spanPx = Math.hypot(pts[pts.length - 1].x - pts[0].x, pts[pts.length - 1].y - pts[0].y);
-      const genPx = pts.length > 1 ? spanPx / (pts.length - 1) : Infinity;
-      const braid = genPx >= MIN_GEN_PX;
       const n = pts.length - 1;
       const hasNext = r < runs.length - 1;
       const hasPrev = r > 0;
@@ -172,7 +217,10 @@ export function buildRibbons(inp: RibbonInput): Strand[] {
       let lastSign = 0;
       let segStart = joseph.length;
       for (const s of samples) {
-        const off = braid ? A * Math.cos(Math.PI * rate * (s.u - Uend)) : A * 0.55;
+        // коса и параллельные нити сменяют друг друга плавно, по шагу поколений на экране
+        const w = wAt(s.u);
+        const braid = w > 0.5;
+        const off = clampOff(A * (w * Math.cos(Math.PI * rate * (s.u - Uend)) + (1 - w) * 0.55), s);
         const idx = Math.min(run.ids.length - 1, Math.floor(s.u));
         const tJ = (posJ.get(run.ids[idx]) ?? 0) / Math.max(1, jIds.length - 1);
         const tM = (posM.get(run.ids[idx]) ?? 0) / Math.max(1, mIds.length - 1);
@@ -199,7 +247,7 @@ export function buildRibbons(inp: RibbonInput): Strand[] {
         // на концах (точки расхождения и схождения) нить стоит на ±A, как в косе; к середине — мягкая волна
         const edge = Math.min(s.u, n - s.u);
         const taper = Math.max(0, 1 - edge * 2);
-        const off = side * A * taper + inp.meander * Math.sin(Math.PI * s.u) * (1 - taper);
+        const off = clampOff(side * A * taper + inp.meander * wAt(s.u) * Math.sin(Math.PI * s.u) * (1 - taper), s);
         const idx = Math.min(run.ids.length - 1, Math.floor(s.u));
         const nextId = run.ids[Math.min(run.ids.length - 1, idx + 1)];
         target.push({

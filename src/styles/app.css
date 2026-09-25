@@ -532,6 +532,17 @@ a {
   margin-left: 4px;
   font-variant-numeric: lining-nums;
 }
+.refs {
+  margin-left: 4px;
+}
+.refs .ref {
+  margin-left: 0;
+}
+.refsep {
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--ink-3);
+}
 .ref[aria-expanded='true'] {
   color: var(--ink);
   border-bottom-style: solid;
@@ -783,7 +794,7 @@ a {
 }
 @media (max-width: 720px) {
   :root {
-    --top-h: 92px;
+    --top-h: 104px;
     --strip-h: 56px;
   }
   .top {
@@ -1000,6 +1011,36 @@ a {
   font-weight: 400;
   font-size: 12px;
   color: var(--ink-3);
+}
+.spread .spine.kin {
+  font-weight: 400;
+  font-size: 13.5px;
+  line-height: 19px;
+}
+.spread .spine.kin .sent {
+  margin: 0 0 10px;
+  font-style: italic;
+  color: var(--ink-2);
+}
+.spread .spine.kin .chain {
+  margin: 0;
+  padding: 0;
+  border-left: 0;
+  font-size: inherit;
+  list-style: none;
+}
+/* звенья цепочки соединены тонкой вертикальной чертой, как отвод родства на небе */
+.spread .spine.kin .chain li + li::before {
+  content: '';
+  display: block;
+  width: 1px;
+  height: 10px;
+  margin: 2px auto;
+  background: var(--rule-strong);
+}
+.spread .spine.kin .chain .gap {
+  color: var(--ink-3);
+  font-style: italic;
 }
 .spread .row.quiet .spine {
   font-weight: 400;

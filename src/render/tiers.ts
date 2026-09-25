@@ -63,16 +63,29 @@ function rowsOf(bars: Bar[]): Bar[][] {
   return rows;
 }
 
+const TOP = 30;
+const ROW_H = 17;
+
+function tierLayout(m: ModelData) {
+  const { tiers } = buildTiers(m);
+  const layout = tiers.map((t) => ({ t, rows: t.name === 'Эпохи' || t.name === 'События' ? [t.bars] : rowsOf(t.bars) }));
+  const totalH = layout.reduce((a, l) => a + Math.max(1, l.rows.length) * ROW_H + 18, 0) + 8;
+  return { layout, totalH };
+}
+
+/** Нижний край ярусов на холсте: ниже него — небо. */
+export function tiersBottom(m: ModelData): number {
+  return TOP - 4 + tierLayout(m).totalH;
+}
+
 export function drawTiers(sky: Sky, s: SkyState) {
   const { ctx, cam, pal } = sky;
   const W = cam.w;
-  const { tiers } = buildTiers(s.model);
-  const top = 30;
-  const rowH = 17;
+  const top = TOP;
+  const rowH = ROW_H;
   let y = top;
   // подложка
-  const layout = tiers.map((t) => ({ t, rows: t.name === 'Эпохи' || t.name === 'События' ? [t.bars] : rowsOf(t.bars) }));
-  const totalH = layout.reduce((a, l) => a + Math.max(1, l.rows.length) * rowH + 18, 0) + 8;
+  const { layout, totalH } = tierLayout(s.model);
   ctx.fillStyle = pal.sky;
   ctx.fillRect(0, top - 4, W, totalH);
   ctx.strokeStyle = pal.rule;

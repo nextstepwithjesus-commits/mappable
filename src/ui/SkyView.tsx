@@ -8,7 +8,7 @@ import {
 import { skyRef, viewTick, plural } from './common.tsx';
 import { formatSpan, formatYear } from '../engine/years.ts';
 import { relate } from '../engine/kinship.ts';
-import { drawTiers } from '../render/tiers.ts';
+import { drawTiers, tiersBottom } from '../render/tiers.ts';
 
 export const kinPath = { current: null as string[] | null };
 
@@ -121,7 +121,9 @@ export function SkyView() {
       if (!raf) raf = requestAnimationFrame(frame);
     };
     skyRef.redraw = request;
-    skyRef.flyTo = (id: string) => {
+    // лист карточки на телефоне появляется после отрисовки выбора — размеры берутся в следующем кадре
+    skyRef.flyTo = (id: string) => requestAnimationFrame(() => flyNow(id));
+    const flyNow = (id: string) => {
       const n = sky.node(id);
       if (!n) return;
       const c = model.value.chrono.get(id);
@@ -132,7 +134,31 @@ export function SkyView() {
       const t1 = n.t0 + span * 0.65;
       const x0 = sky.xOf(t0);
       const x1 = sky.xOf(t1);
-      sky.cam.flyTo((x0 + x1) / 2, n.lane, Math.max(50, x1 - x0), request, reduced());
+      // открытая панель слева закрывает часть неба: окно лет ложится на видимую справа от неё часть
+      const L = sheetOverlap();
+      const wT = Math.max(50, x1 - x0) * (sky.cam.w / (sky.cam.w - L));
+      const cx = (x0 + x1) / 2 - L / 2 / (sky.cam.w / wT);
+      // по вертикали лицо ставится в середину видимой части неба: ниже ярусов эпох и выше нижнего листа карточки
+      const [vTop, vBottom] = visibleRows();
+      const ky = sky.cam.kyFor(sky.cam.w / wT);
+      const lane = n.lane + ((vTop + vBottom) / 2 - sky.cam.h / 2) / ky;
+      sky.cam.flyTo(cx, lane, wT, request, reduced());
+    };
+    /** Видимая по вертикали часть холста (px): ниже линейки или ярусов эпох, выше нижнего листа карточки (телефон). */
+    const visibleRows = (): [number, number] => {
+      const top = epochMode.value ? tiersBottom(model.value) : 26;
+      let bottom = sky.cam.h;
+      const sheet = document.querySelector<HTMLElement>('.folio:not([hidden])');
+      if (sheet && getComputedStyle(sheet).position === 'fixed') bottom = Math.max(top + 80, sheet.getBoundingClientRect().top - wrap.current!.getBoundingClientRect().top);
+      return [top, Math.max(top + 80, bottom)];
+    };
+    /** Ширина неба под левой панелью (0, если панели нет или она закрывает почти всё небо, как на телефоне). */
+    const sheetOverlap = () => {
+      const sh = document.querySelector<HTMLElement>('.sheet');
+      if (!sh) return 0;
+      const c = wrap.current!.getBoundingClientRect();
+      const L = Math.max(0, Math.min(c.width, sh.getBoundingClientRect().right - c.left));
+      return c.width - L < 240 ? 0 : L;
     };
 
     const resize = () => {
@@ -191,6 +217,20 @@ export function SkyView() {
         setAnnounce(`${p.name}${p.disambig ? `, ${p.disambig}` : ''}; ${lifeText(id)}; ${groupById.get(p.group)?.name ?? ''}`);
       }
       request();
+    });
+    // панель или ярусы эпох легли поверх выбранного лица — небо сдвигается так, чтобы лицо было видно
+    const offPanel = effect(() => {
+      if (!panel.value && !epochMode.value) return;
+      requestAnimationFrame(() => {
+        const id = selected.value;
+        const n = id ? sky.node(id) : null;
+        if (!id || !n) return;
+        const L = sheetOverlap();
+        const [vTop, vBottom] = visibleRows();
+        const x = sky.cam.sx(sky.xOf(n.t0));
+        const y = sky.cam.sy(n.lane);
+        if ((L > 0 && x < L + 24) || y < vTop + 20 || y > vBottom - 10) flyNow(id);
+      });
     });
     const offLines = effect(() => {
       if (onlyLines.value) flowStart = performance.now();
@@ -319,6 +359,7 @@ export function SkyView() {
       offLambda();
       offSel();
       offLines();
+      offPanel();
       if (raf) cancelAnimationFrame(raf);
       void dirty;
     };

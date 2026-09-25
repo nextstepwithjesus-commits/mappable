@@ -342,6 +342,35 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
     }
   }
 
+  // цепочки с пропуском поколений (Мф 1:13–15: одиннадцать имён на пять веков): у звена между двумя такими связями
+  // одно поколение не известно, поэтому оно только выравнивается посередине между соседями — без этого
+  // звенья цепочки сбиваются в кучу на минимальном шаге поколения у одного из её концов.
+  // Только для соседей из той же или смежной эпохи: «Шеломиф, сын Ицгара» при Давиде — потомок через века,
+  // и середина между Ицгаром и сыном Шеломифа увела бы его далеко от засвидетельствованных лет.
+  // Эпоха лица без пометы эпохи — по закреплённому году или по засвидетельствованным годам.
+  const epochIdx = new Map(epochs.map((e, i) => [e.id, i]));
+  const epochIndexOf = (id: string): number | undefined => {
+    const own = epochOf(id);
+    if (own) return epochIdx.get(own);
+    const c = g.persons.get(id)?.chrono;
+    const y =
+      fixedYear(B(id)) ??
+      (c?.active ? toAstro(c.active.from) - 30 : c?.reign?.length ? toAstro(c.reign[0].start) - 25 : c?.born?.range ? (toAstro(c.born.range[0]) + toAstro(c.born.range[1])) / 2 : null);
+    return y === null ? undefined : epochIdx.get(epochAt(epochs, y)?.id ?? '');
+  };
+  const near = (a: string, b: string) => {
+    const ia = epochIndexOf(a);
+    const ib = epochIndexOf(b);
+    return ia !== undefined && ib !== undefined && Math.abs(ia - ib) <= 1;
+  };
+  const mids: { x: string; p: string; c: string; w: number }[] = [];
+  for (const id of g.order) {
+    const up = (g.parentsOf.get(id) ?? []).find((e) => e.kind === 'father' && e.gap);
+    if (!up) continue;
+    const down = (g.childrenOf.get(id) ?? []).filter((e) => e.kind === 'father' && e.gap);
+    if (down.length === 1 && near(up.parent, id) && near(id, down[0].child)) mids.push({ x: B(id), p: B(up.parent), c: B(down[0].child), w: 0.02 });
+  }
+
   // --- 4. переменные — корни компонент
   const allKeys = new Set<string>();
   for (const id of g.order) {
@@ -428,7 +457,7 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
   }
 
   // --- 5. Гаусс — Зейдель по свободным корням
-  type Term = { other: string; sign: 1 | -1; delta: number; w: number; kind: Ineq['kind']; selfOff: number };
+  type Term = { other: string; other2?: string; sign: 1 | -1; delta: number; w: number; kind: Ineq['kind'] | 'mid'; selfOff: number };
   const terms = new Map<string, Term[]>();
   const addTerm = (root: string, t: Term) => {
     const a = terms.get(root);
@@ -440,6 +469,10 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
     const rj = q.j.startsWith('@') ? null : rootOffset.get(q.j);
     if (ri && free.has(ri.root) && !q.onlyJ) addTerm(ri.root, { other: q.j, sign: -1, delta: q.delta, w: q.w, kind: q.kind, selfOff: ri.off });
     if (rj && free.has(rj.root)) addTerm(rj.root, { other: q.i, sign: 1, delta: q.delta, w: q.w, kind: q.kind, selfOff: rj.off });
+  }
+  for (const m of mids) {
+    const ro = rootOffset.get(m.x)!;
+    if (free.has(ro.root)) addTerm(ro.root, { other: m.p, other2: m.c, sign: 1, delta: 0, w: m.w, kind: 'mid', selfOff: ro.off });
   }
   for (const [key, pr] of priors) {
     const ro = rootOffset.get(key)!;
@@ -456,8 +489,13 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
       let num = 0;
       let den = 0;
       for (const t of terms.get(r)!) {
-        const ov = val(t.other);
+        let ov = val(t.other);
         if (ov === undefined) continue;
+        if (t.kind === 'mid') {
+          const ov2 = val(t.other2!);
+          if (ov2 === undefined) continue;
+          ov = (ov + ov2) / 2;
+        }
         // собственное значение в терминах ограничения: x_self = cur + selfOff
         // sign = +1: x_self − x_other (≥|=|≤) delta → цель x_self = x_other + delta
         // sign = −1: x_other − x_self (≥|=|≤) delta → цель x_self = x_other − delta

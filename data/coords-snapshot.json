@@ -706,19 +706,19 @@
   {
    "id": "navukhodonosor",
    "name": "Навуходоносор",
-   "lane": 34,
+   "lane": 33,
    "t0": -629
   },
   {
    "id": "iezekiil",
    "name": "Иезекииль",
-   "lane": -33,
+   "lane": -39,
    "t0": -625
   },
   {
    "id": "daniil",
    "name": "Даниил",
-   "lane": -34,
+   "lane": -33,
    "t0": -624
   },
   {
@@ -748,7 +748,7 @@
   {
    "id": "kir",
    "name": "Кир",
-   "lane": 30,
+   "lane": 29,
    "t0": -571
   },
   {
@@ -760,13 +760,13 @@
   {
    "id": "zakhariya-syn-varakhii",
    "name": "Захария",
-   "lane": -33,
+   "lane": 33,
    "t0": -552
   },
   {
    "id": "esfir",
    "name": "Есфирь",
-   "lane": -10,
+   "lane": 9,
    "t0": -522
   },
   {

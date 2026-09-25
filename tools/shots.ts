@@ -33,7 +33,7 @@ async function main() {
     await page.goto(`http://localhost:${PORT}/`);
     await page.waitForTimeout(1800);
     await act(page);
-    await page.waitForTimeout(900);
+    await page.waitForTimeout(1600); // перелёт неба — до 1,4 с
     await page.screenshot({ path: join(OUT, `${name}-${theme}-${width}.png`) });
     await ctx.close();
   };
