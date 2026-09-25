@@ -34,3 +34,26 @@ jobs:
         with:
           name: toledot-site
           path: dist
+
+  accept:
+    # сценарии приёмки ТЗ § 11.2 в настоящем браузере; снимки — в артефакте
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Браузер для Playwright
+        run: npx playwright install --with-deps chromium
+      - run: npm run -s data
+      - run: npx vite build
+      - name: Сценарии приёмки
+        run: npm run -s accept
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: acceptance-screens
+          path: docs/screens/accept-*.png
