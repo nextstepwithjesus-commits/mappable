@@ -293,9 +293,11 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
       ineqs.push({ i: B(id), j: `@${toAstro(c.active.from)}`, delta: 12, w: 2, kind: 'ge' }); // b ≤ from − 12
       ineqs.push({ i: B(id), j: `@${toAstro(c.active.from)}`, delta: Math.min(35, n.g + 5), w: 0.003, kind: 'eq' }); // обычно — за поколение до служения
       ineqs.push({ i: `@${toAstro(c.active.to)}`, j: B(id), delta: -n.lifeMax, w: 2, kind: 'ge' }); // b ≥ to − lifeMax
+      ineqs.push({ i: `@${toAstro(c.active.to)}`, j: D(id), delta: 0, w: 2, kind: 'ge' }); // d ≥ to: умер не раньше последнего засвидетельствованного года
     }
     for (const r of c?.reign ?? []) {
       ineqs.push({ i: B(id), j: `@${toAstro(r.start)}`, delta: 0, w: 2, kind: 'ge' });
+      ineqs.push({ i: `@${toAstro(r.end)}`, j: D(id), delta: -1, w: 2, kind: 'ge' }); // d ≥ конец царствования − 1
     }
     // поколение: отец и мать
     for (const e of g.parentsOf.get(id) ?? []) {
@@ -347,7 +349,8 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
   // корни, у которых из смерти нет никаких данных, не должны тянуть решение: смерть без возраста — отдельная свободная переменная
   const hasDeathData = (id: string) => {
     const r = rootOffset.get(D(id))!;
-    return r.root !== D(id) || fixed.has(D(id));
+    // допустимый интервал года смерти (died.range) — тоже сведение о смерти
+    return r.root !== D(id) || fixed.has(D(id)) || !!g.persons.get(id)?.chrono?.died?.range;
   };
 
   const val = (key: string): number | undefined => {

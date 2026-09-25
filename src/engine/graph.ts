@@ -99,6 +99,8 @@ export function buildGraph(persons: Person[]): Graph {
         if (ex) {
           for (const r of s.refs) if (!ex.refs.includes(r)) ex.refs.push(r);
           if (s.note && !ex.note) ex.note = s.note;
+          // «наложница» с любой стороны сильнее «жены»: у женщины вид связи записывается только как «муж»
+          if (s.kind === 'concubine') ex.kind = 'concubine';
         }
         continue;
       }

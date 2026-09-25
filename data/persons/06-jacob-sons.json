@@ -8073,7 +8073,16 @@
      20,
      21
     ]
-   }
+   },
+   "spouses": [
+    {
+     "id": "nalozhnitsa-manassii",
+     "kind": "concubine",
+     "refs": [
+      "1Пар 7:14"
+     ]
+    }
+   ]
   },
   {
    "id": "efrem",
