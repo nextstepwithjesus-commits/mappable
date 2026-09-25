@@ -520,7 +520,8 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
     for (const r of c?.reign ?? []) bump(toAstro(r.end));
     for (const e of p.card?.events ?? []) if (e.year !== undefined) bump(toAstro(e.year));
     for (const e of p.card?.events ?? []) if (e.age !== undefined) bump(b + e.age);
-    for (const e of g.childrenOf.get(id) ?? []) if (e.kind === 'father' || e.kind === 'mother') {
+    // рождение ребёнка — засвидетельствованная жизнь родителя, но не «потомка» через пропуск поколений
+    for (const e of g.childrenOf.get(id) ?? []) if ((e.kind === 'father' || e.kind === 'mother') && !e.gap) {
       const cb = val(B(e.child));
       if (cb !== undefined && cls.get(e.child) !== 'epochal') bump(e.kind === 'father' ? cb - 1 : cb);
     }
