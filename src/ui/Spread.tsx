@@ -10,7 +10,7 @@ import { relate } from '../engine/kinship.ts';
 import type { Card } from '../data/types.ts';
 import { selected, second, panel, model } from '../state.ts';
 import { SECTIONS, PARTS, buildSections, Masthead } from './Folio.tsx';
-import { P, skyRef } from './common.tsx';
+import { P, skyRef, CAN_PRINT } from './common.tsx';
 
 type St = 'content' | 'silent' | 'absent';
 const STATE_TEXT: Record<Exclude<St, 'content'>, string> = { silent: 'в Писании не сообщается', absent: 'раздел не составлен' };
@@ -108,7 +108,7 @@ export function Spread() {
         </button>
         <button onClick={() => skyRef.flyTo(a)}>левое лицо на небе</button>
         <button onClick={() => skyRef.flyTo(b)}>правое лицо на небе</button>
-        <button onClick={() => window.print()}>печать</button>
+        {CAN_PRINT && <button onClick={() => window.print()}>печать</button>}
         <button onClick={close}>закрыть</button>
       </div>
       <div class="spread-grid">

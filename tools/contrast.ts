@@ -15,7 +15,7 @@ const block = (sel: string) => {
   for (const m of css.slice(i, j).matchAll(/(--[\w-]+):\s*(#[0-9a-fA-F]{6})/g)) out[m[1]] = m[2];
   return out;
 };
-const themes = { night: block(":root[data-theme='night']"), day: block(":root[data-theme='day']") };
+const themes = { night: block(":root[data-map='night']"), day: block(":root[data-map='day']") };
 
 const lin = (c: number) => {
   const v = c / 255;

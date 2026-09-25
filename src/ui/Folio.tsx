@@ -3,7 +3,7 @@ import type { ComponentChildren } from 'preact';
 import { byId, graph, groupById, loadCard, lineMembership, books } from '../data/atlas.ts';
 import type { Card, Chrono, Fact, Cert } from '../data/types.ts';
 import { selected, second, pickMode, panel, model, showSchema } from '../state.ts';
-import { P, Refs, VerseInsert, Mark, roleText, refLabel, skyRef, plural } from './common.tsx';
+import { P, Refs, VerseInsert, Mark, roleText, refLabel, skyRef, plural, CAN_PRINT } from './common.tsx';
 import { siblings } from '../engine/graph.ts';
 import { genitive } from '../engine/kinship.ts';
 import { formatYear, formatSpan, yearsWord, toHist } from '../engine/years.ts';
@@ -187,7 +187,7 @@ export function Folio() {
           <button aria-pressed={showSchema.value} onClick={() => (showSchema.value = !showSchema.value)}>
             Вся схема разделов
           </button>
-          <button onClick={() => window.print()}>Печать</button>
+          {CAN_PRINT && <button onClick={() => window.print()}>Печать</button>}
           <button onClick={() => { selected.value = null; panel.value = null; }}>Закрыть</button>
         </div>
         <div class="mast"><div class="rule" /></div>

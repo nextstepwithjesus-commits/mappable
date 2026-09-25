@@ -6,3 +6,4 @@ src/generated/
 .DS_Store
 coverage/
 dist-perf/
+dist-artifact/

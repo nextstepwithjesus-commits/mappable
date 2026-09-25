@@ -46,6 +46,9 @@ export function roleText(roles: Role[], sex: 'm' | 'f'): string {
 }
 
 /** «1Цар 16:1» → «1 Цар 16:1» с неразрывными пробелами. */
+/** Печать: в сборке для встраивания (vite build --mode artifact) рамка просмотра не открывает диалог печати. */
+export const CAN_PRINT = import.meta.env.MODE !== 'artifact';
+
 export function refLabel(ref: string): string {
   return ref.replace(/^([1-4])(\S)/, '$1 $2').replace(/ (\d)/, ' $1').replace(/-/g, '–');
 }

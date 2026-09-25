@@ -23,7 +23,8 @@
     "perf": "tsx tools/perf.ts",
     "accept": "tsx tools/accept.ts",
     "coords": "tsx tools/coords.ts",
-    "a11y": "tsx tools/a11y.ts"
+    "a11y": "tsx tools/a11y.ts",
+    "build:artifact": "npm run data && vite build --mode artifact && tsx tools/artifact-page.ts"
   },
   "license": "UNLICENSED",
   "dependencies": {

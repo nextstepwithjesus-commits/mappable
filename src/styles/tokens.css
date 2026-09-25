@@ -1,6 +1,7 @@
-/* Токены «Звёздного атласа» (docs/DESIGN.md). Оттенок — только у двух лент; всё остальное — светлота. */
+/* Токены «Звёздного атласа» (docs/DESIGN.md). Оттенок — только у двух лент; всё остальное — светлота.
+   Тема карты — свой атрибут data-map: data-theme на корне может ставить страница, в которую встроен атлас. */
 :root,
-:root[data-theme='night'] {
+:root[data-map='night'] {
   --sky: #0d1b34;
   --sky-band: #11223f;
   --sheet: #0f2040;
@@ -19,7 +20,7 @@
   --glow: 1;
   color-scheme: dark;
 }
-:root[data-theme='day'] {
+:root[data-map='day'] {
   --sky: #eef2f6;
   --sky-band: #e5ebf2;
   --sheet: #f8fafc;
@@ -39,7 +40,7 @@
   color-scheme: light;
 }
 @media (prefers-color-scheme: light) {
-  :root:not([data-theme]) {
+  :root:not([data-map]) {
     --sky: #eef2f6;
     --sky-band: #e5ebf2;
     --sheet: #f8fafc;

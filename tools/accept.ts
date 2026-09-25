@@ -167,7 +167,7 @@ async function main() {
   try {
     for (const s of SCENARIOS) {
       if (only && s.n !== only) continue;
-      const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+      const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
       const page = await ctx.newPage();
       const errors: string[] = [];
       page.on('pageerror', (e) => errors.push(e.message));

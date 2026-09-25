@@ -21,7 +21,18 @@ const save = (k: string, v: unknown) => {
   }
 };
 
-export const theme = signal<Theme>(load('theme', 'night'));
+/** Тема по умолчанию — как у читателя: явный выбор страницы-хозяина (data-theme), иначе настройка системы. */
+const viewerTheme = (): Theme => {
+  const host = document.documentElement.dataset.theme;
+  if (host === 'light') return 'day';
+  if (host === 'dark') return 'night';
+  try {
+    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'day' : 'night';
+  } catch {
+    return 'night';
+  }
+};
+export const theme = signal<Theme>(load('theme', viewerTheme()));
 export const modelId = signal<string>(load('model', 'mt-long'));
 export const lambda = signal<number>(load('lambda', 1)); // 1 — масштаб по насыщенности, 0 — истинный
 export const selected = signal<string | null>(null);
@@ -52,9 +63,12 @@ effect(() => {
   if (!models.some((m) => m.id === id)) loadModel(id).then(() => modelsLoaded.value++);
 });
 
+// запоминается только выбор читателя, не тема по умолчанию: иначе атлас перестал бы следовать за системой
+let themeChosen = false;
 effect(() => {
-  document.documentElement.dataset.theme = theme.value;
-  save('theme', theme.value);
+  document.documentElement.dataset.map = theme.value;
+  if (themeChosen) save('theme', theme.value);
+  themeChosen = true;
 });
 effect(() => save('model', modelId.value));
 effect(() => save('lambda', lambda.value));

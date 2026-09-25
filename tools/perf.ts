@@ -28,7 +28,7 @@ async function main() {
   const results: string[] = [];
   try {
     for (const [w, h] of [[1440, 900], [390, 844]] as const) {
-      const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: w > 500 ? 1 : 3 });
+      const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: w > 500 ? 1 : 3, colorScheme: 'dark' });
       const page = await ctx.newPage();
       await page.addInitScript("localStorage.setItem('toledot:intro', 'true')");
       await page.goto(`http://localhost:${PORT}/`);
