@@ -309,6 +309,15 @@
     { "id": "ben-aminadav", "name": "Бен-Аминадав", "disambig": "зять Соломона", "owner": "19" },
     { "id": "akhimaas-zyat-solomona", "name": "Ахимаас", "disambig": "зять Соломона", "owner": "19" },
     { "id": "vaneya-syn-iodaya", "name": "Ванея", "disambig": "сын Иодая", "owner": "19" },
-    { "id": "iodai-otets-vanei", "name": "Иодай", "disambig": "священник, отец Ванеи", "owner": "19" }
+    { "id": "iodai-otets-vanei", "name": "Иодай", "disambig": "священник, отец Ванеи", "owner": "19" },
+    { "id": "fanuil", "name": "Фануил", "disambig": "отец Анны пророчицы", "owner": "16" },
+    { "id": "anna-prorochitsa", "name": "Анна", "disambig": "пророчица", "owner": "16" },
+    { "id": "kleopa", "name": "Клеопа", "owner": "16" },
+    { "id": "mariya-kleopova", "name": "Мария", "disambig": "Клеопова", "owner": "16" },
+    { "id": "mariya-mat-iakova", "name": "Мария", "disambig": "мать Иакова и Иосии", "owner": "16" },
+    { "id": "iakov-menshiy", "name": "Иаков", "disambig": "меньший", "owner": "16" },
+    { "id": "iosiya-syn-marii", "name": "Иосия", "disambig": "сын Марии", "owner": "16" },
+    { "id": "arkhelay", "name": "Архелай", "disambig": "сын Ирода Великого", "owner": "17" },
+    { "id": "filipp-brat-iroda", "name": "Филипп", "disambig": "брат Ирода Антипы", "owner": "17" }
   ]
 }

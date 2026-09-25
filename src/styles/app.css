@@ -447,8 +447,9 @@ a {
 }
 .sec .no {
   position: absolute;
-  left: -40px;
-  width: 28px;
+  left: -52px;
+  width: 40px;
+  white-space: nowrap;
   text-align: right;
   font-family: var(--sans);
   font-size: 12.5px;
@@ -600,12 +601,21 @@ a {
   left: 0;
   top: var(--top-h);
   bottom: var(--strip-h);
-  width: min(560px, 100vw);
+  width: min(520px, 100vw);
   background: var(--sheet);
   border-right: 1px solid var(--rule);
   overflow-y: auto;
   z-index: 20;
   padding: 18px 28px 40px 30px;
+}
+/* при открытой карточке небу остаётся не меньше трети ширины */
+@media (max-width: 1600px) {
+  .app:has(.folio:not([hidden])) .sheet:not(.wide) {
+    width: 420px;
+  }
+}
+.sheet.wide {
+  width: min(820px, 100vw);
 }
 .sheet h2 {
   font-size: 24px;

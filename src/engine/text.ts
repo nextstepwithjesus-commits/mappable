@@ -1,6 +1,7 @@
 /** Нормализация русского текста для поиска и сверки имён. */
 export function norm(s: string): string {
-  return s.toLowerCase().replace(/ё/g, 'е').replace(/[́̀]/g, '');
+  // тире внутри имени («Бен—Амми», Быт 19:38) — то же, что дефис
+  return s.toLowerCase().replace(/ё/g, 'е').replace(/[́̀]/g, '').replace(/(?<=[а-я])[—–](?=[а-я])/g, '-');
 }
 
 const STRIP = /[аяйьоеиыую]$/;
@@ -18,10 +19,15 @@ export function nameMatcher(name: string): RegExp {
     const root = stem.slice(0, -1);
     return new RegExp(`(^|[^а-я])${root}(й|я|ю|е|ев|ева|еву|евы|ем)([^а-я]|$)`);
   }
+  if (stem.length === 3 && /[ао]$/.test(stem)) {
+    // «Ила» → «Илы», «Иле»; «Хазо» несклоняемо
+    const root = stem.slice(0, -1);
+    return new RegExp(`(^|[^а-я])${root}(а|ы|е|у|ой|ою|о|ин|ина)([^а-я]|$)`);
+  }
   const esc = stem.replace(/[-]/g, '[-\\s]?');
   if (stem.length <= 3) {
     // короткие имена (Ной, Ир, Ева): основа + типичные окончания
-    return new RegExp(`(^|[^а-я])${esc}(й|я|ю|е|ев|ева|еву|евы|ем|ом|а|у|ы|ой|ин|ина|ову|ов|ова|и)?([^а-я]|$)`);
+    return new RegExp(`(^|[^а-я])${esc}(й|я|ю|е|ев|ева|еву|евы|ем|ом|а|у|ы|ой|ою|ей|ею|о|ин|ина|ову|ов|ова|и)?([^а-я]|$)`);
   }
   return new RegExp(`(^|[^а-я])${esc}`);
 }

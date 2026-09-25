@@ -9,6 +9,7 @@ import { fixLayout, stem, SearchIndex } from '../src/engine/search.ts';
 import { splitRuns } from '../src/engine/ribbons.ts';
 import { buildTimeScale, timeToX, xToTime } from '../src/engine/timescale.ts';
 import epochsJson from '../data/epochs.json' with { type: 'json' };
+import { nameMatcher, norm } from '../src/engine/text.ts';
 
 const epochs = epochsJson as Epoch[];
 
@@ -179,5 +180,20 @@ describe('поиск', () => {
     ]);
     expect(idx.search('Давида')[0].id).toBe('david');
     expect(idx.search('Руф 4:22').map((h) => h.id).sort()).toEqual(['david', 'iessey']);
+  });
+});
+
+describe('сверка имён с текстом стиха', () => {
+  const hit = (name: string, word: string) => nameMatcher(name).test(' ' + norm(word) + ' ');
+  it('узнаёт падежные и притяжательные формы', () => {
+    expect(hit('Ной', 'Ноя')).toBe(true);
+    expect(hit('Мара', 'Марою')).toBe(true);
+    expect(hit('Ила', 'Илы')).toBe(true);
+    expect(hit('Хазо', 'Хазо')).toBe(true);
+    expect(hit('Бен-Амми', 'Бен—Амми')).toBe(true);
+  });
+  it('не путает короткие имена со служебными словами', () => {
+    expect(hit('Ной', 'но')).toBe(false);
+    expect(hit('Ила', 'или')).toBe(false);
   });
 });

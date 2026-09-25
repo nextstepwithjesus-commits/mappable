@@ -13,9 +13,9 @@ import { SECTIONS } from './Folio.tsx';
 import { kinPath, lifeText } from './SkyView.tsx';
 import type { Card } from '../data/types.ts';
 
-function Sheet({ title, lead, children }: { title: string; lead?: string; children: ComponentChildren }) {
+function Sheet({ title, lead, wide, children }: { title: string; lead?: string; wide?: boolean; children: ComponentChildren }) {
   return (
-    <section class="sheet" aria-label={title}>
+    <section class={wide ? 'sheet wide' : 'sheet'} aria-label={title}>
       <button class="close" onClick={() => (panel.value = null)}>
         закрыть
       </button>
@@ -271,7 +271,7 @@ function SynopsisPanel() {
   const mm = new Map(lines.mary.persons.map((p) => [p.id, p]));
   const cell = (ok: boolean, text: string, cls = '') => <td class={ok ? cls : 'no'}>{ok ? text : '—'}</td>;
   return (
-    <Sheet title="Синопсис родословий" lead="Параллельные столбцы: Быт 5; 11 | Руф 4 | 1 Пар 1–3 | Мф 1 | Лк 3. Видны пропуски у Матфея, Каинан у Луки, Федаия в 1 Пар 3:19 и то, что Авиуда и Рисая нет среди сыновей Зоровавеля в 1 Пар 3:19–20.">
+    <Sheet wide title="Синопсис родословий" lead="Параллельные столбцы: Быт 5; 11 | Руф 4 | 1 Пар 1–3 | Мф 1 | Лк 3. Видны пропуски у Матфея, Каинан у Луки, Федаия в 1 Пар 3:19 и то, что Авиуда и Рисая нет среди сыновей Зоровавеля в 1 Пар 3:19–20.">
       <table class="synopsis">
         <thead>
           <tr>

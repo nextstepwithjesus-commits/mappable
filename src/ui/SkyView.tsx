@@ -122,9 +122,15 @@ export function SkyView() {
     skyRef.flyTo = (id: string) => {
       const n = sky.node(id);
       if (!n) return;
-      const x = sky.nodeX(id)!;
-      const targetW = Math.max(sky.cam.w / 2.2, Math.min(sky.cam.w / sky.cam.kx, 1400));
-      sky.cam.flyTo(x + targetW * 0.12, n.lane, Math.min(targetW, 2600), request, reduced());
+      const c = model.value.chrono.get(id);
+      // окно — несколько поколений вокруг лица (в годах, затем в мировых единицах)
+      const life = c ? Math.max(40, (c.d ?? c.dEst) - c.b) : 80;
+      const span = Math.max(120, Math.min(900, life * 2.6));
+      const t0 = n.t0 - span * 0.35;
+      const t1 = n.t0 + span * 0.65;
+      const x0 = sky.xOf(t0);
+      const x1 = sky.xOf(t1);
+      sky.cam.flyTo((x0 + x1) / 2, n.lane, Math.max(50, x1 - x0), request, reduced());
     };
 
     const resize = () => {

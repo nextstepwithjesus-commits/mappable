@@ -72,9 +72,7 @@ export function drawTiers(sky: Sky, s: SkyState) {
   const layout = tiers.map((t) => ({ t, rows: t.name === 'Эпохи' || t.name === 'События' ? [t.bars] : rowsOf(t.bars) }));
   const totalH = layout.reduce((a, l) => a + Math.max(1, l.rows.length) * rowH + 18, 0) + 8;
   ctx.fillStyle = pal.sky;
-  ctx.globalAlpha = 0.93;
   ctx.fillRect(0, top - 4, W, totalH);
-  ctx.globalAlpha = 1;
   ctx.strokeStyle = pal.rule;
   ctx.beginPath();
   ctx.moveTo(0, top - 4 + totalH + 0.5);
@@ -96,7 +94,8 @@ export function drawTiers(sky: Sky, s: SkyState) {
         if (x1 < 0 || x0 > W) continue;
         const inSel = sel ? b.t1 >= sel.bLo && b.t0 <= (sel.d ?? sel.dEst) : false;
         if (t.name === 'События') {
-          ctx.strokeStyle = inSel ? pal.ink : pal.ink3;
+          ctx.strokeStyle = inSel ? pal.ink2 : pal.ink3;
+          ctx.lineWidth = 1;
           ctx.beginPath();
           ctx.moveTo(Math.round(x0) + 0.5, y);
           ctx.lineTo(Math.round(x0) + 0.5, y + rowH - 4);
@@ -104,13 +103,18 @@ export function drawTiers(sky: Sky, s: SkyState) {
           continue;
         }
         const h = rowH - 5;
-        ctx.fillStyle = inSel ? pal.ink2 : pal.band;
-        ctx.globalAlpha = inSel ? 0.55 : 1;
-        ctx.fillRect(x0, y, Math.max(1.5, x1 - x0), h);
-        ctx.globalAlpha = 1;
-        ctx.strokeStyle = inSel ? pal.ink : pal.ruleStrong;
+        const wBar = Math.max(1.5, x1 - x0);
+        // полоса — тон неба на ступень светлее; пересечение с жизнью выбранного лица — ещё на ступень
+        ctx.fillStyle = pal.band;
+        ctx.fillRect(x0, y, wBar, h);
+        if (inSel) {
+          ctx.fillStyle = pal.rule;
+          ctx.fillRect(x0, y, wBar, h);
+        }
+        ctx.strokeStyle = inSel ? pal.ink3 : pal.ruleStrong;
+        ctx.lineWidth = 1;
         ctx.setLineDash(b.soft ? [2, 2] : []);
-        ctx.strokeRect(x0 + 0.5, y + 0.5, Math.max(1.5, x1 - x0) - 1, h - 1);
+        ctx.strokeRect(x0 + 0.5, y + 0.5, wBar - 1, h - 1);
         ctx.setLineDash([]);
         ctx.font = `450 11.5px ${FONT_SERIF}`;
         const tw = ctx.measureText(b.label).width;
@@ -143,7 +147,8 @@ export function drawTiers(sky: Sky, s: SkyState) {
     g2.addColorStop(1, 'rgba(128,160,210,0)');
     ctx.fillStyle = g2;
     ctx.fillRect(c, top - 4, Math.max(1, d - c), cam.h);
-    ctx.strokeStyle = pal.ink2;
+    ctx.strokeStyle = pal.ink3;
+    ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(Math.round(b) + 0.5, top - 4);
     ctx.lineTo(Math.round(b) + 0.5, cam.h);

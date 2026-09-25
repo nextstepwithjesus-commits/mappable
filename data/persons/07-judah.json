@@ -3848,6 +3848,17 @@
    "parentRefs": [
     "2Цар 17:25"
    ],
+   "spouses": [
+    {
+     "id": "iefer-izmailtyanin",
+     "kind": "husband",
+     "refs": [
+      "1Пар 2:17",
+      "2Цар 17:25"
+     ],
+     "note": "«который вошел к Авигее»"
+    }
+   ],
    "kin": [
     {
      "id": "david",
@@ -3862,17 +3873,6 @@
      "refs": [
       "2Цар 17:25"
      ]
-    }
-   ],
-   "spouses": [
-    {
-     "id": "iefer-izmailtyanin",
-     "kind": "husband",
-     "refs": [
-      "1Пар 2:17",
-      "2Цар 17:25"
-     ],
-     "note": "«который вошел к Авигее»"
     }
    ],
    "group": "judah",
@@ -7654,7 +7654,8 @@
       "text": "Отец Халева",
       "refs": [
        "Чис 13:7",
-       "Нав 14:6"
+       "Нав 14:6",
+       "1Пар 4:15"
       ]
      }
     ],
@@ -9133,9 +9134,21 @@
     "1Пар 4:5",
     "1Пар 4:7"
    ],
+   "parentCert": "inference",
+   "motherCert": "scripture",
    "group": "judah",
    "prominence": 1,
    "card": {
+    "parentsNote": [
+     {
+      "text": "Мать Хела названа прямо; отец Ашхур — по связи с 4:5 («У Ахшура… были две жены: Хела и Наара»)",
+      "refs": [
+       "1Пар 4:5",
+       "1Пар 4:7"
+      ],
+      "cert": "inference"
+     }
+    ],
     "scripture": {
      "first": "1Пар 4:7"
     }
@@ -9152,9 +9165,21 @@
     "1Пар 4:5",
     "1Пар 4:7"
    ],
+   "parentCert": "inference",
+   "motherCert": "scripture",
    "group": "judah",
    "prominence": 1,
    "card": {
+    "parentsNote": [
+     {
+      "text": "Мать Хела названа прямо; отец Ашхур — по связи с 4:5 («У Ахшура… были две жены: Хела и Наара»)",
+      "refs": [
+       "1Пар 4:5",
+       "1Пар 4:7"
+      ],
+      "cert": "inference"
+     }
+    ],
     "scripture": {
      "first": "1Пар 4:7"
     }
@@ -9171,9 +9196,21 @@
     "1Пар 4:5",
     "1Пар 4:7"
    ],
+   "parentCert": "inference",
+   "motherCert": "scripture",
    "group": "judah",
    "prominence": 1,
    "card": {
+    "parentsNote": [
+     {
+      "text": "Мать Хела названа прямо; отец Ашхур — по связи с 4:5 («У Ахшура… были две жены: Хела и Наара»)",
+      "refs": [
+       "1Пар 4:5",
+       "1Пар 4:7"
+      ],
+      "cert": "inference"
+     }
+    ],
     "scripture": {
      "first": "1Пар 4:7"
     }
@@ -9917,10 +9954,14 @@
    "disambig": "сын Иудии, отец Гедора",
    "sex": "m",
    "kind": "founder",
+   "father": "mered",
    "mother": "iudiya",
    "parentRefs": [
+    "1Пар 4:17",
     "1Пар 4:18"
    ],
+   "parentCert": "interpretation",
+   "motherCert": "scripture",
    "order": 1,
    "group": "judah",
    "prominence": 1,
@@ -9940,6 +9981,13 @@
     "notes": [
      {
       "kind": "interpretation",
+      "text": "Мать Иудия названа прямо; отец Меред — по толкованию слов «жена его» (1 Пар 4:18), которые можно отнести и к Иеферу",
+      "refs": [
+       "1Пар 4:17-18"
+      ]
+     },
+     {
+      "kind": "interpretation",
       "text": "«Отец» города в родословиях Паралипоменон понимается как основатель или родоначальник его жителей (толкование): город назван как бы его потомком",
       "refs": [
        "1Пар 4:18"
@@ -9954,10 +10002,14 @@
    "disambig": "сын Иудии, отец Сохо",
    "sex": "m",
    "kind": "founder",
+   "father": "mered",
    "mother": "iudiya",
    "parentRefs": [
+    "1Пар 4:17",
     "1Пар 4:18"
    ],
+   "parentCert": "interpretation",
+   "motherCert": "scripture",
    "order": 2,
    "group": "judah",
    "prominence": 1,
@@ -9975,6 +10027,13 @@
      "first": "1Пар 4:18"
     },
     "notes": [
+     {
+      "kind": "interpretation",
+      "text": "Мать Иудия названа прямо; отец Меред — по толкованию слов «жена его» (1 Пар 4:18), которые можно отнести и к Иеферу",
+      "refs": [
+       "1Пар 4:17-18"
+      ]
+     },
      {
       "kind": "identification",
       "text": "Не смешивать с Хевером Кенеянином (Суд 4:11) и с Хевером, сыном Берии (Быт 46:17)",
@@ -9999,10 +10058,14 @@
    "disambig": "сын Иудии, отец Занаоха",
    "sex": "m",
    "kind": "founder",
+   "father": "mered",
    "mother": "iudiya",
    "parentRefs": [
+    "1Пар 4:17",
     "1Пар 4:18"
    ],
+   "parentCert": "interpretation",
+   "motherCert": "scripture",
    "order": 3,
    "group": "judah",
    "prominence": 1,
@@ -10020,6 +10083,13 @@
      "first": "1Пар 4:18"
     },
     "notes": [
+     {
+      "kind": "interpretation",
+      "text": "Мать Иудия названа прямо; отец Меред — по толкованию слов «жена его» (1 Пар 4:18), которые можно отнести и к Иеферу",
+      "refs": [
+       "1Пар 4:17-18"
+      ]
+     },
      {
       "kind": "interpretation",
       "text": "«Отец» города в родословиях Паралипоменон понимается как основатель или родоначальник его жителей (толкование): город назван как бы его потомком",
@@ -10166,10 +10236,14 @@
    "name": "Гарми",
    "disambig": "сын Годии",
    "sex": "m",
+   "father": "mered",
    "mother": "godiya-sestra-nakhama",
    "parentRefs": [
+    "1Пар 4:18",
     "1Пар 4:19"
    ],
+   "parentCert": "interpretation",
+   "motherCert": "scripture",
    "order": 1,
    "group": "judah",
    "prominence": 1,
@@ -10178,6 +10252,13 @@
      "first": "1Пар 4:19"
     },
     "notes": [
+     {
+      "kind": "interpretation",
+      "text": "Мать Годия названа прямо; отец Меред — по толкованию слов «жены его Годии» (1 Пар 4:19) как продолжения речи о Мереде",
+      "refs": [
+       "1Пар 4:18-19"
+      ]
+     },
      {
       "kind": "textual",
       "text": "В еврейском тексте «Гарми» — прозвание («Гармиянин») при Кеиле",
@@ -10193,10 +10274,14 @@
    "name": "Ешфемоа",
    "disambig": "сын Годии, Маахатянин",
    "sex": "m",
+   "father": "mered",
    "mother": "godiya-sestra-nakhama",
    "parentRefs": [
+    "1Пар 4:18",
     "1Пар 4:19"
    ],
+   "parentCert": "interpretation",
+   "motherCert": "scripture",
    "order": 2,
    "group": "judah",
    "prominence": 1,
@@ -10213,6 +10298,13 @@
      "first": "1Пар 4:19"
     },
     "notes": [
+     {
+      "kind": "interpretation",
+      "text": "Мать Годия названа прямо; отец Меред — по толкованию слов «жены его Годии» (1 Пар 4:19) как продолжения речи о Мереде",
+      "refs": [
+       "1Пар 4:18-19"
+      ]
+     },
      {
       "kind": "identification",
       "text": "Ешфемоа — и название города (ср. «Ишбах, отец Ешфемои», 4:17)",
@@ -10373,6 +10465,237 @@
     "scripture": {
      "first": "1Пар 4:20"
     }
+   }
+  },
+  {
+   "id": "ir-syn-siloma",
+   "name": "Ир",
+   "disambig": "сын Силома (Шелы), отец Лехи",
+   "sex": "m",
+   "kind": "founder",
+   "father": "shela-syn-iudy",
+   "parentRefs": [
+    "1Пар 4:21"
+   ],
+   "order": 1,
+   "group": "judah",
+   "prominence": 1,
+   "card": {
+    "status": [
+     {
+      "text": "«Отец Лехи» — родоначальник жителей Лехи",
+      "refs": [
+       "1Пар 4:21"
+      ],
+      "cert": "interpretation"
+     }
+    ],
+    "scripture": {
+     "first": "1Пар 4:21"
+    },
+    "notes": [
+     {
+      "kind": "identification",
+      "text": "Не смешивать с Иром, первенцем Иуды, дядей этого Ира (1 Пар 2:3), и с Иром, сыном Халева (1 Пар 4:15)",
+      "refs": [
+       "1Пар 2:3",
+       "1Пар 4:15"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "laeda-syn-siloma",
+   "name": "Лаеда",
+   "disambig": "сын Силома (Шелы), отец Мареши",
+   "sex": "m",
+   "kind": "founder",
+   "father": "shela-syn-iudy",
+   "parentRefs": [
+    "1Пар 4:21"
+   ],
+   "order": 2,
+   "group": "judah",
+   "prominence": 1,
+   "card": {
+    "status": [
+     {
+      "text": "«Отец Мареши» — родоначальник жителей Мареши",
+      "refs": [
+       "1Пар 4:21"
+      ],
+      "cert": "interpretation"
+     }
+    ],
+    "scripture": {
+     "first": "1Пар 4:21"
+    }
+   }
+  },
+  {
+   "id": "ashbeya",
+   "name": "Ашбея",
+   "disambig": "родоначальник дома выделывавших виссон",
+   "sex": "m",
+   "father": "shela-syn-iudy",
+   "parentRefs": [
+    "1Пар 4:21"
+   ],
+   "parentCert": "interpretation",
+   "fatherGap": true,
+   "group": "judah",
+   "prominence": 1,
+   "card": {
+    "status": [
+     {
+      "text": "Из его дома — «семейства выделывавших виссон»",
+      "refs": [
+       "1Пар 4:21"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "1Пар 4:21"
+    },
+    "notes": [
+     {
+      "kind": "interpretation",
+      "text": "Дом Ашбеи перечислен среди «сыновей Силома»; сам Ашбея, по-видимому, потомок Силома, но степень родства не указана",
+      "refs": [
+       "1Пар 4:21"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "iokim-syn-siloma",
+   "name": "Иоким",
+   "disambig": "из сыновей Силома (1 Пар 4:22)",
+   "sex": "m",
+   "father": "shela-syn-iudy",
+   "parentRefs": [
+    "1Пар 4:21",
+    "1Пар 4:22"
+   ],
+   "fatherGap": true,
+   "group": "judah",
+   "prominence": 1,
+   "card": {
+    "status": [
+     {
+      "text": "Из потомков Силома, о которых сказано: «Они были горшечники… у царя для работ его жили они там»",
+      "refs": [
+       "1Пар 4:22-23"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "1Пар 4:22"
+    }
+   }
+  },
+  {
+   "id": "ioash-syn-siloma",
+   "name": "Иоаш",
+   "disambig": "из сыновей Силома (1 Пар 4:22)",
+   "sex": "m",
+   "father": "shela-syn-iudy",
+   "parentRefs": [
+    "1Пар 4:21",
+    "1Пар 4:22"
+   ],
+   "fatherGap": true,
+   "group": "judah",
+   "prominence": 1,
+   "card": {
+    "status": [
+     {
+      "text": "Вместе с Сарафом «имели владение в Моаве»",
+      "refs": [
+       "1Пар 4:22"
+      ]
+     },
+     {
+      "text": "Из потомков Силома, о которых сказано: «Они были горшечники… у царя для работ его жили они там»",
+      "refs": [
+       "1Пар 4:22-23"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "1Пар 4:22"
+    }
+   }
+  },
+  {
+   "id": "saraf",
+   "name": "Сараф",
+   "disambig": "из сыновей Силома (1 Пар 4:22)",
+   "sex": "m",
+   "father": "shela-syn-iudy",
+   "parentRefs": [
+    "1Пар 4:21",
+    "1Пар 4:22"
+   ],
+   "fatherGap": true,
+   "group": "judah",
+   "prominence": 1,
+   "card": {
+    "status": [
+     {
+      "text": "Вместе с Иоашем «имели владение в Моаве»",
+      "refs": [
+       "1Пар 4:22"
+      ]
+     },
+     {
+      "text": "Из потомков Силома, о которых сказано: «Они были горшечники… у царя для работ его жили они там»",
+      "refs": [
+       "1Пар 4:22-23"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "1Пар 4:22"
+    }
+   }
+  },
+  {
+   "id": "iashuvilekhem",
+   "name": "Иашувилехем",
+   "disambig": "из сыновей Силома (1 Пар 4:22)",
+   "sex": "m",
+   "father": "shela-syn-iudy",
+   "parentRefs": [
+    "1Пар 4:21",
+    "1Пар 4:22"
+   ],
+   "fatherGap": true,
+   "group": "judah",
+   "prominence": 1,
+   "card": {
+    "status": [
+     {
+      "text": "Из потомков Силома, о которых сказано: «Они были горшечники… у царя для работ его жили они там»",
+      "refs": [
+       "1Пар 4:22-23"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "1Пар 4:22"
+    },
+    "notes": [
+     {
+      "kind": "chronology",
+      "text": "«Но это события древние» — текст сам указывает на давность этих сведений; степень родства с Силомом не уточнена",
+      "refs": [
+       "1Пар 4:22"
+      ]
+     }
+    ]
    }
   }
  ]

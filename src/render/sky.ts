@@ -645,7 +645,7 @@ export class Sky {
     const H = cam.h;
     const tL = this.tOf(cam.wx(LETTER_W));
     const tR = this.tOf(cam.wx(W));
-    const tC = (tL + tR) / 2;
+    const tC = this.tOf(cam.wx((LETTER_W + W) / 2));
     const ep = epochs.find((e) => tC >= toAstro(e.start) && tC < toAstro(e.end));
     const span = (a: number, b: number) => {
       const ha = toHist(a);

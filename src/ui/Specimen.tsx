@@ -62,8 +62,19 @@ function Glyphs() {
       for (let x = 20; x <= 740; x += 4) ctx.lineTo(x, y + Math.cos((x - 20) / 36) * 6);
       ctx.stroke();
     };
-    grad('--azure-1', '--azure-2', 116);
-    grad('--gold-1', '--gold-2', 116 + 0.01);
+    const braid = (a: string, b: string, phase: number) => {
+      const g = ctx.createLinearGradient(20, 0, 740, 0);
+      g.addColorStop(0, cs.getPropertyValue(a).trim());
+      g.addColorStop(1, cs.getPropertyValue(b).trim());
+      ctx.strokeStyle = g;
+      ctx.lineWidth = 2.6;
+      ctx.beginPath();
+      for (let x = 20; x <= 740; x += 3) ctx.lineTo(x, 116 + phase * Math.cos((x - 20) / 30) * 7);
+      ctx.stroke();
+    };
+    braid('--azure-1', '--azure-2', -1);
+    braid('--gold-1', '--gold-2', 1);
+    void grad;
   }, [theme.value]);
   return <canvas ref={ref} style={{ width: '760px', height: '150px', display: 'block' }} />;
 }
@@ -146,11 +157,14 @@ export function Specimen() {
         <Glyphs />
 
         <h2 style={{ fontSize: '22px', marginTop: '24px' }}>Схема карточки</h2>
-        <ol style={{ columns: 2, fontSize: '15px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 32px', fontSize: '15px' }}>
           {SECTIONS.map((s) => (
-            <li key={s.n}>{s.title}</li>
+            <div key={s.n}>
+              <span style={{ display: 'inline-block', width: '28px', color: 'var(--ink-3)', fontFamily: 'var(--sans)', fontSize: '13px' }}>{s.n}</span>
+              {s.title}
+            </div>
           ))}
-        </ol>
+        </div>
       </div>
     </div>
   );

@@ -54,6 +54,11 @@ async function main() {
       await select(p, 'Авраам');
       await p.click('.commands >> text=Эпохи');
     });
+    await shot('07-tiers', 1440, 900, theme, async (p) => {
+      await select(p, 'Авраам');
+      await p.click('.commands >> text=Эпохи');
+      await p.click('.sheet .close');
+    });
     await shot('05-synopsis', 1440, 900, theme, async (p) => {
       await p.click('.commands >> text=Синопсис родословий');
     });
