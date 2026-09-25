@@ -181,7 +181,9 @@ function checkYear(where: string, y: unknown) {
   if (y < -4174 || y > 2040) err(where, `год вне шкалы: ${y}`);
 }
 
-const refExists = (id: string) => byId.has(id) || (volumeMode && regById.has(id));
+const presentVolumes = new Set(allFiles.map((f) => basename(f).slice(0, 2)));
+/** Ссылка допустима, если лицо есть в данных, или это опорное лицо тома, который ещё не составлен. */
+const refExists = (id: string) => byId.has(id) || (regById.has(id) && (volumeMode || !presentVolumes.has(regById.get(id)!.owner)));
 
 // словоформы текста (без вставок в скобках) для проверки имён
 const bibleWords = (() => {

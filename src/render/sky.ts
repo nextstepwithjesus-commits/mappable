@@ -53,6 +53,8 @@ export interface SkyState {
   flow: number; // 0 — нет тока, иначе время в мс
   reduced: boolean;
   intro: number; // 0…1 — зажигание звёзд
+  lineFlip: boolean; // Лк 3 как второе родословие Иосифа
+  pins: Set<string>; // отмеченные одноимённые
 }
 
 const LETTERS = 'АБВГДЕЖИКЛМНПРСТУФХЦЧШЭЮЯ';
@@ -605,6 +607,21 @@ export class Sky {
       ctx.stroke();
     }
 
+    // отмеченные одноимённые
+    for (const id of s.pins) {
+      const i = this.nodeIndex.get(id);
+      if (i === undefined) continue;
+      const x = cam.sx(this.X0[i]);
+      const y = cam.sy(this.nodes[i].lane);
+      ctx.strokeStyle = pal.focus;
+      ctx.setLineDash([3, 3]);
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(x, y, 11, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
     // меридиан года
     if (s.meridian !== null) {
       const x = Math.round(cam.sx(this.xOf(s.meridian))) + 0.5;
@@ -617,6 +634,75 @@ export class Sky {
     }
 
     this.drawFrame(ticks);
+    this.drawWayfinding(s);
+  }
+
+  /** Колонтитул (эпоха и годы окна), местный масштаб и указатели на выбранных за краем экрана. */
+  edgeHits: { x: number; y: number; w: number; h: number; id: string }[] = [];
+  private drawWayfinding(s: SkyState) {
+    const { ctx, cam, pal } = this;
+    const W = cam.w;
+    const H = cam.h;
+    const tL = this.tOf(cam.wx(LETTER_W));
+    const tR = this.tOf(cam.wx(W));
+    const tC = (tL + tR) / 2;
+    const ep = epochs.find((e) => tC >= toAstro(e.start) && tC < toAstro(e.end));
+    const span = (a: number, b: number) => {
+      const ha = toHist(a);
+      const hb = toHist(b);
+      if (ha < 0 && hb < 0) return `${-ha}–${-hb}\u00A0гг.\u00A0до\u00A0Р.\u00A0Х.`;
+      if (ha > 0 && hb > 0) return `${ha}–${hb}\u00A0гг.\u00A0по\u00A0Р.\u00A0Х.`;
+      return `${-ha}\u00A0г.\u00A0до\u00A0Р.\u00A0Х. — ${hb}\u00A0г.\u00A0по\u00A0Р.\u00A0Х.`;
+    };
+    ctx.font = `italic 400 13px ${FONT_SERIF}`;
+    ctx.fillStyle = pal.ink2;
+    const head = `${ep ? ep.name + '; ' : ''}${span(Math.max(T_START, tL), Math.min(T_END, tR))}`;
+    ctx.strokeStyle = pal.halo;
+    ctx.lineWidth = 3;
+    ctx.strokeText(head, LETTER_W + 10, RULER_H + 17);
+    ctx.fillText(head, LETTER_W + 10, RULER_H + 17);
+    // местный масштаб: 1 см ≈ N лет
+    const pxPerYear = (this.xOf(tC + 1) - this.xOf(tC)) * cam.kx;
+    if (pxPerYear > 0) {
+      const raw = 37.8 / pxPerYear;
+      const nice = raw >= 100 ? Math.round(raw / 50) * 50 : raw >= 10 ? Math.round(raw / 5) * 5 : Math.max(1, Math.round(raw));
+      const note = `1\u00A0см ≈ ${nice}\u00A0${nice % 10 === 1 && nice % 100 !== 11 ? 'год' : nice % 10 >= 2 && nice % 10 <= 4 && (nice % 100 < 12 || nice % 100 > 14) ? 'года' : 'лет'}${this.lambda > 0.5 ? ', масштаб неравномерный' : ''}`;
+      ctx.font = `450 11.5px ${FONT_SANS}`;
+      const tw = ctx.measureText(note).width;
+      ctx.fillStyle = pal.ink3;
+      ctx.strokeText(note, W - tw - 12, RULER_H + 16);
+      ctx.fillText(note, W - tw - 12, RULER_H + 16);
+    }
+    // указатели на выбранных за краем
+    this.edgeHits = [];
+    for (const id of [s.selected, s.second]) {
+      if (!id) continue;
+      const i = this.nodeIndex.get(id);
+      if (i === undefined) continue;
+      const x = cam.sx(this.X0[i]);
+      const y = cam.sy(this.nodes[i].lane);
+      const inside = x > LETTER_W && x < W && y > RULER_H && y < H;
+      if (inside) continue;
+      const name = byId.get(id)!.name;
+      let arrow = '';
+      if (y < RULER_H) arrow = '↑';
+      else if (y > H) arrow = '↓';
+      else if (x < LETTER_W) arrow = '←';
+      else arrow = '→';
+      const label = `${arrow} ${name}`;
+      ctx.font = `500 13px ${FONT_SANS}`;
+      const tw = ctx.measureText(label).width;
+      const lx = Math.max(LETTER_W + 6, Math.min(W - tw - 10, x - tw / 2));
+      const ly = Math.max(RULER_H + 34, Math.min(H - 12, y));
+      ctx.fillStyle = pal.sky;
+      ctx.fillRect(lx - 5, ly - 13, tw + 10, 18);
+      ctx.strokeStyle = pal.ruleStrong;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(lx - 5.5, ly - 13.5, tw + 11, 19);
+      ctx.fillStyle = pal.ink;
+      ctx.fillText(label, lx, ly);
+      this.edgeHits.push({ x: lx - 5, y: ly - 13, w: tw + 10, h: 18, id });
+    }
   }
 
   private drawRibbons(s: SkyState) {
@@ -629,12 +715,14 @@ export class Sky {
     // лица, которых ещё нет в данных, пропускаются: нить идёт к следующему известному звену
     const weakOf = (ln: 'joseph' | 'mary') =>
       lines[ln].persons
+        .map((st) => (s.lineFlip && ln === 'mary' && st.id === 'mariya' ? { ...st, id: 'iosif-muzh-marii' } : st))
         .filter((st) => this.nodeIndex.has(st.id))
         .map((st) => ({ id: st.id, weak: st.flag === 'interpretation' || st.flag === 'luke-only' || (ln === 'mary' && st.id === 'salafiil') }));
     const ky = cam.ky;
-    const A = Math.max(2, Math.min(8, ky * 0.42));
-    const strands: Strand[] = buildRibbons({ joseph: weakOf('joseph'), mary: weakOf('mary'), project, amplitude: A, meander: A * 0.4 });
-    const core = Math.max(1.4, Math.min(3.2, ky / 8));
+    const boost = s.onlyLines ? 1.35 : 1;
+    const A = Math.max(4, Math.min(11, ky * 0.55)) * boost;
+    const strands: Strand[] = buildRibbons({ joseph: weakOf('joseph'), mary: weakOf('mary'), project, amplitude: A, meander: A * 0.5 });
+    const core = Math.max(2.1, Math.min(3.6, ky / 6)) * boost;
     const colorAt = (line: 'joseph' | 'mary', t: number) => (line === 'joseph' ? mix(pal.gold1, pal.gold2, t) : mix(pal.azure1, pal.azure2, t));
     const hlDim = s.highlight ? 0.55 : 1;
     const strokeStrand = (st: Strand, from: number, to: number, width: number, a: number, composite: GlobalCompositeOperation) => {
@@ -661,7 +749,10 @@ export class Sky {
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     // свечение (ночью)
-    if (pal.glow) for (const st of strands) strokeStrand(st, 0, st.points.length, core * 4, 0.12 * hlDim, 'lighter');
+    if (pal.glow) {
+      for (const st of strands) strokeStrand(st, 0, st.points.length, core * 5, 0.1 * hlDim, 'lighter');
+      for (const st of strands) strokeStrand(st, 0, st.points.length, core * 2.4, 0.16 * hlDim, 'lighter');
+    }
     // основные нити: сначала Мария, потом Иосиф; под каждой — подложка цвета неба (зазор в плетении)
     for (const st of strands) {
       const pts = st.points;

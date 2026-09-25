@@ -243,8 +243,15 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
       addPrior(B(id), toAstro(e.start) - 30, toAstro(e.end), 0.5);
     }
     // относительные границы
-    if (c?.born?.notAfter && g.persons.has(c.born.notAfter.from)) ineqs.push({ i: B(id), j: B(c.born.notAfter.from), delta: -c.born.notAfter.years, w: 5, kind: 'ge' });
-    if (c?.born?.notBefore && g.persons.has(c.born.notBefore.from)) ineqs.push({ i: B(c.born.notBefore.from), j: B(id), delta: c.born.notBefore.years, w: 5, kind: 'ge' });
+    // граница соблюдается жёстко (одностороннее ограничение), а слабое притяжение держит оценку с запасом от границы
+    if (c?.born?.notAfter && g.persons.has(c.born.notAfter.from)) {
+      ineqs.push({ i: B(id), j: B(c.born.notAfter.from), delta: -c.born.notAfter.years, w: 5, kind: 'ge' });
+      ineqs.push({ i: B(c.born.notAfter.from), j: B(id), delta: c.born.notAfter.years - 20, w: 0.002, kind: 'eq' });
+    }
+    if (c?.born?.notBefore && g.persons.has(c.born.notBefore.from)) {
+      ineqs.push({ i: B(c.born.notBefore.from), j: B(id), delta: c.born.notBefore.years, w: 5, kind: 'ge' });
+      ineqs.push({ i: B(c.born.notBefore.from), j: B(id), delta: c.born.notBefore.years + 10, w: 0.002, kind: 'eq' });
+    }
     // допустимые интервалы
     if (c?.born?.range) addPrior(B(id), toAstro(c.born.range[0]), toAstro(c.born.range[1]), 5);
     if (c?.died?.range) addPrior(D(id), toAstro(c.died.range[0]), toAstro(c.died.range[1]), 5);
@@ -252,6 +259,7 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
     if (c?.active) {
       const n = normFor(c.epoch ?? null);
       ineqs.push({ i: B(id), j: `@${toAstro(c.active.from)}`, delta: 12, w: 2, kind: 'ge' }); // b ≤ from − 12
+      ineqs.push({ i: B(id), j: `@${toAstro(c.active.from)}`, delta: Math.min(35, n.g + 5), w: 0.003, kind: 'eq' }); // обычно — за поколение до служения
       ineqs.push({ i: `@${toAstro(c.active.to)}`, j: B(id), delta: -n.lifeMax, w: 2, kind: 'ge' }); // b ≥ to − lifeMax
     }
     for (const r of c?.reign ?? []) {

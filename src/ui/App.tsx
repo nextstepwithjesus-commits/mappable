@@ -6,7 +6,7 @@ import { TimeStrip } from './TimeStrip.tsx';
 import { Panels } from './Panels.tsx';
 import { byId, persons } from '../data/atlas.ts';
 import { SearchIndex } from '../engine/search.ts';
-import { panel, selected, theme, epochMode, readHash, writeHash, second, pickMode, model, type Panel } from '../state.ts';
+import { panel, selected, theme, epochMode, readHash, writeHash, second, pickMode, model, pins, type Panel } from '../state.ts';
 import { skyRef, drawMicroAxis, refLabel } from './common.tsx';
 import { lifeText } from './SkyView.tsx';
 
@@ -167,12 +167,14 @@ function Search() {
                   class="all"
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => {
-                    selected.value = hits[0].id;
-                    second.value = null;
+                    pins.value = hits.map((h) => h.id);
                     setOpen(false);
+                    const s = skyRef.current;
+                    if (s) s.fitAll();
+                    skyRef.redraw();
                   }}
                 >
-                  Найдено: {hits.length}. Одноимённые различаются уточнением и временем жизни.
+                  Показать всех найденных на небе ({hits.length})
                 </button>
               )}
             </>

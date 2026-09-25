@@ -13,6 +13,11 @@ export function nameMatcher(name: string): RegExp {
   const first = norm(name).split(/[\s]+/)[0].replace(/[^а-я-]/g, '');
   let stem = first;
   if (STRIP.test(stem) && stem.length >= 4) stem = stem.slice(0, -1);
+  else if (stem.length === 3 && /[йья]$/.test(stem)) {
+    // «Ной» → «Ноя», «Ною», «Ноев»: окончание обязательно, чтобы не совпасть с союзом «но»
+    const root = stem.slice(0, -1);
+    return new RegExp(`(^|[^а-я])${root}(й|я|ю|е|ев|ева|еву|евы|ем)([^а-я]|$)`);
+  }
   const esc = stem.replace(/[-]/g, '[-\\s]?');
   if (stem.length <= 3) {
     // короткие имена (Ной, Ир, Ева): основа + типичные окончания

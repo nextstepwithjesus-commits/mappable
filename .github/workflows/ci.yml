@@ -1,0 +1,36 @@
+name: Проверка и сборка
+
+on:
+  push:
+    branches: [main, 'claude/**']
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Данные — сверка с Синодальным текстом
+        run: npm run -s validate -- --quiet
+      - name: Сборка данных (хронология, раскладка)
+        run: npm run -s data
+      - name: Тесты движка
+        run: npm test
+      - name: Типы
+        run: npx tsc --noEmit -p .
+      - name: Контраст и различимость лент
+        run: npm run -s contrast
+      - name: Сборка сайта
+        run: npx vite build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: toledot-site
+          path: dist

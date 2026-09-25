@@ -39,6 +39,7 @@ export const layers = signal<Record<string, boolean>>(
 );
 export const introDone = signal<boolean>(load('intro', false));
 export const sectionFocus = signal<number | null>(null); // сквозной раздел
+export const pins = signal<string[]>([]); // отмеченные на небе одноимённые
 
 export const model = computed(() => models.find((m) => m.id === modelId.value) ?? models[0]);
 

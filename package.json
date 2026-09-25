@@ -17,7 +17,9 @@
     "typecheck": "tsc --noEmit",
     "append": "tsx tools/append.ts",
     "layout": "tsx tools/build-data.ts",
-    "shots": "tsx tools/shots.ts"
+    "shots": "tsx tools/shots.ts",
+    "coverage": "tsx tools/coverage.ts",
+    "contrast": "tsx tools/contrast.ts"
   },
   "license": "UNLICENSED",
   "dependencies": {

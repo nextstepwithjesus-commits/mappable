@@ -3,7 +3,7 @@ import { effect } from '@preact/signals';
 import { Sky, readPalette, type SkyState } from '../render/sky.ts';
 import { byId, graph, groupById, models, lines } from '../data/atlas.ts';
 import {
-  selected, second, hovered, lambda, model, layers, onlyLines, meridian, panel, pickMode, theme, introDone, epochMode, modelId,
+  selected, second, hovered, lambda, model, layers, onlyLines, meridian, panel, pickMode, theme, introDone, epochMode, modelId, lineFlip, pins,
 } from '../state.ts';
 import { skyRef, viewTick, plural } from './common.tsx';
 import { formatSpan, formatYear } from '../engine/years.ts';
@@ -92,10 +92,21 @@ export function SkyView() {
       }
       const flowing = flowStart > 0 && now - flowStart < 3000;
       if (flowing) again = true;
+      let highlight = highlightFor(selected.value, second.value);
+      if (!highlight && meridian.value !== null) {
+        // меридиан года: светятся все, кто жив в этот год
+        const t = meridian.value;
+        highlight = new Map();
+        for (const [pid, c] of model.value.chrono) {
+          if (c.cls === 'epochal') continue;
+          const end = c.d ?? c.dEst;
+          if (c.b <= t && t <= end) highlight.set(pid, c.d !== null || (c.last !== null && c.last >= t) ? 'path' : 'desc');
+        }
+      }
       const state: SkyState = {
         model: model.value, lambda: shownLambda, selected: selected.value, second: second.value, hovered: hovered.value, focus: null,
-        highlight: highlightFor(selected.value, second.value), layers: layers.value, onlyLines: onlyLines.value, meridian: meridian.value,
-        tensionPersons, flow: flowing ? now - flowStart : 0, reduced: reduced(), intro,
+        highlight, layers: layers.value, onlyLines: onlyLines.value, meridian: meridian.value,
+        tensionPersons, flow: flowing ? now - flowStart : 0, reduced: reduced(), intro, lineFlip: lineFlip.value, pins: new Set(pins.value),
       };
       sky.draw(state);
       if (epochMode.value) drawTiers(sky, state);
@@ -164,7 +175,10 @@ export function SkyView() {
       void meridian.value;
       void epochMode.value;
       void hovered.value;
+      void lineFlip.value;
+      void pins.value;
       if (id) {
+        introDone.value = true;
         const p = byId.get(id)!;
         setAnnounce(`${p.name}${p.disambig ? `, ${p.disambig}` : ''}; ${lifeText(id)}; ${groupById.get(p.group)?.name ?? ''}`);
       }
@@ -223,6 +237,11 @@ export function SkyView() {
         }
         return;
       }
+      if (p.y < 26) {
+        meridian.value = sky.tOf(sky.cam.wx(p.x));
+        setTip(null);
+        return;
+      } else if (meridian.value !== null && !pointers.size) meridian.value = null;
       const hit = sky.hit(p.x, p.y, e.pointerType === 'touch' ? 22 : 12);
       if (hit !== hovered.value) hovered.value = hit;
       setTip(hit ? { id: hit, x: p.x, y: p.y } : null);
@@ -232,7 +251,14 @@ export function SkyView() {
       pointers.delete(e.pointerId);
       canvas.classList.remove('dragging');
       if (pointers.size < 2) pinch = null;
+      const edge = sky.edgeHits.find((r) => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
+      if (drag && !drag.moved && edge) {
+        skyRef.flyTo(edge.id);
+        drag = null;
+        return;
+      }
       if (drag && !drag.moved) {
+        if (pins.value.length) pins.value = [];
         const hit = sky.hit(p.x, p.y, e.pointerType === 'touch' ? 22 : 12);
         if (pickMode.value === 'kinship' && hit && selected.value && hit !== selected.value) {
           second.value = hit;
@@ -263,6 +289,7 @@ export function SkyView() {
     };
     const onLeave = () => {
       hovered.value = null;
+      meridian.value = null;
       setTip(null);
     };
     canvas.addEventListener('pointerdown', onDown);
