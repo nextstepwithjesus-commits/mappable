@@ -181,6 +181,7 @@ mkdirSync(join(gen, 'verses'), { recursive: true });
 
 const r1 = (x: number) => Math.round(x * 10) / 10;
 const def = results[0];
+const booksOf = new Map<string, Record<string, number>>(); // для § 23 карточки; в индекс неба не входит
 const index = persons.map((p) => {
   const c = p.card;
   const bookCounts: Record<string, number> = {};
@@ -188,6 +189,7 @@ const index = persons.map((p) => {
     const pr = parseRef(r);
     if (pr) bookCounts[pr.book] = (bookCounts[pr.book] ?? 0) + Math.max(1, pr.verses.length);
   }
+  booksOf.set(p.id, bookCounts);
   return {
     id: p.id,
     n: p.name,
@@ -212,22 +214,46 @@ const index = persons.map((p) => {
     kin: (p.kin ?? []).map((k) => ({ id: k.id, rel: k.rel, refs: k.refs, cert: k.cert ?? 'scripture' })),
     ord: p.order ?? null,
     alt: (c?.altNames ?? []).map((a) => a.name),
-    books: bookCounts,
     ep: p.chrono?.epoch ?? null,
     reign: (p.chrono?.reign ?? []).map((x) => ({ over: x.over, start: x.start, end: x.end, years: x.years ?? null })),
     active: p.chrono?.active ? [p.chrono.active.from, p.chrono.active.to] : null,
     silent: c?.silent ?? [],
-    filled: c ? Object.keys(c).filter((k) => k !== 'silent') : [],
   };
 });
+// значения по умолчанию не пишутся в индекс (NFR-2: индекс неба ≤ 200 КБ gzip); atlas.ts восстанавливает их
+const DEFAULTS: Record<string, unknown> = { d: '', k: 'person', u: 0, r: [], f: null, m: null, fk: 'natural', fg: 0, pc: 'scripture', pRefs: [], op: [], sp: [], kin: [], ord: null, alt: [], books: {}, ep: null, reign: [], active: null, silent: [], filled: [] };
+const isDefault = (k: string, v: unknown) => k in DEFAULTS && JSON.stringify(DEFAULTS[k]) === JSON.stringify(v);
+const compactIndex = index.map((row) => {
+  const o: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(row)) {
+    if (k === 'mc' && v === row.pc) continue; // мать — тем же уровнем, что и отец
+    if (!isDefault(k, v)) o[k] = v;
+  }
+  return o;
+});
+const yr = (x: number) => Math.round(x);
+// хронология и узлы раскладки — массивами по номеру лица в индексе, годы — разностями (сжимаются вдвое лучше)
+const personIndex = new Map(index.map((p, i) => [p.id, i]));
+const pi = (id: string | null) => (id === null ? null : personIndex.get(id) ?? null);
 const models = results.map((res) => ({
   id: res.id,
-  chrono: Object.fromEntries(
-    [...res.chrono.persons].map(([id, c]) => [id, [r1(c.b), r1(c.bLo), r1(c.bHi), c.d === null ? null : r1(c.d), c.lastAttested === null ? null : r1(c.lastAttested), r1(c.dEst), c.cls, c.epoch]]),
-  ),
+  chrono: index.map((p) => {
+    const c = res.chrono.persons.get(p.id);
+    if (!c) return null;
+    const b = yr(c.b);
+    const rel = (x: number | null) => (x === null ? null : yr(x) - b);
+    return [b, rel(c.bLo), rel(c.bHi), rel(c.d), rel(c.lastAttested), rel(c.dEst), c.cls, c.epoch];
+  }),
   tensions: res.chrono.tensions,
   layout: {
-    nodes: res.layout.nodes.map((n) => [n.id, n.lane, r1(n.t0), r1(n.t1), n.block, n.parentLane, n.layoutParent, n.satelliteOf, n.spine ? 1 : 0]),
+    // [лицо (для призрака — −(номер+1)), полоса, t0 − рождение, t1 − t0, блок, полоса родителя, родитель раскладки, спутник чего, хребет]
+    nodes: res.layout.nodes.map((n) => {
+      const ghost = n.id.startsWith('ghost:');
+      const person = ghost ? n.id.slice(6) : n.id;
+      const k = personIndex.get(person)!;
+      const b = yr(res.chrono.persons.get(person)?.b ?? 0); // так же считает atlas.ts
+      return [ghost ? -(k + 1) : k, n.lane, yr(n.t0) - b, yr(n.t1) - yr(n.t0), n.block, n.parentLane, pi(n.layoutParent), pi(n.satelliteOf), n.spine ? 1 : 0];
+    }),
     blocks: res.layout.blocks,
     laneMin: res.layout.laneMin,
     laneMax: res.layout.laneMax,
@@ -237,8 +263,9 @@ const models = results.map((res) => ({
 }));
 const atlas = {
   built: new Date().toISOString(),
-  persons: index,
-  models,
+  persons: compactIndex,
+  // в индексе — только модель по умолчанию; остальные подгружаются при переключении (src/generated/models/*.json)
+  models: models.slice(0, 1),
   modelInfo: MODELS,
   lines: { joseph, mary },
   epochs,
@@ -248,12 +275,14 @@ const atlas = {
   volumes: volumes.map((v) => ({ volume: v.volume, title: v.title, scope: v.scope, count: v.persons.length })),
 };
 writeFileSync(join(gen, 'atlas.json'), JSON.stringify(atlas));
+mkdirSync(join(gen, 'models'), { recursive: true });
+for (const m of models.slice(1)) writeFileSync(join(gen, 'models', `${m.id}.json`), JSON.stringify(m));
 for (const v of volumes) {
   const cards: Record<string, unknown> = {};
   for (const p of v.persons) {
     const card = p.card ? JSON.parse(JSON.stringify(p.card)) : {};
     for (const s of card.sayings ?? []) s.quote = typo(s.quote);
-    cards[p.id] = { card, chrono: p.chrono ?? null };
+    cards[p.id] = { card, chrono: p.chrono ?? null, books: booksOf.get(p.id) ?? {} };
   }
   writeFileSync(join(gen, 'cards', `${v.volume}.json`), JSON.stringify(cards));
 }

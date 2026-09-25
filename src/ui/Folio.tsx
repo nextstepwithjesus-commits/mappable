@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
-import { byId, graph, groupById, loadCard, lineMembership, epochs, books, models } from '../data/atlas.ts';
+import { byId, graph, groupById, loadCard, lineMembership, epochs, books } from '../data/atlas.ts';
 import type { Card, Chrono, Fact, Cert } from '../data/types.ts';
-import { selected, second, pickMode, panel, model, showSchema, modelId } from '../state.ts';
+import { selected, second, pickMode, panel, model, showSchema } from '../state.ts';
 import { P, Refs, VerseInsert, Mark, roleText, refLabel, skyRef, plural } from './common.tsx';
 import { siblings } from '../engine/graph.ts';
 import { formatYear, formatSpan, yearsWord, toHist } from '../engine/years.ts';
@@ -184,7 +184,7 @@ export function Folio() {
         {loading ? <p class="muted">Загрузка карточки…</p> : blocks}
         <p class="colophon">
           Составлено разделов: {filledCount} из 24{silentCount ? `; о ${silentCount} ${plural(silentCount, 'разделе', 'разделах', 'разделах')} Писание не сообщает` : ''}. Все ссылки сверены с Синодальным
-          текстом. Даты — по модели «{models.find((x) => x.id === modelId.value) ? modelNames[modelId.value] : ''}».
+          текстом. Даты — по модели «{modelNames[model.value.id] ?? ''}».
         </p>
       </div>
     </aside>

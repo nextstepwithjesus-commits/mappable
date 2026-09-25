@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
-import { anchors, byId, epochs, graph, lines, modelInfo, models, persons, volumes, groupById, loadCard, builtAt } from '../data/atlas.ts';
+import { anchors, byId, epochs, graph, lines, modelInfo, persons, volumes, groupById, loadCard, builtAt } from '../data/atlas.ts';
 import { panel, selected, second, pickMode, model, modelId, epochMode, layers, lineFlip, sectionFocus } from '../state.ts';
 import { P, Refs, VerseInsert, refLabel, skyRef, plural, renderBrackets } from './common.tsx';
 import { relate } from '../engine/kinship.ts';
@@ -587,7 +587,7 @@ function AboutPanel() {
       </table>
       <p class="muted">Раскладка: {Object.entries(m.metrics).map(([k, v]) => `${k} ${v}`).join('; ')}. Сборка: {new Date(builtAt).toLocaleString('ru-RU')}.</p>
       <p class="muted">Родословия на небе — по метке группы: {groupById.size} созвездий. Названия эпох и их основания — в разделе «Эпохи».</p>
-      <p class="muted">{models.length} модели хронологии рассчитаны заранее.</p>
+      <p class="muted">{modelInfo.length} модели хронологии рассчитаны заранее; модель по умолчанию входит в индекс неба, остальные загружаются при выборе.</p>
     </Sheet>
   );
 }

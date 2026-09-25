@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { effect } from '@preact/signals';
 import { Sky, readPalette, type SkyState } from '../render/sky.ts';
-import { byId, graph, groupById, models, lines } from '../data/atlas.ts';
+import { byId, graph, groupById, lines } from '../data/atlas.ts';
 import {
-  selected, second, hovered, lambda, model, layers, onlyLines, meridian, panel, pickMode, theme, introDone, epochMode, modelId, lineFlip, pins,
+  selected, second, hovered, lambda, model, layers, onlyLines, meridian, panel, pickMode, theme, introDone, epochMode, lineFlip, pins,
 } from '../state.ts';
 import { skyRef, viewTick, plural } from './common.tsx';
 import { formatSpan, formatYear } from '../engine/years.ts';
@@ -474,7 +474,7 @@ function Cartouche() {
     skyRef.flyTo(id);
   };
   const entries = ['adam', 'noy', 'avraam', 'moisey', 'david', 'iisus'].filter((id) => byId.has(id));
-  const m = models.find((x) => x.id === modelId.value) ?? models[0];
+  const m = model.value;
   return (
     <div class="cartouche" role="note">
       <button class="close" onClick={() => (introDone.value = true)}>

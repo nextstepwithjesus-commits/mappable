@@ -1,6 +1,6 @@
 /** Состояние приложения (сигналы). Адрес страницы отражает выбранное лицо, окно и режимы. */
 import { signal, computed, effect } from '@preact/signals';
-import { models, byId } from './data/atlas.ts';
+import { models, byId, loadModel } from './data/atlas.ts';
 
 export type Theme = 'night' | 'day';
 export type Panel = null | 'epochs' | 'index' | 'kinship' | 'synopsis' | 'legend' | 'about' | 'section' | 'chapter' | 'spread';
@@ -41,7 +41,16 @@ export const introDone = signal<boolean>(load('intro', false));
 export const sectionFocus = signal<number | null>(null); // сквозной раздел
 export const pins = signal<string[]>([]); // отмеченные на небе одноимённые
 
-export const model = computed(() => models.find((m) => m.id === modelId.value) ?? models[0]);
+const modelsLoaded = signal(0);
+/** Текущая модель; пока выбранная подгружается, показывается модель по умолчанию. */
+export const model = computed(() => {
+  void modelsLoaded.value;
+  return models.find((m) => m.id === modelId.value) ?? models[0];
+});
+effect(() => {
+  const id = modelId.value;
+  if (!models.some((m) => m.id === id)) loadModel(id).then(() => modelsLoaded.value++);
+});
 
 effect(() => {
   document.documentElement.dataset.theme = theme.value;

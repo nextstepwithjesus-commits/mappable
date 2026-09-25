@@ -40,7 +40,6 @@ export interface IdxPerson {
   reign: { over: string; start: number; end: number; years: number | null }[];
   active: [number, number] | null;
   silent: number[];
-  filled: string[];
 }
 
 export interface ChronoRow {
@@ -90,14 +89,15 @@ export interface LineFile {
   persons: LineStep[];
 }
 
+// годы — разностями от рождения; лица — номерами в индексе (tools/build-data.ts)
 type RawChrono = [number, number, number, number | null, number | null, number, DateClass, string | null];
-type RawNode = [string, number, number, number, number, number | null, string | null, string | null, number];
+type RawNode = [number, number, number, number, number, number | null, number | null, number | null, number];
 interface RawAtlas {
   built: string;
   persons: Record<string, never>[];
   models: {
     id: string;
-    chrono: Record<string, RawChrono>;
+    chrono: (RawChrono | null)[];
     tensions: Tension[];
     layout: { nodes: RawNode[]; blocks: BlockInfo[]; laneMin: number; laneMax: number; metrics: Record<string, number> };
     scale: { knots: number[]; xTrue: number[]; xDense: number[] };
@@ -112,51 +112,85 @@ interface RawAtlas {
 }
 const R = raw as unknown as RawAtlas;
 
+// в индексе опущены значения по умолчанию (tools/build-data.ts, DEFAULTS)
 export const persons: IdxPerson[] = R.persons.map((p) => ({
   id: p.id,
   name: p.n,
-  disambig: p.d,
+  disambig: p.d ?? '',
   sex: p.s,
-  kind: p.k,
+  kind: p.k ?? 'person',
   unnamed: !!p.u,
   group: p.g,
   prominence: p.pr,
   magnitude: p.mg,
-  roles: p.r,
+  roles: p.r ?? [],
   volume: p.v,
-  father: p.f,
-  mother: p.m,
-  fatherKind: p.fk,
+  father: p.f ?? null,
+  mother: p.m ?? null,
+  fatherKind: p.fk ?? 'natural',
   fatherGap: !!p.fg,
-  parentCert: p.pc,
-  motherCert: p.mc,
-  parentRefs: p.pRefs,
-  otherParents: p.op,
-  spouses: p.sp,
-  kin: p.kin,
-  order: p.ord,
-  alt: p.alt,
-  books: p.books,
-  epoch: p.ep,
-  reign: p.reign,
-  active: p.active,
-  silent: p.silent,
-  filled: p.filled,
+  parentCert: p.pc ?? 'scripture',
+  motherCert: p.mc ?? p.pc ?? 'scripture',
+  parentRefs: p.pRefs ?? [],
+  otherParents: p.op ?? [],
+  spouses: p.sp ?? [],
+  kin: p.kin ?? [],
+  order: p.ord ?? null,
+  alt: p.alt ?? [],
+  books: {}, // заполняется при загрузке тома карточек (§ 23)
+  epoch: p.ep ?? null,
+  reign: p.reign ?? [],
+  active: p.active ?? null,
+  silent: p.silent ?? [],
 }));
 export const byId = new Map(persons.map((p) => [p.id, p]));
 
-export const models: ModelData[] = R.models.map((m) => {
+type RawModel = RawAtlas['models'][number];
+function decodeModel(m: RawModel): ModelData {
   const chrono = new Map<string, ChronoRow>();
-  for (const [id, r] of Object.entries(m.chrono)) chrono.set(id, { b: r[0], bLo: r[1], bHi: r[2], d: r[3], last: r[4], dEst: r[5], cls: r[6], epoch: r[7] });
-  const nodes: NodeRow[] = m.layout.nodes.map((n) => ({
-    id: n[0], person: n[0].startsWith('ghost:') ? n[0].slice(6) : n[0], ghost: n[0].startsWith('ghost:'), lane: n[1], t0: n[2], t1: n[3], block: n[4],
-    parentLane: n[5], layoutParent: n[6], satelliteOf: n[7], spine: !!n[8],
-  }));
+  const abs = (b: number, x: number | null) => (x === null ? null : b + x);
+  m.chrono.forEach((r, i) => {
+    if (!r) return;
+    const b = r[0];
+    chrono.set(persons[i].id, { b, bLo: b + r[1], bHi: b + r[2], d: abs(b, r[3]), last: abs(b, r[4]), dEst: b + r[5], cls: r[6], epoch: r[7] });
+  });
+  const idAt = (k: number | null) => (k === null ? null : persons[k].id);
+  const nodes: NodeRow[] = m.layout.nodes.map((n) => {
+    const ghost = n[0] < 0;
+    const person = persons[ghost ? -n[0] - 1 : n[0]].id;
+    const t0 = (chrono.get(person)?.b ?? 0) + n[2];
+    return {
+      id: ghost ? `ghost:${person}` : person, person, ghost, lane: n[1], t0, t1: t0 + n[3], block: n[4],
+      parentLane: n[5], layoutParent: idAt(n[6]), satelliteOf: idAt(n[7]), spine: !!n[8],
+    };
+  });
   return {
     id: m.id, chrono, tensions: m.tensions, nodes, nodeByPerson: new Map(nodes.filter((n) => !n.ghost).map((n) => [n.person, n])),
     blocks: m.layout.blocks, laneMin: m.layout.laneMin, laneMax: m.layout.laneMax, metrics: m.layout.metrics, scale: m.scale,
   };
-});
+}
+
+/** Рассчитанные модели хронологии. В индексе — только модель по умолчанию; остальные — loadModel(). */
+export const models: ModelData[] = R.models.map(decodeModel);
+const modelModules = import.meta.glob('../generated/models/*.json');
+const modelLoads = new Map<string, Promise<ModelData | null>>();
+export function loadModel(id: string): Promise<ModelData | null> {
+  const have = models.find((m) => m.id === id);
+  if (have) return Promise.resolve(have);
+  let pr = modelLoads.get(id);
+  if (!pr) {
+    const mod = modelModules[`../generated/models/${id}.json`];
+    pr = mod
+      ? mod().then((x) => {
+          const md = decodeModel(((x as { default?: RawModel }).default ?? x) as RawModel);
+          if (!models.some((m) => m.id === md.id)) models.push(md);
+          return md;
+        })
+      : Promise.resolve(null);
+    modelLoads.set(id, pr);
+  }
+  return pr;
+}
 
 export const modelInfo = R.modelInfo as ChronoModel[];
 export const lines = R.lines as unknown as { joseph: LineFile; mary: LineFile };
@@ -191,7 +225,8 @@ export const lineMembership = (() => {
 // ---------- тела карточек и стихи — по требованию ----------
 const cardModules = import.meta.glob('../generated/cards/*.json');
 const verseModules = import.meta.glob('../generated/verses/*.json');
-const cardCache = new Map<string, Promise<Record<string, { card: Card; chrono: Chrono | null }>>>();
+type CardEntry = { card: Card; chrono: Chrono | null; books: Record<string, number> };
+const cardCache = new Map<string, Promise<Record<string, CardEntry>>>();
 const verseCache = new Map<string, Promise<Record<string, string>>>();
 
 export function loadCard(id: string): Promise<{ card: Card; chrono: Chrono | null } | null> {
@@ -200,7 +235,19 @@ export function loadCard(id: string): Promise<{ card: Card; chrono: Chrono | nul
   const key = `../generated/cards/${p.volume}.json`;
   if (!cardCache.has(key)) {
     const loader = cardModules[key];
-    cardCache.set(key, loader ? loader().then((m) => (m as { default: never }).default) : Promise.resolve({}));
+    cardCache.set(
+      key,
+      loader
+        ? loader().then((m) => {
+            const all = (m as { default: Record<string, CardEntry> }).default;
+            for (const [pid, e] of Object.entries(all)) {
+              const ip = byId.get(pid);
+              if (ip) ip.books = e.books ?? {};
+            }
+            return all;
+          })
+        : Promise.resolve({}),
+    );
   }
   return cardCache.get(key)!.then((all) => all[id] ?? null);
 }

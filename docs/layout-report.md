@@ -1,70 +1,71 @@
 # Отчёт сборки данных
 
-Лиц: 438; томов: 6; процитированных стихов: 3765.
+Лиц: 531; томов: 7; процитированных стихов: 3934.
 
 ## Модель mt-long
 
 ```
 {
- "persons": 438,
- "lanes": 69,
- "corridorWidth": 15,
- "crossings": 220,
- "corridorCrossings": 144,
- "dropLength": 1428,
- "blocks": 91
+ "persons": 531,
+ "lanes": 78,
+ "corridorWidth": 13,
+ "crossings": 241,
+ "corridorCrossings": 44,
+ "dropLength": 1863,
+ "blocks": 98
 }
 ```
 
-Напряжений: 0
+Напряжений: 1
 
 ## Модель mt-short
 
 ```
 {
- "persons": 438,
- "lanes": 99,
- "corridorWidth": 15,
- "crossings": 249,
- "corridorCrossings": 106,
- "dropLength": 1521,
- "blocks": 91
+ "persons": 531,
+ "lanes": 113,
+ "corridorWidth": 13,
+ "crossings": 238,
+ "corridorCrossings": 59,
+ "dropLength": 2075,
+ "blocks": 98
 }
 ```
 
-Напряжений: 0
+Напряжений: 1
 
 ## Модель lxx
 
 ```
 {
- "persons": 438,
- "lanes": 73,
- "corridorWidth": 11,
- "crossings": 231,
- "corridorCrossings": 80,
- "dropLength": 1418,
- "blocks": 91
+ "persons": 531,
+ "lanes": 80,
+ "corridorWidth": 9,
+ "crossings": 243,
+ "corridorCrossings": 30,
+ "dropLength": 1862,
+ "blocks": 98
 }
 ```
 
-Напряжений: 0
+Напряжений: 7
 
 ## Модель terah70
 
 ```
 {
- "persons": 438,
- "lanes": 72,
+ "persons": 531,
+ "lanes": 76,
  "corridorWidth": 15,
- "crossings": 217,
- "corridorCrossings": 140,
- "dropLength": 1441,
- "blocks": 91
+ "crossings": 239,
+ "corridorCrossings": 54,
+ "dropLength": 1866,
+ "blocks": 98
 }
 ```
 
-Напряжений: 0
+Напряжений: 1
 
 ## Хронологические напряжения (модель по умолчанию)
 
+- Ева было бы 130 лет при рождении Сиф (Быт 4:25; Быт 5:3; 1Пар 1:1; Лк 3:38)
