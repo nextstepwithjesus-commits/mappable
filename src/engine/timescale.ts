@@ -56,8 +56,11 @@ export function fritschCarlson(x: number[], y: number[]): number[] {
  * @param spans — промежутки жизни [начало, конец] для оценки «насыщенности» (сколько следов живёт одновременно)
  */
 export function buildTimeScale(births: number[], spans: [number, number][]): TimeScale {
+  // начало шкалы — сотворение по масоретским числам или раньше, если модель (числа в скобках) удревняет Адама
+  const minBirth = births.reduce((a, b) => Math.min(a, b), Infinity);
+  const start = minBirth - 20 < T_START ? Math.floor((minBirth - 20) / BIN) * BIN : T_START;
   const knots: number[] = [];
-  for (let t = T_START; t < T_CANON_END; t += BIN) knots.push(t);
+  for (let t = start; t < T_CANON_END; t += BIN) knots.push(t);
   knots.push(T_CANON_END);
   const post = [400, 800, 1200, 1600, 2000, T_END]; // после канона — редкие узлы
   for (const t of post) knots.push(t);
@@ -67,7 +70,7 @@ export function buildTimeScale(births: number[], spans: [number, number][]): Tim
   const alivePer = new Float64Array(nb);
   const binOf = (t: number) => {
     if (t >= T_CANON_END) return nb - 1;
-    return Math.max(0, Math.min(nb - 1, Math.floor((t - T_START) / BIN)));
+    return Math.max(0, Math.min(nb - 1, Math.floor((t - start) / BIN)));
   };
   for (const b of births) birthsPer[binOf(b)] += 1;
   for (const [a, e] of spans) {
@@ -150,7 +153,7 @@ export function timeToX(ts: TimeScale, t: number, lambda: number): number {
 
 /** Обратное отображение (бисекция). */
 export function xToTime(ts: TimeScale, x: number, lambda: number): number {
-  let lo = T_START - 200;
+  let lo = ts.knots[0] - 200;
   let hi = T_END + 200;
   for (let i = 0; i < 50; i++) {
     const mid = (lo + hi) / 2;

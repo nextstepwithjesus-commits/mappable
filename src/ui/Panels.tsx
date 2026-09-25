@@ -72,7 +72,7 @@ function EpochsPanel() {
       {model.value.epochs.map((e) => (
         <div key={e.id}>
           <h3>
-            <button class="person" onClick={() => flyToYears(toAstro(e.start), Math.min(toAstro(e.end), 110))}>
+            <button class="person" onClick={() => flyToYears(toAstro(e.start), toAstro(e.end))}>
               {e.name}
             </button>
           </h3>

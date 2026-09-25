@@ -239,7 +239,7 @@ export function TimeStrip() {
         if (ep) {
           const span = toAstro(ep.end) - toAstro(ep.start);
           const pad = Math.max(10, span * 0.04);
-          setView(toAstro(ep.start) - pad, Math.min(toAstro(ep.end), 110) + pad);
+          setView(toAstro(ep.start) - pad, toAstro(ep.end) + pad);
         }
       }
       drag = null;

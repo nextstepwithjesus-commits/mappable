@@ -5,7 +5,7 @@
  */
 import { Camera, KX_MIN } from './camera.ts';
 import { drawGlyph, starRadius, roleSigla } from './glyphs.ts';
-import { timeToX, xToTime, hydrateScale, type TimeScale, T_START, T_END } from '../engine/timescale.ts';
+import { timeToX, xToTime, hydrateScale, type TimeScale, T_END } from '../engine/timescale.ts';
 import { buildRibbons, type Strand } from '../engine/ribbons.ts';
 import { toHist, toAstro } from '../engine/years.ts';
 import type { ModelData, NodeRow } from '../data/atlas.ts';
@@ -161,7 +161,7 @@ export class Sky {
   }
 
   fitAll() {
-    const lo = this.xOf(T_START);
+    const lo = this.xOf(this.scale.knots[0]);
     const hi = this.xOf(100);
     this.cam.fit(lo, hi, this.model.laneMin, this.model.laneMax, 36);
   }
@@ -344,6 +344,44 @@ export class Sky {
           ctx.fillRect(a, 0, b - a, H);
         }
       });
+    }
+
+    // завершение канона (Откр — ок. 95 г.) и «сегодня»: шкала неба тянется до 2040 г.
+    {
+      const mark = (t: number, label: string, dashed: boolean) => {
+        const x = Math.round(cam.sx(this.xOf(t))) + 0.5;
+        if (x < LETTER_W || x > W) return;
+        ctx.strokeStyle = alpha(pal.ink3, 0.9);
+        ctx.lineWidth = 1;
+        ctx.setLineDash(dashed ? [3, 4] : []);
+        ctx.beginPath();
+        ctx.moveTo(x, RULER_H);
+        ctx.lineTo(x, H);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.font = `italic 400 12.5px ${FONT_SERIF}`;
+        ctx.fillStyle = pal.ink2;
+        const tw = ctx.measureText(label).width;
+        // подпись вдоль черты, сверху — внизу справа лежат кнопки масштаба
+        ctx.save();
+        ctx.translate(x - 5, RULER_H + 30 + tw);
+        ctx.rotate(-Math.PI / 2);
+        ctx.fillText(label, 0, 0);
+        ctx.restore();
+      };
+      mark(95, 'завершение канона', true);
+      mark(new Date().getFullYear(), 'сегодня', false);
+      // время после канона пусто по существу: сказать об этом, а не оставлять тёмное поле
+      const xc = Math.max(LETTER_W + 40, cam.sx(this.xOf(110)));
+      if (W - xc > 380) {
+        const cx = (xc + W) / 2;
+        ctx.font = `italic 400 15px ${FONT_SERIF}`;
+        ctx.fillStyle = pal.ink3;
+        const l1 = 'После завершения канона новых лиц Писания нет.';
+        const l2 = 'Родословие приведено к Иисусу Христу (Мф 1:16; Лк 3:23).';
+        ctx.fillText(l1, cx - ctx.measureText(l1).width / 2, H / 2 - 10);
+        ctx.fillText(l2, cx - ctx.measureText(l2).width / 2, H / 2 + 14);
+      }
     }
 
     // сетка лет
@@ -673,7 +711,7 @@ export class Sky {
     };
     ctx.font = `italic 400 13px ${FONT_SERIF}`;
     ctx.fillStyle = pal.ink2;
-    const head = `${ep ? ep.name + '; ' : ''}${span(Math.max(T_START, tL), Math.min(T_END, tR))}`;
+    const head = `${ep ? ep.name + '; ' : ''}${span(Math.max(this.scale.knots[0], tL), Math.min(T_END, tR))}`;
     ctx.strokeStyle = pal.halo;
     ctx.lineWidth = 3;
     ctx.strokeText(head, LETTER_W + 10, RULER_H + 17);
@@ -820,7 +858,7 @@ export class Sky {
     for (const s of steps) if (s * pxPerYear >= 78) { step = s; break; }
     const out: { t: number; major: boolean }[] = [];
     // шаги по историческим годам, чтобы метки были круглыми («1000 до Р. Х.»)
-    const hStart = Math.floor(toHist(Math.max(T_START, tL)) / step) * step;
+    const hStart = Math.floor(toHist(Math.max(this.scale.knots[0], tL)) / step) * step;
     const hEnd = toHist(Math.min(T_END, tR));
     for (let h = hStart; h <= hEnd + step; h += step) {
       if (h === 0) continue;
