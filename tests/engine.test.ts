@@ -206,6 +206,7 @@ describe('сверка имён с текстом стиха', () => {
     expect(hit('Ила', 'Илы')).toBe(true);
     expect(hit('Хазо', 'Хазо')).toBe(true);
     expect(hit('Бен-Амми', 'Бен—Амми')).toBe(true);
+    expect(hit('Фуа', 'Фуи')).toBe(true);
   });
   it('не путает короткие имена со служебными словами', () => {
     expect(hit('Ной', 'но')).toBe(false);

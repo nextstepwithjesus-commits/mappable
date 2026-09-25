@@ -20,9 +20,10 @@ export function nameMatcher(name: string): RegExp {
     return new RegExp(`(^|[^а-я])${root}(й|я|ю|е|ев|ева|еву|евы|ем)([^а-я]|$)`);
   }
   if (stem.length === 3 && /[ао]$/.test(stem)) {
-    // «Ила» → «Илы», «Иле»; «Хазо» несклоняемо
+    // «Ила» → «Илы», «Иле»; «Хазо» несклоняемо; после гласной — «Фуа» → «Фуи» (но «Ила» не совпадает с «или»)
     const root = stem.slice(0, -1);
-    return new RegExp(`(^|[^а-я])${root}(а|ы|е|у|ой|ою|о|ин|ина)([^а-я]|$)`);
+    const i = /[аеёиоуыэюя]$/.test(root) ? '|и' : '';
+    return new RegExp(`(^|[^а-я])${root}(а|ы|е|у|ой|ою|о|ин|ина${i})([^а-я]|$)`);
   }
   const esc = stem.replace(/[-]/g, '[-\\s]?');
   if (stem.length <= 3) {

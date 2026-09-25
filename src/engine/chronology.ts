@@ -375,8 +375,10 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
     const id = queue.shift()!;
     const v = init.get(id)!;
     const n = normFor(epochOf(id));
-    for (const e of g.childrenOf.get(id) ?? []) if (!init.has(e.child)) { init.set(e.child, v + n.g); queue.push(e.child); }
-    for (const e of g.parentsOf.get(id) ?? []) if (!init.has(e.parent)) { init.set(e.parent, v - n.g); queue.push(e.parent); }
+    // по связям с пропуском поколений («из сыновей X», fatherGap) начальная оценка не распространяется:
+    // иначе потомок родоначальника колена стартует от времени патриархов, и слабые притяжения не успевают его вернуть
+    for (const e of g.childrenOf.get(id) ?? []) if (!e.gap && !init.has(e.child)) { init.set(e.child, v + n.g); queue.push(e.child); }
+    for (const e of g.parentsOf.get(id) ?? []) if (!e.gap && !init.has(e.parent)) { init.set(e.parent, v - n.g); queue.push(e.parent); }
     for (const s of g.spousesOf.get(id) ?? []) {
       const o = s.a === id ? s.b : s.a;
       if (!init.has(o)) { init.set(o, v); queue.push(o); }
