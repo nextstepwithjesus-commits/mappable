@@ -382,6 +382,20 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
       queue.push(id);
     }
   }
+  // мягкие опоры: засвидетельствованная жизнь, царствование, допустимый интервал рождения —
+  // от них оценка тоже расходится по родству (иначе отцы без дат стартуют с условного −1000)
+  for (const id of g.order) {
+    if (init.has(id)) continue;
+    const c = g.persons.get(id)!.chrono;
+    let v: number | undefined;
+    if (c?.active) v = toAstro(c.active.from) - 30;
+    else if (c?.reign?.length) v = toAstro(c.reign[0].start) - 25;
+    else if (c?.born?.range) v = (toAstro(c.born.range[0]) + toAstro(c.born.range[1])) / 2;
+    if (v !== undefined) {
+      init.set(id, v);
+      queue.push(id);
+    }
+  }
   while (queue.length) {
     const id = queue.shift()!;
     const v = init.get(id)!;

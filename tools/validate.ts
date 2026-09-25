@@ -188,7 +188,7 @@ const refExists = (id: string) => byId.has(id) || (regById.has(id) && (volumeMod
 // словоформы текста (без вставок в скобках) для проверки имён
 const bibleWords = (() => {
   const set = new Set<string>();
-  for (const t of bible.verses.values()) for (const w of norm(stripBrackets(t)).match(/[а-я]+(?:-[а-я]+)?/g) ?? []) set.add(w);
+  for (const t of bible.verses.values()) for (const w of norm(stripBrackets(t)).match(/[а-я]+(?:-[а-я]+)*/g) ?? []) set.add(w);
   return [...set];
 })();
 const nameCache = new Map<string, boolean>();
