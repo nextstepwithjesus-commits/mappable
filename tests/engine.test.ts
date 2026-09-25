@@ -265,3 +265,16 @@ describe('связь «из сыновей X»', () => {
     expect(toHist(res.persons.get('shemaiya')!.b)).toBeGreaterThan(-1100);
   });
 });
+
+describe('родительный падеж имён', () => {
+  it('склоняет по окончанию и полу', async () => {
+    const { genitive } = await import('../src/engine/kinship.ts');
+    expect(genitive('Зоровавель', 'm')).toBe('Зоровавеля');
+    expect(genitive('Рахиль', 'f')).toBe('Рахили');
+    expect(genitive('Иехония', 'm')).toBe('Иехонии');
+    expect(genitive('Ахиноама', 'f')).toBe('Ахиноамы');
+    expect(genitive('Иессей', 'm')).toBe('Иессея');
+    expect(genitive('Давид', 'm')).toBe('Давида');
+    expect(genitive('Мириам', 'f')).toBe('Мириам');
+  });
+});

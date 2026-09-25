@@ -66,7 +66,7 @@ async function main() {
     }
   } finally {
     await browser.close();
-    process.kill(-server.pid!); // вся группа: npx и vite
+    try { process.kill(-server.pid!); } catch { /* уже остановлен */ } // вся группа: npx и vite
     run('npx', ['tsx', 'tools/build-data.ts']);
   }
   const table = ['| Экран | Лиц | Первый кадр неба | Кадров/с при панорамировании | Медиана кадра | 95-й процентиль | Худший кадр |', '|---|---|---|---|---|---|---|', ...results];

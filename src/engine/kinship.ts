@@ -101,15 +101,19 @@ export function bloodTerm(a: number, b: number, female: boolean, halfSibling?: '
 /** Термины Писания «брат», «сестра», «брат по отцу» и т. п. */
 const SIBLING_TERM = /^(брат|сестра)(?![а-яё])/i; // \b в JS не знает кириллицы
 
-function genitive(name: string): string {
-  // простое склонение для подписи: «Давида», «Руфи», «Марии», «Иисуса»
+/**
+ * Родительный падеж имени для подписи: «Давида», «Руфи», «Марии», «Иехонии», «Зоровавеля».
+ * Мужские имена на -ь склоняются как «Зоровавель — Зоровавеля», женские — как «Руфь — Руфи».
+ */
+export function genitive(name: string, sex: 'm' | 'f' = 'm'): string {
   const n = name.split(' ')[0];
   if (/ия$/.test(n)) return n.slice(0, -1) + 'и';
   if (/ья$/.test(n)) return n.slice(0, -1) + 'и';
   if (/а$/.test(n)) return n.slice(0, -1) + (/[гкхжчшщ]а$/.test(n) ? 'и' : 'ы');
   if (/я$/.test(n)) return n.slice(0, -1) + 'и';
-  if (/ь$/.test(n)) return n.slice(0, -1) + 'и';
+  if (/ь$/.test(n)) return n.slice(0, -1) + (sex === 'f' ? 'и' : 'я');
   if (/й$/.test(n)) return n.slice(0, -1) + 'я';
+  if (sex === 'f') return n; // женские на согласный не склоняются (Мириам); на -ь — выше (Рахиль — Рахили)
   if (/[бвгдзклмнпрстфхцчшщж]$/.test(n)) return n + 'а';
   return n;
 }
@@ -120,7 +124,7 @@ export function relate(g: Graph, aId: string, bId: string, maxResults = 6): Rela
   if (!A || !Bp) return [];
   const female = A.sex === 'f';
   const out: Relation[] = [];
-  const sentence = (term: string) => `${A.name} — ${term} ${genitive(Bp.name)}`;
+  const sentence = (term: string) => `${A.name} — ${term} ${genitive(Bp.name, Bp.sex)}`;
 
   // термины Писания
   for (const k of g.kinOf.get(aId) ?? []) {
@@ -152,7 +156,7 @@ export function relate(g: Graph, aId: string, bId: string, maxResults = 6): Rela
       if (other !== bId) continue;
       const par = g.persons.get(pe.parent)!;
       const term = female ? 'племянница' : 'племянник';
-      const tail = `${female ? 'дочь' : 'сын'} ${Bp.sex === 'f' ? 'её' : 'его'} ${par.sex === 'f' ? 'сестры' : 'брата'} ${genitive(par.name)}`;
+      const tail = `${female ? 'дочь' : 'сын'} ${Bp.sex === 'f' ? 'её' : 'его'} ${par.sex === 'f' ? 'сестры' : 'брата'} ${genitive(par.name, par.sex)}`;
       const interp = k.cert === 'interpretation' || pe.cert === 'interpretation';
       out.push({
         term, sentence: `${sentence(term)} (${tail})`,
@@ -166,7 +170,7 @@ export function relate(g: Graph, aId: string, bId: string, maxResults = 6): Rela
       if (other !== aId) continue;
       const par = g.persons.get(pe.parent)!;
       const term = female ? 'тётя' : 'дядя';
-      const tail = `${female ? 'сестра' : 'брат'} ${par.sex === 'f' ? 'его матери' : 'его отца'} ${genitive(par.name)}`;
+      const tail = `${female ? 'сестра' : 'брат'} ${par.sex === 'f' ? 'его матери' : 'его отца'} ${genitive(par.name, par.sex)}`;
       out.push({
         term, sentence: `${sentence(term)} (${tail})`,
         steps: [{ from: aId, to: pe.parent, kind: 'kin', interpretive: k.cert === 'interpretation' }, { from: pe.parent, to: bId, kind: 'down', interpretive: pe.cert === 'interpretation' }],

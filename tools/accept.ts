@@ -188,7 +188,7 @@ async function main() {
     }
   } finally {
     await browser.close();
-    process.kill(-server.pid!);
+    try { process.kill(-server.pid!); } catch { /* уже остановлен */ }
   }
   console.log(failed ? `\nНе прошло сценариев: ${failed}` : '\nВсе сценарии пройдены.');
   process.exitCode = failed ? 1 : 0;

@@ -7,11 +7,11 @@
 ```
 {
  "persons": 1372,
- "lanes": 291,
+ "lanes": 289,
  "corridorWidth": 13,
- "crossings": 392,
+ "crossings": 395,
  "corridorCrossings": 69,
- "dropLength": 3957,
+ "dropLength": 3959,
  "blocks": 422
 }
 ```
@@ -23,9 +23,9 @@
 ```
 {
  "persons": 1372,
- "lanes": 292,
+ "lanes": 290,
  "corridorWidth": 13,
- "crossings": 392,
+ "crossings": 390,
  "corridorCrossings": 72,
  "dropLength": 4048,
  "blocks": 422
@@ -41,9 +41,9 @@
  "persons": 1372,
  "lanes": 289,
  "corridorWidth": 11,
- "crossings": 394,
+ "crossings": 396,
  "corridorCrossings": 47,
- "dropLength": 3925,
+ "dropLength": 3927,
  "blocks": 422
 }
 ```
@@ -55,11 +55,11 @@
 ```
 {
  "persons": 1372,
- "lanes": 291,
+ "lanes": 289,
  "corridorWidth": 15,
- "crossings": 386,
+ "crossings": 389,
  "corridorCrossings": 79,
- "dropLength": 3957,
+ "dropLength": 3959,
  "blocks": 422
 }
 ```

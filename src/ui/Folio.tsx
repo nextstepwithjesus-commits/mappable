@@ -5,6 +5,7 @@ import type { Card, Chrono, Fact, Cert } from '../data/types.ts';
 import { selected, second, pickMode, panel, model, showSchema } from '../state.ts';
 import { P, Refs, VerseInsert, Mark, roleText, refLabel, skyRef, plural } from './common.tsx';
 import { siblings } from '../engine/graph.ts';
+import { genitive } from '../engine/kinship.ts';
 import { formatYear, formatSpan, yearsWord, toHist } from '../engine/years.ts';
 import { contemporaries, type ChronoResult, type PersonChrono } from '../engine/chronology.ts';
 import { lifeText } from './SkyView.tsx';
@@ -41,6 +42,15 @@ export const SECTIONS: { n: number; part: number; title: string }[] = [
 export const PARTS = ['', 'I. Личность', 'II. Происхождение', 'III. Семья', 'IV. Время', 'V. Жизнь', 'VI. Наследие'];
 
 type State = 'content' | 'silent' | 'absent';
+
+/** Ссылка на лицо с именем в родительном падеже («после рождения Иехонии»). */
+function PG({ id }: { id: string }) {
+  const p = byId.get(id);
+  return <P id={id}>{p ? genitive(p.name, p.sex) : id}</P>;
+}
+
+/** Термины Писания «брат», «сестра» (в т. ч. «брат по отцу»). */
+const SIBLING_KIN = /^(брат|сестра)(?![а-яё])/i;
 
 /** Модель ChronoResult поверх данных выбранной модели (для «современников»). */
 function asResult(m: ModelData): ChronoResult {
@@ -372,8 +382,8 @@ export function buildSections(id: string, p: AtlasPerson, card: Card | null, m: 
             <p key={other}>
               {other ? (
                 <>
-                  <span class="muted">{p.sex === 'm' ? 'от ' : 'от '}</span>
-                  <P id={other} />:{' '}
+                  <span class="muted">от </span>
+                  <PG id={other} />:{' '}
                 </>
               ) : null}
               {list
@@ -407,10 +417,29 @@ export function buildSections(id: string, p: AtlasPerson, card: Card | null, m: 
   // 11 — братья и сёстры
   {
     const sib = siblings(graph, id);
+    // брат или сестра, названные так в Писании без общих родителей в данных (Саруия — сестра Давида, 1 Пар 2:16)
+    const kinSib = (graph.kinOf.get(id) ?? [])
+      .filter((k) => SIBLING_KIN.test(k.rel))
+      .map((k) => ({ other: k.from === id ? k.to : k.from, k }))
+      .filter((x, i, a) => !sib.some((s) => s.id === x.other) && a.findIndex((y) => y.other === x.other) === i);
     put(
       11,
-      (sib.length || card?.siblingsNote?.length) && (
+      (sib.length || kinSib.length || card?.siblingsNote?.length) && (
         <>
+          {kinSib.length ? (
+            <ul>
+              {kinSib.map(({ other, k }, i) => (
+                <li class="fact" key={other}>
+                  <P id={other} />
+                  {/* термин записан у того, кого он описывает: «Саруия — сестра Давида»; обратное — по полу */}
+                  <span class="muted"> — {k.from === other ? k.rel : byId.get(other)!.sex === 'f' ? 'сестра' : 'брат'}</span>
+                  <Refs refs={k.refs} owner={ns + `ks11.${i}`} />
+                  <Mark cert={k.cert} />
+                  <VerseInsert owner={ns + `ks11.${i}`} refs={k.refs} />
+                </li>
+              ))}
+            </ul>
+          ) : null}
           {sib.length ? (
             <p>
               {sib.map((s, i) => (
@@ -429,7 +458,7 @@ export function buildSections(id: string, p: AtlasPerson, card: Card | null, m: 
   }
   // 12 — иное родство
   {
-    const kin = graph.kinOf.get(id) ?? [];
+    const kin = (graph.kinOf.get(id) ?? []).filter((k) => !SIBLING_KIN.test(k.rel)); // братья и сёстры — в § 11
     put(
       12,
       (kin.length || card?.kinNote?.length) && (
@@ -874,11 +903,11 @@ function RelativeChrono({ id, m, note }: { id: string; m: ModelData; note?: Fact
   })[0];
   const tensions = m.tensions.filter((t) => t.persons.includes(id));
   // если надёжно датированных родственников нет — порядок по прямому родству: родитель раньше, ребёнок позже
-  const kinOrder = !bornAfter && !bornBefore;
-  const parentLink = kinOrder ? (graph.parentsOf.get(id) ?? []).find((e) => e.kind === 'father' || e.kind === 'mother') : undefined;
-  const childLink = kinOrder
-    ? [...(graph.childrenOf.get(id) ?? [])].filter((e) => e.kind === 'father' || e.kind === 'mother').sort((a, b) => (byId.get(a.child)!.order ?? 99) - (byId.get(b.child)!.order ?? 99))[0]
-    : undefined;
+  // порядок по прямому родству: родитель раньше, ребёнок позже (если они ещё не названы выше как датированные опоры)
+  const parentLink = (graph.parentsOf.get(id) ?? []).find((e) => (e.kind === 'father' || e.kind === 'mother') && e.parent !== bornAfter);
+  const childLink = [...(graph.childrenOf.get(id) ?? [])]
+    .filter((e) => (e.kind === 'father' || e.kind === 'mother') && e.child !== bornBefore)
+    .sort((a, b) => (byId.get(a.child)!.order ?? 99) - (byId.get(b.child)!.order ?? 99))[0];
   const kinWord = (x: string, up: boolean) => {
     const f = byId.get(x)!.sex === 'f';
     return up ? (f ? 'мать' : 'отец') : f ? 'дочь' : 'сын';
@@ -893,18 +922,18 @@ function RelativeChrono({ id, m, note }: { id: string; m: ModelData; note?: Fact
         <p>
           {bornAfter && (
             <>
-              Родился после рождения <P id={bornAfter} />
+              Родился после рождения <PG id={bornAfter} />
             </>
           )}
           {bornAfter && bornBefore ? ' и ' : ''}
           {bornBefore && (
             <>
-              {bornAfter ? 'до' : 'Родился до'} рождения <P id={bornBefore} />
+              {bornAfter ? 'до' : 'Родился до'} рождения <PG id={bornBefore} />
             </>
           )}
           {aliveDuring && (
             <>
-              {bornAfter || bornBefore ? '; ' : ''}жил при жизни <P id={aliveDuring} />
+              {bornAfter || bornBefore ? '; ' : ''}жил при жизни <PG id={aliveDuring} />
             </>
           )}
           .
@@ -916,13 +945,13 @@ function RelativeChrono({ id, m, note }: { id: string; m: ModelData; note?: Fact
           По родству:{' '}
           {parentLink && (
             <>
-              после <P id={parentLink.parent} /> ({kinWord(parentLink.parent, true)})
+              после <PG id={parentLink.parent} /> ({kinWord(parentLink.parent, true)})
             </>
           )}
           {parentLink && childLink ? ', ' : ''}
           {childLink && (
             <>
-              до <P id={childLink.child} /> ({kinWord(childLink.child, false)})
+              до <PG id={childLink.child} /> ({kinWord(childLink.child, false)})
             </>
           )}
           .

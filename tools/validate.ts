@@ -411,7 +411,15 @@ for (const [id, p] of byId) {
   }
   if (!p.father && !p.mother && !(p.spouses?.length) && !(p.kin?.length) && !(p.otherParents?.length)) {
     // допускается для лиц без родословия, но должно быть осознанным
-    const hasChild = [...byId.values()].some((q) => q.father === id || q.mother === id);
+    // связь может быть записана у другого лица: ребёнок, «иной родитель» (otherParents), супруг или родство (kin)
+    const hasChild = [...byId.values()].some(
+      (q) =>
+        q.father === id ||
+        q.mother === id ||
+        (q.otherParents ?? []).some((o) => o.id === id) ||
+        (q.spouses ?? []).some((x) => x.id === id) ||
+        (q.kin ?? []).some((x) => x.id === id),
+    );
     if (!hasChild) warn(W, 'лицо без единой родственной связи');
   }
 }

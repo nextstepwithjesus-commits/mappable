@@ -81,7 +81,7 @@ async function main() {
     });
   }
   await browser.close();
-  process.kill(-server.pid!);
+  try { process.kill(-server.pid!); } catch { /* уже остановлен */ }
   if (errors.length) {
     console.log('Ошибки страницы:\n' + [...new Set(errors)].join('\n'));
     process.exitCode = 1;
