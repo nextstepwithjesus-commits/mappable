@@ -268,7 +268,7 @@ export function buildSections(id: string, p: AtlasPerson, card: Card | null, m: 
             <li key={i}>
               {a.name} <span class="muted">— {ALT_KIND[a.kind] ?? a.kind}</span>
               <Refs refs={a.refs} owner={ns + `a4.${i}`} />
-              {a.note ? <span class="muted">. {a.note}</span> : null}
+              {a.note ? <span class="muted">. {cap(a.note)}</span> : null}
               <VerseInsert owner={ns + `a4.${i}`} refs={a.refs} />
             </li>
           ))}
@@ -534,7 +534,7 @@ export function buildSections(id: string, p: AtlasPerson, card: Card | null, m: 
           {card.places?.map((pl, i) => (
             <li class="fact" key={i}>
               {pl.name} <span class="muted">— {PLACE_ROLE[pl.role]}</span>
-              {pl.note ? <span class="muted">. {pl.note}</span> : null}
+              {pl.note ? <span class="muted">. {cap(pl.note)}</span> : null}
               <Refs refs={pl.refs} owner={ns + `p15.${i}`} />
               <VerseInsert owner={ns + `p15.${i}`} refs={pl.refs} />
             </li>
