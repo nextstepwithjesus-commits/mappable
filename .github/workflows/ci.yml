@@ -22,6 +22,8 @@ jobs:
         run: npm run -s validate -- --quiet
       - name: Сборка данных (хронология, раскладка)
         run: npm run -s data
+      - name: Координаты опорных звёзд (NFR-3)
+        run: npm run -s coords
       - name: Тесты движка
         run: npm test
       - name: Типы

@@ -1,18 +1,18 @@
 # Отчёт сборки данных
 
-Лиц: 2655; томов: 20; процитированных стихов: 12520.
+Лиц: 2660; томов: 20; процитированных стихов: 12530.
 
 ## Модель mt-long
 
 ```
 {
- "persons": 2655,
- "lanes": 488,
+ "persons": 2660,
+ "lanes": 489,
  "corridorWidth": 13,
  "crossings": 472,
  "corridorCrossings": 67,
  "dropLength": 5282,
- "blocks": 1123
+ "blocks": 1127
 }
 ```
 
@@ -22,13 +22,13 @@
 
 ```
 {
- "persons": 2655,
+ "persons": 2660,
  "lanes": 488,
  "corridorWidth": 13,
  "crossings": 523,
  "corridorCrossings": 78,
  "dropLength": 5470,
- "blocks": 1123
+ "blocks": 1127
 }
 ```
 
@@ -38,13 +38,13 @@
 
 ```
 {
- "persons": 2655,
+ "persons": 2660,
  "lanes": 490,
  "corridorWidth": 11,
  "crossings": 462,
  "corridorCrossings": 45,
  "dropLength": 5287,
- "blocks": 1123
+ "blocks": 1127
 }
 ```
 
@@ -54,13 +54,13 @@
 
 ```
 {
- "persons": 2655,
- "lanes": 488,
+ "persons": 2660,
+ "lanes": 489,
  "corridorWidth": 15,
  "crossings": 465,
  "corridorCrossings": 77,
  "dropLength": 5282,
- "blocks": 1123
+ "blocks": 1127
 }
 ```
 

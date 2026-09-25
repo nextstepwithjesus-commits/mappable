@@ -7,7 +7,7 @@
  *   npm run -s perf -- 2000      — другое число
  */
 import { spawn, execFileSync } from 'node:child_process';
-import { existsSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { chromium } from 'playwright';
 import { ROOT } from './bible.ts';
@@ -71,9 +71,13 @@ async function main() {
   }
   const table = ['| Экран | Лиц | Первый кадр неба | Кадров/с при панорамировании | Медиана кадра | 95-й процентиль | Худший кадр |', '|---|---|---|---|---|---|---|', ...results];
   console.log(table.join('\n'));
+  // разделы «## …» после таблицы пишутся вручную и при новом замере сохраняются
+  const out = join(ROOT, 'docs/perf.md');
+  const prev = existsSync(out) ? readFileSync(out, 'utf8') : '';
+  const notes = prev.includes('\n## ') ? prev.slice(prev.indexOf('\n## ')) : '';
   writeFileSync(
-    join(ROOT, 'docs/perf.md'),
-    `# Замер быстродействия (NFR-1)\n\nChromium без аппаратного ускорения в облачном контейнере, ${new Date().toISOString().slice(0, 10)}. Команда: \`npm run -s perf\`.\n\n${table.join('\n')}\n`,
+    out,
+    `# Замер быстродействия (NFR-1)\n\nChromium без аппаратного ускорения в облачном контейнере, ${new Date().toISOString().slice(0, 10)}. Команда: \`npm run -s perf\`.\n\n${table.join('\n')}\n${notes}`,
   );
 }
 main();
