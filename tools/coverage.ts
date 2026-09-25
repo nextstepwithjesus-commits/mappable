@@ -75,7 +75,12 @@ const STOP = new Set(
 const bible = loadBible();
 const ignore: string[] = existsSync(join(ROOT, 'data/coverage-ignore.json')) ? JSON.parse(readFileSync(join(ROOT, 'data/coverage-ignore.json'), 'utf8')) : [];
 const ignoreRes = ignore.map((w) => nameMatcher(w));
-const only = process.argv[2];
+const arg = process.argv[2];
+if (arg && !/^\d\d$/.test(arg)) {
+  console.log('Использование: npm run -s coverage [-- NN], где NN — номер тома (01–20)');
+  process.exit(arg === '--help' || arg === '-h' ? 0 : 1);
+}
+const only = arg;
 
 const dir = join(ROOT, 'data/persons');
 const persons: Person[] = readdirSync(dir)
