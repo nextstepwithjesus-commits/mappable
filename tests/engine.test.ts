@@ -223,3 +223,18 @@ describe('текст Писания', () => {
     expect(b.chapterLength('Пс', 151)).toBe(0);
   });
 });
+
+describe('родство через термин Писания «сестра»', () => {
+  it('Иоав — племянник Давида: мать Иоава Саруия названа сестрой Давида без общих родителей в данных', () => {
+    const P = (id: string, name: string, sex: 'm' | 'f', extra: Partial<Person> = {}): Person => ({ id, name, sex, group: 'judah', prominence: 3, ...extra });
+    const g = buildGraph([
+      P('david', 'Давид', 'm'),
+      P('saruiya', 'Саруия', 'f', { kin: [{ id: 'david', rel: 'сестра', refs: ['1Пар 2:16'] }] }),
+      P('ioav', 'Иоав', 'm', { mother: 'saruiya', parentRefs: ['1Пар 2:16'] }),
+    ]);
+    const r = relate(g, 'ioav', 'david');
+    expect(r.some((x) => x.term === 'племянник' && x.sentence.includes('сын его сестры Саруии'))).toBe(true);
+    expect(relate(g, 'david', 'ioav').some((x) => x.term === 'дядя')).toBe(true);
+    expect(relate(g, 'david', 'saruiya').some((x) => x.term === 'брат')).toBe(true);
+  });
+});

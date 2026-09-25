@@ -1,18 +1,18 @@
 # Отчёт сборки данных
 
-Лиц: 932; томов: 9; процитированных стихов: 6761.
+Лиц: 1151; томов: 11; процитированных стихов: 7800.
 
 ## Модель mt-long
 
 ```
 {
- "persons": 932,
- "lanes": 280,
+ "persons": 1151,
+ "lanes": 277,
  "corridorWidth": 13,
- "crossings": 295,
- "corridorCrossings": 47,
- "dropLength": 3057,
- "blocks": 218
+ "crossings": 356,
+ "corridorCrossings": 63,
+ "dropLength": 3457,
+ "blocks": 346
 }
 ```
 
@@ -22,13 +22,13 @@
 
 ```
 {
- "persons": 932,
- "lanes": 263,
+ "persons": 1151,
+ "lanes": 267,
  "corridorWidth": 13,
- "crossings": 287,
- "corridorCrossings": 62,
- "dropLength": 3102,
- "blocks": 218
+ "crossings": 349,
+ "corridorCrossings": 71,
+ "dropLength": 3526,
+ "blocks": 346
 }
 ```
 
@@ -38,13 +38,13 @@
 
 ```
 {
- "persons": 932,
- "lanes": 278,
- "corridorWidth": 9,
- "crossings": 307,
- "corridorCrossings": 28,
- "dropLength": 3026,
- "blocks": 218
+ "persons": 1151,
+ "lanes": 277,
+ "corridorWidth": 11,
+ "crossings": 369,
+ "corridorCrossings": 42,
+ "dropLength": 3430,
+ "blocks": 346
 }
 ```
 
@@ -54,13 +54,13 @@
 
 ```
 {
- "persons": 932,
- "lanes": 280,
+ "persons": 1151,
+ "lanes": 277,
  "corridorWidth": 15,
- "crossings": 294,
- "corridorCrossings": 57,
- "dropLength": 3065,
- "blocks": 218
+ "crossings": 349,
+ "corridorCrossings": 65,
+ "dropLength": 3459,
+ "blocks": 346
 }
 ```
 

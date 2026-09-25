@@ -124,6 +124,8 @@ function Search() {
     skyRef.flyTo(id);
     setOpen(false);
     setQ('');
+    // фокус — на заголовок открытой карточки: дальше Tab идёт по её разделам, а не по кнопкам неба
+    setTimeout(() => document.querySelector<HTMLElement>(`.folio #title-${CSS.escape(id)}`)?.focus(), 80);
   };
   const onKey = (e: KeyboardEvent) => {
     if (e.key === 'ArrowDown') {

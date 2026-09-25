@@ -237,7 +237,8 @@ for (const [id, p] of byId) {
   if (p.father || p.mother) {
     const texts = checkRefs(`${W}.parentRefs`, p.parentRefs);
     allTexts.push(...texts);
-    if (texts.length && !mentions(texts, names)) warn(W, `имя не найдено в стихах parentRefs (${(p.parentRefs ?? []).join('; ')})`);
+    // у безымянного лица «имя» — описание («Дочь фараона»), его форма в стихе может быть любой
+    if (texts.length && !p.unnamed && !mentions(texts, names)) warn(W, `имя не найдено в стихах parentRefs (${(p.parentRefs ?? []).join('; ')})`);
     checkCert(`${W}.parentCert`, p.parentCert);
     checkCert(`${W}.motherCert`, p.motherCert);
   } else if (p.parentRefs && p.parentRefs.length) {

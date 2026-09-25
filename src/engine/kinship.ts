@@ -96,6 +96,9 @@ export function bloodTerm(a: number, b: number, female: boolean, halfSibling?: '
   return m === 1 ? nephew : `${(female ? ORD_F : ORD)[m]} ${nephew}`;
 }
 
+/** Термины Писания «брат», «сестра», «брат по отцу» и т. п. */
+const SIBLING_TERM = /^(брат|сестра)(?![а-яё])/i; // \b в JS не знает кириллицы
+
 function genitive(name: string): string {
   // простое склонение для подписи: «Давида», «Руфи», «Марии», «Иисуса»
   const n = name.split(' ')[0];
@@ -123,6 +126,49 @@ export function relate(g: Graph, aId: string, bId: string, maxResults = 6): Rela
       out.push({
         term: k.rel, sentence: sentence(k.rel), steps: [{ from: aId, to: bId, kind: 'kin', interpretive: k.cert === 'interpretation' }],
         ancestor: null, up: 0, down: 0, interpretive: k.cert === 'interpretation', scriptureTerm: k.rel,
+      });
+    }
+  }
+  // тот же термин, записанный у второго лица: «Саруия — сестра Давида» даёт «Давид — брат Саруии»
+  for (const k of g.kinOf.get(bId) ?? []) {
+    if (k.from === bId && k.to === aId && SIBLING_TERM.test(k.rel)) {
+      const term = female ? 'сестра' : 'брат';
+      out.push({
+        term, sentence: sentence(term), steps: [{ from: aId, to: bId, kind: 'kin', interpretive: k.cert === 'interpretation' }],
+        ancestor: null, up: 0, down: 0, interpretive: k.cert === 'interpretation', scriptureTerm: k.rel,
+      });
+    }
+  }
+  // через брата или сестру, названных так в Писании без общих родителей в данных (Саруия — сестра Давида, 1 Пар 2:16)
+  const kinSibs = (id: string) =>
+    (g.kinOf.get(id) ?? [])
+      .filter((k) => SIBLING_TERM.test(k.rel))
+      .map((k) => ({ other: k.from === id ? k.to : k.from, k }));
+  const parentEdges = (id: string) => (g.parentsOf.get(id) ?? []).filter((e) => e.kind === 'father' || e.kind === 'mother');
+  for (const pe of parentEdges(aId)) {
+    for (const { other, k } of kinSibs(pe.parent)) {
+      if (other !== bId) continue;
+      const par = g.persons.get(pe.parent)!;
+      const term = female ? 'племянница' : 'племянник';
+      const tail = `${female ? 'дочь' : 'сын'} ${Bp.sex === 'f' ? 'её' : 'его'} ${par.sex === 'f' ? 'сестры' : 'брата'} ${genitive(par.name)}`;
+      const interp = k.cert === 'interpretation' || pe.cert === 'interpretation';
+      out.push({
+        term, sentence: `${sentence(term)} (${tail})`,
+        steps: [{ from: aId, to: pe.parent, kind: 'up', interpretive: pe.cert === 'interpretation' }, { from: pe.parent, to: bId, kind: 'kin', interpretive: k.cert === 'interpretation' }],
+        ancestor: null, up: 1, down: 0, interpretive: interp, scriptureTerm: k.rel,
+      });
+    }
+  }
+  for (const pe of parentEdges(bId)) {
+    for (const { other, k } of kinSibs(pe.parent)) {
+      if (other !== aId) continue;
+      const par = g.persons.get(pe.parent)!;
+      const term = female ? 'тётя' : 'дядя';
+      const tail = `${female ? 'сестра' : 'брат'} ${par.sex === 'f' ? 'его матери' : 'его отца'} ${genitive(par.name)}`;
+      out.push({
+        term, sentence: `${sentence(term)} (${tail})`,
+        steps: [{ from: aId, to: pe.parent, kind: 'kin', interpretive: k.cert === 'interpretation' }, { from: pe.parent, to: bId, kind: 'down', interpretive: pe.cert === 'interpretation' }],
+        ancestor: null, up: 0, down: 1, interpretive: k.cert === 'interpretation' || pe.cert === 'interpretation', scriptureTerm: k.rel,
       });
     }
   }

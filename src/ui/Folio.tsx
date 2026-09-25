@@ -346,6 +346,24 @@ export function buildSections(id: string, p: AtlasPerson, card: Card | null, m: 
       byMother.set(other, a);
     }
     const others = (graph.childrenOf.get(id) ?? []).filter((e) => e.kind.startsWith('other'));
+    // внуки и правнуки — по прямым связям отец/мать (переход к Давиду из карточки Руфи — «правнук»)
+    const kidIds = (x: string) => (graph.childrenOf.get(x) ?? []).filter((e) => e.kind === 'father' || e.kind === 'mother').map((e) => e.child);
+    const nextGen = (ids: string[]) => [...new Set(ids.flatMap(kidIds))];
+    const grand = nextGen([...new Set(kids.map((e) => e.child))]);
+    const great = nextGen(grand);
+    const genRow = (label: string, ids: string[]) =>
+      ids.length ? (
+        <p key={label}>
+          <span class="muted">{label}: </span>
+          {ids.slice(0, 16).map((k, i) => (
+            <span key={k}>
+              {i ? ', ' : ''}
+              <P id={k} />
+            </span>
+          ))}
+          {ids.length > 16 ? <span class="muted"> и ещё {ids.length - 16}</span> : null}
+        </p>
+      ) : null;
     put(
       10,
       (kids.length || others.length || card?.childrenNote?.length) && (
@@ -379,6 +397,8 @@ export function buildSections(id: string, p: AtlasPerson, card: Card | null, m: 
               ))}
             </p>
           ) : null}
+          {genRow(grand.length > 1 ? 'Внуки' : byId.get(grand[0] ?? '')?.sex === 'f' ? 'Внучка' : 'Внук', grand)}
+          {genRow(great.length > 1 ? 'Правнуки' : byId.get(great[0] ?? '')?.sex === 'f' ? 'Правнучка' : 'Правнук', great)}
           {facts(card?.childrenNote, 'n10')}
         </>
       ),
@@ -628,7 +648,7 @@ export function Masthead({ id }: { id: string }) {
   const mm = lineMembership.mary.has(id);
   return (
     <header class="mast">
-      <h2>{p.name}</h2>
+      <h2 id={`title-${id}`} tabIndex={-1}>{p.name}</h2>
       {p.disambig ? <div class="dis">{p.disambig}</div> : <div class="dis">&nbsp;</div>}
       <dl class="passport">
         {p.roles.length ? (
@@ -853,6 +873,16 @@ function RelativeChrono({ id, m, note }: { id: string; m: ModelData; note?: Fact
     return oe !== null && o.b < c.bLo && oe > (c.last ?? c.bHi);
   })[0];
   const tensions = m.tensions.filter((t) => t.persons.includes(id));
+  // если надёжно датированных родственников нет — порядок по прямому родству: родитель раньше, ребёнок позже
+  const kinOrder = !bornAfter && !bornBefore;
+  const parentLink = kinOrder ? (graph.parentsOf.get(id) ?? []).find((e) => e.kind === 'father' || e.kind === 'mother') : undefined;
+  const childLink = kinOrder
+    ? [...(graph.childrenOf.get(id) ?? [])].filter((e) => e.kind === 'father' || e.kind === 'mother').sort((a, b) => (byId.get(a.child)!.order ?? 99) - (byId.get(b.child)!.order ?? 99))[0]
+    : undefined;
+  const kinWord = (x: string, up: boolean) => {
+    const f = byId.get(x)!.sex === 'f';
+    return up ? (f ? 'мать' : 'отец') : f ? 'дочь' : 'сын';
+  };
   return (
     <>
       <p>
@@ -879,6 +909,25 @@ function RelativeChrono({ id, m, note }: { id: string; m: ModelData; note?: Fact
           )}
           .
           <abbr class="mark" title="по годам, рассчитанным хронологическим движком">расч.</abbr>
+        </p>
+      )}
+      {(parentLink || childLink) && (
+        <p>
+          По родству:{' '}
+          {parentLink && (
+            <>
+              после <P id={parentLink.parent} /> ({kinWord(parentLink.parent, true)})
+            </>
+          )}
+          {parentLink && childLink ? ', ' : ''}
+          {childLink && (
+            <>
+              до <P id={childLink.child} /> ({kinWord(childLink.child, false)})
+            </>
+          )}
+          .
+          <Refs refs={[...(parentLink?.refs ?? []), ...(childLink?.refs ?? [])].filter((r, i, a) => a.indexOf(r) === i).slice(0, 3)} owner="kin13" />
+          <abbr class="mark" title="вывод: родитель рождается раньше ребёнка">выв.</abbr>
         </p>
       )}
       {c.cls === 'estimated' && <p class="muted">Год оценён по родству: в среднем по длине поколения своей эпохи между надёжно датированными предками и потомками.</p>}
