@@ -111,7 +111,7 @@ for (const ps of PASSAGES) {
     const t = bible.verses.get(verseId(v));
     if (!t) continue;
     const clean = stripBrackets(t);
-    const re = /(?:^|[^А-ЯЁа-яё])([А-ЯЁ][а-яё]+(?:-[А-ЯЁ]?[а-яё]+)?)/g;
+    const re = /(?:^|[^А-ЯЁа-яё])([А-ЯЁ][а-яё]+(?:[-—][А-ЯЁ]?[а-яё]+)?)/g; // «Баал—Ханан» — одно имя
     let m: RegExpExecArray | null;
     while ((m = re.exec(clean))) {
       const w = m[1];

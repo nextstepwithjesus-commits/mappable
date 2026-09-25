@@ -711,7 +711,8 @@ export class Sky {
     };
     ctx.font = `italic 400 13px ${FONT_SERIF}`;
     ctx.fillStyle = pal.ink2;
-    const head = `${ep ? ep.name + '; ' : ''}${span(Math.max(this.scale.knots[0], tL), Math.min(T_END, tR))}`;
+    // эпоха в колонтитуле — только когда окно уже тысячи лет; на обзоре она ничего не называет
+    const head = `${ep && tR - tL < 1000 ? ep.name + '; ' : ''}${span(Math.max(this.scale.knots[0], tL), Math.min(T_END, tR))}`;
     ctx.strokeStyle = pal.halo;
     ctx.lineWidth = 3;
     ctx.strokeText(head, LETTER_W + 10, RULER_H + 17);
