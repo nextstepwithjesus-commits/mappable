@@ -167,6 +167,7 @@ const index = persons.map((p) => {
     fk: p.fatherKind ?? 'natural',
     fg: p.fatherGap ? 1 : 0,
     pc: p.parentCert ?? 'scripture',
+    mc: p.motherCert ?? p.parentCert ?? 'scripture',
     pRefs: p.parentRefs ?? [],
     op: (p.otherParents ?? []).map((o) => ({ id: o.id, role: o.role, kind: o.kind, cert: o.cert, refs: o.refs })),
     sp: (p.spouses ?? []).map((s) => ({ id: s.id, kind: s.kind, refs: s.refs, cert: s.cert ?? 'scripture' })),
@@ -219,6 +220,36 @@ for (const v of volumes) {
   writeFileSync(join(gen, 'cards', `${v.volume}.json`), JSON.stringify(cards));
 }
 for (const [book, m] of versesByBook) writeFileSync(join(gen, 'verses', `${BOOKS.findIndex((b) => b.code === book).toString().padStart(2, '0')}.json`), JSON.stringify({ book, verses: m }));
+
+// ---------- родословные главы для чтения ----------
+const CHAPTERS = ['Быт 4', 'Быт 5', 'Быт 10', 'Быт 11', 'Быт 25', 'Быт 36', 'Быт 46', 'Исх 6', 'Руф 4', '1Пар 1', '1Пар 2', '1Пар 3', '1Пар 4', '1Пар 5', '1Пар 6', '1Пар 7', '1Пар 8', '1Пар 9', 'Мф 1', 'Лк 3'];
+const personsByVerse = new Map<string, Set<string>>();
+for (const p of persons) {
+  for (const r of refsOf(p)) {
+    const pr = parseRef(r, bible.chapterLength);
+    if (!pr) continue;
+    for (const v of pr.verses.slice(0, 60)) {
+      const k = verseId(v);
+      const set = personsByVerse.get(k) ?? new Set<string>();
+      set.add(p.id);
+      personsByVerse.set(k, set);
+    }
+  }
+}
+const chapters: Record<string, { n: number; t: string; ids: string[] }[]> = {};
+for (const ch of CHAPTERS) {
+  const [book, num] = ch.split(' ');
+  const len = bible.chapterLength(book, Number(num));
+  const out: { n: number; t: string; ids: string[] }[] = [];
+  for (let v = 1; v <= len; v++) {
+    const key = `${book} ${num}:${v}`;
+    const t = bible.verses.get(key);
+    if (t === undefined) continue;
+    out.push({ n: v, t: typo(t), ids: [...(personsByVerse.get(key) ?? [])] });
+  }
+  chapters[ch] = out;
+}
+writeFileSync(join(gen, 'chapters.json'), JSON.stringify(chapters));
 
 // ---------- отчёт ----------
 const rep: string[] = ['# Отчёт сборки данных', '', `Лиц: ${persons.length}; томов: ${volumes.length}; процитированных стихов: ${cited.size}.`, ''];

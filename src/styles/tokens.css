@@ -1,0 +1,77 @@
+/* Токены «Звёздного атласа» (docs/DESIGN.md). Оттенок — только у двух лент; всё остальное — светлота. */
+:root,
+:root[data-theme='night'] {
+  --sky: #0d1b34;
+  --sky-band: #11223f;
+  --sheet: #0f2040;
+  --sheet-2: #132647;
+  --ink: #e8eef7;
+  --ink-2: #a9b8cf;
+  --ink-3: #7385a3;
+  --rule: #243a5f;
+  --rule-strong: #3a557f;
+  --gold-1: #f0c66b;
+  --gold-2: #c9773a;
+  --azure-1: #a8d4fa;
+  --azure-2: #9edbd0;
+  --focus: #ffffff;
+  --halo: #0d1b34;
+  --glow: 1;
+  color-scheme: dark;
+}
+:root[data-theme='day'] {
+  --sky: #eef2f6;
+  --sky-band: #e5ebf2;
+  --sheet: #f8fafc;
+  --sheet-2: #eef2f7;
+  --ink: #172238;
+  --ink-2: #43536d;
+  --ink-3: #6f7d93;
+  --rule: #cdd6e1;
+  --rule-strong: #9eadc1;
+  --gold-1: #9a6a12;
+  --gold-2: #8e4a1e;
+  --azure-1: #2b64a8;
+  --azure-2: #1f7a70;
+  --focus: #0d1b34;
+  --halo: #eef2f6;
+  --glow: 0;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    --sky: #eef2f6;
+    --sky-band: #e5ebf2;
+    --sheet: #f8fafc;
+    --sheet-2: #eef2f7;
+    --ink: #172238;
+    --ink-2: #43536d;
+    --ink-3: #6f7d93;
+    --rule: #cdd6e1;
+    --rule-strong: #9eadc1;
+    --gold-1: #9a6a12;
+    --gold-2: #8e4a1e;
+    --azure-1: #2b64a8;
+    --azure-2: #1f7a70;
+    --focus: #0d1b34;
+    --halo: #eef2f6;
+    --glow: 0;
+    color-scheme: light;
+  }
+}
+:root {
+  --serif: 'Literata Variable', 'Literata', Georgia, serif;
+  --sans: 'Jost Variable', 'Jost', 'Futura', sans-serif;
+  --hebrew: 'Noto Serif Hebrew', serif;
+  --t-name: 34px;
+  --t-name-lh: 40px;
+  --t-sub: 17px;
+  --t-body: 16px;
+  --t-body-lh: 24px;
+  --t-note: 14px;
+  --t-small: 12px;
+  --folio-w: 440px;
+  --strip-h: 76px;
+  --top-h: 44px;
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+}

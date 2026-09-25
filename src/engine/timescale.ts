@@ -25,7 +25,7 @@ export interface TimeScale {
   breakT: number; // начало разрыва шкалы (истинный режим)
 }
 
-function fritschCarlson(x: number[], y: number[]): number[] {
+export function fritschCarlson(x: number[], y: number[]): number[] {
   const n = x.length;
   const d = new Array<number>(n - 1);
   for (let i = 0; i < n - 1; i++) d[i] = (y[i + 1] - y[i]) / (x[i + 1] - x[i]);
@@ -164,4 +164,16 @@ export function xToTime(ts: TimeScale, x: number, lambda: number): number {
 export function yearsPerUnit(ts: TimeScale, t: number, lambda: number): number {
   const dx = timeToX(ts, t + 1, lambda) - timeToX(ts, t, lambda);
   return dx > 0 ? 1 / dx : Infinity;
+}
+
+/** Восстановить масштаб из сохранённых узлов (касательные пересчитываются). */
+export function hydrateScale(raw: { knots: number[]; xTrue: number[]; xDense: number[] }): TimeScale {
+  return {
+    knots: raw.knots,
+    xTrue: raw.xTrue,
+    xDense: raw.xDense,
+    mTrue: fritschCarlson(raw.knots, raw.xTrue),
+    mDense: fritschCarlson(raw.knots, raw.xDense),
+    breakT: T_CANON_END,
+  };
 }

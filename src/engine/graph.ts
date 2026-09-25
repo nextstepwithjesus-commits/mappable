@@ -71,7 +71,7 @@ export function buildGraph(persons: Person[]): Graph {
       push(g.childrenOf, p.father, e);
     }
     if (has(p.mother)) {
-      const e: ParentEdge = { parent: p.mother, child: p.id, kind: 'mother', claim: 'natural', refs: p.parentRefs ?? [], cert, gap: false };
+      const e: ParentEdge = { parent: p.mother, child: p.id, kind: 'mother', claim: 'natural', refs: p.parentRefs ?? [], cert: p.motherCert ?? cert, gap: false };
       push(g.parentsOf, p.id, e);
       push(g.childrenOf, p.mother, e);
     }

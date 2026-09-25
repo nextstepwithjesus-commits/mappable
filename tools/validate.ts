@@ -81,7 +81,7 @@ for (const file of allFiles.concat(targetFiles.filter((f) => !allFiles.includes(
 
 // ---------- проверки ----------
 const PERSON_KEYS = new Set([
-  'id', 'name', 'disambig', 'sex', 'father', 'mother', 'parentRefs', 'parentCert', 'fatherKind', 'order',
+  'id', 'name', 'disambig', 'sex', 'father', 'mother', 'parentRefs', 'parentCert', 'motherCert', 'fatherKind', 'order',
   'otherParents', 'spouses', 'kin', 'roles', 'group', 'prominence', 'chrono', 'card', 'unnamed', 'kind', 'fatherGap',
   '__file', '__vol',
 ]);
@@ -237,6 +237,7 @@ for (const [id, p] of byId) {
     allTexts.push(...texts);
     if (texts.length && !mentions(texts, names)) warn(W, `имя не найдено в стихах parentRefs (${(p.parentRefs ?? []).join('; ')})`);
     checkCert(`${W}.parentCert`, p.parentCert);
+    checkCert(`${W}.motherCert`, p.motherCert);
   } else if (p.parentRefs && p.parentRefs.length) {
     warn(W, 'parentRefs без father/mother');
   }

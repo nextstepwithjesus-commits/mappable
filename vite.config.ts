@@ -5,6 +5,7 @@ import { viteSingleFile } from 'vite-plugin-singlefile';
 export default defineConfig(({ mode }) => ({
   base: './',
   plugins: mode === 'single' ? [preact(), viteSingleFile()] : [preact()],
+  json: { stringify: true },
   build: {
     outDir: mode === 'single' ? 'dist-single' : 'dist',
     target: 'es2022',

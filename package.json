@@ -16,7 +16,8 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "append": "tsx tools/append.ts",
-    "layout": "tsx tools/build-data.ts"
+    "layout": "tsx tools/build-data.ts",
+    "shots": "tsx tools/shots.ts"
   },
   "license": "UNLICENSED",
   "dependencies": {
@@ -29,6 +30,7 @@
   "devDependencies": {
     "@preact/preset-vite": "^2.10.6",
     "@types/node": "^26.6.2",
+    "playwright": "^1.63.0",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
     "typograf": "^7.8.0",
