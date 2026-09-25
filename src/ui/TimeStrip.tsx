@@ -62,9 +62,11 @@ export function TimeStrip() {
         ctx.stroke();
         ctx.font = "450 11px 'Jost Variable', Jost, sans-serif";
         const tw = ctx.measureText(e.short).width;
-        if (b - a > tw + 6) {
+        const lx = a + (b - a - tw) / 2;
+        // не заходить на крайние подписи годов (слева — начало, справа — 2040)
+        if (b - a > tw + 6 && lx > PAD + 84 && lx + tw < W - PAD - 36) {
           ctx.fillStyle = pal.ink3;
-          ctx.fillText(e.short, a + (b - a - tw) / 2, 13);
+          ctx.fillText(e.short, lx, 13);
         }
       });
       // плотность лиц
@@ -101,7 +103,7 @@ export function TimeStrip() {
       }
       ctx.lineWidth = 1;
       // завершение канона и «сегодня»
-      const mark = (t: number, label: string, dashed: boolean) => {
+      const mark = (t: number, label: string, dashed: boolean, maxEnd = Infinity) => {
         const x = Math.round(xOf(t)) + 0.5;
         ctx.strokeStyle = pal.ink2;
         ctx.setLineDash(dashed ? [2, 2] : []);
@@ -113,10 +115,13 @@ export function TimeStrip() {
         ctx.font = "italic 400 11.5px 'Literata Variable', serif";
         ctx.fillStyle = pal.ink2;
         const tw = ctx.measureText(label).width;
-        ctx.fillText(label, Math.min(W - tw - 4, x + 4), H - 10);
+        const lx = Math.min(W - tw - 4, x + 4);
+        if (lx + tw < maxEnd) ctx.fillText(label, lx, H - 10);
+        return lx;
       };
-      mark(CANON_END, 'завершение канона', true);
-      mark(TODAY, 'сегодня', false);
+      ctx.font = "italic 400 11.5px 'Literata Variable', serif";
+      const todayX = mark(TODAY, 'сегодня', false);
+      mark(CANON_END, W < 700 ? 'канон' : 'завершение канона', true, todayX - 8);
       ctx.font = "450 11px 'Jost Variable', sans-serif";
       ctx.fillStyle = pal.ink3;
       ctx.fillText('2040', W - PAD - ctx.measureText('2040').width, 13);

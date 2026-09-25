@@ -678,17 +678,20 @@ export class Sky {
     ctx.lineWidth = 3;
     ctx.strokeText(head, LETTER_W + 10, RULER_H + 17);
     ctx.fillText(head, LETTER_W + 10, RULER_H + 17);
-    // местный масштаб: 1 см ≈ N лет
+    const headEnd = LETTER_W + 10 + ctx.measureText(head).width;
+    // местный масштаб: 1 см ≈ N лет — только если помещается рядом с колонтитулом (на узком экране не помещается)
     const pxPerYear = (this.xOf(tC + 1) - this.xOf(tC)) * cam.kx;
-    if (pxPerYear > 0) {
+    if (pxPerYear > 0 && W >= 720) {
       const raw = 37.8 / pxPerYear;
       const nice = raw >= 100 ? Math.round(raw / 50) * 50 : raw >= 10 ? Math.round(raw / 5) * 5 : Math.max(1, Math.round(raw));
       const note = `1\u00A0см ≈ ${nice}\u00A0${nice % 10 === 1 && nice % 100 !== 11 ? 'год' : nice % 10 >= 2 && nice % 10 <= 4 && (nice % 100 < 12 || nice % 100 > 14) ? 'года' : 'лет'}${this.lambda > 0.5 ? ', масштаб неравномерный' : ''}`;
       ctx.font = `450 11.5px ${FONT_SANS}`;
       const tw = ctx.measureText(note).width;
-      ctx.fillStyle = pal.ink3;
-      ctx.strokeText(note, W - tw - 12, RULER_H + 16);
-      ctx.fillText(note, W - tw - 12, RULER_H + 16);
+      if (W - tw - 12 > headEnd + 24) {
+        ctx.fillStyle = pal.ink3;
+        ctx.strokeText(note, W - tw - 12, RULER_H + 16);
+        ctx.fillText(note, W - tw - 12, RULER_H + 16);
+      }
     }
     // указатели на выбранных за краем
     this.edgeHits = [];
@@ -865,9 +868,11 @@ export class Sky {
         adDone = true;
       }
       const tw = ctx.measureText(label).width;
-      if (x - tw / 2 < lastX + 12) continue;
-      ctx.fillText(label, x - tw / 2, 10);
-      lastX = x + tw / 2;
+      // подпись по центру риски, но не за краями кромки
+      const lx = Math.max(2, Math.min(W - tw - 2, x - tw / 2));
+      if (lx < lastX + 12) continue;
+      ctx.fillText(label, lx, 10);
+      lastX = lx + tw;
     }
     // левая кромка: буквы полос
     ctx.fillStyle = alpha(pal.sky, 0.94);

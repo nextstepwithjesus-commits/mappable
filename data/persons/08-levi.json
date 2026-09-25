@@ -9649,7 +9649,7 @@
      {
       "text": "Во второй год по приходе положил начало строительства храма и поставил левитов надзирать за работами",
       "refs": [
-       "Езд 3:8-9"
+       "Езд 3:8"
       ]
      },
      {
@@ -9715,7 +9715,7 @@
     "scripture": {
      "first": "Езд 2:2",
      "key": [
-      "Езд 3:2-9",
+      "Езд 3:2-8",
       "Езд 5:2",
       "Агг 1:1",
       "Агг 1:12-14",
@@ -21073,6 +21073,4663 @@
     ],
     "scripture": {
      "first": "2Пар 35:9"
+    }
+   }
+  },
+  {
+   "id": "godaviya",
+   "name": "Годавия",
+   "disambig": "предок левитов Иисуса и Кадмиила",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "leviy",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Езд 2:40"
+     ],
+     "cert": "inference",
+     "note": "«Левитов: сыновей Иисуса и Кадмиила, из сыновей Годавии»"
+    }
+   ],
+   "roles": [
+    "levite"
+   ],
+   "group": "levi",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "judah-alone"
+   },
+   "card": {
+    "scripture": {
+     "first": "Езд 2:40"
+    }
+   }
+  },
+  {
+   "id": "kadmiil",
+   "name": "Кадмиил",
+   "disambig": "левит, пришедший с Зоровавелем",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "godaviya",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Езд 2:40"
+     ],
+     "cert": "scripture",
+     "note": "«из сыновей Годавии»"
+    }
+   ],
+   "roles": [
+    "levite"
+   ],
+   "group": "levi",
+   "prominence": 2,
+   "chrono": {
+    "epoch": "exile",
+    "active": {
+     "from": -538,
+     "to": -538,
+     "refs": [
+      "Езд 2:1-2",
+      "Неем 12:1"
+     ],
+     "note": "пришёл из плена с Зоровавелем и Иисусом"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Глава одного из семейств левитов, вернувшихся из плена",
+      "refs": [
+       "Езд 2:40",
+       "Неем 12:8"
+      ]
+     }
+    ],
+    "childrenNote": [
+     {
+      "text": "«Кадмиил и сыновья его»",
+      "refs": [
+       "Езд 3:9"
+      ]
+     },
+     {
+      "text": "«Иисус, сын Кадмиила»",
+      "refs": [
+       "Неем 12:24"
+      ]
+     }
+    ],
+    "events": [
+     {
+      "text": "Пришёл из плена с Зоровавелем и Иисусом",
+      "refs": [
+       "Неем 12:1",
+       "Неем 12:8"
+      ]
+     },
+     {
+      "text": "С сыновьями надзирал за производителями работ в доме Божием при закладке храма",
+      "refs": [
+       "Езд 3:8-9"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Езд 2:40",
+     "key": [
+      "Езд 2:40",
+      "Езд 3:9",
+      "Неем 12:8",
+      "Неем 12:24"
+     ]
+    },
+    "notes": [
+     {
+      "kind": "identification",
+      "text": "Кадмиил в перечнях времени Неемии (Неем 9:4–5; 10:9) — вероятно, глава того же семейства, а не тот же человек",
+      "refs": [
+       "Неем 9:4-5",
+       "Неем 10:9"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "iisus-syn-kadmiila",
+   "name": "Иисус",
+   "disambig": "сын Кадмиила, глава левитов",
+   "sex": "m",
+   "father": "kadmiil",
+   "parentRefs": [
+    "Неем 12:24"
+   ],
+   "roles": [
+    "levite"
+   ],
+   "group": "levi",
+   "prominence": 2,
+   "chrono": {
+    "epoch": "exile",
+    "active": {
+     "from": -538,
+     "to": -538,
+     "refs": [
+      "Езд 2:1-2",
+      "Неем 12:1"
+     ],
+     "note": "пришёл из плена с Зоровавелем и Иисусом"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Глава левитов, поставленных для славословия «по установлению Давида, человека Божия»",
+      "refs": [
+       "Неем 12:24"
+      ]
+     }
+    ],
+    "events": [
+     {
+      "text": "Пришёл из плена с Зоровавелем и Иисусом, сыном Иоседековым",
+      "refs": [
+       "Неем 12:1",
+       "Неем 12:8"
+      ]
+     },
+     {
+      "text": "С сыновьями и братьями надзирал за работами в доме Божием",
+      "refs": [
+       "Езд 3:9"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Езд 2:40",
+     "key": [
+      "Езд 2:40",
+      "Езд 3:9",
+      "Неем 12:8",
+      "Неем 12:24"
+     ]
+    },
+    "notes": [
+     {
+      "kind": "textual",
+      "text": "В Неем 10:9 левит Иисус назван «сыном Азании»; это может быть другое лицо того же семейства",
+      "refs": [
+       "Неем 10:9"
+      ]
+     },
+     {
+      "kind": "identification",
+      "text": "Не смешивать с Иисусом, сыном Иоседека, великим иереем",
+      "refs": [
+       "Агг 1:1"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "verzelliy-svyashchennik",
+   "name": "Верзеллий",
+   "disambig": "священник, взявший жену из дочерей Верзеллия Галаадитянина",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "aaron",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Езд 2:61"
+     ],
+     "cert": "inference",
+     "note": "«из сыновей священнических»"
+    }
+   ],
+   "spouses": [
+    {
+     "id": "zhena-verzelliya-svyashchennika",
+     "kind": "wife",
+     "refs": [
+      "Езд 2:61"
+     ]
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "united"
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Взял жену «из дочерей Верзеллия Галаадитянина и стал называться именем их»",
+      "refs": [
+       "Езд 2:61"
+      ]
+     }
+    ],
+    "childrenNote": [
+     {
+      "text": "Его потомки, «сыновья Верзеллия», не нашли своей родословной записи и были исключены из священства",
+      "refs": [
+       "Езд 2:61-62"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Езд 2:61",
+     "key": [
+      "Езд 2:61-63"
+     ]
+    },
+    "notes": [
+     {
+      "kind": "identification",
+      "text": "Верзеллий Галаадитянин — вероятно, друг Давида (2 Цар 17:27; 19:31–39); лицо другого тома",
+      "refs": [
+       "2Цар 19:31"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "zhena-verzelliya-svyashchennika",
+   "name": "Жена Верзеллия-священника",
+   "disambig": "из дочерей Верзеллия Галаадитянина",
+   "sex": "f",
+   "unnamed": true,
+   "spouses": [
+    {
+     "id": "verzelliy-svyashchennik",
+     "kind": "husband",
+     "refs": [
+      "Езд 2:61"
+     ]
+    }
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "united"
+   },
+   "card": {
+    "lineage": [
+     {
+      "text": "«Из дочерей Верзеллия Галаадитянина»",
+      "refs": [
+       "Езд 2:61"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Езд 2:61"
+    }
+   }
+  },
+  {
+   "id": "girson-iz-synov-fineesa",
+   "name": "Гирсон",
+   "disambig": "из сыновей Финееса, вернувшийся с Ездрой",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "finees",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Езд 8:2"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return",
+    "active": {
+     "from": -458,
+     "to": -458,
+     "refs": [
+      "Езд 7:7-9",
+      "Езд 8:31-33"
+     ],
+     "note": "пришёл с Ездрой в седьмой год Артаксеркса"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Глава поколения, вышедший с Ездрой из Вавилона",
+      "refs": [
+       "Езд 8:1-2"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Езд 8:2"
+    },
+    "notes": [
+     {
+      "kind": "identification",
+      "text": "Не смешивать с Гирсоном, сыном Левия",
+      "refs": [
+       "Исх 6:16"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "daniil-iz-synov-ifamara",
+   "name": "Даниил",
+   "disambig": "из сыновей Ифамара, вернувшийся с Ездрой",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "ifamar",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Езд 8:2"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return",
+    "active": {
+     "from": -458,
+     "to": -458,
+     "refs": [
+      "Езд 7:7-9",
+      "Езд 8:31-33"
+     ],
+     "note": "пришёл с Ездрой в седьмой год Артаксеркса"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Глава поколения, вышедший с Ездрой из Вавилона",
+      "refs": [
+       "Езд 8:1-2"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Езд 8:2"
+    },
+    "notes": [
+     {
+      "kind": "identification",
+      "text": "Не смешивать с пророком Даниилом",
+      "refs": [
+       "Дан 1:6"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "sherevia",
+   "name": "Шеревия",
+   "disambig": "из сыновей Махлия, левит при Ездре",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "makhli",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Езд 8:18"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "roles": [
+    "levite"
+   ],
+   "group": "levi",
+   "prominence": 2,
+   "chrono": {
+    "epoch": "return",
+    "active": {
+     "from": -458,
+     "to": -458,
+     "refs": [
+      "Езд 7:7-9",
+      "Езд 8:31-33"
+     ],
+     "note": "пришёл с Ездрой в седьмой год Артаксеркса"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "«Человек умный из сыновей Махлия, сына Левиина»",
+      "refs": [
+       "Езд 8:18"
+      ]
+     },
+     {
+      "text": "Один из двенадцати начальствующих над священниками, которым Ездра поручил серебро и золото",
+      "refs": [
+       "Езд 8:24"
+      ]
+     }
+    ],
+    "childrenNote": [
+     {
+      "text": "Пришёл с сыновьями и братьями, восемнадцать человек",
+      "refs": [
+       "Езд 8:18"
+      ]
+     }
+    ],
+    "offices": [
+     {
+      "title": "Глава левитов во дни Неемии и Ездры",
+      "refs": [
+       "Неем 12:24",
+       "Неем 12:26"
+      ]
+     }
+    ],
+    "events": [
+     {
+      "text": "Приведён к Ездре к реке Агаве",
+      "refs": [
+       "Езд 8:18"
+      ]
+     },
+     {
+      "text": "Принял весом серебро, золото и сосуды для дома Божия",
+      "refs": [
+       "Езд 8:24-30"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Езд 8:18",
+     "key": [
+      "Езд 8:18",
+      "Езд 8:24",
+      "Неем 12:24"
+     ]
+    },
+    "notes": [
+     {
+      "kind": "identification",
+      "text": "Шеревия, глава левитов в Неем 12:24 (вместе с Хашавией, как в Езд 8:19, 24), отождествляется с ним; Шеревия среди левитов, пришедших с Зоровавелем (Неем 12:8), — другое лицо",
+      "refs": [
+       "Неем 12:24",
+       "Неем 12:8"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "khashaviya-merarit",
+   "name": "Хашавия",
+   "disambig": "из сыновей Мерариных, левит при Ездре",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "merari",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Езд 8:19"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "roles": [
+    "levite"
+   ],
+   "group": "levi",
+   "prominence": 2,
+   "chrono": {
+    "epoch": "return",
+    "active": {
+     "from": -458,
+     "to": -458,
+     "refs": [
+      "Езд 7:7-9",
+      "Езд 8:31-33"
+     ],
+     "note": "пришёл с Ездрой в седьмой год Артаксеркса"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Один из двенадцати начальствующих, которым Ездра поручил серебро и золото",
+      "refs": [
+       "Езд 8:24"
+      ]
+     }
+    ],
+    "offices": [
+     {
+      "title": "Глава левитов во дни Неемии и Ездры",
+      "refs": [
+       "Неем 12:24",
+       "Неем 12:26"
+      ]
+     }
+    ],
+    "events": [
+     {
+      "text": "Приведён к Ездре к реке Агаве вместе с Иешаией",
+      "refs": [
+       "Езд 8:19"
+      ]
+     },
+     {
+      "text": "Принял весом сокровища для дома Божия",
+      "refs": [
+       "Езд 8:24-30"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Езд 8:19",
+     "key": [
+      "Езд 8:19",
+      "Езд 8:24",
+      "Неем 12:24"
+     ]
+    },
+    "notes": [
+     {
+      "kind": "identification",
+      "text": "Хашавия, глава левитов в Неем 12:24, отождествляется с ним по паре имён Хашавия — Шеревия",
+      "refs": [
+       "Неем 12:24",
+       "Езд 8:24"
+      ]
+     },
+     {
+      "kind": "identification",
+      "text": "Не смешивать с Хашавией из дома Хелкии, священником во дни Иоакима (Неем 12:21)",
+      "refs": [
+       "Неем 12:21"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "ieshaiya",
+   "name": "Иешаия",
+   "disambig": "из сыновей Мерариных, левит при Ездре",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "merari",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Езд 8:19"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "roles": [
+    "levite"
+   ],
+   "group": "levi",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return",
+    "active": {
+     "from": -458,
+     "to": -458,
+     "refs": [
+      "Езд 7:7-9",
+      "Езд 8:31-33"
+     ],
+     "note": "пришёл с Ездрой в седьмой год Артаксеркса"
+    }
+   },
+   "card": {
+    "events": [
+     {
+      "text": "Приведён к Ездре с Хашавией и братьями, двадцать человек",
+      "refs": [
+       "Езд 8:19"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Езд 8:19"
+    }
+   }
+  },
+  {
+   "id": "uriya-syn-gakkotsa",
+   "name": "Урия",
+   "disambig": "сын Гаккоца, священник",
+   "sex": "m",
+   "father": "gakkots",
+   "parentRefs": [
+    "Неем 3:21"
+   ],
+   "parentCert": "interpretation",
+   "fatherGap": true,
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "exile"
+   },
+   "card": {
+    "scripture": {
+     "first": "Езд 8:33",
+     "key": [
+      "Езд 8:33",
+      "Неем 3:21"
+     ]
+    },
+    "notes": [
+     {
+      "kind": "identification",
+      "text": "Гаккоц, отец (предок) Урии, отождествлён с главой седьмой череды священников (1 Пар 24:10); ср. «сыновья Гаккоца» (Езд 2:61)",
+      "refs": [
+       "1Пар 24:10",
+       "Езд 2:61"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "meremof-syn-urii",
+   "name": "Меремоф",
+   "disambig": "сын Урии, священник",
+   "sex": "m",
+   "father": "uriya-syn-gakkotsa",
+   "parentRefs": [
+    "Езд 8:33",
+    "Неем 3:21"
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 2,
+   "chrono": {
+    "epoch": "return",
+    "active": {
+     "from": -458,
+     "to": -458,
+     "refs": [
+      "Езд 7:7-9",
+      "Езд 8:31-33"
+     ],
+     "note": "пришёл с Ездрой в седьмой год Артаксеркса"
+    }
+   },
+   "card": {
+    "events": [
+     {
+      "text": "Принял на руки серебро, золото и сосуды, принесённые Ездрой, в доме Божием",
+      "refs": [
+       "Езд 8:33"
+      ],
+      "year": -458
+     },
+     {
+      "text": "Чинил участок стены Иерусалима — от дверей дома Елияшивова до конца его",
+      "refs": [
+       "Неем 3:21"
+      ],
+      "year": -445
+     }
+    ],
+    "scripture": {
+     "first": "Езд 8:33",
+     "key": [
+      "Езд 8:33",
+      "Неем 3:4",
+      "Неем 3:21"
+     ]
+    },
+    "notes": [
+     {
+      "kind": "identification",
+      "text": "Не смешивать с Меремофом, пришедшим с Зоровавелем (Неем 12:3)",
+      "refs": [
+       "Неем 12:3"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "finees-otets-eleazara-ezd8",
+   "name": "Финеес",
+   "disambig": "отец Елеазара (Езд 8:33)",
+   "sex": "m",
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "exile"
+   },
+   "card": {
+    "scripture": {
+     "first": "Езд 8:33"
+    },
+    "notes": [
+     {
+      "kind": "identification",
+      "text": "Не смешивать с Финеесом, сыном Елеазара, внуком Аарона",
+      "refs": [
+       "Исх 6:25"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "eleazar-syn-fineesa-ezd8",
+   "name": "Елеазар",
+   "disambig": "сын Финееса (Езд 8:33)",
+   "sex": "m",
+   "father": "finees-otets-eleazara-ezd8",
+   "parentRefs": [
+    "Езд 8:33"
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return",
+    "active": {
+     "from": -458,
+     "to": -458,
+     "refs": [
+      "Езд 7:7-9",
+      "Езд 8:31-33"
+     ],
+     "note": "пришёл с Ездрой в седьмой год Артаксеркса"
+    }
+   },
+   "card": {
+    "events": [
+     {
+      "text": "Вместе с Меремофом принял сокровища, принесённые Ездрой",
+      "refs": [
+       "Езд 8:33"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Езд 8:33"
+    }
+   }
+  },
+  {
+   "id": "iisus-otets-iozavada",
+   "name": "Иисус",
+   "disambig": "отец левита Иозавада (Езд 8:33)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "leviy",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Езд 8:33"
+     ],
+     "cert": "inference",
+     "note": "его сын — левит"
+    }
+   ],
+   "roles": [
+    "levite"
+   ],
+   "group": "levi",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "exile"
+   },
+   "card": {
+    "scripture": {
+     "first": "Езд 8:33"
+    },
+    "notes": [
+     {
+      "kind": "identification",
+      "text": "Возможно, левит Иисус, сын Кадмиила (Неем 12:8, 24); текст этого не утверждает",
+      "refs": [
+       "Неем 12:24"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "iozavad-syn-iisusa",
+   "name": "Иозавад",
+   "disambig": "сын Иисуса, левит (Езд 8:33)",
+   "sex": "m",
+   "father": "iisus-otets-iozavada",
+   "parentRefs": [
+    "Езд 8:33"
+   ],
+   "roles": [
+    "levite"
+   ],
+   "group": "levi",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return",
+    "active": {
+     "from": -458,
+     "to": -458,
+     "refs": [
+      "Езд 7:7-9",
+      "Езд 8:31-33"
+     ],
+     "note": "пришёл с Ездрой в седьмой год Артаксеркса"
+    }
+   },
+   "card": {
+    "events": [
+     {
+      "text": "Вместе с Меремофом принял сокровища, принесённые Ездрой",
+      "refs": [
+       "Езд 8:33"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Езд 8:33"
+    }
+   }
+  },
+  {
+   "id": "vinnuy-otets-noadii",
+   "name": "Виннуй",
+   "disambig": "отец левита Ноадии (Езд 8:33)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "leviy",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Езд 8:33"
+     ],
+     "cert": "inference",
+     "note": "его сын — левит"
+    }
+   ],
+   "roles": [
+    "levite"
+   ],
+   "group": "levi",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "exile"
+   },
+   "card": {
+    "scripture": {
+     "first": "Езд 8:33"
+    },
+    "notes": [
+     {
+      "kind": "identification",
+      "text": "Возможно, левит Биннуй, пришедший с Зоровавелем (Неем 12:8); текст этого не утверждает",
+      "refs": [
+       "Неем 12:8"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "noadiya",
+   "name": "Ноадия",
+   "disambig": "сын Виннуя, левит",
+   "sex": "m",
+   "father": "vinnuy-otets-noadii",
+   "parentRefs": [
+    "Езд 8:33"
+   ],
+   "roles": [
+    "levite"
+   ],
+   "group": "levi",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return",
+    "active": {
+     "from": -458,
+     "to": -458,
+     "refs": [
+      "Езд 7:7-9",
+      "Езд 8:31-33"
+     ],
+     "note": "пришёл с Ездрой в седьмой год Артаксеркса"
+    }
+   },
+   "card": {
+    "events": [
+     {
+      "text": "Вместе с Меремофом принял сокровища, принесённые Ездрой",
+      "refs": [
+       "Езд 8:33"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Езд 8:33"
+    }
+   }
+  },
+  {
+   "id": "maaseya-ezd10-18",
+   "name": "Маасея",
+   "disambig": "из сыновей Иисуса, сына Иоседекова, и братьев его (Езд 10:18)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "iosedek",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Езд 10:18"
+     ],
+     "cert": "inference",
+     "note": "«из сыновей Иисуса, сына Иоседекова, и братьев его» — потомок Иоседека"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return",
+    "active": {
+     "from": -458,
+     "to": -457,
+     "refs": [
+      "Езд 10:9",
+      "Езд 10:16-17"
+     ],
+     "note": "при исследовании браков с иноплеменными"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Взял жену иноплеменную; при Ездре дал обещание отпустить её",
+      "refs": [
+       "Езд 10:18-19",
+       "Езд 10:44"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Езд 10:18"
+    }
+   }
+  },
+  {
+   "id": "eliezer-ezd10-18",
+   "name": "Елиезер",
+   "disambig": "из сыновей Иисуса, сына Иоседекова, и братьев его (Езд 10:18)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "iosedek",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Езд 10:18"
+     ],
+     "cert": "inference",
+     "note": "«из сыновей Иисуса, сына Иоседекова, и братьев его» — потомок Иоседека"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return",
+    "active": {
+     "from": -458,
+     "to": -457,
+     "refs": [
+      "Езд 10:9",
+      "Езд 10:16-17"
+     ],
+     "note": "при исследовании браков с иноплеменными"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Взял жену иноплеменную; при Ездре дал обещание отпустить её",
+      "refs": [
+       "Езд 10:18-19",
+       "Езд 10:44"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Езд 10:18"
+    }
+   }
+  },
+  {
+   "id": "iariv-ezd10-18",
+   "name": "Иарив",
+   "disambig": "из сыновей Иисуса, сына Иоседекова, и братьев его (Езд 10:18)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "iosedek",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Езд 10:18"
+     ],
+     "cert": "inference",
+     "note": "«из сыновей Иисуса, сына Иоседекова, и братьев его» — потомок Иоседека"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return",
+    "active": {
+     "from": -458,
+     "to": -457,
+     "refs": [
+      "Езд 10:9",
+      "Езд 10:16-17"
+     ],
+     "note": "при исследовании браков с иноплеменными"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Взял жену иноплеменную; при Ездре дал обещание отпустить её",
+      "refs": [
+       "Езд 10:18-19",
+       "Езд 10:44"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Езд 10:18"
+    }
+   }
+  },
+  {
+   "id": "gedaliya-ezd10-18",
+   "name": "Гедалия",
+   "disambig": "из сыновей Иисуса, сына Иоседекова, и братьев его (Езд 10:18)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "iosedek",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Езд 10:18"
+     ],
+     "cert": "inference",
+     "note": "«из сыновей Иисуса, сына Иоседекова, и братьев его» — потомок Иоседека"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return",
+    "active": {
+     "from": -458,
+     "to": -457,
+     "refs": [
+      "Езд 10:9",
+      "Езд 10:16-17"
+     ],
+     "note": "при исследовании браков с иноплеменными"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Взял жену иноплеменную; при Ездре дал обещание отпустить её",
+      "refs": [
+       "Езд 10:18-19",
+       "Езд 10:44"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Езд 10:18"
+    }
+   }
+  },
+  {
+   "id": "khananiy-ezd10-20",
+   "name": "Хананий",
+   "disambig": "из сыновей Иммера (Езд 10:20)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "immer",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Езд 10:20"
+     ],
+     "cert": "inference"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return",
+    "active": {
+     "from": -458,
+     "to": -457,
+     "refs": [
+      "Езд 10:9",
+      "Езд 10:16-17"
+     ],
+     "note": "при исследовании браков с иноплеменными"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Взял жену иноплеменную",
+      "refs": [
+       "Езд 10:20",
+       "Езд 10:44"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Езд 10:20"
+    }
+   }
+  },
+  {
+   "id": "zevadiya-ezd10-20",
+   "name": "Зевадия",
+   "disambig": "из сыновей Иммера (Езд 10:20)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "immer",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Езд 10:20"
+     ],
+     "cert": "inference"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return",
+    "active": {
+     "from": -458,
+     "to": -457,
+     "refs": [
+      "Езд 10:9",
+      "Езд 10:16-17"
+     ],
+     "note": "при исследовании браков с иноплеменными"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Взял жену иноплеменную",
+      "refs": [
+       "Езд 10:20",
+       "Езд 10:44"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Езд 10:20"
+    }
+   }
+  },
+  {
+   "id": "maaseya-ezd10-21",
+   "name": "Маасея",
+   "disambig": "из сыновей Харима (Езд 10:21)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "kharim",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Езд 10:21"
+     ],
+     "cert": "inference"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return",
+    "active": {
+     "from": -458,
+     "to": -457,
+     "refs": [
+      "Езд 10:9",
+      "Езд 10:16-17"
+     ],
+     "note": "при исследовании браков с иноплеменными"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Взял жену иноплеменную",
+      "refs": [
+       "Езд 10:21",
+       "Езд 10:44"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Езд 10:21"
+    }
+   }
+  },
+  {
+   "id": "eliya-ezd10-21",
+   "name": "Елия",
+   "disambig": "из сыновей Харима (Езд 10:21)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "kharim",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Езд 10:21"
+     ],
+     "cert": "inference"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return",
+    "active": {
+     "from": -458,
+     "to": -457,
+     "refs": [
+      "Езд 10:9",
+      "Езд 10:16-17"
+     ],
+     "note": "при исследовании браков с иноплеменными"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Взял жену иноплеменную",
+      "refs": [
+       "Езд 10:21",
+       "Езд 10:44"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Езд 10:21"
+    }
+   }
+  },
+  {
+   "id": "shemaiya-ezd10-21",
+   "name": "Шемаия",
+   "disambig": "из сыновей Харима (Езд 10:21)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "kharim",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Езд 10:21"
+     ],
+     "cert": "inference"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return",
+    "active": {
+     "from": -458,
+     "to": -457,
+     "refs": [
+      "Езд 10:9",
+      "Езд 10:16-17"
+     ],
+     "note": "при исследовании браков с иноплеменными"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Взял жену иноплеменную",
+      "refs": [
+       "Езд 10:21",
+       "Езд 10:44"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Езд 10:21"
+    }
+   }
+  },
+  {
+   "id": "iekhiil-ezd10-21",
+   "name": "Иехиил",
+   "disambig": "из сыновей Харима (Езд 10:21)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "kharim",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Езд 10:21"
+     ],
+     "cert": "inference"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return",
+    "active": {
+     "from": -458,
+     "to": -457,
+     "refs": [
+      "Езд 10:9",
+      "Езд 10:16-17"
+     ],
+     "note": "при исследовании браков с иноплеменными"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Взял жену иноплеменную",
+      "refs": [
+       "Езд 10:21",
+       "Езд 10:44"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Езд 10:21"
+    }
+   }
+  },
+  {
+   "id": "uzziya-ezd10-21",
+   "name": "Уззия",
+   "disambig": "из сыновей Харима (Езд 10:21)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "kharim",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Езд 10:21"
+     ],
+     "cert": "inference"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return",
+    "active": {
+     "from": -458,
+     "to": -457,
+     "refs": [
+      "Езд 10:9",
+      "Езд 10:16-17"
+     ],
+     "note": "при исследовании браков с иноплеменными"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Взял жену иноплеменную",
+      "refs": [
+       "Езд 10:21",
+       "Езд 10:44"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Езд 10:21"
+    }
+   }
+  },
+  {
+   "id": "elioenay-ezd10-22",
+   "name": "Елиоенай",
+   "disambig": "из сыновей Пашхура (Езд 10:22)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "pashkhur-syn-malkhii",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Езд 10:22"
+     ],
+     "cert": "interpretation"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return",
+    "active": {
+     "from": -458,
+     "to": -457,
+     "refs": [
+      "Езд 10:9",
+      "Езд 10:16-17"
+     ],
+     "note": "при исследовании браков с иноплеменными"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Взял жену иноплеменную",
+      "refs": [
+       "Езд 10:22",
+       "Езд 10:44"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Езд 10:22"
+    }
+   }
+  },
+  {
+   "id": "maaseya-ezd10-22",
+   "name": "Маасея",
+   "disambig": "из сыновей Пашхура (Езд 10:22)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "pashkhur-syn-malkhii",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Езд 10:22"
+     ],
+     "cert": "interpretation"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return",
+    "active": {
+     "from": -458,
+     "to": -457,
+     "refs": [
+      "Езд 10:9",
+      "Езд 10:16-17"
+     ],
+     "note": "при исследовании браков с иноплеменными"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Взял жену иноплеменную",
+      "refs": [
+       "Езд 10:22",
+       "Езд 10:44"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Езд 10:22"
+    }
+   }
+  },
+  {
+   "id": "ismail-ezd10-22",
+   "name": "Исмаил",
+   "disambig": "из сыновей Пашхура (Езд 10:22)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "pashkhur-syn-malkhii",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Езд 10:22"
+     ],
+     "cert": "interpretation"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return",
+    "active": {
+     "from": -458,
+     "to": -457,
+     "refs": [
+      "Езд 10:9",
+      "Езд 10:16-17"
+     ],
+     "note": "при исследовании браков с иноплеменными"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Взял жену иноплеменную",
+      "refs": [
+       "Езд 10:22",
+       "Езд 10:44"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Езд 10:22"
+    }
+   }
+  },
+  {
+   "id": "nafanail-ezd10-22",
+   "name": "Нафанаил",
+   "disambig": "из сыновей Пашхура (Езд 10:22)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "pashkhur-syn-malkhii",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Езд 10:22"
+     ],
+     "cert": "interpretation"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return",
+    "active": {
+     "from": -458,
+     "to": -457,
+     "refs": [
+      "Езд 10:9",
+      "Езд 10:16-17"
+     ],
+     "note": "при исследовании браков с иноплеменными"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Взял жену иноплеменную",
+      "refs": [
+       "Езд 10:22",
+       "Езд 10:44"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Езд 10:22"
+    }
+   }
+  },
+  {
+   "id": "iozavad-ezd10-22",
+   "name": "Иозавад",
+   "disambig": "из сыновей Пашхура (Езд 10:22)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "pashkhur-syn-malkhii",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Езд 10:22"
+     ],
+     "cert": "interpretation"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return",
+    "active": {
+     "from": -458,
+     "to": -457,
+     "refs": [
+      "Езд 10:9",
+      "Езд 10:16-17"
+     ],
+     "note": "при исследовании браков с иноплеменными"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Взял жену иноплеменную",
+      "refs": [
+       "Езд 10:22",
+       "Езд 10:44"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Езд 10:22"
+    }
+   }
+  },
+  {
+   "id": "elasa-ezd10-22",
+   "name": "Эласа",
+   "disambig": "из сыновей Пашхура (Езд 10:22)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "pashkhur-syn-malkhii",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Езд 10:22"
+     ],
+     "cert": "interpretation"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return",
+    "active": {
+     "from": -458,
+     "to": -457,
+     "refs": [
+      "Езд 10:9",
+      "Езд 10:16-17"
+     ],
+     "note": "при исследовании браков с иноплеменными"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Взял жену иноплеменную",
+      "refs": [
+       "Езд 10:22",
+       "Езд 10:44"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Езд 10:22"
+    }
+   }
+  },
+  {
+   "id": "iozavad-ezd10-23",
+   "name": "Иозавад",
+   "disambig": "левит (Езд 10:23)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "leviy",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Езд 10:23"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "roles": [
+    "levite"
+   ],
+   "group": "levi",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return",
+    "active": {
+     "from": -458,
+     "to": -457,
+     "refs": [
+      "Езд 10:9",
+      "Езд 10:16-17"
+     ],
+     "note": "при исследовании браков с иноплеменными"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Взял жену иноплеменную",
+      "refs": [
+       "Езд 10:23",
+       "Езд 10:44"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Езд 10:23"
+    }
+   }
+  },
+  {
+   "id": "shimey-ezd10-23",
+   "name": "Шимей",
+   "disambig": "левит (Езд 10:23)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "leviy",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Езд 10:23"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "roles": [
+    "levite"
+   ],
+   "group": "levi",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return",
+    "active": {
+     "from": -458,
+     "to": -457,
+     "refs": [
+      "Езд 10:9",
+      "Езд 10:16-17"
+     ],
+     "note": "при исследовании браков с иноплеменными"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Взял жену иноплеменную",
+      "refs": [
+       "Езд 10:23",
+       "Езд 10:44"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Езд 10:23"
+    }
+   }
+  },
+  {
+   "id": "kelaiya",
+   "name": "Келаия",
+   "disambig": "левит (Езд 10:23)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "leviy",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Езд 10:23"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "roles": [
+    "levite"
+   ],
+   "group": "levi",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return",
+    "active": {
+     "from": -458,
+     "to": -457,
+     "refs": [
+      "Езд 10:9",
+      "Езд 10:16-17"
+     ],
+     "note": "при исследовании браков с иноплеменными"
+    }
+   },
+   "card": {
+    "altNames": [
+     {
+      "name": "Клита",
+      "kind": "variant",
+      "refs": [
+       "Езд 10:23"
+      ],
+      "note": "«Келаия, он же Клита»"
+     }
+    ],
+    "status": [
+     {
+      "text": "Взял жену иноплеменную",
+      "refs": [
+       "Езд 10:23",
+       "Езд 10:44"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Езд 10:23"
+    }
+   }
+  },
+  {
+   "id": "pafakhiya-ezd10-23",
+   "name": "Пафахия",
+   "disambig": "левит (Езд 10:23)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "leviy",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Езд 10:23"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "roles": [
+    "levite"
+   ],
+   "group": "levi",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return",
+    "active": {
+     "from": -458,
+     "to": -457,
+     "refs": [
+      "Езд 10:9",
+      "Езд 10:16-17"
+     ],
+     "note": "при исследовании браков с иноплеменными"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Взял жену иноплеменную",
+      "refs": [
+       "Езд 10:23",
+       "Езд 10:44"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Езд 10:23"
+    }
+   }
+  },
+  {
+   "id": "iuda-ezd10-23",
+   "name": "Иуда",
+   "disambig": "левит (Езд 10:23)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "leviy",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Езд 10:23"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "roles": [
+    "levite"
+   ],
+   "group": "levi",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return",
+    "active": {
+     "from": -458,
+     "to": -457,
+     "refs": [
+      "Езд 10:9",
+      "Езд 10:16-17"
+     ],
+     "note": "при исследовании браков с иноплеменными"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Взял жену иноплеменную",
+      "refs": [
+       "Езд 10:23",
+       "Езд 10:44"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Езд 10:23"
+    }
+   }
+  },
+  {
+   "id": "eliezer-ezd10-23",
+   "name": "Елиезер",
+   "disambig": "левит (Езд 10:23)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "leviy",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Езд 10:23"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "roles": [
+    "levite"
+   ],
+   "group": "levi",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return",
+    "active": {
+     "from": -458,
+     "to": -457,
+     "refs": [
+      "Езд 10:9",
+      "Езд 10:16-17"
+     ],
+     "note": "при исследовании браков с иноплеменными"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Взял жену иноплеменную",
+      "refs": [
+       "Езд 10:23",
+       "Езд 10:44"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Езд 10:23"
+    }
+   }
+  },
+  {
+   "id": "seraiya-neem12",
+   "name": "Сераия",
+   "disambig": "глава священников при Зоровавеле (Неем 12:1)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "aaron",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:1",
+      "Неем 12:7"
+     ],
+     "cert": "inference",
+     "note": "глава священников; священство — только «от семени Аарона»"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "exile",
+    "active": {
+     "from": -538,
+     "to": -538,
+     "refs": [
+      "Езд 2:1-2",
+      "Неем 12:1"
+     ],
+     "note": "пришёл из плена с Зоровавелем и Иисусом"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Глава священников, пришедший из плена с Зоровавелем и Иисусом",
+      "refs": [
+       "Неем 12:1",
+       "Неем 12:7"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:1",
+     "key": [
+      "Неем 12:1",
+      "Неем 12:7",
+      "Неем 12:12"
+     ]
+    },
+    "notes": [
+     {
+      "kind": "identification",
+      "text": "Не смешивать с первосвященником Сераией (4 Цар 25:18)",
+      "refs": [
+       "4Цар 25:18"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "ieremiya-neem12",
+   "name": "Иеремия",
+   "disambig": "глава священников при Зоровавеле (Неем 12:1)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "aaron",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:1",
+      "Неем 12:7"
+     ],
+     "cert": "inference",
+     "note": "глава священников; священство — только «от семени Аарона»"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "exile",
+    "active": {
+     "from": -538,
+     "to": -538,
+     "refs": [
+      "Езд 2:1-2",
+      "Неем 12:1"
+     ],
+     "note": "пришёл из плена с Зоровавелем и Иисусом"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Глава священников, пришедший из плена с Зоровавелем и Иисусом",
+      "refs": [
+       "Неем 12:1",
+       "Неем 12:7"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:1",
+     "key": [
+      "Неем 12:1",
+      "Неем 12:7",
+      "Неем 12:12"
+     ]
+    },
+    "notes": [
+     {
+      "kind": "identification",
+      "text": "Не смешивать с пророком Иеремией",
+      "refs": [
+       "Иер 1:1"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "ezdra-neem12",
+   "name": "Ездра",
+   "disambig": "глава священников при Зоровавеле (Неем 12:1)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "aaron",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:1",
+      "Неем 12:7"
+     ],
+     "cert": "inference",
+     "note": "глава священников; священство — только «от семени Аарона»"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "exile",
+    "active": {
+     "from": -538,
+     "to": -538,
+     "refs": [
+      "Езд 2:1-2",
+      "Неем 12:1"
+     ],
+     "note": "пришёл из плена с Зоровавелем и Иисусом"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Глава священников, пришедший из плена с Зоровавелем и Иисусом",
+      "refs": [
+       "Неем 12:1",
+       "Неем 12:7"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:1",
+     "key": [
+      "Неем 12:1",
+      "Неем 12:7",
+      "Неем 12:13"
+     ]
+    },
+    "notes": [
+     {
+      "kind": "identification",
+      "text": "Не смешивать с книжником Ездрой, пришедшим при Артаксерксе (Езд 7:1–8)",
+      "refs": [
+       "Езд 7:1"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "amariya-neem12",
+   "name": "Амария",
+   "disambig": "глава священников при Зоровавеле (Неем 12:2)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "aaron",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:2",
+      "Неем 12:7"
+     ],
+     "cert": "inference",
+     "note": "глава священников; священство — только «от семени Аарона»"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "exile",
+    "active": {
+     "from": -538,
+     "to": -538,
+     "refs": [
+      "Езд 2:1-2",
+      "Неем 12:1"
+     ],
+     "note": "пришёл из плена с Зоровавелем и Иисусом"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Глава священников, пришедший из плена с Зоровавелем и Иисусом",
+      "refs": [
+       "Неем 12:1",
+       "Неем 12:7"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:2",
+     "key": [
+      "Неем 12:2",
+      "Неем 12:7",
+      "Неем 12:13"
+     ]
+    }
+   }
+  },
+  {
+   "id": "mallukh-neem12",
+   "name": "Маллух",
+   "disambig": "глава священников при Зоровавеле (Неем 12:2)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "aaron",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:2",
+      "Неем 12:7"
+     ],
+     "cert": "inference",
+     "note": "глава священников; священство — только «от семени Аарона»"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "exile",
+    "active": {
+     "from": -538,
+     "to": -538,
+     "refs": [
+      "Езд 2:1-2",
+      "Неем 12:1"
+     ],
+     "note": "пришёл из плена с Зоровавелем и Иисусом"
+    }
+   },
+   "card": {
+    "altNames": [
+     {
+      "name": "Мелиху",
+      "kind": "variant",
+      "refs": [
+       "Неем 12:14"
+      ]
+     }
+    ],
+    "status": [
+     {
+      "text": "Глава священников, пришедший из плена с Зоровавелем и Иисусом",
+      "refs": [
+       "Неем 12:1",
+       "Неем 12:7"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:2",
+     "key": [
+      "Неем 12:2",
+      "Неем 12:7",
+      "Неем 12:14"
+     ]
+    }
+   }
+  },
+  {
+   "id": "khattush-neem12",
+   "name": "Хаттуш",
+   "disambig": "глава священников при Зоровавеле (Неем 12:2)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "aaron",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:2",
+      "Неем 12:7"
+     ],
+     "cert": "inference",
+     "note": "глава священников; священство — только «от семени Аарона»"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "exile",
+    "active": {
+     "from": -538,
+     "to": -538,
+     "refs": [
+      "Езд 2:1-2",
+      "Неем 12:1"
+     ],
+     "note": "пришёл из плена с Зоровавелем и Иисусом"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Глава священников, пришедший из плена с Зоровавелем и Иисусом",
+      "refs": [
+       "Неем 12:1",
+       "Неем 12:7"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:2",
+     "key": [
+      "Неем 12:2",
+      "Неем 12:7"
+     ]
+    }
+   }
+  },
+  {
+   "id": "shekhaniya-neem12",
+   "name": "Шехания",
+   "disambig": "глава священников при Зоровавеле (Неем 12:3)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "aaron",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:3",
+      "Неем 12:7"
+     ],
+     "cert": "inference",
+     "note": "глава священников; священство — только «от семени Аарона»"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "exile",
+    "active": {
+     "from": -538,
+     "to": -538,
+     "refs": [
+      "Езд 2:1-2",
+      "Неем 12:1"
+     ],
+     "note": "пришёл из плена с Зоровавелем и Иисусом"
+    }
+   },
+   "card": {
+    "altNames": [
+     {
+      "name": "Шевания",
+      "kind": "variant",
+      "refs": [
+       "Неем 12:14"
+      ]
+     }
+    ],
+    "status": [
+     {
+      "text": "Глава священников, пришедший из плена с Зоровавелем и Иисусом",
+      "refs": [
+       "Неем 12:1",
+       "Неем 12:7"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:3",
+     "key": [
+      "Неем 12:3",
+      "Неем 12:7",
+      "Неем 12:14"
+     ]
+    }
+   }
+  },
+  {
+   "id": "rekhum-neem12",
+   "name": "Рехум",
+   "disambig": "глава священников при Зоровавеле (Неем 12:3)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "aaron",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:3",
+      "Неем 12:7"
+     ],
+     "cert": "inference",
+     "note": "глава священников; священство — только «от семени Аарона»"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "exile",
+    "active": {
+     "from": -538,
+     "to": -538,
+     "refs": [
+      "Езд 2:1-2",
+      "Неем 12:1"
+     ],
+     "note": "пришёл из плена с Зоровавелем и Иисусом"
+    }
+   },
+   "card": {
+    "altNames": [
+     {
+      "name": "Харим",
+      "kind": "variant",
+      "refs": [
+       "Неем 12:15"
+      ],
+      "note": "«из дома Харима» стоит в перечне на месте Рехума"
+     }
+    ],
+    "status": [
+     {
+      "text": "Глава священников, пришедший из плена с Зоровавелем и Иисусом",
+      "refs": [
+       "Неем 12:1",
+       "Неем 12:7"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:3",
+     "key": [
+      "Неем 12:3",
+      "Неем 12:7",
+      "Неем 12:15"
+     ]
+    },
+    "notes": [
+     {
+      "kind": "textual",
+      "text": "В перечне Неем 12:12–21 на месте дома Рехума стоит «дом Харима»; обычно это понимают как иную форму того же имени",
+      "refs": [
+       "Неем 12:3",
+       "Неем 12:15"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "meremof-neem12",
+   "name": "Меремоф",
+   "disambig": "глава священников при Зоровавеле (Неем 12:3)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "aaron",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:3",
+      "Неем 12:7"
+     ],
+     "cert": "inference",
+     "note": "глава священников; священство — только «от семени Аарона»"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "exile",
+    "active": {
+     "from": -538,
+     "to": -538,
+     "refs": [
+      "Езд 2:1-2",
+      "Неем 12:1"
+     ],
+     "note": "пришёл из плена с Зоровавелем и Иисусом"
+    }
+   },
+   "card": {
+    "altNames": [
+     {
+      "name": "Мераиоф",
+      "kind": "variant",
+      "refs": [
+       "Неем 12:15"
+      ]
+     }
+    ],
+    "status": [
+     {
+      "text": "Глава священников, пришедший из плена с Зоровавелем и Иисусом",
+      "refs": [
+       "Неем 12:1",
+       "Неем 12:7"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:3",
+     "key": [
+      "Неем 12:3",
+      "Неем 12:7",
+      "Неем 12:15"
+     ]
+    }
+   }
+  },
+  {
+   "id": "iddo-neem12",
+   "name": "Иддо",
+   "disambig": "глава священников при Зоровавеле (Неем 12:4)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "aaron",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:4",
+      "Неем 12:7"
+     ],
+     "cert": "inference",
+     "note": "глава священников; священство — только «от семени Аарона»"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "exile",
+    "active": {
+     "from": -538,
+     "to": -538,
+     "refs": [
+      "Езд 2:1-2",
+      "Неем 12:1"
+     ],
+     "note": "пришёл из плена с Зоровавелем и Иисусом"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Глава священников, пришедший из плена с Зоровавелем и Иисусом",
+      "refs": [
+       "Неем 12:1",
+       "Неем 12:7"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:4",
+     "key": [
+      "Неем 12:4",
+      "Неем 12:7",
+      "Неем 12:16"
+     ]
+    },
+    "notes": [
+     {
+      "kind": "identification",
+      "text": "Пророк Захария назван «сыном Варахииным, сыном Аддовым» (Зах 1:1) и «сыном Адды» (Езд 5:1); многие видят в Аддо этого Иддо",
+      "refs": [
+       "Зах 1:1",
+       "Езд 5:1"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "ginnefoy",
+   "name": "Гиннефой",
+   "disambig": "глава священников при Зоровавеле (Неем 12:4)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "aaron",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:4",
+      "Неем 12:7"
+     ],
+     "cert": "inference",
+     "note": "глава священников; священство — только «от семени Аарона»"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "exile",
+    "active": {
+     "from": -538,
+     "to": -538,
+     "refs": [
+      "Езд 2:1-2",
+      "Неем 12:1"
+     ],
+     "note": "пришёл из плена с Зоровавелем и Иисусом"
+    }
+   },
+   "card": {
+    "altNames": [
+     {
+      "name": "Гиннефон",
+      "kind": "variant",
+      "refs": [
+       "Неем 12:16"
+      ]
+     }
+    ],
+    "status": [
+     {
+      "text": "Глава священников, пришедший из плена с Зоровавелем и Иисусом",
+      "refs": [
+       "Неем 12:1",
+       "Неем 12:7"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:4",
+     "key": [
+      "Неем 12:4",
+      "Неем 12:7",
+      "Неем 12:16"
+     ]
+    }
+   }
+  },
+  {
+   "id": "aviya-neem12",
+   "name": "Авия",
+   "disambig": "глава священников при Зоровавеле (Неем 12:4)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "aaron",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:4",
+      "Неем 12:7"
+     ],
+     "cert": "inference",
+     "note": "глава священников; священство — только «от семени Аарона»"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "exile",
+    "active": {
+     "from": -538,
+     "to": -538,
+     "refs": [
+      "Езд 2:1-2",
+      "Неем 12:1"
+     ],
+     "note": "пришёл из плена с Зоровавелем и Иисусом"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Глава священников, пришедший из плена с Зоровавелем и Иисусом",
+      "refs": [
+       "Неем 12:1",
+       "Неем 12:7"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:4",
+     "key": [
+      "Неем 12:4",
+      "Неем 12:7",
+      "Неем 12:17"
+     ]
+    }
+   }
+  },
+  {
+   "id": "miyamin-neem12",
+   "name": "Миямин",
+   "disambig": "глава священников при Зоровавеле (Неем 12:5)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "aaron",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:5",
+      "Неем 12:7"
+     ],
+     "cert": "inference",
+     "note": "глава священников; священство — только «от семени Аарона»"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "exile",
+    "active": {
+     "from": -538,
+     "to": -538,
+     "refs": [
+      "Езд 2:1-2",
+      "Неем 12:1"
+     ],
+     "note": "пришёл из плена с Зоровавелем и Иисусом"
+    }
+   },
+   "card": {
+    "altNames": [
+     {
+      "name": "Миниамин",
+      "kind": "variant",
+      "refs": [
+       "Неем 12:17"
+      ]
+     }
+    ],
+    "status": [
+     {
+      "text": "Глава священников, пришедший из плена с Зоровавелем и Иисусом",
+      "refs": [
+       "Неем 12:1",
+       "Неем 12:7"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:5",
+     "key": [
+      "Неем 12:5",
+      "Неем 12:7",
+      "Неем 12:17"
+     ]
+    }
+   }
+  },
+  {
+   "id": "maadiya",
+   "name": "Маадия",
+   "disambig": "глава священников при Зоровавеле (Неем 12:5)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "aaron",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:5",
+      "Неем 12:7"
+     ],
+     "cert": "inference",
+     "note": "глава священников; священство — только «от семени Аарона»"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "exile",
+    "active": {
+     "from": -538,
+     "to": -538,
+     "refs": [
+      "Езд 2:1-2",
+      "Неем 12:1"
+     ],
+     "note": "пришёл из плена с Зоровавелем и Иисусом"
+    }
+   },
+   "card": {
+    "altNames": [
+     {
+      "name": "Моадия",
+      "kind": "variant",
+      "refs": [
+       "Неем 12:17"
+      ]
+     }
+    ],
+    "status": [
+     {
+      "text": "Глава священников, пришедший из плена с Зоровавелем и Иисусом",
+      "refs": [
+       "Неем 12:1",
+       "Неем 12:7"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:5",
+     "key": [
+      "Неем 12:5",
+      "Неем 12:7",
+      "Неем 12:17"
+     ]
+    }
+   }
+  },
+  {
+   "id": "vilga-neem12",
+   "name": "Вилга",
+   "disambig": "глава священников при Зоровавеле (Неем 12:5)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "aaron",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:5",
+      "Неем 12:7"
+     ],
+     "cert": "inference",
+     "note": "глава священников; священство — только «от семени Аарона»"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "exile",
+    "active": {
+     "from": -538,
+     "to": -538,
+     "refs": [
+      "Езд 2:1-2",
+      "Неем 12:1"
+     ],
+     "note": "пришёл из плена с Зоровавелем и Иисусом"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Глава священников, пришедший из плена с Зоровавелем и Иисусом",
+      "refs": [
+       "Неем 12:1",
+       "Неем 12:7"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:5",
+     "key": [
+      "Неем 12:5",
+      "Неем 12:7",
+      "Неем 12:18"
+     ]
+    }
+   }
+  },
+  {
+   "id": "shemaiya-neem12",
+   "name": "Шемаия",
+   "disambig": "глава священников при Зоровавеле (Неем 12:6)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "aaron",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:6",
+      "Неем 12:7"
+     ],
+     "cert": "inference",
+     "note": "глава священников; священство — только «от семени Аарона»"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "exile",
+    "active": {
+     "from": -538,
+     "to": -538,
+     "refs": [
+      "Езд 2:1-2",
+      "Неем 12:1"
+     ],
+     "note": "пришёл из плена с Зоровавелем и Иисусом"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Глава священников, пришедший из плена с Зоровавелем и Иисусом",
+      "refs": [
+       "Неем 12:1",
+       "Неем 12:7"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:6",
+     "key": [
+      "Неем 12:6",
+      "Неем 12:7",
+      "Неем 12:18"
+     ]
+    }
+   }
+  },
+  {
+   "id": "ioiariv-neem12",
+   "name": "Иоиарив",
+   "disambig": "глава священников при Зоровавеле (Неем 12:6)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "aaron",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:6",
+      "Неем 12:7"
+     ],
+     "cert": "inference",
+     "note": "глава священников; священство — только «от семени Аарона»"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "exile",
+    "active": {
+     "from": -538,
+     "to": -538,
+     "refs": [
+      "Езд 2:1-2",
+      "Неем 12:1"
+     ],
+     "note": "пришёл из плена с Зоровавелем и Иисусом"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Глава священников, пришедший из плена с Зоровавелем и Иисусом",
+      "refs": [
+       "Неем 12:1",
+       "Неем 12:7"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:6",
+     "key": [
+      "Неем 12:6",
+      "Неем 12:7",
+      "Неем 12:19"
+     ]
+    }
+   }
+  },
+  {
+   "id": "iedaiya-neem12-6",
+   "name": "Иедаия",
+   "disambig": "глава священников при Зоровавеле (Неем 12:6)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "aaron",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:6",
+      "Неем 12:7"
+     ],
+     "cert": "inference",
+     "note": "глава священников; священство — только «от семени Аарона»"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "exile",
+    "active": {
+     "from": -538,
+     "to": -538,
+     "refs": [
+      "Езд 2:1-2",
+      "Неем 12:1"
+     ],
+     "note": "пришёл из плена с Зоровавелем и Иисусом"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Глава священников, пришедший из плена с Зоровавелем и Иисусом",
+      "refs": [
+       "Неем 12:1",
+       "Неем 12:7"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:6",
+     "key": [
+      "Неем 12:6",
+      "Неем 12:7",
+      "Неем 12:19"
+     ]
+    },
+    "notes": [
+     {
+      "kind": "identification",
+      "text": "В перечне два разных Иедаии (Неем 12:6 и 12:7); соответственно и в Неем 12:19 и 12:21 названы два дома Иедаии",
+      "refs": [
+       "Неем 12:6-7",
+       "Неем 12:19",
+       "Неем 12:21"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "sallu-neem12",
+   "name": "Саллу",
+   "disambig": "глава священников при Зоровавеле (Неем 12:7)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "aaron",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:7",
+      "Неем 12:7"
+     ],
+     "cert": "inference",
+     "note": "глава священников; священство — только «от семени Аарона»"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "exile",
+    "active": {
+     "from": -538,
+     "to": -538,
+     "refs": [
+      "Езд 2:1-2",
+      "Неем 12:1"
+     ],
+     "note": "пришёл из плена с Зоровавелем и Иисусом"
+    }
+   },
+   "card": {
+    "altNames": [
+     {
+      "name": "Саллай",
+      "kind": "variant",
+      "refs": [
+       "Неем 12:20"
+      ]
+     }
+    ],
+    "status": [
+     {
+      "text": "Глава священников, пришедший из плена с Зоровавелем и Иисусом",
+      "refs": [
+       "Неем 12:1",
+       "Неем 12:7"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:7",
+     "key": [
+      "Неем 12:7",
+      "Неем 12:7",
+      "Неем 12:20"
+     ]
+    }
+   }
+  },
+  {
+   "id": "amok",
+   "name": "Амок",
+   "disambig": "глава священников при Зоровавеле (Неем 12:7)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "aaron",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:7",
+      "Неем 12:7"
+     ],
+     "cert": "inference",
+     "note": "глава священников; священство — только «от семени Аарона»"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "exile",
+    "active": {
+     "from": -538,
+     "to": -538,
+     "refs": [
+      "Езд 2:1-2",
+      "Неем 12:1"
+     ],
+     "note": "пришёл из плена с Зоровавелем и Иисусом"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Глава священников, пришедший из плена с Зоровавелем и Иисусом",
+      "refs": [
+       "Неем 12:1",
+       "Неем 12:7"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:7",
+     "key": [
+      "Неем 12:7",
+      "Неем 12:7",
+      "Неем 12:20"
+     ]
+    }
+   }
+  },
+  {
+   "id": "khelkiya-neem12",
+   "name": "Хелкия",
+   "disambig": "глава священников при Зоровавеле (Неем 12:7)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "aaron",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:7",
+      "Неем 12:7"
+     ],
+     "cert": "inference",
+     "note": "глава священников; священство — только «от семени Аарона»"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "exile",
+    "active": {
+     "from": -538,
+     "to": -538,
+     "refs": [
+      "Езд 2:1-2",
+      "Неем 12:1"
+     ],
+     "note": "пришёл из плена с Зоровавелем и Иисусом"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Глава священников, пришедший из плена с Зоровавелем и Иисусом",
+      "refs": [
+       "Неем 12:1",
+       "Неем 12:7"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:7",
+     "key": [
+      "Неем 12:7",
+      "Неем 12:7",
+      "Неем 12:21"
+     ]
+    }
+   }
+  },
+  {
+   "id": "iedaiya-neem12-7",
+   "name": "Иедаия",
+   "disambig": "глава священников при Зоровавеле (Неем 12:7)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "aaron",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:7",
+      "Неем 12:7"
+     ],
+     "cert": "inference",
+     "note": "глава священников; священство — только «от семени Аарона»"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "exile",
+    "active": {
+     "from": -538,
+     "to": -538,
+     "refs": [
+      "Езд 2:1-2",
+      "Неем 12:1"
+     ],
+     "note": "пришёл из плена с Зоровавелем и Иисусом"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Глава священников, пришедший из плена с Зоровавелем и Иисусом",
+      "refs": [
+       "Неем 12:1",
+       "Неем 12:7"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:7",
+     "key": [
+      "Неем 12:7",
+      "Неем 12:7",
+      "Неем 12:21"
+     ]
+    },
+    "notes": [
+     {
+      "kind": "identification",
+      "text": "В перечне два разных Иедаии (Неем 12:6 и 12:7); соответственно и в Неем 12:19 и 12:21 названы два дома Иедаии",
+      "refs": [
+       "Неем 12:6-7",
+       "Неем 12:19",
+       "Неем 12:21"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "meraiya",
+   "name": "Мераия",
+   "disambig": "из дома Сераии, священник во дни Иоакима",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "seraiya-neem12",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:12"
+     ],
+     "cert": "inference",
+     "note": "«из дома Сераии» — дом назван по главе священников, пришедшему с Зоровавелем"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return"
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Глава поколения священников из дома Сераии во дни первосвященника Иоакима",
+      "refs": [
+       "Неем 12:12",
+       "Неем 12:12"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:12",
+     "key": [
+      "Неем 12:12",
+      "Неем 12:26"
+     ]
+    }
+   }
+  },
+  {
+   "id": "khananiya-neem12",
+   "name": "Ханания",
+   "disambig": "из дома Иеремии, священник во дни Иоакима",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "ieremiya-neem12",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:12"
+     ],
+     "cert": "inference",
+     "note": "«из дома Иеремии» — дом назван по главе священников, пришедшему с Зоровавелем"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return"
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Глава поколения священников из дома Иеремии во дни первосвященника Иоакима",
+      "refs": [
+       "Неем 12:12",
+       "Неем 12:12"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:12",
+     "key": [
+      "Неем 12:12",
+      "Неем 12:26"
+     ]
+    }
+   }
+  },
+  {
+   "id": "meshullam-neem12-13",
+   "name": "Мешуллам",
+   "disambig": "из дома Ездры, священник во дни Иоакима",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "ezdra-neem12",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:13"
+     ],
+     "cert": "inference",
+     "note": "«из дома Ездры» — дом назван по главе священников, пришедшему с Зоровавелем"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return"
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Глава поколения священников из дома Ездры во дни первосвященника Иоакима",
+      "refs": [
+       "Неем 12:12",
+       "Неем 12:13"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:13",
+     "key": [
+      "Неем 12:13",
+      "Неем 12:26"
+     ]
+    }
+   }
+  },
+  {
+   "id": "iokhanan-neem12",
+   "name": "Иоханан",
+   "disambig": "из дома Амарии, священник во дни Иоакима",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "amariya-neem12",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:13"
+     ],
+     "cert": "inference",
+     "note": "«из дома Амарии» — дом назван по главе священников, пришедшему с Зоровавелем"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return"
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Глава поколения священников из дома Амарии во дни первосвященника Иоакима",
+      "refs": [
+       "Неем 12:12",
+       "Неем 12:13"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:13",
+     "key": [
+      "Неем 12:13",
+      "Неем 12:26"
+     ]
+    }
+   }
+  },
+  {
+   "id": "ionafan-neem12-14",
+   "name": "Ионафан",
+   "disambig": "из дома Мелиху, священник во дни Иоакима",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "mallukh-neem12",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:14"
+     ],
+     "cert": "inference",
+     "note": "«из дома Мелиху» — дом назван по главе священников, пришедшему с Зоровавелем"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return"
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Глава поколения священников из дома Мелиху во дни первосвященника Иоакима",
+      "refs": [
+       "Неем 12:12",
+       "Неем 12:14"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:14",
+     "key": [
+      "Неем 12:14",
+      "Неем 12:26"
+     ]
+    }
+   }
+  },
+  {
+   "id": "iosif-neem12",
+   "name": "Иосиф",
+   "disambig": "из дома Шевании, священник во дни Иоакима",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "shekhaniya-neem12",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:14"
+     ],
+     "cert": "inference",
+     "note": "«из дома Шевании» — дом назван по главе священников, пришедшему с Зоровавелем"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return"
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Глава поколения священников из дома Шевании во дни первосвященника Иоакима",
+      "refs": [
+       "Неем 12:12",
+       "Неем 12:14"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:14",
+     "key": [
+      "Неем 12:14",
+      "Неем 12:26"
+     ]
+    }
+   }
+  },
+  {
+   "id": "adna-neem12",
+   "name": "Адна",
+   "disambig": "из дома Харима, священник во дни Иоакима",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "rekhum-neem12",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:15"
+     ],
+     "cert": "inference",
+     "note": "«из дома Харима» — дом назван по главе священников, пришедшему с Зоровавелем"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return"
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Глава поколения священников из дома Харима во дни первосвященника Иоакима",
+      "refs": [
+       "Неем 12:12",
+       "Неем 12:15"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:15",
+     "key": [
+      "Неем 12:15",
+      "Неем 12:26"
+     ]
+    }
+   }
+  },
+  {
+   "id": "khelkiya-neem12-15",
+   "name": "Хелкия",
+   "disambig": "из дома Мераиофа, священник во дни Иоакима",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "meremof-neem12",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:15"
+     ],
+     "cert": "inference",
+     "note": "«из дома Мераиофа» — дом назван по главе священников, пришедшему с Зоровавелем"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return"
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Глава поколения священников из дома Мераиофа во дни первосвященника Иоакима",
+      "refs": [
+       "Неем 12:12",
+       "Неем 12:15"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:15",
+     "key": [
+      "Неем 12:15",
+      "Неем 12:26"
+     ]
+    }
+   }
+  },
+  {
+   "id": "zakhariya-neem12",
+   "name": "Захария",
+   "disambig": "из дома Иддо, священник во дни Иоакима",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "iddo-neem12",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:16"
+     ],
+     "cert": "inference",
+     "note": "«из дома Иддо» — дом назван по главе священников, пришедшему с Зоровавелем"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return"
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Глава поколения священников из дома Иддо во дни первосвященника Иоакима",
+      "refs": [
+       "Неем 12:12",
+       "Неем 12:16"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:16",
+     "key": [
+      "Неем 12:16",
+      "Неем 12:26"
+     ]
+    },
+    "notes": [
+     {
+      "kind": "identification",
+      "text": "Многие видят в нём пророка Захарию, «сына Аддова» (Зах 1:1; Езд 5:1; 6:14); текст Неем 12:16 этого прямо не говорит",
+      "refs": [
+       "Зах 1:1",
+       "Езд 5:1",
+       "Езд 6:14"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "meshullam-neem12-16",
+   "name": "Мешуллам",
+   "disambig": "из дома Гиннефона, священник во дни Иоакима",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "ginnefoy",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:16"
+     ],
+     "cert": "inference",
+     "note": "«из дома Гиннефона» — дом назван по главе священников, пришедшему с Зоровавелем"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return"
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Глава поколения священников из дома Гиннефона во дни первосвященника Иоакима",
+      "refs": [
+       "Неем 12:12",
+       "Неем 12:16"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:16",
+     "key": [
+      "Неем 12:16",
+      "Неем 12:26"
+     ]
+    }
+   }
+  },
+  {
+   "id": "zikhriy-neem12",
+   "name": "Зихрий",
+   "disambig": "из дома Авии, священник во дни Иоакима",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "aviya-neem12",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:17"
+     ],
+     "cert": "inference",
+     "note": "«из дома Авии» — дом назван по главе священников, пришедшему с Зоровавелем"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return"
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Глава поколения священников из дома Авии во дни первосвященника Иоакима",
+      "refs": [
+       "Неем 12:12",
+       "Неем 12:17"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:17",
+     "key": [
+      "Неем 12:17",
+      "Неем 12:26"
+     ]
+    }
+   }
+  },
+  {
+   "id": "piltay",
+   "name": "Пилтай",
+   "disambig": "из дома Моадии, священник во дни Иоакима",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "maadiya",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:17"
+     ],
+     "cert": "inference",
+     "note": "«из дома Моадии» — дом назван по главе священников, пришедшему с Зоровавелем"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return"
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Глава поколения священников из дома Моадии во дни первосвященника Иоакима",
+      "refs": [
+       "Неем 12:12",
+       "Неем 12:17"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:17",
+     "key": [
+      "Неем 12:17",
+      "Неем 12:26"
+     ]
+    }
+   }
+  },
+  {
+   "id": "shammuy-neem12",
+   "name": "Шаммуй",
+   "disambig": "из дома Вилги, священник во дни Иоакима",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "vilga-neem12",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:18"
+     ],
+     "cert": "inference",
+     "note": "«из дома Вилги» — дом назван по главе священников, пришедшему с Зоровавелем"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return"
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Глава поколения священников из дома Вилги во дни первосвященника Иоакима",
+      "refs": [
+       "Неем 12:12",
+       "Неем 12:18"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:18",
+     "key": [
+      "Неем 12:18",
+      "Неем 12:26"
+     ]
+    }
+   }
+  },
+  {
+   "id": "ionafan-neem12-18",
+   "name": "Ионафан",
+   "disambig": "из дома Шемаии, священник во дни Иоакима",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "shemaiya-neem12",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:18"
+     ],
+     "cert": "inference",
+     "note": "«из дома Шемаии» — дом назван по главе священников, пришедшему с Зоровавелем"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return"
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Глава поколения священников из дома Шемаии во дни первосвященника Иоакима",
+      "refs": [
+       "Неем 12:12",
+       "Неем 12:18"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:18",
+     "key": [
+      "Неем 12:18",
+      "Неем 12:26"
+     ]
+    }
+   }
+  },
+  {
+   "id": "mafnay",
+   "name": "Мафнай",
+   "disambig": "из дома Иоиарива, священник во дни Иоакима",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "ioiariv-neem12",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:19"
+     ],
+     "cert": "inference",
+     "note": "«из дома Иоиарива» — дом назван по главе священников, пришедшему с Зоровавелем"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return"
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Глава поколения священников из дома Иоиарива во дни первосвященника Иоакима",
+      "refs": [
+       "Неем 12:12",
+       "Неем 12:19"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:19",
+     "key": [
+      "Неем 12:19",
+      "Неем 12:26"
+     ]
+    }
+   }
+  },
+  {
+   "id": "uzziy-neem12",
+   "name": "Уззий",
+   "disambig": "из дома Иедаии, священник во дни Иоакима",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "iedaiya-neem12-6",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:19"
+     ],
+     "cert": "inference",
+     "note": "«из дома Иедаии» — дом назван по главе священников, пришедшему с Зоровавелем"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return"
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Глава поколения священников из дома Иедаии во дни первосвященника Иоакима",
+      "refs": [
+       "Неем 12:12",
+       "Неем 12:19"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:19",
+     "key": [
+      "Неем 12:19",
+      "Неем 12:26"
+     ]
+    }
+   }
+  },
+  {
+   "id": "kallay",
+   "name": "Каллай",
+   "disambig": "из дома Саллая, священник во дни Иоакима",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "sallu-neem12",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:20"
+     ],
+     "cert": "inference",
+     "note": "«из дома Саллая» — дом назван по главе священников, пришедшему с Зоровавелем"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return"
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Глава поколения священников из дома Саллая во дни первосвященника Иоакима",
+      "refs": [
+       "Неем 12:12",
+       "Неем 12:20"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:20",
+     "key": [
+      "Неем 12:20",
+      "Неем 12:26"
+     ]
+    }
+   }
+  },
+  {
+   "id": "ever-neem12",
+   "name": "Евер",
+   "disambig": "из дома Амока, священник во дни Иоакима",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "amok",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:20"
+     ],
+     "cert": "inference",
+     "note": "«из дома Амока» — дом назван по главе священников, пришедшему с Зоровавелем"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return"
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Глава поколения священников из дома Амока во дни первосвященника Иоакима",
+      "refs": [
+       "Неем 12:12",
+       "Неем 12:20"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:20",
+     "key": [
+      "Неем 12:20",
+      "Неем 12:26"
+     ]
+    },
+    "notes": [
+     {
+      "kind": "identification",
+      "text": "Не смешивать с Евером, предком Авраама",
+      "refs": [
+       "Быт 10:24"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "khashaviya-neem12",
+   "name": "Хашавия",
+   "disambig": "из дома Хелкии, священник во дни Иоакима",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "khelkiya-neem12",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:21"
+     ],
+     "cert": "inference",
+     "note": "«из дома Хелкии» — дом назван по главе священников, пришедшему с Зоровавелем"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return"
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Глава поколения священников из дома Хелкии во дни первосвященника Иоакима",
+      "refs": [
+       "Неем 12:12",
+       "Неем 12:21"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:21",
+     "key": [
+      "Неем 12:21",
+      "Неем 12:26"
+     ]
+    }
+   }
+  },
+  {
+   "id": "nafanail-neem12",
+   "name": "Нафанаил",
+   "disambig": "из дома Иедаии, священник во дни Иоакима",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "iedaiya-neem12-7",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:21"
+     ],
+     "cert": "inference",
+     "note": "«из дома Иедаии» — дом назван по главе священников, пришедшему с Зоровавелем"
+    }
+   ],
+   "roles": [
+    "priest"
+   ],
+   "group": "aaronides",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return"
+   },
+   "card": {
+    "status": [
+     {
+      "text": "Глава поколения священников из дома Иедаии во дни первосвященника Иоакима",
+      "refs": [
+       "Неем 12:12",
+       "Неем 12:21"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:21",
+     "key": [
+      "Неем 12:21",
+      "Неем 12:26"
+     ]
+    }
+   }
+  },
+  {
+   "id": "binnuy",
+   "name": "Биннуй",
+   "disambig": "левит, пришедший с Зоровавелем",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "leviy",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:8"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "roles": [
+    "levite"
+   ],
+   "group": "levi",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "exile",
+    "active": {
+     "from": -538,
+     "to": -538,
+     "refs": [
+      "Езд 2:1-2",
+      "Неем 12:1"
+     ],
+     "note": "пришёл из плена с Зоровавелем и Иисусом"
+    }
+   },
+   "card": {
+    "scripture": {
+     "first": "Неем 12:8"
+    },
+    "notes": [
+     {
+      "kind": "identification",
+      "text": "Возможно, тот же род, что Виннуй, отец левита Ноадии (Езд 8:33), и «Биннуй из сыновей Хенадада» (Неем 10:9)",
+      "refs": [
+       "Езд 8:33",
+       "Неем 10:9"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "sherevia-neem12-8",
+   "name": "Шеревия",
+   "disambig": "левит, пришедший с Зоровавелем (Неем 12:8)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "leviy",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:8"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "roles": [
+    "levite"
+   ],
+   "group": "levi",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "exile",
+    "active": {
+     "from": -538,
+     "to": -538,
+     "refs": [
+      "Езд 2:1-2",
+      "Неем 12:1"
+     ],
+     "note": "пришёл из плена с Зоровавелем и Иисусом"
+    }
+   },
+   "card": {
+    "scripture": {
+     "first": "Неем 12:8"
+    },
+    "notes": [
+     {
+      "kind": "identification",
+      "text": "Не смешивать с Шеревией из сыновей Махлия, пришедшим с Ездрой (Езд 8:18)",
+      "refs": [
+       "Езд 8:18"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "iuda-levit-neem12",
+   "name": "Иуда",
+   "disambig": "левит, пришедший с Зоровавелем (Неем 12:8)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "leviy",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:8"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "roles": [
+    "levite"
+   ],
+   "group": "levi",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "exile",
+    "active": {
+     "from": -538,
+     "to": -538,
+     "refs": [
+      "Езд 2:1-2",
+      "Неем 12:1"
+     ],
+     "note": "пришёл из плена с Зоровавелем и Иисусом"
+    }
+   },
+   "card": {
+    "scripture": {
+     "first": "Неем 12:8"
+    }
+   }
+  },
+  {
+   "id": "bakbukiya",
+   "name": "Бакбукия",
+   "disambig": "левит, страж у порогов",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "leviy",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:9"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "roles": [
+    "levite"
+   ],
+   "group": "levi",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "exile",
+    "active": {
+     "from": -538,
+     "to": -538,
+     "refs": [
+      "Езд 2:1-2",
+      "Неем 12:1"
+     ],
+     "note": "пришёл из плена с Зоровавелем и Иисусом"
+    }
+   },
+   "card": {
+    "status": [
+     {
+      "text": "С Уннием и братьями держал стражу наряду с левитами при славословии",
+      "refs": [
+       "Неем 12:9"
+      ]
+     }
+    ],
+    "offices": [
+     {
+      "title": "Страж-привратник у порогов ворот во дни Иоакима",
+      "refs": [
+       "Неем 12:25",
+       "Неем 12:26"
+      ]
+     }
+    ],
+    "scripture": {
+     "first": "Неем 12:9",
+     "key": [
+      "Неем 12:9",
+      "Неем 12:25"
+     ]
+    },
+    "notes": [
+     {
+      "kind": "identification",
+      "text": "Бакбукия пришедших с Зоровавелем (Неем 12:9) и Бакбукия-страж во дни Иоакима (Неем 12:25) атлас считает одним лицом",
+      "refs": [
+       "Неем 12:9",
+       "Неем 12:25"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "unniy-neem12",
+   "name": "Унний",
+   "disambig": "левит, пришедший с Зоровавелем (Неем 12:9)",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "leviy",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:9"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "roles": [
+    "levite"
+   ],
+   "group": "levi",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "exile",
+    "active": {
+     "from": -538,
+     "to": -538,
+     "refs": [
+      "Езд 2:1-2",
+      "Неем 12:1"
+     ],
+     "note": "пришёл из плена с Зоровавелем и Иисусом"
+    }
+   },
+   "card": {
+    "scripture": {
+     "first": "Неем 12:9"
+    }
+   }
+  },
+  {
+   "id": "ovadiya-neem12-25",
+   "name": "Овадия",
+   "disambig": "привратник во дни Иоакима",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "leviy",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:25"
+     ],
+     "cert": "inference",
+     "note": "«стражи, привратники» среди глав левитов"
+    }
+   ],
+   "roles": [
+    "levite"
+   ],
+   "group": "levi",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return"
+   },
+   "card": {
+    "scripture": {
+     "first": "Неем 12:25"
+    }
+   }
+  },
+  {
+   "id": "meshullam-neem12-25",
+   "name": "Мешуллам",
+   "disambig": "привратник во дни Иоакима",
+   "sex": "m",
+   "otherParents": [
+    {
+     "id": "leviy",
+     "role": "father",
+     "kind": "ancestor",
+     "refs": [
+      "Неем 12:25"
+     ],
+     "cert": "inference",
+     "note": "«стражи, привратники» среди глав левитов"
+    }
+   ],
+   "roles": [
+    "levite"
+   ],
+   "group": "levi",
+   "prominence": 1,
+   "chrono": {
+    "epoch": "return"
+   },
+   "card": {
+    "scripture": {
+     "first": "Неем 12:25"
     }
    }
   }

@@ -804,6 +804,11 @@ a {
   .commands {
     order: 2;
     width: 100%;
+    /* строка команд прокручивается вбок; правый край растворяется — видно, что есть продолжение */
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(90deg, #000 88%, transparent);
+    mask-image: linear-gradient(90deg, #000 88%, transparent);
   }
   .app {
     grid-template-columns: 1fr;
@@ -860,7 +865,7 @@ a {
   }
   .skyctl {
     bottom: auto;
-    top: 30px;
+    top: 52px; /* под колонтитулом неба */
     right: 6px;
     gap: 10px;
     font-size: 12.5px;
