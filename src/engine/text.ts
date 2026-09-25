@@ -12,6 +12,10 @@ const STRIP = /[аяйьоеиыую]$/;
  */
 export function nameMatcher(name: string): RegExp {
   const first = norm(name).split(/[\s]+/)[0].replace(/[^а-я-]/g, '');
+  if (first.length >= 4 && /[уо]$/.test(first) && !first.includes('-')) {
+    // несклоняемые на -у, -о: «Рафу — Рафуев», «Фаллу — Фаллуево», «Хазо»
+    return new RegExp(`(^|[^а-я])${first}(ев|ева|еву|евы|ево|евым|ов|ова|ову)?([^а-я]|$)`);
+  }
   let stem = first;
   if (STRIP.test(stem) && stem.length >= 4) stem = stem.slice(0, -1);
   else if (stem.length === 3 && /[йья]$/.test(stem)) {
