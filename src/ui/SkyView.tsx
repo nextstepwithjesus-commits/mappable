@@ -272,6 +272,10 @@ export function SkyView() {
           const rel = relate(graph, selected.value, hit, 1)[0];
           kinPath.current = rel ? [...new Set(rel.steps.flatMap((s) => [s.from, s.to]))] : null;
           panel.value = 'kinship';
+        } else if (pickMode.value === 'spread' && hit && selected.value && hit !== selected.value) {
+          second.value = hit;
+          pickMode.value = null;
+          panel.value = 'spread';
         } else if (hit) {
           selected.value = hit;
         }

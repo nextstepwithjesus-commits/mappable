@@ -111,6 +111,15 @@ function Search() {
   const [cursor, setCursor] = useState(0);
   const hits = useMemo(() => (q.trim() ? index.search(q, 30) : []), [q]);
   const choose = (id: string) => {
+    if (pickMode.value === 'spread' && selected.value && id !== selected.value) {
+      // второе лицо разворота можно найти и поиском
+      second.value = id;
+      pickMode.value = null;
+      panel.value = 'spread';
+      setOpen(false);
+      setQ('');
+      return;
+    }
     selected.value = id;
     skyRef.flyTo(id);
     setOpen(false);

@@ -170,7 +170,7 @@ const index = persons.map((p) => {
     mc: p.motherCert ?? p.parentCert ?? 'scripture',
     pRefs: p.parentRefs ?? [],
     op: (p.otherParents ?? []).map((o) => ({ id: o.id, role: o.role, kind: o.kind, cert: o.cert, refs: o.refs })),
-    sp: (p.spouses ?? []).map((s) => ({ id: s.id, kind: s.kind, refs: s.refs, cert: s.cert ?? 'scripture' })),
+    sp: (p.spouses ?? []).map((s) => ({ id: s.id, kind: s.kind, refs: s.refs, cert: s.cert ?? 'scripture', ...(s.note ? { note: s.note } : {}) })),
     kin: (p.kin ?? []).map((k) => ({ id: k.id, rel: k.rel, refs: k.refs, cert: k.cert ?? 'scripture' })),
     ord: p.order ?? null,
     alt: (c?.altNames ?? []).map((a) => a.name),

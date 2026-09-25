@@ -11,6 +11,7 @@ import { norm } from '../engine/text.ts';
 import { SearchIndex } from '../engine/search.ts';
 import { SECTIONS } from './Folio.tsx';
 import { kinPath, lifeText } from './SkyView.tsx';
+import { Spread } from './Spread.tsx';
 import type { Card } from '../data/types.ts';
 
 function Sheet({ title, lead, wide, children }: { title: string; lead?: string; wide?: boolean; children: ComponentChildren }) {
@@ -30,6 +31,8 @@ export function Panels() {
   switch (panel.value) {
     case 'epochs':
       return <EpochsPanel />;
+    case 'spread':
+      return <Spread />;
     case 'index':
       return <IndexPanel />;
     case 'kinship':
@@ -206,6 +209,7 @@ function KinshipPanel() {
             сбросить второе
           </button>
         )}
+        {a && b && <button onClick={() => (panel.value = 'spread')}>открыть разворот двух карточек</button>}
       </div>
       <div class="search" style={{ margin: '0 0 10px' }}>
         <label>Второе:</label>

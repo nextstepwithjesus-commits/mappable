@@ -3,7 +3,7 @@ import { signal, computed, effect } from '@preact/signals';
 import { models, byId } from './data/atlas.ts';
 
 export type Theme = 'night' | 'day';
-export type Panel = null | 'epochs' | 'index' | 'kinship' | 'synopsis' | 'legend' | 'about' | 'section' | 'chapter';
+export type Panel = null | 'epochs' | 'index' | 'kinship' | 'synopsis' | 'legend' | 'about' | 'section' | 'chapter' | 'spread';
 
 const load = <T,>(k: string, d: T): T => {
   try {
@@ -28,7 +28,7 @@ export const selected = signal<string | null>(null);
 export const second = signal<string | null>(null); // второе лицо (родство, разворот)
 export const hovered = signal<string | null>(null);
 export const panel = signal<Panel>(null);
-export const pickMode = signal<null | 'kinship'>(null);
+export const pickMode = signal<null | 'kinship' | 'spread'>(null);
 export const onlyLines = signal(false);
 export const epochMode = signal(false);
 export const meridian = signal<number | null>(null); // год меридиана (астр.)

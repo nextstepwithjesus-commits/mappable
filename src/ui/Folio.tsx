@@ -8,7 +8,9 @@ import { siblings } from '../engine/graph.ts';
 import { formatYear, formatSpan, yearsWord, toHist } from '../engine/years.ts';
 import { contemporaries, type ChronoResult, type PersonChrono } from '../engine/chronology.ts';
 import { lifeText } from './SkyView.tsx';
-import type { ModelData } from '../data/atlas.ts';
+import type { ModelData, ChronoRow } from '../data/atlas.ts';
+
+type AtlasPerson = NonNullable<ReturnType<typeof byId.get>>;
 
 export const SECTIONS: { n: number; part: number; title: string }[] = [
   { n: 1, part: 1, title: 'Имя' },
@@ -82,9 +84,117 @@ export function Folio() {
   const m = model.value;
   const c = m.chrono.get(id);
 
-  // ---------- содержимое разделов ----------
-  const out = new Map<number, ComponentChildren>();
+  const out = buildSections(id, p, card, m, c);
   const silent = new Set(p.silent);
+
+  const stateOf = (n: number): State => (out.has(n) ? 'content' : silent.has(n) ? 'silent' : 'absent');
+  const loading = !card;
+
+  // ---------- вывод ----------
+  const blocks: ComponentChildren[] = [];
+  let lastPart = 0;
+  let run: number[] = [];
+  const flushRun = () => {
+    if (!run.length) return;
+    const st = stateOf(run[0]);
+    const label = run.length === 1 ? `${run[0]}` : `${run[0]}–${run[run.length - 1]}`;
+    blocks.push(
+      <div class={`sec ${st}`} key={`run${run[0]}`} data-n={run[0]} id={`sec-${run[0]}`}>
+        <span class="no">{label}</span>
+        {run.map((n) => SECTIONS[n - 1].title).join(', ')} — {st === 'silent' ? 'в Писании не сообщается' : 'раздел не составлен'}
+      </div>,
+    );
+    run = [];
+  };
+  for (const s of SECTIONS) {
+    const st = stateOf(s.n);
+    if (st !== 'content' && !showSchema.value) continue;
+    if (s.part !== lastPart) {
+      flushRun();
+      const partHas = SECTIONS.filter((x) => x.part === s.part).some((x) => stateOf(x.n) === 'content') || showSchema.value;
+      if (partHas) blocks.push(<div class="part" key={`p${s.part}`}>{PARTS[s.part]}</div>);
+      lastPart = s.part;
+    }
+    if (st !== 'content') {
+      if (run.length && stateOf(run[0]) !== st) flushRun();
+      run.push(s.n);
+      continue;
+    }
+    flushRun();
+    const body = out.get(s.n);
+    const long = [10, 17, 23, 24, 13, 14].includes(s.n);
+    blocks.push(
+      <section class={`sec ${long ? 'long' : ''}`} key={s.n} data-n={s.n} id={`sec-${s.n}`} aria-labelledby={`h-${s.n}`}>
+        <span class="no" aria-hidden="true">
+          {s.n}
+        </span>
+        <h3 id={`h-${s.n}`}>{s.title}</h3>
+        {long ? body : <div class="runin">{body}</div>}
+      </section>,
+    );
+  }
+  flushRun();
+
+  const filledCount = SECTIONS.filter((s) => stateOf(s.n) === 'content').length;
+  const silentCount = SECTIONS.filter((s) => stateOf(s.n) === 'silent').length;
+
+  return (
+    <aside class="folio" aria-label={`Карточка: ${p.name}`}>
+      <div class="grab" aria-hidden="true" onClick={(e) => {
+        const f = (e.currentTarget as HTMLElement).parentElement!;
+        const cur = f.style.getPropertyValue('--sheet-h');
+        f.style.setProperty('--sheet-h', cur === '104px' ? '55vh' : cur === '100vh' ? '104px' : '100vh');
+      }}>
+        <span />
+      </div>
+      <div class="folio-inner" ref={inner}>
+        <nav class="rail" aria-label="Разделы карточки">
+          {SECTIONS.map((s, i) => (
+            <>
+              {i > 0 && SECTIONS[i - 1].part !== s.part ? <span class="gap" key={`g${s.n}`} /> : null}
+              <button
+                key={s.n}
+                class={`${stateOf(s.n)} ${current === s.n ? 'current' : ''}`}
+                title={`${s.n}. ${s.title}: ${stateOf(s.n) === 'content' ? 'есть сведения' : stateOf(s.n) === 'silent' ? 'в Писании не сообщается' : 'не составлен'}`}
+                aria-label={`${s.n}. ${s.title}`}
+                onClick={() => {
+                  if (stateOf(s.n) !== 'content') showSchema.value = true;
+                  requestAnimationFrame(() => document.getElementById(`sec-${s.n}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+                }}
+              />
+            </>
+          ))}
+        </nav>
+        <Masthead id={id} />
+        <div class="actions">
+          <button onClick={() => skyRef.flyTo(id)}>Показать на небе</button>
+          <button aria-pressed={pickMode.value === 'kinship'} onClick={() => { pickMode.value = pickMode.value === 'kinship' ? null : 'kinship'; second.value = null; }}>
+            {pickMode.value === 'kinship' ? 'Выберите второе лицо…' : 'Родство с…'}
+          </button>
+          <button aria-pressed={pickMode.value === 'spread'} onClick={() => { pickMode.value = pickMode.value === 'spread' ? null : 'spread'; second.value = null; }}>
+            {pickMode.value === 'spread' ? 'Выберите второе лицо…' : 'Разворот с…'}
+          </button>
+          <button aria-pressed={showSchema.value} onClick={() => (showSchema.value = !showSchema.value)}>
+            Вся схема разделов
+          </button>
+          <button onClick={() => window.print()}>Печать</button>
+          <button onClick={() => { selected.value = null; panel.value = null; }}>Закрыть</button>
+        </div>
+        <div class="mast"><div class="rule" /></div>
+        {loading ? <p class="muted">Загрузка карточки…</p> : blocks}
+        <p class="colophon">
+          Составлено разделов: {filledCount} из 24{silentCount ? `; о ${silentCount} ${plural(silentCount, 'разделе', 'разделах', 'разделах')} Писание не сообщает` : ''}. Все ссылки сверены с Синодальным
+          текстом. Даты — по модели «{models.find((x) => x.id === modelId.value) ? modelNames[modelId.value] : ''}».
+        </p>
+      </div>
+    </aside>
+  );
+}
+
+
+/** Содержимое разделов 1–24 одного лица; ns — приставка ключей вставок стихов (две карточки в развороте). */
+export function buildSections(id: string, p: AtlasPerson, card: Card | null, m: ModelData, c: ChronoRow | undefined, ns = ''): Map<number, ComponentChildren> {
+  const out = new Map<number, ComponentChildren>();
   const put = (n: number, v: ComponentChildren | null | false | undefined) => {
     if (v !== null && v !== false && v !== undefined && !(Array.isArray(v) && v.filter(Boolean).length === 0)) out.set(n, v);
   };
@@ -94,9 +204,9 @@ export function Folio() {
         {fs.map((f, i) => (
           <li class="fact" key={i}>
             {f.text}
-            <Refs refs={f.refs} owner={`${owner}.${i}`} />
+            <Refs refs={f.refs} owner={ns + `${owner}.${i}`} />
             <Mark cert={f.cert} />
-            <VerseInsert owner={`${owner}.${i}`} refs={f.refs} />
+            <VerseInsert owner={ns + `${owner}.${i}`} refs={f.refs} />
           </li>
         ))}
       </ul>
@@ -134,9 +244,9 @@ export function Folio() {
       mn && (
         <p class="fact">
           {mn.text}
-          <Refs refs={mn.refs} owner="m3" />
+          <Refs refs={mn.refs} owner={ns + 'm3'} />
           {!mn.refs?.length ? <abbr class="mark" title="этимология — справочный слой">справ.</abbr> : <Mark cert={mn.cert} />}
-          <VerseInsert owner="m3" refs={mn.refs} />
+          <VerseInsert owner={ns + 'm3'} refs={mn.refs} />
         </p>
       ),
     );
@@ -147,9 +257,9 @@ export function Folio() {
           {card.altNames.map((a, i) => (
             <li key={i}>
               {a.name} <span class="muted">— {ALT_KIND[a.kind] ?? a.kind}</span>
-              <Refs refs={a.refs} owner={`a4.${i}`} />
+              <Refs refs={a.refs} owner={ns + `a4.${i}`} />
               {a.note ? <span class="muted">. {a.note}</span> : null}
-              <VerseInsert owner={`a4.${i}`} refs={a.refs} />
+              <VerseInsert owner={ns + `a4.${i}`} refs={a.refs} />
             </li>
           ))}
         </ul>
@@ -169,15 +279,15 @@ export function Folio() {
   {
     const rows: ComponentChildren[] = [];
     const pc: Cert = p.parentCert;
-    if (p.father) rows.push(<li class="fact" key="f">{p.fatherKind === 'legal' ? 'Законный отец' : 'Отец'}: <P id={p.father} /><Refs refs={p.parentRefs} owner="p6f" /><Mark cert={pc} /><VerseInsert owner="p6f" refs={p.parentRefs} />{p.fatherGap && <span class="muted"> — родословие здесь может пропускать поколения</span>}</li>);
-    if (p.mother) rows.push(<li class="fact" key="m">Мать: <P id={p.mother} /><Refs refs={p.parentRefs} owner="p6m" /><Mark cert={p.motherCert} /><VerseInsert owner="p6m" refs={p.parentRefs} /></li>);
+    if (p.father) rows.push(<li class="fact" key="f">{p.fatherKind === 'legal' ? 'Законный отец' : 'Отец'}: <P id={p.father} /><Refs refs={p.parentRefs} owner={ns + 'p6f'} /><Mark cert={pc} /><VerseInsert owner={ns + 'p6f'} refs={p.parentRefs} />{p.fatherGap && <span class="muted"> — родословие здесь может пропускать поколения</span>}</li>);
+    if (p.mother) rows.push(<li class="fact" key="m">Мать: <P id={p.mother} /><Refs refs={p.parentRefs} owner={ns + 'p6m'} /><Mark cert={p.motherCert} /><VerseInsert owner={ns + 'p6m'} refs={p.parentRefs} /></li>);
     p.otherParents.forEach((o, i) =>
       rows.push(
         <li class="fact" key={`o${i}`}>
           {OTHER_KIND[o.kind] ?? 'Иное указание'}: {o.role === 'father' ? 'отец' : 'мать'} <P id={o.id} />
-          <Refs refs={o.refs} owner={`p6o${i}`} />
+          <Refs refs={o.refs} owner={ns + `p6o${i}`} />
           <Mark cert={o.cert} />
-          <VerseInsert owner={`p6o${i}`} refs={o.refs} />
+          <VerseInsert owner={ns + `p6o${i}`} refs={o.refs} />
         </li>,
       ),
     );
@@ -211,9 +321,10 @@ export function Folio() {
                 <li class="fact" key={other}>
                   <P id={other} />
                   <span class="muted"> — {s.kind === 'concubine' ? 'наложница' : p.sex === 'm' ? 'жена' : 'муж'}</span>
-                  <Refs refs={s.refs} owner={`s9.${i}`} />
+                  <Refs refs={s.refs} owner={ns + `s9.${i}`} />
                   <Mark cert={s.cert} />
-                  <VerseInsert owner={`s9.${i}`} refs={s.refs} />
+                  {s.note ? <div class="note">{s.note}</div> : null}
+                  <VerseInsert owner={ns + `s9.${i}`} refs={s.refs} />
                 </li>
               ))}
             </ul>
@@ -315,9 +426,9 @@ export function Folio() {
                     <P id={k.from} /> — {k.rel}
                   </>
                 )}
-                <Refs refs={k.refs} owner={`k12.${i}`} />
+                <Refs refs={k.refs} owner={ns + `k12.${i}`} />
                 <Mark cert={k.cert} />
-                <VerseInsert owner={`k12.${i}`} refs={k.refs} />
+                <VerseInsert owner={ns + `k12.${i}`} refs={k.refs} />
               </li>
             ))}
           </ul>
@@ -342,8 +453,8 @@ export function Folio() {
                 <li class="fact" key={i}>
                   Встреча с <P id={mt.id} />
                   {mt.text ? `: ${mt.text}` : ''}
-                  <Refs refs={mt.refs} owner={`m14.${i}`} />
-                  <VerseInsert owner={`m14.${i}`} refs={mt.refs} />
+                  <Refs refs={mt.refs} owner={ns + `m14.${i}`} />
+                  <VerseInsert owner={ns + `m14.${i}`} refs={mt.refs} />
                 </li>
               ))}
             </ul>
@@ -375,8 +486,8 @@ export function Folio() {
             <li class="fact" key={i}>
               {pl.name} <span class="muted">— {PLACE_ROLE[pl.role]}</span>
               {pl.note ? <span class="muted">. {pl.note}</span> : null}
-              <Refs refs={pl.refs} owner={`p15.${i}`} />
-              <VerseInsert owner={`p15.${i}`} refs={pl.refs} />
+              <Refs refs={pl.refs} owner={ns + `p15.${i}`} />
+              <VerseInsert owner={ns + `p15.${i}`} refs={pl.refs} />
             </li>
           ))}
           {card.death?.place && <li>{card.death.place} <span class="muted">— место смерти, см. 20</span></li>}
@@ -398,8 +509,8 @@ export function Folio() {
             <li class="fact" key={i}>
               {o.title}
               {o.note ? <span class="muted">. {o.note}</span> : null}
-              <Refs refs={o.refs} owner={`o16.${i}`} />
-              <VerseInsert owner={`o16.${i}`} refs={o.refs} />
+              <Refs refs={o.refs} owner={ns + `o16.${i}`} />
+              <VerseInsert owner={ns + `o16.${i}`} refs={o.refs} />
             </li>
           ))}
         </ul>
@@ -413,9 +524,9 @@ export function Folio() {
           {card.sayings.map((s, i) => (
             <li class="fact quote" key={i}>
               «{s.quote}»
-              <Refs refs={[s.ref]} owner={`q18.${i}`} />
+              <Refs refs={[s.ref]} owner={ns + `q18.${i}`} />
               {s.context ? <div class="muted">{s.context}</div> : null}
-              <VerseInsert owner={`q18.${i}`} refs={[s.ref]} />
+              <VerseInsert owner={ns + `q18.${i}`} refs={[s.ref]} />
             </li>
           ))}
         </ul>
@@ -471,113 +582,15 @@ export function Folio() {
             <li class="fact" key={i}>
               <span class="muted">{NOTE_KIND[n.kind]}. </span>
               {n.text}
-              <Refs refs={n.refs} owner={`n24.${i}`} />
-              <VerseInsert owner={`n24.${i}`} refs={n.refs} />
+              <Refs refs={n.refs} owner={ns + `n24.${i}`} />
+              <VerseInsert owner={ns + `n24.${i}`} refs={n.refs} />
             </li>
           ))}
         </ul>
       ) : null,
     );
 
-  const stateOf = (n: number): State => (out.has(n) ? 'content' : silent.has(n) ? 'silent' : 'absent');
-  const loading = !card;
-
-  // ---------- вывод ----------
-  const blocks: ComponentChildren[] = [];
-  let lastPart = 0;
-  let run: number[] = [];
-  const flushRun = () => {
-    if (!run.length) return;
-    const st = stateOf(run[0]);
-    const label = run.length === 1 ? `${run[0]}` : `${run[0]}–${run[run.length - 1]}`;
-    blocks.push(
-      <div class={`sec ${st}`} key={`run${run[0]}`} data-n={run[0]} id={`sec-${run[0]}`}>
-        <span class="no">{label}</span>
-        {run.map((n) => SECTIONS[n - 1].title).join(', ')} — {st === 'silent' ? 'в Писании не сообщается' : 'раздел не составлен'}
-      </div>,
-    );
-    run = [];
-  };
-  for (const s of SECTIONS) {
-    const st = stateOf(s.n);
-    if (st !== 'content' && !showSchema.value) continue;
-    if (s.part !== lastPart) {
-      flushRun();
-      const partHas = SECTIONS.filter((x) => x.part === s.part).some((x) => stateOf(x.n) === 'content') || showSchema.value;
-      if (partHas) blocks.push(<div class="part" key={`p${s.part}`}>{PARTS[s.part]}</div>);
-      lastPart = s.part;
-    }
-    if (st !== 'content') {
-      if (run.length && stateOf(run[0]) !== st) flushRun();
-      run.push(s.n);
-      continue;
-    }
-    flushRun();
-    const body = out.get(s.n);
-    const long = [10, 17, 23, 24, 13, 14].includes(s.n);
-    blocks.push(
-      <section class={`sec ${long ? 'long' : ''}`} key={s.n} data-n={s.n} id={`sec-${s.n}`} aria-labelledby={`h-${s.n}`}>
-        <span class="no" aria-hidden="true">
-          {s.n}
-        </span>
-        <h3 id={`h-${s.n}`}>{s.title}</h3>
-        {long ? body : <div class="runin">{body}</div>}
-      </section>,
-    );
-  }
-  flushRun();
-
-  const filledCount = SECTIONS.filter((s) => stateOf(s.n) === 'content').length;
-  const silentCount = SECTIONS.filter((s) => stateOf(s.n) === 'silent').length;
-
-  return (
-    <aside class="folio" aria-label={`Карточка: ${p.name}`}>
-      <div class="grab" aria-hidden="true" onClick={(e) => {
-        const f = (e.currentTarget as HTMLElement).parentElement!;
-        const cur = f.style.getPropertyValue('--sheet-h');
-        f.style.setProperty('--sheet-h', cur === '104px' ? '55vh' : cur === '100vh' ? '104px' : '100vh');
-      }}>
-        <span />
-      </div>
-      <div class="folio-inner" ref={inner}>
-        <nav class="rail" aria-label="Разделы карточки">
-          {SECTIONS.map((s, i) => (
-            <>
-              {i > 0 && SECTIONS[i - 1].part !== s.part ? <span class="gap" key={`g${s.n}`} /> : null}
-              <button
-                key={s.n}
-                class={`${stateOf(s.n)} ${current === s.n ? 'current' : ''}`}
-                title={`${s.n}. ${s.title}: ${stateOf(s.n) === 'content' ? 'есть сведения' : stateOf(s.n) === 'silent' ? 'в Писании не сообщается' : 'не составлен'}`}
-                aria-label={`${s.n}. ${s.title}`}
-                onClick={() => {
-                  if (stateOf(s.n) !== 'content') showSchema.value = true;
-                  requestAnimationFrame(() => document.getElementById(`sec-${s.n}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
-                }}
-              />
-            </>
-          ))}
-        </nav>
-        <Masthead id={id} />
-        <div class="actions">
-          <button onClick={() => skyRef.flyTo(id)}>Показать на небе</button>
-          <button aria-pressed={pickMode.value === 'kinship'} onClick={() => { pickMode.value = pickMode.value ? null : 'kinship'; second.value = null; }}>
-            {pickMode.value ? 'Выберите второе лицо на небе…' : 'Родство с…'}
-          </button>
-          <button aria-pressed={showSchema.value} onClick={() => (showSchema.value = !showSchema.value)}>
-            Вся схема разделов
-          </button>
-          <button onClick={() => window.print()}>Печать</button>
-          <button onClick={() => { selected.value = null; panel.value = null; }}>Закрыть</button>
-        </div>
-        <div class="mast"><div class="rule" /></div>
-        {loading ? <p class="muted">Загрузка карточки…</p> : blocks}
-        <p class="colophon">
-          Составлено разделов: {filledCount} из 24{silentCount ? `; о ${silentCount} ${plural(silentCount, 'разделе', 'разделах', 'разделах')} Писание не сообщает` : ''}. Все ссылки сверены с Синодальным
-          текстом. Даты — по модели «{models.find((x) => x.id === modelId.value) ? modelNames[modelId.value] : ''}».
-        </p>
-      </div>
-    </aside>
-  );
+  return out;
 }
 
 const modelNames: Record<string, string> = {
@@ -607,7 +620,7 @@ function deathLine(b: number, d: number, cls: string): string {
   return `${cls === 'exact' ? '' : 'ок. '}${formatYear(d)}, в возрасте ${yearsWord(age)}`;
 }
 
-function Masthead({ id }: { id: string }) {
+export function Masthead({ id }: { id: string }) {
   const p = byId.get(id)!;
   const c = model.value.chrono.get(id);
   const ep = c ? epochs.find((e) => e.id === (p.epoch ?? c.epoch)) : null;

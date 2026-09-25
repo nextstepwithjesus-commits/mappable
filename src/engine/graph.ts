@@ -20,6 +20,7 @@ export interface SpouseEdge {
   refs: string[];
   cert: Cert;
   order?: number;
+  note?: string;
 }
 
 export interface KinEdge {
@@ -95,14 +96,17 @@ export function buildGraph(persons: Person[]): Graph {
       if (seen.has(key)) {
         // дополняем ссылки существующей записи
         const ex = (g.spousesOf.get(p.id) ?? []).find((e) => e.a === s.id || e.b === s.id);
-        if (ex) for (const r of s.refs) if (!ex.refs.includes(r)) ex.refs.push(r);
+        if (ex) {
+          for (const r of s.refs) if (!ex.refs.includes(r)) ex.refs.push(r);
+          if (s.note && !ex.note) ex.note = s.note;
+        }
         continue;
       }
       seen.add(key);
       const husband = s.kind === 'husband' ? s.id : p.id;
       const wife = s.kind === 'husband' ? p.id : s.id;
       const e: SpouseEdge = {
-        a: husband, b: wife, kind: s.kind === 'husband' ? 'wife' : s.kind, refs: [...s.refs], cert: s.cert ?? 'scripture', order: s.order,
+        a: husband, b: wife, kind: s.kind === 'husband' ? 'wife' : s.kind, refs: [...s.refs], cert: s.cert ?? 'scripture', order: s.order, note: s.note,
       };
       push(g.spousesOf, husband, e);
       push(g.spousesOf, wife, e);

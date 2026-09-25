@@ -197,3 +197,14 @@ describe('сверка имён с текстом стиха', () => {
     expect(hit('Ила', 'или')).toBe(false);
   });
 });
+
+describe('текст Писания', () => {
+  it('только 66 канонических книг; Псалтирь — 150 псалмов', async () => {
+    const { loadBible } = await import('../tools/bible.ts');
+    const b = loadBible();
+    const books = new Set(b.order.map((k) => k.split(' ').slice(0, -1).join(' ')));
+    expect(books.size).toBe(66);
+    expect(b.chapterLength('Пс', 150)).toBeGreaterThan(0);
+    expect(b.chapterLength('Пс', 151)).toBe(0);
+  });
+});
