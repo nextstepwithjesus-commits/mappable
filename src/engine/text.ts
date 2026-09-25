@@ -23,7 +23,7 @@ export function nameMatcher(name: string): RegExp {
     const root = stem.slice(0, -1);
     return new RegExp(`(^|[^а-я])${root}(й|я|ю|е|ев|ева|еву|евы|ем)([^а-я]|$)`);
   }
-  if (stem.length === 3 && /[ао]$/.test(stem)) {
+  if (first.length === 3 && /[ао]$/.test(stem)) {
     // «Ила» → «Илы», «Иле»; «Хазо» несклоняемо; после гласной — «Фуа» → «Фуи» (но «Ила» не совпадает с «или»)
     const root = stem.slice(0, -1);
     const i = /[аеёиоуыэюя]$/.test(root) ? '|и' : '';
