@@ -21,7 +21,8 @@
     "coverage": "tsx tools/coverage.ts",
     "contrast": "tsx tools/contrast.ts",
     "perf": "tsx tools/perf.ts",
-    "accept": "tsx tools/accept.ts"
+    "accept": "tsx tools/accept.ts",
+    "coords": "tsx tools/coords.ts"
   },
   "license": "UNLICENSED",
   "dependencies": {
