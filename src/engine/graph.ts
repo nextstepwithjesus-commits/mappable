@@ -143,10 +143,15 @@ export function primaryChildren(g: Graph, id: string): string[] {
 }
 
 /** Родные, единокровные и единоутробные братья и сёстры. */
-export function siblings(g: Graph, id: string): { id: string; kind: 'full' | 'paternal' | 'maternal' }[] {
+/**
+ * Братья и сёстры. «full» — оба родителя общие; «paternal»/«maternal» — общий только отец или только мать,
+ * а другие родители у обоих названы и различны; «unknown» — общий один родитель, а о другом текст молчит
+ * (братья Давида: матери не названы — единокровными их назвать нельзя).
+ */
+export function siblings(g: Graph, id: string): { id: string; kind: 'full' | 'paternal' | 'maternal' | 'unknown' }[] {
   const f = fatherOf(g, id);
   const m = motherOf(g, id);
-  const out = new Map<string, 'full' | 'paternal' | 'maternal'>();
+  const out = new Map<string, 'full' | 'paternal' | 'maternal' | 'unknown'>();
   for (const par of [f, m]) {
     if (!par) continue;
     for (const e of g.childrenOf.get(par) ?? []) {
@@ -155,7 +160,8 @@ export function siblings(g: Graph, id: string): { id: string; kind: 'full' | 'pa
       const cm = motherOf(g, e.child);
       const sameF = !!f && cf === f;
       const sameM = !!m && cm === m;
-      out.set(e.child, sameF && sameM ? 'full' : sameF ? 'paternal' : sameM ? 'maternal' : 'paternal');
+      const kind = sameF && sameM ? 'full' : sameF ? (m && cm ? 'paternal' : 'unknown') : sameM ? (f && cf ? 'maternal' : 'unknown') : 'unknown';
+      out.set(e.child, kind);
     }
   }
   return [...out].map(([sid, kind]) => ({ id: sid, kind }));

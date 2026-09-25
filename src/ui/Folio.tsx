@@ -417,7 +417,7 @@ export function buildSections(id: string, p: AtlasPerson, card: Card | null, m: 
                 <span key={s.id}>
                   {i ? ', ' : ''}
                   <P id={s.id} />
-                  {s.kind !== 'full' && <span class="muted"> ({s.kind === 'paternal' ? 'единокровн.' : 'единоутробн.'})</span>}
+                  {(s.kind === 'paternal' || s.kind === 'maternal') && <span class="muted"> ({s.kind === 'paternal' ? 'единокровн.' : 'единоутробн.'})</span>}
                 </span>
               ))}
             </p>

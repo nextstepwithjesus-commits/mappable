@@ -222,6 +222,12 @@ describe('текст Писания', () => {
     expect(b.chapterLength('Пс', 150)).toBeGreaterThan(0);
     expect(b.chapterLength('Пс', 151)).toBe(0);
   });
+  it('без издательской разметки и добавлений не из канона (сноски, славянское добавление к Иов 42:17)', async () => {
+    const { loadBible } = await import('../tools/bible.ts');
+    const b = loadBible();
+    for (const t of b.verses.values()) expect(/<|Славянской Библии|по переводу 70/.test(t)).toBe(false);
+    expect(b.verses.get('Пс 144:1')!.startsWith('Хвала Давида.')).toBe(true);
+  });
 });
 
 describe('родство через термин Писания «сестра»', () => {
