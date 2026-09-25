@@ -302,6 +302,13 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
     for (const r of c?.reign ?? []) {
       ineqs.push({ i: B(id), j: `@${toAstro(r.start)}`, delta: 0, w: 2, kind: 'ge' });
       ineqs.push({ i: `@${toAstro(r.end)}`, j: D(id), delta: -1, w: 2, kind: 'ge' }); // d ≥ конец царствования − 1
+      if (r.ageAtStart === undefined) {
+        // возраст при воцарении не назван: рождение не раньше «конец царствования − предел жизни»
+        // и слабо тянется к обычному возрасту воцарения (без этого рождение уезжает на столетия раньше)
+        const n = normFor(c?.epoch ?? null);
+        ineqs.push({ i: `@${toAstro(r.end)}`, j: B(id), delta: -n.lifeMax, w: 2, kind: 'ge' });
+        ineqs.push({ i: B(id), j: `@${toAstro(r.start)}`, delta: 25, w: 0.004, kind: 'eq' });
+      }
     }
     // поколение: отец и мать
     for (const e of g.parentsOf.get(id) ?? []) {
