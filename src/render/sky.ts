@@ -363,6 +363,23 @@ export class Sky {
     if (L.constellations && !lineOnly) {
       ctx.save();
       ctx.lineWidth = 1;
+      // название рода подписывается один раз на экран — у самого крупного видимого блока этого рода
+      const labelBlock = new Map<string, { block: number; size: number }>();
+      for (const o of this.outlines) {
+        if (o.size < 5) continue;
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        for (const [t, l] of o.poly) {
+          const x = cam.sx(this.xOf(t));
+          const y = cam.sy(l);
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
+        if (maxX < 0 || minX > W || maxY < 0 || minY > H || maxY - minY <= 34) continue;
+        const cur = labelBlock.get(o.group);
+        if (!cur || o.size > cur.size) labelBlock.set(o.group, { block: o.block, size: o.size });
+      }
       for (const o of this.outlines) {
         const xs = o.poly.map(([t, l]) => [cam.sx(this.xOf(t)), cam.sy(l)] as const);
         let minX = Infinity;
@@ -383,7 +400,7 @@ export class Sky {
         ctx.closePath();
         ctx.stroke();
         // название созвездия — прописными с разрядкой, «прилипает» к левому краю видимой части
-        if (maxY - minY > 34 && o.size >= 5) {
+        if (labelBlock.get(o.group)?.block === o.block) {
           const name = (groupById.get(o.group)?.name ?? o.group).toUpperCase();
           ctx.setLineDash([]);
           ctx.font = `500 ${Math.min(13, 9 + ky * 0.15)}px ${FONT_SANS}`;

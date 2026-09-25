@@ -264,9 +264,9 @@ function SynopsisPanel() {
     let b = 0;
     while (a < j.length || b < m.length) {
       if (a < j.length && b < m.length && j[a] === m[b]) { add(j[a]); a++; b++; continue; }
-      const ta = a < j.length ? model.value.chrono.get(j[a])?.b ?? Infinity : Infinity;
-      const tb = b < m.length ? model.value.chrono.get(m[b])?.b ?? Infinity : Infinity;
-      if (ta <= tb) { add(j[a]); a++; } else { add(m[b]); b++; }
+      // одна линия исчерпана — берём из другой (у недатированных лиц время Infinity, сравнение не продвинет счётчик)
+      const takeJ = b >= m.length || (a < j.length && (model.value.chrono.get(j[a])?.b ?? Infinity) <= (model.value.chrono.get(m[b])?.b ?? Infinity));
+      if (takeJ) { add(j[a]); a++; } else { add(m[b]); b++; }
       if (j[a - 1] === 'iekhoniya' && !ids.includes('fedaiya-syn-iekhonii')) add('fedaiya-syn-iekhonii');
     }
     return ids;

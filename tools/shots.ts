@@ -15,7 +15,8 @@ const only = process.argv.includes('--only') ? process.argv[process.argv.indexOf
 const PORT = 4179;
 
 async function main() {
-  const server = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], { cwd: ROOT, stdio: 'ignore' });
+  // сервер — в своей группе процессов: kill(-pid) гасит и npx, и сам vite (иначе он переживает скрипт и держит порт)
+  const server = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], { cwd: ROOT, stdio: 'ignore', detached: true });
   await new Promise((r) => setTimeout(r, 2500));
   const exe = existsSync('/opt/pw-browsers/chromium') ? '/opt/pw-browsers/chromium' : undefined;
   const browser = await chromium.launch({ executablePath: exe });
@@ -65,7 +66,7 @@ async function main() {
       await select(p, 'Исаак');
     });
     await shot('05-synopsis', 1440, 900, theme, async (p) => {
-      await p.click('.commands >> text=Синопсис родословий');
+      await p.click('.commands >> text=Синопсис');
     });
     await shot('06-specimen', 1200, 1400, theme, async (p) => {
       await p.goto(`http://localhost:${PORT}/#/specimen`);
@@ -73,7 +74,7 @@ async function main() {
     });
   }
   await browser.close();
-  server.kill();
+  process.kill(-server.pid!);
   if (errors.length) {
     console.log('Ошибки страницы:\n' + [...new Set(errors)].join('\n'));
     process.exitCode = 1;

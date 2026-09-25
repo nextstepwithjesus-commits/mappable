@@ -6,7 +6,9 @@ import { skyRef, viewTick } from './common.tsx';
 import { toAstro, toHist } from '../engine/years.ts';
 import { readPalette } from '../render/sky.ts';
 
-const T0 = toAstro(-4174) - 10;
+/** Начало полосы — сотворение в текущей модели (в модели чисел в скобках — на ~1 400 лет раньше). */
+const startOf = () => toAstro(model.value.epochs[0]?.start ?? -4174) - 10;
+let T0 = startOf();
 const T1 = 2040;
 const TODAY = new Date().getFullYear();
 const CANON_END = 95;
@@ -26,6 +28,7 @@ export function TimeStrip() {
     const tOf = (x: number) => T0 + ((x - PAD) / (W - PAD * 2)) * (T1 - T0);
     let hist: number[] = [];
     const buildHist = () => {
+      T0 = startOf();
       const bins = new Array(Math.ceil((T1 - T0) / 25)).fill(0);
       for (const c of model.value.chrono.values()) {
         if (c.cls === 'epochal') continue;
@@ -117,7 +120,7 @@ export function TimeStrip() {
       ctx.font = "450 11px 'Jost Variable', sans-serif";
       ctx.fillStyle = pal.ink3;
       ctx.fillText('2040', W - PAD - ctx.measureText('2040').width, 13);
-      ctx.fillText('4174 до Р. Х.', PAD, H - 10);
+      ctx.fillText(`${-toHist(T0 + 10)} до Р. Х.`, PAD, 13);
       // окно неба
       const v = view();
       if (v) {

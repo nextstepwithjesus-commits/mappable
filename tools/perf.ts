@@ -21,7 +21,7 @@ const run = (cmd: string, args: string[]) => execFileSync(cmd, args, { cwd: ROOT
 async function main() {
   console.log(run('npx', ['tsx', 'tools/build-data.ts', '--synthetic', String(N)]).split('\n').filter((l) => /синтет|atlas/.test(l)).join('\n'));
   run('npx', ['vite', 'build', '--outDir', OUT, '--emptyOutDir']);
-  const server = spawn('npx', ['vite', 'preview', '--outDir', OUT, '--port', String(PORT), '--strictPort'], { cwd: ROOT, stdio: 'ignore' });
+  const server = spawn('npx', ['vite', 'preview', '--outDir', OUT, '--port', String(PORT), '--strictPort'], { cwd: ROOT, stdio: 'ignore', detached: true });
   await new Promise((r) => setTimeout(r, 2500));
   const exe = existsSync('/opt/pw-browsers/chromium') ? '/opt/pw-browsers/chromium' : undefined;
   const browser = await chromium.launch({ executablePath: exe });
@@ -66,7 +66,7 @@ async function main() {
     }
   } finally {
     await browser.close();
-    server.kill();
+    process.kill(-server.pid!); // вся группа: npx и vite
     run('npx', ['tsx', 'tools/build-data.ts']);
   }
   const table = ['| Экран | Лиц | Первый кадр неба | Кадров/с при панорамировании | Медиана кадра | 95-й процентиль | Худший кадр |', '|---|---|---|---|---|---|---|', ...results];
