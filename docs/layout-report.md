@@ -1,18 +1,18 @@
 # Отчёт сборки данных
 
-Лиц: 1663; томов: 15; процитированных стихов: 9264.
+Лиц: 1685; томов: 16; процитированных стихов: 9397.
 
 ## Модель mt-long
 
 ```
 {
- "persons": 1663,
- "lanes": 340,
+ "persons": 1685,
+ "lanes": 344,
  "corridorWidth": 13,
- "crossings": 430,
+ "crossings": 442,
  "corridorCrossings": 67,
- "dropLength": 4934,
- "blocks": 469
+ "dropLength": 4960,
+ "blocks": 478
 }
 ```
 
@@ -22,13 +22,13 @@
 
 ```
 {
- "persons": 1663,
- "lanes": 344,
+ "persons": 1685,
+ "lanes": 349,
  "corridorWidth": 13,
- "crossings": 481,
+ "crossings": 493,
  "corridorCrossings": 78,
- "dropLength": 5104,
- "blocks": 469
+ "dropLength": 5130,
+ "blocks": 478
 }
 ```
 
@@ -38,13 +38,13 @@
 
 ```
 {
- "persons": 1663,
- "lanes": 338,
+ "persons": 1685,
+ "lanes": 345,
  "corridorWidth": 11,
- "crossings": 422,
+ "crossings": 433,
  "corridorCrossings": 44,
- "dropLength": 4918,
- "blocks": 469
+ "dropLength": 4944,
+ "blocks": 478
 }
 ```
 
@@ -54,13 +54,13 @@
 
 ```
 {
- "persons": 1663,
- "lanes": 340,
+ "persons": 1685,
+ "lanes": 344,
  "corridorWidth": 15,
- "crossings": 423,
+ "crossings": 435,
  "corridorCrossings": 77,
- "dropLength": 4934,
- "blocks": 469
+ "dropLength": 4960,
+ "blocks": 478
 }
 ```
 

@@ -166,6 +166,8 @@ interface Ineq {
   delta: number;
   w: number;
   kind: 'eq' | 'ge' | 'le';
+  /** Одностороннее ограничение: двигает только лицо j (зависимое), а не опору i. */
+  onlyJ?: boolean;
 }
 
 export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelId = 'mt-long'): ChronoResult {
@@ -276,13 +278,15 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
     }
     // относительные границы
     // граница соблюдается жёстко (одностороннее ограничение), а слабое притяжение держит оценку с запасом от границы
+    // границы «не позже / не раньше чем через N лет после X» двигают только это лицо, не опору X:
+    // иначе шесть царей Едома с границей «не позже Саула + 20» утягивают год рождения самого Саула
     if (c?.born?.notAfter && g.persons.has(c.born.notAfter.from)) {
-      ineqs.push({ i: B(id), j: B(c.born.notAfter.from), delta: -c.born.notAfter.years, w: 5, kind: 'ge' });
-      ineqs.push({ i: B(c.born.notAfter.from), j: B(id), delta: c.born.notAfter.years - 20, w: 0.002, kind: 'eq' });
+      ineqs.push({ i: B(c.born.notAfter.from), j: B(id), delta: c.born.notAfter.years, w: 5, kind: 'le', onlyJ: true });
+      ineqs.push({ i: B(c.born.notAfter.from), j: B(id), delta: c.born.notAfter.years - 20, w: 0.002, kind: 'eq', onlyJ: true });
     }
     if (c?.born?.notBefore && g.persons.has(c.born.notBefore.from)) {
-      ineqs.push({ i: B(c.born.notBefore.from), j: B(id), delta: c.born.notBefore.years, w: 5, kind: 'ge' });
-      ineqs.push({ i: B(c.born.notBefore.from), j: B(id), delta: c.born.notBefore.years + 10, w: 0.002, kind: 'eq' });
+      ineqs.push({ i: B(c.born.notBefore.from), j: B(id), delta: c.born.notBefore.years, w: 5, kind: 'ge', onlyJ: true });
+      ineqs.push({ i: B(c.born.notBefore.from), j: B(id), delta: c.born.notBefore.years + 10, w: 0.002, kind: 'eq', onlyJ: true });
     }
     // допустимые интервалы
     if (c?.born?.range) addPrior(B(id), toAstro(c.born.range[0]), toAstro(c.born.range[1]), 5);
@@ -413,7 +417,7 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
   for (const q of ineqs) {
     const ri = q.i.startsWith('@') ? null : rootOffset.get(q.i);
     const rj = q.j.startsWith('@') ? null : rootOffset.get(q.j);
-    if (ri && free.has(ri.root)) addTerm(ri.root, { other: q.j, sign: -1, delta: q.delta, w: q.w, kind: q.kind, selfOff: ri.off });
+    if (ri && free.has(ri.root) && !q.onlyJ) addTerm(ri.root, { other: q.j, sign: -1, delta: q.delta, w: q.w, kind: q.kind, selfOff: ri.off });
     if (rj && free.has(rj.root)) addTerm(rj.root, { other: q.i, sign: 1, delta: q.delta, w: q.w, kind: q.kind, selfOff: rj.off });
   }
   for (const [key, pr] of priors) {
