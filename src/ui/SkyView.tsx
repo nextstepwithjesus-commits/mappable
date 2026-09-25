@@ -110,6 +110,8 @@ export function SkyView() {
       };
       sky.draw(state);
       if (epochMode.value) drawTiers(sky, state);
+      // метка первого кадра неба — для замера «первого показа» (NFR-1, tools/perf.ts)
+      if (!performance.getEntriesByName('sky-first-frame').length) performance.mark('sky-first-frame');
       viewTick.value++;
       if (again) request();
       dirty = false;
@@ -136,7 +138,7 @@ export function SkyView() {
     const resize = () => {
       const r = wrap.current!.getBoundingClientRect();
       const first = sky.cam.w === 1000 && sky.cam.h === 700;
-      sky.resize(r.width, r.height, window.devicePixelRatio || 1);
+      sky.resize(r.width, r.height, Math.min(2, window.devicePixelRatio || 1)); // выше 2× разница не видна, а заливка втрое дороже
       sky.setModel(model.value, shownLambda);
       if (first) sky.fitAll();
       request();

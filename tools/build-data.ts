@@ -31,6 +31,44 @@ for (const v of volumes) for (const p of v.persons) {
 }
 const epochs = read<Epoch[]>('data/epochs.json');
 const groups = read<Group[]>('data/groups.json');
+
+// ---------- синтетические лица для замера быстродействия (NFR-1): npm run data -- --synthetic 5000 ----------
+const synthArg = process.argv.indexOf('--synthetic');
+const SYNTH = synthArg > 0 ? Number(process.argv[synthArg + 1]) : 0;
+if (SYNTH > persons.length) {
+  let seed = 7;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  const pick = <T,>(a: T[]): T => a[Math.floor(rnd() * a.length)];
+  const synth: Person[] = [];
+  const need = SYNTH - persons.length;
+  let n = 0;
+  while (synth.length < need) {
+    // корень рода с явным годом, затем 3–5 поколений с возрастом отца при рождении
+    const group = pick(groups).id;
+    const rootId = `synth-${n++}`;
+    synth.push({ id: rootId, name: `Синт ${n}`, sex: 'm', group, prominence: 2, chrono: { born: { year: -Math.round(200 + rnd() * 2200) }, died: { age: 60 + Math.round(rnd() * 60) } } } as Person);
+    const queue = [{ id: rootId, depth: 0 }];
+    while (queue.length && synth.length < need) {
+      const cur = queue.shift()!;
+      if (cur.depth >= 3 + Math.floor(rnd() * 3)) continue;
+      const kids = 1 + Math.floor(rnd() * 4);
+      for (let k = 0; k < kids && synth.length < need; k++) {
+        const id = `synth-${n++}`;
+        synth.push({
+          id, name: `Синт ${n}`, sex: rnd() < 0.8 ? 'm' : 'f', father: cur.id, parentRefs: ['Быт 5:3'], group, prominence: 1, order: k + 1,
+          chrono: { born: { fatherAge: 20 + Math.round(rnd() * 30) }, died: { age: 40 + Math.round(rnd() * 60) } },
+        } as Person);
+        queue.push({ id, depth: cur.depth + 1 });
+      }
+    }
+  }
+  volumes.push({ volume: 'zz', title: 'Синтетические лица', persons: synth } as Volume);
+  for (const p of synth) {
+    persons.push(p);
+    volumeOf.set(p.id, 'zz');
+  }
+  console.log(`синтетических лиц: ${synth.length}; всего: ${persons.length}`);
+}
 const anchors = read<{ anchors: unknown[] }>('data/anchors.json');
 const joseph = read<{ persons: LineStep[]; name: string; subtitle: string; basis: string; refs: string[] }>('data/lines/joseph.json');
 const mary = read<{ persons: LineStep[]; name: string; subtitle: string; basis: string; refs: string[] }>('data/lines/mary.json');
@@ -258,6 +296,6 @@ for (const res of results) {
 }
 rep.push('## Хронологические напряжения (модель по умолчанию)', '');
 for (const t of def.chrono.tensions.slice(0, 200)) rep.push(`- ${t.text} (${t.refs.slice(0, 4).join('; ')})`);
-writeFileSync(join(ROOT, 'docs/layout-report.md'), rep.join('\n') + '\n');
+if (!SYNTH) writeFileSync(join(ROOT, 'docs/layout-report.md'), rep.join('\n') + '\n');
 const size = readFileSync(join(gen, 'atlas.json')).length;
 console.log(`atlas.json: ${(size / 1024).toFixed(0)} КБ; карточек: ${volumes.length} томов; стихов: ${cited.size}`);
