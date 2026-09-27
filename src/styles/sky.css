@@ -1,0 +1,130 @@
+.sky {
+  grid-area: sky;
+  position: relative;
+  overflow: hidden;
+  min-width: 0;
+  touch-action: none;
+}
+.sky canvas {
+  display: block;
+  cursor: grab;
+}
+.sky canvas.dragging {
+  cursor: grabbing;
+}
+.sky canvas.picking {
+  cursor: crosshair;
+}
+
+/* подсказка при наведении */
+.tip {
+  position: absolute;
+  pointer-events: none;
+  background: var(--sheet);
+  border: 1px solid var(--rule);
+  padding: 7px 11px 8px;
+  max-width: 320px;
+  font-size: 14px;
+  line-height: 19px;
+  z-index: 5;
+}
+.tip b {
+  font-weight: 600;
+  font-size: 15px;
+}
+.tip .ds {
+  font-style: italic;
+  color: var(--ink-2);
+}
+.tip .yr {
+  color: var(--ink-2);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+/* картуш — надпись на поле карты при первом показе */
+.cartouche {
+  position: absolute;
+  left: 34px;
+  bottom: 18px;
+  width: 360px;
+  padding: 14px 18px 14px;
+  background: color-mix(in srgb, var(--sky) 88%, transparent);
+  border: 1px solid var(--rule-strong);
+  outline: 1px solid var(--rule);
+  outline-offset: 3px;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--ink-2);
+  z-index: 4;
+}
+.cartouche h1 {
+  margin: 0 0 2px;
+  font-size: 24px;
+  line-height: 28px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.cartouche .sub {
+  font-style: italic;
+  margin: 0 0 10px;
+}
+.cartouche p {
+  margin: 0 0 8px;
+}
+.cartouche .entry {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-top: 6px;
+  font-family: var(--sans);
+  font-size: 14px;
+}
+.cartouche .entry button {
+  color: var(--ink);
+  border-bottom: 1px solid var(--rule-strong);
+}
+.cartouche .close {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--ink-3);
+}
+.swatch {
+  display: inline-block;
+  width: 26px;
+  height: 3px;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+.swatch.gold {
+  background: linear-gradient(90deg, var(--gold-1), var(--gold-2));
+}
+.swatch.azure {
+  background: linear-gradient(90deg, var(--azure-1), var(--azure-2));
+}
+
+/* плавающие управляющие элементы неба */
+.skyctl {
+  position: absolute;
+  right: 14px;
+  bottom: 12px;
+  display: flex;
+  gap: 14px;
+  align-items: baseline;
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--ink-2);
+  background: color-mix(in srgb, var(--sky) 85%, transparent);
+  padding: 4px 10px;
+  z-index: 4;
+}
+.skyctl button[aria-pressed='true'] {
+  color: var(--ink);
+  border-bottom: 1px solid var(--ink);
+}
+.skyctl .zoom button {
+  width: 22px;
+  font-size: 17px;
+}

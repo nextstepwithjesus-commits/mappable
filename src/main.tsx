@@ -4,7 +4,14 @@ import '@fontsource-variable/literata/opsz-italic.css';
 import '@fontsource-variable/jost/wght.css';
 import '@fontsource/noto-serif-hebrew/hebrew-400.css';
 import './styles/tokens.css';
-import './styles/app.css';
+import './styles/base.css';
+import './styles/top.css';
+import './styles/sky.css';
+import './styles/folio.css';
+import './styles/strip.css';
+import './styles/panels.css';
+import './styles/phone.css';
+import './styles/spread.css';
 import { App } from './ui/App.tsx';
 import { Specimen } from './ui/Specimen.tsx';
 

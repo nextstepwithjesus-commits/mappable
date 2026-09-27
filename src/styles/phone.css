@@ -1,0 +1,167 @@
+/* ---------- узкие экраны ---------- */
+@media (max-width: 1560px) {
+  .wordmark small {
+    display: none;
+  }
+}
+/* на узких экранах строка команд прокручивается вбок; правый край растворяется — видно, что есть продолжение */
+@media (max-width: 1160px) {
+  .commands {
+    gap: 12px;
+    -webkit-mask-image: linear-gradient(90deg, #000 90%, transparent);
+    mask-image: linear-gradient(90deg, #000 90%, transparent);
+    padding-right: 24px;
+  }
+}
+@media (max-width: 900px) {
+  :root {
+    --folio-w: 380px;
+  }
+  .commands {
+    gap: 12px;
+  }
+  .wordmark small {
+    display: none;
+  }
+}
+@media (max-width: 720px) {
+  :root {
+    --top-h: 104px;
+    --strip-h: 56px;
+  }
+  .top {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px 14px;
+    padding: 6px 14px 4px 16px;
+  }
+  .wordmark {
+    line-height: 30px;
+  }
+  .search {
+    margin-left: 0;
+    order: 3;
+    width: 100%;
+  }
+  .search input {
+    flex: 1;
+    width: auto;
+  }
+  .results {
+    left: 0;
+    width: 100%;
+  }
+  .commands {
+    order: 2;
+    width: 100%;
+    /* строка команд прокручивается вбок; правый край растворяется — видно, что есть продолжение */
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(90deg, #000 88%, transparent);
+    mask-image: linear-gradient(90deg, #000 88%, transparent);
+  }
+  .app {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'top'
+      'sky'
+      'strip';
+  }
+  .folio {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: var(--sheet-h, 55vh);
+    border-left: 0;
+    border-top: 1px solid var(--rule-strong);
+    z-index: 25;
+    transition: height 260ms var(--ease);
+  }
+  .folio .grab {
+    position: sticky;
+    top: 0;
+    height: 22px;
+    background: var(--sheet);
+    z-index: 2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    touch-action: none;
+  }
+  .folio .grab span {
+    width: 44px;
+    height: 3px;
+    background: var(--rule-strong);
+  }
+  .folio-inner {
+    padding: 4px 22px 60px 44px;
+  }
+  .sec .no {
+    left: -30px;
+  }
+  .mark {
+    right: -18px;
+  }
+  .cartouche {
+    left: 12px;
+    right: 12px;
+    width: auto;
+    bottom: 10px;
+  }
+  .sheet {
+    width: 100%;
+  }
+  .skyctl {
+    bottom: auto;
+    top: 52px; /* под колонтитулом неба */
+    right: 6px;
+    gap: 10px;
+    font-size: 12.5px;
+    padding: 2px 6px;
+  }
+  .skyctl .scale {
+    display: none;
+  }
+  .cartouche {
+    font-size: 13.5px;
+    line-height: 18px;
+    padding: 10px 14px;
+  }
+  .cartouche .long {
+    display: none;
+  }
+  .cartouche h1 {
+    font-size: 20px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+@media print {
+  .top,
+  .sky,
+  .strip,
+  .sheet {
+    display: none !important;
+  }
+  .app {
+    position: static;
+    display: block;
+  }
+  .folio {
+    width: auto;
+    border: 0;
+    overflow: visible;
+    background: #fff;
+    color: #000;
+  }
+  body {
+    overflow: visible;
+    background: #fff;
+  }
+}

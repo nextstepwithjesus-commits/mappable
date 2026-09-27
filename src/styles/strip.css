@@ -1,0 +1,11 @@
+/* ---------- полоса времени ---------- */
+.strip {
+  grid-area: strip;
+  position: relative;
+  border-top: 1px solid var(--rule);
+  background: var(--sky);
+  touch-action: none;
+}
+.strip canvas {
+  display: block;
+}

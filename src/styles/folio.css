@@ -1,0 +1,287 @@
+/* ---------- лист каталога (карточка) ---------- */
+.folio {
+  grid-area: folio;
+  width: var(--folio-w);
+  background: var(--sheet);
+  border-left: 1px solid var(--rule);
+  overflow-y: auto;
+  position: relative;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule-strong) transparent;
+}
+.folio[hidden] {
+  display: none;
+}
+.folio-inner {
+  position: relative;
+  padding: 22px 40px 60px 64px;
+}
+.folio .rail {
+  position: sticky;
+  top: 0;
+  float: left;
+  margin-left: -56px;
+  width: 12px;
+  padding-top: 90px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.rail button {
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--ink-3);
+  border-radius: 50%;
+}
+.rail button.content {
+  background: var(--ink-2);
+  border-color: var(--ink-2);
+}
+.rail button.absent {
+  border-style: dotted;
+  border-color: var(--rule-strong);
+}
+.rail button.current {
+  outline: 1px solid var(--ink);
+  outline-offset: 1px;
+}
+.rail .gap {
+  height: 7px;
+}
+.folio .actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  font-family: var(--sans);
+  font-size: 13.5px;
+  color: var(--ink-2);
+  margin: 0 0 18px;
+}
+.folio .actions button:hover {
+  color: var(--ink);
+}
+.folio .actions button[aria-pressed='true'] {
+  color: var(--ink);
+  border-bottom: 1px solid var(--ink);
+}
+/* фокус на заголовке карточки (после выбора в поиске) — черта снизу, а не рамка */
+.mast h2:focus {
+  outline: none;
+}
+.mast h2:focus-visible {
+  box-shadow: inset 0 -2px 0 var(--ink-3);
+}
+.mast h2 {
+  margin: 0;
+  font-size: var(--t-name);
+  line-height: var(--t-name-lh);
+  font-weight: 560;
+  font-variation-settings: 'opsz' 36;
+}
+.mast .dis {
+  font-style: italic;
+  font-size: var(--t-sub);
+  color: var(--ink-2);
+  margin: 2px 0 12px;
+}
+.passport {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 14px;
+  margin: 0 0 12px;
+  font-size: 14.5px;
+  line-height: 20px;
+}
+.passport dt {
+  color: var(--ink-3);
+  font-family: var(--sans);
+  font-size: 13px;
+}
+.passport dd {
+  margin: 0;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.lifebar {
+  display: block;
+  margin: 6px 0 4px;
+}
+.mast .lines {
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--ink-2);
+  margin: 6px 0 0;
+}
+.mast .rule {
+  height: 4px;
+  border-top: 1.5px solid var(--ink-2);
+  border-bottom: 0.5px solid var(--ink-2);
+  margin: 16px 0 18px;
+}
+.part {
+  font-family: var(--sans);
+  font-size: 12.5px;
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+  margin: 22px 0 8px;
+  padding-top: 6px;
+  border-top: 0.5px solid var(--rule);
+}
+.sec {
+  position: relative;
+  margin: 0 0 12px;
+  scroll-margin-top: 16px;
+}
+.sec .no {
+  position: absolute;
+  left: -52px;
+  width: 40px;
+  white-space: nowrap;
+  text-align: right;
+  font-family: var(--sans);
+  font-size: 12.5px;
+  color: var(--ink-3);
+  font-variant-numeric: lining-nums tabular-nums;
+  top: 2px;
+}
+.sec h3 {
+  display: inline;
+  font-size: var(--t-body);
+  font-weight: 600;
+  margin: 0;
+}
+.sec.long h3 {
+  display: block;
+  margin-bottom: 4px;
+}
+.sec h3 + .runin::before {
+  content: '. ';
+}
+.sec .runin {
+  display: inline;
+}
+.sec p {
+  margin: 0 0 6px;
+}
+.sec ul {
+  margin: 2px 0 6px;
+  padding: 0;
+}
+.sec li {
+  list-style: none;
+  margin: 0 0 5px;
+  padding-left: 0;
+}
+.sec .muted,
+.sec.silent,
+.sec.absent {
+  color: var(--ink-3);
+}
+.sec.absent {
+  font-style: italic;
+}
+.sec .more {
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--ink-2);
+  border-bottom: 1px solid var(--rule-strong);
+}
+.mark {
+  position: absolute;
+  right: -34px;
+  font-family: var(--sans);
+  font-size: 11px;
+  color: var(--ink-3);
+  font-style: normal;
+}
+.fact {
+  position: relative;
+}
+.fact .note {
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--ink-2);
+  margin: 2px 0 0;
+}
+.ref {
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--ink-2);
+  white-space: nowrap;
+  border-bottom: 1px dotted var(--ink-3);
+  margin-left: 4px;
+  font-variant-numeric: lining-nums;
+}
+.refs {
+  margin-left: 4px;
+}
+.refs .ref {
+  margin-left: 0;
+}
+.refsep {
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--ink-3);
+}
+.ref[aria-expanded='true'] {
+  color: var(--ink);
+  border-bottom-style: solid;
+}
+.verses {
+  margin: 6px 0 10px;
+  padding: 2px 0 2px 12px;
+  border-left: 0.5px solid var(--ink-3);
+  font-size: 14.5px;
+  line-height: 21px;
+  color: var(--ink);
+}
+.verses sup {
+  font-family: var(--sans);
+  font-size: 10px;
+  color: var(--ink-3);
+  margin-right: 3px;
+}
+.verses .br {
+  color: var(--ink-3);
+}
+.person {
+  border-bottom: 1px solid var(--rule-strong);
+  cursor: pointer;
+}
+.person:hover {
+  border-bottom-color: var(--ink);
+}
+.quote {
+  font-size: 15.5px;
+}
+.he {
+  font-family: var(--hebrew);
+  font-size: 20px;
+}
+.colophon {
+  margin-top: 28px;
+  padding-top: 10px;
+  border-top: 0.5px solid var(--rule);
+  font-size: 12px;
+  line-height: 17px;
+  color: var(--ink-3);
+}
+.canon {
+  display: grid;
+  grid-template-columns: repeat(33, 1fr);
+  gap: 1px;
+  margin: 6px 0 4px;
+}
+.canon span {
+  height: 11px;
+  background: var(--sheet-2);
+}
+.canon .gapc {
+  grid-column: 1 / -1;
+  height: 3px;
+  background: none;
+}
+.tension {
+  border-left: 2px solid var(--ink-2);
+  padding-left: 10px;
+  margin: 6px 0;
+}
