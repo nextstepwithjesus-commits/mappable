@@ -6,6 +6,7 @@
 import type { Sky, SkyState } from './sky.ts';
 import { byId, persons, type ModelData } from '../data/atlas.ts';
 import { toAstro } from '../engine/years.ts';
+import { mapFont, T_MAP_S, T_UI } from './type.ts';
 
 interface Bar {
   id: string;
@@ -14,9 +15,6 @@ interface Bar {
   t1: number;
   soft: boolean;
 }
-
-const FONT_SERIF = "'Literata Variable', Literata, Georgia, serif";
-const FONT_SANS = "'Jost Variable', Jost, sans-serif";
 
 let cache: { model: string; tiers: { name: string; bars: Bar[] }[] } | null = null;
 
@@ -100,7 +98,7 @@ export function drawTiers(sky: Sky, s: SkyState) {
   const selP = s.selected ? byId.get(s.selected) : null;
 
   for (const { t, rows } of layout) {
-    ctx.font = `500 11.5px ${FONT_SANS}`;
+    ctx.font = mapFont(T_MAP_S, { sans: true, weight: 500, coarse: sky.coarse });
     ctx.fillStyle = pal.ink3;
     ctx.fillText(t.name, 24, y + 11);
     y += 15;
@@ -133,7 +131,7 @@ export function drawTiers(sky: Sky, s: SkyState) {
         ctx.setLineDash(b.soft ? [2, 2] : []);
         ctx.strokeRect(x0 + 0.5, y + 0.5, wBar - 1, h - 1);
         ctx.setLineDash([]);
-        ctx.font = `450 11.5px ${FONT_SERIF}`;
+        ctx.font = mapFont(T_MAP_S, { weight: 450, coarse: sky.coarse });
         const tw = ctx.measureText(b.label).width;
         if (x1 - x0 > tw + 8) {
           ctx.fillStyle = inSel ? pal.ink : pal.ink2;
@@ -170,7 +168,7 @@ export function drawTiers(sky: Sky, s: SkyState) {
     ctx.moveTo(Math.round(b) + 0.5, top - 4);
     ctx.lineTo(Math.round(b) + 0.5, cam.h);
     ctx.stroke();
-    ctx.font = `italic 400 13px ${FONT_SERIF}`;
+    ctx.font = mapFont(T_UI, { italic: true, coarse: sky.coarse });
     ctx.fillStyle = pal.ink;
     ctx.fillText(selP.name, b + 6, top - 4 + totalH + 16);
   }

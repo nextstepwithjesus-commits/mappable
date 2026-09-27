@@ -27,8 +27,12 @@ export interface StrandPoint {
 export interface Strand {
   line: 'joseph' | 'mary';
   points: StrandPoint[];
-  /** индексы точек, где нить уходит «под» другую (для плетения), — пары [начало, конец) */
-  under: [number, number][];
+  /**
+   * Плетение: участки косы между двумя перекрестьями, где эта нить лежит поверх другой, —
+   * пары [начало, конец] в индексах точек этой же нити. Раздельные участки у линий разной длины,
+   * поэтому индексы двух нитей после первого расхождения не совпадают.
+   */
+  over: [number, number][];
 }
 
 export interface RibbonInput {
@@ -191,8 +195,8 @@ export function buildRibbons(inp: RibbonInput): Strand[] {
   const A = inp.amplitude;
   const joseph: StrandPoint[] = [];
   const mary: StrandPoint[] = [];
-  const underJ: [number, number][] = [];
-  const underM: [number, number][] = [];
+  const overJ: [number, number][] = [];
+  const overM: [number, number][] = [];
 
   for (let r = 0; r < runs.length; r++) {
     const run = runs[r];
@@ -215,7 +219,8 @@ export function buildRibbons(inp: RibbonInput): Strand[] {
       if (hasPrev && hasNext && n > 0) rate = Math.max(0, (2 * Math.round(n / 2)) / n);
       const Uend = hasNext ? n : n; // фаза отсчитывается от конца участка (точки расхождения)
       let lastSign = 0;
-      let segStart = joseph.length;
+      let segJ = joseph.length;
+      let segM = mary.length;
       for (const s of samples) {
         // коса и параллельные нити сменяют друг друга плавно, по шагу поколений на экране
         const w = wAt(s.u);
@@ -229,10 +234,12 @@ export function buildRibbons(inp: RibbonInput): Strand[] {
         const sign = Math.sign(Math.sin(Math.PI * rate * (s.u - Uend)));
         if (braid && sign !== lastSign && lastSign !== 0) {
           // переплетение: на каждом перекрестье меняется, чья нить сверху
-          const k = joseph.length - 1;
-          if (Math.floor(s.u) % 2 === 0) underJ.push([segStart, k]);
-          else underM.push([segStart, k]);
-          segStart = k;
+          const kJ = joseph.length - 1;
+          const kM = mary.length - 1;
+          if (Math.floor(s.u) % 2 === 0) overM.push([segM, kM]);
+          else overJ.push([segJ, kJ]);
+          segJ = kJ;
+          segM = kM;
         }
         lastSign = sign;
       }
@@ -260,7 +267,7 @@ export function buildRibbons(inp: RibbonInput): Strand[] {
     }
   }
   return [
-    { line: 'mary', points: mary, under: underM },
-    { line: 'joseph', points: joseph, under: underJ },
+    { line: 'mary', points: mary, over: overM },
+    { line: 'joseph', points: joseph, over: overJ },
   ];
 }
