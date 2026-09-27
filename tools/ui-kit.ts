@@ -38,8 +38,14 @@ export interface PageOpts {
   reducedMotion?: boolean;
 }
 
-export async function session(port: number) {
-  const server = spawn('npx', ['vite', 'preview', '--port', String(port), '--strictPort'], { cwd: ROOT, stdio: 'ignore', detached: true });
+/**
+ * dist — каталог сборки: у параллельных агентов своя сборка, чтобы не затирать общую dist/.
+ * Собрать в свой каталог: npx vite build --outDir .ui-build/<имя>  →  session(порт, { dist: '.ui-build/<имя>' }).
+ */
+export async function session(port: number, opts: { dist?: string } = {}) {
+  const args = ['vite', 'preview', '--port', String(port), '--strictPort'];
+  if (opts.dist) args.push('--outDir', opts.dist);
+  const server = spawn('npx', args, { cwd: ROOT, stdio: 'ignore', detached: true });
   await new Promise((r) => setTimeout(r, 2500));
   const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
   const errors: string[] = [];

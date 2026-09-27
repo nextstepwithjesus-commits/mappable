@@ -22,7 +22,9 @@ const save = (k: string, v: unknown) => {
 };
 
 /** Тема по умолчанию — как у читателя: явный выбор страницы-хозяина (data-theme), иначе настройка системы. */
+const hasDom = typeof document !== 'undefined';
 const viewerTheme = (): Theme => {
+  if (!hasDom) return 'night'; // тесты движка и карточек идут без браузера
   const host = document.documentElement.dataset.theme;
   if (host === 'light') return 'day';
   if (host === 'dark') return 'night';
@@ -66,7 +68,7 @@ effect(() => {
 // запоминается только выбор читателя, не тема по умолчанию: иначе атлас перестал бы следовать за системой
 let themeChosen = false;
 effect(() => {
-  document.documentElement.dataset.map = theme.value;
+  if (hasDom) document.documentElement.dataset.map = theme.value;
   if (themeChosen) save('theme', theme.value);
   themeChosen = true;
 });

@@ -9,3 +9,4 @@ dist-perf/
 dist-artifact/
 .ui-shots/
 tools/_*.ts
+.ui-build/

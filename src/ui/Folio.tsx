@@ -1,15 +1,20 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
-import { byId, graph, groupById, loadCard, lineMembership, books } from '../data/atlas.ts';
+import { byId, graph, groupById, loadCard, lineMembership } from '../data/atlas.ts';
 import type { Card, Chrono, Fact, Cert } from '../data/types.ts';
 import { selected, second, pickMode, panel, model, showSchema } from '../state.ts';
-import { P, Refs, VerseInsert, Mark, roleText, refLabel, skyRef, plural, CAN_PRINT } from './common.tsx';
+import { P, Refs, VerseInsert, Mark, roleText, skyRef, plural, CAN_PRINT } from './common.tsx';
 import { siblings } from '../engine/graph.ts';
-import { genitive } from '../engine/kinship.ts';
-import { formatYear, formatSpan, yearsWord, toHist } from '../engine/years.ts';
+import { formatSpan, yearsWord } from '../engine/years.ts';
 import { contemporaries, type ChronoResult, type PersonChrono } from '../engine/chronology.ts';
-import { lifeText } from './SkyView.tsx';
 import type { ModelData, ChronoRow } from '../data/atlas.ts';
+import { PG, deathLine } from './card/shared.tsx';
+import { Masthead } from './card/Masthead.tsx';
+import { Events } from './card/Events.tsx';
+import { CanonStrip } from './card/Canon.tsx';
+import { BirthLine, RelativeChrono } from './card/Chrono.tsx';
+
+export { Masthead };
 
 type AtlasPerson = NonNullable<ReturnType<typeof byId.get>>;
 
@@ -43,11 +48,6 @@ export const PARTS = ['', 'I. Личность', 'II. Происхождение
 
 type State = 'content' | 'silent' | 'absent';
 
-/** Ссылка на лицо с именем в родительном падеже («после рождения Иехонии»). */
-function PG({ id }: { id: string }) {
-  const p = byId.get(id);
-  return <P id={id}>{p ? genitive(p.name, p.sex) : id}</P>;
-}
 
 /** Термины Писания «брат», «сестра» (в т. ч. «брат по отцу»). */
 const SIBLING_KIN = /^(брат|сестра)(?![а-яё])/i;
@@ -309,10 +309,7 @@ export function buildSections(id: string, p: AtlasPerson, card: Card | null, m: 
     put(
       8,
       <>
-        <p class="fact">
-          {c.cls === 'epochal' ? `Год не установлен; эпоха — ${m.epochs.find((e) => e.id === (p.epoch ?? c.epoch))?.name ?? '—'}` : birthLine(c.b, c.bLo, c.bHi, c.cls)}
-          <Mark calc={c.cls !== 'exact' && c.cls !== 'epochal'} />
-        </p>
+        <BirthLine p={p} c={c} m={m} />
         {card?.birth?.place ? <p>Место: {card.birth.place}</p> : null}
         {facts(card?.birth?.facts, 'b8')}
       </>,
@@ -657,329 +654,3 @@ const PLACE_ROLE: Record<string, string> = { birth: 'рождение', residenc
 const NOTE_KIND: Record<string, string> = { textual: 'Текст', interpretation: 'Толкование', identification: 'Отождествление', chronology: 'Хронология', bracket: 'Скобки Синодального текста' };
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-
-function birthLine(b: number, lo: number, hi: number, cls: string): string {
-  if (cls === 'exact') return `${formatYear(b)}`;
-  if (cls === 'calculated') return `ок. ${formatYear(b).replace(/^ок\.\s/, '')}`;
-  const span = Math.round(hi - lo);
-  return `ок. ${formatYear(b)}; возможный промежуток — ${formatSpan(lo, hi)} (${yearsWord(span)})`;
-}
-function deathLine(b: number, d: number, cls: string): string {
-  const age = Math.round(d - b);
-  return `${cls === 'exact' ? '' : 'ок. '}${formatYear(d)}, в возрасте ${yearsWord(age)}`;
-}
-
-export function Masthead({ id }: { id: string }) {
-  const p = byId.get(id)!;
-  const c = model.value.chrono.get(id);
-  const ep = c ? model.value.epochs.find((e) => e.id === (p.epoch ?? c.epoch)) : null;
-  const j = lineMembership.joseph.has(id);
-  const mm = lineMembership.mary.has(id);
-  return (
-    <header class="mast">
-      <h2 id={`title-${id}`} tabIndex={-1}>{p.name}</h2>
-      {p.disambig ? <div class="dis">{p.disambig}</div> : <div class="dis">&nbsp;</div>}
-      <dl class="passport">
-        {p.roles.length ? (
-          <>
-            <dt>Роль</dt>
-            <dd>{roleText(p.roles, p.sex)}</dd>
-          </>
-        ) : null}
-        <dt>Род</dt>
-        <dd>{groupById.get(p.group)?.name}</dd>
-        <dt>Эпоха</dt>
-        <dd>{ep?.name ?? '—'}</dd>
-        <dt>Годы</dt>
-        <dd>{lifeText(id) || '—'}</dd>
-      </dl>
-      <LifeBar id={id} />
-      {(j || mm) && (
-        <div class="lines">
-          {j && (
-            <span>
-              <span class="swatch gold" />
-              линия Иосифа{' '}
-            </span>
-          )}
-          {mm && (
-            <span>
-              <span class="swatch azure" />
-              линия по Луке
-            </span>
-          )}
-        </div>
-      )}
-    </header>
-  );
-}
-
-/** Мини-шкала жизни на фоне эпохи: ядро — надёжная часть, края — неопределённость. */
-function LifeBar({ id }: { id: string }) {
-  const ref = useRef<HTMLCanvasElement>(null);
-  useEffect(() => {
-    const cv = ref.current;
-    const c = model.value.chrono.get(id);
-    if (!cv || !c) return;
-    const dpr = window.devicePixelRatio || 1;
-    const w = cv.clientWidth;
-    const h = 52;
-    cv.width = w * dpr;
-    cv.height = h * dpr;
-    const ctx = cv.getContext('2d')!;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const cs = getComputedStyle(document.documentElement);
-    const col = (n: string) => cs.getPropertyValue(n).trim();
-    const sans = cs.getPropertyValue('--sans').trim() || 'sans-serif';
-    const end = c.d ?? c.dEst;
-    const span = Math.max(80, end - c.bLo);
-    const t0 = c.bLo - span * 0.3;
-    const t1 = end + span * 0.3;
-    const x = (t: number) => ((t - t0) / (t1 - t0)) * w;
-    // эпохи — полосой с названиями
-    ctx.font = `400 11px ${sans}`;
-    ctx.textBaseline = 'alphabetic';
-    model.value.epochs.forEach((e, i) => {
-      const a = Math.max(0, x(toAstroYear(e.start)));
-      const b = Math.min(w, x(toAstroYear(e.end)));
-      if (b <= a) return;
-      ctx.fillStyle = i % 2 ? col('--sky-band') : col('--sheet-2');
-      ctx.fillRect(a, 0, b - a, 16);
-      const tw = ctx.measureText(e.name).width;
-      if (b - a > tw + 10) {
-        ctx.fillStyle = col('--ink-3');
-        ctx.fillText(e.name, a + 5, 12);
-      }
-    });
-    // жизнь: размытое начало, сплошная часть, предполагаемый конец пунктиром
-    const ink = col('--ink');
-    const g = ctx.createLinearGradient(x(c.bLo), 0, x(c.bHi), 0);
-    g.addColorStop(0, 'rgba(0,0,0,0)');
-    g.addColorStop(1, ink);
-    ctx.fillStyle = c.cls === 'exact' ? ink : g;
-    ctx.fillRect(x(c.bLo), 21, Math.max(2, x(c.bHi) - x(c.bLo)), 4);
-    ctx.fillStyle = ink;
-    const solidEnd = c.d ?? c.last ?? c.bHi;
-    ctx.fillRect(x(c.bHi), 21, Math.max(2, x(solidEnd) - x(c.bHi)), 4);
-    if (c.d === null) {
-      ctx.setLineDash([2, 3]);
-      ctx.strokeStyle = ink;
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(x(solidEnd), 23);
-      ctx.lineTo(x(c.dEst), 23);
-      ctx.stroke();
-      ctx.setLineDash([]);
-    }
-    // рождения родителей (полые) и детей (сплошные) — риски под полосой
-    const p = byId.get(id)!;
-    ctx.strokeStyle = col('--ink-3');
-    ctx.lineWidth = 1;
-    for (const par of [p.father, p.mother]) {
-      const pc = par ? model.value.chrono.get(par) : null;
-      if (!pc) continue;
-      ctx.beginPath();
-      ctx.arc(x(pc.b), 31, 2.2, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-    ctx.fillStyle = col('--ink-2');
-    for (const e of graph.childrenOf.get(id) ?? []) {
-      const kc = model.value.chrono.get(e.child);
-      if (kc) ctx.fillRect(x(kc.b) - 0.5, 28, 1, 6);
-    }
-    // годы на концах
-    ctx.font = `400 11.5px ${sans}`;
-    ctx.fillStyle = col('--ink-2');
-    const hb = toHist(c.b);
-    const he = toHist(end);
-    const era = he < 0 ? ' до Р. Х.' : hb < 0 ? ' по Р. Х.' : '';
-    const left = `${c.cls === 'exact' ? '' : 'ок. '}${Math.abs(hb)}${hb < 0 && he > 0 ? ' до Р. Х.' : ''}`;
-    const right = `${c.d === null ? 'ок. ' : ''}${Math.abs(he)}${era}`;
-    const lw = ctx.measureText(left).width;
-    const rw = ctx.measureText(right).width;
-    const lx = Math.max(0, Math.min(w - lw, x(c.b) - lw / 2));
-    const rx = Math.max(0, Math.min(w - rw, x(end) - rw / 2));
-    if (lx + lw + 8 < rx) ctx.fillText(left, lx, 48);
-    ctx.fillText(right, rx, 48);
-  }, [id, model.value]);
-  return <canvas class="lifebar" ref={ref} style={{ width: '100%', height: '52px' }} aria-hidden="true" />;
-}
-
-/** Годы эпох в данных исторические; шкала полосы — астрономическая. */
-const toAstroYear = (hist: number) => (hist < 0 ? hist + 1 : hist);
-
-function Events({ events }: { events: NonNullable<Card['events']> }) {
-  const [all, setAll] = useState(false);
-  const shown = all ? events : events.slice(0, 8);
-  return (
-    <>
-      <ul>
-        {shown.map((e, i) => (
-          <li class="fact" key={i}>
-            {e.age !== undefined ? <span class="muted">{yearsWord(e.age)}. </span> : e.year !== undefined ? <span class="muted">{formatYear(e.year <= 0 ? e.year + 1 : e.year, { approx: true })}. </span> : null}
-            {e.text}
-            <Refs refs={e.refs} owner={`e17.${i}`} />
-            <Mark cert={e.cert} />
-            <VerseInsert owner={`e17.${i}`} refs={e.refs} />
-          </li>
-        ))}
-      </ul>
-      {!all && events.length > 8 && (
-        <button class="more" onClick={() => setAll(true)}>
-          ещё {events.length - 8} {plural(events.length - 8, 'событие', 'события', 'событий')}
-        </button>
-      )}
-    </>
-  );
-}
-
-/** Полоса 66 книг в синодальном порядке, тон — число упоминаний лица. */
-function CanonStrip({ books: counts, first, keyRefs }: { books: Record<string, number>; first?: string; keyRefs?: string[] }) {
-  const max = Math.max(1, ...Object.values(counts));
-  const ot = books.filter((b) => b.t === 'ot');
-  const nt = books.filter((b) => b.t === 'nt');
-  const cell = (b: (typeof books)[number]) => {
-    const n = counts[b.code] ?? 0;
-    const a = n ? 0.25 + 0.75 * Math.sqrt(n / max) : 0;
-    return <span key={b.code} title={`${b.name}${n ? `: ${n}` : ''}`} style={n ? { background: `color-mix(in srgb, var(--ink) ${Math.round(a * 100)}%, var(--sheet-2))` } : undefined} />;
-  };
-  const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 6);
-  return (
-    <>
-      <div class="canon" aria-label="Упоминания по книгам Писания">
-        {ot.map(cell)}
-        <span class="gapc" />
-        {nt.map(cell)}
-      </div>
-      <p class="muted" style={{ fontSize: '13px' }}>
-        Ветхий Завет — первые 39 клеток, Новый — 27.{' '}
-        {top.map(([code, n], i) => `${i ? '; ' : 'Чаще всего: '}${books.find((b) => b.code === code)?.name} (${n})`).join('')}
-      </p>
-      {first && (
-        <p class="fact">
-          Первое упоминание: <Refs refs={[first]} owner="f23" />
-          <VerseInsert owner="f23" refs={[first]} />
-        </p>
-      )}
-      {keyRefs?.length ? (
-        <p class="fact">
-          Ключевые места: <Refs refs={keyRefs} owner="k23" />
-          <VerseInsert owner="k23" refs={keyRefs} />
-        </p>
-      ) : null}
-    </>
-  );
-}
-
-/** § 13: эпоха, словесная формула относительной хронологии, напряжения. */
-function RelativeChrono({ id, m, note }: { id: string; m: ModelData; note?: Fact[] }) {
-  const p = byId.get(id)!;
-  const c = m.chrono.get(id)!;
-  const ep = model.value.epochs.find((e) => e.id === (p.epoch ?? c.epoch));
-  const dated = (x: string) => {
-    const cc = m.chrono.get(x);
-    return !!cc && (cc.cls === 'exact' || cc.cls === 'calculated');
-  };
-  // ближайшие надёжно датированные родственники (до 3 шагов по родству)
-  const near = new Set<string>();
-  const frontier = [id];
-  for (let depth = 0; depth < 3; depth++) {
-    const next: string[] = [];
-    for (const x of frontier) {
-      for (const e of graph.parentsOf.get(x) ?? []) next.push(e.parent);
-      for (const e of graph.childrenOf.get(x) ?? []) next.push(e.child);
-      for (const s of graph.spousesOf.get(x) ?? []) next.push(s.a === x ? s.b : s.a);
-    }
-    for (const n of next) if (n !== id && !near.has(n)) near.add(n);
-    frontier.splice(0, frontier.length, ...next);
-  }
-  const datedNear = [...near].filter(dated);
-  const bornAfter = datedNear.filter((x) => m.chrono.get(x)!.b < c.bLo).sort((a, b) => m.chrono.get(b)!.b - m.chrono.get(a)!.b)[0];
-  const bornBefore = datedNear.filter((x) => m.chrono.get(x)!.b > c.bHi).sort((a, b) => m.chrono.get(a)!.b - m.chrono.get(b)!.b)[0];
-  const aliveDuring = datedNear.filter((x) => {
-    const o = m.chrono.get(x)!;
-    const oe = o.d ?? o.last;
-    return oe !== null && o.b < c.bLo && oe > (c.last ?? c.bHi);
-  })[0];
-  const tensions = m.tensions.filter((t) => t.persons.includes(id));
-  // если надёжно датированных родственников нет — порядок по прямому родству: родитель раньше, ребёнок позже
-  // порядок по прямому родству: родитель раньше, ребёнок позже (если они ещё не названы выше как датированные опоры)
-  const parentLink = (graph.parentsOf.get(id) ?? []).find((e) => (e.kind === 'father' || e.kind === 'mother') && e.parent !== bornAfter);
-  const childLink = [...(graph.childrenOf.get(id) ?? [])]
-    .filter((e) => (e.kind === 'father' || e.kind === 'mother') && e.child !== bornBefore)
-    .sort((a, b) => (byId.get(a.child)!.order ?? 99) - (byId.get(b.child)!.order ?? 99))[0];
-  const kinWord = (x: string, up: boolean) => {
-    const f = byId.get(x)!.sex === 'f';
-    return up ? (f ? 'мать' : 'отец') : f ? 'дочь' : 'сын';
-  };
-  return (
-    <>
-      <p>
-        Эпоха: {ep?.name ?? '—'}
-        {ep ? <span class="muted"> ({formatSpan(ep.start < 0 ? ep.start + 1 : ep.start, ep.end < 0 ? ep.end + 1 : ep.end, ep.id === 'judges')})</span> : null}.
-      </p>
-      {(bornAfter || bornBefore || aliveDuring) && (
-        <p>
-          {bornAfter && (
-            <>
-              Родился после рождения <PG id={bornAfter} />
-            </>
-          )}
-          {bornAfter && bornBefore ? ' и ' : ''}
-          {bornBefore && (
-            <>
-              {bornAfter ? 'до' : 'Родился до'} рождения <PG id={bornBefore} />
-            </>
-          )}
-          {aliveDuring && (
-            <>
-              {bornAfter || bornBefore ? '; ' : ''}жил при жизни <PG id={aliveDuring} />
-            </>
-          )}
-          .
-          <abbr class="mark" title="по годам, рассчитанным хронологическим движком">расч.</abbr>
-        </p>
-      )}
-      {(parentLink || childLink) && (
-        <p>
-          По родству:{' '}
-          {parentLink && (
-            <>
-              после <PG id={parentLink.parent} /> ({kinWord(parentLink.parent, true)})
-            </>
-          )}
-          {parentLink && childLink ? ', ' : ''}
-          {childLink && (
-            <>
-              до <PG id={childLink.child} /> ({kinWord(childLink.child, false)})
-            </>
-          )}
-          .
-          <Refs refs={[...(parentLink?.refs ?? []), ...(childLink?.refs ?? [])].filter((r, i, a) => a.indexOf(r) === i).slice(0, 3)} owner="kin13" />
-          <abbr class="mark" title="вывод: родитель рождается раньше ребёнка">выв.</abbr>
-        </p>
-      )}
-      {c.cls === 'estimated' && <p class="muted">Год оценён по родству: в среднем по длине поколения своей эпохи между надёжно датированными предками и потомками.</p>}
-      {c.cls === 'epochal' && <p class="muted">Писание не даёт опор для расчёта года: известна только эпоха.</p>}
-      {tensions.map((t, i) => (
-        <div class="tension" key={i}>
-          <b>Хронологическое напряжение.</b> {t.text}
-          <Refs refs={t.refs.slice(0, 4)} owner={`t13.${i}`} />
-          <VerseInsert owner={`t13.${i}`} refs={t.refs.slice(0, 4)} />
-        </div>
-      ))}
-      {note?.map((f, i) => (
-        <p class="fact" key={`n${i}`}>
-          {f.text}
-          <Refs refs={f.refs} owner={`c13.${i}`} />
-          <VerseInsert owner={`c13.${i}`} refs={f.refs} />
-        </p>
-      ))}
-      <p class="muted" style={{ fontSize: '13px' }}>
-        Рождение: {toHist(c.b) < 0 ? `${-toHist(c.b)} г. до Р. Х.` : `${toHist(c.b)} г. по Р. Х.`} ({c.cls === 'exact' ? 'по числам Писания' : c.cls === 'calculated' ? 'по реконструкции' : c.cls === 'estimated' ? 'оценка' : 'эпоха'}).
-      </p>
-    </>
-  );
-}
-
-export { refLabel };
