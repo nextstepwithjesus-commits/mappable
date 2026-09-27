@@ -1,26 +1,32 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { effect } from '@preact/signals';
 import { Sky, readPalette, type SkyState } from '../render/sky.ts';
-import { byId, graph, groupById, lines } from '../data/atlas.ts';
+import { byId, graph, lines } from '../data/atlas.ts';
 import {
   selected, second, first, hovered, focused, lambda, model, layers, onlyLines, meridian, panel, pickMode, theme, introDone, epochMode, lineFlip, pins,
   kinPath, pickSecond,
 } from '../state.ts';
 import { skyRef, viewTick, plural } from './common.tsx';
-import { formatSpan, formatYear } from '../engine/years.ts';
+import { lifeSpanText } from '../engine/years.ts';
+import { isPeople } from './card/Masthead.tsx';
+import { affiliation, constellation } from './card/shared.tsx';
 import { drawTiers, tiersBottom } from '../render/tiers.ts';
 import { nameCase } from './text/ru.ts';
 
 // путь родства хранится в состоянии; отсюда его берёт панель «Родство»
 export { kinPath };
 
+/** Годы жизни в подсказке, указателе и объявлении — те же округлённые годы, что в паспорте карточки. */
 export function lifeText(id: string): string {
   const c = model.value.chrono.get(id);
   if (!c) return '';
-  const approx = c.cls !== 'exact';
-  if (c.cls === 'epochal') return 'время жизни не установлено';
-  if (c.d !== null) return formatSpan(c.b, c.d, approx);
-  return `род. ${formatYear(c.b, { approx })}`;
+  return lifeSpanText(c, { people: isPeople(id) }) || 'время не установлено';
+}
+
+/** Созвездие или колено для подсказки и объявления: служебная группа «Прочие лица» не называется. */
+function placeText(id: string): string {
+  const p = byId.get(id);
+  return (p && constellation(p.group)) ?? affiliation(id)?.text ?? '';
 }
 
 /**
@@ -242,7 +248,7 @@ export function SkyView() {
       if (id) {
         introDone.value = true;
         const p = byId.get(id)!;
-        setAnnounce(`${p.name}${p.disambig ? `, ${p.disambig}` : ''}; ${lifeText(id)}; ${groupById.get(p.group)?.name ?? ''}`);
+        setAnnounce([`${p.name}${p.disambig ? `, ${p.disambig}` : ''}`, lifeText(id), placeText(id)].filter(Boolean).join('; '));
       }
       request();
     });
@@ -520,7 +526,7 @@ export function SkyView() {
           <b>{tipPerson.name}</b>
           {tipPerson.disambig && <span class="ds">, {tipPerson.disambig}</span>}
           <div class="yr">{lifeText(tipPerson.id)}</div>
-          <div class="ds">{groupById.get(tipPerson.group)?.name}</div>
+          <div class="ds">{placeText(tipPerson.id)}</div>
         </div>
       )}
       <SkyControls />

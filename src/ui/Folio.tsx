@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { Fragment, type ComponentChildren, type VNode } from 'preact';
-import { byId, graph, groupById, loadCard, lineMembership, persons } from '../data/atlas.ts';
+import { byId, graph, loadCard, lineMembership, persons } from '../data/atlas.ts';
 import type { Card, Chrono, Fact, Cert, Role, Reign } from '../data/types.ts';
 import { selected, second, pickMode, panel, model, showSchema } from '../state.ts';
 import { P, Refs, VerseInsert, Mark, roleText, skyRef, plural, CAN_PRINT } from './common.tsx';
@@ -8,7 +8,7 @@ import { siblings, type ParentEdge } from '../engine/graph.ts';
 import { formatSpan, formatYear, yearsWord } from '../engine/years.ts';
 import { contemporaries, type ChronoResult, type PersonChrono } from '../engine/chronology.ts';
 import type { ModelData, ChronoRow } from '../data/atlas.ts';
-import { deathLine } from './card/shared.tsx';
+import { deathLine, affiliation } from './card/shared.tsx';
 import {
   bySex, capFirst, lowerFirst, nameCase, splitKinTerm, kinTermIns, kinTermReverse, ownSpouseDat, otherParentLabel, otherChildLabel,
   altKindLabel, reignTitle, MESSIAH_BIRTH,
@@ -16,7 +16,7 @@ import {
 import { Masthead } from './card/Masthead.tsx';
 import { Events } from './card/Events.tsx';
 import { CanonStrip } from './card/Canon.tsx';
-import { BirthLine, RelativeChrono } from './card/Chrono.tsx';
+import { BirthLine, RelativeChrono, YearMark } from './card/Chrono.tsx';
 
 export { Masthead };
 
@@ -471,8 +471,8 @@ export function buildSections(
     put(6, has(rows, card?.parentsNote) && (<>{rows.length ? <ul>{rows}</ul> : null}{facts(card?.parentsNote, 'n6')}</>));
   }
   {
-    const gname = groupById.get(p.group)?.name;
-    put(7, has(card?.lineage, gname) && (<>{gname ? <p>{gname}</p> : null}{facts(card?.lineage, 'l7')}</>));
+    const aff = affiliation(id)?.text;
+    put(7, has(card?.lineage, aff) && (<>{aff ? <p>{aff}</p> : null}{facts(card?.lineage, 'l7')}</>));
   }
   // 8 — рождение
   if (c) {
@@ -852,7 +852,7 @@ export function buildSections(
   // 20 — смерть
   {
     const bits: ComponentChildren[] = [];
-    if (c?.d !== null && c?.d !== undefined && c.cls !== 'epochal') bits.push(<p class="fact" key="y">{deathLine(c.b, c.d, c.cls)}<Mark calc={c.cls !== 'exact'} /></p>);
+    if (c?.d !== null && c?.d !== undefined && c.cls !== 'epochal') bits.push(<p class="fact" key="y">{deathLine(c.b, c.d, c.cls)}<YearMark cls={c.cls} /></p>);
     if (card?.death?.place) bits.push(<p key="pl">Место: {card.death.place}</p>);
     put(20, has(bits, card?.death?.facts, card?.death?.burial) && (<>{bits}{facts(card?.death?.facts, 'd20')}{card?.death?.burial?.length ? <><p class="muted">Погребение:</p>{facts(card.death.burial, 'u20')}</> : null}</>));
   }
@@ -887,7 +887,7 @@ export function buildSections(
     );
   }
   if (card) put(22, facts(card.laterMentions, 'l22'));
-  put(23, Object.keys(p.books).length ? <CanonStrip books={p.books} first={card?.scripture?.first} keyRefs={card?.scripture?.key} /> : null);
+  put(23, Object.keys(p.books).length || card?.scripture?.first || card?.scripture?.key?.length ? <CanonStrip books={p.books} first={card?.scripture?.first} keyRefs={card?.scripture?.key} /> : null);
   if (card)
     put(
       24,

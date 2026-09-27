@@ -181,7 +181,7 @@ const QUAL_RANK: Record<Qual, number> = { '': 0, legal: 1, interpretation: 2 };
 const QUAL_TEXT: Record<Qual, string> = { '': '', legal: '\u00a0— по законному отцу', interpretation: '\u00a0— по толкованию' };
 
 /** Ближайший родоначальник колена или народа по линии отцов и матерей (без связей «по иному указанию»). */
-function byAncestry(id: string): { founder: string; house: string | null; qual: Qual; self: boolean } | null {
+function byAncestry(id: string, noLegal = false): { founder: string; house: string | null; qual: Qual; self: boolean } | null {
   if (TRIBES[id] || NATIONS[id]) return { founder: id, house: null, qual: '', self: true };
   type Node = { id: string; depth: number; qual: Qual; house: string | null };
   const best = new Map<string, Node>();
@@ -192,6 +192,7 @@ function byAncestry(id: string): { founder: string; house: string | null; qual: 
     if (n.depth > 90) continue;
     for (const e of graph.parentsOf.get(n.id) ?? []) {
       if (e.kind !== 'father' && e.kind !== 'mother') continue;
+      if (noLegal && e.claim === 'legal') continue;
       const q: Qual = e.cert === 'interpretation' || n.qual === 'interpretation' ? 'interpretation' : e.claim === 'legal' || n.qual === 'legal' ? 'legal' : '';
       const house = n.house ?? (HOUSES[e.parent] ? e.parent : null);
       const next: Node = { id: e.parent, depth: n.depth + 1, qual: q, house };
@@ -205,7 +206,12 @@ function byAncestry(id: string): { founder: string; house: string | null; qual: 
       queue.push(next);
     }
   }
-  return hit ? { founder: hit.id, house: hit.house, qual: hit.qual, self: false } : null;
+  if (!hit) return null;
+  // законная линия и линия по толкованию ведут к одному колену и дому — колено названо без пометы
+  // (Иисус Христос: Мф 1:16 и Лк 3:23; «из колена Иудина» прямо сказано в Евр 7:14)
+  const other = hit.qual === 'legal' && !noLegal ? byAncestry(id, true) : null;
+  const agreed = !!other && other.founder === hit.id && other.house === hit.house;
+  return { founder: hit.id, house: hit.house, qual: agreed ? '' : hit.qual, self: false };
 }
 
 /** Колено или народ без учёта брака: по предкам, по прозванию в уточнении, по служению левита. */
