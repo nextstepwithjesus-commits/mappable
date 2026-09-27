@@ -50,7 +50,8 @@ export function panelWidth(W: number, wide: boolean): number {
 /** Какие панели — колонки сетки и какие из них широкие. «Разворот» — режим чтения поверх всего; «Вид» — лист у органов неба. */
 export function panelKind(p: Panel): PanelKind {
   if (!p || p === 'spread' || p === 'view') return 'none';
-  return p === 'synopsis' || p === 'index' ? 'wide' : 'regular';
+  // широкие: синопсис (колонки линий), указатель (три столбца), сквозной раздел (таблица по разделу)
+  return p === 'synopsis' || p === 'index' || p === 'section' ? 'wide' : 'regular';
 }
 
 export function gridFor(W: number, kind: PanelKind, card: boolean): Grid {

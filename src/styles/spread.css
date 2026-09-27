@@ -1,4 +1,6 @@
-/* ---------- разворот двух карточек ---------- */
+/* ---------- разворот двух карточек (G9; CARD-48; VIS-37; MOB-22) ----------
+   Две страницы и корешок 168 px между ними. Линейки — только между частями I–VI, внутри части — отбивка 12 px.
+   На телефоне — один столбец: раздел, затем строка первого лица и строка второго. */
 .spread {
   position: absolute;
   left: 0;
@@ -24,12 +26,12 @@
   border-bottom: 1px solid var(--rule);
 }
 .spread-bar .title {
+  margin: 0 auto 0 0;
   font-family: var(--serif);
   font-size: var(--t-lead);
   line-height: var(--t-lead-lh);
   font-weight: 560;
   color: var(--ink);
-  margin-right: auto;
 }
 .spread-bar .close {
   margin-left: 12px;
@@ -42,16 +44,26 @@
 .spread .row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 168px minmax(0, 1fr);
-  border-top: 0.5px solid var(--rule);
-}
-.spread .row.mastrow {
-  border-top: 0;
 }
 .spread .pg {
   min-width: 0;
-  padding: 10px 24px 12px;
+  padding: 6px 24px 6px;
   font-size: var(--t-body);
   line-height: var(--t-body-lh);
+}
+/* внутри части — отбивка между разделами вместо линейки */
+.spread .row + .row > .pg,
+.spread .row + .row > .spine {
+  padding-top: 12px;
+}
+/* имя лица перед его строкой: в два столбца его заменяет место страницы, в один столбец (телефон) — видно */
+.spread .pg .who {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 /* помета «расч.», «выв.» остаётся на своей странице: в развороте она стоит в строке, а не на поле, которое здесь — корешок */
 .spread .pg .mark {
@@ -66,8 +78,15 @@
 .spread .pg p {
   margin: 0 0 6px;
 }
+.spread .mastrow .pg {
+  padding-top: 10px;
+  padding-bottom: 16px;
+}
+.spread .mastrow .cmds {
+  margin: 2px 0 8px -8px;
+}
 .spread .spine {
-  padding: 12px 8px;
+  padding: 6px 8px;
   text-align: center;
   font-size: var(--t-note);
   line-height: var(--t-note-lh);
@@ -85,31 +104,18 @@
 }
 .spread .spine.kin {
   font-weight: 400;
+  padding-top: 12px;
 }
 .spread .spine.kin .sent {
   margin: 0 0 10px;
   font-style: italic;
   color: var(--ink-2);
 }
+/* цепочка в корешке — та же, что в «Родстве» (panels.css), по левому краю корешка */
 .spread .spine.kin .chain {
-  margin: 0;
-  padding: 0;
-  border-left: 0;
-  font-size: inherit;
-  list-style: none;
-}
-/* звенья цепочки соединены тонкой вертикальной чертой, как отвод родства на небе */
-.spread .spine.kin .chain li + li::before {
-  content: '';
-  display: block;
-  width: 1px;
-  height: 10px;
-  margin: 2px auto;
-  background: var(--rule-strong);
-}
-.spread .spine.kin .chain .gap {
-  color: var(--ink-3);
-  font-style: italic;
+  text-align: left;
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
 }
 .spread .row.quiet .spine {
   font-weight: 400;
@@ -119,11 +125,15 @@
   font-style: italic;
   color: var(--ink-3);
 }
-.spread .part {
-  padding: 22px 24px 6px;
+/* часть I–VI — единственная линейка разворота, во всю ширину сетки */
+.spread h3.part {
+  margin: 0;
+  padding: 18px 24px 6px;
+  border-top: 1px solid var(--rule);
   font-family: var(--sans);
   font-size: var(--t-ui);
   line-height: var(--t-ui-lh);
+  font-weight: 400;
   color: var(--ink-2);
   text-align: center;
 }
@@ -153,6 +163,70 @@
     padding-right: 16px;
   }
 }
+/* телефон: один столбец (MOB-22) — шапки друг под другом, в разделе строки двух лиц подряд, с именем; лист карточки скрыт */
+@media (max-width: 720px) {
+  .spread .row {
+    display: block;
+  }
+  .spread .spine {
+    padding: 12px 0 2px;
+    text-align: left;
+    font-weight: 600;
+  }
+  .spread .row.quiet .spine {
+    font-weight: 400;
+  }
+  .spread .pg {
+    padding: 2px 0 4px;
+  }
+  .spread .row + .row > .pg {
+    padding-top: 2px;
+  }
+  .spread .pg .who {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+    margin-right: 0.4em;
+    font-family: var(--sans);
+    font-size: var(--t-ui);
+    line-height: var(--t-ui-lh);
+    color: var(--ink-2);
+  }
+  .spread .mastrow .pg + .spine.kin {
+    padding: 4px 0 12px;
+  }
+  .spread .mastrow {
+    display: flex;
+    flex-direction: column;
+  }
+  .spread .mastrow .spine.kin {
+    order: 3;
+    border-top: 1px solid var(--rule);
+  }
+  .spread .mastrow .pg .who {
+    display: none;
+  }
+  .spread h3.part {
+    padding: 16px 0 4px;
+    text-align: left;
+  }
+  .app:has(> .spread) .folio {
+    display: none;
+  }
+  /* «×» — справа в первой строке, команды — второй строкой */
+  .spread-bar .close {
+    order: 1;
+    margin-left: auto;
+  }
+  .spread-bar .cmd {
+    order: 2;
+  }
+  .spread-bar .title {
+    margin-right: 0;
+  }
+}
 @media print {
   .spread {
     position: static;
@@ -162,4 +236,3 @@
     display: none;
   }
 }
-

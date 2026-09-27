@@ -62,14 +62,41 @@ export const CERT_FULL: Record<Cert, string> = {
   interpretation: 'толкование: распространённое, но не единственное понимание',
 };
 
-export function Mark({ cert, calc }: { cert?: Cert; calc?: boolean }) {
-  if (calc) return <abbr class="mark" title="год рассчитан хронологическим движком по выбранной модели">расч.</abbr>;
-  if (!cert || cert === 'scripture') return null;
+/** Пояснения помет на полях: одни и те же слова в карточке, в «Как читать карту» и у диктора. */
+export const MARK_FULL = {
+  calc: 'год рассчитан хронологическим движком по выбранной модели',
+  exact: 'год по числам Писания и принятой хронологической модели',
+  reign: 'годы по реконструкции Тиле — Янга; числа текста — отдельно',
+  ref: 'справочный слой: не текст Синодального перевода',
+  etym: 'этимология — справочный слой, не текст Синодального перевода',
+  order: 'вывод из порядка имён в родословии',
+} as const;
+
+/**
+ * Помета на поле у первой строки факта: «выв.», «толк.», «расч.», «справ.» (F1; VIS-08, UX-22, MOB-38).
+ * Это кнопка: по нажатию под фактом раскрывается пояснение строкой — без всплывающей подсказки, одинаково мышью,
+ * пальцем и клавиатурой; диктор читает помету вместе с пояснением.
+ */
+export function MarkNote({ label, full }: { label: string; full: string }) {
+  const [open, setOpen] = useState(false);
   return (
-    <abbr class="mark" title={CERT_FULL[cert]}>
-      {CERT_MARK[cert]}
-    </abbr>
+    <>
+      <button type="button" class="mark" aria-expanded={open} aria-label={`${label} — ${full}`} onClick={() => setOpen(!open)}>
+        <abbr title={full}>{label}</abbr>
+      </button>
+      {open ? (
+        <span class="mark-note">
+          {label}{' '}— {full}
+        </span>
+      ) : null}
+    </>
   );
+}
+
+export function Mark({ cert, calc }: { cert?: Cert; calc?: boolean }) {
+  if (calc) return <MarkNote label="расч." full={MARK_FULL.calc} />;
+  if (!cert || cert === 'scripture') return null;
+  return <MarkNote label={CERT_MARK[cert]} full={CERT_FULL[cert]} />;
 }
 
 /**

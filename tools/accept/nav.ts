@@ -260,7 +260,8 @@ export const nav: Scenario[] = [
       await p.click('.commands >> text=Родство');
       await p.fill('.sheet .field input', 'Давид');
       await p.waitForTimeout(300);
-      await p.locator('.sheet button.person', { hasText: 'Давид' }).first().click();
+      // поле «Второе» — комбобокс поиска (G1): лицо выбирается строкой списка
+      await p.locator('.sheet [role="option"]', { hasText: 'Давид' }).first().click();
       await p.waitForTimeout(600);
       const inPanel = p.locator('.sheet button.person[data-id="saruiya"], .sheet button.person[data-id="iessey"]').first();
       if (!(await inPanel.count())) return fail('в цепочке родства нет ссылки на Саруию или Иессея');

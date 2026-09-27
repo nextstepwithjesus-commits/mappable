@@ -127,8 +127,9 @@ export const KIN_TERMS: Record<string, { ins: string; rev: [string | null, strin
   племянница: { ins: 'племянницей', rev: ['дядя', 'тётка'] },
   бабка: { ins: 'бабкой', rev: ['внук', 'внучка'] },
   мать: { ins: 'матерью', rev: ['сын', 'дочь'] },
-  'дочь дяди': { ins: 'дочерью дяди', rev: ['двоюродный брат', 'двоюродная сестра'] },
-  'сын дяди': { ins: 'сыном дяди', rev: ['двоюродный брат', 'двоюродная сестра'] },
+  // «дочь дяди своего» (Есф 2:7): в строке владельца — «Приходится двоюродной сестрой Мардохею: дочь его дяди Абихаила»
+  'дочь дяди': { ins: 'двоюродной сестрой', rev: ['двоюродный брат', 'двоюродная сестра'] },
+  'сын дяди': { ins: 'двоюродным братом', rev: ['двоюродный брат', 'двоюродная сестра'] },
   'двоюродный брат': { ins: 'двоюродным братом', rev: ['двоюродный брат', 'двоюродная сестра'] },
   'младший брат': { ins: 'младшим братом', rev: ['старший брат', 'старшая сестра'] },
   родственник: { ins: 'родственником', rev: ['родственник', 'родственница'] },
@@ -140,6 +141,9 @@ export const KIN_TERMS: Record<string, { ins: string; rev: [string | null, strin
   возлюбленная: { ins: 'возлюбленной', rev: [null, null] },
   совоспитанник: { ins: 'совоспитанником', rev: ['совоспитанник', null] },
 };
+
+/** Термины, которые в строке владельца пересказаны другим словом, — с термином Писания после двоеточия (П-8). */
+export const KIN_TERM_QUOTED = new Set(['дочь дяди', 'сын дяди']);
 
 /** «зять (по толкованию Лк 3:23)» → термин «зять» и пояснение «(по толкованию Лк 3:23)». */
 export function splitKinTerm(rel: string): { term: string; tail: string } {
@@ -297,4 +301,76 @@ export function descendantsNoun(gen: 2 | 3, sexes: Sex[]): string {
 export function peoplesLabel(gen: 1 | 2 | 3, owner: { sex: Sex; plural: boolean }): string {
   if (gen === 1) return `От ${owner.plural ? 'них' : bySex(owner.sex, 'него', 'неё')} произошли`;
   return `Потомки ${gen === 2 ? 'во втором' : 'в третьем'} поколении`;
+}
+
+// ---------- этап 5: карточка как статья ----------
+
+/** «двух», «трёх»…: родительный падеж числительного для «Каждая из трёх»; больше десяти — цифрами. */
+export function countGen(n: number): string {
+  return ['', 'одного', 'двух', 'трёх', 'четырёх', 'пяти', 'шести', 'семи', 'восьми', 'девяти', 'десяти'][n] ?? String(n);
+}
+
+/** «Единокровные братья», «Единоутробная сестра», «Единокровные братья и сёстры» — по полу и числу (§ 11; CARD-28). */
+export function halfSiblingsLabel(kind: 'paternal' | 'maternal', sexes: Sex[]): string {
+  const adj = kind === 'paternal' ? 'Единокровн' : 'Единоутробн';
+  if (sexes.length === 1) return sexes[0] === 'f' ? `${adj}ая сестра` : `${adj}ый брат`;
+  if (sexes.every((s) => s === 'm')) return `${adj}ые братья`;
+  if (sexes.every((s) => s === 'f')) return `${adj}ые сёстры`;
+  return `${adj}ые братья и сёстры`;
+}
+
+export type DerivedRole =
+  | 'grandfather' | 'grandmother' | 'uncle'
+  | 'father-in-law' | 'mother-in-law' | 'father-in-law-f' | 'mother-in-law-f' | 'daughter-in-law' | 'son-in-law';
+
+/**
+ * Подпись вычисляемого родства (F6; CARD-29): «Дед по отцу», «Дяди и тётки по матери», «Тесть», «Свекровь».
+ * -f — свойственники жены: родители мужа — свёкор и свекровь.
+ */
+export function derivedKinLabel(role: DerivedRole, side: string, count: number, sexes: Sex[] = []): string {
+  const sd = side ? ` ${side}` : '';
+  switch (role) {
+    case 'grandfather':
+      return `Дед${sd}`;
+    case 'grandmother':
+      return `Бабка${sd}`;
+    case 'uncle': {
+      const allM = sexes.every((s) => s === 'm');
+      const allF = sexes.every((s) => s === 'f');
+      if (count === 1) return `${allF ? 'Тётка' : 'Дядя'}${sd}`;
+      return `${allM ? 'Дяди' : allF ? 'Тётки' : 'Дяди и тётки'}${sd}`;
+    }
+    case 'father-in-law':
+      return 'Тесть';
+    case 'mother-in-law':
+      return 'Тёща';
+    case 'father-in-law-f':
+      return 'Свёкор';
+    case 'mother-in-law-f':
+      return 'Свекровь';
+    case 'daughter-in-law':
+      return count > 1 ? 'Невестки' : 'Невестка';
+    case 'son-in-law':
+      return count > 1 ? 'Зятья' : 'Зять';
+  }
+}
+
+/** Подпись строки мест § 15 по роли места (F7; CARD-30): «Родился», «Жила», «Бывал», «События»; у народа — без глагола лица. */
+export function placeRoleLabel(role: string, sex: Sex, people = false): string {
+  if (people) return ({ birth: 'Происхождение', residence: 'Жили', travel: 'Бывали', other: 'События', death: 'Гибель', burial: 'Погребение' } as Record<string, string>)[role] ?? 'Места';
+  const f = sex === 'f';
+  switch (role) {
+    case 'birth':
+      return f ? 'Родилась' : 'Родился';
+    case 'residence':
+      return f ? 'Жила' : 'Жил';
+    case 'travel':
+      return f ? 'Бывала' : 'Бывал';
+    case 'death':
+      return f ? 'Умерла' : 'Умер';
+    case 'burial':
+      return f ? 'Погребена' : 'Погребён';
+    default:
+      return 'События';
+  }
 }

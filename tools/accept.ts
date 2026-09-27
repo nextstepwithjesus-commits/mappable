@@ -31,6 +31,9 @@ import { pass, fail, find, hashId, folioText, secText, type Check, type Scenario
 import { layout } from './accept/layout.ts';
 import { nav } from './accept/nav.ts';
 import { sky } from './accept/sky.ts';
+import { card } from './accept/card.ts';
+import { panels } from './accept/panels.ts';
+import { map } from './accept/map.ts';
 
 const BASE: Scenario[] = [
   {
@@ -60,7 +63,8 @@ const BASE: Scenario[] = [
     title: 'Мелхиседек: § 6 «в Писании не сообщается» с Евр 7:3',
     run: async (p) => {
       await find(p, 'Мелхиседек');
-      await p.click('.folio .actions >> text=Вся схема разделов');
+      // строки «в Писании не сообщается» видны всегда (F4); вся схема — командой колофона
+      await p.click('.folio .colophon >> text=Показать все 24 раздела');
       await p.waitForTimeout(400);
       const t = await folioText(p);
       if (!/6[^\n]*Родители[^\n]*в Писании не сообщается|Родители[\s\S]{0,300}Евр\s7:3/.test(t)) return fail('§ 6 не отмечен как «в Писании не сообщается» или нет Евр 7:3');
@@ -92,7 +96,7 @@ const BASE: Scenario[] = [
       await p.click('.commands >> text=Родство');
       await p.fill('.sheet .field input', 'Давид');
       await p.waitForTimeout(300);
-      await p.locator('.sheet button.person', { hasText: 'Давид' }).first().click();
+      await p.locator('.sheet [role="option"]', { hasText: 'Давид' }).first().click();
       await p.waitForTimeout(600);
       const t = await p.locator('.sheet').innerText();
       return /племянник Давида/.test(t) && /Саруи/.test(t) ? pass() : fail('нет «племянник Давида … Саруии»');
@@ -133,10 +137,10 @@ const BASE: Scenario[] = [
     title: 'Модель «краткое пребывание»: напряжение у Моисея исчезает',
     run: async (p) => {
       await find(p, 'Моисей');
-      await p.click('.commands >> text=О карте');
-      await p.click('.sheet >> text=Краткое пребывание');
+      // модель выбирается в органах неба (C6); «О карте» только описывает модели
+      await p.click('.skyctl .menu.model > button');
+      await p.locator('.skyctl [role="menuitemradio"]', { hasText: 'Краткое пребывание' }).click();
       await p.waitForTimeout(1500);
-      await p.click('.sheet .close');
       const t = await secText(p, 13);
       return /Амрам/.test(t) && /напряжени/i.test(t) ? fail('напряжение осталось') : pass();
     },
@@ -266,7 +270,7 @@ const BASE: Scenario[] = [
       await p.click('.commands >> text=Родство');
       await p.fill('.sheet .field input', 'Давид');
       await p.waitForTimeout(300);
-      await p.locator('.sheet button.person', { hasText: 'Давид' }).first().click();
+      await p.locator('.sheet [role="option"]', { hasText: 'Давид' }).first().click();
       await p.waitForTimeout(500);
       const path = (await p.locator('.sky').getAttribute('data-kin-path')) ?? '';
       if (!path) return fail('путь родства Иоав — Давид не показан на небе');
@@ -539,7 +543,7 @@ const BASE: Scenario[] = [
   },
 ];
 /** Сценарии этапа 3 — в своих файлах, чтобы параллельные агенты не правили один список (номера 30–49, 50–69, 70–89). */
-const SCENARIOS: Scenario[] = [...BASE, ...layout, ...nav, ...sky];
+const SCENARIOS: Scenario[] = [...BASE, ...layout, ...nav, ...sky, ...map, ...card, ...panels];
 
 /** Имена лиц обеих линий Мессии — из собранного индекса. */
 function lineNames(): Set<string> {

@@ -4,7 +4,7 @@ import { byId, graph, loadedCard } from '../../data/atlas.ts';
 import type { Fact, Sex } from '../../data/types.ts';
 import type { ParentEdge } from '../../engine/graph.ts';
 import { normFor } from '../../engine/chronology.ts';
-import { Refs, VerseInsert, Mark, refLabel } from '../common.tsx';
+import { Refs, VerseInsert, Mark, MarkNote, MARK_FULL, refLabel } from '../common.tsx';
 import { formatSpan, shownYears, yearsWord, ESTIMATE_STEP } from '../../engine/years.ts';
 import type { ModelData, ChronoRow } from '../../data/atlas.ts';
 import { birthLine, birthEpoch, birthRange, kinDegree, nameIn, Namesake, PersonIn } from './shared.tsx';
@@ -15,7 +15,7 @@ type AtlasPerson = NonNullable<ReturnType<typeof byId.get>>;
 /** Помета года: «расч.» у всех лет, зависящих от хронологической модели. */
 export function YearMark({ cls }: { cls: ChronoRow['cls'] }) {
   if (cls === 'epochal') return null;
-  if (cls === 'exact') return <abbr class="mark" title="по числам Писания и принятой хронологической модели">расч.</abbr>;
+  if (cls === 'exact') return <MarkNote label="расч." full={MARK_FULL.exact} />;
   return <Mark calc />;
 }
 
@@ -190,13 +190,7 @@ export function RelativeChrono({ id, m, note }: { id: string; m: ModelData; note
           {clauses.length ? `${verbBorn(p.sex, people)} ` : ''}
           {clauses}
           {sawNode}
-          {years ? <Mark calc /> : <abbr class="mark" title="вывод из порядка имён в родословии">выв.</abbr>}
-        </p>
-      )}
-      {c.cls === 'estimated' && !people && (
-        <p class="muted">
-          Год оценён по родству: по длине поколения своей эпохи между ближайшими предками и потомками с известными годами.
-          {gapParent ? ' Родословие здесь может пропускать поколения, поэтому оценка приблизительна.' : ''}
+          {years ? <Mark calc /> : <MarkNote label="выв." full={MARK_FULL.order} />}
         </p>
       )}
       {tensions.map((t, i) => (
@@ -206,6 +200,12 @@ export function RelativeChrono({ id, m, note }: { id: string; m: ModelData; note
           <VerseInsert owner={`t13.${i}`} refs={t.refs} />
         </div>
       ))}
+      {c.cls === 'estimated' && !people && (
+        <p class="muted">
+          Год оценён по родству: по длине поколения своей эпохи между ближайшими предками и потомками с известными годами.
+          {gapParent ? ' Родословие здесь может пропускать поколения, поэтому оценка приблизительна.' : ''}
+        </p>
+      )}
       {note?.map((f, i) => (
         <p class="fact" key={`n${i}`}>
           {f.text}

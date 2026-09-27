@@ -1,20 +1,38 @@
 /**
- * Разворот (ТЗ § 3.3): две карточки рядом, раздел против раздела.
+ * Разворот (ТЗ § 3.3; G9): две карточки рядом, раздел против раздела.
  * Номера разделов неизменны, поэтому строки выравниваются сами собой: слева первое лицо, справа второе,
  * номер и название раздела — в корешке. Разделы, о которых нет сведений ни у одного лица, сведены в одну строку.
+ * Линейки — только между частями I–VI (CARD-48; VIS-37); § 1 (имя) — в шапках, отдельной строкой не выводится.
+ * Мини-шкалы двух шапок стоят на общей оси лет. На телефоне — один столбец: в каждом разделе строки двух лиц подряд (MOB-22).
  */
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
 import { byId, graph, loadCard } from '../data/atlas.ts';
-import { relate, foldChain } from '../engine/kinship.ts';
+import { relate } from '../engine/kinship.ts';
 import type { Card, Chrono } from '../data/types.ts';
 import { selected, second, first, panel, model, setPair } from '../state.ts';
-import { SECTIONS, PARTS, buildSections, Masthead } from './Folio.tsx';
-import { P, skyRef, CAN_PRINT, plural } from './common.tsx';
+import { SECTIONS, PARTS, buildSections, sectionStates, Masthead, type SecState } from './Folio.tsx';
+import { lifeWindow } from './card/Masthead.tsx';
+import { skyRef, CAN_PRINT } from './common.tsx';
 import { Close } from './controls.tsx';
+import { Chain } from './panels/Kinship.tsx';
+import { typo } from './text/typo.ts';
 
-type St = 'content' | 'silent' | 'absent';
-const STATE_TEXT: Record<Exclude<St, 'content'>, string> = { silent: 'в Писании не сообщается', absent: 'раздел не составлен' };
+/** Что стоит на странице вместо раздела без сведений. */
+const STATE_TEXT: Partial<Record<SecState, string>> = { silent: 'в Писании не сообщается', na: 'не относится', absent: '—' };
+
+/** Общая ось мини-шкал двух шапок: объединение окон обоих лиц (астрономические годы). */
+export function commonAxis(a: [number, number] | null, b: [number, number] | null): [number, number] | undefined {
+  if (!a || !b) return undefined;
+  return [Math.min(a[0], b[0]), Math.max(a[1], b[1])];
+}
+
+/** «Показать на небе» (IX-25): разворот закрывается (запись в истории), лицо выбирается, небо летит к нему. */
+function showOnSky(id: string) {
+  panel.value = null;
+  selected.value = id;
+  skyRef.flyTo(id);
+}
 
 export function Spread() {
   // пара не следует за выбором: ссылки внутри разворота открывают карточки, но страницы остаются прежними
@@ -36,15 +54,22 @@ export function Spread() {
   const m = model.value;
   const side = (id: string, ns: string) => {
     const p = byId.get(id)!;
-    const out = buildSections(id, p, cards[id]?.card ?? null, m, m.chrono.get(id), ns, cards[id]?.chrono ?? null);
-    const silent = new Set(p.silent);
-    return { out, st: (n: number): St => (out.has(n) ? 'content' : silent.has(n) ? 'silent' : 'absent') };
+    const card = cards[id]?.card ?? null;
+    const out = buildSections(id, p, card, m, m.chrono.get(id), ns, cards[id]?.chrono ?? null);
+    const states = sectionStates(id, out, card);
+    return { id, name: p.name, out, st: (n: number): SecState => states[n] };
   };
   const L = side(a, 'A:');
   const R = side(b, 'B:');
+  const axis = commonAxis(lifeWindow(a), lifeWindow(b));
 
-  const cell = (s: ReturnType<typeof side>, n: number) =>
-    s.st(n) === 'content' ? s.out.get(n) : <span class="none">{STATE_TEXT[s.st(n) as Exclude<St, 'content'>]}</span>;
+  // имя лица перед его строкой — видно в один столбец (телефон), диктору — всегда
+  const cell = (s: ReturnType<typeof side>, n: number) => (
+    <div class="pg">
+      <span class="who">{s.name}:</span>
+      {s.st(n) === 'content' ? s.out.get(n) : <span class="none">{STATE_TEXT[s.st(n)] ?? ''}</span>}
+    </div>
+  );
 
   const rows: ComponentChildren[] = [];
   let lastPart = 0;
@@ -54,28 +79,34 @@ export function Spread() {
     const n0 = run[0];
     rows.push(
       <div class="row quiet" key={`r${n0}`}>
-        <div class="pg">{cell(L, n0)}</div>
+        {cell(L, n0)}
         <div class="spine">
           <span class="no">{run.length > 1 ? `${n0}–${run[run.length - 1]}` : n0}</span>
-          {run.map((n) => SECTIONS[n - 1].title).join(', ')}
+          {typo(run.map((n) => SECTIONS[n - 1].title).join(', '))}
         </div>
-        <div class="pg">{cell(R, n0)}</div>
+        {cell(R, n0)}
       </div>,
     );
     run = [];
   };
   for (const s of SECTIONS) {
+    const sl = L.st(s.n);
+    const sr = R.st(s.n);
+    // § 1 и разделы, которые стоят в шапках, не повторяются; не составленные у обоих — не показываются
+    const hidden = (x: SecState) => x === 'header' || x === 'absent';
+    if (s.n === 1 || (hidden(sl) && hidden(sr))) {
+      flush();
+      continue;
+    }
     if (s.part !== lastPart) {
       flush();
       rows.push(
-        <div class="part" key={`p${s.part}`}>
+        <h3 class="part" key={`p${s.part}`}>
           {PARTS[s.part]}
-        </div>,
+        </h3>,
       );
       lastPart = s.part;
     }
-    const sl = L.st(s.n);
-    const sr = R.st(s.n);
     if (sl !== 'content' && sr !== 'content') {
       if (run.length && (L.st(run[0]) !== sl || R.st(run[0]) !== sr)) flush();
       run.push(s.n);
@@ -84,22 +115,28 @@ export function Spread() {
     flush();
     rows.push(
       <div class="row" key={`r${s.n}`}>
-        <div class="pg">{cell(L, s.n)}</div>
+        {cell(L, s.n)}
         <div class="spine">
           <span class="no">{s.n}</span>
           {s.title}
         </div>
-        <div class="pg">{cell(R, s.n)}</div>
+        {cell(R, s.n)}
       </div>,
     );
   }
   flush();
 
-  const close = () => (panel.value = null);
+  const act = (id: string) => (
+    <div class="cmds">
+      <button class="cmd" onClick={() => showOnSky(id)}>
+        Показать на небе
+      </button>
+    </div>
+  );
   return (
     <section class="spread" aria-label={`Разворот: ${byId.get(a)!.name} и ${byId.get(b)!.name}`}>
       <div class="spread-bar">
-        <span class="title">Разворот</span>
+        <h2 class="title">Разворот</h2>
         <button
           class="cmd"
           onClick={() => {
@@ -107,29 +144,23 @@ export function Spread() {
             selected.value = b;
           }}
         >
-          поменять страницы
-        </button>
-        <button class="cmd" onClick={() => skyRef.flyTo(a)}>
-          левое лицо на небе
-        </button>
-        <button class="cmd" onClick={() => skyRef.flyTo(b)}>
-          правое лицо на небе
+          Поменять страницы
         </button>
         {CAN_PRINT && (
           <button class="cmd" onClick={() => window.print()}>
-            печать
+            Напечатать
           </button>
         )}
-        <Close label="Закрыть разворот" onClick={close} />
+        <Close label="Закрыть разворот" onClick={() => (panel.value = null)} />
       </div>
       <div class="spread-grid">
         <div class="row mastrow">
           <div class="pg">
-            <Masthead id={a} />
+            <Masthead id={a} axis={axis} actions={act(a)} />
           </div>
           <KinSpine key={`${a}|${b}`} a={a} b={b} />
           <div class="pg">
-            <Masthead id={b} />
+            <Masthead id={b} axis={axis} actions={act(b)} />
           </div>
         </div>
         {rows}
@@ -140,11 +171,9 @@ export function Spread() {
 
 /**
  * Цепочка родства между лицами разворота — в корешке, сверху вниз от левого лица к правому:
- * та же фраза, что в панели «Родство»; у каждого звена — кем лицо приходится предыдущему.
- * Цепочка длиннее 8 звеньев свёрнута: три звена, «… ещё N …», три звена.
+ * та же фраза и та же цепочка, что в панели «Родство» (знак лица, отвод, термин связи); длиннее 8 звеньев — свёрнута.
  */
 function KinSpine({ a, b }: { a: string; b: string }) {
-  const [whole, setWhole] = useState(false);
   const r = useMemo(() => relate(graph, a, b, 1)[0], [a, b]);
   if (!r) {
     return (
@@ -153,31 +182,10 @@ function KinSpine({ a, b }: { a: string; b: string }) {
       </div>
     );
   }
-  const shown = whole ? r.chain : foldChain(r.chain);
   return (
     <div class="spine kin">
-      <p class="sent">{r.sentence}</p>
-      <ol class="chain">
-        {shown.map((x, i) =>
-          'hidden' in x ? (
-            <li key={`gap${i}`} class="gap">
-              <button class="cmd" aria-label={`показать ещё ${x.hidden} ${plural(x.hidden, 'звено', 'звена', 'звеньев')}`} onClick={() => setWhole(true)}>
-                … ещё {x.hidden} …
-              </button>
-            </li>
-          ) : (
-            <li key={`${x.id}${i}`}>
-              {x.term && (
-                <>
-                  <i class="term">{x.term}</i>
-                  {x.step?.interpretive && ' (по толкованию)'}{' '}
-                </>
-              )}
-              <P id={x.id} />
-            </li>
-          ),
-        )}
-      </ol>
+      <p class="sent">{typo(r.sentence)}</p>
+      <Chain chain={r.chain} ns="spine" years={false} refs={false} />
     </div>
   );
 }

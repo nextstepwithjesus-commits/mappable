@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
+import type { ComponentChildren } from 'preact';
 import { byId, graph, lineMembership, loadCard, loadedCard } from '../../data/atlas.ts';
 import type { ChronoRow } from '../../data/atlas.ts';
 import { model } from '../../state.ts';
-import { roleText, Mark } from '../common.tsx';
+import { Mark, MarkNote, MARK_FULL } from '../common.tsx';
 import { lifeSpanText, shownYears, shortYear, toAstro, toHist } from '../../engine/years.ts';
-import { activityEpochs, affiliation, birthEpoch, birthRange, constellation } from './shared.tsx';
+import { activityEpochs, affiliation, birthEpoch, birthRange, constellation, roleLabel } from './shared.tsx';
 import { typo, typoTree } from '../text/typo.ts';
 import { mapFont, coarsePointer, T_MAP_S } from '../../render/type.ts';
 
@@ -14,7 +15,11 @@ export const isPeople = (id: string) => {
   return k === 'people' || k === 'clan';
 };
 
-export function Masthead({ id }: { id: string }) {
+/**
+ * Шапка карточки: имя, уточнение, строка команд (у листа), паспорт, мини-шкала жизни, отметки линий Мессии.
+ * actions — команды листа под именем (F2); axis — общая ось лет мини-шкалы (в развороте у двух шапок одна ось).
+ */
+export function Masthead({ id, actions, axis }: { id: string; actions?: ComponentChildren; axis?: [number, number] }) {
   const p = byId.get(id)!;
   const c = model.value.chrono.get(id);
   const eps = activityEpochs(id, c, model.value.epochs);
@@ -26,12 +31,13 @@ export function Masthead({ id }: { id: string }) {
   return (
     <header class="mast">
       <h2 id={`title-${id}`} tabIndex={-1}>{p.name}</h2>
-      {p.disambig ? <div class="dis">{typo(p.disambig)}</div> : <div class="dis">&nbsp;</div>}
+      {p.disambig ? <div class="dis">{typo(p.disambig)}</div> : null}
+      {actions}
       {typoTree(<dl class="passport">
         {p.roles.length ? (
           <>
             <dt>Роль</dt>
-            <dd>{roleText(p.roles, p.sex)}</dd>
+            <dd>{roleLabel(id)}</dd>
           </>
         ) : null}
         {star ? (
@@ -54,14 +60,14 @@ export function Masthead({ id }: { id: string }) {
           {years ? (
             <>
               {years}
-              {c?.cls === 'exact' ? <abbr class="mark" title="по числам Писания и принятой хронологической модели">расч.</abbr> : <Mark calc />}
+              {c?.cls === 'exact' ? <MarkNote label="расч." full={MARK_FULL.exact} /> : <Mark calc />}
             </>
           ) : (
             'время не установлено'
           )}
         </dd>
       </dl>)}
-      <LifeBar id={id} />
+      <LifeBar id={id} axis={axis} />
       {(j || mm) && (
         <div class="lines">
           {j && (
@@ -96,10 +102,41 @@ export function lifeBarLabels(c: ChronoRow): { left: string | null; right: strin
 }
 
 /** Высота мини-шкалы в CSS-пикселях; та же в правиле .lifebar (src/styles/folio.css). */
-const LIFEBAR_H = 52;
+const LIFEBAR_H = 56;
 
-/** Мини-шкала жизни на фоне эпох: ядро — надёжная часть, растушёвка — неопределённость рождения. */
-function LifeBar({ id }: { id: string }) {
+/**
+ * Окно мини-шкалы в астрономических годах: у лица без опор — его эпоха; иначе от раннего края рождения до смерти
+ * или последнего события, с полями по 30 %. Развороту — для общей оси двух шапок (объединение окон).
+ */
+export function lifeWindow(id: string): [number, number] | null {
+  const c = model.value.chrono.get(id);
+  if (!c) return null;
+  const epochs = model.value.epochs;
+  const ep = c.cls === 'epochal' ? birthEpoch(id, c, epochs) : null;
+  if (c.cls === 'epochal' && !ep) return null;
+  const [bLo, bHi] = birthRange(id, c, model.value.chrono);
+  const start = ep ? toAstro(ep.start) : bLo;
+  const end = ep ? toAstro(ep.end) : isPeople(id) ? bHi : (c.d ?? c.last ?? bHi);
+  const span = Math.max(80, end - start);
+  return [start - span * 0.3, end + span * 0.3];
+}
+
+/** Круглые годы оси: шаг, при котором на окно приходится 3–5 рисок. */
+function roundTicks(t0: number, t1: number): number[] {
+  const span = t1 - t0;
+  const step = [10, 20, 25, 50, 100, 200, 250, 500, 1000].find((s) => span / s <= 5) ?? 1000;
+  const out: number[] = [];
+  // риски — по историческому счёту (год 0 не существует): 1000 г. до Р. Х. — это астрономический −999
+  for (let h = Math.ceil(toHist(t0) / step) * step; toAstro(h) <= t1; h += step) if (h !== 0) out.push(toAstro(h));
+  return out;
+}
+
+/**
+ * Мини-шкала жизни в три ряда (F2; VIS-06): эпохи с названиями; жизнь — ядро сплошное, неопределённые края
+ * растушёваны, дети — риски, родители — кружки; ось лет — круглые годы и годы паспорта на концах.
+ * У лица без опор (epochal) — скобка на всю эпоху «время не установлено» (ТЗ § 3.1).
+ */
+function LifeBar({ id, axis }: { id: string; axis?: [number, number] }) {
   const ref = useRef<HTMLCanvasElement>(null);
   // границы рождения из данных приходят с томом карточки; шапка с сигналами не перерисовывается вместе с Folio,
   // поэтому шкала сама ждёт свой том и перерисовывается, когда он пришёл
@@ -117,7 +154,8 @@ function LifeBar({ id }: { id: string }) {
   useEffect(() => {
     const cv = ref.current;
     const c = model.value.chrono.get(id);
-    if (!cv || !c) return;
+    const win = axis ?? lifeWindow(id);
+    if (!cv || !c || !win) return;
     const dpr = window.devicePixelRatio || 1;
     const w = cv.clientWidth;
     const h = LIFEBAR_H;
@@ -129,106 +167,156 @@ function LifeBar({ id }: { id: string }) {
     const col = (n: string) => cs.getPropertyValue(n).trim();
     const epochs = model.value.epochs;
     const people = isPeople(id);
-    // окно шкалы: у лица без опор — его эпоха; иначе от раннего края рождения до смерти или последнего события
-    const ep = c.cls === 'epochal' ? birthEpoch(id, c, epochs) : null;
-    const [bLo, bHi] = birthRange(id, c, model.value.chrono);
-    const start = ep ? toAstro(ep.start) : bLo;
-    const end = ep ? toAstro(ep.end) : people ? bHi : (c.d ?? c.last ?? bHi);
-    const span = Math.max(80, end - start);
-    const t0 = start - span * 0.3;
-    const t1 = end + span * 0.3;
+    const [t0, t1] = win;
     const x = (t: number) => ((t - t0) / (t1 - t0)) * w;
-    // эпохи — полосой с названиями
-    // кегли холста — ступень шкалы T_MAP_S (11,5 px; на сенсорном экране 12,5 px), src/render/type.ts
+    // кегль холста — ступень шкалы T_MAP_S (11,5 px; на сенсорном экране 12,5 px), src/render/type.ts
     const font = mapFont(T_MAP_S, { sans: true, coarse: coarsePointer() });
     ctx.font = font;
     ctx.textBaseline = 'alphabetic';
+    // ряд 1 — эпохи: соседние различаются светлотой, названия с многоточием, если не помещаются
+    const fit = (s: string, room: number) => {
+      if (ctx.measureText(s).width <= room) return s;
+      let t = s;
+      while (t.length > 1 && ctx.measureText(`${t}…`).width > room) t = t.slice(0, -1);
+      return t.length > 2 ? `${t.trimEnd()}…` : '';
+    };
     epochs.forEach((e, i) => {
       const a = Math.max(0, x(toAstro(e.start)));
       const b = Math.min(w, x(toAstro(e.end)));
       if (b <= a) return;
-      ctx.fillStyle = i % 2 ? col('--sky-band') : col('--sheet-2');
-      ctx.fillRect(a, 0, b - a, 16);
-      const tw = ctx.measureText(e.name).width;
-      if (b - a > tw + 10) {
-        ctx.fillStyle = col('--ink-3');
-        ctx.fillText(e.name, a + 5, 12);
+      ctx.fillStyle = i % 2 ? col('--rule') : col('--sheet-2');
+      ctx.fillRect(a, 0, b - a, 14);
+      const label = fit(e.name, b - a - 8);
+      if (label) {
+        ctx.fillStyle = col('--ink-2');
+        ctx.fillText(label, a + 4, 11);
       }
     });
     const ink = col('--ink');
+    const ink2 = col('--ink-2');
+    // ряд 3 — ось: черта и круглые годы; годы паспорта на концах жизни — поверх, круглые рядом с ними не пишутся
+    const axisY = 38;
+    ctx.fillStyle = col('--rule-strong');
+    ctx.fillRect(0, axisY, w, 1);
+    const labels: { x: number; w: number; text: string; tick: number }[] = [];
+    const y = shownYears(c);
+    if (c.cls !== 'epochal' && y) {
+      const { left, right } = lifeBarLabels(c);
+      if (left) labels.push({ x: x(y.b), w: ctx.measureText(left).width, text: left, tick: y.b });
+      if (right && y.d !== null) labels.push({ x: x(y.d), w: ctx.measureText(right).width, text: right, tick: y.d });
+    }
+    // концы жизни не налезают друг на друга: правый сдвигается вправо, левый — влево
+    const place = (l: (typeof labels)[number]) => Math.max(0, Math.min(w - l.w, l.x - l.w / 2));
+    if (labels.length === 2) {
+      let a = place(labels[0]);
+      let b = place(labels[1]);
+      if (a + labels[0].w + 8 > b) {
+        const mid = (a + labels[0].w + b) / 2;
+        a = Math.max(0, mid - 4 - labels[0].w);
+        b = Math.min(w - labels[1].w, mid + 4);
+      }
+      labels[0].x = a;
+      labels[1].x = b;
+    } else labels.forEach((l) => (l.x = place(l)));
+    const taken = labels.map((l) => [l.x - 8, l.x + l.w + 8] as [number, number]);
+    // у лица без опор подпись «время не установлено» стоит на оси под скобкой эпохи: круглые годы её не перекрывают
+    const epochal = c.cls === 'epochal' ? birthEpoch(id, c, epochs) : null;
+    let epochalAt: { x: number; w: number } | null = null;
+    if (epochal) {
+      const a = x(toAstro(epochal.start));
+      const b = x(toAstro(epochal.end));
+      const tw = ctx.measureText('время не установлено').width;
+      epochalAt = { x: Math.max(0, Math.min(w - tw, (a + b) / 2 - tw / 2)), w: tw };
+      taken.push([epochalAt.x - 8, epochalAt.x + tw + 8]);
+    }
     ctx.font = font;
+    // окно через начало эры: первый год по Р. Х. подписан эрой, иначе «50» слева и «50» справа не различить
+    const crossing = toHist(t0) < 0 && toHist(t1) > 0;
+    let eraShown = false;
+    for (const t of roundTicks(t0, t1)) {
+      const tx = x(t);
+      ctx.fillStyle = col('--rule-strong');
+      ctx.fillRect(tx - 0.5, axisY, 1, 4);
+      const ad = crossing && toHist(t) > 0 && !eraShown;
+      const text = `${Math.abs(toHist(t))}${ad ? '\u00a0по\u00a0Р.\u00a0Х.' : ''}`;
+      const tw = ctx.measureText(text).width;
+      const lx = Math.max(0, Math.min(w - tw, tx - tw / 2));
+      if (taken.some(([a, b]) => lx < b && lx + tw > a)) continue;
+      if (ad) eraShown = true;
+      taken.push([lx - 6, lx + tw + 6]);
+      ctx.fillStyle = col('--ink-3');
+      ctx.fillText(text, lx, 52);
+    }
+    for (const l of labels) {
+      ctx.fillStyle = ink;
+      ctx.fillRect(x(l.tick) - 0.5, axisY - 2, 1, 6);
+      ctx.fillStyle = ink2;
+      ctx.fillText(l.text, l.x, 52);
+    }
+    // ряд 2 — жизнь
+    const lifeY = 21;
     if (c.cls === 'epochal') {
+      const ep = birthEpoch(id, c, epochs);
       if (!ep) return;
       // время не установлено: скобка на всю эпоху, без годов (ТЗ § 3.1)
       const a = x(toAstro(ep.start));
       const b = x(toAstro(ep.end));
-      ctx.strokeStyle = col('--ink-2');
+      ctx.strokeStyle = ink2;
       ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.moveTo(a, 28);
-      ctx.lineTo(a, 23);
-      ctx.lineTo(b, 23);
-      ctx.lineTo(b, 28);
+      ctx.moveTo(a, lifeY + 6);
+      ctx.lineTo(a, lifeY);
+      ctx.lineTo(b, lifeY);
+      ctx.lineTo(b, lifeY + 6);
       ctx.stroke();
-      const label = 'время не установлено';
-      const tw = ctx.measureText(label).width;
-      ctx.fillStyle = col('--ink-2');
-      ctx.fillText(label, Math.max(0, Math.min(w - tw, (a + b) / 2 - tw / 2)), 44);
+      ctx.fillStyle = ink2;
+      if (epochalAt) ctx.fillText('время не установлено', epochalAt.x, 52);
       return;
     }
-    const y = shownYears(c);
     if (!y) return;
+    const [bLo, bHi] = birthRange(id, c, model.value.chrono);
     if (people) {
       // народ или род: только засечка времени в родословии, без следа жизни
       ctx.fillStyle = ink;
-      ctx.fillRect(x(c.b) - 1, 19, 2, 8);
+      ctx.fillRect(x(c.b) - 1, lifeY - 3, 2, 10);
     } else {
-      // жизнь: размытое начало, сплошная часть до смерти или последнего события, дальше — короткий пунктир
+      // жизнь: растушёвка только на неопределённом начале, сплошная часть до смерти или последнего события, дальше — пунктир
       const g = ctx.createLinearGradient(x(bLo), 0, x(bHi), 0);
       g.addColorStop(0, 'rgba(0,0,0,0)');
       g.addColorStop(1, ink);
       ctx.fillStyle = c.cls === 'exact' ? ink : g;
-      ctx.fillRect(x(bLo), 21, Math.max(2, x(bHi) - x(bLo)), 4);
+      ctx.fillRect(x(bLo), lifeY, Math.max(2, x(bHi) - x(bLo)), 4);
       ctx.fillStyle = ink;
       const solidEnd = c.d ?? c.last ?? bHi;
-      if (solidEnd > bHi) ctx.fillRect(x(bHi), 21, x(solidEnd) - x(bHi), 4);
+      if (solidEnd > bHi) ctx.fillRect(x(bHi), lifeY, x(solidEnd) - x(bHi), 4);
       if (c.d === null) {
         ctx.setLineDash([2, 3]);
         ctx.strokeStyle = ink;
         ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.moveTo(x(Math.max(solidEnd, bHi)), 23);
-        ctx.lineTo(x(Math.max(solidEnd, bHi)) + 10, 23);
+        ctx.moveTo(x(Math.max(solidEnd, bHi)), lifeY + 2);
+        ctx.lineTo(x(Math.max(solidEnd, bHi)) + 12, lifeY + 2);
         ctx.stroke();
         ctx.setLineDash([]);
       }
     }
-    // рождения родителей (полые) и детей (сплошные) — риски под полосой
+    // рождения родителей (кружки 3 px) и детей (риски 1 × 5) — у полосы жизни
     const p = byId.get(id)!;
-    ctx.strokeStyle = col('--ink-3');
+    ctx.strokeStyle = ink2;
     ctx.lineWidth = 1;
     for (const par of [p.father, p.mother]) {
       const pc = par ? model.value.chrono.get(par) : null;
       if (!pc || pc.cls === 'epochal') continue;
       ctx.beginPath();
-      ctx.arc(x(pc.b), 31, 2.2, 0, Math.PI * 2);
+      ctx.arc(x(pc.b), lifeY + 2, 3, 0, Math.PI * 2);
       ctx.stroke();
     }
-    ctx.fillStyle = col('--ink-2');
+    ctx.fillStyle = ink2;
     for (const e of graph.childrenOf.get(id) ?? []) {
       const kc = model.value.chrono.get(e.child);
-      if (kc && kc.cls !== 'epochal') ctx.fillRect(x(kc.b) - 0.5, 28, 1, 6);
+      if (kc && kc.cls !== 'epochal') ctx.fillRect(x(kc.b) - 0.5, lifeY + 6, 1, 5);
     }
-    // годы на концах — те же, что в паспорте
-    const { left, right } = lifeBarLabels(c);
-    const lw = left ? ctx.measureText(left).width : 0;
-    const rw = right ? ctx.measureText(right).width : 0;
-    const lx = Math.max(0, Math.min(w - lw, x(y.b) - lw / 2));
-    const rx = right && y.d !== null ? Math.max(0, Math.min(w - rw, x(y.d) - rw / 2)) : w;
-    ctx.fillStyle = col('--ink-2');
-    if (left && (!right || lx + lw + 8 < rx)) ctx.fillText(left, lx, 48);
-    if (right) ctx.fillText(right, rx, 48);
-  }, [id, model.value, loaded]);
+  }, [id, model.value, loaded, axis?.[0], axis?.[1]]);
   // размер — классом .lifebar (src/styles/folio.css): ширина строки, высота LIFEBAR_H
   return <canvas class="lifebar" ref={ref} aria-hidden="true" />;
 }

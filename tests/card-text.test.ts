@@ -201,19 +201,28 @@ describe('карточки всех лиц', () => {
     }
   });
 
-  test('§ 14: встречи с именем в начале строки, современники без повторов, одноимённые различены', () => {
+  test('§ 14: встречи с именем в начале строки, современники без повторов, одноимённые различены', async () => {
+    const { loadCard } = await import('../src/data/atlas.ts');
     const m = models[0];
     const bad: string[] = [];
     const namesakes = new Map<string, number>();
     for (const p of persons) namesakes.set(p.name, (namesakes.get(p.name) ?? 0) + 1);
+    const disOf = (x: string) => typo(byId.get(x)!.disambig.replace(/\s*\(([^)]*)\)/g, ', $1')).replace(/\u2060/g, '');
     for (const p of persons) {
       const t = sec(p.id, 14);
       if (/\(вероятно\)/.test(t)) bad.push(`${p.id}: «(вероятно)» при имени`);
       if ((t.match(/Вероятно/g) ?? []).length > 1) bad.push(`${p.id}: «Вероятно» не один раз`);
+      // лицо встречи с одноимёнными — с уточнением и тогда, когда его имя стоит в самом тексте встречи (F7)
+      const met = (await loadCard(p.id))?.card?.met ?? [];
+      for (const mt of met) {
+        const q = byId.get(mt.id)!;
+        if ((namesakes.get(q.name) ?? 0) > 1 && q.disambig && !t.includes(norm(`(${disOf(mt.id)})`))) bad.push(`${p.id}: встреча с ${mt.id} без уточнения`);
+      }
       const c = m.chrono.get(p.id);
       if (!c || c.cls === 'epochal') continue; // у лиц без дат современников по расчёту нет
       const fam = familyIds(p.id);
-      const groups = contemporaryGroups(p.id, m, fam, new Set());
+      // как в карточке: лица встреч названы выше и среди современников не повторяются
+      const groups = contemporaryGroups(p.id, m, fam, new Set(met.map((x) => x.id)));
       const ids = groups.flatMap((g) => g.ids);
       if (new Set(ids).size !== ids.length) bad.push(`${p.id}: повтор в современниках`);
       for (const x of ids) {
@@ -256,7 +265,9 @@ describe('карточки из экспертизы CARD', () => {
     expect(sec('iokhaveda', 12)).toContain('Приходится тёткой Амраму, своему мужу Исх 6:20');
     expect(sec('iokhaveda', 12)).not.toContain('Тётка: Амрам');
     expect(sec('amram', 12)).toContain('Иохаведа — тётка');
-    expect(sec('esfir', 12)).toContain('Приходится дочерью дяди Мардохею Есф 2:7; 2:15');
+    // не «Приходится дочерью дяди Мардохею» (этап 1, оставлено на этап 5): родство словом, термин Писания — после двоеточия
+    expect(sec('esfir', 12)).toContain('Приходится двоюродной сестрой Мардохею: дочь его дяди Абихаила Есф 2:7; 2:15');
+    expect(sec('esfir', 12)).not.toContain('дочерью дяди');
     expect(sec('esfir', 12)).not.toContain('Дочь дяди: Мардохей');
     expect(sec('iosif-muzh-marii', 12)).toContain('Приходится зятем Илию (по толкованию Лк 3:23)');
   });
@@ -286,10 +297,13 @@ describe('карточки из экспертизы CARD', () => {
     expect(sec('esfir', 6)).toContain('Приёмный отец: Мардохей Есф 2:7');
   });
 
-  test('§ 14 и § 16 Давида (A2, A11)', () => {
+  test('§ 14 и § 16 Давида (A2, A11, F7)', () => {
     const t14 = sec('david', 14);
     expect(t14).toContain('Встречи, о которых говорит Писание');
-    expect(t14).toContain('Самуил (пророк и судья) — помазан Самуилом');
+    // имя лица встречи — в самом тексте, а не «Самуил — помазан Самуилом» (F7)
+    expect(t14).toContain('Помазан Самуилом (пророк и судья); бежал к нему в Раму');
+    expect(t14).not.toContain('Самуил (пророк и судья) — помазан Самуилом');
+    expect(t14).toContain('Саул (царь Израиля, сын Киса) — служил при нём');
     expect(t14).not.toMatch(/Встреча с/);
     const t16 = sec('david', 16);
     expect(t16).toContain('Царь Иудеи, в Хевроне: воцарился в 30 лет');
@@ -304,7 +318,9 @@ describe('карточки из экспертизы CARD', () => {
   });
 
   test('§ 14 Мелхиседека: встреча с Аврамом показана и у лица без дат', () => {
-    expect(sec('melkhisedek', 14)).toContain('Авраам — встретил Аврама');
+    // не «Авраам — встретил Аврама» (F7): прежнее имя Аврам — ссылка на Авраама в самом тексте
+    expect(sec('melkhisedek', 14)).toContain('Встретил Аврама, возвращавшегося после поражения царей Быт 14:18–20');
+    expect(sec('melkhisedek', 14)).not.toContain('Авраам — встретил');
   });
 
   test('братья и сёстры не попадают в «Современники» Давида', () => {
@@ -333,7 +349,8 @@ describe('остатки этапа 1: типографика и подписи 
     expect(sec('mariya', 11)).toContain('Мария (Клеопова) — сестра Ин 19:25');
     expect(sec('mariya-kleopova', 11)).toContain('Мария (Мать Иисуса) — сестра');
     expect(sec('david', 10)).toContain('Фамарь (дочь Давида, сестра Авессалома)');
-    expect(sec('david', 10)).toContain('Внуки: Фамарь (дочь Авессалома)');
+    // внуки — при родителях (F6): «от Авессалома — Мааха, Фамарь (дочь Авессалома)»
+    expect(sec('david', 10)).toContain('от Авессалома — Мааха, Фамарь (дочь Авессалома)');
     const shown = (x: string) => norm(`${nameOf(x)} (${typo(byId.get(x)!.disambig.replace(/\s*\(([^)]*)\)/g, ', $1')).replace(/\u2060/g, '')})`);
     const bad: string[] = [];
     for (const p of persons) {
@@ -372,7 +389,8 @@ describe('остатки этапа 1: типографика и подписи 
 
   test('§ 10: группы детей одной схемой — «Сын от Вооза», «Сыновья от Вирсавии», «Дети, мать которых не названа»', () => {
     expect(sec('ruf', 10)).toContain('Сын от Вооза: Овид');
-    expect(sec('david', 10)).toContain('Сыновья от Вирсавии: Самус, Совав, Нафан, Соломон');
+    // первый сын от Вирсавии, безымянный, — на своём месте, первым (F6; CARD-27)
+    expect(sec('david', 10)).toContain('Сыновья от Вирсавии: сын Давида и Вирсавии (умер младенцем на седьмой день), Самус, Совав, Нафан, Соломон');
     expect(sec('david', 10)).toContain('Дети, мать которых не названа: Евеар, Елисуа');
     expect(sec('iakov', 10)).toContain('Сыновья от Рахили: Иосиф, Вениамин');
     // подпись «от …» не бывает без существительного: прежнее «от Лии: …» без «Сыновья» в начале раздела и после других строк

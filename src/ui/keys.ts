@@ -3,7 +3,7 @@
  * «/» — к поиску, «?» — таблица клавиш, Escape — снять одно видимое состояние (D5), J и K — разделы карточки,
  * клавиши неба (src/ui/sky/input.ts, skyKeys) — без фокуса на холсте (D10; IX-38, 40, 41, 42; UX-40).
  */
-import { panel, selected, second, pickMode, pins, pinsQuery, clearPair } from '../state.ts';
+import { panel, selected, second, pickMode, pins, pinsQuery, skyGroup, clearPair } from '../state.ts';
 import { skyKeys } from './sky/input.ts';
 import { openLegend, reduced } from './sky/view.ts';
 
@@ -56,7 +56,7 @@ export function stepSection(dir: 1 | -1): HTMLElement | null {
   }
   const to = secs[Math.max(0, Math.min(secs.length - 1, cur + dir))];
   if (!to || (to === secs[cur] && active)) return null;
-  const head = to.querySelector<HTMLElement>('h3') ?? to;
+  const head = to.querySelector<HTMLElement>('h4, h3') ?? to;
   if (!head.hasAttribute('tabindex')) head.setAttribute('tabindex', '-1');
   to.scrollIntoView({ block: 'start', behavior: reduced() ? 'auto' : 'smooth' });
   head.focus({ preventScroll: true });
@@ -88,7 +88,8 @@ function onKey(e: KeyboardEvent) {
     else if (pins.value.length) {
       pins.value = [];
       pinsQuery.value = '';
-    } else if (second.value) clearPair();
+    } else if (skyGroup.value) skyGroup.value = null;
+    else if (second.value) clearPair();
     else if (selected.value) selected.value = null;
     return;
   }

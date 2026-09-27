@@ -81,35 +81,62 @@
   padding: 5px 12px 5px 0;
   font-weight: 400;
 }
-.sheet th {
+.sheet thead th {
   font-family: var(--sans);
   font-size: var(--t-ui-s);
   line-height: var(--t-ui-s-lh);
   color: var(--ink-2);
   border-bottom: 1px solid var(--rule);
 }
+/* ---------- указатель (G7; VIS-33) ----------
+   Три узких столбца (ТЗ § 3.7). Заглавное слово — Literata 16, одноимённые под ним — 14 вторым цветом, с годами;
+   известные лица — полужирным. Отточие и координата стоят по базовой линии последней строки статьи. */
+/* буквы — строкой, без «стены сегментов»: выбранная — выворотка */
+.letters .seg {
+  padding: 0;
+  margin: 2px 0 10px;
+}
+.letters .seg::after {
+  content: none;
+}
+.letters .seg > button {
+  flex: none;
+  min-width: 26px;
+  margin: 0;
+  padding: 0 4px;
+  border: 0;
+}
 .idx {
-  columns: 2 180px;
-  column-gap: 26px;
-  font-size: var(--t-note);
-  line-height: var(--t-note-lh);
+  columns: 3 220px;
+  column-gap: 28px;
+  font-size: var(--t-body);
+  line-height: var(--t-body-lh);
 }
 .idx .head {
   font-weight: 600;
-  font-size: var(--t-lead);
-  line-height: var(--t-lead-lh);
+  font-size: var(--t-title);
+  line-height: var(--t-title-lh);
   margin: 12px 0 2px;
   break-after: avoid;
 }
-/* строка указателя — цель нажатия не ниже 24 px (WCAG 2.2, 2.5.8); отточие и координата — по базовой линии последней строки */
+.idx .entry {
+  break-inside: avoid;
+}
+/* строка указателя — цель нажатия не ниже 24 px (WCAG 2.2, 2.5.8) */
 .idx .row {
   display: flex;
   align-items: last baseline;
   gap: 4px;
-  break-inside: avoid;
   width: 100%;
   min-height: 24px;
   text-align: left;
+}
+.idx .row .nm {
+  min-width: 0;
+}
+.idx .row.word .nm,
+.idx .row.known > .nm {
+  font-weight: 600;
 }
 button.row:hover {
   background: var(--sheet-2);
@@ -123,80 +150,518 @@ button.row:focus-visible {
   min-width: 8px;
 }
 .idx .row .coord {
+  flex: none;
   font-family: var(--sans);
   font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
   color: var(--ink-2);
   font-variant-numeric: lining-nums tabular-nums;
 }
 .idx .sub {
   padding-left: 14px;
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
   color: var(--ink-2);
 }
-/* синопсис: строки без линеек; черта через каждые пять строк ведёт глаз по широкой таблице */
-.synopsis td {
-  font-size: var(--t-note);
+.idx .sub.known .ds {
+  font-weight: 600;
+  color: var(--ink);
 }
-.synopsis tbody tr:nth-child(5n) td {
+.idx .sub .yrs {
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  white-space: nowrap;
+}
+/* ---------- синопсис (G2; VIS-34, MOB-23) ----------
+   Столбцы: № и имя у Матфея, имя и № у Луки, стихи Бытия, 1 Паралипоменон и Руфи. Общие лица — одним именем на оба
+   столбца линий; где линии расходятся — два столбца рядом, между ними черта. Линейка — через пять строк и над вставкой. */
+.lk3 {
+  margin: 0 0 14px;
+}
+.lk3 .seg {
+  margin-bottom: 6px;
+}
+.syn-wrap {
+  container-type: inline-size;
+}
+.sheet table.synopsis {
+  table-layout: fixed;
+  width: 100%;
+  margin: 0 0 12px;
+}
+.synopsis col.c-no {
+  width: 36px;
+}
+.synopsis col.c-ot {
+  width: 76px;
+}
+/* шапка столбцов прилипает к верху панели: край прокрутки — за верхним полем листа (18 px), на телефоне — под шапкой листа */
+.synopsis {
+  --syn-top: -18px;
+}
+.synopsis thead th {
+  position: sticky;
+  top: var(--syn-top);
+  z-index: 1;
+  background: var(--sheet);
+  padding: 6px 8px 5px 0;
+  border-bottom: 1px solid var(--rule-strong);
+  vertical-align: bottom;
+}
+.synopsis thead th.num {
+  text-align: right;
+  padding-right: 10px;
+}
+.sheet .synopsis td,
+.sheet .synopsis tbody th {
+  padding: 3px 8px 3px 0;
+  vertical-align: baseline;
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+}
+.synopsis tbody th {
+  font-weight: 400;
+  text-align: left;
+  color: var(--ink);
+}
+.synopsis tr.fifth > * {
   border-bottom: 1px solid var(--rule);
 }
-.synopsis td.no {
+/* номера — вправо, табличными цифрами */
+.sheet .synopsis .no-cell {
+  text-align: right;
+  padding-right: 10px;
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+  color: var(--ink-2);
+  font-variant-numeric: lining-nums tabular-nums;
+  white-space: nowrap;
+}
+/* расходящийся участок: столбцы линий разделены чертой */
+.sheet .synopsis .split .nm.lk {
+  border-left: 1px solid var(--rule-strong);
+  padding-left: 10px;
+}
+.sheet .synopsis .split .nm.mt {
+  padding-right: 10px;
+}
+/* «источник не охватывает» — пустая клетка второй плоскости; «—» — источник не называет */
+.sheet .synopsis .out {
+  background: var(--sheet-2);
+}
+.synopsis .ot.no {
   color: var(--ink-3);
 }
-.synopsis + .muted {
+.synopsis .ot .ref {
+  margin-left: 0;
+}
+/* расхождения — полужирным: «опущен», «нет», чтение в скобках */
+.sheet .synopsis .odd,
+.synopsis .ot.absent {
+  font-weight: 600;
+  color: var(--ink);
+}
+.synopsis .ot.bracket {
+  color: var(--ink-3);
+}
+.synopsis .odd-note {
+  font-style: italic;
+  color: var(--ink-2);
+}
+.synopsis .via {
+  display: block;
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  color: var(--ink-2);
+}
+/* вставка перед участком: что здесь происходит, «почему», команда «показать участок на небе» */
+.sheet .synopsis tr.note td {
+  padding: 14px 0 2px;
+  border-top: 1px solid var(--rule-strong);
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+  color: var(--ink);
+}
+.synopsis tr.note p {
+  margin: 0;
+  max-width: 62ch;
+}
+.synopsis tr.note .cmds {
+  margin: 2px 0 6px -8px;
+}
+.synopsis tr.note + tr > * {
+  border-top: 1px solid var(--rule);
+}
+.sheet .synopsis tr.verse-row td {
+  padding: 0 0 6px;
+}
+/* узкий синопсис (телефон, узкая колонка): тесные столбцы, мелкие стихи */
+@container (max-width: 560px) {
+  .synopsis col.c-no {
+    width: 28px;
+  }
+  .synopsis col.c-ot {
+    width: 50px;
+  }
+  .sheet .synopsis .no-cell {
+    padding-right: 6px;
+    font-size: var(--t-ui-s);
+    line-height: var(--t-ui-s-lh);
+  }
+  .synopsis thead th.num {
+    padding-right: 6px;
+  }
+  .synopsis .ot .ref {
+    font-size: var(--t-ui-s);
+  }
+  .sheet .synopsis .split .nm.lk {
+    padding-left: 6px;
+  }
+}
+.synopsis + .muted,
+.syn-wrap + .muted {
   margin-top: 8px;
 }
-/* родство: второе лицо — поле и подсказки */
-.suggest {
-  list-style: none;
-  margin: -4px 0 12px;
-  padding: 0;
+/* ---------- родство (G1) ---------- */
+/* пара: «Первое» и «Второе» — строка поля: подпись, лицо (имя, уточнение, годы), команда «заменить» */
+.pair {
+  margin: 0 0 4px;
 }
-.sheet .suggest li {
-  margin: 2px 0;
+.pair .slot {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) auto;
+  align-items: baseline;
+  column-gap: 8px;
+  margin: 0 0 4px;
+}
+.pair .k,
+.pair .combo > label {
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+  color: var(--ink-2);
+}
+.pair .who {
+  font-size: var(--t-body);
+  line-height: var(--t-body-lh);
+}
+.pair .who .ds {
+  font-style: italic;
+  color: var(--ink-2);
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+}
+.pair .who .yrs,
+.chain .yrs {
+  display: block;
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  color: var(--ink-2);
+  font-variant-numeric: lining-nums;
+}
+.pair .slot .cmd {
+  align-self: start;
+  margin-top: -4px;
+}
+.pair .cmds.swap {
+  margin: 0 0 4px 64px;
+}
+.pair .combo {
+  position: relative;
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  column-gap: 8px;
+  align-items: baseline;
+  margin: 0 0 8px;
+}
+.pair .combo input {
+  max-width: none;
+}
+/* подсказки поля — под полем, во всю его ширину (строки — те же, что у поиска верхней строки: top.css) */
+.sheet .combo .results {
+  left: 72px;
+  right: 0;
+  width: auto;
 }
 .relation {
-  margin: 10px 0 14px;
+  margin: 18px 0 20px;
+}
+.relation + .relation {
+  padding-top: 16px;
+  border-top: 1px solid var(--rule);
 }
 .relation .sent {
   font-size: var(--t-lead);
   line-height: var(--t-lead-lh);
   margin: 0 0 6px;
 }
+.relation .sent:focus {
+  outline: none;
+}
+.relation .sent:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
 .relation > .muted {
   margin: 0 0 4px;
 }
+.relation > .cmds {
+  margin-bottom: 6px;
+}
+/* цепочка: знак лица 8 px и имя; между лицами — отвод (черта от знака к знаку) и курсивом термин связи;
+   звено по термину Писания, по закону или по толкованию — отвод точками, как на небе (E5) */
 .chain {
-  margin: 8px 0 0 4px;
-  padding-left: 14px;
-  border-left: 1px solid var(--ink-3);
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
   font-size: var(--t-body);
   line-height: var(--t-body-lh);
 }
 .sheet .chain li {
-  list-style: none;
-  margin: 2px 0;
+  margin: 0;
+}
+.chain .link {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr);
+  column-gap: 10px;
+  align-items: baseline;
+}
+.chain .link .yrs {
+  grid-column: 2;
+}
+.chain .step {
+  margin-left: 3.5px;
+  padding: 2px 0 4px 16px;
+  border-left: 1px solid var(--ink-3);
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+  color: var(--ink-2);
+}
+.chain .step.loose {
+  border-left-style: dotted;
+  border-left-width: 2px;
+  margin-left: 3px;
 }
 .chain .term {
   font-style: italic;
   color: var(--ink-2);
 }
-.chain .gap .cmd {
-  margin-left: -8px;
+.chain .step .q {
+  font-style: italic;
+}
+.chain .verses {
+  margin-left: 20px;
+}
+.chain .gap {
+  margin: 2px 0 2px 3.5px;
+  padding-left: 8px;
+  border-left: 1px dotted var(--ink-3);
+}
+/* знак лица — как на небе: мужчина — диск, женщина — диск в кольце, народ — пунктирный кружок */
+.sign {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ink-2);
+  align-self: center;
+}
+.sign.f {
+  background: var(--ink-2);
+  border: 2px solid var(--sheet);
+  outline: 1px solid var(--ink-2);
+  outline-offset: 0;
+}
+.sign.people {
+  background: none;
+  border: 1px dashed var(--ink-2);
+}
+/* ---------- «О карте» (G6) ---------- */
+.sheet .levels .mark {
+  position: static;
+}
+.levels tbody th {
+  width: 96px;
+  white-space: nowrap;
+}
+.models {
+  margin: 4px 0 10px;
+}
+.models > div {
+  margin: 0 0 8px;
+  padding-left: 10px;
+  border-left: 2px solid transparent;
+}
+.models > div.on {
+  border-left-color: var(--ink);
+}
+.models dt {
+  font-weight: 600;
+}
+.models dd {
+  margin: 0;
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+  color: var(--ink-2);
+}
+.anchors tbody th .verses {
+  font-weight: 400;
+}
+.sheet .anchors td.yr,
+.sheet .volumes td.n {
+  white-space: nowrap;
+}
+.sheet .volumes td.n {
+  text-align: right;
+  padding-right: 0;
+  font-variant-numeric: lining-nums tabular-nums;
 }
 /* «О карте»: хронологические напряжения */
 .sheet .notes {
   font-size: var(--t-note);
   line-height: var(--t-note-lh);
 }
-/* сквозной раздел: лицо и его строки раздела */
-.xsec {
-  margin: 10px 0;
+/* ---------- сквозной раздел (G4) ---------- */
+.xpick select {
+  flex: 1;
+  min-width: 0;
+  max-width: 340px;
+  min-height: 32px;
+  padding: 2px 6px;
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+  color: var(--ink);
+  background: var(--sheet);
+  border: 1px solid var(--rule-strong);
+  border-radius: 0;
 }
-.sheet .xsec ul {
-  margin: 2px 0 0;
-  padding-left: 16px;
+.xpick select:focus-visible {
+  outline-offset: 1px;
+}
+.sheet h3.xhead {
+  margin: 14px 0 4px;
+}
+.xhead .muted {
+  font-weight: 400;
+}
+.xsec {
+  margin: 12px 0;
+}
+.xname {
+  font-size: var(--t-body);
+  line-height: var(--t-body-lh);
+}
+.xbody {
   font-size: var(--t-note);
   line-height: var(--t-note-lh);
+}
+.sheet .xbody ul {
+  margin: 2px 0 0;
+  padding-left: 0;
+  list-style: none;
+}
+.sheet .xbody li {
+  margin: 2px 0;
+}
+/* помета «расч.», «выв.» — в строке, а не на поле: у панели поля нет */
+.sheet .xbody .mark,
+.sheet .xtable .mark {
+  position: static;
+  margin-left: 0.35em;
+}
+.sheet .none {
+  font-style: italic;
+  color: var(--ink-3);
+}
+.xsilent {
+  margin-top: 14px;
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+}
+/* таблица § 20: лицо, годы, возраст, место, погребение, стихи; черта — через пять строк */
+.xwrap {
+  container-type: inline-size;
+}
+.sheet table.xtable {
+  margin: 4px 0 16px;
+}
+.sheet .xtable td,
+.sheet .xtable tbody th {
+  padding: 7px 12px 7px 0;
+  vertical-align: baseline;
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+}
+.xtable tbody th {
+  font-weight: 400;
+  text-align: left;
+  color: var(--ink);
+}
+.xtable tbody th .ds {
+  display: block;
+  font-style: italic;
+  color: var(--ink-2);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+}
+.xtable .line {
+  display: block;
+}
+.xtable .v {
+  min-width: 0;
+}
+.xtable td.num {
+  white-space: nowrap;
+}
+.xtable tbody tr:nth-child(10n) > * {
+  border-bottom: 1px solid var(--rule);
+}
+.sheet .xtable tr.verse-row td {
+  padding: 0;
+}
+/* узкая колонка: строка таблицы — блоком, у каждого поля — подпись (из шапки) */
+@container (max-width: 600px) {
+  .xtable thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .xtable,
+  .xtable tbody,
+  .xtable tr,
+  .xtable th,
+  .xtable td {
+    display: block;
+  }
+  .xtable tbody tr:not(.verse-row) {
+    padding: 8px 0 6px;
+  }
+  .xtable tbody tr:nth-child(10n) > * {
+    border-bottom: 0;
+  }
+  .sheet .xtable td,
+  .sheet .xtable tbody th {
+    padding: 0;
+  }
+  .sheet .xtable td[data-label] {
+    display: grid;
+    grid-template-columns: 124px minmax(0, 1fr);
+    column-gap: 8px;
+  }
+  .xtable td[data-label]::before {
+    content: attr(data-label);
+    font-family: var(--sans);
+    font-size: var(--t-ui-s);
+    line-height: var(--t-note-lh);
+    color: var(--ink-2);
+  }
 }
 /* эпохи: строки под названием эпохи */
 .epoch h3 {
@@ -217,8 +682,92 @@ button.row:focus-visible {
   font-size: var(--t-note);
   line-height: var(--t-note-lh);
 }
+/* ---------- главы (G3; VIS-35) ----------
+   Оглавление: книга и номера глав строкой, без «стены сегментов»; нажатая глава — выворотка, как у переключателя. */
+.toc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  margin: 2px 0 8px;
+}
+.toc .bk {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 2px;
+}
+.toc .b {
+  margin-right: 4px;
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+  color: var(--ink-2);
+}
+.toc button {
+  min-width: 28px;
+  min-height: 28px;
+  padding: 0 5px;
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+  color: var(--ink);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.toc button:hover {
+  background: var(--sheet-2);
+}
+.toc button:active {
+  background: var(--rule);
+}
+.toc button[aria-pressed='true'] {
+  background: var(--ink);
+  color: var(--sky);
+}
+.toc button:focus-visible {
+  outline-offset: -2px;
+}
+.sheet h3.ch-title {
+  margin: 8px 0 6px;
+}
 .chapter p {
   margin: 0 0 6px;
   font-size: var(--t-body);
   line-height: var(--t-body-lh);
+}
+/* имена в тексте главы — цветом текста и чуть плотнее; черта — только при наведении и фокусе (VIS-35) */
+.chapter .person {
+  font-weight: 500;
+  color: var(--ink);
+  text-decoration-color: transparent;
+}
+.chapter .person:hover,
+.chapter .person:focus-visible {
+  text-decoration-color: var(--ink);
+}
+.sheet .chapter sup {
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: 0;
+  color: var(--ink-3);
+  margin-right: 3px;
+}
+/* ---------- телефон: панель — полноэкранный лист с прилипающей шапкой (phone.css) ---------- */
+@media (max-width: 720px) {
+  /* шапка синопсиса — под шапкой листа: поле «×» 44 px, поля 4 + 4 px и черта 1 px */
+  .synopsis {
+    --syn-top: 53px;
+  }
+  .pair .slot,
+  .pair .combo {
+    grid-template-columns: 56px minmax(0, 1fr) auto;
+  }
+  .pair .combo {
+    grid-template-columns: 56px minmax(0, 1fr);
+  }
+  .pair .cmds.swap {
+    margin-left: 56px;
+  }
+  .sheet .combo .results {
+    left: 0;
+  }
 }

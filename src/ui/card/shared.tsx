@@ -5,10 +5,10 @@
  * Правило (docs/UI-PROMPT.md, <principles> 1): имя ставится в косвенный падеж только функцией склонения
  * (src/ui/text/ru.ts). Если она не справляется (безымянное лицо, составное имя), строка строится без этого лица.
  */
-import { byId, graph, groupById, persons, loadedChrono } from '../../data/atlas.ts';
+import { byId, graph, groupById, persons, loadedChrono, loadedCard } from '../../data/atlas.ts';
 import type { ChronoRow } from '../../data/atlas.ts';
 import type { Epoch, Sex } from '../../data/types.ts';
-import { P } from '../common.tsx';
+import { P, ROLE_NAMES } from '../common.tsx';
 import { nameCase } from '../text/ru.ts';
 import { typo } from '../text/typo.ts';
 import { formatYear, formatSpan, yearsWord, shownYears, shownBirthRange, toAstro, type LifeDates } from '../../engine/years.ts';
@@ -271,6 +271,29 @@ export function affiliation(id: string): Affiliation | null {
   return { text: [own?.text, marriage].filter(Boolean).join('; '), tribe: own?.tribe ?? null };
 }
 
+/**
+ * Колено или народ для строки «Кратко» (F3): «из колена Иудина», «из дома Давидова», «из моавитян», «моавитянка».
+ * Только своё (по предкам, прозванию, служению), без «по браку» и без пометы «по толкованию»; null — если не вычисляется.
+ * founder — родоначальник колена или народа: у его детей строка «сын Рувима из колена Рувимова» была бы повтором.
+ */
+export function affiliationFrom(id: string): { text: string; founder: string | null } | null {
+  const p = byId.get(id);
+  if (!p) return null;
+  const a = byAncestry(id);
+  if (a) {
+    if (a.self || a.qual !== '') return null;
+    const t = TRIBES[a.founder];
+    if (a.house) return { text: `из ${HOUSES_GEN[a.house]}`, founder: a.house };
+    return t ? { text: `из ${t[1]}`, founder: a.founder } : { text: `из ${NATIONS[a.founder]}`, founder: a.founder };
+  }
+  const dis = p.disambig ?? '';
+  for (const [re, tribe] of TRIBE_GENTILIC) if (re.test(dis)) return { text: `из ${TRIBES[tribe][1]}`, founder: null };
+  const g = NATION_GENTILIC.exec(dis);
+  if (g) return { text: g[2].toLowerCase(), founder: null };
+  return null;
+}
+const HOUSES_GEN: Record<string, string> = { david: 'дома Давидова', aaron: 'дома Ааронова', saul: 'дома Саулова' };
+
 /** Созвездие на небе; служебная группа «Прочие лица» созвездием не называется. */
 export function constellation(groupId: string): string | null {
   const g = groupById.get(groupId);
@@ -308,4 +331,40 @@ export function activityEpochs(id: string, c: ChronoRow | undefined, epochs: Epo
   }
   const be = birthEpoch(id, c, epochs);
   return be ? [be] : [];
+}
+
+// ---------- роль словами Писания ----------
+
+/**
+ * Ремесло словами Писания вместо общего «мастер» (роль craftsman): Иосиф — «плотник» («не плотников ли Он сын?»,
+ * Мф 13:55), Хирам — «медник» (3 Цар 7:14), Акила — «делатель палаток» (Деян 18:3). Слово берётся из уточнения
+ * и текстов карточки лица; если его там нет — «мастер».
+ */
+const CRAFTS: [RegExp, string, string][] = [
+  [/плотник/i, 'плотник', 'плотник'],
+  [/медник/i, 'медник', 'медник'],
+  [/серебряник/i, 'серебряник', 'серебряник'],
+  [/делател[ья] палаток|делани[ея] палаток/i, 'делатель палаток', 'делательница палаток'],
+  [/ковач/i, 'ковач', 'ковач'],
+];
+
+/** Роли лица строкой для паспорта и «Кратко»: «царь, пастух, певец»; ремесло — словом Писания. */
+export function roleLabel(id: string): string {
+  const p = byId.get(id);
+  if (!p) return '';
+  const f = p.sex === 'f' ? 1 : 0;
+  let craft: string | null = null;
+  if (p.roles.includes('craftsman')) {
+    const texts = `${p.disambig} ${JSON.stringify(loadedCard(id) ?? {})}`;
+    const hit = CRAFTS.find(([re]) => re.test(texts));
+    craft = hit ? (f ? hit[2] : hit[1]) : null;
+  }
+  return p.roles.map((r) => (r === 'craftsman' && craft ? craft : (ROLE_NAMES[r]?.[f] ?? r))).join(', ');
+}
+
+/** Название одной роли по полу — с тем же словом ремесла, что в паспорте. */
+export function roleNoun(id: string, role: string): string {
+  const p = byId.get(id)!;
+  if (role === 'craftsman') return roleLabel(id).split(', ')[p.roles.indexOf('craftsman')];
+  return ROLE_NAMES[role as keyof typeof ROLE_NAMES]?.[p.sex === 'f' ? 1 : 0] ?? role;
 }

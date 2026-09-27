@@ -1,7 +1,7 @@
 /** Состояние приложения (сигналы). Адрес страницы отражает выбранное лицо, окно, панель и режимы (src/ui/address.ts). */
 import { signal, computed, effect, batch } from '@preact/signals';
 import { models, byId, graph, loadModel } from './data/atlas.ts';
-import { relate } from './engine/kinship.ts';
+import { relate, type KinStep } from './engine/kinship.ts';
 
 export type Theme = 'night' | 'day';
 export type Panel = null | 'epochs' | 'index' | 'kinship' | 'synopsis' | 'legend' | 'about' | 'section' | 'chapter' | 'spread' | 'view';
@@ -73,6 +73,27 @@ export const searchNotice = signal<{ text: string; ids: string[] } | null>(null)
 
 /** Путь родства пары для неба: лица от первого ко второму. Пишут выбор второго лица и панель «Родство». */
 export const kinPath = { current: null as string[] | null };
+/**
+ * Шаги того же пути (E5): кем каждое следующее лицо приходится предыдущему («сын», «сестра»), вид звена (kind: кровное,
+ * по термину Писания, брак; interpretive — по толкованию) и стихи — для подписей шагов на небе. Пишутся вместе с kinPath.
+ */
+export const kinSteps = { current: null as KinStep[] | null };
+
+/**
+ * Группа лиц, которую панель показывает на небе (G2, G3): лица родословной главы («Главы», ТЗ § 3.7) или участок
+ * линий Мессии («Синопсис», ТЗ § 3.2). Небо светит лица группы (и выбранное лицо), остальное гаснет до 25 %;
+ * над небом — строка label с командой «Снять»; Escape снимает группу, как отметки поиска.
+ * kind 'segment' — участок лент: ids идут по порядку поколений, небо выделяет ленты между соседними лицами группы;
+ * line — какая лента участка ('joseph', 'mary' или обе).
+ */
+export type SkyGroup = { ids: string[]; label: string; kind: 'chapter' | 'segment'; line?: 'joseph' | 'mary' | 'both' };
+export const skyGroup = signal<SkyGroup | null>(null);
+
+/**
+ * С какого места открыть «Синопсис» (U2): id лица точки сравнения — 'kainan-syn-arfaksada', 'david', 'salafiil',
+ * 'zorovavel', 'iisus'. Небо ставит его вместе с panel = 'synopsis'; панель прокручивает к участку и сбрасывает сигнал.
+ */
+export const synopsisAt = signal<string | null>(null);
 
 /** Лица пути от первого лица до второго, по порядку шагов. */
 export const pathOf = (steps: { from: string; to: string }[]): string[] => [...new Set(steps.flatMap((s) => [s.from, s.to]))];
@@ -85,12 +106,14 @@ export function setPair(a: string, b: string, withPath: boolean) {
     if (withPath) {
       const rel = relate(graph, a, b, 1)[0];
       kinPath.current = rel ? pathOf(rel.steps) : null;
+      kinSteps.current = rel ? rel.steps : null;
     }
   });
 }
 
 export function clearPair() {
   kinPath.current = null;
+  kinSteps.current = null;
   batch(() => {
     second.value = null;
     first.value = null;
@@ -132,6 +155,7 @@ effect(() => {
 effect(() => {
   if (second.value !== null) return;
   kinPath.current = null;
+  kinSteps.current = null;
   if (first.peek() !== null) first.value = null;
 });
 

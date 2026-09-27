@@ -13,7 +13,7 @@
   display: none;
 }
 /* поля листа (C2; VIS-12, CARD-47): при 500 px — 56 / 40, колонка 404 px — 50–55 знаков; уже — 52 / 36.
-   Правое поле — место для помет «расч.», «справ.» (до 36 px): на поле, а не поверх текста. */
+   Левое поле — рейка и висячие номера разделов; правое — пометы «расч.», «справ.» (до 36 px): на поле, а не поверх текста. */
 .folio {
   --folio-pl: 56px;
   --folio-pr: 40px;
@@ -28,44 +28,9 @@
   position: relative;
   padding: 22px var(--folio-pr) 60px var(--folio-pl);
 }
-.folio .rail {
-  position: sticky;
-  top: 0;
-  float: left;
-  margin-left: calc(4px - var(--folio-pl));
-  width: 12px;
-  padding-top: 90px;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-.rail button {
-  width: 8px;
-  height: 8px;
-  border: 1px solid var(--ink-3);
-  border-radius: 50%;
-}
-.rail button.content {
-  background: var(--ink-2);
-  border-color: var(--ink-2);
-}
-.rail button.absent {
-  border-style: dotted;
-  border-color: var(--rule-strong);
-}
-.rail button.current {
-  outline: 1px solid var(--ink);
-  outline-offset: 1px;
-}
-.rail .gap {
-  height: 7px;
-}
-.folio .actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px 4px;
-  margin: 0 0 18px -8px;
-}
+
+/* ---------- шапка (F2; VIS-04, VIS-05, VIS-11) ----------
+   имя → уточнение → команды → паспорт → мини-шкала → линии → «Кратко» → двойная черта → «I. Личность» */
 /* «×» карточки — в правом верхнем углу листа, прилипает при прокрутке (VIS-11; F2) */
 .folio .close {
   position: sticky;
@@ -73,7 +38,7 @@
   float: right;
   margin: -16px calc(2px - var(--folio-pr)) 0 8px;
   background: var(--sheet);
-  z-index: 2;
+  z-index: 3;
 }
 /* фокус на заголовке карточки (после выбора в поиске) — черта снизу, а не рамка */
 .mast h2:focus {
@@ -94,15 +59,22 @@
   font-size: var(--t-lead);
   line-height: var(--t-lead-lh);
   color: var(--ink-2);
-  margin: 2px 0 12px;
+  margin: 2px 0 0;
 }
-/* паспорт: колонка подписей постоянной ширины — по самой длинной, «Колено / народ»; значения стоят одной колонкой у всех лиц */
+/* три команды одной строкой: глаголы, вид команды — controls.css */
+.folio .actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 4px;
+  margin: 8px 0 12px -8px;
+}
+/* паспорт: колонка подписей постоянной ширины — по самой длинной, «Колено / народ»; строки по базовой линии (VIS-05) */
 .passport {
   display: grid;
-  grid-template-columns: 6.3em minmax(0, 1fr);
+  grid-template-columns: 6.6em minmax(0, 1fr);
   align-items: baseline;
   gap: 2px 12px;
-  margin: 0 0 12px;
+  margin: 12px 0 10px;
   font-size: var(--t-note);
   line-height: var(--t-note-lh);
 }
@@ -110,6 +82,7 @@
   color: var(--ink-2);
   font-family: var(--sans);
   font-size: var(--t-ui-s);
+  line-height: var(--t-note-lh);
   white-space: nowrap;
 }
 .passport dd {
@@ -120,8 +93,8 @@
 .lifebar {
   display: block;
   width: 100%;
-  height: 52px;
-  margin: 6px 0 4px;
+  height: 56px;
+  margin: 4px 0 2px;
 }
 .mast .lines {
   font-family: var(--sans);
@@ -130,60 +103,203 @@
   color: var(--ink-2);
   margin: 6px 0 0;
 }
-.mast .rule {
-  height: 4px;
+/* «Кратко» (F3): кто это — абзац в 2–3 строки под шапкой */
+.brief {
+  margin: 12px 0 0;
+}
+.brief p {
+  margin: 0;
+}
+/* одна двойная черта под шапкой (VIS-04): 1,5 + 0,5 px, зазор 4 px */
+.mast-rule {
+  height: 6px;
   border-top: 1.5px solid var(--ink-2);
   border-bottom: 0.5px solid var(--ink-2);
-  margin: 16px 0 18px;
+  margin: 16px 0 0;
 }
-.part {
+
+/* ---------- рейка разделов (F8; VIS-07, CARD-33, MOB-36) ----------
+   шаг 12 px (метка 7 + 5), поле нажатия 24 × 16, промежуток между частями 14 px; вровень с первым разделом, прилипает */
+.folio .rail {
+  position: sticky;
+  top: 16px;
+  float: left;
+  margin: 26px 0 0 calc(2px - var(--folio-pl));
+  width: 24px;
+  display: flex;
+  flex-direction: column;
+  z-index: 2;
+}
+.rail button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 16px;
+  margin: -2px 0;
+}
+.rail .dot {
+  display: block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+.rail .content .dot,
+.rail-key .content .dot {
+  background: var(--ink-2);
+}
+.rail .silent .dot,
+.rail-key .silent .dot {
+  border: 1.5px solid var(--ink-3);
+}
+.rail .absent .dot,
+.rail-key .absent .dot {
+  border: 1.5px dotted var(--ink-3);
+}
+.rail .na .dot,
+.rail-key .na .dot {
+  height: 1.5px;
+  border-radius: 0;
+  background: var(--ink-3);
+}
+/* ключ рейки перед колофоном: те же метки с подписями (CARD-33) */
+.rail-key {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 14px;
+  margin: 0 0 8px;
   font-family: var(--sans);
   font-size: var(--t-ui-s);
   line-height: var(--t-ui-s-lh);
-  color: var(--ink-3);
-  letter-spacing: 0.04em;
-  margin: 22px 0 8px;
-  padding-top: 6px;
-  border-top: 0.5px solid var(--rule);
+  color: var(--ink-2);
+}
+.rail-key .k {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.rail-key .dot {
+  display: block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+.rail .current .dot {
+  width: 9px;
+  height: 9px;
+  background: var(--ink);
+  border-color: var(--ink);
+}
+/* текущий раздел — ещё и черта 8 px к тексту */
+.rail .current::after {
+  content: '';
+  position: absolute;
+  left: 20px;
+  top: 7.5px;
+  width: 8px;
+  height: 1px;
+  background: var(--ink);
+}
+.rail .gap {
+  flex: none;
+  height: 6px;
+}
+.rail .num {
+  display: none;
+}
+/* ярлык «17 Жизнеописание — есть сведения» при наведении и фокусе: непрозрачный, без тени и скруглений */
+.rail .rail-label {
+  display: none;
+  position: absolute;
+  left: 28px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 2px 8px;
+  white-space: nowrap;
+  background: var(--sheet);
+  border: 1px solid var(--rule-strong);
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+  color: var(--ink);
+  text-align: left;
+}
+.rail .rail-label b {
+  font-weight: 500;
+  font-variant-numeric: lining-nums;
+}
+.rail button:hover .rail-label,
+.rail button:focus-visible .rail-label {
+  display: block;
+}
+.rail button:hover .dot {
+  outline: 1px solid var(--ink-2);
+  outline-offset: 2px;
+}
+.rail button:focus-visible {
+  outline-offset: -2px;
+}
+
+/* ---------- части и разделы (F1, F10; VIS-01, VIS-10, VIS-39) ----------
+   селекторы через .folio: лист встраивается в образец (#/specimen), где свои правила для h3 и h4 */
+.folio .part {
+  margin: 24px 0 8px;
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  font-weight: 500;
+  color: var(--ink-2);
+  letter-spacing: 0.02em;
+}
+.folio .folio-body > .part:first-child {
+  margin-top: 18px;
 }
 .sec {
   position: relative;
   margin: 0 0 12px;
   scroll-margin-top: 16px;
 }
+/* висячий номер раздела на поле, по базовой линии первой строки */
 .sec .no {
   position: absolute;
   left: calc(4px - var(--folio-pl));
+  top: 5px;
   width: calc(var(--folio-pl) - 16px);
   white-space: nowrap;
   text-align: right;
   font-family: var(--sans);
   font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
   color: var(--ink-3);
   font-variant-numeric: lining-nums tabular-nums;
-  top: 2px;
 }
-.sec h3 {
-  display: inline;
-  font-size: var(--t-body);
-  font-weight: 600;
+.folio .sec h4 {
   margin: 0;
+  font-family: var(--serif);
+  font-size: var(--t-body);
+  line-height: var(--t-body-lh);
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: normal;
 }
-.sec.long h3 {
-  display: block;
-  margin-bottom: 4px;
+/* раздел из одного абзаца — заголовок в строку, точка входит в заголовок; раздел со списком — заголовок блоком без точки */
+.runin {
+  position: relative;
 }
-.sec h3 + .runin::before {
-  content: '. ';
-}
-.sec .runin {
+.folio .runin h4 {
   display: inline;
+  margin-right: 0.15em;
+}
+.folio .sec.long h4 {
+  margin-bottom: 4px;
 }
 .sec p {
   margin: 0 0 6px;
 }
 .sec ul {
-  margin: 2px 0 6px;
+  margin: 0 0 6px;
   padding: 0;
 }
 .sec li {
@@ -191,17 +307,44 @@
   margin: 0 0 5px;
   padding-left: 0;
 }
-.sec .muted,
-.sec.silent,
-.sec.absent {
+.sec .muted {
   color: var(--ink-3);
+}
+/* подзаголовки внутри раздела: «Встречи, о которых говорит Писание», «1 Цар 16–30», «Погребение» */
+.sec .sub {
+  margin: 8px 0 2px;
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  color: var(--ink-2);
+}
+.sec .clamp > .sub:first-child,
+.sec .clamp > ul:first-child > .sub:first-child {
+  margin-top: 0;
+}
+/* «В Писании не сообщается», «не относится», «не составлен» — одной бледной сведённой строкой (F4; решение 6) */
+.sec.silent,
+.sec.na,
+.sec.absent {
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+  color: var(--ink-3);
+  margin-bottom: 8px;
+}
+.sec.silent .no,
+.sec.na .no,
+.sec.absent .no {
+  top: 2px;
 }
 .sec.absent {
   font-style: italic;
 }
 .sec .more,
 .verses .more,
-.refs .more {
+.refs .more,
+.brief .more,
+.rest .more,
+.sec .see {
   font-family: var(--sans);
   font-size: var(--t-ui);
   line-height: 1;
@@ -211,27 +354,82 @@
 }
 .sec .more:hover,
 .verses .more:hover,
-.refs .more:hover {
+.refs .more:hover,
+.brief .more:hover,
+.rest .more:hover,
+.sec .see:hover {
   color: var(--ink);
   text-decoration-color: var(--ink);
 }
-.mark {
+/* «ещё 23 события» под свёрнутым разделом (F5) */
+.clamp-more {
+  display: block;
+  margin: 2px 0 4px;
+  padding: 4px 0;
+}
+.rest {
+  margin: 18px 0 0;
+  color: var(--ink-3);
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+}
+
+/* ---------- пометы на полях (F1; VIS-08, UX-22, MOB-38) ----------
+   Jost 12 --ink-2 у первой строки факта; кнопка: по нажатию под фактом — пояснение строкой.
+   На поле — только в листе карточки; в развороте помета стоит в строке (spread.css). */
+.folio .mark {
   position: absolute;
   right: calc(4px - var(--folio-pr));
+  top: 5px;
+  padding: 0 2px;
+  margin: -4px -2px;
+  min-height: 24px;
+}
+.mark {
   font-family: var(--sans);
   font-size: var(--t-ui-s);
-  color: var(--ink-3);
+  line-height: var(--t-ui-s-lh);
+  color: var(--ink-2);
   font-style: normal;
+  font-weight: 400;
+}
+.mark abbr {
+  text-decoration: none;
+}
+.mark:hover,
+.mark[aria-expanded='true'] {
+  color: var(--ink);
+  text-decoration: underline 1px var(--ink);
+  text-underline-offset: 3px;
+}
+.mark:focus-visible {
+  outline-offset: 0;
+}
+.folio .passport .mark {
+  top: 2px;
+}
+.mark-note {
+  display: block;
+  margin: 2px 0 4px;
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  color: var(--ink-2);
 }
 .fact {
   position: relative;
 }
-.fact .note {
+.fact .note,
+.sec li.note {
   font-size: var(--t-note);
   line-height: var(--t-note-lh);
   color: var(--ink-2);
   margin: 2px 0 0;
 }
+.sec li.note {
+  margin: -2px 0 6px;
+}
+
 /* ---------- ссылки в тексте (B4; VIS-02, 28) ----------
    Строчные, без рамки: подчёркивание со смещением 3 px вместо border-bottom, поэтому шаг строк не прыгает.
    Кнопка в браузере остаётся строчно-блочной, поэтому у ссылки на стих — свой интерлиньяж 1: её поле не выходит за строку текста. */
@@ -317,29 +515,75 @@
   font-family: var(--hebrew);
   font-size: var(--t-lead);
 }
+
+/* ---------- колофон (F10; CARD-38, VIS-39): 14/20 читаемым цветом, точный перечень; «Все 24 раздела» и печать ---------- */
 .colophon {
   margin-top: 28px;
   padding-top: 10px;
   border-top: 0.5px solid var(--rule);
   font-size: var(--t-note);
   line-height: var(--t-note-lh);
+  color: var(--ink-2);
+}
+.colophon p {
+  margin: 0;
+}
+.colophon .cmds {
+  margin: 6px 0 0 -8px;
+}
+
+/* ---------- § 23: полоса 66 книг одной строкой (F9; VIS-09) ----------
+   клетки 4 px и больше с зазором 1 px; группы книг — зазор 4 px, заветы — 10 px; четыре ступени светлоты */
+.canon {
+  display: flex;
+  gap: 4px;
+  margin: 6px 0 2px;
+}
+.canon .cg {
+  display: flex;
+  flex: var(--n, 1) 1 0;
+  gap: 1px;
+  min-width: 0;
+}
+.canon .cg.nt {
+  margin-left: 6px;
+}
+.canon .cg > span {
+  flex: 1 1 0;
+  min-width: 3px;
+  height: 12px;
+  background: var(--sheet-2);
+}
+.canon .l1 {
+  background: color-mix(in srgb, var(--ink) 30%, var(--sheet-2));
+}
+.canon .l2 {
+  background: color-mix(in srgb, var(--ink) 52%, var(--sheet-2));
+}
+.canon .l3 {
+  background: color-mix(in srgb, var(--ink) 75%, var(--sheet-2));
+}
+.canon .cg > .l4 {
+  background: var(--ink);
+}
+.canon-t {
+  display: flex;
+  gap: 10px;
+  margin: 0 0 6px;
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
   color: var(--ink-3);
 }
-.canon {
-  display: grid;
-  grid-template-columns: repeat(33, 1fr);
-  gap: 1px;
-  margin: 6px 0 4px;
+.canon-t .ot {
+  flex: 39 1 0;
 }
-/* плотность упоминаний книги — доля --a (0…1) в свойстве разметки; без неё — пустая клетка */
-.canon span {
-  height: 11px;
-  background: color-mix(in srgb, var(--ink) calc(var(--a, 0) * 100%), var(--sheet-2));
+/* подписи заветов — из data-label: подпись к рисунку, не текст раздела (у полосы есть aria-label) */
+.canon-t span::before {
+  content: attr(data-label);
 }
-.canon .gapc {
-  grid-column: 1 / -1;
-  height: 3px;
-  background: none;
+.canon-t .nt {
+  flex: 27 1 0;
 }
 .tension {
   border-left: 2px solid var(--ink-2);
@@ -423,4 +667,76 @@
 }
 .folio.spine .unfold:focus-visible {
   outline-offset: -2px;
+}
+
+/* ---------- сенсорный экран: цели помет и рейки не меньше 24 px (WCAG 2.5.8) ---------- */
+@media (pointer: coarse) {
+  .folio .mark {
+    min-width: 32px;
+    min-height: 32px;
+    margin: -8px -6px;
+    padding: 0 6px;
+  }
+}
+
+/* ---------- телефон (F8; MOB-14): рейка — строка номеров составленных разделов под ручкой листа ---------- */
+@media (max-width: 720px) {
+  .folio {
+    --folio-pl: 44px;
+    --folio-pr: 22px;
+  }
+  .folio .rail {
+    position: sticky;
+    top: 22px;
+    float: none;
+    flex-direction: row;
+    width: auto;
+    margin: 12px calc(-1 * var(--folio-pr)) 0 calc(-1 * var(--folio-pl));
+    padding: 0 calc(var(--folio-pr) - 8px) 0 calc(var(--folio-pl) - 8px);
+    overflow-x: auto;
+    scrollbar-width: none;
+    background: var(--sheet);
+    border-bottom: 1px solid var(--rule);
+  }
+  .folio .rail button {
+    flex: none;
+    width: 32px;
+    height: 44px;
+    margin: 0;
+  }
+  .folio .rail button.absent,
+  .folio .rail button.na {
+    display: none;
+  }
+  .folio .rail .gap {
+    width: 8px;
+    height: auto;
+  }
+  .folio .rail .dot,
+  .folio .rail .rail-label,
+  .folio .rail .current::after {
+    display: none;
+  }
+  .folio .rail .num {
+    display: block;
+    font-family: var(--sans);
+    font-size: var(--t-ui);
+    line-height: var(--t-ui-lh);
+    color: var(--ink-2);
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+  .folio .rail .silent .num {
+    color: var(--ink-3);
+  }
+  .folio .rail .current .num {
+    color: var(--ink);
+    box-shadow: inset 0 -2px 0 var(--ink);
+  }
+  .folio .actions {
+    margin-top: 6px;
+  }
+  /* переход к разделу оставляет его заголовок под ручкой листа и строкой номеров (22 + 45 px) */
+  .sec {
+    scroll-margin-top: 76px;
+  }
 }

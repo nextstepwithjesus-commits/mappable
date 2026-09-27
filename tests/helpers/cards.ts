@@ -50,3 +50,14 @@ export async function passport(id: string): Promise<Map<string, string>> {
   for (const m of html.matchAll(/<dt>(.*?)<\/dt><dd[^>]*>(.*?)<\/dd>/g)) out.set(decode(m[1]), decode(m[2]));
   return out;
 }
+
+/**
+ * Лист карточки целиком — шапка, «Кратко», рейка, разделы по частям, колофон — как его собирает CardPage (Folio.tsx).
+ * Без браузера предел «8 строк» не действует: разделы выводятся полностью.
+ */
+export async function cardPageHtml(id: string): Promise<string> {
+  const { CardPage } = await import('../../src/ui/Folio.tsx');
+  const data = await loadCard(id);
+  return renderToString(h(CardPage, { id, body: { id, card: data?.card ?? null, chrono: data?.chrono ?? null } }) as VNode);
+}
+export const htmlText = decode;
