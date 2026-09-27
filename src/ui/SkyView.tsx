@@ -77,6 +77,7 @@ export function SkyView() {
     let morph: { from: number; to: number; start: number; anchor: Anchor } | null = null;
     let shownLambda = lambda.value;
     let shownTop = -1;
+    let shownLabels = '';
     let tensionPersons = new Set<string>();
 
     const tensions = () => {
@@ -168,6 +169,13 @@ export function SkyView() {
         shownTop = vp.t;
         wrap.current!.style.setProperty('--sky-top', `${Math.round(vp.t)}px`);
         requestAnimationFrame(() => wrap.current && layoutRef.current(false));
+      }
+      // замер подписей кадра — для проверок этапа 4: «нарисовано подписей/пересекающихся пар» (src/render/labels.ts)
+      const ls = sky.labelStats();
+      const labelsKey = `${ls.boxes.length}/${ls.overlaps}`;
+      if (labelsKey !== shownLabels) {
+        shownLabels = labelsKey;
+        wrap.current!.dataset.labels = labelsKey;
       }
       // флажок меридиана — для проверок приёмки (tools/accept/sky.ts): есть ли меридиан и что на флажке
       if (meridianLabel) wrap.current!.dataset.meridian = meridianLabel;

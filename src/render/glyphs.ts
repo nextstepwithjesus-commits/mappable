@@ -19,6 +19,23 @@ export interface GlyphOpts {
   halo: string;
 }
 
+/**
+ * Знак лица на небе по данным: пол, род лица (народ, род), величина, черта царя или царицы, звезда Мессии, призрак жены,
+ * полый знак расчётной даты у звёзд величины 2–6. Масштаб, цвет и подложку задаёт тот, кто рисует.
+ */
+export function personGlyph(
+  p: { id: string; sex: 'm' | 'f'; kind: string; magnitude: number; roles: readonly string[] },
+  ghost: boolean,
+  cls: string | undefined,
+  look: { scale: number; color: string; halo: string },
+): GlyphOpts {
+  return {
+    sex: p.sex, kind: p.kind, magnitude: p.magnitude, king: p.roles.includes('king') || p.roles.includes('queen'),
+    messiah: p.id === 'iisus', ghost, hollow: cls === 'calculated' && p.magnitude > 1,
+    scale: look.scale, color: look.color, halo: look.halo,
+  };
+}
+
 export function starRadius(mag: number, scale = 1): number {
   return MAG_R[Math.max(0, Math.min(6, mag))] * scale;
 }

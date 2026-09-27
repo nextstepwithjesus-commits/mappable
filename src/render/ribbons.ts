@@ -10,8 +10,9 @@
  *   Ночью лента гаснет до 0,55, днём — не ниже 0,85.
  * — Звено по толкованию — разреженная нить без свечения и тона.
  */
-import type { Strand, StrandPoint } from '../engine/ribbons.ts';
-import type { Palette } from './sky.ts';
+import { buildRibbons, type Strand, type StrandPoint } from '../engine/ribbons.ts';
+import type { LineStep } from '../engine/layout.ts';
+import type { Palette, SkyContext, SkyState } from './sky.ts';
 import { hexToRgb } from './color.ts';
 
 export interface RibbonLook {
@@ -233,4 +234,29 @@ export function drawStrands(ctx: CanvasRenderingContext2D, strands: Strand[], co
     ctx.lineDashOffset = 0;
   }
   ctx.restore();
+}
+
+/**
+ * Ленты на небе: нити по лицам линий, которые есть в данных (лица, которых ещё нет, пропускаются — нить идёт к следующему
+ * известному звену). Амплитуда косы и ширина нити растут с высотой полосы; в режиме «только линии» — крупнее.
+ * steps — шаги линий из data/lines (atlas.ts: lines): отсюда модуль не читает данные атласа сам.
+ */
+export function drawSkyRibbons(v: SkyContext, s: SkyState, steps: { joseph: readonly LineStep[]; mary: readonly LineStep[] }) {
+  const { ctx, cam, pal } = v;
+  const project = (id: string) => {
+    const i = v.indexOf(id);
+    if (i === undefined) return null;
+    return { x: cam.sx(v.X0[i]), y: cam.sy(v.nodes[i].lane) };
+  };
+  const weakOf = (ln: 'joseph' | 'mary') =>
+    steps[ln]
+      .map((st) => (s.lineFlip && ln === 'mary' && st.id === 'mariya' ? { ...st, id: 'iosif-muzh-marii' } : st))
+      .filter((st) => v.indexOf(st.id) !== undefined)
+      .map((st) => ({ id: st.id, weak: st.flag === 'interpretation' || st.flag === 'luke-only' || (ln === 'mary' && st.id === 'salafiil') }));
+  const ky = cam.ky;
+  const boost = s.onlyLines ? 1.35 : 1;
+  const A = Math.max(4, Math.min(11, ky * 0.55)) * boost;
+  const strands = buildRibbons({ joseph: weakOf('joseph'), mary: weakOf('mary'), project, amplitude: A, meander: A * 0.5 });
+  const core = Math.max(2.1, Math.min(3.6, ky / 6)) * boost;
+  drawStrands(ctx, strands, core, ribbonLook(pal, !!s.highlight), cam.w, s.flow && !s.reduced ? s.flow * 0.02 : null);
 }
