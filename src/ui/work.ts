@@ -7,7 +7,7 @@
  *    Хранится в памяти браузера (localStorage) и переживает перезагрузку; без хранилища всё работает, только не помнится.
  *  — skyMode — что показывает небо: «все лица» или только набор (J4; сжатие полос — src/render/rows.ts).
  *  — foldDesc, foldGroups — свёрнутые потомки лиц и созвездия (J5); помнятся в сеансе (sessionStorage).
- *  — cardStack — открытые карточки стопкой, последние до 6 лиц; cardFolded — активная свёрнута до строки (J6); сеанс.
+ *  — стопка карточек (J6) — в src/ui/stack.ts.
  * Предки и потомки — по графу (src/engine/graph.ts): отцы и матери, дети; связи по толкованию — только по выбору.
  */
 import { batch, computed, effect, signal } from '@preact/signals';
@@ -253,47 +253,8 @@ if (hasWindow)
     });
   });
 
-// ---------- стопка карточек (J6) ----------
-
-/** Сколько карточек держит стопка. */
-export const STACK_MAX = 6;
-const stack0 = read<{ ids?: unknown; folded?: unknown }>('session', 'stack', {});
-/** Открытые карточки: последние до шести лиц, первым — самое недавнее (активное — выбранное лицо). */
-export const cardStack = signal<string[]>(strings(stack0.ids, (x) => byId.has(x)).slice(0, STACK_MAX));
-/** Активная карточка свёрнута до строки. */
-export const cardFolded = signal<boolean>(stack0.folded === true);
-if (hasWindow) effect(() => write('session', 'stack', { ids: cardStack.value, folded: cardFolded.value }));
-
-/** Положить лицо наверх стопки (выбор лица делает его карточку активной). */
-export function pushCard(id: string, stack = cardStack.peek()): string[] {
-  return [id, ...stack.filter((x) => x !== id)].slice(0, STACK_MAX);
-}
-/** Убрать карточку из стопки; активная закрывается (выбор снимается). */
-export function dropCard(id: string) {
-  batch(() => {
-    cardStack.value = cardStack.peek().filter((x) => x !== id);
-    if (selected.peek() === id) {
-      cardFolded.value = false;
-      selected.value = null;
-    }
-  });
-}
-if (hasWindow) {
-  let last = selected.peek();
-  effect(() => {
-    const id = selected.value;
-    if (id === last) return;
-    last = id;
-    if (!id) return;
-    batch(() => {
-      cardStack.value = pushCard(id);
-      cardFolded.value = false;
-    });
-  });
-  // выбранное по адресу при загрузке — тоже наверху стопки
-  const id0 = selected.peek();
-  if (id0 && cardStack.peek()[0] !== id0) cardStack.value = pushCard(id0);
-}
+// стопка карточек (J6) — src/ui/stack.ts; имена оставлены здесь для прежних импортов
+export { STACK_MAX, cardStack, cardFolded, pushCard, dropCard } from './stack.ts';
 
 // ---------- клавиши (J3, J5) ----------
 
