@@ -10,3 +10,4 @@ dist-artifact/
 .ui-shots/
 tools/_*.ts
 .ui-build/
+tests/_*.test.ts
