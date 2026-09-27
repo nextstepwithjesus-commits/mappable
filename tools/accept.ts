@@ -27,24 +27,12 @@ const PORT = Number(opt('port') ?? 4184);
 const OUT = resolve(ROOT, opt('out') ?? (DIST ? join('.ui-shots/accept', basename(DIST)) : 'docs/screens'));
 const only = argv[0] ? Number(argv[0]) : null;
 
-type Check = { ok: boolean; why: string };
-const pass = (why = ''): Check => ({ ok: true, why });
-const fail = (why: string): Check => ({ ok: false, why });
+import { pass, fail, find, hashId, folioText, secText, type Check, type Scenario } from './accept/kit.ts';
+import { layout } from './accept/layout.ts';
+import { nav } from './accept/nav.ts';
+import { sky } from './accept/sky.ts';
 
-async function find(p: Page, q: string) {
-  await p.click('#find');
-  await p.fill('#find', q);
-  await p.waitForTimeout(250);
-  await p.keyboard.press('Enter');
-  await p.waitForTimeout(1500);
-}
-const hashId = (p: Page) => decodeURIComponent(new URL(p.url()).hash.replace(/^#\/?/, '').split('?')[0]);
-const folioText = (p: Page) => p.locator('.folio').innerText();
-const secText = async (p: Page, n: number) => ((await p.locator(`.folio #sec-${n}`).count()) ? p.locator(`.folio #sec-${n}`).innerText() : '');
-
-/** Окно сценария; по умолчанию 1440 × 900, мышь. */
-type View = { width: number; height: number; touch?: boolean };
-const SCENARIOS: { n: number; title: string; view?: View; run: (p: Page) => Promise<Check> }[] = [
+const BASE: Scenario[] = [
   {
     n: 1,
     title: 'Руфь → правнук Давид; небо перелетает к Давиду',
@@ -545,6 +533,8 @@ const SCENARIOS: { n: number; title: string; view?: View; run: (p: Page) => Prom
     },
   },
 ];
+/** Сценарии этапа 3 — в своих файлах, чтобы параллельные агенты не правили один список (номера 30–49, 50–69, 70–89). */
+const SCENARIOS: Scenario[] = [...BASE, ...layout, ...nav, ...sky];
 
 /** Имена лиц обеих линий Мессии — из собранного индекса. */
 function lineNames(): Set<string> {
