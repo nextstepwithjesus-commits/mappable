@@ -110,6 +110,6 @@
   --t-map-s: 0.71875rem; /* 11,5 Jost — только холст (src/render/type.ts); в CSS не используется */
   --folio-w: 440px;
   --strip-h: 76px;
-  --top-h: 44px;
+  --top-h: 48px; /* верхняя строка (C3; VIS-20) */
   --ease: cubic-bezier(0.4, 0, 0.2, 1);
 }

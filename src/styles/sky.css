@@ -99,11 +99,6 @@
   top: 4px;
   right: 4px;
 }
-/* пока у картуша вместо «×» слово «свернуть» (SkyView.tsx), поле — по слову */
-.cartouche .close:not([aria-label]) {
-  padding: 0 8px;
-  font-size: var(--t-ui);
-}
 .swatch {
   display: inline-block;
   width: 26px;
@@ -118,37 +113,188 @@
   background: linear-gradient(90deg, var(--azure-1), var(--azure-2));
 }
 
-/* органы неба — непрозрачный лист в правом нижнем углу (VIS-21, 22): флажок, переключатель масштаба, «−» и «+» */
+/* Органы неба (C6; VIS-21, VIS-22, IX-37): непрозрачный лист --sheet с рамкой 1 px в правом нижнем углу неба, над полосой
+   времени. Три строки: слои и масштаб неба; масштаб времени; модель хронологии и «Эпохи». Строки не переносятся.
+   Подписи неба под блоком пока рисуются: резерв раскладки подписей — в render (см. отчёт этапа 2). */
 .skyctl {
   position: absolute;
-  right: 14px;
+  right: 12px;
   bottom: 12px;
-  display: flex;
-  gap: 10px;
+  z-index: 4;
+  display: grid;
+  grid-template-columns: auto auto auto;
+  grid-template-areas:
+    'layers layers zoom'
+    'scale-lbl scale scale'
+    'chrono-lbl chrono chrono';
   align-items: center;
+  gap: 2px 12px;
+  padding: 3px 4px 4px;
+  background: var(--sheet);
+  border: 1px solid var(--rule-strong);
   font-family: var(--sans);
   font-size: var(--t-ui);
   line-height: var(--t-ui-lh);
   color: var(--ink-2);
-  background: var(--sheet);
-  border: 1px solid var(--rule-strong);
-  padding: 2px 6px 2px 2px;
-  z-index: 4;
+  white-space: nowrap;
 }
-/* «только линии Мессии» — кнопка с aria-pressed в виде флажка (controls.css) */
-.skyctl .scale,
+/* первая строка: флажки слева, «−», «+», «Всё небо» справа */
+.skyctl .layers {
+  grid-area: layers;
+  display: flex;
+  align-items: center;
+  gap: 0 10px;
+}
 .skyctl .zoom {
+  grid-area: zoom;
+  justify-self: end;
+  display: flex;
+  padding-left: 1px;
+}
+/* подписи строк — по левому краю квадратов флажков */
+.skyctl .lbl {
+  padding-left: 7px;
+}
+.skyctl .scale-lbl {
+  grid-area: scale-lbl;
+}
+.skyctl .chrono-lbl {
+  grid-area: chrono-lbl;
+}
+.skyctl .seg {
+  grid-area: scale;
+  flex-wrap: nowrap;
+  margin: 0;
+  justify-self: start;
+}
+.skyctl .seg::after {
+  content: none;
+}
+.skyctl .chrono {
+  grid-area: chrono;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+/* «−», «+», «Всё небо» — команды 32 px в общей рамке */
+.skyctl .zoom button {
   display: inline-flex;
   align-items: center;
-  padding-top: 1px;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  margin-left: -1px;
+  padding: 0 9px;
+  border: 1px solid var(--rule-strong);
+  color: var(--ink-2);
 }
-.skyctl .scale button:first-of-type {
-  margin-left: 6px;
-}
-.skyctl .zoom button {
-  width: 28px;
+.skyctl .zoom button[aria-label] {
   padding: 0;
   font-size: var(--t-lead);
+  line-height: 1;
+}
+.skyctl .zoom button:hover {
+  position: relative;
+  background: var(--sheet-2);
+  color: var(--ink);
+}
+.skyctl .zoom button:active {
+  background: var(--rule);
+}
+.skyctl .zoom button:focus-visible {
+  position: relative;
+  outline-offset: -2px;
+}
+/* модель хронологии — поле со стрелкой: высота сегмента, рамка 1 px */
+.menu.model > button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 9px;
+  border: 1px solid var(--rule-strong);
+  color: var(--ink);
+  white-space: nowrap;
+}
+.menu.model > button:hover,
+.menu.model > button[aria-expanded='true'] {
+  background: var(--sheet-2);
+}
+.menu.model > button:active {
+  background: var(--rule);
+}
+.menu.model > button:focus-visible {
+  outline-offset: -2px;
+}
+/* список моделей у неба раскрывается вверх, во всю ширину блока (блок — точка отсчёта списка) */
+.skyctl .menu.model {
+  position: static;
+}
+.skyctl .menu.model [role='menu'] {
+  left: -1px;
+  right: -1px;
+  bottom: calc(100% + 4px);
+}
+.skyctl .menu.model [role^='menuitem'] {
+  padding: 7px 14px 8px;
+}
+
+/* Узкое небо (< 520 px: телефон, планшет с карточкой) — колонка кнопок 44 × 44 у правого края (MOB-05, MOB-25) */
+.skyctl.column {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  right: 8px;
+  padding: 0;
+  background: none;
+  border: 0;
+}
+.skyctl.column button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-top: -1px;
+  padding: 0 2px;
+  background: var(--sheet);
+  border: 1px solid var(--rule-strong);
+  color: var(--ink-2);
+  white-space: normal;
+  text-align: center;
+}
+.skyctl.column button[aria-label] {
+  font-size: var(--t-lead);
+  line-height: 1;
+}
+.skyctl.column .all {
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+}
+.skyctl.column button:hover {
+  position: relative;
+  background: var(--sheet-2);
+  color: var(--ink);
+}
+.skyctl.column button:active {
+  background: var(--rule);
+}
+.skyctl.column button[aria-pressed='true'] {
+  color: var(--ink);
+  box-shadow: inset 0 -2px 0 var(--ink);
+}
+.skyctl.column button:focus-visible {
+  position: relative;
+  outline-offset: -2px;
+}
+
+/* на небе уже 880 px картуш и органы неба внизу не помещаются рядом: картуш — в левом верхнем углу, под колонтитулом */
+.cartouche.high {
+  top: 52px;
+  bottom: auto;
+}
+
+/* лист «Вид» (узкое небо): флажки, масштаб, модель */
+.viewctl .seg {
+  margin-bottom: 8px;
 }
 
 /* строка режима выбора второго лица (D6): непрозрачная, у верхней кромки неба, поверх линейки годов */

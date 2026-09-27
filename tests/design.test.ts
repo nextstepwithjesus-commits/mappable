@@ -194,10 +194,6 @@ const allowedKey = (k: string) => GEOMETRY.has(k) || k.startsWith('--');
  * Ключ — «файл» (весь файл) или «файл:свойство».
  */
 const EXCEPTIONS: Record<string, string> = {
-  // TODO(stage2-wave2): образец собирается заново из живых компонентов (B7), разовые style уходят вместе со старым образцом.
-  'src/ui/Specimen.tsx': 'B7 — образец из живых компонентов',
-  // TODO(stage2-wave2): скрытый абзац картуша — убрать или заменить атрибутом hidden (C6, органы неба и картуш).
-  'src/ui/SkyView.tsx:display': 'C6 — картуш',
 };
 
 describe('разметка: в style нет кеглей, цветов и разовых отступов (B2)', () => {

@@ -42,7 +42,9 @@ const hashId = (p: Page) => decodeURIComponent(new URL(p.url()).hash.replace(/^#
 const folioText = (p: Page) => p.locator('.folio').innerText();
 const secText = async (p: Page, n: number) => ((await p.locator(`.folio #sec-${n}`).count()) ? p.locator(`.folio #sec-${n}`).innerText() : '');
 
-const SCENARIOS: { n: number; title: string; run: (p: Page) => Promise<Check> }[] = [
+/** Окно сценария; по умолчанию 1440 × 900, мышь. */
+type View = { width: number; height: number; touch?: boolean };
+const SCENARIOS: { n: number; title: string; view?: View; run: (p: Page) => Promise<Check> }[] = [
   {
     n: 1,
     title: 'Руфь → правнук Давид; небо перелетает к Давиду',
@@ -100,7 +102,7 @@ const SCENARIOS: { n: number; title: string; run: (p: Page) => Promise<Check> }[
     run: async (p) => {
       await find(p, 'Иоав');
       await p.click('.commands >> text=Родство');
-      await p.fill('.sheet .search input', 'Давид');
+      await p.fill('.sheet .field input', 'Давид');
       await p.waitForTimeout(300);
       await p.locator('.sheet button.person', { hasText: 'Давид' }).first().click();
       await p.waitForTimeout(600);
@@ -188,7 +190,8 @@ const SCENARIOS: { n: number; title: string; run: (p: Page) => Promise<Check> }[
       await find(p, 'Давид');
       await p.locator('.folio .actions button', { hasText: 'Родство с' }).click();
       await p.waitForTimeout(300);
-      const bar = (await p.locator('.sky .pickbar').count()) ? await p.locator('.sky .pickbar').innerText() : '';
+      // строка набрана с неразрывными пробелами (B5): сравнивается текст
+      const bar = (await p.locator('.sky .pickbar').count()) ? (await p.locator('.sky .pickbar').innerText()).replace(/\u00a0/g, ' ') : '';
       if (!/^Родство с Давидом: щёлкните второе лицо на небе или найдите его в поле «Найти»\. Esc — отмена/.test(bar)) return fail(`строка режима: «${bar}»`);
       await find(p, 'Иоав');
       if (hashId(p) !== 'david') return fail(`первым лицом стало «${hashId(p)}»`);
@@ -272,7 +275,7 @@ const SCENARIOS: { n: number; title: string; run: (p: Page) => Promise<Check> }[
     run: async (p) => {
       await find(p, 'Иоав');
       await p.click('.commands >> text=Родство');
-      await p.fill('.sheet .search input', 'Давид');
+      await p.fill('.sheet .field input', 'Давид');
       await p.waitForTimeout(300);
       await p.locator('.sheet button.person', { hasText: 'Давид' }).first().click();
       await p.waitForTimeout(500);
@@ -312,13 +315,17 @@ const SCENARIOS: { n: number; title: string; run: (p: Page) => Promise<Check> }[
   },
   {
     n: 18,
-    title: 'Эпохи: звёзды под ярусами не ловят указатель',
+    title: 'Ярусы эпох (флажок органов неба): звёзды под ярусами не ловят указатель',
     run: async (p) => {
       await find(p, 'Давид');
-      await p.click('.commands >> text=Эпохи');
+      if (await p.locator('.sky[data-tiers]').count()) return fail('ярусы включены до флажка');
+      await p.locator('.skyctl').getByText('ярусы эпох', { exact: true }).click();
       await p.waitForTimeout(800);
+      if (!(await p.locator('.skyctl input[type="checkbox"]').nth(1).isChecked())) return fail('флажок «ярусы эпох» не отмечен');
+      if (!(await p.locator('.sky[data-tiers="on"]').count())) return fail('флажок не включил ярусы');
       const box = (await p.locator('.sky canvas').boundingBox())!;
-      const sheet = await p.locator('.sheet').boundingBox();
+      // панель слева (если открыта) закрывает часть неба: проверяется только видимая часть
+      const sheet = (await p.locator('.sheet').count()) ? await p.locator('.sheet').boundingBox() : null;
       const left = Math.max(box.x + 30, sheet ? sheet.x + sheet.width + 10 : 0);
       // ярусов шесть, каждый не ниже 35 px: полоса 40…220 px от верха неба всегда под ними
       for (let y = box.y + 40; y < box.y + 220; y += 6)
@@ -353,6 +360,188 @@ const SCENARIOS: { n: number; title: string; run: (p: Page) => Promise<Check> }[
       await p.waitForTimeout(1800);
       const t = await tipNow();
       return t === star2.name ? fail(`после перелёта висит «${t}»`) : pass(t ? `под указателем теперь «${t}»` : '');
+    },
+  },
+  {
+    n: 20,
+    title: 'Верхняя строка на 1440, 1280, 1024, 768: все команды видны или в «Ещё», тема доступна, прокрутки нет; «Ещё» с клавиатуры',
+    view: { width: 1024, height: 768 },
+    run: async (p) => {
+      const ALL = ['Указатель', 'Главы', 'Синопсис', 'Родство', 'Сквозной раздел', 'Условные знаки', 'О карте'];
+      const notes: string[] = [];
+      for (const [w, h] of [[1440, 900], [1280, 800], [768, 1024], [1024, 768]]) {
+        await p.setViewportSize({ width: w, height: h });
+        await p.waitForTimeout(300);
+        const row = (await p.evaluate(`(() => {
+          const top = document.querySelector('.top'), nav = document.querySelector('.commands');
+          const vis = (el) => { const r = el.getBoundingClientRect(); return r.width > 0 && r.left >= 0 && r.right <= innerWidth + 0.5 && r.top >= 0 && r.bottom <= top.getBoundingClientRect().bottom + 0.5; };
+          return {
+            height: top.getBoundingClientRect().height,
+            scroll: [top.scrollWidth - top.clientWidth, nav.scrollWidth - nav.clientWidth],
+            shown: [...nav.querySelectorAll(':scope > button')].filter(vis).map((b) => b.textContent.trim()),
+            more: nav.querySelector('.more > button') ? vis(nav.querySelector('.more > button')) : null,
+            theme: [...document.querySelectorAll('.top > .seg button')].filter(vis).map((b) => b.textContent.trim()),
+            doc: document.documentElement.scrollWidth - innerWidth,
+          };
+        })()`)) as { height: number; scroll: number[]; shown: string[]; more: boolean | null; theme: string[]; doc: number };
+        if (Math.round(row.height) !== 48) return fail(`${w}: высота строки ${row.height} px, а не 48`);
+        if (row.scroll.some((d) => d > 0) || row.doc > 0) return fail(`${w}: строка прокручивается вбок (${row.scroll.join(', ')})`);
+        if (row.theme.join('|') !== 'Ночь|День') return fail(`${w}: переключатель темы не виден целиком: ${row.theme.join('|')}`);
+        let inMore: string[] = [];
+        if (row.more === false) return fail(`${w}: «Ещё» за краем`);
+        if (row.more) {
+          await p.locator('.commands .more > button').click();
+          inMore = (await p.locator('.commands .more [role="menu"] [role^="menuitem"] .nm').allInnerTexts()).map((t) => t.trim());
+          await p.keyboard.press('Escape');
+        }
+        const missing = ALL.filter((c) => !row.shown.includes(c) && !inMore.includes(c));
+        if (missing.length) return fail(`${w}: нет команд ${missing.join(', ')}`);
+        notes.push(`${w}: ${row.shown.length} в строке${inMore.length ? `, ${inMore.length} в «Ещё»` : ''}`);
+      }
+      // «Ещё» с клавиатуры (1024): Enter открывает, фокус на первом пункте, стрелка — следующий, Escape закрывает и возвращает фокус
+      const more = p.locator('.commands .more > button');
+      if (!(await more.count())) return fail('на 1024 нет «Ещё»');
+      await more.focus();
+      await p.keyboard.press('Enter');
+      await p.waitForTimeout(100);
+      const items = p.locator('.commands .more [role="menu"] [role^="menuitem"]');
+      const n = await items.count();
+      if (!n) return fail('Enter не открыл «Ещё»');
+      const at = () => p.evaluate("[...document.querySelectorAll('.commands .more [role^=menuitem]')].indexOf(document.activeElement)");
+      if ((await at()) !== 0) return fail('после открытия фокус не на первом пункте');
+      await p.keyboard.press('ArrowDown');
+      if ((await at()) !== (n > 1 ? 1 : 0)) return fail('стрелка вниз не перевела фокус');
+      await p.keyboard.press('Escape');
+      await p.waitForTimeout(100);
+      if (await items.count()) return fail('Escape не закрыл список');
+      if (!(await p.evaluate("document.activeElement === document.querySelector('.commands .more > button')"))) return fail('после Escape фокус не вернулся на «Ещё»');
+      // выбор пункта открывает панель; тема переключается сегментом
+      await more.press('Space');
+      await p.waitForTimeout(100);
+      const label = (await items.first().locator('.nm').innerText()).trim();
+      await p.keyboard.press('Enter');
+      await p.waitForTimeout(400);
+      const h2 = (await p.locator('.sheet h2').count()) ? (await p.locator('.sheet h2').innerText()).trim() : '';
+      if (!h2) return fail(`пункт «${label}» не открыл панель`);
+      await p.locator('.top > .seg button', { hasText: 'День' }).click();
+      const map = await p.evaluate('document.documentElement.dataset.map');
+      if (map !== 'day') return fail('«День» не включил дневную карту');
+      return pass(`${notes.join('; ')}; «${label}» → панель «${h2}»`);
+    },
+  },
+  {
+    n: 21,
+    title: 'Модель «краткое пребывание» из органов неба (с клавиатуры): напряжение у Моисея исчезает',
+    run: async (p) => {
+      await find(p, 'Моисей');
+      const before = await secText(p, 13);
+      if (!/Амрам/.test(before)) return fail('в § 13 Моисея нет напряжения до смены модели');
+      const btn = p.locator('.skyctl .menu.model > button');
+      if (!(await btn.count())) return fail('в органах неба нет выбора модели');
+      const was = (await btn.innerText()).trim();
+      await btn.focus();
+      await p.keyboard.press('Enter');
+      await p.waitForTimeout(100);
+      const items = p.locator('.skyctl [role="menu"] [role="menuitemradio"]');
+      const names = (await items.locator('.nm').allInnerTexts()).map((t) => t.trim());
+      if (names.length < 2) return fail(`в списке моделей ${names.length} пунктов`);
+      if ((await items.locator('.note').count()) !== names.length) return fail('не у каждой модели есть пояснение');
+      const checked = (await p.locator('.skyctl [role="menuitemradio"][aria-checked="true"] .nm').innerText()).trim();
+      if (checked !== was) return fail(`отмечена «${checked}», на кнопке «${was}»`);
+      const k = names.findIndex((x) => /Краткое пребывание/.test(x));
+      if (k < 0) return fail('нет модели «Краткое пребывание»');
+      const at = await p.evaluate("[...document.querySelectorAll('.skyctl [role=menuitemradio]')].indexOf(document.activeElement)");
+      for (let i = at as number; i < k; i++) await p.keyboard.press('ArrowDown');
+      await p.keyboard.press('Enter');
+      await p.waitForTimeout(1500);
+      if (await items.count()) return fail('список не закрылся после выбора');
+      if (!(await p.evaluate("document.activeElement === document.querySelector('.skyctl .menu.model > button')"))) return fail('фокус не вернулся на кнопку модели');
+      const now = (await btn.innerText()).trim();
+      if (!/Краткое пребывание/.test(now)) return fail(`на кнопке «${now}»`);
+      const t = await secText(p, 13);
+      return /Амрам/.test(t) && /напряжени/i.test(t) ? fail('напряжение осталось') : pass();
+    },
+  },
+  {
+    n: 22,
+    title: 'Телефон 390 × 844: колонка органов неба 44 × 44, «Вид» открывает лист; тема и все команды доступны',
+    view: { width: 390, height: 844, touch: true },
+    run: async (p) => {
+      if (await p.locator('.skyctl:not(.column)').count()) return fail('на телефоне — блок органов, а не колонка');
+      const col = p.locator('.skyctl.column button');
+      const labels = (await col.evaluateAll((bs) => bs.map((b) => b.getAttribute('aria-label') ?? (b.textContent ?? '').replace(/\s+/g, ' ').trim())));
+      if (labels.join('|') !== 'Приблизить|Отдалить|Всё небо|Вид') return fail(`в колонке: ${labels.join(', ')}`);
+      for (const b of await col.all()) {
+        const r = (await b.boundingBox())!;
+        if (r.width < 44 || r.height < 44) return fail(`кнопка ${r.width.toFixed(0)} × ${r.height.toFixed(0)}`);
+      }
+      const sky = (await p.locator('.sky').boundingBox())!;
+      const last = (await col.last().boundingBox())!;
+      if (last.x + last.width > sky.x + sky.width || last.y + last.height > sky.y + sky.height) return fail('колонка выходит за небо');
+      // тема и команды: без прокрутки, всё видно или в «Ещё»
+      const theme = (await p.locator('.top > .seg button').allInnerTexts()).map((t) => t.trim());
+      if (theme.join('|') !== 'Ночь|День' || !(await p.locator('.top > .seg button').last().isVisible())) return fail('тема недоступна');
+      const scroll = (await p.evaluate("(() => { const n = document.querySelector('.commands'); return n.scrollWidth - n.clientWidth; })()")) as number;
+      if (scroll > 0) return fail('ряд команд прокручивается');
+      // «Вид» — лист со слоями, масштабом и моделью
+      await col.last().tap();
+      await p.waitForTimeout(400);
+      const sheet = p.locator('.sheet', { has: p.locator('h2', { hasText: 'Вид' }) });
+      if (!(await sheet.count())) return fail('«Вид» не открыл лист');
+      const text = await sheet.innerText();
+      for (const w of ['только линии Мессии', 'ярусы эпох', 'по насыщенности', 'истинный', 'Хронология']) if (!text.includes(w)) return fail(`в листе нет «${w}»`);
+      await sheet.getByText('ярусы эпох', { exact: true }).tap();
+      await p.waitForTimeout(300);
+      if (!(await p.locator('.sky[data-tiers="on"]').count())) return fail('флажок в листе не включил ярусы');
+      await sheet.getByText('истинный', { exact: true }).tap();
+      await p.waitForTimeout(200);
+      if ((await sheet.locator('.seg button[aria-pressed="true"]').first().innerText()).trim() !== 'истинный') return fail('масштаб не переключился');
+      // лист у нижнего края, небо над ним видно
+      const sb = (await sheet.boundingBox())!;
+      if (sb.y < sky.y + 120) return fail(`лист закрывает небо: верх листа ${sb.y.toFixed(0)}`);
+      await sheet.locator('.close').tap();
+      await p.waitForTimeout(300);
+      if (await sheet.count()) return fail('«×» не закрыл лист');
+      // планшет 768 × 1024 с карточкой: небо уже 520 px — та же колонка; без карточки — блок
+      const tablet = await p.context().browser()!.newContext({ viewport: { width: 768, height: 1024 }, isMobile: true, hasTouch: true });
+      try {
+        const q = await tablet.newPage();
+        await q.addInitScript("localStorage.setItem('toledot:intro', 'true')");
+        const kind = async (hash: string) => {
+          await q.goto(p.url().replace(/#.*$/, hash));
+          await q.waitForTimeout(1500);
+          const w = (await q.locator('.sky').boundingBox())!.width;
+          return { w, column: (await q.locator('.skyctl.column').count()) > 0 };
+        };
+        const withCard = await kind('#/david');
+        if (!(withCard.w < 520 && withCard.column)) return fail(`планшет с карточкой: небо ${withCard.w.toFixed(0)} px, ${withCard.column ? 'колонка' : 'блок'}`);
+        const bare = await kind('#/');
+        if (bare.column) return fail(`планшет без карточки: небо ${bare.w.toFixed(0)} px, а органы — колонкой`);
+        return pass(`планшет: с карточкой небо ${withCard.w.toFixed(0)} px — колонка, без карточки ${bare.w.toFixed(0)} px — блок`);
+      } finally {
+        await tablet.close();
+      }
+    },
+  },
+  {
+    n: 23,
+    title: 'Образец #/specimen при выбранном лице: открывается, без ошибок консоли, восемь строк таблицы кеглей, обе темы рядом (B7)',
+    run: async (p) => {
+      const errs: string[] = [];
+      p.on('console', (m) => m.type() === 'error' && errs.push(m.text()));
+      await p.goto(p.url().replace(/#.*$/, '') + '#/david');
+      await p.waitForTimeout(800);
+      // переход по адресу при открытой карточке (прежде App сбрасывал выбор и возвращал «#/»)
+      await p.evaluate(() => (location.hash = '#/specimen'));
+      await p.waitForSelector('.spec-type tbody tr', { timeout: 5000 }).catch(() => null);
+      await p.waitForTimeout(1500);
+      if (!p.url().includes('#/specimen')) return fail(`адрес вернулся: ${p.url()}`);
+      const rows = await p.locator('.spec-type tbody tr').count();
+      if (errs.length) return fail(`ошибка консоли: ${errs[0]}`);
+      if (rows !== 8) return fail(`строк в таблице кеглей: ${rows}`);
+      const sky = (m: string) => p.locator(`.spec-map[data-map="${m}"]`).first().evaluate((el) => getComputedStyle(el).getPropertyValue('--sky').trim());
+      const [n, d] = [await sky('night'), await sky('day')];
+      return n && d && n !== d ? pass(`кеглей 8; небо ночью ${n}, днём ${d}`) : fail(`колонки тем без своих токенов: ${n} / ${d}`);
     },
   },
 ];
@@ -400,7 +589,8 @@ async function main() {
   try {
     for (const s of SCENARIOS) {
       if (only && s.n !== only) continue;
-      const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
+      const v = s.view ?? { width: 1440, height: 900 };
+      const ctx = await browser.newContext({ viewport: { width: v.width, height: v.height }, colorScheme: 'dark', isMobile: !!v.touch, hasTouch: !!v.touch, deviceScaleFactor: v.touch ? 2 : 1 });
       const page = await ctx.newPage();
       const errors: string[] = [];
       page.on('pageerror', (e) => errors.push(e.message));

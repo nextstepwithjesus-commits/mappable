@@ -6,6 +6,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { ROOT } from './bible.ts';
+import { contrast as ratio, linearRgb, CONTRAST_USES } from '../src/ui/contrast.ts';
 
 const css = readFileSync(join(ROOT, 'src/styles/tokens.css'), 'utf8');
 const block = (sel: string) => {
@@ -17,19 +18,7 @@ const block = (sel: string) => {
 };
 const themes = { night: block(":root[data-map='night']"), day: block(":root[data-map='day']") };
 
-const lin = (c: number) => {
-  const v = c / 255;
-  return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
-};
-const rgb = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
-const lum = (h: string) => {
-  const [r, g, b] = rgb(h).map(lin);
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-};
-const ratio = (a: string, b: string) => {
-  const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p);
-  return (x + 0.05) / (y + 0.05);
-};
+// формула контраста и перечень пар «токен — фон» — общие с образцом #/specimen (src/ui/contrast.ts)
 
 // матрицы Machado 2009 (тяжесть 1.0), в линейном RGB
 const CVD: Record<string, number[][]> = {
@@ -46,7 +35,7 @@ const toLab = (lr: number[]) => {
   return [116 * f(Y) - 16, 500 * (f(X) - f(Y)), 200 * (f(Y) - f(Z))];
 };
 const simulate = (h: string, m?: number[][]) => {
-  const l = rgb(h).map(lin);
+  const l = linearRgb(h);
   const s = m ? m.map((row) => Math.max(0, Math.min(1, row[0] * l[0] + row[1] * l[1] + row[2] * l[2]))) : l;
   return toLab(s);
 };
@@ -60,28 +49,7 @@ const check = (name: string, v: number, min: number) => {
 };
 for (const [t, c] of Object.entries(themes)) {
   console.log(`\n— тема ${t}`);
-  // текст: на небе, на листе и на поле наведения (--sheet-2 — фон команды под указателем и активной строки поиска)
-  for (const bg of ['--sky', '--sheet', '--sheet-2']) {
-    check(`текст --ink на ${bg}`, ratio(c['--ink'], c[bg]), 4.5);
-    check(`текст --ink-2 на ${bg}`, ratio(c['--ink-2'], c[bg]), 4.5);
-    check(`мелкие подписи --ink-3 на ${bg}`, ratio(c['--ink-3'], c[bg]), 4.5);
-  }
-  check('выбранный сегмент: --sky на --ink', ratio(c['--sky'], c['--ink']), 4.5);
-  for (const g of ['--gold-1', '--gold-2', '--azure-1', '--azure-2']) check(`лента ${g} на --sky`, ratio(c[g], c['--sky']), 3);
-  // плоскости (VIS-18): лист и панели отделены от неба светлотой, а не тенью; наведение заметно на листе
-  check('плоскость: --sheet к --sky', ratio(c['--sheet'], c['--sky']), 1.15);
-  check('наведение: --sheet-2 к --sheet', ratio(c['--sheet-2'], c['--sheet']), 1.1);
-  // графика, несущая смысл (WCAG 1.4.11, ≥ 3 : 1): черта нажатой команды и рамка флажка — --ink и --ink-2, кольцо фокуса — --focus
-  for (const bg of ['--sky', '--sheet', '--sheet-2']) {
-    check(`черта нажатой команды --ink на ${bg}`, ratio(c['--ink'], c[bg]), 3);
-    check(`рамка флажка --ink-2 на ${bg}`, ratio(c['--ink-2'], c[bg]), 3);
-    check(`кольцо фокуса --focus на ${bg}`, ratio(c['--focus'], c[bg]), 3);
-  }
-  // --rule-strong — структурная линия: край листа и панели, рамка группы сегментов, подчёркивание ссылки в покое.
-  // Сама по себе она смысла не несёт (лист отличается от неба светлотой, сегмент и ссылку называет их текст),
-  // поэтому порог 3 : 1 для графики к ней не относится; нужен порог заметности 2,2 : 1 к обеим плоскостям.
-  check('структурная линия --rule-strong на --sky', ratio(c['--rule-strong'], c['--sky']), 2.2);
-  check('структурная линия --rule-strong на --sheet', ratio(c['--rule-strong'], c['--sheet']), 2.2);
+  for (const u of CONTRAST_USES) check(u.what, ratio(c[u.fg], c[u.bg]), u.min);
   for (const [k, m] of [['обычное зрение', undefined], ...Object.entries(CVD)] as [string, number[][] | undefined][]) {
     const d = Math.min(dE(simulate(c['--gold-1'], m), simulate(c['--azure-1'], m)), dE(simulate(c['--gold-2'], m), simulate(c['--azure-2'], m)));
     check(`ленты различимы (${k}), ΔE`, d, 20);

@@ -1,0 +1,396 @@
+/* ---------- образец #/specimen (ТЗ § 5.7; B7, VIS-38) ----------
+   Вёрстка страницы образца. Вид органов управления, карточки и текста — их собственные правила (controls.css, folio.css):
+   образец их не повторяет. Наведение, нажатие и фокус без указателя и токены второй темы дают двойники правил,
+   выведенные при открытии образца (src/ui/specimen-css.ts): [data-pseudo~=…] и .spec-map[data-map=…]. */
+
+/* страница прокручивается целиком (у атласа body не прокручивается): снимок во всю высоту берёт всё */
+html:has(.specimen),
+html:has(.specimen) body {
+  height: auto;
+  overflow: visible;
+}
+.specimen {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 32px 32px 96px;
+}
+.specimen h1 {
+  margin: 0 0 8px;
+  font-size: var(--t-display);
+  line-height: var(--t-display-lh);
+  font-weight: 560;
+  font-variation-settings: 'opsz' 36;
+}
+.specimen h2 {
+  margin: 48px 0 8px;
+  font-size: var(--t-title);
+  line-height: var(--t-title-lh);
+  font-weight: 560;
+}
+.specimen h3 {
+  margin: 0 0 12px;
+  font-size: var(--t-lead);
+  line-height: var(--t-lead-lh);
+  font-weight: 560;
+}
+.specimen h4 {
+  margin: 20px 0 6px;
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+  font-weight: 500;
+  color: var(--ink);
+}
+.spec-lead {
+  max-width: 44rem;
+  margin: 0 0 16px;
+  font-size: var(--t-lead);
+  line-height: var(--t-lead-lh);
+  color: var(--ink-2);
+}
+.spec-note {
+  max-width: 44rem;
+  margin: 0 0 16px;
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+  color: var(--ink-2);
+}
+.spec-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
+}
+.spec-bar .seg {
+  margin: 0;
+}
+/* подпись под образцом и над рядом — Jost 12/16 */
+.spec-cap,
+.spec-use {
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  color: var(--ink-2);
+}
+.spec-use {
+  margin-top: 2px;
+}
+
+/* ---------- таблицы: без линейки под каждой строкой; группы отбиты воздухом ---------- */
+.spec-type,
+.spec-colors {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.spec-type th,
+.spec-colors thead th {
+  padding: 0 16px 8px 0;
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  font-weight: 400;
+  color: var(--ink-2);
+  text-align: left;
+  vertical-align: bottom;
+  border-bottom: 1px solid var(--rule-strong);
+}
+.spec-type td {
+  padding: 14px 16px 14px 0;
+  vertical-align: top;
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+}
+.spec-type {
+  max-width: 64rem;
+}
+.spec-type td:first-child {
+  width: 60%;
+}
+.spec-type th.num {
+  text-align: right;
+}
+.spec-type .num,
+.spec-colors .num {
+  text-align: right;
+}
+/* имя токена: два дефиса Jost стоят вплотную и читаются как тире — между знаками воздух */
+.spec-token {
+  font-variant-ligatures: none;
+  letter-spacing: 0.06em;
+}
+.spec-bg {
+  white-space: nowrap;
+}
+.spec-sample {
+  overflow-wrap: anywhere;
+}
+.spec-sample.t-display {
+  font-size: var(--t-display);
+  line-height: var(--t-display-lh);
+  font-weight: 560;
+  font-variation-settings: 'opsz' 36;
+}
+.spec-sample.t-title {
+  font-size: var(--t-title);
+  line-height: var(--t-title-lh);
+  font-weight: 560;
+}
+.spec-sample.t-lead {
+  font-size: var(--t-lead);
+  line-height: var(--t-lead-lh);
+}
+.spec-sample.t-body {
+  font-size: var(--t-body);
+  line-height: var(--t-body-lh);
+}
+.spec-sample.t-note {
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+}
+.spec-sample.t-ui {
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+}
+.spec-sample.t-ui-s {
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+}
+.spec-sample.t-display,
+.spec-sample.t-title,
+.spec-sample.t-lead,
+.spec-sample.t-body,
+.spec-sample.t-note {
+  font-family: var(--serif);
+}
+/* 11,5 — кегль только холста: строка нарисована функцией подписей неба */
+.spec-mapline {
+  display: block;
+  width: 100%;
+  height: 18px;
+}
+
+/* ---------- две темы рядом ---------- */
+.spec-themes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+.spec-map {
+  min-width: 0;
+  padding: 20px 24px 24px;
+  background: var(--sheet);
+  color: var(--ink);
+  border: 1px solid var(--rule-strong);
+}
+
+.spec-colors th[scope='rowgroup'] {
+  padding: 10px 12px 0 0;
+  font-weight: 400;
+  text-align: left;
+  vertical-align: top;
+}
+.spec-colors td {
+  padding: 10px 12px 0 0;
+  vertical-align: top;
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+}
+.spec-colors tbody tr + tr td {
+  padding-top: 2px;
+}
+.spec-tname {
+  white-space: nowrap;
+}
+.spec-tname,
+.spec-value {
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+}
+.spec-value {
+  color: var(--ink-2);
+}
+.spec-swatch {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin: 0 6px -2px 0;
+  background: var(--c);
+  border: 1px solid var(--rule-strong);
+}
+.spec-fail {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* ---------- органы × состояния ---------- */
+.spec-kind + .spec-kind h4 {
+  margin-top: 16px;
+}
+.spec-states {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 8px;
+}
+.spec-state {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 96px;
+}
+.spec-demo {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+}
+.spec-demo > .seg {
+  flex: 1;
+  margin: 0;
+}
+.spec-demo > .check {
+  margin-left: -7px;
+}
+.spec-demo > span[aria-hidden='true'] {
+  color: var(--ink-3);
+}
+/* выключенная группа полей — только носитель disabled, без рамки и полей */
+.spec-off {
+  flex: 1;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.spec-off .seg {
+  margin: 0;
+}
+
+/* ---------- знаки и линии ---------- */
+/* знаки стоят на полосе неба, как в атласе; холст знака залит тем же цветом неба */
+.spec-sky {
+  padding: 8px 12px 10px;
+  background: var(--sky);
+}
+.spec-sign {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 96px;
+  margin: 0;
+}
+.spec-glyph {
+  display: block;
+  width: 48px;
+  height: 40px;
+}
+/* величины 0–6 подписаны цифрой: узкие поля, весь ряд в одну строку и на телефоне */
+.spec-sign.spec-mag {
+  width: 40px;
+}
+.spec-mag .spec-glyph {
+  width: 40px;
+}
+.spec-ribbons {
+  display: block;
+  width: 100%;
+  height: 96px;
+}
+.spec-list {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+  color: var(--ink-2);
+}
+.spec-signs .spec-note {
+  margin: 0;
+}
+
+/* ---------- карточка ---------- */
+.spec-cards {
+  display: grid;
+  grid-template-columns: minmax(0, 32rem) var(--folio-w);
+  gap: 32px;
+  align-items: start;
+}
+.spec-cardside .seg {
+  margin-top: 0;
+}
+.spec-dl {
+  margin: 16px 0 0;
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+}
+.spec-dl dt {
+  font-weight: 600;
+}
+.spec-dl dd {
+  margin: 0 0 10px;
+  color: var(--ink-2);
+}
+/* карточка — лист атласа в своём поле, во всю высоту; на узком экране не нижний лист, а обычный блок */
+.spec-card .folio {
+  position: relative;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  border: 1px solid var(--rule-strong);
+  z-index: auto;
+  transition: none;
+}
+.spec-card .folio .grab {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .spec-themes,
+  .spec-cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .spec-card {
+    max-width: var(--folio-w);
+  }
+}
+@media (max-width: 720px) {
+  .specimen {
+    padding: 20px 16px 64px;
+  }
+  .spec-map {
+    padding: 16px;
+  }
+  .spec-type td:first-child {
+    width: auto;
+  }
+  .spec-states {
+    gap: 12px 6px;
+  }
+  .spec-state,
+  .spec-sign {
+    width: 104px;
+  }
+  .spec-sign.spec-mag {
+    width: 36px;
+  }
+  .spec-mag .spec-glyph {
+    width: 36px;
+  }
+  .spec-sky {
+    padding: 8px 8px 10px;
+  }
+  .spec-card {
+    max-width: none;
+  }
+}
+/* пробный элемент: браузер приводит значение токена к rgb() (Specimen.tsx, toHex) */
+.spec-probe {
+  color: var(--probe);
+}

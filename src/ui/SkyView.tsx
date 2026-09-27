@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { effect } from '@preact/signals';
 import { Sky, readPalette, type SkyState } from '../render/sky.ts';
-import { byId, graph, lines } from '../data/atlas.ts';
+import { byId, graph, modelInfo } from '../data/atlas.ts';
 import {
-  selected, second, first, hovered, focused, lambda, model, layers, onlyLines, meridian, panel, pickMode, theme, introDone, epochMode, lineFlip, pins,
+  selected, second, first, hovered, focused, lambda, model, modelId, layers, onlyLines, meridian, panel, pickMode, theme, introDone, epochMode, lineFlip, pins,
   kinPath, pickSecond,
 } from '../state.ts';
 import { skyRef, viewTick, plural } from './common.tsx';
@@ -12,6 +12,9 @@ import { isPeople } from './card/Masthead.tsx';
 import { affiliation, constellation } from './card/shared.tsx';
 import { drawTiers, tiersBottom } from '../render/tiers.ts';
 import { nameCase } from './text/ru.ts';
+import { num, typo, typoTree } from './text/typo.ts';
+import { Check, Close, Menu, Segmented } from './controls.tsx';
+import { Sheet } from './panels/Sheet.tsx';
 
 // путь родства хранится в состоянии; отсюда его берёт панель «Родство»
 export { kinPath };
@@ -68,12 +71,35 @@ function highlightFor(id: string | null, path: string[] | null): Map<string, 'se
 
 const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+/** «Всё небо» (C6; UX-05): перелёт к окну, в которое вписано всё небо (fitAll). Пределы и вписывание обеих осей — D2. */
+export function showAll() {
+  const s = skyRef.current;
+  if (!s || !s.model) return;
+  const from = s.cam.state();
+  s.fitAll();
+  const to = s.cam.state();
+  s.cam.set(from);
+  const w = s.cam.w / to.kx;
+  s.cam.flyTo(to.x0 + w / 2, to.laneTop - s.cam.h / 2 / s.cam.kyFor(to.kx), w, skyRef.redraw, reduced());
+  skyRef.redraw();
+}
+
+/**
+ * Уже этой ширины небо получает вместо блока органов колонку кнопок 44 × 44 и лист «Вид» (C6; MOB-05, MOB-25):
+ * телефон и планшет с открытой карточкой.
+ */
+export const COLUMN_BELOW = 520;
+/** Уже этой ширины вступительный картуш слева внизу встал бы под блок органов справа: картуш переходит в левый верхний угол. */
+const CARTOUCHE_BESIDE = 880;
+
 export function SkyView() {
   const wrap = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [tip, setTip] = useState<{ id: string; x: number; y: number } | null>(null);
   const [announce, setAnnounce] = useState('');
+  const [skyW, setSkyW] = useState(0);
   const shownPath = useRef('');
+  const column = skyW > 0 && skyW < COLUMN_BELOW;
 
   useEffect(() => {
     const canvas = canvasRef.current!;
@@ -196,6 +222,7 @@ export function SkyView() {
     const resize = () => {
       const r = wrap.current!.getBoundingClientRect();
       const first = sky.cam.w === 1000 && sky.cam.h === 700;
+      setSkyW(r.width);
       sky.resize(r.width, r.height, Math.min(2, window.devicePixelRatio || 1)); // выше 2× разница не видна, а заливка втрое дороже
       sky.setModel(model.value, shownLambda);
       if (first) sky.fitAll();
@@ -248,7 +275,7 @@ export function SkyView() {
       if (id) {
         introDone.value = true;
         const p = byId.get(id)!;
-        setAnnounce([`${p.name}${p.disambig ? `, ${p.disambig}` : ''}`, lifeText(id), placeText(id)].filter(Boolean).join('; '));
+        setAnnounce(typo([`${p.name}${p.disambig ? `, ${p.disambig}` : ''}`, lifeText(id), placeText(id)].filter(Boolean).join('; ')));
       }
       request();
     });
@@ -491,6 +518,11 @@ export function SkyView() {
     skyRef.redraw();
   };
 
+  // лист «Вид» — только у колонки: если небо стало шире (поворот, закрытая карточка), лист закрывается, органы снова в блоке
+  useEffect(() => {
+    if (!column && panel.value === 'view') panel.value = null;
+  }, [column]);
+
   const tipPerson = tip ? byId.get(tip.id) : null;
   const visibleForSR = (() => {
     void viewTick.value;
@@ -512,46 +544,51 @@ export function SkyView() {
   })();
 
   return (
-    <div class="sky" ref={wrap}>
-      <canvas
-        ref={canvasRef}
-        tabIndex={0}
-        onKeyDown={onKey}
-        aria-label="Звёздная карта родословий. Стрелки — сдвиг, плюс и минус — масштаб, квадратные скобки — к родителю и к ребёнку."
-        class={pickMode.value ? 'picking' : ''}
-      />
-      {pickMode.value && selected.value && <PickBar mode={pickMode.value} id={selected.value} />}
-      {tipPerson && tip && (
-        <div class="tip" style={{ left: `${Math.min(tip.x + 14, (skyRef.current?.cam.w ?? 800) - 330)}px`, top: `${tip.y + 16}px` }}>
-          <b>{tipPerson.name}</b>
-          {tipPerson.disambig && <span class="ds">, {tipPerson.disambig}</span>}
-          <div class="yr">{lifeText(tipPerson.id)}</div>
-          <div class="ds">{placeText(tipPerson.id)}</div>
+    <>
+      {/* data-tiers — включены ли ярусы эпох: для проверок приёмки (tools/accept.ts) */}
+      <div class="sky" ref={wrap} data-tiers={epochMode.value ? 'on' : undefined}>
+        <canvas
+          ref={canvasRef}
+          tabIndex={0}
+          onKeyDown={onKey}
+          aria-label="Звёздная карта родословий. Стрелки — сдвиг, плюс и минус — масштаб, квадратные скобки — к родителю и к ребёнку."
+          class={pickMode.value ? 'picking' : ''}
+        />
+        {pickMode.value && selected.value && <PickBar mode={pickMode.value} id={selected.value} />}
+        {tipPerson && tip && (
+          <div class="tip" style={{ left: `${Math.min(tip.x + 14, (skyRef.current?.cam.w ?? 800) - 330)}px`, top: `${tip.y + 16}px` }}>
+            <b>{tipPerson.name}</b>
+            {tipPerson.disambig && <span class="ds">, {tipPerson.disambig}</span>}
+            <div class="yr">{lifeText(tipPerson.id)}</div>
+            <div class="ds">{placeText(tipPerson.id)}</div>
+          </div>
+        )}
+        {/* до первого замера ширина неба неизвестна: органы появляются сразу в своём виде, без мелькания блока на телефоне */}
+        {skyW > 0 && (column ? <SkyColumn /> : <SkyControls />)}
+        {!introDone.value && <Cartouche high={!column && skyW < CARTOUCHE_BESIDE} />}
+        <ul class="visually-hidden" aria-label="Видимые на карте ключевые лица">
+          {visibleForSR.map((id) => (
+            <li key={id}>
+              <button
+                onClick={() => {
+                  if (!pickSecond(id)) selected.value = id;
+                }}
+                onFocus={() => (focused.value = id)}
+                onBlur={() => {
+                  if (focused.value === id) focused.value = null;
+                }}
+              >
+                {byId.get(id)!.name}
+              </button>
+            </li>
+          ))}
+        </ul>
+        <div class="visually-hidden" aria-live="polite">
+          {announce}
         </div>
-      )}
-      <SkyControls />
-      {!introDone.value && <Cartouche />}
-      <ul class="visually-hidden" aria-label="Видимые на карте ключевые лица">
-        {visibleForSR.map((id) => (
-          <li key={id}>
-            <button
-              onClick={() => {
-                if (!pickSecond(id)) selected.value = id;
-              }}
-              onFocus={() => (focused.value = id)}
-              onBlur={() => {
-                if (focused.value === id) focused.value = null;
-              }}
-            >
-              {byId.get(id)!.name}
-            </button>
-          </li>
-        ))}
-      </ul>
-      <div class="visually-hidden" aria-live="polite">
-        {announce}
       </div>
-    </div>
+      {column && panel.value === 'view' && <ViewSheet />}
+    </>
   );
 }
 
@@ -573,46 +610,144 @@ export function pickBarText(mode: 'kinship' | 'spread', id: string): string {
 function PickBar({ mode, id }: { mode: 'kinship' | 'spread'; id: string }) {
   return (
     <div class="pickbar" role="status">
-      <span>{pickBarText(mode, id)}</span>
+      {/* неразрывные пробелы — при показе: сама строка проверяется тестами как текст (tests/shell.test.ts) */}
+      <span>{typo(pickBarText(mode, id))}</span>
       <button onClick={() => (pickMode.value = null)}>Отменить</button>
     </div>
   );
 }
 
-function SkyControls() {
-  const zoom = (f: number) => {
-    const s = skyRef.current;
-    if (!s) return;
-    s.cam.zoomAt(s.cam.w / 2, s.cam.h / 2, f);
-    skyRef.redraw();
-  };
+/** Приблизить или отдалить у середины неба. */
+function zoomBy(f: number) {
+  const s = skyRef.current;
+  if (!s) return;
+  s.cam.zoomAt(s.cam.w / 2, s.cam.h / 2, f);
+  skyRef.redraw();
+}
+
+const SCALES = [
+  { value: 1, label: 'по насыщенности' },
+  { value: 0, label: 'истинный' },
+] as const;
+
+const toggleEpochsPanel = () => (panel.value = panel.value === 'epochs' ? null : 'epochs');
+
+/** Флажки слоёв неба: линии Мессии и ярусы эпох. */
+function LayerChecks() {
   return (
-    <div class="skyctl">
-      <button aria-pressed={onlyLines.value} onClick={() => (onlyLines.value = !onlyLines.value)}>
+    <>
+      <Check checked={onlyLines.value} onChange={(v) => (onlyLines.value = v)}>
         только линии Мессии
-      </button>
-      <span class="scale">
-        масштаб:{' '}
-        <button aria-pressed={lambda.value === 1} onClick={() => (lambda.value = 1)}>
-          по насыщенности
-        </button>{' '}
-        <button aria-pressed={lambda.value === 0} onClick={() => (lambda.value = 0)}>
-          истинный
-        </button>
-      </span>
-      <span class="zoom">
-        <button aria-label="Приблизить" onClick={() => zoom(1.6)}>
-          +
-        </button>
-        <button aria-label="Отдалить" onClick={() => zoom(1 / 1.6)}>
+      </Check>
+      <Check checked={epochMode.value} onChange={(v) => (epochMode.value = v)}>
+        ярусы эпох
+      </Check>
+    </>
+  );
+}
+
+function ScaleSwitch() {
+  return <Segmented label="Масштаб времени" options={SCALES} value={lambda.value === 0 ? 0 : 1} onChange={(v) => (lambda.value = v)} />;
+}
+
+/** Модель хронологии: список моделей с пояснениями из данных (modelInfo); тот же выбор — в «О карте». */
+function ModelMenu() {
+  const cur = modelInfo.find((m) => m.id === modelId.value) ?? modelInfo[0];
+  return (
+    <Menu
+      class="model"
+      label={cur?.name ?? ''}
+      title="Модель хронологии"
+      radio
+      items={modelInfo.map((m) => ({ key: m.id, label: m.name, note: typo(m.description), checked: m.id === modelId.value, onSelect: () => (modelId.value = m.id) }))}
+    />
+  );
+}
+
+/**
+ * Органы неба (C6; VIS-21, VIS-22, IX-36, IX-37, UX-05): непрозрачный лист с рамкой в правом нижнем углу неба,
+ * над полосой времени. Слои, масштаб времени, модель хронологии, масштаб неба и «Всё небо»; «Эпохи» — панель
+ * с основаниями эпох (прежде её открывала команда «Эпохи» верхней строки).
+ */
+function SkyControls() {
+  return (
+    <div class="skyctl" role="group" aria-label="Вид неба">
+      <div class="layers">
+        <LayerChecks />
+      </div>
+      <div class="zoom">
+        <button type="button" aria-label="Отдалить" title="Отдалить (−)" onClick={() => zoomBy(1 / 1.6)}>
           −
         </button>
+        <button type="button" aria-label="Приблизить" title="Приблизить (+)" onClick={() => zoomBy(1.6)}>
+          +
+        </button>
+        <button type="button" onClick={showAll}>
+          Всё небо
+        </button>
+      </div>
+      <span class="lbl scale-lbl" aria-hidden="true">
+        Масштаб времени
       </span>
+      <ScaleSwitch />
+      <span class="lbl chrono-lbl" aria-hidden="true">
+        Хронология
+      </span>
+      <div class="chrono">
+        <ModelMenu />
+        <button type="button" class="cmd" aria-pressed={panel.value === 'epochs'} title="Эпохи и их основания" onClick={toggleEpochsPanel}>
+          Эпохи
+        </button>
+      </div>
     </div>
   );
 }
 
-function Cartouche() {
+/** Узкое небо (телефон; планшет с карточкой): колонка кнопок 44 × 44 у правого края, остальное — в листе «Вид» (MOB-05, MOB-25). */
+function SkyColumn() {
+  return (
+    <div class="skyctl column" role="group" aria-label="Вид неба">
+      <button type="button" aria-label="Приблизить" title="Приблизить (+)" onClick={() => zoomBy(1.6)}>
+        +
+      </button>
+      <button type="button" aria-label="Отдалить" title="Отдалить (−)" onClick={() => zoomBy(1 / 1.6)}>
+        −
+      </button>
+      <button type="button" class="all" onClick={showAll}>
+        Всё небо
+      </button>
+      <button type="button" aria-pressed={panel.value === 'view'} onClick={() => (panel.value = panel.value === 'view' ? null : 'view')}>
+        Вид
+      </button>
+    </div>
+  );
+}
+
+/** Лист «Вид» на узком небе: слои, масштаб времени и модель хронологии с пояснением (MOB-05). */
+function ViewSheet() {
+  const cur = modelInfo.find((m) => m.id === modelId.value);
+  return (
+    <Sheet title="Вид">
+      <div class="viewctl">
+        <div class="checks">
+          <LayerChecks />
+        </div>
+        <h3>Масштаб времени</h3>
+        <ScaleSwitch />
+        <h3>Хронология</h3>
+        <Segmented label="Модель хронологии" options={modelInfo.map((m) => ({ value: m.id, label: m.name }))} value={modelId.value} onChange={(v) => (modelId.value = v)} />
+        {cur && <p class="muted">{cur.description}</p>}
+        <div class="cmds">
+          <button type="button" class="cmd" onClick={() => (panel.value = 'epochs')}>
+            Эпохи и их основания
+          </button>
+        </div>
+      </div>
+    </Sheet>
+  );
+}
+
+function Cartouche({ high }: { high: boolean }) {
   const count = byId.size;
   const go = (id: string) => {
     introDone.value = true;
@@ -622,26 +757,28 @@ function Cartouche() {
   const entries = ['adam', 'noy', 'avraam', 'moisey', 'david', 'iisus'].filter((id) => byId.has(id));
   const m = model.value;
   return (
-    <div class="cartouche" role="note">
-      <button class="close" onClick={() => (introDone.value = true)}>
-        свернуть
-      </button>
-      <h1>Толедот</h1>
-      <p class="sub">Звёздный атлас библейских родословий</p>
-      <p class="long">
-        {count} {plural(count, 'лицо', 'лица', 'лиц')} канонического Писания. Каждая звезда — человек; по горизонтали — время его жизни, яркость — место в
-        повествовании. Созвездия — роды, колена и народы.
-      </p>
-      <p>
-        <span class="swatch gold" />
-        линия Иосифа (Мф 1)
-        <br />
-        <span class="swatch azure" />
-        линия по Луке, традиционно — Марии (Лк 3)
-      </p>
-      <p class="muted long">
-        Колесо или щипок — масштаб, перетаскивание — сдвиг, щелчок по звезде — карточка. Хронологических напряжений: {m.tensions.length}.
-      </p>
+    <div class={high ? 'cartouche high' : 'cartouche'} role="note">
+      <Close label="Свернуть вступление" onClick={() => (introDone.value = true)} />
+      {typoTree(
+        <>
+          <h1>Толедот</h1>
+          <p class="sub">Звёздный атлас библейских родословий</p>
+          <p class="long">
+            {num(count)} {plural(count, 'лицо', 'лица', 'лиц')} канонического Писания. Каждая звезда — человек; по горизонтали — время его жизни, яркость — место в
+            повествовании. Созвездия — роды, колена и народы.
+          </p>
+          <p>
+            <span class="swatch gold" />
+            линия Иосифа (Мф 1)
+            <br />
+            <span class="swatch azure" />
+            линия по Луке, традиционно — Марии (Лк 3)
+          </p>
+          <p class="muted long">
+            Колесо или щипок — масштаб, перетаскивание — сдвиг, щелчок по звезде — карточка. Хронологических напряжений: {m.tensions.length}.
+          </p>
+        </>,
+      )}
       <div class="entry">
         {entries.map((id) => (
           <button key={id} onClick={() => go(id)}>
@@ -649,7 +786,6 @@ function Cartouche() {
           </button>
         ))}
       </div>
-      <p style={{ display: 'none' }}>{lines.joseph.name}</p>
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { models, byId, graph, loadModel } from './data/atlas.ts';
 import { relate } from './engine/kinship.ts';
 
 export type Theme = 'night' | 'day';
-export type Panel = null | 'epochs' | 'index' | 'kinship' | 'synopsis' | 'legend' | 'about' | 'section' | 'chapter' | 'spread';
+export type Panel = null | 'epochs' | 'index' | 'kinship' | 'synopsis' | 'legend' | 'about' | 'section' | 'chapter' | 'spread' | 'view';
 
 const load = <T,>(k: string, d: T): T => {
   try {

@@ -51,14 +51,15 @@ async function main() {
     await shot('03-lines', 1440, 900, theme, async (p) => {
       await p.click('text=только линии Мессии');
     });
+    // «Эпохи» — в органах неба (C6): флажок ярусов и команда панели
     await shot('04-epochs', 1440, 900, theme, async (p) => {
       await select(p, 'Авраам');
-      await p.click('.commands >> text=Эпохи');
+      await p.locator('.skyctl').getByText('ярусы эпох', { exact: true }).click();
+      await p.locator('.skyctl').getByText('Эпохи', { exact: true }).click();
     });
     await shot('07-tiers', 1440, 900, theme, async (p) => {
       await select(p, 'Авраам');
-      await p.click('.commands >> text=Эпохи');
-      await p.click('.sheet .close');
+      await p.locator('.skyctl').getByText('ярусы эпох', { exact: true }).click();
     });
     await shot('08-spread', 1440, 900, theme, async (p) => {
       await select(p, 'Авраам');

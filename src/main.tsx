@@ -12,6 +12,7 @@ import './styles/strip.css';
 import './styles/panels.css';
 import './styles/phone.css';
 import './styles/spread.css';
+import './styles/specimen.css';
 import { App } from './ui/App.tsx';
 import { Specimen } from './ui/Specimen.tsx';
 

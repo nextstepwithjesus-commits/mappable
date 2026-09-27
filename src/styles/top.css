@@ -10,42 +10,52 @@
     'sky folio'
     'strip strip';
 }
+/* три группы: название и поиск | панели (и «Ещё») | черта, справка, тема */
 .top {
   grid-area: top;
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 0 18px 0 22px;
+  padding: 0 16px 0 14px;
   border-bottom: 1px solid var(--rule);
   background: var(--sky);
   min-width: 0;
 }
+/* название — команда «Всё небо»: поле как у команды, наведение — фон листа */
 .wordmark {
+  flex: none;
+  display: inline-flex;
+  align-items: baseline;
+  padding: 3px 6px 4px;
   font-family: var(--serif);
   font-weight: 600;
   font-size: var(--t-lead);
+  line-height: var(--t-lead-lh);
   letter-spacing: 0.01em;
-  line-height: var(--top-h);
   white-space: nowrap;
+}
+.wordmark:hover {
+  background: var(--sheet-2);
+}
+.wordmark:active {
+  background: var(--rule);
+}
+.wordmark:focus-visible {
+  outline-offset: -2px;
 }
 .wordmark small {
   font-weight: 400;
   font-style: italic;
   font-size: var(--t-note);
+  line-height: var(--t-note-lh);
   color: var(--ink-2);
-  margin-left: 8px;
+  margin-left: 10px;
 }
-/* строка команд прокручивается вбок; кольцо фокуса у команд — внутри поля (controls.css), край ряда его не режет */
-.commands {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  min-width: 0;
-}
+/* поиск — сразу после названия, 280–320 px вместе с подписью «Найти:» */
 .top .search {
-  margin-left: auto;
+  flex: none;
+  width: clamp(280px, 22vw, 320px);
+  margin-left: 18px;
   position: relative;
   display: flex;
   align-items: baseline;
@@ -56,11 +66,63 @@
   color: var(--ink-2);
 }
 .top .search input {
-  width: 210px;
+  flex: 1;
+  width: auto;
 }
+/* панели — справа; ширина ряда не зависит от содержимого: что не помещается, уходит в «Ещё» (App.tsx, overflowCommands) */
+.commands {
+  flex: 1 1 0;
+  min-width: 0;
+  margin-left: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+}
+/* вертикальная черта перед справкой и темой */
+.commands .sep {
+  flex: none;
+  width: 1px;
+  height: 24px;
+  margin: 0 10px;
+  background: var(--rule-strong);
+}
+/* тема — сегменты «Ночь | День» в конце строки */
+.top > .seg {
+  flex: none;
+  flex-wrap: nowrap;
+  margin: 0 0 0 8px;
+}
+.top > .seg::after {
+  content: none;
+}
+/* образцы команд для замера: вне потока и невидимы */
+.top .probe {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.top .probe > * {
+  flex: none;
+}
+/* образец подзаголовка — со своим отступом от названия */
+.top .probe .sub {
+  padding-left: 10px;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+}
+/* подсказки — под полем, от его левого края */
 .results {
   position: absolute;
-  right: 0;
+  left: 0;
   top: calc(100% + 8px);
   width: 460px;
   max-height: min(70vh, 560px);
@@ -109,6 +171,8 @@
   grid-column: 1;
 }
 .result canvas {
+  width: 120px;
+  height: 12px;
   grid-row: 1 / span 2;
   grid-column: 2;
   align-self: center;
@@ -137,4 +201,9 @@
 }
 .results .all:focus-visible {
   outline-offset: -2px;
+}
+/* «Ещё» раскрывается вниз, к правому краю кнопки: список не выходит за край окна */
+.top .more [role='menu'] {
+  right: 0;
+  top: calc(100% + 8px);
 }

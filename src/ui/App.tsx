@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { effect } from '@preact/signals';
 import { SkyView } from './SkyView.tsx';
 import { Folio } from './Folio.tsx';
@@ -6,15 +6,19 @@ import { TimeStrip } from './TimeStrip.tsx';
 import { Panels } from './Panels.tsx';
 import { byId, persons } from '../data/atlas.ts';
 import { SearchIndex } from '../engine/search.ts';
-import { panel, selected, theme, epochMode, readHash, writeHash, second, pickMode, model, pins, pickSecond, clearPair, type Panel } from '../state.ts';
+import { panel, selected, theme, readHash, writeHash, second, pickMode, model, pins, pickSecond, clearPair, type Panel } from '../state.ts';
 import { skyRef, drawMicroAxis, refLabel } from './common.tsx';
-import { lifeText } from './SkyView.tsx';
+import { lifeText, showAll } from './SkyView.tsx';
+import { Menu, Segmented } from './controls.tsx';
+import { typo } from './text/typo.ts';
 
 export function App() {
   useEffect(() => {
     // адрес → состояние
     const apply = () => {
       const h = readHash();
+      // переход на образец: выбор не сбрасывать, иначе writeHash вернёт адрес «#/» раньше, чем main.tsx сменит маршрут
+      if (h.route === 'specimen') return;
       if (h.id && h.id !== selected.value) {
         selected.value = h.id;
         setTimeout(() => skyRef.flyTo(h.id!), 50);
@@ -68,44 +72,130 @@ function isTextField(t: EventTarget | null): boolean {
   return t instanceof HTMLInputElement && !['checkbox', 'radio', 'button', 'submit', 'reset', 'range', 'color', 'file'].includes(t.type);
 }
 
-const COMMANDS: { id: Exclude<Panel, null> | 'epochMode'; label: string }[] = [
-  { id: 'epochMode', label: 'Эпохи' },
+/** Панели атласа — средняя группа верхней строки (C3; VIS-20). «Эпохи» — флажок и команда органов неба (C6). */
+const PANELS: { id: Exclude<Panel, null>; label: string }[] = [
   { id: 'index', label: 'Указатель' },
-  { id: 'kinship', label: 'Родство' },
-  { id: 'synopsis', label: 'Синопсис' },
   { id: 'chapter', label: 'Главы' },
+  { id: 'synopsis', label: 'Синопсис' },
+  { id: 'kinship', label: 'Родство' },
   { id: 'section', label: 'Сквозной раздел' },
+];
+/** Справка — после вертикальной черты, рядом с темой. */
+const HELP: { id: Exclude<Panel, null>; label: string }[] = [
   { id: 'legend', label: 'Условные знаки' },
   { id: 'about', label: 'О карте' },
 ];
+/**
+ * В каком порядке команды уходят в «Ещё», когда строке не хватает места: сначала панели с конца ряда,
+ * затем справка, последним — «Указатель». Видимые команды остаются в своих группах и на своих местах.
+ */
+const COLLAPSE: Exclude<Panel, null>[] = ['section', 'kinship', 'synopsis', 'chapter', 'about', 'legend', 'index'];
+const SUBTITLE = 'звёздный атлас библейских родословий';
+const THEMES = [
+  { value: 'night', label: 'Ночь' },
+  { value: 'day', label: 'День' },
+] as const;
 
+/**
+ * Какие команды не помещаются в ряд шириной avail (C3; VIS-20, IX-46, MOB-04): ряд — видимые панели, «Ещё» (если что-то
+ * ушло в него), черта и видимая справка; gap — промежуток между соседями ряда. Ширины команд — по образцам (probe).
+ */
+export function overflowCommands(avail: number, width: (id: string) => number, gap: number, sep: number, more: number): Set<string> {
+  const hidden = new Set<string>();
+  const need = () => {
+    const shown = [...PANELS, ...HELP].filter((c) => !hidden.has(c.id));
+    const n = shown.length + 1 + (hidden.size ? 1 : 0);
+    return shown.reduce((a, c) => a + width(c.id), 0) + sep + (hidden.size ? more : 0) + gap * (n - 1);
+  };
+  for (const id of COLLAPSE) {
+    if (need() <= avail) break;
+    hidden.add(id);
+  }
+  return hidden;
+}
+
+const togglePanel = (id: Exclude<Panel, null>) => (panel.value = panel.value === id ? null : id);
+
+/**
+ * Верхняя строка из трёх групп (C3; VIS-20, UX-20, IX-46, MOB-04): название и поиск; панели; после черты — справка и тема.
+ * Если места не хватает, сначала уходит подзаголовок названия, затем лишние команды — в меню «Ещё»:
+ * строка никогда не прокручивается вбок.
+ */
 function TopBar() {
+  const nav = useRef<HTMLElement>(null);
+  const probe = useRef<HTMLDivElement>(null);
+  const subRef = useRef<HTMLElement>(null);
+  const [hidden, setHidden] = useState<Set<string>>(() => new Set());
+  const [sub, setSub] = useState(true);
+  useLayoutEffect(() => {
+    const fit = () => {
+      const n = nav.current;
+      const pr = probe.current;
+      if (!n || !pr) return;
+      const w = new Map([...pr.children].map((el) => [(el as HTMLElement).dataset.id!, el.getBoundingClientRect().width]));
+      const cs = getComputedStyle(n);
+      const sep = n.querySelector<HTMLElement>('.sep');
+      const sepW = sep ? sep.getBoundingClientRect().width + parseFloat(getComputedStyle(sep).marginLeft) + parseFloat(getComputedStyle(sep).marginRight) : 0;
+      // запас в 1 px: дробные ширины не должны вытолкнуть последнюю команду за край
+      const over = (avail: number) => overflowCommands(avail - 1, (id) => w.get(id) ?? 0, parseFloat(cs.columnGap) || 0, sepW, w.get('more') ?? 0);
+      // ширина ряда без подзаголовка (на телефоне подзаголовка нет, и ряд команд — отдельной строкой)
+      const s = subRef.current;
+      const base = n.clientWidth + (s ? s.getBoundingClientRect().width + parseFloat(getComputedStyle(s).marginLeft) : 0);
+      const withSub = over(base - (w.get('sub') ?? 0));
+      const keepSub = withSub.size === 0;
+      const next = keepSub ? withSub : over(base);
+      setSub(keepSub);
+      setHidden((prev) => (prev.size === next.size && [...next].every((x) => prev.has(x)) ? prev : next));
+    };
+    const ro = new ResizeObserver(fit);
+    ro.observe(nav.current!);
+    ro.observe(probe.current!);
+    fit();
+    return () => ro.disconnect();
+  }, []);
+
+  const button = (c: { id: Exclude<Panel, null>; label: string }) => (
+    <button key={c.id} aria-pressed={panel.value === c.id} onClick={() => togglePanel(c.id)}>
+      {c.label}
+    </button>
+  );
+  const moreItems = [...PANELS, ...HELP]
+    .filter((c) => hidden.has(c.id))
+    .map((c, i, all) => ({
+      key: c.id,
+      label: c.label,
+      checked: panel.value === c.id,
+      // справка отделена от панелей чертой, как в самой строке
+      sep: i > 0 && HELP.some((h) => h.id === c.id) && !HELP.some((h) => h.id === all[i - 1].id),
+      onSelect: () => togglePanel(c.id),
+    }));
   return (
     <header class="top">
-      <div class="wordmark">
-        Толедот<small>звёздный атлас библейских родословий</small>
-      </div>
-      <nav class="commands" aria-label="Разделы атласа">
-        {COMMANDS.map((c) => {
-          const pressed = c.id === 'epochMode' ? epochMode.value : panel.value === c.id;
-          return (
-            <button
-              key={c.id}
-              aria-pressed={pressed}
-              onClick={() => {
-                if (c.id === 'epochMode') {
-                  epochMode.value = !epochMode.value;
-                  panel.value = epochMode.value ? 'epochs' : panel.value === 'epochs' ? null : panel.value;
-                } else panel.value = panel.value === c.id ? null : c.id;
-              }}
-            >
-              {c.label}
-            </button>
-          );
-        })}
-        <button onClick={() => (theme.value = theme.value === 'night' ? 'day' : 'night')}>{theme.value === 'night' ? 'Дневная' : 'Ночная'}</button>
-      </nav>
+      <button class="wordmark" title="Всё небо" onClick={showAll}>
+        Толедот{sub && <small ref={subRef}>{SUBTITLE}</small>}
+      </button>
       <Search />
+      <nav class="commands" ref={nav} aria-label="Панели атласа">
+        {PANELS.filter((c) => !hidden.has(c.id)).map(button)}
+        {moreItems.length > 0 && <Menu class="more" label="Ещё" title="Другие панели и справка" items={moreItems} />}
+        <span class="sep" aria-hidden="true" />
+        {HELP.filter((c) => !hidden.has(c.id)).map(button)}
+      </nav>
+      <Segmented label="Тема" options={THEMES} value={theme.value} onChange={(v) => (theme.value = v)} />
+      {/* образцы команд для замера ширины: невидимы, вне дерева доступности и вне порядка Tab */}
+      <div class="probe" ref={probe} aria-hidden="true">
+        {[...PANELS, ...HELP].map((c) => (
+          <span key={c.id} class="cmd" data-id={c.id}>
+            {c.label}
+          </span>
+        ))}
+        <span class="cmd more-probe" data-id="more">
+          Ещё
+        </span>
+        <span class="sub" data-id="sub">
+          {SUBTITLE}
+        </span>
+      </div>
     </header>
   );
 }
@@ -228,10 +318,8 @@ function ResultRow({ id, active, onChoose }: { id: string; active: boolean; onCh
   return (
     <button class="result" role="option" aria-selected={active} onMouseDown={(e) => e.preventDefault()} onClick={() => onChoose(id)}>
       <span class="nm">{p.name}</span>
-      <canvas ref={ref} width={120} height={12} style={{ width: '120px', height: '12px' }} aria-hidden="true" />
-      <span class="ds">
-        {p.disambig || '—'}; {lifeText(id)}
-      </span>
+      <canvas ref={ref} width={120} height={12} aria-hidden="true" />
+      <span class="ds">{typo([p.disambig, lifeText(id)].filter(Boolean).join('; '))}</span>
     </button>
   );
 }

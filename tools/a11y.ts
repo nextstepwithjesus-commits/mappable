@@ -19,7 +19,7 @@ const DIST = opt('dist');
 const PORT = Number(opt('port') ?? 4187);
 const axeSource = readFileSync(join(ROOT, 'node_modules/axe-core/axe.min.js'), 'utf8');
 
-type Screen = { name: string; hash: string; act?: (p: Page) => Promise<void> };
+type Screen = { name: string; hash: string; act?: (p: Page) => Promise<void>; view?: { width: number; height: number; touch?: boolean } };
 const SCREENS: Screen[] = [
   { name: 'небо', hash: '#/' },
   { name: 'карточка Давида', hash: '#/david' },
@@ -29,13 +29,27 @@ const SCREENS: Screen[] = [
     await p.waitForTimeout(250);
     await p.keyboard.press('Enter');
   } },
-  ...['Указатель', 'Родство', 'Синопсис', 'Главы', 'Сквозной раздел', 'Условные знаки', 'О карте', 'Эпохи'].map((cmd) => ({
+  ...['Указатель', 'Родство', 'Синопсис', 'Главы', 'Сквозной раздел', 'Условные знаки', 'О карте'].map((cmd) => ({
     name: `панель «${cmd}»`,
     hash: '#/david',
     act: async (p: Page) => {
       await p.locator('.commands').getByText(cmd, { exact: true }).click();
     },
   })),
+  // «Эпохи» — в органах неба (C6): флажок ярусов и команда панели
+  { name: 'панель «Эпохи» и ярусы', hash: '#/david', act: async (p) => {
+    await p.locator('.skyctl').getByText('ярусы эпох', { exact: true }).click();
+    await p.locator('.skyctl').getByText('Эпохи', { exact: true }).click();
+  } },
+  { name: 'список моделей хронологии', hash: '#/', act: async (p) => {
+    await p.click('.skyctl .menu.model > button');
+  } },
+  { name: '«Ещё» на 1024', hash: '#/', view: { width: 1024, height: 768 }, act: async (p) => {
+    await p.click('.commands .more > button');
+  } },
+  { name: 'телефон: лист «Вид»', hash: '#/david', view: { width: 390, height: 844, touch: true }, act: async (p) => {
+    await p.locator('.skyctl.column button', { hasText: 'Вид' }).tap();
+  } },
   { name: 'образец', hash: '#/specimen' },
 ];
 
@@ -50,7 +64,8 @@ async function main() {
   try {
     for (const theme of ['night', 'day']) {
       for (const s of SCREENS) {
-        const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+        const v = s.view ?? { width: 1440, height: 900 };
+        const ctx = await browser.newContext({ viewport: { width: v.width, height: v.height }, isMobile: !!v.touch, hasTouch: !!v.touch });
         const p = await ctx.newPage();
         await p.addInitScript(`localStorage.setItem('toledot:intro','true');localStorage.setItem('toledot:theme', JSON.stringify('${theme}'))`);
         await p.goto(`http://localhost:${PORT}/${s.hash}`);
