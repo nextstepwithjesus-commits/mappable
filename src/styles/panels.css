@@ -663,6 +663,30 @@ button.row:focus-visible {
     color: var(--ink-2);
   }
 }
+/* эпохи (G8): сводная таблица сверху; эпоха выбранного лица — полужирным */
+.sheet table.epochs td.yrs {
+  white-space: nowrap;
+}
+/* основание — строкой под эпохой, без черты между ними */
+.sheet table.epochs tr:not(.basis) > * {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.sheet table.epochs tr.basis td {
+  padding-top: 2px;
+  color: var(--ink-2);
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+}
+.sheet table.epochs tr.here th,
+.epoch.here h3 {
+  font-weight: 600;
+}
+.sheet table.epochs th a {
+  color: inherit;
+  text-decoration: underline 1px var(--rule-strong);
+  text-underline-offset: 3px;
+}
 /* эпохи: строки под названием эпохи */
 .epoch h3 {
   margin-bottom: 2px;
