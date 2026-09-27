@@ -4,7 +4,7 @@
  * клавиши неба (src/ui/sky/input.ts, skyKeys) — без фокуса на холсте (D10; IX-38, 40, 41, 42; UX-40).
  */
 import { panel, selected, second, pickMode, pins, pinsQuery, skyGroup, clearPair } from '../state.ts';
-import { skyKeys } from './sky/input.ts';
+import { skyKeys } from './sky/skykeys.ts';
 import { openLegend, reduced } from './sky/view.ts';
 
 /** «?» — таблица клавиш в «Условных знаках» (раздел «Клавиши»); повторное нажатие закрывает панель. */

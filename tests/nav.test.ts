@@ -5,7 +5,8 @@
  */
 import { describe, it, expect } from 'vitest';
 import { byId } from '../src/data/atlas.ts';
-import { classifyWheel, wheelNotches, wheelPixels, isClick, childFor, CLICK_SLOP, type WheelSample } from '../src/ui/sky/input.ts';
+import { classifyWheel, wheelNotches, wheelPixels, isClick, CLICK_SLOP, type WheelSample } from '../src/ui/sky/input.ts';
+import { childFor } from '../src/ui/sky/skykeys.ts';
 import { parseAddress, formatAddress, nearIds } from '../src/ui/address.ts';
 import { sliderStep, stripCursor, frameGrip } from '../src/ui/TimeStrip.tsx';
 import { resultBlocks } from '../src/ui/top/Search.tsx';
