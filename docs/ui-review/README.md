@@ -27,6 +27,16 @@
 
 - `src/ui/Panels.tsx` → маршрутизатор панелей и `src/ui/panels/{Sheet,Epochs,Index,Kinship,Synopsis,Chapter,Section,Legend,About}.tsx`.
 - `src/styles/app.css` → по прежним строкам: 1–46 `base.css`; 47–190 `top.css`; 191–321 `sky.css`; 322–609 `folio.css`; 610–621 `strip.css`; 622–777 `panels.css`; 778–945 `phone.css` (узкие экраны, ослабленное движение, печать); 946–1108 `spread.css`. Порядок подключения в `src/main.tsx` сохраняет каскад.
+- Перед этапом 3 так же разделены `src/ui/SkyView.tsx` и `src/ui/App.tsx`:
+  - в `SkyView.tsx` остались цикл кадра, перелёт, видимая часть неба и подписки на состояние;
+  - `src/ui/sky/input.ts` — указатель (протяжка, щипок, колесо, наведение, подсказка) и клавиши холста;
+  - `src/ui/sky/Controls.tsx` — органы неба, колонка кнопок и лист «Вид»;
+  - `src/ui/sky/Overlays.tsx` — строка выбора второго лица и картуш;
+  - `src/ui/sky/text.ts` — строки подсказки, объявления и строки выбора;
+  - `src/ui/sky/view.ts` — «Всё небо» и учёт ослабленного движения;
+  - в `App.tsx` остались раскладка приложения, адрес и глобальные клавиши;
+  - `src/ui/top/TopBar.tsx` — верхняя строка и меню «Ещё»;
+  - `src/ui/top/Search.tsx` — поиск.
 
 ## Главный вывод
 

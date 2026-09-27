@@ -5,7 +5,7 @@ import { selected, second, first, pickMode, kinPath, pathOf, setPair, clearPair,
 import { P, Refs, VerseInsert, plural, skyRef } from '../common.tsx';
 import { relate, foldChain, accusative, type Relation } from '../../engine/kinship.ts';
 import { SearchIndex } from '../../engine/search.ts';
-import { lifeText } from '../SkyView.tsx';
+import { lifeText } from '../sky/text.ts';
 import { Sheet } from './Sheet.tsx';
 import { typo } from '../text/typo.ts';
 

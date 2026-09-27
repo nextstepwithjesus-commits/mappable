@@ -6,7 +6,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { overflowCommands } from '../src/ui/App.tsx';
+import { overflowCommands } from '../src/ui/top/TopBar.tsx';
 
 // ширины команд — как у образцов Jost 13 с полями 8 px (порядок строки: панели, затем справка)
 const W: Record<string, number> = { index: 86, chapter: 58, synopsis: 78, kinship: 72, section: 121, legend: 116, about: 68 };

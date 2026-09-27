@@ -7,7 +7,8 @@ import { describe, it, expect } from 'vitest';
 import { persons, byId } from '../src/data/atlas.ts';
 import { SearchIndex } from '../src/engine/search.ts';
 import { selected, second, first, panel, pickMode, kinPath, pickSecond, clearPair } from '../src/state.ts';
-import { pairPath, pickBarText } from '../src/ui/SkyView.tsx';
+import { pairPath } from '../src/ui/SkyView.tsx';
+import { pickBarText } from '../src/ui/sky/text.ts';
 import { nameCase } from '../src/ui/text/ru.ts';
 import { frameGrip } from '../src/ui/TimeStrip.tsx';
 

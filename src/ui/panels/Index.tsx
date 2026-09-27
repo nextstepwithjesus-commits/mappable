@@ -4,7 +4,7 @@ import { selected, model } from '../../state.ts';
 import { skyRef } from '../common.tsx';
 import { atlasCoord } from '../../render/sky.ts';
 import { norm } from '../../engine/text.ts';
-import { lifeText } from '../SkyView.tsx';
+import { lifeText } from '../sky/text.ts';
 import { Sheet } from './Sheet.tsx';
 import { num } from '../text/typo.ts';
 import { Segmented } from '../controls.tsx';
