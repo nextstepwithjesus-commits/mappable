@@ -2,6 +2,7 @@
  * Проверка доступности (ТЗ § 3.8) движком axe-core на основных экранах в обеих темах:
  * небо, карточка, разворот, панели. Небо — холст с текстовой альтернативой; всё остальное — обычная разметка.
  *   npm run -s a11y   (нужна сборка: npx vite build)
+ *   npx tsx tools/a11y.ts --dist .ui-build/<имя> --port <порт>   (своя сборка и порт — для параллельной работы)
  */
 import { spawn } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
@@ -9,7 +10,13 @@ import { join } from 'node:path';
 import { chromium, type Page } from 'playwright';
 import { ROOT } from './bible.ts';
 
-const PORT = 4187;
+const argv = process.argv.slice(2);
+const opt = (name: string) => {
+  const i = argv.indexOf(`--${name}`);
+  return i < 0 ? null : (argv[i + 1] ?? null);
+};
+const DIST = opt('dist');
+const PORT = Number(opt('port') ?? 4187);
 const axeSource = readFileSync(join(ROOT, 'node_modules/axe-core/axe.min.js'), 'utf8');
 
 type Screen = { name: string; hash: string; act?: (p: Page) => Promise<void> };
@@ -33,7 +40,9 @@ const SCREENS: Screen[] = [
 ];
 
 async function main() {
-  const server = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], { cwd: ROOT, stdio: 'ignore', detached: true });
+  const args = ['vite', 'preview', '--port', String(PORT), '--strictPort'];
+  if (DIST) args.push('--outDir', DIST);
+  const server = spawn('npx', args, { cwd: ROOT, stdio: 'ignore', detached: true });
   await new Promise((r) => setTimeout(r, 2500));
   const exe = existsSync('/opt/pw-browsers/chromium') ? '/opt/pw-browsers/chromium' : undefined;
   const browser = await chromium.launch({ executablePath: exe });
