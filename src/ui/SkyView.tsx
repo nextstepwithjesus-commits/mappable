@@ -3,14 +3,16 @@ import { effect } from '@preact/signals';
 import { Sky, readPalette, type SkyState } from '../render/sky.ts';
 import { byId, graph, groupById, lines } from '../data/atlas.ts';
 import {
-  selected, second, hovered, lambda, model, layers, onlyLines, meridian, panel, pickMode, theme, introDone, epochMode, lineFlip, pins,
+  selected, second, first, hovered, focused, lambda, model, layers, onlyLines, meridian, panel, pickMode, theme, introDone, epochMode, lineFlip, pins,
+  kinPath, pickSecond,
 } from '../state.ts';
 import { skyRef, viewTick, plural } from './common.tsx';
 import { formatSpan, formatYear } from '../engine/years.ts';
-import { relate } from '../engine/kinship.ts';
 import { drawTiers, tiersBottom } from '../render/tiers.ts';
+import { nameCase } from './text/ru.ts';
 
-export const kinPath = { current: null as string[] | null };
+// путь родства хранится в состоянии; отсюда его берёт панель «Родство»
+export { kinPath };
 
 export function lifeText(id: string): string {
   const c = model.value.chrono.get(id);
@@ -21,15 +23,29 @@ export function lifeText(id: string): string {
   return `род. ${formatYear(c.b, { approx })}`;
 }
 
-function highlightFor(id: string | null, other: string | null): Map<string, 'self' | 'anc' | 'desc' | 'path'> | null {
+/**
+ * Путь родства, который сейчас можно показать: он идёт от первого лица пары ко второму.
+ * Прежний путь другой пары не показывается никогда (MAP-19).
+ */
+export function pairPath(): string[] | null {
+  const b = second.value;
+  const path = kinPath.current;
+  if (!b || !path || path.length < 2 || path[path.length - 1] !== b) return null;
+  const a = first.value ?? selected.value;
+  return path[0] === a || path[0] === selected.value ? path : null;
+}
+
+function highlightFor(id: string | null, path: string[] | null): Map<string, 'self' | 'anc' | 'desc' | 'path'> | null {
   if (!id) return null;
   const m = new Map<string, 'self' | 'anc' | 'desc' | 'path'>();
-  m.set(id, 'self');
-  if (other && kinPath.current) {
-    for (const p of kinPath.current) m.set(p, 'path');
-    m.set(other, 'self');
+  if (path) {
+    for (const p of path) m.set(p, 'path');
+    m.set(path[0], 'self');
+    m.set(path[path.length - 1], 'self');
+    m.set(id, 'self');
     return m;
   }
+  m.set(id, 'self');
   const up = [id];
   while (up.length) {
     const x = up.pop()!;
@@ -51,6 +67,7 @@ export function SkyView() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [tip, setTip] = useState<{ id: string; x: number; y: number } | null>(null);
   const [announce, setAnnounce] = useState('');
+  const shownPath = useRef('');
 
   useEffect(() => {
     const canvas = canvasRef.current!;
@@ -92,7 +109,15 @@ export function SkyView() {
       }
       const flowing = flowStart > 0 && now - flowStart < 3000;
       if (flowing) again = true;
-      let highlight = highlightFor(selected.value, second.value);
+      const path = pairPath();
+      let highlight = highlightFor(selected.value, path);
+      // какой путь родства светится на небе — для проверок приёмки (tools/accept.ts)
+      const pathKey = path && selected.value ? path.join(' ') : '';
+      if (pathKey !== shownPath.current) {
+        shownPath.current = pathKey;
+        if (pathKey) wrap.current!.dataset.kinPath = pathKey;
+        else delete wrap.current!.dataset.kinPath;
+      }
       if (!highlight && meridian.value !== null) {
         // меридиан года: светятся все, кто жив в этот год
         const t = meridian.value;
@@ -104,12 +129,13 @@ export function SkyView() {
         }
       }
       const state: SkyState = {
-        model: model.value, lambda: shownLambda, selected: selected.value, second: second.value, hovered: hovered.value, focus: null,
+        model: model.value, lambda: shownLambda, selected: selected.value, second: second.value, hovered: hovered.value, focus: focused.value,
         highlight, layers: layers.value, onlyLines: onlyLines.value, meridian: meridian.value,
         tensionPersons, flow: flowing ? now - flowStart : 0, reduced: reduced(), intro, lineFlip: lineFlip.value, pins: new Set(pins.value),
       };
       sky.draw(state);
       if (epochMode.value) drawTiers(sky, state);
+      watchCamera();
       // метка первого кадра неба — для замера «первого показа» (NFR-1, tools/perf.ts)
       if (!performance.getEntriesByName('sky-first-frame').length) performance.mark('sky-first-frame');
       viewTick.value++;
@@ -209,6 +235,8 @@ export function SkyView() {
       void meridian.value;
       void epochMode.value;
       void hovered.value;
+      void focused.value;
+      void first.value;
       void lineFlip.value;
       void pins.value;
       if (id) {
@@ -241,6 +269,37 @@ export function SkyView() {
     const pointers = new Map<number, { x: number; y: number }>();
     let drag: { x: number; y: number; moved: boolean } | null = null;
     let pinch: { d: number; cx: number; cy: number } | null = null;
+    // где мышь или перо над небом (касание не наводит) — чтобы после движения неба проверить, что под указателем теперь
+    let pointer: { x: number; y: number; r: number } | null = null;
+    let tipShown = false;
+    const showTip = (t: { id: string; x: number; y: number } | null) => {
+      if (!t && !tipShown) return;
+      tipShown = !!t;
+      setTip(t);
+    };
+    /** Подсказка и наведение — по тому, что под указателем сейчас. */
+    const rehit = () => {
+      if (!pointer || drag || pinch || pointer.y < 26) return;
+      const hit = sky.hit(pointer.x, pointer.y, pointer.r);
+      if (hit !== hovered.value) hovered.value = hit;
+      showTip(hit ? { id: hit, x: pointer.x, y: pointer.y } : null);
+    };
+    // Небо сдвинулось (протяжка, колесо, клавиши, перелёт, полоса времени, смена масштаба): подсказка прежнего лица
+    // прячется сразу, а попадание проверяется заново, когда небо остановится (IX-07, MAP-39).
+    let camKey = '';
+    let calm = 0;
+    const watchCamera = () => {
+      const c = sky.cam;
+      const key = `${c.x0} ${c.kx} ${c.laneTop} ${c.w} ${c.h} ${shownLambda} ${model.value.id}`;
+      if (key === camKey) return;
+      const initial = !camKey;
+      camKey = key;
+      if (initial) return;
+      showTip(null);
+      if (hovered.value) hovered.value = null;
+      clearTimeout(calm);
+      calm = window.setTimeout(rehit, 120);
+    };
     const local = (e: PointerEvent | WheelEvent | MouseEvent) => {
       const r = canvas.getBoundingClientRect();
       return { x: e.clientX - r.left, y: e.clientY - r.top };
@@ -259,6 +318,7 @@ export function SkyView() {
     };
     const onMove = (e: PointerEvent) => {
       const p = local(e);
+      pointer = e.pointerType === 'touch' ? null : { x: p.x, y: p.y, r: 12 };
       if (pointers.has(e.pointerId)) pointers.set(e.pointerId, p);
       if (pinch && pointers.size === 2) {
         const [a, b] = [...pointers.values()];
@@ -280,19 +340,19 @@ export function SkyView() {
           sky.cam.pan(dx, dy);
           drag.x = p.x;
           drag.y = p.y;
-          setTip(null);
+          showTip(null);
           request();
         }
         return;
       }
       if (p.y < 26) {
         meridian.value = sky.tOf(sky.cam.wx(p.x));
-        setTip(null);
+        showTip(null);
         return;
       } else if (meridian.value !== null && !pointers.size) meridian.value = null;
       const hit = sky.hit(p.x, p.y, e.pointerType === 'touch' ? 22 : 12);
       if (hit !== hovered.value) hovered.value = hit;
-      setTip(hit ? { id: hit, x: p.x, y: p.y } : null);
+      showTip(hit ? { id: hit, x: p.x, y: p.y } : null);
     };
     const onUp = (e: PointerEvent) => {
       const p = local(e);
@@ -308,21 +368,14 @@ export function SkyView() {
       if (drag && !drag.moved) {
         if (pins.value.length) pins.value = [];
         const hit = sky.hit(p.x, p.y, e.pointerType === 'touch' ? 22 : 12);
-        if (pickMode.value === 'kinship' && hit && selected.value && hit !== selected.value) {
-          second.value = hit;
-          pickMode.value = null;
-          const rel = relate(graph, selected.value, hit, 1)[0];
-          kinPath.current = rel ? [...new Set(rel.steps.flatMap((s) => [s.from, s.to]))] : null;
-          panel.value = 'kinship';
-        } else if (pickMode.value === 'spread' && hit && selected.value && hit !== selected.value) {
-          second.value = hit;
-          pickMode.value = null;
-          panel.value = 'spread';
-        } else if (hit) {
-          selected.value = hit;
-        }
+        // в режиме «Родство с…» или «Разворот с…» щелчок выбирает второе лицо, первое остаётся
+        if (hit && !pickSecond(hit)) selected.value = hit;
       }
       drag = null;
+      if (pointer) {
+        clearTimeout(calm);
+        calm = window.setTimeout(rehit, 120);
+      }
     };
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
@@ -340,9 +393,10 @@ export function SkyView() {
       request();
     };
     const onLeave = () => {
+      pointer = null;
       hovered.value = null;
       meridian.value = null;
-      setTip(null);
+      showTip(null);
     };
     canvas.addEventListener('pointerdown', onDown);
     canvas.addEventListener('pointermove', onMove);
@@ -360,15 +414,17 @@ export function SkyView() {
       offSel();
       offLines();
       offPanel();
+      clearTimeout(calm);
       if (raf) cancelAnimationFrame(raf);
       void dirty;
     };
   }, []);
 
-  // клавиатура — по физическим клавишам, поэтому работает и на русской раскладке
+  // клавиатура — по физическим клавишам, поэтому работает и на русской раскладке.
+  // Только с холста: у кнопок внутри неба (скрытый список лиц, органы неба, строка выбора) свои Enter и пробел (MOB-29).
   const onKey = (e: KeyboardEvent) => {
     const sky = skyRef.current;
-    if (!sky) return;
+    if (!sky || e.target !== canvasRef.current) return;
     const id = selected.value;
     const go = (to: string | null | undefined) => {
       if (to && byId.has(to)) {
@@ -420,7 +476,7 @@ export function SkyView() {
         panel.value = panel.value === 'legend' ? null : 'legend';
         break;
       case 'Enter':
-        if (hovered.value) selected.value = hovered.value;
+        if (hovered.value && !pickSecond(hovered.value)) selected.value = hovered.value;
         break;
       default:
         return;
@@ -435,21 +491,30 @@ export function SkyView() {
     const sky = skyRef.current;
     if (!sky || !sky.model) return [];
     const out: string[] = [];
+    // только то, что видно и доступно указателю: без скрытых режимом «только линии» и закрытых ярусами эпох
     for (let i = 0; i < sky.nodes.length && out.length < 40; i++) {
       const n = sky.nodes[i];
       if (n.ghost) continue;
       const p = byId.get(n.person)!;
       if (p.magnitude > 2) continue;
-      const x = sky.cam.sx(sky.X0[i]);
-      const y = sky.cam.sy(n.lane);
-      if (x > 0 && x < sky.cam.w && y > 0 && y < sky.cam.h) out.push(n.person);
+      if (sky.reachable(i)) out.push(n.person);
     }
+    // пункт с фокусом остаётся в списке, пока его звезда на виду: иначе фокус клавиатуры ушёл бы в никуда
+    const f = focused.value;
+    if (f && !out.includes(f) && sky.reachable(f)) out.push(f);
     return out;
   })();
 
   return (
-    <div class="sky" ref={wrap} onKeyDown={onKey}>
-      <canvas ref={canvasRef} tabIndex={0} aria-label="Звёздная карта родословий. Стрелки — сдвиг, плюс и минус — масштаб, квадратные скобки — к родителю и к ребёнку." class={pickMode.value ? 'picking' : ''} />
+    <div class="sky" ref={wrap}>
+      <canvas
+        ref={canvasRef}
+        tabIndex={0}
+        onKeyDown={onKey}
+        aria-label="Звёздная карта родословий. Стрелки — сдвиг, плюс и минус — масштаб, квадратные скобки — к родителю и к ребёнку."
+        class={pickMode.value ? 'picking' : ''}
+      />
+      {pickMode.value && selected.value && <PickBar mode={pickMode.value} id={selected.value} />}
       {tipPerson && tip && (
         <div class="tip" style={{ left: `${Math.min(tip.x + 14, (skyRef.current?.cam.w ?? 800) - 330)}px`, top: `${tip.y + 16}px` }}>
           <b>{tipPerson.name}</b>
@@ -463,13 +528,47 @@ export function SkyView() {
       <ul class="visually-hidden" aria-label="Видимые на карте ключевые лица">
         {visibleForSR.map((id) => (
           <li key={id}>
-            <button onClick={() => (selected.value = id)}>{byId.get(id)!.name}</button>
+            <button
+              onClick={() => {
+                if (!pickSecond(id)) selected.value = id;
+              }}
+              onFocus={() => (focused.value = id)}
+              onBlur={() => {
+                if (focused.value === id) focused.value = null;
+              }}
+            >
+              {byId.get(id)!.name}
+            </button>
           </li>
         ))}
       </ul>
       <div class="visually-hidden" aria-live="polite">
         {announce}
       </div>
+    </div>
+  );
+}
+
+/** «с» или «со»: «со Стефаном», но «с Саррой». */
+const withPrep = (w: string) => (/^[сзшжщ][^аеёиоуыэюяь]/i.test(w) ? 'со' : 'с');
+
+/**
+ * Строка режима выбора второго лица у верхней кромки неба (D6): что делать и как отменить.
+ * Имя — в творительном падеже, если он выводится надёжно («Родство с Давидом», «с женой Лота»), иначе — в именительном после тире.
+ */
+export function pickBarText(mode: 'kinship' | 'spread', id: string): string {
+  const p = byId.get(id)!;
+  const what = mode === 'kinship' ? 'Родство' : 'Разворот';
+  const ins = nameCase(p.name, p.sex, 'ins', p.unnamed);
+  const lead = ins ? `${what} ${withPrep(ins)} ${ins}` : `${what}; первое лицо — ${p.name}`;
+  return `${lead}: щёлкните второе лицо на небе или найдите его в поле «Найти». Esc — отмена`;
+}
+
+function PickBar({ mode, id }: { mode: 'kinship' | 'spread'; id: string }) {
+  return (
+    <div class="pickbar" role="status">
+      <span>{pickBarText(mode, id)}</span>
+      <button onClick={() => (pickMode.value = null)}>Отменить</button>
     </div>
   );
 }

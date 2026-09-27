@@ -29,6 +29,8 @@ export interface SearchDoc {
   alt: string[];
   disambig: string;
   prominence: number;
+  /** величина звезды 0–6 (0 — ярче всех); без неё значимость берётся из prominence */
+  magnitude?: number;
   refs: string[]; // все ссылки лица (для поиска по стиху)
 }
 
@@ -36,6 +38,28 @@ export interface SearchHit {
   id: string;
   score: number;
   matched: string; // по какой форме найдено
+}
+
+/**
+ * Классы совпадения, от лучшего к худшему. Порядок результатов — по классу, внутри класса — по значимости лица,
+ * поэтому «Иисус» ставит Иисуса Христа (совпадение по первому слову имени) раньше одноимённых левитов.
+ */
+const EXACT = 0; // имя целиком или его первое слово: «Иисус» → «Иисус», «Иисус Христос», «Иисус Навин»
+const PREFIX = 1; // начало имени: «Иос» → «Иосиф»
+const STEM = 2; // косвенная форма имени или первого слова: «Давида», «Иисуса»
+const WORD = 3; // слово внутри имени: «Навин» → «Иисус Навин»
+const PART = 4; // часть имени: «сафат» → «Иосафат»
+const BY_DISAMBIG = 5; // уточнение: «Искариот»
+const NONE = 6;
+
+function matchClass(f: string, q: string, qs: string): number {
+  const words = f.split(/[\s-]+/);
+  if (f === q || f.split(/\s+/)[0] === q) return EXACT;
+  if (f.startsWith(q)) return PREFIX;
+  if (stem(f) === qs || stem(words[0]) === qs) return STEM;
+  if (words.some((w) => w.startsWith(q) || stem(w) === qs)) return WORD;
+  if (q.length >= 3 && f.includes(q)) return PART;
+  return NONE;
 }
 
 export class SearchIndex {
@@ -72,29 +96,32 @@ export class SearchIndex {
     const qs = stem(q);
     const hits: SearchHit[] = [];
     for (const d of this.docs) {
-      let best = 0;
+      // лучший класс по имени и иным формам; при равном классе имя важнее иной формы
+      let cls = NONE;
+      let alt = 1;
       let matched = '';
-      const tryForm = (form: string, weight: number) => {
-        const f = norm(form);
-        let s = 0;
-        if (f === q) s = 100;
-        else if (f.startsWith(q)) s = 80;
-        else if (stem(f) === qs) s = 75;
-        else if (f.split(/[\s-]+/).some((w) => w.startsWith(q) || stem(w) === qs)) s = 60;
-        else if (q.length >= 3 && f.includes(q)) s = 40;
-        s *= weight;
-        if (s > best) { best = s; matched = form; }
+      const tryForm = (form: string, isAlt: number) => {
+        const c = matchClass(norm(form), q, qs);
+        if (c < cls || (c === cls && isAlt < alt)) {
+          cls = c;
+          alt = isAlt;
+          matched = form;
+        }
       };
-      tryForm(d.name, 1);
-      for (const a of d.alt) tryForm(a, 0.92);
-      if (d.disambig) {
+      tryForm(d.name, 0);
+      for (const a of d.alt) tryForm(a, 1);
+      if (cls === NONE && d.disambig) {
         const f = norm(d.disambig);
         if (q.length >= 3 && (f.includes(q) || f.split(/[\s,]+/).some((w) => stem(w) === qs))) {
-          const s = 35;
-          if (s > best) { best = s; matched = d.disambig; }
+          cls = BY_DISAMBIG;
+          alt = 0;
+          matched = d.disambig;
         }
       }
-      if (best > 0) hits.push({ id: d.id, score: best + d.prominence * 2, matched });
+      if (cls === NONE) continue;
+      // значимость: ярче звезда — выше; величина 0–6, prominence 1–5 (5 — главные лица)
+      const mag = d.magnitude ?? 6 - d.prominence;
+      hits.push({ id: d.id, score: (NONE - cls) * 1000 + (1 - alt) * 100 + (6 - mag) * 10 + d.prominence, matched });
     }
     return hits.sort((a, b) => b.score - a.score).slice(0, limit);
   }

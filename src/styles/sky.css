@@ -128,3 +128,33 @@
   width: 22px;
   font-size: 17px;
 }
+
+/* строка режима выбора второго лица (D6): непрозрачная, у верхней кромки неба, поверх линейки годов */
+.pickbar {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100% - 24px);
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding: 4px 12px 5px;
+  background: var(--sheet);
+  border: 1px solid var(--rule-strong);
+  border-top: 0;
+  font-family: var(--sans);
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--ink);
+  z-index: 6;
+}
+.pickbar button {
+  flex: none;
+  color: var(--ink);
+  border-bottom: 1px solid var(--rule-strong);
+}
+.pickbar button:hover {
+  border-bottom-color: var(--ink);
+}

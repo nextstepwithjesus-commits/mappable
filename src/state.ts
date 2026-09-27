@@ -1,6 +1,7 @@
 /** Состояние приложения (сигналы). Адрес страницы отражает выбранное лицо, окно и режимы. */
-import { signal, computed, effect } from '@preact/signals';
-import { models, byId, loadModel } from './data/atlas.ts';
+import { signal, computed, effect, batch } from '@preact/signals';
+import { models, byId, graph, loadModel } from './data/atlas.ts';
+import { relate } from './engine/kinship.ts';
 
 export type Theme = 'night' | 'day';
 export type Panel = null | 'epochs' | 'index' | 'kinship' | 'synopsis' | 'legend' | 'about' | 'section' | 'chapter' | 'spread';
@@ -39,7 +40,14 @@ export const modelId = signal<string>(load('model', 'mt-long'));
 export const lambda = signal<number>(load('lambda', 1)); // 1 — масштаб по насыщенности, 0 — истинный
 export const selected = signal<string | null>(null);
 export const second = signal<string | null>(null); // второе лицо (родство, разворот)
+/**
+ * Первое лицо пары «Родства» или «Разворота». Запоминается, когда выбрано второе, и дальше не следует за выбором:
+ * ссылки внутри этих панелей открывают карточку и ведут небо, но пару не меняют. Без второго лица не хранится.
+ */
+export const first = signal<string | null>(null);
 export const hovered = signal<string | null>(null);
+/** Звезда с фокусом клавиатуры (пункт скрытого списка лиц неба): небо рисует у неё кольцо и подпись. */
+export const focused = signal<string | null>(null);
 export const panel = signal<Panel>(null);
 export const pickMode = signal<null | 'kinship' | 'spread'>(null);
 export const onlyLines = signal(false);
@@ -53,6 +61,70 @@ export const layers = signal<Record<string, boolean>>(
 export const introDone = signal<boolean>(load('intro', false));
 export const sectionFocus = signal<number | null>(null); // сквозной раздел
 export const pins = signal<string[]>([]); // отмеченные на небе одноимённые
+
+/** Путь родства пары для неба: лица от первого ко второму. Пишут выбор второго лица и панель «Родство». */
+export const kinPath = { current: null as string[] | null };
+
+/** Лица пути от первого лица до второго, по порядку шагов. */
+export const pathOf = (steps: { from: string; to: string }[]): string[] => [...new Set(steps.flatMap((s) => [s.from, s.to]))];
+
+/** Пара «первое — второе» для «Родства» и «Разворота»; для родства (withPath) сразу строится путь на небе. */
+export function setPair(a: string, b: string, withPath: boolean) {
+  batch(() => {
+    first.value = a;
+    second.value = b;
+    if (withPath) {
+      const rel = relate(graph, a, b, 1)[0];
+      kinPath.current = rel ? pathOf(rel.steps) : null;
+    }
+  });
+}
+
+export function clearPair() {
+  kinPath.current = null;
+  batch(() => {
+    second.value = null;
+    first.value = null;
+  });
+}
+
+/**
+ * Лицо выбрано (на небе, в поиске, в скрытом списке) в режиме выбора второго лица: оно становится вторым,
+ * первое остаётся, режим снимается и открывается панель режима. Возвращает false, если режима нет —
+ * тогда лицо выбирается обычным порядком.
+ */
+export function pickSecond(id: string): boolean {
+  const mode = pickMode.peek();
+  const a = selected.peek();
+  if (!mode || !a || id === a || !byId.has(id)) return false;
+  batch(() => {
+    setPair(a, id, mode === 'kinship');
+    pickMode.value = null;
+    panel.value = mode;
+  });
+  return true;
+}
+
+// Смена выбранного лица снимает режим выбора второго лица, а пару — если её панель закрыта: иначе после «Родства»
+// небо показывало бы прежнюю цепочку у нового лица (MAP-19). Пока открыты «Родство» или «Разворот», пара остаётся:
+// ссылки в них ведут по карточкам, не меняя пары.
+let lastSelected = selected.peek();
+effect(() => {
+  const id = selected.value;
+  if (id === lastSelected) return;
+  lastSelected = id;
+  const p = panel.peek();
+  batch(() => {
+    if (pickMode.peek()) pickMode.value = null;
+    if (second.peek() && p !== 'kinship' && p !== 'spread') clearPair();
+  });
+});
+// второе лицо сброшено (кнопкой «сбросить второе» или новым режимом выбора) — пары нет, пути тоже
+effect(() => {
+  if (second.value !== null) return;
+  kinPath.current = null;
+  if (first.peek() !== null) first.value = null;
+});
 
 const modelsLoaded = signal(0);
 /** Текущая модель; пока выбранная подгружается, показывается модель по умолчанию. */

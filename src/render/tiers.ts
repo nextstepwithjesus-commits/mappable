@@ -88,6 +88,8 @@ export function drawTiers(sky: Sky, s: SkyState) {
   const { layout, totalH } = tierLayout(s.model);
   ctx.fillStyle = pal.sky;
   ctx.fillRect(0, top - 4, W, totalH);
+  // звёзды под ярусами закрыты: указатель и скрытый список их не достают (IX-28)
+  sky.openTop = top - 4 + totalH;
   ctx.strokeStyle = pal.rule;
   ctx.beginPath();
   ctx.moveTo(0, top - 4 + totalH + 0.5);

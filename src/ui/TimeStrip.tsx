@@ -5,6 +5,7 @@ import { model, meridian, theme } from '../state.ts';
 import { skyRef, viewTick } from './common.tsx';
 import { toAstro, toHist } from '../engine/years.ts';
 import { readPalette } from '../render/sky.ts';
+import { KX_MIN, KX_MAX } from '../render/camera.ts';
 
 /** Начало полосы — сотворение в текущей модели (в модели чисел в скобках — на ~1 400 лет раньше). */
 const startOf = () => toAstro(model.value.epochs[0]?.start ?? -4174) - 10;
@@ -13,6 +14,32 @@ const T1 = 2040;
 const TODAY = new Date().getFullYear();
 const CANON_END = 95;
 const PAD = 14;
+/** Зона захвата края рамки — по 22 px в каждую сторону (44 px, ТЗ § 3.4). */
+const GRIP = 22;
+/** Рамка уже этого — её тело целиком отдаётся сдвигу, а ручки краёв выносятся наружу (MAP-42). */
+const NARROW = 88;
+/** Самое узкое окно неба, лет. */
+const MIN_YEARS = 20;
+
+export type FrameGrip = 'move' | 'left' | 'right' | 'new';
+
+/**
+ * Что берёт нажатие в точке x полосы при рамке [a, b] (px). У широкой рамки края ловятся на ±22 px, между ними — сдвиг.
+ * У узкой (уже 88 px) тело рамки, не меньше 44 px, — сдвиг, а ручки лежат снаружи, по 22 px с каждой стороны.
+ */
+export function frameGrip(x: number, a: number, b: number): FrameGrip {
+  if (b - a >= NARROW) {
+    if (Math.abs(x - a) < GRIP) return 'left';
+    if (Math.abs(x - b) < GRIP) return 'right';
+    return x > a && x < b ? 'move' : 'new';
+  }
+  const c = (a + b) / 2;
+  const half = Math.max((b - a) / 2, GRIP);
+  if (x >= c - half && x <= c + half) return 'move';
+  if (x >= c - half - GRIP && x < c - half) return 'left';
+  if (x > c + half && x <= c + half + GRIP) return 'right';
+  return 'new';
+}
 
 export function TimeStrip() {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -139,6 +166,8 @@ export function TimeStrip() {
         ctx.globalAlpha = 0.08;
         ctx.fillRect(a, 2, Math.max(3, b - a), H - 4);
         ctx.globalAlpha = 1;
+        // окно в годах — для проверок приёмки (tools/accept.ts)
+        wrap.current!.dataset.window = `${v.a.toFixed(1)} ${v.b.toFixed(1)}`;
       }
       // меридиан
       if (meridian.value !== null) {
@@ -191,18 +220,28 @@ export function TimeStrip() {
     });
 
     // ---------- взаимодействие: тянуть окно, растягивать края, щелчок по эпохе ----------
-    let drag: { mode: 'move' | 'left' | 'right' | 'new'; x: number; a: number; b: number; moved: boolean } | null = null;
-    const setView = (ta: number, tb: number) => {
+    let drag: { mode: FrameGrip; x: number; a: number; b: number; moved: boolean } | null = null;
+    /** Окно неба [ta, tb] лет (clamp — не шире шкалы); масштаб — в пределах камеры, середина окна остаётся на месте. */
+    const setView = (ta: number, tb: number, clamp = true) => {
       const s = skyRef.current;
       if (!s) return;
-      const xa = s.xOf(Math.max(T0, ta));
-      const xb = s.xOf(Math.min(T1, tb));
-      if (xb - xa < 5) return;
+      const xa = s.xOf(clamp ? Math.max(T0, ta) : ta);
+      const xb = s.xOf(clamp ? Math.min(T1, tb) : tb);
+      if (!(xb > xa)) return;
       const midLane = s.cam.wLane(s.cam.h / 2);
-      s.cam.kx = (s.cam.w - 18) / (xb - xa);
-      s.cam.x0 = xa - 18 / s.cam.kx;
+      s.cam.stop();
+      const w = s.cam.w - 18;
+      s.cam.kx = Math.max(KX_MIN, Math.min(KX_MAX, w / (xb - xa)));
+      s.cam.x0 = (xa + xb) / 2 - (18 + w / 2) / s.cam.kx;
       s.cam.laneTop = midLane + s.cam.h / 2 / s.cam.ky;
       skyRef.redraw();
+    };
+    /** Сдвиг окна без изменения его ширины: у краёв шкалы окно упирается, а не сжимается. */
+    const shiftView = (a: number, b: number, dt: number) => {
+      const lo = Math.min(T0, a);
+      const hi = Math.max(T1, b);
+      const na = Math.max(lo, Math.min(hi - (b - a), a + dt));
+      setView(na, na + (b - a), false);
     };
     const onDown = (e: PointerEvent) => {
       cv.setPointerCapture(e.pointerId);
@@ -210,14 +249,7 @@ export function TimeStrip() {
       const x = e.clientX - r.left;
       const v = view();
       if (!v) return;
-      const a = xOf(v.a);
-      const b = xOf(v.b);
-      const hitZone = 22; // 44 px зона захвата
-      let mode: 'move' | 'left' | 'right' | 'new' = 'new';
-      if (Math.abs(x - a) < hitZone && b - a > 30) mode = 'left';
-      else if (Math.abs(x - b) < hitZone && b - a > 30) mode = 'right';
-      else if (x > a && x < b) mode = 'move';
-      drag = { mode, x, a: v.a, b: v.b, moved: false };
+      drag = { mode: frameGrip(x, xOf(v.a), xOf(v.b)), x, a: v.a, b: v.b, moved: false };
     };
     const onMove = (e: PointerEvent) => {
       const r = cv.getBoundingClientRect();
@@ -227,9 +259,9 @@ export function TimeStrip() {
       const dt = tOf(x) - tOf(drag.x);
       if (Math.abs(x - drag.x) > 2) drag.moved = true;
       if (!drag.moved) return;
-      if (drag.mode === 'move' || drag.mode === 'new') setView(drag.a + dt, drag.b + dt);
-      else if (drag.mode === 'left') setView(Math.min(drag.a + dt, drag.b - 3), drag.b);
-      else setView(drag.a, Math.max(drag.b + dt, drag.a + 3));
+      if (drag.mode === 'move' || drag.mode === 'new') shiftView(drag.a, drag.b, dt);
+      else if (drag.mode === 'left') setView(Math.min(drag.a + dt, drag.b - MIN_YEARS), drag.b);
+      else setView(drag.a, Math.max(drag.b + dt, drag.a + MIN_YEARS));
     };
     const onUp = (e: PointerEvent) => {
       if (drag && !drag.moved) {

@@ -6,7 +6,7 @@ import { TimeStrip } from './TimeStrip.tsx';
 import { Panels } from './Panels.tsx';
 import { byId, persons } from '../data/atlas.ts';
 import { SearchIndex } from '../engine/search.ts';
-import { panel, selected, theme, epochMode, readHash, writeHash, second, pickMode, model, pins, type Panel } from '../state.ts';
+import { panel, selected, theme, epochMode, readHash, writeHash, second, pickMode, model, pins, pickSecond, clearPair, type Panel } from '../state.ts';
 import { skyRef, drawMicroAxis, refLabel } from './common.tsx';
 import { lifeText } from './SkyView.tsx';
 
@@ -25,16 +25,21 @@ export function App() {
     window.addEventListener('popstate', apply);
     const off = effect(() => writeHash(selected.value));
     const onKey = (e: KeyboardEvent) => {
-      const typing = (e.target as HTMLElement)?.closest?.('input, textarea');
+      // в поле ввода клавиши принадлежат полю: Escape там не закрывает ни панель, ни карточку (IX-14)
+      const typing = isTextField(e.target);
       if (e.code === 'Slash' && !typing && !e.ctrlKey && !e.metaKey) {
         e.preventDefault();
         document.getElementById('find')?.focus();
       }
-      if (e.code === 'Escape') {
+      // поле без своего Escape: нажатие только уводит из поля, следующее уже снимает состояние
+      if (e.code === 'Escape' && typing && !e.defaultPrevented) (e.target as HTMLElement).blur();
+      if (e.code === 'Escape' && !typing && !e.defaultPrevented) {
+        // каждое нажатие снимает одно видимое состояние, по порядку (D5)
         if (pickMode.value) pickMode.value = null;
         else if (panel.value) panel.value = null;
-        else if (second.value) second.value = null;
-        else selected.value = null;
+        else if (pins.value.length) pins.value = [];
+        else if (second.value) clearPair();
+        else if (selected.value) selected.value = null;
       }
     };
     window.addEventListener('keydown', onKey);
@@ -54,6 +59,13 @@ export function App() {
       <Panels />
     </div>
   );
+}
+
+/** Поле, в котором набирают текст (не флажок и не кнопка). */
+function isTextField(t: EventTarget | null): boolean {
+  if (!(t instanceof HTMLElement)) return false;
+  if (t.isContentEditable || t instanceof HTMLTextAreaElement || t instanceof HTMLSelectElement) return true;
+  return t instanceof HTMLInputElement && !['checkbox', 'radio', 'button', 'submit', 'reset', 'range', 'color', 'file'].includes(t.type);
 }
 
 const COMMANDS: { id: Exclude<Panel, null> | 'epochMode'; label: string }[] = [
@@ -102,7 +114,7 @@ function Search() {
   const index = useMemo(
     () =>
       new SearchIndex(
-        persons.map((p) => ({ id: p.id, name: p.name, alt: p.alt, disambig: p.disambig, prominence: p.prominence, refs: p.parentRefs })),
+        persons.map((p) => ({ id: p.id, name: p.name, alt: p.alt, disambig: p.disambig, prominence: p.prominence, magnitude: p.magnitude, refs: p.parentRefs })),
       ),
     [],
   );
@@ -111,11 +123,8 @@ function Search() {
   const [cursor, setCursor] = useState(0);
   const hits = useMemo(() => (q.trim() ? index.search(q, 30) : []), [q]);
   const choose = (id: string) => {
-    if (pickMode.value === 'spread' && selected.value && id !== selected.value) {
-      // второе лицо разворота можно найти и поиском
-      second.value = id;
-      pickMode.value = null;
-      panel.value = 'spread';
+    // в режиме «Родство с…» или «Разворот с…» найденное лицо становится вторым, первое остаётся (D6)
+    if (pickSecond(id)) {
       setOpen(false);
       setQ('');
       return;
@@ -136,8 +145,12 @@ function Search() {
       e.preventDefault();
     } else if (e.key === 'Enter' && hits[cursor]) choose(hits[cursor].id);
     else if (e.key === 'Escape') {
-      setOpen(false);
-      (e.target as HTMLInputElement).blur();
+      // Escape действует только в поле: закрыть подсказки, затем очистить, затем уйти из поля (D5)
+      e.preventDefault();
+      e.stopPropagation();
+      if (open && q.trim()) setOpen(false);
+      else if (q) setQ('');
+      else (e.target as HTMLInputElement).blur();
     }
   };
   const isRef = /\d+:\d+/.test(q);

@@ -285,8 +285,35 @@ export class Sky {
   }
 
   // ---------- попадание ----------
+  /** Что нарисовано в последнем кадре и потому ловит указатель: в режиме «только линии» — лица линий Мессии. */
+  private drawnOnly: Set<string> | null = null;
+  private drawnGhosts = true;
+  /** Верх открытого неба (px): ниже линейки годов, а в режиме эпох — ниже ярусов (их рисует tiers.ts). */
+  openTop = RULER_H;
+
+  private drawn(i: number): boolean {
+    const n = this.nodes[i];
+    if (this.drawnOnly && !this.drawnOnly.has(n.person)) return false;
+    return !(n.ghost && !this.drawnGhosts);
+  }
+
+  /** Звезда нарисована и лежит в открытой части неба — её можно навести, щёлкнуть и выбрать с клавиатуры. */
+  reachable(i: number | string): boolean {
+    if (typeof i === 'string') {
+      const k = this.nodeIndex.get(i);
+      if (k === undefined) return false;
+      i = k;
+    }
+    if (!this.drawn(i)) return false;
+    const x = this.cam.sx(this.X0[i]);
+    const y = this.cam.sy(this.nodes[i].lane);
+    return x > LETTER_W && x < this.cam.w && y > this.openTop && y < this.cam.h;
+  }
+
   hit(sx: number, sy: number, radius = 12): string | null {
     const cam = this.cam;
+    // линейка, левая кромка и ярусы эпох закрывают звёзды под собой
+    if (sy < this.openTop || sx < LETTER_W) return null;
     let best: string | null = null;
     let bestD = radius * radius;
     const ky = cam.ky;
@@ -295,6 +322,7 @@ export class Sky {
       const x = cam.sx(this.X0[i]);
       const y = cam.sy(n.lane);
       if (Math.abs(y - sy) > radius + ky) continue;
+      if (y < this.openTop || !this.drawn(i)) continue;
       const dx = x - sx;
       const dy = y - sy;
       const d = dx * dx + dy * dy;
@@ -309,6 +337,7 @@ export class Sky {
       const n = this.nodes[i];
       const y = cam.sy(n.lane);
       if (Math.abs(y - sy) > Math.max(3, ky * 0.35)) continue;
+      if (!this.drawn(i)) continue;
       if (sx >= cam.sx(this.X0[i]) && sx <= cam.sx(this.X1[i])) return n.person;
     }
     return null;
@@ -332,6 +361,9 @@ export class Sky {
     const lineOnly = s.onlyLines;
     const spineSet = new Set([...lines.joseph.persons, ...lines.mary.persons].map((x) => x.id));
     const intro = s.intro;
+    this.drawnOnly = lineOnly ? spineSet : null;
+    this.drawnGhosts = !!L.ghosts;
+    this.openTop = RULER_H;
 
     // эпохи
     if (L.epochs) {
@@ -614,7 +646,7 @@ export class Sky {
         const n = this.nodes[i];
         if (n.ghost) continue;
         const p = byId.get(n.person)!;
-        const forced = p.id === s.selected || p.id === s.hovered || p.id === s.second || (hl?.get(p.id) === 'path');
+        const forced = p.id === s.selected || p.id === s.hovered || p.id === s.second || p.id === s.focus || (hl?.get(p.id) === 'path');
         if (!forced && !(level >= this.labelLevel[i])) continue;
         if (!forced && lineOnly && !spineSet.has(p.id)) continue;
         const lit = Math.max(0, Math.min(1, intro * 7 - p.magnitude - 0.5));
@@ -649,21 +681,22 @@ export class Sky {
       }
     }
 
-    // выбранные: кольцо фокуса
-    for (const id of [s.selected, s.second, s.focus]) {
-      if (!id) continue;
+    // выбранные — кольцо; фокус клавиатуры — такое же кольцо, а у выбранной звезды — второе, снаружи
+    const ring = (id: string, out: number) => {
       const i = this.nodeIndex.get(id);
-      if (i === undefined) continue;
+      if (i === undefined) return;
       const p = byId.get(id)!;
       const x = cam.sx(this.X0[i]);
       const y = cam.sy(this.nodes[i].lane);
-      const r = starRadius(p.magnitude, zoomScale) + (p.sex === 'f' ? 6.5 : 5);
+      const r = starRadius(p.magnitude, zoomScale) + (p.sex === 'f' ? 6.5 : 5) + out;
       ctx.strokeStyle = pal.focus;
-      ctx.lineWidth = id === s.focus && id !== s.selected ? 1.5 : 2;
+      ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.arc(x, y, r, 0, Math.PI * 2);
       ctx.stroke();
-    }
+    };
+    for (const id of [s.selected, s.second]) if (id) ring(id, 0);
+    if (s.focus) ring(s.focus, s.focus === s.selected || s.focus === s.second ? 4 : 0);
 
     // отмеченные одноимённые
     for (const id of s.pins) {
