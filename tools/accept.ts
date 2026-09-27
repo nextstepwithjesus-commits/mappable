@@ -36,6 +36,7 @@ import { panels } from './accept/panels.ts';
 import { map } from './accept/map.ts';
 import { phone } from './accept/phone.ts';
 import { a11y } from './accept/a11y.ts';
+import { work } from './accept/work.ts';
 
 const BASE: Scenario[] = [
   {
@@ -548,7 +549,7 @@ const BASE: Scenario[] = [
   },
 ];
 /** Сценарии этапа 3 — в своих файлах, чтобы параллельные агенты не правили один список (номера 30–49, 50–69, 70–89). */
-const SCENARIOS: Scenario[] = [...BASE, ...layout, ...nav, ...sky, ...map, ...card, ...panels, ...phone, ...a11y];
+const SCENARIOS: Scenario[] = [...BASE, ...layout, ...nav, ...sky, ...map, ...card, ...panels, ...phone, ...a11y, ...work];
 
 /** Имена лиц обеих линий Мессии — из собранного индекса. */
 function lineNames(): Set<string> {
