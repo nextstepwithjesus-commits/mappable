@@ -3,7 +3,8 @@
  * условные знаки и линии неба, состояния карточки. Маршрут #/specimen — эталон для снимков экрана.
  *
  * Всё собрано из живых частей атласа: органы управления — из controls.tsx и common.tsx, знаки — drawGlyph,
- * ленты — buildRibbons и drawStrands (те же функции, что у неба), карточка — сам Folio. Своих копий рисования и стилей нет:
+ * ленты — buildRibbons и drawStrands, следы и родство — drawLifeTrail, drawDescent, drawBracket и drawMarriage
+ * (те же функции, что у неба; образцы следов — те же, что в «Как читать карту»), карточка — сам Folio. Своих копий рисования и стилей нет:
  * наведение, нажатие и фокус показаны статично атрибутом data-pseudo, темы рядом — обёрткой .spec-map[data-map];
  * правила для них выводятся из действующих таблиц стилей (src/ui/specimen-css.ts).
  * Образец не анимируется и не использует случайных чисел: снимки между запусками совпадают.
@@ -22,6 +23,7 @@ import { P, Refs } from './common.tsx';
 import { CONTRAST_USES, contrast } from './contrast.ts';
 import { Check, Close, Segmented } from './controls.tsx';
 import { Folio, PARTS } from './Folio.tsx';
+import { PAINTERS, type PainterKey } from './panels/Legend.tsx';
 import { installSpecimenRules, type Pseudo } from './specimen-css.ts';
 import { typo } from './text/typo.ts';
 
@@ -438,6 +440,8 @@ const SIGNS: { o: Partial<GlyphOpts>; cap: string }[] = [
   { o: { sex: 'f' }, cap: 'женщина' },
   { o: { kind: 'people' }, cap: 'народ или род из таблицы народов' },
   { o: { king: true }, cap: 'царь: черта над знаком' },
+  { o: { king: true, sex: 'f' }, cap: 'царица: черта над кольцом' },
+  { o: { infant: true }, cap: 'умер младенцем: † слева' },
   { o: { hollow: true }, cap: 'год рождения по расчёту: полый знак' },
   { o: { sex: 'f', ghost: true }, cap: 'жена в родной семье: «призрак»' },
   { o: { messiah: true, magnitude: 0 }, cap: 'Иисус Христос: восьмилучевая звезда' },
@@ -508,6 +512,43 @@ function Ribbons({ map }: { map: Theme }) {
   );
 }
 
+/**
+ * Следы жизни и родство — образцы «Как читать карту» (src/ui/panels/Legend.tsx, PAINTERS): drawLifeTrail, drawDescent,
+ * drawBracket и drawMarriage из src/render/trails.ts, те же функции, что у неба.
+ */
+const TRAILS: { k: PainterKey; cap: string }[] = [
+  { k: 'trailExact', cap: 'годы известны' },
+  { k: 'trailEstimated', cap: 'годы оценочные: пунктир начала и конца' },
+  { k: 'trailLast', cap: 'до последнего упоминания' },
+  { k: 'trailNone', cap: 'о жизни не известно' },
+  { k: 'trailEpochal', cap: 'известна только эпоха' },
+];
+const LINKS: { k: PainterKey; cap: string }[] = [
+  { k: 'descent', cap: 'отвод к ребёнку' },
+  { k: 'mother', cap: 'мать на отводе' },
+  { k: 'tension', cap: 'хронологическое напряжение' },
+  { k: 'bracket', cap: 'дети одной пары' },
+  { k: 'mothers', cap: 'дети разных матерей' },
+  { k: 'marriage', cap: 'брак' },
+  { k: 'marriageFar', cap: 'брак с дальней женой' },
+  { k: 'ghost', cap: 'призрак жены в родной семье' },
+];
+
+function Line({ map, k, tall = false }: { map: Theme; k: PainterKey; tall?: boolean }) {
+  return (
+    <Canvas
+      class={tall ? 'spec-linecv tall' : 'spec-linecv'}
+      deps={[map]}
+      draw={(ctx, w, h) => {
+        const pal = paletteOf(map);
+        ctx.fillStyle = pal.sky;
+        ctx.fillRect(0, 0, w, h);
+        PAINTERS[k](ctx, pal, w, h);
+      }}
+    />
+  );
+}
+
 function Signs({ map }: { map: Theme }) {
   return (
     <div class="spec-signs">
@@ -537,13 +578,24 @@ function Signs({ map }: { map: Theme }) {
         <li>Расхождение: у каждой линии свои лица, нить Иосифа уходит вверх.</li>
         <li>Звено по толкованию — разреженная нить.</li>
       </ul>
-      <h4>Следы жизни и связь «родитель — ребёнок»</h4>
-      <p class="spec-note">
-        {typo(
-          'Образца нет: следы жизни (точный, расчётный, оценочный, до последнего события) и отвод от родителя к ребёнку небо рисует внутри Sky.draw, ' +
-            'общей функции для них пока нет. Своей копии рисования образец не делает; образец появится вместе с такой функцией (A14).',
-        )}
-      </p>
+      <h4>Следы жизни</h4>
+      <div class="spec-states spec-sky">
+        {TRAILS.map((s) => (
+          <figure class="spec-sign spec-line" key={s.k}>
+            <Line map={map} k={s.k} />
+            <figcaption class="spec-cap">{s.cap}</figcaption>
+          </figure>
+        ))}
+      </div>
+      <h4>Родство</h4>
+      <div class="spec-states spec-sky">
+        {LINKS.map((s) => (
+          <figure class="spec-sign spec-line" key={s.k}>
+            <Line map={map} k={s.k} tall />
+            <figcaption class="spec-cap">{s.cap}</figcaption>
+          </figure>
+        ))}
+      </div>
     </div>
   );
 }
@@ -669,7 +721,9 @@ export function Specimen() {
         </section>
         <section aria-labelledby="spec-h-signs">
           <h2 id="spec-h-signs">Условные знаки и линии</h2>
-          <p class="spec-note">{typo('Нарисованы теми же функциями, что небо: drawGlyph, buildRibbons и drawStrands.')}</p>
+          <p class="spec-note">
+            {typo('Нарисованы теми же функциями, что небо: drawGlyph, buildRibbons, drawStrands, drawLifeTrail, drawDescent, drawBracket и drawMarriage.')}
+          </p>
           <Themes>{(m) => <Signs map={m} />}</Themes>
         </section>
         <section aria-labelledby="spec-h-card">

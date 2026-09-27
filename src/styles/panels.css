@@ -697,14 +697,80 @@ button.row:focus-visible {
 .epoch p.muted:first-of-type {
   margin-top: 0;
 }
-.legend-row {
+/* ---------- «Условные знаки» — как читать карту (G5; UX-35, VIS-31, CARD-43) ----------
+   Строка: образец слева (96 px), пояснение справа; вырезка из неба — во всю ширину, пояснение под ней.
+   Образец — окно в небо: фон неба, без рамки и скруглений. */
+.sheet .legend {
+  list-style: none;
+  margin: 4px 0 12px;
+  padding: 0;
+}
+.sheet .legend .legend-row {
   display: grid;
-  grid-template-columns: 70px 1fr;
-  gap: 10px;
+  grid-template-columns: 96px minmax(0, 1fr);
+  column-gap: 12px;
   align-items: center;
-  margin: 6px 0;
+  margin: 0;
+  padding: 4px 0;
   font-size: var(--t-note);
   line-height: var(--t-note-lh);
+}
+.sheet .legend .legend-wide {
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: 6px;
+  padding: 8px 0 10px;
+}
+.legend-pic {
+  display: block;
+  min-width: 0;
+  line-height: 0;
+}
+.legend-sample {
+  display: block;
+  max-width: 100%;
+  background: var(--sky);
+}
+/* величины 0–6: семь звёзд в ряд, цифра под каждой */
+.legend-mags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  line-height: var(--t-ui-s-lh);
+}
+.legend-mag {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.legend-num {
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  color: var(--ink-2);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+/* разделы панели — командами в строку */
+.sheet .legend-toc {
+  margin: 10px 0 4px -8px;
+}
+/* ключ рейки — тот же, что в карточке */
+.legend-pic .rail-key {
+  margin: 0;
+}
+/* пометы на полях: помета — как в карточке, пояснение рядом */
+.sheet table.legend-marks {
+  margin: 2px 0 6px;
+}
+.sheet table.legend-marks caption {
+  text-align: left;
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+  padding: 0 0 2px;
+}
+.sheet table.legend-marks th {
+  width: 60px;
+  white-space: nowrap;
 }
 /* ---------- главы (G3; VIS-35) ----------
    Оглавление: книга и номера глав строкой, без «стены сегментов»; нажатая глава — выворотка, как у переключателя. */

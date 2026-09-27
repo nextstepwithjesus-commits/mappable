@@ -1,18 +1,49 @@
 /** Строки неба: годы и место лица в подсказке и объявлении, строка выбора второго лица. */
 import { byId } from '../../data/atlas.ts';
 import { model } from '../../state.ts';
-import { formatYear, lifeSpanText } from '../../engine/years.ts';
+import { formatYear, lifeSpanText, shownBirthRange, toHist } from '../../engine/years.ts';
 import type { ChronoRow } from '../../data/atlas.ts';
 import { isPeople } from '../card/Masthead.tsx';
-import { affiliation, constellation } from '../card/shared.tsx';
+import { affiliation, birthRange, constellation } from '../card/shared.tsx';
 import { nameCase } from '../text/ru.ts';
 import { plural } from '../common.tsx';
+import { typo } from '../text/typo.ts';
 
 /** Годы жизни в подсказке, указателе и объявлении — те же округлённые годы, что в паспорте карточки. */
 export function lifeText(id: string): string {
   const c = model.value.chrono.get(id);
   if (!c) return '';
   return lifeSpanText(c, { people: isPeople(id) }) || 'время не установлено';
+}
+
+/**
+ * Промежуток оценочного года рождения для подсказки звезды (G5): «Родился между 1020 и 990 гг. до Р. Х.».
+ *
+ * Почему промежуток словами, а не «ок. 1005 г. до Р. Х. (±15)»:
+ *  — «±15» — знак погрешности измерения; читателю-непрофессионалу он незнаком и обещает симметричную ошибку,
+ *    а промежуток из данных бывает несимметричным: его края подрезают границы из текста («не раньше Потопа»);
+ *  — «между … и …» называет те же годы, что § 8 карточки («возможный промежуток — 1020–990 гг. до Р. Х.») и что
+ *    пунктирное начало следа на небе, — читатель видит одни и те же числа везде.
+ * Годы — те же, что в § 8: birthRange (границы из данных) и shownBirthRange (округление до 5 или 10 лет).
+ * null — год не оценочный (точный, расчётный), лицо — народ или род, промежуток вырождается в точку.
+ */
+export function birthSpanText(id: string): string | null {
+  const p = byId.get(id);
+  const c = model.value.chrono.get(id);
+  if (!p || !c || c.cls !== 'estimated' || isPeople(id)) return null;
+  const [bLo, bHi] = birthRange(id, c, model.value.chrono);
+  const [lo, hi] = shownBirthRange({ ...c, bLo, bHi });
+  if (!(hi > lo)) return null;
+  return typo(`${p.sex === 'f' ? 'Родилась' : 'Родился'} между ${betweenYears(lo, hi)}`);
+}
+
+/** «1020 и 990 гг. до Р. Х.», «5 г. до Р. Х. и 10 г. по Р. Х.»: концы промежутка (астр.) после «между». */
+export function betweenYears(a: number, b: number): string {
+  const ha = toHist(a);
+  const hb = toHist(b);
+  if (ha < 0 && hb < 0) return `${-ha} и ${-hb} гг. до Р. Х.`;
+  if (ha > 0 && hb > 0) return `${ha} и ${hb} гг. по Р. Х.`;
+  return `${formatYear(a)} и ${formatYear(b)}`;
 }
 
 /** Созвездие или колено для подсказки и объявления: служебная группа «Прочие лица» не называется. */

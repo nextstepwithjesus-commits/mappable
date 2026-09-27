@@ -1,4 +1,4 @@
-/** Сценарии приёмки этапа 5: панели «Родство», «Синопсис», «Главы», «Сквозной раздел», «О карте», «Указатель» и разворот. Номера 110–129. */
+/** Сценарии приёмки этапа 5: панели «Родство», «Синопсис», «Главы», «Сквозной раздел», «О карте», «Указатель», «Условные знаки» и разворот. Номера 110–129. */
 import type { Page } from 'playwright';
 import { pass, fail, find, hashId, type Scenario } from './kit.ts';
 
@@ -316,6 +316,198 @@ export const panels: Scenario[] = [
       await close.tap();
       await p.waitForTimeout(600);
       return (await p.locator('section.spread').count()) ? fail('«×» не закрыл разворот') : pass('один столбец; «×» закрывает');
+    },
+  },
+  // ---------- G5: «Условные знаки» — как читать карту (122–127) ----------
+  {
+    n: 122,
+    title: 'G5 мышью: «Условные знаки» — пояснение «Как читать карту: …», разделы по порядку, у каждой строки нарисованный образец',
+    run: async (p) => {
+      await p.goto(p.url().replace(/#.*$/, '') + '#/david');
+      await p.waitForTimeout(2000);
+      await openPanel(p, 'Условные знаки');
+      const sh = sheet(p);
+      const h2 = (await sh.locator('h2').first().innerText()).trim();
+      if (h2 !== 'Условные знаки') return fail(`заголовок панели: «${h2}»`);
+      const lead = nb((await sh.locator('.lead').innerText()).trim());
+      if (!/^Как читать карту: /.test(lead)) return fail(`пояснение: «${lead}»`);
+      const heads = (await sh.locator('h3[id^="legend-"]').allInnerTexts()).map((x) => x.trim());
+      const want = ['Как читать карту', 'Небо', 'Знаки', 'Линии', 'Время', 'Карточка', 'Клавиши', 'Слои'];
+      if (heads.join('|') !== want.join('|')) return fail(`разделы: ${heads.join(' | ')}`);
+      // пройти панель до конца: вырезки из неба рисуются, когда видны
+      const total = await sh.evaluate((el) => el.scrollHeight);
+      for (let y = 0; y < total; y += 300) {
+        await sh.evaluate((el, y) => (el.scrollTop = y), y);
+        await p.waitForTimeout(120);
+      }
+      await p.waitForTimeout(300);
+      const blank = await sh.evaluate((el) =>
+        [...el.querySelectorAll('.legend-row')]
+          .map((row, i) => {
+            const cv = row.querySelector('canvas.legend-sample, canvas.lifebar') as HTMLCanvasElement | null;
+            if (!cv) return row.querySelector('.rail-key') || !row.querySelector('.legend-pic') ? null : i;
+            if (!cv.width || !cv.height) return i;
+            const d = cv.getContext('2d')!.getImageData(0, 0, cv.width, cv.height).data;
+            for (let k = 3; k < d.length; k += 4 * 5) if (d[k] > 0) return null;
+            return i;
+          })
+          .filter((x) => x !== null),
+      );
+      const rows = await sh.locator('.legend-row').count();
+      if (rows < 40) return fail(`строк с образцами: ${rows}`);
+      if (blank.length) return fail(`пустые образцы в строках ${blank.join(', ')}`);
+      // клавиши — таблицей, kbd набран гротеском, без «·»
+      const kbd = await sh.locator('#legend-keys ~ table.keys kbd').first().evaluate((e) => getComputedStyle(e).fontFamily);
+      if (/mono/i.test(kbd) || !/Jost/.test(kbd)) return fail(`шрифт kbd: ${kbd}`);
+      if (/·/.test(await sh.innerText())) return fail('в панели есть «·»');
+      return pass(`${rows} строк, все образцы нарисованы`);
+    },
+  },
+  {
+    n: 123,
+    title: 'G5 пальцем, 390 × 844: «Условные знаки» во весь лист, образцы не шире листа, «Линии» в оглавлении ведёт к разделу',
+    view: PHONE,
+    run: async (p) => {
+      await p.goto(p.url().replace(/#.*$/, '') + '#/david~plegend');
+      await p.waitForTimeout(2400);
+      const sh = sheet(p);
+      if (!(await sh.count())) return fail('панель не открыта по адресу');
+      const over = await sh.evaluate((el) => el.scrollWidth - el.clientWidth);
+      if (over > 1) return fail(`лист шире экрана на ${over} px`);
+      const wide = await sh.evaluate((el) => {
+        const r = el.getBoundingClientRect();
+        return [...el.querySelectorAll('canvas.legend-sample')].filter((c) => {
+          const b = c.getBoundingClientRect();
+          return b.left < r.left - 1 || b.right > r.right + 1;
+        }).length;
+      });
+      if (wide) return fail(`образцов за краем листа: ${wide}`);
+      await sh.locator('.legend-toc button', { hasText: 'Линии' }).tap();
+      await p.waitForTimeout(600);
+      const at = await sh.evaluate((el) => {
+        const h = el.querySelector('#legend-lines')!.getBoundingClientRect();
+        const r = el.getBoundingClientRect();
+        return { top: h.top - r.top, h: r.height };
+      });
+      if (at.top < 0 || at.top > at.h / 2) return fail(`«Линии» после касания: ${Math.round(at.top)} px от верха листа`);
+      const cell = await sh.locator('.legend-row .legend-text').first().boundingBox();
+      return cell && cell.width >= 200 ? pass('лист без прокрутки вбок; оглавление ведёт к разделу') : fail(`колонка пояснений: ${cell?.width} px`);
+    },
+  },
+  {
+    n: 124,
+    title: 'G5 клавиатурой: L — «Условные знаки»; Tab до «Время» в оглавлении, Enter — раздел «Время» наверху листа',
+    run: async (p) => {
+      await p.goto(p.url().replace(/#.*$/, '') + '#/david');
+      await p.waitForTimeout(2000);
+      await p.locator('body').click({ position: { x: 5, y: 5 } }).catch(() => {});
+      await p.keyboard.press('Escape');
+      await p.keyboard.press('KeyL');
+      await p.waitForTimeout(700);
+      const sh = sheet(p);
+      if (!(await sh.count()) || (await sh.locator('h2').first().innerText()).trim() !== 'Условные знаки') return fail('L не открыл «Условные знаки»');
+      let tabs = 0;
+      for (; tabs < 80; tabs++) {
+        const on = await p.evaluate(() => {
+          const a = document.activeElement as HTMLElement | null;
+          return a && a.closest('.legend-toc') ? a.innerText.trim() : '';
+        });
+        if (on === 'Время') break;
+        await p.keyboard.press('Tab');
+      }
+      if (tabs >= 80) return fail('Tab не дошёл до «Время» в оглавлении');
+      await p.keyboard.press('Enter');
+      await p.waitForTimeout(600);
+      const top = await sh.evaluate((el) => el.querySelector('#legend-time')!.getBoundingClientRect().top - el.getBoundingClientRect().top);
+      return top >= 0 && top < 120 ? pass(`Tab × ${tabs}, «Время» наверху листа`) : fail(`«Время» в ${Math.round(top)} px от верха листа`);
+    },
+  },
+  {
+    n: 125,
+    title: 'G5: смена темы перерисовывает образцы — фон вырезки неба и цвет знака берутся из новой темы',
+    run: async (p) => {
+      await p.goto(p.url().replace(/#.*$/, '') + '#/david~plegend');
+      await p.waitForTimeout(2200);
+      const sh = sheet(p);
+      const probe = () =>
+        sh.evaluate((el) => {
+          const crop = el.querySelector('.legend-row canvas.legend-sample') as HTMLCanvasElement;
+          const mag = el.querySelector('.legend-mag canvas') as HTMLCanvasElement;
+          const sky = getComputedStyle(document.documentElement).getPropertyValue('--sky').trim();
+          // фон рамки — у левого края вырезки, знак величины 0 — в середине своего холста
+          const a = crop.getContext('2d')!.getImageData(2, Math.floor(crop.height / 2), 1, 1).data;
+          const b = mag.getContext('2d')!.getImageData(Math.floor(mag.width / 2), Math.floor(mag.height / 2), 1, 1).data;
+          return { crop: [a[0], a[1], a[2]], mag: [b[0], b[1], b[2]], sky };
+        });
+      const hex = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+      const near = (a: number[], b: number[]) => a.every((v, i) => Math.abs(v - b[i]) <= 6);
+      await sh.locator('.legend-row canvas.legend-sample').first().scrollIntoViewIfNeeded();
+      await p.waitForTimeout(400);
+      const night = await probe();
+      await p.locator('.top > .seg button', { hasText: 'День' }).click();
+      await p.waitForTimeout(900);
+      const day = await probe();
+      if (!near(night.crop, hex(night.sky))) return fail(`ночью фон рамки ${night.crop} ≠ ${night.sky}`);
+      if (!near(day.crop, hex(day.sky))) return fail(`днём фон рамки ${day.crop} ≠ ${day.sky}`);
+      if (near(night.mag, day.mag)) return fail(`знак величины 0 не сменил цвет: ${night.mag}`);
+      return pass(`ночь ${night.sky}, день ${day.sky}`);
+    },
+  },
+  {
+    n: 126,
+    title: 'G5: образец полосы времени — часть самой полосы около рамки; сдвиг неба сдвигает и образец',
+    run: async (p) => {
+      await p.goto(p.url().replace(/#.*$/, '') + '#/david~plegend');
+      await p.waitForTimeout(2200);
+      const sh = sheet(p);
+      const row = sh.locator('#legend-time ~ ul .legend-row').first();
+      await row.scrollIntoViewIfNeeded();
+      await p.waitForTimeout(400);
+      const sig = () =>
+        row.locator('canvas').evaluate((c) => {
+          const cv = c as HTMLCanvasElement;
+          if (!cv.width || !cv.height) return '';
+          const d = cv.getContext('2d')!.getImageData(0, 0, cv.width, cv.height).data;
+          let h = 0;
+          for (let k = 0; k < d.length; k += 16) h = (h * 31 + d[k]) | 0;
+          return String(h);
+        });
+      const h = await row.locator('canvas').evaluate((c) => (c as HTMLCanvasElement).getBoundingClientRect().height);
+      const strip = await p.locator('.strip canvas').evaluate((c) => (c as HTMLCanvasElement).getBoundingClientRect().height);
+      if (Math.abs(h - strip) > 1) return fail(`высота образца ${h}, полосы ${strip}`);
+      const a = await sig();
+      await p.keyboard.press('Escape');
+      await p.locator('.skyctl').getByText('Всё небо', { exact: true }).click();
+      await p.waitForTimeout(1500);
+      await openPanel(p, 'Условные знаки');
+      await sh.locator('#legend-time ~ ul .legend-row').first().scrollIntoViewIfNeeded();
+      await p.waitForTimeout(500);
+      const b = await sig();
+      return a && b && a !== b ? pass('образец следует за полосой') : fail(`образец не изменился: ${a} → ${b}`);
+    },
+  },
+  {
+    n: 127,
+    title: 'G5, образец #/specimen: следы жизни и родство нарисованы (drawLifeTrail, drawDescent) в обеих темах',
+    run: async (p) => {
+      await p.goto(p.url().replace(/#.*$/, '') + '#/specimen');
+      await p.waitForTimeout(2200);
+      const sec = p.locator('section[aria-labelledby="spec-h-signs"]');
+      if (/Образца нет/.test(await sec.innerText())) return fail('в образце осталась строка «Образца нет»');
+      const n = await sec.locator('canvas.spec-linecv').count();
+      if (n !== 26) return fail(`образцов следов и родства: ${n} (ждём 13 × 2 темы)`);
+      await sec.locator('canvas.spec-linecv').first().scrollIntoViewIfNeeded();
+      const drawn = await sec.evaluate((el) =>
+        [...el.querySelectorAll('canvas.spec-linecv')].filter((c) => {
+          const cv = c as HTMLCanvasElement;
+          const ctx = cv.getContext('2d')!;
+          const d = ctx.getImageData(0, 0, cv.width, cv.height).data;
+          const [r, g, b] = [d[0], d[1], d[2]];
+          for (let k = 0; k < d.length; k += 4 * 3) if (Math.abs(d[k] - r) + Math.abs(d[k + 1] - g) + Math.abs(d[k + 2] - b) > 40) return true;
+          return false;
+        }).length,
+      );
+      return drawn === n ? pass(`${n} образцов нарисованы`) : fail(`нарисовано ${drawn} из ${n}`);
     },
   },
 ];

@@ -295,6 +295,15 @@ html:has(.specimen) body {
 .spec-mag .spec-glyph {
   width: 40px;
 }
+/* следы жизни и родство: образец 96 px — как в «Как читать карту» */
+.spec-linecv {
+  display: block;
+  width: 96px;
+  height: 26px;
+}
+.spec-linecv.tall {
+  height: 48px;
+}
 .spec-ribbons {
   display: block;
   width: 100%;
