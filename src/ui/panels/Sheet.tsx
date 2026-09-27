@@ -5,10 +5,13 @@ import { skyRef } from '../common.tsx';
 export function Sheet({ title, lead, wide, children }: { title: string; lead?: string; wide?: boolean; children: ComponentChildren }) {
   return (
     <section class={wide ? 'sheet wide' : 'sheet'} aria-label={title}>
-      <button class="close" onClick={() => (panel.value = null)}>
-        закрыть
-      </button>
-      <h2>{title}</h2>
+      {/* шапка: на телефоне прилипает к верху листа, чтобы «закрыть» всегда было под рукой */}
+      <header class="sheet-head">
+        <h2>{title}</h2>
+        <button class="close" onClick={() => (panel.value = null)}>
+          закрыть
+        </button>
+      </header>
       {lead && <p class="lead">{lead}</p>}
       {children}
     </section>

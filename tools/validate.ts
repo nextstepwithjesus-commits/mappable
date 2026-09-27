@@ -200,9 +200,28 @@ function nameInBible(name: string): boolean {
   return ok;
 }
 
+/**
+ * Служебная запись в тексте для читателя: год со знаком минус («−1446»), путь к файлу, латиница.
+ * Годы в текстах пишутся по-русски: «1446 г. до Р. Х.». Латиница допустима только в транслитерации (§ 2).
+ */
+const LATIN_OK = new Set(['translit']);
+function checkReaderText(where: string, v: unknown, key = '') {
+  if (typeof v === 'string') {
+    // текст для читателя — строка с кириллицей; перечислимые значения (cert, role, kind…) пишутся латиницей и не проверяются
+    if (LATIN_OK.has(key) || key === 'id' || key === 'refs' || key === 'script' || !/[А-Яа-яЁё]/.test(v)) return;
+    if (/[−-]\d{1,4}(?![\d:])/.test(v) && /(^|[\s(«])[−-]\d/.test(v)) err(where, `год со знаком минус в тексте для читателя: «${v.slice(0, 80)}» — пишите «1446 г. до Р. Х.»`);
+    if (/\b[\w-]+\.(json|ts|tsx)\b|data\//.test(v)) err(where, `служебная запись в тексте для читателя: «${v.slice(0, 80)}»`);
+    if (/[A-Za-z]{3,}/.test(v)) warn(where, `латиница в тексте для читателя: «${v.slice(0, 80)}»`);
+    return;
+  }
+  if (Array.isArray(v)) v.forEach((x) => checkReaderText(where, x, key));
+  else if (v && typeof v === 'object') for (const [k, x] of Object.entries(v)) if (k !== 'refs' && k !== 'id') checkReaderText(where, x, k);
+}
+
 for (const [id, p] of byId) {
   if (!targetIds.has(id)) continue;
   const W = id;
+  checkReaderText(W, { card: p.card, chrono: p.chrono, disambig: p.disambig });
   for (const k of Object.keys(p)) if (!PERSON_KEYS.has(k)) err(W, `неизвестное поле «${k}»`);
   if (!ID_RE.test(id)) err(W, 'id: только латиница в нижнем регистре, цифры и дефис');
   if (typeof p.name !== 'string' || !/^[А-ЯЁ][А-ЯЁа-яё\- ]*$/.test(p.name)) err(W, 'name: имя по-русски, с прописной, только кириллица, дефис и пробел');

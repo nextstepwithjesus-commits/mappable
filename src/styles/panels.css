@@ -12,9 +12,15 @@
   padding: 18px 28px 40px 30px;
 }
 /* при открытой карточке небу остаётся не меньше трети ширины */
-@media (max-width: 1600px) {
+@media (min-width: 721px) and (max-width: 1600px) {
   .app:has(.folio:not([hidden])) .sheet:not(.wide) {
     width: 420px;
+  }
+}
+/* панель никогда не ложится на карточку (на телефоне она — отдельный лист поверх, см. phone.css) */
+@media (min-width: 721px) {
+  .app:has(.folio:not([hidden])) .sheet {
+    max-width: calc(100% - var(--folio-w));
   }
 }
 .sheet.wide {

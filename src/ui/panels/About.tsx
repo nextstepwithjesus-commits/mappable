@@ -1,7 +1,12 @@
 import { anchors, modelInfo, volumes, groupById, builtAt } from '../../data/atlas.ts';
 import { model, modelId, lineFlip } from '../../state.ts';
 import { Refs, VerseInsert, plural } from '../common.tsx';
+import { formatYear, toAstro } from '../../engine/years.ts';
 import { Sheet } from './Sheet.tsx';
+
+/** Год якоря по-человечески: «967 г. до Р. Х.»; в вариантах «-966 (Тиле)» → «966 г. до Р. Х. (Тиле)». */
+const anchorYear = (v: number) => formatYear(toAstro(v));
+const anchorAlt = (s: string) => s.replace(/^(-?\d+)/, (y) => anchorYear(Number(y)));
 
 // ---------- о карте ----------
 export function AboutPanel() {
@@ -42,7 +47,10 @@ export function AboutPanel() {
               <td>
                 {a.event} <Refs refs={[a.verse]} owner={`an${a.id}`} />
               </td>
-              <td>{a.value < 0 ? `${-a.value} до Р. Х.` : `${a.value} по Р. Х.`}{a.alternatives.length ? <div class="muted">или {a.alternatives.join('; ')}</div> : null}</td>
+              <td>
+                {anchorYear(a.value)}
+                {a.alternatives.length ? <div class="muted">или {a.alternatives.map(anchorAlt).join('; ')}</div> : null}
+              </td>
               <td class="muted">{a.source}</td>
             </tr>
           ))}
@@ -72,9 +80,9 @@ export function AboutPanel() {
           ))}
         </tbody>
       </table>
-      <p class="muted">Раскладка: {Object.entries(m.metrics).map(([k, v]) => `${k} ${v}`).join('; ')}. Сборка: {new Date(builtAt).toLocaleString('ru-RU')}.</p>
-      <p class="muted">Родословия на небе — по метке группы: {groupById.size} созвездий. Названия эпох и их основания — в разделе «Эпохи».</p>
-      <p class="muted">{modelInfo.length} модели хронологии рассчитаны заранее; модель по умолчанию входит в индекс неба, остальные загружаются при выборе.</p>
+      <p class="muted">
+        Роды, колена и народы образуют на небе {groupById.size} {plural(groupById.size, 'созвездие', 'созвездия', 'созвездий')}. Названия эпох и их основания — в панели «Эпохи». Данные атласа собраны {new Date(builtAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}.
+      </p>
     </Sheet>
   );
 }

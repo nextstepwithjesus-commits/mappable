@@ -98,8 +98,10 @@
   .folio-inner {
     padding: 4px 22px 60px 44px;
   }
+  /* номер раздела целиком на поле слева от заголовка */
   .sec .no {
-    left: -30px;
+    left: -36px;
+    width: 28px;
   }
   .mark {
     right: -18px;
@@ -110,8 +112,41 @@
     width: auto;
     bottom: 10px;
   }
-  .sheet {
+  /* панель на телефоне — полноэкранный лист поверх карточки, с прилипающей шапкой */
+  .sheet,
+  .sheet.wide {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
     width: 100%;
+    max-width: none;
+    z-index: 30;
+    padding-top: 0;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .sheet-head {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 0 -16px 4px;
+    padding: 4px 4px 4px 16px;
+    background: var(--sheet);
+    border-bottom: 1px solid var(--rule);
+  }
+  .sheet-head h2 {
+    margin: 0;
+  }
+  .sheet .sheet-head .close {
+    position: static;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 12px;
   }
   .skyctl {
     bottom: auto;
