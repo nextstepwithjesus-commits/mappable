@@ -8,7 +8,7 @@ import type { Sky } from '../render/sky.ts';
 import type { Cert, Role } from '../data/types.ts';
 import { selected, hovered, pickSecond } from '../state.ts';
 import { typo } from './text/typo.ts';
-import { inView, reduced } from './sky/view.ts';
+import { inView } from './sky/view.ts';
 
 export const skyRef: { current: Sky | null; redraw: () => void; flyTo: (id: string) => void } = {
   current: null,
@@ -122,22 +122,8 @@ export function goTo(id: string) {
   if (!visible) skyRef.flyTo(id);
 }
 
-/** Перелёт к окну, в котором видны все лица (отметки поиска «Все N на небе»): по годам и полосам, с полями. */
-export function flyToIds(ids: string[]) {
-  const s = skyRef.current;
-  if (!s || !s.model) return;
-  const pts = ids.map((id) => ({ x: s.nodeX(id), n: s.node(id) })).filter((p): p is { x: number; n: NonNullable<typeof p.n> } => p.x !== null && !!p.n);
-  if (!pts.length) return;
-  const xs = pts.map((p) => p.x);
-  const lanes = pts.map((p) => p.n.lane);
-  const x0 = Math.min(...xs);
-  const x1 = Math.max(...xs);
-  // не уже 160 лет вокруг одиночного лица: иначе окно — одна звезда без соседей
-  const minW = Math.abs(s.xOf(s.tOf(x0) + 160) - x0);
-  const w = Math.max(minW, (x1 - x0) * 1.2);
-  s.cam.flyTo((x0 + x1) / 2, (Math.min(...lanes) + Math.max(...lanes)) / 2, w, skyRef.redraw, reduced());
-  skyRef.redraw();
-}
+/** Вписать лица в небо по обеим осям (время и полосы) — одна функция перелёта для всех панелей (D4; src/ui/sky/view.ts). */
+export { flyToIds } from './sky/view.ts';
 
 /** Ссылка, которая сейчас подсвечивает звезду наведением: при уходе ссылки из разметки подсветка снимается. */
 let hoverLink: HTMLElement | null = null;

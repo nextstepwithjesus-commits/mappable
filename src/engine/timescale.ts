@@ -13,7 +13,12 @@ export const T_START = toAstro(-4174) - 20;
 export const T_CANON_END = 100;
 export const T_END = 2040;
 const BIN = 10; // лет
-const MAG = 20; // предельное отношение масштабов
+/**
+ * Предельное растяжение «по насыщенности»: самый растянутый участок шкалы не длиннее самого сжатого больше чем в MAG раз
+ * (решение владельца 1; прежде MAG = 20, и 120 лет Моисея выходили длиннее 930 лет Адама — MAP-31).
+ */
+export const DENSE_MAG = 6;
+const MAG = DENSE_MAG;
 export const WORLD_WIDTH = 100_000; // условных единиц по горизонтали
 
 export interface TimeScale {
@@ -98,10 +103,22 @@ export function buildTimeScale(births: number[], spans: [number, number][]): Tim
   // истинная: равные доли по годам до конца канона
   const wTrue = new Float64Array(nb);
   const wDense = new Float64Array(nb);
+  // растяжение отрезка — от 1 до MAG; после ограничения сглаживается ещё раз (σ = 2 интервала): у предела нет ступеньки,
+  // и кубическая интерполяция между узлами не выходит за 1 : MAG заметно
+  const stretch = new Float64Array(canonBins);
+  for (let i = 0; i < canonBins; i++) stretch[i] = Math.min(MAG, 1 + dens[i] * 1.4);
   for (let i = 0; i < canonBins; i++) {
     wTrue[i] = knots[i + 1] - knots[i];
-    const base = 1;
-    wDense[i] = (knots[i + 1] - knots[i]) * Math.min(MAG, base + dens[i] * 1.4);
+    let s = 0;
+    let w = 0;
+    for (let k = -6; k <= 6; k++) {
+      const j = i + k;
+      if (j < 0 || j >= canonBins) continue;
+      const wk = Math.exp(-(k * k) / (2 * 4));
+      s += wk * stretch[j];
+      w += wk;
+    }
+    wDense[i] = (knots[i + 1] - knots[i]) * (s / w);
   }
   const norm = (w: Float64Array) => {
     let s = 0;

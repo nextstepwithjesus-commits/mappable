@@ -2,7 +2,7 @@ import { useMemo } from 'preact/hooks';
 import { byId, persons } from '../../data/atlas.ts';
 import { model } from '../../state.ts';
 import { goTo } from '../common.tsx';
-import { atlasCoord } from '../../render/sky.ts';
+import { atlasCoord } from '../../engine/layout.ts';
 import { norm } from '../../engine/text.ts';
 import { lifeText } from '../sky/text.ts';
 import { Sheet, useRemembered } from './Sheet.tsx';
@@ -57,7 +57,8 @@ export function IndexPanel() {
   const coord = (id: string) => {
     const n = m.nodeByPerson.get(id);
     const c = m.chrono.get(id);
-    return n && c ? atlasCoord(c.b, n.lane, m.laneMax) : '';
+    // координата — там, где звезда стоит на карте: у лиц скоплений это клетка сетки (n.t0), а не год рождения
+    return n && c ? atlasCoord(n.t0, n.lane) : '';
   };
   const known = (id: string) => (byId.get(id)?.magnitude ?? 6) <= KNOWN_MAG;
   let lastLetter = '';

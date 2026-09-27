@@ -45,7 +45,7 @@
  "persons": 2660,
  "lanes": 341,
  "corridorWidth": 11,
- "crossings": 239,
+ "crossings": 238,
  "corridorCrossings": 47,
  "dropLength": 5329,
  "blocks": 560,
@@ -61,9 +61,9 @@
 ```
 {
  "persons": 2660,
- "lanes": 332,
+ "lanes": 336,
  "corridorWidth": 15,
- "crossings": 212,
+ "crossings": 214,
  "corridorCrossings": 63,
  "dropLength": 5347,
  "blocks": 560,

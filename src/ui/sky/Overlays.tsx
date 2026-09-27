@@ -1,6 +1,6 @@
 /** Надписи поверх неба: строка выбора второго лица, вступительный картуш и «Как читать карту». */
 import { byId } from '../../data/atlas.ts';
-import { introDone, pickMode, pins, pinsQuery, selected } from '../../state.ts';
+import { introDone, pickMode, pins, pinsQuery, selected, skyGroup } from '../../state.ts';
 import { skyRef, plural } from '../common.tsx';
 import { num, typo, typoTree } from '../text/typo.ts';
 import { Close } from '../controls.tsx';
@@ -44,6 +44,22 @@ export function PinBar({ n, query }: { n: number; query: string }) {
 }
 
 /**
+ * Строка группы у верхней кромки неба (G2, G3; skyGroup): что светится — лица главы или участок линий Мессии — и как
+ * снять. Остальное небо погашено до 25 %. Снимают «Снять», Escape и закрытие панели.
+ */
+export function GroupBar({ label }: { label: string }) {
+  return (
+    <div class="pickbar pinbar groupbar" role="status">
+      <span>
+        {typo(label)}
+        <span class="keys-only">. Esc — снять</span>
+      </span>
+      <button onClick={() => (skyGroup.value = null)}>Снять</button>
+    </div>
+  );
+}
+
+/**
  * «Как читать карту» (C5; UX-03, MOB-07): один текст — во вступлении и в начале «Условных знаков».
  * На сенсорном экране вступление говорит о касаниях, с мышью — о колесе и щелчке (sky.css, .for-touch / .for-mouse);
  * в «Условных знаках» (both) — оба способа.
@@ -51,7 +67,10 @@ export function PinBar({ n, query }: { n: number; query: string }) {
 export function ReadingGuide({ both = false }: { both?: boolean }) {
   return typoTree(
     <ul class={both ? 'guide both' : 'guide'}>
-      <li>Годы сверху — время, буквы слева — полосы неба. Координата в «Указателе» — номер века от начала шкалы и буква полосы.</li>
+      <li>
+        Годы сверху — время; внизу — номера столбцов по сто лет, буквы слева — строки неба. Координата в «Указателе» — номер столбца и
+        буква строки.
+      </li>
       <li>
         Найти лицо — поле «Найти» или клавиша <kbd>/</kbd>: имя, другая форма имени или стих («Руф 4:21»).
       </li>

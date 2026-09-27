@@ -2,12 +2,16 @@
  * Ввод неба: указатель (протяжка, щипок, колесо и тачпад, двойной щелчок, наведение и подсказка).
  * Клавиши неба — в src/ui/sky/skykeys.ts.
  */
-import { FRAME_H, type Sky } from '../../render/sky.ts';
-import { selected, hovered, epochMode, pins, pinsQuery, pickMode, pickSecond } from '../../state.ts';
+import { FRAME_H, type Rect, type Sky } from '../../render/sky.ts';
+import { byId } from '../../data/atlas.ts';
+import { selected, hovered, epochMode, layers, panel, pins, pinsQuery, pickMode, pickSecond, synopsisAt } from '../../state.ts';
+import { lineNoteHits, ribbonAt, setRibbonHover } from '../../render/ribbons.ts';
 import { goTo, skyRef } from '../common.tsx';
 import { tierAt, tierHot, type TierHit } from '../../render/tiers.ts';
 import { showYears, stopFlight, zoomBy } from './view.ts';
 import { hoverYear } from './meridian.ts';
+import { openSheetAt } from '../sheet.ts';
+import { closeWhich, openWhich, whichOpen } from './Which.tsx';
 import type { Tip } from './Tip.tsx';
 
 export type { Tip };
@@ -99,6 +103,101 @@ export function isClick(dist: number, ms: number, type: string): boolean {
   return dist <= (CLICK_SLOP[type] ?? 5) || (ms < 250 && dist < 8);
 }
 
+// ---------- касание (H5; MOB-10, MOB-17, MOB-39) ----------
+
+/** Радиус касания пальцем, px: после звезды ищется ближайший след. */
+export const TOUCH_R = 22;
+/** Цель касания не меньше 44 × 44 (WCAG 2.5.5): указатели у края на телефоне — 18 px в высоту, их поле шире рисунка. */
+export const TOUCH_TARGET = 44;
+
+/** Прямоугольник, раздвинутый до min × min вокруг своей середины. */
+export function inflate(r: Rect, min: number): Rect {
+  const w = Math.max(r.w, min);
+  const h = Math.max(r.h, min);
+  return { x: r.x - (w - r.w) / 2, y: r.y - (h - r.h) / 2, w, h };
+}
+
+/** Звезда под пальцем: расстояние до касания (px), величина (0 — самая яркая), подписана ли на небе, место на холсте. */
+export interface TapCandidate {
+  id: string;
+  d: number;
+  mag: number;
+  labeled: boolean;
+  x: number;
+  y: number;
+}
+export type TapChoice = { kind: 'pick'; id: string } | { kind: 'ask'; ids: string[] } | { kind: 'zoom' } | { kind: 'none' };
+
+/**
+ * Вес звезды для касания (MOB-10): расстояние / (1 + 0,3·(6 − величина)); у подписанной — ещё ×0,6.
+ * Меньше — вероятнее: палец целится в то, что видит, — в яркие звёзды с именами.
+ */
+export const tapScore = (c: TapCandidate) => (c.d / (1 + 0.3 * (6 - Math.max(0, Math.min(6, c.mag))))) * (c.labeled ? 0.6 : 1);
+/** Больше стольких равновероятных звёзд — не список, а приближение: на обзоре имена ничего не скажут. */
+export const ASK_MAX = 5;
+
+/**
+ * Что значит касание (MOB-10). Звёзды «равновероятны», если вес не больше полуторного веса лучшей (и не дальше 1,5 единицы
+ * веса — две звезды в паре пикселей друг от друга неразличимы и при точном касании). Одна такая — выбор; две–пять —
+ * список «Какое лицо?» сверху вниз, как на небе; больше пяти — приближение к месту касания, если есть куда.
+ */
+export function tapChoice(cands: TapCandidate[], canZoom: boolean): TapChoice {
+  if (!cands.length) return { kind: 'none' };
+  const sorted = [...cands].sort((a, b) => tapScore(a) - tapScore(b));
+  const s0 = tapScore(sorted[0]);
+  const near = sorted.filter((c) => tapScore(c) <= Math.max(s0 * 1.5, s0 + 1.5));
+  if (near.length === 1) return { kind: 'pick', id: near[0].id };
+  if (near.length > ASK_MAX && canZoom) return { kind: 'zoom' };
+  return { kind: 'ask', ids: near.slice(0, ASK_MAX).sort((a, b) => a.y - b.y || a.x - b.x).map((c) => c.id) };
+}
+
+/** Подпись под пальцем: касание имени — то же, что касание звезды (на телефоне палец целится в надпись). */
+const LABEL_D = 2;
+
+/**
+ * Звёзды в радиусе r от точки (px холста), которые видны и ловят указатель; у лица с двумя знаками — ближайший.
+ * Звезда, чья подпись под пальцем (поле подписи — не ниже 24 px), считается в LABEL_D px от касания.
+ */
+function tapCandidates(sky: Sky, x: number, y: number, r: number): TapCandidate[] {
+  const cam = sky.cam;
+  const labels = sky.labelStats().boxes.filter((b) => b.kind === 'star' && b.id);
+  const labeled = new Set(labels.map((b) => b.id!));
+  const onLabel = new Set(
+    labels
+      .filter((b) => {
+        const q = inflate(b, 24);
+        return x >= b.x - 2 && x <= b.x + b.w + 2 && y >= q.y && y <= q.y + q.h;
+      })
+      .map((b) => b.id!),
+  );
+  const best = new Map<string, TapCandidate>();
+  for (let i = 0; i < sky.nodes.length; i++) {
+    const n = sky.nodes[i];
+    const sy = cam.sy(n.lane);
+    const named = onLabel.has(n.person);
+    if (!named && Math.abs(sy - y) > r) continue;
+    const sx = cam.sx(sky.X0[i]);
+    let d = Math.hypot(sx - x, sy - y);
+    if (named) d = Math.min(d, LABEL_D);
+    if (d > r || !sky.reachable(i)) continue;
+    const was = best.get(n.person);
+    if (was && was.d <= d) continue;
+    best.set(n.person, { id: n.person, d, mag: byId.get(n.person)?.magnitude ?? 6, labeled: labeled.has(n.person), x: sx, y: sy });
+  }
+  return [...best.values()];
+}
+
+/**
+ * Выбор звезды на небе (щелчок, касание, строка «Какое лицо?»): в режиме «Родство с…» и «Разворот с…» — второе лицо;
+ * иначе — выбор, и на телефоне лист карточки открывается на шапке 104 px (решение владельца 12).
+ */
+function chooseStar(id: string) {
+  if (pins.value.length) pins.value = [];
+  if (pickSecond(id)) return;
+  if (id !== selected.value) openSheetAt('peek');
+  selected.value = id;
+}
+
 export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () => void, setTip: (t: Tip | null) => void): PointerInput {
   const pointers = new Map<number, { x: number; y: number }>();
   let drag: { x0: number; y0: number; x: number; y: number; moved: boolean; t: number; type: string } | null = null;
@@ -141,9 +240,13 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     }
     setTierHot(null);
     const edge = sky.edgeHits.some((q) => x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h);
-    const hit = edge ? null : sky.hit(x, y, r);
+    // выноски точек сравнения линий — ссылки (E6; src/render/ribbons.ts)
+    const note = !edge && lineNoteHits(sky).some((q) => x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h);
+    const hit = edge || note ? null : sky.hit(x, y, r);
     if (hit !== hovered.value) hovered.value = hit;
-    setHot(!!hit || edge);
+    // лента под указателем: подсвечивается, у указателя — шаг со стихом, идёт ток света (E6; MAP-28)
+    if (setRibbonHover(sky, hit || edge || note || !layers.value.ribbons ? null : ribbonAt(sky, x, y))) request();
+    setHot(!!hit || edge || note);
     showTip(hit ? { kind: 'star', id: hit, x, y } : null);
   };
   /** Подсказка и наведение — по тому, что под указателем сейчас. */
@@ -162,8 +265,11 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     const initial = !camWas;
     camWas = key;
     if (initial) return;
+    // список «Какое лицо?» стоит у места касания: небо сдвинулось — место уже не то
+    if (whichOpen()) closeWhich();
     showTip(null);
     if (hovered.value) hovered.value = null;
+    setRibbonHover(sky, null);
     setTierHot(null);
     clearTimeout(calm);
     calm = window.setTimeout(rehit, 120);
@@ -176,6 +282,7 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     canvas.setPointerCapture(e.pointerId);
     // нажатие прерывает перелёт и шаг масштаба (D4): stopFlight и упор камеры — в SkyView
     stopZoom();
+    if (whichOpen()) closeWhich();
     clearTimeout(clearTimer);
     const p = local(e);
     pointers.set(e.pointerId, p);
@@ -227,7 +334,7 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       return;
     }
     hoverYear(null);
-    probe(p.x, p.y, e.pointerType === 'touch' ? 22 : 12);
+    probe(p.x, p.y, e.pointerType === 'touch' ? TOUCH_R : 12);
   };
   const onUp = (e: PointerEvent) => {
     const p = local(e);
@@ -243,9 +350,23 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     if (!d || e.type === 'pointercancel' || !isClick(Math.hypot(p.x - d.x0, p.y - d.y0), performance.now() - d.t, d.type)) return;
     // щелчок — там, где нажали: дрожание при отпускании не уводит к соседней звезде
     const at = { x: d.x0, y: d.y0 };
-    const edge = sky.edgeHits.find((r) => at.x >= r.x && at.x <= r.x + r.w && at.y >= r.y && at.y <= r.y + r.h);
+    const touch = d.type === 'touch';
+    // указатель у края: палец попадает в поле 44 × 44 вокруг надписи (MOB-17)
+    const edge = sky.edgeHits.find((e) => {
+      const r = touch ? inflate(e, TOUCH_TARGET) : e;
+      return at.x >= r.x && at.x <= r.x + r.w && at.y >= r.y && at.y <= r.y + r.h;
+    });
     if (edge) {
       goTo(edge.id);
+      return;
+    }
+    // выноска точки сравнения линий — синопсис участка; знак-спутница у развилки — карточка лица (E6; U2)
+    const note = lineNoteHits(sky).find((r) => at.x >= r.x && at.x <= r.x + r.w && at.y >= r.y && at.y <= r.y + r.h);
+    if (note) {
+      if (note.kind === 'synopsis') {
+        synopsisAt.value = note.id;
+        panel.value = 'synopsis';
+      } else goTo(note.id);
       return;
     }
     // ярусы эпох: лицо — выбрать (и перелёт, если его нет на экране), эпоха и событие — показать их годы (IX-28)
@@ -255,6 +376,8 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       const b = t.bar;
       if (b.kind === 'person') {
         if (pins.value.length) pins.value = [];
+        // касание отрезка царя — тоже касание неба: лист карточки — на шапке
+        if (b.id !== selected.value && !pickMode.value) openSheetAt('peek');
         goTo(b.id);
       } else {
         const span = Math.max(40, b.t1 - b.t0);
@@ -263,11 +386,37 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       }
       return;
     }
-    const hit = sky.hit(at.x, at.y, d.type === 'touch' ? 22 : 12);
+    let hit: string | null = null;
+    if (touch) {
+      // палец в плотном месте: не наугад — единственная вероятная звезда, список «Какое лицо?» или приближение (H5)
+      const cam = sky.cam;
+      const canZoom = cam.clampKx(cam.kx * KEY_STEP, cam.wx(at.x)) > cam.kx * 1.2;
+      const c = tapChoice(tapCandidates(sky, at.x, at.y, TOUCH_R), canZoom);
+      // что сделало касание — для проверок приёмки (tools/accept/phone.ts)
+      canvas.dataset.tap = c.kind;
+      if (c.kind === 'zoom') {
+        zoomBy(KEY_STEP, at, KEY_MS);
+        return;
+      }
+      if (c.kind === 'ask') {
+        const b = canvas.getBoundingClientRect();
+        const vp = sky.cam.vp;
+        openWhich({
+          ids: c.ids,
+          x: b.left + at.x,
+          y: b.top + at.y,
+          bounds: { left: b.left + vp.l, top: b.top + sky.openTop, right: b.left + vp.r, bottom: b.top + vp.b },
+          onPick: chooseStar,
+          back: canvas,
+        });
+        return;
+      }
+      // одна звезда — она; ни одной — ближайший след под пальцем
+      hit = c.kind === 'pick' ? c.id : sky.hit(at.x, at.y, TOUCH_R);
+    } else hit = sky.hit(at.x, at.y, 12);
     if (hit) {
-      if (pins.value.length) pins.value = [];
       // в режиме «Родство с…» или «Разворот с…» щелчок выбирает второе лицо, первое остаётся
-      if (!pickSecond(hit)) selected.value = hit;
+      chooseStar(hit);
       return;
     }
     // пустое небо: снять выбор (IX-09); «назад» в браузере его вернёт (D8). В режиме выбора второго лица — ничего.
@@ -328,6 +477,7 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
   const onLeave = () => {
     pointer = null;
     hovered.value = null;
+    if (setRibbonHover(sky, null)) request();
     hoverYear(null);
     setTierHot(null);
     setHot(false);
@@ -344,6 +494,7 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
   return {
     watchCamera,
     dispose() {
+      closeWhich();
       clearTimeout(calm);
       clearTimeout(clearTimer);
       stopZoom();

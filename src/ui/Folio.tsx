@@ -7,13 +7,16 @@ import { grid } from './layout.ts';
 import { skyRef, plural, CAN_PRINT } from './common.tsx';
 import { lowerFirst } from './text/ru.ts';
 import { typo } from './text/typo.ts';
-import { Masthead } from './card/Masthead.tsx';
+import { Masthead, isPeople } from './card/Masthead.tsx';
 import { Close } from './controls.tsx';
 import { SECTIONS, PARTS, buildSections, familyIds, contemporaryGroups } from './card/sections.tsx';
 import { Clamp, clampItems } from './card/Clamp.tsx';
 import { Brief, authoredCount } from './card/Brief.tsx';
 import { Rail, RailKey, type SecState } from './card/Rail.tsx';
 import { affiliation } from './card/shared.tsx';
+import { lifeSpanText } from '../engine/years.ts';
+import { reduced } from './sky/view.ts';
+import { sheetStop, snapSheet, stopsFor, releaseVelocity, type SheetStop } from './sheet.ts';
 
 export { Masthead, SECTIONS, PARTS, buildSections, familyIds, contemporaryGroups };
 export type { SecState };
@@ -124,12 +127,13 @@ export function CardPage({
     requestAnimationFrame(() => {
       if (st === 'header') {
         const t = document.getElementById(`title-${id}`);
-        t?.closest('.folio')?.scrollTo({ top: 0, behavior: 'smooth' });
+        t?.closest('.folio')?.scrollTo({ top: 0, behavior: reduced() ? 'auto' : 'smooth' });
         t?.focus({ preventScroll: true });
         return;
       }
       const el = document.getElementById(`sec-${n}`);
-      el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // ослабленное движение — переход без плавной прокрутки (MOB-40)
+      el?.scrollIntoView({ behavior: reduced() ? 'auto' : 'smooth', block: 'start' });
     });
   };
 
@@ -240,6 +244,163 @@ export function CardPage({
 
 /** Сколько ждать тома карточки, прежде чем сказать «Загрузка карточки…» (IX-45). */
 const LOADING_AFTER = 300;
+/** Порог протяжки листа: дальше — лист тянется, ближе — касание (как у касания неба, D3). */
+const DRAG_SLOP = 8;
+
+/**
+ * Протяжка нижнего листа на телефоне (H2; MOB-12): за шапку листа — указателем, за текст — касанием, если текст
+ * прокручен к началу (тогда протяжка вниз сворачивает лист, а не прокручивает текст); на шапке (104 px) текст не
+ * прокручивается, и лист тянется за любое место. Высота при протяжке — в --sheet-h на самом листе; при отпускании лист
+ * встаёт в ближайшее положение с учётом скорости (snapSheet) или закрывается взмахом вниз.
+ */
+function useSheetDrag(aside: { current: HTMLElement | null }, on: boolean) {
+  useEffect(() => {
+    const el = aside.current;
+    if (!el || !on) return;
+    let d: { y0: number; h0: number; pts: { t: number; y: number }[]; from: SheetStop; moved: boolean } | null = null;
+    let touch: { x0: number; y0: number; top: number; t: number } | null = null;
+    // место для листа — небо между верхней строкой и полосой времени: лист на 100 % занимает его целиком
+    const avail = () => document.querySelector('.sky')?.getBoundingClientRect().height ?? window.innerHeight * 0.8;
+    // время — Event.timeStamp: скорость взмаха считается по времени касаний, а не по тому, когда до них дошла очередь
+    const begin = (y: number, t: number) => {
+      d = { y0: y, h0: el.getBoundingClientRect().height, pts: [{ t, y }], from: sheetStop.peek(), moved: false };
+    };
+    const move = (y: number, t: number) => {
+      if (!d) return false;
+      const dy = y - d.y0;
+      if (!d.moved && Math.abs(dy) < DRAG_SLOP) return false;
+      if (!d.moved) {
+        d.moved = true;
+        el.dataset.drag = '';
+      }
+      const h = Math.max(0, Math.min(stopsFor(avail()).full, d.h0 - dy));
+      el.style.setProperty('--sheet-h', `${Math.round(h)}px`);
+      d.pts.push({ t, y });
+      while (d.pts.length > 2 && t - d.pts[0].t > 160) d.pts.shift();
+      return true;
+    };
+    /** Отпускание: true — это была протяжка. */
+    const end = (t: number) => {
+      const was = d;
+      d = null;
+      if (!was || !was.moved) return false;
+      const h = el.getBoundingClientRect().height;
+      const to = snapSheet(h, releaseVelocity(was.pts, t), stopsFor(avail()), was.from);
+      delete el.dataset.drag;
+      el.style.removeProperty('--sheet-h');
+      if (to === 'close') selected.value = null;
+      else sheetStop.value = to;
+      return true;
+    };
+    const inBar = (t: EventTarget | null) => t instanceof Element && !!t.closest('.sheet-bar') && !t.closest('button');
+    // шапка листа: указатель (палец, перо, мышь); касание шапки на 104 px поднимает лист до 55 %
+    const onDown = (e: PointerEvent) => {
+      if (!inBar(e.target) || (e.pointerType === 'mouse' && e.button !== 0)) return;
+      el.setPointerCapture(e.pointerId);
+      begin(e.clientY, e.timeStamp);
+    };
+    const onMove = (e: PointerEvent) => {
+      if (d && el.hasPointerCapture(e.pointerId)) move(e.clientY, e.timeStamp);
+    };
+    const onUp = (e: PointerEvent) => {
+      if (!el.hasPointerCapture(e.pointerId)) return;
+      el.releasePointerCapture(e.pointerId);
+      const from = d?.from;
+      if (!end(e.timeStamp) && e.type === 'pointerup' && from === 'peek') sheetStop.value = 'half';
+    };
+    // текст листа: касание, прокрученное к началу, тянет лист вниз; на шапке — в обе стороны
+    const onTouchStart = (e: TouchEvent) => {
+      // шапку тянет указатель (выше); её кнопки нажимаются как обычно
+      if (e.touches.length !== 1 || (e.target instanceof Element && e.target.closest('.sheet-bar'))) {
+        touch = null;
+        return;
+      }
+      const t = e.touches[0];
+      touch = { x0: t.clientX, y0: t.clientY, top: el.scrollTop, t: e.timeStamp };
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      if (!touch || e.touches.length !== 1) return;
+      const t = e.touches[0];
+      if (!d) {
+        const dx = t.clientX - touch.x0;
+        const dy = t.clientY - touch.y0;
+        if (Math.abs(dy) < DRAG_SLOP || Math.abs(dy) < Math.abs(dx)) return;
+        const peek = sheetStop.peek() === 'peek';
+        if (!(peek || (dy > 0 && touch.top <= 0 && el.scrollTop <= 0))) {
+          touch = null;
+          return;
+        }
+        begin(touch.y0, touch.t);
+      }
+      if (e.cancelable) e.preventDefault();
+      move(t.clientY, e.timeStamp);
+    };
+    const onTouchEnd = (e: TouchEvent) => {
+      if (touch && d) end(e.timeStamp);
+      touch = null;
+    };
+    el.addEventListener('pointerdown', onDown);
+    el.addEventListener('pointermove', onMove);
+    el.addEventListener('pointerup', onUp);
+    el.addEventListener('pointercancel', onUp);
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchmove', onTouchMove, { passive: false });
+    el.addEventListener('touchend', onTouchEnd);
+    el.addEventListener('touchcancel', onTouchEnd);
+    return () => {
+      el.removeEventListener('pointerdown', onDown);
+      el.removeEventListener('pointermove', onMove);
+      el.removeEventListener('pointerup', onUp);
+      el.removeEventListener('pointercancel', onUp);
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchmove', onTouchMove);
+      el.removeEventListener('touchend', onTouchEnd);
+      el.removeEventListener('touchcancel', onTouchEnd);
+      delete el.dataset.drag;
+      el.style.removeProperty('--sheet-h');
+    };
+  }, [on]);
+}
+
+/**
+ * Закреплённая шапка нижнего листа (H2; MOB-12, MOB-15): ручка, имя, «Развернуть» или «Свернуть» и «×» (44 × 44).
+ * На шапке (104 px) под именем — годы: этого хватает, чтобы узнать лицо, не открывая карточки (MOB-11).
+ * Имя здесь — для глаз: заголовком карточки для диктора и для фокуса остаётся h2 шапки карточки (Masthead).
+ */
+function SheetBar({ id, stop }: { id: string; stop: SheetStop }) {
+  const p = byId.get(id)!;
+  const c = model.value.chrono.get(id);
+  const years = c ? lifeSpanText(c, { people: isPeople(id) }) : '';
+  const full = stop === 'full';
+  return (
+    <div class="sheet-bar">
+      <div class="grab" aria-hidden="true">
+        <span />
+      </div>
+      <div class="bar-row">
+        <div class="bar-name" aria-hidden="true">
+          {p.name}
+        </div>
+        <button
+          type="button"
+          class="cmd bar-toggle"
+          aria-expanded={full}
+          aria-label={full ? 'Свернуть карточку' : 'Развернуть карточку'}
+          onClick={() => (sheetStop.value = full ? 'peek' : 'full')}
+        >
+          {full ? 'Свернуть' : 'Развернуть'}
+        </button>
+        {/* «×» снимает только выбор; открытая панель остаётся (D11; IX-26) */}
+        <Close label="Закрыть карточку" onClick={() => (selected.value = null)} />
+      </div>
+      {stop === 'peek' && (
+        <div class="bar-years" aria-hidden="true">
+          {typo(years || 'время не установлено')}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function Folio() {
   const id = selected.value;
@@ -250,6 +411,12 @@ export function Folio() {
   const [slow, setSlow] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const inner = useRef<HTMLDivElement>(null);
+  const aside = useRef<HTMLElement>(null);
+  // на телефоне карточка — нижний лист с тремя положениями (ТЗ § 3.8; H2)
+  const phone = grid.value.phone;
+  const stop = sheetStop.value;
+  const sheet = phone && !!id && byId.has(id);
+  useSheetDrag(aside, sheet);
   useEffect(() => {
     if (!id) return;
     let alive = true;
@@ -269,15 +436,30 @@ export function Folio() {
   useEffect(() => {
     const el = inner.current?.parentElement;
     if (!el) return;
+    // текущий раздел — тот, чей заголовок дошёл до верха листа; на телефоне верх листа — под шапкой и строкой номеров
+    const edge = phone ? 120 : 80;
     const onScroll = () => {
       const secs = [...el.querySelectorAll<HTMLElement>('.sec[data-n]')];
+      const top = el.getBoundingClientRect().top;
       let cur = 1;
-      for (const s of secs) if (s.offsetTop - el.scrollTop < 80) cur = Number(s.dataset.n);
+      for (const s of secs) if (s.getBoundingClientRect().top - top < edge) cur = Number(s.dataset.n);
       setCurrent(cur);
     };
     el.addEventListener('scroll', onScroll, { passive: true });
     return () => el.removeEventListener('scroll', onScroll);
   });
+  // лист на шапке показывает начало карточки; строка номеров на телефоне держит текущий раздел на виду (H3)
+  useEffect(() => {
+    if (sheet && stop === 'peek') aside.current?.scrollTo({ top: 0 });
+  }, [sheet, stop, id]);
+  useEffect(() => {
+    if (!sheet) return;
+    const rail = inner.current?.querySelector<HTMLElement>('.rail');
+    const b = rail?.querySelector<HTMLElement>('button.current');
+    if (!rail || !b || rail.scrollWidth <= rail.clientWidth) return;
+    const want = b.offsetLeft + b.offsetWidth / 2 - rail.clientWidth / 2;
+    rail.scrollLeft = Math.max(0, Math.min(rail.scrollWidth - rail.clientWidth, want));
+  }, [sheet, current, id]);
 
   if (!id) return <aside class="folio" hidden />;
   const p = byId.get(id);
@@ -293,7 +475,14 @@ export function Folio() {
   // команды карточки — глаголами, одной строкой (F2; решение владельца 9); «Все 24 раздела» и печать — в колофоне
   const actions = (
     <div class="actions">
-      <button type="button" onClick={() => skyRef.flyTo(id)}>
+      <button
+        type="button"
+        onClick={() => {
+          // на телефоне лист сначала сворачивается до шапки: перелёт идёт над ним, а не под ним (MOB-15)
+          if (phone) sheetStop.value = 'peek';
+          skyRef.flyTo(id);
+        }}
+      >
         Показать на небе
       </button>
       <button type="button" aria-pressed={pickMode.value === 'kinship'} onClick={() => { pickMode.value = pickMode.value === 'kinship' ? null : 'kinship'; second.value = null; }}>
@@ -306,18 +495,12 @@ export function Folio() {
   );
 
   return (
-    <aside class="folio" aria-label={`Карточка: ${p.name}`}>
-      <div class="grab" aria-hidden="true" onClick={(e) => {
-        const f = (e.currentTarget as HTMLElement).parentElement!;
-        const cur = f.style.getPropertyValue('--sheet-h');
-        f.style.setProperty('--sheet-h', cur === '104px' ? '55vh' : cur === '100vh' ? '104px' : '100vh');
-      }}>
-        <span />
-      </div>
+    <aside class="folio" aria-label={`Карточка: ${p.name}`} ref={aside} data-stop={phone ? stop : undefined}>
+      {phone && <SheetBar id={id} stop={stop} />}
       <div class="folio-inner" ref={inner}>
-        {/* единый «×» (B3): липкий, в правом верхнем углу листа; на сенсорном экране — 44 × 44 */}
+        {/* единый «×» (B3): липкий, в правом верхнем углу листа; на сенсорном экране — 44 × 44; на телефоне — в шапке листа */}
         {/* «×» снимает только выбор; открытая панель остаётся (D11; IX-26) */}
-        <Close label="Закрыть карточку" onClick={() => (selected.value = null)} />
+        {!phone && <Close label="Закрыть карточку" onClick={() => (selected.value = null)} />}
         {failed === id ? (
           <>
             <Masthead id={id} actions={actions} />

@@ -163,27 +163,96 @@ export interface TierPlan {
   blocks: TierBlock[];
   /** нижний край ярусов: ниже — открытое небо */
   bottom: number;
+  /** доля неба, в которую раскладка уложена (tiersBudget) */
+  maxH: number;
 }
 
 const visibleIn = (b: TierBar, t0: number, t1: number) => b.t1 >= t0 && b.t0 <= t1;
 
-/**
- * Раскладка ярусов для окна лет [t0, t1]: высота каждого — по строкам его видимых отрезков; пустой — свёрнут.
- * compact — мелкий масштаб: строки по 5 px без подписей, события — риски без подписей (эпохи — как обычно).
- */
-export function planTiers(tiers: Tier[], t0: number, t1: number, model = '', top = TIER_TOP, compact = false): TierPlan {
+/** Как ужать ярусы, если они не помещаются в свою долю неба (H7; MOB-24). */
+interface Squeeze {
+  /** мелкие строки без подписей у всех ярусов, кроме эпох */
+  compact: boolean;
+  /** события — риски без подписей, строкой 14 px */
+  eventsCompact: boolean;
+  /** пустые ярусы не показывать вовсе (иначе — свёрнутая строка с названием) */
+  dropEmpty: boolean;
+  /** строк в ярусе не больше стольких; отрезки остальных — тонкой чертой под ними */
+  cap: number;
+  /** зазор между ярусами */
+  gap: number;
+  /** сколько непустых ярусов убрать — начиная с тех, у кого в окне меньше всего отрезков (эпохи остаются всегда) */
+  drop: number;
+}
+/** Под отрезками строк, не вошедших в ярус, — полоса 4 px с тонкими чертами. */
+const CAPPED_H = 4;
+
+function layoutTiers(tiers: Tier[], t0: number, t1: number, model: string, top: number, q: Squeeze): TierPlan {
+  const vis = new Map(tiers.map((t) => [t.key, t.bars.filter((b) => visibleIn(b, t0, t1))]));
+  const dropped = new Set(
+    tiers
+      .filter((t) => t.key !== 'epochs' && vis.get(t.key)!.length)
+      .sort((a, b) => vis.get(a.key)!.length - vis.get(b.key)!.length)
+      .slice(0, q.drop)
+      .map((t) => t.key),
+  );
   let y = top;
   const blocks: TierBlock[] = [];
   for (const tier of tiers) {
-    const vis = tier.bars.filter((b) => visibleIn(b, t0, t1));
-    const rows = [...new Set(vis.map((b) => b.row))].sort((a, b) => a - b);
-    const collapsed = rows.length === 0;
-    const pitch = compact && tier.key !== 'epochs' ? COMPACT_PITCH : PITCH;
-    const h = collapsed ? COLLAPSED_H : tier.key === 'events' ? (compact ? COLLAPSED_H : EVENTS_H) : Math.max(pitch === PITCH ? 0 : COLLAPSED_H, rows.length * pitch);
+    if (dropped.has(tier.key)) continue;
+    const all = [...new Set(vis.get(tier.key)!.map((b) => b.row))].sort((a, b) => a - b);
+    const collapsed = all.length === 0;
+    if (collapsed && q.dropEmpty && tier.key !== 'epochs') continue;
+    const rows = all.slice(0, Math.max(1, q.cap));
+    const capped = rows.length < all.length;
+    const pitch = q.compact && tier.key !== 'epochs' ? COMPACT_PITCH : PITCH;
+    const h = collapsed
+      ? COLLAPSED_H
+      : tier.key === 'events'
+        ? q.eventsCompact
+          ? COLLAPSED_H
+          : EVENTS_H
+        : Math.max(pitch === PITCH ? 0 : COLLAPSED_H, rows.length * pitch + (capped ? CAPPED_H : 0));
     blocks.push({ tier, y, h, rows, collapsed, pitch });
-    y += h + TIER_GAP;
+    y += h + q.gap;
   }
-  return { model, t0, t1, blocks, bottom: y - TIER_GAP + PAD };
+  return { model, t0, t1, blocks, bottom: y - q.gap + PAD, maxH: Infinity };
+}
+
+/**
+ * Раскладка ярусов для окна лет [t0, t1]: высота каждого — по строкам его видимых отрезков; пустой — свёрнут.
+ * compact — мелкий масштаб: строки по 5 px без подписей, события — риски без подписей (эпохи — как обычно).
+ * maxH — сколько неба ярусам можно занять от нижней кромки рамки (H7; MOB-24). Если они не помещаются, они ужимаются
+ * по шагам, пока не поместятся: без пустых ярусов; не больше двух строк, затем одной; события без подписей; мелкие
+ * строки; без зазоров; в последнюю очередь уходят ярусы, у которых в окне меньше всего отрезков.
+ */
+export function planTiers(tiers: Tier[], t0: number, t1: number, model = '', top = TIER_TOP, compact = false, maxH = Infinity): TierPlan {
+  const base = { compact, eventsCompact: compact, dropEmpty: false, cap: Infinity, gap: TIER_GAP, drop: 0 };
+  const steps: Squeeze[] = [
+    base,
+    { ...base, dropEmpty: true },
+    { ...base, dropEmpty: true, cap: 2 },
+    { ...base, dropEmpty: true, cap: 1 },
+    { ...base, dropEmpty: true, cap: 1, eventsCompact: true },
+    { compact: true, eventsCompact: true, dropEmpty: true, cap: 3, gap: TIER_GAP, drop: 0 },
+    { compact: true, eventsCompact: true, dropEmpty: true, cap: 1, gap: TIER_GAP, drop: 0 },
+    { compact: true, eventsCompact: true, dropEmpty: true, cap: 1, gap: 0, drop: 0 },
+  ];
+  for (let k = 1; k < tiers.length; k++) steps.push({ compact: true, eventsCompact: true, dropEmpty: true, cap: 1, gap: 0, drop: k });
+  let p = layoutTiers(tiers, t0, t1, model, top, steps[0]);
+  for (let i = 1; i < steps.length && p.bottom - FRAME_H > maxH; i++) p = layoutTiers(tiers, t0, t1, model, top, steps[i]);
+  p.maxH = maxH;
+  return p;
+}
+
+/** Доля видимого неба, которую могут занять ярусы (H7; MOB-24: на телефоне ярусы вытесняли небо целиком). */
+export const TIERS_SHARE = 0.35;
+/** Ниже такой высоты видимого неба (лист карточки поднят) ярусы — в самом сжатом виде, чтобы небу осталось место. */
+const ROOM_MIN = 160;
+/** Сколько px ярусам можно занять при видимом небе от рамки до bottom (px холста). */
+export function tiersBudget(bottom: number): number {
+  const room = bottom - FRAME_H;
+  return room >= ROOM_MIN ? Math.round(room * TIERS_SHARE) : 0;
 }
 
 let plan: TierPlan | null = null;
@@ -204,7 +273,7 @@ function windowOf(sky: Sky): [number, number] {
 export function replanTiers(sky: Sky, m: ModelData): boolean {
   const [a, b] = windowOf(sky);
   const vp = sky.cam.vp;
-  const next = planTiers(buildTiers(m), a, b, m.id, TIER_TOP, compactAt(((vp.r - vp.l) * 1.2) / Math.max(1, b - a)));
+  const next = planTiers(buildTiers(m), a, b, m.id, TIER_TOP, compactAt(((vp.r - vp.l) * 1.2) / Math.max(1, b - a)), tiersBudget(vp.b));
   const was = plan?.bottom;
   plan = next;
   return next.bottom !== was;
@@ -264,6 +333,13 @@ export function drawTiers(sky: Sky, s: SkyState) {
   const { ctx, cam, pal } = sky;
   const W = cam.w;
   const LW = sky.letterW;
+  // видимое небо стало выше или ниже (лист карточки на телефоне сменил положение): доля ярусов — заново,
+  // и небо под ними сдвигается вместе с их нижним краем
+  const budgetNow = tiersBudget(cam.vp.b);
+  if (plan && plan.model === s.model.id && Math.abs(plan.maxH - budgetNow) > 4) {
+    replanTiers(sky, s.model);
+    if (plan!.bottom !== cam.vp.t) sky.setInsets({ top: plan!.bottom });
+  }
   const p = plan && plan.model === s.model.id ? plan : (replanTiers(sky, s.model), plan!);
   const bottom = p.bottom;
   hitRects = [];

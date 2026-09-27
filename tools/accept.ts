@@ -34,6 +34,8 @@ import { sky } from './accept/sky.ts';
 import { card } from './accept/card.ts';
 import { panels } from './accept/panels.ts';
 import { map } from './accept/map.ts';
+import { phone } from './accept/phone.ts';
+import { a11y } from './accept/a11y.ts';
 
 const BASE: Scenario[] = [
   {
@@ -475,9 +477,12 @@ const BASE: Scenario[] = [
       const sky = (await p.locator('.sky').boundingBox())!;
       const last = (await col.last().boundingBox())!;
       if (last.x + last.width > sky.x + sky.width || last.y + last.height > sky.y + sky.height) return fail('колонка выходит за небо');
-      // тема и команды: без прокрутки, всё видно или в «Ещё»
-      const theme = (await p.locator('.top > .seg button').allInnerTexts()).map((t) => t.trim());
-      if (theme.join('|') !== 'Ночь|День' || !(await p.locator('.top > .seg button').last().isVisible())) return fail('тема недоступна');
+      // тема на телефоне — флажок «Дневная карта» в «Разделах» (H4: верх — одна строка 48 px); команды — без прокрутки
+      await p.locator('.top .sections > button').tap();
+      await p.waitForTimeout(200);
+      const items = (await p.locator('.top .sections [role^="menuitem"] .nm').allInnerTexts()).map((t) => t.trim());
+      if (!items.includes('Дневная карта')) return fail('тема недоступна');
+      await p.keyboard.press('Escape');
       const scroll = (await p.evaluate("(() => { const n = document.querySelector('.commands'); return n.scrollWidth - n.clientWidth; })()")) as number;
       if (scroll > 0) return fail('ряд команд прокручивается');
       // «Вид» — лист со слоями, масштабом и моделью
@@ -543,7 +548,7 @@ const BASE: Scenario[] = [
   },
 ];
 /** Сценарии этапа 3 — в своих файлах, чтобы параллельные агенты не правили один список (номера 30–49, 50–69, 70–89). */
-const SCENARIOS: Scenario[] = [...BASE, ...layout, ...nav, ...sky, ...map, ...card, ...panels];
+const SCENARIOS: Scenario[] = [...BASE, ...layout, ...nav, ...sky, ...map, ...card, ...panels, ...phone, ...a11y];
 
 /** Имена лиц обеих линий Мессии — из собранного индекса. */
 function lineNames(): Set<string> {

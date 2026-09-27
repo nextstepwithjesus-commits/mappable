@@ -1,37 +1,21 @@
-/* ---------- узкие экраны ---------- */
+/* ---------- вырез экрана и системные полосы (H4; MOB-18) ----------
+   Страница открыта с viewport-fit=cover: сетка атласа отступает от выреза, скруглений и полосы «домой». */
+.app {
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* ---------- узкие экраны: телефон (≤ 720 px) ---------- */
 @media (max-width: 720px) {
   :root {
-    --top-h: 104px;
+    --top-h: 48px;
     --strip-h: 56px;
-  }
-  /* верхняя строка телефона — три ряда: название и тема; панели и справка (лишнее — в «Ещё»); поиск */
-  .wordmark small {
-    display: none;
-  }
-  .top {
-    flex-wrap: wrap;
-    align-content: center;
-    row-gap: 2px;
-    padding: 2px 8px 4px 10px;
-  }
-  .top > .seg {
-    order: 1;
-    margin-left: auto;
-  }
-  .commands {
-    order: 2;
-    flex: 1 0 100%;
-    margin-left: 0;
-    justify-content: flex-start;
-  }
-  .top .search {
-    order: 3;
-    width: 100%;
-    margin: 0 0 0 6px;
-  }
-  .results {
-    left: 0;
-    width: 100%;
+    /* нижний лист карточки (H2; ТЗ § 3.8): шапка 104 px, 55 % и весь экран между верхней строкой и полосой времени.
+       100 % — по динамической высоте окна (dvh), 55 % — по малой (svh): положение не прыгает, когда прячется адресная строка */
+    --sheet-peek: 104px;
+    --sheet-avail: calc(100dvh - var(--top-h) - var(--strip-h) - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    --sheet-half: calc((100svh - var(--top-h) - var(--strip-h) - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * 0.55);
+    /* закреплённая шапка листа без годов: ручка 12 px и строка 44 px */
+    --bar-h: 56px;
   }
   .app {
     grid-template-columns: 1fr;
@@ -40,41 +24,174 @@
       'sky'
       'strip';
   }
-  .folio {
+
+  /* верхняя строка — одна, 48 px (H4; MOB-03, MOB-04): «Толедот», поиск, «Разделы» */
+  .top.phone {
+    gap: 2px;
+    padding: 0 4px 0 6px;
+  }
+  .top.phone .wordmark {
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+  .top.phone .search {
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
+    margin: 0 4px 0 8px;
+  }
+  /* подсказка в узком поле обрывается многоточием, а не на половине буквы */
+  .top.phone .search input {
+    text-overflow: ellipsis;
+  }
+  /* поле в фокусе занимает всю строку: запросу и подсказкам — вся ширина экрана */
+  .top.phone .search:focus-within {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 8px;
+    right: 8px;
+    margin: 0;
+    align-items: center;
+    background: var(--sky);
+    z-index: 31;
+  }
+  .top.phone .commands {
+    flex: none;
+    margin-left: 0;
+  }
+  /* «Разделы» — список строками 48 px во всю высоту экрана; раскрывается от правого края */
+  .top.phone .sections [role='menu'] {
+    min-width: 232px;
+    max-height: calc(100dvh - var(--top-h) - env(safe-area-inset-top) - 16px);
+    overflow-y: auto;
+  }
+  .top.phone .sections [role^='menuitem'] {
+    min-height: 48px;
+    padding-top: 15px;
+    padding-bottom: 15px;
+  }
+  .results {
+    left: 0;
+    width: 100%;
+  }
+
+  /* ---------- нижний лист карточки (H2; ТЗ § 3.8; MOB-11, 12, 15, 16) ----------
+     Над полосой времени: полоса видна при любом положении листа. Высота — положение (data-stop) или протяжка (--sheet-h). */
+  .app > .folio[data-stop] {
+    --stop-h: var(--sheet-half);
     position: fixed;
     left: 0;
     right: 0;
-    bottom: 0;
-    width: 100%;
-    height: var(--sheet-h, 55vh);
+    bottom: calc(var(--strip-h) + env(safe-area-inset-bottom));
+    width: auto;
+    height: min(var(--sheet-h, var(--stop-h)), var(--sheet-avail));
     border-left: 0;
     border-top: 1px solid var(--rule-strong);
     z-index: 25;
+    overscroll-behavior: contain;
     transition: height 260ms var(--ease);
   }
-  .folio .grab {
+  .app > .folio[data-stop='peek'] {
+    --stop-h: var(--sheet-peek);
+    overflow: hidden;
+  }
+  .app > .folio[data-stop='full'] {
+    --stop-h: var(--sheet-avail);
+  }
+  .app > .folio[data-drag] {
+    transition: none;
+  }
+  /* закреплённая шапка: ручка, имя, «Развернуть» / «Свернуть», «×»; за неё лист тянется */
+  .folio .sheet-bar {
     position: sticky;
     top: 0;
-    height: 22px;
+    z-index: 4;
+    padding: 0 4px 0 var(--folio-pl);
     background: var(--sheet);
-    z-index: 2;
+    touch-action: none;
+    cursor: grab;
+  }
+  .folio[data-drag] .sheet-bar {
+    cursor: grabbing;
+  }
+  .folio .grab {
     display: flex;
     justify-content: center;
     align-items: center;
-    touch-action: none;
+    height: 12px;
+    margin-left: calc(-1 * var(--folio-pl));
   }
   .folio .grab span {
-    width: 44px;
+    width: 36px;
     height: 3px;
     background: var(--rule-strong);
   }
-  .folio-inner {
-    padding: 4px 22px 60px 44px;
+  .folio .bar-row {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    min-height: 44px;
   }
-  /* «×» листа — под ручкой протяжки, в правом поле */
-  .folio .close {
-    top: 24px;
-    margin: 0 -20px 0 8px;
+  .folio .bar-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    font-size: var(--t-lead);
+    line-height: var(--t-lead-lh);
+    font-weight: 600;
+  }
+  /* заголовок карточки (h2) на телефоне — в шапке листа; сам h2 остаётся для диктора и фокуса, его фокус виден на имени шапки */
+  .folio[data-stop] .mast h2 {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .folio[data-stop]:has(.mast h2:focus-visible) .bar-name {
+    box-shadow: inset 0 -2px 0 var(--ink-3);
+  }
+  .folio .bar-toggle {
+    flex: none;
+    min-height: 44px;
+  }
+  /* карточка вне листа (образец #/specimen) не разворачивается: команды нет */
+  .folio:not(.app > .folio) .bar-toggle {
+    display: none;
+  }
+  .folio .sheet-bar .close {
+    position: static;
+    float: none;
+    flex: none;
+    min-width: 44px;
+    height: 44px;
+    margin: 0;
+  }
+  .folio .bar-years {
+    padding: 0 0 2px;
+    font-size: var(--t-note);
+    line-height: var(--t-note-lh);
+    color: var(--ink-2);
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+  .folio-inner {
+    padding: 2px 22px 60px 44px;
+  }
+  /* уточнение — первая строка текста листа: на шапке 104 px оно видно под именем и годами */
+  .folio[data-stop] .mast .dis {
+    margin-top: 0;
+  }
+  /* строка номеров разделов (H3; F8) — под шапкой листа; переход к разделу оставляет его заголовок под обеими */
+  .folio[data-stop] .rail {
+    top: var(--bar-h);
+  }
+  .folio[data-stop] .sec {
+    scroll-margin-top: calc(var(--bar-h) + 52px);
   }
   /* номер раздела целиком на поле слева от заголовка */
   .sec .no {
@@ -90,11 +207,12 @@
     width: auto;
     bottom: 10px;
   }
-  /* панель на телефоне — полноэкранный лист поверх карточки, с прилипающей шапкой */
+
+  /* ---------- панель на телефоне — полноэкранный лист поверх карточки, с прилипающей шапкой (H1) ---------- */
   .sheet,
   .sheet.wide {
     position: fixed;
-    top: var(--top-h);
+    top: calc(var(--top-h) + env(safe-area-inset-top));
     left: 0;
     right: 0;
     bottom: 0;
@@ -102,8 +220,9 @@
     max-width: none;
     z-index: 30;
     padding-top: 0;
-    padding-left: 16px;
-    padding-right: 16px;
+    padding-left: calc(16px + env(safe-area-inset-left));
+    padding-right: calc(16px + env(safe-area-inset-right));
+    padding-bottom: calc(40px + env(safe-area-inset-bottom));
   }
   .sheet-head {
     position: sticky;
@@ -124,10 +243,28 @@
   .sheet .sheet-head .close {
     position: static;
   }
-  /* колонка органов неба — под колонтитулом, выше нижнего листа карточки (MOB-05) */
+  /* «Эпохи» — лист на 55 % у нижнего края: ярусы эпох над ним видны (MOB-24) */
+  .sheet:has(> table.epochs) {
+    top: auto;
+    height: var(--sheet-half);
+    border-top: 1px solid var(--rule-strong);
+  }
+
+  /* ---------- колонка органов неба (C6; MOB-05; H7) ----------
+     Под рамкой, а в режиме эпох — под ярусами (--sky-top — верх видимой части, SkyView): на ярусы она не ложится.
+     Если над листом карточки места мало, колонка поднимается, но не уходит под лист. */
+  .app:has(> .folio[data-stop='peek']) {
+    --sheet-cover: var(--sheet-peek);
+  }
+  .app:has(> .folio[data-stop='half']) {
+    --sheet-cover: var(--sheet-half);
+  }
+  .app:has(> .folio[data-stop='full']) {
+    --sheet-cover: var(--sheet-avail);
+  }
   .skyctl.column {
     bottom: auto;
-    top: 52px;
+    top: max(var(--sky-top, 44px), min(calc(var(--sky-top, 44px) + 8px), calc(100% - var(--sheet-cover, 0px) - 181px)));
   }
   /* лист «Вид» — у нижнего края, по высоте содержимого: небо над ним видно и отвечает на флажки */
   .sheet:has(> .viewctl) {
@@ -150,6 +287,159 @@
     line-height: var(--t-lead-lh);
   }
 }
+
+/* ---------- низкий экран: альбомная ориентация телефона, масштаб 200 % (H6; MOB-26, MOB-43) ----------
+   Поля компактнее: верхняя строка 44 px, полоса времени 44 px; карточка-колонка — 340 px; лист карточки открывается
+   на шапке (src/ui/sheet.ts); колонка органов неба — квадратом 2 × 2, чтобы не ложиться на ярусы эпох. */
+@media (max-height: 520px) {
+  :root {
+    --top-h: 44px;
+    --strip-h: 44px;
+  }
+  .skyctl.column {
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 87px;
+  }
+  .skyctl.column button {
+    margin-left: -1px;
+  }
+}
+@media (max-height: 520px) and (min-width: 721px) {
+  :root {
+    --folio-w: 340px;
+  }
+}
+
+/* ---------- «Какое лицо?» (H5; MOB-10): касание в плотном месте неба — список 2–5 имён у пальца ----------
+   Лист --sheet с рамкой 1 px, без тени; строки 44 px: имя текстом, уточнение или годы — второй строкой. */
+.which {
+  position: fixed;
+  z-index: 26;
+  width: min(300px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+  padding: 0 0 6px;
+  background: var(--sheet);
+  border: 1px solid var(--rule-strong);
+  color: var(--ink);
+}
+/* до замера места список невидим: его размер уже известен, но стоит он ещё не у пальца */
+.which:not([data-placed]) {
+  visibility: hidden;
+}
+.which-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: 14px;
+}
+.which h2 {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+  font-weight: 500;
+  color: var(--ink-2);
+}
+.which .close {
+  min-width: 44px;
+  height: 44px;
+}
+.which ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.which-item {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: 5px 14px 6px;
+  text-align: left;
+}
+.which-item:hover,
+.which-item:focus {
+  background: var(--sheet-2);
+}
+.which-item:active {
+  background: var(--rule);
+}
+.which-item:focus-visible {
+  outline-offset: -2px;
+}
+.which-item .nm {
+  display: block;
+  font-size: var(--t-body);
+  line-height: var(--t-body-lh);
+}
+.which-item .ds {
+  display: block;
+  font-style: italic;
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+  color: var(--ink-2);
+}
+
+/* ---------- сенсорный экран: цели касания не меньше 44 px (H5; MOB-39, WCAG 2.5.5) ---------- */
+@media (pointer: coarse) {
+  .cmd,
+  .commands > button,
+  .commands .more > button,
+  .folio .actions button,
+  .pickbar button,
+  .wordmark,
+  .guide-cmd,
+  .menu.model > button,
+  .result.cmdrow {
+    min-height: 44px;
+  }
+  .seg button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  .check {
+    min-height: 44px;
+  }
+  .menu [role^='menuitem'] {
+    min-height: 44px;
+    padding-top: 13px;
+    padding-bottom: 13px;
+  }
+  .skyctl .zoom button {
+    min-width: 44px;
+    height: 44px;
+  }
+  .top .search input {
+    min-height: 44px;
+  }
+  /* ссылки в тексте: поле касания 32 px по высоте без изменения межстрочия — прозрачное продолжение кнопки */
+  .person,
+  .ref {
+    position: relative;
+  }
+  .person::after,
+  .ref::after {
+    content: '';
+    position: absolute;
+    left: -2px;
+    right: -2px;
+    top: 50%;
+    height: 32px;
+    transform: translateY(-50%);
+  }
+}
+/* планшет с пальцем: метки рейки — шаг 24 px, поле касания 24 × 24 (MOB-14; WCAG 2.5.8) */
+@media (pointer: coarse) and (min-width: 721px) {
+  .folio .rail button {
+    height: 24px;
+    margin: 0;
+  }
+  .folio .rail .gap {
+    height: 8px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     transition: none !important;
@@ -166,6 +456,7 @@
   .app {
     position: static;
     display: block;
+    padding: 0;
   }
   /* бумага: дневные токены (tokens.css, @media print) */
   .folio {

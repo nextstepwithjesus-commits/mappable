@@ -1,19 +1,21 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { effect } from '@preact/signals';
 import { FRAME_H, Sky, readPalette, type Emphasis, type Rect, type SkyState } from '../render/sky.ts';
-import { byId, graph } from '../data/atlas.ts';
+import { byId, lines } from '../data/atlas.ts';
+import { highlightFor } from '../render/marks.ts';
+import { comparePoints, lineNoteHits, ribbonHover } from '../render/ribbons.ts';
 import {
   selected, second, first, hovered, focused, lambda, model, layers, onlyLines, meridian, panel, pickMode, theme, introDone, epochMode, lineFlip, pins,
-  pinsQuery, kinPath,
+  pinsQuery, kinPath, kinSteps, skyGroup, synopsisAt,
 } from '../state.ts';
 import { skyRef, viewTick, goTo } from './common.tsx';
 import { drawTiers, replanTiers, tiersBottom } from '../render/tiers.ts';
 import { typo } from './text/typo.ts';
 import { aliveAt, lifeText, meridianText, placeText } from './sky/text.ts';
-import { flightTarget, flyToPerson, inView, introOpen, keepInView, reduced, screenOf, setReserve, stopFlight } from './sky/view.ts';
+import { allInView, flightTarget, flyToIds, flyToPerson, inView, introOpen, keepInView, reduced, screenOf, setReserve, stopFlight } from './sky/view.ts';
 import { attachPointer, type Tip } from './sky/input.ts';
 import { COLUMN_BELOW, SkyColumn, SkyControls, ViewSheet } from './sky/Controls.tsx';
-import { CARTOUCHE_BESIDE, Cartouche, GuideCommand, PickBar, PinBar } from './sky/Overlays.tsx';
+import { CARTOUCHE_BESIDE, Cartouche, GroupBar, GuideCommand, PickBar, PinBar } from './sky/Overlays.tsx';
 import { SkyTip } from './sky/Tip.tsx';
 
 /**
@@ -28,30 +30,7 @@ export function pairPath(): string[] | null {
   return path[0] === a || path[0] === selected.value ? path : null;
 }
 
-function highlightFor(id: string | null, path: string[] | null): Map<string, Emphasis> | null {
-  if (!id) return null;
-  const m = new Map<string, Emphasis>();
-  if (path) {
-    for (const p of path) m.set(p, 'path');
-    m.set(path[0], 'self');
-    m.set(path[path.length - 1], 'self');
-    m.set(id, 'self');
-    return m;
-  }
-  m.set(id, 'self');
-  const up = [id];
-  while (up.length) {
-    const x = up.pop()!;
-    for (const e of graph.parentsOf.get(x) ?? []) if (!m.has(e.parent)) { m.set(e.parent, 'anc'); up.push(e.parent); }
-  }
-  const down = [id];
-  while (down.length) {
-    const x = down.pop()!;
-    for (const e of graph.childrenOf.get(x) ?? []) if (!m.has(e.child)) { m.set(e.child, 'desc'); down.push(e.child); }
-  }
-  for (const s of graph.spousesOf.get(id) ?? []) m.set(s.a === id ? s.b : s.a, 'path');
-  return m;
-}
+// выделение неба (род выбранного лица, путь родства, группа панели) — src/render/marks.ts, highlightFor
 
 export function SkyView() {
   const wrap = useRef<HTMLDivElement>(null);
@@ -79,6 +58,11 @@ export function SkyView() {
     let shownTop = -1;
     let shownLabels = '';
     let tensionPersons = new Set<string>();
+    /** с какого мгновения указатель на ленте (ток света, E6) */
+    let hotSince = 0;
+    /** новый путь родства: вписать его, когда небо остановится (E5) */
+    let pathFit: { path: string[]; since: number; still: number } | null = null;
+    let fitted: string[] | null = null;
 
     const tensions = () => {
       tensionPersons = new Set(model.value.tensions.flatMap((t) => (t.persons.length <= 3 ? t.persons : [t.persons[0], t.persons[t.persons.length - 1]])));
@@ -125,20 +109,41 @@ export function SkyView() {
         if (intro < 1) again = true;
         else introStart = -1;
       }
-      const flowing = flowStart > 0 && now - flowStart < 3000;
-      if (flowing) again = true;
+      // ток света к Иисусу: 3 с после включения «только линии» и всё время, пока указатель на ленте (ТЗ § 3.2; E6)
+      const ribbonHot = !!ribbonHover(sky);
+      if (!ribbonHot) hotSince = 0;
+      else if (!hotSince) hotSince = now;
+      const flowing = (flowStart > 0 && now - flowStart < 3000) || ribbonHot;
+      if (flowing && !reduced()) again = true;
+      const flowT = ribbonHot ? now - hotSince + 1 : now - flowStart;
       const path = pairPath();
-      // отметки поиска (E10): светятся отмеченные и выбранное лицо, остальное небо гаснет
+      // отметки поиска (E10): светятся отмеченные и выбранное лицо, остальное небо гаснет; группа панели (главы,
+      // участок синопсиса) — лица группы; иначе путь родства или род выбранного лица (E4, E5; src/render/marks.ts)
       const pinned = pins.value;
+      const hlf = pinned.length ? null : highlightFor(selected.value, path, skyGroup.value?.ids);
       let highlight: Map<string, Emphasis> | null = pinned.length
         ? new Map<string, Emphasis>([...pinned, ...(selected.value ? [selected.value] : [])].map((x) => [x, 'self']))
-        : highlightFor(selected.value, path);
+        : (hlf?.hl ?? null);
       // какой путь родства светится на небе — для проверок приёмки (tools/accept.ts)
       const pathKey = path && selected.value ? path.join(' ') : '';
       if (pathKey !== shownPath.current) {
         shownPath.current = pathKey;
         if (pathKey) wrap.current!.dataset.kinPath = pathKey;
         else delete wrap.current!.dataset.kinPath;
+      }
+      // новый путь или команда «Показать путь на небе» (новый список лиц) — вписать оба конца (E5), когда небо
+      // успокоится: после перелёта по адресу или панели
+      if (path !== fitted) {
+        fitted = path;
+        pathFit = path && selected.value ? { path, since: now, still: now } : null;
+      }
+      if (pathFit) {
+        if (sky.cam.moving) pathFit.still = now;
+        if (now - pathFit.since > 4000) pathFit = null;
+        else if (now - pathFit.since >= 500 && now - pathFit.still >= 250) {
+          if (!allInView(pathFit.path)) flyToIds(pathFit.path);
+          pathFit = null;
+        } else again = true;
       }
       // меридиан года (D13): светятся все, кто жив в этот год, «вероятно» — бледнее, чем «наверняка»;
       // при выбранном лице небо не перестраивается, счёт живых — во флажке у линейки
@@ -153,8 +158,8 @@ export function SkyView() {
       const state: SkyState = {
         model: model.value, lambda: shownLambda, selected: selected.value, second: second.value, hovered: hovered.value, focus: focused.value,
         highlight, layers: layers.value, onlyLines: onlyLines.value, meridian: meridian.value,
-        tensionPersons, flow: flowing ? now - flowStart : 0, reduced: reduced(), intro, lineFlip: lineFlip.value, pins: new Set(pins.value),
-        reserve: reserveRef.current, meridianLabel,
+        tensionPersons, flow: flowing ? flowT : 0, reduced: reduced(), intro, lineFlip: lineFlip.value, pins: new Set(pins.value),
+        reserve: reserveRef.current, meridianLabel, kinSteps: path ? kinSteps.current : null, depth: hlf?.depth ?? null,
       };
       // ярусы эпох — поверх звёзд, под меридианом, рамкой и указателями у края
       sky.draw(state, epochMode.value ? () => drawTiers(sky, state) : undefined);
@@ -180,6 +185,10 @@ export function SkyView() {
       // флажок меридиана — для проверок приёмки (tools/accept/sky.ts): есть ли меридиан и что на флажке
       if (meridianLabel) wrap.current!.dataset.meridian = meridianLabel;
       else delete wrap.current!.dataset.meridian;
+      // выноски точек сравнения линий (E6) — для проверок приёмки (tools/accept/map.ts): «лицо:x,y,w,h;…» в px холста
+      const notesKey = lineNoteHits(sky).filter((h) => h.kind === 'synopsis').map((h) => `${h.id}:${[h.x, h.y, h.w, h.h].map(Math.round).join(',')}`).join(';');
+      if (notesKey) wrap.current!.dataset.lineNotes = notesKey;
+      else delete wrap.current!.dataset.lineNotes;
       // где звезда выбранного лица (px холста) — «выбранное лицо видно» проверяется по ней
       const sel = selected.value ? screenOf(selected.value) : null;
       if (sel) wrap.current!.dataset.sel = `${sel.x.toFixed(1)} ${sel.y.toFixed(1)}`;
@@ -317,6 +326,8 @@ export function SkyView() {
 
     // любое нажатие на холсте прерывает перелёт (D4; IX-11); пока указатель нажат, небо у края данных не возвращается
     const onDown = () => {
+      // читатель взялся за небо — путь родства больше не вписывается сам
+      pathFit = null;
       stopFlight();
       sky.cam.hold(true);
     };
@@ -375,6 +386,8 @@ export function SkyView() {
       void first.value;
       void lineFlip.value;
       void pins.value;
+      // группа панели («Главы», участок «Синопсиса») светится и без выбранного лица — кадр по её смене
+      void skyGroup.value;
       if (id && id !== lastSel) {
         // выбор лица — явное действие: вступление сворачивается в «Как читать карту» (C5)
         introDone.value = true;
@@ -488,6 +501,10 @@ export function SkyView() {
     if (f && !out.includes(f) && sky.reachable(f)) out.push(f);
     return out;
   })();
+  // точки сравнения линий в режиме «только линии» — и для клавиатуры: открывают синопсис участка (E6; U2)
+  const linePoints = onlyLines.value
+    ? comparePoints(lines.joseph.persons, lines.mary.persons.map((st) => (lineFlip.value && st.id === 'mariya' ? { ...st, id: 'iosif-muzh-marii' } : st)))
+    : [];
 
   return (
     <>
@@ -501,6 +518,7 @@ export function SkyView() {
         />
         {pickMode.value && selected.value && <PickBar mode={pickMode.value} id={selected.value} />}
         {pins.value.length > 0 && !pickMode.value && <PinBar n={pins.value.length} query={pinsQuery.value} />}
+        {skyGroup.value && !pins.value.length && !pickMode.value && <GroupBar label={skyGroup.value.label} />}
         <SkyTip tip={tip} />
         {/* до первого замера ширина неба неизвестна: органы появляются сразу в своём виде, без мелькания блока на телефоне */}
         {skyW > 0 && (column ? <SkyColumn /> : <SkyControls />)}
@@ -522,6 +540,22 @@ export function SkyView() {
             </li>
           ))}
         </ul>
+        {linePoints.length > 0 && (
+          <ul class="visually-hidden" aria-label="Точки сравнения Мф 1 и Лк 3: синопсис участка">
+            {linePoints.map((cp) => (
+              <li key={cp.at}>
+                <button
+                  onClick={() => {
+                    synopsisAt.value = cp.at;
+                    panel.value = 'synopsis';
+                  }}
+                >
+                  {typo(cp.full)}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
         <div class="visually-hidden" aria-live="polite">
           {announce}
         </div>

@@ -13,7 +13,7 @@
  */
 import { effect, signal } from '@preact/signals';
 import { skyRef } from '../common.tsx';
-import { model, panel, selected } from '../../state.ts';
+import { model, onlyLines, panel, selected } from '../../state.ts';
 import type { ViewState } from '../../render/camera.ts';
 import type { Rect } from '../../render/sky.ts';
 
@@ -137,13 +137,176 @@ export function flyToPerson(id: string) {
   flightTarget = s.cam.moving ? id : null;
 }
 
-/** «Всё небо» (D2; UX-05, IX-04, MOB-06): перелёт к виду, в который вписано всё небо по обеим осям. */
+/**
+ * «Всё небо» (D2; UX-05, IX-04, MOB-06): перелёт к виду, в который вписано всё небо по обеим осям.
+ * В режиме «только линии Мессии» «всё небо» — это весь коридор линий (E6).
+ */
 export function showAll() {
   const s = skyRef.current;
   if (!s || !s.model) return;
   flightTarget = null;
+  if (onlyLines.peek()) return fitLines(true);
   s.cam.flyTo(s.fitState(), skyRef.redraw, reduced());
   skyRef.redraw();
+}
+
+// ---------- несколько лиц: путь родства, группа (E5) ----------
+
+/** Поле для имени справа от звезды, px: окно вписывает и подписи крайних лиц (IX-08). */
+const NAME_ROOM = 90;
+
+/**
+ * Вид, в который вписаны все лица ids по обеим осям (E5; MAP-18, UX-11): по времени — с полем 10 % и местом для имени
+ * справа; по полосам — не выше 80 % видимой части. Высота полосы растёт с масштабом, поэтому, если полосы пути не
+ * помещаются, масштаб уменьшается, пока не поместятся. Одно лицо — окно не уже minYears лет.
+ */
+export function viewForIds(ids: readonly string[], minYears = 60): ViewState | null {
+  const s = skyRef.current;
+  if (!s || !s.model) return null;
+  const pts = ids.map((id) => ({ x: s.nodeX(id), n: s.node(id) })).filter((q): q is { x: number; n: NonNullable<typeof q.n> } => q.x !== null && !!q.n);
+  if (!pts.length) return null;
+  const cam = s.cam;
+  const vp = cam.vp;
+  const W = vp.r - vp.l;
+  // по вертикали — без широких органов неба у нижнего и верхнего края (блок «Вид», вступление): путь не уходит под них
+  let top = vp.t;
+  let bottom = vp.b;
+  for (const r of reserveRects) {
+    if (r.w < W * 0.3) continue;
+    if (r.y + r.h >= vp.b - 8 && r.y > (vp.t + vp.b) / 2) bottom = Math.min(bottom, r.y - 8);
+    else if (r.y <= vp.t + 8 && r.y + r.h < (vp.t + vp.b) / 2) top = Math.max(top, r.y + r.h + 8);
+  }
+  const H = Math.max(80, bottom - top);
+  const x0 = Math.min(...pts.map((q) => q.x));
+  const x1 = Math.max(...pts.map((q) => q.x));
+  const l0 = Math.min(...pts.map((q) => q.n.lane));
+  const l1 = Math.max(...pts.map((q) => q.n.lane));
+  const tMid = s.tOf((x0 + x1) / 2);
+  const span = Math.max(x1 - x0, s.xOf(tMid + minYears / 2) - s.xOf(tMid - minYears / 2));
+  const room = Math.max(40, W * 0.8 - NAME_ROOM);
+  let kx = room / span;
+  // полосы пути — не выше 80 % видимой части: высота полосы следует за масштабом
+  const tall = (k: number) => cam.kyFor(k) * (l1 - l0 + 1) > H * 0.8;
+  if (tall(kx)) {
+    let lo = Math.min(kx, cam.kxLo());
+    let hi = kx;
+    if (!tall(lo))
+      for (let i = 0; i < 40; i++) {
+        const mid = Math.sqrt(lo * hi);
+        if (tall(mid)) hi = mid;
+        else lo = mid;
+      }
+    kx = lo;
+  }
+  const [cx] = cam.vpCenter();
+  const cy = (top + bottom) / 2;
+  // середина окна — середина пути, сдвинутая влево на половину поля для имени
+  const xc = (x0 + x1) / 2 + NAME_ROOM / 2 / kx;
+  return { x0: xc - cx / kx, kx, laneTop: (l0 + l1) / 2 + cy / cam.kyFor(kx) };
+}
+
+/** Все лица ids — в видимой части неба (с полями inView). */
+export function allInView(ids: readonly string[]): boolean {
+  return ids.every((id) => inView(id));
+}
+
+/** Перелёт, вписывающий лица ids (путь родства, лица группы): оба конца пути на экране (E5). */
+export function flyToIds(ids: readonly string[]) {
+  const v = viewForIds(ids);
+  if (!v) return;
+  flightTarget = null;
+  flyTo(v);
+}
+
+// ---------- «только линии Мессии» (E6; MAP-23) ----------
+
+/** Сколько полос не меньше вписывается в 60 % высоты в режиме «только линии» (MAP-23: ±13 полос). */
+const FOCUS_MIN = 27;
+
+/** Коридор линий: мировые x рождения первого и последнего лица линий и полосы лиц линий. */
+export function linesFrame(): { x0: number; x1: number; lane0: number; lane1: number } | null {
+  const s = skyRef.current;
+  if (!s || !s.model) return null;
+  let x0 = Infinity;
+  let x1 = -Infinity;
+  let lane0 = Infinity;
+  let lane1 = -Infinity;
+  s.nodes.forEach((n, i) => {
+    if (!n.spine || n.ghost) return;
+    x0 = Math.min(x0, s.X0[i]);
+    x1 = Math.max(x1, s.X0[i]);
+    lane0 = Math.min(lane0, n.lane);
+    lane1 = Math.max(lane1, n.lane);
+  });
+  return x1 > x0 ? { x0, x1, lane0, lane1 } : null;
+}
+
+/**
+ * Режим «только линии» вписывает коридор (MAP-23): полосы линий — на 60 % высоты видимой части (выше и ниже —
+ * место для выносок точек сравнения), по времени — от Адама до Иисуса Христа с местом для имени справа.
+ * animate = false — сразу (первый показ по адресу).
+ */
+export function fitLines(animate = true) {
+  const s = skyRef.current;
+  const f = linesFrame();
+  if (!s || !f) return;
+  const cam = s.cam;
+  // полосы коридора — на 60 % высоты, но не выше, чем ±13 полос на ней: косы и следы не раздуваются (MAP-23)
+  setFocus(Math.max(FOCUS_MIN, f.lane1 - f.lane0 + 1));
+  const vp = cam.vp;
+  const kx = Math.max(1e-6, (vp.r - vp.l - 24 - NAME_ROOM * 1.4) / (f.x1 - f.x0));
+  const [, cy] = cam.vpCenter();
+  const to = cam.constrain({ x0: f.x0 - (vp.l + 24) / kx, kx, laneTop: (f.lane0 + f.lane1) / 2 + cy / cam.kyFor(kx) });
+  flightTarget = null;
+  if (animate) cam.flyTo(to, skyRef.redraw, reduced());
+  else {
+    cam.stop();
+    cam.set(to);
+  }
+  skyRef.redraw();
+}
+
+/** Высота полосы коридора: полоса в середине видимой части остаётся на месте, меняется только высота. */
+function setFocus(lanes: number) {
+  const s = skyRef.current;
+  if (!s) return;
+  const cam = s.cam;
+  if (cam.focusLanes === lanes) return;
+  const [, cy] = cam.vpCenter();
+  const mid = cam.wLane(cy);
+  cam.focusLanes = lanes;
+  cam.laneTop = mid + cy / cam.ky;
+}
+
+// режим «только линии»: включили — коридор вписывается; выключили — обычная высота полосы. Первый показ по адресу —
+// сразу, без перелёта (окно адреса, если оно есть, ставится после и остаётся)
+if (typeof window !== 'undefined') {
+  let shown: boolean | null = null;
+  let wait = 0;
+  effect(() => {
+    const on = onlyLines.value;
+    cancelAnimationFrame(wait);
+    const apply = (tries: number) => {
+      // модуль читается раньше common.tsx (круговой импорт): небо спрашивается только в кадре
+      const s = skyRef?.current;
+      if (!s || !s.model || !(s.cam.w > 0) || !linesFrame()) {
+        if (tries < 240) wait = requestAnimationFrame(() => apply(tries + 1));
+        return;
+      }
+      const first = shown === null;
+      if (shown === on) return;
+      shown = on;
+      if (on) fitLines(!first);
+      else if (!first) {
+        setFocus(0);
+        s.cam.clampNow();
+        const id = selected.peek();
+        if (id) keepInView(id);
+        skyRef.redraw();
+      }
+    };
+    wait = requestAnimationFrame(() => apply(0));
+  });
 }
 
 /**

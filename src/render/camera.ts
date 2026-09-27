@@ -83,7 +83,16 @@ export class Camera {
   kyMin(): number {
     return Math.max(1.2, Math.min(6, this.h / (this.laneSpan + 6)));
   }
+  /**
+   * Режим «только линии Мессии» (E6; MAP-23): сколько полос коридора вписать в 60 % высоты видимой части.
+   * Полоса не ниже этой высоты на любом масштабе; 0 — обычная высота полосы. Ставит src/ui/sky/view.ts.
+   */
+  focusLanes = 0;
   kyFor(kx: number): number {
+    const k = this.kyBase(kx);
+    return this.focusLanes > 0 ? Math.max(k, Math.min(KY_MAX, (0.6 * (this.vp.b - this.vp.t)) / this.focusLanes)) : k;
+  }
+  private kyBase(kx: number): number {
     const g = Math.max(this.kyMin(), Math.min(KY_MAX, 3.5 + 3.3 * Math.log2(Math.max(kx, 1e-6) / 0.014)));
     const f = this.fitK;
     if (!f) return g;
