@@ -24,7 +24,6 @@ export { Masthead };
 
 type AtlasPerson = NonNullable<ReturnType<typeof byId.get>>;
 /** Тело карточки из сборки (tools/build-data.ts): стихи родства, разделённые между отцом и матерью. */
-type BuiltCard = Card & { parentRefsBy?: { father: string[]; mother: string[] } };
 
 export const SECTIONS: { n: number; part: number; title: string }[] = [
   { n: 1, part: 1, title: 'Имя' },
@@ -516,7 +515,7 @@ export function buildSections(
     const rows: ComponentChildren[] = [];
     const pc: Cert = p.parentCert;
     // у отца и у матери свои стихи (CARD-32): при сборке общий список parentRefs разделён по тому, кто назван в стихе
-    const by = (card as BuiltCard | null)?.parentRefsBy;
+    const by = card?.parentRefsBy;
     const fRefs = by?.father ?? p.parentRefs;
     const mRefs = by?.mother ?? p.parentRefs;
     if (p.father) rows.push(<li class="fact" key="f">{p.fatherKind === 'legal' ? 'Законный отец' : 'Отец'}: <PT id={p.father} /><Refs refs={fRefs} owner={ns + 'p6f'} /><Mark cert={pc} /><VerseInsert owner={ns + 'p6f'} refs={fRefs} />{p.fatherGap && <span class="muted"> — родословие здесь может пропускать поколения</span>}</li>);

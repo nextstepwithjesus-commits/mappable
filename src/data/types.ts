@@ -188,6 +188,8 @@ export interface Card {
   altNames?: AltName[]; // § 4
   status?: Fact[]; // § 5
   parentsNote?: Fact[]; // § 6
+  /** стихи родителей порознь: вычисляются при сборке из parentRefs (tools/build-data.ts, splitParentRefs) */
+  parentRefsBy?: { father: Ref[]; mother: Ref[] };
   lineage?: Fact[]; // § 7
   birth?: { place?: string; facts?: Fact[] }; // § 8
   spousesNote?: Fact[]; // § 9
