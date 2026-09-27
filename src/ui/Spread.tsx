@@ -3,27 +3,28 @@
  * Номера разделов неизменны, поэтому строки выравниваются сами собой: слева первое лицо, справа второе,
  * номер и название раздела — в корешке. Разделы, о которых нет сведений ни у одного лица, сведены в одну строку.
  */
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useMemo, useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
 import { byId, graph, loadCard } from '../data/atlas.ts';
-import { relate } from '../engine/kinship.ts';
-import type { Card } from '../data/types.ts';
-import { selected, second, panel, model } from '../state.ts';
+import { relate, foldChain } from '../engine/kinship.ts';
+import type { Card, Chrono } from '../data/types.ts';
+import { selected, second, first, panel, model, setPair } from '../state.ts';
 import { SECTIONS, PARTS, buildSections, Masthead } from './Folio.tsx';
-import { P, skyRef, CAN_PRINT } from './common.tsx';
+import { P, skyRef, CAN_PRINT, plural } from './common.tsx';
 
 type St = 'content' | 'silent' | 'absent';
 const STATE_TEXT: Record<Exclude<St, 'content'>, string> = { silent: 'в Писании не сообщается', absent: 'раздел не составлен' };
 
 export function Spread() {
-  const a = selected.value;
+  // пара не следует за выбором: ссылки внутри разворота открывают карточки, но страницы остаются прежними
+  const a = first.value ?? selected.value;
   const b = second.value;
-  const [cards, setCards] = useState<Record<string, Card>>({});
+  const [cards, setCards] = useState<Record<string, { card: Card; chrono: Chrono | null }>>({});
   useEffect(() => {
     let alive = true;
     for (const id of [a, b]) {
       if (!id || cards[id]) continue;
-      loadCard(id).then((d) => alive && setCards((c) => ({ ...c, [id]: d?.card ?? {} })));
+      loadCard(id).then((d) => alive && setCards((c) => ({ ...c, [id]: { card: d?.card ?? {}, chrono: d?.chrono ?? null } })));
     }
     return () => {
       alive = false;
@@ -34,7 +35,7 @@ export function Spread() {
   const m = model.value;
   const side = (id: string, ns: string) => {
     const p = byId.get(id)!;
-    const out = buildSections(id, p, cards[id] ?? null, m, m.chrono.get(id), ns);
+    const out = buildSections(id, p, cards[id]?.card ?? null, m, m.chrono.get(id), ns, cards[id]?.chrono ?? null);
     const silent = new Set(p.silent);
     return { out, st: (n: number): St => (out.has(n) ? 'content' : silent.has(n) ? 'silent' : 'absent') };
   };
@@ -100,8 +101,8 @@ export function Spread() {
         <span class="title">Разворот</span>
         <button
           onClick={() => {
+            setPair(b, a, false);
             selected.value = b;
-            second.value = a;
           }}
         >
           поменять страницы
@@ -116,7 +117,7 @@ export function Spread() {
           <div class="pg">
             <Masthead id={a} />
           </div>
-          <KinSpine a={a} b={b} />
+          <KinSpine key={`${a}|${b}`} a={a} b={b} />
           <div class="pg">
             <Masthead id={b} />
           </div>
@@ -127,9 +128,14 @@ export function Spread() {
   );
 }
 
-/** Цепочка родства между лицами разворота — в корешке, сверху вниз от левого лица к правому. */
+/**
+ * Цепочка родства между лицами разворота — в корешке, сверху вниз от левого лица к правому:
+ * та же фраза, что в панели «Родство»; у каждого звена — кем лицо приходится предыдущему.
+ * Цепочка длиннее 8 звеньев свёрнута: три звена, «… ещё N …», три звена.
+ */
 function KinSpine({ a, b }: { a: string; b: string }) {
-  const r = relate(graph, a, b, 1)[0];
+  const [whole, setWhole] = useState(false);
+  const r = useMemo(() => relate(graph, a, b, 1)[0], [a, b]);
   if (!r) {
     return (
       <div class="spine kin">
@@ -137,24 +143,27 @@ function KinSpine({ a, b }: { a: string; b: string }) {
       </div>
     );
   }
-  const ids = [...new Set(r.steps.flatMap((s) => [s.from, s.to]))];
-  // длинная цепочка сокращается: три звена сверху, три снизу
-  const shown: (string | number)[] = ids.length > 8 ? [...ids.slice(0, 3), ids.length - 6, ...ids.slice(-3)] : ids;
+  const shown = whole ? r.chain : foldChain(r.chain);
   return (
     <div class="spine kin">
-      <p class="sent">
-        {r.sentence}
-        {r.interpretive ? ', по толкованию' : ''}
-      </p>
+      <p class="sent">{r.sentence}</p>
       <ol class="chain">
         {shown.map((x, i) =>
-          typeof x === 'number' ? (
+          'hidden' in x ? (
             <li key={`gap${i}`} class="gap">
-              ещё {x}
+              <button aria-label={`показать ещё ${x.hidden} ${plural(x.hidden, 'звено', 'звена', 'звеньев')}`} onClick={() => setWhole(true)}>
+                … ещё {x.hidden} …
+              </button>
             </li>
           ) : (
-            <li key={x}>
-              <P id={x} />
+            <li key={`${x.id}${i}`}>
+              {x.term && (
+                <>
+                  <i class="term">{x.term}</i>
+                  {x.step?.interpretive && ' (по толкованию)'}{' '}
+                </>
+              )}
+              <P id={x.id} />
             </li>
           ),
         )}
