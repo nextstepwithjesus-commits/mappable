@@ -316,11 +316,15 @@ const BASE: Scenario[] = [
       // панель слева (если открыта) закрывает часть неба: проверяется только видимая часть
       const sheet = (await p.locator('.sheet').count()) ? await p.locator('.sheet').boundingBox() : null;
       const left = Math.max(box.x + 30, sheet ? sheet.x + sheet.width + 10 : 0);
-      // ярусов шесть, каждый не ниже 35 px: полоса 40…220 px от верха неба всегда под ними
-      for (let y = box.y + 40; y < box.y + 220; y += 6)
+      // ярусы — от служебной строки рамки (40 px) до верха видимой части неба (data-view: l t r b …); пустые ярусы
+      // свёрнуты (D14), поэтому их нижний край берётся из вида, а не из прежних «шести ярусов по 35 px»
+      const bottom = Number(((await p.locator('.sky').getAttribute('data-view')) ?? '').split(' ')[1]);
+      if (!(bottom > 100)) return fail(`ярусы не сдвинули верх неба: ${bottom}`);
+      // отрезки ярусов отвечают сами (подсказка data-kind="tier"); звёзды под ними — нет
+      for (let y = box.y + 40; y < box.y + bottom; y += 6)
         for (let x = left; x < box.x + box.width - 20; x += 23) {
           await p.mouse.move(x, y);
-          const tip = p.locator('.sky .tip b');
+          const tip = p.locator('.sky .tip[data-kind="star"] b');
           if (await tip.count()) return fail(`под ярусами отозвалось «${(await tip.innerText()).trim()}»`);
         }
       return pass();

@@ -7,6 +7,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { ROOT } from './bible.ts';
 import { contrast as ratio, linearRgb, CONTRAST_USES } from '../src/ui/contrast.ts';
+import { alphaForContrast, over, likelyAlpha, CONSTELLATION_DIM, DIM, DIM_LABEL_CONTRAST } from '../src/render/dim.ts';
 
 const css = readFileSync(join(ROOT, 'src/styles/tokens.css'), 'utf8');
 const block = (sel: string) => {
@@ -50,6 +51,21 @@ const check = (name: string, v: number, min: number) => {
 for (const [t, c] of Object.entries(themes)) {
   console.log(`\n— тема ${t}`);
   for (const u of CONTRAST_USES) check(u.what, ratio(c[u.fg], c[u.bg]), u.min);
+  // затемнение при выделении (E12; MOB-41): погашенные подписи и «вероятно» на меридиане — не ниже 3 : 1,
+  // названия созвездий — альфа 0,75 и не ниже 3 : 1 (src/render/dim.ts)
+  for (const ink of ['--ink', '--ink-2']) {
+    const a = alphaForContrast(c[ink], c['--sky'], DIM_LABEL_CONTRAST);
+    check(`погашенная подпись ${ink} на --sky (альфа ${Math.max(DIM, a).toFixed(2)})`, ratio(over(c[ink], c['--sky'], Math.max(DIM, a)), c['--sky']), 3);
+    const dim = ratio(over(c[ink], c['--sky'], Math.max(DIM, a)), c['--sky']);
+    const likely = ratio(over(c[ink], c['--sky'], likelyAlpha(a)), c['--sky']);
+    check(`подпись «вероятно» ${ink} на --sky (альфа ${likelyAlpha(a).toFixed(2)})`, likely, 3);
+    check(`«вероятно» ${ink} ярче погашенной, отношение контрастов`, likely / dim, 1.2);
+  }
+  check(`название созвездия при выделении --ink-3 на --sky (альфа ${CONSTELLATION_DIM})`, ratio(over(c['--ink-3'], c['--sky'], CONSTELLATION_DIM), c['--sky']), 3);
+  // подписи отрезков ярусов эпох (src/render/tiers.ts): днём тон отрезка — --rule, выбранного — --rule-strong
+  check('подпись яруса --ink-2 на --rule', ratio(c['--ink-2'], c['--rule']), 4.5);
+  check('подпись яруса --ink на --rule', ratio(c['--ink'], c['--rule']), 4.5);
+  check('подпись яруса --ink на --rule-strong', ratio(c['--ink'], c['--rule-strong']), 4.5);
   for (const [k, m] of [['обычное зрение', undefined], ...Object.entries(CVD)] as [string, number[][] | undefined][]) {
     const d = Math.min(dE(simulate(c['--gold-1'], m), simulate(c['--azure-1'], m)), dE(simulate(c['--gold-2'], m), simulate(c['--azure-2'], m)));
     check(`ленты различимы (${k}), ΔE`, d, 20);

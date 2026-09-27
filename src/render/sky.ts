@@ -6,8 +6,9 @@
 import { Camera, KX_MIN, type Frame } from './camera.ts';
 import { drawGlyph, starRadius, roleSigla } from './glyphs.ts';
 import { alpha } from './color.ts';
+import { alphaForContrast, CONSTELLATION_DIM, DIM, DIM_LABEL_CONTRAST, LIKELY, likelyAlpha } from './dim.ts';
 import { drawStrands, ribbonLook } from './ribbons.ts';
-import { coarsePointer, mapFont, mapSize, nameFont, nameSize, siglaFont, T_MAP_S, T_NOTE, T_UI } from './type.ts';
+import { coarsePointer, mapFont, mapSize, nameFont, nameSize, siglaFont, T_MAP_S, T_NOTE, T_UI, T_UI_S } from './type.ts';
 import { timeToX, xToTime, hydrateScale, type TimeScale, T_END } from '../engine/timescale.ts';
 import { buildRibbons } from '../engine/ribbons.ts';
 import { toHist, toAstro } from '../engine/years.ts';
@@ -28,6 +29,12 @@ export interface Palette {
   azure2: string;
   focus: string;
   halo: string;
+  /** лист и поле наведения: флажок меридиана, отрезки ярусов эпох */
+  sheet: string;
+  sheet2: string;
+  /** непрозрачность погашенной подписи цвета --ink и --ink-2, при которой её контраст к небу — не ниже 3 : 1 (E12) */
+  dimInk: number;
+  dimInk2: number;
   glow: boolean;
   /** сила двух слоёв свечения лент ночью (широкий, узкий) */
   ribbonGlow: [number, number];
@@ -42,6 +49,9 @@ export interface Palette {
 const RIBBON_GLOW: [number, number] = [0.06, 0.1];
 const RIBBON_TONE = 0.15;
 
+// затемнение при выделении — src/render/dim.ts (его же проверяет npm run -s contrast)
+export { DIM, LIKELY, DIM_LABEL_CONTRAST, CONSTELLATION_DIM, over, alphaForContrast, likelyAlpha } from './dim.ts';
+
 export function readPalette(): Palette {
   const cs = getComputedStyle(document.documentElement);
   const v = (n: string) => cs.getPropertyValue(n).trim();
@@ -50,10 +60,12 @@ export function readPalette(): Palette {
     return Number.isFinite(x) ? x : d;
   };
   const glow = v('--glow') === '1';
+  const sky = v('--sky');
   return {
-    sky: v('--sky'), band: v('--sky-band'), ink: v('--ink'), ink2: v('--ink-2'), ink3: v('--ink-3'), rule: v('--rule'),
+    sky, band: v('--sky-band'), ink: v('--ink'), ink2: v('--ink-2'), ink3: v('--ink-3'), rule: v('--rule'),
     ruleStrong: v('--rule-strong'), gold1: v('--gold-1'), gold2: v('--gold-2'), azure1: v('--azure-1'), azure2: v('--azure-2'),
-    focus: v('--focus'), halo: v('--halo'), glow,
+    focus: v('--focus'), halo: v('--halo'), sheet: v('--sheet'), sheet2: v('--sheet-2'),
+    dimInk: alphaForContrast(v('--ink'), sky, DIM_LABEL_CONTRAST), dimInk2: alphaForContrast(v('--ink-2'), sky, DIM_LABEL_CONTRAST), glow,
     ribbonGlow: glow ? [num('--ribbon-glow-1', RIBBON_GLOW[0]), num('--ribbon-glow-2', RIBBON_GLOW[1])] : [0, 0],
     ribbonTone: glow ? 0 : num('--ribbon-tone', RIBBON_TONE),
   };
@@ -66,7 +78,11 @@ export interface SkyState {
   second: string | null;
   hovered: string | null;
   focus: string | null;
-  highlight: Map<string, 'self' | 'anc' | 'desc' | 'path'> | null;
+  /**
+   * Выделение: остальное небо гаснет. self — выбранное лицо и отметки поиска, anc и desc — предки и потомки,
+   * path — путь родства и супруги; sure и likely — живые в год меридиана «наверняка» и «вероятно» (D13).
+   */
+  highlight: Map<string, Emphasis> | null;
   layers: Record<string, boolean>;
   onlyLines: boolean;
   meridian: number | null;
@@ -75,13 +91,17 @@ export interface SkyState {
   reduced: boolean;
   intro: number; // 0…1 — зажигание звёзд
   lineFlip: boolean; // Лк 3 как второе родословие Иосифа
-  pins: Set<string>; // отмеченные одноимённые
+  pins: Set<string>; // отмеченные одноимённые (E10): сплошное кольцо и подпись с уточнением
+  /** флажок меридиана у линейки: «990 г. до Р. Х.: живы 186, наверняка 41» (D13) */
+  meridianLabel?: string | null;
   /**
    * Резерв: прямоугольники в px холста, закрытые органами неба, колонкой кнопок, вступлением (C4, C6).
    * Подписи звёзд и указатели у края под ними не рисуются.
    */
   reserve?: Rect[];
 }
+
+export type Emphasis = 'self' | 'anc' | 'desc' | 'path' | 'sure' | 'likely';
 
 /** Прямоугольник в px холста. */
 export interface Rect {
@@ -105,6 +125,12 @@ const MIN_YEARS = 20;
 /** Ширина левой кромки с буквами полос; на сенсорном экране шире — буквы там крупнее («Ж2» в 12,5 px). */
 const LETTER_W = 18;
 const LETTER_W_TOUCH = 22;
+/** Обзор: полоса ниже 5 px — мелкие звёзды точками, без следов связей (ТЗ § 3.1, семантическое увеличение). */
+const OVERVIEW_KY = 5;
+/** На обзоре указатель и подсказка — только у звёзд величины 0–3 (E11; IX-07). */
+const OVERVIEW_MAG = 3;
+/** Сколько самых значимых живых подписать сверх обычных порогов, когда стоит меридиан (D13; IX-34). */
+const MERIDIAN_EXTRA = 8;
 
 export class Sky {
   cam = new Camera();
@@ -123,6 +149,9 @@ export class Sky {
   nodes: NodeRow[] = [];
   private nodeIndex = new Map<string, number>();
   private labelLevel = new Float64Array(0);
+  /** Ширина имени (кегль по величине) и сокращения роли: замеряются один раз, а не в каждом кадре. */
+  private nameW = new Float64Array(0);
+  private siglaW = new Float64Array(0);
   private labelKey = '';
   private outlines: { block: number; group: string; foreign: boolean; poly: [number, number][]; rows: Map<number, [number, number]>; size: number }[] = [];
   private epochX: { id: string; x0: number; x1: number; name: string; short: string }[] = [];
@@ -298,6 +327,8 @@ export class Sky {
     this.labelLevel = new Float64Array(n).fill(Infinity);
     const ctx = this.ctx;
     const widths = new Float64Array(n);
+    this.nameW = widths;
+    this.siglaW = new Float64Array(n).fill(-1);
     for (let i = 0; i < n; i++) {
       const p = byId.get(this.nodes[i].person)!;
       if (this.nodes[i].ghost) continue;
@@ -372,10 +403,25 @@ export class Sky {
   /** Верх открытого неба (px): ниже линейки годов и служебной строки, а в режиме эпох — ниже ярусов (их рисует tiers.ts). */
   openTop = FRAME_H;
 
+  /** Названия созвездий этого кадра: подписи отметок, пути и меридиана на них не ложатся. */
+  private nameBoxes: Rect[] = [];
+  /** Выделение последнего кадра: на обзоре выделенные мелкие звёзды нарисованы знаком, а не точкой, и ловят указатель. */
+  private drawnHl: Map<string, Emphasis> | null = null;
+
   private drawn(i: number): boolean {
     const n = this.nodes[i];
     if (this.drawnOnly && !this.drawnOnly.has(n.person)) return false;
     return !(n.ghost && !this.drawnGhosts);
+  }
+
+  /**
+   * На обзоре (полоса ниже 5 px) звёзды величины 4–6 — точки без имени: они не ловят указатель и не дают подсказку
+   * (E11; IX-07). Выделенные (выбранное лицо, его род, отметки поиска) нарисованы знаком и ловят.
+   */
+  private pointable(i: number): boolean {
+    if (this.cam.ky >= OVERVIEW_KY) return true;
+    const id = this.nodes[i].person;
+    return (byId.get(id)?.magnitude ?? 6) <= OVERVIEW_MAG || !!this.drawnHl?.has(id);
   }
 
   /** Звезда нарисована и лежит в открытой части неба — её можно навести, щёлкнуть и выбрать с клавиатуры. */
@@ -403,7 +449,7 @@ export class Sky {
       const x = cam.sx(this.X0[i]);
       const y = cam.sy(n.lane);
       if (Math.abs(y - sy) > radius + ky) continue;
-      if (y < this.openTop || !this.drawn(i)) continue;
+      if (y < this.openTop || !this.drawn(i) || !this.pointable(i)) continue;
       const dx = x - sx;
       const dy = y - sy;
       const d = dx * dx + dy * dy;
@@ -418,14 +464,18 @@ export class Sky {
       const n = this.nodes[i];
       const y = cam.sy(n.lane);
       if (Math.abs(y - sy) > Math.max(3, ky * 0.35)) continue;
-      if (!this.drawn(i)) continue;
+      if (!this.drawn(i) || !this.pointable(i)) continue;
       if (sx >= cam.sx(this.X0[i]) && sx <= cam.sx(this.X1[i])) return n.person;
     }
     return null;
   }
 
   // ---------- кадр ----------
-  draw(s: SkyState) {
+  /**
+   * Кадр неба. under — то, что лежит поверх звёзд, но под меридианом, рамкой и указателями у края: ярусы эпох
+   * (src/render/tiers.ts; их рисует SkyView). Меридиан проходит и через ярусы, указатели у края не уходят под них.
+   */
+  draw(s: SkyState, under?: () => void) {
     const { ctx, cam, pal } = this;
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     const W = cam.w;
@@ -438,14 +488,20 @@ export class Sky {
     const level = Math.max(0, 2 * Math.log2(kx / KX_MIN));
     const zoomScale = Math.max(0.7, Math.min(1.25, ky / 18));
     const hl = s.highlight;
-    const emph = (id: string) => (hl ? (hl.has(id) ? 1 : 0.22) : 1);
+    const emph = (id: string) => {
+      if (!hl) return 1;
+      const k = hl.get(id);
+      return k === undefined ? DIM : k === 'likely' ? LIKELY : 1;
+    };
+    this.drawnHl = hl;
     const L = s.layers;
     const lineOnly = s.onlyLines;
     const spineSet = new Set([...lines.joseph.persons, ...lines.mary.persons].map((x) => x.id));
     const intro = s.intro;
     this.drawnOnly = lineOnly ? spineSet : null;
     this.drawnGhosts = !!L.ghosts;
-    this.openTop = FRAME_H;
+    // открытое небо — ниже рамки, а в режиме эпох — ниже ярусов (их нижний край — верхнее поле видимой части)
+    this.openTop = Math.max(FRAME_H, this.insets.top);
     const reserve = s.reserve;
 
     // эпохи
@@ -509,6 +565,7 @@ export class Sky {
     ctx.stroke();
 
     // созвездия
+    this.nameBoxes = [];
     if (L.constellations && !lineOnly) {
       ctx.save();
       ctx.lineWidth = 1;
@@ -567,12 +624,14 @@ export class Sky {
       ctx.setLineDash([]);
       ctx.font = mapFont(T_MAP_S, { sans: true, weight: 500, coarse: this.coarse });
       ctx.letterSpacing = '0.22em';
-      ctx.fillStyle = alpha(pal.ink3, hl ? 0.45 : 0.95);
+      // при выделении названия гаснут не ниже 0,75: остаются читаемыми (E12; MOB-41)
+      ctx.fillStyle = alpha(pal.ink3, hl ? CONSTELLATION_DIM : 0.95);
       for (const c of names.sort((a, b) => b.size - a.size)) {
         if (placed.some((q) => c.x < q.x + q.w + 8 && q.x < c.x + c.w + 8 && Math.abs(c.y - q.y) < fs + 3)) continue;
         // под органами неба и вступлением названия не рисуются (C6)
         if (hits({ x: c.x, y: c.y - fs, w: c.w, h: fs + 4 }, reserve)) continue;
         placed.push(c);
+        this.nameBoxes.push({ x: c.x - 2, y: c.y - fs, w: c.w + 4, h: fs + 4 });
         ctx.fillText(c.name, c.x, c.y);
       }
       ctx.letterSpacing = '0px';
@@ -711,7 +770,7 @@ export class Sky {
       const x = cam.sx(this.X0[i]);
       const y = cam.sy(n.lane);
       if (x < -20 || x > W + 20) continue;
-      if (ky < 5 && p.magnitude > 3 && !(hl && hl.has(p.id))) {
+      if (ky < OVERVIEW_KY && p.magnitude > OVERVIEW_MAG && !(hl && hl.has(p.id))) {
         // обзор: мелкие звёзды — точками
         ctx.fillStyle = alpha(pal.ink, 0.55 * emph(p.id) * intro);
         ctx.fillRect(x - 0.6, y - 0.6, 1.2, 1.2);
@@ -728,109 +787,253 @@ export class Sky {
       });
     }
 
-    // подписи
+    // подписи — группами по старшинству; каждая следующая группа не ложится на уже нарисованные (D13, E10; MAP-07):
+    //  1) выбранное, второе, наведённое и лицо с фокусом — всегда;
+    //  2) отметки поиска — с уточнением, в одном из четырёх положений; путь родства и супруги выбранного;
+    //  3) обычные — по заранее вычисленным порогам масштаба;
+    //  4) на меридиане — до восьми самых значимых живых сверх порогов.
+    // Погашенные выделением подписи держат контраст к небу не ниже 3 : 1 (E12; MOB-41).
     if (L.labels) {
       this.ensureLabels();
       ctx.textBaseline = 'alphabetic';
       ctx.lineJoin = 'round';
-      for (const i of vis) {
+      const taken: Rect[] = [];
+      const done = new Set<number>();
+      const top = this.openTop;
+      const bottom = cam.vp.b;
+      const clash = (b: Rect, upTo = taken.length) => {
+        for (let k = 0; k < upTo; k++) {
+          const q = taken[k];
+          if (b.x < q.x + q.w && q.x < b.x + b.w && b.y < q.y + q.h && q.y < b.y + b.h) return true;
+        }
+        return false;
+      };
+      /** Место подписи шириной w с кеглем size у звезды (x, y) радиуса r: справа, слева, сверху, снизу. */
+      const spot = (side: 'r' | 'l' | 't' | 'b', x: number, y: number, r: number, w: number, size: number) => {
+        const tx = side === 'r' ? x + r + 3 : side === 'l' ? x - r - 3 - w : x - w / 2;
+        const ty = side === 't' ? y - r - 5 : side === 'b' ? y + r + size + 1 : y - 3;
+        return { tx, ty, box: { x: tx - 2, y: ty - size, w: w + 4, h: size + 5 } };
+      };
+      const inside = (b: Rect) => b.x > this.letterW + 2 && b.x + b.w < W - 4 && b.y >= top && b.y + b.h <= bottom + 4;
+      /**
+       * Нарисовать подпись звезды i. sides — положения по порядку предпочтения; check — не ложиться на нарисованные
+       * (checkUpTo — только на первые checkUpTo); note — уточнение курсивом после имени (отметки поиска).
+       */
+      const label = (
+        i: number,
+        o: { sides: ('r' | 'l' | 't' | 'b')[]; check: boolean; checkUpTo?: number; color: string; alpha: number; note?: string; sigla?: boolean },
+      ): boolean => {
         const n = this.nodes[i];
-        if (n.ghost) continue;
         const p = byId.get(n.person)!;
-        const forced = p.id === s.selected || p.id === s.hovered || p.id === s.second || p.id === s.focus || (hl?.get(p.id) === 'path');
-        if (!forced && !(level >= this.labelLevel[i])) continue;
-        if (!forced && lineOnly && !spineSet.has(p.id)) continue;
-        const lit = Math.max(0, Math.min(1, intro * 7 - p.magnitude - 0.5));
-        if (lit <= 0 && !forced) continue;
         const x = cam.sx(this.X0[i]);
         const y = cam.sy(n.lane);
         // звезда за краем окна не подписывается: для выбранных есть указатели у края (MOB-01)
-        if (x < this.letterW || x > W) continue;
+        if (x < this.letterW || x > W) return false;
         const r = starRadius(p.magnitude, zoomScale);
-        ctx.font = nameFont(p.magnitude, this.coarse);
-        const nameW = ctx.measureText(p.name).width;
-        const size = nameSize(p.magnitude, this.coarse);
-        const ty = y - 3;
-        // у правого края подпись переходит влево от звезды, чтобы не обрезаться рамкой;
-        // под органами неба, колонкой кнопок и вступлением подпись не рисуется — или переходит на другую сторону (C6)
-        const right = x + r + 3;
-        const left = x - r - 3 - nameW;
-        const fitsRight = right + nameW <= cam.w - 6;
-        const fitsLeft = left > this.letterW + 4;
-        const free = (lx: number) => !hits({ x: lx - 2, y: ty - size, w: nameW + 4, h: size + 5 }, reserve);
-        let flip = !fitsRight && fitsLeft;
-        if (reserve && !free(flip ? left : right)) {
-          if (!flip && fitsLeft && free(left)) flip = true;
-          else if (flip || !fitsRight || !free(right)) continue;
+        const nf = nameFont(p.magnitude, this.coarse);
+        let nameW = this.nameW[i];
+        if (!(nameW > 0)) {
+          ctx.font = nf;
+          nameW = ctx.measureText(p.name).width;
         }
-        const tx = flip ? left : right;
-        const e = forced ? 1 : emph(p.id) * lit;
+        const size = nameSize(p.magnitude, this.coarse);
+        const note = o.note ? `, ${o.note}` : '';
+        const noteFont = mapFont(T_UI_S, { italic: true, coarse: this.coarse });
+        let noteW = 0;
+        if (note) {
+          ctx.font = noteFont;
+          noteW = ctx.measureText(note).width;
+        }
+        const sig = o.sigla && ky >= 18 && p.roles.length ? roleSigla(p.roles) : '';
+        let sigW = 0;
+        if (sig) {
+          if (!(this.siglaW[i] >= 0)) {
+            ctx.font = siglaFont(p.magnitude, this.coarse);
+            this.siglaW[i] = ctx.measureText(sig).width + 4;
+          }
+          sigW = this.siglaW[i];
+        }
+        let at: ReturnType<typeof spot> | null = null;
+        let side: 'r' | 'l' | 't' | 'b' = 'r';
+        for (const sd of o.sides) {
+          const q = spot(sd, x, y, r, nameW + noteW + (sd === 'r' ? sigW : 0), size);
+          // под органами неба, колонкой кнопок и вступлением подписи не рисуются (C6)
+          if (!inside(q.box) || hits(q.box, reserve)) continue;
+          if (o.check && clash(q.box, o.checkUpTo)) continue;
+          // отметки, путь и меридиан не ложатся и на названия созвездий
+          if (o.check && o.checkUpTo === undefined && hits(q.box, this.nameBoxes)) continue;
+          at = q;
+          side = sd;
+          break;
+        }
+        if (!at) return false;
+        const { tx, ty } = at;
+        ctx.globalAlpha = o.alpha;
         ctx.strokeStyle = pal.halo;
         ctx.lineWidth = 3;
-        ctx.globalAlpha = e;
+        ctx.font = nf;
         ctx.strokeText(p.name, tx, ty);
-        ctx.fillStyle = p.magnitude <= 2 || forced ? pal.ink : pal.ink2;
+        ctx.fillStyle = o.color;
         ctx.fillText(p.name, tx, ty);
-        if (ky >= 18 && p.roles.length && !flip) {
-          const sig = roleSigla(p.roles);
-          if (sig) {
-            const w = nameW;
-            ctx.font = siglaFont(p.magnitude, this.coarse);
-            ctx.strokeText(sig, tx + w + 4, ty);
-            ctx.fillStyle = pal.ink3;
-            ctx.fillText(sig, tx + w + 4, ty);
-          }
+        if (note) {
+          ctx.font = noteFont;
+          ctx.strokeText(note, tx + nameW, ty);
+          ctx.fillStyle = pal.ink2;
+          ctx.fillText(note, tx + nameW, ty);
+        }
+        if (sig && side === 'r') {
+          ctx.font = siglaFont(p.magnitude, this.coarse);
+          ctx.strokeText(sig, tx + nameW + noteW + 4, ty);
+          ctx.fillStyle = pal.ink3;
+          ctx.fillText(sig, tx + nameW + noteW + 4, ty);
         }
         ctx.globalAlpha = 1;
+        taken.push(at.box);
+        done.add(i);
+        return true;
+      };
+      const idx = (id: string | null) => (id ? this.nodeIndex.get(id) : undefined);
+      const shown = (i: number | undefined): i is number => i !== undefined && !this.nodes[i].ghost && this.drawn(i);
+
+      // 1) обязательные: у правого края — слева от звезды
+      for (const id of new Set([s.selected, s.second, s.hovered, s.focus])) {
+        const i = idx(id);
+        if (!shown(i)) continue;
+        label(i, { sides: ['r', 'l'], check: false, color: pal.ink, alpha: 1, sigla: true });
+      }
+      // 2) отметки поиска — с уточнением (E10); путь родства и супруги выбранного
+      for (const id of s.pins) {
+        const i = idx(id);
+        if (!shown(i) || done.has(i)) continue;
+        const p = byId.get(id)!;
+        label(i, { sides: ['r', 'l', 'b', 't'], check: true, color: pal.ink, alpha: 1, note: p.disambig || undefined });
+      }
+      if (hl)
+        for (const [id, k] of hl) {
+          if (k !== 'path') continue;
+          const i = idx(id);
+          if (!shown(i) || done.has(i)) continue;
+          if (lineOnly && !spineSet.has(id)) continue;
+          label(i, { sides: ['r', 'l'], check: true, color: pal.ink, alpha: 1, sigla: true });
+        }
+      // 3) обычные — по порогам; старшие подписи (группы 1–2) они не перекрывают
+      const priority = taken.length;
+      for (const i of vis) {
+        const n = this.nodes[i];
+        if (n.ghost || done.has(i)) continue;
+        if (!(level >= this.labelLevel[i])) continue;
+        const p = byId.get(n.person)!;
+        if (lineOnly && !spineSet.has(p.id)) continue;
+        const lit = Math.max(0, Math.min(1, intro * 7 - p.magnitude - 0.5));
+        if (lit <= 0) continue;
+        const bright = p.magnitude <= 2;
+        const color = bright ? pal.ink : pal.ink2;
+        const k = hl ? hl.get(p.id) : 'self';
+        // погашенная подпись — не прозрачнее, чем нужно для контраста 3 : 1
+        const floor = bright ? pal.dimInk : pal.dimInk2;
+        const a = k === undefined ? Math.max(DIM, floor) : k === 'likely' ? likelyAlpha(floor) : 1;
+        label(i, { sides: ['r', 'l'], check: priority > 0, checkUpTo: priority, color, alpha: a * lit, sigla: true });
+      }
+      // 4) меридиан: самые значимые из живых, кому не хватило порога, — если есть место (IX-34)
+      if (s.meridian !== null && hl) {
+        const cand: number[] = [];
+        for (const i of vis) {
+          const n = this.nodes[i];
+          if (n.ghost || done.has(i)) continue;
+          const k = hl.get(n.person);
+          if (k !== 'sure' && k !== 'likely') continue;
+          const y = cam.sy(n.lane);
+          if (y < top || y > bottom) continue;
+          cand.push(i);
+        }
+        const rank = (i: number) => {
+          const p = byId.get(this.nodes[i].person)!;
+          return p.magnitude * 100 - p.prominence - (hl.get(p.id) === 'sure' ? 50 : 0);
+        };
+        cand.sort((a, b) => rank(a) - rank(b));
+        let added = 0;
+        for (const i of cand) {
+          if (added >= MERIDIAN_EXTRA) break;
+          const p = byId.get(this.nodes[i].person)!;
+          const likely = hl.get(p.id) === 'likely';
+          if (label(i, { sides: ['r', 'l', 't', 'b'], check: true, color: pal.ink, alpha: likely ? likelyAlpha(pal.dimInk) : 1 })) added++;
+        }
       }
     }
 
     // выбранные — кольцо; фокус клавиатуры — такое же кольцо, а у выбранной звезды — второе, снаружи
-    const ring = (id: string, out: number) => {
+    const ring = (id: string, out: number, width = 2, color = pal.focus, gap?: number) => {
       const i = this.nodeIndex.get(id);
       if (i === undefined) return;
       const p = byId.get(id)!;
       const x = cam.sx(this.X0[i]);
       const y = cam.sy(this.nodes[i].lane);
-      const r = starRadius(p.magnitude, zoomScale) + (p.sex === 'f' ? 6.5 : 5) + out;
-      ctx.strokeStyle = pal.focus;
-      ctx.lineWidth = 2;
+      const r = starRadius(p.magnitude, zoomScale) + (gap ?? (p.sex === 'f' ? 6.5 : 5)) + out;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
       ctx.beginPath();
       ctx.arc(x, y, r, 0, Math.PI * 2);
       ctx.stroke();
     };
     for (const id of [s.selected, s.second]) if (id) ring(id, 0);
     if (s.focus) ring(s.focus, s.focus === s.selected || s.focus === s.second ? 4 : 0);
+    // наведённая звезда — тонкое кольцо: звезда отвечает на указатель (E11; IX-06)
+    if (s.hovered && s.hovered !== s.selected && s.hovered !== s.second && s.hovered !== s.focus) {
+      const i = this.nodeIndex.get(s.hovered);
+      if (i !== undefined && this.drawn(i)) ring(s.hovered, 0, 1, pal.ink, byId.get(s.hovered)!.sex === 'f' ? 6.2 : 4);
+    }
 
-    // отмеченные одноимённые
+    // отмеченные одноимённые — сплошное кольцо (E10; UX-31: пунктир читался как знак народа)
     for (const id of s.pins) {
       const i = this.nodeIndex.get(id);
-      if (i === undefined) continue;
-      const x = cam.sx(this.X0[i]);
-      const y = cam.sy(this.nodes[i].lane);
-      ctx.strokeStyle = pal.focus;
-      ctx.setLineDash([3, 3]);
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.arc(x, y, 11, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.setLineDash([]);
+      if (i === undefined || !this.drawn(i)) continue;
+      ring(id, 0, 1.5, pal.ink, byId.get(id)!.sex === 'f' ? 8.5 : 7);
     }
 
-    // меридиан года
-    if (s.meridian !== null) {
-      const x = Math.round(cam.sx(this.xOf(s.meridian))) + 0.5;
-      ctx.strokeStyle = alpha(pal.ink, 0.7);
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(x, RULER_H);
-      ctx.lineTo(x, H);
-      ctx.stroke();
-    }
-
+    under?.();
     this.drawFrame(ticks);
+    this.drawMeridian(s);
     this.drawWayfinding(s);
   }
+
+  /**
+   * Меридиан года (D13; UX-27, IX-34, MAP-07, MAP-33): черта через ярусы и небо и флажок у линейки неба —
+   * «990 г. до Р. Х.: живы 186, наверняка 41». Флажок — лист на служебной строке рамки, справа от черты, у правого края — слева.
+   */
+  private drawMeridian(s: SkyState) {
+    this.meridianFlag = null;
+    if (s.meridian === null) return;
+    const { ctx, cam, pal } = this;
+    const x = Math.round(cam.sx(this.xOf(s.meridian))) + 0.5;
+    if (x < this.letterW || x > cam.w) return;
+    ctx.strokeStyle = alpha(pal.ink, 0.7);
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x, RULER_H);
+    ctx.lineTo(x, cam.h);
+    ctx.stroke();
+    const text = s.meridianLabel;
+    if (!text) return;
+    ctx.font = mapFont(T_MAP_S, { sans: true, weight: 500, coarse: this.coarse });
+    ctx.textBaseline = 'middle';
+    const tw = ctx.measureText(text).width;
+    const w = tw + 12;
+    const h = ROW_H - 1;
+    let bx = x + 1;
+    if (bx + w > cam.w - 2) bx = x - w;
+    bx = Math.max(this.letterW + 1, bx);
+    const by = RULER_H;
+    ctx.fillStyle = pal.sheet;
+    ctx.fillRect(bx, by, w, h);
+    ctx.strokeStyle = pal.ruleStrong;
+    ctx.strokeRect(Math.round(bx) + 0.5, by + 0.5, Math.round(w) - 1, h - 1);
+    ctx.fillStyle = pal.ink;
+    ctx.fillText(text, bx + 6, by + h / 2 + 0.5);
+    ctx.textBaseline = 'alphabetic';
+    this.meridianFlag = { x: bx, y: by, w, h };
+  }
+  /** Где стоит флажок меридиана (px холста) — для проверок. */
+  meridianFlag: Rect | null = null;
 
   /** Указатели на выбранных за краем экрана («→ Давид»): по щелчку — перелёт. Не заходят под органы неба (C4; MAP-37). */
   edgeHits: { x: number; y: number; w: number; h: number; id: string }[] = [];

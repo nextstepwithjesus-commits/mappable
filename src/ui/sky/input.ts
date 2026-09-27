@@ -3,17 +3,19 @@
  * Клавиши — по физическим клавишам (KeyboardEvent.code), поэтому работают и на русской раскладке; слушает их window
  * (src/ui/keys.ts), а не холст: небо отвечает и без фокуса на холсте (IX-38).
  */
-import type { Sky } from '../../render/sky.ts';
+import { FRAME_H, type Sky } from '../../render/sky.ts';
 import { byId, graph, lineMembership } from '../../data/atlas.ts';
-import { selected, hovered, meridian, panel, epochMode, pins, pinsQuery, pickMode, pickSecond } from '../../state.ts';
+import { selected, hovered, panel, epochMode, pins, pinsQuery, pickMode, pickSecond } from '../../state.ts';
 import { goTo, skyRef } from '../common.tsx';
-import { showAll, stopFlight, zoomBy } from './view.ts';
+import { tierAt, tierHot, type TierHit } from '../../render/tiers.ts';
+import { showAll, showYears, stopFlight, zoomBy } from './view.ts';
+import { hoverYear } from './meridian.ts';
+import type { Tip } from './Tip.tsx';
 
-export interface Tip {
-  id: string;
-  x: number;
-  y: number;
-}
+export type { Tip };
+
+/** Линейка лет вверху неба: над ней — меридиан года (D13). */
+const RULER = 26;
 
 export interface PointerInput {
   /** Небо сдвинулось? Подсказка прежнего лица прячется, попадание проверяется заново, когда небо остановится. extra — масштаб времени и модель. */
@@ -109,17 +111,47 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
   let lastWheel: { t: number; kind: WheelKind } | null = null;
   // щелчок по пустому небу снимает выбор, но не сразу: второй щелчок того же двойного — масштаб, а не снятие
   let clearTimer = 0;
-  const showTip = (t: { id: string; x: number; y: number } | null) => {
+  let tipKey = '';
+  const showTip = (t: Tip | null) => {
     if (!t && !tipShown) return;
+    const k = !t ? '' : t.kind === 'star' ? `s:${t.id}` : `t:${t.hit.bar.key}`;
+    // та же звезда или тот же отрезок — подсказка стоит, а не переставляется за указателем
+    if (k && k === tipKey) return;
+    tipKey = k;
     tipShown = !!t;
     setTip(t);
   };
+  /** Отрезок яруса под указателем: обводка в кадре. */
+  const setTierHot = (h: TierHit | null) => {
+    const k = h?.bar.key ?? null;
+    if (k === tierHot.key) return;
+    tierHot.key = k;
+    request();
+  };
+  /** Курсор: над звездой, отрезком яруса и указателем у края — «рука со пальцем» (E11; IX-06, UX-29). */
+  const setHot = (on: boolean) => canvas.classList.toggle('hot', on);
+  /** Что под указателем (px холста): отрезок яруса или звезда; обновляет наведение, подсказку и курсор. */
+  const probe = (x: number, y: number, r: number) => {
+    if (epochMode.value && y >= FRAME_H && y < sky.openTop) {
+      // ярусы эпох: отрезки отвечают сами, звёзды под ними не ловятся (IX-28)
+      const t = tierAt(x, y);
+      if (hovered.value) hovered.value = null;
+      setTierHot(t);
+      setHot(!!t);
+      showTip(t ? { kind: 'tier', hit: t, x, y } : null);
+      return;
+    }
+    setTierHot(null);
+    const edge = sky.edgeHits.some((q) => x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h);
+    const hit = edge ? null : sky.hit(x, y, r);
+    if (hit !== hovered.value) hovered.value = hit;
+    setHot(!!hit || edge);
+    showTip(hit ? { kind: 'star', id: hit, x, y } : null);
+  };
   /** Подсказка и наведение — по тому, что под указателем сейчас. */
   const rehit = () => {
-    if (!pointer || drag || pinch || pointer.y < 26) return;
-    const hit = sky.hit(pointer.x, pointer.y, pointer.r);
-    if (hit !== hovered.value) hovered.value = hit;
-    showTip(hit ? { id: hit, x: pointer.x, y: pointer.y } : null);
+    if (!pointer || drag || pinch || pointer.y < RULER) return;
+    probe(pointer.x, pointer.y, pointer.r);
   };
   // Небо сдвинулось (протяжка, колесо, клавиши, перелёт, полоса времени, смена масштаба): подсказка прежнего лица
   // прячется сразу, а попадание проверяется заново, когда небо остановится (IX-07, MAP-39).
@@ -134,6 +166,7 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     if (initial) return;
     showTip(null);
     if (hovered.value) hovered.value = null;
+    setTierHot(null);
     clearTimeout(calm);
     calm = window.setTimeout(rehit, 120);
   };
@@ -148,6 +181,8 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     clearTimeout(clearTimer);
     const p = local(e);
     pointers.set(e.pointerId, p);
+    // нажатие снимает меридиан: во время протяжки его нет (D13)
+    hoverYear(null);
     if (pointers.size === 1) drag = { x0: p.x, y0: p.y, x: p.x, y: p.y, moved: false, t: performance.now(), type: e.pointerType };
     if (pointers.size === 2) {
       const [a, b] = [...pointers.values()];
@@ -175,6 +210,7 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       if (drag.moved || Math.hypot(p.x - drag.x0, p.y - drag.y0) > (CLICK_SLOP[drag.type] ?? 5)) {
         drag.moved = true;
         canvas.classList.add('dragging');
+        setHot(false);
         sky.cam.pan(p.x - drag.x, p.y - drag.y);
         drag.x = p.x;
         drag.y = p.y;
@@ -183,14 +219,17 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       }
       return;
     }
-    if (p.y < 26) {
-      meridian.value = sky.tOf(sky.cam.wx(p.x));
+    if (p.y < RULER) {
+      // над линейкой — меридиан года, через 250 мс (D13)
+      if (e.pointerType !== 'touch') hoverYear(sky.tOf(sky.cam.wx(p.x)));
+      if (hovered.value) hovered.value = null;
+      setTierHot(null);
+      setHot(false);
       showTip(null);
       return;
-    } else if (meridian.value !== null && !pointers.size) meridian.value = null;
-    const hit = sky.hit(p.x, p.y, e.pointerType === 'touch' ? 22 : 12);
-    if (hit !== hovered.value) hovered.value = hit;
-    showTip(hit ? { id: hit, x: p.x, y: p.y } : null);
+    }
+    hoverYear(null);
+    probe(p.x, p.y, e.pointerType === 'touch' ? 22 : 12);
   };
   const onUp = (e: PointerEvent) => {
     const p = local(e);
@@ -211,6 +250,21 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       goTo(edge.id);
       return;
     }
+    // ярусы эпох: лицо — выбрать (и перелёт, если его нет на экране), эпоха и событие — показать их годы (IX-28)
+    if (epochMode.value && at.y >= FRAME_H && at.y < sky.openTop) {
+      const t = tierAt(at.x, at.y);
+      if (!t) return;
+      const b = t.bar;
+      if (b.kind === 'person') {
+        if (pins.value.length) pins.value = [];
+        goTo(b.id);
+      } else {
+        const span = Math.max(40, b.t1 - b.t0);
+        const pad = Math.max(10, span * 0.06);
+        showYears(b.kind === 'event' ? b.t0 - 40 : b.t0 - pad, b.kind === 'event' ? b.t0 + 40 : b.t1 + pad, true);
+      }
+      return;
+    }
     const hit = sky.hit(at.x, at.y, d.type === 'touch' ? 22 : 12);
     if (hit) {
       if (pins.value.length) pins.value = [];
@@ -219,7 +273,7 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       return;
     }
     // пустое небо: снять выбор (IX-09); «назад» в браузере его вернёт (D8). В режиме выбора второго лица — ничего.
-    if (pickMode.value || at.y < 26) return;
+    if (pickMode.value || at.y < RULER) return;
     clearTimeout(clearTimer);
     clearTimer = window.setTimeout(() => {
       if (pins.value.length) {
@@ -276,7 +330,9 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
   const onLeave = () => {
     pointer = null;
     hovered.value = null;
-    meridian.value = null;
+    hoverYear(null);
+    setTierHot(null);
+    setHot(false);
     showTip(null);
   };
   canvas.addEventListener('pointerdown', onDown);

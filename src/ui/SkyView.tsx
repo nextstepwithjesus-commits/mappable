@@ -1,19 +1,20 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { effect } from '@preact/signals';
-import { FRAME_H, Sky, readPalette, type Rect, type SkyState } from '../render/sky.ts';
+import { FRAME_H, Sky, readPalette, type Emphasis, type Rect, type SkyState } from '../render/sky.ts';
 import { byId, graph } from '../data/atlas.ts';
 import {
   selected, second, first, hovered, focused, lambda, model, layers, onlyLines, meridian, panel, pickMode, theme, introDone, epochMode, lineFlip, pins,
-  kinPath,
+  pinsQuery, kinPath,
 } from '../state.ts';
 import { skyRef, viewTick, goTo } from './common.tsx';
-import { drawTiers, tiersBottom } from '../render/tiers.ts';
+import { drawTiers, replanTiers, tiersBottom } from '../render/tiers.ts';
 import { typo } from './text/typo.ts';
-import { lifeText, placeText } from './sky/text.ts';
+import { aliveAt, lifeText, meridianText, placeText } from './sky/text.ts';
 import { flightTarget, flyToPerson, inView, introOpen, keepInView, reduced, screenOf, setReserve, stopFlight } from './sky/view.ts';
 import { attachPointer, type Tip } from './sky/input.ts';
 import { COLUMN_BELOW, SkyColumn, SkyControls, ViewSheet } from './sky/Controls.tsx';
-import { CARTOUCHE_BESIDE, Cartouche, GuideCommand, PickBar } from './sky/Overlays.tsx';
+import { CARTOUCHE_BESIDE, Cartouche, GuideCommand, PickBar, PinBar } from './sky/Overlays.tsx';
+import { SkyTip } from './sky/Tip.tsx';
 
 /**
  * Путь родства, который сейчас можно показать: он идёт от первого лица пары ко второму.
@@ -27,9 +28,9 @@ export function pairPath(): string[] | null {
   return path[0] === a || path[0] === selected.value ? path : null;
 }
 
-function highlightFor(id: string | null, path: string[] | null): Map<string, 'self' | 'anc' | 'desc' | 'path'> | null {
+function highlightFor(id: string | null, path: string[] | null): Map<string, Emphasis> | null {
   if (!id) return null;
-  const m = new Map<string, 'self' | 'anc' | 'desc' | 'path'>();
+  const m = new Map<string, Emphasis>();
   if (path) {
     for (const p of path) m.set(p, 'path');
     m.set(path[0], 'self');
@@ -75,6 +76,7 @@ export function SkyView() {
     let flowStart = 0;
     let morph: { from: number; to: number; start: number; anchor: Anchor } | null = null;
     let shownLambda = lambda.value;
+    let shownTop = -1;
     let tensionPersons = new Set<string>();
 
     const tensions = () => {
@@ -100,6 +102,8 @@ export function SkyView() {
 
     const frame = () => {
       raf = 0;
+      // небо снято со страницы (образец #/specimen), а анимация камеры или таймер ещё просят кадр — рисовать некуда
+      if (!wrap.current) return;
       const now = performance.now();
       let again = false;
       if (morph) {
@@ -123,7 +127,11 @@ export function SkyView() {
       const flowing = flowStart > 0 && now - flowStart < 3000;
       if (flowing) again = true;
       const path = pairPath();
-      let highlight = highlightFor(selected.value, path);
+      // отметки поиска (E10): светятся отмеченные и выбранное лицо, остальное небо гаснет
+      const pinned = pins.value;
+      let highlight: Map<string, Emphasis> | null = pinned.length
+        ? new Map<string, Emphasis>([...pinned, ...(selected.value ? [selected.value] : [])].map((x) => [x, 'self']))
+        : highlightFor(selected.value, path);
       // какой путь родства светится на небе — для проверок приёмки (tools/accept.ts)
       const pathKey = path && selected.value ? path.join(' ') : '';
       if (pathKey !== shownPath.current) {
@@ -131,28 +139,39 @@ export function SkyView() {
         if (pathKey) wrap.current!.dataset.kinPath = pathKey;
         else delete wrap.current!.dataset.kinPath;
       }
-      if (!highlight && meridian.value !== null) {
-        // меридиан года: светятся все, кто жив в этот год
-        const t = meridian.value;
-        highlight = new Map();
-        for (const [pid, c] of model.value.chrono) {
-          if (c.cls === 'epochal') continue;
-          const end = c.d ?? c.dEst;
-          if (c.b <= t && t <= end) highlight.set(pid, c.d !== null || (c.last !== null && c.last >= t) ? 'path' : 'desc');
-        }
+      // меридиан года (D13): светятся все, кто жив в этот год, «вероятно» — бледнее, чем «наверняка»;
+      // при выбранном лице небо не перестраивается, счёт живых — во флажке у линейки
+      let meridianLabel: string | null = null;
+      if (meridian.value !== null) {
+        const alive = aliveAt(model.value.chrono, meridian.value);
+        let sure = 0;
+        for (const k of alive.values()) if (k === 'sure') sure++;
+        meridianLabel = meridianText(meridian.value, alive.size, sure);
+        if (!highlight) highlight = alive;
       }
       const state: SkyState = {
         model: model.value, lambda: shownLambda, selected: selected.value, second: second.value, hovered: hovered.value, focus: focused.value,
         highlight, layers: layers.value, onlyLines: onlyLines.value, meridian: meridian.value,
         tensionPersons, flow: flowing ? now - flowStart : 0, reduced: reduced(), intro, lineFlip: lineFlip.value, pins: new Set(pins.value),
-        reserve: reserveRef.current,
+        reserve: reserveRef.current, meridianLabel,
       };
-      sky.draw(state);
-      if (epochMode.value) drawTiers(sky, state);
+      // ярусы эпох — поверх звёзд, под меридианом, рамкой и указателями у края
+      sky.draw(state, epochMode.value ? () => drawTiers(sky, state) : undefined);
       input.watchCamera(`${shownLambda} ${model.value.id}`);
+      watchSettle(`${sky.cam.x0} ${sky.cam.kx} ${sky.cam.w} ${shownLambda} ${model.value.id}`);
       // окно неба — для проверок приёмки (tools/accept/layout.ts): видимая часть, годы и полосы по её краям
       const vp = sky.cam.vp;
       wrap.current!.dataset.view = [vp.l, vp.t, vp.r, vp.b, sky.cam.x0, sky.cam.kx, sky.cam.laneTop, sky.cam.ky].map((v) => +v.toFixed(4)).join(' ');
+      // верх видимой части неба — для органов у верхнего края (вступление и «Как читать карту» на узком небе, sky.css):
+      // в режиме эпох они встают под ярусы, а не на них; их прямоугольники резерва замеряются заново
+      if (vp.t !== shownTop) {
+        shownTop = vp.t;
+        wrap.current!.style.setProperty('--sky-top', `${Math.round(vp.t)}px`);
+        requestAnimationFrame(() => wrap.current && layoutRef.current(false));
+      }
+      // флажок меридиана — для проверок приёмки (tools/accept/sky.ts): есть ли меридиан и что на флажке
+      if (meridianLabel) wrap.current!.dataset.meridian = meridianLabel;
+      else delete wrap.current!.dataset.meridian;
       // где звезда выбранного лица (px холста) — «выбранное лицо видно» проверяется по ней
       const sel = selected.value ? screenOf(selected.value) : null;
       if (sel) wrap.current!.dataset.sel = `${sel.x.toFixed(1)} ${sel.y.toFixed(1)}`;
@@ -190,7 +209,7 @@ export function SkyView() {
       // колонка кнопок узкого неба — полоса справа: иначе конец лент (Иисус Христос) на «всём небе» лежал бы под ней (MOB-01)
       const col = wrap.current!.querySelector<HTMLElement>('.skyctl.column');
       const right = col ? Math.max(0, box.right - col.getBoundingClientRect().left + 4) : 0;
-      return { top: epochMode.peek() ? tiersBottom(model.value) : FRAME_H, bottom: Math.min(bottom, box.height - FRAME_H - 80), left, right };
+      return { top: epochMode.peek() ? tiersBottom(sky, model.value) : FRAME_H, bottom: Math.min(bottom, box.height - FRAME_H - 80), left, right };
     };
     /** Что было до смены видимой части: камера на «всём небе»? выбранное лицо видно? */
     const snapshot = () => {
@@ -222,7 +241,8 @@ export function SkyView() {
     let last = { left: 0, w: 0, h: 0 };
     /** Размер холста: при сетке [панель][небо][карточка] он меняется, когда открываются панель и карточка. */
     const resize = () => {
-      const r = wrap.current!.getBoundingClientRect();
+      if (!wrap.current) return;
+      const r = wrap.current.getBoundingClientRect();
       if (r.width === last.w && r.height === last.h && r.left === last.left) return;
       const first = last.w === 0;
       const before = first ? null : snapshot();
@@ -316,6 +336,8 @@ export function SkyView() {
       sky.setModel(m, shownLambda);
       holdAnchor(a);
       if (!a.id) sky.cam.clampNow();
+      // годы эпох зависят от модели: ярусы раскладываются заново
+      if (epochMode.peek() && replanTiers(sky, m)) applyInsets(false);
       request();
     });
     const offLambda = effect(() => {
@@ -355,11 +377,44 @@ export function SkyView() {
       lastSel = id;
       request();
     });
-    // ярусы эпох сдвигают верх видимой части: выбранное лицо остаётся видным, «всё небо» вписывается под ярусы
+    // ярусы эпох сдвигают небо вниз, а не закрывают его (D14; UX-26): то, что было у верхнего края видимой части,
+    // остаётся у него — под ярусами; выключили ярусы — небо поднимается обратно. «Всё небо» вписывается под ярусы.
+    let tiersShown = epochMode.peek();
     const offTiers = effect(() => {
-      void epochMode.value;
-      requestAnimationFrame(() => applyInsets(true));
+      const on = epochMode.value;
+      requestAnimationFrame(() => {
+        if (!wrap.current || !sky.model || !last.w) return;
+        const toggled = on !== tiersShown;
+        tiersShown = on;
+        if (on) replanTiers(sky, model.peek());
+        const before = snapshot();
+        const t0 = sky.cam.vp.t;
+        if (!sky.setInsets(insets())) return request();
+        const dy = sky.cam.vp.t - t0;
+        if (toggled && dy && !before.wasFit && !(sky.cam.moving && flightTarget)) {
+          const to = sky.cam.constrain({ x0: sky.cam.x0, kx: sky.cam.kx, laneTop: sky.cam.laneTop + dy / sky.cam.ky });
+          sky.cam.animateTo(to, 250, request, reduced());
+          if (before.sel) requestAnimationFrame(() => keepInView(before.sel!));
+          request();
+          return;
+        }
+        afterViewport(before, true);
+      });
     });
+    // раскладка ярусов — по окну неба, когда оно остановилось: пустые ярусы свёрнуты, строки — по видимым отрезкам
+    let settleKey = '';
+    let settleTimer = 0;
+    const watchSettle = (key: string) => {
+      if (key === settleKey) return;
+      settleKey = key;
+      clearTimeout(settleTimer);
+      if (!epochMode.peek()) return;
+      settleTimer = window.setTimeout(() => {
+        if (!wrap.current || !epochMode.peek() || sky.cam.moving) return;
+        if (replanTiers(sky, model.peek())) applyInsets(false);
+        request();
+      }, 200);
+    };
     const offLines = effect(() => {
       if (onlyLines.value) flowStart = performance.now();
       request();
@@ -380,6 +435,9 @@ export function SkyView() {
       offSel();
       offLines();
       offTiers();
+      clearTimeout(settleTimer);
+      // перелёт и шаг масштаба останавливаются вместе с небом: их кадры некуда рисовать
+      sky.cam.stop();
       input.dispose();
       if (raf) cancelAnimationFrame(raf);
       void dirty;
@@ -404,7 +462,6 @@ export function SkyView() {
     if (!column && panel.value === 'view') panel.value = null;
   }, [column]);
 
-  const tipPerson = tip ? byId.get(tip.id) : null;
   const visibleForSR = (() => {
     void viewTick.value;
     const sky = skyRef.current;
@@ -435,14 +492,8 @@ export function SkyView() {
           class={pickMode.value ? 'picking' : ''}
         />
         {pickMode.value && selected.value && <PickBar mode={pickMode.value} id={selected.value} />}
-        {tipPerson && tip && (
-          <div class="tip" style={{ left: `${Math.min(tip.x + 14, (skyRef.current?.cam.w ?? 800) - 330)}px`, top: `${tip.y + 16}px` }}>
-            <b>{tipPerson.name}</b>
-            {tipPerson.disambig && <span class="ds">, {tipPerson.disambig}</span>}
-            <div class="yr">{lifeText(tipPerson.id)}</div>
-            <div class="ds">{placeText(tipPerson.id)}</div>
-          </div>
-        )}
+        {pins.value.length > 0 && !pickMode.value && <PinBar n={pins.value.length} query={pinsQuery.value} />}
+        <SkyTip tip={tip} />
         {/* до первого замера ширина неба неизвестна: органы появляются сразу в своём виде, без мелькания блока на телефоне */}
         {skyW > 0 && (column ? <SkyColumn /> : <SkyControls />)}
         {skyW > 0 && (intro ? <Cartouche high={!column && skyW < CARTOUCHE_BESIDE} /> : <GuideCommand high={!column && skyW < CARTOUCHE_BESIDE} />)}

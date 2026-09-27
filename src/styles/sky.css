@@ -15,17 +15,23 @@
   outline: 2px solid var(--focus);
   outline-offset: -2px;
 }
-.sky canvas.dragging {
-  cursor: grabbing;
-}
 .sky canvas.picking {
   cursor: crosshair;
 }
+/* над звездой, отрезком яруса эпох и указателем у края — нажимаемое (E11; IX-06, UX-29) */
+.sky canvas.hot {
+  cursor: pointer;
+}
+.sky canvas.dragging {
+  cursor: grabbing;
+}
 
-/* подсказка при наведении — лист: непрозрачный, край 1 px */
+/* подсказка при наведении — лист: непрозрачный, край 1 px. Место и задержку задаёт src/ui/sky/tip.ts:
+   left и top — по настоящему размеру листа, в одном из четырёх положений у звезды */
 .tip {
   position: absolute;
   pointer-events: none;
+  width: max-content;
   background: var(--sheet);
   border: 1px solid var(--rule-strong);
   padding: 7px 11px 8px;
@@ -33,6 +39,10 @@
   font-size: var(--t-note);
   line-height: var(--t-note-lh);
   z-index: 5;
+}
+/* до задержки 120 мс и до выбора места подсказка прозрачна: её размер уже измерен, но её не видно */
+.tip:not([data-shown]) {
+  opacity: 0;
 }
 .tip b {
   font-weight: 600;
@@ -45,6 +55,14 @@
 .tip .yr {
   color: var(--ink-2);
   font-variant-numeric: lining-nums tabular-nums;
+}
+/* стих основания у отрезка яруса эпох: царствование, надписание книги пророка */
+.tip .verse {
+  margin-top: 4px;
+  color: var(--ink);
+}
+.tip .verse .br {
+  color: var(--ink-3);
 }
 
 /* картуш — надпись на поле карты при первом показе; непрозрачный лист с двойной рамкой (C5; VIS-24).
@@ -169,7 +187,8 @@
   color: var(--ink-2);
 }
 .guide-cmd.high {
-  top: 52px;
+  /* под рамкой, а в режиме эпох — под ярусами: --sky-top — верх видимой части неба (SkyView) */
+  top: calc(var(--sky-top, 44px) + 8px);
   bottom: auto;
 }
 .guide-cmd:hover {
@@ -376,7 +395,7 @@
 
 /* на небе уже 880 px картуш и органы неба внизу не помещаются рядом: картуш — в левом верхнем углу, под колонтитулом */
 .cartouche.high {
-  top: 52px;
+  top: calc(var(--sky-top, 44px) + 8px);
   bottom: auto;
 }
 
@@ -408,4 +427,11 @@
 }
 .pickbar button {
   flex: none;
+}
+/* строка отметок поиска (E10) — тот же лист и та же команда, что у строки выбора второго лица (.pickbar);
+   «Esc — снять» — только там, где есть клавиатура */
+@media (pointer: coarse) {
+  .pinbar .keys-only {
+    display: none;
+  }
 }

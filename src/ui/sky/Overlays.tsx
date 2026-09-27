@@ -1,10 +1,10 @@
 /** Надписи поверх неба: строка выбора второго лица, вступительный картуш и «Как читать карту». */
 import { byId } from '../../data/atlas.ts';
-import { introDone, pickMode, selected } from '../../state.ts';
+import { introDone, pickMode, pins, pinsQuery, selected } from '../../state.ts';
 import { skyRef, plural } from '../common.tsx';
 import { num, typo, typoTree } from '../text/typo.ts';
 import { Close } from '../controls.tsx';
-import { pickBarText } from './text.ts';
+import { pickBarText, pinBarText } from './text.ts';
 import { introOpen, openGuide } from './view.ts';
 
 /** Уже этой ширины вступительный картуш слева внизу встал бы под блок органов справа: картуш переходит в левый верхний угол. */
@@ -16,6 +16,29 @@ export function PickBar({ mode, id }: { mode: 'kinship' | 'spread'; id: string }
       {/* неразрывные пробелы — при показе: сама строка проверяется тестами как текст (tests/shell.test.ts) */}
       <span>{typo(pickBarText(mode, id))}</span>
       <button onClick={() => (pickMode.value = null)}>Отменить</button>
+    </div>
+  );
+}
+
+/**
+ * Строка отметок поиска у верхней кромки неба (E10; UX-31, IX-19): сколько отмечено и по какому запросу, как снять.
+ * Снимают отметки «Снять», Escape, новый поиск и щелчок по звезде или по пустому небу.
+ */
+export function PinBar({ n, query }: { n: number; query: string }) {
+  return (
+    <div class="pickbar pinbar" role="status">
+      <span>
+        {typo(pinBarText(n, query))}
+        <span class="keys-only">. Esc — снять</span>
+      </span>
+      <button
+        onClick={() => {
+          pins.value = [];
+          pinsQuery.value = '';
+        }}
+      >
+        Снять
+      </button>
     </div>
   );
 }

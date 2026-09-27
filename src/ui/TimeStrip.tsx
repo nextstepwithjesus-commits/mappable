@@ -7,6 +7,7 @@ import { formatSpan, toAstro, toHist } from '../engine/years.ts';
 import { readPalette } from '../render/sky.ts';
 import { T_MAP_S, coarsePointer, mapFont } from '../render/type.ts';
 import { reduced, showAll, showYears, stopFlight } from './sky/view.ts';
+import { hoverYear } from './sky/meridian.ts';
 import { typo } from './text/typo.ts';
 
 /** Начало полосы — сотворение в текущей модели (в модели чисел в скобках — на ~1 400 лет раньше). */
@@ -333,6 +334,8 @@ export function TimeStrip() {
       stopFlight();
       cancelAnimationFrame(recenter);
       clearTimeout(epochTimer);
+      // во время протяжки меридиана нет (D13)
+      hoverYear(null);
       const r = cv.getBoundingClientRect();
       const x = e.clientX - r.left;
       const v = view();
@@ -367,7 +370,8 @@ export function TimeStrip() {
         const v = view();
         const g = v ? frameGrip(x, xOf(v.a), xOf(v.b)) : null;
         // над ручкой — ширина окна, а не год: меридиан с подписью закрыл бы ручку
-        meridian.value = g === 'left' || g === 'right' ? null : tOf(x);
+        // меридиан — через 250 мс и не над ручками (D13; src/ui/sky/meridian.ts)
+        hoverYear(g === 'left' || g === 'right' ? null : tOf(x));
         if (g !== grip) {
           grip = g;
           draw();
@@ -375,7 +379,7 @@ export function TimeStrip() {
         setCursor();
         return;
       }
-      meridian.value = null;
+      hoverYear(null);
       const dt = tOf(x) - tOf(drag.x);
       if (Math.abs(x - drag.x) > 2) drag.moved = true;
       if (!drag.moved) return;
@@ -412,7 +416,7 @@ export function TimeStrip() {
     };
     const onLeave = () => {
       if (!drag) {
-        meridian.value = null;
+        hoverYear(null);
         if (grip) {
           grip = null;
           draw();
