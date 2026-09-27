@@ -9,6 +9,12 @@
   display: block;
   cursor: grab;
 }
+/* холст в фокусе — внутренняя обводка по краю неба (B8; VIS-16): снаружи её срезал бы край сетки.
+   Кольцо у звезды в фокусе рисует сам холст (I1). */
+.sky canvas:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
 .sky canvas.dragging {
   cursor: grabbing;
 }
@@ -16,21 +22,21 @@
   cursor: crosshair;
 }
 
-/* подсказка при наведении */
+/* подсказка при наведении — лист: непрозрачный, край 1 px */
 .tip {
   position: absolute;
   pointer-events: none;
   background: var(--sheet);
-  border: 1px solid var(--rule);
+  border: 1px solid var(--rule-strong);
   padding: 7px 11px 8px;
   max-width: 320px;
-  font-size: 14px;
-  line-height: 19px;
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
   z-index: 5;
 }
 .tip b {
   font-weight: 600;
-  font-size: 15px;
+  font-size: var(--t-body);
 }
 .tip .ds {
   font-style: italic;
@@ -41,26 +47,26 @@
   font-variant-numeric: lining-nums tabular-nums;
 }
 
-/* картуш — надпись на поле карты при первом показе */
+/* картуш — надпись на поле карты при первом показе; непрозрачный лист с двойной рамкой */
 .cartouche {
   position: absolute;
   left: 34px;
   bottom: 18px;
   width: 360px;
   padding: 14px 18px 14px;
-  background: color-mix(in srgb, var(--sky) 88%, transparent);
+  background: var(--sheet);
   border: 1px solid var(--rule-strong);
-  outline: 1px solid var(--rule);
+  outline: 1px solid var(--rule-strong);
   outline-offset: 3px;
-  font-size: 14px;
-  line-height: 20px;
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
   color: var(--ink-2);
   z-index: 4;
 }
 .cartouche h1 {
   margin: 0 0 2px;
-  font-size: 24px;
-  line-height: 28px;
+  font-size: var(--t-title);
+  line-height: var(--t-title-lh);
   font-weight: 600;
   color: var(--ink);
 }
@@ -77,19 +83,26 @@
   gap: 6px 14px;
   margin-top: 6px;
   font-family: var(--sans);
-  font-size: 14px;
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
 }
 .cartouche .entry button {
   color: var(--ink);
-  border-bottom: 1px solid var(--rule-strong);
+  text-decoration: underline 1px var(--rule-strong);
+  text-underline-offset: 3px;
+}
+.cartouche .entry button:hover {
+  text-decoration-color: var(--ink);
 }
 .cartouche .close {
   position: absolute;
-  top: 8px;
-  right: 12px;
-  font-family: var(--sans);
-  font-size: 13px;
-  color: var(--ink-3);
+  top: 4px;
+  right: 4px;
+}
+/* пока у картуша вместо «×» слово «свернуть» (SkyView.tsx), поле — по слову */
+.cartouche .close:not([aria-label]) {
+  padding: 0 8px;
+  font-size: var(--t-ui);
 }
 .swatch {
   display: inline-block;
@@ -105,28 +118,37 @@
   background: linear-gradient(90deg, var(--azure-1), var(--azure-2));
 }
 
-/* плавающие управляющие элементы неба */
+/* органы неба — непрозрачный лист в правом нижнем углу (VIS-21, 22): флажок, переключатель масштаба, «−» и «+» */
 .skyctl {
   position: absolute;
   right: 14px;
   bottom: 12px;
   display: flex;
-  gap: 14px;
-  align-items: baseline;
+  gap: 10px;
+  align-items: center;
   font-family: var(--sans);
-  font-size: 13px;
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
   color: var(--ink-2);
-  background: color-mix(in srgb, var(--sky) 85%, transparent);
-  padding: 4px 10px;
+  background: var(--sheet);
+  border: 1px solid var(--rule-strong);
+  padding: 2px 6px 2px 2px;
   z-index: 4;
 }
-.skyctl button[aria-pressed='true'] {
-  color: var(--ink);
-  border-bottom: 1px solid var(--ink);
+/* «только линии Мессии» — кнопка с aria-pressed в виде флажка (controls.css) */
+.skyctl .scale,
+.skyctl .zoom {
+  display: inline-flex;
+  align-items: center;
+  padding-top: 1px;
+}
+.skyctl .scale button:first-of-type {
+  margin-left: 6px;
 }
 .skyctl .zoom button {
-  width: 22px;
-  font-size: 17px;
+  width: 28px;
+  padding: 0;
+  font-size: var(--t-lead);
 }
 
 /* строка режима выбора второго лица (D6): непрозрачная, у верхней кромки неба, поверх линейки годов */
@@ -138,23 +160,18 @@
   width: max-content;
   max-width: calc(100% - 24px);
   display: flex;
-  align-items: baseline;
-  gap: 16px;
-  padding: 4px 12px 5px;
+  align-items: center;
+  gap: 12px;
+  padding: 0 4px 0 12px;
   background: var(--sheet);
   border: 1px solid var(--rule-strong);
   border-top: 0;
   font-family: var(--sans);
-  font-size: 13px;
-  line-height: 18px;
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
   color: var(--ink);
   z-index: 6;
 }
 .pickbar button {
   flex: none;
-  color: var(--ink);
-  border-bottom: 1px solid var(--rule-strong);
-}
-.pickbar button:hover {
-  border-bottom-color: var(--ink);
 }

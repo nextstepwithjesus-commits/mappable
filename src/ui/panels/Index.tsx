@@ -6,6 +6,7 @@ import { atlasCoord } from '../../render/sky.ts';
 import { norm } from '../../engine/text.ts';
 import { lifeText } from '../SkyView.tsx';
 import { Sheet } from './Sheet.tsx';
+import { Segmented } from '../controls.tsx';
 
 // ---------- указатель ----------
 export function IndexPanel() {
@@ -34,17 +35,13 @@ export function IndexPanel() {
   let lastLetter = '';
   return (
     <Sheet title="Указатель" lead={`Все лица атласа (${persons.length}) по алфавиту. Число — век от начала шкалы, буква — полоса на левой кромке карты.`}>
-      <div class="opts">
-        <button aria-pressed={!letter} onClick={() => setLetter(null)}>
-          все
-        </button>
-        {letters.map((l) => (
-          <button key={l} aria-pressed={letter === l} onClick={() => setLetter(l)}>
-            {l}
-          </button>
-        ))}
-      </div>
-      <div class="search" style={{ margin: '0 0 12px' }}>
+      <Segmented
+        label="Буква"
+        options={[{ value: '', label: 'все' }, ...letters.map((l) => ({ value: l, label: l }))]}
+        value={letter ?? ''}
+        onChange={(v) => setLetter(v || null)}
+      />
+      <div class="field">
         <label for="idx-filter">Отобрать:</label>
         <input id="idx-filter" value={filter} onInput={(e) => setFilter((e.target as HTMLInputElement).value)} />
       </div>

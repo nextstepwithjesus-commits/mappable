@@ -5,20 +5,17 @@
   }
 }
 /* на узких экранах строка команд прокручивается вбок; правый край растворяется — видно, что есть продолжение */
+/* в маске цвет задаёт только непрозрачность: годится любой токен */
 @media (max-width: 1160px) {
   .commands {
-    gap: 12px;
-    -webkit-mask-image: linear-gradient(90deg, #000 90%, transparent);
-    mask-image: linear-gradient(90deg, #000 90%, transparent);
+    -webkit-mask-image: linear-gradient(90deg, var(--ink) 90%, transparent);
+    mask-image: linear-gradient(90deg, var(--ink) 90%, transparent);
     padding-right: 24px;
   }
 }
 @media (max-width: 900px) {
   :root {
     --folio-w: 380px;
-  }
-  .commands {
-    gap: 12px;
   }
   .wordmark small {
     display: none;
@@ -36,14 +33,14 @@
     padding: 6px 14px 4px 16px;
   }
   .wordmark {
-    line-height: 30px;
+    line-height: var(--t-lead-lh);
   }
-  .search {
+  .top .search {
     margin-left: 0;
     order: 3;
     width: 100%;
   }
-  .search input {
+  .top .search input {
     flex: 1;
     width: auto;
   }
@@ -57,8 +54,8 @@
     /* строка команд прокручивается вбок; правый край растворяется — видно, что есть продолжение */
     overflow-x: auto;
     scrollbar-width: none;
-    -webkit-mask-image: linear-gradient(90deg, #000 88%, transparent);
-    mask-image: linear-gradient(90deg, #000 88%, transparent);
+    -webkit-mask-image: linear-gradient(90deg, var(--ink) 88%, transparent);
+    mask-image: linear-gradient(90deg, var(--ink) 88%, transparent);
   }
   .app {
     grid-template-columns: 1fr;
@@ -97,6 +94,11 @@
   }
   .folio-inner {
     padding: 4px 22px 60px 44px;
+  }
+  /* «×» листа — под ручкой протяжки, в правом поле */
+  .folio .close {
+    top: 24px;
+    margin: 0 -20px 0 8px;
   }
   /* номер раздела целиком на поле слева от заголовка */
   .sec .no {
@@ -144,31 +146,29 @@
   }
   .sheet .sheet-head .close {
     position: static;
-    min-width: 44px;
-    min-height: 44px;
-    padding: 0 12px;
   }
   .skyctl {
     bottom: auto;
     top: 52px; /* под колонтитулом неба */
     right: 6px;
-    gap: 10px;
-    font-size: 12.5px;
-    padding: 2px 6px;
+    gap: 6px;
+    font-size: var(--t-ui-s);
+    line-height: var(--t-ui-s-lh);
   }
   .skyctl .scale {
     display: none;
   }
   .cartouche {
-    font-size: 13.5px;
-    line-height: 18px;
+    font-size: var(--t-ui);
+    line-height: var(--t-ui-lh);
     padding: 10px 14px;
   }
   .cartouche .long {
     display: none;
   }
   .cartouche h1 {
-    font-size: 20px;
+    font-size: var(--t-lead);
+    line-height: var(--t-lead-lh);
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -188,15 +188,16 @@
     position: static;
     display: block;
   }
+  /* бумага: дневные токены (tokens.css, @media print) */
   .folio {
     width: auto;
     border: 0;
     overflow: visible;
-    background: #fff;
-    color: #000;
+    background: var(--sheet);
+    color: var(--ink);
   }
   body {
     overflow: visible;
-    background: #fff;
+    background: var(--sheet);
   }
 }

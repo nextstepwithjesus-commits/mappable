@@ -3,7 +3,7 @@
   grid-area: folio;
   width: var(--folio-w);
   background: var(--sheet);
-  border-left: 1px solid var(--rule);
+  border-left: 1px solid var(--rule-strong);
   overflow-y: auto;
   position: relative;
   scrollbar-width: thin;
@@ -51,18 +51,17 @@
 .folio .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 16px;
-  font-family: var(--sans);
-  font-size: 13.5px;
-  color: var(--ink-2);
-  margin: 0 0 18px;
+  gap: 2px 4px;
+  margin: 0 0 18px -8px;
 }
-.folio .actions button:hover {
-  color: var(--ink);
-}
-.folio .actions button[aria-pressed='true'] {
-  color: var(--ink);
-  border-bottom: 1px solid var(--ink);
+/* «×» карточки — в правом верхнем углу листа, прилипает при прокрутке (VIS-11; F2) */
+.folio .close {
+  position: sticky;
+  top: 6px;
+  float: right;
+  margin: -16px -34px 0 8px;
+  background: var(--sheet);
+  z-index: 2;
 }
 /* фокус на заголовке карточки (после выбора в поиске) — черта снизу, а не рамка */
 .mast h2:focus {
@@ -73,41 +72,49 @@
 }
 .mast h2 {
   margin: 0;
-  font-size: var(--t-name);
-  line-height: var(--t-name-lh);
+  font-size: var(--t-display);
+  line-height: var(--t-display-lh);
   font-weight: 560;
   font-variation-settings: 'opsz' 36;
 }
 .mast .dis {
   font-style: italic;
-  font-size: var(--t-sub);
+  font-size: var(--t-lead);
+  line-height: var(--t-lead-lh);
   color: var(--ink-2);
   margin: 2px 0 12px;
 }
+/* паспорт: колонка подписей постоянной ширины — по самой длинной, «Колено / народ»; значения стоят одной колонкой у всех лиц */
 .passport {
   display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 2px 14px;
+  grid-template-columns: 6.3em minmax(0, 1fr);
+  align-items: baseline;
+  gap: 2px 12px;
   margin: 0 0 12px;
-  font-size: 14.5px;
-  line-height: 20px;
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
 }
 .passport dt {
-  color: var(--ink-3);
+  color: var(--ink-2);
   font-family: var(--sans);
-  font-size: 13px;
+  font-size: var(--t-ui-s);
+  white-space: nowrap;
 }
 .passport dd {
   margin: 0;
   font-variant-numeric: lining-nums tabular-nums;
 }
+/* мини-шкала жизни: холст на ширину строки; высота — LIFEBAR_H в src/ui/card/Masthead.tsx */
 .lifebar {
   display: block;
+  width: 100%;
+  height: 52px;
   margin: 6px 0 4px;
 }
 .mast .lines {
   font-family: var(--sans);
-  font-size: 13px;
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
   color: var(--ink-2);
   margin: 6px 0 0;
 }
@@ -119,7 +126,8 @@
 }
 .part {
   font-family: var(--sans);
-  font-size: 12.5px;
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
   color: var(--ink-3);
   letter-spacing: 0.04em;
   margin: 22px 0 8px;
@@ -138,7 +146,7 @@
   white-space: nowrap;
   text-align: right;
   font-family: var(--sans);
-  font-size: 12.5px;
+  font-size: var(--t-ui-s);
   color: var(--ink-3);
   font-variant-numeric: lining-nums tabular-nums;
   top: 2px;
@@ -179,17 +187,25 @@
 .sec.absent {
   font-style: italic;
 }
-.sec .more {
+.sec .more,
+.verses .more {
   font-family: var(--sans);
-  font-size: 13px;
+  font-size: var(--t-ui);
+  line-height: 1;
   color: var(--ink-2);
-  border-bottom: 1px solid var(--rule-strong);
+  text-decoration: underline 1px var(--rule-strong);
+  text-underline-offset: 3px;
+}
+.sec .more:hover,
+.verses .more:hover {
+  color: var(--ink);
+  text-decoration-color: var(--ink);
 }
 .mark {
   position: absolute;
   right: -34px;
   font-family: var(--sans);
-  font-size: 11px;
+  font-size: var(--t-ui-s);
   color: var(--ink-3);
   font-style: normal;
 }
@@ -197,19 +213,52 @@
   position: relative;
 }
 .fact .note {
-  font-size: 14px;
-  line-height: 20px;
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
   color: var(--ink-2);
   margin: 2px 0 0;
 }
+/* ---------- ссылки в тексте (B4; VIS-02, 28) ----------
+   Строчные, без рамки: подчёркивание со смещением 3 px вместо border-bottom, поэтому шаг строк не прыгает.
+   Кнопка в браузере остаётся строчно-блочной, поэтому у ссылки на стих — свой интерлиньяж 1: её поле не выходит за строку текста. */
+.person,
 .ref {
+  display: inline;
+  vertical-align: baseline;
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+.person {
+  line-height: inherit;
+  text-align: inherit;
+  text-decoration-color: var(--rule-strong);
+}
+.ref {
+  margin-left: 4px;
   font-family: var(--sans);
-  font-size: 13px;
+  font-size: var(--t-ui);
+  line-height: 1;
   color: var(--ink-2);
   white-space: nowrap;
-  border-bottom: 1px dotted var(--ink-3);
-  margin-left: 4px;
+  text-decoration-style: dotted;
+  text-decoration-color: var(--ink-3);
   font-variant-numeric: lining-nums;
+}
+.person:hover,
+.ref:hover,
+.ref[aria-expanded='true'] {
+  color: var(--ink);
+  text-decoration-style: solid;
+  text-decoration-color: var(--ink);
+}
+.person:active,
+.ref:active {
+  text-decoration-thickness: 2px;
+}
+.person:focus-visible,
+.ref:focus-visible {
+  outline-offset: 1px;
 }
 .refs {
   margin-left: 4px;
@@ -219,50 +268,47 @@
 }
 .refsep {
   font-family: var(--sans);
-  font-size: 13px;
+  font-size: var(--t-ui);
+  line-height: 1;
   color: var(--ink-3);
-}
-.ref[aria-expanded='true'] {
-  color: var(--ink);
-  border-bottom-style: solid;
 }
 .verses {
   margin: 6px 0 10px;
   padding: 2px 0 2px 12px;
   border-left: 0.5px solid var(--ink-3);
-  font-size: 14.5px;
-  line-height: 21px;
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
   color: var(--ink);
 }
-.verses sup {
+/* номер стиха — над строкой, но без собственного интерлиньяжа: шаг строк вклейки ровный */
+.verses sup,
+.chapter sup {
   font-family: var(--sans);
-  font-size: 10px;
+  font-size: var(--t-ui-s);
+  line-height: 0;
+  vertical-align: baseline;
+  position: relative;
+  top: -0.45em;
   color: var(--ink-3);
   margin-right: 3px;
+  font-variant-numeric: lining-nums;
 }
 .verses .br {
   color: var(--ink-3);
 }
-.person {
-  border-bottom: 1px solid var(--rule-strong);
-  cursor: pointer;
-}
-.person:hover {
-  border-bottom-color: var(--ink);
-}
 .quote {
-  font-size: 15.5px;
+  font-size: var(--t-body);
 }
 .he {
   font-family: var(--hebrew);
-  font-size: 20px;
+  font-size: var(--t-lead);
 }
 .colophon {
   margin-top: 28px;
   padding-top: 10px;
   border-top: 0.5px solid var(--rule);
-  font-size: 12px;
-  line-height: 17px;
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
   color: var(--ink-3);
 }
 .canon {
@@ -271,9 +317,10 @@
   gap: 1px;
   margin: 6px 0 4px;
 }
+/* плотность упоминаний книги — доля --a (0…1) в свойстве разметки; без неё — пустая клетка */
 .canon span {
   height: 11px;
-  background: var(--sheet-2);
+  background: color-mix(in srgb, var(--ink) calc(var(--a, 0) * 100%), var(--sheet-2));
 }
 .canon .gapc {
   grid-column: 1 / -1;

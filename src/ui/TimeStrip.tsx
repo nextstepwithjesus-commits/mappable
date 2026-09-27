@@ -6,6 +6,7 @@ import { skyRef, viewTick } from './common.tsx';
 import { toAstro, toHist } from '../engine/years.ts';
 import { readPalette } from '../render/sky.ts';
 import { KX_MIN, KX_MAX } from '../render/camera.ts';
+import { T_MAP_S, coarsePointer, mapFont } from '../render/type.ts';
 
 /** Начало полосы — сотворение в текущей модели (в модели чисел в скобках — на ~1 400 лет раньше). */
 const startOf = () => toAstro(model.value.epochs[0]?.start ?? -4174) - 10;
@@ -51,6 +52,9 @@ export function TimeStrip() {
     let H = 0;
     let dpr = 1;
     let pal = readPalette();
+    // кегль полосы — ступень шкалы холста 11,5 px; на сенсорном экране не мельче 12,5 px (B2; MOB-42)
+    let coarse = coarsePointer();
+    const small = (o: { sans?: boolean; weight?: number; italic?: boolean } = {}) => mapFont(T_MAP_S, { ...o, coarse });
     const xOf = (t: number) => PAD + ((t - T0) / (T1 - T0)) * (W - PAD * 2);
     const tOf = (x: number) => T0 + ((x - PAD) / (W - PAD * 2)) * (T1 - T0);
     let hist: number[] = [];
@@ -87,7 +91,7 @@ export function TimeStrip() {
         ctx.moveTo(Math.round(a) + 0.5, 0);
         ctx.lineTo(Math.round(a) + 0.5, H);
         ctx.stroke();
-        ctx.font = "450 11px 'Jost Variable', Jost, sans-serif";
+        ctx.font = small({ sans: true, weight: 450 });
         const tw = ctx.measureText(e.short).width;
         const lx = a + (b - a - tw) / 2;
         // не заходить на крайние подписи годов (слева — начало, справа — 2040)
@@ -139,17 +143,17 @@ export function TimeStrip() {
         ctx.lineTo(x, H - 4);
         ctx.stroke();
         ctx.setLineDash([]);
-        ctx.font = "italic 400 11.5px 'Literata Variable', serif";
+        ctx.font = small({ italic: true });
         ctx.fillStyle = pal.ink2;
         const tw = ctx.measureText(label).width;
         const lx = Math.min(W - tw - 4, x + 4);
         if (lx + tw < maxEnd) ctx.fillText(label, lx, H - 10);
         return lx;
       };
-      ctx.font = "italic 400 11.5px 'Literata Variable', serif";
+      ctx.font = small({ italic: true });
       const todayX = mark(TODAY, 'сегодня', false);
       mark(CANON_END, W < 700 ? 'канон' : 'завершение канона', true, todayX - 8);
-      ctx.font = "450 11px 'Jost Variable', sans-serif";
+      ctx.font = small({ sans: true, weight: 450 });
       ctx.fillStyle = pal.ink3;
       ctx.fillText('2040', W - PAD - ctx.measureText('2040').width, 13);
       ctx.fillText(`${-toHist(T0 + 10)} до Р. Х.`, PAD, 13);
@@ -179,7 +183,7 @@ export function TimeStrip() {
         ctx.stroke();
         const h = toHist(meridian.value);
         const label = h < 0 ? `${-h} г. до Р. Х.` : `${h} г. по Р. Х.`;
-        ctx.font = "500 11.5px 'Jost Variable', sans-serif";
+        ctx.font = small({ sans: true, weight: 500 });
         const tw = ctx.measureText(label).width;
         ctx.fillStyle = pal.sky;
         ctx.fillRect(Math.min(W - tw - 10, x + 4), 26, tw + 6, 15);
@@ -191,6 +195,7 @@ export function TimeStrip() {
     const resize = () => {
       const r = wrap.current!.getBoundingClientRect();
       dpr = window.devicePixelRatio || 1;
+      coarse = coarsePointer();
       W = r.width;
       H = r.height;
       cv.width = W * dpr;

@@ -5,6 +5,7 @@ import { P, Refs, VerseInsert } from '../common.tsx';
 import { SECTIONS } from '../Folio.tsx';
 import type { Card } from '../../data/types.ts';
 import { Sheet } from './Sheet.tsx';
+import { Segmented } from '../controls.tsx';
 
 // ---------- сквозной раздел ----------
 const SETS: { id: string; name: string; ids: () => string[] }[] = [
@@ -49,40 +50,28 @@ export function SectionPanel() {
   const field = SECTION_FIELD[n];
   return (
     <Sheet title="Сквозной раздел" lead="Один раздел карточки по группе лиц — благодаря неизменной схеме из 24 разделов. Например, «20. Смерть и погребение» у всех царей Иудеи.">
-      <div class="opts">
-        {SECTIONS.filter((s) => SECTION_FIELD[s.n]).map((s) => (
-          <button key={s.n} aria-pressed={s.n === n} onClick={() => setN(s.n)}>
-            {s.n}. {s.title}
-          </button>
-        ))}
-      </div>
-      <div class="opts">
-        {SETS.map((s) => (
-          <button key={s.id} aria-pressed={s.id === setId} onClick={() => setSetId(s.id)}>
-            {s.name}
-          </button>
-        ))}
-      </div>
+      <Segmented label="Раздел карточки" options={SECTIONS.filter((s) => SECTION_FIELD[s.n]).map((s) => ({ value: s.n, label: `${s.n}. ${s.title}` }))} value={n} onChange={setN} />
+      <Segmented label="Группа лиц" options={SETS.map((s) => ({ value: s.id, label: s.name }))} value={setId} onChange={setSetId} />
       {ids.map((id) => {
         const c = cards[id];
         const items = c && field ? field(c) : null;
         return (
-          <div key={id} style={{ margin: '10px 0' }}>
+          <div key={id} class="xsec">
             <P id={id} />
             {byId.get(id)!.disambig ? <span class="muted">, {byId.get(id)!.disambig}</span> : null}
             {!c ? (
               <div class="muted">…</div>
             ) : items && items.length ? (
-              <ul style={{ margin: '2px 0 0', paddingLeft: '16px' }}>
+              <ul>
                 {items.slice(0, 6).map((it, i) => (
-                  <li key={i} style={{ fontSize: '14.5px' }}>
+                  <li key={i}>
                     {it.text} <Refs refs={it.refs} owner={`x${id}${i}`} />
                     <VerseInsert owner={`x${id}${i}`} refs={it.refs} />
                   </li>
                 ))}
               </ul>
             ) : (
-              <div class="muted" style={{ fontSize: '14px' }}>
+              <div class="muted">
                 {byId.get(id)!.silent.includes(n) ? 'в Писании не сообщается' : 'раздел не составлен'}
               </div>
             )}

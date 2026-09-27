@@ -17,21 +17,22 @@
   z-index: 1;
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
-  gap: 6px 20px;
-  padding: 10px 32px;
+  align-items: center;
+  gap: 2px 4px;
+  padding: 6px 12px 6px 32px;
   background: var(--sheet);
   border-bottom: 1px solid var(--rule);
-  font-family: var(--sans);
-  font-size: 14px;
-  color: var(--ink-2);
 }
 .spread-bar .title {
   font-family: var(--serif);
-  font-size: 18px;
+  font-size: var(--t-lead);
+  line-height: var(--t-lead-lh);
   font-weight: 560;
   color: var(--ink);
   margin-right: auto;
+}
+.spread-bar .close {
+  margin-left: 12px;
 }
 .spread-grid {
   max-width: 1360px;
@@ -49,8 +50,13 @@
 .spread .pg {
   min-width: 0;
   padding: 10px 24px 12px;
-  font-size: 15.5px;
-  line-height: 23px;
+  font-size: var(--t-body);
+  line-height: var(--t-body-lh);
+}
+/* помета «расч.», «выв.» остаётся на своей странице: в развороте она стоит в строке, а не на поле, которое здесь — корешок */
+.spread .pg .mark {
+  position: static;
+  margin-left: 0.4em;
 }
 .spread .pg ul {
   margin: 0;
@@ -63,8 +69,8 @@
 .spread .spine {
   padding: 12px 8px;
   text-align: center;
-  font-size: 14px;
-  line-height: 19px;
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
   font-weight: 600;
   border-left: 0.5px solid var(--rule);
   border-right: 0.5px solid var(--rule);
@@ -73,13 +79,12 @@
   display: block;
   font-family: var(--sans);
   font-weight: 400;
-  font-size: 12px;
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
   color: var(--ink-3);
 }
 .spread .spine.kin {
   font-weight: 400;
-  font-size: 13.5px;
-  line-height: 19px;
 }
 .spread .spine.kin .sent {
   margin: 0 0 10px;
@@ -117,7 +122,8 @@
 .spread .part {
   padding: 22px 24px 6px;
   font-family: var(--sans);
-  font-size: 13px;
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
   color: var(--ink-2);
   text-align: center;
 }
@@ -138,8 +144,8 @@
   }
   .spread .pg {
     padding: 6px 12px 10px;
-    font-size: 14.5px;
-    line-height: 21px;
+    font-size: var(--t-note);
+    line-height: var(--t-note-lh);
   }
   .spread-bar,
   .spread-grid {

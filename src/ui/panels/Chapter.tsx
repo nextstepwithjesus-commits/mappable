@@ -4,6 +4,7 @@ import { byId } from '../../data/atlas.ts';
 import { P, refLabel, renderBrackets } from '../common.tsx';
 import { norm } from '../../engine/text.ts';
 import { Sheet } from './Sheet.tsx';
+import { Segmented } from '../controls.tsx';
 
 // ---------- чтение глав ----------
 const CHAPTERS = ['Быт 4', 'Быт 5', 'Быт 10', 'Быт 11', 'Быт 25', 'Быт 36', 'Быт 46', 'Исх 6', 'Руф 4', '1Пар 1', '1Пар 2', '1Пар 3', '1Пар 4', '1Пар 5', '1Пар 6', '1Пар 7', '1Пар 8', '1Пар 9', 'Мф 1', 'Лк 3'];
@@ -48,13 +49,7 @@ export function ChapterPanel() {
   };
   return (
     <Sheet title="Чтение глав" lead="Родословные главы в Синодальном переводе. Имена, внесённые в атлас, — ссылки на карточки.">
-      <div class="opts">
-        {CHAPTERS.map((c) => (
-          <button key={c} aria-pressed={c === ch} onClick={() => setCh(c)}>
-            {refLabel(c)}
-          </button>
-        ))}
-      </div>
+      <Segmented label="Глава" options={CHAPTERS.map((c) => ({ value: c, label: refLabel(c) }))} value={ch} onChange={setCh} />
       <div class="chapter">
         {!text ? (
           <p class="muted">…</p>

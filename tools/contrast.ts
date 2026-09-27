@@ -60,13 +60,28 @@ const check = (name: string, v: number, min: number) => {
 };
 for (const [t, c] of Object.entries(themes)) {
   console.log(`\n— тема ${t}`);
-  for (const bg of ['--sky', '--sheet']) {
+  // текст: на небе, на листе и на поле наведения (--sheet-2 — фон команды под указателем и активной строки поиска)
+  for (const bg of ['--sky', '--sheet', '--sheet-2']) {
     check(`текст --ink на ${bg}`, ratio(c['--ink'], c[bg]), 4.5);
     check(`текст --ink-2 на ${bg}`, ratio(c['--ink-2'], c[bg]), 4.5);
     check(`мелкие подписи --ink-3 на ${bg}`, ratio(c['--ink-3'], c[bg]), 4.5);
   }
+  check('выбранный сегмент: --sky на --ink', ratio(c['--sky'], c['--ink']), 4.5);
   for (const g of ['--gold-1', '--gold-2', '--azure-1', '--azure-2']) check(`лента ${g} на --sky`, ratio(c[g], c['--sky']), 3);
-  check('граница --rule-strong на --sky', ratio(c['--rule-strong'], c['--sky']), 1.7);
+  // плоскости (VIS-18): лист и панели отделены от неба светлотой, а не тенью; наведение заметно на листе
+  check('плоскость: --sheet к --sky', ratio(c['--sheet'], c['--sky']), 1.15);
+  check('наведение: --sheet-2 к --sheet', ratio(c['--sheet-2'], c['--sheet']), 1.1);
+  // графика, несущая смысл (WCAG 1.4.11, ≥ 3 : 1): черта нажатой команды и рамка флажка — --ink и --ink-2, кольцо фокуса — --focus
+  for (const bg of ['--sky', '--sheet', '--sheet-2']) {
+    check(`черта нажатой команды --ink на ${bg}`, ratio(c['--ink'], c[bg]), 3);
+    check(`рамка флажка --ink-2 на ${bg}`, ratio(c['--ink-2'], c[bg]), 3);
+    check(`кольцо фокуса --focus на ${bg}`, ratio(c['--focus'], c[bg]), 3);
+  }
+  // --rule-strong — структурная линия: край листа и панели, рамка группы сегментов, подчёркивание ссылки в покое.
+  // Сама по себе она смысла не несёт (лист отличается от неба светлотой, сегмент и ссылку называет их текст),
+  // поэтому порог 3 : 1 для графики к ней не относится; нужен порог заметности 2,2 : 1 к обеим плоскостям.
+  check('структурная линия --rule-strong на --sky', ratio(c['--rule-strong'], c['--sky']), 2.2);
+  check('структурная линия --rule-strong на --sheet', ratio(c['--rule-strong'], c['--sheet']), 2.2);
   for (const [k, m] of [['обычное зрение', undefined], ...Object.entries(CVD)] as [string, number[][] | undefined][]) {
     const d = Math.min(dE(simulate(c['--gold-1'], m), simulate(c['--azure-1'], m)), dE(simulate(c['--gold-2'], m), simulate(c['--azure-2'], m)));
     check(`ленты различимы (${k}), ΔE`, d, 20);

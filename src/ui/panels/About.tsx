@@ -3,6 +3,7 @@ import { model, modelId, lineFlip } from '../../state.ts';
 import { Refs, VerseInsert, plural } from '../common.tsx';
 import { formatYear, toAstro } from '../../engine/years.ts';
 import { Sheet } from './Sheet.tsx';
+import { Check, Segmented } from '../controls.tsx';
 
 /** Год якоря по-человечески: «967 г. до Р. Х.»; в вариантах «-966 (Тиле)» → «966 г. до Р. Х. (Тиле)». */
 const anchorYear = (v: number) => formatYear(toAstro(v));
@@ -18,19 +19,13 @@ export function AboutPanel() {
       <h3>Уровни достоверности</h3>
       <p>Без пометы — прямо сказано в Писании. «выв.» — вывод из сопоставления стихов. «толк.» — толкование, распространённое, но не единственное. «расч.» — год, рассчитанный движком по выбранной модели. «справ.» — справочный слой (подлинник, этимология).</p>
       <h3>Модель хронологии</h3>
-      <div class="opts">
-        {modelInfo.map((mi) => (
-          <button key={mi.id} aria-pressed={modelId.value === mi.id} onClick={() => (modelId.value = mi.id)}>
-            {mi.name}
-          </button>
-        ))}
-      </div>
+      <Segmented label="Модель хронологии" options={modelInfo.map((mi) => ({ value: mi.id, label: mi.name }))} value={modelId.value} onChange={(v) => (modelId.value = v)} />
       <p>{modelInfo.find((x) => x.id === modelId.value)?.description}</p>
       <p class="muted">Шкала «лет от сотворения» здесь — расчёт атласа по масоретским числам Быт 5 и 11 (сотворение — 4174 г. до Р. Х. в модели по умолчанию). Это не византийская эра «от сотворения мира» (5508 г. до Р. Х.), принятая в России до 1700 г.</p>
-      <div class="opts">
-        <button aria-pressed={lineFlip.value} onClick={() => (lineFlip.value = !lineFlip.value)}>
+      <div class="checks">
+        <Check checked={lineFlip.value} onChange={(v) => (lineFlip.value = v)}>
           показывать Лк 3 как второе родословие Иосифа
-        </button>
+        </Check>
       </div>
       <h3>Внебиблейские якоря</h3>
       <table>
@@ -58,9 +53,9 @@ export function AboutPanel() {
       </table>
       <h3>Хронологические напряжения ({m.tensions.length})</h3>
       <p class="muted">Места, где числа текста не сходятся между собой. Атлас их не сглаживает.</p>
-      <ul style={{ paddingLeft: '18px' }}>
+      <ul class="notes">
         {m.tensions.slice(0, 80).map((t, i) => (
-          <li key={i} style={{ fontSize: '14.5px', margin: '4px 0' }}>
+          <li key={i}>
             {t.text} <Refs refs={t.refs.slice(0, 3)} owner={`tn${i}`} />
             <VerseInsert owner={`tn${i}`} refs={t.refs.slice(0, 3)} />
           </li>

@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'preact/hooks';
 import { layers } from '../../state.ts';
 import { drawGlyph } from '../../render/glyphs.ts';
 import { Sheet } from './Sheet.tsx';
+import { Check } from '../controls.tsx';
 
 // ---------- условные знаки ----------
 function Glyph({ o, w = 60, h = 26 }: { o: Parameters<typeof drawGlyph>[3]; w?: number; h?: number }) {
@@ -49,11 +50,11 @@ export function LegendPanel() {
         <kbd>,</kbd> <kbd>.</kbd> (<kbd>б</kbd> <kbd>ю</kbd>) — к брату или сестре · <kbd>E</kbd> (<kbd>У</kbd>) — эпохи · <kbd>L</kbd> (<kbd>Д</kbd>) — условные знаки · <kbd>Esc</kbd> — закрыть
       </p>
       <h3>Слои</h3>
-      <div class="opts">
+      <div class="checks" role="group" aria-label="Слои карты">
         {Object.entries({ lifelines: 'следы жизни', connectors: 'связи', constellations: 'созвездия', epochs: 'эпохи', ribbons: 'линии Мессии', tensions: 'напряжения', ghosts: 'призраки', labels: 'подписи' }).map(([k, v]) => (
-          <button key={k} aria-pressed={layers.value[k]} onClick={() => (layers.value = { ...layers.value, [k]: !layers.value[k] })}>
+          <Check key={k} checked={layers.value[k]} onChange={(on) => (layers.value = { ...layers.value, [k]: on })}>
             {v}
-          </button>
+          </Check>
         ))}
       </div>
     </Sheet>

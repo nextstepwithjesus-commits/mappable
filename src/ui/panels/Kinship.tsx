@@ -36,14 +36,22 @@ export function KinshipPanel() {
         <br />
         Второе лицо: {b ? <P id={b} /> : <span class="muted">не выбрано</span>}
       </p>
-      <div class="opts">
-        <button aria-pressed={pickMode.value === 'kinship'} disabled={!a} onClick={() => (pickMode.value = pickMode.value ? null : 'kinship')}>
+      <div class="cmds">
+        <button class="cmd" aria-pressed={pickMode.value === 'kinship'} disabled={!a} onClick={() => (pickMode.value = pickMode.value ? null : 'kinship')}>
           выбрать второе на небе
         </button>
-        {b && <button onClick={clearPair}>сбросить второе</button>}
-        {a && b && <button onClick={() => (panel.value = 'spread')}>открыть разворот двух карточек</button>}
+        {b && (
+          <button class="cmd" onClick={clearPair}>
+            сбросить второе
+          </button>
+        )}
+        {a && b && (
+          <button class="cmd" onClick={() => (panel.value = 'spread')}>
+            открыть разворот двух карточек
+          </button>
+        )}
       </div>
-      <div class="search" style={{ margin: '0 0 10px' }}>
+      <div class="field search">
         <label for="kin-second">Второе:</label>
         <input
           id="kin-second"
@@ -61,9 +69,9 @@ export function KinshipPanel() {
         />
       </div>
       {hits.length > 0 && (
-        <ul style={{ padding: 0, margin: '0 0 12px' }}>
+        <ul class="suggest">
           {hits.map((h) => (
-            <li key={h.id} style={{ listStyle: 'none', margin: '2px 0' }}>
+            <li key={h.id}>
               <button
                 class="person"
                 onClick={() => {
@@ -84,8 +92,8 @@ export function KinshipPanel() {
       ))}
       {extra.length > 0 && (
         <>
-          <div class="opts">
-            <button class="more" aria-expanded={more} onClick={() => setMore(!more)}>
+          <div class="cmds">
+            <button class="cmd more" aria-expanded={more} onClick={() => setMore(!more)}>
               {more ? 'скрыть другие пути' : `ещё ${extra.length} ${plural(extra.length, 'путь', 'пути', 'путей')}`}
             </button>
           </div>
@@ -171,7 +179,7 @@ function RelationView({ r, ns }: { r: Relation; ns: string }) {
         {chain.map((c, i) =>
           'hidden' in c ? (
             <li key="gap" class="gap">
-              <button class="more" aria-label={`показать ещё ${c.hidden} ${plural(c.hidden, 'звено', 'звена', 'звеньев')}`} onClick={() => setWhole(true)}>
+              <button class="cmd more" aria-label={`показать ещё ${c.hidden} ${plural(c.hidden, 'звено', 'звена', 'звеньев')}`} onClick={() => setWhole(true)}>
                 … ещё {c.hidden} …
               </button>
             </li>

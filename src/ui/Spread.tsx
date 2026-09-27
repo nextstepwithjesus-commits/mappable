@@ -11,6 +11,7 @@ import type { Card, Chrono } from '../data/types.ts';
 import { selected, second, first, panel, model, setPair } from '../state.ts';
 import { SECTIONS, PARTS, buildSections, Masthead } from './Folio.tsx';
 import { P, skyRef, CAN_PRINT, plural } from './common.tsx';
+import { Close } from './controls.tsx';
 
 type St = 'content' | 'silent' | 'absent';
 const STATE_TEXT: Record<Exclude<St, 'content'>, string> = { silent: 'в Писании не сообщается', absent: 'раздел не составлен' };
@@ -100,6 +101,7 @@ export function Spread() {
       <div class="spread-bar">
         <span class="title">Разворот</span>
         <button
+          class="cmd"
           onClick={() => {
             setPair(b, a, false);
             selected.value = b;
@@ -107,10 +109,18 @@ export function Spread() {
         >
           поменять страницы
         </button>
-        <button onClick={() => skyRef.flyTo(a)}>левое лицо на небе</button>
-        <button onClick={() => skyRef.flyTo(b)}>правое лицо на небе</button>
-        {CAN_PRINT && <button onClick={() => window.print()}>печать</button>}
-        <button onClick={close}>закрыть</button>
+        <button class="cmd" onClick={() => skyRef.flyTo(a)}>
+          левое лицо на небе
+        </button>
+        <button class="cmd" onClick={() => skyRef.flyTo(b)}>
+          правое лицо на небе
+        </button>
+        {CAN_PRINT && (
+          <button class="cmd" onClick={() => window.print()}>
+            печать
+          </button>
+        )}
+        <Close label="Закрыть разворот" onClick={close} />
       </div>
       <div class="spread-grid">
         <div class="row mastrow">
@@ -151,7 +161,7 @@ function KinSpine({ a, b }: { a: string; b: string }) {
         {shown.map((x, i) =>
           'hidden' in x ? (
             <li key={`gap${i}`} class="gap">
-              <button aria-label={`показать ещё ${x.hidden} ${plural(x.hidden, 'звено', 'звена', 'звеньев')}`} onClick={() => setWhole(true)}>
+              <button class="cmd" aria-label={`показать ещё ${x.hidden} ${plural(x.hidden, 'звено', 'звена', 'звеньев')}`} onClick={() => setWhole(true)}>
                 … ещё {x.hidden} …
               </button>
             </li>

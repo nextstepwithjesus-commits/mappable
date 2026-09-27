@@ -1,16 +1,15 @@
 import type { ComponentChildren } from 'preact';
 import { panel } from '../../state.ts';
 import { skyRef } from '../common.tsx';
+import { Close } from '../controls.tsx';
 
 export function Sheet({ title, lead, wide, children }: { title: string; lead?: string; wide?: boolean; children: ComponentChildren }) {
   return (
     <section class={wide ? 'sheet wide' : 'sheet'} aria-label={title}>
-      {/* шапка: на телефоне прилипает к верху листа, чтобы «закрыть» всегда было под рукой */}
+      {/* шапка: на телефоне прилипает к верху листа, чтобы «×» всегда был под рукой */}
       <header class="sheet-head">
         <h2>{title}</h2>
-        <button class="close" onClick={() => (panel.value = null)}>
-          закрыть
-        </button>
+        <Close label="Закрыть панель" onClick={() => (panel.value = null)} />
       </header>
       {lead && <p class="lead">{lead}</p>}
       {children}

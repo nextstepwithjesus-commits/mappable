@@ -1,61 +1,88 @@
-/* Токены «Звёздного атласа» (docs/DESIGN.md). Оттенок — только у двух лент; всё остальное — светлота.
-   Тема карты — свой атрибут data-map: data-theme на корне может ставить страница, в которую встроен атлас. */
+/* Токены «Звёздного атласа» (ТЗ § 5.2–5.3; docs/ui-review VIS-18, VIS-27). Оттенок — только у двух лент; всё остальное — светлота.
+   Тема карты — свой атрибут data-map: data-theme на корне может ставить страница, в которую встроен атлас.
+   Плоскости: небо (--sky) → лист и панели (--sheet, край — 1 px --rule-strong, без тени) → наведение и вклейки (--sheet-2).
+   Цвета — только здесь и только #rrggbb: холст читает их через getComputedStyle (src/render/sky.ts, readPalette).
+   Проверки: npm run -s contrast (контраст), tests/design.test.ts (блок светлой системной темы совпадает с дневной). */
 :root,
 :root[data-map='night'] {
   --sky: #0d1b34;
   --sky-band: #11223f;
-  --sheet: #0f2040;
-  --sheet-2: #132647;
+  --sheet: #14284a;
+  --sheet-2: #1b3358;
   --ink: #e8eef7;
   --ink-2: #a9b8cf;
-  --ink-3: #8193b0;
-  --rule: #243a5f;
-  --rule-strong: #3a557f;
-  --gold-1: #f0c66b;
-  --gold-2: #e2773c;
-  --azure-1: #a8d4fa;
-  --azure-2: #7ee0c6;
+  --ink-3: #8fa0bc;
+  --rule: #2a4470;
+  --rule-strong: #4a6590;
+  --gold-1: #e6b550;
+  --gold-2: #c9773a;
+  --azure-1: #9ccbf5;
+  --azure-2: #9edbd0;
   --focus: #ffffff;
   --halo: #0d1b34;
   --glow: 1;
   color-scheme: dark;
 }
 :root[data-map='day'] {
-  --sky: #eef2f6;
-  --sky-band: #e5ebf2;
-  --sheet: #f8fafc;
+  --sky: #e9eef4;
+  --sky-band: #e1e8f0;
+  --sheet: #ffffff;
   --sheet-2: #eef2f7;
   --ink: #172238;
   --ink-2: #43536d;
   --ink-3: #56637a;
-  --rule: #cdd6e1;
-  --rule-strong: #9eadc1;
+  --rule: #c6d0dd;
+  --rule-strong: #8e9fb6;
   --gold-1: #9a6a12;
   --gold-2: #8e4a1e;
   --azure-1: #2b64a8;
   --azure-2: #1f7a70;
   --focus: #0d1b34;
-  --halo: #eef2f6;
+  --halo: #e9eef4;
   --glow: 0;
   color-scheme: light;
 }
+/* До первого кадра скрипта (он ставит data-map) — тема системы. Значения — копия дневной темы; совпадение проверяет tests/design.test.ts. */
 @media (prefers-color-scheme: light) {
   :root:not([data-map]) {
-    --sky: #eef2f6;
-    --sky-band: #e5ebf2;
-    --sheet: #f8fafc;
+    --sky: #e9eef4;
+    --sky-band: #e1e8f0;
+    --sheet: #ffffff;
     --sheet-2: #eef2f7;
     --ink: #172238;
     --ink-2: #43536d;
     --ink-3: #56637a;
-    --rule: #cdd6e1;
-    --rule-strong: #9eadc1;
+    --rule: #c6d0dd;
+    --rule-strong: #8e9fb6;
     --gold-1: #9a6a12;
     --gold-2: #8e4a1e;
     --azure-1: #2b64a8;
     --azure-2: #1f7a70;
     --focus: #0d1b34;
-    --halo: #eef2f6;
+    --halo: #e9eef4;
+    --glow: 0;
+    color-scheme: light;
+  }
+}
+/* Печать — на бумаге: дневные токены при любой теме экрана. Тоже копия дневной темы (tests/design.test.ts). */
+@media print {
+  :root,
+  :root[data-map] {
+    --sky: #e9eef4;
+    --sky-band: #e1e8f0;
+    --sheet: #ffffff;
+    --sheet-2: #eef2f7;
+    --ink: #172238;
+    --ink-2: #43536d;
+    --ink-3: #56637a;
+    --rule: #c6d0dd;
+    --rule-strong: #8e9fb6;
+    --gold-1: #9a6a12;
+    --gold-2: #8e4a1e;
+    --azure-1: #2b64a8;
+    --azure-2: #1f7a70;
+    --focus: #0d1b34;
+    --halo: #e9eef4;
     --glow: 0;
     color-scheme: light;
   }
@@ -64,13 +91,23 @@
   --serif: 'Literata Variable', 'Literata', Georgia, serif;
   --sans: 'Jost Variable', 'Jost', 'Futura', sans-serif;
   --hebrew: 'Noto Serif Hebrew', serif;
-  --t-name: 34px;
-  --t-name-lh: 40px;
-  --t-sub: 17px;
-  --t-body: 16px;
-  --t-body-lh: 24px;
-  --t-note: 14px;
-  --t-small: 12px;
+  /* Шкала кеглей — ровно восемь ступеней (VIS-27). Кегль и интерлиньяж — в rem: текст следует настройке шрифта в браузере (MOB-42).
+     Других font-size в CSS нет (tests/design.test.ts). */
+  --t-display: 2.125rem; /* 34/40 Literata — имя в карточке */
+  --t-display-lh: 2.5rem;
+  --t-title: 1.5rem; /* 24/30 Literata — заголовки панелей и вступления */
+  --t-title-lh: 1.875rem;
+  --t-lead: 1.125rem; /* 18/26 Literata — вводки, фраза родства, заголовки внутри панелей, уточнение имени */
+  --t-lead-lh: 1.625rem;
+  --t-body: 1rem; /* 16/24 Literata — текст */
+  --t-body-lh: 1.5rem;
+  --t-note: 0.875rem; /* 14/20 Literata — паспорт, подсказка, стихи, колофон, пометы в панелях */
+  --t-note-lh: 1.25rem;
+  --t-ui: 0.8125rem; /* 13/18 Jost — команды, переключатели, ссылки на стихи, подписи полей */
+  --t-ui-lh: 1.125rem;
+  --t-ui-s: 0.75rem; /* 12/16 Jost — номера разделов, части, пометы, шкалы */
+  --t-ui-s-lh: 1rem;
+  --t-map-s: 0.71875rem; /* 11,5 Jost — только холст (src/render/type.ts); в CSS не используется */
   --folio-w: 440px;
   --strip-h: 76px;
   --top-h: 44px;
