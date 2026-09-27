@@ -3,13 +3,13 @@ import type { ComponentChildren } from 'preact';
 import { byId } from '../../data/atlas.ts';
 import { P, refLabel, renderBrackets } from '../common.tsx';
 import { norm } from '../../engine/text.ts';
-import { Sheet } from './Sheet.tsx';
+import { Sheet, useRemembered } from './Sheet.tsx';
 import { Segmented } from '../controls.tsx';
 
 // ---------- чтение глав ----------
 const CHAPTERS = ['Быт 4', 'Быт 5', 'Быт 10', 'Быт 11', 'Быт 25', 'Быт 36', 'Быт 46', 'Исх 6', 'Руф 4', '1Пар 1', '1Пар 2', '1Пар 3', '1Пар 4', '1Пар 5', '1Пар 6', '1Пар 7', '1Пар 8', '1Пар 9', 'Мф 1', 'Лк 3'];
 export function ChapterPanel() {
-  const [ch, setCh] = useState('Мф 1');
+  const [ch, setCh] = useRemembered('chapter:ch', 'Мф 1');
   const [text, setText] = useState<{ n: number; t: string; ids: string[] }[] | null>(null);
   useEffect(() => {
     setText(null);

@@ -3,10 +3,11 @@ import { effect } from '@preact/signals';
 import { lines } from '../data/atlas.ts';
 import { model, meridian, theme } from '../state.ts';
 import { skyRef, viewTick } from './common.tsx';
-import { toAstro, toHist } from '../engine/years.ts';
+import { formatSpan, toAstro, toHist } from '../engine/years.ts';
 import { readPalette } from '../render/sky.ts';
-import { KX_MIN, KX_MAX } from '../render/camera.ts';
 import { T_MAP_S, coarsePointer, mapFont } from '../render/type.ts';
+import { reduced, showAll, showYears, stopFlight } from './sky/view.ts';
+import { typo } from './text/typo.ts';
 
 /** Начало полосы — сотворение в текущей модели (в модели чисел в скобках — на ~1 400 лет раньше). */
 const startOf = () => toAstro(model.value.epochs[0]?.start ?? -4174) - 10;
@@ -21,6 +22,38 @@ const GRIP = 22;
 const NARROW = 88;
 /** Самое узкое окно неба, лет. */
 const MIN_YEARS = 20;
+/** Ручка края рамки: видимая черта за краем, px от края до черты и её высота. */
+const HANDLE_GAP = 4;
+const HANDLE_H = 18;
+/** Нажатие вне рамки переносит её середину под указатель за 150 мс (IX-32). */
+const RECENTER_MS = 150;
+/** Щелчок по эпохе ждёт, не двойной ли это щелчок («всё небо»), мс. */
+const DBL_MS = 240;
+
+/** Курсор над полосой: над ручками — ew-resize, над рамкой — grab (при протяжке — grabbing), вне рамки — pointer (IX-33). */
+export function stripCursor(g: FrameGrip, dragging: boolean): string {
+  if (g === 'left' || g === 'right') return 'ew-resize';
+  if (g === 'move') return dragging ? 'grabbing' : 'grab';
+  return dragging ? 'grabbing' : 'pointer';
+}
+
+/**
+ * Окно после стрелки на ползунке полосы (role="slider"): стрелки — на 10 % ширины окна, с Shift и PageUp/PageDown — на 40 %,
+ * Home и End — к началу и концу шкалы. Ширина окна не меняется; окно не выходит за шкалу [lo, hi].
+ */
+export function sliderStep(key: string, shift: boolean, a: number, b: number, lo: number, hi: number): [number, number] | null {
+  const w = b - a;
+  let na: number;
+  if (key === 'ArrowLeft' || key === 'ArrowDown') na = a - w * (shift ? 0.4 : 0.1);
+  else if (key === 'ArrowRight' || key === 'ArrowUp') na = a + w * (shift ? 0.4 : 0.1);
+  else if (key === 'PageUp') na = a - w * 0.4;
+  else if (key === 'PageDown') na = a + w * 0.4;
+  else if (key === 'Home') na = lo;
+  else if (key === 'End') na = hi - w;
+  else return null;
+  na = Math.max(Math.min(lo, a), Math.min(Math.max(hi, b) - w, na));
+  return [na, na + w];
+}
 
 export type FrameGrip = 'move' | 'left' | 'right' | 'new';
 
@@ -70,11 +103,16 @@ export function TimeStrip() {
     };
     buildHist();
 
+    /** Окно неба в годах (астр.): видимая часть неба — без левой кромки, панели и листа карточки. */
     const view = () => {
       const s = skyRef.current;
       if (!s || !s.model) return null;
-      return { a: s.tOf(s.cam.wx(18)), b: s.tOf(s.cam.wx(s.cam.w)) };
+      const { l, r } = s.cam.vp;
+      return { a: s.tOf(s.cam.wx(l)), b: s.tOf(s.cam.wx(r)) };
     };
+    // что под указателем: для курсора и ручки, которую подсвечивать
+    let grip: FrameGrip | null = null;
+    let dragging = false;
 
     const draw = () => {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -133,6 +171,21 @@ export function TimeStrip() {
         ctx.stroke();
       }
       ctx.lineWidth = 1;
+      // ручки рамки окна (где они будут нарисованы ниже): подписи «завершения канона» и «сегодня» их обходят
+      const v = view();
+      const grips: { x: number; w: number }[] = [];
+      if (v) {
+        const a = xOf(v.a);
+        const b = xOf(v.b);
+        const c = (a + b) / 2;
+        const half = b - a >= NARROW ? (b - a) / 2 : Math.max((b - a) / 2, GRIP / 2);
+        for (const side of ['left', 'right'] as const) {
+          const edge = side === 'left' ? Math.min(a, c - half) : Math.max(b, c + half);
+          const x0 = Math.round(side === 'left' ? edge - HANDLE_GAP - 7 : edge + HANDLE_GAP);
+          grips.push({ x: x0 - 2, w: 11 });
+        }
+      }
+      const onGrip = (lx: number, tw: number) => grips.some((h) => lx < h.x + h.w + 2 && h.x - 2 < lx + tw);
       // завершение канона и «сегодня»
       const mark = (t: number, label: string, dashed: boolean, maxEnd = Infinity) => {
         const x = Math.round(xOf(t)) + 0.5;
@@ -146,8 +199,11 @@ export function TimeStrip() {
         ctx.font = small({ italic: true });
         ctx.fillStyle = pal.ink2;
         const tw = ctx.measureText(label).width;
-        const lx = Math.min(W - tw - 4, x + 4);
-        if (lx + tw < maxEnd) ctx.fillText(label, lx, H - 10);
+        // подпись — справа от черты; у правого края — слева от неё, чтобы черта не перечёркивала слово (VIS-25);
+        // если на месте подписи ручка рамки — подпись уходит вправо за ручку, а не под неё; не помещается — не рисуется
+        let lx = x + 4 + tw <= W - 4 ? x + 4 : x - tw - 4;
+        for (const g of grips) if (onGrip(lx, tw)) lx = Math.max(lx, g.x + g.w + 4);
+        if (lx + tw < Math.min(maxEnd, W - 2) && lx >= 2 && !onGrip(lx, tw)) ctx.fillText(label, lx, H - 10);
         return lx;
       };
       ctx.font = small({ italic: true });
@@ -158,7 +214,7 @@ export function TimeStrip() {
       ctx.fillText('2040', W - PAD - ctx.measureText('2040').width, 13);
       ctx.fillText(`${-toHist(T0 + 10)} до Р. Х.`, PAD, 13);
       // окно неба
-      const v = view();
+      const handles: { x: number; w: number }[] = [];
       if (v) {
         const a = xOf(v.a);
         const b = xOf(v.b);
@@ -170,8 +226,29 @@ export function TimeStrip() {
         ctx.globalAlpha = 0.08;
         ctx.fillRect(a, 2, Math.max(3, b - a), H - 4);
         ctx.globalAlpha = 1;
+        // ручки — снаружи рамки: короткие черты за левым и правым краем; ручка под указателем — толще (IX-33, UX-28)
+        const c = (a + b) / 2;
+        const half = b - a >= NARROW ? (b - a) / 2 : Math.max((b - a) / 2, GRIP / 2);
+        // ручки — ниже подписи года меридиана (26–41 px), над основанием столбцов
+        const hy = Math.round(Math.min(H - HANDLE_H - 4, Math.max(44, H - HANDLE_H - 10)));
+        for (const side of ['left', 'right'] as const) {
+          const edge = side === 'left' ? Math.min(a, c - half) : Math.max(b, c + half);
+          // ручка — две черты на подложке цвета неба, чтобы не сливаться со столбцами плотности
+          const x0 = Math.round(side === 'left' ? edge - HANDLE_GAP - 7 : edge + HANDLE_GAP);
+          const hot = grip === side;
+          ctx.fillStyle = pal.sky;
+          ctx.fillRect(x0 - 2, hy - 3, 11, HANDLE_H + 6);
+          handles.push({ x: x0 - 2, w: 11 });
+          ctx.fillStyle = pal.ink;
+          ctx.fillRect(x0, hy, hot ? 3 : 2, HANDLE_H);
+          ctx.fillRect(x0 + 5, hy, hot ? 3 : 2, HANDLE_H);
+        }
         // окно в годах — для проверок приёмки (tools/accept.ts)
         wrap.current!.dataset.window = `${v.a.toFixed(1)} ${v.b.toFixed(1)}`;
+        // ползунок для клавиатуры и диктора (MOB-35): середина окна и окно словами
+        const mid = toHist((v.a + v.b) / 2);
+        cv.setAttribute('aria-valuenow', String(mid));
+        cv.setAttribute('aria-valuetext', `Окно карты: ${typo(formatSpan(Math.max(T0, v.a), Math.min(T1, v.b)))}`);
       }
       // меридиан
       if (meridian.value !== null) {
@@ -185,10 +262,14 @@ export function TimeStrip() {
         const label = h < 0 ? `${-h} г. до Р. Х.` : `${h} г. по Р. Х.`;
         ctx.font = small({ sans: true, weight: 500 });
         const tw = ctx.measureText(label).width;
+        // подпись года — справа от черты; если там ручка рамки — слева: ручку подпись не закрывает
+        const over = (lx: number) => handles.some((h) => lx < h.x + h.w && h.x < lx + tw + 6);
+        let lx = Math.min(W - tw - 10, x + 4);
+        if (over(lx)) lx = Math.max(2, x - tw - 10);
         ctx.fillStyle = pal.sky;
-        ctx.fillRect(Math.min(W - tw - 10, x + 4), 26, tw + 6, 15);
+        ctx.fillRect(lx, 26, tw + 6, 15);
         ctx.fillStyle = pal.ink;
-        ctx.fillText(label, Math.min(W - tw - 7, x + 7), 37);
+        ctx.fillText(label, lx + 3, 37);
       }
     };
 
@@ -214,6 +295,7 @@ export function TimeStrip() {
     const off2 = effect(() => {
       void model.value;
       buildHist();
+      cv.setAttribute('aria-valuemin', String(toHist(T0)));
       draw();
     });
     const off3 = effect(() => {
@@ -224,22 +306,14 @@ export function TimeStrip() {
       });
     });
 
-    // ---------- взаимодействие: тянуть окно, растягивать края, щелчок по эпохе ----------
+    // ---------- взаимодействие: тянуть окно, растягивать края, щелчок по эпохе, клавиши ----------
     let drag: { mode: FrameGrip; x: number; a: number; b: number; moved: boolean } | null = null;
-    /** Окно неба [ta, tb] лет (clamp — не шире шкалы); масштаб — в пределах камеры, середина окна остаётся на месте. */
+    /** Окно неба [ta, tb] лет сразу (протяжка, клавиши); clamp — не шире шкалы. */
     const setView = (ta: number, tb: number, clamp = true) => {
-      const s = skyRef.current;
-      if (!s) return;
-      const xa = s.xOf(clamp ? Math.max(T0, ta) : ta);
-      const xb = s.xOf(clamp ? Math.min(T1, tb) : tb);
-      if (!(xb > xa)) return;
-      const midLane = s.cam.wLane(s.cam.h / 2);
-      s.cam.stop();
-      const w = s.cam.w - 18;
-      s.cam.kx = Math.max(KX_MIN, Math.min(KX_MAX, w / (xb - xa)));
-      s.cam.x0 = (xa + xb) / 2 - (18 + w / 2) / s.cam.kx;
-      s.cam.laneTop = midLane + s.cam.h / 2 / s.cam.ky;
-      skyRef.redraw();
+      const a = clamp ? Math.max(T0, ta) : ta;
+      const b = clamp ? Math.min(T1, tb) : tb;
+      if (!(b > a)) return;
+      showYears(a, b, false);
     };
     /** Сдвиг окна без изменения его ширины: у краёв шкалы окно упирается, а не сжимается. */
     const shiftView = (a: number, b: number, dt: number) => {
@@ -248,56 +322,161 @@ export function TimeStrip() {
       const na = Math.max(lo, Math.min(hi - (b - a), a + dt));
       setView(na, na + (b - a), false);
     };
+    let recenter = 0;
+    let epochTimer = 0;
+    const setCursor = () => {
+      cv.style.cursor = grip ? stripCursor(grip, dragging) : '';
+    };
     const onDown = (e: PointerEvent) => {
       cv.setPointerCapture(e.pointerId);
+      // нажатие на полосе прерывает перелёт (D4) и отложенный щелчок по эпохе
+      stopFlight();
+      cancelAnimationFrame(recenter);
+      clearTimeout(epochTimer);
       const r = cv.getBoundingClientRect();
       const x = e.clientX - r.left;
       const v = view();
       if (!v) return;
-      drag = { mode: frameGrip(x, xOf(v.a), xOf(v.b)), x, a: v.a, b: v.b, moved: false };
+      const mode = frameGrip(x, xOf(v.a), xOf(v.b));
+      drag = { mode, x, a: v.a, b: v.b, moved: false };
+      dragging = true;
+      grip = mode;
+      setCursor();
+      if (mode === 'new') {
+        // нажатие вне рамки: её середина переезжает под указатель за 150 мс, дальше протягивание двигает (IX-32)
+        const w = v.b - v.a;
+        const t = tOf(x);
+        const to = Math.max(Math.min(T0, v.a), Math.min(Math.max(T1, v.b) - w, t - w / 2));
+        drag = { mode: 'move', x, a: to, b: to + w, moved: false };
+        const from = v.a;
+        const start = performance.now();
+        const step = (now: number) => {
+          const k = reduced() ? 1 : Math.min(1, (now - start) / RECENTER_MS);
+          const e2 = 1 - Math.pow(1 - k, 3);
+          const na = from + (to - from) * e2;
+          setView(na, na + w, false);
+          if (k < 1) recenter = requestAnimationFrame(step);
+        };
+        recenter = requestAnimationFrame(step);
+      }
     };
     const onMove = (e: PointerEvent) => {
       const r = cv.getBoundingClientRect();
       const x = e.clientX - r.left;
-      meridian.value = drag ? null : tOf(x);
-      if (!drag) return;
+      if (!drag) {
+        const v = view();
+        const g = v ? frameGrip(x, xOf(v.a), xOf(v.b)) : null;
+        // над ручкой — ширина окна, а не год: меридиан с подписью закрыл бы ручку
+        meridian.value = g === 'left' || g === 'right' ? null : tOf(x);
+        if (g !== grip) {
+          grip = g;
+          draw();
+        }
+        setCursor();
+        return;
+      }
+      meridian.value = null;
       const dt = tOf(x) - tOf(drag.x);
       if (Math.abs(x - drag.x) > 2) drag.moved = true;
       if (!drag.moved) return;
+      cancelAnimationFrame(recenter);
       if (drag.mode === 'move' || drag.mode === 'new') shiftView(drag.a, drag.b, dt);
       else if (drag.mode === 'left') setView(Math.min(drag.a + dt, drag.b - MIN_YEARS), drag.b);
       else setView(drag.a, Math.max(drag.b + dt, drag.a + MIN_YEARS));
     };
     const onUp = (e: PointerEvent) => {
-      if (drag && !drag.moved) {
+      if (drag && !drag.moved && e.type === 'pointerup') {
         const r = cv.getBoundingClientRect();
         const t = tOf(e.clientX - r.left);
         const ep = model.value.epochs.find((x) => t >= toAstro(x.start) && t < toAstro(x.end));
+        // щелчок по эпохе — перелёт к ней (D4); чуть позже, чтобы двойной щелчок успел стать «всем небом»
         if (ep) {
-          const span = toAstro(ep.end) - toAstro(ep.start);
-          const pad = Math.max(10, span * 0.04);
-          setView(toAstro(ep.start) - pad, toAstro(ep.end) + pad);
+          clearTimeout(epochTimer);
+          epochTimer = window.setTimeout(() => {
+            cancelAnimationFrame(recenter);
+            const span = toAstro(ep.end) - toAstro(ep.start);
+            const pad = Math.max(10, span * 0.04);
+            showYears(toAstro(ep.start) - pad, toAstro(ep.end) + pad, true);
+          }, DBL_MS);
         }
       }
       drag = null;
+      dragging = false;
+      setCursor();
+    };
+    const onDbl = () => {
+      // двойной щелчок — всё небо (UX-28)
+      clearTimeout(epochTimer);
+      cancelAnimationFrame(recenter);
+      showAll();
     };
     const onLeave = () => {
-      if (!drag) meridian.value = null;
+      if (!drag) {
+        meridian.value = null;
+        if (grip) {
+          grip = null;
+          draw();
+        }
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      const v = view();
+      if (!v || e.ctrlKey || e.metaKey || e.altKey) return;
+      const next = sliderStep(e.key, e.shiftKey, v.a, v.b, T0, T1);
+      if (!next) return;
+      e.preventDefault();
+      stopFlight();
+      setView(next[0], next[1], false);
     };
     cv.addEventListener('pointerdown', onDown);
     cv.addEventListener('pointermove', onMove);
     cv.addEventListener('pointerup', onUp);
+    cv.addEventListener('pointercancel', onUp);
     cv.addEventListener('pointerleave', onLeave);
+    cv.addEventListener('dblclick', onDbl);
+    cv.addEventListener('keydown', onKey);
     return () => {
       ro.disconnect();
       off1();
       off2();
       off3();
+      cancelAnimationFrame(recenter);
+      clearTimeout(epochTimer);
+      cv.removeEventListener('pointerdown', onDown);
+      cv.removeEventListener('pointermove', onMove);
+      cv.removeEventListener('pointerup', onUp);
+      cv.removeEventListener('pointercancel', onUp);
+      cv.removeEventListener('pointerleave', onLeave);
+      cv.removeEventListener('dblclick', onDbl);
+      cv.removeEventListener('keydown', onKey);
     };
   }, []);
+  const epochs = model.value.epochs;
   return (
     <div class="strip" ref={wrap}>
-      <canvas ref={ref} role="img" aria-label="Полоса времени от сотворения до 2040 года с эпохами и рамкой текущего окна карты. Тяните рамку, чтобы сдвинуть карту; щелчок по эпохе — перелёт к ней." />
+      {/* ползунок окна карты: стрелки — сдвиг на 10 % (Shift — на 40 %), Home и End — к краям шкалы, «+» и «−» — ширина */}
+      <canvas
+        ref={ref}
+        tabIndex={0}
+        role="slider"
+        aria-label="Полоса времени от сотворения до 2040 года: окно карты"
+        aria-valuemax={2040}
+        aria-orientation="horizontal"
+        aria-describedby="strip-help"
+        title="Тяните рамку или её края; щелчок по эпохе — перелёт к ней, двойной щелчок — всё небо"
+      />
+      <p id="strip-help" class="visually-hidden">
+        Стрелки влево и вправо сдвигают окно карты, с Shift — дальше; Home и End — к началу и концу шкалы; плюс и минус меняют ширину окна.
+      </p>
+      <ul class="visually-hidden" aria-label="Эпохи на полосе времени">
+        {epochs.map((e) => (
+          <li key={e.id}>
+            <button type="button" onClick={() => showYears(toAstro(e.start), toAstro(e.end), true)}>
+              {typo(`${e.name}, ${formatSpan(toAstro(e.start), toAstro(e.end))}`)}
+            </button>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

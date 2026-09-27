@@ -224,7 +224,8 @@ const BASE: Scenario[] = [
       const T0 = -4183, T1 = 2040, PAD = 14;
       const xOf = (t: number) => box.x + PAD + ((t - T0) / (T1 - T0)) * (box.width - PAD * 2);
       await p.mouse.click(xOf(-990), box.y + box.height / 2); // эпоха «Царство»
-      await p.waitForTimeout(400);
+      // щелчок по эпохе — перелёт (D4), после паузы на двойной щелчок (D12): ждать конца перелёта
+      await p.waitForTimeout(2000);
       const win = async () => ((await strip.getAttribute('data-window')) ?? '').split(' ').map(Number);
       const [a, b] = await win();
       const wPx = xOf(b) - xOf(a);

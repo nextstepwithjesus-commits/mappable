@@ -4,21 +4,14 @@
  */
 import { modelInfo } from '../../data/atlas.ts';
 import { lambda, modelId, onlyLines, panel, epochMode } from '../../state.ts';
-import { skyRef } from '../common.tsx';
 import { typo } from '../text/typo.ts';
 import { Check, Menu, Segmented } from '../controls.tsx';
 import { Sheet } from '../panels/Sheet.tsx';
-import { showAll } from './view.ts';
+import { showAll, zoomBy } from './view.ts';
 
 export const COLUMN_BELOW = 520;
-
-/** Приблизить или отдалить у середины неба. */
-function zoomBy(f: number) {
-  const s = skyRef.current;
-  if (!s) return;
-  s.cam.zoomAt(s.cam.w / 2, s.cam.h / 2, f);
-  skyRef.redraw();
-}
+/** Шаг масштаба кнопок и клавиш: ×2 за 250 мс (IX-02); привязка — выбранное лицо, если видно, иначе середина неба. */
+const STEP = 2;
 
 const SCALES = [
   { value: 1, label: 'по насыщенности' },
@@ -66,18 +59,19 @@ function ModelMenu() {
  */
 export function SkyControls() {
   return (
-    <div class="skyctl" role="group" aria-label="Вид неба">
+    // data-reserve: под блоком подписи и указатели у края не рисуются (C6), SkyView замеряет его прямоугольник
+    <div class="skyctl" role="group" aria-label="Вид неба" data-reserve="controls">
       <div class="layers">
         <LayerChecks />
       </div>
       <div class="zoom">
-        <button type="button" aria-label="Отдалить" title="Отдалить (−)" onClick={() => zoomBy(1 / 1.6)}>
+        <button type="button" aria-label="Отдалить" title="Отдалить (−)" onClick={() => zoomBy(1 / STEP)}>
           −
         </button>
-        <button type="button" aria-label="Приблизить" title="Приблизить (+)" onClick={() => zoomBy(1.6)}>
+        <button type="button" aria-label="Приблизить" title="Приблизить (+)" onClick={() => zoomBy(STEP)}>
           +
         </button>
-        <button type="button" onClick={showAll}>
+        <button type="button" title="Всё небо (0, Home)" aria-keyshortcuts="0 Home" onClick={showAll}>
           Всё небо
         </button>
       </div>
@@ -101,14 +95,14 @@ export function SkyControls() {
 /** Узкое небо (телефон; планшет с карточкой): колонка кнопок 44 × 44 у правого края, остальное — в листе «Вид» (MOB-05, MOB-25). */
 export function SkyColumn() {
   return (
-    <div class="skyctl column" role="group" aria-label="Вид неба">
-      <button type="button" aria-label="Приблизить" title="Приблизить (+)" onClick={() => zoomBy(1.6)}>
+    <div class="skyctl column" role="group" aria-label="Вид неба" data-reserve="controls">
+      <button type="button" aria-label="Приблизить" title="Приблизить (+)" onClick={() => zoomBy(STEP)}>
         +
       </button>
-      <button type="button" aria-label="Отдалить" title="Отдалить (−)" onClick={() => zoomBy(1 / 1.6)}>
+      <button type="button" aria-label="Отдалить" title="Отдалить (−)" onClick={() => zoomBy(1 / STEP)}>
         −
       </button>
-      <button type="button" class="all" onClick={showAll}>
+      <button type="button" class="all" title="Всё небо (0, Home)" aria-keyshortcuts="0 Home" onClick={showAll}>
         Всё небо
       </button>
       <button type="button" aria-pressed={panel.value === 'view'} onClick={() => (panel.value = panel.value === 'view' ? null : 'view')}>
@@ -122,7 +116,7 @@ export function SkyColumn() {
 export function ViewSheet() {
   const cur = modelInfo.find((m) => m.id === modelId.value);
   return (
-    <Sheet title="Вид">
+    <Sheet title="Вид" reserve>
       <div class="viewctl">
         <div class="checks">
           <LayerChecks />

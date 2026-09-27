@@ -1,10 +1,12 @@
-/** Состояние приложения (сигналы). Адрес страницы отражает выбранное лицо, окно и режимы. */
+/** Состояние приложения (сигналы). Адрес страницы отражает выбранное лицо, окно, панель и режимы (src/ui/address.ts). */
 import { signal, computed, effect, batch } from '@preact/signals';
 import { models, byId, graph, loadModel } from './data/atlas.ts';
 import { relate } from './engine/kinship.ts';
 
 export type Theme = 'night' | 'day';
 export type Panel = null | 'epochs' | 'index' | 'kinship' | 'synopsis' | 'legend' | 'about' | 'section' | 'chapter' | 'spread' | 'view';
+/** Все панели — для разбора адреса (src/ui/address.ts). */
+export const PANELS: readonly Exclude<Panel, null>[] = ['epochs', 'index', 'kinship', 'synopsis', 'legend', 'about', 'section', 'chapter', 'spread', 'view'];
 
 const load = <T,>(k: string, d: T): T => {
   try {
@@ -61,6 +63,13 @@ export const layers = signal<Record<string, boolean>>(
 export const introDone = signal<boolean>(load('intro', false));
 export const sectionFocus = signal<number | null>(null); // сквозной раздел
 export const pins = signal<string[]>([]); // отмеченные на небе одноимённые
+/** По какому запросу поставлены отметки: для строки «Отмечено N лиц по запросу…» на небе (D9, E10). */
+export const pinsQuery = signal('');
+/**
+ * Сообщение поиска, не связанное с набранным запросом: адрес с несуществующим лицом (D8; IX-44).
+ * ids — лица с похожим адресом, которые поиск предлагает строками.
+ */
+export const searchNotice = signal<{ text: string; ids: string[] } | null>(null);
 
 /** Путь родства пары для неба: лица от первого ко второму. Пишут выбор второго лица и панель «Родство». */
 export const kinPath = { current: null as string[] | null };
@@ -148,22 +157,3 @@ effect(() => save('model', modelId.value));
 effect(() => save('lambda', lambda.value));
 effect(() => save('layers', layers.value));
 effect(() => save('intro', introDone.value));
-
-// ---------- адрес ----------
-export function readHash(): { id: string | null; view: string | null; route: string } {
-  const h = decodeURIComponent(location.hash.replace(/^#\/?/, ''));
-  const [path, query] = h.split('?');
-  const params = new URLSearchParams(query ?? '');
-  if (path === 'specimen') return { id: null, view: null, route: 'specimen' };
-  return { id: path && byId.has(path) ? path : null, view: params.get('v'), route: 'atlas' };
-}
-
-let writing = false;
-export function writeHash(id: string | null, view?: string) {
-  const next = `#/${id ?? ''}${view ? `?v=${view}` : ''}`;
-  if (location.hash === next) return;
-  writing = true;
-  history.pushState(null, '', next);
-  writing = false;
-}
-export const isWritingHash = () => writing;

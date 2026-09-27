@@ -6,7 +6,7 @@ import { P, Refs, VerseInsert, plural, skyRef } from '../common.tsx';
 import { relate, foldChain, accusative, type Relation } from '../../engine/kinship.ts';
 import { SearchIndex } from '../../engine/search.ts';
 import { lifeText } from '../sky/text.ts';
-import { Sheet } from './Sheet.tsx';
+import { Sheet, useRemembered } from './Sheet.tsx';
 import { typo } from '../text/typo.ts';
 
 // ---------- родство ----------
@@ -14,7 +14,7 @@ export function KinshipPanel() {
   // пара не следует за выбором: ссылки в цепочке открывают карточки, но первое лицо остаётся прежним
   const a = first.value ?? selected.value;
   const b = second.value && second.value !== a ? second.value : null;
-  const [q, setQ] = useState('');
+  const [q, setQ] = useRemembered('kinship:q', '');
   const [more, setMore] = useState(false);
   const index = useMemo(
     () => new SearchIndex(persons.map((p) => ({ id: p.id, name: p.name, alt: p.alt, disambig: p.disambig, prominence: p.prominence, magnitude: p.magnitude, refs: [] }))),

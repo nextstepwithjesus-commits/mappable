@@ -1,11 +1,13 @@
 /**
- * Ввод неба: указатель (протяжка, щипок, колесо, двойной щелчок, наведение и подсказка) и клавиши холста.
- * Клавиши — по физическим клавишам (KeyboardEvent.code), поэтому работают и на русской раскладке.
+ * Ввод неба: указатель (протяжка, щипок, колесо и тачпад, двойной щелчок, наведение и подсказка) и клавиши неба.
+ * Клавиши — по физическим клавишам (KeyboardEvent.code), поэтому работают и на русской раскладке; слушает их window
+ * (src/ui/keys.ts), а не холст: небо отвечает и без фокуса на холсте (IX-38).
  */
 import type { Sky } from '../../render/sky.ts';
-import { byId, graph } from '../../data/atlas.ts';
-import { selected, hovered, meridian, panel, introDone, epochMode, pins, pickSecond } from '../../state.ts';
-import { skyRef } from '../common.tsx';
+import { byId, graph, lineMembership } from '../../data/atlas.ts';
+import { selected, hovered, meridian, panel, epochMode, pins, pinsQuery, pickMode, pickSecond } from '../../state.ts';
+import { goTo, skyRef } from '../common.tsx';
+import { showAll, stopFlight, zoomBy } from './view.ts';
 
 export interface Tip {
   id: string;
@@ -19,13 +21,94 @@ export interface PointerInput {
   dispose(): void;
 }
 
+// ---------- колесо и тачпад (D1; IX-01, IX-02; решение владельца 8) ----------
+
+export type WheelKind = 'mouse' | 'trackpad' | 'pinch';
+export interface WheelSample {
+  deltaMode: number;
+  deltaX: number;
+  deltaY: number;
+  ctrlKey: boolean;
+  shiftKey: boolean;
+  /** время события, мс */
+  t: number;
+}
+
+/** Шаг колеса мыши: у Chrome на macOS кратен 4,000244140625, у остальных — целый и не меньше 50 px. */
+const mouseDelta = (d: number) => d !== 0 && (Math.abs(d) % 4.000244140625 === 0 || (Number.isInteger(d) && Math.abs(d) >= 50));
+
+/**
+ * Мышь или тачпад — эвристика Mapbox: строки и страницы (deltaMode ≠ 0) и крупный целый шаг — колесо мыши;
+ * мелкий дробный шаг и сдвиг по x — тачпад; ctrlKey с мелким шагом — щипок тачпада (так его передают браузеры).
+ * События ближе 300 мс друг к другу — один жест: инерция тачпада не превращается в колесо.
+ */
+export function classifyWheel(e: WheelSample, prev: { t: number; kind: WheelKind } | null): WheelKind {
+  const d = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+  if (e.ctrlKey) return e.deltaMode !== 0 || mouseDelta(d) ? 'mouse' : 'pinch';
+  if (e.deltaMode !== 0) return 'mouse';
+  if (prev && prev.kind !== 'pinch' && e.t - prev.t < 300) return prev.kind;
+  if (e.deltaX !== 0 && !e.shiftKey) return 'trackpad';
+  return mouseDelta(d) ? 'mouse' : 'trackpad';
+}
+
+/** Строка прокрутки — треть щелчка колеса (у Firefox щелчок — 3 строки), страница — высота неба. */
+export const wheelPixels = (delta: number, mode: number, page: number) => (mode === 1 ? (delta * 100) / 3 : mode === 2 ? delta * page : delta);
+
+/** Щелчков колеса в одном событии: 100 px — один щелчок; крупный шаг — не меньше одного, не больше трёх. */
+export const wheelNotches = (px: number) => {
+  const a = Math.abs(px);
+  return Math.min(3, a >= 50 ? Math.max(1, a / 100) : a / 100);
+};
+
+/** Шаги масштаба: колесо ×1,5 за 180 мс, кнопки, клавиши и двойной щелчок ×2 за 250 мс (IX-02). */
+export const WHEEL_STEP = 1.5;
+export const WHEEL_MS = 180;
+export const KEY_STEP = 2;
+export const KEY_MS = 250;
+
+// ---------- плавный масштаб ----------
+
+/**
+ * Шаг масштаба колеса: щелчки во время шага накапливаются — новый щелчок продолжает идущий шаг (к оставшейся части
+ * прибавляется его множитель), а не начинается с места, где анимация успела остановиться (IX-02).
+ * Сам шаг — общая функция неба zoomBy (src/ui/sky/view.ts): пределы камеры и prefers-reduced-motion — там.
+ */
+let wheelStep: { target: number; until: number } | null = null;
+
+/** Прервать накопление шагов колеса (нажатие, протяжка, клавиши). */
+export function stopZoom() {
+  wheelStep = null;
+}
+
+/** Щелчки колеса мыши: ×WHEEL_STEP за каждый, у указателя, за WHEEL_MS; шаги подряд складываются. */
+export function wheelZoom(factor: number, x: number, y: number) {
+  const s = skyRef.current;
+  if (!s || !(factor > 0)) return;
+  const now = performance.now();
+  const f = wheelStep && s.cam.moving && now < wheelStep.until ? (wheelStep.target / s.cam.kx) * factor : factor;
+  wheelStep = { target: s.cam.kx * f, until: now + WHEEL_MS };
+  zoomBy(f, { x, y }, WHEEL_MS);
+}
+
+// ---------- щелчок ----------
+
+/** Порог щелчка по типу указателя: мышь 5 px, перо 6, палец 10 (IX-10, MOB-09). */
+export const CLICK_SLOP: Record<string, number> = { mouse: 5, pen: 6, touch: 10 };
+/** Быстрое отпускание (до 250 мс) со смещением до 8 px — тоже щелчок, даже если небо чуть сдвинулось. */
+export function isClick(dist: number, ms: number, type: string): boolean {
+  return dist <= (CLICK_SLOP[type] ?? 5) || (ms < 250 && dist < 8);
+}
+
 export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () => void, setTip: (t: Tip | null) => void): PointerInput {
   const pointers = new Map<number, { x: number; y: number }>();
-  let drag: { x: number; y: number; moved: boolean } | null = null;
+  let drag: { x0: number; y0: number; x: number; y: number; moved: boolean; t: number; type: string } | null = null;
   let pinch: { d: number; cx: number; cy: number } | null = null;
   // где мышь или перо над небом (касание не наводит) — чтобы после движения неба проверить, что под указателем теперь
   let pointer: { x: number; y: number; r: number } | null = null;
   let tipShown = false;
+  let lastWheel: { t: number; kind: WheelKind } | null = null;
+  // щелчок по пустому небу снимает выбор, но не сразу: второй щелчок того же двойного — масштаб, а не снятие
+  let clearTimer = 0;
   const showTip = (t: { id: string; x: number; y: number } | null) => {
     if (!t && !tipShown) return;
     tipShown = !!t;
@@ -40,14 +123,14 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
   };
   // Небо сдвинулось (протяжка, колесо, клавиши, перелёт, полоса времени, смена масштаба): подсказка прежнего лица
   // прячется сразу, а попадание проверяется заново, когда небо остановится (IX-07, MAP-39).
-  let camKey = '';
+  let camWas = '';
   let calm = 0;
   const watchCamera = (extra: string) => {
     const c = sky.cam;
     const key = `${c.x0} ${c.kx} ${c.laneTop} ${c.w} ${c.h} ${extra}`;
-    if (key === camKey) return;
-    const initial = !camKey;
-    camKey = key;
+    if (key === camWas) return;
+    const initial = !camWas;
+    camWas = key;
     if (initial) return;
     showTip(null);
     if (hovered.value) hovered.value = null;
@@ -60,15 +143,17 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
   };
   const onDown = (e: PointerEvent) => {
     canvas.setPointerCapture(e.pointerId);
+    // нажатие прерывает перелёт и шаг масштаба (D4): stopFlight и упор камеры — в SkyView
+    stopZoom();
+    clearTimeout(clearTimer);
     const p = local(e);
     pointers.set(e.pointerId, p);
-    if (pointers.size === 1) drag = { x: p.x, y: p.y, moved: false };
+    if (pointers.size === 1) drag = { x0: p.x, y0: p.y, x: p.x, y: p.y, moved: false, t: performance.now(), type: e.pointerType };
     if (pointers.size === 2) {
       const [a, b] = [...pointers.values()];
       pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2 };
       drag = null;
     }
-    introDone.value = true;
   };
   const onMove = (e: PointerEvent) => {
     const p = local(e);
@@ -86,12 +171,11 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       return;
     }
     if (drag) {
-      const dx = p.x - drag.x;
-      const dy = p.y - drag.y;
-      if (drag.moved || Math.abs(dx) + Math.abs(dy) > 3) {
+      // протяжка начинается за порогом щелчка своего указателя; небо сдвигается от точки нажатия, без скачка
+      if (drag.moved || Math.hypot(p.x - drag.x0, p.y - drag.y0) > (CLICK_SLOP[drag.type] ?? 5)) {
         drag.moved = true;
         canvas.classList.add('dragging');
-        sky.cam.pan(dx, dy);
+        sky.cam.pan(p.x - drag.x, p.y - drag.y);
         drag.x = p.x;
         drag.y = p.y;
         showTip(null);
@@ -113,38 +197,81 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     pointers.delete(e.pointerId);
     canvas.classList.remove('dragging');
     if (pointers.size < 2) pinch = null;
-    const edge = sky.edgeHits.find((r) => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
-    if (drag && !drag.moved && edge) {
-      skyRef.flyTo(edge.id);
-      drag = null;
-      return;
-    }
-    if (drag && !drag.moved) {
-      if (pins.value.length) pins.value = [];
-      const hit = sky.hit(p.x, p.y, e.pointerType === 'touch' ? 22 : 12);
-      // в режиме «Родство с…» или «Разворот с…» щелчок выбирает второе лицо, первое остаётся
-      if (hit && !pickSecond(hit)) selected.value = hit;
-    }
+    const d = drag;
     drag = null;
     if (pointer) {
       clearTimeout(calm);
       calm = window.setTimeout(rehit, 120);
     }
+    if (!d || e.type === 'pointercancel' || !isClick(Math.hypot(p.x - d.x0, p.y - d.y0), performance.now() - d.t, d.type)) return;
+    // щелчок — там, где нажали: дрожание при отпускании не уводит к соседней звезде
+    const at = { x: d.x0, y: d.y0 };
+    const edge = sky.edgeHits.find((r) => at.x >= r.x && at.x <= r.x + r.w && at.y >= r.y && at.y <= r.y + r.h);
+    if (edge) {
+      goTo(edge.id);
+      return;
+    }
+    const hit = sky.hit(at.x, at.y, d.type === 'touch' ? 22 : 12);
+    if (hit) {
+      if (pins.value.length) pins.value = [];
+      // в режиме «Родство с…» или «Разворот с…» щелчок выбирает второе лицо, первое остаётся
+      if (!pickSecond(hit)) selected.value = hit;
+      return;
+    }
+    // пустое небо: снять выбор (IX-09); «назад» в браузере его вернёт (D8). В режиме выбора второго лица — ничего.
+    if (pickMode.value || at.y < 26) return;
+    clearTimeout(clearTimer);
+    clearTimer = window.setTimeout(() => {
+      if (pins.value.length) {
+        pins.value = [];
+        pinsQuery.value = '';
+      }
+      if (selected.value) selected.value = null;
+    }, 260);
   };
   const onWheel = (e: WheelEvent) => {
     e.preventDefault();
     const p = local(e);
-    if (e.shiftKey) sky.cam.pan(-e.deltaY, 0);
-    else if (e.ctrlKey) sky.cam.zoomAt(p.x, p.y, Math.exp(-e.deltaY * 0.01));
-    else if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) sky.cam.pan(-e.deltaX, 0);
-    else sky.cam.zoomAt(p.x, p.y, Math.exp(-e.deltaY * 0.0016));
-    introDone.value = true;
+    // deltaMode читается первым: Firefox тогда отдаёт колесо мыши строками, а не пикселями
+    const mode = e.deltaMode;
+    const sample: WheelSample = { deltaMode: mode, deltaX: e.deltaX, deltaY: e.deltaY, ctrlKey: e.ctrlKey, shiftKey: e.shiftKey, t: performance.now() };
+    const kind = classifyWheel(sample, lastWheel);
+    lastWheel = { t: sample.t, kind };
+    const dx = wheelPixels(e.deltaX, mode, sky.cam.h);
+    const dy = wheelPixels(e.deltaY, mode, sky.cam.h);
+    clearTimeout(clearTimer);
+    if (kind === 'pinch') {
+      // щипок — непрерывно, за пальцами
+      stopZoom();
+      stopFlight();
+      sky.cam.zoomAt(p.x, p.y, Math.exp(-dy * 0.01));
+    } else if (kind === 'trackpad') {
+      // два пальца — сдвиг 1 : 1 по обеим осям
+      stopZoom();
+      stopFlight();
+      if (e.shiftKey && dx === 0) sky.cam.pan(-dy, 0);
+      else sky.cam.pan(-dx, -dy);
+    } else if (e.shiftKey || e.altKey) {
+      // Shift + колесо — сдвиг по времени, Alt + колесо — по полосам
+      stopZoom();
+      stopFlight();
+      const along = Math.abs(dy) >= Math.abs(dx) ? dy : dx;
+      if (e.shiftKey) sky.cam.pan(-along, 0);
+      else sky.cam.pan(0, -along);
+    } else {
+      // колесо мыши — масштаб у курсора: щелчок ×1,5 за 180 мс, щелчки накапливаются
+      const along = Math.abs(dy) >= Math.abs(dx) ? dy : dx;
+      const n = wheelNotches(along);
+      if (n > 0) wheelZoom(Math.pow(WHEEL_STEP, -Math.sign(along) * n), p.x, p.y);
+    }
     request();
   };
   const onDbl = (e: MouseEvent) => {
+    clearTimeout(clearTimer);
     const p = local(e);
-    sky.cam.zoomAt(p.x, p.y, 2);
-    request();
+    // двойной щелчок — ×2 у точки, Shift — ×0,5 (IX-02)
+    stopZoom();
+    zoomBy(e.shiftKey ? 1 / KEY_STEP : KEY_STEP, p, KEY_MS);
   };
   const onLeave = () => {
     pointer = null;
@@ -164,6 +291,8 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     watchCamera,
     dispose() {
       clearTimeout(calm);
+      clearTimeout(clearTimer);
+      stopZoom();
       canvas.removeEventListener('pointerdown', onDown);
       canvas.removeEventListener('pointermove', onMove);
       canvas.removeEventListener('pointerup', onUp);
@@ -175,52 +304,97 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
   };
 }
 
-// клавиатура — по физическим клавишам, поэтому работает и на русской раскладке.
-// Только с холста: у кнопок внутри неба (скрытый список лиц, органы неба, строка выбора) свои Enter и пробел (MOB-29).
-export function skyKey(e: KeyboardEvent, canvas: HTMLCanvasElement | null): void {
+// ---------- клавиши неба ----------
+
+/**
+ * Путь подъёма по «[»: лица, от которых поднимались к родителю. «]» возвращает к последнему из них,
+ * если стоим на его родителе (IX-40); иначе путь забывается.
+ */
+let climb: string[] = [];
+
+/** Ребёнок для «]»: откуда пришли по «[»; иначе ребёнок на линии Мессии; иначе самый значимый. */
+export function childFor(id: string, path: string[]): { to: string | null; path: string[] } {
+  const p = [...path];
+  const last = p[p.length - 1];
+  const lp = last ? byId.get(last) : undefined;
+  if (lp && (lp.father === id || lp.mother === id)) {
+    p.pop();
+    return { to: last, path: p };
+  }
+  const kids = (graph.childrenOf.get(id) ?? []).filter((e) => e.kind === 'father' || e.kind === 'mother').map((e) => e.child);
+  const onLine = kids.find((k) => lineMembership.joseph.has(k) || lineMembership.mary.has(k));
+  const best = onLine ?? [...kids].sort((a, b) => (byId.get(a)?.magnitude ?? 9) - (byId.get(b)?.magnitude ?? 9))[0];
+  return { to: best ?? null, path: [] };
+}
+
+/**
+ * Клавиши неба (на window, кроме полей ввода; вызывает src/ui/keys.ts). Возвращает true, если клавиша обработана.
+ * nav — можно ли стрелкам и Home вести небо (фокус не в прокручиваемой панели или карточке).
+ */
+export function skyKeys(e: KeyboardEvent, nav: boolean, onCanvas: boolean): boolean {
   const sky = skyRef.current;
-  if (!sky || e.target !== canvas) return;
+  if (!sky) return false;
   const id = selected.value;
   const go = (to: string | null | undefined) => {
-    if (to && byId.has(to)) {
-      selected.value = to;
-      skyRef.flyTo(to);
-    }
+    if (to && byId.has(to)) goTo(to);
   };
   switch (e.code) {
     case 'Equal':
     case 'NumpadAdd':
-      sky.cam.zoomAt(sky.cam.w / 2, sky.cam.h / 2, 1.5);
+      // ×2 за 250 мс у выбранного лица, если оно на виду, иначе у середины видимой части (IX-02)
+      stopZoom();
+      zoomBy(KEY_STEP, undefined, KEY_MS);
       break;
     case 'Minus':
     case 'NumpadSubtract':
-      sky.cam.zoomAt(sky.cam.w / 2, sky.cam.h / 2, 1 / 1.5);
+      stopZoom();
+      zoomBy(1 / KEY_STEP, undefined, KEY_MS);
+      break;
+    case 'Digit0':
+    case 'Numpad0':
+      showAll();
+      break;
+    case 'Home':
+      if (!nav) return false;
+      showAll();
       break;
     case 'ArrowLeft':
-      sky.cam.pan(120, 0);
-      break;
     case 'ArrowRight':
-      sky.cam.pan(-120, 0);
-      break;
     case 'ArrowUp':
-      sky.cam.pan(0, 90);
+    case 'ArrowDown': {
+      if (!nav) return false;
+      stopFlight();
+      stopZoom();
+      const k = e.shiftKey ? 3 : 1;
+      if (e.code === 'ArrowLeft') sky.cam.pan(120 * k, 0);
+      else if (e.code === 'ArrowRight') sky.cam.pan(-120 * k, 0);
+      else if (e.code === 'ArrowUp') sky.cam.pan(0, 90 * k);
+      else sky.cam.pan(0, -90 * k);
       break;
-    case 'ArrowDown':
-      sky.cam.pan(0, -90);
+    }
+    case 'BracketLeft': {
+      if (!id) return false;
+      const par = byId.get(id)?.father ?? byId.get(id)?.mother;
+      if (!par) return false;
+      climb = [...climb, id].slice(-200);
+      go(par);
       break;
-    case 'BracketLeft':
-      if (id) go(byId.get(id)?.father ?? byId.get(id)?.mother);
+    }
+    case 'BracketRight': {
+      if (!id) return false;
+      const r = childFor(id, climb);
+      climb = r.path;
+      go(r.to);
       break;
-    case 'BracketRight':
-      if (id) go((graph.childrenOf.get(id) ?? []).find((e2) => e2.kind === 'father' || e2.kind === 'mother')?.child);
-      break;
+    }
     case 'Comma':
     case 'Period': {
-      if (!id) break;
+      if (!id) return false;
       const par = byId.get(id)?.father ?? byId.get(id)?.mother;
-      if (!par) break;
+      if (!par) return false;
       const sibs = (graph.childrenOf.get(par) ?? []).filter((x) => x.kind === 'father' || x.kind === 'mother').map((x) => x.child);
       const i = sibs.indexOf(id);
+      climb = [];
       go(sibs[(i + (e.code === 'Comma' ? -1 : 1) + sibs.length) % sibs.length]);
       break;
     }
@@ -231,11 +405,15 @@ export function skyKey(e: KeyboardEvent, canvas: HTMLCanvasElement | null): void
       panel.value = panel.value === 'legend' ? null : 'legend';
       break;
     case 'Enter':
-      if (hovered.value && !pickSecond(hovered.value)) selected.value = hovered.value;
+    case 'NumpadEnter':
+      // Enter — только на самом холсте: у кнопок свои Enter и пробел (MOB-29)
+      if (!onCanvas || !hovered.value) return false;
+      if (!pickSecond(hovered.value)) selected.value = hovered.value;
       break;
     default:
-      return;
+      return false;
   }
   e.preventDefault();
   skyRef.redraw();
+  return true;
 }

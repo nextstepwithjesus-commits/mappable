@@ -1,18 +1,19 @@
-import { useMemo, useState } from 'preact/hooks';
+import { useMemo } from 'preact/hooks';
 import { byId, persons } from '../../data/atlas.ts';
-import { selected, model } from '../../state.ts';
-import { skyRef } from '../common.tsx';
+import { model } from '../../state.ts';
+import { goTo } from '../common.tsx';
 import { atlasCoord } from '../../render/sky.ts';
 import { norm } from '../../engine/text.ts';
 import { lifeText } from '../sky/text.ts';
-import { Sheet } from './Sheet.tsx';
+import { Sheet, useRemembered } from './Sheet.tsx';
 import { num } from '../text/typo.ts';
 import { Segmented } from '../controls.tsx';
 
 // ---------- указатель ----------
 export function IndexPanel() {
-  const [letter, setLetter] = useState<string | null>(null);
-  const [filter, setFilter] = useState('');
+  // буква и фильтр помнятся, пока открыт атлас: панель, открытая снова, стоит там же (D11)
+  const [letter, setLetter] = useRemembered<string | null>('index:letter', null);
+  const [filter, setFilter] = useRemembered('index:filter', '');
   const m = model.value;
   const groups = useMemo(() => {
     const byName = new Map<string, string[]>();
@@ -54,7 +55,7 @@ export function IndexPanel() {
             <div key={name}>
               {head && <div class="head">{name[0]}</div>}
               {ids.length === 1 ? (
-                <button class="row" onClick={() => { selected.value = ids[0]; skyRef.flyTo(ids[0]); }}>
+                <button class="row" onClick={() => goTo(ids[0])}>
                   <span>{name}</span>
                   <span class="lead-dots" />
                   <span class="coord">{coord(ids[0])}</span>
@@ -65,7 +66,7 @@ export function IndexPanel() {
                     <span>{name}</span>
                   </div>
                   {ids.map((id) => (
-                    <button class="row sub" key={id} onClick={() => { selected.value = id; skyRef.flyTo(id); }}>
+                    <button class="row sub" key={id} onClick={() => goTo(id)}>
                       <span>{byId.get(id)!.disambig || lifeText(id)}</span>
                       <span class="lead-dots" />
                       <span class="coord">{coord(id)}</span>

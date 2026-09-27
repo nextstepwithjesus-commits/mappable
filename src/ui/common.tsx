@@ -6,8 +6,9 @@ import { byId, loadVerses } from '../data/atlas.ts';
 import { parseRef, verseId } from '../engine/books.ts';
 import type { Sky } from '../render/sky.ts';
 import type { Cert, Role } from '../data/types.ts';
-import { selected } from '../state.ts';
+import { selected, hovered, pickSecond } from '../state.ts';
 import { typo } from './text/typo.ts';
+import { inView, reduced } from './sky/view.ts';
 
 export const skyRef: { current: Sky | null; redraw: () => void; flyTo: (id: string) => void } = {
   current: null,
@@ -71,18 +72,67 @@ export function Mark({ cert, calc }: { cert?: Cert; calc?: boolean }) {
   );
 }
 
-/** Ссылка на лицо: переход по щелчку. */
+/**
+ * Звезда лица на виду: нарисована, доступна указателю и лежит в видимой части неба — не под панелью, ярусами,
+ * листом карточки и органами неба (inView, src/ui/sky/view.ts).
+ */
+export function onScreen(id: string): boolean {
+  const s = skyRef.current;
+  return !!s && !!s.model && s.reachable(id) && inView(id);
+}
+
+/**
+ * Одно правило для ссылки на лицо (D7; IX-47): лицо выбирается, а небо летит к нему, только если звезды нет на экране.
+ * В режиме «Родство с…» или «Разворот с…» лицо становится вторым, первое остаётся (D6). Пока открыты «Родство»
+ * или «Разворот», пара не меняется: её держит src/state.ts.
+ */
+export function goTo(id: string) {
+  if (!byId.has(id)) return;
+  if (hovered.peek() === id) hovered.value = null;
+  if (pickSecond(id)) return;
+  const visible = onScreen(id);
+  selected.value = id;
+  if (!visible) skyRef.flyTo(id);
+}
+
+/** Перелёт к окну, в котором видны все лица (отметки поиска «Все N на небе»): по годам и полосам, с полями. */
+export function flyToIds(ids: string[]) {
+  const s = skyRef.current;
+  if (!s || !s.model) return;
+  const pts = ids.map((id) => ({ x: s.nodeX(id), n: s.node(id) })).filter((p): p is { x: number; n: NonNullable<typeof p.n> } => p.x !== null && !!p.n);
+  if (!pts.length) return;
+  const xs = pts.map((p) => p.x);
+  const lanes = pts.map((p) => p.n.lane);
+  const x0 = Math.min(...xs);
+  const x1 = Math.max(...xs);
+  // не уже 160 лет вокруг одиночного лица: иначе окно — одна звезда без соседей
+  const minW = Math.abs(s.xOf(s.tOf(x0) + 160) - x0);
+  const w = Math.max(minW, (x1 - x0) * 1.2);
+  s.cam.flyTo((x0 + x1) / 2, (Math.min(...lanes) + Math.max(...lanes)) / 2, w, skyRef.redraw, reduced());
+  skyRef.redraw();
+}
+
+/** Ссылка, которая сейчас подсвечивает звезду наведением: при уходе ссылки из разметки подсветка снимается. */
+let hoverLink: HTMLElement | null = null;
+const hoverOff = (el: HTMLElement | null) => {
+  if (!el || hoverLink !== el) return;
+  hoverLink = null;
+  hovered.value = null;
+};
+
+/** Ссылка на лицо: выбрать и показать на небе по одному правилу (goTo); наведение и фокус подсвечивают звезду. */
 export function P({ id, children }: { id: string; children?: ComponentChildren }) {
   const p = byId.get(id);
+  const ref = useRef<HTMLButtonElement>(null);
+  useEffect(() => () => hoverOff(ref.current), []);
   if (!p) return <span>{children ?? id}</span>;
+  const on = (e: Event) => {
+    hoverLink = e.currentTarget as HTMLElement;
+    hovered.value = id;
+  };
+  const off = (e: Event) => hoverOff(e.currentTarget as HTMLElement);
   return (
-    <button
-      class="person"
-      onClick={() => {
-        selected.value = id;
-        skyRef.flyTo(id);
-      }}
-    >
+    <button ref={ref} class="person" data-id={id} onClick={() => goTo(id)} onMouseEnter={on} onMouseLeave={off} onFocus={on} onBlur={off}>
       {children ?? p.name}
     </button>
   );

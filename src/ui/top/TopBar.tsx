@@ -12,9 +12,9 @@ const PANELS: { id: Exclude<Panel, null>; label: string }[] = [
   { id: 'kinship', label: 'Родство' },
   { id: 'section', label: 'Сквозной раздел' },
 ];
-/** Справка — после вертикальной черты, рядом с темой. */
-const HELP: { id: Exclude<Panel, null>; label: string }[] = [
-  { id: 'legend', label: 'Условные знаки' },
+/** Справка — после вертикальной черты, рядом с темой. key — клавиша, которая открывает панель (в подсказке кнопки). */
+const HELP: { id: Exclude<Panel, null>; label: string; key?: string }[] = [
+  { id: 'legend', label: 'Условные знаки', key: 'L' },
   { id: 'about', label: 'О карте' },
 ];
 /**
@@ -86,8 +86,8 @@ export function TopBar() {
     return () => ro.disconnect();
   }, []);
 
-  const button = (c: { id: Exclude<Panel, null>; label: string }) => (
-    <button key={c.id} aria-pressed={panel.value === c.id} onClick={() => togglePanel(c.id)}>
+  const button = (c: { id: Exclude<Panel, null>; label: string; key?: string }) => (
+    <button key={c.id} aria-pressed={panel.value === c.id} title={c.key ? `${c.label} (${c.key})` : undefined} aria-keyshortcuts={c.key} onClick={() => togglePanel(c.id)}>
       {c.label}
     </button>
   );
@@ -103,7 +103,7 @@ export function TopBar() {
     }));
   return (
     <header class="top">
-      <button class="wordmark" title="Всё небо" onClick={showAll}>
+      <button class="wordmark" title="Всё небо (0, Home)" aria-keyshortcuts="0 Home" onClick={showAll}>
         Толедот{sub && <small ref={subRef}>{SUBTITLE}</small>}
       </button>
       <Search />

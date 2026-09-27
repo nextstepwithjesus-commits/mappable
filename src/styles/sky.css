@@ -47,12 +47,16 @@
   font-variant-numeric: lining-nums tabular-nums;
 }
 
-/* картуш — надпись на поле карты при первом показе; непрозрачный лист с двойной рамкой */
+/* картуш — надпись на поле карты при первом показе; непрозрачный лист с двойной рамкой (C5; VIS-24).
+   Закрывается только «×», входом или выбором лица; «всё небо» вписывается рядом с ним (SkyView, поля видимой части). */
 .cartouche {
   position: absolute;
   left: 34px;
   bottom: 18px;
-  width: 360px;
+  width: 380px;
+  max-height: calc(100% - 70px);
+  overflow-y: auto;
+  scrollbar-width: thin;
   padding: 14px 18px 14px;
   background: var(--sheet);
   border: 1px solid var(--rule-strong);
@@ -70,6 +74,13 @@
   font-weight: 600;
   color: var(--ink);
 }
+.cartouche h2 {
+  margin: 10px 0 4px;
+  font-size: var(--t-body);
+  line-height: var(--t-body-lh);
+  font-weight: 600;
+  color: var(--ink);
+}
 .cartouche .sub {
   font-style: italic;
   margin: 0 0 10px;
@@ -77,11 +88,41 @@
 .cartouche p {
   margin: 0 0 8px;
 }
+/* легенда лент — сеткой: образец 34 px и подпись */
+.cartouche .ribbons {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  align-items: center;
+  row-gap: 2px;
+}
+.cartouche .ribbons .swatch {
+  margin: 0;
+}
+/* «Как читать карту» — во вступлении и в «Условных знаках»: сенсорный экран — о касаниях, мышь — о колесе и щелчке */
+.guide {
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+}
+.guide li {
+  margin: 0 0 4px;
+}
+.guide:not(.both) .for-touch {
+  display: none;
+}
+@media (pointer: coarse) {
+  .guide:not(.both) .for-touch {
+    display: list-item;
+  }
+  .guide:not(.both) .for-mouse {
+    display: none;
+  }
+}
 .cartouche .entry {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 14px;
-  margin-top: 6px;
+  gap: 4px 12px;
+  margin-top: 8px;
   font-family: var(--sans);
   font-size: var(--t-ui);
   line-height: var(--t-ui-lh);
@@ -94,10 +135,57 @@
 .cartouche .entry button:hover {
   text-decoration-color: var(--ink);
 }
+/* «×» прилипает к верху таблички, если она прокручивается (альбомная ориентация телефона; MOB-07) */
 .cartouche .close {
+  position: sticky;
+  top: -10px;
+  float: right;
+  margin: -10px -14px 0 8px;
+  background: var(--sheet);
+  z-index: 1;
+}
+/* низкое окно (альбомная ориентация, масштаб 200 %): укороченное вступление */
+@media (max-height: 520px) {
+  .cartouche .long,
+  .cartouche .sub {
+    display: none;
+  }
+}
+/* свёрнутое вступление — команда в левом нижнем углу неба (C5; UX-03) */
+.guide-cmd {
   position: absolute;
-  top: 4px;
-  right: 4px;
+  left: 26px;
+  bottom: 12px;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 10px;
+  background: var(--sheet);
+  border: 1px solid var(--rule-strong);
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+  color: var(--ink-2);
+}
+.guide-cmd.high {
+  top: 52px;
+  bottom: auto;
+}
+.guide-cmd:hover {
+  background: var(--sheet-2);
+  color: var(--ink);
+}
+.guide-cmd:active {
+  background: var(--rule);
+}
+.guide-cmd:focus-visible {
+  outline-offset: -2px;
+}
+@media (pointer: coarse) {
+  .guide-cmd {
+    min-height: 44px;
+  }
 }
 .swatch {
   display: inline-block;
@@ -115,7 +203,7 @@
 
 /* Органы неба (C6; VIS-21, VIS-22, IX-37): непрозрачный лист --sheet с рамкой 1 px в правом нижнем углу неба, над полосой
    времени. Три строки: слои и масштаб неба; масштаб времени; модель хронологии и «Эпохи». Строки не переносятся.
-   Подписи неба под блоком пока рисуются: резерв раскладки подписей — в render (см. отчёт этапа 2). */
+   Блок — резерв неба (data-reserve): подписи звёзд и указатели у края под ним не рисуются (SkyState.reserve). */
 .skyctl {
   position: absolute;
   right: 12px;

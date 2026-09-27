@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { Fragment, type ComponentChildren, type VNode } from 'preact';
-import { byId, graph, loadCard, lineMembership, persons } from '../data/atlas.ts';
+import { byId, graph, loadCard, loadedCard, loadedChrono, lineMembership, persons } from '../data/atlas.ts';
 import type { Card, Chrono, Fact, Cert, Role, Reign } from '../data/types.ts';
 import { selected, second, pickMode, panel, model, showSchema } from '../state.ts';
+import { grid } from './layout.ts';
 import { P, Refs, VerseInsert, Mark, roleText, skyRef, plural, CAN_PRINT } from './common.tsx';
 import { siblings, type ParentEdge } from '../engine/graph.ts';
 import { formatSpan, formatYear, yearsWord } from '../engine/years.ts';
@@ -264,21 +265,34 @@ function list(
   );
 }
 
+/** Сколько ждать тома карточки, прежде чем сказать «Загрузка карточки…» (IX-45). */
+const LOADING_AFTER = 300;
+
 export function Folio() {
   const id = selected.value;
   const [data, setData] = useState<{ id: string; card: Card; chrono: Chrono | null } | null>(null);
   const [current, setCurrent] = useState(1);
+  // том не загрузился (D11): лист говорит об этом и предлагает повторить, а не остаётся в «Загрузке» навсегда
+  const [failed, setFailed] = useState<string | null>(null);
+  const [slow, setSlow] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const inner = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!id) return;
     let alive = true;
-    setData(null);
-    loadCard(id).then((d) => alive && setData({ id, card: d?.card ?? {}, chrono: d?.chrono ?? null }));
+    setFailed(null);
+    setSlow(false);
+    const t = setTimeout(() => alive && setSlow(true), LOADING_AFTER);
+    loadCard(id)
+      .then((d) => alive && setData({ id, card: d?.card ?? {}, chrono: d?.chrono ?? null }))
+      .catch(() => alive && setFailed(id))
+      .finally(() => clearTimeout(t));
     inner.current?.parentElement?.scrollTo({ top: 0 });
     return () => {
       alive = false;
+      clearTimeout(t);
     };
-  }, [id]);
+  }, [id, attempt]);
   useEffect(() => {
     const el = inner.current?.parentElement;
     if (!el) return;
@@ -295,12 +309,21 @@ export function Folio() {
   if (!id) return <aside class="folio" hidden />;
   const p = byId.get(id);
   if (!p) return <aside class="folio" hidden />;
-  const card = data && data.id === id ? data.card : null;
+  // карточка свёрнута в корешок: небу иначе осталось бы меньше 40 % (C1; решение 7)
+  if (grid.value.spine) return <FolioSpine id={id} />;
+  // тело карточки (D11; IX-45): том уже загружен — сразу; иначе до прихода нового держится прежнее тело (бледнее),
+  // а «Загрузка карточки…» появляется, только если ждать дольше 300 мс
+  const have = data && data.id === id ? data : loadedCard(id) ? { id, card: loadedCard(id)!, chrono: loadedChrono(id) } : null;
+  const shown = have ?? (data && !slow && failed !== id ? data : null);
+  const stale = !have && !!shown;
+  const bodyId = shown ? shown.id : id;
+  const bp = byId.get(bodyId)!;
+  const card = shown ? shown.card : null;
   const m = model.value;
-  const c = m.chrono.get(id);
+  const c = m.chrono.get(bodyId);
 
-  const out = buildSections(id, p, card, m, c, '', data && data.id === id ? data.chrono : null);
-  const silent = new Set(p.silent);
+  const out = buildSections(bodyId, bp, card, m, c, '', shown ? shown.chrono : null);
+  const silent = new Set(bp.silent);
 
   const stateOf = (n: number): State => (out.has(n) ? 'content' : silent.has(n) ? 'silent' : 'absent');
   const loading = !card;
@@ -364,7 +387,8 @@ export function Folio() {
       </div>
       <div class="folio-inner" ref={inner}>
         {/* единый «×» (B3): липкий, в правом верхнем углу листа; на сенсорном экране — 44 × 44 */}
-        <Close label="Закрыть карточку" onClick={() => { selected.value = null; panel.value = null; }} />
+        {/* «×» снимает только выбор; открытая панель остаётся (D11; IX-26) */}
+        <Close label="Закрыть карточку" onClick={() => (selected.value = null)} />
         <nav class="rail" aria-label="Разделы карточки">
           {SECTIONS.map((s, i) => (
             <>
@@ -397,7 +421,20 @@ export function Folio() {
           {CAN_PRINT && <button onClick={() => window.print()}>Печать</button>}
         </div>
         <div class="mast"><div class="rule" /></div>
-        {loading ? <p class="muted">Загрузка карточки…</p> : blocks}
+        {failed === id ? (
+          <div class="load-error" role="alert">
+            <p>{typo('Карточку не удалось загрузить: том с её разделами не пришёл. Проверьте связь и повторите.')}</p>
+            <button type="button" class="cmd" onClick={() => setAttempt((a) => a + 1)}>
+              Повторить
+            </button>
+          </div>
+        ) : loading ? (
+          slow ? <p class="muted" role="status">Загрузка карточки…</p> : null
+        ) : (
+          <div class={stale ? 'folio-body stale' : 'folio-body'} aria-busy={stale ? 'true' : undefined}>
+            {blocks}
+          </div>
+        )}
         <p class="colophon">
           {typo(
             `Составлено разделов: ${filledCount} из 24${silentCount ? `; о ${silentCount} ${plural(silentCount, 'разделе', 'разделах', 'разделах')} Писание не сообщает` : ''}. ` +
@@ -409,6 +446,25 @@ export function Folio() {
   );
 }
 
+
+/**
+ * Корешок свёрнутой карточки (C1): 56 px — «×», имя и «развернуть». Развернуть — значит закрыть панель:
+ * карточка и широкая панель вместе небу места не оставляют; прокрутка и фильтры панели помнятся (D11).
+ */
+function FolioSpine({ id }: { id: string }) {
+  const p = byId.get(id)!;
+  return (
+    <aside class="folio spine" aria-label={`Карточка: ${p.name} (свёрнута)`}>
+      <Close label="Закрыть карточку" onClick={() => (selected.value = null)} />
+      <button type="button" class="unfold" aria-label={`Развернуть карточку: ${p.name}`} title="Развернуть карточку" onClick={() => (panel.value = null)}>
+        <span class="nm">{p.name}</span>
+        <span class="cmdl" aria-hidden="true">
+          развернуть
+        </span>
+      </button>
+    </aside>
+  );
+}
 
 /**
  * Содержимое разделов 1–24 одного лица; ns — приставка ключей вставок стихов (две карточки в развороте).

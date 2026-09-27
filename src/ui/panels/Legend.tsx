@@ -3,6 +3,8 @@ import { layers } from '../../state.ts';
 import { drawGlyph } from '../../render/glyphs.ts';
 import { Sheet } from './Sheet.tsx';
 import { Check } from '../controls.tsx';
+import { ReadingGuide } from '../sky/Overlays.tsx';
+import { KeysTable } from '../top/Keys.tsx';
 
 // ---------- условные знаки ----------
 function Glyph({ o, w = 60, h = 26 }: { o: Parameters<typeof drawGlyph>[3]; w?: number; h?: number }) {
@@ -30,6 +32,9 @@ export function LegendPanel() {
   const base = { sex: 'm' as const, kind: 'person', magnitude: 2, color: '', halo: '' };
   return (
     <Sheet title="Условные знаки" lead="Как читать звёздную карту.">
+      {/* тот же текст, что во вступлении (C5; UX-03): клавиша «?» и команда «Как читать карту» ведут сюда */}
+      <h3 id="legend-guide">Как читать карту</h3>
+      <ReadingGuide both />
       <h3>Звёзды — лица</h3>
       <div class="legend-row"><Glyph o={{ ...base, magnitude: 0 }} /><span>величина звезды — значимость лица в повествовании (от 0 до 6)</span></div>
       <div class="legend-row"><Glyph o={base} /><span>мужчина</span></div>
@@ -44,11 +49,8 @@ export function LegendPanel() {
       <p><span class="swatch gold" />Линия Иосифа — законная, царская (Мф 1). <span class="swatch azure" />Линия по Луке — традиционно родословие Марии (Лк 3). Разреженная нить — звено по толкованию.</p>
       <h3>Созвездия</h3>
       <p>Штриховой контур — род, колено или дом Израиля; точечный — народ вне Израиля. Полосы на левой кромке обозначены буквами, века — числами: так строятся координаты указателя.</p>
-      <h3>Клавиши</h3>
-      <p>
-        <kbd>/</kbd> (<kbd>.</kbd> на русской раскладке) — поиск · <kbd>+</kbd> <kbd>−</kbd> — масштаб · стрелки — сдвиг · <kbd>[</kbd> <kbd>]</kbd> (<kbd>х</kbd> <kbd>ъ</kbd>) — к родителю и к ребёнку ·{' '}
-        <kbd>,</kbd> <kbd>.</kbd> (<kbd>б</kbd> <kbd>ю</kbd>) — к брату или сестре · <kbd>E</kbd> (<kbd>У</kbd>) — эпохи · <kbd>L</kbd> (<kbd>Д</kbd>) — условные знаки · <kbd>Esc</kbd> — закрыть
-      </p>
+      <h3 id="legend-keys">Клавиши</h3>
+      <KeysTable />
       <h3>Слои</h3>
       <div class="checks" role="group" aria-label="Слои карты">
         {Object.entries({ lifelines: 'следы жизни', connectors: 'связи', constellations: 'созвездия', epochs: 'эпохи', ribbons: 'линии Мессии', tensions: 'напряжения', ghosts: 'призраки', labels: 'подписи' }).map(([k, v]) => (

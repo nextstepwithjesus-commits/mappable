@@ -12,15 +12,27 @@
 .folio[hidden] {
   display: none;
 }
+/* поля листа (C2; VIS-12, CARD-47): при 500 px — 56 / 40, колонка 404 px — 50–55 знаков; уже — 52 / 36.
+   Правое поле — место для помет «расч.», «справ.» (до 36 px): на поле, а не поверх текста. */
+.folio {
+  --folio-pl: 56px;
+  --folio-pr: 40px;
+}
+@media (max-width: 1359px) {
+  .folio {
+    --folio-pl: 52px;
+    --folio-pr: 36px;
+  }
+}
 .folio-inner {
   position: relative;
-  padding: 22px 40px 60px 64px;
+  padding: 22px var(--folio-pr) 60px var(--folio-pl);
 }
 .folio .rail {
   position: sticky;
   top: 0;
   float: left;
-  margin-left: -56px;
+  margin-left: calc(4px - var(--folio-pl));
   width: 12px;
   padding-top: 90px;
   display: flex;
@@ -59,7 +71,7 @@
   position: sticky;
   top: 6px;
   float: right;
-  margin: -16px -34px 0 8px;
+  margin: -16px calc(2px - var(--folio-pr)) 0 8px;
   background: var(--sheet);
   z-index: 2;
 }
@@ -141,8 +153,8 @@
 }
 .sec .no {
   position: absolute;
-  left: -52px;
-  width: 40px;
+  left: calc(4px - var(--folio-pl));
+  width: calc(var(--folio-pl) - 16px);
   white-space: nowrap;
   text-align: right;
   font-family: var(--sans);
@@ -205,7 +217,7 @@
 }
 .mark {
   position: absolute;
-  right: -34px;
+  right: calc(4px - var(--folio-pr));
   font-family: var(--sans);
   font-size: var(--t-ui-s);
   color: var(--ink-3);
@@ -333,4 +345,82 @@
   border-left: 2px solid var(--ink-2);
   padding-left: 10px;
   margin: 6px 0;
+}
+
+/* тело прежнего лица, пока грузится том нового (D11; IX-45): бледнее и «занято» для диктора */
+.folio-body.stale {
+  opacity: 0.45;
+}
+/* том карточки не загрузился: сообщение и «Повторить» (D11) */
+.load-error {
+  margin: 8px 0 16px;
+  color: var(--ink-2);
+}
+.load-error p {
+  margin: 0 0 6px;
+}
+.load-error .cmd {
+  margin-left: -8px;
+  border: 1px solid var(--rule-strong);
+}
+
+/* корешок свёрнутой карточки (C1; решение 7): 56 px — «×», имя и «развернуть»; имя читается снизу вверх, как на корешке */
+.folio.spine {
+  width: 56px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 0 8px;
+}
+.folio.spine .close {
+  position: static;
+  float: none;
+  margin: 0;
+}
+.folio.spine .unfold {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  padding: 12px 0;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  overflow: hidden;
+}
+.folio.spine .unfold .nm {
+  font-family: var(--serif);
+  font-size: var(--t-lead);
+  line-height: var(--t-lead-lh);
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-height: 0;
+}
+.folio.spine .unfold .cmdl {
+  flex: none;
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+  color: var(--ink-2);
+  text-decoration: underline 1px var(--rule-strong);
+  text-underline-offset: 3px;
+}
+.folio.spine .unfold:hover {
+  background: var(--sheet-2);
+}
+.folio.spine .unfold:hover .cmdl {
+  color: var(--ink);
+}
+.folio.spine .unfold:active {
+  background: var(--rule);
+}
+.folio.spine .unfold:focus-visible {
+  outline-offset: -2px;
 }

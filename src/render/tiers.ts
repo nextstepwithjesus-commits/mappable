@@ -3,7 +3,7 @@
  * Эпохи; судьи; цари Иудеи; цари Израиля (совместные правления — подрядами с перекрытием);
  * служения пророков; события. Промежуток жизни выбранного лица проецируется столбцом через все ярусы.
  */
-import type { Sky, SkyState } from './sky.ts';
+import { FRAME_H, type Sky, type SkyState } from './sky.ts';
 import { byId, persons, type ModelData } from '../data/atlas.ts';
 import { toAstro } from '../engine/years.ts';
 import { mapFont, T_MAP_S, T_UI } from './type.ts';
@@ -61,7 +61,8 @@ function rowsOf(bars: Bar[]): Bar[][] {
   return rows;
 }
 
-const TOP = 30;
+/** Ярусы начинаются под линейкой и служебной строкой рамки (C4), не закрывая их. */
+const TOP = FRAME_H + 4;
 const ROW_H = 17;
 
 function tierLayout(m: ModelData) {

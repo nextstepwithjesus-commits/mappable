@@ -286,6 +286,11 @@ export function loadCard(id: string): Promise<{ card: Card; chrono: Chrono | nul
             }
             return all;
           })
+          // том не загрузился (сеть): отказ не остаётся в кэше, «Повторить» загрузит его заново
+          .catch((e) => {
+            cardCache.delete(key);
+            throw e;
+          })
         : Promise.resolve({}),
     );
   }

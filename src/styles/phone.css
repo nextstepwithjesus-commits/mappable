@@ -1,9 +1,4 @@
 /* ---------- узкие экраны ---------- */
-@media (max-width: 900px) {
-  :root {
-    --folio-w: 380px;
-  }
-}
 @media (max-width: 720px) {
   :root {
     --top-h: 104px;
@@ -99,6 +94,7 @@
   .sheet,
   .sheet.wide {
     position: fixed;
+    top: var(--top-h);
     left: 0;
     right: 0;
     bottom: 0;
@@ -139,7 +135,9 @@
     max-height: calc(100% - var(--top-h));
     border-top: 1px solid var(--rule-strong);
   }
+  /* на телефоне табличка — не больше половины неба: над ней видно всё небо, текст прокручивается (MOB-07) */
   .cartouche {
+    max-height: 55%;
     font-size: var(--t-ui);
     line-height: var(--t-ui-lh);
     padding: 10px 14px;

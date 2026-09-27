@@ -9,3 +9,7 @@
 .strip canvas {
   display: block;
 }
+/* полоса — ползунок окна карты (MOB-35): кольцо фокуса внутри полосы, чтобы не обрезалось краем окна */
+.strip canvas:focus-visible {
+  outline-offset: -2px;
+}

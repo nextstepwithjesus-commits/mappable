@@ -3,11 +3,11 @@
  * эпохи → сетка лет → созвездия → следы жизни → связи → ленты → звёзды → подписи → меридиан → рамка листа.
  * Подписи отбираются по заранее вычисленным порогам масштаба (без пересчёта на каждый кадр).
  */
-import { Camera, KX_MIN } from './camera.ts';
+import { Camera, KX_MIN, type Frame } from './camera.ts';
 import { drawGlyph, starRadius, roleSigla } from './glyphs.ts';
 import { alpha } from './color.ts';
 import { drawStrands, ribbonLook } from './ribbons.ts';
-import { coarsePointer, mapFont, mapSize, nameFont, nameSize, siglaFont, T_MAP_S, T_NOTE, T_UI, T_UI_S } from './type.ts';
+import { coarsePointer, mapFont, mapSize, nameFont, nameSize, siglaFont, T_MAP_S, T_NOTE, T_UI } from './type.ts';
 import { timeToX, xToTime, hydrateScale, type TimeScale, T_END } from '../engine/timescale.ts';
 import { buildRibbons } from '../engine/ribbons.ts';
 import { toHist, toAstro } from '../engine/years.ts';
@@ -76,11 +76,32 @@ export interface SkyState {
   intro: number; // 0…1 — зажигание звёзд
   lineFlip: boolean; // Лк 3 как второе родословие Иосифа
   pins: Set<string>; // отмеченные одноимённые
+  /**
+   * Резерв: прямоугольники в px холста, закрытые органами неба, колонкой кнопок, вступлением (C4, C6).
+   * Подписи звёзд и указатели у края под ними не рисуются.
+   */
+  reserve?: Rect[];
 }
+
+/** Прямоугольник в px холста. */
+export interface Rect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+const hits = (a: Rect, rs: Rect[] | undefined) => !!rs && rs.some((r) => a.x < r.x + r.w && r.x < a.x + a.w && a.y < r.y + r.h && r.y < a.y + a.h);
 
 const LETTERS = 'АБВГДЕЖИКЛМНПРСТУФХЦЧШЭЮЯ';
 export const BAND = 12;
+/** Линейка лет вверху рамки. */
 const RULER_H = 26;
+/** Служебная строка под линейкой: слева видимые годы и эпоха, справа масштаб (C4; VIS-21, MAP-09, UX-09). */
+const ROW_H = 18;
+/** Верхнее поле рамки целиком: ниже него — открытое небо. */
+export const FRAME_H = RULER_H + ROW_H;
+/** Сколько лет самое крупное окно видимой части неба (D2; IX-03). */
+const MIN_YEARS = 20;
 /** Ширина левой кромки с буквами полос; на сенсорном экране шире — буквы там крупнее («Ж2» в 12,5 px). */
 const LETTER_W = 18;
 const LETTER_W_TOUCH = 22;
@@ -105,6 +126,11 @@ export class Sky {
   private labelKey = '';
   private outlines: { block: number; group: string; foreign: boolean; poly: [number, number][]; rows: Map<number, [number, number]>; size: number }[] = [];
   private epochX: { id: string; x0: number; x1: number; name: string; short: string }[] = [];
+  /**
+   * Поля видимой части неба сверх рамки, px холста: top — нижний край ярусов эпох или рамки, bottom — верх нижнего листа
+   * карточки на телефоне, left и right — полосы, занятые вступлением или колонкой кнопок при вписывании «всего неба».
+   */
+  private insets = { top: FRAME_H, bottom: 0, left: 0, right: 0 };
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -123,6 +149,50 @@ export class Sky {
     this.cam.w = w;
     this.cam.h = h;
     this.labelKey = '';
+    this.updateView();
+  }
+
+  /** Поля видимой части (C1, D2): их задаёт SkyView по ярусам, листу карточки, вступлению и органам неба. */
+  setInsets(ins: Partial<{ top: number; bottom: number; left: number; right: number }>) {
+    const next = { ...this.insets, ...ins };
+    if (next.top === this.insets.top && next.bottom === this.insets.bottom && next.left === this.insets.left && next.right === this.insets.right) return false;
+    this.insets = next;
+    this.updateView();
+    return true;
+  }
+  /** Видимая часть неба в px холста: без рамки, ярусов, листа карточки и полей вступления. */
+  viewport() {
+    return this.cam.vp;
+  }
+  /** Рамка «всего неба»: от сотворения до 100 г. по Р. Х., все полосы. */
+  private fitFrame(): Frame {
+    return { x0: this.xOf(this.scale.knots[0]), x1: this.xOf(100), lane0: this.model.laneMin - 0.5, lane1: this.model.laneMax + 0.5 };
+  }
+  /** Видимая часть, пределы сдвига и масштаб «всего неба» — после смены размера, полей, масштаба времени или модели. */
+  private updateView() {
+    const cam = this.cam;
+    const vp = {
+      l: this.letterW + this.insets.left,
+      t: Math.max(FRAME_H, this.insets.top),
+      r: cam.w - this.insets.right,
+      b: cam.h - this.insets.bottom,
+    };
+    if (vp.r - vp.l < 80) vp.l = Math.max(0, vp.r - 80);
+    if (vp.b - vp.t < 80) vp.b = Math.min(cam.h, vp.t + 80);
+    if (!this.model) {
+      cam.setViewport(vp, null, null);
+      return;
+    }
+    const fit = this.fitFrame();
+    // пределы сдвига — вся шкала до 2040 г.: полоса времени и «сегодня» (ТЗ § 11.2, п. 7)
+    const frame = { ...fit, x1: this.xOf(T_END) };
+    cam.setViewport(vp, frame, fit);
+    // приближение — не больше ~20 лет на ширину видимой части: у мировой x — по местной плотности шкалы
+    cam.kxMaxAt = (x: number) => {
+      const t = this.tOf(x);
+      const dw = this.xOf(t + MIN_YEARS / 2) - this.xOf(t - MIN_YEARS / 2);
+      return dw > 0 ? (vp.r - vp.l) / dw : Infinity;
+    };
   }
 
   setModel(m: ModelData, lambda: number) {
@@ -144,6 +214,7 @@ export class Sky {
         this.X1[i] = timeToX(this.scale, this.nodes[i].t1, lambda);
       }
       this.epochX = m.epochs.map((e) => ({ id: e.id, x0: timeToX(this.scale, toAstro(e.start), lambda), x1: timeToX(this.scale, toAstro(e.end), lambda), name: e.name, short: e.short }));
+      this.updateView();
     }
   }
 
@@ -162,10 +233,17 @@ export class Sky {
     return i === undefined ? null : this.X0[i];
   }
 
+  /** Вид «всё небо»: сотворение … 100 г. по Р. Х. и все полосы — в видимой части по обеим осям (D2; MAP-01, MOB-01). */
+  fitState() {
+    return this.cam.fitView(this.fitFrame());
+  }
   fitAll() {
-    const lo = this.xOf(this.scale.knots[0]);
-    const hi = this.xOf(100);
-    this.cam.fit(lo, hi, this.model.laneMin, this.model.laneMax, 36);
+    this.cam.stop();
+    this.cam.set(this.fitState());
+  }
+  /** Камера на «всём небе» (с точностью до пикселя). */
+  atFit(): boolean {
+    return !!this.model && this.cam.near(this.fitState());
   }
 
   /** Контуры созвездий: по каждой полосе притока — крайние годы; дыры заполняются соседями. */
@@ -212,7 +290,8 @@ export class Sky {
 
   // ---------- пороги подписей ----------
   private ensureLabels() {
-    const key = `${this.model.id}|${Math.round(this.lambda * 4)}|${this.cam.h}|${this.coarse}`;
+    const f = this.cam.fitK;
+    const key = `${this.model.id}|${Math.round(this.lambda * 4)}|${this.cam.h}|${this.coarse}|${f ? `${f.kx.toPrecision(3)} ${f.ky.toPrecision(3)}` : ''}`;
     if (key === this.labelKey) return;
     this.labelKey = key;
     const n = this.nodes.length;
@@ -290,8 +369,8 @@ export class Sky {
   /** Что нарисовано в последнем кадре и потому ловит указатель: в режиме «только линии» — лица линий Мессии. */
   private drawnOnly: Set<string> | null = null;
   private drawnGhosts = true;
-  /** Верх открытого неба (px): ниже линейки годов, а в режиме эпох — ниже ярусов (их рисует tiers.ts). */
-  openTop = RULER_H;
+  /** Верх открытого неба (px): ниже линейки годов и служебной строки, а в режиме эпох — ниже ярусов (их рисует tiers.ts). */
+  openTop = FRAME_H;
 
   private drawn(i: number): boolean {
     const n = this.nodes[i];
@@ -309,7 +388,7 @@ export class Sky {
     if (!this.drawn(i)) return false;
     const x = this.cam.sx(this.X0[i]);
     const y = this.cam.sy(this.nodes[i].lane);
-    return x > this.letterW && x < this.cam.w && y > this.openTop && y < this.cam.h;
+    return x > this.letterW && x < this.cam.w && y > this.openTop && y < this.cam.vp.b;
   }
 
   hit(sx: number, sy: number, radius = 12): string | null {
@@ -355,7 +434,8 @@ export class Sky {
     ctx.fillRect(0, 0, W, H);
     const ky = cam.ky;
     const kx = cam.kx;
-    const level = 2 * Math.log2(kx / KX_MIN);
+    // «всё небо» на телефоне мельче KX_MIN: подписи нулевого уровня (величина 0) остаются
+    const level = Math.max(0, 2 * Math.log2(kx / KX_MIN));
     const zoomScale = Math.max(0.7, Math.min(1.25, ky / 18));
     const hl = s.highlight;
     const emph = (id: string) => (hl ? (hl.has(id) ? 1 : 0.22) : 1);
@@ -365,7 +445,8 @@ export class Sky {
     const intro = s.intro;
     this.drawnOnly = lineOnly ? spineSet : null;
     this.drawnGhosts = !!L.ghosts;
-    this.openTop = RULER_H;
+    this.openTop = FRAME_H;
+    const reserve = s.reserve;
 
     // эпохи
     if (L.epochs) {
@@ -381,40 +462,36 @@ export class Sky {
     }
 
     // завершение канона (Откр — ок. 95 г.) и «сегодня»: шкала неба тянется до 2040 г.
+    // Черты — на небе; подписи к ним — в служебной строке рамки (drawFrame), не на данных (C4; MAP-38).
+    for (const [t, dashed] of [[95, true], [new Date().getFullYear(), false]] as const) {
+      const x = Math.round(cam.sx(this.xOf(t))) + 0.5;
+      if (x < this.letterW || x > W) continue;
+      ctx.strokeStyle = alpha(pal.ink3, 0.9);
+      ctx.lineWidth = 1;
+      ctx.setLineDash(dashed ? [3, 4] : []);
+      ctx.beginPath();
+      ctx.moveTo(x, FRAME_H);
+      ctx.lineTo(x, H);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
     {
-      const mark = (t: number, label: string, dashed: boolean) => {
-        const x = Math.round(cam.sx(this.xOf(t))) + 0.5;
-        if (x < this.letterW || x > W) return;
-        ctx.strokeStyle = alpha(pal.ink3, 0.9);
-        ctx.lineWidth = 1;
-        ctx.setLineDash(dashed ? [3, 4] : []);
-        ctx.beginPath();
-        ctx.moveTo(x, RULER_H);
-        ctx.lineTo(x, H);
-        ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.font = mapFont(T_UI_S, { italic: true, coarse: this.coarse });
-        ctx.fillStyle = pal.ink2;
-        const tw = ctx.measureText(label).width;
-        // подпись вдоль черты, сверху — внизу справа лежат кнопки масштаба
-        ctx.save();
-        ctx.translate(x - 5, RULER_H + 30 + tw);
-        ctx.rotate(-Math.PI / 2);
-        ctx.fillText(label, 0, 0);
-        ctx.restore();
-      };
-      mark(95, 'завершение канона', true);
-      mark(new Date().getFullYear(), 'сегодня', false);
-      // время после канона пусто по существу: сказать об этом, а не оставлять тёмное поле
+      // время после канона пусто по существу: сказать об этом, а не оставлять тёмное поле — только на пустом месте
       const xc = Math.max(this.letterW + 40, cam.sx(this.xOf(110)));
       if (W - xc > 380) {
         const cx = (xc + W) / 2;
         ctx.font = mapFont(T_NOTE, { italic: true, coarse: this.coarse });
-        ctx.fillStyle = pal.ink3;
         const l1 = 'После завершения канона новых лиц Писания нет.';
         const l2 = 'Родословие приведено к Иисусу Христу (Мф 1:16; Лк 3:23).';
-        ctx.fillText(l1, cx - ctx.measureText(l1).width / 2, H / 2 - 10);
-        ctx.fillText(l2, cx - ctx.measureText(l2).width / 2, H / 2 + 14);
+        const w1 = ctx.measureText(l1).width;
+        const w2 = ctx.measureText(l2).width;
+        const ym = (cam.vp.t + cam.vp.b) / 2;
+        const box = { x: cx - Math.max(w1, w2) / 2, y: ym - 26, w: Math.max(w1, w2), h: 44 };
+        if (box.x > xc && !hits(box, reserve)) {
+          ctx.fillStyle = pal.ink3;
+          ctx.fillText(l1, cx - w1 / 2, ym - 10);
+          ctx.fillText(l2, cx - w2 / 2, ym + 14);
+        }
       }
     }
 
@@ -426,7 +503,7 @@ export class Sky {
     for (const t of ticks) {
       if (!t.major && ticks.length > 14) continue;
       const x = Math.round(cam.sx(this.xOf(t.t))) + 0.5;
-      ctx.moveTo(x, RULER_H);
+      ctx.moveTo(x, FRAME_H);
       ctx.lineTo(x, H);
     }
     ctx.stroke();
@@ -479,7 +556,7 @@ export class Sky {
           ctx.letterSpacing = '0.22em';
           const tw = ctx.measureText(name).width;
           ctx.letterSpacing = '0px';
-          const y = Math.max(minY + 14, Math.min(maxY - 6, RULER_H + 18));
+          const y = Math.max(minY + 14, Math.min(maxY - 6, FRAME_H + 14));
           const x = Math.max(minX + 10, this.letterW + 12);
           if (x + tw < maxX - 6) names.push({ name, x, y, w: tw, size: o.size });
         }
@@ -493,6 +570,8 @@ export class Sky {
       ctx.fillStyle = alpha(pal.ink3, hl ? 0.45 : 0.95);
       for (const c of names.sort((a, b) => b.size - a.size)) {
         if (placed.some((q) => c.x < q.x + q.w + 8 && q.x < c.x + c.w + 8 && Math.abs(c.y - q.y) < fs + 3)) continue;
+        // под органами неба и вступлением названия не рисуются (C6)
+        if (hits({ x: c.x, y: c.y - fs, w: c.w, h: fs + 4 }, reserve)) continue;
         placed.push(c);
         ctx.fillText(c.name, c.x, c.y);
       }
@@ -665,13 +744,26 @@ export class Sky {
         if (lit <= 0 && !forced) continue;
         const x = cam.sx(this.X0[i]);
         const y = cam.sy(n.lane);
+        // звезда за краем окна не подписывается: для выбранных есть указатели у края (MOB-01)
+        if (x < this.letterW || x > W) continue;
         const r = starRadius(p.magnitude, zoomScale);
         ctx.font = nameFont(p.magnitude, this.coarse);
         const nameW = ctx.measureText(p.name).width;
-        // у правого края подпись переходит влево от звезды, чтобы не обрезаться рамкой
-        const flip = x + r + 3 + nameW > cam.w - 6 && x - r - 3 - nameW > this.letterW + 4;
-        const tx = flip ? x - r - 3 - nameW : x + r + 3;
+        const size = nameSize(p.magnitude, this.coarse);
         const ty = y - 3;
+        // у правого края подпись переходит влево от звезды, чтобы не обрезаться рамкой;
+        // под органами неба, колонкой кнопок и вступлением подпись не рисуется — или переходит на другую сторону (C6)
+        const right = x + r + 3;
+        const left = x - r - 3 - nameW;
+        const fitsRight = right + nameW <= cam.w - 6;
+        const fitsLeft = left > this.letterW + 4;
+        const free = (lx: number) => !hits({ x: lx - 2, y: ty - size, w: nameW + 4, h: size + 5 }, reserve);
+        let flip = !fitsRight && fitsLeft;
+        if (reserve && !free(flip ? left : right)) {
+          if (!flip && fitsLeft && free(left)) flip = true;
+          else if (flip || !fitsRight || !free(right)) continue;
+        }
+        const tx = flip ? left : right;
         const e = forced ? 1 : emph(p.id) * lit;
         ctx.strokeStyle = pal.halo;
         ctx.lineWidth = 3;
@@ -740,76 +832,91 @@ export class Sky {
     this.drawWayfinding(s);
   }
 
-  /** Колонтитул (эпоха и годы окна), местный масштаб и указатели на выбранных за краем экрана. */
+  /** Указатели на выбранных за краем экрана («→ Давид»): по щелчку — перелёт. Не заходят под органы неба (C4; MAP-37). */
   edgeHits: { x: number; y: number; w: number; h: number; id: string }[] = [];
   private drawWayfinding(s: SkyState) {
     const { ctx, cam, pal } = this;
     const W = cam.w;
-    const H = cam.h;
-    const tL = this.tOf(cam.wx(this.letterW));
-    const tR = this.tOf(cam.wx(W));
-    const tC = this.tOf(cam.wx((this.letterW + W) / 2));
-    const ep = this.model.epochs.find((e) => tC >= toAstro(e.start) && tC < toAstro(e.end));
-    const span = (a: number, b: number) => {
-      const ha = toHist(a);
-      const hb = toHist(b);
-      if (ha < 0 && hb < 0) return `${-ha}–${-hb}\u00A0гг.\u00A0до\u00A0Р.\u00A0Х.`;
-      if (ha > 0 && hb > 0) return `${ha}–${hb}\u00A0гг.\u00A0по\u00A0Р.\u00A0Х.`;
-      return `${-ha}\u00A0г.\u00A0до\u00A0Р.\u00A0Х. — ${hb}\u00A0г.\u00A0по\u00A0Р.\u00A0Х.`;
-    };
-    ctx.font = mapFont(T_UI, { italic: true, coarse: this.coarse });
-    ctx.fillStyle = pal.ink2;
-    // эпоха в колонтитуле — только когда окно уже тысячи лет; на обзоре она ничего не называет
-    const head = `${ep && tR - tL < 1000 ? ep.name + '; ' : ''}${span(Math.max(this.scale.knots[0], tL), Math.min(T_END, tR))}`;
-    ctx.strokeStyle = pal.halo;
-    ctx.lineWidth = 3;
-    ctx.strokeText(head, this.letterW + 10, RULER_H + 17);
-    ctx.fillText(head, this.letterW + 10, RULER_H + 17);
-    const headEnd = this.letterW + 10 + ctx.measureText(head).width;
-    // местный масштаб: 1 см ≈ N лет — только если помещается рядом с колонтитулом (на узком экране не помещается)
-    const pxPerYear = (this.xOf(tC + 1) - this.xOf(tC)) * cam.kx;
-    if (pxPerYear > 0 && W >= 720) {
-      const raw = 37.8 / pxPerYear;
-      const nice = raw >= 100 ? Math.round(raw / 50) * 50 : raw >= 10 ? Math.round(raw / 5) * 5 : Math.max(1, Math.round(raw));
-      const note = `1\u00A0см ≈ ${nice}\u00A0${nice % 10 === 1 && nice % 100 !== 11 ? 'год' : nice % 10 >= 2 && nice % 10 <= 4 && (nice % 100 < 12 || nice % 100 > 14) ? 'года' : 'лет'}${this.lambda > 0.5 ? ', масштаб неравномерный' : ''}`;
-      ctx.font = mapFont(T_MAP_S, { sans: true, weight: 450, coarse: this.coarse });
-      const tw = ctx.measureText(note).width;
-      if (W - tw - 12 > headEnd + 24) {
-        ctx.fillStyle = pal.ink3;
-        ctx.strokeText(note, W - tw - 12, RULER_H + 16);
-        ctx.fillText(note, W - tw - 12, RULER_H + 16);
-      }
-    }
-    // указатели на выбранных за краем
+    const top = this.openTop;
+    const bottom = cam.vp.b;
     this.edgeHits = [];
+    const placed: Rect[] = [];
     for (const id of [s.selected, s.second]) {
       if (!id) continue;
       const i = this.nodeIndex.get(id);
       if (i === undefined) continue;
       const x = cam.sx(this.X0[i]);
       const y = cam.sy(this.nodes[i].lane);
-      const inside = x > this.letterW && x < W && y > RULER_H && y < H;
+      const inside = x > this.letterW && x < W && y > top && y < bottom;
       if (inside) continue;
       const name = byId.get(id)!.name;
       let arrow = '';
-      if (y < RULER_H) arrow = '↑';
-      else if (y > H) arrow = '↓';
+      if (y < top) arrow = '↑';
+      else if (y > bottom) arrow = '↓';
       else if (x < this.letterW) arrow = '←';
       else arrow = '→';
       const label = `${arrow} ${name}`;
       ctx.font = mapFont(T_UI, { sans: true, weight: 500, coarse: this.coarse });
       const tw = ctx.measureText(label).width;
-      const lx = Math.max(this.letterW + 6, Math.min(W - tw - 10, x - tw / 2));
-      const ly = Math.max(RULER_H + 34, Math.min(H - 12, y));
+      let lx = Math.max(this.letterW + 6, Math.min(W - tw - 10, x - tw / 2));
+      let ly = Math.max(top + 18, Math.min(bottom - 10, y));
+      // под органами неба, колонкой кнопок, вступлением и другим указателем — сдвиг вверх или вниз, затем влево
+      const box = () => ({ x: lx - 5, y: ly - 13, w: tw + 10, h: 18 });
+      const taken = [...(s.reserve ?? []), ...placed];
+      for (let k = 0; k < 6 && hits(box(), taken); k++) {
+        const r = taken.find((q) => hits(box(), [q]))!;
+        const up = r.y - 8;
+        const down = r.y + r.h + 18;
+        if (up - 13 >= top + 4 && (Math.abs(up - ly) <= Math.abs(down - ly) || down > bottom - 4)) ly = up;
+        else if (down <= bottom - 4) ly = down;
+        else lx = Math.max(this.letterW + 6, r.x - tw - 16);
+      }
+      const b = box();
       ctx.fillStyle = pal.sky;
-      ctx.fillRect(lx - 5, ly - 13, tw + 10, 18);
+      ctx.fillRect(b.x, b.y, b.w, b.h);
       ctx.strokeStyle = pal.ruleStrong;
       ctx.lineWidth = 1;
-      ctx.strokeRect(lx - 5.5, ly - 13.5, tw + 11, 19);
+      ctx.strokeRect(b.x - 0.5, b.y - 0.5, b.w + 1, b.h + 1);
       ctx.fillStyle = pal.ink;
       ctx.fillText(label, lx, ly);
-      this.edgeHits.push({ x: lx - 5, y: ly - 13, w: tw + 10, h: 18, id });
+      this.edgeHits.push({ ...b, id });
+      placed.push(b);
     }
+  }
+
+  /** Строка колонтитула: видимые годы и эпоха в середине окна (UX-09). */
+  private headText(): { years: string; epoch: string } {
+    const cam = this.cam;
+    const tL = this.tOf(cam.wx(this.letterW));
+    const tR = this.tOf(cam.wx(cam.w));
+    const tC = this.tOf(cam.wx((cam.vp.l + cam.vp.r) / 2));
+    const ep = this.model.epochs.find((e) => tC >= toAstro(e.start) && tC < toAstro(e.end));
+    const span = (a: number, b: number) => {
+      const ha = Math.round(toHist(a));
+      const hb = Math.round(toHist(b));
+      if (ha < 0 && hb < 0) return `${-ha}–${-hb}\u00A0гг.\u00A0до\u00A0Р.\u00A0Х.`;
+      if (ha > 0 && hb > 0) return `${ha}–${hb}\u00A0гг.\u00A0по\u00A0Р.\u00A0Х.`;
+      return `${-ha}\u00A0г.\u00A0до\u00A0Р.\u00A0Х.\u00A0— ${hb}\u00A0г.\u00A0по\u00A0Р.\u00A0Х.`;
+    };
+    // эпоха — только когда окно уже тысячи лет; на обзоре она ничего не называет
+    return { years: `видно ${span(Math.max(this.scale.knots[0], tL), Math.min(T_END, tR))}`, epoch: ep && tR - tL < 1000 ? `эпоха в\u00A0середине\u00A0— «${ep.name}»` : '' };
+  }
+
+  /** Местный масштаб: «1 см ≈ 60 лет»; мельче года — «1 год ≈ 2 см» (IX-03). */
+  private scaleText(): string {
+    const cam = this.cam;
+    const tC = this.tOf(cam.wx((cam.vp.l + cam.vp.r) / 2));
+    const pxPerYear = (this.xOf(tC + 1) - this.xOf(tC)) * cam.kx;
+    if (!(pxPerYear > 0)) return '';
+    const uneven = this.lambda > 0.5 ? ', масштаб неравномерный' : '';
+    const raw = 37.8 / pxPerYear;
+    if (raw < 0.75) {
+      const cm = Math.round((pxPerYear / 37.8) * 2) / 2;
+      return `1\u00A0год ≈ ${String(cm).replace('.', ',')}\u00A0см${uneven}`;
+    }
+    const nice = raw >= 100 ? Math.round(raw / 50) * 50 : raw >= 10 ? Math.round(raw / 5) * 5 : Math.max(1, Math.round(raw));
+    const word = nice % 10 === 1 && nice % 100 !== 11 ? 'год' : nice % 10 >= 2 && nice % 10 <= 4 && (nice % 100 < 12 || nice % 100 > 14) ? 'года' : 'лет';
+    return `1\u00A0см ≈ ${nice}\u00A0${word}${uneven}`;
   }
 
   private drawRibbons(s: SkyState) {
@@ -844,7 +951,9 @@ export class Sky {
     for (const s of steps) if (s * pxPerYear >= 78) { step = s; break; }
     const out: { t: number; major: boolean }[] = [];
     // шаги по историческим годам, чтобы метки были круглыми («1000 до Р. Х.»)
-    const hStart = Math.floor(toHist(Math.max(this.scale.knots[0], tL)) / step) * step;
+    // до начала шкалы (сотворения) рисок нет: первая — не раньше него
+    const t0 = Math.max(this.scale.knots[0], tL);
+    const hStart = (t0 > tL ? Math.ceil(toHist(t0) / step) : Math.floor(toHist(t0) / step)) * step;
     const hEnd = toHist(Math.min(T_END, tR));
     for (let h = hStart; h <= hEnd + step; h += step) {
       if (h === 0) continue;
@@ -855,77 +964,119 @@ export class Sky {
     return out;
   }
 
+  /**
+   * Рамка листа (C4; VIS-21, VIS-23, MAP-09, UX-09, UX-41). Все поля непрозрачные, служебные надписи — только в них:
+   *  — линейка лет: подписи не левее кромки, эра — у первой подписи каждой эры, мелкие риски теснее 6 px не рисуются;
+   *  — служебная строка 18 px: слева видимые годы и эпоха в середине окна, справа масштаб, у своих черт — «завершение
+   *    канона» и «сегодня», если не мешают;
+   *  — угловое поле и левая кромка с буквами полос; буква не ближе 10 px к краям кромки.
+   */
   private drawFrame(ticks: { t: number; major: boolean }[]) {
     const { ctx, cam, pal } = this;
     const W = cam.w;
     const H = cam.h;
-    // верхняя кромка: годы
+    const LW = this.letterW;
     ctx.fillStyle = pal.sky;
-    ctx.fillRect(0, 0, W, RULER_H);
+    ctx.fillRect(0, 0, W, FRAME_H);
+    ctx.fillRect(0, FRAME_H, LW, H - FRAME_H);
     ctx.strokeStyle = pal.rule;
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(0, RULER_H - 0.5);
     ctx.lineTo(W, RULER_H - 0.5);
+    ctx.moveTo(0, FRAME_H - 0.5);
+    ctx.lineTo(W, FRAME_H - 0.5);
+    ctx.moveTo(LW - 0.5, 0);
+    ctx.lineTo(LW - 0.5, H);
     ctx.stroke();
+
+    // линейка лет
     ctx.font = mapFont(T_MAP_S, { sans: true, weight: 450, coarse: this.coarse });
     ctx.fillStyle = pal.ink3;
+    ctx.strokeStyle = pal.ink3;
     ctx.textBaseline = 'middle';
     let lastX = -Infinity;
+    let lastTick = -Infinity;
     let bcDone = false;
     let adDone = false;
     for (const tk of ticks) {
       const x = cam.sx(this.xOf(tk.t));
-      if (x < this.letterW + 4 || x > W - 10) continue;
-      ctx.strokeStyle = pal.ink3;
+      if (x < LW + 4 || x > W - 4) continue;
+      if (!tk.major && x - lastTick < 6) continue;
+      lastTick = x;
       ctx.beginPath();
       ctx.moveTo(Math.round(x) + 0.5, RULER_H - (tk.major ? 7 : 4));
       ctx.lineTo(Math.round(x) + 0.5, RULER_H);
       ctx.stroke();
       const h = toHist(tk.t);
-      let label = String(Math.abs(h));
-      if (h < 0 && !bcDone) {
-        label += ' до Р. Х.';
-        bcDone = true;
-      } else if (h > 0 && !adDone) {
-        label += ' по Р. Х.';
-        adDone = true;
-      }
+      const era = h < 0 && !bcDone ? '\u00A0до\u00A0Р.\u00A0Х.' : h > 0 && !adDone ? '\u00A0по\u00A0Р.\u00A0Х.' : '';
+      const label = String(Math.abs(h)) + era;
       const tw = ctx.measureText(label).width;
-      // подпись по центру риски, но не за краями кромки
-      const lx = Math.max(2, Math.min(W - tw - 2, x - tw / 2));
-      if (lx < lastX + 12) continue;
-      ctx.fillText(label, lx, 10);
+      // подпись по центру риски, но не за краями линейки: у края она сдвигается, оставаясь над своей риской
+      const lx = Math.max(LW + 4, Math.min(W - tw - 4, x - tw / 2));
+      if (lx < lastX + 12 || x < lx || x > lx + tw) continue;
+      ctx.fillText(label, lx, 11);
       lastX = lx + tw;
+      if (h < 0) bcDone = true;
+      else adDone = true;
     }
+
+    // служебная строка: годы окна и эпоха слева, масштаб справа, подписи черт канона и «сегодня» — у своих черт
+    const rowY = RULER_H + ROW_H / 2;
+    ctx.font = mapFont(T_MAP_S, { sans: true, weight: 450, coarse: this.coarse });
+    ctx.fillStyle = pal.ink2;
+    const { years, epoch } = this.headText();
+    const left = LW + 8;
+    let leftEnd = left;
+    let rightStart = W - 8;
+    const scale = this.scaleText();
+    const ws = scale ? ctx.measureText(scale).width : 0;
+    const wy = ctx.measureText(years).width;
+    const full = epoch ? `${years}; ${epoch}` : years;
+    const wf = ctx.measureText(full).width;
+    if (scale && W - 8 - ws > left + wy + 24) rightStart = W - 8 - ws;
+    const head = left + wf < rightStart - 24 ? full : left + wy < rightStart - 12 ? years : '';
+    if (head) {
+      ctx.fillText(head, left, rowY);
+      leftEnd = left + ctx.measureText(head).width;
+    }
+    if (rightStart < W - 8) ctx.fillText(scale, rightStart, rowY);
+    ctx.fillStyle = pal.ink3;
+    for (const [t, label] of [[95, 'завершение канона'], [new Date().getFullYear(), 'сегодня']] as const) {
+      const x = cam.sx(this.xOf(t));
+      const tw = ctx.measureText(label).width;
+      if (x + 4 > leftEnd + 16 && x + 4 + tw < rightStart - 16) ctx.fillText(label, x + 4, rowY);
+    }
+
     // левая кромка: буквы полос
-    ctx.fillStyle = alpha(pal.sky, 0.94);
-    ctx.fillRect(0, RULER_H, this.letterW, H - RULER_H);
-    ctx.strokeStyle = pal.rule;
-    ctx.beginPath();
-    ctx.moveTo(this.letterW - 0.5, RULER_H);
-    ctx.lineTo(this.letterW - 0.5, H);
-    ctx.stroke();
     const laneTopG = this.model.laneMax;
     ctx.font = mapFont(T_MAP_S, { sans: true, weight: 500, coarse: this.coarse });
     ctx.fillStyle = pal.ink3;
-    const ky = cam.ky;
+    ctx.strokeStyle = alpha(pal.rule, 0.9);
+    // на «всём небе» полоса ниже 14 px: подписана каждая k-я, черты — не теснее 5 px (иначе кромка — «штрихкод»)
+    const bandH = BAND * cam.ky;
+    const every = bandH >= 14 ? 1 : [2, 3, 4, 6, 12].find((k) => k * bandH >= 16) ?? 24;
+    const lines = bandH >= 5;
     for (let band = 0; band < 400; band++) {
       const l0 = laneTopG - band * BAND;
       const y0 = cam.sy(l0 + 0.5);
       const y1 = cam.sy(l0 - BAND + 0.5);
-      if (y1 < RULER_H) continue;
+      if (y1 < FRAME_H) continue;
       if (y0 > H) break;
-      ctx.strokeStyle = alpha(pal.rule, 0.9);
-      ctx.beginPath();
-      ctx.moveTo(0, Math.round(y1) + 0.5);
-      ctx.lineTo(this.letterW, Math.round(y1) + 0.5);
-      ctx.stroke();
-      if (y1 - y0 > 14 && ky > 0) {
+      if (lines || band % every === every - 1) {
+        ctx.beginPath();
+        ctx.moveTo(lines ? 0 : LW - 5, Math.round(y1) + 0.5);
+        ctx.lineTo(LW, Math.round(y1) + 0.5);
+        ctx.stroke();
+      }
+      if (band % every) continue;
+      const a = Math.max(y0, FRAME_H);
+      const b = Math.min(y1, H);
+      const ym = every > 1 ? y0 + 7 : (a + b) / 2;
+      if ((every > 1 || b - a > 14) && ym >= FRAME_H + 10 && ym <= H - 10) {
         const letter = LETTERS[band % LETTERS.length] + (band >= LETTERS.length ? String(Math.floor(band / LETTERS.length) + 1) : '');
-        const ym = Math.max(RULER_H + 10, Math.min(H - 8, (y0 + y1) / 2));
         const tw = ctx.measureText(letter).width;
-        ctx.fillText(letter, (this.letterW - tw) / 2, ym);
+        ctx.fillText(letter, Math.max(1, (LW - tw) / 2), ym);
       }
     }
     ctx.textBaseline = 'alphabetic';

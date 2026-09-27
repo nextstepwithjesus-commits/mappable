@@ -108,7 +108,8 @@ function LifeBar({ id }: { id: string }) {
   useEffect(() => {
     if (loaded) return;
     let alive = true;
-    loadCard(id).then(() => alive && setVolume((n) => n + 1));
+    // том не загрузился — шкала остаётся без подписей; сообщение и «Повторить» показывает карточка (Folio)
+    loadCard(id).then(() => alive && setVolume((n) => n + 1)).catch(() => {});
     return () => {
       alive = false;
     };

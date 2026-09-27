@@ -108,8 +108,25 @@
   --t-ui-s: 0.75rem; /* 12/16 Jost — номера разделов, части, пометы, шкалы */
   --t-ui-s-lh: 1rem;
   --t-map-s: 0.71875rem; /* 11,5 Jost — только холст (src/render/type.ts); в CSS не используется */
-  --folio-w: 440px;
+  /* ширина карточки по экрану (C2; решение 14): 500 при ≥ 1360, 460 — 1200–1359, 400 — 1024–1199, 380 — уже;
+     те же числа — в src/ui/layout.ts (cardWidth), совпадение проверяет tests/layout.test.ts */
+  --folio-w: 500px;
   --strip-h: 76px;
   --top-h: 48px; /* верхняя строка (C3; VIS-20) */
   --ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+@media (max-width: 1359px) {
+  :root {
+    --folio-w: 460px;
+  }
+}
+@media (max-width: 1199px) {
+  :root {
+    --folio-w: 400px;
+  }
+}
+@media (max-width: 1023px) {
+  :root {
+    --folio-w: 380px;
+  }
 }

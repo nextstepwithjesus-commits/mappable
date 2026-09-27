@@ -4,7 +4,7 @@ import { sectionFocus } from '../../state.ts';
 import { P, Refs, VerseInsert } from '../common.tsx';
 import { SECTIONS } from '../Folio.tsx';
 import type { Card } from '../../data/types.ts';
-import { Sheet } from './Sheet.tsx';
+import { Sheet, useRemembered } from './Sheet.tsx';
 import { Segmented } from '../controls.tsx';
 
 // ---------- сквозной раздел ----------
@@ -36,8 +36,14 @@ const SECTION_FIELD: Record<number, (c: Card) => { text: string; refs?: string[]
   24: (c) => (c.notes ?? []).map((n) => ({ text: n.text, refs: n.refs })),
 };
 export function SectionPanel() {
-  const [n, setN] = useState(sectionFocus.value ?? 20);
-  const [setId, setSetId] = useState('judah');
+  // раздел и группа помнятся (D11); раздел из карточки («сквозной раздел» у своего номера) важнее запомненного
+  const [savedN, saveN] = useRemembered('section:n', 20);
+  const n = sectionFocus.value ?? savedN;
+  const setN = (v: number) => {
+    sectionFocus.value = null;
+    saveN(v);
+  };
+  const [setId, setSetId] = useRemembered('section:set', 'judah');
   const [cards, setCards] = useState<Record<string, Card>>({});
   const ids = (SETS.find((s) => s.id === setId)?.ids() ?? []).filter((id) => byId.has(id));
   useEffect(() => {

@@ -14,7 +14,8 @@ export async function find(p: Page, q: string) {
   await p.keyboard.press('Enter');
   await p.waitForTimeout(1500);
 }
-export const hashId = (p: Page) => decodeURIComponent(new URL(p.url()).hash.replace(/^#\/?/, '').split('?')[0]);
+/** Лицо из адреса: «#/david» и «#/david~y-1010~w240~…» (D8: поля вида идут после «~»). */
+export const hashId = (p: Page) => decodeURIComponent(new URL(p.url()).hash.replace(/^#\/?/, '').split(/[?~]/)[0]);
 export const folioText = (p: Page) => p.locator('.folio').innerText();
 export const secText = async (p: Page, n: number) => ((await p.locator(`.folio #sec-${n}`).count()) ? p.locator(`.folio #sec-${n}`).innerText() : '');
 
