@@ -119,7 +119,7 @@ describe('пара «первое — второе» (D6, A13)', () => {
 describe('строка выбора второго лица (D6)', () => {
   it('имя в творительном падеже, без подстановки несклонённого имени', () => {
     const t = (mode: 'kinship' | 'spread', id: string) => pickBarText(mode, id).split(':')[0];
-    expect(pickBarText('kinship', 'david')).toBe('Родство с Давидом: щёлкните второе лицо на небе или найдите его в поле «Найти». Esc — отмена');
+    expect(pickBarText('kinship', 'david')).toBe('Родство с Давидом: выберите второе лицо на небе или найдите его в поле «Найти»');
     expect(t('spread', 'ruf')).toBe('Разворот с Руфью');
     expect(t('kinship', 'iisus')).toBe('Родство с Иисусом Христом');
     expect(t('kinship', 'iisus-navin')).toBe('Родство с Иисусом Навиным');
@@ -132,7 +132,7 @@ describe('строка выбора второго лица (D6)', () => {
       const ins = nameCase(p.name, p.sex, 'ins', p.unnamed);
       const t = pickBarText('kinship', p.id);
       expect(t, p.id).toMatch(new RegExp(ins ? `^Родство со? ${esc(ins)}:` : `^Родство; первое лицо — ${esc(p.name)}:`));
-      expect(t, p.id).toMatch(/: щёлкните второе лицо на небе или найдите его в поле «Найти»\. Esc — отмена$/);
+      expect(t, p.id).toMatch(/: выберите второе лицо на небе или найдите его в поле «Найти»$/);
     }
   });
 });

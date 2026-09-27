@@ -14,7 +14,10 @@ export function PickBar({ mode, id }: { mode: 'kinship' | 'spread'; id: string }
   return (
     <div class="pickbar" role="status">
       {/* неразрывные пробелы — при показе: сама строка проверяется тестами как текст (tests/shell.test.ts) */}
-      <span>{typo(pickBarText(mode, id))}</span>
+      <span>
+        {typo(pickBarText(mode, id))}
+        <span class="keys-only">. Esc — отмена</span>
+      </span>
       <button onClick={() => (pickMode.value = null)}>Отменить</button>
     </div>
   );

@@ -151,9 +151,10 @@ function stepSpot(route: { x: number; y: number }[], w: number, size: number): {
 /** Ломаные шагов пути в px холста: только шаги, оба конца которых есть на небе. */
 function kinRoutes(v: SkyContext, steps: readonly KinStep[]): { st: KinStep; pts: { x: number; y: number }[] }[] {
   const { cam } = v;
+  // лица, скрытые рабочим набором или свёрткой (J4, J5), — без шага: его конец висел бы в пустоте
   const at = (id: string) => {
     const i = v.indexOf(id);
-    return i === undefined ? null : { x: cam.sx(v.X0[i]), y: cam.sy(v.nodes[i].lane) };
+    return i === undefined || v.hides(id) ? null : { x: cam.sx(v.X0[i]), y: cam.sy(v.nodes[i].lane) };
   };
   const out: { st: KinStep; pts: { x: number; y: number }[] }[] = [];
   for (const st of steps) {
@@ -271,7 +272,8 @@ export function drawRings(v: SkyContext, p: Pass) {
   const s = p.s;
   const ring = (id: string, out: number, width = 2, color = pal.focus, gap?: number) => {
     const i = v.indexOf(id);
-    if (i === undefined) return;
+    // скрытое набором или свёрткой (J4, J5) — без кольца
+    if (i === undefined || v.hides(id)) return;
     const q = byId.get(id)!;
     const x = cam.sx(v.X0[i]);
     const y = cam.sy(v.nodes[i].lane);

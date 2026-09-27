@@ -27,6 +27,10 @@ vi.mock('../src/render/ribbons.ts', async (orig) => {
   const m = await orig<typeof import('../src/render/ribbons.ts')>();
   return { ...m, drawStrands: vi.fn(m.drawStrands) };
 });
+vi.mock('../src/render/labels.ts', async (orig) => {
+  const m = await orig<typeof import('../src/render/labels.ts')>();
+  return { ...m, drawFoldMark: vi.fn(m.drawFoldMark) };
+});
 vi.mock('../src/engine/ribbons.ts', async (orig) => {
   const m = await orig<typeof import('../src/engine/ribbons.ts')>();
   return { ...m, buildRibbons: vi.fn(m.buildRibbons) };
@@ -82,6 +86,7 @@ const glyphs = await import('../src/render/glyphs.ts');
 const trails = await import('../src/render/trails.ts');
 const ribbons = await import('../src/render/ribbons.ts');
 const eribbons = await import('../src/engine/ribbons.ts');
+const labels = await import('../src/render/labels.ts');
 const { models, byId } = await import('../src/data/atlas.ts');
 
 /** Холст, который принимает любые вызовы; ширина текста — 7 px на знак. */
@@ -109,6 +114,7 @@ const spies = {
   drawMarriage: vi.mocked(trails.drawMarriage),
   drawStrands: vi.mocked(ribbons.drawStrands),
   buildRibbons: vi.mocked(eribbons.buildRibbons),
+  drawFoldMark: vi.mocked(labels.drawFoldMark),
 };
 type SpyName = keyof typeof spies;
 
@@ -130,6 +136,10 @@ describe('образцы — функции неба, а не свои копи�
   });
   it('каждый образец вызывает функцию неба', () => {
     for (const k of Object.keys(PAINTERS) as (keyof typeof PAINTERS)[]) expect(used(paint(k)), k).not.toEqual([]);
+  });
+  it('знаки свёрнутого (J5) — drawFoldMark неба: «+N» у лица и строка созвездия с названием', () => {
+    expect(paint('foldDesc').drawFoldMark.mock.calls.map((c) => [c[5], c[6]])).toEqual([['', '+12']]);
+    expect(paint('foldGroup').drawFoldMark.mock.calls.map((c) => [c[5], c[6]])).toEqual([['ЕДОМ', '+38']]);
   });
   it('семь величин звезды — drawGlyph с величинами 0…6', () => {
     const seen: number[] = [];

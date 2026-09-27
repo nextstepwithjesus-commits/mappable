@@ -256,6 +256,11 @@ button.row:focus-visible {
 }
 .synopsis .ot .ref {
   margin-left: 0;
+  /* поле нажатия не меньше 24 × 24: WCAG 2.5.8 (wcag22aa) */
+  display: inline-block;
+  min-width: 24px;
+  min-height: 24px;
+  text-align: left;
 }
 /* расхождения — полужирным: «опущен», «нет», чтение в скобках */
 .sheet .synopsis .odd,
@@ -860,4 +865,193 @@ button.row:focus-visible {
   .sheet .combo .results {
     left: 0;
   }
+}
+
+/* ---------- клавиатура и диктор (I1–I3; src/ui/App.tsx, src/ui/sky/SkyA11y.tsx) ---------- */
+/* main вокруг неба — только ориентир для диктора (MOB-37): ячейку сетки занимает само небо */
+.app-main {
+  display: contents;
+}
+
+/* ---------- рабочий набор, небо по набору, свёртка (J3–J5; src/ui/panels/Work.tsx, src/ui/sky/Controls.tsx) ---------- */
+/* органы неба: четвёртая строка — «На небе: все лица | в работе» и «развернуть всё» */
+.skyctl {
+  grid-template-areas:
+    'layers layers zoom'
+    'scale-lbl scale scale'
+    'chrono-lbl chrono chrono'
+    'work-lbl work work';
+}
+.skyctl .work-lbl {
+  grid-area: work-lbl;
+}
+.skyctl .work {
+  grid-area: work;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+/* «Взять в работу»: кнопка и выбор объёма под ней — непрозрачный лист с рамкой, как список «Ещё» */
+.workbtn {
+  position: relative;
+}
+.workpick {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 2px);
+  z-index: 30;
+  width: max-content;
+  max-width: min(390px, calc(100vw - 24px));
+  padding: 6px 8px 8px 0;
+  background: var(--sheet);
+  border: 1px solid var(--rule-strong);
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+  color: var(--ink-2);
+  white-space: normal;
+}
+.workpick .wp-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 2px;
+}
+.workpick .wp-row .k {
+  min-width: 11.5em;
+  padding-left: 8px;
+}
+.workpick .wp-gens .cmd {
+  justify-content: center;
+  min-width: 32px;
+}
+.workpick .wp-note {
+  margin: 0 0 4px 8px;
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+}
+.workpick .check {
+  margin-left: 1px;
+}
+.workpick .wp-out {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid var(--rule);
+}
+/* меню неба — у звезды или названия созвездия, в пределах неба */
+.sky .skymenu {
+  z-index: 8;
+}
+/* место меню — по его настоящему размеру: до замера оно невидимо */
+.sky .skymenu:not([data-placed]) {
+  visibility: hidden;
+}
+.skymenu .wp-head {
+  margin: 0 0 4px 8px;
+  font-family: var(--serif);
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+  color: var(--ink);
+}
+.skymenu .wp-row.wp-first {
+  margin: 0;
+}
+/* панель «В работе» */
+.work-sky {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 8px;
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+  color: var(--ink-2);
+}
+.work-sky .seg {
+  margin: 0;
+}
+.sheet .worklist {
+  list-style: none;
+  margin: 4px 0 10px -8px;
+  padding: 0;
+}
+.sheet .worklist li {
+  margin: 0;
+}
+.worklist .wi-row {
+  display: block;
+  width: 100%;
+  min-height: 32px;
+  padding: 5px 8px;
+  text-align: left;
+  font-size: var(--t-body);
+  line-height: var(--t-body-lh);
+  color: var(--ink);
+}
+.worklist .wi-row:hover {
+  background: var(--sheet-2);
+}
+.worklist .wi-row:focus-visible {
+  outline-offset: -2px;
+}
+.worklist .wi-row[aria-expanded='true'] {
+  box-shadow: inset 2px 0 0 var(--ink);
+}
+.worklist .nm {
+  font-weight: 560;
+}
+.worklist .ds {
+  font-style: italic;
+  color: var(--ink-2);
+}
+.worklist .wi-row .yrs {
+  display: block;
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+  color: var(--ink-2);
+}
+.worklist .wi-body {
+  padding: 2px 0 8px 8px;
+}
+.worklist .wi-body .cmds {
+  margin-bottom: 4px;
+}
+.worklist.folds li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: 8px;
+}
+/* подсказка звезды: клавиши рабочего набора и свёртки (J3, J5) */
+.tip .tip-keys {
+  display: grid;
+  margin-top: 4px;
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  color: var(--ink-2);
+}
+/* строка набора у верхней кромки неба (J4) — как строка отметок */
+.workbar button + button {
+  margin-left: 2px;
+}
+/* «в работу» в строке поиска: надпись-команда справа (J3; Shift+Enter) */
+.result:has(> .row-cmd) {
+  grid-template-columns: minmax(0, 1fr) 56px auto;
+}
+.result .row-cmd {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  align-self: center;
+  padding: 4px 6px;
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  color: var(--ink-2);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.result .row-cmd:hover {
+  color: var(--ink);
+  background: var(--sheet);
 }

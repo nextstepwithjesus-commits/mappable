@@ -1,8 +1,11 @@
 /**
- * Проверка доступности (ТЗ § 3.8) движком axe-core на основных экранах в обеих темах:
- * небо, карточка, разворот, панели. Небо — холст с текстовой альтернативой; всё остальное — обычная разметка.
+ * Проверка доступности (ТЗ § 3.8; WCAG 2.2 AA) движком axe-core на основных экранах в обеих темах: стол 1440 и 1024,
+ * телефон 390 (360, альбомная 844 × 390) и планшет 768 — небо, карточка, разворот, панели, поиск, листы телефона.
+ * Теги axe: wcag2a, wcag2aa, wcag21a, wcag21aa, wcag22aa (в том числе размер целей касания, 2.5.8).
+ * Небо — холст role="application" со списком лиц на виду (src/ui/sky/SkyA11y.tsx); всё остальное — обычная разметка.
  *   npm run -s a11y   (нужна сборка: npx vite build)
  *   npx tsx tools/a11y.ts --dist .ui-build/<имя> --port <порт>   (своя сборка и порт — для параллельной работы)
+ *   npx tsx tools/a11y.ts --only телефон                          (только экраны, в имени которых есть слово)
  */
 import { spawn } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
@@ -17,11 +20,25 @@ const opt = (name: string) => {
 };
 const DIST = opt('dist');
 const PORT = Number(opt('port') ?? 4187);
+const ONLY = opt('only');
 const axeSource = readFileSync(join(ROOT, 'node_modules/axe-core/axe.min.js'), 'utf8');
+const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 
-type Screen = { name: string; hash: string; act?: (p: Page) => Promise<void>; view?: { width: number; height: number; touch?: boolean } };
-const SCREENS: Screen[] = [
+type View = { width: number; height: number; touch?: boolean };
+type Screen = { name: string; hash: string; act?: (p: Page) => Promise<void>; view?: View };
+const PHONE: View = { width: 390, height: 844, touch: true };
+const TABLET: View = { width: 768, height: 1024, touch: true };
+
+/** Касание элемента (экраны телефона и планшета). */
+const press = (p: Page, sel: string, text?: string) => (text ? p.locator(sel, { hasText: text }) : p.locator(sel)).first().tap();
+
+const DESK: Screen[] = [
   { name: 'небо', hash: '#/' },
+  // небо с фокусом клавиатуры: холст — приложение, у него звезда с фокусом (aria-activedescendant)
+  { name: 'небо: фокус на холсте', hash: '#/', act: async (p) => {
+    await p.locator('.sky canvas').focus();
+    await p.keyboard.press('ArrowRight');
+  } },
   { name: 'карточка Давида', hash: '#/david' },
   { name: 'разворот', hash: '#/avraam', act: async (p) => {
     await p.click('.folio .actions >> text=Разворот с…');
@@ -44,14 +61,76 @@ const SCREENS: Screen[] = [
   { name: 'список моделей хронологии', hash: '#/', act: async (p) => {
     await p.click('.skyctl .menu.model > button');
   } },
+  // комбобокс поиска (I3; MOB-28): открытый список с группой одноимённых и список «ничего не найдено»
+  { name: 'поиск с подсказками', hash: '#/', act: async (p) => {
+    await p.click('#find');
+    await p.keyboard.type('Иосиф');
+    await p.keyboard.press('ArrowDown');
+  } },
+  { name: 'поиск без совпадений', hash: '#/', act: async (p) => {
+    await p.click('#find');
+    await p.keyboard.type('Щщщщ');
+  } },
   { name: '«Ещё» на 1024', hash: '#/', view: { width: 1024, height: 768 }, act: async (p) => {
     await p.click('.commands .more > button');
   } },
-  { name: 'телефон: лист «Вид»', hash: '#/david', view: { width: 390, height: 844, touch: true }, act: async (p) => {
-    await p.locator('.skyctl.column button', { hasText: 'Вид' }).tap();
+  { name: 'карточка и «Синопсис» на 1024', hash: '#/david', view: { width: 1024, height: 768 }, act: async (p) => {
+    const b = p.locator('.commands > button', { hasText: 'Синопсис' });
+    if (await b.count()) await b.click();
+    else {
+      await p.click('.commands .more > button');
+      await p.locator('.commands [role^="menuitem"]', { hasText: 'Синопсис' }).click();
+    }
   } },
   { name: 'образец', hash: '#/specimen' },
 ];
+
+// телефон и планшет (H1–H7): касание, листы, «Разделы», «Какое лицо?»
+const TOUCH: Screen[] = [
+  { name: 'телефон: небо', hash: '#/', view: PHONE },
+  { name: 'телефон: лист на 55 %', hash: '#/david', view: PHONE },
+  { name: 'телефон: лист на шапке', hash: '#/david', view: PHONE, act: (p) => press(p, '.folio .actions button', 'Показать на небе') },
+  { name: 'телефон: лист на 100 %', hash: '#/david', view: PHONE, act: (p) => press(p, '.folio .sheet-bar .bar-toggle') },
+  { name: 'телефон: «Разделы»', hash: '#/david', view: PHONE, act: (p) => press(p, '.top .sections > button') },
+  { name: 'телефон: поиск с подсказками', hash: '#/', view: PHONE, act: async (p) => {
+    await press(p, '.top label[for="find"]');
+    await p.keyboard.type('Иосиф');
+  } },
+  { name: 'телефон: «Родство»', hash: '#/david', view: PHONE, act: async (p) => {
+    await press(p, '.top .sections > button');
+    await press(p, '.top .sections [role^="menuitem"]', 'Родство');
+  } },
+  { name: 'телефон: «Вид»', hash: '#/david', view: PHONE, act: (p) => press(p, '.skyctl.column button', 'Вид') },
+  { name: 'телефон: «Эпохи»', hash: '#/david', view: PHONE, act: async (p) => {
+    await press(p, '.skyctl.column button', 'Вид');
+    await press(p, '.sheet button', 'Эпохи и их основания');
+  } },
+  { name: 'телефон: «Какое лицо?»', hash: '#/david', view: PHONE, act: async (p) => {
+    // касание рядом с выбранной звездой в плотном месте открывает список «Какое лицо?» (H5)
+    for (const [dx, dy] of [[50, 80], [-12, 30], [55, 55], [45, 70]]) {
+      const [x, y] = ((await p.locator('.sky').getAttribute('data-sel')) ?? '0 0').split(' ').map(Number);
+      const box = (await p.locator('.sky canvas').boundingBox())!;
+      await p.touchscreen.tap(box.x + x + dx, box.y + y + dy);
+      await p.waitForTimeout(400);
+      if (await p.locator('.which').count()) return;
+      await p.goto(p.url().replace(/#.*$/, '#/david'));
+      await p.waitForTimeout(2000);
+    }
+  } },
+  { name: 'телефон 360: лист на 100 %', hash: '#/ruf', view: { width: 360, height: 740, touch: true }, act: (p) => press(p, '.folio .sheet-bar .bar-toggle') },
+  { name: 'телефон, альбомная: карточка', hash: '#/david', view: { width: 844, height: 390, touch: true } },
+  { name: 'планшет: карточка', hash: '#/david', view: TABLET },
+  { name: 'планшет: «Указатель»', hash: '#/david', view: TABLET, act: async (p) => {
+    const b = p.locator('.commands > button', { hasText: 'Указатель' });
+    if (await b.count()) await b.tap();
+    else {
+      await p.locator('.commands .more > button').tap();
+      await p.locator('.commands [role^="menuitem"]', { hasText: 'Указатель' }).tap();
+    }
+  } },
+];
+
+const SCREENS = [...DESK, ...TOUCH].filter((s) => !ONLY || s.name.includes(ONLY));
 
 async function main() {
   const args = ['vite', 'preview', '--port', String(PORT), '--strictPort'];
@@ -69,18 +148,22 @@ async function main() {
         const p = await ctx.newPage();
         await p.addInitScript(`localStorage.setItem('toledot:intro','true');localStorage.setItem('toledot:theme', JSON.stringify('${theme}'))`);
         await p.goto(`http://localhost:${PORT}/${s.hash}`);
-        await p.waitForTimeout(1500);
+        await p.waitForTimeout(v.touch ? 2200 : 1500);
+        let note = '';
         if (s.act) {
-          await s.act(p);
+          // экран, который не удалось открыть, проверяется как есть — с пометой
+          await Promise.race([s.act(p), new Promise((_, no) => setTimeout(() => no(new Error('действие не выполнено за 6 с')), 6000))]).catch((e) => {
+            note = ` (${(e as Error).message.split('\n')[0]})`;
+          });
           await p.waitForTimeout(900);
         }
         await p.addScriptTag({ content: axeSource });
         const res = (await p.evaluate(
-          "axe.run(document, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'] } }).then(r => r.violations.map(v => ({ id: v.id, impact: v.impact, help: v.help, nodes: v.nodes.slice(0, 3).map(n => n.target.join(' ')) })))",
+          `axe.run(document, { runOnly: { type: 'tag', values: ${JSON.stringify(TAGS)} } }).then(r => r.violations.map(v => ({ id: v.id, impact: v.impact, help: v.help, nodes: v.nodes.slice(0, 3).map(n => n.target.join(' ') + ' ' + (n.failureSummary || '').split('\\n').slice(1, 2).join(' ')) })))`,
         )) as { id: string; impact: string; help: string; nodes: string[] }[];
-        total += res.length;
-        console.log(`${res.length ? 'НЕТ' : 'да '} ${theme} · ${s.name}${res.length ? '' : ''}`);
-        for (const v of res) console.log(`     ${v.impact} ${v.id}: ${v.help}\n       ${v.nodes.join('\n       ')}`);
+        total += res.length + (note ? 1 : 0);
+        console.log(`${res.length || note ? 'НЕТ' : 'да '} ${theme} · ${s.name}${note}`);
+        for (const r of res) console.log(`     ${r.impact} ${r.id}: ${r.help}\n       ${r.nodes.join('\n       ')}`);
         await ctx.close();
       }
     }

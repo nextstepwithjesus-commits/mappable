@@ -4,9 +4,9 @@ import { models, byId, graph, loadModel } from './data/atlas.ts';
 import { relate, type KinStep } from './engine/kinship.ts';
 
 export type Theme = 'night' | 'day';
-export type Panel = null | 'epochs' | 'index' | 'kinship' | 'synopsis' | 'legend' | 'about' | 'section' | 'chapter' | 'spread' | 'view';
+export type Panel = null | 'epochs' | 'index' | 'kinship' | 'synopsis' | 'legend' | 'about' | 'section' | 'chapter' | 'spread' | 'view' | 'work';
 /** Все панели — для разбора адреса (src/ui/address.ts). */
-export const PANELS: readonly Exclude<Panel, null>[] = ['epochs', 'index', 'kinship', 'synopsis', 'legend', 'about', 'section', 'chapter', 'spread', 'view'];
+export const PANELS: readonly Exclude<Panel, null>[] = ['epochs', 'index', 'kinship', 'synopsis', 'legend', 'about', 'section', 'chapter', 'spread', 'view', 'work'];
 
 const load = <T,>(k: string, d: T): T => {
   try {

@@ -9,6 +9,7 @@ import { grid } from '../layout.ts';
 import { Sheet, useRemembered } from './Sheet.tsx';
 import { typo } from '../text/typo.ts';
 import { Combobox, countStatus, personBlocks, personHits, type Row } from '../top/Combobox.tsx';
+import { addPath, workSet } from '../work.ts';
 
 // ---------- родство (G1; A7, E5; CARD-08, 39; VIS-36; UX-11, 12, 13; IX-23, 24) ----------
 
@@ -178,6 +179,16 @@ export function KinshipPanel() {
   );
 }
 
+/** «Взять путь в работу» (J3): все лица пути — в рабочий набор; взятый путь — «путь в работе». */
+function WorkPath({ ids }: { ids: string[] }) {
+  const all = ids.every((id) => workSet.value.has(id));
+  return (
+    <button class="cmd" aria-pressed={all} disabled={all} onClick={() => addPath(ids)}>
+      {all ? 'путь в работе' : 'взять путь в работу'}
+    </button>
+  );
+}
+
 /** Имя лица в винительном падеже — ссылкой: «через Авессалома». */
 const Acc = ({ id }: { id: string }) => {
   const p = byId.get(id);
@@ -298,6 +309,7 @@ function RelationView({ r, ns, lit, onShow }: { r: Relation; ns: string; lit: bo
         <button class="cmd" aria-pressed={lit} onClick={onShow}>
           показать путь на небе
         </button>
+        <WorkPath ids={pathOf(r.steps)} />
       </div>
       <Chain chain={r.chain} ns={ns} />
     </article>

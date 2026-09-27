@@ -15,7 +15,8 @@
  *
  * Общее состояние модули читают через SkyContext (его реализует Sky) и проход кадра Pass; глобального состояния нет.
  */
-import { Camera, KX_MIN, type Frame } from './camera.ts';
+import { KX_MIN, type Camera, type Frame, type ViewState } from './camera.ts';
+import { RowCamera, identityRows, planSky, type FoldMark, type SkyPlan, type SkyView } from './rows.ts';
 import { drawGlyph, personGlyph, starRadius } from './glyphs.ts';
 import { alpha, hexToRgb } from './color.ts';
 import { alphaForContrast, DIM_LABEL_CONTRAST } from './dim.ts';
@@ -25,19 +26,19 @@ import {
   BOTTOM_H, CANON_NOTE, FRAME_H, LETTER_W, LETTER_W_TOUCH, type EdgeHit,
 } from './frame.ts';
 import {
-  clusterShort, clusterText, drawClusterLabel, drawEventLabel, drawGroupNames, drawNote, drawStarLabels, groupName, LabelCache, LabelLedger,
-  measureLabels, Placer, zoomScaleFor, type GroupNameSpot, type LabelStats,
+  claim, clusterShort, clusterText, drawClusterLabel, drawEventLabel, drawFoldMark, drawGroupNames, drawNote, drawStarLabels, foldMarkWidth, groupName, LabelCache, LabelLedger,
+  measureLabels, Placer, textBox, zoomScaleFor, type GroupNameSpot, type LabelStats,
 } from './labels.ts';
 import { drawDescents, drawFamilyNotes, drawSpineTrails, drawTrails, type FamilyNote } from './trails.ts';
 import { drawKinPath, drawLeadNotes, drawMeridian, drawRings, emphasis } from './marks.ts';
-import { coarsePointer } from './type.ts';
+import { coarsePointer, mapSize, T_MAP_S } from './type.ts';
 import type { Rect } from './rect.ts';
 import { timeToX, xToTime, hydrateScale, type TimeScale, T_CANON_END, T_END } from '../engine/timescale.ts';
 import { toAstro } from '../engine/years.ts';
 import type { ClusterInfo, Outline } from '../engine/layout.ts';
 import type { KinStep } from '../engine/kinship.ts';
 import type { ModelData, NodeRow } from '../data/atlas.ts';
-import { byId, groupById, lines } from '../data/atlas.ts';
+import { byId, graph, groupById, lines } from '../data/atlas.ts';
 
 // рамка и атласная координата — src/render/frame.ts; прежние импорты из sky.ts продолжают работать
 export { FRAME_H, BAND, atlasCoord } from './frame.ts';
@@ -138,6 +139,8 @@ export interface SkyState {
   kinSteps?: KinStep[] | null;
   /** поколений от выбранного лица у предков и потомков: дальше третьего род гаснет до 70 % (E4; marks.ts, familyHighlight) */
   depth?: Map<string, number> | null;
+  /** ленты — тонким ориентиром (режим «В работе», J4; ribbons.ts); ставит само небо */
+  guide?: boolean;
 }
 
 /** sib — братья и сёстры выбранного (E4), group — лица группы панели «Главы» или «Синопсис» (skyGroup) — marks.ts. */
@@ -172,8 +175,15 @@ export interface SkyContext {
   indexOf(id: string): number | undefined;
   xOf(t: number): number;
   tOf(x: number): number;
-  /** узел нарисован в этом кадре (режим «только линии», призраки жён) */
+  /** узел нарисован в этом кадре (режим «только линии», призраки жён, рабочий набор и свёрнутое — J4, J5) */
   drawn(i: number): boolean;
+  /** лицо скрыто рабочим набором или свёрткой (J4, J5): связи к нему не рисуются */
+  hides(id: string): boolean;
+  /** строка экрана полосы и полоса строки (сжатие полос, src/render/rows.ts; без сжатия — та же полоса) */
+  rowOf(lane: number): number;
+  laneOf(row: number): number;
+  /** ключ сжатия полос: кэши, построенные по полосам, перестраиваются при его смене */
+  readonly rowsKey: string;
 }
 
 /** Проход кадра: то, что draw() вычисляет один раз и отдаёт слоям. */
@@ -206,6 +216,8 @@ export interface Pass {
   nameBoxes: Rect[];
   /** полосы лент линий Мессии между соседними лицами линии (px холста): названия и пояснения на них не ложатся */
   ribbonBoxes: Rect[];
+  /** режим «В работе» (J4): небо рисует только рабочий набор, и все его лица подписываются */
+  work: boolean;
 }
 
 /** Сколько лет самое крупное окно видимой части неба (D2; IX-03). */
@@ -245,8 +257,12 @@ interface ClusterView {
   laneMax: number;
 }
 
+/** Поля вписанного рабочего набора, px: слева — у звезды, справа — место для имени, сверху и снизу — как у «всего неба». */
+const FIT_SET = { l: 16, r: 110, y: 10 };
+
 export class Sky implements SkyContext {
-  cam = new Camera();
+  /** камера со сжатием полос (J4, J5): вертикаль камеры — строки, src/render/rows.ts */
+  cam = new RowCamera();
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
   dpr = 1;
@@ -281,6 +297,16 @@ export class Sky implements SkyContext {
    * карточки на телефоне, left и right — полосы, занятые вступлением или колонкой кнопок при вписывании «всего неба».
    */
   private insets = { top: FRAME_H, bottom: 0, left: 0, right: 0 };
+  /** что показывает небо: режим «Всё небо | В работе», рабочий набор, свёрнутое (J4, J5; src/ui/work.ts) */
+  private view: SkyView = { mode: 'all', set: new Set(), foldDesc: [], foldGroups: [] };
+  /** план неба по view: скрытые узлы, сжатие полос, знаки свёрнутого (src/render/rows.ts) */
+  plan: SkyPlan = { hidden: null, hiddenPersons: new Set(), rows: identityRows(-1, 1), marks: [], mode: 'all' };
+  /** знаки свёрнутого в последнем кадре (px холста): щелчок разворачивает (src/ui/sky/input.ts) */
+  foldHits: (Rect & { kind: FoldMark['kind']; id: string })[] = [];
+  /** резерв органов неба в последнем кадре: вписанный набор не уходит под них (fitShown) */
+  private reserveNow: Rect[] = [];
+  /** названия созвездий в последнем кадре (px холста): у них — меню «Свернуть созвездие» (J5) */
+  groupHits: (Rect & { group: string })[] = [];
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -316,7 +342,9 @@ export class Sky implements SkyContext {
   }
   /** Рамка «всего неба»: от сотворения до 100 г. по Р. Х., все полосы. */
   private fitFrame(): Frame {
-    return { x0: this.xOf(this.scale.knots[0]), x1: this.xOf(100), lane0: this.model.laneMin - 0.5, lane1: this.model.laneMax + 0.5 };
+    // по вертикали — строки: при сжатии полос (J4, J5) «всё небо» — все оставшиеся строки
+    const r = this.cam.rows;
+    return { x0: this.xOf(this.scale.knots[0]), x1: this.xOf(100), lane0: r.min, lane1: r.max };
   }
   /** Видимая часть, пределы сдвига и масштаб «всего неба» — после смены размера, полей, масштаба времени или модели. */
   private updateView() {
@@ -356,12 +384,13 @@ export class Sky implements SkyContext {
       this.X0 = new Float64Array(m.nodes.length);
       this.X1 = new Float64Array(m.nodes.length);
       this.starA = new Float32Array(m.nodes.length).fill(1);
-      this.cam.laneSpan = m.laneMax - m.laneMin;
       this.buildOutlines();
       this.clusters = m.blocks
         .filter((b) => b.cluster)
         .map((b) => ({ block: b.id, c: b.cluster!, lane: (b.laneMin + b.laneMax) / 2, laneMin: b.laneMin, laneMax: b.laneMax }));
       this.cloud = null;
+      // план неба (набор, свёртка) — по новой раскладке; камера ещё не поставлена, держать нечего
+      this.replan(false);
     }
     if (modelChanged || lambda !== this.lambda) {
       this.lambda = lambda;
@@ -373,6 +402,59 @@ export class Sky implements SkyContext {
       this.epochX = m.epochs.map((e) => ({ id: e.id, x0: timeToX(this.scale, toAstro(e.start), lambda), x1: timeToX(this.scale, toAstro(e.end), lambda), name: e.name, short: e.short }));
       this.updateView();
     }
+  }
+
+  /**
+   * Что показывает небо (J4, J5): режим «Всё небо | В работе», рабочий набор, свёрнутое. Строится план (rows.ts), камера
+   * переходит на новое сжатие полос, не сдвигая неба: лицо anchor (если оно видно и после смены) остаётся на своём месте
+   * экрана, иначе — полоса в середине видимой части. Возвращает, изменилось ли что-нибудь на небе.
+   */
+  setView(v: SkyView, anchor?: string | null): boolean {
+    // набор в режиме «Всё небо» на небо не влияет
+    const same =
+      v.mode === this.view.mode && (v.mode === 'all' || v.set === this.view.set) && v.foldDesc.join() === this.view.foldDesc.join() && v.foldGroups.join() === this.view.foldGroups.join();
+    this.view = v;
+    if (same || !this.model) return false;
+    this.replan(true, anchor);
+    return true;
+  }
+  /** Построить план неба по this.view; keep — держать небо на месте (см. setView). */
+  private replan(keep: boolean, anchor?: string | null) {
+    const m = this.model;
+    const old = this.cam.rows;
+    const plan = planSky(
+      {
+        graph, nodes: m.nodes, laneMin: m.laneMin, laneMax: m.laneMax, t0: (i) => m.nodes[i].t0, groupOf: (id) => byId.get(id)?.group,
+        parentGroup: (g) => groupById.get(g)?.parent, cluster: (b) => !!m.blocks[b]?.cluster, rank: (i) => byId.get(m.nodes[i].person)?.magnitude ?? 6,
+      },
+      this.view,
+    );
+    let hold: { lane: number; sy: number } | null = null;
+    if (keep && this.cam.w > 0) {
+      const i = anchor ? this.nodeIndex.get(anchor) : undefined;
+      const [, cy] = this.cam.vpCenter();
+      if (i !== undefined && !plan.hidden?.[i] && !this.plan.hidden?.[i]) hold = { lane: this.nodes[i].lane, sy: this.cam.sy(this.nodes[i].lane) };
+      else hold = { lane: old.lane(this.cam.wLane(cy)), sy: cy };
+    }
+    this.plan = plan;
+    this.cam.rows = plan.rows;
+    // полос в сжатом небе — строк: от неё зависит самая низкая полоса (Camera.kyMin)
+    this.cam.laneSpan = plan.rows.max - plan.rows.min - 1;
+    this.labelCache.invalidate();
+    if (this.scale && this.lambda >= 0) this.updateView();
+    if (hold) this.cam.laneTop = plan.rows.row(hold.lane) + hold.sy / this.cam.ky;
+  }
+  get rowsKey(): string {
+    return this.cam.rows.key;
+  }
+  rowOf(lane: number): number {
+    return this.cam.rows.row(lane);
+  }
+  laneOf(row: number): number {
+    return this.cam.rows.lane(row);
+  }
+  hides(id: string): boolean {
+    return this.plan.hiddenPersons.has(id);
   }
 
   xOf(t: number): number {
@@ -394,8 +476,69 @@ export class Sky implements SkyContext {
   }
 
   /** Вид «всё небо»: сотворение … 100 г. по Р. Х. и все полосы — в видимой части по обеим осям (D2; MAP-01, MOB-01). */
-  fitState() {
+  fitState(): ViewState {
+    // в режиме «В работе» «Всё небо» вписывает рабочий набор (J4)
+    if (this.plan.mode === 'work') {
+      const v = this.fitShown();
+      if (v) return v;
+    }
     return this.cam.fitView(this.fitFrame());
+  }
+  /**
+   * Вид, в который вписаны лица рабочего набора (J4): по времени — от первой звезды до конца самого долгого следа, не уже
+   * 60 лет, справа — место для имени; по высоте — все строки в видимой части (высота строки следует за масштабом:
+   * если строки не помещаются, масштаб уменьшается, пока не поместятся).
+   */
+  private fitShown(): ViewState | null {
+    const hid = this.plan.hidden;
+    let x0 = Infinity;
+    let x1 = -Infinity;
+    for (let i = 0; i < this.nodes.length; i++) {
+      if (hid && hid[i]) continue;
+      x0 = Math.min(x0, this.X0[i]);
+      x1 = Math.max(x1, this.X0[i], this.X1[i]);
+    }
+    if (!(x1 >= x0)) return null;
+    const cam = this.cam;
+    const vp = cam.vp;
+    const W = Math.max(40, vp.r - vp.l - FIT_SET.l - FIT_SET.r);
+    // по вертикали — без широких органов неба у верхнего и нижнего края: строки набора не уходят под них (как у view.ts)
+    let top = vp.t;
+    let bottom = vp.b;
+    for (const r of this.reserveNow) {
+      if (r.w < (vp.r - vp.l) * 0.3) continue;
+      if (r.y + r.h >= vp.b - 8 && r.y > (vp.t + vp.b) / 2) bottom = Math.min(bottom, r.y - 4);
+      else if (r.y <= vp.t + 8 && r.y + r.h < (vp.t + vp.b) / 2) top = Math.max(top, r.y + r.h + 4);
+    }
+    const tm = this.tOf((x0 + x1) / 2);
+    const span = Math.max(x1 - x0, this.xOf(tm + 30) - this.xOf(tm - 30));
+    const xc = (x0 + x1) / 2;
+    const R = cam.rows.max - cam.rows.min;
+    /** Масштаб, при котором строки помещаются между t и b; null — не помещаются ни при каком. */
+    const fitIn = (t: number, b: number): number | null => {
+      const H = Math.max(40, b - t - 2 * FIT_SET.y);
+      const tall = (k: number) => cam.kyFor(k) * R > H + 0.5;
+      const k0 = cam.clampKx(W / span, xc);
+      if (!tall(k0)) return k0;
+      let lo = cam.kxLo();
+      if (tall(lo)) return null;
+      let hi = k0;
+      for (let k = 0; k < 40; k++) {
+        const mid = Math.sqrt(lo * hi);
+        if (tall(mid)) hi = mid;
+        else lo = mid;
+      }
+      return lo;
+    };
+    let kx = fitIn(top, bottom);
+    // над органами неба строкам не хватает места: вся высота видимой части, как у «всего неба»
+    if (kx === null) {
+      top = vp.t;
+      bottom = vp.b;
+      kx = fitIn(top, bottom) ?? cam.kxLo();
+    }
+    const cy = (top + bottom) / 2;
+    return { x0: xc - (vp.l + FIT_SET.l + W / 2) / kx, kx, laneTop: (cam.rows.min + cam.rows.max) / 2 + cy / cam.kyFor(kx) };
   }
   fitAll() {
     this.cam.stop();
@@ -477,6 +620,9 @@ export class Sky implements SkyContext {
 
   drawn(i: number): boolean {
     const n = this.nodes[i];
+    // рабочий набор и свёрнутое (J4, J5): скрытое не рисуется и не ловит указатель
+    const hid = this.plan.hidden;
+    if (hid && hid[i]) return false;
     if (this.drawnOnly && !this.drawnOnly.has(n.person)) return false;
     return !(n.ghost && !this.drawnGhosts);
   }
@@ -558,14 +704,20 @@ export class Sky implements SkyContext {
     const hl = s.highlight;
     const L = s.layers;
     const lineOnly = s.onlyLines;
+    this.reserveNow = s.reserve ?? [];
     const spine = new Set([...lines.joseph.persons, ...lines.mary.persons].map((x) => x.id));
     this.drawnOnly = lineOnly ? spine : null;
     this.drawnGhosts = !!L.ghosts;
     // открытое небо — ниже рамки, а в режиме эпох — ниже ярусов (их нижний край — верхнее поле видимой части)
     this.openTop = Math.max(FRAME_H, this.insets.top);
     this.ledger.reset();
-    const detail = detailFor(cam.ky);
-    this.markClusters(detail);
+    // режим «В работе» (J4): только лица набора — все звёзды, следы и связи в полную силу, без облаков, контуров и скоплений
+    const work = this.plan.mode === 'work';
+    const detail = work ? 1 : detailFor(cam.ky);
+    if (work) {
+      this.collapsed.clear();
+      this.rings = [];
+    } else this.markClusters(detail);
     this.fillStarAlpha(s, spine, detail);
     const starA = this.starA;
     const p: Pass = {
@@ -582,6 +734,7 @@ export class Sky implements SkyContext {
       labeled: new Set(),
       nameBoxes: [],
       ribbonBoxes: [],
+      work,
     };
     for (const r of s.reserve ?? []) p.placer.add(r);
 
@@ -590,11 +743,11 @@ export class Sky implements SkyContext {
     const events = drawEventLines(this);
     const ticks = yearTicks(this);
     drawGrid(this, ticks);
-    if (!lineOnly) this.drawClouds(detail, !!hl);
-    const constellations = L.constellations && !lineOnly;
+    if (!lineOnly && !work) this.drawClouds(detail, !!hl);
+    const constellations = L.constellations && !lineOnly && !work;
     const spots = constellations ? this.drawConstellations(p) : [];
     p.vis = this.visible(p);
-    if (!lineOnly) this.drawClusters(p);
+    if (!lineOnly && !work) this.drawClusters(p);
     // следы и связи проявляются с подробностью кадра; выделенные — всегда в полную силу
     const lit = (i: number) => lineOnly || (!!hl && hl.has(this.nodes[i].person)) || s.pins.has(this.nodes[i].person);
     const layer = (draw: (q: Pass) => void) => {
@@ -611,7 +764,9 @@ export class Sky implements SkyContext {
     if (L.lifelines) layer((q) => drawTrails(this, q));
     const notes: FamilyNote[] = [];
     if (L.connectors) layer((q) => void notes.push(...(drawDescents(this, q) ?? [])));
-    if (L.ribbons) drawSkyRibbons(this, s, { joseph: lines.joseph.persons, mary: lines.mary.persons });
+    // в режиме «В работе» ленты — тонкий ориентир, и только если в наборе есть лица линий Мессии (J4)
+    const ribbons = L.ribbons && (!work || [...spine].some((id) => !this.plan.hiddenPersons.has(id)));
+    if (ribbons) drawSkyRibbons(this, work ? { ...s, guide: true } : s, { joseph: lines.joseph.persons, mary: lines.mary.persons });
     if (L.lifelines && L.ribbons) drawSpineTrails(this, p);
     // путь родства — под звёздами: звёзды пути лежат на ломаной (E5)
     drawKinPath(this, p);
@@ -630,20 +785,24 @@ export class Sky implements SkyContext {
     }
     // знаки свёрнутых скоплений — как звёзды величины 2: подпись их не закрывает
     if (!lineOnly) for (const g of this.rings) p.placer.add({ x: g.x - 7, y: g.y - 7, w: 14, h: 14 }, true, 2);
-    if (L.ribbons) p.ribbonBoxes = this.ribbonBoxes();
+    if (ribbons) p.ribbonBoxes = this.ribbonBoxes();
     const edges = placeWayfinding(this, s, p);
     const lineSteps = { joseph: lines.joseph.persons, mary: lines.mary.persons };
     // подписи шагов пути родства (E5), выноски точек сравнения и подписи лиц линий (E6) — раньше обычных подписей
     drawLeadNotes(this, p, lineSteps);
+    this.foldHits = [];
     const between = () => {
+      // знаки свёрнутого (J5) — раньше меридианов событий и обычных подписей: по ним свёрнутое разворачивается
+      this.drawFoldMarks(p);
       for (const { x, e } of events) drawEventLabel(this, p, x, e.full, e.name);
-      if (!lineOnly) this.clusterLabels(p);
+      if (!lineOnly && !work) this.clusterLabels(p);
       const xc = Math.max(this.letterW + 40, cam.sx(this.xOf(110)));
       if (cam.w - xc > 380) drawNote(this, p, CANON_NOTE, (xc + cam.w) / 2, (cam.vp.t + cam.vp.b) / 2, xc);
       if (constellations) p.nameBoxes = drawGroupNames(this, p, spots);
     };
     if (L.labels) drawStarLabels(this, p, between);
     else between();
+    this.groupHits = p.nameBoxes as (Rect & { group: string })[];
     drawFamilyNotes(this, p, notes);
     drawRibbonStep(this, p, lineSteps);
     drawRings(this, p);
@@ -661,6 +820,49 @@ export class Sky implements SkyContext {
       put('named', `${this.ledger.named}/${this.ledger.stars}`);
       put('detail', detail.toFixed(2));
       put('clusters', `${this.rings.length}/${this.clusters.length}`);
+      // рабочий набор и свёртка (J4, J5): режим, строк на небе, знаки свёрнутого «вид:id:скрыто» и какие из них на экране
+      put('mode', this.plan.mode);
+      put('unnamed', this.ledger.unnamed.join(' '));
+      put('rows', String(Math.round(this.cam.rows.max - this.cam.rows.min)));
+      put('folds', this.plan.marks.map((m) => `${m.kind}:${m.id}:${m.count}`).join(';'));
+      put('foldHits', this.foldHits.map((h) => `${h.kind}:${h.id}:${[h.x, h.y, h.w, h.h].map(Math.round).join(',')}`).join(';'));
+    }
+  }
+
+  /**
+   * Знаки свёрнутого (J5): у лица со свёрнутыми потомками — «+N» справа от конца следа (N — скрытых лиц), у свёрнутого
+   * созвездия — строка-подпись «НАЗВАНИЕ +N» в его строке. Подчёркнуты, как ссылки неба: щелчок разворачивает
+   * (src/ui/sky/input.ts, foldHits). Ставятся той же проверкой наложений, что подписи.
+   */
+  private drawFoldMarks(p: Pass) {
+    const { ctx, cam, pal } = this;
+    const size = mapSize(T_MAP_S, this.coarse);
+    for (const m of this.plan.marks) {
+      const count = `+${m.count}`;
+      let name = '';
+      let x: number;
+      let y: number;
+      if (m.kind === 'desc') {
+        const i = this.nodeIndex.get(m.id);
+        if (i === undefined || !this.drawn(i)) continue;
+        x = cam.sx(Math.max(this.X0[i], this.X1[i]));
+        y = cam.sy(this.nodes[i].lane);
+        const q = byId.get(m.id);
+        // от конца следа (у лица без следа — от звезды) с отступом
+        x += this.X1[i] > this.X0[i] ? 6 : starRadius(q?.magnitude ?? 6, p.zoomScale) + 6;
+      } else {
+        name = groupName(m.id);
+        x = Math.max(this.letterW + 8, cam.sx(this.xOf(m.t0 ?? 0)));
+        y = cam.sy(m.lane ?? 0);
+      }
+      const { nw, cw } = foldMarkWidth(ctx, this.coarse, name, count);
+      const w = nw + cw;
+      const base = y + size * 0.35;
+      const cands = [textBox(x, base, w, size), textBox(x, base - size - 2, w, size), textBox(x, base + size + 2, w, size)];
+      const got = claim(this, p, cands, 'fold', name ? `${name} ${count}` : count, { id: m.id });
+      if (!got) continue;
+      drawFoldMark(ctx, pal, this.coarse, got.x + 1.5, got.y + 1.5 + 0.8 * size, name, count);
+      this.foldHits.push({ ...got, kind: m.kind, id: m.id });
     }
   }
 
@@ -717,8 +919,21 @@ export class Sky implements SkyContext {
   private fillStarAlpha(s: SkyState, spine: Set<string>, detail: number) {
     const hl = s.highlight;
     const A = this.starA;
+    const hid = this.plan.hidden;
+    const work = this.plan.mode === 'work';
     for (let i = 0; i < this.nodes.length; i++) {
       const n = this.nodes[i];
+      // скрытое набором или свёрткой не рисуется; лица набора в режиме «В работе» видны все (J4, J5)
+      if (hid) {
+        if (hid[i]) {
+          A[i] = 0;
+          continue;
+        }
+        if (work) {
+          A[i] = 1;
+          continue;
+        }
+      }
       const q = byId.get(n.person);
       const k = hl?.get(n.person);
       // лицо свёрнутого скопления видно отдельно, только если это выбранное лицо, путь родства или отметка поиска
@@ -816,22 +1031,37 @@ export class Sky implements SkyContext {
     if (!cl) return;
     const { ctx, cam } = this;
     const m = this.model;
-    const yTop = cam.sy(m.laneMax + 0.5);
-    const h = (m.laneMax - m.laneMin + 1) * cam.ky;
+    // строки растра — полосы; при сжатии полос (J5) — только отрезки оставшихся полос, каждый на свою строку экрана
+    const runs: [number, number][] = [];
+    if (cam.rows.identity) runs.push([m.laneMax, m.laneMin]);
+    else
+      for (let l = m.laneMax; l >= m.laneMin; l--) {
+        if (Math.abs(this.rowOf(l + 0.5) - this.rowOf(l - 0.5) - 1) > 1e-6) continue;
+        let e = l;
+        while (e - 1 >= m.laneMin && Math.abs(this.rowOf(e - 0.5) - this.rowOf(e - 1.5) - 1) < 1e-6) e--;
+        runs.push([l, e]);
+        l = e;
+      }
     ctx.save();
     ctx.globalAlpha = a;
     ctx.imageSmoothingEnabled = true;
     const cols = cl.img.width;
-    if (Math.abs(this.lambda - 1) < 1e-6) {
-      ctx.drawImage(cl.img, 0, 0, cols, cl.img.height, cam.sx(cl.x0), yTop, (cl.x1 - cl.x0) * cam.kx, h);
-    } else {
-      // другой масштаб времени: растр переводится полосами через годы
-      const n = cl.strips.length - 1;
-      for (let k = 0; k < n; k++) {
-        const a0 = cam.sx(this.xOf(cl.strips[k]));
-        const a1 = cam.sx(this.xOf(cl.strips[k + 1]));
-        if (a1 < 0 || a0 > cam.w) continue;
-        ctx.drawImage(cl.img, (cols * k) / n, 0, cols / n, cl.img.height, a0, yTop, a1 - a0 + 0.5, h);
+    for (const [la, lb] of runs) {
+      const sy0 = m.laneMax - la;
+      const sh = la - lb + 1;
+      const yTop = cam.sy(la + 0.5);
+      const h = sh * cam.ky;
+      if (Math.abs(this.lambda - 1) < 1e-6) {
+        ctx.drawImage(cl.img, 0, sy0, cols, sh, cam.sx(cl.x0), yTop, (cl.x1 - cl.x0) * cam.kx, h);
+      } else {
+        // другой масштаб времени: растр переводится полосами через годы
+        const n = cl.strips.length - 1;
+        for (let k = 0; k < n; k++) {
+          const a0 = cam.sx(this.xOf(cl.strips[k]));
+          const a1 = cam.sx(this.xOf(cl.strips[k + 1]));
+          if (a1 < 0 || a0 > cam.w) continue;
+          ctx.drawImage(cl.img, (cols * k) / n, sy0, cols / n, sh, a0, yTop, a1 - a0 + 0.5, h);
+        }
       }
     }
     ctx.restore();
@@ -852,7 +1082,13 @@ export class Sky implements SkyContext {
     ctx.save();
     ctx.lineWidth = 1;
     const la = pal.lineAlpha * (hl ? 0.6 : 1);
+    // свёрнутое созвездие (J5) — строка-подпись вместо контура; вложенные в него дома тоже
+    const folded = (g: string) => {
+      for (let x: string | undefined = g, k = 0; x && k < 8; x = groupById.get(x)?.parent, k++) if (this.view.foldGroups.includes(x)) return true;
+      return false;
+    };
     for (const ov of this.outlineViews) {
+      if (this.view.foldGroups.length && folded(ov.o.group)) continue;
       const xa = cam.sx(this.xOf(ov.t0));
       const xb = cam.sx(this.xOf(ov.t1));
       const ya = cam.sy(ov.l1);
@@ -1012,8 +1248,10 @@ export class Sky implements SkyContext {
     const W = cam.w;
     const H = cam.h;
     const lineOnly = p.s.onlyLines;
+    const hid = this.plan.hidden;
     const vis: number[] = [];
     for (let i = 0; i < this.nodes.length; i++) {
+      if (hid && hid[i]) continue;
       const n = this.nodes[i];
       const y = cam.sy(n.lane);
       if (y < -20 || y > H + 20) continue;

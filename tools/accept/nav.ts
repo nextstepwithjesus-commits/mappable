@@ -221,7 +221,7 @@ export const nav: Scenario[] = [
       await p.goto(p.url().replace(/#.*$/, '#/david'));
       await p.waitForTimeout(2200);
       await p.locator('.sky canvas').focus();
-      for (let i = 0; i < 14; i++) await p.keyboard.press('ArrowLeft');
+      for (let i = 0; i < 14; i++) await p.keyboard.press('Shift+ArrowLeft');
       await p.waitForTimeout(600);
       const far = p.locator('.folio #sec-6 button.person[data-id="iessey"]').first();
       const w2 = await win(p);

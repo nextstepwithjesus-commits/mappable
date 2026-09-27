@@ -125,7 +125,8 @@ export function viewForPerson(id: string): ViewState | null {
   const vp = cam.vp;
   const kx = (vp.r - vp.l) / Math.max(1e-6, x1 - x0);
   const [, cy] = cam.vpCenter();
-  return { x0: x0 - vp.l / kx, kx, laneTop: n.lane + cy / cam.kyFor(kx) };
+  // вертикаль камеры — строки (сжатие полос, src/render/rows.ts)
+  return { x0: x0 - vp.l / kx, kx, laneTop: s.rowOf(n.lane) + cy / cam.kyFor(kx) };
 }
 
 /** Перелёт к лицу (все ссылки на лица, поиск, указатели у края): лицо — в видимой части неба. */
@@ -179,8 +180,9 @@ export function viewForIds(ids: readonly string[], minYears = 60): ViewState | n
   const H = Math.max(80, bottom - top);
   const x0 = Math.min(...pts.map((q) => q.x));
   const x1 = Math.max(...pts.map((q) => q.x));
-  const l0 = Math.min(...pts.map((q) => q.n.lane));
-  const l1 = Math.max(...pts.map((q) => q.n.lane));
+  // по строкам экрана: при сжатии полос (J4, J5) лица набора ближе, чем их полосы
+  const l0 = Math.min(...pts.map((q) => s.rowOf(q.n.lane)));
+  const l1 = Math.max(...pts.map((q) => s.rowOf(q.n.lane)));
   const tMid = s.tOf((x0 + x1) / 2);
   const span = Math.max(x1 - x0, s.xOf(tMid + minYears / 2) - s.xOf(tMid - minYears / 2));
   const room = Math.max(40, W * 0.8 - NAME_ROOM);
@@ -235,8 +237,8 @@ export function linesFrame(): { x0: number; x1: number; lane0: number; lane1: nu
     if (!n.spine || n.ghost) return;
     x0 = Math.min(x0, s.X0[i]);
     x1 = Math.max(x1, s.X0[i]);
-    lane0 = Math.min(lane0, n.lane);
-    lane1 = Math.max(lane1, n.lane);
+    lane0 = Math.min(lane0, s.rowOf(n.lane));
+    lane1 = Math.max(lane1, s.rowOf(n.lane));
   });
   return x1 > x0 ? { x0, x1, lane0, lane1 } : null;
 }

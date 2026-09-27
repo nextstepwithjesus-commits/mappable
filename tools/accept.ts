@@ -187,7 +187,7 @@ const BASE: Scenario[] = [
       await p.waitForTimeout(300);
       // строка набрана с неразрывными пробелами (B5): сравнивается текст
       const bar = (await p.locator('.sky .pickbar').count()) ? (await p.locator('.sky .pickbar').innerText()).replace(/\u00a0/g, ' ') : '';
-      if (!/^Родство с Давидом: щёлкните второе лицо на небе или найдите его в поле «Найти»\. Esc — отмена/.test(bar)) return fail(`строка режима: «${bar}»`);
+      if (!/^Родство с Давидом: выберите второе лицо на небе или найдите его в поле «Найти»\. Esc — отмена/.test(bar)) return fail(`строка режима: «${bar}»`);
       await find(p, 'Иоав');
       if (hashId(p) !== 'david') return fail(`первым лицом стало «${hashId(p)}»`);
       if (await p.locator('.sky .pickbar').count()) return fail('режим выбора второго лица не снят');
@@ -345,9 +345,9 @@ const BASE: Scenario[] = [
       const tipNow = async () => ((await p.locator('.sky .tip b').count()) ? (await p.locator('.sky .tip b').innerText()).trim() : '');
       const star = await hoverStar(p, () => true);
       if (!star) return fail('не нашлось звезды');
-      // сдвиг клавишами: указатель остаётся над небом, звезда уезжает из-под него
+      // сдвиг клавишами — Shift + стрелка (стрелка без Shift ведёт фокус по звёздам, I1): указатель остаётся над небом, звезда уезжает из-под него
       await p.locator('.sky canvas').focus();
-      for (let i = 0; i < 4; i++) await p.keyboard.press('ArrowLeft');
+      for (let i = 0; i < 4; i++) await p.keyboard.press('Shift+ArrowLeft');
       await p.waitForTimeout(60);
       if ((await tipNow()) === star.name) return fail(`после сдвига висит «${star.name}»`);
       // перелёт из поиска, набранного с клавиатуры: мышь так и стоит над небом

@@ -23,6 +23,7 @@ import { alpha } from '../../render/color.ts';
 import { drawGlyph, roleSigla, type GlyphOpts } from '../../render/glyphs.ts';
 import { highlightFor, SIB } from '../../render/marks.ts';
 import { drawStrands, lineNoteHits, ribbonLook } from '../../render/ribbons.ts';
+import { drawFoldMark } from '../../render/labels.ts';
 import { eventMarks } from '../../render/frame.ts';
 import { DIM, FRAME_H, readPalette, Sky, type Palette, type SkyState } from '../../render/sky.ts';
 import {
@@ -30,6 +31,7 @@ import {
 } from '../../render/trails.ts';
 import { lambda, layers, lineFlip, model, theme } from '../../state.ts';
 import { RailKey, STATE_TEXT, type SecState } from '../card/Rail.tsx';
+import { LifeBar } from '../card/Masthead.tsx';
 import { CERT_FULL, MARK_FULL, viewTick } from '../common.tsx';
 import { Check } from '../controls.tsx';
 import { ReadingGuide } from '../sky/Overlays.tsx';
@@ -159,6 +161,14 @@ export const PAINTERS = {
     drawBracket(ctx, { x: b[0].x, y0, kids: b, color: look.link(pal), dash: MOTHER_DASH[1] });
     for (const k of [...a, ...b]) drawGlyph(ctx, k.x, k.y, star(pal));
   },
+  /** свёрнутые потомки (J5): «+12» справа от следа лица — тем же знаком, что на небе */
+  foldDesc: (ctx, pal, w, h) => {
+    const y = px(h / 2);
+    person(ctx, pal, 12, y, w - 44);
+    drawFoldMark(ctx, pal, false, w - 38, y + 4, '', '+12');
+  },
+  /** свёрнутое созвездие (J5): строка с названием и числом скрытых лиц */
+  foldGroup: (ctx, pal, _w, h) => drawFoldMark(ctx, pal, false, 6, Math.round(h / 2) + 4, 'ЕДОМ', '+38'),
   /** брак: «‖» от следа мужа к жене в год первого ребёнка */
   marriage: (ctx, pal, w, h) => {
     const [yH, yW] = [px(9), px(h - 10)];
@@ -704,6 +714,21 @@ export function LegendPanel() {
           Приблизьте — скопление раскроется в сетку имён под скобкой «время не установлено»: годы этих лиц Писание не
           сообщает, поэтому следов жизни у них нет.
         </Wide>
+        <Row s={P('foldDesc')}>
+          «+12» справа от следа — потомки лица свёрнуты, скрыто 12 лиц; щелчок разворачивает. Свернуть потомков — команда
+          карточки, клавиша С (C) или меню звезды: правая кнопка мыши, долгое касание.
+        </Row>
+        <Row s={P('foldGroup')}>
+          Свёрнутое созвездие — строка с названием и числом скрытых лиц; щелчок разворачивает. Свернуть созвездие — правой
+          кнопкой мыши или долгим касанием по его названию; «развернуть всё» — в органах неба.
+        </Row>
+        <li class="legend-row legend-wide">
+          <span class="legend-text">
+            «На небе: в работе» — только лица рабочего набора, все подписаны; пустые полосы убраны, между родами — зазор;
+            ленты Мессии — тонкой нитью. «Всё небо» вписывает набор. Набор собирается командой «Взять в работу» в карточке,
+            в подсказке звезды, в поиске и в «Родстве»; список — в панели «В работе».
+          </span>
+        </li>
       </ul>
 
       <h3 id="legend-signs">Знаки</h3>
@@ -827,14 +852,13 @@ export function LegendPanel() {
 
       <h3 id="legend-card">Карточка</h3>
       <ul class="legend">
-        {/* образца мини-шкалы нет: её рисует LifeBar в src/ui/card/Masthead.tsx, функция не экспортирована, а вся шапка
-            карточки внутри панели дала бы второй заголовок h2 */}
-        <li class="legend-row legend-wide">
-          <span class="legend-text">
-            Мини-шкала в шапке карточки: вверху эпохи; жизнь — полоса, растушёванное начало — оценка года рождения, пунктир
-            в конце — год смерти не известен; кружки — рождения родителей, риски — рождения детей; внизу — годы.
-          </span>
-        </li>
+        {/* образец — сама мини-шкала шапки (LifeBar), без шапки целиком: второй h2 в панели не нужен; лицо — Вооз:
+            оценка рождения, родители, сын, год смерти не известен */}
+        <Wide s={<LifeBar id="vooz" />}>
+          Мини-шкала в шапке карточки (здесь — Вооз): вверху эпохи; жизнь — полоса, растушёванное начало — оценка года
+          рождения, пунктир в конце — год смерти не известен; кружки — рождения родителей, риски — рождения детей; внизу —
+          годы.
+        </Wide>
         <Wide
           s={
             <>

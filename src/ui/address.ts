@@ -114,7 +114,7 @@ export function currentView(): View | null {
   const { l, r } = c.vp;
   const [cx, cy] = c.vpCenter();
   if (!(r > l)) return null;
-  return { year: toHist(s.tOf(c.wx(cx))), width: s.tOf(c.wx(r)) - s.tOf(c.wx(l)), lane: c.wLane(cy) };
+  return { year: toHist(s.tOf(c.wx(cx))), width: s.tOf(c.wx(r)) - s.tOf(c.wx(l)), lane: s.laneOf(c.wLane(cy)) };
 }
 
 /**
@@ -135,7 +135,8 @@ export function cameraFor(v: View): { x: number; lane: number; kx: number } | nu
     if (span(Math.exp(mid)) > v.width) lo = mid;
     else hi = mid;
   }
-  return { x: xc, lane: v.lane, kx: Math.exp((lo + hi) / 2) };
+  // в адресе — полоса раскладки; на сжатом небе (J4, J5) камера ходит по строкам
+  return { x: xc, lane: s.rowOf(v.lane), kx: Math.exp((lo + hi) / 2) };
 }
 
 /** Поставить окно: сразу (первый показ) или перелётом («назад», «вперёд»); камера держит его в своих пределах. */

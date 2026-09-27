@@ -65,7 +65,8 @@ export function pickBarText(mode: 'kinship' | 'spread', id: string): string {
   const what = mode === 'kinship' ? 'Родство' : 'Разворот';
   const ins = nameCase(p.name, p.sex, 'ins', p.unnamed);
   const lead = ins ? `${what} ${withPrep(ins)} ${ins}` : `${what}; первое лицо — ${p.name}`;
-  return `${lead}: щёлкните второе лицо на небе или найдите его в поле «Найти». Esc — отмена`;
+  // «выберите», а не «щёлкните»: на сенсорном экране не щёлкают; «Esc — отмена» — в PickBar, только при клавиатуре (MOB-21)
+  return `${lead}: выберите второе лицо на небе или найдите его в поле «Найти»`;
 }
 
 /**

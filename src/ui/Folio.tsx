@@ -17,6 +17,9 @@ import { affiliation } from './card/shared.tsx';
 import { lifeSpanText } from '../engine/years.ts';
 import { reduced } from './sky/view.ts';
 import { sheetStop, snapSheet, stopsFor, releaseVelocity, type SheetStop } from './sheet.ts';
+import { cardFolded, cardStack, dropCard } from './work.ts';
+import { FoldButton, WorkButton } from './panels/Work.tsx';
+import { goTo } from './common.tsx';
 
 export { Masthead, SECTIONS, PARTS, buildSections, familyIds, contemporaryGroups };
 export type { SecState };
@@ -493,17 +496,36 @@ export function Folio() {
       </button>
     </div>
   );
+  // рабочий набор и свёртка на небе (J3, J5) — второй строкой команд шапки: «Взять в работу» с выбором объёма, «Свернуть потомков»
+  const workCmds = (
+    <div class="workcmds">
+      <WorkButton id={id} />
+      <FoldButton id={id} />
+    </div>
+  );
+  const others = cardStack.value.filter((x) => x !== id && byId.has(x));
+  const folded = cardFolded.value;
 
   return (
-    <aside class="folio" aria-label={`Карточка: ${p.name}`} ref={aside} data-stop={phone ? stop : undefined}>
+    <aside class="folio" aria-label={`Карточка: ${p.name}`} ref={aside} data-stop={phone ? stop : undefined} data-folded={!phone && folded ? '' : undefined}>
       {phone && <SheetBar id={id} stop={stop} />}
+      {/* стопка на телефоне — строка открытых карточек над листом (J6) */}
+      {phone && others.length > 0 && <StackStrip ids={others} />}
       <div class="folio-inner" ref={inner}>
         {/* единый «×» (B3): липкий, в правом верхнем углу листа; на сенсорном экране — 44 × 44; на телефоне — в шапке листа */}
-        {/* «×» снимает только выбор; открытая панель остаётся (D11; IX-26) */}
+        {/* «×» снимает только выбор; открытая панель остаётся (D11; IX-26); карточка остаётся в стопке */}
         {!phone && <Close label="Закрыть карточку" onClick={() => (selected.value = null)} />}
-        {failed === id ? (
+        {/* «Свернуть» (J6): активная карточка — строкой стопки */}
+        {!phone && !folded && (
+          <button type="button" class="cmd fold-card" title="Свернуть карточку до строки" onClick={() => (cardFolded.value = true)}>
+            Свернуть
+          </button>
+        )}
+        {/* стопка (J6): другие открытые карточки — строками над активной; щелчок разворачивает */}
+        {!phone && (others.length > 0 || folded) && <StackRows ids={others} active={folded ? id : null} />}
+        {!phone && folded ? null : failed === id ? (
           <>
-            <Masthead id={id} actions={actions} />
+            <Masthead id={id} actions={<>{actions}{workCmds}</>} />
             <div class="load-error" role="alert">
               <p>{typo('Карточку не удалось загрузить: том с её разделами не пришёл. Проверьте связь и повторите.')}</p>
               <button type="button" class="cmd" onClick={() => setAttempt((a) => a + 1)}>
@@ -512,9 +534,9 @@ export function Folio() {
             </div>
           </>
         ) : (
-          <CardPage id={id} body={shownBody} stale={stale} current={current} actions={actions} />
+          <CardPage id={id} body={shownBody} stale={stale} current={current} actions={<>{actions}{workCmds}</>} />
         )}
-        {!shownBody && failed !== id && slow ? (
+        {!shownBody && failed !== id && slow && !(folded && !phone) ? (
           <p class="muted" role="status">
             Загрузка карточки…
           </p>
@@ -543,3 +565,60 @@ function FolioSpine({ id }: { id: string }) {
   );
 }
 
+
+/** Годы лица для строки стопки: как в шапке листа. */
+function stackYears(id: string): string {
+  const c = model.value.chrono.get(id);
+  return typo((c ? lifeSpanText(c, { people: isPeople(id) }) : '') || 'время не установлено');
+}
+
+/**
+ * Стопка карточек (J6): открытые прежде карточки — строками «имя, уточнение, годы» над активной, самые недавние — выше.
+ * Щелчок по строке делает карточку активной (и кладёт её наверх); «×» убирает её из стопки. active — активная
+ * карточка, свёрнутая до строки: щелчок её разворачивает.
+ */
+function StackRows({ ids, active }: { ids: string[]; active: string | null }) {
+  const row = (id: string, isActive: boolean) => {
+    const p = byId.get(id)!;
+    return (
+      <li key={id} class={isActive ? 'stack-row active' : 'stack-row'} data-id={id}>
+        <button
+          type="button"
+          class="sr-open"
+          aria-label={`${isActive ? 'Развернуть карточку' : 'Открыть карточку'}: ${p.name}${p.disambig ? `, ${p.disambig}` : ''}`}
+          onClick={() => (isActive ? (cardFolded.value = false) : goTo(id))}
+        >
+          <span class="nm">{p.name}</span>
+          {p.disambig ? <span class="ds">{typo(`, ${p.disambig}`)}</span> : null}
+          <span class="yrs">{stackYears(id)}</span>
+        </button>
+        <Close label={`Убрать из стопки: ${p.name}`} onClick={() => dropCard(id)} />
+      </li>
+    );
+  };
+  return (
+    <ul class="stack" aria-label="Открытые карточки">
+      {ids.map((id) => row(id, false))}
+      {active && row(active, true)}
+    </ul>
+  );
+}
+
+/** Стопка на телефоне (J6): строка открытых карточек над листом; касание — карточка наверх, «×» — убрать. */
+function StackStrip({ ids }: { ids: string[] }) {
+  return (
+    <ul class="stack-strip" aria-label="Открытые карточки">
+      {ids.map((id) => {
+        const p = byId.get(id)!;
+        return (
+          <li key={id} data-id={id}>
+            <button type="button" class="sr-open" aria-label={`Открыть карточку: ${p.name}${p.disambig ? `, ${p.disambig}` : ''}`} onClick={() => goTo(id)}>
+              {p.name}
+            </button>
+            <Close label={`Убрать из стопки: ${p.name}`} onClick={() => dropCard(id)} />
+          </li>
+        );
+      })}
+    </ul>
+  );
+}

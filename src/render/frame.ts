@@ -502,8 +502,9 @@ function drawRowLetters(v: SkyContext) {
   ctx.strokeStyle = alpha(pal.rule, 0.9);
   ctx.textBaseline = 'middle';
   const fs = mapSize(T_MAP_S, v.coarse);
-  const r0 = atlasRow(cam.wLane(top));
-  const r1 = atlasRow(cam.wLane(bottom));
+  // вертикаль камеры — строки; буквы — по полосам под ними (сжатие полос J4, J5: убранные строки атласа без буквы)
+  const r0 = atlasRow(v.laneOf(cam.wLane(top)));
+  const r1 = atlasRow(v.laneOf(cam.wLane(bottom)));
   // строка ниже кегля (всё небо на телефоне под листом карточки): буква у каждой k-й строки, черты — у них же
   const rowH = ATLAS_BAND * cam.ky;
   const every = rowH >= fs + 4 ? 1 : [2, 3, 5].find((k) => k * rowH >= fs + 6) ?? 8;
@@ -616,7 +617,8 @@ export function placeWayfinding(v: SkyContext, s: SkyState, p: Pass | null): Edg
   for (const id of [s.selected, s.second]) {
     if (!id) continue;
     const i = v.indexOf(id);
-    if (i === undefined) continue;
+    // лицо скрыто рабочим набором или свёрткой (J4, J5): указывать некуда
+    if (i === undefined || v.hides(id)) continue;
     const x = cam.sx(v.X0[i]);
     const y = cam.sy(v.nodes[i].lane);
     const inside = x > v.letterW && x < W && y > top && y < bottom;

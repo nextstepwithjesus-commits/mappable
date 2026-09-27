@@ -9,6 +9,7 @@ import { ChapterPanel } from './panels/Chapter.tsx';
 import { SectionPanel } from './panels/Section.tsx';
 import { LegendPanel } from './panels/Legend.tsx';
 import { AboutPanel } from './panels/About.tsx';
+import { WorkPanel } from './panels/Work.tsx';
 
 export function Panels() {
   switch (panel.value) {
@@ -30,6 +31,8 @@ export function Panels() {
       return <LegendPanel />;
     case 'about':
       return <AboutPanel />;
+    case 'work':
+      return <WorkPanel />;
     default:
       return null;
   }

@@ -95,6 +95,12 @@ export interface ComboboxProps {
   onEscape?: () => void;
   /** фокус в поле сразу после появления (поле «Второе», открытое командой «заменить») */
   autoFocus?: boolean;
+  /**
+   * Вторая команда строки-лица (J3: «взять в работу»): надпись в конце строки — для мыши и пальца, Shift+Enter в поле —
+   * для клавиатуры. Надпись скрыта от диктора: внутри option нет вложенного органа управления (WCAG 4.1.2), а команду
+   * диктору называет статус списка (Search.tsx).
+   */
+  rowCmd?: { label: (id: string) => string; title: string; run: (id: string) => void };
 }
 
 export function Combobox(props: ComboboxProps) {
@@ -165,6 +171,13 @@ export function Combobox(props: ComboboxProps) {
     setCursor(Math.max(0, Math.min(rows.length - 1, to)));
   };
   const onKey = (e: KeyboardEvent) => {
+    const row = listOpen ? rows[active] : undefined;
+    if (e.key === 'Enter' && e.shiftKey && props.rowCmd && row?.kind === 'person') {
+      // Shift+Enter — вторая команда строки; список остаётся открытым: так берут несколько лиц подряд
+      e.preventDefault();
+      props.rowCmd.run(row.id);
+      return;
+    }
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault();
       if (!listOpen) {
@@ -229,48 +242,64 @@ export function Combobox(props: ComboboxProps) {
         onKeyDown={onKey}
         role="combobox"
         aria-autocomplete="list"
-        aria-controls={listId}
-        aria-expanded={listOpen}
+        aria-controls={listOpen ? listId : undefined}
+        aria-expanded={listOpen && rows.length > 0}
         aria-activedescendant={listOpen && active >= 0 && rows[active] ? optId(active) : undefined}
       />
       <span class="visually-hidden" aria-live="polite">
-        {listOpen ? props.status : ''}
+        {listOpen ? (!q.trim() && notice ? typo(`${notice.text} ${props.status}`) : props.status) : ''}
       </span>
       {listOpen && (
-        <div class="results" id={listId} ref={list} role="listbox" aria-label={props.listLabel} style={maxH ? { '--results-max': `${maxH}px` } : undefined}>
-          {!q.trim() && notice && <div class="empty notice">{typo(notice.text)}</div>}
-          {rows.length > 0 &&
-            blocks.map((b, bi) => {
-              const items = b.rows.map((r) => {
-                i++;
-                const k = i;
-                const on = k === active;
-                const common = {
-                  id: optId(k),
-                  role: 'option' as const,
-                  'aria-selected': on,
-                  onMouseDown: (e: MouseEvent) => e.preventDefault(),
-                  onMouseMove: () => k !== active && setCursor(k),
-                  onClick: () => choose(r),
-                };
-                if (r.kind === 'person') return <ResultRow key={r.key} {...common} person={r.id} grouped={r.grouped} />;
+        // список (listbox) — только когда в нём есть строки (I3; MOB-28): «ничего не найдено» и сообщение об адресе —
+        // не пункты списка; сообщение над строками скрыто от диктора внутри списка, его читает живая область статуса
+        <div
+          class="results"
+          id={listId}
+          ref={list}
+          role={rows.length ? 'listbox' : undefined}
+          aria-label={rows.length ? props.listLabel : undefined}
+          style={maxH ? { '--results-max': `${maxH}px` } : undefined}
+        >
+          {!q.trim() && notice && (
+            <div class="empty notice" aria-hidden={rows.length ? 'true' : undefined}>
+              {typo(notice.text)}
+            </div>
+          )}
+          {rows.length > 0 && (
+            <>
+              {blocks.map((b, bi) => {
+                const items = b.rows.map((r) => {
+                  i++;
+                  const k = i;
+                  const on = k === active;
+                  const common = {
+                    id: optId(k),
+                    role: 'option' as const,
+                    'aria-selected': on,
+                    onMouseDown: (e: MouseEvent) => e.preventDefault(),
+                    onMouseMove: () => k !== active && setCursor(k),
+                    onClick: () => choose(r),
+                  };
+                  if (r.kind === 'person') return <ResultRow key={r.key} {...common} person={r.id} grouped={r.grouped} cmd={props.rowCmd} />;
+                  return (
+                    <div key={r.key} {...common} class={`result cmdrow ${r.kind}`}>
+                      {props.cmdLabel?.(r) ?? ''}
+                    </div>
+                  );
+                });
+                if (!b.head) return items;
+                const hid = `${id}-grp-${bi}`;
                 return (
-                  <div key={r.key} {...common} class={`result cmdrow ${r.kind}`}>
-                    {props.cmdLabel?.(r) ?? ''}
+                  <div key={hid} role="group" aria-labelledby={hid} class="grp">
+                    <div class="grp-head" id={hid}>
+                      {typo(b.head)}
+                    </div>
+                    {items}
                   </div>
                 );
-              });
-              if (!b.head) return items;
-              const hid = `${id}-grp-${bi}`;
-              return (
-                <div key={hid} role="group" aria-labelledby={hid} class="grp">
-                  <div class="grp-head" id={hid}>
-                    {typo(b.head)}
-                  </div>
-                  {items}
-                </div>
-              );
-            })}
+              })}
+            </>
+          )}
           {!rows.length && q.trim() && props.empty ? <div class="empty">{props.empty}</div> : null}
         </div>
       )}
@@ -281,8 +310,8 @@ export function Combobox(props: ComboboxProps) {
 /** «3 лица», «ничего не найдено» — для живой области списка. */
 export const countStatus = (n: number, loading = false) => (n ? `${n}\u00a0${plural(n, 'лицо', 'лица', 'лиц')}` : loading ? '' : 'ничего не найдено');
 
-/** Строка-лицо: имя и уточнение, годы и микрошкала жизни (ТЗ § 3.7). */
-function ResultRow({ person: id, grouped, ...rest }: { person: string; grouped: boolean } & Record<string, unknown>) {
+/** Строка-лицо: имя и уточнение, годы и микрошкала жизни (ТЗ § 3.7); cmd — вторая команда строки в её конце. */
+function ResultRow({ person: id, grouped, cmd, ...rest }: { person: string; grouped: boolean; cmd?: ComboboxProps['rowCmd'] } & Record<string, unknown>) {
   const p = byId.get(id)!;
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
@@ -302,6 +331,21 @@ function ResultRow({ person: id, grouped, ...rest }: { person: string; grouped: 
       </span>
       <span class="yr">{typo(lifeText(id))}</span>
       <canvas ref={ref} width={56} height={10} aria-hidden="true" />
+      {cmd ? (
+        // нажатие не уводит фокус из поля и не выбирает строку: команда — своя
+        <span
+          class="row-cmd"
+          title={cmd.title}
+          aria-hidden="true"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={(e) => {
+            e.stopPropagation();
+            cmd.run(id);
+          }}
+        >
+          {cmd.label(id)}
+        </span>
+      ) : null}
     </div>
   );
 }

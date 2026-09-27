@@ -374,6 +374,8 @@ export function drawDescents(v: SkyContext, p: Pass): FamilyNote[] {
     const n = v.nodes[i];
     if (n.parentLane === null || n.satelliteOf) continue;
     if (n.ghost && !L.ghosts) continue;
+    // родитель скрыт рабочим набором или свёрткой (J4, J5): связь не рисуется — её конец висел бы в пустоте
+    if (n.layoutParent && v.hides(n.layoutParent)) continue;
     const y0 = cam.sy(n.parentLane);
     const y1 = cam.sy(n.lane);
     const x = Math.round(cam.sx(v.X0[i])) + 0.5;
@@ -439,7 +441,7 @@ export function drawDescents(v: SkyContext, p: Pass): FamilyNote[] {
         let mother: typeof knot | undefined;
         if (g.mother) {
           const mi2 = v.indexOf(g.mother);
-          if (mi2 !== undefined) {
+          if (mi2 !== undefined && !v.hides(g.mother)) {
             const my = cam.sy(v.nodes[mi2].lane);
             if (my > lo + 1 && my < hi - 1 && my !== g.y0) {
               knot.y = my;
@@ -512,7 +514,7 @@ function drawMarriages(v: SkyContext, p: Pass) {
     const n = v.nodes[i];
     if (!n.satelliteOf) continue;
     const hi = v.indexOf(n.satelliteOf);
-    if (hi === undefined) continue;
+    if (hi === undefined || v.hides(n.satelliteOf)) continue;
     const fc = firstChild(v.model, n.satelliteOf, n.person);
     const xw = cam.sx(v.X0[i]);
     const x = fc !== null ? cam.sx(v.xOf(fc)) - 6 : Math.max(xw, cam.sx(v.X0[hi])) + 12;

@@ -2,12 +2,17 @@
  * Клавиши неба: масштаб, сдвиг, переходы по родству «[ ] , .», «0» и Home — всё небо (D10; IX-38, 40).
  * По физическим клавишам (KeyboardEvent.code), поэтому работают и на русской раскладке; слушает их window
  * (src/ui/keys.ts), а не холст: небо отвечает и без фокуса на холсте.
+ * Фокус на небе (I1; MOB-29–31, IX-39): стрелки — к ближайшей звезде в эту сторону, Shift со стрелками — сдвиг неба,
+ * Enter и пробел — открыть карточку звезды с фокусом, фокус — на заголовок карточки. Вне неба стрелки, как прежде,
+ * сдвигают небо: кольца фокуса там нет, водить нечего.
  */
 import { byId, graph, lineMembership } from '../../data/atlas.ts';
-import { selected, hovered, panel, epochMode, pickSecond } from '../../state.ts';
+import { selected, hovered, focused, panel, epochMode } from '../../state.ts';
 import { goTo, skyRef } from '../common.tsx';
 import { showAll, stopFlight, zoomBy } from './view.ts';
 import { KEY_STEP, KEY_MS, stopZoom } from './input.ts';
+import { arrowDir, moveStarFocus } from './starnav.ts';
+import { focusCardTitle } from '../focus.ts';
 
 // ---------- клавиши неба ----------
 
@@ -32,11 +37,16 @@ export function childFor(id: string, path: string[]): { to: string | null; path:
   return { to: best ?? null, path: [] };
 }
 
+/** Сдвиг неба стрелкой: на 120 px по времени, на 90 px по полосам. */
+const PAN_X = 120;
+const PAN_Y = 90;
+
 /**
  * Клавиши неба (на window, кроме полей ввода; вызывает src/ui/keys.ts). Возвращает true, если клавиша обработана.
- * nav — можно ли стрелкам и Home вести небо (фокус не в прокручиваемой панели или карточке).
+ * nav — можно ли стрелкам и Home вести небо (фокус не в прокручиваемой панели или карточке);
+ * onSky — фокус на холсте или в списке лиц неба: стрелки водят фокус по звёздам; onCanvas — на самом холсте.
  */
-export function skyKeys(e: KeyboardEvent, nav: boolean, onCanvas: boolean): boolean {
+export function skyKeys(e: KeyboardEvent, nav: boolean, onCanvas: boolean, onSky = onCanvas): boolean {
   const sky = skyRef.current;
   if (!sky) return false;
   const id = selected.value;
@@ -70,11 +80,16 @@ export function skyKeys(e: KeyboardEvent, nav: boolean, onCanvas: boolean): bool
       if (!nav) return false;
       stopFlight();
       stopZoom();
-      const k = e.shiftKey ? 3 : 1;
-      if (e.code === 'ArrowLeft') sky.cam.pan(120 * k, 0);
-      else if (e.code === 'ArrowRight') sky.cam.pan(-120 * k, 0);
-      else if (e.code === 'ArrowUp') sky.cam.pan(0, 90 * k);
-      else sky.cam.pan(0, -90 * k);
+      if (onSky && !e.shiftKey) {
+        // фокус — к ближайшей звезде в эту сторону; из списка лиц неба фокус возвращается на холст
+        moveStarFocus(arrowDir(e.code)!);
+        if (!onCanvas) sky.canvas.focus({ preventScroll: true });
+        break;
+      }
+      if (e.code === 'ArrowLeft') sky.cam.pan(PAN_X, 0);
+      else if (e.code === 'ArrowRight') sky.cam.pan(-PAN_X, 0);
+      else if (e.code === 'ArrowUp') sky.cam.pan(0, PAN_Y);
+      else sky.cam.pan(0, -PAN_Y);
       break;
     }
     case 'BracketLeft': {
@@ -111,10 +126,16 @@ export function skyKeys(e: KeyboardEvent, nav: boolean, onCanvas: boolean): bool
       break;
     case 'Enter':
     case 'NumpadEnter':
-      // Enter — только на самом холсте: у кнопок свои Enter и пробел (MOB-29)
-      if (!onCanvas || !hovered.value) return false;
-      if (!pickSecond(hovered.value)) selected.value = hovered.value;
+    case 'Space': {
+      // Enter и пробел — только на самом холсте: у кнопок свои Enter и пробел (MOB-29). Звезда с фокусом клавиатуры,
+      // иначе — под указателем; в режиме выбора второго лица она становится вторым (goTo → pickSecond)
+      const to = focused.value ?? hovered.value;
+      if (!onCanvas || !to) return false;
+      goTo(to);
+      // карточка открылась — фокус на её заголовок (MOB-31); выбрано второе лицо — фокус возьмёт открытая панель
+      focusCardTitle(to);
       break;
+    }
     default:
       return false;
   }

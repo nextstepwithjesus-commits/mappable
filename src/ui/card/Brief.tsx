@@ -240,7 +240,8 @@ export function briefText(id: string, card: Card | null): string {
 }
 
 /** Абзац «Кратко» под шапкой; у предложений, взятых из текста (у малых лиц), — стихи со вклейкой. */
-export function Brief({ id, card }: { id: string; card: Card | null }) {
+/** ns — приставка вклеек стихов: «Кратко» в панели «В работе» раскрывает свои стихи, а не стихи листа карточки. */
+export function Brief({ id, card, ns = '' }: { id: string; card: Card | null; ns?: string }) {
   const ss = briefSentences(id, card);
   if (!ss.length) return null;
   // имена в записях, взятых из текста (§ 5, § 17), — ссылки, как в разделах (F12)
@@ -259,11 +260,11 @@ export function Brief({ id, card }: { id: string; card: Card | null }) {
           <span key={i}>
             {i ? ' ' : ''}
             {s.segs.map((x, k) => seg(x, k, s.data))}
-            {s.refs?.length ? <Refs refs={s.refs} owner={`brief.${i}`} tail="." /> : '.'}
+            {s.refs?.length ? <Refs refs={s.refs} owner={`${ns}brief.${i}`} tail="." /> : '.'}
           </span>
         ))}
       </p>
-      {ss.map((s, i) => (s.refs?.length ? <VerseInsert key={`v${i}`} owner={`brief.${i}`} refs={s.refs} /> : null))}
+      {ss.map((s, i) => (s.refs?.length ? <VerseInsert key={`v${i}`} owner={`${ns}brief.${i}`} refs={s.refs} /> : null))}
     </div>,
   );
 }

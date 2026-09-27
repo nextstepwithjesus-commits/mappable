@@ -8,7 +8,7 @@ import {
   selected, second, first, hovered, focused, lambda, model, layers, onlyLines, meridian, panel, pickMode, theme, introDone, epochMode, lineFlip, pins,
   pinsQuery, kinPath, kinSteps, skyGroup, synopsisAt,
 } from '../state.ts';
-import { skyRef, viewTick, goTo } from './common.tsx';
+import { skyRef, viewTick } from './common.tsx';
 import { drawTiers, replanTiers, tiersBottom } from '../render/tiers.ts';
 import { typo } from './text/typo.ts';
 import { aliveAt, lifeText, meridianText, placeText } from './sky/text.ts';
@@ -17,6 +17,10 @@ import { attachPointer, type Tip } from './sky/input.ts';
 import { COLUMN_BELOW, SkyColumn, SkyControls, ViewSheet } from './sky/Controls.tsx';
 import { CARTOUCHE_BESIDE, Cartouche, GroupBar, GuideCommand, PickBar, PinBar } from './sky/Overlays.tsx';
 import { SkyTip } from './sky/Tip.tsx';
+import { SkyA11y } from './sky/SkyA11y.tsx';
+import { foldDesc, foldGroups, skyMode, workIds, workKey } from './work.ts';
+import { SkyMenu, WorkBar, skyMenu } from './panels/Work.tsx';
+import { isTextField } from './keys.ts';
 
 /**
  * Путь родства, который сейчас можно показать: он идёт от первого лица пары ко второму.
@@ -217,6 +221,9 @@ export function SkyView() {
       let left = 0;
       const sheet = document.querySelector<HTMLElement>('.folio:not([hidden])');
       if (sheet && getComputedStyle(sheet).position === 'fixed') bottom = Math.max(0, box.bottom - sheet.getBoundingClientRect().top);
+      // стопка карточек на телефоне — строка над листом (J6): небо под ней тоже закрыто
+      const strip = sheet?.querySelector<HTMLElement>('.stack-strip');
+      if (strip && bottom > 0) bottom = Math.max(bottom, box.bottom - strip.getBoundingClientRect().top);
       const cart = wrap.current!.querySelector<HTMLElement>('.cartouche');
       if (cart) {
         const c = cart.getBoundingClientRect();
@@ -440,6 +447,56 @@ export function SkyView() {
       if (onlyLines.value) flowStart = performance.now();
       request();
     });
+    // рабочий набор и свёртка (J4, J5): небо рисует только набор или сворачивает потомков и созвездия, полосы сжимаются.
+    // Небо не сдвигается: свёрнутое или развёрнутое лицо (иначе выбранное) остаётся на своём месте экрана; смена режима
+    // «все лица | в работе» вписывает то, что теперь на небе
+    let shownMode: string | null = null;
+    let shownFolds = foldDesc.peek();
+    const offWork = effect(() => {
+      const v = { mode: skyMode.value, set: workIds.value, foldDesc: foldDesc.value, foldGroups: foldGroups.value };
+      const toggled = v.foldDesc.find((x) => !shownFolds.includes(x)) ?? shownFolds.find((x) => !v.foldDesc.includes(x));
+      shownFolds = v.foldDesc;
+      const changed = sky.setView(v, toggled ?? selected.peek());
+      // первый показ в режиме «В работе» (сеанс продолжается после перезагрузки) — сразу вписать набор
+      if (shownMode === null) {
+        shownMode = v.mode;
+        if (changed && v.mode === 'work' && sky.model && last.w) sky.fitAll();
+        if (changed) request();
+        return;
+      }
+      if (!changed) return;
+      skyMenu.value = null;
+      // включили «в работе» — вписать набор; вернулись ко всем лицам — то же окно лет и те же полосы, но со всем небом
+      if (sky.model && last.w && v.mode === 'work' && shownMode !== 'work') {
+        stopFlight();
+        sky.cam.flyTo(sky.fitState(), request, reduced());
+      } else if (sky.model && last.w) {
+        sky.cam.clampNow();
+        const id = selected.peek();
+        if (id && v.mode !== shownMode && !inView(id)) keepInView(id);
+      }
+      shownMode = v.mode;
+      request();
+    });
+    // клавиши рабочего набора (J3, J5): «В» — взять лицо в работу, «С» — свернуть потомков; лицо — звезда с фокусом,
+    // под указателем или выбранное. Как у клавиш атласа (src/ui/keys.ts): не в полях ввода, не с модификаторами, не в меню
+    const onWorkKey = (e: KeyboardEvent) => {
+      // открытое меню неба — одно видимое состояние: Escape снимает его первым (D5)
+      if (e.code === 'Escape' && skyMenu.peek() && !e.defaultPrevented) {
+        skyMenu.value = null;
+        e.preventDefault();
+        return;
+      }
+      if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || isTextField(e.target)) return;
+      if (e.code !== 'KeyD' && e.code !== 'KeyC') return;
+      const t = e.target instanceof HTMLElement ? e.target : null;
+      if (t?.closest('[role="menu"], [role="listbox"], .workpick')) return;
+      if (workKey(e.code)) {
+        e.preventDefault();
+        request();
+      }
+    };
+    window.addEventListener('keydown', onWorkKey);
 
     const input = attachPointer(sky, canvas, request, setTip);
 
@@ -456,6 +513,8 @@ export function SkyView() {
       offSel();
       offLines();
       offTiers();
+      offWork();
+      window.removeEventListener('keydown', onWorkKey);
       clearTimeout(settleTimer);
       // перелёт и шаг масштаба останавливаются вместе с небом: их кадры некуда рисовать
       sky.cam.stop();
@@ -483,24 +542,6 @@ export function SkyView() {
     if (!column && panel.value === 'view') panel.value = null;
   }, [column]);
 
-  const visibleForSR = (() => {
-    void viewTick.value;
-    const sky = skyRef.current;
-    if (!sky || !sky.model) return [];
-    const out: string[] = [];
-    // только то, что видно и доступно указателю: без скрытых режимом «только линии» и закрытых ярусами эпох
-    for (let i = 0; i < sky.nodes.length && out.length < 40; i++) {
-      const n = sky.nodes[i];
-      if (n.ghost) continue;
-      const p = byId.get(n.person)!;
-      if (p.magnitude > 2) continue;
-      if (sky.reachable(i)) out.push(n.person);
-    }
-    // пункт с фокусом остаётся в списке, пока его звезда на виду: иначе фокус клавиатуры ушёл бы в никуда
-    const f = focused.value;
-    if (f && !out.includes(f) && sky.reachable(f)) out.push(f);
-    return out;
-  })();
   // точки сравнения линий в режиме «только линии» — и для клавиатуры: открывают синопсис участка (E6; U2)
   const linePoints = onlyLines.value
     ? comparePoints(lines.joseph.persons, lines.mary.persons.map((st) => (lineFlip.value && st.id === 'mariya' ? { ...st, id: 'iosif-muzh-marii' } : st)))
@@ -513,33 +554,20 @@ export function SkyView() {
         <canvas
           ref={canvasRef}
           tabIndex={0}
-          aria-label="Звёздная карта родословий. Стрелки — сдвиг, плюс и минус — масштаб, квадратные скобки — к родителю и к ребёнку."
           class={pickMode.value ? 'picking' : ''}
         />
+        <SkyA11y />
         {pickMode.value && selected.value && <PickBar mode={pickMode.value} id={selected.value} />}
         {pins.value.length > 0 && !pickMode.value && <PinBar n={pins.value.length} query={pinsQuery.value} />}
         {skyGroup.value && !pins.value.length && !pickMode.value && <GroupBar label={skyGroup.value.label} />}
+        {/* режим «В работе» (J4): пустой набор или выбранное лицо вне набора — строка у верхней кромки */}
+        {skyMode.value === 'work' && !skyGroup.value && !pins.value.length && !pickMode.value && <WorkBar />}
         <SkyTip tip={tip} />
+        {/* меню звезды и названия созвездия (J3, J5): правая кнопка мыши, долгое касание */}
+        <SkyMenu bounds={{ w: skyW, h: skyRef.current?.cam.h ?? 0 }} />
         {/* до первого замера ширина неба неизвестна: органы появляются сразу в своём виде, без мелькания блока на телефоне */}
         {skyW > 0 && (column ? <SkyColumn /> : <SkyControls />)}
         {skyW > 0 && (intro ? <Cartouche high={!column && skyW < CARTOUCHE_BESIDE} /> : <GuideCommand high={!column && skyW < CARTOUCHE_BESIDE} />)}
-        <ul class="visually-hidden" aria-label="Видимые на карте ключевые лица">
-          {visibleForSR.map((id) => (
-            <li key={id}>
-              <button
-                onClick={() => {
-                  goTo(id);
-                }}
-                onFocus={() => (focused.value = id)}
-                onBlur={() => {
-                  if (focused.value === id) focused.value = null;
-                }}
-              >
-                {byId.get(id)!.name}
-              </button>
-            </li>
-          ))}
-        </ul>
         {linePoints.length > 0 && (
           <ul class="visually-hidden" aria-label="Точки сравнения Мф 1 и Лк 3: синопсис участка">
             {linePoints.map((cp) => (

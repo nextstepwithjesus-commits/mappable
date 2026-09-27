@@ -429,9 +429,10 @@
   flex: none;
 }
 /* строка отметок поиска (E10) — тот же лист и та же команда, что у строки выбора второго лица (.pickbar);
-   «Esc — снять» — только там, где есть клавиатура */
+   «Esc — снять» и «Esc — отмена» — только там, где есть клавиатура (MOB-21) */
 @media (pointer: coarse) {
-  .pinbar .keys-only {
+  .pinbar .keys-only,
+  .pickbar .keys-only {
     display: none;
   }
 }

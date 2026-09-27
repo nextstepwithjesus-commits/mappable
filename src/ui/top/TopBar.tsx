@@ -4,10 +4,20 @@ import { grid } from '../layout.ts';
 import { showAll } from '../sky/view.ts';
 import { Menu, Segmented } from '../controls.tsx';
 import { Search } from './Search.tsx';
+import { workSet } from '../work.ts';
+import { plural } from '../common.tsx';
+
+/** Подсказка команды «В работе»: сколько лиц в рабочем наборе. */
+const workTitle = () => {
+  const n = workSet.value.size;
+  return n ? `Рабочий набор: ${n}\u00a0${plural(n, 'лицо', 'лица', 'лиц')}` : 'Рабочий набор пуст';
+};
 
 /** Панели атласа — средняя группа верхней строки (C3; VIS-20). «Эпохи» — флажок и команда органов неба (C6). */
 const PANELS: { id: Exclude<Panel, null>; label: string }[] = [
   { id: 'index', label: 'Указатель' },
+  // рабочий набор сеанса (J3; решение владельца 17): число лиц — в заголовке панели и в подсказке команды
+  { id: 'work', label: 'В работе' },
   { id: 'chapter', label: 'Главы' },
   { id: 'synopsis', label: 'Синопсис' },
   { id: 'kinship', label: 'Родство' },
@@ -22,7 +32,7 @@ const HELP: { id: Exclude<Panel, null>; label: string; key?: string }[] = [
  * В каком порядке команды уходят в «Ещё», когда строке не хватает места: сначала панели с конца ряда,
  * затем справка, последним — «Указатель». Видимые команды остаются в своих группах и на своих местах.
  */
-const COLLAPSE: Exclude<Panel, null>[] = ['section', 'kinship', 'synopsis', 'chapter', 'about', 'legend', 'index'];
+const COLLAPSE: Exclude<Panel, null>[] = ['section', 'kinship', 'synopsis', 'chapter', 'work', 'about', 'legend', 'index'];
 const SUBTITLE = 'звёздный атлас библейских родословий';
 const THEMES = [
   { value: 'night', label: 'Ночь' },
@@ -127,7 +137,7 @@ export function TopBar() {
       </header>
     );
   const button = (c: { id: Exclude<Panel, null>; label: string; key?: string }) => (
-    <button key={c.id} aria-pressed={panel.value === c.id} title={c.key ? `${c.label} (${c.key})` : undefined} aria-keyshortcuts={c.key} onClick={() => togglePanel(c.id)}>
+    <button key={c.id} aria-pressed={panel.value === c.id} title={c.id === 'work' ? workTitle() : c.key ? `${c.label} (${c.key})` : undefined} aria-keyshortcuts={c.key} onClick={() => togglePanel(c.id)}>
       {c.label}
     </button>
   );

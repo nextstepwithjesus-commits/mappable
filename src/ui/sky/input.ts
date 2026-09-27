@@ -13,6 +13,8 @@ import { hoverYear } from './meridian.ts';
 import { openSheetAt } from '../sheet.ts';
 import { closeWhich, openWhich, whichOpen } from './Which.tsx';
 import type { Tip } from './Tip.tsx';
+import { foldDescOf, foldGroupOf } from '../work.ts';
+import { skyMenu } from '../panels/Work.tsx';
 
 export type { Tip };
 
@@ -95,6 +97,9 @@ export function wheelZoom(factor: number, x: number, y: number) {
 }
 
 // ---------- щелчок ----------
+
+/** Долгое касание — меню неба (J3, J5), мс. */
+export const LONG_PRESS_MS = 550;
 
 /** Порог щелчка по типу указателя: мышь 5 px, перо 6, палец 10 (IX-10, MOB-09). */
 export const CLICK_SLOP: Record<string, number> = { mouse: 5, pen: 6, touch: 10 };
@@ -200,7 +205,18 @@ function chooseStar(id: string) {
 
 export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () => void, setTip: (t: Tip | null) => void): PointerInput {
   const pointers = new Map<number, { x: number; y: number }>();
-  let drag: { x0: number; y0: number; x: number; y: number; moved: boolean; t: number; type: string } | null = null;
+  let drag: { x0: number; y0: number; x: number; y: number; moved: boolean; t: number; type: string; long?: boolean } | null = null;
+  // долгое касание звезды или названия созвездия — меню неба (J3, J5): «Взять в работу», «Свернуть потомков»
+  let longTimer = 0;
+  /** Меню неба у точки (px холста): у названия созвездия — «Свернуть созвездие», у звезды — выбор объёма и свёртка. */
+  const menuAt = (x: number, y: number, r: number): boolean => {
+    const g = sky.groupHits.find((q) => x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h);
+    const id = g ? null : sky.hit(x, y, r);
+    if (!g && !id) return false;
+    showTip(null);
+    skyMenu.value = g ? { x, y, group: g.group } : { x, y, id: id! };
+    return true;
+  };
   let pinch: { d: number; cx: number; cy: number } | null = null;
   // где мышь или перо над небом (касание не наводит) — чтобы после движения неба проверить, что под указателем теперь
   let pointer: { x: number; y: number; r: number } | null = null;
@@ -239,7 +255,9 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       return;
     }
     setTierHot(null);
-    const edge = sky.edgeHits.some((q) => x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h);
+    // знаки свёрнутого (J5) — ссылки, как указатели у края: указатель «рука», щелчок разворачивает
+    const fold = sky.foldHits.some((q) => x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h);
+    const edge = fold || sky.edgeHits.some((q) => x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h);
     // выноски точек сравнения линий — ссылки (E6; src/render/ribbons.ts)
     const note = !edge && lineNoteHits(sky).some((q) => x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h);
     const hit = edge || note ? null : sky.hit(x, y, r);
@@ -265,8 +283,9 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     const initial = !camWas;
     camWas = key;
     if (initial) return;
-    // список «Какое лицо?» стоит у места касания: небо сдвинулось — место уже не то
+    // список «Какое лицо?» и меню неба стоят у места касания: небо сдвинулось — место уже не то
     if (whichOpen()) closeWhich();
+    if (skyMenu.peek()) skyMenu.value = null;
     showTip(null);
     if (hovered.value) hovered.value = null;
     setRibbonHover(sky, null);
@@ -289,6 +308,11 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     // нажатие снимает меридиан: во время протяжки его нет (D13)
     hoverYear(null);
     if (pointers.size === 1) drag = { x0: p.x, y0: p.y, x: p.x, y: p.y, moved: false, t: performance.now(), type: e.pointerType };
+    clearTimeout(longTimer);
+    if (pointers.size === 1 && e.pointerType === 'touch')
+      longTimer = window.setTimeout(() => {
+        if (drag && !drag.moved && pointers.size === 1 && menuAt(drag.x0, drag.y0, TOUCH_R)) drag.long = true;
+      }, LONG_PRESS_MS);
     if (pointers.size === 2) {
       const [a, b] = [...pointers.values()];
       pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2 };
@@ -314,6 +338,7 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       // протяжка начинается за порогом щелчка своего указателя; небо сдвигается от точки нажатия, без скачка
       if (drag.moved || Math.hypot(p.x - drag.x0, p.y - drag.y0) > (CLICK_SLOP[drag.type] ?? 5)) {
         drag.moved = true;
+        clearTimeout(longTimer);
         canvas.classList.add('dragging');
         setHot(false);
         sky.cam.pan(p.x - drag.x, p.y - drag.y);
@@ -343,6 +368,9 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     if (pointers.size < 2) pinch = null;
     const d = drag;
     drag = null;
+    clearTimeout(longTimer);
+    // долгое касание открыло меню — это не щелчок
+    if (d?.long) return;
     if (pointer) {
       clearTimeout(calm);
       calm = window.setTimeout(rehit, 120);
@@ -358,6 +386,16 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     });
     if (edge) {
       goTo(edge.id);
+      return;
+    }
+    // знак свёрнутого (J5): «+N» у следа — развернуть потомков, строка-подпись — развернуть созвездие
+    const fold = sky.foldHits.find((e) => {
+      const r = touch ? inflate(e, TOUCH_TARGET) : e;
+      return at.x >= r.x && at.x <= r.x + r.w && at.y >= r.y && at.y <= r.y + r.h;
+    });
+    if (fold) {
+      if (fold.kind === 'desc') foldDescOf(fold.id, false);
+      else foldGroupOf(fold.id, false);
       return;
     }
     // выноска точки сравнения линий — синопсис участка; знак-спутница у развилки — карточка лица (E6; U2)
@@ -474,6 +512,12 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     stopZoom();
     zoomBy(e.shiftKey ? 1 / KEY_STEP : KEY_STEP, p, KEY_MS);
   };
+  // правая кнопка мыши (и долгое касание, если браузер шлёт contextmenu) — меню неба вместо меню браузера
+  const onContext = (e: MouseEvent) => {
+    e.preventDefault();
+    const p = local(e);
+    if (!menuAt(p.x, p.y, 12)) skyMenu.value = null;
+  };
   const onLeave = () => {
     pointer = null;
     hovered.value = null;
@@ -490,6 +534,7 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
   canvas.addEventListener('pointerleave', onLeave);
   canvas.addEventListener('wheel', onWheel, { passive: false });
   canvas.addEventListener('dblclick', onDbl);
+  canvas.addEventListener('contextmenu', onContext);
 
   return {
     watchCamera,
@@ -505,6 +550,8 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       canvas.removeEventListener('pointerleave', onLeave);
       canvas.removeEventListener('wheel', onWheel);
       canvas.removeEventListener('dblclick', onDbl);
+      canvas.removeEventListener('contextmenu', onContext);
+      clearTimeout(longTimer);
     },
   };
 }

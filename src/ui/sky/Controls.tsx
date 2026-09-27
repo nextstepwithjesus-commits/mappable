@@ -8,6 +8,18 @@ import { typo } from '../text/typo.ts';
 import { Check, Menu, Segmented } from '../controls.tsx';
 import { Sheet } from '../panels/Sheet.tsx';
 import { showAll, zoomBy } from './view.ts';
+import { SkyModeSwitch } from '../panels/Work.tsx';
+import { foldDesc, foldGroups, unfoldAll } from '../work.ts';
+
+/** «Развернуть всё» (J5): есть ли на небе свёрнутые потомки или созвездия. */
+const anyFolded = () => foldDesc.value.length + foldGroups.value.length > 0;
+function UnfoldAll() {
+  return (
+    <button type="button" class="cmd" title="Развернуть свёрнутых потомков и созвездия" onClick={unfoldAll}>
+      развернуть всё
+    </button>
+  );
+}
 
 export const COLUMN_BELOW = 520;
 /** Шаг масштаба кнопок и клавиш: ×2 за 250 мс (IX-02); привязка — выбранное лицо, если видно, иначе середина неба. */
@@ -88,6 +100,14 @@ export function SkyControls() {
           Эпохи
         </button>
       </div>
+      {/* что показывает небо (J4): все лица или только рабочий набор; «развернуть всё» — если что-то свёрнуто (J5) */}
+      <span class="lbl work-lbl" aria-hidden="true">
+        На небе
+      </span>
+      <div class="work">
+        <SkyModeSwitch />
+        {anyFolded() && <UnfoldAll />}
+      </div>
     </div>
   );
 }
@@ -130,6 +150,13 @@ export function ViewSheet() {
           <button type="button" class="cmd" onClick={() => (panel.value = 'epochs')}>
             Эпохи и их основания
           </button>
+        </div>
+        {/* что показывает небо (J4) и «развернуть всё» (J5) — последней строкой: слои, масштаб и хронология остаются на своих
+            местах, лист не становится выше неба над ним */}
+        <div class="work-sky">
+          <span class="k">На небе:</span>
+          <SkyModeSwitch />
+          {anyFolded() && <UnfoldAll />}
         </div>
       </div>
     </Sheet>

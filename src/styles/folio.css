@@ -136,8 +136,9 @@
   align-items: center;
   justify-content: center;
   width: 24px;
-  height: 16px;
-  margin: -2px 0;
+  /* поле нажатия 24 × 24 без перекрытия соседей: WCAG 2.5.8 (wcag22aa) */
+  height: 24px;
+  margin: 0;
 }
 .rail .dot {
   display: block;
@@ -197,7 +198,7 @@
   content: '';
   position: absolute;
   left: 20px;
-  top: 7.5px;
+  top: 11.5px;
   width: 8px;
   height: 1px;
   background: var(--ink);
@@ -738,5 +739,144 @@
   /* переход к разделу оставляет его заголовок под ручкой листа и строкой номеров (22 + 45 px) */
   .sec {
     scroll-margin-top: 76px;
+  }
+}
+
+/* ---------- рабочий набор и стопка карточек (J3, J5, J6; src/ui/Folio.tsx) ---------- */
+/* вторая строка команд шапки: «Взять в работу» с выбором объёма и «Свернуть потомков» */
+.folio .workcmds {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0 4px;
+  margin: -8px 0 12px -8px;
+}
+/* «Свернуть» — рядом с «×», прилипает вместе с ним */
+.folio .fold-card {
+  position: sticky;
+  top: 6px;
+  float: right;
+  margin: -16px 0 0 4px;
+  background: var(--sheet);
+  z-index: 3;
+}
+/* стопка: другие открытые карточки — строками над активной; самые недавние — выше */
+.folio .stack {
+  clear: both;
+  list-style: none;
+  margin: 0 0 16px -8px;
+  padding: 0 0 8px;
+  border-bottom: 1px solid var(--rule);
+}
+.folio[data-folded] .stack {
+  border-bottom: 0;
+}
+.folio .stack-row {
+  display: flex;
+  align-items: center;
+}
+/* строка — одна: имя, уточнение (обрезается многоточием), годы */
+.folio .stack .sr-open {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: baseline;
+  min-width: 0;
+  min-height: 32px;
+  padding: 4px 8px;
+  text-align: left;
+  font-family: var(--serif);
+  font-size: var(--t-body);
+  line-height: var(--t-body-lh);
+  color: var(--ink);
+  white-space: nowrap;
+}
+.folio .stack .sr-open:hover {
+  background: var(--sheet-2);
+}
+.folio .stack .sr-open:focus-visible {
+  outline-offset: -2px;
+}
+.folio .stack .nm {
+  flex: none;
+  font-weight: 560;
+}
+.folio .stack .ds {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: var(--t-note);
+  font-style: italic;
+  color: var(--ink-2);
+}
+.folio .stack .yrs {
+  flex: none;
+  margin-left: 0.6em;
+  font-size: var(--t-note);
+  color: var(--ink-2);
+}
+/* активная карточка, свёрнутая до строки: черта слева — это она */
+.folio .stack-row.active .sr-open {
+  box-shadow: inset 2px 0 0 var(--ink);
+}
+/* «×» строки — в строке, а не в углу листа */
+.folio .stack .close {
+  position: static;
+  float: none;
+  flex: none;
+  margin: 0;
+  background: none;
+}
+
+@media (max-width: 720px) {
+  /* стопка на телефоне — строка над листом (J6): прокручивается вбок, двигается вместе с листом */
+  .folio .stack-strip {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: calc(var(--strip-h) + env(safe-area-inset-bottom) + min(var(--sheet-h, var(--stop-h, 0px)), var(--sheet-avail)));
+    z-index: 26;
+    display: flex;
+    overflow-x: auto;
+    margin: 0;
+    padding: 0 0 0 6px;
+    list-style: none;
+    background: var(--sheet);
+    border-top: 1px solid var(--rule-strong);
+    scrollbar-width: none;
+    transition: bottom 260ms var(--ease);
+  }
+  .folio[data-drag] .stack-strip {
+    transition: none;
+  }
+  .folio .stack-strip li {
+    display: flex;
+    align-items: center;
+    flex: none;
+  }
+  .folio .stack-strip .sr-open {
+    min-height: 44px;
+    padding: 0 2px 0 8px;
+    font-family: var(--serif);
+    font-size: var(--t-note);
+    line-height: var(--t-note-lh);
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  .folio .stack-strip .close {
+    position: static;
+    float: none;
+    margin: 0;
+    min-width: 44px;
+    height: 44px;
+    background: none;
+  }
+  .folio .workcmds {
+    margin-top: -4px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .folio .stack-strip {
+    transition: none;
   }
 }

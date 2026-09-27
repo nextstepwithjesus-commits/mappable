@@ -12,9 +12,10 @@ import { refLabel, renderBrackets, skyRef } from '../common.tsx';
 import { typo } from '../text/typo.ts';
 import type { TierHit } from '../../render/tiers.ts';
 import { starRadius } from '../../render/glyphs.ts';
-import { lifeText, placeText } from './text.ts';
+import { birthSpanText, lifeText, placeText } from './text.ts';
 import { reserve, screenOf } from './view.ts';
 import { placeTip, TIP_DELAY, TIP_MARGIN, TIP_WARM, type TipSide } from './tip.ts';
+import { foldDesc, hasDescendants, workSet } from '../work.ts';
 import type { Rect } from '../../render/sky.ts';
 
 export type Tip = { kind: 'star'; id: string; x: number; y: number } | { kind: 'tier'; hit: TierHit; x: number; y: number };
@@ -109,12 +110,31 @@ export function SkyTip({ tip }: { tip: Tip | null }) {
 function StarTip({ id }: { id: string }) {
   const p = byId.get(id);
   if (!p) return null;
+  const on = workSet.value.has(id);
+  const kids = hasDescendants(id);
+  const folded = foldDesc.value.includes(id);
   return (
     <>
       <b>{p.name}</b>
       {p.disambig && <span class="ds">, {p.disambig}</span>}
       <div class="yr">{lifeText(p.id)}</div>
+      {/* оценочный год рождения — промежутком, те же числа, что в § 8 и в пунктирном начале следа (G5) */}
+      {(() => {
+        const b = birthSpanText(p.id);
+        return b ? <div class="yr">{b}</div> : null;
+      })()}
       <div class="ds">{placeText(p.id)}</div>
+      {/* команды рабочего набора (J3, J5): клавиши обеих раскладок; правая кнопка мыши — меню звезды */}
+      <div class="tip-keys" data-in-work={on ? '' : undefined}>
+        <span>
+          <kbd>В</kbd> (D) — {on ? 'убрать из работы' : 'взять в работу'}
+        </span>
+        {kids && (
+          <span>
+            <kbd>С</kbd> (C) — {folded ? 'развернуть потомков' : 'свернуть потомков'}
+          </span>
+        )}
+      </div>
     </>
   );
 }

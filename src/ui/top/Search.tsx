@@ -6,7 +6,21 @@ import { pickMode, pins, pinsQuery, pickSecond, searchNotice } from '../../state
 import { flyToIds, goTo, plural, refLabel } from '../common.tsx';
 import { typo } from '../text/typo.ts';
 import { prepareBook, searchIndex } from './searchIndex.ts';
-import { Combobox, countStatus, personBlocks, type Block, type Row } from './Combobox.tsx';
+import { Combobox, countStatus, personBlocks, type Block, type ComboboxProps, type Row } from './Combobox.tsx';
+import { addToWork, removeFromWork, workSet } from '../work.ts';
+
+/**
+ * «В работу» — вторичная команда строки-лица поиска (J3): щелчок по надписи справа или Shift+Enter в поле. Лицо уже
+ * в работе — «в работе», повторное нажатие убирает его из набора. Проп rowCmd — у Combobox.
+ */
+export const searchRowCmd: NonNullable<ComboboxProps['rowCmd']> = {
+  label: (id: string) => (workSet.value.has(id) ? 'в работе' : 'в работу'),
+  title: 'Взять лицо в рабочий набор или убрать из него (Shift+Enter)',
+  run: (id: string) => {
+    if (workSet.peek().has(id)) removeFromWork(id);
+    else addToWork(id);
+  },
+};
 
 export type { Block, Row };
 
@@ -106,6 +120,7 @@ export function Search() {
 
   return (
     <Combobox
+      rowCmd={searchRowCmd}
       id="find"
       class="search"
       role="search"
@@ -129,7 +144,7 @@ export function Search() {
       onChoose={choose}
       cmdLabel={(r) => (r.kind === 'all' ? `Все ${r.ids.length} на небе` : `Снять отметки: ${pins.value.length}\u00a0${plural(pins.value.length, 'лицо', 'лица', 'лиц')}`)}
       notice={notice}
-      status={countStatus(shown.length, loading)}
+      status={shown.length ? `${countStatus(shown.length, loading)}; Shift+Enter — взять в работу` : countStatus(shown.length, loading)}
       onEscape={() => (searchNotice.value = null)}
       empty={
         ref

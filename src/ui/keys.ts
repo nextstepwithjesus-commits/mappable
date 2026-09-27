@@ -6,11 +6,18 @@
 import { panel, selected, second, pickMode, pins, pinsQuery, skyGroup, clearPair } from '../state.ts';
 import { skyKeys } from './sky/skykeys.ts';
 import { openLegend, reduced } from './sky/view.ts';
+import { focusPanelAt } from './focus.ts';
 
-/** «?» — таблица клавиш в «Условных знаках» (раздел «Клавиши»); повторное нажатие закрывает панель. */
+/**
+ * «?» — таблица клавиш в «Условных знаках» (раздел «Клавиши»), фокус — на её заголовок; повторное нажатие закрывает
+ * панель, Escape тоже, и фокус возвращается туда, откуда пришли (I2; src/ui/focus.ts).
+ */
 function toggleKeys() {
   if (panel.value === 'legend') panel.value = null;
-  else openLegend('keys');
+  else {
+    focusPanelAt('#legend-keys');
+    openLegend('keys');
+  }
 }
 
 /** Поле, в котором набирают текст (не флажок и не кнопка). */
@@ -101,7 +108,9 @@ function onKey(e: KeyboardEvent) {
     if (stepSection(e.code === 'KeyJ' ? 1 : -1)) e.preventDefault();
     return;
   }
-  skyKeys(e, skyNav(e.target), !!t && t.tagName === 'CANVAS' && !!t.closest('.sky'));
+  // фокус на холсте или в списке лиц неба: стрелки водят фокус по звёздам (I1)
+  const onCanvas = !!t && t.tagName === 'CANVAS' && !!t.closest('.sky');
+  skyKeys(e, skyNav(e.target), onCanvas, onCanvas || !!t?.closest('#sky-stars'));
 }
 
 /** Подключить клавиши атласа. Возвращает отписку. */

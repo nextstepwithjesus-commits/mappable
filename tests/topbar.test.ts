@@ -9,8 +9,9 @@ import { join } from 'node:path';
 import { overflowCommands } from '../src/ui/top/TopBar.tsx';
 
 // ширины команд — как у образцов Jost 13 с полями 8 px (порядок строки: панели, затем справка)
-const W: Record<string, number> = { index: 86, chapter: 58, synopsis: 78, kinship: 72, section: 121, legend: 116, about: 68 };
-const ORDER = ['index', 'chapter', 'synopsis', 'kinship', 'section', 'legend', 'about'];
+// «В работе» (J3) — замер в сборке на 1440: 65,22 px
+const W: Record<string, number> = { index: 86, work: 65, chapter: 58, synopsis: 78, kinship: 72, section: 121, legend: 116, about: 68 };
+const ORDER = ['index', 'work', 'chapter', 'synopsis', 'kinship', 'section', 'legend', 'about'];
 const GAP = 2;
 const SEP = 21;
 const MORE = 52;
@@ -35,14 +36,14 @@ describe('«Ещё» верхней строки (C3; VIS-20, IX-46, MOB-04)', (
       if (hidden.size < ORDER.length) expect(rowWidth(hidden), `ширина ${avail}`).toBeLessThanOrEqual(avail);
     }
   });
-  it('первыми уходят панели с конца ряда, затем справка, последним — «Указатель»', () => {
+  it('первыми уходят панели с конца ряда, «В работе» — после «Глав», затем справка, последним — «Указатель»', () => {
     const seen: string[][] = [];
     for (let avail = full - 1; avail > 0; avail -= 3) {
       const h = [...overflowCommands(avail, width, GAP, SEP, MORE)];
       if (!seen.length || seen[seen.length - 1].length !== h.length) seen.push(h);
     }
     const order = seen.map((h) => h[h.length - 1]);
-    expect(order).toEqual(['section', 'kinship', 'synopsis', 'chapter', 'about', 'legend', 'index']);
+    expect(order).toEqual(['section', 'kinship', 'synopsis', 'chapter', 'work', 'about', 'legend', 'index']);
   });
   it('уход одной команды оставляет место для «Ещё»: не хватает 1 px — уходит команда, а «Ещё» помещается', () => {
     const hidden = overflowCommands(full - 1, width, GAP, SEP, MORE);

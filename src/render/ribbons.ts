@@ -388,7 +388,8 @@ export function drawSkyRibbons(v: SkyContext, s: SkyState, steps: { joseph: read
   const A = Math.max(4, Math.min(11, ky * 0.55)) * boost;
   // нити строятся заново только при смене масштаба, модели, режима или размера холста и при сдвиге дальше запаса;
   // при протяжке неба они рисуются со сдвигом (NFR-1: 60 кадров/с)
-  const key = `${v.model.id}|${v.lambda}|${cam.kx}|${ky}|${s.lineFlip}|${s.onlyLines}|${cam.w}|${cam.h}`;
+  // и при смене сжатия полос (J4, J5; src/render/rows.ts): нити идут через строки, а не через полосы
+  const key = `${v.model.id}|${v.lambda}|${cam.kx}|${ky}|${s.lineFlip}|${s.onlyLines}|${cam.w}|${cam.h}|${v.rowsKey}`;
   let c = ribbonCaches.get(v);
   if (!c || c.key !== key || Math.abs((c.x0 - cam.x0) * cam.kx) > RIBBON_MARGIN - 40) {
     const strands = buildRibbons({ joseph: weakOf('joseph'), mary: weakOf('mary'), project, amplitude: A, meander: A * 0.5, clip: [-RIBBON_MARGIN, cam.w + RIBBON_MARGIN] });
@@ -399,13 +400,15 @@ export function drawSkyRibbons(v: SkyContext, s: SkyState, steps: { joseph: read
   c.dy = (cam.laneTop - c.laneTop) * ky;
   const { strands, dx, dy } = c;
   const clip: [number, number] = [-24 - dx, cam.w + 24 - dx];
-  const core = Math.max(2.1, Math.min(3.6, ky / 6)) * boost;
+  // в режиме «В работе» (J4) ленты — тонкий ориентир
+  const core = Math.max(2.1, Math.min(3.6, ky / 6)) * boost * (s.guide ? 0.55 : 1);
   const flow = s.flow && !s.reduced ? s.flow * 0.02 : null;
   const hl = s.highlight;
   const hover = ribbonHover(v);
   ctx.save();
   ctx.translate(dx, dy);
-  drawStrands(ctx, strands, core, ribbonLook(pal, !!hl), cam.w, hover ? null : flow, { clip, grads: c.grads });
+  // ориентир режима «В работе» (J4) — и приглушён, как при выделении рода
+  drawStrands(ctx, strands, core, ribbonLook(pal, !!hl || !!s.guide), cam.w, hover ? null : flow, { clip, grads: c.grads });
   // участки группы панели и пути родства — в полную силу поверх погашенных лент
   if (hl) {
     const lit = (id: string) => {

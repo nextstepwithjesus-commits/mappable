@@ -68,6 +68,8 @@ export function textBox(tx: number, ty: number, w: number, size: number): Rect {
 
 /** Выноска для звёзд величины 0–1 и лиц линий: подпись отнесена на 14–24 px по диагонали, к ней — тонкая линия (MAP-06). */
 const LEADERS: [number, number][] = [[16, -14], [16, 14], [-16, -14], [-16, 14], [24, -22], [24, 22], [-24, -22], [-24, 22]];
+/** Дальние выноски — в режиме «В работе» (J4), где подписаны все лица набора: в тесном месте подпись уходит дальше. */
+const FAR_LEADERS: [number, number][] = [[40, 0], [-40, 0], [36, -34], [36, 34], [-36, -34], [-36, 34], [60, -18], [60, 18], [-60, -18], [-60, 18]];
 function leaderSpot(dx: number, dy: number, x: number, y: number, w: number, size: number) {
   const ax = x + dx;
   const ay = y + dy;
@@ -150,7 +152,8 @@ export class LabelCache {
   /** Пороги для текущей модели, масштаба времени, высоты холста и масштаба «всего неба». */
   ensure(v: SkyContext) {
     const f = v.cam.fitK;
-    const key = `${v.model.id}|${Math.round(v.lambda * 4)}|${v.cam.h}|${v.coarse}|${f ? `${f.kx.toPrecision(3)} ${f.ky.toPrecision(3)}` : ''}`;
+    // сжатие полос (J4, J5) меняет места звёзд по вертикали: пороги считаются по строкам экрана
+    const key = `${v.model.id}|${Math.round(v.lambda * 4)}|${v.cam.h}|${v.coarse}|${f ? `${f.kx.toPrecision(3)} ${f.ky.toPrecision(3)}` : ''}|${v.rowsKey}`;
     if (key === this.key) return;
     this.key = key;
     const nodes = v.nodes;
@@ -190,7 +193,7 @@ export class LabelCache {
         const kx = KX_MIN * Math.pow(2, lv / 2);
         const ky = v.cam.kyFor(kx);
         const r = starRadius(p.magnitude, zoomScaleFor(ky));
-        const b = spot(sd, v.X0[i] * kx, -nodes[i].lane * ky, r, widths[i], size, king).box;
+        const b = spot(sd, v.X0[i] * kx, -v.rowOf(nodes[i].lane) * ky, r, widths[i], size, king).box;
         return [b.x, b.y, b.x + b.w, b.y + b.h];
       };
       const fits = (lv: number, b: number[]) => {
@@ -242,7 +245,7 @@ export const zoomScaleFor = (ky: number) => Math.max(0.7, Math.min(1.25, ky / 18
  * Что за подпись: имя звезды, название созвездия, пояснение на пустом небе, указатель у края, скопление (E2), меридиан
  * события (E7), «липкое» имя следа у левого края (E1), надписи рамки (линейка, служебная строка, кромки).
  */
-export type LabelKind = 'star' | 'group' | 'note' | 'edge' | 'cluster' | 'event' | 'sticky' | 'frame';
+export type LabelKind = 'star' | 'group' | 'note' | 'edge' | 'cluster' | 'event' | 'sticky' | 'frame' | 'fold';
 
 /** Нарисованная подпись: прямоугольник в px холста, текст и лицо (у имени звезды и указателя). */
 export interface LabelBox extends Rect {
@@ -257,10 +260,13 @@ export class LabelLedger {
   /** видимых звёзд, которые можно подписать, и сколько из них подписано (E1: на масштабе семьи — не меньше 90 %) */
   stars = 0;
   named = 0;
+  /** в режиме «В работе» (J4) — лица видимых звёзд без подписи (для проверок: все лица набора подписаны) */
+  unnamed: string[] = [];
   reset() {
     this.boxes = [];
     this.stars = 0;
     this.named = 0;
+    this.unnamed = [];
   }
   add(kind: LabelKind, text: string, r: Rect, id?: string) {
     const b: LabelBox = { kind, text, x: r.x, y: r.y, w: r.w, h: r.h };
@@ -328,6 +334,8 @@ interface StarOpts {
   sigla?: boolean;
   /** выноска, если у звезды места нет (величины 0–1, лица линий) */
   leader?: boolean;
+  /** и дальние выноски (режим «В работе»: подписаны все лица набора) */
+  far?: boolean;
   /** можно закрыть чужую звезду (выбранное лицо, его семья, отметки) */
   overStars?: boolean;
   /** не проверять занятое (выбранное лицо — первым) */
@@ -401,7 +409,8 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): boole
   const passes: Mode[] = o.force ? ['soft', 'hard', 'none'] : o.overStars ? ['soft', 'hard'] : ['soft'];
   const vert = o.vertical ?? lineSideOf(q.id);
   const sides = vert === -1 ? o.sides.filter((x) => x !== 'b') : vert === 1 ? o.sides.filter((x) => x !== 't') : o.sides;
-  const leaders = vert ? LEADERS.filter(([, dy]) => Math.sign(dy) === vert) : LEADERS;
+  const all = o.far ? [...LEADERS, ...FAR_LEADERS] : LEADERS;
+  const leaders = vert ? all.filter(([, dy]) => Math.sign(dy) === vert || dy === 0) : all;
   for (const soft of passes) {
     for (const sd of sides) {
       const c = spot(sd, x, y, r, nameW + noteW + (sd === 'r' ? sigW : 0), size, king);
@@ -520,6 +529,17 @@ export function drawStarLabels(v: SkyContext, p: Pass, between?: () => void) {
       if (!shown(i) || (lineOnly && !p.spine.has(id))) continue;
       labelStar(v, p, i, { sides: SIDES, color: pal.ink, alpha: 1, sigla: true, leader: true, overStars: true });
     }
+  // рабочий набор (J4): в режиме «В работе» подписаны все лица набора — по степени интереса, с выноской, если у звезды тесно;
+  // погашенные выделением — не прозрачнее, чем нужно для контраста 3 : 1
+  if (p.work) {
+    const all = p.vis.filter((i) => !v.nodes[i].ghost && !p.labeled.has(i) && v.drawn(i)).sort((a, b) => cache.rank[a] - cache.rank[b]);
+    for (const i of all) {
+      const q = byId.get(v.nodes[i].person)!;
+      const k = hl ? hl.get(q.id) : 'self';
+      const a = k === undefined ? Math.max(DIM, q.magnitude <= 2 ? pal.dimInk : pal.dimInk2) : 1;
+      labelStar(v, p, i, { sides: SIDES, color: q.magnitude <= 2 ? pal.ink : pal.ink2, alpha: a, sigla: true, leader: true, far: true, overStars: true });
+    }
+  }
   // 3) обычные — по порогам (на масштабе семьи — все); старшие подписи они не перекрывают. Звёзды величины 0–1 —
   // раньше меридианов событий, скоплений и названий созвездий, остальные — после
   const family = cam.ky >= FAMILY_KY;
@@ -603,6 +623,7 @@ export function drawStarLabels(v: SkyContext, p: Pass, between?: () => void) {
     if (hits({ x: x - 1, y: y - 1, w: 2, h: 2 }, p.reserve)) continue;
     stars++;
     if (p.labeled.has(i)) named++;
+    else if (p.work) v.ledger.unnamed.push(n.person);
   }
   v.ledger.stars = stars;
   v.ledger.named = named;
@@ -677,11 +698,12 @@ export const groupName = (group: string) => (groupById.get(group)?.name ?? group
  * название там помещается целиком, и не ложится на подписи, звёзды, органы неба; нет места — не рисуется. Каждое
  * созвездие — один раз на экран. Возвращает их прямоугольники.
  */
-export function drawGroupNames(v: SkyContext, p: Pass, spots: GroupNameSpot[]): Rect[] {
+export function drawGroupNames(v: SkyContext, p: Pass, spots: GroupNameSpot[]): (Rect & { group: string })[] {
   const { ctx, pal } = v;
   const hl = p.s.highlight;
   const fs = mapSize(T_MAP_S, v.coarse);
-  const boxes: Rect[] = [];
+  // у каждого прямоугольника — созвездие: по названию открывается меню «Свернуть созвездие» (J5; src/ui/sky/input.ts)
+  const boxes: (Rect & { group: string })[] = [];
   const done = new Set<string>();
   ctx.save();
   ctx.setLineDash([]);
@@ -728,12 +750,46 @@ export function drawGroupNames(v: SkyContext, p: Pass, spots: GroupNameSpot[]): 
     if (!got) continue;
     const c = cands.find((q) => q.box === got)!;
     ctx.fillText(name, c.x, c.y);
-    boxes.push(got);
+    boxes.push({ ...got, group: o.group });
     done.add(o.group);
   }
   ctx.letterSpacing = '0px';
   ctx.restore();
   return boxes;
+}
+
+// ---------- знак свёрнутого (J5) ----------
+
+/** Ширины знака свёрнутого: название созвездия с разрядкой и отступом (nw) и «+N» (cw). */
+export function foldMarkWidth(ctx: CanvasRenderingContext2D, coarse: boolean, name: string, count: string): { nw: number; cw: number } {
+  ctx.font = mapFont(T_MAP_S, { sans: true, weight: 500, coarse });
+  ctx.letterSpacing = '0.22em';
+  const nw = name ? ctx.measureText(name).width + 6 : 0;
+  ctx.letterSpacing = '0px';
+  return { nw, cw: ctx.measureText(count).width };
+}
+
+/**
+ * Знак свёрнутого (J5): «+N» — сколько лиц скрыто, подчёркнут, как ссылка неба (щелчок разворачивает); у свёрнутого
+ * созвездия перед ним — название прописными с разрядкой, как у названий созвездий. x и baseline — начало и базовая
+ * линия строки. Этой же функцией знак рисуют небо и «Как читать карту».
+ */
+export function drawFoldMark(ctx: CanvasRenderingContext2D, pal: { ink2: string; ink3: string; halo: string }, coarse: boolean, x: number, baseline: number, name: string, count: string) {
+  const { nw, cw } = foldMarkWidth(ctx, coarse, name, count);
+  ctx.textBaseline = 'alphabetic';
+  ctx.lineJoin = 'round';
+  if (name) {
+    ctx.letterSpacing = '0.22em';
+    ctx.fillStyle = pal.ink3;
+    ctx.fillText(name, x, baseline);
+    ctx.letterSpacing = '0px';
+  }
+  ctx.strokeStyle = pal.halo;
+  ctx.lineWidth = 3;
+  ctx.strokeText(count, x + nw, baseline);
+  ctx.fillStyle = pal.ink2;
+  ctx.fillText(count, x + nw, baseline);
+  ctx.fillRect(Math.round(x + nw), Math.round(baseline + 2), Math.round(cw), 1);
 }
 
 // ---------- скопления, меридианы событий, пояснения ----------

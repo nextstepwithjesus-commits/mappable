@@ -142,12 +142,13 @@ describe('верх телефона: «Разделы» (H4; MOB-03, MOB-04)', (
     const opened: string[] = [];
     let flipped = 0;
     const items = phoneMenuItems('kinship', true, (id) => opened.push(id), () => flipped++);
-    expect(items.map((i) => i.label)).toEqual(['Указатель', 'Главы', 'Синопсис', 'Родство', 'Сквозной раздел', 'Условные знаки', 'О карте', 'Дневная карта']);
+    // «В работе» (J3) — после «Указателя», как в строке команд
+    expect(items.map((i) => i.label)).toEqual(['Указатель', 'В работе', 'Главы', 'Синопсис', 'Родство', 'Сквозной раздел', 'Условные знаки', 'О карте', 'Дневная карта']);
     expect(items.filter((i) => i.checked).map((i) => i.label)).toEqual(['Родство', 'Дневная карта']);
     // справка и тема отделены чертой
     expect(items.filter((i) => i.sep).map((i) => i.label)).toEqual(['Условные знаки', 'Дневная карта']);
-    items[2].onSelect();
-    items[7].onSelect();
+    items[3].onSelect();
+    items[8].onSelect();
     expect(opened).toEqual(['synopsis']);
     expect(flipped).toBe(1);
   });

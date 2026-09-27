@@ -41,11 +41,15 @@ export function Sheet({ title, lead, wide, reserve, children }: { title: string;
     el.addEventListener('scroll', onScroll, { passive: true });
     return () => el.removeEventListener('scroll', onScroll);
   }, [title]);
+  // заголовок принимает фокус при открытии панели и называет область для диктора (I2; src/ui/focus.ts)
+  const hid = `sheet-h-${title.replace(/[^\p{L}\p{N}]+/gu, '-')}`;
   return (
-    <section ref={ref} class={wide ? 'sheet wide' : 'sheet'} aria-label={title} data-reserve={reserve ? 'sheet' : undefined}>
+    <section ref={ref} class={wide ? 'sheet wide' : 'sheet'} aria-labelledby={hid} data-reserve={reserve ? 'sheet' : undefined}>
       {/* шапка: на телефоне прилипает к верху листа, чтобы «×» всегда был под рукой */}
       <header class="sheet-head">
-        <h2>{title}</h2>
+        <h2 id={hid} tabIndex={-1}>
+          {title}
+        </h2>
         <Close label="Закрыть панель" onClick={() => (panel.value = null)} />
       </header>
       {lead && <p class="lead">{typo(lead)}</p>}
