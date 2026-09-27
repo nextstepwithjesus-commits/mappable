@@ -1,8 +1,6 @@
 import { books, mentionsOf } from '../../data/atlas.ts';
 import { Refs, VerseInsert, plural, refLabel } from '../common.tsx';
-
-/** Число с неразрывным пробелом в разрядах: «1 012». */
-const num = (n: number) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0');
+import { num, typoTree } from '../text/typo.ts';
 /** «в 1 стихе», «в 12 стихах» */
 const verses = (n: number) => `${num(n)}\u00a0${plural(n, 'стихе', 'стихах', 'стихах')}`;
 
@@ -19,10 +17,10 @@ export function CanonStrip({ books: counts, first, keyRefs }: { books: Record<st
   const cell = (b: (typeof books)[number]) => {
     const n = counts[b.code] ?? 0;
     const a = n ? 0.25 + 0.75 * Math.sqrt(n / max) : 0;
-    return <span key={b.code} title={`${b.name}${n ? `: ${num(n)}\u00a0${plural(n, 'стих', 'стиха', 'стихов')}` : ''}`} style={n ? { background: `color-mix(in srgb, var(--ink) ${Math.round(a * 100)}%, var(--sheet-2))` } : undefined} />;
+    return <span key={b.code} title={`${b.name}${n ? `: ${num(n)}\u00a0${plural(n, 'стих', 'стиха', 'стихов')}` : ''}`} style={n ? { '--a': Math.round(a * 100) / 100 } : undefined} />;
   };
   const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 6);
-  return (
+  return typoTree(
     <>
       {total > 0 && (
         <>
@@ -53,6 +51,6 @@ export function CanonStrip({ books: counts, first, keyRefs }: { books: Record<st
           <VerseInsert owner="k23" refs={keyRefs} />
         </p>
       ) : null}
-    </>
+    </>,
   );
 }

@@ -5,6 +5,8 @@ import { model } from '../../state.ts';
 import { roleText, Mark } from '../common.tsx';
 import { lifeSpanText, shownYears, shortYear, toAstro, toHist } from '../../engine/years.ts';
 import { activityEpochs, affiliation, birthEpoch, birthRange, constellation } from './shared.tsx';
+import { typo, typoTree } from '../text/typo.ts';
+import { mapFont, coarsePointer, T_MAP_S } from '../../render/type.ts';
 
 /** Народ или род из родословия (Быт 10; Езд 2): у него нет рождения и жизни, только место в родословии. */
 export const isPeople = (id: string) => {
@@ -24,8 +26,8 @@ export function Masthead({ id }: { id: string }) {
   return (
     <header class="mast">
       <h2 id={`title-${id}`} tabIndex={-1}>{p.name}</h2>
-      {p.disambig ? <div class="dis">{p.disambig}</div> : <div class="dis">&nbsp;</div>}
-      <dl class="passport">
+      {p.disambig ? <div class="dis">{typo(p.disambig)}</div> : <div class="dis">&nbsp;</div>}
+      {typoTree(<dl class="passport">
         {p.roles.length ? (
           <>
             <dt>Роль</dt>
@@ -45,7 +47,7 @@ export function Masthead({ id }: { id: string }) {
           </>
         ) : null}
         <dt>Эпоха</dt>
-        <dd>{eps.length ? (eps.length === 1 ? eps[0].name : `${eps[0].name}\u00a0— ${eps[eps.length - 1].name}`) : '—'}</dd>
+        <dd>{eps.length ? (eps.length === 1 ? eps[0].name : `${eps[0].name} — ${eps[eps.length - 1].name}`) : '—'}</dd>
         <dt>Годы</dt>
         {/* class fact: помета «расч.» встаёт на внешнее поле строки, как у фактов разделов */}
         <dd class="fact">
@@ -58,7 +60,7 @@ export function Masthead({ id }: { id: string }) {
             'время не установлено'
           )}
         </dd>
-      </dl>
+      </dl>)}
       <LifeBar id={id} />
       {(j || mm) && (
         <div class="lines">
@@ -93,6 +95,9 @@ export function lifeBarLabels(c: ChronoRow): { left: string | null; right: strin
   return { left: shortYear(y.b, y.approx, hb < 0 && hd > 0), right: shortYear(y.d, y.approx, true) };
 }
 
+/** Высота мини-шкалы в CSS-пикселях; та же в правиле .lifebar (src/styles/folio.css). */
+const LIFEBAR_H = 52;
+
 /** Мини-шкала жизни на фоне эпох: ядро — надёжная часть, растушёвка — неопределённость рождения. */
 function LifeBar({ id }: { id: string }) {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -114,14 +119,13 @@ function LifeBar({ id }: { id: string }) {
     if (!cv || !c) return;
     const dpr = window.devicePixelRatio || 1;
     const w = cv.clientWidth;
-    const h = 52;
+    const h = LIFEBAR_H;
     cv.width = w * dpr;
     cv.height = h * dpr;
     const ctx = cv.getContext('2d')!;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     const cs = getComputedStyle(document.documentElement);
     const col = (n: string) => cs.getPropertyValue(n).trim();
-    const sans = cs.getPropertyValue('--sans').trim() || 'sans-serif';
     const epochs = model.value.epochs;
     const people = isPeople(id);
     // окно шкалы: у лица без опор — его эпоха; иначе от раннего края рождения до смерти или последнего события
@@ -134,7 +138,9 @@ function LifeBar({ id }: { id: string }) {
     const t1 = end + span * 0.3;
     const x = (t: number) => ((t - t0) / (t1 - t0)) * w;
     // эпохи — полосой с названиями
-    ctx.font = `400 11px ${sans}`;
+    // кегли холста — ступень шкалы T_MAP_S (11,5 px; на сенсорном экране 12,5 px), src/render/type.ts
+    const font = mapFont(T_MAP_S, { sans: true, coarse: coarsePointer() });
+    ctx.font = font;
     ctx.textBaseline = 'alphabetic';
     epochs.forEach((e, i) => {
       const a = Math.max(0, x(toAstro(e.start)));
@@ -149,7 +155,7 @@ function LifeBar({ id }: { id: string }) {
       }
     });
     const ink = col('--ink');
-    ctx.font = `400 11.5px ${sans}`;
+    ctx.font = font;
     if (c.cls === 'epochal') {
       if (!ep) return;
       // время не установлено: скобка на всю эпоху, без годов (ТЗ § 3.1)
@@ -222,5 +228,6 @@ function LifeBar({ id }: { id: string }) {
     if (left && (!right || lx + lw + 8 < rx)) ctx.fillText(left, lx, 48);
     if (right) ctx.fillText(right, rx, 48);
   }, [id, model.value, loaded]);
-  return <canvas class="lifebar" ref={ref} style={{ width: '100%', height: '52px' }} aria-hidden="true" />;
+  // размер — классом .lifebar (src/styles/folio.css): ширина строки, высота LIFEBAR_H
+  return <canvas class="lifebar" ref={ref} aria-hidden="true" />;
 }

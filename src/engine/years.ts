@@ -13,6 +13,8 @@ export const toHist = (astro: number): number => {
 export const addYears = (hist: number, n: number): number => toHist(toAstro(hist) + n);
 
 const NBSP = ' ';
+/** Word joiner после «–» в диапазоне: перенос не отрывает конец диапазона («1050–» / «931 гг.»; CARD-25, VIS-03). */
+const WJ = '\u2060';
 
 /** «1040 г. до Р. Х.», «30 г. по Р. Х.» */
 export function formatYear(astro: number, opts: { approx?: boolean; short?: boolean } = {}): string {
@@ -22,13 +24,16 @@ export function formatYear(astro: number, opts: { approx?: boolean; short?: bool
   return `${pre}${h}${NBSP}г.${opts.short ? '' : `${NBSP}по${NBSP}Р.${NBSP}Х.`}`;
 }
 
-/** Промежуток: «ок. 1040–970 гг. до Р. Х.», «5 г. до Р. Х. — 30 г. по Р. Х.» */
+/**
+ * Промежуток: «ок. 1040–970 гг. до Р. Х.», «5 г. до Р. Х. — 30 г. по Р. Х.». Строки годов уже в русской типографике
+ * (неразрывные пробелы, U+2060 после «–»): они совпадают с typo() из src/ui/text/typo.ts — это проверяет tests/typo.test.ts.
+ */
 export function formatSpan(a: number, b: number, approx = false): string {
   const ha = toHist(a);
   const hb = toHist(b);
   const pre = approx ? `ок.${NBSP}` : '';
-  if (ha < 0 && hb < 0) return `${pre}${-ha}–${-hb}${NBSP}гг.${NBSP}до${NBSP}Р.${NBSP}Х.`;
-  if (ha > 0 && hb > 0) return `${pre}${ha}–${hb}${NBSP}гг.${NBSP}по${NBSP}Р.${NBSP}Х.`;
+  if (ha < 0 && hb < 0) return `${pre}${-ha}–${WJ}${-hb}${NBSP}гг.${NBSP}до${NBSP}Р.${NBSP}Х.`;
+  if (ha > 0 && hb > 0) return `${pre}${ha}–${WJ}${hb}${NBSP}гг.${NBSP}по${NBSP}Р.${NBSP}Х.`;
   return `${formatYear(a, { approx })}${NBSP}— ${formatYear(b)}`;
 }
 

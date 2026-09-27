@@ -9,6 +9,7 @@ import { formatSpan, shownYears, yearsWord, ESTIMATE_STEP } from '../../engine/y
 import type { ModelData, ChronoRow } from '../../data/atlas.ts';
 import { birthLine, birthEpoch, birthRange, kinDegree, nameIn, Namesake, PersonIn } from './shared.tsx';
 import { isPeople } from './Masthead.tsx';
+import { typoTree } from '../text/typo.ts';
 type AtlasPerson = NonNullable<ReturnType<typeof byId.get>>;
 
 /** Помета года: «расч.» у всех лет, зависящих от хронологической модели. */
@@ -21,18 +22,18 @@ export function YearMark({ cls }: { cls: ChronoRow['cls'] }) {
 /** § 8: год рождения (те же числа, что в паспорте) и эпоха рождения. */
 export function BirthLine({ p, c, m }: { p: AtlasPerson; c: ChronoRow; m: ModelData }) {
   const ep = birthEpoch(p.id, c, m.epochs);
-  return (
+  return typoTree(
     <p class="fact">
       {birthLine(c, birthRange(p.id, c, m.chrono))}
-      {ep ? `; эпоха\u00a0— ${ep.name}` : ''}
+      {ep ? `; эпоха — ${ep.name}` : ''}
       <YearMark cls={c.cls} />
-    </p>
+    </p>,
   );
 }
 
 const verbBorn = (sex: Sex, people: boolean) => (people ? (sex === 'f' ? 'Названа в родословии' : 'Назван в родословии') : sex === 'f' ? 'Родилась' : 'Родился');
 
-/** Разница лет между двумя лицами для формулы: у оценок — до 5 лет и со знаком «~». */
+/** Разница лет между двумя лицами для формулы: у оценок — до 5 лет и со словом «примерно». */
 function gap(a: ChronoRow, b: ChronoRow): { n: number; approx: boolean } | null {
   const ya = shownYears(a);
   const yb = shownYears(b);
@@ -64,7 +65,8 @@ const plainLink = (e: ParentEdge) => (e.kind === 'father' || e.kind === 'mother'
 
 /**
  * § 13. Формула относительной хронологии по ближайшим родственникам с названием родства:
- * «Родился через ~25 лет после отца, Зоровавеля, и за ~55 лет до сына, Елиакима; застал деда, …» — расч.
+ * «Родился примерно через 25 лет после отца, Зоровавеля, и примерно за 55 лет до сына, Елиакима; застал деда, …» — расч.
+ * Оценка словом, а не знаком «~»: знак — не русская типографика и не читается программами экранного доступа.
  */
 export function RelativeChrono({ id, m, note }: { id: string; m: ModelData; note?: Fact[] }) {
   const p = byId.get(id)!;
@@ -139,25 +141,27 @@ export function RelativeChrono({ id, m, note }: { id: string; m: ModelData; note
     // Сын Марии — с прописной, как в Синодальном тексте (Мф 1:21; Лк 2:7)
     return x === 'iisus' && dir === 'down' ? word.charAt(0).toUpperCase() + word.slice(1) : word;
   };
-  const amount = (g: { n: number; approx: boolean } | null) => (g ? `${g.approx ? '~' : ''}${yearsWord(g.n)} ` : '');
+  // «примерно через 25 лет после…», «за 55 лет до…»: оценка — наречием перед предлогом
+  const amount = (prep: 'через' | 'за', g: { n: number; approx: boolean } | null) => (g ? `${g.approx ? 'примерно ' : ''}${prep} ${yearsWord(g.n)} ` : '');
+  // знак после имени (запятая, точка с запятой, точка) держится за ссылку на лицо — PersonIn after
   const clauses: ComponentChildren[] = [];
   if (up)
     clauses.push(
       <>
-        {up.g ? `через ${amount(up.g)}` : ''}после {kinOf(up.id, 'up', 'gen')}, <PersonIn id={up.id} cs="gen" />
+        {amount('через', up.g)}после {kinOf(up.id, 'up', 'gen')}, <PersonIn id={up.id} cs="gen" after={down ? ',' : saw ? ';' : '.'} />
       </>,
     );
   if (down)
     clauses.push(
       <>
-        {up ? ', и ' : ''}
-        {down.g ? `за ${amount(down.g)}` : ''}до {kinOf(down.id, 'down', 'gen')}, <PersonIn id={down.id} cs="gen" />
+        {up ? ' и ' : ''}
+        {amount('за', down.g)}до {kinOf(down.id, 'down', 'gen')}, <PersonIn id={down.id} cs="gen" after={saw ? ';' : '.'} />
       </>,
     );
   const sawNode = saw ? (
     <>
-      {clauses.length ? '; ' : ''}
-      {clauses.length ? (p.sex === 'f' ? 'застала' : 'застал') : p.sex === 'f' ? 'Застала' : 'Застал'} {kinOf(saw.id, 'up', 'acc', saw.steps, saw.gap)}, <PersonIn id={saw.id} cs="acc" />
+      {clauses.length ? ' ' : ''}
+      {clauses.length ? (p.sex === 'f' ? 'застала' : 'застал') : p.sex === 'f' ? 'Застала' : 'Застал'} {kinOf(saw.id, 'up', 'acc', saw.steps, saw.gap)}, <PersonIn id={saw.id} cs="acc" after="." />
     </>
   ) : null;
   const years = !people && (up?.g || down?.g || saw);
@@ -166,7 +170,7 @@ export function RelativeChrono({ id, m, note }: { id: string; m: ModelData; note
   const met = c.cls === 'epochal' ? (loadedCard(id)?.met ?? []).filter((x) => nameIn(x.id, 'gen') !== null).slice(0, 3) : [];
   const gapParent = (graph.parentsOf.get(id) ?? []).find((e) => e.kind === 'father' && e.gap);
 
-  return (
+  return typoTree(
     <>
       <p>
         {c.cls === 'epochal' || people ? 'Эпоха' : 'Эпоха рождения'}: {ep?.name ?? '—'}
@@ -185,7 +189,8 @@ export function RelativeChrono({ id, m, note }: { id: string; m: ModelData; note
         <p class="fact">
           {clauses.length ? `${verbBorn(p.sex, people)} ` : ''}
           {clauses}
-          {sawNode}.{years ? <Mark calc /> : <abbr class="mark" title="вывод из порядка имён в родословии">выв.</abbr>}
+          {sawNode}
+          {years ? <Mark calc /> : <abbr class="mark" title="вывод из порядка имён в родословии">выв.</abbr>}
         </p>
       )}
       {c.cls === 'estimated' && !people && (
@@ -208,7 +213,7 @@ export function RelativeChrono({ id, m, note }: { id: string; m: ModelData; note
           <VerseInsert owner={`c13.${i}`} refs={f.refs} />
         </p>
       ))}
-    </>
+    </>,
   );
 }
 

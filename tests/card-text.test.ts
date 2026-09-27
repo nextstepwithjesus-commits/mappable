@@ -7,6 +7,7 @@ import { cardSections, allIds, byId } from './helpers/cards.ts';
 import { graph, models, persons } from '../src/data/atlas.ts';
 import { siblings } from '../src/engine/graph.ts';
 import { familyIds, contemporaryGroups } from '../src/ui/Folio.tsx';
+import { typo } from '../src/ui/text/typo.ts';
 import {
   nameCase, realmGenitive, kinTermIns, kinTermReverse, renamedDirection, otherChildLabel, otherParentLabel, reignTitle, KIN_TERMS, splitKinTerm,
 } from '../src/ui/text/ru.ts';
@@ -218,7 +219,8 @@ describe('карточки всех лиц', () => {
       for (const x of ids) {
         if (fam.has(x)) bad.push(`${p.id}: ${x} из семьи среди современников`);
         const q = byId.get(x)!;
-        const shown = `${q.unnamed ? q.name.charAt(0).toLowerCase() + q.name.slice(1) : q.name} (${q.disambig.replace(/\s*\(([^)]*)\)/g, ', $1')})`;
+        // уточнение набрано той же типографикой, что вся карточка («Мф 1:15-16» → «Мф 1:15–16»); U+2060 в тексте проверок нет
+        const shown = `${q.unnamed ? q.name.charAt(0).toLowerCase() + q.name.slice(1) : q.name} (${typo(q.disambig.replace(/\s*\(([^)]*)\)/g, ', $1')).replace(/\u2060/g, '')})`;
         if ((namesakes.get(q.name) ?? 0) > 1 && q.disambig && !t.includes(norm(shown))) bad.push(`${p.id}: ${x} без уточнения`);
       }
     }
@@ -309,5 +311,89 @@ describe('карточки из экспертизы CARD', () => {
     const sibs = siblings(graph, 'david').map((s) => s.id);
     const ids = contemporaryGroups('david', models[0], familyIds('david'), new Set()).flatMap((g) => g.ids);
     for (const s of sibs) expect(ids).not.toContain(s);
+  });
+});
+
+describe('остатки этапа 1: типографика и подписи (B4, B5)', () => {
+  test('нет двойной точки после года: «ок. 6 г. до Р. Х. Ангел…», не «Х..» (Мария § 17)', () => {
+    expect(sec('mariya', 17)).toMatch(/^ок\. 6 г\. до Р\. Х\. Ангел Гавриил/);
+    const bad: string[] = [];
+    for (const [id, s] of cards) for (const [n, t] of s) if (/\.\./.test(t)) bad.push(`${id} § ${n}`);
+    expect(bad.slice(0, 10), `${bad.length} разделов`).toEqual([]);
+  });
+
+  test('оценка словом, а не знаком «~»: «примерно через 55 лет после отца»', () => {
+    expect(sec('aviud-syn-zorovavelya', 13)).toMatch(/Родился примерно через \d+ лет после отца, Зоровавеля, и примерно за \d+ лет до сына, Елиакима\./);
+    const bad: string[] = [];
+    for (const [id, s] of cards) for (const [n, t] of s) if (t.includes('~')) bad.push(`${id} § ${n}`);
+    expect(bad.slice(0, 10), `${bad.length} разделов`).toEqual([]);
+  });
+
+  test('§ 9–12: родственник с именем владельца или другого родственника назван с уточнением', () => {
+    expect(sec('mariya', 11)).toContain('Мария (Клеопова) — сестра Ин 19:25');
+    expect(sec('mariya-kleopova', 11)).toContain('Мария (Мать Иисуса) — сестра');
+    expect(sec('david', 10)).toContain('Фамарь (дочь Давида, сестра Авессалома)');
+    expect(sec('david', 10)).toContain('Внуки: Фамарь (дочь Авессалома)');
+    const shown = (x: string) => norm(`${nameOf(x)} (${typo(byId.get(x)!.disambig.replace(/\s*\(([^)]*)\)/g, ', $1')).replace(/\u2060/g, '')})`);
+    const bad: string[] = [];
+    for (const p of persons) {
+      const rel: [number, string[]][] = [
+        [9, (graph.spousesOf.get(p.id) ?? []).map((s) => (s.a === p.id ? s.b : s.a))],
+        [11, [...siblings(graph, p.id).map((s) => s.id), ...(graph.kinOf.get(p.id) ?? []).filter((k) => /^(брат|сестра)/i.test(k.rel)).map((k) => (k.from === p.id ? k.to : k.from))]],
+        [12, (graph.kinOf.get(p.id) ?? []).filter((k) => !/^(брат|сестра)/i.test(k.rel)).map((k) => (k.from === p.id ? k.to : k.from))],
+      ];
+      for (const [n, ids] of rel)
+        for (const x of new Set(ids)) {
+          const q = byId.get(x);
+          if (!q?.disambig || q.unnamed) continue;
+          const clash = q.name === p.name || ids.some((y) => y !== x && byId.get(y)?.name === q.name);
+          if (clash && !sec(p.id, n).includes(shown(x))) bad.push(`${p.id} § ${n}: ${x} без уточнения`);
+        }
+    }
+    expect(bad.slice(0, 10), `${bad.length} строк`).toEqual([]);
+  });
+
+  test('§ 10: народы с именем во множественном числе — без «сын» и «внук» (Мицраим, Каслухим)', () => {
+    expect(sec('mitsraim', 10)).toContain('От него произошли: Лудим, Анамим');
+    expect(sec('mitsraim', 10)).toContain('Потомки во втором поколении: Филистимляне');
+    expect(sec('mitsraim', 10)).not.toMatch(/Внук: Филистимляне/);
+    expect(sec('kaslukhim', 10)).toContain('От них произошли: Филистимляне');
+    // Ханаан «родил… Иевусея» (Быт 10:15–16): народ с именем в единственном числе остаётся сыном
+    expect(sec('khanaan', 10)).toMatch(/Сыновья: .*Иевусей/);
+    const plural = new Set(persons.filter((p) => (p.kind === 'people' || p.kind === 'clan') && /(им|[ая]не)$/.test(p.name)).map((p) => p.name));
+    const bad: string[] = [];
+    for (const [id, s] of cards) {
+      const t = s.get(10) ?? '';
+      for (const m of t.matchAll(/(Сын|Дочь|Сыновья|Дочери|Дети|Внук|Внучка|Внуки|Внучки|Правнук|Правнучка|Правнуки|Правнучки)[^:]{0,40}: ([^.:;]*?)(?= [А-ЯЁ][а-яё]+(?: [а-яё]+)*:|$)/g))
+        for (const nm of m[2].split(', ')) if (plural.has(nm.replace(/ \(.*$/, '').trim())) bad.push(`${id}: «${m[1]}: … ${nm}»`);
+    }
+    expect(bad.slice(0, 10), `${bad.length} строк`).toEqual([]);
+  });
+
+  test('§ 10: группы детей одной схемой — «Сын от Вооза», «Сыновья от Вирсавии», «Дети, мать которых не названа»', () => {
+    expect(sec('ruf', 10)).toContain('Сын от Вооза: Овид');
+    expect(sec('david', 10)).toContain('Сыновья от Вирсавии: Самус, Совав, Нафан, Соломон');
+    expect(sec('david', 10)).toContain('Дети, мать которых не названа: Евеар, Елисуа');
+    expect(sec('iakov', 10)).toContain('Сыновья от Рахили: Иосиф, Вениамин');
+    // подпись «от …» не бывает без существительного: прежнее «от Лии: …» без «Сыновья» в начале раздела и после других строк
+    // (слово перед «от» — имя ребёнка из прежней строки или начало раздела; строчное слово — текст данных: «четверо от Вирсавии: …»)
+    const bad: string[] = [];
+    for (const [id, s] of cards)
+      for (const m of (s.get(10) ?? '').matchAll(/(?:^|(\S+) )от [А-ЯЁ][а-яё]+: /g))
+        if (m[1] === undefined || (/^[А-ЯЁ]/.test(m[1]) && !/^(Сын|Дочь|Сыновья|Дочери|Дети)$/.test(m[1]))) bad.push(`${id}: «${m[0]}»`);
+    expect(bad.slice(0, 10), `${bad.length} карточек`).toEqual([]);
+  });
+
+  test('§ 23: «Додо — Додова» и «Руфь — Руфью» находит сам сопоставитель форм', async () => {
+    const { nameMatcher, norm } = await import('../src/engine/text.ts');
+    const hit = (name: string, word: string) => nameMatcher(name).test(` ${norm(word)} `);
+    expect(hit('Руфь', 'Руфь')).toBe(true);
+    expect(hit('Руфь', 'Руфью')).toBe(true);
+    expect(hit('Руфь', 'Руфи')).toBe(true);
+    expect(hit('Додо', 'Додова')).toBe(true);
+    expect(hit('Додо', 'Додо')).toBe(true);
+    expect(hit('Ной', 'но')).toBe(false);
+    expect(sec('dodo-ded-foly', 23)).toMatch(/^Названо по имени в 1 стихе \(Суд\)/);
+    expect(sec('ruf', 23)).toMatch(/^Названо по имени в 13 стихах/);
   });
 });

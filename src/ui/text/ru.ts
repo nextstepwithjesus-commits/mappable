@@ -258,3 +258,43 @@ export function reignTitle(over: string, sex: Sex): string | null {
   const g = realmGenitive(over);
   return g === null ? null : `${bySex(sex, 'Царь', 'Царица')} ${g}`;
 }
+
+// ---------- § 10: подписи групп детей и потомков ----------
+
+/**
+ * Имя народа во множественном числе (Быт 10: «От Мицраима произошли Лудим, Анамим…», Быт 10:13–14):
+ * «Лудим», «Кафторим», «Филистимляне». Народы с именем в единственном числе («Иевусей», «Аморрей») Писание называет
+ * сыновьями («Ханаан родил… Иевусея», Быт 10:15–16), и подпись «Сын», «Внук» к ним подходит.
+ */
+export const pluralPeopleName = (name: string, kind: string) => (kind === 'people' || kind === 'clan') && /(им|[ая]не)$/.test(name);
+
+/** «Сын», «Дочь», «Сыновья», «Дочери», «Дети» — по полу и числу детей группы. */
+export function childrenNoun(sexes: Sex[]): string {
+  if (sexes.length === 1) return bySex(sexes[0], 'Сын', 'Дочь');
+  if (sexes.every((s) => s === 'm')) return 'Сыновья';
+  if (sexes.every((s) => s === 'f')) return 'Дочери';
+  return 'Дети';
+}
+
+/** «Сыновья, мать которых не названа», «Дочь, отец которой не назван» — у детей, второй родитель которых в Писании не назван. */
+export function unnamedParentLabel(sexes: Sex[], ownerSex: Sex): string {
+  const which = sexes.length === 1 ? bySex(sexes[0], 'которого', 'которой') : 'которых';
+  return `${childrenNoun(sexes)}, ${ownerSex === 'f' ? `отец ${which} не назван` : `мать ${which} не названа`}`;
+}
+
+/** «Внук», «Внучки», «Правнуки»: gen — 2 (внуки) или 3 (правнуки); по полу и числу. */
+export function descendantsNoun(gen: 2 | 3, sexes: Sex[]): string {
+  const [m, f, pm, pf] = gen === 2 ? ['Внук', 'Внучка', 'Внуки', 'Внучки'] : ['Правнук', 'Правнучка', 'Правнуки', 'Правнучки'];
+  if (sexes.length === 1) return bySex(sexes[0], m, f);
+  return sexes.every((s) => s === 'f') ? pf : pm;
+}
+
+/**
+ * Подпись для народов с именем во множественном числе — без рода и числа лица: у детей — «От него произошли»
+ * (у народа-владельца — «От них произошли», как «от которых вышли Филистимляне», Быт 10:14), дальше —
+ * «Потомки во втором поколении», «Потомки в третьем поколении».
+ */
+export function peoplesLabel(gen: 1 | 2 | 3, owner: { sex: Sex; plural: boolean }): string {
+  if (gen === 1) return `От ${owner.plural ? 'них' : bySex(owner.sex, 'него', 'неё')} произошли`;
+  return `Потомки ${gen === 2 ? 'во втором' : 'в третьем'} поколении`;
+}

@@ -1,12 +1,13 @@
 import { Fragment } from 'preact';
 import { signal } from '@preact/signals';
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
 import { byId, loadVerses } from '../data/atlas.ts';
 import { parseRef, verseId } from '../engine/books.ts';
 import type { Sky } from '../render/sky.ts';
 import type { Cert, Role } from '../data/types.ts';
 import { selected } from '../state.ts';
+import { typo } from './text/typo.ts';
 
 export const skyRef: { current: Sky | null; redraw: () => void; flyTo: (id: string) => void } = {
   current: null,
@@ -45,12 +46,12 @@ export function roleText(roles: Role[], sex: 'm' | 'f'): string {
   return roles.map((r) => ROLE_NAMES[r]?.[sex === 'f' ? 1 : 0] ?? r).join(', ');
 }
 
-/** «1Цар 16:1» → «1 Цар 16:1» с неразрывными пробелами. */
 /** Печать: в сборке для встраивания (vite build --mode artifact) рамка просмотра не открывает диалог печати. */
 export const CAN_PRINT = import.meta.env.MODE !== 'artifact';
 
+/** «1Цар 16:1-3» → «1 Цар 16:1–3»: неразрывные пробелы, «–» и U+2060 после него — той же typo(), что у всего текста. */
 export function refLabel(ref: string): string {
-  return ref.replace(/^([1-4])(\S)/, '$1 $2').replace(/ (\d)/, ' $1').replace(/-/g, '–');
+  return typo(ref.replace(/^([1-4])(\S)/, '$1 $2'));
 }
 
 export const CERT_MARK: Record<Cert, string> = { scripture: '', inference: 'выв.', interpretation: 'толк.' };
@@ -92,31 +93,74 @@ const openRef = signal<string | null>(null);
 /** Ссылки на стихи; раскрываются вклейкой под абзацем (до 3 стихов). */
 const bookPart = (ref: string) => /^([1-4]?\s?[^\d\s]+)\s*(\d.*)$/.exec(ref);
 
-/** Ссылки подряд: «Быт 11:26; 17:5; 1 Пар 1:27» — книга не повторяется, если та же, что у предыдущей. */
-export function Refs({ refs, owner }: { refs?: string[]; owner: string }) {
-  if (!refs || !refs.length) return null;
+/** Сколько ссылок видно сразу; остальные раскрывает «ещё N мест» (B4, CARD-32). */
+export const REFS_SHOWN = 3;
+
+/**
+ * Ссылки подряд: «Быт 11:26; 17:5; 1 Пар 1:27» — книга не повторяется, если та же, что у предыдущей.
+ * Каждая ссылка — вместе со своим разделителем в неразрывном блоке `.nobr`: кнопка ссылки — строчный блок, перед ним
+ * и после него браузер может перенести строку даже у неразрывного пробела, и без обёртки «;» уходил в начало строки.
+ * Больше трёх ссылок — первые три и команда «ещё 2 места», раскрывающая остальные.
+ * tail — знак, который идёт в тексте сразу за ссылками («…2 Цар 5:4–5; 1010–1003 гг.»): он держится за последнюю ссылку.
+ */
+export function Refs({ refs, owner, tail, max = REFS_SHOWN }: { refs?: string[]; owner: string; tail?: string; max?: number }) {
+  // раскрыт список именно этих ссылок: при переходе к другому лицу тот же компонент показывает новые ссылки свёрнутыми
+  const [openFor, setOpenFor] = useState<string | null>(null);
+  const box = useRef<HTMLSpanElement>(null);
+  const focusAt = useRef<number | null>(null);
+  const sig = `${owner}|${(refs ?? []).join('|')}`;
+  const all = openFor === sig;
+  useEffect(() => {
+    // после «ещё N мест» фокус переходит на первую раскрытую ссылку, а не теряется вместе с исчезнувшей командой
+    if (!all || focusAt.current === null) return;
+    box.current?.querySelectorAll<HTMLButtonElement>('button.ref')[focusAt.current]?.focus();
+    focusAt.current = null;
+  }, [all]);
+  if (!refs || !refs.length) return tail ? <>{tail}</> : null;
+  const cut = !all && refs.length > max;
+  const shown = cut ? refs.slice(0, max) : refs;
+  const rest = refs.length - shown.length;
   return (
-    <span class="refs">
-      {refs.map((r, i) => {
+    <span class="refs" ref={box}>
+      {shown.map((r, i) => {
         const key = `${owner}|${r}`;
         const cur = bookPart(r);
         const prev = i > 0 ? bookPart(refs[i - 1]) : null;
         const short = cur && prev && cur[1].replace(/\s/g, '') === prev[1].replace(/\s/g, '');
         const full = refLabel(r);
+        const last = i === shown.length - 1;
+        const sep = !last || cut ? ';' : tail;
         return (
           <Fragment key={r}>
-            {i > 0 && <span class="refsep">; </span>}
-            <button
-              class="ref"
-              aria-label={short ? full : undefined}
-              aria-expanded={openRef.value === key}
-              onClick={() => (openRef.value = openRef.value === key ? null : key)}
-            >
-              {short ? cur![2].replace(/-/g, '–') : full}
-            </button>
+            <span class="nobr">
+              <button
+                class="ref"
+                aria-label={short ? full : undefined}
+                aria-expanded={openRef.value === key}
+                onClick={() => (openRef.value = openRef.value === key ? null : key)}
+              >
+                {short ? typo(cur![2]) : full}
+              </button>
+              {sep ? <span class="refsep">{sep}</span> : null}
+            </span>
+            {!last || cut ? ' ' : null}
           </Fragment>
         );
       })}
+      {cut ? (
+        <span class="nobr">
+          <button
+            class="more"
+            onClick={() => {
+              focusAt.current = max;
+              setOpenFor(sig);
+            }}
+          >
+            ещё{'\u00a0'}{rest}{'\u00a0'}{plural(rest, 'место', 'места', 'мест')}
+          </button>
+          {tail ? <span class="refsep">{tail}</span> : null}
+        </span>
+      ) : null}
     </span>
   );
 }
@@ -156,7 +200,7 @@ export function Verses({ refText, max = 3 }: { refText: string; max?: number }) 
       ))}
       {!all && text.length > max && (
         <button class="more" onClick={() => setAll(true)}>
-          ещё {text.length - max} {plural(text.length - max, 'стих', 'стиха', 'стихов')}
+          ещё{'\u00a0'}{text.length - max}{'\u00a0'}{plural(text.length - max, 'стих', 'стиха', 'стихов')}
         </button>
       )}
     </div>

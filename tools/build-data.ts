@@ -8,14 +8,14 @@
  */
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
-import Typograf from 'typograf';
 import { loadBible, ROOT } from './bible.ts';
 import { buildGraph, primaryChildren } from '../src/engine/graph.ts';
 import { solveChronology, noteModelDifferences, MODELS, type ChronoResult } from '../src/engine/chronology.ts';
 import { computeLayout, type LineStep, type LayoutResult } from '../src/engine/layout.ts';
 import { buildTimeScale } from '../src/engine/timescale.ts';
 import { parseRef, verseId, BOOKS } from '../src/engine/books.ts';
-import { nameMatcher, norm, stripBrackets } from '../src/engine/text.ts';
+import { nameMatcher, norm, stripBrackets, splitParentRefs } from '../src/engine/text.ts';
+import { typo } from '../src/ui/text/typo.ts';
 import type { Person, Volume, Epoch, Group } from '../src/data/types.ts';
 
 const read = <T>(p: string): T => JSON.parse(readFileSync(join(ROOT, p), 'utf8'));
@@ -154,8 +154,9 @@ ranked.forEach(([id], i) => {
 });
 
 // ---------- типографика цитат ----------
-const tp = new Typograf({ locale: ['ru', 'en-US'] });
-const typo = (s: string) => tp.execute(s.replace(/"([^"]*)"/g, '«$1»').replace(/\s-\s/g, ' — '));
+// Та же функция, что у строк интерфейса (src/ui/text/typo.ts, B5): стих во вклейке и строка карточки набраны по одним правилам.
+// Прежний typograf менял сам текст стиха: вставлял запятую после скобки («[и обыскивал,], но», Быт 31:33) и пробел
+// внутри скобок; typo() меняет только пробелы, кавычки, тире и многоточие.
 
 // ---------- стихи ----------
 const bible = loadBible();
@@ -206,14 +207,13 @@ for (const w of wordVerses.keys()) {
   else byPrefix.set(k, [w]);
 }
 const firstWord = (name: string) => norm(name).split(/\s+/)[0];
-/** Словоформы текста, в которых названо имя; у имён на -ь с короткой основой («Руфь») — и сама форма, и «Руфью». */
+/** Словоформы текста, в которых названо имя (формы «Руфь», «Руфью», «Додова» находит сам nameMatcher). */
 const formsCache = new Map<string, string[]>();
 const formsOf = (name: string): string[] => {
   const w0 = firstWord(name);
   if (formsCache.has(w0)) return formsCache.get(w0)!;
   const re = nameMatcher(name);
-  const extra = w0.endsWith('ь') ? new Set([w0, `${w0}ю`]) : new Set([w0]);
-  const out = (byPrefix.get(w0.slice(0, 2)) ?? []).filter((w) => extra.has(w) || re.test(` ${w} `));
+  const out = (byPrefix.get(w0.slice(0, 2)) ?? []).filter((w) => re.test(` ${w} `));
   formsCache.set(w0, out);
   return out;
 };
@@ -403,16 +403,47 @@ const atlas = {
 writeFileSync(join(gen, 'atlas.json'), JSON.stringify(atlas));
 mkdirSync(join(gen, 'models'), { recursive: true });
 for (const m of models.slice(1)) writeFileSync(join(gen, 'models', `${m.id}.json`), JSON.stringify(m));
+// ---------- стихи родства: свои у отца и у матери (§ 6; CARD-32) ----------
+/** Текст стиха (или диапазона) и три предыдущих стиха той же главы, ближайший первым. */
+const verseCtx = (r: string): { text: string; before: string[] } | null => {
+  const pr = parseRef(r, bible.chapterLength);
+  if (!pr || !pr.verses.length) return null;
+  const text = pr.verses.map((v) => bible.verses.get(verseId(v)) ?? '').join(' ');
+  const v0 = pr.verses[0];
+  const before: string[] = [];
+  for (let k = v0.verse - 1; k >= Math.max(1, v0.verse - 3); k--) before.push(bible.verses.get(verseId({ ...v0, verse: k })) ?? '');
+  return { text, before };
+};
+const ownNames = (id: string): string[] => {
+  const q = personById.get(id);
+  return q && !q.unnamed ? [q.name, ...(q.card?.altNames ?? []).filter((a) => a.kind !== 'title' && a.kind !== 'epithet').map((a) => a.name)] : [];
+};
+let splitCount = 0;
+const parentRefsBy = (p: Person): { father: string[]; mother: string[] } | null => {
+  const refs = p.parentRefs ?? [];
+  if (!p.father || !p.mother || refs.length < 2) return null;
+  const fn = ownNames(p.father);
+  const mn = ownNames(p.mother);
+  if (!fn.length || !mn.length) return null;
+  const s = splitParentRefs(refs, fn, mn, verseCtx);
+  if (s.father.length === refs.length && s.mother.length === refs.length) return null;
+  splitCount++;
+  return s;
+};
+
 for (const v of volumes) {
   const cards: Record<string, unknown> = {};
   for (const p of v.persons) {
     const card = p.card ? JSON.parse(JSON.stringify(p.card)) : {};
     for (const s of card.sayings ?? []) s.quote = typo(s.quote);
+    const split = parentRefsBy(p);
+    if (split) card.parentRefsBy = split;
     const mentions = mentionsOf.get(p.id);
     cards[p.id] = { card, chrono: p.chrono ?? null, books: booksOf.get(p.id) ?? {}, ...(mentions ? { mentions } : {}) };
   }
   writeFileSync(join(gen, 'cards', `${v.volume}.json`), JSON.stringify(cards));
 }
+console.log(`§ 6: стихи родства разделены между отцом и матерью у ${splitCount} лиц`);
 for (const [book, m] of versesByBook) writeFileSync(join(gen, 'verses', `${BOOKS.findIndex((b) => b.code === book).toString().padStart(2, '0')}.json`), JSON.stringify({ book, verses: m }));
 
 // ---------- родословные главы для чтения ----------

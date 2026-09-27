@@ -13,8 +13,9 @@ const STRIP = /[аяйьоеиыую]$/;
 export function nameMatcher(name: string): RegExp {
   const first = norm(name).split(/[\s]+/)[0].replace(/[^а-я-]/g, '');
   if (first.length >= 4 && /[уо]$/.test(first) && !first.includes('-')) {
-    // несклоняемые на -у, -о: «Рафу — Рафуев», «Фаллу — Фаллуево», «Хазо»
-    return new RegExp(`(^|[^а-я])${first}(ев|ева|еву|евы|ево|евым|ов|ова|ову)?([^а-я]|$)`);
+    // несклоняемые на -у, -о: «Рафу — Рафуев», «Фаллу — Фаллуево», «Хазо»;
+    // притяжательное после гласной — одним «в»: «Додо — Додова» (Суд 10:1), «Хазо — Хазов»
+    return new RegExp(`(^|[^а-я])${first}(ев|ева|еву|евы|ево|евым|ов|ова|ову|в|ва|ву|вы|во|вым)?([^а-я]|$)`);
   }
   let stem = first;
   if (STRIP.test(stem) && stem.length >= 4) stem = stem.slice(0, -1);
@@ -31,8 +32,10 @@ export function nameMatcher(name: string): RegExp {
   }
   const esc = stem.replace(/[-]/g, '[-\\s]?');
   if (stem.length <= 3) {
-    // короткие имена (Ной, Ир, Ева): основа + типичные окончания
-    return new RegExp(`(^|[^а-я])${esc}(й|я|ю|е|ев|ева|еву|евы|евых|ем|ом|а|у|ы|ой|ою|ей|ею|о|ин|ина|иных|ову|ов|ова|овых|и)?([^а-я]|$)`);
+    // короткие имена (Ной, Ир, Ева): основа + типичные окончания;
+    // основа на мягкий знак — и «ь», «ью»: «Руфь», «Руфью» (Руф 4:13), а не только «Руфи»
+    const soft = first.endsWith('ь') ? 'ь|ью|' : '';
+    return new RegExp(`(^|[^а-я])${esc}(${soft}й|я|ю|е|ев|ева|еву|евы|евых|ем|ом|а|у|ы|ой|ою|ей|ею|о|ин|ина|иных|ову|ов|ова|овых|и)?([^а-я]|$)`);
   }
   return new RegExp(`(^|[^а-я])${esc}`);
 }
@@ -56,4 +59,45 @@ export function translit(s: string): string {
     .join('')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '');
+}
+
+/** Имя названо в тексте: ищется среди слов с прописной буквы (имена в Синодальном тексте пишутся с прописной). */
+export function namesIn(text: string, names: string[]): boolean {
+  const words = ` ${(stripBrackets(text).match(/[А-ЯЁ][а-яё]*(?:[-—–][А-ЯЁа-яё][а-яё]*)*/g) ?? []).map(norm).join(' ')} `;
+  return names.some((n) => nameMatcher(n).test(words));
+}
+
+/**
+ * Стихи родства — свои у отца и у матери (§ 6 карточки; CARD-32). В данных у ребёнка один список `parentRefs`.
+ * Стих относится к родителю, который назван в нём по имени. Стих, где не назван ни один из родителей
+ * («она зачала и родила сына», Быт 29:33; «зачнешь во чреве», Лк 1:31), относится к тем, кто назван в ближайшем
+ * предыдущем стихе той же главы (не дальше трёх стихов); если и там никого нет — к обоим.
+ * Родитель, которому не досталось ни одного стиха, получает весь список: связь не остаётся без основания.
+ * verse(ref) — текст стиха и тексты предыдущих стихов главы, ближайший первым; null — стих не найден (относится к обоим).
+ */
+export function splitParentRefs(
+  refs: string[],
+  father: string[],
+  mother: string[],
+  verse: (ref: string) => { text: string; before: string[] } | null,
+): { father: string[]; mother: string[] } {
+  const f: string[] = [];
+  const m: string[] = [];
+  for (const r of refs) {
+    const v = verse(r);
+    let who = { f: true, m: true };
+    if (v) {
+      for (const t of [v.text, ...v.before.slice(0, 3)]) {
+        const hf = namesIn(t, father);
+        const hm = namesIn(t, mother);
+        if (hf || hm) {
+          who = { f: hf, m: hm };
+          break;
+        }
+      }
+    }
+    if (who.f) f.push(r);
+    if (who.m) m.push(r);
+  }
+  return { father: f.length ? f : [...refs], mother: m.length ? m : [...refs] };
 }

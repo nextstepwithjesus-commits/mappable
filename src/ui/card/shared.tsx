@@ -10,6 +10,7 @@ import type { ChronoRow } from '../../data/atlas.ts';
 import type { Epoch, Sex } from '../../data/types.ts';
 import { P } from '../common.tsx';
 import { nameCase } from '../text/ru.ts';
+import { typo } from '../text/typo.ts';
 import { formatYear, formatSpan, yearsWord, shownYears, shownBirthRange, toAstro, type LifeDates } from '../../engine/years.ts';
 
 // ---------- годы ----------
@@ -85,9 +86,20 @@ export function nameIn(id: string, cs: 'gen' | 'acc'): string | null {
   return cs === 'gen' ? nameCase(p.name, p.sex, 'gen') : accusative(p.name, p.sex);
 }
 
-/** Ссылка на лицо в косвенном падеже; вызывающий заранее проверяет nameIn. */
-export function PersonIn({ id, cs }: { id: string; cs: 'gen' | 'acc' }) {
-  return <P id={id}>{nameIn(id, cs) ?? byId.get(id)?.name ?? id}</P>;
+/**
+ * Ссылка на лицо в косвенном падеже; вызывающий заранее проверяет nameIn.
+ * after — знак препинания сразу за именем: он держится за ссылку (кнопка — строчный блок, перед знаком возможен перенос).
+ */
+export function PersonIn({ id, cs, after }: { id: string; cs: 'gen' | 'acc'; after?: string }) {
+  const link = <P id={id}>{nameIn(id, cs) ?? byId.get(id)?.name ?? id}</P>;
+  return after ? (
+    <span class="nobr">
+      {link}
+      {after}
+    </span>
+  ) : (
+    link
+  );
 }
 
 /** Сколько лиц атласа носят имя: одноимённых различает уточнение. */
@@ -97,7 +109,7 @@ for (const q of persons) nameCount.set(q.name, (nameCount.get(q.name) ?? 0) + 1)
 /** Уточнение для одноимённого: «Иоанна (называемый Марком)»; у единственного носителя имени — ничего. */
 export function Namesake({ id }: { id: string }) {
   const p = byId.get(id);
-  return p && p.disambig && (nameCount.get(p.name) ?? 0) > 1 ? <span class="muted"> ({p.disambig})</span> : null;
+  return p && p.disambig && (nameCount.get(p.name) ?? 0) > 1 ? <span class="muted"> ({typo(p.disambig)})</span> : null;
 }
 
 /** Ссылка на лицо с именем в родительном падеже («после рождения Иехонии»); без склонения — именительный. */

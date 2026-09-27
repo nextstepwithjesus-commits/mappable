@@ -23,6 +23,8 @@ const decode = (s: string) =>
     .replace(/&#39;/g, "'")
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
+    // U+2060 (word joiner после «–» в диапазонах, B5) не виден и не читается: в тексте для проверок его нет
+    .replace(/\u2060/g, '')
     .replace(/[ \t\n]+/g, ' ')
     .trim();
 

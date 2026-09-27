@@ -54,7 +54,8 @@ describe('годы', () => {
     expect(addYears(-1, 1)).toBe(1);
   });
   it('пишет промежутки по-русски', () => {
-    expect(formatSpan(toAstro(-1040), toAstro(-970), true)).toBe('ок. 1040–970 гг. до Р. Х.');
+    // U+2060 после «–»: перенос не отрывает конец диапазона (B5)
+    expect(formatSpan(toAstro(-1040), toAstro(-970), true)).toBe('ок. 1040–\u2060970 гг. до Р. Х.');
   });
 });
 

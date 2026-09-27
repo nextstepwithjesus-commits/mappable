@@ -11,9 +11,11 @@ import type { ModelData, ChronoRow } from '../data/atlas.ts';
 import { deathLine, affiliation } from './card/shared.tsx';
 import {
   bySex, capFirst, lowerFirst, nameCase, splitKinTerm, kinTermIns, kinTermReverse, ownSpouseDat, otherParentLabel, otherChildLabel,
-  altKindLabel, reignTitle, MESSIAH_BIRTH,
+  altKindLabel, reignTitle, MESSIAH_BIRTH, pluralPeopleName, childrenNoun, unnamedParentLabel, descendantsNoun, peoplesLabel,
 } from './text/ru.ts';
+import { typo, typoTree } from './text/typo.ts';
 import { Masthead } from './card/Masthead.tsx';
+import { Close } from './controls.tsx';
 import { Events } from './card/Events.tsx';
 import { CanonStrip } from './card/Canon.tsx';
 import { BirthLine, RelativeChrono, YearMark } from './card/Chrono.tsx';
@@ -21,6 +23,8 @@ import { BirthLine, RelativeChrono, YearMark } from './card/Chrono.tsx';
 export { Masthead };
 
 type AtlasPerson = NonNullable<ReturnType<typeof byId.get>>;
+/** Тело карточки из сборки (tools/build-data.ts): стихи родства, разделённые между отцом и матерью. */
+type BuiltCard = Card & { parentRefsBy?: { father: string[]; mother: string[] } };
 
 export const SECTIONS: { n: number; part: number; title: string }[] = [
   { n: 1, part: 1, title: 'Имя' },
@@ -93,16 +97,58 @@ function PT({ id }: { id: string }) {
   return <P id={id}>{q ? (q.unnamed ? lowerFirst(q.name) : q.name) : id}</P>;
 }
 
-/** Ссылка на лицо с уточнением, если в атласе есть одноимённые: «Мария (Клеопова)». */
-function PN({ id, lower = false }: { id: string; lower?: boolean }) {
+/**
+ * Знак препинания сразу за ссылкой на лицо держится за неё. Кнопка — строчный блок, и перед знаком браузер переносит
+ * строку даже без пробела: в перечне «Шеломиф» / «, Маинан» запятая уходила в начало строки (B4, B5).
+ */
+function Glued({ after, children }: { after?: ComponentChildren; children: ComponentChildren }) {
+  return after ? (
+    <span class="nobr">
+      {children}
+      {after}
+    </span>
+  ) : (
+    <>{children}</>
+  );
+}
+
+/** Уточнение одноимённого в скобках: «Мария (Клеопова)»; скобки внутри уточнения — через запятую. */
+const disambigText = (id: string) => typo(byId.get(id)!.disambig.replace(/\s*\(([^)]*)\)/g, ', $1'));
+
+/**
+ * Ссылка на лицо с уточнением: «Мария (Клеопова)». dis — показать уточнение (по умолчанию — если в атласе есть одноимённые).
+ * after — знак препинания, который идёт следом («,» в перечне).
+ */
+function PN({ id, lower = false, dis, after }: { id: string; lower?: boolean; dis?: boolean; after?: string }) {
   const q = byId.get(id);
-  const dup = q && q.disambig && (nameCount.get(q.name) ?? 0) > 1;
+  const show = !!q?.disambig && (dis ?? (nameCount.get(q.name) ?? 0) > 1);
+  const link = lower ? <PT id={id} /> : <P id={id} />;
+  if (!show) return <Glued after={after}>{link}</Glued>;
   return (
     <>
-      {lower ? <PT id={id} /> : <P id={id} />}
-      {dup ? <span class="muted"> ({q!.disambig.replace(/\s*\(([^)]*)\)/g, ', $1')})</span> : null}
+      {link}
+      <span class="muted">
+        {' '}({disambigText(id)}){after}
+      </span>
     </>
   );
+}
+
+/**
+ * Одноимённые в одном разделе (§ 9–12): лица, чьё имя совпадает с именем владельца карточки или другого лица раздела.
+ * Их называют с уточнением, иначе «Мария — сестра» у Марии читается как «сестра самой себе».
+ */
+function namesakesIn(ownerId: string, ids: string[]): Set<string> {
+  const owner = byId.get(ownerId)!.name;
+  const count = new Map<string, number>();
+  for (const x of new Set(ids)) {
+    const n = byId.get(x)?.name;
+    if (n) count.set(n, (count.get(n) ?? 0) + 1);
+  }
+  return new Set(ids.filter((x) => {
+    const n = byId.get(x)?.name;
+    return !!n && (n === owner || (count.get(n) ?? 0) > 1);
+  }));
 }
 
 /** Ссылка на лицо в косвенном падеже; null — если имя не склоняется надёжно (строку тогда строят иначе). */
@@ -194,17 +240,27 @@ export function contemporaryGroups(id: string, m: ModelData, family: Set<string>
   return out;
 }
 
-/** Перечень лиц через запятую, не больше max, затем «и ещё N». */
-function list(ids: string[], max = 16, item: (id: string) => ComponentChildren = (x) => <PT id={x} />) {
+/**
+ * Перечень лиц через запятую, не больше max, затем «и ещё N». Запятая — за своим именем (item получает её в after),
+ * чтобы перенос не ставил её в начало строки.
+ */
+function list(
+  ids: string[],
+  max = 16,
+  item: (id: string, after?: string) => ComponentChildren = (x, after) => <PN id={x} lower dis={false} after={after} />,
+  tail?: string,
+) {
+  const shown = ids.slice(0, max);
+  const more = ids.length > max;
   return (
     <>
-      {ids.slice(0, max).map((k, i) => (
-        <span key={k}>
-          {i ? ', ' : ''}
-          {item(k)}
-        </span>
+      {shown.map((k, i) => (
+        <Fragment key={k}>
+          {i ? ' ' : ''}
+          {item(k, i < shown.length - 1 ? ',' : more ? undefined : tail)}
+        </Fragment>
       ))}
-      {ids.length > max ? <span class="muted"> и ещё {ids.length - max}</span> : null}
+      {more ? <span class="muted"> и ещё {ids.length - max}{tail}</span> : null}
     </>
   );
 }
@@ -261,7 +317,7 @@ export function Folio() {
     blocks.push(
       <div class={`sec ${st}`} key={`run${run[0]}`} data-n={run[0]} id={`sec-${run[0]}`}>
         <span class="no">{label}</span>
-        {run.map((n) => SECTIONS[n - 1].title).join(', ')} — {st === 'silent' ? 'в Писании не сообщается' : 'раздел не составлен'}
+        {typo(`${run.map((n) => SECTIONS[n - 1].title).join(', ')} — ${st === 'silent' ? 'в Писании не сообщается' : 'раздел не составлен'}`)}
       </div>,
     );
     run = [];
@@ -308,6 +364,8 @@ export function Folio() {
         <span />
       </div>
       <div class="folio-inner" ref={inner}>
+        {/* единый «×» (B3): липкий, в правом верхнем углу листа; на сенсорном экране — 44 × 44 */}
+        <Close label="Закрыть карточку" onClick={() => { selected.value = null; panel.value = null; }} />
         <nav class="rail" aria-label="Разделы карточки">
           {SECTIONS.map((s, i) => (
             <>
@@ -338,13 +396,14 @@ export function Folio() {
             Вся схема разделов
           </button>
           {CAN_PRINT && <button onClick={() => window.print()}>Печать</button>}
-          <button onClick={() => { selected.value = null; panel.value = null; }}>Закрыть</button>
         </div>
         <div class="mast"><div class="rule" /></div>
         {loading ? <p class="muted">Загрузка карточки…</p> : blocks}
         <p class="colophon">
-          Составлено разделов: {filledCount} из 24{silentCount ? `; о ${silentCount} ${plural(silentCount, 'разделе', 'разделах', 'разделах')} Писание не сообщает` : ''}. Все ссылки сверены с Синодальным
-          текстом. Даты — по модели «{modelNames[model.value.id] ?? ''}».
+          {typo(
+            `Составлено разделов: ${filledCount} из 24${silentCount ? `; о ${silentCount} ${plural(silentCount, 'разделе', 'разделах', 'разделах')} Писание не сообщает` : ''}. ` +
+              `Все ссылки сверены с Синодальным текстом. Даты — по модели «${modelNames[model.value.id] ?? ''}».`,
+          )}
         </p>
       </div>
     </aside>
@@ -362,7 +421,8 @@ export function buildSections(
   const out = new Map<number, ComponentChildren>();
   // раздел без сведений не выводится и не считается составленным: ни «0», ни пустой строки, ни пустого фрагмента
   const put = (n: number, v: unknown) => {
-    if (!isEmpty(v)) out.set(n, v as ComponentChildren);
+    // одна функция русской типографики для всех строк раздела (B5): неразрывные пробелы, «–» с U+2060, без «;» в начале
+    if (!isEmpty(v)) out.set(n, typoTree(v as ComponentChildren));
   };
   const facts = (fs: Fact[] | undefined, owner: string) =>
     fs && fs.length ? (
@@ -455,8 +515,12 @@ export function buildSections(
   {
     const rows: ComponentChildren[] = [];
     const pc: Cert = p.parentCert;
-    if (p.father) rows.push(<li class="fact" key="f">{p.fatherKind === 'legal' ? 'Законный отец' : 'Отец'}: <PT id={p.father} /><Refs refs={p.parentRefs} owner={ns + 'p6f'} /><Mark cert={pc} /><VerseInsert owner={ns + 'p6f'} refs={p.parentRefs} />{p.fatherGap && <span class="muted"> — родословие здесь может пропускать поколения</span>}</li>);
-    if (p.mother) rows.push(<li class="fact" key="m">Мать: <PT id={p.mother} /><Refs refs={p.parentRefs} owner={ns + 'p6m'} /><Mark cert={p.motherCert} /><VerseInsert owner={ns + 'p6m'} refs={p.parentRefs} /></li>);
+    // у отца и у матери свои стихи (CARD-32): при сборке общий список parentRefs разделён по тому, кто назван в стихе
+    const by = (card as BuiltCard | null)?.parentRefsBy;
+    const fRefs = by?.father ?? p.parentRefs;
+    const mRefs = by?.mother ?? p.parentRefs;
+    if (p.father) rows.push(<li class="fact" key="f">{p.fatherKind === 'legal' ? 'Законный отец' : 'Отец'}: <PT id={p.father} /><Refs refs={fRefs} owner={ns + 'p6f'} /><Mark cert={pc} /><VerseInsert owner={ns + 'p6f'} refs={fRefs} />{p.fatherGap && <span class="muted"> — родословие здесь может пропускать поколения</span>}</li>);
+    if (p.mother) rows.push(<li class="fact" key="m">Мать: <PT id={p.mother} /><Refs refs={mRefs} owner={ns + 'p6m'} /><Mark cert={p.motherCert} /><VerseInsert owner={ns + 'p6m'} refs={mRefs} /></li>);
     p.otherParents.forEach((o, i) =>
       rows.push(
         // «Приёмная мать: дочь фараонова», «Приёмный отец: Мардохей» — вид и роль одним словосочетанием, согласованным по роду
@@ -491,6 +555,7 @@ export function buildSections(
     // подпись — кем второе лицо приходится владельцу карточки: у мужчины «Мааха — наложница», у женщины «Халев — муж»
     const spouseLabel = (s: (typeof sp)[number]['s']) =>
       p.sex === 'm' ? (s.kind === 'concubine' ? 'наложница' : 'жена') : s.kind === 'concubine' ? 'муж; она названа его наложницей' : 'муж';
+    const same9 = namesakesIn(id, sp.map((x) => x.other));
     put(
       9,
       has(sp, card?.spousesNote) && (
@@ -499,7 +564,7 @@ export function buildSections(
             <ul>
               {sp.map(({ other, s }, i) => (
                 <li class="fact" key={other}>
-                  <P id={other} />
+                  <PN id={other} dis={same9.has(other)} />
                   <span class="muted"> — {spouseLabel(s)}</span>
                   <Refs refs={s.refs} owner={ns + `s9.${i}`} />
                   <Mark cert={s.cert} />
@@ -541,8 +606,8 @@ export function buildSections(
         const refs = messiah ? MESSIAH_BIRTH.fatherRefs : k.parentRefs;
         return (
           <li class="fact" key={`l${kid}`}>
-            {bySex(k.sex, 'Законный сын', 'Законная дочь')}: <P id={kid} />
-            {k.mother ? (mother ? <>, {bySex(k.sex, 'рождённый', 'рождённая')} {mother}</> : <>; мать — <PT id={k.mother} /></>) : null}
+            {bySex(k.sex, 'Законный сын', 'Законная дочь')}: <Glued after={k.mother ? (mother ? ',' : ';') : undefined}><P id={kid} /></Glued>
+            {k.mother ? (mother ? <> {bySex(k.sex, 'рождённый', 'рождённая')} {mother}</> : <> мать — <PT id={k.mother} /></>) : null}
             <Refs refs={refs} owner={ns + `c10l${i}`} />
             <VerseInsert owner={ns + `c10l${i}`} refs={refs} />
           </li>
@@ -552,8 +617,8 @@ export function buildSections(
       const refs = messiah ? MESSIAH_BIRTH.mother.refs : k.parentRefs;
       return (
         <li class="fact" key={`l${kid}`}>
-          {bySex(k.sex, 'Сын', 'Дочь')}: <P id={kid} />
-          {messiah ? <> — {MESSIAH_BIRTH.mother.text}</> : <>; законный отец — <PT id={k.father!} /></>}
+          {bySex(k.sex, 'Сын', 'Дочь')}: <Glued after={messiah ? undefined : ';'}><P id={kid} /></Glued>
+          {messiah ? <> — {MESSIAH_BIRTH.mother.text}</> : <> законный отец — <PT id={k.father!} /></>}
           <Refs refs={refs} owner={ns + `c10l${i}`} />
           <VerseInsert owner={ns + `c10l${i}`} refs={refs} />
         </li>
@@ -572,46 +637,90 @@ export function buildSections(
     const nextGen = (ids: string[]) => [...new Set(ids.flatMap(kidIds))];
     const grand = nextGen([...new Set(kids.map((e) => e.child))]);
     const great = nextGen(grand);
-    const genRow = (label: string, ids: string[]) =>
-      ids.length ? (
-        <p key={label}>
-          <span class="muted">{label}: </span>
-          {list(ids)}
-        </p>
-      ) : null;
-    // «от Лии:», если имя склоняется; иначе «мать — наложница Манассии:»
-    const fromLabel = (other: string) => {
-      const g = caseLink(other, 'gen');
-      if (g) return <><span class="muted">от </span>{g}: </>;
-      return <><span class="muted">{byId.get(other)?.sex === 'f' ? 'мать' : 'отец'} — </span><PT id={other} />: </>;
+    // одноимённые в разделе (Фамарь — дочь и Фамарь — внучка Давида) — с уточнением
+    const same10 = namesakesIn(id, [...kids.map((e) => e.child), ...[...byClaim.values()].flat().map((e) => e.child), ...grand, ...great]);
+    const item = (x: string, after?: string) => <PN id={x} lower dis={same10.has(x)} after={after} />;
+    const sexes = (ids: string[]) => ids.map((x) => byId.get(x)!.sex);
+    // народ с именем во множественном числе («Лудим», «Филистимляне») не называется «сыном» или «внуком» (Быт 10:13–14)
+    const isPlural = (x: string) => pluralPeopleName(byId.get(x)!.name, byId.get(x)!.kind);
+    const owner = { sex: p.sex, plural: pluralPeopleName(p.name, p.kind) };
+    const row = (key: string, label: ComponentChildren, ids: string[], max = 16) => (
+      <p key={key}>
+        <span class="muted">{label}: </span>
+        {list(ids, max, item)}
+      </p>
+    );
+    const genRows = (gen: 2 | 3, ids: string[]) => {
+      const people = ids.filter(isPlural);
+      const rest = ids.filter((x) => !isPlural(x));
+      return (
+        <>
+          {rest.length ? row(`g${gen}`, descendantsNoun(gen, sexes(rest)), rest) : null}
+          {people.length ? row(`g${gen}p`, peoplesLabel(gen, owner), people) : null}
+        </>
+      );
     };
+    /**
+     * Группы детей по второму родителю — одной схемой: «Сын от Вооза: Овид», «Сыновья от Вирсавии: …»;
+     * если имя не склоняется — «Сын: Махир; мать — наложница-Арамеянка»; дети, второй родитель которых не назван, —
+     * последней группой: «Дети, мать которых не названа: …» (если у других детей мать названа) или просто «Сыновья: …».
+     */
+    const groups = [...byMother].sort((a, b) => Number(!a[0]) - Number(!b[0]));
+    const anyNamed = groups.some(([other]) => !!other);
+    const childRows = groups.map(([other, all]) => {
+      const ids = all.filter((x) => !isPlural(x)).sort(order);
+      const people = all.filter(isPlural).sort(order);
+      const peopleRow = people.length ? row(`p${other}`, peoplesLabel(1, owner), people, 99) : null;
+      if (!ids.length) return <Fragment key={`p${other}`}>{peopleRow}</Fragment>;
+      const noun = childrenNoun(sexes(ids));
+      if (!other) return <Fragment key="u">{row(`u`, anyNamed ? unnamedParentLabel(sexes(ids), p.sex) : noun, ids, 99)}{peopleRow}</Fragment>;
+      const g = caseLink(other, 'gen');
+      if (g)
+        return (
+          <Fragment key={other}>
+            <p key={`m${other}`}>
+              <span class="muted">{noun} от </span>
+              <Glued after={<span class="muted">:</span>}>{g}</Glued>{' '}
+              {list(ids, 99, item)}
+            </p>
+            {peopleRow}
+          </Fragment>
+        );
+      // имя второго родителя не склоняется — оно в именительном падеже после перечня
+      return (
+        <Fragment key={other}>
+          <p key={`m${other}`}>
+            <span class="muted">{noun}: </span>
+            {list(ids, 99, item, ';')}
+            <span class="muted"> {byId.get(other)?.sex === 'f' ? 'мать' : 'отец'} — </span>
+            <PT id={other} />
+          </p>
+          {peopleRow}
+        </Fragment>
+      );
+    });
     put(
       10,
       has(kids, byClaim.size > 0, card?.childrenNote) && (
         <>
           {legal.length ? <ul>{legal.map(legalRow)}</ul> : null}
-          {[...byMother].map(([other, ids]) => (
-            <p key={other}>
-              {other ? fromLabel(other) : null}
-              {list(ids.sort(order), 99)}
-            </p>
-          ))}
+          {childRows}
           {[...byClaim].map(([claim, es], i) => {
             const ids = es.map((e) => e.child);
             // стихи — при небольшой группе; у большой они в § 6 каждого потомка
             const refs = es.length <= 3 ? [...new Set(es.flatMap((e) => e.refs))] : [];
             return (
               <p class="fact" key={`c${claim}`}>
-                <span class="muted">{otherChildLabel(claim, ids.map((x) => byId.get(x)!.sex))}: </span>
-                {list(ids, 16, (x) => <PN id={x} lower />)}
+                <span class="muted">{otherChildLabel(claim, sexes(ids))}: </span>
+                {list(ids, 16, (x, after) => <PN id={x} lower dis={same10.has(x) || undefined} after={after} />)}
                 <Refs refs={refs} owner={ns + `c10o${i}`} />
                 <Mark cert={es.every((e) => e.cert === es[0].cert) ? es[0].cert : undefined} />
                 <VerseInsert owner={ns + `c10o${i}`} refs={refs} />
               </p>
             );
           })}
-          {genRow(grand.length > 1 ? 'Внуки' : byId.get(grand[0] ?? '')?.sex === 'f' ? 'Внучка' : 'Внук', grand)}
-          {genRow(great.length > 1 ? 'Правнуки' : byId.get(great[0] ?? '')?.sex === 'f' ? 'Правнучка' : 'Правнук', great)}
+          {genRows(2, grand)}
+          {genRows(3, great)}
           {facts(card?.childrenNote, 'n10')}
         </>
       ),
@@ -625,6 +734,7 @@ export function buildSections(
       .filter((k) => SIBLING_KIN.test(k.rel))
       .map((k) => ({ other: k.from === id ? k.to : k.from, k }))
       .filter((x, i, a) => !sib.some((s) => s.id === x.other) && a.findIndex((y) => y.other === x.other) === i);
+    const same11 = namesakesIn(id, [...kinSib.map((x) => x.other), ...sib.map((x) => x.id)]);
     put(
       11,
       has(sib, kinSib, card?.siblingsNote) && (
@@ -633,7 +743,7 @@ export function buildSections(
             <ul>
               {kinSib.map(({ other, k }, i) => (
                 <li class="fact" key={other}>
-                  <P id={other} />
+                  <PN id={other} dis={same11.has(other)} />
                   {/* термин записан у того, кого он описывает: «Саруия — сестра Давида»; обратное — по полу */}
                   <span class="muted"> — {k.from === other ? k.rel : byId.get(other)!.sex === 'f' ? 'сестра' : 'брат'}</span>
                   <Refs refs={k.refs} owner={ns + `ks11.${i}`} />
@@ -645,13 +755,21 @@ export function buildSections(
           ) : null}
           {sib.length ? (
             <p>
-              {sib.map((s, i) => (
-                <span key={s.id}>
-                  {i ? ', ' : ''}
-                  <P id={s.id} />
-                  {(s.kind === 'paternal' || s.kind === 'maternal') && <span class="muted"> ({s.kind === 'paternal' ? 'единокровн.' : 'единоутробн.'})</span>}
-                </span>
-              ))}
+              {sib.map((s, i) => {
+                const after = i < sib.length - 1 ? ',' : undefined;
+                const half = s.kind === 'paternal' || s.kind === 'maternal';
+                return (
+                  <Fragment key={s.id}>
+                    {i ? ' ' : ''}
+                    <PN id={s.id} dis={same11.has(s.id)} after={half ? undefined : after} />
+                    {half && (
+                      <span class="muted">
+                        {' '}({s.kind === 'paternal' ? 'единокровн.' : 'единоутробн.'}){after}
+                      </span>
+                    )}
+                  </Fragment>
+                );
+              })}
             </p>
           ) : null}
           {facts(card?.siblingsNote, 'n11')}
@@ -663,6 +781,8 @@ export function buildSections(
   {
     const kin = (graph.kinOf.get(id) ?? []).filter((k) => !SIBLING_KIN.test(k.rel)); // братья и сёстры — в § 11
     const spouses = new Set((graph.spousesOf.get(id) ?? []).map((s) => (s.a === id ? s.b : s.a)));
+    const same12 = namesakesIn(id, kin.map((k) => (k.from === id ? k.to : k.from)));
+    const dis12 = (x: string) => (same12.has(x) ? <span class="muted"> ({disambigText(x)})</span> : null);
     /**
      * Термин записан у того, кого он описывает (`kin` у Иохаведы: Амрам, «тётка» — она тётка Амрама).
      * Термин второго лица о владельце: «Иохаведа — тётка» (в карточке Амрама).
@@ -672,7 +792,7 @@ export function buildSections(
       if (k.from !== id) {
         return (
           <>
-            <P id={k.from} /> — {k.rel}
+            <PN id={k.from} dis={same12.has(k.from)} /> — {k.rel}
           </>
         );
       }
@@ -683,8 +803,10 @@ export function buildSections(
       if (ins && dat) {
         return (
           <>
-            Приходится {ins} {dat}
-            {spouses.has(k.to) ? `, ${ownSpouseDat(o.sex)}` : ''}
+            Приходится {ins}{' '}
+            {same12.has(k.to) ? dat : <Glued after={spouses.has(k.to) ? ',' : undefined}>{dat}</Glued>}
+            {dis12(k.to)}
+            {spouses.has(k.to) ? `${same12.has(k.to) ? ',' : ''} ${ownSpouseDat(o.sex)}` : ''}
             {tail ? ` ${tail}` : ''}
           </>
         );
@@ -693,12 +815,12 @@ export function buildSections(
       const rev = kinTermReverse(term, o.sex);
       return rev ? (
         <>
-          <P id={k.to} /> — {rev}
+          <PN id={k.to} dis={same12.has(k.to)} /> — {rev}
           {tail ? ` ${tail}` : ''}
         </>
       ) : (
         <>
-          <P id={k.to} /> — связь по Писанию: «{k.rel}»
+          <PN id={k.to} dis={same12.has(k.to)} /> — связь по Писанию: «{k.rel}»
         </>
       );
     };
@@ -763,7 +885,7 @@ export function buildSections(
                 {gs.map((g) => (
                   <p key={g.label}>
                     <span class="muted">{g.label}: </span>
-                    {list(g.ids, 16, (x) => <PN id={x} lower />)}
+                    {list(g.ids, 16, (x, after) => <PN id={x} lower after={after} />)}
                   </p>
                 ))}
               </Fragment>
@@ -778,7 +900,7 @@ export function buildSections(
       15,
       has(card.places, card.birth?.place, card.death?.place) && (
         <ul>
-          {card.birth?.place && <li>{card.birth.place} <span class="muted">— место рождения, см. 8</span></li>}
+          {card.birth?.place && <li>{card.birth.place} <span class="muted">— место рождения, см. § 8</span></li>}
           {card.places?.map((pl, i) => (
             <li class="fact" key={i}>
               {pl.name} <span class="muted">— {PLACE_ROLE[pl.role]}</span>
@@ -787,7 +909,7 @@ export function buildSections(
               <VerseInsert owner={ns + `p15.${i}`} refs={pl.refs} />
             </li>
           ))}
-          {card.death?.place && <li>{card.death.place} <span class="muted">— место смерти, см. 20</span></li>}
+          {card.death?.place && <li>{card.death.place} <span class="muted">— место смерти, см. § 20</span></li>}
         </ul>
       ),
     );
@@ -808,12 +930,14 @@ export function buildSections(
               noteIsText ? r.note : r.years ? `${yearsWord(r.years)} по тексту` : null,
             ].filter(Boolean);
             // U+2060 после тире: диапазон лет не разрывается в конце строки
-            const span = r.start === r.end ? formatYear(astro(r.start)) : formatSpan(astro(r.start), astro(r.end), false).replace('–', '–\u2060');
+            // формат годов уже с U+2060 после «–»: диапазон не разрывается в конце строки
+            const span = r.start === r.end ? formatYear(astro(r.start)) : formatSpan(astro(r.start), astro(r.end), false);
             return (
               <li class="fact" key={`r${i}`}>
                 {title}: {parts.length ? parts.join('; ') : span}
-                <Refs refs={r.refs} owner={ns + `r16.${i}`} />
-                {parts.length ? `; ${span}` : ''}
+                {/* «;» после стихов держится за последнюю ссылку, иначе перенос ставит его в начало строки */}
+                <Refs refs={r.refs} owner={ns + `r16.${i}`} tail={parts.length ? ';' : undefined} />
+                {parts.length ? ` ${span}` : ''}
                 <abbr class="mark" title="годы по реконструкции Тиле — Янга; числа текста — отдельно">расч.</abbr>
                 {r.note && !noteIsText ? <div class="note">{capFirst(r.note)}</div> : null}
                 <VerseInsert owner={ns + `r16.${i}`} refs={r.refs} />
