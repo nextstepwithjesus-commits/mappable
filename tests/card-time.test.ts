@@ -293,3 +293,11 @@ describe('правки координатора по отчёту карточк
     expect(sec('melkhisedek', 14)).toMatch(/Быт 14:18–20/);
   });
 });
+
+describe('младенец, сын Давида и Вирсавии (2 Цар 12:18)', () => {
+  it('умер младенцем: без «в возрасте 0 лет», годы — одним годом', () => {
+    expect(sec('mladenets-syn-virsavii', 20)).toMatch(/младенцем/);
+    expect(sec('mladenets-syn-virsavii', 20)).not.toMatch(/в возрасте 0/);
+    expect(pp('mladenets-syn-virsavii', 'Годы')).not.toMatch(/(\d+)–\1/);
+  });
+});

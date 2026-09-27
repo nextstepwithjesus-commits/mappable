@@ -100,7 +100,8 @@ export function shownBirthRange(c: LifeDates): [number, number] {
 export function lifeSpanText(c: LifeDates, opts: { people?: boolean } = {}): string {
   const y = shownYears(c);
   if (!y) return '';
-  if (y.d !== null) return formatSpan(y.b, y.d, y.approx);
+  // умер в год рождения (младенец): один год, а не «1005–1005»
+  if (y.d !== null) return y.d === y.b ? formatYear(y.b, { approx: y.approx }) : formatSpan(y.b, y.d, y.approx);
   return `${opts.people ? '' : `род.${NBSP}`}${formatYear(y.b, { approx: y.approx })}`;
 }
 

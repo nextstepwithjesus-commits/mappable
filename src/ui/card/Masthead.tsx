@@ -95,7 +95,8 @@ export function Masthead({ id, actions, axis }: { id: string; actions?: Componen
 export function lifeBarLabels(c: ChronoRow): { left: string | null; right: string | null } {
   const y = shownYears(c);
   if (!y) return { left: null, right: null };
-  if (y.d === null) return { left: shortYear(y.b, y.approx, true), right: null };
+  // о смерти нет данных — или умер в год рождения (младенец): одна подпись, как в паспорте
+  if (y.d === null || y.d === y.b) return { left: shortYear(y.b, y.approx, true), right: null };
   const hb = toHist(y.b);
   const hd = toHist(y.d);
   return { left: shortYear(y.b, y.approx, hb < 0 && hd > 0), right: shortYear(y.d, y.approx, true) };

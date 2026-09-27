@@ -55,7 +55,9 @@ export function birthLine(c: LifeDates, range?: [number, number]): string {
 export function deathLine(b: number, d: number, cls: string, bLo = b, bHi = b): string {
   const y = shownYears({ b, bLo, bHi, d, cls: cls as LifeDates['cls'] });
   if (!y || y.d === null) return '';
-  return `${formatYear(y.d, { approx: y.approx })}, в возрасте ${yearsWord(Math.round(d - b))}`;
+  // «умер младенец» (2 Цар 12:18): возраст меньше года — словом, а не «в возрасте 0 лет»
+  const age = Math.round(d - b);
+  return `${formatYear(y.d, { approx: y.approx })}, ${age < 1 ? 'младенцем' : `в возрасте ${yearsWord(age)}`}`;
 }
 
 // ---------- имена в косвенных падежах ----------
