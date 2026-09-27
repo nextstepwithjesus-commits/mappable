@@ -196,8 +196,6 @@ const allowedKey = (k: string) => GEOMETRY.has(k) || k.startsWith('--');
 const EXCEPTIONS: Record<string, string> = {
   // TODO(stage2-wave2): образец собирается заново из живых компонентов (B7), разовые style уходят вместе со старым образцом.
   'src/ui/Specimen.tsx': 'B7 — образец из живых компонентов',
-  // TODO(stage2-wave2): плотность упоминаний книги — данные; передать долю свойством --a и смешивать цвет в CSS (folio.css, .canon span).
-  'src/ui/card/Canon.tsx:background': 'F9 — полоса 66 книг',
   // TODO(stage2-wave2): скрытый абзац картуша — убрать или заменить атрибутом hidden (C6, органы неба и картуш).
   'src/ui/SkyView.tsx:display': 'C6 — картуш',
 };
@@ -225,8 +223,7 @@ describe('разметка: в style нет кеглей, цветов и раз
 describe('кегли холста в разметке — ступени шкалы (B2; MOB-42)', () => {
   // Холст пишет кеглями src/render/type.ts; явный кегль в строке ctx.font допустим только из шкалы: 16, 14, 13, 12, 11,5.
   const CANVAS_OK = new Set([16, 14, 13, 12, 11.5]);
-  // TODO(stage2-wave2): мини-шкала жизни в шапке карточки переделывается в три ряда (F2); её подписи — 11 и 11,5 px.
-  const CANVAS_EXCEPTIONS = new Set(['src/ui/card/Masthead.tsx']);
+  const CANVAS_EXCEPTIONS = new Set<string>([]);
   it('ctx.font с явным кеглем — только ступени шкалы', () => {
     const bad: string[] = [];
     for (const { file, src } of TSX) {

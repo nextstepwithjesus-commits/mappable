@@ -6,6 +6,7 @@ import { atlasCoord } from '../../render/sky.ts';
 import { norm } from '../../engine/text.ts';
 import { lifeText } from '../SkyView.tsx';
 import { Sheet } from './Sheet.tsx';
+import { num } from '../text/typo.ts';
 import { Segmented } from '../controls.tsx';
 
 // ---------- указатель ----------
@@ -34,7 +35,7 @@ export function IndexPanel() {
   };
   let lastLetter = '';
   return (
-    <Sheet title="Указатель" lead={`Все лица атласа (${persons.length}) по алфавиту. Число — век от начала шкалы, буква — полоса на левой кромке карты.`}>
+    <Sheet title="Указатель" lead={`Все лица атласа (${num(persons.length)}) по алфавиту. Число — век от начала шкалы, буква — полоса на левой кромке карты.`}>
       <Segmented
         label="Буква"
         options={[{ value: '', label: 'все' }, ...letters.map((l) => ({ value: l, label: l }))]}

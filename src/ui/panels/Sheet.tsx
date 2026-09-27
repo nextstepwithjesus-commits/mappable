@@ -2,6 +2,7 @@ import type { ComponentChildren } from 'preact';
 import { panel } from '../../state.ts';
 import { skyRef } from '../common.tsx';
 import { Close } from '../controls.tsx';
+import { typo, typoTree } from '../text/typo.ts';
 
 export function Sheet({ title, lead, wide, children }: { title: string; lead?: string; wide?: boolean; children: ComponentChildren }) {
   return (
@@ -11,8 +12,9 @@ export function Sheet({ title, lead, wide, children }: { title: string; lead?: s
         <h2>{title}</h2>
         <Close label="Закрыть панель" onClick={() => (panel.value = null)} />
       </header>
-      {lead && <p class="lead">{lead}</p>}
-      {children}
+      {lead && <p class="lead">{typo(lead)}</p>}
+      {/* русская типографика для собственных строк панели; компоненты внутри набирают свои строки сами */}
+      {typoTree(children)}
     </section>
   );
 }

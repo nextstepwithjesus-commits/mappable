@@ -3,6 +3,7 @@ import { model, modelId, lineFlip } from '../../state.ts';
 import { Refs, VerseInsert, plural } from '../common.tsx';
 import { formatYear, toAstro } from '../../engine/years.ts';
 import { Sheet } from './Sheet.tsx';
+import { num } from '../text/typo.ts';
 import { Check, Segmented } from '../controls.tsx';
 
 /** Год якоря по-человечески: «967 г. до Р. Х.»; в вариантах «-966 (Тиле)» → «966 г. до Р. Х. (Тиле)». */
@@ -69,7 +70,7 @@ export function AboutPanel() {
               <td>{v.volume}</td>
               <td>{v.title}</td>
               <td>
-                {v.count} {plural(v.count, 'лицо', 'лица', 'лиц')}
+                {num(v.count)} {plural(v.count, 'лицо', 'лица', 'лиц')}
               </td>
             </tr>
           ))}

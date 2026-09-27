@@ -3,6 +3,7 @@ import { model, epochMode } from '../../state.ts';
 import { P, Refs, VerseInsert } from '../common.tsx';
 import { formatSpan, toAstro } from '../../engine/years.ts';
 import { Sheet, flyToYears } from './Sheet.tsx';
+import { typo } from '../text/typo.ts';
 import { Check } from '../controls.tsx';
 
 // ---------- эпохи ----------
@@ -26,7 +27,7 @@ export function EpochsPanel() {
           </p>
           <p>{e.summary}</p>
           <p class="muted">
-            Основание: {e.basis} <Refs refs={e.refs} owner={`ep-${e.id}`} />
+            Основание: {typo(e.basis)} <Refs refs={e.refs} owner={`ep-${e.id}`} />
           </p>
           <VerseInsert owner={`ep-${e.id}`} refs={e.refs} />
           {e.keyPersons.filter((k) => byId.has(k)).length ? (

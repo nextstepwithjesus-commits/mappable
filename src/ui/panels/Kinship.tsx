@@ -7,6 +7,7 @@ import { relate, foldChain, accusative, type Relation } from '../../engine/kinsh
 import { SearchIndex } from '../../engine/search.ts';
 import { lifeText } from '../SkyView.tsx';
 import { Sheet } from './Sheet.tsx';
+import { typo } from '../text/typo.ts';
 
 // ---------- родство ----------
 export function KinshipPanel() {
@@ -121,7 +122,7 @@ function RelationView({ r, ns }: { r: Relation; ns: string }) {
   const ancestorLine = !r.lineal && r.ancestors.length > 0 && !/: общи/.test(r.sentence) && r.up + r.down > 2;
   return (
     <div class="relation">
-      <p class="sent">{r.sentence}</p>
+      <p class="sent">{typo(r.sentence)}</p>
       {r.scripture && (
         <div class="muted">
           {r.scripture.text ? `В Писании: ${r.scripture.text}` : 'Так названо в Писании'}

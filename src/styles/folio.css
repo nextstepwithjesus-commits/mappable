@@ -188,7 +188,8 @@
   font-style: italic;
 }
 .sec .more,
-.verses .more {
+.verses .more,
+.refs .more {
   font-family: var(--sans);
   font-size: var(--t-ui);
   line-height: 1;
@@ -197,7 +198,8 @@
   text-underline-offset: 3px;
 }
 .sec .more:hover,
-.verses .more:hover {
+.verses .more:hover,
+.refs .more:hover {
   color: var(--ink);
   text-decoration-color: var(--ink);
 }
