@@ -238,8 +238,31 @@ export const lineMembership = (() => {
 // ---------- тела карточек и стихи — по требованию ----------
 const cardModules = import.meta.glob('../generated/cards/*.json');
 const verseModules = import.meta.glob('../generated/verses/*.json');
-type CardEntry = { card: Card; chrono: Chrono | null; books: Record<string, number> };
+/**
+ * § 23 «Места Писания»: в скольких стихах лицо названо по имени (tools/build-data.ts).
+ * scope 'bible' — счёт по всей Библии; 'chapters' — только в главах, на которые ссылается карточка
+ * (имя носят и другие лица, народы или места).
+ */
+export interface Mentions {
+  n: number;
+  scope: 'bible' | 'chapters';
+}
+type CardEntry = { card: Card; chrono: Chrono | null; books: Record<string, number>; mentions?: Mentions };
 const cardCache = new Map<string, Promise<Record<string, CardEntry>>>();
+/** Загруженные тела карточек и хронологические входы: чтобы разделы, собранные после загрузки, читали их без ожидания. */
+const cardsLoaded = new Map<string, Card>();
+const chronoLoaded = new Map<string, Chrono | null>();
+/** Сведения о счёте упоминаний — по объекту books лица (IdxPerson.books). */
+export const mentionsOf = new WeakMap<Record<string, number>, Mentions>();
+
+/** Тело карточки, если том уже загружен (loadCard); иначе null. */
+export function loadedCard(id: string): Card | null {
+  return cardsLoaded.get(id) ?? null;
+}
+/** Хронологические входы лица из данных (границы «не раньше», «не позже»), если том уже загружен; иначе null. */
+export function loadedChrono(id: string): Chrono | null {
+  return chronoLoaded.get(id) ?? null;
+}
 const verseCache = new Map<string, Promise<Record<string, string>>>();
 
 export function loadCard(id: string): Promise<{ card: Card; chrono: Chrono | null } | null> {
@@ -255,7 +278,11 @@ export function loadCard(id: string): Promise<{ card: Card; chrono: Chrono | nul
             const all = (m as { default: Record<string, CardEntry> }).default;
             for (const [pid, e] of Object.entries(all)) {
               const ip = byId.get(pid);
-              if (ip) ip.books = e.books ?? {};
+              cardsLoaded.set(pid, e.card);
+              chronoLoaded.set(pid, e.chrono);
+              if (!ip) continue;
+              ip.books = e.books ?? {};
+              if (e.mentions) mentionsOf.set(ip.books, e.mentions);
             }
             return all;
           })

@@ -45,6 +45,6 @@ export async function passport(id: string): Promise<Map<string, string>> {
   await loadCard(id);
   const html = renderToString(h(Masthead, { id }) as VNode);
   const out = new Map<string, string>();
-  for (const m of html.matchAll(/<dt>(.*?)<\/dt><dd>(.*?)<\/dd>/g)) out.set(decode(m[1]), decode(m[2]));
+  for (const m of html.matchAll(/<dt>(.*?)<\/dt><dd[^>]*>(.*?)<\/dd>/g)) out.set(decode(m[1]), decode(m[2]));
   return out;
 }

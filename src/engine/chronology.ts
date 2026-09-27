@@ -23,7 +23,23 @@ const LONG_LIVES = new Set(['antediluvian', 'postdiluvian']);
 const gens = (n: number) => {
   const a = n % 100;
   const b = n % 10;
-  return `${n} ${a > 10 && a < 20 ? 'поколений' : b === 1 ? 'поколение' : b >= 2 && b <= 4 ? 'поколения' : 'поколений'}`;
+  return `${n}\u00a0${a > 10 && a < 20 ? 'поколений' : b === 1 ? 'поколение' : b >= 2 && b <= 4 ? 'поколения' : 'поколений'}`;
+};
+
+/**
+ * Тексты напряжений пишутся для читателя: имена — только в именительном падеже (цепочкой «Левий — Кааф — Амрам»),
+ * родство — общими словами («сын», «после смерти отца»), со стихами и объяснением, без стрелок (docs/ui-review/card.md, CARD-18).
+ */
+const NB = '\u00a0'; // неразрывный пробел: перед тире, в ссылке «Исх 12:40», после числа
+const chainOf = (g: Graph, ids: string[]) => ids.map((x) => g.persons.get(x)!.name).join(`${NB}— `);
+const kidNoun = (g: Graph, id: string) => (g.persons.get(id)!.sex === 'f' ? 'дочь' : 'сын');
+const kidGen = (g: Graph, id: string) => (g.persons.get(id)!.sex === 'f' ? 'дочери' : 'сына');
+const parentGen = (kind: string) => (kind === 'mother' ? 'матери' : 'отца');
+const WHAT: Record<string, string> = {
+  fatherAge: 'возраст отца при рождении',
+  motherAge: 'возраст матери при рождении',
+  offset: 'промежуток между рождениями',
+  deathAge: 'возраст при смерти',
 };
 
 export type ChronoModelId = 'mt-long' | 'mt-short' | 'lxx' | 'terah70';
@@ -184,7 +200,7 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
     if (diff !== null) {
       tensions.push({
         persons: who,
-        text: `${what}: числа текста расходятся с другими данными на ${yearsWord(Math.round(Math.abs(diff)))}`,
+        text: `${chainOf(g, who)}: ${WHAT[what]} по тексту расходится с другими числами текста на ${yearsWord(Math.round(Math.abs(diff)))}.`,
         refs,
       });
     }
@@ -202,15 +218,15 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
       if (modelId === 'terah70' && id === 'avraam') fatherAge = 70;
       const f = fatherOf(g, id);
       const m = motherOf(g, id);
-      if (fatherAge !== undefined && f) equal(B(f), B(id), fatherAge, born.refs ?? [], [f, id], 'Возраст отца при рождении');
-      if (born.motherAge !== undefined && m) equal(B(m), B(id), born.motherAge, born.refs ?? [], [m, id], 'Возраст матери при рождении');
-      if (born.offset && g.persons.has(born.offset.from)) equal(B(born.offset.from), B(id), born.offset.years, born.refs ?? [], [born.offset.from, id], 'Смещение');
+      if (fatherAge !== undefined && f) equal(B(f), B(id), fatherAge, born.refs ?? [], [f, id], 'fatherAge');
+      if (born.motherAge !== undefined && m) equal(B(m), B(id), born.motherAge, born.refs ?? [], [m, id], 'motherAge');
+      if (born.offset && g.persons.has(born.offset.from)) equal(B(born.offset.from), B(id), born.offset.years, born.refs ?? [], [born.offset.from, id], 'offset');
       if (born.year !== undefined) explicit.push({ key: B(id), value: toAstro(born.year), cls: 'calculated', refs: born.refs ?? [], who: id });
     }
     const died = c.died;
     if (died) {
       const age = lxx && died.ageBracket !== undefined ? died.ageBracket : died.age;
-      if (age !== undefined) equal(B(id), D(id), age, died.refs ?? [], [id], 'Возраст при смерти');
+      if (age !== undefined) equal(B(id), D(id), age, died.refs ?? [], [id], 'deathAge');
       if (died.year !== undefined) explicit.push({ key: D(id), value: toAstro(died.year), cls: 'calculated', refs: died.refs ?? [], who: id });
     }
     for (const r of c.reign ?? []) {
@@ -230,7 +246,7 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
     const cur = fixed.get(root);
     if (cur === undefined) fixed.set(root, { value: v, cls });
     else if (Math.abs(cur.value - v) > 2) {
-      tensions.push({ persons: [who], text: `Год расходится с другими числами текста на ${yearsWord(Math.round(Math.abs(cur.value - v)))}`, refs });
+      tensions.push({ persons: [who], text: `${chainOf(g, [who])}: год по тексту расходится с другими числами текста на ${yearsWord(Math.round(Math.abs(cur.value - v)))}.`, refs });
     }
   };
   if (modelAnchor) setFixed(modelAnchor.key, modelAnchor.value, 'exact', [], 'iakov');
@@ -598,43 +614,58 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
   }
 
   // --- 7. напряжения между датированными лицами
+  // «сын не помещается в жизнь отца» — по паре; если пара входит в цепочку поколений с напряжением,
+  // подробность переходит в текст цепочки, чтобы в карточке была одна связная запись (CARD-18)
+  const afterDeath = new Map<string, { t: Tension; child: string; years: number }>();
+  const uniq = (xs: string[]) => [...new Set(xs)];
   for (const id of g.order) {
     const me = persons.get(id)!;
     for (const e of g.parentsOf.get(id) ?? []) {
       if (e.kind !== 'father' && e.kind !== 'mother') continue;
       const par = persons.get(e.parent)!;
       const dated = (x: PersonChrono) => x.cls === 'exact' || x.cls === 'calculated';
-      const pName = g.persons.get(e.parent)!.name;
-      const cName = g.persons.get(id)!.name;
-      // имена в тексте напряжения — только в именительном падеже, в скобках: склонять библейские имена надёжно нельзя
-      const kidWord = g.persons.get(id)!.sex === 'f' ? 'дочери' : 'сына';
-      const refs = [...e.refs, ...(g.persons.get(e.parent)!.chrono?.died?.refs ?? []), ...(g.persons.get(id)!.chrono?.born?.refs ?? [])];
+      const head = chainOf(g, [e.parent, id]);
+      const kid = kidNoun(g, id);
+      const parent = parentGen(e.kind);
+      const refs = uniq([...(g.persons.get(e.parent)!.chrono?.died?.refs ?? []), ...(g.persons.get(id)!.chrono?.born?.refs ?? []), ...e.refs]);
       if (!dated(me) || !dated(par)) {
         // даже при оценочных датах: если возраст родителя при смерти задан текстом, а ребёнок никак не помещается
-        if (par.d !== null && me.b > par.d + 3 && (e.kind === 'father' || e.kind === 'mother') && !e.gap) {
-          tensions.push({
+        if (par.d !== null && me.b > par.d + 3 && !e.gap) {
+          const years = Math.round(me.b - par.d);
+          const t: Tension = {
             persons: [e.parent, id],
-            text: `${cName} не помещается в жизнь ${e.kind === 'father' ? 'отца' : 'матери'} (${pName}): при числах текста рождение приходится на ${yearsWord(Math.round(me.b - par.d))} позже смерти; вероятно, родословие сокращено`,
-            refs: [...new Set(refs)],
-          });
+            text: `${head}: по возрастам, названным в тексте, ${kid} не помещается в жизнь ${parent}: при принятых годах рождение приходится примерно на ${yearsWord(years)} позже ${e.kind === 'mother' ? 'её' : 'его'} смерти. Вероятно, родословие называет не все поколения.`,
+            refs,
+          };
+          tensions.push(t);
+          afterDeath.set(`${e.parent}|${id}`, { t, child: id, years });
         }
         continue;
       }
       const age = me.b - par.b;
       if (par.d !== null && me.b > par.d + (e.kind === 'father' ? 1 : 0) + 0.5) {
+        const years = Math.round(me.b - par.d);
+        const t: Tension = {
+          persons: [e.parent, id],
+          text: `${head}: по числам текста ${kid} рождается через ${yearsWord(years)} после смерти ${parent}. Вероятно, родословие сокращено или ${e.kind === 'mother' ? `мать здесь${NB}— более далёкая прародительница` : `отец здесь${NB}— более далёкий предок`}.`,
+          refs,
+        };
+        tensions.push(t);
+        afterDeath.set(`${e.parent}|${id}`, { t, child: id, years });
+      } else if (e.kind === 'father' && age < 13) {
         tensions.push({
           persons: [e.parent, id],
-          text: `${cName} рождается через ${yearsWord(Math.round(me.b - par.d))} после смерти ${e.kind === 'father' ? 'отца' : 'матери'} (${pName}) — по числам текста; вероятно, родословие сокращено или это более далёкий предок`,
-          refs: [...new Set(refs)],
+          text: `${head}: по годам правления и возрасту при воцарении отцу при рождении ${kidGen(g, id)} выходит ${yearsWord(Math.round(age))}. Вероятно, какое-то из чисел считает совместное правление или передано иначе.`,
+          refs: uniq([...(g.persons.get(id)!.chrono?.reign ?? []).flatMap((r) => r.refs), ...(g.persons.get(e.parent)!.chrono?.reign ?? []).flatMap((r) => r.refs), ...refs]),
         });
-      } else if (e.kind === 'father' && age < 13) {
-        tensions.push({ persons: [e.parent, id], text: `Возраст отца (${pName}) при рождении ${kidWord} (${cName}) — ${yearsWord(Math.round(age))}: так выходит по годам правления и возрасту при воцарении`, refs: [...new Set(refs)] });
       } else if (e.kind === 'mother' && age > 60 && !LONG_LIVES.has(me.epoch ?? '') && g.persons.get(id)!.chrono?.born?.motherAge === undefined) {
-        tensions.push({ persons: [e.parent, id], text: `Возраст матери (${pName}) при рождении ${kidWord} (${cName}) — ${yearsWord(Math.round(age))}`, refs: [...new Set(refs)] });
+        tensions.push({ persons: [e.parent, id], text: `${head}: при принятых годах матери при рождении ${kidGen(g, id)} выходит ${yearsWord(Math.round(age))}.`, refs });
       }
     }
   }
   // цепочки недатированных между датированными: средняя длина поколения вне пределов эпохи
+  const merged = new Set<Tension>();
+  const entry = jacobBirth + 130; // вход Иакова в Египет (Быт 47:9)
   for (const id of g.order) {
     const me = persons.get(id)!;
     if (me.cls !== 'exact' && me.cls !== 'calculated') continue;
@@ -651,13 +682,34 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
         if (steps >= 2) {
           const avg = (me.b - pc.b) / steps;
           const n = normFor(pc.epoch);
-          if (avg > n.max * 1.05 || avg < n.min * 0.9) {
-            const names = chain.map((x) => g.persons.get(x)!.name).reverse();
-            tensions.push({
-              persons: [...chain].reverse(),
-              text: `${names[0]} → ${names[names.length - 1]}: ${gens(steps)} на ${yearsWord(Math.round(me.b - pc.b))} (в среднем ${yearsWord(Math.round(avg))}); вероятно, родословие сокращено`,
-              refs: [...new Set(chain.flatMap((x) => g.persons.get(x)!.parentRefs ?? []))].slice(0, 6),
-            });
+          const long = avg > n.max * 1.05;
+          if (long || avg < n.min * 0.9) {
+            const down = [...chain].reverse(); // от предка к потомку
+            const parts = [`${chainOf(g, down)}: ${gens(steps)} на ${yearsWord(Math.round(me.b - pc.b))}, в среднем по ${yearsWord(Math.round(avg))} на поколение.`];
+            const refs: string[] = [];
+            // цепочка проходит через 430 (215) лет пребывания в Египте: число пребывания — главная причина
+            const crossesEgypt = g.persons.has('iakov') && pc.b < entry && me.b > entry;
+            if (crossesEgypt && long) {
+              parts.push(modelId === 'mt-short' ? `Так выходит при 215${NB}годах пребывания в Египте (скобки Исх${NB}12:40; Гал${NB}3:17).` : `Так выходит при 430${NB}годах пребывания в Египте (Исх${NB}12:40).`);
+              refs.push('Исх 12:40');
+              if (modelId === 'mt-short') refs.push('Гал 3:17');
+            }
+            // стихи с числами — первыми: возраст при смерти промежуточных звеньев, год рождения потомка; затем стихи родства
+            for (const x of down.slice(1, -1)) refs.push(...(g.persons.get(x)!.chrono?.died?.refs ?? []));
+            refs.push(...(g.persons.get(id)!.chrono?.born?.refs ?? []));
+            // подробности пар «рождается после смерти отца» внутри цепочки
+            const inner: string[] = [];
+            for (let k = 0; k + 1 < down.length; k++) {
+              const pair = afterDeath.get(`${down[k]}|${down[k + 1]}`);
+              if (!pair) continue;
+              merged.add(pair.t);
+              inner.push(`${g.persons.get(pair.child)!.name}${NB}— примерно через ${yearsWord(pair.years)} после смерти ${parentGen(g.persons.get(pair.child)!.mother === down[k] ? 'mother' : 'father')}`);
+              refs.push(...pair.t.refs);
+            }
+            if (inner.length) parts.push(`По возрастам, названным в тексте, поколения не помещаются одно в жизнь другого: ${inner.join('; ')}.`);
+            parts.push(long ? 'Вероятно, родословие называет не все поколения.' : 'Вероятно, в родословии названы не отцы и сыновья, а более далёкие предки и потомки.');
+            refs.push(...down.flatMap((x) => g.persons.get(x)!.parentRefs ?? []));
+            tensions.push({ persons: down, text: parts.join(' '), refs: uniq(refs).slice(0, 8) });
           }
         }
         break;
@@ -666,13 +718,38 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
       if (steps > 60) break;
     }
   }
+  if (merged.size) tensions.splice(0, tensions.length, ...tensions.filter((t) => !merged.has(t)));
   return { model: modelId, persons, tensions: dedupeTensions(tensions) };
+}
+
+/** Короткие названия моделей для текста напряжений. */
+const MODEL_SHORT: Record<ChronoModelId, string> = {
+  'mt-long': 'масоретские числа, 430\u00a0лет в Египте',
+  'mt-short': 'краткое пребывание, 215\u00a0лет в Египте',
+  lxx: 'числа в скобках Быт\u00a05 и 11',
+  terah70: 'Фарре 70\u00a0лет',
+};
+
+/**
+ * Дописывает к каждому напряжению, в каких моделях хронологии его нет («В модели „краткое пребывание…“ этого напряжения нет»).
+ * Вызывается при сборке, когда решены все модели (tools/build-data.ts): утверждение проверено расчётом, а не предположено.
+ */
+export function noteModelDifferences(results: { model: ChronoModelId; tensions: Tension[] }[]): void {
+  const key = (t: Tension) => t.persons.join('|');
+  for (const r of results) {
+    for (const t of r.tensions) {
+      const absent = results.filter((o) => o.model !== r.model && !o.tensions.some((x) => key(x) === key(t))).map((o) => `«${MODEL_SHORT[o.model]}»`);
+      if (!absent.length) continue;
+      const list = absent.length === 1 ? absent[0] : `${absent.slice(0, -1).join(', ')} и ${absent[absent.length - 1]}`;
+      t.text += ` В ${absent.length === 1 ? 'модели' : 'моделях'} ${list} этого напряжения нет.`;
+    }
+  }
 }
 
 function dedupeTensions(ts: Tension[]): Tension[] {
   const seen = new Set<string>();
   return ts.filter((t) => {
-    const k = t.persons.join('|') + t.text.slice(0, 20);
+    const k = t.persons.join('|') + t.text; // тексты начинаются с имён, поэтому сравнивается весь текст
     if (seen.has(k)) return false;
     seen.add(k);
     return true;

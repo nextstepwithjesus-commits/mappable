@@ -11,10 +11,11 @@ import { join } from 'node:path';
 import Typograf from 'typograf';
 import { loadBible, ROOT } from './bible.ts';
 import { buildGraph, primaryChildren } from '../src/engine/graph.ts';
-import { solveChronology, MODELS, type ChronoResult } from '../src/engine/chronology.ts';
+import { solveChronology, noteModelDifferences, MODELS, type ChronoResult } from '../src/engine/chronology.ts';
 import { computeLayout, type LineStep, type LayoutResult } from '../src/engine/layout.ts';
 import { buildTimeScale } from '../src/engine/timescale.ts';
 import { parseRef, verseId, BOOKS } from '../src/engine/books.ts';
+import { nameMatcher, norm, stripBrackets } from '../src/engine/text.ts';
 import type { Person, Volume, Epoch, Group } from '../src/data/types.ts';
 
 const read = <T>(p: string): T => JSON.parse(readFileSync(join(ROOT, p), 'utf8'));
@@ -92,8 +93,12 @@ for (const m of MODELS) {
   console.log(`модель ${m.id}: ${(performance.now() - t0).toFixed(0)} мс · напряжений ${chrono.tensions.length} · метрики ${JSON.stringify(layout.metrics)}`);
 }
 
+// в каких моделях напряжения нет — проверено расчётом всех моделей
+noteModelDifferences(results.map((r) => ({ model: r.chrono.model, tensions: r.chrono.tensions })));
+
 // ---------- значимость → звёздная величина (степень интереса по Фурнасу) ----------
-const refsOf = (p: Person): string[] => {
+/** Все ссылки лица; notes: false — без примечаний § 24 (они часто ведут к другим лицам: «не смешивать с…»). */
+const refsOf = (p: Person, opts: { notes?: boolean } = {}): string[] => {
   const out = new Set<string>();
   const add = (r?: string[] | string) => { if (!r) return; for (const x of Array.isArray(r) ? r : [r]) out.add(x); };
   add(p.parentRefs);
@@ -116,7 +121,7 @@ const refsOf = (p: Person): string[] => {
     add(c.scripture?.first);
     add(c.scripture?.key);
     add(c.scripture?.all);
-    for (const n of c.notes ?? []) add(n.refs);
+    if (opts.notes !== false) for (const n of c.notes ?? []) add(n.refs);
   }
   for (const r of p.chrono?.reign ?? []) add(r.refs);
   add(p.chrono?.active?.refs);
@@ -173,6 +178,134 @@ for (const key of cited) {
   versesByBook.set(book, m);
 }
 
+// ---------- § 23: в скольких стихах лицо названо по имени ----------
+// Считаются стихи основного текста (без вставок в скобках), где стоит имя лица или его иная форма (§ 4; титулы и прозвания — нет).
+// Имя ищется сопоставителем форм nameMatcher (склонение, притяжательные «Давидов», «Илиев») среди слов
+// с прописной буквы: имена в Синодальном тексте пишутся с прописной, а совпадающие с ними слова («дано», «гады») — нет.
+// Если имя носят и другие лица атласа, или это имя колена или народа (Завулон, Моав, Хам), или это иная форма
+// (Израиль — и Иаков, и народ), стихи считаются только в главах, на которые ссылается карточка (без § 24),
+// а в главе, которую цитирует и одноимённый, — только стихи, на которые ссылается карточка.
+const t23 = performance.now();
+const wordVerses = new Map<string, string[]>(); // словоформа → стихи
+for (const [key, text] of bible.verses) {
+  const seenWords = new Set<string>();
+  for (const w of stripBrackets(text).match(/[А-ЯЁ][а-яё]*(?:[-—–][А-ЯЁа-яё][а-яё]*)*/g) ?? []) {
+    const n = norm(w);
+    if (seenWords.has(n)) continue;
+    seenWords.add(n);
+    const a = wordVerses.get(n);
+    if (a) a.push(key);
+    else wordVerses.set(n, [key]);
+  }
+}
+const byPrefix = new Map<string, string[]>(); // первые две буквы → словоформы
+for (const w of wordVerses.keys()) {
+  const k = w.slice(0, 2);
+  const a = byPrefix.get(k);
+  if (a) a.push(w);
+  else byPrefix.set(k, [w]);
+}
+const firstWord = (name: string) => norm(name).split(/\s+/)[0];
+/** Словоформы текста, в которых названо имя; у имён на -ь с короткой основой («Руфь») — и сама форма, и «Руфью». */
+const formsCache = new Map<string, string[]>();
+const formsOf = (name: string): string[] => {
+  const w0 = firstWord(name);
+  if (formsCache.has(w0)) return formsCache.get(w0)!;
+  const re = nameMatcher(name);
+  const extra = w0.endsWith('ь') ? new Set([w0, `${w0}ю`]) : new Set([w0]);
+  const out = (byPrefix.get(w0.slice(0, 2)) ?? []).filter((w) => extra.has(w) || re.test(` ${w} `));
+  formsCache.set(w0, out);
+  return out;
+};
+// одноимённые: имя одного лица совпадает с именем или иной формой другого (Иисус Христос и Иисус Навин, Руфь и Руф)
+type NameEntry = { pid: string; word: string; re: RegExp };
+const nameEntries: NameEntry[] = [];
+for (const p of persons) {
+  if (p.unnamed) continue;
+  const names = [p.name, ...(p.card?.altNames ?? []).filter((a) => a.kind !== 'title' && a.kind !== 'epithet').map((a) => a.name)];
+  for (const n of names) nameEntries.push({ pid: p.id, word: firstWord(n), re: nameMatcher(n) });
+}
+const entriesByPrefix = new Map<string, NameEntry[]>();
+for (const e of nameEntries) {
+  const k = e.word.slice(0, 2);
+  const a = entriesByPrefix.get(k);
+  if (a) a.push(e);
+  else entriesByPrefix.set(k, [e]);
+}
+/** Одноимённые лица: чьё имя ловит сопоставитель этого лица («Мелхи» не мешает счёту «Мелхиседека», «Руф» мешает счёту «Руфи»). */
+const namesakes = (p: Person): string[] => {
+  const w = firstWord(p.name);
+  const re = nameMatcher(p.name);
+  return [...new Set((entriesByPrefix.get(w.slice(0, 2)) ?? []).filter((e) => e.pid !== p.id && (e.word === w || re.test(` ${e.word} `))).map((e) => e.pid))];
+};
+// имена колен и народов на небе: «Колено Завулоново», «Моав», «Сыны Хама», «Хорреи Сеира»
+const groupWords = groups.filter((gr) => gr.kind === 'tribe' || gr.kind === 'nation').flatMap((gr) => norm(gr.name).split(/[^а-я-]+/).filter((w) => w.length > 2));
+const eponym = (p: Person): boolean => {
+  const re = nameMatcher(p.name);
+  return groupWords.some((w) => re.test(` ${w} `));
+};
+/** Главы и стихи, на которые ссылается карточка лица (без § 24); целая глава или длинный диапазон — только главой. */
+const citedCache = new Map<string, { chapters: Set<string>; verses: Set<string> }>();
+const citedBy = (p: Person) => {
+  const have = citedCache.get(p.id);
+  if (have) return have;
+  const chapters = new Set<string>();
+  const verses = new Set<string>();
+  for (const r of refsOf(p, { notes: false })) {
+    const pr = parseRef(r, bible.chapterLength);
+    if (pr && pr.chapterOnly) chapters.add(`${pr.book} ${pr.chapterOnly}`);
+    else if (pr)
+      for (const v of pr.verses) {
+        chapters.add(`${v.book} ${v.chapter}`);
+        verses.add(verseId(v));
+      }
+    else {
+      // межглавный диапазон длиннее трёх глав: «Быт 12:1-25:10»
+      const m = /^(\S+)\s+(\d+)(?::\d+)?(?:-(\d+):\d+)?/.exec(r.replace(/[–—]/g, '-'));
+      if (m) for (let ch = Number(m[2]); ch <= Number(m[3] ?? m[2]); ch++) chapters.add(`${m[1]} ${ch}`);
+    }
+  }
+  const out = { chapters, verses };
+  citedCache.set(p.id, out);
+  return out;
+};
+const personById = new Map(persons.map((p) => [p.id, p]));
+const booksOf = new Map<string, Record<string, number>>(); // для § 23 карточки; в индекс неба не входит
+const mentionsOf = new Map<string, { n: number; scope: 'bible' | 'chapters' }>();
+let restrictedCount = 0;
+for (const p of persons) {
+  if (p.unnamed) {
+    booksOf.set(p.id, {});
+    continue;
+  }
+  const kind = p.kind ?? 'person';
+  const rivals = namesakes(p);
+  const restrict = kind !== 'person' || rivals.length > 0 || eponym(p);
+  if (restrict) restrictedCount++;
+  const cited = citedBy(p);
+  // глава, которую цитирует и одноимённый (Лк 3 — четыре Иосифа): в ней — только стихи, на которые ссылается эта карточка
+  const rivalChapters = new Set(rivals.flatMap((r) => [...citedBy(personById.get(r)!).chapters]));
+  const inChapters = (v: string) => {
+    const ch = v.slice(0, v.indexOf(':'));
+    return cited.chapters.has(ch) && (!rivalChapters.has(ch) || cited.verses.has(v));
+  };
+  const verses = new Set<string>();
+  for (const w of formsOf(p.name)) for (const v of wordVerses.get(w)!) if (!restrict || inChapters(v)) verses.add(v);
+  // иные имена, но не титулы и прозвания: «Дева» (Ис 7:14) и «Благодатная» — не имя Марии
+  for (const a of p.card?.altNames ?? []) {
+    if (a.kind === 'title' || a.kind === 'epithet') continue;
+    for (const w of formsOf(a.name)) for (const v of wordVerses.get(w)!) if (inChapters(v)) verses.add(v);
+  }
+  const counts: Record<string, number> = {};
+  for (const v of verses) {
+    const book = v.slice(0, v.indexOf(' '));
+    counts[book] = (counts[book] ?? 0) + 1;
+  }
+  booksOf.set(p.id, counts);
+  if (verses.size) mentionsOf.set(p.id, { n: verses.size, scope: restrict ? 'chapters' : 'bible' });
+}
+console.log(`§ 23: упоминания по имени — ${(performance.now() - t23).toFixed(0)} мс; счёт в главах карточки у ${restrictedCount} лиц; без упоминаний ${persons.length - mentionsOf.size}`);
+
 // ---------- запись ----------
 const gen = join(ROOT, 'src/generated');
 if (existsSync(gen)) rmSync(gen, { recursive: true });
@@ -181,15 +314,8 @@ mkdirSync(join(gen, 'verses'), { recursive: true });
 
 const r1 = (x: number) => Math.round(x * 10) / 10;
 const def = results[0];
-const booksOf = new Map<string, Record<string, number>>(); // для § 23 карточки; в индекс неба не входит
 const index = persons.map((p) => {
   const c = p.card;
-  const bookCounts: Record<string, number> = {};
-  for (const r of refsOf(p)) {
-    const pr = parseRef(r);
-    if (pr) bookCounts[pr.book] = (bookCounts[pr.book] ?? 0) + Math.max(1, pr.verses.length);
-  }
-  booksOf.set(p.id, bookCounts);
   return {
     id: p.id,
     n: p.name,
@@ -282,7 +408,8 @@ for (const v of volumes) {
   for (const p of v.persons) {
     const card = p.card ? JSON.parse(JSON.stringify(p.card)) : {};
     for (const s of card.sayings ?? []) s.quote = typo(s.quote);
-    cards[p.id] = { card, chrono: p.chrono ?? null, books: booksOf.get(p.id) ?? {} };
+    const mentions = mentionsOf.get(p.id);
+    cards[p.id] = { card, chrono: p.chrono ?? null, books: booksOf.get(p.id) ?? {}, ...(mentions ? { mentions } : {}) };
   }
   writeFileSync(join(gen, 'cards', `${v.volume}.json`), JSON.stringify(cards));
 }
