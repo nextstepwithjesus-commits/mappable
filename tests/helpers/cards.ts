@@ -8,6 +8,7 @@ import type { ComponentChildren, VNode } from 'preact';
 import { h } from 'preact';
 import { persons, models, byId, loadCard } from '../../src/data/atlas.ts';
 import { buildSections } from '../../src/ui/Folio.tsx';
+import { Masthead } from '../../src/ui/card/Masthead.tsx';
 
 const decode = (s: string) =>
   s
@@ -30,7 +31,7 @@ export async function cardSections(id: string): Promise<Map<number, string>> {
   const p = byId.get(id)!;
   const data = await loadCard(id);
   const m = models[0];
-  const secs = buildSections(id, p, data?.card ?? null, m, m.chrono.get(id));
+  const secs = buildSections(id, p, data?.card ?? null, m, m.chrono.get(id), '', data?.chrono ?? null);
   const out = new Map<number, string>();
   for (const [n, v] of secs) out.set(n, decode(renderToString(h('div', null, v as ComponentChildren) as VNode)));
   return out;
@@ -38,3 +39,12 @@ export async function cardSections(id: string): Promise<Map<number, string>> {
 
 export const allIds = persons.map((p) => p.id);
 export { byId };
+
+/** Паспорт шапки карточки: подпись поля → значение («Годы» → «род. ок. 1335 г. до Р. Х. расч.»). */
+export async function passport(id: string): Promise<Map<string, string>> {
+  await loadCard(id);
+  const html = renderToString(h(Masthead, { id }) as VNode);
+  const out = new Map<string, string>();
+  for (const m of html.matchAll(/<dt>(.*?)<\/dt><dd>(.*?)<\/dd>/g)) out.set(decode(m[1]), decode(m[2]));
+  return out;
+}
