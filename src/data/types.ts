@@ -112,6 +112,20 @@ export interface Reign {
   ageAtStart?: number;
   refs: Ref[];
   note?: string;
+  /** Синхронизмы текста: «в N-й год царя X воцарился» этот царь (3 Цар 15:1). Число текста, не расчёт. */
+  sync?: Sync[];
+}
+
+/**
+ * Синхронизм воцарения: царь воцарился в year-й год царствования лица with (с его первым царствованием в данных).
+ * Если места Писания называют разные годы (4 Цар 8:25 и 9:29), каждое записывается отдельно.
+ */
+export interface Sync {
+  with: string;
+  year: number;
+  refs: Ref[];
+  cert?: Cert;
+  note?: string;
 }
 
 export interface Active {

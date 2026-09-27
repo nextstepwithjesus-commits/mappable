@@ -11,8 +11,8 @@ import { join } from 'node:path';
 import { loadBible, ROOT } from './bible.ts';
 import { buildGraph, primaryChildren } from '../src/engine/graph.ts';
 import { solveChronology, noteModelDifferences, MODELS, type ChronoResult } from '../src/engine/chronology.ts';
-import { computeLayout, type LineStep, type LayoutResult } from '../src/engine/layout.ts';
-import { buildTimeScale } from '../src/engine/timescale.ts';
+import { computeLayout, computeOutlines, packSpan, GHOST_SPAN, TRAIL_KINDS, type LineStep, type LayoutResult, type ListDef, type Outline } from '../src/engine/layout.ts';
+import { buildTimeScale, timeToX, xToTime } from '../src/engine/timescale.ts';
 import { parseRef, verseId, BOOKS } from '../src/engine/books.ts';
 import { nameMatcher, norm, stripBrackets, splitParentRefs } from '../src/engine/text.ts';
 import { typo } from '../src/ui/text/typo.ts';
@@ -81,16 +81,25 @@ const lines = {
 };
 
 // ---------- хронология и раскладка по всем моделям ----------
-const results: { id: string; chrono: ChronoResult; layout: LayoutResult; scale: ReturnType<typeof buildTimeScale> }[] = [];
+// списки имён без родства — скопления на небе (E2): data/lists.json
+const lists = read<{ lists: ListDef[] }>('data/lists.json').lists;
+// дом → колено: контур колена обводит и его дома (E8)
+const groupParents: Record<string, string> = Object.fromEntries(groups.filter((gr) => gr.parent).map((gr) => [gr.id, gr.parent!]));
+const results: { id: string; chrono: ChronoResult; layout: LayoutResult; scale: ReturnType<typeof buildTimeScale>; outlines: Outline[] }[] = [];
 for (const m of MODELS) {
   const t0 = performance.now();
   const chrono = solveChronology(g, epochs, m.id);
-  const layout = computeLayout(g, chrono, lines);
+  const layout = computeLayout(g, chrono, lines, { lists, epochs });
+  // насыщенность времени — по годам решателя и месту лиц в полосах, как до честных следов и скоплений (A14, E2):
+  // масштаб «по насыщенности» от них не меняется
   const births = [...chrono.persons.values()].map((c) => c.b);
-  const spans = layout.nodes.map((n) => [n.t0, n.t1] as [number, number]);
+  const spans = [...chrono.persons.values()].map((c) => packSpan(c));
+  for (const n of layout.nodes) if (n.ghost) spans.push([n.t0, n.t0 + GHOST_SPAN]);
   const scale = buildTimeScale(births, spans);
-  results.push({ id: m.id, chrono, layout, scale });
-  console.log(`модель ${m.id}: ${(performance.now() - t0).toFixed(0)} мс · напряжений ${chrono.tensions.length} · метрики ${JSON.stringify(layout.metrics)}`);
+  // контуры созвездий (E8) — в единицах масштаба «по насыщенности», вершины — в годах
+  const outlines = computeOutlines(g, layout, (t) => timeToX(scale, t, 1), (x) => xToTime(scale, x, 1), groupParents);
+  results.push({ id: m.id, chrono, layout, scale, outlines });
+  console.log(`модель ${m.id}: ${(performance.now() - t0).toFixed(0)} мс · напряжений ${chrono.tensions.length} · контуров ${outlines.length} · метрики ${JSON.stringify(layout.metrics)}`);
 }
 
 // в каких моделях напряжения нет — проверено расчётом всех моделей
@@ -341,7 +350,8 @@ const index = persons.map((p) => {
     ord: p.order ?? null,
     alt: (c?.altNames ?? []).map((a) => a.name),
     ep: p.chrono?.epoch ?? null,
-    reign: (p.chrono?.reign ?? []).map((x) => ({ over: x.over, start: x.start, end: x.end, years: x.years ?? null })),
+    // синхронизмы текста «в N-й год X воцарился Y» — для ярусов эпох (MAP-47)
+    reign: (p.chrono?.reign ?? []).map((x) => ({ over: x.over, start: x.start, end: x.end, years: x.years ?? null, ...(x.sync?.length ? { sync: x.sync } : {}) })),
     active: p.chrono?.active ? [p.chrono.active.from, p.chrono.active.to] : null,
     silent: c?.silent ?? [],
   };
@@ -368,22 +378,51 @@ const models = results.map((res) => ({
     if (!c) return null;
     const b = yr(c.b);
     const rel = (x: number | null) => (x === null ? null : yr(x) - b);
-    return [b, rel(c.bLo), rel(c.bHi), rel(c.d), rel(c.lastAttested), rel(c.dEst), c.cls, c.epoch];
+    const row: unknown[] = [b, rel(c.bLo), rel(c.bHi), rel(c.d), rel(c.lastAttested), rel(c.dEst), c.cls, c.epoch];
+    // A14: интервал смерти и «умер младенцем» — только если есть (atlas.ts восстанавливает null и false)
+    if (c.dLo !== null || c.infant) row.push(rel(c.dLo), rel(c.dHi), c.infant ? 1 : 0);
+    return row;
   }),
   tensions: res.chrono.tensions,
   layout: {
-    // [лицо (для призрака — −(номер+1)), полоса, t0 − рождение, t1 − t0, блок, полоса родителя, родитель раскладки, спутник чего, хребет]
+    // [лицо (для призрака — −(номер+1)), полоса, t0 − рождение, t1 − t0, блок, полоса родителя, родитель раскладки, спутник чего, хребет, след]
+    // t1 — конец рисуемого следа (layout.ts, п. 7); след — номер в TRAIL_KINDS: life, people, infant, list, ghost
     nodes: res.layout.nodes.map((n) => {
       const ghost = n.id.startsWith('ghost:');
       const person = ghost ? n.id.slice(6) : n.id;
       const k = personIndex.get(person)!;
       const b = yr(res.chrono.persons.get(person)?.b ?? 0); // так же считает atlas.ts
-      return [ghost ? -(k + 1) : k, n.lane, yr(n.t0) - b, yr(n.t1) - yr(n.t0), n.block, n.parentLane, pi(n.layoutParent), pi(n.satelliteOf), n.spine ? 1 : 0];
+      return [ghost ? -(k + 1) : k, n.lane, yr(n.t0) - b, yr(n.t1) - yr(n.t0), n.block, n.parentLane, pi(n.layoutParent), pi(n.satelliteOf), n.spine ? 1 : 0, TRAIL_KINDS.indexOf(n.trail)];
     }),
-    blocks: res.layout.blocks,
+    // у скоплений (E2) — cluster: годы в десятых долях года, как у контуров
+    blocks: res.layout.blocks.map((bl) =>
+      bl.cluster
+        ? { ...bl, t0: r1(bl.t0), t1: r1(bl.t1), cluster: { ...bl.cluster, t0: r1(bl.cluster.t0), t1: r1(bl.cluster.t1), tc: r1(bl.cluster.tc), span: bl.cluster.span.map(r1) } }
+        : bl,
+    ),
     laneMin: res.layout.laneMin,
     laneMax: res.layout.laneMax,
     metrics: res.layout.metrics,
+    // контуры созвездий (E8): кольца — [год·10, полоса·20, затем разности], места под название — [полоса·20, высота, год·10, год·10]
+    outlines: res.outlines.map((o) => ({
+      g: o.group,
+      ...(o.parent ? { p: o.parent } : {}),
+      n: o.size,
+      r: o.rings.map((ring) => {
+        const flat: number[] = [];
+        let pt = 0;
+        let pl = 0;
+        for (const [t, l] of ring) {
+          const qt = Math.round(t * 10);
+          const ql = Math.round(l * 20);
+          flat.push(qt - pt, ql - pl);
+          pt = qt;
+          pl = ql;
+        }
+        return flat;
+      }),
+      s: o.slots.map((s) => [Math.round(s.lane * 20), s.h, Math.round(s.t0 * 10), Math.round(s.t1 * 10)]),
+    })),
   },
   scale: { knots: res.scale.knots.map(r1), xTrue: res.scale.xTrue.map(r1), xDense: res.scale.xDense.map(r1) },
 }));

@@ -1,0 +1,26 @@
+{
+ "about": "Списки имён без родства — храбрые, служители, списки возвращения (E2; решение владельца 3). На небе такой список — одно скопление: подпись, стих, число лиц и сетка имён без следов жизни. В скопление входит лицо, у которого нет родителей, детей и супругов в данных, значимость 1–2, первая ссылка — в одном из отрывков списка, а созвездие (group) — одно из groups списка. name — заглавие скопления словами самого отрывка; refs — отрывки списка; during — лицо, во дни которого составлен список (его царствование или годы служения), если отрывок его называет. Проверяется npm run -s validate.",
+ "lists": [
+  { "id": "heroes-david", "name": "Храбрые Давида", "refs": ["2Цар 23:8-39", "1Пар 11:10-47"], "groups": ["court"], "during": "david" },
+  { "id": "ziklag", "name": "Пришедшие к Давиду в Секелаг", "refs": ["1Пар 12:1-22"], "groups": ["court"], "during": "david" },
+  { "id": "david-divisions", "name": "Начальники отделений и управители Давида", "refs": ["1Пар 27:1-34"], "groups": ["court"], "during": "david" },
+  { "id": "solomon-officials", "name": "Начальники и приставники Соломона", "refs": ["3Цар 4:1-19"], "groups": ["court"], "during": "solomon" },
+  { "id": "priest-courses", "name": "Череды священников", "refs": ["1Пар 24:1-19"], "groups": ["aaronides"], "during": "david" },
+  { "id": "ark-levites", "name": "Левиты, созванные для перенесения ковчега", "refs": ["1Пар 15:3-24"], "groups": ["levi", "aaronides"], "during": "david" },
+  { "id": "simeon-princes", "name": "Князья Симеона", "refs": ["1Пар 4:34-43"], "groups": ["simeon"], "during": "ezekiya" },
+  { "id": "gad-chiefs", "name": "Главы сынов Гада", "refs": ["1Пар 5:11-17"], "groups": ["gad"], "during": "ioafam" },
+  { "id": "manasseh-chiefs", "name": "Главы полуколена Манассиина", "refs": ["1Пар 5:23-26"], "groups": ["manasseh"], "during": "feglaffellasar" },
+  { "id": "hezekiah-levites", "name": "Левиты при Езекии", "refs": ["2Пар 29:12-15", "2Пар 31:10-15"], "groups": ["levi", "aaronides"], "during": "ezekiya" },
+  { "id": "josiah-levites", "name": "Левиты при Иосии", "refs": ["2Пар 34:12-13", "2Пар 35:8-9"], "groups": ["levi", "aaronides"], "during": "iosiya" },
+  { "id": "jerusalem-dwellers", "name": "Жители Иерусалима после плена", "refs": ["1Пар 9:2-34", "Неем 11:3-36"], "groups": ["levi", "aaronides", "judah", "benjamin", "exiles"], "during": "neemiya" },
+  { "id": "zerubbabel-returnees", "name": "Возвратившиеся с Зоровавелем", "refs": ["Езд 2:1-70", "Неем 7:6-73"], "groups": ["exiles", "levi", "aaronides"], "during": "zorovavel" },
+  { "id": "ezra-companions", "name": "Вышедшие с Ездрой из Вавилона", "refs": ["Езд 8:1-20"], "groups": ["exiles", "levi", "aaronides"], "during": "ezdra" },
+  { "id": "foreign-wives", "name": "Взявшие жён иноплеменных", "refs": ["Езд 10:18-44"], "groups": ["exiles", "levi", "aaronides"], "during": "ezdra" },
+  { "id": "wall-builders", "name": "Строители стены Иерусалима", "refs": ["Неем 3:1-32"], "groups": ["exiles", "levi", "aaronides"], "during": "neemiya" },
+  { "id": "ezra-reading", "name": "Стоявшие с Ездрой при чтении закона", "refs": ["Неем 8:4-7"], "groups": ["exiles", "levi", "aaronides"], "during": "neemiya" },
+  { "id": "covenant-seals", "name": "Приложившие печати к завету", "refs": ["Неем 10:1-27"], "groups": ["exiles", "levi", "aaronides"], "during": "neemiya" },
+  { "id": "return-priests", "name": "Священники и левиты при Зоровавеле и Иоакиме", "refs": ["Неем 12:1-26"], "groups": ["exiles", "levi", "aaronides"] },
+  { "id": "wall-dedication", "name": "Хоры при освящении стены", "refs": ["Неем 12:31-42"], "groups": ["exiles", "levi", "aaronides"], "during": "neemiya" },
+  { "id": "rome-greetings", "name": "Приветствия в Послании к Римлянам", "refs": ["Рим 16:3-23"], "groups": ["church"], "during": "pavel" }
+ ]
+}

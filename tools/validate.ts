@@ -14,6 +14,7 @@ import { loadBible, ROOT } from './bible.ts';
 import { parseRef, verseId } from '../src/engine/books.ts';
 import { nameMatcher, norm, stripBrackets } from '../src/engine/text.ts';
 import type { Person, Volume, Group, Epoch } from '../src/data/types.ts';
+import { ordinalStem } from '../src/engine/chronology.ts';
 
 const args = process.argv.slice(2);
 const quiet = args.includes('--quiet');
@@ -181,6 +182,44 @@ function checkYear(where: string, y: unknown) {
   if (y < -4174 || y > 2040) err(where, `год вне шкалы: ${y}`);
 }
 
+/**
+ * Синхронизм воцарения (reign.sync; MAP-47): «в year-й год царя with воцарился» этот царь. Число текста, поэтому:
+ * лицо with есть в данных и царствует; год — целое ≥ 1; если он больше лет царствования with по тексту (+1: «в N-й год»
+ * отсчитывается и в последний, неполный год), запись поясняет это в note; в стихах названы оба царя (имена или иные формы).
+ */
+const SYNC_KEYS = new Set(['with', 'year', 'refs', 'cert', 'note']);
+function checkSync(where: string, p: Person, r: NonNullable<NonNullable<Person['chrono']>['reign']>[number]) {
+  const s = (r as { sync?: unknown }).sync;
+  if (s === undefined) return;
+  if (!Array.isArray(s)) return err(where, 'sync: ожидается массив { with, year, refs }');
+  s.forEach((x: { with?: string; year?: number; refs?: string[]; cert?: string; note?: string }, i: number) => {
+    const w = `${where}.sync[${i}]`;
+    if (!x || typeof x !== 'object') return err(w, 'ожидается { with, year, refs }');
+    for (const k of Object.keys(x)) if (!SYNC_KEYS.has(k)) err(w, `неизвестное поле «${k}»`);
+    if (typeof x.with !== 'string' || !refExists(x.with)) return err(w, `with: нет лица «${x.with}»`);
+    if (x.with === p.id) err(w, 'with: ссылка на себя');
+    if (!Number.isInteger(x.year) || (x.year as number) < 1) err(w, `year: целое ≥ 1, а не ${x.year}`);
+    checkCert(w, x.cert);
+    const texts = checkRefs(w, x.refs);
+    const partner = byId.get(x.with);
+    if (!partner) return;
+    const reigns = partner.chrono?.reign ?? [];
+    if (!reigns.length) err(w, `with: «${x.with}» не царствует в данных (нет chrono.reign)`);
+    const total = reigns.reduce((a, q) => a + (q.years ?? 0), 0);
+    // число текста может не совпадать с годами царствования по тексту (4 Цар 15:30: «двадцатый год Иоафама» при 16 годах):
+    // это напряжение самого текста — предупреждение, а не ошибка; запись должна пояснять его в note
+    if (total && (x.year as number) > total + 1 && !x.note) warn(w, `year ${x.year} больше лет царствования «${partner.name}» по тексту (${total}) — поясните в note`);
+    if (texts.length && !mentions(texts, namesOf(p))) warn(w, `в стихах нет имени «${p.name}»`);
+    if (texts.length && !mentions(texts, namesOf(partner))) warn(w, `в стихах нет имени «${partner.name}»`);
+    // год — число самого текста: в стихах есть порядковое «восемнадцатый», «в тридцать девятом году»
+    const stem = ordinalStem(x.year as number);
+    if (texts.length && stem && !norm(stripBrackets(texts.join(' '))).replace(/\s+/g, ' ').includes(stem)) {
+      err(w, `в стихах нет порядкового числа ${x.year} («${stem}…»)`);
+    }
+  });
+}
+
+
 const presentVolumes = new Set(allFiles.map((f) => basename(f).slice(0, 2)));
 /** Ссылка допустима, если лицо есть в данных, или это опорное лицо тома, который ещё не составлен. */
 const refExists = (id: string) => byId.has(id) || (regById.has(id) && (volumeMode || !presentVolumes.has(regById.get(id)!.owner)));
@@ -337,6 +376,7 @@ for (const [id, p] of byId) {
       if (r.start > r.end) err(w, 'start > end');
       if (!r.over) err(w, 'over обязателен');
       checkRefs(w, r.refs);
+      checkSync(w, p, r);
     });
     if (c.active) {
       checkYear(`${W}.chrono.active`, c.active.from);
@@ -498,6 +538,29 @@ if (!volumeMode) {
     e.events.forEach((ev, i) => checkRefs(`epoch:${e.id}.events[${i}]`, ev.refs));
   }
   for (const r of registry.persons) if (!byId.has(r.id)) warn(`registry:${r.id}`, `лицо из реестра (том ${r.owner}) ещё не создано`);
+}
+
+// ---------- списки без родства (data/lists.json; E2) ----------
+if (!volumeMode && existsSync(join(ROOT, 'data/lists.json'))) {
+  const lists: { lists: { id: string; name: string; refs: string[]; groups: string[]; during?: string }[] } = JSON.parse(readFileSync(join(ROOT, 'data/lists.json'), 'utf8'));
+  const seenList = new Set<string>();
+  const LIST_KEYS = new Set(['id', 'name', 'refs', 'groups', 'during']);
+  for (const l of lists.lists) {
+    const W = `list:${l.id}`;
+    for (const k of Object.keys(l)) if (!LIST_KEYS.has(k)) err(W, `неизвестное поле «${k}»`);
+    if (!ID_RE.test(l.id ?? '')) err(W, 'id: только латиница в нижнем регистре, цифры и дефис');
+    if (seenList.has(l.id)) err(W, 'дублирующийся id списка');
+    seenList.add(l.id);
+    if (typeof l.name !== 'string' || !/^[А-ЯЁ][А-ЯЁа-яё ,\-—]*$/.test(l.name)) err(W, 'name: заглавие по-русски, с прописной');
+    checkRefs(W, l.refs);
+    if (!Array.isArray(l.groups) || !l.groups.length) err(W, 'groups: непустой список созвездий');
+    for (const gid of l.groups ?? []) if (!groupIds.has(gid)) err(W, `groups: неизвестная область «${gid}»`);
+    if (l.during !== undefined) {
+      const d = byId.get(l.during);
+      if (!d) err(W, `during: нет лица «${l.during}»`);
+      else if (!d.chrono?.reign?.length && !d.chrono?.active) warn(W, `during: у «${d.name}» нет ни царствования, ни годов служения — время списка возьмётся из решателя`);
+    }
+  }
 }
 
 // ---------- вывод ----------

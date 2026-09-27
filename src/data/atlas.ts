@@ -6,7 +6,8 @@ import raw from '../generated/atlas.json';
 import type { Card, Chrono, Epoch, Group, Role, Sex, PersonKind, Cert } from './types.ts';
 import type { Book } from '../engine/books.ts';
 import type { ChronoModel, DateClass, Tension } from '../engine/chronology.ts';
-import type { BlockInfo, LineStep } from '../engine/layout.ts';
+import type { BlockInfo, LineStep, Outline, TrailKind } from '../engine/layout.ts';
+import { TRAIL_KINDS } from '../engine/layout.ts';
 import type { Graph } from '../engine/graph.ts';
 import { buildGraph } from '../engine/graph.ts';
 import type { Person } from './types.ts';
@@ -37,20 +38,27 @@ export interface IdxPerson {
   alt: string[];
   books: Record<string, number>;
   epoch: string | null;
-  reign: { over: string; start: number; end: number; years: number | null }[];
+  /** sync — синхронизмы текста «в N-й год X воцарился» (данные; MAP-47) */
+  reign: { over: string; start: number; end: number; years: number | null; sync?: { with: string; year: number; refs: string[]; cert?: Cert; note?: string }[] }[];
   active: [number, number] | null;
   silent: number[];
 }
 
 export interface ChronoRow {
   b: number;
+  /** интервал рождения (A14): у оценочных дат начало следа рисуется пунктиром на bLo…bHi */
   bLo: number;
   bHi: number;
   d: number | null;
+  /** интервал смерти; null — о смерти данных нет (engine/chronology.ts, PersonChrono) */
+  dLo: number | null;
+  dHi: number | null;
   last: number | null;
   dEst: number;
   cls: DateClass;
   epoch: string | null;
+  /** умер младенцем (A14): без следа, знак † */
+  infant: boolean;
 }
 
 export interface NodeRow {
@@ -65,6 +73,8 @@ export interface NodeRow {
   layoutParent: string | null;
   satelliteOf: string | null;
   spine: boolean;
+  /** какой след рисуется (engine/layout.ts, TrailKind): life, people, infant, list, ghost; t1 = t0 — следа нет */
+  trail: TrailKind;
 }
 
 export interface ModelData {
@@ -77,6 +87,8 @@ export interface ModelData {
   laneMin: number;
   laneMax: number;
   metrics: Record<string, number>;
+  /** контуры созвездий (E8): кольца в годах и полосах, места под название */
+  outlines: Outline[];
   scale: { knots: number[]; xTrue: number[]; xDense: number[] };
   /** Эпохи в годах этой модели: «Первозданный мир» и «От Потопа до Авраама» зависят от чисел Быт 5 и 11. */
   epochs: Epoch[];
@@ -92,8 +104,9 @@ export interface LineFile {
 }
 
 // годы — разностями от рождения; лица — номерами в индексе (tools/build-data.ts)
-type RawChrono = [number, number, number, number | null, number | null, number, DateClass, string | null];
-type RawNode = [number, number, number, number, number, number | null, number | null, number | null, number];
+type RawChrono = [number, number, number, number | null, number | null, number, DateClass, string | null, (number | null)?, (number | null)?, number?];
+type RawNode = [number, number, number, number, number, number | null, number | null, number | null, number, number?];
+type RawOutline = { g: string; p?: string; n: number; r: number[][]; s: [number, number, number, number][] };
 interface RawAtlas {
   built: string;
   persons: Record<string, never>[];
@@ -101,7 +114,7 @@ interface RawAtlas {
     id: string;
     chrono: (RawChrono | null)[];
     tensions: Tension[];
-    layout: { nodes: RawNode[]; blocks: BlockInfo[]; laneMin: number; laneMax: number; metrics: Record<string, number> };
+    layout: { nodes: RawNode[]; blocks: BlockInfo[]; laneMin: number; laneMax: number; metrics: Record<string, number>; outlines?: RawOutline[] };
     scale: { knots: number[]; xTrue: number[]; xDense: number[] };
   }[];
   modelInfo: unknown;
@@ -156,7 +169,9 @@ function decodeModel(m: RawModel): ModelData {
   m.chrono.forEach((r, i) => {
     if (!r) return;
     const b = r[0];
-    chrono.set(persons[i].id, { b, bLo: b + r[1], bHi: b + r[2], d: abs(b, r[3]), last: abs(b, r[4]), dEst: b + r[5], cls: r[6], epoch: r[7] });
+    chrono.set(persons[i].id, {
+      b, bLo: b + r[1], bHi: b + r[2], d: abs(b, r[3]), dLo: abs(b, r[8] ?? null), dHi: abs(b, r[9] ?? null), last: abs(b, r[4]), dEst: b + r[5], cls: r[6], epoch: r[7], infant: r[10] === 1,
+    });
   });
   const idAt = (k: number | null) => (k === null ? null : persons[k].id);
   const nodes: NodeRow[] = m.layout.nodes.map((n) => {
@@ -165,7 +180,7 @@ function decodeModel(m: RawModel): ModelData {
     const t0 = (chrono.get(person)?.b ?? 0) + n[2];
     return {
       id: ghost ? `ghost:${person}` : person, person, ghost, lane: n[1], t0, t1: t0 + n[3], block: n[4],
-      parentLane: n[5], layoutParent: idAt(n[6]), satelliteOf: idAt(n[7]), spine: !!n[8],
+      parentLane: n[5], layoutParent: idAt(n[6]), satelliteOf: idAt(n[7]), spine: !!n[8], trail: TRAIL_KINDS[n[9] ?? 0],
     };
   });
   const hist = (a: number) => (a <= 0 ? a - 1 : a);
@@ -178,8 +193,26 @@ function decodeModel(m: RawModel): ModelData {
     if (e.id === 'postdiluvian' && abram && flood !== null) return { ...e, start: hist(flood), end: hist(abram.b) };
     return e;
   });
+  // контуры: годы — десятыми, полосы — двадцатыми, вершины колец — разностями (tools/build-data.ts)
+  const outlines: Outline[] = (m.layout.outlines ?? []).map((o) => ({
+    group: o.g,
+    ...(o.p ? { parent: o.p } : {}),
+    size: o.n,
+    rings: o.r.map((flat) => {
+      const ring: [number, number][] = [];
+      let t = 0;
+      let l = 0;
+      for (let k = 0; k + 1 < flat.length; k += 2) {
+        t += flat[k];
+        l += flat[k + 1];
+        ring.push([t / 10, l / 20]);
+      }
+      return ring;
+    }),
+    slots: o.s.map(([l, h, t0, t1]) => ({ lane: l / 20, h, t0: t0 / 10, t1: t1 / 10 })),
+  }));
   return {
-    id: m.id, chrono, tensions: m.tensions, nodes, nodeByPerson: new Map(nodes.filter((n) => !n.ghost).map((n) => [n.person, n])),
+    id: m.id, chrono, tensions: m.tensions, nodes, outlines, nodeByPerson: new Map(nodes.filter((n) => !n.ghost).map((n) => [n.person, n])),
     blocks: m.layout.blocks, laneMin: m.layout.laneMin, laneMax: m.layout.laneMax, metrics: m.layout.metrics, scale: m.scale, epochs: modelEpochs,
   };
 }

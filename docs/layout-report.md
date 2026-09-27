@@ -7,12 +7,14 @@
 ```
 {
  "persons": 2660,
- "lanes": 489,
+ "lanes": 334,
  "corridorWidth": 13,
- "crossings": 473,
- "corridorCrossings": 66,
- "dropLength": 5269,
- "blocks": 1127
+ "crossings": 233,
+ "corridorCrossings": 62,
+ "dropLength": 5323,
+ "blocks": 560,
+ "clusters": 21,
+ "clustered": 691
 }
 ```
 
@@ -23,12 +25,14 @@
 ```
 {
  "persons": 2660,
- "lanes": 488,
+ "lanes": 322,
  "corridorWidth": 13,
- "crossings": 524,
- "corridorCrossings": 77,
- "dropLength": 5457,
- "blocks": 1127
+ "crossings": 226,
+ "corridorCrossings": 73,
+ "dropLength": 5482,
+ "blocks": 560,
+ "clusters": 21,
+ "clustered": 691
 }
 ```
 
@@ -39,12 +43,14 @@
 ```
 {
  "persons": 2660,
- "lanes": 490,
+ "lanes": 341,
  "corridorWidth": 11,
- "crossings": 463,
- "corridorCrossings": 44,
- "dropLength": 5274,
- "blocks": 1127
+ "crossings": 239,
+ "corridorCrossings": 47,
+ "dropLength": 5329,
+ "blocks": 560,
+ "clusters": 21,
+ "clustered": 691
 }
 ```
 
@@ -55,12 +61,14 @@
 ```
 {
  "persons": 2660,
- "lanes": 489,
+ "lanes": 332,
  "corridorWidth": 15,
- "crossings": 466,
- "corridorCrossings": 76,
- "dropLength": 5269,
- "blocks": 1127
+ "crossings": 212,
+ "corridorCrossings": 63,
+ "dropLength": 5347,
+ "blocks": 560,
+ "clusters": 21,
+ "clustered": 691
 }
 ```
 

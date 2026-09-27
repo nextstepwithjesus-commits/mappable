@@ -84,15 +84,21 @@ export interface Tension {
 
 export interface PersonChrono {
   b: number; // оценка года рождения
+  /** Интервал рождения: у точных и расчётных дат — ширина счёта, у оценочных — по удалённости от датированной родни,
+   *  у лиц только с эпохой — вся эпоха; всегда внутри допустимого интервала данных (born.range). */
   bLo: number;
   bHi: number;
   d: number | null; // год смерти, если следует из данных
+  /** Интервал смерти: по возрасту при смерти — сдвинутый интервал рождения; только по допустимому интервалу (died.range) —
+   *  сам этот интервал, не раньше рождения. null — о смерти данных нет. */
   dLo: number | null;
   dHi: number | null;
   lastAttested: number | null; // последнее засвидетельствованное событие жизни
   dEst: number; // правдоподобный конец жизни (для «вероятных» современников)
   cls: DateClass;
   epoch: string | null; // эпоха рождения
+  /** Умер младенцем: возраст при смерти по тексту меньше двух лет (2 Цар 12:18). След жизни не рисуется (A14). */
+  infant?: boolean;
 }
 
 export interface ChronoResult {
@@ -119,6 +125,15 @@ const NORMS: Record<string, GenNorm> = {
   egypt: { g: 45, min: 18, max: 100, sigma: 20, life: 120, lifeMax: 140 },
   default: { g: 28, min: 13, max: 65, sigma: 9, life: 65, lifeMax: 120 },
 };
+
+/**
+ * Вес притяжения супругов к «одному поколению» — в долях веса «мать — ребёнок» (1/σ²): один ребёнок весит
+ * почти в семь раз больше, чем муж. Меньше — и бездетная жена без иных данных уходит от мужа только за счёт
+ * случайных начальных значений; больше — и жена снова стоит в год рождения мужа (A15).
+ */
+const SPOUSE_W = 0.15;
+/** Возраст при смерти меньше этого — «умер младенцем» (A14): след жизни не рисуется, знак †. */
+const INFANT_AGE = 2;
 
 export function normFor(epochId: string | null): GenNorm {
   return (epochId && NORMS[epochId]) || NORMS.default;
@@ -351,10 +366,13 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
         ineqs.push({ i: B(kids[k - 1]), j: B(kids[k]), delta: 1, w: 0.5, kind: 'ge' });
       }
     }
-    // супруги — примерно одного поколения
+    // супруги — примерно одного поколения. Притяжение слабее, чем у матери к детям (A15; MAP-22): год рождения жены
+    // выводится прежде всего из рождения её детей, а к году мужа тянется, только когда о ней больше ничего не известно.
+    // Прежде вес 0,05 перевешивал всех детей, и жёны стояли в год рождения мужа (+3).
     for (const s of g.spousesOf.get(id) ?? []) {
       if (s.a !== id) continue;
-      ineqs.push({ i: B(s.a), j: B(s.b), delta: 3, w: 0.05, kind: 'eq' });
+      const n = normFor(epochOf(s.a) ?? epochOf(s.b));
+      ineqs.push({ i: B(s.a), j: B(s.b), delta: 3, w: SPOUSE_W / (n.sigma * n.sigma), kind: 'eq' });
     }
   }
 
@@ -585,15 +603,43 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
       bLo = toAstro(pe.start);
       bHi = toAstro(pe.end);
     }
-    // смерть
+    // интервал рождения не шире допустимого интервала данных (born.range: «во время войны с Аммонитянами»)
+    const br = p.chrono?.born?.range;
+    if (br && k !== 'exact' && k !== 'calculated') {
+      bLo = Math.max(bLo, toAstro(br[0]));
+      bHi = Math.min(bHi, toAstro(br[1]));
+    }
+    bLo = Math.min(bLo, b);
+    bHi = Math.max(bHi, b);
+    // смерть: по возрасту — тот же интервал, что у рождения; по закреплённому году — точно;
+    // только по допустимому интервалу (died.range) — сам интервал, а не «рождение + обычная длина жизни»
     let d: number | null = null;
     let dLo: number | null = null;
     let dHi: number | null = null;
     if (hasDeathData(id)) {
       d = val(D(id))!;
-      dLo = d - half;
-      dHi = d + half;
+      const rd = rootOffset.get(D(id))!;
+      const rb = rootOffset.get(B(id))!;
+      const dr = p.chrono?.died?.range;
+      if (fixed.has(rd.root) && rd.root !== rb.root) {
+        const exact = fixed.get(rd.root)!.cls === 'exact';
+        dLo = d - (exact ? 0 : 2);
+        dHi = d + (exact ? 0 : 2);
+      } else if (rd.root === rb.root) {
+        dLo = bLo + (d - b);
+        dHi = bHi + (d - b);
+      } else if (dr) {
+        // допустимый интервал — граница текста: мягкое притяжение не выводит год смерти за него
+        dLo = Math.max(toAstro(dr[0]), b);
+        dHi = Math.max(toAstro(dr[1]), dLo);
+        d = Math.min(Math.max(d, dLo), dHi);
+      } else {
+        dLo = d - half;
+        dHi = d + half;
+      }
     }
+    const dAge = lxx && p.chrono?.died?.ageBracket !== undefined ? p.chrono.died.ageBracket : p.chrono?.died?.age;
+    const infant = dAge !== undefined && dAge < INFANT_AGE;
     let last: number | null = null;
     const c = p.chrono;
     const bump = (y: number | undefined) => {
@@ -610,7 +656,7 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
       if (cb !== undefined && cls.get(e.child) !== 'epochal') bump(e.kind === 'father' ? cb - 1 : cb);
     }
     const dEst = d ?? Math.max(last ?? -Infinity, b + n.life);
-    persons.set(id, { b, bLo, bHi, d, dLo, dHi, lastAttested: last, dEst, cls: k, epoch: ep?.id ?? null });
+    persons.set(id, { b, bLo, bHi, d, dLo, dHi, lastAttested: last, dEst, cls: k, epoch: ep?.id ?? null, ...(infant ? { infant } : {}) });
   }
 
   // --- 7. напряжения между датированными лицами
@@ -772,6 +818,23 @@ export function contemporaries(res: ChronoResult, id: string, limit = 40): { id:
     out.push({ id: oid, sure, overlap });
   }
   return out.sort((a, b) => Number(b.sure) - Number(a.sure) || b.overlap - a.overlap).slice(0, limit).map(({ id: x, sure }) => ({ id: x, sure }));
+}
+
+/**
+ * Основа порядкового числительного, как в Синодальном тексте (для сверки синхронизмов «в N-й год X воцарился Y»):
+ * 18 → «восемнадцат», 39 → «тридцать девят» («в тридцать девятом году»), 50 → «пятидесят».
+ */
+export function ordinalStem(n: number): string | null {
+  if (!Number.isInteger(n) || n < 1 || n > 99) return null;
+  const units = ['', 'перв', 'втор', 'трет', 'четверт', 'пят', 'шест', 'седьм', 'восьм', 'девят'];
+  const teens = ['десят', 'одиннадцат', 'двенадцат', 'тринадцат', 'четырнадцат', 'пятнадцат', 'шестнадцат', 'семнадцат', 'восемнадцат', 'девятнадцат'];
+  const tensOrd = ['', '', 'двадцат', 'тридцат', 'сороков', 'пятидесят', 'шестидесят', 'семидесят', 'восьмидесят', 'девяност'];
+  const tensCard = ['', '', 'двадцать', 'тридцать', 'сорок', 'пятьдесят', 'шестьдесят', 'семьдесят', 'восемьдесят', 'девяносто'];
+  if (n < 10) return units[n];
+  if (n < 20) return teens[n - 10];
+  const t = Math.floor(n / 10);
+  const u = n % 10;
+  return u === 0 ? tensOrd[t] : `${tensCard[t]} ${units[u]}`;
 }
 
 export type { Person };
