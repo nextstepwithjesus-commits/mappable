@@ -56,10 +56,23 @@ const DESK: Screen[] = [
   // «Эпохи» — в органах неба (C6): флажок ярусов и команда панели
   { name: 'панель «Эпохи» и ярусы', hash: '#/david', act: async (p) => {
     await p.locator('.skyctl').getByText('ярусы эпох', { exact: true }).click();
+    await p.locator('.skyctl .view-toggle').click();
     await p.locator('.skyctl').getByText('Эпохи', { exact: true }).click();
   } },
   { name: 'список моделей хронологии', hash: '#/', act: async (p) => {
+    await p.click('.skyctl .view-toggle');
     await p.click('.skyctl .menu.model > button');
+  } },
+  // масштаб по осям и размер областей (J1, J2): лист «Вид» над органами неба, ручки границ, небо во весь экран
+  { name: 'лист «Вид» над органами неба', hash: '#/david', act: async (p) => {
+    await p.click('.skyctl .view-toggle');
+  } },
+  { name: 'ручки границ областей', hash: '#/david~y-1000~w120~l0.0~pkinship', act: async (p) => {
+    await p.locator('.resizer-folio').focus();
+  } },
+  { name: 'небо во весь экран', hash: '#/david~y-1000~w120~l0.0~pkinship', act: async (p) => {
+    await p.locator('.sky canvas').focus();
+    await p.keyboard.press('KeyF');
   } },
   // комбобокс поиска (I3; MOB-28): открытый список с группой одноимённых и список «ничего не найдено»
   { name: 'поиск с подсказками', hash: '#/', act: async (p) => {

@@ -7,7 +7,491 @@
 import type { Scenario } from './kit.ts';
 
 // view
-const view: Scenario[] = [];
+// J1, J2 (агент view): масштаб по двум осям и размер областей. Проверки — по окну неба .sky[data-view]
+// («vp.l vp.t vp.r vp.b x0 kx laneTop ky»: kx — масштаб времени, ky — высота полосы), по адресу (поле h) и памяти
+// браузера («toledot:lanes», «toledot:widths»), по ручкам [role="separator"] (aria-valuenow — ширина области).
+import type { Page as VPage } from 'playwright';
+import { pass as vok, fail as vno } from './kit.ts';
+
+/** Окно неба: масштаб времени kx, высота полосы ky, видимая часть. */
+const vcam = async (p: VPage) => {
+  const [l, t, r, b, x0, kx, laneTop, ky] = ((await p.locator('.sky').getAttribute('data-view')) ?? '').split(' ').map(Number);
+  return { l, t, r, b, x0, kx, laneTop, ky };
+};
+const vgo = async (p: VPage, hash: string, ms = 2400) => {
+  await p.goto(p.url().replace(/#.*$/, '') + hash);
+  await p.waitForTimeout(ms);
+};
+/** Отношение a к b близко к want (с допуском tol). */
+const near = (a: number, b: number, want: number, tol = 0.03) => Math.abs(a / b / want - 1) <= tol;
+const fmt = (c: { kx: number; ky: number }) => `kx ${c.kx.toFixed(4)}, полоса ${c.ky.toFixed(1)} px`;
+/** Окно на масштабе семьи: Давид, 120 лет на ширину. */
+const FAMILY = '#/david~y-1000~w120~l0.0';
+/** Лист «Вид» над блоком органов неба (широкое небо): открыть, если закрыт. */
+async function openViewPop(p: VPage, tap = false) {
+  if (await p.locator('.viewpop').count()) return;
+  const b = p.locator('.skyctl .view-toggle');
+  await (tap ? b.tap() : b.click());
+  await p.waitForTimeout(300);
+}
+/** Кнопка оси в листе «Вид» (широкое небо — над блоком, узкое — лист у колонки). */
+const axisBtn = (p: VPage, label: string) => p.locator(`.viewpop button[aria-label="${label}"], .sky .sheet button[aria-label="${label}"]`).first();
+/** Замеры подписей: нарисовано/наложений и подписано/видимых звёзд. */
+async function vlabels(p: VPage) {
+  const d = (await p.evaluate(`({ labels: document.querySelector('.sky').dataset.labels, named: document.querySelector('.sky canvas').dataset.named, rows: document.querySelector('.sky canvas').dataset.rows, mode: document.querySelector('.sky canvas').dataset.mode })`)) as Record<string, string>;
+  const [drawn, over] = (d.labels ?? '0/0').split('/').map(Number);
+  const [named, stars] = (d.named ?? '0/0').split('/').map(Number);
+  return { drawn, over, named, stars, rows: Number(d.rows), mode: d.mode };
+}
+/** Два пальца: от a0, b0 к a1, b1 за steps шагов (CDP, как в phone.ts). */
+async function pinch(p: VPage, a0: [number, number], b0: [number, number], a1: [number, number], b1: [number, number], steps = 8) {
+  const cdp = await p.context().newCDPSession(p);
+  const pt = (x: number, y: number, id: number) => ({ x, y, id, radiusX: 4, radiusY: 4, force: 1 });
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [pt(...a0, 1), pt(...b0, 2)] });
+  for (let k = 1; k <= steps; k++) {
+    const u = k / steps;
+    const lerp = (q: [number, number], r: [number, number]) => [q[0] + (r[0] - q[0]) * u, q[1] + (r[1] - q[1]) * u] as [number, number];
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [pt(...lerp(a0, a1), 1), pt(...lerp(b0, b1), 2)] });
+    await p.waitForTimeout(16);
+  }
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await cdp.detach();
+  await p.waitForTimeout(400);
+}
+/** Ширина области по ручке: aria-valuenow. */
+const splitW = async (p: VPage, side: 'sheet' | 'folio') => Number(await p.locator(`.resizer-${side}`).getAttribute('aria-valuenow'));
+/** Протянуть ручку мышью на dx px. */
+async function dragSplit(p: VPage, side: 'sheet' | 'folio', dx: number) {
+  const b = (await p.locator(`.resizer-${side}`).boundingBox())!;
+  const x = b.x + b.width / 2;
+  const y = b.y + b.height / 2;
+  await p.mouse.move(x, y);
+  await p.mouse.down();
+  await p.mouse.move(x + dx / 2, y, { steps: 4 });
+  await p.mouse.move(x + dx, y, { steps: 4 });
+  await p.mouse.up();
+  await p.waitForTimeout(500);
+}
+/** Ширина неба на экране. */
+const skyW = async (p: VPage) => (await p.locator('.sky').boundingBox())!.width;
+
+const view: Scenario[] = [
+  {
+    n: 190,
+    title: 'J1 мышью: органы неба в две строки; лист «Вид» — «полосы +» выше в 1,5 раза при том же времени, «время +» вдвое шире при той же полосе, «по умолчанию» — обычная полоса',
+    run: async (p) => {
+      await vgo(p, FAMILY);
+      const box = (await p.locator('.skyctl').boundingBox())!;
+      if (box.height > 90) return vno(`блок органов неба ${Math.round(box.width)} × ${Math.round(box.height)} — больше двух строк`);
+      await openViewPop(p);
+      if (!(await p.locator('.viewpop').isVisible())) return vno('лист «Вид» не открылся');
+      const c0 = await vcam(p);
+      await axisBtn(p, 'Расширить полосы').click();
+      // адрес пишется через 300 мс после того, как небо остановилось (D8)
+      await p.waitForTimeout(900);
+      const c1 = await vcam(p);
+      if (!near(c1.kx, c0.kx, 1, 0.001) || !near(c1.ky, c0.ky, 1.5)) return vno(`«полосы +»: было ${fmt(c0)}, стало ${fmt(c1)}`);
+      if (!p.url().includes('~h1.5')) return vno(`в адресе нет пропорции h1.5: ${p.url()}`);
+      await axisBtn(p, 'Растянуть время').click();
+      await p.waitForTimeout(500);
+      const c2 = await vcam(p);
+      if (!near(c2.kx, c1.kx, 2) || !near(c2.ky, c1.ky, 1, 0.005)) return vno(`«время +»: было ${fmt(c1)}, стало ${fmt(c2)}`);
+      await axisBtn(p, 'Пропорции по умолчанию').click();
+      await p.waitForTimeout(900);
+      const c3 = await vcam(p);
+      if (!near(c3.kx, c2.kx, 1, 0.001) || c3.ky >= c2.ky) return vno(`«по умолчанию»: было ${fmt(c2)}, стало ${fmt(c3)}`);
+      if ((await axisBtn(p, 'Пропорции по умолчанию').getAttribute('aria-disabled')) !== 'true') return vno('«по умолчанию» не выключилась');
+      if (p.url().includes('~h')) return vno(`пропорция осталась в адресе: ${p.url()}`);
+      return vok(`блок ${Math.round(box.width)} × ${Math.round(box.height)}; ${fmt(c0)} → ${fmt(c1)} → ${fmt(c2)} → ${fmt(c3)}`);
+    },
+  },
+  {
+    n: 191,
+    title: 'J1 мышью: протяжка по линейке лет — только время, по буквам полос — только полосы; колесо с Shift — время, с Alt — полосы; колесо без клавиш — прежний масштаб (D1)',
+    run: async (p) => {
+      await vgo(p, FAMILY);
+      const box = (await p.locator('.sky canvas').boundingBox())!;
+      const c0 = await vcam(p);
+      // линейка лет: курсор ew-resize, протяжка вправо на 160 px — время вдвое
+      await p.mouse.move(box.x + 420, box.y + 12);
+      await p.waitForTimeout(100);
+      const cur = await p.locator('.sky canvas').evaluate((c) => getComputedStyle(c).cursor);
+      if (cur !== 'ew-resize') return vno(`курсор над линейкой — ${cur}`);
+      await p.mouse.down();
+      await p.mouse.move(box.x + 500, box.y + 12, { steps: 5 });
+      await p.mouse.move(box.x + 580, box.y + 12, { steps: 5 });
+      await p.mouse.up();
+      await p.waitForTimeout(300);
+      const c1 = await vcam(p);
+      if (!near(c1.kx, c0.kx, 2, 0.05) || !near(c1.ky, c0.ky, 1, 0.01)) return vno(`линейка: было ${fmt(c0)}, стало ${fmt(c1)}`);
+      // буквы полос: протяжка вниз на 60 px — полосы в √2 раз выше
+      await p.mouse.move(box.x + 8, box.y + 400);
+      await p.waitForTimeout(100);
+      const cur2 = await p.locator('.sky canvas').evaluate((c) => getComputedStyle(c).cursor);
+      if (cur2 !== 'ns-resize') return vno(`курсор над буквами полос — ${cur2}`);
+      await p.mouse.down();
+      await p.mouse.move(box.x + 8, box.y + 430, { steps: 4 });
+      await p.mouse.move(box.x + 8, box.y + 460, { steps: 4 });
+      await p.mouse.up();
+      await p.waitForTimeout(300);
+      const c2 = await vcam(p);
+      if (!near(c2.kx, c1.kx, 1, 0.001) || !near(c2.ky, c1.ky, Math.SQRT2, 0.05)) return vno(`буквы полос: было ${fmt(c1)}, стало ${fmt(c2)}`);
+      // колесо с Shift — время ×1,5, с Alt — полосы ÷1,25
+      await p.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      await p.keyboard.down('Shift');
+      await p.mouse.wheel(0, -100);
+      await p.keyboard.up('Shift');
+      await p.waitForTimeout(400);
+      const c3 = await vcam(p);
+      if (!near(c3.kx, c2.kx, 1.5) || !near(c3.ky, c2.ky, 1, 0.01)) return vno(`Shift + колесо: было ${fmt(c2)}, стало ${fmt(c3)}`);
+      await p.keyboard.down('Alt');
+      await p.mouse.wheel(0, 100);
+      await p.keyboard.up('Alt');
+      await p.waitForTimeout(400);
+      const c4 = await vcam(p);
+      if (!near(c4.kx, c3.kx, 1, 0.001) || !near(c4.ky, c3.ky, 1 / 1.25)) return vno(`Alt + колесо: было ${fmt(c3)}, стало ${fmt(c4)}`);
+      // колесо без клавиш — масштаб у указателя ×1,5 по времени, пропорция полос та же
+      await p.mouse.wheel(0, -100);
+      await p.waitForTimeout(400);
+      const c5 = await vcam(p);
+      if (!near(c5.kx, c4.kx, 1.5)) return vno(`колесо: было ${fmt(c4)}, стало ${fmt(c5)}`);
+      // протяжка по небу — сдвиг, масштаб прежний
+      await p.mouse.move(box.x + 600, box.y + 500);
+      await p.mouse.down();
+      await p.mouse.move(box.x + 500, box.y + 450, { steps: 5 });
+      await p.mouse.up();
+      await p.waitForTimeout(300);
+      const c6 = await vcam(p);
+      if (c6.kx !== c5.kx || c6.ky !== c5.ky || c6.x0 === c5.x0) return vno('протяжка по небу не сдвинула небо или сменила масштаб');
+      return vok(`${fmt(c0)} → линейка ${fmt(c1)} → буквы ${fmt(c2)} → Shift ${fmt(c3)} → Alt ${fmt(c4)} → колесо ${fmt(c5)}`);
+    },
+  },
+  {
+    n: 192,
+    title: 'J1 клавиатурой: Shift и «+»/«−» — время, Alt и «+»/«−» — полосы, «+» — обычный масштаб; «Вид» открывается Enter, Tab ведёт в лист, Escape закрывает и возвращает фокус',
+    run: async (p) => {
+      await vgo(p, FAMILY);
+      await p.locator('.sky canvas').focus();
+      const c0 = await vcam(p);
+      await p.keyboard.press('Shift+Equal');
+      await p.waitForTimeout(400);
+      const c1 = await vcam(p);
+      if (!near(c1.kx, c0.kx, 2) || !near(c1.ky, c0.ky, 1, 0.005)) return vno(`Shift и «+»: было ${fmt(c0)}, стало ${fmt(c1)}`);
+      await p.keyboard.press('Shift+Minus');
+      await p.waitForTimeout(400);
+      const c2 = await vcam(p);
+      if (!near(c2.kx, c0.kx, 1, 0.01)) return vno(`Shift и «−»: было ${fmt(c1)}, стало ${fmt(c2)}`);
+      await p.keyboard.press('Alt+Equal');
+      await p.waitForTimeout(400);
+      const c3 = await vcam(p);
+      if (!near(c3.kx, c2.kx, 1, 0.001) || !near(c3.ky, c2.ky, 1.5)) return vno(`Alt и «+»: было ${fmt(c2)}, стало ${fmt(c3)}`);
+      await p.keyboard.press('Alt+Minus');
+      await p.waitForTimeout(400);
+      const c4 = await vcam(p);
+      if (!near(c4.ky, c2.ky, 1, 0.01)) return vno(`Alt и «−»: было ${fmt(c3)}, стало ${fmt(c4)}`);
+      await p.keyboard.press('Equal');
+      await p.waitForTimeout(400);
+      const c5 = await vcam(p);
+      if (!near(c5.kx, c4.kx, 2)) return vno(`«+»: было ${fmt(c4)}, стало ${fmt(c5)}`);
+      // лист «Вид» с клавиатуры
+      await p.locator('.skyctl .view-toggle').focus();
+      await p.keyboard.press('Enter');
+      await p.waitForTimeout(300);
+      if (!(await p.locator('.viewpop').isVisible())) return vno('Enter на «Вид» не открыл лист');
+      await p.keyboard.press('Tab');
+      const inside = await p.evaluate(`!!document.activeElement && !!document.activeElement.closest('.viewpop')`);
+      if (!inside) return vno('Tab после «Вид» не ведёт в лист');
+      await p.keyboard.press('Escape');
+      await p.waitForTimeout(200);
+      if (await p.locator('.viewpop').count()) return vno('Escape не закрыл лист «Вид»');
+      const back = await p.evaluate(`document.activeElement === document.querySelector('.skyctl .view-toggle')`);
+      if (!back) return vno('фокус не вернулся на «Вид»');
+      // Escape снял лист, а не выбранное лицо
+      if (!p.url().includes('#/david')) return vno('Escape снял выбранное лицо вместе с листом');
+      return vok(`${fmt(c0)} → Shift ${fmt(c1)} → Alt ${fmt(c3)} → «+» ${fmt(c5)}`);
+    },
+  },
+  {
+    n: 193,
+    title: 'J1 пальцем, 390 × 844: щипок по горизонтали — только время, по вертикали — только полосы, наискосок — обычный масштаб; лист «Вид» — «Пропорции»',
+    view: { width: 390, height: 844, touch: true },
+    run: async (p) => {
+      await vgo(p, '#/~y-1000~w300~l0.0', 2600);
+      const box = (await p.locator('.sky canvas').boundingBox())!;
+      const cx = box.x + box.width * 0.45;
+      const cy = box.y + box.height * 0.45;
+      const c0 = await vcam(p);
+      await pinch(p, [cx - 40, cy + 4], [cx + 40, cy - 4], [cx - 110, cy + 4], [cx + 110, cy - 4]);
+      const c1 = await vcam(p);
+      if (!(c1.kx > c0.kx * 2) || !near(c1.ky, c0.ky, 1, 0.01)) return vno(`щипок по горизонтали: было ${fmt(c0)}, стало ${fmt(c1)}`);
+      await pinch(p, [cx + 3, cy - 40], [cx - 3, cy + 40], [cx + 3, cy - 90], [cx - 3, cy + 90]);
+      const c2 = await vcam(p);
+      if (!near(c2.kx, c1.kx, 1, 0.01) || !(c2.ky > c1.ky * 1.8)) return vno(`щипок по вертикали: было ${fmt(c1)}, стало ${fmt(c2)}`);
+      await pinch(p, [cx - 40, cy - 40], [cx + 40, cy + 40], [cx - 20, cy - 20], [cx + 20, cy + 20]);
+      const c3 = await vcam(p);
+      if (!(c3.kx < c2.kx * 0.7)) return vno(`щипок наискосок: было ${fmt(c2)}, стало ${fmt(c3)}`);
+      await p.locator('.skyctl.column button', { hasText: 'Вид' }).tap();
+      await p.waitForTimeout(400);
+      const sheet = p.locator('.sky .sheet');
+      if (!(await sheet.getByText('Пропорции', { exact: true }).count())) return vno('в листе «Вид» нет «Пропорций»');
+      const n = await sheet.locator('.axes button').count();
+      await axisBtn(p, 'Сузить полосы').tap();
+      await p.waitForTimeout(500);
+      const c4 = await vcam(p);
+      if (!near(c4.ky, c3.ky, 1 / 1.5)) return vno(`«Сузить полосы»: было ${fmt(c3)}, стало ${fmt(c4)}`);
+      // цели касания — не меньше 44 px
+      const small = await sheet.locator('.axes button').evaluateAll((bs) => bs.filter((b) => b.getBoundingClientRect().height < 44).length);
+      if (small) return vno(`кнопок пропорций ниже 44 px: ${small}`);
+      return vok(`${fmt(c0)} → по горизонтали ${fmt(c1)} → по вертикали ${fmt(c2)} → наискосок ${fmt(c3)}; в листе ${n} кнопок`);
+    },
+  },
+  {
+    n: 194,
+    title: 'J1: пропорция в адресе (h) и в памяти браузера — адрес в новой вкладке даёт ту же высоту полосы; «#/» без полей берёт пропорцию из памяти; «по умолчанию» убирает её отовсюду',
+    run: async (p) => {
+      await vgo(p, FAMILY);
+      await p.locator('.sky canvas').focus();
+      await p.keyboard.press('Alt+Equal');
+      await p.waitForTimeout(400);
+      await p.keyboard.press('Alt+Equal');
+      await p.waitForTimeout(800);
+      const c1 = await vcam(p);
+      const url = p.url();
+      if (!url.includes('~h2.25')) return vno(`в адресе нет h2.25: ${url}`);
+      const stored = await p.evaluate(`localStorage.getItem('toledot:lanes')`);
+      if (stored !== '2.25') return vno(`в памяти браузера пропорция ${stored}`);
+      // новая вкладка с пустым хранилищем: пропорция — из адреса
+      const ctx = await p.context().browser()!.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
+      try {
+        const q = await ctx.newPage();
+        await q.addInitScript("localStorage.setItem('toledot:intro', 'true')");
+        await q.goto(url);
+        await q.waitForTimeout(2600);
+        const c2 = await vcam(q);
+        if (!near(c2.ky, c1.ky, 1, 0.01) || !near(c2.kx, c1.kx, 1, 0.02)) return vno(`новая вкладка: ${fmt(c2)}, а было ${fmt(c1)}`);
+      } finally {
+        await ctx.close();
+      }
+      // тот же браузер, новая вкладка, адрес без полей вида: пропорция — из памяти, и адрес её дописывает
+      const q2 = await p.context().newPage();
+      try {
+        await q2.goto(url.replace(/#.*$/, '') + '#/');
+        await q2.waitForTimeout(2600);
+        if (!q2.url().includes('~h2.25')) return vno(`«#/» не взял пропорцию из памяти: ${q2.url()}`);
+      } finally {
+        await q2.close();
+      }
+      await openViewPop(p);
+      await axisBtn(p, 'Пропорции по умолчанию').click();
+      await p.waitForTimeout(800);
+      const left = await p.evaluate(`localStorage.getItem('toledot:lanes')`);
+      if (p.url().includes('~h') || left !== null) return vno(`после «по умолчанию»: адрес ${p.url()}, память ${left}`);
+      return vok(`${fmt(c1)}; ${url.replace(/^.*#/, '#')}`);
+    },
+  },
+  {
+    n: 195,
+    title: 'J1: подписи зависят от высоты полосы — на масштабе семьи при 60 px подписаны все видимые звёзды, при 4 px и при сжатом до обзора времени подписи не налезают',
+    run: async (p) => {
+      await vgo(p, FAMILY);
+      await p.locator('.sky canvas').focus();
+      for (let i = 0; i < 8; i++) {
+        await p.keyboard.press('Alt+Equal');
+        await p.waitForTimeout(300);
+      }
+      await p.waitForTimeout(500);
+      const hi = await vcam(p);
+      const a = await vlabels(p);
+      if (Math.round(hi.ky) !== 60) return vno(`полоса ${hi.ky.toFixed(1)} px, а не 60`);
+      if (a.over || a.named !== a.stars || a.stars < 5) return vno(`60 px: наложений ${a.over}, подписано ${a.named}/${a.stars}`);
+      for (let i = 0; i < 16; i++) {
+        await p.keyboard.press('Alt+Minus');
+        await p.waitForTimeout(300);
+      }
+      await p.waitForTimeout(500);
+      const lo = await vcam(p);
+      const b = await vlabels(p);
+      if (Math.round(lo.ky) !== 4) return vno(`полоса ${lo.ky.toFixed(1)} px, а не 4`);
+      if (b.over) return vno(`4 px: наложений ${b.over}`);
+      // обычная полоса, затем время сжато до обзора: полоса прежняя, подписи без наложений
+      await vgo(p, '#/~y-1000~w120~l0.0');
+      await p.locator('.sky canvas').focus();
+      for (let i = 0; i < 8; i++) {
+        await p.keyboard.press('Shift+Minus');
+        await p.waitForTimeout(300);
+      }
+      await p.waitForTimeout(500);
+      const c = await vlabels(p);
+      if (c.over) return vno(`время сжато до обзора: наложений ${c.over}`);
+      return vok(`60 px: ${a.named}/${a.stars}; 4 px: ${b.named}/${b.stars}, подписей ${b.drawn}; обзор с высокими полосами: ${c.named}/${c.stars}, наложений 0`);
+    },
+  },
+  {
+    n: 196,
+    title: 'J1 пальцем, 390 × 844: небо «в работе» с высоким набором (Давид с предками и потомками) — «Сузить полосы» делает строки ниже, все строки набора — в видимой части, подписи без наложений',
+    view: { width: 390, height: 844, touch: true },
+    run: async (p) => {
+      await vgo(p, '#/david', 2600);
+      await p.locator('.folio .bar-toggle').tap();
+      await p.waitForTimeout(600);
+      for (const what of ['С потомками: все', 'С предками: все']) {
+        await p.locator('.folio .workbtn > button').tap();
+        await p.waitForTimeout(250);
+        await p.locator(`.workpick button[aria-label="${what}"]`).first().tap();
+        await p.waitForTimeout(300);
+      }
+      await p.locator('.folio .sheet-bar .close').tap();
+      await p.waitForTimeout(600);
+      await p.locator('.skyctl.column button', { hasText: 'Вид' }).tap();
+      await p.waitForTimeout(400);
+      await p.locator('.sky .sheet button', { hasText: 'в работе' }).tap();
+      await p.waitForTimeout(300);
+      await axisBtn(p, 'Сузить полосы').tap();
+      await p.waitForTimeout(400);
+      const c0 = await vcam(p);
+      await p.locator('.sky .sheet .sheet-head .close').tap();
+      await p.waitForTimeout(500);
+      await p.locator('.skyctl.column button', { hasText: 'Всё небо' }).tap();
+      await p.waitForTimeout(1600);
+      const c1 = await vcam(p);
+      const d = await vlabels(p);
+      if (d.mode !== 'work' || d.rows < 20) return vno(`режим ${d.mode}, строк ${d.rows}`);
+      if (d.over) return vno(`наложений ${d.over}`);
+      const tall = d.rows * c1.ky;
+      if (tall > c1.b - c1.t) return vno(`строки набора ${Math.round(tall)} px выше видимой части ${Math.round(c1.b - c1.t)} px`);
+      return vok(`строк ${d.rows}, полоса ${c1.ky.toFixed(1)} px (после «Сузить полосы» ${c0.ky.toFixed(1)}), высота набора ${Math.round(tall)} из ${Math.round(c1.b - c1.t)} px; подписано ${d.named}/${d.stars}`);
+    },
+  },
+  {
+    n: 197,
+    title: 'J2 мышью, 1920 × 1080: границы «панель | небо» и «небо | карточка» перетаскиваются; небо не уже max(480, 40 %); двойной щелчок — ширина по умолчанию; ширины помнятся после перезагрузки',
+    view: { width: 1920, height: 1080 },
+    run: async (p) => {
+      await vgo(p, `${FAMILY}~pkinship`, 2600);
+      if (!(await p.locator('.resizer-sheet').count()) || !(await p.locator('.resizer-folio').count())) return vno('нет ручек-разделителей');
+      const cur = await p.locator('.resizer-folio').evaluate((e) => getComputedStyle(e).cursor);
+      if (cur !== 'col-resize') return vno(`курсор ручки — ${cur}`);
+      const f0 = await splitW(p, 'folio');
+      const s0 = await splitW(p, 'sheet');
+      await dragSplit(p, 'folio', -100);
+      const f1 = await splitW(p, 'folio');
+      const real = (await p.locator('.folio').boundingBox())!.width;
+      if (f1 !== f0 + 100 || Math.abs(real - f1) > 1) return vno(`карточка: было ${f0}, стало ${f1} (на экране ${Math.round(real)})`);
+      // панель тянется, пока небу не останется max(480, 40 %) = 768 px; карточка не сдвигается и не сворачивается
+      await dragSplit(p, 'sheet', 400);
+      const s1 = await splitW(p, 'sheet');
+      const w1 = await skyW(p);
+      if (Math.round(w1) !== 768 || (await splitW(p, 'folio')) !== f1 || (await p.locator('.folio.spine').count()))
+        return vno(`небо ${Math.round(w1)} px, панель ${s1}, карточка ${await splitW(p, 'folio')}, корешок: ${await p.locator('.folio.spine').count()}`);
+      await p.reload();
+      await p.waitForTimeout(2600);
+      if ((await splitW(p, 'folio')) !== f1 || (await splitW(p, 'sheet')) !== s1) return vno(`после перезагрузки: карточка ${await splitW(p, 'folio')}, панель ${await splitW(p, 'sheet')}`);
+      await p.locator('.resizer-folio').dblclick();
+      await p.waitForTimeout(400);
+      await p.locator('.resizer-sheet').dblclick();
+      await p.waitForTimeout(400);
+      const f2 = await splitW(p, 'folio');
+      const s2 = await splitW(p, 'sheet');
+      if (f2 !== f0 || s2 !== s0) return vno(`двойной щелчок: карточка ${f2}, панель ${s2}`);
+      const mem = await p.evaluate(`localStorage.getItem('toledot:widths')`);
+      if (mem !== null) return vno(`ширины по умолчанию остались в памяти: ${mem}`);
+      return vok(`карточка ${f0} → ${f1}, панель ${s0} → ${s1}, небо ${Math.round(w1)} px; двойной щелчок — ${f2} и ${s2}`);
+    },
+  },
+  {
+    n: 198,
+    title: 'J2 клавиатурой, 1920 × 1080: на ручке стрелки меняют ширину и не двигают небо, Home и End — пределы, Enter — по умолчанию; F — небо во весь экран (панель и карточка — корешки), F ещё раз — всё как было',
+    view: { width: 1920, height: 1080 },
+    run: async (p) => {
+      await vgo(p, `${FAMILY}~pkinship`, 2600);
+      const h = p.locator('.resizer-folio');
+      await h.focus();
+      const c0 = await vcam(p);
+      const f0 = await splitW(p, 'folio');
+      await p.keyboard.press('ArrowLeft');
+      await p.keyboard.press('Shift+ArrowLeft');
+      await p.waitForTimeout(300);
+      const f1 = await splitW(p, 'folio');
+      if (f1 !== f0 + 80) return vno(`стрелки: было ${f0}, стало ${f1}`);
+      const c1 = await vcam(p);
+      if (c1.laneTop !== c0.laneTop) return vno('стрелки на ручке сдвинули небо по полосам');
+      await p.keyboard.press('Home');
+      await p.waitForTimeout(200);
+      const lo = await splitW(p, 'folio');
+      const min = Number(await h.getAttribute('aria-valuemin'));
+      await p.keyboard.press('End');
+      await p.waitForTimeout(200);
+      const hi = await splitW(p, 'folio');
+      const max = Number(await h.getAttribute('aria-valuemax'));
+      if (lo !== min || lo !== 360 || hi !== max) return vno(`Home ${lo} (предел ${min}), End ${hi} (предел ${max})`);
+      await p.keyboard.press('Enter');
+      await p.waitForTimeout(300);
+      if ((await splitW(p, 'folio')) !== f0) return vno(`Enter: ${await splitW(p, 'folio')}, а по умолчанию ${f0}`);
+      // F — во весь экран
+      const w0 = await skyW(p);
+      await p.locator('.sky canvas').focus();
+      await p.keyboard.press('KeyF');
+      await p.waitForTimeout(600);
+      const w1 = await skyW(p);
+      const spines = (await p.locator('.folio.spine').count()) + (await p.locator('.sheet.spine').count());
+      if (spines !== 2 || Math.round(w1) !== 1920 - 112) return vno(`F: корешков ${spines}, небо ${Math.round(w1)} px`);
+      if (await p.locator('[role="separator"].resizer').count()) return vno('во весь экран остались ручки');
+      await p.keyboard.press('KeyF');
+      await p.waitForTimeout(600);
+      const w2 = await skyW(p);
+      if (Math.round(w2) !== Math.round(w0) || (await p.locator('.spine').count()) || !(await p.locator('.sheet h2').count())) return vno(`F ещё раз: небо ${Math.round(w2)} px, было ${Math.round(w0)}`);
+      return vok(`${f0} → ${f1}; пределы ${lo}…${hi}; небо ${Math.round(w0)} → ${Math.round(w1)} → ${Math.round(w2)} px`);
+    },
+  },
+  {
+    n: 199,
+    title: 'J2 пальцем: планшет 1024 × 768 — граница карточки тянется пальцем, «небо во весь экран» в листе «Вид», «развернуть» на корешке возвращает всё; телефон 390 × 844 — ручек нет, F ничего не сворачивает',
+    view: { width: 1024, height: 768, touch: true },
+    run: async (p) => {
+      await vgo(p, FAMILY, 2600);
+      const f0 = await splitW(p, 'folio');
+      const b = (await p.locator('.resizer-folio').boundingBox())!;
+      const x = b.x + b.width / 2;
+      const y = b.y + b.height / 2;
+      const cdp = await p.context().newCDPSession(p);
+      const pt = (px: number) => [{ x: px, y, id: 1, radiusX: 4, radiusY: 4, force: 1 }];
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: pt(x) });
+      for (let k = 1; k <= 8; k++) {
+        await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: pt(x - (60 * k) / 8) });
+        await p.waitForTimeout(16);
+      }
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+      await cdp.detach();
+      await p.waitForTimeout(500);
+      const f1 = await splitW(p, 'folio');
+      if (f1 !== f0 + 60) return vno(`пальцем: карточка ${f0} → ${f1}`);
+      // «небо во весь экран» в листе «Вид» (небо 564 px — блок органов)
+      await openViewPop(p, true);
+      await p.locator('.viewpop button', { hasText: 'небо во весь экран' }).tap();
+      await p.waitForTimeout(600);
+      if (!(await p.locator('.folio.spine').count())) return vno('«небо во весь экран» не свернуло карточку');
+      await p.locator('.folio.spine .unfold').tap();
+      await p.waitForTimeout(600);
+      if ((await p.locator('.spine').count()) || (await splitW(p, 'folio')) !== f1) return vno(`«развернуть»: корешков ${await p.locator('.spine').count()}, карточка ${await splitW(p, 'folio')}`);
+      // телефон: ручек нет, F ничего не сворачивает
+      const ctx = await p.context().browser()!.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2, colorScheme: 'dark' });
+      try {
+        const q = await ctx.newPage();
+        await q.addInitScript("localStorage.setItem('toledot:intro', 'true')");
+        await q.goto(p.url().replace(/#.*$/, '') + '#/david');
+        await q.waitForTimeout(2600);
+        await q.keyboard.press('KeyF');
+        await q.waitForTimeout(400);
+        const splits = await q.locator('.resizer').count();
+        const spines = await q.locator('.spine').count();
+        if (splits || spines) return vno(`телефон: ручек ${splits}, корешков ${spines}`);
+      } finally {
+        await ctx.close();
+      }
+      return vok(`карточка ${f0} → ${f1} пальцем; во весь экран и обратно`);
+    },
+  },
+];
 
 // workset
 // J3–J6 (агент workset): рабочий набор, небо по набору, свёртка, стопка карточек. Проверки — по разметке и замерам неба:

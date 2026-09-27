@@ -218,6 +218,7 @@ export const map: Scenario[] = [
         hi = Math.max(hi, d);
       }
       if (hi / lo > DENSE_MAG + 0.05) return fail(`растяжение 1 : ${(hi / lo).toFixed(1)} (npm run -s data после правки src/engine/timescale.ts)`);
+      await p.locator('.skyctl .view-toggle').click();
       const on = await p.locator('.skyctl').getByText('по насыщенности', { exact: true }).first().getAttribute('aria-pressed');
       if (on !== 'true') return fail(`при первом показе масштаб не «по насыщенности» (aria-pressed ${on})`);
       return pass(`растяжение 1 : ${(hi / lo).toFixed(1)}; при первом показе — «по насыщенности»`);

@@ -45,6 +45,12 @@
   - `marks.ts` — яркость выделения, кольца, меридиан;
   - `rect.ts` — прямоугольники;
   - в `ribbons.ts` — `drawSkyRibbons`, в `glyphs.ts` — `personGlyph`.
+- Новые модули этапов 4–6b:
+  - `src/render/rows.ts` — сжатие полос (`lane → row`, RowCamera) для режима «в работе» и свёртки;
+  - `src/ui/work.ts` — рабочий набор и свёрнутое; `src/ui/panels/Work.tsx` — панель «В работе»;
+  - `src/ui/sheet.ts` — нижний лист карточки на телефоне; `src/ui/sky/Which.tsx` — «Какое лицо?»;
+  - `src/ui/sky/SkyA11y.tsx` и `starnav.ts` — небо для клавиатуры и диктора; `src/ui/focus.ts` — фокус панелей и карточки;
+  - `src/ui/layout.ts` — сетка областей, пользовательские ширины, «небо во весь экран»; `src/render/camera.ts` — пропорция полос.
 
 ## Главный вывод
 

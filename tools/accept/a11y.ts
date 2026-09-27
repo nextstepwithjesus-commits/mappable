@@ -350,6 +350,7 @@ export const a11y: Scenario[] = [
       await p.keyboard.press('Shift+Slash');
       await p.waitForTimeout(600);
       await scan();
+      await p.locator('.skyctl .view-toggle').click();
       await p.locator('.skyctl').getByText('Эпохи', { exact: true }).click();
       await p.waitForTimeout(600);
       await scan();

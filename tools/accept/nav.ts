@@ -66,7 +66,7 @@ const near = (a: number, b: number, tol: number) => Math.abs(a / b - 1) <= tol;
 export const nav: Scenario[] = [
   {
     n: 50,
-    title: 'U7, тачпад: два пальца вниз сдвигают небо вниз, щипок масштабирует; колесо мыши — масштаб у указателя, Shift + колесо — сдвиг (D1)',
+    title: 'U7, тачпад: два пальца вниз сдвигают небо вниз, щипок масштабирует; колесо мыши — масштаб у указателя, Shift + колесо — только время (D1, J1)',
     run: async (p) => {
       // адрес с лицом — перелёт к нему: на «всём небе» сдвигать и отдалять некуда
       await p.goto(p.url().replace(/#.*$/, '#/david'));
@@ -103,15 +103,15 @@ export const nav: Scenario[] = [
       await p.waitForTimeout(450);
       const w3 = await width(p);
       if (!near(w3 / w2, 1.5, 0.08)) return fail(`щелчок колеса: ${w2.toFixed(0)} → ${w3.toFixed(0)} лет, а не ×1,5`);
-      // Shift + колесо — сдвиг по времени, масштаб прежний
-      const [s0] = await win(p);
+      // Shift + колесо — только время (J1): окно ×1,5 по годам, высота полосы прежняя; сдвиг у мыши — протяжкой
+      const ky0 = Number(((await p.locator('.sky').getAttribute('data-view')) ?? '').split(' ')[7]);
       await p.keyboard.down('Shift');
       await p.mouse.wheel(0, 100);
       await p.keyboard.up('Shift');
-      await p.waitForTimeout(300);
-      const [s1] = await win(p);
+      await p.waitForTimeout(450);
       const w4 = await width(p);
-      if (!near(w4, w3, 0.01) || !(s1 > s0)) return fail(`Shift + колесо: окно ${s0.toFixed(0)} → ${s1.toFixed(0)}, ширина ${w3.toFixed(0)} → ${w4.toFixed(0)}`);
+      const ky1 = Number(((await p.locator('.sky').getAttribute('data-view')) ?? '').split(' ')[7]);
+      if (!near(w4 / w3, 1.5, 0.08) || !near(ky1, ky0, 0.01)) return fail(`Shift + колесо: ширина ${w3.toFixed(0)} → ${w4.toFixed(0)} лет, полоса ${ky0.toFixed(1)} → ${ky1.toFixed(1)} px`);
       return pass(`пальцы: полоса ${a0.l} → ${a1.l}; щипок ×${(w1 / w2).toFixed(2)}; колесо ×${(w3 / w2).toFixed(2)}`);
     },
   },
@@ -280,6 +280,7 @@ export const nav: Scenario[] = [
       // окно вокруг Давида, а не «всё небо»: ссылка должна передать именно его
       await p.goto(p.url().replace(/#.*$/, '#/david'));
       await p.waitForTimeout(2200);
+      await p.locator('.skyctl .view-toggle').click();
       await p.locator('.skyctl').getByText('Эпохи', { exact: true }).click();
       await p.locator('.skyctl').getByText('истинный', { exact: true }).click();
       await p.waitForTimeout(1500);
@@ -299,7 +300,8 @@ export const nav: Scenario[] = [
         if (hashId(q) !== 'david') return fail(`в новой вкладке лицо «${hashId(q)}»`);
         const h2 = (await q.locator('.sheet h2').count()) ? (await q.locator('.sheet h2').innerText()).trim() : '';
         if (h2 !== 'Эпохи') return fail(`в новой вкладке панель «${h2}»`);
-        const scale = (await q.locator('.skyctl .seg button[aria-pressed="true"]').first().innerText()).trim();
+        await q.locator('.skyctl .view-toggle').click();
+        const scale = (await q.locator('.viewpop .seg button[aria-pressed="true"]').first().innerText()).trim();
         if (scale !== 'истинный') return fail(`в новой вкладке масштаб «${scale}»`);
         const w1 = await win(q);
         const c0 = (w0[0] + w0[1]) / 2;

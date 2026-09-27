@@ -1,5 +1,7 @@
 /**
  * Ввод неба: указатель (протяжка, щипок, колесо и тачпад, двойной щелчок, наведение и подсказка).
+ * Масштаб по двум осям (J1): протяжка по линейке лет — время, по буквам полос — полосы; колесо мыши с Shift — время,
+ * с Alt — полосы; щипок по горизонтали — время, по вертикали — полосы, наискосок — обычный масштаб.
  * Клавиши неба — в src/ui/sky/skykeys.ts.
  */
 import { FRAME_H, type Rect, type Sky } from '../../render/sky.ts';
@@ -8,7 +10,8 @@ import { selected, hovered, epochMode, layers, panel, pins, pinsQuery, pickMode,
 import { lineNoteHits, ribbonAt, setRibbonHover } from '../../render/ribbons.ts';
 import { goTo, skyRef } from '../common.tsx';
 import { tierAt, tierHot, type TierHit } from '../../render/tiers.ts';
-import { showYears, stopFlight, zoomBy } from './view.ts';
+import { showYears, stopFlight, stretchBy, zoomBy } from './view.ts';
+import type { Axis } from '../../render/camera.ts';
 import { hoverYear } from './meridian.ts';
 import { openSheetAt } from '../sheet.ts';
 import { closeWhich, openWhich, whichOpen } from './Which.tsx';
@@ -80,10 +83,53 @@ export const KEY_MS = 250;
  * Сам шаг — общая функция неба zoomBy (src/ui/sky/view.ts): пределы камеры и prefers-reduced-motion — там.
  */
 let wheelStep: { target: number; until: number } | null = null;
+/** То же для колеса с Shift (время) и Alt (полосы), J1: цель — kx или пропорция полос. */
+let axisStep: { axis: Axis; target: number; until: number } | null = null;
 
 /** Прервать накопление шагов колеса (нажатие, протяжка, клавиши). */
 export function stopZoom() {
   wheelStep = null;
+  axisStep = null;
+}
+
+/** Щелчок колеса с Alt — полосы в 1,25 раза: от 4 до 60 px — дюжина щелчков. */
+export const LANES_WHEEL = 1.25;
+
+/** Щелчки колеса мыши с Shift или Alt (J1): только время или только полосы, у указателя; шаги подряд складываются. */
+export function wheelStretch(axis: Axis, factor: number, x: number, y: number) {
+  const s = skyRef.current;
+  if (!s || !(factor > 0)) return;
+  const now = performance.now();
+  const cur = axis === 'time' ? s.cam.kx : s.cam.lanesAt();
+  const f = axisStep && axisStep.axis === axis && s.cam.moving && now < axisStep.until ? (axisStep.target / cur) * factor : factor;
+  wheelStep = null;
+  axisStep = { axis, target: cur * f, until: now + WHEEL_MS };
+  stretchBy(axis, f, { x, y }, WHEEL_MS);
+}
+
+// ---------- растяжение по осям протяжкой и щипком (J1) ----------
+
+/** Протяжка по линейке лет или по буквам полос: на столько px — вдвое (время — вправо, полосы — вниз). */
+export const STRETCH_PX = { time: 160, lanes: 120 };
+/** Щипок по одной оси, если пальцы ближе чем на 30° к ней; иначе — обычный масштаб по обеим осям. */
+export const PINCH_AXIS_DEG = 30;
+
+/** Ось щипка по положению двух пальцев: по горизонтали — время, по вертикали — полосы, наискосок — обе (null). */
+export function pinchAxis(dx: number, dy: number): Axis | null {
+  const deg = (Math.atan2(Math.abs(dy), Math.abs(dx)) * 180) / Math.PI;
+  if (deg < PINCH_AXIS_DEG) return 'time';
+  if (deg > 90 - PINCH_AXIS_DEG) return 'lanes';
+  return null;
+}
+
+/**
+ * Что под нажатием у кромок неба: линейка лет (над служебной строкой) — растянуть время, буквы полос слева — полосы.
+ * Угол между ними и остальное небо — ничего (обычная протяжка сдвигает небо).
+ */
+export function edgeAxis(x: number, y: number, letterW: number, bottom: number): Axis | null {
+  if (y < RULER && x > letterW) return 'time';
+  if (x < letterW && y > FRAME_H && y < bottom) return 'lanes';
+  return null;
 }
 
 /** Щелчки колеса мыши: ×WHEEL_STEP за каждый, у указателя, за WHEEL_MS; шаги подряд складываются. */
@@ -205,7 +251,8 @@ function chooseStar(id: string) {
 
 export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () => void, setTip: (t: Tip | null) => void): PointerInput {
   const pointers = new Map<number, { x: number; y: number }>();
-  let drag: { x0: number; y0: number; x: number; y: number; moved: boolean; t: number; type: string; long?: boolean } | null = null;
+  // axis — нажали на линейку лет или на буквы полос: протяжка растягивает ось, а не сдвигает небо (J1)
+  let drag: { x0: number; y0: number; x: number; y: number; moved: boolean; t: number; type: string; long?: boolean; axis: Axis | null } | null = null;
   // долгое касание звезды или названия созвездия — меню неба (J3, J5): «Взять в работу», «Свернуть потомков»
   let longTimer = 0;
   /** Меню неба у точки (px холста): у названия созвездия — «Свернуть созвездие», у звезды — выбор объёма и свёртка. */
@@ -217,7 +264,8 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     skyMenu.value = g ? { x, y, group: g.group } : { x, y, id: id! };
     return true;
   };
-  let pinch: { d: number; cx: number; cy: number } | null = null;
+  // щипок: ось выбирается по положению пальцев в начале (J1) и держится до конца жеста; span — их разнос по этой оси
+  let pinch: { d: number; cx: number; cy: number; axis: Axis | null; span: number } | null = null;
   // где мышь или перо над небом (касание не наводит) — чтобы после движения неба проверить, что под указателем теперь
   let pointer: { x: number; y: number; r: number } | null = null;
   let tipShown = false;
@@ -278,7 +326,7 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
   let calm = 0;
   const watchCamera = (extra: string) => {
     const c = sky.cam;
-    const key = `${c.x0} ${c.kx} ${c.laneTop} ${c.w} ${c.h} ${extra}`;
+    const key = `${c.x0} ${c.kx} ${c.laneTop} ${c.lanes} ${c.w} ${c.h} ${extra}`;
     if (key === camWas) return;
     const initial = !camWas;
     camWas = key;
@@ -307,7 +355,8 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     pointers.set(e.pointerId, p);
     // нажатие снимает меридиан: во время протяжки его нет (D13)
     hoverYear(null);
-    if (pointers.size === 1) drag = { x0: p.x, y0: p.y, x: p.x, y: p.y, moved: false, t: performance.now(), type: e.pointerType };
+    if (pointers.size === 1)
+      drag = { x0: p.x, y0: p.y, x: p.x, y: p.y, moved: false, t: performance.now(), type: e.pointerType, axis: edgeAxis(p.x, p.y, sky.letterW, sky.cam.vp.b) };
     clearTimeout(longTimer);
     if (pointers.size === 1 && e.pointerType === 'touch')
       longTimer = window.setTimeout(() => {
@@ -315,10 +364,14 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       }, LONG_PRESS_MS);
     if (pointers.size === 2) {
       const [a, b] = [...pointers.values()];
-      pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2 };
+      const axis = pinchAxis(a.x - b.x, a.y - b.y);
+      const d = Math.hypot(a.x - b.x, a.y - b.y);
+      pinch = { d, cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2, axis, span: axis === 'time' ? Math.abs(a.x - b.x) : axis === 'lanes' ? Math.abs(a.y - b.y) : d };
       drag = null;
     }
   };
+  /** Разнос пальцев по оси щипка: не меньше 24 px, чтобы поворот пальцев поперёк оси не давал скачка масштаба. */
+  const PINCH_MIN = 24;
   const onMove = (e: PointerEvent) => {
     const p = local(e);
     pointer = e.pointerType === 'touch' ? null : { x: p.x, y: p.y, r: 12 };
@@ -329,8 +382,11 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       const cx = (a.x + b.x) / 2;
       const cy = (a.y + b.y) / 2;
       sky.cam.pan(cx - pinch.cx, cy - pinch.cy);
-      sky.cam.zoomAt(cx, cy, d / pinch.d);
-      pinch = { d, cx, cy };
+      // развод пальцев по горизонтали — только время, по вертикали — только полосы, наискосок — масштаб (J1)
+      const span = pinch.axis === 'time' ? Math.abs(a.x - b.x) : pinch.axis === 'lanes' ? Math.abs(a.y - b.y) : d;
+      if (pinch.axis) sky.cam.stretchAt(pinch.axis, cx, cy, Math.max(PINCH_MIN, span) / Math.max(PINCH_MIN, pinch.span));
+      else sky.cam.zoomAt(cx, cy, d / pinch.d);
+      pinch = { d, cx, cy, axis: pinch.axis, span };
       request();
       return;
     }
@@ -341,7 +397,10 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
         clearTimeout(longTimer);
         canvas.classList.add('dragging');
         setHot(false);
-        sky.cam.pan(p.x - drag.x, p.y - drag.y);
+        // по линейке лет — растянуть время вокруг точки нажатия, по буквам полос — полосы (J1); иначе — сдвиг
+        if (drag.axis === 'time') sky.cam.stretchAt('time', drag.x0, (sky.cam.vp.t + sky.cam.vp.b) / 2, Math.pow(2, (p.x - drag.x) / STRETCH_PX.time));
+        else if (drag.axis === 'lanes') sky.cam.stretchAt('lanes', drag.x0, drag.y0, Math.pow(2, (p.y - drag.y) / STRETCH_PX.lanes));
+        else sky.cam.pan(p.x - drag.x, p.y - drag.y);
         drag.x = p.x;
         drag.y = p.y;
         showTip(null);
@@ -349,6 +408,10 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       }
       return;
     }
+    // над линейкой лет и буквами полос курсор говорит, что их можно тянуть (J1)
+    const zone = e.pointerType === 'touch' ? null : edgeAxis(p.x, p.y, sky.letterW, sky.cam.vp.b);
+    canvas.classList.toggle('stretch-x', zone === 'time');
+    canvas.classList.toggle('stretch-y', zone === 'lanes');
     if (p.y < RULER) {
       // над линейкой — меридиан года, через 250 мс (D13)
       if (e.pointerType !== 'touch') hoverYear(sky.tOf(sky.cam.wx(p.x)));
@@ -491,12 +554,12 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       if (e.shiftKey && dx === 0) sky.cam.pan(-dy, 0);
       else sky.cam.pan(-dx, -dy);
     } else if (e.shiftKey || e.altKey) {
-      // Shift + колесо — сдвиг по времени, Alt + колесо — по полосам
-      stopZoom();
+      // Shift + колесо — растянуть или сжать только время, Alt + колесо — только полосы (J1); сдвиг у мыши — протяжкой
       stopFlight();
       const along = Math.abs(dy) >= Math.abs(dx) ? dy : dx;
-      if (e.shiftKey) sky.cam.pan(-along, 0);
-      else sky.cam.pan(0, -along);
+      const n = wheelNotches(along);
+      const axis: Axis = e.shiftKey ? 'time' : 'lanes';
+      if (n > 0) wheelStretch(axis, Math.pow(axis === 'time' ? WHEEL_STEP : LANES_WHEEL, -Math.sign(along) * n), p.x, p.y);
     } else {
       // колесо мыши — масштаб у курсора: щелчок ×1,5 за 180 мс, щелчки накапливаются
       const along = Math.abs(dy) >= Math.abs(dx) ? dy : dx;
@@ -520,6 +583,7 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
   };
   const onLeave = () => {
     pointer = null;
+    canvas.classList.remove('stretch-x', 'stretch-y');
     hovered.value = null;
     if (setRibbonHover(sky, null)) request();
     hoverYear(null);

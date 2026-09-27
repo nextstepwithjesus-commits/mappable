@@ -9,12 +9,13 @@
  *  — showAll() — «Всё небо» (кнопка, клавиши 0 и Home, щелчок по «Толедот», двойной щелчок по полосе);
  *  — showYears(a, b, animate) — окно лет: щелчок по эпохе на полосе — перелёт (animate = true), протяжка рамки — сразу;
  *  — zoomBy(f, at?, ms?) — шаг масштаба с анимацией (кнопки и клавиши ×2 за 250 мс, колесо ×1,5 за 180 мс);
+ *  — stretchBy(axis, f, at?, ms?), resetProportions() — масштаб по одной оси и пропорции по умолчанию (J1);
  *  — openGuide(), openLegend('keys') — «Как читать карту» и таблица клавиш (клавиша «?»).
  */
 import { effect, signal } from '@preact/signals';
 import { skyRef } from '../common.tsx';
 import { model, onlyLines, panel, selected } from '../../state.ts';
-import type { ViewState } from '../../render/camera.ts';
+import { LANES_MAX, LANES_MIN, type Axis, type ViewState } from '../../render/camera.ts';
 import type { Rect } from '../../render/sky.ts';
 
 export const reduced = () => typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -317,17 +318,89 @@ if (typeof window !== 'undefined') {
  */
 export function zoomBy(f: number, at?: { x: number; y: number }, ms = 250) {
   const s = skyRef.current;
-  if (!s || !s.model) return;
+  const p = anchorPoint(at);
+  if (!s || !p) return;
   flightTarget = null;
-  let p = at;
-  if (!p) {
-    const id = selected.value;
-    const q = id ? screenOf(id) : null;
-    const vp = s.cam.vp;
-    p = q && q.x > vp.l && q.x < vp.r && q.y > vp.t && q.y < vp.b ? q : { x: (vp.l + vp.r) / 2, y: (vp.t + vp.b) / 2 };
-  }
   s.cam.zoomStep(p.x, p.y, f, ms, skyRef.redraw, reduced());
 }
+
+/** Точка привязки шага масштаба: at, иначе выбранное лицо, если оно видно, иначе середина видимой части. */
+function anchorPoint(at?: { x: number; y: number }): { x: number; y: number } | null {
+  const s = skyRef.current;
+  if (!s || !s.model) return null;
+  if (at) return at;
+  const id = selected.peek();
+  const q = id ? screenOf(id) : null;
+  const vp = s.cam.vp;
+  return q && q.x > vp.l && q.x < vp.r && q.y > vp.t && q.y < vp.b ? q : { x: (vp.l + vp.r) / 2, y: (vp.t + vp.b) / 2 };
+}
+
+// ---------- масштаб по двум осям (J1; решение владельца 16) ----------
+
+/** Шаги растяжения одной оси: время — вдвое, как масштаб; полосы — в полтора раза (от 4 до 60 px — шесть-семь шагов). */
+export const TIME_STEP = 2;
+export const LANES_STEP = 1.5;
+
+/**
+ * Растянуть (f > 1) или сжать ось: «время» — только по горизонтали, высота полосы прежняя; «полосы» — только высота
+ * полосы. Органы неба, клавиши (Shift и Alt с «+» и «−»), колесо с Shift и Alt. Привязка — как у zoomBy.
+ */
+export function stretchBy(axis: Axis, f: number, at?: { x: number; y: number }, ms = 250): boolean {
+  const s = skyRef.current;
+  const p = anchorPoint(at);
+  if (!s || !p) return false;
+  flightTarget = null;
+  const done = s.cam.stretchStep(axis, p.x, p.y, f, ms, skyRef.redraw, reduced());
+  skyRef.redraw();
+  return done;
+}
+
+/** Пропорции по умолчанию (J1): высота полосы снова следует за масштабом времени; время и окно лет не меняются. */
+export function resetProportions() {
+  const s = skyRef.current;
+  const p = anchorPoint();
+  if (!s || !p) return;
+  flightTarget = null;
+  s.cam.resetLanes(p.x, p.y, 250, skyRef.redraw, reduced());
+  skyRef.redraw();
+}
+
+/**
+ * Пропорция полос, которую читатель задал (J1): множитель к обычной высоте полосы, 1 — по умолчанию. Живёт в камере;
+ * здесь — её копия после каждого шага (SkyView), для органов неба и памяти браузера. Адрес пишет её сам (h, address.ts).
+ */
+const LANES_KEY = 'toledot:lanes';
+/** Пропорция из памяти браузера; нет или испорчена — 1. */
+export function storedLanes(): number {
+  try {
+    const v = Number(localStorage.getItem(LANES_KEY));
+    return Number.isFinite(v) && v >= LANES_MIN && v <= LANES_MAX ? v : 1;
+  } catch {
+    return 1;
+  }
+}
+// начальное значение — из памяти: иначе первая запись (1) стёрла бы память раньше, чем небо её прочтёт
+export const lanes = signal<number>(typeof window === 'undefined' ? 1 : storedLanes());
+/** Пропорция из адреса при загрузке (address.ts): адрес с полями вида без «h» — пропорции по умолчанию. */
+let fromAddress: number | null = null;
+export function setStartLanes(v: number) {
+  fromAddress = v;
+}
+/** Пропорция первого показа: из адреса, иначе из памяти браузера. */
+export function startLanes(): number {
+  const v = fromAddress ?? storedLanes();
+  return Math.max(LANES_MIN, Math.min(LANES_MAX, v));
+}
+if (typeof window !== 'undefined')
+  effect(() => {
+    const v = lanes.value;
+    try {
+      if (Math.abs(v - 1) < 1e-3) localStorage.removeItem(LANES_KEY);
+      else localStorage.setItem(LANES_KEY, String(Math.round(v * 1000) / 1000));
+    } catch {
+      /* хранилище недоступно — пропорция живёт до перезагрузки */
+    }
+  });
 
 /** Экранное место звезды лица (px холста). */
 export function screenOf(id: string): { x: number; y: number } | null {

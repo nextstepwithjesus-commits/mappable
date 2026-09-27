@@ -12,6 +12,109 @@
     'sheet sky folio'
     'strip strip strip';
 }
+/* Ручки-разделители (J2; src/ui/App.tsx): 8 px на границе колонки и неба — точкой отсчёта служит ячейка неба. Прозрачны;
+   при наведении, протяжке и фокусе — черта 3 px цвета --ink-2 (≥ 3 : 1 и к листу, и к небу), курсор col-resize.
+   Класс — .resizer, только у прямых детей .app: «split» уже занят строками синопсиса (tr.split). */
+.app > .resizer {
+  grid-area: sky;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 7;
+  width: 8px;
+  cursor: col-resize;
+  touch-action: none;
+}
+.app > .resizer-sheet {
+  left: -4px;
+}
+.app > .resizer-folio {
+  right: -4px;
+}
+.app > .resizer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 3px;
+  margin-left: -1.5px;
+  background: transparent;
+}
+.app > .resizer:hover::after,
+.app > .resizer.dragging::after,
+.app > .resizer:focus-visible::after {
+  background: var(--ink-2);
+}
+.app > .resizer:focus-visible {
+  outline-offset: -2px;
+}
+/* пока тянут ручку, текст панели и карточки не выделяется, курсор — col-resize над всем окном */
+.app:has(> .resizer.dragging) {
+  user-select: none;
+  cursor: col-resize;
+}
+
+/* корешок панели в «Небе во весь экран» (J2): как корешок карточки (folio.css) — «×», название снизу вверх, «развернуть» */
+.sheet.spine {
+  width: 56px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 0 8px;
+}
+.sheet.spine .close {
+  position: static;
+  float: none;
+  margin: 0;
+}
+.sheet.spine .unfold {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  padding: 12px 0;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  overflow: hidden;
+}
+.sheet.spine .unfold .nm {
+  font-family: var(--serif);
+  font-size: var(--t-lead);
+  line-height: var(--t-lead-lh);
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-height: 0;
+}
+.sheet.spine .unfold .cmdl {
+  flex: none;
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+  color: var(--ink-2);
+  text-decoration: underline 1px var(--rule-strong);
+  text-underline-offset: 3px;
+}
+.sheet.spine .unfold:hover {
+  background: var(--sheet-2);
+}
+.sheet.spine .unfold:hover .cmdl {
+  color: var(--ink);
+}
+.sheet.spine .unfold:active {
+  background: var(--rule);
+}
+.sheet.spine .unfold:focus-visible {
+  outline-offset: -2px;
+}
 /* три группы: название и поиск | панели (и «Ещё») | черта, справка, тема */
 .top {
   grid-area: top;

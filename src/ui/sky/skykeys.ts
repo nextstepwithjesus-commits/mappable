@@ -1,5 +1,6 @@
 /**
- * Клавиши неба: масштаб, сдвиг, переходы по родству «[ ] , .», «0» и Home — всё небо (D10; IX-38, 40).
+ * Клавиши неба: масштаб, сдвиг, переходы по родству «[ ] , .», «0» и Home — всё небо (D10; IX-38, 40);
+ * масштаб по одной оси (Shift и Alt с «+» и «−») и «Небо во весь экран» (F) — viewKeys (J1, J2).
  * По физическим клавишам (KeyboardEvent.code), поэтому работают и на русской раскладке; слушает их window
  * (src/ui/keys.ts), а не холст: небо отвечает и без фокуса на холсте.
  * Фокус на небе (I1; MOB-29–31, IX-39): стрелки — к ближайшей звезде в эту сторону, Shift со стрелками — сдвиг неба,
@@ -9,7 +10,8 @@
 import { byId, graph, lineMembership } from '../../data/atlas.ts';
 import { selected, hovered, focused, panel, epochMode } from '../../state.ts';
 import { goTo, skyRef } from '../common.tsx';
-import { showAll, stopFlight, zoomBy } from './view.ts';
+import { LANES_STEP, TIME_STEP, showAll, stopFlight, stretchBy, zoomBy } from './view.ts';
+import { toggleFull } from '../layout.ts';
 import { KEY_STEP, KEY_MS, stopZoom } from './input.ts';
 import { arrowDir, moveStarFocus } from './starnav.ts';
 import { focusCardTitle } from '../focus.ts';
@@ -35,6 +37,32 @@ export function childFor(id: string, path: string[]): { to: string | null; path:
   const onLine = kids.find((k) => lineMembership.joseph.has(k) || lineMembership.mary.has(k));
   const best = onLine ?? [...kids].sort((a, b) => (byId.get(a)?.magnitude ?? 9) - (byId.get(b)?.magnitude ?? 9))[0];
   return { to: best ?? null, path: [] };
+}
+
+/**
+ * Клавиши вида (J1, J2), с модификаторами — поэтому до общего отсева в src/ui/keys.ts: Shift с «+» и «−» — растянуть
+ * или сжать время, Alt с «+» и «−» — полосы; F (без модификаторов) — «Небо во весь экран». Не в полях ввода, меню
+ * и списках. Возвращает true, если клавиша обработана.
+ */
+export function viewKeys(e: KeyboardEvent): boolean {
+  const t = e.target instanceof HTMLElement ? e.target : null;
+  if (t?.closest('[role="menu"], [role="listbox"]')) return false;
+  const plus = e.code === 'Equal' || e.code === 'NumpadAdd';
+  const minus = e.code === 'Minus' || e.code === 'NumpadSubtract';
+  if ((plus || minus) && (e.shiftKey !== e.altKey)) {
+    stopFlight();
+    stopZoom();
+    if (e.shiftKey) stretchBy('time', plus ? TIME_STEP : 1 / TIME_STEP);
+    else stretchBy('lanes', plus ? LANES_STEP : 1 / LANES_STEP);
+    e.preventDefault();
+    return true;
+  }
+  if (e.code === 'KeyF' && !e.shiftKey && !e.altKey) {
+    if (!toggleFull()) return false;
+    e.preventDefault();
+    return true;
+  }
+  return false;
 }
 
 /** Сдвиг неба стрелкой: на 120 px по времени, на 90 px по полосам. */

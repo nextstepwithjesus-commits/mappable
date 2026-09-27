@@ -2,8 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import type { ComponentChildren, VNode } from 'preact';
 import { byId, lineMembership, loadCard, loadedCard, loadedChrono } from '../data/atlas.ts';
 import type { Card, Chrono } from '../data/types.ts';
-import { selected, second, pickMode, panel, model, showSchema } from '../state.ts';
-import { grid } from './layout.ts';
+import { selected, second, pickMode, model, showSchema } from '../state.ts';
+import { grid, unfoldCard } from './layout.ts';
 import { skyRef, plural, CAN_PRINT } from './common.tsx';
 import { lowerFirst } from './text/ru.ts';
 import { typo } from './text/typo.ts';
@@ -555,7 +555,7 @@ function FolioSpine({ id }: { id: string }) {
   return (
     <aside class="folio spine" aria-label={`Карточка: ${p.name} (свёрнута)`}>
       <Close label="Закрыть карточку" onClick={() => (selected.value = null)} />
-      <button type="button" class="unfold" aria-label={`Развернуть карточку: ${p.name}`} title="Развернуть карточку" onClick={() => (panel.value = null)}>
+      <button type="button" class="unfold" aria-label={`Развернуть карточку: ${p.name}`} title="Развернуть карточку" onClick={unfoldCard}>
         <span class="nm">{p.name}</span>
         <span class="cmdl" aria-hidden="true">
           развернуть

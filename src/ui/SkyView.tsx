@@ -12,9 +12,9 @@ import { skyRef, viewTick } from './common.tsx';
 import { drawTiers, replanTiers, tiersBottom } from '../render/tiers.ts';
 import { typo } from './text/typo.ts';
 import { aliveAt, lifeText, meridianText, placeText } from './sky/text.ts';
-import { allInView, flightTarget, flyToIds, flyToPerson, inView, introOpen, keepInView, reduced, screenOf, setReserve, stopFlight } from './sky/view.ts';
+import { allInView, flightTarget, flyToIds, flyToPerson, inView, introOpen, keepInView, lanes, reduced, screenOf, setReserve, startLanes, stopFlight } from './sky/view.ts';
 import { attachPointer, type Tip } from './sky/input.ts';
-import { COLUMN_BELOW, SkyColumn, SkyControls, ViewSheet } from './sky/Controls.tsx';
+import { COLUMN_BELOW, SkyColumn, SkyControls, ViewSheet, viewOpen } from './sky/Controls.tsx';
 import { CARTOUCHE_BESIDE, Cartouche, GroupBar, GuideCommand, PickBar, PinBar } from './sky/Overlays.tsx';
 import { SkyTip } from './sky/Tip.tsx';
 import { SkyA11y } from './sky/SkyA11y.tsx';
@@ -53,6 +53,9 @@ export function SkyView() {
     const canvas = canvasRef.current!;
     const sky = new Sky(canvas);
     skyRef.current = sky;
+    // пропорция полос (J1): из адреса (h), иначе из памяти браузера — до первой раскладки, чтобы небо не перестраивалось
+    sky.cam.lanes = startLanes();
+    lanes.value = sky.cam.lanes;
     let dirty = true;
     let raf = 0;
     let introStart = introDone.value || reduced() ? -1 : performance.now();
@@ -197,6 +200,8 @@ export function SkyView() {
       const sel = selected.value ? screenOf(selected.value) : null;
       if (sel) wrap.current!.dataset.sel = `${sel.x.toFixed(1)} ${sel.y.toFixed(1)}`;
       else delete wrap.current!.dataset.sel;
+      // пропорция полос устоялась (шаг, протяжка, щипок закончились) — в память браузера и органам неба (J1)
+      if (!sky.cam.moving && sky.cam.lanes !== lanes.peek()) lanes.value = sky.cam.lanes;
       // метка первого кадра неба — для замера «первого показа» (NFR-1, tools/perf.ts)
       if (!performance.getEntriesByName('sky-first-frame').length) performance.mark('sky-first-frame');
       viewTick.value++;
@@ -533,13 +538,15 @@ export function SkyView() {
     firstLayout.current = false;
     lastIntro.current = intro;
     layoutRef.current(animate);
-  }, [column, intro, skyW, column && panel.value === 'view']);
+  }, [column, intro, skyW, column && panel.value === 'view', !column && viewOpen.value]);
 
 
 
   // лист «Вид» — только у колонки: если небо стало шире (поворот, закрытая карточка), лист закрывается, органы снова в блоке
   useEffect(() => {
     if (!column && panel.value === 'view') panel.value = null;
+    // лист «Вид» над блоком (широкое небо) — только у блока: небо стало узким — он закрывается
+    if (column) viewOpen.value = false;
   }, [column]);
 
   // точки сравнения линий в режиме «только линии» — и для клавиатуры: открывают синопсис участка (E6; U2)

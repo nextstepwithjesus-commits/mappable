@@ -64,8 +64,12 @@ async function tapOrClick(p: Page, loc: ReturnType<Page['locator']>, how: How) {
 async function openPanel(p: Page, name: string, how: How = 'mouse') {
   if (name === 'Эпохи') {
     const b = p.locator('.skyctl .chrono button', { hasText: 'Эпохи' });
-    if (await b.count()) await tapOrClick(p, b, how);
-    else {
+    const toggle = p.locator('.skyctl .view-toggle');
+    if (await toggle.count()) {
+      if (!(await b.count())) await tapOrClick(p, toggle, how);
+      await p.waitForTimeout(200);
+      await tapOrClick(p, b, how);
+    } else {
       await tapOrClick(p, p.locator('.skyctl.column button', { hasText: 'Вид' }), how);
       await p.waitForTimeout(200);
       await tapOrClick(p, p.locator('.sheet button', { hasText: 'Эпохи и их основания' }), how);
@@ -332,6 +336,7 @@ export const layout: Scenario[] = [
       await find(p, 'Авраам');
       const a = await selAt(p);
       if (!a) return fail('Авраам не на небе');
+      await p.locator('.skyctl .view-toggle').click();
       await p.locator('.skyctl').getByText('истинный', { exact: true }).click();
       await p.waitForTimeout(900);
       const b = await selAt(p);

@@ -110,7 +110,8 @@ const BASE: Scenario[] = [
     title: 'Истинный масштаб времени: выбранное лицо остаётся на месте',
     run: async (p) => {
       await find(p, 'Авраам');
-      await p.click('text=истинный');
+      await p.click('.skyctl .view-toggle');
+      await p.click('.viewpop >> text=истинный');
       await p.waitForTimeout(1200);
       return pass('проверяется по снимку');
     },
@@ -140,7 +141,8 @@ const BASE: Scenario[] = [
     title: 'Модель «краткое пребывание»: напряжение у Моисея исчезает',
     run: async (p) => {
       await find(p, 'Моисей');
-      // модель выбирается в органах неба (C6); «О карте» только описывает модели
+      // модель выбирается в органах неба (C6), в листе «Вид» (J1); «О карте» только описывает модели
+      await p.click('.skyctl .view-toggle');
       await p.click('.skyctl .menu.model > button');
       await p.locator('.skyctl [role="menuitemradio"]', { hasText: 'Краткое пребывание' }).click();
       await p.waitForTimeout(1500);
@@ -436,6 +438,9 @@ const BASE: Scenario[] = [
       await find(p, 'Моисей');
       const before = await secText(p, 13);
       if (!/Амрам/.test(before)) return fail('в § 13 Моисея нет напряжения до смены модели');
+      await p.locator('.skyctl .view-toggle').focus();
+      await p.keyboard.press('Enter');
+      await p.waitForTimeout(200);
       const btn = p.locator('.skyctl .menu.model > button');
       if (!(await btn.count())) return fail('в органах неба нет выбора модели');
       const was = (await btn.innerText()).trim();

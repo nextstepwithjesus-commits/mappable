@@ -4,7 +4,7 @@
  * клавиши неба (src/ui/sky/input.ts, skyKeys) — без фокуса на холсте (D10; IX-38, 40, 41, 42; UX-40).
  */
 import { panel, selected, second, pickMode, pins, pinsQuery, skyGroup, clearPair } from '../state.ts';
-import { skyKeys } from './sky/skykeys.ts';
+import { skyKeys, viewKeys } from './sky/skykeys.ts';
 import { openLegend, reduced } from './sky/view.ts';
 import { focusPanelAt } from './focus.ts';
 
@@ -27,8 +27,8 @@ export function isTextField(t: EventTarget | null): boolean {
   return t instanceof HTMLInputElement && !['checkbox', 'radio', 'button', 'submit', 'reset', 'range', 'color', 'file'].includes(t.type);
 }
 
-/** Элементы, у которых стрелки, Home и End свои: меню, списки, переключатели, ползунок полосы времени. */
-const OWN_ARROWS = '[role="menu"], [role="menubar"], [role="listbox"], [role="radiogroup"], [role="slider"], [role="tablist"], [role="grid"], select';
+/** Элементы, у которых стрелки, Home и End свои: меню, списки, переключатели, ползунок полосы времени, ручки границ областей (J2). */
+const OWN_ARROWS = '[role="menu"], [role="menubar"], [role="listbox"], [role="radiogroup"], [role="slider"], [role="tablist"], [role="grid"], [role="separator"], select';
 
 /**
  * Стрелки и Home ведут небо, когда фокус на странице, на холсте, в небе или в верхней строке — но не в карточке
@@ -100,6 +100,8 @@ function onKey(e: KeyboardEvent) {
     else if (selected.value) selected.value = null;
     return;
   }
+  // масштаб по одной оси (J1: Shift и Alt с «+» и «−») и «Небо во весь экран» (J2: F) — src/ui/sky/skykeys.ts
+  if (!typing && !e.ctrlKey && !e.metaKey && !e.defaultPrevented && viewKeys(e)) return;
   if (typing || mod || e.defaultPrevented) return;
   const t = e.target instanceof HTMLElement ? e.target : null;
   // в меню и списках буквы и стрелки — свои

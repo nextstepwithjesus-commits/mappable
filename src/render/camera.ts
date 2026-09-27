@@ -3,6 +3,14 @@
  * Увеличение анизотропное: масштаб по времени kx меняется свободно, высота полосы ky следует за ним,
  * но остаётся в пределах [kyMin, KY_MAX] (ТЗ § 3.1, замечание картографа).
  *
+ * Масштаб по двум осям (J1; решение владельца 16): у камеры есть пропорция полос lanes — множитель к обычной высоте
+ * полосы при этом масштабе. Обычный масштаб (колесо, «+» и «−», щипок, перелёт) пропорцию не меняет: полоса растёт
+ * с масштабом, как прежде, но в lanes раз выше. Растяжение одной оси (stretchStep, stretchAt):
+ *  — «время» — меняется kx, а пропорция подстраивается так, чтобы высота полосы осталась прежней;
+ *  — «полосы» — меняется только пропорция.
+ * Высота полосы, которую задаёт пропорция, — от 4 до 60 px (KY_LO, KY_HI); если обычная полоса ниже 4 px (обзор), сжать
+ * её нельзя. «Всё небо» пропорцию не сбрасывает: по времени вписано всё небо, по полосам — в заданной пропорции.
+ *
  * Видимая часть холста (vp) — то, что не закрыто рамкой, ярусами эпох, листом карточки и вступлением.
  * Всё, что ставит лицо «в середину», и «всё небо» (fit) считаются от неё, а не от холста (C1, D2).
  *
@@ -19,6 +27,14 @@
 export const KX_MIN = 0.004;
 export const KX_MAX = 12;
 export const KY_MAX = 26;
+/** Пределы высоты полосы, которую задаёт пропорция полос (J1), px. */
+export const KY_LO = 4;
+export const KY_HI = 60;
+/** Пределы самой пропорции (адрес, память браузера): за ними высота полосы всё равно упирается в KY_LO…KY_HI. */
+export const LANES_MIN = 1 / 16;
+export const LANES_MAX = 32;
+/** Ось растяжения (J1): время — по горизонтали, полосы — по вертикали. */
+export type Axis = 'time' | 'lanes';
 /** За сколько удвоений масштаба от «всего неба» высота полосы догоняет обычную. */
 const FIT_BLEND = 2;
 /** Упругий упор за краем данных, px. */
@@ -52,6 +68,9 @@ export interface Frame {
   lane0: number;
   lane1: number;
 }
+
+/** Вид и пропорция полос вместе: растяжение одной оси меняет оба (J1). */
+type Stretched = { v: ViewState; lanes: number };
 
 const ease = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
 const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
@@ -88,9 +107,46 @@ export class Camera {
    * Полоса не ниже этой высоты на любом масштабе; 0 — обычная высота полосы. Ставит src/ui/sky/view.ts.
    */
   focusLanes = 0;
+  /** Пропорция полос (J1): множитель к обычной высоте полосы; 1 — пропорции по умолчанию. */
+  lanes = 1;
+  /** Высота полосы при масштабе kx — с пропорцией полос. */
   kyFor(kx: number): number {
+    return this.kyWith(kx, this.lanes);
+  }
+  /** Высота полосы при масштабе kx и пропорции m: обычная × m, но не ниже min(4, обычная) и не выше 60 px. */
+  kyWith(kx: number, m: number): number {
+    const k = this.kyAuto(kx);
+    if (m === 1) return k;
+    return Math.min(Math.max(KY_HI, k), Math.max(Math.min(KY_LO, k), k * m));
+  }
+  /** Обычная высота полосы при масштабе kx (без пропорции полос). */
+  kyAuto(kx: number): number {
     const k = this.kyBase(kx);
     return this.focusLanes > 0 ? Math.max(k, Math.min(KY_MAX, (0.6 * (this.vp.b - this.vp.t)) / this.focusLanes)) : k;
+  }
+  /** Пределы пропорции при масштабе kx: высота полосы — от min(4, обычная) до 60 px. */
+  lanesRange(kx = this.kx): [number, number] {
+    const k = this.kyAuto(kx);
+    return [Math.min(KY_LO, k) / k, Math.max(KY_HI, k) / k];
+  }
+  /** Пропорция при масштабе kx, в пределах: вне их высота полосы та же, что на краю, поэтому шаг от неё — от края. */
+  lanesAt(kx = this.kx, m = this.lanes): number {
+    const [a, b] = this.lanesRange(kx);
+    return Math.max(a, Math.min(b, m));
+  }
+  /** Пропорция, при которой высота полосы при масштабе kx — ky (в пределах). */
+  lanesFor(kx: number, ky: number): number {
+    return this.lanesAt(kx, ky / this.kyAuto(kx));
+  }
+  /** Поставить пропорцию сразу (адрес, память браузера): середина видимой части по вертикали остаётся на месте. */
+  setLanes(m: number) {
+    const v = Math.max(LANES_MIN, Math.min(LANES_MAX, Number.isFinite(m) && m > 0 ? m : 1));
+    if (v === this.lanes) return;
+    const [, cy] = this.vpCenter();
+    const mid = this.wLane(cy);
+    this.raw = null;
+    this.lanes = v;
+    this.laneTop = mid + cy / this.ky;
   }
   private kyBase(kx: number): number {
     const g = Math.max(this.kyMin(), Math.min(KY_MAX, 3.5 + 3.3 * Math.log2(Math.max(kx, 1e-6) / 0.014)));
@@ -342,6 +398,94 @@ export class Camera {
       this.kx = end.kx;
       this.laneTop = end.laneTop;
     }, onFrame);
+  }
+
+  // ---------- масштаб по одной оси (J1) ----------
+
+  /**
+   * План растяжения оси у точки (sx, sy): вид и пропорция по доле пути e (0…1, по логарифму) и в конце — в пределах.
+   * «Время»: kx × factor в пределах масштаба, пропорция подстраивается — высота полосы прежняя, точка sx на месте.
+   * «Полосы»: пропорция × factor в пределах 4…60 px полосы, kx прежний, полоса под sy на месте. null — растягивать некуда.
+   */
+  private stretchPlan(axis: Axis, sx: number, sy: number, factor: number): { at: (e: number) => Stretched; end: Stretched } | null {
+    if (!(factor > 0)) return null;
+    const wx = this.wx(sx);
+    const wl = this.wLane(sy);
+    const lerp = (a: number, b: number, e: number) => Math.exp(Math.log(a) + (Math.log(b) - Math.log(a)) * e);
+    if (axis === 'time') {
+      const k0 = this.kx;
+      const k1 = this.clampKx(k0 * factor, wx);
+      if (Math.abs(k1 / k0 - 1) < 1e-9) return null;
+      const ky0 = this.ky;
+      const at = (kx: number): Stretched => {
+        const lanes = this.lanesFor(kx, ky0);
+        return { lanes, v: { x0: wx - sx / kx, kx, laneTop: wl + sy / this.kyWith(kx, lanes) } };
+      };
+      return { at: (e) => at(lerp(k0, k1, e)), end: this.bounded(at(k1)) };
+    }
+    const kx = this.kx;
+    const m0 = this.lanesAt(kx);
+    const m1 = this.lanesAt(kx, m0 * factor);
+    if (Math.abs(m1 / m0 - 1) < 1e-9) return null;
+    const x0 = this.x0;
+    const at = (m: number): Stretched => ({ lanes: m, v: { x0, kx, laneTop: wl + sy / this.kyWith(kx, m) } });
+    return { at: (e) => at(lerp(m0, m1, e)), end: this.bounded(at(m1)) };
+  }
+  /** Вид с пропорцией — в пределах сдвига (они зависят от высоты полосы). */
+  private bounded(s: Stretched): Stretched {
+    const was = this.lanes;
+    this.lanes = s.lanes;
+    const b = this.bounds(s.v.kx);
+    this.lanes = was;
+    if (!b) return s;
+    return { lanes: s.lanes, v: { kx: s.v.kx, x0: Math.max(b.x[0], Math.min(b.x[1], s.v.x0)), laneTop: Math.max(b.lane[0], Math.min(b.lane[1], s.v.laneTop)) } };
+  }
+  private put(s: Stretched) {
+    this.lanes = s.lanes;
+    this.x0 = s.v.x0;
+    this.kx = s.v.kx;
+    this.laneTop = s.v.laneTop;
+  }
+  /** Можно ли ещё растянуть (dir = 1) или сжать (dir = −1) ось — для органов неба. */
+  canStretch(axis: Axis, dir: 1 | -1): boolean {
+    if (axis === 'time') {
+      const [cx] = this.vpCenter();
+      return Math.abs(this.clampKx(this.kx * (dir > 0 ? 1.01 : 1 / 1.01), this.wx(cx)) / this.kx - 1) > 1e-6;
+    }
+    const m = this.lanesAt();
+    const [a, b] = this.lanesRange();
+    return dir > 0 ? m < b * (1 - 1e-6) : m > a * (1 + 1e-6);
+  }
+  /** Растянуть ось сразу (протяжка по линейке или по буквам полос, щипок): точка (sx, sy) остаётся на месте. */
+  stretchAt(axis: Axis, sx: number, sy: number, factor: number) {
+    this.stop();
+    this.raw = null;
+    const p = this.stretchPlan(axis, sx, sy, factor);
+    if (p) this.put(p.end);
+  }
+  /** Шаг растяжения оси с анимацией (органы неба, клавиши, колесо): точка (sx, sy) остаётся на месте. Было ли куда. */
+  stretchStep(axis: Axis, sx: number, sy: number, factor: number, ms: number, onFrame: () => void, reduced = false): boolean {
+    this.stop();
+    this.raw = null;
+    const p = this.stretchPlan(axis, sx, sy, factor);
+    if (!p) return false;
+    const end = p.end;
+    const free = p.at(1);
+    this.run(ms, reduced, (t) => {
+      const e = easeOut(t);
+      const s = p.at(e);
+      // сдвиг к пределам — по той же кривой
+      this.put({ lanes: s.lanes, v: { kx: s.v.kx, x0: s.v.x0 + (end.v.x0 - free.v.x0) * e, laneTop: s.v.laneTop + (end.v.laneTop - free.v.laneTop) * e } });
+    }, () => this.put(end), onFrame);
+    return true;
+  }
+  /** Пропорции по умолчанию шагом с анимацией: полоса под sy остаётся на месте. Было ли что менять. */
+  resetLanes(sx: number, sy: number, ms: number, onFrame: () => void, reduced = false): boolean {
+    const m = this.lanesAt();
+    const done = Math.abs(m - 1) > 1e-6 && this.stretchStep('lanes', sx, sy, 1 / m, ms, onFrame, reduced);
+    // за пределами (пропорция из адреса) полоса уже на краю: пропорция просто забывается
+    if (!done) this.setLanes(1);
+    return done;
   }
 
   /**

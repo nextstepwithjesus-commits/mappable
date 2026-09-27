@@ -404,6 +404,170 @@
   margin-bottom: 8px;
 }
 
+/* ---------- блок в две строки и лист «Вид» (J1, J2; src/ui/sky/Controls.tsx) ----------
+   На небе — частое: слои и масштаб неба; что на небе и «Вид». Редкое — в листе «Вид» над блоком: масштаб времени,
+   пропорции («время − +  полосы − +  по умолчанию»), хронология и «Эпохи», «небо во весь экран».
+   Оси — словами: знаков «↔» и «↕» в шрифтах атласа нет, а значок без подписи противоречит принципу 6.
+   Правило сильнее .skyctl из panels.css (четыре строки прежнего блока). */
+.sky > .skyctl {
+  grid-template-areas:
+    'layers layers zoom'
+    'work-lbl work view';
+}
+.skyctl .view-toggle {
+  grid-area: view;
+  justify-self: end;
+  border: 1px solid var(--rule-strong);
+}
+/* знак раскрытия — треугольник 7 × 4 цветом текста, как у списка моделей; открыт — вершиной вниз, лист над кнопкой */
+.skyctl .view-toggle::after {
+  content: '';
+  flex: none;
+  width: 0;
+  height: 0;
+  margin-left: 6px;
+  border-left: 3.5px solid transparent;
+  border-right: 3.5px solid transparent;
+  border-bottom: 4px solid currentColor;
+}
+.skyctl .view-toggle[aria-expanded='true'] {
+  background: var(--sheet-2);
+  color: var(--ink);
+}
+.skyctl .view-toggle[aria-expanded='true']::after {
+  border-bottom: 0;
+  border-top: 4px solid currentColor;
+}
+.viewpop {
+  position: absolute;
+  right: -1px;
+  bottom: calc(100% + 4px);
+  z-index: 5;
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-areas:
+    'scale-lbl scale'
+    'axes-lbl axes'
+    'chrono-lbl chrono'
+    'full full';
+  align-items: center;
+  gap: 4px 12px;
+  padding: 4px 4px 5px;
+  background: var(--sheet);
+  border: 1px solid var(--rule-strong);
+}
+.viewpop .axes-lbl {
+  grid-area: axes-lbl;
+}
+.viewpop .axes {
+  grid-area: axes;
+}
+.viewpop .full-row {
+  grid-area: full;
+  display: flex;
+  justify-content: flex-end;
+}
+.axes {
+  display: flex;
+  align-items: center;
+  gap: 0 6px;
+  /* подписи осей — шрифтом органов управления и в листе «Вид» у колонки, где текст листа — антиква */
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+  color: var(--ink-2);
+}
+.axes .pair {
+  display: flex;
+  margin-right: 10px;
+}
+.axes .pair button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--rule-strong);
+  color: var(--ink-2);
+  font-size: var(--t-lead);
+  line-height: 1;
+}
+.axes .pair button + button {
+  margin-left: -1px;
+}
+.axes .pair button:hover {
+  position: relative;
+  background: var(--sheet-2);
+  color: var(--ink);
+}
+.axes .pair button:active {
+  background: var(--rule);
+}
+.axes .pair button:focus-visible {
+  position: relative;
+  outline-offset: -2px;
+}
+/* у края масштаба — выключена, но в порядке Tab (aria-disabled): цвет структурной линии, как у .cmd:disabled */
+.axes .pair button[aria-disabled='true'] {
+  color: var(--rule-strong);
+  background: none;
+  cursor: default;
+}
+.viewctl .axes {
+  flex-wrap: wrap;
+  gap: 8px 6px;
+  margin-bottom: 8px;
+}
+.viewctl .axes-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+/* лист «Вид» на телефоне не заходит на колонку кнопок: её низ — верх неба + 181 px (phone.css); лист выше — прокручивается */
+@media (max-width: 720px) and (min-height: 521px) {
+  .sky > .sheet:has(> .viewctl) {
+    max-height: calc(100% - var(--top-h) - var(--sky-top, 44px) - 189px);
+  }
+}
+/* лист «Вид» у колонки: модель хронологии — список с пояснениями, как у блока; он раскрывается строкой листа, а не поверх,
+   чтобы не уходить за край листа */
+.viewctl .model-row {
+  margin: 0 0 4px;
+}
+/* кнопка списка — шрифтом органов управления: текст листа вокруг — антиква */
+.viewctl .menu.model > button {
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+}
+.viewctl .menu.model [role='menu'] {
+  position: static;
+  margin-top: 4px;
+}
+@media (pointer: coarse) {
+  .viewctl .menu.model > button {
+    min-height: 44px;
+  }
+}
+@media (pointer: coarse) {
+  .axes .pair button {
+    width: 44px;
+    height: 44px;
+  }
+  .axes .cmd {
+    min-height: 44px;
+  }
+}
+
+/* над линейкой лет и буквами полос небо можно тянуть по оси (J1): курсор говорит об этом и во время протяжки */
+.sky canvas.stretch-x {
+  cursor: ew-resize;
+}
+.sky canvas.stretch-y {
+  cursor: ns-resize;
+}
+
 /* строка режима выбора второго лица (D6): непрозрачная, у верхней кромки неба, поверх линейки годов */
 .pickbar {
   position: absolute;

@@ -7,10 +7,17 @@
  * Широкие панели (синопсис, указатель) — не шире 60 % ширины. На телефоне (≤ 720 px) — прежняя схема:
  * панель — полноэкранный лист, карточка — нижний лист.
  *
- * Ширина карточки (C2): 500 px при ≥ 1360, 460 — при 1200–1359, 400 — при 1024–1199, 380 — уже (планшет).
- * Те же числа — в tokens.css (--folio-w), их совпадение проверяет tests/layout.test.ts.
+ * Ширина карточки (C2): 500 px при ≥ 1360, 460 — при 1200–1359, 400 — при 1024–1199, 380 — уже (планшет);
+ * на низком экране (альбомная ориентация, высота ≤ 520 px) — 340 (H6). Те же числа — в tokens.css и phone.css
+ * (--folio-w), их совпадение проверяет tests/layout.test.ts; во время работы ширину ставит App (--folio-w на .app).
+ *
+ * Размер областей (J2; решение владельца 16): границы «панель | небо» и «небо | карточка» перетаскиваются. Ширина,
+ * которую задал читатель, — предпочтение (userWidths, память браузера): карточка — от 360 до 640 px, панель — от 320 px
+ * до 60 % окна. Пределы C1 сильнее: небу не меньше max(480 px, 40 %). Не помещается — сначала уже панель (до 360 или
+ * 560 px, как в C1), затем карточка — до своей ширины по умолчанию, затем карточка — корешок.
+ * «Небо во весь экран» (клавиша F): панель и карточка — корешки 56 px, повторное нажатие возвращает всё как было.
  */
-import { computed, signal } from '@preact/signals';
+import { computed, effect, signal } from '@preact/signals';
 import { panel, selected, type Panel } from '../state.ts';
 
 export const PHONE_MAX = 720;
@@ -18,6 +25,14 @@ export const SPINE_W = 56;
 /** Самое узкое небо: доля ширины окна (жёстко) и ширина в px (если помещается). */
 export const SKY_SHARE = 0.4;
 export const SKY_MIN = 480;
+/** Низкий экран (альбомная ориентация телефона и планшета, H6): карточка — колонка 340 px. */
+export const SHORT_H = 520;
+export const FOLIO_SHORT = 340;
+/** Пределы ширины, которую задаёт читатель (J2): карточка, панель (доля окна — наибольшая). */
+export const FOLIO_MIN = 360;
+export const FOLIO_MAX = 640;
+export const SHEET_MIN = 320;
+export const SHEET_SHARE = 0.6;
 
 export type PanelKind = 'none' | 'regular' | 'wide';
 
@@ -31,6 +46,24 @@ export interface Grid {
   spine: boolean;
   /** ширина неба, px */
   sky: number;
+  /** панель свёрнута в корешок («Небо во весь экран», J2) */
+  sheetSpine?: boolean;
+  /** «Небо во весь экран» (J2) */
+  full?: boolean;
+}
+
+/** Ширины, заданные читателем (J2): обычной панели, широкой панели и карточки; нет поля — ширина по умолчанию. */
+export interface Widths {
+  regular?: number;
+  wide?: number;
+  folio?: number;
+}
+
+/** Что ещё, кроме ширины окна, решает сетку: высота окна, ширины читателя, «Небо во весь экран». */
+export interface GridOpts {
+  h?: number;
+  widths?: Widths;
+  full?: boolean;
 }
 
 /** Ширина карточки по ширине окна (C2; решение 14). */
@@ -40,6 +73,31 @@ export function cardWidth(W: number): number {
   if (W >= 1024) return 400;
   return 380;
 }
+
+/** Ширина карточки по умолчанию с учётом высоты окна: на низком экране — 340 (H6; phone.css). */
+export function folioDefault(W: number, H?: number): number {
+  return H !== undefined && H <= SHORT_H && W > PHONE_MAX ? FOLIO_SHORT : cardWidth(W);
+}
+
+/** Самое узкое небо при ширине окна W: max(480, 40 %) и 40 % (жёстко). */
+function skyFloor(W: number): { want: number; floor: number } {
+  const floor = Math.ceil(W * SKY_SHARE);
+  return { want: Math.max(SKY_MIN, floor), floor };
+}
+
+/** Пределы ширины карточки, которую задаёт читатель: 360…640 px, но небу — не меньше max(480, 40 %). */
+export function folioRange(W: number, H?: number): [number, number] {
+  const def = folioDefault(W, H);
+  return [Math.min(FOLIO_MIN, def), Math.max(def, Math.min(FOLIO_MAX, W - skyFloor(W).want))];
+}
+
+/** Пределы ширины панели, которую задаёт читатель: 320 px … 60 % окна (широкая по умолчанию — и так не шире 60 %). */
+export function sheetRange(W: number, wide: boolean): [number, number] {
+  const def = panelWidth(W, wide);
+  return [Math.min(SHEET_MIN, def), Math.max(def, Math.floor(W * SHEET_SHARE))];
+}
+
+const clampTo = (v: number, [a, b]: [number, number]) => Math.max(a, Math.min(b, v));
 
 /** Желаемая ширина панели (VIS-19): 400 при < 1280, 440 при 1280–1599, 520 при ≥ 1600; широкая — до 820 и не шире 60 %. */
 export function panelWidth(W: number, wide: boolean): number {
@@ -54,16 +112,32 @@ export function panelKind(p: Panel): PanelKind {
   return p === 'synopsis' || p === 'index' || p === 'section' ? 'wide' : 'regular';
 }
 
-export function gridFor(W: number, kind: PanelKind, card: boolean): Grid {
+export function gridFor(W: number, kind: PanelKind, card: boolean, o: GridOpts = {}): Grid {
   if (W <= PHONE_MAX) return { phone: true, sheet: 0, folio: 0, spine: false, sky: W };
-  const F = card ? cardWidth(W) : 0;
-  if (kind === 'none') return { phone: false, sheet: 0, folio: F, spine: false, sky: W - F };
-  const pref = panelWidth(W, kind === 'wide');
-  const floor = Math.ceil(W * SKY_SHARE);
-  const want = Math.max(SKY_MIN, floor);
-  const pMin = Math.min(pref, kind === 'wide' ? 560 : 360);
-  // карточка остаётся целиком, если панели хватает места хотя бы в наименьшей ширине
+  const wide = kind === 'wide';
+  // «Небо во весь экран» (J2): панель и карточка — корешки
+  if (o.full && (kind !== 'none' || card)) {
+    const P = kind !== 'none' ? SPINE_W : 0;
+    const F = card ? SPINE_W : 0;
+    return { phone: false, sheet: P, folio: F, spine: card, sky: W - P - F, sheetSpine: kind !== 'none', full: true };
+  }
+  const { want, floor } = skyFloor(W);
+  const Fd = card ? folioDefault(W, o.h) : 0;
+  // ширина карточки, которую задал читатель, — в своих пределах; по умолчанию — по экрану (C2, H6)
+  const Fu = card && o.widths?.folio !== undefined ? clampTo(o.widths.folio, folioRange(W, o.h)) : Fd;
+  if (kind === 'none') {
+    // небу — не меньше max(480, 40 %): шире своей ширины по умолчанию карточка за этот предел не идёт
+    const F = Math.max(Math.min(Fu, Fd), Math.min(Fu, W - want));
+    return { phone: false, sheet: 0, folio: F, spine: false, sky: W - F };
+  }
+  const user = o.widths?.[wide ? 'wide' : 'regular'];
+  const pref = user !== undefined ? clampTo(user, sheetRange(W, wide)) : panelWidth(W, wide);
+  const pMin = Math.min(pref, wide ? 560 : 360);
+  // карточка остаётся целиком, если панели хватает места хотя бы в наименьшей ширине: сначала уже панель,
+  // затем карточка — до своей ширины по умолчанию
   if (card) {
+    let F = Fu;
+    if (W - F - want < pMin) F = Math.max(Math.min(Fu, Fd), W - want - pMin);
     const room = W - F - want;
     if (room >= pMin) {
       const P = Math.min(pref, room);
@@ -78,8 +152,98 @@ export function gridFor(W: number, kind: PanelKind, card: boolean): Grid {
   return { phone: false, sheet: P, folio: side, spine: card, sky: W - side - P };
 }
 
+/**
+ * Пределы ручки-разделителя при сетке g (J2): какую ширину панели (side = 'sheet') или карточки ('folio') можно задать.
+ * Ручка не сдвигает соседа: наибольшая ширина — та, при которой небу при нынешней ширине соседа остаётся max(480, 40 %).
+ * Нынешнее положение ручки всегда в пределах (C1 мог сузить колонку сильнее, чем позволяет предел читателя).
+ */
+export function splitRange(W: number, kind: PanelKind, side: 'sheet' | 'folio', g: Grid, H?: number): [number, number] {
+  const { want } = skyFloor(W);
+  const [a, b] = side === 'folio' ? folioRange(W, H) : sheetRange(W, kind === 'wide');
+  const now = side === 'folio' ? g.folio : g.sheet;
+  const other = side === 'folio' ? g.sheet : g.folio;
+  const lo = Math.min(a, now);
+  return [lo, Math.max(lo, now, Math.min(b, W - want - other))];
+}
+
 /** Ширина окна (обновляет App при изменении размера). */
 export const viewportWidth = signal(typeof window === 'undefined' ? 1440 : window.innerWidth);
+/** Высота окна: на низком экране карточка уже (H6). */
+export const viewportHeight = signal(typeof window === 'undefined' ? 900 : window.innerHeight);
 
-/** Сетка сейчас: по ширине окна, открытой панели и выбранному лицу. */
-export const grid = computed(() => gridFor(viewportWidth.value, panelKind(panel.value), !!selected.value));
+// ---------- ширины читателя и «Небо во весь экран» (J2) ----------
+
+const WIDTHS_KEY = 'toledot:widths';
+/** Ширины из памяти браузера: только числа в разумных пределах. */
+export function readWidths(raw: string | null): Widths {
+  const out: Widths = {};
+  try {
+    const v = raw ? (JSON.parse(raw) as Record<string, unknown>) : null;
+    if (v && typeof v === 'object')
+      for (const k of ['regular', 'wide', 'folio'] as const) {
+        const n = v[k];
+        if (typeof n === 'number' && Number.isFinite(n) && n >= 200 && n <= 4000) out[k] = Math.round(n);
+      }
+  } catch {
+    /* испорченная запись — ширины по умолчанию */
+  }
+  return out;
+}
+function loadWidths(): Widths {
+  try {
+    return readWidths(localStorage.getItem(WIDTHS_KEY));
+  } catch {
+    return {};
+  }
+}
+/** Ширины, которые задал читатель, перетаскивая границы областей. */
+export const userWidths = signal<Widths>(typeof window === 'undefined' ? {} : loadWidths());
+if (typeof window !== 'undefined')
+  effect(() => {
+    const w = userWidths.value;
+    try {
+      if (Object.keys(w).length) localStorage.setItem(WIDTHS_KEY, JSON.stringify(w));
+      else localStorage.removeItem(WIDTHS_KEY);
+    } catch {
+      /* хранилище недоступно — ширины живут до перезагрузки */
+    }
+  });
+/** Задать ширину панели нынешнего вида или карточки; null — вернуть ширину по умолчанию (двойной щелчок по ручке). */
+export function setWidth(key: keyof Widths, v: number | null) {
+  const next = { ...userWidths.peek() };
+  if (v === null) delete next[key];
+  else next[key] = Math.round(v);
+  userWidths.value = next;
+}
+
+/** «Небо во весь экран» (J2): панель и карточка свёрнуты в корешки; живёт в сеансе. */
+export const skyFull = signal(false);
+/** Есть ли что свернуть в корешок: колонка панели или карточка (на телефоне — нет: там листы). */
+export const canFill = computed(() => viewportWidth.value > PHONE_MAX && (panelKind(panel.value) !== 'none' || !!selected.value));
+/** Переключить «Небо во весь экран» (клавиша F, органы неба). Сворачивать нечего — ничего не происходит. */
+export function toggleFull(): boolean {
+  if (!skyFull.peek() && !canFill.peek()) return false;
+  skyFull.value = !skyFull.peek();
+  return true;
+}
+/** «Развернуть» на корешке: вернуть панель и карточку. */
+export function unfoldCard() {
+  if (skyFull.peek()) skyFull.value = false;
+  else panel.value = null;
+}
+if (typeof window !== 'undefined') {
+  // открыли другую панель — читатель хочет её видеть: небо больше не во весь экран; сворачивать стало нечего — тоже
+  let shownPanel = panel.peek();
+  effect(() => {
+    const p = panel.value;
+    const was = shownPanel;
+    shownPanel = p;
+    if (!skyFull.peek()) return;
+    if ((p && p !== was && panelKind(p) !== 'none') || !canFill.value) skyFull.value = false;
+  });
+}
+
+/** Сетка сейчас: по ширине и высоте окна, открытой панели, выбранному лицу, ширинам читателя и «Небу во весь экран». */
+export const grid = computed(() =>
+  gridFor(viewportWidth.value, panelKind(panel.value), !!selected.value, { h: viewportHeight.value, widths: userWidths.value, full: skyFull.value }),
+);

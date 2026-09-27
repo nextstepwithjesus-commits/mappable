@@ -172,6 +172,7 @@ export const sky: Scenario[] = [
         await p.locator('.skyctl').getByText('ярусы эпох', { exact: true }).click();
         await p.waitForTimeout(600);
       }
+      await p.locator('.skyctl .view-toggle').click();
       const epochs = p.locator('.skyctl button', { hasText: 'Эпохи' });
       await epochs.click();
       await p.waitForTimeout(500);
@@ -183,6 +184,8 @@ export const sky: Scenario[] = [
       await p.locator('.sheet .close').first().click();
       await p.waitForTimeout(500);
       if (!(await p.locator('.sky[data-tiers="on"]').count())) return fail('закрытие панели выключило ярусы');
+      // щелчок по «×» панели — вне органов неба: лист «Вид» закрылся, открыть снова
+      if (!(await p.locator('.viewpop').count())) await p.locator('.skyctl .view-toggle').click();
       if ((await epochs.getAttribute('aria-pressed')) === 'true') return fail('«Эпохи» осталась нажатой без панели');
       return pass(`верх неба ${a.t.toFixed(0)} и ${e.t.toFixed(0)} px`);
     },

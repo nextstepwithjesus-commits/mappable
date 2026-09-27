@@ -5,9 +5,10 @@
  * масштаб времени, модель хронологии, «только линии Мессии» и ярусы эпох. Опубликованная версия получает извне только
  * «простой» якорь из букв, цифр и «. _ ~ -», поэтому поля разделены «~», у каждого — буква-ключ:
  *
- *   #/david~y-1010~w240~l2.5~pepochs~s0~mmt-long~o1~e1
+ *   #/david~y-1010~w240~l2.5~h1.5~pepochs~s0~mmt-long~o1~e1
  *
  *   y — год середины окна (исторический: −1010 = 1010 г. до Р. Х.), w — ширина окна в годах, l — полоса середины,
+ *   h — пропорция полос (J1: множитель к обычной высоте полосы; нет поля — пропорции по умолчанию),
  *   p — панель, a и b — первое и второе лицо пары, s — масштаб времени (0 истинный, 1 по насыщенности),
  *   m — модель хронологии, o1 — только линии Мессии, e1 — ярусы эпох.
  *
@@ -22,9 +23,9 @@ import {
 } from '../state.ts';
 import { damerau } from '../engine/search.ts';
 import { toAstro, toHist } from '../engine/years.ts';
-import { KX_MAX, KX_MIN } from '../render/camera.ts';
+import { KX_MAX, KX_MIN, LANES_MAX, LANES_MIN } from '../render/camera.ts';
 import { skyRef, viewTick } from './common.tsx';
-import { reduced } from './sky/view.ts';
+import { reduced, setStartLanes } from './sky/view.ts';
 
 export interface View {
   /** год середины окна, исторический */
@@ -48,6 +49,8 @@ export interface Address {
   model?: string;
   only?: boolean;
   tiers?: boolean;
+  /** пропорция полос (J1): множитель к обычной высоте полосы */
+  lanes?: number;
   /** в адресе есть поля вида: он описывает весь вид, а не только лицо */
   full: boolean;
 }
@@ -85,6 +88,7 @@ export function parseAddress(hash: string, has: (id: string) => boolean): Addres
     else if (k === 'm' && /^[a-z0-9-]+$/.test(val)) a.model = val;
     else if (k === 'o') a.only = val === '1';
     else if (k === 'e') a.tiers = val === '1';
+    else if (k === 'h' && NUM.test(val) && Number(val) > 0) a.lanes = Math.max(LANES_MIN, Math.min(LANES_MAX, Number(val)));
   }
   if (v.year !== undefined && v.width !== undefined && v.lane !== undefined && v.year !== 0) a.view = v as View;
   return a;
@@ -94,6 +98,8 @@ export function parseAddress(hash: string, has: (id: string) => boolean): Addres
 export function formatAddress(a: Omit<Address, 'route' | 'full' | 'bad'>): string {
   const f: string[] = [];
   if (a.view) f.push(`y${Math.round(a.view.year)}`, `w${Math.max(1, Math.round(a.view.width))}`, `l${(Math.round(a.view.lane * 10) / 10).toFixed(1)}`);
+  // пропорция полос — два знака после точки, без лишних нулей: 1.5, 0.67, 13
+  if (a.lanes !== undefined && Math.abs(a.lanes - 1) >= 0.005) f.push(`h${String(Math.round(a.lanes * 100) / 100)}`);
   if (a.panel) f.push(`p${a.panel}`);
   if (a.first) f.push(`a${a.first}`);
   if (a.second) f.push(`b${a.second}`);
@@ -186,6 +192,7 @@ function snapshot(): Omit<Address, 'route' | 'full' | 'bad'> {
     model: modelId.peek(),
     only: onlyLines.peek(),
     tiers: epochMode.peek(),
+    lanes: skyRef.current?.cam.lanes,
   };
 }
 
@@ -210,6 +217,8 @@ function applyState(a: Address) {
 // Прочитать адрес до первого показа: модель, масштаб, панель и лицо сразу в нужном виде, без перестройки неба.
 const initial = typeof location !== 'undefined' ? parseAddress(location.hash, (id) => byId.has(id)) : null;
 if (initial && initial.route === 'atlas') applyState(initial);
+// пропорция полос адреса — небу до первой раскладки (SkyView); адрес с полями вида без «h» — пропорции по умолчанию
+if (initial && initial.route === 'atlas' && (initial.lanes !== undefined || initial.full)) setStartLanes(initial.lanes ?? 1);
 
 /** Небо готово принять окно: модель и масштаб адреса уже в нём, размер холста устоялся. */
 function whenSkyReady(then: () => void, tries = 0) {
@@ -251,6 +260,8 @@ export function bindAddress(): () => void {
     if (a.bad) setTimeout(() => document.getElementById('find')?.focus(), 100);
     whenSkyReady(() => {
       if (!alive) return;
+      // пропорция полос (J1) — до окна: высота полосы решает, где середина окна по вертикали
+      if (a.lanes !== undefined || a.full) skyRef.current?.cam.setLanes(a.lanes ?? 1);
       // адрес называет лицо, но не окно (прежний «#/david»): небо летит к лицу
       if (a.view) applyView(a.view, !initialLoad);
       else if (a.id) skyRef.flyTo(a.id);

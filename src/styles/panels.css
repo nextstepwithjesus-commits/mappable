@@ -874,14 +874,7 @@ button.row:focus-visible {
 }
 
 /* ---------- рабочий набор, небо по набору, свёртка (J3–J5; src/ui/panels/Work.tsx, src/ui/sky/Controls.tsx) ---------- */
-/* органы неба: четвёртая строка — «На небе: все лица | в работе» и «развернуть всё» */
-.skyctl {
-  grid-template-areas:
-    'layers layers zoom'
-    'scale-lbl scale scale'
-    'chrono-lbl chrono chrono'
-    'work-lbl work work';
-}
+/* органы неба: строка «На небе: все лица | в работе» и «развернуть всё»; сетку блока задаёт sky.css (.sky > .skyctl) */
 .skyctl .work-lbl {
   grid-area: work-lbl;
 }

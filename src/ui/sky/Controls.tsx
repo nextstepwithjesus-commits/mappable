@@ -7,9 +7,73 @@ import { lambda, modelId, onlyLines, panel, epochMode } from '../../state.ts';
 import { typo } from '../text/typo.ts';
 import { Check, Menu, Segmented } from '../controls.tsx';
 import { Sheet } from '../panels/Sheet.tsx';
-import { showAll, zoomBy } from './view.ts';
+import { LANES_STEP, TIME_STEP, resetProportions, showAll, stretchBy, zoomBy } from './view.ts';
 import { SkyModeSwitch } from '../panels/Work.tsx';
 import { foldDesc, foldGroups, unfoldAll } from '../work.ts';
+import { skyRef, viewTick } from '../common.tsx';
+import { canFill, skyFull, toggleFull } from '../layout.ts';
+import type { Axis } from '../../render/camera.ts';
+import { signal } from '@preact/signals';
+import { useEffect, useRef } from 'preact/hooks';
+import { isTextField } from '../keys.ts';
+
+// ---------- масштаб по осям (J1) и «Небо во весь экран» (J2) ----------
+
+/** Пара «−» и «+» одной оси: выключенная кнопка остаётся в порядке Tab (aria-disabled), чтобы фокус не пропадал на краю. */
+function AxisPair({ axis }: { axis: Axis }) {
+  // органы следят за камерой: у края масштаба кнопка выключается
+  void viewTick.value;
+  const sky = skyRef.current;
+  const can = (dir: 1 | -1) => !sky || !sky.model || sky.cam.canStretch(axis, dir);
+  const time = axis === 'time';
+  const btn = (dir: 1 | -1) => {
+    const off = !can(dir);
+    const label = time ? (dir > 0 ? 'Растянуть время' : 'Сжать время') : dir > 0 ? 'Расширить полосы' : 'Сузить полосы';
+    const key = `${time ? 'Shift' : 'Alt'} и ${dir > 0 ? '+' : '−'}`;
+    return (
+      <button
+        type="button"
+        aria-label={label}
+        title={`${label} (${key})`}
+        aria-disabled={off ? 'true' : undefined}
+        aria-keyshortcuts={`${time ? 'Shift' : 'Alt'}+${dir > 0 ? 'Equal' : 'Minus'}`}
+        onClick={() => {
+          if (!off) stretchBy(axis, dir > 0 ? (time ? TIME_STEP : LANES_STEP) : 1 / (time ? TIME_STEP : LANES_STEP));
+        }}
+      >
+        {dir > 0 ? '+' : '−'}
+      </button>
+    );
+  };
+  return (
+    <span class="pair">
+      {btn(-1)}
+      {btn(1)}
+    </span>
+  );
+}
+
+/** «Пропорции по умолчанию»: высота полосы снова следует за масштабом времени. Выключена, если пропорции и так обычные. */
+function ResetProportions({ label = 'по умолчанию' }: { label?: string }) {
+  void viewTick.value;
+  const cam = skyRef.current?.cam;
+  const off = !cam || Math.abs(cam.lanesAt() - 1) < 1e-3;
+  return (
+    <button type="button" class="cmd reset" aria-label="Пропорции по умолчанию" title="Пропорции по умолчанию" aria-disabled={off ? 'true' : undefined} onClick={() => !off && resetProportions()}>
+      {label}
+    </button>
+  );
+}
+
+/** «Во весь экран» (J2, клавиша F): панель и карточка — корешки. Есть, только если сворачивать есть что. */
+function FullCommand({ label }: { label: string }) {
+  if (!canFill.value && !skyFull.value) return null;
+  return (
+    <button type="button" class="cmd full" aria-pressed={skyFull.value} title="Небо во весь экран: панель и карточка — корешками (F)" aria-keyshortcuts="F" onClick={() => toggleFull()}>
+      {label}
+    </button>
+  );
+}
 
 /** «Развернуть всё» (J5): есть ли на небе свёрнутые потомки или созвездия. */
 const anyFolded = () => foldDesc.value.length + foldGroups.value.length > 0;
@@ -64,12 +128,85 @@ function ModelMenu() {
   );
 }
 
+/** Лист «Вид» над блоком органов неба открыт (широкое небо). SkyView замеряет его как резерв неба. */
+export const viewOpen = signal(false);
+
+/**
+ * Лист «Вид» над блоком (широкое небо): редкие настройки — масштаб времени, пропорции (J1), хронология и «Эпохи»,
+ * «во весь экран» (J2). Непрозрачный, с рамкой, как блок; не модальный: Escape и нажатие вне блока его закрывают,
+ * фокус возвращается на «Вид». Список моделей раскрывается вверх — над листом.
+ */
+function ViewPop({ toggle }: { toggle: { current: HTMLButtonElement | null } }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const close = (back: boolean) => {
+      viewOpen.value = false;
+      if (back) toggle.current?.focus({ preventScroll: true });
+    };
+    const away = (e: PointerEvent) => {
+      const box = ref.current?.closest('.skyctl');
+      if (box && !box.contains(e.target as Node)) close(false);
+    };
+    // Escape — одно видимое состояние (D5): сначала открытый список моделей (его закрывает Menu), затем лист
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code !== 'Escape' || e.defaultPrevented) return;
+      // в поле ввода Escape принадлежит полю (D5); открытый список моделей закрывает сам Menu
+      if (isTextField(e.target) || ref.current?.querySelector('[role="menu"]')) return;
+      e.preventDefault();
+      close(!!ref.current?.contains(document.activeElement));
+    };
+    document.addEventListener('pointerdown', away, true);
+    window.addEventListener('keydown', onKey, true);
+    return () => {
+      document.removeEventListener('pointerdown', away, true);
+      window.removeEventListener('keydown', onKey, true);
+    };
+  }, []);
+  return (
+    <div class="viewpop" id="sky-viewpop" ref={ref} role="group" aria-label="Вид неба: масштаб времени, пропорции, хронология" data-reserve="view">
+      <span class="lbl scale-lbl" aria-hidden="true">
+        Масштаб времени
+      </span>
+      <ScaleSwitch />
+      <span class="lbl axes-lbl" aria-hidden="true">
+        Пропорции
+      </span>
+      <div class="axes" role="group" aria-label="Масштаб по осям">
+        <span class="ax" aria-hidden="true">
+          время
+        </span>
+        <AxisPair axis="time" />
+        <span class="ax" aria-hidden="true">
+          полосы
+        </span>
+        <AxisPair axis="lanes" />
+        <ResetProportions />
+      </div>
+      <span class="lbl chrono-lbl" aria-hidden="true">
+        Хронология
+      </span>
+      <div class="chrono">
+        <ModelMenu />
+        <button type="button" class="cmd" aria-pressed={panel.value === 'epochs'} title="Эпохи и их основания" onClick={toggleEpochsPanel}>
+          Эпохи
+        </button>
+      </div>
+      <div class="full-row">
+        <FullCommand label="небо во весь экран" />
+      </div>
+    </div>
+  );
+}
+
 /**
  * Органы неба (C6; VIS-21, VIS-22, IX-36, IX-37, UX-05): непрозрачный лист с рамкой в правом нижнем углу неба,
- * над полосой времени. Слои, масштаб времени, модель хронологии, масштаб неба и «Всё небо»; «Эпохи» — панель
- * с основаниями эпох (прежде её открывала команда «Эпохи» верхней строки).
+ * над полосой времени. На небе — частое, в две строки: слои, масштаб неба и «Всё небо»; что на небе (J4) и «Вид».
+ * Редкое — масштаб времени, пропорции полос и времени (J1), модель хронологии и «Эпохи», «во весь экран» (J2) — в листе
+ * «Вид» над блоком (ViewPop): блок не растёт в стену кнопок и меньше закрывает небо.
  */
 export function SkyControls() {
+  const toggle = useRef<HTMLButtonElement>(null);
+  const open = viewOpen.value;
   return (
     // data-reserve: под блоком подписи и указатели у края не рисуются (C6), SkyView замеряет его прямоугольник
     <div class="skyctl" role="group" aria-label="Вид неба" data-reserve="controls">
@@ -87,19 +224,6 @@ export function SkyControls() {
           Всё небо
         </button>
       </div>
-      <span class="lbl scale-lbl" aria-hidden="true">
-        Масштаб времени
-      </span>
-      <ScaleSwitch />
-      <span class="lbl chrono-lbl" aria-hidden="true">
-        Хронология
-      </span>
-      <div class="chrono">
-        <ModelMenu />
-        <button type="button" class="cmd" aria-pressed={panel.value === 'epochs'} title="Эпохи и их основания" onClick={toggleEpochsPanel}>
-          Эпохи
-        </button>
-      </div>
       {/* что показывает небо (J4): все лица или только рабочий набор; «развернуть всё» — если что-то свёрнуто (J5) */}
       <span class="lbl work-lbl" aria-hidden="true">
         На небе
@@ -108,6 +232,18 @@ export function SkyControls() {
         <SkyModeSwitch />
         {anyFolded() && <UnfoldAll />}
       </div>
+      <button
+        type="button"
+        class="cmd view-toggle"
+        ref={toggle}
+        aria-expanded={open}
+        aria-controls={open ? 'sky-viewpop' : undefined}
+        title="Масштаб времени, пропорции, хронология"
+        onClick={() => (viewOpen.value = !open)}
+      >
+        Вид
+      </button>
+      {open && <ViewPop toggle={toggle} />}
     </div>
   );
 }
@@ -132,9 +268,11 @@ export function SkyColumn() {
   );
 }
 
-/** Лист «Вид» на узком небе: слои, масштаб времени и модель хронологии с пояснением (MOB-05). */
+/**
+ * Лист «Вид» на узком небе (MOB-05): слои, масштаб времени, пропорции (J1), «небо во весь экран» (J2, не на телефоне),
+ * модель хронологии — списком с пояснениями, «Эпохи и их основания», что на небе (J4). Лист не выше неба под колонкой кнопок.
+ */
 export function ViewSheet() {
-  const cur = modelInfo.find((m) => m.id === modelId.value);
   return (
     <Sheet title="Вид" reserve>
       <div class="viewctl">
@@ -143,9 +281,29 @@ export function ViewSheet() {
         </div>
         <h3>Масштаб времени</h3>
         <ScaleSwitch />
+        {/* масштаб по осям (J1): пальцами — щипок по горизонтали или по вертикали; «по умолчанию» — в строке заголовка,
+            чтобы лист не рос; «во весь экран» (J2) — не на телефоне */}
+        <div class="axes-head">
+          <h3>Пропорции</h3>
+          <ResetProportions />
+        </div>
+        <div class="axes" role="group" aria-label="Масштаб по осям">
+          <span class="ax" aria-hidden="true">
+            время
+          </span>
+          <AxisPair axis="time" />
+          <span class="ax" aria-hidden="true">
+            полосы
+          </span>
+          <AxisPair axis="lanes" />
+        </div>
+        <FullCommand label="небо во весь экран" />
+        {/* модель — тем же списком с пояснениями, что у блока на широком небе: четыре кнопки и абзац пояснения делали лист
+            выше неба над ним, а пояснение каждой модели и так стоит в её пункте списка */}
         <h3>Хронология</h3>
-        <Segmented label="Модель хронологии" options={modelInfo.map((m) => ({ value: m.id, label: m.name }))} value={modelId.value} onChange={(v) => (modelId.value = v)} />
-        {cur && <p class="muted">{cur.description}</p>}
+        <div class="model-row">
+          <ModelMenu />
+        </div>
         <div class="cmds">
           <button type="button" class="cmd" onClick={() => (panel.value = 'epochs')}>
             Эпохи и их основания
