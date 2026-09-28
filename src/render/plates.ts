@@ -81,25 +81,18 @@ function nameIn(id: string, first: boolean): string {
   return p.unnamed && !first ? lowerFirst(p.name) : p.name;
 }
 
-/** «сына», «дочери», «сыновей», «дочерей», «детей» — чьи родитель не назван. */
-function kidsGen(u: Union): string {
-  const sexes = u.kids.map((k) => byId.get(k)?.sex ?? 'm');
-  if (sexes.length === 1) return sexes[0] === 'f' ? 'дочери' : 'сына';
-  if (sexes.every((s) => s === 'f')) return 'дочерей';
-  if (sexes.every((s) => s !== 'f')) return 'сыновей';
-  return 'детей';
-}
-
 /**
- * Первая строка картуша — имена супругов в именительном: «Авраам и Агарь». Второе лицо не названо — «Сиф: мать сына
- * не названа», «Мария: отец не назван». У союза происхождения иного рода с одним лицом (усыновление, по Луке) — одно имя.
+ * Первая строка картуша — имена супругов в именительном: «Авраам и Агарь». Второе лицо не названо — «Сиф и его жена»,
+ * «Мария и её муж» (решение 75). У союза происхождения иного рода с одним лицом (усыновление, по Луке) — одно имя.
  */
 export function plateNames(u: Union): string {
   if (u.a && u.b) return `${nameIn(u.a, true)} и ${nameIn(u.b, false)}`;
   const one = u.a ?? u.b;
   if (!one) return '';
   if (u.claim || !u.kids.length) return nameIn(one, true);
-  return u.a ? `${nameIn(one, true)}: мать ${kidsGen(u)} не названа` : `${nameIn(one, true)}: отец ${kidsGen(u)} не назван`;
+  // второй супруг не назван (решение 75): «Сиф и его жена», «Мария и её муж»
+  const his = byId.get(one)?.sex === 'f' ? 'её' : 'его';
+  return u.a ? `${nameIn(one, true)} и ${his} жена` : `${nameIn(one, true)} и ${his} муж`;
 }
 
 /** Вид связи словами данных. */

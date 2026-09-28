@@ -10,6 +10,7 @@
  */
 import type { ComponentChildren } from 'preact';
 import { byId, loadedCard } from '../../data/atlas.ts';
+import { model } from '../../state.ts';
 import type { TreeNode } from '../../engine/tree.ts';
 import type { Union } from '../../engine/unions.ts';
 import { yearsWord } from '../../engine/years.ts';
@@ -51,7 +52,7 @@ const CERT: Record<string, string> = { inference: 'выв.', interpretation: 'т
 const marked = (s: string, cert?: string) => (cert && CERT[cert] ? `${s}, ${CERT[cert]}` : s);
 
 /**
- * Вид союза одной строкой: «Ева — жена Адама», «Хеттура — наложница Авраама», «мать детей не названа в Писании»,
+ * Вид союза одной строкой: «Ева — жена Адама», «Хеттура — наложница Авраама», «имя жены в Писании не названо»,
  * «Иосиф — законный отец», «отец по родословию Луки». Склонение — только функцией ru.ts, иначе без имени.
  */
 export function unionKindLine(u: Union): string {
@@ -59,8 +60,8 @@ export function unionKindLine(u: Union): string {
   if (u.claim === 'legal' && u.a) return marked(`${nameOf(u.a)} — законный отец`, u.kidsCert);
   const named = u.a ?? u.b;
   if (named && isPeople(named)) return '';
-  if (!u.b) return marked('мать детей не названа в Писании', u.kidsCert);
-  if (!u.a) return marked('отец детей не назван в Писании', u.kidsCert);
+  if (!u.b) return marked('имя жены в Писании не названо', u.kidsCert);
+  if (!u.a) return marked('имя мужа в Писании не названо', u.kidsCert);
   if (u.kind === 'wife' || u.kind === 'concubine') {
     const word = u.kind === 'concubine' ? 'наложница' : 'жена';
     const g = gen(u.a);
@@ -226,25 +227,50 @@ export function UnionCard(p: CardProps & { u: Union; open: boolean; hidden: numb
   );
 }
 
-/** Пустое место союза: «Мать не названа в Писании», «Отец не назван в Писании» и стих союза. */
+/** Старший ребёнок союза по году рождения в текущей модели (у детей без года — по порядку данных). */
+function eldest(u: Union): string | null {
+  const ch = model.peek().chrono;
+  const at = new Map(u.kids.map((k, i) => [k, i]));
+  return [...u.kids].sort((x, y) => (ch.get(x)?.b ?? 1e9) - (ch.get(y)?.b ?? 1e9) || at.get(x)! - at.get(y)!)[0] ?? null;
+}
+
+/**
+ * Пустое место союза (решение 75): кем приходится неназванное лицо — «Жена Сифа», строкой ниже — чья мать: «мать Еноса»;
+ * детей несколько — «мать Ира и других детей» (всех не перечисляем). Для мужа — «Муж …», «отец …». Склонение —
+ * только функцией ru.ts; если имя надёжно не склоняется — «Жена» и «муж — Сиф». Третья строка — «имя в Писании
+ * не названо» и стих.
+ */
+export function unnamedLines(u: Union, role: 'a' | 'b'): { title: string; sub: string } {
+  const wife = role === 'b';
+  const other = wife ? u.a : u.b;
+  const og = other ? gen(other) : null;
+  const title = og ? `${wife ? 'Жена' : 'Муж'} ${og}` : wife ? 'Жена' : 'Муж';
+  const k = eldest(u);
+  const kg = k ? gen(k) : null;
+  const parent = wife ? 'мать' : 'отец';
+  let sub = '';
+  if (k) sub = u.kids.length === 1 ? (kg ? `${parent} ${kg}` : `${parent}: ${nameOf(k)}`) : kg ? `${parent} ${kg} и других детей` : `${parent} детей: ${nameOf(k)} и другие`;
+  else if (other && !og) sub = `${wife ? 'муж' : 'жена'} — ${nameOf(other)}`;
+  return { title, sub };
+}
+
+/** Одной строкой (для диктора и подписи): «Жена Сифа (мать Еноса), имя в Писании не названо». */
 export function unnamedText(u: Union, role: 'a' | 'b'): string {
-  // чья мать (чей отец): единственного ребёнка — по имени, если склонение надёжно; иначе — «детей Сифа»
-  const kid = u.kids.length === 1 ? gen(u.kids[0]) : null;
-  const other = role === 'b' ? u.a : u.b;
-  const whose = kid ?? (other && gen(other) ? `детей ${gen(other)}` : null);
-  if (role === 'b') return whose ? `Мать ${whose} не названа в Писании` : 'Мать не названа в Писании';
-  return whose ? `Отец ${whose} не назван в Писании` : 'Отец не назван в Писании';
+  const { title, sub } = unnamedLines(u, role);
+  return `${title}${sub ? ` (${sub})` : ''}, имя в Писании не названо`;
 }
 
 export function UnnamedCard(p: CardProps & { u: Union; role: 'a' | 'b' }) {
-  const text = unnamedText(p.u, p.role);
+  const { title, sub } = unnamedLines(p.u, p.role);
   const ref = p.u.refs[0] ? refLabel(p.u.refs[0]) : '';
   return (
-    <Shell {...p} label={typo(`${text}${ref ? `; ${ref}` : ''}`)} cls="tc-unnamed">
+    <Shell {...p} label={typo(`${unnamedText(p.u, p.role)}${ref ? `; ${ref}` : ''}`)} cls="tc-unnamed">
       <div class="tc-top">
         <UnnamedAvatar size={44} />
         <div class="tc-info">
-          <div class="tc-txt">{text}</div>
+          <div class="tc-txt">{typo(title)}</div>
+          {sub && <div class="tc-sub">{typo(sub)}</div>}
+          <div class="tc-sub">имя в Писании не названо</div>
           {ref && <div class="tc-ref">{ref}</div>}
         </div>
       </div>

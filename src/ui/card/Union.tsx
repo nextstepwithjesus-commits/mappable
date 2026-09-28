@@ -54,6 +54,9 @@ const claimRole = (u: Union): 'father' | 'mother' => (u.a ? 'father' : 'mother')
 /** Заголовок карточки союза: «Авраам и Агарь»; второе лицо не названо — одно имя («Сиф»). */
 export function unionTitle(u: Union): string {
   const ids = [u.a, u.b].filter((x): x is string => !!x);
+  // второй супруг не назван (решение 75): «Сиф и его жена», «Мария и её муж»; у союза иного рода и у народа — одно имя
+  const one = ids.length === 1 && !u.claim && u.kids.length && !isPeople(ids[0]) ? ids[0] : null;
+  if (one) return u.a ? `${nameOf(one)} и ${byId.get(one)?.sex === 'f' ? 'её' : 'его'} жена` : `${nameOf(one)} и ${byId.get(one)?.sex === 'f' ? 'её' : 'его'} муж`;
   return ids.map((x, i) => (i ? midName(x) : nameOf(x))).join(' и ');
 }
 
@@ -65,8 +68,8 @@ export function unionSub(u: Union): string | null {
   if (isClaimUnion(u)) return capFirst(otherParentLabel(u.claim!, claimRole(u)));
   const named = u.a ?? u.b;
   if (named && isPeople(named)) return null;
-  if (!u.b) return 'Мать детей в Писании не названа';
-  if (!u.a) return 'Отец детей в Писании не назван';
+  if (!u.b) return 'Имя жены в Писании не названо';
+  if (!u.a) return 'Имя мужа в Писании не названо';
   return null;
 }
 
@@ -110,8 +113,9 @@ export function unionLinkText(u: Union, who: string): string {
 export function originLinkText(u: Union): string {
   if (isClaimUnion(u)) return `${unionTitle(u)} (${claimShort(u.claim!)})`;
   const named = u.a ?? u.b;
-  if (!u.b && !(named && isPeople(named))) return `${unionTitle(u)} (мать не названа)`;
-  if (!u.a && !(named && isPeople(named))) return `${unionTitle(u)} (отец не назван)`;
+  // здесь речь о родителях: «Фарра (мать не названа)», а не «Фарра и его жена (…)»
+  if (!u.b && named && !isPeople(named)) return `${nameOf(named)} (мать не названа)`;
+  if (!u.a && named && !isPeople(named)) return `${nameOf(named)} (отец не назван)`;
   return unionTitle(u);
 }
 

@@ -107,7 +107,7 @@ export const tree5: Scenario[] = [
   },
   {
     n: 602,
-    title: 'Решение 73: Сиф → «Продолжить ветвь» — союз «Сиф» («мать детей не названа в Писании») и пустое место пунктиром; «Раскрыть детей (1)» — Енос и «Другие сыновья и дочери: имена не названы» (Быт 5:7), связь к ним пунктиром',
+    title: 'Решение 73: Сиф → «Продолжить ветвь» — союз «Сиф и его жена» («имя жены в Писании не названо») и пустое место «Жена Сифа (мать Еноса)» пунктиром (решение 75); «Раскрыть детей (1)» — Енос и «Другие сыновья и дочери: имена не названы» (Быт 5:7), связь к ним пунктиром',
     run: async (p) => {
       await openTree(p, ADAM);
       await card(p, 'u:adam+eva').getByRole('button', { name: /Раскрыть детей/ }).click();
@@ -115,12 +115,12 @@ export const tree5: Scenario[] = [
       await card(p, 'p:sif').getByRole('button', { name: 'Продолжить ветвь' }).click();
       await p.waitForTimeout(500);
       const u = await text(p, 'u:sif+');
-      if (!/Сиф/.test(u) || !/мать детей не названа в Писании/.test(u)) return fail(`союз Сифа: ${u}`);
+      if (!/Сиф и его жена/.test(u) || !/имя жены в Писании не названо/.test(u)) return fail(`союз Сифа: ${u}`);
       const empty = p.locator('.tree .tc-unnamed[data-key="u:sif+#b"]');
       if (!(await empty.count())) return fail('нет пустого места');
       const et = flat(await empty.innerText());
       const dashed = await empty.evaluate((e) => getComputedStyle(e).borderTopStyle);
-      if (!/Мать .*не названа в Писании/.test(et) || dashed !== 'dashed') return fail(`пустое место: ${et}, рамка ${dashed}`);
+      if (!/Жена Сифа.*мать Еноса.*имя в Писании не названо/.test(et) || dashed !== 'dashed') return fail(`пустое место: ${et}, рамка ${dashed}`);
       await card(p, 'u:sif+').getByRole('button', { name: /Раскрыть детей \(1\)/ }).click();
       await p.waitForTimeout(900);
       if (!(await card(p, 'p:enos').count())) return fail('нет Еноса');

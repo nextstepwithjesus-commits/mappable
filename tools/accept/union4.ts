@@ -85,7 +85,7 @@ export const union4: Scenario[] = [
   },
   {
     n: 522,
-    title: 'Решение 67: союз Сифа — мать Еноса не названа: заголовок «Сиф», строкой ниже «Мать детей в Писании не названа»; ничего не выдумано',
+    title: 'Решение 67: союз Сифа — мать Еноса не названа: заголовок «Сиф и его жена», строкой ниже «Имя жены в Писании не названо» (решение 75); ничего не выдумано',
     run: async (p) => {
       await open(p, '#/sif');
       const link = p.locator('.folio #sec-10 [data-union="u:sif+"]');
@@ -94,9 +94,9 @@ export const union4: Scenario[] = [
       await p.waitForTimeout(400);
       const t = await title(p);
       const dis = flat(await p.locator('.folio .mast .dis').innerText());
-      if (t !== 'Сиф' || dis !== 'Мать детей в Писании не названа') return fail(`«${t}» / «${dis}»`);
+      if (t !== 'Сиф и его жена' || dis !== 'Имя жены в Писании не названо') return fail(`«${t}» / «${dis}»`);
       const body = await p.locator('.folio').innerText();
-      if (/Сиф и |реконструкц|образ матери/i.test(body)) return fail('в карточке союза есть выдуманное место');
+      if (/Сиф и мать|реконструкц|образ матери/i.test(body)) return fail('в карточке союза есть выдуманное место');
       if (!/Енос/.test(body)) return fail('нет Еноса среди детей');
       return pass(`${t} — ${dis}`);
     },

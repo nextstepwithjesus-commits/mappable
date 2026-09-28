@@ -96,8 +96,8 @@ describe('текст картуша (решения 67, 70)', () => {
     expect(plates.plateSub(U('u:david+melkhola'))).toBe('жена; детей не названо');
   });
   it('второе лицо не названо — так и сказано; ничего не выдумано', () => {
-    expect(plates.plateNames(U('u:sif+'))).toBe('Сиф: мать сына не названа');
-    expect(plates.plateNames(U('u:noy+'))).toBe('Ной: мать сыновей не названа');
+    expect(plates.plateNames(U('u:sif+'))).toBe('Сиф и его жена');
+    expect(plates.plateNames(U('u:noy+'))).toBe('Ной и его жена');
   });
   it('происхождение иного рода — словами данных, уровень достоверности — пометой', () => {
     expect(plates.plateSub(U('u:iosif-muzh-marii+mariya'))).toBe('жена; по закону; сын');

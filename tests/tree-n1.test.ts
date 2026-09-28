@@ -109,12 +109,14 @@ describe('«Другие сыновья и дочери» (Быт 5:4)', () => {
 describe('строки карточек', () => {
   it('союз: вид связи словами данных; неназванная мать; законный отец', () => {
     expect(unionKindLine(U.byId.get('u:adam+eva')!)).toBe('Ева — жена Адама');
-    expect(unionKindLine(U.byId.get('u:sif+')!)).toBe('мать детей не названа в Писании');
+    expect(unionKindLine(U.byId.get('u:sif+')!)).toBe('имя жены в Писании не названо');
     expect(unionKindLine(U.byId.get('u:iosif-muzh-marii+mariya')!)).toBe('Иосиф — законный отец');
     expect(unionKindLine(U.byId.get('u:avraam+khettura')!)).toBe('Хеттура — наложница Авраама');
   });
-  it('пустое место: «Мать … не названа в Писании»', () => {
-    expect(unnamedText(U.byId.get('u:sif+')!, 'b')).toMatch(/^Мать .*не названа в Писании$/);
+  it('пустое место (решение 75): «Жена Сифа (мать Еноса)», имя не названо; детей несколько — «мать … и других детей»', () => {
+    expect(unnamedText(U.byId.get('u:sif+')!, 'b')).toBe('Жена Сифа (мать Еноса), имя в Писании не названо');
+    const many = [...U.byId.values()].find((x) => x.a && !x.b && !x.claim && x.kids.length > 2);
+    if (many) expect(unnamedText(many, 'b')).toMatch(/^Жена .+ \(мать .+ и других детей\), имя в Писании не названо$/);
   });
   it('команда детей союза: «Раскрыть детей (3)», «Раскрыть ещё (2)» (остальных детей), «Свернуть детей»; без детей — нет', () => {
     const u = U.byId.get('u:adam+eva')!;
