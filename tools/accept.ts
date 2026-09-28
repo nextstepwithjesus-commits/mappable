@@ -3,7 +3,7 @@
  * со снимком каждого сценария в docs/screens/accept-NN.png.
  * Каждый сценарий печатает «да» или «НЕТ» с причиной; код выхода 1, если хоть один не прошёл.
  *   npm run -s accept                — все сценарии (нужна сборка: npx vite build)
- *   npm run -s accept -- 5           — только пятый
+ *   npm run -s accept -- 5           — только пятый; можно несколько и диапазоны: 5 130-149 220
  *   npx tsx tools/accept.ts --dist .ui-build/shell --port 4334 [--out <каталог снимков>] [N]
  *                                    — своя сборка и свой порт (параллельные агенты); снимки тогда
  *                                      по умолчанию в .ui-shots/accept/<имя сборки>, чтобы не затирать docs/screens
@@ -25,7 +25,11 @@ const opt = (name: string) => {
 const DIST = opt('dist');
 const PORT = Number(opt('port') ?? 4184);
 const OUT = resolve(ROOT, opt('out') ?? (DIST ? join('.ui-shots/accept', basename(DIST)) : 'docs/screens'));
-const only = argv[0] ? Number(argv[0]) : null;
+/** Выбранные номера: «5», «130-149», «5,7» — через пробел или запятую; пусто — все. */
+const only: Set<number> | null = argv.length ? new Set(argv.flatMap((a) => a.split(',')).filter(Boolean).flatMap((a) => {
+  const [lo, hi] = a.split('-').map(Number);
+  return hi === undefined ? [lo] : Array.from({ length: Math.max(0, hi - lo + 1) }, (_, i) => lo + i);
+})) : null;
 
 import { pass, fail, find, hashId, folioText, secText, type Check, type Scenario } from './accept/kit.ts';
 import { layout } from './accept/layout.ts';
@@ -626,7 +630,7 @@ async function main() {
   let failed = 0;
   try {
     for (const s of SCENARIOS) {
-      if (only && s.n !== only) continue;
+      if (only && !only.has(s.n)) continue;
       const v = s.view ?? { width: 1440, height: 900 };
       const ctx = await browser.newContext({ viewport: { width: v.width, height: v.height }, colorScheme: 'dark', isMobile: !!v.touch, hasTouch: !!v.touch, deviceScaleFactor: v.touch ? 2 : 1 });
       const page = await ctx.newPage();
