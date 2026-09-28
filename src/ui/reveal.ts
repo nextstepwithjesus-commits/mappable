@@ -257,3 +257,17 @@ export function hasHidden(id: string): boolean {
   for (const u of [...unionsOf(id), ...originOf(id)]) if (membersOf(u).some((m) => !set.has(m))) return true;
   return false;
 }
+
+// ---------- выбранный союз (решение 71) ----------
+
+/** Союз, чья карточка открыта в листе карточки; выбор лица её закрывает. */
+export const selectedUnion = signal<string | null>(null);
+/** Открыть карточку союза (null — закрыть). */
+export function selectUnion(uid: string | null) {
+  selectedUnion.value = uid && unions.byId.has(uid) ? uid : null;
+}
+if (hasWindow)
+  effect(() => {
+    void selected.value;
+    selectedUnion.value = null;
+  });
