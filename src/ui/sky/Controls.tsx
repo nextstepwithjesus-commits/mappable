@@ -3,19 +3,20 @@
  * лист «Вид» над блоком или у колонки. Лист «Вид» — всплывающий на обеих ширинах (IX-80): открыт, пока viewOpen; в адрес
  * и историю не пишется; закрывают его «Вид», Escape, «×» у колонки и нажатие мимо.
  */
-import { modelInfo } from '../../data/atlas.ts';
+import { byId, modelInfo } from '../../data/atlas.ts';
 import { lambda, modelId, onlyLines, panel, epochMode } from '../../state.ts';
-import { typo } from '../text/typo.ts';
+import { num, typo } from '../text/typo.ts';
 import { Menu } from '../controls.tsx';
 import { Sheet } from '../panels/Sheet.tsx';
 import { LANES_STEP, TIME_STEP, resetProportions, showAll, stretchBy, zoomBy } from './view.ts';
-import { SKY_MODES, foldDesc, foldGroups, skyMode, unfoldAll } from '../work.ts';
+import { SKY_MODES, foldDesc, foldGroups, skyMode, unfoldAll, workSet } from '../work.ts';
+import { KEY_IDS, STARTS, start, startWith, type Start } from '../reveal.ts';
 import { lanesText } from './Overlays.tsx';
-import { skyRef, viewTick } from '../common.tsx';
-import { canFill, skyFull, toggleFull } from '../layout.ts';
+import { plural, skyRef, viewTick } from '../common.tsx';
+import { canFill, grid, skyFull, toggleFull } from '../layout.ts';
 import type { Axis } from '../../render/camera.ts';
 import { signal } from '@preact/signals';
-import { useEffect, useRef } from 'preact/hooks';
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { isTextField } from '../keys.ts';
 
 // ---------- масштаб по осям (J1) и «Небо во весь экран» (J2) ----------
@@ -118,6 +119,125 @@ export function SkyModeSwitch() {
         </button>
       ))}
     </div>
+  );
+}
+
+// ---------- начало (решение 68): пять начал и «Начать заново» ----------
+
+/**
+ * Короткое пояснение начала — строкой под названием во вступлении и в панели «В работе»; полное (STARTS[].hint) — в
+ * подсказке кнопки и для диктора.
+ */
+export function startNote(s: Start): string {
+  const n = byId.size;
+  return {
+    adam: 'только Адам; союзы и дети — по щелчку',
+    jesus: 'от Иисуса Христа вверх, к предкам',
+    lines: 'обе линии, по Матфею и по Луке',
+    key: `главные лица Писания, ${num(KEY_IDS.length)} ${plural(KEY_IDS.length, 'лицо', 'лица', 'лиц')}`,
+    all: `все ${num(n)} ${plural(n, 'лицо', 'лица', 'лиц')} сразу`,
+  }[s];
+}
+
+/** Нужно ли подтверждение (решение 68): начало, кроме «всего неба», заменяет набор, а в наборе больше одного лица. */
+export const needsConfirm = (s: Start, n: number) => s !== 'all' && n > 1;
+/** Вопрос подтверждения: «Набор из 12 лиц будет заменён», «Набор из 21 лица будет заменён». */
+export const replaceText = (n: number) => `Набор из ${num(n)} ${plural(n, 'лица', 'лиц', 'лиц')} будет заменён`;
+
+/** Лист «Вид» открыт командой «Начать заново…»: фокус — на разделе «Начало» (StartList листа). */
+export const startsFocus = signal(false);
+
+/**
+ * «Начать заново…» (решение 68): лист «Вид» на разделе «Начало» — тот же выбор из пяти начал. Команда верхней строки
+ * («Ещё», «Разделы» телефона), строки режима «набор» у кромки неба и укороченного вступления. На телефоне открытая панель
+ * уступает место листу.
+ */
+export function openStarts() {
+  if (grid.peek().phone && panel.peek()) panel.value = null;
+  startsFocus.value = true;
+  viewOpen.value = true;
+}
+
+/**
+ * Пять начал (решение 68): по кнопке на начало, текущее отмечено (aria-current). Начало, которое заменяет набор больше
+ * чем из одного лица, сначала спрашивает: «Набор из N лиц будет заменён — начать заново | отмена». notes — короткое
+ * пояснение строкой под названием (вступление, «В работе»); без него пояснение — в подсказке. onDone — после выбора
+ * (свернуть вступление, закрыть лист «Вид»). focus — фокус на текущее начало (или первое) при появлении.
+ */
+export function StartList({ notes = false, label = 'Начало', onDone, focus = false }: { notes?: boolean; label?: string; onDone?: (s: Start) => void; focus?: boolean }) {
+  const [ask, setAsk] = useState<Start | null>(null);
+  const id = useId();
+  const list = useRef<HTMLUListElement>(null);
+  const yes = useRef<HTMLButtonElement>(null);
+  // после «отмены» фокус возвращается на начало, о котором спрашивали
+  const back = useRef<Start | null>(null);
+  const n = workSet.value.size;
+  const cur = start.value;
+  useLayoutEffect(() => {
+    if (ask) yes.current?.focus({ preventScroll: true });
+    else if (back.current) {
+      list.current?.querySelector<HTMLElement>(`button[data-start="${back.current}"]`)?.focus({ preventScroll: true });
+      back.current = null;
+    }
+  }, [ask]);
+  useEffect(() => {
+    if (!focus || !list.current) return;
+    // весь список — в видимую часть листа (на телефоне лист «Вид» прокручивается), фокус — на текущее начало
+    list.current.scrollIntoView({ block: 'nearest' });
+    const b = list.current.querySelector<HTMLElement>('button[aria-current="true"]') ?? list.current.querySelector<HTMLElement>('button');
+    b?.focus({ preventScroll: true });
+  }, [focus]);
+  const go = (s: Start) => {
+    // список остаётся (панель «В работе») — фокус на выбранном начале, а не на исчезнувшей кнопке вопроса
+    back.current = s;
+    setAsk(null);
+    // набор начала (src/ui/reveal.ts); камеру на новый набор ставит само небо (SkyView)
+    startWith(s);
+    onDone?.(s);
+  };
+  if (ask)
+    return (
+      <div class="starts-ask" role="group" aria-labelledby={id}>
+        <span class="q" id={id}>
+          {typo(replaceText(n))}
+        </span>
+        <span class="dash" aria-hidden="true">
+          —
+        </span>
+        <button type="button" class="cmd" ref={yes} onClick={() => go(ask)}>
+          начать заново
+        </button>
+        <button
+          type="button"
+          class="cmd"
+          onClick={() => {
+            back.current = ask;
+            setAsk(null);
+          }}
+        >
+          отмена
+        </button>
+      </div>
+    );
+  return (
+    <ul class={notes ? 'starts notes' : 'starts'} ref={list} aria-label={label}>
+      {STARTS.map((o) => (
+        <li key={o.value}>
+          <button
+            type="button"
+            data-start={o.value}
+            aria-current={o.value === cur ? 'true' : undefined}
+            aria-label={o.label}
+            aria-description={typo(o.hint)}
+            title={typo(o.hint)}
+            onClick={() => (needsConfirm(o.value, n) ? setAsk(o.value) : go(o.value))}
+          >
+            <span class="nm">{o.label}</span>
+            {notes && <span class="note">{typo(startNote(o.value))}</span>}
+          </button>
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -266,7 +386,7 @@ function ViewPop({ toggle }: { toggle: { current: HTMLButtonElement | null } }) 
     () => toggle.current,
   );
   return (
-    <div class="viewpop" id="sky-viewpop" ref={ref} role="group" aria-label="Вид неба: масштаб времени, пропорции, хронология" data-reserve="view">
+    <div class="viewpop" id="sky-viewpop" ref={ref} role="group" aria-label="Вид неба: масштаб времени, пропорции, хронология, начало" data-reserve="view">
       <span class="lbl scale-lbl" aria-hidden="true">
         Масштаб времени
       </span>
@@ -304,11 +424,35 @@ function ViewPop({ toggle }: { toggle: { current: HTMLButtonElement | null } }) 
           Эпохи
         </button>
       </div>
+      {/* начало (решение 68): те же пять начал, что во вступлении; «Начать заново…» открывает лист на этом разделе */}
+      <span class="lbl start-lbl" aria-hidden="true">
+        Начало
+      </span>
+      <div class="start-box">
+        <StartsHere />
+      </div>
       <div class="full-row">
         <FullCommand label="небо во весь экран" />
       </div>
     </div>
   );
+}
+
+/**
+ * Раздел «Начало» листа «Вид»: пять начал; выбор закрывает лист, фокус — на «Вид», как после Escape. Лист открыт
+ * командой «Начать заново…» (startsFocus) — фокус на текущем начале.
+ */
+function StartsHere() {
+  const f = startsFocus.value;
+  useEffect(() => {
+    if (f) startsFocus.value = false;
+  }, [f]);
+  const done = () => {
+    const had = !!document.activeElement?.closest('.viewpop, .sheet');
+    viewOpen.value = false;
+    if (had) document.querySelector<HTMLElement>('.sky .skyctl .view-toggle, .sky .skyctl.column button[aria-expanded]')?.focus({ preventScroll: true });
+  };
+  return <StartList focus={f} onDone={done} />;
 }
 
 /**
@@ -347,7 +491,7 @@ export function SkyControls() {
         ref={toggle}
         aria-expanded={open}
         aria-controls={open ? 'sky-viewpop' : undefined}
-        title="Масштаб времени, пропорции, хронология"
+        title="Масштаб времени, пропорции, хронология, начало"
         onClick={() => (viewOpen.value = !open)}
       >
         Вид
@@ -380,7 +524,7 @@ export function SkyColumn() {
         <button type="button" class="all" title="Всё небо (0, Home)" aria-keyshortcuts="0 Home" onClick={showAll}>
           Всё небо
         </button>
-        <button type="button" ref={toggle} aria-expanded={open} title="Масштаб времени, пропорции, хронология" onClick={() => (viewOpen.value = !open)}>
+        <button type="button" ref={toggle} aria-expanded={open} title="Масштаб времени, пропорции, хронология, начало" onClick={() => (viewOpen.value = !open)}>
           Вид
         </button>
       </div>
@@ -459,6 +603,9 @@ export function ViewSheet({ col, toggle }: { col?: { current: HTMLDivElement | n
           <SkyModeSwitch />
           {anyFolded() && <UnfoldAll />}
         </div>
+        {/* начало (решение 68) — последним разделом: прежние строки листа остаются на своих местах */}
+        <h3>Начало</h3>
+        <StartsHere />
       </div>
     </Sheet>
   );

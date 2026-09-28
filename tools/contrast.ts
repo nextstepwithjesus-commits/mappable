@@ -8,6 +8,7 @@ import { join } from 'node:path';
 import { ROOT } from './bible.ts';
 import { contrast as ratio, linearRgb, CONTRAST_USES } from '../src/ui/contrast.ts';
 import { over, likelyAlpha, CONSTELLATION_DIM, DIM, DIM_LABEL_CONTRAST, CLOUD_DIMMED, dimLabelAlpha, labelGrounds, separateRibbons, RIBBON_LIGHTNESS } from '../src/render/dim.ts';
+import { BRANCH_COLORS, BRANCH_CONTRAST, BRANCH_DE, BRANCH_FAR_CONTRAST, BRANCH_NAMES, branchColor, branchFade, branchFloor, type MapTheme } from '../src/render/branches.ts';
 
 const css = readFileSync(join(ROOT, 'src/styles/tokens.css'), 'utf8');
 const block = (sel: string) => {
@@ -80,6 +81,28 @@ for (const [t, c] of Object.entries(themes)) {
   for (const [k, m] of [['обычное зрение', undefined], ...Object.entries(CVD)] as [string, number[][] | undefined][]) {
     const d = Math.min(dE(simulate(c['--gold-1'], m), simulate(c['--azure-1'], m)), dE(simulate(c['--gold-2'], m), simulate(c['--azure-2'], m)));
     check(`ленты различимы (${k}), ΔE`, d, 20);
+  }
+  // цвета ветвей выбранного лица (решение 69; src/render/branches.ts): графика ≥ 3 : 1 к небу и полосе эпохи, дальние
+  // поколения — не бледнее BRANCH_FAR_CONTRAST; не похожи на ленты (токены и цвета холста), на --ink и друг на друга —
+  // при обычном зрении, дейтеранопии и протанопии
+  const theme = t as MapTheme;
+  const branches = BRANCH_COLORS[theme];
+  const grounds = [c['--sky'], c['--sky-band']];
+  for (const [i, b] of branches.entries()) {
+    for (const g of grounds) check(`ветвь ${BRANCH_NAMES[i]} ${b} на ${g}`, ratio(b, g), BRANCH_CONTRAST);
+    const far = branchFade(99, branchFloor(b, grounds));
+    for (const g of grounds) check(`ветвь ${BRANCH_NAMES[i]} в дальнем поколении (альфа ${far.toFixed(2)}) на ${g}`, ratio(over(b, g, far), g), BRANCH_FAR_CONTRAST);
+  }
+  for (let i = 6; i < 12; i++) for (const g of grounds) check(`ветвь ${i + 1} (оттенок второго круга) ${branchColor(i, theme)} на ${g}`, ratio(branchColor(i, theme), g), BRANCH_CONTRAST);
+  const others = [...new Set([c['--gold-1'], c['--gold-2'], c['--azure-1'], c['--azure-2'], ...lanes, c['--ink']])];
+  for (const [k, m] of [['обычное зрение', undefined], ['deutan', CVD.deutan], ['protan', CVD.protan]] as [string, number[][] | undefined][]) {
+    const min = m ? BRANCH_DE.cvd : BRANCH_DE.normal;
+    let pair = Infinity;
+    for (let i = 0; i < branches.length; i++) for (let j = i + 1; j < branches.length; j++) pair = Math.min(pair, dE(simulate(branches[i], m), simulate(branches[j], m)));
+    check(`ветви различимы между собой (${k}), ΔE`, pair, min);
+    let rib = Infinity;
+    for (const b of branches) for (const o of others) rib = Math.min(rib, dE(simulate(b, m), simulate(o, m)));
+    check(`ветви не похожи на ленты и --ink (${k}), ΔE`, rib, min);
   }
 }
 console.log(fail ? `\nНе прошло проверок: ${fail}` : '\nВсе проверки пройдены.');

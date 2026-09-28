@@ -4,6 +4,7 @@
  * Всё видимое на небе объяснено строкой с образцом, и образец нарисован той же функцией, что небо:
  *  — знаки, следы, отводы, скобы, браки, выделение рода и ленты — отдельными образцами: drawGlyph, drawLifeTrail,
  *    drawDescent, drawBracket, drawMarriage, buildRibbons и drawStrands (PAINTERS; их же берёт образец #/specimen);
+ *    подсветка ветвей выбранного лица — образцом неба drawBranchSample (src/render/branches.ts);
  *  — рамка, облака, созвездия, скопления, кольца, указатели у края, путь родства, выноски линий и меридиан — вырезкой
  *    из настоящего неба: Sky.draw рисует кадр на невидимом холсте, в панель переносится его часть (CROPS);
  *  — полоса времени — часть её собственного холста; рейка и пометы — те же подписи, что в карточке (RailKey,
@@ -23,6 +24,9 @@ import { alpha } from '../../render/color.ts';
 import { mapFont, T_MAP_S } from '../../render/type.ts';
 import { drawBirthBand, drawGlyph, roleSigla, starRadius, type GlyphOpts } from '../../render/glyphs.ts';
 import { drawWorkMark, highlightFor, SIB } from '../../render/marks.ts';
+import { drawBranchSample } from '../../render/branches.ts';
+import { drawPlateSample, plateNames, plateSize, plateSub } from '../../render/plates.ts';
+import { unionsOf } from '../reveal.ts';
 import { drawStrands, lineNoteHits, ribbonLook } from '../../render/ribbons.ts';
 import { drawFoldMark } from '../../render/labels.ts';
 import { eventMarks } from '../../render/frame.ts';
@@ -283,6 +287,24 @@ export const PAINTERS = {
       const p = project(id);
       drawGlyph(ctx, p.x, p.y, star(pal, { magnitude: id === 'z' ? 0 : 3, messiah: id === 'z' }));
     }
+  },
+  /** подсветка ветвей выбранного лица (решение 69): предок, выбранное лицо, три ветви своих цветов, внук бледнее */
+  branches: drawBranchSample,
+  /**
+   * картуши союзов (решения 67, 70): союзы Авраама из данных — с Агарью свёрнут («+»), с Саррой раскрыт («−»); надписи —
+   * те же функции, что на небе (plateNames, plateSub). Не помещаются в строку — второй под первым
+   */
+  plates: (ctx, pal, w) => {
+    const us = unionsOf('avraam');
+    const hagar = us.find((u) => u.b === 'agar');
+    const sarah = us.find((u) => u.b === 'sarra');
+    if (!hagar || !sarah) return;
+    const a = { names: plateNames(hagar), sub: plateSub(hagar) };
+    const b = { names: plateNames(sarah), sub: plateSub(sarah) };
+    const r = drawPlateSample(ctx, pal, false, 8, 8, a.names, a.sub);
+    const wb = plateSize(ctx, false, b).w;
+    const side = r.x + r.w + 16 + wb <= w - 8;
+    drawPlateSample(ctx, pal, false, side ? r.x + r.w + 16 : 8, side ? 8 : r.y + r.h + 8, b.names, b.sub, true);
   },
 } satisfies Record<string, Painter>;
 
@@ -813,6 +835,27 @@ export function LegendPanel() {
             в подсказке звезды, в поиске и в «Родстве»; список — в панели «В работе».
           </span>
         </li>
+        {/* раскрытие родословия (решения 67, 68, 70, 72): картуш союза — образцом неба drawPlateSample (src/render/plates.ts) */}
+        <Wide s={<Paint draw={PAINTERS.plates} h={56} />}>
+          Союз на небе — брак или связь, от которой пошли дети: жена, наложница, служанка, данная в жену. В небе «набор»
+          его картуш стоит между супругами и их детьми: имена супругов, вид связи словами Писания и дети; если Писание не
+          называет жену или мать, её место так и помечено. Знак «+» в картуше — союз свёрнут, «−» — раскрыт. Щелчок по лицу
+          показывает картуши его союзов: вниз — его браки, вверх — союз родителей. Щелчок по картушу раскрывает обоих
+          супругов и всех детей и открывает карточку союза, повторный — сворачивает всё, что раскрыто через него.
+        </Wide>
+        <li class="legend-row legend-wide">
+          <span class="legend-text">
+            Плюс без числа после имени — у лица есть нераскрытые союзы: щелчок по нему покажет их картуши. Плюс с числом
+            после имени — другое: потомки лица скрыты на небе (см. выше).
+          </span>
+        </li>
+        <li class="legend-row legend-wide">
+          <span class="legend-text">
+            Раскрытые лица — это рабочий набор. Начало — «С Адама», «С Иисуса Христа», «Родословие Иисуса Христа», «Ключевые
+            лица» или «Всё небо» — выбирается при первом посещении; «Начать заново» — в листе «Вид», в панели «В работе»
+            и в меню «Ещё». Строка у кромки неба говорит, сколько лиц раскрыто, и ведёт ко всему небу.
+          </span>
+        </li>
       </ul>
 
       <h3 id="legend-signs">Знаки</h3>
@@ -904,6 +947,13 @@ export function LegendPanel() {
         <Wide s={<Paint draw={PAINTERS.family} h={64} />}>
           Выбрано лицо — светится его род: предки — сплошной связью, потомки — штрихом, братья и сёстры — тоньше и бледнее;
           дальше третьего поколения — чуть бледнее; остальное небо гаснет.
+        </Wide>
+        {/* подсветка ветвей (решение 69): образец — функцией неба drawBranchSample (src/render/branches.ts) */}
+        <Wide s={<Paint draw={PAINTERS.branches} h={64} />}>
+          Подсветка ветвей выбранного лица: его потомки окрашены по ветвям. Если у лица два союза с детьми и больше — у
+          каждого союза свой цвет (у Авраама — Сарра, Агарь, Хеттура); если союз один — свой цвет у ветви каждого ребёнка
+          (у Ноя — Сим, Хам, Иафет). Цвет со свечением тянется по всей ветви и бледнеет с каждым поколением; черта под
+          именем — начало ветви; предки выбранного — мягкое белое свечение. Цвета ветвей не похожи на золото и лазурь лент.
         </Wide>
         <Wide s={C('path', 120)}>
           Путь родства — ломаная линия со словами шагов («мать», «сын»): кровное родство сплошной линией, по закону и брак —

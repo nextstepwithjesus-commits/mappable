@@ -13,6 +13,14 @@ import { declinableForm, nameCase, realmInstrumental, yearsGen } from '../text/r
 import { typo } from '../text/typo.ts';
 import { formatYear, formatSpan, yearsWord, shownYears, shownBirthRange, toAstro, type LifeDates } from '../../engine/years.ts';
 
+/** Названия моделей хронологии в колофонах карточки лица и карточки союза. */
+export const MODEL_NAMES: Record<string, string> = {
+  'mt-long': 'масоретские числа, 430 лет в Египте',
+  'mt-short': 'краткое пребывание, 215 лет',
+  lxx: 'числа в скобках Быт 5 и 11',
+  terah70: 'Фарре 70 лет',
+};
+
 /** Перекрёстная ссылка «см. § 8» — команда: переходит к разделу (CARD-31). */
 export function SeeSec({ n }: { n: number }) {
   return (

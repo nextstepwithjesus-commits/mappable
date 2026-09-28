@@ -250,7 +250,9 @@ export function workOrder(birth: (id: string) => number | null): string[] {
 
 export type SkyMode = 'all' | 'work';
 /** Что показывает небо: все лица или только рабочий набор. Помнится в сеансе и пишется в адрес (k1; решение 34). */
-export const skyMode = signal<SkyMode>(read<SkyMode>('session', 'skymode', 'all') === 'work' ? 'work' : 'all');
+/** Режим неба, сохранённый в этом сеансе, до первой записи; null — новый сеанс (src/ui/reveal.ts: «как в прошлый раз»). */
+export const skyModeSaved = ((m) => (m === 'work' || m === 'all' ? m : null))(read<SkyMode | null>('session', 'skymode', null));
+export const skyMode = signal<SkyMode>(skyModeSaved === 'work' ? 'work' : 'all');
 if (hasWindow) effect(() => write('session', 'skymode', skyMode.value));
 // набор из ссылки — просмотр в режиме «набор»: вернулись ко всем лицам — просмотр кончился (IX-69). Строка UX-79 —
 // до перехода в «набор» или первого лица, взятого в работу

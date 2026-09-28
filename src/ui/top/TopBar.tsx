@@ -7,6 +7,11 @@ import { Search } from './Search.tsx';
 import { workSet } from '../work.ts';
 import { plural } from '../common.tsx';
 import { WORK_LEAD } from '../panels/Work.tsx';
+import { openStarts } from '../sky/Controls.tsx';
+
+/** Команда выбора начала (решение 68): в «Ещё» и в «Разделах» телефона, последней; открывает лист «Вид» на «Начале». */
+export const RESTART_LABEL = 'Начать заново…';
+export const RESTART_HINT = 'Выбрать начало: с Адама, с Иисуса Христа, родословие Иисуса Христа, ключевые лица или всё небо';
 
 /** Надпись команды рабочего набора (UX-48; решение 26): «В работе: 46», пустой набор — «В работе». */
 export const workLabel = (n: number) => (n ? `В работе: ${n}` : 'В работе');
@@ -67,15 +72,16 @@ const THEMES = [
 ] as const;
 
 /**
- * Какие команды не помещаются в ряд шириной avail (C3; VIS-20, IX-46, MOB-04): ряд — видимые панели, «Ещё» (если что-то
- * ушло в него), черта и видимая справка; gap — промежуток между соседями ряда. Ширины команд — по образцам (probe).
+ * Какие команды не помещаются в ряд шириной avail (C3; VIS-20, IX-46, MOB-04): ряд — видимые панели, «Ещё», черта
+ * и видимая справка; gap — промежуток между соседями ряда. Ширины команд — по образцам (probe). «Ещё» в ряду всегда:
+ * в нём последней стоит «Начать заново…» (решение 68), остальное — ушедшие команды.
  */
 export function overflowCommands(avail: number, width: (id: string) => number, gap: number, sep: number, more: number): Set<string> {
   const hidden = new Set<string>();
   const need = () => {
     const shown = [...PANELS, ...HELP].filter((c) => !hidden.has(c.id));
-    const n = shown.length + 1 + (hidden.size ? 1 : 0);
-    return shown.reduce((a, c) => a + width(c.id), 0) + sep + (hidden.size ? more : 0) + gap * (n - 1);
+    const n = shown.length + 2;
+    return shown.reduce((a, c) => a + width(c.id), 0) + sep + more + gap * (n - 1);
   };
   for (const id of COLLAPSE) {
     if (need() <= avail) break;
@@ -90,7 +96,7 @@ const togglePanel = (id: Exclude<Panel, null>) => (panel.value = panel.value ===
  * Пункты меню «Разделы» телефона (H4; MOB-03, MOB-04): все панели, справка и тема — строками 48 px.
  * Тема — флажок «Дневная карта»: на телефоне в строке нет места для переключателя «Ночь | День».
  */
-export function phoneMenuItems(open: Panel, day: boolean, select: (id: Exclude<Panel, null>) => void, toggleTheme: () => void, workN = 0) {
+export function phoneMenuItems(open: Panel, day: boolean, select: (id: Exclude<Panel, null>) => void, toggleTheme: () => void, workN = 0, restart: () => void = openStarts) {
   return [
     ...[...PANELS, ...HELP].map((c) => ({
       key: c.id,
@@ -99,6 +105,8 @@ export function phoneMenuItems(open: Panel, day: boolean, select: (id: Exclude<P
       sep: c.id === HELP[0].id,
       onSelect: () => select(c.id),
     })),
+    // выбор начала (решение 68) — после справки, отдельной группой; не флажок: пункт открывает лист «Вид»
+    { key: 'restart', label: RESTART_LABEL, checked: undefined, sep: true, onSelect: restart },
     { key: 'theme', label: 'Дневная карта', checked: day, sep: true, onSelect: toggleTheme },
   ];
 }
@@ -177,16 +185,22 @@ export function TopBar() {
       {label(c)}
     </button>
   );
-  const moreItems = [...PANELS, ...HELP]
-    .filter((c) => hidden.has(c.id))
-    .map((c, i, all) => ({
-      key: c.id,
-      label: label(c),
-      checked: panel.value === c.id,
-      // справка отделена от панелей чертой, как в самой строке
-      sep: i > 0 && HELP.some((h) => h.id === c.id) && !HELP.some((h) => h.id === all[i - 1].id),
-      onSelect: () => togglePanel(c.id),
-    }));
+  const moreItems = [
+    ...[...PANELS, ...HELP]
+      .filter((c) => hidden.has(c.id))
+      .map((c, i, all) => ({
+        key: c.id as string,
+        label: label(c),
+        checked: (panel.value === c.id) as boolean | undefined,
+        // справка отделена от панелей чертой, как в самой строке
+        sep: i > 0 && HELP.some((h) => h.id === c.id) && !HELP.some((h) => h.id === all[i - 1].id),
+        onSelect: (): void => {
+          togglePanel(c.id);
+        },
+      })),
+  ];
+  // выбор начала (решение 68) — последним пунктом «Ещё», после черты; не флажок: пункт открывает лист «Вид»
+  moreItems.push({ key: 'restart', label: RESTART_LABEL, checked: undefined, sep: moreItems.length > 0, onSelect: openStarts });
   return (
     <header class="top">
       <button class="wordmark" title="Всё небо (0, Home)" aria-keyshortcuts="0 Home" onClick={showAll}>
@@ -195,7 +209,7 @@ export function TopBar() {
       <Search />
       <nav class="commands" ref={nav} aria-label="Панели атласа">
         {PANELS.filter((c) => !hidden.has(c.id)).map(button)}
-        {moreItems.length > 0 && <Menu class="more" label="Ещё" title="Другие панели и справка" items={moreItems} />}
+        <Menu class="more" label="Ещё" title={moreItems.length > 1 ? 'Другие панели и справка; начать заново' : RESTART_HINT} items={moreItems} />
         <span class="sep" aria-hidden="true" />
         {HELP.filter((c) => !hidden.has(c.id)).map(button)}
       </nav>

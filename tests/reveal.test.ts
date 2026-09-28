@@ -86,3 +86,14 @@ describe('раскрытие (решения 68, 70)', () => {
     expect(skyMode.value).toBe('all');
   });
 });
+
+describe('ветви: при равенстве — путь по отцу', () => {
+  it('Давид: Авия — в ветви Вирсавии (через Соломона и Ровоама), а не Маахи (через Авессалома)', () => {
+    const U = buildUnions(graph);
+    const b = branchesOf(U, graph, 'david');
+    const ids = [...b.desc.keys()];
+    const aviya = ids.find((x) => byId.get(x)?.name === 'Авия' && b.desc.get(x)!.gen === 3);
+    expect(aviya).toBeTruthy();
+    expect(b.desc.get(aviya!)!.branch).toBe(b.desc.get('solomon')!.branch);
+  });
+});

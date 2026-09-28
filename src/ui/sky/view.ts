@@ -780,3 +780,150 @@ export function keepInView(id: string, ms = 250) {
   flightTarget = null;
   cam.animateTo(to, ms, skyRef.redraw, reduced());
 }
+
+// ---------- раскрытие на небе «набор» (решения 68, 70) ----------
+
+/** Вписывание раскрытых лиц — за столько мс (не больше 600), прямым переходом, без «отдалить — приблизить». */
+export const REVEAL_MS = 450;
+
+/** Раскрытый или свёрнутый союз: id, лицо, от которого раскрыт, и раскрыт ли теперь. */
+export type UnionFlip = { uid: string; from: string; open: boolean };
+
+/**
+ * Какой союз раскрыли или свернули (решение 70; src/ui/reveal.ts, expanded): добавленный в раскрытые; убранный — тот,
+ * чьё лицо from осталось в наборе set (свёртка убирает и союзы, раскрытые от ушедших лиц). null — ничего или несколько сразу.
+ */
+export function unionFlip(prev: Readonly<Record<string, string>>, next: Readonly<Record<string, string>>, set: ReadonlySet<string>): UnionFlip | null {
+  const added = Object.keys(next).filter((k) => !(k in prev));
+  if (added.length) return added.length === 1 ? { uid: added[0], from: next[added[0]], open: true } : null;
+  const gone = Object.keys(prev).filter((k) => !(k in next) && set.has(prev[k]));
+  return gone.length === 1 ? { uid: gone[0], from: prev[gone[0]], open: false } : null;
+}
+
+/** Родители и дети лица по основным связям (отец, мать). */
+const upOf = (id: string) => (graph.parentsOf.get(id) ?? []).filter((e) => e.kind === 'father' || e.kind === 'mother').map((e) => e.parent);
+const downOf = (id: string) => (graph.childrenOf.get(id) ?? []).filter((e) => e.kind === 'father' || e.kind === 'mother').map((e) => e.child);
+
+/**
+ * Окно «вокруг лица» для начал «С Адама» и «С Иисуса Христа» (решение 68): по времени — от рождения деда до рождения
+ * внуков (поколение-два в обе стороны: у Адама — вперёд, у Иисуса Христа — назад) и короткая жизнь самого лица, не уже
+ * 60 лет, с полями и местом для имени справа; по вертикали лицо — в середине видимой части. Не всё небо: первый шаг
+ * раскрытия виден сразу.
+ */
+export function viewAround(id: string): ViewState | null {
+  const s = skyRef.current;
+  if (!s || !s.model) return null;
+  const n = s.node(id);
+  if (!n) return null;
+  const bornOf = (x: string) => {
+    const m = s.model.nodeByPerson.get(x);
+    return m ? (m.born ?? m.t0) : null;
+  };
+  const years: number[] = [n.t0];
+  const push = (t: number | null) => {
+    if (t !== null && Number.isFinite(t)) years.push(t);
+  };
+  for (const p of upOf(id)) {
+    push(bornOf(p));
+    for (const g of upOf(p)) push(bornOf(g));
+  }
+  for (const k of downOf(id)) {
+    push(bornOf(k));
+    for (const g of downOf(k)) push(bornOf(g));
+  }
+  if (n.t1 - n.t0 <= 100) push(n.t1);
+  const lo = Math.min(...years);
+  const hi = Math.max(...years);
+  const mid = (lo + hi) / 2;
+  const half = Math.max((hi - lo) / 2, 30);
+  const pad = half * 0.16;
+  const xa = s.xOf(mid - half - pad);
+  const xb = s.xOf(mid + half + pad);
+  if (!(xb > xa)) return null;
+  const cam = s.cam;
+  const vp = cam.vp;
+  const W = Math.max(80, vp.r - vp.l - NAME_ROOM - 16);
+  const kx = cam.clampKx(W / (xb - xa), (xa + xb) / 2);
+  const [, cy] = cam.vpCenter();
+  return cam.constrain({ x0: xa - (vp.l + 16) / kx, kx, laneTop: s.rowOf(n.lane) + cy / cam.kyFor(kx) });
+}
+
+/**
+ * Раскрытые лица вне видимой части (решение 70): окно меняется наименьшим движением — отдаляется, только если они
+ * не помещаются, и сдвигается ровно настолько, чтобы все были видны; точка keep (картуш союза, px холста) по возможности
+ * остаётся на месте экрана. null — все и так на виду.
+ */
+export function revealView(ids: readonly string[], keep: { x: number; y: number } | null): ViewState | null {
+  const s = skyRef.current;
+  if (!s || !s.model) return null;
+  const pts = ids.map((id) => ({ x: s.nodeX(id), n: s.node(id) })).filter((q): q is { x: number; n: NonNullable<typeof q.n> } => q.x !== null && !!q.n);
+  if (!pts.length || ids.every((id) => inView(id))) return null;
+  const cam = s.cam;
+  const vp = cam.vp;
+  const L = vp.l + MARGIN.l;
+  const R = vp.r - MARGIN.r;
+  const T = vp.t + MARGIN.t + 8;
+  const B = vp.b - MARGIN.b;
+  // точка, которая остаётся на месте экрана: картуш, иначе первое лицо
+  const ax = keep ? keep.x : cam.sx(pts[0].x);
+  const ay = keep ? keep.y : cam.sy(pts[0].n.lane);
+  const awx = cam.wx(ax);
+  const arow = cam.wLane(ay);
+  const xs = [awx, ...pts.map((q) => q.x)];
+  const rs = [arow, ...pts.map((q) => s.rowOf(q.n.lane))];
+  const x0 = Math.min(...xs);
+  const x1 = Math.max(...xs);
+  const r0 = Math.min(...rs);
+  const r1 = Math.max(...rs);
+  const fits = (k: number) => (x1 - x0) * k <= R - L && (r1 - r0) * cam.kyFor(k) <= B - T;
+  let kx = cam.kx;
+  if (!fits(kx)) {
+    let lo = cam.kxLo();
+    let hi = kx;
+    if (fits(lo))
+      for (let i = 0; i < 40; i++) {
+        const m = Math.sqrt(lo * hi);
+        if (fits(m)) lo = m;
+        else hi = m;
+      }
+    kx = lo;
+  }
+  const ky = cam.kyFor(kx);
+  const sx0 = ax + (x0 - awx) * kx;
+  const sx1 = ax + (x1 - awx) * kx;
+  const sy0 = ay - (r1 - arow) * ky;
+  const sy1 = ay - (r0 - arow) * ky;
+  let dx = 0;
+  let dy = 0;
+  if (sx0 < L) dx = L - sx0;
+  else if (sx1 > R) dx = R - sx1;
+  if (sy0 < T) dy = T - sy0;
+  else if (sy1 > B) dy = B - sy1;
+  return cam.constrain({ x0: awx - (ax + dx) / kx, kx, laneTop: arow + (ay + dy) / ky });
+}
+
+/** Вписать раскрытые лица (решение 70): прямой переход за REVEAL_MS, при ослабленном движении — сразу. */
+export function fitReveal(ids: readonly string[], keep: { x: number; y: number } | null): boolean {
+  const s = skyRef.current;
+  const v = revealView(ids, keep);
+  if (!s || !v || s.cam.near(v)) return false;
+  flightTarget = null;
+  s.cam.zoomTo(v, REVEAL_MS, skyRef.redraw, reduced());
+  skyRef.redraw();
+  return true;
+}
+
+/** Перейти к окну «вокруг лица» (начало «С Адама», «С Иисуса Христа»): animate — прямым переходом. */
+export function showAround(id: string, animate: boolean): boolean {
+  const s = skyRef.current;
+  const v = viewAround(id);
+  if (!s || !v) return false;
+  flightTarget = null;
+  if (animate) s.cam.zoomTo(v, REVEAL_MS, skyRef.redraw, reduced());
+  else {
+    s.cam.stop();
+    s.cam.set(v);
+  }
+  skyRef.redraw();
+  return true;
+}

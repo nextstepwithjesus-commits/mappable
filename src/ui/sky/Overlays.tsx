@@ -12,6 +12,8 @@ import { pickBarText, pinBarText } from './text.ts';
 import { introOpen, lanes, openGuide, openLegend, resetProportions } from './view.ts';
 import { addToWork, adoptLinkSet, leaveLinkSet, linkSet, skyMode, workNotice, workSet, WORK_URL_MAX } from '../work.ts';
 import { grid } from '../layout.ts';
+import { start, type Start } from '../reveal.ts';
+import { StartList, openStarts } from './Controls.tsx';
 
 /** Уже этой ширины вступительный картуш слева внизу встал бы под блок органов справа: картуш переходит в левый верхний угол. */
 export const CARTOUCHE_BESIDE = 880;
@@ -111,15 +113,40 @@ export function workLineNote(n: number): string {
 /** Число лиц со склонением: «1 лицо», «2 лица», «38 лиц». */
 const persons = (n: number) => `${num(n)} ${plural(n, 'лицо', 'лица', 'лиц')}`;
 
-/** Строка режима «набор» у верхней кромки неба: что скрыто и как вернуть всех (UX-62, MOB-54, MOB-73). */
+/** Раскрытие (решения 68, 70): начало выбрано и это не «всё небо» — набор раскрывают шаг за шагом. */
+export const revealing = (s: Start | null) => !!s && s !== 'all';
+
+/** Текст строки «набор» в раскрытии (решение 72): «Раскрыто 12 лиц», «Раскрыто 1 лицо». */
+export const revealLineText = (n: number) => `Раскрыто ${persons(n)}`;
+
+/**
+ * Строка режима «набор» у верхней кромки неба: что скрыто и как вернуть всех (UX-62, MOB-54, MOB-73). В раскрытии
+ * (решение 72) — «Раскрыто 12 лиц — показать всё небо | начать заново»; «начать заново» открывает выбор начала (лист
+ * «Вид», раздел «Начало»). На телефоне — одна строка: «Раскрыто 12 лиц — все лица | начать заново»; уже 360 px строке
+ * хватает места только на одну команду — «начать заново» остаётся в «Виде» и в «Разделах» (panels.css).
+ */
 export function WorkLine() {
   const set = workSet.value;
   const id = selected.value;
   const out = !!id && !set.has(id);
   const p = out ? byId.get(id!) : undefined;
-  const all = { label: 'показать всех', title: 'Небо — все лица', run: () => (skyMode.value = 'all') };
+  const phone = grid.value.phone;
+  const reveal = revealing(start.value) && set.size > 0;
+  // на телефоне — словами переключателя «все лица | набор»: кнопка «Всё небо» колонки вписывает небо, а не меняет его
+  const all = reveal
+    ? { label: phone ? 'все лица' : 'показать всё небо', title: 'Небо — все лица; раскрытое остаётся в наборе', run: () => (skyMode.value = 'all') }
+    : { label: 'показать всех', title: 'Небо — все лица', run: () => (skyMode.value = 'all') };
   // на телефоне обычная строка — одна: короткий текст и «показать всех» рядом (MOB-73)
-  const one = grid.value.phone && !out && set.size > 0;
+  const one = phone && !out && set.size > 0;
+  if (reveal && !out)
+    return (
+      <SkyBar
+        cls={one ? 'workbar revealbar one' : 'workbar revealbar'}
+        text={revealLineText(set.size)}
+        note={workLineNote(set.size)}
+        cmds={[all, { label: 'начать заново', title: 'Выбрать начало заново: с Адама, с Иисуса Христа, родословие, ключевые лица или всё небо', run: openStarts }]}
+      />
+    );
   return (
     <SkyBar
       cls={one ? 'workbar one' : 'workbar'}
@@ -257,12 +284,18 @@ const fold = () => {
   introDone.value = true;
   introOpen.value = false;
 };
+/** Укороченное вступление: «С чего начать» — лист «Вид» на разделе «Начало» (тот же выбор), вступление сворачивается. */
+const foldToStarts = () => {
+  fold();
+  openStarts();
+};
 
 /** Быстрые входы вступления (UX-56; решение 37: и «Руфь» — сценарий 1). */
 export const ENTRIES = ['adam', 'noy', 'avraam', 'moisey', 'ruf', 'david', 'iisus'];
 
 /**
- * Вступительный картуш. Быстрые входы — сразу под подзаголовком: на 1024 × 768 они видны без прокрутки (UX-56).
+ * Вступительный картуш. При первом посещении (начало не выбрано, решение 68) под подзаголовком — пять начал, выбор
+ * сворачивает вступление. Быстрые входы — ниже них: на 1024 × 768 они видны без прокрутки (UX-56).
  * low — небо не выше 520 px (альбомный телефон, масштаб 200 %): одна строка «Как читать карту» и «Свернуть» (MOB-07),
  * небо остаётся видным.
  */
@@ -274,12 +307,20 @@ export function Cartouche({ high, low = false }: { high: boolean; low?: boolean 
     skyRef.flyTo(id);
   };
   const entries = ENTRIES.filter((id) => byId.has(id));
+  // начало ещё не выбрано (решение 68): вступление предлагает пять начал
+  const pick = start.value === null;
   if (low)
     return (
-      <div class="cartouche low" role="note" aria-label="Толедот — звёздный атлас библейских родословий" data-reserve="intro">
+      <div class={pick ? 'cartouche low picking' : 'cartouche low'} role="note" aria-label="Толедот — звёздный атлас библейских родословий" data-reserve="intro">
         <b class="ttl">Толедот</b>
         {/* главное для пальца — одной фразой (MOB-07); остальное — в «Как читать карту» */}
         <span class="hint for-touch">{typo('Коснитесь звезды — карточка лица')}</span>
+        {/* пять начал на низком небе не помещаются: «С чего начать» открывает тот же выбор в листе «Вид» */}
+        {pick && (
+          <button type="button" class="cmd start-cmd" title="Пять начал: с Адама, с Иисуса Христа, родословие, ключевые лица, всё небо" onClick={foldToStarts}>
+            С чего начать
+          </button>
+        )}
         <button type="button" class="cmd" onClick={() => openLegend('guide')}>
           Как читать карту
         </button>
@@ -290,7 +331,7 @@ export function Cartouche({ high, low = false }: { high: boolean; low?: boolean 
     );
   return (
     // data-reserve: под табличкой не рисуются подписи, «всё небо» вписывается рядом с ней (SkyView)
-    <div class={high ? 'cartouche high' : 'cartouche'} role="note" aria-labelledby="cartouche-title" data-reserve="intro">
+    <div class={`cartouche${high ? ' high' : ''}${pick ? ' picking' : ''}`} role="note" aria-labelledby="cartouche-title" data-reserve="intro">
       <Close label="Свернуть вступление" onClick={fold} />
       {typoTree(
         <>
@@ -298,7 +339,14 @@ export function Cartouche({ high, low = false }: { high: boolean; low?: boolean 
           <p class="sub">Звёздный атлас библейских родословий</p>
         </>,
       )}
-      <div class="entry" role="group" aria-label="С чего начать">
+      {/* пять начал (решение 68) — при первом посещении; выбор сворачивает вступление. Быстрые входы — ниже, как прежде */}
+      {pick && (
+        <div class="pick" role="group" aria-labelledby="starts-title">
+          <h2 id="starts-title">С чего начать</h2>
+          <StartList notes label="Начало" onDone={fold} />
+        </div>
+      )}
+      <div class="entry" role="group" aria-label={pick ? 'Сразу к лицу' : 'С чего начать'}>
         {entries.map((id) => (
           <button key={id} type="button" onClick={() => go(id)}>
             {byId.get(id)!.name}

@@ -8,6 +8,10 @@
  *  — путь родства — полная яркость; сам путь — ломаная с подписями шагов (drawKinPath);
  *  — группа лиц панели (главы, участок синопсиса) — полная яркость (skyGroup);
  *  — остальное небо — DIM (src/render/dim.ts).
+ *
+ * Ветви выбранного лица (решение 69): потомки по союзам или по детям (branchMapOf, с кэшем по лицу и модели) — цветом
+ * своей ветви со свечением, бледнее с каждым поколением; предки — мягким свечением (branchFrame; цвета и свечение —
+ * src/render/branches.ts, рисуют следы и отводы — src/render/trails.ts).
  */
 import { alpha } from './color.ts';
 import { DIM, LIKELY } from './dim.ts';
@@ -15,6 +19,9 @@ import { starRadius } from './glyphs.ts';
 import { RULER_H, ROW_H } from './frame.ts';
 import { mapFont, mapSize, T_MAP_S } from './type.ts';
 import { byId, graph } from '../data/atlas.ts';
+import { branchesOf, type Branch } from '../engine/unions.ts';
+import { unions } from '../ui/reveal.ts';
+import { branchColor, branchDash, branchFade, branchFloor, type MapTheme } from './branches.ts';
 import { claim, putLabel, textBox } from './labels.ts';
 import { beadAt, drawBranchLabels, drawKeyLineNames, drawLineNames, drawLineNotes, drawMt1Women } from './ribbons.ts';
 import type { LineStep } from '../engine/layout.ts';
@@ -109,6 +116,106 @@ export function highlightFor(id: string | null, path: readonly string[] | null, 
     return { hl: m, depth: null };
   }
   return familyHighlight(id);
+}
+
+// ---------- ветви выбранного лица (решение 69) ----------
+
+/** Ветви потомков лица: ключи ветвей (союз или ребёнок), ветвь и поколение каждого потомка, дети каждой ветви. */
+export interface BranchMap {
+  id: string;
+  /** ключи ветвей по порядку: id союза (союзов с детьми два и больше) или id ребёнка */
+  keys: string[];
+  /** потомок → ветвь, поколение (1 — дети), союз */
+  desc: Map<string, Branch>;
+  /** дети каждой ветви (первое поколение) по порядку данных: метка ветви — у первого, чья подпись на небе */
+  heads: string[][];
+}
+/** Без предела поколений: цвет тянется по всей ветви вниз (у Адама — через всё небо). */
+const ALL_GENERATIONS = 1000;
+/** Сколько последних выбранных лиц помнит кэш ветвей. */
+const BRANCH_CACHE = 16;
+const branchCache = new Map<string, BranchMap>();
+
+/**
+ * Ветви потомков лица id (src/engine/unions.ts, branchesOf по союзам атласа src/ui/reveal.ts) — с кэшем по лицу и модели
+ * хронологии: у Адама обход идёт почти через всё небо, а кадр при панорамировании рисуется десятки раз в секунду.
+ */
+export function branchMapOf(id: string, model = ''): BranchMap {
+  const key = `${id}|${model}`;
+  const hit = branchCache.get(key);
+  if (hit) {
+    branchCache.delete(key);
+    branchCache.set(key, hit);
+    return hit;
+  }
+  const { desc, keys } = branchesOf(unions, graph, id, ALL_GENERATIONS);
+  const heads = keys.map(() => [] as string[]);
+  for (const [k, b] of desc) if (b.gen === 1) heads[b.branch].push(k);
+  const out: BranchMap = { id, keys, desc, heads };
+  branchCache.set(key, out);
+  if (branchCache.size > BRANCH_CACHE) branchCache.delete(branchCache.keys().next().value!);
+  return out;
+}
+
+/** Как рисовать потомка по ветви в этом кадре: цвет ветви (#rrggbb), яркость поколения, штрих следа. */
+export interface BranchPaint {
+  color: string;
+  a: number;
+  dash: readonly number[];
+  branch: number;
+  gen: number;
+}
+/** Ветви выбранного лица в кадре: цвет потомков, свечение предков, что нарисовано цветом. */
+export interface BranchFrame {
+  map: BranchMap | null;
+  theme: MapTheme;
+  /** потомок выбранного по ветви (в выделении рода — 'desc'): как его рисовать; иначе null */
+  paint(id: string): BranchPaint | null;
+  /** предок выбранного (в выделении рода — 'anc'): мягкое свечение */
+  ancestor(id: string): boolean;
+  /** лица, нарисованные в этом кадре цветом ветви (для проверок приёмки: canvas[data-branches]) */
+  shown: Set<string>;
+}
+const HEX6 = /^#[0-9a-f]{6}$/i;
+const branchFrames = new WeakMap<object, BranchFrame>();
+
+/**
+ * Ветви выбранного лица для кадра (решение 69): только при выделении рода выбранного (не путь родства, не группа,
+ * не отметки). Кадр узнаётся по его Placer — он один на кадр и общий для проходов слоёв.
+ */
+export function branchFrame(v: Pick<SkyContext, 'pal' | 'model'>, p: Pick<Pass, 's' | 'placer'>): BranchFrame {
+  const key = (p.placer as object | undefined) ?? p;
+  const was = branchFrames.get(key);
+  if (was) return was;
+  const s = p.s;
+  const hl = s.highlight;
+  const sel = s.selected;
+  const theme: MapTheme = v.pal?.glow ? 'night' : 'day';
+  const on = !!sel && !!hl && hl.get(sel) === 'self';
+  const map = on ? branchMapOf(sel!, v.model?.id ?? '') : null;
+  const grounds = [v.pal?.sky, v.pal?.band].filter((c): c is string => !!c && HEX6.test(c.trim()));
+  const byBranch = new Map<number, BranchPaint>();
+  const f: BranchFrame = {
+    map,
+    theme,
+    paint(id) {
+      if (!map || hl!.get(id) !== 'desc') return null;
+      const b = map.desc.get(id);
+      if (!b) return null;
+      const k = b.branch * 64 + Math.min(63, b.gen);
+      let out = byBranch.get(k);
+      if (!out) {
+        const color = branchColor(b.branch, theme);
+        out = { color, a: branchFade(b.gen, grounds.length ? branchFloor(color, grounds) : 0), dash: branchDash(b.branch), branch: b.branch, gen: b.gen };
+        byBranch.set(k, out);
+      }
+      return out;
+    },
+    ancestor: (id) => !!map && hl!.get(id) === 'anc',
+    shown: new Set(),
+  };
+  branchFrames.set(key, f);
+  return f;
 }
 
 // ---------- путь родства (E5) ----------

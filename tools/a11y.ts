@@ -41,6 +41,8 @@ const DESK: Screen[] = [
     await p.keyboard.press('ArrowRight');
   } },
   { name: 'карточка Давида', hash: '#/david' },
+  // карточка союза в листе (решение 71): супруги, дети, происхождение, «Раскрыть на небе»
+  { name: 'карточка союза', hash: '#/avraam~uavraam.agar' },
   { name: 'разворот', hash: '#/avraam', act: async (p) => {
     await p.click('.folio .actions >> text=Разворот с…');
     await p.fill('#find', 'Исаак');
@@ -137,6 +139,7 @@ const TOUCH: Screen[] = [
   } },
   { name: 'телефон 360: лист на 100 %', hash: '#/ruf', view: { width: 360, height: 740, touch: true }, act: (p) => press(p, '.folio .sheet-bar .bar-toggle') },
   { name: 'телефон, альбомная: карточка', hash: '#/david', view: { width: 844, height: 390, touch: true } },
+  { name: 'телефон: карточка союза на 100 %', hash: '#/david~udavid.virsaviya', view: PHONE, act: (p) => press(p, '.folio .sheet-bar .bar-toggle') },
   { name: 'планшет: карточка', hash: '#/david', view: TABLET },
   { name: 'планшет: «Указатель»', hash: '#/david', view: TABLET, act: async (p) => {
     const b = p.locator('.commands > button', { hasText: 'Указатель' });

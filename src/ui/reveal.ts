@@ -22,7 +22,7 @@ import { batch, computed, effect, signal } from '@preact/signals';
 import { byId, graph, lineMembership, persons } from '../data/atlas.ts';
 import { buildUnions, membersOf, type Union } from '../engine/unions.ts';
 import { selected } from '../state.ts';
-import { skyMode, workSet, type WorkEntry } from './work.ts';
+import { skyMode, skyModeSaved, workSet, type WorkEntry } from './work.ts';
 
 // ---------- хранилище ----------
 
@@ -71,13 +71,8 @@ export const start = signal<Start | null>(((s) => (STARTS.some((x) => x.value ==
 if (hasWindow) effect(() => write('start', start.value));
 // «дальше открывается как в прошлый раз»: новый сеанс после начала с раскрытием — сразу небо «набор» (режим неба помнится
 // в сеансе, src/ui/work.ts; адрес с полями вида задаёт его сам)
-if (hasWindow && start.peek() && start.peek() !== 'all' && workSet.peek().size) {
-  try {
-    if (window.sessionStorage.getItem('toledot:skymode') === null && !/~k1/.test(window.location.hash)) skyMode.value = 'work';
-  } catch {
-    /* без хранилища сеанса — как было */
-  }
-}
+export const restoreReveal = hasWindow && skyModeSaved === null && !!start.peek() && start.peek() !== 'all' && workSet.peek().size > 0;
+if (restoreReveal && !/~k1/.test(window.location.hash)) skyMode.value = 'work';
 
 /** Ключевые лица (решение 68): самые яркие звёзды неба (величина 0–1) и главные лица, чья величина меньше. */
 const KEY_EXTRA = ['sarra', 'revekka', 'liya', 'rakhil', 'ruf', 'mariya', 'iosif-muzh-marii', 'samuil', 'iliya', 'elisey', 'daniil', 'ezdra', 'neemiya', 'esfir'];

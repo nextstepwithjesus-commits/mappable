@@ -20,7 +20,8 @@ import { Close } from '../controls.tsx';
 import { grid } from '../layout.ts';
 import { sheetStop } from '../sheet.ts';
 import { reduced } from '../sky/view.ts';
-import { SkyModeSwitch } from '../sky/Controls.tsx';
+import { SkyModeSwitch, StartList } from '../sky/Controls.tsx';
+import { closePerson, opened } from '../reveal.ts';
 import {
   addToWork, clearWork, foldDesc, foldDescOf, foldGroupOf, foldGroups, hasDescendants, lineOf, removeFromWork, removeWithLine, workOrder,
   workSet, type Scope, type WorkEntry,
@@ -604,6 +605,10 @@ export function WorkPanel() {
         </>
       )}
       {folded > 0 && <FoldList />}
+      {/* «Начать заново» (решение 68): те же пять начал, что во вступлении и в листе «Вид»; набор больше одного лица
+          заменяется только после подтверждения */}
+      <h3 id="work-start">Начать заново</h3>
+      <StartList notes label="Начать заново" />
     </Sheet>
   );
 }
@@ -672,7 +677,8 @@ export const skyMenu = signal<SkyMenuAt | null>(null);
 
 /**
  * Меню звезды на небе (J3, J5): правая кнопка мыши, долгое касание или клавиша меню на звезде. У звезды — выбор объёма
- * «Взять в работу» с пунктом «Скрыть потомков на небе»; у названия созвездия — «Свернуть созвездие». Escape и щелчок мимо закрывают.
+ * «Взять в работу» с пунктом «Скрыть потомков на небе»; у названия созвездия — «Свернуть созвездие». У лица, чьи картуши
+ * союзов показаны на небе «набор» (решение 70), — «Скрыть союзы на небе». Escape и щелчок мимо закрывают.
  */
 export function SkyMenu({ bounds }: { bounds: { w: number; h: number } }) {
   const at = skyMenu.value;
@@ -724,6 +730,29 @@ export function SkyMenu({ bounds }: { bounds: { w: number; h: number } }) {
         {typo(`${groupOn ? 'Развернуть' : 'Свернуть'} созвездие «${g.name}»`)}
       </button>
     ) : null;
+  // картуши союзов лица на небе «набор» (решение 70): скрыть их, раскрытые союзы и раскрытые лица остаются
+  const unionsCmd =
+    p && opened.value.includes(p.id) ? (
+      <button
+        type="button"
+        class="cmd"
+        role="menuitem"
+        title="Картуши союзов лица уходят с неба; раскрытые союзы и лица остаются. Показать снова — щелчок по лицу"
+        onClick={() => {
+          closePerson(p.id);
+          close(true);
+        }}
+      >
+        Скрыть союзы на небе
+      </button>
+    ) : null;
+  const skyCmds =
+    unionsCmd || groupCmd ? (
+      <>
+        {unionsCmd}
+        {groupCmd}
+      </>
+    ) : null;
   return (
     <div class="workpick skymenu" ref={wrap} style={{ left: `${pos?.x ?? at.x}px`, top: `${pos?.y ?? at.y}px` }} data-placed={pos ? '' : undefined} {...pop}>
       {p ? (
@@ -736,7 +765,7 @@ export function SkyMenu({ bounds }: { bounds: { w: number; h: number } }) {
             </p>
             {x}
           </div>
-          <WorkPicker id={p.id} heading sky={groupCmd} onDone={() => close(true)} />
+          <WorkPicker id={p.id} heading sky={skyCmds} onDone={() => close(true)} />
         </>
       ) : (
         <div class="wp-head wp-first">

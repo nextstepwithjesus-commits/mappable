@@ -34,6 +34,7 @@ import { skyRef, viewTick } from './common.tsx';
 import { HISTORY_MS, holdLinesRows, reduced, setStartLanes } from './sky/view.ts';
 import { EMPTY_LINK_NOTICE, WORK_URL_MAX, linkSet, linkSetFor, shownSet, skyMode, workNotice, workSet } from './work.ts';
 import { selectFromHistory } from './stack.ts';
+import { restoreReveal, selectedUnion, selectUnion } from './reveal.ts';
 
 export interface View {
   /** год середины окна, исторический */
@@ -63,12 +64,27 @@ export interface Address {
   work?: boolean;
   /** рабочий набор — если в нём не больше WORK_URL_MAX лиц */
   set?: string[];
+  /** карточка союза в листе (решение 71): id союза, src/engine/unions.ts */
+  union?: string;
   /** в адресе есть поля вида: он описывает весь вид, а не только лицо */
   full: boolean;
 }
 
 const ID = /^[a-z0-9-]+$/;
 const NUM = /^-?\d+(\.\d+)?$/;
+
+/**
+ * Союз в адресе (решение 71) — поле «u» из букв, цифр и точек: «u:avraam+agar» ↔ «avraam.agar», «u:sif+» ↔ «sif.»,
+ * «u:iakov+~adoptive» ↔ «iakov..adoptive». Знаки «:», «+» и «~» самого id в простой якорь не входят.
+ */
+export const unionField = (uid: string): string | null => {
+  const m = /^u:([a-z0-9-]*)\+([a-z0-9-]*)(?:~([a-z-]+))?$/.exec(uid);
+  return m && (m[1] || m[2]) ? [m[1], m[2], ...(m[3] ? [m[3]] : [])].join('.') : null;
+};
+export const unionFromField = (v: string): string | null => {
+  const m = /^([a-z0-9-]*)\.([a-z0-9-]*)(?:\.([a-z-]+))?$/.exec(v);
+  return m && (m[1] || m[2]) ? `u:${m[1]}+${m[2]}${m[3] ? `~${m[3]}` : ''}` : null;
+};
 
 /** Разбор адреса; has — есть ли лицо с таким id. Неизвестные и испорченные поля пропускаются. */
 export function parseAddress(hash: string, has: (id: string) => boolean): Address {
@@ -105,6 +121,9 @@ export function parseAddress(hash: string, has: (id: string) => boolean): Addres
     else if (k === 'n') {
       const ids = [...new Set(val.split('.'))].filter((x) => ID.test(x) && has(x)).slice(0, WORK_URL_MAX);
       if (ids.length) a.set = ids;
+    } else if (k === 'u') {
+      const uid = unionFromField(val);
+      if (uid) a.union = uid;
     }
   }
   if (v.year !== undefined && v.width !== undefined && v.lane !== undefined && v.year !== 0) a.view = v as View;
@@ -126,6 +145,9 @@ export function formatAddress(a: Omit<Address, 'route' | 'full' | 'bad'>): strin
   if (a.tiers) f.push('e1');
   if (a.work) f.push('k1');
   if (a.work && a.set?.length && a.set.length <= WORK_URL_MAX) f.push(`n${a.set.join('.')}`);
+  // карточка союза открыта в листе выбранного лица (решение 71)
+  const u = a.id && a.union ? unionField(a.union) : null;
+  if (u) f.push(`u${u}`);
   return `#/${a.id ?? ''}${f.map((x) => `~${x}`).join('')}`;
 }
 
@@ -203,7 +225,8 @@ const pushKey = () => {
   const id = selected.value;
   const b = second.value;
   const a = first.value;
-  return `${id ?? ''}|${panel.value ?? ''}|${b && a && a !== id ? a : ''}|${b ?? ''}`;
+  // карточка союза — своя запись истории: «назад» возвращает карточку лица (решение 71)
+  return `${id ?? ''}|${panel.value ?? ''}|${b && a && a !== id ? a : ''}|${b ?? ''}|${selectedUnion.value ?? ''}`;
 };
 
 /** Вид атласа сейчас — в полях адреса. */
@@ -226,6 +249,7 @@ function snapshot(): Omit<Address, 'route' | 'full' | 'bad'> {
     work: skyMode.peek() === 'work',
     // набор, который показывает небо: из ссылки, пока его смотрят, — ссылка остаётся той же (IX-69)
     set: [...shownSet.peek().keys()],
+    union: selectedUnion.peek() ?? undefined,
   };
 }
 
@@ -263,7 +287,7 @@ export function applyWork(a: Pick<Address, 'work' | 'set'>, own: boolean) {
 }
 
 /** Режимы, модель, панель, пара и лицо из адреса; окно ставится отдельно, когда небо готово. history — это «назад» или «вперёд». */
-function applyState(a: Address, history = false) {
+function applyState(a: Address, history = false, init = false) {
   const mark = markOf(typeof window !== 'undefined' ? window.history.state : null);
   batch(() => {
     if (a.scale !== undefined) lambda.value = a.scale;
@@ -271,8 +295,9 @@ function applyState(a: Address, history = false) {
     if (a.full) {
       onlyLines.value = !!a.only;
       epochMode.value = !!a.tiers;
-      // рабочий набор — раньше режима: небо сразу показывает набор ссылки
-      applyWork(a, !!mark && !mark.link);
+      // рабочий набор — раньше режима: небо сразу показывает набор ссылки. Новый сеанс по адресу без «k1» после
+      // раскрытия — небо «набор», как в прошлый раз (решение 68; src/ui/reveal.ts)
+      if (!(init && !a.work && restoreReveal)) applyWork(a, !!mark && !mark.link);
     } else if (linkSet.peek()) {
       // ушли на адрес без набора («#/», «#/david»): набор из ссылки в адресе не остаётся (IX-69)
       linkSet.value = null;
@@ -288,12 +313,14 @@ function applyState(a: Address, history = false) {
     if (a.second && (a.first ?? a.id)) setPair((a.first ?? a.id)!, a.second, a.panel === 'kinship');
     else if (a.full && second.peek()) clearPair();
   });
+  // карточка союза (решение 71) — после выбора лица: выбор лица закрывает её (src/ui/reveal.ts), поэтому не в том же batch
+  selectUnion(a.id && a.union ? a.union : null);
   searchNotice.value = a.bad ? { text: `Лица с адресом «${a.bad}» в атласе нет. Найдите его по имени.`, ids: nearIds(a.bad) } : null;
 }
 
 // Прочитать адрес до первого показа: модель, масштаб, панель и лицо сразу в нужном виде, без перестройки неба.
 const initial = typeof location !== 'undefined' ? parseAddress(location.hash, (id) => byId.has(id)) : null;
-if (initial && initial.route === 'atlas') applyState(initial);
+if (initial && initial.route === 'atlas') applyState(initial, false, true);
 // пропорция полос адреса — небу до первой раскладки (SkyView); адрес с полями вида без «h» — пропорции по умолчанию
 if (initial && initial.route === 'atlas' && (initial.lanes !== undefined || initial.full)) setStartLanes(initial.lanes ?? 1);
 

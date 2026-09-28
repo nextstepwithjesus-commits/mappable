@@ -1,5 +1,7 @@
 /** Строки неба: годы и место лица в подсказке и объявлении, строки подсказки звезды и ленты, строка выбора второго лица. */
-import { byId, lines } from '../../data/atlas.ts';
+import { byId, graph, lines } from '../../data/atlas.ts';
+import { kidEdges, type Union } from '../../engine/unions.ts';
+import { kidsCount, plateNames, plateSub, unionGen } from '../../render/plates.ts';
 import { model } from '../../state.ts';
 import { formatSpan, formatYear, lifeSpanText, shownBirthRange, toAstro, toHist } from '../../engine/years.ts';
 import type { ChronoRow } from '../../data/atlas.ts';
@@ -248,3 +250,90 @@ export function pinBarText(n: number, query: string): string {
   const q = query.trim();
   return `Отмечено ${n} ${plural(n, 'лицо', 'лица', 'лиц')}${q ? ` по запросу «${q}»` : ''}`;
 }
+
+// ---------- карточки союзов на небе (решение 70; src/render/plates.ts) ----------
+
+/**
+ * «Союз Авраама и Агари» — имена в родительном падеже через склонение (ru.ts); если склонение ненадёжно — без падежа:
+ * «Союз: Авраам и Агарь».
+ */
+export function unionTitle(u: Union): string {
+  const gen = unionGen(u);
+  return gen ? `Союз ${gen}` : `Союз: ${plateNames(u)}`;
+}
+
+/**
+ * Дети союза для подсказки — в порядке, в котором их называют данные (порядок текста): до трёх — по имени со стихом
+ * («сын Измаил (Быт 16:15)», «сыновья Каин (Быт 4:1), Авель (Быт 4:2) и Сиф (Быт 4:25)»; один стих у всех — один раз),
+ * больше — числом и первыми именами («6 сыновей: Зимран, Иокшан, Медан и ещё 3 (Быт 25:2)»). Потомки, названные без
+ * промежуточных звеньев, — «потомки», а не «сыновья». Стих — связь ребёнка с родителем союза (engine/unions.ts, kidEdges).
+ */
+export function unionKidsText(u: Union): string {
+  if (!u.kids.length) return kidsCount(u);
+  const kids = u.kids;
+  const ref = (k: string) => kidEdges(graph, u, k).flatMap((e) => e.refs)[0] ?? null;
+  const name = (k: string) => byId.get(k)?.name ?? k;
+  const sexes = kids.map((k) => byId.get(k)?.sex ?? 'm');
+  const far = u.claim === 'ancestor';
+  const noun = far
+    ? kids.length === 1
+      ? 'потомок'
+      : 'потомки'
+    : sexes.length === 1
+      ? sexes[0] === 'f'
+        ? 'дочь'
+        : 'сын'
+      : sexes.every((s) => s === 'f')
+        ? 'дочери'
+        : sexes.every((s) => s !== 'f')
+          ? 'сыновья'
+          : 'дети';
+  const and = (xs: string[]) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} и ${xs[xs.length - 1]}`);
+  if (kids.length <= 3) {
+    const refs = kids.map(ref);
+    const one = refs.every((r) => r === refs[0]);
+    const list = one ? and(kids.map(name)) : and(kids.map((k, i) => (refs[i] ? `${name(k)} (${refLabel(refs[i]!)})` : name(k))));
+    return `${noun} ${list}${one && refs[0] ? ` (${refLabel(refs[0])})` : ''}`;
+  }
+  const first = ref(kids[0]);
+  const count = far ? `${kids.length} ${plural(kids.length, 'потомок', 'потомка', 'потомков')}` : kidsCount(u);
+  return `${count}: ${kids.slice(0, 3).map(name).join(', ')} и ещё ${kids.length - 3}${first ? ` (${refLabel(first)})` : ''}`;
+}
+
+/** Второе лицо союза не названо: «мать не названа в Писании», «отец не назван в Писании»; оба названы — пусто. */
+const missingText = (u: Union) => (u.claim || !u.kids.length || (u.a && u.b) ? '' : u.a ? 'мать не названа в Писании' : 'отец не назван в Писании');
+
+/**
+ * Подсказка картуша союза: «Союз Авраама и Агари: сын Измаил (Быт 16:15) — щёлкните, чтобы раскрыть». Брак без детей —
+ * вид связи со стихом: «Союз Давида и Мелхолы: жена (1 Цар 18:27); детей не названо — щёлкните, чтобы раскрыть».
+ */
+export function plateTipText(u: Union, open: boolean): string {
+  const what = u.kids.length ? [unionKidsText(u), missingText(u)].filter(Boolean).join('; ') : [u.refs[0] ? `${plateSub(u).split('; ')[0]} (${refLabel(u.refs[0])})` : '', kidsCount(u)].filter(Boolean).join('; ');
+  // без склонения — имена в именительном после «Союз:», дальше — через точку с запятой
+  return typo(`${unionTitle(u)}${unionGen(u) ? ':' : ';'} ${what} — щёлкните, чтобы ${open ? 'свернуть' : 'раскрыть'}`);
+}
+
+/** Пункт списка неба для клавиатуры и диктора: «Союз Авраама и Агари; жена; сын; свёрнут». */
+export function plateItemText(u: Union, open: boolean): string {
+  return typo(`${unionTitle(u)}; ${plateSub(u)}; ${open ? 'раскрыт' : 'свёрнут'}`);
+}
+
+/**
+ * Объявление живой области после раскрытия и свёртки союза: «Раскрыт союз Авраама и Агари: 1 лицо», «Свёрнут союз
+ * Адама и Евы: скрыто 4 лица». n — сколько лиц добавилось на небо или ушло с него.
+ */
+export function plateSayText(u: Union, opened: boolean, n: number): string {
+  const gen = unionGen(u);
+  const head = `${opened ? 'Раскрыт' : 'Свёрнут'} союз${gen ? ` ${gen}` : `: ${plateNames(u)}`}`;
+  const tail = opened
+    ? n > 0
+      ? `${n} ${plural(n, 'лицо', 'лица', 'лиц')}`
+      : 'все лица уже на небе'
+    : n > 0
+      ? `скрыто ${n} ${plural(n, 'лицо', 'лица', 'лиц')}`
+      : '';
+  return typo(tail ? `${head}${gen ? ':' : ';'} ${tail}` : head);
+}
+
+/** Строка для диктора у звезды лица с нераскрытыми союзами (решение 70): «есть нераскрытые союзы». */
+export const REVEAL_TEXT = 'есть нераскрытые союзы';

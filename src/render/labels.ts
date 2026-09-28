@@ -297,9 +297,9 @@ export const zoomScaleFor = (ky: number) => Math.max(0.7, Math.min(1.25, ky / 18
 /**
  * Что за подпись: имя звезды, название созвездия, пояснение на пустом небе, указатель у края, скопление (E2), меридиан
  * события (E7), «липкое» имя следа у левого края (E1), надписи рамки (линейка, служебная строка, кромки), знак
- * свёрнутого (J5), номер лица линии у бусины (mark; MAP-59).
+ * свёрнутого (J5), номер лица линии у бусины (mark; MAP-59), картуш союза в небе «набор» (plate; решение 70, plates.ts).
  */
-export type LabelKind = 'star' | 'group' | 'note' | 'edge' | 'cluster' | 'event' | 'sticky' | 'frame' | 'fold' | 'mark';
+export type LabelKind = 'star' | 'group' | 'note' | 'edge' | 'cluster' | 'event' | 'sticky' | 'frame' | 'fold' | 'mark' | 'plate';
 
 /** Нарисованная подпись: прямоугольник в px холста, текст и лицо (у имени звезды и указателя). */
 export interface LabelBox extends Rect {
@@ -831,11 +831,13 @@ export function namesakesInView(v: SkyContext, p: Pass): Map<string, string> {
 export function putLabel(v: SkyContext, p: Pass, i: number, o: StarOpts): LabelAt | null {
   if (p.labeled.has(i)) return null;
   const q = byId.get(v.nodes[i].person)!;
-  const fold = p.foldText?.get(q.id);
+  // «+N» свёрнутых потомков; в небе «набор» — «+» у лица с нераскрытыми союзами (решение 70)
+  const desc = p.foldText?.get(q.id);
+  const fold = desc ?? p.revealText?.get(q.id);
   const color = epochalAt(v, i) && o.color === v.pal.ink && o.alpha < 1 ? v.pal.ink2 : o.color;
   const note = o.note ?? (p.namesakes?.get(q.id) || undefined);
   const at = labelStar(v, p, i, { ...o, color, ...(note ? { note } : {}), ...(fold ? { fold } : {}) });
-  if (at?.fold && p.foldHits) p.foldHits.push({ ...at.fold, kind: 'desc', id: q.id });
+  if (at?.fold && p.foldHits) p.foldHits.push({ ...at.fold, kind: desc ? 'desc' : 'reveal', id: q.id });
   return at;
 }
 

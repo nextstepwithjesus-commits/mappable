@@ -35,6 +35,9 @@ import { CanonStrip } from './Canon.tsx';
 import { Clamp } from './Clamp.tsx';
 import { BirthLine, RelativeChrono, YearMark } from './Chrono.tsx';
 import { candidateFor, linkCandidates, linkNames, mentionsPerson, type LinkCand } from './links.tsx';
+import { UnionLink } from './Union.tsx';
+import { unionById, unionsOf } from '../reveal.ts';
+import { unionId, type Union } from '../../engine/unions.ts';
 
 type AtlasPerson = NonNullable<ReturnType<typeof byId.get>>;
 
@@ -178,6 +181,11 @@ const direct = (e: ParentEdge) => e.kind === 'father' || e.kind === 'mother';
 /** Прямая кровная связь, записанная Писанием или выведенная (не толкование и не «по закону»). */
 const plainLink = (e: ParentEdge) => direct(e) && e.cert !== 'interpretation' && e.claim !== 'legal';
 const kidsOf = (x: string) => [...new Set((graph.childrenOf.get(x) ?? []).filter(direct).map((e) => e.child))];
+
+/** Брак двух лиц как союз (решение 71): § 9 ведёт к его карточке. Союз иного рода («по закону», «по Луке») — не он. */
+const pairUnion = (id: string, other: string): Union | undefined => unionsOf(id).find((u) => !u.id.includes('~') && ((u.a === id && u.b === other) || (u.b === id && u.a === other)));
+/** Ссылка «союз» после строки (§ 9, § 10): пробел и ссылка; союза нет — ничего. */
+const unionAfter = (u: Union | undefined) => (u ? <> <UnionLink u={u} /></> : null);
 const sexesOf = (ids: string[]) => ids.map((x) => byId.get(x)!.sex);
 
 /** Лица, названные в семейных разделах карточки (§ 6, 9–12): их не повторяют «Современники». */
@@ -1561,6 +1569,7 @@ export function buildSections(
                     )}
                     <Refs refs={s.refs} owner={ns + `s9.${i}`} />
                     <Mark cert={s.cert} />
+                    {unionAfter(pairUnion(id, other))}
                     {!summary && own[i] ? <div class="note">{L(own[i]!)}</div> : null}
                     {subNotes(under9[i], s.refs, `s9n${i}.`, { ids: [other], label: spouseLabel(s).split(';')[0] })}
                     <VerseInsert owner={ns + `s9.${i}`} refs={s.refs} />
@@ -1607,6 +1616,7 @@ export function buildSections(
             {bySex(k.sex, 'Законный сын', 'Законная дочь')}: <Glued after={k.mother ? (mother ? ',' : ';') : undefined}><P id={kid} /></Glued>
             {k.mother ? (mother ? <> {bySex(k.sex, 'рождённый', 'рождённая')} {mother}</> : <> мать — <PT id={k.mother} /></>) : null}
             <Refs refs={refs} owner={ns + `c10l${i}`} />
+            {unionAfter(unionById(unionId(id, k.mother ?? null)))}
             <VerseInsert owner={ns + `c10l${i}`} refs={refs} />
           </li>
         );
@@ -1618,10 +1628,13 @@ export function buildSections(
           {bySex(k.sex, 'Сын', 'Дочь')}: <Glued after={messiah ? undefined : ';'}><P id={kid} /></Glued>
           {messiah ? <> — {MESSIAH_BIRTH.mother.text}</> : <> законный отец — <PT id={k.father!} /></>}
           <Refs refs={refs} owner={ns + `c10l${i}`} />
+          {unionAfter(unionById(unionId(k.father ?? null, id)))}
           <VerseInsert owner={ns + `c10l${i}`} refs={refs} />
         </li>
       );
     };
+    // карточка союза группы детей по второму родителю (решение 71): отец — первым местом союза, мать — вторым
+    const groupUnion = (other: string) => unionById(p.sex === 'f' ? unionId(other || null, id) : unionId(id, other || null));
     // дети по иным указаниям — подписью от лица родителя: «Потомок, названный без промежуточных звеньев: Исмаил»
     const byClaim = new Map<string, ParentEdge[]>();
     for (const e of graph.childrenOf.get(id) ?? []) {
@@ -1748,11 +1761,12 @@ export function buildSections(
         </>
       );
     };
-    const row = (key: string, label: ComponentChildren, ids: string[], refs: string[] = []) => (
+    const row = (key: string, label: ComponentChildren, ids: string[], refs: string[] = [], u?: Union) => (
       <p key={key} class={refs.length ? 'fact' : undefined}>
         <span class="muted">{label}: </span>
         {kidsList(ids)}
         <Refs refs={refs} owner={ns + `c10r${key}`} />
+        {unionAfter(u)}
         <VerseInsert owner={ns + `c10r${key}`} refs={refs} />
       </p>
     );
@@ -1782,7 +1796,8 @@ export function buildSections(
                   {' '}
                   {/* скобка и запятая держатся за имя родителя: «(от Эглы)» не рвётся перед «)» */}
                   <span class="nobr">
-                    ({g ? <>от {g}</> : <>{byId.get(par)?.sex === 'f' ? 'мать' : 'отец'} — <PT id={par} /></>}){last ? '' : ','}
+                    ({g ? <>от {g}</> : <>{byId.get(par)?.sex === 'f' ? 'мать' : 'отец'} — <PT id={par} /></>}
+                    {groupUnion(par) ? <>, <UnionLink u={groupUnion(par)!} /></> : null}){last ? '' : ','}
                   </span>
                 </span>
               </Fragment>
@@ -1806,7 +1821,7 @@ export function buildSections(
       if (!ids.length) return <Fragment key={`p${other}`}>{peopleRow}</Fragment>;
       const noun = childrenNoun(sexes(ids));
       const nt = noteFor(ids);
-      if (!other) return <Fragment key="u">{row(`u`, anyNamed ? unnamedParentLabel(sexes(ids), p.sex) : noun, ids, nt.refs)}{peopleRow}</Fragment>;
+      if (!other) return <Fragment key="u">{row(`u`, anyNamed ? unnamedParentLabel(sexes(ids), p.sex) : noun, ids, nt.refs, groupUnion(other))}{peopleRow}</Fragment>;
       const g = caseLink(other, 'gen');
       if (g)
         return (
@@ -1816,6 +1831,7 @@ export function buildSections(
               <Glued after={<span class="muted">:</span>}>{g}</Glued>{' '}
               {kidsList(ids)}
               <Refs refs={nt.refs} owner={ns + `c10m${other}`} />
+              {unionAfter(groupUnion(other))}
               <VerseInsert owner={ns + `c10m${other}`} refs={nt.refs} />
             </p>
             {peopleRow}
@@ -1830,6 +1846,7 @@ export function buildSections(
             <span class="muted"> {byId.get(other)?.sex === 'f' ? 'мать' : 'отец'} — </span>
             <PT id={other} />
             <Refs refs={nt.refs} owner={ns + `c10m${other}`} />
+            {unionAfter(groupUnion(other))}
             <VerseInsert owner={ns + `c10m${other}`} refs={nt.refs} />
           </p>
           {peopleRow}
@@ -1860,6 +1877,7 @@ export function buildSections(
                 <InlineList ids={ids} item={(x, after) => <PN id={x} lower dis={same10.has(x) || undefined} after={after} />} />
                 <Refs refs={refs} owner={ns + `c10o${i}`} />
                 <Mark cert={es.every((e) => e.cert === es[0].cert) ? es[0].cert : undefined} />
+                {unionAfter(unionById(p.sex === 'f' ? unionId(null, id, claim) : unionId(id, null, claim)))}
                 <VerseInsert owner={ns + `c10o${i}`} refs={refs} />
               </p>
             );

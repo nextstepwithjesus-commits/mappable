@@ -35,6 +35,14 @@ vi.mock('../src/render/labels.ts', async (orig) => {
   const m = await orig<typeof import('../src/render/labels.ts')>();
   return { ...m, drawFoldMark: vi.fn(m.drawFoldMark) };
 });
+vi.mock('../src/render/plates.ts', async (orig) => {
+  const m = await orig<typeof import('../src/render/plates.ts')>();
+  return { ...m, drawPlateSample: vi.fn(m.drawPlateSample) };
+});
+vi.mock('../src/render/branches.ts', async (orig) => {
+  const m = await orig<typeof import('../src/render/branches.ts')>();
+  return { ...m, drawBranchSample: vi.fn(m.drawBranchSample) };
+});
 vi.mock('../src/engine/ribbons.ts', async (orig) => {
   const m = await orig<typeof import('../src/engine/ribbons.ts')>();
   return { ...m, buildRibbons: vi.fn(m.buildRibbons) };
@@ -99,6 +107,8 @@ const ribbons = await import('../src/render/ribbons.ts');
 const eribbons = await import('../src/engine/ribbons.ts');
 const labels = await import('../src/render/labels.ts');
 const marks = await import('../src/render/marks.ts');
+const branches = await import('../src/render/branches.ts');
+const plates = await import('../src/render/plates.ts');
 const { models, byId } = await import('../src/data/atlas.ts');
 
 /** Холст, который принимает любые вызовы; ширина текста — 7 px на знак. */
@@ -131,6 +141,8 @@ const spies = {
   drawWorkMark: vi.mocked(marks.drawWorkMark),
   drawBirthBand: vi.mocked(glyphs.drawBirthBand),
   drawFamilyText: vi.mocked(trails.drawFamilyText),
+  drawBranchSample: vi.mocked(branches.drawBranchSample),
+  drawPlateSample: vi.mocked(plates.drawPlateSample),
 };
 type SpyName = keyof typeof spies;
 
@@ -170,6 +182,20 @@ describe('образцы — функции неба, а не свои копи�
     const tx = s.drawFamilyText.mock.calls[0][3] as number;
     expect(tx).toBeGreaterThanOrEqual(0);
     expect(tx).toBeLessThan(s.drawBracket.mock.calls[0][1].x);
+  });
+  it('подсветка ветвей выбранного лица — образцом неба drawBranchSample, во всю ширину строки (решение 69)', () => {
+    const s = paint('branches', 400, 64);
+    // звёзды образца — знаком неба drawGlyph, который вызывает сам образец
+    expect(used(s)).toEqual(['drawGlyph', 'drawBranchSample']);
+    expect(s.drawBranchSample.mock.calls[0].slice(2)).toEqual([400, 64]);
+  });
+  it('картуш союза — образцом неба drawPlateSample: союзы Авраама из данных, с Агарью свёрнут, с Саррой раскрыт (решения 67, 70)', () => {
+    const s = paint('plates', 460, 56);
+    const calls = s.drawPlateSample.mock.calls.map((c) => ({ names: c[5], sub: c[6], open: !!c[7] }));
+    expect(calls.map((c) => c.names)).toEqual(['Авраам и Агарь', 'Авраам и Сарра']);
+    expect(calls.map((c) => c.open)).toEqual([false, true]);
+    // вторая строка — вид связи и дети, как на небе (plateSub): у Агари — сын Измаил, у Сарры — сын Исаак
+    for (const c of calls) expect(c.sub).toMatch(/жена.*; сын$/);
   });
   it('семь величин звезды — drawGlyph с величинами 0…6', () => {
     const seen: number[] = [];

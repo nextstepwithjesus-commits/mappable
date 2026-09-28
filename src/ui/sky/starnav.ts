@@ -4,11 +4,57 @@
  * сигнал focused (src/state.ts): небо рисует у неё кольцо и подпись (render/marks.ts, render/labels.ts), диктор читает её
  * пункт в списке лиц неба (src/ui/sky/SkyA11y.tsx, aria-activedescendant у холста).
  */
+import { signal } from '@preact/signals';
 import { byId } from '../../data/atlas.ts';
 import { focused, selected } from '../../state.ts';
 import { detailOf, OVERVIEW_MAG, type Sky } from '../../render/sky.ts';
 import { skyRef } from '../common.tsx';
 import { keepInView, screenOf } from './view.ts';
+import { collapseUnion, expandUnion, isExpanded, selectUnion, unionById } from '../reveal.ts';
+import { plateSayText } from './text.ts';
+import { openSheetAt } from '../sheet.ts';
+
+// ---------- карточки союзов на небе (решение 70) ----------
+
+/**
+ * Картуш союза с кольцом клавиатуры (id союза): стрелки водят фокус и по картушам, как по звёздам; пока он есть, у звезды
+ * кольца нет (focused = null), холст называет пункт картуша в списке неба (SkyA11y), Enter раскрывает или сворачивает.
+ */
+export const plateFocus = signal<string | null>(null);
+/** Картуш под указателем мыши: его рамка ярче (src/ui/sky/input.ts). */
+export const plateHover = signal<string | null>(null);
+/** Объявление живой области неба после раскрытия и свёртки союза (SkyView): n — чтобы тот же текст прозвучал снова. */
+export const plateNews = signal<{ text: string; n: number }>({ text: '', n: 0 });
+
+/**
+ * Щелчок, касание или Enter на картуше союза (решение 70): раскрыть союз от лица from (оба супруга и все дети — на небо)
+ * или свернуть его; карточка союза открывается в листе (решение 71). Карточка союза видна при выбранном лице, а смена
+ * лица её закрывает (src/ui/reveal.ts): сначала выбирается лицо from, потом, отдельно, — союз. На телефоне лист, как при
+ * касании звезды, открывается на шапке (решение 12). Живая область объявляет, сколько лиц добавилось или ушло.
+ * Возвращает, раскрыт ли союз теперь.
+ */
+export function pressPlate(uid: string, from: string): boolean {
+  const u = unionById(uid);
+  if (!u) return false;
+  const was = isExpanded(uid);
+  const n = was ? collapseUnion(uid) : expandUnion(uid, from);
+  if (selected.peek() !== from && byId.has(from)) {
+    openSheetAt('peek');
+    selected.value = from;
+  }
+  selectUnion(uid);
+  plateNews.value = { text: plateSayText(u, !was, n), n: plateNews.peek().n + 1 };
+  return !was;
+}
+
+/** Картуши союзов на виду — как точки для стрелок (id — id союза, «u:…»). */
+function platePoints(sky: Sky): (StarPoint & { mag: number; onScreen: boolean })[] {
+  const vp = sky.cam.vp;
+  return sky.plateHits
+    .map((h) => ({ id: h.uid, x: h.x + h.w / 2, y: h.y + h.h / 2, mag: 2, onScreen: true }))
+    .filter((q) => q.x > vp.l && q.x < vp.r && q.y > vp.t && q.y < vp.b);
+}
+const isUnion = (id: string) => id.startsWith('u:');
 
 export type Dir = 'left' | 'right' | 'up' | 'down';
 /** Звезда на экране: лицо и точка в px холста. */
@@ -120,6 +166,7 @@ export const rememberFocus = (id: string | null) => {
 
 /** Поставить фокус на звезду и показать её, если она у края или за краем видимой части. */
 export function setStarFocus(id: string) {
+  plateFocus.value = null;
   focused.value = id;
   lastFocus = id;
   keepInView(id);
@@ -133,21 +180,32 @@ export function enterSky(): string | null {
   const shown = starPoints(sky).filter((s) => s.onScreen);
   const id = startStar(shown, { x: (vp.l + vp.r) / 2, y: (vp.t + vp.b) / 2 }, [focused.peek(), selected.peek(), lastFocus]);
   if (id) {
+    plateFocus.value = null;
     focused.value = id;
     lastFocus = id;
   }
   return id;
 }
 
-/** Стрелка на холсте: фокус к ближайшей звезде в этом направлении. Возвращает, куда перешёл фокус (или null). */
+/**
+ * Стрелка на холсте: фокус к ближайшей звезде или картушу союза (небо «набор», решение 70) в этом направлении.
+ * Возвращает, куда перешёл фокус (id лица или союза; null — никуда).
+ */
 export function moveStarFocus(dir: Dir): string | null {
   const sky = skyRef.current;
   if (!sky || !sky.model) return null;
-  const cur = focused.peek();
-  const at = cur ? screenOf(cur) : null;
+  const plates = platePoints(sky);
+  const pf = plateFocus.peek();
+  const cur = pf ?? focused.peek();
+  const at = pf ? (plates.find((q) => q.id === pf) ?? null) : cur ? screenOf(cur) : null;
   if (!cur || !at) return enterSky();
-  const to = nearestInDirection(at, starPoints(sky), dir, cur);
+  const to = nearestInDirection(at, [...starPoints(sky), ...plates], dir, cur);
   if (!to) return null;
+  if (isUnion(to)) {
+    focused.value = null;
+    plateFocus.value = to;
+    return to;
+  }
   setStarFocus(to);
   return to;
 }

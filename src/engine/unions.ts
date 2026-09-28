@@ -187,7 +187,7 @@ export interface Branch {
  * Потомки лица id по ветвям (решение 69, «по ветвям»): если у лица два союза с детьми и больше — ветвь это союз
  * (Сарра, Агарь, Хеттура); если союз один — ветвь это ребёнок (Сим, Хам, Иафет). keys — ключи ветвей по порядку:
  * id союза или id ребёнка. Обход — по основным отцу и матери (кровным и законным), не дальше maxGen поколений; лицо,
- * достижимое двумя путями, остаётся в ветви ближайшего пути (при равенстве — первой по порядку).
+ * достижимое двумя путями, остаётся в ветви ближайшего пути; при равенстве — пути по отцу, затем первой по порядку.
  */
 export function branchesOf(U: Unions, g: Graph, id: string, maxGen = 30): { desc: Map<string, Branch>; keys: string[] } {
   const own = (U.of.get(id) ?? []).filter((u) => !u.claim && u.kids.length);
@@ -203,16 +203,21 @@ export function branchesOf(U: Unions, g: Graph, id: string, maxGen = 30): { desc
   };
   if (own.length > 1) for (const u of own) for (const k of u.kids) seed(k, u.id, u.id);
   else if (own.length === 1) for (const k of own[0].kids) seed(k, k, own[0].id);
-  for (let i = 0; i < queue.length; i++) {
-    const p = queue[i];
-    const at = desc.get(p)!;
-    if (at.gen >= maxGen) continue;
-    for (const e of g.childrenOf.get(p) ?? []) {
-      if (e.kind !== 'father' && e.kind !== 'mother') continue;
-      if (desc.has(e.child) || e.child === id) continue;
-      desc.set(e.child, { branch: at.branch, gen: at.gen + 1, union: at.union });
-      queue.push(e.child);
-    }
+  // по поколениям: в каждом сначала пути по отцу, потом по матери — царь Авия идёт в ветвь Ровоама (сына Соломона),
+  // а не матери Маахи, внучки Авессалома (3 Цар 15:1–2)
+  for (let layer = queue; layer.length; ) {
+    const next: string[] = [];
+    for (const kind of ['father', 'mother'] as const)
+      for (const p of layer) {
+        const at = desc.get(p)!;
+        if (at.gen >= maxGen) continue;
+        for (const e of g.childrenOf.get(p) ?? []) {
+          if (e.kind !== kind || desc.has(e.child) || e.child === id) continue;
+          desc.set(e.child, { branch: at.branch, gen: at.gen + 1, union: at.union });
+          next.push(e.child);
+        }
+      }
+    layer = next;
   }
   return { desc, keys };
 }

@@ -17,6 +17,8 @@
  *    выбранного лица и при наведении на гребёнку; ссылка — место, где Писание называет этих детей по порядку
  *    (у сыновей Иакова — рассказ о рождениях Быт 29:32–30:24; 35:16–18; решение 41, MAP-73);
  *  — при выделении рода: предки — сплошной линией 1,5 px, потомки — штрихом, братья и сёстры — своей степенью;
+ *    потомки выбранного — ещё и цветом своей ветви со свечением, бледнее с каждым поколением, предки — с мягким
+ *    свечением, у первого ребёнка каждой ветви — цветная черта под подписью (решение 69; branches.ts);
  *  — брак — короткий знак «‖» от следа мужа к жене в год первого ребёнка; к дальней жене — знак и тонкая выноска.
  *    Знак занимает место в общей проверке наложений, как подпись, и при столкновении сдвигается (MAP-76);
  *  — призрак жены в её роду — пунктирный отвод и подпись «Рахиль, жена Иакова».
@@ -34,6 +36,8 @@ import { refText } from '../engine/kinship.ts';
 import { starRadius } from './glyphs.ts';
 import { mapFont, mapSize, T_MAP_S } from './type.ts';
 import { claim, textBox } from './labels.ts';
+import { branchColor, branchTickAt, GlowBatch, glowLayers, glows } from './branches.ts';
+import { branchFrame, FAR, type BranchPaint } from './marks.ts';
 import type { Rect } from './rect.ts';
 import type { Emphasis, Palette, Pass, SkyContext } from './sky.ts';
 
@@ -64,6 +68,8 @@ export interface LifeTrail {
   brk?: number;
   color: string;
   width: number;
+  /** штрих сплошной части: у ветвей второго круга выбранного лица (решение 69; branches.ts, branchDash) */
+  dash?: readonly number[];
 }
 
 /** Знак разрыва «//» на горизонтальном следе у x: два косых штриха через след, между ними — просвет 3 px. */
@@ -111,10 +117,12 @@ export function drawLifeTrail(ctx: CanvasRenderingContext2D, t: LifeTrail) {
   const cut = t.brk !== undefined && t.brk > from + 4 && t.brk < solidTo - 4 ? t.brk : null;
   const solidEnd = cut !== null ? cut - BREAK.gap / 2 - 2 : solidTo;
   if (solidEnd > from + 0.5) {
+    if (t.dash?.length) ctx.setLineDash(t.dash as number[]);
     ctx.beginPath();
     ctx.moveTo(from, y);
     ctx.lineTo(solidEnd, y);
     ctx.stroke();
+    if (t.dash?.length) ctx.setLineDash([]);
   }
   if (cut !== null) {
     drawBreak(ctx, cut, y, t.color);
@@ -360,22 +368,60 @@ export function drawMarriage(ctx: CanvasRenderingContext2D, m: Marriage) {
   }
 }
 
-/** Следы жизни видимых лиц (слой «следы жизни»). На обзоре (полоса ниже 5 px) — тоньше и бледнее. */
+/**
+ * Непрозрачность потомка по ветви выбранного (решение 69): яркость его поколения (branches.ts, branchFade); наведённая
+ * семья гасит чужих детей (FAMILY_HOVER_DIM) — ветвь гаснет в той же доле; зажигание неба при загрузке. Шаг 0,01:
+ * строк цвета на кадр — десятки.
+ */
+export function branchAlpha(bp: Pick<BranchPaint, 'a'>, emph: number, intro = 1): number {
+  return Math.round(Math.min(1, bp.a * Math.min(1, emph / FAR) * intro) * 100) / 100;
+}
+
+/**
+ * Следы жизни видимых лиц (слой «следы жизни»). На обзоре (полоса ниже 5 px) — тоньше и бледнее. Потомки выбранного
+ * лица — цветом своей ветви со свечением, предки — с мягким свечением (решение 69; branches.ts).
+ */
 export function drawTrails(v: SkyContext, p: Pass) {
   const { ctx, cam, pal } = v;
   const ky = cam.ky;
   const intro = p.s.intro;
   // один объект на весь слой: следов в кадре тысячи
   const t: LifeTrail = { x0: 0, x1: 0, y: 0, cls: 'exact', known: true, solidTo: 0, color: '', width: 1 };
+  // ветви выбранного лица (решение 69): свечение потомков цветом ветви и предков — мягким светом — под следами
+  const bf = branchFrame(v, p);
+  if (bf.map) {
+    const glow = new GlowBatch(glowLayers('branch', bf.theme, ky < 5));
+    const anc = new GlowBatch(glowLayers('ancestor', bf.theme, ky < 5));
+    for (const i of p.vis) {
+      const id = v.nodes[i].person;
+      const bp = bf.paint(id);
+      if (bp ? !glows(bp.gen, ky < 5) : !bf.ancestor(id)) continue;
+      if (!trailOf(v, i, t) || t.x1 < -8 || t.x0 > cam.w + 8) continue;
+      if (bp) glow.add(bp.color, branchAlpha(bp, p.emph(id), intro), t.x0, t.y, t.x1, t.y);
+      else anc.add(pal.ink, intro, t.x0, t.y, t.x1, t.y);
+    }
+    anc.flush(ctx, bf.theme === 'night');
+    glow.flush(ctx, bf.theme === 'night');
+  }
   ctx.lineCap = 'butt';
   for (const i of p.vis) {
     if (!trailOf(v, i, t)) continue;
     const n = v.nodes[i];
     const q = byId.get(n.person)!;
-    const e = p.emph(n.person) * intro;
-    const a = (ky < 5 ? 0.35 : 0.55) * e * (q.magnitude <= 2 ? 1.25 : 1);
-    t.color = alpha(pal.ink2, Math.min(1, a));
-    t.width = ky < 5 ? 1 : q.magnitude <= 1 ? 1.6 : 1.2;
+    const bp = bf.paint(n.person);
+    if (bp) {
+      // потомок выбранного — цветом своей ветви, бледнее с каждым поколением (решение 69)
+      t.color = alpha(bp.color, branchAlpha(bp, p.emph(n.person), intro));
+      t.width = ky < 5 ? 1.2 : q.magnitude <= 1 ? 1.8 : 1.5;
+      t.dash = bp.dash;
+      bf.shown.add(n.person);
+    } else {
+      const e = p.emph(n.person) * intro;
+      const a = (ky < 5 ? 0.35 : 0.55) * e * (q.magnitude <= 2 ? 1.25 : 1);
+      t.color = alpha(pal.ink2, Math.min(1, a));
+      t.width = ky < 5 ? 1 : q.magnitude <= 1 ? 1.6 : 1.2;
+      t.dash = undefined;
+    }
     drawLifeTrail(ctx, t);
     if (p.lines && t.x1 > t.x0 + 1 && t.x1 > 0 && t.x0 < cam.w) p.lines.add({ x: t.x0, y: t.y - 1.5, w: t.x1 - t.x0, h: 3 });
     if (p.shown && t.brk !== undefined && t.brk > v.letterW && t.brk < cam.w && t.y > v.openTop && t.y < cam.vp.b) p.shown.breaks.add(n.person);
@@ -783,6 +829,10 @@ export function drawDescents(v: SkyContext, p: Pass): FamilyNote[] {
   const frame = frameOf(v, p);
   const hover = familyHover(v);
   const d: Descent = { x: 0, y0: 0, y1: 0, color: '', ghost: false, mother: undefined, tension: undefined };
+  // ветви выбранного лица (решение 69): свечение отводов к потомкам и предкам — после всех отводов, одним путём на цвет
+  const bf = branchFrame(v, p);
+  const glow = bf.map ? new GlowBatch(glowLayers('branch', bf.theme, cam.ky < 5)) : null;
+  const anc = bf.map ? new GlowBatch(glowLayers('ancestor', bf.theme, cam.ky < 5)) : null;
   // узкие строки (решение 25; MAP-61): связи — 0,5 px, чтобы не заливать небо сеткой вертикалей
   const base = cam.ky < 6 ? 0.5 : 1;
   ctx.lineWidth = base;
@@ -900,9 +950,26 @@ export function drawDescents(v: SkyContext, p: Pass): FamilyNote[] {
         } else if (plain.length) drawBracket(ctx, { x, y0: g.y0, kids: plain, color, mother });
         ctx.lineWidth = base;
         for (const k of lit) {
-          const st = LINK_STYLE[linkKind(kp, hl!.get(k.id)) as Exclude<LinkKind, 'base'>];
+          const lk = linkKind(kp, hl!.get(k.id)) as Exclude<LinkKind, 'base'>;
+          const st = LINK_STYLE[lk];
           ctx.lineWidth = st.width;
-          drawBracket(ctx, { x, y0: g.y0, kids: [k], color: alpha(pal.ink2, Math.min(1, p.emph(k.id) * intro)), dash: st.dash, mother: plain.length ? undefined : mother });
+          // ветви выбранного лица (решение 69): отвод к потомку — цветом его ветви (штрих остаётся), к предку — со
+          // свечением; свечение ложится одним путём после всех отводов
+          const bp = lk === 'desc' ? bf.paint(k.id) : null;
+          let color = alpha(pal.ink2, Math.min(1, p.emph(k.id) * intro));
+          if (bp) {
+            const a = branchAlpha(bp, p.emph(k.id), intro);
+            color = alpha(bp.color, a);
+            if (glows(bp.gen, cam.ky < 5)) {
+              glow!.add(bp.color, a, x, g.y0, x, k.y);
+              if (Math.abs(k.x - x) >= 0.75) glow!.add(bp.color, a, x, k.y, k.x, k.y);
+            }
+            bf.shown.add(k.id);
+          } else if (lk === 'anc' && anc) {
+            anc.add(pal.ink, intro, x, g.y0, x, k.y);
+            if (Math.abs(k.x - x) >= 0.75) anc.add(pal.ink, intro, x, k.y, k.x, k.y);
+          }
+          drawBracket(ctx, { x, y0: g.y0, kids: [k], color, dash: st.dash, mother: plain.length ? undefined : mother });
           ctx.lineWidth = base;
         }
         // хронологическое напряжение: знак разрыва на стволе; ребёнок родился после разрыва следа родителя (MAP-51) —
@@ -930,6 +997,8 @@ export function drawDescents(v: SkyContext, p: Pass): FamilyNote[] {
       }
     }
   }
+  if (anc) anc.flush(ctx, bf.theme === 'night');
+  if (glow) glow.flush(ctx, bf.theme === 'night');
   // порядок братьев по перечислению (MAP-54; решение 41): «годы — по порядку …, выв.» — у детей, чей год оценён
   // по порядку, только в семье выбранного лица (его дети, его братья и сёстры) и у наведённой гребёнки
   const own = new Set<string>();
@@ -1028,6 +1097,7 @@ function marriageSpots(m: MarriageMark): { x: number; from?: number; box: Rect }
  * только на свободное место и попадают в замер подписей. Пометы — сначала там, где не легли бы на линии кадра.
  */
 export function drawFamilyNotes(v: SkyContext, p: Pass, notes: readonly FamilyNote[]) {
+  drawBranchTicks(v, p);
   if (!notes.length) return;
   const { ctx, pal } = v;
   const frame = frameOf(v, p);
@@ -1095,6 +1165,50 @@ export function drawFamilyNotes(v: SkyContext, p: Pass, notes: readonly FamilyNo
     drawFamilyText(ctx, pal, nt.text, c.tx, c.ty, v.coarse);
   }
   ctx.lineWidth = 1;
+}
+
+/**
+ * Метки ветвей (решение 69): когда у выбранного лица ветвей две и больше, под началом подписи первого ребёнка каждой
+ * ветви — короткая черта цвета ветви (branches.ts, branchTickAt). Черта лежит в прямоугольнике самой подписи и места
+ * не занимает; нет подписи ни у одного ребёнка ветви — нет и метки. Рисуется после подписей звёзд. Для проверок
+ * приёмки (tools/accept/colors4.ts) кадр пишет canvas[data-branches]: выбранное лицо, число ветвей, сколько лиц
+ * нарисовано цветом, метки и ветви лиц первых трёх поколений в кадре.
+ */
+export function drawBranchTicks(v: SkyContext, p: Pass) {
+  const bf = branchFrame(v, p);
+  const map = bf.map;
+  const ticks: Record<string, number> = {};
+  if (map && map.keys.length >= 2 && p.s.layers.labels) {
+    const boxes = new Map<string, Rect>();
+    for (const b of v.ledger.boxes) if (b.kind === 'star' && b.id && !boxes.has(b.id)) boxes.set(b.id, b);
+    const { ctx } = v;
+    map.heads.forEach((kids, branch) => {
+      const id = kids.find((k) => boxes.has(k) && bf.paint(k));
+      if (!id) return;
+      const bp = bf.paint(id)!;
+      const r = branchTickAt(boxes.get(id)!);
+      ctx.fillStyle = alpha(bp.color, Math.min(1, p.s.intro));
+      ctx.fillRect(r.x, r.y, r.w, r.h);
+      ticks[id] = branch;
+    });
+  }
+  const ds = (v.ctx.canvas as { dataset?: DOMStringMap } | undefined)?.dataset;
+  if (!ds) return;
+  if (!map || !bf.shown.size) {
+    if (ds.branches !== undefined) delete ds.branches;
+    return;
+  }
+  const gen: Record<string, [number, number]> = {};
+  let n = 0;
+  for (const id of bf.shown) {
+    const b = map.desc.get(id);
+    if (!b || b.gen > 3 || n >= 80) continue;
+    gen[id] = [b.branch, b.gen];
+    n++;
+  }
+  const colors = map.keys.slice(0, 16).map((_, i) => branchColor(i, bf.theme));
+  const out = JSON.stringify({ sel: map.id, n: map.keys.length, shown: bf.shown.size, ticks, colors, gen });
+  if (ds.branches !== out) ds.branches = out;
 }
 
 /**

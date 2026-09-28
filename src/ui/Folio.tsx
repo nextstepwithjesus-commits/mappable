@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'preact/ho
 import type { ComponentChildren, VNode } from 'preact';
 import { byId, lineMembership, loadCard, loadedCard, loadedChrono } from '../data/atlas.ts';
 import type { Card, Chrono } from '../data/types.ts';
-import { selected, second, pickMode, model, showSchema } from '../state.ts';
+import { selected, second, pickMode, model, showSchema, panel } from '../state.ts';
 import { grid, unfoldCard } from './layout.ts';
 import { skyRef, plural, CAN_PRINT, goTo } from './common.tsx';
 import { lowerFirst } from './text/ru.ts';
@@ -13,22 +13,19 @@ import { SECTIONS, PARTS, buildSections, familyIds, contemporaryGroups } from '.
 import { Clamp, clampItems } from './card/Clamp.tsx';
 import { Brief, authoredCount } from './card/Brief.tsx';
 import { Rail, RailKey, type SecState } from './card/Rail.tsx';
-import { affiliation } from './card/shared.tsx';
+import { affiliation, MODEL_NAMES } from './card/shared.tsx';
 import { reduced } from './sky/view.ts';
 import { sheetStop, snapSheet, stopsFor, releaseVelocity, type SheetStop } from './sheet.ts';
 import { cardFolded, cardStack, clipWords, closeAllCards, closeCard, stackSummaryHead } from './stack.ts';
 import { WorkButton } from './panels/Work.tsx';
 import { cardTitle, focusCardTitle, focusQuietly } from './focus.ts';
+import { selectedUnion, selectUnion, unionById } from './reveal.ts';
+import { UnionCard, openerSection, unionTitle, unionYears } from './card/Union.tsx';
+import type { Union } from '../engine/unions.ts';
 
 export { Masthead, SECTIONS, PARTS, buildSections, familyIds, contemporaryGroups };
 export type { SecState };
 
-const modelNames: Record<string, string> = {
-  'mt-long': 'масоретские числа, 430 лет в Египте',
-  'mt-short': 'краткое пребывание, 215 лет',
-  lxx: 'числа в скобках Быт 5 и 11',
-  terah70: 'Фарре 70 лет',
-};
 
 /** «9–12, 14»: номера разделов подряд — диапазоном. */
 export function ranges(ns: number[]): string {
@@ -92,7 +89,7 @@ export function colophonText(id: string, states: Record<number, SecState>): stri
   // у народа и рода годов в карточке нет (CARD-59) — и зависимости от модели тоже
   const dep = c && c.cls !== 'epochal' && !isPeople(id) && c.b < -966;
   return typo(
-    `${parts.join('; ')}. Ссылки сверены с Синодальным текстом.` + (dep ? ` Годы до 967 г. до Р. Х. — по модели «${modelNames[model.value.id] ?? model.value.id}».` : ''),
+    `${parts.join('; ')}. Ссылки сверены с Синодальным текстом.` + (dep ? ` Годы до 967 г. до Р. Х. — по модели «${MODEL_NAMES[model.value.id] ?? model.value.id}».` : ''),
   );
 }
 
@@ -500,10 +497,11 @@ function useSheetDrag(aside: { current: HTMLElement | null }, on: boolean) {
  * строка не режется его краем.
  * Имя здесь — для глаз: заголовком карточки для диктора и для фокуса остаётся h2 шапки карточки (Masthead).
  */
-function SheetBar({ id, stop, onClose }: { id: string; stop: SheetStop; onClose: () => void }) {
+function SheetBar({ id, stop, onClose, union }: { id: string; stop: SheetStop; onClose: () => void; union?: Union | null }) {
   const p = byId.get(id)!;
   const c = model.value.chrono.get(id);
-  const years = passportYears(id, c);
+  // карточка союза (решение 71): в шапке листа — имена супругов и годы рождения детей; «×» возвращает карточку лица
+  const years = union ? (unionYears(union)?.text ?? '') : passportYears(id, c);
   const full = stop === 'full';
   return (
     <div class="sheet-bar">
@@ -512,7 +510,7 @@ function SheetBar({ id, stop, onClose }: { id: string; stop: SheetStop; onClose:
       </div>
       <div class="bar-row">
         <div class="bar-name" aria-hidden="true">
-          {p.name}
+          {union ? unionTitle(union) : p.name}
         </div>
         <button
           type="button"
@@ -524,12 +522,12 @@ function SheetBar({ id, stop, onClose }: { id: string; stop: SheetStop; onClose:
           {full ? 'Свернуть' : 'Развернуть'}
         </button>
         {/* «×» закрывает карточку, как вкладку: открывается следующая из стопки; панель остаётся (D11; решение 18) */}
-        <Close label="Закрыть карточку" onClick={onClose} />
+        <Close label={union ? 'Закрыть карточку союза' : 'Закрыть карточку'} onClick={onClose} />
       </div>
       {stop === 'peek' && (
         <div class="bar-peek" aria-hidden="true">
           <div class="bar-years">{typo(years || 'время не установлено')}</div>
-          {p.disambig ? <div class="bar-dis">{typo(p.disambig)}</div> : null}
+          {union ? <div class="bar-dis">карточка союза</div> : p.disambig ? <div class="bar-dis">{typo(p.disambig)}</div> : null}
         </div>
       )}
     </div>
@@ -624,6 +622,48 @@ function closeActive(id: string) {
 /** После «Свернуть карточку» фокус — на «развернуть» корешка (кнопка «Свернуть карточку» уходит из разметки). */
 let focusSpine = false;
 
+/** Прокрутка карточки лица перед переходом к карточке союза: лист возвращается на то же место. */
+const personTop = new WeakMap<HTMLElement, number>();
+
+/**
+ * Переход «карточка лица ⇄ карточка союза» в одном листе (решение 71): карточка союза открывается с начала; «×» или
+ * Escape возвращают карточку лица на прежнее место прокрутки, фокус — на ссылку «союз», с которой пришли (иначе — на
+ * заголовок карточки). Другое лицо (выбор на небе, ссылка на ребёнка) — обычный переход, без возврата.
+ */
+function useUnionReturn(aside: { current: HTMLElement | null }, id: string | null, uid: string | null) {
+  const last = useRef<{ id: string | null; uid: string | null; top: number }>({ id, uid, top: 0 });
+  useLayoutEffect(() => {
+    const el = aside.current;
+    const was = last.current;
+    if (was.id === id && was.uid === uid) return;
+    if (uid && el) {
+      // вход в союз из карточки лица — запомнить её место; из союза в союз — место остаётся прежним
+      const top = was.id === id && !was.uid ? (personTop.get(el) ?? 0) : was.id === id ? was.top : 0;
+      last.current = { id, uid, top };
+      el.scrollTo({ top: 0 });
+      return;
+    }
+    last.current = { id, uid, top: 0 };
+    if (!el || was.id !== id || !was.uid) return;
+    const from = was.uid;
+    el.scrollTop = was.top;
+    personTop.set(el, was.top);
+    // разделы карточки сначала выводятся целиком, затем предел «8 строк» (Clamp) их сворачивает: место и ссылка — после
+    // этого, в следующем кадре; ссылка — в том разделе, из которого пришли, и видимая (не под «ещё N записей»)
+    requestAnimationFrame(() => {
+      if (!el.isConnected || el.hasAttribute('data-union')) return;
+      el.scrollTop = was.top;
+      const a = document.activeElement;
+      if (a && a !== document.body && a.isConnected) return;
+      const sec = openerSection(from);
+      const scope = (sec && el.querySelector(`#${CSS.escape(sec)}`)) || el;
+      const link = [...scope.querySelectorAll<HTMLElement>(`.folio-body [data-union="${CSS.escape(from)}"]`)].find((x) => x.getClientRects().length > 0);
+      if (link) focusQuietly(link);
+      else focusCardTitle(id!);
+    });
+  }, [id, uid]);
+}
+
 export function Folio({ id: forcedId, forceState }: { id?: string; forceState?: 'loading' | 'error' } = {}) {
   const id = forcedId ?? selected.value;
   // образец (#/specimen, VIS-55) показывает «Загрузку» и «Ошибку» живыми: лист в этом состоянии, без стопки и листа телефона
@@ -643,6 +683,10 @@ export function Folio({ id: forcedId, forceState }: { id?: string; forceState?: 
   const stackSize = cardStack.value.length;
   const stop = sheetStop.value;
   const sheet = live && phone && !!id && byId.has(id);
+  // карточка союза (решение 71) — вместо карточки лица: лицо остаётся выбранным, стопка не меняется
+  const uid = live && id ? selectedUnion.value : null;
+  const union = uid ? (unionById(uid) ?? null) : null;
+  useUnionReturn(aside, id ?? null, union?.id ?? null);
   useSheetDrag(aside, sheet);
   useEffect(() => {
     if (!id || !live) return;
@@ -674,6 +718,8 @@ export function Folio({ id: forcedId, forceState }: { id?: string; forceState?: 
       setCurrent(cur);
       // закреплённая полоса получает фон и черту, когда под неё уходит текст (CARD-53, UX-67)
       el.toggleAttribute('data-scrolled', el.scrollTop > BAR_H - 4);
+      // место в карточке лица — чтобы вернуться на него после карточки союза
+      if (!el.hasAttribute('data-union')) personTop.set(el, el.scrollTop);
     };
     el.addEventListener('scroll', onScroll, { passive: true });
     return () => el.removeEventListener('scroll', onScroll);
@@ -728,7 +774,7 @@ export function Folio({ id: forcedId, forceState }: { id?: string; forceState?: 
     ro.observe(cmds);
     ro.observe(col);
     return () => ro.disconnect();
-  }, [id, phone, live, stackSize, spine]);
+  }, [id, phone, live, stackSize, spine, union?.id]);
 
   if (!id) return <aside class="folio" hidden />;
   const p = byId.get(id);
@@ -745,6 +791,31 @@ export function Folio({ id: forcedId, forceState }: { id?: string; forceState?: 
   const status: BodyStatus = forceState ?? (failed === id ? 'error' : !shownBody && slow ? 'loading' : 'ok');
   const others = live ? cardStack.value.filter((x) => x !== id && byId.has(x)) : [];
   const close = () => closeActive(id);
+
+  if (union)
+    return (
+      <aside
+        class="folio"
+        aria-label={`Карточка союза: ${unionTitle(union)}`}
+        ref={aside}
+        data-union={union.id}
+        data-stop={sheet ? stop : undefined}
+        onKeyDown={(e) => {
+          // Escape в карточке союза возвращает карточку лица — одно видимое состояние (D5); выбор второго лица и
+          // открытая панель снимаются раньше, общим порядком (keys.ts)
+          if (e.key !== 'Escape' || e.defaultPrevented || pickMode.peek() || panel.peek()) return;
+          e.preventDefault();
+          selectUnion(null);
+        }}
+      >
+        {sheet && <SheetBar id={id} stop={stop} onClose={() => selectUnion(null)} union={union} />}
+        {sheet && others.length > 0 && <StackStrip ids={others} />}
+        {live && !phone && <FolioBar id={id} others={others} open={stackOpen} setOpen={setStackOpen} onClose={() => selectUnion(null)} closeLabel="Закрыть карточку союза" />}
+        <div class="folio-inner" ref={inner} key={`union|${union.id}`}>
+          <UnionCard u={union} from={id} />
+        </div>
+      </aside>
+    );
 
   return (
     <aside class="folio" aria-label={`Карточка: ${p.name}`} ref={aside} data-stop={sheet ? stop : undefined} data-state={status === 'ok' ? undefined : status}>
@@ -775,7 +846,7 @@ const BAR_H = 36;
  * Слева — строка стопки «Ещё открыты (N): …» (по щелчку — список), справа — «Свернуть карточку» и «×».
  * Без стопки полоса лежит на строке имени и прозрачна, пока лист не прокручен (data-scrolled): первый экран не теряет строки.
  */
-function FolioBar({ id, others, open, setOpen, onClose }: { id: string; others: string[]; open: boolean; setOpen: (v: boolean) => void; onClose: () => void }) {
+function FolioBar({ id, others, open, setOpen, onClose, closeLabel = 'Закрыть карточку' }: { id: string; others: string[]; open: boolean; setOpen: (v: boolean) => void; onClose: () => void; closeLabel?: string }) {
   const sum = useRef<HTMLButtonElement>(null);
   const hide = (refocus: boolean) => {
     setOpen(false);
@@ -806,7 +877,7 @@ function FolioBar({ id, others, open, setOpen, onClose }: { id: string; others: 
         >
           Свернуть карточку
         </button>
-        <Close label="Закрыть карточку" onClick={onClose} />
+        <Close label={closeLabel} onClick={onClose} />
       </span>
       {open && others.length > 0 && <StackList ids={others} active={id} onPick={() => hide(false)} />}
     </div>

@@ -141,15 +141,21 @@ describe('верх телефона: «Разделы» (H4; MOB-03, MOB-04)', (
   it('все панели, справка и тема — флажком «Дневная карта»', () => {
     const opened: string[] = [];
     let flipped = 0;
-    const items = phoneMenuItems('kinship', true, (id) => opened.push(id), () => flipped++);
-    // «В работе» (J3) — после «Указателя», «Эпохи» (решение 51) — после «Глав», как в строке команд
-    expect(items.map((i) => i.label)).toEqual(['Указатель', 'В работе', 'Главы', 'Эпохи', 'Синопсис', 'Родство', 'Сквозной раздел', 'Условные знаки', 'О карте', 'Дневная карта']);
+    let restarted = 0;
+    const items = phoneMenuItems('kinship', true, (id) => opened.push(id), () => flipped++, 0, () => restarted++);
+    // «В работе» (J3) — после «Указателя», «Эпохи» (решение 51) — после «Глав», как в строке команд; «Начать заново…»
+    // (решение 68) — после справки, перед темой
+    expect(items.map((i) => i.label)).toEqual(['Указатель', 'В работе', 'Главы', 'Эпохи', 'Синопсис', 'Родство', 'Сквозной раздел', 'Условные знаки', 'О карте', 'Начать заново…', 'Дневная карта']);
     expect(items.filter((i) => i.checked).map((i) => i.label)).toEqual(['Родство', 'Дневная карта']);
-    // справка и тема отделены чертой
-    expect(items.filter((i) => i.sep).map((i) => i.label)).toEqual(['Условные знаки', 'Дневная карта']);
+    // «Начать заново…» — команда, а не флажок: у пункта нет состояния «отмечен»
+    expect(items[9].checked).toBeUndefined();
+    // справка, выбор начала и тема отделены чертой
+    expect(items.filter((i) => i.sep).map((i) => i.label)).toEqual(['Условные знаки', 'Начать заново…', 'Дневная карта']);
     items[4].onSelect();
     items[9].onSelect();
+    items[10].onSelect();
     expect(opened).toEqual(['synopsis']);
+    expect(restarted).toBe(1);
     expect(flipped).toBe(1);
   });
 });

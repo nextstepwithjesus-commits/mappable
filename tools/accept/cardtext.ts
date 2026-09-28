@@ -76,7 +76,8 @@ export const cardtext: Scenario[] = [
       const i = s10.search(/Соломон/);
       if (i < 0 || i > 80) return fail(`Соломон не в начале § 10: «${s10.slice(0, 120)}»`);
       if (/Сын от Ахиноамы/.test(s10)) return fail('шесть строк «Сын от …» остались');
-      if (!/Амнон \(от Ахиноамы\)/.test(s10)) return fail(`нет строки «Амнон (от Ахиноамы)»: «${s10.slice(0, 200)}»`);
+      // у каждого — ссылка на карточку союза с его матерью (решение 71)
+      if (!/Амнон \(от Ахиноамы, союз\)/.test(s10)) return fail(`нет строки «Амнон (от Ахиноамы, союз)»: «${s10.slice(0, 200)}»`);
       await unclamp(p, 17);
       const heads = (await p.locator('.folio #sec-17 li.sub').allInnerTexts()).map(flat);
       if (!heads.includes('До воцарения') || !heads.some((h) => /^Царь всего Израиля/.test(h))) return fail(`подзаголовки § 17: ${heads.join(' | ')}`);

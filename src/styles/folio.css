@@ -1385,3 +1385,41 @@ div.workpick.skymenu .wp-head {
     transition: none;
   }
 }
+
+/* ---------- карточка союза (решения 67, 71; src/ui/card/Union.tsx) ----------
+   Ссылка «союз» в § 9 и § 10 и ссылки на союзы в карточке союза — командой, как «см. § 8»: гарнитура Jost отличает её от
+   имени лица (Literata с чертой). Строчная, без рамки; поле нажатия — по строке текста (исключение WCAG 2.5.8 для ссылок
+   в тексте). */
+.folio .ulink {
+  display: inline;
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: 1;
+  color: var(--ink-2);
+  text-decoration: underline 1px var(--rule-strong);
+  text-underline-offset: 3px;
+  text-align: inherit;
+}
+.folio .ulink:hover {
+  color: var(--ink);
+  text-decoration-color: var(--ink);
+}
+/* «Раскрыть на небе» и под ней — сколько лиц союза уже на небе «набор» */
+.folio .union-actions {
+  align-items: baseline;
+  gap: 4px 10px;
+}
+.folio .union-onsky {
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  color: var(--ink-3);
+}
+/* ссылки на стихи союза — в своей строке паспорта; вклейка стихов — под ними, во всю колонку значения */
+.passport dd.union-refs {
+  min-width: 0;
+}
+/* разделы карточки союза — без висячих номеров: у союза нет 24 разделов */
+.folio .union-body > .sec:first-child {
+  margin-top: 12px;
+}

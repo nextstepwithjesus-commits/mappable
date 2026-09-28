@@ -48,24 +48,39 @@ export function identityRows(laneMin: number, laneMax: number): Rows {
  * Вне полос данных отображение продолжается с наклоном 1.
  */
 export function rowsFromHeights(laneMin: number, heights: ArrayLike<number>, key: string, anchor = 0): Rows {
+  return rowsFromSegments(laneMin - 0.5, 1, heights, key, anchor);
+}
+
+/**
+ * То же по половинам полос (решение 70: место под карточки союзов): halves[2j] — высота нижней половины полосы
+ * laneMin + j (от её нижнего края до середины, где стоят звёзды), halves[2j + 1] — верхней. Так строка под карточки
+ * союзов встаёт между полосой родителя и полосой детей, даже если это соседние полосы: звезда остаётся на середине
+ * своей полосы, а место прибавляется только с одной её стороны.
+ */
+export function rowsFromHalves(laneMin: number, halves: ArrayLike<number>, key: string, anchor = 0): Rows {
+  return rowsFromSegments(laneMin - 0.5, 0.5, halves, key, anchor);
+}
+
+/** Кусочно-линейное отображение: отрезки полос шириной seg от b0, у каждого своя высота в строках. */
+function rowsFromSegments(b0: number, seg: number, heights: ArrayLike<number>, key: string, anchor: number): Rows {
   const n = heights.length;
   const h = Float64Array.from(heights);
   const R = new Float64Array(n + 1);
   for (let j = 0; j < n; j++) R[j + 1] = R[j] + Math.max(0, h[j]);
-  const b0 = laneMin - 0.5;
+  const span = n * seg;
   const raw = (x: number) => {
     const u = x - b0;
     if (u <= 0) return R[0] + u;
-    if (u >= n) return R[n] + (u - n);
-    const j = Math.floor(u);
-    return R[j] + h[j] * (u - j);
+    if (u >= span) return R[n] + (u - span);
+    const j = Math.min(n - 1, Math.floor(u / seg));
+    return R[j] + (h[j] * (u - j * seg)) / seg;
   };
   const off = anchor - raw(anchor);
   const row = (x: number) => raw(x) + off;
   const lane = (r: number) => {
     const q = r - off;
     if (q <= R[0]) return b0 + (q - R[0]);
-    if (q >= R[n]) return b0 + n + (q - R[n]);
+    if (q >= R[n]) return b0 + span + (q - R[n]);
     // наибольшая j с R[j] ≤ q < R[j + 1] (на убранных полосах R не растёт — они пропускаются)
     let lo = 0;
     let hi = n - 1;
@@ -76,7 +91,7 @@ export function rowsFromHeights(laneMin: number, heights: ArrayLike<number>, key
     }
     let j = lo;
     while (j > 0 && h[j] <= 0) j--;
-    return h[j] > 0 ? b0 + j + (q - R[j]) / h[j] : b0 + j;
+    return h[j] > 0 ? b0 + (j + (q - R[j]) / h[j]) * seg : b0 + j * seg;
   };
   return { identity: false, key, row, lane, min: R[0] + off, max: R[n] + off };
 }
@@ -95,7 +110,24 @@ export interface SkyView {
    * «+N» встаёт в опустевший отрезок полос, ближайший к ней, а не в самый длинный: место работы не теряется.
    */
   foldAt?: ReadonlyMap<string, number>;
+  /**
+   * Место под карточки союзов в небе «набор» (решение 70; src/render/plates.ts, plateGaps): у полосы lane со стороны dir
+   * (1 — к полосам выше, к верху экрана; −1 — ниже) прибавляется PLATE_ROWS строки — между родителем и детьми.
+   */
+  gaps?: readonly PlateGap[];
 }
+
+/** Место под карточки союзов у полосы лица: сторона dir — 1 (выше, к верху экрана) или −1 (ниже). */
+export interface PlateGap {
+  lane: number;
+  dir: 1 | -1;
+}
+
+/** Сколько строк прибавляется под карточки союзов у полосы родителя (решение 70). */
+export const PLATE_ROWS = 1.5;
+
+/** Ключ мест под карточки союзов: небо перестраивается, только если они изменились. */
+export const gapsKey = (gaps: readonly PlateGap[] | undefined) => (gaps ?? []).map((g) => `${g.lane}${g.dir > 0 ? '+' : '-'}`).sort().join(',');
 
 /** Узел неба в той мере, в какой он нужен плану. */
 export interface PlanNode {
@@ -336,8 +368,25 @@ export function planSky(d: PlanData, v: SkyView): SkyPlan {
   }
   let same = true;
   for (let j = 0; j < L && same; j++) if (h[j] !== 1) same = false;
-  const key = `${v.mode}|${v.foldDesc.join(',')}|${v.foldGroups.join(',')}|${work ? v.set.size : 0}|${hash(h)}`;
-  const rows = same ? identityRows(laneMin, laneMax) : rowsFromHeights(laneMin, h, key, anchorLane(h, laneMin));
+  // место под карточки союзов (решение 70): только в небе «набор», у полос видимых лиц — половины полос
+  const gaps = work ? (v.gaps ?? []).filter((g) => g.lane >= laneMin && g.lane <= laneMax && h[g.lane - laneMin] > 0) : [];
+  let rows: Rows;
+  if (gaps.length) {
+    const halves = new Float64Array(2 * L);
+    for (let j = 0; j < L; j++) halves[2 * j] = halves[2 * j + 1] = h[j] / 2;
+    const seen = new Set<string>();
+    for (const g of gaps) {
+      const k = `${g.lane}${g.dir}`;
+      if (seen.has(k)) continue;
+      seen.add(k);
+      halves[2 * (g.lane - laneMin) + (g.dir > 0 ? 1 : 0)] += PLATE_ROWS;
+    }
+    const key = `${v.mode}|${v.foldDesc.join(',')}|${v.foldGroups.join(',')}|${v.set.size}|${hash(halves)}|g`;
+    rows = rowsFromHalves(laneMin, halves, key, anchorLane(h, laneMin));
+  } else {
+    const key = `${v.mode}|${v.foldDesc.join(',')}|${v.foldGroups.join(',')}|${work ? v.set.size : 0}|${hash(h)}`;
+    rows = same ? identityRows(laneMin, laneMax) : rowsFromHeights(laneMin, h, key, anchorLane(h, laneMin));
+  }
   const hiddenPersons = new Set<string>();
   const seen = new Map<string, boolean>();
   for (let i = 0; i < N; i++) {

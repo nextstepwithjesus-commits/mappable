@@ -202,6 +202,50 @@
 .cartouche .entry button:hover {
   text-decoration-color: var(--ink);
 }
+/* пять начал при первом посещении (решение 68): под подзаголовком, столбцом — название и пояснение; текст — по краю
+   заголовка (поле команды — на отступе слева). Быстрые входы — ниже, отделены промежутком */
+.cartouche .pick h2 {
+  margin-top: 0;
+}
+.cartouche .pick .starts {
+  margin: 0 0 10px;
+}
+/* невысокое окно (1024 × 768, 1366 × 768): начала — в два столбца, одними названиями (пояснение — в подсказке и для
+   диктора); подзаголовок и легенда лент уходят (они же — в «Условных знаках»). Так начала, входы, главная фраза и «Как
+   читать карту» по-прежнему видны без прокрутки (UX-56, UX-70). Телефон — столбцом с пояснениями, табличка прокручивается */
+@media (min-width: 721px) and (max-height: 800px) {
+  .cartouche.picking .sub,
+  .cartouche.picking .ribbons {
+    display: none;
+  }
+  .cartouche.picking .pick h2 {
+    margin-bottom: 2px;
+  }
+  /* сетка сегментов: соседи делят рамку, как у .seg; первый столбец — по самому длинному названию */
+  .cartouche.picking .starts {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    padding-left: 1px;
+    margin-bottom: 8px;
+  }
+  .cartouche.picking .starts li {
+    margin: -1px 0 0 -1px;
+  }
+  .cartouche.picking .starts button {
+    padding: 2px 9px;
+  }
+  .cartouche.picking .starts .nm {
+    font-size: var(--t-ui);
+    line-height: var(--t-ui-lh);
+  }
+  .cartouche.picking .starts .note {
+    display: none;
+  }
+}
+/* укороченное вступление (низкое небо): «С чего начать» — рядом с названием; «Как читать карту» и «Свернуть» — как прежде */
+.cartouche.low .start-cmd {
+  color: var(--ink);
+}
 /* «×» прилипает к верху таблички, если она прокручивается (альбомная ориентация телефона; MOB-07) */
 .cartouche .close {
   position: sticky;
@@ -586,6 +630,7 @@
     'scale-lbl scale'
     'axes-lbl axes'
     'chrono-lbl chrono'
+    'start-lbl start'
     'full full';
   align-items: center;
   gap: 4px 12px;
@@ -598,6 +643,19 @@
 }
 .viewpop .axes {
   grid-area: axes;
+}
+/* «Начало» (решение 68): подпись — у первой строки столбца начал; начала — столбцом, поле команды — от края сегментов */
+.viewpop .start-lbl {
+  grid-area: start-lbl;
+  align-self: start;
+  padding-top: 4px;
+}
+.viewpop .start-box {
+  grid-area: start;
+}
+.viewpop .starts,
+.viewpop .starts-ask {
+  margin: 0;
 }
 .viewpop .full-row {
   grid-area: full;

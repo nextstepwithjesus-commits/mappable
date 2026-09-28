@@ -16,18 +16,23 @@ const GAP = 2;
 const SEP = 21;
 const MORE = 52;
 const width = (id: string) => W[id];
-/** Ширина ряда при данном наборе скрытых команд — так, как его раскладывает App.tsx. */
+/**
+ * Ширина ряда при данном наборе скрытых команд — так, как его раскладывает TopBar.tsx. «Ещё» в ряду всегда: в нём
+ * последним пунктом стоит «Начать заново…» (решение 68).
+ */
 function rowWidth(hidden: Set<string>): number {
   const shown = ORDER.filter((id) => !hidden.has(id));
-  const n = shown.length + 1 + (hidden.size ? 1 : 0);
-  return shown.reduce((a, id) => a + W[id], 0) + SEP + (hidden.size ? MORE : 0) + GAP * (n - 1);
+  const n = shown.length + 2;
+  return shown.reduce((a, id) => a + W[id], 0) + SEP + MORE + GAP * (n - 1);
 }
 const full = rowWidth(new Set());
 
 describe('«Ещё» верхней строки (C3; VIS-20, IX-46, MOB-04)', () => {
-  it('если места хватает, «Ещё» нет и видны все команды', () => {
+  it('если места хватает, видны все команды; «Ещё» — только с «Начать заново…» (решение 68)', () => {
     expect([...overflowCommands(full, width, GAP, SEP, MORE)]).toEqual([]);
     expect([...overflowCommands(full + 200, width, GAP, SEP, MORE)]).toEqual([]);
+    // место под «Ещё» учтено всегда: без него на 1 px меньше полного ряда уже уходит команда
+    expect([...overflowCommands(full - MORE - GAP, width, GAP, SEP, MORE)]).not.toEqual([]);
   });
   it('ряд никогда не шире отведённого места: вместо прокрутки — «Ещё»', () => {
     for (let avail = full; avail >= SEP + MORE; avail -= 7) {

@@ -354,6 +354,94 @@ input[type='search']::-webkit-search-decoration {
   background: var(--rule);
 }
 
+/* ---------- пять начал (решение 68; src/ui/sky/Controls.tsx, StartList) ----------
+   Во вступлении, в листе «Вид» и в панели «В работе». Столбец команд в общей рамке, как сегменты переключателя, только
+   друг под другом: поле 28 px (на сенсорном экране 44 px), соседи делят рамку 1 px; наведение — фон --sheet-2; текущее
+   начало — черта 2 px слева и полный тон. Пояснение (.notes) — строкой под названием, текстом заметок; название тогда
+   крупнее пояснения. Подтверждение замены набора — строкой: вопрос, тире, «начать заново», «отмена». */
+.starts {
+  margin: 0 0 8px;
+  padding: 1px 0 0;
+  list-style: none;
+}
+.starts li {
+  margin: -1px 0 0;
+}
+.starts button {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+  min-height: 28px;
+  padding: 2px 9px;
+  border: 1px solid var(--rule-strong);
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+  color: var(--ink-2);
+  text-align: left;
+  white-space: nowrap;
+}
+.starts.notes button {
+  padding: 5px 10px 6px;
+  color: var(--ink);
+}
+.starts.notes .nm {
+  font-size: var(--t-body);
+  line-height: var(--t-body-lh);
+}
+.starts button:hover {
+  z-index: 1;
+  background: var(--sheet-2);
+  color: var(--ink);
+}
+.starts button:active {
+  background: var(--rule);
+}
+.starts button:focus-visible {
+  z-index: 2;
+  outline-offset: -2px;
+}
+.starts button[aria-current='true'] {
+  color: var(--ink);
+  box-shadow: inset 2px 0 0 var(--ink);
+}
+.starts .note {
+  display: block;
+  font-family: var(--serif);
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+  color: var(--ink-2);
+  white-space: normal;
+}
+.starts-ask {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 4px;
+  margin: 0 0 8px;
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+  color: var(--ink);
+}
+.starts-ask .q {
+  padding-right: 2px;
+}
+.starts-ask .cmd:first-of-type {
+  margin-left: -4px;
+}
+.starts-ask .dash {
+  color: var(--ink-2);
+}
+@media (pointer: coarse) {
+  .starts button {
+    min-height: 44px;
+  }
+}
+
 /* ---------- «Клавиши-буквы: вкл. | выкл.» над таблицей клавиш (решение 48; src/ui/top/Keys.tsx) ---------- */
 .letter-keys {
   display: flex;

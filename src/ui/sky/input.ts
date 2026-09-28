@@ -23,7 +23,10 @@ import { tipKey, type Tip } from './Tip.tsx';
 import { RULER_H } from '../../render/frame.ts';
 import { foldDescOf, foldGroupOf, unfoldAll } from '../work.ts';
 import { MENU_FIRST, dismissedBy, skyMenu } from '../panels/Work.tsx';
-import { epochGoText, orderNoteText } from './text.ts';
+import { epochGoText, orderNoteText, plateTipText } from './text.ts';
+import { openPerson, unionById } from '../reveal.ts';
+import { plateHover, pressPlate } from './starnav.ts';
+import type { PlateHit } from '../../render/plates.ts';
 
 export type { Tip };
 
@@ -345,6 +348,28 @@ export function lineNumberAt(sky: Sky, x: number, y: number): (LineCount & { id:
   return null;
 }
 
+/**
+ * Картуш союза под указателем (решение 70; src/render/plates.ts): на касании — в поле не меньше 44 × 44 вокруг рисунка
+ * (решение 33). Ближайший к точке, если поля соседних картушей перекрываются.
+ */
+export function plateAt(sky: Pick<Sky, 'plateHits'>, x: number, y: number, touch = false): PlateHit | null {
+  let best: PlateHit | null = null;
+  let bestD = Infinity;
+  for (const h of sky.plateHits) {
+    const r = touch ? inflate(h, TOUCH_TARGET) : h;
+    if (x < r.x || x > r.x + r.w || y < r.y || y > r.y + r.h) continue;
+    const d = Math.hypot(x - (h.x + h.w / 2), y - (h.y + h.h / 2));
+    if (d < bestD) {
+      bestD = d;
+      best = h;
+    }
+  }
+  return best;
+}
+
+/** Подсказка «+» у подписи лица с нераскрытыми союзами (решение 70). */
+export const REVEAL_TIP = 'У лица есть нераскрытые союзы — щёлкните, чтобы показать их карточки на небе';
+
 /** Название эпохи в служебной строке под указателем (UX-65): эпоха модели и прямоугольник надписи. */
 function serviceEpochAt(sky: Sky, x: number, y: number) {
   if (y < RULER_H || y >= FRAME_H) return null;
@@ -447,6 +472,12 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
   };
   /** Курсор: над звездой, отрезком яруса и указателем у края — «рука со пальцем» (E11; IX-06, UX-29). */
   const setHot = (on: boolean) => canvas.classList.toggle('hot', on);
+  /** Наведённый картуш союза (решение 70): его рамка ярче. */
+  const setPlate = (uid: string | null) => {
+    if (plateHover.peek() === uid) return;
+    plateHover.value = uid;
+    request();
+  };
   /** Что под указателем (px холста): отрезок яруса или звезда; обновляет наведение, подсказку и курсор. */
   const probe = (x: number, y: number, r: number) => {
     // открыто меню неба: подсказки не ложатся на него, наведение стоит (IX-49)
@@ -462,8 +493,27 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     }
     setTierHot(null);
     // знаки свёрнутого (J5) — ссылки, как указатели у края: указатель «рука», щелчок разворачивает
-    const fold = sky.foldHits.some((q) => x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h);
+    const foldHit = sky.foldHits.find((q) => x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h);
+    const fold = !!foldHit;
     const edge = fold || sky.edgeHits.some((q) => x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h);
+    // картуш союза (решение 70): подсказка — союз и его дети со стихами, щелчок раскрывает или сворачивает
+    const plate = edge ? null : plateAt(sky, x, y);
+    setPlate(plate?.uid ?? null);
+    if (plate) {
+      if (hovered.value) hovered.value = null;
+      if (setRibbonHover(sky, null) || setFamilyHover(sky, null)) request();
+      setHot(true);
+      const u = unionById(plate.uid);
+      if (u) showTip({ kind: 'note', key: `plate:${plate.uid}:${plate.open ? 1 : 0}`, text: plateTipText(u, plate.open), x, y, box: { x: plate.x, y: plate.y, w: plate.w, h: plate.h } });
+      return;
+    }
+    // «+» у подписи лица с нераскрытыми союзами (решение 70)
+    if (foldHit?.kind === 'reveal') {
+      if (hovered.value) hovered.value = null;
+      setHot(true);
+      showTip({ kind: 'note', key: `reveal:${foldHit.id}`, text: REVEAL_TIP, x, y, box: { x: foldHit.x, y: foldHit.y, w: foldHit.w, h: foldHit.h } });
+      return;
+    }
     // выноски точек сравнения линий — ссылки (E6; src/render/ribbons.ts)
     const note = !edge && lineNoteHits(sky).some((q) => x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h);
     // номер у бусины в режиме «только линии» — это лицо: его подсказка объясняет счёт (UX-69; решение 39)
@@ -513,6 +563,7 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     setRibbonHover(sky, null);
     setFamilyHover(sky, null);
     setTierHot(null);
+    setPlate(null);
     clearTimeout(calm);
     calm = window.setTimeout(rehit, 120);
   };
@@ -608,6 +659,7 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     canvas.classList.toggle('stretch-x', zone === 'time');
     canvas.classList.toggle('stretch-y', zone === 'lanes');
     // служебная строка: у масштабной линейки «≈» — пояснение неравномерного масштаба (UX-08)
+    if (p.y < FRAME_H) setPlate(null);
     if (p.y >= RULER_H && p.y < FRAME_H && e.pointerType !== 'touch') {
       hoverYear(null);
       if (hovered.value) hovered.value = null;
@@ -684,7 +736,14 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     if (fold) {
       if (fold.kind === 'desc') foldDescOf(fold.id, false);
       else if (fold.kind === 'all') unfoldAll();
+      else if (fold.kind === 'reveal') openPerson(fold.id);
       else foldGroupOf(fold.id, false);
+      return;
+    }
+    // картуш союза (решение 70): раскрыть или свернуть союз, карточка союза — в листе; на касании поле не меньше 44 px
+    const plate = plateAt(sky, at.x, at.y, touch);
+    if (plate) {
+      pressPlate(plate.uid, plate.from);
       return;
     }
     // название эпохи в служебной строке — небо к эпохе (UX-65); выбор лица не меняется
@@ -835,6 +894,7 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     pointer = null;
     canvas.classList.remove('stretch-x', 'stretch-y');
     hovered.value = null;
+    setPlate(null);
     const r1 = setRibbonHover(sky, null);
     const r2 = setFamilyHover(sky, null);
     if (r1 || r2) request();
