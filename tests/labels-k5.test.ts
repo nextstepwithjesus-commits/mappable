@@ -157,21 +157,23 @@ describe('подписи (MAP-06, 56, 66; MOB-53)', () => {
     expect(covered).toEqual([]);
     expect(boxes.some((b) => b.id === 'david')).toBe(true);
   });
-  it('краткое уточнение одноимённых: не больше двух слов, с запятой у родства, без — у прозвища и «из …» (решение 29)', () => {
+  it('краткое уточнение одноимённых: не больше трёх слов, целой частью, с запятой у родства, без — у прозвища и «из …» (решения 29, 43)', () => {
     expect(labels.shortNote('сын Иоседека, великий иерей')).toBe(', сын Иоседека');
     expect(labels.shortNote('Магдалина')).toBe(' Магдалина');
     expect(labels.shortNote('из Аримафеи')).toBe(' из Аримафеи');
     expect(labels.shortNote('апостол, сын Зеведеев')).toBe(', сын Зеведеев');
     expect(labels.shortNote('апостол, Иаковлев (Фаддей)')).toBe(' Иаковлев');
     expect(labels.shortNote('Искариот, предавший Иисуса')).toBe(' Искариот');
-    expect(labels.shortNote('мать Иакова меньшего и Иосии')).toBe(', мать Иакова');
     expect(labels.shortNote('сын Иосифа (Лк 3:30)')).toBe(', сын Иосифа');
-    // оборот с предлогом не обрезается до бессмыслицы
-    expect(labels.shortNote('с горы Ефремовой')).toBe(null);
+    // решение 43: часть длиннее трёх слов не обрезается («мать Иакова» из «мать Иакова меньшего и Иосии» — обрывок);
+    // без лица (нет главы первого упоминания) уточнения нет, а оборот с предлогом в три слова — целиком
+    expect(labels.shortNote('мать Иакова меньшего и Иосии')).toBe(null);
+    expect(labels.shortNote('с горы Ефремовой')).toBe(' с горы Ефремовой');
     for (const p of atlas.byId.values()) {
-      const n = p.disambig ? labels.shortNote(p.disambig) : null;
+      const n = p.disambig ? labels.shortNote(p.disambig, p.id) : null;
       if (!n) continue;
-      expect(n.replace(/^,? /, '').split(/\s+/).length, p.id).toBeLessThanOrEqual(2);
+      // «, сын Навата», « Магдалина», « (Азария)», « (Мф 2)»: не больше трёх слов, без обрывков
+      expect(n.replace(/^,? /, '').split(/\s+/).length, p.id).toBeLessThanOrEqual(3);
       expect(n, p.id).not.toMatch(/\s(и|в|из|от|с|на)$/);
     }
   });
@@ -289,16 +291,21 @@ describe('названия созвездий на масштабе эпохи (
 });
 
 describe('рабочий набор на небе (IX-51; MAP-64)', () => {
-  it('в режиме «все лица» у членов набора — метка 6 × 1,5 px тоном --ink, только при высоте строки от 8 px', () => {
+  it('в режиме «все лица» у членов набора — уголок 5 × 5 px тоном --ink (не черта: черта — царь; IX-77), только при высоте строки от 8 px', () => {
     const set = new Set(['david', 'iessey', 'solomon']);
     const near = drawSky({ move: around('david', 120), state: { workMarks: set } });
     const ink = near.sky.pal.ink;
-    const marks = near.fills.filter((f) => f.w === 6 && f.h === 1.5 && f.fill === ink);
+    // уголок «┐»: верхняя полоса 5 × 1,25 и правая 1,25 × 5 с общим правым верхним углом
+    const tops = near.fills.filter((f) => f.w === 5 && f.h === 1.25 && f.fill === ink);
+    const sides = near.fills.filter((f) => f.w === 1.25 && f.h === 5 && f.fill === ink);
+    const corners = tops.filter((t) => sides.some((s) => Math.abs(s.x + s.w - (t.x + t.w)) < 0.01 && Math.abs(s.y - t.y) < 0.01));
     expect(near.sky.cam.ky).toBeGreaterThanOrEqual(8);
-    expect(marks.length).toBeGreaterThanOrEqual(2);
+    expect(corners.length).toBeGreaterThanOrEqual(2);
+    // черты 6 × 1,5 (прежней метки, похожей на черту царя) больше нет
+    expect(near.fills.filter((f) => f.w === 6 && f.h === 1.5).length).toBe(0);
     const far = drawSky({ state: { workMarks: set } });
     expect(far.sky.cam.ky).toBeLessThan(8);
-    expect(far.fills.filter((f) => f.w === 6 && f.h === 1.5).length).toBe(0);
+    expect(far.fills.filter((f) => f.w === 5 && f.h === 1.25).length).toBe(0);
   });
   it('в режиме «набор» выделение рода гасит лица набора не ниже 70 %', () => {
     const set = new Set(['david', 'iessey', 'ovid', 'vooz', 'ruf', 'solomon', 'avessalom', 'amnon']);

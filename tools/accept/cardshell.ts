@@ -13,10 +13,20 @@ const go = async (p: Page, hash: string, ms = 2000) => {
   await p.goto(p.url().replace(/#.*$/, '') + hash);
   await p.waitForTimeout(ms);
 };
-/** Перейти по адресу без перезагрузки: стопка живёт в сеансе. */
+/** Имена лиц сценариев для поиска. */
+const NAMES: Record<string, string> = { david: 'Давид', avraam: 'Авраам', ruf: 'Руфь', moisey: 'Моисей', mariya: 'Мария', solomon: 'Соломон' };
+/**
+ * Открыть карточку лица так, как её открывает читатель, — поиском («/», имя, Enter); стопка живёт в сеансе.
+ * Не сменой адреса: адрес — запись истории, а «назад» и адрес не меняют состав стопки (решение 50; UX-74).
+ * Поиск выбрал не то лицо — сценарий падает с причиной.
+ */
 const hop = async (p: Page, id: string, ms = 1300) => {
-  await p.evaluate((h) => (location.hash = h), `#/${id}`);
+  await p.click('#find');
+  await p.fill('#find', NAMES[id] ?? id);
+  await p.waitForTimeout(350);
+  await p.keyboard.press('Enter');
   await p.waitForTimeout(ms);
+  if (hashId(p) !== id) throw new Error(`поиск «${NAMES[id] ?? id}» выбрал «${hashId(p)}», а не ${id}`);
 };
 /** Верх первого раздела карточки и нижний край видимой части листа (над полосой времени). */
 const firstSection = (p: Page) =>
@@ -226,7 +236,8 @@ export const cardshell: Scenario[] = [
         const lines = pseudo && /\\a|\n/i.test(pseudo.content) && pseudo.whiteSpace === 'pre' && getComputedStyle(range!.querySelector('.no')!).color === 'rgba(0, 0, 0, 0)' ? [0, 1] : [];
         return { railL: rail.left - f.left, railR: rail.right, minNo: Math.min(...nos.map((n) => n.left)), lines, content: pseudo?.content ?? '' };
       });
-      if (r.railL > 8) return fail(`рейка в ${r.railL} px от края листа`);
+      // рейка у края листа, но за ручкой границы «небо | карточка», которая заходит в лист на 12 px (VIS-66, сценарий 422)
+      if (r.railL < 12 || r.railL > 16) return fail(`рейка в ${r.railL} px от края листа`);
       if (r.minNo < r.railR + 4) return fail(`номер разделов налезает на рейку: ${r.minNo} < ${r.railR}`);
       if (r.lines.length !== 2) return fail(`диапазон сведённых разделов не в две строки: ${r.content}`);
       await go(p, '#/moisey');
@@ -313,12 +324,14 @@ export const cardshell: Scenario[] = [
       if (!(folds as string[]).includes('ruf')) return fail(`потомки не скрыты: ${JSON.stringify(folds)}`);
       await top.click();
       await p.waitForTimeout(700);
+      // почему лицо в наборе (CARD-75) — один раз, заголовком группы (VIS-83): «Руфь и её семья (N)», Руфь — первой строкой
+      // группы, под строками членов семьи «семья Руфи» не повторяется
+      const heads = (await p.locator('.worklist .wg-head').allInnerTexts()).map((t) => t.replace(/\s+/g, ' ').trim());
+      if (heads.length !== 1 || heads[0] !== `Руфь и её семья (${n})`) return fail(`заголовки групп: ${heads.join(', ')}; в наборе ${n}`);
       const vias = (await p.locator('.worklist .wi-via').allInnerTexts()).map((t) => t.replace(/\s+/g, ' ').trim());
-      if (!vias.length || !vias.every((t) => t === 'семья Руфи')) return fail(`строки «почему»: ${vias.join(', ')}`);
-      await p.locator('.worklist button.wi-via').first().click();
-      await p.waitForTimeout(400);
-      const open = await p.locator('.worklist li.open').getAttribute('data-id');
-      return open === 'ruf' ? pass(`${label}; ${vias.length} × «семья Руфи»`) : fail(`щелчок по «семья Руфи» раскрыл «${open}»`);
+      if (vias.some((t) => /Руфи/.test(t))) return fail(`«семья Руфи» под строками: ${vias.join(', ')}`);
+      const first = await p.locator('.worklist .wg-list > li').first().getAttribute('data-id');
+      return first === 'ruf' ? pass(`${label}; «${heads[0]}»`) : fail(`первой в группе — «${first}»`);
     },
   },
   {

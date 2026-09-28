@@ -171,6 +171,12 @@ export interface LifeEvent {
   age?: number;
   year?: number;
   cert?: Cert;
+  /**
+   * Период жизни (решение 63; CARD-85): подзаголовок § 17 и строка оглавления — «Рождество и детство», «Страсти».
+   * Задаётся у первой записи периода; записи без поля остаются в периоде предыдущей. Только описательное название
+   * по тексту, не ссылка.
+   */
+  period?: string;
 }
 
 export interface Saying {
@@ -212,6 +218,8 @@ export interface Card {
   kinNote?: Fact[]; // § 12
   chronoNote?: Fact[]; // § 13
   met?: Met[]; // § 14 — подтверждённые Писанием встречи
+  /** встречи, записанные в карточках других лиц (id — кто записал): вычисляются при сборке (tools/build-data.ts) */
+  metBy?: Met[];
   places?: Place[]; // § 15
   offices?: Office[]; // § 16
   events?: LifeEvent[]; // § 17

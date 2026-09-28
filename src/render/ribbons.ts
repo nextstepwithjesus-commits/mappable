@@ -17,6 +17,7 @@ import { byId, lines } from '../data/atlas.ts';
 import { nameCase } from '../ui/text/ru.ts';
 import type { Palette, Pass, SkyContext, SkyState } from './sky.ts';
 import { alpha, hexToRgb } from './color.ts';
+import { textTone } from './dim.ts';
 import { drawGlyph, personGlyph, starRadius } from './glyphs.ts';
 import { claim, putLabel, spot, textBox, type Side } from './labels.ts';
 import { hits as hitsReserve } from './rect.ts';
@@ -264,11 +265,10 @@ export function drawStrands(
 
   // основные нити: сначала Мария, потом Иосиф
   for (const p of prepared) layer(p, 0, p.st.points.length);
-  // плетение: там, где Иосиф «под» Марией, Мария рисуется поверх ещё раз. Тугая коса (braid ≤ BRAID_PX, MAP-60) —
-  // без плетения: нити перекрываются почти везде, и конец участка «поверх» читался бы ступенькой на нити (MAP-57)
+  // плетение (MAP-75; решение 40): там, где Иосиф «под» Марией, Мария рисуется поверх ещё раз — всегда: у косы одно
+  // перекрестье на поколение, и нижняя нить в перекрестье рвётся, иначе коса читалась бы золотой линией с «глазками»
   const mary = prepared.find((p) => p.st.line === 'mary');
-  const weave = !(o.braid !== undefined && o.braid <= BRAID_PX);
-  if (mary && weave) for (const [a, b] of mary.st.over) layer(mary, a, b, true);
+  if (mary) for (const [a, b] of mary.st.over) layer(mary, a, b, true);
 
   // ток света к Иисусу — только при выборе или наведении линии
   if (flow !== null) {
@@ -383,47 +383,119 @@ export const ribbonHover = (v: object): RibbonHit | null => hovers.get(v) ?? nul
  * Выделение (E6, skyGroup): при выделенном роде ленты гаснут; участки между соседними лицами группы панели
  * («Главы», участок «Синопсиса») и пути родства — в полную силу. Наведённая лента — в полную силу, шире, с током света.
  */
-export function drawSkyRibbons(v: SkyContext, s: SkyState, steps: { joseph: readonly LineStep[]; mary: readonly LineStep[] }): Strand[] {
-  const { ctx, cam, pal } = v;
-  const project = (id: string) => {
-    const i = v.indexOf(id);
-    if (i === undefined) return null;
-    return { x: cam.sx(v.X0[i]), y: cam.sy(v.nodes[i].lane) };
-  };
-  // ориентир режима «набор» (J4; MAP-64): нить идёт только через лица линий, которые видны; звено, за которым скрыты
-  // лица, — разреженной нитью, как звено по толкованию (скрытые лица сжатием строк стянуты в одну строку — через них
-  // нить делала бы петлю)
-  const weakOf = (ln: 'joseph' | 'mary') => {
-    const out: { id: string; weak: boolean }[] = [];
-    let skipped = false;
-    for (const raw of steps[ln]) {
-      const st = s.lineFlip && ln === 'mary' && raw.id === 'mariya' ? { ...raw, id: 'iosif-muzh-marii' } : raw;
-      if (v.indexOf(st.id) === undefined) continue;
-      if (s.guide && v.hides(st.id)) {
-        skipped = out.length > 0;
-        continue;
-      }
-      out.push({ id: st.id, weak: skipped || st.flag === 'interpretation' || st.flag === 'luke-only' || (ln === 'mary' && st.id === 'salafiil') });
-      skipped = false;
+/**
+ * Средняя линия раздельного участка (MAP-62): точки pts лиц одной ветви по порядку (концы — развилка и схождение —
+ * неподвижны) придвигаются к хорде между концами: отклонение от неё умножается на flat. Небо передаёт flat =
+ * 1 / пропорция строк (J1): при строках ×3 нить царей ходит по строкам не больше, чем при обычных строках (а не на
+ * ~100 px за каждым царём); при обычных строках (flat = 1) нить идёт через звёзды, как прежде. Амплитуда косы от этого
+ * не зависит (BRAID_PX).
+ */
+export function smoothMidline(pts: readonly { x: number; y: number }[], flat: number): number[] {
+  const n = pts.length;
+  if (n < 3 || flat >= 1) return pts.map((q) => q.y);
+  const a = pts[0];
+  const b = pts[n - 1];
+  return pts.map((q, i) => {
+    if (i === 0 || i === n - 1) return q.y;
+    const u = b.x > a.x ? Math.max(0, Math.min(1, (q.x - a.x) / (b.x - a.x))) : i / (n - 1);
+    const ref = a.y + (b.y - a.y) * u;
+    return ref + (q.y - ref) * flat;
+  });
+}
+
+/** Лица линий на небе для нитей: «набор» пропускает скрытых, у звена за скрытыми — разреженная нить (J4; MAP-64). */
+function strandSteps(v: SkyContext, s: SkyState, steps: { joseph: readonly LineStep[]; mary: readonly LineStep[] }, ln: 'joseph' | 'mary') {
+  const out: { id: string; weak: boolean }[] = [];
+  let skipped = false;
+  for (const raw of steps[ln]) {
+    const st = s.lineFlip && ln === 'mary' && raw.id === 'mariya' ? { ...raw, id: 'iosif-muzh-marii' } : raw;
+    if (v.indexOf(st.id) === undefined) continue;
+    if (s.guide && v.hides(st.id)) {
+      skipped = out.length > 0;
+      continue;
     }
-    return out;
-  };
+    out.push({ id: st.id, weak: skipped || st.flag === 'interpretation' || st.flag === 'luke-only' || (ln === 'mary' && st.id === 'salafiil') });
+    skipped = false;
+  }
+  return out;
+}
+
+/**
+ * Нити неба при нынешней камере (кэш на небо, RibbonCache): строятся заново только при смене масштаба, модели, режима,
+ * размера холста или сжатия полос и при сдвиге дальше запаса; иначе — те же нити со сдвигом (dx, dy). Точки лиц — по
+ * полосам раскладки (model.nodes: в режиме «только линии» небо ставит лиц линий на нити, ribbonBeads), средняя
+ * линия раздельных участков сглажена (MAP-62).
+ */
+export function ribbonStrands(v: SkyContext, s: SkyState, steps: { joseph: readonly LineStep[]; mary: readonly LineStep[] }): RibbonCache {
+  const { cam } = v;
   const ky = cam.ky;
-  const boost = s.onlyLines ? 1.35 : 1;
-  // коса — тугая, амплитуда в px постоянна (MAP-60, MAP-62)
-  const A = BRAID_PX;
-  // нити строятся заново только при смене масштаба, модели, режима или размера холста и при сдвиге дальше запаса;
-  // при протяжке неба они рисуются со сдвигом (NFR-1: 60 кадров/с)
-  // и при смене сжатия полос (J4, J5; src/render/rows.ts): нити идут через строки, а не через полосы
   const key = `${v.model.id}|${v.lambda}|${cam.kx}|${ky}|${s.lineFlip}|${s.onlyLines}|${cam.w}|${cam.h}|${v.rowsKey}|${!!s.guide}`;
   let c = ribbonCaches.get(v);
   if (!c || c.key !== key || Math.abs((c.x0 - cam.x0) * cam.kx) > RIBBON_MARGIN - 40) {
-    const strands = buildRibbons({ joseph: weakOf('joseph'), mary: weakOf('mary'), project, amplitude: A, meander: A * 0.5, clip: [-RIBBON_MARGIN, cam.w + RIBBON_MARGIN] });
+    const J = strandSteps(v, s, steps, 'joseph');
+    const M = strandSteps(v, s, steps, 'mary');
+    // точки лиц — по полосам раскладки, а не по нынешним узлам неба (в «только линиях» они стоят на нитях)
+    const raw = (id: string) => {
+      const i = v.indexOf(id);
+      return i === undefined ? null : { x: cam.sx(v.X0[i]), y: cam.sy(v.model.nodes[i].lane) };
+    };
+    // средняя линия раздельных участков (ветвей) при растянутых строках — сглажена (MAP-62); развилки и схождения на месте
+    const flat = Math.min(1, cam.kyWith(cam.kx, 1) / ky);
+    const smooth = new Map<string, number>();
+    const jIds = J.map((q) => q.id);
+    const mIds = M.map((q) => q.id);
+    for (const r of runSpans(jIds, mIds)) {
+      if (r.kind !== 'split') continue;
+      for (const [ids, [a, b]] of [[jIds, r.j], [mIds, r.m]] as const) {
+        const part = ids.slice(a, b + 1);
+        const pts = part.map(raw);
+        if (pts.some((q) => !q)) continue;
+        smoothMidline(pts as { x: number; y: number }[], flat).forEach((y, k) => k > 0 && k < part.length - 1 && smooth.set(part[k], y));
+      }
+    }
+    const project = (id: string) => {
+      const q = raw(id);
+      return q && smooth.has(id) ? { x: q.x, y: smooth.get(id)! } : q;
+    };
+    const A = BRAID_PX;
+    const strands = buildRibbons({ joseph: J, mary: M, project, amplitude: A, meander: A * 0.5, clip: [-RIBBON_MARGIN, cam.w + RIBBON_MARGIN] });
     c = { key, x0: cam.x0, laneTop: cam.laneTop, strands, grads: new Map(), dx: 0, dy: 0 };
     ribbonCaches.set(v, c);
   }
   c.dx = (c.x0 - cam.x0) * cam.kx;
   c.dy = (cam.laneTop - c.laneTop) * ky;
+  return c;
+}
+
+/**
+ * Лица линий на нитях (MAP-71; ТЗ § 3.2: «каждое лицо — бусина»): в режиме «только линии» лицо ветви стоит на своей
+ * нити, общее лицо — посередине между нитями косы, там, где их проводит геометрия лент (сглаженная средняя линия,
+ * MAP-26, MAP-62). Возвращает для лица высоту на экране (px холста). Раскладка (полосы) при этом не меняется.
+ */
+export function ribbonBeads(v: SkyContext, s: SkyState, steps: { joseph: readonly LineStep[]; mary: readonly LineStep[] }): Map<string, number> {
+  const c = ribbonStrands(v, s, steps);
+  const ys = new Map<string, number[]>();
+  for (const st of c.strands)
+    st.ids.forEach((id, k) => {
+      const q = pointAt(st.points, k);
+      if (!q || Math.abs(q.u - k) > 0.02) return;
+      const a = ys.get(id);
+      if (a) a.push(q.y + c.dy);
+      else ys.set(id, [q.y + c.dy]);
+    });
+  const out = new Map<string, number>();
+  for (const [id, a] of ys) out.set(id, a.reduce((x, y) => x + y, 0) / a.length);
+  return out;
+}
+
+export function drawSkyRibbons(v: SkyContext, s: SkyState, steps: { joseph: readonly LineStep[]; mary: readonly LineStep[] }): Strand[] {
+  const { ctx, cam, pal } = v;
+  const ky = cam.ky;
+  const boost = s.onlyLines ? 1.35 : 1;
+  // коса — тугая, амплитуда в px постоянна (MAP-60, MAP-62)
+  const A = BRAID_PX;
+  // нити — из кэша неба: при протяжке неба они рисуются со сдвигом (NFR-1: 60 кадров/с)
+  const c = ribbonStrands(v, s, steps);
   const { strands, dx, dy } = c;
   const clip: [number, number] = [-24 - dx, cam.w + 24 - dx];
   // в режиме «В работе» (J4) ленты — тонкий ориентир
@@ -451,6 +523,21 @@ export function drawSkyRibbons(v: SkyContext, s: SkyState, steps: { joseph: read
   }
   ctx.restore();
   return strands;
+}
+
+/**
+ * Лица ветвей у каждой развилки двух линий (MAP-80): развилка (лицо, где линии расходятся) → лица каждой ветви между
+ * развилкой и схождением, по порядку. Ветвь, у которой лиц нет («только у Луки»), не развилка.
+ */
+export function branchPersons(j: string[], m: string[]): Map<string, { joseph: string[]; mary: string[] }> {
+  const out = new Map<string, { joseph: string[]; mary: string[] }>();
+  for (const r of runSpans(j, m)) {
+    if (r.kind !== 'split') continue;
+    const joseph = j.slice(r.j[0] + 1, j[r.j[1]] === m[r.m[1]] ? r.j[1] : r.j[1] + 1);
+    const mary = m.slice(r.m[0] + 1, j[r.j[1]] === m[r.m[1]] ? r.m[1] : r.m[1] + 1);
+    if (joseph.length && mary.length) out.set(j[r.j[0]], { joseph, mary });
+  }
+  return out;
 }
 
 // ---------- точки сравнения линий (E6; U2, MAP-23, MAP-29, UX-16) ----------
@@ -641,12 +728,76 @@ export function lineNumber(id: string, j: ReadonlyMap<string, LineStep>, m: Read
 }
 
 /**
- * Подписи лиц линий в режиме «только линии» (E6; UX-16; MAP-59): подписаны все. Золотые (только Мф) — сверху, лазурные
- * (только Лк) — снизу, общие — сбоку или над и под косой. Порядок попыток: имя кеглем величины у звезды → имя мельче
- * (ступень T_MAP_S) → с выноской → номер у бусины по Мф 1 или Лк 3 (имя — в подсказке при наведении). Ставятся до
- * обычных подписей, той же проверкой наложений.
+ * Номера лица у бусины (решение 39; MAP-70, UX-69): «Мф 17» — номер по Мф 1 у лица линии Иосифа, «Лк 39» — по Лк 3
+ * у лица линии по Луке; у общего лица — оба, если они есть (до Авраама у Матфея номеров нет). line — чья лента: золотой
+ * номер ставится над нитью, лазурный — под ней; ref — стих шага в своём родословии.
+ */
+export function lineCounts(id: string, j: ReadonlyMap<string, LineStep>, m: ReadonlyMap<string, LineStep>): { line: 'joseph' | 'mary'; book: 'Мф' | 'Лк'; n: number; ref: string }[] {
+  const out: { line: 'joseph' | 'mary'; book: 'Мф' | 'Лк'; n: number; ref: string }[] = [];
+  const a = j.get(id);
+  const b = m.get(id);
+  if (a?.mt) out.push({ line: 'joseph', book: 'Мф', n: a.mt, ref: refIn(a, 'Мф') });
+  const lk = b?.lk ?? (a && !b ? a.lk : undefined);
+  if (lk) out.push({ line: 'mary', book: 'Лк', n: lk, ref: refIn(b ?? a, 'Лк') });
+  return out;
+}
+
+/** Просвет вокруг номера у бусины, px: соседние номера не читаются одной строкой. */
+const NUMBER_GAP = 1.5;
+/** Текст номера: «Мф 17» (неразрывный пробел). */
+export const countLabel = (book: 'Мф' | 'Лк', n: number) => `${book}\u00a0${n}`;
+
+/**
+ * Лица, чьи имена в режиме «только линии» обязательны и номером не заменяются (решение 39; MAP-59, MAP-70): начало
+ * родословия, Ной, Авраам, развилки и схождения лент, Иосиф, Мария и Иисус Христос.
+ */
+export const KEY_LINE_NAMES = ['adam', 'noy', 'avraam', 'david', 'solomon', 'nafan-syn-davida', 'iekhoniya', 'salafiil', 'zorovavel', 'iosif-muzh-marii', 'mariya', 'iisus'];
+
+/** Номер у бусины на экране (для подсказки при наведении, sky/input.ts): место, лицо, чей счёт, номер и стих шага. */
+export interface LineNumberHit extends Rect {
+  id: string;
+  line: 'joseph' | 'mary';
+  book: 'Мф' | 'Лк';
+  n: number;
+  ref: string;
+}
+const numberHitsOf = new WeakMap<object, LineNumberHit[]>();
+/** Номера у бусин последнего кадра (режим «только линии»). */
+export const lineNumberHits = (v: object): LineNumberHit[] => numberHitsOf.get(v) ?? [];
+
+/**
+ * Обязательные имена режима «только линии» (решение 39): раньше выносок и подписей лент, кеглем величины, мельче
+ * или с выноской; вытесняют прочие подписи. Лицо одной линии — со своей стороны ленты.
+ */
+export function drawKeyLineNames(v: SkyContext, p: Pass, steps: { joseph: readonly LineStep[]; mary: readonly LineStep[] }) {
+  if (!p.s.onlyLines || !p.s.layers.labels) return;
+  const st = skySteps(v, p.s, steps);
+  const j = new Set(st.joseph.map((x) => x.id));
+  const m = new Set(st.mary.map((x) => x.id));
+  const keys = KEY_LINE_NAMES.map((id) => (p.s.lineFlip && id === 'mariya' ? 'iosif-muzh-marii' : id));
+  for (const id of new Set(keys)) {
+    const i = v.indexOf(id);
+    if (i === undefined || p.labeled.has(i) || !v.drawn(i)) continue;
+    const sides = lineSidesOf(id, j, m);
+    for (const t of [{ leader: false }, { size: T_MAP_S, leader: false }, { size: T_MAP_S, leader: true, overStars: true }] as const)
+      if (putLabel(v, p, i, { sides, color: v.pal.ink, alpha: 1, sigla: false, ...t })) break;
+  }
+}
+
+/** Стороны подписи лица линии: одной линии — со своей стороны ленты (сверху — Иосифа, снизу — по Луке), общего — сбоку. */
+const lineSidesOf = (id: string, j: ReadonlySet<string> | ReadonlyMap<string, unknown>, m: ReadonlySet<string> | ReadonlyMap<string, unknown>): Side[] =>
+  j.has(id) && m.has(id) ? ['r', 't', 'b', 'l'] : j.has(id) ? ['t', 'r', 'l'] : ['b', 'r', 'l'];
+
+/**
+ * Подписи лиц линий в режиме «только линии» (E6; UX-16; MAP-59, MAP-70; решение 39): подписаны все. Золотые (только Мф)
+ * — сверху, лазурные (только Лк) — снизу, общие — сбоку или над и под косой. Порядок попыток: имя кеглем величины
+ * у звезды → имя мельче (ступень T_MAP_S) → с выноской → номер у бусины «Мф 17» или «Лк 39» цветом своей ленты:
+ * золотой — над нитью, лазурный — под ней, на своём погашенном фоне (без куска следа или отвода у цифр). Ставятся до
+ * обычных подписей, той же проверкой наложений; обязательные имена (drawKeyLineNames) — раньше всех.
  */
 export function drawLineNames(v: SkyContext, p: Pass, steps: { joseph: readonly LineStep[]; mary: readonly LineStep[] }) {
+  const hitsOut: LineNumberHit[] = [];
+  numberHitsOf.set(v, hitsOut);
   if (!p.s.onlyLines || !p.s.layers.labels) return;
   const { ctx, cam, pal } = v;
   const st = skySteps(v, p.s, steps);
@@ -655,7 +806,6 @@ export function drawLineNames(v: SkyContext, p: Pass, steps: { joseph: readonly 
   const ids = [...new Set([...j.keys(), ...m.keys()])].sort((a, b) => (byId.get(a)?.magnitude ?? 6) - (byId.get(b)?.magnitude ?? 6));
   // лицо одной линии — со своей стороны ленты, иначе сбоку, но не по другую сторону: там имя читалось бы
   // как лицо другой линии
-  const sidesOf = (id: string): Side[] => (j.has(id) && m.has(id) ? ['r', 't', 'b', 'l'] : j.has(id) ? ['t', 'r', 'l'] : ['b', 'r', 'l']);
   let rest = ids;
   const tries: { size?: number; leader: boolean }[] = [{ leader: false }, { size: T_MAP_S, leader: false }, { size: T_MAP_S, leader: true }];
   for (const t of tries) {
@@ -664,41 +814,76 @@ export function drawLineNames(v: SkyContext, p: Pass, steps: { joseph: readonly 
       const i = v.indexOf(id);
       if (i === undefined || p.labeled.has(i)) continue;
       const big = (byId.get(id)?.magnitude ?? 6) <= 1;
-      if (!putLabel(v, p, i, { sides: sidesOf(id), color: pal.ink, alpha: 1, leader: t.leader || big, ...(t.size && !big ? { size: t.size } : {}) })) next.push(id);
+      if (!putLabel(v, p, i, { sides: lineSidesOf(id, j, m), color: pal.ink, alpha: 1, leader: t.leader || big, ...(t.size && !big ? { size: t.size } : {}) })) next.push(id);
     }
     rest = next;
   }
-  // номер у бусины
-  const font = mapFont(T_MAP_S, { sans: true, weight: 450, coarse: v.coarse });
+  // номер у бусины: «Мф 17» над золотой нитью, «Лк 39» под лазурной (решение 39)
+  const font = mapFont(T_MAP_S, { sans: true, weight: 500, coarse: v.coarse });
   const size = mapSize(T_MAP_S, v.coarse);
+  const world = ribbonCaches.get(v);
+  // цвет своей ленты, для текста — не ниже 4,5 : 1 к небу и полосе эпохи (днём золото темнее, ТЗ § 3.8)
+  const color = { joseph: textTone(pal.gold1, [pal.sky, pal.band], pal.ink), mary: textTone(pal.azure1, [pal.sky, pal.band], pal.ink) };
   ctx.font = font;
   ctx.textBaseline = 'alphabetic';
   ctx.lineJoin = 'round';
   for (const id of rest) {
     const i = v.indexOf(id);
-    const n = lineNumber(id, j, m);
-    if (i === undefined || n === null) continue;
+    // обязательные имена ставятся раньше всех (drawKeyLineNames); номер у такого лица — только если имени не нашлось места
+    if (i === undefined) continue;
     const x = cam.sx(v.X0[i]);
     const y = cam.sy(v.nodes[i].lane);
     if (x < v.letterW || x > cam.w || y < v.openTop || y > cam.vp.b) continue;
-    const text = String(n);
-    const w = ctx.measureText(text).width;
     const r = starRadius(byId.get(id)?.magnitude ?? 6, p.zoomScale);
-    // у бусины: со своей стороны ленты, затем чуть дальше от неё
-    const own = j.has(id) && m.has(id) ? 0 : j.has(id) ? -1 : 1;
-    const spots = sidesOf(id).map((sd) => spot(sd, x, y, r, w, size));
-    if (own) for (const d of [8, 16]) spots.push({ ...spot(own < 0 ? 't' : 'b', x, y + own * d, r, w, size) });
-    // номер не спутать с лицом другой линии (у Мф и Лк свои номера), поэтому последним — и по другую сторону
-    if (own) spots.push(spot(own < 0 ? 'b' : 't', x, y, r, w, size));
-    const b = claim(v, p, spots.map((q) => q.box), 'mark', text, { id });
-    if (!b) continue;
-    const c = spots.find((q) => q.box === b)!;
-    ctx.strokeStyle = pal.halo;
-    ctx.lineWidth = 3;
-    ctx.strokeText(text, c.tx, c.ty);
-    ctx.fillStyle = pal.ink2;
-    ctx.fillText(text, c.tx, c.ty);
-    p.labeled.add(i);
+    let any = false;
+    for (const c of lineCounts(id, j, m)) {
+      const text = countLabel(c.book, c.n);
+      const w = ctx.measureText(text).width;
+      // над звездой (Мф) или под ней (Лк): по середине, затем со сдвигом вдоль нити и дальше от неё — не сбоку, где
+      // между звездой и числом лёг бы кусок следа («−17»)
+      const up = c.line === 'joseph';
+      const cands: { tx: number; ty: number }[] = [];
+      // номер держится у своей бусины: сначала — прямо над или под ней, затем чуть дальше вдоль нити и от неё
+      for (const d of [0, 6, 12, 18, 24, 30, 36, 44, 52])
+        for (const dx of [-w / 2, 2, -w - 2, w / 2 + 2, -1.5 * w - 2]) {
+          const s0 = spot(up ? 't' : 'b', x, y + (up ? -d : d), r, w, size);
+          cands.push({ tx: x + dx, ty: s0.ty });
+        }
+      // последними — сбоку от звезды: след между звездой и числом гасится (ниже), минусом он не читается
+      const sideAt = cands.length;
+      for (const sd of ['r', 'l'] as const) {
+        const q = spot(sd, x, y, r, w, size);
+        cands.push({ tx: q.tx, ty: q.ty });
+      }
+      // соседние номера — с просветом: «Лк 37 Лк 34» не сливаются в строку
+      const boxes = cands.map((q) => {
+        const b = textBox(q.tx, q.ty, w, size);
+        return { ...b, x: b.x - NUMBER_GAP, w: b.w + 2 * NUMBER_GAP };
+      });
+      // сначала места вне нитей: под номером там гасится фон; на нити — только ореол, лента не прорезается
+      const b = claim(v, p, world ? byStrands(world, boxes) : boxes, 'mark', text.replace(/\u00a0/g, ' '), { id });
+      if (!b) continue;
+      const q = cands[boxes.indexOf(b)];
+      // свой погашенный фон: следы и отводы под номером не читаются минусом
+      if (!world || offStrands(world.strands, b, world.dx, world.dy)) v.fillGround(b.x + NUMBER_GAP, b.x + b.w - NUMBER_GAP, b.y, b.h);
+      // номер сбоку: и след между звездой и числом — полосой цвета фона, если под ней нет нити
+      const k = boxes.indexOf(b);
+      if (k >= sideAt) {
+        const yt = Math.round(y) + 0.5;
+        const a = k === sideAt ? x + r + 1.5 : b.x + b.w - NUMBER_GAP;
+        const e = k === sideAt ? b.x + NUMBER_GAP : x - r - 1.5;
+        const gap = { x: a, y: yt - 2.5, w: e - a, h: 5 };
+        if (gap.w > 0 && (!world || offStrands(world.strands, gap, world.dx, world.dy))) v.fillGround(gap.x, gap.x + gap.w, gap.y, gap.h);
+      }
+      ctx.strokeStyle = pal.halo;
+      ctx.lineWidth = 3;
+      ctx.strokeText(text, q.tx, q.ty);
+      ctx.fillStyle = color[c.line];
+      ctx.fillText(text, q.tx, q.ty);
+      hitsOut.push({ ...b, id, line: c.line, book: c.book, n: c.n, ref: c.ref });
+      any = true;
+    }
+    if (any) p.labeled.add(i);
   }
 }
 
@@ -977,9 +1162,27 @@ export function drawBranchLabels(v: SkyContext, p: Pass, steps: { joseph: readon
     ctx.fillText(bd.text, c.tx, c.ty);
     hitsOut.push({ ...mb, kind: 'person', id: bd.id });
   }
+  // ветви развилок в лицах линий: у каждой — лица между развилкой и схождением (MAP-80, IX-85, UX-72)
+  const branches = branchPersons(st.joseph.map((x) => x.id), st.mary.map((x) => x.id));
+  // лицо ветви на небе: не скрыто набором или свёрткой; в окне — его звезда в открытом небе
+  const onSky = (id: string) => {
+    const i = v.indexOf(id);
+    return i !== undefined && v.drawn(i) && !v.hides(id);
+  };
+  const inWindow = (id: string) => {
+    const i = v.indexOf(id);
+    return i !== undefined && inside({ x: cam.sx(v.X0[i]), y: cam.sy(v.nodes[i].lane) });
+  };
+  // набор (J4) и сжатые строки (свёртка, J5): подпись ветви — только у первого видимого лица ветви, попавшего в окно
+  const strict = !!p.s.guide || p.work || v.rowsKey !== '';
   for (const cp of comparePoints(st.joseph, st.mary)) {
     if (!cp.branch) continue;
+    const br = branches.get(cp.at);
+    // подпись ветви — только у настоящей развилки, обе ветви которой есть на небе (UX-72)
+    if (!br || !br.joseph.some(onSky) || !br.mary.some(onSky)) continue;
     for (const line of ['joseph', 'mary'] as const) {
+      const lead = strict ? br[line].find(onSky) : line === 'joseph' ? cp.branch.joseph : cp.branch.mary;
+      if (!lead || (strict && !inWindow(lead))) continue;
       const first = line === 'joseph' ? cp.branch.joseph : cp.branch.mary;
       const g = gen(first);
       const book = (line === 'joseph' ? cp.branch.mt : cp.branch.lk).replace(/:.*$/, '');
@@ -987,7 +1190,8 @@ export function drawBranchLabels(v: SkyContext, p: Pass, steps: { joseph: readon
       const text = `через ${g}${book ? ` (${book})` : ''}`;
       const sd = world.strands.find((x) => x.line === line);
       if (!sd) continue;
-      const k = sd.ids.indexOf(first);
+      const k = sd.ids.indexOf(lead);
+      if (k < 0) continue;
       // точки ветви у развилки — один раз на подпись (двоичный поиск по номеру лица), в px холста
       const pts: { x: number; y: number }[] = [];
       for (const f of [0.5, 0.3, 0.8, 1.2, 1.6, 2, 2.5, 3]) {

@@ -4,7 +4,8 @@ import { panel } from '../../state.ts';
 import { Close } from '../controls.tsx';
 import { typo, typoTree } from '../text/typo.ts';
 import { showYears } from '../sky/view.ts';
-import { parked } from '../focus.ts';
+import { modalOnPhone, parked } from '../focus.ts';
+import { grid } from '../layout.ts';
 
 /** Прокрутка каждой панели за сеанс (D11; IX-30): вернувшись к панели, читатель видит то же место. */
 const scrolls = new Map<string, number>();
@@ -31,7 +32,22 @@ export function useRemembered<T>(key: string, init: T): [T, (v: T) => void] {
  * выбранное лицо (SkyView, data-reserve). Пока на телефоне идёт выбор второго лица на небе, лист панели этого режима
  * убран (hidden; src/ui/focus.ts, parked — MOB-47): панель остаётся в разметке со своим состоянием и прокруткой.
  */
-export function Sheet({ title, lead, wide, reserve, children }: { title: string; lead?: string; wide?: boolean; reserve?: boolean; children: ComponentChildren }) {
+export function Sheet({
+  title,
+  lead,
+  wide,
+  reserve,
+  onClose,
+  children,
+}: {
+  title: string;
+  lead?: string;
+  wide?: boolean;
+  reserve?: boolean;
+  /** «×» закрывает не панель атласа, а свой лист (лист «Вид» узкого неба — всплывающий, без записи в истории; IX-80) */
+  onClose?: () => void;
+  children: ComponentChildren;
+}) {
   const ref = useRef<HTMLElement>(null);
   // прокрутка — по названию панели: восстановить после отрисовки, запоминать при прокрутке
   useLayoutEffect(() => {
@@ -45,10 +61,15 @@ export function Sheet({ title, lead, wide, reserve, children }: { title: string;
   }, [title]);
   // заголовок принимает фокус при открытии панели и называет область для диктора (I2; src/ui/focus.ts)
   const hid = `sheet-h-${title.replace(/[^\p{L}\p{N}]+/gu, '-')}`;
+  // на телефоне полноэкранный лист модален (под ним inert): диктор объявляет его диалогом с именем по h2 (MOB-75);
+  // колонка на планшете и компьютере, «Эпохи» и «Вид» — области, как прежде
+  const dialog = sheetIsDialog(grid.value.phone, panel.value, !!reserve);
   return (
     <section
       ref={ref}
       class={wide ? 'sheet wide' : 'sheet'}
+      role={dialog ? 'dialog' : undefined}
+      aria-modal={dialog ? 'true' : undefined}
       aria-labelledby={hid}
       data-reserve={reserve ? 'sheet' : undefined}
       hidden={!reserve && parked.value}
@@ -58,7 +79,7 @@ export function Sheet({ title, lead, wide, reserve, children }: { title: string;
         <h2 id={hid} tabIndex={-1}>
           {title}
         </h2>
-        <Close label="Закрыть панель" onClick={() => (panel.value = null)} />
+        <Close label={onClose ? 'Закрыть' : 'Закрыть панель'} onClick={onClose ?? (() => (panel.value = null))} />
       </header>
       {lead && <p class="lead">{typo(lead)}</p>}
       {/* русская типографика для собственных строк панели; компоненты внутри набирают свои строки сами */}
@@ -66,6 +87,12 @@ export function Sheet({ title, lead, wide, reserve, children }: { title: string;
     </section>
   );
 }
+
+/**
+ * Лист панели — диалог (MOB-75): на телефоне, у модальной панели (focus.ts, modalOnPhone), кроме листа внутри неба
+ * (reserve — «Вид»). На планшете и компьютере панель — колонка сетки: область с именем по h2.
+ */
+export const sheetIsDialog = (phone: boolean, p: typeof panel.value, reserve: boolean) => phone && !reserve && modalOnPhone(p);
 
 /** Перелёт к окну лет (лист «Эпохи»): та же функция, что у полосы времени (D4). */
 export const flyToYears = (a: number, b: number) => {

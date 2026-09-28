@@ -4,13 +4,16 @@
  */
 import { groups, loadCard, loadedCard, loadedChrono, loadVerses, persons, volumes, type IdxPerson } from '../../data/atlas.ts';
 import { SearchIndex, refsOfCard, textNamesOfCard } from '../../engine/search.ts';
+import { ROLE_NAMES } from '../common.tsx';
 
 /** Ссылки лица из индекса неба: родители, иные родители, супруги, родство. */
 const indexRefs = (p: IdxPerson) => [...p.parentRefs, ...p.otherParents.flatMap((o) => o.refs), ...p.spouses.flatMap((s) => s.refs), ...p.kin.flatMap((k) => k.refs)];
+/** Роли словами, как в паспорте карточки: «царь», «пророчица», «апостол» — для запросов «царь Давид» (IX-71). */
+const roleWords = (p: IdxPerson) => p.roles.map((r) => ROLE_NAMES[r]?.[p.sex === 'f' ? 1 : 0] ?? '').filter(Boolean);
 
 export const searchIndex = new SearchIndex(
   persons.map((p) => ({
-    id: p.id, name: p.name, alt: p.alt, disambig: p.disambig, prominence: p.prominence, magnitude: p.magnitude, refs: indexRefs(p), kind: p.kind, unnamed: p.unnamed,
+    id: p.id, name: p.name, alt: p.alt, disambig: p.disambig, prominence: p.prominence, magnitude: p.magnitude, refs: indexRefs(p), kind: p.kind, unnamed: p.unnamed, roles: roleWords(p),
   })),
   { groupWords: groups.filter((g) => g.kind === 'tribe' || g.kind === 'nation').flatMap((g) => g.name.split(/\s+/).filter((w) => w.length > 2)) },
 );

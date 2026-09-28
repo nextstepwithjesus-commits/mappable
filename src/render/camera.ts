@@ -73,6 +73,10 @@ export interface Frame {
 type Stretched = { v: ViewState; lanes: number };
 
 const ease = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
+/** Длительность перелёта ван Вейка — Нёйса по длине пути S: 400–1 200 мс (ТЗ § 3.7; с обзора к лицу — 1,2 с, IX-68). */
+export const FLY_MIN_MS = 400;
+export const FLY_MAX_MS = 1200;
+export const flightMs = (S: number) => Math.max(FLY_MIN_MS, Math.min(FLY_MAX_MS, Math.abs(S) * 900));
 /** Замедление к концу: шаг масштаба, инерция протяжки, сдвиг клавишей. У начала скорость — втрое средней. */
 export const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
 /** Плавная смена пропорции полос: по логарифму, от m0 к m1 по доле пути e. */
@@ -114,15 +118,66 @@ export class Camera {
   focusLanes = 0;
   /** Пропорция полос (J1): множитель к обычной высоте полосы; 1 — пропорции по умолчанию. */
   lanes = 1;
+  /**
+   * Пропорция читателя, пока небо показывает временную (IX-70): вписывание группы («Все N на небе», путь родства, лица
+   * главы) сжимает строки только на время отметок — lanes временная, а своя пропорция читателя ждёт здесь; restoreLanes
+   * возвращает её. null — lanes и есть пропорция читателя. Сохранённую пропорцию меняют только растяжение полос
+   * («высота строк», Alt + колесо, протяжка по буквам), «по умолчанию» и адрес.
+   */
+  userLanes: number | null = null;
+  /** Пропорция читателя: своя, даже если сейчас строки временно сжаты вписыванием группы (IX-70). */
+  get ownLanes(): number {
+    return this.userLanes ?? this.lanes;
+  }
+  /**
+   * Нижний предел высоты строки при временном сжатии группы, px (MAP-79): группа из многих строк («Захария», 26 лиц
+   * по всем коленам) сжимается ниже 4 px, а не отдаляет время за пределы своих лет. Действует, пока сжатие временное
+   * и пока оно возвращается (restoreLanes); иначе предел — KY_LO.
+   */
+  private groupFloor = KY_LO;
+  private floorOn = false;
+  private get floorPx(): number {
+    return this.floorOn ? this.groupFloor : KY_LO;
+  }
+  /** Пропорция снова своя (адрес, растяжение полос, «по умолчанию»): временного предела строки больше нет. */
+  private ownAgain() {
+    this.userLanes = null;
+    this.floorOn = false;
+  }
+  /**
+   * Сделать пропорцию m временной (IX-70, MAP-70: строки «только линий»): своя пропорция читателя уходит в userLanes, если
+   * её там ещё нет. Высота строки меняется сразу; середина видимой части по вертикали остаётся на месте.
+   */
+  setTempLanes(m: number) {
+    const v = Math.max(LANES_MIN, Math.min(LANES_MAX, m));
+    if (this.userLanes === null) {
+      if (Math.abs(v / this.lanes - 1) < 1e-9) return;
+      this.userLanes = this.lanes;
+    }
+    const [, cy] = this.vpCenter();
+    const mid = this.wLane(cy);
+    this.raw = null;
+    this.lanes = v;
+    this.laneTop = mid + cy / this.ky;
+  }
+  /** Кончить временную пропорцию без перехода: вернуть свою (её возвращает переход, который зовёт этот метод). */
+  endTemp(): number | null {
+    const own = this.userLanes;
+    this.ownAgain();
+    return own;
+  }
   /** Высота полосы при масштабе kx — с пропорцией полос. */
   kyFor(kx: number): number {
     return this.kyWith(kx, this.lanes);
   }
-  /** Высота полосы при масштабе kx и пропорции m: обычная × m, но не ниже min(4, обычная) и не выше 60 px. */
-  kyWith(kx: number, m: number): number {
+  /**
+   * Высота полосы при масштабе kx и пропорции m: обычная × m, но не ниже min(4, обычная) и не выше 60 px. floor —
+   * нижний предел вместо 4 px (временное сжатие группы, MAP-79).
+   */
+  kyWith(kx: number, m: number, floor = this.floorPx): number {
     const k = this.kyAuto(kx);
     if (m === 1) return k;
-    return Math.min(Math.max(KY_HI, k), Math.max(Math.min(KY_LO, k), k * m));
+    return Math.min(Math.max(KY_HI, k), Math.max(Math.min(floor, k), k * m));
   }
   /** Обычная высота полосы при масштабе kx (без пропорции полос). */
   kyAuto(kx: number): number {
@@ -146,6 +201,7 @@ export class Camera {
   /** Поставить пропорцию сразу (адрес, память браузера): середина видимой части по вертикали остаётся на месте. */
   setLanes(m: number) {
     const v = Math.max(LANES_MIN, Math.min(LANES_MAX, Number.isFinite(m) && m > 0 ? m : 1));
+    this.ownAgain();
     if (v === this.lanes) return;
     const [, cy] = this.vpCenter();
     const mid = this.wLane(cy);
@@ -231,15 +287,24 @@ export class Camera {
     const lb = f.lane1 + overL + this.vp.t / ky;
     return { x: xa <= xb ? [xa, xb] : [xb, xa], lane: la <= lb ? [la, lb] : [(la + lb) / 2, (la + lb) / 2] };
   }
-  /** Вид в пределах: масштаб и положение. lanes — пропорция полос, с которой вид будет показан (по умолчанию — нынешняя). */
-  constrain(v: ViewState, lanes = this.lanes): ViewState {
-    if (lanes !== this.lanes) {
-      const was = this.lanes;
+  /**
+   * Вид в пределах: масштаб и положение. lanes — пропорция полос, с которой вид будет показан (по умолчанию — нынешняя);
+   * floor — временный нижний предел строки, px, с которым он будет показан (вписывание группы, MAP-79).
+   */
+  constrain(v: ViewState, lanes = this.lanes, floor?: number): ViewState {
+    if (lanes !== this.lanes || floor !== undefined) {
+      const was = { lanes: this.lanes, floorOn: this.floorOn, groupFloor: this.groupFloor };
       this.lanes = lanes;
+      if (floor !== undefined) {
+        this.floorOn = true;
+        this.groupFloor = Math.min(KY_LO, floor);
+      }
       try {
         return this.constrain(v);
       } finally {
-        this.lanes = was;
+        this.lanes = was.lanes;
+        this.floorOn = was.floorOn;
+        this.groupFloor = was.groupFloor;
       }
     }
     const kx = this.clampKx(v.kx, v.x0 + (this.vpCenter()[0]) / v.kx);
@@ -379,6 +444,8 @@ export class Camera {
   stop() {
     if (this.anim) cancelAnimationFrame(this.anim.raf);
     this.anim = null;
+    // возврат пропорции прерван: временного предела строки больше нет
+    if (this.userLanes === null) this.floorOn = false;
   }
   get moving(): boolean {
     return this.anim !== null;
@@ -410,6 +477,47 @@ export class Camera {
       this.kx = to.kx;
       this.laneTop = to.laneTop;
     }, onFrame);
+  }
+
+  /**
+   * Прямой переход к виду без «отдалить — приблизить» (IX-74, IX-79): «назад» и «вперёд», «Всё небо». Масштаб меняется
+   * по логарифму, а неподвижная точка перехода остаётся на месте экрана — окно растёт или сжимается вокруг неё, как
+   * «вписать всё» в картах; при одинаковом масштабе — просто сдвиг. По вертикали середина идёт по прямой. Как перелёт,
+   * это «долгое» движение: нажатие его только останавливает (IX-54). lanes — пропорция полос в конце (адрес записи).
+   */
+  zoomTo(to: ViewState, ms: number, onFrame: () => void, reduced = false, lanes?: number) {
+    this.stop();
+    this.raw = null;
+    const from = this.state();
+    const m0 = this.lanes;
+    const m1 = lanes !== undefined && lanes > 0 ? Math.max(LANES_MIN, Math.min(LANES_MAX, lanes)) : m0;
+    const [, cy] = this.vpCenter();
+    const k0 = from.kx;
+    const k1 = to.kx;
+    const c0l = from.laneTop - cy / this.ky;
+    const c1l = to.laneTop - cy / this.kyWith(k1, m1);
+    // неподвижная точка: экранная x, у которой мировая x одна и та же в обоих видах (x0 + s / kx)
+    const inv = 1 / k0 - 1 / k1;
+    const sFix = Math.abs(inv) > 1e-12 ? (to.x0 - from.x0) / inv : NaN;
+    const W = Math.max(1, this.vp.r - this.vp.l);
+    const fixed = Number.isFinite(sFix) && Math.abs(sFix) < 40 * W;
+    const xFix = fixed ? from.x0 + sFix / k0 : 0;
+    const finish = () => {
+      this.lanes = m1;
+      this.x0 = to.x0;
+      this.kx = to.kx;
+      this.laneTop = to.laneTop;
+    };
+    this.run(ms, reduced, (t) => {
+      const e = ease(t);
+      const kx = Math.exp(Math.log(k0) + (Math.log(k1) - Math.log(k0)) * e);
+      const [, vy] = this.vpCenter();
+      this.lanes = lerpLog(m0, m1, e);
+      this.kx = kx;
+      this.x0 = fixed ? xFix - sFix / kx : from.x0 + (to.x0 - from.x0) * e;
+      this.laneTop = c0l + (c1l - c0l) * e + vy / this.ky;
+    }, finish, onFrame);
+    this.animKind = 'fly';
   }
 
   /** Шаг масштаба с точкой (sx, sy), которая остаётся на месте (кнопки, клавиши, колесо). */
@@ -501,6 +609,8 @@ export class Camera {
   stretchAt(axis: Axis, sx: number, sy: number, factor: number) {
     this.stop();
     this.raw = null;
+    // протяжка по буквам — пропорция читателя: временное сжатие группы становится его (IX-70)
+    if (axis === 'lanes') this.ownAgain();
     const p = this.stretchPlan(axis, sx, sy, factor);
     if (p) this.put(p.end);
   }
@@ -510,6 +620,8 @@ export class Camera {
     this.raw = null;
     const p = this.stretchPlan(axis, sx, sy, factor);
     if (!p) return false;
+    // «высота строк» и Alt + колесо задают пропорцию читателя (IX-70)
+    if (axis === 'lanes') this.ownAgain();
     const end = p.end;
     const free = p.at(1);
     this.run(ms, reduced, (t) => {
@@ -520,6 +632,42 @@ export class Camera {
     }, () => this.put(end), onFrame);
     return true;
   }
+  /**
+   * Вернуть пропорцию читателя после временного сжатия строк (IX-70): отметки сняли — строки снова своей высоты за ms,
+   * полоса под sy (px холста) остаётся на месте, время не меняется. Было ли что возвращать.
+   */
+  restoreLanes(sy: number, ms: number, onFrame: () => void, reduced = false): boolean {
+    const own = this.userLanes;
+    if (own === null) return false;
+    this.stop();
+    this.raw = null;
+    // пропорция снова своя сразу (память, адрес); временный предел строки держится до конца возврата — без скачка
+    this.userLanes = null;
+    const m0 = this.lanes;
+    if (Math.abs(own / m0 - 1) < 1e-9) {
+      this.floorOn = false;
+      return false;
+    }
+    const kx = this.kx;
+    const x0 = this.x0;
+    const wl = this.wLane(sy);
+    const at = (m: number, floor?: number): Stretched => ({ lanes: m, v: { x0, kx, laneTop: wl + sy / this.kyWith(kx, m, floor) } });
+    const free = at(own, KY_LO);
+    const was = this.floorOn;
+    this.floorOn = false;
+    const end = this.bounded(free);
+    this.floorOn = was;
+    this.run(ms, reduced, (t) => {
+      const e = easeOut(t);
+      const s = at(lerpLog(m0, own, e));
+      this.put({ lanes: s.lanes, v: { kx, x0: s.v.x0 + (end.v.x0 - free.v.x0) * e, laneTop: s.v.laneTop + (end.v.laneTop - free.v.laneTop) * e } });
+    }, () => {
+      this.floorOn = false;
+      this.put(end);
+    }, onFrame);
+    return true;
+  }
+
   /** Пропорции по умолчанию шагом с анимацией: полоса под sy остаётся на месте. Было ли что менять. */
   resetLanes(sx: number, sy: number, ms: number, onFrame: () => void, reduced = false): boolean {
     const m = this.lanesAt();
@@ -534,26 +682,33 @@ export class Camera {
    * Прежняя форма flyTo(x, lane, wTarget, onFrame, reduced) — точка (x, lane) в середину видимой части, окно wTarget
    * мировых единиц на её ширину — тоже принимается; вид ставится в пределы камеры.
    */
-  flyTo(to: ViewState, onFrame: () => void, reduced?: boolean, lanes?: number): void;
+  flyTo(to: ViewState, onFrame: () => void, reduced?: boolean, lanes?: number, floor?: number): void;
   flyTo(x: number, lane: number, wTarget: number, onFrame: () => void, reduced?: boolean): void;
-  flyTo(a: ViewState | number, b: (() => void) | number, c?: boolean | number, d?: (() => void) | number, e?: boolean) {
+  flyTo(a: ViewState | number, b: (() => void) | number, c?: boolean | number, d?: (() => void) | number, e?: boolean | number) {
     if (typeof a === 'number') {
       const [cx, cy] = this.vpCenter();
       const kx = (this.vp.r - this.vp.l) / Math.max(1e-9, c as number);
       this.flyView(this.constrain({ x0: a - cx / kx, kx, laneTop: (b as number) + cy / this.kyFor(kx) }), d as () => void, !!e);
       return;
     }
-    this.flyView(a, b as () => void, !!c, typeof d === 'number' ? d : undefined);
+    this.flyView(a, b as () => void, !!c, typeof d === 'number' ? d : undefined, typeof e === 'number' ? e : undefined);
   }
   /**
    * Перелёт к виду to; lanes — пропорция полос в конце (вписывание групп сжатием строк, IX-53): она меняется вместе
    * с перелётом, по логарифму. to.laneTop посчитан для этой пропорции.
    */
-  private flyView(to: ViewState, onFrame: () => void, reduced: boolean, lanes?: number) {
+  private flyView(to: ViewState, onFrame: () => void, reduced: boolean, lanes?: number, floor?: number) {
     this.stop();
     this.raw = null;
     const m0 = this.lanes;
     const m1 = lanes !== undefined && lanes > 0 ? Math.max(LANES_MIN, Math.min(LANES_MAX, lanes)) : m0;
+    // пропорция группы — временная (IX-70): своя пропорция читателя остаётся в userLanes, пока её не вернут; строки
+    // группы могут быть ниже 4 px (floor, MAP-79)
+    if (m1 !== m0 && this.userLanes === null) this.userLanes = m0;
+    if (this.userLanes !== null && floor !== undefined) {
+      this.floorOn = true;
+      this.groupFloor = Math.min(KY_LO, floor);
+    }
     const [cx, cy] = this.vpCenter();
     const vw = this.vp.r - this.vp.l;
     const w0 = vw / this.kx;
@@ -564,6 +719,7 @@ export class Camera {
     const c1l = to.laneTop - cy / this.kyWith(to.kx, m1);
     const finish = () => {
       this.lanes = m1;
+      if (this.userLanes !== null && Math.abs(this.userLanes / m1 - 1) < 1e-9) this.ownAgain();
       this.x0 = to.x0;
       this.kx = to.kx;
       this.laneTop = to.laneTop;
@@ -601,7 +757,8 @@ export class Camera {
         return [c0x + u * dx, (w0 * coshr0) / cosh(rho * sS + r0)];
       };
     }
-    const duration = Math.max(400, Math.min(1400, Math.abs(S) * 900));
+    // 400–1 200 мс (ТЗ § 3.7: 400–1 400); с обзора к лицу — у верхнего края, 1,2 с (IX-68)
+    const duration = flightMs(S);
     // середина пути не отдаляется дальше «всего неба»
     const wMax = vw / this.kxLo();
     this.run(duration, false, (t) => {

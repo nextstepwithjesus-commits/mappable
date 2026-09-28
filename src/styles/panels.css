@@ -124,17 +124,31 @@
 .idx .entry {
   break-inside: avoid;
 }
-/* строка указателя — цель нажатия не ниже 24 px (WCAG 2.2, 2.5.8) */
+/* строка указателя — цель нажатия не ниже 24 px (WCAG 2.2, 2.5.8). Два столбца: текст статьи и координата (VIS-61,
+   UX-78, CARD-89): длинная строка лет переносится и не заходит на координату; координата — по последней строке */
 .idx .row {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px;
+  column-gap: 4px;
   align-items: last baseline;
-  gap: 4px;
   width: 100%;
   min-height: 24px;
   text-align: left;
 }
 .idx .row .nm {
   min-width: 0;
+}
+/* отточие — от конца текста последней строки до столбца координаты: пустой строчный блок шириной во всю строку,
+   чей излишек срезает сам элемент (вычтенное поле справа не даёт ему уйти на новую строку) */
+.idx .row .lead {
+  overflow: hidden;
+}
+.idx .row .lead::after {
+  content: '';
+  display: inline-block;
+  width: 100%;
+  margin: 0 -100% 0 4px;
+  border-bottom: 1px dotted var(--ink-3);
 }
 .idx .row.word .nm,
 .idx .row.known > .nm {
@@ -146,13 +160,7 @@ button.row:hover {
 button.row:focus-visible {
   outline-offset: -2px;
 }
-.idx .row .lead-dots {
-  flex: 1;
-  border-bottom: 1px dotted var(--ink-3);
-  min-width: 8px;
-}
 .idx .row .coord {
-  flex: none;
   font-family: var(--sans);
   font-size: var(--t-ui-s);
   line-height: var(--t-ui-s-lh);
@@ -169,11 +177,15 @@ button.row:focus-visible {
   font-weight: 600;
   color: var(--ink);
 }
+.idx .sub .ds {
+  display: block;
+}
 .idx .sub .yrs {
+  display: block;
   font-family: var(--sans);
   font-size: var(--t-ui-s);
   line-height: var(--t-ui-s-lh);
-  white-space: nowrap;
+  white-space: normal;
 }
 /* ---------- синопсис (G2; VIS-34, MOB-23) ----------
    Столбцы: № и имя у Матфея, имя и № у Луки, стихи Бытия, 1 Паралипоменон и Руфи. Общие лица — одним именем на оба
@@ -269,10 +281,9 @@ button.row:focus-visible {
   font-style: italic;
   color: var(--ink-2);
 }
-/* общий участок: имя по середине двух колонок — оно у обеих линий (VIS-34) */
+/* общий участок: имя на две колонки — оно у обеих линий (VIS-34), на оси имён Матфея: ось не ломается (VIS-78) */
 .sheet .synopsis .nm.both {
-  text-align: center;
-  padding-right: 0;
+  text-align: left;
 }
 /* до Авраама: столбцы Матфея — одна клетка «Матфей начинает с Авраама (Мф 1:2)» (CARD-63) */
 .sheet .synopsis td.mt-pre {
@@ -325,12 +336,17 @@ button.row:focus-visible {
   font-style: italic;
   color: var(--ink-2);
 }
+/* пометы ветхозаветных столбцов — одним начертанием, как стихи рядом (VIS-78): «не назван в», «отец — Федаия» */
+.synopsis .ot .odd-note,
 .synopsis .via {
-  display: block;
   font-family: var(--sans);
+  font-style: normal;
   font-size: var(--t-ui-s);
   line-height: var(--t-ui-s-lh);
   color: var(--ink-2);
+}
+.synopsis .via {
+  display: block;
 }
 /* вставка перед участком: что здесь происходит, «почему», команда «показать участок на небе» */
 .sheet .synopsis tr.note td {
@@ -355,11 +371,12 @@ button.row:focus-visible {
 }
 /* узкий синопсис (телефон, узкая колонка): тесные столбцы, мелкие стихи */
 @container (max-width: 560px) {
+  /* столбцы номеров и стихов уже: имена линий помещаются целиком и не касаются номеров (MOB-62) */
   .synopsis col.c-no {
-    width: 28px;
+    width: 22px;
   }
   .synopsis col.c-ot {
-    width: 58px;
+    width: 46px;
   }
   .sheet .synopsis td.ot {
     padding-right: 4px;
@@ -382,7 +399,29 @@ button.row:focus-visible {
     font-size: var(--t-ui-s);
   }
   .sheet .synopsis .split .nm.lk {
-    padding-left: 6px;
+    padding-left: 4px;
+  }
+  /* имя не касается номера соседнего столбца (MOB-62): поле 8 px справа; слово, которое всё же не помещается, —
+     с переносом по слогам там, где браузер его умеет */
+  .sheet .synopsis .split .nm {
+    padding-right: 8px;
+    hyphens: auto;
+  }
+  .sheet .synopsis .split .odd-note {
+    font-size: var(--t-ui-s);
+    line-height: var(--t-ui-s-lh);
+  }
+}
+/* самый узкий синопсис (320 px, решение 56): имена линий — мельче, как имена до Авраама; имя, которое всё равно
+   не помещается, переносится (по слогам, где браузер умеет, иначе — в любом месте), но номера не касается */
+@container (max-width: 330px) {
+  .synopsis col.c-no {
+    width: 20px;
+  }
+  .sheet .synopsis .split .nm {
+    font-size: var(--t-ui-s);
+    line-height: var(--t-note-lh);
+    overflow-wrap: anywhere;
   }
 }
 .synopsis + .muted,
@@ -1000,23 +1039,33 @@ button.row:focus-visible {
   align-items: center;
   gap: 8px;
 }
-/* подсказка звезды: клавиши рабочего набора и свёртки (J3, J5) */
-.tip .tip-keys {
-  display: grid;
-  margin-top: 4px;
-  font-family: var(--sans);
-  font-size: var(--t-ui-s);
-  line-height: var(--t-ui-s-lh);
-  color: var(--ink-2);
-}
 /* строка набора у верхней кромки неба (J4) — как строка отметок */
 .workbar button + button {
   margin-left: 2px;
 }
+/* телефон: обычная строка «набор» — одна строка «Только набор: 38 лиц — показать всех» (MOB-73), без переноса текста
+   под команду, как у других строк у кромки на узком небе (sky.css) */
+@media (max-width: 720px) {
+  .pickbar.workbar.one {
+    flex-wrap: nowrap;
+    padding: 0 4px 0 12px;
+  }
+  .pickbar.workbar.one .txt {
+    flex: 0 1 auto;
+    white-space: nowrap;
+  }
+  .pickbar.workbar.one .dash {
+    display: inline;
+  }
+  .pickbar.workbar.one button:first-of-type {
+    margin-left: 0;
+  }
+}
 /* «в работу» в строке поиска: надпись-команда справа (J3; Shift+Enter) */
 .result:has(> .row-cmd) {
-  grid-template-columns: minmax(0, 1fr) 56px auto;
+  grid-template-columns: minmax(0, 1fr) 120px auto;
 }
+/* команда без подчёркивания в каждой строке (VIS-17): черта — только у строки под курсором и при наведении */
 .result .row-cmd {
   grid-column: 3;
   grid-row: 1 / span 2;
@@ -1026,12 +1075,30 @@ button.row:focus-visible {
   font-size: var(--t-ui-s);
   line-height: var(--t-ui-s-lh);
   color: var(--ink-2);
-  text-decoration: underline;
+  text-decoration: underline transparent;
   text-underline-offset: 3px;
+}
+.result[aria-selected='true'] .row-cmd {
+  color: var(--ink);
+  text-decoration-color: var(--ink-2);
 }
 .result .row-cmd:hover {
   color: var(--ink);
+  text-decoration-color: var(--ink);
   background: var(--sheet);
+}
+/* узкий экран: микрошкала короче — годы и «в работу» остаются в строке */
+@media (max-width: 720px) {
+  .result {
+    grid-template-columns: minmax(0, 1fr) 84px;
+    column-gap: 8px;
+  }
+  .result:has(> .row-cmd) {
+    grid-template-columns: minmax(0, 1fr) 84px auto;
+  }
+  .result canvas {
+    width: 84px;
+  }
 }
 
 /* ---------- карточка, § 14: современники по расчёту свёрнуты (решение 19; CARD-55) ----------

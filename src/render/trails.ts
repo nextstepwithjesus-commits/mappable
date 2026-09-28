@@ -8,25 +8,34 @@
  *  — оценочное рождение — начало следа пунктиром до конца интервала рождения (bHi);
  *  — умерший младенцем, народ или род из таблицы народов, лицо скопления-списка — без следа (знаки — glyphs.ts).
  *
- * Семьи (E4; MAP-15, 16, 20, 22; UX-34):
- *  — дети одной пары «отец — мать», рождённые рядом, — под одной скобой: ствол от следа отца и короткие засечки
- *    к звёздам детей; скобы разных матерей одного отца сдвинуты на 4 px и различаются начертанием, у верха — «от Лии»;
+ * Семьи (E4; MAP-15, 16, 20, 22, 73, 74, 76, 80; UX-34):
+ *  — дети одной матери, рождённые рядом, — на своей короткой гребёнке: тонкий сплошной ствол от следа отца и зубцы
+ *    к звёздам детей; гребёнки разных матерей одного отца сдвинуты на 3 px, у корня гребёнки (у ребёнка, ближайшего
+ *    к следу отца) — помета матери «от Лии». Начертанием матери не различаются: штрих на небе значит «потомок
+ *    выбранного» и «по толкованию» (MAP-74);
+ *  — «годы — по порядку …, выв.»: помета у детей, чей год оценён по порядку перечисления, — только у семьи
+ *    выбранного лица и при наведении на гребёнку; ссылка — место, где Писание называет этих детей по порядку
+ *    (у сыновей Иакова — рассказ о рождениях Быт 29:32–30:24; 35:16–18; решение 41, MAP-73);
  *  — при выделении рода: предки — сплошной линией 1,5 px, потомки — штрихом, братья и сёстры — своей степенью;
- *  — брак — короткий знак «‖» от следа мужа к жене в год первого ребёнка; к дальней жене — знак и тонкая выноска;
+ *  — брак — короткий знак «‖» от следа мужа к жене в год первого ребёнка; к дальней жене — знак и тонкая выноска.
+ *    Знак занимает место в общей проверке наложений, как подпись, и при столкновении сдвигается (MAP-76);
  *  — призрак жены в её роду — пунктирный отвод и подпись «Рахиль, жена Иакова».
  *
  * drawLifeTrail, drawDescent, drawBracket и drawMarriage рисуют одиночный знак на любом холсте без неба: ими
  * пользуются небо, образец #/specimen и «Как читать карту», чтобы знак в легенде был тем же, что на небе.
  */
 import { alpha } from './color.ts';
-import { byId, graph, type ModelData } from '../data/atlas.ts';
+import { byId, graph, models, type ModelData } from '../data/atlas.ts';
 import type { DateClass } from '../engine/chronology.ts';
+import { primaryChildren } from '../engine/graph.ts';
+import { BOOK_INDEX } from '../engine/books.ts';
 import { nameCase } from '../ui/text/ru.ts';
 import { refText } from '../engine/kinship.ts';
 import { starRadius } from './glyphs.ts';
 import { mapFont, mapSize, T_MAP_S } from './type.ts';
 import { claim, textBox } from './labels.ts';
-import type { Emphasis, Pass, SkyContext } from './sky.ts';
+import type { Rect } from './rect.ts';
+import type { Emphasis, Palette, Pass, SkyContext } from './sky.ts';
 
 /** Пунктир неуверенного начала и конца следа. */
 export const TRAIL_DOTS = [1.5, 3];
@@ -251,22 +260,26 @@ export function drawDescent(ctx: CanvasRenderingContext2D, d: Descent) {
   if (d.tension) drawTension(ctx, x, (y0 + y1) / 2, d.tension);
 }
 
-/** Начертания скоб разных матерей одного отца: сплошная, штрих, точки, штрих-пунктир (MAP-16). */
-export const MOTHER_DASH: readonly number[][] = [[], [3, 2], [1, 2], [5, 2, 1, 2]];
+/**
+ * Гребёнки разных матерей одного отца сдвинуты на столько px друг от друга (MAP-74): у каждой матери — своя гребёнка
+ * на уровне её детей. Начертание у всех одно — тонкое сплошное: штрих на небе значит «потомок выбранного»
+ * и «по толкованию», а не мать.
+ */
+export const COMB_SHIFT = 3;
 
-/** Скоба пары «отец — мать»: ствол x от следа родителя y0 до дальнего ребёнка и засечки к звёздам детей. */
+/** Скоба (гребёнка) пары «отец — мать»: ствол x от следа родителя y0 до дальнего ребёнка и зубцы к звёздам детей. */
 export interface Bracket {
   x: number;
   y0: number;
   kids: { x: number; y: number }[];
   color: string;
-  /** начертание скобы этой матери (MOTHER_DASH) */
+  /** штрих связи при выделении рода (LINK_STYLE: потомки выбранного); у гребёнок матерей штриха нет (MAP-74) */
   dash?: readonly number[];
   /** узелок матери на стволе */
   mother?: { y: number; color: string };
 }
 
-/** Скоба: ствол и засечки. Толщину линии задаёт вызывающий. */
+/** Скоба: ствол и зубцы. Толщину линии задаёт вызывающий. */
 export function drawBracket(ctx: CanvasRenderingContext2D, b: Bracket) {
   let lo = b.y0;
   let hi = b.y0;
@@ -300,24 +313,48 @@ export interface Marriage {
   color: string;
   /** до какой высоты от следа мужа рисуется двойная черта: ближе — вся, дальше — 8 px и выноска */
   near: number;
+  /**
+   * к дальней жене: где на выноске начинается знак 8 px (по умолчанию — у следа мужа). Знак, которому у следа мужа
+   * нет места, сдвигается вдоль выноски (MAP-76); выноска тогда идёт и от следа мужа до знака.
+   */
+  from?: number;
+  /** промежутки по y, где выноска не рисуется: под подписями, как под их ореолом (MAP-76) */
+  skip?: [number, number][];
 }
 
 export function drawMarriage(ctx: CanvasRenderingContext2D, m: Marriage) {
   const dir = Math.sign(m.yW - m.yH) || 1;
   const far = Math.abs(m.yW - m.yH) > m.near;
-  const yS = far ? m.yH + dir * 8 : m.yW;
+  const y0 = far ? (m.from ?? m.yH) : m.yH;
+  const yS = far ? y0 + dir * 8 : m.yW;
   ctx.strokeStyle = m.color;
   ctx.beginPath();
-  ctx.moveTo(m.x - 1.5, m.yH);
+  ctx.moveTo(m.x - 1.5, y0);
   ctx.lineTo(m.x - 1.5, yS);
-  ctx.moveTo(m.x + 1.5, m.yH);
+  ctx.moveTo(m.x + 1.5, y0);
   ctx.lineTo(m.x + 1.5, yS);
   ctx.stroke();
   if (far) {
     ctx.setLineDash([2, 3]);
     ctx.beginPath();
-    ctx.moveTo(m.x, yS);
-    ctx.lineTo(m.x, m.yW);
+    const line = (a: number, b: number) => {
+      let from = Math.min(a, b);
+      const to = Math.max(a, b);
+      for (const [s0, s1] of [...(m.skip ?? [])].sort((p, q) => p[0] - q[0])) {
+        if (s1 <= from || s0 >= to) continue;
+        if (s0 > from) {
+          ctx.moveTo(m.x, from);
+          ctx.lineTo(m.x, s0);
+        }
+        from = Math.max(from, s1);
+      }
+      if (to > from) {
+        ctx.moveTo(m.x, from);
+        ctx.lineTo(m.x, to);
+      }
+    };
+    if (y0 !== m.yH) line(m.yH, y0);
+    line(yS, m.yW);
     ctx.stroke();
     ctx.setLineDash([]);
   }
@@ -399,27 +436,72 @@ export const LINK_STYLE: Record<Exclude<LinkKind, 'base'>, { width: number; dash
   lit: { width: 1, dash: [] },
 };
 
-/** Дети ближе этого по x (px) — под одной скобой; дальше — у каждого свой отвод. */
-const MERGE_PX = 18;
-/** С какой высоты полосы у скоб появляется помета матери «от Лии». */
+/**
+ * Дети одной матери — на одной гребёнке (MAP-74), пока между ними не родился ребёнок другой матери того же отца
+ * и пока гребёнка не длиннее COMB_SPAN px: зубцы короткие и не читаются как след жизни. Дальше — новая гребёнка той
+ * же матери, со своей пометой.
+ */
+const COMB_SPAN = 96;
+/** С какой высоты полосы у гребёнок появляется помета матери «от Лии». */
 const NOTE_KY = 14;
 
-/** Подпись, которую небо ставит после подписей звёзд, если есть место: «от Лии», «Рахиль, жена Иакова». */
-export interface FamilyNote {
+/**
+ * Что под указателем у семьи (src/ui/sky/input.ts, familyAt): гребёнка отца parent и матери mother, её помета
+ * или помета порядка перечисления. kids — дети этой гребёнки (у пометы матери — все её дети от этого отца в кадре,
+ * у пометы порядка — все дети, чей год оценён по порядку).
+ */
+export interface FamilyHit {
+  kind: 'comb' | 'mother' | 'order';
+  parent: string;
+  mother: string | null;
+  kids: string[];
+  /** место, где Писание называет этих детей по порядку (orderListing): «Быт 29:32–30:24; 35:16–18» */
+  source?: string;
+}
+
+/** Подпись, которую небо ставит после подписей звёзд, если есть место: «от Лии», «Рахиль, жена Иакова», порядок. */
+export interface FamilyText {
   text: string;
-  /** точка привязки: ствол скобы или звезда призрака */
+  /** точка привязки: ствол гребёнки у её корня или звезда призрака */
   x: number;
   y: number;
-  /** где ставить: у ствола скобы (вниз или вверх от следа отца), справа от звезды или у детей (порядок перечисления) */
-  at: 'down' | 'up' | 'star' | 'kids';
+  /** где ставить: у корня гребёнки (помета матери), справа от звезды (призрак) или у детей (порядок перечисления) */
+  at: 'root' | 'star' | 'kids';
   /** радиус звезды (для at = 'star') */
   r?: number;
   /**
-   * Дети, у которых помета может встать, если у верха скобы места нет (MAP-55): у хребта верх скобы лежит на лентах.
-   * Звёзды детей в px холста: помета — слева от звезды или под ней, у первого, затем у дальнего конца скобы.
+   * Дети, у которых помета может встать, если у корня места нет (MAP-55): звёзды детей в px холста — слева от звезды
+   * или под ней, по порядку.
    */
   kids?: { x: number; y: number; r: number }[];
+  /** что помета объясняет: наведение на неё высвечивает гребёнку (familyAt) */
+  hit?: FamilyHit;
+  /**
+   * ствол гребёнки от следа отца (y0) до корня (y1): если корень за краем окна, помета встаёт у видимой части ствола —
+   * ближе к корню, не у следа отца
+   */
+  stem?: { y0: number; y1: number };
 }
+
+/**
+ * Знак брака, который ставится после подписей звёзд через общую проверку наложений (MAP-76): x — желательное место
+ * (год первого ребёнка), xMin — не левее (правее звезды жены).
+ */
+export interface MarriageMark {
+  at: 'marriage';
+  x: number;
+  xMin: number;
+  yH: number;
+  yW: number;
+  near: number;
+  color: string;
+  /** непрозрачность слоя связей в этом кадре (подробность кадра, sky.ts layer) */
+  alpha: number;
+  wife: string;
+}
+
+/** То, что drawDescents откладывает до подписей звёзд: пометы семей и знаки брака (drawFamilyNotes). */
+export type FamilyNote = FamilyText | MarriageMark;
 
 type Kid = { i: number; x: number; y: number; id: string };
 type Group = { parent: string; mother: string | null; y0: number; kids: Kid[] };
@@ -450,34 +532,169 @@ export function motherNote(id: string): string | null {
   return g ? `от ${g}` : null;
 }
 
+// ---------- порядок перечисления (MAP-54, MAP-73; решение 41) ----------
+
+/** Ссылка родства в числах: книга, начало и конец (главы и стихи). */
+interface RefPos {
+  book: string;
+  c: number;
+  v: number;
+  c2: number;
+  v2: number;
+}
+const REF = /^(\S+) (\d+):(\d+)(?:-(\d+)(?::(\d+))?)?/;
+function refPos(r: string): RefPos | null {
+  const m = REF.exec(r);
+  if (!m || !BOOK_INDEX.has(m[1])) return null;
+  const c = Number(m[2]);
+  const v = Number(m[3]);
+  if (m[5]) return { book: m[1], c, v, c2: Number(m[4]), v2: Number(m[5]) };
+  return { book: m[1], c, v, c2: c, v2: m[4] ? Number(m[4]) : v };
+}
+const startOf = (r: RefPos) => r.c * 1000 + r.v;
+const endOf = (r: RefPos) => r.c2 * 1000 + r.v2;
+
+/** Место, где Писание называет детей по порядку: ссылки (синодальные сокращения) и они же для показа. */
+export interface OrderListing {
+  /** «Быт 29:32-30:24», «Быт 35:16-18» */
+  refs: string[];
+  /** «Быт 29:32–30:24; 35:16–18» — неразрывные пробелы, тире в промежутках */
+  text: string;
+  /** дети, которых это место называет по порядку */
+  ids: string[];
+}
+
 /**
- * «порядок по 1 Пар 3:5–8» (MAP-54): стих, где перечислены дети, чей год оценён по порядку перечисления, — самая частая
- * ссылка их родства; стихи той же главы у остальных детей сливаются в промежуток. null — общей ссылки нет.
+ * Дети родителя, чей порядок держит решатель (engine/chronology.ts, siblingPairs): с номером порядка в данных или
+ * с годом, оценённым по порядку; без народов и родов и без потомков через пропуск поколений. По порядку рождения.
+ */
+function orderedKids(parent: string, m: ModelData): string[] {
+  const gap = new Set((graph.childrenOf.get(parent) ?? []).filter((e) => e.gap).map((e) => e.child));
+  return primaryChildren(graph, parent).filter((k) => {
+    const q = byId.get(k);
+    return !!q && q.kind !== 'people' && q.kind !== 'clan' && !gap.has(k) && (q.order !== null || !!m.chrono.get(k)?.byOrder);
+  });
+}
+
+/**
+ * Место перечисления: книга, в которой дети (kids — по порядку рождения) названы в том же порядке. У каждого ребёнка
+ * берётся его первое упоминание в книге; из них — самая длинная неубывающая по главам и стихам цепочка. Лучше та
+ * книга, где цепочка длиннее, затем та, где у детей больше разных стихов (стихи сами задают порядок: рассказ
+ * о рождениях Быт 29:32–30:24 лучше перечня 1 Пар 2:1–2, где сыновья Иакова названы в двух стихах и в другом
+ * порядке), затем первая по канону. must — ребёнок, который обязательно входит в цепочку.
+ */
+export function listingOf(kids: readonly string[], must?: string): OrderListing | null {
+  const refs = kids.map((k) => (byId.get(k)?.parentRefs ?? []).map(refPos).filter((r): r is RefPos => !!r));
+  const books = new Set(refs.flatMap((rs) => rs.map((r) => r.book)));
+  const mi = must === undefined ? -1 : kids.indexOf(must);
+  if (must !== undefined && mi < 0) return null;
+  let best: { book: string; len: number; dist: number; chain: { i: number; r: RefPos }[] } | null = null;
+  for (const book of books) {
+    const items: { i: number; r: RefPos }[] = [];
+    refs.forEach((rs, i) => {
+      const own = rs.filter((r) => r.book === book);
+      if (own.length) items.push({ i, r: own.reduce((a, b) => (startOf(b) < startOf(a) ? b : a)) });
+    });
+    const mustItem = mi >= 0 ? items.find((q) => q.i === mi) : undefined;
+    if (mi >= 0 && !mustItem) continue;
+    // с обязательным ребёнком — только те, кто с ним не спорит: старшие не позже его, младшие не раньше
+    const ok = mustItem ? items.filter((q) => (q.i < mi ? startOf(q.r) <= startOf(mustItem.r) : q.i > mi ? startOf(q.r) >= startOf(mustItem.r) : true)) : items;
+    const w = (a: number) => (ok[a] === mustItem ? 1000 : 1);
+    const len: number[] = [];
+    const dist: number[] = [];
+    const prev: number[] = [];
+    for (let a = 0; a < ok.length; a++) {
+      len[a] = w(a);
+      dist[a] = 1;
+      prev[a] = -1;
+      for (let b = 0; b < a; b++) {
+        if (startOf(ok[b].r) > startOf(ok[a].r)) continue;
+        const L = len[b] + w(a);
+        const D = dist[b] + (startOf(ok[b].r) < startOf(ok[a].r) ? 1 : 0);
+        if (L > len[a] || (L === len[a] && D > dist[a])) {
+          len[a] = L;
+          dist[a] = D;
+          prev[a] = b;
+        }
+      }
+    }
+    let e = -1;
+    for (let a = 0; a < ok.length; a++) if (e < 0 || len[a] > len[e] || (len[a] === len[e] && dist[a] > dist[e])) e = a;
+    if (e < 0) continue;
+    const chain: { i: number; r: RefPos }[] = [];
+    for (let a = e; a >= 0; a = prev[a]) chain.unshift(ok[a]);
+    if (chain.length < 2) continue;
+    const better =
+      !best ||
+      chain.length > best.len ||
+      (chain.length === best.len && (dist[e] > best.dist || (dist[e] === best.dist && BOOK_INDEX.get(book)! < BOOK_INDEX.get(best.book)!)));
+    if (better) best = { book, len: chain.length, dist: dist[e], chain };
+  }
+  if (!best) return null;
+  // стихи — промежутками: соседние (через 4 стиха и меньше, и через границу главы) сливаются
+  const parts: RefPos[] = [];
+  for (const r of [...best.chain.map((q) => q.r)].sort((a, b) => startOf(a) - startOf(b))) {
+    const cur = parts[parts.length - 1];
+    const join = cur && (startOf(r) <= endOf(cur) + 1 || (r.c === cur.c2 && r.v <= cur.v2 + 4) || (r.c === cur.c2 + 1 && r.v <= 4));
+    if (!join) parts.push({ ...r });
+    else if (endOf(r) > endOf(cur)) {
+      cur.c2 = r.c2;
+      cur.v2 = r.v2;
+    }
+  }
+  const span = (r: RefPos) => `${r.c}:${r.v}${r.c2 !== r.c ? `-${r.c2}:${r.v2}` : r.v2 !== r.v ? `-${r.v2}` : ''}`;
+  const out = parts.map((r) => `${best!.book} ${span(r)}`);
+  // refText — только с книгой: без книги «35:16-18» он принял бы «3» за номер книги
+  const text = parts.map((r, k) => (k === 0 ? refText(`${best!.book} ${span(r)}`) : span(r).replace(/-/g, '–'))).join('; ');
+  return { refs: out, text, ids: best.chain.map((q) => kids[q.i]) };
+}
+
+/** Место перечисления семьи родителя (по модели): кэш на модель. */
+const familyCache = new WeakMap<ModelData, Map<string, OrderListing | null>>();
+function familyListing(parent: string, m: ModelData, must?: string): OrderListing | null {
+  let c = familyCache.get(m);
+  if (!c) familyCache.set(m, (c = new Map()));
+  const key = `${parent}|${must ?? ''}`;
+  if (c.has(key)) return c.get(key)!;
+  let kids = orderedKids(parent, m);
+  let got = listingOf(kids, must);
+  // перечня всех детей нет — только тех, чей год оценён по порядку
+  if (!got) {
+    kids = kids.filter((k) => m.chrono.get(k)?.byOrder);
+    got = listingOf(kids, must);
+  }
+  c.set(key, got);
+  return got;
+}
+
+/**
+ * Место перечисления для лица, чей год оценён по порядку перечисления братьев и сестёр (ChronoRow.byOrder): ссылка,
+ * которую подсказка ребёнка пишет в строке «год оценён по порядку перечисления (ссылка), выв.» (решение 41;
+ * src/ui/sky/Tip.tsx). У сыновей Иакова — рассказ о рождениях Быт 29:32–30:24; 35:16–18. null — год оценён не по
+ * порядку или место не найдено.
+ */
+export function orderListing(id: string, m: ModelData = models[0]): OrderListing | null {
+  if (!m.chrono.get(id)?.byOrder) return null;
+  const q = byId.get(id);
+  if (!q) return null;
+  for (const par of [q.father, q.mother]) {
+    if (!par) continue;
+    const got = familyListing(par, m, id);
+    if (got) return got;
+  }
+  return null;
+}
+/** Текст ссылки orderListing: «Быт 29:32–30:24; 35:16–18» или null. */
+export const orderSource = (id: string, m: ModelData = models[0]): string | null => orderListing(id, m)?.text ?? null;
+
+/**
+ * «годы — по порядку 1 Пар 3:1–9, выв.» (MAP-54, MAP-73): помета у детей ids, чей год оценён по порядку перечисления.
+ * Ссылка — место, где Писание называет их по порядку (listingOf). null — такого места нет.
  */
 export function orderNote(ids: readonly string[]): string | null {
-  const count = new Map<string, number>();
-  for (const id of ids) for (const r of new Set(byId.get(id)?.parentRefs ?? [])) count.set(r, (count.get(r) ?? 0) + 1);
-  // при равенстве — раньше по главе и стиху (1 Пар 3:5 раньше 1 Пар 14:4)
-  const key = (r: string) => {
-    const m = /(\d+):(\d+)/.exec(r);
-    return m ? Number(m[1]) * 1000 + Number(m[2]) : 0;
-  };
-  let best: string | null = null;
-  for (const [r, k] of count) if (k >= 2 && (!best || k > count.get(best)! || (k === count.get(best)! && key(r) < key(best)))) best = r;
-  if (!best) return null;
-  const m = /^(.+) (\d+):(\d+)(?:-(\d+))?$/.exec(best);
-  if (!m) return `порядок по ${refText(best)}`;
-  const [, book, ch] = m;
-  let lo = Number(m[3]);
-  let hi = Number(m[4] ?? m[3]);
-  for (const id of ids)
-    for (const r of byId.get(id)?.parentRefs ?? []) {
-      const q = /^(.+) (\d+):(\d+)(?:-(\d+))?$/.exec(r);
-      if (!q || q[1] !== book || q[2] !== ch) continue;
-      lo = Math.min(lo, Number(q[3]));
-      hi = Math.max(hi, Number(q[4] ?? q[3]));
-    }
-  return `порядок по ${refText(`${book} ${ch}:${lo}${hi > lo ? `-${hi}` : ''}`)}`;
+  const kids = [...ids].sort((a, b) => (byId.get(a)?.order ?? 999) - (byId.get(b)?.order ?? 999));
+  const got = listingOf(kids);
+  return got ? `годы — по порядку ${got.text}, выв.` : null;
 }
 
 /** «Рахиль, жена Иакова»: подпись призрака жены; если склонение имени мужа ненадёжно — только имя. */
@@ -489,9 +706,72 @@ export function ghostNote(id: string, husband: string | null): string {
   return g ? `${q.name}, ${q.sex === 'f' ? 'жена' : 'муж'} ${g}` : q.name;
 }
 
+// ---------- наведение на гребёнку (MAP-73, MAP-74) ----------
+
+/** Гребёнка кадра в px холста: ствол x от lo до hi и зубцы к звёздам детей. */
+interface CombShape {
+  parent: string;
+  mother: string | null;
+  x: number;
+  lo: number;
+  hi: number;
+  teeth: { x: number; y: number }[];
+  kids: string[];
+}
+/** Гребёнки и пометы последнего кадра: для familyAt. Кадр узнаётся по его Placer (один на кадр, общий для проходов). */
+const frames = new WeakMap<object, { placer: object; combs: CombShape[]; boxes: { r: Rect; hit: FamilyHit }[] }>();
+function frameOf(v: object, p: Pass) {
+  let f = frames.get(v);
+  if (!f || f.placer !== p.placer) frames.set(v, (f = { placer: p.placer, combs: [], boxes: [] }));
+  return f;
+}
+
 /**
- * Связи родитель → ребёнок (слой «связи»; на обзоре их нет): скобы детей одной пары, отводы, узелки матерей,
- * знаки разрыва при напряжении, отводы к призракам; затем браки. Возвращает пометы матерей для drawFamilyNotes.
+ * Семья под указателем (px холста): помета матери или порядка, затем гребёнка — ствол или зубец ближе r px.
+ * Для src/ui/sky/input.ts: наведение высвечивает гребёнку матери и показывает помету порядка (решение 41).
+ */
+export function familyAt(v: object, x: number, y: number, r = 4): FamilyHit | null {
+  const f = frames.get(v);
+  if (!f) return null;
+  for (const b of f.boxes) if (x >= b.r.x && x <= b.r.x + b.r.w && y >= b.r.y && y <= b.r.y + b.r.h) return b.hit;
+  let best: CombShape | null = null;
+  let bd = r;
+  for (const c of f.combs) {
+    if (y >= c.lo - r && y <= c.hi + r) {
+      const d = Math.abs(x - c.x);
+      if (d <= bd) {
+        bd = d;
+        best = c;
+      }
+    }
+    for (const t of c.teeth) {
+      const d = Math.abs(y - t.y);
+      if (d <= bd && x >= Math.min(c.x, t.x) - r && x <= Math.max(c.x, t.x) + r) {
+        bd = d;
+        best = c;
+      }
+    }
+  }
+  return best ? { kind: 'comb', parent: best.parent, mother: best.mother, kids: best.kids } : null;
+}
+
+/** Гребёнки последнего кадра (px холста): отец, мать, ствол x от lo до hi, дети — для проверок (tests/family-l3). */
+export const familyCombs = (v: object): readonly { parent: string; mother: string | null; x: number; lo: number; hi: number; kids: string[] }[] => frames.get(v)?.combs ?? [];
+
+const hovers = new WeakMap<object, FamilyHit | null>();
+/** Запомнить семью под указателем (src/ui/sky/input.ts); true — изменилась, нужен кадр. */
+export function setFamilyHover(v: object, h: FamilyHit | null): boolean {
+  const was = hovers.get(v) ?? null;
+  hovers.set(v, h);
+  return (was?.parent ?? null) !== (h?.parent ?? null) || (was?.mother ?? null) !== (h?.mother ?? null) || (was?.kind ?? null) !== (h?.kind ?? null);
+}
+/** Семья под указателем: её гребёнка ярче, гребёнки других матерей того же отца — бледнее, помета порядка видна. */
+export const familyHover = (v: object): FamilyHit | null => hovers.get(v) ?? null;
+
+/**
+ * Связи родитель → ребёнок (слой «связи»; на обзоре их нет): гребёнки детей одной матери, отводы, узелки матерей,
+ * знаки разрыва при напряжении, отводы к призракам. Возвращает то, что ставится после подписей звёзд
+ * (drawFamilyNotes): пометы матерей и порядка, подписи призраков и знаки брака.
  */
 export function drawDescents(v: SkyContext, p: Pass): FamilyNote[] {
   const { ctx, cam, pal } = v;
@@ -500,6 +780,8 @@ export function drawDescents(v: SkyContext, p: Pass): FamilyNote[] {
   const hl = s.highlight;
   const intro = s.intro;
   const notes: FamilyNote[] = [];
+  const frame = frameOf(v, p);
+  const hover = familyHover(v);
   const d: Descent = { x: 0, y0: 0, y1: 0, color: '', ghost: false, mother: undefined, tension: undefined };
   // узкие строки (решение 25; MAP-61): связи — 0,5 px, чтобы не заливать небо сеткой вертикалей
   const base = cam.ky < 6 ? 0.5 : 1;
@@ -509,11 +791,17 @@ export function drawDescents(v: SkyContext, p: Pass): FamilyNote[] {
     const n = v.nodes[i];
     if (n.parentLane === null || n.satelliteOf) continue;
     if (n.ghost && !L.ghosts) continue;
+    // ребёнок или родитель не показан (набор, свёртка, «только линии»): отвода нет — он висел бы в пустоте
+    if (!v.drawn(i)) continue;
+    const pi = n.layoutParent ? v.indexOf(n.layoutParent) : undefined;
+    if (pi !== undefined && !v.drawn(pi)) continue;
     // родитель скрыт рабочим набором или свёрткой (J4, J5): связь не рисуется — её конец висел бы в пустоте
     if (n.layoutParent && v.hides(n.layoutParent)) continue;
     const y0 = cam.sy(n.parentLane);
     const y1 = cam.sy(n.lane);
-    const x = Math.round(cam.sx(v.X0[i])) + 0.5;
+    // у лица со знаком у первого свидетельства (решение 38; MAP-69) отвод приходит в оценку рождения — внутрь полосы
+    // промежутка рождения, а не в год знака: иначе он висел бы за концом следа родителя
+    const x = Math.round(cam.sx(n.born !== null && n.born !== undefined ? v.xOf(n.born) : v.X0[i])) + 0.5;
     if (n.ghost) {
       // призрак жены в её роду — пунктирный отвод
       const e = Math.min(p.emph(n.person), n.layoutParent ? p.emph(n.layoutParent) : 1) * intro;
@@ -535,7 +823,6 @@ export function drawDescents(v: SkyContext, p: Pass): FamilyNote[] {
     if (!g) groups.set(key, (g = { parent: par, mother: other && byId.get(other)?.sex === 'f' ? other : null, y0, kids: [] }));
     g.kids.push({ i, x, y: y1, id: n.person });
   }
-  // матери одного отца — по первому ребёнку: их номер задаёт начертание скобы
   const byParent = new Map<string, Group[]>();
   for (const g of groups.values()) {
     g.kids.sort((a, b) => a.x - b.x);
@@ -544,36 +831,45 @@ export function drawDescents(v: SkyContext, p: Pass): FamilyNote[] {
     else byParent.set(g.parent, [g]);
   }
   const knot = { y: 0, color: '' };
+  const radius = (id: string) => starRadius(byId.get(id)?.magnitude ?? 6, p.zoomScale);
   for (const [, gs] of byParent) {
     gs.sort((a, b) => a.kids[0].x - b.kids[0].x);
     const mothers = gs.filter((g) => g.mother).length;
     const trunks: { x: number; lo: number; hi: number }[] = [];
-    gs.forEach((g, mi) => {
-      const dash = mothers >= 2 ? MOTHER_DASH[mi % MOTHER_DASH.length] : MOTHER_DASH[0];
-      // соседние по году рождения дети — под одной скобой
-      const clusters: Kid[][] = [];
+    // годы рождения детей других матерей того же отца: они разбивают гребёнку матери
+    const born = gs.flatMap((g) => g.kids.map((k) => ({ x: k.x, g })));
+    for (const g of gs) {
+      // гребёнки матери: соседние по рождению дети — на одной, пока зубцы короткие (MAP-74)
+      const combs: Kid[][] = [];
       for (const k of g.kids) {
-        const last = clusters[clusters.length - 1];
-        if (last && k.x - last[0].x <= MERGE_PX) last.push(k);
-        else clusters.push([k]);
+        const last = combs[combs.length - 1];
+        const prev = last?.[last.length - 1];
+        const between = !!prev && born.some((b) => b.g !== g && b.x > prev.x && b.x < k.x);
+        if (last && !between && k.x - last[0].x <= COMB_SPAN) last.push(k);
+        else combs.push([k]);
       }
-      let noted = false;
-      for (const cl of clusters) {
+      // наведённая гребёнка (помета матери, ствол): её мать — ярче, другие матери того же отца — бледнее;
+      // помета порядка — все гребёнки этого отца ярче
+      const hovered = !!hover && hover.parent === g.parent;
+      const mine = hovered && (hover!.kind === 'order' || hover!.mother === g.mother);
+      for (const cl of combs) {
         let lo = g.y0;
         let hi = g.y0;
         for (const k of cl) {
           lo = Math.min(lo, k.y);
           hi = Math.max(hi, k.y);
         }
-        // стволы скоб разных матерей не сливаются: сдвиг на 4 px
+        // гребёнки разных матерей не сливаются: сдвиг на 3 px
         let x = cl[0].x;
-        while (trunks.some((t) => Math.abs(t.x - x) < 3.5 && t.lo < hi && lo < t.hi)) x -= 4;
+        while (trunks.some((t) => Math.abs(t.x - x) < COMB_SHIFT - 0.5 && t.lo < hi && lo < t.hi)) x -= COMB_SHIFT;
         trunks.push({ x, lo, hi });
-        // ствол скобы и засечки — линии кадра: названия созвездий на них не ложатся (MAP-08)
+        frame.combs.push({ parent: g.parent, mother: g.mother, x, lo, hi, teeth: cl.map((k) => ({ x: k.x, y: k.y })), kids: cl.map((k) => k.id) });
+        // ствол и зубцы — линии кадра: названия созвездий на них не ложатся (MAP-08)
         if (p.lines && hi > lo + 1 && x > -4 && x < cam.w + 4) p.lines.add({ x: x - 1.5, y: lo, w: 3, h: hi - lo });
+        if (p.lines) for (const k of cl) if (Math.abs(k.x - x) > 1) p.lines.add({ x: Math.min(x, k.x), y: k.y - 1.5, w: Math.abs(k.x - x), h: 3 });
         const eP = g.parent ? p.emph(g.parent) : 1;
         const eBase = Math.min(eP, ...cl.map((k) => p.emph(k.id))) * intro;
-        const color = alpha(pal.ink3, 0.75 * eBase);
+        const color = mine ? alpha(pal.ink2, Math.min(1, intro)) : alpha(pal.ink3, 0.75 * eBase * (hovered ? 0.4 : 1));
         // узелок матери на стволе
         let mother: typeof knot | undefined;
         if (g.mother) {
@@ -591,6 +887,7 @@ export function drawDescents(v: SkyContext, p: Pass): FamilyNote[] {
         const kp = hl ? hl.get(g.parent) : undefined;
         const lit = hl ? cl.filter((k) => linkKind(kp, hl.get(k.id)) !== 'base') : [];
         const plain = lit.length ? cl.filter((k) => !lit.includes(k)) : cl;
+        if (mine) ctx.lineWidth = base + 0.5;
         if (plain.length === 1 && Math.abs(x - plain[0].x) < 0.75) {
           d.x = x;
           d.y0 = g.y0;
@@ -599,10 +896,9 @@ export function drawDescents(v: SkyContext, p: Pass): FamilyNote[] {
           d.ghost = false;
           d.mother = mother;
           d.tension = undefined;
-          if (dash.length) ctx.setLineDash(dash);
           drawDescent(ctx, d);
-          if (dash.length) ctx.setLineDash([]);
-        } else if (plain.length) drawBracket(ctx, { x, y0: g.y0, kids: plain, color, dash, mother });
+        } else if (plain.length) drawBracket(ctx, { x, y0: g.y0, kids: plain, color, mother });
+        ctx.lineWidth = base;
         for (const k of lit) {
           const st = LINK_STYLE[linkKind(kp, hl!.get(k.id)) as Exclude<LinkKind, 'base'>];
           ctx.lineWidth = st.width;
@@ -617,30 +913,48 @@ export function drawDescents(v: SkyContext, p: Pass): FamilyNote[] {
         for (const k of cl)
           if ((torn && s.tensionPersons.has(k.id)) || (brk !== null && v.nodes[k.i].t0 > brk))
             drawTension(ctx, x, (g.y0 + k.y) / 2, alpha(pal.ink, 0.9 * Math.min(eP, p.emph(k.id)) * intro));
-        // помета матери у верха скобы — когда у отца дети от разных матерей; у хребта (верх скобы на лентах) — у детей
-        if (!noted && mothers >= 2 && g.mother && cam.ky >= NOTE_KY) {
+        // помета матери — у корня гребёнки: у ребёнка, ближайшего к следу отца, а не у следа отца (на лентах у хребта;
+        // MAP-74, MAP-80); когда у отца дети от разных матерей
+        if (mothers >= 2 && g.mother && cam.ky >= NOTE_KY) {
           const text = motherNote(g.mother);
-          const far = [...cl].sort((a, b) => Math.abs(b.y - g.y0) - Math.abs(a.y - g.y0))[0];
-          const kids = [cl[0], ...(far !== cl[0] ? [far] : []), ...g.kids.filter((k) => !cl.includes(k))].map((k) => ({
-            x: k.x, y: k.y, r: starRadius(byId.get(k.id)?.magnitude ?? 6, p.zoomScale),
-          }));
-          if (text) notes.push({ text, x, y: g.y0, at: cl[0].y >= g.y0 ? 'down' : 'up', kids });
-          noted = true;
+          const byNear = [...cl].sort((a, b) => Math.abs(a.y - g.y0) - Math.abs(b.y - g.y0));
+          const root = byNear[0];
+          if (text)
+            notes.push({
+              text, x, y: root.y, at: 'root',
+              kids: byNear.map((k) => ({ x: k.x, y: k.y, r: radius(k.id) })),
+              hit: { kind: 'mother', parent: g.parent, mother: g.mother, kids: g.kids.map((k) => k.id) },
+              stem: { y0: g.y0, y1: root.y },
+            });
         }
       }
-    });
+    }
   }
-  // порядок братьев по перечислению (MAP-54; решение 24): «порядок по 1 Пар 3:5–8» — у детей, чей год оценён по порядку
+  // порядок братьев по перечислению (MAP-54; решение 41): «годы — по порядку …, выв.» — у детей, чей год оценён
+  // по порядку, только в семье выбранного лица (его дети, его братья и сёстры) и у наведённой гребёнки
+  const own = new Set<string>();
+  if (s.selected) {
+    own.add(s.selected);
+    const q = byId.get(s.selected);
+    if (q?.father) own.add(q.father);
+    if (q?.mother) own.add(q.mother);
+  }
+  if (hover) own.add(hover.parent);
   if (cam.ky >= NOTE_KY)
-    for (const [, gs] of byParent) {
+    for (const [par, gs] of byParent) {
+      if (!own.has(par)) continue;
       const kids = gs.flatMap((g) => g.kids).filter((k) => v.model.chrono.get(k.id)?.byOrder);
       if (kids.length < 2) continue;
-      const text = orderNote(kids.map((k) => k.id));
-      if (!text) continue;
+      const got = familyListing(par, v.model);
+      if (!got) continue;
       kids.sort((a, b) => a.x - b.x);
-      notes.push({ text, x: kids[0].x, y: kids[0].y, at: 'kids', kids: kids.map((k) => ({ x: k.x, y: k.y, r: starRadius(byId.get(k.id)?.magnitude ?? 6, p.zoomScale) })) });
+      notes.push({
+        text: `годы — по порядку ${got.text}, выв.`, x: kids[0].x, y: kids[0].y, at: 'kids',
+        kids: kids.map((k) => ({ x: k.x, y: k.y, r: radius(k.id) })),
+        hit: { kind: 'order', parent: par, mother: null, kids: kids.map((k) => k.id), source: got.text },
+      });
     }
-  drawMarriages(v, p);
+  collectMarriages(v, p, notes);
   // подписи призраков жён — на масштабе семьи
   if (L.ghosts && cam.ky >= 12)
     for (const i of p.vis) {
@@ -658,13 +972,11 @@ export function drawDescents(v: SkyContext, p: Pass): FamilyNote[] {
 /**
  * Брак (MAP-22): знак «‖» от следа мужа к жене-спутнице в год первого общего ребёнка (или рядом со звездой жены,
  * если детей нет). Жена ближе трёх полос — знак во всю высоту; дальше — знак 8 px и тонкая выноска. Супруги
- * выбранного лица — ярко.
+ * выбранного лица — ярко. Знак ставится после подписей звёзд (drawFamilyNotes): он занимает место, как подпись (MAP-76).
  */
-function drawMarriages(v: SkyContext, p: Pass) {
+function collectMarriages(v: SkyContext, p: Pass, out: FamilyNote[]) {
   const { ctx, cam, pal } = v;
   const hl = p.s.highlight;
-  const m: Marriage = { x: 0, yH: 0, yW: 0, color: '', near: cam.ky * 3.2 };
-  ctx.lineWidth = 1;
   for (const i of p.vis) {
     const n = v.nodes[i];
     if (!n.satelliteOf) continue;
@@ -673,41 +985,82 @@ function drawMarriages(v: SkyContext, p: Pass) {
     const fc = firstChild(v.model, n.satelliteOf, n.person);
     const xw = cam.sx(v.X0[i]);
     const x = fc !== null ? cam.sx(v.xOf(fc)) - 6 : Math.max(xw, cam.sx(v.X0[hi])) + 12;
-    m.x = Math.round(Math.max(x, xw + 6)) + 0.5;
-    m.yH = cam.sy(v.nodes[hi].lane);
-    m.yW = cam.sy(n.lane);
     const lit = !!hl && hl.has(n.person) && hl.has(n.satelliteOf);
     const e = Math.min(p.emph(n.person), p.emph(n.satelliteOf)) * p.s.intro;
-    m.color = lit ? alpha(pal.ink, Math.min(1, e)) : alpha(pal.ink3, 0.8 * e);
-    drawMarriage(ctx, m);
+    out.push({
+      at: 'marriage',
+      x: Math.max(x, xw + 6),
+      xMin: xw + 6,
+      yH: cam.sy(v.nodes[hi].lane),
+      yW: cam.sy(n.lane),
+      near: cam.ky * 3.2,
+      color: lit ? alpha(pal.ink, Math.min(1, e)) : alpha(pal.ink3, 0.8 * e),
+      alpha: ctx.globalAlpha,
+      wife: n.person,
+    });
   }
 }
 
 /**
- * Пометы семей после подписей звёзд (E4): «от Лии» у верха скобы, «Рахиль, жена Иакова» у призрака.
- * Проходят ту же проверку наложений, что подписи звёзд (labels.ts, claim): ставятся только на свободное место
- * и попадают в замер подписей.
+ * Места знака брака (MAP-76): у года первого ребёнка, затем правее и левее вдоль следов. Ближней жене — сначала знак
+ * во всю высоту; где он лёг бы на подпись — знак 8 px с выноской, как у дальней. Знак 8 px сдвигается вдоль выноски:
+ * от следа мужа, затем от жены.
+ */
+function marriageSpots(m: MarriageMark): { x: number; from?: number; box: Rect }[] {
+  const out: { x: number; from?: number; box: Rect }[] = [];
+  const dir = Math.sign(m.yW - m.yH) || 1;
+  const gap = Math.abs(m.yW - m.yH);
+  const far = gap > m.near;
+  const xs = [0, 6, 12, 18, 24, 30, -6, -12].map((dx) => Math.round(m.x + dx) + 0.5).filter((x) => x >= m.xMin);
+  if (!far) for (const x of xs) out.push({ x, box: { x: x - 2.5, y: Math.min(m.yH, m.yW), w: 5, h: gap } });
+  if (gap < 12) return out;
+  for (const x of xs) {
+    const froms: number[] = [];
+    for (let k = 0; k * 8 + 8 <= gap - 2 && k < 6; k++) froms.push(m.yH + dir * k * 8, m.yW - dir * (k * 8 + 8));
+    for (const from of froms) out.push({ x, from, box: { x: x - 2.5, y: Math.min(from, from + dir * 8), w: 5, h: 8 } });
+  }
+  return out;
+}
+
+/**
+ * Пометы семей после подписей звёзд (E4): «от Лии» у корня гребёнки, «годы — по порядку …» у детей, «Рахиль, жена
+ * Иакова» у призрака, знаки брака. Проходят ту же проверку наложений, что подписи звёзд (labels.ts, claim): ставятся
+ * только на свободное место и попадают в замер подписей. Пометы — сначала там, где не легли бы на линии кадра.
  */
 export function drawFamilyNotes(v: SkyContext, p: Pass, notes: readonly FamilyNote[]) {
-  if (!notes.length || !p.s.layers.labels) return;
+  if (!notes.length) return;
   const { ctx, pal } = v;
+  const frame = frameOf(v, p);
+  // знаки брака: место — через общую проверку наложений; не нашлось — знака нет, как нет и подписи (MAP-76)
+  ctx.lineWidth = 1;
+  for (const m of notes) {
+    if (m.at !== 'marriage') continue;
+    const spots = marriageSpots(m);
+    const b = claim(v, p, spots.map((q) => q.box), 'mark', '‖', { id: m.wife });
+    if (!b) continue;
+    const q = spots[spots.findIndex((c) => c.box === b)];
+    // выноска проходит под подписями: где она пересекла бы подпись, её нет (как под ореолом подписи)
+    const skip: [number, number][] = v.ledger.boxes.filter((l) => l !== v.ledger.boxes[v.ledger.boxes.length - 1] && q.x >= l.x && q.x <= l.x + l.w).map((l) => [l.y, l.y + l.h]);
+    const was = ctx.globalAlpha;
+    ctx.globalAlpha = m.alpha;
+    drawMarriage(ctx, { x: q.x, yH: m.yH, yW: m.yW, color: m.color, near: q.from === undefined ? m.near : 0, from: q.from, skip });
+    ctx.globalAlpha = was;
+  }
+  if (!p.s.layers.labels) return;
   const size = mapSize(T_MAP_S, v.coarse);
-  ctx.font = mapFont(T_MAP_S, { italic: true, coarse: v.coarse });
-  ctx.textBaseline = 'alphabetic';
-  ctx.lineJoin = 'round';
   for (const nt of notes) {
+    if (nt.at === 'marriage') continue;
+    ctx.font = mapFont(T_MAP_S, { italic: true, coarse: v.coarse });
     const w = ctx.measureText(nt.text).width;
     const r = nt.r ?? 3;
     const cands: { tx: number; ty: number }[] = [];
     if (nt.at === 'star') cands.push({ tx: nt.x + r + 4, ty: nt.y + size * 0.35 }, { tx: nt.x - r - 4 - w, ty: nt.y + size * 0.35 }, { tx: nt.x - w / 2, ty: nt.y + r + size + 1 });
-    else if (nt.at !== 'kids') {
-      // у верха скобы: сначала к детям (вниз или вверх от следа отца), затем в другую сторону; у ствола и чуть дальше по следу
-      const below = { ty: nt.y + size + 1 };
-      const above = { ty: nt.y - 4 };
-      for (const side of nt.at === 'down' ? [below, above] : [above, below])
-        for (const dx of [4, 16, 30]) cands.push({ tx: nt.x + dx, ty: side.ty }, { tx: nt.x - dx - w, ty: side.ty });
+    // у корня гребёнки: слева от ствола (и от звезды ребёнка, если она на стволе), на строке ребёнка
+    else if (nt.at === 'root') {
+      const k0 = nt.kids?.[0];
+      cands.push({ tx: Math.min(nt.x - 4, k0 ? k0.x - k0.r - 5 : Infinity) - w, ty: nt.y + size * 0.35 });
     }
-    // у детей (MAP-55): слева от звезды, под ней, над ней — у первого, затем у дальнего
+    // у детей (MAP-55): слева от звезды, под ней, над ней — у первого, затем у следующих
     for (const k of nt.kids ?? [])
       cands.push(
         { tx: k.x - k.r - 5 - w, ty: k.y + size * 0.35 },
@@ -715,15 +1068,46 @@ export function drawFamilyNotes(v: SkyContext, p: Pass, notes: readonly FamilyNo
         { tx: k.x - w - 2, ty: k.y + k.r + size + 2 },
         { tx: k.x - w / 2, ty: k.y - k.r - 5 },
       );
-    const boxes = cands.map((c) => textBox(c.tx, c.ty, w, size));
-    const b = claim(v, p, boxes, 'note', nt.text);
+    // корень за краем окна: у видимой части ствола, от края к следу отца, но не у самого следа (там ленты, MAP-80)
+    if (nt.stem) {
+      const { y0, y1 } = nt.stem;
+      const dir = Math.sign(y1 - y0) || 1;
+      const top = v.openTop + size + 2;
+      const bottom = v.cam.vp.b - 4;
+      const from = Math.max(top, Math.min(bottom, y1 - dir * 2));
+      for (let k = 0; k < 8; k++) {
+        const ty = from - dir * k * (size + 4);
+        if ((ty - y0) * dir < size + 6 || ty < top || ty > bottom) break;
+        cands.push({ tx: nt.x - 4 - w, ty }, { tx: nt.x + 4, ty });
+      }
+    }
+    const all = cands.map((c) => ({ c, box: textBox(c.tx, c.ty, w, size) }));
+    // у корня гребёнки — первым (там помету читают как пометку ребёнка; ореол гасит под ней чужой ствол), дальше —
+    // сначала места, где помета не ложится на следы и стволы
+    const first = nt.at === 'root' ? all.slice(0, 1) : [];
+    const rest = all.slice(first.length);
+    const clean = p.lines ? rest.filter((q) => !p.lines!.clash(q.box, false)) : rest;
+    const order = [...first, ...clean, ...rest.filter((q) => !clean.includes(q))];
+    const b = claim(v, p, order.map((q) => q.box), 'note', nt.text);
     if (!b) continue;
-    const c = cands[boxes.indexOf(b)];
-    ctx.strokeStyle = pal.halo;
-    ctx.lineWidth = 3;
-    ctx.strokeText(nt.text, c.tx, c.ty);
-    ctx.fillStyle = pal.ink3;
-    ctx.fillText(nt.text, c.tx, c.ty);
+    const c = order.find((q) => q.box === b)!.c;
+    if (nt.hit) frame.boxes.push({ r: b, hit: nt.hit });
+    drawFamilyText(ctx, pal, nt.text, c.tx, c.ty, v.coarse);
   }
   ctx.lineWidth = 1;
+}
+
+/**
+ * Помета семьи («от Лии», «годы — по порядку …», «Рахиль, жена Иакова»): курсив малого кегля карты с ореолом цвета
+ * неба, базовая линия ty. Той же функцией помету рисует образец в «Как читать карту».
+ */
+export function drawFamilyText(ctx: CanvasRenderingContext2D, pal: Pick<Palette, 'halo' | 'ink3'>, text: string, tx: number, ty: number, coarse = false) {
+  ctx.font = mapFont(T_MAP_S, { italic: true, coarse });
+  ctx.textBaseline = 'alphabetic';
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = pal.halo;
+  ctx.lineWidth = 3;
+  ctx.strokeText(text, tx, ty);
+  ctx.fillStyle = pal.ink3;
+  ctx.fillText(text, tx, ty);
 }

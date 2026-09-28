@@ -4,6 +4,8 @@
  * знак рассеянного скопления (пять точек на окружности 9 px, A14; MAP-14), Иисус Христос — восьмилучевая звезда
  * (Откр 22:16), царь — черта над знаком, умерший младенцем — знак † слева от звезды (A14; MAP-13).
  */
+import { alpha } from './color.ts';
+
 export const MAG_R = [5.6, 4.6, 3.8, 3.1, 2.5, 2.0, 1.6];
 
 export interface GlyphOpts {
@@ -13,7 +15,8 @@ export interface GlyphOpts {
   king?: boolean;
   messiah?: boolean;
   ghost?: boolean;
-  hollow?: boolean; // расчётная дата — полый знак
+  /** полый знак — только «время не установлено», вместе со скобкой (решение 42; MAP-77) */
+  hollow?: boolean;
   /** умер младенцем: слева от звезды знак †, следа нет (A14) */
   infant?: boolean;
   scale?: number;
@@ -23,8 +26,11 @@ export interface GlyphOpts {
 
 /**
  * Знак лица на небе по данным: пол, род лица (народ, род), величина, черта царя или царицы, звезда Мессии, призрак жены,
- * полый знак расчётной даты у звёзд величины 2–6 и у лица «время не установлено», знак † слева от звезды у умершего младенцем. Масштаб, цвет и подложку задаёт тот,
- * кто рисует.
+ * полый знак у лица «время не установлено», знак † слева от звезды у умершего младенцем. Масштаб, цвет и подложку задаёт
+ * тот, кто рисует.
+ *
+ * Полый знак значит одно — «время не установлено» (решение 42; MAP-77): он стоит в середине скобки. Расчётный год —
+ * норма по П-6 (годы царей — реконструкция), знак у него сплошной; помета «расч.» — в подсказке и в карточке.
  */
 export function personGlyph(
   p: { id: string; sex: 'm' | 'f'; kind: string; magnitude: number; roles: readonly string[] },
@@ -35,8 +41,8 @@ export function personGlyph(
 ): GlyphOpts {
   return {
     sex: p.sex, kind: p.kind, magnitude: p.magnitude, king: p.roles.includes('king') || p.roles.includes('queen'),
-    // полый знак: расчётная дата у звёзд величины 2–6; «время не установлено» — у всех величин (MAP-52)
-    messiah: p.id === 'iisus', ghost, hollow: (cls === 'calculated' && p.magnitude > 1) || cls === 'epochal', infant: infant && !ghost,
+    // полый знак — только «время не установлено» (решение 42; MAP-52, MAP-77); расчётный год — сплошной знак
+    messiah: p.id === 'iisus', ghost, hollow: cls === 'epochal', infant: infant && !ghost,
     scale: look.scale, color: look.color, halo: look.halo,
   };
 }
@@ -167,4 +173,30 @@ export function roleSigla(roles: string[]): string {
   const out: string[] = [];
   for (const [r, s] of SIGLA) if (roles.includes(r) && s) out.push(s);
   return out.slice(0, 2).join(' ');
+}
+
+/** Промежуток рождения (решение 38; MAP-69): высота растушёванной полосы, px, и её наибольшая плотность. */
+export const BIRTH_BAND = { h: 6, alpha: 0.34 };
+
+/**
+ * Промежуток рождения лица, чей знак стоит у первого засвидетельствованного года (решение 38; MAP-69): растушёванная
+ * полоса от x0 (начало промежутка) до x1 (его конец, у знака или левее) на высоте следа y — без острого знака внутри.
+ * Слева она проявляется из неба, по краям строки — мягче. Этой же функцией полосу рисует «Как читать карту».
+ */
+export function drawBirthBand(ctx: CanvasRenderingContext2D, b: { x0: number; x1: number; y: number; color: string; alpha?: number }) {
+  const w = b.x1 - b.x0;
+  if (!(w >= 1)) return;
+  const a = b.alpha ?? BIRTH_BAND.alpha;
+  const g = ctx.createLinearGradient(b.x0, 0, b.x1, 0);
+  g.addColorStop(0, alpha(b.color, 0));
+  g.addColorStop(0.35, alpha(b.color, a));
+  g.addColorStop(1, alpha(b.color, a * 0.85));
+  ctx.save();
+  ctx.fillStyle = g;
+  // вертикальная растушёвка: широкая бледная полоса и узкая плотнее
+  ctx.globalAlpha *= 0.45;
+  ctx.fillRect(b.x0, b.y - BIRTH_BAND.h / 2, w, BIRTH_BAND.h);
+  ctx.globalAlpha /= 0.45;
+  ctx.fillRect(b.x0, b.y - BIRTH_BAND.h / 4, w, BIRTH_BAND.h / 2);
+  ctx.restore();
 }

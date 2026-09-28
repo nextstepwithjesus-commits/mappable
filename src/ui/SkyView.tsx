@@ -17,11 +17,11 @@ import {
   updateZoomFloor, type Anchor,
 } from './sky/view.ts';
 import { attachPointer, type Tip } from './sky/input.ts';
-import { SkyColumn, SkyControls, ViewSheet, useColumn, viewOpen } from './sky/Controls.tsx';
+import { SkyColumn, SkyControls, useColumn, viewOpen } from './sky/Controls.tsx';
 import { CARTOUCHE_BESIDE, Cartouche, GuideCommand, SkyBars, lanesChanged, skyBarKind } from './sky/Overlays.tsx';
 import { SkyTip, kinPreview, shownTipStar } from './sky/Tip.tsx';
 import { SkyA11y } from './sky/SkyA11y.tsx';
-import { foldDesc, foldGroups, groupFoldText, keyTarget, skyMode, workIds, workKey, workKeyText, workSet } from './work.ts';
+import { foldDesc, foldGroups, groupFoldText, keyTarget, shownIds, skyMode, workIds, workKey, workKeyText, workSet } from './work.ts';
 import { SkyMenu, skyMenu } from './panels/Work.tsx';
 import { isTextField } from './keys.ts';
 import { grid, skyFull, viewportHeight } from './layout.ts';
@@ -251,7 +251,8 @@ export function SkyView() {
       if (sel) wrap.current!.dataset.sel = `${sel.x.toFixed(1)} ${sel.y.toFixed(1)}`;
       else delete wrap.current!.dataset.sel;
       // пропорция полос устоялась (шаг, протяжка, щипок закончились) — в память браузера и органам неба (J1)
-      if (!sky.cam.moving && sky.cam.lanes !== lanes.peek()) lanes.value = sky.cam.lanes;
+      // временное сжатие строк вписыванием группы (IX-70) — не пропорция читателя: в память идёт своя
+      if (!sky.cam.moving && sky.cam.ownLanes !== lanes.peek()) lanes.value = sky.cam.ownLanes;
       // метка первого кадра неба — для замера «первого показа» (NFR-1, tools/perf.ts)
       if (!performance.getEntriesByName('sky-first-frame').length) performance.mark('sky-first-frame');
       viewTick.value++;
@@ -595,8 +596,9 @@ export function SkyView() {
       request();
     });
     /**
-     * Свернули созвездие (меню у его названия, UX-51): строка-подпись «+N» может оказаться далеко от места щелчка —
-     * небо мягко переходит к ней: строка встаёт на высоту щелчка, её начало — в видимой части. Масштаб не меняется.
+     * Свернули созвездие не у его названия на небе (меню без места щелчка на экране, UX-51): строка-подпись «+N» может
+     * оказаться за краем — небо мягко переходит к ней: строка встаёт на высоту at или в середину, её начало — в видимой
+     * части. Масштаб не меняется. Свёртка у названия неба не двигает: строка встаёт на место щелчка (offWork).
      */
     const showFoldRow = (g: string, at: { x: number; y: number } | null) => {
       const m = sky.plan.marks.find((k) => k.kind === 'group' && k.id === g);
@@ -619,8 +621,11 @@ export function SkyView() {
     let shownMode: string | null = null;
     let shownFolds = foldDesc.peek();
     let shownGroups = foldGroups.peek();
+    /** где свернули созвездие (UX-51): созвездие → полоса у места щелчка; строка «+N» встаёт на неё (src/render/rows.ts) */
+    const foldAt = new Map<string, number>();
     const offWork = effect(() => {
-      const v = { mode: skyMode.value, set: workIds.value, foldDesc: foldDesc.value, foldGroups: foldGroups.value };
+      // небо «набор» показывает набор из ссылки, пока читатель его смотрит (IX-69), иначе свой набор
+      const v = { mode: skyMode.value, set: shownIds.value, foldDesc: foldDesc.value, foldGroups: foldGroups.value, foldAt };
       const toggled = v.foldDesc.find((x) => !shownFolds.includes(x)) ?? shownFolds.find((x) => !v.foldDesc.includes(x));
       const newGroup = v.foldGroups.find((g) => !shownGroups.includes(g)) ?? null;
       const openedGroup = shownGroups.find((g) => !v.foldGroups.includes(g)) ?? null;
@@ -628,7 +633,29 @@ export function SkyView() {
       shownGroups = v.foldGroups;
       // место щелчка по названию созвездия — у меню, пока оно не закрылось
       const menuAt = skyMenu.peek();
+      // свёртка и развёртка созвездия не уносят небо (UX-51): строка, по которой щёлкнули, остаётся на своей высоте экрана —
+      // свернули у названия — строка «+N» встаёт на полосу щелчка; развернули строку «+N» — её полоса там же, где была
+      let hold: { group: string | null; lane: number; y: number } | null = null;
+      if (sky.model && last.w && v.mode === shownMode) {
+        const vp = sky.cam.vp;
+        if (newGroup && menuAt && menuAt.y > vp.t && menuAt.y < vp.b) {
+          foldAt.set(newGroup, Math.round(sky.laneOf(sky.cam.wLane(menuAt.y))));
+          hold = { group: newGroup, lane: 0, y: menuAt.y };
+        } else if (openedGroup) {
+          const m = sky.plan.marks.find((k) => k.kind === 'group' && k.id === openedGroup);
+          const y = m?.lane !== undefined ? sky.cam.sy(m.lane) : NaN;
+          if (m?.lane !== undefined && y > vp.t && y < vp.b) hold = { group: null, lane: m.lane, y };
+        }
+      }
+      if (openedGroup) foldAt.delete(openedGroup);
       const changed = sky.setView(v, toggled ?? selected.peek());
+      if (changed && hold) {
+        const lane = hold.group ? sky.plan.marks.find((k) => k.kind === 'group' && k.id === hold!.group)?.lane : hold.lane;
+        if (lane !== undefined) {
+          stopFlight();
+          sky.cam.laneTop = sky.rowOf(lane) + hold.y / sky.cam.ky;
+        } else hold = null;
+      }
       // первый показ в режиме «набор» (сеанс продолжается после перезагрузки) — сразу вписать набор
       if (shownMode === null) {
         shownMode = v.mode;
@@ -647,7 +674,8 @@ export function SkyView() {
         sky.cam.clampNow();
         const id = selected.peek();
         if (id && v.mode !== shownMode && !inView(id)) keepInView(id);
-        if (newGroup && v.mode === shownMode) showFoldRow(newGroup, menuAt ? { x: menuAt.x, y: menuAt.y } : null);
+        // свернули не у названия (клавиатура, служебная строка) — строка «+N» может оказаться за краем: небо переходит к ней
+        if (newGroup && v.mode === shownMode && !hold) showFoldRow(newGroup, null);
       }
       // свёртка созвездия — вслух (UX-51): «Созвездие «Дом Саулов» свёрнуто: скрыто 65 лиц»
       const g = newGroup ?? openedGroup;
@@ -720,17 +748,12 @@ export function SkyView() {
     firstLayout.current = false;
     lastIntro.current = intro;
     layoutRef.current(animate);
-  }, [column, intro, low, skyW, bars, column && panel.value === 'view', !column && viewOpen.value]);
+  }, [column, intro, low, skyW, bars, viewOpen.value]);
 
-  // лист «Вид» — только у колонки: если небо стало шире (поворот, закрытая карточка; «Вид» у колонки сменил панель, и небо
-  // расширилось), лист переходит в блок — открытым листом над ним
+  // лист «Вид» всплывает у своей кнопки — у блока или у колонки (IX-80; src/ui/sky/Controls.tsx): небо сменило вид органов
+  // (поворот, закрытая карточка) — лист закрывается, его кнопки больше нет на месте
   useEffect(() => {
-    if (!column && panel.value === 'view') {
-      panel.value = null;
-      viewOpen.value = true;
-    }
-    // лист «Вид» над блоком (широкое небо) — только у блока: небо стало узким — он закрывается
-    if (column) viewOpen.value = false;
+    viewOpen.value = false;
   }, [column]);
 
   // точки сравнения линий в режиме «только линии» — и для клавиатуры: открывают синопсис участка (E6; U2)
@@ -777,8 +800,6 @@ export function SkyView() {
           {announce.text}
           {announce.n % 2 ? ' ' : ''}
         </div>
-        {/* лист «Вид» узкого неба — у колонки кнопок, в пределах неба: на карточку он не ложится (C1) */}
-        {column && panel.value === 'view' && <ViewSheet />}
       </div>
     </>
   );

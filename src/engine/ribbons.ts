@@ -7,11 +7,14 @@
  *   в лице — биссектриса соседних хорд, а на стыке общего и раздельного участков — одна для обеих линий, вдоль общего
  *   участка. Раньше сплайн строился по участкам, и на стыке касательная рвалась (излом нити, находка образца).
  *   Смещение нити от средней линии тоже гладкое: на стыках у него нулевая производная.
- * — Общие участки (одинаковые соседние лица в обеих линиях): коса, смещение ±A·cos φ. В лицах нити стоят по обе
- *   стороны («бусина между нитями»), перекрещиваются между поколениями. На длинном поколении перекрестий больше —
- *   не реже чем через CROSS_PX, иначе коса раскрывается «глазом», похожим на развилку (MAP-27); между лицами
- *   такого поколения размах нити меньше (0,6·A). Фаза подобрана так, что у точки расхождения и схождения
- *   нить Иосифа — сверху.
+ * — Общие участки (одинаковые соседние лица в обеих линиях): коса. В лицах нити стоят по обе стороны («бусина между
+ *   нитями»); на каждом поколении — ровно одно перекрестье, посередине между лицами: коса считает поколения (ТЗ § 8.4;
+ *   решение 40, MAP-75). Перекрестье занимает CROSS_LEN·A px по длине, остальное поколение нити идут параллельно
+ *   на ±A — длинное поколение не раскрывается «глазом», похожим на развилку (MAP-27). Фаза подобрана так, что
+ *   у точки расхождения и схождения нить Иосифа — сверху; если число поколений участка между двумя расхождениями
+ *   нечётно, на самом коротком поколении перекрестья нет (лишнего перекрестья, которое читалось бы поколением, нет).
+ * — Плетение (Strand.over): в перекрестьях поверх поочерёдно то Мария, то Иосиф; участок «поверх» — только само
+ *   перекрестье, его концы — там, где нити уже разошлись на 2A: подложка верхней нити даёт у нижней разрыв.
  * — Раздельные участки: одна нить своей линии с мягкой волной не больше 0,25·A и периодом три поколения;
  *   волна гаснет, когда поколения на экране ближе 60 px (без ряби, MAP-26).
  * — Если поколения на экране ближе MIN_GEN_PX, коса плавно заменяется двумя параллельными нитями.
@@ -39,9 +42,10 @@ export interface Strand {
   /** лица своей линии, по которым построена нить (u — номер в этом списке) */
   ids: string[];
   /**
-   * Плетение: участки косы между двумя перекрестьями, где эта нить лежит поверх другой, —
-   * пары [начало, конец] в индексах точек этой же нити. Раздельные участки у линий разной длины,
-   * поэтому индексы двух нитей после первого расхождения не совпадают.
+   * Плетение (MAP-75): перекрестья косы, где эта нить лежит поверх другой, — пары [начало, конец] в индексах точек
+   * этой же нити, включительно. Концы — там, где нити уже разошлись на 2A: подложка верхней нити даёт разрыв только
+   * у нижней нити в самом перекрестье. Раздельные участки у линий разной длины, поэтому индексы двух нитей после
+   * первого расхождения не совпадают.
    */
   over: [number, number][];
 }
@@ -63,11 +67,16 @@ export interface RibbonInput {
 export const BRAID_PX = 3;
 
 const SAMPLES = 14;
-/** Точек сплайна на пиксель длины поколения: на длинных поколениях с несколькими перекрестьями — не реже 1 на 6 px. */
+/** Точек сплайна на пиксель длины поколения: не реже 1 на 6 px; в перекрестье — чаще (CROSS_SAMPLES). */
 const SAMPLE_PX = 6;
 const MIN_GEN_PX = 24;
-/** Перекрестья косы не реже чем через столько px (MAP-27). */
-export const CROSS_PX = 70;
+/**
+ * Длина перекрестья по поколению — CROSS_LEN·A px (MAP-75; решение 40): на ленте неба (A = 3 px) — 15 px, угол
+ * перекрестья от A не зависит. Короче поколения — перекрестье во всё поколение.
+ */
+export const CROSS_LEN = 5;
+/** Точек сплайна в перекрестье: не меньше стольких, чтобы S-образный переход был гладким. */
+const CROSS_SAMPLES = 16;
 /** Волна одиночной нити: не больше 0,25·A, период три поколения, гаснет при шаге поколения меньше 60 px (MAP-26). */
 export const MEANDER_MAX = 0.25;
 export const MEANDER_PERIOD = 3;
@@ -102,17 +111,17 @@ interface Sample {
 }
 
 /** Точек на поколение: не меньше SAMPLES и не реже одной на SAMPLE_PX; за видимой полосой clip — 4. */
+const offClip = (a: Pt, b: Pt, clip?: [number, number]) => !!clip && ((a.x < clip[0] && b.x < clip[0]) || (a.x > clip[1] && b.x > clip[1]));
 const samplesFor = (a: Pt, b: Pt, clip?: [number, number]) =>
-  clip && ((a.x < clip[0] && b.x < clip[0]) || (a.x > clip[1] && b.x > clip[1]))
-    ? 4
-    : Math.max(SAMPLES, Math.min(240, Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / SAMPLE_PX)));
+  offClip(a, b, clip) ? 4 : Math.max(SAMPLES, Math.min(240, Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / SAMPLE_PX)));
 
 /**
  * Средняя линия нити — кубические сегменты Эрмита между лицами с касательными tangents (длина касательной — хорда
  * сегмента). Касательная в каждом лице одна на оба соседних сегмента, поэтому линия гладкая и на стыках участков.
- * Нормаль и радиус кривизны — по производным сегмента, точно.
+ * Нормаль и радиус кривизны — по производным сегмента, точно. dense(i) — промежуток параметра сегмента i
+ * (перекрестье косы), где точек больше: не меньше CROSS_SAMPLES.
  */
-function sampleSpline(pts: Pt[], tangents: Pt[], clip?: [number, number]): Sample[] {
+function sampleSpline(pts: Pt[], tangents: Pt[], clip?: [number, number], dense?: (i: number) => [number, number] | null): Sample[] {
   const out: Sample[] = [];
   if (pts.length === 0) return out;
   if (pts.length === 1) return [{ x: pts[0].x, y: pts[0].y, u: 0, nx: 0, ny: -1, rad: Infinity }];
@@ -123,9 +132,19 @@ function sampleSpline(pts: Pt[], tangents: Pt[], clip?: [number, number]): Sampl
     const m0 = { x: tangents[i].x * c, y: tangents[i].y * c };
     const m1 = { x: tangents[i + 1].x * c, y: tangents[i + 1].y * c };
     const N = samplesFor(P0, P1, clip);
-    const n = i === pts.length - 2 ? N + 1 : N;
-    for (let k = 0; k < n; k++) {
-      const s = k / N;
+    const params: number[] = [];
+    for (let k = 0; k < N; k++) params.push(k / N);
+    const win = dense && !offClip(P0, P1, clip) ? dense(i) : null;
+    if (win) {
+      const [a, b] = win;
+      const M = Math.max(CROSS_SAMPLES, Math.ceil(((b - a) * c) / 1.5));
+      for (let k = 0; k <= M; k++) params.push(a + ((b - a) * k) / M);
+    }
+    if (i === pts.length - 2) params.push(1);
+    params.sort((x, y) => x - y);
+    for (let k = 0; k < params.length; k++) {
+      if (k > 0 && params[k] - params[k - 1] < 1e-6) continue;
+      const s = params[k];
       const s2 = s * s;
       const s3 = s2 * s;
       const h = [2 * s3 - 3 * s2 + 1, s3 - 2 * s2 + s, -2 * s3 + 3 * s2, s3 - s2];
@@ -253,21 +272,18 @@ export function runSpans(j: string[], m: string[]): RunSpan[] {
 }
 
 /**
- * Фаза косы общего участка по поколениям: φ в лицах — кратна π (нити по разные стороны), на каждом поколении
- * растёт на нечётное число π; на длинных — больше, чтобы перекрестья шли не реже чем через CROSS_PX.
- * Если участок с обеих сторон граничит с расхождением, у обоих концов φ ≡ 0 (Иосиф сверху): при нечётной сумме
- * самое длинное поколение получает на π больше (полный оборот). Возвращает φ в каждом лице участка и число
- * полуоборотов на каждом поколении.
+ * Фаза косы общего участка по поколениям: φ в лицах — кратна π (нити по разные стороны), на каждом поколении — одно
+ * перекрестье, φ растёт на π (решение 40: коса считает поколения). Если участок с обеих сторон граничит
+ * с расхождением, у обоих концов φ ≡ 0 (Иосиф сверху): при нечётном числе поколений на самом коротком поколении
+ * перекрестья нет (нити там параллельны) — второе перекрестье на одном поколении читалось бы лишним поколением.
+ * Возвращает φ в каждом лице участка и число перекрестий (0 или 1) на каждом поколении.
  */
 export function braidPhase(lens: number[], anchor: 'start' | 'end' | 'both'): { phi: number[]; turns: number[] } {
-  const turns = lens.map((L) => 2 * Math.max(0, Math.ceil((L / CROSS_PX - 1) / 2)) + 1);
-  if (anchor === 'both' && lens.length) {
-    const sum = turns.reduce((s, x) => s + x, 0);
-    if (sum % 2 === 1) {
-      let k = 0;
-      for (let i = 1; i < lens.length; i++) if (lens[i] > lens[k]) k = i;
-      turns[k] += 1;
-    }
+  const turns = lens.map(() => 1);
+  if (anchor === 'both' && lens.length % 2 === 1) {
+    let k = 0;
+    for (let i = 1; i < lens.length; i++) if (lens[i] < lens[k]) k = i;
+    turns[k] = 0;
   }
   const phi = [0];
   for (const t of turns) phi.push(phi[phi.length - 1] + Math.PI * t);
@@ -340,7 +356,6 @@ export function buildRibbons(inp: RibbonInput): Strand[] {
     const n = L.raw.length;
     const { my, wBraid, pts } = prep[li];
     const wMeander = nodeWeights(pts, (px) => smooth01((px - MEANDER_FULL_PX * 0.66) / (MEANDER_FULL_PX * 0.34)));
-    const samples = sampleSpline(pts, tangentsOf(pts, prep[li].dirs), inp.clip);
     const total = Math.max(1, n - 1);
     // участок каждого поколения k → k+1
     const genRun = new Array<number>(Math.max(0, n - 1)).fill(-1);
@@ -348,8 +363,8 @@ export function buildRibbons(inp: RibbonInput): Strand[] {
       const [a, b] = my(r);
       for (let k = a; k < b; k++) if (r.kind === 'split' || genRun[k] < 0) genRun[k] = ri;
     });
-    // фаза косы по общим участкам
-    const phase = new Map<number, { a: number; phi: number[]; turns: number[] }>();
+    // фаза косы по общим участкам: одно перекрестье на поколение (решение 40)
+    const phase = new Map<number, { a: number; phi: number[]; turns: number[]; cross: number[] }>();
     const genLen = (k: number) => Math.hypot(pts[k + 1].x - pts[k].x, pts[k + 1].y - pts[k].y);
     spans.forEach((r, ri) => {
       if (r.kind !== 'shared') return;
@@ -358,47 +373,65 @@ export function buildRibbons(inp: RibbonInput): Strand[] {
       for (let k = a; k < b; k++) lens.push(genLen(k));
       const hasPrev = ri > 0;
       const hasNext = ri < spans.length - 1;
-      phase.set(ri, { a, ...braidPhase(lens, hasPrev && hasNext ? 'both' : hasPrev ? 'start' : 'end') });
+      const ph = braidPhase(lens, hasPrev && hasNext ? 'both' : hasPrev ? 'start' : 'end');
+      // номер перекрестья на участке у каждого поколения: плетение поочерёдное
+      const cross: number[] = [];
+      let j = 0;
+      for (const t of ph.turns) cross.push(t ? j++ : -1);
+      phase.set(ri, { a, ...ph, cross });
     });
-    /** Смещение косы (без знака линии) на общем участке ri в месте u. */
+    /** Перекрестье поколения k в долях поколения: [начало, конец] вокруг середины, CROSS_LEN·A px; null — его нет. */
+    const window = (k: number): [number, number] | null => {
+      const ri = genRun[k];
+      const ph = phase.get(ri);
+      if (!ph || !ph.turns[k - ph.a]) return null;
+      const w = Math.min(1, (CROSS_LEN * A) / Math.max(1e-3, genLen(k)));
+      return [0.5 - w / 2, 0.5 + w / 2];
+    };
+    const samples = sampleSpline(pts, tangentsOf(pts, prep[li].dirs), inp.clip, window);
+    /** Смещение косы (без знака линии) на общем участке ri в месте u: параллельно на ±A, перекрестье — посередине. */
     const braidOff = (ri: number, u: number) => {
       const ph = phase.get(ri)!;
-      const k = Math.min(ph.turns.length - 1, Math.max(0, Math.floor(u - ph.a)));
       if (!ph.turns.length) return A;
+      const k = Math.min(ph.turns.length - 1, Math.max(0, Math.floor(u - ph.a)));
       const s = Math.max(0, Math.min(1, u - ph.a - k));
-      const phi = ph.phi[k] + Math.PI * ph.turns[k] * s;
-      const env = ph.turns[k] > 1 ? 0.6 + 0.4 * Math.cos(Math.PI * s) ** 2 : 1;
+      const c0 = Math.cos(ph.phi[k]);
+      const win = window(ph.a + k);
+      const shape = win ? c0 * Math.cos(Math.PI * Math.max(0, Math.min(1, (s - win[0]) / (win[1] - win[0])))) : c0;
       const w = weightAt(wBraid, u);
-      return A * (w * env * Math.cos(phi) + (1 - w) * 0.55);
+      return A * (w * shape + (1 - w) * 0.55);
     };
     /** Смещение на краю общего участка ri: там же начинается раздельный участок. */
     const edgeOff = (ri: number, u: number) => (phase.has(ri) ? braidOff(ri, u) : A);
     const points: StrandPoint[] = [];
-    // плетение: у Иосифа сверху нечётные участки косы, у Марии — чётные (индексы — в точках своей нити)
+    // плетение: в перекрестьях с чётным номером сверху Мария, с нечётным — Иосиф (индексы — в точках своей нити)
     const over: [number, number][] = [];
-    let seg: { ri: number; j: number; start: number } | null = null;
+    let seg: { k: number; start: number } | null = null;
+    const closeSeg = (idx: number) => {
+      if (!seg) return;
+      const ph = phase.get(genRun[seg.k])!;
+      const j = ph.cross[seg.k - ph.a];
+      if (idx - 1 > seg.start && (j % 2 === 0) !== isJ) over.push([seg.start, idx - 1]);
+      seg = null;
+    };
     for (const s of samples) {
       const k = Math.min(n - 2, Math.floor(s.u));
       const ri = n > 1 ? genRun[Math.max(0, k)] : 0;
       const r = spans[ri];
       let off: number;
+      const idx = points.length;
       if (!r || r.kind === 'shared') {
         off = n > 1 && r ? sign * braidOff(ri, s.u) : sign * A;
-        // плетение: участки между соседними крайними положениями нити (φ кратно π), в каждом — одно перекрестье
-        if (r && phase.has(ri)) {
-          const ph = phase.get(ri)!;
-          const kk = Math.min(ph.turns.length - 1, Math.max(0, Math.floor(s.u - ph.a)));
-          const phi = ph.turns.length ? ph.phi[kk] + Math.PI * ph.turns[kk] * Math.max(0, Math.min(1, s.u - ph.a - kk)) : 0;
-          const j = Math.floor((phi - ph.phi[0]) / Math.PI + 1e-9);
-          const braid = weightAt(wBraid, s.u) > 0.5;
-          const idx = points.length;
-          if (!seg || seg.ri !== ri) seg = { ri, j, start: idx };
-          else if (j !== seg.j) {
-            if (braid && (seg.j % 2 === 0) !== isJ) over.push([seg.start, idx]);
-            seg = { ri, j, start: idx };
-          }
-        }
+        // участок «поверх» — само перекрестье: от точки, где нити начинают сходиться, до точки, где разошлись
+        const win = n > 1 && r && k >= 0 ? window(k) : null;
+        const f = s.u - k;
+        const inside = !!win && f >= win[0] - 1e-9 && f <= win[1] + 1e-9 && weightAt(wBraid, k + 0.5) > 0.5;
+        if (inside && (!seg || seg.k !== k)) {
+          closeSeg(idx);
+          seg = { k, start: idx };
+        } else if (!inside && seg) closeSeg(idx);
       } else {
+        closeSeg(idx);
         const [a, b] = my(r);
         const v = s.u - a;
         const len = b - a;
@@ -418,6 +451,7 @@ export function buildRibbons(inp: RibbonInput): Strand[] {
         u: s.u,
       });
     }
+    closeSeg(points.length);
     out.push({ line: L.line, points, ids: L.ids, over });
   });
   const [js, ms] = out;

@@ -148,11 +148,12 @@
   color: var(--ink-2);
   cursor: pointer;
 }
-/* поле нажатия флажка — 24 × 24, квадрат внутри — 10 × 10 в рамке 1 px; включённый залит */
+/* поле нажатия флажка — 24 × 24, квадрат внутри — 10 × 10 в рамке 1 px; включённый залит и с галочкой */
 .check input {
   appearance: none;
   display: inline-grid;
   place-content: center;
+  place-items: center;
   width: 24px;
   height: 24px;
   margin: 0;
@@ -165,8 +166,26 @@
   height: 10px;
   border: 1px solid currentColor;
 }
+.check input::before,
+.check input::after {
+  grid-area: 1 / 1;
+}
+/* включённый флажок заметнее выключенного (VIS-67): подпись и квадрат полным тоном --ink, квадрат залит, внутри галочка
+   1,5 px цветом неба — как включённый сегмент (.seg, aria-pressed: заливка --ink, текст --sky) */
+.check:has(input:checked) {
+  color: var(--ink);
+}
 .check input:checked::before {
   background: currentColor;
+}
+.check input:checked::after {
+  content: '';
+  width: 3px;
+  height: 6px;
+  margin-top: -2px;
+  border: solid var(--sky);
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg);
 }
 .check:hover {
   color: var(--ink);
@@ -333,4 +352,20 @@ input[type='search']::-webkit-search-decoration {
   height: 1px;
   margin: 4px 0;
   background: var(--rule);
+}
+
+/* ---------- «Клавиши-буквы: вкл. | выкл.» над таблицей клавиш (решение 48; src/ui/top/Keys.tsx) ---------- */
+.letter-keys {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 10px;
+  margin: 6px 0 4px;
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+  color: var(--ink);
+}
+.letter-keys .seg {
+  margin: 0;
 }

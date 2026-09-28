@@ -17,11 +17,11 @@ import type { CropSpec } from '../src/ui/panels/Legend.tsx';
 // функции неба — шпионы вокруг настоящих: образец рисует ими, а тест видит, с чем
 vi.mock('../src/render/glyphs.ts', async (orig) => {
   const m = await orig<typeof import('../src/render/glyphs.ts')>();
-  return { ...m, drawGlyph: vi.fn(m.drawGlyph) };
+  return { ...m, drawGlyph: vi.fn(m.drawGlyph), drawBirthBand: vi.fn(m.drawBirthBand) };
 });
 vi.mock('../src/render/trails.ts', async (orig) => {
   const m = await orig<typeof import('../src/render/trails.ts')>();
-  return { ...m, drawLifeTrail: vi.fn(m.drawLifeTrail), drawDescent: vi.fn(m.drawDescent), drawBracket: vi.fn(m.drawBracket), drawMarriage: vi.fn(m.drawMarriage), drawEpochBracket: vi.fn(m.drawEpochBracket) };
+  return { ...m, drawLifeTrail: vi.fn(m.drawLifeTrail), drawDescent: vi.fn(m.drawDescent), drawBracket: vi.fn(m.drawBracket), drawMarriage: vi.fn(m.drawMarriage), drawEpochBracket: vi.fn(m.drawEpochBracket), drawFamilyText: vi.fn(m.drawFamilyText) };
 });
 vi.mock('../src/render/ribbons.ts', async (orig) => {
   const m = await orig<typeof import('../src/render/ribbons.ts')>();
@@ -40,7 +40,7 @@ vi.mock('../src/engine/ribbons.ts', async (orig) => {
   return { ...m, buildRibbons: vi.fn(m.buildRibbons) };
 });
 // небо вырезок — запись кадров вместо холста (в тестах холста нет)
-const frames: { state: SkyState; size: [number, number] }[] = [];
+const frames: { state: SkyState; size: [number, number]; view?: unknown }[] = [];
 vi.mock('../src/render/sky.ts', async (orig) => {
   const m = await orig<typeof import('../src/render/sky.ts')>();
   class RecordingSky {
@@ -73,7 +73,14 @@ vi.mock('../src/render/sky.ts', async (orig) => {
       return x;
     }
     draw(state: SkyState) {
-      frames.push({ state, size: this.size });
+      frames.push({ state, size: this.size, view: this.view });
+    }
+    view: unknown = null;
+    setView(v: unknown) {
+      this.view = v;
+    }
+    rowOf(lane: number) {
+      return lane;
     }
   }
   return { ...m, Sky: RecordingSky, readPalette: () => PAL };
@@ -85,7 +92,7 @@ const PAL = {
   sheet2: '#1a2f57', dimInk: 0.4, dimInk2: 0.5, lineAlpha: 0.7, glow: true, ribbonGlow: [0.06, 0.1] as [number, number], ribbonTone: 0,
 };
 
-const { PAINTERS, CROPS, magnitude, paintCrop, cropState } = await import('../src/ui/panels/Legend.tsx');
+const { PAINTERS, CROPS, magnitude, paintCrop, cropState, orderSample } = await import('../src/ui/panels/Legend.tsx');
 const glyphs = await import('../src/render/glyphs.ts');
 const trails = await import('../src/render/trails.ts');
 const ribbons = await import('../src/render/ribbons.ts');
@@ -122,6 +129,8 @@ const spies = {
   drawFoldMark: vi.mocked(labels.drawFoldMark),
   drawEpochBracket: vi.mocked(trails.drawEpochBracket),
   drawWorkMark: vi.mocked(marks.drawWorkMark),
+  drawBirthBand: vi.mocked(glyphs.drawBirthBand),
+  drawFamilyText: vi.mocked(trails.drawFamilyText),
 };
 type SpyName = keyof typeof spies;
 
@@ -144,9 +153,23 @@ describe('образцы — функции неба, а не свои копи�
   it('каждый образец вызывает функцию неба', () => {
     for (const k of Object.keys(PAINTERS) as (keyof typeof PAINTERS)[]) expect(used(paint(k)), k).not.toEqual([]);
   });
-  it('знаки свёрнутого (J5) — drawFoldMark неба: «+N» у лица и строка созвездия с названием', () => {
-    expect(paint('foldDesc').drawFoldMark.mock.calls.map((c) => [c[5], c[6]])).toEqual([['', '+12']]);
+  it('знаки свёрнутого (J5) — строка созвездия с названием drawFoldMark неба; «+N» после имени — кадр неба со свёрнутыми потомками (UX-80)', () => {
     expect(paint('foldGroup').drawFoldMark.mock.calls.map((c) => [c[5], c[6]])).toEqual([['ЕДОМ', '+38']]);
+    // «+N» стоит после имени лица: образец — кадр настоящего неба, где у Давида свёрнуты потомки, а не своя картинка
+    expect('foldDesc' in PAINTERS).toBe(false);
+    expect(CROPS.fold.view().foldDesc).toEqual(['david']);
+    expect(CROPS.fold.at()).toEqual({ ids: ['david'] });
+  });
+  it('помета «годы — по порядку …, выв.» — функцией неба drawFamilyText у гребёнки детей; текст — из данных (UX-73)', () => {
+    // сыновья Иессея названы по порядку в 1 Пар 2:13–15 — та же помета, что небо ставит у семьи Давида
+    expect(orderSample().replace(/\s/g, ' ')).toBe('годы — по порядку 1 Пар 2:13–15, выв.');
+    const s = paint('order', 420, 56);
+    expect(s.drawFamilyText.mock.calls.map((c) => c[2])).toEqual([orderSample()]);
+    expect(s.drawBracket.mock.calls[0][1].kids.length).toBeGreaterThan(1);
+    // помета — слева от первого ребёнка и не выходит за край образца
+    const tx = s.drawFamilyText.mock.calls[0][3] as number;
+    expect(tx).toBeGreaterThanOrEqual(0);
+    expect(tx).toBeLessThan(s.drawBracket.mock.calls[0][1].x);
   });
   it('семь величин звезды — drawGlyph с величинами 0…6', () => {
     const seen: number[] = [];
@@ -195,6 +218,18 @@ describe('образцы — функции неба, а не свои копи�
     expect(paint('epochBracket').drawGlyph.mock.calls[0][3].hollow).toBe(true);
     expect(paint('workMark').drawWorkMark.mock.calls.length).toBe(1);
   });
+  it('полый знак — только «время не установлено», без следа; промежуток рождения — полоса неба drawBirthBand (решения 42, 38)', () => {
+    // полый знак образца — без следа жизни: он значит «время не установлено», а не «год по расчёту» (MAP-77)
+    expect(paint('hollow').drawLifeTrail).not.toHaveBeenCalled();
+    const b = paint('birthBand');
+    expect(b.drawBirthBand.mock.calls.length).toBe(1);
+    const band = b.drawBirthBand.mock.calls[0][1];
+    // полоса — слева от знака, знак стоит у её правого края (у первого засвидетельствованного года)
+    const star = b.drawGlyph.mock.calls[0];
+    expect(band.x1).toBeLessThanOrEqual(star[1]);
+    expect(band.x0).toBeLessThan(band.x1);
+    expect(star[3].hollow).toBeFalsy();
+  });
   it('отвод, мать на отводе, знак разрыва, призрак жены — drawDescent', () => {
     const d = paint('descent').drawDescent.mock.calls[0][1];
     expect(!d.ghost && !d.mother && !d.tension).toBe(true);
@@ -203,10 +238,16 @@ describe('образцы — функции неба, а не свои копи�
     expect(paint('tension').drawDescent.mock.calls[0][1].tension).toBeTruthy();
     expect(paint('ghost').drawDescent.mock.calls[0][1].ghost).toBe(true);
   });
-  it('скоба пары и скобы разных матерей разного начертания — drawBracket', () => {
+  it('скоба пары и гребёнки разных матерей — drawBracket, одним сплошным начертанием (MAP-74)', () => {
     expect(paint('bracket').drawBracket.mock.calls[0][1].kids.length).toBeGreaterThan(1);
-    const dashes = paint('mothers').drawBracket.mock.calls.map((c) => c[1].dash);
-    expect(dashes).toEqual([trails.MOTHER_DASH[0], trails.MOTHER_DASH[1]]);
+    const combs = paint('mothers', 96, 52).drawBracket.mock.calls.map((c) => c[1]);
+    expect(combs.length).toBe(2);
+    // у каждой матери своя гребёнка: свой ствол и свои дети; штриха нет
+    expect(combs[0].x).not.toBe(combs[1].x);
+    for (const b of combs) {
+      expect(b.dash?.length ?? 0).toBe(0);
+      expect(b.kids.length).toBe(2);
+    }
   });
   it('брак «‖»: рядом — во всю высоту, к дальней жене — короткий знак и выноска', () => {
     const near = paint('marriage').drawMarriage.mock.calls[0][1];

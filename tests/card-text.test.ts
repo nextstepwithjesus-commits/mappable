@@ -7,6 +7,15 @@ import { cardSections, allIds, byId } from './helpers/cards.ts';
 import { graph, models, persons } from '../src/data/atlas.ts';
 import { siblings } from '../src/engine/graph.ts';
 import { familyIds, contemporaryGroups } from '../src/ui/Folio.tsx';
+import { section14, visible14 } from '../src/ui/card/sections.tsx';
+import { stemsOf } from '../src/ui/text/repeat.ts';
+
+/** Слова встречи повторяют уточнение (как в карточке, CARD-06). */
+const saysSame = (text: string, dis: string) => {
+  const a = stemsOf(text);
+  const b = new Set(stemsOf(dis));
+  return a.length > 0 && a.filter((w) => b.has(w)).length / a.length >= 0.5;
+};
 import { typo } from '../src/ui/text/typo.ts';
 import {
   nameCase, realmGenitive, kinTermIns, kinTermReverse, renamedDirection, otherChildLabel, otherParentLabel, reignTitle, KIN_TERMS, splitKinTerm,
@@ -182,7 +191,14 @@ describe('карточки всех лиц', () => {
         const mine = sec(p.id, 12);
         // термин описывает владельца, а не второе лицо: не «Тётка: Амрам»
         if (mine.includes(`${cap(k.rel)}: ${other.name}`)) bad.push(`${p.id}: «${cap(k.rel)}: ${other.name}»`);
-        const dat = kinTermIns(splitKinTerm(k.rel).term) ? nameCase(other.name, other.sex, 'dat', other.unnamed) : null;
+        // свойство (зять, невестка…) — строкой «Иуда — свёкор» (CARD-91); остальное — «Приходится тёткой Амраму»
+        const term = splitKinTerm(k.rel).term;
+        const rev = /^(зять|невестка|сноха|тесть|тёща|свёкор|свекровь)$/.test(term) ? kinTermReverse(term, other.sex) : null;
+        if (rev) {
+          if (!mine.includes(`${other.name} — ${rev}`) && !mine.includes(`${other.name} (`)) bad.push(`${p.id}: нет «${other.name} — ${rev}»`);
+          continue;
+        }
+        const dat = kinTermIns(term) ? nameCase(other.name, other.sex, 'dat', other.unnamed) : null;
         if (!mine.includes(dat ?? other.name)) bad.push(`${p.id}: нет ${dat ?? other.name}`);
         // у второго лица — «Иохаведа — тётка»
         if (!sec(k.id, 12).includes(`${p.name} — ${k.rel}`)) bad.push(`${k.id}: нет «${p.name} — ${k.rel}»`);
@@ -217,9 +233,12 @@ describe('карточки всех лиц', () => {
       if (/\(вероятно\)/.test(t)) bad.push(`${p.id}: «(вероятно)» при имени`);
       if ((t.match(/Вероятно/g) ?? []).length > 1) bad.push(`${p.id}: «Вероятно» не один раз`);
       // лицо встречи с одноимёнными — с уточнением и тогда, когда его имя стоит в самом тексте встречи (F7)
-      const met = (await loadCard(p.id))?.card?.met ?? [];
+      const card = (await loadCard(p.id))?.card ?? null;
+      const met = card?.met ?? [];
+      // встреча выводится со словами события (CARD-80); уточнение не нужно, если слова встречи его повторяют (CARD-06)
       for (const mt of met) {
         const q = byId.get(mt.id)!;
+        if (!mt.text?.trim() || familyIds(p.id).has(mt.id) || saysSame(mt.text, q.disambig)) continue;
         if ((namesakes.get(q.name) ?? 0) > 1 && q.disambig && !t.includes(norm(`(${disOf(mt.id)})`))) bad.push(`${p.id}: встреча с ${mt.id} без уточнения`);
       }
       const c = m.chrono.get(p.id);
@@ -229,7 +248,10 @@ describe('карточки всех лиц', () => {
       const groups = contemporaryGroups(p.id, m, fam, new Set(met.map((x) => x.id)));
       const ids = groups.flatMap((g) => g.ids);
       if (new Set(ids).size !== ids.length) bad.push(`${p.id}: повтор в современниках`);
-      for (const x of ids) {
+      for (const x of ids) if (fam.has(x)) bad.push(`${p.id}: ${x} из семьи среди современников`);
+      // видимые без «ещё N» лица расчётного списка и родни — одноимённые с уточнением
+      const d = section14(p.id, m, card);
+      for (const x of d ? visible14(d) : []) {
         if (fam.has(x)) bad.push(`${p.id}: ${x} из семьи среди современников`);
         const q = byId.get(x)!;
         // уточнение набрано той же типографикой, что вся карточка («Мф 1:15-16» → «Мф 1:15–16»); U+2060 в тексте проверок нет
@@ -273,14 +295,16 @@ describe('карточки из экспертизы CARD', () => {
     expect(sec('esfir', 12)).toContain('Приходится двоюродной сестрой Мардохею: дочь его дяди Абихаила Есф 2:7; 2:15');
     expect(sec('esfir', 12)).not.toContain('дочерью дяди');
     expect(sec('esfir', 12)).not.toContain('Дочь дяди: Мардохей');
-    expect(sec('iosif-muzh-marii', 12)).toContain('Приходится зятем Илию (по толкованию Лк 3:23)');
+    // свойство — формой «Имя — кем приходится» (CARD-91): зять Илия — у Иосифа «Илий — тесть»
+    expect(sec('iosif-muzh-marii', 12)).toContain('Илий — тесть (по толкованию Лк 3:23)');
   });
 
   test('§ 9: Мааха, наложница Халева (A3)', () => {
     const t = sec('maakha-nalozhnitsa-khaleva', 9);
     expect(t).toContain('Халев — муж; она названа его наложницей 1 Пар 2:48');
     expect(t).not.toContain('Халев — наложница');
-    expect(sec('khalev-syn-esroma', 9)).toContain('Мааха — наложница');
+    // у мужа трёх и больше жён — первой строкой «Жёны: …; наложницы: …» (CARD-93)
+    expect(sec('khalev-syn-esroma', 9)).toMatch(/наложницы: [^.]*Мааха/);
   });
 
   test('§ 10 Давида: Исмаил — потомок, а не предок (A3)', () => {
@@ -305,9 +329,9 @@ describe('карточки из экспертизы CARD', () => {
     const t14 = sec('david', 14);
     // решение 19 (CARD-55): встречи из своей и чужих карточек одной группой
     expect(t14).toContain('Встречи и связи, о которых говорит Писание');
-    // родня — со степенью и не среди «Других»; список по расчёту — свёрнут
-    expect(t14).toMatch(/Иоав \(сын Саруии, военачальник Давида\) — племянник/);
-    expect(t14).not.toMatch(/Другие:[^.]*Иоав/);
+    // племянник — вторая степень, в § 12 (решение 62); в § 14 его нет ни в «Родне», ни среди «Других»
+    expect(sec('david', 12)).toMatch(/Племянники: Иоав, Авесса и Асаил — сыновья сестры Саруии/);
+    expect(t14).not.toMatch(/Иоав/);
     expect(t14).toContain('Кто ещё жил в это время (расчёт)');
     // имя лица встречи — в самом тексте, а не «Самуил — помазан Самуилом» (F7)
     expect(t14).toContain('Помазан Самуилом (пророк и судья); бежал к нему в Раму');
@@ -342,22 +366,26 @@ describe('карточки из экспертизы CARD', () => {
 describe('остатки этапа 1: типографика и подписи (B4, B5)', () => {
   test('нет двойной точки после года: «ок. 6 г. до Р. Х. Ангел…», не «Х..» (Мария § 17)', () => {
     // первая строка § 17 — подзаголовок части рассказа (CARD-58), затем событие с годом без второй точки
-    expect(sec('mariya', 17)).toMatch(/^Лк 1 ок\. 6 г\. до Р\. Х\. Ангел Гавриил/);
+    // подзаголовков-ссылок («Лк 1») больше нет (решение 63): § 17 начинается с события
+    // первым — оглавление периодов (решение 63), затем подзаголовок периода и событие
+    expect(sec('mariya', 17)).toMatch(/^По периодам: Благовещение \(5\);[^]*Благовещение ок\. 6 г\. до Р\. Х\. Ангел Гавриил/);
     const bad: string[] = [];
     for (const [id, s] of cards) for (const [n, t] of s) if (/\.\./.test(t)) bad.push(`${id} § ${n}`);
     expect(bad.slice(0, 10), `${bad.length} разделов`).toEqual([]);
   });
 
   test('оценка словом, а не знаком «~»: «примерно через 55 лет после отца»', () => {
-    expect(sec('aviud-syn-zorovavelya', 13)).toMatch(/Родился примерно через \d+ лет после отца, Зоровавеля, и примерно за \d+ лет до сына, Елиакима\./);
+    // сын Елиаким — не опора формулы: его год выведен из той же цепочки оценок (CARD-86, tests/card-time-l8a.test.ts)
+    expect(sec('aviud-syn-zorovavelya', 13)).toMatch(/Родился примерно через \d+ лет после отца, Зоровавеля\./);
     const bad: string[] = [];
     for (const [id, s] of cards) for (const [n, t] of s) if (t.includes('~')) bad.push(`${id} § ${n}`);
     expect(bad.slice(0, 10), `${bad.length} разделов`).toEqual([]);
   });
 
   test('§ 9–12: родственник с именем владельца или другого родственника назван с уточнением', () => {
-    expect(sec('mariya', 11)).toContain('Мария (Клеопова) — сестра Ин 19:25');
-    expect(sec('mariya-kleopova', 11)).toContain('Мария (Мать Иисуса) — сестра');
+    // братья и сёстры группой с подписью (CARD-84): «Сестра: Мария (Клеопова) Ин 19:25»
+    expect(sec('mariya', 11)).toContain('Сестра: Мария (Клеопова) Ин 19:25');
+    expect(sec('mariya-kleopova', 11)).toContain('Сестра: Мария (Мать Иисуса)');
     expect(sec('david', 10)).toContain('Фамарь (дочь Давида, сестра Авессалома)');
     // внуки — при родителях (F6): «от Авессалома — Мааха, Фамарь (дочь Авессалома)»
     expect(sec('david', 10)).toContain('от Авессалома — Мааха, Фамарь (дочь Авессалома)');
@@ -401,8 +429,10 @@ describe('остатки этапа 1: типографика и подписи 
     expect(sec('ruf', 10)).toContain('Сын от Вооза: Овид');
     // главное — наверх (CARD-57): сыновья от Вирсавии — первой группой, Соломон и Нафан (линии Мессии) — первыми,
     // безымянный первый сын — последним; дети по одному от матери — одной строкой
-    expect(sec('david', 10)).toMatch(/^Сыновья от Вирсавии: Соломон, Нафан, Самус, Совав, сын Давида и Вирсавии \(умер младенцем на седьмой день\)/);
-    expect(sec('david', 10)).toContain('Сыновья: Авессалом (от Маахи), Амнон (от Ахиноамы), Адония (от Аггифы)');
+    // безымянный — после имён, через «; ещё …»: описание не читается как приложение к Соваву (VIS-72)
+    expect(sec('david', 10)).toMatch(/^Сыновья от Вирсавии: Соломон, Нафан, Самус, Совав; ещё сын Давида и Вирсавии — умер младенцем на седьмой день/);
+    // по одному от матери — по порядку рождения, с подписью и стихом заметки (CARD-93): первенец Амнон — первым
+    expect(sec('david', 10)).toContain('В Хевроне родились шесть сыновей от шести матерей: Амнон (от Ахиноамы), Далуиа (от Авигеи), Авессалом (от Маахи)');
     expect(sec('david', 10)).toMatch(/Дети, мать которых не названа: [^:]*Евеар, Елисуа/);
     expect(sec('iakov', 10)).toContain('Сыновья от Рахили: Иосиф, Вениамин');
     // подпись «от …» не бывает без существительного: прежнее «от Лии: …» без «Сыновья» в начале раздела и после других строк
@@ -423,7 +453,7 @@ describe('остатки этапа 1: типографика и подписи 
     expect(hit('Додо', 'Додова')).toBe(true);
     expect(hit('Додо', 'Додо')).toBe(true);
     expect(hit('Ной', 'но')).toBe(false);
-    expect(sec('dodo-ded-foly', 23)).toMatch(/^Названо по имени в 1 стихе \(Суд\)/);
-    expect(sec('ruf', 23)).toMatch(/^Названо по имени в 13 стихах/);
+    expect(sec('dodo-ded-foly', 23)).toMatch(/^Имя названо в 1 стихе \(Суд\)/);
+    expect(sec('ruf', 23)).toMatch(/^Имя названо в 13 стихах/);
   });
 });

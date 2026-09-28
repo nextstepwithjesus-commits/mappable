@@ -233,7 +233,9 @@ describe('строки у кромки неба (VIS-46, UX-62, MOB-54, UX-53, C
   it('режим «набор»: сколько лиц на небе; вне набора — имя в начале строки; пустой — как собрать', () => {
     expect(overlays.workLineText(12, null)).toBe('На небе — только рабочий набор, 12 лиц');
     expect(overlays.workLineText(1, null)).toBe('На небе — только рабочий набор, 1 лицо');
-    expect(overlays.workLineText(22, null)).toMatch(/22 лица \(ссылкой передаётся только режим\)$/);
+    // решение 58 (MOB-73): оговорка о ссылке ушла из строки в её подсказку — строка не длиннее, чем нужно
+    expect(overlays.workLineText(22, null)).toBe('На небе — только рабочий набор, 22 лица');
+    expect(overlays.workLineNote(22)).toBe('Ссылкой передаётся режим «набор»; сам набор — только если в нём не больше 12 лиц');
     expect(overlays.workLineText(3, 'Вооз')).toBe('Вооз не в наборе');
     expect(overlays.workLineText(0, null)).toMatch(/^Рабочий набор пуст/);
   });

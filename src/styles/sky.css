@@ -50,7 +50,8 @@
   background: var(--sheet);
   border: 1px solid var(--rule-strong);
   padding: 7px 11px 8px;
-  max-width: 320px;
+  /* три строки звезды (IX-58) — каждая в одну строку: «род. ок. 1780 г. до Р. Х. (расч.), между 1805 и 1755 гг.» */
+  max-width: 440px;
   font-size: var(--t-note);
   line-height: var(--t-note-lh);
   z-index: 5;
@@ -71,8 +72,12 @@
   color: var(--ink-2);
   font-variant-numeric: lining-nums tabular-nums;
 }
-/* выбор второго лица «Родства»: кем лицо приходится первому (IX-22) */
+/* выбор второго лица «Родства»: кем лицо приходится первому (IX-22) — первой строкой, вместо имени (IX-58) */
 .tip .kin {
+  color: var(--ink);
+}
+/* третья строка звезды: счёт номера у бусины, разрыв «//», год по порядку перечисления (UX-69, MAP-51, UX-73) */
+.tip .ex {
   color: var(--ink);
 }
 /* пояснение надписи рамки (UX-08) */
@@ -166,19 +171,33 @@
     display: none;
   }
 }
+/* быстрые входы — строками по словам, строки уравнены по длине (VIS-84): семь входов — две ровные строки, «Иисус Христос»
+   не остаётся один. Вход — неразрывный блок в строке, промежуток — его правое поле */
 .cartouche .entry {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 12px;
-  margin: 0 0 10px;
+  margin: 0 0 6px;
   font-family: var(--sans);
   font-size: var(--t-ui);
   line-height: var(--t-ui-lh);
+  text-wrap: balance;
 }
 .cartouche .entry button {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 12px 4px 0;
   color: var(--ink);
   text-decoration: underline 1px var(--rule-strong);
   text-underline-offset: 3px;
+}
+/* сенсорный экран: вход — цель 44 px с полями 8 px, промежуток 8 px (MOB-69; решение 33); текст входов — по краю заголовка */
+@media (pointer: coarse) {
+  .cartouche .entry {
+    margin-left: -8px;
+  }
+  .cartouche .entry button {
+    min-height: 44px;
+    padding: 0 8px;
+    margin: 0 8px 8px 0;
+  }
 }
 .cartouche .entry button:hover {
   text-decoration-color: var(--ink);
@@ -192,9 +211,13 @@
   background: var(--sheet);
   z-index: 1;
 }
-/* невысокое окно (1024 × 768 и ниже): без вводного абзаца — входы и «Как читать карту» видны без прокрутки (UX-56) */
+/* невысокое окно (1024 × 768, 1366 × 768): главная фраза о звезде, яркости и созвездиях остаётся (UX-70), уходят
+   второстепенные строки «Как читать карту» — о координатах (вторая строка списка: годы, столбцы, буквы строк; всё это —
+   в «Условных знаках») и «Всё небо». Строка о колесе остаётся: в ней названа клавиша «?» (IX-41). Входы, фраза и «Как
+   читать карту» видны без прокрутки (UX-56). В «Условных знаках» (.both) — все строки */
 @media (max-height: 800px) {
-  .cartouche .long {
+  .cartouche .guide li:nth-child(2),
+  .cartouche .guide li:last-child {
     display: none;
   }
 }
@@ -205,11 +228,13 @@
     display: none;
   }
 }
-/* низкое небо (до 520 px; MOB-07): вступление — одна строка «Толедот · Как читать карту · Свернуть», небо видно */
+/* низкое небо (до 520 px; MOB-07): вступление — строка «Толедот», «Как читать карту», «Свернуть», небо видно. Одна строка —
+   только если она помещается (MOB-70; решение 56, WCAG 1.4.10): иначе команды переносятся на следующую строку */
 .cartouche.low {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 4px;
+  gap: 0 4px;
   right: auto;
   width: auto;
   max-width: calc(100% - 44px);
@@ -224,6 +249,37 @@
 @media (pointer: coarse) {
   .cartouche.low .hint {
     display: inline;
+  }
+}
+/* узкий экран (320–480 px; с пальцем — до 600 px, там в строке ещё и подсказка): табличка во всю ширину неба в две
+   строки — «Толедот» с подсказкой, под ними обе команды, а не одна «Свернуть» на второй строке. Разрыв строки — пустой
+   элемент во всю ширину между подсказкой и командами (порядок чтения и Tab не меняется) */
+@media (max-width: 480px), (max-width: 600px) and (pointer: coarse) {
+  .cartouche.low {
+    right: 12px;
+    max-width: none;
+    padding: 2px 4px 2px 12px;
+  }
+  .cartouche.low::after {
+    content: '';
+    flex-basis: 100%;
+    order: 1;
+  }
+  .cartouche.low button {
+    order: 2;
+  }
+  .cartouche.low button:first-of-type {
+    margin-left: -8px;
+  }
+  .cartouche.low .ttl {
+    margin-right: 4px;
+  }
+  .cartouche.low .hint {
+    flex: 1 1 10em;
+    min-width: 0;
+    margin-right: 0;
+    white-space: normal;
+    text-wrap: balance;
   }
 }
 .cartouche.low .ttl {
@@ -423,11 +479,13 @@
   background: none;
   border: 0;
 }
+/* кнопка — не меньше 44 × 44, шириной растёт с кеглем браузера, высотой — по подписи (MOB-71: при крупном тексте «Всё
+   небо» и «Вид» не вылезают из кнопок, а колонка не уходит под лист карточки); подпись переносится по словам */
 .skyctl.column button {
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
+  width: max(44px, 2.75rem);
+  min-height: 44px;
   margin-top: -1px;
   padding: 0 2px;
   background: var(--sheet);
@@ -452,7 +510,9 @@
 .skyctl.column button:active {
   background: var(--rule);
 }
-.skyctl.column button[aria-pressed='true'] {
+/* «Вид» у колонки открыл свой лист (IX-80) — нажатая, как команда с раскрытым списком */
+.skyctl.column button[aria-pressed='true'],
+.skyctl.column button[aria-expanded='true'] {
   color: var(--ink);
   box-shadow: inset 0 -2px 0 var(--ink);
 }
@@ -601,10 +661,11 @@
   justify-content: space-between;
   gap: 12px;
 }
-/* лист «Вид» на телефоне не заходит на колонку кнопок: её низ — верх неба + 181 px (phone.css); лист выше — прокручивается */
+/* лист «Вид» на телефоне не заходит на колонку кнопок: её низ — верх неба + четыре кнопки и 5 px (phone.css); лист выше —
+   прокручивается */
 @media (max-width: 720px) and (min-height: 521px) {
   .sky > .sheet:has(> .viewctl) {
-    max-height: calc(100% - var(--top-h) - var(--sky-top, 44px) - 189px);
+    max-height: calc(100% - var(--top-h) - var(--sky-top, 44px) - 4 * max(44px, 2.75rem) - 13px);
   }
 }
 /* лист «Вид» у колонки: модель хронологии — список с пояснениями, как у блока; он раскрывается строкой листа, а не поверх,
@@ -723,4 +784,63 @@
   .pickbar button:first-of-type {
     margin-left: -8px;
   }
+}
+/* низкое небо (до 520 px: 720 × 450 — масштаб 200 %, альбомный телефон): строка выбора второго лица — в одну линию, текст
+   и «отменить (Esc)» рядом (MOB-72); текст обрывается многоточием, целиком — в подсказке строки. Две строки заняли бы
+   треть неба, под ними оказалось бы первое лицо */
+@media (max-height: 520px) {
+  .pickbar.pickbar-pick {
+    flex-wrap: nowrap;
+    padding: 0 4px 0 12px;
+  }
+  .pickbar.pickbar-pick .txt {
+    flex: 0 1 auto;
+    white-space: nowrap;
+  }
+  .pickbar.pickbar-pick .dash {
+    display: inline;
+  }
+  .pickbar.pickbar-pick button:first-of-type {
+    margin-left: 0;
+  }
+}
+
+/* ---------- меню звезды и выбор «Взять в работу» (src/ui/panels/Work.tsx; IX-83, UX-71, MOB-77) ----------
+   Основной вид выбора — folio.css (div.workpick). Здесь — то, что добавил круг 3: подзаголовки групп, строка «Убрать…»
+   в группе набора и шапка меню неба с «×». */
+/* подзаголовки групп меню звезды: «Взять в работу:», «На небе:» — подписью органов, строчными */
+div.workpick .wp-sub {
+  flex: 1 0 100%;
+  margin: 0 0 6px;
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  color: var(--ink-2);
+}
+/* «Убрать из работы», «Убрать с родословной» — команды набора, в той же рамке, что «Только …» и «С семьёй» */
+div.workpick .wp-drop {
+  margin-top: 8px;
+}
+div.workpick .wp-drop .cmd {
+  border: 1px solid var(--rule-strong);
+  padding: 0 10px;
+  color: var(--ink);
+}
+/* шапка меню неба: имя слева, «×» в правом верхнем углу (32 px, на сенсорном экране 44 px — controls.css) */
+.skymenu .wp-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.skymenu .wp-head p {
+  margin: 4px 0 0;
+}
+.skymenu .wp-head .close {
+  flex: none;
+  margin: -6px -8px 0 0;
+}
+.skymenu .wp-head.wp-first {
+  align-items: center;
+  margin: 0;
 }

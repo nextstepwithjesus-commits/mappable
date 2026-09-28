@@ -23,9 +23,15 @@
  *  — верхний край промежутка рождения — не позже смерти и первого засвидетельствованного события (MAP-53);
  *  — у народов и родов нет года рождения: named (CARD-59).
  *
+ * Этап 7, круг 3 (L1; решение владельца 38):
+ *  — у лица Нового Завета без чисел текста с промежутком рождения шире 40 лет знак стоит у первого засвидетельствованного
+ *    года (mark; MAP-69); тесть и тёща старше зятя на поколение (KIN_GENS; Ин 18:13);
+ *  — начало служения и царствования — не моложе наименьшего возраста роли (ROLE_MIN_AGE; MAP-53);
+ *  — лицо живо в год каждого своего события с годом; свой год смерти не сдвигается округлением рождения (dAge; CARD-79).
+ *
  * Все годы внутри — астрономические.
  */
-import type { Person, Epoch } from '../data/types.ts';
+import type { Person, Epoch, Role } from '../data/types.ts';
 import { type Graph, fatherOf, motherOf, primaryChildren } from './graph.ts';
 import { toAstro, yearsWord, formatYear } from './years.ts';
 import { modelEpochs } from './epochs.ts';
@@ -156,6 +162,20 @@ export interface PersonChrono {
    * кончается правдоподобная часть следа (рождение + предел жизни эпохи); дальше — «//» и пунктир до последнего события.
    */
   brk?: number;
+  /**
+   * Год смерти выведен из рождения по возрасту при смерти, названному текстом (true), или свой — явный год, допустимый
+   * интервал, решатель (false). Показ округляет оценку рождения и сдвигает вместе с ней только смерть по возрасту
+   * (engine/years.ts, shownYears; CARD-79). Только при d ≠ null.
+   */
+  dAge?: boolean;
+  /**
+   * Год знака на небе (этап 7, круг 3; MAP-69; решение владельца 38): у оценки без чисел текста с промежутком рождения
+   * шире WIDE_BIRTH лет — первый год, когда лицо заведомо живо: начало служения или царствования, событие с годом,
+   * свой год смерти или начало допустимого интервала смерти. Знак и след стоят от него (engine/layout.ts: t0 = mark),
+   * а промежуток рождения bLo…bHi остаётся в данных — растушёванной полосой влево от знака. b — по-прежнему оценка
+   * рождения (карточка, современники, порядок братьев). Нет — знак в год рождения.
+   */
+  mark?: number;
 }
 
 export interface ChronoResult {
@@ -212,6 +232,63 @@ const SIB_W = 2;
 const SIB_STEP_CROSS = 1.25;
 /** Родитель при рождении ребёнка не моложе (MAP-53; та же граница, что у решателя для отцов). */
 const PARENT_MIN_AGE = 13;
+/**
+ * Наименьший возраст начала засвидетельствованной деятельности (этап 7, круг 3; MAP-53): без него промежуток рождения
+ * пророка кончался в год его служения, и пророк мог «родиться» за 4 года до гибели (Валаам). Возраст — наименьший,
+ * какой называет Писание для такой деятельности:
+ *  — царь, царица, иноземный правитель: наименьший возраст при воцарении в данных (reign.ageAtStart; считается из данных,
+ *    minReignAge) — Иоас воцарился семи лет (4 Цар 11:21; 2 Пар 24:1);
+ *  — священник, первосвященник, левит: 20 лет — левиты отправляли служение «от двадцати лет и выше» (1 Пар 23:24, 27;
+ *    Езд 3:8);
+ *  — вождь (начальник колена, военачальник): 20 лет — исчисление «от двадцати лет и выше, всех годных для войны» (Чис 1:3);
+ *  — пророк, судья, апостол: 12 лет — самое раннее самостоятельное действие, которое текст называет с возрастом: Иисус
+ *    двенадцати лет в храме «посреди учителей» (Лк 2:42–47). Та же граница прежде стояла у решателя для всякой
+ *    засвидетельствованной деятельности (ACTIVE_MIN_AGE).
+ * У лиц без этих ролей событие засвидетельствовано в любом возрасте (0), а решатель, как прежде, слабо держит рождение
+ * не позже чем за ACTIVE_MIN_AGE лет до начала деятельности.
+ */
+const ACTIVE_MIN_AGE = 12;
+const ROLE_MIN_AGE: [Role[], number][] = [
+  [['priest', 'high-priest', 'levite', 'tribal-leader', 'commander'], 20],
+  [['prophet', 'judge', 'apostle'], ACTIVE_MIN_AGE],
+];
+const KING_ROLES: Role[] = ['king', 'queen', 'foreign-ruler'];
+/** Наименьший возраст начала деятельности лица по его ролям; null — ролей с таким возрастом нет. */
+export function roleMinAge(p: Person, minReignAge: number): number | null {
+  const roles = p.roles ?? [];
+  let out: number | null = null;
+  for (const [rs, age] of ROLE_MIN_AGE) if (rs.some((r) => roles.includes(r))) out = Math.max(out ?? 0, age);
+  if (out === null && KING_ROLES.some((r) => roles.includes(r))) out = minReignAge;
+  return out;
+}
+/** Наименьший возраст при воцарении в данных (Иоас — семи лет, 4 Цар 11:21); без чисел в данных — 7. */
+export function minReignAgeOf(g: Graph): number {
+  let m = Infinity;
+  for (const p of g.persons.values()) for (const r of p.chrono?.reign ?? []) if (r.ageAtStart !== undefined) m = Math.min(m, r.ageAtStart);
+  return Number.isFinite(m) ? m : 7;
+}
+/**
+ * Знак у первого засвидетельствованного года (этап 7, круг 3; MAP-69; решение владельца 38): у оценки без чисел текста,
+ * у которой промежуток рождения шире WIDE_BIRTH лет, знак на небе стоит не в середине промежутка, а у первого года,
+ * когда лицо заведомо живо (PersonChrono.mark). Иначе два десятка лиц Нового Завета с промежутком в 70 лет (Пётр,
+ * Пилат, Анна, Каиафа…) стояли острыми звёздами в одном столбце у Рождества.
+ */
+export const WIDE_BIRTH = 40;
+/**
+ * Правило знака у первого засвидетельствованного года — для лиц Нового Завета (решение 38 принято о них): первое
+ * свидетельство не раньше начала этой эпохи, где ветхозаветное повествование уже кончилось («Межзаветное время»:
+ * Захария и Елисавета, Лк 1:5–25; Ирод; затем Евангелия и Деяния). В Ветхом Завете то же правило поставило бы в столбец
+ * десятки лиц одного списка (сыновья Емана при Давиде, 1 Пар 25) и сдвинуло бы всех царей Израиля к воцарению —
+ * это отдельный вопрос владельцу.
+ */
+const MARK_FROM_EPOCH = 'intertestamental';
+/**
+ * Родство поколений словами Писания (kin; этап 7, круг 3; MAP-69): на сколько поколений лицо старше названного.
+ * Мягкое правило решателя, как притяжение «родитель — ребёнок»: «Анна… тесть Каиафе» (Ин 18:13) — на поколение старше
+ * зятя; «тёща Симона» (Мф 8:14) — старше Симона. Только родство в свойстве (через брак), где графа родителей нет:
+ * дядя, тётка и бабка в данных уже связаны с племянником через родителей, и второе притяжение их бы только сдвинуло.
+ */
+const KIN_GENS: Record<string, number> = { тесть: 1, тёща: 1, свёкор: 1, свекровь: 1, зять: -1, невестка: -1, сноха: -1 };
 /**
  * Гаусс — Зейдель: предел проходов и сдвиг, при котором проходы останавливаются. Это только начальное приближение:
  * решение доводит newtonPolish (при 100 и 400 проходах результат один и тот же — до десятых долей года).
@@ -649,14 +726,15 @@ function whenSpans(o: {
   };
 }
 
-/** Первый засвидетельствованный год лица без дат: начало служения (рождение — не позже чем за 12 лет, как у решателя)
- *  или царствования (возраст при воцарении не назван — рождение не позже начала). */
-function attestedFrom(p: Person): { from: number; minAge: number; refs: string[] } | null {
+/** Первый засвидетельствованный год лица без дат: начало служения (рождение — не позже чем за ACTIVE_MIN_AGE лет,
+ *  как у решателя, или за наименьший возраст его роли) или царствования (возраст при воцарении не назван — рождение
+ *  не позже чем за наименьший возраст при воцарении в данных; MAP-53). */
+function attestedFrom(p: Person, minReignAge: number): { from: number; minAge: number; refs: string[] } | null {
   const c = p.chrono;
-  if (c?.active) return { from: toAstro(c.active.from), minAge: 12, refs: c.active.refs ?? [] };
+  if (c?.active) return { from: toAstro(c.active.from), minAge: Math.max(ACTIVE_MIN_AGE, roleMinAge(p, minReignAge) ?? 0), refs: c.active.refs ?? [] };
   if (c?.reign?.length) {
     const r = [...c.reign].sort((a, b) => a.start - b.start)[0];
-    return { from: toAstro(r.start), minAge: r.ageAtStart ?? 0, refs: r.refs };
+    return { from: toAstro(r.start), minAge: r.ageAtStart ?? minReignAge, refs: r.refs };
   }
   return null;
 }
@@ -752,6 +830,7 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
   const explicit: { key: string; value: number; cls: DateClass; refs: string[]; who: string }[] = [];
   const epochById = new Map(epochs.map((e) => [e.id, e]));
   const lxx = modelId === 'lxx';
+  const minReignAge = minReignAgeOf(g);
 
   // --- 1. жёсткие равенства
   const equal = (a: string, b: string, delta: number, refs: string[], who: string[], what: string) => {
@@ -850,6 +929,7 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
   const coupleNorm = (a: string, b: string) => normFor(guessEpoch(a) ?? guessEpoch(b));
   const sibSeen = new Set<string>();
   const sibPairs: [string, string, number][] = [];
+  const kinSeen = new Set<string>();
 
   for (const id of g.order) {
     const p = g.persons.get(id)!;
@@ -877,13 +957,23 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
     // годы засвидетельствованной жизни
     if (c?.active) {
       const n = normFor(c.epoch ?? null);
-      ineqs.push({ i: B(id), j: `@${toAstro(c.active.from)}`, delta: 12, w: 2, kind: 'ge' }); // b ≤ from − 12
+      // b ≤ from − наименьший возраст: 12 лет, у священника, левита и вождя — 20 (ROLE_MIN_AGE; MAP-53)
+      const minAge = Math.max(ACTIVE_MIN_AGE, roleMinAge(p, minReignAge) ?? 0);
+      ineqs.push({ i: B(id), j: `@${toAstro(c.active.from)}`, delta: minAge, w: 2, kind: 'ge' });
       ineqs.push({ i: B(id), j: `@${toAstro(c.active.from)}`, delta: Math.min(35, n.g + 5), w: 0.003, kind: 'eq' }); // обычно — за поколение до служения
       ineqs.push({ i: `@${toAstro(c.active.to)}`, j: B(id), delta: -n.lifeMax, w: 2, kind: 'ge' }); // b ≥ to − lifeMax
       ineqs.push({ i: `@${toAstro(c.active.to)}`, j: D(id), delta: 0, w: 2, kind: 'ge' }); // d ≥ to: умер не раньше последнего засвидетельствованного года
     }
+    // события с годом (CARD-79): лицо живо в год события — родилось не позже и умерло не раньше
+    for (const e of p.card?.events ?? []) {
+      if (e.year === undefined) continue;
+      ineqs.push({ i: B(id), j: `@${toAstro(e.year)}`, delta: 0, w: 2, kind: 'ge' }); // b ≤ год события
+      ineqs.push({ i: `@${toAstro(e.year)}`, j: D(id), delta: 0, w: 2, kind: 'ge' }); // d ≥ год события
+    }
     for (const r of c?.reign ?? []) {
-      ineqs.push({ i: B(id), j: `@${toAstro(r.start)}`, delta: 0, w: 2, kind: 'ge' });
+      // возраст при воцарении не назван — не моложе наименьшего возраста при воцарении в данных (Иоас — семи лет,
+      // 4 Цар 11:21; MAP-53); назван — число текста уже задаёт год рождения
+      ineqs.push({ i: B(id), j: `@${toAstro(r.start)}`, delta: r.ageAtStart ?? minReignAge, w: 2, kind: 'ge' });
       ineqs.push({ i: `@${toAstro(r.end)}`, j: D(id), delta: -1, w: 2, kind: 'ge' }); // d ≥ конец царствования − 1
       if (r.ageAtStart === undefined) {
         // возраст при воцарении не назван: рождение не раньше «конец царствования − предел жизни»
@@ -949,6 +1039,19 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
       const lo = hw ? band.lo : band.hi;
       ineqs.push({ i: B(s.a), j: B(s.b), delta: -lo, w: SPOUSE_BAND_W / (n.sigma * n.sigma), kind: 'ge' });
       ineqs.push({ i: B(s.a), j: B(s.b), delta: band.hi, w: SPOUSE_BAND_W / (n.sigma * n.sigma), kind: 'le' });
+    }
+    // родство в свойстве словами Писания (KIN_GENS; MAP-69): «Анна… тесть Каиафе» (Ин 18:13) — старше зятя на поколение.
+    // Притяжение — как у пары «родитель — ребёнок», граница «старший не моложе младшего» — как у супругов; толкование
+    // («зять (по толкованию Лк 3:23)») не в счёт
+    for (const k of p.kin ?? []) {
+      const gs = KIN_GENS[k.rel];
+      if (!gs || k.cert === 'interpretation' || !g.persons.has(k.id)) continue;
+      const [older, younger] = gs > 0 ? [id, k.id] : [k.id, id];
+      if (kinSeen.has(`${older}|${younger}`)) continue;
+      kinSeen.add(`${older}|${younger}`);
+      const n = normFor(guessEpoch(older) ?? guessEpoch(younger));
+      ineqs.push({ i: B(older), j: B(younger), delta: n.g * Math.abs(gs), w: 1 / (n.sigma * n.sigma), kind: 'eq' });
+      ineqs.push({ i: B(older), j: B(younger), delta: 0, w: SPOUSE_BAND_W / (n.sigma * n.sigma), kind: 'ge' });
     }
   }
 
@@ -1148,6 +1251,9 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
   bfs(distUp, (id) => (g.childrenOf.get(id) ?? []).map((e) => e.child)); // от датированных предков вниз
   bfs(distDown, (id) => (g.parentsOf.get(id) ?? []).map((e) => e.parent)); // от датированных потомков вверх
 
+  // знак у первого засвидетельствованного года (MAP-69) — у лиц, засвидетельствованных не раньше MARK_FROM_EPOCH
+  const markEpoch = mEpochById.get(MARK_FROM_EPOCH);
+  const markFrom = markEpoch ? toAstro(markEpoch.start) : Infinity;
   // скобка «время не установлено» (MAP-52): годы засвидетельствованной деятельности или эпохи, звезда — в середине
   const whenOf = whenSpans({ g, epochs: mEpochs, cls, b: (x) => val(B(x))!, d: (x) => (hasDeathData(x) ? val(D(x))! : null) });
 
@@ -1224,13 +1330,15 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
       last = last === null ? y : Math.max(last, y);
       first = Math.min(first, y - minAge);
     };
+    // начало служения и царствования — не моложе наименьшего возраста роли (ROLE_MIN_AGE; MAP-53): пророк не «рождается»
+    // за 4 года до гибели; без такой роли — упоминание в любом возрасте
     if (c?.active) {
       bump(toAstro(c.active.to));
-      first = Math.min(first, toAstro(c.active.from));
+      first = Math.min(first, toAstro(c.active.from) - (roleMinAge(p, minReignAge) ?? 0));
     }
     for (const r of c?.reign ?? []) {
       bump(toAstro(r.end));
-      first = Math.min(first, toAstro(r.start));
+      first = Math.min(first, toAstro(r.start) - (r.ageAtStart ?? minReignAge));
     }
     for (const e of p.card?.events ?? []) if (e.year !== undefined) bump(toAstro(e.year));
     for (const e of p.card?.events ?? []) if (e.age !== undefined) bump(b + e.age, e.age);
@@ -1251,11 +1359,22 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
     }
     const dEst = d ?? Math.max(last ?? -Infinity, b + n.life);
     const named = p.kind === 'people' || p.kind === 'clan';
+    // знак у первого засвидетельствованного года (MAP-69; решение 38): год, когда лицо заведомо живо, — начало служения
+    // или царствования, событие с годом, свой год смерти, начало допустимого интервала смерти («умер между 30 и 34»)
+    let attest = Infinity;
+    if (c?.active) attest = Math.min(attest, toAstro(c.active.from));
+    for (const r of c?.reign ?? []) attest = Math.min(attest, toAstro(r.start));
+    for (const e of p.card?.events ?? []) if (e.year !== undefined) attest = Math.min(attest, toAstro(e.year));
+    if (d !== null && !sameRoot && fixed.has(rd.root)) attest = Math.min(attest, d);
+    if (c?.died?.range) attest = Math.min(attest, toAstro(c.died.range[0]));
+    const mark = k === 'estimated' && !named && !infant && bHi - bLo > WIDE_BIRTH && attest >= markFrom && Number.isFinite(attest) && attest > b ? attest : undefined;
     persons.set(id, {
       b, bLo, bHi, d, dLo, dHi, lastAttested: last, dEst, cls: k, epoch: ep?.id ?? null,
       ...(infant ? { infant } : {}),
       ...(named ? { named } : {}),
       ...(bracket ? { when: bracket.when } : {}),
+      ...(d !== null ? { dAge: sameRoot } : {}),
+      ...(mark !== undefined ? { mark } : {}),
     });
   }
 
@@ -1377,7 +1496,7 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
       // предок без дат, но с засвидетельствованными годами (служение, царствование): «Салмон → Давид» (ТЗ § 3.6; MAP-51).
       // Рождение такого предка — не позже начала служения без 12 лет (как у решателя), поэтому цепочка до датированного
       // потомка не короче me.b − (from − 12). Если и это больше поколений эпох цепочки — напряжение; иначе идём выше.
-      const act = attestedFrom(g.persons.get(f)!);
+      const act = attestedFrom(g.persons.get(f)!, minReignAge);
       if (act && steps >= 2) {
         const bMax = act.from - act.minAge;
         const total = me.b - bMax;

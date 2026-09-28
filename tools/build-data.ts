@@ -388,9 +388,11 @@ const models = results.map((res) => ({
     // A14: интервал смерти и «умер младенцем»; этап 7 (K1): признаки (1 — народ или род без года рождения, CARD-59;
     // 2 — год по порядку перечисления братьев, MAP-54) и откуда скобка «время не установлено» (MAP-52).
     // Только если есть (atlas.ts восстанавливает null, false и undefined)
-    const flags = (c.named ? 1 : 0) | (c.byOrder ? 2 : 0);
+    // этап 7, круг 3: 4 — свой год смерти, не по возрасту (dAge = false; CARD-79); год знака у первого засвидетельствованного
+    // года (MAP-69) — 14-м полем, разностью от рождения
+    const flags = (c.named ? 1 : 0) | (c.byOrder ? 2 : 0) | (c.dAge === false ? 4 : 0);
     const when = c.when ? `${WHEN_CODE[c.when.by]}${c.when.id ? `:${c.when.id}` : c.when.ref ? `:${c.when.ref}` : ''}` : null;
-    const extra: unknown[] = [c.infant ? 1 : 0, flags, when];
+    const extra: unknown[] = [c.infant ? 1 : 0, flags, when, c.mark === undefined ? null : yr(c.mark) - b];
     let k = extra.length;
     while (k > 0 && (extra[k - 1] === 0 || extra[k - 1] === null)) k--;
     if (c.dLo !== null || k > 0) row.push(rel(c.dLo), rel(c.dHi), ...extra.slice(0, k));
@@ -404,7 +406,8 @@ const models = results.map((res) => ({
   })(),
   layout: {
     // [лицо (для призрака — −(номер+1)), полоса, t0 − рождение, t1 − t0, блок, полоса родителя, родитель раскладки, спутник чего, хребет, след,
-    //  разрыв следа − t0 (MAP-51; только если есть)]
+    //  разрыв следа − t0 (MAP-51; только если есть, иначе null перед полосой рождения),
+    //  полоса рождения [начало − t0, конец − t0] и оценка рождения − t0 (MAP-69; только у знака у первого свидетельства)]
     // t1 — конец рисуемого следа (layout.ts, п. 7); след — номер в TRAIL_KINDS: life, people, infant, list, ghost, epochal
     nodes: res.layout.nodes.map((n) => {
       const ghost = n.id.startsWith('ghost:');
@@ -412,7 +415,8 @@ const models = results.map((res) => ({
       const k = personIndex.get(person)!;
       const b = yr(res.chrono.persons.get(person)?.b ?? 0); // так же считает atlas.ts
       const row = [ghost ? -(k + 1) : k, n.lane, yr(n.t0) - b, yr(n.t1) - yr(n.t0), n.block, n.parentLane, pi(n.layoutParent), pi(n.satelliteOf), n.spine ? 1 : 0, TRAIL_KINDS.indexOf(n.trail)];
-      if (n.brk !== undefined) row.push(yr(n.brk) - yr(n.t0));
+      if (n.brk !== undefined || n.band) row.push(n.brk === undefined ? null : yr(n.brk) - yr(n.t0));
+      if (n.band) row.push(yr(n.band[0]) - yr(n.t0), yr(n.band[1]) - yr(n.t0), yr(n.born!) - yr(n.t0));
       return row;
     }),
     // у скоплений (E2) — cluster: годы в десятых долях года, как у контуров
@@ -491,6 +495,13 @@ const parentRefsBy = (p: Person): { father: string[]; mother: string[] } | null 
   return s;
 };
 
+// встречи, записанные у других лиц (§ 14; CARD-80): в карточку того, с кем встреча, — metBy, чтобы § 14 не зависел
+// от того, какие тома уже загружены (L8a, обход 2 660 карточек)
+const metByOf = new Map<string, { id: string; text?: string; refs: string[] }[]>();
+for (const v of volumes)
+  for (const p of v.persons)
+    for (const mt of p.card?.met ?? []) metByOf.set(mt.id, [...(metByOf.get(mt.id) ?? []), { id: p.id, ...(mt.text ? { text: mt.text } : {}), refs: mt.refs }]);
+
 for (const v of volumes) {
   const cards: Record<string, unknown> = {};
   for (const p of v.persons) {
@@ -498,6 +509,8 @@ for (const v of volumes) {
     for (const s of card.sayings ?? []) s.quote = typo(s.quote);
     const split = parentRefsBy(p);
     if (split) card.parentRefsBy = split;
+    const metBy = metByOf.get(p.id);
+    if (metBy?.length) card.metBy = metBy;
     const mentions = mentionsOf.get(p.id);
     cards[p.id] = { card, chrono: p.chrono ?? null, books: booksOf.get(p.id) ?? {}, ...(mentions ? { mentions } : {}) };
   }

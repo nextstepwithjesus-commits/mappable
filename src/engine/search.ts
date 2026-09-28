@@ -5,6 +5,7 @@
  */
 import { norm, nameMatcher, stripBrackets } from './text.ts';
 import { BOOKS, parseRef, verseId } from './books.ts';
+import { GAPS, VERSES } from './verseCounts.ts';
 import type { Card, Chrono } from '../data/types.ts';
 
 const EN = "qwertyuiop[]asdfghjkl;'zxcvbnm,.`";
@@ -123,6 +124,35 @@ export function parseQueryRef(raw: string): QueryRef | null {
   return { ref, book, chapter, verses: p.verses.map(verseId) };
 }
 
+// ---------- есть ли такая глава и такой стих (IX-82, UX-82) ----------
+
+/** Число глав книги (по канонической таблице src/engine/verseCounts.ts). */
+export const chapterCount = (book: string): number => VERSES[book]?.length ?? 0;
+/** Номер последнего стиха главы; 0 — такой главы нет. */
+export const verseCount = (book: string, ch: number): number => VERSES[book]?.[ch - 1] ?? 0;
+/** Есть ли стих в каноническом тексте: в пределах главы и не в пропуске (Дан 3:24–90 — ТЗ П-1). */
+export function verseExists(book: string, ch: number, v: number): boolean {
+  if (v < 1 || v > verseCount(book, ch)) return false;
+  const gap = GAPS[`${book} ${ch}`];
+  return !gap || v < gap[0] || v > gap[1];
+}
+
+/**
+ * Чего нет в ссылке запроса: главы («Мф 29») или ни одного из стихов («Быт 5:40», «Дан 3:30»). null — ссылка верна
+ * (в диапазоне «Быт 5:30-40» есть хоть один стих — ищутся существующие).
+ */
+export type RefProblem =
+  | { kind: 'chapter'; book: string; chapters: number }
+  | { kind: 'verse'; book: string; chapter: number; last: number; gap: readonly [number, number] | null };
+export function refProblem(r: QueryRef): RefProblem | null {
+  const n = chapterCount(r.book);
+  if (!n) return null;
+  if (r.chapter < 1 || r.chapter > n) return { kind: 'chapter', book: r.book, chapters: n };
+  if (!r.verses.length) return null;
+  const ok = r.verses.some((k) => verseExists(r.book, r.chapter, Number(k.slice(k.lastIndexOf(':') + 1))));
+  return ok ? null : { kind: 'verse', book: r.book, chapter: r.chapter, last: verseCount(r.book, r.chapter), gap: GAPS[`${r.book} ${r.chapter}`] ?? null };
+}
+
 // ---------- традиционные именования (решение владельца 13) ----------
 
 /**
@@ -207,6 +237,8 @@ export interface SearchDoc {
   refs: string[];
   kind?: string;
   unnamed?: boolean;
+  /** роли словами («царь», «пророк», «апостол»): поиск по словам находит «царь Давид», «пророк Илия» (IX-71) */
+  roles?: string[];
 }
 
 /**
@@ -218,6 +250,28 @@ export type HitVia = 'name' | 'alt' | 'disambig' | 'verse' | 'cited' | 'traditio
 /** Нарицательные слова в начале иного имени: такое имя ищется в тексте только целиком. */
 const COMMON_HEAD = /^(сын|дочь|жена|муж|отец|мать|брат|сестра|царь|царица|раб|раба|дева|вдова|сыны|сыновья|дочери)$/;
 
+/**
+ * Слова родства в уточнениях («сын Иессея», «муж Марии», «брат Иакова») — в формах, как их набирает читатель.
+ * Одно такое слово запроса не находит лиц по уточнению и иным именам (IX-55): «Сын» — не Давид («Сын Иессеев»),
+ * не Иисус Навин («Иисус, сын Навин») и не Иаков («сын Исаака»), а только лица, чьё имя с него начинается
+ * («Сын Израильтянки»). В запросе из нескольких слов слово родства сверяется целиком, вместе с именем (IX-71).
+ */
+const KIN_WORDS = new Set(
+  (
+    'сын сына сыну сыном сыне сыны сынов сыновья сыновей дочь дочери дочерью дочерей дочерям отец отца отцу отцом отце ' +
+    'мать матери матерью жена жены жене женой женою жен муж мужа мужу мужем мужья брат брата брату братом братья братьев ' +
+    'сестра сестры сестре сестрой сестер внук внука внуки внучка дед деда прадед тесть тестя свекор свекра свекровь свекрови ' +
+    'сноха снохи невестка невестки зять зятя племянник племянника племянница дядя дяди тетка вдова вдовы первенец первенца ' +
+    'потомок потомка потомки наложница наложницы мачеха теща тещи родственник родственника родственница раб раба рабыня слуга служанка'
+  ).split(' '),
+);
+/** Предлоги и частицы: в запросе из нескольких слов не сверяются («Иосиф из Аримафеи»), одно такое слово — служебное. */
+const STOP_WORDS = new Set('и в во с со на по у к ко о об обо от из изо при до за для же он она оно они тот та то а но ли'.split(' '));
+/** Слово родства (в любой форме из KIN_WORDS). */
+export const kinWord = (w: string): boolean => KIN_WORDS.has(norm(w));
+/** Служебное слово уточнения: слово родства, предлог или частица (IX-55). */
+export const serviceWord = (w: string): boolean => kinWord(w) || STOP_WORDS.has(norm(w));
+
 export interface SearchHit {
   id: string;
   score: number;
@@ -225,6 +279,13 @@ export interface SearchHit {
   via: HitVia;
   /** традиционное именование, которому отвечает лицо (via = 'tradition') */
   tradition?: string;
+  /** запрос совпал с именем или иной формой целиком (или с первым словом имени, или с его косвенной формой) */
+  strong?: boolean;
+  /**
+   * По всем словам запроса никого нет, найдено по одному слову — имени (IX-71): «Иосиф муж Рахили» — «По всем словам
+   * ничего; по имени «Иосиф» — 10 лиц». Значение — имя, как оно записано в атласе.
+   */
+  partial?: string;
 }
 
 /**
@@ -266,6 +327,31 @@ function matchClass(x: Form, q: string, qs: string[], qWords: string[]): number 
   if (x.words.some((w, i) => w.startsWith(q) || share(x.wordSt[i], qs))) return WORD;
   if (q.length >= 3 && x.f.includes(q)) return PART;
   return NONE;
+}
+
+/** Слова лица для поиска по словам: своё имя, иные имена, уточнение и роли. */
+interface Bag {
+  own: BagWord[];
+  alt: BagWord[];
+  other: BagWord[];
+}
+/** Слово лица; rel — стоит в имени после слова родства или предлога и называет родню («Жена Лота»). */
+interface BagWord {
+  w: string;
+  st: string[];
+  rel: boolean;
+  /** предыдущее слово той же части имени или уточнения */
+  prev: string | null;
+  prevSt: string[];
+}
+/** Слово запроса: kin — слово родства; rel — стоит после слова родства или предлога и называет родню. */
+interface QWord {
+  w: string;
+  st: string[];
+  kin: boolean;
+  rel: boolean;
+  /** служебное слово перед ним: «сын» в «сын Давида», «из» в «Иосиф из Аримафеи» */
+  after: { w: string; st: string[]; kin: boolean } | null;
 }
 
 /** Место лица в стихе или главе: упомянуто ли по имени (pos — номер слова) и ссылается ли на стих карточка. */
@@ -461,12 +547,20 @@ export class SearchIndex {
   search(raw: string, limit = 30): SearchHit[] {
     const q0 = raw.trim();
     if (!q0) return [];
-    // ссылка на стих или главу: «Руф 4:21», «руф 4», «Лк 3:23-25»
+    // ссылка на стих или главу: «Руф 4:21», «руф 4», «Лк 3:23-25»; главы или стиха нет — никого (IX-82)
     const ref = parseQueryRef(q0);
-    if (ref) return this.byRef(ref).slice(0, Math.max(limit, 300));
+    if (ref) {
+      if (refProblem(ref)) return [];
+      const verses = ref.verses.filter((k) => verseExists(ref.book, ref.chapter, Number(k.slice(k.lastIndexOf(':') + 1))));
+      return this.byRef({ ...ref, verses }).slice(0, Math.max(limit, 300));
+    }
     const q = norm(fixLayout(q0));
     const qs = stems(q);
     const qWords = q.split(/\s+/).filter(Boolean);
+    // слова запроса без знаков препинания: «Иосиф, муж Марии» — три слова
+    const words = q.split(/[^а-я]+/).filter(Boolean);
+    // одно служебное слово (IX-55): только имена, которые с него начинаются, — не уточнения и не иные имена
+    const service = words.length === 1 && serviceWord(words[0]);
     const hits: SearchHit[] = [];
     this.docs.forEach((d, i) => {
       // лучший класс по имени и иным формам; при равном классе имя важнее иной формы
@@ -474,14 +568,16 @@ export class SearchIndex {
       let alt = 1;
       let matched = '';
       for (const x of this.forms[i]) {
+        if (service && x.alt) continue;
         const c = matchClass(x, q, qs, qWords);
+        if (service && c > STEM) continue;
         if (c < cls || (c === cls && x.alt < alt)) {
           cls = c;
           alt = x.alt;
           matched = x.raw;
         }
       }
-      if (cls === NONE && d.disambig) {
+      if (cls === NONE && d.disambig && !service) {
         const f = norm(d.disambig);
         if (q.length >= 3 && (f.includes(q) || f.split(/[\s,]+/).some((w) => share(stems(w), qs)))) {
           cls = BY_DISAMBIG;
@@ -492,21 +588,115 @@ export class SearchIndex {
       if (cls === NONE) return;
       // значимость: ярче звезда — выше; величина 0–6, prominence 1–5 (5 — главные лица)
       const mag = d.magnitude ?? 6 - d.prominence;
-      hits.push({ id: d.id, score: (NONE - cls) * 1000 + (1 - alt) * 100 + (6 - mag) * 10 + d.prominence, matched, via: cls === BY_DISAMBIG ? 'disambig' : alt ? 'alt' : 'name' });
+      const via = cls === BY_DISAMBIG ? 'disambig' : alt ? 'alt' : 'name';
+      hits.push({ id: d.id, score: (NONE - cls) * 1000 + (1 - alt) * 100 + (6 - mag) * 10 + d.prominence, matched, via, ...(cls <= STEM ? { strong: true } : {}) });
     });
+    // несколько слов (IX-71): каждое — начало слова имени, иной формы, уточнения или роли
+    if (words.length > 1) {
+      const seen = new Map(hits.map((h, k) => [h.id, k]));
+      for (const h of this.byWords(words)) {
+        const k = seen.get(h.id);
+        if (k === undefined) hits.push(h);
+        else if (h.score > hits[k].score) hits[k] = h;
+      }
+    }
     hits.sort((a, b) => b.score - a.score);
     // традиционное именование — первым, с синодальной формой (решение владельца 13)
     const trad = traditionOf(q0);
     if (trad && this.byId.has(trad.id)) {
       const rest = hits.filter((h) => h.id !== trad.id);
-      return [{ id: trad.id, score: 100_000, matched: trad.name, via: 'tradition' as const, tradition: trad.name }, ...rest].slice(0, limit);
+      return [{ id: trad.id, score: 100_000, matched: trad.name, via: 'tradition' as const, tradition: trad.name, strong: true }, ...rest].slice(0, limit);
     }
-    // по имени ничего близкого — опечатки: «Навуходонасор» → «Навуходоносор»
-    if (!hits.some((h) => h.score >= (NONE - WORD) * 1000)) {
+    // по всем словам никого — лица по одному слову-имени: «По всем словам ничего; по имени «Иосиф» — 10 лиц» (IX-71)
+    if (words.length > 1 && !hits.length) return this.byNameWord(words, limit);
+    // по имени ничего близкого — опечатки: «Навуходонасор» → «Навуходоносор»; служебное слово опечаткой не считается
+    if (!service && !hits.some((h) => h.score >= (NONE - WORD) * 1000)) {
       const fuzzy = this.fuzzy(q);
       if (fuzzy.length) return [...fuzzy, ...hits.filter((h) => !fuzzy.some((f) => f.id === h.id))].slice(0, limit);
     }
     return hits.slice(0, limit);
+  }
+
+  /** Слова лица для поиска по словам: имя, иные имена, уточнение и роли — с основами (строится при первой нужде). */
+  private bags: (Bag | undefined)[] = [];
+  private bag(i: number): Bag {
+    let b = this.bags[i];
+    if (!b) {
+      const d = this.docs[i];
+      // слово имени после слова родства или предлога называет родню: «Тёща Симона», «Жена Лота»
+      const split = (s: string): BagWord[] =>
+        norm(s)
+          .split(/[^а-я]+/)
+          .filter(Boolean)
+          .map((w, k, all) => ({ w, st: stems(w), rel: k > 0 && serviceWord(all[k - 1]), prev: k > 0 ? all[k - 1] : null, prevSt: k > 0 ? stems(all[k - 1]) : [] }));
+      // части уточнения — через запятую: «царь Израиля, сын Иессея» — «Израиля» не стоит после «сын»
+      const parts = (s: string) => s.split(/[,;]/).flatMap(split);
+      b = { own: split(d.name), alt: d.alt.flatMap(parts), other: [d.disambig, ...(d.roles ?? [])].flatMap(parts) };
+      this.bags[i] = b;
+    }
+    return b;
+  }
+
+  /**
+   * Поиск по словам (IX-71): лицо подходит, если каждое слово запроса совпадает с началом слова его имени, иной формы,
+   * уточнения или роли (с учётом окончаний: «Марии» — «Мария»). Предлоги не сверяются; слово родства («сын», «муж»)
+   * совпадает только целиком. Слово сразу после слова родства или предлога называет родню, а не само лицо: «сын Иессея»
+   * ищет «Иессея» в уточнении и иных именах, но не в имени Иессея. Выше — лица, у которых с именем совпало первое
+   * слово запроса («Давид сын Иессея» — Давид, затем другие), ниже — у которых имя совпало с другим словом
+   * («царь Давид»), последними — найденные только по уточнению и роли.
+   */
+  private byWords(words: string[]): SearchHit[] {
+    const qs: QWord[] = [];
+    words.forEach((w, k) => {
+      if (STOP_WORDS.has(w)) return;
+      const prev = words[k - 1];
+      const after = prev !== undefined && serviceWord(prev) ? { w: prev, st: stems(prev), kin: kinWord(prev) } : null;
+      qs.push({ w, st: stems(w), kin: kinWord(w), rel: !!after, after });
+    });
+    const lead = qs.find((x) => !x.kin && !x.rel);
+    // одни служебные слова — не запрос: «сын», «жена из» (IX-55)
+    if (!qs.some((x) => !x.kin)) return [];
+    // слово после родства или предлога совпадает только там, где перед ним то же слово родства: «сын Давида» —
+    // Авессалом («сын Давида»), но не Иессей («сын Овида, отец Давида») и не Иоав («племянник Давида»)
+    const hit = (x: BagWord, q: QWord) =>
+      (q.kin ? share(x.st, q.st) : x.w.startsWith(q.w) || share(x.st, q.st)) &&
+      (!q.after || (x.prev !== null && (q.after.kin ? share(x.prevSt, q.after.st) : x.prev === q.after.w)));
+    const out: SearchHit[] = [];
+    this.docs.forEach((d, i) => {
+      const b = this.bag(i);
+      let named = 0;
+      let first = false;
+      for (const q of qs) {
+        // имя лица — слова имени и иных имён, кроме названий родни в них; слово запроса после родства ищется только
+        // в названиях родни, иных именах и уточнении
+        const inName = !q.rel && (b.own.some((x) => !x.rel && hit(x, q)) || b.alt.some((x) => !x.rel && hit(x, q)));
+        const inRest = !inName && (b.own.some((x) => x.rel && hit(x, q)) || (q.rel && b.alt.some((x) => hit(x, q))) || b.alt.some((x) => x.rel && hit(x, q)) || b.other.some((x) => hit(x, q)));
+        if (!inName && !inRest) return;
+        if (inName && !q.kin) {
+          named++;
+          if (q === lead) first = true;
+        }
+      }
+      const mag = d.magnitude ?? 6 - d.prominence;
+      const tier = first ? 2 : named ? 1 : 0;
+      out.push({ id: d.id, score: 3100 + tier * 300 + (6 - mag) * 10 + d.prominence, matched: named ? d.name : d.disambig, via: named ? 'name' : 'disambig' });
+    });
+    return out;
+  }
+
+  /** Никого по всем словам: лица по первому слову, совпавшему с именем целиком (IX-71). */
+  private byNameWord(words: string[], limit: number): SearchHit[] {
+    for (const w of words) {
+      if (serviceWord(w)) continue;
+      const got = this.search(w, limit).filter((h) => h.strong && (h.via === 'name' || h.via === 'alt'));
+      if (!got.length) continue;
+      // имя, как в атласе: первое слово найденной формы, если запрос — оно («Иисус», а не «Иисус Христос»)
+      const m = got[0].matched;
+      const head = m.split(/[\s,]+/)[0];
+      const name = share(stems(head), stems(w)) ? head : m;
+      return got.map((h) => ({ ...h, partial: name }));
+    }
+    return [];
   }
 
   /** Имена в пределах опечаток от запроса (по слову и по основам): сначала ближе, затем значимее. */

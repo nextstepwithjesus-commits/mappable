@@ -14,8 +14,9 @@
  */
 import { effect, signal } from '@preact/signals';
 import { skyRef } from '../common.tsx';
-import { model, onlyLines, panel, selected } from '../../state.ts';
-import { LANES_MAX, LANES_MIN, easeOut, type Axis, type ViewState } from '../../render/camera.ts';
+import { model, onlyLines, panel, pins, second, selected, skyGroup } from '../../state.ts';
+import { graph, lines } from '../../data/atlas.ts';
+import { KY_LO, LANES_MAX, LANES_MIN, easeOut, type Axis, type ViewState } from '../../render/camera.ts';
 import type { Rect } from '../../render/sky.ts';
 
 export const reduced = () => typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -140,15 +141,38 @@ export function flyToPerson(id: string) {
 }
 
 /**
- * «Всё небо» (D2; UX-05, IX-04, MOB-06): перелёт к виду, в который вписано всё небо по обеим осям.
- * В режиме «только линии Мессии» «всё небо» — это весь коридор линий (E6).
+ * Уровень чтения (решение 44; IX-68): небо мельче половины масштаба вида «лицо и несколько поколений вокруг»
+ * (viewForPerson: окно шире ≈ 2,6 жизни, не больше 900 лет) — на нём звезда лица есть, но читать вокруг неё нечего.
+ * Ссылка на лицо, поиск и «назад» к лицу тогда ведут перелёт, даже если звезда на экране.
+ */
+export const READING = 0.5;
+export function belowReading(id: string): boolean {
+  const s = skyRef.current;
+  const v = viewForPerson(id);
+  return !!s && !!v && s.cam.kx < READING * v.kx;
+}
+
+/** «Всё небо» и кнопка «Толедот» — прямой переход за столько мс, без фазы «приблизить» (IX-79). */
+export const HOME_MS = 500;
+/** «Назад» и «вперёд» — переход к окну записи истории за столько мс (решение 46; IX-74). */
+export const HISTORY_MS = 280;
+/** Выключили «только линии», небо в режиме не двигали — прежнее окно возвращается за столько мс (решение 49; IX-73). */
+export const LINES_BACK_MS = 400;
+
+/**
+ * «Всё небо» (D2; UX-05, IX-04, MOB-06): переход к виду, в который вписано всё небо по обеим осям — за 500 мс,
+ * окно растёт вокруг неподвижной точки, без «отдалить — приблизить» (IX-79). В режиме «только линии Мессии»
+ * «всё небо» — это весь коридор линий (E6).
  */
 export function showAll() {
   const s = skyRef.current;
   if (!s || !s.model) return;
   flightTarget = null;
-  if (onlyLines.peek()) return fitLines(true);
-  s.cam.flyTo(s.fitState(), skyRef.redraw, reduced());
+  if (onlyLines.peek()) {
+    fitLines(true);
+    return;
+  }
+  s.cam.zoomTo(s.fitState(), HOME_MS, skyRef.redraw, reduced());
   skyRef.redraw();
 }
 
@@ -161,13 +185,14 @@ const NAME_ROOM = 90;
  * Вид и пропорция полос, в которых вписана группа лиц (IX-53): строки сжимаются, а не отдаляется время.
  * lanes — пропорция полос (J1): множитель к обычной высоте полосы; laneTop посчитан для неё.
  */
-export type GroupView = ViewState & { lanes: number };
+export type GroupView = ViewState & { lanes: number; floor?: number };
 
 /**
  * Вид, в который вписаны все лица ids по обеим осям (E5; MAP-18, UX-11, IX-53): по времени — годы группы с местом для
- * имени справа, окно не уже minYears лет; по вертикали — строки группы не выше 80 % видимой части. Если строки не
- * помещаются, сжимается высота строки (пропорция полос, J1: до 4 px), а время остаётся; и только если и при 4 px не
- * помещаются — отдаляется время, пока не поместятся.
+ * имени справа, окно не уже minYears лет, поля по 5 %, не дальше 100 г. по Р. Х. (MAP-79); по вертикали — строки группы
+ * не выше 80 % видимой части. Если строки не помещаются, сжимается высота строки (пропорция полос, J1: до 4 px, а для
+ * группы из многих строк — временно до 1,5 px, floor), а время остаётся; и только если и так не помещаются — отдаляется
+ * время. Сжатие строк временное: своя пропорция читателя возвращается, когда отметки сняты (IX-70).
  */
 export function viewForIds(ids: readonly string[], minYears = 60): GroupView | null {
   const s = skyRef.current;
@@ -193,18 +218,34 @@ export function viewForIds(ids: readonly string[], minYears = 60): GroupView | n
   const l1 = Math.max(...pts.map((q) => s.rowOf(q.n.lane)));
   const rows = l1 - l0 + 1;
   const tMid = s.tOf((x0 + x1) / 2);
-  const span = Math.max(x1 - x0, s.xOf(tMid + minYears / 2) - s.xOf(tMid - minYears / 2));
-  const room = Math.max(40, W * 0.8 - NAME_ROOM);
   const xMid = (x0 + x1) / 2;
-  let kx = cam.clampKx(room / span, xMid);
-  const fits = (k: number, m: number) => cam.kyWith(k, m) * rows <= H * 0.8;
-  // строки — сжатием высоты строки: пропорция не больше прежней, но не ниже 4 px строки
-  let m = cam.lanes;
+  // по времени (MAP-79): годы группы, не уже minYears лет, с полями по 5 % и местом для имени справа; правый край — не
+  // дальше 100 г. по Р. Х., если группа до него кончается (после него шкала сжата, и поле в пикселях — это века)
+  const half = Math.max(x1 - x0, s.xOf(tMid + minYears / 2) - s.xOf(tMid - minYears / 2)) / 2;
+  const a = Math.min(x0, xMid - half);
+  const b = Math.max(x1, xMid + half);
+  const pad = (b - a) * GROUP_PAD;
+  const xL = a - pad;
+  let plan = Math.min(W / (b + pad - xL), Math.max(40, W - NAME_ROOM) / Math.max(1e-9, b - xL));
+  const xMax = s.xOf(GROUP_RIGHT);
+  if (b < xMax && xL + W / plan > xMax) plan = W / (xMax - xL);
+  let kx = cam.clampKx(plan, xMid);
+  const fits = (k: number, m: number, fl = floor) => cam.kyWith(k, m, fl) * rows <= H * 0.8;
+  // строки — сжатием высоты строки: пропорция не больше своей пропорции читателя (не прежней временной, IX-70), но не
+  // ниже 4 px строки
+  let floor = KY_LO;
+  let m = cam.ownLanes;
   if (!fits(kx, m)) {
     const auto = cam.kyAuto(kx);
-    m = cam.lanesAt(kx, (H * 0.8) / rows / auto);
+    const want = (H * 0.8) / rows;
+    m = cam.lanesAt(kx, want / auto);
+    // и при 4 px не помещаются — строки группы временно ниже 4 px (до GROUP_KY_MIN), а время остаётся по её годам (MAP-79)
+    if (!fits(kx, m) && want >= GROUP_KY_MIN && want < KY_LO) {
+      floor = want;
+      m = Math.max(LANES_MIN, want / auto);
+    }
   }
-  // и при 4 px не помещаются — масштаб времени уменьшается, пока не поместятся (прежний способ)
+  // и так не помещаются — масштаб времени уменьшается, пока не поместятся (прежний способ)
   if (!fits(kx, m)) {
     // высота строки растёт с масштабом: ищется самый крупный масштаб, при котором строки помещаются
     let lo = Math.min(kx, cam.kxLo());
@@ -219,10 +260,20 @@ export function viewForIds(ids: readonly string[], minYears = 60): GroupView | n
   }
   const [cx] = cam.vpCenter();
   const cy = (top + bottom) / 2;
-  // середина окна — середина группы, сдвинутая влево на половину поля для имени
-  const xc = xMid + NAME_ROOM / 2 / kx;
-  return { x0: xc - cx / kx, kx, laneTop: (l0 + l1) / 2 + cy / cam.kyWith(kx, m), lanes: m };
+  // окно по плану — от левого поля; масштаб упёрся в предел или строки не поместились — середина окна у середины группы
+  let x0cam = Math.abs(kx / plan - 1) < 1e-9 ? xL - vp.l / kx : (a + b) / 2 - cx / kx;
+  // и тогда правый край — не дальше 100 г. по Р. Х., если группа до него кончается
+  if (b < xMax && x0cam + vp.r / kx > xMax) x0cam = Math.max(xMax - vp.r / kx, b + NAME_ROOM / kx - vp.r / kx);
+  return { x0: x0cam, kx, laneTop: (l0 + l1) / 2 + cy / cam.kyWith(kx, m, floor), lanes: m, floor: floor < KY_LO ? floor : undefined };
 }
+
+/** Строки группы из многих строк — не ниже стольких px (MAP-79): ниже на них не различить звёзд. */
+export const GROUP_KY_MIN = 1.5;
+
+/** Поле окна группы по времени — доля её ширины с каждой стороны (MAP-79). */
+export const GROUP_PAD = 0.05;
+/** Правый край окна группы — не дальше 100 г. по Р. Х. (астрономический год 100; MAP-79). */
+export const GROUP_RIGHT = 100;
 
 /** Все лица ids — в видимой части неба (с полями inView). */
 export function allInView(ids: readonly string[]): boolean {
@@ -235,8 +286,49 @@ export function flyToIds(ids: readonly string[]) {
   const g = viewForIds(ids);
   if (!s || !g) return;
   flightTarget = null;
-  s.cam.flyTo(s.cam.constrain(g, g.lanes), skyRef.redraw, reduced(), g.lanes);
+  s.cam.flyTo(s.cam.constrain(g, g.lanes, g.floor), skyRef.redraw, reduced(), g.lanes, g.floor);
   skyRef.redraw();
+}
+
+/** За столько мс возвращается пропорция читателя, когда отметки сняты (IX-70). */
+export const RESTORE_MS = 250;
+/** На небе отметки поиска, группа панели (глава, участок синопсиса) или путь пары — то, ради чего сжаты строки. */
+export const groupShown = () => pins.peek().length > 0 || !!skyGroup.peek() || !!second.peek();
+
+/**
+ * Вернуть пропорцию читателя после временного сжатия строк (IX-70): выбранное лицо, если оно видно, остаётся на своей
+ * высоте, иначе — середина видимой части; время не меняется. Было ли что возвращать.
+ */
+export function restoreOwnLanes(): boolean {
+  const s = skyRef.current;
+  if (!s || !s.model || s.cam.userLanes === null) return false;
+  const p = anchorPoint();
+  if (!p) return false;
+  const done = s.cam.restoreLanes(p.y, RESTORE_MS, skyRef.redraw, reduced());
+  skyRef.redraw();
+  return done;
+}
+
+// вписывание группы сжимает строки только на время отметок (IX-70): сняли отметки, группу или пару (Escape, «снять»,
+// новый поиск, щелчок по звезде или пустому небу) — своя пропорция возвращается; идёт перелёт — после него
+if (typeof window !== 'undefined') {
+  let wait = 0;
+  effect(() => {
+    const on = pins.value.length > 0 || !!skyGroup.value || !!second.value;
+    cancelAnimationFrame(wait);
+    if (on) return;
+    const tick = (n: number) => {
+      const s = skyRef?.current;
+      // строки «только линий» — тоже временные (MAP-70): их возвращает выключение режима
+      if (!s || s.cam.userLanes === null || groupShown() || onlyLines.peek()) return;
+      if (s.cam.moving && n < 300) {
+        wait = requestAnimationFrame(() => tick(n + 1));
+        return;
+      }
+      restoreOwnLanes();
+    };
+    wait = requestAnimationFrame(() => tick(0));
+  });
 }
 
 // ---------- «только линии Мессии» (E6; MAP-23) ----------
@@ -274,32 +366,108 @@ export function linesKx(): number | null {
   return Math.max(1e-6, (vp.r - vp.l - 2 * LINES_PAD - NAME_ROOM * 1.4) / (f.x1 - f.x0));
 }
 
+/** Сколько поколений линий по обе стороны от выбранного лица показывает включение «только линии» (UX-68). */
+export const LINES_AROUND = 10;
+
+/**
+ * Лицо линий, у которого держать окно «только линии»: само лицо, если оно на линии; мать или отец лица линии (Руфь, Фамарь,
+ * Вирсавия — знак у бусины сына, решение 28) — этот ребёнок; иначе само лицо (окно — его время).
+ */
+export function lineAnchor(id: string): string {
+  const on = (x: string) => lines.joseph.persons.some((st) => st.id === x) || lines.mary.persons.some((st) => st.id === x);
+  if (on(id)) return id;
+  for (const e of graph.childrenOf.get(id) ?? []) if ((e.kind === 'father' || e.kind === 'mother') && on(e.child)) return e.child;
+  return id;
+}
+
+/**
+ * Мировые x окна «±10 поколений» вокруг лица (UX-68): по каждой линии — десять шагов раньше и позже лица линии, ближайшего
+ * по времени к лицу (lineAnchor); окно — объединение по двум линиям.
+ */
+export function linesAround(id: string): { x0: number; x1: number } | null {
+  const s = skyRef.current;
+  if (!s || !s.model) return null;
+  const xa = s.nodeX(lineAnchor(id));
+  if (xa === null) return null;
+  let x0 = xa;
+  let x1 = xa;
+  for (const line of [lines.joseph, lines.mary]) {
+    const xs = line.persons.map((st) => s.nodeX(st.id)).filter((x): x is number => x !== null).sort((p, q) => p - q);
+    if (!xs.length) continue;
+    let i = 0;
+    for (let k = 1; k < xs.length; k++) if (Math.abs(xs[k] - xa) < Math.abs(xs[i] - xa)) i = k;
+    x0 = Math.min(x0, xs[Math.max(0, i - LINES_AROUND)]);
+    x1 = Math.max(x1, xs[Math.min(xs.length - 1, i + LINES_AROUND)]);
+  }
+  return x1 > x0 ? { x0, x1 } : null;
+}
+
 /**
  * Режим «только линии» вписывает коридор (MAP-23): полосы линий — на 60 % высоты видимой части (выше и ниже —
  * место для выносок точек сравнения), по времени — от Адама до Иисуса Христа с полями по 24 px и местом для имени
- * справа (MAP-59). animate = false — сразу (первый показ по адресу).
+ * справа (MAP-59). around — выбранное лицо (IX-73, UX-68, решение 49): по времени окно — ±10 поколений линий вокруг
+ * него, по вертикали — тот же коридор; лицо остаётся в кадре, весь коридор вписывает «Всё небо». Переход — за 500 мс,
+ * как «Всё небо» (IX-79); animate = false — сразу (первый показ по адресу). Возвращает вид, к которому идёт небо.
  */
-export function fitLines(animate = true) {
+export function fitLines(animate = true, around: string | null = null): ViewState | null {
   const s = skyRef.current;
   const f = linesFrame();
   const k = linesKx();
-  if (!s || !f || k === null) return;
+  if (!s || !f || k === null) return null;
   const cam = s.cam;
   // полосы коридора — на 60 % высоты, но не выше, чем ±13 полос на ней: косы и следы не раздуваются (MAP-23)
   setFocus(Math.max(FOCUS_MIN, f.lane1 - f.lane0 + 1));
   // коридор может быть мельче «всего неба»: предел отдаления в этом режиме — он (zoomFloor)
   updateZoomFloor();
   const vp = cam.vp;
-  const kx = k;
   const [, cy] = cam.vpCenter();
-  const to = cam.constrain({ x0: f.x0 - (vp.l + LINES_PAD) / kx, kx, laneTop: (f.lane0 + f.lane1) / 2 + cy / cam.kyFor(kx) });
+  const mid = (f.lane0 + f.lane1) / 2;
+  const w = around ? linesAround(around) : null;
+  const kx = w ? cam.clampKx(Math.max(40, vp.r - vp.l - 2 * LINES_PAD - NAME_ROOM) / (w.x1 - w.x0), (w.x0 + w.x1) / 2) : k;
+  // строки коридора — по высоте (MAP-70): его полосы — на 60 % высоты, а не четверть, чтобы имена лиц линий помещались;
+  // пропорция временная (IX-70): в память и адрес не идёт, при выключении режима возвращается своя
+  const m = linesLanes(kx);
+  if (cam.userLanes === null && Math.abs(m / cam.lanes - 1) > 1e-9) cam.userLanes = cam.lanes;
+  const to = cam.constrain({ x0: (w ? w.x0 : f.x0) - (vp.l + LINES_PAD) / kx, kx, laneTop: mid + cy / cam.kyWith(kx, m) }, m);
   flightTarget = null;
-  if (animate) cam.flyTo(to, skyRef.redraw, reduced());
+  if (animate) cam.zoomTo(to, HOME_MS, skyRef.redraw, reduced(), m);
   else {
     cam.stop();
+    cam.lanes = m;
     cam.set(to);
   }
   skyRef.redraw();
+  return to;
+}
+
+/** Строки коридора линий занимают столько высоты видимой части (MAP-23, MAP-70). */
+export const LINES_FILL = 0.6;
+/** Пропорция строк «только линий» — не больше (MAP-70: ×2–3; ленты и следы не раздуваются). */
+export const LINES_LANES_MAX = 3;
+
+/**
+ * Пропорция строк в режиме «только линии» при масштабе kx (MAP-70): полосы коридора — на 60 % высоты видимой части, не
+ * выше ×3 обычной высоты; своя пропорция читателя, если она крупнее, остаётся.
+ */
+export function linesLanes(kx: number): number {
+  const s = skyRef.current;
+  const f = linesFrame();
+  if (!s || !f) return 1;
+  const cam = s.cam;
+  const rows = Math.max(1, f.lane1 - f.lane0 + 1);
+  const want = (LINES_FILL * (cam.vp.b - cam.vp.t)) / rows;
+  const m = want / cam.kyAuto(kx);
+  return Math.max(cam.ownLanes, Math.min(LINES_LANES_MAX, m));
+}
+
+/**
+ * Строки «только линий» после адреса (MAP-70): адрес ставит свою пропорцию (h), а в режиме линий строки временно
+ * по высоте коридора — середина видимой части по вертикали остаётся на месте.
+ */
+export function holdLinesRows() {
+  const s = skyRef.current;
+  if (!s || !s.model || !onlyLines.peek() || !linesFrame()) return;
+  s.cam.setTempLanes(linesLanes(s.cam.kx));
 }
 
 /** Окно набора ×1,5, но не уже 200 лет — предел отдаления в режиме «в работе» (IX-64). */
@@ -344,11 +512,35 @@ function setFocus(lanes: number) {
   cam.laneTop = mid + cy / cam.ky;
 }
 
-// режим «только линии»: включили — коридор вписывается; выключили — обычная высота полосы. Первый показ по адресу —
-// сразу, без перелёта (окно адреса, если оно есть, ставится после и остаётся)
+/** Окно неба: мировая x середины видимой части, ширина в мировых единицах, полоса раскладки в середине. */
+type Win = { cx: number; w: number; lane: number };
+function windowNow(): Win | null {
+  const s = skyRef.current;
+  if (!s || !s.model) return null;
+  const c = s.cam;
+  const [cx, cy] = c.vpCenter();
+  return { cx: c.wx(cx), w: (c.vp.r - c.vp.l) / c.kx, lane: s.laneOf(c.wLane(cy)) };
+}
+function viewForWin(w: Win, lanes?: number): ViewState | null {
+  const s = skyRef.current;
+  if (!s || !s.model) return null;
+  const c = s.cam;
+  const [cx, cy] = c.vpCenter();
+  const kx = (c.vp.r - c.vp.l) / w.w;
+  return { x0: w.cx - cx / kx, kx, laneTop: s.rowOf(w.lane) + cy / c.kyWith(kx, lanes ?? c.lanes) };
+}
+
+/**
+ * Режим «только линии» туда и обратно (E6; решение 49; IX-73, UX-68). Включили — окно запоминается, коридор вписывается:
+ * при выбранном лице — ±10 поколений вокруг него, лицо в кадре. Выключили — обычная высота полосы и, если в режиме небо
+ * не двигали, прежнее окно за 400 мс; двигали — окно остаётся, выбранное лицо — в видимой части. Первый показ по адресу —
+ * сразу, без перехода (окно адреса, если оно есть, ставится после и остаётся).
+ */
 if (typeof window !== 'undefined') {
   let shown: boolean | null = null;
   let wait = 0;
+  /** окно до включения режима и вид, к которому режим перешёл */
+  let before: { win: Win; to: ViewState } | null = null;
   effect(() => {
     const on = onlyLines.value;
     cancelAnimationFrame(wait);
@@ -362,15 +554,39 @@ if (typeof window !== 'undefined') {
       const first = shown === null;
       if (shown === on) return;
       shown = on;
-      if (on) fitLines(!first);
-      else if (!first) {
-        setFocus(0);
-        updateZoomFloor();
-        s.cam.clampNow();
+      const cam = s.cam;
+      if (on) {
+        const win = first ? null : windowNow();
+        const to = fitLines(!first, first ? null : selected.peek());
+        before = win && to ? { win, to } : null;
+        return;
+      }
+      if (first) return;
+      const b = before;
+      before = null;
+      // «не двигали»: небо ещё идёт к виду режима или стоит на нём
+      const still = !!b && (cam.moving || cam.near(b.to));
+      setFocus(0);
+      updateZoomFloor();
+      flightTarget = null;
+      // временные строки режима (MAP-70) кончаются: своя пропорция читателя — вместе с окном
+      const own = cam.endTemp() ?? cam.lanes;
+      const back = b && still ? viewForWin(b.win, own) : null;
+      if (back) cam.zoomTo(cam.constrain(back, own), LINES_BACK_MS, skyRef.redraw, reduced(), own);
+      else {
+        cam.stop();
+        // двигали — окно остаётся, строки своей высоты сразу (у выбранного лица, если оно видно)
+        const p = anchorPoint();
+        if (p && Math.abs(own / cam.lanes - 1) > 1e-9) {
+          const lane = cam.wLane(p.y);
+          cam.lanes = own;
+          cam.laneTop = lane + p.y / cam.ky;
+        }
+        cam.clampNow();
         const id = selected.peek();
         if (id) keepInView(id);
-        skyRef.redraw();
       }
+      skyRef.redraw();
     };
     wait = requestAnimationFrame(() => apply(0));
   });
@@ -554,10 +770,11 @@ export function keepInView(id: string, ms = 250) {
   if (q.x < vp.l + MARGIN.l) dx = vp.l + (vp.r - vp.l) * 0.35 - q.x;
   else if (q.x > vp.r - MARGIN.r) dx = vp.l + (vp.r - vp.l) * 0.6 - q.x;
   if (q.y < vp.t + MARGIN.t || q.y > vp.b - MARGIN.b) dy = (vp.t + vp.b) / 2 - q.y;
-  // под органами неба — выше блока
+  // под органами неба — выше блока; под строкой у верхней кромки (верхняя половина видимой части) — ниже строки, а не
+  // под самую рамку
   if (!dx && !dy) {
     const r = reserveRects.find((z) => q.x > z.x - 8 && q.x < z.x + z.w + 8 && q.y > z.y - 8 && q.y < z.y + z.h + 8);
-    if (r) dy = Math.max(vp.t + MARGIN.t, r.y - 40) - q.y;
+    if (r) dy = r.y + r.h / 2 < (vp.t + vp.b) / 2 ? r.y + r.h + 24 - q.y : Math.max(vp.t + MARGIN.t, r.y - 40) - q.y;
   }
   const to = cam.constrain({ x0: cam.x0 - dx / cam.kx, kx: cam.kx, laneTop: cam.laneTop + dy / cam.ky });
   flightTarget = null;

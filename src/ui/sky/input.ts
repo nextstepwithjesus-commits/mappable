@@ -1,16 +1,20 @@
 /**
  * Ввод неба: указатель (протяжка, щипок, колесо и тачпад, двойной щелчок, наведение и подсказка).
- * Масштаб по двум осям (J1): протяжка по линейке лет — время, по буквам полос — полосы; колесо мыши с Shift — время,
- * с Alt — полосы; щипок по горизонтали — время, по вертикали — полосы, наискосок — обычный масштаб.
+ * Колесо мыши (решения 8 и 47): без клавиш — масштаб у указателя; с Shift — сдвиг по времени, как горизонтальная
+ * прокрутка в браузерах; с Ctrl и Shift — растянуть или сжать только время; с Alt — высота строк (J1). Протяжка по линейке
+ * лет — время, по буквам полос — полосы; щипок по горизонтали — время, по вертикали — полосы, наискосок — обычный масштаб.
  * Клавиши неба — в src/ui/sky/skykeys.ts.
  */
 import { FRAME_H, type Rect, type Sky } from '../../render/sky.ts';
-import { byId } from '../../data/atlas.ts';
-import { selected, hovered, epochMode, layers, panel, pins, pinsQuery, pickMode, pickSecond, synopsisAt } from '../../state.ts';
+import { byId, lines } from '../../data/atlas.ts';
+import { selected, hovered, epochMode, layers, onlyLines, panel, pins, pinsQuery, pickMode, pickSecond, synopsisAt, model } from '../../state.ts';
 import { lineNoteHits, ribbonAt, setRibbonHover } from '../../render/ribbons.ts';
+import { starRadius } from '../../render/glyphs.ts';
+import { familyAt, setFamilyHover } from '../../render/trails.ts';
 import { goTo, skyRef } from '../common.tsx';
 import { tierAt, tierHot, type TierHit } from '../../render/tiers.ts';
-import { reduced, resetProportions, screenOf, showYears, stopFlight, stretchBy, zoomBy } from './view.ts';
+import { toAstro } from '../../engine/years.ts';
+import { panStep, reduced, resetProportions, screenOf, showYears, stopFlight, stretchBy, zoomBy } from './view.ts';
 import type { Axis } from '../../render/camera.ts';
 import { hoverYear } from './meridian.ts';
 import { openSheetAt } from '../sheet.ts';
@@ -18,7 +22,8 @@ import { closeWhich, openWhich, whichOpen } from './Which.tsx';
 import { tipKey, type Tip } from './Tip.tsx';
 import { RULER_H } from '../../render/frame.ts';
 import { foldDescOf, foldGroupOf, unfoldAll } from '../work.ts';
-import { skyMenu } from '../panels/Work.tsx';
+import { MENU_FIRST, dismissedBy, skyMenu } from '../panels/Work.tsx';
+import { epochGoText, orderNoteText } from './text.ts';
 
 export type { Tip };
 
@@ -288,6 +293,77 @@ function chooseStar(id: string) {
   selected.value = id;
 }
 
+// ---------- что под указателем, кроме звезды: лента, номер у бусины, эпоха служебной строки ----------
+
+/** Лента ловится не дальше стольких px от нити (MAP-28). */
+export const RIBBON_R = 6;
+
+/**
+ * Лента или звезда (MAP-28): нить ленты важнее знака и следа лица, если указатель к ней ближе, чем к знаку (до края
+ * диска) и к следу, и не дальше RIBBON_R. d — расстояние до знака или следа лица под указателем (Infinity — лица нет).
+ * Радиус, в котором искать нить: 0 — не искать (указатель на самом знаке или следе).
+ */
+export const ribbonReach = (d: number) => Math.max(0, Math.min(RIBBON_R, d - 0.5));
+
+/** Расстояние от точки (px холста) до знака лица id — до края диска — или до его следа, px. */
+export function hitDistance(sky: Sky, id: string, x: number, y: number): number {
+  const cam = sky.cam;
+  const r = starRadius(byId.get(id)?.magnitude ?? 6, Math.max(0.7, Math.min(1.25, cam.ky / 18)));
+  let best = Infinity;
+  for (let i = 0; i < sky.nodes.length; i++) {
+    const n = sky.nodes[i];
+    if (n.person !== id) continue;
+    const sx = cam.sx(sky.X0[i]);
+    const sy = cam.sy(n.lane);
+    best = Math.min(best, Math.max(0, Math.hypot(sx - x, sy - y) - r));
+    if (x >= sx && x <= cam.sx(sky.X1[i])) best = Math.min(best, Math.abs(sy - y));
+  }
+  return best;
+}
+
+/** Номер лица в родословии у бусины: чей счёт (Мф 1 или Лк 3) и номер (UX-69; решение 39). */
+export type LineCount = { book: 'Мф' | 'Лк'; n: number };
+
+/** Чей счёт у номера без приставки «Мф» или «Лк»: у лица линии Иосифа с этим номером по Мф 1 — Мф, иначе Лк. */
+export function countBook(id: string, n: number): 'Мф' | 'Лк' | null {
+  if (lines.joseph.persons.some((st) => st.id === id && st.mt === n)) return 'Мф';
+  if ([...lines.joseph.persons, ...lines.mary.persons].some((st) => st.id === id && st.lk === n)) return 'Лк';
+  return null;
+}
+
+/** Номер у бусины под указателем в режиме «только линии» (UX-69): надпись «Мф 17», «Лк 39» (или только число). */
+export function lineNumberAt(sky: Sky, x: number, y: number): (LineCount & { id: string }) | null {
+  if (!onlyLines.peek()) return null;
+  for (const b of sky.ledger.boxes) {
+    if (b.kind !== 'mark' || !b.id || x < b.x - 2 || x > b.x + b.w + 2 || y < b.y - 2 || y > b.y + b.h + 2) continue;
+    const m = /^(?:(Мф|Лк)\s)?(\d+)$/.exec(b.text.replace(/\u00a0/g, ' ').trim());
+    if (!m) continue;
+    const n = Number(m[2]);
+    const book = (m[1] as 'Мф' | 'Лк' | undefined) ?? countBook(b.id, n);
+    if (book) return { id: b.id, book, n };
+  }
+  return null;
+}
+
+/** Название эпохи в служебной строке под указателем (UX-65): эпоха модели и прямоугольник надписи. */
+function serviceEpochAt(sky: Sky, x: number, y: number) {
+  if (y < RULER_H || y >= FRAME_H) return null;
+  for (const b of sky.ledger.boxes) {
+    if (b.kind !== 'frame' || x < b.x || x > b.x + b.w || b.y < RULER_H - 1 || b.y + b.h > FRAME_H + 1) continue;
+    const e = model.peek().epochs.find((q) => q.name === b.text || q.short === b.text);
+    if (e) return { e, box: { x: b.x, y: b.y, w: b.w, h: b.h } };
+  }
+  return null;
+}
+
+/** Небо — к эпохе (UX-65): как щелчок по отрезку эпохи в ярусах — её годы и поля по краям. */
+function showEpoch(start: number, end: number) {
+  const t0 = toAstro(start);
+  const t1 = toAstro(end);
+  const pad = Math.max(10, Math.max(40, t1 - t0) * 0.06);
+  showYears(t0 - pad, t1 + pad, true);
+}
+
 /** Когда меню звезды открыли с клавиатуры: следом браузер шлёт своё contextmenu — его место не у звезды. */
 let keyMenuAt = -Infinity;
 
@@ -307,7 +383,7 @@ export function openStarMenu(id: string): boolean {
   const focusIn = (tries: number) => {
     const m = document.querySelector<HTMLElement>('.sky .skymenu');
     if (m?.hasAttribute('data-placed')) {
-      if (!m.contains(document.activeElement)) m.querySelector<HTMLElement>('button:not([disabled]), input')?.focus({ preventScroll: true });
+      if (!m.contains(document.activeElement)) m.querySelector<HTMLElement>(MENU_FIRST)?.focus({ preventScroll: true });
       return;
     }
     if (tries < 30 && skyMenu.peek()) requestAnimationFrame(() => focusIn(tries + 1));
@@ -390,12 +466,28 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     const edge = fold || sky.edgeHits.some((q) => x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h);
     // выноски точек сравнения линий — ссылки (E6; src/render/ribbons.ts)
     const note = !edge && lineNoteHits(sky).some((q) => x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h);
-    const hit = edge || note ? null : sky.hit(x, y, r);
+    // номер у бусины в режиме «только линии» — это лицо: его подсказка объясняет счёт (UX-69; решение 39)
+    const num = edge || note ? null : lineNumberAt(sky, x, y);
+    // семья (решение 41; src/render/trails.ts, familyAt): помета матери или порядка важнее звезды, гребёнка — нет
+    const fam = edge || note || num ? null : familyAt(sky, x, y);
+    const famNote = fam && fam.kind !== 'comb' ? fam : null;
+    let hit = edge || note || famNote ? null : (num?.id ?? sky.hit(x, y, r));
+    // лента под указателем (E6; MAP-28): ловится, если указатель ближе к нити, чем к знаку и следу лица, — тогда она
+    // подсвечивается, идёт ток света, подсказка — шаг ленты со стихом; иначе — лицо
+    const reach = edge || note || num || !layers.value.ribbons ? 0 : ribbonReach(hit ? hitDistance(sky, hit, x, y) : Infinity);
+    const rib = reach > 0 ? ribbonAt(sky, x, y, reach) : null;
+    if (rib) hit = null;
     if (hit !== hovered.value) hovered.value = hit;
-    // лента под указателем: подсвечивается, у указателя — шаг со стихом, идёт ток света (E6; MAP-28)
-    if (setRibbonHover(sky, hit || edge || note || !layers.value.ribbons ? null : ribbonAt(sky, x, y))) request();
+    if (setRibbonHover(sky, rib)) request();
+    // гребёнка детей под указателем высвечивается, помета порядка объясняется подсказкой
+    const comb = !hit && !rib && fam?.kind === 'comb' ? fam : null;
+    if (setFamilyHover(sky, famNote ?? comb)) request();
     setHot(!!hit || edge || note);
-    showTip(hit ? { kind: 'star', id: hit, x, y } : null);
+    if (hit) showTip({ kind: 'star', id: hit, x, y, ...(num ? { count: { book: num.book, n: num.n } } : {}) });
+    else if (rib) showTip({ kind: 'ribbon', hit: rib, x, y });
+    else if (famNote?.kind === 'order' && famNote.source)
+      showTip({ kind: 'note', key: `order:${famNote.parent}:${famNote.mother ?? ''}`, text: orderNoteText(famNote.source), x, y, box: { x: x - 4, y: y - 4, w: 8, h: 8 } });
+    else showTip(null);
   };
   /** Подсказка и наведение — по тому, что под указателем сейчас. */
   const rehit = () => {
@@ -419,6 +511,7 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     showTip(null);
     if (hovered.value) hovered.value = null;
     setRibbonHover(sky, null);
+    setFamilyHover(sky, null);
     setTierHot(null);
     clearTimeout(calm);
     calm = window.setTimeout(rehit, 120);
@@ -428,6 +521,9 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     return { x: e.clientX - r.left, y: e.clientY - r.top };
   };
   const onDown = (e: PointerEvent) => {
+    // нажатие, которое закрыло меню звезды или выбор «Взять в работу», только закрывает его (IX-72): не выбирает звезду,
+    // не снимает выбор и не тянет небо
+    if (dismissedBy(e)) return;
     // правая и средняя кнопки мыши не тянут небо и не выбирают звезду: правая — только меню (contextmenu; IX-49, UX-52)
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     canvas.setPointerCapture(e.pointerId);
@@ -516,9 +612,14 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       hoverYear(null);
       if (hovered.value) hovered.value = null;
       setTierHot(null);
-      // «Свёрнуто: … — развернуть» в служебной строке — команды (решение 30; render/frame.ts)
-      setHot(sky.foldHits.some((q) => p.x >= q.x && p.x <= q.x + q.w && p.y >= q.y && p.y <= q.y + q.h));
-      const b = sky.labelStats().boxes.find((q) => q.kind === 'frame' && q.text.startsWith('≈') && p.x >= q.x && p.x <= q.x + q.w);
+      // «Свёрнуто: … — развернуть» и названия эпох в служебной строке — команды (решение 30; UX-65): курсор-рука
+      const ep = serviceEpochAt(sky, p.x, p.y);
+      setHot(!!ep || sky.foldHits.some((q) => p.x >= q.x && p.x <= q.x + q.w && p.y >= q.y && p.y <= q.y + q.h));
+      if (ep) {
+        showTip({ kind: 'note', key: `epoch:${ep.e.id}`, text: epochGoText(ep.e), x: p.x, y: p.y, box: ep.box });
+        return;
+      }
+      const b = sky.ledger.boxes.find((q) => q.kind === 'frame' && q.text.startsWith('≈') && p.x >= q.x && p.x <= q.x + q.w);
       showTip(b ? { kind: 'note', key: 'approx', text: APPROX_NOTE, x: p.x, y: p.y, box: { x: b.x, y: b.y, w: b.w, h: b.h } } : null);
       return;
     }
@@ -586,6 +687,12 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       else foldGroupOf(fold.id, false);
       return;
     }
+    // название эпохи в служебной строке — небо к эпохе (UX-65); выбор лица не меняется
+    const ep = touch ? null : serviceEpochAt(sky, at.x, at.y);
+    if (ep) {
+      showEpoch(ep.e.start, ep.e.end);
+      return;
+    }
     // выноска точки сравнения линий — синопсис участка; знак-спутница у развилки — карточка лица (E6; U2)
     const note = lineNoteHits(sky).find((r) => at.x >= r.x && at.x <= r.x + r.w && at.y >= r.y && at.y <= r.y + r.h);
     if (note) {
@@ -639,7 +746,13 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       }
       // одна звезда — она; ни одной — ближайший след под пальцем
       hit = c.kind === 'pick' ? c.id : sky.hit(at.x, at.y, TOUCH_R);
-    } else hit = sky.hit(at.x, at.y, 12);
+    } else {
+      hit = sky.hit(at.x, at.y, 12);
+      // щелчок по ленте — там, где наведение показывало шаг ленты, а не лицо (MAP-28): не выбирает лицо следа рядом и не
+      // снимает выбор, как щелчок по пустому небу
+      const reach = layers.value.ribbons ? ribbonReach(hit ? hitDistance(sky, hit, at.x, at.y) : Infinity) : 0;
+      if (reach > 0 && ribbonAt(sky, at.x, at.y, reach)) return;
+    }
     if (hit) {
       // в режиме «Родство с…» или «Разворот с…» щелчок выбирает второе лицо, первое остаётся
       chooseStar(hit);
@@ -667,27 +780,32 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     const dx = wheelPixels(e.deltaX, mode, sky.cam.h);
     const dy = wheelPixels(e.deltaY, mode, sky.cam.h);
     clearTimeout(clearTimer);
+    const along = Math.abs(dy) >= Math.abs(dx) ? dy : dx;
     if (kind === 'pinch') {
-      // щипок — непрерывно, за пальцами
+      // щипок — непрерывно, за пальцами; с Shift — только время (решение 47)
       stopZoom();
       stopFlight();
-      sky.cam.zoomAt(p.x, p.y, Math.exp(-dy * 0.01));
+      if (e.shiftKey) sky.cam.stretchAt('time', p.x, p.y, Math.exp(-dy * 0.01));
+      else sky.cam.zoomAt(p.x, p.y, Math.exp(-dy * 0.01));
     } else if (kind === 'trackpad') {
       // два пальца — сдвиг 1 : 1 по обеим осям
       stopZoom();
       stopFlight();
       if (e.shiftKey && dx === 0) sky.cam.pan(-dy, 0);
       else sky.cam.pan(-dx, -dy);
+    } else if (e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      // Shift + колесо — сдвиг по времени, как горизонтальная прокрутка в браузерах (решение 47): вниз — к поздним годам;
+      // шаги подряд складываются (panStep, как у стрелок)
+      stopZoom();
+      if (along) panStep(-along, 0);
     } else if (e.shiftKey || e.altKey) {
-      // Shift + колесо — растянуть или сжать только время, Alt + колесо — только полосы (J1); сдвиг у мыши — протяжкой
+      // Ctrl + Shift + колесо — растянуть или сжать только время (решение 47), Alt + колесо — только высота строк (J1)
       stopFlight();
-      const along = Math.abs(dy) >= Math.abs(dx) ? dy : dx;
       const n = wheelNotches(along);
       const axis: Axis = e.shiftKey ? 'time' : 'lanes';
       if (n > 0) wheelStretch(axis, Math.pow(axis === 'time' ? WHEEL_STEP : LANES_WHEEL, -Math.sign(along) * n), p.x, p.y);
     } else {
       // колесо мыши — масштаб у курсора: щелчок ×1,5 за 180 мс, щелчки накапливаются
-      const along = Math.abs(dy) >= Math.abs(dx) ? dy : dx;
       const n = wheelNotches(along);
       if (n > 0) wheelZoom(Math.pow(WHEEL_STEP, -Math.sign(along) * n), p.x, p.y);
     }
@@ -717,7 +835,9 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     pointer = null;
     canvas.classList.remove('stretch-x', 'stretch-y');
     hovered.value = null;
-    if (setRibbonHover(sky, null)) request();
+    const r1 = setRibbonHover(sky, null);
+    const r2 = setFamilyHover(sky, null);
+    if (r1 || r2) request();
     hoverYear(null);
     setTierHot(null);
     setHot(false);

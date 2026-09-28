@@ -6,16 +6,27 @@
  */
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
-import { byId } from '../../data/atlas.ts';
+import { byId, type ChronoRow } from '../../data/atlas.ts';
 import type { SearchHit } from '../../engine/search.ts';
-import { model } from '../../state.ts';
-import { drawMicroAxis, plural } from '../common.tsx';
+import { eventMarks } from '../../render/frame.ts';
+import type { SkyContext } from '../../render/sky.ts';
+import { model, theme } from '../../state.ts';
+import { plural } from '../common.tsx';
 import { lifeText } from '../sky/text.ts';
 import { typo } from '../text/typo.ts';
 import { searchIndex } from './searchIndex.ts';
 
-/** Строка списка: лицо, «Все N на небе» или «Снять отметки». */
-export type Row = { key: string; kind: 'person'; id: string; hit: SearchHit; grouped: boolean } | { key: string; kind: 'all'; ids: string[] } | { key: string; kind: 'unpin' };
+/**
+ * Строка списка: лицо; «Все N на небе» (scope — лица стиха, стихов или главы); «Снять отметки»; «Читать Мф 1 — имена
+ * со ссылками» (глава из «Глав», IX-75); «Руфь уже выбрана первой» (выбор второго лица, UX-13 — строка без действия).
+ * lead — строка, на которой стоит курсор, пока читатель его не двигал: Enter выбирает её.
+ */
+export type Row =
+  | { key: string; kind: 'person'; id: string; hit: SearchHit; grouped: boolean }
+  | { key: string; kind: 'all'; ids: string[]; lead?: boolean; scope?: 'verse' | 'verses' | 'chapter' }
+  | { key: string; kind: 'unpin' }
+  | { key: string; kind: 'read'; ch: string; lead: true }
+  | { key: string; kind: 'self'; id: string; lead: true };
 /** Группа строк с подписью: одноимённые, традиционное именование, «возможно, вы искали». */
 export type Block = { head?: string; rows: Row[] };
 
@@ -37,6 +48,12 @@ export function personBlocks(hits: SearchHit[]): Block[] {
     if (named.length) blocks.push({ head: verse ? 'Названы в стихе' : 'Названы в главе', rows: named.map((h) => person(h, false)) });
     if (cited.length) blocks.push({ head: verse ? 'Стих упомянут в карточке' : 'Глава упомянута в карточке', rows: cited.map((h) => person(h, false)) });
     return blocks;
+  }
+  // по всем словам никого — лица по имени одним блоком (IX-71): «По всем словам ничего; по имени «Иосиф» — 10 лиц»
+  const partial = hits[0]?.partial;
+  if (partial) {
+    const n = hits.length;
+    return [{ head: partialHead(partial, n), rows: hits.map((h) => person(h, byId.get(h.id)?.name === partial && !!byId.get(h.id)?.disambig)) }];
   }
   const fuzzy = hits.filter((h) => h.via === 'fuzzy');
   if (fuzzy.length) blocks.push({ head: 'Возможно, вы искали', rows: fuzzy.map((h) => person(h, false)) });
@@ -109,8 +126,11 @@ export interface ComboboxProps {
    * для клавиатуры. Надпись скрыта от диктора: внутри option нет вложенного органа управления (WCAG 4.1.2), а команду
    * диктору называет статус списка (Search.tsx).
    */
-  rowCmd?: { label: (id: string) => string; title: string; hint: string; run: (id: string) => void };
+  rowCmd?: { label: (id: string) => string; title: string; hint: string; run: (id: string) => string | void };
 }
+
+/** «По всем словам ничего; по имени «Иосиф» — 10 лиц» (IX-71). */
+export const partialHead = (name: string, n: number) => `По всем словам ничего; по имени «${name}» — ${n}\u00a0${plural(n, 'лицо', 'лица', 'лиц')}`;
 
 export function Combobox(props: ComboboxProps) {
   const { id, q, blocks, notice } = props;
@@ -138,10 +158,17 @@ export function Combobox(props: ComboboxProps) {
   useEffect(() => () => clearTimeout(blurTimer.current), []);
 
   const rows = blocks.flatMap((b) => b.rows);
-  // курсор по умолчанию — первое лицо, а не «Все N на небе»: Enter открывает лучшее совпадение
-  const firstPerson = rows.findIndex((r) => r.kind === 'person');
+  // курсор по умолчанию — первое лицо, а не «Все N на небе»: Enter открывает лучшее совпадение; у ссылки на главу
+  // или стих — «Читать главу» или «Все N из стиха на небе» (IX-75), в выборе второго лица — «уже выбрана» (UX-13)
+  const firstPerson = rows.findIndex((r) => r.kind === 'person' || ('lead' in r && !!r.lead));
   const active = cursor >= 0 && cursor < rows.length ? cursor : firstPerson;
   const listOpen = open && (!!q.trim() || !!notice);
+  // что сказала вторая команда строки («Иессей взят в работу; в наборе 5 лиц», IX-84) — до следующего набора или хода курсора
+  const [said, setSaid] = useState('');
+  const runCmd = (pid: string) => {
+    const text = props.rowCmd?.run(pid);
+    if (text) setSaid(text);
+  };
 
   // строка под курсором — в видимой части списка (IX-15)
   useLayoutEffect(() => {
@@ -177,6 +204,7 @@ export function Combobox(props: ComboboxProps) {
   };
   const move = (to: number) => {
     if (!rows.length) return;
+    setSaid('');
     setCursor(Math.max(0, Math.min(rows.length - 1, to)));
   };
   const onKey = (e: KeyboardEvent) => {
@@ -184,7 +212,7 @@ export function Combobox(props: ComboboxProps) {
     if (e.key === 'Enter' && e.shiftKey && props.rowCmd && row?.kind === 'person') {
       // Shift+Enter — вторая команда строки; список остаётся открытым: так берут несколько лиц подряд
       e.preventDefault();
-      props.rowCmd.run(row.id);
+      runCmd(row.id);
       return;
     }
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
@@ -231,6 +259,7 @@ export function Combobox(props: ComboboxProps) {
           setOpen(true);
           setKept(false);
           setCursor(-1);
+          setSaid('');
         }}
         onFocus={(e) => {
           clearTimeout(blurTimer.current);
@@ -270,7 +299,7 @@ export function Combobox(props: ComboboxProps) {
         </span>
       ) : null}
       <span class="visually-hidden" aria-live="polite">
-        {listOpen ? (!q.trim() && notice ? typo(`${notice.text} ${props.status}`) : props.status) : ''}
+        {listOpen ? (said ? typo(said) : !q.trim() && notice ? typo(`${notice.text} ${props.status}`) : props.status) : ''}
       </span>
       {listOpen && (
         // список (listbox) — только когда в нём есть строки (I3; MOB-28): «ничего не найдено» и сообщение об адресе —
@@ -303,9 +332,10 @@ export function Combobox(props: ComboboxProps) {
                     onMouseMove: () => k !== active && setCursor(k),
                     onClick: () => choose(r),
                   };
-                  if (r.kind === 'person') return <ResultRow key={r.key} {...common} person={r.id} grouped={r.grouped} cmd={props.rowCmd} />;
+                  if (r.kind === 'person') return <ResultRow key={r.key} {...common} person={r.id} grouped={r.grouped} cmd={props.rowCmd} run={runCmd} />;
                   return (
-                    <div key={r.key} {...common} class={`result cmdrow ${r.kind}`}>
+                    // «уже выбрана первой» — строка-сообщение: выбрать её нельзя (UX-13)
+                    <div key={r.key} {...common} class={`result cmdrow ${r.kind}`} aria-disabled={r.kind === 'self' ? 'true' : undefined}>
                       {props.cmdLabel?.(r) ?? ''}
                     </div>
                   );
@@ -333,17 +363,78 @@ export function Combobox(props: ComboboxProps) {
 /** «3 лица», «ничего не найдено» — для живой области списка. */
 export const countStatus = (n: number, loading = false) => (n ? `${n}\u00a0${plural(n, 'лицо', 'лица', 'лиц')}` : loading ? '' : 'ничего не найдено');
 
+/** Размер микрошкалы строки поиска, px (VIS-17; на узком экране её ширину задаёт CSS). */
+export const AXIS_W = 120;
+export const AXIS_H = 14;
+/** Риски микрошкалы — меридианы событий неба этой модели: Потоп, Исход, закладка храма, Рождество Христово. */
+const AXIS_EVENTS = ['Потоп', 'Исход', 'Закладка храма', 'Рождество Христово'];
+/** Правый край микрошкалы: завершение канона (около 95 г. по Р. Х.; ТЗ § 3.4) — после него лиц Писания нет. */
+const AXIS_END = 100;
+
+/**
+ * Микрошкала строки поиска (ТЗ § 3.7; VIS-17): время от сотворения (по модели) до конца I в. по Р. Х., риски
+ * меридианов событий, как на небе, и отрезок жизни. Годы — как у следа на небе: сплошной отрезок от рождения до смерти
+ * или до последнего упоминания, без придуманной длительности жизни; у лица, чьё время не установлено, — редкие точки
+ * через годы его эпохи.
+ */
+export function axisMarks(m: { chrono: Map<string, ChronoRow> }, c: ChronoRow): { t0: number; t1: number; ticks: number[]; from: number; to: number; dotted: boolean } {
+  const t0 = Math.min(m.chrono.get('adam')?.b ?? -4173, c.b);
+  const ticks = eventMarks({ model: m } as unknown as SkyContext)
+    .filter((e) => AXIS_EVENTS.includes(e.name))
+    .map((e) => e.t);
+  const dotted = c.cls === 'epochal';
+  const to = dotted ? c.dEst : (c.d ?? c.last ?? c.b);
+  return { t0, t1: AXIS_END, ticks, from: c.b, to: Math.max(c.b, to), dotted };
+}
+
+function drawSearchAxis(canvas: HTMLCanvasElement, a: ReturnType<typeof axisMarks>, colors: { ink2: string; ink3: string }) {
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.clientWidth || AXIS_W;
+  const h = canvas.clientHeight || AXIS_H;
+  canvas.width = Math.round(w * dpr);
+  canvas.height = Math.round(h * dpr);
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  const x = (t: number) => Math.max(0, Math.min(w, ((t - a.t0) / (a.t1 - a.t0)) * w));
+  const mid = Math.round(h / 2) + 0.5;
+  ctx.strokeStyle = colors.ink3;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, mid);
+  ctx.lineTo(w, mid);
+  // риски событий — во всю высоту шкалы
+  for (const t of a.ticks) {
+    const tx = Math.round(x(t)) + 0.5;
+    ctx.moveTo(tx, 2);
+    ctx.lineTo(tx, h - 2);
+  }
+  ctx.stroke();
+  ctx.strokeStyle = colors.ink2;
+  if (a.dotted) {
+    ctx.lineWidth = 2;
+    ctx.setLineDash([2, 3]);
+  } else ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(x(a.from), mid);
+  ctx.lineTo(Math.max(x(a.from) + 3, x(a.to)), mid);
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
 /** Строка-лицо: имя и уточнение, годы и микрошкала жизни (ТЗ § 3.7); cmd — вторая команда строки в её конце. */
-function ResultRow({ person: id, grouped, cmd, ...rest }: { person: string; grouped: boolean; cmd?: ComboboxProps['rowCmd'] } & Record<string, unknown>) {
+function ResultRow({ person: id, grouped, cmd, run, ...rest }: { person: string; grouped: boolean; cmd?: ComboboxProps['rowCmd']; run?: (id: string) => void } & Record<string, unknown>) {
   const p = byId.get(id)!;
   const ref = useRef<HTMLCanvasElement>(null);
+  const m = model.value;
+  const th = theme.value;
   useEffect(() => {
-    const c = model.value.chrono.get(id);
+    const c = m.chrono.get(id);
     if (!ref.current || !c) return;
     const cs = getComputedStyle(document.documentElement);
-    const hist = (t: number) => (t <= 0 ? t - 1 : t);
-    drawMicroAxis(ref.current, hist(c.b), hist(c.d ?? c.dEst), { ink: cs.getPropertyValue('--ink').trim(), ink3: cs.getPropertyValue('--ink-3').trim() });
-  }, [id]);
+    drawSearchAxis(ref.current, axisMarks(m, c), { ink2: cs.getPropertyValue('--ink-2').trim(), ink3: cs.getPropertyValue('--ink-3').trim() });
+  }, [id, m, th]);
   // в группе одноимённых имя стоит в подписи группы: строка начинается с уточнения, имя — только для диктора
   const plain = !grouped || !p.disambig;
   return (
@@ -353,7 +444,7 @@ function ResultRow({ person: id, grouped, cmd, ...rest }: { person: string; grou
         {p.disambig ? <span class="ds">{plain ? typo(`, ${p.disambig}`) : typo(p.disambig)}</span> : null}
       </span>
       <span class="yr">{typo(lifeText(id, { when: false }))}</span>
-      <canvas ref={ref} width={56} height={10} aria-hidden="true" />
+      <canvas ref={ref} width={AXIS_W} height={AXIS_H} aria-hidden="true" />
       {cmd ? (
         // нажатие не уводит фокус из поля и не выбирает строку: команда — своя
         <span
@@ -363,7 +454,7 @@ function ResultRow({ person: id, grouped, cmd, ...rest }: { person: string; grou
           onMouseDown={(e) => e.preventDefault()}
           onClick={(e) => {
             e.stopPropagation();
-            cmd.run(id);
+            (run ?? cmd.run)(id);
           }}
         >
           {cmd.label(id)}

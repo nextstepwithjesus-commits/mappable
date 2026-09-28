@@ -165,7 +165,9 @@ export function KinshipPanel() {
           </button>
         )}
       </div>
-      {a && b && !rels.length && <p class="muted">Родственной связи в данных атласа не найдено.</p>}
+      {a && b && !rels.length && <p class="muted">Родства между ними Писание не называет.</p>}
+      {/* только свойство (CARD-92): «Кровного родства Писание не называет. Через брак: Авигея — жена Давида, брата Авигеи» */}
+      {a && b && rels.length > 0 && rels.every((r) => r.kind === 'in-law') && <p class="muted">Кровного родства Писание не называет. Через брак:</p>}
       {main.map((r, i) => (
         <RelationView key={`${a}|${b}|${i}`} r={r} ns={`kin${i}`} lit={shown === r} onShow={() => (setOnSky(rels.indexOf(r)), showPathOnSky(r))} />
       ))}

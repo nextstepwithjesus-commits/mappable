@@ -21,8 +21,9 @@
   }
 }
 /* поля листа (C2; VIS-12, CARD-47, VIS-42 вариант А): при 500 px — 68 / 40, колонка 392 px — 50–52 знака; уже — 64 / 36.
-   Левое поле — рейка у самого края (4–28 px) и колонка висячих номеров (36 … поле − 8 px), правое — пометы «расч.», «справ.».
-   Колонка текста не шире 29em (около 60 знаков, ТЗ § 5.3; CARD-69): на широком листе растёт правое поле, пометы — у текста. */
+   Левое поле — рейка (12–36 px, за ручкой границы области: VIS-66) и колонка висячих номеров (40 … поле − 8 px), правое —
+   пометы «расч.», «справ.». Колонка текста не шире 29em (около 60 знаков, ТЗ § 5.3; CARD-69): на широком листе растёт
+   правое поле, пометы — у текста. */
 .folio {
   --folio-pl: 68px;
   --folio-pr: 40px;
@@ -90,6 +91,12 @@
 .folio-bar .fold-card {
   min-height: 32px;
 }
+/* цель касания 44 px (решение 33, MOB-39): правило выше перебивало .cmd из phone.css */
+@media (pointer: coarse) {
+  .folio-bar .fold-card {
+    min-height: 44px;
+  }
+}
 /* строка стопки: «Ещё открыты (5):» и имена от недавних к старым; не помещающиеся — многоточием (Folio.tsx, StackSummary) */
 .folio-bar .stack-sum {
   flex: 1 1 0;
@@ -109,6 +116,8 @@
 .folio-bar .stack-sum .sh {
   flex: none;
 }
+/* имена — сколько помещается во всё место строки до команд (UX-75, VIS-71; замер — StackSummary), треугольник — сразу
+   за ними */
 .folio-bar .stack-sum .names {
   flex: 0 1 auto;
   min-width: 0;
@@ -167,19 +176,41 @@
   gap: 4px 0;
   margin: 8px calc(8px - var(--folio-pr)) 0 -8px;
 }
+/* поля кнопок 6 px: на листе 400 px (1024 × 768) четыре команды с «На небе» помещаются в одну строку (VIS-79, IX-81) */
 .folio .actions > button,
 .folio .actions .workbtn > button {
-  padding: 0 7px;
+  padding: 0 6px;
+}
+/* «Показать на небе» на узком листе — «На небе» (VIS-79, IX-81): при 400 px (1024 × 768) четыре команды — одной строкой.
+   Полное название — в имени кнопки для диктора и в подсказке */
+.folio .actions .show-on-sky .short {
+  display: none;
+}
+@container folio (max-width: 440px) {
+  .folio .actions .show-on-sky .full {
+    display: none;
+  }
+  .folio .actions .show-on-sky .short {
+    display: inline;
+  }
+}
+/* после отмены выбора второго лица на телефоне кнопка встаёт под закреплённой шапкой листа, а не под ней (MOB-72) */
+.folio[data-stop] .actions button {
+  scroll-margin-top: 120px;
+  scroll-margin-bottom: 16px;
 }
 /* в развороте команды — под именем (Spread.tsx) */
 .mast .actions {
   margin-bottom: 8px;
 }
-/* паспорт (VIS-05, MOB-52): колонка подписей — по самой длинной подписи этой карточки; подпись переносится, а не
-   налезает на значение при пользовательских интервалах текста (WCAG 1.4.12) */
+/* паспорт (VIS-05, MOB-52, VIS-70): колонка подписей постоянной ширины — по самой длинной подписи паспорта, «Колено /
+   народ» (86 px): значения у всех карточек и у обеих страниц разворота начинаются с одной вертикали; при крупном шрифте
+   читателя подпись — в две строки. Подпись переносится,
+   а не налезает на значение при пользовательских интервалах текста (WCAG 1.4.12) */
 .passport {
   display: grid;
-  grid-template-columns: max-content minmax(0, 1fr);
+  /* при крупном шрифте читателя (MOB-71) колонка подписей растёт вместе с кеглем */
+  grid-template-columns: max(88px, 5.5rem) minmax(0, 1fr);
   align-items: baseline;
   gap: 2px 10px;
   /* паспорт заходит на правое поле: длинная строка «Роль» помещается в одну; помета «расч.» — в своём столбце у края */
@@ -188,7 +219,6 @@
   line-height: var(--t-note-lh);
 }
 .passport dt {
-  max-width: 9em;
   color: var(--ink-2);
   font-family: var(--sans);
   font-size: var(--t-ui-s);
@@ -198,11 +228,18 @@
   margin: 0;
   font-variant-numeric: lining-nums tabular-nums;
 }
+/* крупный шрифт (MOB-71): длинное значение переносится, а не срезается краем листа; помета — целиком */
+.passport dt,
+.passport dd {
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
 .passport dd.fact {
-  padding-right: 40px;
+  padding-right: max(40px, 2.5rem);
 }
 .folio .passport .mark {
   right: 0;
+  white-space: nowrap;
 }
 /* узкий лист (ручка до 360 px, 1024 px, телефон): помета «расч.» паспорта — в строке за годами, а не на поле поверх них.
    Годы набраны неразрывно, на узкой строке и при пользовательских интервалах текста (MOB-52, WCAG 1.4.12) помета
@@ -248,7 +285,9 @@
   position: sticky;
   top: 44px;
   float: left;
-  margin: 26px 0 0 calc(4px - var(--folio-pl));
+  /* рейка — с 12 px от края листа (VIS-66): ручка границы «небо | карточка» заходит в лист на 12 px (top.css), и поля
+     нажатия меток с ней не пересекаются; колонка висячих номеров — за рейкой, от 40 px */
+  margin: 26px 0 0 calc(12px - var(--folio-pl));
   width: 24px;
   display: flex;
   flex-direction: column;
@@ -385,8 +424,8 @@
 }
 .folio .part .pn {
   position: absolute;
-  left: calc(36px - var(--folio-pl));
-  width: calc(var(--folio-pl) - 44px);
+  left: calc(40px - var(--folio-pl));
+  width: calc(var(--folio-pl) - 48px);
   top: 2px;
   text-align: right;
   font-family: var(--sans);
@@ -404,12 +443,12 @@
   position: relative;
   margin: 0 0 12px;
 }
-/* висячий номер раздела на поле, по базовой линии первой строки: колонка номеров от 36 px до поля − 8 px (VIS-42) */
+/* висячий номер раздела на поле, по базовой линии первой строки: колонка номеров от 40 px до поля − 8 px (VIS-42, VIS-66) */
 .sec .no {
   position: absolute;
-  left: calc(36px - var(--folio-pl));
+  left: calc(40px - var(--folio-pl));
   top: 5px;
-  width: calc(var(--folio-pl) - 44px);
+  width: calc(var(--folio-pl) - 48px);
   white-space: nowrap;
   text-align: right;
   font-family: var(--sans);
@@ -427,9 +466,9 @@ div.sec[data-to]::before {
   content: attr(data-n) '\A–' attr(data-to) / '';
   white-space: pre;
   position: absolute;
-  left: calc(36px - var(--folio-pl));
+  left: calc(40px - var(--folio-pl));
   top: 2px;
-  width: calc(var(--folio-pl) - 44px);
+  width: calc(var(--folio-pl) - 48px);
   text-align: right;
   font-family: var(--sans);
   font-size: var(--t-ui-s);
@@ -613,7 +652,6 @@ div.sec[data-to]::before {
   text-decoration-color: var(--rule);
 }
 .ref {
-  margin-left: 4px;
   font-family: var(--sans);
   font-size: var(--t-ui);
   line-height: 1;
@@ -642,11 +680,10 @@ div.sec[data-to]::before {
 .ref:focus-visible {
   outline-offset: 1px;
 }
-.refs {
-  margin-left: 4px;
-}
-.refs .ref {
-  margin-left: 0;
+/* отступ перед ссылками — обычный пробел, а не поле (VIS-62): после пробела текста он сливается с ним («Первое
+   упоминание: Руф 1:4» — один пробел), а в начале перенесённой строки пропадает, и ссылки встают вровень с колонкой */
+.refs::before {
+  content: ' ';
 }
 .refsep {
   font-family: var(--sans);
@@ -737,6 +774,19 @@ div.sec[data-to]::before {
 }
 .canon .cg > .l4 {
   background: var(--ink);
+}
+/* подписи групп книг — полными словами, в два ряда, на узком листе — в три (VIS-80; Canon.tsx, placeGroupLabels) */
+.canon-g.at[data-rows='2'] {
+  height: calc(2 * var(--t-ui-s-lh));
+}
+.canon-g.at[data-rows='3'] {
+  height: calc(3 * var(--t-ui-s-lh));
+}
+.canon-g.at > span.r2 {
+  top: var(--t-ui-s-lh);
+}
+.canon-g.at > span.r3 {
+  top: calc(2 * var(--t-ui-s-lh));
 }
 .canon-t {
   display: flex;
@@ -1088,9 +1138,12 @@ div.workpick {
 .folio .actions .workbtn {
   position: static;
 }
+/* выбор «Взять в работу ▾» — на ширину строки команд, до правого края листа: пометы полей (выв., расч.) под ним не
+   прячутся наполовину (VIS-82; правка L5) */
 .folio .actions div.workpick {
   left: 8px;
-  width: calc(100% - var(--folio-pr));
+  right: -4px;
+  width: auto;
   max-width: none;
 }
 div.workpick .wp-row {

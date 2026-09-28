@@ -9,9 +9,9 @@ import { join } from 'node:path';
 import { overflowCommands, workLabel, HINTS, phoneMenuItems } from '../src/ui/top/TopBar.tsx';
 
 // ширины команд — как у образцов Jost 13 с полями 8 px (порядок строки: панели, затем справка)
-// «В работе» (J3) — замер в сборке на 1440: 65,22 px
-const W: Record<string, number> = { index: 86, work: 65, chapter: 58, synopsis: 78, kinship: 72, section: 121, legend: 116, about: 68 };
-const ORDER = ['index', 'work', 'chapter', 'synopsis', 'kinship', 'section', 'legend', 'about'];
+// «В работе» (J3) — замер в сборке на 1440: 65,22 px; «Эпохи» (решение 51) — 54 px
+const W: Record<string, number> = { index: 86, work: 65, chapter: 58, epochs: 54, synopsis: 78, kinship: 72, section: 121, legend: 116, about: 68 };
+const ORDER = ['index', 'work', 'chapter', 'epochs', 'synopsis', 'kinship', 'section', 'legend', 'about'];
 const GAP = 2;
 const SEP = 21;
 const MORE = 52;
@@ -36,14 +36,14 @@ describe('«Ещё» верхней строки (C3; VIS-20, IX-46, MOB-04)', (
       if (hidden.size < ORDER.length) expect(rowWidth(hidden), `ширина ${avail}`).toBeLessThanOrEqual(avail);
     }
   });
-  it('первыми уходят панели с конца ряда, «В работе» — после «Глав», затем справка, последним — «Указатель»', () => {
+  it('первыми уходят панели с конца ряда, «Эпохи» — после «Синопсиса», «В работе» — после «Глав», затем справка, последним — «Указатель»', () => {
     const seen: string[][] = [];
     for (let avail = full - 1; avail > 0; avail -= 3) {
       const h = [...overflowCommands(avail, width, GAP, SEP, MORE)];
       if (!seen.length || seen[seen.length - 1].length !== h.length) seen.push(h);
     }
     const order = seen.map((h) => h[h.length - 1]);
-    expect(order).toEqual(['section', 'kinship', 'synopsis', 'chapter', 'work', 'about', 'legend', 'index']);
+    expect(order).toEqual(['section', 'kinship', 'synopsis', 'epochs', 'chapter', 'work', 'about', 'legend', 'index']);
   });
   it('уход одной команды оставляет место для «Ещё»: не хватает 1 px — уходит команда, а «Ещё» помещается', () => {
     const hidden = overflowCommands(full - 1, width, GAP, SEP, MORE);
@@ -77,10 +77,11 @@ describe('строка и органы неба — без скрытой про
     expect(b).toMatch(/white-space:\s*nowrap/);
     expect(b).not.toMatch(/opacity|color-mix|backdrop/);
   });
-  it('кнопки колонки на узком небе — 44 × 44, непрозрачные', () => {
+  it('кнопки колонки на узком небе — не меньше 44 × 44 и шире при крупном тексте (MOB-71), непрозрачные', () => {
     const b = rule(css('sky.css'), '.skyctl.column button');
-    expect(b).toMatch(/width:\s*44px/);
-    expect(b).toMatch(/height:\s*44px/);
+    // ширина растёт с кеглем браузера, высота — по подписи; меньше 44 px не бывает ни того, ни другого
+    expect(b).toMatch(/(?:^|[;\s])width:\s*max\(44px,\s*2\.75rem\)/);
+    expect(b).toMatch(/min-height:\s*44px/);
     expect(b).toMatch(/background:\s*var\(--sheet\)/);
   });
   it('раскрывающийся список — непрозрачный лист с рамкой', () => {

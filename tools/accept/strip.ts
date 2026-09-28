@@ -169,12 +169,14 @@ export const strip: Scenario[] = [
     run: async (p) => {
       await go(p, '#/');
       const g = await geo(p);
-      const note = await p.locator('.strip').getAttribute('data-canon-note');
-      if (!note) return fail('на полосе нет пояснения после канона');
       await p.touchscreen.tap(g.box.x + g.box.width * 0.93, g.field);
       await p.waitForTimeout(1500);
       const w = await win(p);
       if (!near(w, [-9, 100], 2)) return fail(`окно после касания ${fmt(w)}`);
+      // пояснение стоит в свободной части штриховки вне рамки и ручек (MOB-68, L7): на «всём небе» при 390 рамка заходит
+      // в штриховку и места ему нет; после касания рамка у конца данных — штриховка свободна, пояснение на месте
+      const note = await p.locator('.strip').getAttribute('data-canon-note');
+      if (!note) return fail('на полосе нет пояснения после канона');
       return pass(`окно ${fmt(w)}; «${note}»`);
     },
   },

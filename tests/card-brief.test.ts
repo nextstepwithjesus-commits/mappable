@@ -96,7 +96,7 @@ describe('«Кратко» у всех лиц', () => {
         for (const x of s.segs) {
           if (typeof x === 'string') continue;
           const q = byId.get(x.id)!;
-          const g = nameCase(q.name, q.sex, 'gen', q.unnamed);
+          const g = nameCase(q.name, q.sex, 'gen', q.unnamed, q.alt);
           if (!g || (x.form !== g && x.form !== g.charAt(0).toUpperCase() + g.slice(1))) bad.push(`${p.id}: ${x.id} «${x.form}»`);
         }
     expect(bad.slice(0, 10), `${bad.length} имён`).toEqual([]);

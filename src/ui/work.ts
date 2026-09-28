@@ -98,8 +98,76 @@ export const workSet = signal<ReadonlyMap<string, WorkEntry>>(readWork());
 if (hasWindow) effect(() => write('local', 'work', [...workSet.value]));
 
 export const inWork = (id: string) => workSet.value.has(id);
-/** Лица набора множеством (одно и то же, пока набор не менялся): его читает небо (src/render/rows.ts, SkyView). */
+/** Лица набора множеством (одно и то же, пока набор не менялся): метки набора на небе «все лица» (SkyView). */
 export const workIds = computed<ReadonlySet<string>>(() => new Set(workSet.value.keys()));
+
+// ---------- набор из ссылки (решение 45; IX-69, UX-79) ----------
+
+/**
+ * Набор из чужой ссылки (~k1~n…) — временный просмотр (решение 45): небо «набор» показывает его, а свой набор читателя
+ * (workSet и память браузера) не меняется, пока читатель не скажет «добавить в мой набор». null — ссылки нет или её набор
+ * совпадает со своим. Живёт до «добавить», «вернуться к моему», смены режима неба, правки своего набора и ухода по адресу
+ * без набора (src/ui/address.ts).
+ */
+export const linkSet = signal<ReadonlyMap<string, WorkEntry> | null>(null);
+/** Набор, который показывает небо «набор»: из ссылки, пока его смотрят, иначе свой. */
+export const shownSet = computed<ReadonlyMap<string, WorkEntry>>(() => linkSet.value ?? workSet.value);
+/** Лица набора неба множеством: его читает небо (src/render/rows.ts, SkyView). */
+export const shownIds = computed<ReadonlySet<string>>(() => new Set(shownSet.value.keys()));
+
+/** Совпадают ли наборы по составу. */
+export const sameSet = (a: Iterable<string>, b: ReadonlyMap<string, unknown>) => {
+  const xs = [...new Set(a)];
+  return xs.length === b.size && xs.every((id) => b.has(id));
+};
+
+/**
+ * Набор из ссылки (ids) при своём наборе mine: null — показывать свой (совпадает по составу), иначе временный набор; лица,
+ * которые есть и в своём наборе, сохраняют свою помету.
+ */
+export function linkSetFor(ids: readonly string[], mine: ReadonlyMap<string, WorkEntry>): Map<string, WorkEntry> | null {
+  const ok = ids.filter((id) => byId.has(id));
+  if (!ok.length || sameSet(ok, mine)) return null;
+  const next = new Map<string, WorkEntry>();
+  for (const id of ok) next.set(id, mine.get(id) ?? { via: 'self', of: id });
+  return next;
+}
+
+/** «Добавить в мой набор» (решение 45): лица ссылки — в свой набор (свои пометы остаются), просмотр ссылки кончается. */
+export function adoptLinkSet(): number {
+  const l = linkSet.peek();
+  if (!l) return 0;
+  const next = new Map(workSet.peek());
+  let added = 0;
+  for (const [id, e] of l)
+    if (!next.has(id)) {
+      next.set(id, e);
+      added++;
+    }
+  batch(() => {
+    linkSet.value = null;
+    workSet.value = next;
+  });
+  return added;
+}
+
+/**
+ * «Вернуться к моему» (решение 45): небо снова показывает свой набор, набор ссылки уходит из адреса. Свой набор пуст —
+ * небо показывает все лица, а не пустую карту (UX-79).
+ */
+export function leaveLinkSet() {
+  batch(() => {
+    linkSet.value = null;
+    if (!workSet.peek().size) skyMode.value = 'all';
+  });
+}
+
+/**
+ * Строка у кромки неба при ссылке «набор» и пустом своём наборе (UX-79): небо показывает все лица, строка объясняет почему.
+ * Снимается командой «скрыть», сменой режима неба и первым лицом, взятым в работу.
+ */
+export const workNotice = signal<string | null>(null);
+export const EMPTY_LINK_NOTICE = 'Ссылка открыта в режиме «набор», но ваш набор пуст: показаны все лица';
 
 /** Взять в работу лицо id с объёмом scope; лица, уже бывшие в наборе, остаются со своей пометой. Возвращает, сколько добавлено. */
 export function addToWork(id: string, scope: Scope = { kind: 'self' }): number {
@@ -184,6 +252,15 @@ export type SkyMode = 'all' | 'work';
 /** Что показывает небо: все лица или только рабочий набор. Помнится в сеансе и пишется в адрес (k1; решение 34). */
 export const skyMode = signal<SkyMode>(read<SkyMode>('session', 'skymode', 'all') === 'work' ? 'work' : 'all');
 if (hasWindow) effect(() => write('session', 'skymode', skyMode.value));
+// набор из ссылки — просмотр в режиме «набор»: вернулись ко всем лицам — просмотр кончился (IX-69). Строка UX-79 —
+// до перехода в «набор» или первого лица, взятого в работу
+if (hasWindow)
+  effect(() => {
+    const m = skyMode.value;
+    const n = workSet.value.size;
+    if (m === 'all' && linkSet.peek()) linkSet.value = null;
+    if ((m === 'work' || n > 0) && workNotice.peek()) workNotice.value = null;
+  });
 
 /**
  * Переключатель неба «все лица | набор» (решение 26; IX-59): одно слово — одно действие. Панель «В работе: N»

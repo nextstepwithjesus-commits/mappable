@@ -19,6 +19,8 @@ import type { Graph } from '../engine/graph.ts';
 
 /** Зазор между родами в сжатом небе, в долях строки. */
 export const ROW_GAP = 0.6;
+/** Опустевший отрезок не дальше стольких полос от места щелчка — подпись свёрнутого созвездия встаёт в него (UX-51). */
+export const FOLD_NEAR = 2;
 
 /** Отображение полос в строки. */
 export interface Rows {
@@ -88,6 +90,11 @@ export interface SkyView {
   foldDesc: readonly string[];
   /** свёрнутые созвездия */
   foldGroups: readonly string[];
+  /**
+   * Где читатель свернул созвездие (UX-51): созвездие → полоса раскладки, у которой щёлкнули по его названию. Строка-подпись
+   * «+N» встаёт в опустевший отрезок полос, ближайший к ней, а не в самый длинный: место работы не теряется.
+   */
+  foldAt?: ReadonlyMap<string, number>;
 }
 
 /** Узел неба в той мере, в какой он нужен плану. */
@@ -285,14 +292,21 @@ export function planSky(d: PlanData, v: SkyView): SkyPlan {
       const r = d.rank?.(i) ?? 0;
       if (head < 0 || r < (d.rank?.(head) ?? 0) || (r === (d.rank?.(head) ?? 0) && d.t0(i) < d.t0(head))) head = i;
     }
+    // отрезок для подписи: ближайший к месту щелчка (UX-51), иначе самый длинный
+    const pref = v.foldAt?.get(top);
+    const away = (r: [number, number]) => (pref === undefined ? 0 : pref < r[0] ? r[0] - pref : pref > r[1] ? pref - r[1] : 0);
     let best: [number, number] | null = null;
     for (let l = lo; l <= hi; l++) {
       if (h[l - laneMin] !== 0 || labelAt.has(l)) continue;
       let e = l;
       while (e + 1 <= hi && h[e + 1 - laneMin] === 0 && !labelAt.has(e + 1)) e++;
-      if (!best || e - l > best[1] - best[0]) best = [l, e];
+      const run: [number, number] = [l, e];
+      if (!best || away(run) < away(best) || (away(run) === away(best) && e - l > best[1] - best[0])) best = run;
       l = e;
     }
+    // опустевших полос у места щелчка нет (их делят лица других родов): подпись — на самой полосе щелчка, а не за сотню
+    // строк от места работы (UX-51)
+    if (best && pref !== undefined && away(best) > FOLD_NEAR) best = null;
     let lane: number;
     if (best) {
       const len = best[1] - best[0] + 1;
@@ -300,8 +314,10 @@ export function planSky(d: PlanData, v: SkyView): SkyPlan {
         h[l - laneMin] = 1 / len;
         labelAt.add(l);
       }
-      lane = (best[0] + best[1]) / 2;
-    } else if (head >= 0) {
+      // подпись — у места щелчка, если оно в этом отрезке; иначе посередине отрезка
+      lane = pref !== undefined && pref >= best[0] - 0.5 && pref <= best[1] + 0.5 ? pref : (best[0] + best[1]) / 2;
+    } else if (pref !== undefined) lane = pref;
+    else if (head >= 0) {
       // ни одна полоса не опустела (их делят лица других эпох): подпись — на месте главы созвездия
       lane = nodes[head].lane;
       t0 = d.t0(head);

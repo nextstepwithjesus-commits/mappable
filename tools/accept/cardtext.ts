@@ -41,14 +41,18 @@ export const cardtext: Scenario[] = [
   },
   {
     n: 241,
-    title: 'CARD-55 (решение 19): § 14 Давида — встречи и связи из текста, «Иоав — племянник» в родне, не в «Других»; «Кто ещё жил в это время (расчёт)» свёрнуто и раскрывается',
+    title: 'CARD-55, CARD-80 (решения 19, 62): § 14 Давида — встречи и связи из текста; «Иоав — племянник» — в § 12, не в § 14; «Кто ещё жил в это время (расчёт)» свёрнуто и раскрывается',
     run: async (p) => {
       await open(p, '#/david');
       await unclamp(p, 14);
       const sec = p.locator('.folio #sec-14');
       const t = flat(await sec.innerText());
       if (!/Встречи и связи, о которых говорит Писание/.test(t)) return fail('нет «Встречи и связи…»');
-      if (!/Иоав[^;]*— племянник/.test(t)) return fail(`Иоав не назван племянником: «${t.slice(0, 200)}»`);
+      // решение 62 (CARD-80): племянник — вторая степень, строкой § 12; в § 14 его нет
+      await unclamp(p, 12);
+      const t12 = flat(await secText(p, 12));
+      if (!/Племянники: Иоав, Авесса и Асаил — сыновья сестры Саруии/.test(t12)) return fail(`§ 12 без «Племянники: Иоав…»: «${t12.slice(0, 200)}»`);
+      if (/Иоав/.test(t)) return fail(`Иоав в § 14: «${t.slice(0, 200)}»`);
       const det = sec.locator('details.calc');
       if (!(await det.count())) return fail('нет свёрнутого списка по расчёту');
       if (await det.evaluate((d) => (d as HTMLDetailsElement).open)) return fail('список по расчёту раскрыт по умолчанию');
@@ -59,7 +63,7 @@ export const cardtext: Scenario[] = [
       if (!(await det.evaluate((d) => (d as HTMLDetailsElement).open))) return fail('щелчок не раскрыл список');
       const shown = flat(await det.innerText());
       if (!/По расчёту жили в одно время/.test(shown)) return fail(`раскрытый список: «${shown.slice(0, 120)}»`);
-      return pass(`«${t.slice(t.indexOf('Родня'), t.indexOf('Родня') + 90)}…»; список по расчёту раскрывается`);
+      return pass(`«${t12.slice(t12.indexOf('Племянники: Иоав'), t12.indexOf('Племянники: Иоав') + 70)}…»; список по расчёту раскрывается`);
     },
   },
   {
@@ -67,6 +71,7 @@ export const cardtext: Scenario[] = [
     title: 'CARD-57, CARD-58: § 10 Давида — сыновья от Вирсавии (Соломон, Нафан) первыми, дети по одному от матери — одной строкой; § 17 — периоды жизни',
     run: async (p) => {
       await open(p, '#/david');
+      await unclamp(p, 10);
       const s10 = flat(await secText(p, 10));
       const i = s10.search(/Соломон/);
       if (i < 0 || i > 80) return fail(`Соломон не в начале § 10: «${s10.slice(0, 120)}»`);
@@ -80,7 +85,7 @@ export const cardtext: Scenario[] = [
   },
   {
     n: 243,
-    title: 'CARD-59 (решение 23): у народа Лудим — § 6 «Произошли от», § 8 «Происхождение: от Мицраима», § 11 «Названы вместе», § 14 не строится',
+    title: 'CARD-59, CARD-87 (решение 23): у народа Лудим — § 6 «Произошли от», § 8 не строится, § 11 «Названы вместе», § 14 не строится',
     run: async (p) => {
       await open(p, '#/ludim');
       // у малого лица статья — «Кратко»; разделы — по «Показать все сведения»
@@ -91,11 +96,12 @@ export const cardtext: Scenario[] = [
       }
       const all = flat(await p.locator('.folio').innerText());
       if (!/Произошли от: Мицраим/.test(all)) return fail('нет «Произошли от: Мицраим»');
-      if (!/Происхождение: от Мицраима/.test(all)) return fail('нет «Происхождение: от Мицраима»');
+      // CARD-87: § 8 у народа не строится — происхождение в § 6; лист пишет «не относится»
+      if (/Происхождение: от Мицраима/.test(all)) return fail('§ 8 «Происхождение» у народа построен');
       if (!/Названы вместе: Анамим/.test(all)) return fail('нет «Названы вместе: Анамим…»');
       if (/Встречи и связи|Кто ещё жил в это время|Родня, жившая/.test(all)) return fail('§ 14 у народа построен');
       if (/Отец: Мицраим/.test(all)) return fail('«Отец: Мицраим» у народа');
-      return pass('Произошли от; Происхождение; Названы вместе; без современников');
+      return pass('Произошли от; без § 8; Названы вместе; без современников');
     },
   },
   {
@@ -152,7 +158,8 @@ export const cardtext: Scenario[] = [
       };
       const lk = await q('Лк 3:23');
       const named = lk.split('Стих упомянут в карточке')[0];
-      if (!/^Все \d+ на небе Названы в стихе/.test(lk)) return fail(`«Лк 3:23»: ${lk.slice(0, 80)}`);
+      // строка отметок стиха — «Все N из стиха на небе» (IX-75, круг 3)
+      if (!/^Все \d+ из стиха на небе Названы в стихе/.test(lk)) return fail(`«Лк 3:23»: ${lk.slice(0, 80)}`);
       // «Сын Давидов» — уточнение Иисуса Христа; сам Давид — строкой «Давид, царь Израиля…»
       if (/Давид, царь/.test(named)) return fail('Давид среди названных в Лк 3:23');
       const byt = await q('Быт 14:18');

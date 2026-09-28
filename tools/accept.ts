@@ -70,7 +70,10 @@ const BASE: Scenario[] = [
       if (!(await link.count())) return fail('в § 10 нет правнука Давида');
       await link.first().click();
       await p.waitForTimeout(1600);
-      return hashId(p) === 'david' ? pass() : fail(`после перехода выбрано «${hashId(p)}»`);
+      if (hashId(p) !== 'david') return fail(`после перехода выбрано «${hashId(p)}»`);
+      // с обзора поиск и ссылка приближают к лицу до уровня чтения (решение 44; IX-68): окно не шире 900 лет
+      const w = Number(/~w(\d+)/.exec(decodeURIComponent(new URL(p.url()).hash))?.[1] ?? NaN);
+      return w <= 900 ? pass(`окно ${w} лет`) : fail(`небо осталось на обзоре: окно ${w} лет`);
     },
   },
   {
@@ -221,7 +224,7 @@ const BASE: Scenario[] = [
       await p.waitForTimeout(300);
       // строка набрана с неразрывными пробелами (B5): сравнивается текст; команда — после тире, «(Esc)» — в конце (CARD-71, VIS-46)
       const bar = (await p.locator('.sky .pickbar').count()) ? (await p.locator('.sky .pickbar').innerText()).replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim() : '';
-      if (!/^Родство с Давидом: выберите второе лицо на небе или найдите его в поле «Найти» — отменить \(Esc\)$/.test(bar)) return fail(`строка режима: «${bar}»`);
+      if (!/^Родство с Давидом: выберите второе лицо на небе или через поиск — отменить \(Esc\)$/.test(bar)) return fail(`строка режима: «${bar}»`);
       await find(p, 'Иоав');
       if (hashId(p) !== 'david') return fail(`первым лицом стало «${hashId(p)}»`);
       if (await p.locator('.sky .pickbar').count()) return fail('режим выбора второго лица не снят');

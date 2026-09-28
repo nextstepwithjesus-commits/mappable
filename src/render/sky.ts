@@ -17,20 +17,20 @@
  */
 import { KX_MIN, type Camera, type Frame, type ViewState } from './camera.ts';
 import { RowCamera, identityRows, planSky, type FoldMark, type SkyPlan, type SkyView } from './rows.ts';
-import { daggerAt, drawGlyph, personGlyph, starRadius } from './glyphs.ts';
+import { BIRTH_BAND, daggerAt, drawBirthBand, drawGlyph, personGlyph, starRadius } from './glyphs.ts';
 import { alpha, hexToRgb } from './color.ts';
 import { alphaForContrast, CLOUD_DIMMED, dimLabelAlpha, separateRibbons, WORK_DIM } from './dim.ts';
-import { clearOfRibbons, drawBranchLabels, drawRibbonStep, drawSkyRibbons } from './ribbons.ts';
+import { clearOfRibbons, drawBranchLabels, drawSkyRibbons, ribbonBeads } from './ribbons.ts';
 import {
   drawEventLines, drawFrame, drawGrid, drawTimeMarks, paintWayfinding, placeWayfinding, yearTicks, rateAt,
   BOTTOM_H, CANON_NOTE, FRAME_H, LETTER_W, LETTER_W_TOUCH, RULER_H, type EdgeHit,
 } from './frame.ts';
 import {
   claim, clusterShort, clusterText, drawClusterLabel, drawEventLabel, drawFoldMark, drawGroupNames, drawNote, drawStarLabels, foldMarkWidth, groupName, LabelCache, LabelLedger,
-  measureLabels, namesakesInView, Placer, textBox, zoomScaleFor, type GroupNameSpot, type LabelStats,
+  measureLabels, namesakesInView, Placer, textBox, zoomScaleFor, GROUP_AREA_MIN, type GroupNameSpot, type LabelStats,
 } from './labels.ts';
-import { drawDescents, drawFamilyNotes, drawSpineTrails, drawTrails, type FamilyNote } from './trails.ts';
-import { drawKinPath, drawLeadNotes, drawMeridian, drawRings, drawWorkMarks, emphasis } from './marks.ts';
+import { drawDescents, drawFamilyNotes, drawSpineTrails, drawTrails, familyHover, type FamilyNote } from './trails.ts';
+import { drawKinPath, drawLeadNotes, drawMeridian, drawRings, drawWorkMarks, emphasis, meridianFlagAt } from './marks.ts';
 import { coarsePointer, mapFont, mapSize, T_MAP_S } from './type.ts';
 import type { Rect } from './rect.ts';
 import { timeToX, xToTime, hydrateScale, type TimeScale, T_CANON_END, T_END } from '../engine/timescale.ts';
@@ -245,8 +245,8 @@ export interface Pass {
   lines?: Placer;
   /** прямоугольник не ложится на нити лент (после их отрисовки; ribbons.ts, clearOfRibbons): подписи лиц линий — вне лент */
   offRibbon?: (b: Rect) => boolean;
-  /** имена, которые в окне носят две звезды и больше: у подписи — краткое уточнение (MAP-66) */
-  namesakes?: Set<string>;
+  /** одноимённые в окне (MAP-66, MAP-72; решение 43): лицо → краткое уточнение его подписи (пустое — уточнения нет) */
+  namesakes?: Map<string, string>;
   /** лица со свёрнутыми потомками → «+N» (MAP-63, UX-60): знак — у подписи лица */
   foldText?: Map<string, string>;
   /** знаки свёрнутого этого кадра (px холста): щелчок разворачивает (src/ui/sky/input.ts) */
@@ -255,6 +255,8 @@ export interface Pass {
   shown?: { breaks: Set<string>; brackets: Set<string>; workMarks: number; noted: string[] };
 }
 
+/** Лица линий на нитях в режиме «только линии» (MAP-71; ТЗ § 3.2: «каждое лицо — бусина»). */
+const BEADS = true;
 /** Сколько лет самое крупное окно видимой части неба (D2; IX-03). */
 const MIN_YEARS = 20;
 /** Семантическое увеличение: подробность растёт с высотой полосы от DETAIL_KY0 до DETAIL_KY1 (≈ ×1,5 по времени). */
@@ -296,6 +298,8 @@ interface OutlineView {
   foreign: boolean;
   /** кольца: годы и полосы вершин, мировые x при нынешнем масштабе времени */
   rings: { t: Float64Array; lane: Float64Array; x: Float64Array }[];
+  /** ортогональные кольца (VIS-77) по шагу времени и масштабу: вершины — годы, полосы и мировые x */
+  ortho?: { key: string; rings: { t: number[]; lane: number[]; x: Float64Array }[] };
   t0: number;
   t1: number;
   l0: number;
@@ -795,6 +799,9 @@ export class Sky implements SkyContext {
     this.reserveNow = s.reserve ?? [];
     const spine = new Set([...lines.joseph.persons, ...lines.mary.persons].map((x) => x.id));
     this.drawnOnly = lineOnly ? spine : null;
+    // узлы кадра — по раскладке; в режиме «только линии» лица линий стоят на нитях, как бусины (MAP-71)
+    this.nodes = this.model.nodes;
+    if (lineOnly && L.ribbons && BEADS) this.nodes = beadNodes(this, this.model.nodes, ribbonBeads(this, s, { joseph: lines.joseph.persons, mary: lines.mary.persons }));
     this.drawnGhosts = !!L.ghosts;
     // открытое небо — ниже рамки, а в режиме эпох — ниже ярусов (их нижний край — верхнее поле видимой части)
     this.openTop = Math.max(FRAME_H, this.insets.top);
@@ -812,7 +819,7 @@ export class Sky implements SkyContext {
     const p: Pass = {
       s,
       vis: [],
-      emph: work ? floorAt(emphasis(hl, s.depth), WORK_DIM) : emphasis(hl, s.depth),
+      emph: familyDim(this, work ? floorAt(emphasis(hl, s.depth), WORK_DIM) : emphasis(hl, s.depth)),
       spine,
       level: Math.max(0, 2 * Math.log2(cam.kx / KX_MIN)),
       zoomScale: zoomScaleFor(cam.ky),
@@ -856,6 +863,8 @@ export class Sky implements SkyContext {
       if (full.length) draw({ ...p, vis: full });
     };
     if (L.lifelines) layer((q) => drawTrails(this, q));
+    // промежутки рождения у лиц, чей знак стоит у первого засвидетельствованного года (решение 38; MAP-69)
+    if (L.lifelines) layer((q) => this.drawBirthBands(q));
     const notes: FamilyNote[] = [];
     if (L.connectors) layer((q) => void notes.push(...(drawDescents(this, q) ?? [])));
     // в режиме «В работе» ленты — тонкий ориентир, и только если в наборе есть лица линий Мессии (J4)
@@ -920,13 +929,16 @@ export class Sky implements SkyContext {
     this.groupHits = p.nameBoxes as (Rect & { group: string })[];
     this.drawDaggers(p);
     drawFamilyNotes(this, p, notes);
-    drawRibbonStep(this, p, lineSteps);
+    // шаг наведённой ленты объясняет подсказка («Давид, отец; Соломон, сын (Мф 1:6)», src/ui/sky/Tip.tsx; решение 54):
+    // подписи шага на холсте нет — две надписи об одном сразу не нужны. Лента по-прежнему подсвечивается с током света
     drawRings(this, p);
 
     under?.();
-    const cmds = drawFrame(this, ticks, { model: s.modelNote, folds: this.plan.marks });
+    // флажок меридиана — место на служебной строке до рамки: её надписи его обходят (MAP-33)
+    const flag = meridianFlagAt(this, s);
+    const cmds = drawFrame(this, ticks, { model: s.modelNote, folds: this.plan.marks, flag });
     this.foldHits = [...(p.foldHits ?? []), ...cmds];
-    this.meridianFlag = drawMeridian(this, s);
+    this.meridianFlag = drawMeridian(this, s, flag);
     paintWayfinding(this, edges);
     this.edgeHits = edges;
     // замер на холсте для проверок этапа 4: «подписано / видимых звёзд» (E1), подробность кадра (E3),
@@ -955,6 +967,8 @@ export class Sky implements SkyContext {
       put('brackets', [...(p.shown?.brackets ?? [])].sort().join(' '));
       put('workMarks', String(p.shown?.workMarks ?? 0));
       put('noted', (p.shown?.noted ?? []).join('|'));
+      // названия созвездий (MAP-58): области видимой частью не меньше 150 × 60 px — «группа:ш×в:подписана (1/0)»
+      put('groupAreas', groupAreas(this, spots, p.nameBoxes as (Rect & { group: string })[]).map((a) => `${a.group}:${a.w}×${a.h}:${a.named}`).join('|'));
     }
   }
 
@@ -1242,8 +1256,26 @@ export class Sky implements SkyContext {
   // ---------- созвездия (E8) ----------
 
   /**
-   * Созвездия: один сглаженный контур на связную часть (E8; MAP-41), сплошной 1 px с контрастом к небу не ниже 3 : 1;
-   * дом внутри колена — вложенный контур пунктиром; народы вне Израиля — лёгкая заливка. Возвращает места под названия.
+   * Ортогональные кольца контура ov при нынешнем масштабе (решение 52; VIS-77): шаг по времени — круглое число лет,
+   * при котором ступень на экране не мельче ORTHO_PX (у середины созвездия). Кэш — по шагу и масштабу времени.
+   */
+  private orthoOf(ov: OutlineView): { t: number[]; lane: number[]; x: Float64Array }[] {
+    const tc = (ov.t0 + ov.t1) / 2;
+    const rate = rateAt(this, tc);
+    const step = ORTHO_STEPS.find((q) => q * rate >= ORTHO_PX) ?? ORTHO_STEPS[ORTHO_STEPS.length - 1];
+    // по высоте — строка клеток не ниже ORTHO_ROW_PX: на обзоре граница не дробится на полосы в 5 px
+    const band = Math.max(1, Math.round(ORTHO_ROW_PX / Math.max(1, this.cam.ky)));
+    const key = `${step}|${band}|${this.model.id}|${this.lambda}`;
+    if (ov.ortho?.key === key) return ov.ortho.rings;
+    const rings = orthoRings(ov.rings, step, band).map((r) => ({ ...r, x: Float64Array.from(r.t, (t) => this.xOf(t)) }));
+    ov.ortho = { key, rings };
+    return rings;
+  }
+
+  /**
+   * Созвездия: один контур на связную часть (E8; MAP-41) — ортогональные отрезки по времени и полосам со скруглением
+   * углов до 3 px (решение 52; VIS-77; ТЗ § 3.1), сплошной 1 px с контрастом к небу не ниже 3 : 1; дом внутри колена —
+   * вложенный контур пунктиром; народы вне Израиля — лёгкая заливка. Возвращает места под названия.
    */
   private drawConstellations(p: Pass): GroupNameSpot[] {
     const { ctx, cam, pal } = this;
@@ -1268,8 +1300,10 @@ export class Sky implements SkyContext {
       const ya = cam.sy(ov.l1);
       const yb = cam.sy(ov.l0);
       if (xb < 0 || xa > W || yb < this.openTop - 4 || ya > cam.vp.b + 4) continue;
+      // граница — ортогональные отрезки по круглым годам и между полосами (решение 52; VIS-77)
+      const rings = this.orthoOf(ov);
       ctx.beginPath();
-      for (const r of ov.rings) smoothRing(ctx, r.x, r.lane, cam);
+      for (const r of rings) orthoPath(ctx, r.x, r.lane, cam);
       if (ov.foreign) {
         ctx.fillStyle = alpha(pal.ink, 0.035);
         ctx.fill('evenodd');
@@ -1282,7 +1316,7 @@ export class Sky implements SkyContext {
       const edge: [number, number][] = [];
       const xl = this.letterW + 8;
       if (xa < xl && xb > xl + 40)
-        for (const r of ov.rings) {
+        for (const r of rings) {
           const ys: number[] = [];
           const n = r.x.length;
           for (let k = 0; k < n; k++) {
@@ -1297,7 +1331,7 @@ export class Sky implements SkyContext {
           for (let k = 0; k + 1 < ys.length; k += 2) edge.push([Math.max(ys[k], this.openTop), Math.min(ys[k + 1], cam.vp.b)]);
         }
       // кольца в px холста: по ним на масштабе эпохи название ищет место по средней линии области (labels.ts)
-      const poly = ov.rings.map((r) => {
+      const poly = rings.map((r) => {
         const xs = new Float64Array(r.x.length);
         const ys = new Float64Array(r.x.length);
         for (let k = 0; k < r.x.length; k++) {
@@ -1494,6 +1528,24 @@ export class Sky implements SkyContext {
     }
   }
 
+  /**
+   * Промежутки рождения (решение 38; MAP-69): у лица Нового Завета, чей знак стоит у первого засвидетельствованного года
+   * (NodeRow.band), — растушёванная полоса влево от знака через возможные годы рождения (glyphs.ts, drawBirthBand).
+   */
+  private drawBirthBands(p: Pass) {
+    const { ctx, cam, pal } = this;
+    for (const i of p.vis) {
+      const n = this.nodes[i];
+      if (!n.band || n.ghost || !this.drawn(i)) continue;
+      const x0 = cam.sx(this.xOf(n.band[0]));
+      const x1 = Math.min(cam.sx(this.xOf(n.band[1])), cam.sx(this.X0[i]));
+      if (x1 < -4 || x0 > cam.w + 4) continue;
+      const y = Math.round(cam.sy(n.lane)) + 0.5;
+      drawBirthBand(ctx, { x0, x1, y, color: pal.ink2, alpha: BIRTH_BAND.alpha * p.emph(n.person) * p.s.intro });
+      if (p.lines && x1 > x0) p.lines.add({ x: x0, y: y - 3, w: x1 - x0, h: 6 });
+    }
+  }
+
   /** Знак † у звезды умершего младенцем, если её подпись не встала (при подписи «†» стоит перед именем, MAP-68). */
   private drawDaggers(p: Pass) {
     const { ctx, cam, pal } = this;
@@ -1536,17 +1588,197 @@ function tierFormulaRect(canvas: HTMLCanvasElement): { text: string; rect: Rect 
   }
 }
 
+/**
+ * Области созвездий, у которых название обязательно (MAP-58): видимая часть рамки контура в открытом небе не меньше
+ * GROUP_AREA_MIN; named — название этого созвездия есть в кадре.
+ */
+export function groupAreas(v: SkyContext, spots: readonly GroupNameSpot[], names: readonly (Rect & { group: string })[]): { group: string; w: number; h: number; named: 0 | 1 | 2 }[] {
+  const out: { group: string; w: number; h: number; named: 0 | 1 | 2 }[] = [];
+  for (const o of spots) {
+    if (!o.box) continue;
+    const w = Math.round(Math.min(o.box.x1, v.cam.w - 8) - Math.max(o.box.x0, v.letterW + 8));
+    const h = Math.round(Math.min(o.box.y1, v.cam.vp.b) - Math.max(o.box.y0, v.openTop));
+    if (w < GROUP_AREA_MIN[0] || h < GROUP_AREA_MIN[1]) continue;
+    // 1 — название внутри самой области; 2 — у другой части того же созвездия в кадре (повтор — не ближе 1 200 px); 0 — нет
+    const own = names.filter((b) => b.group === o.group);
+    const inside = own.some((b) => b.x + b.w / 2 >= o.box!.x0 && b.x + b.w / 2 <= o.box!.x1 && b.y + b.h / 2 >= o.box!.y0 && b.y + b.h / 2 <= o.box!.y1);
+    out.push({ group: o.group, w, h, named: inside ? 1 : own.length ? 2 : 0 });
+  }
+  return out;
+}
+
+/**
+ * Узлы кадра с лицами линий на нитях (MAP-71): у лица из beads — дробная полоса, в которой его звезда ложится на нить
+ * (обратное преобразование камеры и сжатия строк). Остальные узлы — те же объекты; номера узлов не меняются.
+ */
+export function beadNodes(v: SkyContext, nodes: readonly NodeRow[], beads: ReadonlyMap<string, number>): NodeRow[] {
+  if (!beads.size) return nodes as NodeRow[];
+  const out = nodes.slice();
+  const moved = new Map<string, number>();
+  for (const [id, y] of beads) {
+    const i = v.indexOf(id);
+    if (i === undefined || !Number.isFinite(y)) continue;
+    const lane = v.laneOf(v.cam.wLane(y));
+    if (Number.isFinite(lane) && Math.abs(lane - nodes[i].lane) > 1e-3) {
+      out[i] = { ...nodes[i], lane };
+      moved.set(id, lane);
+    }
+  }
+  // отвод к ребёнку идёт от следа родителя: у ребёнка родителя-бусины — полоса родителя на нити, иначе вертикаль
+  // уходила бы к прежнему месту родителя в пустоту
+  if (moved.size)
+    out.forEach((n, i) => {
+      const lane = n.layoutParent ? moved.get(n.layoutParent) : undefined;
+      if (lane !== undefined && n.parentLane !== null) out[i] = { ...n, parentLane: lane };
+    });
+  return out;
+}
+
+/** Дети того же отца вне наведённой семьи (гребёнка или помета матери; MAP-74) гаснут до стольких. */
+export const FAMILY_HOVER_DIM = 0.4;
+/**
+ * Яркость с наведённой семьёй (MAP-74; trails.ts, familyHover): наведены гребёнка детей одной матери или её помета —
+ * её дети остаются, остальные дети того же отца гаснут до FAMILY_HOVER_DIM. Помета порядка («порядок по …») не гасит.
+ */
+function familyDim(v: object, f: (id: string) => number): (id: string) => number {
+  const h = familyHover(v);
+  if (!h || h.kind === 'order') return f;
+  const kids = new Set(h.kids);
+  const others = new Set<string>();
+  for (const e of graph.childrenOf.get(h.parent) ?? []) if ((e.kind === 'father' || e.kind === 'mother') && !kids.has(e.child)) others.add(e.child);
+  if (!others.size) return f;
+  return (id) => (others.has(id) ? Math.min(FAMILY_HOVER_DIM, f(id)) : f(id));
+}
+
 /** Яркость не ниже floor (режим «набор», MAP-64). */
 const floorAt = (f: (id: string) => number, floor: number) => (id: string) => Math.max(floor, f(id));
 
-/** Замкнутое кольцо через середины сторон квадратичными кривыми: контур без изломов. */
-function smoothRing(ctx: CanvasRenderingContext2D, xs: Float64Array, lanes: Float64Array, cam: Camera) {
+/** Шаги границ созвездий по времени, лет (VIS-77): граница идёт по круглым годам. */
+export const ORTHO_STEPS = [1, 2, 5, 10, 25, 50, 100, 250];
+/** Ступень границы на экране — не мельче стольких px. */
+export const ORTHO_PX = 24;
+/** Строка клеток границы на экране — не ниже стольких px (на обзоре — несколько полос). */
+export const ORTHO_ROW_PX = 10;
+/** Скругление углов границы, px (решение 52: не больше 3). */
+export const ORTHO_ROUND = 3;
+
+/**
+ * Ортогональные кольца области (решение 52; VIS-77; ТЗ § 3.1): клетки «[k·step, (k + 1)·step) лет × полоса j» (полоса —
+ * от j − ½ до j + ½), середина которых внутри колец rings (чётно-нечётное правило), образуют область; её граница —
+ * замкнутые ломаные из вертикалей по круглым годам и горизонталей между полосами, без лишних вершин на прямых.
+ * Клетки, касающиеся только углом, — разные части. Вершины — годы и полосы.
+ */
+export function orthoRings(rings: readonly { t: ArrayLike<number>; lane: ArrayLike<number> }[], step: number, band = 1): { t: number[]; lane: number[] }[] {
+  let lMin = Infinity;
+  let lMax = -Infinity;
+  for (const r of rings)
+    for (let k = 0; k < r.lane.length; k++) {
+      lMin = Math.min(lMin, r.lane[k]);
+      lMax = Math.max(lMax, r.lane[k]);
+    }
+  if (!(lMax >= lMin)) return [];
+  const j0 = Math.ceil(lMin);
+  const j1 = Math.floor(lMax);
+  // клетки по полосам: пересечения горизонтали lane = j с кольцами → отрезки внутри → клетки, чья середина в них
+  const cells = new Map<number, Set<number>>();
+  for (let j = j0; j <= j1; j++) {
+    const ts: number[] = [];
+    for (const r of rings) {
+      const n = r.t.length;
+      for (let k = 0; k < n; k++) {
+        const a = r.lane[k];
+        const b = r.lane[(k + 1) % n];
+        if ((a > j) !== (b > j)) ts.push(r.t[k] + ((r.t[(k + 1) % n] - r.t[k]) * (j - a)) / (b - a));
+      }
+    }
+    ts.sort((a, b) => a - b);
+    // строка клеток — band полос: клетка внутри, если внутри хоть одна её полоса
+    const rj = Math.floor(j / band);
+    const row = cells.get(rj) ?? new Set<number>();
+    for (let k = 0; k + 1 < ts.length; k += 2)
+      for (let c = Math.ceil(ts[k] / step - 0.5); (c + 0.5) * step <= ts[k + 1]; c++) row.add(c);
+    if (row.size) cells.set(rj, row);
+  }
+  const inside = (c: number, j: number) => !!cells.get(j)?.has(c);
+  // рёбра границы: область слева по ходу (годы — вправо, полосы — вверх); вершина (c, j) — год c·step, полоса j − ½
+  const key = (c: number, j: number) => `${c},${j}`;
+  const out = new Map<string, [number, number][]>();
+  const edge = (a: [number, number], b: [number, number]) => {
+    const k = key(...a);
+    const list = out.get(k);
+    if (list) list.push(b);
+    else out.set(k, [b]);
+  };
+  let edges = 0;
+  for (const [j, row] of cells)
+    for (const c of row) {
+      if (!inside(c, j - 1)) (edge([c, j], [c + 1, j]), edges++);
+      if (!inside(c + 1, j)) (edge([c + 1, j], [c + 1, j + 1]), edges++);
+      if (!inside(c, j + 1)) (edge([c + 1, j + 1], [c, j + 1]), edges++);
+      if (!inside(c - 1, j)) (edge([c, j + 1], [c, j]), edges++);
+    }
+  const loops: { t: number[]; lane: number[] }[] = [];
+  while (edges > 0) {
+    // начало — любая вершина с исходящим ребром
+    let start: [number, number] | null = null;
+    for (const [k, list] of out)
+      if (list.length) {
+        const [c, j] = k.split(',').map(Number);
+        start = [c, j];
+        break;
+      }
+    if (!start) break;
+    const pts: [number, number][] = [];
+    let cur = start;
+    let dir: [number, number] = [0, 0];
+    const limit = edges + 4;
+    for (let guard = 0; guard <= limit; guard++) {
+      const list = out.get(key(...cur));
+      if (!list?.length) break;
+      // на седловой вершине — самый левый поворот: клетки, касающиеся углом, остаются разными частями
+      let pick = 0;
+      if (list.length > 1 && (dir[0] || dir[1])) {
+        let best = -Infinity;
+        list.forEach((b, i) => {
+          const d = [b[0] - cur[0], b[1] - cur[1]];
+          const turn = dir[0] * d[1] - dir[1] * d[0];
+          if (turn > best) {
+            best = turn;
+            pick = i;
+          }
+        });
+      }
+      const next = list.splice(pick, 1)[0];
+      edges--;
+      pts.push(cur);
+      dir = [next[0] - cur[0], next[1] - cur[1]];
+      cur = next;
+      if (cur[0] === start[0] && cur[1] === start[1]) break;
+    }
+    // вершины на прямой — лишние
+    const keep = pts.filter((q, i) => {
+      const a = pts[(i - 1 + pts.length) % pts.length];
+      const b = pts[(i + 1) % pts.length];
+      return !((a[0] === q[0] && q[0] === b[0]) || (a[1] === q[1] && q[1] === b[1]));
+    });
+    if (keep.length >= 4) loops.push({ t: keep.map((q) => q[0] * step), lane: keep.map((q) => q[1] * band - 0.5) });
+  }
+  return loops;
+}
+
+/** Путь ортогонального кольца на экране: отрезки с углами, скруглёнными до ORTHO_ROUND px (не больше половины стороны). */
+function orthoPath(ctx: CanvasRenderingContext2D, xs: ArrayLike<number>, lanes: ArrayLike<number>, cam: Camera) {
   const n = xs.length;
   if (n < 3) return;
-  const X = (k: number) => cam.sx(xs[(k + n) % n]);
-  const Y = (k: number) => cam.sy(lanes[(k + n) % n]);
+  const X = (k: number) => Math.round(cam.sx(xs[(k + n) % n])) + 0.5;
+  const Y = (k: number) => Math.round(cam.sy(lanes[(k + n) % n])) + 0.5;
   ctx.moveTo((X(n - 1) + X(0)) / 2, (Y(n - 1) + Y(0)) / 2);
-  for (let k = 0; k < n; k++) ctx.quadraticCurveTo(X(k), Y(k), (X(k) + X(k + 1)) / 2, (Y(k) + Y(k + 1)) / 2);
+  for (let k = 0; k < n; k++) {
+    const a = Math.hypot(X(k) - X(k - 1), Y(k) - Y(k - 1));
+    const b = Math.hypot(X(k + 1) - X(k), Y(k + 1) - Y(k));
+    // у коротких сторон скругление меньше: граница не превращается в «пилюлю»
+    ctx.arcTo(X(k), Y(k), X(k + 1), Y(k + 1), Math.max(0, Math.min(ORTHO_ROUND, a / 4, b / 4)));
+  }
   ctx.closePath();
 }
 

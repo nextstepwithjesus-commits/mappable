@@ -51,6 +51,10 @@
   - `src/ui/sheet.ts` — нижний лист карточки на телефоне; `src/ui/sky/Which.tsx` — «Какое лицо?»;
   - `src/ui/sky/SkyA11y.tsx` и `starnav.ts` — небо для клавиатуры и диктора; `src/ui/focus.ts` — фокус панелей и карточки;
   - `src/ui/layout.ts` — сетка областей, пользовательские ширины, «небо во весь экран»; `src/render/camera.ts` — пропорция полос.
+- Новые модули этапа 7:
+  - `src/ui/stack.ts` — стопка карточек; `src/engine/epochs.ts` — эпохи по модели; `src/ui/text/repeat.ts` — снятие повторов;
+  - `src/engine/verseCounts.ts` — число глав и стихов по книгам (пишет `tools/verse-counts.ts` из synodal.tsv, `--check` сверяет);
+  - в `src/render/trails.ts` — `orderSource`, `orderListing` (источник порядка перечисления), `familyAt` (наведение на гребёнку матери).
 
 ## Главный вывод
 

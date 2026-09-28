@@ -268,6 +268,8 @@ export function scaleBar(v: SkyContext): { years: number; px: number; approx: bo
 export interface ServiceExtra {
   model?: string | null;
   folds?: readonly { kind: 'desc' | 'group'; id: string; count: number }[];
+  /** флажок меридиана на служебной строке (marks.ts, meridianFlagAt): надписи строки его обходят (MAP-33) */
+  flag?: Rect | null;
 }
 /** Команда в служебной строке: прямоугольник (px холста) и что она разворачивает — одно свёрнутое или всё. */
 export type ServiceHit = Rect & { kind: 'desc' | 'group' | 'all'; id: string };
@@ -431,6 +433,7 @@ function drawRuler(v: SkyContext, ticks: YearTick[]) {
     eraAt.set(group[k >= 0 ? k : group.length - 1].tk.h, era);
   }
   let lastEnd = -Infinity;
+  const written: Rect[] = [];
   for (const q of items) {
     const text = q.num + (eraAt.get(q.tk.h) ?? '');
     const tw = ctx.measureText(text).width;
@@ -438,12 +441,50 @@ function drawRuler(v: SkyContext, ticks: YearTick[]) {
     if (q.lx + tw > W - 4 || box.x < lastEnd + 10 || hits(box, placed)) continue;
     ctx.fillText(text, q.lx, 11);
     v.ledger.add('frame', text, box);
+    written.push(box);
     lastEnd = box.x + box.w;
   }
   for (const b of placed) {
     ctx.fillText('Р. Х.', b.x + 2, 11);
     v.ledger.add('frame', 'Р. Х.', b);
   }
+  // подпись полосы плотности (MAP-31) — один раз, в самом широком промежутке между подписями лет над полосой
+  if (v.lambda > 0.01) densityCaption(v, [...written, ...placed], Math.min(W - 4, xBreak));
+}
+
+/** Подпись полосы плотности шкалы: что значит её светлота (MAP-31). Короче — если длинная не помещается. */
+export const DENSITY_CAPTIONS = ['полоса: светлее — время растянуто', 'светлее — время растянуто'];
+
+/**
+ * Подпись полосы плотности под рисками (MAP-31): курсивом --ink-3 в строке лет, в самом широком промежутке между
+ * подписями лет, пока полоса идёт (до конца канона). Нет места — не пишется.
+ */
+function densityCaption(v: SkyContext, taken: Rect[], xEnd: number) {
+  const { ctx, pal } = v;
+  const fs = mapSize(T_MAP_S, v.coarse);
+  ctx.font = mapFont(T_MAP_S, { italic: true, coarse: v.coarse });
+  const xs = taken.map((b) => [b.x, b.x + b.w] as const).sort((a, b) => a[0] - b[0]);
+  const gaps: [number, number][] = [];
+  let at = v.letterW + 4;
+  for (const [a, b] of xs) {
+    if (a > at) gaps.push([at, Math.min(a, xEnd)]);
+    at = Math.max(at, b);
+  }
+  if (xEnd > at) gaps.push([at, xEnd]);
+  gaps.sort((a, b) => b[1] - b[0] - (a[1] - a[0]));
+  const g = gaps[0];
+  if (g)
+    for (const text of DENSITY_CAPTIONS) {
+      const tw = ctx.measureText(text).width;
+      if (g[1] - g[0] < tw + 24) continue;
+      const x = g[0] + 12;
+      ctx.fillStyle = pal.ink3;
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, x, 11);
+      v.ledger.add('frame', text, { x: x - 2, y: 11 - fs / 2 - 1, w: tw + 4, h: fs + 2 });
+      break;
+    }
+  ctx.font = mapFont(T_MAP_S, { sans: true, weight: 450, coarse: v.coarse });
 }
 
 /**
@@ -458,19 +499,36 @@ function drawServiceRow(v: SkyContext, extra: ServiceExtra): ServiceHit[] {
   const rowY = RULER_H + ROW_H / 2;
   const fs = mapSize(T_MAP_S, v.coarse);
   const box = (x: number, w: number) => ({ x: x - 2, y: rowY - fs / 2 - 1, w: w + 4, h: fs + 2 });
-  const taken: Rect[] = [];
+  // флажок меридиана (MAP-33) — занятое место строки: названия эпох и подписи черт его обходят
+  const taken: Rect[] = extra.flag ? [extra.flag] : [];
+  /** Левый край строки шириной w, которая кончается не правее xr и не ложится на занятое: сдвиг влево за помеху. */
+  const leftOf = (xr: number, w: number): number => {
+    let x = xr - w;
+    for (let k = 0; k < 6; k++) {
+      const hit = taken.find((t) => hits(box(x, w), [t]));
+      if (!hit) break;
+      x = hit.x - 12 - w;
+    }
+    return x;
+  };
   ctx.font = mapFont(T_MAP_S, { sans: true, weight: 450, coarse: v.coarse });
   ctx.textBaseline = 'middle';
 
-  // масштабная линейка «├─ 50 лет ─┤» (UX-08)
+  // «сегодня» — первым: оно подписано всегда (MAP-78; ТЗ § 11.2, п. 7), справа от черты, а если справа нет места — слева
+  const marks = markLabels(v);
+  const today = marks.find((m) => m.label === 'сегодня');
+  if (today) placeMark(v, today, box, taken, W - 4);
+
+  // масштабная линейка «├─ 50 лет ─┤» (UX-08): у правого края, левее «сегодня», если подпись черты там
   const bar = scaleBar(v);
   let right = W - 8;
   if (bar) {
-    const text = `${bar.approx ? '≈ ' : ''}${yearsWord(bar.years)}`;
+    const text = `${bar.approx ? '≈ ' : ''}${yearsWord(bar.years)}`;
     const tw = ctx.measureText(text).width;
-    const bx1 = W - 10;
+    const full = tw + 6 + bar.px;
+    const tx = leftOf(W - 10, full);
+    const bx1 = tx + full;
     const bx0 = bx1 - bar.px;
-    const tx = bx0 - 6 - tw;
     if (tx > LW + 8) {
       ctx.strokeStyle = pal.ink2;
       ctx.lineWidth = 1;
@@ -496,7 +554,7 @@ function drawServiceRow(v: SkyContext, extra: ServiceExtra): ServiceHit[] {
     ctx.fillStyle = pal.ink;
     for (const text of [modelText(extra.model), modelText(extra.model, true)]) {
       const tw = ctx.measureText(text).width;
-      const tx = right - tw;
+      const tx = leftOf(right, tw);
       if (tx < LW + 8) continue;
       ctx.fillText(text, tx, rowY);
       const b = box(tx, tw);
@@ -522,7 +580,7 @@ function drawServiceRow(v: SkyContext, extra: ServiceExtra): ServiceHit[] {
       parts.push({ t: ' — ' }, { t: 'развернуть', hit: { kind: 'all', id: '' } });
       const ws = parts.map((q) => ctx.measureText(q.t).width);
       const tw = ws.reduce((a, b) => a + b, 0);
-      const x0 = right - tw;
+      const x0 = leftOf(right, tw);
       if (x0 < LW + 8 && k > 1) continue;
       if (x0 < LW + 8) break;
       let x = x0;
@@ -542,18 +600,10 @@ function drawServiceRow(v: SkyContext, extra: ServiceExtra): ServiceHit[] {
       break;
     }
   }
-  // черты канона и «сегодня» — у своих черт
-  ctx.fillStyle = pal.ink3;
-  for (const [t, label] of [[CANON, 'завершение канона'], [today(), 'сегодня']] as const) {
-    const x = cam.sx(v.xOf(t)) + 4;
-    const tw = ctx.measureText(label).width;
-    const b = box(x, tw);
-    if (x < LW + 8 || x + tw > right || hits(b, taken)) continue;
-    ctx.fillText(label, x, rowY);
-    v.ledger.add('frame', label, b);
-    taken.push(b);
-  }
-  // эпохи: граница — короткая черта, название — у начала эпохи или у левого края, если начало за краем (MAP-35, UX-10)
+  // черта завершения канона — у своей черты: справа, а у правого края — слева (MAP-78)
+  for (const m of marks) if (m !== today) placeMark(v, m, box, taken, right + 12);
+  // эпохи: граница — короткая черта, название — у начала эпохи или у левого края, если начало за краем (MAP-35, UX-10);
+  // под флажком меридиана и другой надписью строки — сразу за ней, в пределах эпохи (MAP-33)
   ctx.strokeStyle = alpha(pal.rule, 1);
   ctx.beginPath();
   const eps = v.model.epochs.map((e) => ({ e, a: cam.sx(v.xOf(toAstro(e.start))), b: cam.sx(v.xOf(toAstro(e.end))) }));
@@ -563,25 +613,60 @@ function drawServiceRow(v: SkyContext, extra: ServiceExtra): ServiceHit[] {
     ctx.lineTo(Math.round(a) + 0.5, FRAME_H - 3);
   }
   ctx.stroke();
+  ctx.font = mapFont(T_MAP_S, { sans: true, weight: 450, coarse: v.coarse });
+  ctx.textBaseline = 'middle';
   ctx.fillStyle = pal.ink2;
   // при ярусах эпох названия эпох — в их первом ярусе (tiers.ts), здесь не повторяются
   const tiers = v.openTop > FRAME_H + 20;
   for (const { e, a, b } of tiers ? [] : eps) {
     const x0 = Math.max(a, LW) + 6;
-    const x1 = Math.min(b, right + 12, W) - 6;
+    const x1 = Math.min(b, W) - 6;
     if (x1 - x0 < 16) continue;
-    for (const text of [e.name, e.short]) {
+    // места: начало эпохи, затем — сразу за каждой помехой строки внутри эпохи
+    const starts = [x0, ...taken.filter((t) => t.x + t.w > x0 && t.x < x1).map((t) => t.x + t.w + 8)].filter((x) => x >= x0).sort((p, q) => p - q);
+    done: for (const text of [e.name, e.short]) {
       const tw = ctx.measureText(text).width;
-      if (x0 + tw > x1) continue;
-      const bx = box(x0, tw);
-      if (hits(bx, taken)) continue;
-      ctx.fillText(text, x0, rowY);
-      v.ledger.add('frame', text, bx);
-      taken.push(bx);
-      break;
+      for (const x of starts) {
+        if (x + tw > x1) continue;
+        const bx = box(x, tw);
+        if (hits(bx, taken)) continue;
+        ctx.fillText(text, x, rowY);
+        v.ledger.add('frame', text, bx);
+        taken.push(bx);
+        break done;
+      }
     }
   }
   return cmds;
+}
+
+/** Подписи черт на служебной строке: «завершение канона» и «сегодня» — где их черты в окне. */
+function markLabels(v: SkyContext): { label: string; x: number }[] {
+  const out: { label: string; x: number }[] = [];
+  for (const [t, label] of [[CANON, 'завершение канона'], [today(), 'сегодня']] as const) {
+    const x = v.cam.sx(v.xOf(t));
+    if (x >= v.letterW && x <= v.cam.w) out.push({ label, x });
+  }
+  return out;
+}
+
+/**
+ * Подпись черты (MAP-78): справа от неё, если помещается до xr и не ложится на занятое, иначе слева от неё. Рисует,
+ * пишет в замер и занимает место. false — места нет ни с одной стороны.
+ */
+function placeMark(v: SkyContext, m: { label: string; x: number }, box: (x: number, w: number) => Rect, taken: Rect[], xr: number): boolean {
+  const { ctx, pal } = v;
+  const tw = ctx.measureText(m.label).width;
+  for (const x of [m.x + 4, m.x - 4 - tw]) {
+    const b = box(x, tw);
+    if (x < v.letterW + 8 || x + tw > Math.min(xr, v.cam.w - 4) || hits(b, taken)) continue;
+    ctx.fillStyle = pal.ink3;
+    ctx.fillText(m.label, x, RULER_H + ROW_H / 2);
+    v.ledger.add('frame', m.label, b);
+    taken.push(b);
+    return true;
+  }
+  return false;
 }
 
 /**

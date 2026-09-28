@@ -43,11 +43,15 @@
     padding-left: 4px;
     padding-right: 4px;
   }
+  /* поле «Найти» — не уже 6rem (MOB-71): при крупном тексте оно не сжимается до нуля */
   .top.phone .search {
     flex: 1 1 auto;
     width: auto;
     min-width: 0;
     margin: 0 4px 0 8px;
+  }
+  .top.phone .search input {
+    min-width: 6rem;
   }
   /* подсказка в узком поле обрывается многоточием, а не на половине буквы */
   .top.phone .search input {
@@ -68,6 +72,58 @@
   .top.phone .commands {
     flex: none;
     margin-left: 0;
+  }
+  /* поле шириной 6rem рядом с «Толедот» и «Разделы» не помещается — экран уже 21em (336 px при обычном кегле; при кегле
+     браузера 32 px — любой телефон; MOB-71): вместо поля — команда «Найти:», она ставит фокус в поле, и поле раскрывается
+     во всю строку, как при фокусе. Поле остаётся в порядке Tab: фокус с клавиатуры раскрывает его так же */
+  @media (max-width: 21em) {
+    .top.phone .search:not(:focus-within) {
+      flex: none;
+      margin: 0 2px;
+    }
+    .top.phone .commands {
+      margin-left: auto;
+    }
+    .top.phone .search:not(:focus-within) label {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      padding: 0 8px;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .top.phone .search:not(:focus-within) label:hover {
+      background: var(--sheet-2);
+      color: var(--ink);
+    }
+    .top.phone .search:not(:focus-within) label:active {
+      background: var(--rule);
+      color: var(--ink);
+    }
+    .top.phone .search:not(:focus-within) input {
+      position: absolute;
+      width: 1px;
+      min-width: 0;
+      height: 1px;
+      min-height: 0;
+      padding: 0;
+      border: 0;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+    /* совсем крупный текст (телефон уже 13em: 390 px при кегле 30 px и крупнее): «Толедот» уходит из строки — «Найти:»
+       и «Разделы» остаются целиком; «Всё небо» — кнопка неба, название атласа — во вступлении */
+    @media (max-width: 13em) {
+      .top.phone .wordmark {
+        display: none;
+      }
+    }
+  }
+  /* команда «Найти:» на сенсорном экране — цель 44 px (решение 33); в обычной строке подпись поля её не растягивает */
+  @media (max-width: 21em) and (pointer: coarse) {
+    .top.phone .search:not(:focus-within) label {
+      min-height: 44px;
+    }
   }
   /* «Разделы» — список строками 48 px во всю высоту экрана; раскрывается от правого края */
   .top.phone .sections [role='menu'] {
@@ -288,7 +344,8 @@
   }
   .skyctl.column {
     bottom: auto;
-    top: max(var(--sky-top, 44px), min(calc(var(--sky-top, 44px) + 8px), calc(100% - var(--sheet-cover, 0px) - 181px)));
+    /* высота колонки — четыре кнопки max(44px, 2.75rem) с общими рамками и отступ (MOB-71: кнопки растут с кеглем) */
+    top: max(var(--sky-top, 44px), min(calc(var(--sky-top, 44px) + 8px), calc(100% - var(--sheet-cover, 0px) - 4 * max(44px, 2.75rem) - 5px)));
   }
   /* «Как читать карту» стоит в левом нижнем углу неба, и открытый лист карточки (любое положение) или лист «Эпох» её
      закрывают: над листом место указателей у края («↓ Давид»). Закрытая команда не получает фокус и не читается
@@ -310,7 +367,9 @@
     line-height: var(--t-ui-lh);
     padding: 10px 14px;
   }
-  .cartouche .long {
+  /* главная фраза о звезде, яркости и созвездиях остаётся и на телефоне (UX-70): её нет больше нигде; табличка
+     прокручивается, «Всё небо» — в «Как читать карту» только на высоком экране */
+  .cartouche .guide li:last-child {
     display: none;
   }
   .cartouche h1 {
@@ -330,10 +389,25 @@
   .skyctl.column {
     flex-direction: row;
     flex-wrap: wrap;
-    width: 87px;
+    width: calc(2 * max(44px, 2.75rem) - 1px);
   }
   .skyctl.column button {
     margin-left: -1px;
+  }
+}
+/* совсем низкое небо (окно до 300 px: 320 × 256 — масштаб 400 %; WCAG 1.4.10): колонка — одной строкой из четырёх кнопок
+   у верхнего края, вступление в две строки встаёт под ней, а не рядом (MOB-70) */
+@media (max-height: 300px) {
+  .skyctl.column {
+    flex-wrap: nowrap;
+    width: auto;
+  }
+  .cartouche.low {
+    bottom: 4px;
+  }
+  /* подсказка о касании уходит: две строки вступления не должны заходить на кнопки неба */
+  .cartouche.low .hint {
+    display: none;
   }
 }
 @media (max-height: 520px) and (min-width: 721px) {
@@ -470,6 +544,13 @@
   .idx .row {
     min-height: 44px;
     padding-bottom: 10px;
+  }
+  /* названия эпох в панели «Эпохи» — строкой 44 px (MOB-39): ссылка сводной таблицы и заголовок статьи эпохи */
+  .sheet table.epochs th a,
+  .epoch h3 .person {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
   }
   /* «ещё 23 события» под свёрнутым разделом — отдельная строка 44 px */
   .clamp-more {

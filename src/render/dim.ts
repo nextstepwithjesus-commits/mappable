@@ -117,3 +117,24 @@ export function separateRibbons(gold: [string, string], azure: [string, string],
   return [out[0][0], out[1][0], out[0][1], out[1][1]];
 }
 
+
+const toneMemo = new Map<string, string>();
+/**
+ * Цвет ленты для текста (номера у бусин, решение 39): сам цвет, если его контраст ко всем фонам grounds не ниже min
+ * (текст — 4,5 : 1, ТЗ § 3.8), иначе он придвигается к цвету текста ink, пока контраст не станет достаточным.
+ * Цвета — #rrggbb; результат — #rrggbb.
+ */
+export function textTone(color: string, grounds: readonly string[], ink: string, min = 4.5): string {
+  const key = `${color}|${grounds.join()}|${ink}|${min}`;
+  const hit = toneMemo.get(key);
+  if (hit) return hit;
+  let out = color;
+  if ([color, ink, ...grounds].every((c) => HEX.test(c.trim())))
+    for (let t = 0; t <= 1.0001; t += 0.05) {
+      const c = over(ink, color, t);
+      out = c;
+      if (grounds.every((g) => contrast(c, g) >= min)) break;
+    }
+  toneMemo.set(key, out);
+  return out;
+}

@@ -68,6 +68,17 @@ export interface ChronoRow {
   /** Год оценён по порядку перечисления братьев и сестёр (MAP-54): помета «выв.» у года рождения. */
   byOrder?: boolean;
   /**
+   * false — год смерти свой (явный год, допустимый интервал), не выведен из рождения по возрасту: округление оценки
+   * рождения его не сдвигает (engine/years.ts, shownYears; CARD-79). undefined — смерть по возрасту или её нет.
+   */
+  dAge?: boolean;
+  /**
+   * Год знака у первого засвидетельствованного года (этап 7, круг 3; MAP-69; решение 38): у лица Нового Завета без
+   * чисел текста с промежутком рождения шире 40 лет знак на небе стоит в этот год (призвание, суд, событие Деяний),
+   * а промежуток рождения bLo…bHi — растушёванная полоса влево от знака (NodeRow.band). b — по-прежнему оценка рождения.
+   */
+  mark?: number;
+  /**
    * У лица «время не установлено» (cls epochal; MAP-52): откуда скобка bLo…bHi — встреча с лицом id, годы брата
    * или сестры id, эпоха главы
    * первого упоминания ref, эпоха из данных, границы из данных или годы созвездия. b — середина скобки.
@@ -95,6 +106,14 @@ export interface NodeRow {
    * null — разрыва нет.
    */
   brk: number | null;
+  /**
+   * Знак у первого засвидетельствованного года (этап 7, круг 3; MAP-69; решение 38; ChronoRow.mark): t0 — этот год,
+   * а не рождение. band — промежуток рождения [начало; конец ≤ t0] (астр.): растушёванная полоса влево от знака, без
+   * острого знака в её середине; место в полосе под неё занято раскладкой. born — оценка рождения внутри полосы: отвод
+   * от родителя приходит в этот год. null — знак в год рождения, как у всех.
+   */
+  band: [number, number] | null;
+  born: number | null;
 }
 
 export interface ModelData {
@@ -127,8 +146,8 @@ export interface LineFile {
 }
 
 // годы — разностями от рождения; лица — номерами в индексе (tools/build-data.ts)
-type RawChrono = [number, number, number, number | null, number | null, number, DateClass, string | null, (number | null)?, (number | null)?, number?, number?, (string | null)?];
-type RawNode = [number, number, number, number, number, number | null, number | null, number | null, number, number?, number?];
+type RawChrono = [number, number, number, number | null, number | null, number, DateClass, string | null, (number | null)?, (number | null)?, number?, number?, (string | null)?, (number | null)?];
+type RawNode = [number, number, number, number, number, number | null, number | null, number | null, number, number?, (number | null)?, number?, number?, number?];
 type RawOutline = { g: string; p?: string; n: number; r: number[][]; s: [number, number, number, number][] };
 interface RawAtlas {
   built: string;
@@ -204,7 +223,9 @@ function decodeModel(m: RawModel): ModelData {
       b, bLo: b + r[1], bHi: b + r[2], d: abs(b, r[3]), dLo: abs(b, r[8] ?? null), dHi: abs(b, r[9] ?? null), last: abs(b, r[4]), dEst: b + r[5], cls: r[6], epoch: r[7], infant: r[10] === 1,
       ...(flags & 1 ? { named: true } : {}),
       ...(flags & 2 ? { byOrder: true } : {}),
+      ...(flags & 4 ? { dAge: false } : {}),
       ...(r[12] ? { when: decodeWhen(r[12]) } : {}),
+      ...(r[13] !== undefined && r[13] !== null ? { mark: b + r[13] } : {}),
     });
   });
   const idAt = (k: number | null) => (k === null ? null : persons[k].id);
@@ -216,6 +237,8 @@ function decodeModel(m: RawModel): ModelData {
       id: ghost ? `ghost:${person}` : person, person, ghost, lane: n[1], t0, t1: t0 + n[3], block: n[4],
       parentLane: n[5], layoutParent: idAt(n[6]), satelliteOf: idAt(n[7]), spine: !!n[8], trail: TRAIL_KINDS[n[9] ?? 0],
       brk: n[10] === undefined || n[10] === null ? null : t0 + n[10],
+      band: n[11] === undefined ? null : [t0 + n[11], t0 + n[12]!],
+      born: n[13] === undefined ? null : t0 + n[13],
     };
   });
   // эпохи модели: в файле модели — только отличия от data/epochs.json (tools/build-data.ts, engine/epochs.ts)

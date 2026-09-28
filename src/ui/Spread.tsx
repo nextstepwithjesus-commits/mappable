@@ -7,7 +7,7 @@
  * лиц подряд (MOB-22, MOB-48).
  */
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import type { ComponentChildren } from 'preact';
+import { Fragment, type ComponentChildren } from 'preact';
 import { byId, graph, loadCard } from '../data/atlas.ts';
 import { relate } from '../engine/kinship.ts';
 import type { Card, Chrono } from '../data/types.ts';
@@ -22,9 +22,12 @@ import { Close } from './controls.tsx';
 import { Chain } from './panels/Kinship.tsx';
 import { typo } from './text/typo.ts';
 
-/** Что стоит на странице вместо раздела без сведений. */
-/** Пустая сторона разворота — словами, не одиноким «—» (VIS-57): раздел не составлен — «не сообщается». */
-const STATE_TEXT: Partial<Record<SecState, string>> = { silent: 'в Писании не сообщается', na: 'не относится', absent: 'не сообщается' };
+/**
+ * Что стоит на странице вместо раздела без сведений. Пустая сторона разворота — словами, не одиноким «—» (VIS-57).
+ * Несоставленный раздел — не молчание Писания (решения 6 и 64; CARD-88): бледное «—» с пояснением «раздел не составлен»;
+ * если раздел не составлен у обоих лиц, строки нет.
+ */
+const STATE_TEXT: Partial<Record<SecState, string>> = { silent: 'в Писании не сообщается', na: 'не относится', absent: 'раздел не составлен' };
 
 /** Общая ось мини-шкал двух шапок: объединение окон обоих лиц (астрономические годы). */
 export function commonAxis(a: [number, number] | null, b: [number, number] | null): [number, number] | undefined {
@@ -82,7 +85,18 @@ export function Spread() {
   const cell = (s: ReturnType<typeof side>, n: number) => (
     <div class="pg">
       <span class="who">{s.name}:</span>
-      {s.st(n) === 'content' ? s.out.get(n) : <span class="none">{STATE_TEXT[s.st(n)] ?? ''}</span>}
+      {s.st(n) === 'content' ? (
+        s.out.get(n)
+      ) : s.st(n) === 'absent' ? (
+        <span class="none absent">
+          <span class="dash" aria-hidden="true">
+            —
+          </span>{' '}
+          {STATE_TEXT.absent}
+        </span>
+      ) : (
+        <span class="none">{STATE_TEXT[s.st(n)] ?? ''}</span>
+      )}
     </div>
   );
 
@@ -179,7 +193,8 @@ export function Spread() {
           </div>
           <KinSpine key={`${a}|${b}`} a={a} b={b} />
         </div>
-        {rows}
+        {/* строки другой пары, модели или пришедшего тома строятся заново, а не перекраиваются (CARD-76) */}
+        <Fragment key={`${a}|${b}|${m.id}|${cards[a] ? 1 : 0}${cards[b] ? 1 : 0}`}>{rows}</Fragment>
       </div>
     </section>
   );
@@ -194,7 +209,7 @@ function KinSpine({ a, b }: { a: string; b: string }) {
   if (!r) {
     return (
       <div class="spine kin">
-        <span class="none">родство в данных атласа не найдено</span>
+        <span class="none">родство не найдено</span>
       </div>
     );
   }

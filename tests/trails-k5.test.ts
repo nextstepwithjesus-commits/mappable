@@ -115,18 +115,22 @@ describe('скобка «время не установлено» (MAP-52)', () 
 });
 
 describe('семьи (MAP-54, MAP-55)', () => {
-  it('«порядок по …»: стих перечисления детей, стихи одной главы — промежутком', () => {
+  it('«годы — по порядку …, выв.»: место, где дети названы по порядку, стихи одной главы — промежутком', () => {
     const txt = trails.orderNote(['samus-syn-davida', 'sovav-syn-davida', 'solomon', 'nafan-syn-davida', 'evear-syn-davida', 'elisama-syn-davida'].filter((id) => atlas.byId.has(id)));
-    expect(txt?.replace(/\u00a0/g, ' ')).toBe('порядок по 1 Пар 3:5–8');
+    expect(txt?.replace(/\u00a0/g, ' ')).toBe('годы — по порядку 1 Пар 3:5–8, выв.');
     expect(trails.orderNote(['adam'])).toBe(null);
   });
   it('у детей Давида от разных матерей — пометы «от Вирсавии», «от Маахи»: у детей, раз верх скобы на лентах', () => {
     const { s, texts } = drawSky(window(-1010, 60, 6));
-    const notes = texts.map((q) => q.t);
+    const notes = texts.map((q) => q.t.replace(/\u00a0/g, ' '));
     expect(notes).toContain('от Вирсавии');
     expect(notes.some((t) => /^от (Маахи|Ахиноамы|Авигеи|Аггифы|Авиталы|Эглы)$/.test(t))).toBe(true);
     expect(s.labelStats().overlaps).toBe(0);
-    // «порядок по 1 Пар …» у детей, чей год оценён по порядку перечисления
-    expect(notes.some((t) => /^порядок по /.test(t.replace(/ /g, ' ')))).toBe(true);
+    // помета порядка — только у семьи выбранного лица (решение 41; MAP-73): без выбора её нет
+    expect(notes.some((t) => /^годы — по порядку /.test(t))).toBe(false);
+    // выбран Давид — у его детей, чей год оценён по порядку перечисления, «годы — по порядку 1 Пар 3:…, выв.»
+    const sel = drawSky(window(-1010, 60, 6), { selected: 'david' });
+    expect(sel.texts.map((q) => q.t.replace(/\u00a0/g, ' ')).some((t) => /^годы — по порядку 1 Пар 3:\d+–\d+, выв\.$/.test(t))).toBe(true);
+    expect(sel.s.labelStats().overlaps).toBe(0);
   });
 });

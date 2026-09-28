@@ -78,13 +78,24 @@ function describedCase(name: string, cs: Case): string | null {
   return [h[cs], ...rest].join(' ');
 }
 
-/** Имя лица в косвенном падеже или null, если склонение ненадёжно. Безымянные — со строчной. */
-export function nameCase(name: string, sex: Sex, cs: Case, unnamed = false): string | null {
+/**
+ * Слово имени на гласную + «а» («Далуиа», «Иешуа») само не склоняется. Если в тексте у того же лица есть форма на «-ия»
+ * («Далуия», 1 Пар 3:1), косвенные падежи строятся от неё: «Далуии», как «Марии» (CARD-86). forms — другие формы имени
+ * лица из данных (alt).
+ */
+export function declinableForm(w: string, forms: readonly string[]): string {
+  if (!/[аеёиоуыэюя]а$/.test(w) || !forms.length) return w;
+  const ia = `${w.slice(0, -1)}я`;
+  return /ия$/.test(ia) && forms.some((f) => f.split(' ').includes(ia)) ? ia : w;
+}
+
+/** Имя лица в косвенном падеже или null, если склонение ненадёжно. Безымянные — со строчной. forms — другие формы имени. */
+export function nameCase(name: string, sex: Sex, cs: Case, unnamed = false, forms: readonly string[] = []): string | null {
   if (unnamed) return describedCase(name, cs);
   const words = name.split(' ');
   const out: string[] = [];
   for (const w of words) {
-    const d = declineWord(w, sex, cs);
+    const d = declineWord(declinableForm(w, forms), sex, cs);
     if (d === null) return null;
     out.push(d);
   }

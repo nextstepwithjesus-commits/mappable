@@ -103,21 +103,31 @@ describe('по всем лицам: годы', () => {
       const b8 = firstYear(sec(id, 8));
       const { left, right } = lifeBarLabels(c);
       const lb = Number(left?.replace(/\D/g, '') ?? NaN);
+      if (c.mark !== undefined && c.cls === 'estimated') {
+        // знак на небе у первого засвидетельствованного года (MAP-69, решение 38): паспорт называет не точку оценки,
+        // а тот же промежуток рождения, что § 8: «род. между 40 и 10 гг. до Р. Х.» — «возможный промежуток — 40–10»
+        const pm = /^род\. между (\d+)(?: г\.(?: до| по) Р\. Х\.)? и (\d+)/.exec(y);
+        const r8 = /возможный промежуток — (\d+)(?: г\.(?: до| по) Р\. Х\.)?\s?[–—]\s?(\d+)/.exec(sec(id, 8));
+        if (!pm || !r8 || pm[1] !== r8[1] || pm[2] !== r8[2]) bad.push(`${id}: паспорт «${y}», § 8 «${sec(id, 8).slice(0, 70)}»`);
+        if (lb !== b8) bad.push(`${id}: шкала «${left}», § 8 «${sec(id, 8).slice(0, 40)}»`);
+        if (right !== null && !/ум\./.test(y)) bad.push(`${id}: конец шкалы «${right}» при паспорте «${y}»`);
+        continue;
+      }
       if (firstYear(y) !== b8 || lb !== b8) bad.push(`${id}: паспорт «${y}», § 8 «${sec(id, 8).slice(0, 40)}», шкала «${left}»`);
       const deathInPassport = /–| — /.test(y); // «1040–970 гг.»; через эру — «5 г. до Р. Х. — 30 г. по Р. Х.»
       if (!!right !== deathInPassport) bad.push(`${id}: конец шкалы «${right}» при паспорте «${y}»`);
     }
     expect(bad).toEqual([]);
   });
-  it('у народа и рода § 8 — «Происхождение: от …» без года (решение 23; CARD-59)', () => {
+  it('у народа и рода § 8 не строится, происхождение — в § 6 «Произошли от» (решение 23; CARD-87)', () => {
     const bad: string[] = [];
     for (const id of allIds.filter(people)) {
       const t = sec(id, 8);
-      if (/\d{3,4}\s*г/.test(t) || /возможный промежуток/.test(t)) bad.push(`${id}: «${t.slice(0, 60)}»`);
-      if (byId.get(id)!.father && !/^Происхождение: /.test(t)) bad.push(`${id}: § 8 «${t.slice(0, 60)}»`);
+      if (t) bad.push(`${id}: § 8 «${t.slice(0, 60)}»`);
+      if (byId.get(id)!.kind === 'people' && byId.get(id)!.father && !/^Произошли от: /.test(sec(id, 6))) bad.push(`${id}: § 6 «${sec(id, 6).slice(0, 60)}»`);
     }
     expect(bad).toEqual([]);
-    expect(sec('ludim', 8)).toMatch(/^Происхождение: от Мицраима Быт 10:13/);
+    expect(sec('ludim', 6)).toMatch(/^Произошли от: Мицраим Быт 10:13/);
   });
   it('§ 20 называет тот же год смерти, что паспорт', () => {
     const bad: string[] = [];
@@ -143,13 +153,13 @@ describe('по всем лицам: § 23 считает стихи, а не с�
         if (max === undefined || n > max) bad.push(`${id}: ${book} ${n} из ${max}`);
       }
       const t = sec(id, 23);
-      const total = /Названо по имени в ([\d\s ]+) стих/.exec(t);
+      const total = /Имя названо в ([\d\s ]+) стих/.exec(t);
       if (total && Number(total[1].replace(/\D/g, '')) !== Object.values(byId.get(id)!.books).reduce((a, b) => a + b, 0)) bad.push(`${id}: итог не равен сумме по книгам`);
     }
     expect(bad).toEqual([]);
   });
-  it('у безымянных лиц нет счёта «названо по имени»', () => {
-    const bad = allIds.filter((id) => byId.get(id)!.unnamed && /Названо по имени/.test(sec(id, 23)));
+  it('у безымянных лиц нет счёта «имя названо»', () => {
+    const bad = allIds.filter((id) => byId.get(id)!.unnamed && /Имя названо/.test(sec(id, 23)));
     expect(bad).toEqual([]);
   });
 });
@@ -181,7 +191,7 @@ describe('Мелхиседек (сценарий U3)', () => {
     expect(pass.get('melkhisedek')!.has('Род')).toBe(false);
   });
   it('§ 23: имя в Евр названо в 9 стихах, а не 42 ссылки', () => {
-    expect(sec('melkhisedek', 23)).toMatch(/^Названо по имени в 11 стихах; больше всего — Евр \(9\), Быт \(1\), Пс \(1\)\./);
+    expect(sec('melkhisedek', 23)).toMatch(/^Имя названо в 11 стихах; больше всего — Евр \(9\), Быт \(1\), Пс \(1\)\./);
   });
 });
 
@@ -205,12 +215,14 @@ describe('Руфь', () => {
 
 describe('Авиуд, сын Зоровавеля (ТЗ § 11.2, п. 4)', () => {
   it('формула «после отца, Зоровавеля» с названием родства и пометой «расч.»', () => {
-    expect(sec('aviud-syn-zorovavelya', 13)).toMatch(/Родился примерно через \d+ лет после отца, Зоровавеля, и примерно за \d+ лет до сына, Елиакима\. расч\./);
+    // сын Елиаким — не опора формулы: его год выведен из той же цепочки оценок, что и год Авиуда (CARD-86)
+    expect(sec('aviud-syn-zorovavelya', 13)).toMatch(/Родился примерно через \d+ лет после отца, Зоровавеля\. расч\./);
+    expect(sec('aviud-syn-zorovavelya', 13)).not.toMatch(/Елиакима/);
     expect(sec('aviud-syn-zorovavelya', 13)).toMatch(/Эпоха рождения: Возвращение и персидское время/);
   });
   it('колено по предкам — колено Иудино, дом Давидов; § 23 — только Мф 1:13', () => {
     expect(pp('aviud-syn-zorovavelya', 'Колено / народ')).toBe('колено Иудино, дом Давидов');
-    expect(sec('aviud-syn-zorovavelya', 23)).toMatch(/^Названо по имени в 1 стихе \(Мф\)/);
+    expect(sec('aviud-syn-zorovavelya', 23)).toMatch(/^Имя названо в 1 стихе \(Мф\)/);
   });
 });
 
@@ -273,11 +285,16 @@ describe('Давид и Мицраим', () => {
     expect(n).toBeGreaterThan(0);
     expect(n).toBeLessThanOrEqual(versesInBook.get('2Цар')!);
   });
-  it('Мицраим: «застал деда, Ноя» вместо «жил при жизни»', () => {
-    expect(sec('mitsraim', 13)).toMatch(/застал деда, Ноя/);
-    // год Мицраима оценён по порядку сыновей Хама (Быт 10:6) — помета «выв.», как в § 8 (MAP-54); иначе «расч.»
-    const mark = models[0].chrono.get('mitsraim')!.byOrder ? 'выв' : 'расч';
-    expect(pp('mitsraim', 'Годы')).toMatch(new RegExp(`^род\\. ок\\. \\d+[05] г\\. до Р\\. Х\\. ${mark}\\.$`));
+  it('Мицраим — народ (решение 61): без года рождения, без § 8 и § 14; § 6 «Произошли от: Хам»', () => {
+    // «Мицраим» — еврейское имя Египта (§ 24); Писание не рассказывает о нём как о человеке
+    expect(byId.get('mitsraim')!.kind).toBe('people');
+    expect(pp('mitsraim', 'Годы')).not.toMatch(/род\. ок\./);
+    expect(sec('mitsraim', 8)).toBe('');
+    expect(sec('mitsraim', 14)).toBe('');
+    expect(sec('mitsraim', 6)).toMatch(/^Произошли от: Хам/);
+    // Хуш и Ханаан остаются лицами: о Ханаане — рассказ (Быт 9:18–27), о Хуше — отец Нимрода (Быт 10:8)
+    expect(byId.get('khanaan')!.kind).toBe('person');
+    expect(byId.get('khush-syn-khama')!.kind).toBe('person');
   });
 });
 

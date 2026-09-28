@@ -3,13 +3,14 @@
  *  — пять точек сравнения выводятся из самих линий: Каинан; Давид — Соломон/Нафан; Салафиил и Зоровавель;
  *    Авиуд/Рисай; Иисус Христос — со стихами Синодального текста;
  *  — ленты: у точек сравнения расходятся и сходятся (п. 2), нить Иосифа при расхождении — сверху;
- *  — коса без «глаз»: перекрестья не реже чем через CROSS_PX; одиночная нить без ряби;
+ *  — коса считает поколения: одно перекрестье на поколение, на длинном — параллельные нити и перекрестье посередине
+ *    (MAP-75; решение 40), без «глаз» (MAP-27); одиночная нить без ряби;
  *  — нить без излома на стыке общего и раздельного участков;
  *  — в режиме «только линии» выноски стоят на небе, проходят замер наложений и ловят щелчок.
  * Нужна свежая сборка данных: npm run -s data.
  */
 import { beforeAll, describe, expect, it } from 'vitest';
-import { buildRibbons, braidPhase, CROSS_PX, MEANDER_MAX, runSpans, type Pt, type Strand } from '../src/engine/ribbons.ts';
+import { buildRibbons, braidPhase, CROSS_LEN, MEANDER_MAX, runSpans, type Pt, type Strand } from '../src/engine/ribbons.ts';
 
 let ribbons: typeof import('../src/render/ribbons.ts');
 let sky: typeof import('../src/render/sky.ts');
@@ -70,7 +71,7 @@ describe('точки сравнения Мф 1 и Лк 3 (U2)', () => {
 });
 
 describe('геометрия лент', () => {
-  it('коса без «глаза»: на длинном поколении перекрестья не реже чем через CROSS_PX (MAP-27)', () => {
+  it('коса считает поколения: одно перекрестье на поколение; на длинном — параллельные нити, перекрестье посередине (MAP-75; решение 40)', () => {
     const ids = ['a', 'b', 'c', 'd'];
     const pos = new Map<string, Pt>([['a', { x: 0, y: 0 }], ['b', { x: 60, y: 0 }], ['c', { x: 560, y: 0 }], ['d', { x: 620, y: 0 }]]);
     const { mary, joseph } = byLine(build(ids, ids, pos));
@@ -80,20 +81,49 @@ describe('геометрия лент', () => {
       const d1 = joseph.points[k].y - mary.points[k].y;
       if (d0 !== 0 && Math.sign(d0) !== Math.sign(d1)) xs.push(joseph.points[k].x);
     }
-    const long = xs.filter((x) => x > 60 && x < 560);
-    expect(long.length).toBeGreaterThanOrEqual(Math.ceil(500 / CROSS_PX) - 1);
-    for (let k = 1; k < long.length; k++) expect(long[k] - long[k - 1]).toBeLessThanOrEqual(CROSS_PX + 12);
+    // по одному перекрестью на каждое поколение, и на длинном тоже
+    for (const [x0, x1] of [[0, 60], [60, 560], [560, 620]]) expect(xs.filter((x) => x > x0 && x < x1).length, `${x0}–${x1}`).toBe(1);
+    // на длинном поколении перекрестье — посередине, вне его (CROSS_LEN·A px) нити параллельны на 2A: без «глаза» (MAP-27)
+    const mid = xs.find((x) => x > 60 && x < 560)!;
+    expect(Math.abs(mid - 310)).toBeLessThan(4);
+    let parallel = 0;
+    for (let k = 0; k < joseph.points.length; k++) {
+      const x = joseph.points[k].x;
+      if (x < 80 || x > 540 || Math.abs(x - 310) < (CROSS_LEN * A) / 2 + 2) continue;
+      expect(Math.abs(joseph.points[k].y - mary.points[k].y)).toBeCloseTo(2 * A, 1);
+      parallel++;
+    }
+    expect(parallel).toBeGreaterThan(20);
     // в лицах нити по-прежнему по разные стороны
     for (const x of [60, 560]) {
       const kj = joseph.points.findIndex((p) => Math.abs(p.x - x) < 1e-6);
       expect(Math.sign(joseph.points[kj].y)).toBe(-Math.sign(mary.points[kj].y));
     }
   });
+  it('плетение поочерёдное: участок «поверх» — только перекрестье, сверху по очереди Мария и Иосиф (MAP-75)', () => {
+    const ids = ['a', 'b', 'c', 'd', 'e'];
+    const pos = new Map<string, Pt>(ids.map((id, i) => [id, { x: i * 200, y: 0 }]));
+    const { mary, joseph } = byLine(build(ids, ids, pos));
+    const spans = [...mary.over.map(([a, b]) => [mary.points[a].x, mary.points[b].x, 'm'] as const), ...joseph.over.map(([a, b]) => [joseph.points[a].x, joseph.points[b].x, 'j'] as const)].sort((p, q) => p[0] - q[0]);
+    expect(spans.length).toBe(4);
+    spans.forEach(([x0, x1, who], k) => {
+      // перекрестье — посередине поколения, длиной CROSS_LEN·A
+      expect((x0 + x1) / 2).toBeCloseTo(100 + 200 * k, 0);
+      expect(x1 - x0).toBeCloseTo(CROSS_LEN * A, 0);
+      if (k) expect(who).not.toBe(spans[k - 1][2]);
+    });
+  });
   it('фаза косы: у обоих концов участка между расхождениями нить Иосифа сверху (φ ≡ 0), в лицах φ кратна π', () => {
     const { phi, turns } = braidPhase([60, 60, 60], 'both');
     expect(phi[0] % (2 * Math.PI)).toBeCloseTo(0, 9);
     expect(phi[phi.length - 1] % (2 * Math.PI)).toBeCloseTo(0, 9);
     expect(turns.reduce((s, x) => s + x, 0) % 2).toBe(0);
+    // одно перекрестье на поколение; при нечётном числе поколений между расхождениями на самом коротком его нет
+    // (Салафиил — Зоровавель: одно поколение, нити параллельны), лишнего перекрестья нет нигде
+    expect(braidPhase([300, 40, 300], 'both').turns).toEqual([1, 0, 1]);
+    expect(braidPhase([500], 'both').turns).toEqual([0]);
+    expect(braidPhase([500, 500, 500], 'end').turns).toEqual([1, 1, 1]);
+    expect(braidPhase([500, 60], 'both').turns).toEqual([1, 1]);
   });
   it('одиночная нить на плотном участке без ряби: волна не больше 0,25·A и гаснет при шаге меньше 60 px (MAP-26)', () => {
     // у Луки на раздельном участке лица чередуются по двум полосам с шагом 20 px
@@ -272,5 +302,15 @@ describe('«только линии» на небе (U2; MAP-23)', () => {
     }
     expect(hit).toBeTruthy();
     expect(['david', 'solomon']).toContain(hit!.from);
+    // шаг объясняет подсказка (Tip.tsx; решение 54): на холсте подписи шага нет, лента наведена
+    ribbons.setRibbonHover(s, hit);
+    s.draw({
+      model: atlas.models[0], lambda: 1, selected: null, second: null, hovered: null, focus: null, highlight: null, layers: LAYERS,
+      onlyLines: true, meridian: null, tensionPersons: new Set(), flow: 0, reduced: true, intro: 1, lineFlip: false, pins: new Set(), reserve: [],
+    } as Parameters<SkyT['draw']>[0]);
+    const step = ribbons.ribbonStepText(hit!, { joseph: atlas.lines.joseph.persons, mary: atlas.lines.mary.persons });
+    expect(s.labelStats().boxes.some((b) => b.text === step)).toBe(false);
+    expect(ribbons.ribbonHover(s)).toBe(hit);
+    ribbons.setRibbonHover(s, null);
   });
 });

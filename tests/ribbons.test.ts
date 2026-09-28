@@ -5,7 +5,7 @@
  * (без световых «бусин» на стыках), слабое свечение ночью, вес днём, гашение не ниже 0,85 днём.
  */
 import { describe, it, expect } from 'vitest';
-import { buildRibbons, type Pt, type Strand } from '../src/engine/ribbons.ts';
+import { buildRibbons, CROSS_LEN, type Pt, type Strand } from '../src/engine/ribbons.ts';
 import { drawStrands, ribbonDim, GLOW_WIDTH, DAY_HALO_MIN, type RibbonLook } from '../src/render/ribbons.ts';
 import { hexToRgb } from '../src/render/color.ts';
 
@@ -109,8 +109,11 @@ describe('ленты: геометрия', () => {
       expect(all[i][0]).toBeGreaterThanOrEqual(all[i - 1][1] - 1e-6); // не перекрываются
       expect(all[i][2]).not.toBe(all[i - 1][2]); // чередуются
     }
-    // каждый участок — от лица до соседнего лица, перекрестье внутри
-    for (const [a, b] of all) expect(b - a).toBeCloseTo(60, 0);
+    // каждый участок — само перекрестье посередине поколения (MAP-75; решение 40): внутри поколения, длиной CROSS_LEN·A
+    for (const [a, b] of all) {
+      expect(b - a).toBeCloseTo(Math.min(60, CROSS_LEN * A), 0);
+      expect(((a + b) / 2 - 180) % 60).toBeCloseTo(30, 0);
+    }
   });
 });
 

@@ -266,10 +266,10 @@
   font-family: var(--serif);
   color: var(--ink);
 }
-/* строка — не выше 60 px (MOB-27): имя и уточнение в одну строку, под ними годы и микрошкала 56 × 10 */
+/* строка — не выше 60 px (MOB-27): имя и уточнение в одну строку, под ними годы и микрошкала 120 × 14 (VIS-17) */
 .result {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 56px;
+  grid-template-columns: minmax(0, 1fr) 120px;
   column-gap: 12px;
   align-items: center;
   padding: 6px 16px 7px;
@@ -302,8 +302,8 @@
 }
 .result canvas {
   grid-column: 2;
-  width: 56px;
-  height: 10px;
+  width: 120px;
+  height: 14px;
 }
 /* одноимённые — группой под подписью «Иосиф — 10 лиц»; строка начинается с уточнения (UX-01) */
 .results .grp-head {
@@ -333,6 +333,14 @@
 }
 .result.cmdrow[aria-selected='true'] {
   color: var(--ink);
+}
+/* «Руфь уже выбрана первой — выберите другое лицо» (UX-13): сообщение строкой списка, выбрать его нельзя */
+.result.cmdrow.self {
+  cursor: default;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
 }
 .results .empty {
   padding: 14px 16px;

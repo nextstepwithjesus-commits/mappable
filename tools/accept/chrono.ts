@@ -27,8 +27,12 @@ const passport = async (p: Page, key: string) => {
 };
 /** Первый год «ок. 1310 г. до Р. Х.» → 1310. */
 const year = (s: string) => Number(/(\d{3,4})/.exec(s)?.[1] ?? NaN);
-/** Год центра окна неба из адреса: «~y-1010» → −1010. */
-const centerYear = (p: Page) => Number(/~y(-?\d+)/.exec(decodeURIComponent(new URL(p.url()).hash))?.[1] ?? NaN);
+/** Где звезда лица на холсте (px) — по скрытому списку неба (src/ui/sky/SkyA11y.tsx); null — звезды нет на виду. */
+const starX = (p: Page, id: string) =>
+  p.evaluate((id) => {
+    const b = document.getElementById(`sky-star-${id}`) as HTMLElement | null;
+    return b && b.dataset.x ? Number(b.dataset.x) : null;
+  }, id);
 
 export const chrono: Scenario[] = [
   {
@@ -117,15 +121,19 @@ export const chrono: Scenario[] = [
     n: 226,
     title: 'MAP-52: Лука — в годы служения Павла (34–62 гг.), а не на меридиане Рождества',
     run: async (p) => {
-      // перелёт ставит звезду выбранного лица в одно и то же место свободной части неба: окно Луки правее окна Павла,
-      // если звезда Луки правее звезды Павла (прежде — 5 г. до Р. Х., левее Павла)
-      await go(p, '#/pavel~mmt-long');
-      const yp = centerYear(p);
+      // Прежде: перелёт ставил звезду выбранного лица в одно и то же место свободной части неба, и окно Луки было правее
+      // окна Павла (звезда Павла — ок. 1 г.). Круг 3 (MAP-69, решение 38): знак Павла — у первого засвидетельствованного
+      // года, обращения (34 г., Деян 9:3–6). Поэтому проверка — по звёздам в одном окне истинного масштаба (скрытый список
+      // неба, data-x): Лука не левее начала служения Павла и не меньше чем на 30 лет правее Рождества (звезда Иисуса Христа)
+      await go(p, '#/~y25~w120~l0~s0~h0.2');
+      const [xj, xp, xl] = await Promise.all(['iisus', 'pavel', 'luka'].map((id) => starX(p, id)));
+      if (xj === null || xp === null || xl === null) return fail(`нет звёзд в списке неба: Иисус ${xj}, Павел ${xp}, Лука ${xl}`);
+      const perYear = (await p.locator('.sky > canvas').boundingBox())!.width / 120;
       await go(p, '#/luka');
-      const yl = centerYear(p);
-      const ys = await passport(p, 'Годы');
-      if (!/время не установлено/.test(ys)) return fail(`паспорт Луки: «${ys}»`);
-      return yl - yp > 10 ? pass(`окно Луки около ${yl} г., Павла — около ${yp} г.`) : fail(`окно Луки около ${yl} г., Павла — около ${yp} г.`);
+      const yl = await passport(p, 'Годы');
+      if (!/время не установлено/.test(yl)) return fail(`паспорт Луки: «${yl}»`);
+      const why = `Лука правее Рождества на ${Math.round((xl - xj) / perYear)} лет, правее знака Павла на ${Math.round((xl - xp) / perYear)}`;
+      return xl - xj > 30 * perYear && xl >= xp ? pass(why) : fail(why);
     },
   },
   {
@@ -155,16 +163,19 @@ export const chrono: Scenario[] = [
     n: 229,
     title: 'MAP-52: братья Господни — не на меридиане Рождества; Мелхиседек — современник Авраама',
     run: async (p) => {
-      await go(p, '#/pavel~mmt-long');
-      const yp = centerYear(p);
-      await go(p, '#/iosiy-brat-gospoden');
-      const y = centerYear(p);
-      // прежде звезда Иосия стояла в 3 г. до Р. Х., левее Павла; теперь — в середине скобки «Земная жизнь Иисуса Христа»
-      if (!(y - yp > 3)) return fail(`окно Иосия около ${y} г., Павла — около ${yp} г.`);
+      // Прежде опорой был Павел (звезда ок. 1 г., окно после перелёта). Круг 3 (MAP-69, решение 38): знак Павла — у обращения
+      // (34 г.), правее скобки братьев Господних. Опора теперь — звезда Иисуса Христа (Рождество, 5 г. до Р. Х., расч.) в одном
+      // окне истинного масштаба (скрытый список неба, data-x): знак Иосия — середина скобки «Земная жизнь Иисуса Христа»
+      await go(p, '#/~y10~w60~l-2~s0');
+      const [xj, xi] = await Promise.all(['iisus', 'iosiy-brat-gospoden'].map((id) => starX(p, id)));
+      if (xj === null || xi === null) return fail(`нет звёзд в списке неба: Иисус ${xj}, Иосий ${xi}`);
+      const perYear = (await p.locator('.sky > canvas').boundingBox())!.width / 60;
+      const y = Math.round((xi - xj) / perYear);
+      if (!(xi - xj > 10 * perYear)) return fail(`знак Иосия правее Рождества на ${y} лет`);
       await go(p, '#/melkhisedek');
       const m = flat(await secText(p, 13));
       if (!/Современник Авраама/.test(m)) return fail(`§ 13 Мелхиседека: «${m.slice(0, 120)}»`);
-      return pass(`окно Иосия около ${y} г., Павла — около ${yp} г.`);
+      return pass(`знак Иосия правее Рождества на ${y} лет`);
     },
   },
 ];

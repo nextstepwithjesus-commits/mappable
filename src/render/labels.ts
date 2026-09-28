@@ -25,10 +25,11 @@ import { CONSTELLATION_DIM, DIM, likelyAlpha, WORK_DIM } from './dim.ts';
 
 /** Иисус Христос: подпись — наивысшего приоритета после выбранного (MOB-53). */
 const MESSIAH = 'iisus';
-import { mapFont, mapSize, nameFontWith, nameSize, siglaFont, T_MAP_S, T_NOTE, T_UI_S } from './type.ts';
+import { mapFont, mapSize, nameFontWith, nameSize, siglaFont, textScale, T_MAP_S, T_NOTE, T_UI_S } from './type.ts';
 import { byId, graph, groupById, lines } from '../data/atlas.ts';
 import { primaryChildren, siblings } from '../engine/graph.ts';
 import { refText } from '../engine/kinship.ts';
+import { BOOK_INDEX, parseRef } from '../engine/books.ts';
 import { cross, hits, type Rect } from './rect.ts';
 import type { Pass, SkyContext } from './sky.ts';
 
@@ -201,7 +202,8 @@ export class LabelCache {
     const f = v.cam.fitK;
     // сжатие полос (J4, J5) меняет места звёзд по вертикали: пороги считаются по строкам экрана
     // и пропорция полос (J1): высота строки меняет места подписей по вертикали
-    const key = `${v.model.id}|${Math.round(v.lambda * 4)}|${v.cam.h}|${v.coarse}|${f ? `${f.kx.toPrecision(3)} ${f.ky.toPrecision(3)}` : ''}|${v.rowsKey}|${v.cam.lanes.toFixed(3)}|${v.cam.focusLanes}`;
+    // и лица линий на нитях в режиме «только линии» (MAP-71): узлы кадра — не узлы раскладки
+    const key = `${v.model.id}|${Math.round(v.lambda * 4)}|${v.cam.h}|${v.coarse}|${f ? `${f.kx.toPrecision(3)} ${f.ky.toPrecision(3)}` : ''}|${v.rowsKey}|${v.cam.lanes.toFixed(3)}|${v.cam.focusLanes}|${v.nodes === v.model.nodes}|${textScale()}`;
     if (key === this.key) return;
     this.key = key;
     const nodes = v.nodes;
@@ -411,6 +413,11 @@ interface StarOpts {
   least?: boolean;
   /** места, которые в режиме least лучше не занимать ни именем, ни выноской: подписи справа у звёзд величины 0–1 */
   avoid?: Rect[];
+  /**
+   * места подписи, которые пробуются раньше сторон: xr — правый край текста, yc — середина строки (px холста). Подпись
+   * там — без сокращения роли, как слева от звезды (Иисус Христос на обзоре — слева, на уровне лент; MAP-81)
+   */
+  places?: { xr: number; yc: number }[];
 }
 
 /** Где встала подпись звезды: прямоугольник (тот же, что в замере), базовая линия, положение и знак «+N». */
@@ -450,6 +457,50 @@ export const labelFontOf = (v: SkyContext, i: number, o: { light?: boolean; size
 /** Отступ знака «+N» от подписи, px. */
 const FOLD_GAP = 5;
 
+/** Зазор между концом подписи и продолжением следа, px (VIS-76): след начинается за подписью, а не у её последней буквы. */
+export const KNOCK_GAP = 3;
+
+/**
+ * Где погасить свой след под подписью (MAP-56, MOB-76, VIS-76): полоса высотой 5 px по следу от края звезды до конца
+ * подписи с зазором KNOCK_GAP — под именем, уточнением и сокращением роли след не читается дефисом («Соломон-ц.»,
+ * «Иисус‑Христос»). Подпись справа (у лица без своего времени — и слева: скобка идёт в обе стороны). null — гасить нечего:
+ * следа в кадре нет, подпись не на нём, или на обзоре под ней облака (полоса цвета неба прорезала бы их).
+ *
+ * У лица линии Мессии след лежит поверх ленты (trails.ts, drawSpineTrails): гасится, только если подпись не на ленте
+ * (clearOfRibbons), а зазор у звезды — только если и он не на ленте, иначе полоса прорезала бы нить.
+ */
+export function knockTrail(v: SkyContext, p: Pass, i: number, at: { box: Rect; side: Side | 'x' }, r: number): Rect | null {
+  if (at.side !== 'r' && at.side !== 'l') return null;
+  const n = v.nodes[i];
+  const epochal = epochalAt(v, i);
+  if (!(n.trail === 'life' || epochal) || !p.s.layers.lifelines) return null;
+  if (at.side === 'l' && !epochal) return null;
+  const s = p.s;
+  const spine = p.spine.has(n.person);
+  // след нарисован: с подробностью кадра, в полную силу у выделенных и в «только линиях», у лиц линий — поверх лент
+  const k = s.highlight?.get(n.person);
+  const lit = s.onlyLines || k !== undefined || s.pins.has(n.person);
+  const drawn = p.detail > 0.01 || lit || (spine && v.cam.ky >= 5);
+  // облака обзора: полоса цвета неба оставила бы в них тёмную заплату
+  const clouds = !s.onlyLines && !p.work && p.starDetail < 0.99;
+  if (!drawn || clouds) return null;
+  const x = v.cam.sx(v.X0[i]);
+  const yt = Math.round(v.cam.sy(n.lane)) + 0.5;
+  const band = (a: number, b: number): Rect => ({ x: a, y: yt - 2.5, w: b - a, h: 5 });
+  const off = spine ? p.offRibbon : undefined;
+  if (at.side === 'r') {
+    const end = at.box.x + at.box.w + KNOCK_GAP - 1.5;
+    if (off && !off(band(at.box.x, end))) return null;
+    const near = band(x + r + 1.5, at.box.x);
+    const a = !off || near.w <= 0 || off(near) ? near.x : at.box.x;
+    return end > a ? band(a, end) : null;
+  }
+  const a = at.box.x - KNOCK_GAP + 1.5;
+  const b = x - r - 1.5;
+  if (off && !off(band(a, b))) return null;
+  return b > a ? band(a, b) : null;
+}
+
 /**
  * Подписать звезду узла i: первое свободное из положений sides, затем — выноска. Рисует имя с ореолом цвета неба,
  * уточнение, сокращение роли и знак «+N»; занимает место, пишет замер и отмечает узел подписанным (p.labeled). Для подписей
@@ -470,7 +521,6 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): Label
   const cache = v.labelCache;
   const r = starRadius(q.magnitude, p.zoomScale);
   const king = q.roles.includes('king') || q.roles.includes('queen');
-  const epochal = epochalAt(v, i);
   const plain = !o.light && !o.size;
   const nf = labelFontOf(v, i, { light: o.light, size: o.size });
   let nameW = plain ? cache.nameW[i] : 0;
@@ -493,9 +543,14 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): Label
     ctx.font = noteFont;
     noteW = ctx.measureText(note).width;
   }
-  const sig = o.sigla && cam.ky >= 18 && q.roles.length ? roleSigla(q.roles) : '';
+  // сокращение роли не повторяет уточнение («Ирод, царь…» — без «ц.»; решение 43)
+  const roles = note ? rolesUnnamed(q.roles, note) : q.roles;
+  const sig = o.sigla && cam.ky >= 18 && roles.length ? roleSigla(roles) : '';
   let sigW = 0;
-  if (sig) {
+  if (sig && roles.length !== q.roles.length) {
+    ctx.font = siglaFont(q.magnitude, v.coarse);
+    sigW = ctx.measureText(sig).width + 4;
+  } else if (sig) {
     if (!(cache.siglaW[i] >= 0)) {
       ctx.font = siglaFont(q.magnitude, v.coarse);
       cache.siglaW[i] = ctx.measureText(sig).width + 4;
@@ -537,6 +592,16 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): Label
     }
   }
   for (const soft of o.least ? [] : passes) {
+    for (const q of o.places ?? []) {
+      const tx = q.xr - textW - foldW;
+      const ty = q.yc + (ASC - DESC) * 0.5 * size;
+      const box = textBox(tx, ty, textW + foldW, size);
+      if (ok(box, soft)) {
+        at = { tx, ty, box, side: 'l' };
+        break;
+      }
+    }
+    if (at) break;
     for (const sd of sides) {
       const c = spot(sd, x, y, r, textW + (sd === 'r' ? sigW : 0) + foldW, size, king);
       if (ok(c.box, soft)) {
@@ -557,15 +622,8 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): Label
   }
   if (!at) return null;
   const { tx, ty } = at;
-  // свой след под подписью справа (у лица без своего времени — и слева: скобка идёт в обе стороны) гасится полосой
-  // цвета фона (MAP-56); у лиц линий — нет: под подписью могла бы оказаться лента. Только когда облака погасли
-  const trailed = n.trail === 'life' || epochal;
-  if (trailed && (at.side === 'r' || at.side === 'l') && !p.spine.has(q.id) && p.detail > 0.01 && p.starDetail >= 0.99 && p.s.layers.lifelines) {
-    const yt = Math.round(y) + 0.5;
-    const a = at.side === 'r' ? x + r + 1.5 : at.box.x;
-    const b = at.side === 'r' ? at.box.x + at.box.w : x - r - 1.5;
-    if (b > a) v.fillGround(a, b, yt - 2.5, 5);
-  }
+  const knock = knockTrail(v, p, i, at, r);
+  if (knock) v.fillGround(knock.x, knock.x + knock.w, knock.y, knock.h);
   ctx.globalAlpha = o.alpha;
   if (at.side === 'x') {
     // выноска: от края звезды к углу подписи
@@ -635,39 +693,111 @@ export function familyOf(id: string): string[] {
   return [...out];
 }
 
+/** Не больше стольких слов в уточнении одноимённого на небе (решение 43; MAP-72). */
+export const NOTE_WORDS = 3;
+const KIN_WORD = /^(сын|дочь|мать|отец|жена|муж|брат|сестра|внук|внучка|племянник|родственница?)$/i;
+/** Первое слово оборота с предлогом: такое уточнение пишется без запятой — «Иосиф из Аримафеи», «Миха с горы Ефремовой». */
+const PREP_WORD = /^(из|от|с|со|в|во|на|при|у)$/i;
+/** Уточнение из одного названия роли («царь», «левит»): роль и так видна сокращением, лиц оно не различает. */
+const BARE_ROLE = /^(царь|царица|пророк|пророчица|первосвященник|священник|левит|судья|апостол|патриарх|певец|привратник)$/i;
+/** Слова, которыми уточнение называет роль: сокращение этой роли после имени тогда не пишется (решение 43). */
+const ROLE_NAMED: Record<string, RegExp> = {
+  king: /(^|[^а-яё])цар(ь|я|ю|ём|е)([^а-яё]|$)/i,
+  queen: /(^|[^а-яё])цариц/i,
+  prophet: /(^|[^а-яё])пророк/i,
+  'high-priest': /первосвящен/i,
+  priest: /(^|[^а-яё])священ/i,
+  judge: /(^|[^а-яё])суд(ья|ьи|ей|ью)([^а-яё]|$)/i,
+  apostle: /(^|[^а-яё])апостол/i,
+  patriarch: /(^|[^а-яё])патриарх/i,
+  levite: /(^|[^а-яё])левит([^а-яё]|$)/i,
+};
+/** Роли лица без тех, которые уже названы в уточнении note (сокращение роли не повторяет уточнение). */
+export function rolesUnnamed(roles: readonly string[], note: string): string[] {
+  return roles.filter((r) => !ROLE_NAMED[r]?.test(note));
+}
+
+const words = (x: string) => x.split(/\s+/).filter(Boolean);
+/** «1 Пар 4:9» и «1Пар 4:9» → разбор ссылки (коды книг — без пробела после номера). */
+const refOf = (raw: string) => parseRef(raw.trim().replace(/^([1-4])\s+(?=[А-ЯЁа-яё])/, '$1'));
+
+/** Ссылки индекса, где лицо названо: в скобках уточнения, в утверждениях о его родителях, браках, родстве и детях. */
+function refsOf(id: string): string[] {
+  const q = byId.get(id);
+  if (!q) return [];
+  const out: string[] = [];
+  for (const m of q.disambig.matchAll(/\(([^)]*)\)/g)) for (const r of m[1].split(/;\s*/)) if (refOf(r)) out.push(r);
+  for (const e of graph.parentsOf.get(id) ?? []) out.push(...e.refs);
+  // у детей — только прямые утверждения: «предок» (op ancestor) называет потомка, а не его далёкого предка
+  for (const e of graph.childrenOf.get(id) ?? []) if (e.claim !== 'ancestor' && !e.gap) out.push(...e.refs);
+  for (const e of graph.spousesOf.get(id) ?? []) out.push(...e.refs);
+  for (const e of graph.kinOf.get(id) ?? []) out.push(...e.refs);
+  for (const r of q.reign) for (const y of r.sync ?? []) out.push(...y.refs);
+  return out;
+}
+const firstMemo = new Map<string, { book: string; c: number; v: number } | null>();
+/** Самая ранняя в каноническом порядке ссылка из refsOf: книга, глава, стих. */
+function firstRef(id: string): { book: string; c: number; v: number } | null {
+  if (firstMemo.has(id)) return firstMemo.get(id)!;
+  let best: { b: number; c: number; v: number; book: string } | null = null;
+  for (const raw of refsOf(id)) {
+    const r = refOf(raw);
+    if (!r) continue;
+    const b = BOOK_INDEX.get(r.book) ?? 99;
+    const c = r.verses[0]?.chapter ?? r.chapterOnly ?? 0;
+    const v = r.verses[0]?.verse ?? 0;
+    if (!best || b < best.b || (b === best.b && (c < best.c || (c === best.c && v < best.v)))) best = { b, c, v, book: r.book };
+  }
+  firstMemo.set(id, best);
+  return best;
+}
 /**
- * Краткое уточнение одноимённого (MAP-66; решение 29): не больше двух слов, из уточнения данных — часть с родством
- * («сын Иоседека», «Мать Иисуса») или прозвище с прописной («Магдалина», «Искариот»), иначе первая часть; ссылки в скобках
- * отбрасываются. Возвращается с разделителем: «, сын Иоседека», « Магдалина», « из Аримафеи».
+ * Глава первого упоминания лица в данных атласа (решение 43): самая ранняя в каноническом порядке из ссылок refsOf —
+ * «Мф 2», «2 Пар 26» (с неразрывными пробелами); verse — со стихом, «Неем 12:34». null — ссылок нет.
  */
-export function shortNote(disambig: string): string | null {
+export function firstChapter(id: string, verse = false): string | null {
+  const r = firstRef(id);
+  return r ? refText(verse && r.v ? `${r.book} ${r.c}:${r.v}` : `${r.book} ${r.c}`) : null;
+}
+
+/**
+ * Краткое уточнение одноимённого на небе (решение 43; MAP-66, MAP-72) — не больше трёх слов и только из данных:
+ *  — «он же X» — «(X)»: «Озия (Азария)»;
+ *  — часть уточнения до первой запятой, если в ней не больше трёх слов: «, сын Навата», «, «знаменитее своих братьев»»;
+ *    часть из одного названия роли («царь», «левит») лиц не различает — тогда следующая часть, если и в ней не больше
+ *    трёх слов («Иаков, сын Зеведеев»);
+ *  — иначе глава первого упоминания (id лица): «Ирод (Мф 2)»;
+ *  — иначе уточнения нет: обрывков («Озия, он же», «Азария, второй сын») не бывает.
+ * Прозвище одним словом с прописной и оборот с предлогом — без запятой: «Мария Магдалина», «Иосиф из Аримафеи».
+ * Ссылки в скобках в текст уточнения не входят. Возвращается с разделителем.
+ */
+export function shortNote(disambig: string, id?: string): string | null {
   const parts = disambig
     .replace(/\([^)]*\)/g, '')
     .split(/[,;]/)
     .map((x) => x.trim())
     .filter(Boolean);
-  if (!parts.length) return null;
-  const KIN = /^(сын|дочь|мать|отец|жена|муж|брат|сестра|внук|внучка|племянник|родственница?)$/i;
-  const PREP = /^(и|в|во|из|от|до|на|с|со|при|над|под|к|по|у|за|или)$/i;
-  // оборот с предлогом («с горы Ефремовой») при обрезке до двух слов теряет смысл — такие части не берутся
-  const fits = (x: string) => x.split(/\s+/).length <= 2 || !PREP.test(x.split(/\s+/)[0]);
-  const ok = parts.filter(fits);
-  if (!ok.length) return null;
-  const pick = ok.find((x) => KIN.test(x.split(/\s+/)[0])) ?? ok.find((x) => /^[А-ЯЁ]/.test(x) && x.split(/\s+/).length === 1) ?? ok[0];
-  const words = pick.split(/\s+/).slice(0, 2);
-  // служебное слово в конце («мать Иоанна и» не бывает, но «из» после обрезки — бывает): отбросить
-  while (words.length > 1 && PREP.test(words[words.length - 1])) words.pop();
-  const text = words.join(' ');
-  if (!text) return null;
-  // прозвище одним словом с прописной и «из …», «от …» — без запятой: «Мария Магдалина», «Иосиф из Аримафеи»
-  const bare = (words.length === 1 && /^[А-ЯЁ]/.test(text) && !KIN.test(text)) || /^(из|от)$/i.test(words[0]);
-  return bare ? ` ${text}` : `, ${text}`;
+  const aka = /^(он|она)\s+же\s+(.+)$/i.exec(parts[0] ?? '');
+  if (aka && words(aka[2]).length <= NOTE_WORDS) return ` (${aka[2]})`;
+  const fit = (x: string | undefined) => !!x && words(x).length <= NOTE_WORDS && !/^(он|она)\s+же\s/i.test(x);
+  const pick = fit(parts[0]) && !BARE_ROLE.test(parts[0]) ? parts[0] : BARE_ROLE.test(parts[0] ?? '') && fit(parts[1]) ? parts[1] : null;
+  if (pick) {
+    const w = words(pick);
+    const bare = (w.length === 1 && /^[А-ЯЁ]/.test(pick) && !KIN_WORD.test(pick)) || PREP_WORD.test(w[0]);
+    return bare ? ` ${pick}` : `, ${pick}`;
+  }
+  const ch = id ? firstChapter(id) : null;
+  return ch ? ` (${ch})` : null;
 }
 
-/** Имена, которые в окне носят две звезды и больше (MAP-66): у их подписей — краткое уточнение. */
-export function namesakesInView(v: SkyContext, p: Pass): Set<string> {
+/**
+ * Одноимённые в окне (MAP-66; решения 29, 43): лица, чьё имя в окне носят две звезды и больше, → краткое уточнение
+ * подписи. Если у двух одноимённых уточнения совпали («Иаков, апостол»), оба получают главу первого упоминания.
+ * Лицо без уточнения — с пустой строкой: его подпись всё равно не спутать, если уточнения есть у остальных.
+ */
+export function namesakesInView(v: SkyContext, p: Pass): Map<string, string> {
   const { cam } = v;
-  const count = new Map<string, number>();
+  const byName = new Map<string, string[]>();
   for (const i of p.vis) {
     const n = v.nodes[i];
     if (n.ghost || !v.drawn(i) || p.starAlpha(i) <= 0.5) continue;
@@ -675,24 +805,36 @@ export function namesakesInView(v: SkyContext, p: Pass): Set<string> {
     const y = cam.sy(n.lane);
     if (x < v.letterW || x > cam.w || y < v.openTop || y > cam.vp.b) continue;
     const name = byId.get(n.person)!.name;
-    count.set(name, (count.get(name) ?? 0) + 1);
+    const a = byName.get(name);
+    if (a) a.push(n.person);
+    else byName.set(name, [n.person]);
   }
-  return new Set([...count].filter(([, k]) => k >= 2).map(([name]) => name));
+  const out = new Map<string, string>();
+  const dup = (notes: string[], k: number) => !!notes[k] && notes.some((x, j) => j !== k && x === notes[k]);
+  for (const ids of byName.values()) {
+    if (ids.length < 2) continue;
+    let notes = ids.map((id) => shortNote(byId.get(id)!.disambig, id) ?? '');
+    // совпавшие уточнения — глава первого упоминания, а если и она общая («Неем 12») — со стихом
+    notes = notes.map((n, k) => (dup(notes, k) && firstChapter(ids[k]) ? ` (${firstChapter(ids[k])})` : n));
+    notes = notes.map((n, k) => (dup(notes, k) && firstChapter(ids[k], true) ? ` (${firstChapter(ids[k], true)})` : n));
+    ids.forEach((id, k) => out.set(id, notes[k]));
+  }
+  return out;
 }
 
 /**
- * Подпись звезды с тем, что ей положено в этом кадре: краткое уточнение одноимённого (MAP-66), знак свёрнутых потомков
- * «+N» (UX-60; его прямоугольник — в p.foldHits), у лица «время не установлено» — цвет --ink-2 (MAP-52). Не поместилось
- * с уточнением — пробует без него.
+ * Подпись звезды с тем, что ей положено в этом кадре: краткое уточнение одноимённого (MAP-66, MAP-72), знак свёрнутых
+ * потомков «+N» (UX-60; его прямоугольник — в p.foldHits), у лица «время не установлено» — цвет --ink-2 (MAP-52).
+ * Уточнение одноимённого не снимается (решение 43): не поместилось с ним — подписи нет, а место остаётся более
+ * значимому из одноимённых (подписи идут по степени интереса).
  */
 export function putLabel(v: SkyContext, p: Pass, i: number, o: StarOpts): LabelAt | null {
   if (p.labeled.has(i)) return null;
   const q = byId.get(v.nodes[i].person)!;
   const fold = p.foldText?.get(q.id);
   const color = epochalAt(v, i) && o.color === v.pal.ink && o.alpha < 1 ? v.pal.ink2 : o.color;
-  const note = o.note ?? (p.namesakes?.has(q.name) && q.disambig ? (shortNote(q.disambig) ?? undefined) : undefined);
-  let at = labelStar(v, p, i, { ...o, color, ...(note ? { note } : {}), ...(fold ? { fold } : {}) });
-  if (!at && note && !o.note) at = labelStar(v, p, i, { ...o, color, ...(fold ? { fold } : {}) });
+  const note = o.note ?? (p.namesakes?.get(q.id) || undefined);
+  const at = labelStar(v, p, i, { ...o, color, ...(note ? { note } : {}), ...(fold ? { fold } : {}) });
   if (at?.fold && p.foldHits) p.foldHits.push({ ...at.fold, kind: 'desc', id: q.id });
   return at;
 }
@@ -753,7 +895,20 @@ export function drawStarLabels(v: SkyContext, p: Pass, between?: () => void) {
       if (x < v.letterW || x > cam.w || y < v.openTop || y > cam.vp.b) continue;
       avoid.push(spot('r', x, y, starRadius(q.magnitude, p.zoomScale), cache.nameW[i], nameSize(q.magnitude, v.coarse)).box);
     }
-    if (!putLabel(v, p, ij, { ...o, far: true, wide: true, least: true, avoid })) putLabel(v, p, ij, { ...o, overStars: true });
+    // на обзоре — первым и слева от звезды, на уровне лент: над ними, затем под ними (MAP-81); соседи уступают место
+    const jx = cam.sx(v.X0[ij]);
+    const jy = cam.sy(v.nodes[ij].lane);
+    const R = starRadius(0, p.zoomScale) * 2.4;
+    const half = ((ASC + DESC) * nameSize(0, v.coarse)) / 2;
+    // строка — над лентами (нити косы и их поле — до 6 px от оси), затем под ними
+    const places = [9, 16].flatMap((d) => [
+      { xr: jx - R - 4, yc: jy - half - d },
+      { xr: jx - R - 4, yc: jy + half + d },
+    ]);
+    const overview = p.starDetail < 0.99;
+    // не закрывая звёзд ярче 4-й величины (MOB-53: на обзоре телефона слева — гуща царей Иудеи)
+    if (!(overview && putLabel(v, p, ij, { ...o, places, sides: [], leader: false, cover: 4 })))
+      if (!putLabel(v, p, ij, { ...o, far: true, wide: true, least: true, avoid })) putLabel(v, p, ij, { ...o, overStars: true });
   }
   // свёрнутые потомки: «+N» у подписи лица — обязательная подпись (MAP-63, UX-60)
   for (const id of p.foldText?.keys() ?? []) {
@@ -988,7 +1143,7 @@ export function drawGroupNames(v: SkyContext, p: Pass, spots: GroupNameSpot[]): 
   // у каждого прямоугольника — созвездие: по названию открывается меню «Свернуть созвездие» (J5; src/ui/sky/input.ts)
   const boxes: (Rect & { group: string })[] = [];
   const done = new Set<string>();
-  /** x начала названий созвездия в этом кадре: следующее — не ближе GROUP_REPEAT_PX */
+  /** x начала названий созвездия в этом кадре: следующее — не ближе GROUP_REPEAT_PX (ТЗ § 3.1) */
   const placed = new Map<string, number[]>();
   ctx.save();
   ctx.setLineDash([]);
@@ -1038,11 +1193,11 @@ export function drawGroupNames(v: SkyContext, p: Pass, spots: GroupNameSpot[]): 
     // название повторяется через ~1 200 px (ТЗ § 3.1). Сначала — пустые места (без линий), затем левое поле и средняя
     // линия области; у них линии под названием гасятся цветом фона: ни следы, ни стволы скоб его не перечёркивают (MAP-08)
     const xs = placed.get(o.group) ?? [];
-    const far = (x: number) => !xs.some((q) => Math.abs(q - x) < GROUP_REPEAT_PX);
+    const far = (x: number, _y?: number) => !xs.some((q) => Math.abs(q - x) < GROUP_REPEAT_PX);
     const clean = [...sticky, ...cands.sort((a, b) => a.x - b.x)].filter((c) => !p.lines?.clash(c.box, false));
-    const put = (c: ReturnType<typeof at>, knock: boolean): boolean => {
-      if (!far(c.x)) return false;
-      const got = claim(v, p, [c.box], 'group', name, knock ? { coverFrom: GROUP_COVER_FROM } : {});
+    const put = (c: ReturnType<typeof at>, knock: boolean, cover = GROUP_COVER_FROM): boolean => {
+      if (!far(c.x, c.box.y + c.box.h / 2)) return false;
+      const got = claim(v, p, [c.box], 'group', name, knock ? { coverFrom: cover } : {});
       if (!got) return false;
       if (knock) {
         // следы и стволы скоб под названием гасятся цветом фона; тусклые звёзды возвращаются поверх, и название пишется
@@ -1066,35 +1221,46 @@ export function drawGroupNames(v: SkyContext, p: Pass, spots: GroupNameSpot[]): 
     // внутри контура, не на звёздах и подписях. Меньше линий под названием — лучше, при равенстве — левее (ближе
     // к «липкому» месту). Места ищутся только там, куда название ещё можно поставить (не ближе 1 200 px к уже
     // поставленному): место без линий берётся сразу, остальные — после просмотра всей области
+    placed.set(o.group, xs);
     if (!low && o.poly && o.box) {
       const vx0 = Math.max(o.box.x0, L);
       const vx1 = Math.min(o.box.x1, R);
       const vy0 = Math.max(o.box.y0, v.openTop);
       const vy1 = Math.min(o.box.y1, v.cam.vp.b);
-      if (vx1 - vx0 >= GROUP_AREA_MIN[0] && vy1 - vy0 >= GROUP_AREA_MIN[1] && vx1 - vx0 >= tw + 8) {
-        const hh = (ASC + DESC) * fs + 6;
-        const stepX = Math.max(32, (vx1 - vx0 - tw) / 24);
+      const hh = (ASC + DESC) * fs + 6;
+      /**
+       * Места по средней линии области: название целиком внутри контура (inner — по трём вертикалям: у краёв и
+       * в середине названия) или, если так не нашлось, только его середина (область узка или изрезана).
+       */
+      const scan = (whole: boolean, cover = GROUP_COVER_FROM) => {
+        const stepX = Math.max(24, (vx1 - vx0 - (whole ? tw : 0)) / 24);
         const rest: (ReturnType<typeof at> & { lines: number })[] = [];
-        for (let xc = vx0 + tw / 2 + 4; xc <= vx1 - tw / 2 - 4; xc += stepX) {
+        const x0 = whole ? vx0 + tw / 2 + 4 : vx0 + 8;
+        const x1 = whole ? vx1 - tw / 2 - 4 : vx1 - 8;
+        for (let xc = x0; xc <= x1; xc += stepX) {
           if (!far(at(xc, 0, tw).x)) continue;
-          const inner = spanAnd(spanAnd(ringSpans(o.poly, xc - tw / 2), ringSpans(o.poly, xc)), ringSpans(o.poly, xc + tw / 2))
-            .map(([a, b]) => [Math.max(a, v.openTop), Math.min(b, v.cam.vp.b)] as [number, number])
-            .filter(([a, b]) => b - a >= hh);
-          column: for (const [a, b] of inner)
+          const spans = whole ? spanAnd(spanAnd(ringSpans(o.poly!, xc - tw / 2), ringSpans(o.poly!, xc)), ringSpans(o.poly!, xc + tw / 2)) : ringSpans(o.poly!, xc);
+          const inner = spans.map(([a, b]) => [Math.max(a, v.openTop), Math.min(b, v.cam.vp.b)] as [number, number]).filter(([a, b]) => b - a >= hh);
+          for (const [a, b] of inner)
             for (let yc = a + hh / 2; yc <= b - hh / 2; yc += 6) {
               const c = at(xc, yc, tw);
               // подписи и звёзды ярче 4-й величины под названием недопустимы — такие места сразу отбрасываются
-              if (p.placer.clash(c.box, true, GROUP_COVER_FROM)) continue;
+              if (p.placer.clash(c.box, true, cover)) continue;
               const lines = p.lines ? p.lines.count(c.box) : 0;
-              if (lines === 0 && put(c, true)) break column;
+              if (lines === 0 && put(c, true, cover)) return;
               if (lines > 0) rest.push({ ...c, lines });
             }
         }
         rest.sort((a, b) => a.lines - b.lines || a.x - b.x);
-        for (const c of rest) put(c, true);
-      }
+        for (const c of rest) if (put(c, true, cover)) return;
+      };
+      // у области крупнее 150 × 60 px название обязательно (MAP-58): целиком внутри контура, иначе — серединой в нём
+      const big = vx1 - vx0 >= GROUP_AREA_MIN[0] && vy1 - vy0 >= GROUP_AREA_MIN[1];
+      if (big && vx1 - vx0 >= tw + 8) scan(true);
+      if (big && xs.length === 0) scan(false);
+      // и последним — поверх звёзд 3-й величины: они возвращаются поверх заливки, название пишется с ореолом
+      if (big && xs.length === 0) scan(false, GROUP_COVER_FROM - 1);
     }
-    placed.set(o.group, xs);
   }
   ctx.letterSpacing = '0px';
   ctx.restore();

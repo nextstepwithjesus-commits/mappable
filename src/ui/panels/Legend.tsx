@@ -20,15 +20,17 @@ import { buildRibbons } from '../../engine/ribbons.ts';
 import { relate } from '../../engine/kinship.ts';
 import { toAstro } from '../../engine/years.ts';
 import { alpha } from '../../render/color.ts';
-import { drawGlyph, roleSigla, starRadius, type GlyphOpts } from '../../render/glyphs.ts';
+import { mapFont, T_MAP_S } from '../../render/type.ts';
+import { drawBirthBand, drawGlyph, roleSigla, starRadius, type GlyphOpts } from '../../render/glyphs.ts';
 import { drawWorkMark, highlightFor, SIB } from '../../render/marks.ts';
 import { drawStrands, lineNoteHits, ribbonLook } from '../../render/ribbons.ts';
 import { drawFoldMark } from '../../render/labels.ts';
 import { eventMarks } from '../../render/frame.ts';
 import { DIM, FRAME_H, readPalette, Sky, type Palette, type SkyState } from '../../render/sky.ts';
 import {
-  drawBracket, drawDescent, drawEpochBracket, drawLifeTrail, drawMarriage, ghostNote, LINK_STYLE, motherNote, MOTHER_DASH, TAIL_PX, type LifeTrail,
+  drawBracket, drawDescent, drawEpochBracket, drawFamilyText, drawLifeTrail, drawMarriage, ghostNote, LINK_STYLE, motherNote, orderNote, TAIL_PX, type LifeTrail,
 } from '../../render/trails.ts';
+import type { SkyView } from '../../render/rows.ts';
 import { lambda, layers, lineFlip, model, theme } from '../../state.ts';
 import { RailKey, STATE_TEXT, type SecState } from '../card/Rail.tsx';
 import { LifeBar } from '../card/Masthead.tsx';
@@ -77,6 +79,10 @@ const signTrail = (o: Partial<GlyphOpts>): Painter => (ctx, pal, w, h) => person
 /** Величина звезды m. */
 export const magnitude = (m: number): Painter => (ctx, pal, w, h) => drawGlyph(ctx, w / 2, h / 2, star(pal, { magnitude: m }));
 
+/** Помета порядка у сыновей Иессея — из данных, как на небе: «годы — по порядку 1 Пар 2:13–15, выв.». */
+const ORDER_FAMILY = ['eliav-syn-iesseya', 'aminadav-syn-iesseya', 'samma-syn-iesseya', 'nafanail-syn-iesseya', 'radday', 'otsem-syn-iesseya', 'david'];
+export const orderSample = () => orderNote(ORDER_FAMILY.filter((id) => byId.has(id))) ?? 'годы — по порядку перечисления, выв.';
+
 /** Середина пикселя: линии в 1 px без размытия. */
 const px = (v: number) => Math.round(v) + 0.5;
 
@@ -87,7 +93,8 @@ export const PAINTERS = {
   messiah: signTrail({ messiah: true, magnitude: 0 }),
   king: signTrail({ king: true, magnitude: 2 }),
   queen: signTrail({ king: true, sex: 'f', magnitude: 2 }),
-  hollow: signTrail({ hollow: true }),
+  /** полый знак — только «время не установлено» (решение 42): без следа, как в середине скобки */
+  hollow: sign({ hollow: true }),
   infant: sign({ infant: true, magnitude: 4 }),
   /** призрак жены в родной семье: пунктирный отвод от следа отца к полому пунктирному кружку */
   ghost: (ctx, pal, w, h) => {
@@ -118,7 +125,14 @@ export const PAINTERS = {
     drawEpochBracket(ctx, { x0: 10, x1: w - 10, y, color: look.trail(pal) });
     drawGlyph(ctx, w / 2, y, star(pal, { hollow: true }));
   },
-  /** лицо из рабочего набора (IX-51): черта над-справа от знака */
+  /** промежуток рождения (решение 38; MAP-69): растушёванная полоса влево от знака у первого засвидетельствованного года */
+  birthBand: (ctx, pal, w, h) => {
+    const y = px(h / 2);
+    const x = Math.round(w * 0.62);
+    drawBirthBand(ctx, { x0: 8, x1: x, y, color: pal.ink2 });
+    person(ctx, pal, x, y, w - 8);
+  },
+  /** лицо из рабочего набора (IX-51, IX-77): уголок над-справа от знака */
   workMark: (ctx, pal, w, h) => {
     const y = px(h / 2 + 2);
     person(ctx, pal, 16, y, w - 10);
@@ -162,27 +176,45 @@ export const PAINTERS = {
     drawBracket(ctx, { x: kids[0].x, y0, kids, color: look.link(pal) });
     for (const k of kids) drawGlyph(ctx, k.x, k.y, star(pal));
   },
-  /** дети разных матерей одного отца: скобы разного начертания */
-  mothers: (ctx, pal, w) => {
+  /**
+   * дети разных матерей одного отца: у каждой матери своя короткая гребёнка на уровне её детей, одним тонким сплошным
+   * начертанием (MAP-74); старшие дети — дальше от следа отца, как на небе
+   */
+  mothers: (ctx, pal, w, h) => {
     const y0 = px(7);
-    const group = (x: number, n: number, top: number) => Array.from({ length: n }, (_, k) => ({ x: px(x + k * 10), y: px(top + k * 11) }));
-    const a = group(w * 0.22, 2, y0 + 13);
-    const b = group(w * 0.6, 2, y0 + 13);
+    const step = (h - 14) / 4;
+    const group = (x: number, top: number) => [0, 1].map((k) => ({ x: px(x + k * 12), y: px(top + k * step) }));
+    const a = group(w * 0.2, y0 + 3 * step);
+    const b = group(w * 0.58, y0 + step);
     person(ctx, pal, 10, y0, w - 6);
     for (const k of [...a, ...b]) drawLifeTrail(ctx, trail(pal, k.x, w - 6, k.y));
     ctx.lineWidth = 1;
-    drawBracket(ctx, { x: a[0].x, y0, kids: a, color: look.link(pal), dash: MOTHER_DASH[0] });
-    drawBracket(ctx, { x: b[0].x, y0, kids: b, color: look.link(pal), dash: MOTHER_DASH[1] });
+    drawBracket(ctx, { x: a[0].x, y0, kids: a, color: look.link(pal) });
+    drawBracket(ctx, { x: b[0].x, y0, kids: b, color: look.link(pal) });
     for (const k of [...a, ...b]) drawGlyph(ctx, k.x, k.y, star(pal));
-  },
-  /** свёрнутые потомки (J5): «+12» справа от следа лица — тем же знаком, что на небе */
-  foldDesc: (ctx, pal, w, h) => {
-    const y = px(h / 2);
-    person(ctx, pal, 12, y, w - 44);
-    drawFoldMark(ctx, pal, false, w - 38, y + 4, '', '+12');
   },
   /** свёрнутое созвездие (J5): строка с названием и числом скрытых лиц */
   foldGroup: (ctx, pal, _w, h) => drawFoldMark(ctx, pal, false, 6, Math.round(h / 2) + 4, 'ЕДОМ', '+38'),
+  /**
+   * «годы — по порядку …, выв.» (MAP-73, UX-73; решение 41): дети на гребёнке и помета у первого из них — той же
+   * функцией, что на небе (drawFamilyText); текст пометы — из данных, как у сыновей Иессея (orderNote)
+   */
+  order: (ctx, pal, w, h) => {
+    const text = orderSample();
+    ctx.font = mapFont(T_MAP_S, { italic: true, coarse: false });
+    const tw = ctx.measureText(text).width;
+    const y0 = px(8);
+    const step = (h - 16) / 3;
+    // помета — слева от первого ребёнка, как первое место пометы на небе
+    const x0 = Math.max(w * 0.45, tw + 24);
+    const kids = [0, 1, 2].map((k) => ({ x: px(x0 + k * 14), y: px(y0 + (k + 1) * step) }));
+    person(ctx, pal, 12, y0, w - 8);
+    for (const k of kids) drawLifeTrail(ctx, trail(pal, k.x, w - 8, k.y));
+    ctx.lineWidth = 1;
+    drawBracket(ctx, { x: kids[0].x, y0, kids, color: look.link(pal) });
+    for (const k of kids) drawGlyph(ctx, k.x, k.y, star(pal));
+    drawFamilyText(ctx, pal, text, kids[0].x - 8 - tw, kids[0].y + 4);
+  },
   /** брак: «‖» от следа мужа к жене в год первого ребёнка */
   marriage: (ctx, pal, w, h) => {
     const [yH, yW] = [px(9), px(h - 10)];
@@ -316,6 +348,8 @@ export interface CropSpec {
   top?: boolean;
   /** состояние неба сверх обычного (все слои, без выделения) */
   state?: (m: ModelData) => Partial<SkyState>;
+  /** что показывает небо вырезки: свёрнутые потомки или созвездия (J5) — как setView неба; своё небо на вырезку */
+  view?: () => Partial<SkyView>;
   /** масштаб времени: 1 — по насыщенности (полоса плотности на линейке), 0 — истинный; по умолчанию — как у неба */
   lambda?: number;
   /** после кадра — куда передвинуть вырезку (px холста неба), например к указателю у края */
@@ -334,8 +368,8 @@ const tensionsOf = (m: ModelData) => new Set(m.tensions.flatMap((t) => (t.person
 
 /** Небо для вырезок одного размера — одно на размер и плотность пикселей. */
 const skies = new Map<string, Sky>();
-function skyOf(w: number, h: number, dpr: number, m: ModelData, lam: number): Sky {
-  const key = `${w}×${h}@${dpr}`;
+function skyOf(w: number, h: number, dpr: number, m: ModelData, lam: number, own = ''): Sky {
+  const key = `${w}×${h}@${dpr}${own}`;
   let s = skies.get(key);
   if (!s) {
     // ширина панели меняется редко; старые холсты не копятся
@@ -377,7 +411,10 @@ export function paintCrop(cv: HTMLCanvasElement, spec: CropSpec, w: number, h: n
   const lam = spec.lambda ?? lambda.peek();
   const dpr = window.devicePixelRatio || 1;
   const size = spec.frame ? { w, h: spec.frame.h } : SHARED;
-  const sky = skyOf(size.w, size.h, dpr, m, lam);
+  const sky = skyOf(size.w, size.h, dpr, m, lam, spec.view ? '|view' : '');
+  // свёрнутое на небе (J5): план неба вырезки; полосы сжаты — лица стоят в строках плана (Sky.rowOf)
+  if (spec.view) sky.setView({ mode: 'all', set: new Set(), foldDesc: [], foldGroups: [], ...spec.view() });
+  const rowOf = (l: number) => (spec.view ? sky.rowOf(l) : l);
   let rx = spec.frame ? 0 : sky.letterW + INSET;
   let ry = spec.frame ? spec.frame.y : spec.top ? FRAME_H : FRAME_H + INSET;
   // середина вырезки на небе — год и полоса или рамка лиц
@@ -390,7 +427,7 @@ export function paintCrop(cv: HTMLCanvasElement, spec: CropSpec, w: number, h: n
     const idx = at.ids.map((id) => sky.indexOf(id)).filter((i): i is number => i !== undefined);
     if (!idx.length) return;
     const xs = idx.map((i) => sky.X0[i]);
-    const ls = idx.map((i) => sky.nodes[i].lane);
+    const ls = idx.map((i) => rowOf(sky.nodes[i].lane));
     wx = (Math.min(...xs) + Math.max(...xs)) / 2;
     t = sky.tOf(wx);
     lane = (Math.min(...ls) + Math.max(...ls)) / 2;
@@ -499,6 +536,8 @@ export const CROPS = {
   },
   /** семья на небе: скобы по матерям, помета матери, браки, призраки жён */
   family: { at: () => ({ ids: ['iakov', 'liya', 'ruvim', 'dan'] }), fit: true },
+  /** свёрнутые потомки (J5; UX-80): «+N» сразу после имени — кадр неба, где у Давида свёрнуты потомки */
+  fold: { at: () => ({ ids: ['david'] }), ky: 16, dx: -40, dy: 6, view: () => ({ foldDesc: ['david'] }) },
   /** путь родства пары и подписи шагов */
   path: { at: () => ({ ids: ['ioav', 'saruiya', 'david'] }), fit: true, state: () => pairState('ioav', 'david') },
   /** дуга родства по термину Писания у наведённого лица */
@@ -683,6 +722,7 @@ export function LegendPanel() {
   void theme.value;
   const go = (id: string) => document.getElementById(id)?.scrollIntoView({ block: 'start' });
   const leah = motherNote('liya') ?? 'от Лии';
+  const order = orderSample();
   const rachel = ghostNote('rakhil', 'iakov');
   return (
     <Sheet title="Условные знаки" lead="Как читать карту: что значит каждый знак, линия и надпись на небе.">
@@ -747,12 +787,13 @@ export function LegendPanel() {
           Приблизьте — скопление раскроется в сетку имён под скобкой «время не установлено»: годы этих лиц Писание не
           сообщает, поэтому следов жизни у них нет.
         </Wide>
-        <Row s={P('foldDesc')}>
-          «+12» справа от следа — потомки лица скрыты на небе, 12 лиц; щелчок показывает их. Скрыть потомков на небе —
-          пункт «Взять в работу ▾» в карточке, клавиша С (C) или меню звезды: правая кнопка мыши, долгое касание.
-        </Row>
+        <Wide s={C('fold', 56)}>
+          «+» с числом сразу после имени — потомки лица скрыты на небе, число — сколько лиц скрыто (здесь — у Давида);
+          щелчок по знаку показывает их. Скрыть потомков на небе — пункт «Взять в работу ▾» в карточке, клавиша С (C)
+          или меню звезды: правая кнопка мыши, долгое касание.
+        </Wide>
         <Row s={P('workMark')}>
-          черта над звездой справа — лицо в рабочем наборе («Взять в работу»); при взятии звезда один раз обводится
+          уголок над звездой справа — лицо в рабочем наборе («Взять в работу»); при взятии звезда один раз обводится
         </Row>
         <li class="legend-row legend-wide">
           <span class="legend-text">
@@ -794,7 +835,10 @@ export function LegendPanel() {
         <Row s={P('king')}>царь — черта над знаком</Row>
         <Row s={P('queen')}>царица — черта над кольцом</Row>
         <Row s={P('messiah')}>Иисус Христос — восьмилучевая звезда, «звезда светлая и утренняя» (Откр 22:16)</Row>
-        <Row s={P('hollow')}>полый знак — год рождения по реконструкции, а не прямо из чисел Писания</Row>
+        <Row s={P('hollow')}>
+          полый знак — время лица не установлено: он стоит в середине скобки (см. «Линии»); у года по расчёту знак сплошной,
+          помета «расч.» — в подсказке и в карточке
+        </Row>
         <Row s={P('infant')}>† слева от звезды — умер младенцем; следа жизни нет</Row>
         <Row s={P('ghost', 40)}>
           «Призрак» жены: сама она стоит рядом с мужем, а в родной семье — пунктирный кружок на пунктирном отводе с подписью
@@ -836,6 +880,10 @@ export function LegendPanel() {
           скобка с полым знаком — время лица не установлено: скобка идёт через годы, когда оно засвидетельствовано (встреча,
           годы брата, эпоха главы); звезды в год рождения нет
         </Row>
+        <Row s={P('birthBand')}>
+          растушёванная полоса слева от знака — возможные годы рождения: чисел в тексте нет, поэтому знак стоит у первого года,
+          когда лицо засвидетельствовано (призвание, суд, событие Деяний)
+        </Row>
         <Row s={P('trailBreak')}>
           «//» на следе — родословие, вероятно, называет не все поколения: жизнь от рождения до ребёнка вышла бы длиннее
           обычной; дальше разрыва — пунктир (толкование, см. § 13 и § 24 карточки)
@@ -844,7 +892,12 @@ export function LegendPanel() {
         <Row s={P('mother', 44)}>квадратик на отводе — мать: её след пересекает отвод</Row>
         <Row s={P('tension', 44)}>знак разрыва на отводе — хронологическое напряжение: числа текста спорят, родословие здесь, вероятно, сокращено</Row>
         <Row s={P('bracket', 48)}>дети одной пары, рождённые рядом, — под одной скобой</Row>
-        <Row s={P('mothers', 44)}>у детей разных матерей одного отца скобы разного начертания; у верха скобы — помета матери «{leah}»</Row>
+        <Row s={P('mothers', 52)}>дети одной матери — на своей короткой гребёнке, у её корня — помета матери «{leah}»; наведение на гребёнку высвечивает её</Row>
+        <Wide s={<Paint draw={PAINTERS.order} h={56} />}>
+          Помета у детей «{order}» — годы их рождения оценены по порядку, в котором их называет это место Писания: это
+          вывод, а не число текста. Помета видна у семьи выбранного лица и при наведении на гребёнку; подсказка ребёнка
+          называет то же место.
+        </Wide>
         <Row s={P('marriage', 40)}>двойная черта «‖» — брак: от следа мужа к жене в год первого ребёнка</Row>
         <Row s={P('marriageFar', 44)}>к жене, стоящей далеко, — короткая «‖» и тонкая пунктирная выноска</Row>
         <Wide s={C('family', 150)}>Так семья выглядит на небе: Иаков, рядом с ним его жёны, их дети — под скобами по матерям.</Wide>
@@ -885,7 +938,8 @@ export function LegendPanel() {
           Мессии бусинами рождений: где линии совпадают — один ряд, где расходятся — два, золотой — по Матфею, лазурный —
           по Луке; черта «завершение канона» и заштрихованное время после него, где лиц нет; отметка «сегодня». Рамка —
           видимая часть неба: тяните её за середину, края — за ручки. Щелчок вне рамки или по названию эпохи — переход
-          к эпохе, двойной щелчок — всё небо.
+          к эпохе, двойной щелчок — всё небо. Колесо над полосой меняет ширину окна у года под указателем, Shift + колесо
+          сдвигает окно. Эпоху, чьё название не поместилось, называет флажок над строкой названий.
         </Wide>
         <Wide s={C('meridian', 100)}>
           Задержите указатель на линейке лет или на полосе времени — через небо пройдёт меридиан года. Во флажке — сколько
@@ -896,8 +950,10 @@ export function LegendPanel() {
             Флажок «ярусы эпох» у неба: над небом — эпохи, судьи, цари Иудеи и Израиля, служения пророков и события.
             Штриховка — совместное правление, пунктирная рамка — годы по оценке; тонкая вертикаль между царями Иудеи
             и Израиля — синхронизм текста («в N-й год X воцарился Y»); черта с засечками вместо отрезка — пророк, чьё время
-            не установлено. Столбец через ярусы — жизнь выбранного лица; у его краёв — формула: после чьего рождения лицо
-            родилось и при чьей жизни умерло (расчёт). Щелчок по царю, судье или пророку открывает его карточку.
+            не установлено. Жизнь выбранного лица — столбец: в ярусах он залит, на небе — две тонкие черты по краям
+            надёжной части жизни; растушёванные края — неопределённость годов рождения и смерти. Под ярусами — формула:
+            после чьего рождения и до чьего лицо родилось, при чьей жизни умерло (расчёт). Щелчок по царю, судье или
+            пророку открывает его карточку.
           </span>
         </li>
         <li class="legend-row legend-wide">

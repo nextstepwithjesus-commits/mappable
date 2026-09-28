@@ -9,7 +9,7 @@ import { byId, graph, groupById, persons, loadedChrono, loadedCard } from '../..
 import type { ChronoRow } from '../../data/atlas.ts';
 import type { Epoch, Sex } from '../../data/types.ts';
 import { P, ROLE_NAMES } from '../common.tsx';
-import { nameCase, realmInstrumental, yearsGen } from '../text/ru.ts';
+import { declinableForm, nameCase, realmInstrumental, yearsGen } from '../text/ru.ts';
 import { typo } from '../text/typo.ts';
 import { formatYear, formatSpan, yearsWord, shownYears, shownBirthRange, toAstro, type LifeDates } from '../../engine/years.ts';
 
@@ -60,13 +60,15 @@ export function birthLine(c: LifeDates, range?: [number, number]): string {
   return `${formatYear(y.b, { approx: true })}; возможный промежуток${NB}— ${formatSpan(lo, hi)}`;
 }
 
-/** § 20: год смерти и возраст — те же числа, что в паспорте. */
-export function deathLine(b: number, d: number, cls: string, bLo = b, bHi = b): string {
-  const y = shownYears({ b, bLo, bHi, d, cls: cls as LifeDates['cls'] });
+/** § 20: год смерти и возраст — те же числа, что в паспорте; dAge — ChronoRow.dAge (false — год смерти свой, не по возрасту). */
+export function deathLine(b: number, d: number, cls: string, bLo = b, bHi = b, dAge?: boolean): string {
+  const y = shownYears({ b, bLo, bHi, d, cls: cls as LifeDates['cls'], dAge });
   if (!y || y.d === null) return '';
   // «умер младенец» (2 Цар 12:18): возраст меньше года — словом, а не «в возрасте 0 лет»;
-  // после «в возрасте» — родительный падеж: «34 лет», «21 года» (CARD-50)
-  const age = Math.round(d - b);
+  // после «в возрасте» — родительный падеж: «34 лет», «21 года» (CARD-50).
+  // Свой год смерти (dAge === false: явный год, событие) у оценки — возраст от показанных лет, как в паспорте:
+  // «1040–970, в возрасте 70», а не 68 от неокруглённого рождения (CARD-79)
+  const age = dAge === false && cls === 'estimated' ? y.d - y.b : Math.round(d - b);
   return `${formatYear(y.d, { approx: y.approx })}, ${age < 1 ? 'младенцем' : `в возрасте ${yearsGen(age)}`}`;
 }
 
@@ -107,9 +109,10 @@ const capFirstRu = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const WORD = /^[А-ЯЁ][а-яё]+$/;
 
 /** Винительный падеж имени: у одушевлённых мужского рода на согласный он равен родительному. */
-function accusative(name: string, sex: Sex): string | null {
+function accusative(name: string, sex: Sex, forms: readonly string[] = []): string | null {
   const out: string[] = [];
-  for (const w of name.split(' ')) {
+  for (const word of name.split(' ')) {
+    const w = declinableForm(word, forms);
     if (!WORD.test(w) || /[аеёиоуыэюя]а$/.test(w)) return null;
     let r: string | null;
     if (/ия$/.test(w)) r = `${w.slice(0, -1)}ю`; // Илия → Илию, Мария → Марию
@@ -127,7 +130,8 @@ function accusative(name: string, sex: Sex): string | null {
 export function nameIn(id: string, cs: 'gen' | 'acc'): string | null {
   const p = byId.get(id);
   if (!p || p.unnamed) return null;
-  return cs === 'gen' ? nameCase(p.name, p.sex, 'gen') : accusative(p.name, p.sex);
+  // «Далуиа» склоняется по форме текста «Далуия» (1 Пар 3:1): «до сына, Далуии» (CARD-86)
+  return cs === 'gen' ? nameCase(p.name, p.sex, 'gen', false, p.alt) : accusative(p.name, p.sex, p.alt);
 }
 
 /**
@@ -346,11 +350,23 @@ export function constellation(groupId: string): string | null {
 
 // ---------- эпохи ----------
 
-/** Эпоха рождения: названная в данных или по расчётному году. */
+/**
+ * Эпоха рождения (CARD-78): у лица с годом рождения — по этому году в текущей модели (c.b), с теми же границами эпох,
+ * что в строке «Эпоха рождения: … (1050–931 гг. до Р. Х.)»; эпоха из данных — только у лиц без годов (epochal)
+ * и у народа или рода: их строка подписана «Эпоха:», а не «Эпоха рождения:».
+ */
 export function birthEpoch(id: string, c: ChronoRow | undefined, epochs: Epoch[]): Epoch | null {
   const p = byId.get(id);
+  const people = p?.kind === 'people' || p?.kind === 'clan';
+  if (c && c.cls !== 'epochal' && !people && epochs.length) return epochAtYear(epochs, c.b);
   const eid = p?.epoch ?? c?.epoch ?? null;
   return epochs.find((e) => e.id === eid) ?? null;
+}
+
+/** Эпоха, в границы которой попадает астрономический год t: начало включено, конец — нет; за краями — крайняя эпоха. */
+export function epochAtYear(epochs: Epoch[], t: number): Epoch {
+  for (const e of epochs) if (t >= toAstro(e.start) && t < toAstro(e.end)) return e;
+  return t < toAstro(epochs[0].start) ? epochs[0] : epochs[epochs.length - 1];
 }
 
 /**

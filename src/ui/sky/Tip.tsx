@@ -2,8 +2,9 @@
  * Подсказка неба (E11; IX-06, IX-07, UX-29) и ярусов эпох (D14; IX-28, MAP-46, MAP-47): лист у звезды или отрезка.
  * Правила места и задержки — src/ui/sky/tip.ts. Подсказка появляется в разметке сразу, прозрачной: её настоящий размер
  * нужен, чтобы выбрать положение; видимой (data-shown) она становится через 120 мс.
- * У звезды сначала две строки — имя с уточнением и годы; место, промежуток рождения и клавиши набора — через 700 мс
- * неподвижности (IX-58). В режиме выбора второго лица «Родства» — кем лицо приходится первому (IX-22).
+ * У звезды — не больше трёх строк и без клавиш (IX-58, VIS-69; клавиши — в таблице «Клавиши»): имя с уточнением, годы
+ * с рождением одной строкой (MAP-53) и одна строка пояснения, самая нужная (StarTip). В режиме выбора второго лица
+ * «Родства» первая строка — кем лицо приходится первому (IX-22). У ленты — шаг родства словами (решение 54).
  */
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { byId, loadCard, loadVerses } from '../../data/atlas.ts';
@@ -11,24 +12,36 @@ import { parseRef, verseId } from '../../engine/books.ts';
 import { formatSpan, formatYear, yearsWord } from '../../engine/years.ts';
 import { graph } from '../../data/atlas.ts';
 import { relate } from '../../engine/kinship.ts';
-import { model, pickMode, selected } from '../../state.ts';
+import { lineFlip, model, pickMode, selected } from '../../state.ts';
 import { refLabel, renderBrackets, skyRef } from '../common.tsx';
 import { typo } from '../text/typo.ts';
 import type { TierHit } from '../../render/tiers.ts';
 import { starRadius } from '../../render/glyphs.ts';
-import { birthSpanText, lifeText, placeText } from './text.ts';
+import { BREAK_TEXT, countText, orderText, placeText, ribbonStepText, tipYears } from './text.ts';
 import { reserve, screenOf } from './view.ts';
 import { placeTip, TIP_DELAY, TIP_MARGIN, TIP_MORE, TIP_WARM, type TipSide } from './tip.ts';
-import { foldDesc, hasDescendants, workSet } from '../work.ts';
 import type { Rect } from '../../render/sky.ts';
+import type { RibbonHit } from '../../render/ribbons.ts';
 
 export type Tip =
-  | { kind: 'star'; id: string; x: number; y: number }
+  /** звезда; count — указатель на номере лица в родословии у бусины (режим «только линии»; UX-69) */
+  | { kind: 'star'; id: string; x: number; y: number; count?: { book: 'Мф' | 'Лк'; n: number } }
   | { kind: 'tier'; hit: TierHit; x: number; y: number }
-  /** пояснение надписи рамки (UX-08: «≈» масштабной линейки) у её прямоугольника box */
+  /** шаг ленты под указателем (E6; MAP-28, решение 54) */
+  | { kind: 'ribbon'; hit: RibbonHit; x: number; y: number }
+  /** пояснение надписи рамки (UX-08: «≈» масштабной линейки; UX-65: эпоха) у её прямоугольника box */
   | { kind: 'note'; key: string; text: string; x: number; y: number; box: Rect };
 
-export const tipKey = (t: Tip | null) => (!t ? '' : t.kind === 'star' ? `s:${t.id}` : t.kind === 'tier' ? `t:${t.hit.bar.key}` : `n:${t.key}`);
+export const tipKey = (t: Tip | null) =>
+  !t
+    ? ''
+    : t.kind === 'star'
+      ? `s:${t.id}${t.count ? `:${t.count.book}` : ''}`
+      : t.kind === 'tier'
+        ? `t:${t.hit.bar.key}`
+        : t.kind === 'ribbon'
+          ? `r:${t.hit.line}:${t.hit.from}:${t.hit.to}`
+          : `n:${t.key}`;
 
 /** Когда подсказка последний раз была видна (для «тёплого» показа без задержки). */
 let lastVisible = -Infinity;
@@ -66,7 +79,7 @@ export function SkyTip({ tip }: { tip: Tip | null }) {
   const ref = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<{ x: number; y: number; side: TipSide } | null>(null);
   const [shown, setShown] = useState(false);
-  // место и клавиши у звезды — через 700 мс неподвижности (IX-58)
+  // третья строка у звезды — через 700 мс неподвижности (IX-58)
   const [more, setMore] = useState(false);
   const key = tipKey(tip);
   const shownRef = useRef(false);
@@ -119,8 +132,9 @@ export function SkyTip({ tip }: { tip: Tip | null }) {
       if (b) avoid.push({ x: b.x - 4, y: b.y - 6, w: b.w + 110, h: b.h + 12 });
     }
     let anchor: Rect | null;
-    if (tip.kind === 'star') anchor = starBox(tip.id);
+    if (tip.kind === 'star') anchor = tip.count ? { x: tip.x - 6, y: tip.y - 8, w: 12, h: 16 } : starBox(tip.id);
     else if (tip.kind === 'tier') anchor = { x: tip.x - 1, y: tip.hit.y, w: 2, h: tip.hit.h };
+    else if (tip.kind === 'ribbon') anchor = { x: tip.x - 8, y: tip.y - 8, w: 16, h: 16 };
     else anchor = tip.box;
     if (!anchor) return;
     const p = placeTip(anchor, size, bounds, avoid, reserve(), tip.kind === 'star' ? undefined : ['se', 'sw']);
@@ -135,49 +149,72 @@ export function SkyTip({ tip }: { tip: Tip | null }) {
       class="tip"
       role="tooltip"
       data-kind={tip.kind}
-      data-id={tip.kind === 'star' ? tip.id : tip.kind === 'tier' ? tip.hit.bar.id : tip.key}
+      data-id={tip.kind === 'star' ? tip.id : tip.kind === 'tier' ? tip.hit.bar.id : tip.kind === 'ribbon' ? `${tip.hit.from} ${tip.hit.to}` : tip.key}
       data-side={pos?.side}
       data-shown={visible ? '' : undefined}
       data-more={tip.kind === 'star' && more ? '' : undefined}
       style={{ left: `${pos?.x ?? 0}px`, top: `${pos?.y ?? 0}px` }}
     >
-      {tip.kind === 'star' ? <StarTip id={tip.id} more={more} /> : tip.kind === 'tier' ? <TierTip hit={tip.hit} /> : <div class="note">{typo(tip.text)}</div>}
+      {tip.kind === 'star' ? (
+        <StarTip id={tip.id} more={more} count={tip.count} />
+      ) : tip.kind === 'tier' ? (
+        <TierTip hit={tip.hit} />
+      ) : tip.kind === 'ribbon' ? (
+        <div class="note">{ribbonStepText(tip.hit.line, tip.hit.from, tip.hit.to, lineFlip.peek())}</div>
+      ) : (
+        <div class="note">{typo(tip.text)}</div>
+      )}
     </div>
   );
 }
 
-function StarTip({ id, more }: { id: string; more: boolean }) {
+/**
+ * Строки подсказки звезды (IX-58, VIS-69; MAP-51, MAP-53, UX-69, UX-73): не больше трёх и без клавиш.
+ *  1) имя с уточнением; в режиме выбора второго лица «Родства» — кем лицо приходится первому (IX-22): предложение само
+ *     начинается с имени («Иессей — отец Давида»);
+ *  2) годы, рождение — одной строкой (tipYears);
+ *  3) одна строка пояснения, по важности: счёт номера у бусины (сразу), разрыв «//», год по порядку перечисления, созвездие
+ *     (через 700 мс неподвижности).
+ */
+export function starTipLines(id: string, o: { more: boolean; count?: { book: 'Мф' | 'Лк'; n: number }; kin?: string | null }): { head: 'name' | 'kin'; years: string; extra: string | null; kind: 'count' | 'break' | 'order' | 'place' | null } {
+  const c = model.value.chrono.get(id);
+  const node = model.value.nodeByPerson.get(id);
+  const order = orderText(id);
+  const broken = !!node && node.brk !== null && node.brk < node.t1;
+  let extra: string | null = null;
+  let kind: 'count' | 'break' | 'order' | 'place' | null = null;
+  if (o.count) [extra, kind] = [countText(o.count.book, o.count.n), 'count'];
+  else if (o.more && broken) [extra, kind] = [typo(BREAK_TEXT), 'break'];
+  else if (o.more && order) [extra, kind] = [order, 'order'];
+  else if (o.more) {
+    const place = placeText(id);
+    if (place) [extra, kind] = [place, 'place'];
+  }
+  // помета «выв.» года по порядку — в строке порядка, если она видна; иначе у самих лет
+  const years = tipYears(id, { mark: !(kind === 'order' && c?.byOrder) });
+  return { head: o.kin ? 'kin' : 'name', years, extra, kind };
+}
+
+function StarTip({ id, more, count }: { id: string; more: boolean; count?: { book: 'Мф' | 'Лк'; n: number } }) {
   const p = byId.get(id);
   if (!p) return null;
-  const on = workSet.value.has(id);
-  const kids = hasDescendants(id);
-  const folded = foldDesc.value.includes(id);
-  // выбор второго лица «Родства»: сразу — кем лицо приходится первому (IX-22); предложение начинается с имени
+  // выбор второго лица «Родства»: первой строкой — кем лицо приходится первому (IX-22, IX-58); предложение — с имени
   const kin = kinPreview(id);
-  const place = more ? placeText(p.id) : '';
-  const birth = more ? birthSpanText(p.id) : '';
+  const t = starTipLines(id, { more, count, kin: kin?.sentence });
   return (
     <>
-      <b>{p.name}</b>
-      {p.disambig && <span class="ds">, {p.disambig}</span>}
-      <div class="yr">{lifeText(p.id)}</div>
-      {kin && <div class="kin">{typo(kin.sentence)}</div>}
-      {/* оценочный год рождения — промежутком, те же числа, что в § 8 и в пунктирном начале следа (G5) */}
-      {birth ? <div class="yr">{birth}</div> : null}
-      {place ? <div class="ds">{place}</div> : null}
-      {/* команды рабочего набора (J3, J5): клавиши обеих раскладок; правая кнопка мыши — меню звезды */}
-      {more && (
-        <div class="tip-keys" data-in-work={on ? '' : undefined}>
-          <span>
-            <kbd>В</kbd> (D) — {on ? 'убрать из работы' : 'взять в работу'}
-          </span>
-          {kids && (
-            <span>
-              <kbd>С</kbd> (C) — {folded ? 'показать потомков на небе' : 'скрыть потомков на небе'}
-            </span>
-          )}
+      {t.head === 'kin' ? (
+        <div class="kin">
+          <b>{typo(kin!.sentence)}</b>
         </div>
+      ) : (
+        <>
+          <b>{p.name}</b>
+          {p.disambig && <span class="ds">, {p.disambig}</span>}
+        </>
       )}
+      <div class="yr">{t.years}</div>
+      {t.extra ? <div class={t.kind === 'place' ? 'ds' : 'ex'}>{t.extra}</div> : null}
     </>
   );
 }
@@ -246,7 +283,8 @@ function TierTip({ hit }: { hit: TierHit }) {
   }
   const p = byId.get(b.id);
   if (!p) return null;
-  const span = formatSpan(b.t0, b.t1, true);
+  // отрезок короче года (служение Аарона перед фараоном, 1446) — один год, а не «ок. 1446–1445 гг.»
+  const span = b.t1 - b.t0 < 1 ? formatYear(b.t0, { approx: true }) : formatSpan(b.t0, b.t1, true);
   return (
     <>
       <b>{p.name}</b>

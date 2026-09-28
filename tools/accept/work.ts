@@ -107,7 +107,7 @@ const view: Scenario[] = [
   },
   {
     n: 191,
-    title: 'J1 мышью: протяжка по линейке лет — только время, по буквам полос — только полосы; колесо с Shift — время, с Alt — полосы; колесо без клавиш — прежний масштаб (D1)',
+    title: 'J1 мышью: протяжка по линейке лет — только время, по буквам полос — только полосы; колесо с Ctrl и Shift — время, с Shift — сдвиг по времени, с Alt — полосы; колесо без клавиш — прежний масштаб (D1, решение 47)',
     run: async (p) => {
       await vgo(p, FAMILY);
       const box = (await p.locator('.sky canvas').boundingBox())!;
@@ -136,14 +136,23 @@ const view: Scenario[] = [
       await p.waitForTimeout(300);
       const c2 = await vcam(p);
       if (!near(c2.kx, c1.kx, 1, 0.001) || !near(c2.ky, c1.ky, Math.SQRT2, 0.05)) return vno(`буквы полос: было ${fmt(c1)}, стало ${fmt(c2)}`);
-      // колесо с Shift — время ×1,5, с Alt — полосы ÷1,25
+      // колесо с Ctrl и Shift — время ×1,5, с Shift — сдвиг по времени без масштаба (решение 47), с Alt — полосы ÷1,25
       await p.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      await p.keyboard.down('Control');
+      await p.keyboard.down('Shift');
+      await p.mouse.wheel(0, -100);
+      await p.keyboard.up('Shift');
+      await p.keyboard.up('Control');
+      await p.waitForTimeout(400);
+      const c3 = await vcam(p);
+      if (!near(c3.kx, c2.kx, 1.5) || !near(c3.ky, c2.ky, 1, 0.01)) return vno(`Ctrl + Shift + колесо: было ${fmt(c2)}, стало ${fmt(c3)}`);
       await p.keyboard.down('Shift');
       await p.mouse.wheel(0, -100);
       await p.keyboard.up('Shift');
       await p.waitForTimeout(400);
-      const c3 = await vcam(p);
-      if (!near(c3.kx, c2.kx, 1.5) || !near(c3.ky, c2.ky, 1, 0.01)) return vno(`Shift + колесо: было ${fmt(c2)}, стало ${fmt(c3)}`);
+      const c35 = await vcam(p);
+      const back = (c3.x0 - c35.x0) * c3.kx;
+      if (c35.kx !== c3.kx || c35.ky !== c3.ky || !(back > 80 && back < 120)) return vno(`Shift + колесо вверх: сдвиг ${back.toFixed(0)} px к ранним годам; было ${fmt(c3)}, стало ${fmt(c35)}`);
       await p.keyboard.down('Alt');
       await p.mouse.wheel(0, 100);
       await p.keyboard.up('Alt');
@@ -690,23 +699,27 @@ const workset: Scenario[] = [
   },
   {
     n: 205,
-    title: 'J3 на небе: подсказка звезды называет клавишу «В (D)»; клавиша берёт лицо под указателем в работу, повторная — убирает',
+    title: 'J3 на небе: клавиша В (D) берёт лицо под указателем в работу, повторная — убирает; подсказка звезды — без клавиш (IX-58), клавиша названа в таблице «Клавиши»',
     run: async (p) => {
       await wgo(p, '#/david');
       const at = await selPoint(p);
       if (!at) return no('нет звезды Давида');
       await p.mouse.move(at.x, at.y);
-      // клавиши набора — в подсказке через 700 мс неподвижности, сначала только имя и годы (IX-58)
+      // подсказка звезды — без клавиш (IX-58, VIS-69): клавиша В (D) названа в таблице «Клавиши»
       await p.waitForTimeout(1100);
-      const tip = p.locator('.sky .tip[data-id="david"] .tip-keys');
-      if (!(await tip.count())) return no('в подсказке нет строки клавиш');
-      if (!/В \(D\) — взять в работу/.test(nbsp(await tip.innerText()))) return no(`подсказка: «${await tip.innerText()}»`);
+      const tip = p.locator('.sky .tip[data-id="david"][data-shown]');
+      if (!(await tip.count())) return no('нет подсказки Давида');
+      if (/\(D\)|взять в работу/.test(nbsp(await tip.innerText()))) return no(`клавиши в подсказке: «${await tip.innerText()}»`);
       await p.keyboard.press('KeyD');
       await p.waitForTimeout(300);
       if ((await stored(p)).join(' ') !== 'david') return no(`после D: ${(await stored(p)).join(' ')}`);
       await p.keyboard.press('KeyD');
       await p.waitForTimeout(300);
-      return (await stored(p)).length === 0 ? ok() : no('повторная D не убрала лицо');
+      if ((await stored(p)).length !== 0) return no('повторная D не убрала лицо');
+      await p.keyboard.press('Shift+Slash');
+      await p.waitForTimeout(600);
+      const table = (await p.locator('table.keys').first().count()) ? nbsp(await p.locator('table.keys').first().innerText()) : '';
+      return /взять лицо в работу или убрать из работы/.test(table) ? ok() : no('в таблице «Клавиши» нет клавиши В (D)');
     },
   },
   {

@@ -8,8 +8,28 @@
  * читатель закрыл панель («Указатель» в строке команд), он не покидает.
  */
 import { computed, effect } from '@preact/signals';
-import { panel, pickMode, selected, type Panel } from '../state.ts';
+import { introDone, panel, pickMode, selected, type Panel } from '../state.ts';
 import { grid } from './layout.ts';
+import { introOpen } from './sky/view.ts';
+
+/**
+ * Свернуть вступительную табличку (Escape — последним в цепочке, UX-76): остаётся команда «Как читать карту» в углу неба.
+ * Фокус, который был в табличке, переходит на эту команду (bindFocus, offIntro).
+ */
+export function foldIntro() {
+  introDone.value = true;
+  introOpen.value = false;
+}
+
+/**
+ * Куда фокус после смены таблички (UX-76). Открыли — на её заголовок («Как читать карту» ставит фокус туда, а не оставляет
+ * его на странице). Свернули, а фокус был в ней (Escape, «×», «Свернуть»), — на команду «Как читать карту». Свернули
+ * вместе с выбором лица (вход «Давид», звезда) — фокусом занимается карточка (offSel): null.
+ */
+export function introFocusTarget(o: { open: boolean; wasInside: boolean; selChanged: boolean }): 'title' | 'command' | null {
+  if (o.open) return 'title';
+  return o.wasInside && !o.selChanged ? 'command' : null;
+}
 
 /**
  * Панели, которые на телефоне ложатся полноэкранным листом (H1): пока такой лист открыт, небо, карточка и полоса
@@ -175,11 +195,32 @@ export function bindFocus(): () => void {
       focusQuietly(root.querySelector<HTMLElement>('.relation .sent') ?? root.querySelector<HTMLElement>('h2'));
     });
   });
+  // вступительная табличка (UX-76): «Условные знаки» начинаются с того же «Как читать карту» — открылись, табличка
+  // сворачивается, текст не стоит дважды; открыли табличку — фокус на её заголовок; свернули с фокусом в ней — на
+  // команду «Как читать карту» в углу неба
+  const offLegend = effect(() => {
+    if (panel.value === 'legend' && introOpen.peek()) foldIntro();
+  });
+  let introShown = introOpen.peek();
+  const offIntro = effect(() => {
+    const open = introOpen.value;
+    if (open === introShown) return;
+    introShown = open;
+    const wasInside = !!document.activeElement?.closest('.cartouche');
+    const sel = selected.peek();
+    later(() => {
+      const to = introFocusTarget({ open, wasInside, selChanged: selected.peek() !== sel || panel.peek() === 'legend' });
+      if (to === 'title') focusQuietly(document.querySelector<HTMLElement>('.cartouche h1, .cartouche .ttl'));
+      else if (to === 'command' && !current()) document.querySelector<HTMLElement>('.sky .guide-cmd')?.focus({ preventScroll: true });
+    });
+  });
   return () => {
     offPanel();
     offSel();
     offModal();
     offParked();
+    offLegend();
+    offIntro();
     setModal(false);
   };
 }

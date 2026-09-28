@@ -1,7 +1,7 @@
-import { useMemo } from 'preact/hooks';
+import { useMemo, useRef } from 'preact/hooks';
 import { byId, persons } from '../../data/atlas.ts';
 import { model } from '../../state.ts';
-import { goTo } from '../common.tsx';
+import { goTo, plural } from '../common.tsx';
 import { atlasCoord } from '../../engine/layout.ts';
 import { norm } from '../../engine/text.ts';
 import { lifeText } from '../sky/text.ts';
@@ -61,6 +61,33 @@ export function IndexPanel() {
     return n && c ? atlasCoord(n.t0, n.lane) : '';
   };
   const known = (id: string) => (byId.get(id)?.magnitude ?? 6) <= KNOWN_MAG;
+  const list = useRef<HTMLDivElement>(null);
+  const field = useRef<HTMLInputElement>(null);
+  const found = shown.reduce((n, [, ids]) => n + ids.length, 0);
+  // «Отобрать» (IX-76): ↓ — на первую строку списка, Enter — к первому найденному лицу; в списке ↑ и ↓ — по строкам,
+  // ↑ с первой строки — обратно в поле
+  const rows = () => [...(list.current?.querySelectorAll<HTMLButtonElement>('button.row') ?? [])];
+  const onFieldKey = (e: KeyboardEvent) => {
+    if (e.key === 'ArrowDown') {
+      const first = rows()[0];
+      if (!first) return;
+      e.preventDefault();
+      first.focus();
+    } else if (e.key === 'Enter' && f && shown.length) {
+      e.preventDefault();
+      goTo(shown[0][1][0]);
+    }
+  };
+  const onListKey = (e: KeyboardEvent) => {
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+    const all = rows();
+    const i = all.indexOf(document.activeElement as HTMLButtonElement);
+    if (i < 0) return;
+    e.preventDefault();
+    const next = all[i + (e.key === 'ArrowDown' ? 1 : -1)];
+    if (next) next.focus();
+    else if (e.key === 'ArrowUp') field.current?.focus();
+  };
   let lastLetter = '';
   return (
     <Sheet wide title="Указатель" lead={`Все лица атласа (${num(persons.length)}) по алфавиту. Число — столбец неба (сто лет от начала шкалы), буква — строка неба на левой кромке.`}>
@@ -69,9 +96,20 @@ export function IndexPanel() {
       </div>
       <div class="field">
         <label for="idx-filter">Отобрать:</label>
-        <input id="idx-filter" value={filter} onInput={(e) => setFilter((e.target as HTMLInputElement).value)} />
+        <input
+          id="idx-filter"
+          ref={field}
+          value={filter}
+          aria-describedby="idx-found"
+          onInput={(e) => setFilter((e.target as HTMLInputElement).value)}
+          onKeyDown={onFieldKey}
+        />
+        {/* сколько найдено — для диктора, пока в поле есть текст (IX-76) */}
+        <span id="idx-found" class="visually-hidden" aria-live="polite">
+          {f ? (found ? `найдено ${found}\u00a0${plural(found, 'лицо', 'лица', 'лиц')}; Enter — к первому, стрелка вниз — к списку` : 'не найдено ни одного лица') : ''}
+        </span>
       </div>
-      <div class="idx">
+      <div class="idx" ref={list} onKeyDown={onListKey}>
         {shown.slice(0, letter || f ? 5000 : 900).map(([name, ids]) => {
           const head = name[0] !== lastLetter;
           lastLetter = name[0];
@@ -79,9 +117,9 @@ export function IndexPanel() {
             <div key={name} class="entry">
               {head && <div class="head">{name[0]}</div>}
               {ids.length === 1 ? (
+                // отточие — от конца текста до координаты (.lead::after); у координаты свой столбец (VIS-61)
                 <button class={known(ids[0]) ? 'row known' : 'row'} onClick={() => goTo(ids[0])}>
-                  <span class="nm">{name}</span>
-                  <span class="lead-dots" />
+                  <span class="nm lead">{name}</span>
                   <span class="coord">{coord(ids[0])}</span>
                 </button>
               ) : (
@@ -89,16 +127,20 @@ export function IndexPanel() {
                   <div class="row word">
                     <span class="nm">{name}</span>
                   </div>
-                  {ids.map((id) => (
-                    <button class={known(id) ? 'row sub known' : 'row sub'} key={id} onClick={() => goTo(id)}>
-                      <span class="nm">
-                        {byId.get(id)!.disambig ? <span class="ds">{typo(byId.get(id)!.disambig)} </span> : null}
-                        <span class="yrs">{typo(lifeText(id))}</span>
-                      </span>
-                      <span class="lead-dots" />
-                      <span class="coord">{coord(id)}</span>
-                    </button>
-                  ))}
+                  {ids.map((id) => {
+                    // годы — всегда своей строкой под уточнением и переносятся; неразрывны только «ок. 815 г.» (VIS-61, VIS-33)
+                    const yrs = typo(lifeText(id));
+                    const ds = byId.get(id)!.disambig;
+                    return (
+                      <button class={known(id) ? 'row sub known' : 'row sub'} key={id} onClick={() => goTo(id)}>
+                        <span class={yrs || ds ? 'nm' : 'nm lead'}>
+                          {ds ? <span class={yrs ? 'ds' : 'ds lead'}>{typo(ds)}</span> : null}
+                          {yrs ? <span class="yrs lead">{yrs}</span> : null}
+                        </span>
+                        <span class="coord">{coord(id)}</span>
+                      </button>
+                    );
+                  })}
                 </>
               )}
             </div>

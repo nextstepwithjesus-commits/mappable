@@ -5,9 +5,14 @@
  * Сверху вниз: строка названий эпох (на широкой полосе — две строки лесенкой), ниже — рамка окна; в её поле — бусины
  * рождений двух линий, столбики плотности, черты канона и «сегодня». Рамка не заходит на названия (MAP-43).
  *
- * Щелчок (IX-50): внутри рамки без протяжки — ничего; вне рамки и по названию эпохи — один переход к окну эпохи за
- * 400 мс, без «отдалить — приблизить»; протяжка вне рамки (сдвиг больше 3 px) переносит рамку под указатель и тянет её;
- * двойной щелчок — всё небо. После канона лиц нет: туда ведёт окно конца данных (MOB-06).
+ * Щелчок (IX-50, IX-78): внутри рамки без протяжки — ничего; вне рамки и по названию эпохи — сразу один переход к окну
+ * эпохи за 400 мс, без «отдалить — приблизить»; протяжка вне рамки (сдвиг больше 3 px) переносит рамку под указатель и
+ * тянет её; двойной щелчок — всё небо (второй щелчок прерывает переход первого). После канона лиц нет: туда ведёт окно
+ * конца данных (MOB-06). Колесо (IX-57; решение 47): масштаб окна у года под указателем, Shift + колесо — сдвиг,
+ * Ctrl + Shift + колесо — растяжение одного времени.
+ *
+ * Подписи (VIS-65, MOB-68): черты границ эпох — только в поле рамки, под строками названий; между названиями — 14 px;
+ * «сегодня», канон и пояснение «лиц нет» не ложатся на ручки и края рамки, черты и друг друга (placeLate).
  */
 import { useEffect, useRef } from 'preact/hooks';
 import { effect, signal } from '@preact/signals';
@@ -18,7 +23,8 @@ import { formatSpan, formatYear, toAstro, toHist } from '../engine/years.ts';
 import { readPalette } from '../render/sky.ts';
 import { easeOut } from '../render/camera.ts';
 import { T_UI_S, coarsePointer, mapFont } from '../render/type.ts';
-import { reduced, showAll, showYears, stopFlight, viewForYears } from './sky/view.ts';
+import { panStep, reduced, showAll, showYears, stopFlight, viewForYears } from './sky/view.ts';
+import { classifyWheel, wheelNotches, wheelPixels, wheelStretch, wheelZoom, type WheelKind, type WheelSample } from './sky/input.ts';
 import { hoverYear } from './sky/meridian.ts';
 import { typo } from './text/typo.ts';
 
@@ -49,14 +55,19 @@ export const DRAG_PX = 3;
 const TOUCH_SLOP = 10;
 /** Переход к эпохе (щелчок, PageUp и PageDown): одно движение с замедлением (IX-50). */
 export const GLIDE_MS = 400;
-/** Щелчок ждёт, не двойной ли это щелчок («всё небо»), мс. */
-const DBL_MS = 240;
 /** Шаг гистограммы плотности, лет. */
 export const BIN = 25;
 /** Базовые линии строк названий эпох. */
 const ROW_Y = [12, 25];
-/** Зазор между подписями эпох в строке, px. */
-const LABEL_GAP = 6;
+/** Зазор между подписями эпох в строке, px: подписи не сливаются во фразу («Возвращение Христос», VIS-65). */
+export const LABEL_GAP = 14;
+/** Зазор между подписями в поле рамки (канон, «сегодня», пояснение) и до ручек, краёв рамки и черт, px. */
+const LATE_GAP = 8;
+/** Шаг колеса над полосой (IX-57): щелчок колеса — ширина окна в 1,25 раза у года под указателем. */
+export const STRIP_WHEEL = 1.25;
+/** Второй щелчок двойного — не дальше стольких мс и px от первого: он прерывает переход и ведёт ко «всему небу» (IX-78). */
+export const DBL_MS = 500;
+const DBL_PX = 6;
 
 /** Курсор над полосой: над ручками — ew-resize, над рамкой — grab (при протяжке — grabbing), вне рамки — pointer (IX-33). */
 export function stripCursor(g: FrameGrip, dragging: boolean): string {
@@ -159,27 +170,41 @@ export interface LabelPlace {
 }
 
 /**
- * Подписи эпох (MAP-43): каждая — по середине своей эпохи, в первой строке, где она не ложится на соседние; если место
- * занято — сдвигается влево или вправо к ближайшему свободному месту, пока касается своей эпохи. rows — сколько строк,
- * [lo, hi] — поле подписей; taken — уже занятые места (номер строки, начало, конец): края шкалы. Не поместилась ни в одну
- * строку — подписи нет. Два порядка — слева направо и от широких эпох к узким; берётся тот, где подписей больше
- * (при равенстве — где подписаны более широкие эпохи): на широкой полосе подписаны все, на узкой — сначала широкие.
+ * Подписи эпох (MAP-43, VIS-65): каждая — по середине своей эпохи, в первой строке, где она не ложится на соседние; если
+ * место занято — сдвигается влево или вправо к ближайшему свободному месту, пока касается своей эпохи. Между подписями
+ * строки — не меньше gap px. rows — сколько строк, [lo, hi] — поле подписей; taken — уже занятые места (номер строки,
+ * начало, конец): края шкалы. Не поместилась ни в одну строку — подписи нет (название — во флажке над полосой).
+ * Три раскладки: слева направо и от широких эпох к узким — от середин; плотная — слева направо, каждая подпись у левого
+ * края своих допустимых мест, затем подписи строки сдвигаются к серединам, пока не упрутся в соседа. На полосе в две
+ * строки берётся та, где подписей больше (при равенстве — где подписаны более широкие эпохи): подписаны все; на полосе
+ * в одну строку — та, где подписаны более широкие эпохи: сначала широкие.
  */
-export function placeEpochLabels(items: readonly LabelItem[], rows: number, lo: number, hi: number, taken: readonly [number, number, number][] = []): Map<string, LabelPlace> {
+export function placeEpochLabels(
+  items: readonly LabelItem[],
+  rows: number,
+  lo: number,
+  hi: number,
+  taken: readonly [number, number, number][] = [],
+  gap = LABEL_GAP,
+): Map<string, LabelPlace> {
+  const fixed = (r: number) => taken.filter((t) => t[0] === r).map((t) => [t[1], t[2]] as [number, number]);
+  const want = (it: LabelItem) => Math.max(lo, Math.min(hi - it.w, (it.x0 + it.x1) / 2 - it.w / 2));
+  // допустимые места подписи: в поле и касаясь своей эпохи
+  const range = (it: LabelItem): [number, number] => [Math.max(lo, it.x0 - 2 - it.w), Math.min(hi - it.w, it.x1 + 2)];
+  const clear = (occ: [number, number][], x: number, w: number) => !occ.some(([a, b]) => x < b + gap && a - gap < x + w);
   const run = (order: readonly LabelItem[]) => {
-    const occ: [number, number][][] = Array.from({ length: rows }, (_, r) => taken.filter((t) => t[0] === r).map((t) => [t[1], t[2]] as [number, number]));
+    const occ = Array.from({ length: rows }, (_, r) => fixed(r));
     const out = new Map<string, LabelPlace>();
     for (const it of order) {
-      const want = Math.max(lo, Math.min(hi - it.w, (it.x0 + it.x1) / 2 - it.w / 2));
-      // подпись в поле, касается своей эпохи и не ложится на занятые места строки
-      const fits = (x: number, r: number) =>
-        x >= lo - 0.01 && x + it.w <= hi + 0.01 && x <= it.x1 + 2 && x + it.w >= it.x0 - 2 && !occ[r].some(([a, b]) => x < b + LABEL_GAP && a - LABEL_GAP < x + it.w);
+      const c = want(it);
+      const [a0, a1] = range(it);
+      const fits = (x: number, r: number) => x >= a0 - 0.01 && x <= a1 + 0.01 && clear(occ[r], x, it.w);
       let best: (LabelPlace & { d: number }) | null = null;
       for (let r = 0; r < rows; r++) {
-        for (const x of [want, ...occ[r].flatMap(([a, b]) => [b + LABEL_GAP, a - LABEL_GAP - it.w])]) {
+        for (const x of [c, ...occ[r].flatMap(([a, b]) => [b + gap, a - gap - it.w])]) {
           if (!fits(x, r)) continue;
           // ближе к середине эпохи; нижняя строка — только если в верхней сдвиг больше 12 px
-          const d = Math.abs(x - want) + r * 12;
+          const d = Math.abs(x - c) + r * 12;
           if (!best || d < best.d) best = { x, row: r, d };
         }
       }
@@ -190,11 +215,192 @@ export function placeEpochLabels(items: readonly LabelItem[], rows: number, lo: 
     }
     return out;
   };
+  const packed = () => {
+    const occ = Array.from({ length: rows }, (_, r) => fixed(r));
+    const at = new Map<string, LabelPlace>();
+    for (const it of [...items].sort((a, b) => a.x0 + a.x1 - (b.x0 + b.x1))) {
+      const [a0, a1] = range(it);
+      let best: LabelPlace | null = null;
+      for (let r = 0; r < rows; r++) {
+        // самое левое свободное место не левее допустимого
+        let x = a0;
+        for (let k = 0; k <= occ[r].length; k++) {
+          const hit = occ[r].find(([a, b]) => x < b + gap && a - gap < x + it.w);
+          if (!hit) break;
+          x = hit[1] + gap;
+        }
+        if (x <= a1 + 0.01 && (!best || x < best.x)) best = { x, row: r };
+      }
+      if (best) {
+        occ[best.row].push([best.x, best.x + it.w]);
+        at.set(it.id, best);
+      }
+    }
+    // подписи строки — к серединам эпох, справа налево: каждая не заходит на правого соседа и на края шкалы
+    for (let r = 0; r < rows; r++) {
+      const row = items.filter((it) => at.get(it.id)?.row === r).sort((a, b) => at.get(a.id)!.x - at.get(b.id)!.x);
+      const walls = fixed(r);
+      let limit = hi;
+      for (let i = row.length - 1; i >= 0; i--) {
+        const it = row[i];
+        const p = at.get(it.id)!;
+        const wall = walls.filter(([a]) => a >= p.x + it.w).reduce((m, [a]) => Math.min(m, a - gap), hi);
+        const x = Math.max(p.x, Math.min(want(it), range(it)[1], limit - it.w, wall - it.w));
+        at.set(it.id, { x, row: r });
+        limit = x - gap;
+      }
+    }
+    return at;
+  };
   const span = (m: Map<string, LabelPlace>) => items.reduce((s, it) => s + (m.has(it.id) ? it.x1 - it.x0 : 0), 0);
-  const inOrder = run(items);
-  const byWidth = run([...items].sort((a, b) => b.x1 - b.x0 - (a.x1 - a.x0)));
-  return byWidth.size > inOrder.size || (byWidth.size === inOrder.size && span(byWidth) > span(inOrder) + 0.5) ? byWidth : inOrder;
+  const better = (a: Map<string, LabelPlace>, b: Map<string, LabelPlace>) =>
+    rows > 1
+      ? a.size > b.size || (a.size === b.size && span(a) > span(b) + 0.5)
+      : span(a) > span(b) + 0.5 || (Math.abs(span(a) - span(b)) <= 0.5 && a.size > b.size);
+  let best = run(items);
+  for (const m of [run([...items].sort((a, b) => b.x1 - b.x0 - (a.x1 - a.x0))), packed()]) if (better(m, best)) best = m;
+  return best;
 }
+
+// ---------- подписи в поле рамки после канона (MOB-68, VIS-65) ----------
+
+export interface Box {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+const LATE_H = 14;
+export interface LateText {
+  text: string;
+  w: number;
+}
+export interface LatePlaced {
+  text: string;
+  x: number;
+  /** базовая линия текста */
+  base: number;
+  /** прямоугольник подписи с подложкой */
+  box: Box;
+}
+export interface LateInput {
+  W: number;
+  H: number;
+  /** верх поля рамки (stripRows) */
+  top: number;
+  /** черты «завершение канона» и «сегодня», px */
+  canonX: number;
+  todayX: number;
+  /** заштрихованный участок после канона, px */
+  hatch: [number, number];
+  /** края рамки окна, px; null — окна ещё нет */
+  frame: [number, number] | null;
+  /** ручки рамки */
+  grips: readonly Box[];
+  /** подпись черты канона: полная и краткая */
+  canon: readonly LateText[];
+  today: LateText;
+  /** пояснение «лиц нет»: от длинного к короткому */
+  note: readonly LateText[];
+}
+/**
+ * Строки подписей поля рамки: нижняя — канон и «сегодня» (одна строка, MOB-68); пояснение — строкой выше, если она
+ * помещается над нижней с зазором 4 px (полоса 56 px и выше), иначе в той же нижней строке (полоса 44 px).
+ */
+export function lateRows(H: number, top: number): { bottom: { y: number; base: number }; note: { y: number; base: number } } {
+  const bottom = { y: H - 16, base: H - 6 };
+  return { bottom, note: top + 3 + LATE_H + 4 <= bottom.y ? { y: top + 3, base: top + 13 } : bottom };
+}
+/** Подпись канона — не дальше 60 px от своей черты (её может отделять край рамки с ручкой), «сегодня» — не дальше 30 px. */
+const CANON_NEAR = 60;
+const TODAY_NEAR = 30;
+
+/**
+ * Подписи поля рамки после канона (MOB-68, VIS-65): «сегодня» — у своей черты справа, подпись канона — справа от своей
+ * черты (над штриховкой, не на столбиках), пояснение «После завершения канона лиц нет» — в самой широкой свободной части
+ * штриховки вне рамки. Ни одна подпись не ложится на ручки и края рамки, на черты канона и «сегодня» и на другие подписи
+ * (зазор 8 px). На полосе 44 px все три — в одной нижней строке (lateRows); что не помещается — не рисуется.
+ * Подпись канона уходит от своей черты не дальше 60 px (иначе берётся краткая), «сегодня» — не дальше 30 px.
+ */
+export function placeLate(o: LateInput): { today: LatePlaced | null; canon: LatePlaced | null; note: LatePlaced | null } {
+  const rows = lateRows(o.H, o.top);
+  const placed: LatePlaced[] = [];
+  /** занятые участки строки [y, y + 14): ручки, края рамки, черты, подписи; body — и тело рамки */
+  const blocked = (y: number, body: boolean): [number, number][] => {
+    const out: [number, number][] = [];
+    for (const g of o.grips) if (g.y < y + LATE_H && y < g.y + g.h) out.push([g.x - 2, g.x + g.w + 2]);
+    if (o.frame) {
+      const [a, b] = o.frame;
+      if (body) out.push([a - 2, b + 2]);
+      else out.push([a - 2, a + 2], [b - 2, b + 2]);
+    }
+    out.push([o.canonX - 2, o.canonX + 2], [o.todayX - 2, o.todayX + 2]);
+    for (const p of placed) if (p.box.y < y + LATE_H && y < p.box.y + p.box.h) out.push([p.box.x - LATE_GAP, p.box.x + p.box.w + LATE_GAP]);
+    return out;
+  };
+  const free = (bl: [number, number][], x: number, w: number) => x >= 2 && x + w <= o.W - 2 && !bl.some(([a, b]) => x - 2 < b && a < x + w + 2);
+  const put = (t: LateText, x: number, row: { y: number; base: number }): LatePlaced => {
+    const p = { text: t.text, x, base: row.base, box: { x: x - 2, y: row.y, w: t.w + 4, h: LATE_H } };
+    placed.push(p);
+    return p;
+  };
+  // «сегодня» — ближе всего к своей черте: слева или справа от неё, иначе по ту сторону ручки или края рамки
+  const row = rows.bottom;
+  let today: LatePlaced | null = null;
+  {
+    const bl = blocked(row.y, false);
+    // ближний край подписи — не дальше 30 px от черты: иначе между ними встаёт ручка или край рамки, и подпись читалась бы
+    // как чужая; тогда подписи нет (черта остаётся)
+    const near = (x: number) => Math.max(x - o.todayX, o.todayX - (x + o.today.w)) <= TODAY_NEAR;
+    const xs = [o.todayX - 4 - o.today.w, o.todayX + 4, ...bl.flatMap(([a, b]) => [b + 2, a - 2 - o.today.w])].filter((x) => near(x) && free(bl, x, o.today.w));
+    xs.sort((a, b) => Math.abs(a + o.today.w / 2 - o.todayX) - Math.abs(b + o.today.w / 2 - o.todayX));
+    if (xs.length) today = put(o.today, xs[0], row);
+  }
+  // канон — справа от черты, не правее «сегодня»
+  let canon: LatePlaced | null = null;
+  {
+    const bl = blocked(row.y, false);
+    const pick = (t: LateText, far: number) => {
+      const xs = [o.canonX + 4, ...bl.map(([, b]) => b + 2)].filter((x) => x >= o.canonX + 3 && x - o.canonX <= far && free(bl, x, t.w) && (!today || x + t.w + 2 + LATE_GAP <= today.box.x));
+      return xs.length ? Math.min(...xs) : null;
+    };
+    for (const t of o.canon) {
+      const x = pick(t, CANON_NEAR);
+      if (x !== null) {
+        canon = put(t, x, row);
+        break;
+      }
+    }
+  }
+  // пояснение — в самой широкой свободной части штриховки вне рамки
+  let note: LatePlaced | null = null;
+  {
+    const nr = rows.note;
+    const bl = blocked(nr.y, true).sort((a, b) => a[0] - b[0]);
+    const lo = Math.max(o.hatch[0] + 6, 2);
+    const hi = Math.min(o.hatch[1] - 6, o.W - 2);
+    const gaps: [number, number][] = [];
+    let x = lo;
+    for (const [a, b] of bl) {
+      if (b <= x) continue;
+      if (a > x) gaps.push([x, Math.min(a, hi)]);
+      x = Math.max(x, b);
+      if (x >= hi) break;
+    }
+    if (x < hi) gaps.push([x, hi]);
+    const wide = gaps.filter(([a, b]) => b > a).sort((a, b) => b[1] - b[0] - (a[1] - a[0]))[0];
+    if (wide) {
+      // подложка шире текста на 2 px с каждой стороны, от краёв свободного участка ещё по 2 px
+      const room = wide[1] - wide[0] - 8;
+      const t = o.note.find((n) => n.w <= room);
+      if (t) note = put(t, (wide[0] + wide[1] - t.w) / 2, nr);
+    }
+  }
+  return { today, canon, note };
+}
+
+/** Прямоугольники пересекаются (края касаются — не пересекаются). */
+export const boxesCross = (a: Box, b: Box) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
 
 /** Ряд бусины на схеме линий: общая для обеих линий, только линия Иосифа (Мф 1) или только линия по Луке. */
 export type BeadRow = 'both' | 'joseph' | 'mary';
@@ -239,6 +445,38 @@ export function birthsWord(n: number): string {
 /** Подпись флажка года над столбиками: год и число рождений в его 25-летии (MAP-45). */
 export function histFlag(t: number, n: number): string {
   return `${formatYear(t)}: ${n ? `${birthsWord(n)} за ${BIN} лет` : `за ${BIN} лет рождений нет`}`;
+}
+
+/**
+ * Второй щелчок двойного (IX-78): не позже DBL_MS после первого и не дальше 6 px от него. Первый щелчок уже начал переход
+ * к эпохе; нажатие второго его прервало, а двойной щелчок ведёт ко всему небу — второй щелчок перехода не начинает.
+ */
+export function isSecondClick(prev: { t: number; x: number } | null, t: number, x: number): boolean {
+  return !!prev && t - prev.t <= DBL_MS && Math.abs(x - prev.x) <= DBL_PX;
+}
+
+/** Что делает колесо над полосой (IX-57; решение 47): масштаб окна, сдвиг, растяжение одного времени, щипок. */
+export type StripWheel = { kind: 'zoom' | 'stretch' | 'pinch'; f: number } | { kind: 'shift'; px: number };
+/**
+ * Колесо над полосой по виду прокрутки (classifyWheel) и клавишам; dx, dy — px. f — во сколько раз крупнее станет небо
+ * (ширина окна — в 1 / f раз): щелчок колеса — 1,25; px — сдвиг окна в px неба (вправо — позже). null — ничего.
+ */
+export function stripWheel(kind: WheelKind, shift: boolean, ctrl: boolean, dx: number, dy: number): StripWheel | null {
+  const along = Math.abs(dy) >= Math.abs(dx) ? dy : dx;
+  if (kind === 'pinch') return dy ? { kind: 'pinch', f: Math.exp(-dy * 0.01) } : null;
+  const step = () => {
+    const n = wheelNotches(along);
+    return n > 0 ? Math.pow(STRIP_WHEEL, -Math.sign(along) * n) : null;
+  };
+  if (shift && ctrl) {
+    const f = step();
+    return f ? { kind: 'stretch', f } : null;
+  }
+  if (shift) return along ? { kind: 'shift', px: along } : null;
+  // тачпад: прокрутка вбок — сдвиг, вдоль — масштаб
+  if (kind === 'trackpad' && Math.abs(dx) > Math.abs(dy)) return { kind: 'shift', px: dx };
+  const f = step();
+  return f ? { kind: 'zoom', f } : null;
 }
 
 /** Переход к окну лет [a, b] одним движением с замедлением (IX-50): без «отдалить — приблизить» ван Вейка. */
@@ -293,6 +531,10 @@ export function TimeStrip() {
     let hotEpoch: string | null = null;
     /** указатель над столбиками: флажок года называет число рождений (MAP-45) */
     let overHist = false;
+    /** указатель над строкой названий: флажок называет эпоху, если её подписи на полосе нет (VIS-65) */
+    let overNames = false;
+    /** эпохи, подписанные на полосе в последнем кадре */
+    let labeled = new Set<string>();
 
     /** Поле разметки для проверок приёмки — только если значение сменилось. */
     const setData = (k: string, v: string | null) => {
@@ -309,7 +551,8 @@ export function TimeStrip() {
       const L = stripRows(H);
       const eps = model.value.epochs;
       const v = view();
-      // эпохи: чередование тона и черты границ
+      // эпохи: чередование тона; черты границ — только в поле рамки, под строками названий: черта не пересекает
+      // подпись (VIS-65)
       eps.forEach((e, i) => {
         const a = xOf(toAstro(e.start));
         const b = xOf(toAstro(e.end));
@@ -318,7 +561,7 @@ export function TimeStrip() {
         ctx.strokeStyle = pal.rule;
         ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.moveTo(Math.round(a) + 0.5, 0);
+        ctx.moveTo(Math.round(a) + 0.5, L.top);
         ctx.lineTo(Math.round(a) + 0.5, H);
         ctx.stroke();
       });
@@ -375,14 +618,22 @@ export function TimeStrip() {
       );
       // подписано эпох из всех — для проверок приёмки (tools/accept/strip.ts)
       setData('epochLabels', `${places.size}/${eps.length}`);
+      labeled = new Set(places.keys());
+      // прямоугольники текста полосы — для проверки наложений (tools/accept/strip3.ts): строка названий — от 10 px над
+      // базовой линией до 3 px под ней
+      const texts: (Box & { t: string })[] = [];
+      const nameBox = (t: string, x: number, base: number, w: number) => texts.push({ t, x, y: base - 10, w, h: 13 });
       ctx.fillStyle = pal.ink3;
       ctx.fillText(startLabel, PAD, ROW_Y[0]);
       ctx.fillText(endLabel, W - PAD - ew, ROW_Y[0]);
+      nameBox(startLabel, PAD, ROW_Y[0], sw);
+      nameBox(endLabel, W - PAD - ew, ROW_Y[0], ew);
       for (const e of eps) {
         const at = places.get(e.id);
         if (!at) continue;
         ctx.fillStyle = e.id === hotEpoch ? pal.ink : pal.ink3;
         ctx.fillText(e.short, at.x, ROW_Y[at.row]);
+        nameBox(e.short, at.x, ROW_Y[at.row], ctx.measureText(e.short).width);
       }
       // плотность рождений; вне окна неба — бледнее (VIS-25)
       const max = Math.max(1, ...hist);
@@ -428,8 +679,7 @@ export function TimeStrip() {
           ctx.fillRect(x, y, 2, 2);
         }
       }
-      // ручки рамки окна (где они будут нарисованы ниже): подписи канона и «сегодня» их обходят
-      const grips: { x: number; w: number }[] = [];
+      // ручки рамки окна (где они будут нарисованы ниже): подписи поля рамки их обходят
       const handleX = (a: number, b: number) => {
         const c = (a + b) / 2;
         const half = b - a >= NARROW ? (b - a) / 2 : Math.max((b - a) / 2, GRIP / 2);
@@ -438,52 +688,49 @@ export function TimeStrip() {
           return { side, x: Math.round(side === 'left' ? edge - HANDLE_GAP - HANDLE_W : edge + HANDLE_GAP) };
         });
       };
-      if (v) for (const h of handleX(xOf(v.a), xOf(v.b))) grips.push({ x: h.x - 2, w: HANDLE_W + 4 });
-      const onGrip = (lx: number, tw: number) => grips.some((h) => lx < h.x + h.w + 2 && h.x - 2 < lx + tw);
-      // завершение канона и «сегодня»: черты в поле рамки, подписи Jost внизу на подложке неба
-      const bottomY = H - 6;
-      const mark = (t: number, label: string, dashed: boolean, side: 'right' | 'left', maxEnd = Infinity) => {
-        const x = Math.round(xOf(t)) + 0.5;
-        ctx.strokeStyle = pal.ink2;
+      const hy = Math.round(L.top + (H - L.top - HANDLE_H) / 2);
+      const grips: Box[] = v ? handleX(xOf(v.a), xOf(v.b)).map((h) => ({ x: h.x, y: hy, w: HANDLE_W, h: HANDLE_H })) : [];
+      // завершение канона и «сегодня»: черты в поле рамки (ниже строк названий)
+      const xCanon = Math.round(xOf(CANON_END)) + 0.5;
+      const xToday = Math.round(xOf(TODAY)) + 0.5;
+      ctx.strokeStyle = pal.ink2;
+      for (const [x, dashed] of [[xToday, false], [xCanon, true]] as const) {
         ctx.setLineDash(dashed ? [2, 2] : []);
         ctx.beginPath();
         ctx.moveTo(x, L.top);
         ctx.lineTo(x, H);
         ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.font = font();
-        const tw = ctx.measureText(label).width;
-        // подпись — со стороны side от черты, чтобы черта не перечёркивала слово; ручку рамки подпись обходит справа
-        let lx = side === 'right' && x + 4 + tw <= W - 4 ? x + 4 : x - tw - 4;
-        for (const g of grips) if (onGrip(lx, tw)) lx = Math.max(lx, g.x + g.w + 4);
-        if (lx + tw < Math.min(maxEnd, W - 2) && lx >= 2 && !onGrip(lx, tw)) {
-          ctx.fillStyle = pal.sky;
-          ctx.fillRect(lx - 2, bottomY - 10, tw + 4, 14);
-          ctx.fillStyle = pal.ink2;
-          ctx.fillText(label, lx, bottomY);
-          return { lx, tw };
-        }
-        return null;
-      };
-      const today = mark(TODAY, 'сегодня', false, 'left');
-      mark(CANON_END, W < 700 ? 'канон' : 'завершение канона', true, 'right', today ? today.lx - 8 : Infinity);
-      // после канона лиц нет: пояснение посреди заштрихованного участка (MOB-06)
-      {
-        ctx.font = font();
-        const room = xe - xc - 12;
-        const note = ['После завершения канона лиц нет', 'После канона лиц нет', 'Лиц нет'].find((s) => ctx.measureText(s).width <= room);
-        // под верхом рамки, над подписями канона и «сегодня»: лент и столбиков после канона нет
-        const ny = L.top + 13;
-        setData('canonNote', note ?? null);
-        if (note) {
-          const tw = ctx.measureText(note).width;
-          const lx = xc + (xe - xc - tw) / 2;
-          ctx.fillStyle = pal.sky;
-          ctx.fillRect(lx - 3, ny - 10, tw + 6, 14);
-          ctx.fillStyle = pal.ink2;
-          ctx.fillText(note, lx, ny);
-        }
       }
+      ctx.setLineDash([]);
+      // подписи поля рамки (MOB-68): «сегодня», канон и пояснение «лиц нет» — вне ручек, краёв рамки, черт и друг друга;
+      // пояснение — в свободной части штриховки вне рамки; не помещается — не рисуется
+      ctx.font = font();
+      const tx = (text: string): LateText => ({ text, w: ctx.measureText(text).width });
+      const late = placeLate({
+        W,
+        H,
+        top: L.top,
+        canonX: xCanon,
+        todayX: xToday,
+        hatch: [xc, xe],
+        frame: v ? [xOf(v.a), xOf(v.a) + Math.max(3, xOf(v.b) - xOf(v.a))] : null,
+        grips,
+        canon: (W < 700 ? ['канон'] : ['завершение канона', 'канон']).map(tx),
+        today: tx('сегодня'),
+        note: ['После завершения канона лиц нет', 'После канона лиц нет', 'Лиц нет'].map(tx),
+      });
+      for (const p of [late.today, late.canon, late.note]) {
+        if (!p) continue;
+        ctx.fillStyle = pal.sky;
+        ctx.fillRect(p.box.x, p.box.y, p.box.w, p.box.h);
+        ctx.fillStyle = pal.ink2;
+        ctx.fillText(p.text, p.x, p.base);
+        texts.push({ t: p.text, ...p.box });
+      }
+      setData('canonNote', late.note?.text ?? null);
+      // текст и ручки полосы — для проверки наложений (MOB-68)
+      setData('texts', JSON.stringify(texts.map((b) => [b.t, Math.round(b.x * 10) / 10, Math.round(b.y), Math.round(b.w * 10) / 10, b.h])));
+      setData('grips', JSON.stringify(grips.map((g) => [g.x, g.y, g.w, g.h])));
       // окно неба: рамка — под строкой названий, ручки — прямоугольники 6 × 18 за краями (VIS-25)
       if (v) {
         const a = xOf(v.a);
@@ -497,7 +744,6 @@ export function TimeStrip() {
         ctx.globalAlpha = 0.08;
         ctx.fillRect(a, top, Math.max(3, b - a), H - top - 1);
         ctx.globalAlpha = 1;
-        const hy = Math.round(L.top + (H - L.top - HANDLE_H) / 2);
         for (const h of handleX(a, b)) {
           const hotGrip = grip === h.side;
           ctx.fillStyle = pal.sheet;
@@ -525,11 +771,18 @@ export function TimeStrip() {
         ctx.lineTo(x, H);
         ctx.stroke();
         const i = Math.floor((t - T0) / BIN);
-        const label = overHist && i >= 0 && i < hist.length ? histFlag(t, hist[i]) : formatYear(t);
+        // над строкой названий — эпоха без подписи на полосе называется во флажке (VIS-65: не третьей строкой)
+        const unnamed = overNames ? epochAtYear(eps, t, toAstro) : null;
+        const label =
+          overHist && i >= 0 && i < hist.length
+            ? histFlag(t, hist[i])
+            : unnamed && !labeled.has(unnamed.id)
+              ? typo(`${unnamed.name}: ${formatYear(t)}`)
+              : formatYear(t);
         ctx.font = font(500);
         const tw = ctx.measureText(label).width;
         // подпись — справа от черты; если там ручка рамки или край — слева: ручку подпись не закрывает
-        const over = (lx: number) => grips.some((h) => lx < h.x + h.w && h.x < lx + tw + 6);
+        const over = (lx: number) => grips.some((h) => lx < h.x + h.w + 2 && h.x - 2 < lx + tw + 6);
         let lx = Math.min(W - tw - 10, x + 4);
         if (over(lx) || lx < x) lx = Math.max(2, x - tw - 10);
         const fy = L.top + 2;
@@ -592,7 +845,10 @@ export function TimeStrip() {
       const na = Math.max(lo, Math.min(hi - (b - a), a + dt));
       setView(na, na + (b - a), false);
     };
-    let epochTimer = 0;
+    /** прошлый щелчок по полосе: второй щелчок двойного перехода не начинает (IX-78) */
+    let lastClick: { t: number; x: number } | null = null;
+    /** прошлое событие колеса: мышь или тачпад (classifyWheel) */
+    let lastWheel: { t: number; kind: WheelKind } | null = null;
     const setCursor = () => {
       cv.style.cursor = grip ? stripCursor(grip, dragging) : '';
     };
@@ -601,9 +857,8 @@ export function TimeStrip() {
     const clickEpoch = (zone: 'names' | FrameGrip, x: number) => (zone === 'names' || zone === 'new' ? epochAtX(x) : null);
     const onDown = (e: PointerEvent) => {
       cv.setPointerCapture(e.pointerId);
-      // нажатие на полосе прерывает перелёт (D4) и отложенный щелчок по эпохе
+      // нажатие на полосе прерывает перелёт (D4) и переход к эпохе
       stopFlight();
-      clearTimeout(epochTimer);
       // во время протяжки меридиана нет (D13)
       hoverYear(null);
       const r = cv.getBoundingClientRect();
@@ -630,10 +885,12 @@ export function TimeStrip() {
         hoverYear(g === 'left' || g === 'right' ? null : tOf(x));
         const ep = zone ? clickEpoch(zone, x) : null;
         const inHist = zone !== null && zone !== 'names' && y > stripRows(H).beads + 7;
-        if (g !== grip || (ep?.id ?? null) !== hotEpoch || inHist !== overHist) {
+        const inNames = zone === 'names';
+        if (g !== grip || (ep?.id ?? null) !== hotEpoch || inHist !== overHist || inNames !== overNames) {
           grip = g;
           hotEpoch = ep?.id ?? null;
           overHist = inHist;
+          overNames = inNames;
           draw();
         }
         setCursor();
@@ -663,13 +920,15 @@ export function TimeStrip() {
     };
     const onUp = (e: PointerEvent) => {
       if (drag && !drag.moved && e.type === 'pointerup') {
-        // щелчок вне рамки или по названию — переход к эпохе (IX-50); внутри рамки — ничего.
-        // Чуть позже, чтобы двойной щелчок успел стать «всем небом».
-        const ep = clickEpoch(drag.zone, drag.x0);
+        // щелчок вне рамки или по названию — переход к эпохе сразу (IX-50, IX-78); внутри рамки — ничего.
+        // Второй щелчок двойного перехода не начинает: его нажатие уже прервало первый, двойной щелчок ведёт ко всему небу.
+        const now = performance.now();
+        const second = isSecondClick(lastClick, now, drag.x0);
+        lastClick = second ? null : { t: now, x: drag.x0 };
+        const ep = second ? null : clickEpoch(drag.zone, drag.x0);
         if (ep) {
           const [a, b] = epochWindow(astroEpoch(ep));
-          clearTimeout(epochTimer);
-          epochTimer = window.setTimeout(() => glideYears(a, b), DBL_MS);
+          glideYears(a, b);
         }
       }
       drag = null;
@@ -678,16 +937,48 @@ export function TimeStrip() {
     };
     const onDbl = () => {
       // двойной щелчок — всё небо (UX-28)
-      clearTimeout(epochTimer);
+      lastClick = null;
       showAll();
+    };
+    /**
+     * Колесо над полосой (IX-57; решение 47 — та же схема, что у неба): колесо — ширина окна в 1,25 раза за щелчок у года
+     * под указателем; Shift + колесо и прокрутка тачпада вбок — сдвиг окна по времени; Ctrl + Shift + колесо — растяжение
+     * одного времени; щипок тачпада — масштаб. Alt + колесо (высота строк) — только над небом.
+     */
+    const onWheel = (e: WheelEvent) => {
+      const s = skyRef.current;
+      const v = view();
+      if (!s || !v || e.altKey) return;
+      e.preventDefault();
+      lastClick = null;
+      hoverYear(null);
+      const r = cv.getBoundingClientRect();
+      const t = Math.max(T0, Math.min(T1, tOf(e.clientX - r.left)));
+      const sample: WheelSample = { deltaMode: e.deltaMode, deltaX: e.deltaX, deltaY: e.deltaY, ctrlKey: e.ctrlKey, shiftKey: e.shiftKey, t: performance.now() };
+      const kind = classifyWheel(sample, lastWheel);
+      lastWheel = { t: sample.t, kind };
+      const vp = s.cam.vp;
+      const act = stripWheel(kind, e.shiftKey, e.ctrlKey, wheelPixels(e.deltaX, e.deltaMode, vp.b - vp.t), wheelPixels(e.deltaY, e.deltaMode, vp.b - vp.t));
+      if (!act) return;
+      // точка неба, которая остаётся на месте, — год под указателем (он может быть и вне окна: окно идёт к нему)
+      const ax = s.cam.sx(s.xOf(t));
+      const ay = (vp.t + vp.b) / 2;
+      if (act.kind === 'shift') panStep(-act.px, 0);
+      else if (act.kind === 'stretch') wheelStretch('time', act.f, ax, ay);
+      else if (act.kind === 'pinch') {
+        stopFlight();
+        s.cam.zoomAt(ax, ay, act.f);
+        skyRef.redraw();
+      } else wheelZoom(act.f, ax, ay);
     };
     const onLeave = () => {
       if (!drag) {
         hoverYear(null);
-        if (grip || hotEpoch || overHist) {
+        if (grip || hotEpoch || overHist || overNames) {
           grip = null;
           hotEpoch = null;
           overHist = false;
+          overNames = false;
           draw();
         }
       }
@@ -714,19 +1005,20 @@ export function TimeStrip() {
     cv.addEventListener('pointercancel', onUp);
     cv.addEventListener('pointerleave', onLeave);
     cv.addEventListener('dblclick', onDbl);
+    cv.addEventListener('wheel', onWheel, { passive: false });
     cv.addEventListener('keydown', onKey);
     return () => {
       ro.disconnect();
       off1();
       off2();
       off3();
-      clearTimeout(epochTimer);
       cv.removeEventListener('pointerdown', onDown);
       cv.removeEventListener('pointermove', onMove);
       cv.removeEventListener('pointerup', onUp);
       cv.removeEventListener('pointercancel', onUp);
       cv.removeEventListener('pointerleave', onLeave);
       cv.removeEventListener('dblclick', onDbl);
+      cv.removeEventListener('wheel', onWheel);
       cv.removeEventListener('keydown', onKey);
     };
   }, []);
@@ -742,7 +1034,7 @@ export function TimeStrip() {
         aria-valuemax={2040}
         aria-orientation="horizontal"
         aria-describedby="strip-help"
-        title="Тяните рамку или её края; щелчок вне рамки или по названию эпохи — переход к эпохе, двойной щелчок — всё небо. Столбики — рождения за 25 лет, без лиц, чьё время не установлено"
+        title="Тяните рамку или её края; щелчок вне рамки или по названию эпохи — переход к эпохе, двойной щелчок — всё небо; колесо — ширина окна у года под указателем, Shift + колесо — сдвиг. Столбики — рождения за 25 лет, без лиц, чьё время не установлено"
       />
       <p id="strip-help" class="visually-hidden">
         Стрелки влево и вправо сдвигают окно карты, с Shift — дальше; PageUp и PageDown — к предыдущей и следующей эпохе;

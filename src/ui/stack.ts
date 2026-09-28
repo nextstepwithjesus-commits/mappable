@@ -69,6 +69,31 @@ export function closeCard(id: string, open: (next: string) => void = (x) => (sel
   return wasActive ? next : selected.peek();
 }
 
+/**
+ * Стопка после «назад» или «вперёд» к лицу id (решение 50; UX-74): история переключает только активную карточку, состав
+ * стопки не меняется. Лицо в стопке — его карточка становится активной; нет в стопке (закрыто крестиком) — открывается
+ * на месте активной карточки, стопка не растёт; активной нет — ложится наверх. Чистая функция: active — выбранное лицо.
+ */
+export function historyStack(stack: readonly string[], active: string | null, id: string): string[] {
+  if (stack.includes(id)) return pushCard(id, [...stack]);
+  if (active && stack[0] === active) return [id, ...stack.slice(1)];
+  return pushCard(id, [...stack]);
+}
+
+/**
+ * Выбрать лицо по записи истории (src/ui/address.ts): стопка — по historyStack, а не «открыть ещё одну карточку»;
+ * null — карточка закрыта, стопка остаётся.
+ */
+export function selectFromHistory(id: string | null) {
+  batch(() => {
+    if (id) {
+      cardStack.value = historyStack(cardStack.peek(), selected.peek(), id);
+      cardFolded.value = false;
+    }
+    selected.value = id;
+  });
+}
+
 /** Закрыть все карточки (строка «Закрыть все» в списке стопки): стопка пуста, выбор снят. */
 export function closeAllCards() {
   batch(() => {

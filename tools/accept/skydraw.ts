@@ -82,17 +82,18 @@ export const skydraw: Scenario[] = [
   },
   {
     n: 274,
-    title: 'MAP-55, MAP-54, MAP-68: у детей Давида — пометы матерей («от Вирсавии»…), «порядок по 1 Пар 3:…», у младенца — «†» кеглем подписи',
+    title: 'MAP-55, MAP-54, MAP-68: у детей Давида — пометы матерей («от Вирсавии»…), у выбранного Давида — «годы — по порядку 1 Пар 3:…, выв.» (решение 41), у младенца — «†» кеглем подписи',
     run: async (p) => {
       await go(p, '#/david~y-1010~w60~l6~s1');
       const n = await notes(p);
       if (!n.includes('от Вирсавии')) return fail(`нет «от Вирсавии»: ${n.slice(0, 12).join(' | ')}`);
       const moms = n.filter((t) => /^от [А-ЯЁ]/.test(t));
       if (moms.length < 3) return fail(`помет матерей ${moms.length}: ${moms.join(', ')}`);
-      if (!n.some((t) => /^порядок по /.test(t))) return fail('нет пометы порядка перечисления');
+      // помета порядка — у семьи выбранного лица (решение 41, MAP-73): Давид выбран — она у его детей
+      if (!n.some((t) => /^годы — по порядку 1 Пар 3:/.test(t))) return fail('нет пометы порядка перечисления');
       if (!(await cv(p, 'label-ids')).split(' ').includes('mladenets-syn-virsavii')) return fail('младенец Давида и Вирсавии без подписи');
       if (await overlaps(p)) return fail(`наложений подписей ${await overlaps(p)}`);
-      return pass(`${moms.join(', ')}; ${n.filter((t) => /^порядок/.test(t)).join('; ')}`);
+      return pass(`${moms.join(', ')}; ${n.filter((t) => /^годы — по порядку/.test(t)).join('; ')}`);
     },
   },
   {
@@ -199,7 +200,7 @@ export const skydraw: Scenario[] = [
   },
   {
     n: 281,
-    title: 'MAP-66, решение 29: одноимённые в одном окне — с кратким уточнением («Мария Магдалина», «Мария, Мать Иисуса»); наложений нет',
+    title: 'MAP-66, решения 29 и 43: одноимённые в одном окне — с кратким уточнением до трёх слов без обрывков («Мария Магдалина», «Мария, Мать Иисуса»); наложений нет',
     run: async (p) => {
       await go(p, '#/~y20~w120~l0~s1', 2600);
       const ids = (await cv(p, 'label-ids')).split(' ');
@@ -209,8 +210,15 @@ export const skydraw: Scenario[] = [
       const noted = (await cv(p, 'noted')).split('|').filter(Boolean).map((t) => t.split('#') as [string, string]);
       const mnoted = new Set(noted.filter(([name]) => name === 'Мария').map(([name, note]) => name + note));
       if (mnoted.size < 2) return fail(`Марии без уточнений: ${noted.map((q) => q.join('')).join('; ')}`);
-      // у отметок поиска уточнение целиком; здесь отметок нет — все уточнения краткие
-      for (const [name, note] of noted) if (note.replace(/^,? /, '').split(/\s+/).length > 2) return fail(`уточнение длиннее двух слов: «${name}${note}»`);
+      // у отметок поиска уточнение целиком; здесь отметок нет — все уточнения краткие (решение 43): не больше трёх слов
+      // и без обрывков — ни «он же» в конце, ни служебного слова, ни открытой кавычки или скобки
+      for (const [name, note] of noted) {
+        const text = note.replace(/^,? /, '');
+        if (text.split(/\s+/).length > 3) return fail(`уточнение длиннее трёх слов: «${name}${note}»`);
+        if (/(^|\s)(он|она)\s+же$|\s(и|в|во|из|от|до|с|со|на|при|у)$/i.test(text)) return fail(`обрывок уточнения: «${name}${note}»`);
+        if ((text.match(/«/g) ?? []).length !== (text.match(/»/g) ?? []).length || (text.match(/\(/g) ?? []).length !== (text.match(/\)/g) ?? []).length)
+          return fail(`уточнение с оборванной кавычкой или скобкой: «${name}${note}»`);
+      }
       if (await overlaps(p)) return fail(`наложений подписей ${await overlaps(p)}`);
       return pass([...mnoted].join('; '));
     },

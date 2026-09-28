@@ -258,10 +258,48 @@ function checkReaderText(where: string, v: unknown, key = '') {
   else if (v && typeof v === 'object') for (const [k, x] of Object.entries(v)) if (k !== 'refs' && k !== 'id') checkReaderText(where, x, k);
 }
 
+/** Поля записи § 17. */
+const EVENT_KEYS = new Set(['text', 'refs', 'age', 'year', 'cert', 'period']);
+
+/**
+ * Периоды § 17 (решение 63; CARD-85): название — описательное, по тексту («Рождество и детство», «Страсти»), не ссылка
+ * и не номер главы; с прописной; до 60 знаков. Период задаётся у первой записи и не возвращается после другого:
+ * записи одного периода идут подряд.
+ */
+function checkPeriods(where: string, events: { period?: unknown }[]) {
+  if (!events.some((e) => e.period !== undefined)) return;
+  if (events[0].period === undefined) err(`${where}[0]`, 'period: если периоды заданы, первая запись открывает первый период');
+  const seen: string[] = [];
+  let cur: string | null = null;
+  events.forEach((e, i) => {
+    if (e.period === undefined) return;
+    const w = `${where}[${i}].period`;
+    if (typeof e.period !== 'string' || !e.period.trim()) return err(w, 'строка — название периода');
+    const t = e.period.trim();
+    if (/\d+\s*[:–-]\s*\d+/.test(t) || /^\d?\s?[А-ЯЁ][а-яё]{0,4}\.?\s+\d/.test(t)) err(w, `«${t}» — похоже на ссылку или номер главы; нужно описательное название периода`);
+    if (!/^[А-ЯЁ«]/.test(t)) err(w, `«${t}» — с прописной`);
+    if (t.length > 60) err(w, `«${t.slice(0, 40)}…» — длиннее 60 знаков`);
+    if (t !== cur && seen.includes(t)) err(w, `период «${t}» уже был: записи одного периода идут подряд`);
+    if (t === cur) warn(w, `«${t}» повторён у записи внутри периода — достаточно первой записи`);
+    if (t !== cur) seen.push(t);
+    cur = t;
+  });
+  if (seen.length === 1) warn(where, `один период «${seen[0]}» — оглавление не строится; задайте два и больше или уберите поле`);
+}
+
+/**
+ * Порядковое при «череды» согласуется с ним (CARD-83): «глава третьей череды», а не «глава третий череды»,
+ * «двадцать первой», а не «двадцать первый». Мужской род на -ый и -ий виден сразу; на -ой («второй») он совпадает
+ * с верным женским родительным и проверкой не отличается.
+ */
+const ORDINAL_MASC_BEFORE_CHERED = /(^|[^а-яё])[а-яё]+(ый|ий)\s+череды/i;
+
 for (const [id, p] of byId) {
   if (!targetIds.has(id)) continue;
   const W = id;
   checkReaderText(W, { card: p.card, chrono: p.chrono, disambig: p.disambig });
+  for (const [k, v] of Object.entries({ disambig: p.disambig, card: JSON.stringify(p.card ?? {}) }))
+    if (typeof v === 'string' && ORDINAL_MASC_BEFORE_CHERED.test(v)) err(W, `${k}: порядковое не согласовано с «череды»: «${ORDINAL_MASC_BEFORE_CHERED.exec(v)![0].trim()}» — нужно «…ой (…ей) череды» (1 Пар 24:7–18)`);
   for (const k of Object.keys(p)) if (!PERSON_KEYS.has(k)) err(W, `неизвестное поле «${k}»`);
   if (!ID_RE.test(id)) err(W, 'id: только латиница в нижнем регистре, цифры и дефис');
   if (typeof p.name !== 'string' || !/^[А-ЯЁ][А-ЯЁа-яё\- ]*$/.test(p.name)) err(W, 'name: имя по-русски, с прописной, только кириллица, дефис и пробел');
@@ -434,7 +472,9 @@ for (const [id, p] of byId) {
       checkYear(w, e.year);
       checkCert(w, e.cert);
       allTexts.push(...checkRefs(w, e.refs));
+      for (const k of Object.keys(e)) if (!EVENT_KEYS.has(k)) err(w, `неизвестное поле «${k}»`);
     });
+    checkPeriods(`${W}.card.events`, card.events ?? []);
     (card.sayings ?? []).forEach((s, i) => {
       const w = `${W}.card.sayings[${i}]`;
       const texts = refTexts(w, s.ref);

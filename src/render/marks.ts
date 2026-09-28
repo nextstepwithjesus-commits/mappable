@@ -16,7 +16,7 @@ import { RULER_H, ROW_H } from './frame.ts';
 import { mapFont, mapSize, T_MAP_S } from './type.ts';
 import { byId, graph } from '../data/atlas.ts';
 import { claim, putLabel, textBox } from './labels.ts';
-import { beadAt, drawBranchLabels, drawLineNames, drawLineNotes, drawMt1Women } from './ribbons.ts';
+import { beadAt, drawBranchLabels, drawKeyLineNames, drawLineNames, drawLineNotes, drawMt1Women } from './ribbons.ts';
 import type { LineStep } from '../engine/layout.ts';
 import type { Rect } from './rect.ts';
 import type { KinStep } from '../engine/kinship.ts';
@@ -257,6 +257,8 @@ export function drawLeadNotes(v: SkyContext, p: Pass, steps: { joseph: readonly 
     }
   }
   drawKinSteps(v, p);
+  // обязательные имена «только линий» (решение 39: Адам, Ной, Авраам, Давид, Соломон, Нафан…) — раньше выносок и подписей лент
+  drawKeyLineNames(v, p, steps);
   drawLineNotes(v, p, steps);
   // подписи лент «через Соломона (Мф 1)» — раньше имён лиц линий (UX-45): имя, которому не хватит места, встанет
   // мельче или номером у бусины (MAP-59); женщины Мф 1 — малыми знаками у сыновей (решение 28)
@@ -267,30 +269,43 @@ export function drawLeadNotes(v: SkyContext, p: Pass, steps: { joseph: readonly 
 
 // ---------- рабочий набор на небе (IX-51) ----------
 
-/** Метка члена набора: черта над-справа от знака, px (IX-51). */
-export const WORK_MARK = { w: 6, h: 1.5 };
+/**
+ * Метка члена набора (IX-51, IX-77): уголок 5 × 5 px над-справа от знака — горизонталь и вертикаль толщиной 1,25 px,
+ * как угол рамки выделения. Черта над знаком значит «царь» (ТЗ § 3.1), поэтому метка набора — другой формы.
+ */
+export const WORK_MARK = { w: 5, h: 5, line: 1.25 };
 /** С какой высоты строки метки набора видны: ниже они сливаются со знаками. */
 export const WORK_MARK_KY = 8;
 /** Отклик звезды на клавишу набора, мс (IX-51; SkyView, WORK_FLASH_MS). */
 export const WORK_FLASH_MS = 300;
 
 /**
- * Место метки набора у звезды (x, y) радиуса r: над-справа. У царя — выше его черты и правее её конца: иначе метка
- * читалась бы продолжением черты.
+ * Место метки набора у звезды (x, y) радиуса r: над-справа, прямоугольник уголка. Низ уголка — выше строки подписи
+ * справа от звезды (она стоит по середине звезды, до 9 px вверх), чтобы подпись оставалась на своём месте; у царя — ещё
+ * и выше его черты и правее её конца: уголок не касается черты.
  */
 export function workMarkAt(x: number, y: number, r: number, king = false): { x: number; y: number; w: number; h: number } {
-  return king ? { x: x + r + 4, y: y - r - 8 - WORK_MARK.h, w: WORK_MARK.w, h: WORK_MARK.h } : { x: x + r + 3, y: y - r - 3 - WORK_MARK.h, w: WORK_MARK.w, h: WORK_MARK.h };
+  const bottom = king ? y - r - 5.5 : y - Math.max(r + 1.5, 9.5);
+  return { x: x + r + (king ? 3.5 : 1.5), y: bottom - WORK_MARK.h, w: WORK_MARK.w, h: WORK_MARK.h };
+}
+/** Две полосы уголка «┐»: верхняя и правая (px холста). */
+export function workMarkBars(x: number, y: number, r: number, king = false): { x: number; y: number; w: number; h: number }[] {
+  const m = workMarkAt(x, y, r, king);
+  const t = WORK_MARK.line;
+  return [
+    { x: m.x, y: m.y, w: m.w, h: t },
+    { x: m.x + m.w - t, y: m.y, w: t, h: m.h },
+  ];
 }
 
 /**
- * Метки членов рабочего набора в режиме «все лица» (IX-51): черта 6 × 1,5 px над-справа от знака тоном --ink, без цвета
- * (цвет — только у лент), при высоте строки от 8 px. Рисуются вместе со звёздами; их места занимаются до подписей.
- * Этой же функцией метку рисует «Как читать карту».
+ * Метки членов рабочего набора в режиме «все лица» (IX-51, IX-77): уголок 5 × 5 px над-справа от знака тоном --ink,
+ * без цвета (цвет — только у лент), при высоте строки от 8 px. Рисуются вместе со звёздами; их места занимаются до
+ * подписей. Этой же функцией метку рисует «Как читать карту».
  */
 export function drawWorkMark(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, color: string, king = false) {
-  const m = workMarkAt(x, y, r, king);
   ctx.fillStyle = color;
-  ctx.fillRect(m.x, m.y, m.w, m.h);
+  for (const b of workMarkBars(x, y, r, king)) ctx.fillRect(b.x, b.y, b.w, b.h);
 }
 export function drawWorkMarks(v: SkyContext, p: Pass) {
   const set = p.s.workMarks;
@@ -440,12 +455,38 @@ export function drawKinArcs(v: SkyContext, p: Pass, id: string) {
   }
 }
 
+/** Флажок меридиана: прямоугольник на служебной строке рамки (px холста), текст и x черты. */
+export interface MeridianFlag extends Rect {
+  text: string;
+  /** x черты меридиана */
+  lx: number;
+}
+
+/**
+ * Где встанет флажок меридиана (D13; MAP-33): лист на служебной строке рамки, справа от черты, у правого края — слева.
+ * Место считается до рамки: служебная строка (frame.ts, drawServiceRow) обходит флажок — название эпохи под ним
+ * сдвигается, а не закрывается. null — меридиана нет, черта за краем или без подписи.
+ */
+export function meridianFlagAt(v: SkyContext, s: SkyState): MeridianFlag | null {
+  if (s.meridian === null || !s.meridianLabel) return null;
+  const { ctx, cam } = v;
+  const x = Math.round(cam.sx(v.xOf(s.meridian))) + 0.5;
+  if (x < v.letterW || x > cam.w) return null;
+  const text = s.meridianLabel;
+  ctx.font = mapFont(T_MAP_S, { sans: true, weight: 500, coarse: v.coarse });
+  const w = ctx.measureText(text).width + 12;
+  let bx = x + 1;
+  if (bx + w > cam.w - 2) bx = x - w;
+  bx = Math.max(v.letterW + 1, bx);
+  return { x: bx, y: RULER_H, w, h: ROW_H - 1, text, lx: x };
+}
+
 /**
  * Меридиан года (D13; UX-27, IX-34, MAP-07, MAP-33): черта через ярусы и небо и флажок у линейки неба —
- * «990 г. до Р. Х.: живы 186, наверняка 41». Флажок — лист на служебной строке рамки, справа от черты, у правого края — слева.
- * Возвращает прямоугольник флажка (px холста) или null.
+ * «990 г. до Р. Х.: живы 186, наверняка 41». Флажок — лист на служебной строке рамки (meridianFlagAt); он в замере
+ * подписей, как надписи рамки. Возвращает прямоугольник флажка (px холста) или null.
  */
-export function drawMeridian(v: SkyContext, s: SkyState): Rect | null {
+export function drawMeridian(v: SkyContext, s: SkyState, flag: MeridianFlag | null = meridianFlagAt(v, s)): Rect | null {
   if (s.meridian === null) return null;
   const { ctx, cam, pal } = v;
   const x = Math.round(cam.sx(v.xOf(s.meridian))) + 0.5;
@@ -456,17 +497,10 @@ export function drawMeridian(v: SkyContext, s: SkyState): Rect | null {
   ctx.moveTo(x, RULER_H);
   ctx.lineTo(x, cam.h);
   ctx.stroke();
-  const text = s.meridianLabel;
-  if (!text) return null;
+  if (!flag) return null;
+  const { x: bx, y: by, w, h, text } = flag;
   ctx.font = mapFont(T_MAP_S, { sans: true, weight: 500, coarse: v.coarse });
   ctx.textBaseline = 'middle';
-  const tw = ctx.measureText(text).width;
-  const w = tw + 12;
-  const h = ROW_H - 1;
-  let bx = x + 1;
-  if (bx + w > cam.w - 2) bx = x - w;
-  bx = Math.max(v.letterW + 1, bx);
-  const by = RULER_H;
   ctx.fillStyle = pal.sheet;
   ctx.fillRect(bx, by, w, h);
   ctx.strokeStyle = pal.ruleStrong;
@@ -474,5 +508,6 @@ export function drawMeridian(v: SkyContext, s: SkyState): Rect | null {
   ctx.fillStyle = pal.ink;
   ctx.fillText(text, bx + 6, by + h / 2 + 0.5);
   ctx.textBaseline = 'alphabetic';
+  v.ledger.add('frame', text, { x: bx, y: by, w, h });
   return { x: bx, y: by, w, h };
 }

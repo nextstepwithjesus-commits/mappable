@@ -138,6 +138,14 @@
   font-style: italic;
   color: var(--ink-3);
 }
+/* раздел не составлен (решение 64; CARD-88): бледнее молчания Писания — кегль примечания, «—» впереди */
+.spread .none.absent {
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+}
+.spread .none.absent .dash {
+  font-style: normal;
+}
 /* часть I–VI — единственная линейка разворота, во всю ширину сетки */
 .spread h3.part {
   margin: 0;

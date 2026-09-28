@@ -90,14 +90,18 @@ describe('коса (MAP-57, 60, 62)', () => {
       expect(Math.abs(e.y - f.y)).toBeGreaterThanOrEqual(4 * ky - 2);
     }
   });
-  it('тугая коса — без плетения: участки «поверх» не перерисовываются, круглых концов на нити нет (MAP-57)', () => {
+  it('тугая коса плетётся (MAP-75; решение 40): участки «поверх» Марии перерисованы с плоскими концами — нижняя нить в перекрестье рвётся', () => {
     const r = recording();
     const strands = build(14);
     ribbons.drawStrands(r.ctx, strands, 2.4, ribbons.ribbonLook({ glow: true, sky: '#0d1b34', halo: '#0d1b34', gold1: '#e6b550', gold2: '#c9773a', azure1: '#9ccbf5', azure2: '#9edbd0', ribbonGlow: [0.06, 0.1], ribbonTone: 0 } as never), 800, null, { braid: BRAID_PX });
-    // по одной подложке и одной нити на каждую нить (две нити): четыре stroke после свечения
+    // по одной подложке и одной нити на каждую нить (две нити) и ещё подложка и нить на каждый участок «поверх» Марии
     const strokes = r.calls.filter((c) => c[0] === 'stroke').length;
     const glow = 4;
-    expect(strokes - glow).toBe(4);
+    const mary = strands.find((q) => q.line === 'mary')!;
+    expect(mary.over.length).toBeGreaterThan(0);
+    expect(strokes - glow).toBe(4 + 2 * mary.over.length);
+    // у участков «поверх» — плоские концы: круглый конец подложки прорезал бы свою нить «швом» (MAP-57)
+    expect(r.calls.filter((c) => c[0] === 'set lineCap').some((c) => c[1] === 'butt')).toBe(true);
     // с широкой косой (braid > 3) — плетение есть: участки «поверх» с плоскими концами
     const r2 = recording();
     const loose = buildRibbons({ joseph: J.map((id) => ({ id, weak: false })), mary: M.map((id) => ({ id, weak: false })), project: (id) => pos(14).get(id) ?? null, amplitude: 8, meander: 2 });

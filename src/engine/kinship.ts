@@ -804,49 +804,62 @@ export function relate(g: Graph, aId: string, bId: string, maxResults = MAX_PATH
     return true;
   });
 
-  // свойство через одно супружество
+  // свойство через одно супружество — словами Писания (CARD-92): «Авигея — жена Давида, брата Авигеи (1 Цар 25:42;
+  // 1 Пар 2:16)»; термин свойства («невестка») — в r.term, для «Современников» и подписи пути
   const inLaw: Relation[] = [];
   const all = () => [...kinOut, ...spouses, ...blood, ...derived, ...inLaw];
-  const addInLaw = (term: string, tail: string, steps: KinStep[]) => {
+  const addInLaw = (term: string, words: string, steps: KinStep[]) => {
     if (all().some((r) => r.term === term)) return;
     const r = base('in-law', term, '', steps);
-    r.sentence = `${start}${term} ${gB} (${tail})${qualText(r.qualifiers)}`;
+    const refs = [...new Set(steps.map((st) => st.refs[0]).filter(Boolean))];
+    r.sentence = `${start}${words}${refs.length ? ` (${refsText(refs)})` : ''}${qualText(r.qualifiers)}`;
     inLaw.push(r);
   };
   const spouseEdges = (id: string) => (g.spousesOf.get(id) ?? []).map((s) => ({ id: s.a === id ? s.b : s.a, s }));
   const childrenOf = (id: string) => (g.childrenOf.get(id) ?? []).filter((e) => e.kind === 'father' || e.kind === 'mother');
-  const sibOf = (id: string) => [...new Set(natural(id).flatMap((e) => childrenOf(e.parent).map((c) => c.child)))].filter((x) => x !== id);
-  const bMale = Bp.sex === 'm';
-  const pron = bMale ? 'его' : 'её';
+  // братья и сёстры: по общим родителям и по слову Писания «брат», «сестра» (Саруия и Авигея — сёстры Давида, 1 Пар 2:16)
+  const sibLinks = (id: string): { id: string; refs: string[]; cert: Cert }[] => {
+    const out = new Map<string, { id: string; refs: string[]; cert: Cert }>();
+    for (const e of natural(id)) for (const c of childrenOf(e.parent)) if (c.child !== id && !out.has(c.child)) out.set(c.child, { id: c.child, refs: c.refs, cert: c.cert });
+    for (const { other, k } of kinSibs(id)) if (!out.has(other)) out.set(other, { id: other, refs: k.refs, cert: k.cert });
+    return [...out.values()];
+  };
   const spStep = (from: string, to: string, s: { cert: Cert; refs: string[]; kind: string }): KinStep => ({
     from, to, kind: 'spouse', term: person(to).sex === 'f' ? (s.kind === 'concubine' ? 'наложница' : 'жена') : 'муж', cert: s.cert, claim: '', refs: s.refs, gap: false, interpretive: s.cert === 'interpretation',
   });
-  const sibStep = (from: string, to: string): KinStep => ({ from, to, kind: 'kin', term: person(to).sex === 'f' ? 'сестра' : 'брат', cert: 'scripture', claim: '', refs: [], gap: false, interpretive: false });
+  const sibStep = (from: string, to: string, l: { refs: string[]; cert: Cert }): KinStep => ({ from, to, kind: 'kin', term: person(to).sex === 'f' ? 'сестра' : 'брат', cert: l.cert, claim: '', refs: l.refs, gap: false, interpretive: l.cert === 'interpretation' });
+  const wifeGen = (x: string, kind: string) => (person(x).sex === 'f' ? (kind === 'concubine' ? 'наложницы' : 'жены') : 'мужа');
+  const wifeNom = (kind: string) => (female ? (kind === 'concubine' ? 'наложница' : 'жена') : 'муж');
   for (const { id: s, s: se } of spouseEdges(bId)) {
-    const sp = bMale ? 'жены' : 'мужа';
     for (const pe of natural(s)) {
       if (pe.parent !== aId) continue;
-      const term = bMale ? (female ? 'тёща' : 'тесть') : female ? 'свекровь' : 'свёкор';
-      addInLaw(term, `${female ? 'мать' : 'отец'} ${pron} ${sp} ${gen(s)}`, [step(aId, pe, 'down'), spStep(s, bId, se)]);
+      // «Иофор — отец Сепфоры, жены Моисея»
+      const term = Bp.sex === 'm' ? (female ? 'тёща' : 'тесть') : female ? 'свекровь' : 'свёкор';
+      addInLaw(term, `${female ? 'мать' : 'отец'} ${gen(s)}, ${wifeGen(s, se.kind)} ${gB}`, [step(aId, pe, 'down'), spStep(s, bId, se)]);
     }
-    if (sibOf(s).includes(aId)) {
-      const term = bMale ? (female ? 'свояченица' : 'шурин') : female ? 'золовка' : 'деверь';
-      addInLaw(term, `${female ? 'сестра' : 'брат'} ${pron} ${sp} ${gen(s)}`, [sibStep(aId, s), spStep(s, bId, se)]);
+    const sl = sibLinks(s).find((x) => x.id === aId);
+    if (sl) {
+      // «Армон — брат Мелхолы, жены Давида»
+      const term = Bp.sex === 'm' ? (female ? 'свояченица' : 'шурин') : female ? 'золовка' : 'деверь';
+      addInLaw(term, `${female ? 'сестра' : 'брат'} ${gen(s)}, ${wifeGen(s, se.kind)} ${gB}`, [sibStep(aId, s, sl), spStep(s, bId, se)]);
     }
   }
   for (const ce of childrenOf(bId)) {
     const c = ce.child;
     const se = spouseEdges(c).find((x) => x.id === aId);
     if (!se) continue;
+    // «Руфь — жена Махлона, сына Ноемини»
     const term = female ? 'невестка' : 'зять';
     const up: KinStep = { ...step(c, ce, 'up'), from: c, to: bId };
-    addInLaw(term, `${female ? 'жена' : 'муж'} ${pron} ${person(c).sex === 'f' ? 'дочери' : 'сына'} ${gen(c)}`, [spStep(aId, c, se.s), up]);
+    addInLaw(term, `${wifeNom(se.s.kind)} ${gen(c)}, ${person(c).sex === 'f' ? 'дочери' : 'сына'} ${gB}`, [spStep(aId, c, se.s), up]);
   }
-  for (const s of sibOf(bId)) {
+  for (const sl of sibLinks(bId)) {
+    const s = sl.id;
     const se = spouseEdges(s).find((x) => x.id === aId);
     if (!se) continue;
+    // «Авигея — жена Давида, брата Авигеи»
     const term = female ? 'невестка' : 'зять';
-    addInLaw(term, `${female ? 'жена' : 'муж'} ${pron} ${person(s).sex === 'f' ? 'сестры' : 'брата'} ${gen(s)}`, [spStep(aId, s, se.s), sibStep(s, bId)]);
+    addInLaw(term, `${wifeNom(se.s.kind)} ${gen(s)}, ${person(s).sex === 'f' ? 'сестры' : 'брата'} ${gB}`, [spStep(aId, s, se.s), sibStep(s, bId, sl)]);
   }
 
   return all().slice(0, maxResults);

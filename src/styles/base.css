@@ -38,14 +38,31 @@ button:disabled {
 }
 /* заголовок, который получает фокус программно (открытая панель, карточка; VIS-45, VIS-56, CARD-74): черта под самим
    текстом, а не рамка во всю колонку; «×» панели стоит вне черты */
-h2[tabindex='-1']:focus {
+h2[tabindex='-1']:focus,
+.sheet h3[tabindex='-1']:focus {
   outline: none;
 }
-.sheet h2[tabindex='-1'] {
+/* то же у раздела панели, на который её открыли (VIS-68: «?» — «Клавиши» в «Условных знаках»; src/ui/focus.ts) */
+.sheet h2[tabindex='-1'],
+.sheet h3[tabindex='-1'] {
   width: fit-content;
   max-width: 100%;
 }
-.sheet h2[tabindex='-1']:focus-visible {
+.sheet h2[tabindex='-1']:focus-visible,
+.sheet h3[tabindex='-1']:focus-visible {
+  box-shadow: inset 0 -2px 0 var(--ink-3);
+}
+/* заголовок вступительной таблички в фокусе («Как читать карту» ставит его туда; UX-76): так же — черта под текстом */
+.cartouche h1[tabindex='-1'],
+.cartouche .ttl[tabindex='-1'] {
+  width: fit-content;
+}
+.cartouche h1[tabindex='-1']:focus,
+.cartouche .ttl[tabindex='-1']:focus {
+  outline: none;
+}
+.cartouche h1[tabindex='-1']:focus-visible,
+.cartouche .ttl[tabindex='-1']:focus-visible {
   box-shadow: inset 0 -2px 0 var(--ink-3);
 }
 @media (min-width: 721px) {
@@ -64,6 +81,17 @@ a {
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+/* образец шириной 1rem: по его ширине холст узнаёт, что сменился размер шрифта браузера (src/render/type.ts; MOB-42) */
+.rem-probe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1rem;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+}
 /* клавиша — гротеском, а не моноширинным шрифтом (ТЗ § 5.6; VIS-32) */
 kbd {
   display: inline-block;
@@ -81,4 +109,19 @@ kbd {
 /* ссылка вместе со своим разделителем или знаком после неё не разрывается переносом (B4) */
 .nobr {
   white-space: nowrap;
+}
+/* панель «В работе»: группы по происхождению (VIS-83; src/ui/panels/Work.tsx) — заголовок «Давид и его семья (38)» один раз,
+   строки группы — с отступом 14 px под ним; остальная вёрстка списка — folio.css (.worklist) */
+.sheet .worklist .wg-head {
+  margin: 10px 8px 2px;
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+  font-weight: 500;
+  color: var(--ink-2);
+}
+.sheet .worklist .wg-list {
+  list-style: none;
+  margin: 0 0 6px;
+  padding: 0 0 0 14px;
 }

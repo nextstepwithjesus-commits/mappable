@@ -260,9 +260,11 @@ export const skyin: Scenario[] = [
     run: async (p) => {
       // набор — в памяти браузера, режим — в адресе (решение 34): адрес без k1 вернул бы все лица
       await p.evaluate(() => localStorage.setItem('toledot:work', JSON.stringify([['david', { via: 'self', of: 'david' }], ['iessey', { via: 'self', of: 'iessey' }], ['ruf', { via: 'self', of: 'ruf' }]])));
-      await go(p, '#/~k1', 100);
+      // атлас читает набор из памяти при загрузке: сначала перезагрузка, потом ссылка «набор» без списка (UX-79: при пустом
+      // наборе в памяти атласа такая ссылка показала бы все лица со строкой-пояснением)
       await p.reload();
-      await p.waitForTimeout(2600);
+      await p.waitForTimeout(1600);
+      await go(p, '#/~k1', 2600);
       const bar = p.locator('.sky .workbar');
       if (!(await bar.count())) return fail('нет строки режима «набор»');
       if (!/3 лица/.test(nbsp(await bar.innerText()))) return fail(`строка: «${await bar.innerText()}»`);
@@ -326,7 +328,7 @@ export const skyin: Scenario[] = [
   },
   {
     n: 257,
-    title: 'IX-67, решение 34: режим «набор» и набор до 12 лиц — в адресе; ссылка в новой вкладке воспроизводит небо',
+    title: 'IX-67, решения 34 и 45: режим «набор» и набор до 12 лиц — в адресе; ссылка в новой вкладке показывает тот же набор временным просмотром, память получателя — только после «добавить в мой набор»',
     run: async (p) => {
       await go(p, '#/david', 2400);
       await p.evaluate(() => localStorage.setItem('toledot:work', JSON.stringify([['david', { via: 'self', of: 'david' }], ['ovid', { via: 'self', of: 'ovid' }], ['vooz', { via: 'self', of: 'vooz' }]])));
@@ -344,10 +346,22 @@ export const skyin: Scenario[] = [
         await q.goto(url);
         await q.waitForTimeout(2600);
         const mode = await q.locator('.sky canvas').first().getAttribute('data-mode');
-        const set = await stored(q);
         if (mode !== 'work') return fail(`новая вкладка: режим ${mode}`);
-        if (set.join(' ') !== 'david ovid vooz') return fail(`новая вкладка: набор ${set.join(' ')}`);
-        if (!(await q.locator('.sky .workbar').count())) return fail('новая вкладка: нет строки режима');
+        // набор ссылки — временный просмотр (решение 45): память получателя пуста, у кромки — строка «Набор по ссылке»
+        if ((await stored(q)).length) return fail(`новая вкладка: набор записан в память до «добавить»: ${(await stored(q)).join(' ')}`);
+        const bar = q.locator('.sky .linkbar');
+        if (!(await bar.count())) return fail('новая вкладка: нет строки «Набор по ссылке»');
+        const t = nbsp(await bar.innerText()).replace(/\s+/g, ' ').trim();
+        if (!/^Набор по ссылке: 3 лица — добавить в мой набор вернуться к моему \(0\)$/.test(t)) return fail(`новая вкладка: строка «${t}»`);
+        // небо показывает ровно набор ссылки: подписаны его лица
+        const named = ((await q.locator('.sky canvas').first().getAttribute('data-label-ids')) ?? '').split(' ').filter(Boolean);
+        if (named.length && named.some((id) => !['david', 'ovid', 'vooz'].includes(id))) return fail(`новая вкладка: на небе не только набор: ${named.join(' ')}`);
+        if (!/~ndavid\.ovid\.vooz/.test(decodeURIComponent(new URL(q.url()).hash))) return fail(`новая вкладка: адрес ${q.url()}`);
+        await bar.getByRole('button', { name: 'добавить в мой набор' }).click();
+        await q.waitForTimeout(600);
+        const set = await stored(q);
+        if (set.join(' ') !== 'david ovid vooz') return fail(`после «добавить в мой набор»: ${set.join(' ')}`);
+        if (!(await q.locator('.sky .workbar').count()) || (await bar.count())) return fail('после «добавить» — не строка своего набора');
       } finally {
         await ctx.close();
       }
@@ -359,9 +373,11 @@ export const skyin: Scenario[] = [
     title: 'IX-64: в режиме «набор» отдаление — не дальше окна набора ×1,5 (не уже 200 лет)',
     run: async (p) => {
       await p.evaluate(() => localStorage.setItem('toledot:work', JSON.stringify([['david', { via: 'self', of: 'david' }], ['iessey', { via: 'self', of: 'iessey' }], ['ovid', { via: 'self', of: 'ovid' }], ['vooz', { via: 'self', of: 'vooz' }], ['ruf', { via: 'self', of: 'ruf' }]])));
-      await go(p, '#/~k1', 100);
+      // атлас читает набор из памяти при загрузке: сначала перезагрузка, потом ссылка «набор» без списка (UX-79: при пустом
+      // наборе в памяти атласа такая ссылка показала бы все лица со строкой-пояснением)
       await p.reload();
-      await p.waitForTimeout(2600);
+      await p.waitForTimeout(1600);
+      await go(p, '#/~k1', 2600);
       if ((await p.locator('.sky canvas').first().getAttribute('data-mode')) !== 'work') return fail('адрес с k1 не включил режим «набор»');
       await p.locator('.skyctl button', { hasText: 'Всё небо' }).click();
       await p.waitForTimeout(1600);
@@ -642,7 +658,7 @@ export const skyin: Scenario[] = [
   },
   {
     n: 268,
-    title: 'IX-58, IX-22, UX-08: подсказка — две строки, место и клавиши через 700 мс; выбор второго лица — «Иессей — отец Давида» и путь на небе; «≈» объяснён',
+    title: 'IX-58, IX-22, UX-08: подсказка — две строки, третья через 700 мс, клавиш нет; выбор второго лица — «Иессей — отец Давида» и путь на небе; «≈» объяснён',
     run: async (p) => {
       await go(p, '#/david~y-1050~w180~l0~s1', 2600);
       const box = await canvasBox(p);
@@ -652,11 +668,14 @@ export const skyin: Scenario[] = [
       await p.waitForTimeout(300);
       const tip = p.locator('.sky .tip[data-shown]');
       if (!(await tip.count())) return fail('нет подсказки');
-      if (await tip.locator('.tip-keys').count()) return fail('клавиши сразу, до 700 мс');
       const lines1 = (await tip.innerText()).split('\n').filter(Boolean).length;
       if (lines1 > 2) return fail(`сразу ${lines1} строк`);
       await p.waitForTimeout(900);
-      if (!(await tip.locator('.tip-keys').count())) return fail('через 700 мс нет клавиш');
+      // через 700 мс — третья строка, и не больше; клавиш набора в подсказке нет: они в таблице «Клавиши» (IX-58, VIS-69)
+      const t2 = nbsp(await tip.innerText());
+      const lines2 = t2.split('\n').filter(Boolean).length;
+      if (lines2 !== 3) return fail(`через 700 мс — ${lines2} строк: «${t2}»`);
+      if (/\((D|C)\)|взять в работу|потомков на небе/.test(t2) || (await tip.locator('kbd').count())) return fail(`клавиши в подсказке: «${t2}»`);
       // выбор второго лица «Родства»: наведение на Иессея — кем он приходится Давиду и путь на небе, до выбора
       await go(p, '#/david~y-1050~w180~l0~s1', 2400);
       await p.locator('.folio button', { hasText: /Родство с|Найти родство/ }).first().click();

@@ -1,11 +1,12 @@
 /**
  * Органы неба: блок в правом нижнем углу широкого неба и колонка кнопок 44 × 44 у узкого (C6; MOB-05, MOB-25, IX-56),
- * лист «Вид» над блоком или у колонки.
+ * лист «Вид» над блоком или у колонки. Лист «Вид» — всплывающий на обеих ширинах (IX-80): открыт, пока viewOpen; в адрес
+ * и историю не пишется; закрывают его «Вид», Escape, «×» у колонки и нажатие мимо.
  */
 import { modelInfo } from '../../data/atlas.ts';
 import { lambda, modelId, onlyLines, panel, epochMode } from '../../state.ts';
 import { typo } from '../text/typo.ts';
-import { Check, Menu, Segmented } from '../controls.tsx';
+import { Menu } from '../controls.tsx';
 import { Sheet } from '../panels/Sheet.tsx';
 import { LANES_STEP, TIME_STEP, resetProportions, showAll, stretchBy, zoomBy } from './view.ts';
 import { SKY_MODES, foldDesc, foldGroups, skyMode, unfoldAll } from '../work.ts';
@@ -95,9 +96,29 @@ function ZoomButton({ dir }: { dir: 1 | -1 }) {
   );
 }
 
+/**
+ * Пояснения флажков и переключателя неба (UX-21): при наведении (title) и для диктора (aria-description), как у команд
+ * верхней строки.
+ */
+export const SKY_HINTS = {
+  lines: 'Только две родословные линии Иисуса Христа — по Матфею (Мф 1) и по Луке (Лк 3) — и места, где они расходятся и сходятся',
+  tiers: 'Над небом — ярусы по годам: эпохи, судьи, цари Иудеи и Израиля, служения пророков, события',
+  all: 'Небо показывает всех лиц атласа',
+  work: 'Небо показывает только лица рабочего набора («В работе»)',
+} as const;
+
 /** Переключатель неба «все лица | набор» (решение 26; J4): тот же в блоке, в листе «Вид» и в панели «В работе». */
 export function SkyModeSwitch() {
-  return <Segmented label="Что показывает небо" options={SKY_MODES} value={skyMode.value} onChange={(v) => (skyMode.value = v)} />;
+  const v = skyMode.value;
+  return (
+    <div class="seg" role="group" aria-label="Что показывает небо">
+      {SKY_MODES.map((o) => (
+        <button type="button" key={o.value} aria-pressed={o.value === v} title={SKY_HINTS[o.value]} aria-description={SKY_HINTS[o.value]} onClick={() => (skyMode.value = o.value)}>
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
 }
 
 /** «Во весь экран» (J2, клавиша F): панель и карточка — корешки. Есть, только если сворачивать есть что. */
@@ -141,16 +162,26 @@ const SCALES = [
 
 const toggleEpochsPanel = () => (panel.value = panel.value === 'epochs' ? null : 'epochs');
 
+/** Флажок слоя неба с пояснением (UX-21): подпись и квадрат нажимаются вместе, как у Check (src/ui/controls.tsx). */
+function HintCheck({ checked, onChange, hint, children }: { checked: boolean; onChange: (v: boolean) => void; hint: string; children: string }) {
+  return (
+    <label class="check" title={hint}>
+      <input type="checkbox" checked={checked} aria-description={hint} onChange={(e) => onChange((e.currentTarget as HTMLInputElement).checked)} />
+      {children}
+    </label>
+  );
+}
+
 /** Флажки слоёв неба: линии Мессии и ярусы эпох. */
 function LayerChecks() {
   return (
     <>
-      <Check checked={onlyLines.value} onChange={(v) => (onlyLines.value = v)}>
+      <HintCheck checked={onlyLines.value} onChange={(v) => (onlyLines.value = v)} hint={SKY_HINTS.lines}>
         только линии Мессии
-      </Check>
-      <Check checked={epochMode.value} onChange={(v) => (epochMode.value = v)}>
+      </HintCheck>
+      <HintCheck checked={epochMode.value} onChange={(v) => (epochMode.value = v)} hint={SKY_HINTS.tiers}>
         ярусы эпох
-      </Check>
+      </HintCheck>
     </>
   );
 }
@@ -191,25 +222,28 @@ export const viewOpen = signal(false);
  * «во весь экран» (J2). Непрозрачный, с рамкой, как блок; не модальный: Escape и нажатие вне блока его закрывают,
  * фокус возвращается на «Вид». Список моделей раскрывается вверх — над листом.
  */
-function ViewPop({ toggle }: { toggle: { current: HTMLButtonElement | null } }) {
-  const ref = useRef<HTMLDivElement>(null);
+/**
+ * Как закрывается лист «Вид» (IX-65, IX-80) — одинаково у блока и у колонки: нажатие мимо листа и его органов (own —
+ * блок с листом или колонка с листом) и Escape. Escape — одно видимое состояние (D5): сначала открытый список моделей
+ * (его закрывает Menu), затем лист. Фокус в другом слое (панель, карточка, поиск) — Escape снимает сначала тот слой, лист
+ * остаётся. Закрыли из листа — фокус на «Вид».
+ */
+function useViewDismiss(sheet: { current: HTMLElement | null }, own: () => Element[], toggle: () => HTMLElement | null) {
   useEffect(() => {
     const close = (back: boolean) => {
       viewOpen.value = false;
-      if (back) toggle.current?.focus({ preventScroll: true });
+      if (back) toggle()?.focus({ preventScroll: true });
     };
+    const inside = (n: Node | null) => !!n && own().some((b) => b.contains(n));
     const away = (e: PointerEvent) => {
-      const box = ref.current?.closest('.skyctl');
-      if (box && !box.contains(e.target as Node)) close(false);
+      if (sheet.current && !inside(e.target as Node)) close(false);
     };
-    // Escape — одно видимое состояние (D5): сначала открытый список моделей (его закрывает Menu), затем лист. Фокус в
-    // другом слое (панель, карточка, поиск) — Escape снимает сначала тот слой, лист остаётся (IX-65)
     const onKey = (e: KeyboardEvent) => {
       if (e.code !== 'Escape' || e.defaultPrevented) return;
       // в поле ввода Escape принадлежит полю (D5); открытый список моделей закрывает сам Menu
-      if (isTextField(e.target) || ref.current?.querySelector('[role="menu"]')) return;
+      if (isTextField(e.target) || sheet.current?.querySelector('[role="menu"]')) return;
       const a = document.activeElement;
-      const inPop = !!ref.current?.closest('.skyctl')?.contains(a);
+      const inPop = inside(a);
       const loose = !a || a === document.body || !!(a instanceof HTMLElement && a.closest('.sky') && !a.closest('.sheet, .folio'));
       if (!inPop && !loose) return;
       e.preventDefault();
@@ -222,6 +256,15 @@ function ViewPop({ toggle }: { toggle: { current: HTMLButtonElement | null } }) 
       window.removeEventListener('keydown', onKey, true);
     };
   }, []);
+}
+
+function ViewPop({ toggle }: { toggle: { current: HTMLButtonElement | null } }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useViewDismiss(
+    ref,
+    () => [ref.current?.closest('.skyctl')].filter((x): x is Element => !!x),
+    () => toggle.current,
+  );
   return (
     <div class="viewpop" id="sky-viewpop" ref={ref} role="group" aria-label="Вид неба: масштаб времени, пропорции, хронология" data-reserve="view">
       <span class="lbl scale-lbl" aria-hidden="true">
@@ -314,30 +357,60 @@ export function SkyControls() {
   );
 }
 
-/** Узкое небо (телефон; планшет с карточкой): колонка кнопок 44 × 44 у правого края, остальное — в листе «Вид» (MOB-05, MOB-25). */
+/**
+ * Узкое небо (телефон; планшет с карточкой): колонка кнопок 44 × 44 у правого края, остальное — в листе «Вид» (MOB-05,
+ * MOB-25). Лист «Вид» — всплывающий у колонки, как у блока на широком небе (IX-80): открыт, пока viewOpen, без записи
+ * в истории; «назад» браузера его не закрывает, адрес не меняется. Прежний адрес с «~pview» открывает этот же лист.
+ */
 export function SkyColumn() {
+  const col = useRef<HTMLDivElement>(null);
+  const toggle = useRef<HTMLButtonElement>(null);
+  const open = viewOpen.value;
+  // адрес прежних выпусков с «~pview» (панель «Вид»): тот же лист, без панели
+  useEffect(() => {
+    if (panel.value !== 'view') return;
+    panel.value = null;
+    viewOpen.value = true;
+  }, [panel.value]);
   return (
-    <div class="skyctl column" role="group" aria-label="Вид неба" data-reserve="controls">
-      <ZoomButton dir={1} />
-      <ZoomButton dir={-1} />
-      <button type="button" class="all" title="Всё небо (0, Home)" aria-keyshortcuts="0 Home" onClick={showAll}>
-        Всё небо
-      </button>
-      <button type="button" aria-pressed={panel.value === 'view'} onClick={() => (panel.value = panel.value === 'view' ? null : 'view')}>
-        Вид
-      </button>
-    </div>
+    <>
+      <div class="skyctl column" role="group" aria-label="Вид неба" data-reserve="controls" ref={col}>
+        <ZoomButton dir={1} />
+        <ZoomButton dir={-1} />
+        <button type="button" class="all" title="Всё небо (0, Home)" aria-keyshortcuts="0 Home" onClick={showAll}>
+          Всё небо
+        </button>
+        <button type="button" ref={toggle} aria-expanded={open} title="Масштаб времени, пропорции, хронология" onClick={() => (viewOpen.value = !open)}>
+          Вид
+        </button>
+      </div>
+      {open && <ViewSheet col={col} toggle={toggle} />}
+    </>
   );
 }
 
 /**
  * Лист «Вид» на узком небе (MOB-05): слои, масштаб времени, пропорции (J1), «небо во весь экран» (J2, не на телефоне),
  * модель хронологии — списком с пояснениями, «Эпохи и их основания», что на небе (J4). Лист не выше неба под колонкой кнопок.
+ * Не панель атласа (IX-80): закрывают его «×», «Вид», Escape и нажатие мимо листа и колонки, фокус возвращается на «Вид».
  */
-export function ViewSheet() {
+export function ViewSheet({ col, toggle }: { col?: { current: HTMLDivElement | null }; toggle?: { current: HTMLButtonElement | null } }) {
+  const wrap = useRef<HTMLDivElement>(null);
+  // «Вид» колонки — и если лист отрисован не колонкой (SkyView по прежней панели «Вид»)
+  const toggleEl = () => toggle?.current ?? document.querySelector<HTMLElement>('.sky .skyctl.column button[aria-expanded]');
+  useViewDismiss(
+    wrap,
+    () => [wrap.current?.closest('.sheet'), col?.current ?? document.querySelector('.sky .skyctl.column')].filter((x): x is Element => !!x),
+    toggleEl,
+  );
+  const close = () => {
+    viewOpen.value = false;
+    if (panel.peek() === 'view') panel.value = null;
+    toggleEl()?.focus({ preventScroll: true });
+  };
   return (
-    <Sheet title="Вид" reserve>
-      <div class="viewctl">
+    <Sheet title="Вид" reserve onClose={close}>
+      <div class="viewctl" ref={wrap}>
         <div class="checks">
           <LayerChecks />
         </div>
@@ -367,7 +440,15 @@ export function ViewSheet() {
           <ModelMenu />
         </div>
         <div class="cmds">
-          <button type="button" class="cmd" onClick={() => (panel.value = 'epochs')}>
+          {/* панель «Эпохи» — колонка сетки или лист телефона: лист «Вид» уступает ей место */}
+          <button
+            type="button"
+            class="cmd"
+            onClick={() => {
+              viewOpen.value = false;
+              panel.value = 'epochs';
+            }}
+          >
             Эпохи и их основания
           </button>
         </div>

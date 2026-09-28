@@ -119,20 +119,21 @@ describe('пара «первое — второе» (D6, A13)', () => {
 describe('строка выбора второго лица (D6)', () => {
   it('имя в творительном падеже, без подстановки несклонённого имени', () => {
     const t = (mode: 'kinship' | 'spread', id: string) => pickBarText(mode, id).split(':')[0];
-    expect(pickBarText('kinship', 'david')).toBe('Родство с Давидом: выберите второе лицо на небе или найдите его в поле «Найти»');
+    // IX-81: вместе с «— отменить (Esc)» строка помещается в 560 px (проверка ширины — tools/accept/input3.ts)
+    expect(pickBarText('kinship', 'david')).toBe('Родство с Давидом: выберите второе лицо на небе или через поиск');
     expect(t('spread', 'ruf')).toBe('Разворот с Руфью');
     expect(t('kinship', 'iisus')).toBe('Родство с Иисусом Христом');
     expect(t('kinship', 'iisus-navin')).toBe('Родство с Иисусом Навиным');
     expect(t('kinship', 'mariya')).toBe('Родство с Марией');
     expect(t('kinship', 'iessey')).toBe('Родство с Иессеем');
   });
-  it('у каждого лица строка грамматична: падеж выведен или имя стоит в именительном после тире', () => {
+  it('у каждого лица строка грамматична: падеж выведен, иначе строка без имени (IX-81), а не имя в именительном', () => {
     const esc = (x: string) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     for (const p of persons) {
       const ins = nameCase(p.name, p.sex, 'ins', p.unnamed);
       const t = pickBarText('kinship', p.id);
-      expect(t, p.id).toMatch(new RegExp(ins ? `^Родство со? ${esc(ins)}:` : `^Родство; первое лицо — ${esc(p.name)}:`));
-      expect(t, p.id).toMatch(/: выберите второе лицо на небе или найдите его в поле «Найти»$/);
+      expect(t, p.id).toMatch(new RegExp(ins ? `^Родство со? ${esc(ins)}:` : '^Родство:'));
+      expect(t, p.id).toMatch(/: выберите второе лицо на небе или через поиск$/);
     }
   });
 });

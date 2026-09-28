@@ -7,19 +7,18 @@ import { grid, unfoldCard } from './layout.ts';
 import { skyRef, plural, CAN_PRINT, goTo } from './common.tsx';
 import { lowerFirst } from './text/ru.ts';
 import { typo } from './text/typo.ts';
-import { Masthead, isPeople } from './card/Masthead.tsx';
+import { Masthead, isPeople, passportYears } from './card/Masthead.tsx';
 import { Close } from './controls.tsx';
 import { SECTIONS, PARTS, buildSections, familyIds, contemporaryGroups } from './card/sections.tsx';
 import { Clamp, clampItems } from './card/Clamp.tsx';
 import { Brief, authoredCount } from './card/Brief.tsx';
 import { Rail, RailKey, type SecState } from './card/Rail.tsx';
 import { affiliation } from './card/shared.tsx';
-import { lifeSpanText } from '../engine/years.ts';
 import { reduced } from './sky/view.ts';
 import { sheetStop, snapSheet, stopsFor, releaseVelocity, type SheetStop } from './sheet.ts';
 import { cardFolded, cardStack, clipWords, closeAllCards, closeCard, stackSummaryHead } from './stack.ts';
 import { WorkButton } from './panels/Work.tsx';
-import { focusCardTitle } from './focus.ts';
+import { cardTitle, focusCardTitle, focusQuietly } from './focus.ts';
 
 export { Masthead, SECTIONS, PARTS, buildSections, familyIds, contemporaryGroups };
 export type { SecState };
@@ -43,15 +42,20 @@ export function ranges(ns: number[]): string {
   return out.join(', ');
 }
 
+/** Разделы, которые к народу и роду не относятся (решение 23; CARD-87): народ не рождается в год, современников нет. */
+const PEOPLE_NA = new Set([8, 14]);
+
 /**
  * Состояние каждого из 24 разделов (ТЗ § 3.3; решение владельца 6):
  * content — есть сведения; header — сведения в шапке (§ 1 — имя, § 5 — роль, § 7 — колено: раздел их не повторяет);
- * silent — составитель проверил: Писание молчит; na — § 21 у лица вне родословий Мессии; absent — не составлен.
+ * silent — составитель проверил: Писание молчит; na — § 21 у лица вне родословий Мессии, § 8 и § 14 у народа и рода;
+ * absent — не составлен.
  */
 export function sectionStates(id: string, out: Map<number, ComponentChildren>, card: Card | null): Record<number, SecState> {
   const p = byId.get(id)!;
   const silent = new Set(p.silent);
   const onLines = lineMembership.joseph.has(id) || lineMembership.mary.has(id);
+  const people = isPeople(id);
   const st: Record<number, SecState> = {};
   for (const s of SECTIONS) {
     const n = s.n;
@@ -59,10 +63,14 @@ export function sectionStates(id: string, out: Map<number, ComponentChildren>, c
     else if (n === 1 || (n === 5 && p.roles.length) || (n === 7 && affiliation(id))) st[n] = 'header';
     else if (silent.has(n)) st[n] = 'silent';
     else if (n === 21 && !onLines && !card?.messiahNote?.length) st[n] = 'na';
+    else if (people && PEOPLE_NA.has(n)) st[n] = 'na';
     else st[n] = 'absent';
   }
   return st;
 }
+
+/** Почему раздел не относится к лицу: народ и род — § 8, 14, 21 (CARD-87); лицо вне линий Мессии — § 21. */
+export const naReason = (id: string) => (isPeople(id) ? 'не относится к народу' : 'не относится: лицо не входит в линии Мессии');
 
 /**
  * Колофон (F10; CARD-38): точный перечень — где сведения, о чём Писание молчит, что не составлено;
@@ -77,7 +85,8 @@ export function colophonText(id: string, states: Record<number, SecState>): stri
   const parts = [`Сведения — в ${filled} ${plural(filled, 'разделе', 'разделах', 'разделах')}`];
   if (silent.length) parts.push(`Писание молчит — § ${ranges(silent)}`);
   if (absent.length) parts.push(`не ${absent.length === 1 ? 'составлен' : 'составлены'} — § ${ranges(absent)}`);
-  if (na.length) parts.push('§ 21 не относится: лицо не входит в линии Мессии');
+  // у народа: «§ 8, 14, 21 не относятся к народу»; у лица — «§ 21 не относится: лицо не входит в линии Мессии»
+  if (na.length) parts.push(isPeople(id) ? `§ ${ranges(na)} ${na.length === 1 ? 'не относится' : 'не относятся'} к народу` : '§ 21 не относится: лицо не входит в линии Мессии');
   const c = model.value.chrono.get(id);
   // −966 — 967 г. до Р. Х. в астрономическом счёте: 4-й год Соломона, якорь хронологии (3 Цар 6:1);
   // у народа и рода годов в карточке нет (CARD-59) — и зависимости от модели тоже
@@ -85,6 +94,70 @@ export function colophonText(id: string, states: Record<number, SecState>): stri
   return typo(
     `${parts.join('; ')}. Ссылки сверены с Синодальным текстом.` + (dep ? ` Годы до 967 г. до Р. Х. — по модели «${modelNames[model.value.id] ?? model.value.id}».` : ''),
   );
+}
+
+/** Ссылки на стихи и «ещё N ссылок» внутри раздела карточки. */
+const REF_STOPS = '.refs button.ref, .refs button.more';
+
+/**
+ * Ссылки на стихи раздела — одна остановка Tab (IX-42): у Давида их 89, и Tab по карточке шёл от стиха к стиху.
+ * В каждом разделе в порядке Tab остаётся одна ссылка — та, на которой читатель был в этом разделе последней (сначала
+ * первая); по ссылкам раздела — стрелками влево и вправо, Home и End, как по меткам рейки. Стрелки вверх и вниз
+ * по-прежнему прокручивают лист, J и K переходят между разделами. Ссылки остаются кнопками: диктор находит их обходом
+ * текста, Enter раскрывает стих под абзацем.
+ * Разметку ссылок строит Refs (common.tsx); порядок Tab правится здесь, после каждой перестройки тела карточки.
+ */
+function useRefStops(root: { current: HTMLElement | null }, key: string) {
+  useEffect(() => {
+    const el = root.current;
+    if (!el || typeof MutationObserver === 'undefined') return;
+    const groupOf = (b: Element) => {
+      const sec = b.closest('.sec');
+      return sec ? [...sec.querySelectorAll<HTMLButtonElement>(REF_STOPS)].filter((x) => x.getClientRects().length) : [];
+    };
+    const settle = (g: HTMLButtonElement[], stop: HTMLButtonElement | undefined) => {
+      for (const b of g) {
+        const want = b === stop ? 0 : -1;
+        if (b.tabIndex !== want) b.tabIndex = want;
+      }
+    };
+    const apply = () => {
+      for (const sec of el.querySelectorAll('.sec')) {
+        const g = [...sec.querySelectorAll<HTMLButtonElement>(REF_STOPS)].filter((x) => x.getClientRects().length);
+        if (!g.length) continue;
+        settle(g, g.find((b) => b.dataset.stop === '') ?? g[0]);
+      }
+    };
+    const onFocus = (e: FocusEvent) => {
+      const b = e.target instanceof HTMLButtonElement && e.target.matches(REF_STOPS) ? e.target : null;
+      if (!b) return;
+      const g = groupOf(b);
+      for (const x of g) delete x.dataset.stop;
+      b.dataset.stop = '';
+      settle(g, b);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      const b = e.target instanceof HTMLButtonElement && e.target.matches(REF_STOPS) ? e.target : null;
+      if (!b || e.altKey || e.ctrlKey || e.metaKey) return;
+      const g = groupOf(b);
+      const i = g.indexOf(b);
+      const to = e.key === 'ArrowRight' ? i + 1 : e.key === 'ArrowLeft' ? i - 1 : e.key === 'Home' ? 0 : e.key === 'End' ? g.length - 1 : null;
+      if (to === null || i < 0) return;
+      e.preventDefault();
+      e.stopPropagation();
+      g[Math.max(0, Math.min(g.length - 1, to))].focus();
+    };
+    apply();
+    const mo = new MutationObserver(apply);
+    mo.observe(el, { childList: true, subtree: true });
+    el.addEventListener('focusin', onFocus);
+    el.addEventListener('keydown', onKey);
+    return () => {
+      mo.disconnect();
+      el.removeEventListener('focusin', onFocus);
+      el.removeEventListener('keydown', onKey);
+    };
+  }, [key]);
 }
 
 /** Заголовок раздела в строку («Имя. Давид…») — если тело раздела — один абзац или один пункт (F1; VIS-01, VIS-10). */
@@ -130,6 +203,30 @@ export function CardPage({
   // малое лицо (F11; CARD-36): меньше трёх записей составителя — «Кратко» и есть статья, разделы — одной строкой
   const compact = !!card && authoredCount(card) < 3 && !schema && openFor !== bodyId;
   const ready = status === 'ok' && !!body;
+  // Тело карточки другого лица (или другой модели) строится заново, а не перекраивается из прежнего (CARD-76): разделы
+  // с одним номером у двух лиц устроены по-разному (заголовок в строку, списки, вложенные фрагменты), и перекройка роняла
+  // Preact на insertBefore — в новой карточке оставались разделы прежнего лица, затем лист переставал обновляться.
+  // Ключ — у тела, «Кратко», рейки и колофона; шапка — по лицу шапки (id).
+  const bodyKey = `${bodyId}|${m.id}`;
+  const lead = useRef<HTMLDivElement>(null);
+  const bodyEl = useRef<HTMLDivElement>(null);
+  useRefStops(bodyEl, `${bodyKey}|${ready}|${compact}|${schema}`);
+  const shownKey = useRef(bodyKey);
+  const refocus = useRef(false);
+  if (shownKey.current !== bodyKey) {
+    // фокус был в теле прежнего лица (ссылка, «ещё N …», метка рейки) — после смены тела он ушёл бы на body
+    const box = lead.current?.parentElement;
+    if (typeof document !== 'undefined' && box?.contains(document.activeElement) && !document.activeElement?.closest('.mast, .actions')) refocus.current = true;
+    shownKey.current = bodyKey;
+  }
+  useLayoutEffect(() => {
+    if (!refocus.current) return;
+    refocus.current = false;
+    const a = document.activeElement;
+    if (a && a !== document.body && a.isConnected) return;
+    // как после перехода по ссылке (I2): фокус — на заголовок карточки нового лица
+    focusQuietly(cardTitle(id) ?? lead.current?.parentElement?.querySelector<HTMLElement>('h2') ?? null);
+  }, [bodyKey]);
 
   const go = (n: number) => {
     const st = states[n];
@@ -161,7 +258,7 @@ export function CardPage({
     blocks.push(
       <div class={`sec ${st}`} key={`run${run[0]}`} data-n={run[0]} data-to={last !== run[0] ? last : undefined} id={`sec-${run[0]}`}>
         <span class="no">{last !== run[0] ? `${run[0]}–${last}` : `${run[0]}`}</span>
-        {typo(`${titles} — ${st === 'silent' ? 'в Писании не сообщается' : st === 'na' ? 'не относится: лицо не входит в линии Мессии' : 'раздел не составлен'}`)}
+        {typo(`${titles} — ${st === 'silent' ? 'в Писании не сообщается' : st === 'na' ? naReason(bodyId) : 'раздел не составлен'}`)}
       </div>,
     );
     run = [];
@@ -214,10 +311,10 @@ export function CardPage({
 
   return (
     <>
-      <Masthead id={id} card={body?.id === id ? card : null} />
-      {status === 'error' ? null : <Brief id={bodyId} card={card} />}
+      <Masthead key={id} id={id} card={body?.id === id ? card : null} />
+      {status === 'error' ? null : <Brief key={bodyKey} id={bodyId} card={card} />}
       {actions}
-      <div class="mast-rule" aria-hidden="true" />
+      <div class="mast-rule" aria-hidden="true" ref={lead} />
       {status === 'error' ? (
         <div class="load-error" role="alert">
           <p>{typo('Карточку не удалось загрузить: том с её разделами не пришёл. Проверьте связь и повторите.')}</p>
@@ -232,9 +329,9 @@ export function CardPage({
         </p>
       ) : null}
       {/* рейка — вровень с первым разделом (VIS-07); на телефоне — строка номеров под шапкой */}
-      {ready && !compact ? <Rail states={states} current={current} onGo={go} /> : null}
+      {ready && !compact ? <Rail key={bodyKey} states={states} current={current} onGo={go} /> : null}
       {ready ? (
-        <div class={stale ? 'folio-body stale' : 'folio-body'} aria-busy={stale ? 'true' : undefined}>
+        <div class={stale ? 'folio-body stale' : 'folio-body'} key={bodyKey} ref={bodyEl} aria-busy={stale ? 'true' : undefined}>
           {compact ? (
             <p class="rest">
               <button type="button" class="more" aria-expanded="false" onClick={() => setOpenFor(bodyId)}>
@@ -248,7 +345,7 @@ export function CardPage({
         </div>
       ) : null}
       {ready ? (
-        <footer class="colophon">
+        <footer class="colophon" key={bodyKey}>
           {compact ? null : <RailKey states={states} />}
           <p>{colophonText(bodyId, states)}</p>
           <div class="cmds">
@@ -406,7 +503,7 @@ function useSheetDrag(aside: { current: HTMLElement | null }, on: boolean) {
 function SheetBar({ id, stop, onClose }: { id: string; stop: SheetStop; onClose: () => void }) {
   const p = byId.get(id)!;
   const c = model.value.chrono.get(id);
-  const years = c ? lifeSpanText(c, { people: isPeople(id) }) : '';
+  const years = passportYears(id, c);
   const full = stop === 'full';
   return (
     <div class="sheet-bar">
@@ -445,34 +542,75 @@ function SheetBar({ id, stop, onClose }: { id: string; stop: SheetStop; onClose:
  */
 function CardActions({ id, phone }: { id: string; phone: boolean }) {
   const pick = pickMode.value;
-  const toggle = (mode: 'kinship' | 'spread') => {
-    pickMode.value = pick === mode ? null : mode;
+  const toggle = (mode: 'kinship' | 'spread', btn: HTMLButtonElement) => {
+    const on = pick !== mode;
+    pickMode.value = on ? mode : null;
     second.value = null;
+    // на телефоне и при масштабе 200 % (узкое окно — нижний лист) выбор сворачивает лист до шапки, и кнопка уходит за край:
+    // фокус — на небо, где выбирают второе лицо (стрелки и Enter; строку выбора диктор слышит из её живой области), как
+    // в панели «Родство» (MOB-47, MOB-72; WCAG 2.4.11). Отмена возвращает фокус на кнопку (usePickReturn)
+    pickFrom = on && phone ? { btn, mode } : null;
+    if (pickFrom) window.setTimeout(() => document.querySelector<HTMLElement>('.sky canvas')?.focus({ preventScroll: true }), 0);
   };
+  usePickReturn();
   return (
     <div class="actions">
+      {/* на узком листе (400 px и уже) — «На небе»: четыре команды — одной строкой (VIS-79, IX-81); имя для диктора —
+          полное, видимая надпись входит в него (WCAG 2.5.3) */}
       <button
         type="button"
+        class="show-on-sky"
         title="Перелететь к звезде лица на небе"
+        aria-label="Показать на небе"
         onClick={() => {
           // на телефоне лист сначала сворачивается до шапки: перелёт идёт над ним, а не под ним (MOB-15)
           if (phone) sheetStop.value = 'peek';
           skyRef.flyTo(id);
         }}
       >
-        Показать на небе
+        <span class="full">Показать на небе</span>
+        <span class="short" aria-hidden="true">
+          На небе
+        </span>
       </button>
       {/* в режиме выбора второго лица надпись и ширина те же — меняется только нажатость (IX-22): ряд не перестраивается,
           а что делать дальше, говорит строка у кромки неба */}
-      <button type="button" aria-pressed={pick === 'kinship'} title="Как связаны это лицо и второе: выберите его на небе или в поиске" onClick={() => toggle('kinship')}>
+      <button type="button" aria-pressed={pick === 'kinship'} title="Как связаны это лицо и второе: выберите его на небе или в поиске" onClick={(e) => toggle('kinship', e.currentTarget)}>
         Родство с…
       </button>
-      <button type="button" aria-pressed={pick === 'spread'} title="Две карточки рядом: выберите второе лицо" onClick={() => toggle('spread')}>
+      <button type="button" aria-pressed={pick === 'spread'} title="Две карточки рядом: выберите второе лицо" onClick={(e) => toggle('spread', e.currentTarget)}>
         Разворот с…
       </button>
       <WorkButton id={id} />
     </div>
   );
+}
+
+/** Выбор второго лица начат командой карточки на телефоне (MOB-72): кнопка, на которую вернуть фокус при отмене. */
+let pickFrom: { btn: HTMLButtonElement; mode: 'kinship' | 'spread' } | null = null;
+/** Лист возвращается в прежнее положение за это время (sheet.ts, переход высоты): потом кнопка видна и получает фокус. */
+const PICK_RETURN_MS = 320;
+
+/**
+ * Отмена выбора (Escape, «отменить») на телефоне (MOB-72): лист возвращается в прежнее положение (sheet.ts), фокус — на
+ * кнопку «Родство с…» или «Разворот с…», прокрученную в видимую часть листа под его закреплённой шапкой
+ * (scroll-margin-top в folio.css; WCAG 2.4.11). Выбор закончен (открылась панель) — фокус ставит панель (focus.ts).
+ */
+function usePickReturn() {
+  const mode = pickMode.value;
+  useEffect(() => {
+    if (mode || !pickFrom) return;
+    const from = pickFrom;
+    pickFrom = null;
+    const t = window.setTimeout(() => {
+      const a = document.activeElement;
+      // фокус уже там, куда его поставила панель, поиск или сам читатель, — не трогать
+      if (!from.btn.isConnected || (a && a !== document.body && !a.closest('.sky'))) return;
+      from.btn.scrollIntoView({ block: 'nearest' });
+      from.btn.focus({ preventScroll: true });
+    }, PICK_RETURN_MS);
+    return () => window.clearTimeout(t);
+  }, [mode]);
 }
 
 /** Закрыть карточку id, как вкладку (решение 18): следующая из стопки — активной, фокус на её заголовок (IX-52). */
@@ -678,12 +816,20 @@ function FolioBar({ id, others, open, setOpen, onClose }: { id: string; others: 
 /** Годы лица для строки стопки: как в шапке листа. */
 function stackYears(id: string): string {
   const c = model.value.chrono.get(id);
-  return typo((c ? lifeSpanText(c, { people: isPeople(id) }) : '') || 'время не установлено');
+  return typo(passportYears(id, c) || 'время не установлено');
 }
 
 /**
- * Строка стопки (решение 18; CARD-52, IX-52, UX-49): «Ещё открыты (N): Иосиф, Моисей…» — свёрнута по умолчанию.
- * Имена — от недавних к старым, целиком: сколько помещается, остальные — многоточием (число N названо).
+ * Имена строки стопки: первые k целиком, остальные — числом, без многоточия (VIS-71): «Руфь, Давид и ещё 2».
+ */
+export function stackNames(names: string[], k: number): string {
+  const n = Math.max(1, Math.min(k, names.length));
+  return n < names.length ? `${names.slice(0, n).join(', ')} и ещё ${names.length - n}` : names.join(', ');
+}
+
+/**
+ * Строка стопки (решение 18; CARD-52, IX-52, UX-49): «Ещё открыты (N): Иосиф, Моисей» — свёрнута по умолчанию.
+ * Имена — от недавних к старым, целиком: сколько помещается в поле до команд, остальные — «и ещё N» (UX-75, VIS-71).
  */
 function StackSummary({ ids, open, btn, onToggle }: { ids: string[]; open: boolean; btn: { current: HTMLButtonElement | null }; onToggle: () => void }) {
   const names = ids.map((x) => byId.get(x)!.name);
@@ -693,23 +839,33 @@ function StackSummary({ ids, open, btn, onToggle }: { ids: string[]; open: boole
   useLayoutEffect(() => {
     const el = namesRef.current;
     if (!el) return;
+    const btn = el.parentElement!;
+    // место имён — вся строка стопки без «Ещё открыты (N):», треугольника и зазоров (UX-75): поле имён само по себе
+    // узко, пока в нём короткая строка, и замер по нему не давал строке вырасти обратно
+    const roomOf = () => {
+      const bs = getComputedStyle(btn);
+      const others = [...btn.children].filter((c) => c !== el) as HTMLElement[];
+      const taken = others.reduce((w, c) => w + c.getBoundingClientRect().width + parseFloat(getComputedStyle(c).marginLeft || '0'), 0);
+      const gap = parseFloat(bs.columnGap || '0') || 0;
+      return btn.clientWidth - parseFloat(bs.paddingLeft) - parseFloat(bs.paddingRight) - taken - gap * others.length;
+    };
     const measure = () => {
-      const room = el.clientWidth;
+      const room = roomOf();
       const ctx = document.createElement('canvas').getContext('2d');
       if (!ctx || !room) return setFit(names.length);
       // свойство font у вычисленного стиля бывает пустым: шрифт холста собирается из частей
       const cs = getComputedStyle(el);
       ctx.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
       let k = names.length;
-      while (k > 1 && ctx.measureText(`${names.slice(0, k).join(', ')}${k < names.length ? '…' : ''}`).width > room - 2) k--;
+      while (k > 1 && ctx.measureText(stackNames(names, k)).width > room - 2) k--;
       setFit(k);
     };
     measure();
     const ro = new ResizeObserver(measure);
-    ro.observe(el);
+    ro.observe(btn);
     return () => ro.disconnect();
   }, [key]);
-  const shown = `${names.slice(0, fit).join(', ')}${fit < names.length ? '…' : ''}`;
+  const shown = stackNames(names, fit);
   return (
     <button
       type="button"

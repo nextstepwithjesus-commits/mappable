@@ -3,6 +3,8 @@
  * Literata 16 и 14 (--t-body, --t-note), Jost 13/18 и 12/16 (--t-ui, --t-ui-s) и 11,5 — кегль только для холста (--t-map-s).
  * Всё, что небо, ярусы эпох и рамка пишут текстом, берёт кегль отсюда; разовых размеров на холсте нет.
  * На сенсорных экранах (pointer: coarse) подписи холста не мельче 12,5 px: их читают с расстояния вытянутой руки.
+ * Кегли холста следуют размеру шрифта браузера (решение 57; MOB-42, WCAG 1.4.4): ступень × корневой кегль / 16, не больше
+ * ×1,5 и не мельче ступени. Сменился корневой кегль — небо заново замеряет и отбирает подписи (textScale, watchTextScale).
  */
 export const FONT_SERIF = "'Literata Variable', Literata, Georgia, serif";
 export const FONT_SANS = "'Jost Variable', Jost, sans-serif";
@@ -32,9 +34,80 @@ export function coarsePointer(): boolean {
   return typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
 }
 
-/** Кегль с нижней границей экрана: 11,5 px, на сенсорном — 12,5 px. */
+// ---------- кегль браузера (решение 57; MOB-42) ----------
+
+/** Наибольший коэффициент кегля холста: при корневом кегле 24 px и крупнее подписи холста — ×1,5. */
+export const TEXT_SCALE_MAX = 1.5;
+
+/**
+ * Коэффициент кегля холста по корневому кеглю страницы (px): кегль / 16 в пределах 1…1,5. Мельче 16 px холст не мельчает:
+ * его ступени — наименьшие читаемые; неизвестный кегль (вне браузера) — 1.
+ */
+export function textScaleFor(rootPx: number): number {
+  if (!Number.isFinite(rootPx) || rootPx <= 0) return 1;
+  return Math.min(TEXT_SCALE_MAX, Math.max(1, rootPx / 16));
+}
+
+/** Корневой кегль страницы: html { font-size: var(--t-body) } = 1rem — размер шрифта, заданный в браузере. */
+function rootFontPx(): number {
+  if (typeof document === 'undefined' || typeof getComputedStyle !== 'function' || !document.documentElement) return NaN;
+  try {
+    return parseFloat(getComputedStyle(document.documentElement).fontSize);
+  } catch {
+    return NaN;
+  }
+}
+
+let scale: number | null = null;
+const listeners = new Set<(k: number) => void>();
+
+/**
+ * Текущий коэффициент кегля холста. Читается один раз (замер корневого кегля — не в каждом кадре); смену кегля
+ * в настройках браузера ловит наблюдатель за образцом шириной 1rem (watch).
+ */
+export function textScale(): number {
+  if (scale === null) {
+    scale = textScaleFor(rootFontPx());
+    watch();
+  }
+  return scale;
+}
+
+/**
+ * Задать коэффициент (смена корневого кегля; тесты). Если он изменился — сообщить подписчикам и небу: событие
+ * «loadingdone» набора шрифтов документа — то же, что после догрузки шрифта: небо сбрасывает замеры и пороги подписей
+ * и перерисовывается (src/render/sky.ts, конструктор Sky).
+ */
+export function setTextScale(k: number) {
+  const next = Math.min(TEXT_SCALE_MAX, Math.max(1, k));
+  if (next === scale) return;
+  scale = next;
+  for (const fn of listeners) fn(next);
+  const fonts = typeof document !== 'undefined' ? (document as { fonts?: EventTarget }).fonts : undefined;
+  if (fonts && typeof Event === 'function') fonts.dispatchEvent(new Event('loadingdone'));
+}
+
+/** Подписаться на смену коэффициента кегля холста; возвращает отписку. */
+export function watchTextScale(fn: (k: number) => void): () => void {
+  listeners.add(fn);
+  return () => listeners.delete(fn);
+}
+
+let watching = false;
+/** Образец шириной 1rem: его ширина меняется вместе с корневым кеглем — коэффициент пересчитывается. */
+function watch() {
+  if (watching || typeof document === 'undefined' || typeof ResizeObserver !== 'function' || !document.body) return;
+  watching = true;
+  const probe = document.createElement('div');
+  probe.setAttribute('aria-hidden', 'true');
+  probe.className = 'rem-probe';
+  document.body.appendChild(probe);
+  new ResizeObserver(() => setTextScale(textScaleFor(rootFontPx()))).observe(probe);
+}
+
+/** Кегль с нижней границей экрана: ступень × коэффициент кегля браузера, не мельче 11,5 px, на сенсорном — 12,5 px. */
 export function mapSize(size: number, coarse: boolean): number {
-  return Math.max(size, coarse ? T_MAP_TOUCH : T_MAP_S);
+  return Math.max(size * textScale(), coarse ? T_MAP_TOUCH : T_MAP_S);
 }
 
 /** Строка ctx.font для кегля шкалы. */

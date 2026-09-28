@@ -40,7 +40,7 @@ describe('пророки в ярусе (MAP-48)', () => {
     expect(w.t1).toBe(years.toAstro(-701));
     expect(w.bracket).toBeUndefined();
   });
-  it('Моисей и Аарон — по служению с годами в карточке: Исход и странствие', () => {
+  it('Моисей и Аарон — по служению с годами в карточке: Моисей — Исход и странствие; Аарон — только служение пророка (L7)', () => {
     const m = atlas.models[0];
     for (const id of ['moisey', 'aaron']) {
       const p = atlas.byId.get(id)!;
@@ -48,9 +48,14 @@ describe('пророки в ярусе (MAP-48)', () => {
       expect(tiers.ministryOf(p.active, m.chrono.get(id), null), `${id} без тома карточек`).toBe(null);
       const w = tiers.ministryOf(p.active, m.chrono.get(id), cardOf(id))!;
       expect(w.t0, id).toBe(years.toAstro(-1446));
-      expect(w.t1, id).toBeGreaterThanOrEqual(years.toAstro(-1407));
       expect(w.refs?.length, id).toBeGreaterThan(0);
     }
+    expect(tiers.ministryOf(null, m.chrono.get('moisey'), cardOf('moisey'))!.t1).toBeGreaterThanOrEqual(years.toAstro(-1407));
+    // Аарон назван пророком Моисея перед фараоном (Исх 7:1) в год Исхода; годы первосвященства — не служение пророка
+    // (решение L7, MAP-48: в ярусе — только то, что сказано в тексте)
+    const aaron = tiers.ministryOf(null, m.chrono.get('aaron'), cardOf('aaron'))!;
+    expect(aaron.t1).toBeLessThan(years.toAstro(-1445));
+    expect(aaron.refs).toContain('Исх 7:1-2');
   });
   it('Енох — по датированным событиям жизни (Быт 5:21–24), с пометой, что служение не датировано', () => {
     const m = atlas.models[0];
@@ -188,7 +193,8 @@ describe('подписи событий (VIS-26)', () => {
 describe('формула на краях столбца (ТЗ § 3.5, § 3.6; MAP-48)', () => {
   it('по надёжно датированной родне, с согласованием по полу и склонением имён', () => {
     const m = atlas.models[0];
-    expect(tiers.columnFormula('moisey', m).birth).toBe('Моисей родился после рождения Аарона');
+    // двусторонняя формула (MAP-48): надёжно датированного младшего родственника нет — опора «до» из родства, сын Гирсам
+    expect(tiers.columnFormula('moisey', m).birth).toBe('Моисей родился после рождения Аарона и до рождения Гирсама');
     const isaak = tiers.columnFormula('isaak', m);
     expect(isaak.birth).toBe('Исаак родился после рождения Измаила и до рождения Иакова');
     expect(isaak.death).toBe('умер после смерти Измаила, при жизни Иакова');

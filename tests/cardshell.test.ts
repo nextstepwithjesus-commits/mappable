@@ -138,10 +138,11 @@ describe('полоса 66 книг (CARD-49, VIS-43)', () => {
 });
 
 describe('шапка карточки (VIS-41, CARD-59, MOB-52, VIS-06)', () => {
-  it('паспорт: колонка подписей — по самой длинной подписи, подпись переносится, а не налезает на значение', () => {
+  it('паспорт: колонка подписей постоянной ширины — по самой длинной подписи паспорта (VIS-70); подпись переносится, а не налезает на значение', () => {
     const src = css('folio.css');
     const b = /(^|\n)\.passport\s*\{([^}]*)\}/.exec(src)![2];
-    expect(b).toMatch(/grid-template-columns:\s*max-content minmax\(0, 1fr\)/);
+    // 88 px при обычном кегле (5,5rem = 88 px); при крупном шрифте читателя колонка растёт вместе с ним (MOB-71)
+    expect(b).toMatch(/grid-template-columns:\s*max\(88px, 5\.5rem\) minmax\(0, 1fr\)/);
     const dt = /(^|\n)\.passport dt\s*\{([^}]*)\}/.exec(src)![2];
     expect(dt).not.toMatch(/nowrap/);
   });

@@ -21,7 +21,7 @@
  *    Звёзды под ярусами указатель не достаёт (Sky.openTop).
  */
 import { FRAME_H, type Rect, type Sky, type SkyState } from './sky.ts';
-import { alpha } from './color.ts';
+import { alpha, hexToRgb } from './color.ts';
 import { hits } from './rect.ts';
 import { contrast } from '../ui/contrast.ts';
 import { byId, graph, loadCard, loadedCard, persons, type ChronoRow, type ModelData } from '../data/atlas.ts';
@@ -123,30 +123,53 @@ export interface Ministry {
   note?: string;
 }
 
-/** Что даёт карточка лица для годов деятельности: служения с годами и датированные события (§ 16, § 17). */
+/** Что даёт карточка лица для годов деятельности: § 5 (положение), служения с годами (§ 16) и датированные события (§ 17). */
 export interface MinistryCard {
-  offices?: { from?: number; to?: number; refs: string[] }[];
+  status?: { text: string; refs: string[] }[];
+  offices?: { title?: string; from?: number; to?: number; refs: string[] }[];
   events?: { year?: number; age?: number; refs: string[] }[];
+}
+
+/** Слова Писания, которыми лицо названо пророком: «пророк», «пророчица», «прозорливец», «пророчествовал». */
+const PROPHET_WORD = /пророк|пророчиц|прозорлив|пророчеств/i;
+
+/**
+ * Основание места в ярусе «Пророки» (MAP-48): стихи, где Писание называет лицо пророком, — из § 5 (положение) или
+ * из служения § 16 с этим словом: Моисей — Втор 34:10; Аарон — Исх 7:1 («будет твоим пророком»); Мариам — Исх 15:20.
+ * null — в карточке такого стиха нет.
+ */
+export function prophetBasis(card: MinistryCard | null): string[] | null {
+  for (const f of [...(card?.status ?? []).map((s) => ({ t: s.text, refs: s.refs })), ...(card?.offices ?? []).map((o) => ({ t: o.title ?? '', refs: o.refs }))])
+    if (PROPHET_WORD.test(f.t) && f.refs.length) return f.refs;
+  return null;
 }
 
 /**
  * Годы пророка в ярусе «Пророки» (MAP-48): по порядку опор —
  *  1) годы служения из данных (active);
- *  2) служения с годами в карточке (§ 16): Моисей — вождь при Исходе и в пустыне, 1446–1406 гг. до Р. Х.;
+ *  2) служения с годами в карточке (§ 16): если среди них есть служение, названное пророческим, — только оно (Аарон —
+ *     «уста и пророк Моисея перед фараоном», 1446 г. до Р. Х., а не годы первосвященства); иначе все (Моисей — вождь
+ *     при Исходе и в пустыне, 1446–1406 гг. до Р. Х.);
  *  3) датированные события жизни (§ 17) у лица с годами по числам текста: Енох, Авраам;
  *  4) у лица «время не установлено» — скобка засвидетельствованной деятельности или эпохи (решение 24), кроме скобки
  *     по годам созвездия: она не свидетельство.
+ * Первая ссылка отрезка по опорам 2 и 3 — основание (prophetBasis): стих, где лицо названо пророком; его приводит подсказка.
  * card — тело карточки, если том уже загружен (иначе опоры 2 и 3 ждут загрузки).
  */
 export function ministryOf(active: [number, number] | null, c: ChronoRow | undefined, card: MinistryCard | null): Ministry | null {
   if (active) return { t0: toAstro(active[0]), t1: Math.max(toAstro(active[1]), toAstro(active[0]) + 0.6), soft: false };
   if (!c) return null;
   const dated = c.cls === 'exact' || c.cls === 'calculated';
-  const offices = (card?.offices ?? []).filter((o) => o.from !== undefined && o.to !== undefined);
+  const basis = prophetBasis(card);
+  const withBasis = (refs: string[]) => (basis ? [...new Set([...basis, ...refs])] : refs);
+  const all = (card?.offices ?? []).filter((o) => o.from !== undefined && o.to !== undefined);
+  const prophetic = all.filter((o) => PROPHET_WORD.test(o.title ?? ''));
+  const offices = prophetic.length ? prophetic : all;
   if (offices.length) {
     const t0 = Math.min(...offices.map((o) => toAstro(o.from!)));
     const t1 = Math.max(...offices.map((o) => toAstro(o.to!)));
-    return { t0, t1: Math.max(t1, t0 + 0.6), soft: false, refs: offices[0].refs };
+    const one = offices.length === 1 && offices[0].title ? offices[0].title : null;
+    return { t0, t1: Math.max(t1, t0 + 0.6), soft: false, refs: withBasis(offices.flatMap((o) => o.refs)), ...(one ? { note: one } : {}) };
   }
   if (dated) {
     const evs = (card?.events ?? [])
@@ -158,7 +181,7 @@ export function ministryOf(active: [number, number] | null, c: ChronoRow | undef
         t0: evs[0].t,
         t1: Math.max(evs[evs.length - 1].t, evs[0].t + 0.6),
         soft: false,
-        refs: evs[0].refs,
+        refs: withBasis(evs[0].refs),
         note: 'События жизни (служение Писание не датирует)',
       };
     return null;
@@ -313,11 +336,13 @@ export interface ColumnFormula {
 }
 
 /**
- * Формула относительной хронологии для краёв столбца выбранного лица (ТЗ § 3.5, § 3.6): «Моисей родился после рождения
- * Аарона»; «умер после смерти Аарона, при жизни …». Опоры — ближайшая родня с годами по числам текста (точные и
- * расчётные даты), без пар, о которых говорит хронологическое напряжение. Имя родни — только в родительном падеже,
- * который умеет строить склонение (nameCase); не склоняется — опора не берётся. У лица с оценочной датой сравнивается
- * весь промежуток: «после» — только если родня родилась раньше его начала.
+ * Формула относительной хронологии для краёв столбца выбранного лица (ТЗ § 3.5, § 3.6; MAP-48): «Моисей родился после
+ * рождения Аарона и до рождения Гирсама»; «умер после смерти Аарона, при жизни …». Опоры — ближайшая родня с годами по
+ * числам текста (точные и расчётные даты), без пар, о которых говорит хронологическое напряжение. Если такая опора
+ * есть только с одной стороны, другую даёт само родство: рождение — после рождения отца или матери и до рождения ребёнка
+ * (ближайших по году; год ребёнка может быть и оценочным — порядок задаёт родство, а не оценка). Имя родни — только в родительном
+ * падеже, который умеет строить склонение (nameCase); не склоняется — опора не берётся. У лица с оценочной датой
+ * сравнивается весь промежуток: «после» — только если родня родилась раньше его начала.
  */
 export function columnFormula(id: string, m: Pick<ModelData, 'chrono' | 'tensions'>): ColumnFormula {
   const p = byId.get(id);
@@ -337,8 +362,20 @@ export function columnFormula(id: string, m: Pick<ModelData, 'chrono' | 'tension
     .map((x) => ({ id: x, c: m.chrono.get(x), g: gen(x) }))
     .filter((r): r is { id: string; c: ChronoRow; g: string } => !!r.c && sure(r.c) && !r.c.named && byId.get(r.id)?.kind === 'person' && r.g !== null);
   const [b0, b1] = bSpan(me);
-  const before = rel.filter((r) => r.c.b < b0).sort((a, b) => b.c.b - a.c.b)[0];
-  const after = rel.filter((r) => r.c.b > b1).sort((a, b) => a.c.b - b.c.b)[0];
+  // родитель и ребёнок — опора порядком родства, если надёжно датированной родни с этой стороны нет
+  const kin = (edges: readonly { parent: string; child: string; kind: string; cert: string; claim: string }[], who: 'parent' | 'child') =>
+    edges
+      .filter(plain)
+      .map((e) => e[who])
+      .filter((x) => !tense.has(x) && byId.get(x)?.kind === 'person')
+      .map((x) => ({ id: x, c: m.chrono.get(x), g: gen(x) }))
+      .filter((r): r is { id: string; c: ChronoRow; g: string } => !!r.c && r.c.cls !== 'epochal' && !r.c.named && r.g !== null);
+  const sureBefore = rel.filter((r) => r.c.b < b0).sort((a, b) => b.c.b - a.c.b)[0];
+  const sureAfter = rel.filter((r) => r.c.b > b1).sort((a, b) => a.c.b - b.c.b)[0];
+  // родство дополняет формулу до двусторонней, но не строит её одно: «Давид родился до рождения Амнона» ничего не
+  // говорит о времени Давида
+  const before = sureBefore ?? (sureAfter ? kin(graph.parentsOf.get(id) ?? [], 'parent').filter((r) => r.c.b < me.b).sort((a, b) => b.c.b - a.c.b)[0] : undefined);
+  const after = sureAfter ?? (sureBefore ? kin(graph.childrenOf.get(id) ?? [], 'child').filter((r) => r.c.b > me.b).sort((a, b) => a.c.b - b.c.b)[0] : undefined);
   const f = p.sex === 'f';
   const born = f ? 'родилась' : 'родился';
   const birth =
@@ -354,6 +391,42 @@ export function columnFormula(id: string, m: Pick<ModelData, 'chrono' | 'tension
       death = `${f ? 'умерла' : 'умер'} ${died ? `после смерти ${died.g}` : ''}${died && alive ? ', ' : ''}${alive ? `при жизни ${alive.g}` : ''}`;
   }
   return { birth, death };
+}
+
+// ---------- столбец жизни выбранного лица (ТЗ § 3.5; VIS-64, MAP-48; решение 53) ----------
+
+/**
+ * Годы столбца (астр.): ядро [core0, core1] — надёжная часть жизни (рождение не позже bHi, жизнь не короче dLo или
+ * последнего засвидетельствованного года), края [lo, core0] и [core1, hi] — неопределённость рождения и смерти
+ * (без данных о смерти — до оценки dEst).
+ */
+export function columnSpan(c: ChronoRow): { lo: number; core0: number; core1: number; hi: number } {
+  const core0 = c.bHi;
+  const core1 = Math.max(core0, c.d !== null ? (c.dLo ?? c.d) : (c.last ?? c.b));
+  const hi = Math.max(core1, c.d !== null ? (c.dHi ?? c.d) : c.dEst);
+  return { lo: Math.min(c.bLo, core0), core0, core1, hi };
+}
+
+/** Столбец в ярусах отличается от неба так (VIS-64): тон виден, но небо не перекрашено. */
+export const COLUMN_CONTRAST = 1.12;
+
+const hex2 = (n: number) => Math.round(Math.max(0, Math.min(255, n))).toString(16).padStart(2, '0');
+/** Цвет a, на долю k покрытый цветом b (как заливка b с прозрачностью k поверх a), — #rrggbb. */
+export function over(a: string, b: string, k: number): string {
+  const A = hexToRgb(a);
+  const B = hexToRgb(b);
+  return `#${[0, 1, 2].map((i) => hex2(A[i] + (B[i] - A[i]) * k)).join('')}`;
+}
+/** Доля k цвета ink поверх sky, при которой заливка отличается от неба на target : 1. */
+export function tintFor(sky: string, ink: string, target = COLUMN_CONTRAST): number {
+  let lo = 0;
+  let hi = 1;
+  for (let i = 0; i < 24; i++) {
+    const k = (lo + hi) / 2;
+    if (contrast(over(sky, ink, k), sky) < target) lo = k;
+    else hi = k;
+  }
+  return lo;
 }
 
 // ---------- раскладка по окну ----------
@@ -672,6 +745,53 @@ function hatch(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h
   ctx.restore();
 }
 
+/** Столбец выбранного лица на экране, px (columnSpan). */
+interface ColumnPx {
+  lo: number;
+  core0: number;
+  core1: number;
+  hi: number;
+}
+function columnPx(sky: Sky, c: ChronoRow): ColumnPx {
+  const y = columnSpan(c);
+  const x = (t: number) => sky.cam.sx(sky.xOf(t));
+  const lo = x(y.lo);
+  const core0 = Math.max(lo, x(y.core0));
+  const core1 = Math.max(core0, x(y.core1));
+  return { lo, core0, core1, hi: Math.max(core1, x(y.hi), lo + 1) };
+}
+const tints = new Map<string, number>();
+/** Доля тона столбца для пары цветов темы (tintFor), с памятью: палитра меняется только со сменой темы. */
+function tintOf(sky: string, ink: string): number {
+  const key = `${sky}|${ink}`;
+  let k = tints.get(key);
+  if (k === undefined) {
+    k = tintFor(sky, ink);
+    tints.set(key, k);
+  }
+  return k;
+}
+/**
+ * Заливка столбца по x: в ярусах — ядро тоном k и растушёванные к нулю края; на небе (feathers) — только края: от k у черты
+ * ядра к нулю наружу, ядро не закрашено (решение 53).
+ */
+function columnGradient(ctx: CanvasRenderingContext2D, ink: string, k: number, c: ColumnPx, feathers: boolean): CanvasGradient {
+  const g = ctx.createLinearGradient(c.lo, 0, c.hi, 0);
+  const span = c.hi - c.lo;
+  const p0 = Math.min(1, Math.max(0, (c.core0 - c.lo) / span));
+  const p1 = Math.min(1, Math.max(p0, (c.core1 - c.lo) / span));
+  const t = (a: number) => alpha(ink, a);
+  g.addColorStop(0, t(p0 > 0 ? 0 : feathers ? 0 : k));
+  g.addColorStop(p0, t(k));
+  if (feathers) {
+    g.addColorStop(p0, t(0));
+    g.addColorStop(p1, t(0));
+  }
+  g.addColorStop(p1, t(k));
+  g.addColorStop(1, t(p1 < 1 ? 0 : feathers ? 0 : k));
+  return g;
+}
+
 /** Ширина колонки названий: 88 px, а на сенсорном экране — не уже самого длинного названия с полями. */
 function nameColumn(ctx: CanvasRenderingContext2D, tiers: readonly Tier[], font: string): number {
   ctx.font = font;
@@ -728,6 +848,28 @@ export function drawTiers(sky: Sky, s: SkyState) {
   const x0Of = (b: TierBar) => cam.sx(sky.xOf(b.t0));
   const x1Of = (b: TierBar) => cam.sx(sky.xOf(b.t1));
   const inSelOf = (b: TierBar) => (sel ? b.t1 >= sel.bLo && b.t0 <= (sel.d ?? sel.dEst) : false);
+
+  // ---------- столбец выбранного лица (решение 53; VIS-64): заливка — только в ярусах, 1,12 : 1, под отрезками ----------
+  const col = sel && selP ? columnPx(sky, sel) : null;
+  const kCol = tintOf(pal.sky, pal.ink3);
+  /** Доля тона столбца в точке x: ядро — kCol, края — растушёвка к нулю. */
+  const colAlpha = (x: number) => {
+    if (!col || x < col.lo || x > col.hi) return 0;
+    if (x < col.core0) return col.core0 > col.lo ? (kCol * (x - col.lo)) / (col.core0 - col.lo) : kCol;
+    if (x <= col.core1) return kCol;
+    return col.hi > col.core1 ? (kCol * (col.hi - x)) / (col.hi - col.core1) : kCol;
+  };
+  const colPaint = col ? columnGradient(ctx, pal.ink3, kCol, col, false) : null;
+  /** Закрасить часть прямоугольника, что лежит в столбце: весь ярус — сразу, подложки подписей — после них. */
+  const paintColumn = (x: number, y: number, w: number, h: number) => {
+    if (!col || !colPaint) return;
+    const a = Math.max(x, col.lo);
+    const z = Math.min(x + w, col.hi);
+    if (z <= a) return;
+    ctx.fillStyle = colPaint;
+    ctx.fillRect(a, y, z - a, h);
+  };
+  paintColumn(0, FRAME_H, W, bottom - FRAME_H);
 
   // ---------- геометрия отрезков: строка и прямоугольник каждого видимого отрезка ----------
   interface Geo {
@@ -863,13 +1005,16 @@ export function drawTiers(sky: Sky, s: SkyState) {
       const tw = ctx.measureText(b.label).width;
       const inSel = inSelOf(b);
       const hot = tierHot.key === b.key;
+      // подложка подписи на небе яруса — цвета неба, а в столбце выбранного лица — с его тоном (VIS-64)
       if (at.where === 'outside') {
         // подпись на небе — на его подложке: вертикали синхронизмов под ней не проходят
         ctx.fillStyle = pal.sky;
         ctx.fillRect(at.x - 2, y, tw + 4, BAR_H);
+        paintColumn(at.x - 2, y, tw + 4, BAR_H);
       } else if (at.where === 'spill') {
         ctx.fillStyle = pal.sky;
         ctx.fillRect(at.x - 2, y, tw + 4, BAR_H);
+        paintColumn(at.x - 2, y, tw + 4, BAR_H);
         // подпись — к своему отрезку: хит-зона продолжается на неё
         hitRects.push({ x: at.x - 2, y, w: tw + 4, h: BAR_H, bar: b, tier: tier.key });
       } else if (at.where === 'inside' && !b.bracket && b.shared.length) {
@@ -879,6 +1024,7 @@ export function drawTiers(sky: Sky, s: SkyState) {
       } else if (at.where === 'inside' && b.bracket) {
         ctx.fillStyle = pal.sky;
         ctx.fillRect(at.x - 2, y + 1, tw + 4, BAR_H - 2);
+        paintColumn(at.x - 2, y + 1, tw + 4, BAR_H - 2);
       }
       ctx.fillStyle = inSel || hot ? pal.ink : pal.ink2;
       ctx.fillText(b.label, at.x, y + BAR_H - 2.5);
@@ -914,7 +1060,9 @@ export function drawTiers(sky: Sky, s: SkyState) {
       const by = top + Math.min(rowH, 14) / 2 + fs * 0.36;
       ctx.save();
       ctx.lineJoin = 'round';
-      ctx.strokeStyle = pal.halo;
+      // ореол — цвета неба под подписью: в столбце выбранного лица — с его тоном (VIS-64)
+      const k = colAlpha(x + 4 + tw / 2);
+      ctx.strokeStyle = k > 0 ? over(pal.halo, pal.ink3, k) : pal.halo;
       ctx.lineWidth = 3;
       ctx.strokeText(b.label, x + 4, by);
       ctx.restore();
@@ -926,36 +1074,48 @@ export function drawTiers(sky: Sky, s: SkyState) {
   }
 
   // ---------- проекция выбранного лица столбцом: сплошное ядро — надёжная часть, растушёванные края — неопределённость ----------
+  // в ярусах столбец уже закрашен (paintColumn) — под отрезками и подписями, без черт: черта не пересекает название.
+  // На небе (решение 53) — только две черты 1 px по краям ядра и растушёвка краёв неопределённости; черты обрываются
+  // у подписей неба
   let formula: ColumnFormula | null = null;
   let core: [number, number] | null = null;
-  if (sel && selP) {
-    const end = sel.d ?? sel.last ?? sel.b;
-    const a = cam.sx(sky.xOf(sel.bLo));
-    const b = cam.sx(sky.xOf(sel.bHi));
-    const c = cam.sx(sky.xOf(end));
-    const d = cam.sx(sky.xOf(sel.d ?? sel.dEst));
-    const tone = (k: number) => alpha(pal.ink3, k);
-    const top = TIER_TOP - 4;
-    const g = ctx.createLinearGradient(a, 0, b, 0);
-    g.addColorStop(0, tone(0));
-    g.addColorStop(1, tone(0.16));
-    ctx.fillStyle = g;
-    ctx.fillRect(a, top, Math.max(1, b - a), cam.h);
-    ctx.fillStyle = tone(0.16);
-    ctx.fillRect(b, top, Math.max(1, c - b), cam.h);
-    const g2 = ctx.createLinearGradient(c, 0, d, 0);
-    g2.addColorStop(0, tone(0.16));
-    g2.addColorStop(1, tone(0));
-    ctx.fillStyle = g2;
-    ctx.fillRect(c, top, Math.max(1, d - c), cam.h);
-    ctx.strokeStyle = pal.ink3;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(Math.round(b) + 0.5, top);
-    ctx.lineTo(Math.round(b) + 0.5, cam.h);
-    ctx.stroke();
+  let lines: number[] = [];
+  let cuts = 0;
+  if (col && sel && selP) {
+    const y0 = bottom + 1;
+    const y1 = cam.vp.b;
+    if (y1 > y0) {
+      ctx.fillStyle = columnGradient(ctx, pal.ink3, kCol, col, true);
+      ctx.fillRect(Math.max(LW, col.lo), y0, Math.max(0, col.hi - Math.max(LW, col.lo)), y1 - y0);
+      lines = [...new Set([Math.round(col.core0) + 0.5, Math.round(col.core1) + 0.5])].filter((x) => x >= LW && x <= W);
+      const boxes = sky.ledger.boxes;
+      ctx.strokeStyle = pal.ruleStrong;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (const x of lines) {
+        // промежутки черты между подписями неба (с полем 2 px)
+        const gaps = boxes
+          .filter((r) => r.x - 1 < x && x < r.x + r.w + 1 && r.y + r.h > y0 && r.y < y1)
+          .map((r) => [r.y - 2, r.y + r.h + 2] as [number, number])
+          .sort((a, b) => a[0] - b[0]);
+        cuts += gaps.length;
+        let y = y0;
+        for (const [a, b] of gaps) {
+          if (a > y) {
+            ctx.moveTo(x, y);
+            ctx.lineTo(x, a);
+          }
+          y = Math.max(y, b);
+        }
+        if (y < y1) {
+          ctx.moveTo(x, y);
+          ctx.lineTo(x, y1);
+        }
+      }
+      ctx.stroke();
+    }
     formula = columnFormula(s.selected!, s.model);
-    core = [b, c];
+    core = [col.core0, col.core1];
   }
 
   // ---------- колонка названий: непрозрачная, с чертой справа (VIS-26) ----------
@@ -980,8 +1140,21 @@ export function drawTiers(sky: Sky, s: SkyState) {
     sync: syncCount,
     events: [eventsDrawn, p.blocks.find((b) => b.tier.key === 'events')?.tier.bars.filter((b) => visibleIn(b, tL, tR)).length ?? 0],
     prophets: [...new Set(geos.filter((g) => g.tier === 'prophets').map((g) => g.b.id))],
+    // первая ссылка отрезка пророка — основание, его стих приводит подсказка (MAP-48)
+    basis: Object.fromEntries(geos.filter((g) => g.tier === 'prophets' && g.b.refs?.length).map((g) => [g.b.id, g.b.refs![0]])),
     labeled: [...labeledIds],
     formula: placedFormula,
+    // столбец выбранного лица (VIS-64): контраст заливки к небу в ярусах, где она кончается (низ ярусов), черты на небе,
+    // сколько раз они обрываются у подписей, ширина растушёвки краёв, px
+    column: col
+      ? {
+          contrast: Math.round(contrast(over(pal.sky, pal.ink3, kCol), pal.sky) * 1000) / 1000,
+          fill: [FRAME_H, bottom],
+          lines: lines.map((x) => Math.round(x * 10) / 10),
+          cuts,
+          feather: [Math.round(col.core0 - col.lo), Math.round(col.hi - col.core1)],
+        }
+      : null,
   });
   if (sky.canvas.dataset.tiers !== state) sky.canvas.dataset.tiers = state;
 }

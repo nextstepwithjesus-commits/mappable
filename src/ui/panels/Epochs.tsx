@@ -18,6 +18,16 @@ const lower = (s: string) => {
   return w && !NAMES.has(w) ? s[0].toLowerCase() + s.slice(1) : s;
 };
 
+/**
+ * Тильда приближения в тексте оснований — словами, как в карточке (CARD-90): «в ~325 лет» → «примерно в 325 лет»,
+ * «(~390)» и «~390» → «около 390». После предлога «около» не встаёт: «в около» было бы неграмотно.
+ */
+export function approxWords(s: string): string {
+  return s
+    .replace(/(^|[\s(«])(в|во|за|на|через)\s+~\s*(\d)/g, '$1примерно $2 $3')
+    .replace(/~\s*(\d)/g, 'около $1');
+}
+
 // ---------- эпохи ----------
 export function EpochsPanel() {
   const id = selected.value;
@@ -55,7 +65,7 @@ export function EpochsPanel() {
                 </td>
               </tr>,
               <tr key={`${e.id}-b`} class="basis">
-                <td colSpan={2}>Основание: {typo(lower(e.basis))}</td>
+                <td colSpan={2}>Основание: {typo(approxWords(lower(e.basis)))}</td>
               </tr>,
             ];
           })}
@@ -71,9 +81,9 @@ export function EpochsPanel() {
           <p class="muted">
             {typo(span(e))} <Mark calc />
           </p>
-          <p>{e.summary}</p>
+          <p>{approxWords(e.summary)}</p>
           <p class="muted">
-            Основание: {typo(lower(e.basis))} <Refs refs={e.refs} owner={`ep-${e.id}`} />
+            Основание: {typo(approxWords(lower(e.basis)))} <Refs refs={e.refs} owner={`ep-${e.id}`} />
           </p>
           <VerseInsert owner={`ep-${e.id}`} refs={e.refs} />
           {e.keyPersons.filter((k) => byId.has(k)).length ? (

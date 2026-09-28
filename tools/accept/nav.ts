@@ -66,7 +66,7 @@ const near = (a: number, b: number, tol: number) => Math.abs(a / b - 1) <= tol;
 export const nav: Scenario[] = [
   {
     n: 50,
-    title: 'U7, тачпад: два пальца вниз сдвигают небо вниз, щипок масштабирует; колесо мыши — масштаб у указателя, Shift + колесо — только время (D1, J1)',
+    title: 'U7, тачпад: два пальца вниз сдвигают небо вниз, щипок масштабирует; колесо мыши — масштаб у указателя, Shift + колесо — сдвиг по времени, Ctrl + Shift + колесо — только время (D1, J1, решение 47)',
     run: async (p) => {
       // адрес с лицом — перелёт к нему: на «всём небе» сдвигать и отдалять некуда
       await p.goto(p.url().replace(/#.*$/, '#/david'));
@@ -103,15 +103,28 @@ export const nav: Scenario[] = [
       await p.waitForTimeout(450);
       const w3 = await width(p);
       if (!near(w3 / w2, 1.5, 0.08)) return fail(`щелчок колеса: ${w2.toFixed(0)} → ${w3.toFixed(0)} лет, а не ×1,5`);
-      // Shift + колесо — только время (J1): окно ×1,5 по годам, высота полосы прежняя; сдвиг у мыши — протяжкой
-      const ky0 = Number(((await p.locator('.sky').getAttribute('data-view')) ?? '').split(' ')[7]);
+      // Shift + колесо — сдвиг по времени, как горизонтальная прокрутка (решение 47): вниз — к поздним годам на 100 px,
+      // ширина окна и высота полосы прежние
+      const view = async () => ((await p.locator('.sky').getAttribute('data-view')) ?? '').split(' ').map(Number);
+      const v0 = await view();
       await p.keyboard.down('Shift');
       await p.mouse.wheel(0, 100);
       await p.keyboard.up('Shift');
       await p.waitForTimeout(450);
+      const v1 = await view();
+      const w35 = await width(p);
+      const moved = (v1[4] - v0[4]) * v0[5];
+      if (!near(w35, w3, 0.01) || !near(v1[7], v0[7], 0.01) || !(moved > 80 && moved < 120)) return fail(`Shift + колесо: сдвиг ${moved.toFixed(0)} px, ширина ${w3.toFixed(0)} → ${w35.toFixed(0)} лет, полоса ${v0[7].toFixed(1)} → ${v1[7].toFixed(1)} px`);
+      // Ctrl + Shift + колесо — только время (J1, решение 47): окно ×1,5 по годам, высота полосы прежняя
+      await p.keyboard.down('Control');
+      await p.keyboard.down('Shift');
+      await p.mouse.wheel(0, 100);
+      await p.keyboard.up('Shift');
+      await p.keyboard.up('Control');
+      await p.waitForTimeout(450);
       const w4 = await width(p);
-      const ky1 = Number(((await p.locator('.sky').getAttribute('data-view')) ?? '').split(' ')[7]);
-      if (!near(w4 / w3, 1.5, 0.08) || !near(ky1, ky0, 0.01)) return fail(`Shift + колесо: ширина ${w3.toFixed(0)} → ${w4.toFixed(0)} лет, полоса ${ky0.toFixed(1)} → ${ky1.toFixed(1)} px`);
+      const ky1 = (await view())[7];
+      if (!near(w4 / w35, 1.5, 0.08) || !near(ky1, v0[7], 0.01)) return fail(`Ctrl + Shift + колесо: ширина ${w35.toFixed(0)} → ${w4.toFixed(0)} лет, полоса ${v0[7].toFixed(1)} → ${ky1.toFixed(1)} px`);
       return pass(`пальцы: полоса ${a0.l} → ${a1.l}; щипок ×${(w1 / w2).toFixed(2)}; колесо ×${(w3 / w2).toFixed(2)}`);
     },
   },

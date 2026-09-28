@@ -77,6 +77,15 @@ export interface LayoutNode {
    * после brk, — тоже со знаком разрыва. Только у следа life, если brk < t1.
    */
   brk?: number;
+  /**
+   * Знак у первого засвидетельствованного года (этап 7, круг 3; MAP-69; решение владельца 38; PersonChrono.mark): t0 —
+   * этот год (призвание, суд, событие Деяний), а не рождение. band — промежуток рождения [bLo; min(bHi, t0)] для
+   * растушёванной полосы влево от знака, без острого знака в её середине; место в полосе занято и под неё (packSpan).
+   * born — оценка рождения (PersonChrono.b) внутри полосы: отвод от родителя приходит сюда, в годы его жизни, а не
+   * в год призвания. Только у следа life вне коридора и скоплений.
+   */
+  band?: [number, number];
+  born?: number;
 }
 
 /** Список имён без родства (data/lists.json). */
@@ -388,7 +397,17 @@ export function clusterRows(n: number): number {
  * чтобы честные следы не меняли масштаб. У лица «время не установлено» (epochal) — вся скобка bLo…bHi и место под имя
  * после знака в её середине (MAP-52).
  */
-export function packSpan(c: { b: number; d: number | null; lastAttested: number | null; cls?: string; bLo?: number; bHi?: number; when?: { by: string } }): [number, number] {
+export function packSpan(c: { b: number; d: number | null; lastAttested: number | null; cls?: string; bLo?: number; bHi?: number; when?: { by: string }; mark?: number }): [number, number] {
+  // знак у первого засвидетельствованного года (MAP-69): место — от начала промежутка рождения (растушёванная полоса)
+  // до конца жизни, место под имя — после знака
+  if (c.mark !== undefined) {
+    const lo = Math.min(c.bLo ?? c.b, c.b);
+    let end: number;
+    if (c.d !== null) end = Math.max(c.d, c.mark);
+    else if (c.lastAttested !== null) end = Math.max(c.lastAttested, c.mark + 8);
+    else end = c.mark + STUB;
+    return [lo, Math.max(end, c.mark + 4)];
+  }
   // скобка «по годам созвездия» (when.by = 'group': 1 Пар 4–5, имена без родства и без эпохи) — не свидетельство,
   // а всё время рода, до полутора тысяч лет: её не рисуют, место — только под знак и имя
   if (c.cls === 'epochal' && c.when?.by === 'group') return [c.b, c.b + STUB];
@@ -414,9 +433,11 @@ export function computeLayout(
   const K = opts.corridorK ?? 7;
   const BEAM = opts.beam ?? 64;
   const ch = (id: string) => chrono.persons.get(id)!;
+  const spineIds = new Set([...lines.joseph, ...lines.mary].map((s) => s.id));
 
-  /** Место в полосе: след и запас под имя (не рисуется); у лица «время не установлено» — скобка. */
-  const span = (id: string): Iv => packSpan(ch(id));
+  /** Место в полосе: след и запас под имя (не рисуется); у лица «время не установлено» — скобка; у лица со знаком
+   *  у первого свидетельства — и полоса рождения (MAP-69), кроме лиц коридора. */
+  const span = (id: string): Iv => packSpan(spineIds.has(id) ? { ...ch(id), mark: undefined } : ch(id));
   /**
    * Рисуемый след (п. 7): t1 — конец жизни, в которой данные уверены. Смерть только в допустимом интервале
    * (died.range: «в царствование Давида») — сплошной след до начала интервала или до последнего события,
@@ -425,7 +446,22 @@ export function computeLayout(
   const drawn = (id: string): { t1: number; trail: TrailKind; brk?: number } => {
     const d = drawnTrail(id);
     const brk = ch(id).brk;
-    return d.trail === 'life' && brk !== undefined && brk < d.t1 ? { ...d, brk } : d;
+    return d.trail === 'life' && brk !== undefined && brk < d.t1 && brk > star(id) ? { ...d, brk } : d;
+  };
+  /**
+   * Год знака (MAP-69): рождение, у лица со знаком у первого засвидетельствованного года — этот год. Лица коридора
+   * стоят в год рождения всегда: через их рождения проходят ленты.
+   */
+  const star = (id: string): number => {
+    const c = ch(id);
+    return c.mark !== undefined && !spineIds.has(id) && c.cls === 'estimated' ? c.mark : c.b;
+  };
+  /** Поля знака у первого свидетельства для узла (LayoutNode.band, born). */
+  const markFields = (id: string): { band?: [number, number]; born?: number } => {
+    const c = ch(id);
+    const s0 = star(id);
+    if (s0 === c.b) return {};
+    return { band: [Math.min(c.bLo, c.b), Math.min(Math.max(c.bHi, c.b), s0)], born: c.b };
   };
   const drawnTrail = (id: string): { t1: number; trail: TrailKind } => {
     const c = ch(id);
@@ -433,12 +469,14 @@ export function computeLayout(
     if (p.kind === 'people' || p.kind === 'clan') return { t1: c.b, trail: 'people' };
     if (c.infant) return { t1: c.b, trail: 'infant' };
     if (c.cls === 'epochal') return { t1: c.b, trail: 'epochal' };
+    // след начинается у знака: в год рождения, у лица со знаком у первого свидетельства — в этот год (MAP-69)
+    const s0 = star(id);
     const died = p.chrono?.died;
     const rangeOnly = !!died?.range && died.age === undefined && died.year === undefined;
-    if (c.d !== null && !rangeOnly) return { t1: Math.max(c.b, c.d), trail: 'life' };
-    if (c.d !== null) return { t1: Math.max(c.b, c.dLo ?? c.b, c.lastAttested ?? -Infinity), trail: 'life' };
-    if (c.lastAttested !== null) return { t1: Math.max(c.b, c.lastAttested), trail: 'life' };
-    return { t1: c.b, trail: 'life' };
+    if (c.d !== null && !rangeOnly) return { t1: Math.max(s0, c.d), trail: 'life' };
+    if (c.d !== null) return { t1: Math.max(s0, c.dLo ?? c.b, c.lastAttested ?? -Infinity), trail: 'life' };
+    if (c.lastAttested !== null) return { t1: Math.max(s0, c.lastAttested), trail: 'life' };
+    return { t1: s0, trail: 'life' };
   };
   const padded = (iv: Iv): Iv => [iv[0] - GAP, iv[1] + GAP];
 
@@ -777,9 +815,10 @@ export function computeLayout(
       const person = ghost ? nid.slice(6) : nid;
       const dr = ghost ? { t1: iv[0], trail: 'ghost' as const } : drawn(nid);
       const n: LayoutNode = {
-        id: nid, person, lane, t0: ghost ? iv[0] : ch(nid).b, t1: dr.t1, block: blockId, ghost, spine: false,
+        id: nid, person, lane, t0: ghost ? iv[0] : star(nid), t1: dr.t1, block: blockId, ghost, spine: false,
         parentLane, layoutParent: lp, satelliteOf: !ghost && satelliteOf.has(nid) ? satelliteOf.get(nid)! : null, trail: dr.trail,
         ...('brk' in dr && dr.brk !== undefined ? { brk: dr.brk } : {}),
+        ...(ghost || dr.trail !== 'life' ? {} : markFields(nid)),
       };
       nodes.push(n);
       byNode.set(nid, n);
@@ -820,9 +859,11 @@ export function computeLayout(
     const lo = Math.min(n.parentLane, n.lane) + 1;
     const hi = Math.max(n.parentLane, n.lane) - 1;
     dropLength += Math.abs(n.lane - n.parentLane);
+    // отвод приходит в год рождения ребёнка; у знака у первого свидетельства — в оценку рождения внутри полосы (born)
+    const at = n.born ?? n.t0;
     for (let l = lo; l <= hi; l++) {
       for (const o of laneNodes.get(l) ?? []) {
-        if (o.t0 < n.t0 && n.t0 < o.t1) {
+        if (o.t0 < at && at < o.t1) {
           if (o.spine) corridorCrossings++;
           else crossings++;
         }

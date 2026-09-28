@@ -187,7 +187,7 @@ describe('семьи (E4)', () => {
     expect(trails.ghostNote('rakhil', 'iakov')).toBe('Рахиль, жена Иакова');
     expect(trails.ghostNote('asenefa', 'iosif')).toBe('Асенефа, жена Иосифа');
   });
-  it('у Иакова дети четырёх матерей: четыре скобы разного начертания и пометы «от Лии», «от Рахили»…', () => {
+  it('у Иакова дети четырёх матерей: гребёнки одним сплошным начертанием, пометы «от Лии», «от Рахили»… у корня гребёнки (MAP-74)', () => {
     const { s, rec } = makeSky();
     at(s, 'iakov', 60);
     expect(s.cam.ky).toBeGreaterThanOrEqual(14);
@@ -196,11 +196,19 @@ describe('семьи (E4)', () => {
     const p = { s: { layers: LAYERS, highlight: null, intro: 1, tensionPersons: new Set() }, vis, emph: () => 1, zoomScale: 1 } as unknown as Parameters<typeof trails.drawDescents>[1];
     rec.calls.length = 0;
     const notes = trails.drawDescents(s, p);
-    const texts = notes.map((n) => n.text);
+    const texts = notes.flatMap((n) => ('text' in n ? [n.text] : []));
     for (const t of ['от Лии', 'от Рахили', 'от Валлы', 'от Зелфы']) expect(texts).toContain(t);
-    // четыре начертания: сплошное и три штриховых
+    // матери не различаются штрихом: штрих на небе значит «потомок выбранного» и «по толкованию»; пунктир [2, 2] —
+    // только отвод к призраку жены
     const dashes = new Set(rec.calls.filter((c) => c[0] === 'setLineDash').map((c) => JSON.stringify(c[1])));
-    for (const d of trails.MOTHER_DASH.slice(1)) expect(dashes).toContain(JSON.stringify(d));
+    for (const d of dashes) expect(['[]', '[2,2]']).toContain(d);
+    // помета матери — у корня гребёнки: на строке её ребёнка, а не у следа Иакова
+    const yJacob = s.cam.sy(s.node('iakov')!.lane);
+    const moms = notes.filter((n): n is import('../src/render/trails.ts').FamilyText => 'text' in n && /^от /.test(n.text));
+    for (const n of moms) {
+      expect(n.at).toBe('root');
+      expect(Math.abs(n.y - yJacob)).toBeGreaterThan(1);
+    }
   });
 });
 

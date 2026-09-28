@@ -10,7 +10,8 @@ import { num, typo, typoTree } from '../text/typo.ts';
 import { Close } from '../controls.tsx';
 import { pickBarText, pinBarText } from './text.ts';
 import { introOpen, lanes, openGuide, openLegend, resetProportions } from './view.ts';
-import { addToWork, skyMode, workSet, WORK_URL_MAX } from '../work.ts';
+import { addToWork, adoptLinkSet, leaveLinkSet, linkSet, skyMode, workNotice, workSet, WORK_URL_MAX } from '../work.ts';
+import { grid } from '../layout.ts';
 
 /** Уже этой ширины вступительный картуш слева внизу встал бы под блок органов справа: картуш переходит в левый верхний угол. */
 export const CARTOUCHE_BESIDE = 880;
@@ -22,11 +23,13 @@ export const CARTOUCHE_BESIDE = 880;
  * строка: текст обрезается многоточием (целиком — в title), команды справа, после тире; «(Esc)» — только там, где есть
  * клавиатура (MOB-21). Непрозрачный лист с рамкой; data-reserve — подписи звёзд под ней не рисуются (SkyView).
  */
-function SkyBar({ cls, text, cmds, esc }: { cls: string; text: string; cmds: { label: string; title?: string; run: () => void }[]; esc?: boolean }) {
+function SkyBar({ cls, text, cmds, esc, note }: { cls: string; text: string; cmds: { label: string; title?: string; run: () => void }[]; esc?: boolean; note?: string }) {
   const t = typo(text);
+  // оговорка — в подсказке строки, а не в самой строке (MOB-73): строка остаётся одной
+  const title = note ? `${t}. ${typo(note)}` : t;
   return (
     <div class={`pickbar ${cls}`} role="status" data-reserve="bar">
-      <span class="txt" title={t}>
+      <span class="txt" title={title}>
         {t}
       </span>
       <span class="dash" aria-hidden="true">
@@ -86,30 +89,78 @@ export function GroupBar({ group }: { group: SkyGroup }) {
 
 /**
  * Текст строки режима «набор» (J4; UX-62, MOB-54, VIS-46): пустой набор — как его собрать; выбранное лицо вне набора —
- * «Вооз не в наборе» (имя в начале, без падежа); иначе — «На небе — только рабочий набор, 38 лиц». Набор длиннее
- * 12 лиц в адрес не входит (решение 34, IX-67) — об этом говорит строка.
+ * «Вооз не в наборе» (имя в начале, без падежа); иначе — «На небе — только рабочий набор, 38 лиц», на телефоне — коротко,
+ * в одну строку: «Только набор: 38 лиц» (MOB-73). Оговорка о ссылке — не в строке, а в её подсказке (workLineNote).
  */
-export function workLineText(n: number, outName: string | null): string {
+export function workLineText(n: number, outName: string | null, short = false): string {
   if (outName) return `${outName} не в наборе`;
   if (!n) return 'Рабочий набор пуст: возьмите лиц клавишей В у звезды или командой «Взять в работу» в карточке';
-  const tail = n > WORK_URL_MAX ? ' (ссылкой передаётся только режим)' : '';
-  return `На небе — только рабочий набор, ${num(n)} ${plural(n, 'лицо', 'лица', 'лиц')}${tail}`;
+  return short ? `Только набор: ${persons(n)}` : `На небе — только рабочий набор, ${persons(n)}`;
 }
 
-/** Строка режима «набор» у верхней кромки неба: что скрыто и как вернуть всех (UX-62, MOB-54). */
+/**
+ * Подсказка строки «набор» (решение 58; MOB-73): набор до 12 лиц передаётся ссылкой списком (решение 34), длиннее —
+ * только режим. Прежняя оговорка «(ссылкой передаётся только режим)» ушла из строки сюда.
+ */
+export function workLineNote(n: number): string {
+  return n > WORK_URL_MAX
+    ? `Ссылкой передаётся режим «набор»; сам набор — только если в нём не больше ${WORK_URL_MAX} лиц`
+    : `Ссылка на этот вид передаёт и сам набор: в нём не больше ${WORK_URL_MAX} лиц`;
+}
+
+/** Число лиц со склонением: «1 лицо», «2 лица», «38 лиц». */
+const persons = (n: number) => `${num(n)} ${plural(n, 'лицо', 'лица', 'лиц')}`;
+
+/** Строка режима «набор» у верхней кромки неба: что скрыто и как вернуть всех (UX-62, MOB-54, MOB-73). */
 export function WorkLine() {
   const set = workSet.value;
   const id = selected.value;
   const out = !!id && !set.has(id);
   const p = out ? byId.get(id!) : undefined;
   const all = { label: 'показать всех', title: 'Небо — все лица', run: () => (skyMode.value = 'all') };
+  // на телефоне обычная строка — одна: короткий текст и «показать всех» рядом (MOB-73)
+  const one = grid.value.phone && !out && set.size > 0;
   return (
     <SkyBar
-      cls="workbar"
-      text={workLineText(set.size, p ? p.name : null)}
+      cls={one ? 'workbar one' : 'workbar'}
+      text={workLineText(set.size, p ? p.name : null, one)}
+      note={set.size ? workLineNote(set.size) : undefined}
       cmds={out ? [{ label: 'взять в работу', title: 'Взять выбранное лицо в рабочий набор', run: () => addToWork(id!) }, all] : [all]}
     />
   );
+}
+
+/** Строка набора из чужой ссылки (решение 45; IX-69): «Набор по ссылке: 2 лица». */
+export function linkBarText(n: number): string {
+  return `Набор по ссылке: ${persons(n)}`;
+}
+/** Команда возврата к своему набору: «вернуться к моему (3)»; число — сколько лиц в своём наборе. */
+export const mineLabel = (m: number) => `вернуться к моему (${num(m)})`;
+
+/**
+ * Набор из ссылки — временный просмотр (решение 45; IX-69, UX-79): «Набор по ссылке: 2 лица — добавить в мой набор |
+ * вернуться к моему (3)». Свой набор и память браузера не меняются до «добавить»; «вернуться к моему» показывает свой
+ * набор (пустой — все лица) и убирает набор ссылки из адреса.
+ */
+export function LinkSetBar() {
+  const l = linkSet.value;
+  if (!l) return null;
+  const m = workSet.value.size;
+  return (
+    <SkyBar
+      cls="workbar linkbar"
+      text={linkBarText(l.size)}
+      cmds={[
+        { label: 'добавить в мой набор', title: 'Лица ссылки — в ваш рабочий набор; ваши лица остаются', run: () => void adoptLinkSet() },
+        { label: mineLabel(m), title: m ? 'Небо — ваш рабочий набор; набор ссылки уходит из адреса' : 'Ваш набор пуст: небо — все лица', run: leaveLinkSet },
+      ]}
+    />
+  );
+}
+
+/** Строка-пояснение у кромки неба (UX-79): ссылка «набор» при пустом своём наборе — показаны все лица. */
+export function NoticeBar({ text }: { text: string }) {
+  return <SkyBar cls="noticebar" text={text} cmds={[{ label: 'скрыть', run: () => (workNotice.value = null) }]} />;
 }
 
 /** Пропорция строк, отличная от обычной, — «строки ×3,6» (UX-53): 1 — обычная. */
@@ -132,11 +183,12 @@ export function LanesNote() {
 }
 
 /** Какая строка состояния стоит у кромки неба: одна, по старшинству (выбор второго лица, отметки, группа, набор). */
-export function skyBarKind(): 'pick' | 'pins' | 'group' | 'work' | null {
+export function skyBarKind(): 'pick' | 'pins' | 'group' | 'link' | 'work' | 'notice' | null {
   if (pickMode.value && selected.value) return 'pick';
   if (pins.value.length) return 'pins';
   if (skyGroup.value) return 'group';
-  if (skyMode.value === 'work') return 'work';
+  if (skyMode.value === 'work') return linkSet.value ? 'link' : 'work';
+  if (workNotice.value) return 'notice';
   return null;
 }
 
@@ -148,7 +200,9 @@ export function SkyBars() {
   if (kind === 'pick') bar = <PickBar mode={pickMode.value!} id={selected.value!} />;
   else if (kind === 'pins') bar = <PinBar n={pins.value.length} query={pinsQuery.value} />;
   else if (kind === 'group') bar = <GroupBar group={skyGroup.value!} />;
+  else if (kind === 'link') bar = <LinkSetBar />;
   else if (kind === 'work') bar = <WorkLine />;
+  else if (kind === 'notice') bar = <NoticeBar text={workNotice.value!} />;
   return (
     <div class="skytop">
       {bar}

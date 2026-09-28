@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'preact/hooks';
+import { useEffect, useLayoutEffect, useMemo, useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
+import { signal } from '@preact/signals';
 import { byId, graph, lines, loadCard, loadedCard } from '../../data/atlas.ts';
 import { BOOKS } from '../../engine/books.ts';
 import { norm, nameMatcher } from '../../engine/text.ts';
@@ -197,8 +198,22 @@ const TOC = (() => {
   return out;
 })();
 
+/** Глава, которую просит открыть поиск («Мф 1» — «Читать Мф 1 — имена со ссылками», IX-75). */
+const chapterAsk = signal<string | null>(null);
+/** Открыть панель «Главы» на главе ch (из «Глав»): лица главы подсвечиваются на небе, как при выборе в оглавлении. */
+export function openChapter(ch: string) {
+  chapterAsk.value = ch;
+  panel.value = 'chapter';
+}
+
 export function ChapterPanel() {
   const [ch, setCh] = useRemembered('chapter:ch', 'Мф 1');
+  const asked = chapterAsk.value;
+  useLayoutEffect(() => {
+    if (!asked) return;
+    chapterAsk.value = null;
+    if (CHAPTERS.includes(asked)) setCh(asked);
+  }, [asked]);
   const [text, setText] = useState<Verse[] | null>(null);
   const [all, setAll] = useState(false);
   useEffect(() => {

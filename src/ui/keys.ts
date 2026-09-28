@@ -2,11 +2,13 @@
  * Клавиши всего атласа (на window, по физическим клавишам — KeyboardEvent.code, поэтому и на русской раскладке):
  * «/» — к поиску, «?» — таблица клавиш, Escape — снять одно видимое состояние (D5), J и K — разделы карточки,
  * клавиши неба (src/ui/sky/input.ts, skyKeys) — без фокуса на холсте (D10; IX-38, 40, 41, 42; UX-40).
+ * Клавиши-буквы можно выключить (решение 48; WCAG 2.1.4): letterKeys.
  */
+import { effect, signal } from '@preact/signals';
 import { panel, selected, second, pickMode, pins, pinsQuery, skyGroup, clearPair } from '../state.ts';
 import { skyKeys, viewKeys } from './sky/skykeys.ts';
-import { openLegend, reduced } from './sky/view.ts';
-import { focusPanelAt } from './focus.ts';
+import { introOpen, openLegend, reduced } from './sky/view.ts';
+import { focusPanelAt, foldIntro } from './focus.ts';
 
 /**
  * «?» — таблица клавиш в «Условных знаках» (раздел «Клавиши»), фокус — на её заголовок; повторное нажатие закрывает
@@ -70,6 +72,18 @@ export function stepSection(dir: 1 | -1): HTMLElement | null {
   return to;
 }
 
+/** Видимые состояния, которые снимает Escape. */
+export type EscapeState = { pick: boolean; panel: boolean; pins: boolean; group: boolean; second: boolean; selected: boolean; intro: boolean };
+
+/**
+ * Что снимет следующий Escape (D5): выбор второго лица, панель, отметки поиска, группа, пара, выбранное лицо и последней —
+ * вступительная табличка (UX-76): она сворачивается в «Как читать карту», когда ничего другого снимать уже нечего.
+ */
+export function escapeTarget(s: EscapeState): keyof EscapeState | null {
+  const order: (keyof EscapeState)[] = ['pick', 'panel', 'pins', 'group', 'second', 'selected', 'intro'];
+  return order.find((k) => s[k]) ?? null;
+}
+
 function onKey(e: KeyboardEvent) {
   // в поле ввода клавиши принадлежат полю: Escape там не закрывает ни панель, ни карточку (IX-14)
   const typing = isTextField(e.target);
@@ -89,15 +103,25 @@ function onKey(e: KeyboardEvent) {
   // поле без своего Escape: нажатие только уводит из поля, следующее уже снимает состояние
   if (e.code === 'Escape' && typing && !e.defaultPrevented) (e.target as HTMLElement).blur();
   if (e.code === 'Escape' && !typing && !e.defaultPrevented) {
-    // каждое нажатие снимает одно видимое состояние, по порядку (D5)
-    if (pickMode.value) pickMode.value = null;
-    else if (panel.value) panel.value = null;
-    else if (pins.value.length) {
+    // каждое нажатие снимает одно видимое состояние, по порядку (D5); вступительная табличка — последней (UX-76)
+    const next = escapeTarget({
+      pick: !!pickMode.value,
+      panel: !!panel.value,
+      pins: pins.value.length > 0,
+      group: !!skyGroup.value,
+      second: !!second.value,
+      selected: !!selected.value,
+      intro: introOpen.value,
+    });
+    if (next === 'pick') pickMode.value = null;
+    else if (next === 'panel') panel.value = null;
+    else if (next === 'pins') {
       pins.value = [];
       pinsQuery.value = '';
-    } else if (skyGroup.value) skyGroup.value = null;
-    else if (second.value) clearPair();
-    else if (selected.value) selected.value = null;
+    } else if (next === 'group') skyGroup.value = null;
+    else if (next === 'second') clearPair();
+    else if (next === 'selected') selected.value = null;
+    else if (next === 'intro') foldIntro();
     return;
   }
   // масштаб по одной оси (J1: Shift и Alt с «+» и «−») и «Небо во весь экран» (J2: F) — src/ui/sky/skykeys.ts
@@ -115,8 +139,62 @@ function onKey(e: KeyboardEvent) {
   skyKeys(e, skyNav(e.target), onCanvas, onCanvas || !!t?.closest('#sky-stars'));
 }
 
+// ---------- клавиши-буквы: вкл. | выкл. (решение 48; WCAG 2.1.4) ----------
+
+/** Где помнится выбор «Клавиши-буквы»: «true» — включены (так по умолчанию), «false» — выключены. */
+export const LETTER_KEYS = 'toledot:letterKeys';
+function readLetterKeys(): boolean {
+  try {
+    return localStorage.getItem(LETTER_KEYS) !== 'false';
+  } catch {
+    return true;
+  }
+}
+/** Клавиши-буквы включены: переключатель в таблице «Клавиши» (src/ui/top/Keys.tsx), помнится в localStorage. */
+export const letterKeys = signal(typeof window === 'undefined' ? true : readLetterKeys());
+if (typeof window !== 'undefined')
+  effect(() => {
+    const on = letterKeys.value;
+    try {
+      localStorage.setItem(LETTER_KEYS, on ? 'true' : 'false');
+    } catch {
+      /* память браузера недоступна: выбор держится до перезагрузки */
+    }
+  });
+
+/** Клавиши, которые работают и при выключенных буквах: «/» и «?» (поиск, эта таблица), «+» и «−» (масштаб), пробел. */
+const ALWAYS = new Set(['Slash', 'NumpadDivide', 'Equal', 'Minus', 'NumpadAdd', 'NumpadSubtract', 'Space']);
+
+/**
+ * Одиночная клавиша-знак (WCAG 2.1.4): буква, цифра, знак препинания или символ без Ctrl, Alt и Cmd (Shift — не
+ * модификатор: заглавная буква — та же буква). Стрелки, Enter, Escape, Tab, Home, End, F-клавиши — не знаки; «/», «?»,
+ * «+», «−» и пробел выключатель не трогает.
+ */
+export function isCharKey(e: Pick<KeyboardEvent, 'key' | 'code' | 'ctrlKey' | 'metaKey' | 'altKey'>): boolean {
+  if (e.ctrlKey || e.metaKey || e.altKey) return false;
+  if ([...e.key].length !== 1 || e.key === ' ' || e.key === '?') return false;
+  return !ALWAYS.has(e.code);
+}
+
+/**
+ * Клавиши-буквы выключены — одиночная клавиша-знак не доходит ни до одного обработчика атласа (E, L, F, D, C, J, K,
+ * [ ] , . 0 и все будущие): её останавливает этот обработчик, первый на window. Действие браузера (ввод в поле, поиск по
+ * странице при наборе) не отменяется. Поля ввода, меню и списки получают букву как обычно: там она — ввод или переход
+ * к пункту.
+ */
+function letterGuard(e: KeyboardEvent) {
+  if (letterKeys.peek() || !isCharKey(e) || isTextField(e.target)) return;
+  const t = e.target instanceof HTMLElement ? e.target : null;
+  if (t?.closest('[role="menu"], [role="menubar"], [role="listbox"]')) return;
+  e.stopImmediatePropagation();
+}
+
 /** Подключить клавиши атласа. Возвращает отписку. */
 export function bindKeys(): () => void {
+  window.addEventListener('keydown', letterGuard, true);
   window.addEventListener('keydown', onKey);
-  return () => window.removeEventListener('keydown', onKey);
+  return () => {
+    window.removeEventListener('keydown', letterGuard, true);
+    window.removeEventListener('keydown', onKey);
+  };
 }

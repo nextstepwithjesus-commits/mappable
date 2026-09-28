@@ -5,7 +5,7 @@ import type { LineStep } from '../../engine/layout.ts';
 import type { Note } from '../../data/types.ts';
 import { lineFlip, skyGroup, synopsisAt, panel } from '../../state.ts';
 import { P, Refs, VerseInsert, Verses, flyToIds, plural, refLabel } from '../common.tsx';
-import { grid } from '../layout.ts';
+import { grid, unfoldCard } from '../layout.ts';
 import { typo } from '../text/typo.ts';
 import { Segmented } from '../controls.tsx';
 import { Sheet } from './Sheet.tsx';
@@ -60,6 +60,20 @@ const WHY: Record<string, string> = {
 export const synopsisNoteIds = () => [...new Set(Object.values(WHY))];
 
 const refPart = (r: string) => /^(\S+)\s+(\d+)(?::(.*))?$/.exec(r.replace(/[–—]/g, '-'));
+/**
+ * Ссылка в клетке столбца — без книги, у каждого стиха своя глава (CARD-90): «1Пар 1:18,24» — «1:18; 1:24»,
+ * «Руф 4:18-22» — «4:18–22».
+ */
+export function shortRef(r: string): string {
+  const m = refPart(r);
+  if (!m) return r;
+  if (!m[3]) return m[2];
+  return m[3]
+    .split(',')
+    .map((v) => `${m[2]}:${v.trim()}`)
+    .join('; ')
+    .replace(/-/g, '–');
+}
 /** Ссылка из столбца источника: та же книга, главы в пределах столбца. */
 const inCol = (r: string, col: (typeof OT_COLS)[number]) => {
   const m = refPart(r);
@@ -230,11 +244,11 @@ export function SynopsisPanel() {
         </td>
       );
     const key = `${row}|${cell.ref}`;
-    const short = cell.ref.replace(/^\S+\s+/, '');
+    const short = shortRef(cell.ref);
     // в узком столбце ссылка переносится после «–» (без U+2060), скобки — внутри кнопки: «[» и «]» не отрываются (MOB-62)
     const btn = (label: string) => (
       <button class="ref" aria-expanded={open === key} aria-label={refLabel(cell.ref)} onClick={() => setOpen(open === key ? null : key)}>
-        {label.replace(/-/g, '–')}
+        {label}
       </button>
     );
     if (cell.kind === 'bracket')
@@ -325,7 +339,7 @@ export function SynopsisPanel() {
     } else if (r.kind === 'common') {
       const jesusLk = r.id === 'iisus' && !r.lk?.no;
       trs.push(
-        // общий участок: имя на обе колонки, по середине — оно принадлежит обеим линиям (VIS-34)
+        // общий участок: имя на обе колонки — оно принадлежит обеим линиям (VIS-34); стоит на оси имён Матфея (VIS-78)
         <tr key={r.key} class={`common${fifth}`} data-id={r.id}>
           {noCell(r.mt, 'mt', false)}
           <th scope="row" colspan={2} class="nm both">
@@ -525,7 +539,9 @@ function WhyInsert({ id, owner }: { id: string; owner: string }) {
           </li>
         ))}
       </ul>
-      <p class="why-card">
+      {/* «Вся карточка» открывает карточку развёрнутой (UX-81): если рядом с синопсисом ей нет места и она легла
+          корешком — как «развернуть» на корешке (unfoldCard) */}
+      <p class="why-card" onClick={() => grid.peek().spine && !grid.peek().phone && unfoldCard()}>
         Вся карточка: <P id={id} />
       </p>
     </div>

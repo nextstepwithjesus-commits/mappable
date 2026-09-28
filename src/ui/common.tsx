@@ -8,7 +8,7 @@ import type { Sky } from '../render/sky.ts';
 import type { Cert, Role } from '../data/types.ts';
 import { selected, hovered, pickSecond } from '../state.ts';
 import { typo } from './text/typo.ts';
-import { inView } from './sky/view.ts';
+import { belowReading, inView } from './sky/view.ts';
 
 export const skyRef: { current: Sky | null; redraw: () => void; flyTo: (id: string) => void } = {
   current: null,
@@ -112,17 +112,39 @@ export function onScreen(id: string): boolean {
 }
 
 /**
- * Одно правило для ссылки на лицо (D7; IX-47): лицо выбирается, а небо летит к нему, только если звезды нет на экране.
- * В режиме «Родство с…» или «Разворот с…» лицо становится вторым, первое остаётся (D6). Пока открыты «Родство»
- * или «Разворот», пара не меняется: её держит src/state.ts.
+ * Откуда пришло действие: 'sky' — с самого неба (щелчок и клавиши на холсте, список звёзд для диктора, ярусы эпох,
+ * меню звезды — всё внутри .sky), 'link' — ссылка, поиск, панель, карточка. Без явного указания — по цели текущего
+ * события: так правило работает у всех, кто зовёт goTo, без правки их кода.
  */
-export function goTo(id: string) {
+export type GoFrom = 'sky' | 'link';
+function goFrom(): GoFrom {
+  const e = typeof window !== 'undefined' ? window.event : undefined;
+  const t = e?.target;
+  return typeof Element !== 'undefined' && t instanceof Element && !!t.closest('.sky') ? 'sky' : 'link';
+}
+
+/**
+ * Нужен ли перелёт к лицу (решение 44; IX-68): звезды нет на экране — всегда; с неба (щелчок по звезде) — только это;
+ * ссылка, поиск, «назад» к лицу — ещё и когда небо мельче уровня чтения (belowReading, src/ui/sky/view.ts).
+ */
+export function needsFlight(visible: boolean, from: GoFrom, below: boolean): boolean {
+  return !visible || (from === 'link' && below);
+}
+
+/**
+ * Одно правило для ссылки на лицо (D7; IX-47; решение 44): лицо выбирается, а небо летит к нему, если звезды нет
+ * на экране или (для ссылок, поиска и панелей) небо мельче уровня чтения — с обзора небо приближает к лицу за 0,8–1,2 с.
+ * Щелчок по звезде на небе камеру не двигает. В режиме «Родство с…» или «Разворот с…» лицо становится вторым,
+ * первое остаётся (D6). Пока открыты «Родство» или «Разворот», пара не меняется: её держит src/state.ts.
+ */
+export function goTo(id: string, from: GoFrom = goFrom()) {
   if (!byId.has(id)) return;
   if (hovered.peek() === id) hovered.value = null;
   if (pickSecond(id)) return;
   const visible = onScreen(id);
+  const below = from === 'link' && belowReading(id);
   selected.value = id;
-  if (!visible) skyRef.flyTo(id);
+  if (needsFlight(visible, from, below)) skyRef.flyTo(id);
 }
 
 /** Вписать лица в небо по обеим осям (время и полосы) — одна функция перелёта для всех панелей (D4; src/ui/sky/view.ts). */
