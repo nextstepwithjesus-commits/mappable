@@ -10,6 +10,7 @@
 import { Fragment, h, type ComponentChildren, type VNode } from 'preact';
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { plural } from '../common.tsx';
+import { cardTitle, focusQuietly } from '../focus.ts';
 
 /** Сколько строк текста показывает раздел до «ещё N …». */
 export const CLAMP_LINES = 8;
@@ -100,6 +101,21 @@ export function Clamp({ sig, n, children }: { sig: string; n: number; children: 
   const [open, setOpen] = useState<string | null>(null);
   const focusFrom = useRef<number | null>(null);
   const w = typeof window === 'undefined' ? 0 : window.innerWidth;
+  // тело раздела у нового лица строится заново (key ниже): фокус на ссылке прежнего тела ушёл бы на body —
+  // он переходит на заголовок карточки нового лица, как после перехода по ссылке (I2)
+  const shownSig = useRef(sig);
+  const refocus = useRef(false);
+  if (shownSig.current !== sig) {
+    if (typeof document !== 'undefined' && box.current?.contains(document.activeElement)) refocus.current = true;
+    shownSig.current = sig;
+  }
+  useLayoutEffect(() => {
+    if (!refocus.current) return;
+    refocus.current = false;
+    const a = document.activeElement;
+    if (a && a !== document.body && a.isConnected) return;
+    focusQuietly(cardTitle(sig.split('|')[0]) ?? box.current?.closest<HTMLElement>('.folio')?.querySelector<HTMLElement>('h2') ?? null);
+  }, [sig]);
   const all = open === sig;
   const known = measured && measured.sig === sig && measured.w === w && measured.len === items.length ? measured.cut : null;
   const cut = all || known === null ? items.length : known;
@@ -126,9 +142,11 @@ export function Clamp({ sig, n, children }: { sig: string; n: number; children: 
     // одна скрытая запись в одну-две строки не стоит строки «ещё 1 …»: команда заняла бы почти то же место
     if (at >= 0 && items.length - at === 1 && els[at].getBoundingClientRect().height <= 2 * lh) at = -1;
     if (at < 0) at = items.length;
-    // хронологическое напряжение не прячется под «ещё N …»: оно говорит, что числа текста спорят друг с другом (ТЗ § 11.2 п. 8)
-    const lastTension = items.map((it) => String((it.node.props as { class?: string }).class ?? '')).reduce((k, c, i) => (/(^|\s)tension(\s|$)/.test(c) ? i : k), -1);
-    if (lastTension >= at && at < items.length) at = lastTension + 1 >= items.length - 1 ? items.length : lastTension + 1;
+    // первое хронологическое напряжение не прячется под «ещё N …»: оно говорит, что числа текста спорят друг с другом
+    // (ТЗ § 11.2 п. 8). В § 13 напряжение — одна короткая запись (объяснение — в § 24), и предел 8 строк держится;
+    // следующие напряжения (у Моисея их два) уходят под «ещё N …», как любые записи
+    const firstTension = items.findIndex((it) => /(^|\s)tension(\s|$)/.test(String((it.node.props as { class?: string }).class ?? '')));
+    if (firstTension >= at && at < items.length) at = firstTension + 1 >= items.length - 1 ? items.length : firstTension + 1;
     // подзаголовок не остаётся последней видимой строкой: он уходит вместе со своей группой
     while (at > 1 && at < items.length && /(^|\s)sub(\s|$)/.test(String((items[at - 1].node.props as { class?: string }).class ?? ''))) at--;
     setMeasured({ sig, w, len: items.length, cut: at });
@@ -147,8 +165,11 @@ export function Clamp({ sig, n, children }: { sig: string; n: number; children: 
   // подзаголовки («1 Цар 16–30», «Встречи, о которых говорит Писание») — не записи: в «ещё N …» не считаются
   const isSub = (it: Item) => /(^|\s)sub(\s|$)/.test(String((it.node.props as { class?: string }).class ?? ''));
   const hidden = items.slice(cut).filter((it) => !isSub(it)).length;
+  // key — лицо и раздел: у другого лица тело раздела строится заново, а не перекраивается из прежнего. Перекройка
+  // списков разного строения (у Моисея в § 12 группа «Дяди по матери: Гирсон и Мерари», у Давида на том же месте —
+  // «Саул — тесть, отец Мелхолы») роняла Preact на insertBefore, и разделы с 12-го оставались от прежнего лица
   return (
-    <div class="clamp" ref={box}>
+    <div class="clamp" ref={box} key={sig}>
       {regroup(items.slice(0, cut))}
       {hidden > 0 && (
         <button

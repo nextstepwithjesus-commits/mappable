@@ -5,16 +5,32 @@
  *    возраст при смерти, возраст при воцарении, явные годы. Они объединяются в «жёсткие компоненты»
  *    (объединение с весами), внутри которых относительные годы известны точно.
  * 2. Компонента, связанная с опорой модели или явным годом, закреплена. Остальные компоненты сдвигаются
- *    как целое мягкими ограничениями (поколение, жизнь родителя, эпоха, годы служения, порядок братьев),
- *    решаемыми взвешенными наименьшими квадратами методом Гаусса — Зейделя.
+ *    как целое мягкими ограничениями (поколение, жизнь родителя, эпоха, годы служения, порядок братьев, супруги),
+ *    решаемыми взвешенными наименьшими квадратами: проходы Гаусса — Зейделя дают начальное приближение, полугладкий
+ *    метод Ньютона (newtonPolish) доводит его до минимума.
  * 3. Неопределённость — по модели случайного блуждания длины поколения между опорами.
  * 4. Там, где числа текста противоречат друг другу, решатель не падает, а записывает «напряжение».
+ *
+ * Этап 7 (K1; решения владельца 21, 23, 24):
+ *  — эпохи строятся в годах модели (engine/epochs.ts): границы, заданные числами Писания, сдвигаются вместе с моделью;
+ *  — супруги — одного поколения: рождение жены в пределах [муж − 15; муж + 30] (в эпохах долгих поколений — шире);
+ *    нарушение — напряжение в карточках обоих (CARD-61);
+ *  — братья и сёстры не рождаются в один год: младшие не раньше старших с шагом не меньше года, по порядку
+ *    перечисления, если своих дат нет (MAP-54);
+ *  — жизнь «до последнего упоминания» длиннее предела жизни эпохи — напряжение «родословие, вероятно, называет не все
+ *    поколения» (толкование) и разрыв следа на небе (MAP-51);
+ *  — лицо «время не установлено» — скобка засвидетельствованной деятельности или эпохи, звезда — в её середине (MAP-52);
+ *  — верхний край промежутка рождения — не позже смерти и первого засвидетельствованного события (MAP-53);
+ *  — у народов и родов нет года рождения: named (CARD-59).
  *
  * Все годы внутри — астрономические.
  */
 import type { Person, Epoch } from '../data/types.ts';
 import { type Graph, fatherOf, motherOf, primaryChildren } from './graph.ts';
-import { toAstro, yearsWord } from './years.ts';
+import { toAstro, yearsWord, formatYear } from './years.ts';
+import { modelEpochs } from './epochs.ts';
+import { BOOKS } from './books.ts';
+import { firstRefOf } from './layout.ts';
 
 /** Эпохи долгих жизней (Быт 5; 11): возраст матери за 60 там не противоречие. */
 const LONG_LIVES = new Set(['antediluvian', 'postdiluvian']);
@@ -80,12 +96,42 @@ export interface Tension {
   persons: string[];
   text: string;
   refs: string[];
+  /**
+   * Вид напряжения (для слоя неба и карточки):
+   *  numbers  — числа текста расходятся между собой;
+   *  pair     — ребёнок не помещается в жизнь родителя;
+   *  chain    — цепочка поколений между датированными лицами длиннее или короче поколений эпохи;
+   *  stretched — жизнь «до последнего упоминания» длиннее предела жизни эпохи (MAP-51);
+   *  spouses  — супруги не одного поколения (CARD-61).
+   */
+  kind?: 'numbers' | 'pair' | 'chain' | 'stretched' | 'spouses';
+  /** Объяснение напряжения — толкование («родословие, вероятно, называет не все поколения»): помета «толк.» (MAP-51). */
+  cert?: 'interpretation';
+}
+
+/**
+ * Откуда взята скобка лица «время не установлено» (MAP-52):
+ *  met     — годы деятельности (или жизни) лиц, с которыми оно встречалось по тексту (card.met), id — первое из них;
+ *  kin     — годы жизни брата или сестры, названных словами Писания (kin: «братья Беэры», 1 Пар 5:7), id — он;
+ *  mention — эпоха книги и главы, где лицо названо впервые, ref — эта ссылка;
+ *  epoch   — эпоха из данных;
+ *  bounds  — границы рождения и смерти из данных («не раньше…», «не позже…»);
+ *  group   — годы датированных лиц его созвездия (иных опор нет).
+ */
+export interface WhenSpan {
+  by: 'met' | 'kin' | 'mention' | 'epoch' | 'bounds' | 'group';
+  id?: string;
+  ref?: string;
 }
 
 export interface PersonChrono {
-  b: number; // оценка года рождения
+  /** Оценка года рождения. У лица «время не установлено» (epochal) — середина скобки bLo…bHi, а не год рождения (MAP-52);
+   *  у народа или рода (named) — место в родословии, а не год рождения (CARD-59). */
+  b: number;
   /** Интервал рождения: у точных и расчётных дат — ширина счёта, у оценочных — по удалённости от датированной родни,
-   *  у лиц только с эпохой — вся эпоха; всегда внутри допустимого интервала данных (born.range). */
+   *  всегда внутри допустимого интервала данных (born.range), не позже смерти и первого засвидетельствованного события
+   *  (упоминание — в любом возрасте, рождение ребёнка — не моложе 13 лет; MAP-53).
+   *  У лиц «время не установлено» (epochal) — скобка засвидетельствованной деятельности или эпохи (when). */
   bLo: number;
   bHi: number;
   d: number | null; // год смерти, если следует из данных
@@ -99,18 +145,31 @@ export interface PersonChrono {
   epoch: string | null; // эпоха рождения
   /** Умер младенцем: возраст при смерти по тексту меньше двух лет (2 Цар 12:18). След жизни не рисуется (A14). */
   infant?: boolean;
+  /** Народ или род (kind people, clan): b — место в родословии, года рождения нет; современников нет (CARD-59). */
+  named?: boolean;
+  /** Год оценён по порядку перечисления братьев и сестёр (младший — не раньше чем через год после старшего): «выв.» (MAP-54). */
+  byOrder?: boolean;
+  /** Откуда взята скобка «время не установлено» (только у epochal). */
+  when?: WhenSpan;
+  /**
+   * Разрыв следа (MAP-51): сплошная жизнь «до последнего упоминания» длиннее предела жизни эпохи. Год (астр.), где
+   * кончается правдоподобная часть следа (рождение + предел жизни эпохи); дальше — «//» и пунктир до последнего события.
+   */
+  brk?: number;
 }
 
 export interface ChronoResult {
   model: ChronoModelId;
   persons: Map<string, PersonChrono>;
   tensions: Tension[];
+  /** Эпохи в годах этой модели (engine/epochs.ts; CARD-60). Годы — исторические, как в data/epochs.json. */
+  epochs?: Epoch[];
 }
 
 const EXODUS = toAstro(-1446);
 
 /** Типичные длины поколения по эпохам (для мягких ограничений). */
-interface GenNorm {
+export interface GenNorm {
   g: number; // среднее
   min: number;
   max: number;
@@ -132,8 +191,44 @@ const NORMS: Record<string, GenNorm> = {
  * случайных начальных значений; больше — и жена снова стоит в год рождения мужа (A15).
  */
 const SPOUSE_W = 0.15;
+/**
+ * Супруги одного поколения (CARD-61): рождение жены в пределах [муж − SPOUSE_LO; муж + SPOUSE_HI] в эпохах обычных
+ * поколений. Там, где поколения длиннее (патриархи: Исаак женился в 40 лет, Иаков — после 84; Быт 25:20; 29:20–28),
+ * пределы растут вместе с длиной поколения эпохи (spouseBand). Граница мягкая, но сильнее притяжения к эпохе: без неё
+ * Руфь стояла через 110 лет после Махлона. Выход за границу больше чем на SPOUSE_SLACK лет — напряжение.
+ */
+const SPOUSE_LO = 15;
+const SPOUSE_HI = 30;
+const SPOUSE_BAND_W = 5; // в долях 1/σ²: в пять раз сильнее притяжения «мать — ребёнок», в десять раз слабее границы «родитель старше на 13 лет»
+const SPOUSE_SLACK = 10;
+/**
+ * Младшие братья и сёстры — не раньше чем через год после старших (ТЗ § 8.2; MAP-54). Шаг — полтора года: граница
+ * мягкая и под давлением других связей уступает на доли года, а в данных годы округляются до целых, и шаг около года
+ * снова дал бы один год двоим.
+ */
+const SIB_STEP = 1.5;
+const SIB_W = 2;
+/** Дети разных матерей с порядком в данных («первенец… второй… шестой», 2 Цар 3:2–5) — шаг не меньше года, но мягче. */
+const SIB_STEP_CROSS = 1.25;
+/** Родитель при рождении ребёнка не моложе (MAP-53; та же граница, что у решателя для отцов). */
+const PARENT_MIN_AGE = 13;
+/**
+ * Гаусс — Зейдель: предел проходов и сдвиг, при котором проходы останавливаются. Это только начальное приближение:
+ * решение доводит newtonPolish (при 100 и 400 проходах результат один и тот же — до десятых долей года).
+ */
+const SWEEPS = 100;
+const SWEEP_EPS = 0.05;
 /** Возраст при смерти меньше этого — «умер младенцем» (A14): след жизни не рисуется, знак †. */
 const INFANT_AGE = 2;
+/** Вес предела возраста матери: как у порядка братьев — сильнее притяжений поколения, слабее чисел текста. */
+const MOTHER_MAX_W = 2;
+/** Предел возраста матери при рождении ребёнка в эпохах обычных поколений. */
+const MOTHER_MAX = 45;
+/** Эпохи долгих поколений: там пределы супругов растут с длиной поколения. */
+export function spouseBand(n: GenNorm): { lo: number; hi: number } {
+  const k = Math.max(1, n.g / NORMS.default.g);
+  return { lo: Math.round(SPOUSE_LO * k), hi: Math.round(SPOUSE_HI * k) };
+}
 
 export function normFor(epochId: string | null): GenNorm {
   return (epochId && NORMS[epochId]) || NORMS.default;
@@ -201,6 +296,455 @@ interface Ineq {
   onlyJ?: boolean;
 }
 
+/**
+ * Доводка решения (этап 7, K1): взвешенные наименьшие квадраты с мягкими ограничениями — выпуклая кусочно-квадратичная
+ * задача, но у неё есть медленные направления: длинные цепочки лиц, связанных слабыми притяжениями поколения между
+ * жёсткими границами (Салмон — Вооз — Овид — Иессей между Наассоном и Давидом; семья Елимелеха, привязанная к Руфи
+ * только браком). Гаусс — Зейдель сдвигает их на доли года за проход и останавливается далеко от минимума: при 400
+ * проходах сотни лиц стояли на 5–190 лет в стороне, отсюда Руфь через 110 лет после Махлона (CARD-61) и ложные
+ * напряжения. Поэтому после проходов Гаусса — Зейделя решение доводится полугладким методом Ньютона: активный набор
+ * ограничений → линейная система (сопряжённые градиенты с диагональным предобуславливанием) → шаг с дроблением,
+ * пока значение не перестанет убывать. Граница «только для зависимого лица» (onlyJ: «не позже Саула + 20») двигает
+ * только его: год опоры в ней на каждом шаге заморожен.
+ */
+function newtonPolish(o: {
+  ineqs: Ineq[];
+  mids: { x: string; p: string; c: string; w: number }[];
+  priors: Map<string, { lo: number; hi: number; w: number }>;
+  rootOffset: Map<string, { root: string; off: number }>;
+  value: Map<string, number>;
+  free: Set<string>;
+}): void {
+  const roots = [...o.free];
+  const idx = new Map(roots.map((r, k) => [r, k]));
+  const n = roots.length;
+  if (!n) return;
+  const x = new Float64Array(n);
+  roots.forEach((r, k) => (x[k] = o.value.get(r)!));
+  // линейный член: r = Σ c·x[v] + k0 (+ замороженная опора fz: c·(x[fz] + fOff)); штраф w·r² там, где ограничение нарушено
+  interface LT { v: number[]; c: number[]; k0: number; w: number; kind: 'eq' | 'ge' | 'le'; fz?: number; fOff?: number; fc?: number }
+  const terms: LT[] = [];
+  type Side = { v: number; off: number } | { k: number } | null;
+  const side = (key: string): Side => {
+    if (key.startsWith('@')) return { k: Number(key.slice(1)) };
+    const ro = o.rootOffset.get(key);
+    if (!ro) return null;
+    const v = idx.get(ro.root);
+    if (v !== undefined) return { v, off: ro.off };
+    const f = o.value.get(ro.root);
+    return f === undefined ? null : { k: f + ro.off };
+  };
+  const push = (t: LT) => {
+    // один и тот же корень с разных сторон — коэффициенты складываются
+    const m = new Map<number, number>();
+    t.v.forEach((v, i) => m.set(v, (m.get(v) ?? 0) + t.c[i]));
+    t.v = [];
+    t.c = [];
+    for (const [v, c] of m) if (Math.abs(c) > 1e-12) { t.v.push(v); t.c.push(c); }
+    if (t.v.length) terms.push(t);
+  };
+  for (const q of o.ineqs) {
+    const sj = side(q.j);
+    const si = side(q.i);
+    if (!sj || !si) continue;
+    const t: LT = { v: [], c: [], k0: -q.delta, w: q.w, kind: q.kind };
+    if ('v' in sj) { t.v.push(sj.v); t.c.push(1); t.k0 += sj.off; } else t.k0 += sj.k;
+    if ('v' in si) {
+      if (q.onlyJ) { t.fz = si.v; t.fOff = si.off; t.fc = -1; } else { t.v.push(si.v); t.c.push(-1); t.k0 -= si.off; }
+    } else t.k0 -= si.k;
+    push(t);
+  }
+  for (const m of o.mids) {
+    const sx = side(m.x);
+    const sp = side(m.p);
+    const sc = side(m.c);
+    if (!sx || !sp || !sc) continue;
+    const t: LT = { v: [], c: [], k0: 0, w: m.w, kind: 'eq' };
+    for (const [s, c] of [[sx, 1], [sp, -0.5], [sc, -0.5]] as [Side, number][]) {
+      if (!s) continue;
+      if ('v' in s) { t.v.push(s.v); t.c.push(c); t.k0 += c * s.off; } else t.k0 += c * s.k;
+    }
+    push(t);
+  }
+  for (const [key, pr] of o.priors) {
+    const s = side(key);
+    if (!s || !('v' in s)) continue;
+    push({ v: [s.v], c: [1], k0: s.off - pr.lo, w: pr.w, kind: 'ge' });
+    push({ v: [s.v], c: [1], k0: s.off - pr.hi, w: pr.w, kind: 'le' });
+  }
+  // плоские массивы: члены подряд (CSR), чтобы умножение на матрицу шло по типизированным массивам
+  const T = terms.length;
+  const start = new Int32Array(T + 1);
+  for (let t = 0; t < T; t++) start[t + 1] = start[t] + terms[t].v.length;
+  const tv = new Int32Array(start[T]);
+  const tc = new Float64Array(start[T]);
+  const tw = new Float64Array(T);
+  const tk0 = new Float64Array(T);
+  const tkind = new Uint8Array(T); // 0 — eq, 1 — ge, 2 — le
+  for (let t = 0; t < T; t++) {
+    const q = terms[t];
+    for (let i = 0; i < q.v.length; i++) {
+      tv[start[t] + i] = q.v[i];
+      tc[start[t] + i] = q.c[i];
+    }
+    tw[t] = q.w;
+    tk0[t] = q.k0;
+    tkind[t] = q.kind === 'eq' ? 0 : q.kind === 'ge' ? 1 : 2;
+  }
+  const r = new Float64Array(T);
+  const frozen = new Float64Array(T);
+  const on = (t: number, s: number) => tkind[t] === 0 || (tkind[t] === 1 && s < 0) || (tkind[t] === 2 && s > 0);
+  const resid = (xx: Float64Array) => {
+    let F = 0;
+    for (let t = 0; t < T; t++) {
+      let s = tk0[t] + frozen[t];
+      for (let e = start[t]; e < start[t + 1]; e++) s += tc[e] * xx[tv[e]];
+      r[t] = s;
+      if (on(t, s)) F += tw[t] * s * s;
+    }
+    return F;
+  };
+  const g = new Float64Array(n);
+  const diag = new Float64Array(n);
+  const d = new Float64Array(n);
+  const res = new Float64Array(n);
+  const z = new Float64Array(n);
+  const p = new Float64Array(n);
+  const hp = new Float64Array(n);
+  const xt = new Float64Array(n);
+  const act = new Int32Array(T);
+  const EPS = 1e-9;
+  for (let outer = 0; outer < 60; outer++) {
+    for (let t = 0; t < T; t++) {
+      const q = terms[t];
+      frozen[t] = q.fz !== undefined ? q.fc! * (x[q.fz] + q.fOff!) : 0;
+    }
+    const F0 = resid(x);
+    g.fill(0);
+    diag.fill(0);
+    let na = 0;
+    for (let t = 0; t < T; t++) {
+      const s = r[t];
+      if (!on(t, s)) continue;
+      act[na++] = t;
+      for (let e = start[t]; e < start[t + 1]; e++) {
+        g[tv[e]] += 2 * tw[t] * s * tc[e];
+        diag[tv[e]] += 2 * tw[t] * tc[e] * tc[e];
+      }
+    }
+    let gmax = 0;
+    for (let k = 0; k < n; k++) gmax = Math.max(gmax, Math.abs(g[k]));
+    if (gmax < 1e-7) break;
+    // H·Δ = −g сопряжёнными градиентами с диагональным предобуславливанием
+    const hmul = (v: Float64Array, out: Float64Array) => {
+      for (let k = 0; k < n; k++) out[k] = EPS * v[k];
+      for (let a = 0; a < na; a++) {
+        const t = act[a];
+        let s = 0;
+        for (let e = start[t]; e < start[t + 1]; e++) s += tc[e] * v[tv[e]];
+        s *= 2 * tw[t];
+        for (let e = start[t]; e < start[t + 1]; e++) out[tv[e]] += s * tc[e];
+      }
+    };
+    d.fill(0);
+    let rz = 0;
+    let bnorm = 0;
+    for (let k = 0; k < n; k++) {
+      res[k] = -g[k];
+      z[k] = res[k] / (diag[k] + EPS);
+      p[k] = z[k];
+      rz += res[k] * z[k];
+      bnorm += res[k] * res[k];
+    }
+    const tol = 1e-10 * bnorm;
+    for (let it = 0; it < 800; it++) {
+      hmul(p, hp);
+      let php = 0;
+      for (let k = 0; k < n; k++) php += p[k] * hp[k];
+      if (php <= 0) break;
+      const a = rz / php;
+      let rr = 0;
+      for (let k = 0; k < n; k++) {
+        d[k] += a * p[k];
+        res[k] -= a * hp[k];
+        rr += res[k] * res[k];
+      }
+      if (rr < tol) break;
+      let rz1 = 0;
+      for (let k = 0; k < n; k++) {
+        z[k] = res[k] / (diag[k] + EPS);
+        rz1 += res[k] * z[k];
+      }
+      const beta = rz1 / rz;
+      rz = rz1;
+      for (let k = 0; k < n; k++) p[k] = z[k] + beta * p[k];
+    }
+    // шаг с дроблением: значение должно убывать
+    let step = 1;
+    let moved = 0;
+    for (let ls = 0; ls < 30; ls++) {
+      for (let k = 0; k < n; k++) xt[k] = x[k] + step * d[k];
+      const F1 = resid(xt);
+      if (F1 < F0 - 1e-12) {
+        for (let k = 0; k < n; k++) {
+          moved = Math.max(moved, Math.abs(xt[k] - x[k]));
+          x[k] = xt[k];
+        }
+        break;
+      }
+      step /= 2;
+    }
+    if (moved < 1e-3) break;
+  }
+  roots.forEach((rt, k) => o.value.set(rt, x[k]));
+}
+
+/** Послания (эпоха «Апостольское время», data/epochs.json: books «Послания»). */
+const EPISTLES = new Set(BOOKS.filter((b) => b.t === 'nt' && !['Мф', 'Мк', 'Лк', 'Ин', 'Деян', 'Откр'].includes(b.code)).map((b) => b.code));
+
+/**
+ * Эпохи книги и главы по каталогу эпох (data/epochs.json, books): «Быт 12–50» → Патриархи, «Послания» → апостольское
+ * время. Книга без времени действия («Иов (время действия не указано)») и родословия 1 Пар 1–9 эпохи не дают.
+ */
+function epochsOfChapter(epochs: Epoch[], book: string, chapter: number): Epoch[] {
+  return epochs.filter((e) =>
+    e.books.some((s) => {
+      if (s.includes('(')) return false;
+      if (s === 'Послания') return EPISTLES.has(book);
+      const m = /^(\S+)(?:\s+(\d+)[–-](\d+))?$/.exec(s.trim());
+      return !!m && m[1] === book && (m[2] === undefined || (chapter >= Number(m[2]) && chapter <= Number(m[3])));
+    }),
+  );
+}
+
+/**
+ * Скобка лица «время не установлено» (MAP-52; решение владельца 24), в астрономических годах, по порядку опор:
+ *  1. встречи по тексту (card.met) с лицами, чьи годы известны: их годы служения или царствования, иначе жизнь
+ *     (от 13 лет до смерти или обычного конца жизни); несколько встреч — объединение, в пределах эпохи книги
+ *     первого упоминания, если они пересекаются (Лука — годы служения Павла, Кол 4:14; Флм 1:24);
+ *  1а. братья и сёстры словами Писания (kin), у которых годы есть, — их годы жизни: ровесники;
+ *  2. допустимый интервал смерти (died.range: «убит в войне Факея с Ахазом», 2 Пар 28:7) — засвидетельствованный миг;
+ *  3. эпоха книги и главы первого упоминания (Манаил и Луций — Деян 13:1, апостольское время);
+ *  4. эпоха из данных;
+ *  5. границы рождения из данных, продолженные на обычную жизнь эпохи; если заданы обе («после Исава, прежде царей
+ *     Израиля», Быт 36:31) — раньше эпохи главы: список может быть моложе книги, в которой записан;
+ *  6. годы датированных лиц того же созвездия (1 Пар 4–5: имена без родства и без эпохи).
+ * Границы рождения подрезают скобку до возможной жизни, смерть — её конец, если скобка от этого не пустеет.
+ */
+function whenSpans(o: {
+  g: Graph;
+  epochs: Epoch[];
+  cls: Map<string, DateClass>;
+  b: (id: string) => number;
+  d: (id: string) => number | null;
+}): (id: string) => { lo: number; hi: number; when: WhenSpan } {
+  const { g, epochs, cls } = o;
+  const astroSpan = (e: Epoch): [number, number] => [toAstro(e.start), toAstro(e.end)];
+  const union = (xs: [number, number][]): [number, number] | null => (xs.length ? [Math.min(...xs.map((x) => x[0])), Math.max(...xs.map((x) => x[1]))] : null);
+  const partner = (q: string): [number, number] | null => {
+    const qc = g.persons.get(q)?.chrono;
+    if (qc?.active) return [toAstro(qc.active.from), toAstro(qc.active.to)];
+    if (qc?.reign?.length) return [toAstro(Math.min(...qc.reign.map((r) => r.start))), toAstro(Math.max(...qc.reign.map((r) => r.end)))];
+    const k = o.cls.get(q);
+    if (!k || k === 'epochal') return null;
+    const b = o.b(q);
+    const n = normFor(qc?.epoch ?? epochAt(epochs, b)?.id ?? null);
+    const end = o.d(q) ?? b + n.life;
+    return end > b + PARENT_MIN_AGE ? [b + PARENT_MIN_AGE, end] : [b, Math.max(end, b)];
+  };
+  /** Годы жизни лица с годами: от рождения до смерти, последнего события или обычного конца жизни эпохи. */
+  const lifeOf = (q: string): [number, number] | null => {
+    const k = o.cls.get(q);
+    if (!k || k === 'epochal') return null;
+    const b = o.b(q);
+    const n = normFor(g.persons.get(q)?.chrono?.epoch ?? epochAt(epochs, b)?.id ?? null);
+    return [b, Math.max(o.d(q) ?? b + n.life, b)];
+  };
+  // годы датированных лиц созвездия
+  const groupSpan = new Map<string, [number, number]>();
+  for (const id of g.order) {
+    const k = cls.get(id);
+    if (k === 'epochal') continue;
+    const p = g.persons.get(id)!;
+    if (p.kind === 'people' || p.kind === 'clan') continue;
+    const b = o.b(id);
+    const cur = groupSpan.get(p.group);
+    groupSpan.set(p.group, cur ? [Math.min(cur[0], b), Math.max(cur[1], b)] : [b, b]);
+  }
+  return (id) => {
+    const p = g.persons.get(id)!;
+    const c = p.chrono;
+    const firstRef = firstRefOf(p);
+    const fm = firstRef ? /^(\S+)\s+(\d+)/.exec(firstRef) : null;
+    const byMention = fm ? union(epochsOfChapter(epochs, fm[1], Number(fm[2])).map(astroSpan)) : null;
+    const met = (p.card?.met ?? []).filter((m) => g.persons.has(m.id));
+    const metSpans = met.map((m) => partner(m.id)).filter((x): x is [number, number] => !!x);
+    // братья и сёстры словами Писания (kin: «Иеиель и Захария — братья Беэры», 1 Пар 5:7) — ровесники: их годы жизни
+    const sib = (g.kinOf.get(id) ?? []).filter((e) => /^(брат|сестра)/.test(e.rel)).map((e) => (e.from === id ? e.to : e.from));
+    const sibSpans = sib.map((q) => lifeOf(q)).filter((x): x is [number, number] => !!x);
+    const ownEpoch = c?.epoch ? epochs.find((e) => e.id === c.epoch) : undefined;
+    const n = normFor(c?.epoch ?? null);
+    // границы рождения из данных
+    let bornLo = -Infinity;
+    let bornHi = Infinity;
+    const at = (x: { from: string; years: number } | undefined) => (x && g.persons.has(x.from) && cls.get(x.from) !== 'epochal' ? o.b(x.from) + x.years : null);
+    const nb = at(c?.born?.notBefore);
+    const na = at(c?.born?.notAfter);
+    if (nb !== null) bornLo = nb;
+    if (na !== null) bornHi = na;
+    if (c?.born?.range) {
+      bornLo = Math.max(bornLo, toAstro(c.born.range[0]));
+      bornHi = Math.min(bornHi, toAstro(c.born.range[1]));
+    }
+    const dr = c?.died?.range ? ([toAstro(c.died.range[0]), toAstro(c.died.range[1])] as [number, number]) : null;
+    // где лицо могло жить по границам рождения из данных: от рождения до обычного конца жизни эпохи
+    const lo0 = Number.isFinite(bornLo);
+    const hi0 = Number.isFinite(bornHi);
+    const window: [number, number] | null = lo0 || hi0 ? [lo0 ? bornLo : bornHi - n.life, hi0 ? bornHi + n.life : bornLo + n.life] : null;
+    let span: [number, number] | null = null;
+    let when: WhenSpan | null = null;
+    const metU = union(metSpans);
+    if (metU) {
+      span = metU;
+      if (byMention && byMention[0] < metU[1] && metU[0] < byMention[1]) span = [Math.max(metU[0], byMention[0]), Math.min(metU[1], byMention[1])];
+      when = { by: 'met', id: met.find((m) => partner(m.id))!.id };
+    } else if (sibSpans.length) {
+      span = union(sibSpans)!;
+      when = { by: 'kin', id: sib.find((q) => lifeOf(q))! };
+    } else if (dr) {
+      span = dr;
+      when = { by: 'bounds' };
+    } else if (window && lo0 && hi0) {
+      // обе границы рождения («после Исава, прежде царей Израиля», Быт 36:31): список может быть моложе книги,
+      // в которой записан, поэтому эпоха главы здесь не опора
+      span = window;
+      when = { by: 'bounds' };
+    } else if (byMention) {
+      span = byMention;
+      when = { by: 'mention', ref: firstRef! };
+    } else if (ownEpoch) {
+      span = astroSpan(ownEpoch);
+      when = { by: 'epoch' };
+    } else if (window) {
+      span = window;
+      when = { by: 'bounds' };
+    } else if (groupSpan.has(p.group)) {
+      span = groupSpan.get(p.group)!;
+      when = { by: 'group' };
+    }
+    if (!span || !when) {
+      const b = o.b(id);
+      return { lo: b - 30, hi: b + 30, when: { by: 'epoch' } };
+    }
+    let [lo, hi] = span;
+    // деятельность — в пределах возможной жизни («бабка Тимофея» — не позже чем за 30 лет до него, 2 Тим 1:5)
+    // и не позже смерти («убит в войне…»), если скобка от этого не пустеет
+    if (window && window[0] < hi && lo < window[1]) {
+      lo = Math.max(lo, window[0]);
+      hi = Math.min(hi, window[1]);
+    }
+    if (dr && dr[1] > lo) hi = Math.min(hi, dr[1]);
+    if (hi < lo) [lo, hi] = span;
+    return { lo, hi, when };
+  };
+}
+
+/** Первый засвидетельствованный год лица без дат: начало служения (рождение — не позже чем за 12 лет, как у решателя)
+ *  или царствования (возраст при воцарении не назван — рождение не позже начала). */
+function attestedFrom(p: Person): { from: number; minAge: number; refs: string[] } | null {
+  const c = p.chrono;
+  if (c?.active) return { from: toAstro(c.active.from), minAge: 12, refs: c.active.refs ?? [] };
+  if (c?.reign?.length) {
+    const r = [...c.reign].sort((a, b) => a.start - b.start)[0];
+    return { from: toAstro(r.start), minAge: r.ageAtStart ?? 0, refs: r.refs };
+  }
+  return null;
+}
+
+/**
+ * Пары соседних по старшинству детей лица id: [старший, младший, шаг в годах] (MAP-54; ТЗ § 8.2 «младшие братья
+ * не раньше старших»).
+ *  — Дети одной пары родителей (или одного названного родителя) — по порядку рождения или перечисления в данных
+ *    (order), а без него — по порядку в томе данных, который следует тексту («сыновья Саруии: Авесса, Иоав и Асаил»,
+ *    1 Пар 2:16). Шаг — не меньше года (SIB_STEP).
+ *  — Умерший младенцем без порядка — первым из детей своей матери, если его допустимый интервал рождения начинается
+ *    не позже, чем у них: сын Давида и Вирсавии умер прежде рождения Соломона (2 Цар 12:18, 24).
+ *  — Дети разных матерей с порядком в данных — тоже по порядку («первенец… второй… шестой», 2 Цар 3:2–5). Где текст
+ *    сжимает рождения сильнее (одиннадцать сыновей Иакова от четырёх матерей — за семь лет службы, Быт 29:31–30:24),
+ *    граница уступает числам текста, и годы могут совпасть.
+ * Без народов и родов: их год — не рождение.
+ */
+export function siblingPairs(g: Graph, id: string): [string, string, number][] {
+  const edge = new Map((g.childrenOf.get(id) ?? []).filter((e) => e.kind === 'father' || e.kind === 'mother').map((e) => [e.child, e]));
+  const kids = primaryChildren(g, id).filter((k) => {
+    const p = g.persons.get(k)!;
+    return p.kind !== 'people' && p.kind !== 'clan';
+  });
+  // потомки через пропуск поколений («сыновья Шимея: Иахаф, Зиза…» при Давиде, 1 Пар 23:10) упорядочиваются только
+  // между собой: это одно поколение, но время его относительно родителя неизвестно
+  const gapOf = (k: string) => (edge.get(k)?.gap ? '#' : '');
+  const other = (k: string): string => {
+    const f = fatherOf(g, k);
+    const m = motherOf(g, k);
+    return ((f === id ? m : f) ?? '') + gapOf(k);
+  };
+  const out: [string, string, number][] = [];
+  const seen = new Map<string, number>();
+  const add = (a: string, b: string, step: number) => {
+    if (a === b) return;
+    const k = `${a}|${b}`;
+    const i = seen.get(k);
+    if (i !== undefined) {
+      out[i][2] = Math.max(out[i][2], step);
+      return;
+    }
+    seen.set(k, out.length);
+    out.push([a, b, step]);
+  };
+  const ord = (k: string) => g.persons.get(k)!.order;
+  const ordered = kids.filter((k) => ord(k) !== undefined);
+  for (let i = 1; i < ordered.length; i++) {
+    const a = ordered[i - 1];
+    const b = ordered[i];
+    if (gapOf(a) !== gapOf(b)) continue;
+    if (ord(b)! > ord(a)!) add(a, b, other(a) === other(b) ? SIB_STEP : SIB_STEP_CROSS);
+  }
+  // дети одной пары родителей
+  const groups = new Map<string, string[]>();
+  for (const k of kids) {
+    const o = other(k);
+    const a = groups.get(o);
+    if (a) a.push(k);
+    else groups.set(o, [k]);
+  }
+  const rangeStart = (k: string) => {
+    const r = g.persons.get(k)!.chrono?.born?.range;
+    return r ? toAstro(r[0]) : null;
+  };
+  for (const ks of groups.values()) {
+    if (ks.length < 2) continue;
+    const seq = [...ks];
+    for (const inf of ks) {
+      const p = g.persons.get(inf)!;
+      const age = p.chrono?.died?.age;
+      const r0 = rangeStart(inf);
+      if (p.order !== undefined || age === undefined || age >= INFANT_AGE || r0 === null) continue;
+      const rest = seq.filter((k) => k !== inf);
+      const at = rest.findIndex((k) => (rangeStart(k) ?? -Infinity) >= r0);
+      if (at < 0) continue;
+      seq.splice(0, seq.length, ...rest.slice(0, at), inf, ...rest.slice(at));
+    }
+    for (let i = 1; i < seq.length; i++) {
+      const a = seq[i - 1];
+      const b = seq[i];
+      // оба с порядком, но младший по перечислению старше по порядку — не противоречить порядку данных
+      if (ord(a) !== undefined && ord(b) !== undefined && ord(b)! < ord(a)!) continue;
+      add(a, b, SIB_STEP);
+    }
+  }
+  return out;
+}
+
 export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelId = 'mt-long'): ChronoResult {
   const tensions: Tension[] = [];
   const uf = new Offsets();
@@ -217,6 +761,7 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
         persons: who,
         text: `${chainOf(g, who)}: ${WHAT[what]} по тексту расходится с другими числами текста на ${yearsWord(Math.round(Math.abs(diff)))}.`,
         refs,
+        kind: 'numbers',
       });
     }
   };
@@ -261,7 +806,7 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
     const cur = fixed.get(root);
     if (cur === undefined) fixed.set(root, { value: v, cls });
     else if (Math.abs(cur.value - v) > 2) {
-      tensions.push({ persons: [who], text: `${chainOf(g, [who])}: год по тексту расходится с другими числами текста на ${yearsWord(Math.round(Math.abs(cur.value - v)))}.`, refs });
+      tensions.push({ persons: [who], text: `${chainOf(g, [who])}: год по тексту расходится с другими числами текста на ${yearsWord(Math.round(Math.abs(cur.value - v)))}.`, refs, kind: 'numbers' });
     }
   };
   if (modelAnchor) setFixed(modelAnchor.key, modelAnchor.value, 'exact', [], 'iakov');
@@ -277,27 +822,34 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
     else priors.set(key, { lo: Math.max(cur.lo, lo), hi: Math.min(cur.hi, hi) < Math.max(cur.lo, lo) ? cur.hi : Math.min(cur.hi, hi), w: Math.max(cur.w, w) });
   };
 
-  // Границы двух первых эпох зависят от модели: в модели чисел в скобках сотворение на ~1 400 лет раньше.
-  // Поэтому они берутся из уже закреплённых лет (Адам, Потоп — 600-й год Ноя, Авраам), а не из data/epochs.json.
+  // Эпохи в годах модели (CARD-60; engine/epochs.ts): границы, заданные числами Писания (сотворение Адама, Потоп —
+  // 600-й год Ноя, рождение Аврама, приход Иакова в Египет — 130 лет), берутся из уже закреплённых лет этой модели.
   const fixedYear = (key: string): number | null => {
     const { root, off } = rootOf(key);
     const f = fixed.get(root);
     return f ? f.value + off : null;
   };
-  const creation = g.persons.has('adam') ? fixedYear(B('adam')) : null;
-  const noah = g.persons.has('noy') ? fixedYear(B('noy')) : null;
-  const flood = noah === null ? null : noah + 600;
-  const abram = g.persons.has('avraam') ? fixedYear(B('avraam')) : null;
+  const mEpochs: Epoch[] = modelEpochs(epochs, (id, of) => (g.persons.has(id) ? fixedYear(of === 'death' ? D(id) : B(id)) : null));
+  const mEpochById = new Map(mEpochs.map((e) => [e.id, e]));
   const epochSpan = (e: Epoch): [number, number] => {
-    if (e.id === 'antediluvian' && creation !== null && flood !== null) return [creation, flood];
-    if (e.id === 'postdiluvian' && flood !== null && abram !== null) return [flood, abram];
-    return [toAstro(e.start), toAstro(e.end)];
+    const m = mEpochById.get(e.id) ?? e;
+    return [toAstro(m.start), toAstro(m.end)];
   };
-  const hist = (a: number) => (a <= 0 ? a - 1 : a);
-  const modelEpochs: Epoch[] = epochs.map((e) => {
-    const [lo, hi] = epochSpan(e);
-    return { ...e, start: hist(lo), end: hist(hi) };
-  });
+  /** Эпоха лица: из данных, иначе по закреплённому году или по засвидетельствованным годам (до решения). */
+  const guessEpoch = (id: string): string | null => {
+    const own = epochOf(id);
+    if (own) return own;
+    const c = g.persons.get(id)?.chrono;
+    const y =
+      fixedYear(B(id)) ??
+      (c?.active ? toAstro(c.active.from) - 30 : c?.reign?.length ? toAstro(c.reign[0].start) - 25 : c?.born?.range ? (toAstro(c.born.range[0]) + toAstro(c.born.range[1])) / 2 : null);
+    return y === null ? null : (epochAt(mEpochs, y)?.id ?? null);
+  };
+  const sexOf = (id: string) => g.persons.get(id)?.sex;
+  /** Нормы поколения пары супругов: по эпохе мужа, иначе жены. */
+  const coupleNorm = (a: string, b: string) => normFor(guessEpoch(a) ?? guessEpoch(b));
+  const sibSeen = new Set<string>();
+  const sibPairs: [string, string, number][] = [];
 
   for (const id of g.order) {
     const p = g.persons.get(id)!;
@@ -348,31 +900,55 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
       const main = e.kind === 'father' || e.kind === 'mother';
       const w = (main ? 1 : 0.4) * (e.gap ? 0.25 : 1);
       const g0 = e.kind.endsWith('mother') ? n.g * 0.85 : n.g;
+      // допустимый интервал рождения из данных («родился в Иерусалиме», «за двадцать лет службы Иакова») точнее
+      // притяжения к «родитель + поколение»: иначе дюжина сыновей тянется к нему всей массой, сбивается к краю
+      // интервала и встаёт в один год (MAP-54)
+      const bounded = !!c?.born?.range || (!!c?.born?.notBefore && !!c?.born?.notAfter);
       // «из сыновей X» и пропуск поколений: число поколений неизвестно — только «родился после», без притяжения к одному поколению
-      if (!e.gap) ineqs.push({ i: B(e.parent), j: B(id), delta: g0, w: w / (n.sigma * n.sigma), kind: 'eq' });
+      // Для такого ребёнка притяжение одностороннее: год родителя по-прежнему выводится из него в полную силу
+      // (жена — по рождению своих детей, A15), а сам ребёнок к родителю тянется слабо.
+      if (!e.gap && !bounded) ineqs.push({ i: B(e.parent), j: B(id), delta: g0, w: w / (n.sigma * n.sigma), kind: 'eq' });
+      if (!e.gap && bounded) {
+        ineqs.push({ i: B(id), j: B(e.parent), delta: -g0, w: w / (n.sigma * n.sigma), kind: 'eq', onlyJ: true });
+        ineqs.push({ i: B(e.parent), j: B(id), delta: g0, w: (0.05 * w) / (n.sigma * n.sigma), kind: 'eq', onlyJ: true });
+      }
       ineqs.push({ i: B(e.parent), j: B(id), delta: e.kind.endsWith('mother') ? 14 : n.min, w: 50 / (n.sigma * n.sigma), kind: 'ge' });
+      // мать рожает не позже MOTHER_MAX лет (вне эпох долгих жизней): иначе сжатое родословие растягивало матерей —
+      // Руфь рожала Овида в 56 лет, Раав Вооза — в 120; растяжение уходит на отцов цепочки, где его видно разрывом
+      // следа и напряжением «родословие называет не все поколения» (MAP-51). Возраст матери из текста (Сарра — 90 лет,
+      // Быт 17:17) — жёсткое равенство, граница его не трогает.
+      // Только в эпохах обычных поколений: в Египте 430 лет пребывания растягивают поколения по числам текста
+      // (Иохаведа, дочь Левия, — мать Моисея, Чис 26:59), и это растяжение показывает напряжение, а не граница.
+      if (e.kind === 'mother' && !e.gap && n === NORMS.default && c?.born?.motherAge === undefined) {
+        ineqs.push({ i: B(e.parent), j: B(id), delta: MOTHER_MAX, w: MOTHER_MAX_W, kind: 'le' });
+      }
       if (main && !e.gap) {
         // рождение при жизни матери и не позже года после смерти отца — граница твёрдая, как notAfter:
         // иначе в эпохах долгих жизней притяжение к середине эпохи уводит недатированного ребёнка за смерть родителя
         ineqs.push({ i: B(id), j: D(e.parent), delta: e.kind === 'father' ? -1 : 0, w: 5, kind: 'ge' });
       }
     }
-    // порядок братьев
-    const kids = primaryChildren(g, id);
-    for (let k = 1; k < kids.length; k++) {
-      const a = g.persons.get(kids[k - 1])!;
-      const b = g.persons.get(kids[k])!;
-      if (a.order !== undefined && b.order !== undefined && b.order > a.order) {
-        ineqs.push({ i: B(kids[k - 1]), j: B(kids[k]), delta: 1, w: 0.5, kind: 'ge' });
-      }
+    // порядок братьев (MAP-54): младшие не раньше старших, шаг — не меньше года
+    for (const [a, b, step] of siblingPairs(g, id)) {
+      if (sibSeen.has(`${a}|${b}`)) continue; // та же пара от второго родителя
+      sibSeen.add(`${a}|${b}`);
+      if (rootOf(B(a)).root === rootOf(B(b)).root) continue; // близнецы (Фарес и Зара: смещение 0) и числа текста
+      ineqs.push({ i: B(a), j: B(b), delta: step, w: SIB_W, kind: 'ge' });
+      sibPairs.push([a, b, step]);
     }
-    // супруги — примерно одного поколения. Притяжение слабее, чем у матери к детям (A15; MAP-22): год рождения жены
+    // супруги — одного поколения. Притяжение к «муж + 3» слабее, чем у матери к детям (A15; MAP-22): год рождения жены
     // выводится прежде всего из рождения её детей, а к году мужа тянется, только когда о ней больше ничего не известно.
-    // Прежде вес 0,05 перевешивал всех детей, и жёны стояли в год рождения мужа (+3).
+    // Граница [муж − 15; муж + 30] (CARD-61) сильнее слабых притяжений поколения и эпохи, но слабее чисел текста
+    // и границ «ребёнок — не раньше 13 лет родителя»: где её не удержать, решатель записывает напряжение (п. 7).
     for (const s of g.spousesOf.get(id) ?? []) {
       if (s.a !== id) continue;
-      const n = normFor(epochOf(s.a) ?? epochOf(s.b));
+      const n = coupleNorm(s.a, s.b);
       ineqs.push({ i: B(s.a), j: B(s.b), delta: 3, w: SPOUSE_W / (n.sigma * n.sigma), kind: 'eq' });
+      const band = spouseBand(n);
+      const hw = sexOf(s.a) === 'm' && sexOf(s.b) === 'f';
+      const lo = hw ? band.lo : band.hi;
+      ineqs.push({ i: B(s.a), j: B(s.b), delta: -lo, w: SPOUSE_BAND_W / (n.sigma * n.sigma), kind: 'ge' });
+      ineqs.push({ i: B(s.a), j: B(s.b), delta: band.hi, w: SPOUSE_BAND_W / (n.sigma * n.sigma), kind: 'le' });
     }
   }
 
@@ -384,13 +960,8 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
   // Эпоха лица без пометы эпохи — по закреплённому году или по засвидетельствованным годам.
   const epochIdx = new Map(epochs.map((e, i) => [e.id, i]));
   const epochIndexOf = (id: string): number | undefined => {
-    const own = epochOf(id);
-    if (own) return epochIdx.get(own);
-    const c = g.persons.get(id)?.chrono;
-    const y =
-      fixedYear(B(id)) ??
-      (c?.active ? toAstro(c.active.from) - 30 : c?.reign?.length ? toAstro(c.reign[0].start) - 25 : c?.born?.range ? (toAstro(c.born.range[0]) + toAstro(c.born.range[1])) / 2 : null);
-    return y === null ? undefined : epochIdx.get(epochAt(epochs, y)?.id ?? '');
+    const e = guessEpoch(id);
+    return e === null ? undefined : epochIdx.get(e);
   };
   const near = (a: string, b: string) => {
     const ia = epochIndexOf(a);
@@ -516,7 +1087,7 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
   }
 
   const freeRoots = [...free].filter((r) => terms.has(r));
-  for (let sweep = 0; sweep < 400; sweep++) {
+  for (let sweep = 0; sweep < SWEEPS; sweep++) {
     let maxMove = 0;
     for (const r of freeRoots) {
       const cur = value.get(r)!;
@@ -547,8 +1118,9 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
       maxMove = Math.max(maxMove, Math.abs(next - cur));
       value.set(r, next);
     }
-    if (maxMove < 0.05) break;
+    if (maxMove < SWEEP_EPS) break;
   }
+  newtonPolish({ ineqs, mids, priors, rootOffset, value, free });
 
   // --- 6. классы дат и неопределённость
   const cls = new Map<string, DateClass>();
@@ -576,14 +1148,18 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
   bfs(distUp, (id) => (g.childrenOf.get(id) ?? []).map((e) => e.child)); // от датированных предков вниз
   bfs(distDown, (id) => (g.parentsOf.get(id) ?? []).map((e) => e.parent)); // от датированных потомков вверх
 
+  // скобка «время не установлено» (MAP-52): годы засвидетельствованной деятельности или эпохи, звезда — в середине
+  const whenOf = whenSpans({ g, epochs: mEpochs, cls, b: (x) => val(B(x))!, d: (x) => (hasDeathData(x) ? val(D(x))! : null) });
+
   const persons = new Map<string, PersonChrono>();
   for (const id of g.order) {
     const p = g.persons.get(id)!;
-    const b = val(B(id))!;
-    const ep = epochAt(modelEpochs, b);
+    const k = cls.get(id)!;
+    const bracket = k === 'epochal' ? whenOf(id) : null;
+    const b = bracket ? (bracket.lo + bracket.hi) / 2 : val(B(id))!;
+    const ep = epochAt(mEpochs, b);
     const epochId = p.chrono?.epoch ?? ep?.id ?? null;
     const n = normFor(epochId);
-    const k = cls.get(id)!;
     let half: number;
     if (k === 'exact') half = 0;
     else if (k === 'calculated') half = 2;
@@ -598,14 +1174,13 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
     }
     let bLo = b - half;
     let bHi = b + half;
-    const pe = p.chrono?.epoch ? epochById.get(p.chrono.epoch) : null;
-    if (k === 'epochal' && pe) {
-      bLo = toAstro(pe.start);
-      bHi = toAstro(pe.end);
+    if (bracket) {
+      bLo = bracket.lo;
+      bHi = bracket.hi;
     }
     // интервал рождения не шире допустимого интервала данных (born.range: «во время войны с Аммонитянами»)
     const br = p.chrono?.born?.range;
-    if (br && k !== 'exact' && k !== 'calculated') {
+    if (br && !bracket && k !== 'exact' && k !== 'calculated') {
       bLo = Math.max(bLo, toAstro(br[0]));
       bHi = Math.min(bHi, toAstro(br[1]));
     }
@@ -616,16 +1191,17 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
     let d: number | null = null;
     let dLo: number | null = null;
     let dHi: number | null = null;
+    const rd = rootOffset.get(D(id))!;
+    const rb = rootOffset.get(B(id))!;
+    const sameRoot = rd.root === rb.root; // возраст при смерти назван текстом
     if (hasDeathData(id)) {
       d = val(D(id))!;
-      const rd = rootOffset.get(D(id))!;
-      const rb = rootOffset.get(B(id))!;
       const dr = p.chrono?.died?.range;
-      if (fixed.has(rd.root) && rd.root !== rb.root) {
+      if (fixed.has(rd.root) && !sameRoot) {
         const exact = fixed.get(rd.root)!.cls === 'exact';
         dLo = d - (exact ? 0 : 2);
         dHi = d + (exact ? 0 : 2);
-      } else if (rd.root === rb.root) {
+      } else if (sameRoot) {
         dLo = bLo + (d - b);
         dHi = bHi + (d - b);
       } else if (dr) {
@@ -641,22 +1217,55 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
     const dAge = lxx && p.chrono?.died?.ageBracket !== undefined ? p.chrono.died.ageBracket : p.chrono?.died?.age;
     const infant = dAge !== undefined && dAge < INFANT_AGE;
     let last: number | null = null;
+    let first = Infinity; // самое раннее засвидетельствованное событие жизни с минимальным возрастом (MAP-53)
     const c = p.chrono;
-    const bump = (y: number | undefined) => {
+    const bump = (y: number | undefined, minAge = 0) => {
       if (y === undefined) return;
       last = last === null ? y : Math.max(last, y);
+      first = Math.min(first, y - minAge);
     };
-    if (c?.active) bump(toAstro(c.active.to));
-    for (const r of c?.reign ?? []) bump(toAstro(r.end));
+    if (c?.active) {
+      bump(toAstro(c.active.to));
+      first = Math.min(first, toAstro(c.active.from));
+    }
+    for (const r of c?.reign ?? []) {
+      bump(toAstro(r.end));
+      first = Math.min(first, toAstro(r.start));
+    }
     for (const e of p.card?.events ?? []) if (e.year !== undefined) bump(toAstro(e.year));
-    for (const e of p.card?.events ?? []) if (e.age !== undefined) bump(b + e.age);
+    for (const e of p.card?.events ?? []) if (e.age !== undefined) bump(b + e.age, e.age);
     // рождение ребёнка — засвидетельствованная жизнь родителя, но не «потомка» через пропуск поколений
     for (const e of g.childrenOf.get(id) ?? []) if ((e.kind === 'father' || e.kind === 'mother') && !e.gap) {
       const cb = val(B(e.child));
-      if (cb !== undefined && cls.get(e.child) !== 'epochal') bump(e.kind === 'father' ? cb - 1 : cb);
+      if (cb !== undefined && cls.get(e.child) !== 'epochal') bump(e.kind === 'father' ? cb - 1 : cb, PARENT_MIN_AGE - (e.kind === 'father' ? 1 : 0));
+    }
+    // MAP-53: верхний край рождения — не позже смерти и не позже самого раннего засвидетельствованного события
+    // (упоминание — в любом возрасте, рождение ребёнка — не моложе 13 лет); оценка остаётся внутри промежутка
+    if (!bracket && k !== 'exact' && k !== 'calculated') {
+      let cap = first;
+      if (d !== null && !sameRoot) cap = Math.min(cap, dHi ?? d);
+      if (cap < bHi) {
+        bHi = Math.max(cap, b);
+        if (sameRoot && d !== null) dHi = bHi + (d - b);
+      }
     }
     const dEst = d ?? Math.max(last ?? -Infinity, b + n.life);
-    persons.set(id, { b, bLo, bHi, d, dLo, dHi, lastAttested: last, dEst, cls: k, epoch: ep?.id ?? null, ...(infant ? { infant } : {}) });
+    const named = p.kind === 'people' || p.kind === 'clan';
+    persons.set(id, {
+      b, bLo, bHi, d, dLo, dHi, lastAttested: last, dEst, cls: k, epoch: ep?.id ?? null,
+      ...(infant ? { infant } : {}),
+      ...(named ? { named } : {}),
+      ...(bracket ? { when: bracket.when } : {}),
+    });
+  }
+
+  // порядок перечисления братьев (MAP-54): год оценён по порядку, если граница «младший — через год» удерживает его
+  for (const [a, b2, step] of sibPairs) {
+    const pa = persons.get(a)!;
+    const pb = persons.get(b2)!;
+    if (pb.b - pa.b > step + 0.75) continue;
+    if (pa.cls === 'estimated') pa.byOrder = true;
+    if (pb.cls === 'estimated') pb.byOrder = true;
   }
 
   // --- 7. напряжения между датированными лицами
@@ -682,6 +1291,8 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
             persons: [e.parent, id],
             text: `${head}: по возрастам, названным в тексте, ${kid} не помещается в жизнь ${parent}: при принятых годах рождение приходится примерно на ${yearsWord(years)} позже ${e.kind === 'mother' ? 'её' : 'его'} смерти. Вероятно, родословие называет не все поколения.`,
             refs,
+            kind: 'pair',
+            cert: 'interpretation',
           };
           tensions.push(t);
           afterDeath.set(`${e.parent}|${id}`, { t, child: id, years });
@@ -695,6 +1306,8 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
           persons: [e.parent, id],
           text: `${head}: по числам текста ${kid} рождается через ${yearsWord(years)} после смерти ${parent}. Вероятно, родословие сокращено или ${e.kind === 'mother' ? `мать здесь${NB}— более далёкая прародительница` : `отец здесь${NB}— более далёкий предок`}.`,
           refs,
+          kind: 'pair',
+          cert: 'interpretation',
         };
         tensions.push(t);
         afterDeath.set(`${e.parent}|${id}`, { t, child: id, years });
@@ -703,9 +1316,10 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
           persons: [e.parent, id],
           text: `${head}: по годам правления и возрасту при воцарении отцу при рождении ${kidGen(g, id)} выходит ${yearsWord(Math.round(age))}. Вероятно, какое-то из чисел считает совместное правление или передано иначе.`,
           refs: uniq([...(g.persons.get(id)!.chrono?.reign ?? []).flatMap((r) => r.refs), ...(g.persons.get(e.parent)!.chrono?.reign ?? []).flatMap((r) => r.refs), ...refs]),
+          kind: 'numbers',
         });
       } else if (e.kind === 'mother' && age > 60 && !LONG_LIVES.has(me.epoch ?? '') && g.persons.get(id)!.chrono?.born?.motherAge === undefined) {
-        tensions.push({ persons: [e.parent, id], text: `${head}: при принятых годах матери при рождении ${kidGen(g, id)} выходит ${yearsWord(Math.round(age))}.`, refs });
+        tensions.push({ persons: [e.parent, id], text: `${head}: при принятых годах матери при рождении ${kidGen(g, id)} выходит ${yearsWord(Math.round(age))}.`, refs, kind: 'pair' });
       }
     }
   }
@@ -755,17 +1369,166 @@ export function solveChronology(g: Graph, epochs: Epoch[], modelId: ChronoModelI
             if (inner.length) parts.push(`По возрастам, названным в тексте, поколения не помещаются одно в жизнь другого: ${inner.join('; ')}.`);
             parts.push(long ? 'Вероятно, родословие называет не все поколения.' : 'Вероятно, в родословии названы не отцы и сыновья, а более далёкие предки и потомки.');
             refs.push(...down.flatMap((x) => g.persons.get(x)!.parentRefs ?? []));
-            tensions.push({ persons: down, text: parts.join(' '), refs: uniq(refs).slice(0, 8) });
+            tensions.push({ persons: down, text: parts.join(' '), refs: uniq(refs).slice(0, 8), kind: 'chain', cert: 'interpretation' });
           }
         }
         break;
+      }
+      // предок без дат, но с засвидетельствованными годами (служение, царствование): «Салмон → Давид» (ТЗ § 3.6; MAP-51).
+      // Рождение такого предка — не позже начала служения без 12 лет (как у решателя), поэтому цепочка до датированного
+      // потомка не короче me.b − (from − 12). Если и это больше поколений эпох цепочки — напряжение; иначе идём выше.
+      const act = attestedFrom(g.persons.get(f)!);
+      if (act && steps >= 2) {
+        const bMax = act.from - act.minAge;
+        const total = me.b - bMax;
+        const avg = total / steps;
+        const down = [...chain].reverse();
+        const nMax = down.slice(0, -1).reduce((s, x) => s + normFor(persons.get(x)!.epoch).max, 0) / steps;
+        if (avg > nMax * 1.05) {
+          const who = g.persons.get(f)!;
+          const kid = g.persons.get(id)!;
+          const text =
+            `${chainOf(g, down)}: ${gens(steps)}${NB}— не меньше чем ${yearsWord(Math.round(total))}, в среднем не меньше чем по ${yearsWord(Math.round(avg))} на поколение ` +
+            `(${who.name} ${who.sex === 'f' ? 'засвидетельствована' : 'засвидетельствован'} уже в ${formatYear(act.from)}, ${kid.name} ${kid.sex === 'f' ? 'родилась' : 'родился'} ` +
+            `${me.cls === 'exact' ? 'в' : 'около'} ${formatYear(me.b)}). Вероятно, родословие называет не все поколения.`;
+          const refs: string[] = [...act.refs.slice(0, 2), ...(kid.chrono?.born?.refs ?? []).slice(0, 2)];
+          // стихи родства: сначала первый стих каждого звена (Руф 4:20–22), затем остальные
+          for (const x of down.slice(1)) refs.push(...(g.persons.get(x)!.parentRefs ?? []).slice(0, 1));
+          for (const x of down.slice(1)) refs.push(...(g.persons.get(x)!.parentRefs ?? []).slice(1));
+          tensions.push({ persons: down, text, refs: uniq(refs).slice(0, 8), kind: 'chain', cert: 'interpretation' });
+          break;
+        }
       }
       cur = f;
       if (steps > 60) break;
     }
   }
   if (merged.size) tensions.splice(0, tensions.length, ...tensions.filter((t) => !merged.has(t)));
-  return { model: modelId, persons, tensions: dedupeTensions(tensions) };
+
+  // --- 7а. растянутые жизни (MAP-51; решение владельца 24): сплошная часть следа — от рождения до смерти или
+  // последнего события (как в engine/layout.ts, drawn) — длиннее предела жизни эпохи, и длину не назвал текст.
+  // Так бывает, когда родословие сжато (Руф 4:18–22; Исх 6:16–20): решатель растягивает поколения, чтобы звенья
+  // дотянулись до датированных лиц. Лицу — разрыв следа (brk), цепочке — напряжение с пометой «толкование».
+  const stretched = new Map<string, { child: string | null; end: number; atDeath: boolean; limit: number }>();
+  for (const id of g.order) {
+    const me = persons.get(id)!;
+    const p = g.persons.get(id)!;
+    if (me.cls === 'epochal' || me.named || me.infant) continue;
+    const died = p.chrono?.died;
+    const rangeOnly = !!died?.range && died.age === undefined && died.year === undefined;
+    let end: number;
+    if (me.d !== null && !rangeOnly) end = Math.max(me.b, me.d);
+    else if (me.d !== null) end = Math.max(me.b, me.dLo ?? me.b, me.lastAttested ?? -Infinity);
+    else if (me.lastAttested !== null) end = Math.max(me.b, me.lastAttested);
+    else continue;
+    const n = normFor(p.chrono?.epoch ?? me.epoch);
+    if (end - me.b <= n.lifeMax + 0.5) continue;
+    // длину жизни назвал текст — возраст при смерти (Аарон — 123 года, Иодай — 130) или оба года
+    const rd = rootOffset.get(D(id))!.root;
+    if (me.d !== null && end <= me.d + 0.5 && (rd === rootOffset.get(B(id))!.root || ((me.cls === 'exact' || me.cls === 'calculated') && fixed.has(rd)))) continue;
+    let child: string | null = null;
+    for (const e of g.childrenOf.get(id) ?? []) {
+      if ((e.kind !== 'father' && e.kind !== 'mother') || e.gap) continue;
+      const cc = persons.get(e.child)!;
+      if (cc.cls === 'epochal') continue;
+      if (Math.abs((e.kind === 'father' ? cc.b - 1 : cc.b) - end) < 0.5) {
+        child = e.child;
+        break;
+      }
+    }
+    const atDeath = !child && me.d !== null && (Math.abs(end - me.d) < 0.5 || Math.abs(end - (me.dLo ?? me.d)) < 0.5);
+    me.brk = me.b + n.lifeMax;
+    stretched.set(id, { child, end, atDeath, limit: n.lifeMax });
+  }
+  const nextOf = new Map<string, string>();
+  for (const [x, s] of stretched) if (s.child && stretched.has(s.child)) nextOf.set(x, s.child);
+  const hasPrev = new Set(nextOf.values());
+  const nameOf = (x: string) => g.persons.get(x)!.name;
+  const poss = (x: string) => (g.persons.get(x)!.sex === 'f' ? 'её' : 'его');
+  for (const start of stretched.keys()) {
+    if (hasPrev.has(start)) continue;
+    const links = [start];
+    let cur = start;
+    while (nextOf.has(cur) && links.length < 30) {
+      cur = nextOf.get(cur)!;
+      links.push(cur);
+    }
+    const tail = stretched.get(cur)!;
+    const par = fatherOf(g, start) ?? motherOf(g, start);
+    const parEdge = par ? (g.parentsOf.get(start) ?? []).find((e) => e.parent === par) : undefined;
+    const up = par && !parEdge?.gap ? par : null;
+    const down = [...(up ? [up] : []), ...links, ...(tail.child ? [tail.child] : [])];
+    // цепочка уже объяснена напряжением поколений между датированными лицами (Наассон — … — Давид)
+    if (tensions.some((t) => t.kind === 'chain' && links.every((x) => t.persons.includes(x)))) continue;
+    const limit = Math.max(...links.map((x) => stretched.get(x)!.limit));
+    const parts: string[] = [];
+    if (links.length === 1) {
+      const x = links[0];
+      const from = up ? `от рождения ${kidGen(g, x)}` : `от ${poss(x)} рождения`;
+      const to = tail.child ? `до рождения ${poss(x)} ${kidGen(g, tail.child)}` : tail.atDeath ? `до ${poss(x)} смерти` : 'до последнего упоминания';
+      parts.push(`${chainOf(g, down)}: по принятым годам ${from} ${to} проходит примерно ${yearsWord(Math.round(tail.end - persons.get(x)!.b))}${NB}— больше предела жизни этого времени (${yearsWord(limit)}).`);
+    } else {
+      const t0 = persons.get(down[0])!.b;
+      const t1 = tail.child ? persons.get(tail.child)!.b : tail.end;
+      parts.push(
+        `${chainOf(g, down)}: по принятым годам ${gens(down.length - 1)} занимают примерно ${yearsWord(Math.round(t1 - t0))}, и у звеньев цепочки от рождения до рождения ребёнка проходит больше предела жизни этого времени (${yearsWord(limit)}).`,
+      );
+    }
+    const refs: string[] = [];
+    const first = persons.get(down[0])!;
+    const lastB = persons.get(down[down.length - 1])!;
+    if (g.persons.has('iakov') && first.b < entry + 1 && lastB.b > entry) {
+      parts.push(modelId === 'mt-short' ? `Так выходит при 215${NB}годах пребывания в Египте (скобки Исх${NB}12:40; Гал${NB}3:17).` : `Так выходит при 430${NB}годах пребывания в Египте (Исх${NB}12:40).`);
+      refs.push('Исх 12:40');
+      if (modelId === 'mt-short') refs.push('Гал 3:17');
+    }
+    parts.push('Вероятно, родословие называет не все поколения.');
+    // стихи с числами — первыми: возраст при смерти, рождение последнего; затем стихи родства звеньев
+    // возраст при смерти предка и звеньев, рождение звеньев и последнего в цепочке, затем рождение предка
+    for (const x of [...(up ? [up] : []), ...links]) refs.push(...(g.persons.get(x)!.chrono?.died?.refs ?? []).slice(0, 1));
+    for (const x of links) refs.push(...(g.persons.get(x)!.chrono?.born?.refs ?? []).slice(0, 2));
+    if (tail.child) refs.push(...(g.persons.get(tail.child)!.chrono?.born?.refs ?? []).slice(0, 1));
+    if (up) refs.push(...(g.persons.get(up)!.chrono?.born?.refs ?? []).slice(0, 2));
+    for (const x of down.slice(1)) refs.push(...(g.persons.get(x)!.parentRefs ?? []).slice(0, 1));
+    for (const x of down.slice(1)) refs.push(...(g.persons.get(x)!.parentRefs ?? []).slice(1));
+    tensions.push({ persons: down, text: parts.join(' '), refs: uniq(refs).slice(0, 8), kind: 'stretched', cert: 'interpretation' });
+  }
+
+  // --- 7б. супруги не одного поколения (CARD-61): граница [муж − 15; муж + 30] (в эпохах долгих поколений — шире)
+  // не удержалась больше чем на SPOUSE_SLACK лет. Запись — в § 13 обоих; если одного из супругов растянуло сжатое
+  // родословие, текст называет то напряжение.
+  for (const [id, edges] of g.spousesOf) {
+    for (const s of edges) {
+      if (s.a !== id) continue;
+      const a = persons.get(s.a)!;
+      const w = persons.get(s.b)!;
+      if (a.cls === 'epochal' || w.cls === 'epochal' || a.named || w.named) continue;
+      const band = spouseBand(coupleNorm(s.a, s.b));
+      const hw = sexOf(s.a) === 'm' && sexOf(s.b) === 'f';
+      const diff = w.b - a.b;
+      const lo = hw ? band.lo : band.hi;
+      if (diff <= band.hi + SPOUSE_SLACK && diff >= -(lo + SPOUSE_SLACK)) continue;
+      const years = Math.round(Math.abs(diff));
+      const rel = hw ? (diff > 0 ? 'жена моложе мужа' : 'жена старше мужа') : 'супруги различаются по возрасту';
+      const usual = diff > 0 ? band.hi : lo;
+      const about = (k: Tension['kind']) => tensions.find((t) => t.kind === k && (t.persons.includes(s.a) || t.persons.includes(s.b)));
+      const related = about('stretched') ?? about('chain') ?? about('pair');
+      const parts = [`${chainOf(g, [s.a, s.b])}: по принятым годам ${rel} на ${yearsWord(years)}, а у супругов одного поколения разница обычно не больше чем в ${yearsWord(usual)}.`];
+      if (related) parts.push(`Так выходит из-за растянутых поколений: см. напряжение «${related.persons.map(nameOf).join(`${NB}— `)}». Вероятно, родословие называет не все поколения.`);
+      else parts.push('Годы обоих выведены из чисел текста и родства, и ближе их не поставить без противоречия другим связям.');
+      // стихи брака, затем числа и родство обоих
+      const own = [s.a, s.b].flatMap((x) => [...(g.persons.get(x)!.chrono?.died?.refs ?? []).slice(0, 1), ...(g.persons.get(x)!.chrono?.born?.refs ?? []).slice(0, 1), ...(g.persons.get(x)!.parentRefs ?? []).slice(0, 1)]);
+      tensions.push({
+        persons: [s.a, s.b],
+        text: parts.join(' '),
+        refs: uniq([...s.refs, ...(related?.refs ?? own)]).slice(0, 8),
+        kind: 'spouses',
+        ...(related ? { cert: 'interpretation' as const } : {}),
+      });
+    }
+  }
+
+  return { model: modelId, persons, tensions: dedupeTensions(tensions), epochs: mEpochs };
 }
 
 /** Короткие названия моделей для текста напряжений. */
@@ -805,11 +1568,12 @@ function dedupeTensions(ts: Tension[]): Tension[] {
 /** Лица, чьи жизни пересекаются с жизнью данного: «наверняка» — по крайним оценкам, «вероятно» — по центральным. */
 export function contemporaries(res: ChronoResult, id: string, limit = 40): { id: string; sure: boolean }[] {
   const me = res.persons.get(id);
-  if (!me) return [];
+  // у народа и рода современников нет (CARD-59; решение 23)
+  if (!me || me.named) return [];
   const myEnd = me.d ?? me.dEst;
   const out: { id: string; sure: boolean; overlap: number }[] = [];
   for (const [oid, o] of res.persons) {
-    if (oid === id || o.cls === 'epochal') continue;
+    if (oid === id || o.cls === 'epochal' || o.named) continue;
     const oEnd = o.d ?? o.dEst;
     const overlap = Math.min(myEnd, oEnd) - Math.max(me.b, o.b);
     if (overlap <= 0) continue;

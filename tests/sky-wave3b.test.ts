@@ -84,7 +84,17 @@ function drawSky(o: { w?: number; h?: number; move?: (s: InstanceType<typeof Sky
 const SIGLA = /^(ц\.|цар\.|пр\.|первосв\.|св\.|суд\.|ап\.|патр\.|лев\.)( \S+)?$/;
 const starLabels = (texts: Text[], top: number) =>
   texts.filter((q) => q.base === 'alphabetic' && q.y > top && !/^[↑↓←→]/.test(q.t) && !SIGLA.test(q.t) && !q.t.startsWith(', ') && !/^[А-ЯЁ ]{4,}$/.test(q.t));
-const box = (q: Text) => ({ x: q.x, y: q.y - 14, w: q.t.length * 7, h: 17 });
+/**
+ * Прямоугольник нарисованной подписи — той же геометрией, что проверяет размещение (labels.ts, textBox): строка кеглем
+ * из шрифта подписи (верх — 0,8 кегля над базовой линией, низ — 0,24 под ней) с ореолом 1,5 px. Прежняя рамка
+ * (14 px вверх и 17 px высотой при любом кегле) была на 1,5–2 px выше настоящей у кегля 12 и видела «наложение»
+ * подписей, стоящих вплотную (Уриил и Церуа при шаге строк 16 px): глифы и их ореолы при этом не пересекаются.
+ */
+const sizeOf = (q: Text) => Number(/(\d+(?:\.\d+)?)px/.exec(q.font)?.[1] ?? 14);
+const box = (q: Text) => {
+  const size = sizeOf(q);
+  return { x: q.x - 1.5, y: q.y - 0.8 * size - 1.5, w: q.t.length * 7 + 3, h: 1.04 * size + 3 };
+};
 const cross = (a: { x: number; y: number; w: number; h: number }, b: { x: number; y: number; w: number; h: number }) =>
   a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
 /** Приблизить к году (астр.) у середины неба. */
@@ -96,13 +106,16 @@ const at = (t: number, k: number) => (s: InstanceType<typeof Sky>) => {
 // ---------- D13: меридиан ----------
 
 describe('меридиан года (D13; UX-27, IX-34, MAP-07, MAP-33)', () => {
-  it('флажок: «990 г. до Р. Х.: живы 186, наверняка 41»; сказуемое согласуется с числом', () => {
+  // UX-59 (этап 7): число — с существительным и «около», «наверняка» — с тире; строку меняет агент cardtext (K3)
+  it('флажок: «990 г. до Р. Х.: живы около 186 лиц, наверняка — 41»; падеж после «около» — по числу', () => {
     const t = years.toAstro(-990);
-    expect(text.meridianText(t, 186, 41)).toBe('990 г. до Р. Х.: живы 186, наверняка 41');
-    expect(text.meridianText(t, 21, 3)).toMatch(/: жив 21, наверняка 3$/);
-    expect(text.meridianText(t, 11, 0)).toMatch(/: живы 11, все — вероятно$/);
-    expect(text.meridianText(t, 1, 0)).toMatch(/: жив 1, вероятно$/);
-    expect(text.meridianText(years.toAstro(2000), 0, 0)).toBe('2000 г. по Р. Х.: живых лиц Писания нет');
+    const nb = (s: string) => s.replace(/\u00a0/g, ' ');
+    expect(nb(text.meridianText(t, 186, 41))).toBe('990 г. до Р. Х.: живы около 186 лиц, наверняка — 41');
+    expect(nb(text.meridianText(t, 291, 7))).toMatch(/: живы около 291 лица, наверняка — 7$/);
+    expect(nb(text.meridianText(t, 11, 0))).toMatch(/: живы около 11 лиц, все — вероятно$/);
+    expect(nb(text.meridianText(t, 1, 0))).toMatch(/: жив один человек — вероятно$/);
+    expect(nb(text.meridianText(t, 1, 1))).toMatch(/: жив один человек — наверняка$/);
+    expect(nb(text.meridianText(years.toAstro(2000), 0, 0))).toBe('2000 г. по Р. Х.: живых лиц Писания нет');
   });
   it('«наверняка» — внутри надёжной части жизни, «вероятно» — по оценке; эпохальные даты не считаются', () => {
     const m = models[0];
@@ -266,9 +279,11 @@ describe('отметки одноимённых (E10; UX-31, IX-19, MAP-49)', ()
     expect(ids.length).toBeGreaterThan(5);
     const hl = new Map(ids.map((id) => [id, 'self' as const]));
     const { texts } = drawSky({ state: { pins: new Set(ids), highlight: hl } });
+    // у отметок — уточнение целиком; у прочих одноимённых в окне (MAP-66) — краткое, не больше двух слов
     const notes = texts.filter((q) => q.t.startsWith(', '));
-    expect(notes.length).toBeGreaterThan(3);
-    for (const n of notes) expect(ids.some((id) => `, ${byId.get(id)!.disambig}` === n.t), n.t).toBe(true);
+    const full = notes.filter((n) => ids.some((id) => `, ${byId.get(id)!.disambig}` === n.t));
+    expect(full.length).toBeGreaterThan(3);
+    for (const n of notes) if (!full.includes(n)) expect(n.t.slice(2).split(/\s+/).length, n.t).toBeLessThanOrEqual(2);
     const names = texts.filter((q) => q.t === 'Иосиф' && q.base === 'alphabetic');
     for (const a of names) for (const b of names) if (a !== b) expect(cross(box(a), box(b))).toBe(false);
   });

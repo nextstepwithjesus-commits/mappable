@@ -5,7 +5,7 @@
  * касание мимо и любое движение неба. Выбор имени — то же, что касание звезды (ввод неба, src/ui/sky/input.ts).
  */
 import { render } from 'preact';
-import { useLayoutEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { byId } from '../../data/atlas.ts';
 import { Close } from '../controls.tsx';
 import { typo } from '../text/typo.ts';
@@ -42,8 +42,12 @@ function WhichList({ ids, x, y, bounds, onPick, onClose }: WhichOpts & { onClose
     const below = y + GAP;
     const top = above >= bounds.top + 8 ? above : below + h <= bounds.bottom - 8 ? below : Math.max(bounds.top + 8, Math.min(below, window.innerHeight - h - 8));
     setAt({ left, top });
-    el.querySelector<HTMLElement>('.which-item')?.focus({ preventScroll: true });
   }, [ids.join(' '), x, y]);
+  // фокус — на первое имя, когда список уже стоит у пальца (data-placed): до этого он невидим (visibility: hidden),
+  // и фокус на нём не держится (MOB-56)
+  useEffect(() => {
+    if (at) ref.current?.querySelector<HTMLElement>('.which-item')?.focus({ preventScroll: true });
+  }, [at?.left, at?.top]);
   return (
     <div
       class="which"

@@ -73,7 +73,10 @@ export interface Frame {
 type Stretched = { v: ViewState; lanes: number };
 
 const ease = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
-const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
+/** Замедление к концу: шаг масштаба, инерция протяжки, сдвиг клавишей. У начала скорость — втрое средней. */
+export const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
+/** Плавная смена пропорции полос: по логарифму, от m0 к m1 по доле пути e. */
+const lerpLog = (a: number, b: number, e: number) => (a === b ? a : Math.exp(Math.log(a) + (Math.log(b) - Math.log(a)) * e));
 
 export class Camera {
   x0 = 0;
@@ -95,6 +98,8 @@ export class Camera {
   /** указатель нажат: небо у упора не возвращается, пока его держат */
   private held = false;
   private anim: { raf: number } | null = null;
+  /** что сейчас движет камеру: перелёт и инерция — долгие движения, их нажатие только останавливает (IX-54) */
+  private animKind: 'fly' | 'glide' | 'step' = 'step';
   /** сдвиг за край: позиция «без упора» и то, что было показано после последнего сдвига */
   private raw: { x0: number; laneTop: number; shownX0: number; shownLane: number } | null = null;
   private settleTimer: ReturnType<typeof setTimeout> | null = null;
@@ -184,8 +189,15 @@ export class Camera {
   }
 
   // ---------- пределы ----------
-  /** Самый мелкий масштаб: «всё небо». */
+  /**
+   * Предел отдаления, если он не «всё небо» (ставит src/ui/sky/view.ts, zoomFloor): в режиме «только линии Мессии» —
+   * коридор линий с полями по 24 px от Адама и от Иисуса Христа (он чуть мельче «всего неба», MAP-59); в режиме
+   * «в работе» — окно набора ×1,5, но не уже 200 лет (IX-64). null — «всё небо».
+   */
+  zoomFloor: number | null = null;
+  /** Самый мелкий масштаб: «всё небо» или предел режима (zoomFloor). */
   kxLo(): number {
+    if (this.zoomFloor !== null && this.zoomFloor > 0) return this.zoomFloor;
     return this.fitK ? this.fitK.kx : KX_MIN;
   }
   /** kx в пределах: не мельче «всего неба», не крупнее ~20 лет на ширину у мировой x. */
@@ -208,19 +220,28 @@ export class Camera {
     const vw = (this.vp.r - this.vp.l) / kx;
     const vh = (this.vp.b - this.vp.t) / ky;
     const s = Math.max(0, Math.min(1, Math.log2(kx / this.kxLo())));
-    const dx = f.x1 - f.x0;
     const dl = f.lane1 - f.lane0;
-    // за краем данных всегда можно заглянуть на EDGE px (поля «всего неба»)
-    const overX = Math.max((vw - dx) / 2, 0.75 * vw * s, EDGE / kx);
+    // за краем данных всегда можно заглянуть на EDGE px (поля «всего неба»). По времени окно шире данных (коридор линий
+    // мельче «всего неба», MAP-59) не центрируется насильно: данные — где угодно внутри окна, с полями не меньше EDGE
+    const overX = Math.max(0.75 * vw * s, EDGE / kx);
     const overL = Math.max((vh - dl) / 2, 0.75 * vh * s, EDGE / ky);
     const xa = f.x0 - overX - this.vp.l / kx;
     const xb = f.x1 + overX - this.vp.r / kx;
     const la = f.lane0 - overL + this.vp.b / ky;
     const lb = f.lane1 + overL + this.vp.t / ky;
-    return { x: xa <= xb ? [xa, xb] : [(xa + xb) / 2, (xa + xb) / 2], lane: la <= lb ? [la, lb] : [(la + lb) / 2, (la + lb) / 2] };
+    return { x: xa <= xb ? [xa, xb] : [xb, xa], lane: la <= lb ? [la, lb] : [(la + lb) / 2, (la + lb) / 2] };
   }
-  /** Вид в пределах: масштаб и положение. */
-  constrain(v: ViewState): ViewState {
+  /** Вид в пределах: масштаб и положение. lanes — пропорция полос, с которой вид будет показан (по умолчанию — нынешняя). */
+  constrain(v: ViewState, lanes = this.lanes): ViewState {
+    if (lanes !== this.lanes) {
+      const was = this.lanes;
+      this.lanes = lanes;
+      try {
+        return this.constrain(v);
+      } finally {
+        this.lanes = was;
+      }
+    }
     const kx = this.clampKx(v.kx, v.x0 + (this.vpCenter()[0]) / v.kx);
     // масштаб поменялся — середина видимой части остаётся на месте
     let { x0, laneTop } = v;
@@ -342,12 +363,29 @@ export class Camera {
     this.animateTo(to, SETTLE_MS, this.onChange, reduced, easeOut);
   }
 
+  /**
+   * Инерция протяжки (решение владельца 37; IX-05): небо скользит ещё на (dx, dy) px за ms и останавливается с замедлением,
+   * в пределах сдвига (за краем данных — сразу к краю). При ослабленном движении инерции нет. Было ли куда скользить.
+   */
+  glide(dx: number, dy: number, ms: number, onFrame: () => void, reduced = false): boolean {
+    if (reduced || !(ms > 0) || (!dx && !dy)) return false;
+    const to = this.constrain({ x0: this.x0 - dx / this.kx, kx: this.kx, laneTop: this.laneTop + dy / this.ky });
+    if (this.near(to)) return false;
+    this.animateTo(to, ms, onFrame, false, easeOut);
+    this.animKind = 'glide';
+    return true;
+  }
+
   stop() {
     if (this.anim) cancelAnimationFrame(this.anim.raf);
     this.anim = null;
   }
   get moving(): boolean {
     return this.anim !== null;
+  }
+  /** Идёт перелёт или инерция протяжки (не короткий шаг масштаба и не возврат от упора). */
+  get flying(): boolean {
+    return this.anim !== null && this.animKind !== 'step';
   }
 
   /** Короткий переход к виду: центр видимой части и ширина окна — по логарифму масштаба. */
@@ -449,8 +487,11 @@ export class Camera {
   /** Можно ли ещё растянуть (dir = 1) или сжать (dir = −1) ось — для органов неба. */
   canStretch(axis: Axis, dir: 1 | -1): boolean {
     if (axis === 'time') {
+      // запас меньше 0,1 % — предел: шаг масштаба держит на месте выбранную звезду, а предел здесь берётся по середине
+      // окна; местная плотность шкалы в паре лет от неё отличается на миллионные доли, и кнопка не должна от этого
+      // оставаться включённой у самого предела (IX-62)
       const [cx] = this.vpCenter();
-      return Math.abs(this.clampKx(this.kx * (dir > 0 ? 1.01 : 1 / 1.01), this.wx(cx)) / this.kx - 1) > 1e-6;
+      return Math.abs(this.clampKx(this.kx * (dir > 0 ? 1.01 : 1 / 1.01), this.wx(cx)) / this.kx - 1) > 1e-3;
     }
     const m = this.lanesAt();
     const [a, b] = this.lanesRange();
@@ -493,20 +534,26 @@ export class Camera {
    * Прежняя форма flyTo(x, lane, wTarget, onFrame, reduced) — точка (x, lane) в середину видимой части, окно wTarget
    * мировых единиц на её ширину — тоже принимается; вид ставится в пределы камеры.
    */
-  flyTo(to: ViewState, onFrame: () => void, reduced?: boolean): void;
+  flyTo(to: ViewState, onFrame: () => void, reduced?: boolean, lanes?: number): void;
   flyTo(x: number, lane: number, wTarget: number, onFrame: () => void, reduced?: boolean): void;
-  flyTo(a: ViewState | number, b: (() => void) | number, c?: boolean | number, d?: () => void, e?: boolean) {
+  flyTo(a: ViewState | number, b: (() => void) | number, c?: boolean | number, d?: (() => void) | number, e?: boolean) {
     if (typeof a === 'number') {
       const [cx, cy] = this.vpCenter();
       const kx = (this.vp.r - this.vp.l) / Math.max(1e-9, c as number);
-      this.flyView(this.constrain({ x0: a - cx / kx, kx, laneTop: (b as number) + cy / this.kyFor(kx) }), d!, !!e);
+      this.flyView(this.constrain({ x0: a - cx / kx, kx, laneTop: (b as number) + cy / this.kyFor(kx) }), d as () => void, !!e);
       return;
     }
-    this.flyView(a, b as () => void, !!c);
+    this.flyView(a, b as () => void, !!c, typeof d === 'number' ? d : undefined);
   }
-  private flyView(to: ViewState, onFrame: () => void, reduced: boolean) {
+  /**
+   * Перелёт к виду to; lanes — пропорция полос в конце (вписывание групп сжатием строк, IX-53): она меняется вместе
+   * с перелётом, по логарифму. to.laneTop посчитан для этой пропорции.
+   */
+  private flyView(to: ViewState, onFrame: () => void, reduced: boolean, lanes?: number) {
     this.stop();
     this.raw = null;
+    const m0 = this.lanes;
+    const m1 = lanes !== undefined && lanes > 0 ? Math.max(LANES_MIN, Math.min(LANES_MAX, lanes)) : m0;
     const [cx, cy] = this.vpCenter();
     const vw = this.vp.r - this.vp.l;
     const w0 = vw / this.kx;
@@ -514,8 +561,9 @@ export class Camera {
     const c0x = this.x0 + cx / this.kx;
     const c1x = to.x0 + cx / to.kx;
     const c0l = this.laneTop - cy / this.ky;
-    const c1l = to.laneTop - cy / this.kyFor(to.kx);
+    const c1l = to.laneTop - cy / this.kyWith(to.kx, m1);
     const finish = () => {
+      this.lanes = m1;
       this.x0 = to.x0;
       this.kx = to.kx;
       this.laneTop = to.laneTop;
@@ -560,15 +608,18 @@ export class Camera {
       const e = ease(t);
       const [ccx, cw] = interp(e);
       const [vx, vy] = this.vpCenter();
+      this.lanes = lerpLog(m0, m1, e);
       this.kx = (this.vp.r - this.vp.l) / Math.min(cw, Math.max(wMax, w0, w1));
       this.x0 = ccx - vx / this.kx;
       const cl = c0l + (c1l - c0l) * e;
       this.laneTop = cl + vy / this.ky;
     }, finish, onFrame);
+    this.animKind = 'fly';
   }
 
   /** Общий ход анимации: шаг по доле времени, конец, кадр. reduced — сразу конец. */
   private run(ms: number, reduced: boolean, step: (t: number) => void, end: () => void, onFrame: () => void) {
+    this.animKind = 'step';
     if (reduced || ms <= 0) {
       end();
       onFrame();

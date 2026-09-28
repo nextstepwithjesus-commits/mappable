@@ -21,11 +21,15 @@ vi.mock('../src/render/glyphs.ts', async (orig) => {
 });
 vi.mock('../src/render/trails.ts', async (orig) => {
   const m = await orig<typeof import('../src/render/trails.ts')>();
-  return { ...m, drawLifeTrail: vi.fn(m.drawLifeTrail), drawDescent: vi.fn(m.drawDescent), drawBracket: vi.fn(m.drawBracket), drawMarriage: vi.fn(m.drawMarriage) };
+  return { ...m, drawLifeTrail: vi.fn(m.drawLifeTrail), drawDescent: vi.fn(m.drawDescent), drawBracket: vi.fn(m.drawBracket), drawMarriage: vi.fn(m.drawMarriage), drawEpochBracket: vi.fn(m.drawEpochBracket) };
 });
 vi.mock('../src/render/ribbons.ts', async (orig) => {
   const m = await orig<typeof import('../src/render/ribbons.ts')>();
   return { ...m, drawStrands: vi.fn(m.drawStrands) };
+});
+vi.mock('../src/render/marks.ts', async (orig) => {
+  const m = await orig<typeof import('../src/render/marks.ts')>();
+  return { ...m, drawWorkMark: vi.fn(m.drawWorkMark) };
 });
 vi.mock('../src/render/labels.ts', async (orig) => {
   const m = await orig<typeof import('../src/render/labels.ts')>();
@@ -87,6 +91,7 @@ const trails = await import('../src/render/trails.ts');
 const ribbons = await import('../src/render/ribbons.ts');
 const eribbons = await import('../src/engine/ribbons.ts');
 const labels = await import('../src/render/labels.ts');
+const marks = await import('../src/render/marks.ts');
 const { models, byId } = await import('../src/data/atlas.ts');
 
 /** Холст, который принимает любые вызовы; ширина текста — 7 px на знак. */
@@ -115,6 +120,8 @@ const spies = {
   drawStrands: vi.mocked(ribbons.drawStrands),
   buildRibbons: vi.mocked(eribbons.buildRibbons),
   drawFoldMark: vi.mocked(labels.drawFoldMark),
+  drawEpochBracket: vi.mocked(trails.drawEpochBracket),
+  drawWorkMark: vi.mocked(marks.drawWorkMark),
 };
 type SpyName = keyof typeof spies;
 
@@ -179,6 +186,14 @@ describe('образцы — функции неба, а не свои копи�
     expect(none.solidTo).toBe(none.x0);
     expect(none.x1 - none.x0).toBe(trails.TAIL_PX);
     expect(t('trailEpochal').cls).toBe('epochal');
+    // растянутое родословие — разрыв «//» внутри следа (MAP-51)
+    const br = t('trailBreak');
+    expect(br.brk! > br.x0 && br.brk! < br.x1).toBe(true);
+  });
+  it('время не установлено — скобка неба drawEpochBracket; лицо в наборе — метка неба drawWorkMark (MAP-52, IX-51)', () => {
+    expect(paint('epochBracket').drawEpochBracket.mock.calls.length).toBe(1);
+    expect(paint('epochBracket').drawGlyph.mock.calls[0][3].hollow).toBe(true);
+    expect(paint('workMark').drawWorkMark.mock.calls.length).toBe(1);
   });
   it('отвод, мать на отводе, знак разрыва, призрак жены — drawDescent', () => {
     const d = paint('descent').drawDescent.mock.calls[0][1];

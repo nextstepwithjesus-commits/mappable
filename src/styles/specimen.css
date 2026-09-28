@@ -21,7 +21,8 @@ html:has(.specimen) body {
   font-weight: 560;
   font-variation-settings: 'opsz' 36;
 }
-.specimen h2 {
+/* заголовки разделов образца; h2 карточки внутри образца — свой, шапки листа (folio.css) */
+.specimen main > section > h2 {
   margin: 48px 0 8px;
   font-size: var(--t-title);
   line-height: var(--t-title-lh);
@@ -331,6 +332,24 @@ html:has(.specimen) body {
 .spec-cardside .seg {
   margin-top: 0;
 }
+/* «Загрузка» и «Ошибка» (VIS-55): живые листы в этих состояниях, рядом, под основной карточкой */
+.spec-cardstates {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, var(--folio-w)));
+  gap: 32px;
+  align-items: start;
+}
+.spec-cardstate {
+  margin: 0;
+}
+.spec-cardstate figcaption {
+  margin: 0 0 6px;
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+  color: var(--ink-2);
+}
 .spec-dl {
   margin: 16px 0 0;
   font-size: var(--t-note);
@@ -362,7 +381,8 @@ html:has(.specimen) body {
 
 @media (max-width: 900px) {
   .spec-themes,
-  .spec-cards {
+  .spec-cards,
+  .spec-cardstates {
     grid-template-columns: minmax(0, 1fr);
   }
   .spec-card {

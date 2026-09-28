@@ -3,7 +3,8 @@
  * Номера разделов неизменны, поэтому строки выравниваются сами собой: слева первое лицо, справа второе,
  * номер и название раздела — в корешке. Разделы, о которых нет сведений ни у одного лица, сведены в одну строку.
  * Линейки — только между частями I–VI (CARD-48; VIS-37); § 1 (имя) — в шапках, отдельной строкой не выводится.
- * Мини-шкалы двух шапок стоят на общей оси лет. На телефоне — один столбец: в каждом разделе строки двух лиц подряд (MOB-22).
+ * Мини-шкалы двух шапок стоят на общей оси лет. На телефоне — один столбец: в каждом разделе корешок, под ним строки двух
+ * лиц подряд (MOB-22, MOB-48).
  */
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
@@ -14,12 +15,16 @@ import { selected, second, first, panel, model, setPair } from '../state.ts';
 import { SECTIONS, PARTS, buildSections, sectionStates, Masthead, type SecState } from './Folio.tsx';
 import { lifeWindow } from './card/Masthead.tsx';
 import { skyRef, CAN_PRINT } from './common.tsx';
+import { focusCardTitle } from './focus.ts';
+import { grid } from './layout.ts';
+import { openSheetAt, sheetStop } from './sheet.ts';
 import { Close } from './controls.tsx';
 import { Chain } from './panels/Kinship.tsx';
 import { typo } from './text/typo.ts';
 
 /** Что стоит на странице вместо раздела без сведений. */
-const STATE_TEXT: Partial<Record<SecState, string>> = { silent: 'в Писании не сообщается', na: 'не относится', absent: '—' };
+/** Пустая сторона разворота — словами, не одиноким «—» (VIS-57): раздел не составлен — «не сообщается». */
+const STATE_TEXT: Partial<Record<SecState, string>> = { silent: 'в Писании не сообщается', na: 'не относится', absent: 'не сообщается' };
 
 /** Общая ось мини-шкал двух шапок: объединение окон обоих лиц (астрономические годы). */
 export function commonAxis(a: [number, number] | null, b: [number, number] | null): [number, number] | undefined {
@@ -27,11 +32,19 @@ export function commonAxis(a: [number, number] | null, b: [number, number] | nul
   return [Math.min(a[0], b[0]), Math.max(a[1], b[1])];
 }
 
-/** «Показать на небе» (IX-25): разворот закрывается (запись в истории), лицо выбирается, небо летит к нему. */
+/**
+ * «Показать на небе» (IX-25): разворот закрывается (запись в истории), лицо выбирается, небо летит к нему. Фокус — на
+ * заголовок карточки этого лица (IX-66), а не туда, откуда открыли разворот: читатель продолжает с лицом, которое показал.
+ * На телефоне лист карточки — на шапке, как после той же команды в карточке (MOB-15): звезда видна над ним.
+ */
 function showOnSky(id: string) {
+  const phone = grid.peek().phone;
+  if (phone) openSheetAt('peek');
   panel.value = null;
   selected.value = id;
+  if (phone) sheetStop.value = 'peek';
   skyRef.flyTo(id);
+  focusCardTitle(id);
 }
 
 export function Spread() {
@@ -63,7 +76,9 @@ export function Spread() {
   const R = side(b, 'B:');
   const axis = commonAxis(lifeWindow(a), lifeWindow(b));
 
-  // имя лица перед его строкой — видно в один столбец (телефон), диктору — всегда
+  // имя лица перед его строкой — видно в один столбец (телефон), диктору — всегда. В разметке строки раздела корешок
+  // (номер и название) — первым, затем «Давид: …», «Соломон: …» (MOB-48): так строку читает диктор и так она идёт на
+  // телефоне; на широком экране места страниц и корешка заданы в spread.css
   const cell = (s: ReturnType<typeof side>, n: number) => (
     <div class="pg">
       <span class="who">{s.name}:</span>
@@ -79,11 +94,11 @@ export function Spread() {
     const n0 = run[0];
     rows.push(
       <div class="row quiet" key={`r${n0}`}>
-        {cell(L, n0)}
         <div class="spine">
           <span class="no">{run.length > 1 ? `${n0}–${run[run.length - 1]}` : n0}</span>
           {typo(run.map((n) => SECTIONS[n - 1].title).join(', '))}
         </div>
+        {cell(L, n0)}
         {cell(R, n0)}
       </div>,
     );
@@ -115,11 +130,11 @@ export function Spread() {
     flush();
     rows.push(
       <div class="row" key={`r${s.n}`}>
-        {cell(L, s.n)}
         <div class="spine">
           <span class="no">{s.n}</span>
           {s.title}
         </div>
+        {cell(L, s.n)}
         {cell(R, s.n)}
       </div>,
     );
@@ -154,14 +169,15 @@ export function Spread() {
         <Close label="Закрыть разворот" onClick={() => (panel.value = null)} />
       </div>
       <div class="spread-grid">
+        {/* шапки обоих лиц, затем цепочка родства; на широком экране цепочка — в корешке между шапками (spread.css) */}
         <div class="row mastrow">
           <div class="pg">
             <Masthead id={a} axis={axis} actions={act(a)} />
           </div>
-          <KinSpine key={`${a}|${b}`} a={a} b={b} />
           <div class="pg">
             <Masthead id={b} axis={axis} actions={act(b)} />
           </div>
+          <KinSpine key={`${a}|${b}`} a={a} b={b} />
         </div>
         {rows}
       </div>

@@ -12,24 +12,46 @@
     'sheet sky folio'
     'strip strip strip';
 }
-/* Ручки-разделители (J2; src/ui/App.tsx): 8 px на границе колонки и неба — точкой отсчёта служит ячейка неба. Прозрачны;
-   при наведении, протяжке и фокусе — черта 3 px цвета --ink-2 (≥ 3 : 1 и к листу, и к небу), курсор col-resize.
-   Класс — .resizer, только у прямых детей .app: «split» уже занят строками синопсиса (tr.split). */
+/* Ручки-разделители (J2; src/ui/App.tsx): на границе колонки и неба — точкой отсчёта служит ячейка неба. Зона захвата —
+   24 px, на сенсорном экране — 44 px (MOB-58); в покое посередине высоты — три точки 2 × 2 px цвета --ink-3 с шагом 5 px
+   (VIS-50: ручку видно без наведения); при наведении, протяжке и фокусе — черта 3 px цвета --ink-2 (≥ 3 : 1 и к листу,
+   и к небу), курсор col-resize. Класс — .resizer, только у прямых детей .app: «split» уже занят строками синопсиса. */
 .app > .resizer {
   grid-area: sky;
   position: absolute;
   top: 0;
   bottom: 0;
   z-index: 7;
-  width: 8px;
+  width: 24px;
   cursor: col-resize;
   touch-action: none;
 }
 .app > .resizer-sheet {
-  left: -4px;
+  left: -12px;
 }
 .app > .resizer-folio {
-  right: -4px;
+  right: -12px;
+}
+@media (pointer: coarse) {
+  .app > .resizer {
+    width: 44px;
+  }
+  .app > .resizer-sheet {
+    left: -22px;
+  }
+  .app > .resizer-folio {
+    right: -22px;
+  }
+}
+.app > .resizer::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 2px;
+  height: 12px;
+  margin: -6px 0 0 -1px;
+  background: repeating-linear-gradient(to bottom, var(--ink-3) 0 2px, transparent 2px 5px);
 }
 .app > .resizer::after {
   content: '';
@@ -45,6 +67,11 @@
 .app > .resizer.dragging::after,
 .app > .resizer:focus-visible::after {
   background: var(--ink-2);
+}
+.app > .resizer:hover::before,
+.app > .resizer.dragging::before,
+.app > .resizer:focus-visible::before {
+  background: none;
 }
 .app > .resizer:focus-visible {
   outline-offset: -2px;

@@ -1,6 +1,6 @@
 import { Fragment } from 'preact';
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import { byId, graph } from '../../data/atlas.ts';
+import { byId, graph, lines } from '../../data/atlas.ts';
 import { selected, second, first, pickMode, kinPath, kinSteps, pathOf, setPair, clearPair, panel } from '../../state.ts';
 import { P, Refs, VerseInsert, flyToIds, goTo, plural, skyRef } from '../common.tsx';
 import { relate, foldChain, accusative, type KinLink, type Relation } from '../../engine/kinship.ts';
@@ -33,10 +33,13 @@ function Who({ id }: { id: string }) {
     <span class="who">
       <P id={id} />
       {p.disambig ? <span class="ds">{typo(`, ${p.disambig}`)}</span> : null}
-      <span class="yrs">{typo(lifeText(id))}</span>
+      <span class="yrs">{typo(lifeText(id, { when: false }))}</span>
     </span>
   );
 }
+
+/** Последовательности линий Мессии по data/lines — для порядка путей «Родства». */
+const LINE_IDS = { joseph: lines.joseph.persons.map((s) => s.id), mary: lines.mary.persons.map((s) => s.id) };
 
 export function KinshipPanel() {
   // пара не следует за выбором: ссылки в цепочке открывают карточки, но первое лицо остаётся прежним
@@ -46,7 +49,8 @@ export function KinshipPanel() {
   // какое поле пары сейчас меняется командой «заменить»
   const [editing, setEditing] = useState<null | 'a' | 'b'>(null);
   const [more, setMore] = useState(false);
-  const rels = useMemo(() => (a && b ? relate(graph, a, b) : []), [a, b]);
+  // пути по линиям Мессии — первыми, смешанные — под «ещё» (решение 20; CARD-62, UX-47)
+  const rels = useMemo(() => (a && b ? relate(graph, a, b, undefined, { lines: LINE_IDS }) : []), [a, b]);
   // какой путь светится на небе: по умолчанию первый
   const [onSky, setOnSky] = useState(0);
   useEffect(() => {
@@ -233,7 +237,7 @@ export function Chain({ chain, ns, years = true, refs = true }: { chain: KinLink
             <div class="link">
               <Sign id={c.id} />
               <P id={c.id} />
-              {years && <span class="yrs">{typo(lifeText(c.id))}</span>}
+              {years && <span class="yrs">{typo(lifeText(c.id, { when: false }))}</span>}
             </div>
             {refs && c.step && <VerseInsert owner={`${ns}c${i}`} refs={c.step.refs} />}
           </li>
@@ -247,11 +251,14 @@ export function Chain({ chain, ns, years = true, refs = true }: { chain: KinLink
 function RelationView({ r, ns, lit, onShow }: { r: Relation; ns: string; lit: boolean; onShow: () => void }) {
   // общий предок — только при боковом родстве, и если фраза не назвала его сама
   const ancestorLine = !r.lineal && r.ancestors.length > 0 && !/: общи/.test(r.sentence) && r.up + r.down > 2;
+  // обходы той же длины (через матерей, по другому месту Писания) — только по запросу (CARD-62)
+  const [detours, setDetours] = useState(false);
   return (
     <article class="relation">
       <p class="sent" tabIndex={-1}>
         {typo(r.sentence)}
       </p>
+      {r.line?.text ? <div class={r.line.kind === 'mixed' ? 'line-note mixed' : 'line-note'}>{typo(r.line.text.charAt(0).toUpperCase() + r.line.text.slice(1))}</div> : null}
       {r.scripture && (
         <div class="muted">
           {r.scripture.text ? `В Писании: ${r.scripture.text}` : 'Так названо в Писании'}
@@ -270,7 +277,14 @@ function RelationView({ r, ns, lit, onShow }: { r: Relation; ns: string; lit: bo
           ))}
         </div>
       )}
-      {r.variants.length > 0 && (
+      {r.variants.length > 0 && !detours && (
+        <div class="cmds">
+          <button class="cmd more" aria-expanded={false} onClick={() => setDetours(true)}>
+            {`ещё ${r.variants.length} ${plural(r.variants.length, 'обход', 'обхода', 'обходов')} той же длины`}
+          </button>
+        </div>
+      )}
+      {r.variants.length > 0 && detours && (
         <div class="muted">
           Путь той же длины идёт и{' '}
           {r.variants.map((v, i) => (

@@ -9,11 +9,26 @@
   display: block;
   cursor: grab;
 }
-/* холст в фокусе — внутренняя обводка по краю неба (B8; VIS-16): снаружи её срезал бы край сетки.
-   Кольцо у звезды в фокусе рисует сам холст (I1). */
+/* холст в фокусе — уголки 16 × 16 толщиной 2 px по углам неба (B8; VIS-16, VIS-60): рамка по всему периметру делала небо
+   картиной в раме. Уголки рисует слой поверх холста; кольцо у звезды в фокусе рисует сам холст (I1). */
 .sky canvas:focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: -2px;
+  outline: none;
+}
+.sky:has(> canvas:focus-visible)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--focus), var(--focus)) left top / 16px 2px no-repeat,
+    linear-gradient(var(--focus), var(--focus)) left top / 2px 16px no-repeat,
+    linear-gradient(var(--focus), var(--focus)) right top / 16px 2px no-repeat,
+    linear-gradient(var(--focus), var(--focus)) right top / 2px 16px no-repeat,
+    linear-gradient(var(--focus), var(--focus)) left bottom / 16px 2px no-repeat,
+    linear-gradient(var(--focus), var(--focus)) left bottom / 2px 16px no-repeat,
+    linear-gradient(var(--focus), var(--focus)) right bottom / 16px 2px no-repeat,
+    linear-gradient(var(--focus), var(--focus)) right bottom / 2px 16px no-repeat;
 }
 .sky canvas.picking {
   cursor: crosshair;
@@ -55,6 +70,15 @@
 .tip .yr {
   color: var(--ink-2);
   font-variant-numeric: lining-nums tabular-nums;
+}
+/* выбор второго лица «Родства»: кем лицо приходится первому (IX-22) */
+.tip .kin {
+  color: var(--ink);
+}
+/* пояснение надписи рамки (UX-08) */
+.tip .note {
+  max-width: 280px;
+  color: var(--ink);
 }
 /* стих основания у отрезка яруса эпох: царствование, надписание книги пророка */
 .tip .verse {
@@ -116,7 +140,9 @@
 .cartouche .ribbons .swatch {
   margin: 0;
 }
-/* «Как читать карту» — во вступлении и в «Условных знаках»: сенсорный экран — о касаниях, мышь — о колесе и щелчке */
+/* «Как читать карту» — во вступлении и в «Условных знаках»: сенсорный экран — о касаниях, мышь — о колесе, щелчке
+   и клавишах. Пункты (li) и слова внутри пункта (span): «щёлкните» и «коснитесь», «клавиша /» (MOB-07).
+   В «Условных знаках» (.both) — оба пункта, а внутри пункта — слова для мыши. */
 .guide {
   margin: 0 0 8px;
   padding: 0;
@@ -125,12 +151,16 @@
 .guide li {
   margin: 0 0 4px;
 }
-.guide:not(.both) .for-touch {
+.guide:not(.both) .for-touch,
+.guide.both span.for-touch {
   display: none;
 }
 @media (pointer: coarse) {
-  .guide:not(.both) .for-touch {
+  .guide:not(.both) li.for-touch {
     display: list-item;
+  }
+  .guide:not(.both) span.for-touch {
+    display: inline;
   }
   .guide:not(.both) .for-mouse {
     display: none;
@@ -140,7 +170,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 4px 12px;
-  margin-top: 8px;
+  margin: 0 0 10px;
   font-family: var(--sans);
   font-size: var(--t-ui);
   line-height: var(--t-ui-lh);
@@ -162,6 +192,12 @@
   background: var(--sheet);
   z-index: 1;
 }
+/* невысокое окно (1024 × 768 и ниже): без вводного абзаца — входы и «Как читать карту» видны без прокрутки (UX-56) */
+@media (max-height: 800px) {
+  .cartouche .long {
+    display: none;
+  }
+}
 /* низкое окно (альбомная ориентация, масштаб 200 %): укороченное вступление */
 @media (max-height: 520px) {
   .cartouche .long,
@@ -169,7 +205,37 @@
     display: none;
   }
 }
-/* свёрнутое вступление — команда в левом нижнем углу неба (C5; UX-03) */
+/* низкое небо (до 520 px; MOB-07): вступление — одна строка «Толедот · Как читать карту · Свернуть», небо видно */
+.cartouche.low {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  right: auto;
+  width: auto;
+  max-width: calc(100% - 44px);
+  padding: 2px 4px 2px 12px;
+  overflow: visible;
+}
+.cartouche.low .hint {
+  display: none;
+  margin-right: 8px;
+  white-space: nowrap;
+}
+@media (pointer: coarse) {
+  .cartouche.low .hint {
+    display: inline;
+  }
+}
+.cartouche.low .ttl {
+  margin-right: 8px;
+  font-family: var(--serif);
+  font-size: var(--t-body);
+  line-height: var(--t-body-lh);
+  font-weight: 600;
+  color: var(--ink);
+}
+/* свёрнутое вступление — команда всегда в левом нижнем углу неба (C5; UX-03, IX-63). На телефоне с открытым листом она
+   под листом: над листом — указатели у края («↓ Давид»), им это место нужнее */
 .guide-cmd {
   position: absolute;
   left: 26px;
@@ -185,11 +251,6 @@
   font-size: var(--t-ui);
   line-height: var(--t-ui-lh);
   color: var(--ink-2);
-}
-.guide-cmd.high {
-  /* под рамкой, а в режиме эпох — под ярусами: --sky-top — верх видимой части неба (SkyView) */
-  top: calc(var(--sky-top, 44px) + 8px);
-  bottom: auto;
 }
 .guide-cmd:hover {
   background: var(--sheet-2);
@@ -283,6 +344,13 @@
   align-items: center;
   gap: 8px;
 }
+/* у предела масштаба «+» или «−» выключены, но в порядке Tab (IX-62): цвет структурной линии, как у .cmd:disabled */
+.skyctl .zoom button[aria-disabled='true'],
+.skyctl.column button[aria-disabled='true'] {
+  color: var(--rule-strong);
+  background: none;
+  cursor: default;
+}
 /* «−», «+», «Всё небо» — команды 32 px в общей рамке */
 .skyctl .zoom button {
   display: inline-flex;
@@ -345,7 +413,7 @@
   padding: 7px 14px 8px;
 }
 
-/* Узкое небо (< 520 px: телефон, планшет с карточкой) — колонка кнопок 44 × 44 у правого края (MOB-05, MOB-25) */
+/* Узкое небо (уже 760 px, телефон, низкое окно) — колонка кнопок 44 × 44 у правого края (MOB-05, MOB-25, IX-56, VIS-51) */
 .skyctl.column {
   display: flex;
   flex-direction: column;
@@ -400,6 +468,14 @@
 }
 
 /* лист «Вид» (узкое небо): флажки, масштаб, модель */
+/* пропорция строк не по умолчанию — её значение рядом с «по умолчанию» (IX-61) */
+.lanes-now {
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+  color: var(--ink-2);
+  white-space: nowrap;
+}
 .viewctl .seg {
   margin-bottom: 8px;
 }
@@ -438,10 +514,11 @@
   border-bottom: 0;
   border-top: 4px solid currentColor;
 }
+/* лист пристыкован к блоку (VIS-51): его нижняя рамка — верхняя рамка блока, правые края совпадают */
 .viewpop {
   position: absolute;
   right: -1px;
-  bottom: calc(100% + 4px);
+  bottom: 100%;
   z-index: 5;
   display: grid;
   grid-template-columns: auto auto;
@@ -568,35 +645,82 @@
   cursor: ns-resize;
 }
 
-/* строка режима выбора второго лица (D6): непрозрачная, у верхней кромки неба, поверх линейки годов */
-.pickbar {
+/* Строки состояния у верхней кромки неба (D6, E10, G2, J4; VIS-46, MAP-67): под служебной строкой рамки — линейка лет
+   видна всегда; в режиме эпох — под ярусами (--sky-top — верх видимой части, SkyView). Строка — непрозрачный лист с рамкой,
+   одна строка не выше 36 px: текст обрезается многоточием, «— команда (Esc)» остаётся. Рядом — метка пропорции строк. */
+.skytop {
   position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: max-content;
-  max-width: calc(100% - 24px);
+  top: calc(var(--sky-top, 44px) + 8px);
+  left: 26px;
+  right: 12px;
+  z-index: 6;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 4px 8px;
+  pointer-events: none;
+}
+.pickbar {
+  pointer-events: auto;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 4px;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 34px;
   padding: 0 4px 0 12px;
   background: var(--sheet);
   border: 1px solid var(--rule-strong);
-  border-top: 0;
   font-family: var(--sans);
   font-size: var(--t-ui);
   line-height: var(--t-ui-lh);
   color: var(--ink);
-  z-index: 6;
+  white-space: nowrap;
+}
+.pickbar .txt {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pickbar .dash {
+  flex: none;
+  color: var(--ink-2);
 }
 .pickbar button {
   flex: none;
 }
-/* строка отметок поиска (E10) — тот же лист и та же команда, что у строки выбора второго лица (.pickbar);
-   «Esc — снять» и «Esc — отмена» — только там, где есть клавиатура (MOB-21) */
+.pickbar .keys-only {
+  flex: none;
+  padding-right: 8px;
+  color: var(--ink-2);
+}
+/* «(Esc)» — только там, где есть клавиатура (MOB-21) */
 @media (pointer: coarse) {
-  .pinbar .keys-only,
   .pickbar .keys-only {
     display: none;
+  }
+}
+/* телефон: колонка кнопок — у верхнего края справа (phone.css), строки не заходят под неё; текст строки не обрезается
+   до «Моисей не в …» — он идёт своей строкой, команды под ним */
+@media (max-width: 720px) {
+  .skytop {
+    left: 8px;
+    right: 60px;
+    justify-content: flex-start;
+  }
+  .pickbar {
+    flex-wrap: wrap;
+    padding: 4px 4px 0 12px;
+  }
+  .pickbar .txt {
+    flex: 1 1 100%;
+    white-space: normal;
+  }
+  .pickbar .dash {
+    display: none;
+  }
+  .pickbar button:first-of-type {
+    margin-left: -8px;
   }
 }

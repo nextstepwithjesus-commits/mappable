@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'preact/hooks';
 import { byId } from '../../data/atlas.ts';
 import { norm } from '../../engine/text.ts';
 import { parseQueryRef, type SearchHit } from '../../engine/search.ts';
-import { pickMode, pins, pinsQuery, pickSecond, searchNotice } from '../../state.ts';
+import { pickMode, pins, pinsQuery, pickSecond, searchNotice, selected } from '../../state.ts';
 import { flyToIds, goTo, plural, refLabel } from '../common.tsx';
 import { typo } from '../text/typo.ts';
 import { prepareBook, searchIndex } from './searchIndex.ts';
@@ -16,6 +16,7 @@ import { addToWork, removeFromWork, workSet } from '../work.ts';
 export const searchRowCmd: NonNullable<ComboboxProps['rowCmd']> = {
   label: (id: string) => (workSet.value.has(id) ? 'в работе' : 'в работу'),
   title: 'Взять лицо в рабочий набор или убрать из него (Shift+Enter)',
+  hint: 'Shift+Enter — взять выбранное лицо в работу или убрать из набора',
   run: (id: string) => {
     if (workSet.peek().has(id)) removeFromWork(id);
     else addToWork(id);
@@ -32,7 +33,11 @@ export type { Block, Row };
 export function markAllIds(hits: SearchHit[]): string[] {
   const first = hits.find((h) => h.via !== 'fuzzy');
   if (!first) return [];
-  if (first.via === 'verse') return hits.filter((h) => h.via === 'verse').map((h) => h.id);
+  // по стиху или главе — названные в тексте; если названных нет — те, чьи карточки ссылаются на него
+  if (first.via === 'verse' || first.via === 'cited') {
+    const named = hits.filter((h) => h.via === 'verse');
+    return (named.length ? named : hits.filter((h) => h.via === 'cited')).map((h) => h.id);
+  }
   // одно имя — по первому слову: «Иисус» — Иисус Христос, Иисус Навин и все Иисусы; «иосиф» — Иосифы, но не Иосифия
   const word = (id: string) => norm(byId.get(id)?.name ?? '').split(' ')[0];
   const key = word(first.id);
@@ -78,7 +83,9 @@ export function Search() {
     };
   }, [ref?.book]);
 
-  const hits = useMemo(() => (q.trim() ? searchIndex.search(q, 60) : []), [q, ready]);
+  // в режиме выбора второго лица первое лицо не предлагается (UX-13): родство с самим собой — молчаливое «ничего»
+  const firstId = pickMode.value ? selected.value : null;
+  const hits = useMemo(() => (q.trim() ? searchIndex.search(q, 60).filter((h) => h.id !== firstId) : []), [q, ready, firstId]);
   const notice = searchNotice.value;
   // сообщение об адресе приходит с пустым полем: прежний запрос его не заслоняет (IX-44)
   useEffect(() => {
@@ -144,7 +151,7 @@ export function Search() {
       onChoose={choose}
       cmdLabel={(r) => (r.kind === 'all' ? `Все ${r.ids.length} на небе` : `Снять отметки: ${pins.value.length}\u00a0${plural(pins.value.length, 'лицо', 'лица', 'лиц')}`)}
       notice={notice}
-      status={shown.length ? `${countStatus(shown.length, loading)}; Shift+Enter — взять в работу` : countStatus(shown.length, loading)}
+      status={countStatus(shown.length, loading)}
       onEscape={() => (searchNotice.value = null)}
       empty={
         ref

@@ -292,7 +292,8 @@ describe('небо на настоящих данных: «Всё небо» п�
     const { FRAME_H } = await import('../src/render/sky.ts');
     for (const [w, move] of [[1440, (s: InstanceType<typeof Sky>) => s.cam.zoomAt(700, 400, 6)], [1440, undefined], [390, undefined]] as const) {
       const { sky, texts } = drawWith(w, 700, null, [], move);
-      const service = texts.filter((q) => /^видно |см\b|≈|завершение канона|^сегодня$|до\u00a0Р\.|по\u00a0Р\./.test(q.t));
+      // служебные надписи рамки: «видно…», масштабная линейка («25 лет», «≈ 200 лет»), эра, «завершение канона», «сегодня»
+      const service = texts.filter((q) => /^видно |см\b|≈|^\d+[\s\u00a0](год|года|лет)$|завершение канона|^сегодня$|до\u00a0Р\.|по\u00a0Р\./.test(q.t));
       expect(service.length).toBeGreaterThan(0);
       for (const q of service) expect(q.y, q.t).toBeLessThan(FRAME_H);
       const ruler = texts.filter((q) => q.base === 'middle' && q.y < 26);

@@ -10,9 +10,10 @@ import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync, rmSync
 import { join } from 'node:path';
 import { loadBible, ROOT } from './bible.ts';
 import { buildGraph, primaryChildren } from '../src/engine/graph.ts';
-import { solveChronology, noteModelDifferences, MODELS, type ChronoResult } from '../src/engine/chronology.ts';
+import { solveChronology, noteModelDifferences, MODELS, type ChronoResult, type WhenSpan } from '../src/engine/chronology.ts';
 import { computeLayout, computeOutlines, packSpan, GHOST_SPAN, TRAIL_KINDS, type LineStep, type LayoutResult, type ListDef, type Outline } from '../src/engine/layout.ts';
 import { buildTimeScale, timeToX, xToTime } from '../src/engine/timescale.ts';
+import { epochDelta } from '../src/engine/epochs.ts';
 import { parseRef, verseId, BOOKS } from '../src/engine/books.ts';
 import { nameMatcher, norm, stripBrackets, splitParentRefs } from '../src/engine/text.ts';
 import { typo } from '../src/ui/text/typo.ts';
@@ -89,7 +90,8 @@ const results: { id: string; chrono: ChronoResult; layout: LayoutResult; scale: 
 for (const m of MODELS) {
   const t0 = performance.now();
   const chrono = solveChronology(g, epochs, m.id);
-  const layout = computeLayout(g, chrono, lines, { lists, epochs });
+  // эпохи в годах этой модели (CARD-60): время скоплений «по эпохе» — тоже по ним
+  const layout = computeLayout(g, chrono, lines, { lists, epochs: chrono.epochs ?? epochs });
   // насыщенность времени — по годам решателя и месту лиц в полосах, как до честных следов и скоплений (A14, E2):
   // масштаб «по насыщенности» от них не меняется
   const births = [...chrono.persons.values()].map((c) => c.b);
@@ -368,6 +370,10 @@ const compactIndex = index.map((row) => {
   return o;
 });
 const yr = (x: number) => Math.round(x);
+/** Откуда скобка «время не установлено» — одной буквой (src/data/atlas.ts, decodeWhen). */
+const WHEN_CODE: Record<WhenSpan['by'], string> = {
+  met: 'm', kin: 'k', mention: 'r', epoch: 'e', bounds: 'b', group: 'g',
+};
 // хронология и узлы раскладки — массивами по номеру лица в индексе, годы — разностями (сжимаются вдвое лучше)
 const personIndex = new Map(index.map((p, i) => [p.id, i]));
 const pi = (id: string | null) => (id === null ? null : personIndex.get(id) ?? null);
@@ -379,20 +385,35 @@ const models = results.map((res) => ({
     const b = yr(c.b);
     const rel = (x: number | null) => (x === null ? null : yr(x) - b);
     const row: unknown[] = [b, rel(c.bLo), rel(c.bHi), rel(c.d), rel(c.lastAttested), rel(c.dEst), c.cls, c.epoch];
-    // A14: интервал смерти и «умер младенцем» — только если есть (atlas.ts восстанавливает null и false)
-    if (c.dLo !== null || c.infant) row.push(rel(c.dLo), rel(c.dHi), c.infant ? 1 : 0);
+    // A14: интервал смерти и «умер младенцем»; этап 7 (K1): признаки (1 — народ или род без года рождения, CARD-59;
+    // 2 — год по порядку перечисления братьев, MAP-54) и откуда скобка «время не установлено» (MAP-52).
+    // Только если есть (atlas.ts восстанавливает null, false и undefined)
+    const flags = (c.named ? 1 : 0) | (c.byOrder ? 2 : 0);
+    const when = c.when ? `${WHEN_CODE[c.when.by]}${c.when.id ? `:${c.when.id}` : c.when.ref ? `:${c.when.ref}` : ''}` : null;
+    const extra: unknown[] = [c.infant ? 1 : 0, flags, when];
+    let k = extra.length;
+    while (k > 0 && (extra[k - 1] === 0 || extra[k - 1] === null)) k--;
+    if (c.dLo !== null || k > 0) row.push(rel(c.dLo), rel(c.dHi), ...extra.slice(0, k));
     return row;
   }),
   tensions: res.chrono.tensions,
+  // эпохи в годах модели (CARD-60): только отличия от data/epochs.json — id → [начало, конец, годы событий]
+  ...(() => {
+    const d = epochDelta(epochs, res.chrono.epochs ?? epochs);
+    return Object.keys(d).length ? { epochs: d } : {};
+  })(),
   layout: {
-    // [лицо (для призрака — −(номер+1)), полоса, t0 − рождение, t1 − t0, блок, полоса родителя, родитель раскладки, спутник чего, хребет, след]
-    // t1 — конец рисуемого следа (layout.ts, п. 7); след — номер в TRAIL_KINDS: life, people, infant, list, ghost
+    // [лицо (для призрака — −(номер+1)), полоса, t0 − рождение, t1 − t0, блок, полоса родителя, родитель раскладки, спутник чего, хребет, след,
+    //  разрыв следа − t0 (MAP-51; только если есть)]
+    // t1 — конец рисуемого следа (layout.ts, п. 7); след — номер в TRAIL_KINDS: life, people, infant, list, ghost, epochal
     nodes: res.layout.nodes.map((n) => {
       const ghost = n.id.startsWith('ghost:');
       const person = ghost ? n.id.slice(6) : n.id;
       const k = personIndex.get(person)!;
       const b = yr(res.chrono.persons.get(person)?.b ?? 0); // так же считает atlas.ts
-      return [ghost ? -(k + 1) : k, n.lane, yr(n.t0) - b, yr(n.t1) - yr(n.t0), n.block, n.parentLane, pi(n.layoutParent), pi(n.satelliteOf), n.spine ? 1 : 0, TRAIL_KINDS.indexOf(n.trail)];
+      const row = [ghost ? -(k + 1) : k, n.lane, yr(n.t0) - b, yr(n.t1) - yr(n.t0), n.block, n.parentLane, pi(n.layoutParent), pi(n.satelliteOf), n.spine ? 1 : 0, TRAIL_KINDS.indexOf(n.trail)];
+      if (n.brk !== undefined) row.push(yr(n.brk) - yr(n.t0));
+      return row;
     }),
     // у скоплений (E2) — cluster: годы в десятых долях года, как у контуров
     blocks: res.layout.blocks.map((bl) =>

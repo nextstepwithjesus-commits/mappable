@@ -17,16 +17,25 @@
     /* закреплённая шапка листа без годов: ручка 12 px и строка 44 px */
     --bar-h: 56px;
   }
+  /* одна колонка ширины окна: minmax(0, …) — содержимое (холсты неба и полосы, длинные строки) не держит сетку шире
+     окна после поворота телефона 844 → 390 или сужения окна 1440 → 700 (MOB-44, WCAG 1.3.4, 1.4.10) */
   .app {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
       'top'
       'sky'
       'strip';
   }
+  .app > .top,
+  .app > .strip {
+    min-width: 0;
+  }
 
-  /* верхняя строка — одна, 48 px (H4; MOB-03, MOB-04): «Толедот», поиск, «Разделы» */
+  /* верхняя строка — одна, 48 px (H4; MOB-03, MOB-04): «Толедот», поиск, «Разделы».
+     Строка — слой над листами панелей, разворота и карточки (z-index 25–30): меню «Разделы» и подсказки поиска
+     раскрываются поверх открытой панели, а не под ней (MOB-45) */
   .top.phone {
+    z-index: 31;
     gap: 2px;
     padding: 0 4px 0 6px;
   }
@@ -182,7 +191,7 @@
   .folio-inner {
     padding: 2px 22px 60px 44px;
   }
-  /* уточнение — первая строка текста листа: на шапке 104 px оно видно под именем и годами */
+  /* уточнение — первая строка статьи под шапкой листа: имя стоит в шапке (h2 скрыт), отступ над уточнением не нужен */
   .folio[data-stop] .mast .dis {
     margin-top: 0;
   }
@@ -240,14 +249,29 @@
   .sheet-head h2 {
     margin: 0;
   }
+  /* лист панели убран на время выбора второго лица на небе (MOB-47; src/ui/focus.ts, parked) */
+  .app > .sheet[hidden] {
+    display: none;
+  }
   .sheet .sheet-head .close {
     position: static;
   }
-  /* «Эпохи» — лист на 55 % у нижнего края: ярусы эпох над ним видны (MOB-24) */
+  /* «Эпохи» — лист на 55 % над полосой времени, на месте листа карточки (MOB-24, MOB-59): ярусы эпох над ним видны.
+     Карточка на это время скрыта, а не выглядывает шапкой между ярусами и листом: её лист стоит на 55 % под листом
+     «Эпох» невидимым — по нему небо считает свою видимую часть и держит выбранное лицо над листом (SkyView, insets;
+     перелёт — src/ui/Panels.tsx). Закрыли «Эпохи» — карточка на прежнем месте. */
   .sheet:has(> table.epochs) {
     top: auto;
+    bottom: calc(var(--strip-h) + env(safe-area-inset-bottom));
     height: var(--sheet-half);
     border-top: 1px solid var(--rule-strong);
+  }
+  .app:has(> .sheet > table.epochs) > .folio[data-stop] {
+    height: var(--sheet-half);
+    visibility: hidden;
+  }
+  .app:has(> .sheet > table.epochs) {
+    --sheet-cover: var(--sheet-half);
   }
 
   /* ---------- колонка органов неба (C6; MOB-05; H7) ----------
@@ -265,6 +289,13 @@
   .skyctl.column {
     bottom: auto;
     top: max(var(--sky-top, 44px), min(calc(var(--sky-top, 44px) + 8px), calc(100% - var(--sheet-cover, 0px) - 181px)));
+  }
+  /* «Как читать карту» стоит в левом нижнем углу неба, и открытый лист карточки (любое положение) или лист «Эпох» её
+     закрывают: над листом место указателей у края («↓ Давид»). Закрытая команда не получает фокус и не читается
+     диктором (MOB-50, WCAG 2.4.11); лист закрыли — она снова на месте */
+  .app:has(> .folio[data-stop]) .guide-cmd,
+  .app:has(> .sheet > table.epochs) .guide-cmd {
+    visibility: hidden;
   }
   /* лист «Вид» — у нижнего края, по высоте содержимого: небо над ним видно и отвечает на флажки */
   .sheet:has(> .viewctl) {
@@ -398,8 +429,55 @@
     min-height: 44px;
     min-width: 44px;
   }
+  /* флажок — строка 44 px, и сам квадрат — поле 44 × 44 (решение 33; MOB-39): отрицательные поля оставляют ему в строке
+     прежние 24 × 24, квадрат 10 × 10 — в середине поля */
   .check {
     min-height: 44px;
+  }
+  .check input {
+    width: 44px;
+    height: 44px;
+    margin: -10px;
+  }
+  /* поля ввода и списки в панелях — не ниже 44 px: «Второе» в «Родстве», поле указателя (MOB-39) */
+  .field input,
+  .sheet input:not([type='checkbox']),
+  .sheet select {
+    min-height: 44px;
+  }
+  /* номера глав в «Главах» — 44 × 44 (MOB-39) */
+  .toc button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  /* буквы указателя и сегменты поколений в выборе «Взять в работу» — 44 × 44 */
+  .letters .seg > button,
+  div.workpick .wp-seg button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  /* в выборе «Взять в работу» подпись строки («С предками») — над сегментами, «поколений» — за ними: с сегментами
+     44 × 44 строка в одну линию шире листа */
+  div.workpick .wp-gens {
+    grid-template-columns: auto 1fr;
+    row-gap: 2px;
+    margin-bottom: 8px;
+  }
+  div.workpick .wp-gens .k {
+    grid-column: 1 / -1;
+  }
+  /* строка указателя — 44 px: текст и координата по-прежнему на базовой линии последней строки статьи */
+  .idx .row {
+    min-height: 44px;
+    padding-bottom: 10px;
+  }
+  /* «ещё 23 события» под свёрнутым разделом — отдельная строка 44 px */
+  .clamp-more {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    margin: 0;
+    padding: 0;
   }
   .menu [role^='menuitem'] {
     min-height: 44px;
@@ -413,19 +491,38 @@
   .top .search input {
     min-height: 44px;
   }
-  /* ссылки в тексте: поле касания 32 px по высоте без изменения межстрочия — прозрачное продолжение кнопки */
+  /* ссылки в тексте: поле касания 32 px по высоте без изменения межстрочия — прозрачное продолжение кнопки;
+     так же — «см. § 24» и «Илий, § 24» в синопсисе: это ссылки внутри фразы */
   .person,
-  .ref {
+  .ref,
+  .sec .see,
+  button.why {
     position: relative;
   }
   .person::after,
-  .ref::after {
+  .ref::after,
+  .sec .see::after,
+  button.why::after {
     content: '';
     position: absolute;
     left: -2px;
     right: -2px;
     top: 50%;
     height: 32px;
+    transform: translateY(-50%);
+  }
+  /* «ещё 5 ссылок» в конце строки ссылок (напряжение § 13, факты) — команда, а не ссылка: поле 44 px (решение 33),
+     межстрочие прежнее; строк под ней в том же абзаце нет */
+  .refs .more {
+    position: relative;
+  }
+  .refs .more::after {
+    content: '';
+    position: absolute;
+    left: -4px;
+    right: -4px;
+    top: 50%;
+    height: 44px;
     transform: translateY(-50%);
   }
 }

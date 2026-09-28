@@ -12,6 +12,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { chromium, type Page } from 'playwright';
 import { ROOT } from './bible.ts';
+import { denseSpots } from './accept/phone.ts';
 
 const argv = process.argv.slice(2);
 const opt = (name: string) => {
@@ -119,16 +120,20 @@ const TOUCH: Screen[] = [
     await press(p, '.sheet button', 'Эпохи и их основания');
   } },
   { name: 'телефон: «Какое лицо?»', hash: '#/david', view: PHONE, act: async (p) => {
-    // касание рядом с выбранной звездой в плотном месте открывает список «Какое лицо?» (H5)
-    for (const [dx, dy] of [[50, 80], [-12, 30], [55, 55], [45, 70]]) {
-      const [x, y] = ((await p.locator('.sky').getAttribute('data-sel')) ?? '0 0').split(' ').map(Number);
+    // касание в плотном месте открывает список «Какое лицо?» (H5): середина ближайшей пары звёзд на виду — место ищется
+    // по данным раскладки (tools/accept/phone.ts, denseSpots), а не смещением от Давида
+    for (let k = 0; k < 3; k++) {
+      const q = (await denseSpots(p))[k];
+      if (!q) break;
       const box = (await p.locator('.sky canvas').boundingBox())!;
-      await p.touchscreen.tap(box.x + x + dx, box.y + y + dy);
+      await p.touchscreen.tap(box.x + q.x, box.y + q.y);
       await p.waitForTimeout(400);
       if (await p.locator('.which').count()) return;
       await p.goto(p.url().replace(/#.*$/, '#/david'));
-      await p.waitForTimeout(2000);
+      await p.waitForTimeout(1200);
     }
+    // экран не открылся — проверка не должна пройти молча
+    throw new Error('список «Какое лицо?» не открылся');
   } },
   { name: 'телефон 360: лист на 100 %', hash: '#/ruf', view: { width: 360, height: 740, touch: true }, act: (p) => press(p, '.folio .sheet-bar .bar-toggle') },
   { name: 'телефон, альбомная: карточка', hash: '#/david', view: { width: 844, height: 390, touch: true } },

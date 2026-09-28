@@ -24,7 +24,7 @@ export function EpochsPanel() {
   const sel = id ? byId.get(id) : null;
   const mine = new Set(id ? activityEpochs(id, model.value.chrono.get(id), model.value.epochs).map((e) => e.id) : []);
   return (
-    <Sheet title="Эпохи" lead="Карта эпох — режим того же неба: сверху ярусы эпох, судей, царей Иудеи и Израиля, пророков и событий. Жизнь выбранного лица проецируется столбцом через все ярусы.">
+    <Sheet title="Эпохи" lead="Эпохи с годами и основаниями; над небом — ярусы эпох, судей, царей, пророков и событий.">
       <div class="checks">
         <Check checked={epochMode.value} onChange={(v) => (epochMode.value = v)}>
           ярусы на небе

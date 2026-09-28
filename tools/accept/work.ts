@@ -86,7 +86,7 @@ const view: Scenario[] = [
       await openViewPop(p);
       if (!(await p.locator('.viewpop').isVisible())) return vno('лист «Вид» не открылся');
       const c0 = await vcam(p);
-      await axisBtn(p, 'Расширить полосы').click();
+      await axisBtn(p, 'Строки выше').click();
       // адрес пишется через 300 мс после того, как небо остановилось (D8)
       await p.waitForTimeout(900);
       const c1 = await vcam(p);
@@ -235,10 +235,10 @@ const view: Scenario[] = [
       const sheet = p.locator('.sky .sheet');
       if (!(await sheet.getByText('Пропорции', { exact: true }).count())) return vno('в листе «Вид» нет «Пропорций»');
       const n = await sheet.locator('.axes button').count();
-      await axisBtn(p, 'Сузить полосы').tap();
+      await axisBtn(p, 'Строки ниже').tap();
       await p.waitForTimeout(500);
       const c4 = await vcam(p);
-      if (!near(c4.ky, c3.ky, 1 / 1.5)) return vno(`«Сузить полосы»: было ${fmt(c3)}, стало ${fmt(c4)}`);
+      if (!near(c4.ky, c3.ky, 1 / 1.5)) return vno(`«Строки ниже»: было ${fmt(c3)}, стало ${fmt(c4)}`);
       // цели касания — не меньше 44 px
       const small = await sheet.locator('.axes button').evaluateAll((bs) => bs.filter((b) => b.getBoundingClientRect().height < 44).length);
       if (small) return vno(`кнопок пропорций ниже 44 px: ${small}`);
@@ -328,7 +328,7 @@ const view: Scenario[] = [
   },
   {
     n: 196,
-    title: 'J1 пальцем, 390 × 844: небо «в работе» с высоким набором (Давид с предками и потомками) — «Сузить полосы» делает строки ниже, все строки набора — в видимой части, подписи без наложений',
+    title: 'J1 пальцем, 390 × 844: небо «в работе» с высоким набором (Давид с предками и потомками) — «Строки ниже» делает строки ниже, все строки набора — в видимой части, подписи без наложений',
     view: { width: 390, height: 844, touch: true },
     run: async (p) => {
       await vgo(p, '#/david', 2600);
@@ -344,9 +344,10 @@ const view: Scenario[] = [
       await p.waitForTimeout(600);
       await p.locator('.skyctl.column button', { hasText: 'Вид' }).tap();
       await p.waitForTimeout(400);
-      await p.locator('.sky .sheet button', { hasText: 'в работе' }).tap();
+      // переключатель неба «все лица | набор» (решение 26; IX-59)
+      await p.locator('.sky .sheet button', { hasText: 'набор' }).tap();
       await p.waitForTimeout(300);
-      await axisBtn(p, 'Сузить полосы').tap();
+      await axisBtn(p, 'Строки ниже').tap();
       await p.waitForTimeout(400);
       const c0 = await vcam(p);
       await p.locator('.sky .sheet .sheet-head .close').tap();
@@ -359,7 +360,7 @@ const view: Scenario[] = [
       if (d.over) return vno(`наложений ${d.over}`);
       const tall = d.rows * c1.ky;
       if (tall > c1.b - c1.t) return vno(`строки набора ${Math.round(tall)} px выше видимой части ${Math.round(c1.b - c1.t)} px`);
-      return vok(`строк ${d.rows}, полоса ${c1.ky.toFixed(1)} px (после «Сузить полосы» ${c0.ky.toFixed(1)}), высота набора ${Math.round(tall)} из ${Math.round(c1.b - c1.t)} px; подписано ${d.named}/${d.stars}`);
+      return vok(`строк ${d.rows}, полоса ${c1.ky.toFixed(1)} px (после «Строки ниже» ${c0.ky.toFixed(1)}), высота набора ${Math.round(tall)} из ${Math.round(c1.b - c1.t)} px; подписано ${d.named}/${d.stars}`);
     },
   },
   {
@@ -465,9 +466,10 @@ const view: Scenario[] = [
       await p.waitForTimeout(500);
       const f1 = await splitW(p, 'folio');
       if (f1 !== f0 + 60) return vno(`пальцем: карточка ${f0} → ${f1}`);
-      // «небо во весь экран» в листе «Вид» (небо 564 px — блок органов)
-      await openViewPop(p, true);
-      await p.locator('.viewpop button', { hasText: 'небо во весь экран' }).tap();
+      // «небо во весь экран» в листе «Вид» (небо 564 px — органы колонкой, IX-56: лист «Вид» у колонки)
+      await p.locator('.skyctl.column button', { hasText: 'Вид' }).tap();
+      await p.waitForTimeout(300);
+      await p.locator('.sky .sheet button', { hasText: 'небо во весь экран' }).tap();
       await p.waitForTimeout(600);
       if (!(await p.locator('.folio.spine').count())) return vno('«небо во весь экран» не свернуло карточку');
       await p.locator('.folio.spine .unfold').tap();
@@ -577,7 +579,9 @@ const workset: Scenario[] = [
       const set = await stored(p);
       if (set.join(' ') !== 'david iessey ovid') return no(`набор: ${set.join(' ')}`);
       const b = p.locator('.folio .workbtn > button');
-      if ((await b.innerText()).trim() !== 'В работе' || (await b.getAttribute('aria-pressed')) !== 'true') return no('команда карточки не стала «В работе»');
+      // этап 7 (решение 26; UX-48): команда карточки — «В наборе ▾», верхняя строка — «В работе: N»
+      if (!/^В наборе/.test((await b.innerText()).trim()) || (await b.getAttribute('aria-pressed')) !== 'true') return no('команда карточки не стала «В наборе ▾»');
+      if (!/^В работе: 3$/.test((await p.locator('.top .commands > button', { hasText: 'В работе' }).innerText()).trim())) return no('в верхней строке нет «В работе: 3»');
       await openWork(p);
       const title = nbsp(await p.locator('section.sheet h2').innerText());
       if (title !== 'В работе: 3 лица') return no(`заголовок панели: «${title}»`);
@@ -612,7 +616,8 @@ const workset: Scenario[] = [
       const empty = nbsp(await p.locator('.work-empty').innerText());
       if (!/Взять в работу/.test(empty)) return no(`пустой набор: «${empty}»`);
       await wgo(p, '#/ruf');
-      await takeFromCard(p, 'Только лицо');
+      // «Только Руфи» — имя в родительном падеже (VIS-47)
+      await takeFromCard(p, 'Только Руфи');
       await p.locator('section.sheet button', { hasText: 'Очистить набор' }).click();
       await p.waitForTimeout(300);
       if ((await stored(p)).length) return no('«Очистить набор» не очистил');
@@ -623,14 +628,14 @@ const workset: Scenario[] = [
   },
   {
     n: 202,
-    title: 'J3 клавиатурой: Enter на «Взять в работу» — фокус на «Только лицо», Enter берёт; Escape закрывает выбор и возвращает фокус',
+    title: 'J3 клавиатурой: Enter на «Взять в работу» — фокус на «Только Руфи», Enter берёт; Escape закрывает выбор и возвращает фокус',
     run: async (p) => {
       await wgo(p, '#/ruf');
       await p.locator('.folio .workbtn > button').focus();
       await p.keyboard.press('Enter');
       await p.waitForTimeout(250);
       const f = (await p.evaluate('document.activeElement && document.activeElement.textContent')) as string;
-      if (f?.trim() !== 'Только лицо') return no(`фокус после открытия: «${f}»`);
+      if (f?.trim() !== 'Только Руфи') return no(`фокус после открытия: «${f}»`);
       await p.keyboard.press('Escape');
       await p.waitForTimeout(200);
       const back = (await p.evaluate(`document.activeElement === document.querySelector('.folio .workbtn > button')`)) as boolean;
@@ -691,7 +696,8 @@ const workset: Scenario[] = [
       const at = await selPoint(p);
       if (!at) return no('нет звезды Давида');
       await p.mouse.move(at.x, at.y);
-      await p.waitForTimeout(500);
+      // клавиши набора — в подсказке через 700 мс неподвижности, сначала только имя и годы (IX-58)
+      await p.waitForTimeout(1100);
       const tip = p.locator('.sky .tip[data-id="david"] .tip-keys');
       if (!(await tip.count())) return no('в подсказке нет строки клавиш');
       if (!/В \(D\) — взять в работу/.test(nbsp(await tip.innerText()))) return no(`подсказка: «${await tip.innerText()}»`);
@@ -705,13 +711,14 @@ const workset: Scenario[] = [
   },
   {
     n: 206,
-    title: 'J4 мышью: «На небе: в работе» — только лица набора, все подписаны, наложений нет, полосы сжаты; «Всё небо» вписывает набор; «все лица» возвращает небо',
+    title: 'J4 мышью: «На небе: набор» — только лица набора, все подписаны, наложений нет, полосы сжаты; «Всё небо» вписывает набор; «все лица» возвращает небо',
     run: async (p) => {
       await wgo(p, '#/david');
       await takeFromCard(p, 'С предками: 3 поколения');
       await takeFromCard(p, 'С семьёй');
       const n = (await stored(p)).length;
-      await p.locator('.skyctl button', { hasText: 'в работе' }).click();
+      // переключатель неба «все лица | набор» (решение 26; IX-59)
+      await p.locator('.skyctl button', { hasText: 'набор' }).click();
       await p.waitForTimeout(2000);
       let d = await skyData(p);
       if (d.mode !== 'work') return no(`режим неба: ${d.mode}`);
@@ -733,17 +740,20 @@ const workset: Scenario[] = [
   },
   {
     n: 207,
-    title: 'J4: пустой набор в режиме «в работе» — строка у кромки неба, «Показать все лица» возвращает небо; лицо вне набора — «Взять в работу»',
+    title: 'J4: пустой набор в режиме «набор» — строка у кромки неба, «показать всех» возвращает небо; лицо вне набора — «Руфь не в наборе — взять в работу» (VIS-46)',
     run: async (p) => {
-      await p.locator('.skyctl button', { hasText: 'в работе' }).click();
+      // переключатель неба «все лица | набор» (решение 26; IX-59)
+      await p.locator('.skyctl button', { hasText: 'набор' }).click();
       await p.waitForTimeout(800);
       const bar = p.locator('.sky .workbar');
       if (!(await bar.count()) || !/Рабочий набор пуст/.test(nbsp(await bar.innerText()))) return no('нет строки пустого набора');
       await seek(p, 'Руфь');
-      if (!/не в рабочем наборе/.test(nbsp(await bar.innerText()))) return no(`строка при лице вне набора: «${await bar.innerText()}»`);
+      if (!/^Руфь не в наборе/.test(nbsp(await bar.innerText()))) return no(`строка при лице вне набора: «${await bar.innerText()}»`);
       await bar.getByRole('button', { name: 'Взять в работу' }).click();
       await p.waitForTimeout(800);
-      if ((await stored(p)).join(' ') !== 'ruf' || (await bar.count())) return no('«Взять в работу» строки не взяло лицо');
+      if ((await stored(p)).join(' ') !== 'ruf') return no('«Взять в работу» строки не взяло лицо');
+      // режим «набор» заявлен у кромки всегда (UX-62, MOB-54): строка говорит, сколько лиц на небе
+      if (!/^На небе — только рабочий набор, 1 лицо/.test(nbsp(await bar.innerText()).replace(/\s+/g, ' ').trim())) return no(`строка после взятия: «${await bar.innerText()}»`);
       const d = await skyData(p);
       if (d.named !== '1/1') return no(`на небе подписано ${d.named}`);
       await p.keyboard.press('Escape');
@@ -765,7 +775,8 @@ const workset: Scenario[] = [
       await p.waitForTimeout(600);
       await p.locator('.skyctl.column button', { hasText: 'Вид' }).tap();
       await p.waitForTimeout(400);
-      await p.locator('.sky .sheet button', { hasText: 'в работе' }).tap();
+      // переключатель неба «все лица | набор» (решение 26; IX-59)
+      await p.locator('.sky .sheet button', { hasText: 'набор' }).tap();
       await p.waitForTimeout(300);
       await p.locator('.sky .sheet .sheet-head .close').tap();
       await p.waitForTimeout(1800);
@@ -781,10 +792,13 @@ const workset: Scenario[] = [
   },
   {
     n: 209,
-    title: 'J5 мышью: «Свернуть потомков» Давида — знак «+N» справа от следа, потомки не рисуются; щелчок по знаку разворачивает',
+    title: 'J5 мышью: «Скрыть потомков на небе» Давида — знак «+N» справа от следа, потомки не рисуются; щелчок по знаку разворачивает',
     run: async (p) => {
       await wgo(p, '#/david');
-      await p.locator('.folio .workcmds button', { hasText: 'Свернуть потомков' }).click();
+      // «Скрыть потомков на небе» — пункт выбора «Взять в работу ▾» (этап 7, решение 26)
+      await p.locator('.folio .workbtn > button').click();
+      await p.waitForTimeout(250);
+      await p.locator('.workpick button', { hasText: 'Скрыть потомков на небе' }).click();
       await p.waitForTimeout(900);
       let d = await skyData(p);
       const m = /desc:david:(\d+)/.exec(d.folds ?? '');
@@ -793,7 +807,12 @@ const workset: Scenario[] = [
       if (!at) return no('знака «+N» на экране нет');
       const star = (await selPoint(p))!;
       if (at.x <= star.x) return no('знак не справа от звезды');
-      if ((await p.locator('.folio .workcmds button', { hasText: 'Развернуть потомков' }).count()) !== 1) return no('команда не стала «Развернуть потомков»');
+      await p.locator('.folio .workbtn > button').click();
+      await p.waitForTimeout(250);
+      const back = await p.locator('.workpick button', { hasText: 'Показать потомков на небе' }).count();
+      await p.keyboard.press('Escape');
+      await p.waitForTimeout(200);
+      if (back !== 1) return no('пункт не стал «Показать потомков на небе»');
       await p.mouse.click(at.x, at.y);
       await p.waitForTimeout(900);
       d = await skyData(p);
@@ -847,7 +866,7 @@ const workset: Scenario[] = [
   },
   {
     n: 212,
-    title: 'J3, J5 пальцем, 390 × 844: долгое касание звезды — меню неба с «Взять в работу» и «Свернуть потомков»',
+    title: 'J3, J5 пальцем, 390 × 844: долгое касание звезды — меню неба с «Взять в работу» и «Скрыть потомков на небе»',
     view: W_PHONE,
     run: async (p) => {
       await wgo(p, '#/david', 2600);
@@ -866,35 +885,45 @@ const workset: Scenario[] = [
       const menu = p.locator('.sky .skymenu');
       if (!(await menu.count())) return no('долгое касание не открыло меню');
       const texts = (await menu.locator('button').allInnerTexts()).map((t) => t.trim());
-      if (!texts.includes('Только лицо') || !texts.includes('Свернуть потомков')) return no(`меню: ${texts.join(', ')}`);
-      await menu.locator('button', { hasText: 'Только лицо' }).tap();
+      if (!texts.includes('Только Давида') || !texts.includes('Скрыть потомков на небе')) return no(`меню: ${texts.join(', ')}`);
+      await menu.locator('button', { hasText: 'Только Давида' }).tap();
       await p.waitForTimeout(300);
       return (await stored(p)).join(' ') === 'david' && !idOf(p) ? ok() : no(`набор ${(await stored(p)).join(' ')}; выбрано ${idOf(p)}`);
     },
   },
   {
     n: 213,
-    title: 'J6 мышью: карточки стопкой — открытые прежде строками «имя, уточнение, годы» над активной; щелчок делает активной; «Свернуть» и «×»',
+    // этап 7 (решение 18; CARD-52, IX-52, VIS-44): стопка — одна строка «Ещё открыты (N): …», список — по щелчку;
+    // «Свернуть карточку» — корешок 56 px; «×» строки закрывает её карточку
+    title: 'J6 мышью: стопка — строка «Ещё открыты (N)», по щелчку список «имя, годы, уточнение»; щелчок делает активной; «Свернуть карточку» — корешок; «×»',
     run: async (p) => {
       await wgo(p, '#/ruf', 1800);
       await wgo(p, '#/vooz', 1800);
       await wgo(p, '#/david', 2000);
-      const rows = () => p.locator('.folio .stack .stack-row:not(.active)');
+      const sum = p.locator('.folio .folio-bar .stack-sum');
+      const openList = async () => {
+        if ((await sum.getAttribute('aria-expanded')) !== 'true') await sum.click();
+        await p.waitForTimeout(250);
+      };
+      const rows = () => p.locator('.folio .stack .stack-row');
       const ids = async () => rows().evaluateAll((els) => els.map((e) => (e as HTMLElement).dataset.id));
+      if (!/^Ещё открыты \(2\): Вооз, Руфь$/.test(nbsp((await sum.getAttribute('aria-label')) ?? '').replace(/\s+/g, ' '))) return no(`строка стопки: ${await sum.getAttribute('aria-label')}`);
+      await openList();
       if ((await ids()).join(' ') !== 'vooz ruf') return no(`строки стопки: ${(await ids()).join(' ')}`);
-      const t = nbsp(await rows().first().innerText()).replace(/\s+/g, ' ').replace(/ ,/g, ',');
-      if (!/^Вооз, .+ род\. ок\./.test(t)) return no(`строка: «${t}»`);
+      const t = nbsp(await rows().first().innerText()).replace(/\s+/g, ' ');
+      if (!/^Вооз род\. ок\. .+ сын Салмона/.test(t)) return no(`строка: «${t}»`);
       await rows().nth(1).locator('.sr-open').click();
       await p.waitForTimeout(900);
       if (idOf(p) !== 'ruf') return no(`после щелчка по Руфи выбрано ${idOf(p)}`);
+      await openList();
       if ((await ids()).join(' ') !== 'david vooz') return no(`стопка после щелчка: ${(await ids()).join(' ')}`);
       await p.locator('.folio .fold-card').click();
-      await p.waitForTimeout(300);
-      const act = p.locator('.folio .stack-row.active');
-      if (!(await act.count()) || (await p.locator('.folio .mast').count())) return no('«Свернуть» не свернула активную карточку');
-      await act.locator('.sr-open').click();
-      await p.waitForTimeout(300);
-      if (!(await p.locator('.folio .mast').count())) return no('щелчок не развернул');
+      await p.waitForTimeout(500);
+      if (!(await p.locator('.folio.spine').count()) || (await p.locator('.folio .mast').count())) return no('«Свернуть карточку» не свернула лист в корешок');
+      await p.locator('.folio.spine .unfold').click();
+      await p.waitForTimeout(500);
+      if (!(await p.locator('.folio .mast').count())) return no('«развернуть» не развернул');
+      await openList();
       await rows().first().locator('.close').click();
       await p.waitForTimeout(300);
       return (await ids()).join(' ') === 'vooz' && idOf(p) === 'ruf' ? ok() : no(`после «×» строки: ${(await ids()).join(' ')}, выбрано ${idOf(p)}`);
@@ -908,7 +937,8 @@ const workset: Scenario[] = [
       const ruth = await worldSel(p);
       for (const id of ['vooz', 'adam', 'sif', 'enos', 'kainan', 'maleleil']) await wgo(p, `#/${id}`, 900);
       await p.waitForTimeout(800);
-      const ids = async () => p.locator('.folio .stack .stack-row').evaluateAll((els) => els.map((e) => (e as HTMLElement).dataset.id));
+      // стопка кроме активной — из памяти сеанса (список в листе раскрывается только по щелчку, решение 18)
+      const ids = async () => ((await p.evaluate(`JSON.parse(sessionStorage.getItem('toledot:stack') || '{}').ids || []`)) as string[]).filter((x) => x !== idOf(p));
       const a = await ids();
       if (a.length !== 5 || a.includes('ruf')) return no(`строки стопки (6 лиц, Руфь — седьмая): ${a.join(' ')}`);
       // вернуться к Руфи щелчком по её звезде на небе
@@ -922,6 +952,8 @@ const workset: Scenario[] = [
       await p.reload();
       await p.waitForTimeout(2200);
       const c = await ids();
+      const shown = ((await p.locator('.folio .folio-bar .stack-sum').getAttribute('aria-label')) ?? '').replace(/\s+/g, ' ');
+      if (!/^Ещё открыты \(5\):/.test(shown)) return no(`строка стопки после перезагрузки: «${shown}»`);
       return c.join(' ') === b.join(' ') ? ok(`стопка: ruf ${c.join(' ')}`) : no(`после перезагрузки: ${c.join(' ')}`);
     },
   },

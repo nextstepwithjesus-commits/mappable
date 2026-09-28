@@ -49,7 +49,7 @@ export function AboutPanel() {
         </tbody>
       </table>
       <h3>Хронология</h3>
-      <p>{typo('Годы рассчитаны хронологическим движком по модели; модели расходятся только в годах до 967 г. до Р. Х. Модель выбирается в органах неба, «Хронология».')}</p>
+      <p>{typo('Годы рассчитаны атласом по выбранной модели хронологии; модели расходятся только в годах до 967 г. до Р. Х. Модель выбирается кнопкой «Вид» внизу справа неба, строка «Хронология».')}</p>
       <dl class="models">
         {modelInfo.map((mi) => (
           <div key={mi.id} class={mi.id === modelId.value ? 'on' : ''}>
@@ -81,6 +81,8 @@ export function AboutPanel() {
       </div>
       <h3>Внебиблейские опоры</h3>
       <p class="muted">{typo('Абсолютные годы невозможны без внешних опор; ниже — принятые значения и другие мнения (ТЗ П-6).')}</p>
+      {/* на узком листе строка таблицы — блоком с подписями полей (MOB-51; WCAG 1.4.10): лист не ездит вбок */}
+      <div class="anchors-wrap">
       <table class="anchors">
         <thead>
           <tr>
@@ -97,15 +99,20 @@ export function AboutPanel() {
                 <Refs refs={[a.verse]} owner={`an${a.id}`} />
                 <VerseInsert owner={`an${a.id}`} refs={[a.verse]} />
               </th>
-              <td class="yr">
-                {anchorYear(a.value)}
-                {a.alternatives.length ? <div class="muted">или {typo(a.alternatives.map(anchorAlt).join('; '))}</div> : null}
+              <td class="yr" data-label="Год">
+                <div>
+                  <span class="nobr">{anchorYear(a.value)}</span>
+                  {a.alternatives.length ? <div class="muted">или {typo(a.alternatives.map(anchorAlt).join('; '))}</div> : null}
+                </div>
               </td>
-              <td class="muted">{typo(a.source)}</td>
+              <td class="muted" data-label="Источник">
+                <div>{typo(a.source)}</div>
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
+      </div>
       <h3>Хронологические напряжения</h3>
       <p class="muted">
         {typo(`Места, где числа текста не сходятся между собой: ${m.tensions.length} в этой модели. Атлас их не сглаживает; у лиц они названы в § 13.`)}

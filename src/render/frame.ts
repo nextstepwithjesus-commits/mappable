@@ -18,7 +18,8 @@ import { mapFont, mapSize, T_MAP_S, T_UI } from './type.ts';
 import { T_CANON_END, T_END } from '../engine/timescale.ts';
 import { toAstro, toHist } from '../engine/years.ts';
 import { atlasColumn, atlasColumnSpan, atlasRow, atlasRowLanes, atlasRowLetter, ATLAS_BAND } from '../engine/layout.ts';
-import { byId } from '../data/atlas.ts';
+import { byId, groupById } from '../data/atlas.ts';
+import { nameCase } from '../ui/text/ru.ts';
 import type { Pass, SkyContext, SkyState } from './sky.ts';
 
 /** Линейка лет вверху рамки. */
@@ -29,9 +30,12 @@ export const ROW_H = 18;
 export const FRAME_H = RULER_H + ROW_H;
 /** Нижняя кромка рамки: риски веков и номера столбцов атласа (E9; MAP-40). */
 export const BOTTOM_H = 16;
-/** Ширина левой кромки с буквами строк; на сенсорном экране шире — буквы там крупнее. */
-export const LETTER_W = 18;
-export const LETTER_W_TOUCH = 22;
+/**
+ * Ширина левой кромки с буквами строк — на две литеры («Ю», «А2» ниже «Я»; UX-07); на сенсорном экране шире — буквы
+ * там крупнее.
+ */
+export const LETTER_W = 22;
+export const LETTER_W_TOUCH = 26;
 /** Полоса плотности шкалы под рисками линейки, px. */
 const DENSITY_H = 3;
 
@@ -163,12 +167,12 @@ export interface EventMark {
 }
 
 /**
- * Ключевые события ТЗ § 3.1 — из каталога эпох (data/epochs.json: год и стихи события). Потоп и призвание Аврама
- * зависят от модели хронологии: их год — от рождения Ноя (600-й год, Быт 7:6) и Аврама (75 лет, Быт 12:4) в этой модели.
+ * Ключевые события ТЗ § 3.1 — из каталога эпох этой модели (ModelData.epochs: год и стихи события). Годы событий,
+ * заданные числами Писания (Потоп, призвание Аврама), каталог уже пересчитал для модели (engine/epochs.ts; CARD-60).
  */
-const EVENTS: { epoch: string; match: RegExp; name: string; from?: { id: string; add: number } }[] = [
-  { epoch: 'antediluvian', match: /^Потоп/, name: 'Потоп', from: { id: 'noy', add: 600 } },
-  { epoch: 'patriarchs', match: /^Аврам в 75 лет/, name: 'Призвание Аврама', from: { id: 'avraam', add: 75 } },
+const EVENTS: { epoch: string; match: RegExp; name: string }[] = [
+  { epoch: 'antediluvian', match: /^Потоп/, name: 'Потоп' },
+  { epoch: 'patriarchs', match: /^Аврам в 75 лет/, name: 'Призвание Аврама' },
   { epoch: 'exodus', match: /^Исход/, name: 'Исход' },
   { epoch: 'united', match: /^Закладка храма/, name: 'Закладка храма' },
   { epoch: 'judah-alone', match: /^Разрушение Иерусалима/, name: 'Вавилонский плен' },
@@ -193,9 +197,7 @@ export function eventMarks(v: SkyContext): EventMark[] {
     const ep = m.epochs.find((x) => x.id === e.epoch);
     const ev = ep?.events?.find((x) => e.match.test(x.text));
     if (!ev) continue;
-    let t = toAstro(ev.year);
-    const c = e.from ? m.chrono.get(e.from.id) : undefined;
-    if (e.from && c && c.cls === 'exact') t = c.b + e.from.add;
+    const t = toAstro(ev.year);
     out.push({ t, name: e.name, full: `${e.name}, ${yearText(t)} (расч.)`, refs: ev.refs ?? [] });
   }
   eventCache.set(m.id, out);
@@ -260,9 +262,21 @@ export function scaleBar(v: SkyContext): { years: number; px: number; approx: bo
 // ---------- рамка ----------
 
 /**
- * Рамка листа (C4, E7, E9). Все поля непрозрачные, служебные надписи — только в них; каждая надпись — в замере подписей.
+ * Что ещё пишет служебная строка справа (решения 30, 35): модель хронологии, если она не по умолчанию, и свёрнутое.
+ * folds — знаки свёрнутого неба (src/render/rows.ts, planSky): «колено Иудино (358)», «потомки Давида (62)».
  */
-export function drawFrame(v: SkyContext, ticks: YearTick[]) {
+export interface ServiceExtra {
+  model?: string | null;
+  folds?: readonly { kind: 'desc' | 'group'; id: string; count: number }[];
+}
+/** Команда в служебной строке: прямоугольник (px холста) и что она разворачивает — одно свёрнутое или всё. */
+export type ServiceHit = Rect & { kind: 'desc' | 'group' | 'all'; id: string };
+
+/**
+ * Рамка листа (C4, E7, E9). Все поля непрозрачные, служебные надписи — только в них; каждая надпись — в замере подписей.
+ * Возвращает команды служебной строки («Свёрнуто: … — развернуть»).
+ */
+export function drawFrame(v: SkyContext, ticks: YearTick[], extra: ServiceExtra = {}): ServiceHit[] {
   const { ctx, cam, pal } = v;
   const W = cam.w;
   const H = cam.h;
@@ -286,10 +300,32 @@ export function drawFrame(v: SkyContext, ticks: YearTick[]) {
   ctx.stroke();
 
   drawRuler(v, ticks);
-  drawServiceRow(v);
+  const cmds = drawServiceRow(v, extra);
   drawRowLetters(v);
   drawColumns(v);
   ctx.textBaseline = 'alphabetic';
+  return cmds;
+}
+
+/** Первое слово названия созвездия — нарицательное: в строке «Свёрнуто: колено Иудино» оно пишется со строчной. */
+const COMMON = /^(Колено|Дом|Род|Сыны|Цари|Священники|Двор|Плен|Церковь|Апостолы|Прочие|Родословие|Патриархи|Хорреи|Измаильтяне|От)(\s|$)/;
+/** Название созвездия в строке: «колено Иудино», «Моав». */
+export function groupInLine(name: string): string {
+  return COMMON.test(name) ? name[0].toLowerCase() + name.slice(1) : name;
+}
+/**
+ * Пункт строки «Свёрнуто: …» (решение 30): «колено Иудино (358)»; потомки — «потомки Давида (62)», если имя надёжно
+ * склоняется, иначе «Давид — потомки (62)» (имя не подставляется в падеж без склонения).
+ */
+export function foldItemText(f: { kind: 'desc' | 'group'; id: string; count: number }): string {
+  if (f.kind === 'group') return `${groupInLine(groupById.get(f.id)?.name ?? f.id)} (${f.count})`;
+  const q = byId.get(f.id);
+  const g = q ? nameCase(q.name, q.sex, 'gen', q.unnamed) : null;
+  return g ? `потомки ${g} (${f.count})` : `${q?.name ?? f.id} — потомки (${f.count})`;
+}
+/** Модель хронологии в служебной строке (решение 35): «модель «Краткое пребывание: 215 лет в Египте»», коротко — до двоеточия. */
+export function modelText(name: string, short = false): string {
+  return `модель «${short ? name.split(':')[0] : name}»`;
 }
 
 /** Линейка: полоса плотности, риски, подписи у своих рисок, граница эр, знак разрыва шкалы. */
@@ -410,8 +446,12 @@ function drawRuler(v: SkyContext, ticks: YearTick[]) {
   }
 }
 
-/** Служебная строка: масштабная линейка справа, подписи черт канона и «сегодня», названия эпох по их годам (E7). */
-function drawServiceRow(v: SkyContext) {
+/**
+ * Служебная строка: масштабная линейка справа, левее — модель хронологии, если она не по умолчанию (решение 35), и
+ * «Свёрнуто: … — развернуть» (решение 30; пункты и «развернуть» подчёркнуты — это команды), подписи черт канона
+ * и «сегодня», названия эпох по их годам (E7).
+ */
+function drawServiceRow(v: SkyContext, extra: ServiceExtra): ServiceHit[] {
   const { ctx, cam, pal } = v;
   const W = cam.w;
   const LW = v.letterW;
@@ -448,6 +488,58 @@ function drawServiceRow(v: SkyContext) {
       v.ledger.add('frame', text, b);
       taken.push(b);
       right = tx - 12;
+    }
+  }
+  const cmds: ServiceHit[] = [];
+  // модель хронологии, если она не по умолчанию (решение 35): целиком, иначе до двоеточия
+  if (extra.model) {
+    ctx.fillStyle = pal.ink;
+    for (const text of [modelText(extra.model), modelText(extra.model, true)]) {
+      const tw = ctx.measureText(text).width;
+      const tx = right - tw;
+      if (tx < LW + 8) continue;
+      ctx.fillText(text, tx, rowY);
+      const b = box(tx, tw);
+      v.ledger.add('frame', text, b);
+      taken.push(b);
+      right = tx - 14;
+      break;
+    }
+  }
+  // свёрнутое (решение 30): «Свёрнуто: колено Иудино (358), потомки Давида (62) — развернуть»; тесно — первые пункты
+  // и «ещё N»; каждый пункт разворачивает своё, «развернуть» — всё
+  const folds = extra.folds ?? [];
+  if (folds.length) {
+    const items = folds.map(foldItemText);
+    for (let k = items.length; k >= 1; k--) {
+      const rest = items.length - k;
+      const parts: { t: string; hit?: { kind: 'desc' | 'group' | 'all'; id: string } }[] = [{ t: 'Свёрнуто: ' }];
+      items.slice(0, k).forEach((t, j) => {
+        if (j) parts.push({ t: ', ' });
+        parts.push({ t, hit: { kind: folds[j].kind, id: folds[j].id } });
+      });
+      if (rest) parts.push({ t: ` и ещё ${rest}` });
+      parts.push({ t: ' — ' }, { t: 'развернуть', hit: { kind: 'all', id: '' } });
+      const ws = parts.map((q) => ctx.measureText(q.t).width);
+      const tw = ws.reduce((a, b) => a + b, 0);
+      const x0 = right - tw;
+      if (x0 < LW + 8 && k > 1) continue;
+      if (x0 < LW + 8) break;
+      let x = x0;
+      parts.forEach((q, j) => {
+        ctx.fillStyle = q.hit ? pal.ink : pal.ink2;
+        ctx.fillText(q.t, x, rowY);
+        if (q.hit) {
+          ctx.fillRect(Math.round(x), Math.round(rowY + fs / 2), Math.round(ws[j]), 1);
+          cmds.push({ x: x - 2, y: RULER_H, w: ws[j] + 4, h: ROW_H, ...q.hit });
+        }
+        x += ws[j];
+      });
+      const b = box(x0, tw);
+      v.ledger.add('frame', parts.map((q) => q.t).join(''), b);
+      taken.push(b);
+      right = x0 - 14;
+      break;
     }
   }
   // черты канона и «сегодня» — у своих черт
@@ -489,9 +581,13 @@ function drawServiceRow(v: SkyContext) {
       break;
     }
   }
+  return cmds;
 }
 
-/** Левая кромка: буквы строк атласа по центру видимой части строки; черта — граница строк (E9; UX-07, MOB-08). */
+/**
+ * Левая кромка: буквы строк атласа по центру видимой части строки; черта — граница строк (E9; UX-07, MOB-08). Над «А»
+ * строк нет: там поле остаётся пустым.
+ */
 function drawRowLetters(v: SkyContext) {
   const { ctx, cam, pal } = v;
   const LW = v.letterW;
@@ -520,6 +616,8 @@ function drawRowLetters(v: SkyContext) {
       ctx.lineTo(LW, Math.round(y1) + 0.5);
     }
     if (!shown) continue;
+    // над «А» строк атласа нет (UX-07: «Я0 Ю0» выглядели сбоем) — поле без буквы
+    if (r < 0) continue;
     // буква — по середине видимой части строки; у прореженных — у верха строки, где она помещается
     const a = Math.max(y0, top);
     const b = Math.min(every === 1 ? y1 : y0 + Math.max(rowH, fs + 6), bottom);

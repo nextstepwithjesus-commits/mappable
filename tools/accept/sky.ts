@@ -75,7 +75,7 @@ async function barNear(p: Page, re: RegExp) {
 export const sky: Scenario[] = [
   {
     n: 70,
-    title: 'D13 мышью: меридиан над линейкой — через 250 мс, флажок «… г. до Р. Х.: живы N, наверняка M»; при протяжке его нет',
+    title: 'D13 мышью: меридиан над линейкой — через 250 мс, флажок «… г. до Р. Х.: живы около N лиц, наверняка — M» (UX-59); при протяжке его нет',
     run: async (p) => {
       await go(p, '#/~y-1000~w900~l0', 1800);
       const b = await canvasBox(p);
@@ -86,7 +86,8 @@ export const sky: Scenario[] = [
       await p.mouse.move(x + 3, b.y + 13);
       await p.waitForTimeout(400);
       const flag = ((await meridianFlag(p)) ?? '').replace(/\s/g, ' ');
-      if (!/^\d+ г\. (до|по) Р\. Х\.: живы? \d+, (наверняка \d+|все — вероятно|вероятно)$/.test(flag)) return fail(`флажок: «${flag}»`);
+      // UX-59 (этап 7, K3): число — с существительным и «около», «наверняка — M»
+      if (!/^\d+ г\. (до|по) Р\. Х\.: (живы около \d+ лица?, (наверняка — \d+|все — вероятно)|жив один человек — (наверняка|вероятно))$/.test(flag)) return fail(`флажок: «${flag}»`);
       // следует за указателем без задержки
       await p.mouse.move(x + 120, b.y + 12);
       await p.waitForTimeout(30);
@@ -176,15 +177,22 @@ export const sky: Scenario[] = [
       const epochs = p.locator('.skyctl button', { hasText: 'Эпохи' });
       await epochs.click();
       await p.waitForTimeout(500);
-      if ((await epochs.getAttribute('aria-pressed')) !== 'true') return fail('«Эпохи» не нажата при открытой панели');
+      // команда листа «Вид» закрывает лист (IX-65): панель «Эпохи» не лежит под ним
+      if (await p.locator('.viewpop').count()) return fail('«Эпохи» не закрыла лист «Вид»');
+      if (!/pepochs/.test(p.url())) return fail('«Эпохи» не открыла панель');
       if (await p.locator('.sky[data-tiers]').count()) return fail('«Эпохи» включила ярусы');
+      // панель и карточка сузили небо — органы колонкой (IX-56), флажок — в листе «Вид» у колонки; ярусы — клавишей E
+      await p.keyboard.press('KeyE');
+      await p.waitForTimeout(500);
+      if (!(await p.locator('.sky[data-tiers="on"]').count())) return fail('ярусы не включились');
+      await p.locator('.sheet .close').first().click();
+      await p.waitForTimeout(700);
+      if (!(await p.locator('.sky[data-tiers="on"]').count())) return fail('закрытие панели выключило ярусы');
+      // небо снова широкое — блок: флажок выключает только ярусы, «Эпохи» без панели не нажата
       await p.locator('.skyctl').getByText('ярусы эпох', { exact: true }).click();
       await p.waitForTimeout(500);
-      if (!(await p.locator('.sky[data-tiers="on"]').count())) return fail('флажок не включил ярусы');
-      await p.locator('.sheet .close').first().click();
-      await p.waitForTimeout(500);
-      if (!(await p.locator('.sky[data-tiers="on"]').count())) return fail('закрытие панели выключило ярусы');
-      // щелчок по «×» панели — вне органов неба: лист «Вид» закрылся, открыть снова
+      if (await p.locator('.sky[data-tiers]').count()) return fail('флажок не выключил ярусы');
+      if (await p.locator('.sheet h2', { hasText: 'Эпохи' }).count()) return fail('флажок открыл панель');
       if (!(await p.locator('.viewpop').count())) await p.locator('.skyctl .view-toggle').click();
       if ((await epochs.getAttribute('aria-pressed')) === 'true') return fail('«Эпохи» осталась нажатой без панели');
       return pass(`верх неба ${a.t.toFixed(0)} и ${e.t.toFixed(0)} px`);

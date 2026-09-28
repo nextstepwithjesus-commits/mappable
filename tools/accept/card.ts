@@ -104,12 +104,14 @@ export const card: Scenario[] = [
   },
   {
     n: 93,
-    title: 'F2, F10: три команды одной строкой, «×» в углу; «Все 24 раздела» и печать — в колофоне',
+    // этап 7 (CARD-54, VIS-41; решение 26): четыре команды одной строкой — «Взять в работу ▾» стоит в том же ряду
+    title: 'F2, F10, CARD-54: четыре команды одной строкой, «×» в углу; «Все 24 раздела» и печать — в колофоне',
     run: async (p) => {
       await open(p, 'ruf');
-      const ys = await p.locator('.folio .actions button').evaluateAll((bs) => bs.map((b) => Math.round(b.getBoundingClientRect().top)));
-      const names = (await p.locator('.folio .actions button').allInnerTexts()).map((t) => t.trim());
-      if (names.join('|') !== 'Показать на небе|Найти родство с…|Открыть разворот с…') return fail(`команды: ${names.join(' | ')}`);
+      const row = p.locator('.folio .actions > button, .folio .actions > .workbtn > button');
+      const ys = await row.evaluateAll((bs) => bs.map((b) => Math.round(b.getBoundingClientRect().top)));
+      const names = (await row.allInnerTexts()).map((t) => t.replace(/[▾▴]/g, '').trim());
+      if (names.join('|') !== 'Показать на небе|Родство с…|Разворот с…|Взять в работу') return fail(`команды: ${names.join(' | ')}`);
       if (new Set(ys).size !== 1) return fail(`команды в ${new Set(ys).size} строки`);
       const close = (await p.locator('.folio .close').first().boundingBox())!;
       const f = (await p.locator('.folio').boundingBox())!;
@@ -134,7 +136,8 @@ export const card: Scenario[] = [
       const b = p.locator('.folio .brief');
       if (!(await b.count())) return fail('нет «Кратко»');
       const t = (await b.innerText()).replace(/\s+/g, ' ').replace(/^Кратко: /, '').trim();
-      if (!/^Царь Иудеи, затем всего Израиля, сын Иессея из колена Иудина; царствовал 40 лет; отец Нафана и Соломона\. В родословии Иисуса Христа по обеим линиям\.$/.test(t)) return fail(`«${t}»`);
+      // дети — по значимости (этап 7, CARD-65): Соломон раньше Нафана
+      if (!/^Царь Иудеи, затем всего Израиля, сын Иессея из колена Иудина; царствовал 40 лет; отец Соломона и Нафана\. В родословии Иисуса Христа по обеим линиям\.$/.test(t)) return fail(`«${t}»`);
       const rule = (await p.locator('.folio .mast-rule').boundingBox())!;
       const bb = (await b.boundingBox())!;
       if (bb.y > rule.y) return fail('«Кратко» не над двойной чертой');

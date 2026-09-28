@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'preact/hooks';
 import type { ComponentChildren, VNode } from 'preact';
 import { byId, lineMembership, loadCard, loadedCard, loadedChrono } from '../data/atlas.ts';
 import type { Card, Chrono } from '../data/types.ts';
 import { selected, second, pickMode, model, showSchema } from '../state.ts';
 import { grid, unfoldCard } from './layout.ts';
-import { skyRef, plural, CAN_PRINT } from './common.tsx';
+import { skyRef, plural, CAN_PRINT, goTo } from './common.tsx';
 import { lowerFirst } from './text/ru.ts';
 import { typo } from './text/typo.ts';
 import { Masthead, isPeople } from './card/Masthead.tsx';
@@ -17,9 +17,9 @@ import { affiliation } from './card/shared.tsx';
 import { lifeSpanText } from '../engine/years.ts';
 import { reduced } from './sky/view.ts';
 import { sheetStop, snapSheet, stopsFor, releaseVelocity, type SheetStop } from './sheet.ts';
-import { cardFolded, cardStack, dropCard } from './work.ts';
-import { FoldButton, WorkButton } from './panels/Work.tsx';
-import { goTo } from './common.tsx';
+import { cardFolded, cardStack, clipWords, closeAllCards, closeCard, stackSummaryHead } from './stack.ts';
+import { WorkButton } from './panels/Work.tsx';
+import { focusCardTitle } from './focus.ts';
 
 export { Masthead, SECTIONS, PARTS, buildSections, familyIds, contemporaryGroups };
 export type { SecState };
@@ -79,8 +79,9 @@ export function colophonText(id: string, states: Record<number, SecState>): stri
   if (absent.length) parts.push(`не ${absent.length === 1 ? 'составлен' : 'составлены'} — § ${ranges(absent)}`);
   if (na.length) parts.push('§ 21 не относится: лицо не входит в линии Мессии');
   const c = model.value.chrono.get(id);
-  // −966 — 967 г. до Р. Х. в астрономическом счёте: 4-й год Соломона, якорь хронологии (3 Цар 6:1)
-  const dep = c && c.cls !== 'epochal' && c.b < -966;
+  // −966 — 967 г. до Р. Х. в астрономическом счёте: 4-й год Соломона, якорь хронологии (3 Цар 6:1);
+  // у народа и рода годов в карточке нет (CARD-59) — и зависимости от модели тоже
+  const dep = c && c.cls !== 'epochal' && !isPeople(id) && c.b < -966;
   return typo(
     `${parts.join('; ')}. Ссылки сверены с Синодальным текстом.` + (dep ? ` Годы до 967 г. до Р. Х. — по модели «${modelNames[model.value.id] ?? model.value.id}».` : ''),
   );
@@ -94,20 +95,26 @@ function runIn(body: ComponentChildren): VNode<{ class?: string; children?: Comp
   return v.type === 'p' || v.type === 'li' ? v : null;
 }
 
+/** Состояние тела карточки: разделы, «Загрузка карточки…» (том ещё не пришёл) или «не удалось загрузить». */
+export type BodyStatus = 'ok' | 'loading' | 'error';
+
 /**
- * Тело карточки без загрузки данных (для листа, образца и разворота): рейка, шапка с командами, «Кратко»,
+ * Тело карточки без загрузки данных (для листа, образца и разворота): шапка, «Кратко», команды, рейка,
  * разделы по частям I–VI, колофон.
  * id — лицо шапки; body — лицо, том и хронология тела (пока грузится том нового лица, тело — прежнего, бледнее).
- * actions — строка команд под именем (у листа карточки); current — раздел, до которого дошла прокрутка.
+ * actions — строка команд листа: под «Кратко», над двойной чертой (VIS-41); current — раздел, до которого дошла прокрутка.
+ * status — вместо разделов строка «Загрузка карточки…» или сообщение «не удалось загрузить» с «Повторить» (onRetry).
  */
 export function CardPage({
-  id, body, stale = false, current = 0, actions,
+  id, body, stale = false, current = 0, actions, status = 'ok', onRetry,
 }: {
   id: string;
   body: { id: string; card: Card | null; chrono: Chrono | null } | null;
   stale?: boolean;
   current?: number;
   actions?: ComponentChildren;
+  status?: BodyStatus;
+  onRetry?: () => void;
 }) {
   const [openFor, setOpenFor] = useState<string | null>(null);
   const bodyId = body?.id ?? id;
@@ -122,6 +129,7 @@ export function CardPage({
   const schema = showSchema.value;
   // малое лицо (F11; CARD-36): меньше трёх записей составителя — «Кратко» и есть статья, разделы — одной строкой
   const compact = !!card && authoredCount(card) < 3 && !schema && openFor !== bodyId;
+  const ready = status === 'ok' && !!body;
 
   const go = (n: number) => {
     const st = states[n];
@@ -146,11 +154,13 @@ export function CardPage({
   const flushRun = () => {
     if (!run.length) return;
     const st = states[run[0]];
-    const label = run.length === 1 ? `${run[0]}` : `${run[0]}–${run[run.length - 1]}`;
     const titles = run.map((n, i) => (i ? lowerFirst(SECTIONS[n - 1].title) : SECTIONS[n - 1].title)).join(', ');
+    const last = run[run.length - 1];
+    // диапазон «9–12» на поле — в две строки, «9» над «–12» (VIS-42): рисует ::before из data-n и data-to (folio.css),
+    // а сам номер остаётся текстом строки для диктора и поиска
     blocks.push(
-      <div class={`sec ${st}`} key={`run${run[0]}`} data-n={run[0]} id={`sec-${run[0]}`}>
-        <span class="no">{label}</span>
+      <div class={`sec ${st}`} key={`run${run[0]}`} data-n={run[0]} data-to={last !== run[0] ? last : undefined} id={`sec-${run[0]}`}>
+        <span class="no">{last !== run[0] ? `${run[0]}–${last}` : `${run[0]}`}</span>
         {typo(`${titles} — ${st === 'silent' ? 'в Писании не сообщается' : st === 'na' ? 'не относится: лицо не входит в линии Мессии' : 'раздел не составлен'}`)}
       </div>,
     );
@@ -166,11 +176,7 @@ export function CardPage({
     }
     if (s.part !== lastPart) {
       flushRun();
-      blocks.push(
-        <h3 class="part" key={`p${s.part}`}>
-          {PARTS[s.part]}
-        </h3>,
-      );
+      blocks.push(<PartHead key={`p${s.part}`} part={s.part} />);
       lastPart = s.part;
     }
     const st = states[s.n];
@@ -208,12 +214,26 @@ export function CardPage({
 
   return (
     <>
-      <Masthead id={id} actions={actions} />
-      <Brief id={bodyId} card={card} />
+      <Masthead id={id} card={body?.id === id ? card : null} />
+      {status === 'error' ? null : <Brief id={bodyId} card={card} />}
+      {actions}
       <div class="mast-rule" aria-hidden="true" />
+      {status === 'error' ? (
+        <div class="load-error" role="alert">
+          <p>{typo('Карточку не удалось загрузить: том с её разделами не пришёл. Проверьте связь и повторите.')}</p>
+          <button type="button" class="cmd" onClick={onRetry}>
+            Повторить
+          </button>
+        </div>
+      ) : status === 'loading' ? (
+        // том ещё не пришёл (D11; IX-45): строка на месте разделов; рейки и колофона нет — им нечего перечислять
+        <p class="muted load-wait" role="status">
+          Загрузка карточки…
+        </p>
+      ) : null}
       {/* рейка — вровень с первым разделом (VIS-07); на телефоне — строка номеров под шапкой */}
-      {compact ? null : <Rail states={states} current={current} onGo={go} />}
-      {body ? (
+      {ready && !compact ? <Rail states={states} current={current} onGo={go} /> : null}
+      {ready ? (
         <div class={stale ? 'folio-body stale' : 'folio-body'} aria-busy={stale ? 'true' : undefined}>
           {compact ? (
             <p class="rest">
@@ -227,21 +247,33 @@ export function CardPage({
           )}
         </div>
       ) : null}
-      <footer class="colophon">
-        {compact ? null : <RailKey states={states} />}
-        <p>{colophonText(bodyId, states)}</p>
-        <div class="cmds">
-          <button type="button" class="cmd" aria-pressed={schema} onClick={() => (showSchema.value = !schema)}>
-            Показать все 24 раздела
-          </button>
-          {CAN_PRINT && (
-            <button type="button" class="cmd" onClick={() => window.print()}>
-              Напечатать карточку
+      {ready ? (
+        <footer class="colophon">
+          {compact ? null : <RailKey states={states} />}
+          <p>{colophonText(bodyId, states)}</p>
+          <div class="cmds">
+            <button type="button" class="cmd" aria-pressed={schema} onClick={() => (showSchema.value = !schema)}>
+              Показать все 24 раздела
             </button>
-          )}
-        </div>
-      </footer>
+            {CAN_PRINT && (
+              <button type="button" class="cmd" onClick={() => window.print()}>
+                Напечатать карточку
+              </button>
+            )}
+          </div>
+        </footer>
+      ) : null}
     </>
+  );
+}
+
+/** Название части (VIS-39): римская цифра — на поле, в колонке номеров; слово — курсивом, как подпись, а не надзаголовок. */
+function PartHead({ part }: { part: number }) {
+  const [roman, ...rest] = PARTS[part].split(' ');
+  return (
+    <h3 class="part">
+      <span class="pn">{roman}</span> <span class="pt">{rest.join(' ')}</span>
+    </h3>
   );
 }
 
@@ -367,10 +399,11 @@ function useSheetDrag(aside: { current: HTMLElement | null }, on: boolean) {
 
 /**
  * Закреплённая шапка нижнего листа (H2; MOB-12, MOB-15): ручка, имя, «Развернуть» или «Свернуть» и «×» (44 × 44).
- * На шапке (104 px) под именем — годы: этого хватает, чтобы узнать лицо, не открывая карточки (MOB-11).
+ * На шапке (104 px) под именем — годы и уточнение (MOB-11, MOB-64): шапка занимает весь лист на 104 px, и ни одна
+ * строка не режется его краем.
  * Имя здесь — для глаз: заголовком карточки для диктора и для фокуса остаётся h2 шапки карточки (Masthead).
  */
-function SheetBar({ id, stop }: { id: string; stop: SheetStop }) {
+function SheetBar({ id, stop, onClose }: { id: string; stop: SheetStop; onClose: () => void }) {
   const p = byId.get(id)!;
   const c = model.value.chrono.get(id);
   const years = c ? lifeSpanText(c, { people: isPeople(id) }) : '';
@@ -393,35 +426,88 @@ function SheetBar({ id, stop }: { id: string; stop: SheetStop }) {
         >
           {full ? 'Свернуть' : 'Развернуть'}
         </button>
-        {/* «×» снимает только выбор; открытая панель остаётся (D11; IX-26) */}
-        <Close label="Закрыть карточку" onClick={() => (selected.value = null)} />
+        {/* «×» закрывает карточку, как вкладку: открывается следующая из стопки; панель остаётся (D11; решение 18) */}
+        <Close label="Закрыть карточку" onClick={onClose} />
       </div>
       {stop === 'peek' && (
-        <div class="bar-years" aria-hidden="true">
-          {typo(years || 'время не установлено')}
+        <div class="bar-peek" aria-hidden="true">
+          <div class="bar-years">{typo(years || 'время не установлено')}</div>
+          {p.disambig ? <div class="bar-dis">{typo(p.disambig)}</div> : null}
         </div>
       )}
     </div>
   );
 }
 
-export function Folio() {
-  const id = selected.value;
+/**
+ * Команды шапки карточки — одной строкой (F2; CARD-54, VIS-41; решения 9 и 26): глаголы с однострочными пояснениями;
+ * «Взять в работу ▾» раскрывает выбор объёма, в нём же — «Скрыть потомков на небе».
+ */
+function CardActions({ id, phone }: { id: string; phone: boolean }) {
+  const pick = pickMode.value;
+  const toggle = (mode: 'kinship' | 'spread') => {
+    pickMode.value = pick === mode ? null : mode;
+    second.value = null;
+  };
+  return (
+    <div class="actions">
+      <button
+        type="button"
+        title="Перелететь к звезде лица на небе"
+        onClick={() => {
+          // на телефоне лист сначала сворачивается до шапки: перелёт идёт над ним, а не под ним (MOB-15)
+          if (phone) sheetStop.value = 'peek';
+          skyRef.flyTo(id);
+        }}
+      >
+        Показать на небе
+      </button>
+      {/* в режиме выбора второго лица надпись и ширина те же — меняется только нажатость (IX-22): ряд не перестраивается,
+          а что делать дальше, говорит строка у кромки неба */}
+      <button type="button" aria-pressed={pick === 'kinship'} title="Как связаны это лицо и второе: выберите его на небе или в поиске" onClick={() => toggle('kinship')}>
+        Родство с…
+      </button>
+      <button type="button" aria-pressed={pick === 'spread'} title="Две карточки рядом: выберите второе лицо" onClick={() => toggle('spread')}>
+        Разворот с…
+      </button>
+      <WorkButton id={id} />
+    </div>
+  );
+}
+
+/** Закрыть карточку id, как вкладку (решение 18): следующая из стопки — активной, фокус на её заголовок (IX-52). */
+function closeActive(id: string) {
+  // выбор второго лица относился к закрытой карточке: следующая открывается как первое лицо, а не как второе
+  pickMode.value = null;
+  const next = closeCard(id, goTo);
+  if (next) focusCardTitle(next);
+}
+
+/** После «Свернуть карточку» фокус — на «развернуть» корешка (кнопка «Свернуть карточку» уходит из разметки). */
+let focusSpine = false;
+
+export function Folio({ id: forcedId, forceState }: { id?: string; forceState?: 'loading' | 'error' } = {}) {
+  const id = forcedId ?? selected.value;
+  // образец (#/specimen, VIS-55) показывает «Загрузку» и «Ошибку» живыми: лист в этом состоянии, без стопки и листа телефона
+  const live = !forceState;
   const [data, setData] = useState<{ id: string; card: Card; chrono: Chrono | null } | null>(null);
   const [current, setCurrent] = useState(1);
   // том не загрузился (D11): лист говорит об этом и предлагает повторить, а не остаётся в «Загрузке» навсегда
   const [failed, setFailed] = useState<string | null>(null);
   const [slow, setSlow] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  const [stackOpen, setStackOpen] = useState(false);
   const inner = useRef<HTMLDivElement>(null);
   const aside = useRef<HTMLElement>(null);
   // на телефоне карточка — нижний лист с тремя положениями (ТЗ § 3.8; H2)
   const phone = grid.value.phone;
+  const spine = grid.value.spine;
+  const stackSize = cardStack.value.length;
   const stop = sheetStop.value;
-  const sheet = phone && !!id && byId.has(id);
+  const sheet = live && phone && !!id && byId.has(id);
   useSheetDrag(aside, sheet);
   useEffect(() => {
-    if (!id) return;
+    if (!id || !live) return;
     let alive = true;
     setFailed(null);
     setSlow(false);
@@ -431,22 +517,25 @@ export function Folio() {
       .catch(() => alive && setFailed(id))
       .finally(() => clearTimeout(t));
     inner.current?.parentElement?.scrollTo({ top: 0 });
+    setStackOpen(false);
     return () => {
       alive = false;
       clearTimeout(t);
     };
-  }, [id, attempt]);
+  }, [id, attempt, live]);
   useEffect(() => {
     const el = inner.current?.parentElement;
     if (!el) return;
-    // текущий раздел — тот, чей заголовок дошёл до верха листа; на телефоне верх листа — под шапкой и строкой номеров
-    const edge = phone ? 120 : 80;
+    // текущий раздел — тот, чей заголовок дошёл до верха листа (под закреплённой полосой); на телефоне — под шапкой листа
+    const edge = phone ? 120 : 96;
     const onScroll = () => {
       const secs = [...el.querySelectorAll<HTMLElement>('.sec[data-n]')];
       const top = el.getBoundingClientRect().top;
       let cur = 1;
       for (const s of secs) if (s.getBoundingClientRect().top - top < edge) cur = Number(s.dataset.n);
       setCurrent(cur);
+      // закреплённая полоса получает фон и черту, когда под неё уходит текст (CARD-53, UX-67)
+      el.toggleAttribute('data-scrolled', el.scrollTop > BAR_H - 4);
     };
     el.addEventListener('scroll', onScroll, { passive: true });
     return () => el.removeEventListener('scroll', onScroll);
@@ -455,6 +544,29 @@ export function Folio() {
   useEffect(() => {
     if (sheet && stop === 'peek') aside.current?.scrollTo({ top: 0 });
   }, [sheet, stop, id]);
+  // фокус клавиатуры ушёл в тело листа, свёрнутого до шапки, — лист поднимается на 55 %: фокус не прячется (MOB-50)
+  useEffect(() => {
+    const el = aside.current;
+    if (!el || !sheet) return;
+    // заголовок карточки (h2) на телефоне скрыт, его фокус виден на имени шапки листа (phone.css): поиск и ссылки ставят
+    // фокус на него, и лист остаётся на шапке
+    const onFocus = (e: FocusEvent) => {
+      const t = e.target;
+      if (sheetStop.peek() !== 'peek' || !(t instanceof HTMLElement) || t.closest('.sheet-bar') || t.matches('.mast h2')) return;
+      sheetStop.value = 'half';
+      // после подъёма — поле фокуса ниже закреплённой шапки листа (WCAG 2.4.11)
+      window.setTimeout(() => {
+        const bar = el.querySelector('.sheet-bar')?.getBoundingClientRect();
+        const r = t.getBoundingClientRect();
+        const fr = el.getBoundingClientRect();
+        if (!bar) return;
+        if (r.top < bar.bottom + 8) el.scrollTop -= bar.bottom + 8 - r.top;
+        else if (r.bottom > fr.bottom - 8) el.scrollTop += r.bottom - fr.bottom + 8;
+      }, 320);
+    };
+    el.addEventListener('focusin', onFocus);
+    return () => el.removeEventListener('focusin', onFocus);
+  }, [sheet]);
   useEffect(() => {
     if (!sheet) return;
     const rail = inner.current?.querySelector<HTMLElement>('.rail');
@@ -463,108 +575,105 @@ export function Folio() {
     const want = b.offsetLeft + b.offsetWidth / 2 - rail.clientWidth / 2;
     rail.scrollLeft = Math.max(0, Math.min(rail.scrollWidth - rail.clientWidth, want));
   }, [sheet, current, id]);
+  // сколько места команды закреплённой полосы занимают в колонке текста: имя в первой строке их обходит (folio.css, --bar-cmds)
+  useLayoutEffect(() => {
+    const el = aside.current;
+    const cmds = el?.querySelector<HTMLElement>('.folio-bar .bar-cmds');
+    const col = inner.current;
+    if (!el || !cmds || !col) return;
+    const set = () => {
+      const right = col.getBoundingClientRect().right - parseFloat(getComputedStyle(col).paddingRight);
+      el.style.setProperty('--bar-cmds', `${Math.max(0, Math.ceil(right - cmds.getBoundingClientRect().left + 8))}px`);
+    };
+    set();
+    const ro = new ResizeObserver(set);
+    ro.observe(cmds);
+    ro.observe(col);
+    return () => ro.disconnect();
+  }, [id, phone, live, stackSize, spine]);
 
   if (!id) return <aside class="folio" hidden />;
   const p = byId.get(id);
   if (!p) return <aside class="folio" hidden />;
-  // карточка свёрнута в корешок: небу иначе осталось бы меньше 40 % (C1; решение 7)
-  if (grid.value.spine) return <FolioSpine id={id} />;
+  // карточка свёрнута в корешок: её свернул читатель, «Небо во весь экран» или небу иначе осталось бы меньше 40 %
+  // (C1; решения 7 и 18)
+  if (live && spine) return <FolioSpine id={id} />;
   // тело карточки (D11; IX-45): том уже загружен — сразу; иначе до прихода нового держится прежнее тело (бледнее),
   // а «Загрузка карточки…» появляется, только если ждать дольше 300 мс
-  const have = data && data.id === id ? data : loadedCard(id) ? { id, card: loadedCard(id)!, chrono: loadedChrono(id) } : null;
-  const shownBody = have ?? (data && !slow && failed !== id ? data : null);
+  const have = !live ? null : data && data.id === id ? data : loadedCard(id) ? { id, card: loadedCard(id)!, chrono: loadedChrono(id) } : null;
+  const shownBody = have ?? (live && data && !slow && failed !== id ? data : null);
   const stale = !have && !!shownBody;
-
-  // команды карточки — глаголами, одной строкой (F2; решение владельца 9); «Все 24 раздела» и печать — в колофоне
-  const actions = (
-    <div class="actions">
-      <button
-        type="button"
-        onClick={() => {
-          // на телефоне лист сначала сворачивается до шапки: перелёт идёт над ним, а не под ним (MOB-15)
-          if (phone) sheetStop.value = 'peek';
-          skyRef.flyTo(id);
-        }}
-      >
-        Показать на небе
-      </button>
-      <button type="button" aria-pressed={pickMode.value === 'kinship'} onClick={() => { pickMode.value = pickMode.value === 'kinship' ? null : 'kinship'; second.value = null; }}>
-        {pickMode.value === 'kinship' ? 'Выберите второе лицо…' : 'Найти родство с…'}
-      </button>
-      <button type="button" aria-pressed={pickMode.value === 'spread'} onClick={() => { pickMode.value = pickMode.value === 'spread' ? null : 'spread'; second.value = null; }}>
-        {pickMode.value === 'spread' ? 'Выберите второе лицо…' : 'Открыть разворот с…'}
-      </button>
-    </div>
-  );
-  // рабочий набор и свёртка на небе (J3, J5) — второй строкой команд шапки: «Взять в работу» с выбором объёма, «Свернуть потомков»
-  const workCmds = (
-    <div class="workcmds">
-      <WorkButton id={id} />
-      <FoldButton id={id} />
-    </div>
-  );
-  const others = cardStack.value.filter((x) => x !== id && byId.has(x));
-  const folded = cardFolded.value;
+  // «Загрузка карточки…» — только если том не пришёл за 300 мс: быстрые переходы её не показывают (D11)
+  const status: BodyStatus = forceState ?? (failed === id ? 'error' : !shownBody && slow ? 'loading' : 'ok');
+  const others = live ? cardStack.value.filter((x) => x !== id && byId.has(x)) : [];
+  const close = () => closeActive(id);
 
   return (
-    <aside class="folio" aria-label={`Карточка: ${p.name}`} ref={aside} data-stop={phone ? stop : undefined} data-folded={!phone && folded ? '' : undefined}>
-      {phone && <SheetBar id={id} stop={stop} />}
+    <aside class="folio" aria-label={`Карточка: ${p.name}`} ref={aside} data-stop={sheet ? stop : undefined} data-state={status === 'ok' ? undefined : status}>
+      {sheet && <SheetBar id={id} stop={stop} onClose={close} />}
       {/* стопка на телефоне — строка открытых карточек над листом (J6) */}
-      {phone && others.length > 0 && <StackStrip ids={others} />}
+      {sheet && others.length > 0 && <StackStrip ids={others} />}
+      {live && !phone && <FolioBar id={id} others={others} open={stackOpen} setOpen={setStackOpen} onClose={close} />}
       <div class="folio-inner" ref={inner}>
-        {/* единый «×» (B3): липкий, в правом верхнем углу листа; на сенсорном экране — 44 × 44; на телефоне — в шапке листа */}
-        {/* «×» снимает только выбор; открытая панель остаётся (D11; IX-26); карточка остаётся в стопке */}
-        {!phone && <Close label="Закрыть карточку" onClick={() => (selected.value = null)} />}
-        {/* «Свернуть» (J6): активная карточка — строкой стопки */}
-        {!phone && !folded && (
-          <button type="button" class="cmd fold-card" title="Свернуть карточку до строки" onClick={() => (cardFolded.value = true)}>
-            Свернуть
-          </button>
-        )}
-        {/* стопка (J6): другие открытые карточки — строками над активной; щелчок разворачивает */}
-        {!phone && (others.length > 0 || folded) && <StackRows ids={others} active={folded ? id : null} />}
-        {!phone && folded ? null : failed === id ? (
-          <>
-            <Masthead id={id} actions={<>{actions}{workCmds}</>} />
-            <div class="load-error" role="alert">
-              <p>{typo('Карточку не удалось загрузить: том с её разделами не пришёл. Проверьте связь и повторите.')}</p>
-              <button type="button" class="cmd" onClick={() => setAttempt((a) => a + 1)}>
-                Повторить
-              </button>
-            </div>
-          </>
-        ) : (
-          <CardPage id={id} body={shownBody} stale={stale} current={current} actions={<>{actions}{workCmds}</>} />
-        )}
-        {!shownBody && failed !== id && slow && !(folded && !phone) ? (
-          <p class="muted" role="status">
-            Загрузка карточки…
-          </p>
-        ) : null}
+        <CardPage
+          id={id}
+          body={shownBody}
+          stale={stale}
+          current={current}
+          actions={<CardActions id={id} phone={phone} />}
+          status={status}
+          onRetry={() => setAttempt((a) => a + 1)}
+        />
       </div>
     </aside>
   );
 }
 
+/** Высота закреплённой полосы карточки, px (folio.css, .folio-bar). */
+const BAR_H = 36;
+
 /**
- * Корешок свёрнутой карточки (C1): 56 px — «×», имя и «развернуть». Развернуть — значит закрыть панель:
- * карточка и широкая панель вместе небу места не оставляют; прокрутка и фильтры панели помнятся (D11).
+ * Закреплённая полоса листа (CARD-53, UX-67; решение 18): на всю ширину листа, текст прокручивается под ней.
+ * Слева — строка стопки «Ещё открыты (N): …» (по щелчку — список), справа — «Свернуть карточку» и «×».
+ * Без стопки полоса лежит на строке имени и прозрачна, пока лист не прокручен (data-scrolled): первый экран не теряет строки.
  */
-function FolioSpine({ id }: { id: string }) {
-  const p = byId.get(id)!;
+function FolioBar({ id, others, open, setOpen, onClose }: { id: string; others: string[]; open: boolean; setOpen: (v: boolean) => void; onClose: () => void }) {
+  const sum = useRef<HTMLButtonElement>(null);
+  const hide = (refocus: boolean) => {
+    setOpen(false);
+    if (refocus) sum.current?.focus();
+  };
   return (
-    <aside class="folio spine" aria-label={`Карточка: ${p.name} (свёрнута)`}>
-      <Close label="Закрыть карточку" onClick={() => (selected.value = null)} />
-      <button type="button" class="unfold" aria-label={`Развернуть карточку: ${p.name}`} title="Развернуть карточку" onClick={unfoldCard}>
-        <span class="nm">{p.name}</span>
-        <span class="cmdl" aria-hidden="true">
-          развернуть
-        </span>
-      </button>
-    </aside>
+    <div
+      class="folio-bar"
+      data-stack={others.length ? '' : undefined}
+      onKeyDown={(e) => {
+        // Escape списка снимает только список, а не выбор лица (одно видимое состояние)
+        if (e.key !== 'Escape' || !open) return;
+        e.preventDefault();
+        e.stopPropagation();
+        hide(true);
+      }}
+    >
+      {others.length > 0 && <StackSummary ids={others} open={open} btn={sum} onToggle={() => setOpen(!open)} />}
+      <span class="bar-cmds">
+        <button
+          type="button"
+          class="cmd fold-card"
+          title="Небо займёт место карточки; развернуть — на корешке справа"
+          onClick={() => {
+            focusSpine = true;
+            cardFolded.value = true;
+          }}
+        >
+          Свернуть карточку
+        </button>
+        <Close label="Закрыть карточку" onClick={onClose} />
+      </span>
+      {open && others.length > 0 && <StackList ids={others} active={id} onPick={() => hide(false)} />}
+    </div>
   );
 }
-
 
 /** Годы лица для строки стопки: как в шапке листа. */
 function stackYears(id: string): string {
@@ -573,38 +682,154 @@ function stackYears(id: string): string {
 }
 
 /**
- * Стопка карточек (J6): открытые прежде карточки — строками «имя, уточнение, годы» над активной, самые недавние — выше.
- * Щелчок по строке делает карточку активной (и кладёт её наверх); «×» убирает её из стопки. active — активная
- * карточка, свёрнутая до строки: щелчок её разворачивает.
+ * Строка стопки (решение 18; CARD-52, IX-52, UX-49): «Ещё открыты (N): Иосиф, Моисей…» — свёрнута по умолчанию.
+ * Имена — от недавних к старым, целиком: сколько помещается, остальные — многоточием (число N названо).
  */
-function StackRows({ ids, active }: { ids: string[]; active: string | null }) {
-  const row = (id: string, isActive: boolean) => {
-    const p = byId.get(id)!;
-    return (
-      <li key={id} class={isActive ? 'stack-row active' : 'stack-row'} data-id={id}>
+function StackSummary({ ids, open, btn, onToggle }: { ids: string[]; open: boolean; btn: { current: HTMLButtonElement | null }; onToggle: () => void }) {
+  const names = ids.map((x) => byId.get(x)!.name);
+  const namesRef = useRef<HTMLSpanElement>(null);
+  const [fit, setFit] = useState(names.length);
+  const key = names.join('|');
+  useLayoutEffect(() => {
+    const el = namesRef.current;
+    if (!el) return;
+    const measure = () => {
+      const room = el.clientWidth;
+      const ctx = document.createElement('canvas').getContext('2d');
+      if (!ctx || !room) return setFit(names.length);
+      // свойство font у вычисленного стиля бывает пустым: шрифт холста собирается из частей
+      const cs = getComputedStyle(el);
+      ctx.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+      let k = names.length;
+      while (k > 1 && ctx.measureText(`${names.slice(0, k).join(', ')}${k < names.length ? '…' : ''}`).width > room - 2) k--;
+      setFit(k);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [key]);
+  const shown = `${names.slice(0, fit).join(', ')}${fit < names.length ? '…' : ''}`;
+  return (
+    <button
+      type="button"
+      class="stack-sum"
+      ref={btn}
+      aria-expanded={open}
+      aria-controls={open ? 'stack-list' : undefined}
+      aria-label={`${stackSummaryHead(ids.length)} ${names.join(', ')}`}
+      title={open ? 'Скрыть список открытых карточек' : 'Показать список открытых карточек'}
+      onClick={onToggle}
+    >
+      <span class="sh">{stackSummaryHead(ids.length)}</span>
+      <span class="names" ref={namesRef}>
+        {shown}
+      </span>
+      <span class="tri" aria-hidden="true">
+        {open ? '▴' : '▾'}
+      </span>
+    </button>
+  );
+}
+
+/** Уточнение в строке стопки — целыми словами, не длиннее 40 знаков (VIS-48). */
+const STACK_DIS = 40;
+
+/**
+ * Список открытых карточек (решение 18): от недавних к старым; строка — имя и годы, под ними уточнение; щелчок делает
+ * карточку активной; «×» закрывает её; в конце — «Закрыть все».
+ */
+function StackList({ ids, active, onPick }: { ids: string[]; active: string; onPick: () => void }) {
+  return (
+    <ul class="stack" id="stack-list" aria-label="Открытые карточки">
+      {ids.map((x) => {
+        const q = byId.get(x)!;
+        const dis = q.disambig ? clipWords(q.disambig, STACK_DIS) : null;
+        return (
+          <li key={x} class="stack-row" data-id={x}>
+            <button
+              type="button"
+              class="sr-open"
+              aria-label={`Открыть карточку: ${q.name}${q.disambig ? `, ${q.disambig}` : ''}`}
+              onClick={() => {
+                onPick();
+                goTo(x);
+              }}
+            >
+              <span class="nm">{q.name}</span>
+              <span class="yrs">{stackYears(x)}</span>
+              {dis ? <span class="ds">{typo(dis)}</span> : null}
+            </button>
+            <Close label={`Закрыть карточку: ${q.name}`} onClick={() => closeCard(x)} />
+          </li>
+        );
+      })}
+      <li class="stack-all">
         <button
           type="button"
-          class="sr-open"
-          aria-label={`${isActive ? 'Развернуть карточку' : 'Открыть карточку'}: ${p.name}${p.disambig ? `, ${p.disambig}` : ''}`}
-          onClick={() => (isActive ? (cardFolded.value = false) : goTo(id))}
+          class="cmd"
+          title={`Закрыть и эту карточку (${byId.get(active)?.name ?? ''}), и все открытые`}
+          onClick={closeAllCards}
         >
-          <span class="nm">{p.name}</span>
-          {p.disambig ? <span class="ds">{typo(`, ${p.disambig}`)}</span> : null}
-          <span class="yrs">{stackYears(id)}</span>
+          Закрыть все
         </button>
-        <Close label={`Убрать из стопки: ${p.name}`} onClick={() => dropCard(id)} />
       </li>
-    );
-  };
-  return (
-    <ul class="stack" aria-label="Открытые карточки">
-      {ids.map((id) => row(id, false))}
-      {active && row(active, true)}
     </ul>
   );
 }
 
-/** Стопка на телефоне (J6): строка открытых карточек над листом; касание — карточка наверх, «×» — убрать. */
+/**
+ * Корешок карточки (C1; VIS-44, UX-50; решения 7 и 18): 56 px — «×», имя и «развернуть», ниже — имена других открытых
+ * карточек снизу вверх, как на корешке. Корешок бывает по выбору читателя («Свернуть карточку»), в «Небе во весь экран»
+ * и когда рядом с широкой панелью небу не хватило бы места; «развернуть» снимает причину (layout.ts, unfoldCard).
+ */
+function FolioSpine({ id }: { id: string }) {
+  const p = byId.get(id)!;
+  const unfold = useRef<HTMLButtonElement>(null);
+  const others = cardStack.value.filter((x) => x !== id && byId.has(x));
+  useLayoutEffect(() => {
+    if (!focusSpine) return;
+    focusSpine = false;
+    unfold.current?.focus({ preventScroll: true });
+  }, []);
+  return (
+    <aside class="folio spine" aria-label={`Карточка: ${p.name} (свёрнута)`}>
+      <Close label="Закрыть карточку" onClick={() => closeActive(id)} />
+      <button
+        type="button"
+        class="unfold"
+        ref={unfold}
+        aria-label={`Развернуть карточку: ${p.name}`}
+        title="Развернуть карточку"
+        onClick={() => {
+          unfoldCard();
+          focusCardTitle(id);
+        }}
+      >
+        <span class="nm">{p.name}</span>
+        <span class="cmdl" aria-hidden="true">
+          развернуть
+        </span>
+      </button>
+      {others.length > 0 && (
+        <ul class="spine-stack" aria-label={stackSummaryHead(others.length).replace(/:$/, '')}>
+          {others.map((x) => {
+            const q = byId.get(x)!;
+            return (
+              <li key={x}>
+                <button type="button" class="sp-open" aria-label={`Открыть карточку: ${q.name}`} title={`Открыть карточку: ${q.name}`} onClick={() => goTo(x)}>
+                  {q.name}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </aside>
+  );
+}
+
+/** Стопка на телефоне (J6): строка открытых карточек над листом; касание — карточка наверх, «×» — закрыть её. */
 function StackStrip({ ids }: { ids: string[] }) {
   return (
     <ul class="stack-strip" aria-label="Открытые карточки">
@@ -615,7 +840,7 @@ function StackStrip({ ids }: { ids: string[] }) {
             <button type="button" class="sr-open" aria-label={`Открыть карточку: ${p.name}${p.disambig ? `, ${p.disambig}` : ''}`} onClick={() => goTo(id)}>
               {p.name}
             </button>
-            <Close label={`Убрать из стопки: ${p.name}`} onClick={() => dropCard(id)} />
+            <Close label={`Закрыть карточку: ${p.name}`} onClick={() => closeCard(id)} />
           </li>
         );
       })}

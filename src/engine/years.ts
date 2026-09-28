@@ -56,6 +56,8 @@ export interface LifeDates {
   bHi: number;
   d: number | null;
   cls: 'exact' | 'calculated' | 'estimated' | 'epochal';
+  /** народ или род (CARD-59): год — место в родословии, а не рождение; годов не показывают */
+  named?: boolean;
 }
 
 /** Точка оценки округляется до 5 лет, границы широкого промежутка (полуширина ≥ 50 лет) — до 10. */
@@ -73,24 +75,38 @@ export function roundYear(astro: number, step: number): number {
 /**
  * Годы рождения и смерти в том виде, в каком их показывает карточка. У оценки год рождения округлён,
  * год смерти (если известен возраст) отсчитан от округлённого рождения, чтобы возраст при смерти сохранился.
- * У лиц класса epochal годов нет: null.
+ * У лиц класса epochal годов нет: null. У народа и рода (named) года рождения нет (CARD-59; решение владельца 23): null.
  */
 export function shownYears(c: LifeDates): { b: number; d: number | null; approx: boolean } | null {
-  if (c.cls === 'epochal') return null;
+  if (c.cls === 'epochal' || c.named) return null;
   if (c.cls !== 'estimated') return { b: Math.round(c.b), d: c.d === null ? null : Math.round(c.d), approx: c.cls !== 'exact' };
   const b = roundYear(c.b, ESTIMATE_STEP);
   return { b, d: c.d === null ? null : b + Math.round(c.d - c.b), approx: true };
 }
 
+/** Округлить астрономический год до step лет в сторону более позднего (later) или более раннего года; нулевого года нет. */
+function roundYearTo(astro: number, step: number, dir: 'later' | 'earlier'): number {
+  const h = toHist(astro);
+  const r = (dir === 'later' ? Math.ceil(h / step) : Math.floor(h / step)) * step;
+  return toAstro(r === 0 ? (dir === 'later' ? step : -step) : r);
+}
+
 /**
- * Возможный промежуток года рождения оценки, концы округлены до ближайших 5 (10) лет: округление наружу
- * вывело бы край за границу из данных (Мицраим «после Потопа»: 2517 → 2520 — уже до Потопа).
- * Показанный год оценки всегда внутри промежутка.
+ * Возможный промежуток года рождения оценки, концы округлены до 5 (10) лет внутрь промежутка: округление наружу
+ * вывело бы край за границу из данных (Мицраим «после Потопа»: 2517 → 2520 — уже до Потопа; Валаам убит в 1406 г.,
+ * и «1405» было бы рождением после смерти, MAP-53). Узкий промежуток, внутри которого круглого года нет, — до
+ * ближайших круглых лет. Показанный год оценки всегда внутри промежутка.
  */
 export function shownBirthRange(c: LifeDates): [number, number] {
   const step = (c.bHi - c.bLo) / 2 >= 50 ? WIDE_STEP : ESTIMATE_STEP;
   const b = shownYears(c)?.b ?? c.b;
-  return [Math.min(roundYear(c.bLo, step), b), Math.max(roundYear(c.bHi, step), b)];
+  let lo = roundYearTo(c.bLo, step, 'later');
+  let hi = roundYearTo(c.bHi, step, 'earlier');
+  if (lo > hi) {
+    lo = roundYear(c.bLo, step);
+    hi = roundYear(c.bHi, step);
+  }
+  return [Math.min(lo, b), Math.max(hi, b)];
 }
 
 /**

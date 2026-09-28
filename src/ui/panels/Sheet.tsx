@@ -4,6 +4,7 @@ import { panel } from '../../state.ts';
 import { Close } from '../controls.tsx';
 import { typo, typoTree } from '../text/typo.ts';
 import { showYears } from '../sky/view.ts';
+import { parked } from '../focus.ts';
 
 /** Прокрутка каждой панели за сеанс (D11; IX-30): вернувшись к панели, читатель видит то же место. */
 const scrolls = new Map<string, number>();
@@ -27,7 +28,8 @@ export function useRemembered<T>(key: string, init: T): [T, (v: T) => void] {
 
 /**
  * Панель. reserve — лист лежит на небе (лист «Вид» узкого неба): небо не рисует под ним подписей и сдвигает из-под него
- * выбранное лицо (SkyView, data-reserve).
+ * выбранное лицо (SkyView, data-reserve). Пока на телефоне идёт выбор второго лица на небе, лист панели этого режима
+ * убран (hidden; src/ui/focus.ts, parked — MOB-47): панель остаётся в разметке со своим состоянием и прокруткой.
  */
 export function Sheet({ title, lead, wide, reserve, children }: { title: string; lead?: string; wide?: boolean; reserve?: boolean; children: ComponentChildren }) {
   const ref = useRef<HTMLElement>(null);
@@ -44,7 +46,13 @@ export function Sheet({ title, lead, wide, reserve, children }: { title: string;
   // заголовок принимает фокус при открытии панели и называет область для диктора (I2; src/ui/focus.ts)
   const hid = `sheet-h-${title.replace(/[^\p{L}\p{N}]+/gu, '-')}`;
   return (
-    <section ref={ref} class={wide ? 'sheet wide' : 'sheet'} aria-labelledby={hid} data-reserve={reserve ? 'sheet' : undefined}>
+    <section
+      ref={ref}
+      class={wide ? 'sheet wide' : 'sheet'}
+      aria-labelledby={hid}
+      data-reserve={reserve ? 'sheet' : undefined}
+      hidden={!reserve && parked.value}
+    >
       {/* шапка: на телефоне прилипает к верху листа, чтобы «×» всегда был под рукой */}
       <header class="sheet-head">
         <h2 id={hid} tabIndex={-1}>

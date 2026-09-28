@@ -4,14 +4,14 @@ import { byId, lines, persons, loadCard } from '../../data/atlas.ts';
 import { batch } from '@preact/signals';
 import { sectionFocus, selected, model, panel } from '../../state.ts';
 import { P, Refs, VerseInsert, Mark, plural, roleText } from '../common.tsx';
-import { SECTIONS, PARTS, buildSections, sectionStates } from '../Folio.tsx';
-import { affiliation } from '../card/shared.tsx';
-import type { Card, Chrono, Reign } from '../../data/types.ts';
-import { formatSpan, toAstro, yearsWord } from '../../engine/years.ts';
+import { SECTIONS, buildSections, sectionStates } from '../Folio.tsx';
+import { affiliation, reignOverLine, reignSpan, type ReignLike } from '../card/shared.tsx';
+import type { Card, Chrono } from '../../data/types.ts';
+import { yearsWord } from '../../engine/years.ts';
 import { lifeText } from '../sky/text.ts';
 import { typo } from '../text/typo.ts';
 import { Sheet, useRemembered } from './Sheet.tsx';
-import { Segmented } from '../controls.tsx';
+import { Menu, Segmented } from '../controls.tsx';
 
 // ---------- сквозной раздел (G4; ТЗ § 3.3; CARD-42) ----------
 export const SETS: { id: string; name: string; kings?: boolean; ids: () => string[] }[] = [
@@ -56,10 +56,21 @@ export function openSection(n: number) {
   });
 }
 
-/** Годы правления по реконструкции (расч.) и число лет по тексту: «715–686 гг. до Р. Х., 29 лет». */
-function reignText(r: Reign | { start: number; end: number; years?: number | null; over: string }): string {
-  const span = formatSpan(toAstro(r.start), toAstro(r.end));
-  return r.years ? `${span}, ${yearsWord(r.years)}` : span;
+/**
+ * Строка царствования (CARD-51) — те же слова, что § 16 карточки (shared.tsx): «семь лет и шесть месяцев над Иудеей,
+ * в Хевроне (2 Цар 5:4–5); 1010–1003 гг. до Р. Х. — расч.». Срок и царство — по тексту, годы — по реконструкции.
+ */
+function ReignLine({ r, owner }: { r: ReignLike; owner: string }) {
+  const refs = r.refs ?? [];
+  return (
+    <span class="line">
+      {typo(reignOverLine(r))}
+      <Refs refs={refs} owner={owner} tail=";" />
+      {refs.length ? ' ' : '; '}
+      {typo(reignSpan(r))}
+      <Mark calc />
+    </span>
+  );
 }
 
 /**
@@ -76,6 +87,9 @@ export function deathAge(ch: Chrono | null): { age: number; cert: 'scripture' | 
 
 /** Таблица § 20 «Смерть и погребение» по группе (CARD-42): годы, возраст при смерти, место, погребение, стихи. */
 function DeathTable({ ids, cards, kings }: { ids: string[]; cards: Record<string, Loaded>; kings: boolean }) {
+  // «Место смерти» — из § 20 (death.place); если его нет ни у кого в группе, столбец не обещает сведений (CARD-51)
+  const place = ids.some((id) => !!cards[id]?.card.death?.place);
+  const cols = place ? 6 : 5;
   return (
     <div class="xwrap">
       <table class="xtable">
@@ -84,7 +98,7 @@ function DeathTable({ ids, cards, kings }: { ids: string[]; cards: Record<string
             <th scope="col">{kings ? 'Царь' : 'Лицо'}</th>
             <th scope="col">{kings ? 'Годы правления' : 'Годы жизни'}</th>
             <th scope="col">Возраст при смерти</th>
-            <th scope="col">Место</th>
+            {place && <th scope="col">Место смерти</th>}
             <th scope="col">Погребение</th>
             <th scope="col">Стихи</th>
           </tr>
@@ -109,13 +123,13 @@ function DeathTable({ ids, cards, kings }: { ids: string[]; cards: Record<string
             ];
             if (!d) {
               row.push(
-                <td key="l" colspan={5} class="muted">
+                <td key="l" colspan={cols - 1} class="muted">
                   …
                 </td>,
               );
             } else if (silent && !death) {
               row.push(
-                <td key="s" colspan={5} class="none" data-label="">
+                <td key="s" colspan={cols - 1} class="none" data-label="">
                   в Писании не сообщается
                 </td>,
               );
@@ -124,13 +138,7 @@ function DeathTable({ ids, cards, kings }: { ids: string[]; cards: Record<string
                 <td key="y" data-label={kings ? 'Годы правления' : 'Годы жизни'}>
                   <div class="v">
                     {byReign ? (
-                      reigns.map((r, i) => (
-                        <span class="line" key={i}>
-                          {typo(reignText(r))}
-                          {reigns.length > 1 && <span class="muted"> {typo(r.over)}</span>}
-                          <Mark calc />
-                        </span>
-                      ))
+                      reigns.map((r, i) => <ReignLine key={i} r={r} owner={`${own}r${i}`} />)
                     ) : (
                       <span class="line">{typo(lifeText(id))}</span>
                     )}
@@ -148,9 +156,11 @@ function DeathTable({ ids, cards, kings }: { ids: string[]; cards: Record<string
                     )}
                   </div>
                 </td>,
-                <td key="p" data-label="Место">
-                  <div class="v">{death?.place ? typo(death.place) : <span class="none">—</span>}</div>
-                </td>,
+                place && (
+                  <td key="p" data-label="Место смерти">
+                    <div class="v">{death?.place ? typo(death.place) : <span class="none">—</span>}</div>
+                  </td>
+                ),
                 <td key="b" data-label="Погребение">
                   <div class="v">
                     {death?.burial?.length ? (
@@ -172,8 +182,9 @@ function DeathTable({ ids, cards, kings }: { ids: string[]; cards: Record<string
             return [
               <tr key={id}>{row}</tr>,
               <tr key={`${id}-v`} class="verse-row">
-                <td colspan={6}>
+                <td colspan={cols}>
                   <VerseInsert owner={own} refs={refs} />
+                  {byReign && d ? reigns.map((r, i) => <VerseInsert key={i} owner={`${own}r${i}`} refs={(r as ReignLike).refs ?? []} />) : null}
                 </td>
               </tr>,
             ];
@@ -216,20 +227,24 @@ export function SectionPanel() {
   }, [setId]);
   const sec = SECTIONS[n - 1];
   return (
-    <Sheet title="Сквозной раздел" lead="Один раздел карточки у группы лиц — благодаря неизменной схеме из 24 разделов. Например, «20. Смерть и погребение» у всех царей Иудеи.">
+    <Sheet title="Сквозной раздел" lead="Один раздел карточки у группы лиц: например, «20. Смерть и погребение» у всех царей Иудеи.">
+      {/* выбор раздела — тем же списком Menu, что модель хронологии в листе «Вид» (VIS-49): 24 пункта в две колонки,
+          части I–VI разделены чертой */}
       <div class="field xpick">
-        <label for="xsec-n">Раздел:</label>
-        <select id="xsec-n" value={n} onChange={(e) => setN(Number((e.currentTarget as HTMLSelectElement).value))}>
-          {PARTS.slice(1).map((part, pi) => (
-            <optgroup label={part} key={part}>
-              {SECTIONS.filter((s) => s.part === pi + 1).map((s) => (
-                <option value={s.n} key={s.n}>
-                  {s.n}. {s.title}
-                </option>
-              ))}
-            </optgroup>
-          ))}
-        </select>
+        <span class="k" id="xsec-n-l">Раздел:</span>
+        <Menu
+          class="model xsec"
+          label={typo(`${sec.n}. ${sec.title}`)}
+          title="Раздел карточки"
+          radio
+          items={SECTIONS.map((x, i) => ({
+            key: String(x.n),
+            label: typo(`${x.n}. ${x.title}`),
+            checked: x.n === n,
+            sep: i > 0 && SECTIONS[i - 1].part !== x.part && x.n !== 13,
+            onSelect: () => setN(x.n),
+          }))}
+        />
       </div>
       <Segmented label="Группа лиц" options={SETS.map((s) => ({ value: s.id, label: s.name }))} value={setId} onChange={setSetId} />
       <h3 class="xhead">

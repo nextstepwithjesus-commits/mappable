@@ -6,14 +6,21 @@ import type { ChronoRow } from '../../data/atlas.ts';
 import { isPeople } from '../card/Masthead.tsx';
 import { affiliation, birthRange, constellation } from '../card/shared.tsx';
 import { nameCase } from '../text/ru.ts';
-import { plural } from '../common.tsx';
+import { plural, refLabel } from '../common.tsx';
 import { typo } from '../text/typo.ts';
 
-/** Годы жизни в подсказке, указателе и объявлении — те же округлённые годы, что в паспорте карточки. */
-export function lifeText(id: string): string {
+/**
+ * Годы жизни в подсказке, указателе и объявлении — те же округлённые годы, что в паспорте карточки.
+ * У лица «время не установлено» — и откуда взято его время (MAP-52): «время не установлено; упомянут в Быт 14:13»,
+ * «…; современник Авраама». when: false — без этого (узкие строки подсказок поиска и «Родства»).
+ */
+export function lifeText(id: string, { when = true }: { when?: boolean } = {}): string {
   const c = model.value.chrono.get(id);
   if (!c) return '';
-  return lifeSpanText(c, { people: isPeople(id) }) || 'время не установлено';
+  const years = lifeSpanText(c, { people: isPeople(id) });
+  if (years) return years;
+  const from = when && c.cls === 'epochal' && !isPeople(id) ? whenText(id) : null;
+  return from ? `время не установлено; ${from.charAt(0).toLowerCase()}${from.slice(1)}` : 'время не установлено';
 }
 
 /**
@@ -57,6 +64,32 @@ export function placeText(id: string): string {
 const withPrep = (w: string) => (/^[сзшжщ][^аеёиоуыэюяь]/i.test(w) ? 'со' : 'с');
 
 /**
+ * Откуда время лица «время не установлено» (MAP-52; ChronoRow.when) — строкой подсказки звезды под «время не
+ * установлено»: «Упомянут в Быт 14:13» (эпоха главы первого упоминания), «Современник Авраама» (встреча по тексту),
+ * «Одного поколения с Беэрой» (брат или сестра, названные Писанием). null — время взято из эпохи, границ данных или
+ * годов созвездия, или имя не склоняется надёжно: тогда строки нет, падеж не подставляется наугад.
+ */
+export function whenText(id: string): string | null {
+  const p = byId.get(id);
+  const c = model.value.chrono.get(id);
+  const w = c?.cls === 'epochal' ? c.when : undefined;
+  if (!p || !w) return null;
+  const f = p.sex === 'f';
+  if (w.by === 'mention' && w.ref) return typo(`${f ? 'Упомянута' : 'Упомянут'} в ${refLabel(w.ref)}`);
+  const o = w.id ? byId.get(w.id) : undefined;
+  if (!o || o.unnamed) return null;
+  if (w.by === 'met') {
+    const g = nameCase(o.name, o.sex, 'gen');
+    return g ? typo(`${f ? 'Современница' : 'Современник'} ${g}`) : null;
+  }
+  if (w.by === 'kin') {
+    const i = nameCase(o.name, o.sex, 'ins');
+    return i ? typo(`Одного поколения ${withPrep(i)} ${i}`) : null;
+  }
+  return null;
+}
+
+/**
  * Строка режима выбора второго лица у верхней кромки неба (D6): что делать и как отменить.
  * Имя — в творительном падеже, если он выводится надёжно («Родство с Давидом», «с женой Лота»), иначе — в именительном после тире.
  */
@@ -87,15 +120,17 @@ export function aliveAt(chrono: Map<string, ChronoRow>, t: number): Map<string, 
 }
 
 /**
- * Флажок меридиана у линейки неба: «990 г. до Р. Х.: живы 186, наверняка 41» (D13; MAP-07).
- * Сказуемое согласуется с числом: «жив 21», «живы 186»; никого — «живых лиц Писания нет».
+ * Флажок меридиана у линейки неба (D13; MAP-07; UX-59): «951 г. до Р. Х.: живы около 291 лица, наверняка — 7».
+ * Число — с существительным: «около» — потому что годы большинства лиц оценочные; после «около» — родительный падеж
+ * («около 291 лица», «около 186 лиц»). Один — «жив один человек — наверняка»; никого — «живых лиц Писания нет».
  */
 export function meridianText(t: number, alive: number, sure: number): string {
   const year = formatYear(t);
   if (alive <= 0) return `${year}: живых лиц Писания нет`;
-  const verb = alive % 10 === 1 && alive % 100 !== 11 ? 'жив' : 'живы';
-  if (sure <= 0) return `${year}: ${verb}\u00A0${alive}, ${alive === 1 ? 'вероятно' : 'все\u00A0— вероятно'}`;
-  return `${year}: ${verb}\u00A0${alive}, наверняка\u00A0${sure}`;
+  if (alive === 1) return `${year}: жив один человек\u00A0— ${sure > 0 ? 'наверняка' : 'вероятно'}`;
+  const who = `около\u00A0${alive}\u00A0${alive % 10 === 1 && alive % 100 !== 11 ? 'лица' : 'лиц'}`;
+  if (sure <= 0) return `${year}: живы ${who}, все\u00A0— вероятно`;
+  return `${year}: живы ${who}, наверняка\u00A0— ${sure}`;
 }
 
 /**

@@ -29,6 +29,15 @@ export type AfterChoose = 'keep' | 'clear' | void;
 export function personBlocks(hits: SearchHit[]): Block[] {
   const blocks: Block[] = [];
   const person = (h: SearchHit, grouped: boolean): Row => ({ key: h.id, kind: 'person', id: h.id, hit: h, grouped });
+  // поиск по стиху или главе — две группы (IX-55, UX-58): «Названы в стихе» и «Стих упомянут в карточке»
+  if (hits.some((h) => h.via === 'verse' || h.via === 'cited')) {
+    const verse = hits.some((h) => /:/.test(h.matched));
+    const named = hits.filter((h) => h.via === 'verse');
+    const cited = hits.filter((h) => h.via === 'cited');
+    if (named.length) blocks.push({ head: verse ? 'Названы в стихе' : 'Названы в главе', rows: named.map((h) => person(h, false)) });
+    if (cited.length) blocks.push({ head: verse ? 'Стих упомянут в карточке' : 'Глава упомянута в карточке', rows: cited.map((h) => person(h, false)) });
+    return blocks;
+  }
   const fuzzy = hits.filter((h) => h.via === 'fuzzy');
   if (fuzzy.length) blocks.push({ head: 'Возможно, вы искали', rows: fuzzy.map((h) => person(h, false)) });
   const byName = new Map<string, SearchHit[]>();
@@ -60,7 +69,7 @@ export function personBlocks(hits: SearchHit[]): Block[] {
 /** Лица по запросу для поля выбора лица (без поиска по стиху): тот же индекс и то же ранжирование, что у поиска. */
 export function personHits(q: string, exclude: (id: string) => boolean = () => false, limit = 40): SearchHit[] {
   if (!q.trim()) return [];
-  return searchIndex.search(q, limit).filter((h) => h.via !== 'verse' && !exclude(h.id));
+  return searchIndex.search(q, limit).filter((h) => h.via !== 'verse' && h.via !== 'cited' && !exclude(h.id));
 }
 
 export interface ComboboxProps {
@@ -100,7 +109,7 @@ export interface ComboboxProps {
    * для клавиатуры. Надпись скрыта от диктора: внутри option нет вложенного органа управления (WCAG 4.1.2), а команду
    * диктору называет статус списка (Search.tsx).
    */
-  rowCmd?: { label: (id: string) => string; title: string; run: (id: string) => void };
+  rowCmd?: { label: (id: string) => string; title: string; hint: string; run: (id: string) => void };
 }
 
 export function Combobox(props: ComboboxProps) {
@@ -235,6 +244,13 @@ export function Combobox(props: ComboboxProps) {
           if (justFocused.current) e.preventDefault();
           justFocused.current = false;
         }}
+        onClick={() => {
+          // щелчок по полю с сохранённым запросом открывает прежний список (IX-60); фокус с клавиатуры — без списка
+          if (q.trim() && !open) {
+            setKept(false);
+            setOpen(true);
+          }
+        }}
         onBlur={() => {
           clearTimeout(blurTimer.current);
           blurTimer.current = window.setTimeout(close, 150);
@@ -245,7 +261,14 @@ export function Combobox(props: ComboboxProps) {
         aria-controls={listOpen ? listId : undefined}
         aria-expanded={listOpen && rows.length > 0}
         aria-activedescendant={listOpen && active >= 0 && rows[active] ? optId(active) : undefined}
+        aria-describedby={props.rowCmd ? `${id}-hint` : undefined}
       />
+      {/* вторая команда строки — подсказкой поля (MOB-63): внутри option кнопка диктору недоступна */}
+      {props.rowCmd ? (
+        <span id={`${id}-hint`} class="visually-hidden">
+          {props.rowCmd.hint}
+        </span>
+      ) : null}
       <span class="visually-hidden" aria-live="polite">
         {listOpen ? (!q.trim() && notice ? typo(`${notice.text} ${props.status}`) : props.status) : ''}
       </span>
@@ -329,7 +352,7 @@ function ResultRow({ person: id, grouped, cmd, ...rest }: { person: string; grou
         <span class={plain ? 'nm' : 'nm visually-hidden'}>{p.name}</span>
         {p.disambig ? <span class="ds">{plain ? typo(`, ${p.disambig}`) : typo(p.disambig)}</span> : null}
       </span>
-      <span class="yr">{typo(lifeText(id))}</span>
+      <span class="yr">{typo(lifeText(id, { when: false }))}</span>
       <canvas ref={ref} width={56} height={10} aria-hidden="true" />
       {cmd ? (
         // нажатие не уводит фокус из поля и не выбирает строку: команда — своя

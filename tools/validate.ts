@@ -15,6 +15,7 @@ import { parseRef, verseId } from '../src/engine/books.ts';
 import { nameMatcher, norm, stripBrackets } from '../src/engine/text.ts';
 import type { Person, Volume, Group, Epoch } from '../src/data/types.ts';
 import { ordinalStem } from '../src/engine/chronology.ts';
+import { overlap, REPEAT_SHARE } from '../src/ui/text/repeat.ts';
 
 const args = process.argv.slice(2);
 const quiet = args.includes('--quiet');
@@ -561,6 +562,38 @@ if (!volumeMode && existsSync(join(ROOT, 'data/lists.json'))) {
       else if (!d.chrono?.reign?.length && !d.chrono?.active) warn(W, `during: у «${d.name}» нет ни царствования, ни годов служения — время списка возьмётся из решателя`);
     }
   }
+}
+
+// ---------- повторы в карточке (CARD-56) ----------
+// Две записи одного лица, у которых больше 70 % значимых слов общие, — вероятно, одно и то же сказано дважды
+// (Моисей: «жена Ефиоплянка, которую он взял» в пояснении брака и в заметке § 9). Мера — src/ui/text/repeat.ts,
+// та же, по которой карточка не выводит повторяющиеся части пояснений. Предупреждение, а не ошибка: составитель решает.
+{
+  const texts = (v: unknown, path: string, out: { path: string; text: string }[]) => {
+    if (Array.isArray(v)) v.forEach((x, i) => texts(x, `${path}[${i}]`, out));
+    else if (v && typeof v === 'object') {
+      for (const [k, x] of Object.entries(v)) {
+        if (k === 'refs' || k === 'id' || k === 'quote' || k === 'script' || k === 'translit') continue;
+        if ((k === 'text' || k === 'note' || k === 'context') && typeof x === 'string') out.push({ path: `${path}.${k}`, text: x });
+        else texts(x, `${path}.${k}`, out);
+      }
+    }
+    return out;
+  };
+  let repeats = 0;
+  for (const [id, p] of byId) {
+    if (!targetIds.has(id)) continue;
+    const all = texts({ card: p.card, spouses: p.spouses, kin: p.kin }, id, []);
+    for (let i = 0; i < all.length; i++)
+      for (let j = i + 1; j < all.length; j++) {
+        const share = overlap(all[i].text, all[j].text);
+        if (share <= REPEAT_SHARE) continue;
+        repeats++;
+        const cut = (t: string) => (t.length > 60 ? `${t.slice(0, 60)}…` : t);
+        warn(id, `повтор (${Math.round(share * 100)} % слов): «${cut(all[i].text)}» (${all[i].path.slice(id.length + 1)}) и «${cut(all[j].text)}» (${all[j].path.slice(id.length + 1)})`);
+      }
+  }
+  if (repeats) warn('карточки', `записей-повторов: ${repeats} — список выше, «повтор (N % слов)»`);
 }
 
 // ---------- вывод ----------

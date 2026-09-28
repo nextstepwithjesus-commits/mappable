@@ -249,13 +249,20 @@ export const a11y: Scenario[] = [
       if (hashId(p) !== 'iessey') return fail(`ссылка выбрала «${hashId(p)}»`);
       const b = await active(p);
       if (b.tag === 'body') return fail('после перехода по ссылке фокус потерян');
-      // «×» карточки
+      // «×» карточки закрывает её, как вкладку (этап 7, решение 18; IX-52): открыта прежняя карточка — фокус на её заголовке
+      await p.locator('.folio .close').first().focus();
+      await p.keyboard.press('Enter');
+      await p.waitForTimeout(900);
+      if (hashId(p) !== 'david') return fail(`после «×» выбрано «${hashId(p)}», а не прежняя карточка — Давид`);
+      const d = await active(p);
+      if (d.id !== 'title-david') return fail(`после «×» фокус на ${d.tag}#${d.id}, а не на заголовке прежней карточки`);
+      // последняя карточка: «×» закрывает лист, фокус — туда, откуда карточку открыли
       await p.locator('.folio .close').first().focus();
       await p.keyboard.press('Enter');
       await p.waitForTimeout(700);
-      if (hashId(p)) return fail('«×» не закрыл карточку');
+      if (hashId(p)) return fail('«×» последней карточки не закрыл её');
       const c = await active(p);
-      return c.tag !== 'body' ? pass(`после ссылки — ${b.tag}#${b.id}; после «×» — ${c.tag}${c.id ? `#${c.id}` : ''}`) : fail('после «×» карточки фокус потерян');
+      return c.tag !== 'body' ? pass(`после ссылки — ${b.tag}#${b.id}; после «×» — #${d.id}, затем ${c.tag}${c.id ? `#${c.id}` : ''}`) : fail('после «×» карточки фокус потерян');
     },
   },
   {
@@ -350,8 +357,17 @@ export const a11y: Scenario[] = [
       await p.keyboard.press('Shift+Slash');
       await p.waitForTimeout(600);
       await scan();
-      await p.locator('.skyctl .view-toggle').click();
-      await p.locator('.skyctl').getByText('Эпохи', { exact: true }).click();
+      // «Эпохи» — в листе «Вид»: у блока органов — над ним, у колонки (небо уже 760 px) — лист «Вид» колонки (IX-56)
+      if (await p.locator('.skyctl .view-toggle').count()) {
+        await p.locator('.skyctl .view-toggle').click();
+        await p.locator('.skyctl').getByText('Эпохи', { exact: true }).click();
+      } else {
+        // «Вид» у колонки заменяет открытую панель: небо становится шире, и лист «Вид» открывается над блоком органов
+        await p.locator('.skyctl.column button', { hasText: 'Вид' }).click();
+        await p.waitForTimeout(500);
+        if (await p.locator('.viewpop').count()) await p.locator('.skyctl').getByText('Эпохи', { exact: true }).click();
+        else await p.locator('.sky > .sheet button', { hasText: 'Эпохи и их основания' }).click();
+      }
       await p.waitForTimeout(600);
       await scan();
       await p.locator('.commands > button', { hasText: 'Синопсис' }).click();

@@ -209,7 +209,14 @@ export interface SearchDoc {
   unnamed?: boolean;
 }
 
-export type HitVia = 'name' | 'alt' | 'disambig' | 'verse' | 'tradition' | 'fuzzy';
+/**
+ * verse — лицо названо в стихе (главе) по имени; cited — стих (глава) упомянут в карточке лица, но имени в тексте нет
+ * (IX-55, UX-58): «Быт 14:18» — Мелхиседек назван, Авраам только упомянут в карточке.
+ */
+export type HitVia = 'name' | 'alt' | 'disambig' | 'verse' | 'cited' | 'tradition' | 'fuzzy';
+
+/** Нарицательные слова в начале иного имени: такое имя ищется в тексте только целиком. */
+const COMMON_HEAD = /^(сын|дочь|жена|муж|отец|мать|брат|сестра|царь|царица|раб|раба|дева|вдова|сыны|сыновья|дочери)$/;
 
 export interface SearchHit {
   id: string;
@@ -279,7 +286,7 @@ export class SearchIndex {
   /** лицо → главы, на которые ссылаются его ссылки */
   private chaptersOf = new Map<string, Set<string>>();
   /** формы имени для сверки с текстом стиха: по первым двум буквам */
-  private textForms = new Map<string, { id: string; re: RegExp; alt: boolean; first: string }[]>();
+  private textForms = new Map<string, { id: string; re: RegExp; alt: boolean; first: string; next?: RegExp }[]>();
   private textFormsOf = new Map<string, string[]>();
   private eponymsCache: Set<string> | null = null;
   private groupWords: string[];
@@ -362,11 +369,15 @@ export class SearchIndex {
     }
     const firsts: string[] = [];
     names.forEach((n, k) => {
-      const w = norm(n).split(/\s+/)[0];
+      const parts = norm(n).split(/\s+/);
+      const w = parts[0];
       if (w.length < 2) return;
+      // иное имя с нарицательным словом впереди («Сын Иессеев», «Дочь Сиона», «Жена Урии») — только целиком:
+      // слово «Сын» стиха (Лк 3:23) не находит Давида (IX-55); второе слово должно стоять следом
+      const common = k > 0 && parts.length > 1 && COMMON_HEAD.test(w);
       firsts.push(w);
       const b = this.textForms.get(w.slice(0, 2)) ?? [];
-      b.push({ id, re: nameMatcher(n), alt: k > 0, first: w });
+      b.push({ id, re: nameMatcher(n), alt: k > 0, first: w, next: common ? nameMatcher(parts[1]) : undefined });
       this.textForms.set(w.slice(0, 2), b);
     });
     this.textFormsOf.set(id, firsts);
@@ -387,7 +398,7 @@ export class SearchIndex {
       const found = new Map<string, Place>();
       const cited = this.citedIn.get(key);
       ws.forEach((w, pos) => {
-        let hits = (this.textForms.get(w.slice(0, 2)) ?? []).filter((e) => e.re.test(` ${w} `));
+        let hits = (this.textForms.get(w.slice(0, 2)) ?? []).filter((e) => e.re.test(` ${w} `) && (!e.next || (pos + 1 < ws.length && e.next.test(` ${ws[pos + 1]} `))));
         // слово — форма самого имени, а не только его начало: «Иосифа» — Иосиф, а не Иосия
         const ws2 = stems(w);
         const full = hits.filter((h) => share(stems(h.first), ws2));
@@ -406,36 +417,45 @@ export class SearchIndex {
     }
   }
 
-  /** Лица стиха или главы: названные по имени — в порядке текста, затем те, на кого ссылается карточка, — по значимости. */
+  /**
+   * Лица стиха или главы двумя группами (IX-55, UX-58): названные по имени — в порядке текста (via 'verse'), затем те,
+   * на кого стих или главу только ссылается карточка, — по значимости (via 'cited').
+   */
   private byRef(r: QueryRef): SearchHit[] {
     this.ensureRefs();
-    const rank = new Map<string, number>(); // меньше — раньше
+    const named = new Map<string, number>(); // меньше — раньше
+    const cited = new Map<string, number>();
     const mag = (id: string) => {
       const d = this.docs[this.byId.get(id)!];
       return d.magnitude ?? 6 - d.prominence;
     };
-    const put = (id: string, v: number) => {
+    const put = (m: Map<string, number>, id: string, v: number) => {
       if (!this.byId.has(id)) return;
-      const was = rank.get(id);
-      if (was === undefined || v < was) rank.set(id, v);
+      const was = m.get(id);
+      if (was === undefined || v < was) m.set(id, v);
     };
     if (r.verses.length) {
       r.verses.forEach((k, vi) => {
-        for (const [id, pl] of this.namedIn.get(k) ?? []) put(id, vi * 1000 + pl.pos);
-        for (const id of this.citedIn.get(k) ?? []) put(id, 500_000 + mag(id));
+        for (const [id, pl] of this.namedIn.get(k) ?? []) put(named, id, vi * 1000 + pl.pos);
+        for (const id of this.citedIn.get(k) ?? []) put(cited, id, mag(id));
       });
     } else {
       const ch = `${r.book} ${r.chapter}`;
       for (const [k, m] of this.namedIn) {
         if (k.slice(0, k.indexOf(':')) !== ch) continue;
         const v = Number(k.slice(k.indexOf(':') + 1));
-        for (const [id, pl] of m) put(id, v * 1000 + pl.pos);
+        for (const [id, pl] of m) put(named, id, v * 1000 + pl.pos);
       }
-      for (const [id, v] of this.inChapter.get(ch) ?? []) put(id, v * 1000 + 900 + mag(id));
+      for (const [id] of this.inChapter.get(ch) ?? []) put(cited, id, mag(id));
     }
-    return [...rank.entries()]
-      .sort((a, b) => a[1] - b[1] || mag(a[0]) - mag(b[0]))
-      .map(([id], i, all) => ({ id, score: all.length - i, matched: r.ref, via: 'verse' as const }));
+    for (const id of named.keys()) cited.delete(id);
+    const a = [...named.entries()].sort((x, y) => x[1] - y[1] || mag(x[0]) - mag(y[0]));
+    const b = [...cited.entries()].sort((x, y) => x[1] - y[1]);
+    const n = a.length + b.length;
+    return [
+      ...a.map(([id], i) => ({ id, score: n - i, matched: r.ref, via: 'verse' as const })),
+      ...b.map(([id], i) => ({ id, score: n - a.length - i, matched: r.ref, via: 'cited' as const })),
+    ];
   }
 
   search(raw: string, limit = 30): SearchHit[] {

@@ -1,6 +1,7 @@
 /**
- * Рабочий набор (J3; решение владельца 17): панель «В работе», команда «Взять в работу» с выбором объёма, строка набора
- * у верхней кромки неба и меню звезды на небе (правая кнопка мыши, долгое касание).
+ * Рабочий набор (J3; решение владельца 17): панель «В работе», команда «Взять в работу» с выбором объёма и меню звезды
+ * на небе (правая кнопка мыши, долгое касание). Строка режима «набор» у кромки неба — src/ui/sky/Overlays.tsx (WorkLine),
+ * переключатель «все лица | набор» — src/ui/sky/Controls.tsx (SkyModeSwitch).
  * Состояние набора, неба и свёртки — src/ui/work.ts.
  */
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
@@ -9,32 +10,33 @@ import { byId, groupById, loadCard, loadedCard } from '../../data/atlas.ts';
 import type { Card } from '../../data/types.ts';
 import { model, selected } from '../../state.ts';
 import { goTo, plural } from '../common.tsx';
+import { nameIn } from '../card/shared.tsx';
 import { Sheet, useRemembered } from './Sheet.tsx';
 import { typo } from '../text/typo.ts';
 import { lifeText } from '../sky/text.ts';
 import { Brief } from '../card/Brief.tsx';
-import { Check, Segmented } from '../controls.tsx';
+import { Check } from '../controls.tsx';
+import { SkyModeSwitch } from '../sky/Controls.tsx';
 import {
-  addToWork, clearWork, foldDesc, foldDescOf, foldGroupOf, foldGroups, hasDescendants, lineOf, removeFromWork, removeWithLine, skyMode, workOrder,
-  workSet, type Scope, type SkyMode, type WorkEntry,
+  addToWork, clearWork, foldDesc, foldDescOf, foldGroupOf, foldGroups, hasDescendants, lineOf, removeFromWork, removeWithLine, workOrder,
+  workSet, type Scope, type WorkEntry,
 } from '../work.ts';
 
 /** «1 поколение», «2 поколения», «все» — число поколений для предков и потомков. */
 export const genText = (g: number | null) => (g === null ? 'все' : `${g} ${plural(g, 'поколение', 'поколения', 'поколений')}`);
 const GENS: (number | null)[] = [1, 2, 3, null];
 
-/** Переключатель неба «все лица | в работе» (J4): тот же в органах неба, в листе «Вид» и в панели. */
-export const SKY_MODES: readonly { value: SkyMode; label: string }[] = [
-  { value: 'all', label: 'все лица' },
-  { value: 'work', label: 'в работе' },
-];
-export function SkyModeSwitch() {
-  return <Segmented label="Что показывает небо" options={SKY_MODES} value={skyMode.value} onChange={(v) => (skyMode.value = v)} />;
+/** «Только Давида» — имя в родительном падеже, если его надёжно склоняет src/ui/text/ru.ts; иначе «Только это лицо». */
+export function onlyLabel(id: string): string {
+  const g = nameIn(id, 'gen');
+  return g ? `Только ${g}` : 'Только это лицо';
 }
 
 /**
- * Выбор объёма (J3): только лицо, с семьёй, с предками и с потомками на 1, 2, 3 поколения или все; со связями по толкованию
- * — флажком. Каждая команда сразу берёт лиц в работу. Если лицо уже в работе — «убрать из работы» и «убрать с родословной».
+ * Выбор объёма (J3; VIS-47): только лицо, с семьёй, с предками и с потомками на 1, 2, 3 поколения или все; со связями
+ * по толкованию — флажком. Команды — в поле 32 px с рамкой, поколения — сегменты 28 px, подписи строк — колонкой.
+ * Каждая команда сразу берёт лиц в работу. Ниже черты — «Скрыть потомков на небе» (решение 26) и, если лицо уже в работе,
+ * «Убрать из работы» и «Убрать с родословной».
  */
 export function WorkPicker({ id, onDone }: { id: string; onDone: () => void }) {
   const [interp, setInterp] = useState(false);
@@ -43,56 +45,80 @@ export function WorkPicker({ id, onDone }: { id: string; onDone: () => void }) {
   const on = workSet.value.has(id);
   const line = lineOf(id).length;
   const kids = hasDescendants(id);
+  const folded = foldDesc.value.includes(id);
   const take = (s: Scope) => {
     addToWork(id, s);
     onDone();
   };
   // на кнопках — только число поколений: подпись строки говорит, чего; диктору — полностью («С предками: 2 поколения»)
-  const row = (kind: 'anc' | 'desc', label: string, disabled = false) => (
+  const row = (kind: 'anc' | 'desc', label: string, tail: boolean, disabled = false) => (
     <div class="wp-row wp-gens" role="group" aria-label={label}>
       <span class="k" aria-hidden="true">
-        {label}, поколений:
+        {label}
       </span>
-      {GENS.map((g) => (
-        <button key={String(g)} type="button" class="cmd" disabled={disabled} aria-label={`${label}: ${genText(g)}`} onClick={() => take({ kind, gen: g, interp })}>
-          {g === null ? 'все' : g}
-        </button>
-      ))}
+      <span class="wp-seg">
+        {GENS.map((g) => (
+          <button key={String(g)} type="button" disabled={disabled} aria-label={`${label}: ${genText(g)}`} onClick={() => take({ kind, gen: g, interp })}>
+            {g === null ? 'все' : g}
+          </button>
+        ))}
+      </span>
+      {tail ? (
+        <span class="wp-tail" aria-hidden="true">
+          поколений
+        </span>
+      ) : null}
     </div>
   );
   return (
     <>
-      <div class="wp-row">
+      <div class="wp-row wp-take">
         <button type="button" class="cmd" ref={first} onClick={() => take({ kind: 'self' })}>
-          Только лицо
+          {onlyLabel(id)}
         </button>
         <button type="button" class="cmd" onClick={() => take({ kind: 'family', interp })}>
           С семьёй
         </button>
       </div>
       <p class="wp-note">{typo('Семья — родители, супруги, дети, братья и сёстры.')}</p>
-      {row('anc', 'С предками')}
-      {row('desc', 'С потомками', !kids)}
+      {row('anc', 'С предками', true)}
+      {row('desc', 'С потомками', false, !kids)}
       <Check checked={interp} onChange={setInterp}>
         со связями по толкованию
       </Check>
-      {on && (
+      {(kids || folded || on) && (
         <div class="wp-row wp-out">
-          <button
-            type="button"
-            class="cmd"
-            onClick={() => {
-              removeFromWork(id);
-              onDone();
-            }}
-          >
-            Убрать из работы
-          </button>
-          {line > 0 && (
+          {(kids || folded) && (
             <button
               type="button"
               class="cmd"
-              title={`Убрать лицо и ещё ${line} ${plural(line, 'лицо', 'лица', 'лиц')}, взятых вместе с ним`}
+              aria-pressed={folded}
+              title="Потомки на небе заменяются знаком «+N» (клавиша С на небе)"
+              onClick={() => {
+                foldDescOf(id);
+                onDone();
+              }}
+            >
+              {folded ? 'Показать потомков на небе' : 'Скрыть потомков на небе'}
+            </button>
+          )}
+          {on && (
+            <button
+              type="button"
+              class="cmd"
+              onClick={() => {
+                removeFromWork(id);
+                onDone();
+              }}
+            >
+              Убрать из работы
+            </button>
+          )}
+          {on && line > 0 && (
+            <button
+              type="button"
+              class="cmd"
+              title={`Убрать лицо и ещё ${line} ${plural(line, 'лицо', 'лица', 'лиц')}, взятых вместе с ним`}
               onClick={() => {
                 removeWithLine(id);
                 onDone();
@@ -132,8 +158,8 @@ function usePopover(open: boolean, close: (refocus: boolean) => void, wrap: { cu
 }
 
 /**
- * «Взять в работу» — команда шапки карточки (J3): раскрывает выбор объёма. Лицо уже в работе — «В работе» (нажата):
- * тот же выбор добавляет родню и убирает лицо.
+ * «Взять в работу ▾» — команда шапки карточки (J3; решение 26): раскрывает выбор объёма. Лицо уже в наборе — «В наборе ▾»
+ * (нажата): тот же выбор добавляет родню, скрывает потомков на небе и убирает лицо.
  */
 export function WorkButton({ id }: { id: string }) {
   const [open, setOpen] = useState(false);
@@ -155,10 +181,13 @@ export function WorkButton({ id }: { id: string }) {
         aria-expanded={open}
         aria-pressed={on}
         aria-controls={open ? `wp-${id}` : undefined}
-        title={on ? 'Лицо в рабочем наборе: добавить родню или убрать' : 'Взять лицо в рабочий набор (клавиша В на небе)'}
+        title={on ? 'Лицо в рабочем наборе: добавить родню, скрыть потомков на небе или убрать' : 'Взять лицо в рабочий набор, с родней или без; скрыть потомков на небе (клавиши В и С на небе)'}
         onClick={() => setOpen(!open)}
       >
-        {on ? 'В работе' : 'Взять в работу'}
+        {on ? 'В наборе' : 'Взять в работу'}
+        <span class="tri" aria-hidden="true">
+          {open ? '▴' : '▾'}
+        </span>
       </button>
       {open && (
         <div class="workpick" id={`wp-${id}`} role="group" aria-label="Что взять в работу">
@@ -169,13 +198,13 @@ export function WorkButton({ id }: { id: string }) {
   );
 }
 
-/** Свернуть или развернуть потомков лица на небе (J5): команда шапки карточки. */
+/** Скрыть или показать потомков лица на небе (J5; решение 26): команда строки панели «В работе». */
 export function FoldButton({ id }: { id: string }) {
-  if (!hasDescendants(id)) return null;
   const on = foldDesc.value.includes(id);
+  if (!hasDescendants(id) && !on) return null;
   return (
     <button type="button" class="cmd" aria-pressed={on} title="Потомки на небе заменяются знаком «+N» (клавиша С на небе)" onClick={() => foldDescOf(id)}>
-      {on ? 'Развернуть потомков' : 'Свернуть потомков'}
+      {on ? 'Показать потомков на небе' : 'Скрыть потомков на небе'}
     </button>
   );
 }
@@ -220,8 +249,22 @@ function WorkItem({ id }: { id: string }) {
   );
 }
 
-/** Откуда лицо в наборе — для диктора и подсказки строки: «предок», «потомок», «семья», «звено пути». */
-const VIA: Record<WorkEntry['via'], string> = { self: '', anc: 'предок', desc: 'потомок', family: 'семья', path: 'звено пути' };
+/**
+ * Почему лицо в наборе (CARD-75): «семья Руфи», «предок Давида, 2-е поколение», «потомок Давида, 1-е поколение»,
+ * «путь родства от Руфи». Имя — в родительном падеже, только если его надёжно склоняет src/ui/text/ru.ts; иначе строка
+ * начинается с отношения, а имя стоит после двоеточия: «семья: Жена Лота». Взятое само — null.
+ */
+export function viaText(e: WorkEntry): string | null {
+  if (e.via === 'self') return null;
+  const of = byId.get(e.of);
+  if (!of) return null;
+  const g = nameIn(e.of, 'gen');
+  const gen = e.gen ? `, ${e.gen}-е поколение` : '';
+  const head = { family: 'семья', anc: 'предок', desc: 'потомок', path: 'путь родства от' }[e.via];
+  if (g) return `${head} ${g}${e.via === 'anc' || e.via === 'desc' ? gen : ''}`;
+  const rel = e.via === 'path' ? 'путь родства' : head;
+  return `${rel}${e.via === 'anc' || e.via === 'desc' ? gen : ''}: ${of.name}`;
+}
 
 /** Набор, очищенный последним: «Вернуть» восстанавливает его (без подтверждений и всплывающих окон). */
 let cleared: [string, WorkEntry][] | null = null;
@@ -238,7 +281,7 @@ export function WorkPanel() {
   const n = ids.length;
   const folded = foldDesc.value.length + foldGroups.value.length;
   return (
-    <Sheet title={n ? `В работе: ${n} ${plural(n, 'лицо', 'лица', 'лиц')}` : 'В работе'} lead="Лица, с которыми вы работаете в этом сеансе. Набор помнится и после перезагрузки страницы; небо может показывать только его.">
+    <Sheet title={n ? `В работе: ${n} ${plural(n, 'лицо', 'лица', 'лиц')}` : 'В работе'} lead="Лица, с которыми вы работаете; набор помнится и после перезагрузки. Небо может показывать только их.">
       <div class="work-sky">
         <span class="k">На небе:</span>
         <SkyModeSwitch />
@@ -273,7 +316,8 @@ export function WorkPanel() {
               const p = byId.get(id)!;
               const e = set.get(id);
               const on = open === id;
-              const via = e ? VIA[e.via] : '';
+              const via = e ? viaText(e) : null;
+              const from = e && e.via !== 'self' && set.has(e.of) ? e.of : null;
               return (
                 <li key={id} class={on ? 'open' : undefined} data-id={id}>
                   <div class="wi-head">
@@ -281,8 +325,25 @@ export function WorkPanel() {
                       <span class="nm">{p.name}</span>
                       {p.disambig ? <span class="ds">{typo(`, ${p.disambig}`)}</span> : null}
                       <span class="yrs">{typo(lifeText(id))}</span>
-                      {via && <span class="visually-hidden">{`; ${via}`}</span>}
                     </button>
+                    {/* почему лицо в наборе (CARD-75): щелчок раскрывает строку лица, с которым его взяли, — там вся его родословная */}
+                    {via ? (
+                      from ? (
+                        <button
+                          type="button"
+                          class="wi-via"
+                          title={`Раскрыть в списке: ${byId.get(from)!.name}`}
+                          onClick={() => {
+                            setOpen(from);
+                            requestAnimationFrame(() => document.querySelector<HTMLElement>(`.worklist li[data-id="${CSS.escape(from)}"] .wi-row`)?.focus());
+                          }}
+                        >
+                          {typo(via)}
+                        </button>
+                      ) : (
+                        <span class="wi-via">{typo(via)}</span>
+                      )
+                    ) : null}
                   </div>
                   {on && <WorkItem id={id} />}
                 </li>
@@ -340,33 +401,13 @@ function FoldList() {
 // ---------- на небе: строка набора и меню звезды ----------
 
 /**
- * Строка у верхней кромки неба в режиме «В работе» (J4): пустой набор — как его собрать; выбранное лицо не в наборе —
- * взять его в работу или показать все лица.
+ * Чем читатель открыл меню неба: касание фокус не переносит (фокус клавиатуры пальцу не нужен, а небо после касания
+ * возвращает его себе и закрыло бы меню); клавиша меню и мышь — переносят на первую команду.
  */
-export function WorkBar() {
-  const n = workSet.value.size;
-  const id = selected.value;
-  const out = !!id && !workSet.value.has(id);
-  if (n && !out) return null;
-  return (
-    <div class="pickbar pinbar workbar" role="status">
-      <span>
-        {typo(
-          out
-            ? 'Выбранное лицо не в рабочем наборе, и на небе его нет.'
-            : 'Рабочий набор пуст: небо показывает только лиц, взятых в работу. Возьмите их командой «Взять в работу» в карточке или клавишей В у звезды.',
-        )}
-      </span>
-      {out && (
-        <button type="button" onClick={() => addToWork(id!)}>
-          Взять в работу
-        </button>
-      )}
-      <button type="button" onClick={() => (skyMode.value = 'all')}>
-        Показать все лица
-      </button>
-    </div>
-  );
+let lastInput: 'key' | 'mouse' | 'touch' | 'pen' = 'mouse';
+if (typeof window !== 'undefined') {
+  window.addEventListener('keydown', () => (lastInput = 'key'), true);
+  window.addEventListener('pointerdown', (e) => (lastInput = e.pointerType === 'touch' || e.pointerType === 'pen' ? e.pointerType : 'mouse'), true);
 }
 
 /** Меню неба: у звезды (id), у названия созвездия (group) или у знака свёрнутого — в точке (x, y) px неба. */
@@ -375,7 +416,7 @@ export const skyMenu = signal<SkyMenuAt | null>(null);
 
 /**
  * Меню звезды на небе (J3, J5): правая кнопка мыши, долгое касание или клавиша меню на звезде. У звезды — выбор объёма
- * «Взять в работу» и «Свернуть потомков»; у названия созвездия — «Свернуть созвездие». Escape и щелчок мимо закрывают.
+ * «Взять в работу» с пунктом «Скрыть потомков на небе»; у названия созвездия — «Свернуть созвездие». Escape и щелчок мимо закрывают.
  */
 export function SkyMenu({ bounds }: { bounds: { w: number; h: number } }) {
   const at = skyMenu.value;
@@ -397,10 +438,14 @@ export function SkyMenu({ bounds }: { bounds: { w: number; h: number } }) {
   });
   const group = at?.group ?? (at?.id ? byId.get(at.id)?.group : undefined);
   const g = group ? groupById.get(group) : undefined;
-  const firstGroup = useRef<HTMLButtonElement>(null);
-  useLayoutEffect(() => {
-    if (at && !at.id) firstGroup.current?.focus();
-  }, [at]);
+  // фокус — на первую команду меню, когда оно встало на место (data-placed): до замера оно невидимо и фокус не держит;
+  // так меню одинаково открывается правой кнопкой и клавишей меню (IX-49); после долгого касания фокус не переносится
+  const placed = !!at && !!pos;
+  useEffect(() => {
+    const m = wrap.current;
+    if (!placed || !m || m.contains(document.activeElement) || lastInput === 'touch') return;
+    m.querySelector<HTMLElement>('button:not([disabled]), input')?.focus({ preventScroll: true });
+  }, [placed, at]);
   if (!at) return null;
   const p = at.id ? byId.get(at.id) : undefined;
   const groupOn = !!group && foldGroups.value.includes(group);
@@ -421,20 +466,6 @@ export function SkyMenu({ bounds }: { bounds: { w: number; h: number } }) {
             {p.disambig ? typo(`, ${p.disambig}`) : null}
           </p>
           <WorkPicker id={p.id} onDone={() => close(true)} />
-          {hasDescendants(p.id) && (
-            <div class="wp-row wp-out">
-              <button
-                type="button"
-                class="cmd"
-                onClick={() => {
-                  foldDescOf(p.id);
-                  close(true);
-                }}
-              >
-                {foldDesc.value.includes(p.id) ? 'Развернуть потомков' : 'Свернуть потомков'}
-              </button>
-            </div>
-          )}
         </>
       )}
       {/* созвездие линий Мессии не сворачивается: его лица — хребет неба */}
@@ -443,7 +474,6 @@ export function SkyMenu({ bounds }: { bounds: { w: number; h: number } }) {
           <button
             type="button"
             class="cmd"
-            ref={firstGroup}
             onClick={() => {
               foldGroupOf(g.id);
               close(true);

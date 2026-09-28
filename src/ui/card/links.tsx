@@ -100,8 +100,15 @@ export function candidateFor(id: string): LinkCand {
 
 /** Названо ли лицо в тексте (любой формой имени, в любом падеже, с прописной). */
 export function mentionsPerson(text: string, id: string): boolean {
-  const c = candidateFor(id);
+  const q = byId.get(id);
   const low = lower(text);
+  // безымянное лицо («Дочь фараонова») названо, если в тексте есть все значимые слова описания в любой форме:
+  // «Воспитан дочерью фараоновой» — о ней (CARD-56)
+  if (q?.unnamed) {
+    const ws = lower(q.name).split(/[\s-]+/).filter((w) => w.length >= 4);
+    return ws.length > 0 && ws.every((w) => low.includes(w.slice(0, Math.max(3, w.length - 3))));
+  }
+  const c = candidateFor(id);
   return c.stems.some((f) => findForm(text, low, f, 0) !== null);
 }
 
@@ -164,19 +171,22 @@ export function linkNames(text: string, cands: LinkCand[], after?: (id: string) 
   const out: ComponentChildren[] = [];
   let at = 0;
   for (const s of spans) {
-    if (s.a > at) out.push(text.slice(at, s.a));
+    // открывающая кавычка или скобка сразу перед именем держится за ссылку: «» не остаётся в конце строки (CARD-68)
+    const lead = /[«„(\[]+$/.exec(text.slice(at, s.a))?.[0] ?? '';
+    if (s.a - lead.length > at) out.push(text.slice(at, s.a - lead.length));
     const link = (
       <P id={s.id} key={`${s.id}@${s.a}`}>
         {text.slice(s.a, s.b)}
       </P>
     );
-    const punct = /^[,.;:!?…»)]+/.exec(text.slice(s.b))?.[0] ?? '';
+    const punct = /^[,.;:!?…»“)\]]+/.exec(text.slice(s.b))?.[0] ?? '';
     const extra = after?.(s.id);
     if (extra) {
-      out.push(link, ' ', <span class="nobr" key={`${s.id}~${s.a}`}>{extra}{punct}</span>);
-    } else if (punct) {
+      out.push(lead ? <span class="nobr" key={`${s.id}^${s.a}`}>{lead}{link}</span> : link, ' ', <span class="nobr" key={`${s.id}~${s.a}`}>{extra}{punct}</span>);
+    } else if (punct || lead) {
       out.push(
         <span class="nobr" key={`${s.id}~${s.a}`}>
+          {lead}
           {link}
           {punct}
         </span>,

@@ -15,7 +15,7 @@
 import { effect, signal } from '@preact/signals';
 import { skyRef } from '../common.tsx';
 import { model, onlyLines, panel, selected } from '../../state.ts';
-import { LANES_MAX, LANES_MIN, type Axis, type ViewState } from '../../render/camera.ts';
+import { LANES_MAX, LANES_MIN, easeOut, type Axis, type ViewState } from '../../render/camera.ts';
 import type { Rect } from '../../render/sky.ts';
 
 export const reduced = () => typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -158,11 +158,18 @@ export function showAll() {
 const NAME_ROOM = 90;
 
 /**
- * Вид, в который вписаны все лица ids по обеим осям (E5; MAP-18, UX-11): по времени — с полем 10 % и местом для имени
- * справа; по полосам — не выше 80 % видимой части. Высота полосы растёт с масштабом, поэтому, если полосы пути не
- * помещаются, масштаб уменьшается, пока не поместятся. Одно лицо — окно не уже minYears лет.
+ * Вид и пропорция полос, в которых вписана группа лиц (IX-53): строки сжимаются, а не отдаляется время.
+ * lanes — пропорция полос (J1): множитель к обычной высоте полосы; laneTop посчитан для неё.
  */
-export function viewForIds(ids: readonly string[], minYears = 60): ViewState | null {
+export type GroupView = ViewState & { lanes: number };
+
+/**
+ * Вид, в который вписаны все лица ids по обеим осям (E5; MAP-18, UX-11, IX-53): по времени — годы группы с местом для
+ * имени справа, окно не уже minYears лет; по вертикали — строки группы не выше 80 % видимой части. Если строки не
+ * помещаются, сжимается высота строки (пропорция полос, J1: до 4 px), а время остаётся; и только если и при 4 px не
+ * помещаются — отдаляется время, пока не поместятся.
+ */
+export function viewForIds(ids: readonly string[], minYears = 60): GroupView | null {
   const s = skyRef.current;
   if (!s || !s.model) return null;
   const pts = ids.map((id) => ({ x: s.nodeX(id), n: s.node(id) })).filter((q): q is { x: number; n: NonNullable<typeof q.n> } => q.x !== null && !!q.n);
@@ -170,13 +177,13 @@ export function viewForIds(ids: readonly string[], minYears = 60): ViewState | n
   const cam = s.cam;
   const vp = cam.vp;
   const W = vp.r - vp.l;
-  // по вертикали — без широких органов неба у нижнего и верхнего края (блок «Вид», вступление): путь не уходит под них
+  // по вертикали — без широких органов неба у нижнего и верхнего края (блок «Вид», вступление, строки у кромки)
   let top = vp.t;
   let bottom = vp.b;
   for (const r of reserveRects) {
     if (r.w < W * 0.3) continue;
     if (r.y + r.h >= vp.b - 8 && r.y > (vp.t + vp.b) / 2) bottom = Math.min(bottom, r.y - 8);
-    else if (r.y <= vp.t + 8 && r.y + r.h < (vp.t + vp.b) / 2) top = Math.max(top, r.y + r.h + 8);
+    else if (r.y <= vp.t + 60 && r.y + r.h < (vp.t + vp.b) / 2) top = Math.max(top, r.y + r.h + 8);
   }
   const H = Math.max(80, bottom - top);
   const x0 = Math.min(...pts.map((q) => q.x));
@@ -184,28 +191,37 @@ export function viewForIds(ids: readonly string[], minYears = 60): ViewState | n
   // по строкам экрана: при сжатии полос (J4, J5) лица набора ближе, чем их полосы
   const l0 = Math.min(...pts.map((q) => s.rowOf(q.n.lane)));
   const l1 = Math.max(...pts.map((q) => s.rowOf(q.n.lane)));
+  const rows = l1 - l0 + 1;
   const tMid = s.tOf((x0 + x1) / 2);
   const span = Math.max(x1 - x0, s.xOf(tMid + minYears / 2) - s.xOf(tMid - minYears / 2));
   const room = Math.max(40, W * 0.8 - NAME_ROOM);
-  let kx = room / span;
-  // полосы пути — не выше 80 % видимой части: высота полосы следует за масштабом
-  const tall = (k: number) => cam.kyFor(k) * (l1 - l0 + 1) > H * 0.8;
-  if (tall(kx)) {
+  const xMid = (x0 + x1) / 2;
+  let kx = cam.clampKx(room / span, xMid);
+  const fits = (k: number, m: number) => cam.kyWith(k, m) * rows <= H * 0.8;
+  // строки — сжатием высоты строки: пропорция не больше прежней, но не ниже 4 px строки
+  let m = cam.lanes;
+  if (!fits(kx, m)) {
+    const auto = cam.kyAuto(kx);
+    m = cam.lanesAt(kx, (H * 0.8) / rows / auto);
+  }
+  // и при 4 px не помещаются — масштаб времени уменьшается, пока не поместятся (прежний способ)
+  if (!fits(kx, m)) {
+    // высота строки растёт с масштабом: ищется самый крупный масштаб, при котором строки помещаются
     let lo = Math.min(kx, cam.kxLo());
     let hi = kx;
-    if (!tall(lo))
+    if (fits(lo, m))
       for (let i = 0; i < 40; i++) {
         const mid = Math.sqrt(lo * hi);
-        if (tall(mid)) hi = mid;
-        else lo = mid;
+        if (fits(mid, m)) lo = mid;
+        else hi = mid;
       }
     kx = lo;
   }
   const [cx] = cam.vpCenter();
   const cy = (top + bottom) / 2;
-  // середина окна — середина пути, сдвинутая влево на половину поля для имени
-  const xc = (x0 + x1) / 2 + NAME_ROOM / 2 / kx;
-  return { x0: xc - cx / kx, kx, laneTop: (l0 + l1) / 2 + cy / cam.kyFor(kx) };
+  // середина окна — середина группы, сдвинутая влево на половину поля для имени
+  const xc = xMid + NAME_ROOM / 2 / kx;
+  return { x0: xc - cx / kx, kx, laneTop: (l0 + l1) / 2 + cy / cam.kyWith(kx, m), lanes: m };
 }
 
 /** Все лица ids — в видимой части неба (с полями inView). */
@@ -213,12 +229,14 @@ export function allInView(ids: readonly string[]): boolean {
   return ids.every((id) => inView(id));
 }
 
-/** Перелёт, вписывающий лица ids (путь родства, лица группы): оба конца пути на экране (E5). */
+/** Перелёт, вписывающий лица ids (путь родства, лица группы, одноимённые): все на экране (E5; IX-53). */
 export function flyToIds(ids: readonly string[]) {
-  const v = viewForIds(ids);
-  if (!v) return;
+  const s = skyRef.current;
+  const g = viewForIds(ids);
+  if (!s || !g) return;
   flightTarget = null;
-  flyTo(v);
+  s.cam.flyTo(s.cam.constrain(g, g.lanes), skyRef.redraw, reduced(), g.lanes);
+  skyRef.redraw();
 }
 
 // ---------- «только линии Мессии» (E6; MAP-23) ----------
@@ -244,22 +262,37 @@ export function linesFrame(): { x0: number; x1: number; lane0: number; lane1: nu
   return x1 > x0 ? { x0, x1, lane0, lane1 } : null;
 }
 
+/** Поле у Адама и у Иисуса Христа в режиме «только линии», px (MAP-59); справа — ещё место для имени. */
+export const LINES_PAD = 24;
+
+/** Масштаб, при котором коридор линий от Адама до Иисуса Христа вписан с полями LINES_PAD (MAP-59). */
+export function linesKx(): number | null {
+  const s = skyRef.current;
+  const f = linesFrame();
+  if (!s || !f) return null;
+  const vp = s.cam.vp;
+  return Math.max(1e-6, (vp.r - vp.l - 2 * LINES_PAD - NAME_ROOM * 1.4) / (f.x1 - f.x0));
+}
+
 /**
  * Режим «только линии» вписывает коридор (MAP-23): полосы линий — на 60 % высоты видимой части (выше и ниже —
- * место для выносок точек сравнения), по времени — от Адама до Иисуса Христа с местом для имени справа.
- * animate = false — сразу (первый показ по адресу).
+ * место для выносок точек сравнения), по времени — от Адама до Иисуса Христа с полями по 24 px и местом для имени
+ * справа (MAP-59). animate = false — сразу (первый показ по адресу).
  */
 export function fitLines(animate = true) {
   const s = skyRef.current;
   const f = linesFrame();
-  if (!s || !f) return;
+  const k = linesKx();
+  if (!s || !f || k === null) return;
   const cam = s.cam;
   // полосы коридора — на 60 % высоты, но не выше, чем ±13 полос на ней: косы и следы не раздуваются (MAP-23)
   setFocus(Math.max(FOCUS_MIN, f.lane1 - f.lane0 + 1));
+  // коридор может быть мельче «всего неба»: предел отдаления в этом режиме — он (zoomFloor)
+  updateZoomFloor();
   const vp = cam.vp;
-  const kx = Math.max(1e-6, (vp.r - vp.l - 24 - NAME_ROOM * 1.4) / (f.x1 - f.x0));
+  const kx = k;
   const [, cy] = cam.vpCenter();
-  const to = cam.constrain({ x0: f.x0 - (vp.l + 24) / kx, kx, laneTop: (f.lane0 + f.lane1) / 2 + cy / cam.kyFor(kx) });
+  const to = cam.constrain({ x0: f.x0 - (vp.l + LINES_PAD) / kx, kx, laneTop: (f.lane0 + f.lane1) / 2 + cy / cam.kyFor(kx) });
   flightTarget = null;
   if (animate) cam.flyTo(to, skyRef.redraw, reduced());
   else {
@@ -267,6 +300,36 @@ export function fitLines(animate = true) {
     cam.set(to);
   }
   skyRef.redraw();
+}
+
+/** Окно набора ×1,5, но не уже 200 лет — предел отдаления в режиме «в работе» (IX-64). */
+export const WORK_ZOOM_OUT = 1.5;
+export const WORK_MIN_YEARS = 200;
+
+/**
+ * Предел отдаления по режиму неба (Camera.zoomFloor): в режиме «в работе» — окно набора ×1,5, но не уже 200 лет
+ * (IX-64); в режиме «только линии» — коридор линий с полями по 24 px (MAP-59); иначе — «всё небо». Зовётся при смене
+ * режима и видимой части (SkyView).
+ */
+export function updateZoomFloor() {
+  const s = skyRef.current;
+  if (!s || !s.model || !(s.cam.w > 0)) return;
+  const cam = s.cam;
+  cam.zoomFloor = null;
+  const all = cam.kxLo();
+  let floor: number | null = null;
+  if (s.plan.mode === 'work') {
+    const fit = s.fitState();
+    const vp = cam.vp;
+    const tc = s.tOf(fit.x0 + (vp.l + vp.r) / 2 / fit.kx);
+    const w200 = s.xOf(tc + WORK_MIN_YEARS / 2) - s.xOf(tc - WORK_MIN_YEARS / 2);
+    const k200 = w200 > 0 ? (vp.r - vp.l) / w200 : fit.kx;
+    floor = Math.max(all, Math.min(fit.kx / WORK_ZOOM_OUT, k200));
+  } else if (onlyLines.peek()) {
+    const k = linesKx();
+    if (k !== null) floor = Math.min(all, k);
+  }
+  cam.zoomFloor = floor;
 }
 
 /** Высота полосы коридора: полоса в середине видимой части остаётся на месте, меняется только высота. */
@@ -302,6 +365,7 @@ if (typeof window !== 'undefined') {
       if (on) fitLines(!first);
       else if (!first) {
         setFocus(0);
+        updateZoomFloor();
         s.cam.clampNow();
         const id = selected.peek();
         if (id) keepInView(id);
@@ -322,6 +386,26 @@ export function zoomBy(f: number, at?: { x: number; y: number }, ms = 250) {
   if (!s || !p) return;
   flightTarget = null;
   s.cam.zoomStep(p.x, p.y, f, ms, skyRef.redraw, reduced());
+}
+
+/** Сдвиг клавишей — за столько мс, с замедлением (IX-05): небо не прыгает на 120 px за кадр. */
+export const PAN_MS = 180;
+let panGoal: { v: ViewState; until: number } | null = null;
+/**
+ * Сдвиг неба на (dx, dy) px клавишей (стрелки, Shift со стрелками): плавно за PAN_MS; нажатия подряд (удержание клавиши)
+ * складываются — новый шаг продолжает идущий от его цели. При ослабленном движении — сразу.
+ */
+export function panStep(dx: number, dy: number) {
+  const s = skyRef.current;
+  if (!s || !s.model) return;
+  const cam = s.cam;
+  const now = performance.now();
+  const base = panGoal && cam.moving && now < panGoal.until + 60 ? panGoal.v : cam.state();
+  const to = cam.constrain({ x0: base.x0 - dx / cam.kx, kx: cam.kx, laneTop: base.laneTop + dy / cam.ky });
+  flightTarget = null;
+  panGoal = { v: to, until: now + PAN_MS };
+  cam.animateTo(to, PAN_MS, skyRef.redraw, reduced(), easeOut);
+  skyRef.redraw();
 }
 
 /** Точка привязки шага масштаба: at, иначе выбранное лицо, если оно видно, иначе середина видимой части. */
@@ -401,6 +485,36 @@ if (typeof window !== 'undefined')
       /* хранилище недоступно — пропорция живёт до перезагрузки */
     }
   });
+
+// ---------- привязка при смене масштаба времени и модели (D15; ТЗ § 11.2 п. 6; IX-35, IX-48) ----------
+
+/** Что держать на месте: выбранное лицо на экране (sx, sy) или год t середины видимой части (id = null). */
+export type Anchor = { id: string | null; sx: number; sy: number; t: number };
+
+/** Якорь сейчас: выбранное лицо, если его звезда в видимой части, иначе год в середине видимой части. */
+export function anchorNow(): Anchor | null {
+  const s = skyRef.current;
+  if (!s || !s.model) return null;
+  const id = selected.peek();
+  const vp = s.cam.vp;
+  const q = id ? screenOf(id) : null;
+  if (id && q && q.x >= vp.l && q.x <= vp.r && q.y >= vp.t && q.y <= vp.b) return { id, sx: q.x, sy: q.y, t: 0 };
+  const [cx, cy] = s.cam.vpCenter();
+  return { id: null, sx: cx, sy: cy, t: s.tOf(s.cam.wx(cx)) };
+}
+
+/**
+ * Поставить камеру так, чтобы якорь был на прежнем месте экрана: по горизонтали — всегда; по вертикали (vertical) —
+ * строка лица под прежней точкой: смена модели хронологии меняет полосы раскладки у всех, кроме лиц линий (IX-48).
+ */
+export function holdAnchor(a: Anchor, vertical = false) {
+  const s = skyRef.current;
+  if (!s || !s.model) return;
+  const x = a.id ? s.nodeX(a.id) : s.xOf(a.t);
+  if (x !== null) s.cam.x0 = x - a.sx / s.cam.kx;
+  const n = vertical && a.id ? s.node(a.id) : undefined;
+  if (n) s.cam.laneTop = s.rowOf(n.lane) + a.sy / s.cam.ky;
+}
 
 /** Экранное место звезды лица (px холста). */
 export function screenOf(id: string): { x: number; y: number } | null {

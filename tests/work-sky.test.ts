@@ -133,15 +133,25 @@ describe('небо «В работе» (J4)', () => {
 });
 
 describe('свёртка на небе (J5)', () => {
-  it('знак «+N» справа от следа Давида; его потомки не рисуются и не ловятся', () => {
+  it('знак «+N» — сразу после подписи Давида, а не у конца следа (UX-60, MAP-63); потомки не рисуются и не ловятся', () => {
     const { s, texts, data } = frame({ view: { mode: 'all', set: new Set(), foldDesc: ['david'], foldGroups: [] }, move: around('david', 180) });
     const mark = s.plan.marks.find((m) => m.id === 'david')!;
     expect(texts.some((t) => t.t === `+${mark.count}`)).toBe(true);
     expect(data.folds).toContain(`desc:david:${mark.count}`);
-    const hit = s.foldHits.find((h) => h.id === 'david')!;
+    const hit = s.foldHits.find((h) => h.id === 'david' && h.kind === 'desc' && h.y > sky.FRAME_H)!;
+    expect(hit).toBeTruthy();
+    // знак — в прямоугольнике подписи Давида, у её правого края
+    const label = s.labelStats().boxes.find((b) => b.kind === 'star' && b.id === 'david')!;
+    expect(label).toBeTruthy();
+    expect(hit.x).toBeGreaterThan(label.x);
+    expect(hit.x + hit.w).toBeLessThanOrEqual(label.x + label.w + 3);
+    expect(Math.abs(hit.y + hit.h / 2 - (label.y + label.h / 2))).toBeLessThan(2);
+    // и не дальше 200 px от звезды (прежде «+62» стоял у конца следа, в ≈ 750 px)
     const i = s.indexOf('david')!;
-    expect(hit.x).toBeGreaterThan(s.cam.sx(s.X1[i]));
-    expect(Math.abs(hit.y + hit.h / 2 - s.cam.sy(s.nodes[i].lane))).toBeLessThan(hit.h);
+    expect(Math.abs(hit.x - s.cam.sx(s.X0[i]))).toBeLessThan(200);
+    // служебная строка рамки: «Свёрнуто: потомки Давида (62) — развернуть»
+    expect(texts.some((t) => t.t === `потомки Давида (${mark.count})`)).toBe(true);
+    expect(s.foldHits.some((h) => h.kind === 'all' && h.y < sky.FRAME_H)).toBe(true);
     expect(s.reachable('avessalom')).toBe(false);
     expect(s.labelStats().overlaps).toBe(0);
   });

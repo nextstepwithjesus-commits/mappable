@@ -10,9 +10,9 @@
 import { byId, graph, lineMembership } from '../../data/atlas.ts';
 import { selected, hovered, focused, panel, epochMode } from '../../state.ts';
 import { goTo, skyRef } from '../common.tsx';
-import { LANES_STEP, TIME_STEP, showAll, stopFlight, stretchBy, zoomBy } from './view.ts';
+import { LANES_STEP, TIME_STEP, panStep, showAll, stopFlight, stretchBy, zoomBy } from './view.ts';
 import { toggleFull } from '../layout.ts';
-import { KEY_STEP, KEY_MS, stopZoom } from './input.ts';
+import { KEY_STEP, KEY_MS, openStarMenu, stopZoom } from './input.ts';
 import { arrowDir, moveStarFocus } from './starnav.ts';
 import { focusCardTitle } from '../focus.ts';
 
@@ -65,7 +65,7 @@ export function viewKeys(e: KeyboardEvent): boolean {
   return false;
 }
 
-/** Сдвиг неба стрелкой: на 120 px по времени, на 90 px по полосам. */
+/** Сдвиг неба стрелкой: на 120 px по времени, на 90 px по полосам — плавно, за 180 мс (panStep; IX-05). */
 const PAN_X = 120;
 const PAN_Y = 90;
 
@@ -106,18 +106,28 @@ export function skyKeys(e: KeyboardEvent, nav: boolean, onCanvas: boolean, onSky
     case 'ArrowUp':
     case 'ArrowDown': {
       if (!nav) return false;
-      stopFlight();
       stopZoom();
       if (onSky && !e.shiftKey) {
+        stopFlight();
         // фокус — к ближайшей звезде в эту сторону; из списка лиц неба фокус возвращается на холст
         moveStarFocus(arrowDir(e.code)!);
         if (!onCanvas) sky.canvas.focus({ preventScroll: true });
         break;
       }
-      if (e.code === 'ArrowLeft') sky.cam.pan(PAN_X, 0);
-      else if (e.code === 'ArrowRight') sky.cam.pan(-PAN_X, 0);
-      else if (e.code === 'ArrowUp') sky.cam.pan(0, PAN_Y);
-      else sky.cam.pan(0, -PAN_Y);
+      // сдвиг сам прерывает перелёт; идущий сдвиг клавишей продолжается от своей цели — нажатия складываются
+      if (e.code === 'ArrowLeft') panStep(PAN_X, 0);
+      else if (e.code === 'ArrowRight') panStep(-PAN_X, 0);
+      else if (e.code === 'ArrowUp') panStep(0, PAN_Y);
+      else panStep(0, -PAN_Y);
+      break;
+    }
+    case 'ContextMenu':
+    case 'F10': {
+      // меню звезды с клавиатуры (IX-49): клавиша меню или Shift + F10 — у звезды с кольцом фокуса, на холсте — и у
+      // выбранного лица, если оно на виду; то же меню, что у правой кнопки мыши и долгого касания
+      if (e.code === 'F10' && !e.shiftKey) return false;
+      const to = focused.value ?? (onCanvas ? selected.value : null);
+      if (!to || !openStarMenu(to)) return false;
       break;
     }
     case 'BracketLeft': {

@@ -1,86 +1,199 @@
-/** Надписи поверх неба: строка выбора второго лица, вступительный картуш и «Как читать карту». */
+/**
+ * Надписи поверх неба: строки состояния у верхней кромки (выбор второго лица, отметки поиска, группа панели, рабочий
+ * набор, пропорция строк), вступительный картуш и «Как читать карту».
+ */
+import type { ComponentChildren } from 'preact';
 import { byId } from '../../data/atlas.ts';
-import { introDone, pickMode, pins, pinsQuery, selected, skyGroup } from '../../state.ts';
+import { introDone, pickMode, pins, pinsQuery, selected, skyGroup, type SkyGroup } from '../../state.ts';
 import { skyRef, plural } from '../common.tsx';
 import { num, typo, typoTree } from '../text/typo.ts';
 import { Close } from '../controls.tsx';
 import { pickBarText, pinBarText } from './text.ts';
-import { introOpen, openGuide } from './view.ts';
+import { introOpen, lanes, openGuide, openLegend, resetProportions } from './view.ts';
+import { addToWork, skyMode, workSet, WORK_URL_MAX } from '../work.ts';
 
 /** Уже этой ширины вступительный картуш слева внизу встал бы под блок органов справа: картуш переходит в левый верхний угол. */
 export const CARTOUCHE_BESIDE = 880;
 
-export function PickBar({ mode, id }: { mode: 'kinship' | 'spread'; id: string }) {
+// ---------- строки состояния у верхней кромки неба ----------
+
+/**
+ * Строка состояния неба (VIS-46, MAP-67): под служебной строкой рамки, а не на линейке лет — годы видны всегда. Одна
+ * строка: текст обрезается многоточием (целиком — в title), команды справа, после тире; «(Esc)» — только там, где есть
+ * клавиатура (MOB-21). Непрозрачный лист с рамкой; data-reserve — подписи звёзд под ней не рисуются (SkyView).
+ */
+function SkyBar({ cls, text, cmds, esc }: { cls: string; text: string; cmds: { label: string; title?: string; run: () => void }[]; esc?: boolean }) {
+  const t = typo(text);
   return (
-    <div class="pickbar" role="status">
-      {/* неразрывные пробелы — при показе: сама строка проверяется тестами как текст (tests/shell.test.ts) */}
-      <span>
-        {typo(pickBarText(mode, id))}
-        <span class="keys-only">. Esc — отмена</span>
+    <div class={`pickbar ${cls}`} role="status" data-reserve="bar">
+      <span class="txt" title={t}>
+        {t}
       </span>
-      <button onClick={() => (pickMode.value = null)}>Отменить</button>
+      <span class="dash" aria-hidden="true">
+        —
+      </span>
+      {cmds.map((c) => (
+        <button key={c.label} type="button" title={c.title} onClick={c.run}>
+          {c.label}
+        </button>
+      ))}
+      {esc && <span class="keys-only">(Esc)</span>}
     </div>
   );
 }
 
+/** Выбор второго лица «Родства» или «Разворота» (D6): «Родство с Давидом: выберите второе лицо… — отменить (Esc)». */
+export function PickBar({ mode, id }: { mode: 'kinship' | 'spread'; id: string }) {
+  return <SkyBar cls="pickbar-pick" text={pickBarText(mode, id)} cmds={[{ label: 'отменить', run: () => (pickMode.value = null) }]} esc />;
+}
+
 /**
- * Строка отметок поиска у верхней кромки неба (E10; UX-31, IX-19): сколько отмечено и по какому запросу, как снять.
- * Снимают отметки «Снять», Escape, новый поиск и щелчок по звезде или по пустому небу.
+ * Отметки поиска (E10; UX-31, IX-19): «Отмечено 6 лиц по запросу «Мария» — снять (Esc)». Снимают «снять», Escape,
+ * новый поиск и щелчок по звезде или по пустому небу.
  */
 export function PinBar({ n, query }: { n: number; query: string }) {
   return (
-    <div class="pickbar pinbar" role="status">
-      <span>
-        {typo(pinBarText(n, query))}
-        <span class="keys-only">. Esc — снять</span>
-      </span>
-      <button
-        onClick={() => {
-          pins.value = [];
-          pinsQuery.value = '';
-        }}
-      >
-        Снять
-      </button>
+    <SkyBar
+      cls="pinbar"
+      text={pinBarText(n, query)}
+      cmds={[
+        {
+          label: 'снять',
+          run: () => {
+            pins.value = [];
+            pinsQuery.value = '';
+          },
+        },
+      ]}
+      esc
+    />
+  );
+}
+
+/** Текст строки группы: «Отмечены лица главы Мф 1» (CARD-71); участок синопсиса — «Участок линий: …». */
+export function groupBarText(g: Pick<SkyGroup, 'label' | 'kind'>): string {
+  if (g.kind === 'chapter') return `Отмечены ${g.label.charAt(0).toLowerCase()}${g.label.slice(1)}`;
+  return `Участок линий: ${g.label}`;
+}
+
+/**
+ * Строка группы (G2, G3; skyGroup): лица главы или участок линий Мессии светятся, остальное небо погашено до 25 %.
+ * «Отмечены лица главы Мф 1 — снять (Esc)» (CARD-71). Снимают «снять», Escape и закрытие панели.
+ */
+export function GroupBar({ group }: { group: SkyGroup }) {
+  return <SkyBar cls="groupbar" text={groupBarText(group)} cmds={[{ label: 'снять', run: () => (skyGroup.value = null) }]} esc />;
+}
+
+/**
+ * Текст строки режима «набор» (J4; UX-62, MOB-54, VIS-46): пустой набор — как его собрать; выбранное лицо вне набора —
+ * «Вооз не в наборе» (имя в начале, без падежа); иначе — «На небе — только рабочий набор, 38 лиц». Набор длиннее
+ * 12 лиц в адрес не входит (решение 34, IX-67) — об этом говорит строка.
+ */
+export function workLineText(n: number, outName: string | null): string {
+  if (outName) return `${outName} не в наборе`;
+  if (!n) return 'Рабочий набор пуст: возьмите лиц клавишей В у звезды или командой «Взять в работу» в карточке';
+  const tail = n > WORK_URL_MAX ? ' (ссылкой передаётся только режим)' : '';
+  return `На небе — только рабочий набор, ${num(n)} ${plural(n, 'лицо', 'лица', 'лиц')}${tail}`;
+}
+
+/** Строка режима «набор» у верхней кромки неба: что скрыто и как вернуть всех (UX-62, MOB-54). */
+export function WorkLine() {
+  const set = workSet.value;
+  const id = selected.value;
+  const out = !!id && !set.has(id);
+  const p = out ? byId.get(id!) : undefined;
+  const all = { label: 'показать всех', title: 'Небо — все лица', run: () => (skyMode.value = 'all') };
+  return (
+    <SkyBar
+      cls="workbar"
+      text={workLineText(set.size, p ? p.name : null)}
+      cmds={out ? [{ label: 'взять в работу', title: 'Взять выбранное лицо в рабочий набор', run: () => addToWork(id!) }, all] : [all]}
+    />
+  );
+}
+
+/** Пропорция строк, отличная от обычной, — «строки ×3,6» (UX-53): 1 — обычная. */
+export function lanesText(m: number): string {
+  const v = Math.round(m * 10) / 10;
+  return `строки ×${String(v >= 10 ? Math.round(v) : v).replace('.', ',')}`;
+}
+/** Пропорция заметно не обычная — метка видна. */
+export const lanesChanged = (m: number) => Math.abs(Math.round(m * 10) / 10 - 1) >= 0.05;
+
+/**
+ * Метка изменённой пропорции строк (UX-53, IX-61): пока высота строк не обычная, у кромки неба — «строки ×3,6 — сбросить».
+ * Случайная протяжка по буквам больше не меняет вид незаметно; сброс — здесь, двойным щелчком по буквам и в «Виде».
+ */
+export function LanesNote() {
+  // пропорция, устоявшаяся после шага, протяжки или щипка (SkyView пишет её в lanes): метка не мигает во время шага
+  const m = lanes.value;
+  if (!lanesChanged(m)) return null;
+  return <SkyBar cls="lanesbar" text={lanesText(m)} cmds={[{ label: 'сбросить', title: 'Пропорции по умолчанию (двойной щелчок по буквам строк)', run: resetProportions }]} />;
+}
+
+/** Какая строка состояния стоит у кромки неба: одна, по старшинству (выбор второго лица, отметки, группа, набор). */
+export function skyBarKind(): 'pick' | 'pins' | 'group' | 'work' | null {
+  if (pickMode.value && selected.value) return 'pick';
+  if (pins.value.length) return 'pins';
+  if (skyGroup.value) return 'group';
+  if (skyMode.value === 'work') return 'work';
+  return null;
+}
+
+/** Строки у верхней кромки неба: строка состояния и метка пропорции строк; рядом, с переносом на узком небе. */
+export function SkyBars() {
+  const kind = skyBarKind();
+  if (!kind && !lanesChanged(lanes.value)) return null;
+  let bar: ComponentChildren = null;
+  if (kind === 'pick') bar = <PickBar mode={pickMode.value!} id={selected.value!} />;
+  else if (kind === 'pins') bar = <PinBar n={pins.value.length} query={pinsQuery.value} />;
+  else if (kind === 'group') bar = <GroupBar group={skyGroup.value!} />;
+  else if (kind === 'work') bar = <WorkLine />;
+  return (
+    <div class="skytop">
+      {bar}
+      <LanesNote />
     </div>
   );
 }
 
-/**
- * Строка группы у верхней кромки неба (G2, G3; skyGroup): что светится — лица главы или участок линий Мессии — и как
- * снять. Остальное небо погашено до 25 %. Снимают «Снять», Escape и закрытие панели.
- */
-export function GroupBar({ label }: { label: string }) {
-  return (
-    <div class="pickbar pinbar groupbar" role="status">
-      <span>
-        {typo(label)}
-        <span class="keys-only">. Esc — снять</span>
-      </span>
-      <button onClick={() => (skyGroup.value = null)}>Снять</button>
-    </div>
-  );
-}
+// ---------- вступление и «Как читать карту» ----------
 
 /**
  * «Как читать карту» (C5; UX-03, MOB-07): один текст — во вступлении и в начале «Условных знаков».
- * На сенсорном экране вступление говорит о касаниях, с мышью — о колесе и щелчке (sky.css, .for-touch / .for-mouse);
- * в «Условных знаках» (both) — оба способа.
+ * На сенсорном экране вступление говорит о касаниях (они — первым пунктом) и не называет клавиш; с мышью — о колесе,
+ * щелчке и клавишах, в том числе «?» (IX-41). В «Условных знаках» (both) — оба способа (sky.css, .for-touch / .for-mouse).
  */
 export function ReadingGuide({ both = false }: { both?: boolean }) {
+  const touch = <li class="for-touch">{both ? 'Касание: коснитесь' : 'Коснитесь'} звезды — откроется карточка; двумя пальцами — масштаб, одним — сдвиг; долгое касание — меню звезды.</li>;
   return typoTree(
     <ul class={both ? 'guide both' : 'guide'}>
+      {!both && touch}
       <li>
         Годы сверху — время; внизу — номера столбцов по сто лет, буквы слева — строки неба. Координата в «Указателе» — номер столбца и
         буква строки.
       </li>
       <li>
-        Найти лицо — поле «Найти» или клавиша <kbd>/</kbd>: имя, другая форма имени или стих («Руф 4:21»).
+        Найти лицо — поле «Найти»
+        <span class="for-mouse">
+          {' '}
+          или клавиша <kbd>/</kbd>
+        </span>
+        : имя, другая форма имени или стих («Руф 4:21»).
       </li>
-      <li>Внизу — полоса времени от сотворения до 2040 года; рамка на ней — видимая часть неба. Щёлкните эпоху — небо покажет её; рамку можно тянуть.</li>
-      <li class="for-mouse">{both ? 'Мышь: колесо' : 'Колесо'} — масштаб, перетаскивание — сдвиг, щелчок по звезде — карточка лица.</li>
-      <li class="for-touch">{both ? 'Касание: коснитесь' : 'Коснитесь'} звезды — откроется карточка; двумя пальцами — масштаб, одним — сдвиг.</li>
-      <li>«Всё небо» или щелчок по названию «Толедот» — снова вся карта.</li>
+      <li>
+        Внизу — полоса времени от сотворения до 2040 года; рамка на ней — видимая часть неба. <span class="for-mouse">Щёлкните эпоху</span>
+        <span class="for-touch">Коснитесь эпохи</span> — небо покажет её; рамку можно тянуть.
+      </li>
+      <li class="for-mouse">
+        {both ? 'Мышь: колесо' : 'Колесо'} — масштаб, перетаскивание — сдвиг, щелчок по звезде — карточка лица, правая кнопка — меню звезды. Все клавиши —{' '}
+        <kbd>?</kbd>.
+      </li>
+      {both && touch}
+      <li>
+        «Всё небо» или <span class="for-mouse">щелчок по названию</span>
+        <span class="for-touch">касание названия</span> «Толедот» — снова вся карта.
+      </li>
     </ul>,
   );
 }
@@ -91,14 +204,36 @@ const fold = () => {
   introOpen.value = false;
 };
 
-export function Cartouche({ high }: { high: boolean }) {
+/** Быстрые входы вступления (UX-56; решение 37: и «Руфь» — сценарий 1). */
+export const ENTRIES = ['adam', 'noy', 'avraam', 'moisey', 'ruf', 'david', 'iisus'];
+
+/**
+ * Вступительный картуш. Быстрые входы — сразу под подзаголовком: на 1024 × 768 они видны без прокрутки (UX-56).
+ * low — небо не выше 520 px (альбомный телефон, масштаб 200 %): одна строка «Как читать карту» и «Свернуть» (MOB-07),
+ * небо остаётся видным.
+ */
+export function Cartouche({ high, low = false }: { high: boolean; low?: boolean }) {
   const count = byId.size;
   const go = (id: string) => {
     fold();
     selected.value = id;
     skyRef.flyTo(id);
   };
-  const entries = ['adam', 'noy', 'avraam', 'moisey', 'david', 'iisus'].filter((id) => byId.has(id));
+  const entries = ENTRIES.filter((id) => byId.has(id));
+  if (low)
+    return (
+      <div class="cartouche low" role="note" aria-label="Толедот — звёздный атлас библейских родословий" data-reserve="intro">
+        <b class="ttl">Толедот</b>
+        {/* главное для пальца — одной фразой (MOB-07); остальное — в «Как читать карту» */}
+        <span class="hint for-touch">{typo('Коснитесь звезды — карточка лица')}</span>
+        <button type="button" class="cmd" onClick={() => openLegend('guide')}>
+          Как читать карту
+        </button>
+        <button type="button" class="cmd" onClick={fold}>
+          Свернуть
+        </button>
+      </div>
+    );
   return (
     // data-reserve: под табличкой не рисуются подписи, «всё небо» вписывается рядом с ней (SkyView)
     <div class={high ? 'cartouche high' : 'cartouche'} role="note" aria-labelledby="cartouche-title" data-reserve="intro">
@@ -107,6 +242,17 @@ export function Cartouche({ high }: { high: boolean }) {
         <>
           <h1 id="cartouche-title">Толедот</h1>
           <p class="sub">Звёздный атлас библейских родословий</p>
+        </>,
+      )}
+      <div class="entry" role="group" aria-label="С чего начать">
+        {entries.map((id) => (
+          <button key={id} type="button" onClick={() => go(id)}>
+            {byId.get(id)!.name}
+          </button>
+        ))}
+      </div>
+      {typoTree(
+        <>
           <p class="long">
             {num(count)} {plural(count, 'лицо', 'лица', 'лиц')} канонического Писания. Каждая звезда — человек; по горизонтали — время его жизни, яркость — место в
             повествовании. Созвездия — роды, колена и народы.
@@ -121,24 +267,18 @@ export function Cartouche({ high }: { high: boolean }) {
         </>,
       )}
       <ReadingGuide />
-      <div class="entry" aria-label="С чего начать">
-        {entries.map((id) => (
-          <button key={id} onClick={() => go(id)}>
-            {byId.get(id)!.name}
-          </button>
-        ))}
-      </div>
     </div>
   );
 }
 
 /**
- * Свёрнутое вступление: команда в левом нижнем углу неба (C5; UX-03). На небе уже 880 px внизу справа — органы неба,
- * и команда, как и сам картуш, переходит в левый верхний угол.
+ * Свёрнутое вступление: команда «Как читать карту» — всегда в левом нижнем углу неба (IX-63); органы неба на узком небе —
+ * колонкой справа, на широком — блоком справа, углу они не мешают. На телефоне лист карточки её закрывает: над листом —
+ * указатели у края.
  */
-export function GuideCommand({ high }: { high: boolean }) {
+export function GuideCommand() {
   return (
-    <button type="button" class={high ? 'guide-cmd high' : 'guide-cmd'} data-reserve="guide" onClick={openGuide} title="Вступление и «Как читать карту»">
+    <button type="button" class="guide-cmd" data-reserve="guide" onClick={openGuide} title="Вступление и «Как читать карту»">
       Как читать карту
     </button>
   );

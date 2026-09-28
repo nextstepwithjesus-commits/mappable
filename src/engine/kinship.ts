@@ -78,6 +78,16 @@ export interface Relation {
   scripture?: { text: string | null; refs: string[] };
   /** путь длиннее кратчайшего больше чем на 2 поколения: показывается под «ещё N путей» */
   more: boolean;
+  /**
+   * Путь и линии Мессии (решение 20; CARD-62): mt — целиком по Мф 1 (с участком до Авраама по Быт), lk — по Лк 3,
+   * both — по общему участку, mixed — склейка двух родословий; text — помета для читателя. Без линий — не задано.
+   */
+  line?: { kind: 'mt' | 'lk' | 'both' | 'mixed'; text: string };
+}
+
+/** Линии Мессии для «Родства»: последовательности id по data/lines (atlas.lines). */
+export interface RelateOptions {
+  lines?: { joseph: string[]; mary: string[] };
 }
 
 /** Сколько поколений сверх кратчайшего пути ещё перечислять (под «ещё N путей»). */
@@ -360,7 +370,8 @@ function qualifiersOf(steps: KinStep[]): Qualifier[] {
   return out;
 }
 const QUAL_WORD: Record<Qualifier['kind'], string> = { adoptive: 'по усыновлению', legal: 'по закону', interpretation: 'по толкованию' };
-const qualText = (qs: Qualifier[]) => qs.map((q) => `, ${QUAL_WORD[q.kind]}${q.refs.length ? ` (${refsText(q.refs)})` : ''}`).join('');
+/** Пометы пути одной фразой: «, по закону (Мф 1:16) и по толкованию (Лк 3:27)» (CARD-62). */
+const qualText = (qs: Qualifier[]) => (qs.length ? `, ${qs.map((q) => `${QUAL_WORD[q.kind]}${q.refs.length ? ` (${refsText(q.refs)})` : ''}`).join(' и ')}` : '');
 
 // ---------- пути по графу ----------
 
@@ -512,7 +523,45 @@ function foldVariants(sorted: Relation[]): Relation[] {
 
 // ---------- сборка ----------
 
-export function relate(g: Graph, aId: string, bId: string, maxResults = MAX_PATHS): Relation[] {
+/**
+ * Как путь идёт по линиям Мессии: для каждого звена «родитель — ребёнок» — в какой линии эти два лица соседние.
+ * Звенья вне линий допускаются только на концах пути (Руфь — мать Овида); в середине — путь не по линии.
+ */
+function lineKind(r: Relation, J: Set<string>, M: Set<string>, genOf: (id: string) => string): Relation['line'] {
+  const cls = r.steps.map((st) => {
+    if (st.kind !== 'up' && st.kind !== 'down') return 'none';
+    const k = `${st.from}>${st.to}`;
+    const j = J.has(k);
+    const m = M.has(k);
+    return j && m ? 'both' : j ? 'mt' : m ? 'lk' : 'none';
+  });
+  let a = 0;
+  let b = cls.length - 1;
+  while (a <= b && cls[a] === 'none') a++;
+  while (b >= a && cls[b] === 'none') b--;
+  if (a > b) return undefined;
+  const mid = cls.slice(a, b + 1);
+  if (mid.includes('none')) return undefined;
+  const hasJ = mid.includes('mt');
+  const hasM = mid.includes('lk');
+  if (!hasJ && !hasM) return { kind: 'both', text: '' };
+  if (hasJ && !hasM) return { kind: 'mt', text: 'путь по Матфею (Мф 1)' };
+  if (hasM && !hasJ) return { kind: 'lk', text: 'путь по Луке (Лк 3); традиционно — родословие Марии, это толкование' };
+  // смешанный путь: участки в порядке поколений (от предка), место перехода — лицо после последнего звена первого участка
+  const order = r.down >= r.up ? r.steps.map((st, i) => ({ st, c: cls[i] })) : [...r.steps].reverse().map((st, i, all) => ({ st, c: cls[all.length - 1 - i] }));
+  const runs: { c: string; last: string }[] = [];
+  for (const { st, c } of order) {
+    if (c !== 'mt' && c !== 'lk') continue;
+    const tail = r.down >= r.up ? st.to : st.from;
+    if (runs.length && runs[runs.length - 1].c === c) runs[runs.length - 1].last = tail;
+    else runs.push({ c, last: tail });
+  }
+  const word = (c: string) => (c === 'mt' ? 'по Матфею' : 'по Луке');
+  if (runs.length === 2) return { kind: 'mixed', text: `смешанный путь: до ${genOf(runs[0].last)} — ${word(runs[0].c)}, дальше — ${word(runs[1].c)}` };
+  return { kind: 'mixed', text: 'смешанный путь: участки то по Матфею, то по Луке' };
+}
+
+export function relate(g: Graph, aId: string, bId: string, maxResults = MAX_PATHS, opts: RelateOptions = {}): Relation[] {
   const A = g.persons.get(aId);
   const Bp = g.persons.get(bId);
   if (!A || !Bp || aId === bId) return [];
@@ -720,11 +769,29 @@ export function relate(g: Graph, aId: string, bId: string, maxResults = MAX_PATH
     const via = r.via.length ? `, через ${r.via.map(acc).join(' и ')}` : '';
     r.sentence += via + qualText(r.qualifiers) + (clause.get(r) ?? '');
   }
-  // пути длиннее кратчайшего больше чем на 2 поколения — под «ещё N путей»
+  // пути по линиям Мессии (решение 20; CARD-62, UX-47): первыми — целиком по Мф 1 и по Лк 3, смешанные — под «ещё»
+  let byLine = false;
+  if (opts.lines && blood.length > 1) {
+    const adj = (seq: string[]) => {
+      const out = new Set<string>();
+      for (let i = 1; i < seq.length; i++) out.add(`${seq[i - 1]}>${seq[i]}`).add(`${seq[i]}>${seq[i - 1]}`);
+      return out;
+    };
+    const J = adj(opts.lines.joseph);
+    const M = adj(opts.lines.mary);
+    for (const r of blood) r.line = lineKind(r, J, M, gen);
+    byLine = blood.some((r) => r.line?.kind === 'mt' || r.line?.kind === 'lk');
+    if (byLine) {
+      const rank = (r: Relation) => ({ mt: 0, lk: 1, both: 2, mixed: 4 })[r.line?.kind ?? 'both'] ?? 3;
+      blood.sort((x, y) => rank(x) - rank(y));
+    }
+  }
+  // пути длиннее кратчайшего больше чем на 2 поколения — под «ещё N путей»; при линиях Мессии — и смешанные
   const shortest = (blood.find((r) => !adopted(r)) ?? blood[0])?.steps.length ?? 0;
   let shownCount = 0;
   for (const r of blood) {
-    r.more = r.steps.length > shortest + 2 || shownCount >= SHOW_MAX;
+    const pure = byLine && (r.line?.kind === 'mt' || r.line?.kind === 'lk');
+    r.more = byLine ? !pure : r.steps.length > shortest + 2 || shownCount >= SHOW_MAX;
     if (!r.more) shownCount++;
   }
   // «брат» в Писании и родные братья в данных — одно родство: термин Писания становится пометой при нём

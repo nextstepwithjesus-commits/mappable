@@ -190,14 +190,15 @@ export const map: Scenario[] = [
       await p.waitForTimeout(2500);
       const bar = p.locator('.sky .groupbar');
       if (!(await bar.count())) return fail('нет строки группы над небом');
-      const text = (await bar.innerText()).replace(/\s+/g, ' ');
-      if (!/^Лица главы /.test(text)) return fail(`строка группы: «${text}»`);
+      const text = (await bar.innerText()).replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim();
+      // «Отмечены лица главы Мф 1 — снять (Esc)»: «снять» — один раз (CARD-71)
+      if (!/^Отмечены лица главы .+ — снять \(Esc\)$/.test(text)) return fail(`строка группы: «${text}»`);
       const [, m] = ((await p.locator('.sky').getAttribute('data-labels')) ?? '0/0').split('/').map(Number);
       if (m !== 0) return fail(`наложений подписей ${m}`);
       await bar.getByRole('button', { name: 'Снять' }).click();
       await p.waitForTimeout(300);
       if (await bar.count()) return fail('«Снять» не сняло группу');
-      return pass(`«${text.replace(/ Снять$/, '')}»; «Снять» снимает`);
+      return pass(`«${text}»; «снять» снимает`);
     },
   },
   {
@@ -291,12 +292,12 @@ export const map: Scenario[] = [
     const out: import('./kit.ts').Scenario[] = [
       {
         n: 130,
-        title: 'E5, U5 мышью: Давид → «Найти родство с…» → «Иоав»: путь на небе, оба конца в видимой части, наложений подписей нет',
+        title: 'E5, U5 мышью: Давид → «Родство с…» → «Иоав»: путь на небе, оба конца в видимой части, наложений подписей нет',
         run: async (p) => {
           const { find } = await import('./kit.ts');
           await p.goto(p.url().replace(/#.*$/, '') + '#/david');
           await p.waitForTimeout(1600);
-          await p.locator('.folio button', { hasText: 'Найти родство с…' }).first().click();
+          await p.locator('.folio button', { hasText: 'Родство с…' }).first().click();
           await p.waitForTimeout(300);
           await find(p, 'Иоав');
           await p.waitForTimeout(2500);
@@ -320,12 +321,12 @@ export const map: Scenario[] = [
       },
       {
         n: 132,
-        title: 'E5, U1 с клавиатуры, 1024 × 768: Руфь → Enter на «Найти родство с…» → поиск «Давид» → Enter: путь Руфь — Давид на экране',
+        title: 'E5, U1 с клавиатуры, 1024 × 768: Руфь → Enter на «Родство с…» → поиск «Давид» → Enter: путь Руфь — Давид на экране',
         view: { width: 1024, height: 768 },
         run: async (p) => {
           await p.goto(p.url().replace(/#.*$/, '') + '#/ruf');
           await p.waitForTimeout(1600);
-          await p.locator('.folio button', { hasText: 'Найти родство с…' }).first().focus();
+          await p.locator('.folio button', { hasText: 'Родство с…' }).first().focus();
           await p.keyboard.press('Enter');
           await p.waitForTimeout(300);
           await p.locator('#find').focus();

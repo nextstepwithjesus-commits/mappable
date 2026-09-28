@@ -4,7 +4,8 @@
    2) команда — .cmd в ряду .cmds: слово в поле 32 px; наведение — фон --sheet-2; нажатая (aria-pressed, aria-current) — черта 2 px;
    3) переключатель — .seg: прямоугольные сегменты 28 px, без скруглений; флажок слоя — .check;
    «×» — .close: 32×32, на сенсорном экране 44×44, с aria-label;
-   список — .menu: кнопка и раскрывающийся список пунктов («Ещё» верхней строки, модель хронологии у неба).
+   список — .menu: кнопка и раскрывающийся список пунктов («Ещё» верхней строки, модель хронологии у неба);
+   на сенсорном экране все цели — не меньше 44 px (решение 33; phone.css, @media (pointer: coarse)).
    Компоненты — src/ui/controls.tsx. Разметку App, SkyView и Folio этот файл берёт по их классам.
    Кольцо фокуса у органов в прокручиваемых рядах — внутри поля (outline-offset: -2px), чтобы край ряда его не обрезал. */
 
@@ -280,9 +281,10 @@ input[type='search']::-webkit-search-decoration {
   border-right: 3.5px solid transparent;
   border-top: 4px solid currentColor;
 }
+/* список — над листами панелей и разворота (z-index 30): «Ещё» и «Разделы» раскрываются поверх открытой панели (MOB-45) */
 .menu [role='menu'] {
   position: absolute;
-  z-index: 30;
+  z-index: 40;
   min-width: 100%;
   padding: 4px 0;
   background: var(--sheet);

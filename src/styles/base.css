@@ -36,6 +36,23 @@ button:disabled {
   outline: 2px solid var(--focus);
   outline-offset: 3px;
 }
+/* заголовок, который получает фокус программно (открытая панель, карточка; VIS-45, VIS-56, CARD-74): черта под самим
+   текстом, а не рамка во всю колонку; «×» панели стоит вне черты */
+h2[tabindex='-1']:focus {
+  outline: none;
+}
+.sheet h2[tabindex='-1'] {
+  width: fit-content;
+  max-width: 100%;
+}
+.sheet h2[tabindex='-1']:focus-visible {
+  box-shadow: inset 0 -2px 0 var(--ink-3);
+}
+@media (min-width: 721px) {
+  .sheet-head {
+    padding-right: 40px;
+  }
+}
 a {
   color: inherit;
 }

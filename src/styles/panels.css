@@ -32,11 +32,13 @@
   font-weight: 560;
   margin: 4px 0 6px;
 }
+/* вводка панели — 16/24 --ink-2, не длиннее двух строк (VIS-58): до первого органа панели — не больше ~90 px */
 .sheet .lead {
   color: var(--ink-2);
-  font-size: var(--t-lead);
-  line-height: var(--t-lead-lh);
-  margin: 0 0 14px;
+  font-size: var(--t-body);
+  line-height: var(--t-body-lh);
+  margin: 0 0 12px;
+  max-width: 62ch;
 }
 /* «×» — в правом верхнем углу панели; на телефоне шапка прилипает (phone.css) */
 .sheet .sheet-head .close {
@@ -262,11 +264,59 @@ button.row:focus-visible {
   min-height: 24px;
   text-align: left;
 }
-/* расхождения — полужирным: «опущен», «нет», чтение в скобках */
-.sheet .synopsis .odd,
-.synopsis .ot.absent {
-  font-weight: 600;
+/* пометы расхождений — курсивом --ink-2 (VIS-34): «у Мф опущен», «не назван в»; ссылка при них — обычным начертанием */
+.sheet .synopsis .odd {
+  font-style: italic;
+  color: var(--ink-2);
+}
+/* общий участок: имя по середине двух колонок — оно у обеих линий (VIS-34) */
+.sheet .synopsis .nm.both {
+  text-align: center;
+  padding-right: 0;
+}
+/* до Авраама: столбцы Матфея — одна клетка «Матфей начинает с Авраама (Мф 1:2)» (CARD-63) */
+.sheet .synopsis td.mt-pre {
+  vertical-align: top;
+  padding: 6px 10px 6px 8px;
+  background: var(--sheet-2);
+  font-style: italic;
+  color: var(--ink-2);
+  border-right: 1px solid var(--rule-strong);
+}
+.sheet .synopsis tr.pre .nm.lk {
+  padding-left: 10px;
+}
+/* «почему» — команда-вклейка: примечания § 24 под вставкой, как вклейка стиха (UX-44) */
+.synopsis button.why,
+.lk3 button.why {
   color: var(--ink);
+  text-decoration: underline 1px var(--rule-strong);
+  text-underline-offset: 3px;
+}
+.synopsis button.why[aria-expanded='true'],
+.lk3 button.why[aria-expanded='true'] {
+  text-decoration-color: var(--ink);
+}
+.synopsis .why-insert,
+.lk3 .why-insert {
+  margin: 6px 0 8px;
+  padding: 6px 0 6px 12px;
+  border-left: 2px solid var(--rule-strong);
+  max-width: 62ch;
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+}
+.why-insert ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.why-insert li {
+  margin: 0 0 6px;
+}
+.why-insert .why-card {
+  margin: 2px 0 0;
+  color: var(--ink-2);
 }
 .synopsis .ot.bracket {
   color: var(--ink-3);
@@ -309,7 +359,16 @@ button.row:focus-visible {
     width: 28px;
   }
   .synopsis col.c-ot {
-    width: 50px;
+    width: 58px;
+  }
+  .sheet .synopsis td.ot {
+    padding-right: 4px;
+  }
+  /* до Авраама имя стоит в одном столбце Луки: мельче, чтобы «Арфаксад» не наезжал на номер */
+  .sheet .synopsis tr.pre .nm.lk {
+    padding-left: 4px;
+    font-size: var(--t-ui-s);
+    line-height: var(--t-note-lh);
   }
   .sheet .synopsis .no-cell {
     padding-right: 6px;
@@ -516,9 +575,49 @@ button.row:focus-visible {
 .anchors tbody th .verses {
   font-weight: 400;
 }
-.sheet .anchors td.yr,
+/* «О карте», опоры: год целиком — неразрывно (.nobr), «или …» переносится; на узком листе — блоками (MOB-51) */
 .sheet .volumes td.n {
   white-space: nowrap;
+}
+.anchors-wrap {
+  container-type: inline-size;
+}
+@container (max-width: 560px) {
+  .anchors thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .anchors,
+  .anchors tbody,
+  .anchors tr,
+  .anchors th,
+  .anchors td {
+    display: block;
+  }
+  /* опоры разделены отбивкой, а не линейкой под каждой строкой */
+  .anchors tbody tr {
+    padding: 10px 0 12px;
+  }
+  .sheet .anchors td,
+  .sheet .anchors tbody th {
+    padding: 0;
+  }
+  .sheet .anchors td[data-label] {
+    display: grid;
+    grid-template-columns: 84px minmax(0, 1fr);
+    column-gap: 8px;
+    margin-top: 2px;
+  }
+  .anchors td[data-label]::before {
+    content: attr(data-label);
+    font-family: var(--sans);
+    font-size: var(--t-ui-s);
+    line-height: var(--t-note-lh);
+    color: var(--ink-2);
+  }
 }
 .sheet .volumes td.n {
   text-align: right;
@@ -531,22 +630,39 @@ button.row:focus-visible {
   line-height: var(--t-note-lh);
 }
 /* ---------- сквозной раздел (G4) ---------- */
-.xpick select {
-  flex: 1;
-  min-width: 0;
-  max-width: 340px;
-  min-height: 32px;
-  padding: 2px 6px;
+/* выбор раздела — Menu (VIS-49): кнопка как у модели хронологии; 24 пункта в две колонки
+   (части I–III слева, IV–VI справа; между частями — черта) */
+.xpick .k {
   font-family: var(--sans);
   font-size: var(--t-ui);
   line-height: var(--t-ui-lh);
-  color: var(--ink);
-  background: var(--sheet);
-  border: 1px solid var(--rule-strong);
-  border-radius: 0;
+  color: var(--ink-2);
 }
-.xpick select:focus-visible {
-  outline-offset: 1px;
+.xpick .menu.xsec [role='menu'] {
+  column-count: 2;
+  column-gap: 0;
+  width: 600px;
+  max-width: calc(100vw - 48px);
+  left: 0;
+  top: calc(100% + 2px);
+}
+/* части I–III — слева, IV–VI — справа: колонка начинается с «13. Эпоха…» */
+.xpick .menu.xsec [role='menu'] > button:nth-of-type(13) {
+  break-before: column;
+}
+.xpick .menu.xsec [role^='menuitem'] {
+  break-inside: avoid;
+}
+@media (max-width: 640px) {
+  .xpick .menu.xsec [role='menu'] {
+    column-count: 1;
+    width: auto;
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+  .xpick .menu.xsec [role='menu'] > button:nth-of-type(13) {
+    break-before: auto;
+  }
 }
 .sheet h3.xhead {
   margin: 14px 0 4px;
@@ -884,137 +1000,6 @@ button.row:focus-visible {
   align-items: center;
   gap: 8px;
 }
-/* «Взять в работу»: кнопка и выбор объёма под ней — непрозрачный лист с рамкой, как список «Ещё» */
-.workbtn {
-  position: relative;
-}
-.workpick {
-  position: absolute;
-  left: 0;
-  top: calc(100% + 2px);
-  z-index: 30;
-  width: max-content;
-  max-width: min(390px, calc(100vw - 24px));
-  padding: 6px 8px 8px 0;
-  background: var(--sheet);
-  border: 1px solid var(--rule-strong);
-  font-family: var(--sans);
-  font-size: var(--t-ui);
-  line-height: var(--t-ui-lh);
-  color: var(--ink-2);
-  white-space: normal;
-}
-.workpick .wp-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0 2px;
-}
-.workpick .wp-row .k {
-  min-width: 11.5em;
-  padding-left: 8px;
-}
-.workpick .wp-gens .cmd {
-  justify-content: center;
-  min-width: 32px;
-}
-.workpick .wp-note {
-  margin: 0 0 4px 8px;
-  font-size: var(--t-ui-s);
-  line-height: var(--t-ui-s-lh);
-}
-.workpick .check {
-  margin-left: 1px;
-}
-.workpick .wp-out {
-  margin-top: 4px;
-  padding-top: 4px;
-  border-top: 1px solid var(--rule);
-}
-/* меню неба — у звезды или названия созвездия, в пределах неба */
-.sky .skymenu {
-  z-index: 8;
-}
-/* место меню — по его настоящему размеру: до замера оно невидимо */
-.sky .skymenu:not([data-placed]) {
-  visibility: hidden;
-}
-.skymenu .wp-head {
-  margin: 0 0 4px 8px;
-  font-family: var(--serif);
-  font-size: var(--t-note);
-  line-height: var(--t-note-lh);
-  color: var(--ink);
-}
-.skymenu .wp-row.wp-first {
-  margin: 0;
-}
-/* панель «В работе» */
-.work-sky {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 0 0 8px;
-  font-family: var(--sans);
-  font-size: var(--t-ui);
-  line-height: var(--t-ui-lh);
-  color: var(--ink-2);
-}
-.work-sky .seg {
-  margin: 0;
-}
-.sheet .worklist {
-  list-style: none;
-  margin: 4px 0 10px -8px;
-  padding: 0;
-}
-.sheet .worklist li {
-  margin: 0;
-}
-.worklist .wi-row {
-  display: block;
-  width: 100%;
-  min-height: 32px;
-  padding: 5px 8px;
-  text-align: left;
-  font-size: var(--t-body);
-  line-height: var(--t-body-lh);
-  color: var(--ink);
-}
-.worklist .wi-row:hover {
-  background: var(--sheet-2);
-}
-.worklist .wi-row:focus-visible {
-  outline-offset: -2px;
-}
-.worklist .wi-row[aria-expanded='true'] {
-  box-shadow: inset 2px 0 0 var(--ink);
-}
-.worklist .nm {
-  font-weight: 560;
-}
-.worklist .ds {
-  font-style: italic;
-  color: var(--ink-2);
-}
-.worklist .wi-row .yrs {
-  display: block;
-  font-size: var(--t-note);
-  line-height: var(--t-note-lh);
-  color: var(--ink-2);
-}
-.worklist .wi-body {
-  padding: 2px 0 8px 8px;
-}
-.worklist .wi-body .cmds {
-  margin-bottom: 4px;
-}
-.worklist.folds li {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-left: 8px;
-}
 /* подсказка звезды: клавиши рабочего набора и свёртки (J3, J5) */
 .tip .tip-keys {
   display: grid;
@@ -1047,4 +1032,105 @@ button.row:focus-visible {
 .result .row-cmd:hover {
   color: var(--ink);
   background: var(--sheet);
+}
+
+/* ---------- карточка, § 14: современники по расчёту свёрнуты (решение 19; CARD-55) ----------
+   Раскрытие — родной <details>: состояние видно, клавиатура и диктор работают без сценария. Надпись — как «ещё N …». */
+.sec details.calc {
+  margin: 4px 0 0;
+}
+.sec details.calc > summary {
+  display: block;
+  list-style: none;
+  padding: 6px 0;
+  cursor: pointer;
+}
+.sec details.calc > summary::-webkit-details-marker {
+  display: none;
+}
+.sec details.calc > summary:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.sec details.calc > summary:hover .more {
+  color: var(--ink);
+  text-decoration-color: var(--ink);
+}
+.sec details.calc[open] .if-shut,
+.sec details.calc:not([open]) .if-open {
+  display: none;
+}
+
+/* «Как читать карту»: словарь — термин и пояснение в строку (решение 36; UX-54) */
+.sheet dl.glossary {
+  margin: 8px 0 14px;
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+}
+.glossary > div {
+  margin: 0 0 2px;
+}
+.glossary dt {
+  display: inline;
+  font-style: italic;
+}
+.glossary dt::after {
+  content: ' — ';
+  font-style: normal;
+}
+.glossary dd {
+  display: inline;
+  margin: 0;
+  color: var(--ink-2);
+}
+
+/* «Родство»: путь и линии Мессии (решение 20; CARD-62) — «Путь по Матфею (Мф 1)», «Смешанный путь: …» */
+.relation .line-note {
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+  color: var(--ink-2);
+}
+.relation .line-note.mixed {
+  font-style: italic;
+}
+
+/* разворот: пустая сторона — «не сообщается» Literata 14 --ink-3 (VIS-57) */
+.spread .pg > .none {
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+}
+
+/* ---------- § 23: подписи восьми групп книг под полосой (VIS-43; Canon.tsx, GroupLabels) ----------
+   та же сетка, что у полосы (.canon в folio.css): группа — flex по числу книг, зазор 4 px, перед Новым Заветом ещё 6 px;
+   полное название, сокращение или ничего — по месту (измеряет GroupLabels) */
+.canon-g {
+  display: flex;
+  gap: 4px;
+  margin: 1px 0 0;
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  color: var(--ink-2);
+}
+.canon-g > span {
+  flex: var(--n, 1) 1 0;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.canon-g > .nt {
+  margin-left: 6px;
+}
+/* после замера — каждая подпись точно над клетками своей группы */
+.canon-g.at {
+  position: relative;
+  height: var(--t-ui-s-lh);
+}
+.canon-g.at > span {
+  position: absolute;
+  top: 0;
+  margin: 0;
+}
+.canon-g > span::before {
+  content: attr(data-label);
 }

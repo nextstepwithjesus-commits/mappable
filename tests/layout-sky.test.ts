@@ -155,6 +155,11 @@ describe('честный конец следа (A14)', () => {
       } else if (c.infant) {
         expect(n.trail).toBe('infant');
         expect(n.t1).toBe(n.t0);
+      } else if (c.cls === 'epochal') {
+        // «время не установлено» (MAP-52): следа нет, знак — в середине скобки bLo…bHi, а не в её начале
+        expect(n.trail, n.id).toBe('epochal');
+        expect(n.t1).toBe(n.t0);
+        expect(n.t0).toBeCloseTo((c.bLo + c.bHi) / 2, 6);
       } else {
         expect(n.trail).toBe('life');
         const died = p.chrono?.died;

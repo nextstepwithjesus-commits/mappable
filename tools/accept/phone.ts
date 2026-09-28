@@ -85,6 +85,42 @@ async function tapStar(p: Page, id: string) {
   await p.touchscreen.tap(box.x + (w.X - v.x0) * v.kx, box.y + (v.laneTop - w.lane) * v.ky);
   await p.waitForTimeout(1200);
 }
+/**
+ * Плотные места на виду: середины ближайших пар звёзд (список лиц неба, data-x/y у пунктов), от 4 до 24 px друг от
+ * друга, по возрастанию расстояния; не у края видимой части. Место ищется по данным, а не смещением от лица: раскладка
+ * меняется (этап 7, K1: сыновья Давида больше не стоят «гребёнкой»), а проверка «Какое лицо?» должна оставаться проверкой.
+ */
+export async function denseSpots(p: Page): Promise<{ x: number; y: number; ids: [string, string] }[]> {
+  return (await p.evaluate(`(() => {
+    const [l, t, r, b] = document.querySelector('.sky').dataset.view.split(' ').map(Number);
+    const pts = [...document.querySelectorAll('[id^="sky-star-"]')].filter((e) => e.dataset.x)
+      .map((e) => ({ id: e.id.slice(9), x: +e.dataset.x, y: +e.dataset.y }))
+      .filter((q) => q.x > l + 30 && q.x < r - 30 && q.y > t + 30 && q.y < b - 30);
+    const out = [];
+    for (let i = 0; i < pts.length; i++)
+      for (let j = i + 1; j < pts.length; j++) {
+        const d = Math.hypot(pts[i].x - pts[j].x, pts[i].y - pts[j].y);
+        if (d >= 4 && d <= 24) out.push({ d, x: (pts[i].x + pts[j].x) / 2, y: (pts[i].y + pts[j].y) / 2, ids: [pts[i].id, pts[j].id] });
+      }
+    return out.sort((u, v) => u.d - v.d);
+  })()`)) as { x: number; y: number; ids: [string, string] }[];
+}
+/**
+ * Коснуться плотного места рядом с лицом id (оно выбрано адресом): перебор ближайших пар, пока касание не спросит
+ * «Какое лицо?». true — список открыт.
+ */
+export async function tapDense(p: Page, id: string, tries = 6): Promise<boolean> {
+  for (let k = 0; k < tries; k++) {
+    await go(p, `#/${id}`, 2400);
+    const q = (await denseSpots(p))[k];
+    if (!q) return false;
+    const box = (await p.locator('.sky canvas').boundingBox())!;
+    await p.touchscreen.tap(box.x + q.x, box.y + q.y);
+    await p.waitForTimeout(500);
+    if ((await p.locator('.sky canvas').getAttribute('data-tap')) === 'ask' && (await p.locator('.which').count())) return true;
+  }
+  return false;
+}
 /** Открыть панель: на телефоне — из «Разделов», на планшете — командой строки или из «Ещё». */
 async function openPanel(p: Page, name: string) {
   const direct = p.locator('.commands > button', { hasText: name });
@@ -224,9 +260,9 @@ export const phone: Scenario[] = [
       s = await sheet(p);
       if (hashId(p) !== to || s?.stop !== 'half') return fail(`ссылка: ${hashId(p)} (ждали ${to}), лист ${s?.stop}`);
       // выбор второго лица: лист на шапке, небо видно; «Отменить» — обратно к 55 %
-      await p.locator('.folio .actions button', { hasText: 'Найти родство с…' }).tap();
+      await p.locator('.folio .actions button', { hasText: 'Родство с…' }).tap();
       await p.waitForTimeout(500);
-      if ((await sheet(p))?.stop !== 'peek') return fail('«Найти родство с…» не свернул лист');
+      if ((await sheet(p))?.stop !== 'peek') return fail('«Родство с…» не свернул лист');
       await p.locator('.pickbar button', { hasText: 'Отменить' }).tap();
       await p.waitForTimeout(500);
       if ((await sheet(p))?.stop !== 'half') return fail(`«Отменить» оставил лист ${(await sheet(p))?.stop}`);
@@ -333,23 +369,12 @@ export const phone: Scenario[] = [
   },
   {
     n: 156,
-    title: 'H5: в плотном месте касание спрашивает «Какое лицо?» (2–5 имён, строки 44 px), выбор — лицо и лист на шапке; на обзоре — приближение',
+    title: 'H5: в плотном месте касание спрашивает «Какое лицо?» (2–5 имён, строки 44 px), выбор — лицо и лист на шапке; на обзоре в гуще — список или приближение, а не выбор наугад',
     view: PHONE,
     run: async (p) => {
-      // места у Давида, где под пальцем несколько звёзд на близких расстояниях (сыновья Иессея и Давида)
-      const tries = [[50, 80], [-12, 30], [55, 55], [45, 70], [-20, 40], [40, 90]];
+      // плотное место у Давида: середина ближайшей пары звёзд на виду (по данным раскладки, а не по смещениям)
       let ids: string[] = [];
-      for (const [dx, dy] of tries) {
-        await go(p, '#/david', 2400);
-        const q = (await selAt(p))!;
-        const box = (await p.locator('.sky canvas').boundingBox())!;
-        await p.touchscreen.tap(box.x + q.x + dx, box.y + q.y + dy);
-        await p.waitForTimeout(500);
-        if ((await p.locator('.sky canvas').getAttribute('data-tap')) === 'ask') {
-          ids = await p.locator('.which .which-item').evaluateAll((bs) => bs.map((b) => (b as HTMLElement).dataset.id!));
-          break;
-        }
-      }
+      if (await tapDense(p, 'david')) ids = await p.locator('.which .which-item').evaluateAll((bs) => bs.map((b) => (b as HTMLElement).dataset.id!));
       if (!ids.length) return fail('ни одно касание в плотном месте не спросило «Какое лицо?»');
       if (ids.length < 2 || ids.length > 5) return fail(`в списке ${ids.length} имён`);
       if (hashId(p) !== 'david') return fail(`пока список открыт, выбор сменился на «${hashId(p)}»`);
@@ -361,7 +386,8 @@ export const phone: Scenario[] = [
       if (hashId(p) !== pick) return fail(`выбрано «${hashId(p)}», а не «${pick}»`);
       if ((await sheet(p))?.stop !== 'peek') return fail('выбор из списка открыл лист не на шапке');
       if (await p.locator('.which').count()) return fail('список не закрылся');
-      // обзор: касание в гуще — приближение, а не выбор (перебор мест от середины Единого царства к краям)
+      // обзор: касание в гуще — список «Какое лицо?» (до 5 равновероятных) или приближение (больше 5), но не выбор наугад
+      // (H5; tapChoice в src/ui/sky/input.ts). Перебор мест от середины Единого царства к краям
       const fit = async () => {
         if (await p.locator('.which').count()) await p.locator('.which .close').tap();
         if (await p.locator('.folio .sheet-bar .close').count()) await p.locator('.folio .sheet-bar .close').tap();
@@ -373,9 +399,12 @@ export const phone: Scenario[] = [
       const k0 = (await view(p)).kx;
       const box = (await p.locator('.sky canvas').boundingBox())!;
       let zoomed = false;
+      let asked = 0;
       const spots: [number, number][] = [];
       for (const fy of [0.5, 0.45, 0.55, 0.4, 0.6]) for (const fx of [0.72, 0.68, 0.76, 0.64, 0.8, 0.6]) spots.push([fx, fy]);
       for (const [fx, fy] of spots) {
+        // что сделало именно это касание: прежняя отметка не должна остаться от предыдущего (касание яруса её не пишет)
+        await p.evaluate(`document.querySelector('.sky canvas').removeAttribute('data-tap')`);
         await p.touchscreen.tap(box.x + box.width * fx, box.y + box.height * fy);
         await p.waitForTimeout(500);
         const kind = await p.locator('.sky canvas').getAttribute('data-tap');
@@ -383,12 +412,23 @@ export const phone: Scenario[] = [
           zoomed = true;
           break;
         }
-        if (kind === 'pick' || kind === 'ask' || hashId(p)) await fit();
+        if (kind === 'ask') {
+          // список на обзоре: 2–5 имён, выбора наугад нет — лицо не выбрано, пока читатель не коснулся строки
+          const n = await p.locator('.which .which-item').count();
+          if (n < 2 || n > 5) return fail(`на обзоре «Какое лицо?» из ${n} строк`);
+          if (hashId(p)) return fail(`на обзоре касание в гуще выбрало «${hashId(p)}» без списка`);
+          asked++;
+          break;
+        }
+        if (kind === 'pick' || hashId(p)) await fit();
       }
-      if (!zoomed) return fail('на обзоре касание в гуще не приблизило небо');
-      const k1 = (await view(p)).kx;
-      if (!(k1 > k0 * 1.5)) return fail(`масштаб ${k0} → ${k1}`);
-      return pass(`«Какое лицо?»: ${ids.join(', ')}; обзор ×${(k1 / k0).toFixed(1)}`);
+      if (!zoomed && !asked) return fail('на обзоре касание в гуще не дало ни списка, ни приближения');
+      if (zoomed) {
+        const k1 = (await view(p)).kx;
+        if (!(k1 > k0 * 1.5)) return fail(`масштаб ${k0} → ${k1}`);
+        return pass(`«Какое лицо?»: ${ids.join(', ')}; обзор ×${(k1 / k0).toFixed(1)}`);
+      }
+      return pass(`«Какое лицо?»: ${ids.join(', ')}; на обзоре в гуще — тоже список`);
     },
   },
   {
@@ -431,7 +471,9 @@ export const phone: Scenario[] = [
       await p.waitForTimeout(500);
       const small = (await p.evaluate(`(() => {
         const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < innerHeight; };
-        const skip = (e) => e.closest('.rail') || e.matches('.person, .ref, .mark, .visually-hidden *') || e.closest('.visually-hidden');
+        // «ещё 5 ссылок» в конце строки ссылок и «см. § 24» — в строке текста: их поле касания — прозрачное продолжение
+        // (::after), оно проверяется ниже; межстрочие не меняется
+        const skip = (e) => e.closest('.rail') || e.matches('.person, .ref, .sec .see, .refs .more, .mark, .visually-hidden *') || e.closest('.visually-hidden');
         return [...document.querySelectorAll('button, [role^=menuitem], input, a[href]')].filter(vis).filter((e) => !skip(e))
           .map((e) => { const r = e.getBoundingClientRect(); return { t: (e.getAttribute('aria-label') || e.textContent || e.tagName).trim().slice(0, 24), w: r.width, h: r.height }; })
           .filter((r) => r.h < 44 || r.w < 44 && r.t.length < 3);
@@ -444,7 +486,15 @@ export const phone: Scenario[] = [
       })) as { h: number; lh: string };
       if (!(ok.h >= 32)) return fail(`поле ссылки ${ok.h} px`);
       if (ok.lh !== '24px') return fail(`межстрочие текста ${ok.lh}`);
-      return pass();
+      // «ещё N ссылок» — команда: поле 44 px (решение 33); «см. § N» — ссылка в тексте: 32 px
+      const fields = (await p.evaluate(`(() => {
+        const h = (sel) => [...document.querySelectorAll(sel)].map((e) => parseFloat(getComputedStyle(e, '::after').height) || 0);
+        return { more: h('.folio .refs .more'), see: h('.folio .sec .see') };
+      })()`)) as { more: number[]; see: number[] };
+      if (!fields.more.length) return fail('в карточке Давида нет «ещё N ссылок»');
+      if (fields.more.some((x) => x < 44)) return fail(`поле «ещё N ссылок» ${Math.min(...fields.more)} px`);
+      if (fields.see.some((x) => x < 32)) return fail(`поле «см. § N» ${Math.min(...fields.see)} px`);
+      return pass(`«ещё N ссылок»: ${fields.more.length} × 44 px`);
     },
   },
   {
@@ -517,15 +567,7 @@ export const phone: Scenario[] = [
       if ((await sheet(p))?.stop !== 'peek' || (await t.getAttribute('aria-expanded')) !== 'false') return fail('пробел на «Свернуть» не свернул лист');
       if ((await t.getAttribute('aria-label')) !== 'Развернуть карточку') return fail(`имя кнопки «${await t.getAttribute('aria-label')}»`);
       // «Какое лицо?»: Escape закрывает список и возвращает фокус на небо
-      for (const [dx, dy] of [[-12, 30], [50, 80], [55, 55]]) {
-        await go(p, '#/david', 2400);
-        const q = (await selAt(p))!;
-        const box = (await p.locator('.sky canvas').boundingBox())!;
-        await p.touchscreen.tap(box.x + q.x + dx, box.y + q.y + dy);
-        await p.waitForTimeout(500);
-        if (await p.locator('.which').count()) break;
-      }
-      if (!(await p.locator('.which').count())) return fail('список «Какое лицо?» не открылся');
+      if (!(await tapDense(p, 'david'))) return fail('список «Какое лицо?» не открылся');
       await p.locator('.which .which-item').first().focus();
       await p.keyboard.press('Escape');
       await p.waitForTimeout(300);

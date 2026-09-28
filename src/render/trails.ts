@@ -22,6 +22,7 @@ import { alpha } from './color.ts';
 import { byId, graph, type ModelData } from '../data/atlas.ts';
 import type { DateClass } from '../engine/chronology.ts';
 import { nameCase } from '../ui/text/ru.ts';
+import { refText } from '../engine/kinship.ts';
 import { starRadius } from './glyphs.ts';
 import { mapFont, mapSize, T_MAP_S } from './type.ts';
 import { claim, textBox } from './labels.ts';
@@ -47,8 +48,26 @@ export interface LifeTrail {
   solidTo: number;
   /** оценочное рождение: до этой x (bHi) начало следа — пунктиром; нет — сплошной от звезды */
   sureFrom?: number;
+  /**
+   * Разрыв (MAP-51; решение 24): x, где кончается правдоподобная часть следа (рождение + предел жизни эпохи). Дальше —
+   * знак «//» и пунктир: сплошная жизнь в 190 и 257 лет — не факт, а растянутое родословие.
+   */
+  brk?: number;
   color: string;
   width: number;
+}
+
+/** Знак разрыва «//» на горизонтальном следе у x: два косых штриха через след, между ними — просвет 3 px. */
+export const BREAK = { gap: 3, h: 4, slant: 3 };
+export function drawBreak(ctx: CanvasRenderingContext2D, x: number, y: number, color: string) {
+  ctx.strokeStyle = color;
+  ctx.setLineDash([]);
+  ctx.beginPath();
+  for (const dx of [-BREAK.gap / 2, BREAK.gap / 2]) {
+    ctx.moveTo(x + dx - BREAK.slant / 2, y + BREAK.h);
+    ctx.lineTo(x + dx + BREAK.slant / 2, y - BREAK.h);
+  }
+  ctx.stroke();
 }
 
 /**
@@ -79,11 +98,23 @@ export function drawLifeTrail(ctx: CanvasRenderingContext2D, t: LifeTrail) {
     ctx.stroke();
     ctx.setLineDash([]);
   }
-  if (solidTo > from + 0.5) {
+  // разрыв (MAP-51): сплошная часть кончается у brk, за знаком «//» — пунктир до конца засвидетельствованного
+  const cut = t.brk !== undefined && t.brk > from + 4 && t.brk < solidTo - 4 ? t.brk : null;
+  const solidEnd = cut !== null ? cut - BREAK.gap / 2 - 2 : solidTo;
+  if (solidEnd > from + 0.5) {
     ctx.beginPath();
     ctx.moveTo(from, y);
+    ctx.lineTo(solidEnd, y);
+    ctx.stroke();
+  }
+  if (cut !== null) {
+    drawBreak(ctx, cut, y, t.color);
+    ctx.setLineDash(TRAIL_DOTS);
+    ctx.beginPath();
+    ctx.moveTo(cut + BREAK.gap / 2 + 2, y);
     ctx.lineTo(solidTo, y);
     ctx.stroke();
+    ctx.setLineDash([]);
   }
   if ((!t.known || t.cls === 'estimated') && x1 > solidTo + 0.5) {
     ctx.setLineDash(TRAIL_DOTS);
@@ -120,6 +151,61 @@ export function trailOf(v: SkyContext, i: number, out: LifeTrail): LifeTrail | n
   out.solidTo = sure;
   out.x1 = known ? (loose && c.dHi !== null && c.dHi > n.t1 ? Math.max(sure, cam.sx(v.xOf(c.dHi))) : sure) : sure + TAIL_PX;
   out.sureFrom = loose && c.bHi > n.t0 ? cam.sx(v.xOf(c.bHi)) : undefined;
+  out.brk = n.brk !== null && n.brk < n.t1 ? cam.sx(v.xOf(n.brk)) : undefined;
+  return out;
+}
+
+// ---------- «время не установлено» (MAP-52; решение 24) ----------
+
+/** Скобка лица без своего времени: годы засвидетельствованной деятельности или эпохи, x0…x1 в px, на высоте y. */
+export interface EpochBracket {
+  x0: number;
+  x1: number;
+  y: number;
+  color: string;
+}
+/** Засечки скобки — на столько px вверх и вниз от строки. */
+export const BRACKET_TICK = 3;
+/** Пунктир скобки: редкие точки — время не установлено, не след жизни. */
+export const BRACKET_DOTS = [1, 3];
+
+/**
+ * Скобка «время не установлено» (ТЗ § 3.1): редкий пунктир через годы, когда лицо засвидетельствовано (встреча,
+ * годы брата, эпоха главы), с засечками на концах. Полый знак лица стоит в её середине (glyphs.ts). Той же функцией
+ * скобку рисуют «Как читать карту» и образец.
+ */
+export function drawEpochBracket(ctx: CanvasRenderingContext2D, b: EpochBracket) {
+  const x0 = Math.round(b.x0) + 0.5;
+  const x1 = Math.round(b.x1) + 0.5;
+  ctx.strokeStyle = b.color;
+  ctx.lineWidth = 1;
+  ctx.setLineDash(BRACKET_DOTS);
+  ctx.beginPath();
+  ctx.moveTo(x0, b.y);
+  ctx.lineTo(x1, b.y);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.beginPath();
+  for (const x of [x0, x1]) {
+    ctx.moveTo(x, b.y - BRACKET_TICK);
+    ctx.lineTo(x, b.y + BRACKET_TICK);
+  }
+  ctx.stroke();
+}
+
+/**
+ * Скобка узла i в px холста или null: только у лица «время не установлено» (trail 'epochal'), и не по годам созвездия
+ * (when.by = 'group' — это не свидетельство, K1: только полый знак).
+ */
+export function bracketOf(v: SkyContext, i: number, out: EpochBracket): EpochBracket | null {
+  const n = v.nodes[i];
+  if (n.ghost || n.trail !== 'epochal') return null;
+  const c = v.model.chrono.get(n.person);
+  if (!c || c.when?.by === 'group' || !(c.bHi > c.bLo)) return null;
+  const { cam } = v;
+  out.x0 = cam.sx(v.xOf(c.bLo));
+  out.x1 = cam.sx(v.xOf(c.bHi));
+  out.y = Math.round(cam.sy(n.lane)) + 0.5;
   return out;
 }
 
@@ -254,6 +340,18 @@ export function drawTrails(v: SkyContext, p: Pass) {
     t.color = alpha(pal.ink2, Math.min(1, a));
     t.width = ky < 5 ? 1 : q.magnitude <= 1 ? 1.6 : 1.2;
     drawLifeTrail(ctx, t);
+    if (p.lines && t.x1 > t.x0 + 1 && t.x1 > 0 && t.x0 < cam.w) p.lines.add({ x: t.x0, y: t.y - 1.5, w: t.x1 - t.x0, h: 3 });
+    if (p.shown && t.brk !== undefined && t.brk > v.letterW && t.brk < cam.w && t.y > v.openTop && t.y < cam.vp.b) p.shown.breaks.add(n.person);
+  }
+  // лица «время не установлено» — скобкой вместо следа (MAP-52)
+  const b: EpochBracket = { x0: 0, x1: 0, y: 0, color: '' };
+  for (const i of p.vis) {
+    if (!bracketOf(v, i, b)) continue;
+    if (b.x1 < -4 || b.x0 > cam.w + 4) continue;
+    const e = p.emph(v.nodes[i].person) * intro;
+    b.color = alpha(pal.ink2, Math.min(1, (ky < 5 ? 0.45 : 0.7) * e));
+    drawEpochBracket(ctx, b);
+    if (p.shown && b.y > v.openTop && b.y < cam.vp.b) p.shown.brackets.add(v.nodes[i].person);
   }
 }
 
@@ -312,10 +410,15 @@ export interface FamilyNote {
   /** точка привязки: ствол скобы или звезда призрака */
   x: number;
   y: number;
-  /** где ставить: у ствола скобы (вниз или вверх от следа отца) или справа от звезды */
-  at: 'down' | 'up' | 'star';
+  /** где ставить: у ствола скобы (вниз или вверх от следа отца), справа от звезды или у детей (порядок перечисления) */
+  at: 'down' | 'up' | 'star' | 'kids';
   /** радиус звезды (для at = 'star') */
   r?: number;
+  /**
+   * Дети, у которых помета может встать, если у верха скобы места нет (MAP-55): у хребта верх скобы лежит на лентах.
+   * Звёзды детей в px холста: помета — слева от звезды или под ней, у первого, затем у дальнего конца скобы.
+   */
+  kids?: { x: number; y: number; r: number }[];
 }
 
 type Kid = { i: number; x: number; y: number; id: string };
@@ -347,6 +450,36 @@ export function motherNote(id: string): string | null {
   return g ? `от ${g}` : null;
 }
 
+/**
+ * «порядок по 1 Пар 3:5–8» (MAP-54): стих, где перечислены дети, чей год оценён по порядку перечисления, — самая частая
+ * ссылка их родства; стихи той же главы у остальных детей сливаются в промежуток. null — общей ссылки нет.
+ */
+export function orderNote(ids: readonly string[]): string | null {
+  const count = new Map<string, number>();
+  for (const id of ids) for (const r of new Set(byId.get(id)?.parentRefs ?? [])) count.set(r, (count.get(r) ?? 0) + 1);
+  // при равенстве — раньше по главе и стиху (1 Пар 3:5 раньше 1 Пар 14:4)
+  const key = (r: string) => {
+    const m = /(\d+):(\d+)/.exec(r);
+    return m ? Number(m[1]) * 1000 + Number(m[2]) : 0;
+  };
+  let best: string | null = null;
+  for (const [r, k] of count) if (k >= 2 && (!best || k > count.get(best)! || (k === count.get(best)! && key(r) < key(best)))) best = r;
+  if (!best) return null;
+  const m = /^(.+) (\d+):(\d+)(?:-(\d+))?$/.exec(best);
+  if (!m) return `порядок по ${refText(best)}`;
+  const [, book, ch] = m;
+  let lo = Number(m[3]);
+  let hi = Number(m[4] ?? m[3]);
+  for (const id of ids)
+    for (const r of byId.get(id)?.parentRefs ?? []) {
+      const q = /^(.+) (\d+):(\d+)(?:-(\d+))?$/.exec(r);
+      if (!q || q[1] !== book || q[2] !== ch) continue;
+      lo = Math.min(lo, Number(q[3]));
+      hi = Math.max(hi, Number(q[4] ?? q[3]));
+    }
+  return `порядок по ${refText(`${book} ${ch}:${lo}${hi > lo ? `-${hi}` : ''}`)}`;
+}
+
 /** «Рахиль, жена Иакова»: подпись призрака жены; если склонение имени мужа ненадёжно — только имя. */
 export function ghostNote(id: string, husband: string | null): string {
   const q = byId.get(id);
@@ -368,7 +501,9 @@ export function drawDescents(v: SkyContext, p: Pass): FamilyNote[] {
   const intro = s.intro;
   const notes: FamilyNote[] = [];
   const d: Descent = { x: 0, y0: 0, y1: 0, color: '', ghost: false, mother: undefined, tension: undefined };
-  ctx.lineWidth = 1;
+  // узкие строки (решение 25; MAP-61): связи — 0,5 px, чтобы не заливать небо сеткой вертикалей
+  const base = cam.ky < 6 ? 0.5 : 1;
+  ctx.lineWidth = base;
   const groups = new Map<string, Group>();
   for (const i of p.vis) {
     const n = v.nodes[i];
@@ -434,6 +569,8 @@ export function drawDescents(v: SkyContext, p: Pass): FamilyNote[] {
         let x = cl[0].x;
         while (trunks.some((t) => Math.abs(t.x - x) < 3.5 && t.lo < hi && lo < t.hi)) x -= 4;
         trunks.push({ x, lo, hi });
+        // ствол скобы и засечки — линии кадра: названия созвездий на них не ложатся (MAP-08)
+        if (p.lines && hi > lo + 1 && x > -4 && x < cam.w + 4) p.lines.add({ x: x - 1.5, y: lo, w: 3, h: hi - lo });
         const eP = g.parent ? p.emph(g.parent) : 1;
         const eBase = Math.min(eP, ...cl.map((k) => p.emph(k.id))) * intro;
         const color = alpha(pal.ink3, 0.75 * eBase);
@@ -470,21 +607,39 @@ export function drawDescents(v: SkyContext, p: Pass): FamilyNote[] {
           const st = LINK_STYLE[linkKind(kp, hl!.get(k.id)) as Exclude<LinkKind, 'base'>];
           ctx.lineWidth = st.width;
           drawBracket(ctx, { x, y0: g.y0, kids: [k], color: alpha(pal.ink2, Math.min(1, p.emph(k.id) * intro)), dash: st.dash, mother: plain.length ? undefined : mother });
-          ctx.lineWidth = 1;
+          ctx.lineWidth = base;
         }
-        // хронологическое напряжение: знак разрыва на стволе
-        if (L.tensions && s.tensionPersons.has(g.parent))
-          for (const k of cl)
-            if (s.tensionPersons.has(k.id)) drawTension(ctx, x, (g.y0 + k.y) / 2, alpha(pal.ink, 0.9 * Math.min(eP, p.emph(k.id)) * intro));
-        // помета матери у верха скобы — когда у отца дети от разных матерей
+        // хронологическое напряжение: знак разрыва на стволе; ребёнок родился после разрыва следа родителя (MAP-51) —
+        // тот же знак: между ними, вероятно, не все поколения
+        const pi = g.parent ? v.indexOf(g.parent) : undefined;
+        const brk = pi !== undefined ? v.nodes[pi].brk : null;
+        const torn = L.tensions && s.tensionPersons.has(g.parent);
+        for (const k of cl)
+          if ((torn && s.tensionPersons.has(k.id)) || (brk !== null && v.nodes[k.i].t0 > brk))
+            drawTension(ctx, x, (g.y0 + k.y) / 2, alpha(pal.ink, 0.9 * Math.min(eP, p.emph(k.id)) * intro));
+        // помета матери у верха скобы — когда у отца дети от разных матерей; у хребта (верх скобы на лентах) — у детей
         if (!noted && mothers >= 2 && g.mother && cam.ky >= NOTE_KY) {
           const text = motherNote(g.mother);
-          if (text) notes.push({ text, x, y: g.y0, at: cl[0].y >= g.y0 ? 'down' : 'up' });
+          const far = [...cl].sort((a, b) => Math.abs(b.y - g.y0) - Math.abs(a.y - g.y0))[0];
+          const kids = [cl[0], ...(far !== cl[0] ? [far] : []), ...g.kids.filter((k) => !cl.includes(k))].map((k) => ({
+            x: k.x, y: k.y, r: starRadius(byId.get(k.id)?.magnitude ?? 6, p.zoomScale),
+          }));
+          if (text) notes.push({ text, x, y: g.y0, at: cl[0].y >= g.y0 ? 'down' : 'up', kids });
           noted = true;
         }
       }
     });
   }
+  // порядок братьев по перечислению (MAP-54; решение 24): «порядок по 1 Пар 3:5–8» — у детей, чей год оценён по порядку
+  if (cam.ky >= NOTE_KY)
+    for (const [, gs] of byParent) {
+      const kids = gs.flatMap((g) => g.kids).filter((k) => v.model.chrono.get(k.id)?.byOrder);
+      if (kids.length < 2) continue;
+      const text = orderNote(kids.map((k) => k.id));
+      if (!text) continue;
+      kids.sort((a, b) => a.x - b.x);
+      notes.push({ text, x: kids[0].x, y: kids[0].y, at: 'kids', kids: kids.map((k) => ({ x: k.x, y: k.y, r: starRadius(byId.get(k.id)?.magnitude ?? 6, p.zoomScale) })) });
+    }
   drawMarriages(v, p);
   // подписи призраков жён — на масштабе семьи
   if (L.ghosts && cam.ky >= 12)
@@ -545,13 +700,21 @@ export function drawFamilyNotes(v: SkyContext, p: Pass, notes: readonly FamilyNo
     const r = nt.r ?? 3;
     const cands: { tx: number; ty: number }[] = [];
     if (nt.at === 'star') cands.push({ tx: nt.x + r + 4, ty: nt.y + size * 0.35 }, { tx: nt.x - r - 4 - w, ty: nt.y + size * 0.35 }, { tx: nt.x - w / 2, ty: nt.y + r + size + 1 });
-    else {
+    else if (nt.at !== 'kids') {
       // у верха скобы: сначала к детям (вниз или вверх от следа отца), затем в другую сторону; у ствола и чуть дальше по следу
       const below = { ty: nt.y + size + 1 };
       const above = { ty: nt.y - 4 };
       for (const side of nt.at === 'down' ? [below, above] : [above, below])
         for (const dx of [4, 16, 30]) cands.push({ tx: nt.x + dx, ty: side.ty }, { tx: nt.x - dx - w, ty: side.ty });
     }
+    // у детей (MAP-55): слева от звезды, под ней, над ней — у первого, затем у дальнего
+    for (const k of nt.kids ?? [])
+      cands.push(
+        { tx: k.x - k.r - 5 - w, ty: k.y + size * 0.35 },
+        { tx: k.x - w / 2, ty: k.y + k.r + size + 2 },
+        { tx: k.x - w - 2, ty: k.y + k.r + size + 2 },
+        { tx: k.x - w / 2, ty: k.y - k.r - 5 },
+      );
     const boxes = cands.map((c) => textBox(c.tx, c.ty, w, size));
     const b = claim(v, p, boxes, 'note', nt.text);
     if (!b) continue;

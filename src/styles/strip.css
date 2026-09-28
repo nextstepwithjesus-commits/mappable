@@ -2,12 +2,19 @@
 .strip {
   grid-area: strip;
   position: relative;
+  /* полоса не держит сетку своей шириной: при сужении окна и повороте телефона она следует за сеткой (MOB-44) */
+  min-width: 0;
+  overflow: hidden;
   border-top: 1px solid var(--rule);
   background: var(--sky);
   touch-action: none;
 }
 .strip canvas {
   display: block;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
 }
 /* полоса — ползунок окна карты (MOB-35): кольцо фокуса внутри полосы, чтобы не обрезалось краем окна */
 .strip canvas:focus-visible {

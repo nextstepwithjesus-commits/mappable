@@ -15,8 +15,8 @@ import { starRadius } from './glyphs.ts';
 import { RULER_H, ROW_H } from './frame.ts';
 import { mapFont, mapSize, T_MAP_S } from './type.ts';
 import { byId, graph } from '../data/atlas.ts';
-import { claim, labelStar, textBox } from './labels.ts';
-import { drawBranchLabels, drawLineNames, drawLineNotes } from './ribbons.ts';
+import { claim, putLabel, textBox } from './labels.ts';
+import { beadAt, drawBranchLabels, drawLineNames, drawLineNotes, drawMt1Women } from './ribbons.ts';
 import type { LineStep } from '../engine/layout.ts';
 import type { Rect } from './rect.ts';
 import type { KinStep } from '../engine/kinship.ts';
@@ -252,14 +252,68 @@ export function drawLeadNotes(v: SkyContext, p: Pass, steps: { joseph: readonly 
     for (const id of new Set([s.selected, s.second, s.hovered, s.focus])) {
       const i = id ? v.indexOf(id) : undefined;
       if (i === undefined || v.nodes[i].ghost || !v.drawn(i) || p.starAlpha(i) <= 0.5) continue;
-      labelStar(v, p, i, { sides: ['r', 'l', 't', 'b'], color: v.pal.ink, alpha: 1, sigla: true, leader: true, overStars: true, force: first });
+      putLabel(v, p, i, { sides: ['r', 'l', 't', 'b'], color: v.pal.ink, alpha: 1, sigla: true, leader: true, overStars: true, force: first });
       first = false;
     }
   }
   drawKinSteps(v, p);
   drawLineNotes(v, p, steps);
+  // подписи лент «через Соломона (Мф 1)» — раньше имён лиц линий (UX-45): имя, которому не хватит места, встанет
+  // мельче или номером у бусины (MAP-59); женщины Мф 1 — малыми знаками у сыновей (решение 28)
+  if (p.s.onlyLines) drawBranchLabels(v, p, steps);
+  drawMt1Women(v, p, steps);
   drawLineNames(v, p, steps);
-  drawBranchLabels(v, p, steps);
+}
+
+// ---------- рабочий набор на небе (IX-51) ----------
+
+/** Метка члена набора: черта над-справа от знака, px (IX-51). */
+export const WORK_MARK = { w: 6, h: 1.5 };
+/** С какой высоты строки метки набора видны: ниже они сливаются со знаками. */
+export const WORK_MARK_KY = 8;
+/** Отклик звезды на клавишу набора, мс (IX-51; SkyView, WORK_FLASH_MS). */
+export const WORK_FLASH_MS = 300;
+
+/**
+ * Место метки набора у звезды (x, y) радиуса r: над-справа. У царя — выше его черты и правее её конца: иначе метка
+ * читалась бы продолжением черты.
+ */
+export function workMarkAt(x: number, y: number, r: number, king = false): { x: number; y: number; w: number; h: number } {
+  return king ? { x: x + r + 4, y: y - r - 8 - WORK_MARK.h, w: WORK_MARK.w, h: WORK_MARK.h } : { x: x + r + 3, y: y - r - 3 - WORK_MARK.h, w: WORK_MARK.w, h: WORK_MARK.h };
+}
+
+/**
+ * Метки членов рабочего набора в режиме «все лица» (IX-51): черта 6 × 1,5 px над-справа от знака тоном --ink, без цвета
+ * (цвет — только у лент), при высоте строки от 8 px. Рисуются вместе со звёздами; их места занимаются до подписей.
+ * Этой же функцией метку рисует «Как читать карту».
+ */
+export function drawWorkMark(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, color: string, king = false) {
+  const m = workMarkAt(x, y, r, king);
+  ctx.fillStyle = color;
+  ctx.fillRect(m.x, m.y, m.w, m.h);
+}
+export function drawWorkMarks(v: SkyContext, p: Pass) {
+  const set = p.s.workMarks;
+  if (!set?.size || v.cam.ky < WORK_MARK_KY) return;
+  const { ctx, cam, pal } = v;
+  for (const id of set) {
+    const i = v.indexOf(id);
+    if (i === undefined || !v.drawn(i) || p.starAlpha(i) <= 0.5) continue;
+    const q = byId.get(id);
+    if (!q) continue;
+    const x = cam.sx(v.X0[i]);
+    const y = cam.sy(v.nodes[i].lane);
+    if (x < v.letterW || x > cam.w || y < v.openTop || y > cam.vp.b) continue;
+    const r = starRadius(q.magnitude, p.zoomScale) + (q.sex === 'f' ? 2.2 : 0);
+    const king = q.roles.includes('king') || q.roles.includes('queen');
+    ctx.globalAlpha = Math.max(0.7, p.emph(id));
+    drawWorkMark(ctx, x, y, r, pal.ink, king);
+    ctx.globalAlpha = 1;
+    const m = workMarkAt(x, y, r, king);
+    // подпись на метку не ложится
+    p.placer.add({ x: m.x - 1, y: m.y - 1, w: m.w + 2, h: m.h + 2 });
+    if (p.shown) p.shown.workMarks++;
+  }
 }
 
 /**
@@ -275,8 +329,12 @@ export function drawRings(v: SkyContext, p: Pass) {
     // скрытое набором или свёрткой (J4, J5) — без кольца
     if (i === undefined || v.hides(id)) return;
     const q = byId.get(id)!;
-    const x = cam.sx(v.X0[i]);
-    const y = cam.sy(v.nodes[i].lane);
+    // звезды нет на небе (режим «только линии»): кольцо — у её знака-спутницы (мать у развилки, женщины Мф 1; UX-46),
+    // а без знака — не рисуется: пустое кольцо читалось бы как сбой
+    const bead = v.drawn(i) ? null : beadAt(v, id);
+    if (!v.drawn(i) && !bead) return;
+    const x = bead ? bead.x : cam.sx(v.X0[i]);
+    const y = bead ? bead.y : cam.sy(v.nodes[i].lane);
     const r = starRadius(q.magnitude, p.zoomScale) + (gap ?? (q.sex === 'f' ? 6.5 : 5)) + out;
     ctx.strokeStyle = color;
     ctx.lineWidth = width;
@@ -308,6 +366,17 @@ export function drawRings(v: SkyContext, p: Pass) {
   // («сестра»); это соседство по слову Писания, не утверждение о родителях (П-8)
   if (s.hovered && cam.ky >= 5) drawKinArcs(v, p, s.hovered);
   for (const id of [s.selected, s.second]) if (id) ring(id, 0);
+  // отклик на клавишу набора (IX-51): однократная обводка 300 мс — расходится и гаснет; при ослабленном движении — стоит
+  const fl = s.workFlash;
+  if (fl) {
+    const t = ((typeof performance !== 'undefined' ? performance.now() : fl.at) - fl.at) / WORK_FLASH_MS;
+    if (t >= 0 && t < 1) {
+      ctx.save();
+      ctx.globalAlpha = 1 - t;
+      ring(fl.id, s.reduced ? 3 : 2 + 6 * t, 1.5, pal.ink);
+      ctx.restore();
+    }
+  }
   if (s.focus) ring(s.focus, s.focus === s.selected || s.focus === s.second ? 4 : 0);
   // наведённая звезда — тонкое кольцо: звезда отвечает на указатель
   if (s.hovered && s.hovered !== s.selected && s.hovered !== s.second && s.hovered !== s.focus) {

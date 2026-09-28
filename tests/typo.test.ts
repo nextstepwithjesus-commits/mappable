@@ -1,6 +1,6 @@
 /**
  * Русская типографика в одном месте (B5) и ссылки в тексте (B4): одна функция typo() для строк интерфейса, годов
- * и текстов стихов при сборке; ссылки неотрывны от своих разделителей, больше трёх — «ещё N мест».
+ * и текстов стихов при сборке; ссылки неотрывны от своих разделителей, больше трёх — «ещё N ссылок».
  * Перед тестами нужна свежая сборка данных: npm run -s data.
  */
 import { describe, it, expect, beforeAll } from 'vitest';
@@ -23,8 +23,9 @@ describe('typo: правила', () => {
     expect(typo('ок. 1040 г.')).toBe(`ок.${NBSP}1040${NBSP}г.`);
     expect(typo('(см. § 24)')).toBe(`(см.${NBSP}§${NBSP}24)`);
     expect(typo('род. ок. 1335 г. до Р. Х.')).toBe(`род.${NBSP}ок.${NBSP}1335${NBSP}г.${NBSP}до${NBSP}Р.${NBSP}Х.`);
-    expect(typo('1-я Паралипоменон')).toBe(`1-я${NBSP}Паралипоменон`);
-    expect(typo('предок в 10-м поколении')).toBe(`предок в${NBSP}10-м${NBSP}поколении`);
+    // внутри порядкового после дефиса — U+2060 (CARD-68, UX-12): «10-» и «м» не расходятся по строкам
+    expect(typo('1-я Паралипоменон')).toBe(`1-\u2060я${NBSP}Паралипоменон`);
+    expect(typo('предок в 10-м поколении')).toBe(`предок в${NBSP}10-\u2060м${NBSP}поколении`);
     // слово, которое лишь кончается на «ок»: не сокращение
     expect(typo('порок. Да')).toBe('порок. Да');
   });
@@ -148,18 +149,18 @@ describe('ссылки в тексте (B4)', () => {
     expect(s.replace(/<span class="nobr">.*?<\/span><\/span>/g, '')).not.toContain(';');
   });
 
-  it('больше трёх ссылок — первые три и команда «ещё N мест» со склонением', () => {
+  it('больше трёх ссылок — первые три и команда «ещё N ссылок» со склонением (CARD-67: «места» — места § 15)', () => {
     const s = html(five);
     expect((s.match(/class="ref"/g) ?? []).length).toBe(3);
-    expect(s).toMatch(/<button class="more">ещё\u00a02\u00a0места<\/button>/);
-    expect(html(five.slice(0, 4))).toContain(`ещё${NBSP}1${NBSP}место`);
-    expect(html([...five, 'Быт 1:1', 'Быт 1:2', 'Быт 1:3'])).toContain(`ещё${NBSP}5${NBSP}мест`);
+    expect(s).toMatch(/<button class="more">ещё\u00a02\u00a0ссылки<\/button>/);
+    expect(html(five.slice(0, 4))).toContain(`ещё${NBSP}1${NBSP}ссылка`);
+    expect(html([...five, 'Быт 1:1', 'Быт 1:2', 'Быт 1:3'])).toContain(`ещё${NBSP}5${NBSP}ссылок`);
     expect(html(five.slice(0, 3))).not.toContain('ещё');
   });
 
-  it('tail — знак после ссылок держится за последнюю ссылку или за «ещё N мест»', () => {
+  it('tail — знак после ссылок держится за последнюю ссылку или за «ещё N ссылок»', () => {
     expect(html(['2Цар 5:4-5', '2Цар 2:11'], ';')).toMatch(/2:11<\/button><span class="refsep">;<\/span><\/span><\/span>$/);
-    expect(html(five, ';')).toMatch(/места<\/button><span class="refsep">;<\/span><\/span><\/span>$/);
+    expect(html(five, ';')).toMatch(/ссылки<\/button><span class="refsep">;<\/span><\/span><\/span>$/);
     expect(renderToString(h(Refs, { refs: [], owner: 't', tail: ';' }) as VNode)).toBe(';');
   });
 });

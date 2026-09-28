@@ -3,31 +3,79 @@ import type { ComponentChildren } from 'preact';
 import { byId, graph, loadedCard } from '../../data/atlas.ts';
 import type { Fact, Sex } from '../../data/types.ts';
 import type { ParentEdge } from '../../engine/graph.ts';
-import { normFor } from '../../engine/chronology.ts';
+import { normFor, type Tension } from '../../engine/chronology.ts';
 import { Refs, VerseInsert, Mark, MarkNote, MARK_FULL, refLabel } from '../common.tsx';
 import { formatSpan, shownYears, yearsWord, ESTIMATE_STEP } from '../../engine/years.ts';
 import type { ModelData, ChronoRow } from '../../data/atlas.ts';
-import { birthLine, birthEpoch, birthRange, kinDegree, nameIn, Namesake, PersonIn } from './shared.tsx';
+import { birthLine, birthEpoch, birthRange, kinDegree, nameIn, Namesake, PersonIn, SeeSec } from './shared.tsx';
 import { isPeople } from './Masthead.tsx';
 import { typoTree } from '../text/typo.ts';
 type AtlasPerson = NonNullable<ReturnType<typeof byId.get>>;
 
-/** Помета года: «расч.» у всех лет, зависящих от хронологической модели. */
-export function YearMark({ cls }: { cls: ChronoRow['cls'] }) {
+/**
+ * Помета года: «расч.» у всех лет, зависящих от хронологической модели; «выв.» у года, оценённого по порядку
+ * перечисления братьев и сестёр (MAP-54; ChronoRow.byOrder). Одна и та же помета — в § 8 и в паспорте.
+ */
+export function YearMark({ cls, byOrder = false }: { cls: ChronoRow['cls']; byOrder?: boolean }) {
   if (cls === 'epochal') return null;
+  if (byOrder) return <MarkNote label="выв." full={MARK_FULL.byOrder} />;
   if (cls === 'exact') return <MarkNote label="расч." full={MARK_FULL.exact} />;
   return <Mark calc />;
 }
 
-/** § 8: год рождения (те же числа, что в паспорте) и эпоха рождения. */
+/**
+ * § 8: год рождения (те же числа, что в паспорте) и эпоха рождения. Год, оценённый по порядку перечисления братьев
+ * и сестёр (MAP-54; ChronoRow.byOrder), — с пометой «выв.»: на поле одна помета, и её пояснение говорит и о расчёте.
+ */
 export function BirthLine({ p, c, m }: { p: AtlasPerson; c: ChronoRow; m: ModelData }) {
   const ep = birthEpoch(p.id, c, m.epochs);
   return typoTree(
     <p class="fact">
       {birthLine(c, birthRange(p.id, c, m.chrono))}
       {ep ? `; эпоха — ${ep.name}` : ''}
-      <YearMark cls={c.cls} />
+      <YearMark cls={c.cls} byOrder={c.byOrder} />
     </p>,
+  );
+}
+
+/**
+ * Напряжение одной записью для § 13 (решение по CARD-61 и пределу 8 строк): цепочка имён, суть в числах
+ * до первого пояснения и вывод-толкование («Вероятно, родословие называет не все поколения»); всё объяснение
+ * со стихами — в § 24. Тексты напряжений строит решатель (engine/chronology.ts) по образцам:
+ * «Цепочка: суть, в среднем…», «Цепочка: суть, а у супругов…», «Цепочка: суть: при принятых годах…»,
+ * «Цепочка: суть. Так выходит…». Суть длиннее 160 знаков не выводится — остаются цепочка и вывод.
+ */
+export function tensionBrief(t: Tension): { chain: string; gist: string; interp: string | null } {
+  const at = t.text.indexOf(':');
+  const chain = at > 0 ? t.text.slice(0, at).trim() : '';
+  const rest = at > 0 ? t.text.slice(at + 1).trim() : t.text.trim();
+  // конец сути: двоеточие пояснения, «, а …», «, в среднем …» или конец предложения (не «г. до Р. Х.»)
+  const end = /:\s|,\s(?:а|в среднем)\s|\.(?:\s+(?=[А-ЯЁ][а-яё])|$)/.exec(rest);
+  let gist = (end ? rest.slice(0, end.index) : rest).trim();
+  if (gist.length > 160) gist = '';
+  const interp = /(?:^|\.\s+)(Вероятно,[^.]*\.)/.exec(t.text)?.[1] ?? null;
+  return { chain, gist, interp };
+}
+
+/** § 13: напряжения лица одной записью (см. tensionBrief); стихи — всех напряжений, без повторов; «толк.» — если вывод толкование. */
+// обычная функция, а не компонент: предел «8 строк» (Clamp) узнаёт запись напряжения по классу div.tension
+function tensionBlock(tensions: Tension[]) {
+  const briefs = tensions.map(tensionBrief);
+  const interp = [...new Set(briefs.map((b) => b.interp).filter((x): x is string => !!x))];
+  const refs = [...new Set(tensions.flatMap((t) => t.refs))];
+  return (
+    <div class="tension fact">
+      <b>{tensions.length > 1 ? 'Хронологические напряжения.' : 'Хронологическое напряжение.'}</b>{' '}
+      {briefs.map((b) => (b.chain ? `${b.chain}${b.gist ? `: ${b.gist}` : ''}. ` : '')).join('')}
+      {interp.length ? `${interp.join(' ')} ` : ''}
+      Подробнее{' '}
+      <span class="nobr">
+        <SeeSec n={24} />.
+      </span>
+      <Refs refs={refs} owner="t13" />
+      {tensions.some((t) => t.cert === 'interpretation') ? <Mark cert="interpretation" /> : null}
+      <VerseInsert owner="t13" refs={refs} />
+    </div>
   );
 }
 
@@ -193,13 +241,9 @@ export function RelativeChrono({ id, m, note }: { id: string; m: ModelData; note
           {years ? <Mark calc /> : <MarkNote label="выв." full={MARK_FULL.order} />}
         </p>
       )}
-      {tensions.map((t, i) => (
-        <div class="tension" key={i}>
-          <b>Хронологическое напряжение.</b> {t.text}
-          <Refs refs={t.refs} owner={`t13.${i}`} />
-          <VerseInsert owner={`t13.${i}`} refs={t.refs} />
-        </div>
-      ))}
+      {/* напряжения — одной записью: у каждого цепочка и суть, вывод-толкование один раз, объяснение и все стихи —
+          в § 24 («Подробнее см. § 24»); так § 13 держит предел 8 строк и у Моисея с двумя напряжениями */}
+      {tensions.length > 0 && tensionBlock(tensions)}
       {c.cls === 'estimated' && !people && (
         <p class="muted">
           Год оценён по родству: по длине поколения своей эпохи между ближайшими предками и потомками с известными годами.

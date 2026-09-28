@@ -45,6 +45,19 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) 168px minmax(0, 1fr);
 }
+/* места в строке заданы явно, а не порядком разметки: в разметке корешок раздела может стоять первым — так строку читает
+   диктор и так она идёт на телефоне (MOB-48); на экране — первое лицо, корешок, второе лицо */
+.spread .row > .pg {
+  grid-row: 1;
+  grid-column: 1;
+}
+.spread .row > .pg ~ .pg {
+  grid-column: 3;
+}
+.spread .row > .spine {
+  grid-row: 1;
+  grid-column: 2;
+}
 .spread .pg {
   min-width: 0;
   padding: 6px 24px 6px;
@@ -141,9 +154,18 @@
   .spread .row {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
-  .spread .spine {
+  /* корешок — строкой над страницами, страницы — рядом под ним */
+  .spread .row > .pg {
+    grid-row: 2;
+  }
+  .spread .row > .pg ~ .pg {
+    grid-column: 2;
+  }
+  .spread .row > .spine {
     grid-column: 1 / -1;
     grid-row: 1;
+  }
+  .spread .spine {
     border: 0;
     text-align: left;
     padding: 10px 12px 0;
@@ -163,10 +185,15 @@
     padding-right: 16px;
   }
 }
-/* телефон: один столбец (MOB-22) — шапки друг под другом, в разделе строки двух лиц подряд, с именем; лист карточки скрыт */
+/* телефон: один столбец (MOB-22) — шапки друг под другом; в каждом разделе сначала его корешок (номер и название),
+   под ним строки двух лиц подряд, с именем: «Давид: …», «Соломон: …» (MOB-48). Лист карточки скрыт */
 @media (max-width: 720px) {
   .spread .row {
-    display: block;
+    display: flex;
+    flex-direction: column;
+  }
+  .spread .row > .spine {
+    order: -1;
   }
   .spread .spine {
     padding: 12px 0 2px;
@@ -197,10 +224,7 @@
   .spread .mastrow .pg + .spine.kin {
     padding: 4px 0 12px;
   }
-  .spread .mastrow {
-    display: flex;
-    flex-direction: column;
-  }
+  /* шапки обоих лиц, под ними — цепочка родства корешка */
   .spread .mastrow .spine.kin {
     order: 3;
     border-top: 1px solid var(--rule);
@@ -215,13 +239,24 @@
   .app:has(> .spread) .folio {
     display: none;
   }
-  /* «×» — справа в первой строке, команды — второй строкой */
+  /* «×» — справа в первой строке, команды — второй строкой: перенос строки — пустой элемент во всю ширину между ними
+     (иначе на 360–390 px «Поменять страницы» вставал в первую строку, и «×» оказывался посередине) */
   .spread-bar .close {
     order: 1;
     margin-left: auto;
   }
-  .spread-bar .cmd {
+  .spread-bar::after {
+    content: '';
     order: 2;
+    flex-basis: 100%;
+    height: 0;
+  }
+  .spread-bar .cmd {
+    order: 3;
+    margin-left: -8px;
+  }
+  .spread-bar .cmd + .cmd {
+    margin-left: 0;
   }
   .spread-bar .title {
     margin-right: 0;

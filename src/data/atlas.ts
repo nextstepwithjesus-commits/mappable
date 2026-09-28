@@ -5,7 +5,8 @@
 import raw from '../generated/atlas.json';
 import type { Card, Chrono, Epoch, Group, Role, Sex, PersonKind, Cert } from './types.ts';
 import type { Book } from '../engine/books.ts';
-import type { ChronoModel, DateClass, Tension } from '../engine/chronology.ts';
+import type { ChronoModel, DateClass, Tension, WhenSpan } from '../engine/chronology.ts';
+import { applyEpochDelta } from '../engine/epochs.ts';
 import type { BlockInfo, LineStep, Outline, TrailKind } from '../engine/layout.ts';
 import { TRAIL_KINDS } from '../engine/layout.ts';
 import type { Graph } from '../engine/graph.ts';
@@ -59,6 +60,19 @@ export interface ChronoRow {
   epoch: string | null;
   /** умер младенцем (A14): без следа, знак † */
   infant: boolean;
+  /**
+   * Народ или род (kind people, clan; CARD-59; решение 23): b — место в родословии, а не год рождения. Годов рождения
+   * и жизни у него не показывают (engine/years.ts: shownYears → null), современников нет.
+   */
+  named?: boolean;
+  /** Год оценён по порядку перечисления братьев и сестёр (MAP-54): помета «выв.» у года рождения. */
+  byOrder?: boolean;
+  /**
+   * У лица «время не установлено» (cls epochal; MAP-52): откуда скобка bLo…bHi — встреча с лицом id, годы брата
+   * или сестры id, эпоха главы
+   * первого упоминания ref, эпоха из данных, границы из данных или годы созвездия. b — середина скобки.
+   */
+  when?: WhenSpan;
 }
 
 export interface NodeRow {
@@ -73,8 +87,14 @@ export interface NodeRow {
   layoutParent: string | null;
   satelliteOf: string | null;
   spine: boolean;
-  /** какой след рисуется (engine/layout.ts, TrailKind): life, people, infant, list, ghost; t1 = t0 — следа нет */
+  /** какой след рисуется (engine/layout.ts, TrailKind): life, people, infant, list, ghost, epochal; t1 = t0 — следа нет */
   trail: TrailKind;
+  /**
+   * Разрыв следа (MAP-51; решение 24): год (астр.), где кончается правдоподобная часть сплошного следа — рождение плюс
+   * предел жизни эпохи. От brk до t1 — «//» и пунктир; отвод к ребёнку, рождённому после brk, — со знаком разрыва.
+   * null — разрыва нет.
+   */
+  brk: number | null;
 }
 
 export interface ModelData {
@@ -90,7 +110,10 @@ export interface ModelData {
   /** контуры созвездий (E8): кольца в годах и полосах, места под название */
   outlines: Outline[];
   scale: { knots: number[]; xTrue: number[]; xDense: number[] };
-  /** Эпохи в годах этой модели: «Первозданный мир» и «От Потопа до Авраама» зависят от чисел Быт 5 и 11. */
+  /**
+   * Эпохи в годах этой модели (CARD-60; engine/epochs.ts): границы и события, заданные числами Писания (сотворение,
+   * Потоп, рождение Аврама, приход Иакова в Египет), сдвигаются вместе с моделью.
+   */
   epochs: Epoch[];
 }
 
@@ -104,8 +127,8 @@ export interface LineFile {
 }
 
 // годы — разностями от рождения; лица — номерами в индексе (tools/build-data.ts)
-type RawChrono = [number, number, number, number | null, number | null, number, DateClass, string | null, (number | null)?, (number | null)?, number?];
-type RawNode = [number, number, number, number, number, number | null, number | null, number | null, number, number?];
+type RawChrono = [number, number, number, number | null, number | null, number, DateClass, string | null, (number | null)?, (number | null)?, number?, number?, (string | null)?];
+type RawNode = [number, number, number, number, number, number | null, number | null, number | null, number, number?, number?];
 type RawOutline = { g: string; p?: string; n: number; r: number[][]; s: [number, number, number, number][] };
 interface RawAtlas {
   built: string;
@@ -114,6 +137,7 @@ interface RawAtlas {
     id: string;
     chrono: (RawChrono | null)[];
     tensions: Tension[];
+    epochs?: Record<string, [number, number, number[]]>;
     layout: { nodes: RawNode[]; blocks: BlockInfo[]; laneMin: number; laneMax: number; metrics: Record<string, number>; outlines?: RawOutline[] };
     scale: { knots: number[]; xTrue: number[]; xDense: number[] };
   }[];
@@ -163,14 +187,24 @@ export const byId = new Map(persons.map((p) => [p.id, p]));
 export const epochs = R.epochs as unknown as Epoch[];
 
 type RawModel = RawAtlas['models'][number];
+/** «m:avraam», «k:beera-syn-vaala», «r:Кол 4:14», «e», «b», «g» (tools/build-data.ts) → WhenSpan. */
+function decodeWhen(s: string): WhenSpan {
+  const by = ({ m: 'met', k: 'kin', r: 'mention', e: 'epoch', b: 'bounds', g: 'group' } as const)[s[0] as 'm' | 'k' | 'r' | 'e' | 'b' | 'g'] ?? 'epoch';
+  const rest = s.length > 2 ? s.slice(2) : undefined;
+  return by === 'met' || by === 'kin' ? { by, id: rest } : by === 'mention' ? { by, ref: rest } : { by };
+}
 function decodeModel(m: RawModel): ModelData {
   const chrono = new Map<string, ChronoRow>();
   const abs = (b: number, x: number | null) => (x === null ? null : b + x);
   m.chrono.forEach((r, i) => {
     if (!r) return;
     const b = r[0];
+    const flags = r[11] ?? 0;
     chrono.set(persons[i].id, {
       b, bLo: b + r[1], bHi: b + r[2], d: abs(b, r[3]), dLo: abs(b, r[8] ?? null), dHi: abs(b, r[9] ?? null), last: abs(b, r[4]), dEst: b + r[5], cls: r[6], epoch: r[7], infant: r[10] === 1,
+      ...(flags & 1 ? { named: true } : {}),
+      ...(flags & 2 ? { byOrder: true } : {}),
+      ...(r[12] ? { when: decodeWhen(r[12]) } : {}),
     });
   });
   const idAt = (k: number | null) => (k === null ? null : persons[k].id);
@@ -181,18 +215,11 @@ function decodeModel(m: RawModel): ModelData {
     return {
       id: ghost ? `ghost:${person}` : person, person, ghost, lane: n[1], t0, t1: t0 + n[3], block: n[4],
       parentLane: n[5], layoutParent: idAt(n[6]), satelliteOf: idAt(n[7]), spine: !!n[8], trail: TRAIL_KINDS[n[9] ?? 0],
+      brk: n[10] === undefined || n[10] === null ? null : t0 + n[10],
     };
   });
-  const hist = (a: number) => (a <= 0 ? a - 1 : a);
-  const adam = chrono.get('adam');
-  const noah = chrono.get('noy');
-  const abram = chrono.get('avraam');
-  const flood = noah && noah.cls === 'exact' ? noah.b + 600 : null; // Потоп — в 600-й год Ноя (Быт 7:6)
-  const modelEpochs = epochs.map((e) => {
-    if (e.id === 'antediluvian' && adam && flood !== null) return { ...e, start: hist(adam.b), end: hist(flood) };
-    if (e.id === 'postdiluvian' && abram && flood !== null) return { ...e, start: hist(flood), end: hist(abram.b) };
-    return e;
-  });
+  // эпохи модели: в файле модели — только отличия от data/epochs.json (tools/build-data.ts, engine/epochs.ts)
+  const modelEpochs = applyEpochDelta(epochs, m.epochs);
   // контуры: годы — десятыми, полосы — двадцатыми, вершины колец — разностями (tools/build-data.ts)
   const outlines: Outline[] = (m.layout.outlines ?? []).map((o) => ({
     group: o.g,

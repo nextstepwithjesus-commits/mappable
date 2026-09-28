@@ -6,7 +6,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { overflowCommands } from '../src/ui/top/TopBar.tsx';
+import { overflowCommands, workLabel, HINTS, phoneMenuItems } from '../src/ui/top/TopBar.tsx';
 
 // ширины команд — как у образцов Jost 13 с полями 8 px (порядок строки: панели, затем справка)
 // «В работе» (J3) — замер в сборке на 1440: 65,22 px
@@ -87,5 +87,23 @@ describe('строка и органы неба — без скрытой про
     const b = rule(css('controls.css'), ".menu [role='menu']");
     expect(b).toMatch(/background:\s*var\(--sheet\)/);
     expect(b).toMatch(/border:\s*1px solid var\(--rule-strong\)/);
+  });
+});
+
+describe('«В работе: N» и однострочные пояснения команд (UX-48, UX-21; решения 9 и 26)', () => {
+  it('команда рабочего набора показывает число лиц; пустой набор — «В работе»', () => {
+    expect(workLabel(0)).toBe('В работе');
+    expect(workLabel(46)).toBe('В работе: 46');
+    const items = phoneMenuItems(null, false, () => {}, () => {}, 3);
+    expect(items.find((i) => i.key === 'work')?.label).toBe('В работе: 3');
+  });
+  it('у каждой панели верхней строки — пояснение одной строкой, без повторения названия', () => {
+    for (const id of ['index', 'work', 'chapter', 'synopsis', 'kinship', 'section', 'legend', 'about'] as const) {
+      const t = HINTS[id];
+      expect(t, id).toBeTruthy();
+      expect(t, id).not.toMatch(/\n/);
+      expect(t.length, id).toBeLessThanOrEqual(100);
+      expect(t, id).toMatch(/^[А-ЯЁ]/);
+    }
   });
 });

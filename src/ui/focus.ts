@@ -7,8 +7,8 @@
  * Фокус переносится, только если он потерялся (document.body) или остался в закрытой панели: кнопку, с которой
  * читатель закрыл панель («Указатель» в строке команд), он не покидает.
  */
-import { effect } from '@preact/signals';
-import { panel, selected, type Panel } from '../state.ts';
+import { computed, effect } from '@preact/signals';
+import { panel, pickMode, selected, type Panel } from '../state.ts';
 import { grid } from './layout.ts';
 
 /**
@@ -17,6 +17,18 @@ import { grid } from './layout.ts';
  * лист внутри неба: небо над ними видно и отвечает, они не модальны. Верхняя строка остаётся доступной: она над листом.
  */
 export const modalOnPhone = (p: Panel) => p !== null && p !== 'epochs' && p !== 'view';
+
+/**
+ * Лист панели убран на время выбора второго лица на небе (MOB-47): на телефоне «выбрать второе на небе» в «Родстве»
+ * закрывал бы небо собственным листом. Пока идёт выбор, лист панели скрыт (Sheet, hidden), небо, карточка на шапке
+ * и полоса доступны, у кромки неба — строка выбора с «отменить». Выбрали лицо (pickSecond снова открывает панель
+ * режима) или отменили — лист возвращается, уже с ответом. Только панель того же режима: другая панель, открытая во
+ * время выбора, видна как обычно.
+ */
+export function parkedFor(phone: boolean, p: Panel, mode: 'kinship' | 'spread' | null): boolean {
+  return phone && mode !== null && p === mode && modalOnPhone(p);
+}
+export const parked = computed(() => parkedFor(grid.value.phone, panel.value, pickMode.value));
 /** Что закрывает полноэкранный лист панели на телефоне. */
 const UNDER_SHEET = '.app > main > .sky, .app > .folio, .app > .strip';
 function setModal(on: boolean) {
@@ -74,10 +86,19 @@ export function focusPanelAt(sel: string) {
  * Заголовок появляется после отрисовки выбора.
  */
 export function focusCardTitle(id: string) {
-  later(() => {
-    if (selected.peek() === id) focusQuietly(cardTitle(id));
-  });
+  // карточка лица, которое только что выбрано, может появиться на кадр-другой позже (подгрузка тела карточки): ждать её
+  // не дольше полусекунды и только пока выбрано это лицо
+  let frames = 0;
+  const attempt = () => {
+    if (selected.peek() !== id) return;
+    const t = cardTitle(id);
+    if (t) focusQuietly(t);
+    else if (++frames < TITLE_WAIT_FRAMES) requestAnimationFrame(attempt);
+  };
+  later(attempt);
 }
+/** Сколько кадров ждать заголовка карточки (≈ 0,5 с). */
+const TITLE_WAIT_FRAMES = 30;
 
 /** Подключить перенос фокуса (App). Возвращает отписку. */
 export function bindFocus(): () => void {
@@ -127,18 +148,38 @@ export function bindFocus(): () => void {
       back?.focus({ preventScroll: true });
     });
   });
-  // модальный лист телефона: inert снимается раньше, чем фокус возвращается на место под листом
+  // модальный лист телефона: inert снимается раньше, чем фокус возвращается на место под листом; убранный на время
+  // выбора лист (parked) небо не закрывает
+  const modalNow = () => grid.peek().phone && modalOnPhone(panel.peek()) && !parked.peek();
   const offModal = effect(() => {
-    const on = grid.value.phone && modalOnPhone(panel.value);
+    const on = grid.value.phone && modalOnPhone(panel.value) && !parked.value;
     void selected.value;
     setModal(on);
     // корень карточки мог перерисоваться вместе с выбором — ещё раз после отрисовки
-    later(() => setModal(grid.peek().phone && modalOnPhone(panel.peek())));
+    later(() => setModal(modalNow()));
+  });
+  // лист убран на время выбора (MOB-47): фокус — на небо, где выбирают (стрелки и Enter; строка выбора объявляется
+  // сама, role="status"); лист вернулся — фокус на ответ панели, иначе на её заголовок
+  let wasParked = parked.peek();
+  const offParked = effect(() => {
+    const on = parked.value;
+    if (on === wasParked) return;
+    wasParked = on;
+    later(() => {
+      if (on) {
+        if (!current() || current()!.closest('[hidden]')) skyCanvas()?.focus({ preventScroll: true });
+        return;
+      }
+      const root = panelRoot();
+      if (!root || root.hidden) return;
+      focusQuietly(root.querySelector<HTMLElement>('.relation .sent') ?? root.querySelector<HTMLElement>('h2'));
+    });
   });
   return () => {
     offPanel();
     offSel();
     offModal();
+    offParked();
     setModal(false);
   };
 }

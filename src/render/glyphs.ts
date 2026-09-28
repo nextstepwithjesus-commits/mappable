@@ -23,7 +23,7 @@ export interface GlyphOpts {
 
 /**
  * Знак лица на небе по данным: пол, род лица (народ, род), величина, черта царя или царицы, звезда Мессии, призрак жены,
- * полый знак расчётной даты у звёзд величины 2–6, знак † слева от звезды у умершего младенцем. Масштаб, цвет и подложку задаёт тот,
+ * полый знак расчётной даты у звёзд величины 2–6 и у лица «время не установлено», знак † слева от звезды у умершего младенцем. Масштаб, цвет и подложку задаёт тот,
  * кто рисует.
  */
 export function personGlyph(
@@ -35,7 +35,8 @@ export function personGlyph(
 ): GlyphOpts {
   return {
     sex: p.sex, kind: p.kind, magnitude: p.magnitude, king: p.roles.includes('king') || p.roles.includes('queen'),
-    messiah: p.id === 'iisus', ghost, hollow: cls === 'calculated' && p.magnitude > 1, infant: infant && !ghost,
+    // полый знак: расчётная дата у звёзд величины 2–6; «время не установлено» — у всех величин (MAP-52)
+    messiah: p.id === 'iisus', ghost, hollow: (cls === 'calculated' && p.magnitude > 1) || cls === 'epochal', infant: infant && !ghost,
     scale: look.scale, color: look.color, halo: look.halo,
   };
 }

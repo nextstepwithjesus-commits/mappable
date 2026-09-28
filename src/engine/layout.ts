@@ -49,11 +49,14 @@ export interface LineStep {
  *  people — народ или род (kind people, clan): без следа, знак «рассеянное скопление»;
  *  infant — умер младенцем: без следа, знак †;
  *  list   — имя в скоплении списка без родства (BlockInfo.cluster): без следа, клетка сетки;
- *  ghost  — «призрак» жены в родной семье: без следа.
+ *  ghost  — «призрак» жены в родной семье: без следа;
+ *  epochal — «время не установлено» (ТЗ § 3.1; MAP-52): следа нет, вместо него — скобка через годы засвидетельствованной
+ *           деятельности или эпохи (ChronoRow.bLo…bHi; откуда она — PersonChrono.when); знак стоит в её середине (t0).
+ *           Скобка «по годам созвездия» (when.by = 'group') — не свидетельство: её не рисуют, только полый знак.
  */
-export type TrailKind = 'life' | 'people' | 'infant' | 'list' | 'ghost';
-/** Порядок кодов в atlas.json (узел, 10-е поле). */
-export const TRAIL_KINDS: TrailKind[] = ['life', 'people', 'infant', 'list', 'ghost'];
+export type TrailKind = 'life' | 'people' | 'infant' | 'list' | 'ghost' | 'epochal';
+/** Порядок кодов в atlas.json (узел, 10-е поле); новые коды — только в конец. */
+export const TRAIL_KINDS: TrailKind[] = ['life', 'people', 'infant', 'list', 'ghost', 'epochal'];
 
 export interface LayoutNode {
   id: string; // для призрака — `ghost:<id>`
@@ -68,6 +71,12 @@ export interface LayoutNode {
   layoutParent: string | null; // узел-родитель по раскладке
   satelliteOf: string | null; // для жены рядом с мужем
   trail: TrailKind;
+  /**
+   * Разрыв следа (MAP-51; решение владельца 24): год, где кончается правдоподобная часть сплошного следа
+   * (рождение + предел жизни эпохи; PersonChrono.brk). Дальше до t1 — «//» и пунктир; отвод к ребёнку, родившемуся
+   * после brk, — тоже со знаком разрыва. Только у следа life, если brk < t1.
+   */
+  brk?: number;
 }
 
 /** Список имён без родства (data/lists.json). */
@@ -376,9 +385,14 @@ export function clusterRows(n: number): number {
 /**
  * Место лица в полосе при раскладке: от рождения до смерти, иначе до последнего события (не короче 8 лет), иначе STUB лет —
  * запас под имя. Рисуемый след короче (п. 7); этим же промежутком меряется насыщенность времени (tools/build-data.ts),
- * чтобы честные следы не меняли масштаб.
+ * чтобы честные следы не меняли масштаб. У лица «время не установлено» (epochal) — вся скобка bLo…bHi и место под имя
+ * после знака в её середине (MAP-52).
  */
-export function packSpan(c: { b: number; d: number | null; lastAttested: number | null }): [number, number] {
+export function packSpan(c: { b: number; d: number | null; lastAttested: number | null; cls?: string; bLo?: number; bHi?: number; when?: { by: string } }): [number, number] {
+  // скобка «по годам созвездия» (when.by = 'group': 1 Пар 4–5, имена без родства и без эпохи) — не свидетельство,
+  // а всё время рода, до полутора тысяч лет: её не рисуют, место — только под знак и имя
+  if (c.cls === 'epochal' && c.when?.by === 'group') return [c.b, c.b + STUB];
+  if (c.cls === 'epochal' && c.bLo !== undefined && c.bHi !== undefined) return [Math.min(c.bLo, c.b), Math.max(c.bHi, c.b + STUB)];
   let end: number;
   if (c.d !== null) end = c.d;
   else if (c.lastAttested !== null) end = Math.max(c.lastAttested, c.b + 8);
@@ -401,18 +415,24 @@ export function computeLayout(
   const BEAM = opts.beam ?? 64;
   const ch = (id: string) => chrono.persons.get(id)!;
 
-  /** Место в полосе: след и запас под имя (не рисуется). */
+  /** Место в полосе: след и запас под имя (не рисуется); у лица «время не установлено» — скобка. */
   const span = (id: string): Iv => packSpan(ch(id));
   /**
    * Рисуемый след (п. 7): t1 — конец жизни, в которой данные уверены. Смерть только в допустимом интервале
    * (died.range: «в царствование Давида») — сплошной след до начала интервала или до последнего события,
    * дальше неуверенный конец до dHi рисует отрисовка по интервалу смерти (ChronoRow.dLo…dHi).
    */
-  const drawn = (id: string): { t1: number; trail: TrailKind } => {
+  const drawn = (id: string): { t1: number; trail: TrailKind; brk?: number } => {
+    const d = drawnTrail(id);
+    const brk = ch(id).brk;
+    return d.trail === 'life' && brk !== undefined && brk < d.t1 ? { ...d, brk } : d;
+  };
+  const drawnTrail = (id: string): { t1: number; trail: TrailKind } => {
     const c = ch(id);
     const p = g.persons.get(id)!;
     if (p.kind === 'people' || p.kind === 'clan') return { t1: c.b, trail: 'people' };
     if (c.infant) return { t1: c.b, trail: 'infant' };
+    if (c.cls === 'epochal') return { t1: c.b, trail: 'epochal' };
     const died = p.chrono?.died;
     const rangeOnly = !!died?.range && died.age === undefined && died.year === undefined;
     if (c.d !== null && !rangeOnly) return { t1: Math.max(c.b, c.d), trail: 'life' };
@@ -559,7 +579,8 @@ export function computeLayout(
     }
     return span(nid);
   };
-  const birth = (nid: string) => nodeSpan(nid)[0];
+  // год знака: рождение, у лица «время не установлено» — середина скобки (а не её начало, где начинается место в полосе)
+  const birth = (nid: string) => ch(nid.startsWith('ghost:') ? nid.slice(6) : nid).b;
   const isSat = (nid: string) => !nid.startsWith('ghost:') && satelliteOf.has(nid);
   for (const [p, kids] of kidsOf) {
     const order = primaryChildren(g, p);
@@ -666,11 +687,10 @@ export function computeLayout(
   const blocks: BlockInfo[] = [];
   const groupSide = new Map<string, number>(); // сторона, куда уже ставили этот род
   for (const id of spine) {
-    const iv = span(id);
     const dr = drawn(id);
     const n: LayoutNode = {
-      id, person: id, lane: corridorLane.get(id)!, t0: iv[0], t1: dr.t1, block: -1, ghost: false, spine: true,
-      parentLane: null, layoutParent: null, satelliteOf: null, trail: dr.trail,
+      id, person: id, lane: corridorLane.get(id)!, t0: ch(id).b, t1: dr.t1, block: -1, ghost: false, spine: true,
+      parentLane: null, layoutParent: null, satelliteOf: null, trail: dr.trail, ...(dr.brk !== undefined ? { brk: dr.brk } : {}),
     };
     nodes.push(n);
     byNode.set(id, n);
@@ -757,8 +777,9 @@ export function computeLayout(
       const person = ghost ? nid.slice(6) : nid;
       const dr = ghost ? { t1: iv[0], trail: 'ghost' as const } : drawn(nid);
       const n: LayoutNode = {
-        id: nid, person, lane, t0: iv[0], t1: dr.t1, block: blockId, ghost, spine: false,
+        id: nid, person, lane, t0: ghost ? iv[0] : ch(nid).b, t1: dr.t1, block: blockId, ghost, spine: false,
         parentLane, layoutParent: lp, satelliteOf: !ghost && satelliteOf.has(nid) ? satelliteOf.get(nid)! : null, trail: dr.trail,
+        ...('brk' in dr && dr.brk !== undefined ? { brk: dr.brk } : {}),
       };
       nodes.push(n);
       byNode.set(nid, n);
@@ -947,8 +968,9 @@ export function atlasCoord(t: number, lane: number): string {
 // Вершины контура — (год, полоса); при другом масштабе времени отрисовка переводит их тем же timeToX: монотонное
 // преобразование не выводит звёзды из области.
 //
-// Место для названия (slots) — самые длинные пустые участки внутри области высотой в 1, 2 и 3 полосы: ни звезды, ни следа,
-// ни места под имя звезды. Если название не помещается ни в один участок, его не рисуют (MAP-08).
+// Область — звёзды и первые CORE_YEARS лет следа (не весь след: иначе контур обводит длинные жизни «сосисками», MAP-58).
+// Место для названия (slots) — пустые участки внутри области высотой в 2, 3 и 1 полосу, по нескольку на высоту: ни звезды,
+// ни следа, ни места под имя звезды. Если название не помещается ни в один участок в окне, его не рисуют (MAP-08).
 
 /** Контур созвездия: одна связная часть. Годы — астрономические, полосы — как у узлов. */
 export interface Outline {
@@ -968,6 +990,11 @@ export interface Outline {
 
 /** Лиц в связной части, меньше — контур не строится. */
 export const OUTLINE_MIN = 5;
+/** Сколько лет следа от рождения входит в область созвездия: дальше след — линия поверх неба (MAP-58). */
+const CORE_YEARS = 30;
+/** Мест под название на каждую высоту (2, 3, 1 полоса) и наименьшая длина места, клеток. */
+const SLOTS_PER_H = 8;
+const SLOT_MIN = 4;
 /** Ширина клетки растра, мировых единиц (≈ 2–4 px на масштабе эпохи). */
 const OUTLINE_CX = 100;
 /** Клеток растра на полосу. */
@@ -990,12 +1017,18 @@ export function computeOutlines(
   parents: Record<string, string> = {},
 ): Outline[] {
   // отпечатки узлов в мировых единицах
-  interface Foot { x0: number; x1: number; lane: number; group: string | null }
-  const foots: Foot[] = layout.nodes.map((n) => ({ x0: toX(n.t0), x1: Math.max(toX(n.t1), toX(n.t0)), lane: n.lane, group: regionGroup(g, n, layout.blocks) }));
+  // core — сколько следа входит в область: звезда и первые CORE_YEARS лет жизни; дальше след — линия, а не область
+  // (MAP-58: длинные следы давали контурам «сосиски»)
+  interface Foot { x0: number; x1: number; core: number; lane: number; group: string | null }
+  const foots: Foot[] = layout.nodes.map((n) => {
+    const x0 = toX(n.t0);
+    const x1 = Math.max(toX(n.t1), x0);
+    return { x0, x1, core: Math.min(x1, Math.max(x0, toX(n.t0 + CORE_YEARS))), lane: n.lane, group: regionGroup(g, n, layout.blocks) };
+  });
   // скопления — прямоугольником целиком (подпись и сетка)
   for (const b of layout.blocks) {
     if (!b.cluster) continue;
-    for (let l = b.laneMin; l <= b.laneMax; l++) foots.push({ x0: toX(b.cluster.t0), x1: toX(b.cluster.t1), lane: l, group: null });
+    for (let l = b.laneMin; l <= b.laneMax; l++) foots.push({ x0: toX(b.cluster.t0), x1: toX(b.cluster.t1), core: toX(b.cluster.t1), lane: l, group: null });
   }
   // область колена включает его дома; у дома — своя, вложенная
   const byGroup = new Map<string, Foot[]>();
@@ -1023,7 +1056,7 @@ export function computeOutlines(
     let xMin = Infinity, xMax = -Infinity, lMin = Infinity, lMax = -Infinity;
     for (const f of own) {
       xMin = Math.min(xMin, f.x0 - PAD_L);
-      xMax = Math.max(xMax, f.x1 + PAD_R);
+      xMax = Math.max(xMax, f.core + PAD_R);
       lMin = Math.min(lMin, f.lane);
       lMax = Math.max(lMax, f.lane);
     }
@@ -1044,8 +1077,9 @@ export function computeOutlines(
     const ownCore = new Uint8Array(W * H);
     const foreign = new Uint8Array(W * H);
     const busy = new Uint8Array(W * H); // для мест под название: все звёзды, следы и имена
-    for (const f of own) mark(ownCore, f.x0 - PAD_L, f.x1 + PAD_R, f.lane - 0.5, f.lane + 0.5);
+    for (const f of own) mark(ownCore, f.x0 - PAD_L, f.core + PAD_R, f.lane - 0.5, f.lane + 0.5);
     const inBox = (f: Foot) => f.x1 >= (gx0 - 1) * OUTLINE_CX && f.x0 <= (gx1 + 1) * OUTLINE_CX && f.lane >= gl0 - 1 && f.lane <= gl0 + H / OUTLINE_RY + 1;
+    // свои следы (и хвосты за core) — «занятое» для мест под название, как и прежде
     for (const f of foots) {
       if (!inBox(f)) continue;
       if (!belongs(f, group)) mark(foreign, f.x0 - 60, f.x1 + 120, f.lane - 0.5, f.lane + 0.5);
@@ -1102,11 +1136,14 @@ export function computeOutlines(
         const lane = gl0 + (p[1] + 0.5) / OUTLINE_RY;
         return [Math.round(t * 10) / 10, Math.round(lane * 20) / 20];
       };
-      // места под название: пустые участки внутри части высотой 1, 2 и 3 полосы
+      // места под название: пустые участки внутри части высотой 2, 3 и 1 полоса — по нескольку на высоту, не
+      // перекрываясь, самые длинные первыми: на масштабе эпохи в окне оказывается хотя бы одно, а на широком — несколько,
+      // и название повторяется по области (MAP-58; ТЗ § 3.1)
       const slots: Outline['slots'] = [];
-      for (const h of [1, 2, 3]) {
+      const took: { j0: number; j1: number; i0: number; i1: number }[] = [];
+      for (const h of [2, 3, 1]) {
         const rowsN = h * OUTLINE_RY;
-        let best: { j: number; i0: number; i1: number } | null = null;
+        const runs: { j: number; i0: number; i1: number }[] = [];
         for (let j = 0; j + rowsN <= H; j++) {
           let run = 0;
           for (let i = 0; i <= W; i++) {
@@ -1117,15 +1154,22 @@ export function computeOutlines(
             }
             if (free) run++;
             else {
-              if (run > 0 && (!best || run > best.i1 - best.i0 + 1)) best = { j, i0: i - run, i1: i - 1 };
+              if (run >= SLOT_MIN) runs.push({ j, i0: i - run, i1: i - 1 });
               run = 0;
             }
           }
         }
-        if (best && best.i1 - best.i0 + 1 >= 4) {
-          const t0 = toT((best.i0 + gx0) * OUTLINE_CX);
-          const t1 = toT((best.i1 + 1 + gx0) * OUTLINE_CX);
-          slots.push({ lane: Math.round((gl0 + (best.j + rowsN / 2) / OUTLINE_RY) * 20) / 20, h, t0: Math.round(t0 * 10) / 10, t1: Math.round(t1 * 10) / 10 });
+        runs.sort((a, b) => b.i1 - b.i0 - (a.i1 - a.i0) || a.j - b.j || a.i0 - b.i0);
+        let k = 0;
+        for (const r of runs) {
+          if (k >= SLOTS_PER_H) break;
+          const j1 = r.j + rowsN - 1;
+          if (took.some((q) => r.i0 <= q.i1 && q.i0 <= r.i1 && r.j <= q.j1 && q.j0 <= j1)) continue;
+          took.push({ j0: r.j, j1, i0: r.i0, i1: r.i1 });
+          const t0 = toT((r.i0 + gx0) * OUTLINE_CX);
+          const t1 = toT((r.i1 + 1 + gx0) * OUTLINE_CX);
+          slots.push({ lane: Math.round((gl0 + (r.j + rowsN / 2) / OUTLINE_RY) * 20) / 20, h, t0: Math.round(t0 * 10) / 10, t1: Math.round(t1 * 10) / 10 });
+          k++;
         }
       }
       out.push({ group, ...(parents[group] ? { parent: parents[group] } : {}), size: sizes[c], rings: rings.map((r) => r.map(toWorld)), slots });

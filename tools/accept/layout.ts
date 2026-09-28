@@ -262,7 +262,10 @@ export const layout: Scenario[] = [
       const lanesNow = await allLanes(p);
       if (lanesNow) return fail(`«Всё небо»: ${lanesNow}`);
       const k = (await view(p)).kx;
-      await p.locator('.skyctl button[aria-label="Отдалить"]').click();
+      // у предела «−» выключена (aria-disabled, IX-62): нажатие всё равно не отдаляет
+      const out = p.locator('.skyctl button[aria-label="Отдалить"]');
+      if ((await out.getAttribute('aria-disabled')) !== 'true') return fail('на «всём небе» «−» не выключена');
+      await out.click({ force: true });
       await p.waitForTimeout(400);
       if (Math.abs((await view(p)).kx / k - 1) > 1e-3) return fail('«−» отдалил дальше «всего неба»');
       for (const id of ['iisus', 'adam']) {
@@ -401,7 +404,7 @@ export const layout: Scenario[] = [
   },
   {
     n: 43,
-    title: 'C5: телефон в альбомной ориентации (844 × 390) — вступление можно закрыть; о жестах сказано',
+    title: 'C5, MOB-07: телефон в альбомной ориентации (844 × 390) — вступление одной строкой, «Свернуть» 44 px; о касаниях сказано',
     view: { width: 844, height: 390, touch: true },
     run: async (p) => {
       await p.evaluate(() => localStorage.setItem('toledot:cartouche', 'open'));
@@ -409,15 +412,19 @@ export const layout: Scenario[] = [
       await p.waitForTimeout(1800);
       const cart = p.locator('.cartouche');
       if (!(await cart.count())) return fail('вступления нет');
-      const close = cart.locator('.close');
+      // небо ниже 520 px (MOB-07): вступление — одна строка «Толедот, коснитесь звезды… — Как читать карту — Свернуть»,
+      // небо над ней видно; «Свернуть» — цель 44 px
+      const cb = (await cart.boundingBox())!;
+      if (cb.height > 60) return fail(`вступление не одной строкой: ${cb.height} px`);
+      const close = cart.locator('button', { hasText: 'Свернуть' });
       const b = await close.boundingBox();
       if (!b || b.y < 0 || b.y + b.height > 390) return fail(`«×» вне экрана: ${JSON.stringify(b)}`);
-      if (b.width < 44 || b.height < 44) return fail(`«×» ${b.width} × ${b.height}`);
+      if (b.width < 44 || b.height < 44) return fail(`«Свернуть» ${b.width} × ${b.height}`);
       const touchLine = cart.locator('.for-touch');
       if (!(await touchLine.isVisible())) return fail('на сенсорном экране нет строки о касаниях');
       await close.tap();
       await p.waitForTimeout(300);
-      return (await cart.count()) ? fail('«×» не свернул вступление') : pass();
+      return (await cart.count()) ? fail('«Свернуть» не свернул вступление') : pass();
     },
   },
   {
@@ -438,12 +445,15 @@ export const layout: Scenario[] = [
       await find(p, 'Павел');
       const flashes = (await p.evaluate('window.__loading')) as number;
       if (flashes) return fail(`«Загрузка карточки…» мелькнула ${flashes} раз`);
-      // «×» карточки — только выбор; панель остаётся
+      // «×» карточки — только карточка; панель остаётся. «×» закрывает карточку, как вкладку (этап 7, решение 18):
+      // открывается прежняя из стопки; после последней выбор снят
       await openPanel(p, 'Указатель');
-      await p.locator('.folio .close').first().click();
-      await p.waitForTimeout(400);
+      for (let i = 0; i < 6 && hashId(p); i++) {
+        await p.locator('.folio .close').first().click();
+        await p.waitForTimeout(500);
+        if ((await sheetTitle(p)) !== 'Указатель') return fail('«×» карточки закрыл и панель');
+      }
       if (hashId(p)) return fail('«×» не снял выбор');
-      if ((await sheetTitle(p)) !== 'Указатель') return fail('«×» карточки закрыл и панель');
       // прокрутка панели
       await p.locator('.sheet').evaluate((e) => (e.scrollTop = 900));
       await p.waitForTimeout(100);

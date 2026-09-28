@@ -9,9 +9,18 @@ import { byId, graph, groupById, persons, loadedChrono, loadedCard } from '../..
 import type { ChronoRow } from '../../data/atlas.ts';
 import type { Epoch, Sex } from '../../data/types.ts';
 import { P, ROLE_NAMES } from '../common.tsx';
-import { nameCase } from '../text/ru.ts';
+import { nameCase, realmInstrumental, yearsGen } from '../text/ru.ts';
 import { typo } from '../text/typo.ts';
 import { formatYear, formatSpan, yearsWord, shownYears, shownBirthRange, toAstro, type LifeDates } from '../../engine/years.ts';
+
+/** Перекрёстная ссылка «см. § 8» — команда: переходит к разделу (CARD-31). */
+export function SeeSec({ n }: { n: number }) {
+  return (
+    <button type="button" class="see" onClick={() => document.getElementById(`sec-${n}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' })}>
+      см.{' '}§{' '}{n}
+    </button>
+  );
+}
 
 // ---------- годы ----------
 
@@ -55,10 +64,43 @@ export function birthLine(c: LifeDates, range?: [number, number]): string {
 export function deathLine(b: number, d: number, cls: string, bLo = b, bHi = b): string {
   const y = shownYears({ b, bLo, bHi, d, cls: cls as LifeDates['cls'] });
   if (!y || y.d === null) return '';
-  // «умер младенец» (2 Цар 12:18): возраст меньше года — словом, а не «в возрасте 0 лет»
+  // «умер младенец» (2 Цар 12:18): возраст меньше года — словом, а не «в возрасте 0 лет»;
+  // после «в возрасте» — родительный падеж: «34 лет», «21 года» (CARD-50)
   const age = Math.round(d - b);
-  return `${formatYear(y.d, { approx: y.approx })}, ${age < 1 ? 'младенцем' : `в возрасте ${yearsWord(age)}`}`;
+  return `${formatYear(y.d, { approx: y.approx })}, ${age < 1 ? 'младенцем' : `в возрасте ${yearsGen(age)}`}`;
 }
+
+// ---------- царствование: § 16 карточки и «Сквозной раздел» говорят одними словами (CARD-51) ----------
+
+/** Царствование из данных: и из тома карточки (со стихами), и из индекса. */
+export type ReignLike = { over: string; start: number; end: number; years?: number | null; ageAtStart?: number; note?: string; refs?: string[] };
+
+const TEXT_NOTE = /^по тексту\s*—\s*/;
+/** Пояснение «по тексту — семь лет и шесть месяцев» точнее круглого числа лет и заменяет его. */
+export const reignNoteIsText = (r: ReignLike) => !!r.note && TEXT_NOTE.test(r.note);
+
+/** Срок царствования по тексту: «семь лет и шесть месяцев» (из пояснения) или «33 года»; null — текст срока не даёт. */
+export function reignLength(r: ReignLike): string | null {
+  if (reignNoteIsText(r)) return r.note!.replace(TEXT_NOTE, '');
+  return r.years ? yearsWord(r.years) : null;
+}
+
+/** Годы царствования по реконструкции (расч.): «1010–1003 гг. до Р. Х.»; годы в данных — исторические. */
+export function reignSpan(r: ReignLike): string {
+  return r.start === r.end ? formatYear(toAstro(r.start)) : formatSpan(toAstro(r.start), toAstro(r.end));
+}
+
+/**
+ * Строка царствования для перечня: «семь лет и шесть месяцев над Иудеей, в Хевроне»; «33 года над всем Израилем».
+ * Без срока — «над Иудеей»; царство не склоняется — «царство — …» (имя не ставится в падеж без склонения).
+ */
+export function reignOverLine(r: ReignLike): string {
+  const len = reignLength(r);
+  const ins = realmInstrumental(r.over);
+  const where = ins ? `над ${ins}` : `царство — ${r.over}`;
+  return len ? `${len} ${where}` : capFirstRu(where);
+}
+const capFirstRu = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 // ---------- имена в косвенных падежах ----------
 

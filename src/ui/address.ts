@@ -5,12 +5,14 @@
  * масштаб времени, модель хронологии, «только линии Мессии» и ярусы эпох. Опубликованная версия получает извне только
  * «простой» якорь из букв, цифр и «. _ ~ -», поэтому поля разделены «~», у каждого — буква-ключ:
  *
- *   #/david~y-1010~w240~l2.5~h1.5~pepochs~s0~mmt-long~o1~e1
+ *   #/david~y-1010~w240~l2.5~h1.5~pepochs~s0~mmt-long~o1~e1~k1~ndavid.iessey.ovid
  *
  *   y — год середины окна (исторический: −1010 = 1010 г. до Р. Х.), w — ширина окна в годах, l — полоса середины,
  *   h — пропорция полос (J1: множитель к обычной высоте полосы; нет поля — пропорции по умолчанию),
  *   p — панель, a и b — первое и второе лицо пары, s — масштаб времени (0 истинный, 1 по насыщенности),
- *   m — модель хронологии, o1 — только линии Мессии, e1 — ярусы эпох.
+ *   m — модель хронологии, o1 — только линии Мессии, e1 — ярусы эпох,
+ *   k1 — небо показывает только рабочий набор (решение 34; IX-67), n — сам набор, если в нём не больше 12 лиц:
+ *   id через точку (длиннее — только режим, строка набора говорит об этом).
  *
  * Прежние адреса «#/david» и «#/moisey?v=…» работают: лицо выбирается, небо летит к нему.
  * Сдвиг неба и режимы пишутся через replaceState с задержкой, лицо, панель и пара — через pushState,
@@ -26,6 +28,7 @@ import { toAstro, toHist } from '../engine/years.ts';
 import { KX_MAX, KX_MIN, LANES_MAX, LANES_MIN } from '../render/camera.ts';
 import { skyRef, viewTick } from './common.tsx';
 import { reduced, setStartLanes } from './sky/view.ts';
+import { WORK_URL_MAX, skyMode, workSet, type WorkEntry } from './work.ts';
 
 export interface View {
   /** год середины окна, исторический */
@@ -51,6 +54,10 @@ export interface Address {
   tiers?: boolean;
   /** пропорция полос (J1): множитель к обычной высоте полосы */
   lanes?: number;
+  /** небо показывает только рабочий набор (решение 34) */
+  work?: boolean;
+  /** рабочий набор — если в нём не больше WORK_URL_MAX лиц */
+  set?: string[];
   /** в адресе есть поля вида: он описывает весь вид, а не только лицо */
   full: boolean;
 }
@@ -89,6 +96,11 @@ export function parseAddress(hash: string, has: (id: string) => boolean): Addres
     else if (k === 'o') a.only = val === '1';
     else if (k === 'e') a.tiers = val === '1';
     else if (k === 'h' && NUM.test(val) && Number(val) > 0) a.lanes = Math.max(LANES_MIN, Math.min(LANES_MAX, Number(val)));
+    else if (k === 'k') a.work = val === '1';
+    else if (k === 'n') {
+      const ids = [...new Set(val.split('.'))].filter((x) => ID.test(x) && has(x)).slice(0, WORK_URL_MAX);
+      if (ids.length) a.set = ids;
+    }
   }
   if (v.year !== undefined && v.width !== undefined && v.lane !== undefined && v.year !== 0) a.view = v as View;
   return a;
@@ -107,6 +119,8 @@ export function formatAddress(a: Omit<Address, 'route' | 'full' | 'bad'>): strin
   if (a.model) f.push(`m${a.model}`);
   if (a.only) f.push('o1');
   if (a.tiers) f.push('e1');
+  if (a.work) f.push('k1');
+  if (a.work && a.set?.length && a.set.length <= WORK_URL_MAX) f.push(`n${a.set.join('.')}`);
   return `#/${a.id ?? ''}${f.map((x) => `~${x}`).join('')}`;
 }
 
@@ -193,7 +207,21 @@ function snapshot(): Omit<Address, 'route' | 'full' | 'bad'> {
     only: onlyLines.peek(),
     tiers: epochMode.peek(),
     lanes: skyRef.current?.cam.lanes,
+    work: skyMode.peek() === 'work',
+    set: [...workSet.peek().keys()],
   };
+}
+
+/**
+ * Набор из адреса (решение 34): если он не тот, что в памяти браузера, — становится набором; лица, которые были в наборе
+ * и остались, сохраняют свою помету (откуда взяты).
+ */
+function applySet(ids: string[]) {
+  const cur = workSet.peek();
+  if (ids.length === cur.size && ids.every((id) => cur.has(id))) return;
+  const next = new Map<string, WorkEntry>();
+  for (const id of ids) next.set(id, cur.get(id) ?? { via: 'self', of: id });
+  workSet.value = next;
 }
 
 /** Режимы, модель, панель, пара и лицо из адреса; окно ставится отдельно, когда небо готово. */
@@ -204,6 +232,9 @@ function applyState(a: Address) {
     if (a.full) {
       onlyLines.value = !!a.only;
       epochMode.value = !!a.tiers;
+      // рабочий набор — раньше режима: небо сразу показывает набор ссылки
+      if (a.work && a.set) applySet(a.set);
+      skyMode.value = a.work ? 'work' : 'all';
     }
     // «назад» из панели закрывает её; в прежнем адресе без полей панель не трогается
     if (a.full || a.panel) panel.value = a.panel ?? null;
@@ -280,13 +311,18 @@ export function bindAddress(): () => void {
     clearTimeout(replaceTimer);
     write('push');
   });
-  // окно и режимы — та же запись, с задержкой 300 мс
+  // окно и режимы — та же запись, с задержкой 300 мс. Кадры неба идут и без движения камеры (ток света по ленте под
+  // указателем, отклик звезды): таймер переставляется, только когда вид правда изменился, иначе запись не наступала бы
+  let viewKey = '';
+  let setSeen = workSet.peek();
   const offReplace = effect(() => {
     void viewTick.value;
-    void lambda.value;
-    void modelId.value;
-    void onlyLines.value;
-    void epochMode.value;
+    const c = skyRef.current?.cam;
+    const key = [c?.x0, c?.kx, c?.laneTop, c?.lanes, c?.w, lambda.value, modelId.value, onlyLines.value, epochMode.value, skyMode.value].join(' ');
+    const set = workSet.value;
+    if (key === viewKey && set === setSeen) return;
+    viewKey = key;
+    setSeen = set;
     clearTimeout(replaceTimer);
     replaceTimer = window.setTimeout(() => write('replace'), 300);
   });

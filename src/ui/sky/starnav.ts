@@ -6,7 +6,7 @@
  */
 import { byId } from '../../data/atlas.ts';
 import { focused, selected } from '../../state.ts';
-import { detailFor, OVERVIEW_MAG, type Sky } from '../../render/sky.ts';
+import { detailOf, OVERVIEW_MAG, type Sky } from '../../render/sky.ts';
 import { skyRef } from '../common.tsx';
 import { keepInView, screenOf } from './view.ts';
 
@@ -92,7 +92,8 @@ export function starPoints(sky: Sky): (StarPoint & { mag: number; onScreen: bool
   const out: (StarPoint & { mag: number; onScreen: boolean })[] = [];
   if (!sky.model) return out;
   const cam = sky.cam;
-  const detail = detailFor(cam.ky);
+  // звёзды видны, когда подробна хотя бы одна ось (решение 25; render/sky.ts, detailOf)
+  const detail = detailOf(cam).stars;
   const clusters = clustersOf(sky);
   for (let i = 0; i < sky.nodes.length; i++) {
     const n = sky.nodes[i];

@@ -54,6 +54,15 @@ export function nameFont(m: number, coarse: boolean): string {
   return `${NAME_WEIGHT[mag(m)]} ${nameSize(m, coarse)}px ${FONT_SERIF}`;
 }
 
+/**
+ * Шрифт имени звезды с отличиями: italic — лицо «время не установлено» (MAP-52); light — погашенная выделением подпись
+ * без полужирного (MOB-41); size — ступень шкалы вместо кегля величины (подписи лиц линий в режиме «только линии»).
+ */
+export function nameFontWith(m: number, coarse: boolean, o: { italic?: boolean; light?: boolean; size?: number } = {}): string {
+  const size = o.size ? mapSize(o.size, coarse) : nameSize(m, coarse);
+  return `${o.italic ? 'italic ' : ''}${o.light ? 400 : NAME_WEIGHT[mag(m)]} ${size}px ${FONT_SERIF}`;
+}
+
 /** Шрифт сокращения роли после имени («ц.», «пр.»): курсив на ступень мельче имени. */
 export function siglaFont(m: number, coarse: boolean): string {
   const s = NAME_SIZE[mag(m)];

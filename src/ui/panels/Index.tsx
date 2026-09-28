@@ -63,7 +63,7 @@ export function IndexPanel() {
   const known = (id: string) => (byId.get(id)?.magnitude ?? 6) <= KNOWN_MAG;
   let lastLetter = '';
   return (
-    <Sheet wide title="Указатель" lead={`Все лица атласа (${num(persons.length)}) по алфавиту. Число — век от начала шкалы, буква — полоса на левой кромке карты.`}>
+    <Sheet wide title="Указатель" lead={`Все лица атласа (${num(persons.length)}) по алфавиту. Число — столбец неба (сто лет от начала шкалы), буква — строка неба на левой кромке.`}>
       <div class="letters">
         <Segmented label="Буква" options={[{ value: '', label: 'все' }, ...letters.map((l) => ({ value: l, label: l }))]} value={letter ?? ''} onChange={(v) => setLetter(v || null)} />
       </div>

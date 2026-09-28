@@ -21,8 +21,11 @@
 import { KX_MIN } from './camera.ts';
 import { starRadius, roleSigla } from './glyphs.ts';
 import { alpha } from './color.ts';
-import { CONSTELLATION_DIM, DIM, likelyAlpha } from './dim.ts';
-import { mapFont, mapSize, nameFont, nameSize, siglaFont, T_MAP_S, T_NOTE, T_UI_S } from './type.ts';
+import { CONSTELLATION_DIM, DIM, likelyAlpha, WORK_DIM } from './dim.ts';
+
+/** Иисус Христос: подпись — наивысшего приоритета после выбранного (MOB-53). */
+const MESSIAH = 'iisus';
+import { mapFont, mapSize, nameFontWith, nameSize, siglaFont, T_MAP_S, T_NOTE, T_UI_S } from './type.ts';
 import { byId, graph, groupById, lines } from '../data/atlas.ts';
 import { primaryChildren, siblings } from '../engine/graph.ts';
 import { refText } from '../engine/kinship.ts';
@@ -70,6 +73,32 @@ export function textBox(tx: number, ty: number, w: number, size: number): Rect {
 const LEADERS: [number, number][] = [[16, -14], [16, 14], [-16, -14], [-16, 14], [24, -22], [24, 22], [-24, -22], [-24, 22]];
 /** Дальние выноски — в режиме «В работе» (J4), где подписаны все лица набора: в тесном месте подпись уходит дальше. */
 const FAR_LEADERS: [number, number][] = [[40, 0], [-40, 0], [36, -34], [36, 34], [-36, -34], [-36, 34], [60, -18], [60, 18], [-60, -18], [-60, 18]];
+/** Отрезок от звезды (x, y) к (ax, ay), без первых skip px, не пересекает занятых подписями мест (шаг 3 px). */
+function segmentClear(pl: Placer, x: number, y: number, ax: number, ay: number, skip: number): boolean {
+  const d = Math.hypot(ax - x, ay - y);
+  for (let t = skip; t <= d; t += 3) {
+    const px = x + ((ax - x) * t) / d;
+    const py = y + ((ay - y) * t) / d;
+    if (pl.clash({ x: px - 0.5, y: py - 0.5, w: 1, h: 1 }, false)) return false;
+  }
+  return true;
+}
+/** Отрезок от (x, y) к (ax, ay) проходит через прямоугольник a (шаг 3 px). */
+function segmentCrosses(a: Rect, x: number, y: number, ax: number, ay: number): boolean {
+  const d = Math.hypot(ax - x, ay - y);
+  for (let t = 0; t <= d; t += 3) {
+    const px = x + ((ax - x) * t) / d;
+    const py = y + ((ay - y) * t) / d;
+    if (px >= a.x && px <= a.x + a.w && py >= a.y && py <= a.y + a.h) return true;
+  }
+  return false;
+}
+/** Выноски подальше (StarOpts.wide): до 100 px в сторону и 90 px вверх или вниз, ближние раньше. */
+const WIDE_LEADERS: [number, number][] = (() => {
+  const out: [number, number][] = [];
+  for (const dx of [16, 40, 70, 100]) for (const dy of [24, 36, 48, 60, 75, 90]) out.push([-dx, -dy], [-dx, dy], [dx, -dy], [dx, dy]);
+  return out.sort((a, b) => Math.hypot(...a) - Math.hypot(...b));
+})();
 function leaderSpot(dx: number, dy: number, x: number, y: number, w: number, size: number) {
   const ax = x + dx;
   const ay = y + dy;
@@ -124,6 +153,24 @@ export class Placer {
     }
     return false;
   }
+  /** Сколько звёзд закрывает r, с весом по яркости (7 − величина): для выбора места, где имя прячет меньше всего. */
+  cover(r: Rect): number {
+    const seen = new Set<Rect>();
+    let sum = 0;
+    for (const k of Placer.keys(r))
+      for (const o of this.soft.get(k) ?? [])
+        if (!seen.has(o) && cross(r, o)) {
+          seen.add(o);
+          sum += 7 - Math.min(6, o.m);
+        }
+    return sum;
+  }
+  /** Сколько занятых (жёстких) прямоугольников пересекает r — для выбора места с наименьшим числом пересечений. */
+  count(r: Rect): number {
+    const seen = new Set<Rect>();
+    for (const k of Placer.keys(r)) for (const o of this.hard.get(k) ?? []) if (!seen.has(o) && cross(r, o)) seen.add(o);
+    return seen.size;
+  }
 }
 
 // ---------- пороги подписей ----------
@@ -153,7 +200,8 @@ export class LabelCache {
   ensure(v: SkyContext) {
     const f = v.cam.fitK;
     // сжатие полос (J4, J5) меняет места звёзд по вертикали: пороги считаются по строкам экрана
-    const key = `${v.model.id}|${Math.round(v.lambda * 4)}|${v.cam.h}|${v.coarse}|${f ? `${f.kx.toPrecision(3)} ${f.ky.toPrecision(3)}` : ''}|${v.rowsKey}`;
+    // и пропорция полос (J1): высота строки меняет места подписей по вертикали
+    const key = `${v.model.id}|${Math.round(v.lambda * 4)}|${v.cam.h}|${v.coarse}|${f ? `${f.kx.toPrecision(3)} ${f.ky.toPrecision(3)}` : ''}|${v.rowsKey}|${v.cam.lanes.toFixed(3)}|${v.cam.focusLanes}`;
     if (key === this.key) return;
     this.key = key;
     const nodes = v.nodes;
@@ -165,11 +213,14 @@ export class LabelCache {
     const widths = new Float64Array(n);
     this.nameW = widths;
     this.siglaW = new Float64Array(n).fill(-1);
+    // место подписи в порогах — с «†» младенца (MAP-68); ширина имени — шрифтом узла (курсив у лица без времени)
+    const full = new Float64Array(n);
     for (let i = 0; i < n; i++) {
       const p = byId.get(nodes[i].person)!;
       if (nodes[i].ghost) continue;
-      ctx.font = nameFont(p.magnitude, v.coarse);
+      ctx.font = labelFontOf(v, i);
       widths[i] = ctx.measureText(p.name).width;
+      full[i] = widths[i] + (infantAt(v, i) ? ctx.measureText(DAGGER).width : 0);
     }
     const order = [...Array(n).keys()]
       .filter((i) => !nodes[i].ghost)
@@ -193,7 +244,7 @@ export class LabelCache {
         const kx = KX_MIN * Math.pow(2, lv / 2);
         const ky = v.cam.kyFor(kx);
         const r = starRadius(p.magnitude, zoomScaleFor(ky));
-        const b = spot(sd, v.X0[i] * kx, -v.rowOf(nodes[i].lane) * ky, r, widths[i], size, king).box;
+        const b = spot(sd, v.X0[i] * kx, -v.rowOf(nodes[i].lane) * ky, r, full[i], size, king).box;
         return [b.x, b.y, b.x + b.w, b.y + b.h];
       };
       const fits = (lv: number, b: number[]) => {
@@ -243,9 +294,10 @@ export const zoomScaleFor = (ky: number) => Math.max(0.7, Math.min(1.25, ky / 18
 
 /**
  * Что за подпись: имя звезды, название созвездия, пояснение на пустом небе, указатель у края, скопление (E2), меридиан
- * события (E7), «липкое» имя следа у левого края (E1), надписи рамки (линейка, служебная строка, кромки).
+ * события (E7), «липкое» имя следа у левого края (E1), надписи рамки (линейка, служебная строка, кромки), знак
+ * свёрнутого (J5), номер лица линии у бусины (mark; MAP-59).
  */
-export type LabelKind = 'star' | 'group' | 'note' | 'edge' | 'cluster' | 'event' | 'sticky' | 'frame' | 'fold';
+export type LabelKind = 'star' | 'group' | 'note' | 'edge' | 'cluster' | 'event' | 'sticky' | 'frame' | 'fold' | 'mark';
 
 /** Нарисованная подпись: прямоугольник в px холста, текст и лицо (у имени звезды и указателя). */
 export interface LabelBox extends Rect {
@@ -310,11 +362,11 @@ export function insideSky(v: SkyContext, b: Rect): boolean {
  * Первое свободное место из candidates: внутри открытого неба, не на резерве и не на занятом. Занимает его и пишет
  * в замер. Для подписей любых слоёв (пути родства, лент, призраков): так они проходят ту же проверку наложений.
  */
-export function claim(v: SkyContext, p: Pass, candidates: Rect[], kind: LabelKind, text: string, o: { id?: string; soft?: boolean } = {}): Rect | null {
+export function claim(v: SkyContext, p: Pass, candidates: Rect[], kind: LabelKind, text: string, o: { id?: string; soft?: boolean; coverFrom?: number } = {}): Rect | null {
   // названия, скопления и пояснения не ложатся на ленты линий Мессии: ленты — главное на небе
   const avoid = kind === 'group' || kind === 'cluster' || kind === 'note' || kind === 'event' ? p.ribbonBoxes : undefined;
   for (const b of candidates) {
-    if (!insideSky(v, b) || hits(b, p.reserve) || hits(b, avoid) || p.placer.clash(b, o.soft ?? true)) continue;
+    if (!insideSky(v, b) || hits(b, p.reserve) || hits(b, avoid) || p.placer.clash(b, o.soft ?? true, o.coverFrom)) continue;
     p.placer.add(b);
     v.ledger.add(kind, text, b, o.id);
     return b;
@@ -328,7 +380,7 @@ interface StarOpts {
   sides: Side[];
   color: string;
   alpha: number;
-  /** уточнение курсивом после имени (отметки поиска) */
+  /** уточнение курсивом после имени: отметки поиска — полностью, одноимённые в окне — кратко (MAP-66) */
   note?: string;
   /** сокращение роли после имени на крупном масштабе */
   sigla?: boolean;
@@ -342,6 +394,32 @@ interface StarOpts {
   force?: boolean;
   /** по какую сторону звезды можно ставить подпись: −1 — не ниже середины (лицо только линии Иосифа), 1 — не выше (Марии) */
   vertical?: -1 | 1;
+  /** погашенная выделением: без полужирного (MOB-41) */
+  light?: boolean;
+  /** кегль — ступень шкалы вместо кегля величины (лица линий в режиме «только линии», MAP-59) */
+  size?: number;
+  /** знак свёрнутых потомков «+N» сразу после подписи (UX-60, MAP-63): подчёркнут, как ссылка */
+  fold?: string;
+  /** звёзды этой величины и тусклее подпись может закрыть (по умолчанию — на две величины тусклее своей; 99 — никакие) */
+  cover?: number;
+  /** и выноски подальше — до ~100 px от звезды, ближние раньше (Иисус Христос на обзоре, MOB-53) */
+  wide?: boolean;
+  /**
+   * место, где имя закрывает меньше всего звёзд (с весом по яркости), не ложится на подписи и ленты и ближе к звезде —
+   * вместо первого подходящего по порядку сторон (Иисус Христос, MOB-53)
+   */
+  least?: boolean;
+  /** места, которые в режиме least лучше не занимать ни именем, ни выноской: подписи справа у звёзд величины 0–1 */
+  avoid?: Rect[];
+}
+
+/** Где встала подпись звезды: прямоугольник (тот же, что в замере), базовая линия, положение и знак «+N». */
+export interface LabelAt {
+  box: Rect;
+  tx: number;
+  ty: number;
+  side: Side | 'x';
+  fold?: Rect;
 }
 
 let lineSide: Map<string, -1 | 1> | null = null;
@@ -360,31 +438,55 @@ export function lineSideOf(id: string): -1 | 1 | undefined {
   return lineSide.get(id);
 }
 
+/** Знак перед именем умершего младенцем (MAP-68): кеглем подписи, с узким пробелом. */
+export const DAGGER = '†\u2009';
+/** Узел — умерший младенцем: у подписи — «†» (MAP-68). */
+export const infantAt = (v: SkyContext, i: number) => v.nodes[i].trail === 'infant' || !!v.model.chrono.get(v.nodes[i].person)?.infant;
+/** Узел — лицо «время не установлено»: подпись курсивом (MAP-52). */
+export const epochalAt = (v: SkyContext, i: number) => v.nodes[i].trail === 'epochal';
+/** Шрифт имени узла: курсив у лица без своего времени (тот же, по которому замеряются пороги). */
+export const labelFontOf = (v: SkyContext, i: number, o: { light?: boolean; size?: number } = {}) =>
+  nameFontWith(byId.get(v.nodes[i].person)!.magnitude, v.coarse, { italic: epochalAt(v, i), ...o });
+/** Отступ знака «+N» от подписи, px. */
+const FOLD_GAP = 5;
+
 /**
  * Подписать звезду узла i: первое свободное из положений sides, затем — выноска. Рисует имя с ореолом цвета неба,
- * уточнение и сокращение роли; занимает место, пишет замер и отмечает узел подписанным (p.labeled). Для подписей лиц
- * из других слоёв (лица линий, путь родства) — та же функция.
+ * уточнение, сокращение роли и знак «+N»; занимает место, пишет замер и отмечает узел подписанным (p.labeled). Для подписей
+ * лиц из других слоёв (лица линий, путь родства) — та же функция.
+ *
+ * Лицо линии Мессии сначала ищет место вне лент (MAP-56): имя на своей ленте не читается. Подпись справа от звезды
+ * гасит под собой свой след полосой цвета фона (MAP-56): между звездой, именем и сокращением роли след не читается дефисом.
  */
-export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): boolean {
-  if (p.labeled.has(i)) return true;
+export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): LabelAt | null {
+  if (p.labeled.has(i)) return null;
   const { ctx, cam, pal } = v;
   const n = v.nodes[i];
   const q = byId.get(n.person)!;
   const x = cam.sx(v.X0[i]);
   const y = cam.sy(n.lane);
   // звезда за краем окна не подписывается: для выбранных есть указатели у края (MOB-01)
-  if (x < v.letterW || x > cam.w || y < v.openTop || y > cam.vp.b) return false;
+  if (x < v.letterW || x > cam.w || y < v.openTop || y > cam.vp.b) return null;
   const cache = v.labelCache;
   const r = starRadius(q.magnitude, p.zoomScale);
   const king = q.roles.includes('king') || q.roles.includes('queen');
-  const nf = nameFont(q.magnitude, v.coarse);
-  let nameW = cache.nameW[i];
+  const epochal = epochalAt(v, i);
+  const plain = !o.light && !o.size;
+  const nf = labelFontOf(v, i, { light: o.light, size: o.size });
+  let nameW = plain ? cache.nameW[i] : 0;
   if (!(nameW > 0)) {
     ctx.font = nf;
     nameW = ctx.measureText(q.name).width;
   }
-  const size = nameSize(q.magnitude, v.coarse);
-  const note = o.note ? `, ${o.note}` : '';
+  // «†» младенца — кеглем подписи перед именем (MAP-68)
+  const infant = infantAt(v, i);
+  let dagW = 0;
+  if (infant) {
+    ctx.font = nf;
+    dagW = ctx.measureText(DAGGER).width;
+  }
+  const size = o.size ? mapSize(o.size, v.coarse) : nameSize(q.magnitude, v.coarse);
+  const note = o.note ?? '';
   const noteFont = mapFont(T_UI_S, { italic: true, coarse: v.coarse });
   let noteW = 0;
   if (note) {
@@ -400,20 +502,43 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): boole
     }
     sigW = cache.siglaW[i];
   }
+  const foldW = o.fold ? FOLD_GAP + foldMarkWidth(ctx, v.coarse, '', o.fold).cw : 0;
+  const textW = dagW + nameW + noteW;
   // на обзоре и в масштабе эпохи имя может закрыть звезду на две величины тусклее; на масштабе семьи — ни одной
-  const coverFrom = cam.ky < FAMILY_KY ? q.magnitude + 2 : 99;
-  // проходы: не на звёздах и подписях → не на подписях → (выбранное лицо) где угодно в открытом небе
-  type Mode = 'soft' | 'hard' | 'none';
-  const ok = (b: Rect, m: Mode) => insideSky(v, b) && !hits(b, p.reserve) && (m === 'none' || !p.placer.clash(b, m === 'soft', coverFrom));
+  const coverFrom = o.cover ?? (cam.ky < FAMILY_KY ? q.magnitude + 2 : 99);
+  // проходы: (лицо линии) не на лентах → не на звёздах и подписях → не на подписях → (выбранное лицо) где угодно
+  type Mode = 'clear' | 'soft' | 'hard' | 'none';
+  const offRibbon = p.offRibbon;
+  const ok = (b: Rect, m: Mode) =>
+    insideSky(v, b) && !hits(b, p.reserve) && (m === 'none' || !p.placer.clash(b, m === 'soft' || m === 'clear', coverFrom)) && (m !== 'clear' || offRibbon!(b));
   let at: { tx: number; ty: number; box: Rect; ax?: number; ay?: number; side: Side | 'x' } | null = null;
-  const passes: Mode[] = o.force ? ['soft', 'hard', 'none'] : o.overStars ? ['soft', 'hard'] : ['soft'];
+  const base: Mode[] = o.force ? ['soft', 'hard', 'none'] : o.overStars ? ['soft', 'hard'] : ['soft'];
+  const passes: Mode[] = offRibbon && p.spine.has(q.id) ? ['clear', ...base] : base;
   const vert = o.vertical ?? lineSideOf(q.id);
   const sides = vert === -1 ? o.sides.filter((x) => x !== 'b') : vert === 1 ? o.sides.filter((x) => x !== 't') : o.sides;
-  const all = o.far ? [...LEADERS, ...FAR_LEADERS] : LEADERS;
+  const all = [...LEADERS, ...(o.far ? FAR_LEADERS : []), ...(o.wide ? WIDE_LEADERS : [])];
   const leaders = vert ? all.filter(([, dy]) => Math.sign(dy) === vert || dy === 0) : all;
-  for (const soft of passes) {
+  if (o.least) {
+    let best = Infinity;
+    const cands: { tx: number; ty: number; box: Rect; ax?: number; ay?: number; side: Side | 'x'; far: number }[] = [
+      ...sides.map((sd) => ({ ...spot(sd, x, y, r, textW + (sd === 'r' ? sigW : 0) + foldW, size, king), side: sd, far: 0 })),
+      ...(o.leader ? leaders.map(([dx, dy]) => ({ ...leaderSpot(dx, dy, x, y, textW + foldW, size), side: 'x' as const, far: Math.hypot(dx, dy) })) : []),
+    ];
+    for (const c of cands) {
+      if (!ok(c.box, 'hard')) continue;
+      if (c.far > 52 && !segmentClear(p.placer, x, y, c.ax!, c.ay!, r + 2)) continue;
+      // звёзды под именем, лента под ним (MAP-56), длина выноски и места имён ярких звёзд под именем или выноской
+      let score = p.placer.cover(c.box) + (offRibbon && !offRibbon(c.box) ? 6 : 0) + c.far / 12;
+      for (const a of o.avoid ?? []) if (cross(c.box, a) || (c.side === 'x' && segmentCrosses(a, x, y, c.ax!, c.ay!))) score += 12;
+      if (score < best) {
+        best = score;
+        at = c;
+      }
+    }
+  }
+  for (const soft of o.least ? [] : passes) {
     for (const sd of sides) {
-      const c = spot(sd, x, y, r, nameW + noteW + (sd === 'r' ? sigW : 0), size, king);
+      const c = spot(sd, x, y, r, textW + (sd === 'r' ? sigW : 0) + foldW, size, king);
       if (ok(c.box, soft)) {
         at = { ...c, side: sd };
         break;
@@ -421,16 +546,26 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): boole
     }
     if (!at && o.leader)
       for (const [dx, dy] of leaders) {
-        const c = leaderSpot(dx, dy, x, y, nameW + noteW, size);
-        if (ok(c.box, soft)) {
+        const c = leaderSpot(dx, dy, x, y, textW + foldW, size);
+        // длинная выноска (wide) не пересекает чужие подписи: по ней читалось бы, чья это подпись
+        if (ok(c.box, soft) && (Math.abs(dx) <= 40 && Math.abs(dy) <= 34 ? true : segmentClear(p.placer, x, y, c.ax, c.ay, r + 2))) {
           at = { ...c, side: 'x' };
           break;
         }
       }
     if (at) break;
   }
-  if (!at) return false;
+  if (!at) return null;
   const { tx, ty } = at;
+  // свой след под подписью справа (у лица без своего времени — и слева: скобка идёт в обе стороны) гасится полосой
+  // цвета фона (MAP-56); у лиц линий — нет: под подписью могла бы оказаться лента. Только когда облака погасли
+  const trailed = n.trail === 'life' || epochal;
+  if (trailed && (at.side === 'r' || at.side === 'l') && !p.spine.has(q.id) && p.detail > 0.01 && p.starDetail >= 0.99 && p.s.layers.lifelines) {
+    const yt = Math.round(y) + 0.5;
+    const a = at.side === 'r' ? x + r + 1.5 : at.box.x;
+    const b = at.side === 'r' ? at.box.x + at.box.w : x - r - 1.5;
+    if (b > a) v.fillGround(a, b, yt - 2.5, 5);
+  }
   ctx.globalAlpha = o.alpha;
   if (at.side === 'x') {
     // выноска: от края звезды к углу подписи
@@ -447,26 +582,46 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): boole
   ctx.strokeStyle = pal.halo;
   ctx.lineWidth = 3;
   ctx.font = nf;
-  ctx.strokeText(q.name, tx, ty);
   ctx.fillStyle = o.color;
-  ctx.fillText(q.name, tx, ty);
+  if (infant) {
+    ctx.strokeText(DAGGER, tx, ty);
+    ctx.fillText(DAGGER, tx, ty);
+  }
+  ctx.strokeText(q.name, tx + dagW, ty);
+  ctx.fillText(q.name, tx + dagW, ty);
   if (note) {
     ctx.font = noteFont;
-    ctx.strokeText(note, tx + nameW, ty);
+    ctx.strokeText(note, tx + dagW + nameW, ty);
     ctx.fillStyle = pal.ink2;
-    ctx.fillText(note, tx + nameW, ty);
+    ctx.fillText(note, tx + dagW + nameW, ty);
   }
-  if (sig && at.side === 'r') {
+  let end = tx + textW;
+  // лицо линии, чья подпись справа легла на ленту: сокращение роли не пишется — между именем и ним читался бы след (MAP-56)
+  const onRibbon = p.spine.has(q.id) && !!offRibbon && !offRibbon(at.box);
+  if (sig && at.side === 'r' && !onRibbon) {
     ctx.font = siglaFont(q.magnitude, v.coarse);
-    ctx.strokeText(sig, tx + nameW + noteW + 4, ty);
+    ctx.strokeText(sig, end + 4, ty);
     ctx.fillStyle = pal.ink3;
-    ctx.fillText(sig, tx + nameW + noteW + 4, ty);
+    ctx.fillText(sig, end + 4, ty);
+    end += sigW;
+  }
+  let fold: Rect | undefined;
+  if (o.fold) {
+    ctx.globalAlpha = 1;
+    drawFoldMark(ctx, pal, v.coarse, end + FOLD_GAP, ty, '', o.fold);
+    fold = { x: end + FOLD_GAP - 2, y: at.box.y, w: foldW - FOLD_GAP + 4, h: at.box.h };
   }
   ctx.globalAlpha = 1;
   p.placer.add(at.box);
+  // длинная выноска занимает свой путь: следующие подписи её не перекрывают
+  if (at.side === 'x' && Math.hypot(at.ax! - x, at.ay! - y) > 52) {
+    const d = Math.hypot(at.ax! - x, at.ay! - y);
+    for (let t = r + 2; t < d; t += 4) p.placer.add({ x: x + ((at.ax! - x) * t) / d - 1, y: y + ((at.ay! - y) * t) / d - 1, w: 2, h: 2 });
+  }
   v.ledger.add('star', q.name, at.box, q.id);
   p.labeled.add(i);
-  return true;
+  if (note && p.shown) p.shown.noted.push(`${q.name}#${note}`);
+  return { box: at.box, tx, ty, side: at.side, fold };
 }
 
 /** Ближайшая семья лица: родители, супруги, дети, братья и сёстры (E1; MAP-21, UX-33). */
@@ -481,15 +636,79 @@ export function familyOf(id: string): string[] {
 }
 
 /**
+ * Краткое уточнение одноимённого (MAP-66; решение 29): не больше двух слов, из уточнения данных — часть с родством
+ * («сын Иоседека», «Мать Иисуса») или прозвище с прописной («Магдалина», «Искариот»), иначе первая часть; ссылки в скобках
+ * отбрасываются. Возвращается с разделителем: «, сын Иоседека», « Магдалина», « из Аримафеи».
+ */
+export function shortNote(disambig: string): string | null {
+  const parts = disambig
+    .replace(/\([^)]*\)/g, '')
+    .split(/[,;]/)
+    .map((x) => x.trim())
+    .filter(Boolean);
+  if (!parts.length) return null;
+  const KIN = /^(сын|дочь|мать|отец|жена|муж|брат|сестра|внук|внучка|племянник|родственница?)$/i;
+  const PREP = /^(и|в|во|из|от|до|на|с|со|при|над|под|к|по|у|за|или)$/i;
+  // оборот с предлогом («с горы Ефремовой») при обрезке до двух слов теряет смысл — такие части не берутся
+  const fits = (x: string) => x.split(/\s+/).length <= 2 || !PREP.test(x.split(/\s+/)[0]);
+  const ok = parts.filter(fits);
+  if (!ok.length) return null;
+  const pick = ok.find((x) => KIN.test(x.split(/\s+/)[0])) ?? ok.find((x) => /^[А-ЯЁ]/.test(x) && x.split(/\s+/).length === 1) ?? ok[0];
+  const words = pick.split(/\s+/).slice(0, 2);
+  // служебное слово в конце («мать Иоанна и» не бывает, но «из» после обрезки — бывает): отбросить
+  while (words.length > 1 && PREP.test(words[words.length - 1])) words.pop();
+  const text = words.join(' ');
+  if (!text) return null;
+  // прозвище одним словом с прописной и «из …», «от …» — без запятой: «Мария Магдалина», «Иосиф из Аримафеи»
+  const bare = (words.length === 1 && /^[А-ЯЁ]/.test(text) && !KIN.test(text)) || /^(из|от)$/i.test(words[0]);
+  return bare ? ` ${text}` : `, ${text}`;
+}
+
+/** Имена, которые в окне носят две звезды и больше (MAP-66): у их подписей — краткое уточнение. */
+export function namesakesInView(v: SkyContext, p: Pass): Set<string> {
+  const { cam } = v;
+  const count = new Map<string, number>();
+  for (const i of p.vis) {
+    const n = v.nodes[i];
+    if (n.ghost || !v.drawn(i) || p.starAlpha(i) <= 0.5) continue;
+    const x = cam.sx(v.X0[i]);
+    const y = cam.sy(n.lane);
+    if (x < v.letterW || x > cam.w || y < v.openTop || y > cam.vp.b) continue;
+    const name = byId.get(n.person)!.name;
+    count.set(name, (count.get(name) ?? 0) + 1);
+  }
+  return new Set([...count].filter(([, k]) => k >= 2).map(([name]) => name));
+}
+
+/**
+ * Подпись звезды с тем, что ей положено в этом кадре: краткое уточнение одноимённого (MAP-66), знак свёрнутых потомков
+ * «+N» (UX-60; его прямоугольник — в p.foldHits), у лица «время не установлено» — цвет --ink-2 (MAP-52). Не поместилось
+ * с уточнением — пробует без него.
+ */
+export function putLabel(v: SkyContext, p: Pass, i: number, o: StarOpts): LabelAt | null {
+  if (p.labeled.has(i)) return null;
+  const q = byId.get(v.nodes[i].person)!;
+  const fold = p.foldText?.get(q.id);
+  const color = epochalAt(v, i) && o.color === v.pal.ink && o.alpha < 1 ? v.pal.ink2 : o.color;
+  const note = o.note ?? (p.namesakes?.has(q.name) && q.disambig ? (shortNote(q.disambig) ?? undefined) : undefined);
+  let at = labelStar(v, p, i, { ...o, color, ...(note ? { note } : {}), ...(fold ? { fold } : {}) });
+  if (!at && note && !o.note) at = labelStar(v, p, i, { ...o, color, ...(fold ? { fold } : {}) });
+  if (at?.fold && p.foldHits) p.foldHits.push({ ...at.fold, kind: 'desc', id: q.id });
+  return at;
+}
+
+/**
  * Подписи звёзд — группами по старшинству; каждая следующая группа не ложится на уже занятое (D13, E1, E10; MAP-07):
- *  1) выбранное, второе, наведённое и лицо с фокусом;
+ *  1) выбранное, второе, наведённое и лицо с фокусом; Иисус Христос (MOB-53); лица со свёрнутыми потомками — с «+N»,
+ *     он вытесняет соседей (MAP-63, UX-60);
  *  2) отметки поиска — с уточнением; путь родства и супруги выбранного; семья выбранного — родители, супруги, дети,
  *     братья и сёстры (E1; MAP-21);
  *  3) обычные — по заранее вычисленным порогам масштаба, на масштабе семьи — все, кому хватает места;
  *  4) «липкие» имена следов, уходящих за левый край (E1; MAP-10);
  *  5) на меридиане — до восьми самых значимых живых сверх порогов.
  * Между группами 2 и 3 размещаются меридианы событий, скопления и названия созвездий (sky.ts, labelLayer).
- * Погашенные выделением подписи держат контраст к небу не ниже 3 : 1 (E12; MOB-41).
+ * У одноимённых в окне — краткое уточнение (MAP-66). Погашенные выделением подписи держат контраст не ниже 4,5 : 1
+ * к самому светлому фону (решение 31; MOB-41) и теряют полужирный.
  */
 export function drawStarLabels(v: SkyContext, p: Pass, between?: () => void) {
   const { cam, pal } = v;
@@ -500,44 +719,76 @@ export function drawStarLabels(v: SkyContext, p: Pass, between?: () => void) {
   cache.ensure(v);
   const idx = (id: string | null) => (id ? v.indexOf(id) : undefined);
   const shown = (i: number | undefined): i is number => i !== undefined && !v.nodes[i].ghost && v.drawn(i) && p.starAlpha(i) > 0.5;
+  /** Непрозрачность и начертание подписи по выделению: погашенная — не ниже 4,5 : 1 и без полужирного. */
+  const dimOf = (i: number): { alpha: number; light: boolean } => {
+    const q = byId.get(v.nodes[i].person)!;
+    const k = hl ? hl.get(q.id) : 'self';
+    const floor = q.magnitude <= 2 ? pal.dimInk : pal.dimInk2;
+    if (k === undefined) return { alpha: p.work ? Math.max(WORK_DIM, floor) : Math.max(DIM, floor), light: true };
+    return { alpha: k === 'likely' ? likelyAlpha(floor) : 1, light: false };
+  };
 
   // 1) обязательные: у правого края — слева от звезды; выбранное — первым и без проверки
   let first = true;
   for (const id of new Set([s.selected, s.second, s.hovered, s.focus])) {
     const i = idx(id);
     if (!shown(i)) continue;
-    labelStar(v, p, i, { sides: ['r', 'l', 't', 'b'], color: pal.ink, alpha: 1, sigla: true, leader: true, overStars: true, force: first });
+    putLabel(v, p, i, { sides: ['r', 'l', 't', 'b'], color: pal.ink, alpha: 1, sigla: true, leader: true, overStars: true, force: first });
     first = false;
+  }
+  // Иисус Христос — к Нему сходятся ленты: подписан на любом масштабе, где видна звезда (MOB-53). Сначала — место, где
+  // имя не закрывает ни одной звезды, в том числе с выноской подальше: на обзоре телефона слева от звезды — гуща царей
+  // Иудеи, имя поверх неё прятало бы их звёзды и перехватывало касание. Нет такого места — слева или с выноской поверх
+  // тусклых звёзд
+  const ij = idx(MESSIAH);
+  if (shown(ij)) {
+    const o = { sides: ['r', 'l', 't', 'b'] as Side[], color: pal.ink, alpha: dimOf(ij).alpha, sigla: true, leader: true };
+    // места имён звёзд величины 0–1 справа от них: имя Христа и его выноска их не занимают (Давид, Авраам на обзоре)
+    const avoid: Rect[] = [];
+    for (const i of p.vis) {
+      const q = byId.get(v.nodes[i].person)!;
+      if (i === ij || q.magnitude > 1 || !shown(i) || !(cache.nameW[i] > 0)) continue;
+      const x = cam.sx(v.X0[i]);
+      const y = cam.sy(v.nodes[i].lane);
+      if (x < v.letterW || x > cam.w || y < v.openTop || y > cam.vp.b) continue;
+      avoid.push(spot('r', x, y, starRadius(q.magnitude, p.zoomScale), cache.nameW[i], nameSize(q.magnitude, v.coarse)).box);
+    }
+    if (!putLabel(v, p, ij, { ...o, far: true, wide: true, least: true, avoid })) putLabel(v, p, ij, { ...o, overStars: true });
+  }
+  // свёрнутые потомки: «+N» у подписи лица — обязательная подпись (MAP-63, UX-60)
+  for (const id of p.foldText?.keys() ?? []) {
+    const i = idx(id);
+    if (!shown(i)) continue;
+    putLabel(v, p, i, { sides: SIDES, color: pal.ink, alpha: 1, sigla: true, leader: true, overStars: true });
   }
   // 2) отметки поиска — с уточнением (E10); путь родства и супруги выбранного; семья выбранного
   for (const id of s.pins) {
     const i = idx(id);
     if (!shown(i)) continue;
     const q = byId.get(id)!;
-    labelStar(v, p, i, { sides: SIDES, color: pal.ink, alpha: 1, note: q.disambig || undefined, leader: true, overStars: true });
+    putLabel(v, p, i, { sides: SIDES, color: pal.ink, alpha: 1, note: q.disambig ? `, ${q.disambig}` : undefined, leader: true, overStars: true });
   }
   if (hl)
     for (const [id, k] of hl) {
       if (k !== 'path') continue;
       const i = idx(id);
       if (!shown(i) || (lineOnly && !p.spine.has(id))) continue;
-      labelStar(v, p, i, { sides: SIDES, color: pal.ink, alpha: 1, sigla: true, leader: true, overStars: true });
+      putLabel(v, p, i, { sides: SIDES, color: pal.ink, alpha: 1, sigla: true, leader: true, overStars: true });
     }
   if (s.selected && !s.pins.size)
     for (const id of familyOf(s.selected)) {
       const i = idx(id);
       if (!shown(i) || (lineOnly && !p.spine.has(id))) continue;
-      labelStar(v, p, i, { sides: SIDES, color: pal.ink, alpha: 1, sigla: true, leader: true, overStars: true });
+      putLabel(v, p, i, { sides: SIDES, color: pal.ink, alpha: 1, sigla: true, leader: true, overStars: true });
     }
   // рабочий набор (J4): в режиме «В работе» подписаны все лица набора — по степени интереса, с выноской, если у звезды тесно;
-  // погашенные выделением — не прозрачнее, чем нужно для контраста 3 : 1
+  // погашенные выделением — не ниже 70 % (MAP-64) и 4,5 : 1 (решение 31)
   if (p.work) {
     const all = p.vis.filter((i) => !v.nodes[i].ghost && !p.labeled.has(i) && v.drawn(i)).sort((a, b) => cache.rank[a] - cache.rank[b]);
     for (const i of all) {
       const q = byId.get(v.nodes[i].person)!;
-      const k = hl ? hl.get(q.id) : 'self';
-      const a = k === undefined ? Math.max(DIM, q.magnitude <= 2 ? pal.dimInk : pal.dimInk2) : 1;
-      labelStar(v, p, i, { sides: SIDES, color: q.magnitude <= 2 ? pal.ink : pal.ink2, alpha: a, sigla: true, leader: true, far: true, overStars: true });
+      const d = dimOf(i);
+      putLabel(v, p, i, { sides: SIDES, color: q.magnitude <= 2 ? pal.ink : pal.ink2, alpha: d.alpha, light: d.light, sigla: true, leader: true, far: true, overStars: true });
     }
   }
   // 3) обычные — по порогам (на масштабе семьи — все); старшие подписи они не перекрывают. Звёзды величины 0–1 —
@@ -551,7 +802,8 @@ export function drawStarLabels(v: SkyContext, p: Pass, between?: () => void) {
     if (lineOnly && !p.spine.has(n.person)) continue;
     if (p.starAlpha(i) <= 0.5) continue;
     const need = cache.level[i] - (cache.shown[i] ? HYSTERESIS : 0);
-    if (!family && !(p.level >= need)) continue;
+    // звёзды величины 0 (Авраам, Иаков, Давид…) — кандидаты на любом масштабе: тесно у звезды — с выноской (MAP-06)
+    if (!family && !(p.level >= need) && byId.get(n.person)!.magnitude > 0) continue;
     cand.push(i);
   }
   cand.sort((a, b) => cache.rank[a] - cache.rank[b]);
@@ -567,15 +819,14 @@ export function drawStarLabels(v: SkyContext, p: Pass, between?: () => void) {
     const lit = Math.max(0, Math.min(1, s.intro * 7.5 - q.magnitude - 0.5));
     if (lit <= 0) continue;
     const bright = q.magnitude <= 2;
-    const color = bright ? pal.ink : pal.ink2;
-    const k = hl ? hl.get(q.id) : 'self';
-    // погашенная подпись — не прозрачнее, чем нужно для контраста 3 : 1
-    const floor = bright ? pal.dimInk : pal.dimInk2;
-    const a = k === undefined ? Math.max(DIM, floor) : k === 'likely' ? likelyAlpha(floor) : 1;
+    // лицо «время не установлено» — курсивом --ink-2 (MAP-52)
+    const color = bright && !epochalAt(v, i) ? pal.ink : pal.ink2;
+    // погашенная подпись — не ниже 4,5 : 1 к самому светлому фону и без полужирного (решение 31)
+    const d = dimOf(i);
     const pref = cache.level[i] <= p.level ? SIDES[cache.side[i * LEVELS + lv]] : 'r';
     const sides: Side[] = [pref, ...SIDES.filter((x) => x !== pref)];
     const leader = family || q.magnitude <= 1 || p.spine.has(q.id);
-    if (labelStar(v, p, i, { sides, color, alpha: a * lit, sigla: true, leader })) now[i] = 1;
+    if (putLabel(v, p, i, { sides, color, alpha: d.alpha * lit, light: d.light, sigla: true, leader })) now[i] = 1;
   }
   if (!hooked) between?.();
   cache.shown = now;
@@ -607,7 +858,7 @@ export function drawStarLabels(v: SkyContext, p: Pass, between?: () => void) {
       if (added >= MERIDIAN_EXTRA) break;
       const q = byId.get(v.nodes[i].person)!;
       const likely = hl.get(q.id) === 'likely';
-      if (labelStar(v, p, i, { sides: SIDES, color: pal.ink, alpha: likely ? likelyAlpha(pal.dimInk) : 1 })) added++;
+      if (putLabel(v, p, i, { sides: SIDES, color: pal.ink, alpha: likely ? likelyAlpha(pal.dimInk) : 1 })) added++;
     }
   }
 
@@ -688,15 +939,47 @@ export interface GroupNameSpot {
   box?: { x0: number; x1: number; y0: number; y1: number };
   /** отрезки по y, где контур пересекает левый край открытого неба: название «прилипает» к левому полю (E8) */
   edge?: [number, number][];
+  /** кольца контура в px холста (MAP-58): по ним ищется средняя линия видимой части области */
+  poly?: { x: Float64Array; y: Float64Array }[];
 }
+
+/** Отрезки по y внутри колец на вертикали x (чётно-нечётное правило), по возрастанию. */
+export function ringSpans(poly: { x: Float64Array; y: Float64Array }[], x: number): [number, number][] {
+  const ys: number[] = [];
+  for (const r of poly) {
+    const n = r.x.length;
+    for (let k = 0; k < n; k++) {
+      const x1 = r.x[k];
+      const x2 = r.x[(k + 1) % n];
+      if ((x1 - x) * (x2 - x) < 0) ys.push(r.y[k] + ((r.y[(k + 1) % n] - r.y[k]) * (x - x1)) / (x2 - x1));
+    }
+  }
+  ys.sort((a, b) => a - b);
+  const out: [number, number][] = [];
+  for (let k = 0; k + 1 < ys.length; k += 2) out.push([ys[k], ys[k + 1]]);
+  return out;
+}
+/** Общая часть отрезков двух списков. */
+function spanAnd(a: [number, number][], b: [number, number][]): [number, number][] {
+  const out: [number, number][] = [];
+  for (const [a0, a1] of a) for (const [b0, b1] of b) if (Math.min(a1, b1) > Math.max(a0, b0)) out.push([Math.max(a0, b0), Math.min(a1, b1)]);
+  return out;
+}
+/** Название созвездия на средней линии области может лечь на звёзды 4–6-й величины (точки), но не ярче. */
+export const GROUP_COVER_FROM = 4;
+/** Видимая область созвездия, у которой название обязательно (MAP-58): не меньше стольких px. */
+export const GROUP_AREA_MIN: [number, number] = [150, 60];
 
 /** Название созвездия прописными с разрядкой (единственное место, где прописные допустимы, — ТЗ § 5.6). */
 export const groupName = (group: string) => (groupById.get(group)?.name ?? group).toUpperCase();
 
+/** Название созвездия повторяется не чаще, чем через столько px (ТЗ § 3.1: «через каждые ~1 200 px»). */
+export const GROUP_REPEAT_PX = 1200;
 /**
- * Названия созвездий — прописными с разрядкой, в пустом месте внутри контура (E8; MAP-08, 41): середина места, если
- * название там помещается целиком, и не ложится на подписи, звёзды, органы неба; нет места — не рисуется. Каждое
- * созвездие — один раз на экран. Возвращает их прямоугольники.
+ * Названия созвездий — прописными с разрядкой, в пустом месте внутри контура (E8; MAP-08, 41, 58): середина места, если
+ * название там помещается целиком, и не ложится на подписи, звёзды, органы неба, следы и стволы скоб; место уходит за
+ * левый край — название «прилипает» к левому полю. Повторяется через ~1 200 px; нет места — не рисуется. Возвращает их
+ * прямоугольники.
  */
 export function drawGroupNames(v: SkyContext, p: Pass, spots: GroupNameSpot[]): (Rect & { group: string })[] {
   const { ctx, pal } = v;
@@ -705,13 +988,15 @@ export function drawGroupNames(v: SkyContext, p: Pass, spots: GroupNameSpot[]): 
   // у каждого прямоугольника — созвездие: по названию открывается меню «Свернуть созвездие» (J5; src/ui/sky/input.ts)
   const boxes: (Rect & { group: string })[] = [];
   const done = new Set<string>();
+  /** x начала названий созвездия в этом кадре: следующее — не ближе GROUP_REPEAT_PX */
+  const placed = new Map<string, number[]>();
   ctx.save();
   ctx.setLineDash([]);
   ctx.font = mapFont(T_MAP_S, { sans: true, weight: 500, coarse: v.coarse });
   ctx.letterSpacing = '0.22em';
   ctx.textBaseline = 'alphabetic';
-  // при выделении названия гаснут не ниже 0,75: остаются читаемыми (E12; MOB-41)
-  ctx.fillStyle = alpha(pal.ink3, hl ? CONSTELLATION_DIM : 0.95);
+  // при выделении названия гаснут не ниже 0,75 и не ниже 4,5 : 1 к самому светлому фону (E12; MOB-41; решение 31)
+  ctx.fillStyle = alpha(pal.ink3, hl ? Math.max(CONSTELLATION_DIM, pal.dimInk3) : 0.95);
   const L = v.letterW + 8;
   const R = v.cam.w - 8;
   // на обзоре следов нет (облака): название может выходить за пустое место — по средней линии области, лишь бы
@@ -723,10 +1008,11 @@ export function drawGroupNames(v: SkyContext, p: Pass, spots: GroupNameSpot[]): 
     return { x, y, box: { x: x - 2, y: y - ASC * fs - 2, w: tw + 4, h: (ASC + DESC) * fs + 4 } };
   };
   for (const o of [...spots].sort((a, b) => b.size - a.size)) {
-    if (done.has(o.group)) continue;
     const name = groupName(o.group);
     const tw = ctx.measureText(name).width;
     const cands: ReturnType<typeof at>[] = [];
+    // место, уходящее за левый край, — название «прилипает» к левому полю (MAP-58), как имена следов
+    const sticky: ReturnType<typeof at>[] = [];
     // на обзоре — по средней линии области (ТЗ § 3.1), если название не шире области больше чем на треть
     const bw = o.box ? Math.min(o.box.x1, R) - Math.max(o.box.x0, L) : 0;
     const fitsLow = low && !!o.box && tw <= bw * 1.35;
@@ -740,18 +1026,75 @@ export function drawGroupNames(v: SkyContext, p: Pass, spots: GroupNameSpot[]): 
       const a = Math.max(sl.x0, L);
       const b = Math.min(sl.x1, R);
       // место в целых полосах: строка может занять и по полполосы сверху и снизу — там следов нет (след — по середине полосы)
-      if (sl.h + v.cam.ky >= fs + 4 && b - a >= tw + 16) cands.push(at((a + b) / 2, sl.yc, tw));
+      const tall = sl.h + v.cam.ky >= fs + 4;
+      if (tall && sl.x0 < L && b - L >= tw + 12) sticky.push(at(L + 4 + tw / 2, sl.yc, tw));
+      if (tall && b - a >= tw + 16) cands.push(at((a + b) / 2, sl.yc, tw));
       else if (fitsLow && b > a) cands.push(at((a + b) / 2, sl.yc, tw));
     }
-    // созвездие уходит за левый край: название — у левого поля, по середине области на краю
+    // созвездие уходит за левый край: название — у левого поля, по середине области на краю (последним: там могут быть следы)
+    const edge: ReturnType<typeof at>[] = [];
     for (const [y0, y1] of [...(o.edge ?? [])].sort((a, b) => b[1] - b[0] - (a[1] - a[0])))
-      if (y1 - y0 >= fs + 6) cands.push(at(L + 4 + tw / 2, (y0 + y1) / 2, tw));
-    const got = claim(v, p, cands.map((c) => c.box), 'group', name);
-    if (!got) continue;
-    const c = cands.find((q) => q.box === got)!;
-    ctx.fillText(name, c.x, c.y);
-    boxes.push({ ...got, group: o.group });
-    done.add(o.group);
+      if (y1 - y0 >= fs + 6) edge.push(at(L + 4 + tw / 2, (y0 + y1) / 2, tw));
+    // название повторяется через ~1 200 px (ТЗ § 3.1). Сначала — пустые места (без линий), затем левое поле и средняя
+    // линия области; у них линии под названием гасятся цветом фона: ни следы, ни стволы скоб его не перечёркивают (MAP-08)
+    const xs = placed.get(o.group) ?? [];
+    const far = (x: number) => !xs.some((q) => Math.abs(q - x) < GROUP_REPEAT_PX);
+    const clean = [...sticky, ...cands.sort((a, b) => a.x - b.x)].filter((c) => !p.lines?.clash(c.box, false));
+    const put = (c: ReturnType<typeof at>, knock: boolean): boolean => {
+      if (!far(c.x)) return false;
+      const got = claim(v, p, [c.box], 'group', name, knock ? { coverFrom: GROUP_COVER_FROM } : {});
+      if (!got) return false;
+      if (knock) {
+        // следы и стволы скоб под названием гасятся цветом фона; тусклые звёзды возвращаются поверх, и название пишется
+        // с ореолом — звезда видна между буквами
+        v.fillGround(got.x, got.x + got.w, got.y, got.h);
+        v.restars(p, got);
+        ctx.strokeStyle = pal.halo;
+        ctx.lineWidth = 3;
+        ctx.lineJoin = 'round';
+        ctx.strokeText(name, c.x, c.y);
+      }
+      ctx.fillText(name, c.x, c.y);
+      boxes.push({ ...got, group: o.group });
+      xs.push(c.x);
+      done.add(o.group);
+      return true;
+    };
+    for (const c of clean) put(c, false);
+    for (const c of edge) put(c, true);
+    // средняя линия видимой части области (MAP-58): у области крупнее 150 × 60 px название обязательно; место —
+    // внутри контура, не на звёздах и подписях. Меньше линий под названием — лучше, при равенстве — левее (ближе
+    // к «липкому» месту). Места ищутся только там, куда название ещё можно поставить (не ближе 1 200 px к уже
+    // поставленному): место без линий берётся сразу, остальные — после просмотра всей области
+    if (!low && o.poly && o.box) {
+      const vx0 = Math.max(o.box.x0, L);
+      const vx1 = Math.min(o.box.x1, R);
+      const vy0 = Math.max(o.box.y0, v.openTop);
+      const vy1 = Math.min(o.box.y1, v.cam.vp.b);
+      if (vx1 - vx0 >= GROUP_AREA_MIN[0] && vy1 - vy0 >= GROUP_AREA_MIN[1] && vx1 - vx0 >= tw + 8) {
+        const hh = (ASC + DESC) * fs + 6;
+        const stepX = Math.max(32, (vx1 - vx0 - tw) / 24);
+        const rest: (ReturnType<typeof at> & { lines: number })[] = [];
+        for (let xc = vx0 + tw / 2 + 4; xc <= vx1 - tw / 2 - 4; xc += stepX) {
+          if (!far(at(xc, 0, tw).x)) continue;
+          const inner = spanAnd(spanAnd(ringSpans(o.poly, xc - tw / 2), ringSpans(o.poly, xc)), ringSpans(o.poly, xc + tw / 2))
+            .map(([a, b]) => [Math.max(a, v.openTop), Math.min(b, v.cam.vp.b)] as [number, number])
+            .filter(([a, b]) => b - a >= hh);
+          column: for (const [a, b] of inner)
+            for (let yc = a + hh / 2; yc <= b - hh / 2; yc += 6) {
+              const c = at(xc, yc, tw);
+              // подписи и звёзды ярче 4-й величины под названием недопустимы — такие места сразу отбрасываются
+              if (p.placer.clash(c.box, true, GROUP_COVER_FROM)) continue;
+              const lines = p.lines ? p.lines.count(c.box) : 0;
+              if (lines === 0 && put(c, true)) break column;
+              if (lines > 0) rest.push({ ...c, lines });
+            }
+        }
+        rest.sort((a, b) => a.lines - b.lines || a.x - b.x);
+        for (const c of rest) put(c, true);
+      }
+    }
+    placed.set(o.group, xs);
   }
   ctx.letterSpacing = '0px';
   ctx.restore();

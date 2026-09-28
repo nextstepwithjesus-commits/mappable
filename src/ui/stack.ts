@@ -40,15 +40,70 @@ if (hasWindow) effect(() => write('stack', { ids: cardStack.value, folded: cardF
 export function pushCard(id: string, stack = cardStack.peek()): string[] {
   return [id, ...stack.filter((x) => x !== id)].slice(0, STACK_MAX);
 }
-/** Убрать карточку из стопки; активная закрывается (выбор снимается). */
-export function dropCard(id: string) {
+
+/**
+ * Закрыть карточку id, как вкладку (решение 18; IX-52, UX-49): она уходит из стопки; если она активная, активной
+ * становится самая недавняя из оставшихся (next), а если других нет — карточка закрывается (next = null).
+ * Чистая функция: stack — стопка, active — выбранное лицо.
+ */
+export function afterClose(stack: readonly string[], active: string | null, id: string): { stack: string[]; next: string | null } {
+  const rest = stack.filter((x) => x !== id);
+  if (active !== id) return { stack: rest, next: active };
+  return { stack: rest, next: rest.find((x) => byId.has(x)) ?? null };
+}
+
+/**
+ * Закрыть карточку id. open — как сделать активной следующую (выбрать лицо и, если его нет на экране, перелететь
+ * к нему: src/ui/common.tsx, goTo); без open — просто выбрать. Возвращает лицо, чья карточка теперь активна.
+ */
+export function closeCard(id: string, open: (next: string) => void = (x) => (selected.value = x)): string | null {
+  const { stack, next } = afterClose(cardStack.peek(), selected.peek(), id);
+  const wasActive = selected.peek() === id;
   batch(() => {
-    cardStack.value = cardStack.peek().filter((x) => x !== id);
-    if (selected.peek() === id) {
-      cardFolded.value = false;
-      selected.value = null;
-    }
+    cardStack.value = stack;
+    if (!wasActive) return;
+    cardFolded.value = false;
+    if (next) open(next);
+    else selected.value = null;
   });
+  return wasActive ? next : selected.peek();
+}
+
+/** Закрыть все карточки (строка «Закрыть все» в списке стопки): стопка пуста, выбор снят. */
+export function closeAllCards() {
+  batch(() => {
+    cardStack.value = [];
+    cardFolded.value = false;
+    selected.value = null;
+  });
+}
+
+/** Прежнее имя: убрать карточку из стопки (строка списка, «×» активной). */
+export const dropCard = (id: string) => void closeCard(id);
+
+/**
+ * Строка стопки «Ещё открыты (N): …» (решение 18; CARD-52): N — сколько карточек кроме активной; имена — от недавних
+ * к старым. Глагол согласован с «карточка»: «Ещё открыта (1): Руфь», «Ещё открыты (3): …».
+ */
+export function stackSummaryHead(n: number): string {
+  return `Ещё ${n === 1 ? 'открыта' : 'открыты'} (${n}):`;
+}
+
+/**
+ * Уточнение для строки стопки (VIS-48, CARD-52): не обрезается посреди слова — целыми словами не длиннее max знаков
+ * с многоточием; первое слово длиннее max — уточнения нет (null).
+ */
+export function clipWords(s: string, max: number): string | null {
+  if (s.length <= max) return s;
+  const words = s.split(' ');
+  let out = '';
+  for (const w of words) {
+    const next = out ? `${out} ${w}` : w;
+    if (next.length + 1 > max) break;
+    out = next;
+  }
+  if (!out) return null;
+  return `${out.replace(/[,;:.\s—–-]+$/, '')}…`;
 }
 if (hasWindow) {
   let last = selected.peek();

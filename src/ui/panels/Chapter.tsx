@@ -255,7 +255,7 @@ export function ChapterPanel() {
     flyToIds(ids);
   };
   return (
-    <Sheet title="Чтение глав" lead="Родословные главы в Синодальном переводе. Имена, внесённые в атлас, — ссылки на карточки; лица главы подсвечены на небе.">
+    <Sheet title="Чтение глав" lead="Родословные главы Синодального перевода: имена — ссылки на карточки, лица главы подсвечены на небе.">
       <div class="toc" role="group" aria-label="Глава">
         {TOC.map((b) => (
           <span class="bk" key={b.code}>

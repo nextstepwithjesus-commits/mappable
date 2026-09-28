@@ -7,11 +7,32 @@ import { Search } from './Search.tsx';
 import { workSet } from '../work.ts';
 import { plural } from '../common.tsx';
 
-/** Подсказка команды «В работе»: сколько лиц в рабочем наборе. */
-const workTitle = () => {
-  const n = workSet.value.size;
-  return n ? `Рабочий набор: ${n}\u00a0${plural(n, 'лицо', 'лица', 'лиц')}` : 'Рабочий набор пуст';
+/** Надпись команды рабочего набора (UX-48; решение 26): «В работе: 46», пустой набор — «В работе». */
+export const workLabel = (n: number) => (n ? `В работе: ${n}` : 'В работе');
+
+/**
+ * Однострочные пояснения команд верхней строки (UX-21; решение 9) — подсказка при наведении и описание для диктора.
+ * Слова — из вводок самих панелей.
+ */
+export const HINTS: Record<Exclude<Panel, null>, string> = {
+  index: 'Все лица атласа по алфавиту, с атласными координатами',
+  work: 'Лица, с которыми вы работаете в этом сеансе; небо может показывать только их',
+  chapter: 'Родословные главы в Синодальном переводе: имена — ссылки на карточки',
+  synopsis: 'Родословия Иисуса Христа по Матфею и по Луке рядом, по лицам',
+  kinship: 'Кем одно лицо приходится другому: степень родства, путь по поколениям и стихи',
+  section: 'Один раздел карточки у группы лиц, например «Смерть и погребение» у царей Иудеи',
+  legend: 'Как читать карту: что значит каждый знак, линия и надпись на небе',
+  about: 'Источник, уровни достоверности, хронология и известные трудности текста',
+  epochs: 'Ярусы эпох, судей, царей и пророков над небом',
+  spread: 'Две карточки рядом',
+  view: 'Вид неба',
 };
+
+/** Подсказка команды: пояснение, число лиц набора, клавиша. */
+function hintOf(c: { id: Exclude<Panel, null>; key?: string }, n: number): string {
+  const count = c.id === 'work' ? (n ? ` (в наборе ${n}\u00a0${plural(n, 'лицо', 'лица', 'лиц')})` : ' (набор пуст)') : '';
+  return `${HINTS[c.id]}${count}${c.key ? `. Клавиша ${c.key}` : ''}`;
+}
 
 /** Панели атласа — средняя группа верхней строки (C3; VIS-20). «Эпохи» — флажок и команда органов неба (C6). */
 const PANELS: { id: Exclude<Panel, null>; label: string }[] = [
@@ -63,11 +84,11 @@ const togglePanel = (id: Exclude<Panel, null>) => (panel.value = panel.value ===
  * Пункты меню «Разделы» телефона (H4; MOB-03, MOB-04): все панели, справка и тема — строками 48 px.
  * Тема — флажок «Дневная карта»: на телефоне в строке нет места для переключателя «Ночь | День».
  */
-export function phoneMenuItems(open: Panel, day: boolean, select: (id: Exclude<Panel, null>) => void, toggleTheme: () => void) {
+export function phoneMenuItems(open: Panel, day: boolean, select: (id: Exclude<Panel, null>) => void, toggleTheme: () => void, workN = 0) {
   return [
     ...[...PANELS, ...HELP].map((c) => ({
       key: c.id,
-      label: c.label,
+      label: c.id === 'work' ? workLabel(workN) : c.label,
       checked: open === c.id,
       sep: c.id === HELP[0].id,
       onSelect: () => select(c.id),
@@ -131,21 +152,30 @@ export function TopBar() {
             class="more sections"
             label="Разделы"
             title="Панели атласа, справка и тема"
-            items={phoneMenuItems(panel.value, theme.value === 'day', togglePanel, () => (theme.value = theme.value === 'day' ? 'night' : 'day'))}
+            items={phoneMenuItems(panel.value, theme.value === 'day', togglePanel, () => (theme.value = theme.value === 'day' ? 'night' : 'day'), workSet.value.size)}
           />
         </nav>
       </header>
     );
+  const n = workSet.value.size;
+  const label = (c: { id: Exclude<Panel, null>; label: string }) => (c.id === 'work' ? workLabel(n) : c.label);
   const button = (c: { id: Exclude<Panel, null>; label: string; key?: string }) => (
-    <button key={c.id} aria-pressed={panel.value === c.id} title={c.id === 'work' ? workTitle() : c.key ? `${c.label} (${c.key})` : undefined} aria-keyshortcuts={c.key} onClick={() => togglePanel(c.id)}>
-      {c.label}
+    <button
+      key={c.id}
+      aria-pressed={panel.value === c.id}
+      title={hintOf(c, n)}
+      aria-description={hintOf(c, n)}
+      aria-keyshortcuts={c.key}
+      onClick={() => togglePanel(c.id)}
+    >
+      {label(c)}
     </button>
   );
   const moreItems = [...PANELS, ...HELP]
     .filter((c) => hidden.has(c.id))
     .map((c, i, all) => ({
       key: c.id,
-      label: c.label,
+      label: label(c),
       checked: panel.value === c.id,
       // справка отделена от панелей чертой, как в самой строке
       sep: i > 0 && HELP.some((h) => h.id === c.id) && !HELP.some((h) => h.id === all[i - 1].id),
@@ -168,7 +198,7 @@ export function TopBar() {
       <div class="probe" ref={probe} aria-hidden="true">
         {[...PANELS, ...HELP].map((c) => (
           <span key={c.id} class="cmd" data-id={c.id}>
-            {c.label}
+            {label(c)}
           </span>
         ))}
         <span class="cmd more-probe" data-id="more">

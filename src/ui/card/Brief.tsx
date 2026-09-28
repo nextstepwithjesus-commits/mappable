@@ -14,7 +14,8 @@ import type { ComponentChildren } from 'preact';
 import { byId, graph, lineMembership } from '../../data/atlas.ts';
 import type { Card } from '../../data/types.ts';
 import { P, Refs, VerseInsert } from '../common.tsx';
-import { bySex, capFirst, nameCase, pluralPeopleName, realmGenitive } from '../text/ru.ts';
+import { bySex, capFirst, lowerFirst, nameCase, pluralPeopleName, realmGenitive } from '../text/ru.ts';
+import { stemsOf } from '../text/repeat.ts';
 import { typoTree } from '../text/typo.ts';
 import { yearsWord } from '../../engine/years.ts';
 import { affiliationFrom, roleNoun } from './shared.tsx';
@@ -33,6 +34,33 @@ export const BRIEF_MAX_SMALL = 240;
 
 /** Вторая роль, которую стоит назвать рядом с первой: служение, а не занятие. */
 const SECOND_ROLES = new Set(['king', 'queen', 'judge', 'prophet', 'high-priest', 'priest', 'apostle']);
+
+/** Части подзаголовка, которые говорят о родстве («сын Амрама», «жена Вооза», «он же Савл»), а не о лице. */
+const KIN_PART = /^(сын|дочь|жена|муж|мать|отец|брат|сестра|внук|внучка|вдова|наложница|свекровь|свёкор|тесть|тёща|зять|невестка|племянник|племянница|он же|она же|сыновья|дочери|первенец)(?![а-яё])/i;
+/** Прозвание по месту или народу в начале записи § 5: «Вифлеемлянин, Ефрафянин из Вифлеема…» — не положение лица. */
+const GENTILIC = /^[А-ЯЁ][а-яё]+(янин|янка|итянин|итянка|еянин|еянка)(?![а-яё])/;
+
+/**
+ * Первая фраза «Кратко» из подзаголовка (решение 22; CARD-65): части, которые называют служение или положение
+ * («пророк и законодатель», «военачальник Давида», «царь Салимский, священник Бога Всевышнего»), без частей о родстве
+ * и без стихов. Пусто — подзаголовок говорит только о родстве.
+ */
+export function disambigHead(dis: string): string {
+  const parts = dis.split(/,\s+/).map((x) => x.trim());
+  return parts
+    .filter((x, i) => {
+      if (!x || KIN_PART.test(x) || /\d/.test(x) || /[()]/.test(x)) return false;
+      // приложение к родству в родительном падеже: «дочь Фалмая, царя Гессурского» — о Фалмае, не о ней
+      if (i > 0 && KIN_PART.test(parts[i - 1]) && /^[а-яё]+(а|я|ого|его|ой|ей|и|ы)(?![а-яё])/.test(x)) return false;
+      // одно имя с прописной («апостол, Симон, сын Ионин») — иное имя, а не служение; прозвание («Моавитянка») — служит
+      if (/^[А-ЯЁ][а-яё]+$/.test(x) && !GENTILIC.test(x)) return false;
+      return true;
+    })
+    .join(', ');
+}
+
+/** Оговорка составителя, что слово «жена» о ней в тексте не употреблено (Есфирь, § 9; жёны Давида из 1 Пар 3:9). */
+const WIFE_CAVEAT = /«?жен(а|ой)»?[^.;]{0,60}не (употреблен|назван)|не назван[аы]?[^.;]{0,20}«?жен(ой|а)»?/i;
 
 /** Имя в родительном падеже; null — если склонение ненадёжно. */
 function gen(id: string): BriefSeg | null {
@@ -93,7 +121,11 @@ export function briefSentences(id: string, card: Card | null): BriefSentence[] {
   const st = card?.status?.[0];
   let statusUsed: string | null = null;
   let reignNote: BriefSeg[] = [];
-  if (role && !people) {
+  if (role === 'messiah' && !people) {
+    // «Христос, Сын Божий, Сын Давидов» — одно имя служения, не «Мессия, Христос» (одно и то же; CARD-65)
+    const dh = disambigHead(p.disambig ?? '');
+    first.push(['Христос', p.disambig].filter(Boolean).join(', ') || dh);
+  } else if (role && !people) {
     let head = roleNoun(id, role);
     let realm = false;
     if ((role === 'king' || role === 'queen') && p.reign.length) {
@@ -108,19 +140,26 @@ export function briefSentences(id: string, card: Card | null): BriefSentence[] {
       const chain = rs.every((r, i) => r.years !== null && r.years !== undefined && r.years > 0 && (i === 0 || r.start === rs[i - 1].end));
       if (chain) reignNote = [`${bySex(p.sex, 'царствовал', 'царствовала')} ${yearsWord(rs.reduce((n, r) => n + (r.years ?? 0), 0))}`];
     }
+    // подзаголовок называет служение точнее роли: «Пророк и законодатель» у Моисея, «Военачальник Давида» у Иоава
+    const dh = realm ? '' : disambigHead(p.disambig ?? '');
+    if (dh) head = dh;
     if (!realm && st && st.text.length <= 60 && !/[«»"():;]/.test(st.text) && st.text.toLowerCase().startsWith(head.toLowerCase())) {
       head = st.text.replace(/[.;]\s*$/, '');
       statusUsed = st.text;
-    } else if (!realm) {
+    } else if (!realm && !dh) {
       // вторая роль — если она тоже служение: «Царь и священник», «Пророк и судья»
       const second = roles.slice(1).find((r) => SECOND_ROLES.has(r));
       if (second && role !== 'messiah') head += ` и ${roleNoun(id, second)}`;
     }
     first.push(capFirst(head));
+  } else if (!people) {
+    // роли нет, но подзаголовок называет положение: «Моавитянка» у Руфи
+    const dh = disambigHead(p.disambig ?? '');
+    if (dh) first.push(capFirst(dh));
   }
 
   // 2. положение (§ 5) — если роли нет: «Из храбрых Давида»; короткая запись, без цитаты во всю длину — отдельным предложением
-  if (!first.length && st && st.text.length <= 120 && !/^[«"]/.test(st.text)) {
+  if (!first.length && st && st.text.length <= 120 && !/^[«"]/.test(st.text) && !GENTILIC.test(st.text)) {
     out.push({ segs: [capFirst(st.text.replace(/[.;]\s*$/, ''))], data: true });
     statusUsed = st.text;
   }
@@ -134,27 +173,48 @@ export function briefSentences(id: string, card: Card | null): BriefSentence[] {
   const par = parent ? gen(parent) : null;
   const parentNamed = !!statusUsed && !!parent && statusUsed.includes(byId.get(parent)!.name.slice(0, Math.max(3, byId.get(parent)!.name.length - 2)));
   const origin: BriefSeg[] = [];
+  const messiah = role === 'messiah';
   if (par && !parentNamed) {
-    const word = people ? (/(им|[ая]не)$/.test(p.name) ? 'произошли от' : 'в родословии — сын') : bySex(p.sex, 'сын', 'дочь');
+    // у Иисуса Христа — «родился от Марии» (Мф 1:16: «Марии, от Которой родился Иисус»): «Сын Божий, …, сын Марии» спорило бы
+    const word = messiah ? 'родился от' : people ? (/(им|[ая]не)$/.test(p.name) ? 'произошли от' : 'в родословии — сын') : bySex(p.sex, 'сын', 'дочь');
     origin.push(`${word} `, par);
   }
   // 4. колено, дом или народ (паспорт): «из колена Иудина»; у детей родоначальника — не повторять
-  const aff = people ? null : affiliationFrom(id);
+  // «из дома Давидова» у Иисуса Христа повторило бы «Сын Давидов» подзаголовка
+  const aff = people || messiah ? null : affiliationFrom(id);
   if (aff && aff.founder !== parent) {
     if (origin.length) origin.push(aff.text.startsWith('из ') ? ' ' : ', ');
     origin.push(aff.text);
   }
   if (origin.length) {
-    if (first.length) first.push(', ', ...origin);
+    if (first.length) first.push(messiah ? '; ' : ', ', ...origin);
     else first.push(capFirstSeg(origin[0]), ...origin.slice(1));
   }
   if (reignNote.length) first.push('; ', ...reignNote);
+  // главное служение (§ 16) — у лиц без царства: «вождь и избавитель Израиля при Исходе…» у Моисея (CARD-65);
+  // запись, которая повторяет слова первой фразы («военачальник» у Иоава), не добавляется
+  // какое служение главное: самое позднее с датой начала (у Иисуса Навина — «Вождь Израиля после Моисея»), иначе — с большим
+  // числом стихов (у Иосифа — «Правитель над всею землею Египетскою»); записи с цитатой и одним стихом — нет
+  if (!messiah && !reignNote.length && !p.reign.length && first.length) {
+    const head = new Set(stemsOf(first.map((x) => (typeof x === 'string' ? x : x.form)).join(' ')));
+    const cands = (card?.offices ?? [])
+      .map((o) => ({ ...o, t: o.title.split(/;\s*/)[0].replace(/[.]\s*$/, '') }))
+      .filter((o) => o.t.length <= 70 && !/[«»"]/.test(o.t) && (o.from !== undefined || o.refs.length >= 2) && stemsOf(o.t).every((w) => !head.has(w)));
+    const dated = cands.filter((o) => o.from !== undefined).sort((a, b) => b.from! - a.from!);
+    const main = dated[0] ?? [...cands].sort((a, b) => b.refs.length - a.refs.length)[0];
+    if (main) first.push('; ', lowerFirst(main.t));
+  }
 
   // 5. супруг (§ 9) — у женщины: «жена Махлона, затем Вооза»; «наложница Халева»
   let family = !!par;
   if (f && !people) {
     const hs = (graph.spousesOf.get(id) ?? []).filter((s) => s.b === id);
-    const named = hs.map((s) => ({ s, g: gen(s.a) })).filter((x): x is { s: (typeof hs)[number]; g: BriefSeg } => x.g !== null);
+    // термин, оговорённый в § 9 («Слово „жена“ о ней не употреблено»), в «Кратко» не употребляется (CARD-65)
+    const caveat = (s: (typeof hs)[number]) => WIFE_CAVEAT.test(s.note ?? '') || (card?.spousesNote ?? []).some((f) => WIFE_CAVEAT.test(f.text));
+    const named = hs
+      .filter((s) => !caveat(s))
+      .map((s) => ({ s, g: gen(s.a) }))
+      .filter((x): x is { s: (typeof hs)[number]; g: BriefSeg } => x.g !== null);
     if (named.length && !(statusUsed && named.some((x) => statusUsed!.includes(byId.get(x.s.a)!.name.slice(0, 4))))) {
       const segs: BriefSeg[] = [];
       named.forEach((x, i) => {
@@ -177,8 +237,10 @@ export function briefSentences(id: string, card: Card | null): BriefSentence[] {
     const legal = [...new Set(all.filter((e) => e.claim === 'legal').map((e) => e.child))];
     const onLine = (x: string) => lineMembership.joseph.has(x) || lineMembership.mary.has(x);
     const notable = plain.filter((x) => onLine(x) || (byId.get(x)?.magnitude ?? 9) <= 1);
+    // по значимости: линии Мессии, затем яркость звезды, затем порядок рождения — Соломон раньше Нафана (CARD-65)
+    const weight = (x: string) => (onLine(x) ? -10 : 0) + (byId.get(x)?.magnitude ?? 6);
     const pick = (notable.length ? notable : small ? plain : [])
-      .sort((a, b) => (byId.get(a)!.order ?? 99) - (byId.get(b)!.order ?? 99))
+      .sort((a, b) => weight(a) - weight(b) || (byId.get(a)!.order ?? 99) - (byId.get(b)!.order ?? 99))
       .map(gen)
       .filter((x): x is BriefSeg => x !== null)
       .slice(0, 4);
@@ -188,7 +250,9 @@ export function briefSentences(id: string, card: Card | null): BriefSentence[] {
       else first.push(capFirstSeg(segs[0]), ...segs.slice(1));
       family = true;
     };
-    if (pick.length) addKids(bySex(p.sex, 'отец', 'мать'), pick);
+    // дети уже названы записью § 5 («Мать Аарона, Моисея и Мариам») — второй раз не называются
+    const kidsSaid = !!statusUsed && pick.some((x) => typeof x !== 'string' && statusUsed!.includes(byId.get(x.id)!.name.slice(0, Math.max(3, byId.get(x.id)!.name.length - 2))));
+    if (pick.length && !kidsSaid) addKids(bySex(p.sex, 'отец', 'мать'), pick);
     // законное отцовство (Мф 1:16): «законный отец Иисуса Христа»
     const lg = legal.map(gen).filter((x): x is BriefSeg => x !== null);
     if (lg.length) addKids(bySex(p.sex, 'законный отец', 'законная мать'), lg);
@@ -201,7 +265,9 @@ export function briefSentences(id: string, card: Card | null): BriefSentence[] {
   // «Кратко» — 2–3 строки: запись из текста добавляется, если с ней абзац не длиннее BRIEF_MAX знаков
   const len = () => out.reduce((n, x) => n + x.segs.reduce((k, y) => k + (typeof y === 'string' ? y.length : y.form.length), 0) + 2, 0);
   // одна роль без родства («Левит.») — ещё и положение из § 5: «Левит. Привратник у ковчега»
-  if (noFamily && st && !statusUsed && st.text.length <= 140 && len() + st.text.length <= BRIEF_MAX_SMALL) {
+  const said = () => new Set(stemsOf(out.flatMap((x) => x.segs).concat(first).map((x) => (typeof x === 'string' ? x : x.form)).join(' ')));
+  const repeats = (t: string) => stemsOf(t).length > 0 && stemsOf(t).every((w) => said().has(w));
+  if (noFamily && st && !statusUsed && st.text.length <= 140 && len() + st.text.length <= BRIEF_MAX_SMALL && !repeats(st.text)) {
     out.push({ segs: [capFirst(st.text.replace(/[.;]\s*$/, ''))], data: true });
     statusUsed = st.text;
   }
@@ -211,7 +277,7 @@ export function briefSentences(id: string, card: Card | null): BriefSentence[] {
       if (len() === 0 || len() + t.length <= (small ? BRIEF_MAX_SMALL : BRIEF_MAX)) out.push({ segs: [capFirst(t.replace(/[.;]\s*$/, ''))], refs, data: true });
     };
     if (ev) take(ev.text, ev.refs);
-    else if (small && st && !statusUsed) take(st.text, st.refs);
+    else if (small && st && !statusUsed && !repeats(st.text)) take(st.text, st.refs);
   }
 
   // 8. родословие Иисуса Христа (§ 21)

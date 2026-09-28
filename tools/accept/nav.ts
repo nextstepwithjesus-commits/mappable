@@ -281,8 +281,9 @@ export const nav: Scenario[] = [
       await p.goto(p.url().replace(/#.*$/, '#/david'));
       await p.waitForTimeout(2200);
       await p.locator('.skyctl .view-toggle').click();
-      await p.locator('.skyctl').getByText('Эпохи', { exact: true }).click();
+      // «Эпохи» — команда листа «Вид», она закрывает лист (IX-65): масштаб — раньше
       await p.locator('.skyctl').getByText('истинный', { exact: true }).click();
+      await p.locator('.skyctl').getByText('Эпохи', { exact: true }).click();
       await p.waitForTimeout(1500);
       const url = p.url();
       const hash = new URL(url).hash;
@@ -300,8 +301,13 @@ export const nav: Scenario[] = [
         if (hashId(q) !== 'david') return fail(`в новой вкладке лицо «${hashId(q)}»`);
         const h2 = (await q.locator('.sheet h2').count()) ? (await q.locator('.sheet h2').innerText()).trim() : '';
         if (h2 !== 'Эпохи') return fail(`в новой вкладке панель «${h2}»`);
-        await q.locator('.skyctl .view-toggle').click();
-        const scale = (await q.locator('.viewpop .seg button[aria-pressed="true"]').first().innerText()).trim();
+        // панель «Эпохи» и карточка сужают небо — органы колонкой, масштаб — в листе «Вид» у колонки (IX-56)
+        const col = (await q.locator('.skyctl.column').count()) > 0;
+        if (col) await q.locator('.skyctl.column button', { hasText: 'Вид' }).click();
+        else await q.locator('.skyctl .view-toggle').click();
+        await q.waitForTimeout(300);
+        // «Вид» у колонки сменил панель «Эпохи» — небо стало шире, и лист «Вид» открыт над блоком
+        const scale = (await q.locator('.viewpop .seg button[aria-pressed="true"], .sky .sheet .viewctl .seg button[aria-pressed="true"]').first().innerText()).trim();
         if (scale !== 'истинный') return fail(`в новой вкладке масштаб «${scale}»`);
         const w1 = await win(q);
         const c0 = (w0[0] + w0[1]) / 2;
@@ -503,7 +509,7 @@ export const nav: Scenario[] = [
   },
   {
     n: 63,
-    title: 'Полоса времени: курсоры, нажатие вне рамки ставит её середину под указатель, ползунок со стрелками, двойной щелчок — всё небо (D12)',
+    title: 'Полоса времени: курсоры, протяжка вне рамки ставит её середину под указатель, ползунок со стрелками, двойной щелчок — всё небо (D12, IX-50)',
     run: async (p) => {
       await p.goto(p.url().replace(/#.*$/, '#/david'));
       await p.waitForTimeout(2200);
@@ -522,10 +528,12 @@ export const nav: Scenario[] = [
       const cl = await cursor(Math.min(xOf(a), (xOf(a) + xOf(b)) / 2 - 22) - 10);
       const co = await cursor(xOf(-3000));
       if (cm !== 'grab' || cl !== 'ew-resize' || co !== 'pointer') return fail(`курсоры: рамка «${cm}», край «${cl}», вне «${co}»`);
-      // нажатие вне рамки: середина — под указатель, протяжка двигает дальше
+      // протяжка вне рамки: со сдвигом больше 3 px середина — под указатель, дальше рамка идёт за ним
+      // (IX-50: нажатие без сдвига рамку не трогает — это проверяет сценарий 291)
       const target = -2500;
-      await p.mouse.move(xOf(target), y);
+      await p.mouse.move(xOf(target) - 6, y);
       await p.mouse.down();
+      await p.mouse.move(xOf(target), y, { steps: 2 });
       await p.waitForTimeout(250);
       const [a1, b1] = await win(p);
       await p.mouse.move(xOf(target) + 40, y, { steps: 4 });

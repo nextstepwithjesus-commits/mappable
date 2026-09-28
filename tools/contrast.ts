@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { ROOT } from './bible.ts';
 import { contrast as ratio, linearRgb, CONTRAST_USES } from '../src/ui/contrast.ts';
-import { alphaForContrast, over, likelyAlpha, CONSTELLATION_DIM, DIM, DIM_LABEL_CONTRAST } from '../src/render/dim.ts';
+import { over, likelyAlpha, CONSTELLATION_DIM, DIM, DIM_LABEL_CONTRAST, CLOUD_DIMMED, dimLabelAlpha, labelGrounds, separateRibbons, RIBBON_LIGHTNESS } from '../src/render/dim.ts';
 
 const css = readFileSync(join(ROOT, 'src/styles/tokens.css'), 'utf8');
 const block = (sel: string) => {
@@ -51,17 +51,28 @@ const check = (name: string, v: number, min: number) => {
 for (const [t, c] of Object.entries(themes)) {
   console.log(`\n— тема ${t}`);
   for (const u of CONTRAST_USES) check(u.what, ratio(c[u.fg], c[u.bg]), u.min);
-  // затемнение при выделении (E12; MOB-41): погашенные подписи и «вероятно» на меридиане — не ниже 3 : 1,
-  // названия созвездий — альфа 0,75 и не ниже 3 : 1 (src/render/dim.ts)
-  for (const ink of ['--ink', '--ink-2']) {
-    const a = alphaForContrast(c[ink], c['--sky'], DIM_LABEL_CONTRAST);
-    check(`погашенная подпись ${ink} на --sky (альфа ${Math.max(DIM, a).toFixed(2)})`, ratio(over(c[ink], c['--sky'], Math.max(DIM, a)), c['--sky']), 3);
-    const dim = ratio(over(c[ink], c['--sky'], Math.max(DIM, a)), c['--sky']);
-    const likely = ratio(over(c[ink], c['--sky'], likelyAlpha(a)), c['--sky']);
-    check(`подпись «вероятно» ${ink} на --sky (альфа ${likelyAlpha(a).toFixed(2)})`, likely, 3);
-    check(`«вероятно» ${ink} ярче погашенной, отношение контрастов`, likely / dim, 1.2);
+  // затемнение при выделении (E12; MOB-41; решение 31): погашенные подписи, «вероятно» на меридиане и названия созвездий —
+  // не ниже 4,5 : 1 к каждому фону под ними: небу, полосе эпохи и облаку плотности на них (src/render/dim.ts)
+  const cloud = t === 'night' ? CLOUD_DIMMED.night : CLOUD_DIMMED.day;
+  for (const ink of ['--ink', '--ink-2', '--ink-3']) {
+    const a = ink === '--ink-3' ? Math.max(CONSTELLATION_DIM, dimLabelAlpha(c[ink], c['--sky'], c['--sky-band'], cloud)) : Math.max(DIM, dimLabelAlpha(c[ink], c['--sky'], c['--sky-band'], cloud));
+    for (const g of labelGrounds(c[ink], c['--sky'], c['--sky-band'], cloud)) {
+      const dim = ratio(over(c[ink], g, a), g);
+      check(`погашенная подпись ${ink} на ${g} (альфа ${a.toFixed(2)})`, dim, DIM_LABEL_CONTRAST);
+      if (ink === '--ink-3') continue;
+      const likely = ratio(over(c[ink], g, likelyAlpha(a)), g);
+      check(`подпись «вероятно» ${ink} на ${g} (альфа ${likelyAlpha(a).toFixed(2)})`, likely, DIM_LABEL_CONTRAST);
+      check(`«вероятно» ${ink} ярче погашенной на ${g}, отношение контрастов`, likely / dim, 1.2);
+    }
   }
-  check(`название созвездия при выделении --ink-3 на --sky (альфа ${CONSTELLATION_DIM})`, ratio(over(c['--ink-3'], c['--sky'], CONSTELLATION_DIM), c['--sky']), 3);
+  // светлота лент на холсте (решение 32; MOB-61): отношение светлот по всей длине — не меньше 1,5
+  const lanes = separateRibbons([c['--gold-1'], c['--gold-2']], [c['--azure-1'], c['--azure-2']], c['--sky'], t === 'night');
+  const hex = (h: string) => [1, 3, 5].map((k) => parseInt(h.slice(k, k + 2), 16));
+  const mixH = (a: string, b: string, u: number) => `#${hex(a).map((x, k) => Math.round(x + (hex(b)[k] - x) * u).toString(16).padStart(2, '0')).join('')}`;
+  let worst = Infinity;
+  for (let k = 0; k <= 10; k++) worst = Math.min(worst, ratio(mixH(lanes[0], lanes[1], k / 10), mixH(lanes[2], lanes[3], k / 10)));
+  check(`ленты различимы по светлоте (на холсте: ${lanes.join(', ')})`, worst, RIBBON_LIGHTNESS);
+  for (const k of lanes) check(`лента ${k} на холсте к --sky`, ratio(k, c['--sky']), 3);
   // подписи отрезков ярусов эпох (src/render/tiers.ts): днём тон отрезка — --rule, выбранного — --rule-strong
   check('подпись яруса --ink-2 на --rule', ratio(c['--ink-2'], c['--rule']), 4.5);
   check('подпись яруса --ink на --rule', ratio(c['--ink'], c['--rule']), 4.5);

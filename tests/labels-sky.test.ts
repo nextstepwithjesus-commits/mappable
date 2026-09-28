@@ -156,19 +156,23 @@ describe('подписи без наложений (E1)', () => {
   });
 
   it('подпись справа — не ближе r + 5 от центра звезды: черта царя не сливается с именем (MAP-11, VIS-40)', () => {
-    const { sky: s } = drawSky({ move: around('david', 50) });
+    // цари Израиля — не на линиях Мессии: их подписи стоят справа (у лиц линий — вне лент, сверху или снизу, MAP-56)
     let kings = 0;
+    for (const id of ['david', 'akhav', 'ieroboam']) {
+    const { sky: s } = drawSky({ move: around(id, 50) });
     for (const b of s.labelStats().boxes.filter((q) => q.kind === 'star')) {
       const q = byId.get(b.id!)!;
       if (!q.roles.includes('king')) continue;
       const i = s.indexOf(q.id)!;
       const x = s.cam.sx(s.X0[i]);
       const r = starRadius(q.magnitude, labels.zoomScaleFor(s.cam.ky));
-      const cx = b.x + b.w / 2;
-      if (cx < x || b.y > s.cam.sy(s.nodes[i].lane)) continue; // слева или снизу
+      // только подписи справа: строка по середине звезды (сверху, снизу, слева и выноски — другие положения)
+      const y = s.cam.sy(s.nodes[i].lane);
+      if (b.x < x || Math.abs(b.y + b.h / 2 - y) > 3) continue;
       kings++;
       // начало строки (без ореола 1,5 px) — правее черты царя (она выступает за диск на 1,5–2 px) с зазором
       expect(b.x + 1.5 - x, q.name).toBeGreaterThanOrEqual(r + 5 - 0.01);
+    }
     }
     expect(kings).toBeGreaterThan(0);
   });
@@ -250,11 +254,11 @@ describe('обзор и семантическое увеличение (E3; MAP
     expect(s2.labelStats().boxes.some((b) => b.kind === 'cluster' && /время не установлено/.test(b.text))).toBe(true);
   });
 
-  it('названия созвездий: по одному на экран, не на лентах линий Мессии', () => {
+  it('названия созвездий: одно и то же — не чаще, чем через ~1 200 px (ТЗ § 3.1; MAP-58), не на лентах линий Мессии', () => {
     for (const [, move] of SCALES) {
       const { sky: s } = drawSky({ move });
       const g = s.labelStats().boxes.filter((b) => b.kind === 'group');
-      expect(new Set(g.map((b) => b.text)).size).toBe(g.length);
+      for (const a of g) for (const b of g) if (a !== b && a.text === b.text) expect(Math.abs(a.x - b.x), a.text).toBeGreaterThanOrEqual(labels.GROUP_REPEAT_PX - 1);
     }
     const { sky: s } = drawSky();
     expect(s.labelStats().boxes.filter((b) => b.kind === 'group').length).toBeGreaterThan(5);

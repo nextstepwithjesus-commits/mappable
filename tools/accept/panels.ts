@@ -158,12 +158,13 @@ export const panels: Scenario[] = [
       const note = nb(await s.locator('tr.note.split').first().innerText());
       if (!/Здесь линии расходятся: Соломон\s?Мф 1:6 — Нафан\s?Лк 3:31/.test(note) || !/Почему — Илий, § 24/.test(note)) return fail(`вставка: «${note.slice(0, 160)}»`);
       if (!(await s.locator('tr', { has: p.locator('button.person[data-id="kainan-syn-arfaksada"]') }).locator('td.ot.bracket').count())) return fail('у Каинана нет чтения в скобках');
-      if (!/нет/.test(await s.locator('tr', { has: p.locator('button.person[data-id="aviud-syn-zorovavelya"]') }).locator('td.ot.absent').innerText())) return fail('у Авиуда нет «нет» в 1 Пар');
+      // этап 7 (CARD-63): «не назван в 3:19–20» вместо «нет 3:19–20»
+      if (!/не\s+назван\s+в/.test(await s.locator('tr', { has: p.locator('button.person[data-id="aviud-syn-zorovavelya"]') }).locator('td.ot.absent').innerText())) return fail('у Авиуда нет «не назван в» в 1 Пар');
       const cmd = s.locator('tr.note.split').first().getByRole('button', { name: 'показать участок на небе' });
       await cmd.click();
       await p.waitForTimeout(400);
       if ((await cmd.getAttribute('aria-pressed')) !== 'true') return fail('команда «показать участок на небе» не нажата');
-      return pass('Соломон 15 | Нафан 41; шапка липкая; скобки у Каинана; «нет» у Авиуда');
+      return pass('Соломон 15 | Нафан 41; шапка липкая; скобки у Каинана; «не назван в» у Авиуда');
     },
   },
   {
@@ -227,13 +228,17 @@ export const panels: Scenario[] = [
       const s = sheet(p);
       await p.waitForTimeout(1500);
       const heads = (await s.locator('table.xtable thead th').allInnerTexts()).map((x) => x.trim());
-      if (heads.join('|') !== 'Царь|Годы правления|Возраст при смерти|Место|Погребение|Стихи') return fail(`шапка: ${heads.join('|')}`);
+      // этап 7 (CARD-51): столбец — «Место смерти» (из § 20)
+      if (heads.join('|') !== 'Царь|Годы правления|Возраст при смерти|Место смерти|Погребение|Стихи') return fail(`шапка: ${heads.join('|')}`);
       const hez = s.locator('table.xtable tbody tr', { has: p.locator('button.person[data-id="ezekiya"]') });
       const age = nb(await hez.locator('td.num').innerText());
       if (!/54 года/.test(age) || !/выв\./.test(age)) return fail(`возраст Езекии: «${age}»`);
       const yrs = nb(await hez.locator('td').first().innerText());
-      if (!/715–686 гг\. до Р\. Х\., 29 лет/.test(yrs)) return fail(`годы Езекии: «${yrs}»`);
-      await s.locator('#xsec-n').selectOption('6');
+      // этап 7 (CARD-51): те же слова, что § 16 карточки — «29 лет над Иудеей (стихи); 715–686 гг. до Р. Х.»
+      if (!/29 лет над Иудеей[\s\S]*715–686 гг\. до Р\. Х\./.test(yrs)) return fail(`годы Езекии: «${yrs}»`);
+      // выбор раздела — Menu, а не <select> (VIS-49)
+      await s.locator('.xpick .menu > button').click();
+      await s.locator('.xpick [role="menuitemradio"]', { hasText: '6. Родители' }).click();
       await p.waitForTimeout(800);
       const blocks = await s.locator('.xsec .xbody').count();
       return blocks >= 10 ? pass(`§ 20 — таблица; § 6 — лиц со сведениями: ${blocks}`) : fail(`§ 6 — лиц со сведениями: ${blocks}`);
@@ -306,8 +311,18 @@ export const panels: Scenario[] = [
       const sp = p.locator('section.spread');
       if (!(await sp.count())) return fail('разворот не открыт');
       const row = sp.locator('.row:not(.mastrow):not(.quiet)').first();
-      const disp = await row.evaluate((e) => getComputedStyle(e).display);
-      if (disp !== 'block') return fail(`строка раздела: display ${disp}`);
+      // один столбец (этап 7, MOB-48: строка — колонка flex, а не блок): корешок и страницы идут друг под другом во всю
+      // ширину строки, корешок раздела — первым
+      const col = (await row.evaluate((e) => {
+        const r = e.getBoundingClientRect();
+        const kids = [...e.children].map((c) => ({ spine: c.classList.contains('spine'), b: c.getBoundingClientRect() }));
+        const stacked = kids.every((k, i) => i === 0 || k.b.top >= kids[i - 1].b.bottom - 1);
+        const full = kids.every((k) => Math.abs(k.b.left - r.left) <= 1 && Math.abs(k.b.width - r.width) <= 1);
+        const order = [...kids].sort((a, b) => a.b.top - b.b.top).map((k) => (k.spine ? 'корешок' : 'страница')).join(' ');
+        return { stacked, full, order };
+      })) as { stacked: boolean; full: boolean; order: string };
+      if (!col.stacked || !col.full) return fail(`строка раздела не в один столбец: ${JSON.stringify(col)}`);
+      if (col.order !== 'корешок страница страница') return fail(`порядок в строке раздела: ${col.order}`);
       const who = (await row.locator('.pg .who').allInnerTexts()).map((x) => x.trim());
       if (who.join('|') !== 'Авраам:|Исаак:') return fail(`имена строк: ${who.join('|')}`);
       const folio = await p.locator('.folio').evaluateAll((es) => es.filter((e) => getComputedStyle(e).display !== 'none' && !(e as HTMLElement).hidden).length);

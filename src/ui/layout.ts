@@ -16,9 +16,13 @@
  * до 60 % окна. Пределы C1 сильнее: небу не меньше max(480 px, 40 %). Не помещается — сначала уже панель (до 360 или
  * 560 px, как в C1), затем карточка — до своей ширины по умолчанию, затем карточка — корешок.
  * «Небо во весь экран» (клавиша F): панель и карточка — корешки 56 px, повторное нажатие возвращает всё как было.
+ *
+ * «Свернуть карточку» (решение 18; VIS-44, UX-50): свёрнутая карточка — тот же корешок 56 px, небо занимает
+ * освободившееся место; панель остаётся колонкой. Одна модель для всех свёрнутых областей.
  */
 import { computed, effect, signal } from '@preact/signals';
 import { panel, selected, type Panel } from '../state.ts';
+import { cardFolded } from './stack.ts';
 
 export const PHONE_MAX = 720;
 export const SPINE_W = 56;
@@ -50,6 +54,8 @@ export interface Grid {
   sheetSpine?: boolean;
   /** «Небо во весь экран» (J2) */
   full?: boolean;
+  /** карточку свернул читатель («Свернуть карточку») — корешок по его выбору, а не по нехватке места */
+  folded?: boolean;
 }
 
 /** Ширины, заданные читателем (J2): обычной панели, широкой панели и карточки; нет поля — ширина по умолчанию. */
@@ -64,6 +70,8 @@ export interface GridOpts {
   h?: number;
   widths?: Widths;
   full?: boolean;
+  /** карточка свёрнута в корешок командой «Свернуть карточку» */
+  folded?: boolean;
 }
 
 /** Ширина карточки по ширине окна (C2; решение 14). */
@@ -122,9 +130,12 @@ export function gridFor(W: number, kind: PanelKind, card: boolean, o: GridOpts =
     return { phone: false, sheet: P, folio: F, spine: card, sky: W - P - F, sheetSpine: kind !== 'none', full: true };
   }
   const { want, floor } = skyFloor(W);
+  // карточку свернул читатель: корешок, небо и панель делят остальное (ниже — как при корешке по нехватке места)
+  const folded = card && !!o.folded;
   const Fd = card ? folioDefault(W, o.h) : 0;
   // ширина карточки, которую задал читатель, — в своих пределах; по умолчанию — по экрану (C2, H6)
   const Fu = card && o.widths?.folio !== undefined ? clampTo(o.widths.folio, folioRange(W, o.h)) : Fd;
+  if (kind === 'none' && folded) return { phone: false, sheet: 0, folio: SPINE_W, spine: true, sky: W - SPINE_W, folded: true };
   if (kind === 'none') {
     // небу — не меньше max(480, 40 %): шире своей ширины по умолчанию карточка за этот предел не идёт
     const F = Math.max(Math.min(Fu, Fd), Math.min(Fu, W - want));
@@ -135,7 +146,7 @@ export function gridFor(W: number, kind: PanelKind, card: boolean, o: GridOpts =
   const pMin = Math.min(pref, wide ? 560 : 360);
   // карточка остаётся целиком, если панели хватает места хотя бы в наименьшей ширине: сначала уже панель,
   // затем карточка — до своей ширины по умолчанию
-  if (card) {
+  if (card && !folded) {
     let F = Fu;
     if (W - F - want < pMin) F = Math.max(Math.min(Fu, Fd), W - want - pMin);
     const room = W - F - want;
@@ -149,7 +160,7 @@ export function gridFor(W: number, kind: PanelKind, card: boolean, o: GridOpts =
   let P = Math.min(pref, W - side - want);
   if (P < pMin) P = Math.min(pMin, W - side - floor);
   P = Math.max(0, Math.floor(P));
-  return { phone: false, sheet: P, folio: side, spine: card, sky: W - side - P };
+  return { phone: false, sheet: P, folio: side, spine: card, sky: W - side - P, ...(folded ? { folded: true } : {}) };
 }
 
 /**
@@ -226,10 +237,20 @@ export function toggleFull(): boolean {
   skyFull.value = !skyFull.peek();
   return true;
 }
-/** «Развернуть» на корешке: вернуть панель и карточку. */
+/**
+ * «Развернуть» на корешке: вернуть панель и карточку. Корешок бывает по трём причинам: «Небо во весь экран» — выключить
+ * его; «Свернуть карточку» — развернуть; нехватка места рядом с широкой панелью (C1) — закрыть панель (её прокрутка
+ * и фильтры помнятся, D11). Если после первых двух карточке всё равно не хватает места, закрывается и панель.
+ */
 export function unfoldCard() {
-  if (skyFull.peek()) skyFull.value = false;
-  else panel.value = null;
+  const was = { full: skyFull.peek(), folded: cardFolded.peek() };
+  if (was.full) skyFull.value = false;
+  if (was.folded) cardFolded.value = false;
+  if (!was.full && !was.folded) {
+    panel.value = null;
+    return;
+  }
+  if (!was.full && grid.peek().spine) panel.value = null;
 }
 if (typeof window !== 'undefined') {
   // открыли другую панель — читатель хочет её видеть: небо больше не во весь экран; сворачивать стало нечего — тоже
@@ -245,5 +266,10 @@ if (typeof window !== 'undefined') {
 
 /** Сетка сейчас: по ширине и высоте окна, открытой панели, выбранному лицу, ширинам читателя и «Небу во весь экран». */
 export const grid = computed(() =>
-  gridFor(viewportWidth.value, panelKind(panel.value), !!selected.value, { h: viewportHeight.value, widths: userWidths.value, full: skyFull.value }),
+  gridFor(viewportWidth.value, panelKind(panel.value), !!selected.value, {
+    h: viewportHeight.value,
+    widths: userWidths.value,
+    full: skyFull.value,
+    folded: cardFolded.value,
+  }),
 );

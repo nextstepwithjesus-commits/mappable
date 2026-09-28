@@ -127,11 +127,22 @@ const BASE: Scenario[] = [
     n: 7,
     title: 'Полоса времени до 2040: «сегодня», «завершение канона», «Время Церкви»',
     run: async (p) => {
+      // ТЗ § 11.2, сценарий 7: протянуть рамку к 2040 г. (щелчок после канона ведёт к концу данных — MOB-06)
+      await p.goto(p.url().replace(/#.*$/, '#/david'));
+      await p.waitForTimeout(2200);
       const strip = p.locator('.strip canvas').first();
       const b = (await strip.boundingBox())!;
-      await p.mouse.click(b.x + b.width - 30, b.y + b.height / 2);
+      const [a0, b0] = ((await p.locator('.strip').getAttribute('data-window')) ?? '').split(' ').map(Number);
+      const T0 = -4183, T1 = 2040, PAD = 14;
+      const xOf = (t: number) => b.x + PAD + ((t - T0) / (T1 - T0)) * (b.width - PAD * 2);
+      const y = b.y + b.height - 12;
+      await p.mouse.move(xOf((a0 + b0) / 2), y);
+      await p.mouse.down();
+      await p.mouse.move(b.x + b.width - 2, y, { steps: 12 });
+      await p.mouse.up();
       await p.waitForTimeout(1200);
-      return pass('проверяется по снимку');
+      const [, b1] = ((await p.locator('.strip').getAttribute('data-window')) ?? '').split(' ').map(Number);
+      return b1 >= 2030 ? pass(`окно до ${b1.toFixed(0)} г.; черты и эпоха — по снимку`) : fail(`рамка дотянута лишь до ${b1.toFixed(0)} г.`);
     },
   },
   {
@@ -194,9 +205,9 @@ const BASE: Scenario[] = [
       await find(p, 'Давид');
       await p.locator('.folio .actions button', { hasText: 'Родство с' }).click();
       await p.waitForTimeout(300);
-      // строка набрана с неразрывными пробелами (B5): сравнивается текст
-      const bar = (await p.locator('.sky .pickbar').count()) ? (await p.locator('.sky .pickbar').innerText()).replace(/\u00a0/g, ' ') : '';
-      if (!/^Родство с Давидом: выберите второе лицо на небе или найдите его в поле «Найти»\. Esc — отмена/.test(bar)) return fail(`строка режима: «${bar}»`);
+      // строка набрана с неразрывными пробелами (B5): сравнивается текст; команда — после тире, «(Esc)» — в конце (CARD-71, VIS-46)
+      const bar = (await p.locator('.sky .pickbar').count()) ? (await p.locator('.sky .pickbar').innerText()).replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim() : '';
+      if (!/^Родство с Давидом: выберите второе лицо на небе или найдите его в поле «Найти» — отменить \(Esc\)$/.test(bar)) return fail(`строка режима: «${bar}»`);
       await find(p, 'Иоав');
       if (hashId(p) !== 'david') return fail(`первым лицом стало «${hashId(p)}»`);
       if (await p.locator('.sky .pickbar').count()) return fail('режим выбора второго лица не снят');
@@ -239,8 +250,9 @@ const BASE: Scenario[] = [
       // полоса линейна: от сотворения (−4174, астр. −4173) минус 10 лет до 2040
       const T0 = -4183, T1 = 2040, PAD = 14;
       const xOf = (t: number) => box.x + PAD + ((t - T0) / (T1 - T0)) * (box.width - PAD * 2);
-      await p.mouse.click(xOf(-990), box.y + box.height / 2); // эпоха «Царство»
-      // щелчок по эпохе — перелёт (D4), после паузы на двойной щелчок (D12): ждать конца перелёта
+      // щелчок по названию эпохи «Царство» (IX-50: щелчок внутри рамки окно не меняет, по названию — переход к эпохе),
+      // после паузы на двойной щелчок (D12): ждать конца перехода
+      await p.mouse.click(xOf(-990), box.y + 10);
       await p.waitForTimeout(2000);
       const win = async () => ((await strip.getAttribute('data-window')) ?? '').split(' ').map(Number);
       const [a, b] = await win();

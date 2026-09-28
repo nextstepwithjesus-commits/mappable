@@ -1,6 +1,6 @@
 /**
- * Уже этой ширины небо получает вместо блока органов колонку кнопок 44 × 44 и лист «Вид» (C6; MOB-05, MOB-25):
- * телефон и планшет с открытой карточкой.
+ * Органы неба: блок в правом нижнем углу широкого неба и колонка кнопок 44 × 44 у узкого (C6; MOB-05, MOB-25, IX-56),
+ * лист «Вид» над блоком или у колонки.
  */
 import { modelInfo } from '../../data/atlas.ts';
 import { lambda, modelId, onlyLines, panel, epochMode } from '../../state.ts';
@@ -8,8 +8,8 @@ import { typo } from '../text/typo.ts';
 import { Check, Menu, Segmented } from '../controls.tsx';
 import { Sheet } from '../panels/Sheet.tsx';
 import { LANES_STEP, TIME_STEP, resetProportions, showAll, stretchBy, zoomBy } from './view.ts';
-import { SkyModeSwitch } from '../panels/Work.tsx';
-import { foldDesc, foldGroups, unfoldAll } from '../work.ts';
+import { SKY_MODES, foldDesc, foldGroups, skyMode, unfoldAll } from '../work.ts';
+import { lanesText } from './Overlays.tsx';
 import { skyRef, viewTick } from '../common.tsx';
 import { canFill, skyFull, toggleFull } from '../layout.ts';
 import type { Axis } from '../../render/camera.ts';
@@ -28,7 +28,7 @@ function AxisPair({ axis }: { axis: Axis }) {
   const time = axis === 'time';
   const btn = (dir: 1 | -1) => {
     const off = !can(dir);
-    const label = time ? (dir > 0 ? 'Растянуть время' : 'Сжать время') : dir > 0 ? 'Расширить полосы' : 'Сузить полосы';
+    const label = time ? (dir > 0 ? 'Растянуть время' : 'Сжать время') : dir > 0 ? 'Строки выше' : 'Строки ниже';
     const key = `${time ? 'Shift' : 'Alt'} и ${dir > 0 ? '+' : '−'}`;
     return (
       <button
@@ -53,16 +53,51 @@ function AxisPair({ axis }: { axis: Axis }) {
   );
 }
 
-/** «Пропорции по умолчанию»: высота полосы снова следует за масштабом времени. Выключена, если пропорции и так обычные. */
+/**
+ * «Пропорции по умолчанию»: высота строк снова следует за масштабом времени. Доступна, пока заданная пропорция не 1,
+ * даже если на этом масштабе она упирается в край и не видна (IX-61); рядом — её значение: «строки ×0,5».
+ */
 function ResetProportions({ label = 'по умолчанию' }: { label?: string }) {
   void viewTick.value;
   const cam = skyRef.current?.cam;
-  const off = !cam || Math.abs(cam.lanesAt() - 1) < 1e-3;
+  const off = !cam || Math.abs(cam.lanes - 1) < 1e-3;
   return (
-    <button type="button" class="cmd reset" aria-label="Пропорции по умолчанию" title="Пропорции по умолчанию" aria-disabled={off ? 'true' : undefined} onClick={() => !off && resetProportions()}>
-      {label}
+    <>
+      {/* значение — текстом перед командой: его читает и диктор, название команды не меняется */}
+      {!off && <span class="lanes-now">{lanesText(cam!.lanes)}</span>}
+      <button
+        type="button"
+        class="cmd reset"
+        aria-label="Пропорции по умолчанию"
+        title="Пропорции по умолчанию (двойной щелчок по буквам строк)"
+        aria-disabled={off ? 'true' : undefined}
+        onClick={() => !off && resetProportions()}
+      >
+        {label}
+      </button>
+    </>
+  );
+}
+
+/**
+ * «Приблизить» и «Отдалить» (IX-62): у предела масштаба кнопка выключена (aria-disabled, в порядке Tab) и говорит почему.
+ */
+function ZoomButton({ dir }: { dir: 1 | -1 }) {
+  void viewTick.value;
+  const sky = skyRef.current;
+  const off = !!sky && !!sky.model && !sky.cam.canStretch('time', dir);
+  const label = dir > 0 ? 'Приблизить' : 'Отдалить';
+  const title = off ? (dir > 0 ? 'Ближе нельзя: 20 лет на экран' : 'Дальше нельзя: всё небо') : `${label} (${dir > 0 ? '+' : '−'})`;
+  return (
+    <button type="button" aria-label={label} title={title} aria-disabled={off ? 'true' : undefined} onClick={() => !off && zoomBy(dir > 0 ? STEP : 1 / STEP)}>
+      {dir > 0 ? '+' : '−'}
     </button>
   );
+}
+
+/** Переключатель неба «все лица | набор» (решение 26; J4): тот же в блоке, в листе «Вид» и в панели «В работе». */
+export function SkyModeSwitch() {
+  return <Segmented label="Что показывает небо" options={SKY_MODES} value={skyMode.value} onChange={(v) => (skyMode.value = v)} />;
 }
 
 /** «Во весь экран» (J2, клавиша F): панель и карточка — корешки. Есть, только если сворачивать есть что. */
@@ -85,13 +120,23 @@ function UnfoldAll() {
   );
 }
 
-export const COLUMN_BELOW = 520;
+/**
+ * Уже этой ширины небо получает вместо блока органов колонку кнопок 44 × 44 и лист «Вид» (IX-56, VIS-51): блок в две
+ * строки занимал бы больше двух третей низа неба и закрывал подписи. Колонка — и всегда на телефоне (с учётом листа
+ * карточки) и на низком экране (альбомный телефон, масштаб 200 %; MOB-26, MOB-46).
+ */
+export const COLUMN_BELOW = 760;
+/** Низкое окно (альбомная ориентация, масштаб 200 %): органы — колонкой (MOB-26). */
+export const SHORT_BELOW = 520;
+/** Колонка или блок: по ширине неба, по сетке телефона и по высоте окна. */
+export const useColumn = (skyW: number, phone: boolean, winH: number) => skyW > 0 && (skyW < COLUMN_BELOW || phone || winH <= SHORT_BELOW);
 /** Шаг масштаба кнопок и клавиш: ×2 за 250 мс (IX-02); привязка — выбранное лицо, если видно, иначе середина неба. */
 const STEP = 2;
 
+/** Масштаб времени: пояснение каждого сегмента — в title (UX-08). */
 const SCALES = [
-  { value: 1, label: 'по насыщенности' },
-  { value: 0, label: 'истинный' },
+  { value: 1, label: 'по насыщенности', title: 'Время растянуто там, где много лиц: шкала неравномерная (≈ у масштабной линейки)' },
+  { value: 0, label: 'истинный', title: 'Равномерная шкала: каждый год одной ширины' },
 ] as const;
 
 const toggleEpochsPanel = () => (panel.value = panel.value === 'epochs' ? null : 'epochs');
@@ -110,8 +155,18 @@ function LayerChecks() {
   );
 }
 
+/** Переключатель масштаба времени: сегменты .seg, как у Segmented, с пояснением в title (UX-08). */
 function ScaleSwitch() {
-  return <Segmented label="Масштаб времени" options={SCALES} value={lambda.value === 0 ? 0 : 1} onChange={(v) => (lambda.value = v)} />;
+  const v = lambda.value === 0 ? 0 : 1;
+  return (
+    <div class="seg" role="group" aria-label="Масштаб времени">
+      {SCALES.map((o) => (
+        <button type="button" key={o.value} aria-pressed={o.value === v} title={o.title} onClick={() => (lambda.value = o.value)}>
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
 }
 
 /** Модель хронологии: список моделей с пояснениями из данных (modelInfo); тот же выбор — в «О карте». */
@@ -147,13 +202,18 @@ function ViewPop({ toggle }: { toggle: { current: HTMLButtonElement | null } }) 
       const box = ref.current?.closest('.skyctl');
       if (box && !box.contains(e.target as Node)) close(false);
     };
-    // Escape — одно видимое состояние (D5): сначала открытый список моделей (его закрывает Menu), затем лист
+    // Escape — одно видимое состояние (D5): сначала открытый список моделей (его закрывает Menu), затем лист. Фокус в
+    // другом слое (панель, карточка, поиск) — Escape снимает сначала тот слой, лист остаётся (IX-65)
     const onKey = (e: KeyboardEvent) => {
       if (e.code !== 'Escape' || e.defaultPrevented) return;
       // в поле ввода Escape принадлежит полю (D5); открытый список моделей закрывает сам Menu
       if (isTextField(e.target) || ref.current?.querySelector('[role="menu"]')) return;
+      const a = document.activeElement;
+      const inPop = !!ref.current?.closest('.skyctl')?.contains(a);
+      const loose = !a || a === document.body || !!(a instanceof HTMLElement && a.closest('.sky') && !a.closest('.sheet, .folio'));
+      if (!inPop && !loose) return;
       e.preventDefault();
-      close(!!ref.current?.contains(document.activeElement));
+      close(inPop);
     };
     document.addEventListener('pointerdown', away, true);
     window.addEventListener('keydown', onKey, true);
@@ -177,7 +237,7 @@ function ViewPop({ toggle }: { toggle: { current: HTMLButtonElement | null } }) 
         </span>
         <AxisPair axis="time" />
         <span class="ax" aria-hidden="true">
-          полосы
+          высота строк
         </span>
         <AxisPair axis="lanes" />
         <ResetProportions />
@@ -187,7 +247,17 @@ function ViewPop({ toggle }: { toggle: { current: HTMLButtonElement | null } }) 
       </span>
       <div class="chrono">
         <ModelMenu />
-        <button type="button" class="cmd" aria-pressed={panel.value === 'epochs'} title="Эпохи и их основания" onClick={toggleEpochsPanel}>
+        {/* команда листа закрывает лист (IX-65): открытая панель «Эпохи» не лежит под ним */}
+        <button
+          type="button"
+          class="cmd"
+          aria-pressed={panel.value === 'epochs'}
+          title="Эпохи и их основания"
+          onClick={() => {
+            toggleEpochsPanel();
+            viewOpen.value = false;
+          }}
+        >
           Эпохи
         </button>
       </div>
@@ -214,12 +284,8 @@ export function SkyControls() {
         <LayerChecks />
       </div>
       <div class="zoom">
-        <button type="button" aria-label="Отдалить" title="Отдалить (−)" onClick={() => zoomBy(1 / STEP)}>
-          −
-        </button>
-        <button type="button" aria-label="Приблизить" title="Приблизить (+)" onClick={() => zoomBy(STEP)}>
-          +
-        </button>
+        <ZoomButton dir={-1} />
+        <ZoomButton dir={1} />
         <button type="button" title="Всё небо (0, Home)" aria-keyshortcuts="0 Home" onClick={showAll}>
           Всё небо
         </button>
@@ -252,12 +318,8 @@ export function SkyControls() {
 export function SkyColumn() {
   return (
     <div class="skyctl column" role="group" aria-label="Вид неба" data-reserve="controls">
-      <button type="button" aria-label="Приблизить" title="Приблизить (+)" onClick={() => zoomBy(STEP)}>
-        +
-      </button>
-      <button type="button" aria-label="Отдалить" title="Отдалить (−)" onClick={() => zoomBy(1 / STEP)}>
-        −
-      </button>
+      <ZoomButton dir={1} />
+      <ZoomButton dir={-1} />
       <button type="button" class="all" title="Всё небо (0, Home)" aria-keyshortcuts="0 Home" onClick={showAll}>
         Всё небо
       </button>
@@ -293,7 +355,7 @@ export function ViewSheet() {
           </span>
           <AxisPair axis="time" />
           <span class="ax" aria-hidden="true">
-            полосы
+            высота строк
           </span>
           <AxisPair axis="lanes" />
         </div>

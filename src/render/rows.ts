@@ -107,9 +107,10 @@ export interface FoldMark {
   id: string;
   /** скрытых лиц */
   count: number;
-  /** у созвездия — полоса строки-подписи и годы его начала */
+  /** у созвездия — полоса строки-подписи, годы его начала и последнего рождения (знак — в окнах, куда они приходятся) */
   lane?: number;
   t0?: number;
+  t1?: number;
 }
 
 /** План неба: какие узлы скрыты, отображение полос и знаки свёрнутого. */
@@ -270,10 +271,12 @@ export function planSky(d: PlanData, v: SkyView): SkyPlan {
     let lo = Infinity;
     let hi = -Infinity;
     let t0 = Infinity;
+    let t1 = -Infinity;
     for (const i of idx) {
       lo = Math.min(lo, nodes[i].lane);
       hi = Math.max(hi, nodes[i].lane);
       t0 = Math.min(t0, d.t0(i));
+      t1 = Math.max(t1, d.t0(i));
     }
     // глава созвездия: самое яркое лицо (при равенстве — раньше родившееся); подпись встаёт на его место
     let head = -1;
@@ -303,7 +306,7 @@ export function planSky(d: PlanData, v: SkyView): SkyPlan {
       lane = nodes[head].lane;
       t0 = d.t0(head);
     } else lane = Math.round((lo + hi) / 2);
-    marks.push({ kind: 'group', id: top, count, lane, t0 });
+    marks.push({ kind: 'group', id: top, count, lane, t0, t1: Math.max(t0, t1) });
   }
   // зазоры между родами там, где полосы убраны
   let prev = -1;

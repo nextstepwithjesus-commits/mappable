@@ -14,7 +14,7 @@ import { batch, computed, effect, signal } from '@preact/signals';
 import { byId, graph, groupById, lineMembership } from '../data/atlas.ts';
 import { siblings } from '../engine/graph.ts';
 import { walk } from '../render/rows.ts';
-import { selected, focused, hovered } from '../state.ts';
+import { selected, focused } from '../state.ts';
 
 // ---------- хранилища ----------
 
@@ -181,9 +181,21 @@ export function workOrder(birth: (id: string) => number | null): string[] {
 // ---------- небо по набору (J4) ----------
 
 export type SkyMode = 'all' | 'work';
-/** Что показывает небо: все лица или только рабочий набор. Помнится в сеансе. */
+/** Что показывает небо: все лица или только рабочий набор. Помнится в сеансе и пишется в адрес (k1; решение 34). */
 export const skyMode = signal<SkyMode>(read<SkyMode>('session', 'skymode', 'all') === 'work' ? 'work' : 'all');
 if (hasWindow) effect(() => write('session', 'skymode', skyMode.value));
+
+/**
+ * Переключатель неба «все лица | набор» (решение 26; IX-59): одно слово — одно действие. Панель «В работе: N»
+ * открывает верхняя строка, «В наборе ▾» — кнопка карточки; переключатель только выбирает, что на небе.
+ */
+export const SKY_MODES: readonly { value: SkyMode; label: string }[] = [
+  { value: 'all', label: 'все лица' },
+  { value: 'work', label: 'набор' },
+];
+
+/** Набор не длиннее стольких лиц передаётся ссылкой — списком id (решение 34; IX-67); длиннее — только режим. */
+export const WORK_URL_MAX = 12;
 
 // ---------- свёртка (J5) ----------
 
@@ -256,28 +268,62 @@ if (hasWindow)
 // стопка карточек (J6) — src/ui/stack.ts; имена оставлены здесь для прежних импортов
 export { STACK_MAX, cardStack, cardFolded, pushCard, dropCard } from './stack.ts';
 
-// ---------- клавиши (J3, J5) ----------
+// ---------- клавиши (J3, J5; IX-51, MOB-55) ----------
 
-/** Лицо, к которому относится клавиша неба: звезда с фокусом клавиатуры, под указателем, иначе выбранное. */
-export const keyTarget = () => focused.peek() ?? hovered.peek() ?? selected.peek();
+/**
+ * Лицо, к которому относится клавиша неба (IX-51): звезда с кольцом клавиатуры; иначе звезда, чья подсказка сейчас видна
+ * (tip — её id, src/ui/sky/Tip.tsx); иначе выбранное лицо. Звезда под указателем без видимой подсказки клавишу не берёт:
+ * читатель работает с карточкой, мышь просто лежит на небе.
+ */
+export const keyTarget = (tip: string | null = null) => focused.peek() ?? tip ?? selected.peek();
+
+/** Число лиц словами: «5 лиц», «1 лицо». */
+const persons = (n: number) => `${n} ${n % 10 === 1 && n % 100 !== 11 ? 'лицо' : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 'лица' : 'лиц'}`;
+/** Глагол по роду лица: «взят» и «взята», «убран» и «убрана». */
+const bySex = (id: string, m: string, f: string) => (byId.get(id)?.sex === 'f' ? f : m);
+
+/**
+ * Что сказала клавиша набора — для живой области (IX-51, MOB-55, WCAG 4.1.3). Имя — в начале строки, в именительном
+ * падеже: «Иессей взят в работу; в наборе 5 лиц», «Руфь убрана из работы; набор пуст», «Давид: потомки свёрнуты, скрыто 62 лица».
+ */
+export function workKeyText(
+  r: { kind: 'take' | 'drop'; id: string; size: number } | { kind: 'fold' | 'unfold'; id: string; hidden?: number },
+): string {
+  const name = byId.get(r.id)?.name ?? r.id;
+  if ('size' in r) {
+    if (r.kind === 'take') return `${name} ${bySex(r.id, 'взят', 'взята')} в работу; в наборе ${persons(r.size)}`;
+    return `${name} ${bySex(r.id, 'убран', 'убрана')} из работы; ${r.size ? `в наборе ${persons(r.size)}` : 'набор пуст'}`;
+  }
+  if (r.kind === 'unfold') return `${name}: потомки развёрнуты`;
+  return `${name}: потомки свёрнуты${r.hidden ? `, скрыто ${persons(r.hidden)}` : ''}`;
+}
+
+/** Свёртка созвездия вслух (UX-51): «Созвездие «Дом Саулов» свёрнуто: скрыто 65 лиц»; развёрнуто — без счёта. */
+export function groupFoldText(name: string, on: boolean, count: number): string {
+  return on ? `Созвездие «${name}» свёрнуто${count ? `: скрыто ${persons(count)}` : ''}` : `Созвездие «${name}» развёрнуто`;
+}
+
+export type WorkKeyResult = { kind: 'take' | 'drop'; id: string; size: number } | { kind: 'fold' | 'unfold'; id: string };
 
 /**
  * Клавиши рабочего набора (по физическим клавишам, KeyboardEvent.code, — и на русской раскладке):
  * D («В») — взять лицо в работу или убрать из работы; C («С») — свернуть или развернуть его потомков на небе.
- * Возвращает true, если клавиша обработана.
+ * id — лицо клавиши (keyTarget). Возвращает, что сделано (для объявления), или null, если клавиша не про набор.
  */
-export function workKey(code: string): boolean {
-  const id = keyTarget();
-  if (!id || !byId.has(id)) return false;
+export function workKey(code: string, id: string | null = keyTarget()): WorkKeyResult | null {
+  if (!id || !byId.has(id)) return null;
   if (code === 'KeyD') {
-    if (workSet.peek().has(id)) removeFromWork(id);
-    else addToWork(id);
-    return true;
+    if (workSet.peek().has(id)) {
+      removeFromWork(id);
+      return { kind: 'drop', id, size: workSet.peek().size };
+    }
+    addToWork(id);
+    return { kind: 'take', id, size: workSet.peek().size };
   }
   if (code === 'KeyC') {
-    if (!hasDescendants(id) && !foldDesc.peek().includes(id)) return false;
+    if (!hasDescendants(id) && !foldDesc.peek().includes(id)) return null;
     foldDescOf(id);
-    return true;
+    return { kind: foldDesc.peek().includes(id) ? 'fold' : 'unfold', id };
   }
-  return false;
+  return null;
 }
