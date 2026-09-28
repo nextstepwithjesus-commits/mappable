@@ -24,21 +24,23 @@ import { focusCardTitle } from '../focus.ts';
 import { screenOf } from './view.ts';
 import { expanded, hasHidden, opened, unionById } from '../reveal.ts';
 import { skyMode } from '../work.ts';
+import { dotsOn, openDot } from './DotCard.tsx';
+import { openSheetAt } from '../sheet.ts';
 
 const LIST_ID = 'sky-stars';
 const WINDOW_ID = 'sky-window';
 const HELP_ID = 'sky-help';
 /** id пункта списка лиц неба: на него указывает aria-activedescendant холста. */
 export const starDomId = (id: string) => `sky-star-${id}`;
-/** id пункта картуша союза в списке неба (решение 70): «u:avraam+agar» → «sky-plate-u_avraam_agar». */
+/** id пункта точки союза в списке неба (решения 70, 76): «u:avraam+agar» → «sky-plate-u_avraam_agar». */
 export const plateDomId = (uid: string) => `sky-plate-${uid.replace(/[^a-z0-9-]/gi, '_')}`;
 
 export const SKY_LABEL = 'Звёздная карта родословий';
 export const SKY_HELP =
-  'Стрелки — к ближайшей звезде в эту сторону; Shift со стрелками — сдвиг неба; Enter — открыть карточку звезды; клавиша меню или Shift и F10 — меню звезды; плюс и минус — масштаб; ноль — всё небо; квадратные скобки — к родителю и к ребёнку; вопросительный знак — все клавиши. В небе «набор» стрелки водят и по карточкам союзов; Enter на карточке союза раскрывает или сворачивает союз.';
+  'Стрелки — к ближайшей звезде в эту сторону; Shift со стрелками — сдвиг неба; Enter — открыть карточку звезды; клавиша меню или Shift и F10 — меню звезды; плюс и минус — масштаб; ноль — всё небо; квадратные скобки — к родителю и к ребёнку; вопросительный знак — все клавиши. В небе «набор» стрелки водят и по точкам союзов; Enter на звезде или точке союза открывает у неё карточку с командами раскрытия, Escape её закрывает.';
 /** Справка для сенсорного экрана: жесты вместо клавиш (MOB-67). */
 export const SKY_HELP_TOUCH =
-  'Коснитесь звезды — откроется карточка лица; одним пальцем — сдвиг неба, двумя — масштаб; долгое касание звезды — меню звезды; «Всё небо» — вся карта. В небе «набор» касание карточки союза раскрывает или сворачивает союз.';
+  'Коснитесь звезды — откроется карточка лица; одним пальцем — сдвиг неба, двумя — масштаб; долгое касание звезды — меню звезды; «Всё небо» — вся карта. В небе «набор» касание звезды или точки союза открывает у неё карточку с командами раскрытия.';
 const coarse = () => typeof window !== 'undefined' && !!window.matchMedia?.('(pointer: coarse)').matches;
 /** Сколько лиц держать в списке: самые яркие на виду, по порядку времени. */
 const LIST_MAX = 40;
@@ -79,7 +81,7 @@ export function windowText(t0: number, t1: number, epochs: readonly Pick<Epoch, 
 
 /**
  * Пункт списка: имя (видимый текст), для диктора — с уточнением и годами; в небе «набор» у лица с нераскрытыми союзами,
- * чьи карточки союзов не показаны, — «есть нераскрытые союзы» (решение 70).
+ * чьи точки союзов не показаны, — «есть нераскрытые союзы» (решение 70).
  */
 const itemLabel = (id: string, sel: string | null) =>
   typo(
@@ -87,10 +89,10 @@ const itemLabel = (id: string, sel: string | null) =>
       (sel === id ? '; выбрано' : ''),
   );
 
-/** Картуш союза в списке неба: id союза, лицо, у которого он стоит, раскрыт ли. */
+/** Точка союза в списке неба: id союза, лицо, у которого она стоит, раскрыт ли союз. */
 type PlateItem = { uid: string; from: string; open: boolean };
 
-/** Лица на виду для списка: самые яркие, затем по времени (слева направо); и картуши союзов на виду (решение 70). */
+/** Лица на виду для списка: самые яркие, затем по времени (слева направо); и точки союзов на виду (решения 70, 76). */
 function listed(): { ids: string[]; text: string; plates: PlateItem[] } {
   const sky = skyRef.current;
   if (!sky || !sky.model) return { ids: [], text: '', plates: [] };
@@ -102,7 +104,7 @@ function listed(): { ids: string[]; text: string; plates: PlateItem[] } {
     .map((s) => s.id);
   const vp = sky.cam.vp;
   const text = windowText(sky.tOf(sky.cam.wx(vp.l)), sky.tOf(sky.cam.wx(vp.r)), model.value.epochs, shown.length);
-  // картуши по порядку чтения: слева направо, сверху вниз
+  // точки союзов по порядку чтения: слева направо, сверху вниз
   const plates = sky.plateHits
     .filter((h) => h.x + h.w > vp.l && h.x < vp.r && h.y + h.h > vp.t && h.y < vp.b)
     .sort((a, b) => a.x - b.x || a.y - b.y)
@@ -110,10 +112,25 @@ function listed(): { ids: string[]; text: string; plates: PlateItem[] } {
   return { ids, text, plates };
 }
 
-/** Открыть карточку лица из списка неба: выбор (или второе лицо пары), фокус — на заголовок карточки. */
+/**
+ * Открыть карточку лица из списка неба или клавишей на холсте: выбор (или второе лицо пары), фокус — на заголовок
+ * карточки. В небе «набор» (решение 76) — ещё и карточка у звезды, фокус — на её первую команду.
+ */
 function choose(id: string) {
+  if (dotsOn.peek()) {
+    if (id !== selected.peek()) openSheetAt('peek');
+    goTo(id);
+    openDot({ kind: 'person', id }, { focus: true });
+    return;
+  }
   goTo(id);
   focusCardTitle(id);
+}
+
+/** Точка союза с клавиатуры: в небе «набор» — карточка у точки с фокусом на первой команде; иначе — раскрыть или свернуть. */
+function chooseUnion(uid: string, from: string) {
+  if (dotsOn.peek()) openDot({ kind: 'union', uid, from }, { focus: true });
+  else pressPlate(uid, from);
 }
 
 export function SkyA11y() {
@@ -127,9 +144,11 @@ export function SkyA11y() {
   const f = focused.value;
   const sel = selected.value;
   const pf = plateFocus.value;
-  // пункты «есть нераскрытые союзы» и состояние картушей меняются вместе с раскрытием (решение 70)
+  // пункты «есть нераскрытые союзы» и состояние точек союзов меняются вместе с раскрытием (решение 70)
   void opened.value;
   const exp = expanded.value;
+  // небо «набор»: пункты открывают карточку у точки (решение 76)
+  const dots = dotsOn.value;
 
   const canvas = () => list.current?.parentElement?.querySelector<HTMLCanvasElement>(':scope > canvas') ?? null;
   /** Читатель работает с небом: фокус на холсте, в списке лиц неба или нигде. */
@@ -159,17 +178,26 @@ export function SkyA11y() {
       focused.value = null;
       plateFocus.value = null;
     };
-    // картуш союза с кольцом клавиатуры (решение 70): Enter и пробел раскрывают или сворачивают союз; клавиши атласа
-    // (src/ui/keys.ts) событие, отменённое здесь, не берут
+    // Enter и пробел на холсте (решение 76): у точки союза с кольцом клавиатуры и, в небе «набор», у звезды с кольцом —
+    // карточка у точки, фокус на её первую команду (без карточки у точки — союз раскрывается или сворачивается сразу).
+    // Клавиши атласа (src/ui/keys.ts, src/ui/sky/skykeys.ts) событие, отменённое здесь, не берут
     const onKey = (e: KeyboardEvent) => {
-      const uid = plateFocus.peek();
-      if (!uid || e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
       if (e.code !== 'Enter' && e.code !== 'NumpadEnter' && e.code !== 'Space') return;
-      const h = skyRef.current?.plateHits.find((q) => q.uid === uid);
-      const u = unionById(uid);
-      if (!u) return;
+      const uid = plateFocus.peek();
+      if (uid) {
+        const h = skyRef.current?.plateHits.find((q) => q.uid === uid);
+        const u = unionById(uid);
+        if (!u) return;
+        e.preventDefault();
+        chooseUnion(uid, h?.from ?? u.a ?? u.b ?? u.kids[0]);
+        skyRef.redraw();
+        return;
+      }
+      const id = focused.peek();
+      if (!id || !dotsOn.peek()) return;
       e.preventDefault();
-      pressPlate(uid, h?.from ?? u.a ?? u.b ?? u.kids[0]);
+      choose(id);
       skyRef.redraw();
     };
     c.addEventListener('focus', onFocus);
@@ -212,7 +240,7 @@ export function SkyA11y() {
     if (view.text && onSky()) setSaid(view.text);
   }, [view.text]);
 
-  // звезда с фокусом всегда есть в списке: иначе холсту не на что указать; картуш с фокусом — тоже
+  // звезда с фокусом всегда есть в списке: иначе холсту не на что указать; точка союза с фокусом — тоже
   const ids = f && !view.ids.includes(f) && byId.has(f) ? [...view.ids, f] : view.ids;
   const pfHit = pf && !view.plates.some((q) => q.uid === pf) ? skyRef.current?.plateHits.find((q) => q.uid === pf) : undefined;
   const plates = pfHit ? [...view.plates, { uid: pfHit.uid, from: pfHit.from, open: pfHit.open }] : view.plates;
@@ -239,6 +267,7 @@ export function SkyA11y() {
                 data-x={at ? Math.round(at.x) : undefined}
                 data-y={at ? Math.round(at.y) : undefined}
                 aria-label={itemLabel(id, sel)}
+                aria-haspopup={dots ? 'dialog' : undefined}
                 onClick={() => choose(id)}
                 onFocus={() => {
                   plateFocus.value = null;
@@ -255,7 +284,7 @@ export function SkyA11y() {
             </li>
           );
         })}
-        {/* картуши союзов на виду (решение 70): Enter раскрывает или сворачивает союз */}
+        {/* точки союзов на виду (решения 70, 76): Enter открывает у точки карточку союза */}
         {plates.map((q) => {
           const u = unionById(q.uid);
           if (!u) return null;
@@ -267,8 +296,9 @@ export function SkyA11y() {
                 id={plateDomId(q.uid)}
                 tabIndex={-1}
                 aria-label={plateItemText(u, open)}
-                aria-expanded={open}
-                onClick={() => pressPlate(q.uid, q.from)}
+                aria-expanded={dots ? undefined : open}
+                aria-haspopup={dots ? 'dialog' : undefined}
+                onClick={() => chooseUnion(q.uid, q.from)}
                 onFocus={() => {
                   focused.value = null;
                   plateFocus.value = q.uid;

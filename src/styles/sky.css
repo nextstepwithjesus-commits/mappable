@@ -930,3 +930,89 @@ div.workpick .wp-drop .cmd {
   bottom: 60px;
   max-height: calc(100% - 110px);
 }
+
+/* ---------- карточка у точки (решение 76; src/ui/sky/DotCard.tsx) ----------
+   Лист атласа у звезды лица или у точки союза в небе «набор»: фон листа, рамка 1 px --rule-strong, без тени и
+   скругления; язык карточек древа (tree.css: .tc-nm, .tc-yrs, .tc-sub, .tc-head, образ .av) в компактном виде —
+   образ 40 px, имя кеглем вводки, годы и команды гротеском. У союза — двойная рамка, как у карточки союза в древе.
+   От знака к карточке — отвод 1 px цветом рамки (.dc-lead), как выноска на карте. Место задаёт DotCard.tsx (placeDot);
+   до первого замера карточка невидима. На телефоне — во всю ширину неба над листом карточки (data-dock). */
+.dotcard {
+  position: absolute;
+  z-index: 5;
+  box-sizing: border-box;
+  width: max-content;
+  min-width: 232px;
+  max-width: 340px;
+  padding: 8px 8px 4px 10px;
+  background: var(--sheet);
+  border: 1px solid var(--rule-strong);
+  color: var(--ink);
+}
+.dotcard:not([data-placed]) {
+  visibility: hidden;
+}
+.dotcard.dc-union {
+  padding: 4px 8px 3px 8px;
+  border: 3px double var(--rule-strong);
+}
+/* «×» — в углу листа; имя и строка «союз» не заходят под него */
+.dotcard > .close {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+.dotcard .dc-top {
+  display: flex;
+  gap: 10px;
+  min-width: 0;
+  padding-right: 28px;
+}
+.dotcard.dc-union .dc-top {
+  gap: 8px;
+  padding-right: 0;
+}
+.dotcard .tc-head {
+  min-height: 24px;
+  align-items: center;
+  padding-right: 32px;
+}
+.dotcard .tc-nm .nm {
+  white-space: normal;
+}
+.dotcard.dc-union .tc-nm .nm {
+  font-size: var(--t-body);
+  line-height: var(--t-body-lh);
+}
+/* команды — строкой под сведениями, поле 32 px (на сенсорном экране 44 px, phone.css) */
+.dotcard .dc-cmds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 2px;
+  margin: 6px 0 0 -8px;
+}
+.dotcard.dc-union .dc-cmds {
+  margin: 4px 0 0 -6px;
+}
+.dc-lead {
+  position: absolute;
+  z-index: 5;
+  pointer-events: none;
+  background: var(--rule-strong);
+}
+.dotcard[data-dock] {
+  min-width: 0;
+  max-width: none;
+}
+@media (pointer: coarse) {
+  .dotcard > .close {
+    top: -2px;
+    right: -2px;
+  }
+  .dotcard .dc-top {
+    padding-right: 36px;
+  }
+  .dotcard .tc-head {
+    padding-right: 40px;
+  }
+}

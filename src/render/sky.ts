@@ -4,7 +4,8 @@
  * Слои снизу вверх и где их код:
  *  фон и полосы эпох — здесь; черты канона и «сегодня», меридианы событий, сетка лет — frame.ts;
  *  облака плотности рождений (обзор), контуры созвездий, знаки скоплений — здесь;
- *  следы жизни, отводы, браки — trails.ts; ленты — ribbons.ts; звёзды — здесь (знаки — glyphs.ts);
+ *  следы жизни, отводы, браки — trails.ts; ленты — ribbons.ts; в небе «набор» — линии союзов (plates.ts);
+ *  звёзды — здесь (знаки — glyphs.ts); точки союзов (plates.ts);
  *  подписи — labels.ts (пороги масштаба вычислены заранее, в кадре подписи только отбираются и проверяются на наложения);
  *  кольца выбора, фокуса, наведения и отметок — marks.ts;
  *  ярусы эпох (tiers.ts, их рисует SkyView через under) → рамка (frame.ts) → меридиан (marks.ts) → указатели у края (frame.ts).
@@ -17,7 +18,7 @@
  */
 import { KX_MIN, type Camera, type Frame, type ViewState } from './camera.ts';
 import { RowCamera, gapsKey, identityRows, planSky, type FoldMark, type SkyPlan, type SkyView } from './rows.ts';
-import { drawPlates, plateGaps, type PlateHit, type PlateIn, type PlateMarks } from './plates.ts';
+import { drawUnionDots, drawUnionLines, layoutUnionDots, plateGaps, unionLinks, type PlateHit, type PlateIn, type PlateMarks } from './plates.ts';
 import { BIRTH_BAND, daggerAt, drawBirthBand, drawGlyph, personGlyph, starRadius } from './glyphs.ts';
 import { alpha, hexToRgb } from './color.ts';
 import { alphaForContrast, CLOUD_DIMMED, dimLabelAlpha, separateRibbons, WORK_DIM } from './dim.ts';
@@ -155,8 +156,9 @@ export interface SkyState {
   /** отклик звезды на клавишу набора (IX-51): однократная обводка 300 мс с мгновения at (performance.now()) */
   workFlash?: { id: string; at: number } | null;
   /**
-   * Карточки союзов в небе «набор» (решение 70; src/ui/reveal.ts, plates; рисует plates.ts): что показать и в каком
-   * состоянии; plateMarks — наведённый, с кольцом клавиатуры, открытый в листе карточки. В небе «все лица» — нет.
+   * Союзы в небе «набор» (решения 70, 76; src/ui/reveal.ts, plates; рисует plates.ts) — точки с линиями к супругам
+   * и детям: что показать и в каком состоянии; plateMarks — наведённая, с кольцом клавиатуры, открытая в листе карточки.
+   * В небе «все лица» — нет.
    */
   plates?: readonly PlateIn[] | null;
   plateMarks?: PlateMarks | null;
@@ -165,8 +167,8 @@ export interface SkyState {
 }
 
 /**
- * Что показывает небо (rows.ts, SkyView) и карточки союзов неба «набор» (решение 70): по ним Sky сам оставляет место
- * под картуши (plates.ts, plateGaps) — и заново при смене модели хронологии, когда меняются полосы раскладки.
+ * Что показывает небо (rows.ts, SkyView) и союзы неба «набор» (решения 70, 76): по ним Sky сам оставляет место
+ * под точки у строки одного лица (plates.ts, plateGaps) — и заново при смене модели хронологии, когда меняются полосы.
  */
 export type SkyViewIn = SkyView & { plates?: readonly PlateIn[] | null };
 
@@ -270,6 +272,12 @@ export interface Pass {
   foldText?: Map<string, string>;
   /** небо «набор»: лица с нераскрытыми союзами → «+» после подписи (решение 70); щелчок показывает их союзы */
   revealText?: Map<string, string>;
+  /**
+   * небо «набор» (решение 76): дети союзов с точкой на небе — их связь с родителями рисует точка союза (plates.ts),
+   * прежних отводов и гребёнок у них нет; пары «муж|жена» с точкой — без знака брака «‖» (trails.ts)
+   */
+  unionKids?: ReadonlySet<string>;
+  unionPairs?: ReadonlySet<string>;
   /** знаки свёрнутого этого кадра (px холста): щелчок разворачивает (src/ui/sky/input.ts); reveal — «+» союзов */
   foldHits?: (Rect & { kind: FoldHitKind; id: string })[];
   /** для проверок приёмки: лица с разрывом «//» на следе и со скобкой «время не установлено» в кадре (trails.ts) */
@@ -388,7 +396,7 @@ export class Sky implements SkyContext {
    * «Свёрнуто: … — развернуть» в рамке (kind 'all' — развернуть всё); щелчок разворачивает (src/ui/sky/input.ts).
    */
   foldHits: (Rect & { kind: FoldHitKind; id: string })[] = [];
-  /** карточки союзов в последнем кадре (px холста; решение 70): щелчок, касание и клавиатура — src/ui/sky */
+  /** точки союзов в последнем кадре (px холста; решения 70, 76): щелчок, касание и клавиатура — src/ui/sky */
   plateHits: PlateHit[] = [];
   /** резерв органов неба в последнем кадре: вписанный набор не уходит под них (fitShown) */
   private reserveNow: Rect[] = [];
@@ -506,7 +514,7 @@ export class Sky implements SkyContext {
    * экрана, иначе — полоса в середине видимой части. Возвращает, изменилось ли что-нибудь на небе.
    */
   setView(v: SkyViewIn, anchor?: string | null): boolean {
-    // места под карточки союзов (решение 70): по картушам и полосам раскладки — только в небе «набор»
+    // места под точки союзов (решения 70, 76): по союзам и полосам раскладки — только в небе «набор»
     const next: SkyViewIn = { ...v, gaps: v.gaps ?? this.gapsFor(v) };
     // набор в режиме «Всё небо» на небо не влияет
     const same =
@@ -519,7 +527,7 @@ export class Sky implements SkyContext {
     this.replan(true, anchor);
     return true;
   }
-  /** Места под картуши союзов (решение 70; plates.ts, plateGaps) для вида v по полосам нынешней раскладки. */
+  /** Места под точки союзов (решения 70, 76; plates.ts, plateGaps) для вида v по полосам нынешней раскладки. */
   private gapsFor(v: SkyViewIn) {
     if (v.mode !== 'work' || !this.model || !v.plates?.length) return [];
     const m = this.model;
@@ -529,7 +537,7 @@ export class Sky implements SkyContext {
   private replan(keep: boolean, anchor?: string | null) {
     const m = this.model;
     const old = this.cam.rows;
-    // смена модели хронологии меняет полосы раскладки: места под картуши — по новым полосам
+    // смена модели хронологии меняет полосы раскладки: места под точки союзов — по новым полосам
     if (this.view.plates?.length) this.view = { ...this.view, gaps: this.gapsFor(this.view) };
     const plan = planSky(
       {
@@ -902,6 +910,13 @@ export class Sky implements SkyContext {
     // промежутки рождения у лиц, чей знак стоит у первого засвидетельствованного года (решение 38; MAP-69)
     if (L.lifelines) layer((q) => this.drawBirthBands(q));
     const notes: FamilyNote[] = [];
+    // союзы неба «набор» (решение 76): точки и линии к супругам и детям; у их детей нет прежних отводов и знаков брака
+    const unionPlates = work && s.plates?.length && !lineOnly ? s.plates : null;
+    if (unionPlates) {
+      const links = unionLinks(this, unionPlates);
+      p.unionKids = links.kids;
+      p.unionPairs = links.pairs;
+    }
     if (L.connectors) layer((q) => void notes.push(...(drawDescents(this, q) ?? [])));
     // в режиме «В работе» ленты — тонкий ориентир, и только если в наборе есть лица линий Мессии (J4)
     const ribbons = L.ribbons && (!work || [...spine].some((id) => !this.plan.hiddenPersons.has(id)));
@@ -910,10 +925,14 @@ export class Sky implements SkyContext {
       p.offRibbon = (b) => clearOfRibbons(this, b);
     }
     if (L.lifelines && L.ribbons) drawSpineTrails(this, p);
+    // точки союзов — места до звёзд и подписей: они обходят звёзды и ленты, подписи обходят их; линии — под звёздами
+    const dots = unionPlates ? layoutUnionDots(this, p, unionPlates, s.plateMarks ?? {}) : null;
+    const unionLog = dots && L.connectors ? drawUnionLines(this, p, dots, s.plateMarks ?? {}) : [];
     // путь родства — под звёздами: звёзды пути лежат на ломаной (E5)
     drawKinPath(this, p);
     this.drawStars(p);
     drawWorkMarks(this, p);
+    this.plateHits = dots ? drawUnionDots(this, p, dots, s.plateMarks ?? {}) : [];
 
     // подписи: одна проверка наложений на всё, что пишется на небе (E1)
     for (const i of p.vis) {
@@ -965,9 +984,6 @@ export class Sky implements SkyContext {
     if (L.labels) drawStarLabels(this, p, between);
     else between();
     this.groupHits = p.nameBoxes as (Rect & { group: string })[];
-    // карточки союзов (решение 70) — после подписей звёзд: картуш не ложится на подписи и сдвигается вдоль следа;
-    // пометы семей и знаки браков (drawFamilyNotes) — после картушей и обходят их
-    this.plateHits = work && s.plates?.length && !lineOnly ? drawPlates(this, p, s.plates, s.plateMarks ?? {}) : [];
     this.drawDaggers(p);
     drawFamilyNotes(this, p, notes);
     // шаг наведённой ленты объясняет подсказка («Давид, отец; Соломон, сын (Мф 1:6)», src/ui/sky/Tip.tsx; решение 54):
@@ -998,8 +1014,12 @@ export class Sky implements SkyContext {
       put('rows', String(Math.round(this.cam.rows.max - this.cam.rows.min)));
       put('folds', this.plan.marks.map((m) => `${m.kind}:${m.id}:${m.count}`).join(';'));
       put('foldHits', this.foldHits.map((h) => `${h.kind}:${h.id}:${[h.x, h.y, h.w, h.h].map(Math.round).join(',')}`).join(';'));
-      // карточки союзов (решение 70): «союз:раскрыт (1/0):x,y,w,h» — для проверок приёмки tools/accept/reveal4.ts
+      // точки союзов (решения 70, 76): «союз:раскрыт (1/0):x,y,w,h» — поле попадания, для проверок приёмки
+      // tools/accept/reveal4.ts; центры ромбов и «+N» — canvas[data-dots], линии — canvas[data-union-lines] (plates.ts)
       put('plates', this.plateHits.map((h) => `${h.uid}:${h.open ? 1 : 0}:${[h.x, h.y, h.w, h.h].map(Math.round).join(',')}`).join(';'));
+      // «союз:раскрыт (1/0):x,y (центр ромба):скрыто лиц» и линии «союз=супруг», «союз>ребёнок:#цвет» (tools/accept/dots6.ts)
+      put('dots', this.plateHits.map((h) => `${h.uid}:${h.open ? 1 : 0}:${Math.round(h.cx)},${Math.round(h.cy)}:${h.hidden}`).join(';'));
+      put('unionLines', unionLog.join(';'));
       // этап 7 (K5), для проверок приёмки tools/accept/skydraw.ts: подписанные лица, пометы и названия (текст), служебная
       // строка, разрывы «//», скобки «время не установлено», метки набора
       const boxes = this.ledger.boxes;

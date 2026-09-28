@@ -37,7 +37,7 @@ vi.mock('../src/render/labels.ts', async (orig) => {
 });
 vi.mock('../src/render/plates.ts', async (orig) => {
   const m = await orig<typeof import('../src/render/plates.ts')>();
-  return { ...m, drawPlateSample: vi.fn(m.drawPlateSample) };
+  return { ...m, drawUnionSample: vi.fn(m.drawUnionSample) };
 });
 vi.mock('../src/render/branches.ts', async (orig) => {
   const m = await orig<typeof import('../src/render/branches.ts')>();
@@ -142,7 +142,7 @@ const spies = {
   drawBirthBand: vi.mocked(glyphs.drawBirthBand),
   drawFamilyText: vi.mocked(trails.drawFamilyText),
   drawBranchSample: vi.mocked(branches.drawBranchSample),
-  drawPlateSample: vi.mocked(plates.drawPlateSample),
+  drawUnionSample: vi.mocked(plates.drawUnionSample),
 };
 type SpyName = keyof typeof spies;
 
@@ -189,13 +189,23 @@ describe('образцы — функции неба, а не свои копи�
     expect(used(s)).toEqual(['drawGlyph', 'drawBranchSample']);
     expect(s.drawBranchSample.mock.calls[0].slice(2)).toEqual([400, 64]);
   });
-  it('картуш союза — образцом неба drawPlateSample: союзы Авраама из данных, с Агарью свёрнут, с Саррой раскрыт (решения 67, 70)', () => {
-    const s = paint('plates', 460, 56);
-    const calls = s.drawPlateSample.mock.calls.map((c) => ({ names: c[5], sub: c[6], open: !!c[7] }));
-    expect(calls.map((c) => c.names)).toEqual(['Авраам и Агарь', 'Авраам и Сарра']);
-    expect(calls.map((c) => c.open)).toEqual([false, true]);
-    // вторая строка — вид связи и дети, как на небе (plateSub): у Агари — сын Измаил, у Сарры — сын Исаак
-    for (const c of calls) expect(c.sub).toMatch(/жена.*; сын$/);
+  it('союз — точкой неба drawUnionSample: раскрытый ромб с супругами и тремя детьми, свёрнутый — правее, во всю строку (решения 67, 70, 76)', () => {
+    const s = paint('plates', 460, 64);
+    // звёзды образца — знаком неба drawGlyph: муж, жена (знак женщины), три ребёнка, лицо со свёрнутым союзом
+    expect(used(s)).toEqual(['drawGlyph', 'drawUnionSample']);
+    expect(s.drawUnionSample.mock.calls[0].slice(2)).toEqual([460, 64]);
+    const sexes = s.drawGlyph.mock.calls.map((c) => c[3].sex);
+    expect(sexes.length).toBe(6);
+    expect(sexes.filter((x) => x === 'f').length).toBe(1);
+    const at = s.drawUnionSample.mock.results[0].value as { open: { x: number; y: number }; closed: { x: number; y: number } };
+    // оба ромба — внутри образца, свёрнутый правее раскрытого
+    for (const d of [at.open, at.closed]) {
+      expect(d.x).toBeGreaterThan(0);
+      expect(d.x).toBeLessThan(460);
+      expect(d.y).toBeGreaterThan(0);
+      expect(d.y).toBeLessThan(64);
+    }
+    expect(at.closed.x).toBeGreaterThan(at.open.x + 100);
   });
   it('семь величин звезды — drawGlyph с величинами 0…6', () => {
     const seen: number[] = [];

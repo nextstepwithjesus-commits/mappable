@@ -14,11 +14,9 @@ import { typo } from './text/typo.ts';
 import { aliveAt, lifeText, meridianText, placeText } from './sky/text.ts';
 import {
   allInView, anchorNow, fitReveal, flightTarget, flyToIds, flyToPerson, holdAnchor, inView, introOpen, keepInView, lanes, reduced, screenOf, setReserve, showAround,
-  startLanes, stopFlight, unionFlip, updateZoomFloor, viewAround, type Anchor, type UnionFlip,
+  startLanes, stopFlight, unionFlip, updateZoomFloor, viewAround, type Anchor,
 } from './sky/view.ts';
-import { expanded, hasHidden, opened, openPerson, plates, selectedUnion, unionById, type Plate } from './reveal.ts';
-import { hangSide, plateAnchorPoint, PLATE_PAD, type PlateIn } from '../render/plates.ts';
-import { starRadius } from '../render/glyphs.ts';
+import { expanded, hasHidden, opened, plates, selectedUnion, unionById, type Plate } from './reveal.ts';
 import { plateFocus, plateHover, plateNews } from './sky/starnav.ts';
 import { computed } from '@preact/signals';
 import { attachPointer, type Tip } from './sky/input.ts';
@@ -26,6 +24,7 @@ import { SkyColumn, SkyControls, useColumn, viewOpen } from './sky/Controls.tsx'
 import { CARTOUCHE_BESIDE, Cartouche, GuideCommand, SkyBars, lanesChanged, skyBarKind } from './sky/Overlays.tsx';
 import { SkyTip, kinPreview, shownTipStar } from './sky/Tip.tsx';
 import { SkyA11y } from './sky/SkyA11y.tsx';
+import { DotCard, dotCard } from './sky/DotCard.tsx';
 import { foldDesc, foldGroups, groupFoldText, keyTarget, linkSet, shownIds, skyMode, workIds, workKey, workKeyText, workSet } from './work.ts';
 import { SkyMenu, skyMenu } from './panels/Work.tsx';
 import { isTextField } from './keys.ts';
@@ -65,11 +64,16 @@ export const REFIT_MS = 300;
 // выделение неба (род выбранного лица, путь родства, группа панели) — src/render/marks.ts, highlightFor
 
 /**
- * Карточки союзов на небе «набор» (решение 70; src/ui/reveal.ts, plates): только для своего набора — набор из ссылки
+ * Точки союзов на небе «набор» (решения 70, 76; src/ui/reveal.ts, plates): только для своего набора — набор из ссылки
  * (IX-69) смотрят как есть.
  */
 const skyPlates = computed<readonly Plate[]>(() => (skyMode.value === 'work' && !linkSet.value ? plates.value : []));
-/** Лица набора с нераскрытыми союзами, чьи карточки союзов не показаны: «+» после подписи (решение 70). */
+/** Союз, у точки которого открыта карточка у точки (решение 76). */
+const dotUnion = computed<string | null>(() => {
+  const c = dotCard.value;
+  return c?.kind === 'union' ? c.uid : null;
+});
+/** Лица набора с нераскрытыми союзами, чьи точки союзов не показаны: «+» после подписи (решение 70). */
 const revealIds = computed<ReadonlySet<string> | null>(() => {
   if (skyMode.value !== 'work' || linkSet.value) return null;
   const open = new Set(opened.value);
@@ -222,9 +226,10 @@ export function SkyView() {
         modelNote: mid !== modelInfo[0]?.id ? (modelInfo.find((m) => m.id === mid)?.name ?? null) : null,
         workMarks: skyMode.value === 'all' && workSet.value.size ? workIds.value : null,
         workFlash: flash,
-        // карточки союзов и «+» нераскрытых союзов в небе «набор» (решение 70)
+        // точки союзов и «+» нераскрытых союзов в небе «набор» (решения 70, 76)
         plates: skyPlates.value,
-        plateMarks: { hover: plateHover.value, focus: plateFocus.value, selected: selectedUnion.value },
+        // точка союза с открытой карточкой у точки (решение 76) отмечена, как союз, открытый в листе карточки
+        plateMarks: { hover: plateHover.value, focus: plateFocus.value, selected: dotUnion.value ?? selectedUnion.value },
         reveal: revealIds.value,
       };
       // ярусы эпох — поверх звёзд, под меридианом, рамкой и указателями у края
@@ -569,11 +574,12 @@ export function SkyView() {
       void modelId.value;
       // группа панели («Главы», участок «Синопсиса») светится и без выбранного лица — кадр по её смене
       void skyGroup.value;
-      // карточки союзов, их состояния и «+» нераскрытых союзов (решение 70)
+      // точки союзов, их состояния, карточка у точки и «+» нераскрытых союзов (решения 70, 76)
       void skyPlates.value;
       void revealIds.value;
       void plateFocus.value;
       void selectedUnion.value;
+      void dotUnion.value;
       if (id && id !== lastSel) {
         // выбор лица — явное действие: вступление сворачивается в «Как читать карту» (C5)
         introDone.value = true;
@@ -626,12 +632,8 @@ export function SkyView() {
       if (onlyLines.value) flowStart = performance.now();
       request();
     });
-    // небо «набор» (решение 70): выбор лица набора — щелчок по звезде, Enter, поиск — показывает на небе карточки его
-    // союзов; повторный выбор их не прячет (скрывает их closePerson — команда карточки, src/ui/reveal.ts)
-    const offOpen = effect(() => {
-      const id = selected.value;
-      if (id && skyMode.peek() === 'work' && !linkSet.peek() && workSet.peek().has(id)) openPerson(id);
-    });
+    // небо «набор» (решение 76): щелчок по звезде лица сам союзов не показывает — у звезды раскрывается карточка у точки
+    // (src/ui/sky/DotCard.tsx), точки союзов показывает её команда «Продолжить ветвь» или «+» после подписи лица
     // раскрытие и свёртка союза — вслух (решение 70): «Раскрыт союз Авраама и Агари: 1 лицо»
     const offNews = effect(() => {
       const n = plateNews.value;
@@ -665,54 +667,12 @@ export function SkyView() {
     let shownGroups = foldGroups.peek();
     /** где свернули созвездие (UX-51): созвездие → полоса у места щелчка; строка «+N» встаёт на неё (src/render/rows.ts) */
     const foldAt = new Map<string, number>();
-    // раскрытие на небе (решение 70): прежние раскрытые союзы и прежний набор — чтобы понять, какой союз раскрыли или
-    // свернули, и удержать его картуш на месте экрана
+    // раскрытие на небе (решения 70, 76): прежние раскрытые союзы и прежний набор — чтобы понять, какой союз раскрыли или
+    // свернули, и удержать на месте экрана лицо, от которого его раскрыли
     let shownExp = expanded.peek();
     let shownSet: ReadonlySet<string> = shownIds.peek();
-    const plateOf = (f: UnionFlip, open: boolean): PlateIn | null => {
-      const u = unionById(f.uid);
-      return u ? { union: u, from: f.from, dir: u.kids.includes(f.from) ? 'up' : 'down', open } : null;
-    };
-    /** Где картуш союза на экране при наборе set (до перестройки строк): точка отвода и прямоугольник прошлого кадра. */
-    const plateScreen = (f: UnionFlip, open: boolean, set: ReadonlySet<string>) => {
-      const pl = plateOf(f, open);
-      const a = pl ? plateAnchorPoint(sky, pl, (id) => set.has(id)) : null;
-      if (!a) return null;
-      const x = sky.cam.sx(a.x);
-      const y = sky.cam.sy(a.lane);
-      const hit = sky.plateHits.find((h) => h.uid === f.uid) ?? null;
-      const px = hit ? hit.x + hit.w / 2 : x;
-      const py = hit ? hit.y + hit.h / 2 : y;
-      const vp = sky.cam.vp;
-      // картуша не было на виду — держать нечего
-      if (px < vp.l || px > vp.r || py < vp.t || py > vp.b) return null;
-      return { x, y, kind: a.kind, hit };
-    };
-    /**
-     * Удержать картуш на месте экрана после перестройки строк: точку отвода; если картуш переходит от звезды лица к следу
-     * родителя (союз «вверх») или обратно — его левый верхний угол. Возвращает, где теперь точка картуша (px холста).
-     */
-    const holdPlate = (f: UnionFlip, at: NonNullable<ReturnType<typeof plateScreen>>, set: ReadonlySet<string>) => {
-      const pl = plateOf(f, f.open);
-      const a = pl ? plateAnchorPoint(sky, pl, (id) => set.has(id)) : null;
-      if (!pl || !a) return null;
-      let tx = at.x;
-      let ty = at.y;
-      if (a.kind !== at.kind && at.hit) {
-        const { w, h } = at.hit;
-        const side = hangSide(pl.union, a.lane, (id) => model.peek().nodeByPerson.get(id)?.lane);
-        const dx = a.kind === 'trail' ? -PLATE_PAD.lead : -starRadius(byId.get(pl.from)?.magnitude ?? 6, 1) - 6 - w;
-        const dy = a.kind === 'trail' ? (side < 0 ? PLATE_PAD.gap : -PLATE_PAD.gap - h) : -5 - h;
-        tx = at.hit.x - dx;
-        ty = at.hit.y - dy;
-      }
-      stopFlight();
-      sky.cam.x0 = a.x - tx / sky.cam.kx;
-      sky.cam.laneTop = sky.rowOf(a.lane) + ty / sky.cam.ky;
-      return { x: tx, y: ty };
-    };
     const offWork = effect(() => {
-      // небо «набор» показывает набор из ссылки, пока читатель его смотрит (IX-69), иначе свой набор; картуши союзов —
+      // небо «набор» показывает набор из ссылки, пока читатель его смотрит (IX-69), иначе свой набор; точки союзов —
       // место под них в строках неба (решение 70)
       const v = { mode: skyMode.value, set: shownIds.value, foldDesc: foldDesc.value, foldGroups: foldGroups.value, foldAt, plates: skyPlates.value };
       const exp = expanded.peek();
@@ -720,8 +680,8 @@ export function SkyView() {
       shownExp = exp;
       const prevSet = shownSet;
       shownSet = v.set;
-      // картуш раскрытого или свёрнутого союза — где он был на экране (до перестройки строк)
-      const flipAt = flip && sky.model && last.w && v.mode === 'work' && shownMode === 'work' ? plateScreen(flip, !flip.open, prevSet) : null;
+      // лицо, от которого раскрыли или свернули союз, — было ли оно на виду (до перестройки строк)
+      const flipAt = flip && sky.model && last.w && v.mode === 'work' && shownMode === 'work' && inView(flip.from) ? flip : null;
       const toggled = v.foldDesc.find((x) => !shownFolds.includes(x)) ?? shownFolds.find((x) => !v.foldDesc.includes(x));
       const newGroup = v.foldGroups.find((g) => !shownGroups.includes(g)) ?? null;
       const openedGroup = shownGroups.find((g) => !v.foldGroups.includes(g)) ?? null;
@@ -752,11 +712,12 @@ export function SkyView() {
           sky.cam.laneTop = sky.rowOf(lane) + hold.y / sky.cam.ky;
         } else hold = null;
       }
-      // раскрыли или свернули союз (решение 70): картуш остаётся на месте экрана; новые лица вне видимой части —
-      // вписать их прямым переходом, не дольше 600 мс; свёртка небо не сдвигает
+      // раскрыли или свернули союз (решения 70, 76): небо не прыгает — лицо, от которого раскрыли, остаётся на своём месте
+      // экрана (setView держит его строку), точка союза встаёт на своё новое место между супругами; новые лица вне видимой
+      // части — вписать их прямым переходом, не дольше 600 мс, не сдвигая этого лица; свёртка небо не сдвигает
       let revealed = false;
       if (changed && flip && flipAt) {
-        const keep = holdPlate(flip, flipAt, v.set);
+        const keep = screenOf(flip.from);
         if (flip.open) {
           const u = unionById(flip.uid);
           updateZoomFloor();
@@ -844,7 +805,6 @@ export function SkyView() {
       offLines();
       offTiers();
       offWork();
-      offOpen();
       offNews();
       offFull();
       window.removeEventListener('keydown', onWorkKey);
@@ -892,6 +852,8 @@ export function SkyView() {
           class={pickMode.value ? 'picking' : ''}
         />
         <SkyA11y />
+        {/* карточка у звезды или точки союза в небе «набор» (решение 76): сразу после холста — Tab с неба ведёт в неё */}
+        <DotCard />
         {/* строки у кромки неба — под служебной строкой рамки (VIS-46, MAP-67): выбор второго лица, отметки поиска, группа,
             режим «набор» (UX-62, MOB-54), пропорция строк (UX-53) */}
         <SkyBars />

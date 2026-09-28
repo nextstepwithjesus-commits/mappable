@@ -30,8 +30,8 @@ import { mapFont, T_MAP_S } from '../../render/type.ts';
 import { drawBirthBand, drawGlyph, roleSigla, starRadius, type GlyphOpts } from '../../render/glyphs.ts';
 import { drawWorkMark, highlightFor, SIB } from '../../render/marks.ts';
 import { BRANCH_FADE, branchColor, drawBranchSample } from '../../render/branches.ts';
-import { drawPlateSample, plateNames, plateSize, plateSub } from '../../render/plates.ts';
-import { atlasView, unionById, unionsOf } from '../reveal.ts';
+import { drawUnionSample } from '../../render/plates.ts';
+import { atlasView, unionById } from '../reveal.ts';
 import { drawStrands, lineNoteHits, ribbonLook } from '../../render/ribbons.ts';
 import { drawFoldMark } from '../../render/labels.ts';
 import { eventMarks } from '../../render/frame.ts';
@@ -296,21 +296,10 @@ export const PAINTERS = {
   /** подсветка ветвей выбранного лица (решение 69): предок, выбранное лицо, три ветви своих цветов, внук бледнее */
   branches: drawBranchSample,
   /**
-   * картуши союзов (решения 67, 70): союзы Авраама из данных — с Агарью свёрнут («+»), с Саррой раскрыт («−»); надписи —
-   * те же функции, что на небе (plateNames, plateSub). Не помещаются в строку — второй под первым
+   * союз на небе — точка (решения 67, 70, 76): раскрытый — залитый ромб со скобками от мужа и жены и линиями к трём детям
+   * цветами их ветвей; свёрнутый — полый ромб у строки лица и «+4». Тот же рисунок, что на небе (drawUnionSample)
    */
-  plates: (ctx, pal, w) => {
-    const us = unionsOf('avraam');
-    const hagar = us.find((u) => u.b === 'agar');
-    const sarah = us.find((u) => u.b === 'sarra');
-    if (!hagar || !sarah) return;
-    const a = { names: plateNames(hagar), sub: plateSub(hagar) };
-    const b = { names: plateNames(sarah), sub: plateSub(sarah) };
-    const r = drawPlateSample(ctx, pal, false, 8, 8, a.names, a.sub);
-    const wb = plateSize(ctx, false, b).w;
-    const side = r.x + r.w + 16 + wb <= w - 8;
-    drawPlateSample(ctx, pal, false, side ? r.x + r.w + 16 : 8, side ? 8 : r.y + r.h + 8, b.names, b.sub, true);
-  },
+  plates: (ctx, pal, w, h) => void drawUnionSample(ctx, pal, w, h),
 } satisfies Record<string, Painter>;
 
 export type PainterKey = keyof typeof PAINTERS;
@@ -969,17 +958,19 @@ export function LegendPanel() {
             в подсказке звезды, в поиске и в «Родстве»; список — в панели «В работе».
           </span>
         </li>
-        {/* раскрытие родословия (решения 67, 68, 70, 72): картуш союза — образцом неба drawPlateSample (src/render/plates.ts) */}
-        <Wide s={<Paint draw={PAINTERS.plates} h={56} />}>
+        {/* раскрытие родословия (решения 67, 68, 70, 72, 76): точка союза — образцом неба drawUnionSample (src/render/plates.ts) */}
+        <Wide s={<Paint draw={PAINTERS.plates} h={64} />}>
           Союз на небе — брак или связь, от которой пошли дети: жена, наложница, служанка, данная в жену. В небе «набор»
-          его картуш стоит между супругами и их детьми: имена супругов, вид связи словами Писания и дети; если Писание не
-          называет жену или мать, её место так и помечено. Знак «+» в картуше — союз свёрнут, «−» — раскрыт. Щелчок по лицу
-          показывает картуши его союзов: вниз — его браки, вверх — союз родителей. Щелчок по картушу раскрывает обоих
-          супругов и всех детей и открывает карточку союза, повторный — сворачивает всё, что раскрыто через него.
+          союз — малый ромб между строками мужа и жены, правее их звёзд и левее звезды первого ребёнка: к нему сходятся
+          линии от супругов, от него к каждому ребёнку идёт своя линия цвета его ветви. Залитый ромб — союз раскрыт: оба
+          супруга и все дети на небе; полый с числом — свёрнут, число — сколько лиц союза ещё не показано. Линия штрихом —
+          происхождение иного рода (по закону, по Луке, усыновление), редкими точками — по толкованию. Щелчок по звезде
+          открывает у неё карточку лица: «Продолжить ветвь» показывает точки его браков, «Родители» — союз родителей.
+          Щелчок по точке открывает у неё карточку союза: супруги, вид связи и стих, раскрыть или свернуть детей.
         </Wide>
         <li class="legend-row legend-wide">
           <span class="legend-text">
-            Плюс без числа после имени — у лица есть нераскрытые союзы: щелчок по нему покажет их картуши. Плюс с числом
+            Плюс без числа после имени — у лица есть нераскрытые союзы: щелчок по нему покажет точки его союзов. Плюс с числом
             после имени — другое: потомки лица скрыты на небе (см. выше).
           </span>
         </li>

@@ -1,36 +1,56 @@
 /**
- * Карточки союзов на небе «набор» (решения владельца 67, 70, 72): брак или связь, от которой пошли дети, — небольшой
- * картуш в традиции звёздного атласа (ТЗ § 5): тонкая рамка 1 px цвета туманности, без тени и скругления, фон неба.
+ * Союзы на небе «набор» — точки (решения владельца 67, 70, 76). Союз — брак или связь, от которой пошли дети, — стоит
+ * на небе малым знаком между супругами: к нему сходятся линии от мужа и жены, от него расходятся линии к детям.
+ * Прямоугольных картушей нет; кто в союзе и что в нём сказано, читатель узнаёт из подсказки (наведение) и из карточки
+ * у точки (щелчок; src/ui/sky/DotCard.tsx).
  *
- *   ┌──────────────────────┐
- *   │ +  Авраам и Агарь    │   имена супругов — кеглем подписей;
- *   │    жена; сын         │   вид связи словами данных и дети — строкой мельче
- *   └──────────────────────┘
+ *        Адам ●━━━━━━━╮                         ● Сиф
+ *                     ╰──◆ ─────────────────────╯      линия к ребёнку — цветом его ветви (branches.ts), 1,5 px,
+ *                     ╭──╯╲──────────── ● Авель       мягкое свечение; от мужа и жены — скобки тоном следа
+ *         Ева ◉━━━━━━━╯    ╲──────────── ● Каин
  *
- * Знак слева — состояние: «+» — свёрнут (щелчок раскрывает обоих супругов и детей), «−» — раскрыт.
+ * Знак — ромбик 8 px (у касаний 9 px). Почему ромб: все знаки лиц в атласе круглые (диск, диск в кольце, пунктирное
+ * скопление, восьмилучевая звезда, ТЗ § 5.4), а двойное кольцо спутали бы со знаком женщины; ромб той же величины, что
+ * звезда 2–3-й величины, остаётся «точкой» звёздной карты и с первого взгляда не читается как лицо. В генеалогических
+ * схемах ромб — привычный знак узла брака.
+ *  — раскрыт (оба супруга и все дети на небе) — ромб залит; свёрнут — полый, справа мелко «+N» — сколько лиц союза
+ *    ещё не на небе (как «+N» свёрнутых потомков);
+ *  — выбранный (карточка союза открыта) — кольцо, как у выбранной звезды; наведённый — ярче и тонкое кольцо;
+ *    с фокусом клавиатуры — кольцо фокуса;
+ *  — подписи у точки нет: имена супругов и детей — в подсказке и в карточке у точки.
  *
- * Место (решение 70):
- *  — союз «вниз» — на следе отца (или единственного родителя, если отца нет на небе) в год рождения первого ребёнка,
- *    у корня гребёнки детей этой матери (src/render/trails.ts, familyCombs); картуш висит под следом или над ним —
- *    с той стороны, где больше детей: там небо «набор» оставляет строку (src/render/rows.ts, PlateGap). Брак без детей —
- *    в середине жизни мужа;
- *  — союз «вверх» (родители лица, которых нет на небе) — над лицом, слева от его звезды, на уровне его рождения;
- *    раскрытый союз «вверх» стоит там же, где стоял бы союз «вниз» у родителя;
- *  — картуш не ложится на подписи и звёзды (общая проверка наложений, labels.ts, claim): при нехватке места он сдвигается
- *    вдоль следа, затем — на другую сторону следа, затем — в одну строку;
- *  — от следа к картушу — одна тонкая линия (отвод): у раскрытого союза она продолжается стволом гребёнки его детей.
+ * Место (решение 76):
+ *  — по высоте — между строками мужа и жены (посередине); если на небе один супруг (жена не названа или не раскрыта) —
+ *    у его строки со стороны детей; если на небе только ребёнок (союз его родителей) — у строки ребёнка со стороны
+ *    родителей;
+ *  — по времени — через четверть пути от рождения младшего из супругов до рождения первого ребёнка: правее звёзд
+ *    супругов и левее звезды первого ребёнка (dotTime); брак без детей — через четверть пути до конца более короткого
+ *    следа;
+ *  — точка не ложится на звёзды, ленты и другие точки и уходит с линий следов: сдвиг вдоль времени, затем чуть выше
+ *    или ниже; подписи звёзд ставятся после точек и обходят их (общая проверка наложений, labels.ts, Placer).
  *
- * drawPlateSample рисует образец картуша на любом холсте (условные знаки, src/ui/panels/Legend.tsx).
+ * Линии рисуются под звёздами и подписями (sky.ts): скобки от супругов — плавные кривые Безье, выходящие из следа
+ * и входящие в ромб слева; к детям — прямые, как отрезки созвездия. Цвет линии к ребёнку — цвет его ветви у родителя
+ * (по союзам, если у родителя союзов с детьми два и больше, иначе по детям — решение 69); у выбранного лица и его рода —
+ * цвет и свечение его ветвей (подсветка M4), предки — мягким белым светом, прочие гаснут вместе с небом. Связь иного
+ * рода (по закону, по Луке, усыновление) — штрихом, по толкованию — редкими точками. Дети раскрытого союза не получают
+ * прежних отводов от следа отца (trails.ts): связь не дублируется.
+ *
+ * drawUnionSample рисует образец — союз с линиями к трём детям и свёрнутый союз — на любом холсте (условные знаки,
+ * src/ui/panels/Legend.tsx).
  */
-import { byId } from '../data/atlas.ts';
+import { byId, graph } from '../data/atlas.ts';
 import type { ModelData } from '../data/atlas.ts';
-import type { Union } from '../engine/unions.ts';
+import { branchesOf, membersOf, type Union } from '../engine/unions.ts';
+import { unions as ALL_UNIONS } from '../ui/reveal.ts';
 import { lowerFirst, nameCase } from '../ui/text/ru.ts';
 import { alpha } from './color.ts';
-import { starRadius } from './glyphs.ts';
-import { claim } from './labels.ts';
-import { familyCombs } from './trails.ts';
-import { mapFont, mapSize, T_MAP_S, T_UI } from './type.ts';
+import { branchColor, GlowBatch, glowLayers, glows, type MapTheme } from './branches.ts';
+import { drawGlyph, starRadius } from './glyphs.ts';
+import { insideSky, Placer, spot as labelSpot } from './labels.ts';
+import { branchFrame } from './marks.ts';
+import { branchAlpha } from './trails.ts';
+import { mapFont, mapSize, nameSize, T_MAP_S } from './type.ts';
 import type { Rect } from './rect.ts';
 import type { PlateGap } from './rows.ts';
 import type { Pass, SkyContext } from './sky.ts';
@@ -38,7 +58,7 @@ import type { Pass, SkyContext } from './sky.ts';
 /** Союз на небе: что рисовать (src/ui/reveal.ts, plates — тот же вид). */
 export interface PlateIn {
   union: Union;
-  /** лицо, у которого карточка стоит */
+  /** лицо, от которого союз показан */
   from: string;
   /** 'down' — союз лица (к детям), 'up' — союз его происхождения (к родителям) */
   dir: 'down' | 'up';
@@ -46,17 +66,28 @@ export interface PlateIn {
   open: boolean;
 }
 
-/** Картуш в последнем кадре (px холста): щелчок и касание — src/ui/sky/input.ts, клавиатура — starnav.ts. */
+/**
+ * Точка союза в последнем кадре (px холста): прямоугольник вокруг ромба (и «+N»), по которому ловят щелчок и наведение
+ * (src/ui/sky/input.ts, plateAt; на касании поле раздувается до 44 px) и клавиатура (starnav.ts); cx, cy — центр ромба:
+ * к нему крепится карточка у точки (DotCard).
+ */
 export interface PlateHit extends Rect {
   uid: string;
   from: string;
   open: boolean;
-  /** точка на следе (или у звезды), от которой идёт отвод */
+  /** центр ромба */
+  cx: number;
+  cy: number;
+  /** полуразмер ромба, px */
+  r: number;
+  /** лиц союза, которых ещё нет на небе («+N»; 0 — все на небе) */
+  hidden: number;
+  /** то же, что cx, cy (прежнее имя: точка, от которой шёл отвод картуша) */
   ax: number;
   ay: number;
 }
 
-/** Состояния картушей в кадре: наведённый, с кольцом клавиатуры, открытый в листе карточки. */
+/** Состояния точек в кадре: наведённая, с кольцом клавиатуры, открытая в листе карточки. */
 export interface PlateMarks {
   hover?: string | null;
   focus?: string | null;
@@ -74,7 +105,7 @@ const plural = (n: number, one: string, few: string, many: string) => {
   return many;
 };
 
-/** Имя лица в картуше: безымянное («Жена Лота») не первым словом — со строчной. */
+/** Имя лица в названии союза: безымянное («Жена Лота») не первым словом — со строчной. */
 function nameIn(id: string, first: boolean): string {
   const p = byId.get(id);
   if (!p) return id;
@@ -82,8 +113,9 @@ function nameIn(id: string, first: boolean): string {
 }
 
 /**
- * Первая строка картуша — имена супругов в именительном: «Авраам и Агарь». Второе лицо не названо — «Сиф и его жена»,
- * «Мария и её муж» (решение 75). У союза происхождения иного рода с одним лицом (усыновление, по Луке) — одно имя.
+ * Название союза (подсказка, карточка у точки, клавиатура) — имена супругов в именительном: «Авраам и Агарь». Второе
+ * лицо не названо — «Сиф и его жена», «Мария и её муж» (решение 75). У союза происхождения иного рода с одним лицом
+ * (усыновление, по Луке) — одно имя.
  */
 export function plateNames(u: Union): string {
   if (u.a && u.b) return `${nameIn(u.a, true)} и ${nameIn(u.b, false)}`;
@@ -120,8 +152,9 @@ export function kidsCount(u: Union): string {
 }
 
 /**
- * Вторая строка картуша: вид связи словами данных («жена», «наложница»), вид происхождения детей («по закону», «по Луке»,
- * «усыновление») с пометой «толк.» или «выв.», и дети со склонением: «наложница; 6 сыновей», «жена; по закону; сын».
+ * Вид союза одной строкой (карточка у точки, объявление): вид связи словами данных («жена», «наложница»), вид
+ * происхождения детей («по закону», «по Луке», «усыновление») с пометой «толк.» или «выв.», и дети со склонением:
+ * «наложница; 6 сыновей», «жена; по закону; сын».
  */
 export function plateSub(u: Union): string {
   if (u.claim === 'ancestor') {
@@ -151,18 +184,43 @@ export function unionGen(u: Union): string | null {
 
 // ---------- место ----------
 
+/** Полуразмер ромба союза, px: 4,5 — ромб 9 px (у касаний — 5). */
+export const DOT_R = 4.5;
+export const DOT_R_TOUCH = 5;
+/** Поле точки в проверке наложений, px от центра: ромб и кольцо выбора; подписи отступают от ромба на столько. */
+export const DOT_FIELD = 8;
 /**
- * Где стоит картуш: на следе родителя, который есть на небе (отец, иначе мать; у союза «вниз» без родителя на небе —
- * у лица from), или — у союза «вверх», родителей которого нет на небе, — у звезды лица from.
+ * Точка у строки одного лица (супруг или ребёнок): отступ от строки, px — доля высоты строки в пределах. Не меньше
+ * полувысоты подписи и поля точки: подписи справа и слева от звёзд этой строки точку не задевают.
  */
-export function plateAnchor(pl: PlateIn, shown: (id: string) => boolean): { at: string; kind: 'trail' | 'star' } {
-  const u = pl.union;
-  const par = [u.a, u.b].find((x): x is string => !!x && shown(x) && !u.kids.includes(x));
-  if (par) return { at: par, kind: 'trail' };
-  return { at: pl.from, kind: pl.dir === 'down' ? 'trail' : 'star' };
+export const DOT_HANG = { k: 0.7, min: 19, max: 24 };
+/** Точка не ближе стольких px к звезде супруга (справа) и к звезде ребёнка (слева). */
+export const DOT_CLEAR = 9;
+/**
+ * Не ближе стольких px к звезде супруга, если до звезды ребёнка есть место (не дальше середины промежутка): при мелком
+ * масштабе времени четверть пути — считаные пиксели, и скобки от супругов сливались бы со звездой.
+ */
+export const DOT_LEAD = 24;
+/** Где по времени стоит точка: доля пути от рождения младшего супруга до рождения первого ребёнка. */
+export const DOT_AT = 0.25;
+
+/** Лицо на небе: узел есть и нарисован в этом кадре. */
+const shownIn = (v: Pick<SkyContext, 'indexOf' | 'drawn'>) => (id: string) => {
+  const i = v.indexOf(id);
+  return i !== undefined && v.drawn(i);
+};
+
+/** Супруги союза, которые на небе (муж, затем жена); ребёнок союза супругом не считается. */
+export function spousesShown(u: Union, shown: (id: string) => boolean): string[] {
+  return [u.a, u.b].filter((x): x is string => !!x && !u.kids.includes(x) && shown(x));
 }
 
-/** С какой стороны следа родителя на полосе lane висит картуш: там, где больше детей союза (1 — выше, −1 — ниже). */
+/** Лица союза, которых нет на небе, — «+N» у свёрнутой точки (только лица с местом на небе). */
+export function hiddenOf(u: Union, shown: (id: string) => boolean, has: (id: string) => boolean): number {
+  return membersOf(u).filter((id) => has(id) && !shown(id)).length;
+}
+
+/** С какой стороны строки родителя на полосе lane дети союза: 1 — выше (к верху экрана), −1 — ниже. */
 export function hangSide(u: Union, lane: number, laneOf: (id: string) => number | undefined): 1 | -1 {
   let s = 0;
   for (const k of u.kids) {
@@ -172,282 +230,707 @@ export function hangSide(u: Union, lane: number, laneOf: (id: string) => number 
   return s > 0 ? 1 : -1;
 }
 
+/** С какой стороны строки ребёнка (полоса lane) его родители: 1 — выше, −1 — ниже; поровну или неизвестно — выше. */
+export function parentSide(u: Union, lane: number, laneOf: (id: string) => number | undefined): 1 | -1 {
+  let s = 0;
+  for (const p of [u.a, u.b]) {
+    const l = p ? laneOf(p) : undefined;
+    if (l !== undefined) s += l - lane;
+  }
+  return s < 0 ? -1 : 1;
+}
+
 /**
- * Места под картуши для сжатия строк неба «набор» (src/render/rows.ts, planSky): у полосы родителя — со стороны детей;
- * у лица, чьих родителей нет на небе, — над ним. У лица с тремя союзами и больше — с обеих сторон следа.
+ * Места под точки союзов для сжатия строк неба «набор» (src/render/rows.ts, planSky). Точка между строками двух
+ * супругов места не просит. Точке у строки одного супруга — PLATE_ROWS строки со стороны детей, точке у строки ребёнка
+ * (родителей нет на небе) — со стороны родителей.
  */
 export function plateGaps(plates: readonly PlateIn[], laneOf: (id: string) => number | undefined, shown: (id: string) => boolean): PlateGap[] {
   const out = new Map<string, PlateGap>();
   const put = (lane: number, dir: 1 | -1) => out.set(`${lane}${dir}`, { lane, dir });
-  const per = new Map<string, number>();
   for (const pl of plates) {
-    const an = plateAnchor(pl, shown);
-    const lane = laneOf(an.at);
-    if (lane === undefined) continue;
-    if (an.kind === 'star') {
-      put(lane, 1);
+    const u = pl.union;
+    const sp = spousesShown(u, shown);
+    if (sp.length >= 2) continue;
+    if (sp.length === 1) {
+      const lane = laneOf(sp[0]);
+      if (lane !== undefined) put(lane, hangSide(u, lane, laneOf));
       continue;
     }
-    put(lane, hangSide(pl.union, lane, laneOf));
-    per.set(an.at, (per.get(an.at) ?? 0) + 1);
-  }
-  for (const [id, n] of per) {
-    const lane = laneOf(id);
-    if (n < 3 || lane === undefined) continue;
-    put(lane, 1);
-    put(lane, -1);
+    const kid = u.kids.includes(pl.from) && shown(pl.from) ? pl.from : u.kids.find(shown);
+    const lane = kid ? laneOf(kid) : undefined;
+    if (lane !== undefined) put(lane, parentSide(u, lane, laneOf));
   }
   return [...out.values()];
 }
 
-/** Год рождения первого ребёнка союза (астр.; у лица со знаком у первого свидетельства — оценка рождения). */
+/** Год рождения первого ребёнка союза (астр.; год знака на небе). */
 export function firstBirth(model: ModelData, u: Union): number | null {
   let t = Infinity;
   for (const k of u.kids) {
     const n = model.nodeByPerson.get(k);
-    if (n) t = Math.min(t, n.born ?? n.t0);
+    if (n) t = Math.min(t, n.t0);
   }
   return Number.isFinite(t) ? t : null;
 }
 
 /**
- * Точка картуша в координатах неба: мировая x и полоса — год рождения первого ребёнка на полосе родителя (брак без детей —
- * середина жизни), а у союза «вверх» без родителей на небе — рождение лица from. По ней небо держит картуш на месте
- * экрана, когда союз раскрывают и сворачивают (src/ui/SkyView.tsx).
+ * Год точки союза (астр.): через четверть пути (DOT_AT) от рождения младшего из супругов до рождения первого ребёнка.
+ * Брак без детей — через четверть пути до конца более короткого из следов (не дальше 60 лет); супругов нет в модели —
+ * за 20 лет до первого ребёнка. Год точки — только место знака, не утверждение о годе брака.
  */
-export function plateAnchorPoint(v: Pick<SkyContext, 'model' | 'xOf'>, pl: PlateIn, shown: (id: string) => boolean): { x: number; lane: number; kind: 'trail' | 'star' } | null {
-  const an = plateAnchor(pl, shown);
-  const n = v.model.nodeByPerson.get(an.at);
-  if (!n) return null;
-  if (an.kind === 'star') return { x: v.xOf(n.t0), lane: n.lane, kind: 'star' };
-  const t = firstBirth(v.model, pl.union) ?? (n.t0 + n.t1) / 2;
-  return { x: v.xOf(t), lane: n.lane, kind: 'trail' };
+export function dotTime(model: ModelData, u: Union): number | null {
+  const sp = [u.a, u.b].map((id) => (id ? model.nodeByPerson.get(id) : undefined)).filter((n) => !!n);
+  const first = firstBirth(model, u);
+  if (!sp.length) return first === null ? null : first - 20 * DOT_AT;
+  const young = Math.max(...sp.map((n) => n!.t0));
+  const end = first ?? Math.min(young + 60, ...sp.map((n) => Math.max(n!.t1, young + 4)));
+  return young + DOT_AT * (end - young);
 }
-
-// ---------- размер и рисунок ----------
-
-/** Поля картуша, px: по горизонтали, по вертикали; просвет между следом и картушем; отступ картуша влево от отвода. */
-export const PLATE_PAD = { x: 6, y: 3, gap: 3, lead: 9 };
-
-interface PlateText {
-  names: string;
-  sub: string;
-  sign: string;
-}
-interface PlateSize {
-  w: number;
-  h: number;
-  signW: number;
-  s1: number;
-  s2: number;
-}
-
-const namesFont = (coarse: boolean) => mapFont(T_UI, { weight: 500, coarse });
-const subFont = (coarse: boolean) => mapFont(T_MAP_S, { sans: true, coarse });
-const signFont = (coarse: boolean) => mapFont(T_UI, { sans: true, weight: 500, coarse });
-
-/** Размер картуша: две строки (compact — только имена). */
-export function plateSize(ctx: CanvasRenderingContext2D, coarse: boolean, t: { names: string; sub: string }, compact = false): PlateSize {
-  const s1 = mapSize(T_UI, coarse);
-  const s2 = mapSize(T_MAP_S, coarse);
-  ctx.font = signFont(coarse);
-  const signW = Math.max(ctx.measureText('+').width, ctx.measureText('−').width) + 5;
-  ctx.font = namesFont(coarse);
-  const w1 = ctx.measureText(t.names).width;
-  let w2 = 0;
-  if (!compact && t.sub) {
-    ctx.font = subFont(coarse);
-    w2 = ctx.measureText(t.sub).width;
-  }
-  const w = Math.ceil(PLATE_PAD.x * 2 + signW + Math.max(w1, w2));
-  const h = Math.ceil(PLATE_PAD.y * 2 + s1 * 1.04 + (!compact && t.sub ? s2 * 1.2 + 1 : 0));
-  return { w, h, signW, s1, s2 };
-}
-
-type PlatePal = { ink: string; ink2: string; ink3: string; focus: string };
 
 /**
- * Картуш в прямоугольнике box: фон (ground), рамка 1 px цвета туманности (наведённый — ярче, открытый в листе карточки —
- * с внутренней второй линией, как рамка в атласе), знак «+» или «−», имена и строка вида связи.
+ * Где союз на небе по раскладке (px холста), до проверки наложений: центр, пределы по времени (правее звёзд супругов,
+ * левее звёзд детей) и вид места — между супругами, у строки одного супруга, у строки ребёнка.
  */
-function paintPlate(ctx: CanvasRenderingContext2D, pal: PlatePal, coarse: boolean, box: Rect, t: PlateText, z: PlateSize, compact: boolean, st: { hover?: boolean; focus?: boolean; selected?: boolean }, ground: (b: Rect) => void) {
-  ground(box);
+interface DotSpot {
+  x: number;
+  y: number;
+  lo: number;
+  hi: number;
+  kind: 'between' | 'hang' | 'child';
+  /** половина промежутка между строками супругов (для сдвига вверх и вниз) или отступ от строки */
+  room: number;
+  /** строка лица, у которой стоит точка (у точки между супругами — середина) */
+  ref: number;
+}
+
+/** Отступ точки от строки одного лица, px. */
+const hangPx = (ky: number) => Math.max(DOT_HANG.min, Math.min(DOT_HANG.max, ky * DOT_HANG.k));
+
+function dotSpot(v: SkyContext, p: Pick<Pass, 'zoomScale'>, pl: PlateIn, shown: (id: string) => boolean): DotSpot | null {
+  const { cam, model } = v;
+  const u = pl.union;
+  const t = dotTime(model, u);
+  if (t === null) return null;
+  const at = (id: string) => {
+    const i = v.indexOf(id)!;
+    const q = byId.get(id);
+    return { x: cam.sx(v.X0[i]), y: cam.sy(v.nodes[i].lane), r: starRadius(q?.magnitude ?? 6, p.zoomScale) + (q?.sex === 'f' ? 2.2 : 0), lane: v.nodes[i].lane };
+  };
+  const sp = spousesShown(u, shown).map(at);
+  const kids = u.kids.filter(shown).map(at);
+  const laneOf = (id: string) => model.nodeByPerson.get(id)?.lane;
+  let lo = -Infinity;
+  let hi = Infinity;
+  for (const s of sp) lo = Math.max(lo, s.x + s.r + DOT_CLEAR);
+  for (const k of kids) hi = Math.min(hi, k.x - k.r - DOT_CLEAR);
+  const x0 = Math.max(cam.sx(v.xOf(t)), Math.min(lo + DOT_LEAD, (lo + (Number.isFinite(hi) ? hi : lo + 2 * DOT_LEAD)) / 2));
+  const x = lo <= hi ? Math.max(lo, Math.min(hi, x0)) : (lo + hi) / 2;
+  const hang = hangPx(cam.ky);
+  if (sp.length >= 2) return { x, y: (sp[0].y + sp[1].y) / 2, lo, hi, kind: 'between', room: Math.abs(sp[0].y - sp[1].y) / 2, ref: (sp[0].y + sp[1].y) / 2 };
+  if (sp.length === 1) {
+    const side = hangSide(u, sp[0].lane, laneOf);
+    return { x, y: sp[0].y - side * hang, lo, hi, kind: 'hang', room: hang, ref: sp[0].y };
+  }
+  const kid = u.kids.includes(pl.from) && shown(pl.from) ? pl.from : u.kids.find(shown);
+  if (!kid) return null;
+  const k = at(kid);
+  return { x, y: k.y - parentSide(u, k.lane, laneOf) * hang, lo, hi, kind: 'child', room: hang, ref: k.y };
+}
+
+// ---------- цвет линий к детям ----------
+
+/** Ветвь ребёнка у родителя (решение 69): по союзам родителя, если их с детьми два и больше, иначе по детям. */
+const schemes = new Map<string, Map<string, number>>();
+function schemeOf(parent: string): Map<string, number> {
+  let m = schemes.get(parent);
+  if (!m) {
+    m = new Map([...branchesOf(ALL_UNIONS, graph, parent, 1).desc].map(([k, b]) => [k, b.branch]));
+    if (schemes.size > 512) schemes.clear();
+    schemes.set(parent, m);
+  }
+  return m;
+}
+/** Номер ветви ребёнка kid в союзе u — у отца (или матери, если отец не назван); иное происхождение — по порядку детей. */
+export function kidBranch(u: Union, kid: string): number {
+  const parent = u.a ?? u.b;
+  if (parent && !u.claim) {
+    const b = schemeOf(parent).get(kid);
+    if (b !== undefined) return b;
+  }
+  return Math.max(0, u.kids.indexOf(kid));
+}
+/** Цвет линии к ребёнку по ветви у родителя (#rrggbb): тот же, что у ветви при выборе этого родителя. */
+export const kidColor = (u: Union, kid: string, theme: MapTheme): string => branchColor(kidBranch(u, kid), theme);
+/** Начертание линии к ребёнку: иное происхождение (по закону, по Луке, усыновление) — штрих, по толкованию — точки. */
+export function kidDash(u: Union): number[] {
+  if (u.kidsCert === 'interpretation') return [1, 3.5];
+  if (u.claim) return [5, 3];
+  return [];
+}
+
+// ---------- кадр ----------
+
+/** Яркость ромба союза относительно звезды (наведённый и выбранный — 1). */
+export const DOT_TONE = 0.82;
+/** Толщина линии к ребёнку и скобки от супруга, px. */
+export const KID_LINE_W = 1.5;
+export const SPOUSE_LINE_W = 1.2;
+
+/** Точка союза в кадре: место, лица на небе и их звёзды (px холста). */
+export interface UnionDot {
+  pl: PlateIn;
+  cx: number;
+  cy: number;
+  /** точка встала в открытое небо (иначе линии идут к её месту за краем, а ромба и попадания нет) */
+  placed: boolean;
+  box: Rect | null;
+  hidden: number;
+  /** яркость союза при выделении: по детям на небе, иначе по супругам */
+  e: number;
+  /** супруги на небе: звезда, конец следа и конец места подписи справа от звезды (lab), куда подпись встанет первой */
+  spouses: { id: string; x: number; y: number; r: number; end: number; lab?: number }[];
+  kids: { id: string; x: number; y: number; r: number; t0: number }[];
+  r: number;
+  count: string;
+  countW: number;
+  /**
+   * где «+N» у ромба — там, где нет линий: справа (линий к детям нет), слева (нет скобок от супругов — союз родителей
+   * лица) или под ромбом, дальше от строки лица (есть и те и другие)
+   */
+  countAt: 'r' | 'l' | 'v';
+  /** сторона от строки лица, куда уходит «+N» под ромбом: 1 — вниз, −1 — вверх */
+  away: 1 | -1;
+}
+
+/** Где точка стояла в прошлых кадрах (ключ сдвига): точка, которой хватает места там же, там и остаётся. */
+const placedMemo = new WeakMap<object, Map<string, string>>();
+
+/**
+ * Лица, связь которых с родителями рисует точка союза (дети союзов на небе), и пары супругов с точкой: у них нет
+ * прежних отводов, гребёнок и знаков брака (trails.ts). Считается до слоя связей.
+ */
+export function unionLinks(v: Pick<SkyContext, 'indexOf' | 'drawn'>, plates: readonly PlateIn[]): { kids: Set<string>; pairs: Set<string> } {
+  const shown = shownIn(v);
+  const kids = new Set<string>();
+  const pairs = new Set<string>();
+  for (const pl of plates) {
+    const u = pl.union;
+    for (const k of u.kids) if (shown(k)) kids.add(k);
+    const sp = spousesShown(u, shown);
+    if (sp.length === 2) pairs.add(`${sp[0]}|${sp[1]}`).add(`${sp[1]}|${sp[0]}`);
+  }
+  return { kids, pairs };
+}
+
+/**
+ * Места точек союзов в кадре. Вызывается после следов и лент, до звёзд: точка обходит звёзды, ленты, резерв органов
+ * неба и другие точки и уходит с линий следов; её поле занимает место в общей проверке наложений — подписи звёзд,
+ * которые ставятся позже, её обходят. Раскрытые и открытая в листе карточки — первыми: им лучшие места.
+ */
+export function layoutUnionDots(v: SkyContext, p: Pass, plates: readonly PlateIn[], marks: PlateMarks = {}): UnionDot[] {
+  const { ctx, cam } = v;
+  const out: UnionDot[] = [];
+  if (!plates.length) return out;
+  let memo = placedMemo.get(v);
+  if (!memo) placedMemo.set(v, (memo = new Map()));
+  const shown = shownIn(v);
+  const has = (id: string) => v.indexOf(id) !== undefined;
+  // звёзды кадра — как их занимает небо перед подписями (sky.ts): точка их не закрывает
+  const stars = new Placer();
+  for (const i of p.vis) {
+    if (p.starAlpha(i) <= 0.5 || !v.drawn(i)) continue;
+    const q = byId.get(v.nodes[i].person);
+    const r = starRadius(q?.magnitude ?? 6, p.zoomScale) + (q?.sex === 'f' ? 2.2 : 0) + 1.5;
+    const k = q && (q.roles.includes('king') || q.roles.includes('queen')) ? 4 : 0;
+    stars.add({ x: cam.sx(v.X0[i]) - r, y: cam.sy(v.nodes[i].lane) - r - k, w: 2 * r, h: 2 * r + k }, true);
+  }
+  // подписи ставятся после точек и обходят их; но место подписи справа у звезды — первое, куда она встанет, — точка
+  // по возможности оставляет свободным: у выбранного, второго, наведённого лица и лица с фокусом (их подпись обязана
+  // встать) — почти всегда, у остальных — если рядом есть другое место
+  const s = p.s;
+  const must = new Set([s.selected, s.second, s.hovered, s.focus].filter((x): x is string => !!x));
+  v.labelCache.ensure(v);
+  const nameW = v.labelCache.nameW;
+  const siglaW = v.labelCache.siglaW;
+  const names: { box: Rect; cost: number }[] = [];
+  const nameEnd = new Map<string, number>();
+  for (const i of p.vis) {
+    const n = v.nodes[i];
+    if (n.ghost || p.starAlpha(i) <= 0.5 || !v.drawn(i)) continue;
+    const q = byId.get(n.person);
+    if (!q) continue;
+    const x = cam.sx(v.X0[i]);
+    const y = cam.sy(n.lane);
+    if (x < -200 || x > cam.w + 20 || y < v.openTop - 20 || y > cam.vp.b + 20) continue;
+    const w = (nameW[i] > 0 ? nameW[i] : q.name.length * 8) + Math.max(0, siglaW[i] ?? 0) + (p.revealText?.has(q.id) || s.reveal?.has(q.id) ? 14 : 0);
+    const king = q.roles.includes('king') || q.roles.includes('queen');
+    const box = labelSpot('r', x, y, starRadius(q.magnitude, p.zoomScale), w, nameSize(q.magnitude, v.coarse), king).box;
+    names.push({ box, cost: must.has(q.id) ? 300 : 22 });
+    nameEnd.set(q.id, box.x + box.w);
+  }
+  const nameCost = (b: Rect, near: readonly { box: Rect; cost: number }[]) => {
+    let c = 0;
+    for (const nm of near) if (b.x < nm.box.x + nm.box.w && nm.box.x < b.x + b.w && b.y < nm.box.y + nm.box.h && nm.box.y < b.y + b.h) c += nm.cost;
+    return c;
+  };
+  const R = v.coarse ? DOT_R_TOUCH : DOT_R;
+  ctx.font = countFont(v.coarse);
+  const rank = (pl: PlateIn) => (pl.union.id === marks.selected ? 0 : pl.open ? 1 : 2);
+  const order = plates.map((pl, k) => ({ pl, k })).sort((a, b) => rank(a.pl) - rank(b.pl) || a.k - b.k);
+  for (const { pl } of order) {
+    const u = pl.union;
+    const spot = dotSpot(v, p, pl, shown);
+    if (!spot) continue;
+    const at = (id: string) => {
+      const i = v.indexOf(id)!;
+      const q = byId.get(id);
+      return { id, x: cam.sx(v.X0[i]), y: cam.sy(v.nodes[i].lane), r: starRadius(q?.magnitude ?? 6, p.zoomScale) + (q?.sex === 'f' ? 2.2 : 0), end: cam.sx(v.X1[i]), t0: v.nodes[i].t0 };
+    };
+    const spouses = spousesShown(u, shown).map((id) => ({ ...at(id), lab: nameEnd.get(id) }));
+    const kids = u.kids.filter(shown).map(at);
+    // союз целиком за краем окна — не рисуется
+    const xs = [spot.x, ...spouses.map((s) => s.x), ...kids.map((k) => k.x)];
+    const ys = [spot.y, ...spouses.map((s) => s.y), ...kids.map((k) => k.y)];
+    if (Math.max(...xs) < -40 || Math.min(...xs) > cam.w + 40 || Math.max(...ys) < v.openTop - 40 || Math.min(...ys) > cam.vp.b + 40) continue;
+    const hidden = pl.open ? 0 : hiddenOf(u, shown, has);
+    const count = hidden ? `+${hidden}` : '';
+    const countW = count ? ctx.measureText(count).width : 0;
+    const e = !p.s.highlight ? 1 : kids.length ? Math.max(...kids.map((k) => p.emph(k.id))) : spouses.length ? Math.min(...spouses.map((s) => p.emph(s.id))) : 1;
+    const countAt: UnionDot['countAt'] = !kids.length ? 'r' : !spouses.length ? 'l' : 'v';
+    const dot: UnionDot = { pl, cx: spot.x, cy: spot.y, placed: false, box: null, hidden, e, spouses, kids, r: R, count, countW, countAt, away: 1 };
+    const csize = mapSize(T_MAP_S, v.coarse);
+    out.push(dot);
+    // места: вдоль времени, затем чуть выше или ниже — у точки между супругами на треть свободного места от середины,
+    // у точки у строки одного лица — дальше от строки
+    const ups = spot.kind === 'between' ? [0, 0.35, -0.35].map((f) => f * Math.max(0, spot.room - DOT_FIELD)) : [0, 6];
+    const dxs = [0, 8, -8, 16, -16, 24, -24, 36, -36, 48, -48, 64, -64, 84, -84, 110, -110, 140];
+    const cands: { x: number; y: number; key: string; score: number; box: Rect; away: 1 | -1 }[] = [];
+    // места подписей у точки — в пределах сдвигов (кадр набора может нести сотни подписей)
+    const near = names.filter((nm) => nm.box.x < spot.x + 200 && nm.box.x + nm.box.w > spot.x - 200 && nm.box.y < spot.y + 80 && nm.box.y + nm.box.h > spot.y - 80);
+    ups.forEach((dy, vi) => {
+      const sy = spot.kind === 'between' ? spot.y + dy : spot.y + (Math.sign(spot.y - spot.ref) || 1) * dy;
+      for (const dx of dxs) {
+        const x = spot.x + dx;
+        const away = (Math.sign(sy - spot.ref) || 1) as 1 | -1;
+        const box = dotBox(x, sy, countW, countAt, away, csize);
+        const outside = spot.lo <= spot.hi && (x < spot.lo - 0.5 || x > spot.hi + 0.5);
+        const score = Math.abs(dx) + vi * 14 + (outside ? 60 : 0) + nameCost(box, near);
+        cands.push({ x, y: sy, key: `${vi}|${dx}`, score, box, away });
+      }
+    });
+    cands.sort((a, b) => a.score - b.score);
+    const inSky = (b: Rect) => insideSky(v, b);
+    const free = (b: Rect) => inSky(b) && !p.placer.clash(b) && !stars.clash(b, true);
+    // штраф места, дорогой в счёте, — только у мест, которые ещё могут победить: точка на линии следа (+18) и на ленте (+400)
+    const penalty = (c: (typeof cands)[number]) =>
+      (p.lines?.clash({ x: c.x - R, y: c.y - R, w: 2 * R, h: 2 * R }, false) ? 18 : 0) + (p.offRibbon && !p.offRibbon(c.box) ? 400 : 0);
+    let got: (typeof cands)[number] | null = null;
+    // место прошлого кадра — первым, если оно свободно и не намного хуже лучшего (точка не прыгает при сдвиге неба)
+    const was = memo.get(u.id);
+    const prev = was ? cands.find((c) => c.key === was) : undefined;
+    if (prev && prev.score <= cands[0].score + 30 && free(prev.box) && prev.score + penalty(prev) <= cands[0].score + 30) got = prev;
+    if (!got) {
+      let best = Infinity;
+      for (const c of cands) {
+        if (c.score >= best) break;
+        if (!free(c.box)) continue;
+        const sc = c.score + penalty(c);
+        if (sc < best) {
+          best = sc;
+          got = c;
+        }
+      }
+    }
+    // места нет — лучшее место в открытом небе, даже на чужой звезде: без точки союз распался бы на линии
+    got ??= cands.find((c) => inSky(c.box) && !p.placer.clash(c.box, false)) ?? null;
+    if (!got) {
+      memo.delete(u.id);
+      continue;
+    }
+    memo.set(u.id, got.key);
+    dot.cx = got.x;
+    dot.cy = got.y;
+    dot.placed = true;
+    dot.box = got.box;
+    dot.away = got.away;
+    p.placer.add(got.box);
+    v.ledger.add('plate', plateNames(u), got.box, u.id);
+    // линия ромба в проверке линий: название созвездия и помета не ложатся на точку
+    p.lines?.add({ x: got.x - R, y: got.y - R, w: 2 * R, h: 2 * R });
+  }
+  return out;
+}
+
+const countFont = (coarse: boolean) => mapFont(T_MAP_S, { sans: true, weight: 500, coarse });
+
+/** Поле точки: ромб с кольцом и «+N» справа, слева или под ромбом (away — сторона от строки лица: 1 — вниз). */
+function dotBox(x: number, y: number, countW: number, at: UnionDot['countAt'], away: number, size: number): Rect {
+  const F = DOT_FIELD;
+  if (!countW) return { x: x - F, y: y - F, w: 2 * F, h: 2 * F };
+  if (at === 'r') return { x: x - F, y: y - F, w: 2 * F + countW + 3, h: 2 * F };
+  if (at === 'l') return { x: x - F - countW - 3, y: y - F, w: 2 * F + countW + 3, h: 2 * F };
+  const w = Math.max(2 * F, countW + 4);
+  return away > 0 ? { x: x - w / 2, y: y - F, w, h: 2 * F + size } : { x: x - w / 2, y: y - F - size, w, h: 2 * F + size };
+}
+/** Где пишется «+N» у ромба (x — начало строки, y — середина строки). */
+function countSpot(d: UnionDot, size: number, away: number): { x: number; y: number } {
+  if (d.countAt === 'r') return { x: d.cx + d.r + 4, y: d.cy };
+  if (d.countAt === 'l') return { x: d.cx - d.r - 4 - d.countW, y: d.cy };
+  return { x: d.cx - d.countW / 2, y: d.cy + away * (d.r + 3 + size * 0.5) };
+}
+
+/**
+ * Скобка от супруга (звезда s, её след до end) к ромбу d: кривая Безье выходит из следа и входит в левый угол ромба
+ * горизонтально. Если начало скобки пришлось бы под подпись справа от звезды (s.lab — конец её места), скобка выходит
+ * из самой звезды — вниз или вверх, к ромбу: из-под подписи линия читалась бы как её помета. Ромб у самой звезды или
+ * левее — прямой отрезок. Четыре точки кривой (у отрезка — две).
+ */
+export function bracketCurve(s: { x: number; y: number; r: number; end: number; lab?: number }, d: { x: number; y: number; r: number }): number[] {
+  const tip = d.x - d.r;
+  const dy = d.y - s.y;
+  const W = Math.max(12, Math.min(48, Math.abs(dy) * 0.9));
+  let x0 = Math.max(s.x + s.r + 1.5, tip - W);
+  // след не доходит до начала скобки (нет следа или он короче) — скобка выходит прямо от звезды
+  if (s.end < x0 + 1) x0 = s.x + s.r + 1.5;
+  const dir = Math.sign(dy) || 1;
+  if (s.lab !== undefined && x0 < s.lab + 2 && tip > s.x + s.r + 4 && Math.abs(dy) > s.r + 4) {
+    const y0 = s.y + dir * (s.r + 1.5);
+    return [s.x, y0, s.x, s.y + dir * Math.max(s.r + 2, Math.abs(dy) * 0.8), s.x + (tip - s.x) * 0.35, d.y, tip, d.y];
+  }
+  if (tip <= x0 + 2) {
+    const dx = d.x - s.x;
+    const l = Math.hypot(dx, dy) || 1;
+    return [s.x + (dx / l) * (s.r + 1.5), s.y + (dy / l) * (s.r + 1.5), d.x - (dx / l) * d.r, d.y - (dy / l) * d.r];
+  }
+  const m = (tip - x0) * 0.5;
+  return [x0, s.y, x0 + m, s.y, tip - m, d.y, tip, d.y];
+}
+/** Нарисовать скобку от супруга к ромбу (bracketCurve) текущим цветом и толщиной. */
+export function spouseBracket(ctx: CanvasRenderingContext2D, s: { x: number; y: number; r: number; end: number; lab?: number }, d: { x: number; y: number; r: number }) {
+  const c = bracketCurve(s, d);
+  ctx.beginPath();
+  ctx.moveTo(c[0], c[1]);
+  if (c.length === 4) ctx.lineTo(c[2], c[3]);
+  else ctx.bezierCurveTo(c[2], c[3], c[4], c[5], c[6], c[7]);
+  ctx.stroke();
+}
+/** Точки кривой скобки через равные доли параметра (для проверки линий кадра). */
+function bracketSamples(c: number[], n = 8): [number, number][] {
+  if (c.length === 4) return [[c[0], c[1]], [c[2], c[3]]];
+  const out: [number, number][] = [];
+  for (let k = 0; k <= n; k++) {
+    const t = k / n;
+    const a = (1 - t) ** 3;
+    const b = 3 * (1 - t) ** 2 * t;
+    const q = 3 * (1 - t) * t * t;
+    const e = t ** 3;
+    out.push([a * c[0] + b * c[2] + q * c[4] + e * c[6], a * c[1] + b * c[3] + q * c[5] + e * c[7]]);
+  }
+  return out;
+}
+/** Ломаная — в линии кадра (Pass.lines): названия созвездий и пометы семей на неё не ложатся. */
+function addPolyline(pl: Pick<Placer, 'add'> | undefined, pts: readonly [number, number][]) {
+  if (!pl) return;
+  for (let k = 0; k + 1 < pts.length; k++) {
+    const [x0, y0] = pts[k];
+    const [x1, y1] = pts[k + 1];
+    const n = Math.max(1, Math.ceil(Math.hypot(x1 - x0, y1 - y0) / 24));
+    for (let j = 0; j < n; j++) {
+      const ax = x0 + ((x1 - x0) * j) / n;
+      const ay = y0 + ((y1 - y0) * j) / n;
+      const bx = x0 + ((x1 - x0) * (j + 1)) / n;
+      const by = y0 + ((y1 - y0) * (j + 1)) / n;
+      pl.add({ x: Math.min(ax, bx) - 1, y: Math.min(ay, by) - 1, w: Math.abs(bx - ax) + 2, h: Math.abs(by - ay) + 2 });
+    }
+  }
+}
+
+/** Отрезок от ромба (x0, y0) к звезде ребёнка (x1, y1) радиуса r: концы — у края ромба и у края звезды. */
+function kidSegment(x0: number, y0: number, dr: number, x1: number, y1: number, r: number): [number, number, number, number] {
+  const dx = x1 - x0;
+  const dy = y1 - y0;
+  const l = Math.hypot(dx, dy) || 1;
+  const a = Math.min(dr * 0.75 + 1, l / 2);
+  const b = Math.min(r + 1.5, l / 2);
+  return [x0 + (dx / l) * a, y0 + (dy / l) * a, x1 - (dx / l) * b, y1 - (dy / l) * b];
+}
+
+/** Знак разрыва (хронологическое напряжение) поперёк отрезка в его середине: две короткие косые черты. */
+function tensionAcross(ctx: CanvasRenderingContext2D, s: [number, number, number, number], color: string) {
+  const [x0, y0, x1, y1] = s;
+  const mx = (x0 + x1) / 2;
+  const my = (y0 + y1) / 2;
+  const l = Math.hypot(x1 - x0, y1 - y0) || 1;
+  const ux = (x1 - x0) / l;
+  const uy = (y1 - y0) / l;
+  // черты наклонены к отрезку, как «//» на следе
+  const nx = -uy + ux * 0.6;
+  const ny = ux + uy * 0.6;
+  const nl = Math.hypot(nx, ny) || 1;
   ctx.save();
-  ctx.globalAlpha = 1;
   ctx.setLineDash([]);
   ctx.lineWidth = 1;
-  ctx.strokeStyle = st.selected ? pal.ink : st.hover ? pal.ink2 : pal.ink3;
-  ctx.strokeRect(Math.round(box.x) + 0.5, Math.round(box.y) + 0.5, Math.round(box.w) - 1, Math.round(box.h) - 1);
-  if (st.selected) ctx.strokeRect(Math.round(box.x) + 2.5, Math.round(box.y) + 2.5, Math.round(box.w) - 5, Math.round(box.h) - 5);
-  if (st.focus) {
-    ctx.strokeStyle = pal.focus;
-    ctx.lineWidth = 2;
-    ctx.strokeRect(Math.round(box.x) - 2, Math.round(box.y) - 2, Math.round(box.w) + 4, Math.round(box.h) + 4);
+  ctx.strokeStyle = color;
+  ctx.beginPath();
+  for (const k of [-1.6, 1.6]) {
+    const cx = mx + ux * k;
+    const cy = my + uy * k;
+    ctx.moveTo(cx - (nx / nl) * 4, cy - (ny / nl) * 4);
+    ctx.lineTo(cx + (nx / nl) * 4, cy + (ny / nl) * 4);
   }
-  ctx.textBaseline = 'alphabetic';
-  const b1 = box.y + PLATE_PAD.y + z.s1 * 0.84;
-  const x0 = box.x + PLATE_PAD.x;
-  ctx.font = signFont(coarse);
-  ctx.fillStyle = pal.ink2;
-  ctx.fillText(t.sign, x0, b1);
-  ctx.font = namesFont(coarse);
-  ctx.fillStyle = pal.ink;
-  ctx.fillText(t.names, x0 + z.signW, b1);
-  if (!compact && t.sub) {
-    ctx.font = subFont(coarse);
-    ctx.fillStyle = pal.ink2;
-    ctx.fillText(t.sub, x0 + z.signW, b1 + z.s1 * 0.2 + 1 + z.s2 * 1.0);
-  }
+  ctx.stroke();
   ctx.restore();
 }
 
 /**
- * Образец картуша для условных знаков (src/ui/panels/Legend.tsx): тот же рисунок, что на небе, на любом холсте.
- * x, y — левый верхний угол; фон — цвет pal.sky. Возвращает прямоугольник картуша.
+ * Линии союзов (под звёздами и подписями): скобки от супругов тоном следа и линии к детям цветом ветви со свечением.
+ * У наведённой и выбранной точки линии — в полную силу и толще: в гуще семьи видно, какие линии её. Возвращает, что
+ * нарисовано, — для проверок приёмки (sky.ts пишет canvas[data-union-lines]): «союз=супруг» и «союз>ребёнок:#цвет».
  */
-export function drawPlateSample(
-  ctx: CanvasRenderingContext2D,
-  pal: PlatePal & { sky: string },
-  coarse: boolean,
-  x: number,
-  y: number,
-  names: string,
-  sub: string,
-  open = false,
-): Rect {
-  const t = { names, sub, sign: open ? '−' : '+' };
-  const z = plateSize(ctx, coarse, t);
-  const box = { x, y, w: z.w, h: z.h };
-  paintPlate(ctx, pal, coarse, box, t, z, false, {}, (b) => {
-    ctx.fillStyle = pal.sky;
-    ctx.fillRect(b.x, b.y, b.w, b.h);
-  });
-  return box;
+export function drawUnionLines(v: SkyContext, p: Pass, dots: readonly UnionDot[], marks: PlateMarks = {}): string[] {
+  const { ctx, pal } = v;
+  const s = p.s;
+  const hl = s.highlight;
+  const intro = s.intro;
+  const bf = branchFrame(v, p);
+  const theme: MapTheme = pal.glow ? 'night' : 'day';
+  const glow = new GlowBatch(glowLayers('branch', theme));
+  const anc = new GlowBatch(glowLayers('ancestor', theme));
+  const log: string[] = [];
+  type Seg = { seg: [number, number, number, number]; color: string; dash: number[]; tension?: string; hot: boolean };
+  const hot = (d: UnionDot) => d.pl.union.id === marks.hover || d.pl.union.id === marks.selected;
+  const segs: Seg[] = [];
+  ctx.save();
+  ctx.setLineDash([]);
+  ctx.lineCap = 'round';
+  // скобки от супругов — тоном следа
+  ctx.lineWidth = SPOUSE_LINE_W;
+  for (const d of dots) {
+    for (const sp of d.spouses) {
+      const e = hot(d) ? 1 : Math.min(p.emph(sp.id), d.e) * intro;
+      ctx.strokeStyle = alpha(hot(d) ? pal.ink : pal.ink2, Math.min(1, (hot(d) ? 0.85 : 0.62) * e));
+      ctx.lineWidth = hot(d) ? SPOUSE_LINE_W + 0.5 : SPOUSE_LINE_W;
+      spouseBracket(ctx, sp, { x: d.cx, y: d.cy, r: d.r });
+      addPolyline(p.lines, bracketSamples(bracketCurve(sp, { x: d.cx, y: d.cy, r: d.r })));
+      log.push(`${d.pl.union.id}=${sp.id}`);
+    }
+  }
+  // линии к детям — цветом ветви: у рода выбранного — его ветвей, у предков — светом текста, у прочих — ветви у родителя
+  const L = s.layers;
+  for (const d of dots) {
+    const u = d.pl.union;
+    const dash = kidDash(u);
+    const par = u.a ?? u.b;
+    const pi = par ? v.indexOf(par) : undefined;
+    const brk = pi !== undefined ? v.nodes[pi].brk : null;
+    const torn = !!par && L.tensions && s.tensionPersons.has(par);
+    for (const k of d.kids) {
+      const seg = kidSegment(d.cx, d.cy, d.r, k.x, k.y, k.r);
+      const bp = bf.paint(k.id);
+      const kind = hl?.get(k.id);
+      let color: string;
+      let hex: string;
+      if (bp) {
+        hex = bp.color;
+        const a = branchAlpha(bp, p.emph(k.id), intro);
+        color = alpha(hex, a);
+        if (glows(bp.gen, false)) glow.add(hex, a, ...seg);
+      } else if (bf.map && (kind === 'anc' || kind === 'self')) {
+        hex = pal.ink;
+        color = alpha(pal.ink2, Math.min(1, p.emph(k.id) * intro));
+        anc.add(pal.ink, intro, ...seg);
+      } else {
+        hex = kidColor(u, k.id, theme);
+        const a = hot(d) ? 1 : Math.min(1, p.emph(k.id) * intro);
+        color = alpha(hex, a);
+        glow.add(hex, a, ...seg);
+      }
+      if (hot(d) && bp) color = alpha(hex, 1);
+      const tension = (torn && s.tensionPersons.has(k.id)) || (brk !== null && brk !== undefined && k.t0 > brk) ? alpha(pal.ink, 0.9 * Math.min(1, p.emph(k.id)) * intro) : undefined;
+      segs.push({ seg, color, dash, tension, hot: hot(d) });
+      log.push(`${u.id}>${k.id}:${hex}`);
+    }
+  }
+  anc.flush(ctx, theme === 'night');
+  glow.flush(ctx, theme === 'night');
+  for (const q of segs) {
+    ctx.lineWidth = q.hot ? KID_LINE_W + 0.75 : KID_LINE_W;
+    ctx.strokeStyle = q.color;
+    ctx.setLineDash(q.dash);
+    ctx.beginPath();
+    ctx.moveTo(q.seg[0], q.seg[1]);
+    ctx.lineTo(q.seg[2], q.seg[3]);
+    ctx.stroke();
+    addPolyline(p.lines, [[q.seg[0], q.seg[1]], [q.seg[2], q.seg[3]]]);
+  }
+  ctx.setLineDash([]);
+  for (const q of segs) if (q.tension) tensionAcross(ctx, q.seg, q.tension);
+  ctx.restore();
+  return log;
 }
 
-/** Место-кандидат картуша: прямоугольник, в одну ли строку, с какой стороны следа и ключ места (для постоянства). */
-type Cand = { box: Rect; compact: boolean; side: 1 | -1 | 0; key: string; sticky: boolean };
-
-/**
- * Где картуш стоял в прошлых кадрах (ключ места по союзу и виду привязки): картуш, которому хватает места там же, там
- * и остаётся — не прыгает между кадрами, когда соседние подписи меняют сторону, и при раскрытии союза (решение 70).
- */
-const placed = new WeakMap<object, Map<string, string>>();
-
-/**
- * Картуши союзов в кадре неба «набор». Раскрытые и открытый в листе карточки — первыми: им лучшие места. Возвращает
- * прямоугольники нарисованных картушей (щелчок, касание, клавиатура).
- */
-export function drawPlates(v: SkyContext, p: Pass, plates: readonly PlateIn[], marks: PlateMarks = {}): PlateHit[] {
-  const { ctx, cam, pal } = v;
-  const out: PlateHit[] = [];
-  if (!plates.length) return out;
-  let memo = placed.get(v);
-  if (!memo) placed.set(v, (memo = new Map()));
-  const combs = familyCombs(v);
-  const vp = cam.vp;
-  /** Картуш сдвинут внутрь видимой части по горизонтали (у края неба — органы, колонка кнопок). */
-  const within = (x: number, w: number) => Math.max(vp.l + 2, Math.min(vp.r - w - 2, x));
-  const shown = (id: string) => {
-    const i = v.indexOf(id);
-    return i !== undefined && v.drawn(i);
+/** Ромб союза: заливка (раскрыт) или контур с подложкой цвета неба (свёрнут). */
+export function paintDot(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, o: { open: boolean; color: string; halo: string; width?: number }) {
+  const path = (h: number) => {
+    ctx.beginPath();
+    ctx.moveTo(x, y - h);
+    ctx.lineTo(x + h, y);
+    ctx.lineTo(x, y + h);
+    ctx.lineTo(x - h, y);
+    ctx.closePath();
   };
-  const laneOf = (id: string) => v.model.nodeByPerson.get(id)?.lane;
-  const rank = (pl: PlateIn) => (pl.union.id === marks.selected ? 0 : pl.open ? 1 : 2);
-  const order = plates.map((pl, k) => ({ pl, k })).sort((a, b) => rank(a.pl) - rank(b.pl) || a.k - b.k);
-  const ground = (b: Rect) => v.fillGround(b.x, b.x + b.w, b.y, b.h);
-  for (const { pl } of order) {
-    const u = pl.union;
-    const an = plateAnchor(pl, shown);
-    const i = v.indexOf(an.at);
-    if (i === undefined || !v.drawn(i)) continue;
-    const n = v.nodes[i];
-    const ay = cam.sy(n.lane);
-    if (ay < v.openTop - 80 || ay > cam.vp.b + 80) continue;
-    const t: PlateText = { names: plateNames(u), sub: plateSub(u), sign: pl.open ? '−' : '+' };
-    const full = plateSize(ctx, v.coarse, t);
-    const tight = plateSize(ctx, v.coarse, t, true);
-    const cands: Cand[] = [];
-    let ax: number;
-    if (an.kind === 'trail') {
-      const t0 = firstBirth(v.model, u);
-      ax = cam.sx(t0 !== null ? v.xOf(t0) : (v.X0[i] + v.X1[i]) / 2);
-      // у корня гребёнки детей этого союза (trails.ts): ствол сдвинут от соседней гребёнки другой матери
-      const mine = combs.filter((c) => c.parent === an.at && c.kids.some((k) => u.kids.includes(k)));
-      if (mine.length) ax = Math.min(...mine.map((c) => c.x));
-      if (ax < -2000 || ax > cam.w + 2000) continue;
-      const pref = hangSide(u, n.lane, laneOf);
-      // вдоль следа — шагами в полкартуша; у края неба — сдвинут внутрь видимой части (ключ «c»)
-      const list: { k: number | 'c' | 'r' | 'l'; side: 1 | -1; compact: boolean; score: number }[] = [];
-      for (const compact of [false, true])
-        for (const side of [pref, -pref as 1 | -1]) {
-          for (const k of [0, 0.5, -0.5, 1, -1, 1.5, -1.5, 2, -2, 3, -3, 4, -4]) list.push({ k, side, compact, score: Math.abs(k) + (side !== pref ? 1.5 : 0) + (compact ? 20 : 0) });
-          // у края неба: сдвинут внутрь видимой части (c), у её правого (r) и левого (l) края — на узком небе
-          list.push({ k: 'c', side, compact, score: 0.75 + (side !== pref ? 1.5 : 0) + (compact ? 20 : 0) });
-          list.push({ k: 'r', side, compact, score: 5 + (side !== pref ? 1.5 : 0) + (compact ? 20 : 0) });
-          list.push({ k: 'l', side, compact, score: 5.5 + (side !== pref ? 1.5 : 0) + (compact ? 20 : 0) });
-        }
-      list.sort((a, b) => a.score - b.score);
-      for (const c of list) {
-        const z = c.compact ? tight : full;
-        const x0 = ax - PLATE_PAD.lead;
-        const x = c.k === 'c' ? within(x0, z.w) : c.k === 'r' ? vp.r - z.w - 2 : c.k === 'l' ? vp.l + 2 : x0 + c.k * (z.w + 8);
-        // у края — только недалеко от отвода: длинная косая линия читалась бы как чужая
-        if ((c.k === 'r' || c.k === 'l') && Math.abs(x - x0) > 2 * (z.w + 8)) continue;
-        const y = c.side < 0 ? ay + PLATE_PAD.gap : ay - PLATE_PAD.gap - z.h;
-        cands.push({ box: { x, y, w: z.w, h: z.h }, compact: c.compact, side: c.side, key: `${c.side}|${c.compact ? 1 : 0}|${c.k}`, sticky: typeof c.k === 'number' });
-      }
-    } else {
-      // союз «вверх»: над лицом, слева от его звезды; тесно — дальше влево, под звездой, справа над ней
-      const q = byId.get(an.at);
-      const r = starRadius(q?.magnitude ?? 6, p.zoomScale);
-      ax = cam.sx(v.X0[i]);
-      if (ax < -2000 || ax > cam.w + 2000) continue;
-      for (const compact of [false, true]) {
-        const z = compact ? tight : full;
-        const up = ay - 5 - z.h;
-        const down = ay + 5;
-        const left = ax - r - 6 - z.w;
-        const spots = [[left, up], [within(left, z.w), up], [left - z.w - 8, up], [left, down], [ax + r + 6, up], [within(ax + r + 6, z.w), up], [left - z.w - 8, down]] as const;
-        spots.forEach(([x, y], k) => cands.push({ box: { x, y, w: z.w, h: z.h }, compact, side: 0, key: `s|${compact ? 1 : 0}|${k}`, sticky: k !== 1 && k !== 5 }));
-      }
+  ctx.save();
+  ctx.setLineDash([]);
+  // подложка цвета неба — ромб отделяется от линий, как звезда
+  ctx.fillStyle = o.halo;
+  path(r + 1.8);
+  ctx.fill();
+  path(r);
+  if (o.open) {
+    ctx.fillStyle = o.color;
+    ctx.fill();
+  } else {
+    ctx.lineWidth = o.width ?? 1.3;
+    ctx.lineJoin = 'miter';
+    ctx.strokeStyle = o.color;
+    // контур внутри ромба: полый знак той же величины, что залитый
+    path(r - (o.width ?? 1.3) / 2);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+/** «+N» свёрнутого союза справа от ромба: малый гротеск, с ореолом цвета неба. */
+function paintCount(ctx: CanvasRenderingContext2D, pal: { ink2: string; halo: string }, coarse: boolean, x: number, y: number, text: string, color: string) {
+  ctx.font = countFont(coarse);
+  ctx.textBaseline = 'alphabetic';
+  ctx.lineJoin = 'round';
+  const base = y + mapSize(T_MAP_S, coarse) * 0.34;
+  ctx.strokeStyle = pal.halo;
+  ctx.lineWidth = 3;
+  ctx.strokeText(text, x, base);
+  ctx.fillStyle = color;
+  ctx.fillText(text, x, base);
+}
+
+/**
+ * Ромбы союзов поверх линий: состояние (залит — раскрыт, полый с «+N» — свёрнут), наведение (ярче, тонкое кольцо),
+ * выбор (кольцо, как у выбранной звезды) и фокус клавиатуры (кольцо фокуса). Возвращает попадания (src/ui/sky).
+ */
+export function drawUnionDots(v: SkyContext, p: Pass, dots: readonly UnionDot[], marks: PlateMarks = {}): PlateHit[] {
+  const { ctx, pal } = v;
+  const out: PlateHit[] = [];
+  const intro = p.s.intro;
+  for (const d of dots) {
+    if (!d.placed || !d.box) continue;
+    const u = d.pl.union;
+    const hover = marks.hover === u.id;
+    const sel = marks.selected === u.id;
+    // ромб — светом звёзд, чуть тише звезды: такая же точка неба, что лицо, но узел, а не лицо; наведённый и выбранный — ярче
+    const e = hover || sel ? 1 : DOT_TONE * d.e;
+    const color = alpha(pal.ink, Math.min(1, e * intro));
+    paintDot(ctx, d.cx, d.cy, d.r, { open: d.pl.open, color, halo: pal.sky });
+    if (d.count) {
+      const at = countSpot(d, mapSize(T_MAP_S, v.coarse), d.away);
+      paintCount(ctx, pal, v.coarse, at.x, at.y, d.count, color);
     }
-    // место прошлого кадра — первым (постоянство)
-    const was = memo.get(`${u.id}|${an.kind}`);
-    const first = was ? cands.findIndex((q) => q.key === was) : -1;
-    if (first > 0) cands.unshift(...cands.splice(first, 1));
-    const got = claim(v, p, cands.map((c) => c.box), 'plate', t.names, { id: u.id });
-    if (!got) continue;
-    const c = cands.find((q) => q.box === got)!;
-    // место у края видимой части не запоминается: оно зависит от окна, а не от следа
-    if (c.sticky) memo.set(`${u.id}|${an.kind}`, c.key);
-    else memo.delete(`${u.id}|${an.kind}`);
-    const box = got;
-    // отвод: от следа (или звезды) к картушу — одна тонкая линия
     ctx.save();
     ctx.setLineDash([]);
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = alpha(pal.ink3, 0.9);
-    ctx.beginPath();
-    if (an.kind === 'trail') {
-      const tx = Math.max(box.x + 3, Math.min(box.x + box.w - 3, ax));
-      const ty = c.side < 0 ? box.y : box.y + box.h;
-      ctx.moveTo(Math.round(ax) + 0.5, ay);
-      ctx.lineTo(Math.round(tx) + 0.5, ty);
-    } else {
-      const q = byId.get(an.at);
-      const r = starRadius(q?.magnitude ?? 6, p.zoomScale) + 2;
-      const cx = Math.max(box.x, Math.min(box.x + box.w, ax));
-      const cy = Math.max(box.y, Math.min(box.y + box.h, ay));
-      const d = Math.hypot(cx - ax, cy - ay) || 1;
-      ctx.moveTo(ax + ((cx - ax) / d) * r, ay + ((cy - ay) / d) * r);
-      ctx.lineTo(cx, cy);
-    }
-    ctx.stroke();
+    const ring = (r: number, w: number, c: string) => {
+      ctx.lineWidth = w;
+      ctx.strokeStyle = c;
+      ctx.beginPath();
+      ctx.arc(d.cx, d.cy, r, 0, Math.PI * 2);
+      ctx.stroke();
+    };
+    if (sel) ring(d.r + 3.5, 1.5, pal.focus);
+    else if (hover) ring(d.r + 3, 1, pal.ink);
+    if (marks.focus === u.id) ring(d.r + (sel ? 6.5 : 5), 2, pal.focus);
     ctx.restore();
-    const z = c.compact ? tight : full;
-    paintPlate(ctx, pal, v.coarse, box, t, z, c.compact, { hover: marks.hover === u.id, focus: marks.focus === u.id, selected: marks.selected === u.id }, ground);
-    out.push({ x: box.x, y: box.y, w: box.w, h: box.h, uid: u.id, from: pl.from, open: pl.open, ax, ay });
+    // поле попадания — не меньше 18 × 18 (на касании input.ts раздувает до 44)
+    const b = d.box;
+    const g = Math.max(0, (18 - b.h) / 2);
+    out.push({ x: b.x - g, y: b.y - g, w: b.w + 2 * g, h: b.h + 2 * g, uid: u.id, from: d.pl.from, open: d.pl.open, cx: d.cx, cy: d.cy, r: d.r, hidden: d.hidden, ax: d.cx, ay: d.cy });
   }
   return out;
+}
+
+// ---------- образец для «Условных знаков» ----------
+
+/** Палитра образца: тема (glow — ночь), небо, текст. */
+export interface UnionSamplePalette {
+  glow: boolean;
+  sky: string;
+  ink: string;
+  ink2: string;
+}
+
+/**
+ * Образец союза для условных знаков (src/ui/panels/Legend.tsx): слева — раскрытый союз, как на небе: муж и жена
+ * со следами, скобки от них к залитому ромбу и три линии к трём детям цветами их ветвей со свечением; справа — лицо
+ * со свёрнутым союзом: полый ромб у его строки со стороны детей и «+4». Те же функции, что на небе (paintDot,
+ * spouseBracket, drawGlyph). Сигнатура — как у образцов легенды: (ctx, pal, w, h), пиксели CSS. Возвращает центры
+ * ромбов — раскрытого и свёрнутого.
+ */
+export function drawUnionSample(ctx: CanvasRenderingContext2D, pal: UnionSamplePalette, w: number, h: number): { open: { x: number; y: number }; closed: { x: number; y: number } } {
+  const theme: MapTheme = pal.glow ? 'night' : 'day';
+  const px = (x: number) => Math.round(x) + 0.5;
+  const R = DOT_R;
+  const split = Math.min(w - 120, Math.max(200, w * 0.64));
+  // раскрытый союз: муж сверху, жена снизу, дети между ними и правее
+  const top = px(10);
+  const bottom = px(h - 10);
+  const husband = { x: px(14), y: top, r: starRadius(3), end: split - 24 };
+  const wife = { x: px(22), y: bottom, r: starRadius(3) + 2.2, end: split * 0.62 };
+  const dot = { x: px(husband.x + (split - husband.x) * 0.3), y: px((top + bottom) / 2) };
+  // дети — между строками супругов, не на их строках: следы не сливаются
+  const kids = [0.24, 0.53, 0.82].map((f, k) => ({ x: px(dot.x + 64 + k * 26), y: px(top + (bottom - top) * f), b: k }));
+  const trail = (x0: number, y: number, x1: number) => {
+    ctx.strokeStyle = alpha(pal.ink2, 0.6);
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(x0, y);
+    ctx.lineTo(x1, y);
+    ctx.stroke();
+  };
+  ctx.save();
+  ctx.setLineDash([]);
+  trail(husband.x, husband.y, husband.end);
+  trail(wife.x, wife.y, wife.end);
+  for (const k of kids) trail(k.x, k.y, Math.min(split - 8, k.x + 40));
+  ctx.strokeStyle = alpha(pal.ink2, 0.62);
+  ctx.lineWidth = SPOUSE_LINE_W;
+  spouseBracket(ctx, husband, { x: dot.x, y: dot.y, r: R });
+  spouseBracket(ctx, wife, { x: dot.x, y: dot.y, r: R });
+  const glow = new GlowBatch(glowLayers('branch', theme));
+  const segs = kids.map((k) => ({ seg: kidSegment(dot.x, dot.y, R, k.x, k.y, starRadius(4)), color: branchColor(k.b, theme) }));
+  for (const q of segs) glow.add(q.color, 1, ...q.seg);
+  glow.flush(ctx, pal.glow);
+  ctx.lineWidth = KID_LINE_W;
+  ctx.lineCap = 'round';
+  for (const q of segs) {
+    ctx.strokeStyle = q.color;
+    ctx.beginPath();
+    ctx.moveTo(q.seg[0], q.seg[1]);
+    ctx.lineTo(q.seg[2], q.seg[3]);
+    ctx.stroke();
+  }
+  paintDot(ctx, dot.x, dot.y, R, { open: true, color: pal.ink2, halo: pal.sky });
+  const star = (x: number, y: number, magnitude: number, sex: 'm' | 'f' = 'm') => drawGlyph(ctx, x, y, { sex, kind: 'person', magnitude, color: pal.ink, halo: pal.sky });
+  star(husband.x, husband.y, 3);
+  star(wife.x, wife.y, 3, 'f');
+  for (const k of kids) star(k.x, k.y, 4);
+  // свёрнутый союз: лицо и полый ромб у его строки со стороны детей, «+4»
+  const one = { x: px(split + 18), y: px(h * 0.3), r: starRadius(3), end: w - 8 };
+  trail(one.x, one.y, one.end);
+  const closed = { x: px(one.x + Math.min(40, (w - one.x) * 0.35)), y: px(one.y + hangPx(h / 2.5)) };
+  ctx.strokeStyle = alpha(pal.ink2, 0.62);
+  ctx.lineWidth = SPOUSE_LINE_W;
+  spouseBracket(ctx, one, { x: closed.x, y: closed.y, r: R });
+  paintDot(ctx, closed.x, closed.y, R, { open: false, color: pal.ink2, halo: pal.sky });
+  paintCount(ctx, { ink2: pal.ink2, halo: pal.sky }, false, closed.x + R + 4, closed.y, '+4', pal.ink2);
+  star(one.x, one.y, 3);
+  ctx.restore();
+  return { open: dot, closed };
 }

@@ -21,7 +21,9 @@
  *    свечением, у первого ребёнка каждой ветви — цветная черта под подписью (решение 69; branches.ts);
  *  — брак — короткий знак «‖» от следа мужа к жене в год первого ребёнка; к дальней жене — знак и тонкая выноска.
  *    Знак занимает место в общей проверке наложений, как подпись, и при столкновении сдвигается (MAP-76);
- *  — призрак жены в её роду — пунктирный отвод и подпись «Рахиль, жена Иакова».
+ *  — призрак жены в её роду — пунктирный отвод и подпись «Рахиль, жена Иакова»;
+ *  — в небе «набор» у детей союза, чья точка на небе, отводов и гребёнок нет, у пары с точкой — знака брака: их связь
+ *    рисует точка союза (решение 76; plates.ts, Pass.unionKids и unionPairs).
  *
  * drawLifeTrail, drawDescent, drawBracket и drawMarriage рисуют одиночный знак на любом холсте без неба: ими
  * пользуются небо, образец #/specimen и «Как читать карту», чтобы знак в легенде был тем же, что на небе.
@@ -902,7 +904,10 @@ export function drawDescents(v: SkyContext, p: Pass): FamilyNote[] {
       // помета порядка — все гребёнки этого отца ярче
       const hovered = !!hover && hover.parent === g.parent;
       const mine = hovered && (hover!.kind === 'order' || hover!.mother === g.mother);
-      for (const cl of combs) {
+      for (const all of combs) {
+        // небо «набор» (решение 76): связь детей союза с точкой на небе рисует точка (plates.ts) — отвода и гребёнки нет
+        const cl = p.unionKids ? all.filter((k) => !p.unionKids!.has(k.id)) : all;
+        if (!cl.length) continue;
         let lo = g.y0;
         let hi = g.y0;
         for (const k of cl) {
@@ -1049,6 +1054,8 @@ function collectMarriages(v: SkyContext, p: Pass, out: FamilyNote[]) {
   for (const i of p.vis) {
     const n = v.nodes[i];
     if (!n.satelliteOf) continue;
+    // пара с точкой союза на небе «набор» (решение 76): супругов соединяют скобки к точке — знака «‖» нет
+    if (p.unionPairs?.has(`${n.satelliteOf}|${n.person}`)) continue;
     const hi = v.indexOf(n.satelliteOf);
     if (hi === undefined || v.hides(n.satelliteOf)) continue;
     const fc = firstChild(v.model, n.satelliteOf, n.person);
@@ -1157,7 +1164,14 @@ export function drawFamilyNotes(v: SkyContext, p: Pass, notes: readonly FamilyNo
     const first = nt.at === 'root' ? all.slice(0, 1) : [];
     const rest = all.slice(first.length);
     const clean = p.lines ? rest.filter((q) => !p.lines!.clash(q.box, false)) : rest;
-    const order = [...first, ...clean, ...rest.filter((q) => !clean.includes(q))];
+    // чистого места нет — сначала там, где линии под пометой короче (в небе «набор» к детям идут косые линии от точки
+    // союза: помета на такой линии закрыла бы её почти целиком)
+    const dirty = rest.filter((q) => !clean.includes(q));
+    if (p.lines && p.unionKids?.size) {
+      const area = new Map(dirty.map((q) => [q, p.lines!.overlap(q.box)]));
+      dirty.sort((a, b) => area.get(a)! - area.get(b)!);
+    }
+    const order = [...first, ...clean, ...dirty];
     const b = claim(v, p, order.map((q) => q.box), 'note', nt.text);
     if (!b) continue;
     const c = order.find((q) => q.box === b)!.c;

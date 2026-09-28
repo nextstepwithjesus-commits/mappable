@@ -166,6 +166,18 @@ export class Placer {
         }
     return sum;
   }
+  /** Площадь, которой r ложится на занятые (жёсткие) прямоугольники, px² — для выбора места, где линии под ним короче. */
+  overlap(r: Rect): number {
+    const seen = new Set<Rect>();
+    let sum = 0;
+    for (const k of Placer.keys(r))
+      for (const o of this.hard.get(k) ?? []) {
+        if (seen.has(o) || !cross(r, o)) continue;
+        seen.add(o);
+        sum += (Math.min(r.x + r.w, o.x + o.w) - Math.max(r.x, o.x)) * (Math.min(r.y + r.h, o.y + o.h) - Math.max(r.y, o.y));
+      }
+    return sum;
+  }
   /** Сколько занятых (жёстких) прямоугольников пересекает r — для выбора места с наименьшим числом пересечений. */
   count(r: Rect): number {
     const seen = new Set<Rect>();
@@ -297,7 +309,7 @@ export const zoomScaleFor = (ky: number) => Math.max(0.7, Math.min(1.25, ky / 18
 /**
  * Что за подпись: имя звезды, название созвездия, пояснение на пустом небе, указатель у края, скопление (E2), меридиан
  * события (E7), «липкое» имя следа у левого края (E1), надписи рамки (линейка, служебная строка, кромки), знак
- * свёрнутого (J5), номер лица линии у бусины (mark; MAP-59), картуш союза в небе «набор» (plate; решение 70, plates.ts).
+ * свёрнутого (J5), номер лица линии у бусины (mark; MAP-59), точка союза в небе «набор» (plate; решения 70, 76, plates.ts).
  */
 export type LabelKind = 'star' | 'group' | 'note' | 'edge' | 'cluster' | 'event' | 'sticky' | 'frame' | 'fold' | 'mark' | 'plate';
 

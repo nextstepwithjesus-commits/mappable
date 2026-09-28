@@ -23,10 +23,11 @@ import { tipKey, type Tip } from './Tip.tsx';
 import { RULER_H } from '../../render/frame.ts';
 import { foldDescOf, foldGroupOf, unfoldAll } from '../work.ts';
 import { MENU_FIRST, dismissedBy, skyMenu } from '../panels/Work.tsx';
-import { epochGoText, orderNoteText, plateTipText } from './text.ts';
+import { dotTipText, epochGoText, orderNoteText, plateTipText } from './text.ts';
 import { openPerson, unionById } from '../reveal.ts';
 import { plateHover, pressPlate } from './starnav.ts';
 import type { PlateHit } from '../../render/plates.ts';
+import { closeDot, dotCard, dotsOn, openDot } from './DotCard.tsx';
 
 export type { Tip };
 
@@ -287,13 +288,15 @@ function tapCandidates(sky: Sky, x: number, y: number, r: number): TapCandidate[
 
 /**
  * Выбор звезды на небе (щелчок, касание, строка «Какое лицо?»): в режиме «Родство с…» и «Разворот с…» — второе лицо;
- * иначе — выбор, и на телефоне лист карточки открывается на шапке 104 px (решение владельца 12).
+ * иначе — выбор, и на телефоне лист карточки открывается на шапке 104 px (решение владельца 12). В небе «набор» у самой
+ * звезды раскрывается карточка у точки: образ, имя, годы и команды раскрытия (решение 76; src/ui/sky/DotCard.tsx).
  */
 function chooseStar(id: string) {
   if (pins.value.length) pins.value = [];
   if (pickSecond(id)) return;
   if (id !== selected.value) openSheetAt('peek');
   selected.value = id;
+  if (dotsOn.peek()) openDot({ kind: 'person', id });
 }
 
 // ---------- что под указателем, кроме звезды: лента, номер у бусины, эпоха служебной строки ----------
@@ -349,8 +352,8 @@ export function lineNumberAt(sky: Sky, x: number, y: number): (LineCount & { id:
 }
 
 /**
- * Картуш союза под указателем (решение 70; src/render/plates.ts): на касании — в поле не меньше 44 × 44 вокруг рисунка
- * (решение 33). Ближайший к точке, если поля соседних картушей перекрываются.
+ * Точка союза под указателем (решения 70, 76; src/render/plates.ts, Sky.plateHits): на касании — в поле не меньше
+ * 44 × 44 вокруг знака (решение 33). Ближайшая к указателю, если поля соседних точек перекрываются.
  */
 export function plateAt(sky: Pick<Sky, 'plateHits'>, x: number, y: number, touch = false): PlateHit | null {
   let best: PlateHit | null = null;
@@ -368,7 +371,7 @@ export function plateAt(sky: Pick<Sky, 'plateHits'>, x: number, y: number, touch
 }
 
 /** Подсказка «+» у подписи лица с нераскрытыми союзами (решение 70). */
-export const REVEAL_TIP = 'У лица есть нераскрытые союзы — щёлкните, чтобы показать их карточки на небе';
+export const REVEAL_TIP = 'У лица есть нераскрытые союзы — щёлкните, чтобы показать их на небе';
 
 /** Название эпохи в служебной строке под указателем (UX-65): эпоха модели и прямоугольник надписи. */
 function serviceEpochAt(sky: Sky, x: number, y: number) {
@@ -472,7 +475,7 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
   };
   /** Курсор: над звездой, отрезком яруса и указателем у края — «рука со пальцем» (E11; IX-06, UX-29). */
   const setHot = (on: boolean) => canvas.classList.toggle('hot', on);
-  /** Наведённый картуш союза (решение 70): его рамка ярче. */
+  /** Наведённая точка союза (решения 70, 76): она ярче. */
   const setPlate = (uid: string | null) => {
     if (plateHover.peek() === uid) return;
     plateHover.value = uid;
@@ -496,7 +499,9 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     const foldHit = sky.foldHits.find((q) => x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h);
     const fold = !!foldHit;
     const edge = fold || sky.edgeHits.some((q) => x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h);
-    // картуш союза (решение 70): подсказка — союз и его дети со стихами, щелчок раскрывает или сворачивает
+    // точка союза (решения 70, 76): в небе «набор» подсказка — одна строка «Союз Адама и Евы: 3 сына — щёлкните», щелчок
+    // открывает карточку у точки; у точки с открытой карточкой подсказки нет — всё сказано в карточке. Без карточки у точки
+    // (выбор второго лица) — прежняя подсказка: дети со стихами, щелчок раскрывает или сворачивает
     const plate = edge ? null : plateAt(sky, x, y);
     setPlate(plate?.uid ?? null);
     if (plate) {
@@ -504,7 +509,13 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       if (setRibbonHover(sky, null) || setFamilyHover(sky, null)) request();
       setHot(true);
       const u = unionById(plate.uid);
-      if (u) showTip({ kind: 'note', key: `plate:${plate.uid}:${plate.open ? 1 : 0}`, text: plateTipText(u, plate.open), x, y, box: { x: plate.x, y: plate.y, w: plate.w, h: plate.h } });
+      const card = dotCard.peek();
+      const dots = dotsOn.peek();
+      if (!u || (dots && card?.kind === 'union' && card.uid === plate.uid)) showTip(null);
+      else {
+        const text = dots ? dotTipText(u) : plateTipText(u, plate.open);
+        showTip({ kind: 'note', key: `plate:${plate.uid}:${dots ? 'dot' : plate.open ? 1 : 0}`, text, x, y, box: { x: plate.x, y: plate.y, w: plate.w, h: plate.h } });
+      }
       return;
     }
     // «+» у подписи лица с нераскрытыми союзами (решение 70)
@@ -533,7 +544,10 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     const comb = !hit && !rib && fam?.kind === 'comb' ? fam : null;
     if (setFamilyHover(sky, famNote ?? comb)) request();
     setHot(!!hit || edge || note);
-    if (hit) showTip({ kind: 'star', id: hit, x, y, ...(num ? { count: { book: num.book, n: num.n } } : {}) });
+    // у звезды с открытой карточкой у точки подсказки нет: имя и годы — в карточке (решение 76)
+    const card = dotCard.peek();
+    if (hit && !num && card?.kind === 'person' && card.id === hit) showTip(null);
+    else if (hit) showTip({ kind: 'star', id: hit, x, y, ...(num ? { count: { book: num.book, n: num.n } } : {}) });
     else if (rib) showTip({ kind: 'ribbon', hit: rib, x, y });
     else if (famNote?.kind === 'order' && famNote.source)
       showTip({ kind: 'note', key: `order:${famNote.parent}:${famNote.mother ?? ''}`, text: orderNoteText(famNote.source), x, y, box: { x: x - 4, y: y - 4, w: 8, h: 8 } });
@@ -740,10 +754,12 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       else foldGroupOf(fold.id, false);
       return;
     }
-    // картуш союза (решение 70): раскрыть или свернуть союз, карточка союза — в листе; на касании поле не меньше 44 px
+    // точка союза (решение 76): в небе «набор» — карточка у точки, раскрытие — её командой; без карточки у точки (выбор
+    // второго лица) — раскрыть или свернуть союз, как прежде; на касании поле не меньше 44 px
     const plate = plateAt(sky, at.x, at.y, touch);
     if (plate) {
-      pressPlate(plate.uid, plate.from);
+      if (dotsOn.peek()) openDot({ kind: 'union', uid: plate.uid, from: plate.from });
+      else pressPlate(plate.uid, plate.from);
       return;
     }
     // название эпохи в служебной строке — небо к эпохе (UX-65); выбор лица не меняется
@@ -819,6 +835,11 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     }
     // пустое небо: снять выбор (IX-09); «назад» в браузере его вернёт (D8). В режиме выбора второго лица — ничего.
     if (pickMode.value || at.y < RULER) return;
+    // открыта карточка у точки — щелчок по пустому небу закрывает только её: одно видимое состояние за раз (D5)
+    if (dotCard.peek()) {
+      closeDot();
+      return;
+    }
     clearTimeout(clearTimer);
     clearTimer = window.setTimeout(() => {
       if (pins.value.length) {

@@ -14,44 +14,55 @@ import { collapseUnion, expandUnion, isExpanded, selectUnion, unionById } from '
 import { plateSayText } from './text.ts';
 import { openSheetAt } from '../sheet.ts';
 
-// ---------- карточки союзов на небе (решение 70) ----------
+// ---------- союзы на небе «набор» (решения 70, 76) ----------
 
 /**
- * Картуш союза с кольцом клавиатуры (id союза): стрелки водят фокус и по картушам, как по звёздам; пока он есть, у звезды
- * кольца нет (focused = null), холст называет пункт картуша в списке неба (SkyA11y), Enter раскрывает или сворачивает.
+ * Точка союза с кольцом клавиатуры (id союза): стрелки водят фокус и по точкам союзов, как по звёздам; пока он есть,
+ * у звезды кольца нет (focused = null), холст называет пункт союза в списке неба (SkyA11y), Enter открывает у точки
+ * карточку союза (src/ui/sky/DotCard.tsx).
  */
 export const plateFocus = signal<string | null>(null);
-/** Картуш под указателем мыши: его рамка ярче (src/ui/sky/input.ts). */
+/** Точка союза под указателем мыши: она ярче (src/ui/sky/input.ts). */
 export const plateHover = signal<string | null>(null);
 /** Объявление живой области неба после раскрытия и свёртки союза (SkyView): n — чтобы тот же текст прозвучал снова. */
 export const plateNews = signal<{ text: string; n: number }>({ text: '', n: 0 });
 
 /**
- * Щелчок, касание или Enter на картуше союза (решение 70): раскрыть союз от лица from (оба супруга и все дети — на небо)
- * или свернуть его; карточка союза открывается в листе (решение 71). Карточка союза видна при выбранном лице, а смена
- * лица её закрывает (src/ui/reveal.ts): сначала выбирается лицо from, потом, отдельно, — союз. На телефоне лист, как при
- * касании звезды, открывается на шапке (решение 12). Живая область объявляет, сколько лиц добавилось или ушло.
- * Возвращает, раскрыт ли союз теперь.
+ * Раскрыть союз от лица from (оба супруга и все дети — на небо) или свернуть его, и сказать это вслух: «Раскрыт союз
+ * Адама и Евы: 3 лица». Выбор лица и лист карточки не меняются — это команда «Раскрыть детей» карточки у точки
+ * (решение 76). Возвращает, раскрыт ли союз теперь.
  */
-export function pressPlate(uid: string, from: string): boolean {
+export function toggleKids(uid: string, from: string): boolean {
   const u = unionById(uid);
   if (!u) return false;
   const was = isExpanded(uid);
   const n = was ? collapseUnion(uid) : expandUnion(uid, from);
+  plateNews.value = { text: plateSayText(u, !was, n), n: plateNews.peek().n + 1 };
+  return !was;
+}
+
+/**
+ * Щелчок по точке союза там, где карточки у точки нет (выбор второго лица «Родства», решение 70): раскрыть или свернуть
+ * союз и открыть карточку союза в листе (решение 71). Карточка союза видна при выбранном лице, а смена лица её закрывает
+ * (src/ui/reveal.ts): сначала выбирается лицо from, потом, отдельно, — союз. На телефоне лист, как при касании звезды,
+ * открывается на шапке (решение 12). Возвращает, раскрыт ли союз теперь.
+ */
+export function pressPlate(uid: string, from: string): boolean {
+  if (!unionById(uid)) return false;
+  const open = toggleKids(uid, from);
   if (selected.peek() !== from && byId.has(from)) {
     openSheetAt('peek');
     selected.value = from;
   }
   selectUnion(uid);
-  plateNews.value = { text: plateSayText(u, !was, n), n: plateNews.peek().n + 1 };
-  return !was;
+  return open;
 }
 
-/** Картуши союзов на виду — как точки для стрелок (id — id союза, «u:…»). */
+/** Точки союзов на виду — для стрелок (id — id союза, «u:…»). */
 function platePoints(sky: Sky): (StarPoint & { mag: number; onScreen: boolean })[] {
   const vp = sky.cam.vp;
   return sky.plateHits
-    .map((h) => ({ id: h.uid, x: h.x + h.w / 2, y: h.y + h.h / 2, mag: 2, onScreen: true }))
+    .map((h) => ({ id: h.uid, x: h.cx, y: h.cy, mag: 2, onScreen: true }))
     .filter((q) => q.x > vp.l && q.x < vp.r && q.y > vp.t && q.y < vp.b);
 }
 const isUnion = (id: string) => id.startsWith('u:');
@@ -188,7 +199,7 @@ export function enterSky(): string | null {
 }
 
 /**
- * Стрелка на холсте: фокус к ближайшей звезде или картушу союза (небо «набор», решение 70) в этом направлении.
+ * Стрелка на холсте: фокус к ближайшей звезде или точке союза (небо «набор», решения 70, 76) в этом направлении.
  * Возвращает, куда перешёл фокус (id лица или союза; null — никуда).
  */
 export function moveStarFocus(dir: Dir): string | null {

@@ -22,6 +22,7 @@ import { reserve, screenOf } from './view.ts';
 import { placeTip, TIP_DELAY, TIP_MARGIN, TIP_MORE, TIP_WARM, type TipSide } from './tip.ts';
 import type { Rect } from '../../render/sky.ts';
 import type { RibbonHit } from '../../render/ribbons.ts';
+import { dotRect } from './DotCard.tsx';
 
 export type Tip =
   /** звезда; count — указатель на номере лица в родословии у бусины (режим «только линии»; UX-69) */
@@ -125,6 +126,9 @@ export function SkyTip({ tip }: { tip: Tip | null }) {
     const cam = s.cam;
     const bounds = { x: TIP_MARGIN, y: TIP_MARGIN, w: cam.w - 2 * TIP_MARGIN, h: cam.vp.b - 2 * TIP_MARGIN };
     const avoid: Rect[] = [];
+    // открытая карточка у точки (решение 76): подсказка её не закрывает
+    const card = dotRect();
+    if (card) avoid.push({ x: card.x - 4, y: card.y - 4, w: card.w + 8, h: card.h + 8 });
     const sel = selected.peek();
     if (sel && (tip.kind !== 'star' || tip.id !== sel)) {
       const b = starBox(sel);
