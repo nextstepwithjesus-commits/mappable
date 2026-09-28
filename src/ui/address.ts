@@ -279,9 +279,10 @@ function applyState(a: Address, history = false) {
     }
     // «назад» из панели закрывает её; в прежнем адресе без полей панель не трогается
     if (a.full || a.panel) panel.value = a.panel ?? null;
-    // «назад» и «вперёд» переключают только активную карточку, состав стопки не меняется (решение 50; UX-74)
+    // «назад» и «вперёд» по записям атласа переключают только активную карточку, состав стопки не меняется (решение 50;
+    // UX-74). Новый адрес — набранный, закладка, ссылка извне (запись без отметки атласа) — открывает карточку как обычно
     if (a.id !== selected.peek()) {
-      if (history) selectFromHistory(a.id);
+      if (history && mark) selectFromHistory(a.id);
       else selected.value = a.id;
     }
     if (a.second && (a.first ?? a.id)) setPair((a.first ?? a.id)!, a.second, a.panel === 'kinship');

@@ -581,7 +581,7 @@ async function foldHit(p: Page, key: string): Promise<{ x: number; y: number } |
 const workset: Scenario[] = [
   {
     n: 200,
-    title: 'J3 мышью: карточка Давида — «Взять в работу» с предками на 2 поколения; «В работе» в верхней строке, число лиц в заголовке, порядок по рождению',
+    title: 'J3 мышью: карточка Давида — «Взять в работу» с предками на 2 поколения; «В работе» в верхней строке, число лиц в заголовке, группа «Давид и его предки (3)»: лицо первым, дальше по рождению',
     run: async (p) => {
       await wgo(p, '#/david');
       await takeFromCard(p, 'С предками: 2 поколения');
@@ -594,8 +594,11 @@ const workset: Scenario[] = [
       await openWork(p);
       const title = nbsp(await p.locator('section.sheet h2').innerText());
       if (title !== 'В работе: 3 лица') return no(`заголовок панели: «${title}»`);
+      // VIS-83 (круг 3): одна группа по происхождению с заголовком; внутри — само лицо первым, дальше по рождению
+      const heads = (await p.locator('.worklist .wg-head').allInnerTexts()).map((t) => nbsp(t.trim()));
+      if (heads.join(' | ') !== 'Давид и его предки (3)') return no(`заголовки групп: ${heads.join(' | ') || 'нет'}`);
       const names = (await p.locator('.worklist .wi-row .nm').allInnerTexts()).map((t) => t.trim());
-      if (names.join(' ') !== 'Овид Иессей Давид') return no(`порядок: ${names.join(', ')}`);
+      if (names.join(' ') !== 'Давид Овид Иессей') return no(`порядок: ${names.join(', ')}`);
       // строка разворачивается: «Кратко» и команды
       await p.locator('.worklist .wi-row', { hasText: 'Иессей' }).click();
       await p.waitForTimeout(700);

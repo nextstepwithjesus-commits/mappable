@@ -317,6 +317,9 @@ export function SkyView() {
       if (!sky.model || !last.w) return;
       const before = snapshot();
       if (!sky.setInsets(insets())) return;
+      // идёт перелёт к лицу (поиск, ссылка): прежнее окно не довписывается — иначе оно перебивает перелёт, и небо остаётся
+      // на старом месте (сценарий 36: ярусы, панель и карточка); перелёт пересчитывает afterViewport
+      if (sky.cam.moving && flightTarget) refit = null;
       // органы неба сменили вид (колонка ↔ блок) сразу после смены ширины неба — вписывание идёт к той же цели
       if (refit && performance.now() < refit.until && !before.wasFit && refitTo()) return;
       afterViewport(before, animate);
