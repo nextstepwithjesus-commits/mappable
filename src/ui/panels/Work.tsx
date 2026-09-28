@@ -20,8 +20,8 @@ import { Close } from '../controls.tsx';
 import { grid } from '../layout.ts';
 import { sheetStop } from '../sheet.ts';
 import { reduced } from '../sky/view.ts';
-import { SkyModeSwitch, StartList } from '../sky/Controls.tsx';
-import { closePerson, opened } from '../reveal.ts';
+import { SkyModeSwitch, StartList, ViewSwitch } from '../sky/Controls.tsx';
+import { atlasView, closePerson, opened } from '../reveal.ts';
 import {
   addToWork, clearWork, foldDesc, foldDescOf, foldGroupOf, foldGroups, hasDescendants, lineOf, removeFromWork, removeWithLine, workOrder,
   workSet, type Scope, type WorkEntry,
@@ -538,10 +538,18 @@ export function WorkPanel() {
   const folded = foldDesc.value.length + foldGroups.value.length;
   return (
     <Sheet title={n ? `В работе: ${n} ${plural(n, 'лицо', 'лица', 'лиц')}` : 'В работе'} lead={WORK_LEAD}>
-      <div class="work-sky">
-        <span class="k">На небе:</span>
-        <SkyModeSwitch />
-      </div>
+      {/* в древе (решение 73) набор — это само древо: вместо «На небе: все лица | набор» — «Небо | Древо» */}
+      {atlasView.value === 'tree' ? (
+        <div class="work-sky">
+          <span class="k">Вид:</span>
+          <ViewSwitch />
+        </div>
+      ) : (
+        <div class="work-sky">
+          <span class="k">На небе:</span>
+          <SkyModeSwitch />
+        </div>
+      )}
       {n === 0 ? (
         <>
           <p class="muted work-empty">

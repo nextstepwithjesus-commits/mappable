@@ -1,6 +1,7 @@
-import { useEffect, useRef } from 'preact/hooks';
+import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { effect } from '@preact/signals';
 import { SkyView } from './SkyView.tsx';
+import { TreeView } from './tree/TreeView.tsx';
 import { Folio } from './Folio.tsx';
 import { TimeStrip } from './TimeStrip.tsx';
 import { Panels } from './Panels.tsx';
@@ -11,7 +12,10 @@ import { bindFocus } from './focus.ts';
 import { grid, panelKind, setWidth, skyFull, splitRange, unfoldCard, viewportHeight, viewportWidth, type Grid, type Widths } from './layout.ts';
 import { panel, type Panel } from '../state.ts';
 import { Close } from './controls.tsx';
-import { plural } from './common.tsx';
+import { plural, skyRef } from './common.tsx';
+import { atlasView } from './reveal.ts';
+import { introOpen } from './sky/view.ts';
+import { Cartouche, GuideCommand, TreeBars } from './sky/Overlays.tsx';
 
 export function App() {
   useEffect(() => {
@@ -46,6 +50,8 @@ export function App() {
 
   const g = grid.value;
   const p = panel.value;
+  // вид главной области (решение 73): небо или древо карточек; в древе полосы времени нет — её место отдано древу
+  const tree = atlasView.value === 'tree';
 
   // Сетка [панель][небо][карточка] (C1): ширины колонок панели и карточки считает layout.ts — по экрану, по ширинам,
   // которые задал читатель (J2), и с «Небом во весь экран»; карточка-корешок — своей шириной из folio.css.
@@ -56,7 +62,7 @@ export function App() {
   // Ручки-разделители (J2) — между панелью и небом и между небом и карточкой: после панели и после неба в порядке Tab.
   return (
     <div
-      class={['app', g.spine && 'spine', g.full && 'full'].filter(Boolean).join(' ')}
+      class={['app', g.spine && 'spine', g.full && 'full', tree && 'in-tree'].filter(Boolean).join(' ')}
       // ширина карточки — только у развёрнутой колонки: корешок и лист телефона — своей шириной из CSS
       style={{ '--sheet-w': `${g.sheet}px`, '--folio-w': !g.phone && g.folio > 0 && !g.spine ? `${g.folio}px` : undefined }}
     >
@@ -65,11 +71,48 @@ export function App() {
       {splitShown(g, 'sheet') && <Splitter side="sheet" g={g} />}
       <main class="app-main">
         <h1 class="visually-hidden">Толедот — звёздный атлас библейских родословий</h1>
-        <SkyView />
+        {tree ? <TreeArea /> : <SkyView />}
       </main>
       {splitShown(g, 'folio') && <Splitter side="folio" g={g} />}
       <Folio />
-      <TimeStrip />
+      {!tree && <TimeStrip />}
+    </div>
+  );
+}
+
+// ---------- древо на месте неба (решение 73) ----------
+
+const noop = () => {};
+
+/**
+ * Область древа — ячейка неба в сетке (решение 73): само древо, строка «Раскрыто N лиц» у верхней кромки и вступление
+ * древа или команда «Как читать карту». Органов неба (линии Мессии, ярусы эпох, «Вид») здесь нет: у древа свои органы,
+ * вид переключает «Небо | Древо» в верхней строке. Небо, пока его нет на экране, не принимает команд: его ссылка
+ * (skyRef) пуста, клавиши и перелёты неба молчат; вернётся небо — SkyView заполнит её снова.
+ */
+function TreeArea() {
+  const wrap = useRef<HTMLDivElement>(null);
+  const [size, setSize] = useState({ w: 0, h: 0 });
+  useEffect(() => {
+    skyRef.current = null;
+    skyRef.redraw = noop;
+    skyRef.flyTo = noop;
+  }, []);
+  useLayoutEffect(() => {
+    const el = wrap.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setSize({ w: el.clientWidth, h: el.clientHeight }));
+    ro.observe(el);
+    setSize({ w: el.clientWidth, h: el.clientHeight });
+    return () => ro.disconnect();
+  }, []);
+  const intro = introOpen.value;
+  return (
+    <div class="treearea" ref={wrap}>
+      <TreeView />
+      <TreeBars />
+      {/* вступление — в левом нижнем углу, как на небе, над рядом органов древа (sky.css): вверх ему уходить не нужно */}
+      {size.w > 0 && (intro ? <Cartouche tree high={false} low={size.h > 0 && size.h <= 520} /> : <GuideCommand />)}
     </div>
   );
 }

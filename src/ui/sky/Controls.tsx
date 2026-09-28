@@ -4,18 +4,18 @@
  * и историю не пишется; закрывают его «Вид», Escape, «×» у колонки и нажатие мимо.
  */
 import { byId, modelInfo } from '../../data/atlas.ts';
-import { lambda, modelId, onlyLines, panel, epochMode } from '../../state.ts';
+import { lambda, modelId, onlyLines, panel, epochMode, selected } from '../../state.ts';
 import { num, typo } from '../text/typo.ts';
 import { Menu } from '../controls.tsx';
 import { Sheet } from '../panels/Sheet.tsx';
-import { LANES_STEP, TIME_STEP, resetProportions, showAll, stretchBy, zoomBy } from './view.ts';
-import { SKY_MODES, foldDesc, foldGroups, skyMode, unfoldAll, workSet } from '../work.ts';
-import { KEY_IDS, STARTS, start, startWith, type Start } from '../reveal.ts';
+import { LANES_STEP, TIME_STEP, introOpen, resetProportions, showAll, stretchBy, zoomBy } from './view.ts';
+import { SKY_MODES, addToWork, foldDesc, foldGroups, skyMode, unfoldAll, workSet } from '../work.ts';
+import { KEY_IDS, STARTS, atlasView, openPerson, start, startWith, type AtlasView, type Start } from '../reveal.ts';
 import { lanesText } from './Overlays.tsx';
 import { plural, skyRef, viewTick } from '../common.tsx';
 import { canFill, grid, skyFull, toggleFull } from '../layout.ts';
 import type { Axis } from '../../render/camera.ts';
-import { signal } from '@preact/signals';
+import { batch, signal } from '@preact/signals';
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { isTextField } from '../keys.ts';
 
@@ -122,6 +122,58 @@ export function SkyModeSwitch() {
   );
 }
 
+// ---------- вид атласа: небо или древо (решение 73) ----------
+
+/** Два вида главной области: пояснение каждого — в подсказке и для диктора (UX-21). */
+export const VIEWS: readonly { value: AtlasView; label: string; hint: string }[] = [
+  { value: 'sky', label: 'Небо', hint: 'Звёздное небо: по горизонтали время, звёзды — лица, созвездия — роды и колена' },
+  { value: 'tree', label: 'Древо', hint: 'Древо карточек: лица и их союзы слева направо, ветви раскрываются по щелчку' },
+];
+
+/**
+ * Что делает переход к виду v (чистая часть showView): «Небо» — те же раскрытые лица на небе «набор» с картушами
+ * союзов (кроме начала «Всё небо»: там небо остаётся каким было); «Древо» строится из раскрытых лиц — если их нет,
+ * древо начинается с выбранного лица, а без него вступление предлагает начало.
+ */
+export function viewPlan(v: AtlasView, o: { start: Start | null; set: number; selected: string | null }): { mode?: 'work'; seed?: string; intro?: boolean } {
+  if (v === 'sky') return !!o.start && o.start !== 'all' && o.set > 0 ? { mode: 'work' } : {};
+  if (o.set > 0) return {};
+  return o.selected ? { seed: o.selected } : { intro: true };
+}
+
+/** Показать небо или древо (переключатель «Небо | Древо», решение 73); одно состояние раскрытия на оба вида. */
+export function showView(v: AtlasView) {
+  if (atlasView.peek() === v) return;
+  const plan = viewPlan(v, { start: start.peek(), set: workSet.peek().size, selected: selected.peek() });
+  batch(() => {
+    viewOpen.value = false;
+    atlasView.value = v;
+    if (plan.mode) skyMode.value = plan.mode;
+    if (plan.seed) {
+      addToWork(plan.seed);
+      openPerson(plan.seed);
+    }
+    if (plan.intro) introOpen.value = true;
+  });
+}
+
+/**
+ * Переключатель «Небо | Древо» (решение 73): в верхней строке на широком экране, в «Разделах» на телефоне. Нажатая
+ * кнопка — нынешний вид (aria-pressed), как у «Ночь | День».
+ */
+export function ViewSwitch() {
+  const v = atlasView.value;
+  return (
+    <div class="seg viewswitch" role="group" aria-label="Вид атласа">
+      {VIEWS.map((o) => (
+        <button type="button" key={o.value} aria-pressed={o.value === v} title={o.hint} aria-description={o.hint} onClick={() => showView(o.value)}>
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 // ---------- начало (решение 68): пять начал и «Начать заново» ----------
 
 /**
@@ -150,12 +202,13 @@ export const startsFocus = signal(false);
 /**
  * «Начать заново…» (решение 68): лист «Вид» на разделе «Начало» — тот же выбор из пяти начал. Команда верхней строки
  * («Ещё», «Разделы» телефона), строки режима «набор» у кромки неба и укороченного вступления. На телефоне открытая панель
- * уступает место листу.
+ * уступает место листу. В древе листа «Вид» нет (решение 73): выбор начала — во вступлении, фокус — на текущем начале.
  */
 export function openStarts() {
   if (grid.peek().phone && panel.peek()) panel.value = null;
   startsFocus.value = true;
-  viewOpen.value = true;
+  if (atlasView.peek() === 'tree') introOpen.value = true;
+  else viewOpen.value = true;
 }
 
 /**

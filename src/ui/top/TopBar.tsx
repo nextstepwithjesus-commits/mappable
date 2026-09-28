@@ -1,3 +1,4 @@
+import type { ComponentChildren } from 'preact';
 import { useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { panel, theme, type Panel } from '../../state.ts';
 import { grid } from '../layout.ts';
@@ -7,7 +8,9 @@ import { Search } from './Search.tsx';
 import { workSet } from '../work.ts';
 import { plural } from '../common.tsx';
 import { WORK_LEAD } from '../panels/Work.tsx';
-import { openStarts } from '../sky/Controls.tsx';
+import { VIEWS, ViewSwitch, openStarts, showView } from '../sky/Controls.tsx';
+import { atlasView, type AtlasView } from '../reveal.ts';
+import { fitTree } from '../tree/TreeView.tsx';
 
 /** Команда выбора начала (решение 68): в «Ещё» и в «Разделах» телефона, последней; открывает лист «Вид» на «Начале». */
 export const RESTART_LABEL = 'Начать заново…';
@@ -93,16 +96,28 @@ export function overflowCommands(avail: number, width: (id: string) => number, g
 const togglePanel = (id: Exclude<Panel, null>) => (panel.value = panel.value === id ? null : id);
 
 /**
- * Пункты меню «Разделы» телефона (H4; MOB-03, MOB-04): все панели, справка и тема — строками 48 px.
- * Тема — флажок «Дневная карта»: на телефоне в строке нет места для переключателя «Ночь | День».
+ * Пункты меню «Разделы» телефона (H4; MOB-03, MOB-04): вид атласа, все панели, справка и тема — строками 48 px.
+ * Вид — первыми пунктами «Небо» и «Древо» (решение 73): на телефоне в строке нет места для переключателя «Небо | Древо»;
+ * отмечен нынешний вид. Тема — флажок «Дневная карта»: нет места и для «Ночь | День».
  */
-export function phoneMenuItems(open: Panel, day: boolean, select: (id: Exclude<Panel, null>) => void, toggleTheme: () => void, workN = 0, restart: () => void = openStarts) {
+export function phoneMenuItems(
+  open: Panel,
+  day: boolean,
+  select: (id: Exclude<Panel, null>) => void,
+  toggleTheme: () => void,
+  workN = 0,
+  restart: () => void = openStarts,
+  view: AtlasView = 'sky',
+  pickView: (v: AtlasView) => void = showView,
+) {
   return [
+    ...VIEWS.map((v) => ({ key: `view-${v.value}`, label: v.label, checked: view === v.value, sep: false, onSelect: () => pickView(v.value) })),
     ...[...PANELS, ...HELP].map((c) => ({
       key: c.id,
       label: c.id === 'work' ? workLabel(workN) : c.label,
       checked: open === c.id,
-      sep: c.id === HELP[0].id,
+      // панели отделены чертой от вида, справка — от панелей
+      sep: c.id === PANELS[0].id || c.id === HELP[0].id,
       onSelect: () => select(c.id),
     })),
     // выбор начала (решение 68) — после справки, отдельной группой; не флажок: пункт открывает лист «Вид»
@@ -157,16 +172,14 @@ export function TopBar() {
   if (phone)
     return (
       <header class="top phone">
-        <button class="wordmark" title="Всё небо (0, Home)" aria-keyshortcuts="0 Home" onClick={showAll}>
-          Толедот
-        </button>
+        <Wordmark />
         <Search />
         <nav class="commands" aria-label="Панели атласа">
           <Menu
             class="more sections"
             label="Разделы"
             title="Панели атласа, справка и тема"
-            items={phoneMenuItems(panel.value, theme.value === 'day', togglePanel, () => (theme.value = theme.value === 'day' ? 'night' : 'day'), workSet.value.size)}
+            items={phoneMenuItems(panel.value, theme.value === 'day', togglePanel, () => (theme.value = theme.value === 'day' ? 'night' : 'day'), workSet.value.size, openStarts, atlasView.value)}
           />
         </nav>
       </header>
@@ -203,10 +216,12 @@ export function TopBar() {
   moreItems.push({ key: 'restart', label: RESTART_LABEL, checked: undefined, sep: moreItems.length > 0, onSelect: openStarts });
   return (
     <header class="top">
-      <button class="wordmark" title="Всё небо (0, Home)" aria-keyshortcuts="0 Home" onClick={showAll}>
-        Толедот{sub && <small ref={subRef}>{SUBTITLE}</small>}
-      </button>
+      <Wordmark>{sub && <small ref={subRef}>{SUBTITLE}</small>}</Wordmark>
       <Search />
+      {/* вид главной области (решение 73): «Небо | Древо» — рядом с поиском, до панелей; в «Ещё» не уходит */}
+      <div class="view-switch">
+        <ViewSwitch />
+      </div>
       <nav class="commands" ref={nav} aria-label="Панели атласа">
         {PANELS.filter((c) => !hidden.has(c.id)).map(button)}
         <Menu class="more" label="Ещё" title={moreItems.length > 1 ? 'Другие панели и справка; начать заново' : RESTART_HINT} items={moreItems} />
@@ -229,5 +244,22 @@ export function TopBar() {
         </span>
       </div>
     </header>
+  );
+}
+
+/**
+ * «Толедот» в верхней строке: на небе — «Всё небо», в древе (решение 73) — «Вписать всё» древо (src/ui/tree/TreeView.tsx).
+ */
+function Wordmark({ children }: { children?: ComponentChildren }) {
+  const tree = atlasView.value === 'tree';
+  return (
+    <button
+      class="wordmark"
+      title={tree ? 'Вписать всё древо (0)' : 'Всё небо (0, Home)'}
+      aria-keyshortcuts={tree ? '0' : '0 Home'}
+      onClick={() => (tree ? fitTree() : showAll())}
+    >
+      Толедот{children}
+    </button>
   );
 }

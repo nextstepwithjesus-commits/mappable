@@ -70,6 +70,28 @@ export const POINTER_ROWS: { how: string; what: string }[] = [
   { how: 'полоса времени', what: 'тянуть рамку, края рамки — ширина окна; щелчок вне рамки или по названию эпохи — переход к эпохе; двойной щелчок — всё небо' },
 ];
 
+/**
+ * Древо карточек (решение 73; src/ui/tree/): свои клавиши, пока фокус на карточке древа. Клавиши атласа — поиск, «?»,
+ * Escape, J и K по разделам карточки — работают и в древе.
+ */
+export const TREE_KEY_ROWS: KeyRow[] = [
+  { keys: [k('Tab')], what: 'по карточкам древа: по столбцам, слева направо' },
+  { keys: [k('←'), k('→')], what: 'к соседней карточке по линии родства: лицо, его союз, дети союза' },
+  { keys: [k('↑'), k('↓')], what: 'к соседней карточке в том же столбце' },
+  { keys: [k('Enter')], what: 'выбрать лицо или союз: справа откроется подробная карточка' },
+  { keys: [k('пробел')], what: 'главная команда карточки: «Продолжить ветвь» у лица, «Раскрыть детей» у союза; ещё раз — свернуть' },
+  { keys: [k('+'), k('−')], what: 'приблизить или отдалить древо' },
+  { keys: [k('0')], what: 'вписать всё древо в окно' },
+];
+
+/** Мышь и касание в древе. */
+export const TREE_POINTER_ROWS: { how: string; what: string }[] = [
+  { how: 'щелчок по карточке', what: 'подробная карточка лица или союза справа; на телефоне — лист снизу' },
+  { how: 'команды на карточке', what: 'раскрыть или свернуть ветвь: союзы лица, союз его родителей, детей союза' },
+  { how: 'протяжка по древу', what: 'сдвиг' },
+  { how: 'колесо мыши, щипок', what: 'масштаб у указателя' },
+];
+
 function Caps({ keys }: { keys: string[] }) {
   const out: ComponentChildren[] = [];
   keys.forEach((k, i) => {
@@ -165,6 +187,32 @@ export function KeysTable() {
       <table class="keys">
         <tbody>
           {POINTER_ROWS.map((r) => (
+            <tr key={r.how}>
+              <td class="how">{typo(r.how)}</td>
+              <td>{typo(r.what)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {/* древо карточек (решение 73): свои клавиши и жесты; вид переключает «Небо | Древо» в верхней строке */}
+      <h3 id="legend-keys-tree">Древо</h3>
+      <table class="keys">
+        <thead>
+          <tr>
+            <th scope="col">Клавиши</th>
+            <th scope="col">Действие в древе</th>
+          </tr>
+        </thead>
+        <tbody>
+          {TREE_KEY_ROWS.map((r) => (
+            <tr key={r.what}>
+              <td>
+                <KeyCell keys={r.keys} mod={r.mod} />
+              </td>
+              <td>{typo(r.what)}</td>
+            </tr>
+          ))}
+          {TREE_POINTER_ROWS.map((r) => (
             <tr key={r.how}>
               <td class="how">{typo(r.how)}</td>
               <td>{typo(r.what)}</td>

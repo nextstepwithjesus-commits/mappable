@@ -19,7 +19,7 @@ import { sheetStop, snapSheet, stopsFor, releaseVelocity, type SheetStop } from 
 import { cardFolded, cardStack, clipWords, closeAllCards, closeCard, stackSummaryHead } from './stack.ts';
 import { WorkButton } from './panels/Work.tsx';
 import { cardTitle, focusCardTitle, focusQuietly } from './focus.ts';
-import { selectedUnion, selectUnion, unionById } from './reveal.ts';
+import { atlasView, selectedUnion, selectUnion, unionById } from './reveal.ts';
 import { UnionCard, openerSection, unionTitle, unionYears } from './card/Union.tsx';
 import type { Union } from '../engine/unions.ts';
 
@@ -389,7 +389,7 @@ function useSheetDrag(aside: { current: HTMLElement | null }, on: boolean) {
     let d: { y0: number; h0: number; pts: { t: number; y: number }[]; from: SheetStop; moved: boolean } | null = null;
     let touch: { x0: number; y0: number; top: number; t: number } | null = null;
     // место для листа — небо между верхней строкой и полосой времени: лист на 100 % занимает его целиком
-    const avail = () => document.querySelector('.sky')?.getBoundingClientRect().height ?? window.innerHeight * 0.8;
+    const avail = () => document.querySelector('.sky, .treearea')?.getBoundingClientRect().height ?? window.innerHeight * 0.8;
     // время — Event.timeStamp: скорость взмаха считается по времени касаний, а не по тому, когда до них дошла очередь
     const begin = (y: number, t: number) => {
       d = { y0: y, h0: el.getBoundingClientRect().height, pts: [{ t, y }], from: sheetStop.peek(), moved: false };
@@ -563,7 +563,16 @@ function CardActions({ id, phone }: { id: string; phone: boolean }) {
         onClick={() => {
           // на телефоне лист сначала сворачивается до шапки: перелёт идёт над ним, а не под ним (MOB-15)
           if (phone) sheetStop.value = 'peek';
-          skyRef.flyTo(id);
+          // в древе (решение 73) — сначала на небо: перелёт — когда небо встало на место
+          if (atlasView.peek() === 'tree') {
+            atlasView.value = 'sky';
+            let tries = 0;
+            const wait = () => {
+              if (skyRef.current?.model) skyRef.flyTo(id);
+              else if (tries++ < 120) requestAnimationFrame(wait);
+            };
+            requestAnimationFrame(wait);
+          } else skyRef.flyTo(id);
         }}
       >
         <span class="full">Показать на небе</span>

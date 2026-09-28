@@ -11,6 +11,7 @@ import { bySex, pluralPeopleName } from '../text/ru.ts';
 import { typo, typoTree } from '../text/typo.ts';
 import { YearMark } from './Chrono.tsx';
 import { mapFont, T_UI_S } from '../../render/type.ts';
+import { Avatar } from '../tree/Avatar.tsx';
 
 /** Народ или род из родословия (Быт 10; Езд 2): у него нет рождения и жизни, только место в родословии. */
 export const isPeople = (id: string) => {
@@ -73,6 +74,8 @@ export function Masthead({ id, actions, axis }: { id: string; actions?: Componen
   const epochText = eps.length ? (eps.length === 1 ? eps[0].name : `${eps[0].name} — ${eps[eps.length - 1].name}`) : '—';
   return (
     <header class="mast">
+      {/* образ лица (решение 74): условный силуэт или изображение с пометой — слева от имени, как на карточке древа */}
+      <Avatar id={id} size={88} />
       {/* имя — в строчном блоке: черта фокуса — по ширине имени (VIS-56); первая строка обходит команды полосы листа */}
       <h2 id={`title-${id}`} tabIndex={-1}>
         <span class="nm">{p.name}</span>

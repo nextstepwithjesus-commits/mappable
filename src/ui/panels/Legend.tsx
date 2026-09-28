@@ -20,13 +20,18 @@ import { byId, graph, type ModelData } from '../../data/atlas.ts';
 import { buildRibbons } from '../../engine/ribbons.ts';
 import { relate } from '../../engine/kinship.ts';
 import { toAstro } from '../../engine/years.ts';
+import { TREE } from '../../engine/tree.ts';
+import { PersonCard, UnionCard, UnnamedCard } from '../tree/Cards.tsx';
+import type { TreeNode } from '../../engine/tree.ts';
+import { nodeBox } from '../tree/geom.ts';
+import { Avatar, UnnamedAvatar } from '../tree/Avatar.tsx';
 import { alpha } from '../../render/color.ts';
 import { mapFont, T_MAP_S } from '../../render/type.ts';
 import { drawBirthBand, drawGlyph, roleSigla, starRadius, type GlyphOpts } from '../../render/glyphs.ts';
 import { drawWorkMark, highlightFor, SIB } from '../../render/marks.ts';
-import { drawBranchSample } from '../../render/branches.ts';
+import { BRANCH_FADE, branchColor, drawBranchSample } from '../../render/branches.ts';
 import { drawPlateSample, plateNames, plateSize, plateSub } from '../../render/plates.ts';
-import { unionsOf } from '../reveal.ts';
+import { atlasView, unionById, unionsOf } from '../reveal.ts';
 import { drawStrands, lineNoteHits, ribbonLook } from '../../render/ribbons.ts';
 import { drawFoldMark } from '../../render/labels.ts';
 import { eventMarks } from '../../render/frame.ts';
@@ -676,6 +681,133 @@ function StripSample() {
   return <canvas ref={ref} class="legend-sample" style={{ width: '100%', height: `${h}px` }} aria-hidden="true" />;
 }
 
+// ---------- образцы древа (решение 73) ----------
+
+/**
+ * Образцы карточек древа — сами карточки древа (src/ui/tree/Cards.tsx) на месте раскладки, без действия: образец
+ * всегда выглядит и говорит так же, как карточка на полотне. Слой inert: карточки не берут фокус и не нажимаются.
+ */
+const noop = () => {};
+const SAMPLE = { current: false, glow: '', onSelect: noop, onKey: noop } as const;
+
+/** Место образца: карточка стоит в своей точке раскладки (nodeBox), слой сдвинут так, что она — в левом верхнем углу. */
+function Stage({ node, children }: { node: TreeNode; children: ComponentChildren }) {
+  const b = nodeBox(node);
+  return (
+    <span class="lt-sample" aria-hidden="true">
+      <span class="lt-stage" inert style={{ width: `${b.w}px`, height: `${b.h}px` }}>
+        <span class="lt-plane" style={{ left: `${-b.x}px`, top: `${-b.y}px` }}>
+          {children}
+        </span>
+      </span>
+    </span>
+  );
+}
+
+/** Образец карточки лица древа: образ, имя, годы и команды «Продолжить ветвь», «Родители». */
+function TreePersonSample({ id }: { id: string }) {
+  if (!byId.has(id)) return null;
+  const node: TreeNode = { kind: 'person', key: `p:${id}`, id, layer: 0, y: TREE.personH / 2, h: TREE.personH };
+  return (
+    <Stage node={node}>
+      <PersonCard {...SAMPLE} node={node} id={id} cmds={{ more: true, fold: false, parents: true, hideParents: false }} onMore={noop} onFold={noop} onParents={noop} onHideParents={noop} />
+    </Stage>
+  );
+}
+
+/** Образец карточки союза: «союз» и первый стих, имена супругов, вид связи, «Раскрыть детей (N)» и «Подробнее». */
+function TreeUnionSample({ uid }: { uid: string }) {
+  const u = unionById(uid);
+  if (!u) return null;
+  const node: TreeNode = { kind: 'union', key: uid, union: u, layer: 1, y: TREE.unionH / 2, h: TREE.unionH, hidden: u.kids.length, open: false };
+  return (
+    <Stage node={node}>
+      <UnionCard {...SAMPLE} node={node} u={u} open={false} hidden={u.kids.length} onKids={noop} onMore={noop} />
+    </Stage>
+  );
+}
+
+/** Образец пустого места: пунктирная рамка, «Мать … не названа в Писании» и стих союза. */
+function TreeUnnamedSample({ uid }: { uid: string }) {
+  const u = unionById(uid);
+  if (!u) return null;
+  const role = u.b ? 'a' : 'b';
+  const node: TreeNode = { kind: 'unnamed', key: `${uid}#${role}`, union: u, role, layer: 0, y: TREE.unnamedH / 2, h: TREE.unnamedH };
+  return (
+    <Stage node={node}>
+      <UnnamedCard {...SAMPLE} node={node} u={u} role={role} />
+    </Stage>
+  );
+}
+
+/** Образцы образов лиц (решение 74): мужчина, женщина, народ, неназванное лицо, Иисус Христос — функциями древа. */
+function AvatarSamples() {
+  const people = ['mitsraim', 'kittim'].find((id) => byId.has(id));
+  const items: [ComponentChildren, string][] = [
+    [<Avatar id="adam" size={40} />, 'мужчина'],
+    [<Avatar id="eva" size={40} />, 'женщина'],
+    ...(people ? [[<Avatar id={people} size={40} />, 'народ'] as [ComponentChildren, string]] : []),
+    [<UnnamedAvatar size={40} />, 'не назван'],
+    [<Avatar id="iisus" size={40} />, 'Иисус Христос'],
+  ];
+  return (
+    <span class="lt-sample lt-avatars" aria-hidden="true">
+      {items.map(([pic, cap]) => (
+        <span class="lt-av" key={cap}>
+          {pic}
+          <span class="legend-num">{cap}</span>
+        </span>
+      ))}
+    </span>
+  );
+}
+
+/** Узел-карточка на схеме связей. */
+const Node = ({ x, y, w = 44, h = 20, sel = false, o }: { x: number; y: number; w?: number; h?: number; sel?: boolean; o?: number }) => (
+  <rect class={sel ? 'lt-node sel' : 'lt-node'} x={x} y={y} width={w} height={h} opacity={o} />
+);
+
+/** Образец связей древа: союз → ребёнок двойной линией (золотой и лазурной) и одной — лазурной, где линии разошлись. */
+function TreeLinesSample() {
+  return (
+    <svg class="lt-svg tree-links" viewBox="0 0 228 64" width="228" height="64" aria-hidden="true">
+      <Node x={2} y={22} />
+      <Node x={182} y={4} />
+      <Node x={182} y={40} />
+      <path class="rb mt" d="M46 30.5 H98 a6 6 0 0 0 6 -6 V20 a6 6 0 0 1 6 -6 H182" />
+      <path class="rb lk" d="M46 33.5 H101 a6 6 0 0 0 6 -6 V23 a6 6 0 0 1 6 -6 H182" />
+      <path class="rb lk" d="M46 33.5 H101 a6 6 0 0 1 6 6 V44 a6 6 0 0 0 6 6 H182" />
+    </svg>
+  );
+}
+
+/** Образец ветвей выбранного лица: две ветви цветами неба (branchColor), бледнеющие по поколениям; предок — светлым. */
+function TreeBranchSample() {
+  const t = theme.value;
+  const f = (g: number) => BRANCH_FADE[Math.min(g, BRANCH_FADE.length - 1)];
+  const branch = (i: number, d: string, g: number) => (
+    <g style={{ '--c': branchColor(i, t), '--a': String(f(g)) }}>
+      <path class="glow desc" d={d} />
+      <path class="ln desc" d={d} />
+    </g>
+  );
+  return (
+    <svg class="lt-svg tree-links" viewBox="0 0 304 64" width="304" height="64" aria-hidden="true">
+      <path class="glow anc" d="M2 32 H40" />
+      <path class="ln anc" d="M2 32 H40" />
+      <Node x={40} y={22} sel />
+      {branch(0, 'M84 32 H104 a6 6 0 0 0 6 -6 V18 a6 6 0 0 1 6 -6 H140', 0)}
+      {branch(1, 'M84 32 H104 a6 6 0 0 1 6 6 V46 a6 6 0 0 0 6 6 H140', 0)}
+      <Node x={140} y={3} h={18} />
+      <Node x={140} y={43} h={18} />
+      {branch(0, 'M184 12 H258', 1)}
+      {branch(1, 'M184 52 H258', 1)}
+      <Node x={258} y={3} h={18} o={0.8} />
+      <Node x={258} y={43} h={18} o={0.8} />
+    </svg>
+  );
+}
+
 // ---------- строки ----------
 
 /** Строка: образец слева, пояснение справа. */
@@ -728,6 +860,7 @@ export const GLOSSARY: [string, string][] = [
 /** Разделы панели после «Как читать карту». */
 const PARTS = [
   ['legend-sky', 'Небо'],
+  ['legend-tree', 'Древо'],
   ['legend-signs', 'Знаки'],
   ['legend-lines', 'Линии'],
   ['legend-time', 'Время'],
@@ -750,7 +883,8 @@ export function LegendPanel() {
     <Sheet title="Условные знаки" lead="Как читать карту: что значит каждый знак, линия и надпись на небе.">
       {/* тот же текст, что во вступлении (C5; UX-03): клавиша «?» и команда «Как читать карту» ведут сюда */}
       <h3 id="legend-guide">Как читать карту</h3>
-      <ReadingGuide both />
+      {/* в древе (решение 73) — как читать древо; небо — в разделе «Небо» ниже, и наоборот */}
+      <ReadingGuide both tree={atlasView.value === 'tree'} />
       {/* одно слово — одно понятие (решение 36; UX-54): эти слова значат одно и то же во всех текстах атласа */}
       <dl class="glossary">
         {GLOSSARY.map(([term, what]) => (
@@ -852,10 +986,55 @@ export function LegendPanel() {
         <li class="legend-row legend-wide">
           <span class="legend-text">
             Раскрытые лица — это рабочий набор. Начало — «С Адама», «С Иисуса Христа», «Родословие Иисуса Христа», «Ключевые
-            лица» или «Всё небо» — выбирается при первом посещении; «Начать заново» — в листе «Вид», в панели «В работе»
-            и в меню «Ещё». Строка у кромки неба говорит, сколько лиц раскрыто, и ведёт ко всему небу.
+            лица» или «Всё небо» — выбирается при первом посещении; первые четыре открывают древо, «Всё небо» — небо.
+            «Начать заново» — в листе «Вид», в панели «В работе» и в меню «Ещё», в древе — во вступлении. Строка у кромки
+            неба и древа говорит, сколько лиц раскрыто, и ведёт ко всему небу.
           </span>
         </li>
+      </ul>
+
+      {/* древо карточек (решение 73): образцы — разметкой, в стиле карточек древа (src/ui/tree/); лица и стихи — из данных */}
+      <h3 id="legend-tree">Древо</h3>
+      <p class="muted">
+        Древо — второй вид атласа: карточки лиц и союзов слева направо, по поколениям. Переключатель «Небо | Древо» — в верхней
+        строке, на телефоне — в «Разделах».
+      </p>
+      <ul class="legend">
+        <Wide s={<TreePersonSample id="sif" />}>
+          Карточка лица: имя, уточнение и годы. «Продолжить ветвь» показывает союзы лица, «Родители» — союз его родителей;
+          щелчок по карточке открывает подробную карточку справа. Выбранная карточка — в рамке цвета фокуса.
+        </Wide>
+        {/* образы лиц (решение 74): силуэт — условный знак оформления, изображение «худож.» — не из Писания; образцы —
+            функциями самих карточек (src/ui/tree/Avatar.tsx) */}
+        <li class="legend-row legend-wide">
+          <span class="legend-pic">
+            <AvatarSamples />
+          </span>
+          <span class="legend-text">
+            Силуэт на карточке — условный знак: мужской или женский, у народа — группа, у неназванного — пунктир; у Иисуса
+            Христа — восьмилучевая звезда. Изображение с пометой «худож.» — художественная интерпретация создателей
+            приложения, не изображение из Писания.
+          </span>
+        </li>
+        <Wide s={<TreeUnionSample uid="u:adam+eva" />}>
+          Карточка союза — брак или связь, от которой пошли дети: имена супругов, вид связи словами Писания и первый стих.
+          «Раскрыть детей» показывает детей союза, повторное нажатие сворачивает всё, что раскрыто через него; «Подробнее» —
+          карточка союза справа.
+        </Wide>
+        <Wide s={<TreeUnnamedSample uid="u:kain+" />}>
+          Пунктирная рамка — место, которое Писание оставляет без имени: жена или мать не названа. Выдуманных имён и
+          изображений в атласе нет — только то, что сказано в тексте.
+        </Wide>
+        <Wide s={<TreeLinesSample />}>
+          Двойная линия, золотая и лазурная, — шаг родословия Иисуса Христа по Матфею и по Луке; где линии расходятся,
+          у шага одна линия своего цвета. У имени на линии — золотая и лазурная точки, у Иисуса Христа — восьмилучевая
+          звезда.
+        </Wide>
+        <Wide s={<TreeBranchSample />}>
+          Ветви выбранного лица светятся своими цветами, как на небе: у каждого союза с детьми свой цвет, при одном союзе —
+          у ветви каждого ребёнка; цвет бледнеет с каждым поколением. Путь к предкам — мягкое светлое свечение, остальное
+          древо гаснет.
+        </Wide>
       </ul>
 
       <h3 id="legend-signs">Знаки</h3>

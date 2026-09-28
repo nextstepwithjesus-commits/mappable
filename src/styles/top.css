@@ -353,3 +353,27 @@
   right: 0;
   top: calc(100% + 8px);
 }
+
+/* вид главной области «Небо | Древо» (решение 73; src/ui/sky/Controls.tsx, ViewSwitch) — сразу после поиска, до панелей;
+   в «Ещё» не уходит. Сегменты — как «Ночь | День», в одну строку, с полями чуть уже. Место под него — из промежутков
+   и ширины поиска: на 1440 все панели по-прежнему в строке, в «Ещё» — только «Начать заново…» */
+.top > .view-switch {
+  flex: none;
+  margin-left: 12px;
+}
+.top > .view-switch .seg {
+  flex-wrap: nowrap;
+  margin: 0;
+}
+.top > .view-switch .seg::after {
+  content: none;
+}
+.top > .view-switch .seg button {
+  padding: 0 8px;
+}
+.top > .view-switch + .commands {
+  margin-left: 14px;
+}
+.top > .search:has(+ .view-switch) {
+  width: clamp(272px, 20.5vw, 320px);
+}

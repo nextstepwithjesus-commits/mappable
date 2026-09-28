@@ -27,6 +27,13 @@ async function fresh(p: Page, o: { intro?: boolean; start?: string | null; extra
 }
 /** Что показывает небо: «work» — набор, «all» — все лица (холст пишет режим в data-mode). */
 const mode = (p: Page) => p.evaluate(() => (document.querySelector('.sky canvas') as HTMLElement | null)?.dataset.mode ?? '');
+/** На месте неба — древо карточек (решение 73: начала «С Адама», «С Иисуса Христа», «Родословие», «Ключевые лица»). */
+const inTree = (p: Page) => p.evaluate("!!document.querySelector('.treearea .tree') && !document.querySelector('.sky canvas')");
+/** Переключатель «Небо | Древо» верхней строки: «Небо» — те же раскрытые лица на небе «набор» (решение 73). */
+async function toSky(p: Page) {
+  await p.locator('.top .view-switch button', { hasText: 'Небо' }).click();
+  await p.waitForTimeout(1600);
+}
 /** Рабочий набор из памяти браузера: id по порядку. */
 const work = async (p: Page) => ((await p.evaluate(() => JSON.parse(localStorage.getItem('toledot:work') ?? '[]'))) as [string, unknown][]).map((r) => r[0]);
 const startOf = (p: Page) => p.evaluate(() => JSON.parse(localStorage.getItem('toledot:start') ?? 'null') as string | null);
@@ -74,7 +81,7 @@ async function starAt(p: Page, id: string): Promise<{ x: number; y: number } | n
 export const start4: Scenario[] = [
   {
     n: 540,
-    title: 'Решение 68: первое посещение (1440 × 900) — вступление предлагает пять начал с пояснениями, входы — ниже; «С Адама» сворачивает вступление, на небе «набор» один Адам, строка «Раскрыто 1 лицо — показать всё небо | начать заново»',
+    title: 'Решения 68, 73: первое посещение (1440 × 900) — вступление предлагает пять начал с пояснениями, входы — ниже; «С Адама» сворачивает вступление и открывает древо с одним Адамом, строка «Раскрыто 1 лицо — показать всё небо | начать заново»; «Небо» — небо «набор»',
     run: async (p) => {
       await fresh(p, { intro: true });
       if (!(await p.locator('.sky .cartouche').count())) return fail('вступления нет');
@@ -87,17 +94,24 @@ export const start4: Scenario[] = [
       if ((await p.locator('.cartouche .entry button').count()) !== 7) return fail('быстрых входов не семь');
       await p.locator('.cartouche .starts button', { hasText: 'С Адама' }).click();
       await p.waitForTimeout(1800);
-      if (await p.locator('.sky .cartouche').count()) return fail('вступление не свернулось');
-      if (!(await p.locator('.sky .guide-cmd').count())) return fail('нет «Как читать карту»');
+      if (await p.locator('.cartouche').count()) return fail('вступление не свернулось');
+      // решение 73: начало «С Адама» открывает древо; «Как читать карту» — в его углу
+      if (!(await inTree(p))) return fail('«С Адама» не открыл древо');
+      if (!(await p.locator('.treearea .guide-cmd').count())) return fail('нет «Как читать карту»');
       if ((await startOf(p)) !== 'adam') return fail(`начало в памяти: ${await startOf(p)}`);
       const w = await work(p);
       if (w.join(',') !== 'adam') return fail(`набор: ${w.join(', ')}`);
-      if ((await mode(p)) !== 'work') return fail(`небо: ${await mode(p)}`);
       if (hashId(p) !== 'adam') return fail(`выбрано «${hashId(p)}»`);
       const b = await revealBar(p);
       if (!b) return fail('нет строки раскрытия');
       if (flat(b.text) !== 'Раскрыто 1 лицо') return fail(`строка: «${flat(b.text)}»`);
       if (b.cmds.join('|') !== 'показать всё небо|начать заново') return fail(`команды строки: ${b.cmds.join(' | ')}`);
+      // «Небо» — тот же набор на небе «набор», со своей строкой раскрытия и «Как читать карту»
+      await toSky(p);
+      if ((await mode(p)) !== 'work') return fail(`небо: ${await mode(p)}`);
+      if (!(await p.locator('.sky .guide-cmd').count())) return fail('на небе нет «Как читать карту»');
+      const bs = await revealBar(p);
+      if (!bs || flat(bs.text) !== 'Раскрыто 1 лицо' || bs.cmds.join('|') !== 'показать всё небо|начать заново') return fail(`строка неба: ${bs ? `${flat(bs.text)} — ${bs.cmds.join(' | ')}` : 'нет'}`);
       // «показать всё небо» — небо «все лица», раскрытое остаётся в наборе
       await p.locator('.skytop .revealbar button', { hasText: 'показать всё небо' }).click();
       await p.waitForTimeout(800);
@@ -140,12 +154,15 @@ export const start4: Scenario[] = [
       const b = await revealBar(p);
       const n = Number(/\d+/.exec(flat(b?.text ?? ''))?.[0]);
       if (n !== ids.length) return fail(`строка «${flat(b?.text ?? '')}», в наборе ${ids.length}`);
+      // решение 73: родословие открывается древом; «Небо» — те же лица на небе «набор»
+      if (!(await inTree(p))) return fail('«Родословие Иисуса Христа» не открыло древо');
+      await toSky(p);
       return (await mode(p)) === 'work' ? pass(`${out.join('; ')}; линии — ${n} лиц`) : fail('небо не «набор»');
     },
   },
   {
     n: 542,
-    title: 'Решение 68: телефон 390 × 844 — начала столбцом, цели 44 px во всю ширину; «Ключевые лица» — набор ключевых лиц; строка раскрытия — одна строка «Раскрыто N лиц — все лица | начать заново»',
+    title: 'Решения 68, 73: телефон 390 × 844 — начала столбцом, цели 44 px во всю ширину; «Ключевые лица» — древо ключевых лиц; строка раскрытия — одна строка «Раскрыто N лиц — все лица | начать заново»; «начать заново» — вступление с началами',
     view: { width: 390, height: 844, touch: true },
     run: async (p) => {
       await fresh(p, { intro: true });
@@ -168,14 +185,15 @@ export const start4: Scenario[] = [
       if (b.cut > 1) return fail('текст строки обрезан');
       if (b.cmds.join('|') !== 'все лица|начать заново') return fail(`команды: ${b.cmds.join(' | ')}`);
       if (b.r > b.W) return fail('строка за правым краем');
-      // «начать заново» — лист «Вид» на «Начале», фокус на текущем начале
+      if (!(await inTree(p))) return fail('«Ключевые лица» не открыли древо');
+      // «начать заново» в древе (решение 73) — вступление с началами, текущее отмечено: листа «Вид» у древа нет
       await p.locator('.skytop .revealbar button', { hasText: 'начать заново' }).tap();
       await p.waitForTimeout(700);
-      const sh = await starts(p, '.sky .sheet');
-      if (labels(sh) !== NAMES.join('|')) return fail(`в листе «Вид» начала: ${labels(sh)}`);
-      if (sh.find((x) => x.cur)?.t !== 'Ключевые лица') return fail('в листе «Вид» не отмечено текущее начало');
+      const sh = await starts(p, '.treearea .cartouche');
+      if (labels(sh) !== NAMES.join('|')) return fail(`во вступлении древа начала: ${labels(sh)}`);
+      if (sh.find((x) => x.cur)?.t !== 'Ключевые лица') return fail('во вступлении не отмечено текущее начало');
       const vh = await p.evaluate(() => innerHeight);
-      if (sh.some((x) => x.top < 0 || x.top + x.h > vh)) return fail('начала листа «Вид» за краем экрана');
+      if (sh.some((x) => x.top < 0 || x.top + x.h > vh)) return fail('начала вступления за краем экрана');
       return pass(`${ids.length} ключевых лиц, строка ${b.h.toFixed(0)} px`);
     },
   },
@@ -222,7 +240,7 @@ export const start4: Scenario[] = [
   },
   {
     n: 544,
-    title: 'Решение 68: вступление закрыто, начало не выбрано — небо «все лица», без строки; в листе «Вид» — «Начало» без отметки; «Родословие Иисуса Христа» закрывает лист и раскрывает обе линии',
+    title: 'Решения 68, 73: вступление закрыто, начало не выбрано — небо «все лица», без строки; в листе «Вид» — «Начало» без отметки; «Родословие Иисуса Христа» закрывает лист и раскрывает обе линии древом',
     run: async (p) => {
       await fresh(p, { intro: false });
       if (await p.locator('.sky .cartouche').count()) return fail('вступление открыто');
@@ -242,7 +260,7 @@ export const start4: Scenario[] = [
       await p.locator('.viewpop .starts button', { hasText: 'Родословие Иисуса Христа' }).click();
       await p.waitForTimeout(1600);
       if (await p.locator('.viewpop').count()) return fail('лист «Вид» не закрылся');
-      if ((await mode(p)) !== 'work') return fail('небо не «набор»');
+      if (!(await inTree(p))) return fail('не древо');
       const ids = await work(p);
       const b = await revealBar(p);
       return b && Number(/\d+/.exec(flat(b.text))?.[0]) === ids.length && ids.includes('iisus') && ids.includes('adam') ? pass(`«${flat(b.text)}»`) : fail(`строка «${flat(b?.text ?? '')}», набор ${ids.length}`);
@@ -258,6 +276,8 @@ export const start4: Scenario[] = [
       await p.locator('.viewpop .starts button', { hasText: 'Родословие Иисуса Христа' }).click();
       await p.waitForTimeout(1500);
       const before = await work(p);
+      // родословие открылось древом (решение 73); лист «Вид» — у неба
+      await toSky(p);
       await p.locator('.skyctl .view-toggle').click();
       await p.waitForTimeout(300);
       const s = await starts(p, '.viewpop');

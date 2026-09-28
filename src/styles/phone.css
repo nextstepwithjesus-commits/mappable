@@ -369,7 +369,7 @@
   }
   /* главная фраза о звезде, яркости и созвездиях остаётся и на телефоне (UX-70): её нет больше нигде; табличка
      прокручивается, «Всё небо» — в «Как читать карту» только на высоком экране */
-  .cartouche .guide li:last-child {
+  .cartouche .guide:not(.tree-guide) li:last-child {
     display: none;
   }
   .cartouche h1 {
@@ -647,5 +647,23 @@
   body {
     overflow: visible;
     background: var(--sheet);
+  }
+}
+
+/* древо на телефоне (решение 73): полосы времени нет — древо на весь экран между верхней строкой и листом карточки;
+   положения листа считаются без полосы */
+@media (max-width: 720px) {
+  /* органы древа (tree.css) на телефоне — ряд кнопок 44 px почти во всю ширину у нижнего края: «Как читать карту» и
+     свёрнутое вступление — над ним */
+  .treearea > .guide-cmd {
+    bottom: calc(8px + max(44px, 2.75rem) + 10px);
+  }
+  .treearea > .cartouche {
+    bottom: calc(8px + max(44px, 2.75rem) + 10px);
+  }
+  .app.in-tree {
+    --strip-h: 0px;
+    --sheet-avail: calc(100dvh - var(--top-h) - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    --sheet-half: calc((100svh - var(--top-h) - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * 0.55);
   }
 }

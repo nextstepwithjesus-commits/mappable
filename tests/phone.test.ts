@@ -138,25 +138,33 @@ describe('ярусы эпох — не больше 35 % видимого неб
 });
 
 describe('верх телефона: «Разделы» (H4; MOB-03, MOB-04)', () => {
-  it('все панели, справка и тема — флажком «Дневная карта»', () => {
+  it('вид атласа, все панели, справка и тема — флажком «Дневная карта»', () => {
     const opened: string[] = [];
+    const views: string[] = [];
     let flipped = 0;
     let restarted = 0;
-    const items = phoneMenuItems('kinship', true, (id) => opened.push(id), () => flipped++, 0, () => restarted++);
+    const items = phoneMenuItems('kinship', true, (id) => opened.push(id), () => flipped++, 0, () => restarted++, 'tree', (v) => views.push(v));
+    // «Небо» и «Древо» (решение 73) — первыми: в строке телефона нет места для переключателя «Небо | Древо»;
     // «В работе» (J3) — после «Указателя», «Эпохи» (решение 51) — после «Глав», как в строке команд; «Начать заново…»
     // (решение 68) — после справки, перед темой
-    expect(items.map((i) => i.label)).toEqual(['Указатель', 'В работе', 'Главы', 'Эпохи', 'Синопсис', 'Родство', 'Сквозной раздел', 'Условные знаки', 'О карте', 'Начать заново…', 'Дневная карта']);
-    expect(items.filter((i) => i.checked).map((i) => i.label)).toEqual(['Родство', 'Дневная карта']);
+    expect(items.map((i) => i.label)).toEqual(['Небо', 'Древо', 'Указатель', 'В работе', 'Главы', 'Эпохи', 'Синопсис', 'Родство', 'Сквозной раздел', 'Условные знаки', 'О карте', 'Начать заново…', 'Дневная карта']);
+    // отмечены нынешний вид, открытая панель и тема
+    expect(items.filter((i) => i.checked).map((i) => i.label)).toEqual(['Древо', 'Родство', 'Дневная карта']);
     // «Начать заново…» — команда, а не флажок: у пункта нет состояния «отмечен»
-    expect(items[9].checked).toBeUndefined();
-    // справка, выбор начала и тема отделены чертой
-    expect(items.filter((i) => i.sep).map((i) => i.label)).toEqual(['Условные знаки', 'Начать заново…', 'Дневная карта']);
-    items[4].onSelect();
-    items[9].onSelect();
-    items[10].onSelect();
+    const at = (label: string) => items.find((i) => i.label === label)!;
+    expect(at('Начать заново…').checked).toBeUndefined();
+    // панели, справка, выбор начала и тема отделены чертой
+    expect(items.filter((i) => i.sep).map((i) => i.label)).toEqual(['Указатель', 'Условные знаки', 'Начать заново…', 'Дневная карта']);
+    at('Синопсис').onSelect();
+    at('Начать заново…').onSelect();
+    at('Дневная карта').onSelect();
+    at('Небо').onSelect();
     expect(opened).toEqual(['synopsis']);
     expect(restarted).toBe(1);
     expect(flipped).toBe(1);
+    expect(views).toEqual(['sky']);
+    // по умолчанию отмечено небо
+    expect(phoneMenuItems(null, false, () => {}, () => {}).filter((i) => i.checked).map((i) => i.label)).toEqual(['Небо']);
   });
 });
 

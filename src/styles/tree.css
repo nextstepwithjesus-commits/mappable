@@ -1,0 +1,469 @@
+/* Древо карточек (решение 73; src/ui/tree/). Вид атласа (ТЗ § 5): тонкая рамка без теней и скруглений, Literata —
+   имена, Jost — пометы и команды; цвет несут только ленты линий Мессии и подсветка ветвей выбранного (решение 69).
+   Карточка союза — двойной рамкой, как картуш на листе атласа; пустое место и «другие дети» — пунктиром. */
+
+.tree {
+  grid-area: sky;
+  position: relative;
+  overflow: hidden;
+  min-width: 0;
+  background: var(--sky);
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.tree.dragging {
+  cursor: grabbing;
+}
+.tree-plane {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+}
+
+/* ---------- связи ---------- */
+.tree-links {
+  position: absolute;
+  left: 0;
+  top: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+.tree-links path {
+  fill: none;
+  stroke-linejoin: round;
+}
+.tree-links .ln {
+  stroke: var(--ink-3);
+  stroke-width: 1.25;
+}
+.tree-links .dashed {
+  stroke-dasharray: 4 3;
+}
+/* выбран кто-то на древе: связи вне его рода — 40 % */
+.tree-links .dim {
+  opacity: 0.4;
+}
+.tree-links .ln.desc {
+  stroke: var(--c);
+  stroke-width: 2;
+  opacity: var(--a);
+}
+.tree-links .ln.self,
+.tree-links .ln.anc {
+  stroke: var(--ink);
+  stroke-width: 1.75;
+}
+/* свечение: ночью — широкий полупрозрачный слой своего цвета, днём — тон под линией (как на небе, src/render/branches.ts) */
+.tree-links .glow {
+  stroke-linecap: round;
+}
+.tree-links .glow.desc {
+  stroke: var(--c);
+  stroke-width: 8;
+  opacity: calc(var(--a) * 0.24);
+}
+.tree-links .glow.self,
+.tree-links .glow.anc {
+  stroke: var(--ink);
+  stroke-width: 7;
+  opacity: 0.13;
+}
+:root[data-map='day'] .tree-links .glow.desc {
+  stroke-width: 5;
+  opacity: calc(var(--a) * 0.2);
+}
+:root[data-map='day'] .tree-links .glow.self,
+:root[data-map='day'] .tree-links .glow.anc {
+  stroke-width: 4.5;
+  opacity: 0.1;
+}
+/* ленты линий Мессии: золотая — Мф 1, лазурная — Лк 3; на общих участках — обе рядом; звено по толкованию — редкой нитью */
+.tree-links .rb {
+  stroke-width: 2;
+}
+.tree-links .rb.mt {
+  stroke: var(--gold-1);
+}
+.tree-links .rb.lk {
+  stroke: var(--azure-1);
+}
+.tree-links .rb.interp {
+  stroke-dasharray: 2 3;
+}
+
+/* ---------- карточки ---------- */
+.tc {
+  position: absolute;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 8px 12px 4px;
+  overflow: hidden;
+  background: var(--sheet);
+  border: 1px solid var(--rule-strong);
+  color: var(--ink);
+  cursor: pointer;
+}
+.tc:hover {
+  background: var(--sheet-2);
+}
+/* выбранная — рамка цветом текста в 2 px (вторая черта — внутренней тенью: карточка не сдвигается) */
+.tc[aria-current='true'] {
+  border-color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--ink);
+}
+.tc-nm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.tc-nm .nm {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--serif);
+  font-size: var(--t-lead);
+  line-height: var(--t-lead-lh);
+}
+.tc-dis,
+.tc-yrs,
+.tc-sub,
+.tc-head,
+.tc-ref {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.tc-nm + .tc-yrs,
+.tc-dis + .tc-yrs {
+  margin-top: 2px;
+}
+.tc-cmds {
+  display: flex;
+  gap: 0 2px;
+  margin: auto 0 0 -8px;
+}
+.tc-cmds .cmd {
+  min-height: 28px;
+}
+
+/* образ слева, сведения справа (решение 74) */
+.tc-top {
+  display: flex;
+  gap: 10px;
+  min-width: 0;
+}
+.tc-info {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+}
+.tc-union .tc-top {
+  gap: 8px;
+}
+.tc-unnamed .tc-top,
+.tc-others .tc-top {
+  align-items: center;
+}
+
+/* знаки лент у имени: золотая точка — Мф 1, лазурная — Лк 3 (у Иисуса Христа восьмилучевая звезда — в образе) */
+.tc-lines {
+  display: inline-flex;
+  flex: none;
+  gap: 3px;
+}
+.tc-lines i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+.tc-lines .mt {
+  background: var(--gold-1);
+}
+.tc-lines .lk {
+  background: var(--azure-1);
+}
+
+/* союз: двойная рамка; сверху — «союз» и первый стих */
+.tc-union {
+  padding: 4px 10px 1px;
+  border: 3px double var(--rule-strong);
+}
+.tc-union .tc-cmds {
+  margin-left: -6px;
+}
+.tc-union .tc-nm .nm {
+  font-size: var(--t-body);
+  line-height: var(--t-body-lh);
+}
+.tc-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--ink-3);
+}
+.tc-head .tc-ref {
+  color: var(--ink-2);
+}
+
+/* пустое место союза и «другие сыновья и дочери»: пунктир, без листа */
+.tc-unnamed,
+.tc-others {
+  justify-content: center;
+  padding: 6px 12px;
+  background: var(--sky);
+  border-style: dashed;
+}
+.tc-txt {
+  white-space: normal;
+  font-family: var(--serif);
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+  color: var(--ink);
+}
+.tc-others .tc-txt {
+  font-size: var(--t-body);
+  line-height: var(--t-body-lh);
+}
+
+/* подсветка выбранного (решение 69): потомок — черта и рамка цветом ветви, ночью со свечением; предок — рамка
+   цветом текста; остальные карточки — рамкой структурной линии */
+.tc.hl-desc {
+  border-color: var(--c);
+  box-shadow: inset 3px 0 0 var(--c);
+}
+:root[data-map='night'] .tc.hl-desc {
+  box-shadow:
+    inset 3px 0 0 var(--c),
+    0 0 12px -3px var(--c);
+}
+.tc.hl-anc {
+  border-color: var(--ink-2);
+}
+.tc.hl-dim {
+  border-color: var(--rule);
+}
+.tc.hl-desc[aria-current='true'],
+.tc.hl-anc[aria-current='true'] {
+  border-color: var(--ink);
+}
+
+/* ---------- образы лиц (решение 74; src/ui/tree/Avatar.tsx) ----------
+   Условный силуэт, два тона, без черт лица: фон — глубина неба, голова и плечи — светлее, волосы, покров и борода —
+   тоном туманности; квадрат без тени, скругление 2 px. Пунктир — лицо не названо. Звезда Иисуса Христа — цветом света. */
+.av {
+  --av-bg: var(--sky);
+  --av-body: color-mix(in srgb, var(--ink-3) 38%, var(--sky));
+  --av-hair: var(--ink-3);
+  display: block;
+  flex: none;
+  overflow: hidden;
+  background: var(--av-bg);
+  border-radius: 2px;
+}
+:root[data-map='day'] .av {
+  --av-bg: var(--sky-band);
+  --av-body: var(--sheet);
+  --av-hair: color-mix(in srgb, var(--ink-3) 72%, var(--sky-band));
+}
+.av .b {
+  fill: var(--av-body);
+}
+.av .h {
+  fill: var(--av-hair);
+}
+.av .d {
+  fill: none;
+  stroke: var(--av-hair);
+  stroke-width: 1.6;
+  stroke-dasharray: 3.5 2.5;
+}
+.av .s {
+  fill: var(--ink);
+}
+.av-empty {
+  background: none;
+  outline: 1px dashed var(--rule-strong);
+  outline-offset: -1px;
+}
+/* изображение (потом): помета «худож.» в углу */
+.av-img {
+  position: relative;
+}
+.av-img img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.av-mark {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  padding: 0 3px;
+  background: var(--sheet);
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  color: var(--ink-2);
+}
+
+/* образ в шапке подробной карточки (card/Masthead.tsx): 88 px слева от имени и уточнения; паспорт — под ним.
+   На листе карточки телефона шапка — 104 px (ТЗ § 3.8): образа там нет */
+.mast > .av {
+  float: left;
+  margin: 6px 16px 8px 0;
+}
+.mast > .av ~ .passport {
+  clear: left;
+}
+.folio[data-stop] .mast > .av {
+  display: none;
+}
+
+/* ---------- органы ---------- */
+.tree-ctl {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 4;
+  display: flex;
+  padding: 3px 4px 3px 5px;
+  background: var(--sheet);
+  border: 1px solid var(--rule-strong);
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+  color: var(--ink-2);
+  white-space: nowrap;
+  cursor: default;
+}
+.tree-ctl button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  margin-left: -1px;
+  padding: 0 9px;
+  border: 1px solid var(--rule-strong);
+  color: var(--ink-2);
+}
+.tree-ctl .zm {
+  padding: 0;
+  font-size: var(--t-lead);
+  line-height: 1;
+}
+.tree-ctl button:hover {
+  position: relative;
+  background: var(--sheet-2);
+  color: var(--ink);
+}
+.tree-ctl button:active {
+  background: var(--rule);
+}
+.tree-ctl button:focus-visible {
+  position: relative;
+  outline-offset: -2px;
+}
+.tree-ctl button[aria-disabled='true'] {
+  color: var(--rule-strong);
+  background: none;
+  cursor: default;
+}
+
+/* миникарта: всё древо мелко и рамка видимой части — над органами, у правого края */
+.tree-map {
+  position: absolute;
+  right: 12px;
+  bottom: 60px;
+  z-index: 4;
+  background: var(--sheet);
+  border: 1px solid var(--rule-strong);
+  cursor: pointer;
+  touch-action: none;
+}
+.tree-map rect {
+  fill: var(--ink-3);
+}
+.tree-map .union {
+  fill: var(--rule-strong);
+}
+.tree-map .unnamed {
+  fill: var(--rule);
+}
+.tree-map .cur {
+  fill: var(--ink);
+}
+.tree-map .view {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+
+/* пустое древо */
+.tree-empty {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  font-family: var(--serif);
+  font-size: var(--t-body);
+  line-height: var(--t-body-lh);
+  color: var(--ink-2);
+  cursor: default;
+}
+.tree-empty p {
+  margin: 0 0 8px;
+}
+
+/* телефон: органы — столбец у правого края над листом карточки (--sheet-cover, phone.css), цели касания 44 × 44:
+   «−» и «+» рядом, под ними «Вписать всё» и «К выбранному» во всю ширину столбца */
+@media (max-width: 720px) {
+  .tree-ctl {
+    right: 8px;
+    bottom: calc(var(--sheet-cover, 0px) + 8px);
+    display: grid;
+    grid-template-columns: repeat(2, max(44px, 2.75rem));
+    padding: 0;
+    background: none;
+    border: 0;
+  }
+  .tree-ctl button {
+    min-width: 0;
+    height: auto;
+    min-height: 44px;
+    margin: -1px 0 0 -1px;
+    padding: 0 2px;
+    background: var(--sheet);
+    white-space: normal;
+    text-align: center;
+  }
+  .tree-ctl .wd {
+    grid-column: 1 / -1;
+  }
+  /* на телефоне миникарты нет: место — древу */
+  .tree-map {
+    display: none;
+  }
+}
+
+/* в области древа (src/ui/App.tsx, TreeArea) — во всю её величину */
+.treearea > .tree {
+  position: absolute;
+  inset: 0;
+}

@@ -94,8 +94,9 @@ describe('вступление (MOB-69, MOB-70, VIS-84, UX-70)', () => {
   it('невысокое окно: главная фраза остаётся, уходят строки о координатах и «Всё небо», строка с «?» — нет (UX-70, IX-41); на телефоне фраза тоже есть', () => {
     const low = block(sky, '@media (max-height: 800px)');
     expect(low).not.toMatch(/\.long|for-mouse/);
-    expect(prop(decls(low, '.cartouche .guide li:nth-child(2)'), 'display')).toBe('none');
-    expect(prop(decls(low, '.cartouche .guide li:last-child'), 'display')).toBe('none');
+    // строки неба; «Как читать карту» древа (решение 73, .tree-guide) — другой список, его строки остаются
+    expect(prop(decls(low, '.cartouche .guide:not(.tree-guide) li:nth-child(2)'), 'display')).toBe('none');
+    expect(prop(decls(low, '.cartouche .guide:not(.tree-guide) li:last-child'), 'display')).toBe('none');
     expect(block(phone, '@media (max-width: 720px)')).not.toMatch(/\.cartouche \.long/);
   });
 });

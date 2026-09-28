@@ -362,9 +362,10 @@ describe('вырезки из неба', () => {
 });
 
 describe('разделы панели', () => {
-  it('как читать карту, небо, знаки, линии, время, карточка, клавиши, слои — по порядку', () => {
+  it('как читать карту, небо, древо, знаки, линии, время, карточка, клавиши, слои — по порядку', () => {
     const ids = [...source.matchAll(/<h3 id="(legend-[a-z]+)"/g)].map((x) => x[1]);
-    expect(ids).toEqual(['legend-guide', 'legend-sky', 'legend-signs', 'legend-lines', 'legend-time', 'legend-card', 'legend-keys', 'legend-layers']);
+    // «Древо» (решение 73) — сразу после «Неба»: второй вид главной области
+    expect(ids).toEqual(['legend-guide', 'legend-sky', 'legend-tree', 'legend-signs', 'legend-lines', 'legend-time', 'legend-card', 'legend-keys', 'legend-layers']);
   });
   it('название панели — «Условные знаки», пояснение начинается с «Как читать карту:»', () => {
     expect(source).toMatch(/<Sheet title="Условные знаки" lead="Как читать карту: [^"]+">/);

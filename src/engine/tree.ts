@@ -50,8 +50,8 @@ export interface TreeLayout {
   height: number;
 }
 
-/** Размеры (px в масштабе 1): ширина столбца, высота карточек, промежутки. */
-export const TREE = { colW: 300, personH: 104, unionH: 96, unnamedH: 72, gap: 16, groupGap: 36, pad: 40 };
+/** Размеры (px в масштабе 1): ширина столбца, высота карточек (у лица — с образом 64 px, решение 74), промежутки. */
+export const TREE = { colW: 300, personH: 120, unionH: 100, unnamedH: 72, gap: 16, groupGap: 36, pad: 40 };
 
 export const personKey = (id: string) => `p:${id}`;
 export const unionKey = (uid: string) => uid;

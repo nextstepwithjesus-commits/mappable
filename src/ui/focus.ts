@@ -50,7 +50,7 @@ export function parkedFor(phone: boolean, p: Panel, mode: 'kinship' | 'spread' |
 }
 export const parked = computed(() => parkedFor(grid.value.phone, panel.value, pickMode.value));
 /** Что закрывает полноэкранный лист панели на телефоне. */
-const UNDER_SHEET = '.app > main > .sky, .app > .folio, .app > .strip';
+const UNDER_SHEET = '.app > main > .sky, .app > main > .treearea, .app > .folio, .app > .strip';
 function setModal(on: boolean) {
   for (const el of document.querySelectorAll(UNDER_SHEET)) el.toggleAttribute('inert', on);
 }
@@ -211,7 +211,7 @@ export function bindFocus(): () => void {
     later(() => {
       const to = introFocusTarget({ open, wasInside, selChanged: selected.peek() !== sel || panel.peek() === 'legend' });
       if (to === 'title') focusQuietly(document.querySelector<HTMLElement>('.cartouche h1, .cartouche .ttl'));
-      else if (to === 'command' && !current()) document.querySelector<HTMLElement>('.sky .guide-cmd')?.focus({ preventScroll: true });
+      else if (to === 'command' && !current()) document.querySelector<HTMLElement>('.guide-cmd')?.focus({ preventScroll: true });
     });
   });
   return () => {

@@ -3,6 +3,8 @@
  * набор, пропорция строк), вступительный картуш и «Как читать карту».
  */
 import type { ComponentChildren } from 'preact';
+import { useEffect, useState } from 'preact/hooks';
+import { batch } from '@preact/signals';
 import { byId } from '../../data/atlas.ts';
 import { introDone, pickMode, pins, pinsQuery, selected, skyGroup, type SkyGroup } from '../../state.ts';
 import { skyRef, plural } from '../common.tsx';
@@ -13,7 +15,7 @@ import { introOpen, lanes, openGuide, openLegend, resetProportions } from './vie
 import { addToWork, adoptLinkSet, leaveLinkSet, linkSet, skyMode, workNotice, workSet, WORK_URL_MAX } from '../work.ts';
 import { grid } from '../layout.ts';
 import { start, type Start } from '../reveal.ts';
-import { StartList, openStarts } from './Controls.tsx';
+import { StartList, openStarts, showView, startsFocus } from './Controls.tsx';
 
 /** Уже этой ширины вступительный картуш слева внизу встал бы под блок органов справа: картуш переходит в левый верхний угол. */
 export const CARTOUCHE_BESIDE = 880;
@@ -209,6 +211,45 @@ export function LanesNote() {
   return <SkyBar cls="lanesbar" text={lanesText(m)} cmds={[{ label: 'сбросить', title: 'Пропорции по умолчанию (двойной щелчок по буквам строк)', run: resetProportions }]} />;
 }
 
+// ---------- строка у кромки древа (решение 73) ----------
+
+/** Команда строки древа «показать всё небо»: небо «все лица»; раскрытое остаётся в наборе и в древе. */
+export function showAllSky() {
+  batch(() => {
+    showView('sky');
+    skyMode.value = 'all';
+  });
+}
+
+/**
+ * Строка у верхней кромки древа — та же, что у неба в раскрытии (решение 72): «Раскрыто 12 лиц — показать всё небо |
+ * начать заново». Набор из чужой ссылки — строкой ссылки, как на небе (решение 45). Пустое древо строки не имеет: его
+ * начало предлагает вступление.
+ */
+export function TreeBars() {
+  const l = linkSet.value;
+  const n = workSet.value.size;
+  if (!l && !n) return null;
+  const phone = grid.value.phone;
+  return (
+    <div class="skytop treetop">
+      {l ? (
+        <LinkSetBar />
+      ) : (
+        <SkyBar
+          cls={phone ? 'workbar revealbar treebar one' : 'workbar revealbar treebar'}
+          text={revealLineText(n)}
+          note={workLineNote(n)}
+          cmds={[
+            { label: phone ? 'все лица' : 'показать всё небо', title: 'Небо — все лица; раскрытое остаётся в наборе и в древе', run: showAllSky },
+            { label: 'начать заново', title: 'Выбрать начало заново: с Адама, с Иисуса Христа, родословие, ключевые лица или всё небо', run: openStarts },
+          ]}
+        />
+      )}
+    </div>
+  );
+}
+
 /** Какая строка состояния стоит у кромки неба: одна, по старшинству (выбор второго лица, отметки, группа, набор). */
 export function skyBarKind(): 'pick' | 'pins' | 'group' | 'link' | 'work' | 'notice' | null {
   if (pickMode.value && selected.value) return 'pick';
@@ -245,7 +286,8 @@ export function SkyBars() {
  * На сенсорном экране вступление говорит о касаниях (они — первым пунктом) и не называет клавиш; с мышью — о колесе,
  * щелчке и клавишах, в том числе «?» (IX-41). В «Условных знаках» (both) — оба способа (sky.css, .for-touch / .for-mouse).
  */
-export function ReadingGuide({ both = false }: { both?: boolean }) {
+export function ReadingGuide({ both = false, tree = false }: { both?: boolean; tree?: boolean }) {
+  if (tree) return <TreeGuide both={both} />;
   const touch = <li class="for-touch">{both ? 'Касание: коснитесь' : 'Коснитесь'} звезды — откроется карточка; двумя пальцами — масштаб, одним — сдвиг; долгое касание — меню звезды.</li>;
   return typoTree(
     <ul class={both ? 'guide both' : 'guide'}>
@@ -279,6 +321,45 @@ export function ReadingGuide({ both = false }: { both?: boolean }) {
   );
 }
 
+/**
+ * «Как читать карту» в древе (решение 73): древо объясняется словами его же команд (src/ui/tree/). Тот же выбор касание
+ * или мышь, что у неба: both — оба способа («Условные знаки»).
+ */
+export function TreeGuide({ both = false }: { both?: boolean }) {
+  const touch = (
+    <li class="for-touch">
+      {both ? 'Касание: коснитесь' : 'Коснитесь'} карточки — откроется подробная карточка лица или союза; одним пальцем — сдвиг, двумя — масштаб.
+    </li>
+  );
+  return typoTree(
+    <ul class={both ? 'guide tree-guide both' : 'guide tree-guide'}>
+      {!both && touch}
+      <li>
+        Слева направо — поколения: лицо, его союз — брак или связь, от которой пошли дети, — дети этого союза, их союзы и дальше.
+      </li>
+      <li>
+        «Продолжить ветвь» на карточке лица показывает его союзы, «Родители» — союз его родителей. «Раскрыть детей» на карточке
+        союза показывает его детей; «Свернуть ветвь» и «Свернуть детей» убирают всё, что раскрыто через карточку.
+      </li>
+      <li>Пунктирная рамка — место лица, которого Писание не называет по имени: так помечены неназванные жёны и матери.</li>
+      <li>
+        Золотая и лазурная линии — родословие Иисуса Христа по Матфею и по Луке. У выбранного лица ветви потомков светятся
+        своими цветами, путь к предкам — светлым.
+      </li>
+      <li class="for-mouse">
+        {both ? 'Мышь: щелчок' : 'Щелчок'} по карточке — подробная карточка справа; колесо — масштаб, перетаскивание — сдвиг. Все клавиши —{' '}
+        <kbd>?</kbd>.
+      </li>
+      {both && touch}
+      <li>
+        {grid.value.phone && !both
+          ? '«Небо» в «Разделах» показывает те же лица на звёздном небе, по времени их жизни.'
+          : 'Переключатель «Небо | Древо» в верхней строке (на телефоне — в «Разделах») показывает те же лица на звёздном небе, по времени их жизни.'}
+      </li>
+    </ul>,
+  );
+}
+
 /** Свернуть вступление: остаётся команда «Как читать карту» в углу неба. */
 const fold = () => {
   introDone.value = true;
@@ -299,7 +380,8 @@ export const ENTRIES = ['adam', 'noy', 'avraam', 'moisey', 'ruf', 'david', 'iisu
  * low — небо не выше 520 px (альбомный телефон, масштаб 200 %): одна строка «Как читать карту» и «Свернуть» (MOB-07),
  * небо остаётся видным.
  */
-export function Cartouche({ high, low = false }: { high: boolean; low?: boolean }) {
+export function Cartouche({ high, low = false, tree = false }: { high: boolean; low?: boolean; tree?: boolean }) {
+  if (tree) return <TreeCartouche high={high} low={low} />;
   const count = byId.size;
   const go = (id: string) => {
     fold();
@@ -369,6 +451,92 @@ export function Cartouche({ high, low = false }: { high: boolean; low?: boolean 
         </>,
       )}
       <ReadingGuide />
+    </div>
+  );
+}
+
+/**
+ * Свернуть вступление древа: фокус из таблички — на «Как читать карту» древа (src/ui/focus.ts ищет её только на небе);
+ * после выбора начала (card) — на выбранную карточку древа, если она есть: с неё и продолжают раскрытие.
+ */
+const foldTree = (card = false) => {
+  const inside = !!document.activeElement?.closest('.cartouche');
+  fold();
+  if (inside)
+    window.setTimeout(() => {
+      const a = document.activeElement;
+      if (a && a !== document.body && a.isConnected) return;
+      const to = (card && document.querySelector<HTMLElement>('.treearea .tc[aria-current="true"]')) || document.querySelector<HTMLElement>('.treearea .guide-cmd');
+      to?.focus({ preventScroll: true });
+    }, 30);
+};
+
+/**
+ * Вступление в древе (решение 73). Начало выбирается здесь — и при первом посещении, и по «Начать заново…»: листа «Вид»
+ * в древе нет. Под началами — как читать древо; быстрых входов к лицу нет: древо растёт от начала. Табличку открыли
+ * командой «Начать заново…» (startsFocus) — фокус на текущем начале, после фокуса на заголовке (src/ui/focus.ts).
+ * low — область не выше 520 px: одна строка; «С чего начать» разворачивает табличку целиком, она прокручивается.
+ */
+function TreeCartouche({ high, low }: { high: boolean; low: boolean }) {
+  const [wide, setWide] = useState(false);
+  const f = startsFocus.value;
+  const pick = start.value === null;
+  useEffect(() => {
+    if (!f) return;
+    startsFocus.value = false;
+    setWide(true);
+    // без отмены при смене f: сброс startsFocus сам меняет f, а фокус нужен после заголовка (focus.ts, setTimeout 0)
+    window.setTimeout(() => {
+      const q = (s: string) => document.querySelector<HTMLElement>(`.cartouche .starts ${s}`);
+      (q('button[aria-current="true"]') ?? q('button'))?.focus({ preventScroll: true });
+    }, 40);
+  }, [f]);
+  if (low && !wide && !f)
+    return (
+      <div class="cartouche low picking tree-intro" role="note" aria-label="Толедот — древо библейских родословий" data-reserve="intro">
+        <b class="ttl">Толедот</b>
+        <span class="hint for-touch">{typo('Коснитесь карточки — подробная карточка')}</span>
+        <button type="button" class="cmd start-cmd" title="Пять начал: с Адама, с Иисуса Христа, родословие, ключевые лица, всё небо" onClick={() => setWide(true)}>
+          С чего начать
+        </button>
+        <button type="button" class="cmd" onClick={() => openLegend('guide')}>
+          Как читать карту
+        </button>
+        <button type="button" class="cmd" onClick={() => foldTree()}>
+          Свернуть
+        </button>
+      </div>
+    );
+  return (
+    <div class={`cartouche picking tree-intro${high ? ' high' : ''}`} role="note" aria-labelledby="cartouche-title" data-reserve="intro">
+      <Close label="Свернуть вступление" onClick={() => foldTree()} />
+      {typoTree(
+        <>
+          <h1 id="cartouche-title">Толедот</h1>
+          <p class="sub">Звёздный атлас библейских родословий</p>
+        </>,
+      )}
+      {/* пять начал (решения 68, 73): «Всё небо» открывает небо, остальные — древо; выбор сворачивает табличку */}
+      <div class="pick" role="group" aria-labelledby="starts-title">
+        <h2 id="starts-title">{pick ? 'С чего начать' : 'Начать заново'}</h2>
+        <StartList notes label="Начало" onDone={() => foldTree(true)} />
+      </div>
+      {typoTree(
+        <>
+          <p class="long">
+            Древо — родословие карточками: лица и их союзы, от которых пошли дети. Каждая ветвь раскрывается по щелчку; все
+            сведения — из Писания, со стихами.
+          </p>
+          <p class="ribbons">
+            <span class="swatch gold" />
+            <span>линия Иосифа (Мф 1)</span>
+            <span class="swatch azure" />
+            <span>линия по Луке, традиционно — Марии (Лк 3)</span>
+          </p>
+          <h2>Как читать карту</h2>
+        </>,
+      )}
+      <ReadingGuide tree />
     </div>
   );
 }
