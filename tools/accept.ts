@@ -64,6 +64,8 @@ import { start4 } from './accept/start4.ts';
 import { colors4 } from './accept/colors4.ts';
 import { tree5 } from './accept/tree5.ts';
 import { view5 } from './accept/view5.ts';
+import { dots6 } from './accept/dots6.ts';
+import { peek6 } from './accept/peek6.ts';
 
 const BASE: Scenario[] = [
   {
@@ -596,7 +598,7 @@ const BASE: Scenario[] = [
   },
 ];
 /** Сценарии этапа 3 — в своих файлах, чтобы параллельные агенты не правили один список (номера 30–49, 50–69, 70–89). */
-const SCENARIOS: Scenario[] = [...BASE, ...layout, ...nav, ...sky, ...map, ...card, ...panels, ...phone, ...a11y, ...work, ...chrono, ...cardshell, ...cardtext, ...skyin, ...skydraw, ...strip, ...phone7, ...chrono3, ...sky3, ...family3, ...nav3, ...input3, ...find3, ...strip3, ...card3, ...cardtext3, ...phone3, ...reveal4, ...union4, ...start4, ...colors4, ...tree5, ...view5];
+const SCENARIOS: Scenario[] = [...BASE, ...layout, ...nav, ...sky, ...map, ...card, ...panels, ...phone, ...a11y, ...work, ...chrono, ...cardshell, ...cardtext, ...skyin, ...skydraw, ...strip, ...phone7, ...chrono3, ...sky3, ...family3, ...nav3, ...input3, ...find3, ...strip3, ...card3, ...cardtext3, ...phone3, ...reveal4, ...union4, ...start4, ...colors4, ...tree5, ...view5, ...dots6, ...peek6];
 
 /** Имена лиц обеих линий Мессии — из собранного индекса. */
 function lineNames(): Set<string> {
