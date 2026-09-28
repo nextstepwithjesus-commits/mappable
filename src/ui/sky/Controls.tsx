@@ -6,7 +6,7 @@
 import { byId, modelInfo } from '../../data/atlas.ts';
 import { lambda, modelId, onlyLines, panel, epochMode, selected } from '../../state.ts';
 import { num, typo } from '../text/typo.ts';
-import { Menu } from '../controls.tsx';
+import { Menu, rovingKey } from '../controls.tsx';
 import { Sheet } from '../panels/Sheet.tsx';
 import { LANES_STEP, TIME_STEP, introOpen, resetProportions, showAll, stretchBy, zoomBy } from './view.ts';
 import { SKY_MODES, addToWork, foldDesc, foldGroups, skyMode, unfoldAll, workSet } from '../work.ts';
@@ -164,9 +164,23 @@ export function showView(v: AtlasView) {
 export function ViewSwitch() {
   const v = atlasView.value;
   return (
-    <div class="seg viewswitch" role="group" aria-label="Вид атласа">
+    // одна остановка Tab на переключатель, выбор — стрелками (как у «Ночь | День»): путь Tab до неба не длиннее 15
+    <div
+      class="seg viewswitch"
+      role="group"
+      aria-label="Вид атласа"
+      onKeyDown={(e) => rovingKey(e, VIEWS.findIndex((o) => o.value === v), VIEWS.length, (j) => showView(VIEWS[j].value))}
+    >
       {VIEWS.map((o) => (
-        <button type="button" key={o.value} aria-pressed={o.value === v} title={o.hint} aria-description={o.hint} onClick={() => showView(o.value)}>
+        <button
+          type="button"
+          key={o.value}
+          aria-pressed={o.value === v}
+          tabIndex={o.value === v ? 0 : -1}
+          title={o.hint}
+          aria-description={o.hint}
+          onClick={() => showView(o.value)}
+        >
           {o.label}
         </button>
       ))}

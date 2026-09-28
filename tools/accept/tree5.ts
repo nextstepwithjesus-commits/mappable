@@ -129,9 +129,9 @@ export const tree5: Scenario[] = [
       if (!/Другие сыновья и дочери/.test(ot) || !/имена не названы/.test(ot) || !/Быт 5:7/.test(ot) || !/Быт 5:4/.test(ot)) return fail(`другие дети: ${ot}`);
       const dash = await p.evaluate(() => [...document.querySelectorAll('.tree-links g[data-edge*="others:"] path')].map((x) => getComputedStyle(x).strokeDasharray));
       if (!dash.length || dash.some((d) => d === 'none')) return fail(`связь к другим детям: ${dash.join(', ')}`);
-      // «другие дети» не входят в число детей союза: пустое место называет мать Еноса
+      // «другие дети» не входят в число детей союза: пустое место — «Жена Сифа», мать одного Еноса (решение 75)
       const et2 = flat(await empty.innerText());
-      if (!/Мать Еноса не названа в Писании/.test(et2)) return fail(`пустое место после раскрытия: ${et2}`);
+      if (!/Жена Сифа/.test(et2) || !/мать Еноса(?! и других)/.test(et2) || !/имя в Писании не названо/.test(et2)) return fail(`пустое место после раскрытия: ${et2}`);
       const ov = await overlaps(p);
       if (ov.length) return fail(`наложения: ${ov.join(', ')}`);
       return pass(ot.replace(/\s+/g, ' '));

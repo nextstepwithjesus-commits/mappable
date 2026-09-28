@@ -321,19 +321,6 @@
   color: var(--ink-2);
 }
 
-/* образ в шапке подробной карточки (card/Masthead.tsx): 88 px слева от имени и уточнения; паспорт — под ним.
-   На листе карточки телефона шапка — 104 px (ТЗ § 3.8): образа там нет */
-.mast > .av {
-  float: left;
-  margin: 6px 16px 8px 0;
-}
-.mast > .av ~ .passport {
-  clear: left;
-}
-.folio[data-stop] .mast > .av {
-  display: none;
-}
-
 /* ---------- органы ---------- */
 .tree-ctl {
   position: absolute;

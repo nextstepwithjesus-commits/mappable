@@ -195,7 +195,7 @@ export function KeysTable() {
         </tbody>
       </table>
       {/* древо карточек (решение 73): свои клавиши и жесты; вид переключает «Небо | Древо» в верхней строке */}
-      <h3 id="legend-keys-tree">Древо</h3>
+      <h3 id="keys-tree">Клавиши древа</h3>
       <table class="keys">
         <thead>
           <tr>

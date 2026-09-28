@@ -228,7 +228,7 @@ export function TopBar() {
         <span class="sep" aria-hidden="true" />
         {HELP.filter((c) => !hidden.has(c.id)).map(button)}
       </nav>
-      <Segmented label="Тема" options={THEMES} value={theme.value} onChange={(v) => (theme.value = v)} />
+      <Segmented label="Тема" options={THEMES} value={theme.value} onChange={(v) => (theme.value = v)} roving />
       {/* образцы команд для замера ширины: невидимы, вне дерева доступности и вне порядка Tab */}
       <div class="probe" ref={probe} aria-hidden="true">
         {[...PANELS, ...HELP].map((c) => (

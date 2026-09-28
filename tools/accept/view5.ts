@@ -243,7 +243,7 @@ export const view5: Scenario[] = [
       if ((await sheet.locator('.lt-avatars .av').count()) < 5) return fail('нет образцов силуэтов');
       // «Как читать карту» в начале панели — о древе, пока на экране древо
       if (!/Слева направо — поколения/.test(flat(await sheet.locator('ul.guide').first().innerText()))) return fail('«Как читать карту» панели — не о древе');
-      if (!(await sheet.locator('#legend-keys-tree').count())) return fail('нет клавиш древа');
+      if (!(await sheet.locator('#keys-tree').count())) return fail('нет клавиш древа');
       // образцы — в пределах панели, без прокрутки вбок
       const over = await sheet.evaluate((s) => s.scrollWidth - s.clientWidth);
       if (over > 0) return fail(`панель прокручивается вбок на ${over} px`);

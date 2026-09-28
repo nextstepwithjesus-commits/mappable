@@ -22,21 +22,47 @@ export function Segmented<T extends string | number>({
   options,
   value,
   onChange,
+  roving = false,
 }: {
   label: string;
   options: readonly { value: T; label: ComponentChildren }[];
   value: T | null;
   onChange: (v: T) => void;
+  /** одна остановка Tab на весь переключатель, выбор — стрелками, Home и End (верхняя строка: «Ночь | День») */
+  roving?: boolean;
 }) {
+  const at = options.findIndex((o) => o.value === value);
   return (
-    <div class="seg" role="group" aria-label={label}>
-      {options.map((o) => (
-        <button type="button" key={o.value} aria-pressed={o.value === value} onClick={() => onChange(o.value)}>
+    <div class="seg" role="group" aria-label={label} onKeyDown={roving ? (e) => rovingKey(e, at, options.length, (j) => onChange(options[j].value)) : undefined}>
+      {options.map((o, k) => (
+        <button
+          type="button"
+          key={o.value}
+          aria-pressed={o.value === value}
+          tabIndex={roving ? (k === (at < 0 ? 0 : at) ? 0 : -1) : undefined}
+          onClick={() => onChange(o.value)}
+        >
           {o.label}
         </button>
       ))}
     </div>
   );
+}
+
+/**
+ * Стрелки в переключателе с одной остановкой Tab (шаблон группы кнопок WAI-ARIA): ←/↑ — предыдущий, →/↓ — следующий
+ * (по кругу), Home и End — первый и последний; выбранный сразу применяется, фокус переходит на него.
+ */
+export function rovingKey(e: KeyboardEvent, at: number, n: number, choose: (j: number) => void) {
+  const k = e.key;
+  if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(k) || e.altKey || e.ctrlKey || e.metaKey) return;
+  e.preventDefault();
+  e.stopPropagation();
+  const i = at < 0 ? 0 : at;
+  const j = k === 'Home' ? 0 : k === 'End' ? n - 1 : (i + (k === 'ArrowLeft' || k === 'ArrowUp' ? n - 1 : 1)) % n;
+  const group = e.currentTarget as HTMLElement;
+  choose(j);
+  requestAnimationFrame(() => group.querySelectorAll<HTMLElement>('button')[j]?.focus());
 }
 
 /** Флажок: квадрат 10 × 10 в поле нажатия 24 × 24, подпись нажимается вместе с ним. */

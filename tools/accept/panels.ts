@@ -347,7 +347,8 @@ export const panels: Scenario[] = [
       const lead = nb((await sh.locator('.lead').innerText()).trim());
       if (!/^Как читать карту: /.test(lead)) return fail(`пояснение: «${lead}»`);
       const heads = (await sh.locator('h3[id^="legend-"]').allInnerTexts()).map((x) => x.trim());
-      const want = ['Как читать карту', 'Небо', 'Знаки', 'Линии', 'Время', 'Карточка', 'Клавиши', 'Слои'];
+      // «Древо» — раздел вида древа (решение 73), сразу после «Неба»
+      const want = ['Как читать карту', 'Небо', 'Древо', 'Знаки', 'Линии', 'Время', 'Карточка', 'Клавиши', 'Слои'];
       if (heads.join('|') !== want.join('|')) return fail(`разделы: ${heads.join(' | ')}`);
       // пройти панель до конца: вырезки из неба рисуются, когда видны
       const total = await sh.evaluate((el) => el.scrollHeight);
@@ -360,7 +361,8 @@ export const panels: Scenario[] = [
         [...el.querySelectorAll('.legend-row')]
           .map((row, i) => {
             const cv = row.querySelector('canvas.legend-sample, canvas.lifebar') as HTMLCanvasElement | null;
-            if (!cv) return row.querySelector('.rail-key') || !row.querySelector('.legend-pic') ? null : i;
+            // образец древа (решение 73) — сами карточки разметкой, с силуэтами SVG, а не холст
+            if (!cv) return row.querySelector('.rail-key') || !row.querySelector('.legend-pic') || row.querySelector('.legend-pic svg, .legend-pic .tc') ? null : i;
             if (!cv.width || !cv.height) return i;
             const d = cv.getContext('2d')!.getImageData(0, 0, cv.width, cv.height).data;
             for (let k = 3; k < d.length; k += 4 * 5) if (d[k] > 0) return null;
