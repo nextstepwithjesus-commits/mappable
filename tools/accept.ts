@@ -44,6 +44,15 @@ import { skyin } from './accept/skyin.ts';
 import { skydraw } from './accept/skydraw.ts';
 import { strip } from './accept/strip.ts';
 import { phone7 } from './accept/phone7.ts';
+import { chrono3 } from './accept/chrono3.ts';
+import { labels3 } from './accept/labels3.ts';
+import { lines3 } from './accept/lines3.ts';
+import { nav3 } from './accept/nav3.ts';
+import { input3 } from './accept/input3.ts';
+import { find3 } from './accept/find3.ts';
+import { strip3 } from './accept/strip3.ts';
+import { card3 } from './accept/card3.ts';
+import { phone3 } from './accept/phone3.ts';
 
 const BASE: Scenario[] = [
   {
@@ -573,7 +582,7 @@ const BASE: Scenario[] = [
   },
 ];
 /** Сценарии этапа 3 — в своих файлах, чтобы параллельные агенты не правили один список (номера 30–49, 50–69, 70–89). */
-const SCENARIOS: Scenario[] = [...BASE, ...layout, ...nav, ...sky, ...map, ...card, ...panels, ...phone, ...a11y, ...work, ...chrono, ...cardshell, ...cardtext, ...skyin, ...skydraw, ...strip, ...phone7];
+const SCENARIOS: Scenario[] = [...BASE, ...layout, ...nav, ...sky, ...map, ...card, ...panels, ...phone, ...a11y, ...work, ...chrono, ...cardshell, ...cardtext, ...skyin, ...skydraw, ...strip, ...phone7, ...chrono3, ...labels3, ...lines3, ...nav3, ...input3, ...find3, ...strip3, ...card3, ...phone3];
 
 /** Имена лиц обеих линий Мессии — из собранного индекса. */
 function lineNames(): Set<string> {
