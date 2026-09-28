@@ -104,11 +104,23 @@ export const expanded = signal<Readonly<Record<string, string>>>(
 if (hasWindow) effect(() => write('reveal', { opened: opened.value, expanded: expanded.value }));
 
 /** Начать заново с начала s (решение 68): набор — лица начала, союзы свёрнуты; «всё небо» — небо «все лица». */
+// ---------- вид атласа: небо или древо (решение 73) ----------
+
+/**
+ * Что показывает главная область: звёздное небо (время по горизонтали) или древо — карточки лиц и союзов, раскрываемые
+ * слева направо (src/ui/tree/, раскладка — src/engine/tree.ts). Оба вида держат одно состояние раскрытия.
+ * Начала «С Адама», «С Иисуса Христа», «Родословие», «Ключевые лица» открывают древо, «Всё небо» — небо.
+ */
+export type AtlasView = 'sky' | 'tree';
+export const atlasView = signal<AtlasView>(read<AtlasView>('view', 'sky') === 'tree' ? 'tree' : 'sky');
+if (hasWindow) effect(() => write('view', atlasView.value));
+
 export function startWith(s: Start) {
   batch(() => {
     start.value = s;
     opened.value = [];
     expanded.value = {};
+    atlasView.value = s === 'all' ? 'sky' : 'tree';
     if (s === 'all') {
       skyMode.value = 'all';
       return;

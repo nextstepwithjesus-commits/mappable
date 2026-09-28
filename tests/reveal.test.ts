@@ -97,3 +97,15 @@ describe('ветви: при равенстве — путь по отцу', () 
     expect(b.desc.get(aviya!)!.branch).toBe(b.desc.get('solomon')!.branch);
   });
 });
+
+describe('вид атласа (решение 73)', () => {
+  it('начала с раскрытием открывают древо, «всё небо» — небо', async () => {
+    const { atlasView } = await import('../src/ui/reveal.ts');
+    startWith('adam');
+    expect(atlasView.value).toBe('tree');
+    startWith('all');
+    expect(atlasView.value).toBe('sky');
+    startWith('lines');
+    expect(atlasView.value).toBe('tree');
+  });
+});
