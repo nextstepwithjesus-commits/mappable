@@ -14,7 +14,7 @@ import { typo } from './text/typo.ts';
 import { aliveAt, lifeText, meridianText, placeText } from './sky/text.ts';
 import {
   allInView, anchorNow, fitReveal, flightTarget, flyToIds, flyToPerson, holdAnchor, inView, introOpen, keepInView, lanes, reduced, screenOf, setReserve, showAround,
-  startLanes, stopFlight, unionFlip, updateZoomFloor, viewAround, type Anchor,
+  startLanes, stopFlight, unionFlip, updateZoomFloor, viewAround, linesAgain, type Anchor,
 } from './sky/view.ts';
 import { expanded, hasHidden, opened, plates, selectedUnion, unionById, type Plate } from './reveal.ts';
 import { plateFocus, plateHover, plateNews } from './sky/starnav.ts';
@@ -82,6 +82,9 @@ const revealIds = computed<ReadonlySet<string> | null>(() => {
   return out;
 });
 
+/** Сколько раз небо создавалось (переход «Древо → Небо» создаёт его заново): со второго раза — linesAgain. */
+let mounts = 0;
+
 export function SkyView() {
   const wrap = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -102,6 +105,8 @@ export function SkyView() {
     const canvas = canvasRef.current!;
     const sky = new Sky(canvas);
     skyRef.current = sky;
+    // небо создано заново (с древа): режим «только линии» вписывает коридор, как при первом показе (этап 11, B1)
+    if (mounts++ > 0) linesAgain.value++;
     // пропорция полос (J1): из адреса (h), иначе из памяти браузера — до первой раскладки, чтобы небо не перестраивалось
     sky.cam.lanes = startLanes();
     lanes.value = sky.cam.lanes;
@@ -266,6 +271,8 @@ export function SkyView() {
       if (labelsKey !== shownLabels) {
         shownLabels = labelsKey;
         wrap.current!.dataset.labels = labelsKey;
+        // какие подписи наложились — «вид:текст~вид:текст» (этап 11, B1; tools/_bugs-chaos.ts): пусто — наложений нет
+        wrap.current!.dataset.overlapPairs = ls.pairs.map(([a, b]) => `${ls.boxes[a].kind}:${ls.boxes[a].text}~${ls.boxes[b].kind}:${ls.boxes[b].text}`).join(';');
       }
       // флажок меридиана — для проверок приёмки (tools/accept/sky.ts): есть ли меридиан и что на флажке
       if (meridianLabel) wrap.current!.dataset.meridian = meridianLabel;
@@ -673,8 +680,9 @@ export function SkyView() {
     let shownSet: ReadonlySet<string> = shownIds.peek();
     const offWork = effect(() => {
       // небо «набор» показывает набор из ссылки, пока читатель его смотрит (IX-69), иначе свой набор; точки союзов —
-      // место под них в строках неба (решение 70)
-      const v = { mode: skyMode.value, set: shownIds.value, foldDesc: foldDesc.value, foldGroups: foldGroups.value, foldAt, plates: skyPlates.value };
+      // место под них в строках неба (решение 70). В режиме «только линии» точек союзов нет (sky.ts, unionPlates) — нет и
+      // пустых строк под них: иначе лента линий раздувалась вдвое (горб у Ламеха, снимок 14; этап 11, B1)
+      const v = { mode: skyMode.value, set: shownIds.value, foldDesc: foldDesc.value, foldGroups: foldGroups.value, foldAt, plates: onlyLines.value ? [] : skyPlates.value };
       const exp = expanded.peek();
       const flip = unionFlip(shownExp, exp, v.set);
       shownExp = exp;
@@ -838,8 +846,14 @@ export function SkyView() {
   }, [column]);
 
   // точки сравнения линий в режиме «только линии» — и для клавиатуры: открывают синопсис участка (E6; U2)
+  // в небе «набор» — только по лицам линий из набора, как выноски на холсте (ribbons.ts, skySteps; этап 11, B1): список
+  // для клавиатуры не называет точек сравнения, которых на небе нет
+  const onSky = (id: string) => skyMode.value !== 'work' || shownIds.value.has(id);
   const linePoints = onlyLines.value
-    ? comparePoints(lines.joseph.persons, lines.mary.persons.map((st) => (lineFlip.value && st.id === 'mariya' ? { ...st, id: 'iosif-muzh-marii' } : st)))
+    ? comparePoints(
+        lines.joseph.persons.filter((st) => onSky(st.id)),
+        lines.mary.persons.map((st) => (lineFlip.value && st.id === 'mariya' ? { ...st, id: 'iosif-muzh-marii' } : st)).filter((st) => onSky(st.id)),
+      )
     : [];
 
   return (

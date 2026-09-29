@@ -429,11 +429,14 @@ function strandSteps(v: SkyContext, s: SkyState, steps: { joseph: readonly LineS
 export function ribbonStrands(v: SkyContext, s: SkyState, steps: { joseph: readonly LineStep[]; mary: readonly LineStep[] }): RibbonCache {
   const { cam } = v;
   const ky = cam.ky;
-  const key = `${v.model.id}|${v.lambda}|${cam.kx}|${ky}|${s.lineFlip}|${s.onlyLines}|${cam.w}|${cam.h}|${v.rowsKey}|${!!s.guide}`;
+  // лица нитей — в ключе (этап 11, B1): набор той же величины с теми же строками (одно лицо линии убрали, другое лицо
+  // взяли в той же полосе) не меняет ключа строк, а нить прошла бы через скрытое лицо
+  const J = strandSteps(v, s, steps, 'joseph');
+  const M = strandSteps(v, s, steps, 'mary');
+  const ids = (xs: { id: string; weak: boolean }[]) => xs.map((q) => (q.weak ? `~${q.id}` : q.id)).join(',');
+  const key = `${v.model.id}|${v.lambda}|${cam.kx}|${ky}|${s.lineFlip}|${s.onlyLines}|${cam.w}|${cam.h}|${v.rowsKey}|${!!s.guide}|${ids(J)}|${ids(M)}`;
   let c = ribbonCaches.get(v);
   if (!c || c.key !== key || Math.abs((c.x0 - cam.x0) * cam.kx) > RIBBON_MARGIN - 40) {
-    const J = strandSteps(v, s, steps, 'joseph');
-    const M = strandSteps(v, s, steps, 'mary');
     // точки лиц — по полосам раскладки, а не по нынешним узлам неба (в «только линиях» они стоят на нитях)
     const raw = (id: string) => {
       const i = v.indexOf(id);
@@ -523,6 +526,69 @@ export function drawSkyRibbons(v: SkyContext, s: SkyState, steps: { joseph: read
   }
   ctx.restore();
   return strands;
+}
+
+/** Шаг поколения на экране, при котором средняя линия нити ещё не сглажена (engine/ribbons.ts, MEANDER_FULL_PX). */
+const DENSE_PX = 60;
+/**
+ * Проверка лент кадра (этап 11, B1; canvas[data-ribbon-gaps], tools/_bugs-chaos.ts): лента не обрывается между двумя
+ * соседними видимыми лицами линии и проходит у их звёзд (p.starsDrawn — нарисованные звёзды кадра). Возвращает замечания:
+ * «линия:а>б» — нить не проходит через одно из соседних видимых лиц; «линия:лицо@N» — звезда общего лица двух линий
+ * в N px от своей нити, дальше строки и амплитуды косы (нить нарисована не там, где звёзды, — устаревший кэш). Лица
+ * тесных поколений и раздельных участков нить сглаживает нарочно (MAP-26, MAP-62) — у них только непрерывность.
+ * Пусто — всё в порядке.
+ */
+export function ribbonCheck(v: SkyContext, p: Pass, steps: { joseph: readonly LineStep[]; mary: readonly LineStep[] }): string[] {
+  const c = ribbonCaches.get(v);
+  if (!c) return [];
+  const { cam } = v;
+  const out: string[] = [];
+  const st = skySteps(v, p.s, steps);
+  const on = (i: number) => {
+    const x = cam.sx(v.X0[i]);
+    const y = cam.sy(v.nodes[i].lane);
+    return x > v.letterW && x < cam.w && y > v.openTop && y < cam.vp.b ? { x, y } : null;
+  };
+  // строка и амплитуда косы, но не меньше 16 px: средняя линия тесных поколений сглажена (MAP-26, MAP-62)
+  const tol = Math.max(16, cam.ky) + BRAID_PX + 2;
+  // общие лица обеих линий: на раздельных участках средняя линия при растянутых строках сглажена нарочно (MAP-62) —
+  // там проверяется только непрерывность
+  const jSet = new Set(st.joseph.map((x) => x.id));
+  const shared = new Set(st.mary.map((x) => x.id).filter((id) => jSet.has(id)));
+  for (const strand of c.strands) {
+    const ids = new Map(strand.ids.map((id, k) => [id, k]));
+    const pts = strand.points;
+    let prev: string | null = null;
+    for (const step of st[strand.line]) {
+      const i = v.indexOf(step.id);
+      if (i === undefined || !p.starsDrawn.has(i)) continue;
+      const q = on(i);
+      if (!q) continue;
+      const k = ids.get(step.id);
+      if (prev !== null && (k === undefined || !ids.has(prev))) out.push(`${strand.line}:${prev}>${step.id}`);
+      prev = step.id;
+      if (k === undefined || !shared.has(step.id)) continue;
+      // тесные поколения (шаг меньше 60 px) нить сглаживает нарочно (MAP-26): у таких лиц — только непрерывность
+      const nx = (id: string | undefined) => {
+        const j = id === undefined ? undefined : v.indexOf(id);
+        return j === undefined ? null : cam.sx(v.X0[j]);
+      };
+      const genPx = [nx(strand.ids[k - 1]), nx(strand.ids[k + 1])].filter((x): x is number => x !== null).map((x) => Math.abs(x - q.x));
+      if (genPx.some((d) => d < DENSE_PX)) continue;
+      // расстояние от звезды до своей нити у её места (u = k ± ½): первая точка с u ≥ k − ½ — двоичным поиском
+      let lo = 0;
+      let hi = pts.length;
+      while (lo < hi) {
+        const mid = (lo + hi) >> 1;
+        if (pts[mid].u < k - 0.5) lo = mid + 1;
+        else hi = mid;
+      }
+      let best = Infinity;
+      for (let j = lo; j < pts.length && pts[j].u <= k + 0.5; j++) best = Math.min(best, Math.hypot(pts[j].x + c.dx - q.x, pts[j].y + c.dy - q.y));
+      if (Number.isFinite(best) && best > tol) out.push(`${strand.line}:${step.id}@${Math.round(best)}`);
+    }
+  }
+  return out;
 }
 
 /**
@@ -711,10 +777,15 @@ const beads = new WeakMap<object, { bx: number; by: number; low: number; mr: num
 /** Выноски последнего кадра (src/ui/sky/input.ts: наведение и щелчок). */
 export const lineNoteHits = (v: object): NoteHit[] => noteHitsOf.get(v) ?? [];
 
-/** Шаги линий на небе: Лк 3 как второе родословие Иосифа меняет Марию на Иосифа; лица, которых нет на небе, пропускаются. */
+/**
+ * Шаги линий на небе: Лк 3 как второе родословие Иосифа меняет Марию на Иосифа; лица, которых нет на небе, пропускаются —
+ * и лица, скрытые набором или свёрткой (J4, J5; этап 11, B1): их нет среди звёзд и на нитях лент (strandSteps), поэтому
+ * нет и их имён, номеров у бусин, выносок точек сравнения и знаков матерей. Прежде в небе «набор» с «только линиями»
+ * имена всех лиц линий висели на пустом небе без звёзд и лент (снимок 14).
+ */
 export function skySteps(v: SkyContext, s: SkyState, steps: { joseph: readonly LineStep[]; mary: readonly LineStep[] }) {
   const fix = (ln: 'joseph' | 'mary') =>
-    steps[ln].map((st) => (s.lineFlip && ln === 'mary' && st.id === 'mariya' ? { ...st, id: 'iosif-muzh-marii' } : st)).filter((st) => v.indexOf(st.id) !== undefined);
+    steps[ln].map((st) => (s.lineFlip && ln === 'mary' && st.id === 'mariya' ? { ...st, id: 'iosif-muzh-marii' } : st)).filter((st) => v.indexOf(st.id) !== undefined && !v.hides(st.id));
   return { joseph: fix('joseph'), mary: fix('mary') };
 }
 
@@ -829,8 +900,9 @@ export function drawLineNames(v: SkyContext, p: Pass, steps: { joseph: readonly 
   ctx.lineJoin = 'round';
   for (const id of rest) {
     const i = v.indexOf(id);
-    // обязательные имена ставятся раньше всех (drawKeyLineNames); номер у такого лица — только если имени не нашлось места
-    if (i === undefined) continue;
+    // обязательные имена ставятся раньше всех (drawKeyLineNames); номер у такого лица — только если имени не нашлось места;
+    // номер — у нарисованной бусины (этап 11, B1)
+    if (i === undefined || !p.starShown(i)) continue;
     const x = cam.sx(v.X0[i]);
     const y = cam.sy(v.nodes[i].lane);
     if (x < v.letterW || x > cam.w || y < v.openTop || y > cam.vp.b) continue;
@@ -957,7 +1029,8 @@ export function drawMt1Women(v: SkyContext, p: Pass, _steps: { joseph: readonly 
   for (const [son, w] of women) {
     const i = v.indexOf(son);
     const mq = byId.get(w.mother);
-    if (i === undefined || !mq) continue;
+    // знак матери стоит у звезды сына: сына нет в кадре (скрыт набором) — нет и знака (этап 11, B1; снимок 14: Фамарь)
+    if (i === undefined || !mq || !p.starShown(i)) continue;
     const x = cam.sx(v.X0[i]);
     const y = cam.sy(v.nodes[i].lane);
     if (x < v.letterW + 20 || x > cam.w - 20 || y < v.openTop || y > cam.vp.b) continue;
@@ -1029,9 +1102,10 @@ export function drawLineNotes(v: SkyContext, p: Pass, steps: { joseph: readonly 
   const st = skySteps(v, p.s, steps);
   const points = comparePoints(st.joseph, st.mary);
   const world = ribbonCaches.get(v) ?? { strands: [], dx: 0, dy: 0 };
+  // выноска и знак матери — у нарисованной звезды (этап 11, B1)
   const at = (id: string) => {
     const i = v.indexOf(id);
-    return i === undefined ? null : { x: cam.sx(v.X0[i]), y: cam.sy(v.nodes[i].lane), i };
+    return i === undefined || !p.starShown(i) ? null : { x: cam.sx(v.X0[i]), y: cam.sy(v.nodes[i].lane), i };
   };
   const size = mapSize(T_UI_S, v.coarse);
   const font = mapFont(T_UI_S, { coarse: v.coarse });

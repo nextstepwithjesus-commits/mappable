@@ -22,7 +22,7 @@ import { dotTime, drawUnionDots, drawUnionLines, layoutUnionDots, plateGaps, uni
 import { BIRTH_BAND, daggerAt, drawBirthBand, drawGlyph, personGlyph, starRadius } from './glyphs.ts';
 import { alpha, hexToRgb } from './color.ts';
 import { alphaForContrast, CLOUD_DIMMED, dimLabelAlpha, separateRibbons, WORK_DIM } from './dim.ts';
-import { clearOfRibbons, drawBranchLabels, drawSkyRibbons, ribbonBeads } from './ribbons.ts';
+import { clearOfRibbons, drawBranchLabels, drawSkyRibbons, ribbonBeads, ribbonCheck } from './ribbons.ts';
 import {
   drawEventLines, drawFrame, drawGrid, drawTimeMarks, paintWayfinding, placeWayfinding, yearTicks, rateAt,
   BOTTOM_H, CANON_NOTE, FRAME_H, LETTER_W, LETTER_W_TOUCH, RULER_H, type EdgeHit,
@@ -32,7 +32,7 @@ import {
   measureLabels, namesakesInView, Placer, textBox, zoomScaleFor, GROUP_AREA_MIN, type GroupNameSpot, type LabelStats,
 } from './labels.ts';
 import { drawDescents, drawFamilyNotes, drawSpineTrails, drawTrails, familyHover, type FamilyNote } from './trails.ts';
-import { drawKinPath, drawLeadNotes, drawMeridian, drawRings, drawWorkMarks, emphasis, meridianFlagAt } from './marks.ts';
+import { drawKinPath, drawLeadNotes, drawMeridian, drawRings, drawWorkMarks, emphasis, kinRoutes, meridianFlagAt } from './marks.ts';
 import { coarsePointer, mapFont, mapSize, T_MAP_S } from './type.ts';
 import type { Rect } from './rect.ts';
 import { timeToX, xToTime, hydrateScale, type TimeScale, T_CANON_END, T_END } from '../engine/timescale.ts';
@@ -250,6 +250,14 @@ export interface Pass {
   starDetail: number;
   /** непрозрачность звезды узла i в этом кадре (0 — не нарисована и не ловит указатель) */
   starAlpha: (i: number) => number;
+  /**
+   * Звезда узла i рисуется в этом кадре (этап 11, B1): не скрыта набором, свёрткой, режимом «только линии» или слоем
+   * призраков, проявилась и уже зажглась. Та же проверка — у звёзд (drawStars) и у подписей лиц (labels.ts, labelStar):
+   * подписи без звезды не бывает. Положение на экране проверяет каждый слой сам.
+   */
+  starShown: (i: number) => boolean;
+  /** узлы, чьи звёзды нарисованы в этом кадре (drawStars): замер «подпись без звезды» (canvas[data-bare]) */
+  starsDrawn: Set<number>;
   /** резерв органов неба */
   reserve: Rect[] | undefined;
   /** занятые места кадра: любая подпись проверяется здесь (labels.ts, claim и labelStar) */
@@ -906,6 +914,8 @@ export class Sky implements SkyContext {
       rowDetail: dd.rows,
       starDetail: dd.stars,
       starAlpha: (i) => starA[i] ?? 0,
+      starShown: (i) => this.starShown(s, i),
+      starsDrawn: new Set(),
       reserve: s.reserve,
       placer: new Placer(),
       labeled: new Set(),
@@ -986,8 +996,9 @@ export class Sky implements SkyContext {
     // одноимённые в окне (MAP-66) и свёрнутые потомки (MAP-63, UX-60): их подписям положено уточнение и «+N»
     p.namesakes = namesakesInView(this, p);
     p.foldText = new Map(this.plan.marks.filter((m) => m.kind === 'desc').map((m) => [m.id, `+${m.count}`]));
-    // небо «набор»: «+» у лица с нераскрытыми союзами, пока его карточки союзов не показаны (решение 70)
-    if (work && s.reveal?.size) p.revealText = new Map([...s.reveal].map((id) => [id, '+']));
+    // небо «набор»: «+» у лица с нераскрытыми союзами, пока его карточки союзов не показаны (решение 70); в режиме
+    // «только линии» точек союзов нет (unionPlates), и «+» был бы мёртвой ссылкой (этап 11, B1)
+    if (work && !lineOnly && s.reveal?.size) p.revealText = new Map([...s.reveal].map((id) => [id, '+']));
     p.foldHits = [];
     // имя и формула выбранного лица под ярусами эпох (их пишет tiers.ts поверх неба, после подписей) — в общей проверке
     // наложений, первыми (MOB-60): место берётся из прошлого кадра ярусов (canvas.dataset.tiers.formula.rect)
@@ -1059,6 +1070,18 @@ export class Sky implements SkyContext {
       // строка, разрывы «//», скобки «время не установлено», метки набора
       const boxes = this.ledger.boxes;
       put('labelIds', boxes.filter((b) => b.kind === 'star').map((b) => b.id).join(' '));
+      // этап 11 (B1), для проверок tools/accept/bugs7.ts и tools/_bugs-chaos.ts: лица, чья подпись (имя или номер у бусины)
+      // есть в кадре, а звезды нет, — «лицо» через пробел; пусто — у каждой подписи лица нарисована его звезда
+      put('bare', bareLabels(boxes, (id) => this.nodeIndex.get(id), p.starsDrawn).join(' '));
+      // лента не обрывается между соседними видимыми лицами линии и идёт у их звёзд (ribbons.ts, ribbonCheck); пусто — да
+      put('ribbonGaps', ribbons ? ribbonCheck(this, p, lineSteps).join(' ') : '');
+      // подписи за краем холста — «вид:текст»; пусто — ни одна подпись не срезана краем
+      put('out', boxes.filter((b) => b.x < -0.5 || b.y < -0.5 || b.x + b.w > cam.w + 0.5 || b.y + b.h > cam.h + 0.5).map((b) => `${b.kind}:${b.text}`).join('|'));
+      // размер кадра и цвет неба, которыми он нарисован: после смены ширины и темы — новые (tools/_bugs-chaos.ts)
+      put('size', `${Math.round(cam.w)}x${Math.round(cam.h)}`);
+      put('pal', pal.sky);
+      // шаги пути родства, нарисованные на небе, — «от>к» (marks.ts, kinRoutes): только между нарисованными звёздами
+      put('kinRoutes', s.kinSteps?.length ? kinRoutes(this, s.kinSteps).map((r) => `${r.st.from}>${r.st.to}`).join(' ') : '');
       put('notes', boxes.filter((b) => b.kind === 'note' || b.kind === 'mark' || b.kind === 'group' || b.kind === 'fold').map((b) => b.text.replace(/\u00a0/g, ' ')).join('|'));
       // звёзды неба «набор» в этом кадре (решение 76; tools/accept/polish6.ts): «лицо:x,y» — список неба для клавиатуры
       // (SkyA11y) обновляется, только когда небо постоит, а проверке нужен кадр сразу после сдвига
@@ -1604,6 +1627,18 @@ export class Sky implements SkyContext {
     this.ctx.restore();
   }
 
+  /**
+   * Звезда узла i рисуется в этом кадре (Pass.starShown; этап 11, B1): узел нарисован (не скрыт набором, свёрткой,
+   * режимом «только линии», слоем призраков), звезда проявилась и уже зажглась. По ней решают и звёзды, и подписи лиц.
+   */
+  private starShown(s: SkyState, i: number): boolean {
+    const n = this.nodes[i];
+    if (!n || !this.drawn(i) || (n.ghost && !s.layers.ghosts) || !(this.starA[i] > 0.02)) return false;
+    const q = byId.get(n.person);
+    // зажигание по величине (ТЗ § 5.5): звезда величины m загорается, когда intro · 7 > m
+    return !!q && s.intro * 7 - q.magnitude > 0;
+  }
+
   /** Звёзды: мелкие проявляются с подробностью кадра; зажигание при загрузке — от ярких к тусклым (ТЗ § 5.5). */
   private drawStars(p: Pass, only?: number[]) {
     const { ctx, cam, pal } = this;
@@ -1612,10 +1647,9 @@ export class Sky implements SkyContext {
     const intro = s.intro;
     const look = { scale: p.zoomScale, color: '', halo: pal.sky };
     for (const i of only ?? p.vis) {
+      if (!p.starShown(i)) continue;
       const n = this.nodes[i];
-      if (n.ghost && !s.layers.ghosts) continue;
       const sa = this.starA[i];
-      if (sa <= 0.02) continue;
       const q = byId.get(n.person)!;
       const c = this.model.chrono.get(n.person);
       const x = cam.sx(this.X0[i]);
@@ -1623,11 +1657,11 @@ export class Sky implements SkyContext {
       if (x < -20 || x > W + 20) continue;
       // зажигание по величине
       const lit = Math.max(0, Math.min(1, intro * 7 - q.magnitude));
-      if (lit <= 0) continue;
       const e = p.emph(q.id) * lit * sa;
       look.color = alpha(pal.ink, e);
       // «†» умершего младенцем — в подписи, кеглем имени (MAP-68); у звезды без подписи — знаком (drawDaggers)
       drawGlyph(ctx, x, y, personGlyph(q, n.ghost, c?.cls, look, false));
+      p.starsDrawn.add(i);
     }
   }
 
@@ -1672,6 +1706,22 @@ export class Sky implements SkyContext {
       ctx.stroke();
     }
   }
+}
+
+/**
+ * Подписи лиц без звезды (этап 11, B1): лица подписей-имён ('star') и номеров у бусин («Мф 17», «Лк 39»; 'mark') кадра,
+ * чьих звёзд в кадре нет (drawn — узлы нарисованных звёзд). Пометы, знак брака «‖», указатели у края, «липкие» имена
+ * и знаки свёрнутого стоят и без звезды на экране — они не в счёт.
+ */
+export function bareLabels(boxes: readonly { kind: string; id?: string; text?: string }[], indexOf: (id: string) => number | undefined, drawn: ReadonlySet<number>): string[] {
+  const out = new Set<string>();
+  for (const b of boxes) {
+    const bead = b.kind === 'mark' && /^(Мф|Лк)[\s\u00a0]\d/.test(b.text ?? '');
+    if ((b.kind !== 'star' && !bead) || !b.id) continue;
+    const i = indexOf(b.id);
+    if (i === undefined || !drawn.has(i)) out.add(b.id);
+  }
+  return [...out];
 }
 
 /**

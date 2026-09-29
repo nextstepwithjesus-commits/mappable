@@ -1174,20 +1174,40 @@ function drawFormula(sky: Sky, s: SkyState, name: string, f: ColumnFormula, core
   const mark = ', расч.';
   const left = f.birth ? `${f.birth}${f.death ? '' : mark}` : name;
   const right = f.death ? `${f.death}${mark}` : null;
-  const wl = ctx.measureText(left).width;
-  const wr = right ? ctx.measureText(right).width : 0;
+  // строка шире неба справа от колонки названий — переносится по словам (этап 11, B1): на узком небе формула уходила за
+  // правый край холста («Иаков родился после рождения Исаака и до рождения Иосифа» на 360 px)
+  const room = Math.max(60, W - 6 - (colR + 6));
+  const wrap = (t: string): string[] => {
+    if (ctx.measureText(t).width <= room) return [t];
+    const out: string[] = [];
+    let cur = '';
+    for (const word of t.split(' ')) {
+      const next = cur ? `${cur} ${word}` : word;
+      if (cur && ctx.measureText(next).width > room) {
+        out.push(cur);
+        cur = word;
+      } else cur = next;
+    }
+    if (cur) out.push(cur);
+    return out;
+  };
+  const ls = wrap(left);
+  const rs = right ? wrap(right) : [];
+  const wl = Math.max(...ls.map((t) => ctx.measureText(t).width));
+  const wr = rs.length ? Math.max(...rs.map((t) => ctx.measureText(t).width)) : 0;
   const lx = Math.max(colR + 6, Math.min(W - wl - 6, core[0] + 6));
-  // правая строка — у правого края ядра; не помещается рядом с левой — на следующей строке
+  // правая строка — у правого края ядра; не помещается рядом с левой (или перенесена) — на следующих строках
   let rx = right ? Math.max(colR + 6, Math.min(W - wr - 6, core[1] - 6 - wr)) : 0;
   let rRow = 0;
-  if (right && rx < lx + wl + 16) {
-    rRow = 1;
+  if (right && (ls.length > 1 || rs.length > 1 || rx < lx + wl + 16)) {
+    rRow = ls.length;
     if (rx < colR + 6) rx = lx;
   }
-  const rows = rRow + 1;
+  const rows = right ? Math.max(ls.length, rRow + rs.length) : ls.length;
   // указатель «↑ Имя» у верхнего края и органы неба: блок формулы уходит ниже них
   const block = (y: number): Rect => ({ x: Math.min(lx, right ? rx : lx) - 3, y: y - lineH + 3, w: Math.max(lx + wl, right ? rx + wr : 0) - Math.min(lx, right ? rx : lx) + 6, h: lineH * rows + 2 });
-  const avoid = [...pointerBoxes(sky, s), ...(s.reserve ?? [])];
+  // и звезда самого выбранного лица: формула в несколько строк на узком небе не закрывает её (этап 11, B1)
+  const avoid = [...pointerBoxes(sky, s), ...(s.reserve ?? []), ...selectedStar(sky, s)];
   let y = bottom + lineH + 1;
   for (let k = 0; k < 4; k++) {
     const hit = avoid.find((r) => hits(block(y), [r]));
@@ -1201,9 +1221,20 @@ function drawFormula(sky: Sky, s: SkyState, name: string, f: ColumnFormula, core
     ctx.fillStyle = pal.ink;
     ctx.fillText(t, x, yy);
   };
-  text(left, lx, y, wl);
-  if (right) text(right, rx, y + rRow * lineH, wr);
+  ls.forEach((t, k) => text(t, lx, y + k * lineH, ctx.measureText(t).width));
+  rs.forEach((t, k) => text(t, rx, y + (rRow + k) * lineH, ctx.measureText(t).width));
   return { text: right ? [left, right] : [left], rect: block(y), avoid };
+}
+
+/** Звезда выбранного лица в открытом небе — квадрат 24 × 24 px вокруг неё: формула столбца её не закрывает. */
+function selectedStar(sky: Sky, s: SkyState): Rect[] {
+  const i = s.selected ? sky.indexOf(s.selected) : undefined;
+  if (i === undefined || !sky.drawn(i)) return [];
+  const x = sky.cam.sx(sky.X0[i]);
+  const y = sky.cam.sy(sky.nodes[i].lane);
+  if (x < sky.letterW || x > sky.cam.w || y < sky.openTop || y > sky.cam.vp.b) return [];
+  const r = 12;
+  return [{ x: x - r, y: y - r, w: 2 * r, h: 2 * r }];
 }
 
 /**

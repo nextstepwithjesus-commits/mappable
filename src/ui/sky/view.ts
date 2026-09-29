@@ -336,7 +336,10 @@ if (typeof window !== 'undefined') {
 /** Сколько полос не меньше вписывается в 60 % высоты в режиме «только линии» (MAP-23: ±13 полос). */
 const FOCUS_MIN = 27;
 
-/** Коридор линий: мировые x рождения первого и последнего лица линий и полосы лиц линий. */
+/**
+ * Коридор линий: мировые x рождения первого и последнего лица линий и полосы лиц линий. Лица, скрытые набором (J4), — не в
+ * счёт (этап 11, B1): в небе «набор» «только линии» вписывают лиц линий из набора, а не пустое небо, где стояли бы остальные.
+ */
 export function linesFrame(): { x0: number; x1: number; lane0: number; lane1: number } | null {
   const s = skyRef.current;
   if (!s || !s.model) return null;
@@ -344,8 +347,9 @@ export function linesFrame(): { x0: number; x1: number; lane0: number; lane1: nu
   let x1 = -Infinity;
   let lane0 = Infinity;
   let lane1 = -Infinity;
+  const hid = s.plan.hidden;
   s.nodes.forEach((n, i) => {
-    if (!n.spine || n.ghost) return;
+    if (!n.spine || n.ghost || (hid && hid[i])) return;
     x0 = Math.min(x0, s.X0[i]);
     x1 = Math.max(x1, s.X0[i]);
     lane0 = Math.min(lane0, s.rowOf(n.lane));
@@ -392,7 +396,12 @@ export function linesAround(id: string): { x0: number; x1: number } | null {
   let x0 = xa;
   let x1 = xa;
   for (const line of [lines.joseph, lines.mary]) {
-    const xs = line.persons.map((st) => s.nodeX(st.id)).filter((x): x is number => x !== null).sort((p, q) => p - q);
+    // поколения — лица линии на небе: скрытые набором не в счёт (этап 11, B1)
+    const xs = line.persons
+      .filter((st) => !s.hides(st.id))
+      .map((st) => s.nodeX(st.id))
+      .filter((x): x is number => x !== null)
+      .sort((p, q) => p - q);
     if (!xs.length) continue;
     let i = 0;
     for (let k = 1; k < xs.length; k++) if (Math.abs(xs[k] - xa) < Math.abs(xs[i] - xa)) i = k;
@@ -537,13 +546,26 @@ function viewForWin(w: Win, lanes?: number): ViewState | null {
  * не двигали, прежнее окно за 400 мс; двигали — окно остаётся, выбранное лицо — в видимой части. Первый показ по адресу —
  * сразу, без перехода (окно адреса, если оно есть, ставится после и остаётся).
  */
+/**
+ * Небо создано заново — переход «Древо → Небо» (решение 73): режим «только линии» вписывает коридор, как при первом
+ * показе (этап 11, B1). Прежде новое небо вставало на «всё небо» с обычными строками, и коридор сжимался в полосу по
+ * 2 px на строку. Зовёт SkyView при каждом создании неба, кроме первого.
+ */
+export const linesAgain = signal(0);
+
 if (typeof window !== 'undefined') {
   let shown: boolean | null = null;
   let wait = 0;
   /** окно до включения режима и вид, к которому режим перешёл */
   let before: { win: Win; to: ViewState } | null = null;
+  let again = 0;
   effect(() => {
     const on = onlyLines.value;
+    if (linesAgain.value !== again) {
+      again = linesAgain.value;
+      shown = null;
+      before = null;
+    }
     cancelAnimationFrame(wait);
     const apply = (tries: number) => {
       // модуль читается раньше common.tsx (круговой импорт): небо спрашивается только в кадре

@@ -256,12 +256,13 @@ function stepSpot(route: { x: number; y: number }[], w: number, size: number): {
 }
 
 /** Ломаные шагов пути в px холста: только шаги, оба конца которых есть на небе. */
-function kinRoutes(v: SkyContext, steps: readonly KinStep[]): { st: KinStep; pts: { x: number; y: number }[] }[] {
+export function kinRoutes(v: SkyContext, steps: readonly KinStep[]): { st: KinStep; pts: { x: number; y: number }[] }[] {
   const { cam } = v;
-  // лица, скрытые рабочим набором или свёрткой (J4, J5), — без шага: его конец висел бы в пустоте
+  // лица, скрытые рабочим набором или свёрткой (J4, J5), и лица не на линиях в режиме «только линии» — без шага: его конец
+  // висел бы в пустоте, где звезды нет (этап 11, B1: путь «Руфь — Давид» шёл от Овида к пустому месту Руфи)
   const at = (id: string) => {
     const i = v.indexOf(id);
-    return i === undefined || v.hides(id) ? null : { x: cam.sx(v.X0[i]), y: cam.sy(v.nodes[i].lane) };
+    return i === undefined || v.hides(id) || !v.drawn(i) ? null : { x: cam.sx(v.X0[i]), y: cam.sy(v.nodes[i].lane) };
   };
   const out: { st: KinStep; pts: { x: number; y: number }[] }[] = [];
   for (const st of steps) {

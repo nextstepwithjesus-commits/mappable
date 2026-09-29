@@ -523,6 +523,9 @@ export function knockTrail(v: SkyContext, p: Pass, i: number, at: { box: Rect; s
  */
 export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): LabelAt | null {
   if (p.labeled.has(i)) return null;
+  // подпись — только у звезды, нарисованной в этом кадре в полную силу (этап 11, B1): та же проверка, что у звёзд (sky.ts,
+  // starShown). Иначе имя лица, скрытого набором, висело бы на пустом небе («набор» и «только линии», снимок 14)
+  if (!p.starShown(i) || p.starAlpha(i) <= 0.5) return null;
   const { ctx, cam, pal } = v;
   const n = v.nodes[i];
   const q = byId.get(n.person)!;
@@ -604,6 +607,19 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): Label
     }
   }
   for (const soft of o.least ? [] : passes) {
+    // выбранное лицо (force), прежде чем лечь поверх занятого, пробует дальние выноски, не закрывая подписей и точек союзов
+    // (этап 11, B1; хаос night-390: в тесном наборе на телефоне имя Авраама ложилось на точки союзов Рагава и Серуха)
+    if (soft === 'none' && o.leader) {
+      for (const [dx, dy] of FAR_LEADERS) {
+        if (vert && Math.sign(dy) !== vert && dy !== 0) continue;
+        const c = leaderSpot(dx, dy, x, y, textW + foldW, size);
+        if (ok(c.box, 'hard') && segmentClear(p.placer, x, y, c.ax, c.ay, r + 2)) {
+          at = { ...c, side: 'x' };
+          break;
+        }
+      }
+      if (at) break;
+    }
     for (const q of o.places ?? []) {
       const tx = q.xr - textW - foldW;
       const ty = q.yc + (ASC - DESC) * 0.5 * size;
