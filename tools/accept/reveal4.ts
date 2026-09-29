@@ -87,17 +87,17 @@ const windowYears = (p: Page) => Number(/~w(\d+)/.exec(decodeURIComponent(new UR
 export const reveal4: Scenario[] = [
   {
     n: 500,
-    title: 'С Адама: на небе Адам и картуш «Адам и Ева» со знаком «+»; у Адама нет «+» (его союзы показаны); окно — не всё небо',
+    title: 'С Адама: на небе Адам и полая точка союза «Адам и Ева» (решение 76); у Адама нет «+» (его союзы показаны); окно — не всё небо',
     run: async (p) => {
       await setup(p, ADAM);
       const d = await canvasData(p);
       if (d.mode !== 'work') return fail(`режим неба: ${d.mode}`);
       const q = await plateOf(p, 'u:adam+eva');
-      if (!q) return fail(`нет картуша «Адам и Ева»: ${d.plates || 'картушей нет'}`);
-      if (q.open) return fail('картуш раскрыт до щелчка');
+      if (!q) return fail(`нет точки союза «Адам и Ева»: ${d.plates || 'точек нет'}`);
+      if (q.open) return fail('точка союза раскрыта до щелчка');
       if ((d.foldHits ?? '').includes('reveal:adam:')) return fail('у Адама «+», хотя его союзы показаны');
       const w = Number(/~w(\d+)/.exec(decodeURIComponent(new URL(p.url()).hash))?.[1] ?? NaN);
-      return w < 1500 ? pass(`картуш ${q.w}×${q.h} px; окно ${w} лет`) : fail(`окно ${w} лет — почти всё небо`);
+      return w < 1500 ? pass(`поле точки ${q.w}×${q.h} px; окно ${w} лет`) : fail(`окно ${w} лет — почти всё небо`);
     },
   },
   {
@@ -149,7 +149,7 @@ export const reveal4: Scenario[] = [
       if (ids.join(' ') !== 'adam') return fail(`набор после свёртки: ${ids.join(' ')}`);
       const q1 = await plateOf(p, 'u:adam+eva');
       const a1 = await starAt(p, 'adam');
-      if (!q1 || q1.open) return fail('картуш не свёрнут');
+      if (!q1 || q1.open) return fail('точка союза не свёрнута');
       if (!a1 || Math.abs(a1.x - a0.x) > 2 || Math.abs(a1.y - a0.y) > 3) return fail(`Адам сдвинулся: ${a0.x},${a0.y} → ${a1?.x},${a1?.y}`);
       const said = await liveText(p);
       return /Свёрнут союз Адама и Евы: скрыто 4 лица/.test(said) ? pass() : fail(`объявление: «${said}»`);
@@ -161,7 +161,7 @@ export const reveal4: Scenario[] = [
     run: async (p) => {
       await setup(p, ADAM);
       const q = await plateOf(p, 'u:adam+eva');
-      if (!q) return fail('нет картуша');
+      if (!q) return fail('нет точки союза');
       const at = await pageAt(p, q.x + q.w / 2, q.y + q.h / 2);
       await p.mouse.move(at.x - 30, at.y - 40);
       await p.mouse.move(at.x, at.y, { steps: 4 });
@@ -214,7 +214,7 @@ export const reveal4: Scenario[] = [
       await p.waitForTimeout(700);
       const r = await reveal(p);
       if (!r.opened.includes('kain')) return fail('союзы Каина не показаны');
-      return (await plateOf(p, 'u:kain+')) ? pass() : fail('нет картуша союза Каина');
+      return (await plateOf(p, 'u:kain+')) ? pass() : fail('нет точки союза Каина');
     },
   },
   {
@@ -269,34 +269,34 @@ export const reveal4: Scenario[] = [
   },
   {
     n: 508,
-    title: 'Авраам: три союза с детьми — Сарра, Агарь, Хеттура (наложница) — три картуша без наложений на подписи и друг на друга',
+    title: 'Авраам: три союза с детьми — Сарра, Агарь, Хеттура (наложница) — три точки союзов без наложений на подписи и друг на друга',
     run: async (p) => {
       await setup(p, { work: ['avraam'], opened: ['avraam'], hash: '#/avraam' });
       const ps = await platesOf(p);
       const want = ['u:avraam+sarra', 'u:avraam+agar', 'u:avraam+khettura'];
       const miss = want.filter((u) => !ps.some((q) => q.uid === u));
-      if (miss.length) return fail(`нет картушей: ${miss.join(', ')}`);
+      if (miss.length) return fail(`нет точек союзов: ${miss.join(', ')}`);
       for (let i = 0; i < ps.length; i++)
         for (let j = i + 1; j < ps.length; j++) {
           const a = ps[i];
           const b = ps[j];
-          if (a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h) return fail(`картуши ${a.uid} и ${b.uid} наложились`);
+          if (a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h) return fail(`поля точек ${a.uid} и ${b.uid} наложились`);
         }
       const labels = await p.evaluate(() => (document.querySelector('.sky') as HTMLElement).dataset.labels ?? '');
       const over = Number(labels.split('/')[1] ?? NaN);
-      return over === 0 ? pass(`${ps.length} картушей; подписи ${labels}`) : fail(`наложений подписей: ${labels}`);
+      return over === 0 ? pass(`точек союзов: ${ps.length}; подписи ${labels}`) : fail(`наложений подписей: ${labels}`);
     },
   },
   {
     n: 509,
-    title: 'С Иисуса Христа: картуш «Иосиф и Мария» над звездой слева; щелчок раскрывает родителей — картуш у следа Иосифа, почти на том же месте экрана (сдвиг — только чтобы вписать родителей), родители на виду',
+    title: 'С Иисуса Христа: точка союза «Иосиф и Мария» над звездой слева; «Раскрыть родителей» в карточке у точки раскрывает родителей — точка у следа Иосифа, почти на том же месте экрана (сдвиг — только чтобы вписать родителей), родители на виду',
     run: async (p) => {
       await setup(p, { work: ['iisus'], opened: ['iisus'], hash: '#/iisus', start: 'jesus' });
       const uid = 'u:iosif-muzh-marii+mariya';
       const q0 = await plateOf(p, uid);
       const j = await starAt(p, 'iisus');
-      if (!q0 || !j) return fail(`нет картуша или звезды: ${(await canvasData(p)).plates}`);
-      if (!(q0.x + q0.w <= j.x && q0.y + q0.h <= j.y)) return fail(`картуш не над звездой слева: ${q0.x},${q0.y} ${q0.w}×${q0.h}, звезда ${j.x},${j.y}`);
+      if (!q0 || !j) return fail(`нет точки союза или звезды: ${(await canvasData(p)).plates}`);
+      if (!(q0.x + q0.w <= j.x && q0.y + q0.h <= j.y)) return fail(`точка союза не над звездой слева: ${q0.x},${q0.y} ${q0.w}×${q0.h}, звезда ${j.x},${j.y}`);
       // решение 76: раскрытие — командой карточки у точки
       const cmd = await toggleVia(p, q0);
       if (cmd !== 'Раскрыть родителей') return fail(`команда карточки у точки: «${cmd}»`);
@@ -304,19 +304,19 @@ export const reveal4: Scenario[] = [
       const ids = await stored(p);
       if (!ids.includes('iosif-muzh-marii') || !ids.includes('mariya')) return fail(`набор: ${ids.join(' ')}`);
       const q1 = await plateOf(p, uid);
-      if (!q1 || !q1.open) return fail('картуш не раскрыт');
+      if (!q1 || !q1.open) return fail('точка союза не раскрыта');
       const js = await starAt(p, 'iosif-muzh-marii');
       const ms = await starAt(p, 'mariya');
       if (!js || !ms) return fail('родителей нет на виду');
       const vp = (await p.evaluate(() => (document.querySelector('.sky') as HTMLElement).dataset.view ?? '')).split(' ').map(Number);
       if (js.x < vp[0] || ms.x < vp[0] || js.x > vp[2] || ms.x > vp[2]) return fail(`родители за краем: Иосиф ${js.x}, Мария ${ms.x}`);
-      if (Math.abs(q1.y - js.y) > 60) return fail(`картуш не у следа Иосифа: ${q1.y} при следе ${js.y}`);
-      return near(q0, q1, 80) ? pass(`картуш ${q0.x},${q0.y} → ${q1.x},${q1.y}`) : fail(`картуш сдвинулся: ${q0.x},${q0.y} → ${q1.x},${q1.y}`);
+      if (Math.abs(q1.y - js.y) > 60) return fail(`точка союза не у следа Иосифа: ${q1.y} при следе ${js.y}`);
+      return near(q0, q1, 80) ? pass(`точка ${q0.x},${q0.y} → ${q1.x},${q1.y}`) : fail(`точка союза сдвинулась: ${q0.x},${q0.y} → ${q1.x},${q1.y}`);
     },
   },
   {
     n: 510,
-    title: 'Начало с одного лица: окно — вокруг него с запасом на поколение-два (Адам — до рождения внуков, Иисус Христос — от рождения дедов), не всё небо; картуш союза на виду',
+    title: 'Начало с одного лица: окно — вокруг него с запасом на поколение-два (Адам — до рождения внуков, Иисус Христос — от рождения дедов), не всё небо; точка союза на виду',
     run: async (p) => {
       const out: string[] = [];
       for (const [id, uid, lo, hi] of [
@@ -328,7 +328,7 @@ export const reveal4: Scenario[] = [
         if (!(w >= lo && w <= hi)) return fail(`${id}: окно ${w} лет, ждали ${lo}–${hi}`);
         const s = await starAt(p, id);
         if (!s) return fail(`${id}: звезды нет на виду`);
-        if (!(await plateOf(p, uid))) return fail(`${id}: нет картуша ${uid}`);
+        if (!(await plateOf(p, uid))) return fail(`${id}: нет точки союза ${uid}`);
         out.push(`${id} — ${w} лет`);
       }
       return pass(out.join('; '));

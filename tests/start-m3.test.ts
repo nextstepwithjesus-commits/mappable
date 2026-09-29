@@ -145,15 +145,20 @@ describe('справка (решения 67–72)', () => {
     expect(RESTART_LABEL.replace(/…$/, '')).toBe('Начать заново');
     expect(about).toContain('«Начать заново»');
   });
-  it('«Клавиши»: щелчок по лицу в небе «набор» и по картушу союза; Enter на картуше', () => {
+  it('«Клавиши»: щелчок по лицу в небе «набор» и по точке союза — карточка у точки; Enter на звезде или точке союза (решение 76)', () => {
     const hows = POINTER_ROWS.map((r) => r.how);
     expect(hows).toContain('щелчок по лицу в небе «набор»');
-    expect(hows).toContain('щелчок по картушу союза');
-    // Enter на картуше — после строки «Enter — открыть карточку звезды»: первая строка с Enter остаётся прежней
+    expect(hows).toContain('щелчок по точке союза');
+    expect(POINTER_ROWS.find((r) => r.how === 'щелчок по лицу в небе «набор»')?.what).toMatch(/^карточка у звезды: «Информация».*«Продолжить ветвь».*«Родители»/);
+    expect(POINTER_ROWS.find((r) => r.how === 'щелчок по точке союза')?.what).toMatch(/^карточка у точки: «Раскрыть детей».*«Свернуть детей».*«Подробнее» — карточка союза справа/);
+    // картушей на небе больше нет (решение 76): ни одна строка «Клавиш» их не называет
+    expect([...KEY_ROWS.map((r) => r.what), ...POINTER_ROWS.flatMap((r) => [r.how, r.what])].join(' ')).not.toMatch(/картуш/);
+    // Enter на точке союза — после строки «Enter — открыть карточку звезды»: первая строка с Enter остаётся прежней
     const enter = KEY_ROWS.map((r, i) => ({ r, i })).filter(({ r }) => r.keys.some((k) => k.en === 'Enter'));
     expect(enter[0].r.what).toMatch(/заголовок карточки/);
-    const plate = enter.find(({ r }) => /картуше союза/.test(r.what));
+    const plate = enter.find(({ r }) => /на звезде или точке союза в небе «набор» — открыть у неё карточку/.test(r.what));
     expect(plate && plate.i).toBeGreaterThan(enter[0].i);
-    expect(KEY_ROWS.find((r) => r.keys.some((k) => k.en === '←') && !r.mod)?.what).toMatch(/к ближайшей звезде или картушу союза/);
+    expect(plate?.r.what).toMatch(/Escape — закрыть/);
+    expect(KEY_ROWS.find((r) => r.keys.some((k) => k.en === '←') && !r.mod)?.what).toMatch(/к ближайшей звезде или точке союза/);
   });
 });

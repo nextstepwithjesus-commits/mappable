@@ -36,7 +36,7 @@ import { BOOK_INDEX } from '../engine/books.ts';
 import { nameCase } from '../ui/text/ru.ts';
 import { refText } from '../engine/kinship.ts';
 import { starRadius } from './glyphs.ts';
-import { mapFont, mapSize, T_MAP_S } from './type.ts';
+import { mapFont, mapSize, nameSize, T_MAP_S } from './type.ts';
 import { claim, textBox } from './labels.ts';
 import { branchColor, branchTickAt, GlowBatch, glowLayers, glows } from './branches.ts';
 import { branchFrame, FAR, type BranchPaint } from './marks.ts';
@@ -521,7 +521,7 @@ export interface FamilyText {
    * Дети, у которых помета может встать, если у корня места нет (MAP-55): звёзды детей в px холста — слева от звезды
    * или под ней, по порядку.
    */
-  kids?: { x: number; y: number; r: number }[];
+  kids?: { x: number; y: number; r: number; id?: string }[];
   /** что помета объясняет: наведение на неё высвечивает гребёнку (familyAt) */
   hit?: FamilyHit;
   /**
@@ -1024,7 +1024,7 @@ export function drawDescents(v: SkyContext, p: Pass): FamilyNote[] {
       kids.sort((a, b) => a.x - b.x);
       notes.push({
         text: `годы — по порядку ${got.text}, выв.`, x: kids[0].x, y: kids[0].y, at: 'kids',
-        kids: kids.map((k) => ({ x: k.x, y: k.y, r: radius(k.id) })),
+        kids: kids.map((k) => ({ x: k.x, y: k.y, r: radius(k.id), id: k.id })),
         hit: { kind: 'order', parent: par, mother: null, kids: kids.map((k) => k.id), source: got.text },
       });
     }
@@ -1137,6 +1137,25 @@ export function drawFamilyNotes(v: SkyContext, p: Pass, notes: readonly FamilyNo
       const k0 = nt.kids?.[0];
       cands.push({ tx: Math.min(nt.x - 4, k0 ? k0.x - k0.r - 5 : Infinity) - w, ty: nt.y + size * 0.35 });
     }
+    // небо «набор» (решение 76): к детям слева идут линии от точки союза, помета слева от звезды легла бы на них и на
+    // скобку от матери. Сперва — под подписью нижнего из детей и над подписью верхнего, от начала подписи (помета
+    // читается как примечание к детям и не заходит в пучок линий), затем там же, но кончаясь у звезды, затем — у каждого
+    // ребёнка под подписью и над ней
+    const kin = nt.at === 'kids' && p.unionKids?.size ? (nt.kids ?? []) : [];
+    const toUnionKids = kin.length > 0 && kin.every((k) => !!k.id && p.unionKids!.has(k.id));
+    if (toUnionKids) {
+      const byY = [...kin].sort((a, b) => a.y - b.y);
+      // полувысота подписи ребёнка (labels.ts, spot и textBox: ±0,52 кегля и ореол) — помета встаёт вплотную под ней
+      // или над ней
+      const half = (k: (typeof byY)[number]) => Math.max(k.r, 0.52 * nameSize(byId.get(k.id ?? '')?.magnitude ?? 6, v.coarse) + 1.5) + 1.5;
+      const under = (k: (typeof byY)[number], left = false) => ({ tx: left ? k.x - k.r - 4 - w : k.x + k.r + 4, ty: k.y + half(k) + 0.8 * size + 1.5 });
+      const over = (k: (typeof byY)[number], left = false) => ({ tx: left ? k.x - k.r - 4 - w : k.x + k.r + 4, ty: k.y - half(k) - 0.24 * size - 1.5 });
+      const bottom = byY[byY.length - 1];
+      const top = byY[0];
+      // линии от точки приходят к верхнему ребёнку снизу, к нижнему — сверху: над верхним и под нижним свободно и слева
+      cands.push(under(bottom), over(top), over(top, true), under(bottom, true));
+      for (const k of byY) cands.push(under(k), over(k));
+    }
     // у детей (MAP-55): слева от звезды, под ней, над ней — у первого, затем у следующих
     for (const k of nt.kids ?? [])
       cands.push(
@@ -1165,8 +1184,10 @@ export function drawFamilyNotes(v: SkyContext, p: Pass, notes: readonly FamilyNo
     const rest = all.slice(first.length);
     const clean = p.lines ? rest.filter((q) => !p.lines!.clash(q.box, false)) : rest;
     // чистого места нет — сначала там, где линии под пометой короче (в небе «набор» к детям идут косые линии от точки
-    // союза: помета на такой линии закрыла бы её почти целиком)
-    const dirty = rest.filter((q) => !clean.includes(q));
+    // союза: помета на такой линии закрыла бы её почти целиком). У детей союза с точкой — только чистое место: помета
+    // с ореолом легла бы поверх цветной линии к ребёнку или скобки от матери; нет места — пометы нет (год ребёнка
+    // объясняет подсказка звезды и карточка, § 8)
+    const dirty = toUnionKids ? [] : rest.filter((q) => !clean.includes(q));
     if (p.lines && p.unionKids?.size) {
       const area = new Map(dirty.map((q) => [q, p.lines!.overlap(q.box)]));
       dirty.sort((a, b) => area.get(a)! - area.get(b)!);

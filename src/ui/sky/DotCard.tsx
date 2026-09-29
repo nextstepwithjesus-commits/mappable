@@ -217,6 +217,8 @@ export type DotSide = 's' | 'e' | 'n' | 'w';
 export const DOT_SIDES: readonly DotSide[] = ['s', 'e', 'n', 'w'];
 /** Длина отвода от края знака до карточки, px. */
 export const DOT_LEAD = 10;
+/** Телефон: небо поднимается под карточку, только когда его высота не менялась столько мс (лист карточки встал). */
+export const VP_SETTLE_MS = 300;
 /** Отступ карточки от краёв видимой части неба, px. */
 export const DOT_MARGIN = 6;
 
@@ -329,13 +331,22 @@ function anchorOf(at: DotAt): DotAnchor | null {
   return { x: h.cx, y: h.cy, r: h.r + 4 };
 }
 
-/** Что карточке лучше не закрывать: органы неба, имена на небе, звёзды и точки союзов; и подпись своего лица — нельзя. */
+/**
+ * Что карточке лучше не закрывать: органы неба, имена и пометы на небе, звёзды и точки союзов; и подпись своего лица —
+ * нельзя.
+ */
 function obstacles(at: DotAt, a: DotAnchor): { avoid: Rect[]; soft: Obstacle[] } {
   const s = skyRef.current!;
   const avoid: Rect[] = [];
   const soft: Obstacle[] = reserve().map((r) => ({ ...r, cost: 30 }));
   const own = at.kind === 'person' ? at.id : null;
   for (const b of s.ledger.boxes) {
+    // пометы семей, подписи лент («через Рисая (Лк 3)»), знаки свёрнутого — тоже надписи неба: карточка их не закрывает,
+    // если есть место (рамка и её строки — вне открытого неба, точки союзов — ниже)
+    if (b.kind === 'note' || b.kind === 'mark' || b.kind === 'fold' || b.kind === 'group' || b.kind === 'event' || b.kind === 'sticky') {
+      soft.push({ x: b.x, y: b.y, w: b.w, h: b.h, cost: 20 });
+      continue;
+    }
     if (b.kind !== 'star') continue;
     if (own && b.id === own) avoid.push(b);
     else soft.push({ x: b.x, y: b.y, w: b.w, h: b.h, cost: 30 });
@@ -481,6 +492,9 @@ export function DotCard() {
   const leadRef = useRef<HTMLDivElement>(null);
   const spot = useRef<string | null>(null);
   const nudged = useRef(false);
+  /** высота видимой части неба в прошлом месте карточки и когда она менялась (телефон: лист опускается) */
+  const vpSeen = useRef(0);
+  const vpAt = useRef(0);
   const size = useRef({ w: 0, h: 0 });
   const outSince = useRef(0);
   const timer = useRef(0);
@@ -524,8 +538,17 @@ export function DotCard() {
         size.current = { w, h: el.offsetHeight };
       }
       q = dockDot(a, size.current.h, { ...bounds, w }, reserve());
+      // видимая часть неба ещё меняется (лист карточки опускается до шапки после касания — небо растёт вниз): сдвигать
+      // небо рано — после сдвига под «низкий» лист знак и его семья ушли бы под верхнюю кромку; место — когда небо встанет
+      const now = performance.now();
+      if (vpSeen.current !== bounds.h) {
+        vpSeen.current = bounds.h;
+        vpAt.current = now;
+      }
+      const settling = now - vpAt.current < VP_SETTLE_MS;
+      if (q.nudge && settling) timer.current = window.setTimeout(place, VP_SETTLE_MS);
       // небо так низко, что карточка закрыла бы знак, — небо поднимается один раз за карточку (дальше его ведёт читатель)
-      if (q.nudge && !nudged.current && !s.cam.moving) {
+      else if (q.nudge && !nudged.current && !s.cam.moving) {
         nudged.current = true;
         const cam = s.cam;
         cam.animateTo(cam.constrain({ x0: cam.x0, kx: cam.kx, laneTop: cam.laneTop + q.nudge / cam.ky }), 250, skyRef.redraw, reduced());

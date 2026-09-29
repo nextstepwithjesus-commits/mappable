@@ -18,7 +18,7 @@
  */
 import { KX_MIN, type Camera, type Frame, type ViewState } from './camera.ts';
 import { RowCamera, gapsKey, identityRows, planSky, type FoldMark, type SkyPlan, type SkyView } from './rows.ts';
-import { drawUnionDots, drawUnionLines, layoutUnionDots, plateGaps, unionLinks, type PlateHit, type PlateIn, type PlateMarks } from './plates.ts';
+import { dotTime, drawUnionDots, drawUnionLines, layoutUnionDots, plateGaps, unionLinks, type PlateHit, type PlateIn, type PlateMarks } from './plates.ts';
 import { BIRTH_BAND, daggerAt, drawBirthBand, drawGlyph, personGlyph, starRadius } from './glyphs.ts';
 import { alpha, hexToRgb } from './color.ts';
 import { alphaForContrast, CLOUD_DIMMED, dimLabelAlpha, separateRibbons, WORK_DIM } from './dim.ts';
@@ -349,6 +349,11 @@ const FAMILY_FADE: [number, number] = [10, 14];
 
 /** Поля вписанного рабочего набора, px: слева — у звезды, справа — место для имени, сверху и снизу — как у «всего неба». */
 const FIT_SET = { l: 16, r: 110, y: 10 };
+/**
+ * «Всё небо» в небе «набор»: следы жизни входят в окно, только если удлиняют окно звёзд и точек набора не больше чем
+ * на такую долю его ширины; иначе окно — по звёздам, следы уходят за правый край.
+ */
+export const FIT_TRAIL = 0.35;
 
 export class Sky implements SkyContext {
   /** камера со сжатием полос (J4, J5): вертикаль камеры — строки, src/render/rows.ts */
@@ -515,11 +520,11 @@ export class Sky implements SkyContext {
    */
   setView(v: SkyViewIn, anchor?: string | null): boolean {
     // места под точки союзов (решения 70, 76): по союзам и полосам раскладки — только в небе «набор»
-    const next: SkyViewIn = { ...v, gaps: v.gaps ?? this.gapsFor(v) };
+    const next: SkyViewIn = { ...v, gaps: v.gaps ?? this.gapsFor(v), reveal: v.mode === 'work' && !!v.plates?.length };
     // набор в режиме «Всё небо» на небо не влияет
     const same =
       v.mode === this.view.mode &&
-      (v.mode === 'all' || (v.set === this.view.set && gapsKey(next.gaps) === gapsKey(this.view.gaps))) &&
+      (v.mode === 'all' || (v.set === this.view.set && gapsKey(next.gaps) === gapsKey(this.view.gaps) && !!next.reveal === !!this.view.reveal)) &&
       v.foldDesc.join() === this.view.foldDesc.join() &&
       v.foldGroups.join() === this.view.foldGroups.join();
     this.view = next;
@@ -615,26 +620,56 @@ export class Sky implements SkyContext {
   fitState(): ViewState {
     // в режиме «В работе» «Всё небо» вписывает рабочий набор (J4)
     if (this.plan.mode === 'work') {
-      const v = this.fitShown();
+      const v = this.fitShown(false);
       if (v) return v;
     }
     return this.cam.fitView(this.fitFrame());
   }
   /**
-   * Вид, в который вписаны лица рабочего набора (J4): по времени — от первой звезды до конца самого долгого следа, не уже
-   * 60 лет, справа — место для имени; по высоте — все строки в видимой части (высота строки следует за масштабом:
-   * если строки не помещаются, масштаб уменьшается, пока не поместятся).
+   * Вид, в который вписан рабочий набор вместе со всеми следами жизни (прежнее «всё небо» набора): по нему — предел
+   * отдаления в небе «набор» (src/ui/sky/view.ts, updateZoomFloor), чтобы долгий след можно было увидеть целиком.
    */
-  private fitShown(): ViewState | null {
+  fitWideState(): ViewState {
+    return (this.plan.mode === 'work' && this.fitShown(true)) || this.cam.fitView(this.fitFrame());
+  }
+  /**
+   * Вид, в который вписано то, что раскрыто в небе «набор» (J4; решение 76): по времени — звёзды набора и точки их
+   * союзов, не уже 60 лет, справа — место для имени; следы жизни — только если они удлиняют окно не больше чем на треть
+   * (FIT_TRAIL): иначе долгий след (Адам — 930 лет) прижал бы раскрытое родословие к левому краю; trails — со всеми
+   * следами (предел отдаления, fitWideState). По высоте — все строки в видимой части (высота строки следует за
+   * масштабом: если строки не помещаются, масштаб уменьшается, пока не поместятся).
+   */
+  private fitShown(trails: boolean): ViewState | null {
     const hid = this.plan.hidden;
     let x0 = Infinity;
-    let x1 = -Infinity;
+    let xs = -Infinity;
+    let xt = -Infinity;
     for (let i = 0; i < this.nodes.length; i++) {
       if (hid && hid[i]) continue;
       x0 = Math.min(x0, this.X0[i]);
-      x1 = Math.max(x1, this.X0[i], this.X1[i]);
+      xs = Math.max(xs, this.X0[i]);
+      xt = Math.max(xt, this.X1[i]);
     }
-    if (!(x1 >= x0)) return null;
+    if (!(xs >= x0)) return null;
+    // точки союзов — правее звёзд супругов и левее первого ребёнка, но союз родителей у ребёнка и брак без детей на небе
+    // могут выйти за звёзды
+    const has = (id: string | null | undefined) => {
+      const i = id ? this.nodeIndex.get(id) : undefined;
+      return i !== undefined && !(hid && hid[i]);
+    };
+    for (const pl of this.view.plates ?? []) {
+      const u = pl.union;
+      if (![u.a, u.b, ...u.kids].some(has)) continue;
+      const t = dotTime(this.model, u);
+      if (t === null) continue;
+      const x = this.xOf(t);
+      x0 = Math.min(x0, x);
+      xs = Math.max(xs, x);
+    }
+    const tm0 = this.tOf((x0 + xs) / 2);
+    const span0 = Math.max(xs - x0, this.xOf(tm0 + 30) - this.xOf(tm0 - 30));
+    // следы — целиком, если помещаются в прибавку FIT_TRAIL; иначе окно — по звёздам и точкам (следы уходят за край)
+    const x1 = trails || xt <= xs + FIT_TRAIL * span0 ? Math.max(xs, xt) : xs;
     const cam = this.cam;
     const vp = cam.vp;
     const W = Math.max(40, vp.r - vp.l - FIT_SET.l - FIT_SET.r);
@@ -1025,6 +1060,11 @@ export class Sky implements SkyContext {
       const boxes = this.ledger.boxes;
       put('labelIds', boxes.filter((b) => b.kind === 'star').map((b) => b.id).join(' '));
       put('notes', boxes.filter((b) => b.kind === 'note' || b.kind === 'mark' || b.kind === 'group' || b.kind === 'fold').map((b) => b.text.replace(/\u00a0/g, ' ')).join('|'));
+      // звёзды неба «набор» в этом кадре (решение 76; tools/accept/polish6.ts): «лицо:x,y» — список неба для клавиатуры
+      // (SkyA11y) обновляется, только когда небо постоит, а проверке нужен кадр сразу после сдвига
+      put('stars', this.plan.mode === 'work' ? p.vis.filter((i) => this.drawn(i) && !this.nodes[i].ghost).slice(0, 240).map((i) => `${this.nodes[i].person}:${Math.round(cam.sx(this.X0[i]))},${Math.round(cam.sy(this.nodes[i].lane))}`).join(';') : '');
+      // места помет семей в небе «набор» (решение 76; tools/accept/polish6.ts): «x,y,w,h» — помета не на линиях к детям
+      put('noteBoxes', this.plan.mode === 'work' ? boxes.filter((b) => b.kind === 'note').map((b) => [b.x, b.y, b.w, b.h].map(Math.round).join(',')).join(';') : '');
       put('service', boxes.filter((b) => b.kind === 'frame' && b.y >= RULER_H - 1 && b.y + b.h <= FRAME_H + 1).map((b) => b.text.replace(/\u00a0/g, ' ')).join('|'));
       put('breaks', [...(p.shown?.breaks ?? [])].sort().join(' '));
       put('brackets', [...(p.shown?.brackets ?? [])].sort().join(' '));

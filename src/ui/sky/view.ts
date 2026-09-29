@@ -475,9 +475,9 @@ export const WORK_ZOOM_OUT = 1.5;
 export const WORK_MIN_YEARS = 200;
 
 /**
- * Предел отдаления по режиму неба (Camera.zoomFloor): в режиме «в работе» — окно набора ×1,5, но не уже 200 лет
- * (IX-64); в режиме «только линии» — коридор линий с полями по 24 px (MAP-59); иначе — «всё небо». Зовётся при смене
- * режима и видимой части (SkyView).
+ * Предел отдаления по режиму неба (Camera.zoomFloor): в режиме «в работе» — окно набора со всеми следами ×1,5, но
+ * не уже 200 лет (IX-64); в режиме «только линии» — коридор линий с полями по 24 px (MAP-59); иначе — «всё небо».
+ * Зовётся при смене режима и видимой части (SkyView).
  */
 export function updateZoomFloor() {
   const s = skyRef.current;
@@ -487,7 +487,8 @@ export function updateZoomFloor() {
   const all = cam.kxLo();
   let floor: number | null = null;
   if (s.plan.mode === 'work') {
-    const fit = s.fitState();
+    // по набору со всеми следами: «Всё небо» набора вписывает только звёзды и точки, а отдалить можно до целых следов
+    const fit = s.fitWideState();
     const vp = cam.vp;
     const tc = s.tOf(fit.x0 + (vp.l + vp.r) / 2 / fit.kx);
     const w200 = s.xOf(tc + WORK_MIN_YEARS / 2) - s.xOf(tc - WORK_MIN_YEARS / 2);
@@ -850,8 +851,8 @@ export function viewAround(id: string): ViewState | null {
 
 /**
  * Раскрытые лица вне видимой части (решение 70): окно меняется наименьшим движением — отдаляется, только если они
- * не помещаются, и сдвигается ровно настолько, чтобы все были видны; точка keep (картуш союза, px холста) по возможности
- * остаётся на месте экрана. null — все и так на виду.
+ * не помещаются, и сдвигается ровно настолько, чтобы все были видны; точка keep (звезда лица, от которого раскрыли,
+ * px холста) по возможности остаётся на месте экрана. null — все и так на виду.
  */
 export function revealView(ids: readonly string[], keep: { x: number; y: number } | null): ViewState | null {
   const s = skyRef.current;
@@ -864,7 +865,7 @@ export function revealView(ids: readonly string[], keep: { x: number; y: number 
   const R = vp.r - MARGIN.r;
   const T = vp.t + MARGIN.t + 8;
   const B = vp.b - MARGIN.b;
-  // точка, которая остаётся на месте экрана: картуш, иначе первое лицо
+  // точка, которая остаётся на месте экрана: лицо, от которого раскрыли, иначе первое лицо
   const ax = keep ? keep.x : cam.sx(pts[0].x);
   const ay = keep ? keep.y : cam.sy(pts[0].n.lane);
   const awx = cam.wx(ax);

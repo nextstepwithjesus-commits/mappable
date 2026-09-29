@@ -406,13 +406,13 @@ export const start4: Scenario[] = [
   },
   {
     n: 550,
-    title: 'Решения 67–72: «Условные знаки» — союз на небе, картуш союза, плюс нераскрытых союзов, подсветка ветвей, пять начал, щелчок по лицу и союзу в «Клавишах»; «О карте» — абзац о началах и раскрытии',
+    title: 'Решения 67–72, 76: «Условные знаки» — союз на небе точкой, плюс нераскрытых союзов, подсветка ветвей, пять начал, щелчок по лицу и по точке союза и Enter на ней в «Клавишах»; «О карте» — абзац о началах и раскрытии',
     run: async (p) => {
       await fresh(p, { intro: false });
       await p.locator('.commands > button', { hasText: 'Условные знаки' }).click();
       await p.waitForTimeout(800);
       const t = flat(await p.locator('.app > .sheet').innerText());
-      for (const w of ['Союз на небе', 'Плюс без числа после имени', 'Подсветка ветвей выбранного лица', '«С Иисуса Христа»', '«Начать заново»', 'щелчок по картушу союза', 'на картуше союза', 'щелчок по лицу в небе «набор»'])
+      for (const w of ['Союз на небе', 'Плюс без числа после имени', 'Подсветка ветвей выбранного лица', '«С Иисуса Христа»', '«Начать заново»', 'щелчок по точке союза', 'на звезде или точке союза в небе «набор»', 'щелчок по лицу в небе «набор»'])
         if (!t.includes(w)) return fail(`в «Условных знаках» нет «${w}»`);
       await p.locator('.commands > button', { hasText: 'О карте' }).click();
       await p.waitForTimeout(800);
@@ -435,7 +435,7 @@ export const start4: Scenario[] = [
   },
   {
     n: 552,
-    title: 'Решение 70: меню звезды у лица с показанными картушами союзов — «Скрыть союзы на небе»; пункт убирает картуши, лицо остаётся в наборе; у лица без показанных картушей пункта нет',
+    title: 'Решение 70: меню звезды у лица с показанными точками союзов — «Скрыть союзы на небе»; пункт убирает его точки союзов, лицо остаётся в наборе; у лица без показанных точек союзов пункта нет',
     run: async (p) => {
       await fresh(p, { intro: false, start: 'adam', extra: { ...ADAM_KAIN, reveal: { opened: ['adam', 'kain'], expanded: { 'u:adam+eva': 'adam', 'u:kain+': 'kain' } } } }, '#/~k1', 2800);
       const menuAt = async (id: string) => {
@@ -448,7 +448,7 @@ export const start4: Scenario[] = [
       const opened = async () => ((await p.evaluate(() => JSON.parse(localStorage.getItem('toledot:reveal') ?? '{}'))) as { opened?: string[] }).opened ?? [];
       const avel = await menuAt('avel');
       if (!avel) return fail('звезды Авеля нет среди лиц на виду');
-      if (avel.includes('Скрыть союзы на небе')) return fail('у Авеля (картуши не показаны) есть «Скрыть союзы на небе»');
+      if (avel.includes('Скрыть союзы на небе')) return fail('у Авеля (точки союзов не показаны) есть «Скрыть союзы на небе»');
       await p.keyboard.press('Escape');
       await p.waitForTimeout(200);
       const kain = await menuAt('kain');
@@ -456,7 +456,7 @@ export const start4: Scenario[] = [
       if (!kain.includes('Скрыть союзы на небе')) return fail(`в меню Каина: ${kain.join(' | ')}`);
       await p.locator('.skymenu [role="menuitem"]', { hasText: 'Скрыть союзы на небе' }).click();
       await p.waitForTimeout(500);
-      if ((await opened()).includes('kain')) return fail('картуши Каина остались');
+      if ((await opened()).includes('kain')) return fail('точки союзов Каина остались');
       if (!(await work(p)).includes('kain')) return fail('Каин ушёл из набора');
       return (await p.locator('.skymenu').count()) ? fail('меню не закрылось') : pass();
     },
