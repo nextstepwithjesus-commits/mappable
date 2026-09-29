@@ -17,6 +17,8 @@
  */
 import { Camera } from './camera.ts';
 import type { Graph } from '../engine/graph.ts';
+import type { LinkKey } from '../engine/linkkey.ts';
+import type { FamilyUnit } from '../engine/family.ts';
 
 /** Зазор между родами в сжатом небе, в долях строки. */
 export const ROW_GAP = 0.6;
@@ -103,8 +105,51 @@ function rowsFromSegments(b0: number, seg: number, heights: ArrayLike<number>, k
   return { identity: false, key, row, lane, min: R[0] + off, max: R[n] + off };
 }
 
+/**
+ * Обрывок наружу (этап 11, § 7; src/engine/lineage.ts, Stub): связь лица показа from с лицом вне показа to. Небо рисует
+ * пунктир от звезды или ромба from с подписью в две строки: words — «Ревекка, дочь Вафуила», where — «жена Исаака;
+ * в «Патриархах»». key — связь (src/engine/linkkey.ts): щелчок по обрывку выбирает её.
+ */
+export interface PlanStub {
+  from: string;
+  to: string;
+  key: LinkKey;
+  words: string;
+  where: string;
+}
+
+/**
+ * Показ для плана неба (этап 11, § 4–5; src/ui/show.ts, skyShow): что показано и как уложено. Его передаёт небу
+ * SkyView вместе с остальным видом (SkyView.show); план (planSky) переводит его в поля SkyPlan.
+ */
+export interface ShowIn {
+  /** ключ показа: небо перестраивается, только если он изменился */
+  key: string;
+  /** 'map' — строки общей раскладки со свёрткой прочего; 'family' — семейная укладка «Г» (src/engine/family.ts) */
+  layout: 'map' | 'family';
+  /** лица показа; null — всё небо */
+  ids: ReadonlySet<string> | null;
+  /** гости — лица вне показа, нужные для союзов (жёны, матери): небо рисует их на 45 % */
+  guests: ReadonlySet<string>;
+  stubs: readonly PlanStub[];
+  /** 'family': виртуальная полоса каждого лица показа и гостя (больше — выше на экране, как полосы раскладки) */
+  lanes: ReadonlyMap<string, number> | null;
+  /** лицо-опора перехода (§ 10): при смене показа — лицо в фокусе, при раскрытии — лицо, от которого раскрыли */
+  anchor: string | null;
+  /**
+   * 'family': единицы союзов укладки по родителю (src/engine/family.ts, FamilyUnit): союз, мать, дети по году, сторона
+   * от строки родителя и год ствола (у внешней единицы — до рождений детей внутренних: ступенька «лестницы союзов»).
+   */
+  units?: ReadonlyMap<string, readonly FamilyUnit[]> | null;
+}
+
 /** Что показывает небо: режим, рабочий набор и свёрнутое (src/ui/work.ts). */
 export interface SkyView {
+  /**
+   * Показ (этап 11; src/ui/show.ts, skyShow). Если он задан, план строится по нему, а mode и set не читаются
+   * (они остаются для прежнего вызова без показа).
+   */
+  show?: ShowIn | null;
   mode: 'all' | 'work';
   /** лица рабочего набора (в режиме «В работе» небо рисует только их) */
   set: ReadonlySet<string>;
@@ -174,7 +219,30 @@ export interface SkyPlan {
   rows: Rows;
   marks: FoldMark[];
   mode: 'all' | 'work';
+  // Поля этапа 11 (§ 13, стык 2). planSky заполняет их всегда; необязательны они только для начального плана неба,
+  // который Sky создаёт до первого planSky (src/render/sky.ts): там их нет — значит, прежняя карта.
+  /**
+   * Укладка (этап 11, § 4): 'map' — полосы общей раскладки через rows (всё небо, «все колена», ключевые лица);
+   * 'family' — семейная укладка «Г»: у каждого узла показа своя виртуальная полоса nodeLane, rows по ним тождественные.
+   */
+  layout?: 'map' | 'family';
+  /**
+   * 'family': виртуальная полоса узла по его индексу (больше — выше на экране); NaN — узел не в показе (он же скрыт
+   * в hidden). Небо рисует копии узлов с lane = nodeLane[i]. 'map' — null.
+   */
+  nodeLane?: Float64Array | null;
+  /** гости показа (§ 7): лица вне показа, нужные для союзов; небо рисует их на 45 % */
+  guests?: ReadonlySet<string>;
+  /** обрывки наружу (§ 7) */
+  stubs?: readonly PlanStub[];
+  /** лицо-опора перехода (§ 10); null — середина экрана */
+  anchor?: string | null;
+  /** 'family': единицы союзов укладки по родителю (ShowIn.units); 'map' — null */
+  units?: ReadonlyMap<string, readonly FamilyUnit[]> | null;
 }
+
+/** Поля плана без показа: прежняя карта. */
+const MAP_FIELDS = { layout: 'map' as const, nodeLane: null, guests: new Set<string>() as ReadonlySet<string>, stubs: [] as readonly PlanStub[], anchor: null };
 
 /**
  * Потомки (dir = 'down') или предки ('up') лица по графу: отцы и матери, дети. gen — число поколений (null — все);
@@ -244,7 +312,22 @@ function within(g: string | null, top: string, parentGroup: (g: string) => strin
  * и лица вложенных в него домов, кроме лиц линий Мессии и скоплений. В режиме «В работе» видны только лица набора
  * (без призраков).
  */
-export function planSky(d: PlanData, v: SkyView): SkyPlan {
+export function planSky(d: PlanData, v: SkyView): FullPlan {
+  const s = v.show;
+  if (!s) return { ...planMap(d, v), ...MAP_FIELDS };
+  const extra = { guests: s.guests, stubs: s.stubs, anchor: s.anchor };
+  if (s.layout === 'family' && s.lanes) return { ...planFamily(d, v, s.lanes, s.key), ...extra, units: s.units ?? null };
+  // карта: всё небо или лица показа и гости на полосах общей раскладки (пустые полосы убраны, как в прежнем «наборе»)
+  const set = s.ids ? new Set([...s.ids, ...s.guests]) : v.set;
+  return { ...planMap(d, { ...v, mode: s.ids ? 'work' : 'all', set }), layout: 'map', nodeLane: null, ...extra };
+}
+
+/** План без показа или по показу на карте: прежняя раскладка, скрытые узлы и сжатие полос. */
+type MapPlan = Omit<SkyPlan, 'layout' | 'nodeLane' | 'guests' | 'stubs' | 'anchor'>;
+/** План, который строит planSky: поля этапа 11 заполнены. */
+export type FullPlan = Required<Pick<SkyPlan, 'layout' | 'nodeLane' | 'guests' | 'stubs' | 'anchor'>> & SkyPlan;
+
+function planMap(d: PlanData, v: SkyView): MapPlan {
   const { nodes, laneMin, laneMax } = d;
   const N = nodes.length;
   const work = v.mode === 'work';
@@ -409,6 +492,45 @@ export function planSky(d: PlanData, v: SkyView): SkyPlan {
   }
   for (const [p, all] of seen) if (all) hiddenPersons.add(p);
   return { hidden, hiddenPersons, rows, marks, mode: v.mode };
+}
+
+/**
+ * План семейной укладки «Г» (этап 11, § 4.2): лица показа и гости стоят на своих виртуальных полосах lanes (их считает
+ * src/engine/family.ts), остальные узлы и призраки скрыты. Строки тождественные по виртуальным полосам; ключ строк —
+ * по показу, чтобы кэши подписей и лент перестраивались при смене укладки. Свёрнутые потомки (J5) в укладку не входят
+ * (src/ui/show.ts), здесь — только их счёт для «+N».
+ */
+function planFamily(d: PlanData, v: SkyView, lanes: ReadonlyMap<string, number>, key: string): MapPlan & { layout: 'family'; nodeLane: Float64Array } {
+  const { nodes } = d;
+  const N = nodes.length;
+  const hidden = new Uint8Array(N);
+  const nodeLane = new Float64Array(N).fill(NaN);
+  let lo = Infinity;
+  let hi = -Infinity;
+  const all = new Map<string, boolean>();
+  for (let i = 0; i < N; i++) {
+    const n = nodes[i];
+    const l = n.ghost ? undefined : lanes.get(n.person);
+    if (l === undefined || !Number.isFinite(l)) hidden[i] = 1;
+    else {
+      nodeLane[i] = l;
+      if (l < lo) lo = l;
+      if (l > hi) hi = l;
+    }
+    all.set(n.person, (all.get(n.person) ?? true) && !!hidden[i]);
+  }
+  const hiddenPersons = new Set<string>();
+  for (const [p, h] of all) if (h) hiddenPersons.add(p);
+  const marks: FoldMark[] = [];
+  for (const root of v.foldDesc) {
+    if (!lanes.has(root)) continue;
+    let count = 0;
+    for (const x of walk(d.graph, root, 'down', null, { other: true }).keys()) if (!lanes.has(x) && all.has(x)) count++;
+    if (count) marks.push({ kind: 'desc', id: root, count });
+  }
+  if (!(lo <= hi)) lo = hi = 0;
+  const rows: Rows = { ...identityRows(lo, hi), key: `f|${key}` };
+  return { hidden, hiddenPersons, rows, marks, mode: 'work', layout: 'family', nodeLane };
 }
 
 /** Полоса-якорь сжатого неба: 0 (ось коридора), если она осталась, иначе ближайшая оставшаяся. */

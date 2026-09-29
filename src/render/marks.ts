@@ -28,6 +28,10 @@ import type { LineStep } from '../engine/layout.ts';
 import type { Rect } from './rect.ts';
 import type { KinStep } from '../engine/kinship.ts';
 import type { Emphasis, Pass, SkyContext, SkyState } from './sky.ts';
+import { linkShown, type LinkDraw } from './trails.ts';
+import { linkKeyString, type LinkKey } from '../engine/linkkey.ts';
+import { linkRoles } from '../ui/linkwords.ts';
+import { LINK_YELLOW } from './plates.ts';
 
 /** Братья и сёстры выбранного лица: ярче погашенного неба, бледнее рода по прямой (UX-34). */
 export const SIB = 0.72;
@@ -233,10 +237,21 @@ const STEP_DASH: Record<StepLook, number[]> = { blood: [], legal: [6, 3], term: 
  * Ломаная шага: от родителя вдоль его следа до года рождения ребёнка, затем отводом к ребёнку (как связь на небе);
  * вверх — наоборот; брак и родство по термину — прямой отрезок. a и b — звёзды from и to.
  */
-export function stepRoute(kind: KinStep['kind'], a: { x: number; y: number }, b: { x: number; y: number }): { x: number; y: number }[] {
-  if (kind === 'down') return [a, { x: b.x, y: a.y }, b];
-  if (kind === 'up') return [a, { x: a.x, y: b.y }, b];
+export function stepRoute(kind: KinStep['kind'], a: { x: number; y: number }, b: { x: number; y: number }, trunk?: number | null): { x: number; y: number }[] {
+  // ствол связи (src/render/links.ts): путь идёт по нему, а не сквозь звезду ребёнка (этап 11, § 2: «те же маршруты»)
+  if (kind === 'down') return trunk != null && trunk < b.x - 1 ? [a, { x: trunk, y: a.y }, { x: trunk, y: b.y }, b] : [a, { x: b.x, y: a.y }, b];
+  if (kind === 'up') return trunk != null && trunk < a.x - 1 ? [a, { x: trunk, y: a.y }, { x: trunk, y: b.y }, b] : [a, { x: a.x, y: b.y }, b];
   return [a, b];
+}
+
+/** x ствола связи «родитель → ребёнок» в кадре (px холста): начало зубца к ребёнку; null — зубца нет (лента, связи не нарисованы). */
+export function trunkOf(d: LinkDraw | null | undefined, parent: string, kid: string): number | null {
+  if (!d) return null;
+  for (const q of d.frame.paths) {
+    if (q.kind !== 'tooth' || q.ends[q.ends.length - 1] !== kid || !q.ends.includes(parent) || !linkShown(q, d)) continue;
+    return q.pts[0] + d.dx;
+  }
+  return null;
 }
 
 /** Места подписи шага: у середин колен, от длинного к короткому; справа и слева от вертикали, над и под горизонталью. */
@@ -256,7 +271,7 @@ function stepSpot(route: { x: number; y: number }[], w: number, size: number): {
 }
 
 /** Ломаные шагов пути в px холста: только шаги, оба конца которых есть на небе. */
-export function kinRoutes(v: SkyContext, steps: readonly KinStep[]): { st: KinStep; pts: { x: number; y: number }[] }[] {
+export function kinRoutes(v: SkyContext, steps: readonly KinStep[], d?: LinkDraw | null): { st: KinStep; pts: { x: number; y: number }[] }[] {
   const { cam } = v;
   // лица, скрытые рабочим набором или свёрткой (J4, J5), и лица не на линиях в режиме «только линии» — без шага: его конец
   // висел бы в пустоте, где звезды нет (этап 11, B1: путь «Руфь — Давид» шёл от Овида к пустому месту Руфи)
@@ -268,7 +283,9 @@ export function kinRoutes(v: SkyContext, steps: readonly KinStep[]): { st: KinSt
   for (const st of steps) {
     const a = at(st.from);
     const b = at(st.to);
-    if (a && b) out.push({ st, pts: stepRoute(st.kind, a, b) });
+    if (!a || !b) continue;
+    const trunk = st.kind === 'down' ? trunkOf(d, st.from, st.to) : st.kind === 'up' ? trunkOf(d, st.to, st.from) : null;
+    out.push({ st, pts: stepRoute(st.kind, a, b, trunk) });
   }
   return out;
 }
@@ -282,7 +299,7 @@ export function drawKinPath(v: SkyContext, p: Pass) {
   const steps = p.s.kinSteps;
   if (!steps?.length) return;
   const { ctx, pal } = v;
-  const routes = kinRoutes(v, steps);
+  const routes = kinRoutes(v, steps, p.links);
   if (!routes.length) return;
   ctx.save();
   ctx.lineJoin = 'round';
@@ -325,7 +342,7 @@ export function drawKinSteps(v: SkyContext, p: Pass) {
   ctx.textBaseline = 'alphabetic';
   ctx.lineJoin = 'round';
   let prev = '';
-  for (const r of kinRoutes(v, steps)) {
+  for (const r of kinRoutes(v, steps, p.links)) {
     const text = r.st.term;
     const key = `${text}|${stepLook(r.st)}`;
     if (!text || key === prev) continue;
@@ -618,4 +635,213 @@ export function drawMeridian(v: SkyContext, s: SkyState, flag: MeridianFlag | nu
   ctx.textBaseline = 'alphabetic';
   v.ledger.add('frame', text, { x: bx, y: by, w, h });
   return { x: bx, y: by, w, h };
+}
+
+// ---------- выбранная связь (этап 11, § 8; решения 83, 84) ----------
+
+/** Выбранная связь в последнем кадре: для карточки связи (linkAnchor) и проверок приёмки (canvas[data-link-sel]). */
+export interface SelectedLinkInfo {
+  /** запись ключа (linkKeyString) */
+  ks: string;
+  /** концы: лицо, роль, на экране ли (кольцо) или у края (указатель); x, y — центр кольца или указателя, px холста */
+  ends: { id: string; role: string; x: number; y: number; on: boolean }[];
+  /** точка карточки связи: середина нарисованного пути в окне, px холста; null — пути в окне нет */
+  x: number | null;
+  y: number | null;
+  /** отрезков пути в кадре */
+  segs: number;
+  /** указатели у края: щелчок — перелёт к лицу (src/ui/sky/input.ts, как указатели frame.ts) */
+  edges: (Rect & { id: string })[];
+}
+
+/** Хвост пути по следу родителя влево от ствола (K1 § 2.8): видно, из чьего следа вышла связь. */
+const TAIL = 40;
+
+/** Ломаные выбранной связи в px холста: пути её ключа в кадре; у «союз → ребёнок» — ствол от узла до ребёнка и черта брака. */
+export function selectedRoute(v: SkyContext, d: LinkDraw | null | undefined, key: LinkKey): number[][] {
+  const out: number[][] = [];
+  if (!d) return out;
+  const ks = linkKeyString(key) ?? '';
+  const shift = (pts: readonly number[]) => pts.map((q, k) => q + (k % 2 ? d.dy : d.dx));
+  const paths = d.frame.paths.filter((q) => linkShown(q, d));
+  const star = (id: string) => {
+    const i = v.indexOf(id);
+    return i === undefined || !v.drawn(i) ? null : { x: v.cam.sx(v.X0[i]), y: v.cam.sy(v.nodes[i].lane) };
+  };
+  const tails = (x: number, ids: readonly string[]) => {
+    for (const id of ids) {
+      const s = star(id);
+      if (s && s.x < x - 2) out.push([Math.max(s.x, x - TAIL), s.y, x, s.y]);
+    }
+  };
+  if (key.kind === 'step') {
+    for (const q of paths) if (q.kind === 'ribbon' && q.ks === ks) out.push(shift(q.pts));
+    return out;
+  }
+  if (key.kind === 'kin') {
+    const a = star(key.a);
+    const b = star(key.b);
+    if (a && b) out.push([a.x, a.y, b.x, b.y]);
+    return out;
+  }
+  const u = key.union;
+  if (key.kind === 'union') {
+    for (const q of paths) if (q.union === u) out.push(shift(q.pts));
+    const n = d.frame.nodes.find((m) => m.union === u && m.kind === 'union');
+    if (n) tails(n.x + d.dx, [n.owner, n.from]);
+    return out;
+  }
+  if (key.kind === 'spouse') {
+    for (const q of paths) if (q.ks === ks) out.push(shift(q.pts));
+    return out;
+  }
+  // союз → ребёнок: зубец (или лента), ствол от узла до строки ребёнка, черта брака и ступенька лестницы союза
+  const kid = key.child;
+  const teeth = paths.filter((q) => q.ks === ks && q.kind !== 'ribbon');
+  const rib = paths.filter((q) => q.kind === 'ribbon' && q.ends[1] === kid && q.union === u);
+  for (const q of [...teeth, ...rib]) out.push(shift(q.pts));
+  const tooth = teeth.find((q) => q.kind === 'tooth') ?? teeth[0];
+  if (!tooth) return out;
+  const x = tooth.pts[0];
+  const ky = tooth.pts[1];
+  const node = d.frame.nodes.find((m) => m.union === u && Math.abs(m.x - x) < 1);
+  const ny = node ? node.y : null;
+  for (const q of paths) {
+    if (q.union !== u || q === tooth) continue;
+    if (q.kind === 'bar' || q.kind === 'jog' || q.kind === 'clan') {
+      out.push(shift(q.pts));
+      continue;
+    }
+    if (q.kind !== 'trunk' || Math.abs(q.pts[0] - x) > 0.5) continue;
+    const lo = ny === null ? -Infinity : Math.min(ny, ky);
+    const hi = ny === null ? Infinity : Math.max(ny, ky);
+    const a = Math.max(lo, Math.min(q.pts[1], q.pts[3]));
+    const b = Math.min(hi, Math.max(q.pts[1], q.pts[3]));
+    if (b - a > 0.5) out.push(shift([x, a, x, b]));
+  }
+  if (node) tails(node.x + d.dx, [node.owner, node.from]);
+  return out;
+}
+
+/**
+ * Выбранная связь (§ 8): путь — жёлтым (ночью #F2E600 2,5 px со свечением 5 и 9 px; днём — маркер #FCDA2D 9 px под
+ * линией --ink 2,2 px), на концах — кольца с ролями курсивом («отец», «мать», «сын»); конец за краем — указатель у кромки
+ * «‹ Иаков, отец». Рисуется поверх неба. Возвращает место связи в кадре (null — связь не выбрана).
+ */
+export function drawSelectedLink(v: SkyContext, p: Pass): SelectedLinkInfo | null {
+  const key = p.s.link;
+  if (!key) return null;
+  const { ctx, cam, pal } = v;
+  const night = !!pal.glow;
+  const routes = selectedRoute(v, p.links, key);
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  const trace = (pts: readonly number[]) => {
+    ctx.beginPath();
+    ctx.moveTo(pts[0], pts[1]);
+    for (let k = 2; k < pts.length; k += 2) ctx.lineTo(pts[k], pts[k + 1]);
+    ctx.stroke();
+  };
+  const layers: [string, number][] = night
+    ? [[alpha(LINK_YELLOW.night, 0.16), 9], [alpha(LINK_YELLOW.night, 0.3), 5], [LINK_YELLOW.night, 2.5]]
+    : [[alpha(LINK_YELLOW.day, 0.9), 9], [pal.ink, 2.2]];
+  for (const [color, w] of layers) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = w;
+    for (const r of routes) trace(r);
+  }
+  ctx.restore();
+  // середина пути в окне: к ней встаёт карточка связи
+  let sx = 0;
+  let sy = 0;
+  let n = 0;
+  const vp = cam.vp;
+  for (const r of routes)
+    for (let k = 0; k + 1 < r.length; k += 2)
+      if (r[k] >= vp.l && r[k] <= vp.r && r[k + 1] >= vp.t && r[k + 1] <= vp.b) {
+        sx += r[k];
+        sy += r[k + 1];
+        n++;
+      }
+  // концы: кольца на экране, указатели у кромки за краем
+  const ends: SelectedLinkInfo['ends'] = [];
+  const edges: SelectedLinkInfo['edges'] = [];
+  const size = mapSize(T_MAP_S, v.coarse);
+  const ink = night ? LINK_YELLOW.night : pal.ink;
+  for (const e of linkRoles(key)) {
+    const i = v.indexOf(e.id);
+    const q = byId.get(e.id);
+    if (i === undefined || !q || !v.drawn(i)) continue;
+    const x = cam.sx(v.X0[i]);
+    const y = cam.sy(v.nodes[i].lane);
+    const on = x >= vp.l && x <= vp.r && y >= v.openTop && y <= vp.b;
+    if (on) {
+      const r = starRadius(q.magnitude, p.zoomScale) + (q.sex === 'f' ? 6.5 : 5);
+      ctx.save();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = night ? LINK_YELLOW.night : pal.ink;
+      if (!night) {
+        ctx.strokeStyle = alpha(LINK_YELLOW.day, 0.9);
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.strokeStyle = pal.ink;
+        ctx.lineWidth = 1.6;
+      }
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+      // роль курсивом — под звездой, иначе над ней или справа
+      if (e.role && p.s.layers.labels) {
+        ctx.font = mapFont(T_MAP_S, { italic: true, coarse: v.coarse });
+        const w = ctx.measureText(e.role).width;
+        const spots = [
+          { tx: x - w / 2, ty: y + r + 3 + size * 0.8 },
+          { tx: x - w / 2, ty: y - r - 4 },
+          { tx: x + r + 4, ty: y + size * 0.3 },
+          { tx: x - r - 4 - w, ty: y + size * 0.3 },
+        ];
+        const boxes = spots.map((c) => textBox(c.tx, c.ty, w, size));
+        const b = claim(v, p, boxes, 'mark', e.role, { id: e.id }) ?? boxes[0];
+        const c = spots[boxes.indexOf(b)];
+        ctx.save();
+        ctx.textBaseline = 'alphabetic';
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = pal.halo;
+        ctx.lineWidth = 3;
+        ctx.strokeText(e.role, c.tx, c.ty);
+        ctx.fillStyle = ink;
+        ctx.fillText(e.role, c.tx, c.ty);
+        ctx.restore();
+      }
+      ends.push({ id: e.id, role: e.role, x, y, on: true });
+      continue;
+    }
+    // указатель у кромки: «‹ Иаков, отец» слева, «Иаков, отец ›» справа, «↑ …» и «↓ …» сверху и снизу
+    const text0 = e.role ? `${q.name}, ${e.role}` : q.name;
+    const left = x < vp.l;
+    const right = x > vp.r;
+    const text = left ? `‹ ${text0}` : right ? `${text0} ›` : y < v.openTop ? `↑ ${text0}` : `↓ ${text0}`;
+    ctx.font = mapFont(T_MAP_S, { sans: true, weight: 500, coarse: v.coarse });
+    const w = ctx.measureText(text).width;
+    const tx = left ? v.letterW + 6 : right ? vp.r - 6 - w : Math.max(v.letterW + 6, Math.min(vp.r - 6 - w, x - w / 2));
+    const ty = left || right ? Math.max(v.openTop + size + 4, Math.min(vp.b - 6, y + size * 0.35)) : y < v.openTop ? v.openTop + size + 6 : vp.b - 8;
+    const box = textBox(tx, ty, w, size);
+    ctx.save();
+    ctx.fillStyle = night ? alpha(pal.sky, 0.85) : alpha(LINK_YELLOW.day, 0.9);
+    ctx.fillRect(box.x - 3, box.y - 1, box.w + 6, box.h + 2);
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = ink;
+    ctx.fillText(text, tx, ty);
+    ctx.restore();
+    p.placer.add(box);
+    const least = v.coarse ? 44 : 24;
+    const hit = { x: box.x - 3, y: box.y - Math.max(0, (least - box.h) / 2), w: box.w + 6, h: Math.max(box.h, least), id: e.id };
+    edges.push(hit);
+    ends.push({ id: e.id, role: e.role, x: tx + w / 2, y: ty - size * 0.35, on: false });
+  }
+  return { ks: linkKeyString(key) ?? '', ends, x: n ? sx / n : null, y: n ? sy / n : null, segs: routes.length, edges };
 }

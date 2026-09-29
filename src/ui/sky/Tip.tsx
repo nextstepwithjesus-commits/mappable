@@ -23,6 +23,8 @@ import { placeTip, TIP_DELAY, TIP_MARGIN, TIP_MORE, TIP_WARM, type TipSide } fro
 import type { Rect } from '../../render/sky.ts';
 import type { RibbonHit } from '../../render/ribbons.ts';
 import { dotRect } from './DotCard.tsx';
+import { linkTip } from '../linkwords.ts';
+import type { LinkKey } from '../../engine/linkkey.ts';
 
 export type Tip =
   /** звезда; count — указатель на номере лица в родословии у бусины (режим «только линии»; UX-69) */
@@ -31,7 +33,12 @@ export type Tip =
   /** шаг ленты под указателем (E6; MAP-28, решение 54) */
   | { kind: 'ribbon'; hit: RibbonHit; x: number; y: number }
   /** пояснение надписи рамки (UX-08: «≈» масштабной линейки; UX-65: эпоха) у её прямоугольника box */
-  | { kind: 'note'; key: string; text: string; x: number; y: number; box: Rect };
+  | { kind: 'note'; key: string; text: string; x: number; y: number; box: Rect }
+  /**
+   * связь под указателем (этап 11, § 8): «Иаков и Рахиль — родители; Иосиф — сын (Быт 30:22–24)» — слова связи
+   * src/ui/linkwords.ts (linkTip), у точки на линии x, y; ks — запись ключа
+   */
+  | { kind: 'link'; key: LinkKey; ks: string; x: number; y: number };
 
 export const tipKey = (t: Tip | null) =>
   !t
@@ -42,7 +49,17 @@ export const tipKey = (t: Tip | null) =>
         ? `t:${t.hit.bar.key}`
         : t.kind === 'ribbon'
           ? `r:${t.hit.line}:${t.hit.from}:${t.hit.to}`
-          : `n:${t.key}`;
+          : t.kind === 'link'
+            ? `l:${t.ks}`
+            : `n:${t.key}`;
+
+/**
+ * Подсказка шага ленты (решение 54; стык 4): те же слова, что у любой связи (src/ui/linkwords.ts, linkTip) — стих, где
+ * назван родитель (DG 2.3.7: у Марии → Иисус — Лк 1:31, а не Лк 3:23); если слов шага нет — прежняя строка ленты.
+ */
+export function ribbonTipText(line: 'joseph' | 'mary', from: string, to: string, flip = false): string {
+  return linkTip({ kind: 'step', line, child: to }) || ribbonStepText(line, from, to, flip);
+}
 
 /** Когда подсказка последний раз была видна (для «тёплого» показа без задержки). */
 let lastVisible = -Infinity;
@@ -138,7 +155,7 @@ export function SkyTip({ tip }: { tip: Tip | null }) {
     let anchor: Rect | null;
     if (tip.kind === 'star') anchor = tip.count ? { x: tip.x - 6, y: tip.y - 8, w: 12, h: 16 } : starBox(tip.id);
     else if (tip.kind === 'tier') anchor = { x: tip.x - 1, y: tip.hit.y, w: 2, h: tip.hit.h };
-    else if (tip.kind === 'ribbon') anchor = { x: tip.x - 8, y: tip.y - 8, w: 16, h: 16 };
+    else if (tip.kind === 'ribbon' || tip.kind === 'link') anchor = { x: tip.x - 8, y: tip.y - 8, w: 16, h: 16 };
     else anchor = tip.box;
     if (!anchor) return;
     const p = placeTip(anchor, size, bounds, avoid, reserve(), tip.kind === 'star' ? undefined : ['se', 'sw']);
@@ -153,7 +170,7 @@ export function SkyTip({ tip }: { tip: Tip | null }) {
       class="tip"
       role="tooltip"
       data-kind={tip.kind}
-      data-id={tip.kind === 'star' ? tip.id : tip.kind === 'tier' ? tip.hit.bar.id : tip.kind === 'ribbon' ? `${tip.hit.from} ${tip.hit.to}` : tip.key}
+      data-id={tip.kind === 'star' ? tip.id : tip.kind === 'tier' ? tip.hit.bar.id : tip.kind === 'ribbon' ? `${tip.hit.from} ${tip.hit.to}` : tip.kind === 'link' ? tip.ks : tip.key}
       data-side={pos?.side}
       data-shown={visible ? '' : undefined}
       data-more={tip.kind === 'star' && more ? '' : undefined}
@@ -164,7 +181,9 @@ export function SkyTip({ tip }: { tip: Tip | null }) {
       ) : tip.kind === 'tier' ? (
         <TierTip hit={tip.hit} />
       ) : tip.kind === 'ribbon' ? (
-        <div class="note">{ribbonStepText(tip.hit.line, tip.hit.from, tip.hit.to, lineFlip.peek())}</div>
+        <div class="note">{ribbonTipText(tip.hit.line, tip.hit.from, tip.hit.to, lineFlip.peek())}</div>
+      ) : tip.kind === 'link' ? (
+        <div class="note">{linkTip(tip.key)}</div>
       ) : (
         <div class="note">{typo(tip.text)}</div>
       )}

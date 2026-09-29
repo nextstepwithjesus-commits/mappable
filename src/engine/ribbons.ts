@@ -34,6 +34,8 @@ export interface StrandPoint {
   weak: boolean; // звено по толкованию
   /** место в своей линии: номер лица (дробный — между лицами); для наведения и участка синопсиса */
   u: number;
+  /** шаг «по закону» (Иосиф → Иисус, Мф 1:16): штрихом, как связь иного рода (Г10) */
+  legal?: boolean;
 }
 
 export interface Strand {
@@ -456,4 +458,305 @@ export function buildRibbons(inp: RibbonInput): Strand[] {
   });
   const [js, ms] = out;
   return [ms, js];
+}
+
+// ---------- ленты по маршрутам связей (этап 11, решение 79; STAGE11.md § 3) ----------
+
+/**
+ * Шаг ленты на масштабе семьи: маршрут связи «родитель → ребёнок» (src/render/links.ts, stepRoute) — по следу родителя
+ * до ступеньки у узла союза, вертикалью к строке ребёнка, зубцом к его звезде. pts — ломаная из горизонталей и вертикалей
+ * (x0, y0, x1, y1, …) от звезды родителя до звезды ребёнка.
+ */
+export interface RouteStep {
+  id: string;
+  weak: boolean;
+  /** шаг «по закону» (Иосиф → Иисус, Мф 1:16): от узла союза — штрихом */
+  legal?: boolean;
+  /** маршрут к этому лицу от предыдущего лица линии; у первого лица линии — пусто */
+  pts: number[] | null;
+}
+
+export interface RouteInput {
+  joseph: RouteStep[];
+  mary: RouteStep[];
+  /** звезда лица, px */
+  project: (id: string) => Pt | null;
+  amplitude: number;
+  /** радиус скругления ступеньки, px (8–16) */
+  radius: number;
+  clip?: [number, number];
+}
+
+/** Точка ломаной со скруглёнными углами: место, направление касательной, длина от начала. */
+interface RoutePt {
+  x: number;
+  y: number;
+  tx: number;
+  ty: number;
+  s: number;
+}
+
+/**
+ * Ломаная из горизонталей и вертикалей — со скруглёнными углами радиуса до r (не больше половины соседних отрезков),
+ * точками не реже чем через step px. Касательная — по направлению движения.
+ */
+export function roundRoute(pts: readonly number[], r: number, step = 4): RoutePt[] {
+  const P: Pt[] = [];
+  for (let k = 0; k + 1 < pts.length; k += 2) {
+    const q = { x: pts[k], y: pts[k + 1] };
+    const last = P[P.length - 1];
+    if (!last || Math.hypot(q.x - last.x, q.y - last.y) > 0.01) P.push(q);
+  }
+  const out: RoutePt[] = [];
+  if (P.length < 2) {
+    if (P.length === 1) out.push({ x: P[0].x, y: P[0].y, tx: 1, ty: 0, s: 0 });
+    return out;
+  }
+  let s = 0;
+  const add = (x: number, y: number, tx: number, ty: number) => {
+    const last = out[out.length - 1];
+    if (last) s += Math.hypot(x - last.x, y - last.y);
+    out.push({ x, y, tx, ty, s });
+  };
+  const line = (a: Pt, b: Pt, from0: boolean) => {
+    const l = Math.hypot(b.x - a.x, b.y - a.y);
+    if (l < 1e-6) return;
+    const tx = (b.x - a.x) / l;
+    const ty = (b.y - a.y) / l;
+    const n = Math.max(1, Math.ceil(l / step));
+    for (let k = from0 ? 0 : 1; k <= n; k++) add(a.x + (tx * l * k) / n, a.y + (ty * l * k) / n, tx, ty);
+  };
+  // углы: у вершины k — дуга от точки за rk до вершины к точке через rk после неё
+  let cur: Pt = P[0];
+  let first = true;
+  for (let k = 1; k < P.length; k++) {
+    const b = P[k];
+    if (k === P.length - 1) {
+      line(cur, b, first);
+      break;
+    }
+    const c = P[k + 1];
+    const l1 = Math.hypot(b.x - cur.x, b.y - cur.y);
+    const l2 = Math.hypot(c.x - b.x, c.y - b.y);
+    const rk = Math.max(0, Math.min(r, l1 / 2, l2 / 2));
+    const u1 = { x: (b.x - cur.x) / (l1 || 1), y: (b.y - cur.y) / (l1 || 1) };
+    const u2 = { x: (c.x - b.x) / (l2 || 1), y: (c.y - b.y) / (l2 || 1) };
+    const a0 = { x: b.x - u1.x * rk, y: b.y - u1.y * rk };
+    const a1 = { x: b.x + u2.x * rk, y: b.y + u2.y * rk };
+    line(cur, a0, first);
+    first = false;
+    // дуга: квадратичная кривая через вершину (у прямого угла — почти окружность), касательные на концах — вдоль отрезков
+    const n = Math.max(4, Math.ceil((rk * Math.PI) / 2 / Math.max(1, step / 2)));
+    for (let j = 1; j <= n; j++) {
+      const t = j / n;
+      const x = (1 - t) * (1 - t) * a0.x + 2 * (1 - t) * t * b.x + t * t * a1.x;
+      const y = (1 - t) * (1 - t) * a0.y + 2 * (1 - t) * t * b.y + t * t * a1.y;
+      const dx = 2 * (1 - t) * (b.x - a0.x) + 2 * t * (a1.x - b.x);
+      const dy = 2 * (1 - t) * (b.y - a0.y) + 2 * t * (a1.y - b.y);
+      const dl = Math.hypot(dx, dy) || 1;
+      add(x, y, dx / dl, dy / dl);
+    }
+    cur = a1;
+  }
+  return out;
+}
+
+/**
+ * Нити лент по маршрутам связей (решение 79; STAGE11.md § 3): на масштабе семьи лента — это и есть связь с ребёнком линии.
+ * Каждая нить идёт по маршрутам своих шагов; на общих участках — две нити на ±A от маршрута (коса), одно перекрестье на
+ * поколение — посередине вертикали ступеньки (ТЗ § 8.4: перекрестья — между поколениями), фаза — та же, что у сплайна
+ * (braidPhase: у точек расхождения и схождения нить Иосифа — сверху, то есть слева по ходу). На раздельных участках нить
+ * идёт на своей стороне маршрута (Иосифа — слева, Марии — справа по ходу), поэтому у развилки нити расходятся, не
+ * перекрещиваясь, и след лица линии остаётся виден между ними. Звено по толкованию — разреженной нитью; шаг «по закону» —
+ * от узла союза штрихом.
+ */
+export function buildRouteRibbons(inp: RouteInput): Strand[] {
+  const A = inp.amplitude;
+  const R = inp.radius;
+  const lines = (['joseph', 'mary'] as const).map((line) => {
+    const steps = inp[line].filter((s) => !!inp.project(s.id));
+    return { line, steps, ids: steps.map((s) => s.id) };
+  });
+  const [J, M] = lines;
+  const spans = runSpans(J.ids, M.ids);
+  const out: Strand[] = [];
+  lines.forEach((L) => {
+    const isJ = L.line === 'joseph';
+    const sign = isJ ? 1 : -1;
+    const n = L.ids.length;
+    const my = (r: RunSpan) => (isJ ? r.j : r.m);
+    // маршруты поколений: k → k+1
+    const routes: RoutePt[][] = [];
+    for (let k = 0; k + 1 < n; k++) {
+      const st = L.steps[k + 1];
+      const a = inp.project(L.ids[k])!;
+      const b = inp.project(L.ids[k + 1])!;
+      const pts = st.pts && st.pts.length >= 4 ? st.pts : [a.x, a.y, b.x, b.y];
+      routes.push(roundRoute(pts, R));
+    }
+    const genRun = new Array<number>(Math.max(0, n - 1)).fill(-1);
+    spans.forEach((r, ri) => {
+      const [a, b] = my(r);
+      for (let k = a; k < b; k++) if (r.kind === 'split' || genRun[k] < 0) genRun[k] = ri;
+    });
+    // фаза косы по общим участкам (как у сплайна): одно перекрестье на поколение
+    const phase = new Map<number, { a: number; phi: number[]; turns: number[]; cross: number[] }>();
+    spans.forEach((r, ri) => {
+      if (r.kind !== 'shared') return;
+      const [a, b] = my(r);
+      const lens: number[] = [];
+      for (let k = a; k < b; k++) lens.push(routes[k].length ? routes[k][routes[k].length - 1].s : 0);
+      const ph = braidPhase(lens, ri > 0 && ri < spans.length - 1 ? 'both' : ri > 0 ? 'start' : 'end');
+      const cross: number[] = [];
+      let j = 0;
+      for (const t of ph.turns) cross.push(t ? j++ : -1);
+      phase.set(ri, { a, ...ph, cross });
+    });
+    /** Середина вертикали маршрута поколения (длина от начала) и её длина: там перекрестье. */
+    const vertical = (rt: RoutePt[]): [number, number] => {
+      let s0 = -1;
+      let s1 = -1;
+      for (const q of rt)
+        if (Math.abs(q.ty) > 0.7) {
+          if (s0 < 0) s0 = q.s;
+          s1 = q.s;
+        }
+      if (s0 < 0) {
+        const L0 = rt.length ? rt[rt.length - 1].s : 0;
+        return [L0 / 2, L0];
+      }
+      return [(s0 + s1) / 2, s1 - s0];
+    };
+    const points: StrandPoint[] = [];
+    const over: [number, number][] = [];
+    const total = Math.max(1, n - 1);
+    for (let k = 0; k + 1 < n; k++) {
+      const rt = routes[k];
+      if (!rt.length) continue;
+      const len = rt[rt.length - 1].s || 1;
+      const ri = genRun[k];
+      const r = spans[ri];
+      const ph = r?.kind === 'shared' ? phase.get(ri) : undefined;
+      const [mid, vlen] = vertical(rt);
+      const w = Math.min(CROSS_LEN * A, Math.max(6, vlen));
+      const turn = !!ph && !!ph.turns[k - ph.a];
+      const c0 = ph ? Math.cos(ph.phi[k - ph.a]) : 1;
+      const legalFrom = L.steps[k + 1].legal ? (rt.find((q) => Math.abs(q.ty) > 0.7)?.s ?? 0) : Infinity;
+      let seg: number | null = null;
+      const j = ph ? ph.cross[k - ph.a] : -1;
+      for (let q = k === 0 ? 0 : 1; q < rt.length; q++) {
+        const p = rt[q];
+        let sig: number;
+        if (ph) {
+          if (turn) {
+            const f = Math.max(0, Math.min(1, (p.s - (mid - w / 2)) / w));
+            sig = c0 * Math.cos(Math.PI * f);
+          } else sig = c0;
+        } else sig = 1;
+        const off = sign * sig * A;
+        // нормаль «слева по ходу»: (ty, −tx)
+        const idx = points.length;
+        points.push({
+          x: p.x + p.ty * off,
+          y: p.y - p.tx * off,
+          t: (k + p.s / len) / total,
+          weak: L.steps[k + 1].weak && p.s > 0.5,
+          legal: p.s >= legalFrom ? true : undefined,
+          u: k + p.s / len,
+        });
+        // плетение: в перекрестье поверх поочерёдно то Мария, то Иосиф
+        const inside = turn && Math.abs(p.s - mid) <= w / 2;
+        if (inside && seg === null) seg = idx;
+        if (!inside && seg !== null) {
+          if (idx - 1 > seg && (j % 2 === 0) !== isJ) over.push([seg, idx - 1]);
+          seg = null;
+        }
+      }
+      if (seg !== null && points.length - 1 > seg && (j % 2 === 0) !== isJ) over.push([seg, points.length - 1]);
+    }
+    if (!points.length && n === 1) {
+      const a = inp.project(L.ids[0])!;
+      points.push({ x: a.x, y: a.y, t: 0, weak: false, u: 0 });
+    }
+    out.push({ line: L.line, points, ids: L.ids, over });
+  });
+  const [js, ms] = out;
+  return [ms, js];
+}
+
+/**
+ * Смесь двух видов нитей одной линии (сплайн обзора и маршрут масштаба семьи) — плавный переход в полосе ×1,5 масштаба
+ * (§ 3): точки каждого поколения обоих видов берутся по равным долям длины и смешиваются с весом f (0 — сплайн, 1 —
+ * маршрут). Плетение и пометы — от вида с большим весом.
+ */
+export function blendStrands(a: Strand[], b: Strand[], f: number): Strand[] {
+  if (f <= 0.001) return a;
+  if (f >= 0.999) return b;
+  return a.map((sa) => {
+    const sb = b.find((q) => q.line === sa.line);
+    if (!sb || sb.ids.join() !== sa.ids.join()) return f < 0.5 ? sa : (sb ?? sa);
+    const byGen = (s: Strand) => {
+      const m = new Map<number, StrandPoint[]>();
+      for (const p of s.points) {
+        const k = Math.min(s.ids.length - 2, Math.max(0, Math.floor(p.u)));
+        const arr = m.get(k);
+        if (arr) arr.push(p);
+        else m.set(k, [p]);
+      }
+      return m;
+    };
+    const ga = byGen(sa);
+    const gb = byGen(sb);
+    const pts: StrandPoint[] = [];
+    const main = f < 0.5 ? sa : sb;
+    const resample = (ps: StrandPoint[], m: number): StrandPoint[] => {
+      if (ps.length < 2) return Array.from({ length: m }, () => ps[0]);
+      const L: number[] = [0];
+      for (let k = 1; k < ps.length; k++) L.push(L[k - 1] + Math.hypot(ps[k].x - ps[k - 1].x, ps[k].y - ps[k - 1].y));
+      const tot = L[L.length - 1] || 1;
+      const outp: StrandPoint[] = [];
+      let j = 0;
+      for (let k = 0; k < m; k++) {
+        const s = (tot * k) / (m - 1);
+        while (j + 1 < L.length - 1 && L[j + 1] < s) j++;
+        const t = L[j + 1] > L[j] ? (s - L[j]) / (L[j + 1] - L[j]) : 0;
+        const p0 = ps[j];
+        const p1 = ps[Math.min(ps.length - 1, j + 1)];
+        outp.push({ ...(t < 0.5 ? p0 : p1), x: p0.x + (p1.x - p0.x) * t, y: p0.y + (p1.y - p0.y) * t, u: p0.u + (p1.u - p0.u) * t, t: p0.t + (p1.t - p0.t) * t });
+      }
+      return outp;
+    };
+    const gens = Math.max(0, sa.ids.length - 1);
+    for (let k = 0; k < gens; k++) {
+      const pa = ga.get(k) ?? [];
+      const pb = gb.get(k) ?? [];
+      if (!pa.length || !pb.length) continue;
+      const m = Math.max(8, Math.min(240, Math.max(pa.length, pb.length)));
+      const ra = resample(pa, m);
+      const rb = resample(pb, m);
+      for (let q = 0; q < m; q++) {
+        const x = ra[q].x + (rb[q].x - ra[q].x) * f;
+        const y = ra[q].y + (rb[q].y - ra[q].y) * f;
+        const src = f < 0.5 ? ra[q] : rb[q];
+        pts.push({ ...src, x, y });
+      }
+    }
+    // плетение смеси — по точкам главного вида: перекрестья переводятся в номера новых точек по месту u
+    const over: [number, number][] = [];
+    for (const [s0, s1] of main.over) {
+      const u0 = main.points[s0]?.u;
+      const u1 = main.points[s1]?.u;
+      if (u0 === undefined || u1 === undefined) continue;
+      let a0 = -1;
+      let a1 = -1;
+      pts.forEach((p, i) => {
+        if (p.u >= u0 && p.u <= u1) {
+          if (a0 < 0) a0 = i;
+          a1 = i;
+        }
+      });
+      if (a0 >= 0 && a1 > a0) over.push([a0, a1]);
+    }
+    return { line: sa.line, points: pts, ids: sa.ids, over };
+  });
 }

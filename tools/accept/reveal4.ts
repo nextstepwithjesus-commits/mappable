@@ -259,8 +259,9 @@ export const reveal4: Scenario[] = [
       const at = await pageAt(p, q.x + q.w / 2, q.y + q.h + dy);
       await p.touchscreen.tap(at.x, at.y);
       await p.waitForTimeout(700);
-      const cmd = p.locator('.sky .dotcard[data-kind="union"][data-placed] .dc-cmds button', { hasText: /^Раскрыть детей/ });
-      if (!(await cmd.count())) return fail('касание не открыло карточку у точки союза');
+      // этап 11 (решение 77): на телефоне карточка у ромба — нижний лист (DotSheet), второй карточки над небом нет
+      const cmd = p.locator('.dotcard[data-kind="union"][data-placed] .dc-cmds button', { hasText: /^Раскрыть детей/ });
+      if (!(await cmd.count())) return fail('касание не открыло карточку у ромба союза');
       await cmd.tap();
       await p.waitForTimeout(1100);
       const ids = await stored(p);
@@ -289,14 +290,17 @@ export const reveal4: Scenario[] = [
   },
   {
     n: 509,
-    title: 'С Иисуса Христа: точка союза «Иосиф и Мария» над звездой слева; «Раскрыть родителей» в карточке у точки раскрывает родителей — точка у следа Иосифа, почти на том же месте экрана (сдвиг — только чтобы вписать родителей), родители на виду',
+    // этап 11 (решение 78, Г4): ромб свёрнутого союза — на строке ребёнка, раскрытого — на следе родителя у тройника лент
+    title: 'С Иисуса Христа: ромб союза «Иосиф и Мария» на строке Иисуса Христа слева; «Раскрыть родителей» в карточке у ромба раскрывает родителей — ромб на следе родителя у тройника лент, почти на том же месте экрана (сдвиг — только чтобы вписать родителей), родители на виду',
     run: async (p) => {
       await setup(p, { work: ['iisus'], opened: ['iisus'], hash: '#/iisus', start: 'jesus' });
       const uid = 'u:iosif-muzh-marii+mariya';
       const q0 = await plateOf(p, uid);
       const j = await starAt(p, 'iisus');
       if (!q0 || !j) return fail(`нет точки союза или звезды: ${(await canvasData(p)).plates}`);
-      if (!(q0.x + q0.w <= j.x && q0.y + q0.h <= j.y)) return fail(`точка союза не над звездой слева: ${q0.x},${q0.y} ${q0.w}×${q0.h}, звезда ${j.x},${j.y}`);
+      // этап 11 (решение 78, Г4): родителей на небе нет — ромб свёрнутого союза на строке Иисуса Христа, левее звезды (прежде —
+      // точка над звездой слева)
+      if (!(q0.x + q0.w <= j.x && Math.abs(q0.y + q0.h / 2 - j.y) <= 2)) return fail(`ромб союза не на строке звезды слева: ${q0.x},${q0.y} ${q0.w}×${q0.h}, звезда ${j.x},${j.y}`);
       // решение 76: раскрытие — командой карточки у точки
       const cmd = await toggleVia(p, q0);
       if (cmd !== 'Раскрыть родителей') return fail(`команда карточки у точки: «${cmd}»`);
@@ -310,7 +314,9 @@ export const reveal4: Scenario[] = [
       if (!js || !ms) return fail('родителей нет на виду');
       const vp = (await p.evaluate(() => (document.querySelector('.sky') as HTMLElement).dataset.view ?? '')).split(' ').map(Number);
       if (js.x < vp[0] || ms.x < vp[0] || js.x > vp[2] || ms.x > vp[2]) return fail(`родители за краем: Иосиф ${js.x}, Мария ${ms.x}`);
-      if (Math.abs(q1.y - js.y) > 60) return fail(`точка союза не у следа Иосифа: ${q1.y} при следе ${js.y}`);
+      // этап 11 (Г4, § 3): у раскрытого союза ромб — на следе родителя, у тройника, из которого ленты уходят к Иисусу Христу
+      const cy = q1.y + q1.h / 2;
+      if (Math.abs(cy - js.y) > 2 && Math.abs(cy - ms.y) > 2) return fail(`ромб союза не на следе Иосифа или Марии: ${cy} при следах ${js.y}, ${ms.y}`);
       return near(q0, q1, 80) ? pass(`точка ${q0.x},${q0.y} → ${q1.x},${q1.y}`) : fail(`точка союза сдвинулась: ${q0.x},${q0.y} → ${q1.x},${q1.y}`);
     },
   },

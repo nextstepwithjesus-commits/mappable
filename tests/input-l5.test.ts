@@ -247,6 +247,9 @@ describe('пояснения флажков и переключателя неб
       expect(t.length, k).toBeGreaterThan(20);
       expect(t, k).not.toMatch(/[→·]|[А-ЯЁ]{3,}/);
     }
-    expect(SKY_HINTS.lines).toMatch(/Мф 1.*Лк 3/);
+    // этап 11 (решение 81): флажка «только линии Мессии» больше нет — линии Мессии стали показом (строка показа и лист
+    // «Показ», src/ui/panels/Show.tsx); «Всё небо» у органов неба стало «Вписать» — пояснение называет кадр, а не показ
+    expect('lines' in SKY_HINTS).toBe(false);
+    expect(SKY_HINTS.fit).toMatch(/^Вписать/);
   });
 });

@@ -1,4 +1,11 @@
-/** Сценарии приёмки: союзы-точки на небе (решение 76), группа peek6: номера 680–699, карточка у точки на небе. */
+/**
+ * Сценарии приёмки: союзы-точки на небе (решение 76), группа peek6: номера 680–699, карточка у точки на небе.
+ * Этап 11 (решение 77, STAGE11.md § 6; задача Q3): карточка у звезды — в любом показе, с блоком «Родство»; её команды —
+ * «Карточка» (прежде «Информация»), «Только его род ▾», «Родство с…», в наборе — «Продолжить ветвь» / «Свернуть ветвь»
+ * и «Родители»; у ромба — «Карточка союза» (прежде «Подробнее»); Enter на звезде ставит фокус на первое имя «Родства»
+ * (§ 8); на телефоне карточка у звезды — нижний лист на 214 px, над небом её нет. Сценарии 680, 683, 685, 686, 688, 689,
+ * 692 приведены к этому; остальные проверки — прежние.
+ */
 import type { Page } from 'playwright';
 import { fail, pass, type Scenario } from './kit.ts';
 
@@ -68,7 +75,7 @@ async function leadOk(p: Page, at: { x: number; y: number }, c: Box, tol = 14): 
 export const peek6: Scenario[] = [
   {
     n: 680,
-    title: 'Решение 76: «С Адама» — щелчок по звезде Адама: выбран Адам, справа — его карточка, у звезды — карточка у точки (диалог «Адам, 4174–3244 гг. до Р. Х.»): образ, имя, годы, «Информация», «Свернуть ветвь», «×»; не закрывает звезду и её подпись, прикреплена отводом',
+    title: 'Решения 76, 77: «С Адама» — щелчок по звезде Адама: выбран Адам, справа — его карточка, у звезды — карточка (диалог «Адам, 4174–3244 гг. до Р. Х.»): образ, имя, годы, «Карточка», «Только его род ▾», «Родство с…», «Свернуть ветвь», «×»; не закрывает звезду и её подпись, прикреплена отводом',
     run: async (p) => {
       await setup(p, { ...ADAM, hash: '#/' });
       const a = await starAt(p, 'adam');
@@ -86,7 +93,7 @@ export const peek6: Scenario[] = [
       const text = flat(await card(p).innerText());
       if (!/Адам/.test(text) || !/4174–3244 гг\. до Р\. Х\./.test(text)) return fail(`в карточке: «${text}»`);
       const cmds = await commands(p);
-      if (cmds.join(' | ') !== 'Информация | Свернуть ветвь') return fail(`команды: ${cmds.join(' | ')}`);
+      if (cmds.join(' | ') !== 'Карточка | Только его род ▾ | Родство с… | Свернуть ветвь') return fail(`команды: ${cmds.join(' | ')}`);
       if (!(await card(p).locator('button.close[aria-label]').count())) return fail('нет «×»');
       const cb = await card(p).locator('.dc-cmds button').first().boundingBox();
       if (!cb || cb.height < 31.5) return fail(`поле команды ${cb?.height} px`);
@@ -180,7 +187,7 @@ export const peek6: Scenario[] = [
   },
   {
     n: 683,
-    title: 'Решение 76: щелчок по точке союза Адама и Евы — карточка союза у точки: «Адам и Ева», «Ева — жена Адама», стих, «3 сына, выв.», «Раскрыть детей (3)», «Подробнее»; набор не меняется, подсказки у открытой точки нет; «Подробнее» — справа карточка союза, карточка у точки остаётся',
+    title: 'Решения 76, 77: щелчок по точке союза Адама и Евы — карточка союза у точки: «Адам и Ева», «Ева — жена Адама», стих, «3 сына, выв.», «Раскрыть детей (3)», «Карточка союза»; набор не меняется, подсказки у открытой точки нет; «Карточка союза» — справа карточка союза, карточка у точки остаётся',
     run: async (p) => {
       await setup(p, ADAM);
       const d = await dotAt(p, 'u:adam+eva');
@@ -196,15 +203,15 @@ export const peek6: Scenario[] = [
       for (const w of ['союз', 'Быт 2:22–25', 'Адам и Ева', 'Ева — жена Адама', '3 сына, выв.']) if (!text.includes(w)) return fail(`в карточке нет «${w}»: ${text}`);
       if (!(await card(p).locator('.av').count())) return fail('нет образа союза');
       const cmds = await commands(p);
-      if (cmds.join(' | ') !== 'Раскрыть детей (3) | Подробнее') return fail(`команды: ${cmds.join(' | ')}`);
+      if (cmds.join(' | ') !== 'Раскрыть детей (3) | Карточка союза') return fail(`команды: ${cmds.join(' | ')}`);
       if ((await stored(p)).join(' ') !== 'adam') return fail(`щелчок по точке изменил набор: ${(await stored(p)).join(' ')}`);
       await p.mouse.move(d.x + 1, d.y);
       await p.waitForTimeout(500);
       if (await p.locator('.sky .tip[data-shown]').count()) return fail('подсказка у точки с открытой карточкой');
-      await card(p).locator('.dc-cmds button', { hasText: 'Подробнее' }).click();
+      await card(p).locator('.dc-cmds button', { hasText: 'Карточка союза' }).click();
       await p.waitForTimeout(900);
       if (!(await p.locator('.folio[data-union="u:adam+eva"]').count())) return fail('справа нет карточки союза');
-      if (!(await cardBox(p))) return fail('карточка у точки закрылась после «Подробнее»');
+      if (!(await cardBox(p))) return fail('карточка у точки закрылась после «Карточки союза»');
       return pass(text);
     },
   },
@@ -234,7 +241,7 @@ export const peek6: Scenario[] = [
   },
   {
     n: 685,
-    title: 'Решение 76, клавиатура: стрелкой — к Адаму, Enter открывает карточку у звезды (диалог) с фокусом на «Информация», Tab — к следующей команде; Escape закрывает, фокус на холсте, кольцо — на Адаме',
+    title: 'Решения 76, 77, 83, клавиатура: стрелкой — к Адаму, Enter открывает карточку у звезды (диалог) с фокусом на первом имени «Родства» (Ева), Tab — к следующей строке (Каин); Escape закрывает, фокус на холсте, кольцо — на Адаме',
     run: async (p) => {
       await setup(p, ADAM);
       await p.locator('.sky canvas').focus();
@@ -250,10 +257,10 @@ export const peek6: Scenario[] = [
       await p.keyboard.press('Enter');
       await p.waitForTimeout(700);
       const f1 = await p.evaluate(() => ({ t: (document.activeElement as HTMLElement | null)?.innerText?.trim() ?? '', dlg: document.activeElement?.closest('[role="dialog"]')?.getAttribute('aria-label') ?? '' }));
-      if (f1.t !== 'Информация' || !/^Адам/.test(f1.dlg)) return fail(`фокус после Enter: «${f1.t}» в «${f1.dlg}»`);
+      if (f1.t !== 'Ева' || !/^Адам/.test(f1.dlg)) return fail(`фокус после Enter: «${f1.t}» в «${f1.dlg}»`);
       await p.keyboard.press('Tab');
       const f2 = await p.evaluate(() => (document.activeElement as HTMLElement | null)?.innerText?.trim() ?? '');
-      if (f2 !== 'Свернуть ветвь') return fail(`Tab: «${f2}»`);
+      if (f2 !== 'Каин') return fail(`Tab: «${f2}»`);
       await p.keyboard.press('Escape');
       await p.waitForTimeout(400);
       if (await p.locator('.sky .dotcard').count()) return fail('Escape не закрыл карточку');
@@ -264,7 +271,7 @@ export const peek6: Scenario[] = [
   },
   {
     n: 686,
-    title: 'Решение 76: «Информация» разворачивает свёрнутую в корешок карточку лица и ставит фокус на её заголовок',
+    title: 'Решения 76, 77: «Карточка» (прежде «Информация») разворачивает свёрнутую в корешок карточку лица и ставит фокус на её заголовок',
     run: async (p) => {
       await setup(p, ADAM);
       const fold = p.locator('.folio button', { hasText: 'Свернуть карточку' });
@@ -277,7 +284,7 @@ export const peek6: Scenario[] = [
       await p.mouse.click(a.x, a.y);
       await p.waitForTimeout(800);
       if (!(await cardBox(p))) return fail('нет карточки у точки');
-      await card(p).locator('.dc-cmds button', { hasText: 'Информация' }).click();
+      await card(p).locator('.dc-cmds button', { hasText: /^Карточка$/ }).click();
       await p.waitForTimeout(1000);
       if (await p.locator('.folio.spine').count()) return fail('карточка осталась корешком');
       const f = await p.evaluate(() => document.activeElement?.id ?? '');
@@ -309,7 +316,7 @@ export const peek6: Scenario[] = [
   },
   {
     n: 688,
-    title: 'Решение 76, телефон 390 × 844: касание Адама — лист карточки на шапке, карточка у точки — у нижнего края неба над листом, во всю ширину неба, звезду не закрывает; цели 44 px; «Информация» поднимает лист до половины и закрывает карточку у точки',
+    title: 'Решения 76, 77, телефон 390 × 844: касание Адама — нижний лист на 214 px и есть карточка у звезды (образ, имя, годы, «Родство»), второй карточки над небом нет, звезда не под листом; цели 44 px; «Карточка ▴» поднимает лист',
     view: PHONE,
     run: async (p) => {
       await setup(p, { ...ADAM, hash: '#/' });
@@ -317,27 +324,28 @@ export const peek6: Scenario[] = [
       if (!a) return fail('нет звезды Адама');
       await p.touchscreen.tap(a.x, a.y);
       await p.waitForTimeout(1200);
-      const c = await cardBox(p);
-      if (!c) return fail('касание не открыло карточку у точки');
+      if (await cardBox(p)) return fail('над небом — карточка у звезды, а должен быть лист');
       const sheet = await p.locator('.folio').boundingBox();
       if (!sheet) return fail('нет листа карточки');
-      if (c.y + c.height > sheet.y + 1) return fail(`карточка у точки заходит на лист: ${Math.round(c.y + c.height)} > ${Math.round(sheet.y)}`);
-      const sky = await canvasBox(p);
-      if (c.width < sky.width * 0.6) return fail(`карточка ${Math.round(c.width)} px при небе ${Math.round(sky.width)} px`);
+      if (Math.abs(sheet.height - 214) > 16) return fail(`лист ${Math.round(sheet.height)} px`);
+      const dc = p.locator('.folio .sheet-dot .dotcard');
+      if (!(await dc.count())) return fail('в листе нет карточки у звезды');
+      const text = flat(await dc.innerText());
+      if (!/^Адам/.test(text) || !/4174–3244 гг\. до Р\. Х\./.test(text) || !(await dc.locator('.av').count())) return fail(`лист: «${text.slice(0, 120)}»`);
       const a1 = (await starAt(p, 'adam'))!;
-      if (inside(a1, c, 6)) return fail('карточка закрывает звезду');
-      const hs = await card(p).locator('button').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().height));
+      if (a1.y > sheet.y - 6) return fail('звезда под листом');
+      // цели — команды листа и «×» (имена «Родства» — ссылки в тексте: поле касания у них — псевдоэлементом, phone.css)
+      const hs = await p.locator('.folio .sheet-dot').locator('.dc-cmds button, .close').evaluateAll((els) => els.filter((e) => (e as HTMLElement).offsetParent).map((e) => e.getBoundingClientRect().height));
       if (hs.some((h) => h < 43.5)) return fail(`низкие цели: ${hs.map(Math.round).join(', ')}`);
-      await card(p).locator('.dc-cmds button', { hasText: 'Информация' }).tap();
+      await p.locator('.folio .sheet-dot .dc-cmds button', { hasText: 'Карточка' }).first().tap();
       await p.waitForTimeout(1000);
       const sheet2 = (await p.locator('.folio').boundingBox())!;
-      if (!(sheet2.height > sheet.height + 100)) return fail(`лист не поднялся: ${Math.round(sheet.height)} → ${Math.round(sheet2.height)}`);
-      return (await p.locator('.sky .dotcard').count()) ? fail('карточка у точки осталась над поднятым листом') : pass(`карточка ${Math.round(c.width)}×${Math.round(c.height)} над листом`);
+      return sheet2.height > sheet.height + 100 ? pass(`лист ${Math.round(sheet.height)} → ${Math.round(sheet2.height)} px`) : fail(`лист не поднялся: ${Math.round(sheet.height)} → ${Math.round(sheet2.height)}`);
     },
   },
   {
     n: 689,
-    title: 'Решение 76: небо «все лица» — щелчок по звезде Давида выбирает его, как прежде, без карточки у точки',
+    title: 'Решения 76, 77: небо «все лица» — щелчок по звезде Давида выбирает его и открывает у звезды карточку с «Родством» (этап 11: карточка у звезды — в любом показе)',
     run: async (p) => {
       await p.evaluate(() => sessionStorage.setItem('toledot:skymode', JSON.stringify('all')));
       await p.goto(p.url().replace(/#.*$/, '') + '#/david');
@@ -349,7 +357,9 @@ export const peek6: Scenario[] = [
       await p.mouse.click(d.x, d.y);
       await p.waitForTimeout(900);
       if (!/#\/david/.test(p.url())) return fail(`выбор: ${p.url()}`);
-      return (await p.locator('.sky .dotcard').count()) ? fail('во «всех лицах» открылась карточка у точки') : pass();
+      const c = await cardBox(p);
+      if (!c) return fail('во «всех лицах» нет карточки у звезды');
+      return (await card(p).locator('.dc-kin').count()) ? pass() : fail('в карточке нет «Родства»');
     },
   },
   {
@@ -418,7 +428,7 @@ export const peek6: Scenario[] = [
   },
   {
     n: 692,
-    title: 'Решение 76, клавиатура: Enter на звезде Иисуса Христа — фокус на «Информация»; Tab — «Родители», Enter раскрывает родителей, фокус остаётся в карточке на «Скрыть родителей»; живая область объявляет раскрытие',
+    title: 'Решения 76, 77, клавиатура: Enter на звезде Иисуса Христа — фокус на первом имени «Родства» (Иосиф); Tab — к команде «Родители», Enter раскрывает родителей, фокус остаётся в карточке на «Скрыть родителей»; живая область объявляет раскрытие',
     run: async (p) => {
       await setup(p, { work: ['iisus'], opened: ['iisus'], hash: '#/iisus', start: 'jesus' });
       await p.locator('.sky canvas').focus();
@@ -433,8 +443,9 @@ export const peek6: Scenario[] = [
       await p.keyboard.press('Enter');
       await p.waitForTimeout(700);
       const t = () => p.evaluate(() => (document.activeElement?.closest('.dotcard') ? (document.activeElement as HTMLElement).innerText.trim() : `вне карточки: ${document.activeElement?.tagName}`));
-      if ((await t()) !== 'Информация') return fail(`фокус после Enter: «${await t()}»`);
-      await p.keyboard.press('Tab');
+      if ((await t()) !== 'Иосиф') return fail(`фокус после Enter: «${await t()}»`);
+      // «Родство» — строка за строкой, затем команды карточки; «Родители» — не дальше восьми Tab
+      for (let i = 0; i < 8 && (await t()) !== 'Родители'; i++) await p.keyboard.press('Tab');
       if ((await t()) !== 'Родители') return fail(`Tab: «${await t()}»`);
       await p.keyboard.press('Enter');
       await p.waitForTimeout(1300);

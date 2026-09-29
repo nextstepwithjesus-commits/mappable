@@ -120,17 +120,19 @@ describe('семьи (MAP-54, MAP-55)', () => {
     expect(txt?.replace(/\u00a0/g, ' ')).toBe('годы — по порядку 1 Пар 3:5–8, выв.');
     expect(trails.orderNote(['adam'])).toBe(null);
   });
-  it('у детей Давида от разных матерей — пометы «от Вирсавии», «от Маахи»: у детей, раз верх скобы на лентах', () => {
+  it('у детей Давида от разных матерей — имя матери у ромба её союза на следе Давида (этап 11, Г8; прежде — пометы «от Вирсавии» у детей)', () => {
+    // этап 11 (STAGE11 § 2): у каждого союза свой ромб; мать далеко от детей — ромб на следе отца с её именем (Г8);
+    // пометы «от …» у гребёнок и пометы порядка (Г9) ушли с неба — порядок виден по положению, его ссылки — в подсказке
     const { s, texts } = drawSky(window(-1010, 60, 6));
     const notes = texts.map((q) => q.t.replace(/\u00a0/g, ' '));
-    expect(notes).toContain('от Вирсавии');
-    expect(notes.some((t) => /^от (Маахи|Ахиноамы|Авигеи|Аггифы|Авиталы|Эглы)$/.test(t))).toBe(true);
+    expect(notes.filter((t) => /^от [А-ЯЁ]/.test(t))).toEqual([]);
+    const names = s.labelStats().boxes.filter((b) => b.kind === 'plate' && b.text).map((b) => b.text);
+    expect(names).toContain('Вирсавия');
     expect(s.labelStats().overlaps).toBe(0);
-    // помета порядка — только у семьи выбранного лица (решение 41; MAP-73): без выбора её нет
-    expect(notes.some((t) => /^годы — по порядку /.test(t))).toBe(false);
-    // выбран Давид — у его детей, чей год оценён по порядку перечисления, «годы — по порядку 1 Пар 3:…, выв.»
+    expect(notes.some((t) => /по порядку/.test(t))).toBe(false);
+    // выбран Давид — помет порядка на небе тоже нет
     const sel = drawSky(window(-1010, 60, 6), { selected: 'david' });
-    expect(sel.texts.map((q) => q.t.replace(/\u00a0/g, ' ')).some((t) => /^годы — по порядку 1 Пар 3:\d+–\d+, выв\.$/.test(t))).toBe(true);
+    expect(sel.texts.map((q) => q.t.replace(/\u00a0/g, ' ')).some((t) => /по порядку/.test(t))).toBe(false);
     expect(sel.s.labelStats().overlaps).toBe(0);
   });
 });

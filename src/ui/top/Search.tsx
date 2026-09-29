@@ -12,14 +12,15 @@ import { addToWork, removeFromWork, workKeyText, workSet } from '../work.ts';
 import { CHAPTERS, openChapter } from '../panels/Chapter.tsx';
 
 /**
- * «В работу» — вторичная команда строки-лица поиска (J3): щелчок по надписи справа или Shift+Enter в поле. Лицо уже
- * в работе — «в работе», повторное нажатие убирает его из набора. Что сделано, объявляется той же фразой, что у клавиши
- * В на небе (IX-84): «Иессей взят в работу; в наборе 5 лиц». Проп rowCmd — у Combobox.
+ * «В набор» — вторичная команда строки-лица поиска (J3; этап 11 — одно слово «набор», Я30): щелчок по надписи справа
+ * или Shift+Enter в поле. Лицо уже в наборе — «в наборе», повторное нажатие убирает его из набора. Что сделано,
+ * объявляется той же фразой, что у клавиши В на небе (IX-84): «Иессей добавлен в набор; в наборе 5 лиц». Проп rowCmd —
+ * у Combobox.
  */
 export const searchRowCmd: NonNullable<ComboboxProps['rowCmd']> = {
-  label: (id: string) => (workSet.value.has(id) ? 'в работе' : 'в работу'),
-  title: 'Взять лицо в рабочий набор или убрать из него (Shift+Enter)',
-  hint: 'Shift+Enter — взять выбранное лицо в работу или убрать из набора',
+  label: (id: string) => (workSet.value.has(id) ? 'в наборе' : 'в набор'),
+  title: 'Добавить лицо в набор или убрать из него (Shift+Enter)',
+  hint: 'Shift+Enter — добавить выбранное лицо в набор или убрать из набора',
   run: (id: string) => {
     const had = workSet.peek().has(id);
     if (had) removeFromWork(id);

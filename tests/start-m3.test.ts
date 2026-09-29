@@ -1,10 +1,13 @@
 /**
- * Пять начал, «Начать заново», строка раскрытия, «В работе», условные знаки и «О карте» (решения 68, 70, 72; задача M3):
+ * Пять начал, «Начать заново», строка показа, панель «Набор», условные знаки и «О карте» (решения 68, 70, 72; задача M3;
+ * этап 11 — решения 77, 81):
  *  — вступление при первом посещении предлагает пять начал, быстрые входы остаются ниже; выбранное начало — без выбора;
- *  — выбор, который заменяет набор больше одного лица, сначала спрашивает; «всё небо» набор не трогает;
- *  — строка режима «набор» в раскрытии: «Раскрыто 12 лиц» со склонением;
- *  — группы «В работе» после раскрытия Адам → союз → Каин → союз читаются: «Адам и его семья (5)», «Семья Каина (1)»;
- *  — справка называет союз на небе, «+» нераскрытых союзов, подсветку ветвей, пять начал и «Начать заново».
+ *  — подтверждение — только у начал, которые заменяют набор («С Адама», «С Иисуса Христа»), при наборе больше одного
+ *    лица; «Родословие Иисуса Христа», «Ключевые лица» и «Всё небо» — показы, набор они не трогают (этап 11, § 5);
+ *  — строки «Раскрыто N лиц» больше нет: набор называет строка показа «На небе: набор — 12 лиц» (этап 11, § 5);
+ *  — группы панели «Набор» после раскрытия Адам → союз → Каин → союз читаются: «Адам и его семья (5)», «Семья Каина (1)»;
+ *  — справка называет союз на небе, «+» нераскрытых союзов, подсветку ветвей, пять начал и «Начать заново»; «Клавиши» —
+ *    карточку у звезды в любом показе и карточку союза у ромба (решение 77).
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -15,7 +18,8 @@ import { byId } from '../src/data/atlas.ts';
 import { expandUnion, KEY_IDS, openPerson, start, startWith, STARTS, unionsOf } from '../src/ui/reveal.ts';
 import { skyMode, workSet, type WorkEntry } from '../src/ui/work.ts';
 import { needsConfirm, replaceText, StartList, startNote } from '../src/ui/sky/Controls.tsx';
-import { Cartouche, revealing, revealLineText, workLineText } from '../src/ui/sky/Overlays.tsx';
+import { Cartouche } from '../src/ui/sky/Overlays.tsx';
+import { ShowBar } from '../src/ui/sky/ShowBar.tsx';
 import { groupTitle, kindsOf, workGroups } from '../src/ui/panels/Work.tsx';
 import { KEY_ROWS, POINTER_ROWS } from '../src/ui/top/Keys.tsx';
 import { RESTART_LABEL } from '../src/ui/top/TopBar.tsx';
@@ -38,10 +42,13 @@ describe('пять начал (решение 68)', () => {
     expect(flat(startNote('all'))).toBe(`все ${flat(String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' '))} ${form} сразу`);
     expect(flat(startNote('key'))).toMatch(new RegExp(`${KEY_IDS.length} (лицо|лица|лиц)$`));
   });
-  it('подтверждение — только если начало заменяет набор больше чем из одного лица; «всё небо» набор не трогает', () => {
+  it('подтверждение — только если начало заменяет набор больше чем из одного лица; показы набор не трогают', () => {
     expect(needsConfirm('adam', 1)).toBe(false);
     expect(needsConfirm('adam', 2)).toBe(true);
-    expect(needsConfirm('lines', 104)).toBe(true);
+    expect(needsConfirm('jesus', 2)).toBe(true);
+    // этап 11 (§ 5, решение 81): «Родословие Иисуса Христа» и «Ключевые лица» — показы, набор прежний (show.ts, Q2)
+    expect(needsConfirm('lines', 104)).toBe(false);
+    expect(needsConfirm('key', 104)).toBe(false);
     expect(needsConfirm('all', 104)).toBe(false);
   });
   it('вопрос — с родительным падежом числа: «Набор из 21 лица», «из 104 лиц»', () => {
@@ -50,14 +57,17 @@ describe('пять начал (решение 68)', () => {
     expect(flat(replaceText(104))).toBe('Набор из 104 лиц будет заменён');
     expect(flat(replaceText(1001))).toBe('Набор из 1 001 лица будет заменён');
   });
-  it('выбор начала: набор начала, небо «набор»; «всё небо» — небо «все лица», набор прежний', () => {
+  it('выбор начала: «Ключевые лица» — показ ключевых лиц, набор прежний; «всё небо» — небо «все лица», набор прежний', () => {
+    // этап 11 (§ 5, решение 81): «Ключевые лица» — показ, а не замена набора; небо показывает KEY_IDS (show.ts)
+    startWith('adam');
     startWith('key');
     expect(start.value).toBe('key');
-    expect(workSet.value.size).toBe(KEY_IDS.length);
+    expect([...workSet.value.keys()]).toEqual(['adam']);
+    expect(KEY_IDS.length).toBeGreaterThan(40);
     expect(skyMode.value).toBe('work');
     startWith('all');
     expect(skyMode.value).toBe('all');
-    expect(workSet.value.size).toBe(KEY_IDS.length);
+    expect([...workSet.value.keys()]).toEqual(['adam']);
   });
   it('список: пять кнопок с названием и подсказкой, текущее начало отмечено aria-current', () => {
     startWith('jesus');
@@ -97,23 +107,22 @@ describe('вступление (решение 68)', () => {
   });
 });
 
-describe('строка режима «набор» в раскрытии (решение 72)', () => {
-  it('раскрытие — начало выбрано и это не «всё небо»', () => {
-    expect(revealing(null)).toBe(false);
-    expect(revealing('all')).toBe(false);
-    expect(revealing('adam')).toBe(true);
-    expect(revealing('key')).toBe(true);
-  });
-  it('«Раскрыто N лиц» со склонением; прежняя строка набора не меняется', () => {
-    expect(flat(revealLineText(1))).toBe('Раскрыто 1 лицо');
-    expect(flat(revealLineText(22))).toBe('Раскрыто 22 лица');
-    expect(flat(revealLineText(12))).toBe('Раскрыто 12 лиц');
-    expect(flat(revealLineText(104))).toBe('Раскрыто 104 лица');
-    expect(workLineText(12, null)).toBe('На небе — только рабочий набор, 12 лиц');
+describe('строка показа вместо строки «Раскрыто N лиц» (этап 11, § 5; прежде — решение 72)', () => {
+  it('набор после раскрытия: «На небе: набор — 5 лиц» со склонением, «изменить» и «всё небо»; слова «Раскрыто» нет', () => {
+    startWith('adam');
+    const one = flat(renderToString(h(ShowBar, {})));
+    expect(one).toContain('набор — 1 лицо');
+    expandUnion(unionsOf('adam')[0].id, 'adam');
+    const out = flat(renderToString(h(ShowBar, {})));
+    expect(out).toContain('На небе:');
+    expect(out).toContain('набор — 5 лиц');
+    expect(out).toMatch(/>изменить</);
+    expect(out).toMatch(/>всё небо</);
+    expect(out).not.toMatch(/Раскрыто/);
   });
 });
 
-describe('«В работе» после раскрытия Адам → Ева, Каин, Авель, Сиф → Каин → Енох (решение 72)', () => {
+describe('панель «Набор» после раскрытия Адам → Ева, Каин, Авель, Сиф → Каин → Енох (решение 72; этап 11 — «Набор» вместо «В работе»)', () => {
   it('две группы: «Адам и его семья (5)» и «Семья Каина (1)»', () => {
     startWith('adam');
     expandUnion(unionsOf('adam')[0].id, 'adam');
@@ -148,20 +157,22 @@ describe('справка (решения 67–72)', () => {
     expect(RESTART_LABEL.replace(/…$/, '')).toBe('Начать заново');
     expect(about).toContain('«Начать заново»');
   });
-  it('«Клавиши»: щелчок по лицу в небе «набор» и по точке союза — карточка у точки; Enter на звезде или точке союза (решение 76)', () => {
+  it('«Клавиши»: щелчок по звезде в любом показе и по ромбу союза — карточка у знака; Enter на звезде или ромбе союза (решения 76, 77)', () => {
     const hows = POINTER_ROWS.map((r) => r.how);
-    expect(hows).toContain('щелчок по лицу в небе «набор»');
-    expect(hows).toContain('щелчок по точке союза');
-    expect(POINTER_ROWS.find((r) => r.how === 'щелчок по лицу в небе «набор»')?.what).toMatch(/^карточка у звезды: «Информация».*«Продолжить ветвь».*«Родители»/);
-    expect(POINTER_ROWS.find((r) => r.how === 'щелчок по точке союза')?.what).toMatch(/^карточка у точки: «Раскрыть детей».*«Свернуть детей».*«Подробнее» — карточка союза справа/);
+    // этап 11 (решение 77): карточка у звезды — в любом показе, а не только в небе «набор»; «Информация» стала
+    // «Карточкой» (STAGE11 § 6), «Подробнее» у ромба — «Карточкой союза», как в карточке связи (§ 8)
+    expect(hows).toContain('щелчок по звезде');
+    expect(hows).toContain('щелчок по ромбу союза');
+    expect(POINTER_ROWS.find((r) => r.how === 'щелчок по звезде')?.what).toMatch(/^карточка у звезды с «Родством»: «Карточка» — подробная справа, «Только его род ▾», «Родство с…»; в показе «набор» — «Продолжить ветвь» и «Родители»/);
+    expect(POINTER_ROWS.find((r) => r.how === 'щелчок по ромбу союза')?.what).toMatch(/^карточка союза у ромба: «Раскрыть детей».*«Свернуть детей».*«Карточка союза» — подробная справа/);
     // картушей на небе больше нет (решение 76): ни одна строка «Клавиш» их не называет
     expect([...KEY_ROWS.map((r) => r.what), ...POINTER_ROWS.flatMap((r) => [r.how, r.what])].join(' ')).not.toMatch(/картуш/);
     // Enter на точке союза — после строки «Enter — открыть карточку звезды»: первая строка с Enter остаётся прежней
     const enter = KEY_ROWS.map((r, i) => ({ r, i })).filter(({ r }) => r.keys.some((k) => k.en === 'Enter'));
     expect(enter[0].r.what).toMatch(/заголовок карточки/);
-    const plate = enter.find(({ r }) => /на звезде или точке союза в небе «набор» — открыть у неё карточку/.test(r.what));
+    const plate = enter.find(({ r }) => /на звезде или ромбе союза — открыть у неё карточку/.test(r.what));
     expect(plate && plate.i).toBeGreaterThan(enter[0].i);
     expect(plate?.r.what).toMatch(/Escape — закрыть/);
-    expect(KEY_ROWS.find((r) => r.keys.some((k) => k.en === '←') && !r.mod)?.what).toMatch(/к ближайшей звезде или точке союза/);
+    expect(KEY_ROWS.find((r) => r.keys.some((k) => k.en === '←') && !r.mod)?.what).toMatch(/к ближайшей звезде или ромбу союза/);
   });
 });

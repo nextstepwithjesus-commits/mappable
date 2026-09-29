@@ -16,6 +16,7 @@ import { nameMatcher, norm, stripBrackets } from '../src/engine/text.ts';
 import type { Person, Volume, Group, Epoch } from '../src/data/types.ts';
 import { ordinalStem } from '../src/engine/chronology.ts';
 import { overlap, REPEAT_SHARE } from '../src/ui/text/repeat.ts';
+import { checkGroups } from './groups-check.ts';
 
 const args = process.argv.slice(2);
 const quiet = args.includes('--quiet');
@@ -580,6 +581,9 @@ if (!volumeMode) {
   }
   for (const r of registry.persons) if (!byId.has(r.id)) warn(`registry:${r.id}`, `лицо из реестра (том ${r.owner}) ещё не создано`);
 }
+
+// ---------- созвездия: разделы, вложенность, родоначальники (data/groups.json; этап 11, решение 82) ----------
+if (!volumeMode) for (const i of checkGroups(groups, byId)) err(i.where, i.msg);
 
 // ---------- списки без родства (data/lists.json; E2) ----------
 if (!volumeMode && existsSync(join(ROOT, 'data/lists.json'))) {

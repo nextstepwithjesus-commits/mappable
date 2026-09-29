@@ -69,12 +69,14 @@ describe('порог щелчка по типу указателя (D3; IX-10, M
 describe('адрес хранит вид (D8; IX-43, IX-44, UX-30)', () => {
   const has = (id: string) => byId.has(id);
   it('лицо, окно, панель, пара, масштаб, модель и режимы — туда и обратно', () => {
+    // этап 11 (решение 81): «только линии Мессии» — это показ, он пишется полем «~vl»; прежнее «~o1» открывается тем же показом
     const a = { id: 'david', view: { year: -1010, width: 240, lane: 2.46 }, panel: 'epochs' as const, second: 'ioav', first: 'saruiya', scale: 0 as const, model: 'mt-short', only: true, tiers: true };
     const s = formatAddress(a);
-    expect(s).toBe('#/david~y-1010~w240~l2.5~pepochs~asaruiya~bioav~s0~mmt-short~o1~e1');
+    expect(s).toBe('#/david~y-1010~w240~l2.5~pepochs~asaruiya~bioav~s0~mmt-short~e1~vl');
     const b = parseAddress(s, has);
-    expect(b).toMatchObject({ route: 'atlas', id: 'david', full: true, panel: 'epochs', first: 'saruiya', second: 'ioav', scale: 0, model: 'mt-short', only: true, tiers: true });
+    expect(b).toMatchObject({ route: 'atlas', id: 'david', full: true, panel: 'epochs', first: 'saruiya', second: 'ioav', scale: 0, model: 'mt-short', show: { kind: 'lines' }, tiers: true });
     expect(b.view).toEqual({ year: -1010, width: 240, lane: 2.5 });
+    expect(parseAddress('#/david~y-1010~w240~l2.5~o1', has).show).toEqual({ kind: 'lines' });
   });
   it('только буквы, цифры и «. _ ~ -» после «#/» — ограничение опубликованной версии', () => {
     for (const s of [

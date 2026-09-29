@@ -2,40 +2,48 @@
  * Адрес страницы ↔ вид атласа (ТЗ § 3.7, глубокие ссылки; D8; IX-43, 44; UX-30).
  *
  * В адресе — лицо, окно неба (год середины, ширина в годах, полоса середины), панель, пара «Родства» или «Разворота»,
- * масштаб времени, модель хронологии, «только линии Мессии» и ярусы эпох. Опубликованная версия получает извне только
- * «простой» якорь из букв, цифр и «. _ ~ -», поэтому поля разделены «~», у каждого — буква-ключ:
+ * масштаб времени, модель хронологии, показ неба, выбранная связь и ярусы эпох. Опубликованная версия получает извне
+ * только «простой» якорь из букв, цифр и «. _ ~ -», поэтому поля разделены «~», у каждого — буква-ключ:
  *
- *   #/david~y-1010~w240~l2.5~h1.5~pepochs~s0~mmt-long~o1~e1~k1~ndavid.iessey.ovid
+ *   #/david~y-1010~w240~l2.5~h1.5~pepochs~s0~mmt-long~e1~vs~ndavid.iessey.ovid~ck.iessey._._.david
  *
- *   y — год середины окна (исторический: −1010 = 1010 г. до Р. Х.), w — ширина окна в годах, l — полоса середины,
- *   h — пропорция полос (J1: множитель к обычной высоте полосы; нет поля — пропорции по умолчанию),
- *   p — панель, a и b — первое и второе лицо пары, s — масштаб времени (0 истинный, 1 по насыщенности),
- *   m — модель хронологии, o1 — только линии Мессии, e1 — ярусы эпох,
- *   k1 — небо показывает только рабочий набор (решение 34; IX-67), n — сам набор, если в нём не больше 12 лиц:
- *   id через точку (длиннее — только режим; об этом — подсказка строки набора),
- *   t1 — главная область показывает древо карточек, а не небо (решение 73); окна неба (y, w, l) у древа нет.
+ *   y — год середины окна (исторический: −1010 = 1010 г. до Р. Х.), w — ширина окна в годах, l — полоса середины
+ *   (в семейной укладке — её виртуальная полоса), h — пропорция полос (J1: множитель к обычной высоте полосы; нет поля —
+ *   пропорции по умолчанию), p — панель, a и b — первое и второе лицо пары, s — масштаб времени (0 истинный, 1 по
+ *   насыщенности), m — модель хронологии, e1 — ярусы эпох,
+ *   v — показ неба (этап 11, решение 81; src/ui/work.ts, showKey): «vl» — линии Мессии, «vk» — ключевые лица, «vs» —
+ *   набор, «vg.nahorites» — созвездия, «vr.iuda.d.0.f» — род лица; всё небо — без поля; x — связи наружу у созвездий
+ *   (0 — без связей, 2 — с роднёй; обрывками — без поля); n — набор показа «набор», если в нём не больше 12 лиц: id через
+ *   точку; c — выбранная связь (src/engine/linkkey.ts); u — карточка союза в листе.
  *
- * Прежние адреса «#/david» и «#/moisey?v=…» работают: лицо выбирается, небо летит к нему.
- * Сдвиг неба и режимы пишутся через replaceState с задержкой, лицо, панель и пара — через pushState,
- * поэтому «назад» сначала закрывает панель, затем возвращает прежнее лицо вместе с его окном — переходом за 280 мс,
- * и адрес при этом остаётся адресом записи (решение 46; IX-74).
+ * Прежние адреса работают: «#/david» и «#/moisey?v=…» выбирают лицо, небо летит к нему; «~o1» открывает линии Мессии,
+ * «~k1» и «~t1» — набор (древа больше нет, решение 77).
+ * Сдвиг неба, раскрытие и свёртка пишутся через replaceState с задержкой; лицо, панель, пара, показ и выбранная связь —
+ * через pushState, поэтому «назад» сначала закрывает панель, затем возвращает прежнее лицо, показ и связь вместе
+ * с окном — переходом за BACK_MS (200 мс; Я28 — не дольше 300 мс), и адрес при этом остаётся адресом записи (решение 46;
+ * IX-74).
  *
  * Набор из чужой ссылки — временный просмотр (решение 45; IX-69): свой набор читателя не меняется. Записи истории
  * атласа помечены (HistoryMark): их «n» — свой набор в тот момент, и «назад» не выдаёт его за чужую ссылку.
  */
 import { batch, effect } from '@preact/signals';
-import { byId, models, modelInfo } from '../data/atlas.ts';
+import { byId, graph, lineMembership, models, modelInfo } from '../data/atlas.ts';
+import { linkKeyString, parseLinkKey, type LinkKey } from '../engine/linkkey.ts';
 import {
-  selected, panel, first, second, lambda, modelId, onlyLines, epochMode, searchNotice, setPair, clearPair, PANELS, type Panel,
+  selected, panel, first, second, lambda, modelId, epochMode, searchNotice, setPair, clearPair, PANELS, type Panel,
 } from '../state.ts';
 import { damerau } from '../engine/search.ts';
 import { toAstro, toHist } from '../engine/years.ts';
 import { KX_MAX, KX_MIN, LANES_MAX, LANES_MIN } from '../render/camera.ts';
 import { skyRef, viewTick } from './common.tsx';
-import { HISTORY_MS, holdLinesRows, reduced, setStartLanes } from './sky/view.ts';
-import { EMPTY_LINK_NOTICE, WORK_URL_MAX, linkSet, linkSetFor, shownSet, skyMode, workNotice, workSet } from './work.ts';
+import { HISTORY_MS, holdLinesRows, inView, keepInView, reduced, setStartLanes } from './sky/view.ts';
+import {
+  EMPTY_LINK_NOTICE, WORK_URL_MAX, linkSet, linkSetFor, parseShow, setShowState, show, showHistory, showKey, showLinksField, shownSet, workNotice,
+  workSet, type Show,
+} from './work.ts';
 import { selectFromHistory } from './stack.ts';
-import { atlasView, restoreReveal, selectedUnion, selectUnion } from './reveal.ts';
+import { restoreReveal, selectedUnion, selectUnion, unionById } from './reveal.ts';
+import { selectedLink } from './linkstate.ts';
 
 export interface View {
   /** год середины окна, исторический */
@@ -57,17 +65,20 @@ export interface Address {
   second?: string;
   scale?: 0 | 1;
   model?: string;
-  only?: boolean;
   tiers?: boolean;
   /** пропорция полос (J1): множитель к обычной высоте полосы */
   lanes?: number;
-  /** небо показывает только рабочий набор (решение 34) */
-  work?: boolean;
-  /** рабочий набор — если в нём не больше WORK_URL_MAX лиц */
+  /** показ неба (этап 11; поле «v» с «x», прежние «o1», «k1», «t1»); нет — адрес показа не называет */
+  show?: Show;
+  /** набор показа «набор» — если в нём не больше WORK_URL_MAX лиц */
   set?: string[];
   /** карточка союза в листе (решение 71): id союза, src/engine/unions.ts */
   union?: string;
-  /** главная область — древо карточек, а не небо (решение 73) */
+  /** выбранная связь (этап 11, решение 83; поле «c») */
+  link?: LinkKey;
+  /** прежние поля до этапа 11 — только разбор: «o1» (только линии Мессии), «k1» (набор), «t1» (древо) */
+  only?: boolean;
+  work?: boolean;
   tree?: boolean;
   /** в адресе есть поля вида: он описывает весь вид, а не только лицо */
   full: boolean;
@@ -106,6 +117,8 @@ export function parseAddress(hash: string, has: (id: string) => boolean): Addres
   if (id && ID.test(id) && has(id)) a.id = id;
   else if (id) a.bad = id;
   const v: Partial<View> = {};
+  let showField: string | null = null;
+  let linksField: string | null = null;
   for (const f of fields) {
     const k = f[0];
     const val = f.slice(1);
@@ -122,16 +135,47 @@ export function parseAddress(hash: string, has: (id: string) => boolean): Addres
     else if (k === 'h' && NUM.test(val) && Number(val) > 0) a.lanes = Math.max(LANES_MIN, Math.min(LANES_MAX, Number(val)));
     else if (k === 'k') a.work = val === '1';
     else if (k === 't') a.tree = val === '1';
+    else if (k === 'v') showField = val;
+    else if (k === 'x') linksField = val;
     else if (k === 'n') {
       const ids = [...new Set(val.split('.'))].filter((x) => ID.test(x) && has(x)).slice(0, WORK_URL_MAX);
       if (ids.length) a.set = ids;
     } else if (k === 'u') {
       const uid = unionFromField(val);
       if (uid) a.union = uid;
+    } else if (k === 'c') {
+      const key = parseLinkKey(val);
+      if (key && linkExists(key, has)) a.link = key;
     }
   }
   if (v.year !== undefined && v.width !== undefined && v.lane !== undefined && v.year !== 0) a.view = v as View;
+  // показ: поле «v»; прежние адреса — «o1» (только линии Мессии), «k1» и «t1» (набор; древа больше нет)
+  const sh = showField !== null ? parseShow(showField, linksField) : null;
+  if (sh && (sh.kind !== 'lineage' || has(sh.id))) a.show = sh;
+  else if (a.only) a.show = { kind: 'lines' };
+  else if (a.work || a.tree) a.show = { kind: 'set' };
   return a;
+}
+
+/**
+ * Есть ли связь в данных: союз и его ребёнок или супруг, шаг линии Мессии, родство словами Писания. has — есть ли лицо
+ * (адрес разбирается и без данных атласа в тестах, но союзы и линии берутся из атласа).
+ */
+export function linkExists(k: LinkKey, has: (id: string) => boolean = (id) => byId.has(id)): boolean {
+  switch (k.kind) {
+    case 'child':
+      return has(k.child) && !!unionById(k.union)?.kids.includes(k.child);
+    case 'spouse': {
+      const u = unionById(k.union);
+      return has(k.person) && !!u && (u.a === k.person || u.b === k.person);
+    }
+    case 'union':
+      return !!unionById(k.union);
+    case 'step':
+      return has(k.child) && lineMembership[k.line].has(k.child);
+    case 'kin':
+      return has(k.a) && has(k.b) && (graph.kinOf.get(k.a) ?? []).some((e) => (e.from === k.a && e.to === k.b) || (e.from === k.b && e.to === k.a));
+  }
 }
 
 /** Адрес из вида: только буквы, цифры и «. _ ~ -» после «#/» (ограничение опубликованной версии). */
@@ -145,14 +189,21 @@ export function formatAddress(a: Omit<Address, 'route' | 'full' | 'bad'>): strin
   if (a.second) f.push(`b${a.second}`);
   if (a.scale !== undefined) f.push(`s${a.scale}`);
   if (a.model) f.push(`m${a.model}`);
-  if (a.only) f.push('o1');
   if (a.tiers) f.push('e1');
-  if (a.work) f.push('k1');
-  if (a.work && a.set?.length && a.set.length <= WORK_URL_MAX) f.push(`n${a.set.join('.')}`);
-  if (a.tree) f.push('t1');
+  // показ (этап 11): всё небо — без поля; прежние флажки «только линии» и «набор» пишутся показом
+  const sh: Show | undefined = a.show ?? (a.only ? { kind: 'lines' } : a.work || a.tree ? { kind: 'set' } : undefined);
+  if (sh && sh.kind !== 'all') {
+    f.push(`v${showKey(sh)}`);
+    const x = showLinksField(sh);
+    if (x) f.push(`x${x}`);
+  }
+  if (sh?.kind === 'set' && a.set?.length && a.set.length <= WORK_URL_MAX) f.push(`n${a.set.join('.')}`);
   // карточка союза открыта в листе выбранного лица (решение 71)
   const u = a.id && a.union ? unionField(a.union) : null;
   if (u) f.push(`u${u}`);
+  // выбранная связь (решение 83)
+  const c = a.link ? linkKeyString(a.link) : null;
+  if (c) f.push(`c${c}`);
   return `#/${a.id ?? ''}${f.map((x) => `~${x}`).join('')}`;
 }
 
@@ -192,8 +243,15 @@ export function cameraFor(v: View): { x: number; lane: number; kx: number } | nu
 }
 
 /**
- * Поставить окно: сразу (первый показ) или переходом за 280 мс без «отдалить — приблизить» («назад», «вперёд»; решение 46,
- * IX-74), при ослабленном движении — сразу; камера держит его в своих пределах.
+ * Переход окна при «назад» и «вперёд», мс. Я28 (этап 11): прежний показ и окно возвращаются за ≤ 300 мс вместе с кадром
+ * смены плана (смена показа — до 50 мс на построение неба) и кадром отклика, поэтому сам переход короче общего
+ * HISTORY_MS (src/ui/sky/view.ts) — без «отдалить — приблизить», как по решению 46 (IX-74).
+ */
+export const BACK_MS = Math.min(HISTORY_MS, 200);
+
+/**
+ * Поставить окно: сразу (первый показ) или переходом за BACK_MS без «отдалить — приблизить» («назад», «вперёд»;
+ * решение 46, IX-74), при ослабленном движении — сразу; камера держит его в своих пределах.
  */
 function applyView(v: View, animate: boolean) {
   const s = skyRef.current;
@@ -202,7 +260,7 @@ function applyView(v: View, animate: boolean) {
   const c = s.cam;
   const [cx, cy] = c.vpCenter();
   const to = c.constrain({ x0: t.x - cx / t.kx, kx: t.kx, laneTop: t.lane + cy / c.kyFor(t.kx) });
-  if (animate && !reduced()) c.zoomTo(to, HISTORY_MS, skyRef.redraw);
+  if (animate && !reduced()) c.zoomTo(to, BACK_MS, skyRef.redraw);
   else {
     c.stop();
     c.set(to);
@@ -225,14 +283,18 @@ export function nearIds(bad: string, n = 5): string[] {
     .map((x) => x.id);
 }
 
-/** Что пишется новой записью истории: лицо, панель, пара. Первое лицо пары — только если оно не выбранное. */
+/**
+ * Что пишется новой записью истории: лицо, панель, пара, карточка союза, показ и выбранная связь. Первое лицо пары —
+ * только если оно не выбранное. Состав набора в ключ не входит: раскрытие и свёртка пишутся в ту же запись.
+ */
 const pushKey = () => {
   const id = selected.value;
   const b = second.value;
   const a = first.value;
-  // карточка союза — своя запись истории: «назад» возвращает карточку лица (решение 71)
-  // небо и древо — разные записи: «назад» и «вперёд» переходят между ними (решение 73)
-  return `${id ?? ''}|${panel.value ?? ''}|${b && a && a !== id ? a : ''}|${b ?? ''}|${selectedUnion.value ?? ''}|${atlasView.value}`;
+  const sh = show.value;
+  const c = selectedLink.value;
+  // карточка союза — своя запись истории: «назад» возвращает карточку лица (решение 71); показ и связь — тоже (этап 11)
+  return `${id ?? ''}|${panel.value ?? ''}|${b && a && a !== id ? a : ''}|${b ?? ''}|${selectedUnion.value ?? ''}|${showKey(sh)}${showLinksField(sh) ?? ''}|${c ? linkKeyString(c) : ''}`;
 };
 
 /** Вид атласа сейчас — в полях адреса. */
@@ -242,22 +304,20 @@ function snapshot(): Omit<Address, 'route' | 'full' | 'bad'> {
   const a = first.peek();
   return {
     id,
-    // у древа нет окна неба (решение 73); небо, которое только что ушло с экрана, окна в адрес не пишет
-    view: atlasView.peek() === 'tree' ? undefined : (currentView() ?? undefined),
+    view: currentView() ?? undefined,
     panel: panel.peek() ?? undefined,
     first: b && a && a !== id ? a : undefined,
     second: b ?? undefined,
     scale: lambda.peek() === 0 ? 0 : 1,
     model: modelId.peek(),
-    only: onlyLines.peek(),
     tiers: epochMode.peek(),
     // своя пропорция читателя, а не временное сжатие строк вписыванием группы (IX-70)
     lanes: skyRef.current?.cam.ownLanes,
-    work: skyMode.peek() === 'work',
+    show: show.peek(),
     // набор, который показывает небо: из ссылки, пока его смотрят, — ссылка остаётся той же (IX-69)
     set: [...shownSet.peek().keys()],
     union: selectedUnion.peek() ?? undefined,
-    tree: atlasView.peek() === 'tree',
+    link: selectedLink.peek() ?? undefined,
   };
 }
 
@@ -279,19 +339,32 @@ export function applyWork(a: Pick<Address, 'work' | 'set'>, own: boolean) {
   const mine = workSet.peek();
   if (!a.work) {
     linkSet.value = null;
-    skyMode.value = 'all';
+    setShowState({ kind: 'all' });
     return;
   }
   const l = !own && a.set ? linkSetFor(a.set, mine) : null;
   linkSet.value = l;
   if (!l && !a.set && !mine.size) {
-    skyMode.value = 'all';
+    setShowState({ kind: 'all' });
     // строка — только для ссылки извне; своя запись истории просто показывает все лица
     if (!own) workNotice.value = EMPTY_LINK_NOTICE;
     return;
   }
   // ссылка на пустой набор своим уже не станет: пустой свой — все лица
-  skyMode.value = l || mine.size ? 'work' : 'all';
+  setShowState(l || mine.size ? { kind: 'set' } : { kind: 'all' });
+}
+
+/**
+ * Показ из адреса (этап 11): набор — через applyWork (набор ссылки, пустой свой набор); остальные показы — как есть,
+ * набор ссылки при этом уходит (IX-69).
+ */
+export function applyShow(sh: Show, a: Pick<Address, 'set'>, own: boolean) {
+  if (sh.kind === 'set') {
+    applyWork({ work: true, set: a.set }, own);
+    return;
+  }
+  linkSet.value = null;
+  setShowState(sh);
 }
 
 /** Режимы, модель, панель, пара и лицо из адреса; окно ставится отдельно, когда небо готово. history — это «назад» или «вперёд». */
@@ -301,13 +374,12 @@ function applyState(a: Address, history = false, init = false) {
     if (a.scale !== undefined) lambda.value = a.scale;
     if (a.model && modelInfo.some((m) => m.id === a.model)) modelId.value = a.model;
     if (a.full) {
-      onlyLines.value = !!a.only;
       epochMode.value = !!a.tiers;
-      // адрес с полями вида описывает и главную область: «t1» — древо, без него — небо (решение 73)
-      atlasView.value = a.tree ? 'tree' : 'sky';
-      // рабочий набор — раньше режима: небо сразу показывает набор ссылки. Новый сеанс по адресу без «k1» после
-      // раскрытия — небо «набор», как в прошлый раз (решение 68; src/ui/reveal.ts)
-      if (!(init && !a.work && restoreReveal)) applyWork(a, !!mark && !mark.link);
+      // показ: адрес с полями вида описывает и его; без поля показа — всё небо. Новый сеанс по такому адресу после
+      // выбранного начала — показ как в прошлый раз (решение 68; src/ui/work.ts, firstShow)
+      if (a.show || !(init && restoreReveal)) applyShow(a.show ?? { kind: 'all' }, a, !!mark && !mark.link);
+      // выбранная связь (решение 83): «назад» её возвращает, запись без неё — снимает
+      selectedLink.value = a.link ?? null;
     } else if (linkSet.peek()) {
       // ушли на адрес без набора («#/», «#/david»): набор из ссылки в адресе не остаётся (IX-69)
       linkSet.value = null;
@@ -334,17 +406,33 @@ if (initial && initial.route === 'atlas') applyState(initial, false, true);
 // пропорция полос адреса — небу до первой раскладки (SkyView); адрес с полями вида без «h» — пропорции по умолчанию
 if (initial && initial.route === 'atlas' && (initial.lanes !== undefined || initial.full)) setStartLanes(initial.lanes ?? 1);
 
-/** Небо готово принять окно: модель и масштаб адреса уже в нём, размер холста устоялся. */
-function whenSkyReady(then: () => void, tries = 0) {
+/**
+ * Небо готово принять окно: модель и масштаб адреса уже в нём, размер холста устоялся. settle — ждать ещё два кадра:
+ * сетка раскладки (панель, карточка) меняет ширину холста. Без смены сетки небо готово сразу («назад» к другому показу
+ * с той же панелью и карточкой: окно едет без задержки, Я28).
+ */
+function whenSkyReady(then: () => void, tries = 0, settle = true) {
   const s = skyRef.current;
-  const ready = s && s.model && s.model.id === modelId.peek() && models.some((m) => m.id === modelId.peek()) && s.lambda === lambda.peek();
+  const model = s && s.model && s.model.id === modelId.peek() && models.some((m) => m.id === modelId.peek()) && s.lambda === lambda.peek();
+  // первый показ и смена сетки: окно или перелёт — после перехода строк к укладке показа (§ 10), иначе цель перелёта
+  // берётся с середины перехода и лицо остаётся за краем (род Иуды по адресу)
+  const ready = model && !(settle && s.transitioning);
+  if (ready && !settle && tries === 0) {
+    then();
+    return;
+  }
   if (ready || tries > 180) {
-    // ещё два кадра: сетка раскладки (панель, карточка) меняет ширину холста
     requestAnimationFrame(() => requestAnimationFrame(then));
     return;
   }
-  requestAnimationFrame(() => whenSkyReady(then, tries + 1));
+  requestAnimationFrame(() => whenSkyReady(then, tries + 1, settle));
 }
+
+/** Пропорция полос в нынешнем адресе (поле «h»; без него — 1). */
+const lanesInAddress = (): number => {
+  const m = /~h(\d+(?:\.\d+)?)(?=~|$)/.exec(location.hash);
+  return m ? Number(m[1]) : 1;
+};
 
 /** Подключить адрес: прочитать его сейчас и при «назад»/«вперёд», записывать при смене вида. Возвращает отписку. */
 export function bindAddress(): () => void {
@@ -357,7 +445,12 @@ export function bindAddress(): () => void {
   let settleRaf = 0;
 
   const mark = (): HistoryMark => ({ toledot: 1, link: !!linkSet.peek() });
+  /** когда адрес записан в последний раз (performance.now) */
+  let lastWrite = -Infinity;
   const write = (mode: 'push' | 'replace') => {
+    // смена показа, записанная как «в ту же запись» (раскрытие, свёртка: src/ui/work.ts, setShowState)
+    if (showHistory.mode === 'replace') mode = 'replace';
+    showHistory.mode = 'push';
     if (location.hash.startsWith('#/specimen')) return;
     const next = formatAddress(snapshot());
     lastPush = pushKey();
@@ -366,6 +459,7 @@ export function bindAddress(): () => void {
     if (location.hash === next && cur && cur.link === m.link) return;
     if (mode === 'push') history.pushState(m, '', next);
     else history.replaceState(m, '', next);
+    lastWrite = performance.now();
   };
 
   /** Ждать, пока камера не встанет (переход записи, перелёт к лицу), и ещё кадр — затем then. */
@@ -387,35 +481,42 @@ export function bindAddress(): () => void {
     clearTimeout(replaceTimer);
     quiet = true;
     applying = true;
+    // сетка раскладки меняется, если меняется панель или карточка появляется либо уходит: тогда окно ставится через два кадра
+    const panel0 = panel.peek();
+    const card0 = !!selected.peek();
     if (!initialLoad) applyState(a, true);
+    const grid = initialLoad || panel.peek() !== panel0 || !!selected.peek() !== card0;
     lastPush = pushKey();
     applying = false;
     // неверный адрес: открыт поиск с сообщением и похожими лицами (IX-44)
     if (a.bad) setTimeout(() => document.getElementById('find')?.focus(), 100);
-    // древо (решение 73): неба нет — ждать нечего, адрес пишется сразу; окно неба древу не нужно
-    const settle = (then: () => void) => (atlasView.peek() === 'tree' ? requestAnimationFrame(then) : whenSkyReady(then));
-    settle(() => {
+    whenSkyReady(() => {
       if (!alive) return;
-      if (atlasView.peek() === 'tree') {
-        quiet = false;
-        if (initialLoad || !a.view) write('replace');
-        return;
-      }
       // пропорция полос (J1) — до окна: высота полосы решает, где середина окна по вертикали
       if (a.lanes !== undefined || a.full) skyRef.current?.cam.setLanes(a.lanes ?? 1);
       // в режиме «только линии» строки временно по высоте коридора (MAP-70): своя пропорция — в адресе и памяти
       holdLinesRows();
-      // окно записи — сразу при первом показе, переходом за 280 мс при «назад» и «вперёд»; адрес называет лицо, но не
+      // окно записи — сразу при первом показе, переходом за BACK_MS при «назад» и «вперёд»; адрес называет лицо, но не
       // окно (прежний «#/david»): небо летит к лицу
       if (a.view) applyView(a.view, !initialLoad);
       else if (a.id) skyRef.flyTo(a.id);
       // адрес пишется, когда небо встало: окно самой записи, а не кадр перехода. Запись истории с окном остаётся какой
       // была; первый показ и адрес без окна дополняются окном
       whenStill(() => {
+        // адрес называет лицо без окна, а перелёт оставил его за краем (семейная укладка: окно не мельче строк показа, а
+        // перелёт рассчитан на жизнь лица, у Хама — 900 лет оценки) — небо сдвигается к лицу, масштаб прежний
+        if (!a.view && a.id && a.id === selected.peek() && !inView(a.id)) {
+          keepInView(a.id);
+          whenStill(() => {
+            quiet = false;
+            write('replace');
+          });
+          return;
+        }
         quiet = false;
         if (initialLoad || !a.view) write('replace');
       });
-    });
+    }, 0, grid);
   };
   apply(true);
   const onPop = () => apply(false);
@@ -438,7 +539,7 @@ export function bindAddress(): () => void {
   const offReplace = effect(() => {
     void viewTick.value;
     const c = skyRef.current?.cam;
-    const key = [c?.x0, c?.kx, c?.laneTop, c?.ownLanes, c?.w, lambda.value, modelId.value, onlyLines.value, epochMode.value, skyMode.value].join(' ');
+    const key = [c?.x0, c?.kx, c?.laneTop, c?.ownLanes, c?.w, lambda.value, modelId.value, epochMode.value].join(' ');
     const set = shownSet.value;
     if (key === viewKey && set === setSeen) return;
     viewKey = key;
@@ -446,6 +547,13 @@ export function bindAddress(): () => void {
     // запись истории ещё применяется: кадры перехода в адрес не идут
     if (quiet) return;
     clearTimeout(replaceTimer);
+    // пропорция полос устоялась (шаг «полосы ±», «Пропорции по умолчанию»; J1), а в адресе прежняя: адрес пишется в том
+    // же кадре, что и память браузера (SkyView), — не ждать 300 мс после кадра, который сам бывает долгим. Не чаще раза
+    // в 350 мс: частые записи истории браузер ограничивает (протяжка по буквам полос)
+    if (c && !c.moving && Math.abs(lanesInAddress() - Math.round(c.ownLanes * 100) / 100) >= 0.005) {
+      replaceTimer = window.setTimeout(() => write('replace'), Math.max(0, lastWrite + 350 - performance.now()));
+      return;
+    }
     replaceTimer = window.setTimeout(() => write('replace'), 300);
   });
   return () => {

@@ -26,6 +26,8 @@ import { YearMark } from './Chrono.tsx';
 import { Clamp } from './Clamp.tsx';
 import { MODEL_NAMES } from './shared.tsx';
 import { focusQuietly } from '../focus.ts';
+import { familyOrderNote } from '../../render/links.ts';
+import { isClaimUnion, unionName } from '../linkwords.ts';
 
 /** Стихи о зачатии от Духа Святаго (Мф 1:18, 20; Лк 1:35) — у Иисуса Христа в перечне детей союза Иосифа и Марии. */
 const MESSIAH_REFS = MESSIAH_BIRTH.mother.refs;
@@ -35,7 +37,7 @@ const nameOf = (id: string) => byId.get(id)?.name ?? id;
 const midName = (id: string) => (byId.get(id)?.unnamed ? lowerFirst(nameOf(id)) : nameOf(id));
 
 /** Союз иного рода — отдельный союз с пометой (решение 67): «по закону», «по Луке», усыновление. */
-export const isClaimUnion = (u: Union) => !!u.claim && u.id.includes('~');
+export { isClaimUnion };
 
 /** Коротко о союзе иного рода — в подписях ссылок и у диктора. */
 const CLAIM_SHORT: Record<string, string> = {
@@ -51,14 +53,12 @@ const claimShort = (claim: string) => CLAIM_SHORT[claim] ?? 'по иному у�
 /** Кто назван в союзе иного рода: отец (a) или мать (b). */
 const claimRole = (u: Union): 'father' | 'mother' => (u.a ? 'father' : 'mother');
 
-/** Заголовок карточки союза: «Авраам и Агарь»; второе лицо не названо — одно имя («Сиф»). */
-export function unionTitle(u: Union): string {
-  const ids = [u.a, u.b].filter((x): x is string => !!x);
-  // второй супруг не назван (решение 75): «Сиф и его жена», «Мария и её муж»; у союза иного рода и у народа — одно имя
-  const one = ids.length === 1 && !u.claim && u.kids.length && !isPeople(ids[0]) ? ids[0] : null;
-  if (one) return u.a ? `${nameOf(one)} и ${byId.get(one)?.sex === 'f' ? 'её' : 'его'} жена` : `${nameOf(one)} и ${byId.get(one)?.sex === 'f' ? 'её' : 'его'} муж`;
-  return ids.map((x, i) => (i ? midName(x) : nameOf(x))).join(' и ');
-}
+/**
+ * Заголовок карточки союза: «Авраам и Агарь»; второе лицо не названо — «Сиф и его жена» (решение 75), а если у лица есть
+ * и названные супруги — «Давид (мать не названа)»; у союза иного рода и у народа — одно имя. Одно название на небе,
+ * в карточках и в словах связи (src/ui/linkwords.ts, unionName).
+ */
+export const unionTitle = (u: Union): string => unionName(u);
 
 /**
  * Строка под заголовком: кто в Писании не назван («Мать детей в Писании не названа») или какого рода союз
@@ -284,7 +284,7 @@ function RevealCommand({ u, from }: { u: Union; from: string }) {
           const now = workSet.peek().size;
           const n = Math.abs(now - was);
           const who = `${n} ${plural(n, 'лицо', 'лица', 'лиц')}`;
-          setSaid(now >= was ? `Раскрыто на небе «набор»: ${who}` : `Свёрнуто, с неба убрано: ${who}`);
+          setSaid(now >= was ? `На небе «набор» показано ещё: ${who}` : `Свёрнуто, с неба убрано: ${who}`);
         }}
       >
         {open ? 'Свернуть на небе' : 'Раскрыть на небе'}
@@ -328,6 +328,7 @@ export function UnionCard({ u, from }: { u: Union; from?: string | null }) {
     return byId.get(x)?.silent.includes(6) ? [{ x, os: [] as Union[] }] : [];
   });
   const early = years && Number.isFinite(years.early) && years.early < -966;
+  const order = familyOrderNote(u.id, m);
   return (
     <>
       <header class="mast union-mast">
@@ -356,6 +357,8 @@ export function UnionCard({ u, from }: { u: Union; from?: string | null }) {
                 <dd class="fact">
                   {years.text}
                   {Number.isFinite(years.early) ? <YearMark cls={years.exact ? 'exact' : 'calculated'} /> : null}
+                  {/* помета порядка с верным диапазоном стихов (этап 11, стык 5; src/render/links.ts): на небе её нет (Г9) */}
+                  {order ? <div class="note">годы детей — {order}</div> : null}
                 </dd>
               </>
             ) : null}

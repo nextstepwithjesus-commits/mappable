@@ -1,7 +1,7 @@
 /**
- * Рабочий набор (J3; решение владельца 17): панель «В работе», команда «Взять в работу» с выбором объёма и меню звезды
- * на небе (правая кнопка мыши, долгое касание). Строка режима «набор» у кромки неба — src/ui/sky/Overlays.tsx (WorkLine),
- * переключатель «все лица | набор» — src/ui/sky/Controls.tsx (SkyModeSwitch).
+ * Набор (J3; решения владельца 17, 81): панель «Набор», команда «Добавить в набор» с выбором объёма и меню звезды
+ * на небе (правая кнопка мыши, долгое касание). Набор — один из показов неба (src/ui/show.ts): «Показать набор на небе»
+ * в панели и строка показа у кромки неба (src/ui/sky/ShowBar.tsx).
  * Состояние набора, неба и свёртки — src/ui/work.ts.
  */
 import type { ComponentChildren } from 'preact';
@@ -20,8 +20,9 @@ import { Close } from '../controls.tsx';
 import { grid } from '../layout.ts';
 import { sheetStop } from '../sheet.ts';
 import { reduced } from '../sky/view.ts';
-import { SkyModeSwitch, StartList, ViewSwitch } from '../sky/Controls.tsx';
-import { atlasView, closePerson, opened } from '../reveal.ts';
+import { StartList } from '../sky/Controls.tsx';
+import { closePerson, opened } from '../reveal.ts';
+import { setShow, show } from '../show.ts';
 import {
   addToWork, clearWork, foldDesc, foldDescOf, foldGroupOf, foldGroups, hasDescendants, lineOf, removeFromWork, removeWithLine, workOrder,
   workSet, type Scope, type WorkEntry,
@@ -123,10 +124,10 @@ function useMenuKeys(menu: { current: HTMLElement | null }) {
 /**
  * Выбор объёма (J3; VIS-47): только лицо, с семьёй, с предками и с потомками на 1, 2, 3 поколения или все; со связями
  * по толкованию — флажком. Команды — в поле 32 px с рамкой, поколения — сегменты 28 px, подписи строк — колонкой.
- * Каждая команда сразу берёт лиц в работу; если лицо уже в работе — «Убрать из работы» и «Убрать с родословной».
+ * Каждая команда сразу добавляет лиц в набор; если лицо уже в наборе — «Убрать из набора» и «Убрать с родословной».
  * Ниже черты — команды вида неба (UX-71): «Скрыть потомков на небе» (решение 26) и, в меню звезды, «Свернуть созвездие».
- * Меню (role menu, IX-83): ряды — строки, сегменты поколений — пункты ряда. heading — подзаголовки групп «Взять в работу:»
- * и «На небе:» (меню звезды: у него нет кнопки «Взять в работу», которая говорила бы, что делают первые пункты; UX-71).
+ * Меню (role menu, IX-83): ряды — строки, сегменты поколений — пункты ряда. heading — подзаголовки групп «Добавить в набор:»
+ * и «На небе:» (меню звезды: у него нет кнопки «Добавить в набор», которая говорила бы, что делают первые пункты; UX-71).
  */
 export function WorkPicker({ id, onDone, heading = false, sky }: { id: string; onDone: () => void; heading?: boolean; sky?: ComponentChildren }) {
   const [interp, setInterp] = useState(false);
@@ -167,11 +168,11 @@ export function WorkPicker({ id, onDone, heading = false, sky }: { id: string; o
   );
   const viewCmds = kids || folded || !!sky;
   return (
-    <div class="wp-menu" role="menu" ref={menu} aria-label={p ? `${p.name}: взять в работу${viewCmds ? ', на небе' : ''}` : 'Взять в работу'} onKeyDown={onKey}>
-      <div role="group" aria-label="Взять в работу">
+    <div class="wp-menu" role="menu" ref={menu} aria-label={p ? `${p.name}: добавить в набор${viewCmds ? ', на небе' : ''}` : 'Добавить в набор'} onKeyDown={onKey}>
+      <div role="group" aria-label="Добавить в набор">
         {heading && (
           <p class="wp-sub" aria-hidden="true">
-            Взять в работу:
+            Добавить в набор:
           </p>
         )}
         <div class="wp-row wp-take" role="none" data-mrow="">
@@ -203,7 +204,7 @@ export function WorkPicker({ id, onDone, heading = false, sky }: { id: string; o
                 onDone();
               }}
             >
-              Убрать из работы
+              Убрать из набора
             </button>
             {line > 0 && (
               <button
@@ -284,8 +285,8 @@ function usePopover(open: boolean, close: (refocus: boolean) => void, wrap: { cu
 }
 
 /**
- * «Взять в работу ▾» — команда шапки карточки (J3; решение 26): раскрывает выбор объёма. Лицо уже в наборе — «В наборе ▾»
- * (нажата): тот же выбор добавляет родню, скрывает потомков на небе и убирает лицо.
+ * «Добавить в набор ▾» — команда шапки карточки (J3; решение 26; этап 11 — одно слово «набор», Я30): раскрывает выбор
+ * объёма. Лицо уже в наборе — «В наборе ▾» (нажата): тот же выбор добавляет родню, скрывает потомков на небе и убирает лицо.
  */
 export function WorkButton({ id }: { id: string }) {
   const [open, setOpen] = useState(false);
@@ -313,10 +314,10 @@ export function WorkButton({ id }: { id: string }) {
         aria-expanded={open}
         aria-pressed={on}
         aria-controls={open ? `wp-${id}` : undefined}
-        title={on ? 'Лицо в рабочем наборе: добавить родню, скрыть потомков на небе или убрать' : 'Взять лицо в рабочий набор, с родней или без; скрыть потомков на небе (клавиши В и С на небе)'}
+        title={on ? 'Лицо в наборе: добавить родню, скрыть потомков на небе или убрать' : 'Добавить лицо в набор, с роднёй или без; скрыть потомков на небе (клавиши В и С на небе)'}
         onClick={() => setOpen(!open)}
       >
-        {on ? 'В наборе' : 'Взять в работу'}
+        {on ? 'В наборе' : 'Добавить в набор'}
         <span class="tri" aria-hidden="true">
           {open ? '▴' : '▾'}
         </span>
@@ -346,7 +347,7 @@ export function pickScroll(o: { btnTop: number; pickTop: number; pickBottom: num
 }
 
 /**
- * Выбор «Взять в работу» целиком в видимой части карточки (VIS-82, MOB-74): если его низ уходит за край листа (на
+ * Выбор «Добавить в набор» целиком в видимой части карточки (VIS-82, MOB-74): если его низ уходит за край листа (на
  * телефоне — под полосу времени), карточка прокручивается так, чтобы были видны и кнопка, и весь выбор. На телефоне лист,
  * в котором выбору с кнопкой не хватает высоты, сначала поднимается во весь экран.
  */
@@ -372,7 +373,7 @@ function fitPick(pick: HTMLElement, btn: HTMLElement, again = true) {
   if (dy) sc.scrollBy({ top: dy, behavior: reduced() ? 'auto' : 'smooth' });
 }
 
-/** Скрыть или показать потомков лица на небе (J5; решение 26): команда строки панели «В работе». */
+/** Скрыть или показать потомков лица на небе (J5; решение 26): команда строки панели «Набор». */
 export function FoldButton({ id }: { id: string }) {
   const on = foldDesc.value.includes(id);
   if (!hasDescendants(id) && !on) return null;
@@ -383,7 +384,7 @@ export function FoldButton({ id }: { id: string }) {
   );
 }
 
-// ---------- панель «В работе» ----------
+// ---------- панель «Набор» ----------
 
 /** Тело лица набора, развёрнутое по щелчку: роль и созвездие, «Кратко» и команды. */
 function WorkItem({ id }: { id: string }) {
@@ -410,7 +411,7 @@ function WorkItem({ id }: { id: string }) {
           Открыть карточку
         </button>
         <button type="button" class="cmd" onClick={() => removeFromWork(id)}>
-          Убрать из работы
+          Убрать из набора
         </button>
         {line > 0 && (
           <button type="button" class="cmd" title={`Убрать лицо и ещё ${line} ${plural(line, 'лицо', 'лица', 'лиц')}, взятых вместе с ним`} onClick={() => removeWithLine(id)}>
@@ -440,10 +441,10 @@ export function viaText(e: WorkEntry): string | null {
   return `${rel}${e.via === 'anc' || e.via === 'desc' ? gen : ''}: ${of.name}`;
 }
 
-// ---------- группы панели «В работе» (VIS-83) ----------
+// ---------- группы панели «Набор» (VIS-83) ----------
 
 /**
- * Строка панели «В работе»: одиночное лицо (of — null) или группа — лицо of и взятые вместе с ним (его семья, предки,
+ * Строка панели «Набор»: одиночное лицо (of — null) или группа — лицо of и взятые вместе с ним (его семья, предки,
  * потомки, путь родства от него). Происхождение пишется один раз — заголовком группы, а не под каждой строкой.
  */
 export type WorkGroup = { of: string | null; ids: string[] };
@@ -522,8 +523,8 @@ export function memberNote(e: WorkEntry | undefined, kinds: number): string | nu
 /** Набор, очищенный последним: «Вернуть» восстанавливает его (без подтверждений и всплывающих окон). */
 let cleared: [string, WorkEntry][] | null = null;
 
-/** Вводка панели (UX-77): то же, что пояснение команды «В работе» в верхней строке. */
-export const WORK_LEAD = 'Лица, с которыми вы работаете; набор помнится в этом браузере. Небо может показывать только их.';
+/** Вводка панели (UX-77): то же, что пояснение команды «Набор» в верхней строке. */
+export const WORK_LEAD = 'Лица, собранные вручную; набор помнится в этом браузере. Показ «набор» — только они на небе.';
 
 export function WorkPanel() {
   const set = workSet.value;
@@ -537,24 +538,22 @@ export function WorkPanel() {
   const n = ids.length;
   const folded = foldDesc.value.length + foldGroups.value.length;
   return (
-    <Sheet title={n ? `В работе: ${n} ${plural(n, 'лицо', 'лица', 'лиц')}` : 'В работе'} lead={WORK_LEAD}>
-      {/* в древе (решение 73) набор — это само древо: вместо «На небе: все лица | набор» — «Небо | Древо» */}
-      {atlasView.value === 'tree' ? (
-        <div class="work-sky">
-          <span class="k">Вид:</span>
-          <ViewSwitch />
-        </div>
-      ) : (
-        <div class="work-sky">
-          <span class="k">На небе:</span>
-          <SkyModeSwitch />
-        </div>
-      )}
+    <Sheet title={n ? `Набор: ${n} ${plural(n, 'лицо', 'лица', 'лиц')}` : 'Набор'} lead={WORK_LEAD}>
+      {/* набор — один из показов неба (решение 81): что на небе, говорит строка показа у его кромки */}
+      <div class="work-sky">
+        {show.value.kind === 'set' ? (
+          <span class="k">{typo('На небе — набор')}</span>
+        ) : (
+          <button type="button" class="cmd" title="Небо покажет только лиц набора; прежний показ вернёт «назад»" onClick={() => setShow({ kind: 'set' })}>
+            Показать набор на небе
+          </button>
+        )}
+      </div>
       {n === 0 ? (
         <>
           <p class="muted work-empty">
             {typo(
-              'Набор пуст. Чтобы собрать его, нажмите «Взять в работу» в карточке лица — с предками, потомками или семьёй. То же — в строке поиска (Shift+Enter), в «Родстве» (весь путь) и на небе: клавиша В у звезды под указателем, правая кнопка мыши или долгое касание звезды.',
+              'Набор пуст. Чтобы собрать его, нажмите «Добавить в набор» в карточке лица — с предками, потомками или семьёй. То же — в строке поиска (Shift+Enter), в «Родстве» (весь путь) и на небе: клавиша В у звезды под указателем, правая кнопка мыши или долгое касание звезды.',
             )}
           </p>
           {undo && cleared && (
@@ -621,7 +620,7 @@ export function WorkPanel() {
   );
 }
 
-/** Строка лица в панели «В работе»: имя, уточнение и годы; под ними — чем лицо отличается от соседей по группе; щелчок — тело. */
+/** Строка лица в панели «Набор»: имя, уточнение и годы; под ними — чем лицо отличается от соседей по группе; щелчок — тело. */
 function WorkRow({ id, note, open, setOpen }: { id: string; note: string | null; open: string | null; setOpen: (v: string | null) => void }) {
   const p = byId.get(id)!;
   const on = open === id;
@@ -685,7 +684,7 @@ export const skyMenu = signal<SkyMenuAt | null>(null);
 
 /**
  * Меню звезды на небе (J3, J5): правая кнопка мыши, долгое касание или клавиша меню на звезде. У звезды — выбор объёма
- * «Взять в работу» с пунктом «Скрыть потомков на небе»; у названия созвездия — «Свернуть созвездие». У лица, чьи точки
+ * «Добавить в набор» с пунктом «Скрыть потомков на небе»; у названия созвездия — «Свернуть созвездие». У лица, чьи точки
  * союзов показаны на небе «набор» (решения 70, 76), — «Скрыть союзы на небе». Escape и щелчок мимо закрывают.
  */
 export function SkyMenu({ bounds }: { bounds: { w: number; h: number } }) {

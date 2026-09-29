@@ -122,7 +122,7 @@ export interface ComboboxProps {
   /** фокус в поле сразу после появления (поле «Второе», открытое командой «заменить») */
   autoFocus?: boolean;
   /**
-   * Вторая команда строки-лица (J3: «взять в работу»): надпись в конце строки — для мыши и пальца, Shift+Enter в поле —
+   * Вторая команда строки-лица (J3: «в набор»): надпись в конце строки — для мыши и пальца, Shift+Enter в поле —
    * для клавиатуры. Надпись скрыта от диктора: внутри option нет вложенного органа управления (WCAG 4.1.2), а команду
    * диктору называет статус списка (Search.tsx).
    */
@@ -163,7 +163,7 @@ export function Combobox(props: ComboboxProps) {
   const firstPerson = rows.findIndex((r) => r.kind === 'person' || ('lead' in r && !!r.lead));
   const active = cursor >= 0 && cursor < rows.length ? cursor : firstPerson;
   const listOpen = open && (!!q.trim() || !!notice);
-  // что сказала вторая команда строки («Иессей взят в работу; в наборе 5 лиц», IX-84) — до следующего набора или хода курсора
+  // что сказала вторая команда строки («Иессей добавлен в набор; в наборе 5 лиц», IX-84) — до следующего набора или хода курсора
   const [said, setSaid] = useState('');
   const runCmd = (pid: string) => {
     const text = props.rowCmd?.run(pid);

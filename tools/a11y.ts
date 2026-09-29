@@ -34,29 +34,31 @@ const TABLET: View = { width: 768, height: 1024, touch: true };
 const press = (p: Page, sel: string, text?: string) => (text ? p.locator(sel, { hasText: text }) : p.locator(sel)).first().tap();
 
 /**
- * Древо карточек (решения 73, 74) — вид главной области из памяти браузера: набор и раскрытие, как после щелчков по
- * командам карточек («С Адама»; Адам → союз → Каин, Авель, Сиф → союз Сифа → Енос).
+ * Набор на небе (этап 11, решение 77: вида «Древо» больше нет — его состояния проверяются на небе «набор»): набор и
+ * раскрытие из памяти браузера, как после щелчков по командам карточек («С Адама»; Адам → союз → Каин, Авель, Сиф → союз
+ * Сифа → Енос), показ «набор» (~vs), ромбы союзов с «+N» и карточка у звезды.
  */
 const fam = (of: string) => ({ via: 'family', of });
-const TREE_ADAM = { work: [['adam', { via: 'self', of: 'adam' }]], reveal: { opened: ['adam'], expanded: {} } };
-const TREE_ENOS = {
+const SET_ADAM = { work: [['adam', { via: 'self', of: 'adam' }]], reveal: { opened: ['adam'], expanded: {} } };
+const SET_ENOS = {
   work: [['adam', { via: 'self', of: 'adam' }], ['eva', fam('adam')], ['kain', fam('adam')], ['avel', fam('adam')], ['sif', fam('adam')], ['enos', fam('sif')]],
   reveal: { opened: ['adam', 'sif'], expanded: { 'u:adam+eva': 'adam', 'u:sif+': 'sif' } },
 };
-async function openTree(p: Page, st: { work: unknown[]; reveal: unknown }) {
+async function openSet(p: Page, st: { work: unknown[]; reveal: unknown }) {
   await p.evaluate((st) => {
-    localStorage.setItem('toledot:view', '"tree"');
+    localStorage.setItem('toledot:view', '"sky"');
     localStorage.setItem('toledot:start', '"adam"');
     localStorage.setItem('toledot:work', JSON.stringify(st.work));
     localStorage.setItem('toledot:reveal', JSON.stringify(st.reveal));
+    sessionStorage.setItem('toledot:skymode', '"work"');
   }, st);
-  // адрес с полями вида неба (~y…~w…) сказал бы «небо»: заново открывается адрес лица без полей
+  // адрес лица без полей вида и с показом «набор»
   const u = new URL(p.url());
-  u.search = '?tree=1';
-  u.hash = u.hash.replace(/~.*$/, '');
+  u.hash = `${u.hash.replace(/~.*$/, '')}~vs`;
   await p.goto(u.toString());
-  await p.waitForTimeout(1800);
-  if (!(await p.locator('.tree .tc').count())) throw new Error('древо не открылось');
+  await p.reload();
+  await p.waitForTimeout(2200);
+  if ((await p.evaluate(() => document.documentElement.dataset.show)) !== 's') throw new Error('набор на небе не открылся');
 }
 
 const DESK: Screen[] = [
@@ -125,9 +127,11 @@ const DESK: Screen[] = [
     }
   } },
   { name: 'образец', hash: '#/specimen' },
-  // древо карточек (решения 73, 74): карточки лиц и союзов, образы, органы, миникарта, подсветка ветвей выбранного
-  { name: 'древо: С Адама', hash: '#/adam', act: (p) => openTree(p, TREE_ADAM) },
-  { name: 'древо: раскрытый союз и выбранное лицо', hash: '#/sif', act: (p) => openTree(p, TREE_ENOS) },
+  // набор на небе (этап 11, решение 77; прежде — древо карточек): ромбы союзов, «+N», карточка у звезды
+  { name: 'набор на небе: С Адама', hash: '#/adam', act: (p) => openSet(p, SET_ADAM) },
+  { name: 'набор на небе: раскрытый союз и выбранное лицо', hash: '#/sif', act: (p) => openSet(p, SET_ENOS) },
+  // выбранная связь (этап 11, § 8): жёлтый путь, кольца, карточка связи с концами
+  { name: 'выбранная связь: Ной и его жена → Хам', hash: '#/noy~ck.noy._._.kham' },
 ];
 
 // телефон и планшет (H1–H7): касание, листы, «Разделы», «Какое лицо?»
@@ -169,7 +173,7 @@ const TOUCH: Screen[] = [
   { name: 'телефон 360: лист на 100 %', hash: '#/ruf', view: { width: 360, height: 740, touch: true }, act: (p) => press(p, '.folio .sheet-bar .bar-toggle') },
   { name: 'телефон, альбомная: карточка', hash: '#/david', view: { width: 844, height: 390, touch: true } },
   { name: 'телефон: карточка союза на 100 %', hash: '#/david~udavid.virsaviya', view: PHONE, act: (p) => press(p, '.folio .sheet-bar .bar-toggle') },
-  { name: 'телефон: древо и лист карточки', hash: '#/sif', view: PHONE, act: (p) => openTree(p, TREE_ENOS) },
+  { name: 'телефон: набор на небе и лист карточки', hash: '#/sif', view: PHONE, act: (p) => openSet(p, SET_ENOS) },
   { name: 'планшет: карточка', hash: '#/david', view: TABLET },
   { name: 'планшет: «Указатель»', hash: '#/david', view: TABLET, act: async (p) => {
     const b = p.locator('.commands > button', { hasText: 'Указатель' });

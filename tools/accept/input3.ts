@@ -43,7 +43,7 @@ async function menuOn(p: Page, id: string): Promise<{ x: number; y: number } | n
 export const input3: Scenario[] = [
   {
     n: 370,
-    title: 'IX-72: пока меню звезды открыто, щелчок мимо только закрывает его — не выбирает звезду и не снимает выбор; так же у «Взять в работу ▾»',
+    title: 'IX-72: пока меню звезды открыто, щелчок мимо только закрывает его — не выбирает звезду и не снимает выбор; так же у «Добавить в набор ▾»',
     run: async (p): Promise<Check> => {
       await go(p, '#/david~y-1050~w180~l0~s1', 2600);
       const v0 = await view(p);
@@ -67,10 +67,10 @@ export const input3: Scenario[] = [
       await p.mouse.click(c.x + so.x, c.y + so.y);
       await p.waitForTimeout(700);
       if (hashId(p) !== 'solomon') return fail(`следующий щелчок не выбрал Соломона: «${hashId(p)}»`);
-      // «Взять в работу ▾» в карточке: щелчок по звезде на небе только закрывает выбор
+      // «Добавить в набор ▾» в карточке: щелчок по звезде на небе только закрывает выбор
       await p.locator('.folio .workbtn > button').click();
       await p.waitForTimeout(300);
-      if (!(await p.locator('.folio .workpick').count())) return fail('«Взять в работу ▾» не раскрылся');
+      if (!(await p.locator('.folio .workpick').count())) return fail('«Добавить в набор ▾» не раскрылся');
       const je = await star(p, 'iessey');
       if (!je) return fail('Иессея нет на небе');
       await p.mouse.click(c.x + je.x, c.y + je.y);
@@ -118,15 +118,15 @@ export const input3: Scenario[] = [
   },
   {
     n: 372,
-    title: 'UX-71: в меню звезды — «Взять в работу:» перед пунктами набора и «На небе:» над командами вида неба; «×» закрывает меню',
+    title: 'UX-71: в меню звезды — «Добавить в набор:» перед пунктами набора и «На небе:» над командами вида неба; «×» закрывает меню',
     run: async (p) => {
       await go(p, '#/~y-1100~w300~l0~s1~mmt-long', 2600);
       if (!(await menuOn(p, 'gedeon'))) return fail('меню у Гедеона не открылось');
       const m = p.locator('.sky .skymenu');
       const subs = (await m.locator('.wp-sub').allInnerTexts()).map((t) => flat(t).trim());
-      if (subs.join('|') !== 'Взять в работу:|На небе:') return fail(`подзаголовки: ${subs.join(', ')}`);
+      if (subs.join('|') !== 'Добавить в набор:|На небе:') return fail(`подзаголовки: ${subs.join(', ')}`);
       const groups = await m.locator('[role="menu"] > [role="group"]').evaluateAll((gs) => gs.map((g) => `${g.getAttribute('aria-label')}: ${[...g.querySelectorAll('[role^="menuitem"]')].map((b) => (b.textContent ?? '').trim()).join(', ')}`));
-      if (!/^Взять в работу: Только Гедеона, С семьёй, 1/.test(flat(groups[0] ?? ''))) return fail(`первая группа: ${groups[0]}`);
+      if (!/^Добавить в набор: Только Гедеона, С семьёй, 1/.test(flat(groups[0] ?? ''))) return fail(`первая группа: ${groups[0]}`);
       if (!/^На небе: .*Свернуть созвездие «Колено Манассиино»/.test(flat(groups[1] ?? ''))) return fail(`вторая группа: ${groups[1]}`);
       const close = m.locator('.wp-head .close');
       if (!(await close.count())) return fail('у меню нет «×»');
@@ -166,7 +166,7 @@ export const input3: Scenario[] = [
   },
   {
     n: 374,
-    title: 'MOB-74, 390 × 844: «Взять в работу ▾» из листа на 55 % — выбор целиком над полосой времени и под шапкой листа',
+    title: 'MOB-74, 390 × 844: «Добавить в набор ▾» из листа на 55 % — выбор целиком над полосой времени и под шапкой листа',
     view: PHONE,
     run: async (p) => {
       await go(p, '#/david', 2600);
@@ -184,12 +184,12 @@ export const input3: Scenario[] = [
       if (pick.y + pick.height > strip.y + 1) return fail(`низ выбора ${(pick.y + pick.height).toFixed(0)} под полосой времени (верх ${strip.y.toFixed(0)})`);
       if (pick.y < head.y + head.height - 1) return fail(`верх выбора ${pick.y.toFixed(0)} под шапкой листа`);
       const btn = (await p.locator('.folio .workbtn > button').boundingBox())!;
-      return btn.y >= head.y + head.height - 1 ? pass(`выбор ${pick.y.toFixed(0)}–${(pick.y + pick.height).toFixed(0)}, полоса с ${strip.y.toFixed(0)}`) : fail('кнопка «Взять в работу» ушла под шапку');
+      return btn.y >= head.y + head.height - 1 ? pass(`выбор ${pick.y.toFixed(0)}–${(pick.y + pick.height).toFixed(0)}, полоса с ${strip.y.toFixed(0)}`) : fail('кнопка «Добавить в набор» ушла под шапку');
     },
   },
   {
     n: 375,
-    title: 'VIS-82, 1440: «Взять в работу ▾» — выбор целиком в видимой части карточки',
+    title: 'VIS-82, 1440: «Добавить в набор ▾» — выбор целиком в видимой части карточки',
     run: async (p) => {
       await go(p, '#/moisey', 2600);
       const f = (await p.locator('.folio').boundingBox())!;
@@ -220,7 +220,7 @@ export const input3: Scenario[] = [
         if (lines.length !== 3) return fail(`${id}: ${lines.length} строк: «${lines.join(' | ')}»`);
         const bad = lines.findIndex((l, i) => !want[i].test(l));
         if (bad >= 0) return fail(`${id}, строка ${bad + 1}: «${lines[bad]}»`);
-        if (/\((D|C)\)|взять в работу|потомков на небе/.test(t) || (await p.locator('.sky .tip kbd').count())) return fail(`${id}: клавиши в подсказке`);
+        if (/\((D|C)\)|взять в работу|добавить в набор|потомков на небе/.test(t) || (await p.locator('.sky .tip kbd').count())) return fail(`${id}: клавиши в подсказке`);
         const b = (await p.locator('.sky .tip[data-shown]').boundingBox())!;
         // три строки: имя кеглем текста и две строки заметок — без переносов
         if (b.height > 96) return fail(`${id}: подсказка ${b.width.toFixed(0)} × ${b.height.toFixed(0)} — строки переносятся`);

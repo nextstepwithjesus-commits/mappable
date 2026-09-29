@@ -15,11 +15,12 @@ const css = (f: string) => readFileSync(join(__dirname, '../src/styles', f), 'ut
 
 describe('нижний лист карточки: положения (H2; ТЗ § 3.8; решение владельца 12)', () => {
   const s = stopsFor(740);
-  it('три положения: 104 px, 55 % и всё место между верхней строкой и полосой времени', () => {
+  it('три положения: 214 px, 55 % и всё место между верхней строкой и полосой времени', () => {
     expect(s).toEqual({ peek: PEEK_H, half: Math.round(740 * HALF_SHARE), full: 740 });
-    expect(PEEK_H).toBe(104);
-    // низкий экран: 55 % не ниже шапки
-    expect(stopsFor(150).half).toBeGreaterThanOrEqual(104);
+    // этап 11 (STAGE11 § 6, решение 77): нижнее положение — не шапка 104 px, а карточка у звезды 214 px с «Родством»
+    expect(PEEK_H).toBe(214);
+    // низкий экран: 55 % не ниже нижнего положения
+    expect(stopsFor(150).half).toBeGreaterThanOrEqual(PEEK_H);
   });
   it('касание звезды — шапка; поиск и ссылки — 55 %; на низком экране — всегда шапка', () => {
     const now = 10_000;
@@ -43,7 +44,8 @@ describe('нижний лист карточки: положения (H2; ТЗ �
     expect(snapSheet(80, -0.8, s, 'peek')).toBe('close');
     expect(snapSheet(40, 0, s, 'peek')).toBe('close');
     expect(snapSheet(300, -2, s, 'half')).toBe('peek');
-    expect(snapSheet(96, -0.2, s, 'peek')).toBe('peek');
+    // медленно чуть ниже нижнего положения — лист остаётся (прежде 96 = 104 − 8; этап 11 — 214 − 8)
+    expect(snapSheet(PEEK_H - 8, -0.2, s, 'peek')).toBe('peek');
   });
   it('скорость — по времени событий за последние 100 мс; палец постоял перед отпусканием — взмаха нет', () => {
     const pts = [
@@ -138,33 +140,31 @@ describe('ярусы эпох — не больше 35 % видимого неб
 });
 
 describe('верх телефона: «Разделы» (H4; MOB-03, MOB-04)', () => {
-  it('вид атласа, все панели, справка и тема — флажком «Дневная карта»', () => {
+  it('все панели, справка и тема — флажком «Дневная карта»; вида «Древо» нет (решение 77)', () => {
     const opened: string[] = [];
-    const views: string[] = [];
     let flipped = 0;
     let restarted = 0;
-    const items = phoneMenuItems('kinship', true, (id) => opened.push(id), () => flipped++, 0, () => restarted++, 'tree', (v) => views.push(v));
-    // «Небо» и «Древо» (решение 73) — первыми: в строке телефона нет места для переключателя «Небо | Древо»;
-    // «В работе» (J3) — после «Указателя», «Эпохи» (решение 51) — после «Глав», как в строке команд; «Начать заново…»
-    // (решение 68) — после справки, перед темой
-    expect(items.map((i) => i.label)).toEqual(['Небо', 'Древо', 'Указатель', 'В работе', 'Главы', 'Эпохи', 'Синопсис', 'Родство', 'Сквозной раздел', 'Условные знаки', 'О карте', 'Начать заново…', 'Дневная карта']);
-    // отмечены нынешний вид, открытая панель и тема
-    expect(items.filter((i) => i.checked).map((i) => i.label)).toEqual(['Древо', 'Родство', 'Дневная карта']);
+    const items = phoneMenuItems('kinship', true, (id) => opened.push(id), () => flipped++, 0, () => restarted++);
+    // этап 11 (решения 77, 81): пунктов «Небо» и «Древо» больше нет — атлас один; «Набор» (одно слово — одно понятие)
+    // — после «Указателя», «Эпохи» (решение 51) — после «Глав», как в строке команд; «Начать заново…» (решение 68) —
+    // после справки, перед темой
+    expect(items.map((i) => i.label)).toEqual(['Указатель', 'Набор', 'Главы', 'Эпохи', 'Синопсис', 'Родство', 'Сквозной раздел', 'Условные знаки', 'О карте', 'Начать заново…', 'Дневная карта']);
+    expect(items.map((i) => i.label)).not.toContain('Древо');
+    // отмечены открытая панель и тема
+    expect(items.filter((i) => i.checked).map((i) => i.label)).toEqual(['Родство', 'Дневная карта']);
     // «Начать заново…» — команда, а не флажок: у пункта нет состояния «отмечен»
     const at = (label: string) => items.find((i) => i.label === label)!;
     expect(at('Начать заново…').checked).toBeUndefined();
-    // панели, справка, выбор начала и тема отделены чертой
-    expect(items.filter((i) => i.sep).map((i) => i.label)).toEqual(['Указатель', 'Условные знаки', 'Начать заново…', 'Дневная карта']);
+    // справка, выбор начала и тема отделены чертой
+    expect(items.filter((i) => i.sep).map((i) => i.label)).toEqual(['Условные знаки', 'Начать заново…', 'Дневная карта']);
     at('Синопсис').onSelect();
     at('Начать заново…').onSelect();
     at('Дневная карта').onSelect();
-    at('Небо').onSelect();
     expect(opened).toEqual(['synopsis']);
     expect(restarted).toBe(1);
     expect(flipped).toBe(1);
-    expect(views).toEqual(['sky']);
-    // по умолчанию отмечено небо
-    expect(phoneMenuItems(null, false, () => {}, () => {}).filter((i) => i.checked).map((i) => i.label)).toEqual(['Небо']);
+    // набор с лицами — число в пункте: «Набор: 3»
+    expect(phoneMenuItems(null, false, () => {}, () => {}, 3).find((i) => i.key === 'work')!.label).toBe('Набор: 3');
   });
 });
 
@@ -173,8 +173,8 @@ describe('стили телефона (H2, H4, H6; MOB-16, MOB-18, MOB-43)', () 
   it('порог телефона в CSS — тот же, что в раскладке (src/ui/layout.ts)', () => {
     expect(phone).toContain(`@media (max-width: ${PHONE_MAX}px)`);
   });
-  it('лист над полосой времени, шапка 104 px, 100 % — по dvh, 55 % — по svh; вырез экрана учтён', () => {
-    expect(phone).toMatch(/--sheet-peek:\s*104px/);
+  it('лист над полосой времени, карточка у звезды 214 px (этап 11), 100 % — по dvh, 55 % — по svh; вырез экрана учтён', () => {
+    expect(phone).toMatch(/--sheet-peek:\s*214px/);
     expect(phone).toMatch(/--sheet-avail:\s*calc\(100dvh/);
     expect(phone).toMatch(/--sheet-half:\s*calc\(\(100svh[^;]*\*\s*0\.55\)/);
     expect(phone).toMatch(/bottom:\s*calc\(var\(--strip-h\)\s*\+\s*env\(safe-area-inset-bottom\)\)/);

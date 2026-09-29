@@ -1,0 +1,417 @@
+/* ---------- строка показа и лист «Показ» (этап 11, решения 81, 82; src/ui/sky/ShowBar.tsx, src/ui/panels/Show.tsx) ----------
+   Строка показа — у верхней кромки неба слева, первой в ряду строк (.skytop): «На небе:» — гротеском вторым цветом,
+   показ — антиквой цветом текста, изменяемые части — командами со штрихом снизу, как ссылки. Лист «Показ» — под строкой:
+   на широком экране 420 px и до 70 % высоты неба, с прокруткой внутри; на телефоне — во всю высоту неба. Рамка 1 px,
+   без тени и скруглений; строки созвездий — 32 px (на касании 44 px). */
+.skytop {
+  justify-content: flex-start;
+}
+/* рамка строки — как у строк состояния неба (.pickbar, sky.css), но своим классом: строк у кромки неба бывает две сразу */
+.showbar {
+  pointer-events: auto;
+  display: flex;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 4px;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 34px;
+  padding: 0 4px 0 12px;
+  background: var(--sheet);
+  border: 1px solid var(--rule-strong);
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+  color: var(--ink);
+}
+.showbar .dash {
+  color: var(--ink-2);
+}
+/* длинная строка («созвездие «Дом Нахора» — 16 лиц и 1 гость; основатель Нахор; 4 связи наружу») переносится, а не
+   обрезается: каждая её часть — сведения */
+.showbar .txt {
+  min-width: 0;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  padding: 7px 0;
+}
+.showbar .sb-k {
+  color: var(--ink-2);
+}
+.showbar .sb-v {
+  font-family: var(--serif);
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+  color: var(--ink);
+}
+/* изменяемые части строки и команды — ссылки со штрихом снизу: «изменить», «всё небо», «потомки ▾» */
+.showbar .sb-cmd,
+.showbar .sb-menu > button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 6px;
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+  color: var(--ink);
+  text-decoration-line: underline;
+  text-decoration-color: var(--rule-strong);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+.showbar .sb-cmd:hover,
+.showbar .sb-menu > button:hover {
+  background: var(--sheet-2);
+  text-decoration-color: var(--ink);
+}
+.showbar .sb-cmd[aria-expanded='true'] {
+  box-shadow: inset 0 -2px 0 var(--ink);
+  text-decoration-line: none;
+}
+/* меню частей рода лица — внутри предложения строки: кнопка без поля слева, список — под ней */
+.showbar .sb-v .sb-menu {
+  display: inline-block;
+  position: relative;
+}
+.showbar .sb-v .sb-menu > button {
+  padding: 0 2px;
+  font-family: var(--serif);
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+}
+.showbar .sb-menu [role='menu'] {
+  top: 100%;
+  bottom: auto;
+  left: 0;
+  right: auto;
+}
+/* команды и списки — в потоке предложения (ShowBar.tsx): строка текста 24 px, цель 24 px (WCAG 2.5.8); одна строка
+   показа — 34 px, как прежде, а перенесённая на узком небе — по 24 px на строку, а не по 32 */
+.showbar .txt {
+  padding: 4px 0;
+}
+.showbar .txt .sb-cmd,
+.showbar .txt .sb-menu > button {
+  min-height: 24px;
+}
+@media (pointer: coarse) {
+  .showbar .sb-cmd,
+  .showbar .sb-menu > button,
+  .showbar .txt .sb-cmd,
+  .showbar .txt .sb-menu > button {
+    min-height: 44px;
+  }
+  .showbar .txt {
+    padding: 0;
+  }
+}
+/* телефон: «На небе: всё небо — изменить» — одной строкой, если помещается; иначе — с переносом */
+@media (max-width: 720px) {
+  .showbar {
+    padding: 0 4px 0 10px;
+  }
+  .showbar .txt {
+    flex: 0 1 auto;
+  }
+  .showbar .dash {
+    display: inline;
+  }
+}
+/* телефон: без «На небе:» — строка и так у кромки неба в своей рамке, диктору её называет имя группы («Показ. На небе:
+   …»). Телефон в портретной ориентации (до 480 px) — ещё и без команд-показов («всё небо», «добавить созвездие …»):
+   они — видами и строками листа «Показ»; «ключевые лица — 59 лиц — изменить» — одна строка */
+@media (max-width: 720px) {
+  .showbar .sb-k {
+    display: none;
+  }
+}
+@media (max-width: 480px) {
+  .showbar .sb-cmd[data-cmd='show'] {
+    display: none;
+  }
+}
+
+/* ---------- лист «Показ» ---------- */
+.sky > .sheet.showsheet {
+  position: absolute;
+  top: calc(var(--sky-top, 44px) + 50px);
+  left: 26px;
+  right: auto;
+  bottom: auto;
+  z-index: 8;
+  width: min(420px, calc(100% - 52px));
+  max-height: min(70%, calc(100% - var(--sky-top, 44px) - 70px));
+  padding: 10px 16px 14px;
+  border: 1px solid var(--rule-strong);
+}
+.showsheet .sheet-head h2 {
+  font-size: var(--t-lead);
+  line-height: var(--t-lead-lh);
+  margin: 0 36px 6px 0;
+}
+.showsheet fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.showsheet legend {
+  padding: 0;
+}
+/* виды показа: строка — переключатель, название, число справа */
+.ss-kinds {
+  display: grid;
+}
+.ss-kind,
+.ss-radio {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 0 4px;
+  border-top: 1px solid var(--rule);
+  font-family: var(--serif);
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+  color: var(--ink);
+  cursor: pointer;
+}
+.ss-kind:hover,
+.ss-radio:hover {
+  background: var(--sheet-2);
+}
+.ss-kind .nm {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.ss-kind .n,
+.ss-row .n {
+  flex: none;
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.ss-kind.on .nm {
+  font-weight: 600;
+}
+.showsheet input[type='radio'],
+.showsheet input[type='checkbox'] {
+  flex: none;
+  margin: 0;
+  accent-color: var(--ink);
+}
+/* поле «Найти созвездие» — как поле «Найти» панели: подпись над полем, черта снизу */
+.ss-find {
+  display: grid;
+  gap: 2px;
+  margin: 12px 0 6px;
+}
+.ss-find label {
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  color: var(--ink-2);
+}
+.ss-find input {
+  width: 100%;
+  min-height: 32px;
+  padding: 0 4px;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--rule-strong);
+  font-family: var(--serif);
+  font-size: var(--t-body);
+  line-height: var(--t-body-lh);
+  color: var(--ink);
+}
+.ss-find input::placeholder {
+  color: var(--ink-3);
+}
+/* флажок раздела с тремя состояниями: выбраны не все — черта в квадрате */
+.showsheet .check input:indeterminate::after {
+  content: '';
+  width: 6px;
+  height: 0;
+  border-top: 1.5px solid currentColor;
+}
+/* разделы: строка раздела — раскрыть или свернуть и флажок «все колена — 1 470» справа */
+.ss-sec {
+  border-top: 1px solid var(--rule);
+}
+.ss-sec-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 32px;
+}
+.ss-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 4px;
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+  color: var(--ink);
+  text-align: left;
+}
+.ss-toggle:hover {
+  background: var(--sheet-2);
+}
+.ss-toggle .tri {
+  width: 10px;
+  color: var(--ink-2);
+}
+.ss-all {
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.ss-list {
+  margin: 0 0 4px;
+  padding: 0;
+  list-style: none;
+}
+.ss-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding-left: 16px;
+}
+.ss-row.house {
+  padding-left: 34px;
+}
+.ss-row .check {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--serif);
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+  color: var(--ink);
+}
+.ss-row.on .check .nm {
+  font-weight: 600;
+}
+/* «только это» — видна при наведении и фокусе строки; на касании — всегда (§ 7) */
+.ss-row .only {
+  min-height: 28px;
+  opacity: 0;
+}
+.ss-row:hover .only,
+.ss-row:focus-within .only {
+  opacity: 1;
+}
+@media (pointer: coarse) {
+  .ss-row .only {
+    opacity: 1;
+    min-height: 44px;
+  }
+  .ss-row,
+  .ss-kind,
+  .ss-radio,
+  .ss-sec-head,
+  .ss-toggle {
+    min-height: 44px;
+  }
+}
+.ss-links {
+  margin-top: 10px !important;
+}
+.ss-links legend {
+  margin: 0 0 2px;
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  color: var(--ink-2);
+}
+/* род лица: поле лица, сегменты направления, поколений и «по отцам | по крови» */
+.ss-lineage h3 {
+  margin: 12px 0 4px;
+  font-size: var(--t-body);
+  line-height: var(--t-body-lh);
+}
+.ss-lineage .slot {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.ss-lineage .slot .k {
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  color: var(--ink-2);
+}
+.ss-lineage .who {
+  font-family: var(--serif);
+  font-size: var(--t-body);
+  line-height: var(--t-body-lh);
+}
+.ss-opts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 8px;
+}
+.ss-opts .k {
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  color: var(--ink-2);
+  margin-right: -6px;
+}
+.ss-count {
+  margin: 10px 0 0;
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+  color: var(--ink-2);
+}
+/* телефон: лист во всю высоту неба; «Показать N лиц» — внизу листа, во всю ширину */
+.ss-apply {
+  position: sticky;
+  bottom: -14px;
+  margin: 12px -16px -14px;
+  padding: 8px 16px 12px;
+  background: var(--sheet);
+  border-top: 1px solid var(--rule);
+}
+.ss-apply .apply {
+  width: 100%;
+  min-height: 48px;
+  justify-content: center;
+  background: var(--ink);
+  color: var(--sheet);
+  font-size: var(--t-ui);
+}
+.ss-apply .apply:hover {
+  background: var(--ink-2);
+  color: var(--sheet);
+}
+@media (max-width: 720px) {
+  .sky > .sheet.showsheet {
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    max-height: none;
+    border: 0;
+    padding: 10px 16px 14px;
+  }
+}

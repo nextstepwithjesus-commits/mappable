@@ -2,8 +2,9 @@
  * «Условные знаки» — как читать карту (G5; UX-35, VIS-31, VIS-32, CARD-43; ТЗ § 5.4; принцип 3 docs/UI-PROMPT.md).
  *
  * Всё видимое на небе объяснено строкой с образцом, и образец нарисован той же функцией, что небо:
- *  — знаки, следы, отводы, скобы, браки, выделение рода и ленты — отдельными образцами: drawGlyph, drawLifeTrail,
- *    drawDescent, drawBracket, drawMarriage, buildRibbons и drawStrands (PAINTERS; их же берёт образец #/specimen);
+ *  — знаки, следы, призрак жены и ленты — отдельными образцами: drawGlyph, drawLifeTrail, drawDescent, buildRibbons
+ *    и drawStrands (PAINTERS); грамматика связей (этап 11, решение 78: ромб союза, узел, ствол и зубцы, черта брака,
+ *    разрыв, обрывки, лента в узле, выбранная связь) — образцами неба drawLinkSample (src/render/plates.ts);
  *    подсветка ветвей выбранного лица — образцом неба drawBranchSample (src/render/branches.ts);
  *  — рамка, облака, созвездия, скопления, кольца, указатели у края, путь родства, выноски линий и меридиан — вырезкой
  *    из настоящего неба: Sky.draw рисует кадр на невидимом холсте, в панель переносится его часть (CROPS);
@@ -11,7 +12,8 @@
  *    STATE_TEXT, MARK_FULL, CERT_FULL).
  * Своих копий рисования здесь нет: это проверяет tests/legend.test.ts.
  *
- * Порядок: «Как читать карту» (#legend-guide), небо, знаки, линии, время, карточка, клавиши (#legend-keys), слои.
+ * Порядок: «Как читать карту» (#legend-guide), небо, карточки на небе, знаки, линии, время, карточка, клавиши
+ * (#legend-keys), слои.
  */
 import { effect } from '@preact/signals';
 import { Fragment, type ComponentChildren } from 'preact';
@@ -20,24 +22,18 @@ import { byId, graph, type ModelData } from '../../data/atlas.ts';
 import { buildRibbons } from '../../engine/ribbons.ts';
 import { relate } from '../../engine/kinship.ts';
 import { toAstro } from '../../engine/years.ts';
-import { TREE } from '../../engine/tree.ts';
-import { PersonCard, UnionCard, UnnamedCard } from '../tree/Cards.tsx';
-import type { TreeNode } from '../../engine/tree.ts';
-import { nodeBox } from '../tree/geom.ts';
-import { Avatar, UnnamedAvatar } from '../tree/Avatar.tsx';
+import { Avatar, UnnamedAvatar } from '../card/Avatar.tsx';
 import { alpha } from '../../render/color.ts';
-import { mapFont, T_MAP_S } from '../../render/type.ts';
 import { drawBirthBand, drawGlyph, roleSigla, starRadius, type GlyphOpts } from '../../render/glyphs.ts';
-import { drawWorkMark, highlightFor, SIB } from '../../render/marks.ts';
-import { BRANCH_FADE, branchColor, drawBranchSample } from '../../render/branches.ts';
-import { drawUnionSample } from '../../render/plates.ts';
-import { atlasView, unionById } from '../reveal.ts';
+import { drawWorkMark, highlightFor } from '../../render/marks.ts';
+import { drawBranchSample } from '../../render/branches.ts';
+import { drawLinkSample, type LinkSign } from '../../render/plates.ts';
 import { drawStrands, lineNoteHits, ribbonLook } from '../../render/ribbons.ts';
 import { drawFoldMark } from '../../render/labels.ts';
 import { eventMarks } from '../../render/frame.ts';
-import { DIM, FRAME_H, readPalette, Sky, type Palette, type SkyState } from '../../render/sky.ts';
+import { FRAME_H, readPalette, Sky, type Palette, type SkyState } from '../../render/sky.ts';
 import {
-  drawBracket, drawDescent, drawEpochBracket, drawFamilyText, drawLifeTrail, drawMarriage, ghostNote, LINK_STYLE, motherNote, orderNote, TAIL_PX, type LifeTrail,
+  drawDescent, drawEpochBracket, drawLifeTrail, ghostNote, TAIL_PX, type LifeTrail,
 } from '../../render/trails.ts';
 import type { SkyView } from '../../render/rows.ts';
 import { lambda, layers, lineFlip, model, theme } from '../../state.ts';
@@ -55,14 +51,10 @@ import { Sheet } from './Sheet.tsx';
 /** Образец: рисунок в пикселях CSS на холсте w × h; фон холста — небо (правило .legend-sample). */
 export type Painter = (ctx: CanvasRenderingContext2D, pal: Palette, w: number, h: number) => void;
 
-/** Вид линий неба на масштабе семьи — как в src/render/trails.ts (drawTrails, drawDescents, drawMarriages). */
+/** Вид следа неба — как в src/render/trails.ts (drawTrails). */
 const look = {
   /** след звезды величины 0–2 (a — яркость лица при выделении) */
   trail: (pal: Palette, a = 1) => alpha(pal.ink2, 0.55 * 1.25 * a),
-  link: (pal: Palette) => alpha(pal.ink3, 0.75),
-  knot: (pal: Palette) => alpha(pal.ink2, 0.9),
-  tension: (pal: Palette) => alpha(pal.ink, 0.9),
-  marriage: (pal: Palette) => alpha(pal.ink3, 0.8),
 };
 
 /** Знак лица образца: по умолчанию — мужчина, величина 3, цвет имён на небе. */
@@ -88,12 +80,11 @@ const signTrail = (o: Partial<GlyphOpts>): Painter => (ctx, pal, w, h) => person
 /** Величина звезды m. */
 export const magnitude = (m: number): Painter => (ctx, pal, w, h) => drawGlyph(ctx, w / 2, h / 2, star(pal, { magnitude: m }));
 
-/** Помета порядка у сыновей Иессея — из данных, как на небе: «годы — по порядку 1 Пар 2:13–15, выв.». */
-const ORDER_FAMILY = ['eliav-syn-iesseya', 'aminadav-syn-iesseya', 'samma-syn-iesseya', 'nafanail-syn-iesseya', 'radday', 'otsem-syn-iesseya', 'david'];
-export const orderSample = () => orderNote(ORDER_FAMILY.filter((id) => byId.has(id))) ?? 'годы — по порядку перечисления, выв.';
-
 /** Середина пикселя: линии в 1 px без размытия. */
 const px = (v: number) => Math.round(v) + 0.5;
+
+/** Знак грамматики связей — образцом неба (drawLinkSample). */
+const linkSign = (sign: LinkSign): Painter => (ctx, pal, w, h) => drawLinkSample(ctx, pal, w, h, sign);
 
 export const PAINTERS = {
   man: signTrail({}),
@@ -147,132 +138,20 @@ export const PAINTERS = {
     person(ctx, pal, 16, y, w - 10);
     drawWorkMark(ctx, 16, y, starRadius(3), pal.ink);
   },
-  /** отвод: от следа родителя к звезде ребёнка в год его рождения */
-  descent: (ctx, pal, w, h) => {
-    const [y0, y1, x] = [px(8), px(h - 9), px(w * 0.5)];
-    person(ctx, pal, 12, y0, w - 8);
-    person(ctx, pal, x, y1, w - 8);
-    ctx.lineWidth = 1;
-    drawDescent(ctx, { x, y0, y1, color: look.link(pal) });
-    drawGlyph(ctx, x, y1, star(pal));
-  },
-  /** узелок матери: её след пересекает отвод */
-  mother: (ctx, pal, w, h) => {
-    const [y0, ym, y1, x] = [px(7), px(h / 2), px(h - 8), px(w * 0.62)];
-    person(ctx, pal, 12, y0, w - 8);
-    person(ctx, pal, 22, ym, w - 8, { sex: 'f' });
-    person(ctx, pal, x, y1, w - 8);
-    ctx.lineWidth = 1;
-    drawDescent(ctx, { x, y0, y1, color: look.link(pal), mother: { y: ym, color: look.knot(pal) } });
-    drawGlyph(ctx, x, y1, star(pal));
-  },
-  /** хронологическое напряжение: знак разрыва на отводе */
-  tension: (ctx, pal, w, h) => {
-    const [y0, y1, x] = [px(7), px(h - 8), px(w * 0.5)];
-    person(ctx, pal, 12, y0, w - 8);
-    person(ctx, pal, x, y1, w - 8);
-    ctx.lineWidth = 1;
-    drawDescent(ctx, { x, y0, y1, color: look.link(pal), tension: look.tension(pal) });
-    drawGlyph(ctx, x, y1, star(pal));
-  },
-  /** дети одной пары, рождённые рядом, — под одной скобой */
-  bracket: (ctx, pal, w, h) => {
-    const y0 = px(7);
-    const kids = [0, 1, 2].map((k) => ({ x: px(w * 0.36 + k * 11), y: px(y0 + 12 + k * ((h - 26) / 2)) }));
-    person(ctx, pal, 12, y0, w - 8);
-    for (const k of kids) drawLifeTrail(ctx, trail(pal, k.x, w - 8, k.y));
-    ctx.lineWidth = 1;
-    drawBracket(ctx, { x: kids[0].x, y0, kids, color: look.link(pal) });
-    for (const k of kids) drawGlyph(ctx, k.x, k.y, star(pal));
-  },
   /**
-   * дети разных матерей одного отца: у каждой матери своя короткая гребёнка на уровне её детей, одним тонким сплошным
-   * начертанием (MAP-74); старшие дети — дальше от следа отца, как на небе
+   * Грамматика связей (этап 11, решение 78; STAGE11 § 2): ромб союза на следе матери, узел второго гнезда, ствол с
+   * зубцами и чертой брака, разрыв чужого следа, обрывки длинной связи, лента в узле своего шага, выбранная связь —
+   * образцами неба drawLinkSample (src/render/plates.ts, Q1): те же рисовальщики и размеры, что на небе.
    */
-  mothers: (ctx, pal, w, h) => {
-    const y0 = px(7);
-    const step = (h - 14) / 4;
-    const group = (x: number, top: number) => [0, 1].map((k) => ({ x: px(x + k * 12), y: px(top + k * step) }));
-    const a = group(w * 0.2, y0 + 3 * step);
-    const b = group(w * 0.58, y0 + step);
-    person(ctx, pal, 10, y0, w - 6);
-    for (const k of [...a, ...b]) drawLifeTrail(ctx, trail(pal, k.x, w - 6, k.y));
-    ctx.lineWidth = 1;
-    drawBracket(ctx, { x: a[0].x, y0, kids: a, color: look.link(pal) });
-    drawBracket(ctx, { x: b[0].x, y0, kids: b, color: look.link(pal) });
-    for (const k of [...a, ...b]) drawGlyph(ctx, k.x, k.y, star(pal));
-  },
+  linkTrunk: linkSign('trunk'),
+  linkNode: linkSign('node'),
+  linkJoin: linkSign('join'),
+  linkCut: linkSign('cut'),
+  linkStub: linkSign('stub'),
+  linkRibbon: linkSign('ribbon'),
+  linkSelected: linkSign('selected'),
   /** свёрнутое созвездие (J5): строка с названием и числом скрытых лиц */
   foldGroup: (ctx, pal, _w, h) => drawFoldMark(ctx, pal, false, 6, Math.round(h / 2) + 4, 'ЕДОМ', '+38'),
-  /**
-   * «годы — по порядку …, выв.» (MAP-73, UX-73; решение 41): дети на гребёнке и помета у первого из них — той же
-   * функцией, что на небе (drawFamilyText); текст пометы — из данных, как у сыновей Иессея (orderNote)
-   */
-  order: (ctx, pal, w, h) => {
-    const text = orderSample();
-    ctx.font = mapFont(T_MAP_S, { italic: true, coarse: false });
-    const tw = ctx.measureText(text).width;
-    const y0 = px(8);
-    const step = (h - 16) / 3;
-    // помета — слева от первого ребёнка, как первое место пометы на небе
-    const x0 = Math.max(w * 0.45, tw + 24);
-    const kids = [0, 1, 2].map((k) => ({ x: px(x0 + k * 14), y: px(y0 + (k + 1) * step) }));
-    person(ctx, pal, 12, y0, w - 8);
-    for (const k of kids) drawLifeTrail(ctx, trail(pal, k.x, w - 8, k.y));
-    ctx.lineWidth = 1;
-    drawBracket(ctx, { x: kids[0].x, y0, kids, color: look.link(pal) });
-    for (const k of kids) drawGlyph(ctx, k.x, k.y, star(pal));
-    drawFamilyText(ctx, pal, text, kids[0].x - 8 - tw, kids[0].y + 4);
-  },
-  /** брак: «‖» от следа мужа к жене в год первого ребёнка */
-  marriage: (ctx, pal, w, h) => {
-    const [yH, yW] = [px(9), px(h - 10)];
-    person(ctx, pal, 12, yH, w - 8);
-    person(ctx, pal, 22, yW, w - 8, { sex: 'f' });
-    ctx.lineWidth = 1;
-    drawMarriage(ctx, { x: px(w * 0.55), yH, yW, color: look.marriage(pal), near: 60 });
-  },
-  /** к дальней жене — «‖» 8 px и тонкая выноска */
-  marriageFar: (ctx, pal, w, h) => {
-    const [yH, yW] = [px(7), px(h - 7)];
-    person(ctx, pal, 12, yH, w - 8);
-    person(ctx, pal, 22, yW, w - 8, { sex: 'f' });
-    ctx.lineWidth = 1;
-    drawMarriage(ctx, { x: px(w * 0.55), yH, yW, color: look.marriage(pal), near: 12 });
-  },
-  /**
-   * Выделение рода: дед и отец (предки) — сплошная связь 1,5 px, выбранное лицо, его сын (потомок) — штрихом, брат —
-   * тонкой связью и бледнее; чужая семья гаснет.
-   */
-  family: (ctx, pal, w, h) => {
-    const row = (k: number) => px(8 + k * ((h - 16) / 4));
-    const G = { x: px(14), y: row(0) };
-    const P = { x: px(w * 0.2), y: row(1) };
-    const S = { x: px(w * 0.38), y: row(2) };
-    const B = { x: px(w * 0.47), y: row(3) };
-    const C = { x: px(w * 0.62), y: row(4) };
-    const other = { x: px(w * 0.72), y: row(1) };
-    person(ctx, pal, other.x, other.y, w - 8, {}, {}, DIM);
-    person(ctx, pal, G.x, G.y, w - 8);
-    person(ctx, pal, P.x, P.y, w - 8);
-    person(ctx, pal, S.x, S.y, w - 8, { magnitude: 2 });
-    person(ctx, pal, B.x, B.y, w - 8, {}, {}, SIB);
-    person(ctx, pal, C.x, C.y, w - 8);
-    const link = (from: { x: number; y: number }, to: { x: number; y: number }, kind: keyof typeof LINK_STYLE, a = 1) => {
-      const st = LINK_STYLE[kind];
-      ctx.lineWidth = st.width;
-      drawBracket(ctx, { x: to.x, y0: from.y, kids: [to], color: alpha(pal.ink2, a), dash: st.dash });
-    };
-    link(G, P, 'anc');
-    link(P, S, 'anc');
-    link(P, B, 'sib', SIB);
-    link(S, C, 'desc');
-    ctx.lineWidth = 1;
-    drawGlyph(ctx, P.x, P.y, star(pal));
-    drawGlyph(ctx, S.x, S.y, star(pal, { magnitude: 2 }));
-    drawGlyph(ctx, B.x, B.y, star(pal, {}, SIB));
-    drawGlyph(ctx, C.x, C.y, star(pal));
-  },
   /**
    * Две ленты: общий участок (коса), у Луки лишнее звено по толкованию (разреженная нить), снова коса, расхождение на два
    * поколения (Иосиф выше), схождение; последнее лицо — Иисус Христос.
@@ -295,11 +174,6 @@ export const PAINTERS = {
   },
   /** подсветка ветвей выбранного лица (решение 69): предок, выбранное лицо, три ветви своих цветов, внук бледнее */
   branches: drawBranchSample,
-  /**
-   * союз на небе — точка (решения 67, 70, 76): раскрытый — залитый ромб со скобками от мужа и жены и линиями к трём детям
-   * цветами их ветвей; свёрнутый — полый ромб у строки лица и «+4». Тот же рисунок, что на небе (drawUnionSample)
-   */
-  plates: (ctx, pal, w, h) => void drawUnionSample(ctx, pal, w, h),
 } satisfies Record<string, Painter>;
 
 export type PainterKey = keyof typeof PAINTERS;
@@ -670,64 +544,7 @@ function StripSample() {
   return <canvas ref={ref} class="legend-sample" style={{ width: '100%', height: `${h}px` }} aria-hidden="true" />;
 }
 
-// ---------- образцы древа (решение 73) ----------
-
-/**
- * Образцы карточек древа — сами карточки древа (src/ui/tree/Cards.tsx) на месте раскладки, без действия: образец
- * всегда выглядит и говорит так же, как карточка на полотне. Слой inert: карточки не берут фокус и не нажимаются.
- */
-const noop = () => {};
-const SAMPLE = { current: false, glow: '', onSelect: noop, onKey: noop } as const;
-
-/** Место образца: карточка стоит в своей точке раскладки (nodeBox), слой сдвинут так, что она — в левом верхнем углу. */
-function Stage({ node, children }: { node: TreeNode; children: ComponentChildren }) {
-  const b = nodeBox(node);
-  return (
-    <span class="lt-sample" aria-hidden="true">
-      <span class="lt-stage" inert style={{ width: `${b.w}px`, height: `${b.h}px` }}>
-        <span class="lt-plane" style={{ left: `${-b.x}px`, top: `${-b.y}px` }}>
-          {children}
-        </span>
-      </span>
-    </span>
-  );
-}
-
-/** Образец карточки лица древа: образ, имя, годы и команды «Продолжить ветвь», «Родители». */
-function TreePersonSample({ id }: { id: string }) {
-  if (!byId.has(id)) return null;
-  const node: TreeNode = { kind: 'person', key: `p:${id}`, id, layer: 0, y: TREE.personH / 2, h: TREE.personH };
-  return (
-    <Stage node={node}>
-      <PersonCard {...SAMPLE} node={node} id={id} cmds={{ more: true, fold: false, parents: true, hideParents: false }} onMore={noop} onFold={noop} onParents={noop} onHideParents={noop} />
-    </Stage>
-  );
-}
-
-/** Образец карточки союза: «союз» и первый стих, имена супругов, вид связи, «Раскрыть детей (N)» и «Подробнее». */
-function TreeUnionSample({ uid }: { uid: string }) {
-  const u = unionById(uid);
-  if (!u) return null;
-  const node: TreeNode = { kind: 'union', key: uid, union: u, layer: 1, y: TREE.unionH / 2, h: TREE.unionH, hidden: u.kids.length, open: false };
-  return (
-    <Stage node={node}>
-      <UnionCard {...SAMPLE} node={node} u={u} open={false} hidden={u.kids.length} onKids={noop} onMore={noop} />
-    </Stage>
-  );
-}
-
-/** Образец пустого места: пунктирная рамка, «Мать … не названа в Писании» и стих союза. */
-function TreeUnnamedSample({ uid }: { uid: string }) {
-  const u = unionById(uid);
-  if (!u) return null;
-  const role = u.b ? 'a' : 'b';
-  const node: TreeNode = { kind: 'unnamed', key: `${uid}#${role}`, union: u, role, layer: 0, y: TREE.unnamedH / 2, h: TREE.unnamedH };
-  return (
-    <Stage node={node}>
-      <UnnamedCard {...SAMPLE} node={node} u={u} role={role} />
-    </Stage>
-  );
-}
+// ---------- образы лиц (решение 74) ----------
 
 /** Образцы образов лиц (решение 74): мужчина, женщина, народ, неназванное лицо, Иисус Христос — функциями древа. */
 function AvatarSamples() {
@@ -748,52 +565,6 @@ function AvatarSamples() {
         </span>
       ))}
     </span>
-  );
-}
-
-/** Узел-карточка на схеме связей. */
-const Node = ({ x, y, w = 44, h = 20, sel = false, o }: { x: number; y: number; w?: number; h?: number; sel?: boolean; o?: number }) => (
-  <rect class={sel ? 'lt-node sel' : 'lt-node'} x={x} y={y} width={w} height={h} opacity={o} />
-);
-
-/** Образец связей древа: союз → ребёнок двойной линией (золотой и лазурной) и одной — лазурной, где линии разошлись. */
-function TreeLinesSample() {
-  return (
-    <svg class="lt-svg tree-links" viewBox="0 0 228 64" width="228" height="64" aria-hidden="true">
-      <Node x={2} y={22} />
-      <Node x={182} y={4} />
-      <Node x={182} y={40} />
-      <path class="rb mt" d="M46 30.5 H98 a6 6 0 0 0 6 -6 V20 a6 6 0 0 1 6 -6 H182" />
-      <path class="rb lk" d="M46 33.5 H101 a6 6 0 0 0 6 -6 V23 a6 6 0 0 1 6 -6 H182" />
-      <path class="rb lk" d="M46 33.5 H101 a6 6 0 0 1 6 6 V44 a6 6 0 0 0 6 6 H182" />
-    </svg>
-  );
-}
-
-/** Образец ветвей выбранного лица: две ветви цветами неба (branchColor), бледнеющие по поколениям; предок — светлым. */
-function TreeBranchSample() {
-  const t = theme.value;
-  const f = (g: number) => BRANCH_FADE[Math.min(g, BRANCH_FADE.length - 1)];
-  const branch = (i: number, d: string, g: number) => (
-    <g style={{ '--c': branchColor(i, t), '--a': String(f(g)) }}>
-      <path class="glow desc" d={d} />
-      <path class="ln desc" d={d} />
-    </g>
-  );
-  return (
-    <svg class="lt-svg tree-links" viewBox="0 0 304 64" width="304" height="64" aria-hidden="true">
-      <path class="glow anc" d="M2 32 H40" />
-      <path class="ln anc" d="M2 32 H40" />
-      <Node x={40} y={22} sel />
-      {branch(0, 'M84 32 H104 a6 6 0 0 0 6 -6 V18 a6 6 0 0 1 6 -6 H140', 0)}
-      {branch(1, 'M84 32 H104 a6 6 0 0 1 6 6 V46 a6 6 0 0 0 6 6 H140', 0)}
-      <Node x={140} y={3} h={18} />
-      <Node x={140} y={43} h={18} />
-      {branch(0, 'M184 12 H258', 1)}
-      {branch(1, 'M184 52 H258', 1)}
-      <Node x={258} y={3} h={18} o={0.8} />
-      <Node x={258} y={43} h={18} o={0.8} />
-    </svg>
   );
 }
 
@@ -849,7 +620,7 @@ export const GLOSSARY: [string, string][] = [
 /** Разделы панели после «Как читать карту». */
 const PARTS = [
   ['legend-sky', 'Небо'],
-  ['legend-tree', 'Древо'],
+  ['legend-cards', 'Карточки на небе'],
   ['legend-signs', 'Знаки'],
   ['legend-lines', 'Линии'],
   ['legend-time', 'Время'],
@@ -865,15 +636,12 @@ export function LegendPanel() {
   // перечитать образцы при смене темы
   void theme.value;
   const go = (id: string) => document.getElementById(id)?.scrollIntoView({ block: 'start' });
-  const leah = motherNote('liya') ?? 'от Лии';
-  const order = orderSample();
   const rachel = ghostNote('rakhil', 'iakov');
   return (
     <Sheet title="Условные знаки" lead="Как читать карту: что значит каждый знак, линия и надпись на небе.">
       {/* тот же текст, что во вступлении (C5; UX-03): клавиша «?» и команда «Как читать карту» ведут сюда */}
       <h3 id="legend-guide">Как читать карту</h3>
-      {/* в древе (решение 73) — как читать древо; небо — в разделе «Небо» ниже, и наоборот */}
-      <ReadingGuide both tree={atlasView.value === 'tree'} />
+      <ReadingGuide both />
       {/* одно слово — одно понятие (решение 36; UX-54): эти слова значат одно и то же во всех текстах атласа */}
       <dl class="glossary">
         {GLOSSARY.map(([term, what]) => (
@@ -934,11 +702,11 @@ export function LegendPanel() {
         </Wide>
         <Wide s={C('fold', 56)}>
           «+» с числом сразу после имени — потомки лица скрыты на небе, число — сколько лиц скрыто (здесь — у Давида);
-          щелчок по знаку показывает их. Скрыть потомков на небе — пункт «Взять в работу ▾» в карточке, клавиша С (C)
+          щелчок по знаку показывает их. Скрыть потомков на небе — пункт «Добавить в набор ▾» в подробной карточке, клавиша С (C)
           или меню звезды: правая кнопка мыши, долгое касание.
         </Wide>
         <Row s={P('workMark')}>
-          уголок над звездой справа — лицо в рабочем наборе («Взять в работу»); при взятии звезда один раз обводится
+          уголок над звездой справа — лицо в наборе («Добавить в набор»); при добавлении звезда один раз обводится
         </Row>
         <li class="legend-row legend-wide">
           <span class="legend-text">
@@ -948,58 +716,69 @@ export function LegendPanel() {
         </li>
         <Row s={P('foldGroup')}>
           Свёрнутое созвездие — надпись с названием и числом скрытых лиц; щелчок разворачивает. Свернуть созвездие — правой
-          кнопкой мыши или долгим касанием по его названию; развернуть всё сразу — команда «развернуть всё» в строке «На небе»
-          у кнопок внизу справа.
+          кнопкой мыши или долгим касанием по его названию; развернуть всё сразу — команда «развернуть всё» у кнопок внизу
+          справа.
         </Row>
+        {/* показ (решения 81, 82): строка «На небе: …» и лист «Показ» — src/ui/sky/ShowBar.tsx, src/ui/panels/Show.tsx */}
         <li class="legend-row legend-wide">
           <span class="legend-text">
-            Переключатель «На небе» в положении «набор» — только лица рабочего набора, все подписаны; пустые строки неба убраны, между родами — зазор;
-            ленты Мессии — тонкой нитью. «Всё небо» вписывает набор — звёзды и точки союзов; долгие следы жизни уходят за
-            правый край. Набор собирается командой «Взять в работу» в карточке,
-            в подсказке звезды, в поиске и в «Родстве»; список — в панели «В работе».
+            Строка «На небе: …» у верхней кромки неба говорит, что показано: всё небо, линии Мессии, ключевые лица,
+            созвездия, род лица или набор, и сколько в показе лиц. Её части — команды: «изменить» открывает лист «Показ»,
+            в нём — вид показа, созвездия с полем «Найти созвездие», связи наружу, род лица и число лиц до применения.
+            «Вписать» у кнопок внизу справа и название «Толедот» ставят в окно весь показ; «Всё небо» — показ всех лиц.
           </span>
         </li>
-        {/* раскрытие родословия (решения 67, 68, 70, 72, 76): точка союза — образцом неба drawUnionSample (src/render/plates.ts) */}
-        <Wide s={<Paint draw={PAINTERS.plates} h={64} />}>
-          Союз на небе — брак или связь, от которой пошли дети: жена, наложница, служанка, данная в жену. В небе «набор»
-          союз — малый ромб между строками мужа и жены, ближе к строкам детей, правее звёзд супругов и левее звезды первого
-          ребёнка: к нему сходятся плавные линии от мужа и жены, от него к каждому ребёнку идёт прямая линия цвета его
-          ветви. Залитый ромб — союз раскрыт: оба супруга и все дети на небе; полый с числом — свёрнут, число — сколько лиц
-          союза ещё не показано. Линия штрихом — происхождение иного рода (по закону, по Луке, усыновление), редкими
-          точками — по толкованию. Щелчок по звезде открывает у неё карточку лица: «Информация» — подробная карточка
-          справа, «Продолжить ветвь» — точки его союзов, «Родители» — союз родителей. Щелчок по точке открывает у неё
-          карточку союза: супруги, вид связи и стих; «Раскрыть детей» или «Свернуть детей», «Подробнее» — карточка союза
-          справа.
+        <li class="legend-row legend-wide">
+          <span class="legend-text">
+            Набор — лица, собранные вручную: начало «С Адама» или «С Иисуса Христа», раскрытые союзы и команда «Добавить в
+            набор» в подробной карточке, в меню звезды, в поиске и в «Родстве». В показе «набор» подписаны все его лица,
+            пустые строки неба убраны; список — в панели «Набор».
+          </span>
+        </li>
+        {/* союз на небе (решение 78, Г4): ромб на следе матери — образцом неба drawLinkSample (src/render/plates.ts) */}
+        <Wide s={<Paint draw={PAINTERS.linkNode} h={30} />}>
+          Союз на небе — брак или связь, от которой пошли дети: жена, наложница, служанка, данная в жену. Ромб союза стоит
+          на следе матери, там, где из него выходит ствол к её детям; мать не названа — на следе отца. От мужа к ромбу идёт
+          черта брака, от ромба — вертикальный ствол, от ствола — короткие зубцы к детям: старший ближе к матери, дальше
+          вниз по годам. Залитый ромб — дети показаны; полый с числом — свёрнуты, число — сколько лиц союза ещё не
+          показано. Линия штрихом — иное происхождение (по закону, по Луке, левират, усыновление), точками — по толкованию
+          и «время не установлено». Щелчок по ромбу открывает у него карточку союза: супруги, вид связи и стих; «Раскрыть
+          детей» или «Свернуть детей», «Карточка союза» — подробная карточка союза справа.
         </Wide>
         <li class="legend-row legend-wide">
           <span class="legend-text">
-            Плюс без числа после имени — у лица есть нераскрытые союзы: щелчок по нему покажет точки его союзов. Плюс с числом
-            после имени — другое: потомки лица скрыты на небе (см. выше).
+            Плюс без числа после имени — у лица есть союзы, которых нет на небе: щелчок по нему покажет их ромбы, как
+            «Продолжить ветвь» в карточке у звезды. Плюс с числом после имени — другое: потомки лица скрыты на небе (см.
+            выше).
           </span>
         </li>
         <li class="legend-row legend-wide">
           <span class="legend-text">
-            Раскрытые лица — это рабочий набор. Начало — «С Адама», «С Иисуса Христа», «Родословие Иисуса Христа», «Ключевые
-            лица» или «Всё небо» — выбирается при первом посещении; первые четыре открывают древо, «Всё небо» — небо.
-            «Начать заново» — в листе «Вид», в панели «В работе» и в меню «Ещё», в древе — во вступлении. Строка у кромки
-            неба и древа говорит, сколько лиц раскрыто, и ведёт ко всему небу.
+            Начало — «С Адама», «С Иисуса Христа», «Родословие Иисуса Христа», «Ключевые лица» или «Всё небо» — выбирается
+            при первом посещении. Первые два начинают набор с одного лица, его карточка у звезды открыта; «Родословие Иисуса
+            Христа» — показ линий Мессии; «Ключевые лица» и «Всё небо» — одноимённые показы. «Начать заново» — в листе
+            «Вид», в панели «Набор» и в меню «Ещё».
           </span>
         </li>
       </ul>
 
-      {/* древо карточек (решение 73): образцы — разметкой, в стиле карточек древа (src/ui/tree/); лица и стихи — из данных */}
-      <h3 id="legend-tree">Древо</h3>
+      {/* один атлас (решения 77, 83): карточка у звезды, у ромба союза и у связи — лист атласа на небе */}
+      <h3 id="legend-cards">Карточки на небе</h3>
       <p class="muted">
-        Древо — второй вид атласа: карточки лиц и союзов слева направо, по поколениям. Переключатель «Небо | Древо» — в верхней
-        строке, на телефоне — в «Разделах».
+        Одна карточка за раз — у звезды, у ромба союза или у выбранной связи. Подробная карточка лица — справа, на телефоне —
+        лист снизу.
       </p>
       <ul class="legend">
-        <Wide s={<TreePersonSample id="sif" />}>
-          Карточка лица: имя, уточнение и годы. «Продолжить ветвь» показывает союзы лица, «Родители» — союз его родителей;
-          щелчок по карточке открывает подробную карточку справа. Выбранная карточка — в рамке цвета фокуса.
-        </Wide>
-        {/* образы лиц (решение 74): силуэт — условный знак оформления, изображение «худож.» — не из Писания; образцы —
-            функциями самих карточек (src/ui/tree/Avatar.tsx) */}
+        <li class="legend-row legend-wide">
+          <span class="legend-text">
+            Щелчок, касание или Enter на звезде — у неё карточка: образ, имя, уточнение, годы и блок «Родство» — родители,
+            жёны или муж, дети, братья и сёстры и как получен год. Наведите указатель на имя в «Родстве» — его линия
+            подсветится на небе; щелчок по имени выбирает это лицо, Enter — открывает карточку этой связи. «Карточка» —
+            подробная карточка справа; «Только его род ▾» — на небе только предки или потомки лица; «Родство с…» — путь к
+            другому лицу.
+          </span>
+        </li>
+        {/* образы лиц (решение 74): силуэт — условный знак оформления, изображение «худож.» — не из Писания */}
         <li class="legend-row legend-wide">
           <span class="legend-pic">
             <AvatarSamples />
@@ -1010,25 +789,20 @@ export function LegendPanel() {
             приложения, не изображение из Писания.
           </span>
         </li>
-        <Wide s={<TreeUnionSample uid="u:adam+eva" />}>
-          Карточка союза — брак или связь, от которой пошли дети: имена супругов, вид связи словами Писания и первый стих.
-          «Раскрыть детей» показывает детей союза, повторное нажатие сворачивает всё, что раскрыто через него; «Подробнее» —
-          карточка союза справа.
-        </Wide>
-        <Wide s={<TreeUnnamedSample uid="u:kain+" />}>
-          Пунктирная рамка — место, которое Писание оставляет без имени: жена или мать не названа. Выдуманных имён и
-          изображений в атласе нет — только то, что сказано в тексте.
-        </Wide>
-        <Wide s={<TreeLinesSample />}>
-          Двойная линия, золотая и лазурная, — шаг родословия Иисуса Христа по Матфею и по Луке; где линии расходятся,
-          у шага одна линия своего цвета. У имени на линии — золотая и лазурная точки, у Иисуса Христа — восьмилучевая
-          звезда.
-        </Wide>
-        <Wide s={<TreeBranchSample />}>
-          Ветви выбранного лица светятся своими цветами, как на небе: у каждого союза с детьми свой цвет, при одном союзе —
-          у ветви каждого ребёнка; цвет бледнеет с каждым поколением. Путь к предкам — мягкое светлое свечение, остальное
-          древо гаснет.
-        </Wide>
+        <li class="legend-row legend-wide">
+          <span class="legend-text">
+            Щелчок по линии — связь выделяется жёлтым, на её концах — кольца с ролями («отец», «мать», «сын»), рядом —
+            карточка связи: «Иаков и Рахиль — родители; Иосиф — сын» и стихи, концы с годами, союз, ленты, если это шаг
+            родословия Иисуса Христа. Выбор лица при этом не меняется. Escape снимает сначала связь, потом карточку у
+            звезды.
+          </span>
+        </li>
+        <li class="legend-row legend-wide">
+          <span class="legend-text">
+            Неназванный супруг: союз — «Сиф и его жена», в карточке — «имя жены в Писании не названо». Если у лица есть и
+            названные жёны, — «Давид (мать не названа)»: какая из жён, текст не говорит.
+          </span>
+        </li>
       </ul>
 
       <h3 id="legend-signs">Знаки</h3>
@@ -1104,29 +878,43 @@ export function LegendPanel() {
           «//» на следе — родословие, вероятно, называет не все поколения: жизнь от рождения до ребёнка вышла бы длиннее
           обычной; дальше разрыва — пунктир (толкование, см. § 13 и § 24 карточки)
         </Row>
-        <Row s={P('descent', 44)}>вертикальный отвод от следа родителя — рождение ребёнка в этот год</Row>
-        <Row s={P('mother', 44)}>квадратик на отводе — мать: её след пересекает отвод</Row>
-        <Row s={P('tension', 44)}>знак разрыва на отводе — хронологическое напряжение: числа текста спорят, родословие здесь, вероятно, сокращено</Row>
-        <Row s={P('bracket', 48)}>дети одной пары, рождённые рядом, — под одной скобой</Row>
-        <Row s={P('mothers', 52)}>дети одной матери — на своей короткой гребёнке, у её корня — помета матери «{leah}»; наведение на гребёнку высвечивает её</Row>
-        <Wide s={<Paint draw={PAINTERS.order} h={56} />}>
-          Помета у детей «{order}» — годы их рождения оценены по порядку, в котором их называет это место Писания: это
-          вывод, а не число текста. Помета видна у семьи выбранного лица и при наведении на гребёнку; подсказка ребёнка
-          называет то же место.
+        {/* грамматика связей (этап 11, решение 78; STAGE11 § 2): образцы — функцией неба drawLinkSample (src/render/plates.ts) */}
+        <Wide s={<Paint draw={PAINTERS.linkTrunk} h={64} />}>
+          Родство идёт по вертикали: от союза родителей — вертикальный ствол, от ствола — короткие зубцы к детям; старший
+          ближе к матери, дальше вниз по годам. Ромб — союз: он стоит на следе матери, там, где из него выходит ствол к её
+          детям; мать не названа или стоит далеко от детей — на следе отца. Двойная черта «‖» — брак: от следа мужа
+          к ромбу. Косых линий нет: путь идёт по времени слева направо, одна связь — одна линия.
         </Wide>
-        <Row s={P('marriage', 40)}>двойная черта «‖» — брак: от следа мужа к жене в год первого ребёнка</Row>
-        <Row s={P('marriageFar', 44)}>к жене, стоящей далеко, — короткая «‖» и тонкая пунктирная выноска</Row>
-        <Wide s={C('family', 150)}>Так семья выглядит на небе: Иаков, рядом с ним его жёны, их дети — под скобами по матерям.</Wide>
-        <Wide s={<Paint draw={PAINTERS.family} h={64} />}>
-          Выбрано лицо — светится его род: предки — сплошной связью, потомки — штрихом, братья и сёстры — тоньше и бледнее;
-          дальше третьего поколения — чуть бледнее; остальное небо гаснет.
+        <Row s={P('linkNode', 30)}>
+          залитый ромб — дети союза показаны; полый с числом — свёрнуты, число — сколько лиц союза ещё не показано; щелчок
+          по числу раскрывает их
+        </Row>
+        <Row s={P('linkJoin', 44)}>точка на следе — второе гнездо того же союза: дети, рождённые далеко от первых, идут от своего ствола</Row>
+        <Row s={P('linkCut', 30)}>разрыв чужого следа — пересечение без связи: линии соединяются только в ромбе или точке</Row>
+        <Row s={P('linkStub', 44)}>
+          на всём небе длинная связь через чужие следы — два коротких обрывка с именем и координатой цели; целиком она видна
+          при наведении и выборе
+        </Row>
+        <li class="legend-row legend-wide">
+          <span class="legend-text">
+            Сплошная линия — Писание; штрих — иное происхождение: по закону, по Луке, левират, усыновление; точки —
+            толкование и время не установлено. Других значений у штриха и точек нет.
+          </span>
+        </li>
+        <Wide s={C('family', 150)}>Так семья выглядит на небе: Иаков и его жёны; у каждой матери — свой ромб, свой ствол и её дети.</Wide>
+        {/* выбранная связь (решения 83, 84): жёлтый путь и кольца на концах — drawLinkSample('selected') */}
+        <Wide s={<Paint draw={PAINTERS.linkSelected} h={44} />}>
+          Щелчок по линии — связь выделяется жёлтым, на обоих концах — кольца с ролями: отец, мать, сын. Рядом — карточка
+          связи: кто её концы, стихи, ленты и союз. Конец за краем окна — жёлтый указатель у кромки. Выбор лица при этом не
+          меняется; снять связь — «×», Escape или щелчок по пустому небу.
         </Wide>
         {/* подсветка ветвей (решение 69): образец — функцией неба drawBranchSample (src/render/branches.ts) */}
         <Wide s={<Paint draw={PAINTERS.branches} h={64} />}>
-          Подсветка ветвей выбранного лица: его потомки окрашены по ветвям. Если у лица два союза с детьми и больше — у
-          каждого союза свой цвет (у Авраама — Сарра, Агарь, Хеттура); если союз один — свой цвет у ветви каждого ребёнка
-          (у Ноя — Сим, Хам, Иафет). Цвет со свечением тянется по всей ветви и бледнеет с каждым поколением; черта под
-          именем — начало ветви; предки выбранного — мягкое белое свечение. Цвета ветвей не похожи на золото и лазурь лент.
+          Подсветка ветвей выбранного лица: на небе его семья — союз родителей, его союзы и дети, все подписаны; остальное
+          небо гаснет. Предки — мягкое белое свечение; потомки окрашены по ветвям. Если у лица два союза с детьми и больше —
+          у каждого союза свой цвет (у Авраама — Сарра, Агарь, Хеттура); если союз один — свой цвет у ветви каждого ребёнка
+          (у Ноя — Сим, Хам, Иафет). Цвет тянется по всей ветви и бледнеет с каждым поколением; черта под именем — начало
+          ветви. Цвета ветвей не похожи на золото и лазурь лент и на жёлтый выбранной связи.
         </Wide>
         <Wide s={C('path', 120)}>
           Путь родства — ломаная линия со словами шагов («мать», «сын»): кровное родство сплошной линией, по закону и брак —
@@ -1139,11 +927,15 @@ export function LegendPanel() {
         <Wide s={<Paint draw={PAINTERS.ribbons} h={64} />}>
           Золотая лента — линия Иосифа (Мф 1), лазурная — линия по Луке, традиционно — Марии (Лк 3). Где линии совпадают,
           нити свиты в косу, лицо — между нитями; где расходятся, у каждой свои лица, нить Иосифа выше. Разреженная нить —
-          звено по толкованию. Наведите указатель на ленту — появится шаг линии со стихом («Давид → Соломон (Мф 1:6)»)
-          и медленный ток света к Иисусу Христу.
+          звено по толкованию. Наведите указатель на ленту — появится шаг линии словами родства и стихом, где назван
+          родитель (Давид — отец; Соломон — сын, Мф 1:6), и медленный ток света к Иисусу Христу.
         </Wide>
+        <Row s={P('linkRibbon', 56)}>
+          на масштабе семьи лента идёт по следу родителя до ромба своего шага и ступенькой уходит к звезде ребёнка; другой
+          линии к ребёнку линии Мессии нет. В ромбе Давида и Вирсавии ленты расходятся: золото — к Соломону, лазурь — к Нафану
+        </Row>
         <Wide s={C('compare', 90)}>
-          В режиме «Только линии Мессии» у мест, где линии расходятся и сходятся, — выноски со стихами; щелчок по выноске
+          В показе «линии Мессии» у мест, где линии расходятся и сходятся, — выноски со стихами; щелчок по выноске
           открывает синопсис этого участка.
         </Wide>
         <Wide s={C('split', 130)}>

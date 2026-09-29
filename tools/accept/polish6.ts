@@ -2,6 +2,9 @@
  * Сценарии приёмки: доводка неба «набор» после решения 76 (задача P3), группа polish6: номера 700–719 — «Всё небо»
  * вписывает раскрытое, помета порядка не на линиях к детям, большая семья читается (точки между супругами, не вплотную,
  * жёны подписаны), карточка у точки не закрывает своей семьи, справка — о точке союза. Небо «все лица» — как прежде.
+ * Этап 11 (задача Q3): кнопка кадра называется «Вписать» (Я30); на телефоне карточка — нижний лист (решение 77); справка —
+ * о грамматике связей решения 78 (ромб на следе матери, ствол, зубцы) и командах «Карточка», «Карточка союза» — сценарии
+ * 707–710 и помощник fitSky приведены к этому.
  */
 import type { Page } from 'playwright';
 import { fail, pass, type Scenario } from './kit.ts';
@@ -70,14 +73,9 @@ const reserves = (p: Page) =>
 /** Наложения подписей: «подписано/наложений» (.sky[data-labels]). */
 const overlaps = async (p: Page) => Number(((await p.evaluate(() => (document.querySelector('.sky') as HTMLElement).dataset.labels ?? '')).split('/')[1]) ?? NaN);
 const inside = (q: Pt, b: Box, pad = 0) => q.x > b.x - pad && q.x < b.x + b.w + pad && q.y > b.y - pad && q.y < b.y + b.h + pad;
-/** Отрезок a–b проходит через прямоугольник r. */
-function crosses(r: Box, a: Pt, b: Pt) {
-  for (let k = 0; k <= 64; k++) if (inside({ x: a.x + ((b.x - a.x) * k) / 64, y: a.y + ((b.y - a.y) * k) / 64 }, r)) return true;
-  return false;
-}
-/** Кнопка «Всё небо» органов неба (не «показать всё небо» строки у кромки). */
+/** Кнопка «Вписать» органов неба (этап 11, Я30: прежде «Всё небо»; «всё небо» — теперь показ в строке показа). */
 async function fitSky(p: Page) {
-  await p.locator('.sky button[title^="Всё небо"]').first().click();
+  await p.locator('.sky .skyctl button[title^="Вписать"]').first().click();
   await p.waitForTimeout(1400);
 }
 const flat = (s: string) => s.replace(/[   ]/g, ' ').replace(/⁠/g, '').replace(/\s+/g, ' ').trim();
@@ -150,35 +148,32 @@ export const polish6: Scenario[] = [
   },
   {
     n: 703,
-    title: 'Задача P3, изъян 1: выбран Адам, союз с Евой раскрыт — помета «годы — по порядку Быт 4:1–2; 4:25, выв.» не ложится на линии от точки союза к сыновьям и на саму точку (обычный масштаб и «Всё небо»)',
+    // этап 11 (решение 78, Г9): порядок рождения виден по положению, помет «годы — по порядку …» на небе нет ни в каком
+    // масштабе; их текст — в строке «Год» карточки у звезды ребёнка (и в подсказке, в карточке союза). Прежняя проверка «помета
+    // не на линиях» заменена проверкой, что пометы на небе нет, а строка «Год» у Каина называет место перечисления
+    title: 'Задача P3, изъян 1; этап 11 (Г9): выбран Адам, союз с Евой раскрыт — помет порядка на небе нет (обычный масштаб и «Вписать»); у звезды Каина строка «Год» — «по порядку перечисления, Быт 4:…, выв.»',
     run: async (p) => {
       await setup(p, ADAM_OPEN);
-      const out: string[] = [];
-      for (const step of ['обычный', '«Всё небо»']) {
+      for (const step of ['обычный', '«Вписать»']) {
         if (step !== 'обычный') await fitSky(p);
         const d = await canvasData(p);
-        const dot = (await dotsOf(p)).get('u:adam+eva');
-        if (!dot) return fail(`${step}: нет точки союза`);
-        const notes = (d.noteBoxes ?? '').split(';').filter(Boolean).map((q) => q.split(',').map(Number)).map(([x, y, w, h]) => ({ x, y, w, h }));
-        if (!(d.notes ?? '').includes('годы — по порядку')) {
-          out.push(`${step}: пометы нет`);
-          continue;
-        }
-        if (!notes.length) return fail(`${step}: помета есть, а её места нет в canvas[data-note-boxes]`);
-        for (const k of ['kain', 'avel', 'sif']) {
-          const q = await starAt(p, k);
-          if (q && notes.some((n) => crosses(n, dot, q))) return fail(`${step}: помета на линии к ${k}`);
-        }
-        if (notes.some((n) => inside(dot, n, 4))) return fail(`${step}: помета на точке союза`);
-        out.push(`${step}: помета не на линиях`);
+        if (!(await dotsOf(p)).get('u:adam+eva')) return fail(`${step}: нет ромба союза`);
+        if ((d.notes ?? '').includes('по порядку')) return fail(`${step}: помета порядка на небе: ${d.notes}`);
       }
-      if (out.every((s) => s.endsWith('пометы нет'))) return fail('помета не встала ни разу');
-      return (await overlaps(p)) === 0 ? pass(out.join('; ')) : fail('подписи наложились');
+      const k = await frameStar(p, 'kain');
+      if (!k) return fail('нет звезды Каина');
+      const cv = (await p.locator('.sky canvas').boundingBox())!;
+      await p.mouse.click(cv.x + k.x, cv.y + k.y);
+      await p.waitForTimeout(1000);
+      const card = flat(await p.locator('.sky .dotcard[data-placed]').first().innerText().catch(() => ''));
+      if (!/по порядку перечисления, Быт 4:[^,]*, выв\./.test(card)) return fail(`строка «Год» у Каина: «${card.slice(0, 200)}»`);
+      return (await overlaps(p)) === 0 ? pass('помет на небе нет; «Год» у Каина — по порядку перечисления') : fail('подписи наложились');
     },
   },
   {
     n: 704,
-    title: 'Задача P3, изъян 2: Иаков и четыре жены — каждая точка союза между строками мужа и своей жены, точки не вплотную (≥ 16 px), все четыре жены подписаны',
+    // этап 11 (решение 78, Г4, Г8): ромб союза стоит на следе матери (прежде — точка между строками мужа и жены)
+    title: 'Задача P3, изъян 2; этап 11 (Г4): Иаков и четыре жены — ромб каждого союза на следе своей жены, ромбы не вплотную (≥ 16 px), все четыре жены подписаны',
     run: async (p) => {
       await setup(p, JACOB);
       const ds = await dotsOf(p);
@@ -188,12 +183,12 @@ export const polish6: Scenario[] = [
       for (const w of JACOB_WIVES) {
         const q = ds.get(`u:iakov+${w}`);
         const s = await starAt(p, w);
-        if (!q || !s) return fail(`нет точки или звезды: ${w}`);
-        if (!(q.y > Math.min(j.y, s.y) && q.y < Math.max(j.y, s.y))) return fail(`точка союза с ${w} не между строками: ${q.y} (Иаков ${j.y}, жена ${s.y})`);
+        if (!q || !s) return fail(`нет ромба или звезды: ${w}`);
+        if (Math.abs(q.y - s.y) > 1.5 || !(q.x > s.x)) return fail(`ромб союза с ${w} не на её следе: ${q.x},${q.y} (жена ${s.x},${s.y})`);
         pts.push(q);
       }
       for (let a = 0; a < pts.length; a++)
-        for (let b = a + 1; b < pts.length; b++) if (Math.hypot(pts[a].x - pts[b].x, pts[a].y - pts[b].y) < 16) return fail(`точки вплотную: ${JSON.stringify(pts[a])} и ${JSON.stringify(pts[b])}`);
+        for (let b = a + 1; b < pts.length; b++) if (Math.hypot(pts[a].x - pts[b].x, pts[a].y - pts[b].y) < 16) return fail(`ромбы вплотную: ${JSON.stringify(pts[a])} и ${JSON.stringify(pts[b])}`);
       const named = ((await canvasData(p)).labelIds ?? '').split(' ');
       const miss = JACOB_WIVES.filter((w) => !named.includes(w));
       if (miss.length) return fail(`жёны без подписи: ${miss.join(', ')}`);
@@ -202,17 +197,21 @@ export const polish6: Scenario[] = [
   },
   {
     n: 705,
-    title: 'Задача P3, изъян 2, телефон 390 × 844: семья Иакова — все четыре жены подписаны, подписи без наложений',
+    // этап 11 (решение 77, § 4.2): на телефоне с листом карточки (214 px) небо у выбранного Иакова — «лицо и поколения вокруг»,
+    // строки семейной укладки; вся семья по высоте не помещается, остальное уходит за край и доступно сдвигом. Прежнее «все
+    // четыре жены на виду» заменено: жёны на виду подписаны (не меньше двух), наложений нет
+    title: 'Задача P3, изъян 2; этап 11 (Я12), телефон 390 × 844: семья Иакова — жёны на виду подписаны, остальные — за краем по высоте; подписи без наложений',
     view: PHONE,
     run: async (p) => {
       await setup(p, JACOB);
+      const v = (await p.evaluate(() => (document.querySelector('.sky') as HTMLElement).dataset.view ?? '')).split(' ').map(Number);
       const named = ((await canvasData(p)).labelIds ?? '').split(' ');
       const shown: string[] = [];
       for (const w of JACOB_WIVES) if (await starAt(p, w)) shown.push(w);
-      if (shown.length < 4) return fail(`на виду не все жёны: ${shown.join(', ')}`);
-      const miss = JACOB_WIVES.filter((w) => !named.includes(w));
+      if (shown.length < 2) return fail(`на виду жён: ${shown.join(', ')}`);
+      const miss = shown.filter((w) => !named.includes(w));
       if (miss.length) return fail(`жёны без подписи: ${miss.join(', ')}`);
-      return (await overlaps(p)) === 0 ? pass() : fail('подписи наложились');
+      return (await overlaps(p)) === 0 ? pass(`строка ${v[7].toFixed(1)} px; на виду: ${shown.join(', ')}`) : fail('подписи наложились');
     },
   },
   {
@@ -248,7 +247,7 @@ export const polish6: Scenario[] = [
   },
   {
     n: 707,
-    title: 'Задача P3, изъян 5, телефон 390 × 844: касание точки союза — карточка у нижнего края над листом, а точка и звёзды Адама и Евы — в открытом небе между верхними органами и карточкой; цели 44 px',
+    title: 'Задача P3, изъян 5; этап 11 (решение 77), телефон 390 × 844: касание точки союза — карточка союза в нижнем листе на 214 px (над небом второй карточки нет), а точка и звёзды Адама и Евы — в открытом небе между верхними органами и листом; цели 44 px',
     view: PHONE,
     run: async (p) => {
       await setup(p, ADAM_OPEN);
@@ -257,11 +256,12 @@ export const polish6: Scenario[] = [
       const cv = (await p.locator('.sky canvas').boundingBox())!;
       await p.touchscreen.tap(cv.x + d0.x, cv.y + d0.y);
       await p.waitForTimeout(1600);
-      const card = p.locator('.sky .dotcard[data-placed]');
-      const b = await card.boundingBox();
-      if (!b) return fail('нет карточки у точки');
+      if (await p.locator('.sky .dotcard[data-placed]').count()) return fail('над небом — карточка, а должен быть лист');
+      const card = p.locator('.folio .sheet-dot .dotcard[data-kind="union"]');
+      if (!(await card.count())) return fail('в листе нет карточки союза');
+      const b = (await p.locator('.folio').boundingBox())!;
       const top = b.y - cv.y;
-      // верхние органы неба: строка «Раскрыто 5 лиц» у кромки
+      // верхние органы неба: строка показа у кромки
       const rs = (await reserves(p)).filter((r) => r.y < 200 && r.w > 150);
       const ceil = Math.max(0, ...rs.map((r) => r.y + r.h));
       const d = (await dotsOf(p)).get('u:adam+eva');
@@ -270,16 +270,16 @@ export const polish6: Scenario[] = [
       if (!(await canvasData(p)).stars) return fail('нет canvas[data-stars] — мест звёзд кадра');
       for (const [id, q] of [['точка', d], ['adam', await frameStar(p, 'adam')], ['eva', await frameStar(p, 'eva')]] as const) {
         if (!q) return fail(`${id}: нет на виду`);
-        // с полем на знак и подпись: звезда не под строкой у кромки и не у самой карточки
-        if (!(q.y > ceil + 14 && q.y < top - 14)) return fail(`${id} не в открытом небе: y ${q.y}, верхние органы до ${Math.round(ceil)}, карточка с ${Math.round(top)}`);
+        // с полем на знак и подпись: звезда не под строкой у кромки и не у самого листа
+        if (!(q.y > ceil + 14 && q.y < top - 14)) return fail(`${id} не в открытом небе: y ${q.y}, верхние органы до ${Math.round(ceil)}, лист с ${Math.round(top)}`);
       }
       const low = (await card.locator('button').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().height))).filter((h) => h < 43.5);
-      return low.length ? fail(`цели ниже 44 px: ${low.join(', ')}`) : pass(`карточка с ${Math.round(top)} px, точка на ${d.y}`);
+      return low.length ? fail(`цели ниже 44 px: ${low.join(', ')}`) : pass(`лист с ${Math.round(top)} px, точка на ${d.y}`);
     },
   },
   {
     n: 708,
-    title: 'Задача P3, изъян 6: «Клавиши» — «к ближайшей звезде или точке союза», Enter на звезде или точке союза открывает карточку у неё, щелчок по точке союза — карточка у точки; слова «картуш» нет',
+    title: 'Задача P3, изъян 6; этап 11 (решения 77, 78): «Клавиши» — «к ближайшей звезде или ромбу союза», Enter на звезде или ромбе союза открывает карточку у него, щелчок по ромбу союза — карточка союза у ромба; слова «картуш» нет',
     run: async (p) => {
       await setup(p, ADAM_OPEN);
       await p.keyboard.press('Shift+Slash');
@@ -287,14 +287,14 @@ export const polish6: Scenario[] = [
       const sheet = p.locator('.app > .sheet');
       if (!(await sheet.count())) return fail('таблица клавиш не открылась');
       const t = flat(await sheet.innerText());
-      for (const w of ['к ближайшей звезде или точке союза', 'на звезде или точке союза в небе «набор» — открыть у неё карточку', 'щелчок по точке союза', 'карточка у точки: «Раскрыть детей»'])
+      for (const w of ['к ближайшей звезде или ромбу союза', 'на звезде или ромбе союза — открыть у неё карточку', 'щелчок по ромбу союза', 'карточка союза у ромба: «Раскрыть детей»'])
         if (!t.includes(w)) return fail(`в «Клавишах» нет «${w}»`);
       return /картуш/.test(t) ? fail('в «Клавишах» осталось слово «картуш»') : pass();
     },
   },
   {
     n: 709,
-    title: 'Задача P3, изъян 7: «Как читать карту» в небе «набор» описывает точку союза и цветные линии: ромб между мужем и женой, линии цвета ветви, залитый — раскрыт, полый с числом — свёрнут',
+    title: 'Задача P3, изъян 7; этап 11 (решение 78): «Как читать карту» описывает грамматику связей — ствол от родителя, зубцы к детям, ромб союза на следе матери, выбор линии жёлтым',
     run: async (p) => {
       await setup(p, ADAM_OPEN);
       await p.locator('.sky .guide-cmd').click();
@@ -302,20 +302,20 @@ export const polish6: Scenario[] = [
       const g = p.locator('.sky .cartouche .guide');
       if (!(await g.count())) return fail('«Как читать карту» не открылся');
       const t = flat(await g.innerText());
-      for (const w of ['В небе «набор» союз — малый ромб между строками мужа и жены', 'своя линия цвета его ветви', 'Залитый ромб — союз раскрыт, полый с числом — свёрнут', 'по звезде или по ромбу открывает у него карточку'])
+      for (const w of ['от родителя идёт вертикальный ствол, от ствола — короткие зубцы к детям', 'ромб — союз родителей, он стоит на следе матери', 'связь выделяется жёлтым', 'карточка с родством'])
         if (!t.includes(w)) return fail(`в «Как читать карту» нет «${w}»: ${t}`);
       return pass();
     },
   },
   {
     n: 710,
-    title: 'Задача P3, изъян 7: «Условные знаки» — союз-точка ближе к строкам детей, плавные линии от супругов и прямые к детям цвета ветви, «Информация» и «Подробнее» в карточках у точки',
+    title: 'Задача P3, изъян 7; этап 11 (решения 77, 78): «Условные знаки» — ромб союза на следе матери, черта брака, ствол и зубцы; «Карточка» и «Карточка союза» в карточках на небе',
     run: async (p) => {
       await setup(p, ADAM_OPEN);
       await p.locator('.commands > button', { hasText: 'Условные знаки' }).click();
       await p.waitForTimeout(800);
       const t = flat(await p.locator('.app > .sheet').innerText());
-      for (const w of ['ближе к строкам детей', 'плавные линии от мужа и жены', 'прямая линия цвета его ветви', '«Информация» — подробная карточка справа', '«Подробнее» — карточка союза справа', 'В небе «набор» союз — малый ромб'])
+      for (const w of ['Ромб союза стоит на следе матери', 'От мужа к ромбу идёт черта брака', 'от ствола — короткие зубцы к детям', '«Карточка» — подробная карточка справа', '«Карточка союза» — подробная карточка союза справа'])
         if (!t.includes(w)) return fail(`в «Условных знаках» нет «${w}»`);
       return /картуш/.test(t) ? fail('в «Условных знаках» осталось слово «картуш»') : pass();
     },

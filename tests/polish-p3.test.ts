@@ -170,22 +170,21 @@ describe('точка союза между супругами — ближе к 
     // чётное число детей — середина двух средних
     expect(plates.betweenY([0, 1000], [100, 200, 300, 400])).toBe(250);
   });
-  it('Иаков и четыре жены: каждая точка — между строками своих супругов, у Лии — ближе к строке Иакова (её сыновья выше); точки не теснятся', () => {
+  it('Иаков и четыре жены: ромб каждого союза — на следе своей матери (этап 11, Г4; прежде — между строками супругов); ромбы не теснятся', () => {
+    // этап 11 (STAGE11 § 2, Г4): ромб союза стоит на следе матери, там, где из него выходит ствол к её детям; от мужа к нему —
+    // черта брака. Прежнее правило решения 76 (точка между строками супругов, ближе к детям) заменено
     const pls = JACOB_UNIONS.map((u) => open(u, 'iakov'));
     const { s, data } = frame({ ids: JACOB, plates: pls, at: 'iakov', years: 200 });
     const ds = dots(data);
-    const j = star(s, 'iakov');
     for (const uid of JACOB_UNIONS) {
       const q = ds.get(uid);
       expect(q, uid).toBeTruthy();
       const w = star(s, uid.split('+')[1]);
-      expect(q!.y, uid).toBeGreaterThan(Math.min(j.y, w.y));
-      expect(q!.y, uid).toBeLessThan(Math.max(j.y, w.y));
+      expect(Math.abs(q!.y - w.y), uid).toBeLessThanOrEqual(1.5);
+      // на следе: правее звезды матери
+      expect(q!.x, uid).toBeGreaterThan(w.x);
     }
-    const leah = ds.get('u:iakov+liya')!;
-    const l = star(s, 'liya');
-    expect(Math.abs(leah.y - j.y)).toBeLessThan(Math.abs(l.y - j.y) / 2);
-    // точки разных союзов — не вплотную: пучки линий начинаются из разных мест
+    // ромбы разных союзов — не вплотную: стволы начинаются из разных мест
     const all = [...ds.entries()].filter(([u]) => JACOB_UNIONS.includes(u)).map(([, q]) => q);
     for (let a = 0; a < all.length; a++)
       for (let b = a + 1; b < all.length; b++) expect(Math.hypot(all[a].x - all[b].x, all[a].y - all[b].y)).toBeGreaterThanOrEqual(16);
@@ -215,45 +214,23 @@ describe('строки неба «набор» с союзами — зазор 
   });
 });
 
-/** Пересекает ли отрезок (x0, y0)–(x1, y1) прямоугольник r (с полем pad). */
-function crosses(r: { x: number; y: number; w: number; h: number }, x0: number, y0: number, x1: number, y1: number, pad = 0) {
-  const n = 64;
-  for (let k = 0; k <= n; k++) {
-    const x = x0 + ((x1 - x0) * k) / n;
-    const y = y0 + ((y1 - y0) * k) / n;
-    if (x > r.x - pad && x < r.x + r.w + pad && y > r.y - pad && y < r.y + r.h + pad) return true;
-  }
-  return false;
-}
-
-describe('помета «годы — по порядку …» в небе «набор» — не на линиях к детям (задача P3, п. 1)', () => {
-  it('Адам выбран: при любом окне и ширине неба помета не ложится на линии от точки союза к сыновьям и на саму точку; места нет — пометы нет', () => {
-    let shown = 0;
-    const where: string[] = [];
+describe('помета «годы — по порядку …» в небе «набор» (задача P3, п. 1; этап 11, Г9 — помет порядка на небе нет)', () => {
+  // этап 11 (STAGE11 § 2, Г9): порядок рождения виден по положению (старший ближе к матери); помета «годы — по порядку …»
+  // ушла с неба в подсказку и карточку союза (links.ts, familyOrderNote). Прежние проверки «помета не на линиях» заменены
+  // проверкой, что пометы на небе нет ни в каком окне, а её текст есть для подсказки
+  it('Адам выбран: при любом окне и ширине неба пометы порядка нет, наложений нет', () => {
     for (const w of [940, 1100, 1440])
       for (const years of [200, 300, 400, 500, 700, 900]) {
-        const { s, data } = frame({ ids: ADAM_KIDS, plates: [open('u:adam+eva', 'adam')], selected: 'adam', at: 'adam', years, w });
+        const { s } = frame({ ids: ADAM_KIDS, plates: [open('u:adam+eva', 'adam')], selected: 'adam', at: 'adam', years, w });
         expect(s.labelStats().overlaps, `${w}/${years}`).toBe(0);
-        const note = s.ledger.boxes.find((b) => b.kind === 'note' && b.text.startsWith('годы — по порядку'));
-        if (!note) continue;
-        shown++;
-        const d = dots(data).get('u:adam+eva')!;
-        for (const k of ['kain', 'avel', 'sif']) {
-          const q = star(s, k);
-          if (crosses(note, d.x, d.y, q.x, q.y)) where.push(`${w}/${years}: на линии к ${k}`);
-        }
-        if (crosses(note, d.x - 6, d.y, d.x + 6, d.y, 2)) where.push(`${w}/${years}: на точке`);
+        expect(s.ledger.boxes.find((b) => b.kind === 'note' && /по порядку/.test(b.text)), `${w}/${years}`).toBeUndefined();
       }
-    expect(where).toEqual([]);
-    // помета не пропала: она встаёт под подписью нижнего сына или над подписью верхнего
-    expect(shown).toBeGreaterThanOrEqual(12);
   });
-  it('«Всё небо» семьи Адама: помета на месте и не на линиях', () => {
-    const { s, data } = frame({ ids: ADAM_KIDS, plates: [open('u:adam+eva', 'adam')], selected: 'adam', fit: true });
-    const note = s.ledger.boxes.find((b) => b.kind === 'note' && b.text.startsWith('годы — по порядку'));
-    expect(note).toBeTruthy();
-    const d = dots(data).get('u:adam+eva')!;
-    for (const k of ['kain', 'avel', 'sif']) expect(crosses(note!, d.x, d.y, star(s, k).x, star(s, k).y), k).toBe(false);
+  it('«Всё небо» семьи Адама: пометы на небе нет; текст пометы — у союза для подсказки и карточки', async () => {
+    const { s } = frame({ ids: ADAM_KIDS, plates: [open('u:adam+eva', 'adam')], selected: 'adam', fit: true });
+    expect(s.ledger.boxes.find((b) => b.kind === 'note' && /по порядку/.test(b.text))).toBeUndefined();
+    const links = await import('../src/render/links.ts');
+    expect(flat(links.familyOrderNote('u:adam+eva')!)).toMatch(/^по порядку перечисления, Быт 4:/);
   });
 });
 
@@ -261,20 +238,22 @@ const flat = (x: string) => x.replace(/[   ]/g, ' ').replace(/⁠/g, '').replace
 const src = (f: string) => flat(readFileSync(join(__dirname, '..', f), 'utf8'));
 
 describe('справка о точке союза (задача P3, пп. 6, 7)', () => {
-  it('«Как читать карту» в «Условных знаках» — о ромбе союза и линиях цвета ветви, как на образце drawUnionSample', async () => {
+  it('«Как читать карту» в «Условных знаках» — о ромбе союза, стволе и зубцах (этап 11, решение 78; прежде — точка союза решения 76)', async () => {
     const { ReadingGuide } = await import('../src/ui/sky/Overlays.tsx');
     const t = flat(renderToString(h(ReadingGuide, { both: true })));
-    expect(t).toContain('В небе «набор» союз — малый ромб между строками мужа и жены');
-    expect(t).toContain('своя линия цвета его ветви');
-    expect(t).toContain('Залитый ромб — союз раскрыт, полый с числом — свёрнут');
+    // этап 11 (STAGE11 § 2): ромб союза стоит на следе матери, от него — ствол и зубцы к детям; прежние «малый ромб между
+    // строками мужа и жены» и «линии цвета ветви» от точки ушли с неба вместе с петлёй точки и «четвертью пути»
+    expect(t).toContain('от родителя идёт вертикальный ствол, от ствола — короткие зубцы к детям');
+    expect(t).toContain('ромб — союз родителей, он стоит на следе матери');
     expect(t).not.toMatch(/картуш/);
   });
-  it('«Условные знаки»: точка — ближе к строкам детей, скобки от супругов, прямые линии к детям; «Информация» и «Подробнее»', () => {
+  it('«Условные знаки»: ромб на следе матери, черта брака, ствол и зубцы; «Раскрыть детей» и «Карточка союза» в карточке у ромба', () => {
     const t = src('src/ui/panels/Legend.tsx');
-    expect(t).toContain('малый ромб между строками мужа и жены, ближе к строкам детей');
-    expect(t).toContain('к нему сходятся плавные линии от мужа и жены, от него к каждому ребёнку идёт прямая линия цвета его ветви');
-    expect(t).toContain('«Информация» — подробная карточка справа');
-    expect(t).toContain('«Подробнее» — карточка союза справа');
+    expect(t).toContain('Ромб союза стоит на следе матери, там, где из него выходит ствол к её детям');
+    expect(t).toContain('От мужа к ромбу идёт черта брака, от ромба — вертикальный ствол, от ствола — короткие зубцы к детям');
+    // этап 11: «Информация» — «Карточка» (STAGE11 § 6), «Подробнее» у ромба — «Карточка союза», как в карточке связи (§ 8)
+    expect(t).toContain('«Карточка» — подробная карточка справа');
+    expect(t).toContain('«Карточка союза» — подробная карточка союза справа');
     expect(t).not.toMatch(/щелчок по картушу|на картуше/);
   });
   it('слово «картуш» о союзе на небе больше не встречается в интерфейсе неба и «Клавишах»', () => {

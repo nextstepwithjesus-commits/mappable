@@ -11,6 +11,7 @@ import { bySex, pluralPeopleName } from '../text/ru.ts';
 import { typo, typoTree } from '../text/typo.ts';
 import { YearMark } from './Chrono.tsx';
 import { mapFont, T_UI_S } from '../../render/type.ts';
+import { openShowSheet } from '../panels/Show.tsx';
 
 /** Народ или род из родословия (Быт 10; Езд 2): у него нет рождения и жизни, только место в родословии. */
 export const isPeople = (id: string) => {
@@ -90,7 +91,17 @@ export function Masthead({ id, actions, axis }: { id: string; actions?: Componen
           {star && !sameAs(star, tribe?.text) ? (
             <>
               <dt>Созвездие</dt>
-              <dd>{star}</dd>
+              <dd>
+                {/* лист «Показ» на этом созвездии (этап 11, § 5): «только это» — показать на небе одно созвездие */}
+                <button
+                  type="button"
+                  class="pass-link"
+                  title="Лист «Показ»: только это созвездие на небе"
+                  onClick={(e) => openShowSheet({ focus: 'groups', group: p.group, back: e.currentTarget as HTMLElement })}
+                >
+                  {star}
+                </button>
+              </dd>
             </>
           ) : null}
           {tribe ? (

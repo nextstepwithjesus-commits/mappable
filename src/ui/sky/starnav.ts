@@ -5,6 +5,7 @@
  * пункт в списке лиц неба (src/ui/sky/SkyA11y.tsx, aria-activedescendant у холста).
  */
 import { signal } from '@preact/signals';
+import type { LinkKey } from '../../engine/linkkey.ts';
 import { byId } from '../../data/atlas.ts';
 import { focused, selected } from '../../state.ts';
 import { detailOf, OVERVIEW_MAG, type Sky } from '../../render/sky.ts';
@@ -24,6 +25,22 @@ import { openSheetAt } from '../sheet.ts';
 export const plateFocus = signal<string | null>(null);
 /** Точка союза под указателем мыши: она ярче (src/ui/sky/input.ts). */
 export const plateHover = signal<string | null>(null);
+/**
+ * Связь под указателем (этап 11, § 8; src/ui/sky/input.ts): небо рисует её путь и концы полной яркостью и на 1 px толще,
+ * подсказка через 120 мс называет её словами src/ui/linkwords.ts.
+ */
+export const linkHover = signal<LinkKey | null>(null);
+/**
+ * Точка щелчка по линии (мировые координаты неба): карточка связи встаёт у неё и едет вместе с небом при сдвиге
+ * и масштабе (SkyView, linkAnchor). ks — запись ключа выбранной так связи.
+ */
+export const linkClick = { ks: '', wx: 0, lane: 0 };
+/** Запомнить точку щелчка по связи ks (px холста). */
+export function rememberLinkClick(sky: Pick<Sky, 'cam'>, ks: string, x: number, y: number) {
+  linkClick.ks = ks;
+  linkClick.wx = sky.cam.wx(x);
+  linkClick.lane = sky.cam.wLane(y);
+}
 /** Объявление живой области неба после раскрытия и свёртки союза (SkyView): n — чтобы тот же текст прозвучал снова. */
 export const plateNews = signal<{ text: string; n: number }>({ text: '', n: 0 });
 

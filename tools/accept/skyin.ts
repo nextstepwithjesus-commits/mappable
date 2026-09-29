@@ -196,7 +196,7 @@ export const skyin: Scenario[] = [
   },
   {
     n: 254,
-    title: 'IX-51, MOB-55: клавиша В берёт звезду с видимой подсказкой, иначе выбранное лицо; объявление «Иессей взят в работу; в наборе 1 лицо»; С — «потомки свёрнуты»',
+    title: 'IX-51, MOB-55: клавиша В берёт звезду с видимой подсказкой, иначе выбранное лицо; объявление «Иессей добавлен в набор; в наборе 1 лицо»; С — «потомки свёрнуты»',
     run: async (p) => {
       await go(p, '#/david~y-1050~w180~l0~s1', 2600);
       const box = await canvasBox(p);
@@ -209,7 +209,7 @@ export const skyin: Scenario[] = [
       await p.waitForTimeout(300);
       if ((await stored(p)).join(' ') !== 'iessey') return fail(`в наборе: ${(await stored(p)).join(' ')}`);
       const t1 = nbsp(await live(p)).trim();
-      if (t1 !== 'Иессей взят в работу; в наборе 1 лицо') return fail(`объявление: «${t1}»`);
+      if (t1 !== 'Иессей добавлен в набор; в наборе 1 лицо') return fail(`объявление: «${t1}»`);
       // указатель ушёл на пустое место — подсказки нет: клавиша берёт выбранное лицо
       await p.mouse.move(box.x + 30, box.y + box.height - 40);
       await p.waitForTimeout(400);
@@ -217,7 +217,7 @@ export const skyin: Scenario[] = [
       await p.waitForTimeout(300);
       if ((await stored(p)).join(' ') !== 'iessey david') return fail(`без подсказки взято: ${(await stored(p)).join(' ')}`);
       const t2 = nbsp(await live(p)).trim();
-      if (t2 !== 'Давид взят в работу; в наборе 2 лица') return fail(`объявление: «${t2}»`);
+      if (t2 !== 'Давид добавлен в набор; в наборе 2 лица') return fail(`объявление: «${t2}»`);
       await p.keyboard.press('KeyC');
       await p.waitForTimeout(400);
       const t3 = nbsp(await live(p)).trim();

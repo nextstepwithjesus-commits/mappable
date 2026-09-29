@@ -42,6 +42,11 @@ import { branchColor, branchTickAt, GlowBatch, glowLayers, glows } from './branc
 import { branchFrame, FAR, type BranchPaint } from './marks.ts';
 import type { Rect } from './rect.ts';
 import type { Emphasis, Palette, Pass, SkyContext } from './sky.ts';
+import type { LinkFrame, LinkPath, PathStyle } from './links.ts';
+import type { LinkKey } from '../engine/linkkey.ts';
+import { atlasCoord } from '../engine/layout.ts';
+import { unions as ALL_UNIONS } from '../ui/reveal.ts';
+import { unionName } from '../ui/linkwords.ts';
 
 /** Пунктир неуверенного начала и конца следа. */
 export const TRAIL_DOTS = [1.5, 3];
@@ -72,6 +77,11 @@ export interface LifeTrail {
   width: number;
   /** штрих сплошной части: у ветвей второго круга выбранного лица (решение 69; branches.ts, branchDash) */
   dash?: readonly number[];
+  /**
+   * Разрывы следа (этап 11, Г7): пары «x, полуширина» — где след пересекает чужая связь (ствол, черта брака, лента),
+   * в нём просвет: пересечение не читается узлом.
+   */
+  cuts?: readonly number[];
 }
 
 /** Знак разрыва «//» на горизонтальном следе у x: два косых штриха через след, между ними — просвет 3 px. */
@@ -91,15 +101,44 @@ export function drawBreak(ctx: CanvasRenderingContext2D, x: number, y: number, c
  * След жизни: пунктир от звезды до sureFrom (оценочное рождение), сплошной до solidTo; дальше до x1 — пунктир,
  * если смерть не известна или дата оценочная. Эпохальная дата — точечный след не длиннее 60 px.
  */
+/**
+ * Горизонталь [a, b] на высоте y — с просветами cuts (пары «x, полуширина»): отрезки добавляются в текущий путь.
+ * Разрыв (Г7) — просвет в следе там, где его пересекает чужая связь.
+ */
+export function gapLine(ctx: CanvasRenderingContext2D, a: number, b: number, y: number, cuts?: readonly number[]) {
+  if (b <= a) return;
+  if (!cuts?.length) {
+    ctx.moveTo(a, y);
+    ctx.lineTo(b, y);
+    return;
+  }
+  const gaps: [number, number][] = [];
+  for (let k = 0; k + 1 < cuts.length; k += 2) if (cuts[k] + cuts[k + 1] > a && cuts[k] - cuts[k + 1] < b) gaps.push([cuts[k] - cuts[k + 1], cuts[k] + cuts[k + 1]]);
+  gaps.sort((p, q) => p[0] - q[0]);
+  let x = a;
+  for (const [g0, g1] of gaps) {
+    if (g0 > x) {
+      ctx.moveTo(x, y);
+      ctx.lineTo(Math.min(g0, b), y);
+    }
+    x = Math.max(x, g1);
+    if (x >= b) return;
+  }
+  if (b > x) {
+    ctx.moveTo(x, y);
+    ctx.lineTo(b, y);
+  }
+}
+
 export function drawLifeTrail(ctx: CanvasRenderingContext2D, t: LifeTrail) {
   const { x0, x1, y } = t;
+  const cuts = t.cuts;
   ctx.strokeStyle = t.color;
   ctx.lineWidth = t.width;
   if (t.cls === 'epochal') {
     ctx.setLineDash([1, 4]);
     ctx.beginPath();
-    ctx.moveTo(x0, y);
-    ctx.lineTo(Math.min(x1, x0 + 60), y);
+    gapLine(ctx, x0, Math.min(x1, x0 + 60), y, cuts);
     ctx.stroke();
     ctx.setLineDash([]);
     return;
@@ -110,8 +149,7 @@ export function drawLifeTrail(ctx: CanvasRenderingContext2D, t: LifeTrail) {
   if (from > x0 + 0.5) {
     ctx.setLineDash(TRAIL_DOTS);
     ctx.beginPath();
-    ctx.moveTo(x0, y);
-    ctx.lineTo(from, y);
+    gapLine(ctx, x0, from, y, cuts);
     ctx.stroke();
     ctx.setLineDash([]);
   }
@@ -121,8 +159,7 @@ export function drawLifeTrail(ctx: CanvasRenderingContext2D, t: LifeTrail) {
   if (solidEnd > from + 0.5) {
     if (t.dash?.length) ctx.setLineDash(t.dash as number[]);
     ctx.beginPath();
-    ctx.moveTo(from, y);
-    ctx.lineTo(solidEnd, y);
+    gapLine(ctx, from, solidEnd, y, cuts);
     ctx.stroke();
     if (t.dash?.length) ctx.setLineDash([]);
   }
@@ -130,16 +167,14 @@ export function drawLifeTrail(ctx: CanvasRenderingContext2D, t: LifeTrail) {
     drawBreak(ctx, cut, y, t.color);
     ctx.setLineDash(TRAIL_DOTS);
     ctx.beginPath();
-    ctx.moveTo(cut + BREAK.gap / 2 + 2, y);
-    ctx.lineTo(solidTo, y);
+    gapLine(ctx, cut + BREAK.gap / 2 + 2, solidTo, y, cuts);
     ctx.stroke();
     ctx.setLineDash([]);
   }
   if ((!t.known || t.cls === 'estimated') && x1 > solidTo + 0.5) {
     ctx.setLineDash(TRAIL_DOTS);
     ctx.beginPath();
-    ctx.moveTo(solidTo, y);
-    ctx.lineTo(x1, y);
+    gapLine(ctx, solidTo, x1, y, cuts);
     ctx.stroke();
     ctx.setLineDash([]);
   }
@@ -416,6 +451,7 @@ export function drawTrails(v: SkyContext, p: Pass) {
       t.color = alpha(bp.color, branchAlpha(bp, p.emph(n.person), intro));
       t.width = ky < 5 ? 1.2 : q.magnitude <= 1 ? 1.8 : 1.5;
       t.dash = bp.dash;
+      t.cuts = p.cuts?.get(i);
       bf.shown.add(n.person);
     } else {
       const e = p.emph(n.person) * intro;
@@ -423,6 +459,7 @@ export function drawTrails(v: SkyContext, p: Pass) {
       t.color = alpha(pal.ink2, Math.min(1, a));
       t.width = ky < 5 ? 1 : q.magnitude <= 1 ? 1.6 : 1.2;
       t.dash = undefined;
+      t.cuts = p.cuts?.get(i);
     }
     drawLifeTrail(ctx, t);
     if (p.lines && t.x1 > t.x0 + 1 && t.x1 > 0 && t.x0 < cam.w) p.lines.add({ x: t.x0, y: t.y - 1.5, w: t.x1 - t.x0, h: 3 });
@@ -454,6 +491,7 @@ export function drawSpineTrails(v: SkyContext, p: Pass) {
     if (!p.spine.has(n.person) || !trailOf(v, i, t)) continue;
     t.color = alpha(pal.ink, 0.6 * p.emph(n.person) * p.s.intro);
     t.width = 1;
+    t.cuts = p.cuts?.get(i);
     drawLifeTrail(ctx, t);
   }
 }
@@ -625,11 +663,14 @@ function orderedKids(parent: string, m: ModelData): string[] {
 }
 
 /**
- * Место перечисления: книга, в которой дети (kids — по порядку рождения) названы в том же порядке. У каждого ребёнка
- * берётся его первое упоминание в книге; из них — самая длинная неубывающая по главам и стихам цепочка. Лучше та
- * книга, где цепочка длиннее, затем та, где у детей больше разных стихов (стихи сами задают порядок: рассказ
- * о рождениях Быт 29:32–30:24 лучше перечня 1 Пар 2:1–2, где сыновья Иакова названы в двух стихах и в другом
- * порядке), затем первая по канону. must — ребёнок, который обязательно входит в цепочку.
+ * Место перечисления: книга, в которой дети (kids — по порядку рождения) названы в том же порядке. У ребёнка в книге
+ * бывает несколько ссылок (рассказ о рождении и перечень: Рувим — Быт 29:32 и 35:23; жена в одном стихе, дети в другом:
+ * Тувалкаин — Быт 4:19 и 4:22): каждому ребёнку берётся та из них, при которой цепочка детей по порядку стихов длиннее,
+ * а стихов в ней больше (DG 2.3.6: место — стихи, где дети названы, а не первая ссылка ребёнка). Лучше та книга, где
+ * цепочка длиннее, затем та, где у детей больше разных стихов (стихи сами задают порядок: рассказ о рождениях
+ * Быт 29:32–30:24 лучше перечня 1 Пар 2:1–2, где сыновья Иакова названы в двух стихах и в другом порядке), затем первая
+ * по канону. must — ребёнок, который обязательно входит в цепочку. Промежуток стихов — от первого до последнего стиха
+ * выбранных ссылок детей цепочки.
  */
 export function listingOf(kids: readonly string[], must?: string): OrderListing | null {
   const refs = kids.map((k) => (byId.get(k)?.parentRefs ?? []).map(refPos).filter((r): r is RefPos => !!r));
@@ -638,50 +679,60 @@ export function listingOf(kids: readonly string[], must?: string): OrderListing 
   if (must !== undefined && mi < 0) return null;
   let best: { book: string; len: number; dist: number; chain: { i: number; r: RefPos }[] } | null = null;
   for (const book of books) {
-    const items: { i: number; r: RefPos }[] = [];
+    // состояния: ребёнок i с одной из своих ссылок в книге; цепочка — по неубывающему началу стиха
+    const st: { i: number; r: RefPos; len: number; dist: number; jumps: number; first: number; prev: number }[] = [];
     refs.forEach((rs, i) => {
-      const own = rs.filter((r) => r.book === book);
-      if (own.length) items.push({ i, r: own.reduce((a, b) => (startOf(b) < startOf(a) ? b : a)) });
+      for (const r of rs) if (r.book === book) st.push({ i, r, len: 0, dist: 0, jumps: 0, first: 0, prev: -1 });
     });
-    const mustItem = mi >= 0 ? items.find((q) => q.i === mi) : undefined;
-    if (mi >= 0 && !mustItem) continue;
-    // с обязательным ребёнком — только те, кто с ним не спорит: старшие не позже его, младшие не раньше
-    const ok = mustItem ? items.filter((q) => (q.i < mi ? startOf(q.r) <= startOf(mustItem.r) : q.i > mi ? startOf(q.r) >= startOf(mustItem.r) : true)) : items;
-    const w = (a: number) => (ok[a] === mustItem ? 1000 : 1);
-    const len: number[] = [];
-    const dist: number[] = [];
-    const prev: number[] = [];
-    for (let a = 0; a < ok.length; a++) {
-      len[a] = w(a);
-      dist[a] = 1;
-      prev[a] = -1;
+    if (mi >= 0 && !st.some((q) => q.i === mi)) continue;
+    const w = (q: { i: number }) => (q.i === mi ? 1000 : 1);
+    // соседние места цепочки — одно перечисление (тот же или следующий стих, в пределах 4 стихов): иначе — скачок; при
+    // равной длине цепочки лучше та, где скачков меньше (одно место, а не россыпь по главам: 1 Пар 3:5–8, а не 3:5; 14:4–7)
+    const near = (a: RefPos, b: RefPos) => startOf(b) <= endOf(a) + 1 || (b.c === a.c2 && b.v <= a.v2 + 4) || (b.c === a.c2 + 1 && b.v <= 4);
+    // порядок цепочек: длиннее; раньше начало (первое место, где дети названы: рассказ о рождениях Быт 38, а не список
+    // Быт 46:12; 1 Пар 3:5, а не 14:4); меньше скачков (одно перечисление, а не россыпь: 1 Пар 3:5–8, а не 3:5; 14:4–7);
+    // больше разных стихов (дети названы своими стихами: у Циллы — 4:19 и 4:22, а не 4:19 дважды)
+    type S = { len: number; jumps: number; first: number; dist: number };
+    const better = (x: S, y: S) => x.len > y.len || (x.len === y.len && (x.first < y.first || (x.first === y.first && (x.jumps < y.jumps || (x.jumps === y.jumps && x.dist > y.dist)))));
+    for (let a = 0; a < st.length; a++) {
+      const qa = st[a];
+      qa.len = w(qa);
+      qa.dist = 0;
+      qa.jumps = 0;
+      qa.first = startOf(qa.r);
+      qa.prev = -1;
       for (let b = 0; b < a; b++) {
-        if (startOf(ok[b].r) > startOf(ok[a].r)) continue;
-        const L = len[b] + w(a);
-        const D = dist[b] + (startOf(ok[b].r) < startOf(ok[a].r) ? 1 : 0);
-        if (L > len[a] || (L === len[a] && D > dist[a])) {
-          len[a] = L;
-          dist[a] = D;
-          prev[a] = b;
+        const qb = st[b];
+        if (qb.i >= qa.i || startOf(qb.r) > startOf(qa.r)) continue;
+        const cand = { len: qb.len + w(qa), jumps: qb.jumps + (near(qb.r, qa.r) ? 0 : 1), first: qb.first, dist: qb.dist + (startOf(qb.r) < startOf(qa.r) ? 1 : 0) };
+        if (better(cand, qa)) {
+          Object.assign(qa, cand);
+          qa.prev = b;
         }
       }
     }
     let e = -1;
-    for (let a = 0; a < ok.length; a++) if (e < 0 || len[a] > len[e] || (len[a] === len[e] && dist[a] > dist[e])) e = a;
+    for (let a = 0; a < st.length; a++) if (e < 0 || better(st[a], st[e])) e = a;
     if (e < 0) continue;
+    // must — в цепочке обязательно (вес 1000): без него цепочка не годится
     const chain: { i: number; r: RefPos }[] = [];
-    for (let a = e; a >= 0; a = prev[a]) chain.unshift(ok[a]);
+    for (let a = e; a >= 0; a = st[a].prev) chain.unshift({ i: st[a].i, r: st[a].r });
+    if (mi >= 0 && !chain.some((q) => q.i === mi)) continue;
     if (chain.length < 2) continue;
-    const better =
-      !best ||
-      chain.length > best.len ||
-      (chain.length === best.len && (dist[e] > best.dist || (dist[e] === best.dist && BOOK_INDEX.get(book)! < BOOK_INDEX.get(best.book)!)));
-    if (better) best = { book, len: chain.length, dist: dist[e], chain };
+    const len = chain.length;
+    const dist = st[e].dist;
+    const wins = !best || len > best.len || (len === best.len && (dist > best.dist || (dist === best.dist && BOOK_INDEX.get(book)! < BOOK_INDEX.get(best.book)!)));
+    if (wins) best = { book, len, dist, chain };
   }
   if (!best) return null;
-  // стихи — промежутками: соседние (через 4 стиха и меньше, и через границу главы) сливаются
+  // стихи — промежутками: от начала первой ссылки цепочки; соседние (через 4 стиха и меньше, и через границу главы) сливаются
+  const own = best.chain.flatMap((q) => {
+    // у ребёнка — и его ссылки в этой книге раньше выбранной (жена в одном стихе, дети в следующем: Быт 4:19 и 4:22)
+    const rs = refs[q.i].filter((r) => r.book === best!.book && startOf(r) <= startOf(q.r) && startOf(q.r) - startOf(r) <= 4);
+    return rs.length ? rs : [q.r];
+  });
   const parts: RefPos[] = [];
-  for (const r of [...best.chain.map((q) => q.r)].sort((a, b) => startOf(a) - startOf(b))) {
+  for (const r of [...own].sort((a, b) => startOf(a) - startOf(b))) {
     const cur = parts[parts.length - 1];
     const join = cur && (startOf(r) <= endOf(cur) + 1 || (r.c === cur.c2 && r.v <= cur.v2 + 4) || (r.c === cur.c2 + 1 && r.v <= 4));
     if (!join) parts.push({ ...r });
@@ -694,7 +745,7 @@ export function listingOf(kids: readonly string[], must?: string): OrderListing 
   const out = parts.map((r) => `${best!.book} ${span(r)}`);
   // refText — только с книгой: без книги «35:16-18» он принял бы «3» за номер книги
   const text = parts.map((r, k) => (k === 0 ? refText(`${best!.book} ${span(r)}`) : span(r).replace(/-/g, '–'))).join('; ');
-  return { refs: out, text, ids: best.chain.map((q) => kids[q.i]) };
+  return { refs: out, text, ids: [...new Set(best.chain.map((q) => kids[q.i]))] };
 }
 
 /** Место перечисления семьи родителя (по модели): кэш на модель. */
@@ -1105,6 +1156,30 @@ function marriageSpots(m: MarriageMark): { x: number; from?: number; box: Rect }
  */
 export function drawFamilyNotes(v: SkyContext, p: Pass, notes: readonly FamilyNote[]) {
   drawBranchTicks(v, p);
+  placeNotes(v, p, notes);
+}
+
+/**
+ * Подписи призраков жён на масштабе семьи — «Рахиль, жена Иакова» (ТЗ § 3.1, UX-34): призрак в родном роду читается
+ * как та же жена. Этап 11 убрал с неба пометы гребёнок (Г8, Г9), подписи призраков остаются; ставятся после подписей звёзд.
+ */
+export function drawGhostNotes(v: SkyContext, p: Pass) {
+  const { cam } = v;
+  if (!p.s.layers.ghosts || cam.ky < 12) return;
+  const notes: FamilyNote[] = [];
+  for (const i of p.vis) {
+    const n = v.nodes[i];
+    if (!n.ghost) continue;
+    const ri = v.indexOf(n.person);
+    const husband = (ri !== undefined ? v.nodes[ri].satelliteOf : null) ?? byId.get(n.person)?.spouses[0]?.id ?? null;
+    const q = byId.get(n.person);
+    if (!q) continue;
+    notes.push({ text: ghostNote(n.person, husband), x: cam.sx(v.X0[i]), y: cam.sy(n.lane), at: 'star', r: starRadius(q.magnitude, p.zoomScale) });
+  }
+  placeNotes(v, p, notes);
+}
+
+function placeNotes(v: SkyContext, p: Pass, notes: readonly FamilyNote[]) {
   if (!notes.length) return;
   const { ctx, pal } = v;
   const frame = frameOf(v, p);
@@ -1259,4 +1334,353 @@ export function drawFamilyText(ctx: CanvasRenderingContext2D, pal: Pick<Palette,
   ctx.strokeText(text, tx, ty);
   ctx.fillStyle = pal.ink3;
   ctx.fillText(text, tx, ty);
+}
+
+// ---------- связи кадра (этап 11, § 2; геометрия — src/render/links.ts) ----------
+
+/**
+ * Связи кадра и что из них рисуется (sky.ts, linksFor): длинные связи — целиком или обрывками (Г11), наведённая
+ * и подсвеченные строкой «Родство» — полной яркостью и на 1 px толще (§ 8), выбранную рисует marks.ts поверх неба.
+ */
+export interface LinkDraw {
+  frame: LinkFrame;
+  /** сдвиг неба с построения связей, px холста */
+  dx: number;
+  dy: number;
+  /** союзы, чьи длинные связи и родовые черты видны целиком: наведённая и выбранная связь, семья выбранного (Г11) */
+  expanded: ReadonlySet<string>;
+  /** записи ключей (linkKeyString): связь под указателем, подсвеченные строкой «Родство», выбранная */
+  hover: string;
+  preview: ReadonlySet<string>;
+  selected: string;
+  /** подробность кадра по времени: связи проявляются с ней (семантическое увеличение, E3) */
+  alpha: number;
+  /** путь выделен (семья выбранного, путь родства, «только линии»): в полную силу при любой подробности */
+  lit: (q: LinkPath) => boolean;
+}
+
+/**
+ * Путь рисуется в этом кадре: «всегда» — да; длинная связь целиком ('full') — только раскрытой (наведение, выбор, семья
+ * выбранного), её обрывки ('short') — только свёрнутой.
+ */
+export function linkShown(q: Pick<LinkPath, 'when' | 'union' | 'ks'>, d: Pick<LinkDraw, 'expanded' | 'hover' | 'selected' | 'preview'>): boolean {
+  if (q.when === 'always') return true;
+  const open = (!!q.union && d.expanded.has(q.union)) || q.ks === d.hover || q.ks === d.selected || d.preview.has(q.ks);
+  return q.when === 'full' ? open : !open;
+}
+
+/** Начертание связи (Г10): сплошная — Писание; штрих [5, 3] — иное происхождение; точки [1, 3] — толкование. */
+export const LINK_DASH: Record<PathStyle, number[]> = { solid: [], dash: [5, 3], dots: [1, 3] };
+/** Черта брака «‖»: две черты 1 px, между осями 3,2 px (K1 § 2.2). */
+export const BAR_GAP = 3.2;
+/** Тон связи — --ink-2 с этой непрозрачностью (тон следа — 0,55): стволы и зубцы читаются чуть яснее следов. */
+export const LINK_TONE = 0.72;
+
+/** Яркость пути по его концам: первый конец — узел (родитель), дальше — второй родитель и дети; путь — как слабейшая сторона. */
+function pathEmph(p: Pass, q: Pick<LinkPath, 'ends'>): number {
+  const e = q.ends;
+  if (!e.length) return 1;
+  if (e.length === 1) return p.emph(e[0]);
+  let rest = 0;
+  for (let k = 1; k < e.length; k++) rest = Math.max(rest, p.emph(e[k]));
+  return Math.min(p.emph(e[0]), rest);
+}
+
+/** Цвет ветви у пути к потомкам выбранного (решение 69, § 9): зубец — цветом ребёнка; ствол — общим цветом детей ветви. */
+function pathBranch(bf: ReturnType<typeof branchFrame>, p: Pass, q: LinkPath): string | null {
+  if (!bf.map || q.kind === 'bar' || q.kind === 'jog' || q.kind === 'clan') return null;
+  let color: string | null = null;
+  let a = 0;
+  for (let k = 1; k < q.ends.length; k++) {
+    const bp = bf.paint(q.ends[k]);
+    if (!bp) continue;
+    if (color && color !== bp.color) return null;
+    color = bp.color;
+    a = Math.max(a, branchAlpha(bp, p.emph(q.ends[k]), p.s.intro));
+  }
+  return color ? alpha(color, a) : null;
+}
+
+/**
+ * Связи кадра (§ 2): стволы, зубцы, черты брака «‖», ступеньки лестницы союзов, родовые черты и обрывки. Тоном текста;
+ * у потомков выбранного — цветом ветви (§ 9); наведённая — --ink полной яркостью и на 1 px толще (§ 8). Ленты рисует
+ * ribbons.ts, узлы — plates.ts (drawLinkNodes), выбранную связь — marks.ts. Линии занимают место в p.lines: названия
+ * созвездий на них не ложатся.
+ */
+export function drawLinks(v: SkyContext, p: Pass, d: LinkDraw) {
+  const { ctx, cam, pal } = v;
+  const bf = branchFrame(v, p);
+  const g0 = ctx.globalAlpha;
+  const { dx, dy } = d;
+  const W = cam.w;
+  const H = cam.h;
+  ctx.save();
+  ctx.lineCap = 'butt';
+  ctx.lineJoin = 'miter';
+  for (const q of d.frame.paths) {
+    if (q.kind === 'ribbon' || !linkShown(q, d)) continue;
+    const hot = q.ks === d.hover || d.preview.has(q.ks);
+    const a0 = hot || d.lit(q) ? 1 : d.alpha;
+    if (a0 <= 0.01) continue;
+    const pts = q.pts;
+    let x0 = Infinity;
+    let x1 = -Infinity;
+    let y0 = Infinity;
+    let y1 = -Infinity;
+    for (let k = 0; k < pts.length; k += 2) {
+      x0 = Math.min(x0, pts[k] + dx);
+      x1 = Math.max(x1, pts[k] + dx);
+      y0 = Math.min(y0, pts[k + 1] + dy);
+      y1 = Math.max(y1, pts[k + 1] + dy);
+    }
+    if (x1 < -4 || x0 > W + 4 || y1 < -4 || y0 > H + 4) continue;
+    const e = hot ? 1 : pathEmph(p, q) * p.s.intro;
+    ctx.globalAlpha = g0 * a0;
+    ctx.strokeStyle = hot ? pal.ink : (pathBranch(bf, p, q) ?? alpha(pal.ink2, Math.min(1, LINK_TONE * e)));
+    ctx.lineWidth = hot ? 2 : 1;
+    ctx.setLineDash(LINK_DASH[q.style]);
+    ctx.beginPath();
+    if (q.kind === 'bar') {
+      for (const off of [-BAR_GAP / 2, BAR_GAP / 2]) {
+        ctx.moveTo(pts[0] + dx + off, pts[1] + dy);
+        for (let k = 2; k < pts.length; k += 2) ctx.lineTo(pts[k] + dx + off, pts[k + 1] + dy);
+      }
+    } else {
+      ctx.moveTo(pts[0] + dx, pts[1] + dy);
+      for (let k = 2; k < pts.length; k += 2) ctx.lineTo(pts[k] + dx, pts[k + 1] + dy);
+    }
+    ctx.stroke();
+    if (p.lines)
+      for (let k = 0; k + 3 < pts.length; k += 2) {
+        const ax = pts[k] + dx;
+        const ay = pts[k + 1] + dy;
+        const bx = pts[k + 2] + dx;
+        const by = pts[k + 3] + dy;
+        p.lines.add({ x: Math.min(ax, bx) - 1.5, y: Math.min(ay, by) - 1.5, w: Math.abs(bx - ax) + 3, h: Math.abs(by - ay) + 3 });
+      }
+  }
+  ctx.restore();
+  ctx.globalAlpha = g0;
+}
+
+/** Подпись обрывка или узла на небе: текст, точка привязки и куда от неё ставить. */
+interface LinkText {
+  text: string;
+  x: number;
+  y: number;
+  /** −1 — над точкой, 1 — под ней, 0 — справа (или слева, если right = false) */
+  dir: -1 | 0 | 1;
+  right: boolean;
+  /** чья подпись: союз связи (или запись ключа) — на своих линиях подпись может лежать, на чужих — нет (Я12) */
+  id?: string;
+  /** можно и по другую сторону точки (над следом и под ним): имя матери у ромба */
+  side2?: boolean;
+}
+
+const nameOf = (id: string) => byId.get(id)?.name ?? id;
+/** «Симеон, 23 Б»: имя и атласная координата лица на общей раскладке (ТЗ § 3.1, как в указателе). */
+function nameAt(v: SkyContext, id: string): string {
+  const i = v.indexOf(id);
+  const n = i === undefined ? undefined : v.model.nodes[i];
+  return n ? `${nameOf(id)}, ${atlasCoord(n.t0, n.lane)}` : nameOf(id);
+}
+/** Родство дочери (сына), стоящей у мужа (§ 4.2 п. 1): «дочь Ревекка — жена Исаака»; падеж — ru.ts, без него — через тире. */
+function kidAway(kid: string, parent: string): string {
+  const k = byId.get(kid);
+  if (!k) return '';
+  const word = k.sex === 'f' ? 'дочь' : 'сын';
+  const spouse = (unionsOfKid(kid).find((u) => u.a && u.b && (u.a === kid || u.b === kid)) ?? null);
+  const other = spouse ? (spouse.a === kid ? spouse.b : spouse.a) : null;
+  const o = other ? byId.get(other) : undefined;
+  if (!o) return `${word} ${k.name}`;
+  const gen = nameCase(o.name, o.sex, 'gen', o.unnamed, o.alt);
+  const role = k.sex === 'f' ? 'жена' : 'муж';
+  void parent;
+  return gen ? `${word} ${k.name} — ${role} ${gen}` : `${word} ${k.name}; ${role} — ${o.name}`;
+}
+/** Сторона ребёнка у обрывка к родной семье: «дочь Вафуила»; без падежа — «отец — Вафуил». */
+function kidOf(kid: string, parent: string): string {
+  const k = byId.get(kid);
+  const q = byId.get(parent);
+  if (!k || !q) return '';
+  const gen = nameCase(q.name, q.sex, 'gen', q.unnamed, q.alt);
+  if (gen) return `${k.sex === 'f' ? 'дочь' : 'сын'} ${gen}`;
+  return `${q.sex === 'f' ? 'мать' : 'отец'} — ${q.name}`;
+}
+const unionsOfKid = (id: string) => ALL_UNIONS.of.get(id) ?? [];
+
+/** Перечень целей обрывка: до трёх имён с координатами, дальше — «ещё N». */
+function targetsText(v: SkyContext, ids: readonly string[]): string {
+  const head = ids.slice(0, 3).map((id) => nameAt(v, id));
+  return ids.length > 3 ? `${head.join('; ')}; ещё ${ids.length - 3}` : head.join('; ');
+}
+
+/** Поставить подпись связи в свободное место у точки и нарисовать её (курсив малого кегля карты, тоном --ink-2). */
+function putLinkText(v: SkyContext, p: Pass, t: LinkText, a: number): Rect | null {
+  const { ctx } = v;
+  const size = mapSize(T_MAP_S, v.coarse);
+  ctx.font = mapFont(T_MAP_S, { italic: true, coarse: v.coarse });
+  const w = ctx.measureText(t.text).width;
+  const cands: { tx: number; ty: number }[] = [];
+  const mid = (0.72 - 0.22) * 0.5 * size;
+  if (t.dir === 0) {
+    if (t.right) cands.push({ tx: t.x + 4, ty: t.y + mid }, { tx: t.x + 4, ty: t.y - 5 }, { tx: t.x + 4, ty: t.y + size + 3 });
+    else cands.push({ tx: t.x - 4 - w, ty: t.y + mid }, { tx: t.x - 4 - w, ty: t.y - 5 }, { tx: t.x - 4 - w, ty: t.y + size + 3 });
+    // у ромба в тесном ряду узлов (Давид: семь союзов) — и по другую сторону, над следом и под ним
+    if (t.side2) {
+      const ox = t.right ? t.x - 12 - w : t.x + 12;
+      cands.push({ tx: ox, ty: t.y - 5 }, { tx: ox, ty: t.y + size + 3 });
+      // след лица линий Мессии несёт ленту: имя — за её полосой
+      for (const dy of [12, 20]) cands.push({ tx: t.x + 4, ty: t.y - 5 - dy }, { tx: t.x + 4, ty: t.y + size + 3 + dy });
+    }
+  } else {
+    const ty = t.dir < 0 ? t.y - 4 : t.y + size + 2;
+    cands.push({ tx: t.x + 4, ty }, { tx: t.x - 4 - w, ty }, { tx: t.x - w / 2, ty: t.dir < 0 ? ty - 4 : ty + 4 });
+  }
+  // поле подписи — с запасом над строкой: курсив малого кегля не встаёт вплотную к органам неба и соседним подписям
+  const boxes = cands.map((c) => {
+    const b = textBox(c.tx, c.ty, w, size);
+    return { x: b.x, y: b.y - 5, w: b.w, h: b.h + 5 };
+  });
+  const b = claim(v, p, boxes, 'plate', t.text, { id: t.id });
+  if (!b) return null;
+  const c = cands[boxes.indexOf(b)];
+  const g0 = ctx.globalAlpha;
+  ctx.globalAlpha = g0 * a;
+  drawFamilyText(ctx, { halo: v.pal.halo, ink3: v.pal.ink2 }, t.text, c.tx, c.ty, v.coarse);
+  ctx.globalAlpha = g0;
+  return b;
+}
+
+/**
+ * Подписи связей (после подписей звёзд, если есть место): цели обрывков длинных связей и родовых черт — «Симеон, 23 Б;
+ * Левий, 23 В», «Иаков, 22 П» (Г11, Г12; ТЗ § 3.1); обрывок дочери, стоящей у мужа, — «дочь Ревекка — жена Исаака»
+ * (§ 4.2 п. 1); имя матери у ромба на следе отца, если союзов с детьми два и больше (Г8), и «Сиф и его жена» у ромба
+ * союза с неназванной женой (решение 75). Для проверок пишет canvas[data-link-texts]: «текст@x,y» через «|».
+ */
+export function drawLinkLabels(v: SkyContext, p: Pass, d: LinkDraw) {
+  const { cam } = v;
+  const out: string[] = [];
+  const onScreen = (x: number, y: number) => x > v.letterW && x < cam.w && y > v.openTop && y < cam.vp.b;
+  for (const st of d.frame.stubs) {
+    const lit = st.targets.every((id) => p.emph(id) > 0.5);
+    if (st.kind !== 'kid' && !linkShown({ when: 'short', union: st.union, ks: st.ks }, d)) continue;
+    const a = lit ? 1 : d.alpha;
+    if (a < 0.5) continue;
+    const x = st.x + d.dx;
+    const y = st.y + d.dy;
+    if (!onScreen(x, y)) continue;
+    const parent = st.side === 'child' ? st.targets[0] : null;
+    let text: string;
+    if (st.kind === 'kid') {
+      const kid = st.key.kind === 'child' ? st.key.child : st.targets[0];
+      const par = st.side === 'child' ? st.targets[0] : null;
+      text = st.side === 'parent' ? kidAway(kid, '') : par ? kidOf(kid, par) : '';
+    } else text = st.side === 'parent' ? targetsText(v, st.targets) : parent ? nameAt(v, parent) : '';
+    if (!text) continue;
+    // подпись обрывка — в полную силу или никак: бледная подпись не держала бы контраста 4,5 : 1
+    const e = Math.min(1, Math.max(...st.targets.map((id) => p.emph(id))));
+    if (e < 0.99 && !lit) continue;
+    const b = putLinkText(v, p, { text, x, y, dir: st.dir, right: st.side === 'parent' || st.dir !== 0, id: st.union ?? st.ks }, 1);
+    if (b) out.push(`${text}@${Math.round(x)},${Math.round(y)}`);
+  }
+  for (const n of d.frame.nodes) {
+    if (n.mother === null || n.kind !== 'union') continue;
+    const x = n.x + d.dx;
+    const y = n.y + d.dy;
+    if (!onScreen(x, y)) continue;
+    // имя матери — только у союза в полную силу: погашенный выделением союз (и «вероятно» живые на меридиане) подписи не
+    // получает — бледная подпись не держала бы контраста 4,5 : 1
+    const a = Math.min(1, p.emph(n.owner), p.emph(n.from), n.mother ? p.emph(n.mother) : 1);
+    if (a < 0.99 || !(d.alpha > 0.5 || d.expanded.has(n.union))) continue;
+    const u = ALL_UNIONS.byId.get(n.union);
+    const text = n.mother ? nameOf(n.mother) : u ? unionName(u) : '';
+    if (!text) continue;
+    const b = putLinkText(v, p, { text, x: x + 5, y, dir: 0, right: true, id: n.union, side2: true }, 1);
+    if (b) out.push(`${text}@${Math.round(x)},${Math.round(y)}`);
+  }
+  const ds = (v.ctx.canvas as { dataset?: DOMStringMap } | undefined)?.dataset;
+  if (ds) {
+    const s = out.join('|');
+    if (ds.linkTexts !== s) ds.linkTexts = s;
+  }
+}
+
+/** Обрывок наружу показа (§ 7), px холста: щелчок по нему открывает карточку того лица (src/ui/sky/input.ts). */
+export interface PlanStubHit extends Rect {
+  from: string;
+  to: string;
+  key: LinkKey;
+}
+
+/**
+ * Обрывки наружу показа (§ 7; план неба Q2, SkyPlan.stubs): пунктир от звезды лица показа к краю его строки в сторону
+ * лица вне показа и подпись в две строки — «Ревекка, дочь Вафуила» / «жена Исаака; в «Патриархах»». Возвращает поля
+ * попадания (подпись и пунктир; не меньше 24 × 24, на касании 44 × 44).
+ */
+export function drawPlanStubs(v: SkyContext, p: Pass, stubs: readonly { from: string; to: string; key: LinkKey; words: string; where: string }[]): PlanStubHit[] {
+  const { ctx, cam, pal } = v;
+  const out: PlanStubHit[] = [];
+  if (!stubs.length) return out;
+  const size = mapSize(T_MAP_S, v.coarse);
+  const lh = size + 3;
+  const log: string[] = [];
+  const least = v.coarse ? 44 : 24;
+  const seen = new Map<string, number>();
+  for (const st of stubs) {
+    const i = v.indexOf(st.from);
+    if (i === undefined || !v.drawn(i)) continue;
+    const n = v.nodes[i];
+    const q = byId.get(st.from);
+    if (!q) continue;
+    const x = cam.sx(v.X0[i]);
+    const y = cam.sy(n.lane);
+    if (x < v.letterW || x > cam.w || y < v.openTop || y > cam.vp.b) continue;
+    // куда смотрит обрывок: к строке лица вне показа на общей раскладке; несколько обрывков одного лица — веером
+    const j = v.indexOf(st.to);
+    const lf = v.model.nodes[i].lane;
+    const lt = j === undefined ? lf : v.model.nodes[j].lane;
+    const dir = lt > lf ? -1 : 1;
+    const k = seen.get(`${st.from}${dir}`) ?? 0;
+    seen.set(`${st.from}${dir}`, k + 1);
+    const r = starRadius(q.magnitude, p.zoomScale) + (q.sex === 'f' ? 2.2 : 0);
+    const sx = Math.round(x + r + 6 + k * 10) + 0.5;
+    const ey = y + dir * 18;
+    ctx.save();
+    ctx.strokeStyle = alpha(pal.ink2, Math.min(1, LINK_TONE * p.emph(st.from)));
+    ctx.lineWidth = 1;
+    ctx.setLineDash(LINK_DASH.dots);
+    ctx.beginPath();
+    ctx.moveTo(x + r + 2, y);
+    ctx.lineTo(sx, y);
+    ctx.lineTo(sx, ey);
+    ctx.stroke();
+    ctx.restore();
+    ctx.font = mapFont(T_MAP_S, { italic: true, coarse: v.coarse });
+    const w = Math.max(ctx.measureText(st.words).width, st.where ? ctx.measureText(st.where).width : 0);
+    const h = st.where ? 2 * lh : lh;
+    const top = dir < 0 ? ey - 3 - h : ey + 3;
+    const cands = [{ x: sx + 3, y: top }, { x: sx - 3 - w, y: top }];
+    const boxes = cands.map((c) => ({ x: c.x - 1.5, y: c.y - 1.5, w: w + 3, h: h + 3 }));
+    const b = claim(v, p, boxes, 'plate', st.words, { id: st.to });
+    if (!b) continue;
+    const c = cands[boxes.indexOf(b)];
+    drawFamilyText(ctx, { halo: pal.halo, ink3: pal.ink2 }, st.words, c.x, c.y + size * 0.8, v.coarse);
+    if (st.where) drawFamilyText(ctx, { halo: pal.halo, ink3: pal.ink3 }, st.where, c.x, c.y + lh + size * 0.8, v.coarse);
+    // поле попадания: подпись и пунктир, не меньше least × least
+    const hx0 = Math.min(b.x, sx - 4);
+    const hx1 = Math.max(b.x + b.w, sx + 4);
+    const hy0 = Math.min(b.y, y, ey);
+    const hy1 = Math.max(b.y + b.h, y, ey);
+    const gw = Math.max(0, (least - (hx1 - hx0)) / 2);
+    const gh = Math.max(0, (least - (hy1 - hy0)) / 2);
+    out.push({ x: hx0 - gw, y: hy0 - gh, w: hx1 - hx0 + 2 * gw, h: hy1 - hy0 + 2 * gh, from: st.from, to: st.to, key: st.key });
+    log.push(`${st.from}>${st.to}@${Math.round(sx)},${Math.round(ey)}`);
+  }
+  const ds = (ctx.canvas as { dataset?: DOMStringMap } | undefined)?.dataset;
+  if (ds) {
+    const s = log.join(' ');
+    if (ds.planStubs !== s) ds.planStubs = s;
+  }
+  return out;
 }

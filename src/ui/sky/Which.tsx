@@ -1,5 +1,6 @@
 /**
- * «Какое лицо?» (H5; MOB-10): касание в плотном месте неба, где под пальцем несколько звёзд на близких расстояниях,
+ * «Какое лицо?» (H5; MOB-10) и «Какая связь?» (этап 11, § 8): касание в плотном месте неба, где под пальцем несколько
+ * звёзд (или линий связей) на близких расстояниях,
  * не выбирает наугад, а спрашивает — список из 2–5 имён с уточнением или годами, по порядку сверху вниз, как на небе.
  * Список — лист у места касания (над пальцем, если есть место), на небе поверх звёзд; закрывают его «×», Escape,
  * касание мимо и любое движение неба. Выбор имени — то же, что касание звезды (ввод неба, src/ui/sky/input.ts).
@@ -13,6 +14,12 @@ import { lifeText } from './text.ts';
 
 export interface WhichOpts {
   ids: string[];
+  /**
+   * «Какая связь?» (этап 11, § 8): касание в гуще линий — связи у пальца строками по 56 px; text — слова связи
+   * (src/ui/linkwords.ts, linkTitle), sub — стих. Лица ids идут после связей (касание у звезды на самой линии: «Лицо или связь?»).
+   */
+  links?: { ks: string; text: string; sub?: string }[];
+  onPickLink?: (ks: string) => void;
   /** место касания и прямоугольник неба — px окна */
   x: number;
   y: number;
@@ -25,7 +32,10 @@ export interface WhichOpts {
 /** Зазор между пальцем и списком: палец не закрывает имена. */
 const GAP = 24;
 
-function WhichList({ ids, x, y, bounds, onPick, onClose }: WhichOpts & { onClose: () => void }) {
+/** Строка «Какая связь?» — не ниже 56 px (§ 8): слова связи бывают в две строки (класс which-link, src/styles/phone.css). */
+export const LINK_ROW = 56;
+
+function WhichList({ ids, links, x, y, bounds, onPick, onPickLink, onClose }: WhichOpts & { onClose: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
   const [at, setAt] = useState<{ left: number; top: number } | null>(null);
   // щелчок, который браузер досылает после касания неба, не должен выбрать имя под пальцем: строки отвечают только
@@ -42,7 +52,7 @@ function WhichList({ ids, x, y, bounds, onPick, onClose }: WhichOpts & { onClose
     const below = y + GAP;
     const top = above >= bounds.top + 8 ? above : below + h <= bounds.bottom - 8 ? below : Math.max(bounds.top + 8, Math.min(below, window.innerHeight - h - 8));
     setAt({ left, top });
-  }, [ids.join(' '), x, y]);
+  }, [ids.join(' '), links?.map((l) => l.ks).join(' '), x, y]);
   // фокус — на первое имя, когда список уже стоит у пальца (data-placed): до этого он невидим (visibility: hidden),
   // и фокус на нём не держится (MOB-56)
   useEffect(() => {
@@ -67,10 +77,18 @@ function WhichList({ ids, x, y, bounds, onPick, onClose }: WhichOpts & { onClose
       }}
     >
       <div class="which-head">
-        <h2 id="which-title">Какое лицо?</h2>
+        <h2 id="which-title">{links && ids.length ? 'Лицо или связь?' : links ? 'Какая связь?' : 'Какое лицо?'}</h2>
         <Close label="Закрыть список" onClick={onClose} />
       </div>
       <ul>
+        {links?.map((l) => (
+          <li key={l.ks}>
+            <button type="button" class="which-item which-link" data-link={l.ks} onClick={(e) => (armed.current || e.detail === 0) && onPickLink?.(l.ks)}>
+              <span class="nm">{typo(l.text)}</span>
+              {l.sub ? <span class="ds">{typo(l.sub)}</span> : null}
+            </button>
+          </li>
+        ))}
         {ids.map((id) => {
           const p = byId.get(id);
           if (!p) return null;
@@ -118,7 +136,11 @@ export function openWhich(o: WhichOpts) {
     closeWhich();
     o.onPick(id);
   };
-  render(<WhichList {...o} onPick={pick} onClose={() => closeWhich(true)} />, host);
+  const pickLink = (ks: string) => {
+    closeWhich();
+    o.onPickLink?.(ks);
+  };
+  render(<WhichList {...o} onPick={pick} onPickLink={pickLink} onClose={() => closeWhich(true)} />, host);
   // касание мимо списка закрывает его, а само касание делает своё дело (выбирает другую звезду, сдвигает небо)
   const away = (e: PointerEvent) => {
     if (!host?.contains(e.target as Node)) closeWhich();

@@ -1215,44 +1215,12 @@ button.row:focus-visible {
   content: attr(data-label);
 }
 
-/* ---------- «Условные знаки» — древо (решение 73; Legend.tsx, образцы древа) ----------
-   Образцы — сами карточки древа (классы и вид — tree.css) на фоне неба, но в потоке текста и без действия; связи —
-   классами линий древа (.tree-links), узлы — прямоугольниками листа. */
+/* ---------- «Условные знаки»: образцы на фоне неба ---------- */
 .lt-sample {
   display: block;
   padding: 10px 12px;
   background: var(--sky);
   line-height: var(--t-ui-lh);
-}
-.lt-stage {
-  position: relative;
-  display: block;
-  max-width: 100%;
-  overflow: hidden;
-}
-.lt-plane {
-  position: absolute;
-}
-.lt-stage .tc {
-  cursor: default;
-}
-.lt-svg.tree-links {
-  position: static;
-  display: block;
-  max-width: 100%;
-  height: auto;
-  padding: 8px 12px;
-  background: var(--sky);
-  box-sizing: content-box;
-}
-.lt-svg .lt-node {
-  fill: var(--sheet);
-  stroke: var(--rule-strong);
-  stroke-width: 1;
-}
-.lt-svg .lt-node.sel {
-  stroke: var(--ink);
-  stroke-width: 2;
 }
 /* образы лиц (решение 74): образцы в ряд, подпись под каждым */
 .lt-avatars {

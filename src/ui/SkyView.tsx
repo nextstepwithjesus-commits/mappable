@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { effect } from '@preact/signals';
-import { FRAME_H, Sky, readPalette, type Emphasis, type Rect, type SkyState } from '../render/sky.ts';
+import { FRAME_H, SCALE_SETTLE_MS, Sky, readPalette, type Emphasis, type Rect, type SkyState } from '../render/sky.ts';
 import { byId, groupById, lines, modelInfo } from '../data/atlas.ts';
 import { highlightFor } from '../render/marks.ts';
 import { comparePoints, lineNoteHits, ribbonHover } from '../render/ribbons.ts';
@@ -17,7 +17,11 @@ import {
   startLanes, stopFlight, unionFlip, updateZoomFloor, viewAround, linesAgain, type Anchor,
 } from './sky/view.ts';
 import { expanded, hasHidden, opened, plates, selectedUnion, unionById, type Plate } from './reveal.ts';
-import { plateFocus, plateHover, plateNews } from './sky/starnav.ts';
+import { linkClick, linkHover, plateFocus, plateHover, plateNews } from './sky/starnav.ts';
+import { linkAnchor, previewLinks, selectedLink } from './linkstate.ts';
+import { skyShow, whereOf } from './show.ts';
+import { linkSpeech } from './linkwords.ts';
+import { linkKeyString } from '../engine/linkkey.ts';
 import { computed } from '@preact/signals';
 import { attachPointer, type Tip } from './sky/input.ts';
 import { SkyColumn, SkyControls, useColumn, viewOpen } from './sky/Controls.tsx';
@@ -82,6 +86,29 @@ const revealIds = computed<ReadonlySet<string> | null>(() => {
   return out;
 });
 
+/**
+ * linkAnchor (src/ui/linkstate.ts) по кадру: у выбранной мышью связи — точка щелчка (со сдвигом неба), иначе середина
+ * её пути в окне; null — связи нет или её пути нет в окне. Сигнал меняется, только если точка сдвинулась больше чем на 0,5 px.
+ */
+function anchorLink(sky: Sky) {
+  const k = selectedLink.peek();
+  const info = sky.linkSel;
+  let at: { x: number; y: number } | null = null;
+  if (k && info) {
+    const ks = info.ks;
+    if (linkClick.ks === ks && info.x !== null) {
+      const x = sky.cam.sx(linkClick.wx);
+      const y = sky.cam.sy(linkClick.lane);
+      const vp = sky.cam.vp;
+      at = x >= vp.l && x <= vp.r && y >= vp.t && y <= vp.b ? { x, y } : { x: info.x, y: info.y! };
+    } else if (info.x !== null) at = { x: info.x, y: info.y! };
+  }
+  const was = linkAnchor.peek();
+  if (!at && !was) return;
+  if (at && was && Math.abs(at.x - was.x) < 0.5 && Math.abs(at.y - was.y) < 0.5) return;
+  linkAnchor.value = at;
+}
+
 /** Сколько раз небо создавалось (переход «Древо → Небо» создаёт его заново): со второго раза — linesAgain. */
 let mounts = 0;
 
@@ -112,6 +139,7 @@ export function SkyView() {
     lanes.value = sky.cam.lanes;
     let dirty = true;
     let raf = 0;
+    let staleTimer = 0;
     let introStart = introDone.value || reduced() ? -1 : performance.now();
     let flowStart = 0;
     let morph: { from: number; to: number; start: number; anchor: Anchor } | null = null;
@@ -236,9 +264,26 @@ export function SkyView() {
         // точка союза с открытой карточкой у точки (решение 76) отмечена, как союз, открытый в листе карточки
         plateMarks: { hover: plateHover.value, focus: plateFocus.value, selected: dotUnion.value ?? selectedUnion.value },
         reveal: revealIds.value,
+        // выбранная связь, подсвеченные строкой «Родство» и связь под указателем (этап 11, § 8; src/ui/linkstate.ts)
+        link: selectedLink.value,
+        linkPreview: previewLinks.value,
+        linkHover: linkHover.value,
+        // гости показа (§ 7): уточнение подписи «в «Доме Фарры»»
+        guestWhere: whereOf,
       };
+      // переход между укладками (§ 10): при ослабленном движении — сразу конечный кадр
+      sky.animate = !reduced();
       // ярусы эпох — поверх звёзд, под меридианом, рамкой и указателями у края
       sky.draw(state, epochMode.value ? () => drawTiers(sky, state) : undefined);
+      // переход идёт — кадры до его конца (§ 10)
+      if (sky.transitioning) again = true;
+      // масштаб в движении: кадр связей и пороги подписей пересчитаны из прежних — точный кадр, когда масштаб постоит (Я33)
+      if (sky.scaleMoving || sky.linksStale) {
+        clearTimeout(staleTimer);
+        staleTimer = window.setTimeout(request, SCALE_SETTLE_MS + 30);
+      }
+      // место выбранной связи на экране — карточке связи (стык 1): точка щелчка по линии, иначе середина её пути в кадре
+      anchorLink(sky);
       // смена модели: прежний кадр растворяется поверх нового (IX-48)
       if (fade) {
         const t = (now - fade.start) / MODEL_FADE_MS;
@@ -487,6 +532,8 @@ export function SkyView() {
     const input = attachPointer(sky, canvas, request, setTip);
     // любое нажатие на холсте прерывает перелёт (D4; IX-11); пока указатель нажат, небо у края данных не возвращается
     const onDown = () => {
+      // ввод во время перехода (§ 10) — сразу конечный кадр
+      sky.endTransition();
       // читатель взялся за небо — путь родства больше не вписывается сам
       pathFit = null;
       stopFlight();
@@ -498,6 +545,9 @@ export function SkyView() {
     canvas.addEventListener('pointercancel', onUp);
     // колесо над надписями поверх неба — небу (IX-57): органы, строки у кромки, «Как читать карту»; прокручиваемые листы
     // (вступление, «Вид» у колонки, меню) прокручиваются сами
+    const onAnyInput = () => sky.endTransition();
+    canvas.addEventListener('wheel', onAnyInput, { passive: true });
+    window.addEventListener('keydown', onAnyInput, true);
     const onWheelOver = (e: WheelEvent) => {
       const t = e.target;
       if (t === canvas || !(t instanceof Element)) return;
@@ -587,6 +637,10 @@ export function SkyView() {
       void plateFocus.value;
       void selectedUnion.value;
       void dotUnion.value;
+      // связи (§ 8): выбранная, подсвеченные строкой «Родство», под указателем
+      void selectedLink.value;
+      void previewLinks.value;
+      void linkHover.value;
       if (id && id !== lastSel) {
         // выбор лица — явное действие: вступление сворачивается в «Как читать карту» (C5)
         introDone.value = true;
@@ -646,6 +700,16 @@ export function SkyView() {
       const n = plateNews.value;
       if (n.text) say(n.text);
     });
+    // выбранная связь — вслух (§ 8): «Связь: Иаков и Лия — родители; Иуда — сын; Бытие 29:35»
+    let saidLink = '';
+    const offLinkSay = effect(() => {
+      const k = selectedLink.value;
+      const ks = k ? (linkKeyString(k) ?? '') : '';
+      if (ks === saidLink) return;
+      saidLink = ks;
+      if (k) say(linkSpeech(k));
+      else if (linkClick.ks) linkClick.ks = '';
+    });
     /**
      * Свернули созвездие не у его названия на небе (меню без места щелчка на экране, UX-51): строка-подпись «+N» может
      * оказаться за краем — небо мягко переходит к ней: строка встаёт на высоту at или в середину, её начало — в видимой
@@ -682,7 +746,9 @@ export function SkyView() {
       // небо «набор» показывает набор из ссылки, пока читатель его смотрит (IX-69), иначе свой набор; точки союзов —
       // место под них в строках неба (решение 70). В режиме «только линии» точек союзов нет (sky.ts, unionPlates) — нет и
       // пустых строк под них: иначе лента линий раздувалась вдвое (горб у Ламеха, снимок 14; этап 11, B1)
-      const v = { mode: skyMode.value, set: shownIds.value, foldDesc: foldDesc.value, foldGroups: foldGroups.value, foldAt, plates: onlyLines.value ? [] : skyPlates.value };
+      // показ (этап 11; src/ui/show.ts): план неба строится по нему — укладка, гости, обрывки, опора перехода
+      const sh = skyShow.value;
+      const v = { mode: skyMode.value, set: shownIds.value, foldDesc: foldDesc.value, foldGroups: foldGroups.value, foldAt, plates: onlyLines.value ? [] : skyPlates.value, show: sh };
       const exp = expanded.peek();
       const flip = unionFlip(shownExp, exp, v.set);
       shownExp = exp;
@@ -712,7 +778,8 @@ export function SkyView() {
         }
       }
       if (openedGroup) foldAt.delete(openedGroup);
-      const changed = sky.setView(v, toggled ?? flip?.from ?? selected.peek());
+      sky.animate = !reduced();
+      const changed = sky.setView(v, toggled ?? flip?.from ?? sh.anchor ?? selected.peek());
       if (changed && hold) {
         const lane = hold.group ? sky.plan.marks.find((k) => k.kind === 'group' && k.id === hold!.group)?.lane : hold.lane;
         if (lane !== undefined) {
@@ -774,7 +841,7 @@ export function SkyView() {
       shownMode = v.mode;
       request();
     });
-    // клавиши рабочего набора (J3, J5): «В» — взять лицо в работу, «С» — свернуть потомков. Лицо — звезда с кольцом
+    // клавиши набора (J3, J5): «В» — добавить лицо в набор, «С» — свернуть потомков. Лицо — звезда с кольцом
     // клавиатуры, иначе звезда с видимой подсказкой, иначе выбранное (IX-51); ответ — в живой области (MOB-55) и
     // однократной обводкой звезды. Как у клавиш атласа (src/ui/keys.ts): не в полях ввода, не с модификаторами, не в меню
     const onWorkKey = (e: KeyboardEvent) => {
@@ -806,6 +873,8 @@ export function SkyView() {
       canvas.removeEventListener('pointerup', onUp);
       canvas.removeEventListener('pointercancel', onUp);
       wrapEl.removeEventListener('wheel', onWheelOver);
+      canvas.removeEventListener('wheel', onAnyInput);
+      window.removeEventListener('keydown', onAnyInput, true);
       offTheme();
       offModel();
       offLambda();
@@ -814,9 +883,11 @@ export function SkyView() {
       offTiers();
       offWork();
       offNews();
+      offLinkSay();
       offFull();
       window.removeEventListener('keydown', onWorkKey);
       clearTimeout(settleTimer);
+      clearTimeout(staleTimer);
       // перелёт и шаг масштаба останавливаются вместе с небом: их кадры некуда рисовать
       sky.cam.stop();
       input.dispose();

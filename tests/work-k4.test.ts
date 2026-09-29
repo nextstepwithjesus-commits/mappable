@@ -34,11 +34,12 @@ describe('клавиши набора: чья звезда и что сказа�
     clearWork();
     const t = workKey('KeyD', 'iessey')!;
     expect(t).toEqual({ kind: 'take', id: 'iessey', size: 1 });
-    expect(workKeyText(t)).toBe('Иессей взят в работу; в наборе 1 лицо');
+    // этап 11 (Я30, решение 81): одно слово — «набор»; «в работу» в интерфейсе больше нет
+    expect(workKeyText(t)).toBe('Иессей добавлен в набор; в наборе 1 лицо');
     const r = workKey('KeyD', 'ruf')!;
-    expect(workKeyText(r)).toBe('Руфь взята в работу; в наборе 2 лица');
-    expect(workKeyText(workKey('KeyD', 'ruf')!)).toBe('Руфь убрана из работы; в наборе 1 лицо');
-    expect(workKeyText(workKey('KeyD', 'iessey')!)).toBe('Иессей убран из работы; набор пуст');
+    expect(workKeyText(r)).toBe('Руфь добавлена в набор; в наборе 2 лица');
+    expect(workKeyText(workKey('KeyD', 'ruf')!)).toBe('Руфь убрана из набора; в наборе 1 лицо');
+    expect(workKeyText(workKey('KeyD', 'iessey')!)).toBe('Иессей убран из набора; набор пуст');
     expect(workSet.value.size).toBe(0);
     const f = workKey('KeyC', 'david')!;
     expect(f).toEqual({ kind: 'fold', id: 'david' });
@@ -62,20 +63,25 @@ describe('клавиши набора: чья звезда и что сказа�
 });
 
 describe('режим неба и набор в адресе (решение 34; IX-67)', () => {
-  it('k1 — небо показывает набор; n — набор до 12 лиц через точку; простые символы', () => {
+  it('показ «набор» — поле «~vs»; n — набор до 12 лиц через точку; простые символы; прежнее «~k1» открывается набором', () => {
+    // этап 11 (решение 81): режим «набор» стал показом «набор» и пишется полем показа «~vs»
     const s = formatAddress({ id: 'david', work: true, set: ['david', 'iessey', 'ovid'] });
-    expect(s).toBe('#/david~k1~ndavid.iessey.ovid');
+    expect(s).toBe('#/david~vs~ndavid.iessey.ovid');
     expect(/^#\/[a-z0-9._~-]*$/.test(s)).toBe(true);
     const a = parseAddress(s, has);
-    expect(a.work).toBe(true);
+    expect(a.show).toEqual({ kind: 'set' });
     expect(a.set).toEqual(['david', 'iessey', 'ovid']);
     expect(a.full).toBe(true);
+    const old = parseAddress('#/david~k1~ndavid.iessey.ovid', has);
+    expect(old.show).toEqual({ kind: 'set' });
+    expect(old.set).toEqual(['david', 'iessey', 'ovid']);
   });
-  it('набор длиннее 12 лиц — только режим; режим «все лица» — без набора', () => {
+  it('набор длиннее 12 лиц — только показ; всё небо — без набора', () => {
     const many = [...byId.keys()].slice(0, WORK_URL_MAX + 1);
-    expect(formatAddress({ id: null, work: true, set: many })).toBe('#/~k1');
+    expect(formatAddress({ id: null, work: true, set: many })).toBe('#/~vs');
     expect(formatAddress({ id: null, work: true, set: many.slice(0, WORK_URL_MAX) })).toMatch(/~n[a-z0-9.-]+$/);
     expect(formatAddress({ id: 'david', work: false, set: ['david'] })).toBe('#/david');
+    expect(formatAddress({ id: 'david', show: { kind: 'all' }, set: ['david'] })).toBe('#/david');
   });
   it('неизвестные и повторённые id набора пропускаются; не больше 12', () => {
     const a = parseAddress('#/~k1~ndavid.nobody.david.ruf', has);

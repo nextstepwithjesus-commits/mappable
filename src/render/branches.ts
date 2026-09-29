@@ -20,6 +20,12 @@ import { alpha } from './color.ts';
 import { alphaForContrast } from './dim.ts';
 import { drawGlyph } from './glyphs.ts';
 
+/**
+ * Жёлтый выбранной связи (этап 11, § 8, 9): ночью — линия 2,5 px со свечением, днём — маркер 9 px под линией тона текста
+ * (K1 § 2.7). Проверка контраста и различимости с лентами и ветвями — tools/contrast.ts.
+ */
+export const LINK_YELLOW = { night: '#F2E600', day: '#FCDA2D' };
+
 export type MapTheme = 'night' | 'day';
 
 /** Цвета ветвей по порядку: зелёный, фиолетовый, коралловый, розовый, мятный, синий (#rrggbb). */

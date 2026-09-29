@@ -106,7 +106,7 @@ export const find3: Scenario[] = [
   },
   {
     n: 394,
-    title: 'IX-84: Shift+Enter («в работу») в строке поиска объявляет «Иессей взят в работу; в наборе N лиц» — как клавиша В на небе',
+    title: 'IX-84: Shift+Enter («в работу») в строке поиска объявляет «Иессей добавлен в набор; в наборе N лиц» — как клавиша В на небе',
     run: async (p) => {
       await type(p, 'Иессей');
       await p.keyboard.press('Shift+Enter');
@@ -115,8 +115,8 @@ export const find3: Scenario[] = [
       await p.keyboard.press('Shift+Enter');
       await p.waitForTimeout(300);
       const back = await live(p);
-      if (!/^Иессей взят в работу; в наборе \d+ (лицо|лица|лиц)$/.test(said)) return fail(`взят: «${said}»`);
-      return /^Иессей убран из работы; /.test(back) ? pass(`${said} / ${back}`) : fail(`убран: «${back}»`);
+      if (!/^Иессей добавлен в набор; в наборе \d+ (лицо|лица|лиц)$/.test(said)) return fail(`взят: «${said}»`);
+      return /^Иессей убран из набора; /.test(back) ? pass(`${said} / ${back}`) : fail(`убран: «${back}»`);
     },
   },
   {

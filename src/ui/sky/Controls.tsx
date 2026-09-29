@@ -4,18 +4,18 @@
  * и историю не пишется; закрывают его «Вид», Escape, «×» у колонки и нажатие мимо.
  */
 import { byId, modelInfo } from '../../data/atlas.ts';
-import { lambda, modelId, onlyLines, panel, epochMode, selected } from '../../state.ts';
+import { lambda, modelId, panel, epochMode } from '../../state.ts';
 import { num, typo } from '../text/typo.ts';
-import { Menu, rovingKey } from '../controls.tsx';
+import { Menu } from '../controls.tsx';
 import { Sheet } from '../panels/Sheet.tsx';
-import { LANES_STEP, TIME_STEP, introOpen, resetProportions, showAll, stretchBy, zoomBy } from './view.ts';
-import { SKY_MODES, addToWork, foldDesc, foldGroups, skyMode, unfoldAll, workSet } from '../work.ts';
-import { KEY_IDS, STARTS, atlasView, openPerson, start, startWith, type AtlasView, type Start } from '../reveal.ts';
+import { LANES_STEP, TIME_STEP, resetProportions, showAll, stretchBy, zoomBy } from './view.ts';
+import { foldDesc, foldGroups, unfoldAll, workSet } from '../work.ts';
+import { KEY_IDS, STARTS, start, startWith, type Start } from '../reveal.ts';
 import { lanesText } from './Overlays.tsx';
 import { plural, skyRef, viewTick } from '../common.tsx';
 import { canFill, grid, skyFull, toggleFull } from '../layout.ts';
 import type { Axis } from '../../render/camera.ts';
-import { batch, signal } from '@preact/signals';
+import { signal } from '@preact/signals';
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { isTextField } from '../keys.ts';
 
@@ -98,95 +98,14 @@ function ZoomButton({ dir }: { dir: 1 | -1 }) {
 }
 
 /**
- * Пояснения флажков и переключателя неба (UX-21): при наведении (title) и для диктора (aria-description), как у команд
- * верхней строки.
+ * Пояснения органов неба (UX-21): при наведении (title) и для диктора (aria-description), как у команд верхней строки.
+ * Флажка «только линии Мессии» и переключателя «все лица | набор» больше нет (решение 81): это показы, их выбирает
+ * строка показа у верхней кромки неба (src/ui/sky/ShowBar.tsx).
  */
 export const SKY_HINTS = {
-  lines: 'Только две родословные линии Иисуса Христа — по Матфею (Мф 1) и по Луке (Лк 3) — и места, где они расходятся и сходятся',
   tiers: 'Над небом — ярусы по годам: эпохи, судьи, цари Иудеи и Израиля, служения пророков, события',
-  all: 'Небо показывает всех лиц атласа',
-  work: 'Небо показывает только лица рабочего набора («В работе»)',
+  fit: 'Вписать: весь нынешний показ в окне (0, Home)',
 } as const;
-
-/** Переключатель неба «все лица | набор» (решение 26; J4): тот же в блоке, в листе «Вид» и в панели «В работе». */
-export function SkyModeSwitch() {
-  const v = skyMode.value;
-  return (
-    <div class="seg" role="group" aria-label="Что показывает небо">
-      {SKY_MODES.map((o) => (
-        <button type="button" key={o.value} aria-pressed={o.value === v} title={SKY_HINTS[o.value]} aria-description={SKY_HINTS[o.value]} onClick={() => (skyMode.value = o.value)}>
-          {o.label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-// ---------- вид атласа: небо или древо (решение 73) ----------
-
-/** Два вида главной области: пояснение каждого — в подсказке и для диктора (UX-21). */
-export const VIEWS: readonly { value: AtlasView; label: string; hint: string }[] = [
-  { value: 'sky', label: 'Небо', hint: 'Звёздное небо: по горизонтали время, звёзды — лица, созвездия — роды и колена' },
-  { value: 'tree', label: 'Древо', hint: 'Древо карточек: лица и их союзы слева направо, ветви раскрываются по щелчку' },
-];
-
-/**
- * Что делает переход к виду v (чистая часть showView): «Небо» — те же раскрытые лица на небе «набор» с точками
- * союзов (кроме начала «Всё небо»: там небо остаётся каким было); «Древо» строится из раскрытых лиц — если их нет,
- * древо начинается с выбранного лица, а без него вступление предлагает начало.
- */
-export function viewPlan(v: AtlasView, o: { start: Start | null; set: number; selected: string | null }): { mode?: 'work'; seed?: string; intro?: boolean } {
-  if (v === 'sky') return !!o.start && o.start !== 'all' && o.set > 0 ? { mode: 'work' } : {};
-  if (o.set > 0) return {};
-  return o.selected ? { seed: o.selected } : { intro: true };
-}
-
-/** Показать небо или древо (переключатель «Небо | Древо», решение 73); одно состояние раскрытия на оба вида. */
-export function showView(v: AtlasView) {
-  if (atlasView.peek() === v) return;
-  const plan = viewPlan(v, { start: start.peek(), set: workSet.peek().size, selected: selected.peek() });
-  batch(() => {
-    viewOpen.value = false;
-    atlasView.value = v;
-    if (plan.mode) skyMode.value = plan.mode;
-    if (plan.seed) {
-      addToWork(plan.seed);
-      openPerson(plan.seed);
-    }
-    if (plan.intro) introOpen.value = true;
-  });
-}
-
-/**
- * Переключатель «Небо | Древо» (решение 73): в верхней строке на широком экране, в «Разделах» на телефоне. Нажатая
- * кнопка — нынешний вид (aria-pressed), как у «Ночь | День».
- */
-export function ViewSwitch() {
-  const v = atlasView.value;
-  return (
-    // одна остановка Tab на переключатель, выбор — стрелками (как у «Ночь | День»): путь Tab до неба не длиннее 15
-    <div
-      class="seg viewswitch"
-      role="group"
-      aria-label="Вид атласа"
-      onKeyDown={(e) => rovingKey(e, VIEWS.findIndex((o) => o.value === v), VIEWS.length, (j) => showView(VIEWS[j].value))}
-    >
-      {VIEWS.map((o) => (
-        <button
-          type="button"
-          key={o.value}
-          aria-pressed={o.value === v}
-          tabIndex={o.value === v ? 0 : -1}
-          title={o.hint}
-          aria-description={o.hint}
-          onClick={() => showView(o.value)}
-        >
-          {o.label}
-        </button>
-      ))}
-    </div>
-  );
-}
 
 // ---------- начало (решение 68): пять начал и «Начать заново» ----------
 
@@ -205,8 +124,12 @@ export function startNote(s: Start): string {
   }[s];
 }
 
-/** Нужно ли подтверждение (решение 68): начало, кроме «всего неба», заменяет набор, а в наборе больше одного лица. */
-export const needsConfirm = (s: Start, n: number) => s !== 'all' && n > 1;
+/**
+ * Нужно ли подтверждение (решение 68): начало заменяет набор, а в наборе больше одного лица. Набор заменяют только
+ * «С Адама» и «С Иисуса Христа» (набор с одного лица); «Родословие Иисуса Христа», «Ключевые лица» и «Всё небо» —
+ * показы, набор читателя они не трогают (этап 11, § 5; src/ui/reveal.ts, startWith).
+ */
+export const needsConfirm = (s: Start, n: number) => (s === 'adam' || s === 'jesus') && n > 1;
 /** Вопрос подтверждения: «Набор из 12 лиц будет заменён», «Набор из 21 лица будет заменён». */
 export const replaceText = (n: number) => `Набор из ${num(n)} ${plural(n, 'лица', 'лиц', 'лиц')} будет заменён`;
 
@@ -215,14 +138,12 @@ export const startsFocus = signal(false);
 
 /**
  * «Начать заново…» (решение 68): лист «Вид» на разделе «Начало» — тот же выбор из пяти начал. Команда верхней строки
- * («Ещё», «Разделы» телефона), строки режима «набор» у кромки неба и укороченного вступления. На телефоне открытая панель
- * уступает место листу. В древе листа «Вид» нет (решение 73): выбор начала — во вступлении, фокус — на текущем начале.
+ * («Ещё», «Разделы» телефона), панели «Набор» и укороченного вступления. На телефоне открытая панель уступает место листу.
  */
 export function openStarts() {
   if (grid.peek().phone && panel.peek()) panel.value = null;
   startsFocus.value = true;
-  if (atlasView.peek() === 'tree') introOpen.value = true;
-  else viewOpen.value = true;
+  viewOpen.value = true;
 }
 
 /**
@@ -260,6 +181,12 @@ export function StartList({ notes = false, label = 'Начало', onDone, focus
     setAsk(null);
     // набор начала (src/ui/reveal.ts); камеру на новый набор ставит само небо (SkyView)
     startWith(s);
+    // «С Адама» и «С Иисуса Христа» — набор с одного лица, его карточка у звезды открыта (этап 11, § 5): у ромба его
+    // союза — «+N»; карточка ждёт звезду, пока небо вписывает новый показ (модуль карточки — без круга импортов)
+    if (s === 'adam' || s === 'jesus') {
+      const id = s === 'adam' ? 'adam' : 'iisus';
+      void import('./DotCard.tsx').then((m) => m.openDot({ kind: 'person', id }, { grace: 1500 }));
+    }
     onDone?.(s);
   };
   if (ask)
@@ -359,17 +286,12 @@ function HintCheck({ checked, onChange, hint, children }: { checked: boolean; on
   );
 }
 
-/** Флажки слоёв неба: линии Мессии и ярусы эпох. */
+/** Флажок слоя неба: ярусы эпох. Линии Мессии — показ (решение 81), не слой. */
 function LayerChecks() {
   return (
-    <>
-      <HintCheck checked={onlyLines.value} onChange={(v) => (onlyLines.value = v)} hint={SKY_HINTS.lines}>
-        только линии Мессии
-      </HintCheck>
-      <HintCheck checked={epochMode.value} onChange={(v) => (epochMode.value = v)} hint={SKY_HINTS.tiers}>
-        ярусы эпох
-      </HintCheck>
-    </>
+    <HintCheck checked={epochMode.value} onChange={(v) => (epochMode.value = v)} hint={SKY_HINTS.tiers}>
+      ярусы эпох
+    </HintCheck>
   );
 }
 
@@ -524,9 +446,9 @@ function StartsHere() {
 
 /**
  * Органы неба (C6; VIS-21, VIS-22, IX-36, IX-37, UX-05): непрозрачный лист с рамкой в правом нижнем углу неба,
- * над полосой времени. На небе — частое, в две строки: слои, масштаб неба и «Всё небо»; что на небе (J4) и «Вид».
- * Редкое — масштаб времени, пропорции полос и времени (J1), модель хронологии и «Эпохи», «во весь экран» (J2) — в листе
- * «Вид» над блоком (ViewPop): блок не растёт в стену кнопок и меньше закрывает небо.
+ * над полосой времени. На небе — частое, одной строкой: ярусы эпох, масштаб неба, «Вписать» и «Вид». Что показано на
+ * небе, — строка показа у верхней кромки (решение 81). Редкое — масштаб времени, пропорции полос и времени (J1), модель
+ * хронологии и «Эпохи», «во весь экран» (J2) — в листе «Вид» над блоком (ViewPop).
  */
 export function SkyControls() {
   const toggle = useRef<HTMLButtonElement>(null);
@@ -540,18 +462,17 @@ export function SkyControls() {
       <div class="zoom">
         <ZoomButton dir={-1} />
         <ZoomButton dir={1} />
-        <button type="button" title="Всё небо (0, Home)" aria-keyshortcuts="0 Home" onClick={showAll}>
-          Всё небо
+        {/* «Вписать» — кадр; «Всё небо» — только показ, в строке показа (решение 81) */}
+        <button type="button" class="fit" title={SKY_HINTS.fit} aria-keyshortcuts="0 Home" onClick={showAll}>
+          Вписать
         </button>
       </div>
-      {/* что показывает небо (J4): все лица или только рабочий набор; «развернуть всё» — если что-то свёрнуто (J5) */}
-      <span class="lbl work-lbl" aria-hidden="true">
-        На небе
-      </span>
-      <div class="work">
-        <SkyModeSwitch />
-        {anyFolded() && <UnfoldAll />}
-      </div>
+      {/* «развернуть всё» — если на небе что-то свёрнуто (J5) */}
+      {anyFolded() && (
+        <div class="work">
+          <UnfoldAll />
+        </div>
+      )}
       <button
         type="button"
         class="cmd view-toggle"
@@ -588,8 +509,8 @@ export function SkyColumn() {
       <div class="skyctl column" role="group" aria-label="Вид неба" data-reserve="controls" ref={col}>
         <ZoomButton dir={1} />
         <ZoomButton dir={-1} />
-        <button type="button" class="all" title="Всё небо (0, Home)" aria-keyshortcuts="0 Home" onClick={showAll}>
-          Всё небо
+        <button type="button" class="all fit" title={SKY_HINTS.fit} aria-keyshortcuts="0 Home" onClick={showAll}>
+          Вписать
         </button>
         <button type="button" ref={toggle} aria-expanded={open} title="Масштаб времени, пропорции, хронология, начало" onClick={() => (viewOpen.value = !open)}>
           Вид
@@ -663,13 +584,12 @@ export function ViewSheet({ col, toggle }: { col?: { current: HTMLDivElement | n
             Эпохи и их основания
           </button>
         </div>
-        {/* что показывает небо (J4) и «развернуть всё» (J5) — последней строкой: слои, масштаб и хронология остаются на своих
-            местах, лист не становится выше неба над ним */}
-        <div class="work-sky">
-          <span class="k">На небе:</span>
-          <SkyModeSwitch />
-          {anyFolded() && <UnfoldAll />}
-        </div>
+        {/* «развернуть всё» (J5) — последней строкой: слои, масштаб и хронология остаются на своих местах */}
+        {anyFolded() && (
+          <div class="work-sky">
+            <UnfoldAll />
+          </div>
+        )}
         {/* начало (решение 68) — последним разделом: прежние строки листа остаются на своих местах */}
         <h3>Начало</h3>
         <StartsHere />

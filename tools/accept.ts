@@ -68,6 +68,9 @@ import { dots6 } from './accept/dots6.ts';
 import { peek6 } from './accept/peek6.ts';
 import { polish6 } from './accept/polish6.ts';
 import { bugs7 } from './accept/bugs7.ts';
+import { show11 } from './accept/show11.ts';
+import { unify11 } from './accept/unify11.ts';
+import { grammar11 } from './accept/grammar11.ts';
 
 const BASE: Scenario[] = [
   {
@@ -88,10 +91,14 @@ const BASE: Scenario[] = [
   },
   {
     n: 2,
-    title: 'Только линии Мессии: две ленты от Адама до Иисуса',
+    title: 'Только линии Мессии: две ленты от Адама до Иисуса (этап 11, решение 81: флажок стал показом — строка показа, «изменить», лист «Показ»)',
     run: async (p) => {
-      await p.click('text=только линии Мессии');
+      await p.locator('.sky .showbar .sb-cmd', { hasText: 'изменить' }).click();
+      await p.waitForTimeout(300);
+      await p.locator('.showsheet label.ss-kind:has(input[value="lines"])').click();
+      await p.keyboard.press('Escape');
       await p.waitForTimeout(1200);
+      if ((await p.evaluate(() => document.documentElement.dataset.show)) !== 'l') return fail('показ не «линии Мессии»');
       return pass('проверяется по снимку');
     },
   },
@@ -341,8 +348,13 @@ const BASE: Scenario[] = [
     title: 'Только линии Мессии: скрытые лица не ловят указатель',
     run: async (p) => {
       await find(p, 'Давид');
-      await p.click('text=только линии Мессии');
-      await p.waitForTimeout(600);
+      // этап 11 (решение 81): «только линии Мессии» — показ; читатель включает его строкой показа и листом «Показ»
+      await p.locator('.sky .showbar .sb-cmd', { hasText: 'изменить' }).click();
+      await p.waitForTimeout(300);
+      await p.locator('.showsheet label.ss-kind:has(input[value="lines"])').click();
+      await p.keyboard.press('Escape');
+      await p.waitForTimeout(1200);
+      if ((await p.evaluate(() => document.documentElement.dataset.show)) !== 'l') return fail('показ не «линии Мессии»');
       const onLines = lineNames();
       const box = (await p.locator('.sky canvas').boundingBox())!;
       const seen = new Set<string>();
@@ -365,7 +377,8 @@ const BASE: Scenario[] = [
       if (await p.locator('.sky[data-tiers]').count()) return fail('ярусы включены до флажка');
       await p.locator('.skyctl').getByText('ярусы эпох', { exact: true }).click();
       await p.waitForTimeout(800);
-      if (!(await p.locator('.skyctl input[type="checkbox"]').nth(1).isChecked())) return fail('флажок «ярусы эпох» не отмечен');
+      // этап 11 (решение 81): флажка «только линии Мессии» нет — флажок ярусов ищется по своей подписи
+      if (!(await p.locator('.skyctl label', { hasText: 'ярусы эпох' }).locator('input[type="checkbox"]').isChecked())) return fail('флажок «ярусы эпох» не отмечен');
       if (!(await p.locator('.sky[data-tiers="on"]').count())) return fail('флажок не включил ярусы');
       const box = (await p.locator('.sky canvas').boundingBox())!;
       // панель слева (если открыта) закрывает часть неба: проверяется только видимая часть
@@ -521,7 +534,8 @@ const BASE: Scenario[] = [
       if (await p.locator('.skyctl:not(.column)').count()) return fail('на телефоне — блок органов, а не колонка');
       const col = p.locator('.skyctl.column button');
       const labels = (await col.evaluateAll((bs) => bs.map((b) => b.getAttribute('aria-label') ?? (b.textContent ?? '').replace(/\s+/g, ' ').trim())));
-      if (labels.join('|') !== 'Приблизить|Отдалить|Всё небо|Вид') return fail(`в колонке: ${labels.join(', ')}`);
+      // этап 11 (Я30): вписать кадр — «Вписать»; «Всё небо» — только показ
+      if (labels.join('|') !== 'Приблизить|Отдалить|Вписать|Вид') return fail(`в колонке: ${labels.join(', ')}`);
       for (const b of await col.all()) {
         const r = (await b.boundingBox())!;
         if (r.width < 44 || r.height < 44) return fail(`кнопка ${r.width.toFixed(0)} × ${r.height.toFixed(0)}`);
@@ -543,7 +557,8 @@ const BASE: Scenario[] = [
       const sheet = p.locator('.sheet', { has: p.locator('h2', { hasText: 'Вид' }) });
       if (!(await sheet.count())) return fail('«Вид» не открыл лист');
       const text = await sheet.innerText();
-      for (const w of ['только линии Мессии', 'ярусы эпох', 'по насыщенности', 'истинный', 'Хронология']) if (!text.includes(w)) return fail(`в листе нет «${w}»`);
+      // флажка «только линии Мессии» в листе «Вид» больше нет (решение 81): линии Мессии — показ в листе «Показ», ниже
+      for (const w of ['ярусы эпох', 'по насыщенности', 'истинный', 'Хронология']) if (!text.includes(w)) return fail(`в листе нет «${w}»`);
       await sheet.getByText('ярусы эпох', { exact: true }).tap();
       await p.waitForTimeout(300);
       if (!(await p.locator('.sky[data-tiers="on"]').count())) return fail('флажок в листе не включил ярусы');
@@ -556,6 +571,13 @@ const BASE: Scenario[] = [
       await sheet.locator('.close').tap();
       await p.waitForTimeout(300);
       if (await sheet.count()) return fail('«×» не закрыл лист');
+      // показ «Линии Мессии» — в листе «Показ» (строка показа, «изменить»; этап 11, решение 81)
+      await p.locator('.sky .showbar .sb-cmd', { hasText: 'изменить' }).tap();
+      await p.waitForTimeout(400);
+      const kinds = (await p.locator('.showsheet label.ss-kind .nm').allInnerTexts()).map((t) => t.replace(/\s+/g, ' ').trim());
+      if (!kinds.some((k) => /^Линии Мессии/.test(k))) return fail(`в листе «Показ»: ${kinds.join(' | ')}`);
+      await p.locator('.showsheet .sheet-head .close').tap();
+      await p.waitForTimeout(300);
       // планшет 768 × 1024 с карточкой: небо уже 520 px — та же колонка; без карточки — блок
       const tablet = await p.context().browser()!.newContext({ viewport: { width: 768, height: 1024 }, isMobile: true, hasTouch: true });
       try {
@@ -600,7 +622,7 @@ const BASE: Scenario[] = [
   },
 ];
 /** Сценарии этапа 3 — в своих файлах, чтобы параллельные агенты не правили один список (номера 30–49, 50–69, 70–89). */
-const SCENARIOS: Scenario[] = [...BASE, ...layout, ...nav, ...sky, ...map, ...card, ...panels, ...phone, ...a11y, ...work, ...chrono, ...cardshell, ...cardtext, ...skyin, ...skydraw, ...strip, ...phone7, ...chrono3, ...sky3, ...family3, ...nav3, ...input3, ...find3, ...strip3, ...card3, ...cardtext3, ...phone3, ...reveal4, ...union4, ...start4, ...colors4, ...tree5, ...view5, ...dots6, ...peek6, ...polish6, ...bugs7];
+const SCENARIOS: Scenario[] = [...BASE, ...layout, ...nav, ...sky, ...map, ...card, ...panels, ...phone, ...a11y, ...work, ...chrono, ...cardshell, ...cardtext, ...skyin, ...skydraw, ...strip, ...phone7, ...chrono3, ...sky3, ...family3, ...nav3, ...input3, ...find3, ...strip3, ...card3, ...cardtext3, ...phone3, ...reveal4, ...union4, ...start4, ...colors4, ...tree5, ...view5, ...dots6, ...peek6, ...polish6, ...bugs7, ...show11, ...unify11, ...grammar11];
 
 /** Имена лиц обеих линий Мессии — из собранного индекса. */
 function lineNames(): Set<string> {

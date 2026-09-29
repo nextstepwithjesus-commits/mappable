@@ -74,18 +74,36 @@ async function stars(p: Page): Promise<Map<string, { x: number; y: number }>> {
   return out;
 }
 
-/** Флажок «только линии Мессии»: на блоке органов неба, а на узком небе — в листе «Вид» у колонки. */
-async function toggleLines(p: Page) {
-  const on = p.locator('.sky .skyctl:not(.column) label.check:has-text("только линии Мессии")');
-  if ((await on.count()) && (await on.first().isVisible())) await on.first().click();
-  else {
-    await p.locator('.sky .skyctl.column button[aria-expanded]').first().click();
+/**
+ * Показ «линии Мессии» (этап 11, решение 81: флажка «только линии Мессии» больше нет — это показ): лист «Показ» из строки
+ * показа, вид «Линии Мессии»; на телефоне — кнопка «Показать». kind — какой показ выбрать (по умолчанию линии; 'set' —
+ * вернуться к набору).
+ */
+async function toggleLines(p: Page, kind: 'lines' | 'set' = 'lines') {
+  const want = kind === 'lines' ? 'l' : 's';
+  const viaSheet = async () => {
+    const bar = p.locator('.showbar button.sb-cmd[data-cmd="sheet"]').first();
+    if (!(await bar.count()) || !(await bar.isVisible())) return false;
+    await bar.click({ timeout: 4000 });
+    await p.waitForTimeout(400);
+    await p.locator(`.showsheet input[name="show-kind"][value="${kind}"]`).first().check({ force: true, timeout: 4000 });
     await p.waitForTimeout(300);
-    await p.locator('.sky .sheet label.check:has-text("только линии Мессии")').first().click();
-    await p.waitForTimeout(200);
-    await p.keyboard.press('Escape');
+    const apply = p.locator('.showsheet .ss-apply button.apply');
+    if ((await apply.count()) && (await apply.first().isVisible())) await apply.first().click({ timeout: 4000 });
+    else await p.keyboard.press('Escape');
+    await p.waitForTimeout(1800);
+    return (await p.evaluate(() => document.documentElement.dataset.show)) === want;
+  };
+  if (!(await viaSheet().catch(() => false))) {
+    // лист показа недоступен (узкое небо: строка показа под листом карточки) — показ полем «~v» адреса, выбор лица тот же
+    const u = new URL(p.url());
+    const parts = u.hash.split('~').filter((f) => !f.startsWith('v'));
+    u.hash = `${parts.join('~')}~v${want}`;
+    await p.goto(u.toString());
+    await p.waitForTimeout(2600);
   }
-  await p.waitForTimeout(1600);
+  const got = await p.evaluate(() => document.documentElement.dataset.show);
+  if (got !== want) throw new Error(`показ не сменился: ${got}, ждали ${want}`);
 }
 
 /** Замечания кадра: подписи без звезды, ленты, подписи за краем. */
@@ -99,19 +117,24 @@ async function frameIssues(p: Page): Promise<string[]> {
   return out;
 }
 
-/** Снимок 14 целиком: подписаны только лица набора, у каждой подписи — звезда, выносок и знаков чужих лиц нет. */
+/**
+ * Снимок 14 целиком: подписаны только лица показа, у каждой подписи — звезда, выносок и знаков лиц не на небе нет.
+ * Этап 11 (решение 81): «набор с только линиями» стал показом «линии Мессии» — на небе все лица линий от Адама, и «лица
+ * показа» — это они (canvas[data-stars]), а не набор; пометы «только у Луки», «Мф», «Лк» у лиц линий на небе законны,
+ * помета о Фамари (её в показе нет) — нет.
+ */
 async function shot14(p: Page): Promise<string[]> {
   const bad = await frameIssues(p);
   const d = await canvasData(p);
-  const set = new Set(ARFAKSAD.work);
-  const stray = (d.labelIds ?? '').split(' ').filter((id) => id && !set.has(id));
-  if (stray.length) bad.push(`подписаны лица вне набора: ${stray.join(', ')}`);
-  const notes = d.notes ?? '';
-  for (const t of ['только у Луки', 'Фамарь', 'Расходятся', 'Мф ', 'Лк ']) if (notes.includes(t)) bad.push(`помета «${t}…» у лица вне набора`);
+  const shown = new Set([...(await stars(p)).keys()]);
+  const stray = (d.labelIds ?? '').split(' ').filter((id) => id && !shown.has(id));
+  if (stray.length) bad.push(`подписаны лица не на небе: ${stray.join(', ')}`);
+  // пометы и точки сравнения показа «линии Мессии» («Фамарь — мать Фареса (Мф 1:3)», «Каинан — только у Луки», «Расходятся …»)
+  // — о его лицах и о тексте Мф 1 и Лк 3; знаков лиц не на небе (как Фамари у Фареса на снимке 14) нет — это data-bare
   if (d.mode !== 'work') bad.push(`режим неба ${d.mode}`);
-  // и список для клавиатуры не называет точек сравнения лиц вне набора
+  // и список для клавиатуры называет точки сравнения только лиц на небе
   const points = await p.locator('.sky ul[aria-label^="Точки сравнения"] button').allInnerTexts();
-  if (points.length) bad.push(`точки сравнения для клавиатуры: ${points.join(' | ')}`);
+  if (d.bare) bad.push(`точки сравнения при подписях без звёзд: ${points.join(' | ')}`);
   // окно — у лиц набора, а не на пустом небе: Арфаксад и Ной в видимой части
   const v = await viewOf(p);
   const st = await stars(p);
@@ -125,7 +148,8 @@ async function shot14(p: Page): Promise<string[]> {
 export const bugs7: Scenario[] = [
   {
     n: 720,
-    title: 'Этап 11, B1, снимок 14: «С Адама» раскрыто до Арфаксада, Арфаксад выбран, «только линии Мессии» — имена только у лиц набора и у каждого своя звезда; ни «Каинан — только у Луки», ни Фамари; окно — у набора',
+    // этап 11 (решение 81): флажок «только линии Мессии» стал показом «линии Мессии» — его выбирают в листе «Показ»
+    title: 'Этап 11, B1, снимок 14: «С Адама» раскрыто до Арфаксада, Арфаксад выбран, показ «линии Мессии» — имена только у лиц на небе и у каждого своя звезда; Фамари нет; Арфаксад и Ной в кадре',
     run: async (p) => {
       await setup(p, { ...ARFAKSAD, hash: '#/arfaksad' });
       await toggleLines(p);
@@ -135,7 +159,7 @@ export const bugs7: Scenario[] = [
   },
   {
     n: 721,
-    title: 'Этап 11, B1, снимок 14 на телефоне 390 × 844: «только линии» из листа «Вид» у колонки — те же проверки',
+    title: 'Этап 11, B1, снимок 14 на телефоне 390 × 844: показ «линии Мессии» из листа «Показ» (кнопка «Показать») — те же проверки',
     view: PHONE,
     run: async (p) => {
       await setup(p, { ...ARFAKSAD, hash: '#/arfaksad' });
@@ -146,16 +170,18 @@ export const bugs7: Scenario[] = [
   },
   {
     n: 726,
-    title: 'Этап 11, B1, самый короткий путь к снимку 14 (критик K4): начало «С Адама» — на небе один Адам; «только линии Мессии» — подписан только Адам, у подписи звезда, помет о чужих лицах нет; протянули небо — так же',
+    title: 'Этап 11, B1, самый короткий путь к снимку 14 (критик K4): начало «С Адама» — на небе один Адам; показ «линии Мессии» — подписи только у лиц на небе, у каждой подписи звезда, помет о лицах не на небе нет; протянули небо — так же',
     run: async (p) => {
       await setup(p, { work: ['adam'], opened: ['adam'], hash: '#/adam' });
       await toggleLines(p);
       const bad: string[] = [];
       const look = async (step: string) => {
         const d = await canvasData(p);
+        // этап 11 (решение 81): в показе «линии Мессии» на небе все лица линий — подписи только у нарисованных звёзд
         const ids = (d.labelIds ?? '').split(' ').filter(Boolean);
-        if (ids.some((id) => id !== 'adam')) bad.push(`${step}: подписаны ${ids.join(', ')}`);
-        if (d.notes) bad.push(`${step}: пометы ${d.notes}`);
+        const shown = new Set([...(await stars(p)).keys()]);
+        const stray = ids.filter((id) => !shown.has(id));
+        if (stray.length) bad.push(`${step}: подписаны лица не на небе: ${stray.join(', ')}`);
         bad.push(...(await frameIssues(p)).map((x) => `${step}: ${x}`));
       };
       await look('линии');
@@ -171,11 +197,11 @@ export const bugs7: Scenario[] = [
   },
   {
     n: 722,
-    title: 'Этап 11, B1, горб у Ламеха: в небе «набор» с «только линиями» точек союзов нет — нет и строк под них; Ламех выше Мафусала не больше чем на полторы строки (раскладка: на одну полосу), без «только линий» точки на месте',
+    title: 'Этап 11, B1, горб у Ламеха: показ «линии Мессии» из набора — свёрнутых союзов с «+N» нет, Ламех выше Мафусала не больше чем на полторы строки (у лент нет «горба Ламеха», § 4.2); в наборе ромбы союзов на месте',
     run: async (p) => {
       await setup(p, { ...ARFAKSAD, hash: '#/arfaksad' });
       const d0 = await canvasData(p);
-      if (!d0.dots) return fail('без «только линий» нет точек союзов');
+      if (!d0.dots) return fail('в наборе нет ромбов союзов');
       await toggleLines(p);
       const st = await stars(p);
       const { ky } = await viewOf(p);
@@ -187,28 +213,31 @@ export const bugs7: Scenario[] = [
       const down = (n.y - a.y) / ky;
       if (!(up > 0.3 && up <= 1.5)) return fail(`Ламех выше Мафусала на ${up.toFixed(2)} строки (строка ${ky.toFixed(1)} px)`);
       if (!(down <= 2.6)) return fail(`Ламех выше Ноя на ${down.toFixed(2)} строки`);
-      if ((await canvasData(p)).dots) return fail('в «только линиях» нарисованы точки союзов');
+      // этап 11: в показе «линии Мессии» свёрнутых союзов набора с «+N» нет (союзы — станции лент в узлах)
+      const shut = ((await canvasData(p)).dots ?? '').split(';').filter((q) => /:0:/.test(q));
+      if (shut.length) return fail(`в показе «линии Мессии» свёрнутые союзы: ${shut.join(', ')}`);
       return pass(`Ламех выше Мафусала на ${up.toFixed(2)}, Ноя — на ${down.toFixed(2)} строки`);
     },
   },
   {
     n: 723,
-    title: 'Этап 11, B1: в небе «набор» с «только линиями» у подписей нет «+» нераскрытых союзов (точек союзов нет — «+» ничего бы не открыл); выключили — «+» снова есть',
+    title: 'Этап 11, B1: в показе «линии Мессии» у подписей нет «+» нераскрытых союзов (раскрытие — только в наборе); вернулись к набору — «+» снова есть',
     run: async (p) => {
       await setup(p, { ...ARFAKSAD, hash: '#/arfaksad' });
       const before = (await canvasData(p)).foldHits ?? '';
-      if (!before.includes('reveal:')) return fail(`без «только линий» нет «+»: ${before}`);
+      if (!before.includes('reveal:')) return fail(`в наборе нет «+»: ${before}`);
       await toggleLines(p);
       const on = (await canvasData(p)).foldHits ?? '';
       if (on.includes('reveal:')) return fail(`в «только линиях» есть «+»: ${on}`);
-      await toggleLines(p);
+      await toggleLines(p, 'set');
       const off = (await canvasData(p)).foldHits ?? '';
       return off.includes('reveal:') ? pass() : fail(`после выключения «+» не вернулся: ${off}`);
     },
   },
   {
     n: 724,
-    title: 'Этап 11, B1: «все лица» с «только линиями» (#/~o1) и «Родословие Иисуса Христа» в «наборе» с «только линиями» — у каждой подписи лица звезда, ленты без обрывов, подписи не за краем',
+    // этап 11 (решение 81): прежний адрес «~o1» открывает показ «линии Мессии»; «набор с только линиями» — тот же показ
+    title: 'Этап 11, B1: прежний адрес «только линий» (#/~o1) и набор «Родословие Иисуса Христа», из него — показ «линии Мессии»: у каждой подписи лица звезда, ленты без обрывов, подписи не за краем',
     run: async (p) => {
       const bad: string[] = [];
       await p.goto(p.url().replace(/#.*$/, '') + '#/~o1');
@@ -310,14 +339,17 @@ export const bugs7: Scenario[] = [
   },
   {
     n: 730,
-    title: 'Этап 11, B1: «только линии» у Давида, «Древо» и снова «Небо» — новое небо вписывает коридор линий, как «Всё небо» режима: строки коридора читаются (не по 2 px), подписаны Адам и Иисус Христос, у каждой подписи — звезда',
+    // этап 11 (решение 77): вида «Древо» больше нет — прежний путь «Древо» и снова «Небо» заменён новой загрузкой старого
+    // адреса «~o1», который открывает показ «линии Мессии», и «Вписать»; проверки кадра — прежние
+    title: 'Этап 11, B1: «только линии» у Давида по прежнему адресу «~o1» — показ «линии Мессии» вписывает коридор линий: строки коридора читаются (не по 2 px), подписаны Адам и Иисус Христос, у каждой подписи — звезда',
     run: async (p) => {
       await p.goto(p.url().replace(/#.*$/, '') + '#/david~o1');
+      await p.reload();
       await p.waitForTimeout(3200);
-      await p.locator('.top .view-switch button:text-is("Древо")').first().click();
-      await p.waitForTimeout(1500);
-      await p.locator('.top .view-switch button:text-is("Небо")').first().click();
-      await p.waitForTimeout(2600);
+      if ((await p.evaluate(() => document.documentElement.dataset.show)) !== 'l') return fail('показ не «линии Мессии»');
+      // прежнее «новое небо» древа вписывало коридор; теперь это «Вписать» — весь показ в окне
+      await p.locator('.sky .skyctl button[title^="Вписать"]').first().click();
+      await p.waitForTimeout(1600);
       const { ky } = await viewOf(p);
       const ids = ((await canvasData(p)).labelIds ?? '').split(' ');
       const bad = await frameIssues(p);

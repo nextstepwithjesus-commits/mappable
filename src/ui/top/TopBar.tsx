@@ -8,16 +8,17 @@ import { Search } from './Search.tsx';
 import { workSet } from '../work.ts';
 import { plural } from '../common.tsx';
 import { WORK_LEAD } from '../panels/Work.tsx';
-import { VIEWS, ViewSwitch, openStarts, showView } from '../sky/Controls.tsx';
-import { atlasView, type AtlasView } from '../reveal.ts';
-import { fitTree } from '../tree/TreeView.tsx';
+import { openStarts } from '../sky/Controls.tsx';
 
 /** Команда выбора начала (решение 68): в «Ещё» и в «Разделах» телефона, последней; открывает лист «Вид» на «Начале». */
 export const RESTART_LABEL = 'Начать заново…';
 export const RESTART_HINT = 'Выбрать начало: с Адама, с Иисуса Христа, родословие Иисуса Христа, ключевые лица или всё небо';
 
-/** Надпись команды рабочего набора (UX-48; решение 26): «В работе: 46», пустой набор — «В работе». */
-export const workLabel = (n: number) => (n ? `В работе: ${n}` : 'В работе');
+/**
+ * Надпись команды рабочего набора (UX-48; решения 26, 81): «Набор: 46», пустой набор — «Набор». Одно слово — одно
+ * понятие: панель «Набор: 18», строка показа «На небе: набор — 18 лиц» (STAGE11.md § 5).
+ */
+export const workLabel = (n: number) => (n ? `Набор: ${n}` : 'Набор');
 
 /**
  * Однострочные пояснения команд верхней строки (UX-21; решение 9) — подсказка при наведении и описание для диктора.
@@ -51,7 +52,7 @@ function hintOf(c: { id: Exclude<Panel, null>; key?: string }, n: number): strin
 const PANELS: { id: Exclude<Panel, null>; label: string }[] = [
   { id: 'index', label: 'Указатель' },
   // рабочий набор (J3; решение владельца 17): число лиц — в заголовке панели и в подсказке команды
-  { id: 'work', label: 'В работе' },
+  { id: 'work', label: 'Набор' },
   { id: 'chapter', label: 'Главы' },
   { id: 'epochs', label: 'Эпохи' },
   { id: 'synopsis', label: 'Синопсис' },
@@ -96,9 +97,9 @@ export function overflowCommands(avail: number, width: (id: string) => number, g
 const togglePanel = (id: Exclude<Panel, null>) => (panel.value = panel.value === id ? null : id);
 
 /**
- * Пункты меню «Разделы» телефона (H4; MOB-03, MOB-04): вид атласа, все панели, справка и тема — строками 48 px.
- * Вид — первыми пунктами «Небо» и «Древо» (решение 73): на телефоне в строке нет места для переключателя «Небо | Древо»;
- * отмечен нынешний вид. Тема — флажок «Дневная карта»: нет места и для «Ночь | День».
+ * Пункты меню «Разделы» телефона (H4; MOB-03, MOB-04): все панели, справка и тема — строками 48 px. Вид атласа один
+ * (решение 77): переключателя «Небо | Древо» больше нет; что показано на небе, говорит строка показа у его кромки.
+ * Тема — флажок «Дневная карта»: в строке нет места для «Ночь | День».
  */
 export function phoneMenuItems(
   open: Panel,
@@ -107,17 +108,14 @@ export function phoneMenuItems(
   toggleTheme: () => void,
   workN = 0,
   restart: () => void = openStarts,
-  view: AtlasView = 'sky',
-  pickView: (v: AtlasView) => void = showView,
 ) {
   return [
-    ...VIEWS.map((v) => ({ key: `view-${v.value}`, label: v.label, checked: view === v.value, sep: false, onSelect: () => pickView(v.value) })),
     ...[...PANELS, ...HELP].map((c) => ({
       key: c.id,
       label: c.id === 'work' ? workLabel(workN) : c.label,
       checked: open === c.id,
-      // панели отделены чертой от вида, справка — от панелей
-      sep: c.id === PANELS[0].id || c.id === HELP[0].id,
+      // справка отделена чертой от панелей
+      sep: c.id === HELP[0].id,
       onSelect: () => select(c.id),
     })),
     // выбор начала (решение 68) — после справки, отдельной группой; не флажок: пункт открывает лист «Вид»
@@ -179,7 +177,7 @@ export function TopBar() {
             class="more sections"
             label="Разделы"
             title="Панели атласа, справка и тема"
-            items={phoneMenuItems(panel.value, theme.value === 'day', togglePanel, () => (theme.value = theme.value === 'day' ? 'night' : 'day'), workSet.value.size, openStarts, atlasView.value)}
+            items={phoneMenuItems(panel.value, theme.value === 'day', togglePanel, () => (theme.value = theme.value === 'day' ? 'night' : 'day'), workSet.value.size, openStarts)}
           />
         </nav>
       </header>
@@ -218,10 +216,6 @@ export function TopBar() {
     <header class="top">
       <Wordmark>{sub && <small ref={subRef}>{SUBTITLE}</small>}</Wordmark>
       <Search />
-      {/* вид главной области (решение 73): «Небо | Древо» — рядом с поиском, до панелей; в «Ещё» не уходит */}
-      <div class="view-switch">
-        <ViewSwitch />
-      </div>
       <nav class="commands" ref={nav} aria-label="Панели атласа">
         {PANELS.filter((c) => !hidden.has(c.id)).map(button)}
         <Menu class="more" label="Ещё" title={moreItems.length > 1 ? 'Другие панели и справка; начать заново' : RESTART_HINT} items={moreItems} />
@@ -248,17 +242,12 @@ export function TopBar() {
 }
 
 /**
- * «Толедот» в верхней строке: на небе — «Всё небо», в древе (решение 73) — «Вписать всё» древо (src/ui/tree/TreeView.tsx).
+ * «Толедот» в верхней строке — «Вписать»: весь нынешний показ в окне (клавиши 0 и Home). Показ он не меняет: «Всё небо» —
+ * только показ, его выбирает строка показа у кромки неба (решение 81).
  */
 function Wordmark({ children }: { children?: ComponentChildren }) {
-  const tree = atlasView.value === 'tree';
   return (
-    <button
-      class="wordmark"
-      title={tree ? 'Вписать всё древо (0)' : 'Всё небо (0, Home)'}
-      aria-keyshortcuts={tree ? '0' : '0 Home'}
-      onClick={() => (tree ? fitTree() : showAll())}
-    >
+    <button class="wordmark" title="Вписать: весь показ в окне (0, Home)" aria-keyshortcuts="0 Home" onClick={() => showAll()}>
       Толедот{children}
     </button>
   );

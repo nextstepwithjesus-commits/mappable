@@ -50,7 +50,7 @@ export function parkedFor(phone: boolean, p: Panel, mode: 'kinship' | 'spread' |
 }
 export const parked = computed(() => parkedFor(grid.value.phone, panel.value, pickMode.value));
 /** Что закрывает полноэкранный лист панели на телефоне. */
-const UNDER_SHEET = '.app > main > .sky, .app > main > .treearea, .app > .folio, .app > .strip';
+const UNDER_SHEET = '.app > main > .sky, .app > .folio, .app > .strip';
 function setModal(on: boolean) {
   for (const el of document.querySelectorAll(UNDER_SHEET)) el.toggleAttribute('inert', on);
 }

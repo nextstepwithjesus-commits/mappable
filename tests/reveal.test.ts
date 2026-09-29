@@ -2,7 +2,7 @@ import { describe, expect, it, beforeEach } from 'vitest';
 import { byId, graph } from '../src/data/atlas.ts';
 import { branchesOf, buildUnions, membersOf } from '../src/engine/unions.ts';
 import { collapseUnion, expandUnion, expanded, KEY_IDS, LINE_IDS, opened, openPerson, originOf, plates, startWith, unionsOf } from '../src/ui/reveal.ts';
-import { skyMode, workSet } from '../src/ui/work.ts';
+import { show, skyMode, workSet } from '../src/ui/work.ts';
 
 const names = (ids: readonly string[]) => ids.map((id) => byId.get(id)?.name ?? id);
 
@@ -75,14 +75,20 @@ describe('раскрытие (решения 68, 70)', () => {
     expect(workSet.value.has('iosif-muzh-marii') && workSet.value.has('mariya')).toBe(true);
     expect(membersOf(o).every((m) => workSet.value.has(m))).toBe(true);
   });
-  it('начала «родословие» и «ключевые лица» — наборы лиц; «всё небо» — небо «все лица»', () => {
+  it('начала «родословие» и «ключевые лица» — одноимённые показы, набор не трогают; «всё небо» — показ «всё небо»', () => {
+    // этап 11 (§ 5, решение 81): «Родословие Иисуса Христа» — показ «линии Мессии», «Ключевые лица» — свой показ;
+    // набор читателя остаётся прежним
+    startWith('adam');
+    const before = [...workSet.value.keys()];
     startWith('lines');
-    expect(workSet.value.size).toBe(LINE_IDS.length);
-    expect(workSet.value.has('adam') && workSet.value.has('iisus') && workSet.value.has('david')).toBe(true);
+    expect(show.value).toEqual({ kind: 'lines' });
+    expect([...workSet.value.keys()]).toEqual(before);
+    expect(LINE_IDS.includes('adam') && LINE_IDS.includes('iisus') && LINE_IDS.includes('david')).toBe(true);
     startWith('key');
-    expect(workSet.value.size).toBe(KEY_IDS.length);
+    expect(show.value).toEqual({ kind: 'key' });
     expect(KEY_IDS.length).toBeGreaterThan(40);
     startWith('all');
+    expect(show.value).toEqual({ kind: 'all' });
     expect(skyMode.value).toBe('all');
   });
 });
@@ -98,14 +104,21 @@ describe('ветви: при равенстве — путь по отцу', () 
   });
 });
 
-describe('вид атласа (решение 73)', () => {
-  it('начала с раскрытием открывают древо, «всё небо» — небо', async () => {
+describe('один атлас (решение 77; решение 73 отменено)', () => {
+  it('древа нет: любое начало оставляет небо; запись «tree» возвращается к небу', async () => {
     const { atlasView } = await import('../src/ui/reveal.ts');
-    startWith('adam');
-    expect(atlasView.value).toBe('tree');
-    startWith('all');
+    for (const s of ['adam', 'all', 'lines', 'jesus', 'key'] as const) {
+      startWith(s);
+      expect(atlasView.value, s).toBe('sky');
+    }
+    atlasView.value = 'tree';
     expect(atlasView.value).toBe('sky');
-    startWith('lines');
-    expect(atlasView.value).toBe('tree');
+  });
+  it('«С Адама» — набор с одного лица, лицо выбрано, показ «набор»', async () => {
+    const { selected } = await import('../src/state.ts');
+    startWith('adam');
+    expect([...workSet.value.keys()]).toEqual(['adam']);
+    expect(selected.value).toBe('adam');
+    expect(show.value).toEqual({ kind: 'set' });
   });
 });

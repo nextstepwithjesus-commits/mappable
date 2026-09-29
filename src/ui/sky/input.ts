@@ -10,7 +10,7 @@ import { byId, lines } from '../../data/atlas.ts';
 import { selected, hovered, epochMode, layers, onlyLines, panel, pins, pinsQuery, pickMode, pickSecond, synopsisAt, model } from '../../state.ts';
 import { lineNoteHits, ribbonAt, setRibbonHover } from '../../render/ribbons.ts';
 import { starRadius } from '../../render/glyphs.ts';
-import { familyAt, setFamilyHover } from '../../render/trails.ts';
+import { setFamilyHover } from '../../render/trails.ts';
 import { goTo, skyRef } from '../common.tsx';
 import { tierAt, tierHot, type TierHit } from '../../render/tiers.ts';
 import { toAstro } from '../../engine/years.ts';
@@ -23,10 +23,16 @@ import { tipKey, type Tip } from './Tip.tsx';
 import { RULER_H } from '../../render/frame.ts';
 import { foldDescOf, foldGroupOf, unfoldAll } from '../work.ts';
 import { MENU_FIRST, dismissedBy, skyMenu } from '../panels/Work.tsx';
-import { dotTipText, epochGoText, orderNoteText, plateTipText } from './text.ts';
+import { dotTipText, epochGoText, plateTipText } from './text.ts';
 import { openPerson, unionById } from '../reveal.ts';
-import { plateHover, pressPlate } from './starnav.ts';
-import type { PlateHit } from '../../render/plates.ts';
+import { linkHover, plateHover, pressPlate, rememberLinkClick, toggleKids } from './starnav.ts';
+import type { CountHit, PlateHit } from '../../render/plates.ts';
+import type { LinkHit } from '../../render/links.ts';
+import type { PlanStubHit } from '../../render/trails.ts';
+import type { RibbonHit } from '../../render/ribbons.ts';
+import { linkKeyString, sameLink, type LinkKey } from '../../engine/linkkey.ts';
+import { previewLinks, selectedLink } from '../linkstate.ts';
+import { linkTitle, linkRefs, refShort } from '../linkwords.ts';
 import { closeDot, dotCard, dotsOn, openDot } from './DotCard.tsx';
 
 export type { Tip };
@@ -370,6 +376,125 @@ export function plateAt(sky: Pick<Sky, 'plateHits'>, x: number, y: number, touch
   return best;
 }
 
+/** «+N» свёрнутого союза под указателем (этап 11, § 2): отдельная цель, на касании — не меньше 44 × 44. */
+export function countAt(sky: Pick<Sky, 'countHits'>, x: number, y: number, touch = false): CountHit | null {
+  for (const h of sky.countHits) {
+    const r = touch ? inflate(h, TOUCH_TARGET) : h;
+    if (x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h) return h;
+  }
+  return null;
+}
+
+/** Обрывок наружу показа под указателем (§ 7): подпись и пунктир; на касании — не меньше 44 × 44. */
+export function stubAt(sky: Pick<Sky, 'stubHits'>, x: number, y: number, touch = false): PlanStubHit | null {
+  for (const h of sky.stubHits) {
+    const r = touch ? inflate(h, TOUCH_TARGET) : h;
+    if (x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h) return h;
+  }
+  return null;
+}
+
+/** Подсказка обрывка наружу показа: «Ревекка — щёлкните, чтобы открыть карточку». */
+export function stubTipText(id: string): string {
+  const p = byId.get(id);
+  return p ? `${p.name}${p.disambig ? `, ${p.disambig}` : ''} — щёлкните, чтобы открыть карточку` : '';
+}
+
+/** Линия связи ловится мышью не дальше стольких px (§ 8: 5–6 px от линии). */
+export const LINK_R = 6;
+/**
+ * Звезда важнее линии, ромба и «+N» ближе стольких px к её середине (§ 8: «не ближе 12 px к звезде») — кроме точного
+ * наведения: указатель на самой линии (≤ 2 px), на ромбе или на «+N» и вне знака звезды (радиус + 5 px). Иначе зубец
+ * длиной 5–12 px, весь лежащий у звезды ребёнка, нельзя было бы выбрать мышью.
+ */
+export const STAR_FIRST = 12;
+
+/** Что под указателем по старшинству (этап 11, § 8): звезда > ◆ > «+N» > зубец > ствол > «‖» > обрывок > лента > след. */
+export type Under =
+  | { kind: 'star'; id: string; d: number }
+  | { kind: 'plate'; plate: PlateHit }
+  | { kind: 'count'; count: CountHit }
+  | { kind: 'link'; hit: LinkHit }
+  | { kind: 'stub'; stub: PlanStubHit }
+  | { kind: 'ribbon'; hit: RibbonHit }
+  | { kind: 'trail'; id: string };
+
+/** Радиус знака звезды лица на небе (px холста), как у hitDistance. */
+const glyphR = (sky: Sky, id: string) => starRadius(byId.get(id)?.magnitude ?? 6, Math.max(0.7, Math.min(1.25, sky.cam.ky / 18))) + (byId.get(id)?.sex === 'f' ? 2.2 : 0);
+
+/**
+ * Что под указателем мыши или пера (px холста; r — радиус звезды): звезда, ромб союза, «+N», линия связи, обрывок наружу,
+ * лента, след — по старшинству § 8. Попадание по линиям — сеткой кадра (src/render/links.ts, LinkHits): не больше 1 мс.
+ */
+export function underPointer(sky: Sky, x: number, y: number, r: number): Under | null {
+  const L = layers.peek();
+  const star = sky.hitStar(x, y, r);
+  const plate = plateAt(sky, x, y);
+  const count = plate ? null : countAt(sky, x, y);
+  const line = L.connectors ? sky.linkAt(x, y, LINK_R, false) : null;
+  const onPlate = !!plate && Math.hypot(x - plate.cx, y - plate.cy) <= plate.r + 3;
+  const onCount = !!count && Math.abs(y - (count.y + count.h / 2)) <= 8;
+  const onLine = !!line && line.d <= 2;
+  if (star && (star.d <= STAR_FIRST || !(plate || count || line))) {
+    const exact = (onPlate || onCount || onLine) && star.d > glyphR(sky, star.id) + 5;
+    if (!exact) {
+      // лента важнее знака, если указатель к нити ближе, чем к знаку (MAP-28)
+      const reach = L.ribbons ? ribbonReach(hitDistance(sky, star.id, x, y)) : 0;
+      const rib = reach > 0 ? ribbonAt(sky, x, y, reach) : null;
+      return rib ? { kind: 'ribbon', hit: rib } : { kind: 'star', id: star.id, d: star.d };
+    }
+  }
+  if (plate) return { kind: 'plate', plate };
+  if (count) return { kind: 'count', count };
+  if (line) return { kind: 'link', hit: line };
+  const stub = stubAt(sky, x, y);
+  if (stub) return { kind: 'stub', stub };
+  const rib = L.ribbons ? ribbonAt(sky, x, y, RIBBON_R) : null;
+  if (rib) return { kind: 'ribbon', hit: rib };
+  const trail = sky.hitTrail(x, y);
+  return trail ? { kind: 'trail', id: trail } : null;
+}
+
+/** Шаг ленты под указателем — ключ связи (src/engine/linkkey.ts): «шаг линии к лицу to». */
+export const ribbonKey = (h: Pick<RibbonHit, 'line' | 'to'>): LinkKey => ({ kind: 'step', line: h.line, child: h.to });
+
+/**
+ * Связи у пальца (касание, § 8): линии и узлы в радиусе TOUCH_R и шаг ленты — по одной на ключ, ближайшие первыми.
+ */
+export function linksNear(sky: Sky, x: number, y: number, r = TOUCH_R): { key: LinkKey; ks: string; d: number; x: number; y: number }[] {
+  const out = (layers.peek().connectors ? sky.linksAt(x, y, r, false) : []).map((h) => ({ key: h.key, ks: h.ks, d: h.d, x: h.x, y: h.y }));
+  if (layers.peek().ribbons) {
+    const rib = ribbonAt(sky, x, y, r);
+    if (rib) {
+      const key = ribbonKey(rib);
+      const ks = linkKeyString(key) ?? '';
+      if (!out.some((q) => q.ks === ks)) out.push({ key, ks, d: Math.hypot(rib.x - x, rib.y - y), x: rib.x, y: rib.y });
+    }
+  }
+  return out.sort((a, b) => a.d - b.d);
+}
+
+/**
+ * Что значит касание у линий (§ 8): одна связь в радиусе — она; две и больше, и вторая ближе полуторного расстояния
+ * первой — список «Какая связь?»; иначе — ближайшая.
+ */
+export function linkChoice<T extends { d: number }>(near: readonly T[]): { kind: 'pick'; hit: T } | { kind: 'ask'; hits: T[] } | { kind: 'none' } {
+  if (!near.length) return { kind: 'none' };
+  if (near.length === 1) return { kind: 'pick', hit: near[0] };
+  const d0 = Math.max(near[0].d, 1);
+  const close = near.filter((h) => h.d < 1.5 * d0);
+  return close.length >= 2 ? { kind: 'ask', hits: close.slice(0, ASK_MAX) } : { kind: 'pick', hit: near[0] };
+}
+
+/** Выбрать связь (§ 8): selectedLink; выбор лица не меняется; x, y — точка щелчка (к ней встаёт карточка связи). */
+export function chooseLink(sky: Pick<Sky, 'cam'>, key: LinkKey, x: number, y: number) {
+  const ks = linkKeyString(key);
+  if (!ks) return;
+  rememberLinkClick(sky, ks, x, y);
+  previewLinks.value = null;
+  selectedLink.value = key;
+}
+
 /** Подсказка «+» у подписи лица с нераскрытыми союзами (решение 70). */
 export const REVEAL_TIP = 'У лица есть нераскрытые союзы — щёлкните, чтобы показать их на небе';
 
@@ -428,7 +553,7 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
   let drag: {
     x0: number; y0: number; x: number; y: number; moved: boolean; t: number; type: string; long?: boolean; axis: Axis | null; stopper: boolean; trail: DragSample[];
   } | null = null;
-  // долгое касание звезды или названия созвездия — меню неба (J3, J5): «Взять в работу», «Свернуть потомков»
+  // долгое касание звезды или названия созвездия — меню неба (J3, J5): «Добавить в набор», «Свернуть потомков»
   let longTimer = 0;
   /** Касание кончилось долгим: его touchend не порождает щелчка (см. onTouchEnd). */
   let swallowTap = false;
@@ -481,6 +606,13 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     plateHover.value = uid;
     request();
   };
+  /** Связь под указателем (§ 8): путь и концы — полной яркостью и на 1 px толще. */
+  const setLink = (k: LinkKey | null) => {
+    const was = linkHover.peek();
+    if (was === k || (was && k && sameLink(was, k))) return;
+    linkHover.value = k;
+    request();
+  };
   /** Что под указателем (px холста): отрезок яруса или звезда; обновляет наведение, подсказку и курсор. */
   const probe = (x: number, y: number, r: number) => {
     // открыто меню неба: подсказки не ложатся на него, наведение стоит (IX-49)
@@ -499,27 +631,10 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     const foldHit = sky.foldHits.find((q) => x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h);
     const fold = !!foldHit;
     const edge = fold || sky.edgeHits.some((q) => x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h);
-    // точка союза (решения 70, 76): в небе «набор» подсказка — одна строка «Союз Адама и Евы: 3 сына — щёлкните», щелчок
-    // открывает карточку у точки; у точки с открытой карточкой подсказки нет — всё сказано в карточке. Без карточки у точки
-    // (выбор второго лица) — прежняя подсказка: дети со стихами, щелчок раскрывает или сворачивает
-    const plate = edge ? null : plateAt(sky, x, y);
-    setPlate(plate?.uid ?? null);
-    if (plate) {
-      if (hovered.value) hovered.value = null;
-      if (setRibbonHover(sky, null) || setFamilyHover(sky, null)) request();
-      setHot(true);
-      const u = unionById(plate.uid);
-      const card = dotCard.peek();
-      const dots = dotsOn.peek();
-      if (!u || (dots && card?.kind === 'union' && card.uid === plate.uid)) showTip(null);
-      else {
-        const text = dots ? dotTipText(u) : plateTipText(u, plate.open);
-        showTip({ kind: 'note', key: `plate:${plate.uid}:${dots ? 'dot' : plate.open ? 1 : 0}`, text, x, y, box: { x: plate.x, y: plate.y, w: plate.w, h: plate.h } });
-      }
-      return;
-    }
     // «+» у подписи лица с нераскрытыми союзами (решение 70)
     if (foldHit?.kind === 'reveal') {
+      setPlate(null);
+      setLink(null);
       if (hovered.value) hovered.value = null;
       setHot(true);
       showTip({ kind: 'note', key: `reveal:${foldHit.id}`, text: REVEAL_TIP, x, y, box: { x: foldHit.x, y: foldHit.y, w: foldHit.w, h: foldHit.h } });
@@ -529,28 +644,48 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     const note = !edge && lineNoteHits(sky).some((q) => x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h);
     // номер у бусины в режиме «только линии» — это лицо: его подсказка объясняет счёт (UX-69; решение 39)
     const num = edge || note ? null : lineNumberAt(sky, x, y);
-    // семья (решение 41; src/render/trails.ts, familyAt): помета матери или порядка важнее звезды, гребёнка — нет
-    const fam = edge || note || num ? null : familyAt(sky, x, y);
-    const famNote = fam && fam.kind !== 'comb' ? fam : null;
-    let hit = edge || note || famNote ? null : (num?.id ?? sky.hit(x, y, r));
-    // лента под указателем (E6; MAP-28): ловится, если указатель ближе к нити, чем к знаку и следу лица, — тогда она
-    // подсвечивается, идёт ток света, подсказка — шаг ленты со стихом; иначе — лицо
-    const reach = edge || note || num || !layers.value.ribbons ? 0 : ribbonReach(hit ? hitDistance(sky, hit, x, y) : Infinity);
-    const rib = reach > 0 ? ribbonAt(sky, x, y, reach) : null;
-    if (rib) hit = null;
+    // что под указателем по старшинству (этап 11, § 8): звезда > ◆ > «+N» > зубец > ствол > «‖» > лента > след
+    const u = edge || note || num ? null : underPointer(sky, x, y, r);
+    const plate = u?.kind === 'plate' ? u.plate : null;
+    setPlate(plate?.uid ?? null);
+    setLink(u?.kind === 'link' ? u.hit.key : null);
+    const hit = num?.id ?? (u?.kind === 'star' || u?.kind === 'trail' ? u.id : null);
+    const rib = u?.kind === 'ribbon' ? u.hit : null;
     if (hit !== hovered.value) hovered.value = hit;
-    if (setRibbonHover(sky, rib)) request();
-    // гребёнка детей под указателем высвечивается, помета порядка объясняется подсказкой
-    const comb = !hit && !rib && fam?.kind === 'comb' ? fam : null;
-    if (setFamilyHover(sky, famNote ?? comb)) request();
-    setHot(!!hit || edge || note);
+    if (setRibbonHover(sky, rib) || setFamilyHover(sky, null)) request();
+    setHot(!!u || edge || note || !!num);
+    if (plate) {
+      // ромб союза: в небе «набор» подсказка — одна строка «Союз Адама и Евы: 3 сына — щёлкните», щелчок открывает
+      // карточку у ромба; у ромба с открытой карточкой подсказки нет — всё сказано в карточке
+      const un = unionById(plate.uid);
+      const card = dotCard.peek();
+      const dots = dotsOn.peek();
+      if (!un || (dots && card?.kind === 'union' && card.uid === plate.uid)) showTip(null);
+      else {
+        const text = dots ? dotTipText(un) : plateTipText(un, plate.open);
+        showTip({ kind: 'note', key: `plate:${plate.uid}:${dots ? 'dot' : plate.open ? 1 : 0}`, text, x, y, box: { x: plate.x, y: plate.y, w: plate.w, h: plate.h } });
+      }
+      return;
+    }
+    if (u?.kind === 'count') {
+      // «+N» свёрнутого союза — отдельная цель: щелчок раскрывает или сворачивает союз
+      const un = unionById(u.count.uid);
+      showTip(un ? { kind: 'note', key: `count:${u.count.uid}:${u.count.open ? 1 : 0}`, text: plateTipText(un, u.count.open), x, y, box: { x: u.count.x, y: u.count.y, w: u.count.w, h: u.count.h } } : null);
+      return;
+    }
+    if (u?.kind === 'stub') {
+      showTip({ kind: 'note', key: `stub:${u.stub.from}:${u.stub.to}`, text: stubTipText(u.stub.to), x, y, box: { x: u.stub.x, y: u.stub.y, w: u.stub.w, h: u.stub.h } });
+      return;
+    }
+    if (u?.kind === 'link') {
+      showTip({ kind: 'link', key: u.hit.key, ks: u.hit.ks, x: u.hit.x, y: u.hit.y });
+      return;
+    }
     // у звезды с открытой карточкой у точки подсказки нет: имя и годы — в карточке (решение 76)
     const card = dotCard.peek();
     if (hit && !num && card?.kind === 'person' && card.id === hit) showTip(null);
     else if (hit) showTip({ kind: 'star', id: hit, x, y, ...(num ? { count: { book: num.book, n: num.n } } : {}) });
     else if (rib) showTip({ kind: 'ribbon', hit: rib, x, y });
-    else if (famNote?.kind === 'order' && famNote.source)
-      showTip({ kind: 'note', key: `order:${famNote.parent}:${famNote.mother ?? ''}`, text: orderNoteText(famNote.source), x, y, box: { x: x - 4, y: y - 4, w: 8, h: 8 } });
     else showTip(null);
   };
   /** Подсказка и наведение — по тому, что под указателем сейчас. */
@@ -578,6 +713,7 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     setFamilyHover(sky, null);
     setTierHot(null);
     setPlate(null);
+    setLink(null);
     clearTimeout(calm);
     calm = window.setTimeout(rehit, 120);
   };
@@ -586,7 +722,7 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     return { x: e.clientX - r.left, y: e.clientY - r.top };
   };
   const onDown = (e: PointerEvent) => {
-    // нажатие, которое закрыло меню звезды или выбор «Взять в работу», только закрывает его (IX-72): не выбирает звезду,
+    // нажатие, которое закрыло меню звезды или выбор «Добавить в набор», только закрывает его (IX-72): не выбирает звезду,
     // не снимает выбор и не тянет небо
     if (dismissedBy(e)) return;
     // правая и средняя кнопки мыши не тянут небо и не выбирают звезду: правая — только меню (contextmenu; IX-49, UX-52)
@@ -673,7 +809,10 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     canvas.classList.toggle('stretch-x', zone === 'time');
     canvas.classList.toggle('stretch-y', zone === 'lanes');
     // служебная строка: у масштабной линейки «≈» — пояснение неравномерного масштаба (UX-08)
-    if (p.y < FRAME_H) setPlate(null);
+    if (p.y < FRAME_H) {
+      setPlate(null);
+      setLink(null);
+    }
     if (p.y >= RULER_H && p.y < FRAME_H && e.pointerType !== 'touch') {
       hoverYear(null);
       if (hovered.value) hovered.value = null;
@@ -754,14 +893,6 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       else foldGroupOf(fold.id, false);
       return;
     }
-    // точка союза (решение 76): в небе «набор» — карточка у точки, раскрытие — её командой; без карточки у точки (выбор
-    // второго лица) — раскрыть или свернуть союз, как прежде; на касании поле не меньше 44 px
-    const plate = plateAt(sky, at.x, at.y, touch);
-    if (plate) {
-      if (dotsOn.peek()) openDot({ kind: 'union', uid: plate.uid, from: plate.from });
-      else pressPlate(plate.uid, plate.from);
-      return;
-    }
     // название эпохи в служебной строке — небо к эпохе (UX-65); выбор лица не меняется
     const ep = touch ? null : serviceEpochAt(sky, at.x, at.y);
     if (ep) {
@@ -794,7 +925,20 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       }
       return;
     }
-    let hit: string | null = null;
+    // ромб союза (решение 76): карточка у ромба, раскрытие — её командой; без карточки у ромба (выбор второго лица) —
+    // раскрыть или свернуть союз, как прежде
+    const pressDot = (h: PlateHit) => {
+      if (dotsOn.peek()) openDot({ kind: 'union', uid: h.uid, from: h.from });
+      else pressPlate(h.uid, h.from);
+    };
+    // обрывок наружу показа (§ 7): карточка того лица — оно встаёт на небо гостем, небо летит к нему
+    const pressStub = (h: PlanStubHit) => {
+      goTo(h.to, 'sky');
+      if (dotsOn.peek()) openDot({ kind: 'person', id: h.to }, { grace: 1500 });
+    };
+    const rect = canvas.getBoundingClientRect();
+    const vp = sky.cam.vp;
+    const whichAt = { x: rect.left + at.x, y: rect.top + at.y, bounds: { left: rect.left + vp.l, top: rect.top + sky.openTop, right: rect.left + vp.r, bottom: rect.top + vp.b }, back: canvas };
     if (touch) {
       // палец в плотном месте: не наугад — единственная вероятная звезда, список «Какое лицо?» или приближение (H5)
       const cam = sky.cam;
@@ -802,39 +946,103 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       const c = tapChoice(tapCandidates(sky, at.x, at.y, TOUCH_R), canZoom);
       // что сделало касание — для проверок приёмки (tools/accept/phone.ts)
       canvas.dataset.tap = c.kind;
+      // звезда под самым пальцем важнее связей (§ 8: звезда > ◆ > «+N» > линии)
+      const tight = c.kind !== 'none' && c.kind !== 'zoom' ? sky.hitStar(at.x, at.y, STAR_FIRST + 2) : null;
+      if (tight && c.kind === 'pick') {
+        // палец на самой линии у звезды (зубец к ребёнку короче поля звезды, § 8): не наугад — «лицо или связь» списком
+        const onLine = pickMode.value ? [] : linksNear(sky, at.x, at.y, 6);
+        if (onLine.length && tight.d > glyphR(sky, tight.id) + 2) {
+          canvas.dataset.tap = 'links';
+          openWhich({
+            ids: [c.id],
+            links: onLine.slice(0, ASK_MAX - 1).map((h) => ({ ks: h.ks, text: linkTitle(h.key), sub: linkRefs(h.key).slice(0, 2).map(refShort).join('; ') })),
+            ...whichAt,
+            onPick: chooseStar,
+            onPickLink: (ks) => {
+              const h = onLine.find((q) => q.ks === ks);
+              if (h) chooseLink(sky, h.key, h.x, h.y);
+            },
+          });
+          return;
+        }
+        chooseStar(c.id);
+        return;
+      }
+      if (tight && c.kind === 'ask') {
+        openWhich({ ids: c.ids, ...whichAt, onPick: chooseStar });
+        return;
+      }
+      // ромб, «+N» и обрывок наружу — поля не меньше 44 × 44
+      const plate = plateAt(sky, at.x, at.y, true);
+      if (plate) return pressDot(plate);
+      const count = countAt(sky, at.x, at.y, true);
+      if (count) {
+        if (!pickMode.value) toggleKids(count.uid, count.from);
+        return;
+      }
+      const stub = stubAt(sky, at.x, at.y, true);
+      if (stub) return pressStub(stub);
+      // связи у пальца (§ 8): одна — она, несколько на близких расстояниях — «Какая связь?»
+      const lc = pickMode.value ? { kind: 'none' as const } : linkChoice(linksNear(sky, at.x, at.y));
+      if (lc.kind === 'pick') {
+        canvas.dataset.tap = 'link';
+        chooseLink(sky, lc.hit.key, lc.hit.x, lc.hit.y);
+        return;
+      }
+      if (lc.kind === 'ask') {
+        canvas.dataset.tap = 'links';
+        openWhich({
+          ids: [],
+          links: lc.hits.map((h) => ({ ks: h.ks, text: linkTitle(h.key), sub: linkRefs(h.key).slice(0, 2).map(refShort).join('; ') })),
+          ...whichAt,
+          onPick: chooseStar,
+          onPickLink: (ks) => {
+            const h = lc.hits.find((q) => q.ks === ks);
+            if (h) chooseLink(sky, h.key, h.x, h.y);
+          },
+        });
+        return;
+      }
       if (c.kind === 'zoom') {
         zoomBy(KEY_STEP, at, KEY_MS);
         return;
       }
       if (c.kind === 'ask') {
-        const b = canvas.getBoundingClientRect();
-        const vp = sky.cam.vp;
-        openWhich({
-          ids: c.ids,
-          x: b.left + at.x,
-          y: b.top + at.y,
-          bounds: { left: b.left + vp.l, top: b.top + sky.openTop, right: b.left + vp.r, bottom: b.top + vp.b },
-          onPick: chooseStar,
-          back: canvas,
-        });
+        openWhich({ ids: c.ids, ...whichAt, onPick: chooseStar });
         return;
       }
       // одна звезда — она; ни одной — ближайший след под пальцем
-      hit = c.kind === 'pick' ? c.id : sky.hit(at.x, at.y, TOUCH_R);
+      const hit = c.kind === 'pick' ? c.id : sky.hitTrail(at.x, at.y);
+      if (hit) {
+        chooseStar(hit);
+        return;
+      }
     } else {
-      hit = sky.hit(at.x, at.y, 12);
-      // щелчок по ленте — там, где наведение показывало шаг ленты, а не лицо (MAP-28): не выбирает лицо следа рядом и не
-      // снимает выбор, как щелчок по пустому небу
-      const reach = layers.value.ribbons ? ribbonReach(hit ? hitDistance(sky, hit, at.x, at.y) : Infinity) : 0;
-      if (reach > 0 && ribbonAt(sky, at.x, at.y, reach)) return;
-    }
-    if (hit) {
-      // в режиме «Родство с…» или «Разворот с…» щелчок выбирает второе лицо, первое остаётся
-      chooseStar(hit);
-      return;
+      const u = underPointer(sky, at.x, at.y, 12);
+      if (u?.kind === 'star' || u?.kind === 'trail') {
+        // в режиме «Родство с…» или «Разворот с…» щелчок выбирает второе лицо, первое остаётся
+        chooseStar(u.id);
+        return;
+      }
+      if (u?.kind === 'plate') return pressDot(u.plate);
+      if (u?.kind === 'count') {
+        if (!pickMode.value) toggleKids(u.count.uid, u.count.from);
+        return;
+      }
+      if (u?.kind === 'stub') return pressStub(u.stub);
+      // линия связи или шаг ленты (§ 8): выбрать связь; выбор лица не меняется. В режиме выбора второго лица — ничего
+      if (u?.kind === 'link' || u?.kind === 'ribbon') {
+        if (!pickMode.value) chooseLink(sky, u.kind === 'link' ? u.hit.key : ribbonKey(u.hit), u.kind === 'link' ? u.hit.x : at.x, u.kind === 'link' ? u.hit.y : at.y);
+        return;
+      }
     }
     // пустое небо: снять выбор (IX-09); «назад» в браузере его вернёт (D8). В режиме выбора второго лица — ничего.
     if (pickMode.value || at.y < RULER) return;
+    // выбрана связь — первый щелчок снимает её (§ 8), второй — карточку у звезды и выбор лица
+    if (selectedLink.peek()) {
+      selectedLink.value = null;
+      return;
+    }
     // открыта карточка у точки — щелчок по пустому небу закрывает только её: одно видимое состояние за раз (D5)
     if (dotCard.peek()) {
       closeDot();
@@ -916,6 +1124,7 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     canvas.classList.remove('stretch-x', 'stretch-y');
     hovered.value = null;
     setPlate(null);
+    setLink(null);
     const r1 = setRibbonHover(sky, null);
     const r2 = setFamilyHover(sky, null);
     if (r1 || r2) request();

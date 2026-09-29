@@ -34,6 +34,7 @@ let work: typeof import('../src/ui/work.ts');
 let marks: typeof import('../src/render/marks.ts');
 let trails: typeof import('../src/render/trails.ts');
 let branches: typeof import('../src/render/branches.ts');
+let links: typeof import('../src/render/links.ts');
 type Sky = InstanceType<typeof import('../src/render/sky.ts').Sky>;
 type PlateIn = import('../src/render/plates.ts').PlateIn;
 
@@ -50,6 +51,7 @@ beforeAll(async () => {
   marks = await import('../src/render/marks.ts');
   trails = await import('../src/render/trails.ts');
   branches = await import('../src/render/branches.ts');
+  links = await import('../src/render/links.ts');
 });
 
 const LAYERS = { lifelines: true, connectors: true, constellations: true, epochs: true, ribbons: true, tensions: true, ghosts: true, labels: true };
@@ -131,8 +133,9 @@ describe('год и место точки союза (решение 76)', () =>
     const jx = f.s.cam.sx(f.s.X0[i]);
     const jy = f.s.cam.sy(f.s.nodes[i].lane);
     expect(x).toBeLessThan(jx - plates.DOT_CLEAR + 1);
-    const laneOf = (id: string) => M().nodeByPerson.get(id)?.lane;
-    expect(Math.sign(jy - y)).toBe(plates.parentSide(U('u:iosif-muzh-marii+mariya'), laneOf('iisus')!, laneOf));
+    // этап 11 (решение 78, Г2–Г4): полый ромб союза родителей стоит на строке ребёнка левее его звезды, от ромба к нему —
+    // зубец; прежнее место «со стороны родителей», между строками, ушло вместе с косыми лучами
+    expect(Math.abs(jy - y)).toBeLessThanOrEqual(1);
     // «+2» — слева от ромба: справа к Иисусу Христу идёт линия
     expect(f.texts).toContain('+2');
     // линия к Иисусу Христу — штрихом: Иосиф — отец по закону (Мф 1:16)
@@ -162,7 +165,9 @@ describe('линии к детям: цвет ветви, начертание (�
     const interp = [...reveal.unions.byId.values()].find((u) => u.kidsCert === 'interpretation');
     if (interp) expect(plates.kidDash(interp)[0]).toBeLessThan(2);
   });
-  it('выбрано лицо — линии к его потомкам цветом его ветвей: при выборе Адама линия к Еносу — цвета ветви Сифа', () => {
+  // этап 11 (решение 84, § 9): цвет ветви — только у рода выбранного лица; у невыбранных союзов цвета нет. К Сифу и Еносу
+  // ведёт лента (Г1: одна связь — одна линия), зубцы — к Каину и Авелю
+  it('выбрано лицо — зубцы к его потомкам цветом его ветвей; без выбора зубцы — тоном текста', () => {
     reveal.startWith('adam');
     const ids = ['adam', 'eva', 'kain', 'avel', 'sif', 'enos'];
     const pls: PlateIn[] = [
@@ -171,54 +176,65 @@ describe('линии к детям: цвет ветви, начертание (�
     ];
     const none = kidLines(frame({ ids, plates: pls, at: 'adam', years: 500 }).data);
     const sel = kidLines(frame({ ids, plates: pls, at: 'adam', years: 500, selected: 'adam' }).data);
-    // без выбора — ветвь Еноса у его отца Сифа (у Сифа один союз и один сын — первый цвет)
-    expect(none.get('enos')).toBe(plates.kidColor(U('u:sif+'), 'enos', 'day'));
-    // при выборе Адама — цвет ветви Сифа у Адама, как у следа Еноса (подсветка ветвей, решение 69)
-    expect(sel.get('enos')).toBe(plates.kidColor(U('u:adam+eva'), 'sif', 'day'));
-    expect(sel.get('sif')).toBe(plates.kidColor(U('u:adam+eva'), 'sif', 'day'));
-    expect(sel.get('enos')).not.toBe(none.get('enos'));
+    for (const k of ['kain', 'avel']) {
+      expect(none.get(k), k).toBe('');
+      expect(sel.get(k), k).toMatch(/^#[0-9a-f]{6}$/i);
+    }
+    // у Каина и Авеля — разные ветви Адама (решение 69)
+    expect(sel.get('kain')).not.toBe(sel.get('avel'));
+    // к Сифу и Еносу — только лента
+    expect(none.has('sif')).toBe(false);
+    expect(none.has('enos')).toBe(false);
   });
 });
 
 describe('связь не дублируется (решение 76)', () => {
   beforeEach(() => reveal.startWith('adam'));
-  it('у детей союза с точкой нет прежних отводов и гребёнок; без точки — есть', () => {
+  // этап 11 (решение 78): связь «союз → ребёнок» рисует один путь — зубец от ствола союза (src/render/links.ts), есть ли
+  // карточка союза в состоянии или нет; прежних отводов и гребёнок нет нигде
+  it('у детей союза — по одному зубцу от ствола союза; прежних отводов и гребёнок нет', () => {
     const ids = ['adam', 'eva', 'kain', 'avel', 'sif'];
     const pl: PlateIn = { union: U('u:adam+eva'), from: 'adam', dir: 'down', open: true };
-    const withDot = frame({ ids, plates: [pl], at: 'adam', years: 400 });
-    expect(trails.familyCombs(withDot.s).filter((c) => c.parent === 'adam')).toEqual([]);
-    const without = frame({ ids, plates: [], at: 'adam', years: 400 });
-    expect(trails.familyCombs(without.s).filter((c) => c.parent === 'adam').flatMap((c) => c.kids).sort()).toEqual(['avel', 'kain', 'sif']);
+    for (const plates0 of [[pl], []]) {
+      const f = frame({ ids, plates: plates0, at: 'adam', years: 400 });
+      expect(trails.familyCombs(f.s).filter((c) => c.parent === 'adam')).toEqual([]);
+      const lines = (f.data.unionLines ?? '').split(';');
+      for (const k of ['kain', 'avel']) expect(lines.filter((l) => l.startsWith(`u:adam+eva>${k}:`)).length, k).toBe(1);
+    }
   });
-  it('у супругов с точкой нет знака брака «‖»: их соединяют скобки к точке', () => {
+  // этап 11 (Г4): от мужа к ромбу на следе жены — черта брака «‖» (путь связи «супруг → союз»), прежнего знака «‖»
+  // в замере подписей и скобок к точке нет
+  it('у супругов — черта брака от мужа к ромбу на следе жены; прежнего знака «‖» и скобок нет', () => {
     const ids = ['iakov', 'liya', 'ruvim', 'simeon', 'leviy', 'iuda', 'issakhar', 'zavulon', 'dina'];
     const pl: PlateIn = { union: U('u:iakov+liya'), from: 'iakov', dir: 'down', open: true };
     const bars = (f: ReturnType<typeof frame>) => f.s.ledger.boxes.filter((b) => b.kind === 'mark' && b.text === '‖').map((b) => b.id);
-    const withDot = frame({ ids, plates: [pl], at: 'iakov', years: 200 });
-    expect(bars(withDot)).not.toContain('liya');
-    expect((withDot.data.unionLines ?? '').split(';')).toEqual(expect.arrayContaining(['u:iakov+liya=iakov', 'u:iakov+liya=liya']));
-    // без точки знак брака — как прежде, если Лия стоит у мужа
-    const without = frame({ ids, plates: [], at: 'iakov', years: 200 });
-    const n = M().nodes.find((q) => q.person === 'liya' && !q.ghost);
-    if (n?.satelliteOf === 'iakov') expect(bars(without)).toContain('liya');
+    for (const plates0 of [[pl], []]) {
+      const f = frame({ ids, plates: plates0, at: 'iakov', years: 200 });
+      expect(bars(f)).toEqual([]);
+      const lines = (f.data.unionLines ?? '').split(';');
+      expect(lines.some((l) => l.startsWith('u:iakov+liya>'))).toBe(true);
+      expect(lines).not.toContain('u:iakov+liya=liya');
+    }
   });
 });
 
 describe('точка в кадре: поле попадания, состояние, подписи (решение 76)', () => {
   beforeEach(() => reveal.startWith('adam'));
-  it('поле попадания — вокруг ромба, не меньше 18 × 18; центр ромба — внутри', () => {
+  // этап 11 (Я31): поле ромба — не меньше 24 × 24 (было 18 × 18)
+  it('поле попадания — вокруг ромба, не меньше 24 × 24; центр ромба — внутри', () => {
     const f = frame({ ids: ['adam'], plates: reveal.plates.value, at: 'adam', years: 400 });
     const h = f.s.plateHits[0];
     expect(h.uid).toBe('u:adam+eva');
     expect(h.from).toBe('adam');
-    expect(h.w).toBeGreaterThanOrEqual(18);
-    expect(h.h).toBeGreaterThanOrEqual(18);
+    expect(h.w).toBeGreaterThanOrEqual(24);
+    expect(h.h).toBeGreaterThanOrEqual(24);
     expect(h.cx).toBeGreaterThan(h.x);
     expect(h.cx).toBeLessThan(h.x + h.w);
     expect(h.cy).toBeGreaterThan(h.y);
     expect(h.cy).toBeLessThan(h.y + h.h);
     expect([h.ax, h.ay]).toEqual([h.cx, h.cy]);
-    expect(h.r).toBe(plates.DOT_R);
+    // ромб раскрытого неба — 9 px (§ 2, «Знаки»)
+    expect(h.r).toBe(links.NODE_R_FAMILY);
   });
   it('выбранный Адам: подпись Адама встаёт и не ложится на точку; наложений нет', () => {
     const f = frame({ ids: ['adam'], plates: reveal.plates.value, at: 'adam', years: 400, selected: 'adam' });
@@ -260,6 +276,8 @@ describe('образец условных знаков и небо «все ли
     const b = frame({ mode: 'all', ids: [...work.workSet.value.keys()], plates: null, at: 'adam', years: 400, selected: 'adam' });
     expect(a.calls.length).toBeGreaterThan(1000);
     expect(a.calls).toEqual(b.calls);
-    expect(a.s.plateHits).toEqual([]);
+    // этап 11 (решение 78): ромбы союзов — часть грамматики и на «всех лицах» (7 px), те же с союзами в состоянии и без
+    expect(a.s.plateHits).toEqual(b.s.plateHits);
+    expect(a.s.plateHits.every((h) => h.r === links.NODE_R_MAP)).toBe(true);
   });
 });

@@ -10,7 +10,8 @@
  *   Ночью лента гаснет до 0,55, днём — не ниже 0,85.
  * — Звено по толкованию — разреженная нить без свечения и тона.
  */
-import { BRAID_PX, buildRibbons, runSpans, type Strand, type StrandPoint } from '../engine/ribbons.ts';
+import { BRAID_PX, blendStrands, buildRibbons, buildRouteRibbons, runSpans, type RouteStep, type Strand, type StrandPoint } from '../engine/ribbons.ts';
+import { stepRoute } from './links.ts';
 import type { LineStep } from '../engine/layout.ts';
 import { refText } from '../engine/kinship.ts';
 import { byId, lines } from '../data/atlas.ts';
@@ -56,6 +57,9 @@ export function ribbonDim(highlight: boolean, night: boolean): number {
   return night ? 0.7 : 0.85;
 }
 
+/** Ленты при выбранной связи (§ 8): гаснут до стольких. */
+export const LINK_RIBBON_DIM = 0.55;
+
 /** Вид лент по палитре темы; highlight — выделен род (небо гаснет). Для неба, легенды и образца. */
 export function ribbonLook(pal: Palette, highlight = false): RibbonLook {
   return {
@@ -71,7 +75,7 @@ type Rgb = [number, number, number];
 const lerp3 = (a: Rgb, b: Rgb, t: number): Rgb => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
 const css = (c: Rgb, a = 1) => (a >= 1 ? `rgb(${c.map(Math.round).join(',')})` : `rgba(${c.map(Math.round).join(',')},${a})`);
 
-type Part = 'all' | 'solid' | 'weak';
+type Part = 'all' | 'solid' | 'weak' | 'legal';
 
 /**
  * Путь нити от from до to (включительно) с отсечением по видимой полосе [x0, x1].
@@ -92,7 +96,7 @@ export function tracePath(ctx: CanvasRenderingContext2D, pts: StrandPoint[], fro
   for (let i = start; i < end; i++) {
     const a = pts[i];
     const b = pts[i + 1];
-    const take = part === 'all' || (part === 'weak') === b.weak;
+    const take = part === 'all' || (part === 'weak' ? b.weak : part === 'legal' ? !b.weak && !!b.legal : !b.weak && !b.legal);
     if (!take || Math.max(a.x, b.x) < x0 || Math.min(a.x, b.x) > x1) {
       pen = false;
       continue;
@@ -109,17 +113,27 @@ export function tracePath(ctx: CanvasRenderingContext2D, pts: StrandPoint[], fro
   return any;
 }
 
+/** Опоры цвета не чаще, чем через столько px по x: цвет меняется медленно, а у нитей-маршрутов t растёт в каждой точке. */
+const KNOT_PX = 8;
+/** …и не чаще, чем через такую долю линии (≈ 125 опор на всю линию; поколение — 1/77 ≈ 0,013, опора каждого сохраняется). */
+const KNOT_DT = 0.008;
+
 /**
- * Опоры цвета вдоль нити: (x, t) в точках, где начинается новое поколение (t — место лица в линии, 0…1).
- * x приводится к неубывающему, чтобы градиент был определён.
+ * Опоры цвета вдоль нити: (x, t) в точках, где начинается новое поколение (t — место лица в линии, 0…1), не чаще чем
+ * через KNOT_PX и KNOT_DT. x приводится к неубывающему, чтобы градиент был определён. Без прореживания нить-маршрут масштаба
+ * семьи (t растёт в каждой точке через 4 px) давала сотни опор на градиент, и кадр масштабирования шёл 50–200 мс.
  */
 export function colorKnots(pts: StrandPoint[]): { x: number; t: number }[] {
   const out: { x: number; t: number }[] = [];
   let maxX = -Infinity;
-  for (let i = 0; i < pts.length; i++) {
-    if (i > 0 && i < pts.length - 1 && pts[i].t === pts[i - 1].t) continue;
-    maxX = Math.max(maxX, pts[i].x);
-    out.push({ x: maxX, t: pts[i].t });
+  const last = pts.length - 1;
+  for (let i = 0; i <= last; i++) {
+    if (i > 0 && i < last && pts[i].t === pts[i - 1].t) continue;
+    const x = Math.max(maxX, pts[i].x);
+    if (out.length && i < last && (x - out[out.length - 1].x < KNOT_PX || Math.abs(pts[i].t - out[out.length - 1].t) < KNOT_DT)) continue;
+    maxX = x;
+    if (i === last && out.length > 1 && x - out[out.length - 1].x < KNOT_PX) out.pop();
+    out.push({ x, t: pts[i].t });
   }
   return out;
 }
@@ -261,6 +275,14 @@ export function drawStrands(
       ctx.stroke();
       ctx.setLineDash([]);
     }
+    // шаг «по закону» (Иосиф → Иисус, Мф 1:16) от узла союза — штрихом, как связь иного рода (Г10: штрих [5, 3])
+    if (tracePath(ctx, pts, from, to, 'legal', -Infinity, Infinity)) {
+      ctx.strokeStyle = solid;
+      ctx.lineWidth = coreW;
+      ctx.setLineDash([coreW * 2.2, coreW * 1.3]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
   };
 
   // основные нити: сначала Мария, потом Иосиф
@@ -332,8 +354,16 @@ export interface RibbonHit {
  */
 interface RibbonCache {
   key: string;
+  /** ключ без масштаба: при нём нити пересчитываются из прежних, пока масштаб в движении (Я33) */
+  base: string;
   x0: number;
   laneTop: number;
+  /** масштаб нитей кэша и масштаб их точной сборки; exact — нити построены при этом масштабе, а не пересчитаны */
+  kx: number;
+  ky: number;
+  kx0: number;
+  ky0: number;
+  exact: boolean;
   strands: Strand[];
   grads: Map<string, CanvasGradient>;
   /** сдвиг последнего кадра: экранная точка = точка нити + (dx, dy) */
@@ -405,7 +435,7 @@ export function smoothMidline(pts: readonly { x: number; y: number }[], flat: nu
 
 /** Лица линий на небе для нитей: «набор» пропускает скрытых, у звена за скрытыми — разреженная нить (J4; MAP-64). */
 function strandSteps(v: SkyContext, s: SkyState, steps: { joseph: readonly LineStep[]; mary: readonly LineStep[] }, ln: 'joseph' | 'mary') {
-  const out: { id: string; weak: boolean }[] = [];
+  const out: { id: string; weak: boolean; legal: boolean; skipped: boolean }[] = [];
   let skipped = false;
   for (const raw of steps[ln]) {
     const st = s.lineFlip && ln === 'mary' && raw.id === 'mariya' ? { ...raw, id: 'iosif-muzh-marii' } : raw;
@@ -414,17 +444,22 @@ function strandSteps(v: SkyContext, s: SkyState, steps: { joseph: readonly LineS
       skipped = out.length > 0;
       continue;
     }
-    out.push({ id: st.id, weak: skipped || st.flag === 'interpretation' || st.flag === 'luke-only' || (ln === 'mary' && st.id === 'salafiil') });
+    out.push({ id: st.id, weak: skipped || st.flag === 'interpretation' || st.flag === 'luke-only' || (ln === 'mary' && st.id === 'salafiil'), legal: st.flag === 'legal', skipped });
     skipped = false;
   }
   return out;
 }
 
+/** Радиус ступеньки ленты на масштабе семьи (§ 3: 8–16 px) — по высоте строки. */
+export const routeRadius = (ky: number) => Math.max(8, Math.min(16, ky * 0.5));
+
 /**
  * Нити неба при нынешней камере (кэш на небо, RibbonCache): строятся заново только при смене масштаба, модели, режима,
  * размера холста или сжатия полос и при сдвиге дальше запаса; иначе — те же нити со сдвигом (dx, dy). Точки лиц — по
- * полосам раскладки (model.nodes: в режиме «только линии» небо ставит лиц линий на нити, ribbonBeads), средняя
- * линия раздельных участков сглажена (MAP-62).
+ * полосам кадра (в режиме «только линии» на общей раскладке — по полосам раскладки: небо ставит лиц линий на нити,
+ * ribbonBeads), средняя линия раздельных участков сглажена (MAP-62). На масштабе семьи (v.routeFactor, § 3) нити идут
+ * по маршрутам связей — по следу родителя до узла союза шага и ступенькой к ребёнку; в полосе перехода ×1,5 сплайн
+ * плавно переходит в маршрут (blendStrands).
  */
 export function ribbonStrands(v: SkyContext, s: SkyState, steps: { joseph: readonly LineStep[]; mary: readonly LineStep[] }): RibbonCache {
   const { cam } = v;
@@ -434,13 +469,23 @@ export function ribbonStrands(v: SkyContext, s: SkyState, steps: { joseph: reado
   const J = strandSteps(v, s, steps, 'joseph');
   const M = strandSteps(v, s, steps, 'mary');
   const ids = (xs: { id: string; weak: boolean }[]) => xs.map((q) => (q.weak ? `~${q.id}` : q.id)).join(',');
-  const key = `${v.model.id}|${v.lambda}|${cam.kx}|${ky}|${s.lineFlip}|${s.onlyLines}|${cam.w}|${cam.h}|${v.rowsKey}|${!!s.guide}|${ids(J)}|${ids(M)}`;
+  // доля маршрута (§ 3): 0 — сплайн обзора, 1 — маршрут масштаба семьи; шаг 0,05 — кэш не перестраивается на каждом кадре
+  const f = Math.round(Math.max(0, Math.min(1, v.routeFactor)) * 20) / 20;
+  const base = `${v.model.id}|${v.lambda}|${s.lineFlip}|${s.onlyLines}|${cam.w}|${cam.h}|${v.rowsKey}|${!!s.guide}|${ids(J)}|${ids(M)}`;
+  const key = `${base}|${cam.kx}|${ky}|${f}|${f > 0 ? v.linksKey : ''}`;
   let c = ribbonCaches.get(v);
-  if (!c || c.key !== key || Math.abs((c.x0 - cam.x0) * cam.kx) > RIBBON_MARGIN - 40) {
-    // точки лиц — по полосам раскладки, а не по нынешним узлам неба (в «только линиях» они стоят на нитях)
+  // масштаб в движении (Я33): нити пересчитываются из прежних (точки линейны по координатам неба), пока масштаб не уйдёт
+  // от точной сборки дальше чем вдвое; когда постоит — строятся заново (небо перерисовывает кадр, SkyView)
+  const near = (a: number, b: number) => a / b < 2 && b / a < 2;
+  if (c && c.key !== key && v.scaleMoving && c.base === base && near(cam.kx, c.kx0) && near(ky, c.ky0) && Math.abs((c.x0 - cam.x0) * cam.kx) < RIBBON_MARGIN) {
+    c = rescaleRibbons(c, cam.x0, cam.laneTop, cam.kx, ky, key);
+    ribbonCaches.set(v, c);
+  } else if (!c || c.key !== key || (!c.exact && !v.scaleMoving) || Math.abs((c.x0 - cam.x0) * cam.kx) > RIBBON_MARGIN - 40) {
+    // точки лиц — по полосам нитей: в «только линиях» на общей раскладке — по полосам раскладки (лица стоят на нитях)
+    const at = v.ribbonNodes;
     const raw = (id: string) => {
       const i = v.indexOf(id);
-      return i === undefined ? null : { x: cam.sx(v.X0[i]), y: cam.sy(v.model.nodes[i].lane) };
+      return i === undefined ? null : { x: cam.sx(v.X0[i]), y: cam.sy(at[i].lane) };
     };
     // средняя линия раздельных участков (ветвей) при растянутых строках — сглажена (MAP-62); развилки и схождения на месте
     const flat = Math.min(1, cam.kyWith(cam.kx, 1) / ky);
@@ -449,8 +494,8 @@ export function ribbonStrands(v: SkyContext, s: SkyState, steps: { joseph: reado
     const mIds = M.map((q) => q.id);
     for (const r of runSpans(jIds, mIds)) {
       if (r.kind !== 'split') continue;
-      for (const [ids, [a, b]] of [[jIds, r.j], [mIds, r.m]] as const) {
-        const part = ids.slice(a, b + 1);
+      for (const [xs, [a, b]] of [[jIds, r.j], [mIds, r.m]] as const) {
+        const part = xs.slice(a, b + 1);
         const pts = part.map(raw);
         if (pts.some((q) => !q)) continue;
         smoothMidline(pts as { x: number; y: number }[], flat).forEach((y, k) => k > 0 && k < part.length - 1 && smooth.set(part[k], y));
@@ -461,13 +506,45 @@ export function ribbonStrands(v: SkyContext, s: SkyState, steps: { joseph: reado
       return q && smooth.has(id) ? { x: q.x, y: smooth.get(id)! } : q;
     };
     const A = BRAID_PX;
-    const strands = buildRibbons({ joseph: J, mary: M, project, amplitude: A, meander: A * 0.5, clip: [-RIBBON_MARGIN, cam.w + RIBBON_MARGIN] });
-    c = { key, x0: cam.x0, laneTop: cam.laneTop, strands, grads: new Map(), dx: 0, dy: 0 };
+    let strands = buildRibbons({ joseph: J, mary: M, project, amplitude: A, meander: A * 0.5, clip: [-RIBBON_MARGIN, cam.w + RIBBON_MARGIN] });
+    if (f > 0) {
+      // маршруты шагов: по узлам союзов кадра (src/render/links.ts, via); звёзды — на своих местах кадра
+      const star = (id: string) => {
+        const i = v.indexOf(id);
+        if (i === undefined) return null;
+        const q = byId.get(id);
+        return { x: cam.sx(v.X0[i]), y: cam.sy(v.nodes[i].lane), r: starRadius(q?.magnitude ?? 6, Math.max(0.7, Math.min(1.25, ky / 18))) + (q?.sex === 'f' ? 2.2 : 0) };
+      };
+      const route = (xs: typeof J): RouteStep[] =>
+        xs.map((q, k) => {
+          if (k === 0 || q.skipped) return { id: q.id, weak: q.weak, pts: null };
+          const a = star(xs[k - 1].id);
+          const b = star(q.id);
+          const via = v.linkVia(`${xs[k - 1].id}>${q.id}`);
+          return { id: q.id, weak: q.weak, legal: q.legal, pts: a && b ? stepRoute(a, b, via ? via.x : b.x - b.r - 9) : null };
+        });
+      const routes = buildRouteRibbons({ joseph: route(J), mary: route(M), project: star, amplitude: A, radius: routeRadius(ky), clip: [-RIBBON_MARGIN, cam.w + RIBBON_MARGIN] });
+      strands = blendStrands(strands, routes, f);
+    }
+    c = { key, base, x0: cam.x0, laneTop: cam.laneTop, kx: cam.kx, ky, kx0: cam.kx, ky0: ky, exact: true, strands, grads: new Map(), dx: 0, dy: 0 };
     ribbonCaches.set(v, c);
   }
   c.dx = (c.x0 - cam.x0) * cam.kx;
   c.dy = (cam.laneTop - c.laneTop) * ky;
   return c;
+}
+
+/**
+ * Нити при новом масштабе — пересчётом прежних (на время движения масштаба, как кадр связей в sky.ts): x = (X − x0)·kx,
+ * y = (laneTop − строка)·ky линейны по координатам неба, строки те же (ключ без масштаба). Градиенты — заново.
+ */
+function rescaleRibbons(c: RibbonCache, x0: number, laneTop: number, kx: number, ky: number, key: string): RibbonCache {
+  const a = kx / c.kx;
+  const bx = (c.x0 - x0) * kx;
+  const e = ky / c.ky;
+  const by = (laneTop - c.laneTop) * ky;
+  const strands = c.strands.map((st) => ({ ...st, points: st.points.map((q) => ({ ...q, x: q.x * a + bx, y: q.y * e + by })) }));
+  return { ...c, key, x0, laneTop, kx, ky, exact: false, strands, grads: new Map(), dx: 0, dy: 0 };
 }
 
 /**
@@ -509,7 +586,10 @@ export function drawSkyRibbons(v: SkyContext, s: SkyState, steps: { joseph: read
   ctx.save();
   ctx.translate(dx, dy);
   // ориентир режима «В работе» (J4) — и приглушён, как при выделении рода
-  drawStrands(ctx, strands, core, ribbonLook(pal, !!hl || !!s.guide), cam.w, hover ? null : flow, { clip, grads: c.grads, braid: A });
+  const look = ribbonLook(pal, !!hl || !!s.guide);
+  // выбранная связь (§ 8): ленты гаснут до 55 %
+  if (s.link) look.dim = Math.min(look.dim, LINK_RIBBON_DIM);
+  drawStrands(ctx, strands, core, look, cam.w, hover ? null : flow, { clip, grads: c.grads, braid: A });
   // участки группы панели и пути родства — в полную силу поверх погашенных лент
   if (hl) {
     const lit = (id: string) => {

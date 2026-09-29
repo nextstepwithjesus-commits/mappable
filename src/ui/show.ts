@@ -1,0 +1,582 @@
+/**
+ * Модель показа (этап 11, § 5 и § 7; решения 77, 81, 82).
+ *
+ *   Показ = всё небо | линии Мессии | ключевые лица | созвездия {список; связи наружу} |
+ *           род лица {лицо; предки, потомки или оба; поколений 1–3 или все; по отцам или по крови} | набор
+ *   Фокус = лицо | союз | связь | ничего — поверх любого показа (src/state.ts selected, src/ui/linkstate.ts selectedLink)
+ *
+ * Здесь — всё, что из показа следует:
+ *  — show, setShow — сам показ (сигнал живёт в src/ui/work.ts, чтобы reveal.ts читал его без круга импорта);
+ *  — showContent — состав: лица, гости (жёны и матери вне показа, нужные для союзов), обрывки наружу, родоначальник,
+ *    укладка ('map' — общая раскладка со свёрткой прочего; 'family' — семейная укладка «Г», src/engine/family.ts);
+ *  — skyShow — то же для плана неба (src/render/rows.ts, SkyView.show): с виртуальными полосами семейной укладки;
+ *  — showSummary — строка «На небе: …» у верхней кромки неба, части с командами;
+ *  — groupSections() — разделы листа «Показ» с числами; countShow(s) — число лиц до применения.
+ * Составы — src/engine/lineage.ts (род лица, созвездия, гости, обрывки).
+ */
+import { batch, computed, effect } from '@preact/signals';
+import { byId, graph, groupById, groups, lines, models, persons } from '../data/atlas.ts';
+import type { Group, GroupSection } from '../data/types.ts';
+import { familyLayout, type FamilyData, type FamilyResult } from '../engine/family.ts';
+import { packSpan } from '../engine/layout.ts';
+import { groupsWith, inGroup, lineageWith, useKinData, type KinData, type LineageBy, type LineageDir, type LinksOut, type Stub } from '../engine/lineage.ts';
+import type { ShowIn } from '../render/rows.ts';
+import { linkKeyString } from '../engine/linkkey.ts';
+import { selectedLink } from './linkstate.ts';
+import { walk } from '../render/rows.ts';
+import { model, onlyLines, selected } from '../state.ts';
+import { KEY_IDS, LINE_IDS, unions } from './reveal.ts';
+import { nameCase } from './text/ru.ts';
+import { num } from './text/typo.ts';
+import { foldDesc, parseShow, sameShow, setShowState, show, showAnchor, showKey, showLinksField, showOn, shownSet, type Show } from './work.ts';
+
+export { show, showKey, showLinksField, parseShow, sameShow };
+export type { Show, LinksOut, LineageBy, LineageDir, Stub };
+export type { ShowKind } from './work.ts';
+
+// ---------- данные составов ----------
+
+/** Данные атласа для составов (src/engine/lineage.ts). */
+export const kinData: KinData = {
+  graph,
+  unions,
+  person: (id) => {
+    const p = byId.get(id);
+    return p ? { name: p.name, sex: p.sex, group: p.group, unnamed: p.unnamed, alt: p.alt } : undefined;
+  },
+  group: (id) => groupById.get(id),
+};
+useKinData(kinData);
+
+// ---------- состав показа ----------
+
+export interface ShowContent {
+  /** лица показа (у всего неба — все лица) */
+  ids: ReadonlySet<string>;
+  /** гости — лица вне показа, нужные для союзов: небо рисует их бледнее */
+  guests: ReadonlySet<string>;
+  /** обрывки наружу */
+  stubs: readonly Stub[];
+  /** родоначальник созвездия (у показа одного созвездия с его домами), если он задан в data/groups.json */
+  founder?: string;
+  /** 'map' — общая раскладка со свёрткой прочего; 'family' — семейная укладка «Г» */
+  layout: 'map' | 'family';
+  /** родоначальники созвездий показа, лежащие вне этих созвездий (полноправные лица показа с пометой) */
+  founders: ReadonlySet<string>;
+  /** дочь рода с потомками вне рода → сколько их («+N» у дочери; род лица по отцам) */
+  plus: ReadonlyMap<string, number>;
+}
+
+/** Показ созвездий больше стольких лиц (с гостями) — картой со свёрткой прочего, а не семейной укладкой. */
+export const FAMILY_MAX = 900;
+const EMPTY: ReadonlySet<string> = new Set();
+const ALL_IDS: ReadonlySet<string> = new Set(persons.map((p) => p.id));
+
+/** Созвездия раздела листа, по порядку данных; вложенные дома — сразу за своим созвездием. */
+function sectionGroups(sec: GroupSection): Group[] {
+  const own = groups.filter((g) => g.section === sec);
+  const top = own.filter((g) => !g.parent || !own.some((x) => x.id === g.parent));
+  const out: Group[] = [];
+  const add = (g: Group) => {
+    out.push(g);
+    for (const h of own) if (h.parent === g.id) add(h);
+  };
+  for (const g of top) add(g);
+  return out;
+}
+/** Все колена Израилевы с домами: раздел «Колена Израилевы» целиком. */
+export const TRIBES: readonly string[] = sectionGroups('tribes').map((g) => g.id);
+/** Показ «все колена». */
+export const allTribes = (links: LinksOut = 'stubs'): Show => ({ kind: 'groups', groups: TRIBES, links });
+/** Созвездие и вложенные в него дома (Колено Иудино → и Дом Давидов). */
+export function withHouses(id: string): string[] {
+  const out = [id];
+  for (let i = 0; i < out.length; i++) for (const g of groups) if (g.parent === out[i] && !out.includes(g.id)) out.push(g.id);
+  return out;
+}
+/** Выбран весь раздел: у показа созвездий — все созвездия раздела (например, «все колена»). */
+function wholeSection(gs: readonly string[]): GroupSection | null {
+  const set = new Set(gs);
+  const secs = new Set(gs.map((g) => groupById.get(g)?.section));
+  if (secs.size !== 1) return null;
+  const sec = [...secs][0];
+  if (!sec) return null;
+  const all = groups.filter((g) => g.section === sec).map((g) => g.id);
+  return all.length > 1 && all.every((g) => set.has(g)) ? sec : null;
+}
+/**
+ * Созвездие из списков (Езд 2, Неем 7…): семейная укладка выше карты больше чем в LIST_RATIO раза — родства в нём мало,
+ * а списки на общей карте уже собраны скоплениями. Такое созвездие показывается картой. Считается по модели
+ * по умолчанию, чтобы укладка показа не зависела от выбранной модели.
+ */
+const LIST_RATIO = 1.5;
+function listLike(S: ReadonlySet<string>): boolean {
+  if (S.size < 60) return false;
+  const m = models[0];
+  const lanes = new Set<number>();
+  for (const id of S) {
+    const n = m.nodeByPerson.get(id);
+    if (n) lanes.add(n.lane);
+  }
+  return familyLayout(S, familyData(m)).count > LIST_RATIO * lanes.size;
+}
+
+/** Родоначальник показа созвездий: у одного созвездия (с его домами) — его founder. */
+function soleFounder(gs: readonly string[]): string | undefined {
+  const tops = gs.filter((g) => !gs.includes(groupById.get(g)?.parent ?? ''));
+  if (tops.length !== 1) return undefined;
+  const f = groupById.get(tops[0])?.founder;
+  return f && byId.has(f) ? f : undefined;
+}
+
+const CONTENT_CACHE = 128;
+const contentCache = new Map<string, ShowContent>();
+/**
+ * Состав показа s. У набора — набор неба сейчас (src/ui/work.ts, shownSet); остальные составы зависят только от данных
+ * и запоминаются.
+ */
+export function contentOf(s: Show, set: ReadonlyMap<string, unknown> = shownSet.peek()): ShowContent {
+  if (s.kind === 'set') return { ids: new Set(set.keys()), guests: EMPTY, stubs: [], layout: 'family', founders: EMPTY, plus: new Map() };
+  const key = `${showKey(s)}|${showLinksField(s) ?? ''}`;
+  const hit = contentCache.get(key);
+  if (hit) return hit;
+  let c: ShowContent;
+  switch (s.kind) {
+    case 'all':
+      c = { ids: ALL_IDS, guests: EMPTY, stubs: [], layout: 'map', founders: EMPTY, plus: new Map() };
+      break;
+    case 'lines':
+      c = { ids: new Set(LINE_IDS), guests: EMPTY, stubs: [], layout: 'family', founders: EMPTY, plus: new Map() };
+      break;
+    case 'key':
+      c = { ids: new Set(KEY_IDS), guests: EMPTY, stubs: [], layout: 'map', founders: EMPTY, plus: new Map() };
+      break;
+    case 'groups': {
+      const r = groupsWith(kinData, byId.keys(), s.groups, s.links);
+      const all = new Set([...r.ids, ...r.guests]);
+      const map = all.size > FAMILY_MAX || wholeSection(s.groups) === 'tribes' || listLike(all);
+      c = { ids: r.ids, guests: r.guests, stubs: r.stubs, layout: map ? 'map' : 'family', founders: r.founders, plus: r.plus, founder: soleFounder(s.groups) };
+      break;
+    }
+    case 'lineage': {
+      const r = lineageWith(kinData, s.id, s.dir, s.gen, s.by);
+      c = { ids: r.ids, guests: r.guests, stubs: r.stubs, layout: 'family', founders: EMPTY, plus: r.plus };
+      break;
+    }
+  }
+  // запоминаются недавние составы (лист «Показ» считает числа на каждый флажок)
+  if (contentCache.size >= CONTENT_CACHE) contentCache.delete(contentCache.keys().next().value!);
+  contentCache.set(key, c);
+  return c;
+}
+
+/** Состав нынешнего показа. */
+export const showContent = computed<ShowContent>(() => contentOf(show.value, shownSet.value));
+
+/**
+ * Число лиц показа s до применения (лист «Показ»): все, кто будет на небе, — лица показа и гости. Это же число стоит
+ * в строке «На небе: …» («Дом Нахора» — 17 лиц: 15 лиц созвездия, основатель Нахор и гостья Милка).
+ */
+export function countShow(s: Show): number {
+  const c = contentOf(s);
+  return c.ids.size + c.guests.size;
+}
+/** Числа показа s: лица, гости, обрывки. */
+export function showCounts(s: Show): { ids: number; guests: number; stubs: number } {
+  const c = contentOf(s);
+  return { ids: c.ids.size, guests: c.guests.size, stubs: c.stubs.length };
+}
+
+// ---------- смена показа ----------
+
+/**
+ * Сменить показ. anchor — лицо-опора перехода (§ 10; по умолчанию — выбранное лицо); history — как записать смену
+ * в историю: 'push' (по умолчанию) — новой записью, «назад» вернёт прежний показ; 'replace' — в ту же запись.
+ * Несуществующие созвездия и лица отбрасываются; показ без созвездий или без лица — всё небо.
+ */
+export function setShow(s: Show, o: { anchor?: string | null; history?: 'push' | 'replace' } = {}) {
+  let next: Show = s;
+  if (s.kind === 'groups') {
+    const gs = [...new Set(s.groups)].filter((g) => groupById.has(g));
+    next = gs.length ? { kind: 'groups', groups: gs, links: s.links } : { kind: 'all' };
+  } else if (s.kind === 'lineage' && !byId.has(s.id)) next = { kind: 'all' };
+  const anchor = o.anchor === undefined ? selected.peek() : o.anchor;
+  setShowState(next, { anchor, history: o.history });
+}
+
+// ---------- план неба: укладка ----------
+
+/** Клетки скоплений общей раскладки по модели (списки без родства, E2): лицо → скопление, строка сетки, годы сетки. */
+const cellsByModel = new WeakMap<object, Map<string, { key: string; row: number; rows: number; t0: number; t1: number }>>();
+function clusterCells(m: (typeof models)[number]) {
+  let out = cellsByModel.get(m);
+  if (!out) {
+    out = new Map();
+    for (const b of m.blocks) if (b.cluster) for (const c of b.cluster.cells) out.set(c.id, { key: String(b.id), row: c.row, rows: b.cluster.rows, t0: b.cluster.t0, t1: b.cluster.t1 });
+    cellsByModel.set(m, out);
+  }
+  return out;
+}
+
+/** Данные семейной укладки по модели хронологии: годы знаков и места лиц — те же, что у всего неба. */
+export function familyData(m: (typeof models)[number] = model.value): FamilyData {
+  const spine = new Set(LINE_IDS);
+  const cells = clusterCells(m);
+  return {
+    cluster: (id) => cells.get(id) ?? null,
+    graph,
+    unions,
+    t0: (id) => m.nodeByPerson.get(id)?.t0 ?? m.chrono.get(id)?.b ?? 0,
+    span: (id) => {
+      const c = m.chrono.get(id);
+      const t = m.nodeByPerson.get(id)?.t0 ?? c?.b ?? 0;
+      if (!c) return [t, t + 8];
+      return packSpan({ b: c.b, d: c.d, lastAttested: c.last, cls: c.cls, bLo: c.bLo, bHi: c.bHi, when: c.when, mark: spine.has(id) ? undefined : c.mark });
+    },
+    lines: { joseph: lines.joseph.persons.map((x) => x.id).filter((id) => byId.has(id)), mary: lines.mary.persons.map((x) => x.id).filter((id) => byId.has(id)) },
+  };
+}
+
+/**
+ * Выбранное лицо вне показа (не у всего неба): строка показа называет его («Руфь — вне показа»). Состав показа выбор
+ * не меняет (Я21): на небе такого лица нет, пока читатель не сменит показ.
+ */
+export function outsideOf(s: Show, c: ShowContent, sel: string | null): string | null {
+  return s.kind !== 'all' && sel && byId.has(sel) && !c.ids.has(sel) && !c.guests.has(sel) ? sel : null;
+}
+
+/** Прежняя семейная укладка — априорное условие следующей (устойчивость, § 4.2 п. 6) и опора виртуальных полос. */
+let lastFamily: { res: FamilyResult; lanes: Map<string, number> } | null = null;
+
+/** Лица, свёрнутые у лиц foldDesc (J5): их потомки, кроме лиц линий Мессии. */
+function foldedOf(S: ReadonlySet<string>, roots: readonly string[]): Set<string> {
+  const out = new Set<string>();
+  const spine = new Set(LINE_IDS);
+  for (const r of roots) {
+    if (!S.has(r)) continue;
+    for (const x of walk(graph, r, 'down', null, { other: true }).keys()) if (!spine.has(x)) out.add(x);
+  }
+  return out;
+}
+
+/** Укладки недавних показов: показ и состав → строки (не больше FAMILY_CACHE). */
+const FAMILY_CACHE = 12;
+const familyCache = new Map<string, { res: FamilyResult; lanes: Map<string, number> }>();
+const hashIds = (S: ReadonlySet<string>) => {
+  let x = 2166136261;
+  for (const id of [...S].sort()) {
+    for (let i = 0; i < id.length; i++) x = Math.imul(x ^ id.charCodeAt(i), 16777619);
+    x = Math.imul(x ^ 44, 16777619);
+  }
+  return `${S.size}.${(x >>> 0).toString(36)}`;
+};
+
+const hashLanes = (lanes: ReadonlyMap<string, number>) => {
+  let x = 2166136261;
+  for (const [id, l] of lanes) {
+    for (let i = 0; i < id.length; i++) x = Math.imul(x ^ id.charCodeAt(i), 16777619);
+    x = Math.imul(x ^ (l + 1000), 16777619);
+  }
+  return (x >>> 0).toString(36);
+};
+
+/**
+ * Семейная укладка лиц S: строки → виртуальные полосы. Опора (anchor) остаётся на своей прежней полосе, если она была
+ * в прежней укладке, иначе встаёт на свою полосу общей раскладки; без опоры коридор — у оси.
+ */
+export function familyLanes(S: ReadonlySet<string>, o: { focus?: string | null; anchor?: string | null } = {}): { lanes: Map<string, number>; res: FamilyResult } {
+  const res = familyLayout(S, familyData(), { prior: lastFamily?.res.prior ?? null, focus: o.focus ?? null });
+  const m = model.peek();
+  let off: number;
+  const a = o.anchor && res.rows.has(o.anchor) ? o.anchor : null;
+  const prev = a ? lastFamily?.lanes.get(a) : undefined;
+  if (a && prev !== undefined) off = prev - res.rows.get(a)!;
+  else if (a && m.nodeByPerson.get(a)) off = m.nodeByPerson.get(a)!.lane - res.rows.get(a)!;
+  else {
+    const sp = [...res.spine].map((id) => res.rows.get(id)!).sort((x, y) => x - y);
+    off = sp.length ? -sp[sp.length >> 1] : -Math.floor((res.count - 1) / 2);
+  }
+  const lanes = new Map<string, number>();
+  for (const [id, r] of res.rows) lanes.set(id, r + off);
+  lastFamily = { res, lanes };
+  return { lanes, res };
+}
+
+/**
+ * Показ для плана неба (src/render/rows.ts, ShowIn): небо передаёт его в SkyView.show. В семейной укладке — виртуальные
+ * полосы лиц показа и гостей; свёрнутые потомки (J5) в укладку не входят.
+ */
+export const skyShow = computed<ShowIn>(() => {
+  const s = show.value;
+  const c = showContent.value;
+  const anchor = showAnchor.value ?? selected.peek();
+  const k = `${showKey(s)}|${showLinksField(s) ?? ''}`;
+  if (c.layout === 'map') {
+    return { key: `m|${k}|${s.kind === 'set' ? c.ids.size : ''}`, layout: 'map', ids: s.kind === 'all' ? null : c.ids, guests: c.guests, stubs: c.stubs, lanes: null, anchor, units: null };
+  }
+  void model.value;
+  const S0 = new Set([...c.ids, ...c.guests]);
+  const folded = foldedOf(S0, foldDesc.value);
+  const S = folded.size ? new Set([...S0].filter((x) => !folded.has(x))) : S0;
+  const focus = s.kind === 'lineage' && s.dir === 'both' ? s.id : null;
+  // тот же показ того же состава уже укладывали (например, «назад» к нему): те же строки — окно записи истории встаёт
+  // туда же, где было
+  const ck = `${k}|${model.value.id}|${hashIds(S)}|${focus ?? ''}`;
+  let hit = familyCache.get(ck);
+  if (hit) {
+    familyCache.delete(ck);
+    lastFamily = hit;
+  } else {
+    hit = familyLanes(S, { focus, anchor });
+    if (familyCache.size >= FAMILY_CACHE) familyCache.delete(familyCache.keys().next().value!);
+  }
+  familyCache.set(ck, hit);
+  const { lanes, res } = hit;
+  const guests = folded.size ? new Set([...c.guests].filter((x) => S.has(x))) : c.guests;
+  const stubs = folded.size ? c.stubs.filter((x) => S.has(x.from)) : c.stubs;
+  return { key: `f|${k}|${hashLanes(lanes)}`, layout: 'family', ids: c.ids, guests, stubs, lanes, anchor, units: res.units };
+});
+
+// ---------- строка показа ----------
+
+/** Команда части строки показа. */
+export type ShowCmd =
+  /** открыть лист «Показ» («изменить») */
+  | { kind: 'sheet' }
+  /** перейти к показу («всё небо», «добавить созвездие «Патриархи»») */
+  | { kind: 'show'; show: Show }
+  /** меню поля рода лица: предки/потомки/оба, поколения, по отцам/по крови */
+  | { kind: 'menu'; field: 'dir' | 'gen' | 'by'; options: readonly { label: string; show: Show; current: boolean }[] };
+
+/** Часть строки показа: текст или изменяемая часть (команда). */
+export interface SummaryPart {
+  text: string;
+  cmd?: ShowCmd;
+}
+/** Строка показа: text — предложение «На небе: …» (изменяемые части — с командами), cmds — команды после него. */
+export interface ShowSummary {
+  text: readonly SummaryPart[];
+  cmds: readonly SummaryPart[];
+  /** вся строка без команд — для диктора и подписи */
+  label: string;
+}
+
+const plural = (n: number, one: string, few: string, many: string) =>
+  `${num(n)} ${n % 10 === 1 && n % 100 !== 11 ? one : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? few : many}`;
+export const personsN = (n: number) => plural(n, 'лицо', 'лица', 'лиц');
+const linksN = (n: number) => plural(n, 'связь', 'связи', 'связей');
+/** «5 поколений»; null — все. */
+const genWord = (g: 1 | 2 | 3 | null) => (g === null ? 'все поколения' : g === 1 ? '1 поколение' : `${g} поколения`);
+const DIR_WORD: Record<LineageDir, string> = { down: 'потомки', up: 'предки', both: 'предки и потомки' };
+const BY_WORD: Record<LineageBy, string> = { father: 'по отцам', blood: 'по крови' };
+
+/** Имя с уточнением в родительном падеже: «Иуды (сын Иакова)»; null — имя не склоняется надёжно. */
+function nameGen(id: string): string | null {
+  const p = byId.get(id);
+  if (!p) return null;
+  const g = nameCase(p.name, p.sex, 'gen', p.unnamed, p.alt);
+  return g ? `${g}${p.disambig ? ` (${p.disambig})` : ''}` : null;
+}
+const fullName = (id: string) => {
+  const p = byId.get(id);
+  return p ? `${p.name}${p.disambig ? ` (${p.disambig})` : ''}` : id;
+};
+
+/** Созвездие, куда ведёт больше всего обрывков (чтобы предложить «добавить созвездие …»). */
+function stubTarget(s: Show, c: ShowContent): string | null {
+  if (s.kind !== 'groups' || !c.stubs.length) return null;
+  const n = new Map<string, number>();
+  for (const x of c.stubs) {
+    const g = byId.get(x.to)?.group;
+    if (g && !s.groups.includes(g)) n.set(g, (n.get(g) ?? 0) + 1);
+  }
+  let best: string | null = null;
+  for (const [g, k] of n) if (!best || k > n.get(best)!) best = g;
+  return best;
+}
+
+/** Строка показа s. */
+export function summaryOf(s: Show, c: ShowContent = contentOf(s)): ShowSummary {
+  const text: SummaryPart[] = [{ text: 'На небе: ' }];
+  const cmds: SummaryPart[] = [{ text: 'изменить', cmd: { kind: 'sheet' } }];
+  const toAll: SummaryPart = { text: 'всё небо', cmd: { kind: 'show', show: { kind: 'all' } } };
+  const n = c.ids.size;
+  switch (s.kind) {
+    case 'all':
+      text.push({ text: 'всё небо' });
+      break;
+    case 'lines':
+      text.push({ text: `линии Мессии — ${personsN(n)}` });
+      cmds.push(toAll);
+      break;
+    case 'key':
+      text.push({ text: `ключевые лица — ${personsN(n)}` });
+      cmds.push(toAll);
+      break;
+    case 'set':
+      text.push({ text: `набор — ${personsN(n)}` });
+      cmds.push(toAll);
+      break;
+    case 'groups': {
+      const sec = wholeSection(s.groups);
+      const names = s.groups.map((g) => `«${groupById.get(g)?.name ?? g}»`);
+      if (sec === 'tribes') text.push({ text: 'все колена' });
+      else text.push({ text: `${s.groups.length > 1 ? 'созвездия' : 'созвездие'} ${names.join(', ')}` });
+      const bits = [personsN(n + c.guests.size)];
+      if (c.founder) bits.push(`основатель ${byId.get(c.founder)?.name ?? c.founder}`);
+      if (s.links === 'stubs') bits.push(c.stubs.length ? `${linksN(c.stubs.length)} наружу` : 'связей наружу нет');
+      else if (s.links === 'none') bits.push('без связей наружу');
+      else bits.push('с роднёй вне созвездия');
+      text.push({ text: ` — ${bits.join('; ')}` });
+      const t = stubTarget(s, c);
+      if (t) cmds.push({ text: `добавить созвездие «${groupById.get(t)?.name}»`, cmd: { kind: 'show', show: { ...s, groups: [...s.groups, t] } } });
+      cmds.push(toAll);
+      break;
+    }
+    case 'lineage': {
+      const opt = <T,>(field: 'dir' | 'gen' | 'by', vals: readonly T[], label: (v: T) => string, set: (v: T) => Show, cur: T): SummaryPart => ({
+        text: label(cur),
+        cmd: { kind: 'menu', field, options: vals.map((v) => ({ label: label(v), show: set(v), current: v === cur })) },
+      });
+      text.push(opt<LineageDir>('dir', ['down', 'up', 'both'], (v) => DIR_WORD[v], (v) => ({ ...s, dir: v }), s.dir));
+      const g = nameGen(s.id);
+      text.push({ text: g ? ` ${g} — ` : `: ${fullName(s.id)} — ` });
+      text.push(opt<1 | 2 | 3 | null>('gen', [1, 2, 3, null], genWord, (v) => ({ ...s, gen: v }), s.gen));
+      text.push({ text: '; ' });
+      text.push(opt<LineageBy>('by', ['father', 'blood'], (v) => BY_WORD[v], (v) => ({ ...s, by: v }), s.by));
+      text.push({ text: ` — ${personsN(n + c.guests.size)}` });
+      cmds.shift();
+      cmds.push(toAll);
+      break;
+    }
+  }
+  return { text, cmds, label: text.map((p) => p.text).join('') };
+}
+
+/** Строка показа сейчас; выбранное лицо вне показа — в конце строки: «Давид — вне показа». */
+export const showSummary = computed<ShowSummary>(() => {
+  const s = show.value;
+  const c = showContent.value;
+  const sm = summaryOf(s, c);
+  const out = outsideOf(s, c, selected.value);
+  if (!out) return sm;
+  const part = { text: `; ${fullName(out)} — вне показа` };
+  return { ...sm, text: [...sm.text, part], label: sm.label + part.text };
+});
+
+// ---------- лист «Показ»: разделы созвездий ----------
+
+/** Заголовки разделов листа «Показ» (§ 7), по порядку. */
+export const SECTIONS: readonly { id: GroupSection; name: string }[] = [
+  { id: 'origins', name: 'От Адама до Авраама' },
+  { id: 'patriarchs', name: 'Патриархи и соседние народы' },
+  { id: 'tribes', name: 'Колена Израилевы' },
+  { id: 'kingdoms', name: 'Царства, плен и возвращение' },
+  { id: 'nt', name: 'Новый Завет' },
+  { id: 'other', name: 'Прочие лица' },
+];
+
+export interface GroupRow {
+  id: string;
+  name: string;
+  kind: Group['kind'];
+  /** 0 — созвездие раздела, 1 — дом внутри колена или созвездия */
+  depth: number;
+  parent?: string;
+  /** родоначальник (data/groups.json) */
+  founder?: string;
+  /** лиц в самом созвездии */
+  count: number;
+  /** лиц вместе с вложенными домами */
+  total: number;
+}
+export interface GroupSectionInfo {
+  id: GroupSection;
+  name: string;
+  /** лиц в разделе */
+  count: number;
+  groups: readonly GroupRow[];
+}
+
+let sectionsCache: GroupSectionInfo[] | null = null;
+/** Разделы листа «Показ» с числами лиц: созвездия по порядку данных, вложенные дома — сразу за своим. */
+export function groupSections(): readonly GroupSectionInfo[] {
+  if (sectionsCache) return sectionsCache;
+  const own = new Map<string, number>();
+  for (const p of persons) own.set(p.group, (own.get(p.group) ?? 0) + 1);
+  const depthOf = (g: Group) => {
+    let d = 0;
+    for (let x = g.parent; x && d < 8; x = groupById.get(x)?.parent) d++;
+    return d;
+  };
+  sectionsCache = SECTIONS.map((sec) => {
+    const gs = sectionGroups(sec.id);
+    const rows: GroupRow[] = gs.map((g) => ({
+      id: g.id,
+      name: g.name,
+      kind: g.kind,
+      depth: depthOf(g),
+      ...(g.parent ? { parent: g.parent } : {}),
+      ...(g.founder ? { founder: g.founder } : {}),
+      count: own.get(g.id) ?? 0,
+      total: withHouses(g.id).reduce((a, x) => a + (own.get(x) ?? 0), 0),
+    }));
+    return { id: sec.id, name: sec.name, count: rows.reduce((a, r) => a + r.count, 0), groups: rows };
+  });
+  return sectionsCache;
+}
+
+// ---------- связь с прежними сигналами и наблюдаемость ----------
+
+// флажок «только линии Мессии» (src/state.ts, onlyLines) — производный от показа: показ «линии Мессии» — флажок стоит.
+// Прежние органы неба ещё пишут в него (src/ui/sky/Controls.tsx): запись меняет показ
+effect(() => {
+  const on = show.value.kind === 'lines';
+  if (onlyLines.peek() !== on) onlyLines.value = on;
+});
+let linesFrom: Show | null = null;
+effect(() => {
+  const on = onlyLines.value;
+  const cur = show.peek();
+  if (on && cur.kind !== 'lines') {
+    linesFrom = cur;
+    setShow({ kind: 'lines' });
+  } else if (!on && cur.kind === 'lines') {
+    const back = linesFrom ?? { kind: 'all' };
+    linesFrom = null;
+    setShow(back);
+  }
+});
+// лица показа с гостями — прежнему небу (src/ui/work.ts, shownIds), пока оно не читает skyShow
+effect(() => {
+  const s = show.value;
+  const c = showContent.value;
+  const on = s.kind === 'all' || s.kind === 'set' ? null : c.guests.size ? new Set([...c.ids, ...c.guests]) : c.ids;
+  batch(() => {
+    if (showOn.peek() !== on) showOn.value = on;
+  });
+});
+// показ на корне документа — для сценариев приёмки и отладки: data-show, число лиц, гостей и обрывков, укладка
+if (typeof document !== 'undefined')
+  effect(() => {
+    const s = show.value;
+    const c = showContent.value;
+    const d = document.documentElement.dataset;
+    d.show = showKey(s) + (showLinksField(s) ? `~x${showLinksField(s)}` : '');
+    d.showIds = String(c.ids.size);
+    d.showGuests = String(c.guests.size);
+    d.showStubs = String(c.stubs.length);
+    d.showLayout = c.layout;
+  });
+// выбранная связь — там же (запись src/engine/linkkey.ts): сценарии видят её, не читая холст
+if (typeof document !== 'undefined')
+  effect(() => {
+    const k = selectedLink.value;
+    const d = document.documentElement.dataset;
+    const v = k ? linkKeyString(k) : null;
+    if (v) d.link = v;
+    else delete d.link;
+  });
+
+/** Где лицо id: «в «Патриархах»» (для подписей гостей: «в «Доме Фарры»»). */
+export const whereOf = (id: string): string => inGroup(kinData, byId.get(id)?.group ?? '');

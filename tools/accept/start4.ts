@@ -1,8 +1,13 @@
 /**
  * Сценарии приёмки: раскрытие родословия и союзы (решения 67–72), группа start4: номера 540–559, пять начал, органы
  * и условные знаки (задача M3): выбор начала во вступлении (широкий, невысокий, телефон, 320 px), «Начать заново» в листе
- * «Вид», в «Ещё», в «Разделах» телефона и в «В работе» с подтверждением, строка «Раскрыто N лиц», группы «В работе»
- * после раскрытия, «Условные знаки» и «О карте».
+ * «Вид», в «Ещё», в «Разделах» телефона и в панели «Набор» с подтверждением, группы панели «Набор» после раскрытия,
+ * «Условные знаки» и «О карте».
+ *
+ * Этап 11 (решения 77, 81; задача Q3): древа и строки «Раскрыто N лиц» больше нет. «С Адама» и «С Иисуса Христа» —
+ * набор с одного лица и его карточка у звезды; «Родословие Иисуса Христа», «Ключевые лица» и «Всё небо» — одноимённые
+ * показы, набор они не трогают. Что на небе, говорит строка показа «На небе: …» (html[data-show] — ключ показа,
+ * src/ui/show.ts). Панель «В работе» называется «Набор».
  */
 import type { Page } from 'playwright';
 import { pass, fail, hashId, type Scenario } from './kit.ts';
@@ -27,28 +32,26 @@ async function fresh(p: Page, o: { intro?: boolean; start?: string | null; extra
 }
 /** Что показывает небо: «work» — набор, «all» — все лица (холст пишет режим в data-mode). */
 const mode = (p: Page) => p.evaluate(() => (document.querySelector('.sky canvas') as HTMLElement | null)?.dataset.mode ?? '');
-/** На месте неба — древо карточек (решение 73: начала «С Адама», «С Иисуса Христа», «Родословие», «Ключевые лица»). */
-const inTree = (p: Page) => p.evaluate("!!document.querySelector('.treearea .tree') && !document.querySelector('.sky canvas')");
-/** Переключатель «Небо | Древо» верхней строки: «Небо» — те же раскрытые лица на небе «набор» (решение 73). */
-async function toSky(p: Page) {
-  await p.locator('.top .view-switch button', { hasText: 'Небо' }).click();
-  await p.waitForTimeout(1600);
-}
-/** Рабочий набор из памяти браузера: id по порядку. */
+/** Ключ показа неба (src/ui/show.ts пишет его в html[data-show]): «a» — всё небо, «l» — линии, «k» — ключевые, «s» — набор. */
+const showOf = (p: Page) => p.evaluate(() => document.documentElement.dataset.show ?? '');
+/** Набор из памяти браузера: id по порядку. */
 const work = async (p: Page) => ((await p.evaluate(() => JSON.parse(localStorage.getItem('toledot:work') ?? '[]'))) as [string, unknown][]).map((r) => r[0]);
 const startOf = (p: Page) => p.evaluate(() => JSON.parse(localStorage.getItem('toledot:start') ?? 'null') as string | null);
-/** Строка раскрытия у кромки неба: текст, команды, высота. */
-async function revealBar(p: Page) {
+/** Строка показа у кромки неба (этап 11; на месте прежней строки «Раскрыто N лиц»): текст, команды, высота. */
+async function showBar(p: Page) {
   return (await p.evaluate(`(() => {
-    const b = document.querySelector('.skytop .pickbar.revealbar');
+    const b = document.querySelector('.skytop .showbar');
     if (!b) return null;
-    const t = b.querySelector('.txt');
     const vis = (e) => getComputedStyle(e).display !== 'none' && e.getBoundingClientRect().width > 0;
     const r = b.getBoundingClientRect();
-    return { text: t.textContent, cut: t.scrollWidth - t.clientWidth, h: r.height, l: r.left, r: r.right, W: innerWidth,
-      cmds: [...b.querySelectorAll('button')].filter(vis).map((x) => x.textContent.trim()) };
+    const over = [...b.querySelectorAll('*')].some((e) => e.scrollWidth > e.clientWidth + 1 && getComputedStyle(e).overflow === 'hidden');
+    return { text: b.textContent.replace(/\s*—\s*/g, ' — '), cut: over ? 1 : 0, h: r.height, l: r.left, r: r.right, W: innerWidth,
+      cmds: [...b.querySelectorAll('.sb-cmd')].filter(vis).map((x) => x.textContent.trim()) };
   })()`)) as { text: string; cut: number; h: number; l: number; r: number; W: number; cmds: string[] } | null;
 }
+/** Карточка у звезды лица id открыта (решение 77): диалог .dotcard вида «лицо» с его именем. */
+const cardAt = (p: Page, name: string) =>
+  p.evaluate((nm) => [...document.querySelectorAll('.dotcard[data-kind="person"][data-placed], .sheet-dot .dotcard')].some((c) => c.querySelector('.nm')?.textContent?.trim() === nm), name);
 /** Кнопки начал в элементе sel: названия, текущее, размеры. */
 async function starts(p: Page, sel: string) {
   return (await p.evaluate(`[...document.querySelectorAll(${JSON.stringify(sel)} + ' .starts button')].map((b) => {
@@ -81,7 +84,7 @@ async function starAt(p: Page, id: string): Promise<{ x: number; y: number } | n
 export const start4: Scenario[] = [
   {
     n: 540,
-    title: 'Решения 68, 73: первое посещение (1440 × 900) — вступление предлагает пять начал с пояснениями, входы — ниже; «С Адама» сворачивает вступление и открывает древо с одним Адамом, строка «Раскрыто 1 лицо — показать всё небо | начать заново»; «Небо» — небо «набор»',
+    title: 'Решения 68, 77, 81: первое посещение (1440 × 900) — вступление предлагает пять начал с пояснениями, входы — ниже; «С Адама» сворачивает вступление: набор из одного Адама, у его звезды — карточка, строка показа «На небе: набор — 1 лицо — изменить | всё небо»; «всё небо» — показ всех лиц, набор прежний',
     run: async (p) => {
       await fresh(p, { intro: true });
       if (!(await p.locator('.sky .cartouche').count())) return fail('вступления нет');
@@ -93,35 +96,31 @@ export const start4: Scenario[] = [
       if (!entry || entry.y < s[4].top + s[4].h - 1) return fail('быстрые входы не ниже начал');
       if ((await p.locator('.cartouche .entry button').count()) !== 7) return fail('быстрых входов не семь');
       await p.locator('.cartouche .starts button', { hasText: 'С Адама' }).click();
-      await p.waitForTimeout(1800);
+      await p.waitForTimeout(2200);
       if (await p.locator('.cartouche').count()) return fail('вступление не свернулось');
-      // решение 73: начало «С Адама» открывает древо; «Как читать карту» — в его углу
-      if (!(await inTree(p))) return fail('«С Адама» не открыл древо');
-      if (!(await p.locator('.treearea .guide-cmd').count())) return fail('нет «Как читать карту»');
+      // этап 11 (решение 77): древа нет — «С Адама» открывает небо «набор» с одним Адамом и его карточкой у звезды
+      if (await p.locator('.treearea').count()) return fail('на месте неба — древо');
+      if (!(await p.locator('.sky .guide-cmd').count())) return fail('нет «Как читать карту»');
       if ((await startOf(p)) !== 'adam') return fail(`начало в памяти: ${await startOf(p)}`);
       const w = await work(p);
       if (w.join(',') !== 'adam') return fail(`набор: ${w.join(', ')}`);
       if (hashId(p) !== 'adam') return fail(`выбрано «${hashId(p)}»`);
-      const b = await revealBar(p);
-      if (!b) return fail('нет строки раскрытия');
-      if (flat(b.text) !== 'Раскрыто 1 лицо') return fail(`строка: «${flat(b.text)}»`);
-      if (b.cmds.join('|') !== 'показать всё небо|начать заново') return fail(`команды строки: ${b.cmds.join(' | ')}`);
-      // «Небо» — тот же набор на небе «набор», со своей строкой раскрытия и «Как читать карту»
-      await toSky(p);
-      if ((await mode(p)) !== 'work') return fail(`небо: ${await mode(p)}`);
-      if (!(await p.locator('.sky .guide-cmd').count())) return fail('на небе нет «Как читать карту»');
-      const bs = await revealBar(p);
-      if (!bs || flat(bs.text) !== 'Раскрыто 1 лицо' || bs.cmds.join('|') !== 'показать всё небо|начать заново') return fail(`строка неба: ${bs ? `${flat(bs.text)} — ${bs.cmds.join(' | ')}` : 'нет'}`);
-      // «показать всё небо» — небо «все лица», раскрытое остаётся в наборе
-      await p.locator('.skytop .revealbar button', { hasText: 'показать всё небо' }).click();
-      await p.waitForTimeout(800);
-      if ((await mode(p)) !== 'all') return fail('«показать всё небо» не показал все лица');
-      return (await work(p)).join(',') === 'adam' ? pass() : fail('«показать всё небо» изменил набор');
+      if ((await showOf(p)) !== 's') return fail(`показ: ${await showOf(p)}`);
+      if (!(await cardAt(p, 'Адам'))) return fail('у звезды Адама нет карточки');
+      const b = await showBar(p);
+      if (!b) return fail('нет строки показа');
+      if (!/^На небе: набор — 1 лицо/.test(flat(b.text))) return fail(`строка: «${flat(b.text)}»`);
+      if (b.cmds.join('|') !== 'изменить|всё небо') return fail(`команды строки: ${b.cmds.join(' | ')}`);
+      // «всё небо» — показ всех лиц; набор остаётся
+      await p.locator('.skytop .showbar .sb-cmd', { hasText: 'всё небо' }).click();
+      await p.waitForTimeout(1200);
+      if ((await showOf(p)) !== 'a' || (await mode(p)) !== 'all') return fail('«всё небо» не показало все лица');
+      return (await work(p)).join(',') === 'adam' ? pass() : fail('«всё небо» изменило набор');
     },
   },
   {
     n: 541,
-    title: 'Решение 68, UX-56, UX-70: 1024 × 768 и 1366 × 768 — начала в два столбца в пределах вступления, вступление не прокручивается, главная фраза и входы видны; «Родословие Иисуса Христа» — обе линии в наборе',
+    title: 'Решения 68, 81; UX-56, UX-70: 1024 × 768 и 1366 × 768 — начала в два столбца в пределах вступления, вступление не прокручивается, главная фраза и входы видны; «Родословие Иисуса Христа» — показ «линии Мессии», набор не тронут',
     view: { width: 1024, height: 768 },
     run: async (p) => {
       const out: string[] = [];
@@ -148,21 +147,20 @@ export const start4: Scenario[] = [
         out.push(`${w}: 2 × 3`);
       }
       await p.locator('.cartouche .starts button', { hasText: 'Родословие Иисуса Христа' }).click();
-      await p.waitForTimeout(1800);
-      const ids = await work(p);
-      for (const id of ['adam', 'david', 'solomon', 'nafan-syn-davida', 'iosif-muzh-marii', 'mariya', 'iisus']) if (!ids.includes(id)) return fail(`в наборе нет ${id}`);
-      const b = await revealBar(p);
-      const n = Number(/\d+/.exec(flat(b?.text ?? ''))?.[0]);
-      if (n !== ids.length) return fail(`строка «${flat(b?.text ?? '')}», в наборе ${ids.length}`);
-      // решение 73: родословие открывается древом; «Небо» — те же лица на небе «набор»
-      if (!(await inTree(p))) return fail('«Родословие Иисуса Христа» не открыло древо');
-      await toSky(p);
-      return (await mode(p)) === 'work' ? pass(`${out.join('; ')}; линии — ${n} лиц`) : fail('небо не «набор»');
+      await p.waitForTimeout(2000);
+      // этап 11 (решение 81): «Родословие Иисуса Христа» — показ «линии Мессии», набор не заменяется
+      if ((await showOf(p)) !== 'l') return fail(`показ: ${await showOf(p)}`);
+      if ((await work(p)).length) return fail(`набор: ${(await work(p)).join(', ')}`);
+      const n = Number(await p.evaluate(() => document.documentElement.dataset.showIds ?? '0'));
+      const b = await showBar(p);
+      const said = Number(/линии Мессии — (\d+)/.exec(flat(b?.text ?? '').replace(/(\d) (\d)/g, '$1$2'))?.[1]);
+      if (!(n > 100) || said !== n) return fail(`строка «${flat(b?.text ?? '')}», в показе ${n}`);
+      return (await mode(p)) === 'work' ? pass(`${out.join('; ')}; линии — ${n} лиц`) : fail('небо показывает не только линии');
     },
   },
   {
     n: 542,
-    title: 'Решения 68, 73: телефон 390 × 844 — начала столбцом, цели 44 px во всю ширину; «Ключевые лица» — древо ключевых лиц; строка раскрытия — одна строка «Раскрыто N лиц — все лица | начать заново»; «начать заново» — вступление с началами',
+    title: 'Решения 68, 81: телефон 390 × 844 — начала столбцом, цели 44 px во всю ширину; «Ключевые лица» — показ ключевых лиц; строка показа — одна строка «На небе: ключевые лица — N лиц», без обрезки; «изменить» — лист «Показ», текущий вид отмечен',
     view: { width: 390, height: 844, touch: true },
     run: async (p) => {
       await fresh(p, { intro: true });
@@ -176,30 +174,28 @@ export const start4: Scenario[] = [
       if (s.some((x) => x.w < cb.width * 0.7)) return fail('начало не во всю ширину вступления');
       await p.locator('.cartouche .starts button', { hasText: 'Ключевые лица' }).tap();
       await p.waitForTimeout(2000);
-      const ids = await work(p);
-      for (const id of ['adam', 'noy', 'avraam', 'moisey', 'david', 'iisus', 'ruf', 'mariya']) if (!ids.includes(id)) return fail(`в ключевых нет ${id}`);
-      const b = await revealBar(p);
-      if (!b) return fail('нет строки раскрытия');
-      if (flat(b.text) !== `Раскрыто ${ids.length} лиц` && !/^Раскрыто \d+ лиц(а|о)?$/.test(flat(b.text))) return fail(`строка: «${flat(b.text)}»`);
+      if ((await showOf(p)) !== 'k') return fail(`показ: ${await showOf(p)}`);
+      const n = Number(await p.evaluate(() => document.documentElement.dataset.showIds ?? '0'));
+      if (n < 40) return fail(`ключевых лиц: ${n}`);
+      const b = await showBar(p);
+      if (!b) return fail('нет строки показа');
+      if (!/^На небе: ключевые лица — \d+ (лицо|лица|лиц)/.test(flat(b.text))) return fail(`строка: «${flat(b.text)}»`);
       if (b.h > 50) return fail(`строка в ${b.h.toFixed(0)} px — не одна`);
       if (b.cut > 1) return fail('текст строки обрезан');
-      if (b.cmds.join('|') !== 'все лица|начать заново') return fail(`команды: ${b.cmds.join(' | ')}`);
-      if (b.r > b.W) return fail('строка за правым краем');
-      if (!(await inTree(p))) return fail('«Ключевые лица» не открыли древо');
-      // «начать заново» в древе (решение 73) — вступление с началами, текущее отмечено: листа «Вид» у древа нет
-      await p.locator('.skytop .revealbar button', { hasText: 'начать заново' }).tap();
-      await p.waitForTimeout(700);
-      const sh = await starts(p, '.treearea .cartouche');
-      if (labels(sh) !== NAMES.join('|')) return fail(`во вступлении древа начала: ${labels(sh)}`);
-      if (sh.find((x) => x.cur)?.t !== 'Ключевые лица') return fail('во вступлении не отмечено текущее начало');
+      if (b.r > b.W + 0.5) return fail('строка за правым краем');
+      await p.locator('.skytop .showbar .sb-cmd', { hasText: 'изменить' }).tap();
+      await p.waitForTimeout(600);
+      const cur = await p.locator('.showsheet input[name="show-kind"]:checked').getAttribute('value');
+      if (cur !== 'key') return fail(`в листе «Показ» отмечено «${cur}»`);
       const vh = await p.evaluate(() => innerHeight);
-      if (sh.some((x) => x.top < 0 || x.top + x.h > vh)) return fail('начала вступления за краем экрана');
-      return pass(`${ids.length} ключевых лиц, строка ${b.h.toFixed(0)} px`);
+      const sb = (await p.locator('.showsheet').boundingBox())!;
+      if (sb.y < 0 || sb.y + Math.min(sb.height, 200) > vh) return fail('лист «Показ» за краем экрана');
+      return pass(`${n} ключевых лиц, строка ${b.h.toFixed(0)} px`);
     },
   },
   {
     n: 543,
-    title: 'Решение 68, MOB-70: 320 × 568 пальцем — укороченное вступление с командой «С чего начать» (44 px, в пределах таблички, мимо кнопок неба); она открывает лист «Вид» на «Начале»; «С Иисуса Христа» — один Иисус Христос, строка в одну строку',
+    title: 'Решение 68, MOB-70: 320 × 568 пальцем — укороченное вступление с командой «С чего начать» (44 px, в пределах таблички, мимо кнопок неба); она открывает лист «Вид» на «Начале»; «С Иисуса Христа» — набор из одного Иисуса Христа, строка показа в одну строку',
     view: { width: 320, height: 568, touch: true },
     run: async (p) => {
       await fresh(p, { intro: true });
@@ -232,20 +228,22 @@ export const start4: Scenario[] = [
       await p.waitForTimeout(1800);
       if (await p.locator('.sky .sheet .starts').count()) return fail('лист «Вид» не закрылся после выбора');
       if ((await work(p)).join(',') !== 'iisus') return fail(`набор: ${(await work(p)).join(', ')}`);
-      const b = await revealBar(p);
-      if (!b) return fail('нет строки раскрытия');
+      const b = await showBar(p);
+      if (!b) return fail('нет строки показа');
       if (b.h > 50 || b.cut > 1) return fail(`строка ${b.h.toFixed(0)} px, обрезано ${b.cut} px`);
-      return b.cmds.join('|') === 'все лица' ? pass(`«${flat(b.text)}» — все лица`) : fail(`команды на 320 px: ${b.cmds.join(' | ')}`);
+      if (b.r > b.W + 0.5) return fail('строка за правым краем');
+      return /^На небе: набор — 1 лицо/.test(flat(b.text)) ? pass(`«${flat(b.text)}»`) : fail(`строка на 320 px: «${flat(b.text)}»`);
     },
   },
   {
     n: 544,
-    title: 'Решения 68, 73: вступление закрыто, начало не выбрано — небо «все лица», без строки; в листе «Вид» — «Начало» без отметки; «Родословие Иисуса Христа» закрывает лист и раскрывает обе линии древом',
+    title: 'Решения 68, 81: вступление закрыто, начало не выбрано — показ «всё небо», строка «На небе: всё небо — изменить»; в листе «Вид» — «Начало» без отметки; «Родословие Иисуса Христа» закрывает лист и показывает обе линии',
     run: async (p) => {
       await fresh(p, { intro: false });
       if (await p.locator('.sky .cartouche').count()) return fail('вступление открыто');
-      if ((await mode(p)) !== 'all') return fail(`небо: ${await mode(p)}`);
-      if (await p.locator('.skytop .workbar').count()) return fail('строка набора без набора');
+      if ((await mode(p)) !== 'all' || (await showOf(p)) !== 'a') return fail(`небо: ${await mode(p)}, показ ${await showOf(p)}`);
+      const b0 = await showBar(p);
+      if (!b0 || flat(b0.text) !== 'На небе: всё небо — изменить') return fail(`строка показа: «${flat(b0?.text ?? '')}»`);
       await p.locator('.skyctl .view-toggle').click();
       await p.waitForTimeout(400);
       const s = await starts(p, '.viewpop');
@@ -260,24 +258,25 @@ export const start4: Scenario[] = [
       await p.locator('.viewpop .starts button', { hasText: 'Родословие Иисуса Христа' }).click();
       await p.waitForTimeout(1600);
       if (await p.locator('.viewpop').count()) return fail('лист «Вид» не закрылся');
-      if (!(await inTree(p))) return fail('не древо');
-      const ids = await work(p);
-      const b = await revealBar(p);
-      return b && Number(/\d+/.exec(flat(b.text))?.[0]) === ids.length && ids.includes('iisus') && ids.includes('adam') ? pass(`«${flat(b.text)}»`) : fail(`строка «${flat(b?.text ?? '')}», набор ${ids.length}`);
+      if ((await showOf(p)) !== 'l') return fail(`показ: ${await showOf(p)}`);
+      const b = await showBar(p);
+      return b && /^На небе: линии Мессии — /.test(flat(b.text)) && !(await work(p)).length ? pass(`«${flat(b.text)}»`) : fail(`строка «${flat(b?.text ?? '')}», набор ${(await work(p)).length}`);
     },
   },
   {
     n: 545,
-    title: 'Решение 68: «Начать заново» из листа «Вид» с набором больше одного лица — «Набор из N лиц будет заменён — начать заново | отмена»; «отмена» ничего не меняет и возвращает фокус; «начать заново» заменяет набор',
+    title: 'Решения 68, 81: «Начать заново» из листа «Вид» с набором больше одного лица — «С Адама» спрашивает «Набор из N лиц будет заменён — начать заново | отмена»; «отмена» ничего не меняет и возвращает фокус; «начать заново» заменяет набор; показы («Родословие») набор не трогают и не спрашивают',
     run: async (p) => {
-      await fresh(p, { intro: false });
+      await fresh(p, { intro: false, start: 'adam', extra: ADAM_KAIN });
+      const before = await work(p);
+      if (before.length !== 6) return fail(`набор до начала: ${before.join(', ')}`);
       await p.locator('.skyctl .view-toggle').click();
       await p.waitForTimeout(300);
+      // показ — без вопроса и без замены набора (этап 11, § 5)
       await p.locator('.viewpop .starts button', { hasText: 'Родословие Иисуса Христа' }).click();
       await p.waitForTimeout(1500);
-      const before = await work(p);
-      // родословие открылось древом (решение 73); лист «Вид» — у неба
-      await toSky(p);
+      if (await p.locator('.viewpop .starts-ask').count()) return fail('«Родословие» спросило подтверждение');
+      if ((await work(p)).length !== before.length) return fail('«Родословие» изменило набор');
       await p.locator('.skyctl .view-toggle').click();
       await p.waitForTimeout(300);
       const s = await starts(p, '.viewpop');
@@ -328,18 +327,15 @@ export const start4: Scenario[] = [
   },
   {
     n: 547,
-    title: 'Решение 68: «В работе» — раздел «Начать заново»: пять начал с пояснениями, текущее отмечено; «Всё небо» без вопроса — небо «все лица», набор прежний',
+    title: 'Решения 68, 81: панель «Набор» — раздел «Начать заново»: пять начал с пояснениями, текущее отмечено; «Всё небо» без вопроса — показ всех лиц, набор прежний',
     run: async (p) => {
-      await fresh(p, { intro: false });
-      await p.locator('.skyctl .view-toggle').click();
-      await p.waitForTimeout(300);
-      await p.locator('.viewpop .starts button', { hasText: 'Ключевые лица' }).click();
-      await p.waitForTimeout(1500);
+      await fresh(p, { intro: false, start: 'key', extra: ADAM_KAIN });
       const n = (await work(p)).length;
-      await p.locator('.commands > button', { hasText: 'В работе' }).click();
+      // этап 11 (Я30): панель «В работе» называется «Набор»
+      await p.locator('.commands > button', { hasText: 'Набор' }).click();
       await p.waitForTimeout(600);
       const head = p.locator('.sheet h3#work-start');
-      if (!(await head.count()) || (await head.innerText()).trim() !== 'Начать заново') return fail('в «В работе» нет раздела «Начать заново»');
+      if (!(await head.count()) || (await head.innerText()).trim() !== 'Начать заново') return fail('в панели «Набор» нет раздела «Начать заново»');
       const s = await starts(p, '.sheet');
       if (labels(s) !== NAMES.join('|')) return fail(`начала: ${labels(s)}`);
       if (s.find((x) => x.cur)?.t !== 'Ключевые лица') return fail('текущее начало не отмечено');
@@ -348,21 +344,21 @@ export const start4: Scenario[] = [
       await p.locator('.sheet .starts button', { hasText: 'Всё небо' }).click();
       await p.waitForTimeout(900);
       if (await p.locator('.sheet .starts-ask').count()) return fail('«Всё небо» спросило подтверждение');
-      if ((await mode(p)) !== 'all') return fail('небо не «все лица»');
+      if ((await mode(p)) !== 'all' || (await showOf(p)) !== 'a') return fail('небо не «всё небо»');
       if ((await work(p)).length !== n) return fail('«Всё небо» изменило набор');
       return (await startOf(p)) === 'all' ? pass(`набор ${n} лиц сохранён`) : fail('начало не «всё небо»');
     },
   },
   {
     n: 548,
-    title: 'Решение 72: раскрытие Адам → Ева, Каин, Авель, Сиф → Каин → Енох — в «В работе» группы «Адам и его семья (5)» и «Семья Каина (1)»; строка «Раскрыто 6 лиц»',
+    title: 'Решения 72, 81: раскрытие Адам → Ева, Каин, Авель, Сиф → Каин → Енох — строка показа «На небе: набор — 6 лиц»; в панели «Набор» группы «Адам и его семья (5)» и «Семья Каина (1)»',
     run: async (p) => {
-      // адрес вида «набор» (~k1) — как его пишет атлас после щелчков по союзам
+      // адрес вида «набор» (~k1 — прежнее поле, открывается показом «набор») — как его писал атлас после щелчков по союзам
       await fresh(p, { intro: false, start: 'adam', extra: ADAM_KAIN }, '#/~k1');
-      if ((await mode(p)) !== 'work') return fail(`небо: ${await mode(p)}`);
-      const b = await revealBar(p);
-      if (!b || flat(b.text) !== 'Раскрыто 6 лиц') return fail(`строка: «${flat(b?.text ?? '')}»`);
-      await p.locator('.commands > button', { hasText: 'В работе' }).click();
+      if ((await mode(p)) !== 'work' || (await showOf(p)) !== 's') return fail(`небо: ${await mode(p)}, показ ${await showOf(p)}`);
+      const b = await showBar(p);
+      if (!b || !/^На небе: набор — 6 лиц/.test(flat(b.text))) return fail(`строка: «${flat(b?.text ?? '')}»`);
+      await p.locator('.commands > button', { hasText: 'Набор' }).click();
       await p.waitForTimeout(600);
       const heads = (await p.locator('.sheet .wg-head').allInnerTexts()).map(flat);
       if (heads.join(' | ') !== 'Адам и его семья (5) | Семья Каина (1)') return fail(`группы: ${heads.join(' | ')}`);
@@ -406,13 +402,13 @@ export const start4: Scenario[] = [
   },
   {
     n: 550,
-    title: 'Решения 67–72, 76: «Условные знаки» — союз на небе точкой, плюс нераскрытых союзов, подсветка ветвей, пять начал, щелчок по лицу и по точке союза и Enter на ней в «Клавишах»; «О карте» — абзац о началах и раскрытии',
+    title: 'Решения 67–72, 76–78: «Условные знаки» — союз на небе ромбом, плюс нераскрытых союзов, подсветка ветвей, пять начал; в «Клавишах» — щелчок по звезде и по ромбу союза, Enter на них; «О карте» — абзац о началах и раскрытии',
     run: async (p) => {
       await fresh(p, { intro: false });
       await p.locator('.commands > button', { hasText: 'Условные знаки' }).click();
       await p.waitForTimeout(800);
       const t = flat(await p.locator('.app > .sheet').innerText());
-      for (const w of ['Союз на небе', 'Плюс без числа после имени', 'Подсветка ветвей выбранного лица', '«С Иисуса Христа»', '«Начать заново»', 'щелчок по точке союза', 'на звезде или точке союза в небе «набор»', 'щелчок по лицу в небе «набор»'])
+      for (const w of ['Союз на небе', 'Плюс без числа после имени', 'Подсветка ветвей выбранного лица', '«С Иисуса Христа»', '«Начать заново»', 'щелчок по ромбу союза', 'на звезде или ромбе союза', 'щелчок по звезде'])
         if (!t.includes(w)) return fail(`в «Условных знаках» нет «${w}»`);
       await p.locator('.commands > button', { hasText: 'О карте' }).click();
       await p.waitForTimeout(800);
@@ -423,14 +419,13 @@ export const start4: Scenario[] = [
   },
   {
     n: 551,
-    title: 'Решение 68: «дальше атлас открывается как в прошлый раз» — новый сеанс (память сеанса пуста) после раскрытия от Адама открывает небо «набор» со строкой «Раскрыто 6 лиц»',
+    title: 'Решение 68: «дальше атлас открывается как в прошлый раз» — новый сеанс (память сеанса пуста) после раскрытия от Адама открывает показ «набор» со строкой «На небе: набор — 6 лиц»',
     run: async (p) => {
       // fresh очищает память сеанса: как новая вкладка на следующий день
       await fresh(p, { intro: false, start: 'adam', extra: ADAM_KAIN });
-      if ((await mode(p)) !== 'work')
-        return fail(`новый сеанс открыл небо «${await mode(p)}», а не «набор»: src/ui/work.ts пишет «all» в память сеанса раньше проверки src/ui/reveal.ts, а адрес без полей вида (src/ui/address.ts, applyWork) ставит «все лица»`);
-      const b = await revealBar(p);
-      return b && flat(b.text) === 'Раскрыто 6 лиц' ? pass() : fail(`строка: «${flat(b?.text ?? '')}»`);
+      if ((await mode(p)) !== 'work' || (await showOf(p)) !== 's') return fail(`новый сеанс открыл небо «${await mode(p)}» (показ ${await showOf(p)}), а не «набор»`);
+      const b = await showBar(p);
+      return b && /^На небе: набор — 6 лиц/.test(flat(b.text)) ? pass() : fail(`строка: «${flat(b?.text ?? '')}»`);
     },
   },
   {

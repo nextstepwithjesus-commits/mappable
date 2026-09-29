@@ -52,6 +52,10 @@ export const hovered = signal<string | null>(null);
 export const focused = signal<string | null>(null);
 export const panel = signal<Panel>(null);
 export const pickMode = signal<null | 'kinship' | 'spread'>(null);
+/**
+ * «Только линии Мессии» — производный от показа (этап 11, решение 81; src/ui/show.ts): стоит, пока показ — «линии Мессии».
+ * Запись в него (прежние органы неба) меняет показ. Уйдёт, когда его перестанут читать.
+ */
 export const onlyLines = signal(false);
 export const epochMode = signal(false);
 export const meridian = signal<number | null>(null); // год меридиана (астр.)

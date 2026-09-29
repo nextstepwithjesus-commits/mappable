@@ -164,8 +164,8 @@ describe('«в работу» в поиске и микрошкала (IX-84, VI
     const was = workSet.peek();
     try {
       const said = searchRowCmd.run('iessey');
-      expect(said).toMatch(/^Иессей взят в работу; в наборе \d+ (лицо|лица|лиц)$/);
-      expect(searchRowCmd.run('iessey')).toMatch(/^Иессей убран из работы; /);
+      expect(said).toMatch(/^Иессей добавлен в набор; в наборе \d+ (лицо|лица|лиц)$/);
+      expect(searchRowCmd.run('iessey')).toMatch(/^Иессей убран из набора; /);
     } finally {
       workSet.value = was;
     }

@@ -9,9 +9,10 @@
   :root {
     --top-h: 48px;
     --strip-h: 56px;
-    /* нижний лист карточки (H2; ТЗ § 3.8): шапка 104 px, 55 % и весь экран между верхней строкой и полосой времени.
-       100 % — по динамической высоте окна (dvh), 55 % — по малой (svh): положение не прыгает, когда прячется адресная строка */
-    --sheet-peek: 104px;
+    /* нижний лист карточки (H2; ТЗ § 3.8): карточка у звезды 214 px (этап 11, решение 77), 55 % и весь экран между
+       верхней строкой и полосой времени. 100 % — по динамической высоте окна (dvh), 55 % — по малой (svh): положение не
+       прыгает, когда прячется адресная строка */
+    --sheet-peek: 214px;
     --sheet-avail: calc(100dvh - var(--top-h) - var(--strip-h) - env(safe-area-inset-top) - env(safe-area-inset-bottom));
     --sheet-half: calc((100svh - var(--top-h) - var(--strip-h) - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * 0.55);
     /* закреплённая шапка листа без годов: ручка 12 px и строка 44 px */
@@ -236,6 +237,31 @@
     min-width: 44px;
     height: 44px;
     margin: 0;
+  }
+  /* карточка у звезды в листе на 214 px (решение 77): «×» — в углу листа, строки «Родства» — по всей ширине */
+  .folio .sheet-bar.sheet-dot {
+    position: relative;
+    padding: 0 8px 4px 16px;
+  }
+  .folio .sheet-dot > .close {
+    position: absolute;
+    top: 8px;
+    right: 4px;
+  }
+  .folio .sheet-dot .dc-top {
+    padding-right: 44px;
+  }
+  .folio .sheet-dot .dc-kin {
+    margin: 6px 0 0;
+    padding: 4px 0 2px;
+  }
+  .folio .sheet-dot .dc-cmds {
+    margin: 2px -8px 0;
+    padding: 0;
+  }
+  .folio .sheet-dot .dc-cmds .cmd,
+  .folio .sheet-dot .dc-cmds .menu > button {
+    min-height: 44px;
   }
   .folio .bar-years {
     padding: 0 0 2px;
@@ -577,13 +603,15 @@
   .person,
   .ref,
   .sec .see,
-  button.why {
+  button.why,
+  .passport .pass-link {
     position: relative;
   }
   .person::after,
   .ref::after,
   .sec .see::after,
-  button.why::after {
+  button.why::after,
+  .passport .pass-link::after {
     content: '';
     position: absolute;
     left: -2px;
@@ -650,20 +678,3 @@
   }
 }
 
-/* древо на телефоне (решение 73): полосы времени нет — древо на весь экран между верхней строкой и листом карточки;
-   положения листа считаются без полосы */
-@media (max-width: 720px) {
-  /* органы древа (tree.css) на телефоне — ряд кнопок 44 px почти во всю ширину у нижнего края: «Как читать карту» и
-     свёрнутое вступление — над ним */
-  .treearea > .guide-cmd {
-    bottom: calc(8px + max(44px, 2.75rem) + 10px);
-  }
-  .treearea > .cartouche {
-    bottom: calc(8px + max(44px, 2.75rem) + 10px);
-  }
-  .app.in-tree {
-    --strip-h: 0px;
-    --sheet-avail: calc(100dvh - var(--top-h) - env(safe-area-inset-top) - env(safe-area-inset-bottom));
-    --sheet-half: calc((100svh - var(--top-h) - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * 0.55);
-  }
-}

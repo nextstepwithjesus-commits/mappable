@@ -15,14 +15,16 @@
  *  — expanded — раскрытые союзы: id союза → лицо, от которого раскрыли (родитель — вниз, ребёнок — вверх).
  *    Свёртка союза убирает тех, кого он раскрыл, и всё, что раскрыли от них.
  *
- * Пять начал (решение 68): с Адама, с Иисуса Христа, родословие Иисуса Христа (обе линии), ключевые лица, всё небо.
- * При первом посещении атлас предлагает выбрать начало; дальше открывается как в прошлый раз (память браузера).
+ * Пять начал (решение 68; этап 11, § 5): «С Адама» и «С Иисуса Христа» — набор с одного лица, его карточка у звезды
+ * открыта; «Родословие Иисуса Христа» — показ «линии Мессии»; «Ключевые лица» и «Всё небо» — одноимённые показы
+ * (src/ui/show.ts). При первом посещении атлас предлагает выбрать начало; дальше открывается как в прошлый раз.
  */
 import { batch, computed, effect, signal } from '@preact/signals';
 import { byId, graph, lineMembership, persons } from '../data/atlas.ts';
 import { buildUnions, membersOf, type Union } from '../engine/unions.ts';
 import { selected } from '../state.ts';
-import { skyMode, skyModeSaved, workSet, type WorkEntry } from './work.ts';
+import { num } from './text/typo.ts';
+import { setShowState, show, showRestored, workSet, type Show, type WorkEntry } from './work.ts';
 
 // ---------- хранилище ----------
 
@@ -57,22 +59,24 @@ export const originOf = (id: string): Union[] => unions.origin.get(id) ?? [];
 
 // ---------- начало (решение 68) ----------
 
+/** «лицо», «лица», «лиц» — по числу. */
+const personsWord = (n: number) => (n % 10 === 1 && n % 100 !== 11 ? 'лицо' : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 'лица' : 'лиц');
+
 export type Start = 'adam' | 'jesus' | 'lines' | 'key' | 'all';
 export const STARTS: readonly { value: Start; label: string; hint: string }[] = [
-  { value: 'adam', label: 'С Адама', hint: 'В древе только Адам. «Продолжить ветвь» покажет его союз с Евой, «Раскрыть детей» — их детей, и так дальше.' },
-  { value: 'jesus', label: 'С Иисуса Христа', hint: 'В древе только Иисус Христос. «Родители» раскрывает родословие вверх, до Адама.' },
-  { value: 'lines', label: 'Родословие Иисуса Христа', hint: 'Обе линии — по Матфею и по Луке — от Адама до Иисуса Христа; остальные ветви раскрываются на карточках.' },
-  { value: 'key', label: 'Ключевые лица', hint: 'Главные лица истории Писания; их ветви раскрываются на карточках.' },
-  { value: 'all', label: 'Всё небо', hint: 'Все 2 660 лиц на звёздном небе; ветви и созвездия можно сворачивать.' },
+  { value: 'adam', label: 'С Адама', hint: 'На небе только Адам и его карточка. «+N» у ромба союза раскрывает детей, и так дальше.' },
+  { value: 'jesus', label: 'С Иисуса Христа', hint: 'На небе только Иисус Христос и его карточка. «Родители» раскрывают родословие вверх, до Адама.' },
+  { value: 'lines', label: 'Родословие Иисуса Христа', hint: 'Обе линии — по Матфею и по Луке — от Адама до Иисуса Христа.' },
+  { value: 'key', label: 'Ключевые лица', hint: 'Главные лица истории Писания; щелчок по звезде открывает карточку и родство.' },
+  { value: 'all', label: 'Всё небо', hint: `Все ${num(persons.length)} ${personsWord(persons.length)} на звёздном небе; созвездия можно сворачивать.` },
 ];
 
 /** Выбранное начало; null — ещё не выбирали (первое посещение: атлас предлагает выбрать). */
 export const start = signal<Start | null>(((s) => (STARTS.some((x) => x.value === s) ? s : null))(read<Start | null>('start', null)));
 if (hasWindow) effect(() => write('start', start.value));
-// «дальше открывается как в прошлый раз»: новый сеанс после начала с раскрытием — сразу небо «набор» (режим неба помнится
-// в сеансе, src/ui/work.ts; адрес с полями вида задаёт его сам)
-export const restoreReveal = hasWindow && skyModeSaved === null && !!start.peek() && start.peek() !== 'all' && workSet.peek().size > 0;
-if (restoreReveal && !/~k1/.test(window.location.hash)) skyMode.value = 'work';
+// «дальше открывается как в прошлый раз»: новый сеанс после выбранного начала — тот же показ (src/ui/work.ts, firstShow);
+// адрес с полями вида без поля показа его не сбрасывает (src/ui/address.ts)
+export const restoreReveal = showRestored && !!start.peek() && start.peek() !== 'all';
 
 /** Ключевые лица (решение 68): самые яркие звёзды неба (величина 0–1) и главные лица, чья величина меньше. */
 const KEY_EXTRA = ['sarra', 'revekka', 'liya', 'rakhil', 'ruf', 'mariya', 'iosif-muzh-marii', 'samuil', 'iliya', 'elisey', 'daniil', 'ezdra', 'neemiya', 'esfir'];
@@ -103,45 +107,71 @@ export const expanded = signal<Readonly<Record<string, string>>>(
 );
 if (hasWindow) effect(() => write('reveal', { opened: opened.value, expanded: expanded.value }));
 
-/** Начать заново с начала s (решение 68): набор — лица начала, союзы свёрнуты; «всё небо» — небо «все лица». */
-// ---------- вид атласа: небо или древо (решение 73) ----------
+// ---------- вид атласа (решение 73 отменено решением 77) ----------
 
 /**
- * Что показывает главная область: звёздное небо (время по горизонтали) или древо — карточки лиц и союзов, раскрываемые
- * слева направо (src/ui/tree/, раскладка — src/engine/tree.ts). Оба вида держат одно состояние раскрытия.
- * Начала «С Адама», «С Иисуса Христа», «Родословие», «Ключевые лица» открывают древо, «Всё небо» — небо.
+ * Вида «Древо» больше нет (этап 11, решение 77): атлас — одно небо. Экспорт остаётся, пока его использования не убраны
+ * (src/ui/App.tsx и др.); значение всегда 'sky' — запись 'tree' тут же возвращается к небу.
  */
 export type AtlasView = 'sky' | 'tree';
-export const atlasView = signal<AtlasView>(read<AtlasView>('view', 'sky') === 'tree' ? 'tree' : 'sky');
-if (hasWindow) effect(() => write('view', atlasView.value));
+export const atlasView = signal<AtlasView>('sky');
+effect(() => {
+  if (atlasView.value !== 'sky') atlasView.value = 'sky';
+});
 
+/** Показ начала s (решение 68; этап 11, § 5). */
+export function startShow(s: Start): Show {
+  if (s === 'lines') return { kind: 'lines' };
+  if (s === 'key') return { kind: 'key' };
+  if (s === 'all') return { kind: 'all' };
+  return { kind: 'set' };
+}
+
+/**
+ * Начать с начала s (решение 68; этап 11, § 5): «С Адама» и «С Иисуса Христа» — набор с одного лица, союзы свёрнуты,
+ * лицо выбрано (его карточка у звезды открыта, у ромба союза — «+N»); «Родословие Иисуса Христа», «Ключевые лица»
+ * и «Всё небо» — одноимённые показы, набор читателя они не трогают.
+ */
 export function startWith(s: Start) {
   batch(() => {
     start.value = s;
-    opened.value = [];
-    expanded.value = {};
-    atlasView.value = s === 'all' ? 'sky' : 'tree';
-    if (s === 'all') {
-      skyMode.value = 'all';
-      return;
-    }
-    const next = new Map<string, WorkEntry>();
-    for (const id of startIds(s)) next.set(id, { via: 'self', of: id });
-    workSet.value = next;
-    skyMode.value = 'work';
-    // с одного лица — сразу его карточка и его союзы: первый шаг раскрытия виден без поиска
     if (s === 'adam' || s === 'jesus') {
       const id = s === 'adam' ? 'adam' : 'iisus';
       opened.value = [id];
+      expanded.value = {};
+      workSet.value = new Map<string, WorkEntry>([[id, { via: 'self', of: id }]]);
       selected.value = id;
+      setShowState({ kind: 'set' }, { anchor: id });
+      return;
     }
+    setShowState(startShow(s), { anchor: selected.peek() });
   });
 }
 
-/** Показать на небе карточки союзов лица (щелчок по лицу в небе «набор»). */
+/**
+ * Союз лица, который раскрывается вместе с лицом (Я27; решение координатора по K2): у лица один союз с детьми — он;
+ * союзов с детьми два и больше или ни одного — null (сначала ромбы союзов, потом «+N» у нужного).
+ */
+export function soleUnion(id: string): Union | null {
+  const withKids = unionsOf(id).filter((u) => u.kids.length > 0);
+  return withKids.length === 1 ? withKids[0] : null;
+}
+
+/**
+ * «+» у имени и «Продолжить ветвь» (щелчок по лицу в небе «набор»): на небо — ромбы союзов лица; если союз с детьми
+ * у лица один, он сразу раскрывается — дети на небе без второго щелчка по «+N» (Я27: Адам → Ной — не больше 11 действий).
+ */
 export function openPerson(id: string) {
-  if (!byId.has(id) || opened.peek().includes(id)) return;
-  opened.value = [...opened.peek(), id];
+  if (!byId.has(id)) return;
+  const sole = soleUnion(id);
+  const open = !opened.peek().includes(id);
+  // только в показе «набор»: в других показах ромбов раскрытия нет, и раскрытие не меняет показ
+  const grow = !!sole && !(sole.id in expanded.peek()) && workSet.peek().has(id) && show.peek().kind === 'set';
+  if (!open && !grow) return;
+  batch(() => {
+    if (open) opened.value = [...opened.peek(), id];
+    if (grow) expandUnion(sole!.id, id);
+  });
 }
 /** Скрыть карточки союзов лица (свёрнутые; раскрытые союзы остаются). */
 export function closePerson(id: string) {
@@ -168,10 +198,13 @@ export function expandUnion(uid: string, from?: string): number {
     next.set(id, { via: 'family', of: by });
     added++;
   }
+  // опора перехода (§ 10) — ромб союза: он стоит на следе матери, и если мать уже была на небе, держится она — ромб остаётся
+  // под щелчком, дети встают вокруг него; иначе — лицо, от которого раскрыли (у его следа стоял свёрнутый ромб)
+  const mother = u.b && u.b !== by && workSet.peek().has(u.b) ? u.b : null;
   batch(() => {
     workSet.value = next;
     expanded.value = { ...expanded.peek(), [uid]: by };
-    if (skyMode.peek() !== 'work') skyMode.value = 'work';
+    setShowState({ kind: 'set' }, { anchor: mother ?? by, history: show.peek().kind === 'set' ? 'replace' : 'push' });
     if (!opened.peek().includes(by)) opened.value = [...opened.peek(), by];
   });
   return added;
@@ -212,6 +245,8 @@ export function collapseUnion(uid: string): number {
     expanded.value = exp;
     opened.value = opened.peek().filter((x) => !gone.has(x));
     if (selected.peek() && gone.has(selected.peek()!)) selected.value = by;
+    // свёртка: опора перехода — лицо, у которого свернули (§ 10)
+    if (show.peek().kind === 'set') setShowState({ kind: 'set' }, { anchor: by, history: 'replace' });
   });
   return gone.size;
 }
@@ -238,6 +273,8 @@ export interface Plate {
   total: number;
 }
 export const plates = computed<Plate[]>(() => {
+  // карточки союзов раскрытия — только в показе «набор» (этап 11): в других показах союзы рисует само небо
+  if (show.value.kind !== 'set') return [];
   const set = workSet.value;
   const exp = expanded.value;
   const out = new Map<string, Plate>();

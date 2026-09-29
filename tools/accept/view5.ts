@@ -1,315 +1,212 @@
 /**
- * Сценарии приёмки: древо карточек (решение 73), группа view5: номера 630–649, вид атласа: небо и древо, органы, начала.
- * Задача N2 — древо на месте неба: переключатель «Небо | Древо» в верхней строке и в «Разделах» телефона; в древе нет
- * органов неба и полосы времени; начала, «Начать заново…» и строка «Раскрыто N лиц» работают и в древе; вступление древа
- * объясняет древо; поле адреса «t1», «назад» и «вперёд» между небом и древом; «Условные знаки», «О карте», «Клавиши».
+ * Сценарии приёмки: вид атласа, группа view5 — номера 630–649.
+ *
+ * Прежде (решение 73, задача N2) здесь проверялся вид «Древо» на месте неба: переключатель «Небо | Древо», поле адреса
+ * «~t1», вступление и «Как читать карту» древа, строка «Раскрыто N лиц» у его кромки. Этап 11 (решение 77, STAGE11.md
+ * § 5; задача Q3) древо убрал: атлас — одно небо, карточка у звезды заменяет карточки древа. Сценарии 630–638 проверяют
+ * новое поведение на тех же местах: главная область — всегда небо с полосой времени и органами; переключателя нет ни
+ * в верхней строке, ни в «Разделах» телефона; прежний адрес «~t1» открывает набор на небе; «Начать заново…» — лист «Вид»;
+ * справка — о карточке у звезды, «Родстве», связях и строке показа; на телефоне карточка у звезды — нижний лист.
  */
 import type { Page } from 'playwright';
-import { pass, fail, hashId, type Scenario } from './kit.ts';
+import { fail, hashId, pass, type Scenario } from './kit.ts';
+import { ADAM, cardOf, clickStar, flat, open, self, starPt, state } from './unify11.ts';
 
 const NAMES = ['С Адама', 'С Иисуса Христа', 'Родословие Иисуса Христа', 'Ключевые лица', 'Всё небо'];
-const flat = (s: string) => s.replace(/[   ]/g, ' ').replace(/⁠/g, '').replace(/\s+/g, ' ').trim();
 
-/** Открыть заново с памятью браузера: вступление, начало, вид и прочие ключи (toledot:<ключ>). */
-async function fresh(p: Page, o: { intro?: boolean; start?: string | null; view?: 'sky' | 'tree'; extra?: Record<string, unknown> } = {}, hash = '#/', ms = 2200) {
-  await p.evaluate(
-    ([intro, start, view, extra]) => {
-      localStorage.setItem('toledot:cartouche', intro ? 'open' : 'folded');
-      if (start) localStorage.setItem('toledot:start', JSON.stringify(start));
-      else localStorage.removeItem('toledot:start');
-      if (view) localStorage.setItem('toledot:view', JSON.stringify(view));
-      else localStorage.removeItem('toledot:view');
-      for (const [k, v] of Object.entries(extra as Record<string, unknown>)) localStorage.setItem(`toledot:${k}`, JSON.stringify(v));
-      sessionStorage.clear();
-    },
-    [!!o.intro, o.start ?? null, o.view ?? null, o.extra ?? {}] as const,
-  );
-  await p.goto(`${p.url().replace(/[?#].*$/, '')}?v5=${Date.now()}${hash}`);
-  await p.waitForTimeout(ms);
-}
-
-/** Что на месте неба: древо, небо (режим холста) или ничего. */
-async function area(p: Page): Promise<{ tree: boolean; sky: string | null; strip: boolean; ctl: boolean; treeCtl: boolean; cards: string[] }> {
+/** Главная область: небо (режим холста), полоса времени, органы неба; древа нет. */
+async function area(p: Page): Promise<{ tree: boolean; sky: string | null; strip: boolean; ctl: boolean }> {
   return (await p.evaluate(`(() => {
     const c = document.querySelector('.sky canvas');
     return {
-      tree: !!document.querySelector('.app > main > .treearea .tree'),
+      tree: !!document.querySelector('.treearea, .tree'),
       sky: c ? (c.dataset.mode || 'on') : null,
       strip: !!document.querySelector('.app > .strip'),
       ctl: !!document.querySelector('.skyctl'),
-      treeCtl: !!document.querySelector('.treearea .tree-ctl'),
-      cards: [...document.querySelectorAll('.treearea .tc')].map((e) => e.dataset.key),
     };
-  })()`)) as { tree: boolean; sky: string | null; strip: boolean; ctl: boolean; treeCtl: boolean; cards: string[] };
+  })()`)) as { tree: boolean; sky: string | null; strip: boolean; ctl: boolean };
 }
-/** Нажатая кнопка переключателя «Небо | Древо» в верхней строке. */
-const pressed = (p: Page) => p.evaluate("[...document.querySelectorAll('.top .view-switch button[aria-pressed=\"true\"]')].map((b) => b.textContent.trim()).join('|')");
-/** Рабочий набор из памяти браузера: id по порядку. */
+/** Набор из памяти браузера: id по порядку. */
 const work = async (p: Page) => ((await p.evaluate(() => JSON.parse(localStorage.getItem('toledot:work') ?? '[]'))) as [string, unknown][]).map((r) => r[0]);
-/** Строка у кромки древа: текст и видимые команды. */
-async function treeBar(p: Page) {
-  return (await p.evaluate(`(() => {
-    const b = document.querySelector('.treearea .skytop .pickbar');
-    if (!b) return null;
-    const vis = (e) => getComputedStyle(e).display !== 'none' && e.getBoundingClientRect().width > 0;
-    return { text: b.querySelector('.txt').textContent, cmds: [...b.querySelectorAll('button')].filter(vis).map((x) => x.textContent.trim()) };
-  })()`)) as { text: string; cmds: string[] } | null;
-}
-/** Кнопки начал во вступлении. */
-const startLabels = (p: Page) => p.evaluate("[...document.querySelectorAll('.cartouche .starts button')].map((b) => b.getAttribute('aria-label')).join('|')");
-/** Раскрытие Адам → союз с Евой (дети) в памяти браузера. */
-const fam = (of: string) => ({ via: 'family', of });
-const ADAM_OPEN = {
-  work: [['adam', { via: 'self', of: 'adam' }], ['eva', fam('adam')], ['kain', fam('adam')], ['avel', fam('adam')], ['sif', fam('adam')]],
-  reveal: { opened: ['adam'], expanded: { 'u:adam+eva': 'adam' } },
-};
 
 export const view5: Scenario[] = [
   {
     n: 630,
-    title: 'Решение 73: первое посещение — вступление с пятью началами; «С Адама» открывает древо на месте неба: Адам, союз «Адам и Ева»; полосы времени и органов неба нет, адрес с «~t1»',
+    title: 'Решение 77: первое посещение — вступление с пятью началами; «С Адама» открывает небо (не древо): полоса времени и органы неба на месте, набор из Адама, у его звезды — карточка; в адресе нет «~t1»',
     run: async (p) => {
-      await fresh(p, { intro: true });
-      if ((await startLabels(p)) !== NAMES.join('|')) return fail(`начала: ${await startLabels(p)}`);
+      await p.evaluate(() => {
+        localStorage.setItem('toledot:cartouche', 'open');
+        localStorage.removeItem('toledot:start');
+        sessionStorage.clear();
+      });
+      await p.goto(`${p.url().replace(/[?#].*$/, '')}?v5=${Date.now()}#/`);
+      await p.waitForTimeout(2200);
+      const names = await p.evaluate("[...document.querySelectorAll('.cartouche .starts button')].map((b) => b.getAttribute('aria-label')).join('|')");
+      if (names !== NAMES.join('|')) return fail(`начала: ${names}`);
       await p.locator('.cartouche .starts button', { hasText: 'С Адама' }).click();
-      await p.waitForTimeout(1500);
+      await p.waitForTimeout(2200);
       const a = await area(p);
-      if (!a.tree) return fail('древа нет');
-      if (a.sky !== null) return fail('небо осталось на экране');
-      if (a.strip) return fail('полоса времени в древе');
-      if (a.ctl) return fail('органы неба в древе');
-      if (!a.treeCtl) return fail('нет органов древа');
-      if (!a.cards.includes('p:adam') || !a.cards.includes('u:adam+eva')) return fail(`карточки: ${a.cards.join(' ')}`);
-      if (await p.locator('.cartouche').count()) return fail('вступление не свернулось');
-      if (!/~t1(~|$)/.test(new URL(p.url()).hash)) return fail(`адрес без «t1»: ${new URL(p.url()).hash}`);
-      if (hashId(p) !== 'adam') return fail(`выбрано «${hashId(p)}»`);
-      if ((await pressed(p)) !== 'Древо') return fail(`переключатель: ${await pressed(p)}`);
-      // древо — во всю высоту до нижнего края окна: место полосы времени отдано ему
-      const box = (await p.locator('.treearea').boundingBox())!;
-      const H = p.viewportSize()!.height;
-      return Math.abs(box.y + box.height - H) <= 1 ? pass(`${a.cards.length} карточки`) : fail(`древо кончается на ${box.y + box.height}, окно ${H}`);
+      if (a.tree || a.sky !== 'work' || !a.strip || !a.ctl) return fail(`древо ${a.tree}, небо ${a.sky}, полоса ${a.strip}, органы ${a.ctl}`);
+      if ((await work(p)).join(',') !== 'adam') return fail(`набор: ${(await work(p)).join(', ')}`);
+      const c = await cardOf(p);
+      if (!c || c.name !== 'Адам') return fail('у звезды Адама нет карточки');
+      return /~t1/.test(p.url()) ? fail(`адрес: ${p.url()}`) : pass();
     },
   },
   {
     n: 631,
-    title: 'Решение 73: переключатель «Небо | Древо» у поиска; «Небо» — те же лица на небе «набор», «Древо» — снова древо; «назад» и «вперёд» — между ними',
+    title: 'Решение 77: переключателя «Небо | Древо» нет — в верхней строке только поиск, панели и тема; в «Ещё» — «Начать заново…»; команд и клавиш древа нет',
     run: async (p) => {
-      await fresh(p, { start: 'adam', view: 'tree', extra: ADAM_OPEN }, '#/adam');
-      let a = await area(p);
-      if (!a.tree) return fail('при виде «древо» из памяти — не древо');
-      // переключатель — сразу после поиска, до панелей; весь на виду
-      const sw = (await p.locator('.top .view-switch').boundingBox())!;
-      const find = (await p.locator('.top .search').boundingBox())!;
-      const nav = (await p.locator('.top .commands').boundingBox())!;
-      if (!(sw.x >= find.x + find.width && sw.x + sw.width <= nav.x + 1)) return fail('переключатель не между поиском и панелями');
-      await p.locator('.top .view-switch button', { hasText: 'Небо' }).click();
-      await p.waitForTimeout(1800);
-      a = await area(p);
-      if (a.tree || a.sky !== 'work') return fail(`«Небо»: древо ${a.tree}, небо ${a.sky}`);
-      if (!a.strip) return fail('на небе нет полосы времени');
-      if ((await work(p)).join(',') !== 'adam,eva,kain,avel,sif') return fail(`набор изменился: ${(await work(p)).join(',')}`);
-      if (/~t1/.test(new URL(p.url()).hash)) return fail('в адресе неба осталось «t1»');
-      await p.goBack();
-      await p.waitForTimeout(1500);
-      if (!(await area(p)).tree) return fail('«назад» не вернул древо');
-      await p.goForward();
-      await p.waitForTimeout(1800);
-      a = await area(p);
-      if (a.tree || !a.sky) return fail('«вперёд» не вернул небо');
-      await p.locator('.top .view-switch button', { hasText: 'Древо' }).click();
-      await p.waitForTimeout(1200);
-      a = await area(p);
-      return a.tree && a.cards.includes('p:sif') ? pass() : fail(`«Древо»: ${a.cards.join(' ')}`);
+      await open(p, '#/david');
+      if (await p.locator('.top .view-switch').count()) return fail('в верхней строке — переключатель вида');
+      const top = flat(await p.locator('.top').innerText());
+      if (/Древо/.test(top) || /\bНебо\b/.test(top.replace(/На небе/g, ''))) return fail(`верхняя строка: «${top}»`);
+      await p.locator('.commands .more > button').click();
+      await p.waitForTimeout(200);
+      const items = (await p.locator('.commands .more [role^="menuitem"] .nm').allInnerTexts()).map((t) => t.trim());
+      if (!items.includes('Начать заново…')) return fail(`«Ещё»: ${items.join(' | ')}`);
+      await p.keyboard.press('Escape');
+      await p.keyboard.press('Shift+Slash');
+      await p.waitForTimeout(600);
+      const keys = flat((await p.locator('table.keys').first().innerText().catch(() => '')) ?? '');
+      return /древ/i.test(keys) ? fail('в «Клавишах» — клавиши древа') : pass();
     },
   },
   {
     n: 632,
-    title: 'Решение 73: адрес с «~t1» открывает древо, без него — небо; «Раскрыто N лиц — показать всё небо | начать заново» у кромки древа',
+    title: 'Решения 77, 81: прежний адрес «~t1» (древо) открывает набор на небе: показ «набор», лица набора из «~n…», карточки древа нет',
     run: async (p) => {
-      await fresh(p, { start: 'adam', view: 'sky', extra: ADAM_OPEN }, '#/adam~k1~t1');
-      let a = await area(p);
-      if (!a.tree) return fail('«~t1» не открыл древо');
-      const b = await treeBar(p);
-      if (!b) return fail('нет строки у кромки древа');
-      if (flat(b.text) !== 'Раскрыто 5 лиц') return fail(`строка: «${flat(b.text)}»`);
-      if (b.cmds.join('|') !== 'показать всё небо|начать заново') return fail(`команды: ${b.cmds.join(' | ')}`);
-      await p.locator('.treearea .skytop button', { hasText: 'показать всё небо' }).click();
-      await p.waitForTimeout(1800);
-      a = await area(p);
-      if (a.tree || a.sky !== 'all') return fail(`«показать всё небо»: древо ${a.tree}, небо ${a.sky}`);
-      if ((await work(p)).length !== 5) return fail('набор изменился');
-      await fresh(p, { start: 'adam', view: 'tree', extra: ADAM_OPEN }, '#/adam~k1');
-      a = await area(p);
-      return !a.tree && a.sky === 'work' ? pass() : fail(`адрес без «t1»: древо ${a.tree}, небо ${a.sky}`);
+      await open(p, '#/david~t1~niessey.david', { start: 'adam' });
+      const a = await area(p);
+      if (a.tree) return fail('открылось древо');
+      const s = await state(p);
+      if (s.show !== 's') return fail(`показ: ${s.show}`);
+      if (Number(s.ids) !== 2) return fail(`в показе ${s.ids} лиц`);
+      const bar = flat(await p.locator('.sky .showbar').innerText());
+      return /^На небе: набор — 2 лица/.test(bar) ? pass(bar) : fail(`строка показа: «${bar}»`);
     },
   },
   {
     n: 633,
-    title: 'Решения 68, 73: в древе «Начать заново…» из «Ещё» открывает вступление с началами, фокус — на текущем; набор больше лица — с подтверждением; «С Иисуса Христа» — древо с Иисусом Христом',
+    title: 'Решения 68, 77: «Начать заново…» из «Ещё» открывает лист «Вид» на «Начале», фокус — на текущем; набор больше лица — с подтверждением; «С Иисуса Христа» — набор из одного Иисуса Христа и его карточка у звезды',
     run: async (p) => {
-      await fresh(p, { start: 'adam', view: 'tree', extra: ADAM_OPEN }, '#/adam');
+      await open(p, '#/~vs', { start: 'adam', extra: { work: [self('adam'), ['eva', { via: 'family', of: 'adam' }]], reveal: { opened: ['adam'], expanded: { 'u:adam+eva': 'adam' } } } });
       await p.locator('.commands .more > button').click();
       await p.waitForTimeout(200);
       await p.locator('.commands .more [role^="menuitem"]', { hasText: 'Начать заново' }).click();
       await p.waitForTimeout(600);
-      if (!(await p.locator('.treearea .cartouche').count())) return fail('вступление древа не открылось');
-      if (await p.locator('.viewpop, .sheet .viewctl').count()) return fail('открылся лист «Вид»');
-      if ((await startLabels(p)) !== NAMES.join('|')) return fail(`начала: ${await startLabels(p)}`);
-      const head = flat(await p.locator('.cartouche #starts-title').innerText());
-      if (head !== 'Начать заново') return fail(`заголовок начал: «${head}»`);
-      const focus = await p.evaluate("document.activeElement?.getAttribute('data-start')");
-      if (focus !== 'adam') return fail(`фокус не на текущем начале: ${focus}`);
-      await p.locator('.cartouche .starts button', { hasText: 'С Иисуса Христа' }).click();
+      const f = await p.evaluate(() => ({ in: !!document.activeElement?.closest('.viewpop .starts'), label: document.activeElement?.getAttribute('aria-label') }));
+      if (!f.in || f.label !== 'С Адама') return fail(`фокус: ${JSON.stringify(f)}`);
+      await p.locator('.viewpop .starts button', { hasText: 'С Иисуса Христа' }).click();
       await p.waitForTimeout(300);
-      const ask = p.locator('.cartouche .starts-ask');
-      if (!(await ask.count())) return fail('замена набора из 5 лиц без подтверждения');
-      if (!/Набор из 5 лиц будет заменён/.test(flat(await ask.innerText()))) return fail(`вопрос: ${flat(await ask.innerText())}`);
-      await ask.locator('button', { hasText: 'начать заново' }).click();
-      await p.waitForTimeout(1500);
-      const a = await area(p);
-      if (!a.tree) return fail('после начала — не древо');
-      if (await p.locator('.cartouche').count()) return fail('вступление не свернулось');
-      if (!a.cards.includes('p:iisus')) return fail(`карточки: ${a.cards.join(' ')}`);
-      return (await work(p)).join(',') === 'iisus' ? pass() : fail(`набор: ${(await work(p)).join(',')}`);
+      if (!(await p.locator('.viewpop .starts-ask').count())) return fail('нет вопроса о замене набора');
+      await p.locator('.viewpop .starts-ask button', { hasText: 'начать заново' }).click();
+      await p.waitForTimeout(2200);
+      if ((await work(p)).join(',') !== 'iisus') return fail(`набор: ${(await work(p)).join(', ')}`);
+      if (hashId(p) !== 'iisus') return fail(`выбрано «${hashId(p)}»`);
+      const c = await cardOf(p);
+      return c && c.name === 'Иисус Христос' ? pass() : fail(`карточка у звезды: ${c ? c.name : 'нет'}`);
     },
   },
   {
     n: 634,
-    title: 'Решение 73: «Как читать карту» в древе объясняет древо — поколения слева направо, команды карточек, пустое место, линии Мессии; не небо; «Всё небо» из вступления — небо «все лица»',
+    title: 'Решения 77, 78, 81, 83: «Как читать карту» — карточка с родством у звезды, ствол, зубцы, ромб союза, жёлтая связь, строка «На небе: …» и «Вписать»; о древе ни слова',
     run: async (p) => {
-      await fresh(p, { start: 'adam', view: 'tree', extra: ADAM_OPEN }, '#/adam');
-      const cmd = p.locator('.treearea .guide-cmd');
-      if (!(await cmd.count())) return fail('нет «Как читать карту» в древе');
-      // команда не под органами древа: слева, органы — справа
-      const cb = (await cmd.boundingBox())!;
-      const ob = (await p.locator('.treearea .tree-ctl').boundingBox())!;
-      if (cb.x + cb.width > ob.x) return fail('команда заходит под органы древа');
-      await cmd.click();
-      await p.waitForTimeout(500);
-      const c = p.locator('.treearea .cartouche');
-      if (!(await c.count())) return fail('вступление не открылось');
-      const t = flat(await c.innerText());
-      for (const w of ['Слева направо — поколения', '«Продолжить ветвь»', '«Раскрыть детей»', 'Пунктирная рамка', 'Золотая и лазурная'])
-        if (!t.includes(w)) return fail(`во вступлении нет «${w}»`);
-      if (/Годы сверху|номера столбцов|полоса времени/.test(t)) return fail('вступление древа говорит о небе');
-      if (await c.locator('.entry').count()) return fail('быстрые входы в древе');
-      await c.locator('.starts button', { hasText: 'Всё небо' }).click();
-      await p.waitForTimeout(300);
-      const ask = c.locator('.starts-ask button', { hasText: 'начать заново' });
-      if (await ask.count()) await ask.click();
-      await p.waitForTimeout(1800);
-      const a = await area(p);
-      return !a.tree && a.sky === 'all' ? pass() : fail(`«Всё небо»: древо ${a.tree}, небо ${a.sky}`);
+      await open(p, '#/');
+      await p.locator('.commands > button', { hasText: 'Условные знаки' }).click();
+      await p.waitForTimeout(800);
+      const g = flat(await p.locator('.app > .sheet ul.guide').first().innerText());
+      for (const w of ['карточка с родством', 'вертикальный ствол', 'зубцы', 'ромб — союз родителей', 'жёлтым', '«На небе: …»', '«Вписать»'])
+        if (!g.includes(w)) return fail(`в «Как читать карту» нет «${w}»`);
+      return /древ/i.test(g) ? fail('«Как читать карту» говорит о древе') : pass();
     },
   },
   {
     n: 635,
-    title: 'Решение 73: пустое древо — «Древо» при пустом наборе начинается с выбранного лица; без выбранного — вступление с началами',
+    title: 'Решение 77: что перешло из древа на атлас — у звезды Адама в наборе «Продолжить ветвь» нет (его союз показан), у Каина после раскрытия — «Продолжить ветвь»; «Родители» у Сифа; образ-силуэт в карточке',
     run: async (p) => {
-      await fresh(p, { start: 'all', view: 'sky' }, '#/david');
-      await p.locator('.top .view-switch button', { hasText: 'Древо' }).click();
+      await open(p, '#/adam~vs', {
+        start: 'adam',
+        extra: {
+          work: [self('adam'), ['eva', { via: 'family', of: 'adam' }], ['kain', { via: 'family', of: 'adam' }], ['avel', { via: 'family', of: 'adam' }], ['sif', { via: 'family', of: 'adam' }]],
+          reveal: { opened: ['adam'], expanded: { 'u:adam+eva': 'adam' } },
+        },
+      });
+      if (!(await clickStar(p, 'kain'))) return fail('нет звезды Каина');
+      const k = flat(await p.locator('.sky .dotcard[data-kind="person"]').innerText());
+      if (!k.includes('Продолжить ветвь')) return fail(`карточка Каина: ${k.slice(0, 160)}`);
+      if (!(await p.locator('.sky .dotcard .av').count())) return fail('в карточке нет образа');
+      await p.locator('.sky .dotcard .dc-cmds button', { hasText: 'Продолжить ветвь' }).click();
       await p.waitForTimeout(1200);
-      let a = await area(p);
-      if (!a.tree) return fail('не древо');
-      if (!a.cards.includes('p:david')) return fail(`нет карточки Давида: ${a.cards.join(' ')}`);
-      // у Давида показаны его союзы: ветвь продолжается без поиска
-      if (!a.cards.some((k) => k.startsWith('u:david+'))) return fail('нет союзов Давида');
-      await fresh(p, { start: 'all', view: 'sky', extra: { work: [], reveal: { opened: [], expanded: {} } } }, '#/');
-      await p.locator('.top .view-switch button', { hasText: 'Древо' }).click();
-      await p.waitForTimeout(1200);
-      a = await area(p);
-      if (!a.tree) return fail('не древо');
-      return (await p.locator('.treearea .cartouche .starts button').count()) === 5 ? pass() : fail('нет вступления с началами');
+      const d = ((await p.locator('.sky canvas').getAttribute('data-dots')) ?? '').split(';').map((x) => x.split(':')[0] + ':' + x.split(':')[1]);
+      if (!d.some((x) => x.startsWith('u:kain+'))) return fail(`ромба союза Каина нет: ${d.join(', ')}`);
+      return pass();
     },
   },
   {
     n: 636,
-    title: 'Решение 73: «Условные знаки» — раздел «Древо» (карточка лица, союза, пустое место, двойная линия, ветви; силуэты и «худож.»), «Клавиши» — таблица древа; «О карте» — абзац о древе',
+    title: 'Решение 77: «Условные знаки» — раздела «Древо» нет; раздел «Карточки на небе» — карточка у звезды с «Родством», образы (силуэты, «худож.»), карточка связи; «О карте» — строка показа и карточка у звезды',
     run: async (p) => {
-      await fresh(p, { start: 'adam', view: 'tree', extra: ADAM_OPEN }, '#/');
-      await p.locator('.commands button', { hasText: 'Условные знаки' }).click();
+      await open(p, '#/');
+      await p.locator('.commands > button', { hasText: 'Условные знаки' }).click();
       await p.waitForTimeout(800);
       const sheet = p.locator('.app > .sheet');
-      if (!(await sheet.locator('#legend-tree').count())) return fail('нет раздела «Древо»');
-      for (const sel of ['.tc.tc-person', '.tc.tc-union', '.tc.tc-unnamed', 'svg.lt-svg .rb.mt', 'svg.lt-svg .ln.desc'])
-        if (!(await sheet.locator(sel).count())) return fail(`нет образца ${sel}`);
-      const person = flat(await sheet.locator('.tc.tc-person').innerText());
-      if (!person.startsWith('Сиф') || !/Продолжить ветвь/.test(person)) return fail(`образец лица: ${person}`);
-      const union = flat(await sheet.locator('.tc.tc-union').innerText());
-      if (!/Адам и Ева/.test(union) || !/Быт 2:22/.test(union)) return fail(`образец союза: ${union}`);
-      const text = flat(await sheet.innerText());
-      if (!/Силуэт на карточке — условный знак/.test(text) || !text.includes('«худож.»')) return fail('нет строки о силуэтах');
-      // образцы силуэтов — рисунком самих карточек: мужчина, женщина, народ, неназванный, звезда Иисуса Христа
-      if ((await sheet.locator('.lt-avatars .av').count()) < 5) return fail('нет образцов силуэтов');
-      // «Как читать карту» в начале панели — о древе, пока на экране древо
-      if (!/Слева направо — поколения/.test(flat(await sheet.locator('ul.guide').first().innerText()))) return fail('«Как читать карту» панели — не о древе');
-      if (!(await sheet.locator('#keys-tree').count())) return fail('нет клавиш древа');
-      // образцы — в пределах панели, без прокрутки вбок
+      if (await sheet.locator('#legend-tree').count()) return fail('есть раздел «Древо»');
+      if (!(await sheet.locator('#legend-cards').count())) return fail('нет раздела «Карточки на небе»');
+      if ((await sheet.locator('.av').count()) < 5) return fail('нет образцов образов');
+      const t = flat(await sheet.innerText());
+      for (const w of ['«Родство»', 'карточка связи', '«худож.»']) if (!t.includes(w)) return fail(`в «Условных знаках» нет ${w}`);
       const over = await sheet.evaluate((s) => s.scrollWidth - s.clientWidth);
       if (over > 0) return fail(`панель прокручивается вбок на ${over} px`);
-      await p.locator('.commands button', { hasText: 'О карте' }).click();
+      await p.locator('.commands > button', { hasText: 'О карте' }).click();
       await p.waitForTimeout(600);
       const about = flat(await p.locator('.app > .sheet').innerText());
-      if (!about.includes('«Небо | Древо»')) return fail('в «О карте» нет абзаца о древе');
-      return about.includes('художественная интерпретация создателей приложения') ? pass() : fail('в «О карте» нет фразы об изображениях');
+      if (about.includes('Небо | Древо')) return fail('в «О карте» — абзац о древе');
+      return about.includes('«На небе: …»') && about.includes('блоком «Родство»') ? pass() : fail('в «О карте» нет строки показа или «Родства»');
     },
   },
   {
     n: 637,
-    title: 'Решение 73, телефон 390 × 844: «Небо» и «Древо» в «Разделах»; древо — на весь экран под верхней строкой, без полосы времени; карточка — нижний лист над древом',
+    title: 'Решение 77, телефон 390 × 844: в «Разделах» нет «Небо» и «Древо»; главная область — небо с полосой времени; касание звезды — нижний лист и есть карточка у звезды',
     view: { width: 390, height: 844, touch: true },
     run: async (p) => {
-      await fresh(p, { start: 'adam', view: 'sky', extra: ADAM_OPEN }, '#/');
+      await open(p, '#/adam~va', { start: 'adam', extra: ADAM });
       await p.locator('.top .sections > button').tap();
       await p.waitForTimeout(250);
       const items = (await p.locator('.top .sections [role^="menuitem"] .nm').allInnerTexts()).map((x) => x.trim());
-      if (items[0] !== 'Небо' || items[1] !== 'Древо') return fail(`«Разделы»: ${items.join(' | ')}`);
-      await p.locator('.top .sections [role^="menuitem"]', { hasText: 'Древо' }).tap();
-      await p.waitForTimeout(1200);
+      if (items.includes('Небо') || items.includes('Древо')) return fail(`«Разделы»: ${items.join(' | ')}`);
+      await p.keyboard.press('Escape');
+      await p.waitForTimeout(200);
       const a = await area(p);
-      if (!a.tree || a.strip) return fail(`древо ${a.tree}, полоса ${a.strip}`);
-      const box = (await p.locator('.treearea').boundingBox())!;
-      const top = (await p.locator('.top').boundingBox())!;
-      if (Math.abs(box.y - (top.y + top.height)) > 1 || Math.abs(box.y + box.height - 844) > 1) return fail(`древо ${box.y}…${box.y + box.height}`);
+      if (a.tree || !a.sky || !a.strip) return fail(`древо ${a.tree}, небо ${a.sky}, полоса ${a.strip}`);
+      const q = await starPt(p, 'adam');
+      if (!q) return fail('нет звезды Адама');
+      await p.touchscreen.tap(q.x, q.y);
+      await p.waitForTimeout(1000);
+      if (!(await p.locator('.folio .sheet-dot .dotcard').count())) return fail('в листе нет карточки у звезды');
+      if (await p.locator('.sky .dotcard[data-placed]').count()) return fail('над небом — вторая карточка');
       const over = (await p.evaluate('document.documentElement.scrollWidth - innerWidth')) as number;
-      if (over > 0) return fail(`прокрутка вбок ${over} px`);
-      // выбор карточки — лист карточки снизу, над древом (карточка на виду: древо вписано органом «Вписать всё»)
-      await p.locator('.treearea .tree-ctl button', { hasText: 'Вписать всё' }).tap();
-      await p.waitForTimeout(600);
-      await p.locator('.tc[data-key="p:adam"] .tc-nm').tap();
-      await p.waitForTimeout(1200);
-      if (hashId(p) !== 'adam') return fail(`выбрано «${hashId(p)}»`);
-      const f = await p.locator('.folio').boundingBox();
-      if (!f || f.y <= box.y || f.y + f.height > 844 + 1) return fail('нет листа карточки над древом');
-      await p.locator('.top .sections > button').tap();
-      await p.waitForTimeout(250);
-      const checked = await p.evaluate("[...document.querySelectorAll('.top .sections [aria-checked=\"true\"] .nm')].map((e) => e.textContent.trim()).join('|')");
-      if (!String(checked).startsWith('Древо')) return fail(`отмечено: ${checked}`);
-      await p.locator('.top .sections [role^="menuitem"]', { hasText: 'Небо' }).tap();
-      await p.waitForTimeout(1500);
-      const b = await area(p);
-      return !b.tree && b.sky === 'work' ? pass() : fail(`«Небо»: древо ${b.tree}, небо ${b.sky}`);
+      return over > 0 ? fail(`прокрутка вбок ${over} px`) : pass();
     },
   },
   {
     n: 638,
-    title: 'Решение 73, 320 × 640: древо без прокрутки вбок, строка раскрытия — «все лица» (уже 360 px «начать заново» — в «Разделах», как на небе), органы древа и «Как читать карту» не накладываются',
+    title: 'Решение 77, 320 × 640: небо без прокрутки вбок; строка показа в одну строку, в пределах экрана; органы неба и «Как читать карту» не накладываются на неё',
     view: { width: 320, height: 640, touch: true },
     run: async (p) => {
-      await fresh(p, { start: 'adam', view: 'tree', extra: ADAM_OPEN }, '#/');
-      const a = await area(p);
-      if (!a.tree) return fail('не древо');
-      const over = (await p.evaluate('document.documentElement.scrollWidth - innerWidth')) as number;
-      if (over > 0) return fail(`прокрутка вбок ${over} px`);
-      const b = await treeBar(p);
-      if (!b || b.cmds.join('|') !== 'все лица') return fail(`строка: ${b ? b.cmds.join(' | ') : 'нет'}`);
-      const bb = (await p.locator('.treearea .skytop .pickbar').boundingBox())!;
-      if (bb.height > 50 || bb.x + bb.width > 320) return fail(`строка ${bb.height.toFixed(0)} px, правый край ${bb.x + bb.width}`);
-      const g = await p.locator('.treearea .guide-cmd').boundingBox();
-      const o = await p.locator('.treearea .tree-ctl').boundingBox();
-      if (!g || !o) return fail('нет команды или органов');
-      const cross = g.x < o.x + o.width && o.x < g.x + g.width && g.y < o.y + o.height && o.y < g.y + g.height;
-      return cross ? fail('«Как читать карту» на органах древа') : pass();
+      await open(p, '#/~vs', { start: 'adam', extra: ADAM });
+      const r = (await p.evaluate(`(() => {
+        const box = (e) => { if (!e) return null; const q = e.getBoundingClientRect(); return { l: q.left, r: q.right, t: q.top, b: q.bottom, h: q.height }; };
+        return { bar: box(document.querySelector('.skytop .showbar')), ctl: [...document.querySelectorAll('.skyctl button')].map(box), guide: box(document.querySelector('.sky .guide-cmd')), W: innerWidth, sw: document.documentElement.scrollWidth };
+      })()`)) as { bar: { l: number; r: number; t: number; b: number; h: number } | null; ctl: { l: number; r: number; t: number; b: number }[]; guide: { l: number; r: number; t: number; b: number } | null; W: number; sw: number };
+      if (r.sw > r.W + 1) return fail(`прокрутка вбок: ${r.sw}`);
+      if (!r.bar) return fail('нет строки показа');
+      if (r.bar.h > 50) return fail(`строка показа в ${r.bar.h.toFixed(0)} px`);
+      if (r.bar.r > r.W + 0.5 || r.bar.l < -0.5) return fail('строка показа за краем');
+      const hit = (a: { l: number; r: number; t: number; b: number }, b: { l: number; r: number; t: number; b: number }) => a.l < b.r && b.l < a.r && a.t < b.b && b.t < a.b;
+      if (r.ctl.some((k) => hit(k, r.bar!))) return fail('органы неба на строке показа');
+      if (r.guide && hit(r.guide, r.bar)) return fail('«Как читать карту» на строке показа');
+      return pass();
     },
   },
 ];

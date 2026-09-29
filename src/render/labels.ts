@@ -27,6 +27,7 @@ import { CONSTELLATION_DIM, DIM, likelyAlpha, WORK_DIM } from './dim.ts';
 const MESSIAH = 'iisus';
 import { mapFont, mapSize, nameFontWith, nameSize, siglaFont, textScale, T_MAP_S, T_NOTE, T_UI_S } from './type.ts';
 import { byId, graph, groupById, lines } from '../data/atlas.ts';
+import { linkRoles } from '../ui/linkwords.ts';
 import { primaryChildren, siblings } from '../engine/graph.ts';
 import { refText } from '../engine/kinship.ts';
 import { BOOK_INDEX, parseRef } from '../engine/books.ts';
@@ -215,8 +216,11 @@ export class LabelCache {
     // сжатие полос (J4, J5) меняет места звёзд по вертикали: пороги считаются по строкам экрана
     // и пропорция полос (J1): высота строки меняет места подписей по вертикали
     // и лица линий на нитях в режиме «только линии» (MAP-71): узлы кадра — не узлы раскладки
-    const key = `${v.model.id}|${Math.round(v.lambda * 4)}|${v.cam.h}|${v.coarse}|${f ? `${f.kx.toPrecision(3)} ${f.ky.toPrecision(3)}` : ''}|${v.rowsKey}|${v.cam.lanes.toFixed(3)}|${v.cam.focusLanes}|${v.nodes === v.model.nodes}|${textScale()}`;
+    const base = `${v.model.id}|${Math.round(v.lambda * 4)}|${v.cam.h}|${v.coarse}|${f ? `${f.kx.toPrecision(3)} ${f.ky.toPrecision(3)}` : ''}|${v.rowsKey}|${v.cam.focusLanes}|${v.nodes === v.model.nodes}|${textScale()}`;
+    const key = `${base}|${v.cam.lanes.toFixed(3)}`;
     if (key === this.key) return;
+    // пропорция полос в движении (перелёт, растяжение полос): пороги — прежние, заново — когда масштаб постоит (Я33)
+    if (v.scaleMoving && this.key.startsWith(`${base}|`)) return;
     this.key = key;
     const nodes = v.nodes;
     const n = nodes.length;
@@ -377,15 +381,19 @@ export function insideSky(v: SkyContext, b: Rect): boolean {
  * в замер. Для подписей любых слоёв (пути родства, лент, призраков): так они проходят ту же проверку наложений.
  */
 export function claim(v: SkyContext, p: Pass, candidates: Rect[], kind: LabelKind, text: string, o: { id?: string; soft?: boolean; coverFrom?: number } = {}): Rect | null {
-  // названия, скопления и пояснения не ложатся на ленты линий Мессии: ленты — главное на небе
-  const avoid = kind === 'group' || kind === 'cluster' || kind === 'note' || kind === 'event' ? p.ribbonBoxes : undefined;
-  for (const b of candidates) {
-    if (!insideSky(v, b) || hits(b, p.reserve) || hits(b, avoid) || p.placer.clash(b, o.soft ?? true, o.coverFrom)) continue;
-    p.placer.add(b);
-    v.ledger.add(kind, text, b, o.id);
-    return b;
-  }
-  return null;
+  // названия, скопления, пояснения и подписи связей не ложатся на ленты линий Мессии: ленты — главное на небе
+  // подписи связей при лентах по маршрутам — по самой ленте (Pass.onRibbon): рамка шага от родителя до ребёнка закрыла бы
+  // весь след Давида с ромбами его союзов
+  const exact = kind === 'plate' && p.onRibbon;
+  const avoid = !exact && (kind === 'group' || kind === 'cluster' || kind === 'note' || kind === 'event' || kind === 'plate') ? p.ribbonBoxes : undefined;
+  const ok = (b: Rect) => insideSky(v, b) && !hits(b, p.reserve) && !hits(b, avoid) && !(exact && p.onRibbon!(b)) && !p.placer.clash(b, o.soft ?? true, o.coverFrom);
+  // сначала — место не на чужих линиях связей (этап 11, Я12; sky.ts, Pass.onLink), затем — любое свободное
+  const onLink = p.onLink;
+  const b = (onLink ? candidates.find((c) => ok(c) && !onLink(c, o.id ?? '')) : undefined) ?? candidates.find(ok);
+  if (!b) return null;
+  p.placer.add(b);
+  v.ledger.add(kind, text, b, o.id);
+  return b;
 }
 
 // ---------- подпись звезды ----------
@@ -577,12 +585,19 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): Label
   // на обзоре и в масштабе эпохи имя может закрыть звезду на две величины тусклее; на масштабе семьи — ни одной
   const coverFrom = o.cover ?? (cam.ky < FAMILY_KY ? q.magnitude + 2 : 99);
   // проходы: (лицо линии) не на лентах → не на звёздах и подписях → не на подписях → (выбранное лицо) где угодно
-  type Mode = 'clear' | 'soft' | 'hard' | 'none';
+  // 'free' — как 'soft', и не на чужих линиях связей (этап 11, Я12; sky.ts, Pass.onLink): сначала место без линий
+  type Mode = 'clear' | 'free' | 'soft' | 'hard' | 'none';
   const offRibbon = p.offRibbon;
+  const onLink = p.onLink;
   const ok = (b: Rect, m: Mode) =>
-    insideSky(v, b) && !hits(b, p.reserve) && (m === 'none' || !p.placer.clash(b, m === 'soft' || m === 'clear', coverFrom)) && (m !== 'clear' || offRibbon!(b));
+    insideSky(v, b) &&
+    !hits(b, p.reserve) &&
+    (m === 'none' || !p.placer.clash(b, m === 'soft' || m === 'clear' || m === 'free', coverFrom)) &&
+    (m !== 'clear' || offRibbon!(b)) &&
+    ((m !== 'free' && m !== 'clear') || !onLink?.(b, q.id));
   let at: { tx: number; ty: number; box: Rect; ax?: number; ay?: number; side: Side | 'x' } | null = null;
-  const base: Mode[] = o.force ? ['soft', 'hard', 'none'] : o.overStars ? ['soft', 'hard'] : ['soft'];
+  const free: Mode[] = onLink ? ['free'] : [];
+  const base: Mode[] = o.force ? [...free, 'soft', 'hard', 'none'] : o.overStars ? [...free, 'soft', 'hard'] : [...free, 'soft'];
   const passes: Mode[] = offRibbon && p.spine.has(q.id) ? ['clear', ...base] : base;
   const vert = o.vertical ?? lineSideOf(q.id);
   const sides = vert === -1 ? o.sides.filter((x) => x !== 'b') : vert === 1 ? o.sides.filter((x) => x !== 't') : o.sides;
@@ -630,6 +645,20 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): Label
       }
     }
     if (at) break;
+    // поверх занятого (выбранное лицо, места нет): та сторона, где под именем меньше занятого — ромбов союзов, подписей
+    if (soft === 'none') {
+      let best = Infinity;
+      for (const sd of sides) {
+        const c = spot(sd, x, y, r, textW + (sd === 'r' ? sigW : 0) + foldW, size, king);
+        if (!ok(c.box, soft)) continue;
+        const o = p.placer.overlap(c.box);
+        if (o < best) {
+          best = o;
+          at = { ...c, side: sd };
+        }
+      }
+      if (at) break;
+    }
     for (const sd of sides) {
       const c = spot(sd, x, y, r, textW + (sd === 'r' ? sigW : 0) + foldW, size, king);
       if (ok(c.box, soft)) {
@@ -900,9 +929,10 @@ export function drawStarLabels(v: SkyContext, p: Pass, between?: () => void) {
     return { alpha: k === 'likely' ? likelyAlpha(floor) : 1, light: false };
   };
 
-  // 1) обязательные: у правого края — слева от звезды; выбранное — первым и без проверки
+  // 1) обязательные: у правого края — слева от звезды; выбранное — первым и без проверки; концы выбранной связи (§ 8, Я24)
   let first = true;
-  for (const id of new Set([s.selected, s.second, s.hovered, s.focus])) {
+  const ends = s.link ? linkRoles(s.link).map((e) => e.id) : [];
+  for (const id of new Set([s.selected, s.second, s.hovered, s.focus, ...ends])) {
     const i = idx(id);
     if (!shown(i)) continue;
     putLabel(v, p, i, { sides: ['r', 'l', 't', 'b'], color: pal.ink, alpha: 1, sigla: true, leader: true, overStars: true, force: first });

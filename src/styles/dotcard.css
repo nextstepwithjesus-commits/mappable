@@ -1,0 +1,362 @@
+/* ---------- карточка у звезды, у ромба союза и у связи (этап 11, решения 77, 83; src/ui/sky/DotCard.tsx) ----------
+   Лист атласа поверх неба: фон листа, рамка 1 px --rule-strong, без тени и скругления. Шапка — образ 40 px, имя
+   Literata кеглем вводки, уточнение и годы гротеском; ниже — блок «Родство»: подпись строки слева (Jost), имена справа
+   (Literata, ссылки в тексте — .person); внизу — команды. От знака к карточке — отвод 1 px цветом рамки (.dc-lead),
+   как выноска на карте. Место задаёт DotCard.tsx (placeDot); до первого замера карточка невидима. На телефоне карточка
+   у звезды — это нижний лист (Folio.tsx, .sheet-dot): над небом второй карточки нет. */
+.dotcard {
+  position: absolute;
+  z-index: 5;
+  box-sizing: border-box;
+  width: 300px;
+  max-width: calc(100% - 12px);
+  padding: 8px 10px 2px;
+  background: var(--sheet);
+  border: 1px solid var(--rule-strong);
+  color: var(--ink);
+}
+.dotcard:not([data-placed]) {
+  visibility: hidden;
+}
+/* союз — двойная рамка, как у карточки союза */
+.dotcard.dc-union {
+  border: 3px double var(--rule-strong);
+  padding: 6px 8px 2px;
+}
+/* связь — рамка цветом текста: её линия на небе выбрана */
+.dotcard.dc-link {
+  border-color: var(--ink-2);
+}
+/* «×» — в углу листа; имя и заголовок не заходят под него */
+.dotcard > .close {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+.dc-top {
+  display: flex;
+  gap: 10px;
+  min-width: 0;
+  padding-right: 28px;
+}
+.dc-info {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+}
+.dc-nm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.dc-nm .nm {
+  min-width: 0;
+  font-family: var(--serif);
+  font-size: var(--t-lead);
+  line-height: var(--t-lead-lh);
+}
+.dc-union .dc-nm .nm,
+.dc-link .dc-nm .nm {
+  font-size: var(--t-body);
+  line-height: var(--t-body-lh);
+}
+.dc-dis,
+.dc-yrs,
+.dc-sub {
+  min-width: 0;
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.dc-dis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dc-nm + .dc-yrs,
+.dc-dis + .dc-yrs {
+  margin-top: 2px;
+}
+
+/* знаки лент у имени: золотая точка — Мф 1, лазурная — Лк 3 (у Иисуса Христа восьмилучевая звезда — в образе) */
+.dc-lines {
+  display: inline-flex;
+  flex: none;
+  gap: 3px;
+}
+.dc-lines i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+.dc-lines .mt {
+  background: var(--gold-1);
+}
+.dc-lines .lk {
+  background: var(--azure-1);
+}
+
+/* ---------- блок «Родство»: подпись строки и имена ---------- */
+.dc-kin {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  column-gap: 10px;
+  margin: 8px -10px 0;
+  padding: 6px 10px 4px;
+  border-top: 1px solid var(--rule);
+}
+.dc-row {
+  display: contents;
+}
+.dc-lbl {
+  padding-top: 3px;
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+.dc-val {
+  min-width: 0;
+  padding: 1px 0 3px;
+  font-family: var(--serif);
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.dc-val .note,
+.dc-val .txt {
+  color: var(--ink-2);
+}
+/* строка «Год» — пояснение, а не ссылки */
+.dc-row.year .dc-val {
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  color: var(--ink-2);
+  padding-top: 3px;
+}
+/* строка под указателем или с фокусом — её линии подсвечены на небе: подпись строки — цветом текста */
+.dc-row.hot .dc-lbl {
+  color: var(--ink);
+}
+/* «ещё 9» — команда внутри строки: гротеском, без черты в покое */
+.dc-more {
+  display: inline;
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: 1;
+  color: var(--ink-2);
+  text-decoration-line: none;
+}
+.dc-more:hover,
+.dc-more:focus-visible {
+  color: var(--ink);
+  text-decoration-line: underline;
+  text-underline-offset: 3px;
+}
+
+/* ---------- карточка связи ---------- */
+.dc-link .dc-head {
+  padding-right: 28px;
+}
+.dc-link h3 {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: var(--t-body);
+  line-height: var(--t-body-lh);
+  font-weight: 600;
+}
+.dc-link h3:focus-visible {
+  outline-offset: 2px;
+}
+.dc-refs {
+  margin-top: 2px;
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  color: var(--ink-2);
+}
+.dc-marks {
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  color: var(--ink-2);
+  font-style: italic;
+}
+.dc-note {
+  margin: 4px 0 0;
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  color: var(--ink-2);
+}
+
+/* ---------- команды ---------- */
+.dc-cmds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 2px;
+  margin: 4px -10px 0;
+  padding: 2px 4px 0;
+  border-top: 1px solid var(--rule);
+}
+.dc-union .dc-cmds {
+  margin: 4px -8px 0;
+}
+.dc-cmds + .dc-cmds {
+  margin-top: 0;
+  border-top: 0;
+}
+.dc-cmds .menu {
+  position: relative;
+}
+/* «Только его род ▾» — команда, как соседние: гротеск, поле 32 px; список — под ней */
+.dc-cmds .menu > button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 8px;
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.dc-cmds .menu > button:hover {
+  background: var(--sheet-2);
+  color: var(--ink);
+}
+.dc-cmds .menu > button[aria-expanded='true'] {
+  color: var(--ink);
+  box-shadow: inset 0 -2px 0 var(--ink);
+}
+.dc-cmds .menu [role='menu'] {
+  top: 100%;
+  left: 0;
+}
+
+/* отвод от знака к карточке: прямой — полоской 1 px (.dc-lead), к карточке вдали от знака — отрезком svg (.dc-line) */
+.dc-lead,
+.dc-line {
+  position: absolute;
+  z-index: 5;
+  pointer-events: none;
+}
+.dc-lead {
+  background: var(--rule-strong);
+}
+svg.dc-line {
+  left: 0;
+  top: 0;
+  display: none;
+  overflow: visible;
+}
+svg.dc-line line {
+  stroke: var(--rule-strong);
+  stroke-width: 1;
+}
+
+/* во весь лист телефона (Folio.tsx): рамки нет — рамка у самого листа */
+.sheet-dot .dotcard,
+.dotcard.in-sheet {
+  position: static;
+  width: auto;
+  max-width: none;
+  border: 0;
+  padding: 0;
+  background: none;
+}
+.dotcard[data-dock] {
+  width: auto;
+}
+
+@media (pointer: coarse) {
+  .dotcard > .close {
+    top: -2px;
+    right: -2px;
+  }
+  .dc-top,
+  .dc-link .dc-head {
+    padding-right: 36px;
+  }
+  /* имена в строке «Родство» — поле касания 32 px без изменения межстрочия, как у ссылок в тексте (phone.css) */
+  .dc-val .person,
+  .dc-more {
+    position: relative;
+  }
+  .dc-more::after {
+    content: '';
+    position: absolute;
+    left: -4px;
+    right: -4px;
+    top: 50%;
+    height: 44px;
+    transform: translateY(-50%);
+  }
+}
+
+/* ---------- образы лиц (решение 74; src/ui/card/Avatar.tsx) ----------
+   Условный силуэт, два тона, без черт лица: фон — глубина неба, голова и плечи — светлее, волосы, покров и борода —
+   тоном туманности; квадрат без тени, скругление 2 px. Пунктир — лицо не названо. Звезда Иисуса Христа — цветом света. */
+.av {
+  --av-bg: var(--sky);
+  --av-body: color-mix(in srgb, var(--ink-3) 38%, var(--sky));
+  --av-hair: var(--ink-3);
+  display: block;
+  flex: none;
+  overflow: hidden;
+  background: var(--av-bg);
+  border-radius: 2px;
+}
+:root[data-map='day'] .av {
+  --av-bg: var(--sky-band);
+  --av-body: var(--sheet);
+  --av-hair: color-mix(in srgb, var(--ink-3) 72%, var(--sky-band));
+}
+.av .b {
+  fill: var(--av-body);
+}
+.av .h {
+  fill: var(--av-hair);
+}
+.av .d {
+  fill: none;
+  stroke: var(--av-hair);
+  stroke-width: 1.6;
+  stroke-dasharray: 3.5 2.5;
+}
+.av .s {
+  fill: var(--ink);
+}
+.av-empty {
+  background: none;
+  outline: 1px dashed var(--rule-strong);
+  outline-offset: -1px;
+}
+/* изображение (потом): помета «худож.» в углу */
+.av-img {
+  position: relative;
+}
+.av-img img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.av-mark {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  padding: 0 3px;
+  background: var(--sheet);
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  color: var(--ink-2);
+}

@@ -96,12 +96,12 @@ describe('строка и органы неба — без скрытой про
   });
 });
 
-describe('«В работе: N» и однострочные пояснения команд (UX-48, UX-21; решения 9 и 26)', () => {
-  it('команда рабочего набора показывает число лиц; пустой набор — «В работе»', () => {
-    expect(workLabel(0)).toBe('В работе');
-    expect(workLabel(46)).toBe('В работе: 46');
+describe('«Набор: N» и однострочные пояснения команд (UX-48, UX-21; решения 9, 26, 81)', () => {
+  it('команда рабочего набора показывает число лиц; пустой набор — «Набор» (этап 11: одно слово — одно понятие, решение 81)', () => {
+    expect(workLabel(0)).toBe('Набор');
+    expect(workLabel(46)).toBe('Набор: 46');
     const items = phoneMenuItems(null, false, () => {}, () => {}, 3);
-    expect(items.find((i) => i.key === 'work')?.label).toBe('В работе: 3');
+    expect(items.find((i) => i.key === 'work')?.label).toBe('Набор: 3');
   });
   it('у каждой панели верхней строки — пояснение одной строкой, без повторения названия', () => {
     for (const id of ['index', 'work', 'chapter', 'synopsis', 'kinship', 'section', 'legend', 'about'] as const) {

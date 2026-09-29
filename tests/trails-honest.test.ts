@@ -258,7 +258,7 @@ describe('выделение рода (E4; MAP-20, UX-34)', () => {
 });
 
 describe('отрисовка на небе: пометы и подписи призраков проходят замер наложений', () => {
-  it('семья Иакова на масштабе семьи: пометы матерей и призраков — в замере, наложений нет', () => {
+  it('семья Иакова на масштабе семьи: имя матери у ромба и подписи призраков — в замере, наложений нет', () => {
     const { s } = makeSky();
     // окно — вокруг рождения сыновей Иакова, след Иакова — в середине по высоте
     s.cam.zoomAt(720, 400, 30);
@@ -268,8 +268,12 @@ describe('отрисовка на небе: пометы и подписи пр�
     draw(s, { selected: 'iakov', highlight: marks.familyHighlight('iakov').hl, depth: marks.familyHighlight('iakov').depth });
     const st = s.labelStats();
     const notes = st.boxes.filter((b) => b.kind === 'note').map((b) => b.text);
-    expect(notes).toContain('от Лии');
-    expect(notes).toContain('от Рахили');
+    // этап 11 (STAGE11 § 2, Г8): мать видна по положению — ромб союза на её следе, а если она далеко от детей, ромб на
+    // следе отца с её именем; пометы «от Лии», «от Рахили» у гребёнок ушли с неба
+    expect(notes.filter((t) => /^от [А-ЯЁ]/.test(t))).toEqual([]);
+    const names = st.boxes.filter((b) => b.kind === 'plate' && b.text).map((b) => b.text);
+    expect(names).toContain('Лия');
+    // подписи призраков жён — прежние (ТЗ § 3.1)
     expect(notes.some((t) => /, жена /.test(t))).toBe(true);
     expect(st.overlaps).toBe(0);
   });

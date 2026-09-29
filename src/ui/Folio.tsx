@@ -19,7 +19,8 @@ import { sheetStop, snapSheet, stopsFor, releaseVelocity, type SheetStop } from 
 import { cardFolded, cardStack, clipWords, closeAllCards, closeCard, stackSummaryHead } from './stack.ts';
 import { WorkButton } from './panels/Work.tsx';
 import { cardTitle, focusCardTitle, focusQuietly } from './focus.ts';
-import { atlasView, selectedUnion, selectUnion, unionById } from './reveal.ts';
+import { selectedUnion, selectUnion, unionById } from './reveal.ts';
+import { DotSheet } from './sky/DotCard.tsx';
 import { UnionCard, openerSection, unionTitle, unionYears } from './card/Union.tsx';
 import type { Union } from '../engine/unions.ts';
 
@@ -389,7 +390,7 @@ function useSheetDrag(aside: { current: HTMLElement | null }, on: boolean) {
     let d: { y0: number; h0: number; pts: { t: number; y: number }[]; from: SheetStop; moved: boolean } | null = null;
     let touch: { x0: number; y0: number; top: number; t: number } | null = null;
     // место для листа — небо между верхней строкой и полосой времени: лист на 100 % занимает его целиком
-    const avail = () => document.querySelector('.sky, .treearea')?.getBoundingClientRect().height ?? window.innerHeight * 0.8;
+    const avail = () => document.querySelector('.sky')?.getBoundingClientRect().height ?? window.innerHeight * 0.8;
     // время — Event.timeStamp: скорость взмаха считается по времени касаний, а не по тому, когда до них дошла очередь
     const begin = (y: number, t: number) => {
       d = { y0: y, h0: el.getBoundingClientRect().height, pts: [{ t, y }], from: sheetStop.peek(), moved: false };
@@ -492,6 +493,23 @@ function useSheetDrag(aside: { current: HTMLElement | null }, on: boolean) {
 }
 
 /**
+ * Нижний лист на 214 px — это и есть карточка у звезды (этап 11, решение 77; STAGE11.md § 6): ручка, образ, имя, уточнение
+ * и годы, две строки «Родства», команды «Карточка ▴», «Только его род ▾», «Родство с…» и «×». Выбранная связь или ромб
+ * союза — их карточка на том же месте. За свободное место лист тянется, как за шапку; касание поднимает лист до 55 %.
+ */
+function DotSheetBar({ id, onClose }: { id: string; onClose: () => void }) {
+  return (
+    <div class="sheet-bar sheet-dot">
+      <div class="grab" aria-hidden="true">
+        <span />
+      </div>
+      <DotSheet id={id} />
+      <Close label="Закрыть карточку" onClick={onClose} />
+    </div>
+  );
+}
+
+/**
  * Закреплённая шапка нижнего листа (H2; MOB-12, MOB-15): ручка, имя, «Развернуть» или «Свернуть» и «×» (44 × 44).
  * На шапке (104 px) под именем — годы и уточнение (MOB-11, MOB-64): шапка занимает весь лист на 104 px, и ни одна
  * строка не режется его краем.
@@ -563,16 +581,7 @@ function CardActions({ id, phone }: { id: string; phone: boolean }) {
         onClick={() => {
           // на телефоне лист сначала сворачивается до шапки: перелёт идёт над ним, а не под ним (MOB-15)
           if (phone) sheetStop.value = 'peek';
-          // в древе (решение 73) — сначала на небо: перелёт — когда небо встало на место
-          if (atlasView.peek() === 'tree') {
-            atlasView.value = 'sky';
-            let tries = 0;
-            const wait = () => {
-              if (skyRef.current?.model) skyRef.flyTo(id);
-              else if (tries++ < 120) requestAnimationFrame(wait);
-            };
-            requestAnimationFrame(wait);
-          } else skyRef.flyTo(id);
+          skyRef.flyTo(id);
         }}
       >
         <span class="full">Показать на небе</span>
@@ -828,7 +837,8 @@ export function Folio({ id: forcedId, forceState }: { id?: string; forceState?: 
 
   return (
     <aside class="folio" aria-label={`Карточка: ${p.name}`} ref={aside} data-stop={sheet ? stop : undefined} data-state={status === 'ok' ? undefined : status}>
-      {sheet && <SheetBar id={id} stop={stop} onClose={close} />}
+      {/* на 214 px лист — карточка у звезды (решение 77); выше — шапка листа и подробная карточка */}
+      {sheet && (stop === 'peek' ? <DotSheetBar id={id} onClose={close} /> : <SheetBar id={id} stop={stop} onClose={close} />)}
       {/* стопка на телефоне — строка открытых карточек над листом (J6) */}
       {sheet && others.length > 0 && <StackStrip ids={others} />}
       {live && !phone && <FolioBar id={id} others={others} open={stackOpen} setOpen={setStackOpen} onClose={close} />}

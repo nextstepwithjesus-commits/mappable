@@ -513,8 +513,9 @@ function Ribbons({ map }: { map: Theme }) {
 }
 
 /**
- * Следы жизни и родство — образцы «Как читать карту» (src/ui/panels/Legend.tsx, PAINTERS): drawLifeTrail, drawDescent,
- * drawBracket и drawMarriage из src/render/trails.ts, те же функции, что у неба.
+ * Следы жизни и родство — образцы «Как читать карту» (src/ui/panels/Legend.tsx, PAINTERS): drawLifeTrail и drawDescent
+ * из src/render/trails.ts и знаки грамматики связей drawLinkSample из src/render/plates.ts (этап 11, решение 78) — те же
+ * функции, что у неба.
  */
 const TRAILS: { k: PainterKey; cap: string }[] = [
   { k: 'trailExact', cap: 'годы известны' },
@@ -524,13 +525,13 @@ const TRAILS: { k: PainterKey; cap: string }[] = [
   { k: 'trailEpochal', cap: 'известна только эпоха' },
 ];
 const LINKS: { k: PainterKey; cap: string }[] = [
-  { k: 'descent', cap: 'отвод к ребёнку' },
-  { k: 'mother', cap: 'мать на отводе' },
-  { k: 'tension', cap: 'хронологическое напряжение' },
-  { k: 'bracket', cap: 'дети одной пары' },
-  { k: 'mothers', cap: 'дети разных матерей' },
-  { k: 'marriage', cap: 'брак' },
-  { k: 'marriageFar', cap: 'брак с дальней женой' },
+  { k: 'linkTrunk', cap: 'ствол, зубцы и черта брака' },
+  { k: 'linkNode', cap: 'союз: дети показаны, свёрнуты' },
+  { k: 'linkJoin', cap: 'второе гнездо союза' },
+  { k: 'linkCut', cap: 'разрыв чужого следа' },
+  { k: 'linkStub', cap: 'обрывки длинной связи' },
+  { k: 'linkRibbon', cap: 'лента в узле своего шага' },
+  { k: 'linkSelected', cap: 'выбранная связь' },
   { k: 'ghost', cap: 'призрак жены в родной семье' },
 ];
 

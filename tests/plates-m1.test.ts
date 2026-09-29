@@ -25,6 +25,7 @@ function recording() {
 }
 
 let sky: typeof import('../src/render/sky.ts');
+let links: typeof import('../src/render/links.ts');
 let rows: typeof import('../src/render/rows.ts');
 let plates: typeof import('../src/render/plates.ts');
 let atlas: typeof import('../src/data/atlas.ts');
@@ -40,6 +41,7 @@ beforeAll(async () => {
     getComputedStyle: () => ({ getPropertyValue: () => '' }),
   });
   sky = await import('../src/render/sky.ts');
+  links = await import('../src/render/links.ts');
   rows = await import('../src/render/rows.ts');
   plates = await import('../src/render/plates.ts');
   atlas = await import('../src/data/atlas.ts');
@@ -207,7 +209,9 @@ describe('точки союзов на холсте (решение 76)', () => 
     return { x: f.s.cam.sx(f.s.X0[i]), y: f.s.cam.sy(f.s.nodes[i].lane) };
   };
 
-  it('С Адама: полая точка союза «Адам и Ева» у строки Адама со стороны детей, правее его звезды, «+4»; картуша с рамкой и надписью нет', () => {
+  // этап 11 (решение 78, Г4): свёрнутый союз — полый ромб с «+N» на следе родителя, правее его звезды; прежнее место
+  // «у строки со стороны детей» (решение 76) ушло вместе с косыми лучами
+  it('С Адама: полый ромб союза «Адам и Ева» на следе Адама, правее его звезды, «+4»; картуша с рамкой и надписью нет', () => {
     const f = frame(['adam'], { plates: reveal.plates.value, at: 'adam', years: 400 });
     const ds = dots(f.data.dots ?? '');
     expect(ds.map((q) => q.uid)).toEqual(['u:adam+eva']);
@@ -216,12 +220,7 @@ describe('точки союзов на холсте (решение 76)', () => 
     // Ева и трое сыновей не на небе
     expect(q.hidden).toBe(4);
     const a = at(f, 'adam');
-    const laneOf = (id: string) => atlas.models[0].nodeByPerson.get(id)?.lane;
-    const side = plates.hangSide(U('u:adam+eva'), laneOf('adam')!, laneOf);
-    // у строки Адама со стороны детей: не на строке его подписи, но не дальше строки
-    expect(Math.sign(a.y - q.y)).toBe(side);
-    expect(Math.abs(q.y - a.y)).toBeGreaterThanOrEqual(plates.DOT_HANG.min - 0.5);
-    expect(Math.abs(q.y - a.y)).toBeLessThanOrEqual(plates.DOT_HANG.max + 7);
+    expect(Math.abs(q.y - a.y)).toBeLessThanOrEqual(1);
     expect(q.x).toBeGreaterThan(a.x + 5);
     // поле попадания — вокруг ромба и «+4»
     const hit = parse(f.data.plates ?? '')[0];
@@ -233,11 +232,13 @@ describe('точки союзов на холсте (решение 76)', () => 
     // у точки нет подписи: имена союза — в подсказке и карточке у точки
     expect(f.texts.some((t) => t.t === 'Адам и Ева')).toBe(false);
     expect(f.texts.some((t) => /жена; 3 сына/.test(t.t))).toBe(false);
-    // скобка от Адама к точке есть, линий к детям нет — детей нет на небе
-    expect((f.data.unionLines ?? '').split(';')).toEqual(['u:adam+eva=adam']);
+    // линий союза нет: ни Евы, ни детей на небе нет — ромб стоит на самом следе Адама
+    expect(f.data.unionLines ?? '').toBe('');
   });
 
-  it('раскрытый союз: залитая точка между строками Адама и Евы, правее их звёзд и левее первого ребёнка; линии к Адаму, Еве и каждому сыну — своим цветом', () => {
+  // этап 11 (решения 78, 79, 84): ромб — на следе Евы, от Адама к нему — черта брака; к Каину и Авелю — зубцы тоном текста
+  // (цвет — только у рода выбранного лица), к Сифу — лента (одна связь — одна линия)
+  it('раскрытый союз: залитый ромб на следе Евы, правее звёзд супругов и левее первого ребёнка; черта брака от Адама, зубцы к Каину и Авелю', () => {
     reveal.expandUnion('u:adam+eva', 'adam');
     const ids = [...work.workSet.value.keys()];
     expect(ids.sort()).toEqual(['adam', 'avel', 'eva', 'kain', 'sif']);
@@ -247,25 +248,25 @@ describe('точки союзов на холсте (решение 76)', () => 
     expect(q.hidden).toBe(0);
     const a = at(f, 'adam');
     const e = at(f, 'eva');
-    // по высоте — между строками мужа и жены
-    expect(q.y).toBeGreaterThan(Math.min(a.y, e.y) + 4);
-    expect(q.y).toBeLessThan(Math.max(a.y, e.y) - 4);
+    // ромб — на следе матери (Г4)
+    expect(Math.abs(q.y - e.y)).toBeLessThanOrEqual(1);
     // по времени — правее звёзд супругов и левее звезды первого ребёнка
     const kids = ['kain', 'avel', 'sif'].map((id) => at(f, id));
-    expect(q.x).toBeGreaterThan(Math.max(a.x, e.x) + plates.DOT_CLEAR - 1);
-    expect(q.x).toBeLessThan(Math.min(...kids.map((k) => k.x)) - plates.DOT_CLEAR + 1);
-    // линии: скобки от обоих супругов, к каждому сыну — своя, у каждого свой цвет (ветвь у отца)
+    expect(q.x).toBeGreaterThan(Math.max(a.x, e.x));
+    expect(q.x).toBeLessThan(Math.min(...kids.map((k) => k.x)));
     const lines = (f.data.unionLines ?? '').split(';');
-    expect(lines).toContain('u:adam+eva=adam');
-    expect(lines).toContain('u:adam+eva=eva');
+    // от следа Адама до ромба на следе Евы — вертикаль союза (черта брака или ствол, если между ними строки детей)
+    const verts = links
+      .parseLinkLog(f.data.links ?? '')
+      .filter((l) => /^[us]\.adam\.eva\./.test(l.ks) && (l.kind === 'bar' || l.kind === 'trunk') && l.pts[0] === l.pts[2])
+      .map((l) => [Math.min(l.pts[1], l.pts[3]), Math.max(l.pts[1], l.pts[3])]);
+    const lo = Math.min(...verts.map((v) => v[0]));
+    const hi = Math.max(...verts.map((v) => v[1]));
+    expect(lo).toBeLessThanOrEqual(Math.min(a.y, e.y) + 1);
+    expect(hi).toBeGreaterThanOrEqual(Math.max(a.y, e.y) - 1);
     const kidLines = lines.filter((l) => l.includes('>'));
-    expect(kidLines.map((l) => l.split('>')[1].split(':')[0]).sort()).toEqual(['avel', 'kain', 'sif']);
-    const colors = kidLines.map((l) => l.split(':').pop());
-    expect(new Set(colors).size).toBe(3);
-    for (const l of kidLines) {
-      const kid = l.split('>')[1].split(':')[0];
-      expect(l.split(':').pop()).toBe(plates.kidColor(U('u:adam+eva'), kid, 'day'));
-    }
+    expect(kidLines.map((l) => l.split('>')[1].split(':')[0]).sort()).toEqual(['avel', 'kain']);
+    for (const l of kidLines) expect(l.split(':').pop()).toBe('');
     // подписи и точки не накладываются; все лица набора подписаны; звёзды — не под полем точки
     expect(f.s.labelStats().overlaps).toBe(0);
     expect(f.data.unnamed).toBe('');
@@ -286,10 +287,14 @@ describe('точки союзов на холсте (решение 76)', () => 
     for (const uid of ['u:avraam+sarra', 'u:avraam+agar', 'u:avraam+khettura']) expect(ps.map((q) => q.uid)).toContain(uid);
     for (let i = 0; i < ps.length; i++) for (let j = i + 1; j < ps.length; j++) expect(cross(ps[i], ps[j])).toBe(false);
     expect(f.s.labelStats().overlaps).toBe(0);
-    // Сарра и Агарь на небе: их союзы с Авраамом — точки между строками, со скобками от обоих
+    // этап 11 (Г4, Г1): у Сарры и Агари — ромбы на их следах и черты брака от Авраама; к Измаилу — зубец, к Исааку — лента
     const lines = (f.data.unionLines ?? '').split(';');
-    for (const l of ['u:avraam+sarra=avraam', 'u:avraam+sarra=sarra', 'u:avraam+agar=agar', 'u:avraam+sarra>isaak', 'u:avraam+agar>izmail'])
-      expect(lines.some((x) => x.startsWith(l))).toBe(true);
+    for (const l of ['u:avraam+agar>izmail']) expect(lines.some((x) => x.startsWith(l)), l).toBe(true);
+    expect(lines.some((x) => x.startsWith('u:avraam+sarra>isaak'))).toBe(false);
+    for (const w of ['sarra', 'agar']) {
+      const d = dots(f.data.dots ?? '').find((x) => x.uid === `u:avraam+${w}`)!;
+      expect(Math.abs(d.y - at(f, w).y), w).toBeLessThanOrEqual(1);
+    }
   });
 
   it('«+» после подписи лица с нераскрытыми союзами — знак reveal, щелчок показывает союзы', () => {

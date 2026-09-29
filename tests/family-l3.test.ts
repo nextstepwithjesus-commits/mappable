@@ -9,6 +9,10 @@
  *    у следа отца (и в режиме «набор», MAP-80); наведение на гребёнку (familyAt, setFamilyHover) высвечивает её;
  *  — знак брака «‖» занимает место в проверке наложений и сдвигается вдоль выноски (MAP-76);
  *  — коса на данных линий: одно перекрестье на поколение, между Салафиилом и Зоровавелем — ни одного лишнего.
+ * Этап 11 (решение 78, STAGE11 § 2) заменил гребёнки грамматикой связей src/render/links.ts: помет порядка на небе нет
+ * (Г9), помет матерей «от …» нет — мать видна по положению или по имени у ромба (Г8), у каждого союза свой ромб, наведение
+ * ловит связь (Sky.linkAt), а не гребёнку, черта брака «‖» — линия связи. Тесты этих мест переписаны под новое поведение;
+ * порядок перечисления и его ссылки (orderSource, orderListing) и коса — прежние.
  * Нужна свежая сборка данных: npm run -s data.
  */
 import { readFileSync } from 'node:fs';
@@ -42,6 +46,7 @@ let atlas: typeof import('../src/data/atlas.ts');
 let years: typeof import('../src/engine/years.ts');
 let eribbons: typeof import('../src/engine/ribbons.ts');
 let work: typeof import('../src/ui/work.ts');
+let links: typeof import('../src/render/links.ts');
 type Sky = InstanceType<typeof import('../src/render/sky.ts').Sky>;
 
 beforeAll(async () => {
@@ -52,6 +57,7 @@ beforeAll(async () => {
   years = await import('../src/engine/years.ts');
   eribbons = await import('../src/engine/ribbons.ts');
   work = await import('../src/ui/work.ts');
+  links = await import('../src/render/links.ts');
 });
 
 const LAYERS = { lifelines: true, connectors: true, constellations: true, epochs: true, ribbons: true, tensions: true, ghosts: true, labels: true };
@@ -82,6 +88,15 @@ const window = (year: number, span: number, lane = 0) => (s: Sky) => {
   s.cam.set({ x0: s.xOf(t) - (vp.l + vw / 2) / kx, kx, laneTop: lane + (vp.t + vp.b) / 2 / s.cam.kyFor(kx) });
 };
 const notesOf = (s: Sky) => s.labelStats().boxes.filter((b) => b.kind === 'note');
+/** Пути связей последнего кадра, нарисованные в нём (px холста: со сдвигом кадра связей). */
+function drawnLinks(s: Sky) {
+  const d = s.linkFrame()!;
+  const paths = d.frame.paths.filter((q) => trails.linkShown(q, d) && (d.alpha > 0.01 || d.lit(q))).map((q) => ({ ...q, pts: q.pts.map((v, k) => v + (k % 2 ? d.dy : d.dx)) }));
+  const nodes = d.frame.nodes.map((n) => ({ ...n, x: n.x + d.dx, y: n.y + d.dy }));
+  return { d, paths, nodes };
+}
+/** Мать союза «u:отец+мать» (null — не названа). */
+const motherOfUnion = (u: string): string | null => /^u:[a-z0-9-]*\+([a-z0-9-]*)/.exec(u)?.[1] || null;
 
 // ---------- MAP-73, решение 41: помета порядка и её ссылка ----------
 
@@ -122,97 +137,110 @@ describe('порядок перечисления: ссылка — место, 
     const l = trails.listingOf(['ir-syn-iudy', 'onan', 'shela-syn-iudy', 'fares'].filter((id) => atlas.byId.has(id)));
     expect(l && nb(l.text)).toMatch(/^Быт 38:/);
   });
-  it('на небе помета — только у семьи выбранного лица; без выбора её нет нигде (MAP-73: было 7–8 на экран)', () => {
+  it('помет порядка на небе нет — ни без выбора, ни у семьи выбранного (этап 11, Г9; прежде MAP-73 — у семьи выбранного); текст — в подсказке и карточке союза', () => {
+    // этап 11 (STAGE11 § 2, Г9): порядок рождения виден по положению; помета «годы — по порядку …» ушла с неба в подсказку и
+    // карточку союза (familyOrderNote, диапазон — по стихам, где названы дети этого союза)
+    const order = (s: Sky) => notesOf(s).filter((b) => /по порядку/.test(nb(b.text)));
     for (const [y, w, l] of [[-1700, 300, 0], [-2070, 250, 21], [-1915, 70, -2]] as const) {
       const { s } = drawSky(window(y, w, l));
-      expect(notesOf(s).filter((b) => /^годы — по порядку/.test(nb(b.text))), `${y}`).toEqual([]);
+      expect(order(s), `${y}`).toEqual([]);
     }
-    const { s } = drawSky(window(-1915, 70, -2), { selected: 'iakov' });
-    const own = notesOf(s).map((b) => nb(b.text)).filter((t) => t.startsWith('годы — по порядку'));
-    expect(own).toEqual(['годы — по порядку Быт 29:32–30:24; 35:16–18, выв.']);
-    expect(s.labelStats().overlaps).toBe(0);
-    // выбран сын — помета у его братьев и сестёр
-    const son = drawSky(window(-1915, 70, -2), { selected: 'ruvim' });
-    expect(notesOf(son.s).some((b) => nb(b.text).startsWith('годы — по порядку Быт 29:32'))).toBe(true);
+    for (const selected of ['iakov', 'ruvim']) {
+      const { s } = drawSky(window(-1915, 70, -2), { selected });
+      expect(order(s), selected).toEqual([]);
+      expect(s.labelStats().overlaps, selected).toBe(0);
+    }
+    expect(nb(links.familyOrderNote('u:iakov+liya')!)).toMatch(/^по порядку перечисления, Быт 29:32/);
+    expect(nb(links.familyOrderNote('u:iakov+liya')!)).toMatch(/, выв\.$/);
   });
 });
 
 // ---------- MAP-74, MAP-80: гребёнки матерей ----------
 
-describe('гребёнки матерей (MAP-74)', () => {
-  it('у детей Давида от семи матерей — одно сплошное начертание стволов; помета матери у её ребёнка, не у следа Давида', () => {
+describe('союзы матерей: у каждого свой ромб и свои зубцы (MAP-74; этап 11, Г4, Г6, Г8)', () => {
+  it('у детей Давида от семи матерей — сплошные линии без штриха; помет «от …» нет, у ромба на следе Давида — имя матери', () => {
     const { s, calls } = drawSky(window(-1010, 50, 0));
-    // ни одного штриха у связей без выделения (штрих — только «потомок выбранного» и «по толкованию»)
+    // ни одного прежнего штриха (штрих [5, 3] — только иное происхождение, точки [1, 3] — толкование и нить народа, Г10)
     const dashes = new Set(calls.filter((c) => c[0] === 'setLineDash').map((c) => JSON.stringify(c[1])));
     for (const d of ['[3,2]', '[1,2]', '[5,2,1,2]']) expect(dashes.has(d), d).toBe(false);
+    // этап 11, Г8: мать видна по положению или по имени у ромба; пометы «от Вирсавии» у ребёнка ушли с неба
+    expect(notesOf(s).filter((b) => /^от [А-ЯЁ]/.test(b.text))).toEqual([]);
     const yDavid = s.cam.sy(s.node('david')!.lane);
-    const moms = notesOf(s).filter((b) => /^от [А-ЯЁ]/.test(b.text));
-    expect(moms.length).toBeGreaterThanOrEqual(5);
-    expect(moms.map((b) => b.text)).toContain('от Вирсавии');
-    for (const b of moms) {
-      const mother = atlas.persons.find((q) => trails.motherNote(q.id) === b.text)!;
-      // на строке одного из её детей, у которых отец — Давид (или рядом с его стволом), и не на строке Давида
-      const kids = atlas.persons.filter((q) => q.mother === mother.id && q.father === 'david' && s.node(q.id));
-      const rows = kids.map((q) => s.cam.sy(s.node(q.id)!.lane));
-      const cy = b.y + b.h / 2;
-      expect(Math.abs(cy - yDavid), b.text).toBeGreaterThan(4);
-      expect(rows.some((y) => Math.abs(y - cy) < 16) || kids.length === 0, `${b.text}: ${cy} vs ${rows.join(',')}`).toBe(true);
+    const { nodes } = drawnLinks(s);
+    const own = nodes.filter((n) => n.kind === 'union' && n.union.startsWith('u:david+') && n.owner === 'david');
+    // у каждого союза Давида с детьми на небе — свой ромб на следе Давида, у названной матери — её имя у ромба
+    expect(own.length).toBeGreaterThanOrEqual(5);
+    for (const n of own) {
+      expect(Math.abs(n.y - yDavid), n.union).toBeLessThan(1);
+      expect(n.mother ?? '', n.union).toBe(motherOfUnion(n.union) ?? '');
     }
+    const names = s.labelStats().boxes.filter((b) => b.kind === 'plate' && b.text).map((b) => b.text);
+    expect(names).toContain('Вирсавия');
     expect(s.labelStats().overlaps).toBe(0);
   });
-  it('гребёнки разных матерей одного отца не сливаются: стволы — не ближе 3 px, у каждой матери свои дети', () => {
-    expect(trails.COMB_SHIFT).toBe(3);
-    for (const span of [50, 300, 700]) {
+  it('союзы разных матерей одного отца не сливаются: ромбы не ближе 2r + 1, вертикали не ближе 8 px, у зубца — ребёнок своего союза', () => {
+    // этап 11 (Г4, Г6, Г7): прежние гребёнки со сдвигом 3 px заменены стволами союзов; разные союзы — не ближе 8 px (или общая
+    // шина с узлами каждого союза), ромбы одного следа — раздельно. Масштабы: окно 50 лет, «лицо и поколения вокруг», 300 лет
+    for (const span of [50, 170, 300]) {
       const { s } = drawSky(window(-1010, span, 0));
-      const combs = trails.familyCombs(s).filter((c) => c.parent === 'david');
-      expect(combs.length, `${span}`).toBeGreaterThan(3);
-      for (const a of combs)
-        for (const b of combs) {
-          if (a === b || a.mother === b.mother || !(a.lo < b.hi && b.lo < a.hi)) continue;
-          expect(Math.abs(a.x - b.x), `${span}: ${a.mother} / ${b.mother}`).toBeGreaterThanOrEqual(trails.COMB_SHIFT - 0.5);
+      const { paths, nodes } = drawnLinks(s);
+      const dav = paths.filter((q) => q.union?.startsWith('u:david+'));
+      expect(dav.filter((q) => q.kind === 'tooth').length, `${span}`).toBeGreaterThan(5);
+      // у зубца — ребёнок своего союза (отец и мать ребёнка — супруги союза)
+      for (const q of dav.filter((p) => p.kind === 'tooth' && p.key.kind === 'child')) {
+        const kid = atlas.byId.get((q.key as { child: string }).child)!;
+        expect(kid.father, q.ks).toBe('david');
+        expect(kid.mother ?? null, q.ks).toBe(motherOfUnion(q.union!));
+      }
+      // вертикали разных союзов с перекрытием по высоте: на одной шине или не ближе 8 px
+      const vs: { x: number; y0: number; y1: number; u: string }[] = [];
+      for (const q of dav)
+        for (const [x0, y0, x1, y1] of links.segmentsOf(q)) if (Math.abs(x0 - x1) < 0.5 && Math.abs(y0 - y1) > 0.5) vs.push({ x: x0, y0: Math.min(y0, y1), y1: Math.max(y0, y1), u: q.union! });
+      for (const a of vs)
+        for (const b of vs) {
+          if (a.u >= b.u || Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0) <= 0.5) continue;
+          const dx = Math.abs(a.x - b.x);
+          expect(dx < 0.5 || dx >= links.TRUNK_GAP - 0.5, `${span}: ${a.u} / ${b.u}: ${dx}`).toBe(true);
         }
-      // у гребёнки — дети одной матери
-      for (const c of combs) for (const k of c.kids) expect(atlas.byId.get(k)!.mother ?? null, k).toBe(c.mother);
+      // ромбы союзов на следе Давида — раздельно
+      const on = nodes.filter((n) => n.owner === 'david').sort((a, b) => a.x - b.x);
+      for (let k = 1; k < on.length; k++) expect(on[k].x - on[k - 1].x, `${span}: ${on[k - 1].union} / ${on[k].union}`).toBeGreaterThanOrEqual(2 * links.NODE_R_MAP + 1 - 0.01);
+      expect(s.labelStats().overlaps, `${span}`).toBe(0);
     }
   });
-  it('наведение на гребёнку: familyAt находит гребёнку и помету; гребёнка матери ярче и толще, появляется помета порядка', () => {
+  it('наведение: ромб — союз, зубец — связь с ребёнком (Sky.linkAt); гребёнок нет (familyAt пуст); наведённый союз толще, помета порядка — в подсказке', () => {
     const f = drawSky(window(-1010, 50, 0));
     const { s } = f;
-    // помета матери ловится указателем
-    const note = notesOf(s).find((b) => b.text === 'от Вирсавии')!;
-    const byNote = trails.familyAt(s, note.x + note.w / 2, note.y + note.h / 2)!;
-    expect(byNote.kind).toBe('mother');
-    expect(byNote.parent).toBe('david');
-    expect(byNote.mother).toBe('virsaviya');
-    // ствол гребёнки — тоже: у ребёнка Вирсавии, над его звездой
-    const kid = atlas.persons.find((q) => q.mother === 'virsaviya' && q.father === 'david' && s.node(q.id) && s.indexOf(q.id) !== undefined && q.id !== 'solomon' && q.id !== 'nafan-syn-davida')!;
-    const x = Math.round(s.cam.sx(s.X0[s.indexOf(kid.id)!])) + 0.5;
-    const y = s.cam.sy(s.node(kid.id)!.lane);
-    const yD = s.cam.sy(s.node('david')!.lane);
-    const byStem = trails.familyAt(s, x, (y + yD) / 2);
-    expect(byStem?.parent).toBe('david');
-    // без наведения помета порядка у детей Давида не стоит; с наведением — стоит, и гребёнка рисуется толщиной 1,5 px
-    expect(notesOf(s).some((b) => nb(b.text).startsWith('годы — по порядку'))).toBe(false);
-    expect(trails.setFamilyHover(s, byNote)).toBe(true);
-    expect(trails.setFamilyHover(s, byNote)).toBe(false);
-    f.redraw();
-    expect(notesOf(s).some((b) => nb(b.text).startsWith('годы — по порядку 1 Пар 3:'))).toBe(true);
-    expect(f.calls.some((c) => c[0] === '=lineWidth' && c[1] === 1.5)).toBe(true);
-    expect(s.labelStats().overlaps).toBe(0);
-    trails.setFamilyHover(s, null);
+    const { nodes, paths } = drawnLinks(s);
+    // этап 11, § 8: под указателем — связь; прежний familyAt гребёнок и помет матерей больше ничего не находит
+    const n = nodes.find((q) => q.union === 'u:david+virsaviya' && q.kind === 'union')!;
+    const atNode = s.linkAt(n.x, n.y, 4)!;
+    expect(atNode.kind).toBe('node');
+    expect(atNode.key).toEqual({ kind: 'union', union: 'u:david+virsaviya' });
+    const t = paths.find((q) => q.kind === 'tooth' && q.union === 'u:david+virsaviya')!;
+    const mx = (t.pts[0] + t.pts[2]) / 2;
+    const my = t.pts[1];
+    const atTooth = s.linkAt(mx, my, 4)!;
+    expect(atTooth.key).toEqual(t.key);
+    expect(trails.familyAt(s, mx, my)).toBe(null);
+    expect(trails.familyCombs(s)).toEqual([]);
+    // наведённый союз рисуется толщиной 2 px (без наведения — 1 px)
+    const wide = (c: typeof f.calls) => c.filter((q) => q[0] === '=lineWidth' && q[1] === 2).length;
+    const before = wide(f.calls);
+    const hov = drawSky(window(-1010, 50, 0), { linkHover: { kind: 'union', union: 'u:david+virsaviya' } });
+    expect(wide(hov.calls)).toBeGreaterThan(before);
+    expect(notesOf(hov.s).some((b) => /по порядку/.test(nb(b.text)))).toBe(false);
+    expect(nb(links.familyOrderNote('u:david+virsaviya')!)).toMatch(/^по порядку перечисления, 2 Цар 5:14/);
   });
-  it('режим «набор» (MAP-80): помета матери — у её ребёнка, а не у ленты под «Соломон»', () => {
+  it('набор (MAP-80; этап 11 — семейная укладка): помет «от …» нет, ромб каждого союза — на следе матери', () => {
     const ids = new Set(work.scopeIds('david', { kind: 'family' }).map((x) => x.id));
     const { s } = drawSky(() => {}, {}, { view: { mode: 'work', set: ids, foldDesc: [], foldGroups: [] }, before: (q) => q.fitAll() });
-    const yDavid = s.cam.sy(s.node('david')!.lane);
-    const moms = notesOf(s).filter((b) => /^от [А-ЯЁ]/.test(b.text));
-    expect(moms.length).toBeGreaterThanOrEqual(3);
-    const sol = s.labelStats().boxes.find((b) => b.kind === 'star' && b.id === 'solomon');
-    for (const b of moms) {
-      expect(Math.abs(b.y + b.h / 2 - yDavid), b.text).toBeGreaterThan(4);
-      // не под подписью Соломона (у ленты): помета Ахиноамы — у Амнона
-      if (sol && b.text === 'от Ахиноамы') expect(Math.abs(b.y - (sol.y + sol.h)) < 6 && Math.abs(b.x - sol.x) < 40).toBe(false);
-    }
+    expect(notesOf(s).filter((b) => /^от [А-ЯЁ]/.test(b.text))).toEqual([]);
+    const { d, nodes } = drawnLinks(s);
+    expect(d.frame.layout).toBe('family');
+    const named = nodes.filter((n) => n.kind === 'union' && n.union.startsWith('u:david+') && motherOfUnion(n.union) && s.node(motherOfUnion(n.union)!));
+    expect(named.length).toBeGreaterThanOrEqual(3);
+    for (const n of named) expect(n.owner, n.union).toBe(motherOfUnion(n.union));
     expect(s.labelStats().overlaps).toBe(0);
   });
 });
@@ -220,12 +248,20 @@ describe('гребёнки матерей (MAP-74)', () => {
 // ---------- MAP-76: знак брака ----------
 
 describe('знак брака в проверке наложений (MAP-76)', () => {
-  it('знак «‖» — в замере подписей: ни одного наложения на подписи; у Моисея и Сепфоры он есть', () => {
+  it('черта брака «‖» у Моисея и Сепфоры — линия связи (ключ супруга); подписи на ней не лежат, наложений нет', () => {
+    // этап 11 (Г4): черта брака — путь связи kind 'bar' от мужа к ромбу союза (links.ts), а не знак в замере подписей;
+    // подписи обходят линии связей (Я12), знак ромба на конце черты — свой
     const { s } = drawSky(window(-1480, 280, 0), { selected: 'moisey' }, { before: (q) => { const n = q.node('moisey')!; q.cam.laneTop = n.lane + 380 / q.cam.ky; } });
+    const { paths } = drawnLinks(s);
+    const bars = paths.filter((q) => q.kind === 'bar' && q.union === 'u:moisey+sepfora');
+    expect(bars.length).toBeGreaterThan(0);
+    expect(bars[0].key.kind).toBe('spouse');
     const st = s.labelStats();
-    const marks = st.boxes.filter((b) => b.kind === 'mark' && b.text === '‖');
-    expect(marks.length).toBeGreaterThan(0);
-    expect(marks.some((b) => b.id === 'sepfora')).toBe(true);
+    for (const q of bars)
+      for (const [x0, y0, x1, y1] of links.segmentsOf(q)) {
+        const on = st.boxes.filter((b) => !(b.kind === 'plate' && !b.text) && b.kind !== 'frame' && Math.max(x0, x1) > b.x && Math.min(x0, x1) < b.x + b.w && Math.max(y0, y1) > b.y && Math.min(y0, y1) < b.y + b.h);
+        expect(on.map((b) => b.text), q.ks).toEqual([]);
+      }
     expect(st.overlaps).toBe(0);
   });
   it('знак 8 px сдвигается вдоль выноски; выноска не рисуется под подписью', () => {

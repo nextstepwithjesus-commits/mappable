@@ -237,6 +237,22 @@
 .passport dd.fact {
   padding-right: max(40px, 2.5rem);
 }
+/* «Созвездие» паспорта — ссылка в лист «Показ» на этом созвездии (этап 11, § 5): как имя-ссылка в тексте, строчная */
+.passport .pass-link {
+  display: inline;
+  text-align: inherit;
+  text-decoration-line: underline;
+  text-decoration-color: var(--rule);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+.passport .pass-link:hover {
+  color: var(--ink);
+  text-decoration-color: var(--ink);
+}
+.passport .pass-link:focus-visible {
+  outline-offset: 1px;
+}
 .folio .passport .mark {
   right: 0;
   white-space: nowrap;

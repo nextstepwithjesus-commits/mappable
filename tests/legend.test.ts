@@ -1,11 +1,16 @@
 /**
  * «Условные знаки» — как читать карту (G5; UX-35, VIS-31, VIS-32, CARD-43; принцип 3 docs/UI-PROMPT.md):
- *  — образцы рисуют функции неба (drawGlyph, drawLifeTrail, drawDescent, drawBracket, drawMarriage, buildRibbons,
- *    drawStrands), а не свои копии: в Legend.tsx нет ни одного вызова рисования холста, кроме переноса вырезки;
+ *  — образцы рисуют функции неба (drawGlyph, drawLifeTrail, drawDescent, buildRibbons, drawStrands, drawLinkSample),
+ *    а не свои копии: в Legend.tsx нет ни одного вызова рисования холста, кроме переноса вырезки;
  *  — у каждого знака и каждого вида следа и связи есть образец, и он передаёт функции неба именно этот вид;
  *  — вырезки рамки, облаков, созвездий, скоплений, колец, пути родства и меридиана — кадр Sky.draw, перенесённый
  *    на холст образца; лица, на которых они стоят, есть на небе;
- *  — разделы панели идут по порядку: как читать карту, небо, знаки, линии, время, карточка, клавиши, слои.
+ *  — разделы панели идут по порядку: как читать карту, небо, карточки на небе, знаки, линии, время, карточка, клавиши,
+ *    слои.
+ * Этап 11 (решения 77, 78): раздела «Древо» нет; с неба ушли отводы с квадратиком матери, скобы и гребёнки, пометы
+ * порядка, выноска к дальней жене и штрих потомков — их образцы (descent, mother, tension, bracket, mothers, order,
+ * marriage, marriageFar, family) и прежний образец союза (plates, drawUnionSample) заменены знаками грамматики связей
+ * drawLinkSample (src/render/plates.ts): ромб, узел, ствол с зубцами и чертой брака, разрыв, обрывки, лента, выбранная связь.
  * Нужна свежая сборка данных: npm run -s data.
  */
 import { readFileSync } from 'node:fs';
@@ -37,7 +42,7 @@ vi.mock('../src/render/labels.ts', async (orig) => {
 });
 vi.mock('../src/render/plates.ts', async (orig) => {
   const m = await orig<typeof import('../src/render/plates.ts')>();
-  return { ...m, drawUnionSample: vi.fn(m.drawUnionSample) };
+  return { ...m, drawUnionSample: vi.fn(m.drawUnionSample), drawLinkSample: vi.fn(m.drawLinkSample) };
 });
 vi.mock('../src/render/branches.ts', async (orig) => {
   const m = await orig<typeof import('../src/render/branches.ts')>();
@@ -100,7 +105,7 @@ const PAL = {
   sheet2: '#1a2f57', dimInk: 0.4, dimInk2: 0.5, lineAlpha: 0.7, glow: true, ribbonGlow: [0.06, 0.1] as [number, number], ribbonTone: 0,
 };
 
-const { PAINTERS, CROPS, magnitude, paintCrop, cropState, orderSample } = await import('../src/ui/panels/Legend.tsx');
+const { PAINTERS, CROPS, magnitude, paintCrop, cropState } = await import('../src/ui/panels/Legend.tsx');
 const glyphs = await import('../src/render/glyphs.ts');
 const trails = await import('../src/render/trails.ts');
 const ribbons = await import('../src/render/ribbons.ts');
@@ -143,6 +148,7 @@ const spies = {
   drawFamilyText: vi.mocked(trails.drawFamilyText),
   drawBranchSample: vi.mocked(branches.drawBranchSample),
   drawUnionSample: vi.mocked(plates.drawUnionSample),
+  drawLinkSample: vi.mocked(plates.drawLinkSample),
 };
 type SpyName = keyof typeof spies;
 
@@ -172,40 +178,24 @@ describe('образцы — функции неба, а не свои копи�
     expect(CROPS.fold.view().foldDesc).toEqual(['david']);
     expect(CROPS.fold.at()).toEqual({ ids: ['david'] });
   });
-  it('помета «годы — по порядку …, выв.» — функцией неба drawFamilyText у гребёнки детей; текст — из данных (UX-73)', () => {
-    // сыновья Иессея названы по порядку в 1 Пар 2:13–15 — та же помета, что небо ставит у семьи Давида
-    expect(orderSample().replace(/\s/g, ' ')).toBe('годы — по порядку 1 Пар 2:13–15, выв.');
-    const s = paint('order', 420, 56);
-    expect(s.drawFamilyText.mock.calls.map((c) => c[2])).toEqual([orderSample()]);
-    expect(s.drawBracket.mock.calls[0][1].kids.length).toBeGreaterThan(1);
-    // помета — слева от первого ребёнка и не выходит за край образца
-    const tx = s.drawFamilyText.mock.calls[0][3] as number;
-    expect(tx).toBeGreaterThanOrEqual(0);
-    expect(tx).toBeLessThan(s.drawBracket.mock.calls[0][1].x);
-  });
   it('подсветка ветвей выбранного лица — образцом неба drawBranchSample, во всю ширину строки (решение 69)', () => {
     const s = paint('branches', 400, 64);
     // звёзды образца — знаком неба drawGlyph, который вызывает сам образец
     expect(used(s)).toEqual(['drawGlyph', 'drawBranchSample']);
     expect(s.drawBranchSample.mock.calls[0].slice(2)).toEqual([400, 64]);
   });
-  it('союз — точкой неба drawUnionSample: раскрытый ромб с супругами и тремя детьми, свёрнутый — правее, во всю строку (решения 67, 70, 76)', () => {
-    const s = paint('plates', 460, 64);
-    // звёзды образца — знаком неба drawGlyph: муж, жена (знак женщины), три ребёнка, лицо со свёрнутым союзом
-    expect(used(s)).toEqual(['drawGlyph', 'drawUnionSample']);
-    expect(s.drawUnionSample.mock.calls[0].slice(2)).toEqual([460, 64]);
-    const sexes = s.drawGlyph.mock.calls.map((c) => c[3].sex);
-    expect(sexes.length).toBe(6);
-    expect(sexes.filter((x) => x === 'f').length).toBe(1);
-    const at = s.drawUnionSample.mock.results[0].value as { open: { x: number; y: number }; closed: { x: number; y: number } };
-    // оба ромба — внутри образца, свёрнутый правее раскрытого
-    for (const d of [at.open, at.closed]) {
-      expect(d.x).toBeGreaterThan(0);
-      expect(d.x).toBeLessThan(460);
-      expect(d.y).toBeGreaterThan(0);
-      expect(d.y).toBeLessThan(64);
+  it('грамматика связей — образцами неба drawLinkSample: ромб, узел, ствол с зубцами и «‖», разрыв, обрывки, лента, выбранная связь (решение 78)', () => {
+    const signs = {
+      linkTrunk: 'trunk', linkNode: 'node', linkJoin: 'join', linkCut: 'cut', linkStub: 'stub', linkRibbon: 'ribbon', linkSelected: 'selected',
+    } as const;
+    for (const [k, sign] of Object.entries(signs) as [keyof typeof signs, (typeof signs)[keyof typeof signs]][]) {
+      const s = paint(k, 420, 56);
+      // образец — функция неба с этим знаком, во всю ширину строки; своих линий у образца нет
+      expect(s.drawLinkSample.mock.calls.map((c) => c.slice(2)), k).toEqual([[420, 56, sign]]);
+      expect(used(s), k).toContain('drawLinkSample');
     }
-    expect(at.closed.x).toBeGreaterThan(at.open.x + 100);
+    // прежних образцов связей больше нет: их знаков на небе нет (STAGE11 § 2, «С неба уходят»)
+    for (const k of ['descent', 'mother', 'tension', 'bracket', 'mothers', 'order', 'marriage', 'marriageFar', 'family', 'plates']) expect(k in PAINTERS, k).toBe(false);
   });
   it('семь величин звезды — drawGlyph с величинами 0…6', () => {
     const seen: number[] = [];
@@ -266,36 +256,8 @@ describe('образцы — функции неба, а не свои копи�
     expect(band.x0).toBeLessThan(band.x1);
     expect(star[3].hollow).toBeFalsy();
   });
-  it('отвод, мать на отводе, знак разрыва, призрак жены — drawDescent', () => {
-    const d = paint('descent').drawDescent.mock.calls[0][1];
-    expect(!d.ghost && !d.mother && !d.tension).toBe(true);
-    expect(d.y1).toBeGreaterThan(d.y0);
-    expect(paint('mother').drawDescent.mock.calls[0][1].mother).toBeTruthy();
-    expect(paint('tension').drawDescent.mock.calls[0][1].tension).toBeTruthy();
+  it('призрак жены — drawDescent с пунктиром призрака', () => {
     expect(paint('ghost').drawDescent.mock.calls[0][1].ghost).toBe(true);
-  });
-  it('скоба пары и гребёнки разных матерей — drawBracket, одним сплошным начертанием (MAP-74)', () => {
-    expect(paint('bracket').drawBracket.mock.calls[0][1].kids.length).toBeGreaterThan(1);
-    const combs = paint('mothers', 96, 52).drawBracket.mock.calls.map((c) => c[1]);
-    expect(combs.length).toBe(2);
-    // у каждой матери своя гребёнка: свой ствол и свои дети; штриха нет
-    expect(combs[0].x).not.toBe(combs[1].x);
-    for (const b of combs) {
-      expect(b.dash?.length ?? 0).toBe(0);
-      expect(b.kids.length).toBe(2);
-    }
-  });
-  it('брак «‖»: рядом — во всю высоту, к дальней жене — короткий знак и выноска', () => {
-    const near = paint('marriage').drawMarriage.mock.calls[0][1];
-    expect(Math.abs(near.yW - near.yH)).toBeLessThanOrEqual(near.near);
-    const far = paint('marriageFar').drawMarriage.mock.calls[0][1];
-    expect(Math.abs(far.yW - far.yH)).toBeGreaterThan(far.near);
-  });
-  it('выделение рода: предки сплошные, потомки штрихом, братья — своей толщиной (LINK_STYLE неба)', () => {
-    const st = paint('family', 340, 64).drawBracket.mock.calls.map((c) => c[1].dash);
-    expect(st).toContainEqual(trails.LINK_STYLE.anc.dash);
-    expect(st).toContainEqual(trails.LINK_STYLE.desc.dash);
-    expect(trails.LINK_STYLE.desc.dash.length).toBeGreaterThan(0);
   });
   it('ленты: коса, расхождение и звено по толкованию — buildRibbons и drawStrands', () => {
     const s = paint('ribbons', 340, 64);
@@ -372,10 +334,10 @@ describe('вырезки из неба', () => {
 });
 
 describe('разделы панели', () => {
-  it('как читать карту, небо, древо, знаки, линии, время, карточка, клавиши, слои — по порядку', () => {
+  it('как читать карту, небо, карточки на небе, знаки, линии, время, карточка, клавиши, слои — по порядку', () => {
     const ids = [...source.matchAll(/<h3 id="(legend-[a-z]+)"/g)].map((x) => x[1]);
-    // «Древо» (решение 73) — сразу после «Неба»: второй вид главной области
-    expect(ids).toEqual(['legend-guide', 'legend-sky', 'legend-tree', 'legend-signs', 'legend-lines', 'legend-time', 'legend-card', 'legend-keys', 'legend-layers']);
+    // этап 11 (решение 77): вида «Древо» нет; сразу после «Неба» — карточки у звезды, у ромба и у связи
+    expect(ids).toEqual(['legend-guide', 'legend-sky', 'legend-cards', 'legend-signs', 'legend-lines', 'legend-time', 'legend-card', 'legend-keys', 'legend-layers']);
   });
   it('название панели — «Условные знаки», пояснение начинается с «Как читать карту:»', () => {
     expect(source).toMatch(/<Sheet title="Условные знаки" lead="Как читать карту: [^"]+">/);

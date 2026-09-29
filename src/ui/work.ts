@@ -5,7 +5,11 @@
  *
  *  — workSet — лица, с которыми читатель работает: id → откуда взято (само лицо, предок, потомок, семья, звено пути).
  *    Хранится в памяти браузера (localStorage) и переживает перезагрузку; без хранилища всё работает, только не помнится.
- *  — skyMode — что показывает небо: «все лица» или только набор (J4; сжатие полос — src/render/rows.ts).
+ *  — show — показ неба (этап 11, § 5; решение 81): всё небо, линии Мессии, ключевые лица, созвездия, род лица или набор.
+ *    Здесь — только сам сигнал и его запись (reveal.ts и show.ts читают его без круга импорта); модель показа —
+ *    составы, строка «На небе: …», числа — src/ui/show.ts. Показ «набор» — это workSet (или набор из ссылки, linkSet).
+ *  — skyMode — прежний переключатель «все лица | набор» (J4): теперь производный от показа — «все лица» у показа «всё
+ *    небо», «набор» у остальных. Запись в него (прежние органы неба) меняет показ.
  *  — foldDesc, foldGroups — свёрнутые потомки лиц и созвездия (J5); помнятся в сеансе (sessionStorage).
  *  — стопка карточек (J6) — в src/ui/stack.ts.
  * Предки и потомки — по графу (src/engine/graph.ts): отцы и матери, дети; связи по толкованию — только по выбору.
@@ -13,6 +17,7 @@
 import { batch, computed, effect, signal } from '@preact/signals';
 import { byId, graph, groupById, lineMembership } from '../data/atlas.ts';
 import { siblings } from '../engine/graph.ts';
+import type { LineageBy, LineageDir, LinksOut } from '../engine/lineage.ts';
 import { walk } from '../render/rows.ts';
 import { selected, focused } from '../state.ts';
 
@@ -112,8 +117,16 @@ export const workIds = computed<ReadonlySet<string>>(() => new Set(workSet.value
 export const linkSet = signal<ReadonlyMap<string, WorkEntry> | null>(null);
 /** Набор, который показывает небо «набор»: из ссылки, пока его смотрят, иначе свой. */
 export const shownSet = computed<ReadonlyMap<string, WorkEntry>>(() => linkSet.value ?? workSet.value);
-/** Лица набора неба множеством: его читает небо (src/render/rows.ts, SkyView). */
-export const shownIds = computed<ReadonlySet<string>>(() => new Set(shownSet.value.keys()));
+/**
+ * Лица на небе множеством: его читает небо (src/render/rows.ts, SkyView). У показа «набор» — набор неба, у показов
+ * созвездий, рода, линий и ключевых лиц — их лица с гостями (src/ui/show.ts пишет их в showOn).
+ */
+export const shownIds = computed<ReadonlySet<string>>(() => {
+  const k = show.value.kind;
+  const on = showOn.value;
+  if (k !== 'set' && k !== 'all' && on) return on;
+  return new Set(shownSet.value.keys());
+});
 
 /** Совпадают ли наборы по составу. */
 export const sameSet = (a: Iterable<string>, b: ReadonlyMap<string, unknown>) => {
@@ -158,7 +171,7 @@ export function adoptLinkSet(): number {
 export function leaveLinkSet() {
   batch(() => {
     linkSet.value = null;
-    if (!workSet.peek().size) skyMode.value = 'all';
+    if (!workSet.peek().size) setShowState({ kind: 'all' });
   });
 }
 
@@ -205,7 +218,7 @@ export function addPath(ids: readonly string[]): number {
   return added;
 }
 
-/** Убрать лицо из работы. */
+/** Убрать лицо из набора. */
 export function removeFromWork(id: string) {
   if (!workSet.peek().has(id)) return;
   const next = new Map(workSet.peek());
@@ -246,22 +259,176 @@ export function workOrder(birth: (id: string) => number | null): string[] {
   });
 }
 
+// ---------- показ (этап 11, § 5; решение 81) ----------
+
+/**
+ * Показ неба: что на нём сейчас. Одновременно действует один показ; поверх него — фокус (лицо, союз, связь).
+ *  all     — всё небо (общая раскладка, карта);
+ *  lines   — линии Мессии (Мф 1, Лк 3), семейная укладка «Г» с коридором;
+ *  key     — ключевые лица (src/ui/reveal.ts, KEY_IDS), карта со свёрткой прочего;
+ *  groups  — созвездия (список id data/groups.json) и связи наружу: обрывками, с роднёй вне созвездия, без связей;
+ *  lineage — род лица: предки, потомки или оба; поколений 1–3 или все (null); по отцам или по крови;
+ *  set     — набор (раскрыто вручную): рабочий набор workSet или набор из ссылки linkSet.
+ */
+export type Show =
+  | { kind: 'all' }
+  | { kind: 'lines' }
+  | { kind: 'key' }
+  | { kind: 'groups'; groups: readonly string[]; links: LinksOut }
+  | { kind: 'lineage'; id: string; dir: LineageDir; gen: 1 | 2 | 3 | null; by: LineageBy }
+  | { kind: 'set' };
+export type ShowKind = Show['kind'];
+export type { LinksOut, LineageDir, LineageBy };
+
+/**
+ * Ключ показа — он же поле «~v» адреса (src/ui/address.ts): «a» — всё небо, «l» — линии Мессии, «k» — ключевые лица,
+ * «s» — набор, «g.nahorites.judah» — созвездия, «r.iuda.d.0.f» — род лица (направление a | d | b, поколений 0 — все,
+ * по отцам f | по крови b). Связи наружу у созвездий — отдельным полем «~x» (showLinksField).
+ */
+export function showKey(s: Show): string {
+  switch (s.kind) {
+    case 'all':
+      return 'a';
+    case 'lines':
+      return 'l';
+    case 'key':
+      return 'k';
+    case 'set':
+      return 's';
+    case 'groups':
+      return ['g', ...s.groups].join('.');
+    case 'lineage':
+      return ['r', s.id, s.dir === 'up' ? 'a' : s.dir === 'down' ? 'd' : 'b', String(s.gen ?? 0), s.by === 'father' ? 'f' : 'b'].join('.');
+  }
+}
+/** Поле «~x»: связи наружу у показа созвездий — 0 без связей, 1 обрывками (по умолчанию, не пишется), 2 с роднёй. */
+export const showLinksField = (s: Show): string | null => (s.kind === 'groups' && s.links !== 'stubs' ? (s.links === 'none' ? '0' : '2') : null);
+
+/** Показ по ключу (поле «~v») и полю «~x»; null — ключ не разобран или называет несуществующее лицо или созвездие. */
+export function parseShow(v: string, x?: string | null): Show | null {
+  const f = v.split('.');
+  switch (f[0]) {
+    case 'a':
+      return f.length === 1 ? { kind: 'all' } : null;
+    case 'l':
+      return f.length === 1 ? { kind: 'lines' } : null;
+    case 'k':
+      return f.length === 1 ? { kind: 'key' } : null;
+    case 's':
+      return f.length === 1 ? { kind: 'set' } : null;
+    case 'g': {
+      const gs = [...new Set(f.slice(1))].filter((g) => groupById.has(g));
+      if (!gs.length) return null;
+      const links: LinksOut = x === '0' ? 'none' : x === '2' ? 'kin' : 'stubs';
+      return { kind: 'groups', groups: gs, links };
+    }
+    case 'r': {
+      if (f.length !== 5 || !byId.has(f[1])) return null;
+      const dir: LineageDir | null = f[2] === 'a' ? 'up' : f[2] === 'd' ? 'down' : f[2] === 'b' ? 'both' : null;
+      const n = Number(f[3]);
+      const gen = n === 0 ? null : n === 1 || n === 2 || n === 3 ? (n as 1 | 2 | 3) : undefined;
+      const by: LineageBy | null = f[4] === 'f' ? 'father' : f[4] === 'b' ? 'blood' : null;
+      if (!dir || gen === undefined || !by) return null;
+      return { kind: 'lineage', id: f[1], dir, gen, by };
+    }
+    default:
+      return null;
+  }
+}
+/** Один и тот же показ. */
+export const sameShow = (a: Show, b: Show) => showKey(a) === showKey(b) && showLinksField(a) === showLinksField(b);
+
+/** Показ, сохранённый в этом сеансе; null — новый сеанс. */
+const showSaved: Show | null = ((v) =>
+  v && typeof v === 'object' && typeof (v as { k?: unknown }).k === 'string' ? parseShow((v as { k: string }).k, (v as { x?: string }).x ?? null) : null)(
+  read<unknown>('session', 'show', null),
+);
+/** Режим неба, сохранённый в сеансе до этапа 11 (не перезаписывается): показ «набор» или «всё небо». */
+const modeSaved = ((m) => (m === 'work' || m === 'all' ? m : null))(read<string | null>('session', 'skymode', null));
+/**
+ * Первый показ: сохранённый в этом сеансе; в новом сеансе — «как в прошлый раз» (решение 68) по выбранному началу
+ * (src/ui/reveal.ts, start): набор, если он не пуст, линии Мессии, ключевые лица, иначе всё небо.
+ */
+function firstShow(): Show {
+  if (showSaved) {
+    // прежний ключ режима записан позже показа (его ставят сценарии и прежние страницы): при расхождении верен он
+    const m = showSaved.kind === 'all' ? 'all' : 'work';
+    if (modeSaved && modeSaved !== m) return modeSaved === 'work' ? { kind: 'set' } : { kind: 'all' };
+    return showSaved;
+  }
+  if (modeSaved) return modeSaved === 'work' ? { kind: 'set' } : { kind: 'all' };
+  const st = read<string | null>('local', 'start', null);
+  if ((st === 'adam' || st === 'jesus') && workSet.peek().size > 0) return { kind: 'set' };
+  if (st === 'lines') return { kind: 'lines' };
+  if (st === 'key') return { kind: 'key' };
+  return { kind: 'all' };
+}
+/** Показ неба. Пишут его setShow (src/ui/show.ts), начала (src/ui/reveal.ts, startWith) и адрес; читают все. */
+export const show = signal<Show>(firstShow());
+/** Новый сеанс продолжен по памяти браузера (решение 68): показ не из этого сеанса и не «всё небо». */
+export const showRestored = hasWindow && !showSaved && !modeSaved && show.peek().kind !== 'all';
+if (hasWindow)
+  effect(() => {
+    const s = show.value;
+    const x = showLinksField(s);
+    write('session', 'show', x ? { k: showKey(s), x } : { k: showKey(s) });
+    // и прежний ключ режима неба — для прежних страниц и сценариев, которые его читают и пишут
+    write('session', 'skymode', s.kind === 'all' ? 'all' : 'work');
+  });
+
+/** Лицо-опора перехода при смене показа (§ 10): его строка на экране не сдвигается; null — выбранное лицо или середина. */
+export const showAnchor = signal<string | null>(null);
+/** Как записать ближайшую смену показа в историю (src/ui/address.ts): 'push' — новой записью, 'replace' — в ту же. */
+export const showHistory = { mode: 'push' as 'push' | 'replace' };
+
+/**
+ * Сменить показ (низкий уровень; модель — src/ui/show.ts, setShow). anchor — лицо-опора перехода; history — как записать
+ * смену в историю. Тот же показ не перезаписывается.
+ */
+export function setShowState(s: Show, o: { anchor?: string | null; history?: 'push' | 'replace' } = {}) {
+  batch(() => {
+    showAnchor.value = o.anchor ?? null;
+    // способ записи — только у настоящей смены показа: иначе он достался бы следующей записи (выбору лица)
+    if (sameShow(s, show.peek())) return;
+    showHistory.mode = o.history ?? 'push';
+    show.value = s;
+  });
+}
+
+/**
+ * Лица показа (кроме «всего неба» и набора) вместе с гостями: их пишет src/ui/show.ts, читает shownIds — чтобы прежнее
+ * небо (режим «набор» в src/render/rows.ts) показывало состав показа, пока небо не перешло на поле show плана.
+ */
+export const showOn = signal<ReadonlySet<string> | null>(null);
+
 // ---------- небо по набору (J4) ----------
 
 export type SkyMode = 'all' | 'work';
-/** Что показывает небо: все лица или только рабочий набор. Помнится в сеансе и пишется в адрес (k1; решение 34). */
-/** Режим неба, сохранённый в этом сеансе, до первой записи; null — новый сеанс (src/ui/reveal.ts: «как в прошлый раз»). */
-export const skyModeSaved = ((m) => (m === 'work' || m === 'all' ? m : null))(read<SkyMode | null>('session', 'skymode', null));
-export const skyMode = signal<SkyMode>(skyModeSaved === 'work' ? 'work' : 'all');
-if (hasWindow) effect(() => write('session', 'skymode', skyMode.value));
-// набор из ссылки — просмотр в режиме «набор»: вернулись ко всем лицам — просмотр кончился (IX-69). Строка UX-79 —
-// до перехода в «набор» или первого лица, взятого в работу
+/** Режим неба, сохранённый в этом сеансе до этапа 11; null — новый сеанс или показ помнится сам. */
+export const skyModeSaved = modeSaved;
+/**
+ * Прежний переключатель неба (J4): производный от показа — «all» у всего неба, «work» у остальных показов. Запись в него
+ * (прежние органы неба) меняет показ: «all» — всё небо, «work» — набор.
+ */
+export const skyMode = signal<SkyMode>(show.peek().kind === 'all' ? 'all' : 'work');
+effect(() => {
+  const m: SkyMode = show.value.kind === 'all' ? 'all' : 'work';
+  if (skyMode.peek() !== m) skyMode.value = m;
+});
+effect(() => {
+  const m = skyMode.value;
+  const k = show.peek().kind;
+  if (m === 'all' && k !== 'all') setShowState({ kind: 'all' });
+  else if (m === 'work' && k === 'all') setShowState({ kind: 'set' });
+});
+// набор из ссылки — просмотр в показе «набор»: ушли с него — просмотр кончился (IX-69). Строка UX-79 — до перехода
+// в «набор» или первого лица, взятого в работу
 if (hasWindow)
   effect(() => {
-    const m = skyMode.value;
+    const k = show.value.kind;
     const n = workSet.value.size;
-    if (m === 'all' && linkSet.peek()) linkSet.value = null;
-    if ((m === 'work' || n > 0) && workNotice.peek()) workNotice.value = null;
+    if (k !== 'set' && linkSet.peek()) linkSet.value = null;
+    if ((k === 'set' || n > 0) && workNotice.peek()) workNotice.value = null;
   });
 
 /**
@@ -363,15 +530,16 @@ const bySex = (id: string, m: string, f: string) => (byId.get(id)?.sex === 'f' ?
 
 /**
  * Что сказала клавиша набора — для живой области (IX-51, MOB-55, WCAG 4.1.3). Имя — в начале строки, в именительном
- * падеже: «Иессей взят в работу; в наборе 5 лиц», «Руфь убрана из работы; набор пуст», «Давид: потомки свёрнуты, скрыто 62 лица».
+ * падеже: «Иессей добавлен в набор; в наборе 5 лиц», «Руфь убрана из набора; набор пуст», «Давид: потомки свёрнуты,
+ * скрыто 62 лица». Одно слово — одно понятие: «набор» (этап 11, решение 81; слов «В работе» в интерфейсе нет).
  */
 export function workKeyText(
   r: { kind: 'take' | 'drop'; id: string; size: number } | { kind: 'fold' | 'unfold'; id: string; hidden?: number },
 ): string {
   const name = byId.get(r.id)?.name ?? r.id;
   if ('size' in r) {
-    if (r.kind === 'take') return `${name} ${bySex(r.id, 'взят', 'взята')} в работу; в наборе ${persons(r.size)}`;
-    return `${name} ${bySex(r.id, 'убран', 'убрана')} из работы; ${r.size ? `в наборе ${persons(r.size)}` : 'набор пуст'}`;
+    if (r.kind === 'take') return `${name} ${bySex(r.id, 'добавлен', 'добавлена')} в набор; в наборе ${persons(r.size)}`;
+    return `${name} ${bySex(r.id, 'убран', 'убрана')} из набора; ${r.size ? `в наборе ${persons(r.size)}` : 'набор пуст'}`;
   }
   if (r.kind === 'unfold') return `${name}: потомки развёрнуты`;
   return `${name}: потомки свёрнуты${r.hidden ? `, скрыто ${persons(r.hidden)}` : ''}`;
@@ -386,7 +554,7 @@ export type WorkKeyResult = { kind: 'take' | 'drop'; id: string; size: number } 
 
 /**
  * Клавиши рабочего набора (по физическим клавишам, KeyboardEvent.code, — и на русской раскладке):
- * D («В») — взять лицо в работу или убрать из работы; C («С») — свернуть или развернуть его потомков на небе.
+ * D («В») — добавить лицо в набор или убрать из набора; C («С») — свернуть или развернуть его потомков на небе.
  * id — лицо клавиши (keyTarget). Возвращает, что сделано (для объявления), или null, если клавиша не про набор.
  */
 export function workKey(code: string, id: string | null = keyTarget()): WorkKeyResult | null {

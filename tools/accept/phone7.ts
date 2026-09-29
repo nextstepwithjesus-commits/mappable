@@ -306,7 +306,7 @@ export const phone7: Scenario[] = [
   },
   {
     n: 305,
-    title: 'MOB-39, решение 33: на телефоне цели в панелях не меньше 44 × 44 — номера глав, поле «Второе», указатель, «Сквозной раздел», «Вид», выбор «Взять в работу» с флажком',
+    title: 'MOB-39, решение 33: на телефоне цели в панелях не меньше 44 × 44 — номера глав, поле «Второе», указатель, «Сквозной раздел», «Вид», выбор «Добавить в набор» с флажком',
     view: PHONE,
     run: async (p) => {
       const out: string[] = [];
@@ -322,12 +322,12 @@ export const phone7: Scenario[] = [
       const v = await smallTargets(p, '.sky > .sheet');
       if (v.length) out.push(`«Вид»: ${v.slice(0, 3).join(', ')}`);
       await go(p, '#/david');
-      await tap(p, '.folio .actions button', 'Взять в работу');
+      await tap(p, '.folio .actions button', 'Добавить в набор');
       const w = await smallTargets(p, '.folio div.workpick');
-      if (w.length) out.push(`«Взять в работу»: ${w.slice(0, 3).join(', ')}`);
+      if (w.length) out.push(`«Добавить в набор»: ${w.slice(0, 3).join(', ')}`);
       // строка выбора не шире листа: подписи и «поколений» не уходят за его край
       const over = (await p.evaluate(`(() => { const w = document.querySelector('.folio div.workpick'); if (!w) return 0; const r = w.getBoundingClientRect(); return Math.max(0, ...[...w.querySelectorAll('*')].map((e) => e.getBoundingClientRect().right - r.right)); })()`)) as number;
-      if (over > 1) out.push(`«Взять в работу»: строка шире листа на ${over.toFixed(0)} px`);
+      if (over > 1) out.push(`«Добавить в набор»: строка шире листа на ${over.toFixed(0)} px`);
       return out.length ? fail(out.join('; ')) : pass();
     },
   },

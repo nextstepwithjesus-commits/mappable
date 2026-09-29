@@ -2,6 +2,7 @@
  * Карточка у точки на небе «набор» (решение 76, задача P2): место у звезды и у точки союза (placeDot, dockDot), команды
  * карточки лица и союза поверх раскрытия (src/ui/reveal.ts), однострочная подсказка точки союза, имя диалога, когда
  * карточка у точки вообще есть (dotsOn), справка неба для клавиатуры.
+ * Этап 11 (решение 77): карточка у звезды — в любом показе; dotsOn ложно только при выборе второго лица.
  */
 import { beforeEach, describe, expect, it } from 'vitest';
 import { expandUnion, expanded, opened, startWith, unions } from '../src/ui/reveal.ts';
@@ -191,18 +192,23 @@ describe('где есть карточка у точки (dotsOn) и одна к
     pickMode.value = null;
     onlyLines.value = false;
   });
-  it('только небо «набор» своего набора: не «все лица», не набор из ссылки, не «только линии», не выбор второго лица', () => {
+  it('в любом показе — «набор», «все лица», набор из ссылки, «линии Мессии»; нет только при выборе второго лица (этап 11, решение 77)', () => {
+    // прежде (решение 76) карточка у точки была только в небе «набор» своего набора; этап 11 (STAGE11 § 1, § 6):
+    // щелчок, касание или Enter на любой звезде в любом показе открывает у неё карточку с «Родством»
     expect(dotsOn.value).toBe(true);
     skyMode.value = 'all';
-    expect(dotsOn.value).toBe(false);
+    expect(dotsOn.value).toBe(true);
     skyMode.value = 'work';
     linkSet.value = new Map([['david', { via: 'self', of: 'david' }]]);
-    expect(dotsOn.value).toBe(false);
+    expect(dotsOn.value).toBe(true);
     linkSet.value = null;
     onlyLines.value = true;
-    expect(dotsOn.value).toBe(false);
+    expect(dotsOn.value).toBe(true);
     onlyLines.value = false;
+    // «Родство с…», «Разворот с…»: щелчок выбирает второе лицо — карточки у звезды нет
     pickMode.value = 'kinship';
+    expect(dotsOn.value).toBe(false);
+    pickMode.value = 'spread';
     expect(dotsOn.value).toBe(false);
     pickMode.value = null;
     expect(dotsOn.value).toBe(true);
@@ -222,10 +228,11 @@ describe('где есть карточка у точки (dotsOn) и одна к
 });
 
 describe('справка неба для клавиатуры и касания', () => {
-  it('Enter на звезде или точке союза открывает карточку у точки, Escape закрывает', () => {
-    expect(SKY_HELP).toMatch(/точкам союзов/);
-    expect(SKY_HELP).toMatch(/Enter на звезде или точке союза открывает у неё карточку/);
+  // этап 11 (решение 78): знак союза на небе — ромб союза (так же называют его «Условные знаки»), а не «точка союза»
+  it('Enter на звезде или ромбе союза открывает у него карточку, Escape закрывает', () => {
+    expect(SKY_HELP).toMatch(/ромбам союзов/);
+    expect(SKY_HELP).toMatch(/Enter на звезде или ромбе союза открывает у него карточку/);
     expect(SKY_HELP).toMatch(/Escape её закрывает/);
-    expect(SKY_HELP_TOUCH).toMatch(/касание звезды или точки союза открывает у неё карточку/);
+    expect(SKY_HELP_TOUCH).toMatch(/касание звезды или ромба союза открывает у него карточку/);
   });
 });

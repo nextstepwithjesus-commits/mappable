@@ -119,7 +119,7 @@ export const card3: Scenario[] = [
         })),
       );
       const names = r.map((x) => x.t).join(' | ');
-      if (names !== 'На небе | Родство с… | Разворот с… | Взять в работу') return fail(`команды: ${names}`);
+      if (names !== 'На небе | Родство с… | Разворот с… | Добавить в набор') return fail(`команды: ${names}`);
       if (new Set(r.map((x) => x.y)).size !== 1) return fail(`команды в ${new Set(r.map((x) => x.y)).size} строки`);
       if (r[0].name !== 'Показать на небе') return fail(`имя первой кнопки «${r[0].name}»`);
       return pass(names);

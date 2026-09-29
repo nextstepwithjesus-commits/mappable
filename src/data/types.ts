@@ -282,8 +282,20 @@ export interface Group {
   kind: 'line' | 'tribe' | 'nation' | 'house' | 'people' | 'other';
   foreign?: boolean; // народы вне Израиля — штриховка
   parent?: string;
+  /**
+   * Родоначальник созвездия (этап 11, решение 82): id лица, от которого идёт созвездие, — там, где он ясен из данных
+   * и текста. Он может лежать в другом созвездии: Нахор, брат Авраама, — в «Доме Фарры», а «Дом Нахора» — его потомки.
+   * В показе «созвездие» родоначальник — полноправное лицо с пометой. Сверяется валидатором: лицо есть и оно — член
+   * созвездия или родитель его члена.
+   */
+  founder?: string;
+  /** Раздел листа «Показ» (этап 11, § 7): порядок и заголовки — src/ui/show.ts, SECTIONS. */
+  section?: GroupSection;
   hue?: number;
 }
+
+/** Разделы листа «Показ» (этап 11, § 7). */
+export type GroupSection = 'origins' | 'patriarchs' | 'tribes' | 'kingdoms' | 'nt' | 'other';
 
 export interface Epoch {
   id: string;

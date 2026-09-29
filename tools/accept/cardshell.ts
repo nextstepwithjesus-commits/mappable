@@ -2,7 +2,7 @@
  * Сценарии приёмки этапа 7 (доработка по повторной экспертизе), группа cardshell (K2): оболочка карточки —
  * первый экран (VIS-41, CARD-54), стопка как вкладки (решение 18; CARD-52, IX-52, UX-49), свёрнутая карточка —
  * корешок (VIS-44, UX-50), закреплённая полоса (CARD-53, UX-67), рейка (VIS-42, CARD-70), полоса 66 книг (CARD-49),
- * «Взять в работу» (VIS-47, CARD-75, UX-48), фокус заголовков (VIS-45, VIS-56, CARD-74), лист телефона (MOB-50, MOB-64),
+ * «Добавить в набор» (VIS-47, CARD-75, UX-48; этап 11 — прежде «Взять в работу»), фокус заголовков (VIS-45, VIS-56, CARD-74), лист телефона (MOB-50, MOB-64),
  * живые «Загрузка» и «Ошибка» образца (VIS-55). Номера 230–239.
  */
 import type { Page } from 'playwright';
@@ -50,7 +50,7 @@ const rect = (p: Page, sel: string) => p.locator(sel).first().boundingBox();
 export const cardshell: Scenario[] = [
   {
     n: 230,
-    title: 'VIS-41, CARD-54, 1440 × 900: § 1 не ниже 480 px; команды — одной строкой: «Показать на небе», «Родство с…», «Разворот с…», «Взять в работу ▾»; эпохи и легенды лент в шапке нет',
+    title: 'VIS-41, CARD-54, 1440 × 900: § 1 не ниже 480 px; команды — одной строкой: «Показать на небе», «Родство с…», «Разворот с…», «Добавить в набор ▾»; эпохи и легенды лент в шапке нет',
     run: async (p) => {
       const tops: string[] = [];
       for (const id of ['david', 'melkhisedek', 'avraam', 'esfir']) {
@@ -61,12 +61,12 @@ export const cardshell: Scenario[] = [
       }
       const cmds = await commands(p);
       const names = cmds.map((c) => c.t).join(' | ');
-      if (names !== 'Показать на небе | Родство с… | Разворот с… | Взять в работу') return fail(`команды: ${names}`);
+      if (names !== 'Показать на небе | Родство с… | Разворот с… | Добавить в набор') return fail(`команды: ${names}`);
       if (new Set(cmds.map((c) => c.y)).size !== 1) return fail(`команды в ${new Set(cmds.map((c) => c.y)).size} строки`);
       const visibleEpoch = await p.evaluate(() => [...document.querySelectorAll('.folio .passport dt')].some((d) => d.textContent === 'Эпоха' && (d as HTMLElement).getBoundingClientRect().width > 2));
       if (visibleEpoch) return fail('в паспорте видна строка «Эпоха»');
       if (await p.locator('.folio .mast .lines').count()) return fail('в шапке строка-легенда лент');
-      // «Скрыть потомков на небе» — пункт выбора «Взять в работу», а не команда шапки (решение 26)
+      // «Скрыть потомков на небе» — пункт выбора «Добавить в набор», а не команда шапки (решение 26)
       if (await p.locator('.folio .actions > button', { hasText: /потомков/ }).count()) return fail('«потомков» — командой шапки');
       return pass(tops.join(', '));
     },
@@ -290,11 +290,11 @@ export const cardshell: Scenario[] = [
   },
   {
     n: 237,
-    title: 'VIS-47, UX-48, CARD-75: «Взять в работу ▾» — лист во всю колонку, поколения столбцами, «Скрыть потомков на небе»; верхняя строка — «В работе: N»; в панели видно, почему лицо в наборе',
+    title: 'VIS-47, UX-48, CARD-75: «Добавить в набор ▾» — лист во всю колонку, поколения столбцами, «Скрыть потомков на небе»; верхняя строка — «Набор: N»; в панели видно, почему лицо в наборе',
     run: async (p) => {
       await go(p, '#/ruf');
       const btn = p.locator('.folio .workbtn > button');
-      if (!/^Взять в работу\s*▾$/.test((await btn.innerText()).trim())) return fail(`команда: «${await btn.innerText()}»`);
+      if (!/^Добавить в набор\s*▾$/.test((await btn.innerText()).trim())) return fail(`команда: «${await btn.innerText()}»`);
       await btn.click();
       await p.waitForTimeout(300);
       const pick = await p.evaluate(() => {
@@ -311,9 +311,9 @@ export const cardshell: Scenario[] = [
       await p.locator('.workpick .wp-take button', { hasText: 'С семьёй' }).click();
       await p.waitForTimeout(400);
       const n = ((await p.evaluate(`JSON.parse(localStorage.getItem('toledot:work') || '[]').length`)) as number) || 0;
-      const top = p.locator('.top .commands > button', { hasText: 'В работе' });
+      const top = p.locator('.top .commands > button', { hasText: 'Набор' });
       const label = (await top.innerText()).trim();
-      if (label !== `В работе: ${n}`) return fail(`верхняя строка: «${label}», в наборе ${n}`);
+      if (label !== `Набор: ${n}`) return fail(`верхняя строка: «${label}», в наборе ${n}`);
       if (!/^В наборе/.test((await btn.innerText()).trim())) return fail(`команда карточки: «${await btn.innerText()}»`);
       // «Скрыть потомков на небе» из того же выбора
       await btn.click();

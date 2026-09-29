@@ -172,7 +172,8 @@ export function showAll() {
     fitLines(true);
     return;
   }
-  s.cam.zoomTo(s.fitState(), HOME_MS, skyRef.redraw, reduced());
+  // «Вписать» — весь показ, и в семейной укладке тоже (fitWholeState; Я30)
+  s.cam.zoomTo(s.fitWholeState(), HOME_MS, skyRef.redraw, reduced());
   skyRef.redraw();
 }
 
@@ -340,6 +341,9 @@ const FOCUS_MIN = 27;
  * Коридор линий: мировые x рождения первого и последнего лица линий и полосы лиц линий. Лица, скрытые набором (J4), — не в
  * счёт (этап 11, B1): в небе «набор» «только линии» вписывают лиц линий из набора, а не пустое небо, где стояли бы остальные.
  */
+let lineIdsMemo: Set<string> | null = null;
+const lineIds = () => (lineIdsMemo ??= new Set([...lines.joseph.persons, ...lines.mary.persons].map((q) => q.id)));
+
 export function linesFrame(): { x0: number; x1: number; lane0: number; lane1: number } | null {
   const s = skyRef.current;
   if (!s || !s.model) return null;
@@ -348,8 +352,11 @@ export function linesFrame(): { x0: number; x1: number; lane0: number; lane1: nu
   let lane0 = Infinity;
   let lane1 = -Infinity;
   const hid = s.plan.hidden;
+  // лица линий Мессии (data/lines/*.json): в показе «линии Мессии» у копий узлов семейной укладки полосы свои, и не у всех
+  // лиц линий есть знак хребта раскладки (Адам) — коридор от Адама до Иисуса Христа по спискам линий
+  const onLine = lineIds();
   s.nodes.forEach((n, i) => {
-    if (!n.spine || n.ghost || (hid && hid[i])) return;
+    if (!(n.spine || onLine.has(n.person)) || n.ghost || (hid && hid[i])) return;
     x0 = Math.min(x0, s.X0[i]);
     x1 = Math.max(x1, s.X0[i]);
     lane0 = Math.min(lane0, s.rowOf(n.lane));
@@ -367,7 +374,11 @@ export function linesKx(): number | null {
   const f = linesFrame();
   if (!s || !f) return null;
   const vp = s.cam.vp;
-  return Math.max(1e-6, (vp.r - vp.l - 2 * LINES_PAD - NAME_ROOM * 1.4) / (f.x1 - f.x0));
+  const k = Math.max(1e-6, (vp.r - vp.l - 2 * LINES_PAD - NAME_ROOM * 1.4) / (f.x1 - f.x0));
+  // окно у́же неба с полем под имя (карточка справа, узкое небо): предел отдаления — всё небо до 2040 г., и камера сдвинула бы
+  // коридор вправо, срезав Адама; тогда без поля под имя справа — имя Иисуса Христа встанет слева от звезды
+  const lo = s.cam.kxLo();
+  return k >= lo ? k : Math.max(k, Math.min(lo * 1.02, (vp.r - vp.l - 2 * LINES_PAD) / (f.x1 - f.x0)));
 }
 
 /** Сколько поколений линий по обе стороны от выбранного лица показывает включение «только линии» (UX-68). */

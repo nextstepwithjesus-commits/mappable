@@ -51,9 +51,13 @@ import { insideSky, Placer, spot as labelSpot } from './labels.ts';
 import { branchFrame } from './marks.ts';
 import { branchAlpha } from './trails.ts';
 import { mapFont, mapSize, nameSize, T_MAP_S } from './type.ts';
-import type { Rect } from './rect.ts';
+import { cross, type Rect } from './rect.ts';
+import { LINK_YELLOW } from './branches.ts';
 import type { PlateGap } from './rows.ts';
 import type { Pass, SkyContext } from './sky.ts';
+import { JOIN_R, NODE_R_FAMILY, NODE_R_MAP, type LinkNode, type LinkPath } from './links.ts';
+import type { LinkDraw } from './trails.ts';
+import { linkKeyString } from '../engine/linkkey.ts';
 
 /** Союз на небе: что рисовать (src/ui/reveal.ts, plates — тот же вид). */
 export interface PlateIn {
@@ -1030,3 +1034,293 @@ export function drawUnionSample(ctx: CanvasRenderingContext2D, pal: UnionSampleP
   ctx.restore();
   return { open: dot, closed };
 }
+
+// ---------- узлы союзов кадра (этап 11, § 2; геометрия — src/render/links.ts) ----------
+
+/** «+N» свёрнутого союза в последнем кадре (px холста): отдельная цель, не меньше 24 × 24 (на касании — 44 × 44). */
+export type CountHit = Rect & { uid: string; from: string; open: boolean };
+
+/** Поле цели не меньше min × min вокруг середины прямоугольника. */
+function atLeast(r: Rect, min: number): Rect {
+  const w = Math.max(r.w, min);
+  const h = Math.max(r.h, min);
+  return { x: r.x - (w - r.w) / 2, y: r.y - (h - r.h) / 2, w, h };
+}
+
+/** Узел • следующего гнезда: кружок 4 px на подложке цвета неба. */
+export function paintJoin(ctx: CanvasRenderingContext2D, x: number, y: number, color: string, halo: string) {
+  ctx.save();
+  ctx.fillStyle = halo;
+  ctx.beginPath();
+  ctx.arc(x, y, JOIN_R + 1.6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(x, y, JOIN_R, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+/**
+ * Узлы союзов кадра (§ 2, «Знаки»): ◆ — 9 px в раскрытом небе, 7 px на «всех лицах»; залит — дети показаны, полый с «+N» —
+ * свёрнут; выбранный (карточка союза) — в кольце; наведённый — ярче и в тонком кольце; с фокусом клавиатуры — кольцо
+ * фокуса. • — узел следующего гнезда того же союза. Рисуются над лентами и под звёздами: ленты проходят через ромб, как
+ * через пересадочную станцию (§ 3). Возвращает поля попадания ромбов (не меньше 24 × 24) и «+N» (отдельная цель).
+ */
+export function drawLinkNodes(v: SkyContext, p: Pass, d: LinkDraw, marks: PlateMarks = {}, settle = 1): { plates: PlateHit[]; counts: CountHit[] } {
+  const { ctx, cam, pal } = v;
+  const plates: PlateHit[] = [];
+  const counts: CountHit[] = [];
+  const R = d.frame.layout === 'family' ? NODE_R_FAMILY : NODE_R_MAP;
+  // поле ромба и «+N» — не меньше 24 × 24; на касании input.ts раздувает его до 44 × 44 (plateAt, countAt; Я31)
+  const least = 24;
+  const intro = p.s.intro;
+  const g0 = ctx.globalAlpha;
+  const size = mapSize(T_MAP_S, v.coarse);
+  const state = (n: LinkNode) => {
+    const ks = linkKeyString(n.key) ?? '';
+    const hover = marks.hover === n.union || d.hover === ks || d.preview.has(ks);
+    const sel = marks.selected === n.union;
+    const lit = hover || sel || marks.focus === n.union || d.lit({ ends: [n.owner, n.from] } as LinkPath);
+    return { hover, sel, lit };
+  };
+  // на мелком масштабе «всех лиц» ромбы соседних семей сходятся: знак, чьё место занято уже нарисованным ромбом, не
+  // рисуется (семантическое увеличение, ТЗ § 3.1) — выделенные и наведённые первыми
+  const map = d.frame.layout === 'map';
+  // «все лица» теснее поколения в 18 px: ромбов нет (семья — сгусток; знаки только закрывали бы друг друга и имена)
+  if (map && v.genRoom < 0.5) return { plates, counts };
+  const inView: { n: LinkNode; x: number; y: number; st: ReturnType<typeof state> }[] = [];
+  for (const n of d.frame.nodes) {
+    const x = n.x + d.dx;
+    const y = n.y + d.dy;
+    // под рамкой листа (линейка годов сверху, буквы полос слева) узла не видно: ни знака, ни цели, ни места в замере
+    if (x < v.letterW || x > cam.w + 12 || y < v.openTop || y > cam.vp.b) continue;
+    // узел союза, чьи связи рисуют только ленты, — станция их маршрута: пока ленты — сплайн обзора, его нет (§ 3)
+    if (d.frame.ribbonOnly?.has(n.union) && v.routeFactor < 0.5) continue;
+    inView.push({ n, x, y, st: state(n) });
+  }
+  if (map) inView.sort((a, b) => Number(b.st.lit) - Number(a.st.lit));
+  const taken: Rect[] = [];
+  for (const { n, x, y, st } of inView) {
+    const { hover, sel, lit } = st;
+    const a0 = lit ? 1 : d.alpha;
+    if (a0 <= 0.01) continue;
+    const own = { x: x - R - 0.5, y: y - R - 0.5, w: 2 * R + 1, h: 2 * R + 1 };
+    // знак целиком в открытом небе: у кромки рамки ромб не срезается — его нет
+    if (own.x < v.letterW || own.x + own.w > cam.w || own.y < v.openTop || own.y + own.h > cam.vp.b) continue;
+    if (map) {
+      if (taken.some((t) => cross(t, own))) continue;
+      taken.push(own);
+    }
+    const e = hover || sel ? 1 : DOT_TONE * Math.max(p.emph(n.owner), p.emph(n.from));
+    const color = alpha(pal.ink, Math.min(1, e * intro));
+    ctx.globalAlpha = g0 * a0 * settle;
+    if (n.kind === 'join') {
+      paintJoin(ctx, x, y, color, pal.sky);
+      continue;
+    }
+    paintDot(ctx, x, y, R, { open: n.open, color, halo: pal.sky });
+    let count: CountHit | null = null;
+    if (n.count) {
+      ctx.font = countFont(v.coarse);
+      const w = ctx.measureText(n.count).width;
+      const tx = x + R + 4;
+      paintCount(ctx, pal, v.coarse, tx, y, n.count, color);
+      count = { ...atLeast({ x: tx - 2, y: y - size * 0.7, w: w + 4, h: size * 1.4 }, least), uid: n.union, from: n.from, open: n.open };
+      counts.push(count);
+    }
+    ctx.save();
+    ctx.setLineDash([]);
+    const ring = (r: number, w: number, c: string) => {
+      ctx.lineWidth = w;
+      ctx.strokeStyle = c;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.stroke();
+    };
+    if (sel) ring(R + 3.5, 1.5, pal.focus);
+    else if (hover) ring(R + 3, 1, pal.ink);
+    if (marks.focus === n.union) ring(R + (sel ? 6.5 : 5), 2, pal.focus);
+    ctx.restore();
+    // поле ромба — не меньше 24 × 24 (на касании 44 × 44), но не на «+N»: у него своя цель
+    let box = atLeast({ x: x - R - 2, y: y - R - 2, w: 2 * R + 4, h: 2 * R + 4 }, least);
+    // у свёрнутого — поле ромба левее «+N», той же ширины (не меньше 24 px): цели не накладываются
+    if (count && box.x + box.w > count.x) box = { ...box, x: count.x - box.w };
+    const hidden = n.count ? Number(n.count.replace(/\D/g, '')) || 0 : 0;
+    plates.push({ ...box, uid: n.union, from: n.from, open: n.open, cx: x, cy: y, r: R, hidden, ax: x, ay: y });
+    // место ромба и «+N» — в общей проверке наложений: подписи их не закрывают; в замере — знаком союза (kind 'plate')
+    const dot = { x: x - R - 1.5, y: y - R - 1.5, w: 2 * R + 3, h: 2 * R + 3 };
+    p.placer.add(dot);
+    // в замере — сам знак (ромб r с полупикселем сглаживания): соседние ромбы одного следа стоят через 2r + 2 px (links.ts,
+    // в самой тесной семье — через 2r + 1) и не накладываются
+    v.ledger.add('plate', '', own, n.union);
+    if (count) p.placer.add({ x: x + R + 2, y: y - size * 0.6, w: count.w - (count.x - (x + R + 2)) - 2, h: size * 1.2 });
+  }
+  ctx.globalAlpha = g0;
+  return { plates, counts };
+}
+
+// ---------- образцы знаков грамматики связей («Условные знаки»; Q3 пишет подписи) ----------
+
+/** Знак грамматики связей для образца: ◆, •, ствол с зубцами, разрыв, обрывок, лента в узле, выбранная связь. */
+export type LinkSign = 'node' | 'join' | 'trunk' | 'cut' | 'stub' | 'ribbon' | 'selected';
+
+/** Палитра образца знаков связей: тема (glow — ночь), небо, текст, ленты. */
+export interface LinkSamplePalette extends UnionSamplePalette {
+  gold1?: string;
+  azure1?: string;
+}
+
+/** Жёлтый выбранной связи (§ 8, § 9; K1 § 2.7): ночью — линия со свечением, днём — маркер под линией --ink. */
+export { LINK_YELLOW };
+
+/**
+ * Образец знака грамматики связей (src/ui/panels/Legend.tsx): те же рисовальщики и размеры, что на небе. Сигнатура — как
+ * у образцов легенды: (ctx, pal, w, h), пиксели CSS; sign — какой знак.
+ */
+export function drawLinkSample(ctx: CanvasRenderingContext2D, pal: LinkSamplePalette, w: number, h: number, sign: LinkSign) {
+  const px = (x: number) => Math.round(x) + 0.5;
+  const tone = alpha(pal.ink2, 0.72);
+  const trailTone = alpha(pal.ink2, 0.6);
+  const star = (x: number, y: number, magnitude: number, sex: 'm' | 'f' = 'm') => drawGlyph(ctx, x, y, { sex, kind: 'person', magnitude, color: pal.ink, halo: pal.sky });
+  const line = (pts: number[], color: string, width = 1, dash: number[] = []) => {
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.setLineDash(dash);
+    ctx.beginPath();
+    ctx.moveTo(pts[0], pts[1]);
+    for (let k = 2; k < pts.length; k += 2) ctx.lineTo(pts[k], pts[k + 1]);
+    ctx.stroke();
+    ctx.restore();
+  };
+  const top = px(h * 0.28);
+  const mid = px(h * 0.5);
+  const low = px(h * 0.78);
+  ctx.save();
+  ctx.lineCap = 'butt';
+  switch (sign) {
+    case 'node': {
+      // залитый ромб (дети показаны) и полый с «+N» (свёрнут): на следе матери
+      line([px(8), mid, px(w * 0.46), mid], trailTone, 1.2);
+      paintDot(ctx, px(w * 0.24), mid, NODE_R_FAMILY, { open: true, color: pal.ink, halo: pal.sky });
+      line([px(w * 0.56), mid, px(w - 6), mid], trailTone, 1.2);
+      paintDot(ctx, px(w * 0.68), mid, NODE_R_FAMILY, { open: false, color: pal.ink, halo: pal.sky });
+      paintCount(ctx, { ink2: pal.ink2, halo: pal.sky }, false, px(w * 0.68) + NODE_R_FAMILY + 4, mid, '+4', pal.ink);
+      break;
+    }
+    case 'join': {
+      // два гнезда одного союза на одном следе: ◆ у первого ствола, • у второго
+      const x1 = px(w * 0.3);
+      const x2 = px(w * 0.66);
+      line([px(8), top, px(w - 6), top], trailTone, 1.2);
+      line([x1, top, x1, low, x1 + 16, low], tone);
+      line([x2, top, x2, low, x2 + 16, low], tone);
+      paintDot(ctx, x1, top, NODE_R_FAMILY, { open: true, color: pal.ink, halo: pal.sky });
+      paintJoin(ctx, x2, top, pal.ink, pal.sky);
+      star(x1 + 20, low, 4);
+      star(x2 + 20, low, 4);
+      break;
+    }
+    case 'trunk': {
+      // ствол от ромба на следе матери и зубцы к детям; «‖» — черта брака от следа мужа
+      const x = px(w * 0.34);
+      const hy = px(4);
+      const my = px(h * 0.3);
+      line([px(8), hy, px(w - 6), hy], trailTone, 1.2);
+      line([px(14), my, px(w - 10), my], trailTone, 1.2);
+      line([x - BAR_HALF, hy, x - BAR_HALF, my], tone);
+      line([x + BAR_HALF, hy, x + BAR_HALF, my], tone);
+      const kids = [h * 0.55, h * 0.72, h * 0.9].map(px);
+      line([x, my, x, kids[kids.length - 1]], tone);
+      kids.forEach((ky, k) => {
+        line([x, ky, x + 12 + k * 8, ky], tone);
+        star(x + 16 + k * 8, ky, 4);
+      });
+      paintDot(ctx, x, my, NODE_R_FAMILY, { open: true, color: pal.ink, halo: pal.sky });
+      star(px(10), hy, 3);
+      star(px(16), my, 3, 'f');
+      break;
+    }
+    case 'cut': {
+      // чужой след под стволом — разрыв по 3 px с каждой стороны, без узла
+      const x = px(w * 0.5);
+      line([px(8), mid, x - 3, mid], trailTone, 1.2);
+      line([x + 3, mid, px(w - 6), mid], trailTone, 1.2);
+      line([x, px(3), x, px(h - 3)], tone);
+      break;
+    }
+    case 'stub': {
+      // длинная связь обрывками по 16 px
+      const x = px(w * 0.3);
+      line([px(8), top, px(w - 6), top], trailTone, 1.2);
+      line([x, top, x, top + 16], tone);
+      paintDot(ctx, x, top, NODE_R_MAP, { open: true, color: pal.ink, halo: pal.sky });
+      line([x, low - 12, x, low, x + 10, low], tone);
+      star(x + 14, low, 4);
+      break;
+    }
+    case 'ribbon': {
+      // лента идёт по следу родителя до узла союза и ступенькой уходит к ребёнку; в узле ленты расходятся
+      const x = px(w * 0.42);
+      const g = pal.gold1 ?? (pal.glow ? '#E6B550' : '#9A6A12');
+      const a = pal.azure1 ?? (pal.glow ? '#9CCBF5' : '#2B64A8');
+      line([px(8), top, px(w - 6), top], trailTone, 1.2);
+      line([px(10), top - 2, x - 8, top - 2], g, 2);
+      line([px(10), top + 2, x - 8, top + 2], a, 2);
+      ctx.save();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = g;
+      ctx.beginPath();
+      ctx.moveTo(x - 8, top - 2);
+      ctx.arcTo(x - 2, top - 2, x - 2, top + 8, 6);
+      ctx.lineTo(x - 2, mid - 6);
+      ctx.arcTo(x - 2, mid, x + 6, mid, 6);
+      ctx.lineTo(px(w * 0.72), mid);
+      ctx.stroke();
+      ctx.strokeStyle = a;
+      ctx.beginPath();
+      ctx.moveTo(x - 8, top + 2);
+      ctx.arcTo(x + 2, top + 2, x + 2, top + 12, 6);
+      ctx.lineTo(x + 2, low - 6);
+      ctx.arcTo(x + 2, low, x + 10, low, 6);
+      ctx.lineTo(px(w * 0.8), low);
+      ctx.stroke();
+      ctx.restore();
+      paintDot(ctx, x, top, NODE_R_FAMILY, { open: true, color: pal.ink, halo: pal.sky });
+      star(px(w * 0.72) + 4, mid, 3);
+      star(px(w * 0.8) + 4, low, 3);
+      break;
+    }
+    case 'selected': {
+      // выбранная связь: жёлтый путь и кольца на концах
+      const x = px(w * 0.3);
+      const pts = [px(10), top, x, top, x, low, px(w * 0.7), low];
+      if (pal.glow) {
+        line(pts, alpha(LINK_YELLOW.night, 0.18), 9);
+        line(pts, alpha(LINK_YELLOW.night, 0.3), 5);
+        line(pts, LINK_YELLOW.night, 2.5);
+      } else {
+        line(pts, alpha(LINK_YELLOW.day, 0.9), 9);
+        line(pts, pal.ink, 2.2);
+      }
+      const ring = (cx: number, cy: number) => {
+        ctx.save();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = pal.glow ? LINK_YELLOW.night : pal.ink;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 7, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      };
+      star(px(10), top, 3);
+      star(px(w * 0.7) + 4, low, 4);
+      ring(px(10), top);
+      ring(px(w * 0.7) + 4, low);
+      break;
+    }
+  }
+  ctx.restore();
+}
+/** Полуразнос черт «‖» в образце (trails.ts, BAR_GAP). */
+const BAR_HALF = 1.6;

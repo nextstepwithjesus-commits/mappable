@@ -185,12 +185,12 @@ export function KinshipPanel() {
   );
 }
 
-/** «Взять путь в работу» (J3): все лица пути — в рабочий набор; взятый путь — «путь в работе». */
+/** «Добавить путь в набор» (J3): все лица пути — в набор; добавленный путь — «путь в наборе». */
 function WorkPath({ ids }: { ids: string[] }) {
   const all = ids.every((id) => workSet.value.has(id));
   return (
     <button class="cmd" aria-pressed={all} disabled={all} onClick={() => addPath(ids)}>
-      {all ? 'путь в работе' : 'взять путь в работу'}
+      {all ? 'путь в наборе' : 'добавить путь в набор'}
     </button>
   );
 }

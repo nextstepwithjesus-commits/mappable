@@ -258,10 +258,12 @@
 /* невысокое окно (1024 × 768, 1366 × 768): главная фраза о звезде, яркости и созвездиях остаётся (UX-70), уходят
    второстепенные строки «Как читать карту» — о координатах (вторая строка списка: годы, столбцы, буквы строк; всё это —
    в «Условных знаках») и «Всё небо». Строка о колесе остаётся: в ней названа клавиша «?» (IX-41). Входы, фраза и «Как
-   читать карту» видны без прокрутки (UX-56). В «Условных знаках» (.both) — все строки */
+   читать карту» видны без прокрутки (UX-56). Строки о родстве на небе и о строке показа (li.more, этап 11) — тоже только
+   в «Условных знаках» (.both), где все строки */
 @media (max-height: 800px) {
   .cartouche .guide:not(.tree-guide) li:nth-child(2),
-  .cartouche .guide:not(.tree-guide) li:last-child {
+  .cartouche .guide:not(.tree-guide) li:last-child,
+  .cartouche .guide li.more {
     display: none;
   }
 }
@@ -903,116 +905,3 @@ div.workpick .wp-drop .cmd {
   margin: 0;
 }
 
-/* ---------- древо на месте неба (решение 73; src/ui/App.tsx, TreeArea) ----------
-   Ячейка неба в сетке: древо (src/ui/tree/, tree.css), строка «Раскрыто N лиц» у верхней кромки, вступление древа или
-   «Как читать карту». Полосы времени в древе нет: её строка сетки — 0 px, место отдано древу (--strip-h, phone.css). */
-.app.in-tree {
-  --strip-h: 0px;
-}
-.treearea {
-  grid-area: sky;
-  position: relative;
-  overflow: hidden;
-  min-width: 0;
-  min-height: 0;
-  background: var(--sky);
-  /* у древа нет рамки с линейкой лет: строки у кромки — от самого верха */
-  --sky-top: 0px;
-}
-/* полотно древа (tree.css, .tree) — во всю область; строка у кромки, вступление и «Как читать карту» — над ним */
-.treearea > .tree {
-  position: absolute;
-  inset: 0;
-}
-/* вступление древа — слева внизу, над рядом органов древа (правый нижний угол, 40 px): на узком древе они не
-   накладываются; сверху — место строки «Раскрыто N лиц» */
-.treearea > .cartouche {
-  bottom: 60px;
-  max-height: calc(100% - 110px);
-}
-
-/* ---------- карточка у точки (решение 76; src/ui/sky/DotCard.tsx) ----------
-   Лист атласа у звезды лица или у точки союза в небе «набор»: фон листа, рамка 1 px --rule-strong, без тени и
-   скругления; язык карточек древа (tree.css: .tc-nm, .tc-yrs, .tc-sub, .tc-head, образ .av) в компактном виде —
-   образ 40 px, имя кеглем вводки, годы и команды гротеском. У союза — двойная рамка, как у карточки союза в древе.
-   От знака к карточке — отвод 1 px цветом рамки (.dc-lead), как выноска на карте. Место задаёт DotCard.tsx (placeDot);
-   до первого замера карточка невидима. На телефоне — во всю ширину неба над листом карточки (data-dock). */
-.dotcard {
-  position: absolute;
-  z-index: 5;
-  box-sizing: border-box;
-  width: max-content;
-  min-width: 232px;
-  max-width: 340px;
-  padding: 8px 8px 4px 10px;
-  background: var(--sheet);
-  border: 1px solid var(--rule-strong);
-  color: var(--ink);
-}
-.dotcard:not([data-placed]) {
-  visibility: hidden;
-}
-.dotcard.dc-union {
-  padding: 4px 8px 3px 8px;
-  border: 3px double var(--rule-strong);
-}
-/* «×» — в углу листа; имя и строка «союз» не заходят под него */
-.dotcard > .close {
-  position: absolute;
-  top: 0;
-  right: 0;
-}
-.dotcard .dc-top {
-  display: flex;
-  gap: 10px;
-  min-width: 0;
-  padding-right: 28px;
-}
-.dotcard.dc-union .dc-top {
-  gap: 8px;
-  padding-right: 0;
-}
-.dotcard .tc-head {
-  min-height: 24px;
-  align-items: center;
-  padding-right: 32px;
-}
-.dotcard .tc-nm .nm {
-  white-space: normal;
-}
-.dotcard.dc-union .tc-nm .nm {
-  font-size: var(--t-body);
-  line-height: var(--t-body-lh);
-}
-/* команды — строкой под сведениями, поле 32 px (на сенсорном экране 44 px, phone.css) */
-.dotcard .dc-cmds {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0 2px;
-  margin: 6px 0 0 -8px;
-}
-.dotcard.dc-union .dc-cmds {
-  margin: 4px 0 0 -6px;
-}
-.dc-lead {
-  position: absolute;
-  z-index: 5;
-  pointer-events: none;
-  background: var(--rule-strong);
-}
-.dotcard[data-dock] {
-  min-width: 0;
-  max-width: none;
-}
-@media (pointer: coarse) {
-  .dotcard > .close {
-    top: -2px;
-    right: -2px;
-  }
-  .dotcard .dc-top {
-    padding-right: 36px;
-  }
-  .dotcard .tc-head {
-    padding-right: 40px;
-  }
-}

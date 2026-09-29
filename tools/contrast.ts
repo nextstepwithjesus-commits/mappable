@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { ROOT } from './bible.ts';
 import { contrast as ratio, linearRgb, CONTRAST_USES } from '../src/ui/contrast.ts';
 import { over, likelyAlpha, CONSTELLATION_DIM, DIM, DIM_LABEL_CONTRAST, CLOUD_DIMMED, dimLabelAlpha, labelGrounds, separateRibbons, RIBBON_LIGHTNESS } from '../src/render/dim.ts';
-import { BRANCH_COLORS, BRANCH_CONTRAST, BRANCH_DE, BRANCH_FAR_CONTRAST, BRANCH_NAMES, branchColor, branchFade, branchFloor, type MapTheme } from '../src/render/branches.ts';
+import { BRANCH_COLORS, LINK_YELLOW, BRANCH_CONTRAST, BRANCH_DE, BRANCH_FAR_CONTRAST, BRANCH_NAMES, branchColor, branchFade, branchFloor, type MapTheme } from '../src/render/branches.ts';
 
 const css = readFileSync(join(ROOT, 'src/styles/tokens.css'), 'utf8');
 const block = (sel: string) => {
@@ -103,6 +103,25 @@ for (const [t, c] of Object.entries(themes)) {
     let rib = Infinity;
     for (const b of branches) for (const o of others) rib = Math.min(rib, dE(simulate(b, m), simulate(o, m)));
     check(`ветви не похожи на ленты и --ink (${k}), ΔE`, rib, min);
+  }
+  // жёлтый выбранной связи (этап 11, § 9; src/render/plates.ts, LINK_YELLOW; marks.ts, drawSelectedLink): ночью — жёлтая линия
+  // к небу и полосе эпохи ≥ 4,5 : 1; днём — жёлтая подложка под линией тона текста, линия к подложке ≥ 4,5 : 1. Жёлтый не похож
+  // на ленты и цвета ветвей: ΔE ≥ 18 при обычном зрении и ≥ 10 при каждом виде дальтонизма
+  const yellow = LINK_YELLOW[theme];
+  if (theme === 'night') for (const g of grounds) check(`жёлтый выбранной связи ${yellow} на ${g}`, ratio(yellow, g), 4.5);
+  else for (const g of grounds) check(`линия выбранной связи --ink на жёлтой подложке (альфа 0,9 на ${g})`, ratio(c['--ink'], over(yellow, g, 0.9)), 4.5);
+  const hues = [...new Set([c['--gold-1'], c['--gold-2'], c['--azure-1'], c['--azure-2'], ...lanes, ...branches, ...Array.from({ length: 6 }, (_, i) => branchColor(i + 6, theme))])];
+  for (const [k, m] of [['обычное зрение', undefined], ...Object.entries(CVD)] as [string, number[][] | undefined][]) {
+    let d = Infinity;
+    let with_ = '';
+    for (const h of hues) {
+      const v = dE(simulate(yellow, m), simulate(h, m));
+      if (v < d) {
+        d = v;
+        with_ = h;
+      }
+    }
+    check(`жёлтый не похож на ленты и ветви (${k}; ближе всех ${with_}), ΔE`, d, m ? 10 : 18);
   }
 }
 console.log(fail ? `\nНе прошло проверок: ${fail}` : '\nВсе проверки пройдены.');
