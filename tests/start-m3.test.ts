@@ -32,7 +32,10 @@ describe('пять начал (решение 68)', () => {
       expect(t, o.value).not.toMatch(/[·→]/);
       expect(t.length, o.value).toBeLessThanOrEqual(42);
     }
-    expect(flat(startNote('all'))).toBe(`все ${flat(String(byId.size).replace(/\B(?=(\d{3})+(?!\d))/g, ' '))} лиц сразу`);
+    // склонение считается здесь заново, не той же функцией: 2 660 лиц, 2 663 лица, 2 661 лицо
+    const n = byId.size;
+    const form = n % 10 === 1 && n % 100 !== 11 ? 'лицо' : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 'лица' : 'лиц';
+    expect(flat(startNote('all'))).toBe(`все ${flat(String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' '))} ${form} сразу`);
     expect(flat(startNote('key'))).toMatch(new RegExp(`${KEY_IDS.length} (лицо|лица|лиц)$`));
   });
   it('подтверждение — только если начало заменяет набор больше чем из одного лица; «всё небо» набор не трогает', () => {

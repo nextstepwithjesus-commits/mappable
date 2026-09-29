@@ -320,7 +320,7 @@
     { "id": "arkhelay", "name": "Архелай", "disambig": "сын царя Ирода", "owner": "17" },
     { "id": "filipp-brat-iroda", "name": "Филипп", "disambig": "брат Ирода четвертовластника", "owner": "17" },
     { "id": "elishama-syn-ammiuda", "name": "Елишама", "disambig": "сын Аммиуда, начальник Ефремов", "owner": "09" },
-    { "id": "ammiud-syn-laedana", "name": "Аммиуд", "disambig": "сын Лаедана, отец Елисамы", "owner": "09" },
+    { "id": "ammiud-syn-laedana", "name": "Аммиуд", "disambig": "сын Лаедана, отец Елишамы", "owner": "09" },
     { "id": "aviezer-syn-galaada", "name": "Авиезер", "disambig": "сын Галаада (Иезер)", "owner": "09" }
   ]
 }
