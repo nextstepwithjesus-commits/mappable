@@ -24,6 +24,11 @@
  *    событие; иначе след не рисуется (t1 = t0). У народов и родов, у умерших младенцами,
  *    у «призраков» жён и у лиц скоплений следа нет. Место в полосе при этом занимается как прежде (с запасом STUB лет
  *    под имя), поэтому честный след не сдвигает раскладку.
+ * 8. Априорное условие (ТЗ § 8.3, п. 5; NFR-3): раскладка выпуска учитывает прежнюю — полосы опорных лиц из
+ *    data/coords-snapshot.json (opts.prior). Порядок постановки притоков не меняется. Блок (приток, скопление), в котором
+ *    есть опорные лица, стоит на прежней стороне (PRIOR_SIDE_W), а его основание — на ближайшей к прежней полосе, где
+ *    контур свободен; внутри притока братья с опорными лицами в поддеревьях стоят в прежнем порядке. Поэтому после правок
+ *    данных и хронологии опорные лица сдвигаются по полосе только там, где этого требует непересечение жизней в полосе.
  *
  * Здесь же — контуры созвездий (computeOutlines, E8) и атласные координаты (atlasCoord, E9).
  */
@@ -188,6 +193,11 @@ const GHOST_LEN = 25; // = GHOST_SPAN
 export const CLUSTER_MIN = 4;
 /** Скопление: ширина столбца сетки, лет. */
 export const CLUSTER_PITCH = 4;
+/**
+ * Штраф за сторону блока, противоположную прежней (априорное условие, п. 8): больше любой разницы расстояний (полос
+ * на небе — несколько сотен) и предпочтения рода (0,5), поэтому созвездие с опорными лицами не меняет стороны.
+ */
+const PRIOR_SIDE_W = 1e6;
 
 // ---------- занятость полос ----------
 class Occupancy {
@@ -428,12 +438,20 @@ export function computeLayout(
   g: Graph,
   chrono: ChronoResult,
   lines: { joseph: LineStep[]; mary: LineStep[] },
-  opts: { corridorK?: number; beam?: number; lists?: ListDef[]; epochs?: { id: string; start: number; end: number }[] } = {},
+  opts: {
+    corridorK?: number;
+    beam?: number;
+    lists?: ListDef[];
+    epochs?: { id: string; start: number; end: number }[];
+    /** Априорное условие (п. 8): полосы опорных лиц прежнего выпуска (data/coords-snapshot.json). */
+    prior?: { id: string; lane: number }[];
+  } = {},
 ): LayoutResult {
   const K = opts.corridorK ?? 7;
   const BEAM = opts.beam ?? 64;
   const ch = (id: string) => chrono.persons.get(id)!;
   const spineIds = new Set([...lines.joseph, ...lines.mary].map((s) => s.id));
+  const priorLane = new Map((opts.prior ?? []).filter((p) => g.persons.has(p.id)).map((p) => [p.id, p.lane]));
 
   /** Место в полосе: след и запас под имя (не рисуется); у лица «время не установлено» — скобка; у лица со знаком
    *  у первого свидетельства — и полоса рождения (MAP-69), кроме лиц коридора. */
@@ -632,7 +650,6 @@ export function computeLayout(
       return order.indexOf(b) - order.indexOf(a);
     });
   }
-
   // --- 3. аккуратные деревья: относительные смещения
   const relOffset = new Map<string, number>(); // смещение узла относительно родителя по раскладке
   const subtree = (nid: string): Contour => {
@@ -647,6 +664,58 @@ export function computeLayout(
     }
     return own;
   };
+
+  // априорное условие (п. 8): братья, в чьих поддеревьях есть опорные лица, стоят в прежнем порядке — ближе к родителю
+  // тот, чьё опорное лицо стояло ближе к оси, — если нынешний порядок (по годам рождения) ставит их иначе: Кааф и
+  // Мерари после границы «вошли в Египет с Иаковом» (Быт 46:11) родились в один год, и порядок по тексту поставил бы
+  // ближе к Левию Мерари, а весь род Каафа (Амрам, Аарон, Моисей…) — на 32 полосы дальше. Порядок, который даёт прежнее
+  // взаимное расположение, не меняется (без правок данных раскладка та же); остальные дети и спутницы — на своих местах
+  if (priorLane.size) {
+    const depthMemo = new Map<string, number | null>();
+    /** Наименьшее |полоса| опорного лица в поддереве по раскладке; null — опорных лиц нет. */
+    const priorDepth = (nid: string): number | null => {
+      if (depthMemo.has(nid)) return depthMemo.get(nid)!;
+      depthMemo.set(nid, null); // защита от циклов
+      let best = priorLane.has(nid) ? Math.abs(priorLane.get(nid)!) : null;
+      for (const k of kidsOf.get(nid) ?? []) {
+        if (spineSet.has(k)) continue;
+        const d = priorDepth(k);
+        if (d !== null && (best === null || d < best)) best = d;
+      }
+      depthMemo.set(nid, best);
+      return best;
+    };
+    const anchorKids = (p: string) => (kidsOf.get(p) ?? []).filter((k) => !isSat(k) && !spineSet.has(k) && priorDepth(k) !== null);
+    // дети лица коридора — корни притоков, а не поддерево: их порядок постановки не меняется
+    const parents = [...kidsOf.keys()].filter((p) => !spineSet.has(p) && anchorKids(p).length >= 2);
+    const level = (id: string) => {
+      let n = 0;
+      for (let x = layoutParent.get(id); x && n < 1000; x = layoutParent.get(x)) n++;
+      return n;
+    };
+    // глубже — раньше: когда меряется порядок детей, порядок в их поддеревьях уже прежний
+    parents.sort((a, b) => level(b) - level(a));
+    for (const p of parents) {
+      const kids = kidsOf.get(p)!;
+      // смещения детей при нынешнем порядке — как в subtree(p)
+      const off = new Map<string, number>();
+      const own: Contour = new Map([[0, [padded(nodeSpan(p))]]]);
+      for (const k of kids) {
+        if (spineSet.has(k)) continue;
+        const sub = subtree(k);
+        let sh = 1;
+        while (contourCollides(own, sub, sh)) sh++;
+        off.set(k, sh);
+        contourMerge(own, sub, sh);
+      }
+      const ak = anchorKids(p);
+      const agrees = ak.every((a) => ak.every((b) => (priorDepth(a)! - priorDepth(b)!) * (off.get(a)! - off.get(b)!) >= 0));
+      if (agrees) continue;
+      const slots = ak.map((k) => ({ k, i: kids.indexOf(k) }));
+      const byPrior = [...slots].sort((a, b) => priorDepth(a.k)! - priorDepth(b.k)! || a.i - b.i);
+      slots.forEach((sl, j) => (kids[sl.i] = byPrior[j].k));
+    }
+  }
 
   // --- 4. коридор в глобальной занятости + огибающая лент
   const occ = new Occupancy();
@@ -734,26 +803,123 @@ export function computeLayout(
     byNode.set(id, n);
   }
 
-  /** Ближайшее к коридору место для контура: сторона и полоса основания. */
-  const findPlace = (contour: Contour, attachLane: number, group: string) => {
+  /**
+   * Прежние сторона и полоса основания блока по его опорным лицам (hits: смещение от основания в сторону блока и прежняя
+   * полоса): сторона — у большинства опорных лиц (поровну — у ближайшего к основанию), основание — медиана тех оснований,
+   * при которых каждое опорное лицо встало бы на свою прежнюю полосу.
+   */
+  const priorOf = (hits: { off: number; lane: number }[]): { side: 1 | -1; base: number } | null => {
+    const hs = hits.filter((h) => h.lane !== 0);
+    if (!hs.length) return null;
+    const up = hs.filter((h) => h.lane > 0).length;
+    const nearest = [...hs].sort((a, b) => a.off - b.off)[0];
+    const side: 1 | -1 = up * 2 > hs.length ? 1 : up * 2 < hs.length ? -1 : nearest.lane > 0 ? 1 : -1;
+    const bases = hs.filter((h) => Math.sign(h.lane) === side).map((h) => h.lane - side * h.off).sort((a, b) => a - b);
+    return { side, base: bases[(bases.length - 1) >> 1] };
+  };
+  /** Опорные лица притока: смещение от корня по аккуратному дереву (relOffset) и прежняя полоса; призраки — не в счёт. */
+  const priorHits = (root: string): { off: number; lane: number }[] => {
+    const hits: { off: number; lane: number }[] = [];
+    const walk = (nid: string, off: number) => {
+      const L = nid.startsWith('ghost:') ? undefined : priorLane.get(nid);
+      if (L !== undefined) hits.push({ off, lane: L });
+      for (const k of kidsOf.get(nid) ?? []) if (!spineSet.has(k)) walk(k, off + relOffset.get(k)!);
+    };
+    walk(root, 0);
+    return hits;
+  };
+  /** Контур скопления: строка подписи и rows строк имён во всю ширину сетки. */
+  const clusterContour = (pl: ClusterPlan): Contour => {
+    const contour: Contour = new Map();
+    for (let k = 0; k <= pl.rows; k++) contour.set(k, [padded([pl.t0, pl.t1])]);
+    return contour;
+  };
+  /** Опорные лица скопления: строка r стоит на основании + (rows − 1 − r) при стороне +1 и на основании − 1 − r при −1. */
+  const clusterHits = (pl: ClusterPlan): { off: number; lane: number }[] =>
+    pl.cells.filter((c) => priorLane.has(c.id)).map((c) => {
+      const lane = priorLane.get(c.id)!;
+      return { off: lane > 0 ? pl.rows - 1 - c.row : 1 + c.row, lane };
+    });
+  /** Полоса прикрепления блока: лицо коридора, к которому он прикреплён или рядом с которым стоит; скопление — ось. */
+  const attachLaneOf = (pb: Pending) => (pb.attach ? corridorLane.get(pb.attach)! : pb.near ? corridorLane.get(pb.near)! : 0);
+  /** Первая допустимая полоса основания на стороне side: от полосы прикрепления наружу, вне коридора. */
+  const startOf = (side: 1 | -1, attachLane: number) => (side === 1 ? Math.max(attachLane + 1, 1) : Math.min(attachLane - 1, -1));
+
+  // априорные места блоков с опорными лицами (п. 8) и их резерв: пока такой блок не поставлен, его прежнее место —
+  // нынешний контур блока на прежних стороне и основании — не достаётся блоку без опорных лиц. Иначе приток или
+  // скопление, поставленный раньше (порядок постановки не меняется), по правилу «ближе к коридору» занимает место,
+  // освободившееся после правок, и блок с опорными лицами сдвигается. Блоки с опорными лицами резерва не видят: между
+  // собой они ставятся по прежнему порядку (Кааф, родившийся теперь до прихода в Египет, остаётся на своей полосе, а
+  // сдвигается Симеон, а не весь блок Левия)
+  const plan = new Map<Pending, { side: 1 | -1; base: number }>();
+  const foot = new Map<number, { iv: Iv; owner: Pending }[]>(); // полоса → резерв
+  const footLanes = new Map<Pending, number[]>();
+  if (priorLane.size) {
+    for (const pb of pending) {
+      const pl = pb.cluster ? plans.get(pb.cluster)! : null;
+      // контур притока считается прежде смещений его лиц: subtree заполняет relOffset
+      const contour = pl ? clusterContour(pl) : subtree(pb.root!);
+      const pr = priorOf(pl ? clusterHits(pl) : priorHits(pb.root!));
+      if (!pr) continue;
+      const start = startOf(pr.side, attachLaneOf(pb));
+      const base = pr.side === 1 ? Math.max(pr.base, start) : Math.min(pr.base, start);
+      plan.set(pb, { side: pr.side, base });
+      const lanes: number[] = [];
+      for (const [k, ivs] of contour) {
+        const L = base + pr.side * k;
+        const a = foot.get(L) ?? [];
+        for (const iv of ivs) a.push({ iv, owner: pb });
+        foot.set(L, a);
+        lanes.push(L);
+      }
+      footLanes.set(pb, lanes);
+    }
+  }
+  /** Блок поставлен — его резерв снят: он уже в занятости полос, на прежнем месте или рядом. */
+  const unreserve = (pb: Pending) => {
+    for (const L of footLanes.get(pb) ?? []) foot.set(L, foot.get(L)!.filter((r) => r.owner !== pb));
+  };
+  /** Контур с основанием base на стороне side не задевает занятых полос, а блок без опорных лиц (keep) — и резерва. */
+  const fits = (contour: Contour, side: 1 | -1, base: number, keep: boolean): boolean => {
+    for (const [lane, ivs] of contour) {
+      const L = base + side * lane;
+      const res = keep ? foot.get(L) : undefined;
+      for (const iv of ivs) {
+        if (occ.collides(L, iv)) return false;
+        if (res) for (const r of res) if (r.iv[0] <= iv[1] && iv[0] <= r.iv[1]) return false;
+      }
+    }
+    return true;
+  };
+  /**
+   * Место для контура: сторона и полоса основания. Без опорных лиц — ближайшее к коридору: от полосы прикрепления наружу,
+   * на той стороне, где ближе; тот же род — на ту же сторону (+0,5); при равенстве — сторона Иосифа.
+   * С опорными лицами (prior; априорное условие, п. 8) — сторона прежняя: штраф PRIOR_SIDE_W за другую перевешивает и
+   * разницу расстояний, и предпочтение рода. На прежней стороне полоса основания — ближайшая к прежней, где контур не
+   * задевает занятых полос (правила укладки те же); при равном отступе — ближе к оси.
+   */
+  const findPlace = (contour: Contour, attachLane: number, group: string, prior: { side: 1 | -1; base: number } | null) => {
+    const keep = prior === null; // блок без опорных лиц обходит резерв
     let best: { side: 1 | -1; base: number; score: number } | null = null;
     const sides: (1 | -1)[] = [1, -1];
     for (const side of sides) {
       // на стороне своей ветви коридора начинаем от полосы прикрепления
-      let base = side === 1 ? Math.max(attachLane + 1, 1) : Math.min(attachLane - 1, -1);
-      for (let guard = 0; guard < 4000; guard++) {
-        let ok = true;
-        for (const [lane, ivs] of contour) {
-          const L = base + side * lane;
-          for (const iv of ivs) if (occ.collides(L, iv)) { ok = false; break; }
-          if (!ok) break;
+      const start = startOf(side, attachLane);
+      let base = start;
+      if (prior && prior.side === side) {
+        const target = side === 1 ? Math.max(prior.base, start) : Math.min(prior.base, start);
+        base = target;
+        for (let d = 0; d < 4000; d++) {
+          const inward = target - side * d;
+          if (d > 0 && (inward - start) * side >= 0 && fits(contour, side, inward, keep)) { base = inward; break; }
+          if (fits(contour, side, target + side * d, keep)) { base = target + side * d; break; }
         }
-        if (ok) break;
-        base += side;
+      } else {
+        for (let guard = 0; guard < 4000 && !fits(contour, side, base, keep); guard++) base += side;
       }
       // ближе к месту прикрепления; тот же род — на ту же сторону; при равенстве — сторона Иосифа
       const pref = groupSide.get(group);
-      const score = Math.abs(base - attachLane) + (pref !== undefined && pref !== side ? 0.5 : 0) + (side === -1 ? 0.01 : 0);
+      const score = Math.abs(base - attachLane) + (pref !== undefined && pref !== side ? 0.5 : 0) + (side === -1 ? 0.01 : 0) + (prior && prior.side !== side ? PRIOR_SIDE_W : 0);
       if (!best || score < best.score) best = { side, base, score };
     }
     return best!;
@@ -763,10 +929,9 @@ export function computeLayout(
     if (pb.cluster) {
       const pl = plans.get(pb.cluster)!;
       // блок: строка подписи и rows строк имён, во всю ширину сетки
-      const contour: Contour = new Map();
-      for (let k = 0; k <= pl.rows; k++) contour.set(k, [padded([pl.t0, pl.t1])]);
-      const { side, base } = findPlace(contour, 0, pl.group);
+      const { side, base } = findPlace(clusterContour(pl), 0, pl.group, plan.get(pb) ?? null);
       groupSide.set(pl.group, side);
+      unreserve(pb);
       const blockId = blocks.length;
       const lanes = Array.from({ length: pl.rows + 1 }, (_, k) => base + side * k);
       const labelLane = Math.max(...lanes);
@@ -798,10 +963,11 @@ export function computeLayout(
     }
     const root = pb.root!;
     const contour = subtree(root);
-    const attachLane = pb.attach ? corridorLane.get(pb.attach)! : pb.near ? corridorLane.get(pb.near)! : 0;
+    const attachLane = attachLaneOf(pb);
     const group = root.startsWith('ghost:') ? g.persons.get(root.slice(6))!.group : g.persons.get(root)!.group;
-    const { side, base } = findPlace(contour, attachLane, group);
+    const { side, base } = findPlace(contour, attachLane, group, plan.get(pb) ?? null);
     groupSide.set(group, side);
+    unreserve(pb);
     const blockId = blocks.length;
     let laneMin = Infinity;
     let laneMax = -Infinity;
