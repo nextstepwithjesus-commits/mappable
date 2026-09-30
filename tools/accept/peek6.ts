@@ -259,7 +259,11 @@ export const peek6: Scenario[] = [
       const f1 = await p.evaluate(() => ({ t: (document.activeElement as HTMLElement | null)?.innerText?.trim() ?? '', dlg: document.activeElement?.closest('[role="dialog"]')?.getAttribute('aria-label') ?? '' }));
       if (f1.t !== 'Ева' || !/^Адам/.test(f1.dlg)) return fail(`фокус после Enter: «${f1.t}» в «${f1.dlg}»`);
       await p.keyboard.press('Tab');
-      const f2 = await p.evaluate(() => (document.activeElement as HTMLElement | null)?.innerText?.trim() ?? '');
+      // имя на кнопке — в .nm; запятая за именем (.sep, решение 92) скрыта от диктора и в имя не входит
+      const f2 = await p.evaluate(() => {
+        const a = document.activeElement as HTMLElement | null;
+        return ((a?.querySelector('.nm') as HTMLElement | null) ?? a)?.innerText?.trim() ?? '';
+      });
       if (f2 !== 'Каин') return fail(`Tab: «${f2}»`);
       await p.keyboard.press('Escape');
       await p.waitForTimeout(400);

@@ -1295,7 +1295,7 @@ export function drawGroupNames(v: SkyContext, p: Pass, spots: GroupNameSpot[]): 
        * в середине названия) или, если так не нашлось, только его середина (область узка или изрезана).
        */
       const scan = (whole: boolean, cover = GROUP_COVER_FROM) => {
-        const stepX = Math.max(24, (vx1 - vx0 - (whole ? tw : 0)) / 24);
+        const stepX = Math.max(12, (vx1 - vx0 - (whole ? tw : 0)) / 48);
         const rest: (ReturnType<typeof at> & { lines: number })[] = [];
         const x0 = whole ? vx0 + tw / 2 + 4 : vx0 + 8;
         const x1 = whole ? vx1 - tw / 2 - 4 : vx1 - 8;
