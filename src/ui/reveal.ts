@@ -24,16 +24,16 @@ import { byId, graph, lineMembership, persons } from '../data/atlas.ts';
 import { buildUnions, membersOf, type Union } from '../engine/unions.ts';
 import { selected } from '../state.ts';
 import { num } from './text/typo.ts';
-import { setShowState, show, showRestored, workSet, type Show, type WorkEntry } from './work.ts';
+import { parseStored, setShowState, show, showRestored, workSet, type Show, type WorkEntry } from './work.ts';
 
 // ---------- хранилище ----------
 
 const hasWindow = typeof window !== 'undefined';
+/** Своё сохранение — с проверкой схемы (решение 130; src/ui/work.ts, parseStored). */
 function read<T>(key: string, d: T): T {
   if (!hasWindow) return d;
   try {
-    const v = window.localStorage.getItem(`toledot:${key}`);
-    return v === null ? d : (JSON.parse(v) as T);
+    return parseStored(window.localStorage.getItem(`toledot:${key}`), d);
   } catch {
     return d;
   }
@@ -62,11 +62,17 @@ export const originOf = (id: string): Union[] => unions.origin.get(id) ?? [];
 /** «лицо», «лица», «лиц» — по числу. */
 const personsWord = (n: number) => (n % 10 === 1 && n % 100 !== 11 ? 'лицо' : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 'лица' : 'лиц');
 
+/**
+ * Имя показа «линии Мессии» и начала (решение 110): одно во всём атласе — во вступлении, в листе «Показ», в строке
+ * показа и в строках «нет в показе «…»».
+ */
+export const LINES_TITLE = 'Родословие Иисуса Христа (Мф 1, Лк 3)';
+
 export type Start = 'adam' | 'jesus' | 'lines' | 'key' | 'all';
 export const STARTS: readonly { value: Start; label: string; hint: string }[] = [
   { value: 'adam', label: 'С Адама', hint: 'На небе только Адам и его карточка. «+N» у ромба союза раскрывает детей, и так дальше.' },
   { value: 'jesus', label: 'С Иисуса Христа', hint: 'На небе только Иисус Христос и его карточка. «Родители» раскрывают родословие вверх, до Адама.' },
-  { value: 'lines', label: 'Родословие Иисуса Христа', hint: 'Обе линии — по Матфею и по Луке — от Адама до Иисуса Христа.' },
+  { value: 'lines', label: LINES_TITLE, hint: 'Обе линии — по Матфею и по Луке — от Адама до Иисуса Христа.' },
   { value: 'key', label: 'Ключевые лица', hint: 'Главные лица истории Писания; щелчок по звезде открывает карточку и родство.' },
   { value: 'all', label: 'Всё небо', hint: `Все ${num(persons.length)} ${personsWord(persons.length)} на звёздном небе; созвездия можно сворачивать.` },
 ];

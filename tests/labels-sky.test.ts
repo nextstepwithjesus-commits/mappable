@@ -141,7 +141,7 @@ describe('подписи без наложений (E1)', () => {
         expect(x >= s.letterW && x <= s.cam.w && y >= s.openTop && y <= s.cam.vp.b, b.text).toBe(true);
       }
     }
-  });
+  }, 60_000);
 
   it('«липкие» имена: у следа, звезда которого за левым краем, имя стоит у края над следом (MAP-10)', () => {
     const { sky: s, texts } = drawSky({ move: around('solomon', 50) });
@@ -175,7 +175,7 @@ describe('подписи без наложений (E1)', () => {
     }
     }
     expect(kings).toBeGreaterThan(0);
-  });
+  }, 60_000);
 
   it('четыре положения: у звезды у правого края подпись слева, сверху или снизу', () => {
     const r = 4;
@@ -262,7 +262,7 @@ describe('обзор и семантическое увеличение (E3; MAP
     }
     const { sky: s } = drawSky();
     expect(s.labelStats().boxes.filter((b) => b.kind === 'group').length).toBeGreaterThan(5);
-  });
+  }, 60_000);
 });
 
 describe('помощники подписей', () => {

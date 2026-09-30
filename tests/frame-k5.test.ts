@@ -48,19 +48,15 @@ function drawSky(o: { w?: number; state?: Record<string, unknown>; view?: import
 }
 
 describe('служебная строка (решения 30, 35)', () => {
-  it('модель не по умолчанию — «модель «…»» справа в служебной строке; тесно — до двоеточия', () => {
+  // этап 13, решение 102: название модели ушло из строки эпох в строку показа (src/ui/modelinfo.ts, modelBar; тест —
+  // tests/time13.test.ts): в строке эпох оно читалось как ещё одна эпоха и вытесняло «Земная жизнь Иисуса Христа»
+  it('модель не по умолчанию — не в служебной строке: её называет строка показа; названия эпох на месте', () => {
     const name = 'Краткое пребывание: 215 лет в Египте';
-    const { texts, s } = drawSky({ state: { modelNote: name } });
-    const t = texts.find((q) => q.t.startsWith('модель «'));
-    expect(t?.t).toBe('модель «Краткое пребывание: 215 лет в Египте»');
-    expect(t!.y).toBeLessThan(sky.FRAME_H);
-    expect(s.labelStats().boxes.some((b) => b.kind === 'frame' && b.text === t!.t)).toBe(true);
-    expect(frame.modelText(name, true)).toBe('модель «Краткое пребывание»');
+    const { texts } = drawSky({ state: { modelNote: name } });
+    expect(texts.some((q) => q.t.startsWith('модель'))).toBe(false);
+    expect(texts.some((q) => q.y < sky.FRAME_H && atlas.models[0].epochs.some((e) => e.name === q.t || e.short === q.t))).toBe(true);
     const phone = drawSky({ w: 390, state: { modelNote: name } });
-    expect(phone.texts.some((q) => q.t.startsWith('модель «'))).toBe(true);
-    // модель по умолчанию — ничего
-    const none = drawSky();
-    expect(none.texts.some((q) => q.t.startsWith('модель'))).toBe(false);
+    expect(phone.texts.some((q) => q.t.startsWith('модель'))).toBe(false);
   });
   it('«Свёрнуто: колено Иудино (358), потомки Давида (62) — развернуть»: пункты и «развернуть» — команды', () => {
     const { texts, s } = drawSky({ view: { mode: 'all', set: new Set(), foldDesc: ['david'], foldGroups: ['judah'] } });

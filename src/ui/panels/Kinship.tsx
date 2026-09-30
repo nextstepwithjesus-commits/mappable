@@ -41,6 +41,13 @@ function Who({ id }: { id: string }) {
 /** Последовательности линий Мессии по data/lines — для порядка путей «Родства». */
 const LINE_IDS = { joseph: lines.joseph.persons.map((s) => s.id), mary: lines.mary.persons.map((s) => s.id) };
 
+/** Путь не найден (решение 127): что сказать и где искали. */
+export const KIN_NONE = 'В данных атласа путь родства между ними не найден.';
+export const KIN_WHERE =
+  'Искали общих предков по всем связям «родитель — ребёнок» атласа (с Лк 3 и родством по закону), родство, названное в Писании словами («брат», «родственница»), и свойство через один брак. Где родители лица не названы, путь через них не строится.';
+/** Только свойство (CARD-92; решение 127). */
+export const KIN_ONLY_INLAW = 'Кровного родства в данных атласа не найдено: общих предков нет. Через брак:';
+
 export function KinshipPanel() {
   // пара не следует за выбором: ссылки в цепочке открывают карточки, но первое лицо остаётся прежним
   const a = first.value ?? selected.value;
@@ -67,7 +74,7 @@ export function KinshipPanel() {
   const other = field === 'a' ? b : a;
   // родство лица с самим собой не предлагается: второе поле не предлагает первое лицо, и наоборот
   const hits = useMemo(() => (field ? personHits(q, (id) => id === other) : []), [q, field, other]);
-  const blocks = useMemo(() => personBlocks(hits), [hits]);
+  const blocks = useMemo(() => personBlocks(hits, q), [hits, q]);
   const choose = (r: Row) => {
     if (r.kind !== 'person') return;
     const id = r.id;
@@ -165,9 +172,15 @@ export function KinshipPanel() {
           </button>
         )}
       </div>
-      {a && b && !rels.length && <p class="muted">Родства между ними Писание не называет.</p>}
-      {/* только свойство (CARD-92): «Кровного родства Писание не называет. Через брак: Авигея — жена Давида, брата Авигеи» */}
-      {a && b && rels.length > 0 && rels.every((r) => r.kind === 'in-law') && <p class="muted">Кровного родства Писание не называет. Через брак:</p>}
+      {/* ответ не сильнее данных (решение 127; TOL 006): «не найден в данных атласа», а не «Писание не называет» */}
+      {a && b && !rels.length && (
+        <>
+          <p class="kin-none">{typo(KIN_NONE)}</p>
+          <p class="muted kin-where">{typo(KIN_WHERE)}</p>
+        </>
+      )}
+      {/* только свойство (CARD-92): «Кровного родства в данных атласа не найдено. Через брак: Авигея — жена Давида, брата Авигеи» */}
+      {a && b && rels.length > 0 && rels.every((r) => r.kind === 'in-law') && <p class="muted">{typo(KIN_ONLY_INLAW)}</p>}
       {main.map((r, i) => (
         <RelationView key={`${a}|${b}|${i}`} r={r} ns={`kin${i}`} lit={shown === r} onShow={() => (setOnSky(rels.indexOf(r)), showPathOnSky(r))} />
       ))}
@@ -282,7 +295,7 @@ function RelationView({ r, ns, lit, onShow }: { r: Relation; ns: string; lit: bo
       {r.variants.length > 0 && !detours && (
         <div class="cmds">
           <button class="cmd more" aria-expanded={false} onClick={() => setDetours(true)}>
-            {`ещё ${r.variants.length} ${plural(r.variants.length, 'обход', 'обхода', 'обходов')} той же длины`}
+            {`ещё ${r.variants.length} ${plural(r.variants.length, 'путь', 'пути', 'путей')} той же длины`}
           </button>
         </div>
       )}

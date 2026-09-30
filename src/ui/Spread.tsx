@@ -173,7 +173,8 @@ export function Spread() {
             selected.value = b;
           }}
         >
-          Поменять страницы
+          {/* одно действие — одно слово (решение 109): как в «Родстве» */}
+          Поменять местами
         </button>
         {CAN_PRINT && (
           <button class="cmd" onClick={() => window.print()}>

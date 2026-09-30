@@ -30,11 +30,14 @@ import { model } from '../../state.ts';
 import { isClaimUnion, unionName } from '../linkwords.ts';
 import { originOf, unionsOf } from '../reveal.ts';
 import { bySex, childrenNoun, lowerFirst, nameCase, pluralPeopleName } from '../text/ru.ts';
-import { kidsInBirthOrder } from './Union.tsx';
+import { compareKidGroups, kidsInBirthOrder, onLine } from './Union.tsx';
 
 
-/** Часть строки: текст или имя-ссылка с ключом своей связи. */
-export type KinPart = { t: 'text'; text: string } | { t: 'name'; id: string; key: LinkKey };
+/**
+ * Часть строки: текст или имя-ссылка с ключом своей связи. line — лицо на линии Мессии: «ещё N» строки его не прячет
+ * (решение 104), значимость видна знаком лент у имени, а не местом в строке.
+ */
+export type KinPart = { t: 'text'; text: string } | { t: 'name'; id: string; key: LinkKey; line?: boolean };
 
 export type KinRowKind = 'parents' | 'spouses' | 'coparents' | 'children' | 'siblings' | 'year';
 
@@ -105,7 +108,7 @@ function names(ids: readonly { id: string; key: LinkKey; note?: string }[], sep 
   const out: KinPart[] = [];
   ids.forEach((x, i) => {
     if (i) out.push({ t: 'text', text: sep });
-    out.push({ t: 'name', id: x.id, key: x.key });
+    out.push(onLine(x.id) ? { t: 'name', id: x.id, key: x.key, line: true } : { t: 'name', id: x.id, key: x.key });
     if (x.note) out.push({ t: 'text', text: ` (${x.note})` });
   });
   return out;
@@ -337,10 +340,15 @@ function childrenRow(id: string): KinRow | null {
   const seen = new Set<string>();
   const groups: { u: Union; kids: { id: string; key: LinkKey; note?: string }[] }[] = [];
   const far: { id: string; key: LinkKey }[] = [];
-  // сначала кровные союзы с названным вторым родителем, затем — где он не назван, последними — союзы иного рода
-  // (усыновление, по Луке)
-  const blood = us.filter((x) => !isClaimUnion(x));
-  for (const u of [...blood.filter((x) => partnerIn(x, id)), ...blood.filter((x) => !partnerIn(x, id)), ...us.filter(isClaimUnion)]) {
+  // кровные союзы — в порядке групп § 10 (compareKidGroups: союз с ребёнком линии — первым, затем в порядке браков,
+  // второй родитель не назван — последним); последними — союзы иного рода (усыновление, по Луке)
+  const all = unionsOf(id);
+  const blood = us
+    .filter((x) => !isClaimUnion(x))
+    .map((u) => ({ u, named: !!partnerIn(u, id), kids: kidsInBirthOrder(u).filter((k) => k !== id), rank: all.indexOf(u) }))
+    .sort(compareKidGroups)
+    .map((x) => x.u);
+  for (const u of [...blood, ...us.filter(isClaimUnion)]) {
     const g: { id: string; key: LinkKey; note?: string }[] = [];
     for (const k of kidsInBirthOrder(u)) {
       if (seen.has(k) || k === id) continue;

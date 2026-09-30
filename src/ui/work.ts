@@ -24,12 +24,29 @@ import { selected, focused } from '../state.ts';
 // ---------- хранилища ----------
 
 const hasWindow = typeof window !== 'undefined';
+/**
+ * Разбор своего сохранения (решение 130; TOL 011): испорченный JSON, JSON `null` и чужая схема (массив вместо объекта,
+ * строка вместо списка) дают значение по умолчанию d — атлас открывается как при первом посещении, ничего не падает.
+ * Поля внутри проверяет тот, кто читает (readWork, strs, parseShow).
+ */
+export function parseStored<T>(raw: string | null, d: T): T {
+  if (raw === null) return d;
+  let v: unknown;
+  try {
+    v = JSON.parse(raw);
+  } catch {
+    return d;
+  }
+  if (v === null || v === undefined) return d;
+  if (d !== null && typeof d === 'object' && (typeof v !== 'object' || Array.isArray(v) !== Array.isArray(d))) return d;
+  if (d !== null && typeof d !== 'object' && typeof v !== typeof d) return d;
+  return v as T;
+}
 function read<T>(store: 'local' | 'session', key: string, d: T): T {
   if (!hasWindow) return d;
   try {
     const s = store === 'local' ? window.localStorage : window.sessionStorage;
-    const v = s.getItem(`toledot:${key}`);
-    return v === null ? d : (JSON.parse(v) as T);
+    return parseStored(s.getItem(`toledot:${key}`), d);
   } catch {
     return d;
   }
@@ -86,16 +103,75 @@ export function scopeIds(id: string, scope: Scope): { id: string; gen?: number }
 
 // ---------- рабочий набор (J3) ----------
 
-function readWork(): Map<string, WorkEntry> {
-  const raw = read<[string, WorkEntry][]>('local', 'work', []);
-  const m = new Map<string, WorkEntry>();
-  if (!Array.isArray(raw)) return m;
+const VIAS: readonly WorkEntry['via'][] = ['self', 'anc', 'desc', 'family', 'path'];
+
+/**
+ * Строки набора [id, откуда взято] с проверкой схемы (решение 130; TOL 011): чужие id и строки чужого вида
+ * пропускаются, испорченное «откуда» становится «само лицо». skipped — сколько строк не прочитано.
+ */
+export function workFromRows(raw: unknown): { set: Map<string, WorkEntry>; skipped: number } {
+  const set = new Map<string, WorkEntry>();
+  let skipped = 0;
+  if (!Array.isArray(raw)) return { set, skipped };
   for (const row of raw) {
-    if (!Array.isArray(row) || typeof row[0] !== 'string' || !byId.has(row[0])) continue;
-    const e = row[1];
-    m.set(row[0], e && typeof e === 'object' && typeof e.via === 'string' && typeof e.of === 'string' ? e : { via: 'self', of: row[0] });
+    if (!Array.isArray(row) || typeof row[0] !== 'string' || !byId.has(row[0])) {
+      skipped++;
+      continue;
+    }
+    const e = row[1] as Partial<WorkEntry> | null;
+    const good = !!e && typeof e === 'object' && VIAS.includes(e.via as WorkEntry['via']) && typeof e.of === 'string' && byId.has(e.of) && (e.gen === undefined || Number.isInteger(e.gen));
+    set.set(row[0], good ? { via: e!.via!, of: e!.of!, ...(e!.gen !== undefined ? { gen: e!.gen } : {}) } : { via: 'self', of: row[0] });
   }
-  return m;
+  return { set, skipped };
+}
+
+function readWork(): Map<string, WorkEntry> {
+  return workFromRows(read<unknown>('local', 'work', [])).set;
+}
+
+// ---------- набор в файле (решение 130; TOL 007) ----------
+
+/** Вид файла набора: по нему файл узнаётся при открытии. */
+export const SET_FILE_KIND = 'toledot-set';
+
+/** Содержимое файла набора: вид, версия, дата, лица [id, откуда взято] и имена — для человека, читающего файл. */
+export function setFileText(set: ReadonlyMap<string, WorkEntry>, date = new Date()): string {
+  const rows = [...set];
+  return JSON.stringify(
+    { kind: SET_FILE_KIND, version: 1, saved: date.toISOString().slice(0, 10), persons: rows, names: rows.map(([id]) => byId.get(id)?.name ?? id) },
+    null,
+    1,
+  );
+}
+
+/**
+ * Прочитать файл набора: не JSON, не набор атласа, набор без известных лиц — ошибка словами; чужие id пропускаются
+ * и считаются.
+ */
+export function parseSetFile(text: string): { set: Map<string, WorkEntry>; skipped: number } | { error: string } {
+  let data: unknown;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    return { error: 'Это не файл набора атласа: файл не читается как JSON.' };
+  }
+  if (!data || typeof data !== 'object' || Array.isArray(data) || (data as { kind?: unknown }).kind !== SET_FILE_KIND) return { error: 'Это не файл набора атласа.' };
+  const r = workFromRows((data as { persons?: unknown }).persons);
+  if (!r.set.size) return { error: 'В файле нет лиц этого атласа.' };
+  return r;
+}
+
+/** Сохранить набор в файл «toledot-nabor-18.json» (загрузка браузера). */
+export function saveSetFile(set: ReadonlyMap<string, WorkEntry> = workSet.peek()): void {
+  if (!hasWindow || !set.size) return;
+  const url = URL.createObjectURL(new Blob([setFileText(set)], { type: 'application/json' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `toledot-nabor-${set.size}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 /** Рабочий набор: id лица → откуда взято. Порядок — порядок добавления. */
@@ -180,7 +256,7 @@ export function leaveLinkSet() {
  * Снимается командой «скрыть», сменой режима неба и первым лицом, взятым в работу.
  */
 export const workNotice = signal<string | null>(null);
-export const EMPTY_LINK_NOTICE = 'Ссылка открыта в режиме «набор», но ваш набор пуст: показаны все лица';
+export const EMPTY_LINK_NOTICE = 'Ссылка открыта в показе «набор», но ваш набор пуст: показаны все лица';
 
 /** Взять в работу лицо id с объёмом scope; лица, уже бывшие в наборе, остаются со своей пометой. Возвращает, сколько добавлено. */
 export function addToWork(id: string, scope: Scope = { kind: 'self' }): number {
@@ -530,8 +606,9 @@ const bySex = (id: string, m: string, f: string) => (byId.get(id)?.sex === 'f' ?
 
 /**
  * Что сказала клавиша набора — для живой области (IX-51, MOB-55, WCAG 4.1.3). Имя — в начале строки, в именительном
- * падеже: «Иессей добавлен в набор; в наборе 5 лиц», «Руфь убрана из набора; набор пуст», «Давид: потомки свёрнуты,
- * скрыто 62 лица». Одно слово — одно понятие: «набор» (этап 11, решение 81; слов «В работе» в интерфейсе нет).
+ * падеже: «Иессей добавлен в набор; в наборе 5 лиц», «Руфь убрана из набора; набор пуст», «Давид: потомки скрыты на
+ * небе, 62 лица». Одно слово — одно понятие: «набор» (этап 11, решение 81; слов «В работе» в интерфейсе нет); на небе
+ * потомков «скрывают» и «показывают» (этап 13, решение 109), «свернуть» — только карточке и листу.
  */
 export function workKeyText(
   r: { kind: 'take' | 'drop'; id: string; size: number } | { kind: 'fold' | 'unfold'; id: string; hidden?: number },
@@ -541,13 +618,13 @@ export function workKeyText(
     if (r.kind === 'take') return `${name} ${bySex(r.id, 'добавлен', 'добавлена')} в набор; в наборе ${persons(r.size)}`;
     return `${name} ${bySex(r.id, 'убран', 'убрана')} из набора; ${r.size ? `в наборе ${persons(r.size)}` : 'набор пуст'}`;
   }
-  if (r.kind === 'unfold') return `${name}: потомки развёрнуты`;
-  return `${name}: потомки свёрнуты${r.hidden ? `, скрыто ${persons(r.hidden)}` : ''}`;
+  if (r.kind === 'unfold') return `${name}: потомки снова на небе`;
+  return `${name}: потомки скрыты на небе${r.hidden ? `, ${persons(r.hidden)}` : ''}`;
 }
 
-/** Свёртка созвездия вслух (UX-51): «Созвездие «Дом Саулов» свёрнуто: скрыто 65 лиц»; развёрнуто — без счёта. */
+/** Свёртка созвездия вслух (UX-51; решение 109): «Созвездие «Дом Саулов» скрыто на небе: 65 лиц»; снова на небе — без счёта. */
 export function groupFoldText(name: string, on: boolean, count: number): string {
-  return on ? `Созвездие «${name}» свёрнуто${count ? `: скрыто ${persons(count)}` : ''}` : `Созвездие «${name}» развёрнуто`;
+  return on ? `Созвездие «${name}» скрыто на небе${count ? `: ${persons(count)}` : ''}` : `Созвездие «${name}» снова на небе`;
 }
 
 export type WorkKeyResult = { kind: 'take' | 'drop'; id: string; size: number } | { kind: 'fold' | 'unfold'; id: string };

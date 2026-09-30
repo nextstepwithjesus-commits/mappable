@@ -193,7 +193,7 @@ function recording() {
 }
 const LAYERS = { lifelines: true, connectors: true, constellations: true, epochs: true, ribbons: true, tensions: true, ghosts: true, labels: true };
 type SkyT = InstanceType<typeof import('../src/render/sky.ts').Sky>;
-function linesSky(w: number, h: number) {
+function linesSky(w: number, h: number, extra: Record<string, unknown> = {}) {
   const rec = recording();
   const canvas = { getContext: () => rec.ctx, style: {}, width: 0, height: 0 } as unknown as HTMLCanvasElement;
   const s: SkyT = new sky.Sky(canvas);
@@ -220,6 +220,7 @@ function linesSky(w: number, h: number) {
   s.draw({
     model: atlas.models[0], lambda: 1, selected: null, second: null, hovered: null, focus: null, highlight: null, layers: LAYERS,
     onlyLines: true, meridian: null, tensionPersons: new Set(), flow: 0, reduced: true, intro: 1, lineFlip: false, pins: new Set(), reserve: [],
+    ...extra,
   } as Parameters<SkyT['draw']>[0]);
   return { s, rec };
 }
@@ -243,6 +244,24 @@ describe('«только линии» на небе (U2; MAP-23)', () => {
       expect(notes.filter((t) => /^(Каинан|Расходятся|Сходятся)/.test(t)).length).toBe(5);
       expect(st.overlaps).toBe(0);
     });
+  it('решение 116: точка сравнения с фокусом клавиатуры видна на небе — рамка вокруг её подписи и кольцо у точки; и при выключенных подписях', () => {
+    const { s, rec } = linesSky(1440, 776, { noteFocus: 'kainan-syn-arfaksada' });
+    const f = ribbons.lineNoteFocus(s)!;
+    expect(f.id).toBe('kainan-syn-arfaksada');
+    const hit = ribbons.lineNoteHits(s).find((q) => q.kind === 'synopsis' && q.id === f.id)!;
+    expect(hit).toBeTruthy();
+    // рамка — на 3 px шире подписи со всех сторон; кольцо — у самой точки ленты (звезды Каинана)
+    expect(rec.calls.some((c) => c[0] === 'strokeRect' && Math.abs((c[1] as number) - (hit.x - 3)) < 0.01 && Math.abs((c[3] as number) - (hit.w + 6)) < 0.01)).toBe(true);
+    const i = s.indexOf('kainan-syn-arfaksada')!;
+    expect(Math.abs(f.x - s.cam.sx(s.X0[i])) + Math.abs(f.y - s.cam.sy(s.nodes[i].lane))).toBeLessThan(0.5);
+    expect(rec.calls.some((c) => c[0] === 'arc' && Math.abs((c[1] as number) - f.x) < 0.01 && Math.abs((c[3] as number) - f.r) < 0.01)).toBe(true);
+    // без фокуса — ни рамки, ни кольца
+    expect(ribbons.lineNoteFocus(linesSky(1440, 776).s)).toBe(null);
+    // слой подписей выключен: остальных выносок нет, а точка с фокусом — есть
+    const off = linesSky(1440, 776, { noteFocus: 'salafiil', layers: { ...LAYERS, labels: false } });
+    expect(ribbons.lineNoteHits(off.s).filter((q) => q.kind === 'synopsis').map((q) => q.id)).toEqual(['salafiil']);
+    expect(ribbons.lineNoteFocus(off.s)?.id).toBe('salafiil');
+  });
   it('подписи лиц линий: золотые (только Мф) — над звездой, лазурные (только Лк) — под ней (UX-16)', async () => {
     const { s } = linesSky(1440, 776);
     // окно — от Давида на ~250 лет вперёд, как у студентки, приблизившей развилку

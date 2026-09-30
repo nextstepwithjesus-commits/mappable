@@ -1856,6 +1856,7 @@
       "over": "Иудея",
       "start": -873,
       "end": -848,
+      "sole": -870,
       "years": 25,
       "ageAtStart": 35,
       "refs": [
@@ -2824,6 +2825,7 @@
       "over": "Иудея",
       "start": -853,
       "end": -841,
+      "sole": -848,
       "years": 8,
       "ageAtStart": 32,
       "refs": [
@@ -4928,6 +4930,7 @@
       "over": "Иудея",
       "start": -792,
       "end": -740,
+      "sole": -767,
       "years": 52,
       "ageAtStart": 16,
       "refs": [
@@ -5373,6 +5376,7 @@
       "over": "Иудея",
       "start": -750,
       "end": -735,
+      "sole": -740,
       "years": 16,
       "ageAtStart": 25,
       "refs": [
@@ -7263,6 +7267,7 @@
       "over": "Иудея",
       "start": -697,
       "end": -642,
+      "sole": -686,
       "years": 55,
       "ageAtStart": 12,
       "refs": [

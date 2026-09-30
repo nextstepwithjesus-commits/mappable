@@ -359,13 +359,15 @@ export const grammar11: Scenario[] = [
   },
   {
     n: 746,
-    title: 'Каинан: шаг лазурной ленты к нему — разреженная нить (точки); подсказка «только у Луки (Лк 3:36)»',
+    // этап 13, решение 94 (словарь начертаний): точки — только толкование; Каинан назван Писанием (Лк 3:36), шаг к нему —
+    // сплошная нить, а «только у Луки» говорит подсказка (прежде — разреженная нить)
+    title: 'Каинан: шаг лазурной ленты к нему — сплошная нить (решение 94: точки — только толкование); подсказка «только у Луки (Лк 3:36)»',
     run: async (p) => {
       await open(p, '#/kainan-syn-arfaksada~vl~w120');
       const log = await linkLog(p);
       const step = log.find((q) => q.kind === 'ribbon' && q.ks === 'r.m.kainan-syn-arfaksada');
       if (!step) return fail('нет шага ленты к Каинану');
-      if (step.style !== 'dots') return fail(`начертание шага ${step.style}`);
+      if (step.style !== 'solid') return fail(`начертание шага ${step.style}`);
       const o = await origin(p);
       // вдоль шага — до первой точки, где небо называет ленту
       for (const g of segs(step)) {

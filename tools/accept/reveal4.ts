@@ -57,7 +57,7 @@ async function toggleVia(p: Page, q: Plate): Promise<string | null> {
   await p.waitForTimeout(500);
   const card = p.locator(`.sky .dotcard[data-kind="union"][data-id="${q.uid}"][data-placed]`);
   if (!(await card.count())) return null;
-  const cmd = card.locator('.dc-cmds button', { hasText: /^(Раскрыть|Свернуть|Скрыть)/ });
+  const cmd = card.locator('.dc-cmds button', { hasText: /^(Раскрыть|Свернуть|Скрыть|Показать)/ });
   if (!(await cmd.count())) return null;
   const text = (await cmd.first().innerText()).trim();
   await cmd.first().click();
@@ -112,7 +112,7 @@ export const reveal4: Scenario[] = [
       await p.waitForTimeout(600);
       if ((await stored(p)).join(' ') !== 'adam') return fail(`щелчок по точке сам раскрыл союз: ${(await stored(p)).join(' ')}`);
       const cmd = await toggleVia(p, q0);
-      if (cmd !== 'Раскрыть детей (3)') return fail(`команда карточки у точки: «${cmd}»`);
+      if (cmd !== 'Показать детей союза (3)') return fail(`команда карточки у точки: «${cmd}»`);
       await p.waitForTimeout(1200);
       const ids = await stored(p);
       if (ids.join(' ') !== 'adam avel eva kain sif') return fail(`набор после щелчка: ${ids.join(' ')}`);
@@ -129,7 +129,7 @@ export const reveal4: Scenario[] = [
       if (!/Раскрыт союз Адама и Евы: 4 лица/.test(said)) return fail(`объявление: «${said}»`);
       // карточка у точки остаётся, её команда — теперь свёртка
       const now = (await p.locator('.sky .dotcard .dc-cmds button').allInnerTexts()).map((t) => t.trim());
-      if (!now.includes('Свернуть детей')) return fail(`команды карточки после раскрытия: ${now.join(' | ')}`);
+      if (!now.includes('Скрыть детей союза')) return fail(`команды карточки после раскрытия: ${now.join(' | ')}`);
       const d = await canvasData(p);
       return pass(`точка ${q0.x},${q0.y} → ${q1.x},${q1.y}; Адам на месте; подписи ${d.named}`);
     },
@@ -143,7 +143,7 @@ export const reveal4: Scenario[] = [
       const a0 = await starAt(p, 'adam');
       if (!q0 || !q0.open || !a0) return fail('нет раскрытой точки союза или звезды Адама');
       const cmd = await toggleVia(p, q0);
-      if (cmd !== 'Свернуть детей') return fail(`команда карточки у точки: «${cmd}»`);
+      if (cmd !== 'Скрыть детей союза') return fail(`команда карточки у точки: «${cmd}»`);
       await p.waitForTimeout(1000);
       const ids = await stored(p);
       if (ids.join(' ') !== 'adam') return fail(`набор после свёртки: ${ids.join(' ')}`);
@@ -192,7 +192,7 @@ export const reveal4: Scenario[] = [
       await go.click();
       await p.waitForTimeout(900);
       if (!(await plateOf(p, 'u:kain+'))) return fail(`нет точки союза Каина: ${(await canvasData(p)).plates}`);
-      if (!(await p.locator('.sky .dotcard .dc-cmds button', { hasText: 'Свернуть ветвь' }).count())) return fail('команда не стала «Свернуть ветвь»');
+      if (!(await p.locator('.sky .dotcard .dc-cmds button', { hasText: 'Скрыть ветвь' }).count())) return fail('команда не стала «Свернуть ветвь»');
       await p.mouse.click(at.x, at.y);
       await p.waitForTimeout(700);
       const r = await reveal(p);
@@ -237,7 +237,7 @@ export const reveal4: Scenario[] = [
       await p.keyboard.press('Enter');
       await p.waitForTimeout(600);
       const focus = await p.evaluate(() => (document.activeElement?.closest('.dotcard') ? (document.activeElement as HTMLElement).innerText.trim() : ''));
-      if (focus !== 'Раскрыть детей (3)') return fail(`фокус после Enter: «${focus}»`);
+      if (focus !== 'Показать детей союза (3)') return fail(`фокус после Enter: «${focus}»`);
       await p.keyboard.press('Enter');
       await p.waitForTimeout(1000);
       const ids = await stored(p);
@@ -260,7 +260,7 @@ export const reveal4: Scenario[] = [
       await p.touchscreen.tap(at.x, at.y);
       await p.waitForTimeout(700);
       // этап 11 (решение 77): на телефоне карточка у ромба — нижний лист (DotSheet), второй карточки над небом нет
-      const cmd = p.locator('.dotcard[data-kind="union"][data-placed] .dc-cmds button', { hasText: /^Раскрыть детей/ });
+      const cmd = p.locator('.dotcard[data-kind="union"][data-placed] .dc-cmds button', { hasText: /^Показать детей союза/ });
       if (!(await cmd.count())) return fail('касание не открыло карточку у ромба союза');
       await cmd.tap();
       await p.waitForTimeout(1100);
@@ -303,7 +303,7 @@ export const reveal4: Scenario[] = [
       if (!(q0.x + q0.w <= j.x && Math.abs(q0.y + q0.h / 2 - j.y) <= 2)) return fail(`ромб союза не на строке звезды слева: ${q0.x},${q0.y} ${q0.w}×${q0.h}, звезда ${j.x},${j.y}`);
       // решение 76: раскрытие — командой карточки у точки
       const cmd = await toggleVia(p, q0);
-      if (cmd !== 'Раскрыть родителей') return fail(`команда карточки у точки: «${cmd}»`);
+      if (cmd !== 'Показать родителей') return fail(`команда карточки у точки: «${cmd}»`);
       await p.waitForTimeout(1300);
       const ids = await stored(p);
       if (!ids.includes('iosif-muzh-marii') || !ids.includes('mariya')) return fail(`набор: ${ids.join(' ')}`);

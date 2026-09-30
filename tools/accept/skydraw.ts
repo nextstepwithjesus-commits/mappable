@@ -184,14 +184,19 @@ export const skydraw: Scenario[] = [
   },
   {
     n: 279,
-    title: 'Решение 35, IX-48: модель не по умолчанию — «модель «Краткое пребывание: 215 лет в Египте»» в служебной строке; по умолчанию — нет',
+    // этап 13, решение 102 (пересматривает место из решения 35): название модели ушло из служебной строки в строку показа —
+    // в строке эпох оно читалось как ещё одна эпоха и вытесняло «Земную жизнь Иисуса Христа» (снимок 20)
+    title: 'Решение 102 (было 35, IX-48): модель не по умолчанию — «Годы — по модели «Краткое пребывание»» в строке показа, не в служебной строке; по умолчанию — нигде',
     run: async (p) => {
       await go(p, '#/moisey~mmt-short', 3000);
       const svc = await cv(p, 'service');
-      if (!svc.includes('модель «Краткое пребывание')) return fail(`служебная строка: ${svc}`);
+      if (svc.includes('модель «')) return fail(`модель в служебной строке: ${svc}`);
+      const line = (await p.locator('.sky .showbar .sb-line').allInnerTexts()).join(' | ').replace(/\s+/g, ' ');
+      if (!line.includes('Годы — по модели «Краткое пребывание»')) return fail(`строка показа: «${line}»`);
       await go(p, '#/moisey~mmt-long', 3000);
       if ((await cv(p, 'service')).includes('модель «')) return fail('модель по умолчанию названа в служебной строке');
-      return pass(svc.split('|').find((t) => t.startsWith('модель')) ?? '');
+      if (await p.locator('.sky .showbar .sb-line[data-line="model"]').count()) return fail('строка модели при модели по умолчанию');
+      return pass(line);
     },
   },
   {

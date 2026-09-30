@@ -61,7 +61,9 @@ async function barCases(p: Page, touch: boolean): Promise<{ ok: boolean; why: st
         bad.push(`${h}: нет строки показа`);
         continue;
       }
-      if (b.lines !== 1) bad.push(`${theme} ${h}: строк ${b.lines} (${b.h} px): «${b.text}»`);
+      // этап 13, решение 118 (UI-06): на телефоне строка показа — до двух строк (лицо, направление, глубина, принцип
+      // родства); на широком экране — одна строка, как прежде
+      if (b.lines > (touch ? 2 : 1)) bad.push(`${theme} ${h}: строк ${b.lines} (${b.h} px): «${b.text}»`);
       if (!b.change && b.level === '2') bad.push(`${theme} ${h}: в короткой строке нет «изменить»`);
       if (touch && b.change && b.change < 43.5) bad.push(`${theme} ${h}: «изменить» ${b.change} px`);
       if (theme === 'night') seen.push(`«${b.text}»`);
@@ -89,7 +91,7 @@ export const polish11: Scenario[] = [
   },
   {
     n: 852,
-    title: 'Строка показа на телефоне 390 × 844 — одной строкой «Дом Нахора» — 17 лиц — изменить»; «изменить» — 44 px и открывает лист «Показ»; у рода лица — на поле рода',
+    title: 'Строка показа на телефоне 390 × 844 — не больше двух строк (решение 118): «Дом Нахора» — 17 лиц — изменить»; «изменить» — 44 px и открывает лист «Показ»; у рода лица — на поле рода',
     view: PHONE,
     run: async (p) => {
       const r = await barCases(p, true);
@@ -102,7 +104,7 @@ export const polish11: Scenario[] = [
         const r = document.querySelector<HTMLInputElement>('.showsheet input[type="radio"]:checked');
         return r?.closest('label')?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
       });
-      if (!/^Род лица/.test(on)) return fail(`лист открылся на «${on}», а не на роде лица`);
+      if (!/^Предки и потомки лица/.test(on)) return fail(`лист открылся на «${on}», а не на «Предках и потомках лица»`);
       return pass(r.why);
     },
   },
@@ -280,7 +282,8 @@ export const polish11: Scenario[] = [
         });
         if (!first) bad.push(`${w} род Иакова: нет открытой таблички или строки показа`);
         else if (first.all > 0.5) bad.push(`${w} род Иакова: строка показа на табличке ${Math.round(first.all)} px² (на заголовке ${Math.round(first.title)})`);
-        else if (first.h > (w < 600 ? 50 : 40)) bad.push(`${w} род Иакова: строка показа в ${Math.round(first.h)} px — перенеслась`);
+        // на телефоне — до двух строк (решение 118), на широком экране — одна
+        else if (first.h > (w < 600 ? 96 : 40)) bad.push(`${w} род Иакова: строка показа в ${Math.round(first.h)} px — перенеслась`);
       }
       return bad.length ? fail(bad.join(' | ')) : pass('0 px²; и при первом посещении с родом Иакова');
     },

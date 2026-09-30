@@ -7,15 +7,15 @@
  * «Родства» первая строка — кем лицо приходится первому (IX-22). У ленты — шаг родства словами (решение 54).
  */
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
-import { byId, loadCard, loadVerses } from '../../data/atlas.ts';
-import { parseRef, verseId } from '../../engine/books.ts';
-import { formatSpan, formatYear, yearsWord } from '../../engine/years.ts';
+import { byId, loadCard, loadRefVerses } from '../../data/atlas.ts';
+import { dateText, epochSpanText, spanText, yearsWord } from '../../engine/years.ts';
+import { nameCase } from '../text/ru.ts';
 import { graph } from '../../data/atlas.ts';
 import { relate } from '../../engine/kinship.ts';
 import { lineFlip, model, pickMode, selected } from '../../state.ts';
 import { refLabel, renderBrackets, skyRef } from '../common.tsx';
 import { typo } from '../text/typo.ts';
-import type { TierHit } from '../../render/tiers.ts';
+import { hatchWord, type TierHit } from '../../render/tiers.ts';
 import { starRadius } from '../../render/glyphs.ts';
 import { BREAK_TEXT, countText, orderText, placeText, ribbonStepText, tipYears } from './text.ts';
 import { reserve, screenOf } from './view.ts';
@@ -57,8 +57,9 @@ export const tipKey = (t: Tip | null) =>
  * Подсказка шага ленты (решение 54; стык 4): те же слова, что у любой связи (src/ui/linkwords.ts, linkTip) — стих, где
  * назван родитель (DG 2.3.7: у Марии → Иисус — Лк 1:31, а не Лк 3:23); если слов шага нет — прежняя строка ленты.
  */
-export function ribbonTipText(line: 'joseph' | 'mary', from: string, to: string, flip = false): string {
-  return linkTip({ kind: 'step', line, child: to }) || ribbonStepText(line, from, to, flip);
+export function ribbonTipText(line: 'joseph' | 'mary', from: string, to: string, flip = false, gap = 0): string {
+  // участок, где показ скрыл поколения, — «цепочка» span (этап 13, решение 93, К4), а не шаг данных
+  return gap ? linkTip({ kind: 'span', line, from, to }) : linkTip({ kind: 'step', line, child: to }) || ribbonStepText(line, from, to, flip);
 }
 
 /** Когда подсказка последний раз была видна (для «тёплого» показа без задержки). */
@@ -181,7 +182,7 @@ export function SkyTip({ tip }: { tip: Tip | null }) {
       ) : tip.kind === 'tier' ? (
         <TierTip hit={tip.hit} />
       ) : tip.kind === 'ribbon' ? (
-        <div class="note">{ribbonTipText(tip.hit.line, tip.hit.from, tip.hit.to, lineFlip.peek())}</div>
+        <div class="note">{ribbonTipText(tip.hit.line, tip.hit.from, tip.hit.to, lineFlip.peek(), tip.hit.gap)}</div>
       ) : tip.kind === 'link' ? (
         <div class="note">{linkTip(tip.key)}</div>
       ) : (
@@ -254,12 +255,12 @@ function useFirstVerse(id: string | null, kind: 'reign' | 'active', k: number, g
       .then((c) => {
         const refs = given ? [given] : kind === 'reign' ? c?.chrono?.reign?.[k]?.refs : c?.chrono?.active?.refs;
         const first = refs?.[0];
-        const pr = first ? parseRef(first) : null;
-        if (!first || !pr) return;
-        return loadVerses(pr.book).then((vs) => {
-          const text = pr.verses
+        if (!first) return;
+        // loadRefVerses раскрывает и межглавные ссылки (решение 129)
+        return loadRefVerses(first).then((rv) => {
+          const text = (rv?.verses ?? [])
             .slice(0, 2)
-            .map((x) => vs[verseId(x).slice(pr.book.length + 1)] ?? '')
+            .map((x) => x.t)
             .filter(Boolean)
             .join(' ');
           // цитата в кавычках: точка конца стиха уходит, ссылка стоит после кавычки
@@ -283,12 +284,13 @@ function TierTip({ hit }: { hit: TierHit }) {
   const isPerson = b.kind === 'person';
   const reign = b.reign !== undefined;
   const verse = useFirstVerse(isPerson ? b.id : null, reign ? 'reign' : 'active', b.reign ?? 0, isPerson ? b.refs?.[0] : undefined);
+  // годы — словарём дат (этап 13, решение 96; engine/years.ts): у царствований «ок.» нет, у границ эпох — по правилу 99
   if (b.kind === 'epoch') {
     const e = model.value.epochs.find((x) => x.id === b.id);
     return (
       <>
         <b>{b.label}</b>
-        <div class="yr">{e ? formatSpan(b.t0, b.t1, b.soft) : ''}</div>
+        <div class="yr">{e ? typo(epochSpanText(e)) : ''}</div>
         <div class="ds">{typo('Щёлкните — небо покажет эпоху')}</div>
       </>
     );
@@ -298,16 +300,37 @@ function TierTip({ hit }: { hit: TierHit }) {
       <>
         <b>{typo(b.label)}</b>
         <div class="yr">
-          {formatYear(b.t0)}
+          {typo(dateText({ t: b.t0 }))}
           {b.refs?.length ? `; ${b.refs.map(refLabel).join('; ')}` : ''}
         </div>
       </>
     );
   }
+  if (b.kind === 'sync') {
+    // синхронизм, чей год лежит вне отрезка своего царя (решение 103): штрих у начала отрезка
+    return (
+      <>
+        <b>{typo('Синхронизм текста вне принятых годов')}</b>
+        <div>{typo(b.label)}</div>
+      </>
+    );
+  }
   const p = byId.get(b.id);
   if (!p) return null;
-  // отрезок короче года (служение Аарона перед фараоном, 1446) — один год, а не «ок. 1446–1445 гг.»
-  const span = b.t1 - b.t0 < 1 ? formatYear(b.t0, { approx: true }) : formatSpan(b.t0, b.t1, true);
+  // отрезок короче года (служение Аарона перед фараоном, 1446) — один год; оценочные годы служения — «ок.»
+  const approx = b.soft ? { approx: true } : {};
+  const span = b.t1 - b.t0 < 1 ? dateText({ t: b.t0, ...approx }) : spanText({ t: b.t0, ...approx }, { t: b.t1, ...approx });
+  const f = p.sex === 'f';
+  // совместные годы словами (решение 103): «792–767 гг. до Р. Х. — вместе с отцом, Амасией»; «один — с 767 г. до Р. Х.»
+  const together = reign
+    ? b.shared.map(([s0, s1], k) => {
+        const other = b.sharedWith?.[k];
+        const q = other ? byId.get(other) : null;
+        const ins = q ? nameCase(q.name, q.sex, 'ins') : null;
+        const w = hatchWord(b.id, other);
+        return `${spanText({ t: s0 }, { t: s1 })} — ${w}${q ? (ins ? `, ${ins}` : ` (${q.name})`) : ''}`;
+      })
+    : [];
   return (
     <>
       <b>{p.name}</b>
@@ -315,7 +338,11 @@ function TierTip({ hit }: { hit: TierHit }) {
       {reign ? (
         <>
           <div class="yr">{typo(`${cap(b.over ?? '')}: ${span}, расч.`)}</div>
-          {b.years ? <div>{typo(`${p.sex === 'f' ? 'Царствовала' : 'Царствовал'} ${yearsWord(b.years)}`)}</div> : null}
+          {b.years ? <div>{typo(`${f ? 'Царствовала' : 'Царствовал'} ${yearsWord(b.years)}`)}</div> : null}
+          {together.map((t) => (
+            <div key={t}>{typo(t)}</div>
+          ))}
+          {b.sole !== undefined && <div>{typo(`${f ? 'одна' : 'один'} — с ${dateText({ t: b.sole })}`)}</div>}
         </>
       ) : (
         <div class="yr">{typo(b.note ? `${b.note}: ${span}, расч.` : `Годы служения: ${span}, расч.`)}</div>

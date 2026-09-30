@@ -8,7 +8,8 @@
  *    лазурь лент и друг на друга, в том числе при дейтеранопии и протанопии; контраст к небу и полосе эпохи ≥ 3 : 1.
  *    Проверка — npm run -s contrast (tools/contrast.ts) и tests/branches-m4.test.ts.
  *  — Больше шести ветвей (у Давида восемь союзов) — цвета по кругу: соседние ветви не одного цвета, а седьмая и дальше —
- *    оттенок цвета первого круга (BRANCH_SHADES) и штрих на сплошной части следа (BRANCH_DASH).
+ *    оттенок цвета первого круга (BRANCH_SHADES). Штриха у следа ветви нет (этап 13, решение 94: штрих — только иное
+ *    происхождение), ветви различаются оттенком и чертой под именем (branchTickAt).
  *  — Цвет бледнеет с каждым поколением (BRANCH_FADE): 1 — полный, 2 — 75 %, 3 — 55 %, дальше до 25 %, но не ниже
  *    различимого — контраст к небу не меньше BRANCH_FAR_CONTRAST.
  *  — Свечение: ночью — два слоя в режиме 'lighter', как у лент; днём — тон своего цвета под линией. Предки выбранного —
@@ -48,7 +49,14 @@ export const UNION_DE = 20;
  * на бледно-золотой подложке. Контраст к небу и полосе эпохи ≥ 4,5 : 1 (подписи — тем же цветом), ΔE до жёлтого —
  * tools/contrast.ts.
  */
-export const KIN_GOLD: Readonly<Record<MapTheme, string>> = { night: '#FFC94D', day: '#9A5800' };
+export const KIN_GOLD: Readonly<Record<MapTheme, string>> = { night: '#D2BE28', day: '#4B3205' };
+/**
+ * Золотистый не похож на золото ленты Иосифа (этап 13, решение 94; X3 Д6): ΔE CIE76 к обоим концам её градиента
+ * (токены и цвета холста) — не меньше normal при обычном зрении и cvd при каждом виде дальтонизма. Иначе точечная дуга
+ * читалась бы «разреженной золотой лентой». Ночью — старое золото (#D2BE28: 20,8 / 11,9), днём — тёмная бронза на
+ * золотой подложке (#4B3205: 25,6 / 14,6). Проверка — tools/contrast.ts.
+ */
+export const KIN_GOLD_DE = { normal: 18, cvd: 10 };
 /** Подложка золотистой дуги днём: бледное золото под точками — дуга видна «золотой» и на светлом небе. */
 export const KIN_GOLD_UNDER = { color: '#F2B632', a: 0.4, width: 4 };
 
@@ -80,20 +88,15 @@ export const BRANCH_SHADES: Readonly<Record<MapTheme, readonly string[]>> = {
   night: ['#247f46', '#b69cd7', '#99635e', '#ef8dbc', '#67c89a', '#6f9afe'],
   day: ['#0a3b19', '#6534a8', '#ac200d', '#7c2659', '#125b42', '#112e66'],
 };
-/** Сплошная часть следа у ветвей второго круга: штрих, чтобы не спутать с первым кругом. */
-export const BRANCH_DASH: readonly number[] = [6, 2.5];
-
 /**
  * Цвет ветви i (с нуля) в теме: шесть цветов по кругу, соседние ветви — разного цвета; со второго круга — оттенок того
- * же цвета (BRANCH_SHADES) и штрих на следе (branchDash). #rrggbb.
+ * же цвета (BRANCH_SHADES). #rrggbb.
  */
 export function branchColor(i: number, theme: MapTheme): string {
   const n = BRANCH_COLORS[theme].length;
   const k = ((Math.floor(i) % n) + n) % n;
   return (i >= n ? BRANCH_SHADES : BRANCH_COLORS)[theme][k];
 }
-/** Штрих сплошной части следа у ветви i: у первого круга — нет, со второго — BRANCH_DASH. */
-export const branchDash = (i: number): readonly number[] => (i >= BRANCH_COLORS.night.length ? BRANCH_DASH : []);
 
 const floorMemo = new Map<string, number>();
 /**
@@ -205,9 +208,6 @@ export function branchTickAt(box: { x: number; y: number; w: number; h: number }
 
 // ---------- образец для «Условных знаков» ----------
 
-/** Штрих отвода к потомку выбранного — как LINK_STYLE.desc (trails.ts). */
-const DESC_DASH: readonly number[] = [4, 3];
-
 /** Палитра, которой довольно образцу: тема (glow — ночь), небо, текст. */
 export interface BranchSamplePalette {
   glow: boolean;
@@ -220,7 +220,8 @@ export interface BranchSamplePalette {
 /**
  * Образец подсветки ветвей для «Условных знаков» (src/ui/panels/Legend.tsx, PAINTERS): отец выбранного — мягкое
  * свечение предка; выбранное лицо и три союза с детьми — три цвета ветвей со свечением; у первой ветви — внук,
- * бледнее (второе поколение). Отводы к потомкам — штрихом, как на небе. Сигнатура — как у образцов легенды:
+ * бледнее (второе поколение). Отводы к потомкам — сплошные, как на небе (штриха потомков на небе нет, решение 94).
+ * Сигнатура — как у образцов легенды:
  * (ctx, pal, w, h), пиксели CSS.
  */
 export function drawBranchSample(ctx: CanvasRenderingContext2D, pal: BranchSamplePalette, w: number, h: number) {
@@ -270,10 +271,10 @@ export function drawBranchSample(ctx: CanvasRenderingContext2D, pal: BranchSampl
   const gColor = paint(grand, kids[0], 2);
   glow.flush(ctx, pal.glow);
   kids.forEach((k, i) => {
-    line(k.x, self.y, k.x, k.y, colors[i], 1.5, DESC_DASH);
+    line(k.x, self.y, k.x, k.y, colors[i], 1.5);
     line(k.x, k.y, right, k.y, colors[i], 1.5);
   });
-  line(grand.x, kids[0].y, grand.x, grand.y, gColor, 1.5, DESC_DASH);
+  line(grand.x, kids[0].y, grand.x, grand.y, gColor, 1.5);
   line(grand.x, grand.y, right, grand.y, gColor, 1.5);
   ctx.lineWidth = 1;
   const star = (x: number, y: number, magnitude: number) => drawGlyph(ctx, x, y, { sex: 'm', kind: 'person', magnitude, color: pal.ink, halo: pal.sky });

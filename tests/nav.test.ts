@@ -142,16 +142,35 @@ describe('полоса времени (D12; IX-32, IX-33, MOB-35)', () => {
 });
 
 describe('строки результатов поиска (D9; UX-01, IX-19)', () => {
-  it('«Иисус»: «Все N на небе» первой строкой, Христос и Навин — отдельно, одноимённые — группой', () => {
+  it('«Иисус» (решение 120): группа «Имя совпадает» со счётчиком и «Показать на небе» первой строкой; Христос и Навин — первыми, одноимённые — подряд', () => {
     const hits = searchIndex.search('Иисус', 60);
-    const blocks = resultBlocks(hits, { pinned: false, noAll: false });
-    expect(blocks[0].rows[0].kind).toBe('all');
-    const persons = blocks.flatMap((b) => b.rows).filter((r) => r.kind === 'person');
+    const blocks = resultBlocks(hits, { pinned: false, noAll: false, q: 'Иисус' });
+    const name = blocks[0];
+    expect(name.group).toBe('name');
+    expect(name.rows[0]).toMatchObject({ kind: 'all', group: true });
+    const persons = name.rows.flatMap((r) => (r.kind === 'person' ? [r] : []));
+    expect(name.head).toBe(`Имя совпадает — ${persons.length}\u00a0лиц`);
     expect(persons[0]).toMatchObject({ id: 'iisus', grouped: false });
-    expect(persons.slice(0, 3).map((r) => (r.kind === 'person' ? r.id : ''))).toContain('iisus-navin');
-    const g = blocks.find((b) => b.head?.startsWith('Иисус —'));
-    expect(g?.head).toMatch(/^Иисус — \d+ лиц/);
-    expect(g!.rows.every((r) => r.kind === 'person' && r.grouped && byId.get(r.id)?.name === 'Иисус')).toBe(true);
+    expect(persons.slice(0, 3).map((r) => r.id)).toContain('iisus-navin');
+    for (const r of persons) expect(byId.get(r.id)!.name.split(' ')[0]).toBe('Иисус');
+    // одноимённые Иисусы — подряд, на месте самого значимого из них
+    const at = persons.flatMap((r, i) => (byId.get(r.id)!.name === 'Иисус' ? [i] : []));
+    expect(at.length).toBeGreaterThan(1);
+    expect(at[at.length - 1] - at[0] + 1).toBe(at.length);
+    // найденные по уточнению — своей группой со своей командой, не вперемешку с одноимёнными
+    const near = blocks.find((b) => b.group === 'near')!;
+    expect(near.head).toMatch(/^Упомянуты рядом — \d+\u00a0лиц/);
+    expect(near.rows[0]).toMatchObject({ kind: 'all', group: true });
+    expect(near.rows.some((r) => r.kind === 'person' && persons.some((x) => x.id === r.id))).toBe(false);
+  });
+  it('«иосиф» (решение 120): одно имя на всю группу — в подписи «Имя совпадает: Иосиф — 10 лиц», строки начинаются с уточнения', () => {
+    const blocks = resultBlocks(searchIndex.search('иосиф', 60), { pinned: false, noAll: false, q: 'иосиф' });
+    const g = blocks.find((b) => b.group === 'name')!;
+    expect(g.head).toMatch(/^Имя совпадает: Иосиф — \d+\u00a0лиц/);
+    expect(g.rows.filter((r) => r.kind === 'person').every((r) => r.kind === 'person' && r.grouped && byId.get(r.id)?.name === 'Иосиф')).toBe(true);
+    // Иосифия — похожее имя, не одноимённый
+    const forms = blocks.find((b) => b.group === 'forms');
+    expect(forms?.rows.some((r) => r.kind === 'person' && r.id === 'iosifiya')).toBe(true);
   });
   it('в режиме выбора второго лица и при отметках — без «Все N»; при отметках — «Снять отметки»', () => {
     const hits = searchIndex.search('иосиф', 60);
@@ -162,7 +181,7 @@ describe('строки результатов поиска (D9; UX-01, IX-19)', 
     const t = resultBlocks(searchIndex.search('Богородица'), { pinned: false, noAll: false });
     expect(t[0].head).toBe('«Богородица»: в Синодальном переводе — Мария, Мать Иисуса');
     const f = resultBlocks(searchIndex.search('Навуходонасор'), { pinned: false, noAll: false });
-    expect(f[0].head).toBe('Возможно, вы искали');
+    expect(f[0].head).toMatch(/^Возможно, вы искали: похожие имена — \d+\u00a0лиц/);
   });
 });
 

@@ -1,28 +1,33 @@
 /**
  * Лист «Показ» (этап 11, решения 81, 82; STAGE11.md § 7): что показать на небе.
  *
- *  — Переключатель показа, шесть видов, у каждого число лиц: всё небо, линии Мессии, ключевые лица, набор, род лица,
- *    созвездия («выбрано: 1»).
+ *  — Переключатель показа, шесть видов, у каждого число лиц: всё небо, родословие Иисуса Христа (Мф 1, Лк 3), ключевые
+ *    лица, набор, предки и потомки лица, созвездия («выбрано: 1»). Пустой набор — строка «Набор — пуст» с пояснением,
+ *    выбрать её нельзя (решение 111).
  *  — Созвездия: поле «Найти созвездие» (ё и е не различаются, окончания отбрасываются, раскладка исправляется — как у
  *    главного поиска) и шесть разделов (src/ui/show.ts, groupSections): у раздела — флажок с тремя состояниями
  *    («все колена — 1 470»), у строки — флажок, название, число лиц и «только это» (созвездие с его домами).
  *    Раздел, где есть выбранное или найденное, развёрнут. Связи наружу: «обрывками», «с роднёй вне созвездия», «без связей».
- *  — Род лица: поле лица (тот же комбобокс, что у поиска), «предки | потомки | оба», «поколений: 1 2 3 все»,
- *    «по отцам | по крови»; число лиц видно до применения.
+ *  — Предки и потомки лица: поле лица (тот же комбобокс, что у поиска), «предки | потомки | оба», «поколений: 1 2 3 все»,
+ *    «по отцам | по крови»; число лиц видно до применения. Вид выбран, а лица нет — поле лица сразу в фокусе и строка
+ *    «Выберите лицо…» (решение 111; прежде радиокнопка отмечалась, а поля не было).
  *  — На широком экране лист применяется сразу (серия флажков — через 300 мс), небо перестраивается под листом. На телефоне
- *    лист закрывает небо: внизу — «Показать N лиц» (WCAG 3.2.2 — изменение по явной команде).
+ *    лист закрывает небо: внизу — «Применить: N лиц» (WCAG 3.2.2 — изменение по явной команде).
  *
- * Открывают лист «изменить» в строке показа (src/ui/sky/ShowBar.tsx), «Только его род ▾ → Настроить…» в карточке у звезды
+ * Открывают лист «изменить» в строке показа (src/ui/sky/ShowBar.tsx), «Предки и потомки ▾ → Настроить…» в карточке у звезды
  * и поле «Созвездие» в паспорте подробной карточки. Закрывают «×», Escape и нажатие мимо листа (на широком экране);
  * фокус возвращается туда, откуда лист открыли.
  */
 import { signal } from '@preact/signals';
+import { Fragment } from 'preact';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { byId, groupById } from '../../data/atlas.ts';
 import { norm } from '../../engine/text.ts';
 import { fixLayout, stems } from '../../engine/search.ts';
 import { selected } from '../../state.ts';
-import { countShow, groupSections, setShow, show, withHouses, type GroupRow, type GroupSectionInfo, type LineageBy, type LineageDir, type LinksOut, type Show } from '../show.ts';
+import {
+  countShow, groupSections, LINES_TITLE, setShow, show, withHouses, type GroupRow, type GroupSectionInfo, type LineageBy, type LineageDir, type LinksOut, type Show,
+} from '../show.ts';
 import { workSet } from '../work.ts';
 import { grid } from '../layout.ts';
 import { sheetStop } from '../sheet.ts';
@@ -41,7 +46,7 @@ export type ShowFocus = 'kinds' | 'groups' | 'lineage';
 export const showSheet = signal<{ focus: ShowFocus; back: HTMLElement | null; person?: string; group?: string } | null>(null);
 
 /**
- * Открыть лист «Показ». person — лицо для рода («Только его род ▾ → Настроить…»); group — созвездие, на строке которого
+ * Открыть лист «Показ». person — лицо для рода («Предки и потомки ▾ → Настроить…»); group — созвездие, на строке которого
  * стоит фокус (поле «Созвездие» в паспорте подробной карточки, § 5): его раздел раскрыт, «только это» — рядом.
  */
 export function openShowSheet(o: { focus?: ShowFocus; back?: HTMLElement | null; person?: string; group?: string } = {}) {
@@ -69,15 +74,22 @@ export function closeShowSheet(refocus = true) {
 
 export const personsN = (n: number) => `${num(n)} ${plural(n, 'лицо', 'лица', 'лиц')}`;
 
-/** Виды показа по порядку листа: название и пояснение. */
+/**
+ * Виды показа по порядку листа: название и пояснение. Слова — словарь этапа 13 (решения 109, 110): «род» остаётся
+ * созвездиям, показ одного лица — «Предки и потомки лица…»; показ линий — «Родословие Иисуса Христа (Мф 1, Лк 3)», как
+ * начало во вступлении.
+ */
 export const KINDS: readonly { kind: Show['kind']; label: string; hint: string }[] = [
   { kind: 'all', label: 'Всё небо', hint: 'Все лица атласа на звёздном небе' },
-  { kind: 'lines', label: 'Линии Мессии — Мф 1 и Лк 3', hint: 'Обе родословные линии Иисуса Христа, от Адама' },
+  { kind: 'lines', label: LINES_TITLE, hint: 'Обе родословные линии Иисуса Христа — по Матфею и по Луке, от Адама' },
   { kind: 'key', label: 'Ключевые лица', hint: 'Главные лица истории Писания' },
   { kind: 'set', label: 'Набор — собран вручную', hint: 'Лица вашего набора: раскрытые у ромбов союзов и взятые из карточек' },
-  { kind: 'lineage', label: 'Род лица…', hint: 'Предки или потомки одного лица, по отцам или по крови' },
+  { kind: 'lineage', label: 'Предки и потомки лица…', hint: 'Предки или потомки одного лица, по отцам или по крови' },
   { kind: 'groups', label: 'Созвездия', hint: 'Одно или несколько созвездий: колена, дома, народы' },
 ];
+/** Пустой набор (решение 111): строка листа и её пояснение — что сделать, чтобы набор появился. */
+export const EMPTY_SET_LABEL = 'Набор — пуст';
+export const EMPTY_SET_HINT = 'соберите: «Добавить в набор» в карточке';
 
 /** Связи наружу у показа созвездий (§ 7). */
 export const LINKS: readonly { value: LinksOut; label: string; hint: string }[] = [
@@ -96,6 +108,11 @@ const GENS: readonly { value: 1 | 2 | 3 | null; label: string }[] = [
   { value: 3, label: '3' },
   { value: null, label: 'все' },
 ];
+/** Пояснение выбранного принципа родства — строкой под переключателем (решение 118). */
+const BY_NOTE: Record<LineageBy, string> = {
+  father: 'По отцам: сыновья и дочери по отцовской линии; у дочери рода её дети — только если они в том же роду, иначе «+N».',
+  blood: 'По крови: все потомки или предки и по отцу, и по матери.',
+};
 const BYS: readonly { value: LineageBy; label: string; hint: string }[] = [
   { value: 'father', label: 'по отцам', hint: 'Род по отцам; дочь рода — с детьми, если они в том же роду, иначе «+N»' },
   { value: 'blood', label: 'по крови', hint: 'Все потомки и предки по отцу и по матери' },
@@ -127,10 +144,14 @@ function kindCount(kind: Show['kind'], draft: Show): string {
 
 // ---------- лист ----------
 
-/** Показ по умолчанию для вида kind: у рода — лицо st.person, выбранное или прежнее; у созвездий — прежний выбор. */
-function draftFor(kind: Show['kind'], prev: Show, person: string | null): Show {
+/**
+ * Показ по умолчанию для вида kind: у рода — лицо st.person, выбранное или прежнее, а если лица нет — черновик без лица:
+ * поле лица сразу в фокусе (решение 111; прежде черновик оставался прежним показом, и поля не было); у созвездий —
+ * прежний выбор.
+ */
+export function draftFor(kind: Show['kind'], prev: Show, person: string | null): Show {
   if (kind === prev.kind) return prev;
-  if (kind === 'lineage') return person ? { kind: 'lineage', id: person, dir: 'down', gen: null, by: 'father' } : prev;
+  if (kind === 'lineage') return { kind: 'lineage', id: person && byId.has(person) ? person : '', dir: 'down', gen: null, by: 'father' };
   if (kind === 'groups') return { kind: 'groups', groups: [], links: 'stubs' };
   return { kind } as Show;
 }
@@ -223,27 +244,45 @@ function SheetBody({ focus, person, group }: { focus: ShowFocus; person: string 
         <legend class="visually-hidden">Показ</legend>
         {KINDS.map((k) => {
           const on = draft.kind === k.kind;
-          const count = kindCount(k.kind, draft);
-          return (
-            <label key={k.kind} class={on ? 'ss-kind on' : 'ss-kind'} title={k.hint}>
+          // пустой набор (решение 111): строка бледная, с пояснением, выбрать её нельзя — пустое небо ничего не объяснит
+          const empty = k.kind === 'set' && !workSet.value.size && !on;
+          const count = empty ? '' : kindCount(k.kind, draft);
+          const row = (
+            <label key={k.kind} class={['ss-kind', on ? 'on' : '', empty ? 'empty' : ''].filter(Boolean).join(' ')} title={empty ? typo(`Набор пуст: ${EMPTY_SET_HINT}`) : k.hint}>
               <input
                 type="radio"
                 name="show-kind"
                 value={k.kind}
                 checked={on}
+                disabled={empty}
+                aria-describedby={empty ? 'ss-set-empty' : undefined}
                 onChange={() => setDraft(draftFor(k.kind, draft, lastPerson.current ?? selected.peek()))}
               />
-              <span class="nm">{typo(k.label)}</span>
+              <span class="nm">{typo(empty ? EMPTY_SET_LABEL : k.label)}</span>
               {count && <span class="n">{typo(count)}</span>}
+              {empty && (
+                <span class="n" id="ss-set-empty">
+                  {typo(EMPTY_SET_HINT)}
+                </span>
+              )}
             </label>
+          );
+          // параметры выбранного вида — сразу под ним (решение 118; UI-12): «Предки и потомки лица…» — лицо, направление,
+          // поколения, по отцам или по крови; прежде они стояли после всего блока созвездий
+          return k.kind === 'lineage' && draft.kind === 'lineage' ? (
+            <Fragment key={k.kind}>
+              {row}
+              <LineagePart draft={draft} setDraft={setDraft} />
+              {!ready(draft) ? <p class="muted">{typo('Выберите лицо: его предки или потомки встанут на небо.')}</p> : null}
+            </Fragment>
+          ) : (
+            row
           );
         })}
       </fieldset>
       {draft.kind === 'groups' || focus === 'groups' ? (
         <GroupsPart draft={draft} q={q} setQ={setQ} setDraft={setDraft} group={group} />
       ) : null}
-      {draft.kind === 'lineage' ? <LineagePart draft={draft} setDraft={setDraft} /> : null}
-      {draft.kind === 'lineage' && !ready(draft) ? <p class="muted">{typo('Выберите лицо: его предки или потомки встанут на небо.')}</p> : null}
       {phone ? (
         <div class="ss-apply">
           <button
@@ -256,7 +295,7 @@ function SheetBody({ focus, person, group }: { focus: ShowFocus; person: string 
               closeShowSheet(false);
             }}
           >
-            {ready(draft) ? `Показать ${personsN(n)}` : 'Показать'}
+            {ready(draft) ? `Применить: ${personsN(n)}` : 'Применить'}
           </button>
         </div>
       ) : (
@@ -459,18 +498,18 @@ function LineagePart({ draft, setDraft }: { draft: Extract<Show, { kind: 'lineag
   const [editing, setEditing] = useState(!byId.has(draft.id));
   const [q, setQ] = useState('');
   const hits = useMemo(() => personHits(q), [q]);
-  const blocks = useMemo(() => personBlocks(hits), [hits]);
+  const blocks = useMemo(() => personBlocks(hits, q), [hits, q]);
   const p = byId.get(draft.id);
   return (
     <div class="ss-lineage">
-      <h3>Род лица</h3>
+      <h3>Чьи предки и потомки</h3>
       {editing || !p ? (
         <Combobox
           id="show-person"
           class="field search combo"
           label="Лицо:"
           type="text"
-          placeholder="имя"
+          placeholder="имя, например Иуда"
           listLabel="Лицо"
           q={q}
           onInput={setQ}
@@ -494,7 +533,7 @@ function LineagePart({ draft, setDraft }: { draft: Extract<Show, { kind: 'lineag
             {p.name}
             {p.disambig ? <span class="muted">{typo(`, ${p.disambig}`)}</span> : null}
           </span>
-          <button type="button" class="cmd" aria-label="Заменить лицо рода" onClick={() => setEditing(true)}>
+          <button type="button" class="cmd" aria-label="Заменить лицо" onClick={() => setEditing(true)}>
             заменить
           </button>
         </div>
@@ -507,6 +546,8 @@ function LineagePart({ draft, setDraft }: { draft: Extract<Show, { kind: 'lineag
         <Seg label="Поколений" cls="ss-gen" options={GENS} value={draft.gen} onPick={(v) => setDraft({ ...draft, gen: v })} />
         <Seg label="Род" cls="ss-by" options={BYS} value={draft.by} onPick={(v) => setDraft({ ...draft, by: v })} />
       </div>
+      {/* «по отцам» и «по крови» объяснены рядом, а не только в подсказке (решение 118) */}
+      <p class="muted ss-by-note">{typo(BY_NOTE[draft.by])}</p>
     </div>
   );
 }

@@ -2,12 +2,16 @@
  * «Какое лицо?» (H5; MOB-10) и «Какая связь?» (этап 11, § 8): касание в плотном месте неба, где под пальцем несколько
  * звёзд (или линий связей) на близких расстояниях,
  * не выбирает наугад, а спрашивает — список из 2–5 имён с уточнением или годами, по порядку сверху вниз, как на небе.
+ * Строки «Какая связь?» — одной формы (этап 13, решение 105): «X и Y — родители; Z — сын», союз целиком — «… — союз: …»
+ * (src/ui/linkwords.ts, linkRow).
  * Список — лист у места касания (над пальцем, если есть место), на небе поверх звёзд; закрывают его «×», Escape,
  * касание мимо и любое движение неба. Выбор имени — то же, что касание звезды (ввод неба, src/ui/sky/input.ts).
  */
 import { render } from 'preact';
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { byId } from '../../data/atlas.ts';
+import { parseLinkKey } from '../../engine/linkkey.ts';
+import { linkRow } from '../linkwords.ts';
 import { Close } from '../controls.tsx';
 import { typo } from '../text/typo.ts';
 import { lifeText } from './text.ts';
@@ -27,6 +31,12 @@ export interface WhichOpts {
   onPick: (id: string) => void;
   /** куда вернуть фокус после закрытия (холст неба) */
   back?: HTMLElement | null;
+}
+
+/** Слова строки связи — одной формы для всех связей (решение 105); запись ключа не разобрана — слова ввода неба. */
+function rowText(l: { ks: string; text: string }): string {
+  const k = parseLinkKey(l.ks);
+  return (k && linkRow(k)) || l.text;
 }
 
 /** Зазор между пальцем и списком: палец не закрывает имена. */
@@ -84,7 +94,7 @@ function WhichList({ ids, links, x, y, bounds, onPick, onPickLink, onClose }: Wh
         {links?.map((l) => (
           <li key={l.ks}>
             <button type="button" class="which-item which-link" data-link={l.ks} onClick={(e) => (armed.current || e.detail === 0) && onPickLink?.(l.ks)}>
-              <span class="nm">{typo(l.text)}</span>
+              <span class="nm">{typo(rowText(l))}</span>
               {l.sub ? <span class="ds">{typo(l.sub)}</span> : null}
             </button>
           </li>

@@ -62,7 +62,7 @@ export const cardtext: Scenario[] = [
       await p.waitForTimeout(200);
       if (!(await det.evaluate((d) => (d as HTMLDetailsElement).open))) return fail('щелчок не раскрыл список');
       const shown = flat(await det.innerText());
-      if (!/По расчёту жили в одно время/.test(shown)) return fail(`раскрытый список: «${shown.slice(0, 120)}»`);
+      if (!/(Наверняка|Вероятно,) жили в одно время/.test(shown)) return fail(`раскрытый список: «${shown.slice(0, 120)}»`);
       return pass(`«${t12.slice(t12.indexOf('Племянники: Иоав'), t12.indexOf('Племянники: Иоав') + 70)}…»; список по расчёту раскрывается`);
     },
   },
@@ -73,8 +73,11 @@ export const cardtext: Scenario[] = [
       await open(p, '#/david');
       await unclamp(p, 10);
       const s10 = flat(await secText(p, 10));
+      // группа Вирсавии — первой (CARD-57); внутри группы — порядок текста (этап 13, решение 104): младенец, Самус, Совав,
+      // Нафан, Соломон (2 Цар 12:18; 1 Пар 3:5) — место в группе больше не говорит о значимости (знак лент — у имени)
+      const at = s10.search(/Сыновья от Вирсавии:/);
       const i = s10.search(/Соломон/);
-      if (i < 0 || i > 80) return fail(`Соломон не в начале § 10: «${s10.slice(0, 120)}»`);
+      if (at < 0 || at > 20 || i < 0 || i > 160) return fail(`Соломон не в первой группе § 10: «${s10.slice(0, 160)}»`);
       if (/Сын от Ахиноамы/.test(s10)) return fail('шесть строк «Сын от …» остались');
       // у каждого — ссылка на карточку союза с его матерью (решение 71)
       if (!/Амнон \(от Ахиноамы, союз\)/.test(s10)) return fail(`нет строки «Амнон (от Ахиноамы, союз)»: «${s10.slice(0, 200)}»`);
@@ -113,7 +116,8 @@ export const cardtext: Scenario[] = [
       const notes = (await p.locator('.sheet .relation .line-note').allInnerTexts()).map(flat);
       if (!/^Путь по Матфею/.test(notes[0] ?? '')) return fail(`первый путь: «${notes[0] ?? '—'}»`);
       if (!/^Путь по Луке/.test(notes[1] ?? '')) return fail(`второй путь: «${notes[1] ?? '—'}»`);
-      const more = p.locator('.sheet button.more', { hasText: /ещё\s\d+\sпут/ });
+      // «ещё N путей» списка путей, а не «ещё N пути той же длины» внутри пути (этап 13)
+      const more = p.locator('.sheet button.more', { hasText: /^ещё\s\d+\s(путь|пути|путей)$/ });
       if (!(await more.count())) return fail('смешанные пути не под «ещё»');
       await more.first().click();
       await p.waitForTimeout(300);
@@ -164,7 +168,8 @@ export const cardtext: Scenario[] = [
       // «Сын Давидов» — уточнение Иисуса Христа; сам Давид — строкой «Давид, царь Израиля…»
       if (/Давид, царь/.test(named)) return fail('Давид среди названных в Лк 3:23');
       const byt = await q('Быт 14:18');
-      if (!/Названы в стихе Мелхиседек/.test(byt) || !/Стих упомянут в карточке Авраам/.test(byt)) return fail(`«Быт 14:18»: ${byt.slice(0, 140)}`);
+      // этап 13, решение 120: у группы — счётчик («Названы в стихе — 1 лицо»)
+      if (!/Названы в стихе — \d+ (лицо|лица|лиц) Мелхиседек/.test(byt) || !/Стих упомянут в карточке — \d+ (лицо|лица|лиц) Авраам/.test(byt)) return fail(`«Быт 14:18»: ${byt.slice(0, 160)}`);
       // IX-60: запрос остался в поле после выбора; щелчок по полю — прежний список
       await p.fill('#find', 'иосиф');
       await p.waitForTimeout(600);
@@ -192,12 +197,15 @@ export const cardtext: Scenario[] = [
   },
   {
     n: 247,
-    title: 'CARD-51, VIS-49: «Сквозной раздел», § 20, цари Иудеи — «…над Иудеей, в Хевроне», столбец «Место смерти», выбор раздела — Menu, а не <select>',
+    title: 'CARD-51, VIS-49: «Сквозной раздел», § 20, цари единого царства — «…над Иудеей, в Хевроне», столбец «Место смерти», выбор раздела — Menu, а не <select>',
     run: async (p) => {
       await open(p, '#/~psection', 3000);
       if (await p.locator('.sheet select').count()) return fail('системный <select> остался');
       const btn = p.locator('.sheet .xpick .menu > button');
       if (!(await btn.count())) return fail('нет кнопки выбора раздела');
+      // этап 13 (решение 110): Давид — в группе «Цари единого царства» («Цари Иудеи» — от Ровоама)
+      await p.locator('.sheet [role="radio"], .sheet .seg button', { hasText: 'Цари единого царства' }).first().click();
+      await p.waitForTimeout(1500);
       const t = flat(await p.locator('.sheet .xtable').innerText());
       if (!/над Иудеей, в Хевроне/.test(t)) return fail(`нет «над Иудеей, в Хевроне»: «${t.slice(0, 160)}»`);
       if (/\d+ (лет|года?) Иудея/.test(t)) return fail('«7 лет Иудея» осталось');
@@ -216,14 +224,15 @@ export const cardtext: Scenario[] = [
   },
   {
     n: 248,
-    title: 'MOB-51: «О карте» на телефоне — таблица опор блоками, лист не шире экрана; справка без «органов неба»',
+    // этап 13, решение 102: таблица опор — в панели «О хронологии»
+    title: 'MOB-51: «О хронологии» на телефоне — таблица опор блоками, лист не шире экрана; справка без «органов неба»',
     view: { width: 390, height: 844, touch: true },
     run: async (p) => {
-      await open(p, '#/~pabout', 2500);
+      await open(p, '#/~pchronology', 2500);
       const w = (await p.evaluate(`(() => { const sh = document.querySelector('.sheet'); return sh ? [sh.scrollWidth, sh.clientWidth] : [0, 0] })()`)) as number[];
       if (w[0] > w[1] + 1) return fail(`лист шире экрана: ${w[0]} при ${w[1]}`);
       const t = flat(await p.locator('.sheet').innerText());
-      if (/органах? неба|хронологическим движком/.test(t)) return fail('жаргон в «О карте»');
+      if (/органах? неба|хронологическим движком/.test(t)) return fail('жаргон в «О хронологии»');
       if (!/Источник/.test(flat(await p.locator('.sheet .anchors td[data-label="Источник"]').first().innerText().catch(() => '')) + ' Источник')) return fail('нет подписи источника');
       return pass(`ширина листа ${w[0]} / ${w[1]}`);
     },
@@ -254,9 +263,10 @@ export const cardtext: Scenario[] = [
       try {
         const seen: string[] = [];
         for (const [a, b, has12, not12] of [
-          ['moisey', 'david', /Ионафан — дядя/, /Гирсон|Сепфор|Иофор/],
-          ['amram', 'moisey', /Иофор — тесть/, /Иохаведа — тётка|Елисавета/],
-          ['iokhaveda', 'david', /Ионафан — дядя/, /Рувим|Приходится тёткой/],
+          // этап 13, решение 106: в карточке Давида два Ионафана (дядя и племянник) — у дяди уточнение
+          ['moisey', 'david', /Ионафан( \([^)]*\))? — дядя/, /Гирсон|Сепфор|Иофор/],
+          ['amram', 'moisey', /Иофор( \([^)]*\))? — тесть/, /Иохаведа — тётка|Елисавета/],
+          ['iokhaveda', 'david', /Ионафан( \([^)]*\))? — дядя/, /Рувим|Приходится тёткой/],
         ] as const) {
           await open(p, `#/${a}`, 2600);
           // переход, как по ссылке в карточке: меняется только адрес, страница не загружается заново

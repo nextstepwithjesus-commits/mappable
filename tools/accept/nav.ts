@@ -288,14 +288,14 @@ export const nav: Scenario[] = [
   },
   {
     n: 55,
-    title: 'U10: адрес при открытом Давиде, «Эпохах» и истинном масштабе — в новой вкладке то же лицо, окно, панель и масштаб (D8)',
+    title: 'U10: адрес при открытом Давиде, «Эпохах» и масштабе «Равномерный по годам» (решение 124) — в новой вкладке то же лицо, окно, панель и масштаб (D8)',
     run: async (p) => {
       // окно вокруг Давида, а не «всё небо»: ссылка должна передать именно его
       await p.goto(p.url().replace(/#.*$/, '#/david'));
       await p.waitForTimeout(2200);
       await p.locator('.skyctl .view-toggle').click();
       // «Эпохи» — команда листа «Вид», она закрывает лист (IX-65): масштаб — раньше
-      await p.locator('.skyctl').getByText('истинный', { exact: true }).click();
+      await p.locator('.skyctl').getByText('Равномерный по годам', { exact: true }).click();
       await p.locator('.skyctl').getByText('Эпохи', { exact: true }).click();
       await p.waitForTimeout(1500);
       const url = p.url();
@@ -307,7 +307,7 @@ export const nav: Scenario[] = [
       const ctx = await p.context().browser()!.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
       try {
         const q = await ctx.newPage();
-        // новая вкладка: своё хранилище, в нём — масштаб «по насыщенности»
+        // новая вкладка: своё хранилище, в нём — масштаб «Сжатый по плотности лиц»
         await q.addInitScript("localStorage.setItem('toledot:intro', 'true'); localStorage.setItem('toledot:lambda', '1')");
         await q.goto(url);
         await q.waitForTimeout(3000);
@@ -321,7 +321,7 @@ export const nav: Scenario[] = [
         await q.waitForTimeout(300);
         // «Вид» у колонки сменил панель «Эпохи» — небо стало шире, и лист «Вид» открыт над блоком
         const scale = (await q.locator('.viewpop .seg button[aria-pressed="true"], .sky .sheet .viewctl .seg button[aria-pressed="true"]').first().innerText()).trim();
-        if (scale !== 'истинный') return fail(`в новой вкладке масштаб «${scale}»`);
+        if (scale !== 'Равномерный по годам') return fail(`в новой вкладке масштаб «${scale}»`);
         const w1 = await win(q);
         const c0 = (w0[0] + w0[1]) / 2;
         const c1 = (w1[0] + w1[1]) / 2;
@@ -378,7 +378,8 @@ export const nav: Scenario[] = [
       await p.fill('#find', 'иосиф');
       await p.waitForTimeout(300);
       const head = ((await p.locator('#find-results .grp-head').first().innerText()) ?? '').replace(/ /g, ' ');
-      if (!/^Иосиф — \d+ лиц/.test(head)) return fail(`нет группы одноимённых: «${head}»`);
+      // этап 13, решение 120: одноимённые — группой «Имя совпадает: Иосиф — 10 лиц»
+      if (!/^Имя совпадает: Иосиф — \d+ лиц/.test(head)) return fail(`нет группы одноимённых: «${head}»`);
       const grouped = p.locator('#find-results .result.grouped');
       const n = await grouped.count();
       if (n < 5) return fail(`в группе ${n} строк`);
@@ -456,15 +457,18 @@ export const nav: Scenario[] = [
   },
   {
     n: 61,
-    title: '«Все N на небе» — первой строкой; отметки ставятся, «Снять отметки» и Escape их снимают (D9; IX-19)',
+    title: '«Показать на небе» — первой строкой группы «Имя совпадает» (решение 120); отметки ставятся, «Снять отметки» и Escape их снимают (D9; IX-19)',
     run: async (p) => {
       await p.click('#find');
       await p.fill('#find', 'иосиф');
       await p.waitForTimeout(300);
       const firstRow = p.locator('#find-results [role="option"]').first();
       const t = (await firstRow.innerText()).trim();
-      if (!/^Все \d+ на небе$/.test(t)) return fail(`первая строка — «${t}»`);
-      if ((await firstRow.getAttribute('aria-selected')) === 'true') return fail('курсор стоит на «Все N», а не на первом лице');
+      // этап 13, решение 120: первая строка группы «Имя совпадает» — её команда «Показать на небе»
+      const head = ((await p.locator('#find-results .grp-head').first().innerText()) ?? '').replace(/[\u00a0\u2060]/g, ' ');
+      if (!/^Имя совпадает: Иосиф — \d+ лиц$/.test(head)) return fail(`подпись группы — «${head}»`);
+      if (!/^Показать на небе$/.test(t)) return fail(`первая строка — «${t}»`);
+      if ((await firstRow.getAttribute('aria-selected')) === 'true') return fail('курсор стоит на «Показать на небе», а не на первом лице');
       await firstRow.click();
       await p.waitForTimeout(400);
       // тот же запрос: вместо «Все N» — «Снять отметки»
@@ -480,7 +484,7 @@ export const nav: Scenario[] = [
       await p.click('#find');
       await p.waitForTimeout(200);
       const t3 = (await p.locator('#find-results [role="option"]').first().innerText()).trim();
-      return /^Все \d+ на небе$/.test(t3) ? pass(t) : fail(`Escape не снял отметки: «${t3}»`);
+      return /^Показать на небе$/.test(t3) ? pass(`${head}; ${t}`) : fail(`Escape не снял отметки: «${t3}»`);
     },
   },
   {

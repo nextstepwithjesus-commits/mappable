@@ -1,15 +1,53 @@
-import { byId, persons } from '../../data/atlas.ts';
-import { model, epochMode, selected } from '../../state.ts';
-import { P, Refs, VerseInsert, Mark } from '../common.tsx';
+import { byId, modelInfo, persons } from '../../data/atlas.ts';
+import type { Epoch } from '../../data/types.ts';
+import { model, epochMode, selected, modelId } from '../../state.ts';
+import { P, Refs, VerseInsert, MarkNote } from '../common.tsx';
 import { activityEpochs } from '../card/shared.tsx';
-import { formatSpan, toAstro } from '../../engine/years.ts';
+import { epochSpanText, spanText, toAstro } from '../../engine/years.ts';
+import { factsOf, modelShort, type ModelEvent } from '../modelinfo.ts';
+import { ChronoText } from './Chronology.tsx';
 import { Sheet, flyToYears } from './Sheet.tsx';
 import { typo } from '../text/typo.ts';
 import { Check } from '../controls.tsx';
 
-/** Границы эпохи словами; у оценочных эпох — «ок.». Все годы до Р. Х. зависят от модели и опор (ТЗ П-6) — помета «расч.». */
-const APPROX = ['judges', 'conquest', 'intertestamental', 'apostolic', 'church'];
-const span = (e: { id: string; start: number; end: number }) => formatSpan(toAstro(e.start), toAstro(e.end), APPROX.includes(e.id));
+/**
+ * Границы эпохи словами — одно правило для листа «Эпохи», § 13, подсказки и ярусов (engine/years.ts, epochSpanText;
+ * решение 99): «ок.» — только у оценочной границы (Epoch.startEst, endEst).
+ */
+const span = (e: Epoch) => epochSpanText(e);
+
+/**
+ * Границы эпох, заданные опорными событиями моделей (решение 102): у этих эпох годы меняются с моделью хронологии.
+ * Остальные — по реконструкции Тиле — Янга и внешним опорам, одинаковы во всех моделях.
+ */
+const BOUNDS: Record<string, [ModelEvent, ModelEvent]> = {
+  antediluvian: ['adam', 'flood'],
+  postdiluvian: ['flood', 'abram'],
+  patriarchs: ['abram', 'egypt'],
+  egypt: ['egypt', 'exodus'],
+};
+/** Годы эпохи в других моделях, если они иные: «в модели «Краткое пребывание» — 3959–2303 гг. до Р. Х.». */
+export function epochInModels(id: string, cur: string): string[] {
+  const b = BOUNDS[id];
+  if (!b) return [];
+  const mine = factsOf(cur)?.years;
+  const out: string[] = [];
+  for (const m of modelInfo) {
+    if (m.id === cur) continue;
+    const y = factsOf(m.id)?.years;
+    const a = y?.[b[0]];
+    const z = y?.[b[1]];
+    if (a === undefined || z === undefined || (a === mine?.[b[0]] && z === mine?.[b[1]])) continue;
+    out.push(`в модели «${modelShort(m.id)}» — ${spanText({ t: toAstro(a) }, { t: toAstro(z) })}`);
+  }
+  return out;
+}
+/** Пояснение пометы «расч.» у границ эпохи: от чего зависят её годы. */
+export function epochMarkText(id: string, cur: string): string {
+  if (BOUNDS[id] && epochInModels(id, cur).length)
+    return `границы вычислены по числам текста от опоры 967 г. до Р. Х. (3 Цар 6:1); годы — по модели «${factsOf(cur)?.name ?? modelShort(cur)}», в других моделях они иные`;
+  return 'границы — по числам текста, реконструкции царствований Тиле — Янга и внешним опорам; одинаковы во всех моделях';
+}
 /** Первые слова имён лиц атласа: «Авраам 100 лет…» остаётся с прописной. */
 const NAMES = new Set(persons.map((p) => p.name.split(' ')[0]));
 /** «Сумма лет…» → «сумма лет…» после «Основание:»; имена и аббревиатуры («Авраам», «ТЗ», «Мф») не трогаются. */
@@ -37,7 +75,7 @@ export function EpochsPanel() {
     <Sheet title="Эпохи" lead="Эпохи с годами и основаниями; над небом — ярусы эпох, судей, царей, пророков и событий.">
       <div class="checks">
         <Check checked={epochMode.value} onChange={(v) => (epochMode.value = v)}>
-          ярусы на небе
+          ярусы эпох
         </Check>
       </div>
       {/* сводная таблица (G8; CARD-46): эпоха | годы | основание; эпоха выбранного лица выделена */}
@@ -61,11 +99,14 @@ export function EpochsPanel() {
                   {here && sel ? <span class="muted"> — здесь: {sel.name}</span> : null}
                 </th>
                 <td class="yrs">
-                  {typo(span(e))} <Mark calc />
+                  {typo(span(e))} <MarkNote label="расч." full={epochMarkText(e.id, modelId.value)} />
                 </td>
               </tr>,
               <tr key={`${e.id}-b`} class="basis">
-                <td colSpan={2}>Основание: {typo(approxWords(lower(e.basis)))}</td>
+                <td colSpan={2}>
+                  Основание: <ChronoText text={approxWords(lower(e.basis))} />
+                  {epochInModels(e.id, modelId.value).length ? <span class="muted"> {typo(`(${epochInModels(e.id, modelId.value).join('; ')})`)}</span> : null}
+                </td>
               </tr>,
             ];
           })}
@@ -79,11 +120,11 @@ export function EpochsPanel() {
             </button>
           </h3>
           <p class="muted">
-            {typo(span(e))} <Mark calc />
+            {typo(span(e))} <MarkNote label="расч." full={epochMarkText(e.id, modelId.value)} />
           </p>
-          <p>{approxWords(e.summary)}</p>
+          <p>{typo(approxWords(e.summary))}</p>
           <p class="muted">
-            Основание: {typo(approxWords(lower(e.basis)))} <Refs refs={e.refs} owner={`ep-${e.id}`} />
+            Основание: <ChronoText text={approxWords(lower(e.basis))} /> <Refs refs={e.refs} owner={`ep-${e.id}`} />
           </p>
           <VerseInsert owner={`ep-${e.id}`} refs={e.refs} />
           {e.keyPersons.filter((k) => byId.has(k)).length ? (

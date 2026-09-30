@@ -53,16 +53,18 @@ describe('слова связи: «союз → ребёнок»', () => {
     ]);
     expect(linkLines(child('u:iakov+rakhil', 'iosif'))).toEqual([]);
   });
-  it('мать не названа (решение 75): «Ной и его жена — родители; Хам — сын»; кольцо только у Ноя', () => {
+  it('мать не названа (решение 75): «Ной и его жена — родители; Хам — сын»; кольцо только у Ноя; строка «Мать — в Писании не названа»', () => {
     const k = child('u:noy+', 'kham');
     expect(plain(linkTitle(k))).toBe('Ной и его жена — родители; Хам — сын');
     expect(linkRoles(k).map((e) => e.id)).toEqual(['noy', 'kham']);
-    expect(linkInfo(k)!.note).toBe('Мать в Писании не названа');
+    // этап 13 (решение 105, макет X4 М1): не пояснением под карточкой, а строкой конца
+    expect(linkInfo(k)!.missing).toEqual({ role: 'Мать', text: 'в Писании не названа' });
+    expect(linkInfo(k)!.note).toBeNull();
   });
-  it('у лица есть и названные жёны — «его жена» двусмысленно: «Давид — отец, мать не названа»', () => {
+  it('у лица есть и названные жёны — «его жена» двусмысленно: «Давид — отец; … — сын; мать не названа» (одна форма строк, решение 105)', () => {
     const u = U('u:david+');
     expect(unionName(u)).toBe('Давид (мать не названа)');
-    expect(plain(linkTitle(child(u.id, u.kids[0])))).toMatch(/^Давид — отец, мать не названа; \S+ — (сын|дочь)$/);
+    expect(plain(linkTitle(child(u.id, u.kids[0])))).toMatch(/^Давид — отец; \S+ — (сын|дочь); мать не названа$/);
     expect(unionName(U('u:sif+'))).toBe('Сиф и его жена');
   });
   it('вид утверждения — в роли: «Иосиф — отец по закону, Мария — мать; Иисус Христос — сын (Мф 1:16)»', () => {
@@ -74,10 +76,13 @@ describe('слова связи: «союз → ребёнок»', () => {
     expect(plain(linkTitle(child('u:niriy+~by-luke', 'salafiil')))).toBe('Нирий — отец по Луке; Салафиил — сын');
     expect(plain(linkTitle(child('u:iakov+~adoptive', 'efrem')))).toBe('Иаков — приёмный отец; Ефрем — приёмный сын');
   });
-  it('уровни: «толк.» у Илия — Марии; пропуск поколений (DF1) — помета, а не «внук»', () => {
+  it('уровни: «толк.» у Илия — Марии — первым словом заголовка (решение 105); пропуск поколений (DF1) — помета, а не «внук»', () => {
     const m = child('u:iliy-otets-marii+', 'mariya');
     expect(linkMarks(m)).toContain('толк.');
-    expect(plain(linkTip(m))).toBe('Илий и его жена — родители; Мария — дочь; толк. (Лк 3:23)');
+    expect(plain(linkTitle(m))).toBe('По толкованию: Илий и его жена — родители; Мария — дочь');
+    // уровень уже в заголовке — в подсказке помета «толк.» не повторяется
+    expect(plain(linkTip(m))).toBe('По толкованию: Илий и его жена — родители; Мария — дочь (Лк 3:23)');
+    expect(plain(linkSpeech(m))).toBe('Связь — по толкованию: Илий и его жена — родители; Мария — дочь; От Луки 3:23');
     const g = child('u:girsam+', 'shevuil-syn-girsama');
     expect(linkMarks(g)).toContain('пропуск поколений');
     expect(linkInfo(g)!.note).toMatch(/пропускать поколения/);
@@ -92,7 +97,8 @@ describe('слова связи: «союз → ребёнок»', () => {
 describe('слова связи: союз, черта брака, шаг ленты, родство словами', () => {
   it('союз — сценарий 1: «Ной и его жена: Сим, Хам, Иафет (Быт 5:32)»', () => {
     expect(plain(linkTip({ kind: 'union', union: 'u:noy+' }))).toBe('Ной и его жена: Сим, Хам, Иафет (Быт 5:32)');
-    expect(plain(linkTitle({ kind: 'union', union: 'u:iakov+liya' }))).toBe('Иаков и Лия: 6 сыновей и дочь');
+    // число детей словами (решение 105): «одна дочь», «один сын»
+    expect(plain(linkTitle({ kind: 'union', union: 'u:iakov+liya' }))).toBe('Иаков и Лия: 6 сыновей и одна дочь');
     // первый стих союза — где названо больше всего его детей (Быт 35:23 — шесть сыновей Лии)
     expect(linkRefs({ kind: 'union', union: 'u:iakov+liya' })[0]).toBe('Быт 35:23');
     expect(plain(linkTitle({ kind: 'union', union: 'u:david+melkhola' }))).toBe('Давид и Мелхола — муж и жена');
@@ -171,7 +177,10 @@ describe('слова связи: все связи данных', () => {
       expect(i!.ends.length, t).toBeGreaterThan(0);
       for (const e of i!.ends) expect(byId.has(e.id), t).toBe(true);
       expect(plain(linkTip(k))).toMatch(/^\S/);
-      expect(plain(linkSpeech(k))).toMatch(/^Связь: /);
+      expect(plain(linkSpeech(k))).toMatch(/^Связь(: | — по толкованию: | — вывод: )/);
+      // решение 105, П17: заголовок связи по толкованию и по выводу начинается словом уровня (у союза целиком — помета)
+      if (k.kind !== 'union' && i!.cert === 'interpretation') expect(t, t).toMatch(/^По толкованию: /);
+      if (k.kind !== 'union' && i!.cert === 'inference') expect(t, t).toMatch(/^Вывод: /);
     }
   });
   it('у связи «союз → ребёнок» и шага ленты стих есть всегда; роль ребёнка — по полу', () => {

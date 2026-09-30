@@ -8,13 +8,15 @@
  *    год; не вошедшее — «ещё N» и «всё родство — ещё N строк», молча ничего не обрезается. Наведение и фокус на имени подсвечивают его линию на небе (previewLinks), наведение
  *    на строку — все линии строки; щелчок по имени выбирает лицо и летит к нему, если его нет на экране; Enter на имени —
  *    карточка связи (selectedLink), фокус на её заголовке; Escape — назад к той же строке. По строке — стрелками;
- *  — команды «Карточка» (подробная справа), «Только его род ▾» (показ «род лица», src/ui/show.ts), «Родство с…», «×»;
- *    в показе «набор» — ещё «Продолжить ветвь» и «Родители» (раскрытие, решение 70).
- * Карточка союза у ромба — супруги, вид связи и стих, дети числом, «другие сыновья и дочери» (Быт 5:4), «Раскрыть
- * детей (N)» или «Свернуть детей», «Карточка союза» (подробная карточка союза справа, как в карточке связи).
- * Карточка связи — при выбранной связи (src/ui/linkstate.ts, selectedLink): заголовок словами родства
- * (src/ui/linkwords.ts), стихи, строки концов («Отец», «Мать», «Сын» — имя-ссылка и годы), «Ленты», «Союз», пометы;
- * команды «Карточка союза» и «Показать концы». Встаёт у точки щелчка или середины пути (linkAnchor — ставит небо).
+ *  — команды «Вся карточка» (подробная справа), «Предки и потомки ▾» (показ «род лица», src/ui/show.ts), «Родство с…», «×»;
+ *    в показе «набор» — ещё «Продолжить ветвь» и «Показать родителей» (раскрытие, решение 70).
+ * Карточка союза у ромба — супруги, вид связи и стих, дети числом, «другие сыновья и дочери» (Быт 5:4), «Показать
+ * детей союза (N)» или «Скрыть детей союза», «Подробнее о союзе» (подробная карточка союза справа, как в карточке связи).
+ * Карточка связи — при выбранной связи (src/ui/linkstate.ts, selectedLink): заголовок словами родства, у связи по
+ * толкованию и по выводу первым словом — уровень (решение 105; src/ui/linkwords.ts), строка основания, стихи, строки
+ * концов («Отец», «Мать», «Сын» — имя-ссылка и годы; конец не на небе — «нет в показе «…» — показать»), «Линия»,
+ * «Союз» («Илий и его жена: одна дочь»); команды «Подробнее о союзе» и «Вписать связь». Встаёт у точки щелчка или
+ * середины пути (linkAnchor — ставит небо).
  *
  * Место (placeCard): у знака, по четырём сторонам, со стороны, противоположной массе семьи. Никогда не закрывает звезду
  * фокуса с подписью, ромбы союзов фокуса, звёзды и подписи семьи первого поколения, органы неба, строку показа и
@@ -35,15 +37,15 @@ import { focused, model, pickMode, selected } from '../../state.ts';
 import { goTo, skyRef, viewTick } from '../common.tsx';
 import { Close, Menu } from '../controls.tsx';
 import { Avatar, UnionAvatar } from '../card/Avatar.tsx';
-import { askCards, cardsTick, disLine, kidsCommand, onLines, othersNote, othersUnionOf, unionKindLine, yearsLine } from '../card/star.ts';
+import { askCards, cardsTick, disLine, onLines, othersNote, othersUnionOf, unionKindLine, yearsLine } from '../card/star.ts';
 import { familyOf, kinRows, yearHow, type KinPart, type KinRow } from '../card/kinrows.ts';
 import { passportYears, isPeople } from '../card/Masthead.tsx';
 import { closePerson, collapseUnion, expanded, opened, openPerson, originOf, plates, selectedUnion, selectUnion, unionById, unionsOf, unions } from '../reveal.ts';
-import { linkSet, workSet } from '../work.ts';
-import { countShow, setShow, show } from '../show.ts';
+import { addPath, foldDesc, foldGroups, foldsHiding, linkSet, workSet } from '../work.ts';
+import { countShow, setShow, show, showContent, showGuest, showTitle } from '../show.ts';
 import { openShowSheet } from '../panels/Show.tsx';
-import { linkAnchor, previewLinks, selectedLink } from '../linkstate.ts';
-import { kidsCount, linkInfo, linkSpeech, refsShort, refShort, stepParent, unionName, type LinkInfo } from '../linkwords.ts';
+import { linkAnchor, linkGhosts, previewLinks, selectedLink, type GhostWhy } from '../linkstate.ts';
+import { accOf, kidsCount, linkBasis, linkInfo, linkSpeech, refsShort, refShort, spanHidden, stepParent, unionName, type LinkInfo } from '../linkwords.ts';
 import { grid, unfoldCard } from '../layout.ts';
 import { lowScreen, openSheetAt, sheetStop } from '../sheet.ts';
 import { focusCardTitle, focusQuietly } from '../focus.ts';
@@ -52,7 +54,7 @@ import { typo } from '../text/typo.ts';
 import { capFirst } from '../text/ru.ts';
 import { starRadius } from '../../render/glyphs.ts';
 import { familyOrderNote, personOrderNote } from '../../render/links.ts';
-import { flyToIds, reduced, reserve, screenOf } from './view.ts';
+import { aroundPending, flyToIds, reduced, reserve, screenOf } from './view.ts';
 import { plateFocus, rememberFocus, toggleKids } from './starnav.ts';
 import { kidsText, unionTitle } from './text.ts';
 import '../../styles/dotcard.css';
@@ -167,7 +169,7 @@ function focusLinkTitle(frames = 0) {
   else if (frames < 30) requestAnimationFrame(() => focusLinkTitle(frames + 1));
 }
 
-/** Карточка ставит выбор лица сама («Карточка», «Карточка союза», имя «Родства»): такая смена выбора её не закрывает. */
+/** Карточка ставит выбор лица сама («Вся карточка», «Подробнее о союзе», имя «Родства»): такая смена выбора её не закрывает. */
 function selectFromDot(id: string, stop: 'peek' | 'half') {
   const at = dotCard.peek();
   if (at) dotCard.value = { ...at, sel: id, focus: false };
@@ -183,17 +185,17 @@ function selectFromDot(id: string, stop: 'peek' | 'half') {
 const shownUnions = () => new Set(plates.value.map((p) => p.union.id));
 
 export interface PersonDotCmds {
-  /** «Продолжить ветвь» — ромбы его союзов не все на небе; «Свернуть ветвь» — они показаны от него */
+  /** «Продолжить ветвь» — ромбы его союзов не все на небе; «Скрыть ветвь» — они показаны от него */
   branch: 'more' | 'fold' | null;
-  /** «Родители» — союз его родителей не раскрыт; «Скрыть родителей» — раскрыт от него */
+  /** «Показать родителей» — союз его родителей не раскрыт; «Скрыть родителей» — раскрыт от него */
   parents: 'show' | 'hide' | null;
 }
 
 /**
  * Команды раскрытия карточки лица в показе «набор» (решение 70):
- *  — «Продолжить ветвь», если ромбы его союзов показаны не все; иначе «Свернуть ветвь», если они показаны по его щелчку
+ *  — «Продолжить ветвь», если ромбы его союзов показаны не все; иначе «Скрыть ветвь», если они показаны по его щелчку
  *    или его союз раскрыт от него;
- *  — «Родители», если первый союз его происхождения (основные родители) не раскрыт; «Скрыть родителей», если его
+ *  — «Показать родителей», если первый союз его происхождения (основные родители) не раскрыт; «Скрыть родителей», если его
  *    раскрыли от этого лица; раскрыт от родителя — команды нет: родители и так на небе.
  */
 export function personDotCmds(id: string): PersonDotCmds {
@@ -213,7 +215,7 @@ export function continueDot(id: string) {
 }
 
 /**
- * «Свернуть ветвь»: свернуть союзы лица, раскрытые от него (дети уходят со всем, что раскрыто от них), и убрать ромбы его
+ * «Скрыть ветвь»: свернуть союзы лица, раскрытые от него (дети уходят со всем, что раскрыто от них), и убрать ромбы его
  * союзов. Союз, раскрытый от супруга, остаётся: свёртка не убирает с неба самого супруга.
  */
 export function foldDot(id: string) {
@@ -222,29 +224,34 @@ export function foldDot(id: string) {
   closePerson(id);
 }
 
-/** «Родители»: союз родителей раскрывается от лица — родители, братья и сёстры на небе; «Скрыть родителей» — свёртка. */
+/** «Показать родителей»: союз родителей раскрывается от лица — родители, братья и сёстры на небе; «Скрыть родителей» — свёртка. */
 export function parentsDot(id: string) {
   const org = originOf(id)[0];
   if (org) toggleKids(org.id, id);
 }
 
 /**
- * Команда раскрытия у карточки союза. Ромб у лица-ребёнка (союз его родителей): «Раскрыть родителей» — родители, братья
- * и сёстры на небе, «Скрыть родителей». Ромб у супруга: «Раскрыть детей (3)», «Раскрыть ещё (6)» (часть детей уже на
- * небе), «Свернуть детей»; брак без детей или все дети на небе, а супруга нет — «Раскрыть союз», «Свернуть союз».
- * Всё уже на небе и союз не раскрыт — команды нет.
+ * Команда раскрытия у карточки союза — словами неба (этап 13, решение 109: на небе «показать» и «скрыть»; «свернуть» —
+ * только карточке и листу). Ромб у лица-ребёнка (союз его родителей): «Показать родителей» — родители, братья и сёстры
+ * на небе, «Скрыть родителей». Ромб у супруга: «Показать детей союза (3)», «Показать ещё (6)» (часть детей уже на небе),
+ * «Скрыть детей союза»; брак без детей или все дети на небе, а супруга нет — «Показать союз», «Скрыть союз». Всё уже на
+ * небе и союз не раскрыт — команды нет.
  */
 export function unionDotCmd(u: Union, from: string): { text: string; label?: string; open: boolean } | null {
   const open = u.id in expanded.value;
   const set = workSet.value;
   if (u.kids.includes(from) && from !== u.a && from !== u.b) {
-    if (open) return { text: 'Скрыть родителей', label: 'Скрыть родителей: свернуть союз родителей', open: true };
-    return [u.a, u.b, ...u.kids].some((x) => x && !set.has(x)) ? { text: 'Раскрыть родителей', label: 'Раскрыть родителей: родители, братья и сёстры на небе', open: false } : null;
+    if (open) return { text: 'Скрыть родителей', label: 'Скрыть родителей: убрать с неба союз родителей', open: true };
+    return [u.a, u.b, ...u.kids].some((x) => x && !set.has(x)) ? { text: 'Показать родителей', label: 'Показать родителей: родители, братья и сёстры на небе', open: false } : null;
   }
   const hidden = u.kids.filter((k) => !set.has(k)).length;
-  if (u.kids.length && (open || hidden > 0)) return kidsCommand(u, open, hidden);
-  if (open) return { text: 'Свернуть союз', open: true };
-  return [u.a, u.b].some((x) => x && !set.has(x)) ? { text: 'Раскрыть союз', label: 'Раскрыть союз: оба супруга на небе', open: false } : null;
+  if (u.kids.length && (open || hidden > 0)) {
+    if (open) return { text: 'Скрыть детей союза', open: true };
+    if (hidden === u.kids.length) return { text: `Показать детей союза (${hidden})`, open: false };
+    return { text: `Показать ещё (${hidden})`, label: `Показать ещё (${hidden}): остальных детей союза`, open: false };
+  }
+  if (open) return { text: 'Скрыть союз', open: true };
+  return [u.a, u.b].some((x) => x && !set.has(x)) ? { text: 'Показать союз', label: 'Показать союз: оба супруга на небе', open: false } : null;
 }
 
 /** Кого выбрать для карточки союза справа: супруга, который на небе (лицо у ромба, если это супруг), иначе лицо у ромба. */
@@ -257,7 +264,7 @@ export function unionSpouse(u: Union, from: string): string {
 const revealOn = () => show.value.kind === 'set' && !linkSet.value;
 
 /**
- * «Карточка» и «Карточка союза»: подробная карточка справа — лицо выбрано (карточка союза сменяется карточкой лица), свёрнутая
+ * «Вся карточка» и «Подробнее о союзе»: подробная карточка справа — лицо выбрано (карточка союза сменяется карточкой лица), свёрнутая
  * в корешок — разворачивается, на телефоне лист поднимается до половины; фокус — на заголовок карточки.
  */
 function showDetails(id: string, uid: string | null) {
@@ -284,7 +291,7 @@ function kinshipWith(id: string) {
   pickMode.value = 'kinship';
 }
 
-/** «Только его род ▾»: показ «род лица» — потомки, предки или оба, все поколения, по отцам (§ 7). */
+/** «Предки и потомки ▾»: показ «род лица» — потомки, предки или оба, все поколения, по отцам (§ 7). */
 export function lineageShow(id: string, dir: 'down' | 'up' | 'both') {
   setShow({ kind: 'lineage', id, dir, gen: null, by: 'father' }, { anchor: id });
 }
@@ -752,6 +759,81 @@ function rovingTo(el: HTMLElement) {
   for (const b of row.querySelectorAll<HTMLElement>('.person, .dc-more')) b.tabIndex = b === el ? 0 : -1;
 }
 
+/**
+ * Что из строки «Родства» видно сразу (решения 92, 104): первые limit имён, а сверх них — лица линий Мессии (line):
+ * «ещё N» их не прячет (у Давида Соломон — пятым в группе Вирсавии, а виден). Имя супруга-заголовка группы («Вирсавия: …»)
+ * видно, если видно хоть одно имя его группы. Разделители — только между видимыми именами; пропуск внутри строки — «, »
+ * (или «; » между группами). Одно лишнее имя не прячется: «ещё 1» не короче самого имени. rest — сколько имён спрятано,
+ * firstHidden — номер первого спрятанного среди имён (на него встаёт фокус после «ещё N»).
+ */
+export function cutRow(parts: readonly KinPart[], limit: number): { shown: KinPart[]; rest: number; firstHidden: number } {
+  const nameAt = parts.flatMap((p, i) => (p.t === 'name' ? [i] : []));
+  if (nameAt.length <= limit + 1) return { shown: [...parts], rest: 0, firstHidden: nameAt.length };
+  const keep = new Set<number>();
+  nameAt.forEach((i, k) => {
+    if (k < limit || (parts[i] as Extract<KinPart, { t: 'name' }>).line) keep.add(i);
+  });
+  // группа строки: от заголовка («Вирсавия» + «: » или «мать не названа — ») до «; »
+  const label = (p: KinPart | undefined) => p?.t === 'text' && /(:|—)\s*$/.test(p.text);
+  const groupKept = (from: number) => {
+    for (let j = from + 1; j < parts.length; j++) {
+      const q = parts[j];
+      if (q.t === 'text' && /;/.test(q.text)) return false;
+      if (q.t === 'name' && keep.has(j)) return true;
+    }
+    return false;
+  };
+  parts.forEach((p, i) => {
+    if (p.t === 'name' && !keep.has(i) && label(parts[i + 1]) && groupKept(i + 1)) keep.add(i);
+  });
+  const shown: KinPart[] = [];
+  let prevKept = true;
+  let gap = false;
+  let semi = false;
+  parts.forEach((p, i) => {
+    if (p.t === 'name') {
+      if (!keep.has(i)) {
+        prevKept = false;
+        gap = true;
+        return;
+      }
+      if (gap && shown.length && shown[shown.length - 1].t === 'name') shown.push({ t: 'text', text: semi ? '; ' : ', ' });
+      shown.push(p);
+      prevKept = true;
+      gap = false;
+      semi = false;
+      return;
+    }
+    // пояснение к имени — «(приёмный)» — идёт за своим именем
+    if (/^\s*\(/.test(p.text)) {
+      if (prevKept) shown.push(p);
+      return;
+    }
+    // заголовок группы — если видно хоть одно имя группы
+    if (label(p)) {
+      if (prevKept && groupKept(i)) {
+        shown.push(p);
+        gap = false;
+      } else {
+        gap = true;
+        if (/;/.test(p.text)) semi = true;
+      }
+      return;
+    }
+    // разделитель — только между видимыми соседями
+    const next = parts.findIndex((q, j) => j > i && q.t === 'name');
+    if (prevKept && next >= 0 && keep.has(next)) shown.push(p);
+    else {
+      gap = true;
+      if (/;/.test(p.text)) semi = true;
+    }
+  });
+  // хвост-разделитель после последнего видимого имени — не нужен
+  while (shown.length && shown[shown.length - 1].t === 'text' && /^[;,]/.test((shown[shown.length - 1] as { text: string }).text)) shown.pop();
+  const hidden = nameAt.filter((i) => !keep.has(i));
+  return { shown, rest: hidden.length, firstHidden: hidden.length ? nameAt.indexOf(hidden[0]) : nameAt.length };
+}
+
 /** Ключ связи — строкой для сравнения. */
 const ks = (k: LinkKey) => linkKeyString(k) ?? '';
 
@@ -761,19 +843,8 @@ const ks = (k: LinkKey) => linkKeyString(k) ?? '';
  */
 function KinRowView({ row, idx, compact }: { row: KinRow; idx: number; compact?: boolean }) {
   const [all, setAll] = useState(false);
-  const names = row.parts.filter((p): p is Extract<KinPart, { t: 'name' }> => p.t === 'name');
   const limit = compact ? 3 : (ROW_NAMES[row.kind] ?? 5);
-  const cut = !all && names.length > limit + 1 ? names[limit - 1] : null;
-  const shown: KinPart[] = [];
-  let seen = 0;
-  for (const p of row.parts) {
-    if (cut && seen >= limit) break;
-    shown.push(p);
-    if (p.t === 'name') seen++;
-  }
-  // лишний хвост текста после последнего видимого имени (разделитель) — не нужен
-  while (cut && shown.length && shown[shown.length - 1].t === 'text' && /^[;,]/.test((shown[shown.length - 1] as { text: string }).text)) shown.pop();
-  const rest = cut ? names.length - limit : 0;
+  const { shown, rest, firstHidden } = cutRow(row.parts, all ? Infinity : limit);
   const preview = (keys: readonly LinkKey[] | null) => {
     previewLinks.value = keys && keys.length ? keys : null;
   };
@@ -869,7 +940,7 @@ function KinRowView({ row, idx, compact }: { row: KinRow; idx: number; compact?:
                 const row = (e.currentTarget as HTMLElement).closest('.dc-row');
                 setAll(true);
                 requestAnimationFrame(() => {
-                  const next = row?.querySelectorAll<HTMLElement>('.person')[limit];
+                  const next = row?.querySelectorAll<HTMLElement>('.person')[firstHidden];
                   if (next) {
                     rovingTo(next);
                     next.focus();
@@ -941,7 +1012,7 @@ function kinInSheet() {
   }, 320);
 }
 
-/** «Только его род ▾»: потомки, предки, предки и потомки — по отцам, все поколения; «Настроить…» — лист «Показ». */
+/** «Предки и потомки ▾» (решение 109): потомки, предки, те и другие — по отцам, все поколения; «Настроить…» — лист «Показ». */
 function LineageMenu({ id }: { id: string }) {
   const item = (dir: 'down' | 'up' | 'both', label: string) => {
     const n = countShow({ kind: 'lineage', id, dir, gen: null, by: 'father' });
@@ -950,8 +1021,8 @@ function LineageMenu({ id }: { id: string }) {
   return (
     <Menu
       class="dc-lineage"
-      label="Только его род ▾"
-      title="Показать на небе только род лица: потомков, предков или тех и других"
+      label="Предки и потомки ▾"
+      title="Оставить на небе только предков или потомков лица, или тех и других"
       items={[
         item('down', 'Потомки'),
         item('up', 'Предки'),
@@ -982,15 +1053,15 @@ export function PersonBody({ id, compact = false, brief = false, onAll }: { id: 
       </div>
       <KinBlock id={id} compact={compact} brief={brief} onAll={onAll} />
       <div class="dc-cmds">
-        {/* на телефоне «Карточка ▴» разворачивает лист карточки (как «Развернуть» шапки листа) — кнопка с aria-expanded */}
+        {/* на телефоне «Вся карточка ▴» разворачивает лист карточки (как «Развернуть» шапки листа) — кнопка с aria-expanded */}
         <Cmd
           onRun={() => showDetails(id, null)}
           title="Подробная карточка лица: 24 раздела"
           cls="dc-card"
-          label={phone ? 'Карточка: развернуть лист' : undefined}
+          label={phone ? 'Вся карточка: развернуть лист' : undefined}
           expanded={phone ? false : undefined}
         >
-          {phone ? 'Карточка ▴' : 'Карточка'}
+          {phone ? 'Вся карточка ▴' : 'Вся карточка'}
         </Cmd>
         <LineageMenu id={id} />
         <Cmd onRun={() => kinshipWith(id)} title="Как связаны это лицо и второе: выберите его на небе или в поиске">
@@ -1004,12 +1075,12 @@ export function PersonBody({ id, compact = false, brief = false, onAll }: { id: 
               onRun={() => (c.branch === 'more' ? continueDot(id) : foldDot(id))}
               title={c.branch === 'more' ? 'Показать на небе ромбы союзов лица: его браки и союз родителей' : 'Убрать ромбы союзов лица и раскрытое от них'}
             >
-              {c.branch === 'more' ? 'Продолжить ветвь' : 'Свернуть ветвь'}
+              {c.branch === 'more' ? 'Продолжить ветвь' : 'Скрыть ветвь'}
             </Cmd>
           )}
           {c.parents && (
-            <Cmd onRun={() => parentsDot(id)} title={c.parents === 'show' ? 'Раскрыть союз родителей: родители, братья и сёстры на небе' : 'Свернуть союз родителей, раскрытый от лица'}>
-              {c.parents === 'show' ? 'Родители' : 'Скрыть родителей'}
+            <Cmd onRun={() => parentsDot(id)} title={c.parents === 'show' ? 'Родители, братья и сёстры — на небо' : 'Убрать с неба союз родителей, показанный от лица'}>
+              {c.parents === 'show' ? 'Показать родителей' : 'Скрыть родителей'}
             </Cmd>
           )}
         </div>
@@ -1080,66 +1151,191 @@ function UnionBody({ u, from, brief = false }: { u: Union; from: string; brief?:
             {cmd.text}
           </Cmd>
         )}
-        <Cmd onRun={() => showDetails(unionSpouse(u, from), u.id)} label={typo(`Карточка союза: ${names}`)} title="Подробная карточка союза справа: супруги, дети, стихи">
-          Карточка союза
+        <Cmd onRun={() => showDetails(unionSpouse(u, from), u.id)} label={typo(`Подробнее о союзе: ${names}`)} title="Подробная карточка союза справа: супруги, дети, стихи">
+          Подробнее о союзе
         </Cmd>
       </div>
     </>
   );
 }
 
-/** Строка ленты карточки связи: «эту связь рисуют обе ленты — Мф 1:2; Лк 3:33–34», «золотая лента — Мф 1:6». */
-function linesText(i: LinkInfo): string | null {
+/**
+ * Строка «Линия» карточки связи (решение 105): какая лента и по какому стиху — «по Луке (лазурная лента), Лк 3:23»,
+ * у общего шага — обе. Строка говорит правду о показе: если лента здесь этот шаг не рисует (конец вне показа), так
+ * и сказано — «в этом показе — жёлтым путём, лента скрыта».
+ */
+function lineText(i: LinkInfo, drawn: boolean, squeezed = 0): string | null {
   if (!i.lines.length) return null;
-  const refs = i.lines.map((l) => (l.ref ? refShort(l.ref) : '')).filter(Boolean).join('; ');
-  const who = i.lines.length > 1 ? 'эту связь рисуют обе ленты' : i.lines[0].line === 'joseph' ? 'эту связь рисует золотая лента (Мф 1)' : 'эту связь рисует лазурная лента (Лк 3)';
-  return `${who}${refs ? ` — ${refs}` : ''}`;
+  const part = (l: LinkInfo['lines'][number]) => `${l.line === 'joseph' ? 'по Матфею (золотая лента)' : 'по Луке (лазурная лента)'}${l.ref ? `, ${refShort(l.ref)}` : ''}`;
+  // общий шаг обеих лент — коротко: «обе ленты: Мф 1:2 (золотая), Лк 3:33–34 (лазурная)»
+  const both = (l: LinkInfo['lines'][number]) => `${l.ref ? `${refShort(l.ref)} ` : ''}(${l.line === 'joseph' ? 'золотая' : 'лазурная'})`;
+  const t = i.lines.length > 1 ? `обе ленты: ${i.lines.map(both).join(', ')}` : part(i.lines[0]);
+  // цепочка (К4, К7): «в этом показе лента сжата: скрыто 40»
+  if (squeezed) return `${t}; в этом показе лента сжата: скрыто ${squeezed}`;
+  return drawn ? t : `${t}; в этом показе — жёлтым путём, лента скрыта`;
 }
 
-/** Строки концов связи: «Отец», «Мать», «Сын» — имя-ссылка и годы. */
-function EndRow({ id, role, k }: { id: string; role: string; k: number }) {
+/**
+ * Где лицо сейчас относительно неба (решения 93, 105): null — на небе; 'out' — вне показа; 'fold' — спрятано свёрткой.
+ * Читает показ, его временных гостей и свёртку — карточка перерисуется, когда они сменятся.
+ */
+function skyState(id: string): 'out' | 'fold' | null {
+  const s = show.value;
+  const c = showContent.value;
+  void foldDesc.value;
+  void foldGroups.value;
+  if (s.kind !== 'all' && !c.ids.has(id) && !c.guests.has(id)) return 'out';
+  const f = foldsHiding(id);
+  return f.desc.length || f.groups.length ? 'fold' : null;
+}
+
+/**
+ * Где конец связи сейчас (решение 93, К2–К3, К7): по концам-призракам неба (контракт 2: src/ui/linkstate.ts, linkGhosts —
+ * их ставит небо в каждом кадре), а пока небо их не поставило — по показу и свёртке (skyState). Карточка говорит то же,
+ * что небо: 'show' — вне показа, 'folded' — скрыт свёрткой, 'edge' — на небе, но за краем окна; null — звезда на экране.
+ */
+function endWhere(id: string, k: LinkKey): GhostWhy | null {
+  const ks = linkKeyString(k);
+  const g = linkGhosts.value.find((x) => x.id === id && x.ks === ks);
+  if (g) return g.why;
+  const w = skyState(id);
+  return w === 'out' ? 'show' : w === 'fold' ? 'folded' : null;
+}
+
+/**
+ * Строки концов связи: «Отец», «Мать», «Сын» — имя-ссылка и годы. Конец не на небе (решение 93, К3; К7) — под именем
+ * строка «нет в показе «ключевые лица» — показать Илия» (или «скрыт на небе — показать»): лицо встаёт временным гостем
+ * до снятия выбора (src/ui/show.ts, showGuest); за краем окна — «за краем окна — показать»: вписать связь.
+ */
+function EndRow({ id, role, k, n, ends }: { id: string; role: string; k: LinkKey; n: number; ends: readonly string[] }) {
   const q = byId.get(id);
   const years = q ? passportYears(id, model.value.chrono.get(id), isPeople(id)) : '';
+  const where = endWhere(id, k);
+  const acc = accOf(id);
+  const f = q?.sex === 'f';
+  const lead =
+    where === 'show' ? `нет в показе «${showTitle(show.value)}» — ` : where === 'folded' ? `${f ? 'скрыта' : 'скрыт'} на небе — ` : where === 'edge' ? 'за краем окна — ' : '';
   return (
-    <div class="dc-row end" data-row={`end${k}`}>
+    <div class="dc-row end" data-row={`end${n}`}>
       <dt class="dc-lbl">{capFirst(role || 'лицо')}</dt>
       <dd class="dc-val">
         <button type="button" class="person" data-id={id} onClick={() => goTo(id)}>
           {q?.name ?? id}
         </button>
         {years && <span class="note">{typo(`, ${years}`)}</span>}
+        {where && (
+          <span class="dc-out" data-out={where}>
+            {typo(lead)}
+            {where === 'edge' ? (
+              <button type="button" class="dc-show" aria-label={`Вписать связь: ${q?.name ?? id} за краем окна`} onClick={() => flyToIds(ends)}>
+                показать
+              </button>
+            ) : (
+              <button type="button" class="dc-show" aria-label={`Показать на небе: ${q?.name ?? id}`} title="Лицо встанет на небо до снятия выбора связи" onClick={() => showGuest(id)}>
+                {acc ? `показать ${acc}` : 'показать'}
+              </button>
+            )}
+          </span>
+        )}
       </dd>
     </div>
   );
 }
 
-function LinkBody({ k, brief = false }: { k: LinkKey; brief?: boolean }) {
+/**
+ * Показать скрытых цепочки (решение 93, К4 — тот же глагол, что у «+N» на ленте): в показе «набор» лица цепочки
+ * добавляются в набор; в других показах — показ «Родословие Иисуса Христа (Мф 1, Лк 3)» с опорой на младший конец.
+ */
+function showSpan(k: Extract<LinkKey, { kind: 'span' }>) {
+  const inner = spanHidden(k) ?? [];
+  if (show.peek().kind === 'set') addPath([k.from, ...inner, k.to]);
+  else setShow({ kind: 'lines' }, { anchor: k.to });
+}
+
+/** Строка неназванного конца: «Мать — в Писании не названа» (макет X4 М1). */
+function MissingRow({ role, text }: { role: string; text: string }) {
+  return (
+    <div class="dc-row end missing">
+      <dt class="dc-lbl">{role}</dt>
+      <dd class="dc-val">
+        <span class="txt">{typo(text)}</span>
+      </dd>
+    </div>
+  );
+}
+
+/**
+ * Строка основания под заголовком (решение 105): одно предложение из § 24 конца связи или слова уровня; карточки концов
+ * подгружаются — до этого строки нет.
+ */
+function BasisLine({ k }: { k: LinkKey }) {
+  void cardsTick.value;
+  const b = linkBasis(k);
+  const need = b?.need.join(' ') ?? '';
+  useEffect(() => {
+    if (need) askCards(need.split(' '));
+  }, [need]);
+  if (!b || b.need.length) return null;
+  const who = b.from ? byId.get(b.from) : null;
+  return (
+    <p class="dc-basis">
+      {typo(b.text)}
+      {who && (
+        <span class="dc-src">
+          {' ('}
+          <button type="button" class="person" data-id={who.id} title="Карточка лица: § 24 «Примечания»" onClick={() => goTo(who.id)}>
+            {typo(`${who.name}, § 24`)}
+          </button>
+          {')'}
+        </span>
+      )}
+    </p>
+  );
+}
+
+/**
+ * Тело карточки связи. brief — краткий вид (§ 6: полной карточке нет места у линии): заголовок со словом уровня, стихи,
+ * концы с ролями и строки «вне показа», команды; остальное («Линия», «Союз», основание, неназванный конец) — по
+ * «всё о связи — ещё N строк» (onAll): карточка снова полная.
+ */
+function LinkBody({ k, brief = false, onAll }: { k: LinkKey; brief?: boolean; onAll?: () => void }) {
   const i = linkInfo(k);
   if (!i) return <p class="dc-note">Связь не найдена в данных.</p>;
   const u = i.union;
-  const lines = linesText(i);
   const endIds = i.ends.map((e) => e.id);
   // шаг ленты — показать на небе родителя шага и ребёнка
   if (k.kind === 'step') {
     const p = stepParent(k.line, k.child);
     if (p && !endIds.includes(p)) endIds.unshift(p);
   }
+  // лента рисует шаг, только если родитель шага и ребёнок оба на небе; цепочку (span) лента рисует сжатой
+  const kid = k.kind === 'child' || k.kind === 'step' ? k.child : null;
+  const drawn = k.kind === 'span' || (!!kid && i.lines.every((l) => {
+    const p = stepParent(l.line, kid);
+    return !skyState(kid) && (!p || !skyState(p));
+  }));
+  const hidden = k.kind === 'span' ? (spanHidden(k) ?? []) : [];
+  const lines = lineText(i, drawn, hidden.length);
+  // пометы без пометы уровня: уровень уже первым словом заголовка
+  const marks = i.lead ? i.marks.filter((m) => m !== 'толк.' && m !== 'выв.') : i.marks;
   return (
     <>
       <div class="dc-head">
-        <h3 id="dc-link-title" tabIndex={-1}>
+        <h3 id="dc-link-title" tabIndex={-1} data-lead={i.lead ?? undefined}>
           {i.title}
         </h3>
         {i.refs.length > 0 && <div class="dc-refs">{refsShort(i.refs.slice(0, 4))}{i.refs.length > 4 ? typo(` и ещё ${i.refs.length - 4}`) : ''}</div>}
-        {i.marks.length > 0 && <div class="dc-marks">{typo(i.marks.join(', '))}</div>}
+        {!brief && <BasisLine k={k} />}
+        {marks.length > 0 && <div class="dc-marks">{typo(marks.join(', '))}</div>}
       </div>
       <dl class="dc-kin">
         {i.ends.map((e, n) => (
-          <EndRow key={`${e.id}${n}`} id={e.id} role={e.role} k={n} />
+          <EndRow key={`${e.id}${n}`} id={e.id} role={e.role} k={k} n={n} ends={endIds} />
         ))}
+        {i.missing && !brief && <MissingRow role={i.missing.role} text={i.missing.text} />}
         {lines && !brief && (
           <div class="dc-row lines">
-            <dt class="dc-lbl">Ленты</dt>
+            <dt class="dc-lbl">Линия</dt>
             <dd class="dc-val">
               <span class="txt">{typo(lines)}</span>
             </dd>
@@ -1161,20 +1357,39 @@ function LinkBody({ k, brief = false }: { k: LinkKey; brief?: boolean }) {
               >
                 {typo(unionName(u))}
               </button>
-              <span class="note">{typo(` — ${kidsCount(u)}`)}</span>
+              <span class="note">{typo(`: ${kidsCount(u)}`)}</span>
             </dd>
           </div>
         )}
+        {brief && onAll && (() => {
+          // что краткий вид не показал: строки основания, неназванного конца, «Линии», «Союза» и пояснение
+          const more = [i.lead ? 1 : 0, i.missing ? 1 : 0, lines ? 1 : 0, u && k.kind !== 'union' ? 1 : 0, i.note ? 1 : 0].reduce((a, b) => a + b, 0);
+          return more > 0 ? (
+            <div class="dc-row all">
+              <dt class="dc-lbl" />
+              <dd class="dc-val">
+                <button type="button" class="dc-more" title="Показать всю карточку связи" onClick={onAll}>
+                  {`всё о связи — ещё ${more} ${more === 1 ? 'строка' : more < 5 ? 'строки' : 'строк'}`}
+                </button>
+              </dd>
+            </div>
+          ) : null;
+        })()}
       </dl>
       {i.note && !brief && <p class="dc-note">{typo(i.note)}</p>}
       <div class="dc-cmds">
+        {k.kind === 'span' && hidden.length > 0 && (
+          <Cmd onRun={() => showSpan(k)} title={show.value.kind === 'set' ? 'Добавить скрытых в набор' : 'Показ «Родословие Иисуса Христа (Мф 1, Лк 3)»: вся лента'}>
+            {`Показать скрытых (${hidden.length})`}
+          </Cmd>
+        )}
         {u && (
-          <Cmd onRun={() => showDetails(unionSpouse(u, u.a ?? u.b ?? u.kids[0]), u.id)} title="Карточка союза справа: супруги, дети, стихи">
-            Карточка союза
+          <Cmd onRun={() => showDetails(unionSpouse(u, u.a ?? u.b ?? u.kids[0]), u.id)} title="Подробная карточка союза справа: супруги, дети, стихи">
+            Подробнее о союзе
           </Cmd>
         )}
         <Cmd onRun={() => flyToIds(endIds)} title="Вписать в окно оба конца связи">
-          Показать концы
+          Вписать связь
         </Cmd>
       </div>
     </>
@@ -1286,7 +1501,9 @@ export function DotCard() {
       if (!outSince.current) outSince.current = now;
       // небо ещё едет (перелёт, вписывание после открытия карточки справа) или идёт переход показа (раскрытие «+N»:
       // узлы проявляются на 250–450 мс, § 10) — знак может вернуться; закрыть, только если его нет дольше перехода
-      if (!s.cam.moving && now - outSince.current > OUT_MS && !(cur?.until && now < cur.until)) closeDot(el.contains(document.activeElement));
+      // начало «С Иисуса Христа»: окно вокруг лица ещё ставится под новую ширину неба (view.ts, aroundPending) — ждать его
+      const waiting = (cur?.until && now < cur.until) || (cur?.kind === 'person' && aroundPending(cur.id));
+      if (!s.cam.moving && now - outSince.current > OUT_MS && !waiting) closeDot(el.contains(document.activeElement));
       else timer.current = window.setTimeout(place, 160);
       return;
     }
@@ -1506,7 +1723,19 @@ export function DotCard() {
           if (previewLinks.peek()) previewLinks.value = null;
         }}
       >
-        {link ? <LinkBody k={link} brief={brief} /> : at!.kind === 'person' ? (
+        {link ? (
+          <LinkBody
+            k={link}
+            brief={brief}
+            onAll={() => {
+              // читатель просит всю карточку связи: полная, и краткой по месту больше не становится
+              touched.current = true;
+              briefRef.current = false;
+              setBrief(false);
+              requestAnimationFrame(() => ref.current?.querySelector<HTMLElement>('.dc-row.lines .txt, .dc-row.union .person, .dc-kin .person')?.focus({ preventScroll: true }));
+            }}
+          />
+        ) : at!.kind === 'person' ? (
           <PersonBody
             id={at!.id}
             brief={brief}

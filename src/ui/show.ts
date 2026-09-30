@@ -14,7 +14,7 @@
  *  — groupSections() — разделы листа «Показ» с числами; countShow(s) — число лиц до применения.
  * Составы — src/engine/lineage.ts (род лица, созвездия, гости, обрывки).
  */
-import { batch, computed, effect } from '@preact/signals';
+import { batch, computed, effect, signal } from '@preact/signals';
 import { byId, graph, groupById, groups, lines, models, persons } from '../data/atlas.ts';
 import type { Group, GroupSection } from '../data/types.ts';
 import { familyLayout, type FamilyData, type FamilyResult } from '../engine/family.ts';
@@ -24,11 +24,16 @@ import type { ShowIn } from '../render/rows.ts';
 import { linkKeyString } from '../engine/linkkey.ts';
 import { selectedLink } from './linkstate.ts';
 import { walk } from '../render/rows.ts';
-import { model, onlyLines, selected } from '../state.ts';
-import { KEY_IDS, LINE_IDS, unions } from './reveal.ts';
-import { nameCase } from './text/ru.ts';
+import { model, onlyLines, pins, selected, skyGroup } from '../state.ts';
+import { KEY_IDS, LINE_IDS, LINES_TITLE, unions } from './reveal.ts';
+
+export { LINES_TITLE };
+import { lowerFirst, nameCase } from './text/ru.ts';
 import { num } from './text/typo.ts';
-import { foldDesc, parseShow, sameShow, setShowState, show, showAnchor, showKey, showLinksField, showOn, shownSet, WORK_URL_MAX, type Show } from './work.ts';
+import {
+  foldDesc, foldDescOf, foldGroupOf, foldsHiding, parseShow, sameShow, setShowState, show, showAnchor, showKey, showLinksField, showOn, shownSet, WORK_URL_MAX,
+  type Show,
+} from './work.ts';
 
 export { show, showKey, showLinksField, parseShow, sameShow };
 export type { Show, LinksOut, LineageBy, LineageDir, Stub };
@@ -170,8 +175,172 @@ export function contentOf(s: Show, set: ReadonlyMap<string, unknown> = shownSet.
   return c;
 }
 
-/** Состав нынешнего показа. */
-export const showContent = computed<ShowContent>(() => contentOf(show.value, shownSet.value));
+// ---------- временные гости (решение 93, К3; контракт 3 этапа 13) ----------
+
+/**
+ * Временные гости: лица вне показа, которых читатель попросил показать — строкой «вне показа — показать» карточки
+ * связи или щелчком по призраку конца на небе. Гость стоит на небе, как гости созвездий (45 %, подпись «в «…»»), пока
+ * не снят выбор, к которому он относится: выбранная связь (link), а без неё — выбранное лицо (person). Смена показа
+ * тоже его убирает. Адрес пишет гостей полем «~g» рядом с «~c» (src/ui/address.ts): ссылка воспроизводит вид, «назад»
+ * убирает гостя.
+ */
+export interface GuestState {
+  ids: readonly string[];
+  /** ключ показа, в котором гость показан (showKey и поле «~x») */
+  show: string;
+  /** выбранная связь (запись linkKeyString), к которой относится гость; null — гость относится к лицу */
+  link: string | null;
+  /** выбранное лицо, к которому относится гость, если связь не выбрана */
+  person: string | null;
+}
+export const guestState = signal<GuestState | null>(null);
+
+const showField = (s: Show) => `${showKey(s)}|${showLinksField(s) ?? ''}`;
+const linkField = () => {
+  const k = selectedLink.value;
+  return k ? linkKeyString(k) : null;
+};
+/** Гость ещё в силе: тот же показ и тот же выбор. */
+function guestValid(g: GuestState | null): g is GuestState {
+  if (!g || !g.ids.length || g.show !== showField(show.value)) return false;
+  return g.link !== null ? linkField() === g.link : selected.value === g.person;
+}
+/** Временные гости сейчас (пусто — нет или выбор снят). */
+export const linkGuests = computed<readonly string[]>(() => {
+  const g = guestState.value;
+  return guestValid(g) ? g.ids : [];
+});
+// выбор снят или показ сменился — гость уходит и из состояния (адрес его больше не пишет)
+effect(() => {
+  const g = guestState.value;
+  if (g && !guestValid(g)) guestState.value = null;
+});
+
+/**
+ * Показать лицо id временным гостем (контракт 3): лицо вне показа встаёт на небо до снятия выбора. Лицо, спрятанное
+ * свёрткой («свёрнут»), показывается разворотом того, что его прячет, — как при выборе лица. Возвращает, что сделано:
+ * 'guest' — стал гостем; 'unfold' — развёрнуто; 'shown' — лицо уже на небе; null — такого лица нет.
+ */
+export function showGuest(id: string): 'guest' | 'unfold' | 'shown' | null {
+  if (!byId.has(id)) return null;
+  const f = foldsHiding(id);
+  const unfold = f.desc.length > 0 || f.groups.length > 0;
+  const s = show.peek();
+  const c = contentOf(s);
+  const cur = guestState.peek();
+  const live = guestValid(cur) ? cur.ids : [];
+  const inside = s.kind === 'all' || c.ids.has(id) || c.guests.has(id) || live.includes(id);
+  batch(() => {
+    for (const r of f.desc) foldDescOf(r, false);
+    for (const g of f.groups) foldGroupOf(g, false);
+    if (inside) return;
+    const k = selectedLink.peek();
+    guestState.value = { ids: [...live, id], show: showField(s), link: k ? linkKeyString(k) : null, person: k ? null : selected.peek() };
+  });
+  return !inside ? 'guest' : unfold ? 'unfold' : 'shown';
+}
+/** Лицо id — временный гость сейчас. */
+export const isLinkGuest = (id: string) => linkGuests.value.includes(id);
+/** Убрать временных гостей. */
+export function clearGuests() {
+  guestState.value = null;
+}
+
+/**
+ * Поставить гостей из адреса (src/ui/address.ts): после того как показ, лицо и связь адреса уже стоят. Пустой список —
+ * гостей нет.
+ */
+export function setGuestsFromAddress(ids: readonly string[]) {
+  const ok = ids.filter((id) => byId.has(id));
+  if (!ok.length) {
+    guestState.value = null;
+    return;
+  }
+  const k = selectedLink.peek();
+  guestState.value = { ids: ok, show: showField(show.peek()), link: k ? linkKeyString(k) : null, person: k ? null : selected.peek() };
+}
+
+// ---------- найденное всегда видно (решение 113) ----------
+
+/**
+ * Откуда результаты, показанные гостями: поиск (имя, стих, «Все N на небе»), участок Синопсиса, глава. Слово — для
+ * строки показа: «Результаты поиска вне показа: 2 — снять».
+ */
+export type ResultSource = 'search' | 'synopsis' | 'chapter';
+export const RESULT_WORD: Record<ResultSource, string> = {
+  search: 'Результаты поиска вне показа',
+  synopsis: 'Лица участка Синопсиса вне показа',
+  chapter: 'Лица главы вне показа',
+};
+/**
+ * Результаты, обещанные на небе, но стоящие вне показа (решение 113; UI-01): они встают временными гостями — тем же
+ * механизмом, что концы связи (решение 93). Живут, пока тот же показ, до «снять» в строке показа или до того, как
+ * снято то, что их показало (отметки поиска, участок Синопсиса, глава). ids — только гости (лица вне показа).
+ */
+export interface ResultGuests {
+  ids: readonly string[];
+  show: string;
+  source: ResultSource;
+  /**
+   * До чего живут: 'pins' — пока стоят отметки поиска («Все N на небе»); 'group' — пока подсвечена глава или участок
+   * Синопсиса (skyGroup); 'selected' — пока выбрано найденное лицо person.
+   */
+  until: 'pins' | 'group' | 'selected';
+  person?: string;
+}
+export const resultGuests = signal<ResultGuests | null>(null);
+/** Гости результатов сейчас (пусто — нет или показ сменился). */
+export const resultIds = computed<readonly string[]>(() => {
+  const r = resultGuests.value;
+  return r && r.show === showField(show.value) ? r.ids : [];
+});
+// показ сменился или снято то, что показало результаты (отметки, глава, участок, выбор лица) — гости уходят
+effect(() => {
+  const r = resultGuests.value;
+  if (!r) return;
+  const gone =
+    r.show !== showField(show.value) ||
+    (r.until === 'pins' && !pins.value.length) ||
+    (r.until === 'group' && !skyGroup.value) ||
+    (r.until === 'selected' && selected.value !== r.person);
+  if (gone) resultGuests.value = null;
+});
+
+/**
+ * Показать на небе результаты ids (решение 113): те, кто вне показа, встают гостями; спрятанные свёрткой —
+ * разворачиваются. Возвращает, сколько лиц стало гостями (0 — все и так на небе).
+ */
+export function showResults(ids: readonly string[], source: ResultSource, until: ResultGuests['until'] = 'pins', person?: string): number {
+  const s = show.peek();
+  const c = contentOf(s);
+  const ok = ids.filter((id) => byId.has(id));
+  batch(() => {
+    for (const id of ok) {
+      const f = foldsHiding(id);
+      for (const r of f.desc) foldDescOf(r, false);
+      for (const g of f.groups) foldGroupOf(g, false);
+    }
+  });
+  const out = s.kind === 'all' ? [] : ok.filter((id) => !c.ids.has(id) && !c.guests.has(id));
+  resultGuests.value = out.length
+    ? { ids: out, show: showField(s), source, until, ...(person ? { person } : {}) }
+    : resultGuests.peek()?.source === source
+      ? null
+      : resultGuests.peek();
+  return out.length;
+}
+/** Снять гостей результатов; source — только своего источника (снятые отметки поиска не трогают участок Синопсиса). */
+export function clearResults(source?: ResultSource) {
+  const r = resultGuests.peek();
+  if (r && (!source || r.source === source)) resultGuests.value = null;
+}
+
+/** Состав нынешнего показа: с временными гостями — концами связи (решение 93) и результатами (решение 113). */
+export const showContent = computed<ShowContent>(() => {
+  const c = contentOf(show.value, shownSet.value);
+  const extra = [...new Set([...linkGuests.value, ...resultIds.value])].filter((id) => !c.ids.has(id) && !c.guests.has(id));
+  return extra.length ? { ...c, guests: new Set([...c.guests, ...extra]) } : c;
+});
 
 /**
  * Число лиц показа s до применения (лист «Показ»): все, кто будет на небе, — лица показа и гости. Это же число стоит
@@ -312,7 +481,9 @@ export const skyShow = computed<ShowIn>(() => {
   const anchor = showAnchor.value ?? selected.peek();
   const k = `${showKey(s)}|${showLinksField(s) ?? ''}`;
   if (c.layout === 'map') {
-    return { key: `m|${k}|${s.kind === 'set' ? c.ids.size : ''}`, layout: 'map', ids: s.kind === 'all' ? null : c.ids, guests: c.guests, stubs: c.stubs, lanes: null, anchor, units: null };
+    // временные гости (контракт 3) меняют состав карты — ключ с ними
+    const g = [...linkGuests.value, ...resultIds.value];
+    return { key: `m|${k}|${s.kind === 'set' ? c.ids.size : ''}${g.length ? `|g.${g.join('.')}` : ''}`, layout: 'map', ids: s.kind === 'all' ? null : c.ids, guests: c.guests, stubs: c.stubs, lanes: null, anchor, units: null };
   }
   void model.value;
   const S0 = new Set([...c.ids, ...c.guests]);
@@ -346,7 +517,9 @@ export type ShowCmd =
   /** перейти к показу («всё небо», «добавить созвездие «Патриархи»») */
   | { kind: 'show'; show: Show }
   /** меню поля рода лица: предки/потомки/оба, поколения, по отцам/по крови */
-  | { kind: 'menu'; field: 'dir' | 'gen' | 'by'; options: readonly { label: string; show: Show; current: boolean }[] };
+  | { kind: 'menu'; field: 'dir' | 'gen' | 'by'; options: readonly { label: string; show: Show; current: boolean }[] }
+  /** «показать на всём небе» (решение 111): выбранное лицо вне показа — всё небо и перелёт к нему */
+  | { kind: 'reveal'; id: string };
 
 /** Часть строки показа: текст или изменяемая часть (команда). */
 export interface SummaryPart {
@@ -420,7 +593,8 @@ export function summaryOf(s: Show, c: ShowContent = contentOf(s)): ShowSummary {
       short = 'всё небо';
       break;
     case 'lines':
-      text.push({ text: (short = `линии Мессии — ${personsN(n)}`) });
+      // одно имя показа и начала (решение 110): «Родословие Иисуса Христа (Мф 1, Лк 3)»
+      text.push({ text: (short = `${lowerFirst(LINES_TITLE)} — ${personsN(n)}`) });
       cmds.push(toAll);
       break;
     case 'key':
@@ -428,7 +602,12 @@ export function summaryOf(s: Show, c: ShowContent = contentOf(s)): ShowSummary {
       cmds.push(toAll);
       break;
     case 'set':
-      text.push({ text: (short = `набор — ${personsN(n)}`) });
+      // пустой набор (решение 111): строка говорит, что делать, а не «набор — 0 лиц»
+      if (!n) {
+        text.push({ text: EMPTY_SET_TEXT });
+        mid = [text[0], { text: 'набор пуст' }];
+        short = 'набор пуст';
+      } else text.push({ text: (short = `набор — ${personsN(n)}`) });
       cmds.push(toAll);
       break;
     case 'groups': {
@@ -480,6 +659,27 @@ export function summaryOf(s: Show, c: ShowContent = contentOf(s)): ShowSummary {
   return { text, cmds, label: text.map((p) => p.text).join(''), mid: mid ?? text, short: [{ text: short }], shortCmds: [shortCmd] };
 }
 
+/**
+ * Имя показа для строк «нет в показе «…»» (решения 93, 105, 111): «ключевые лица», «Родословие Иисуса Христа», «набор»,
+ * «Дом Нахора», «потомки: Иуда». Всё небо — «всё небо».
+ */
+export function showTitle(s: Show): string {
+  switch (s.kind) {
+    case 'all':
+      return 'всё небо';
+    case 'lines':
+      return LINES_TITLE;
+    case 'key':
+      return 'ключевые лица';
+    case 'set':
+      return 'набор';
+    case 'groups':
+      return wholeSection(s.groups) === 'tribes' ? 'все колена' : s.groups.map((g) => groupById.get(g)?.name ?? g).join(', ');
+    case 'lineage':
+      return `${DIR_WORD[s.dir]}: ${byId.get(s.id)?.name ?? s.id}`;
+  }
+}
+
 /** Имя без уточнения в родительном падеже: «Иакова»; null — имя не склоняется надёжно. */
 function nameCaseBare(id: string): string | null {
   const p = byId.get(id);
@@ -496,7 +696,13 @@ export function setLinkNote(n: number): string {
     : `Ссылка на этот вид передаёт и сам набор: в нём не больше ${WORK_URL_MAX} лиц`;
 }
 
-/** Строка показа сейчас; выбранное лицо вне показа — в конце строки: «Давид — вне показа». */
+/** Пустой показ «набор» (решение 111): что делать, чтобы набор появился. */
+export const EMPTY_SET_TEXT = 'набор пуст — добавьте лиц командой «Добавить в набор» в карточке или начните «С Адама»';
+
+/**
+ * Строка показа сейчас; выбранное лицо вне показа — в конце строки: «Давид — вне показа», и первой командой —
+ * «показать на всём небе» (решение 111): всё небо и перелёт к лицу.
+ */
 export const showSummary = computed<ShowSummary>(() => {
   const s = show.value;
   const c = showContent.value;
@@ -504,7 +710,23 @@ export const showSummary = computed<ShowSummary>(() => {
   const out = outsideOf(s, c, selected.value);
   if (!out) return sm;
   const part = { text: `; ${fullName(out)} — вне показа` };
-  return { ...sm, text: [...sm.text, part], mid: [...sm.mid, part], label: sm.label + part.text };
+  // «всё небо» остаётся: оно возвращает прежнее окно (IX-73); «показать на всём небе» ещё и летит к лицу
+  const reveal: SummaryPart = { text: 'показать на всём небе', cmd: { kind: 'reveal', id: out } };
+  const cmds = [...sm.cmds, reveal];
+  // «вне показа — показать» не пропадает и в краткой строке (решение 118; UI-06): лицо — первым и без уточнения
+  // («Елиав — вне показа; ключевые лица — 59 лиц»), при нехватке места обрезается конец строки, а не лицо
+  const brief = { text: `${byId.get(out)?.name ?? out} — вне показа; ` };
+  return {
+    ...sm,
+    text: [...sm.text, part],
+    // без подробностей — и лицо без уточнения: «; Адам — вне показа»
+    mid: [...sm.mid, { text: `; ${byId.get(out)?.name ?? out} — вне показа` }],
+    short: [brief, ...sm.short],
+    // и в краткой строке «всё небо» остаётся рядом с «показать на всём небе»: оно возвращает прежнее окно (IX-73)
+    shortCmds: [...sm.shortCmds, ...sm.cmds.filter((c) => c.cmd?.kind === 'show' && c.cmd.show.kind === 'all'), reveal],
+    cmds,
+    label: sm.label + part.text,
+  };
 });
 
 // ---------- лист «Показ»: разделы созвездий ----------
@@ -610,6 +832,14 @@ if (typeof document !== 'undefined')
     d.showGuests = String(c.guests.size);
     d.showStubs = String(c.stubs.length);
     d.showLayout = c.layout;
+    // временные гости (контракт 3)
+    const g = linkGuests.value;
+    if (g.length) d.linkGuests = g.join(' ');
+    else delete d.linkGuests;
+    // гости результатов (решение 113)
+    const r = resultIds.value;
+    if (r.length) d.resultGuests = r.join(' ');
+    else delete d.resultGuests;
   });
 // выбранная связь — там же (запись src/engine/linkkey.ts): сценарии видят её, не читая холст
 if (typeof document !== 'undefined')

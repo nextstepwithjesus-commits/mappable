@@ -3,11 +3,11 @@ import { byId, graph, lines } from '../../data/atlas.ts';
 import { kidEdges, type Union } from '../../engine/unions.ts';
 import { kidsCount, plateNames, plateSub, unionGen } from '../../render/plates.ts';
 import { model } from '../../state.ts';
-import { formatSpan, formatYear, lifeSpanText, shownBirthRange, toAstro, toHist } from '../../engine/years.ts';
+import { epochSpanText, formatYear, shownBirthRange, toHist } from '../../engine/years.ts';
 import type { ChronoRow } from '../../data/atlas.ts';
 import type { Epoch } from '../../data/types.ts';
 import { personOrderNote } from '../../render/links.ts';
-import { isPeople } from '../card/Masthead.tsx';
+import { isPeople, passportYears } from '../card/Masthead.tsx';
 import { affiliation, birthRange, constellation } from '../card/shared.tsx';
 import { nameCase } from '../text/ru.ts';
 import { plural, refLabel } from '../common.tsx';
@@ -21,7 +21,9 @@ import { typo } from '../text/typo.ts';
 export function lifeText(id: string, { when = true }: { when?: boolean } = {}): string {
   const c = model.value.chrono.get(id);
   if (!c) return '';
-  const years = lifeSpanText(c, { people: isPeople(id) });
+  // годы паспорта (решение 96): словарь дат с границами текста (birthRange) — подсказка, указатель и диктор говорят
+  // то же, что паспорт и карточка у звезды
+  const years = passportYears(id, c, isPeople(id));
   if (years) return years;
   const from = when && c.cls === 'epochal' && !isPeople(id) ? whenText(id) : null;
   return from ? `время не установлено; ${from.charAt(0).toLowerCase()}${from.slice(1)}` : 'время не установлено';
@@ -42,10 +44,15 @@ export function birthSpanText(id: string): string | null {
   const p = byId.get(id);
   const c = model.value.chrono.get(id);
   if (!p || !c || c.cls !== 'estimated' || isPeople(id)) return null;
-  const [bLo, bHi] = birthRange(id, c, model.value.chrono);
-  const [lo, hi] = shownBirthRange({ ...c, bLo, bHi });
-  if (!(hi > lo)) return null;
-  return typo(`${p.sex === 'f' ? 'Родилась' : 'Родился'} между ${betweenYears(lo, hi)}`);
+  // этап 13, решение 96: промежуток — тот же, что в паспорте (словарь дат engine/years.ts с границами текста); у оценки
+  // не шире 10 лет паспорт пишет «ок.», и промежутка нет
+  const years = passportYears(id, c, false).replace(/\u2060/g, '');
+  const m = /род\.[\s\u00a0]+между[\s\u00a0]+(.+?)(?:,[\s\u00a0]+ум\.|;|$)/.exec(years);
+  if (!m) return null;
+  // «род. между 1580 и 1510, ум. между …» — эра стоит в конце строки паспорта: у промежутка рождения она своя
+  let range = m[1].trim();
+  if (!/Р\.[\s\u00a0]+Х\./.test(range)) range += /по[\s\u00a0]+Р\.[\s\u00a0]+Х\./.test(years) ? ' гг. по Р. Х.' : ' гг. до Р. Х.';
+  return typo(`${p.sex === 'f' ? 'Родилась' : 'Родился'} между ${range}`);
 }
 
 /**
@@ -63,7 +70,9 @@ export function tipYears(id: string, { mark = true }: { mark?: boolean } = {}): 
   const c = model.value.chrono.get(id);
   const life = lifeText(id);
   if (!p || !c || c.cls === 'epochal' || isPeople(id) || c.named) return life;
-  const note = !mark ? '' : c.byOrder ? ' (выв.)' : ' (расч.)';
+  // решение 96: год вычислен от опоры или оценён — «расч.»; порядок перечисления даёт очерёдность, а не год, поэтому
+  // «выв.» у года не ставится (его объясняет строка порядка, orderText)
+  const note = mark ? ' (расч.)' : '';
   // знак у первого засвидетельствованного года (решение 38; MAP-69): точки рождения нет — промежуток и год свидетельства
   if (c.mark !== undefined) {
     const [bLo, bHi] = birthRange(id, c, model.value.chrono);
@@ -72,24 +81,10 @@ export function tipYears(id: string, { mark = true }: { mark?: boolean } = {}): 
     const died = c.d !== null ? `; ум. ${formatYear(c.d, { approx: c.cls === 'estimated' })}` : '';
     return typo(`${born}; первое свидетельство — ${formatYear(c.mark)}${note}${died}`);
   }
-  let span = '';
-  if (c.cls === 'estimated') {
-    const [bLo, bHi] = birthRange(id, c, model.value.chrono);
-    const [lo, hi] = shownBirthRange({ ...c, bLo, bHi });
-    if (hi > lo) span = betweenShort(lo, hi);
-  }
-  if (!span) return typo(`${life}${note}`);
-  return typo(life.startsWith('род.') ? `${life}${note}, между ${span}` : `${life}${note}; род. между ${span}`);
+  // годы — словами паспорта (решение 96): промежуток рождения шире 10 лет паспорт уже называет «род. между …»
+  return typo(`${life}${note}`);
 }
 
-/** Концы промежутка рождения после «между» в строке, где эра уже названа: «1805 и 1755 гг.»; разные эры — полностью. */
-function betweenShort(a: number, b: number): string {
-  const ha = toHist(a);
-  const hb = toHist(b);
-  if (ha < 0 && hb < 0) return `${-ha} и ${-hb} гг.`;
-  if (ha > 0 && hb > 0) return `${ha} и ${hb} гг.`;
-  return betweenYears(a, b);
-}
 
 /**
  * Строка подсказки ребёнка, чей год оценён по порядку перечисления (UX-73; решение 41): «год оценён по порядку
@@ -123,6 +118,27 @@ export function countText(book: 'Мф' | 'Лк', n: number): string {
   return typo(book === 'Мф' ? `«Мф ${n}» — ${n}-й в родословии Мф 1:2–16, считая от Авраама` : `«Лк ${n}» — ${n}-й в родословии Лк 3:23–38, считая от Иосифа`);
 }
 
+/** Лица линии строго между from и to (по порядку data/lines): скрытые в разрыве ленты (К4). */
+export function lineBetween(line: 'joseph' | 'mary', from: string, to: string): string[] {
+  const ids = lines[line].persons.map((x) => x.id);
+  const i = ids.indexOf(from);
+  const j = ids.indexOf(to);
+  return i >= 0 && j > i ? ids.slice(i + 1, j) : [];
+}
+
+/**
+ * Подсказка знака «+N» в разрыве ленты (этап 13, решение 93, К4): «скрыто 40 поколений по Лк 3: Нафан … Илий —
+ * щёлкните, чтобы показать». Имена — в именительном, без подстановки в падеж.
+ */
+export function gapTipText(g: { lines: readonly ('joseph' | 'mary')[]; from: string; to: string; n: number }): string {
+  const src = g.lines.map((l) => (l === 'joseph' ? 'Мф 1' : 'Лк 3'));
+  const hid = lineBetween(g.lines[0], g.from, g.to);
+  const first = byId.get(hid[0] ?? '')?.name;
+  const last = byId.get(hid[hid.length - 1] ?? '')?.name;
+  const who = first ? (hid.length > 1 && last ? `${first} … ${last}` : first) : '';
+  return typo(`В этом показе скрыто ${g.n} ${plural(g.n, 'поколение', 'поколения', 'поколений')} по ${src.join(' и ')}${who ? `: ${who}` : ''} — щёлкните, чтобы показать`);
+}
+
 /**
  * Подсказка шага ленты (E6; MAP-28; решение 54): родство словами, без стрелки и без подстановки имени в падеж — каждое
  * имя стоит в именительном со своим словом: «Давид, отец; Соломон, сын (Мф 1:6)». Стих — ссылка шага в своей линии
@@ -146,11 +162,13 @@ export function ribbonStepText(line: 'joseph' | 'mary', from: string, to: string
   return typo(`${rel}${ref ? ` (${refLabel(ref)})` : ''}${tail}`);
 }
 
-/** Подсказка названия эпохи в служебной строке неба (UX-65): «Эпоха «Судьи»: ок. 1375–1050 гг. до Р. Х.; щёлкните — …». */
-export function epochGoText(e: Pick<Epoch, 'id' | 'name' | 'start' | 'end'>): string {
-  // оценочные границы — у судей и завоевания, как у отрезков ярусов эпох (render/tiers.ts)
-  const soft = e.id === 'judges' || e.id === 'conquest';
-  return typo(`Эпоха «${e.name}»: ${formatSpan(toAstro(e.start), toAstro(e.end), soft)}; щёлкните — небо покажет эпоху`);
+/**
+ * Подсказка названия эпохи в служебной строке неба (UX-65): «Эпоха «Судьи»: ок. 1375–1050 гг. до Р. Х.; щёлкните — …».
+ * Годы границ — словарём дат (решения 96, 99; engine/years.ts, epochSpanText): «ок.» — только у оценочной границы
+ * (Epoch.startEst, endEst), как у отрезков ярусов эпох и в листе «Эпохи».
+ */
+export function epochGoText(e: Epoch): string {
+  return typo(`Эпоха «${e.name}»: ${epochSpanText(e)}; щёлкните — небо покажет эпоху`);
 }
 
 /** «1020 и 990 гг. до Р. Х.», «5 г. до Р. Х. и 10 г. по Р. Х.»: концы промежутка (астр.) после «между». */
@@ -244,15 +262,6 @@ export function meridianText(t: number, alive: number, sure: number): string {
   return `${year}: живы ${who}, наверняка\u00A0— ${sure}`;
 }
 
-/**
- * Строка отметок поиска (E10; IX-19): «Отмечено 11 лиц по запросу «Иосиф»»; подсказку «Esc — снять» строка добавляет
- * только там, где есть клавиатура (sky.css). «Отмечено» — безличное: согласуется с любым числом («Отмечено 1 лицо»).
- */
-export function pinBarText(n: number, query: string): string {
-  const q = query.trim();
-  return `Отмечено ${n} ${plural(n, 'лицо', 'лица', 'лиц')}${q ? ` по запросу «${q}»` : ''}`;
-}
-
 // ---------- союзы на небе «набор» (решения 70, 76; src/render/plates.ts) ----------
 
 /**
@@ -317,9 +326,13 @@ export function plateTipText(u: Union, open: boolean): string {
   return typo(`${unionTitle(u)}${unionGen(u) ? ':' : ';'} ${what} — щёлкните, чтобы ${open ? 'свернуть' : 'раскрыть'}`);
 }
 
-/** Пункт списка неба для клавиатуры и диктора: «Союз Авраама и Агари; жена; сын; свёрнут». */
-export function plateItemText(u: Union, open: boolean): string {
-  return typo(`${unionTitle(u)}; ${plateSub(u)}; ${open ? 'раскрыт' : 'свёрнут'}`);
+/**
+ * Пункт списка неба для клавиатуры и диктора: «Союз Авраама и Агари; жена; сын; дети скрыты». Состояние детей союза
+ * называется только в показе «набор», где союз раскрывают и скрывают (этап 13, X4 Д13; словарь 109: на небе — «скрыть»
+ * и «показать»); в прочих показах дети союза на небе и так.
+ */
+export function plateItemText(u: Union, open: boolean, inSet = true): string {
+  return typo(`${unionTitle(u)}; ${plateSub(u)}${inSet ? `; ${open ? 'дети показаны' : 'дети скрыты'}` : ''}`);
 }
 
 /**

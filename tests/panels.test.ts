@@ -13,6 +13,7 @@ import { linkChapter, chapterSequence, FIRST_VERSE, CHAPTERS, type Verse } from 
 import { deathAge, SETS } from '../src/ui/panels/Section.tsx';
 import { indexGroups } from '../src/ui/panels/Index.tsx';
 import { anchorAlt, anchorYear, builtDate, AboutPanel } from '../src/ui/panels/About.tsx';
+import { ChronologyPanel } from '../src/ui/panels/Chronology.tsx';
 import { commonAxis } from '../src/ui/Spread.tsx';
 import { personBlocks, personHits } from '../src/ui/top/Combobox.tsx';
 import { resultBlocks } from '../src/ui/top/Search.tsx';
@@ -137,10 +138,13 @@ describe('G4: сквозной раздел § 20', () => {
     const sol = await loadCard('solomon');
     expect(deathAge(sol!.chrono)).toBeNull(); // возраст Соломона Писание не называет: не выдумывается
   });
-  it('группы: цари Иудеи — по началу царствования, от Давида', () => {
+  // этап 13 (решение 110; X4 Д3): Давид, Саул, Иевосфей и Соломон — «Цари единого царства»; «Цари Иудеи» — от Ровоама
+  it('группы: цари Иудеи — по началу царствования, от Ровоама; Давид — в «Царях единого царства»', () => {
     const judah = SETS.find((s) => s.id === 'judah')!.ids();
-    expect(judah[0]).toBe('david');
+    expect(judah[0]).toBe('rovoam');
     expect(judah).toContain('ezekiya');
+    expect(SETS.find((s) => s.id === 'united')!.ids()[0]).toBe('saul');
+    expect(SETS.find((s) => s.id === 'united')!.ids()).toContain('david');
   });
 });
 
@@ -163,13 +167,19 @@ describe('G6: «О карте» по-русски', () => {
     expect(plain(anchorAlt('28 (при счёте от единоличного правления, 14 г.)'))).toBe('28 г. по Р. Х. (при счёте от единоличного правления, 14 г.)');
     expect(builtDate('2026-09-27T07:36:00Z')).toMatch(/^27 сентября 2026$/);
   });
-  it('панель: без «-966», служебных метрик, «г..» и номеров томов «01»', () => {
-    const out = html(h(AboutPanel, {}) as VNode).replace(/<[^>]+>/g, ' ');
-    expect(out).not.toMatch(/-\d{3,4}\b/);
-    expect(out).not.toMatch(/persons|lanes|Assyrian/i);
-    expect(out).not.toMatch(/г\.\./);
-    expect(out).not.toMatch(/(^|\s)0\d\s/);
-    expect(out).toContain('966 г. до Р. Х. (Тиле)');
+  // этап 13, решение 102: опоры, модели и напряжения — в панели «О хронологии»; «О карте» ссылается на неё
+  it('панель: без «-966», служебных метрик, «г..» и номеров томов «01»; опоры по-русски — в «О хронологии»', () => {
+    const about = html(h(AboutPanel, {}) as VNode).replace(/<[^>]+>/g, ' ');
+    const chrono = html(h(ChronologyPanel, {}) as VNode).replace(/<[^>]+>/g, ' ');
+    for (const out of [about, chrono]) {
+      expect(out).not.toMatch(/-\d{3,4}\b/);
+      expect(out).not.toMatch(/persons|lanes|Assyrian/i);
+      expect(out).not.toMatch(/г\.\./);
+      expect(out).not.toMatch(/(^|\s)0\d\s/);
+      expect(out).not.toMatch(/ТЗ П-6/);
+    }
+    expect(about).toContain('О хронологии');
+    expect(chrono).toContain('966 г. до Р. Х. (Тиле)');
   });
 });
 
@@ -186,11 +196,11 @@ describe('G1: поле «Второе» — тот же комбобокс, чт
     expect(hits.some((x) => x.id === 'iosif-muzh-marii')).toBe(false);
     const blocks = personBlocks(hits);
     expect(blocks.flatMap((b) => b.rows).every((r) => r.kind === 'person')).toBe(true);
-    // поиск верхней строки: те же строки-лица после строки «Все N на небе»
+    // поиск верхней строки: те же группы и строки-лица; в группе — ещё строка «Показать на небе» (решение 120)
     const all = searchIndex.search('иосиф', 60);
-    const top = resultBlocks(all, { pinned: false, noAll: false });
-    expect(top[0].rows[0].kind).toBe('all');
-    expect(top.slice(1)).toEqual(personBlocks(all));
+    const top = resultBlocks(all, { pinned: false, noAll: false, q: 'иосиф' });
+    expect(top[0].rows[0]).toMatchObject({ kind: 'all', group: true });
+    expect(top.map((b) => ({ ...b, rows: b.rows.filter((r) => r.kind !== 'all') }))).toEqual(personBlocks(all, 'иосиф'));
   });
   it('по стиху поле «Второе» не ищет: лицо выбирается по имени', () => {
     expect(personHits('Руф 4:21')).toEqual([]);

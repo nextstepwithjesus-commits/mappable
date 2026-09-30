@@ -8,7 +8,8 @@ import type { Page } from 'playwright';
 import { pass, fail, secText, type Scenario } from './kit.ts';
 
 /** Текст без неразрывных пробелов и «склеек» (typo): для сверки — обычные пробелы. */
-const flat = (s: string) => s.replace(/[ ⁠ ]/g, (c) => (c === '⁠' ? '' : ' '));
+// этап 13: подзаголовки § 13 («Откуда годы», «Эпоха», «Среди родни») — отдельными строками; пробелы сводятся
+const flat = (s: string) => s.replace(/[ ⁠ ]/g, (c) => (c === '⁠' ? '' : ' ')).replace(/\s+/g, ' ');
 /**
  * Открыть адрес заново (с загрузкой страницы): сценарии проверяют данные карточки, а не переход между карточками —
  * переход «Моисей → Давид» сейчас роняет § 12 (Preact, insertBefore; передано владельцу разделов карточки).
@@ -41,12 +42,14 @@ export const chrono: Scenario[] = [
     run: async (p) => {
       await go(p, '#/avraam~mmt-short');
       const a = flat(await secText(p, 13));
-      if (!/Эпоха рождения: Патриархи \(1951–1661 гг\. до Р\. Х\.\)/.test(a)) return fail(`§ 13 Авраама: «${a.slice(0, 90)}»`);
+      // этап 13, решение 100: строка «Эпоха» § 13 — эпоха жизни с годами модели; эпоха рождения Авраама та же
+      if (!/Эпоха Патриархи \(1951–1661 гг\. до Р\. Х\.\)/.test(a)) return fail(`§ 13 Авраама: «${a.slice(0, 90)}»`);
       const ep = await passport(p, 'Эпоха');
       if (/Египте/.test(ep)) return fail(`паспорт Авраама: «${ep}»`);
       await go(p, '#/iosif~mmt-short');
       const j = flat(await secText(p, 13));
-      if (!/Эпоха рождения: Патриархи/.test(j)) return fail(`§ 13 Иосифа: «${j.slice(0, 90)}»`);
+      // у Иосифа эпоха жизни может быть иной («Израиль в Египте») — тогда эпоха рождения второй частью строки
+      if (!/Эпоха Патриархи \(|родился в эпоху «Патриархи»/.test(j)) return fail(`§ 13 Иосифа: «${j.slice(0, 160)}»`);
       return pass(`Авраам: «${ep}»; Иосиф — «Патриархи»`);
     },
   },
@@ -59,8 +62,8 @@ export const chrono: Scenario[] = [
       const n = await rows.count();
       const text: Record<string, string> = {};
       for (let k = 0; k < n; k++) {
-        const t = flat(await rows.nth(k).innerText());
-        text[t.split(/\t|\n/)[0].trim()] = t;
+        const raw = await rows.nth(k).innerText();
+        text[flat(raw.split(/\t|\n/)[0]).trim()] = flat(raw);
       }
       const egypt = text['Израиль в Египте'] ?? '';
       const pat = text['Патриархи'] ?? '';
@@ -83,13 +86,16 @@ export const chrono: Scenario[] = [
   },
   {
     n: 223,
-    title: 'CARD-61: напряжение «Вооз — Руфь» в § 13 обеих карточек',
+    // этап 13 (решение 101; X1 В2, Д4): напряжение «Вооз — Руфь» было ложным — следствием ребра матери без пропуска
+    // поколений (Мф 1:5: «Салмон родил Вооза от Рахавы»). С motherGap его нет, а у Вооза остаётся «Наассон — … — Давид»
+    title: 'CARD-61 → этап 13: ложного напряжения «Вооз — Руфь» нет в § 13 обеих карточек; у Вооза — «Наассон — … — Давид»',
     run: async (p) => {
       for (const id of ['vooz', 'ruf']) {
         await go(p, `#/${id}~mmt-long`);
         const t = flat(await secText(p, 13));
-        // у Вооза два напряжения («Наассон — … — Давид» и «Вооз — Руфь») — одной записью «Хронологические напряжения.» (K3)
-        if (!/Хронологическ(?:ое напряжение|ие напряжения)\.[^]*Вооз — Руфь: по принятым годам жена моложе мужа/.test(t)) return fail(`§ 13 «${id}»: «${t.slice(0, 160)}»`);
+        if (!t) return fail(`§ 13 «${id}» пуст`);
+        if (/Вооз — Руфь: по принятым годам/.test(t)) return fail(`§ 13 «${id}»: «${t.slice(0, 160)}»`);
+        if (id === 'vooz' && !/Наассон — Салмон — Вооз — Овид — Иессей — Давид:/.test(t)) return fail(`§ 13 Вооза без «Наассон — … — Давид»: «${t.slice(0, 160)}»`);
       }
       return pass();
     },
@@ -100,7 +106,8 @@ export const chrono: Scenario[] = [
     run: async (p) => {
       await go(p, '#/iokhaveda~mmt-long');
       const j = flat(await secText(p, 13));
-      if (!/Левий — Иохаведа — Моисей: .*Вероятно, родословие называет не все поколения\./s.test(j)) return fail(`§ 13 Иохаведы: «${j.slice(0, 160)}»`);
+      // этап 13: одна запись трудности 430 лет, строка «Левий — Иохаведа — Моисей» — по границам текста
+      if (!/Левий — Иохаведа — Моисей[.;:].*Вероятно, родословия называют не все поколения/s.test(j)) return fail(`§ 13 Иохаведы: «${j.slice(0, 160)}»`);
       await go(p, '#/david');
       const d = flat(await secText(p, 13));
       if (!/Наассон — Салмон — Вооз — Овид — Иессей — Давид:/.test(d)) return fail(`§ 13 Давида: «${d.slice(0, 200)}»`);
@@ -109,12 +116,14 @@ export const chrono: Scenario[] = [
   },
   {
     n: 225,
-    title: 'MAP-51: при кратком пребывании (215 лет) напряжения «Левий — Иохаведа — Моисей» нет',
+    // этап 13 (решение 101; X1 А2): при 215 годах напряжения 430 лет нет, но честно остаётся его остаток по границам текста
+    title: 'MAP-51 → этап 13: при кратком пребывании (215 лет) напряжения 430 лет у Иохаведы нет — только остаток «на два поколения не меньше 168 лет»',
     run: async (p) => {
       await go(p, '#/iokhaveda~mmt-short');
       const j = flat(await secText(p, 13));
-      if (/Левий — Иохаведа — Моисей/.test(j)) return fail(`§ 13 Иохаведы: «${j.slice(0, 160)}»`);
-      return /Эпоха/.test(j) ? pass() : fail('§ 13 Иохаведы пуст');
+      if (/430 лет/.test(j)) return fail(`§ 13 Иохаведы: «${j.slice(0, 160)}»`);
+      if (!/Левий — Иохаведа — Моисей[.;:].*на два поколения не меньше \d+ лет/s.test(j)) return fail(`§ 13 Иохаведы без остатка: «${j.slice(0, 160)}»`);
+      return pass();
     },
   },
   {
@@ -125,13 +134,17 @@ export const chrono: Scenario[] = [
       // окна Павла (звезда Павла — ок. 1 г.). Круг 3 (MAP-69, решение 38): знак Павла — у первого засвидетельствованного
       // года, обращения (34 г., Деян 9:3–6). Поэтому проверка — по звёздам в одном окне истинного масштаба (скрытый список
       // неба, data-x): Лука не левее начала служения Павла и не меньше чем на 30 лет правее Рождества (звезда Иисуса Христа)
-      await go(p, '#/~y25~w120~l0~s0~h0.2');
+      // окно — с Рождества до конца служения Павла (70 лет): список неба держит 40 самых заметных лиц окна (SkyA11y,
+      // LIST_MAX), и в окне 120 лет Лука (величина 3) в него уже не входит, хотя на небе виден
+      await go(p, '#/~y28~w70~l0~s0~h0.2');
       const [xj, xp, xl] = await Promise.all(['iisus', 'pavel', 'luka'].map((id) => starX(p, id)));
       if (xj === null || xp === null || xl === null) return fail(`нет звёзд в списке неба: Иисус ${xj}, Павел ${xp}, Лука ${xl}`);
-      const perYear = (await p.locator('.sky > canvas').boundingBox())!.width / 120;
+      const perYear = (await p.locator('.sky > canvas').boundingBox())!.width / 70;
+      // этап 13 (сверка D9): у Луки теперь годы служения по тексту (Кол 4:14; Флм 1:24; 2 Тим 4:11, 57–60 гг.) — «время не
+      // установлено» больше не он; смысл проверки прежний: паспорт не ставит его к Рождеству
       await go(p, '#/luka');
       const yl = await passport(p, 'Годы');
-      if (!/время не установлено/.test(yl)) return fail(`паспорт Луки: «${yl}»`);
+      if (/(^|\D)5 г\. до Р\. Х\.|(^|\D)[1-9] г\. до Р\. Х\. —/.test(yl) || !yl) return fail(`паспорт Луки: «${yl}»`);
       const why = `Лука правее Рождества на ${Math.round((xl - xj) / perYear)} лет, правее знака Павла на ${Math.round((xl - xp) / perYear)}`;
       return xl - xj > 30 * perYear && xl >= xp ? pass(why) : fail(why);
     },
@@ -142,9 +155,11 @@ export const chrono: Scenario[] = [
     run: async (p) => {
       await go(p, '#/valaam~mmt-long');
       const t = flat(await secText(p, 8));
-      const m = /возможный промежуток — (\d+)–(\d+) гг\. до Р\. Х\./.exec(t);
+      // словарь дат этапа 13: «между 1475 и 1420 гг. до Р. Х.»; прежняя запись — «возможный промежуток — 1475–1420»
+      const m = /(?:возможный промежуток — (\d+)–|между (\d+) и )(\d+) гг\. до Р\. Х\./.exec(t);
       if (!m) return fail(`§ 8: «${t.slice(0, 120)}»`);
-      return Number(m[2]) >= 1406 ? pass(`${m[1]}–${m[2]}`) : fail(`${m[1]}–${m[2]}: позже смерти`);
+      const [lo, hi] = [m[1] ?? m[2], m[3]];
+      return Number(hi) >= 1406 ? pass(`${lo}–${hi}`) : fail(`${lo}–${hi}: позже смерти`);
     },
   },
   {
@@ -153,9 +168,9 @@ export const chrono: Scenario[] = [
     run: async (p) => {
       await go(p, '#/ludim~mmt-long');
       const mast = flat(await p.locator('.folio .mast').innerText());
-      if (/ок\. \d{3,4}|\d{3,4} г\. до Р\. Х\./.test(mast)) return fail(`шапка: «${mast.replace(/\s+/g, ' ').slice(0, 160)}»`);
+      if (/ок\. \d{3,4}|\d{3,4} г\. до Р\. Х\.|род\. между \d{3,4} и/.test(mast)) return fail(`шапка: «${mast.replace(/\s+/g, ' ').slice(0, 160)}»`);
       const s8 = flat(await secText(p, 8));
-      if (/возможный промежуток|ок\. \d{3,4} г\./.test(s8)) return fail(`§ 8: «${s8.slice(0, 120)}»`);
+      if (/возможный промежуток|ок\. \d{3,4} г\.|между \d{3,4} и/.test(s8)) return fail(`§ 8: «${s8.slice(0, 120)}»`);
       return pass();
     },
   },

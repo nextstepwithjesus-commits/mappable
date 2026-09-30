@@ -15,7 +15,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { contrast, linearRgb } from '../src/ui/contrast.ts';
 import { over } from '../src/render/dim.ts';
 import {
-  BRANCH_COLORS, BRANCH_CONTRAST, BRANCH_DASH, BRANCH_DE, BRANCH_FADE, BRANCH_FAR_CONTRAST, BRANCH_SHADES, branchColor, branchDash, branchFade, branchFloor,
+  BRANCH_COLORS, BRANCH_CONTRAST, BRANCH_DE, BRANCH_FADE, BRANCH_FAR_CONTRAST, BRANCH_SHADES, branchColor, branchFade, branchFloor,
   branchTickAt, drawBranchSample, GlowBatch, glowLayers, type MapTheme,
 } from '../src/render/branches.ts';
 
@@ -85,15 +85,16 @@ describe('палитра ветвей (решение 69)', () => {
         }
       }
     });
-  it('больше шести ветвей: по кругу, соседние всегда разного цвета; второй круг — оттенок первого и штрих', () => {
+  it('больше шести ветвей: по кругу, соседние всегда разного цвета; второй круг — оттенок первого, без штриха (решение 94)', () => {
     for (const t of ['night', 'day'] as const) {
       for (let i = 0; i < 30; i++) expect(branchColor(i, t), `${i}`).not.toBe(branchColor(i + 1, t));
       for (let i = 0; i < 6; i++) {
         expect(branchColor(i, t)).toBe(BRANCH_COLORS[t][i]);
         expect(branchColor(i + 6, t)).toBe(BRANCH_SHADES[t][i]);
         expect(branchColor(i + 6, t)).not.toBe(branchColor(i, t));
-        expect(branchDash(i)).toEqual([]);
-        expect(branchDash(i + 6)).toEqual(BRANCH_DASH);
+        // этап 13, решение 94: штрих — только иное происхождение; второй круг отличается оттенком (он другой, чем у
+        // первого круга, и не совпадает ни с одним цветом первого круга)
+        expect(BRANCH_COLORS[t]).not.toContain(branchColor(i + 6, t));
       }
       // у Давида восемь союзов: восемь разных цветов
       expect(new Set(Array.from({ length: 8 }, (_, i) => branchColor(i, t))).size).toBe(8);
@@ -289,12 +290,36 @@ describe('на небе (trails.ts): следы и отводы потомков
     for (const c of BRANCH_COLORS.night) expect(styles.some((x) => x.startsWith(rgba(c)))).toBe(false);
     expect(rec.calls.some((c) => c[0] === '=globalCompositeOperation')).toBe(false);
   });
-  it('след второго круга (седьмая ветвь и дальше) — штрих на сплошной части', () => {
-    const r = recording();
-    trails.drawLifeTrail(r.ctx, { x0: 10, x1: 200, y: 50.5, cls: 'exact', known: true, solidTo: 200, color: '#fff', width: 1.5, dash: BRANCH_DASH });
-    expect(r.calls.filter((c) => ['setLineDash', 'moveTo', 'lineTo', 'stroke'].includes(c[0]))).toEqual([
-      ['setLineDash', BRANCH_DASH], ['moveTo', 10, 50.5], ['lineTo', 200, 50.5], ['stroke'], ['setLineDash', []],
-    ]);
+  it('след второго круга (седьмая ветвь и дальше) — сплошной, как у первого: штрих значит только иное происхождение (решение 94)', () => {
+    // у Давида восемь союзов с детьми: ветви 7 и 8 — оттенки первого круга; прежде их след был штрихом [6, 2.5]
+    const { s, rec } = makeSky();
+    s.cam.zoomAt(720, 400, 40);
+    s.cam.x0 = s.nodeX('david')! - 300 / s.cam.kx;
+    s.cam.laneTop = s.node('david')!.lane + 380 / s.cam.ky;
+    const h = marks.familyHighlight('david');
+    const vis: number[] = [];
+    for (let i = 0; i < s.nodes.length; i++) vis.push(i);
+    const p = {
+      s: { layers: LAYERS, highlight: h.hl, depth: h.depth, selected: 'david', intro: 1, tensionPersons: new Set() },
+      vis, emph: marks.emphasis(h.hl, h.depth), zoomScale: 1, placer: {},
+    } as unknown as Parameters<typeof trails.drawTrails>[1];
+    const bf = marks.branchFrame(s, p);
+    const second = [...(bf.map?.desc.entries() ?? [])].filter(([, b]) => b.branch >= 6).map(([id]) => id);
+    expect(second.length).toBeGreaterThan(0);
+    rec.calls.length = 0;
+    trails.drawTrails(s, p);
+    // цвет второго круга на небе есть, а штриха у следов нет
+    const styles = rec.calls.filter((c) => c[0] === '=strokeStyle').map((c) => String(c[1]));
+    expect(styles.some((x) => x.startsWith(rgba(BRANCH_SHADES.night[bf.map!.desc.get(second[0])!.branch - 6])))).toBe(true);
+    // штрих при цвете ветви (эпохальный след «время не установлено» редкими точками — знак времени, не ветви)
+    const branchy = [...BRANCH_COLORS.night, ...BRANCH_SHADES.night].map(rgba);
+    let stroke = '';
+    const dashed: string[] = [];
+    for (const c of rec.calls) {
+      if (c[0] === '=strokeStyle') stroke = String(c[1]);
+      else if (c[0] === 'setLineDash' && (c[1] as number[]).length > 0 && branchy.some((b) => stroke.startsWith(b))) dashed.push(stroke);
+    }
+    expect(dashed).toEqual([]);
   });
   it('метка ветви — под началом подписи первого ребёнка, в её прямоугольнике', () => {
     const box = { x: 100, y: 40, w: 60, h: 15 };

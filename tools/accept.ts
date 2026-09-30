@@ -74,6 +74,11 @@ import { grammar11 } from './accept/grammar11.ts';
 import { polish11 } from './accept/polish11.ts';
 import { cards12 } from './accept/cards12.ts';
 import { sky12 } from './accept/sky12.ts';
+import { ui13 } from './accept/ui13.ts';
+import { time13 } from './accept/time13.ts';
+import { card13 } from './accept/card13.ts';
+import { sky13 } from './accept/sky13.ts';
+import { chrono13 } from './accept/chrono13.ts';
 
 const BASE: Scenario[] = [
   {
@@ -102,7 +107,15 @@ const BASE: Scenario[] = [
       await p.keyboard.press('Escape');
       await p.waitForTimeout(1200);
       if ((await p.evaluate(() => document.documentElement.dataset.show)) !== 'l') return fail('показ не «линии Мессии»');
-      return pass('проверяется по снимку');
+      // этап 13, решение 133: не «по снимку», а по геометрии кадра — весь показ вписан, обе ленты без обрывов между
+      // видимыми лицами линии (canvas[data-ribbon-gaps], src/render/sky.ts), на небе Адам, Давид и Иисус Христос
+      await p.locator('.skyctl button', { hasText: 'Вписать' }).first().click();
+      await p.waitForTimeout(1500);
+      const gaps = await p.evaluate(() => document.querySelector<HTMLCanvasElement>('.sky canvas')?.dataset.ribbonGaps ?? null);
+      if (gaps === null) return fail('нет метки data-ribbon-gaps у неба');
+      if (gaps) return fail(`обрывы лент: ${gaps}`);
+      const missing = await p.evaluate(() => ['adam', 'david', 'iisus'].filter((id) => !document.getElementById(`sky-star-${id}`)));
+      return missing.length ? fail(`нет на небе: ${missing.join(', ')}`) : pass('ленты без обрывов; Адам, Давид, Иисус Христос на небе');
     },
   },
   {
@@ -151,18 +164,31 @@ const BASE: Scenario[] = [
   },
   {
     n: 6,
-    title: 'Истинный масштаб времени: выбранное лицо остаётся на месте',
+    title: 'Масштаб «Равномерный по годам» (решение 124; было «истинный»): выбранное лицо остаётся на месте',
     run: async (p) => {
       await find(p, 'Авраам');
+      await p.waitForTimeout(800);
+      // этап 13, решение 133: не «по снимку», а по геометрии — масштаб в адресе сменился, звезда Авраама осталась на месте
+      const sel = () => p.evaluate(() => document.querySelector<HTMLElement>('.sky')?.dataset.sel ?? '');
+      const scale = () => /~s(\d)/.exec(decodeURIComponent(location.hash))?.[1] ?? '';
+      const s0 = await p.evaluate(scale);
+      const a = (await sel()).split(' ').map(Number);
       await p.click('.skyctl .view-toggle');
-      await p.click('.viewpop >> text=истинный');
+      await p.waitForTimeout(300);
+      await p.locator('.viewpop').getByText(/^(истинный|Равномерный по годам)$/).first().click();
+      await p.waitForFunction((was) => (/~s(\d)/.exec(decodeURIComponent(location.hash))?.[1] ?? '') !== was, s0, { timeout: 3000 }).catch(() => undefined);
       await p.waitForTimeout(1200);
-      return pass('проверяется по снимку');
+      const s1 = await p.evaluate(scale);
+      const b = (await sel()).split(' ').map(Number);
+      if (s0 === s1) return fail(`масштаб в адресе не сменился (~s${s0})`);
+      if (a.length < 2 || b.length < 2 || !a.every(Number.isFinite) || !b.every(Number.isFinite)) return fail('нет выбранной звезды (.sky[data-sel])');
+      const d = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      return d <= 24 ? pass(`звезда сдвинулась на ${d.toFixed(1)} px`) : fail(`звезда Авраама ушла на ${d.toFixed(0)} px: ${a.map(Math.round)} → ${b.map(Math.round)}`);
     },
   },
   {
     n: 7,
-    title: 'Полоса времени до 2040: «сегодня», «завершение канона», «Время Церкви»',
+    title: 'Полоса времени до 2040: «сегодня», «завершение канона», «После завершения канона»',
     run: async (p) => {
       // ТЗ § 11.2, сценарий 7: протянуть рамку к 2040 г. (щелчок после канона ведёт к концу данных — MOB-06)
       await p.goto(p.url().replace(/#.*$/, '#/david'));
@@ -561,13 +587,14 @@ const BASE: Scenario[] = [
       if (!(await sheet.count())) return fail('«Вид» не открыл лист');
       const text = await sheet.innerText();
       // флажка «только линии Мессии» в листе «Вид» больше нет (решение 81): линии Мессии — показ в листе «Показ», ниже
-      for (const w of ['ярусы эпох', 'по насыщенности', 'истинный', 'Хронология']) if (!text.includes(w)) return fail(`в листе нет «${w}»`);
+      // решение 124: «Сжатый по плотности лиц» и «Равномерный по годам» вместо «по насыщенности» и «истинный»
+      for (const w of ['ярусы эпох', 'Сжатый по плотности лиц', 'Равномерный по годам', 'Хронология']) if (!text.includes(w)) return fail(`в листе нет «${w}»`);
       await sheet.getByText('ярусы эпох', { exact: true }).tap();
       await p.waitForTimeout(300);
       if (!(await p.locator('.sky[data-tiers="on"]').count())) return fail('флажок в листе не включил ярусы');
-      await sheet.getByText('истинный', { exact: true }).tap();
+      await sheet.getByText('Равномерный по годам', { exact: true }).tap();
       await p.waitForTimeout(200);
-      if ((await sheet.locator('.seg button[aria-pressed="true"]').first().innerText()).trim() !== 'истинный') return fail('масштаб не переключился');
+      if ((await sheet.locator('.seg button[aria-pressed="true"]').first().innerText()).trim() !== 'Равномерный по годам') return fail('масштаб не переключился');
       // лист у нижнего края, небо над ним видно
       const sb = (await sheet.boundingBox())!;
       if (sb.y < sky.y + 120) return fail(`лист закрывает небо: верх листа ${sb.y.toFixed(0)}`);
@@ -625,7 +652,7 @@ const BASE: Scenario[] = [
   },
 ];
 /** Сценарии этапа 3 — в своих файлах, чтобы параллельные агенты не правили один список (номера 30–49, 50–69, 70–89). */
-const SCENARIOS: Scenario[] = [...BASE, ...layout, ...nav, ...sky, ...map, ...card, ...panels, ...phone, ...a11y, ...work, ...chrono, ...cardshell, ...cardtext, ...skyin, ...skydraw, ...strip, ...phone7, ...chrono3, ...sky3, ...family3, ...nav3, ...input3, ...find3, ...strip3, ...card3, ...cardtext3, ...phone3, ...reveal4, ...union4, ...start4, ...colors4, ...tree5, ...view5, ...dots6, ...peek6, ...polish6, ...bugs7, ...show11, ...unify11, ...grammar11, ...polish11, ...cards12, ...sky12];
+const SCENARIOS: Scenario[] = [...BASE, ...layout, ...nav, ...sky, ...map, ...card, ...panels, ...phone, ...a11y, ...work, ...chrono, ...cardshell, ...cardtext, ...skyin, ...skydraw, ...strip, ...phone7, ...chrono3, ...sky3, ...family3, ...nav3, ...input3, ...find3, ...strip3, ...card3, ...cardtext3, ...phone3, ...reveal4, ...union4, ...start4, ...colors4, ...tree5, ...view5, ...dots6, ...peek6, ...polish6, ...bugs7, ...show11, ...unify11, ...grammar11, ...polish11, ...cards12, ...sky12, ...ui13, ...card13, ...time13, ...sky13, ...chrono13];
 
 /** Имена лиц обеих линий Мессии — из собранного индекса. */
 function lineNames(): Set<string> {

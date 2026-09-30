@@ -153,7 +153,21 @@ function findForm(text: string, low: string, form: string, from: number): { a: n
  * перенёс бы строку. after(id) — что поставить сразу за ссылкой (уточнение одноимённого в § 14).
  * Если ссылок нет, возвращает ту же строку (typoTree и проверки видят тот же текст).
  */
-export function linkNames(text: string, cands: LinkCand[], after?: (id: string) => ComponentChildren): ComponentChildren {
+/**
+ * Тёзки карточки (решение 106): у имени-ссылки лица из twins — его уточнение «(…)», если текст не называет его сам
+ * («Мааха, дочь Авессалома») и имя не стоит в скобках («Мемфивосфей (Мериббаал)»).
+ */
+export type Twins = { has: (id: string) => boolean; dis: (id: string) => string };
+
+/** Текст после имени сам называет уточнение: первая часть уточнения (до запятой) — в ближайших словах. */
+function saysNext(next: string, dis: string): boolean {
+  const stems = (t: string) => lower(t).split(/[^а-я]+/).filter((w) => w.length >= 4).map((w) => w.slice(0, 4));
+  const want = stems(dis.split(/,\s*/)[0]);
+  const have = new Set(stems(next.slice(0, 60)));
+  return want.length > 0 && want.filter((w) => have.has(w)).length / want.length >= 0.5;
+}
+
+export function linkNames(text: string, cands: LinkCand[], after?: (id: string) => ComponentChildren, twins?: Twins): ComponentChildren {
   if (!text || !cands.length) return text;
   const low = lower(text);
   const spans: { a: number; b: number; id: string }[] = [];
@@ -175,12 +189,14 @@ export function linkNames(text: string, cands: LinkCand[], after?: (id: string) 
     const lead = /[«„(\[]+$/.exec(text.slice(at, s.a))?.[0] ?? '';
     if (s.a - lead.length > at) out.push(text.slice(at, s.a - lead.length));
     const link = (
-      <P id={s.id} key={`${s.id}@${s.a}`}>
+      <P id={s.id} key={`${s.id}@${s.a}`} inText>
         {text.slice(s.a, s.b)}
       </P>
     );
     const punct = /^[,.;:!?…»“)\]]+/.exec(text.slice(s.b))?.[0] ?? '';
-    const extra = after?.(s.id);
+    const next = text.slice(s.b);
+    const twin = twins?.has(s.id) && !/^\s*\)/.test(next) && !lead.includes('(') && !saysNext(next, twins.dis(s.id)) ? <span class="muted">({twins.dis(s.id)})</span> : null;
+    const extra = after?.(s.id) ?? twin;
     if (extra) {
       out.push(lead ? <span class="nobr" key={`${s.id}^${s.a}`}>{lead}{link}</span> : link, ' ', <span class="nobr" key={`${s.id}~${s.a}`}>{extra}{punct}</span>);
     } else if (punct || lead) {

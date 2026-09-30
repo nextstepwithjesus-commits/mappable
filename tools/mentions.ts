@@ -27,6 +27,12 @@
  *     действует (правила 1–3 — действуют: Вирсавия, жена Урии, — не город Вирсавия).
  * Составитель управляет счётом через ссылки карточки: стих, на который карточка ссылается (кроме § 24), правила 2–4
  * не исключают.
+ *  5. Одно имя — одно лицо (этап 13, решение 108; X6 п. 3, 4.5). Если стих засчитан нескольким лицам с одним именем,
+ *     а имя стоит в нём k раз, стих остаётся k лицам, у которых больше оснований: полное имя из нескольких слов
+ *     («Мария Клеопова», Ин 19:25); родня, названная рядом с именем («Иеровоама, сына Наватова», 4 Цар 14:24;
+ *     «мать Иакова и Иосии», Мф 27:56); самая узкая ссылка карточки на этот стих («Иоанн» Деян 4:6; Лк 3:28–30).
+ *  6. Дефис. Словоформа через дефис («Хирам-Авия», «Авел-Беф-Мааха») не засчитывается имени, которое пишется без
+ *     дефиса (2 Пар 2:13 — мастер Хирам-Авий, не царь Хирам).
  */
 import { parseRef, verseId } from '../src/engine/books.ts';
 import { nameMatcher, norm, stripBrackets, namesIn } from '../src/engine/text.ts';
@@ -76,6 +82,8 @@ export interface Mentions {
   n: number;
   /** 'chapters' — счёт только в главах карточки (правило 1); 'bible' — по правилам 2–4. */
   scope: 'bible' | 'chapters';
+  /** Народ или род (kind people, clan): подпись § 23 — «имя народа или земли названо в N стихах» (решение 108). */
+  people?: boolean;
 }
 
 export interface MentionCount {
@@ -87,6 +95,10 @@ export interface MentionCount {
   verses: Map<string, Set<string>>;
   /** Сколько лиц считаются только в главах карточки (правило 1). */
   restricted: number;
+  /** Правило 5: стихи, где одно имя было засчитано нескольким лицам, — кому стих оставлен и у кого снят. */
+  resolved: { verse: string; kept: string[]; dropped: string[] }[];
+  /** Правило 5: стихи, где у тёзок оснований поровну и стих остался больше чем k лицам (П19: должно быть пусто). */
+  unresolved: { verse: string; ids: string[] }[];
 }
 
 export function countMentions(persons: Person[], groups: Group[], bible: BibleText): MentionCount {
@@ -125,7 +137,9 @@ export function countMentions(persons: Person[], groups: Group[], bible: BibleTe
     const w0 = firstWord(name);
     if (formsCache.has(w0)) return formsCache.get(w0)!;
     const re = nameMatcher(name);
-    const out = (byPrefix.get(w0.slice(0, 2)) ?? []).filter((w) => re.test(` ${w} `));
+    // правило 6: имя без дефиса не засчитывается словоформе через дефис («Хирам» — не «Хирам-Авия»)
+    const hyphen = w0.includes('-');
+    const out = (byPrefix.get(w0.slice(0, 2)) ?? []).filter((w) => re.test(` ${w} `) && (hyphen || !/[-—–]/.test(w)));
     formsCache.set(w0, out);
     return out;
   };
@@ -298,10 +312,24 @@ export function countMentions(persons: Person[], groups: Group[], bible: BibleTe
         out.add(v);
       }
     }
-    // иные имена, но не титулы и прозвания: «Дева» (Ис 7:14) и «Благодатная» — не имя Марии
+    // иные имена, но не титулы, прозвания и описательные «Сын Иессеев» (их первое слово — не имя: «Сына» в Мф 1:21 — не
+    // Давид). В главе, где лицо названо и основным именем, иная форма засчитывается, только если в этой книге она записана
+    // за ним (§ 4, её стихи): «Азария» — царь в 4 Цар 14–15, а в 2 Пар 26:17, 20, где царь — «Озия», это первосвященник
+    // (этап 13, D4); «Савл» в Деян 22:7 — Павел. Главы, где лицо названо только иной формой (Аврам — Быт 12–16), — как прежде
+    const mainChapters = new Set<string>();
+    for (const v of out) mainChapters.add(v.slice(0, v.indexOf(':')));
     for (const a of p.card?.altNames ?? []) {
-      if (a.kind === 'title' || a.kind === 'epithet') continue;
-      for (const w of formsOf(a.name)) for (const v of wordVerses.get(w)!) if (inChapters(v) && !notThis.has(v)) out.add(v);
+      if (a.kind === 'title' || a.kind === 'epithet' || a.kind === 'patronymic') continue;
+      const own = new Set<string>();
+      for (const r of a.refs ?? []) {
+        const pr = parseRef(r, bible.chapterLength);
+        if (pr) own.add(pr.book);
+      }
+      const inAlt = (v: string) => {
+        const ch = v.slice(0, v.indexOf(':'));
+        return inChapters(v) && (!own.size || own.has(v.slice(0, v.indexOf(' '))) || !mainChapters.has(ch));
+      };
+      for (const w of formsOf(a.name)) for (const v of wordVerses.get(w)!) if (inAlt(v) && !notThis.has(v)) out.add(v);
     }
     const counts: Record<string, number> = {};
     for (const v of out) {
@@ -310,7 +338,80 @@ export function countMentions(persons: Person[], groups: Group[], bible: BibleTe
     }
     books.set(p.id, counts);
     verses.set(p.id, out);
-    if (out.size) mentions.set(p.id, { n: out.size, scope: restrict ? 'chapters' : 'bible' });
+    if (out.size) mentions.set(p.id, { n: out.size, scope: restrict ? 'chapters' : 'bible', ...((p.kind ?? 'person') === 'people' || p.kind === 'clan' ? { people: true } : {}) });
   }
-  return { books, mentions, verses, restricted };
+
+  // --- правило 5: одно имя в стихе — одному лицу
+  const resolved: MentionCount['resolved'] = [];
+  const unresolved: MentionCount['unresolved'] = [];
+  const claim = new Map<string, string[]>(); // стих → лица
+  for (const [pid, vs] of verses) for (const v of vs) claim.set(v, [...(claim.get(v) ?? []), pid]);
+  /** Самая узкая ссылка лица (без § 24), покрывающая стих: число стихов в ней; нет такой — Infinity. */
+  const narrowest = (p: Person, v: string): number => {
+    let best = Infinity;
+    for (const r of refsOf(p, { notes: false })) {
+      const pr = parseRef(r, bible.chapterLength);
+      if (pr && !pr.chapterOnly && pr.verses.some((x) => verseId(x) === v)) best = Math.min(best, pr.verses.length);
+    }
+    return best;
+  };
+  const tokens = (v: string) => [...stripBrackets(bible.verses.get(v) ?? '').matchAll(WORD)].map((m) => norm(m[0]));
+  const touched = new Set<string>();
+  for (const [v, ids] of claim) {
+    if (ids.length < 2) continue;
+    // группы тёзок в стихе: лица, чьи словоформы имени совпадают
+    const words = tokens(v);
+    const formSet = (p: Person) => new Set(formsOf(p.name));
+    const groupsBy = new Map<string, string[]>();
+    for (const id of ids) {
+      const p = byId.get(id)!;
+      const fs = formSet(p);
+      const hits = words.map((w, i) => (fs.has(w) ? i : -1)).filter((i) => i >= 0);
+      if (!hits.length) continue; // засчитан по иной форме имени — правило его не касается
+      const key = hits.join(',');
+      groupsBy.set(key, [...(groupsBy.get(key) ?? []), id]);
+    }
+    for (const [key, group] of groupsBy) {
+      const at = key.split(',').map(Number);
+      if (group.length <= at.length) continue;
+      const text = norm(stripBrackets(bible.verses.get(v) ?? ''));
+      const score = (id: string): [number, number, number] => {
+        const p = byId.get(id)!;
+        // полное имя из нескольких слов, в том числе прозвание («Мария Магдалина», «Мария Клеопова»)
+        const full = [p.name, ...(p.card?.altNames ?? []).map((a) => a.name)].some((n) => /\s/.test(n) && text.includes(norm(n).replace(/,/g, ''))) ? 0 : 1;
+        const kin = relativeNames(p).flatMap((n) => formsOf(n));
+        const kinSet = new Set(kin);
+        const kinAt = words.map((w, i) => (kinSet.has(w) ? i : -1)).filter((i) => i >= 0);
+        const dist = kinAt.length ? Math.min(...at.flatMap((a) => kinAt.map((k) => Math.abs(k - a)))) : Infinity;
+        return [full, dist, narrowest(p, v)];
+      };
+      const scored = group.map((id) => ({ id, s: score(id) })).sort((a, b) => a.s[0] - b.s[0] || a.s[1] - b.s[1] || a.s[2] - b.s[2]);
+      const k = at.length;
+      // ничья на границе — оснований выбрать нет, стих остаётся всем равным
+      const edge = scored[k - 1].s;
+      const tie = scored.slice(k).filter((x) => x.s.every((y, i) => y === edge[i]));
+      const keep = [...scored.slice(0, k), ...tie].map((x) => x.id);
+      if (tie.length) unresolved.push({ verse: v, ids: keep });
+      const drop = group.filter((id) => !keep.includes(id));
+      if (!drop.length) continue;
+      for (const id of drop) {
+        verses.get(id)!.delete(v);
+        touched.add(id);
+      }
+      resolved.push({ verse: v, kept: keep, dropped: drop });
+    }
+  }
+  for (const id of touched) {
+    const out = verses.get(id)!;
+    const counts: Record<string, number> = {};
+    for (const v of out) {
+      const book = v.slice(0, v.indexOf(' '));
+      counts[book] = (counts[book] ?? 0) + 1;
+    }
+    books.set(id, counts);
+    const had = mentions.get(id);
+    if (out.size && had) mentions.set(id, { ...had, n: out.size });
+    else if (!out.size) mentions.delete(id);
+  }
+  return { books, mentions, verses, restricted, resolved, unresolved };
 }

@@ -198,7 +198,27 @@ describe('формула на краях столбца (ТЗ § 3.5, § 3.6; MA
     const isaak = tiers.columnFormula('isaak', m);
     expect(isaak.birth).toBe('Исаак родился после рождения Измаила и до рождения Иакова');
     expect(isaak.death).toBe('умер после смерти Измаила, при жизни Иакова');
-    expect(tiers.columnFormula('mariya', m).birth).toMatch(/^Мария родилась /);
+    // этап 13, решение 100: «Мария родилась до рождения Иисуса Христа» — это сказано самим родством; другой опоры нет —
+    // формулы нет. У Озии опора — правитель: «в царствование Иоаса, царя Иудеи»
+    expect(tiers.columnFormula('mariya', m)).toEqual({ birth: null, death: null });
+    expect(tiers.columnFormula('oziya', m).birth).toBe('Озия родился в царствование Иоаса, царя Иудеи');
+  });
+  it('пустых формул нет: одни родители и дети опорой не бывают (решение 100); тёзки из родни — тоже', () => {
+    const m = atlas.models[0];
+    let n = 0;
+    for (const p of atlas.persons) {
+      const f = tiers.columnFormula(p.id, m);
+      const text = `${f.birth ?? ''} ${f.death ?? ''}`;
+      if (!f.birth && !f.death) continue;
+      n++;
+      if (/царствование/.test(text) && !f.anchors?.length) continue;
+      const near = new Set([...(atlas.graph.parentsOf.get(p.id) ?? []).map((e) => e.parent), ...(atlas.graph.childrenOf.get(p.id) ?? []).map((e) => e.child)]);
+      expect(f.anchors?.length, `${p.id}: «${text.trim()}»`).toBeGreaterThan(0);
+      expect(f.anchors!.some((a) => !near.has(a)) || /царствование/.test(text), `${p.id}: «${text.trim()}»`).toBe(true);
+    }
+    expect(n).toBeGreaterThan(90);
+    // Иоаким: брат Седекия и сын Седекия — тёзки; имя без уточнения опорой не берётся
+    expect(`${tiers.columnFormula('ioakim-tsar', m).birth}`).not.toMatch(/Седекии/);
   });
   it('у народа и у лица «время не установлено» формулы нет; строки не содержат несклонённых пустот', () => {
     const m = atlas.models[0];
@@ -210,13 +230,27 @@ describe('формула на краях столбца (ТЗ § 3.5, § 3.6; MA
       for (const s of [f.birth, f.death]) if (s) expect(s, p.id).not.toMatch(/null|undefined|\s{2}|рождения\s*$|смерти\s*$/);
     }
   });
-  it('пары из хронологического напряжения в формулу не идут', () => {
+  // этап 13, решение 101: одна запись на трудность — «430 лет в Египте» собирает 24 лица цепочки. В формулу не идут
+  // связи, о которых говорит напряжение: пара из двух лиц и звенья поколений цепочки (родители и дети из записи);
+  // брат из той же записи — опора (Аарон и Моисей — Исх 7:7)
+  it('связи из хронологического напряжения в формулу не идут: пары и звенья поколений', () => {
     const m = atlas.models[0];
-    const t = m.tensions.find((x) => x.persons.includes('moisey'))!;
+    const near = new Set([...(atlas.graph.parentsOf.get('moisey') ?? []).map((e) => e.parent), ...(atlas.graph.childrenOf.get('moisey') ?? []).map((e) => e.child)]);
     const f = tiers.columnFormula('moisey', m);
-    for (const id of t.persons.filter((x) => x !== 'moisey')) {
-      const name = atlas.byId.get(id)!.name;
-      expect(`${f.birth} ${f.death}`, name).not.toContain(name.slice(0, -1));
-    }
+    let checked = 0;
+    for (const t of m.tensions.filter((x) => x.persons.includes('moisey')))
+      for (const id of t.persons.filter((x) => x !== 'moisey' && (t.persons.length <= 2 || near.has(x)))) {
+        const name = atlas.byId.get(id)!.name;
+        expect(`${f.birth} ${f.death}`, name).not.toContain(name.slice(0, -1));
+        checked++;
+      }
+    expect(checked).toBeGreaterThan(0);
+    for (const t of m.tensions.filter((x) => x.persons.length <= 2))
+      for (const id of t.persons) {
+        const g = tiers.columnFormula(id, m);
+        const other = t.persons.find((x) => x !== id)!;
+        const name = atlas.byId.get(other)!.name;
+        expect(`${g.birth} ${g.death}`, `${id} — ${other}`).not.toContain(name.slice(0, -1));
+      }
   });
 });

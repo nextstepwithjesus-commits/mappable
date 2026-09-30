@@ -23,7 +23,7 @@ import { enterSky, plateFocus, pressPlate, rememberFocus, starName, starPoints }
 import { focusCardTitle } from '../focus.ts';
 import { screenOf } from './view.ts';
 import { expanded, hasHidden, opened, unionById } from '../reveal.ts';
-import { skyMode } from '../work.ts';
+import { show, skyMode } from '../work.ts';
 import { dotsOn, openDot } from './DotCard.tsx';
 import { openSheetAt } from '../sheet.ts';
 
@@ -149,6 +149,8 @@ export function SkyA11y() {
   const exp = expanded.value;
   // небо «набор»: пункты открывают карточку у точки (решение 76)
   const dots = dotsOn.value;
+  // «дети показаны / скрыты» — только в показе «набор» (X4 Д13)
+  const inSet = show.value.kind === 'set';
 
   const canvas = () => list.current?.parentElement?.querySelector<HTMLCanvasElement>(':scope > canvas') ?? null;
   /** Читатель работает с небом: фокус на холсте, в списке лиц неба или нигде. */
@@ -301,7 +303,7 @@ export function SkyA11y() {
                 type="button"
                 id={plateDomId(q.uid)}
                 tabIndex={-1}
-                aria-label={plateItemText(u, open)}
+                aria-label={plateItemText(u, open, inSet)}
                 aria-expanded={dots ? undefined : open}
                 aria-haspopup={dots ? 'dialog' : undefined}
                 onClick={() => chooseUnion(q.uid, q.from)}
@@ -314,7 +316,7 @@ export function SkyA11y() {
                   if (plateFocus.peek() === q.uid) plateFocus.value = null;
                 }}
               >
-                {plateItemText(u, open)}
+                {plateItemText(u, open, inSet)}
               </button>
             </li>
           );

@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
-import { effect } from '@preact/signals';
+import { effect, signal } from '@preact/signals';
 import { FRAME_H, SCALE_SETTLE_MS, Sky, readPalette, type Emphasis, type Rect, type SkyState } from '../render/sky.ts';
 import { byId, groupById, lines, modelInfo } from '../data/atlas.ts';
 import { highlightFor } from '../render/marks.ts';
@@ -14,8 +14,14 @@ import { typo } from './text/typo.ts';
 import { aliveAt, lifeText, meridianText, placeText } from './sky/text.ts';
 import {
   allInView, anchorNow, fitReveal, flightTarget, flyToIds, flyToPerson, holdAnchor, inView, introOpen, keepInView, lanes, reduced, screenOf, setReserve, showAround,
-  startLanes, stopFlight, unionFlip, updateZoomFloor, viewAround, linesAgain, type Anchor,
+  startLanes, stopFlight, unionFlip, updateZoomFloor, viewAround, linesAgain, fitLines, type Anchor,
 } from './sky/view.ts';
+
+/**
+ * Точка сравнения линий с фокусом клавиатуры (решение 116): кнопки списка «Точки сравнения Мф 1 и Лк 3» скрыты от глаз,
+ * их видимый фокус — на небе: подпись у точки ленты в рамке и кольцо у точки (src/render/ribbons.ts, drawLineNotes).
+ */
+export const noteFocus = signal<string | null>(null);
 import { expanded, hasHidden, opened, plates, selectedUnion, unionById, type Plate } from './reveal.ts';
 import { linkClick, linkHover, plateFocus, plateHover, plateNews } from './sky/starnav.ts';
 import { linkAnchor, previewLinks, selectedLink } from './linkstate.ts';
@@ -253,6 +259,7 @@ export function SkyView() {
       const mid = modelId.value;
       const state: SkyFrameState = {
         model: model.value, lambda: shownLambda, selected: selected.value, second: second.value, hovered: hovered.value, focus: focused.value,
+        noteFocus: onlyLines.value ? noteFocus.value : null,
         highlight, layers: layers.value, onlyLines: onlyLines.value, meridian: meridian.value,
         tensionPersons, flow: flowing ? flowT : 0, reduced: reduced(), intro, lineFlip: lineFlip.value, pins: new Set(pins.value),
         reserve: reserveRef.current, meridianLabel, kinSteps: pair ? kinSteps.current : (preview?.steps ?? null), depth: hlf?.depth ?? null,
@@ -623,6 +630,7 @@ export function SkyView() {
       void meridian.value;
       void hovered.value;
       void focused.value;
+      void noteFocus.value;
       void first.value;
       void lineFlip.value;
       void pins.value;
@@ -960,6 +968,14 @@ export function SkyView() {
                   onClick={() => {
                     synopsisAt.value = cp.at;
                     panel.value = 'synopsis';
+                  }}
+                  onFocus={() => {
+                    noteFocus.value = cp.at;
+                    // точка за краем окна — коридор линий вокруг неё (±10 поколений), чтобы фокус был виден
+                    if (!inView(cp.at)) fitLines(!reduced(), cp.at);
+                  }}
+                  onBlur={() => {
+                    if (noteFocus.peek() === cp.at) noteFocus.value = null;
                   }}
                 >
                   {typo(cp.full)}

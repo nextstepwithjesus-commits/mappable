@@ -125,7 +125,7 @@ export interface LifeTrail {
   brk?: number;
   color: string;
   width: number;
-  /** штрих сплошной части: у ветвей второго круга выбранного лица (решение 69; branches.ts, branchDash) */
+  /** штрих сплошной части (у следов ветвей его больше нет — решение 94; поле — для образцов) */
   dash?: readonly number[];
   /**
    * Разрывы следа (этап 11, Г7): пары «x, полуширина» — где след пересекает чужая связь (ствол, черта брака, лента),
@@ -487,7 +487,7 @@ export function drawTrails(v: SkyContext, p: Pass) {
       // потомок выбранного — цветом своей ветви, бледнее с каждым поколением (решение 69)
       t.color = alpha(bp.color, branchAlpha(bp, p.emph(n.person), intro));
       t.width = ky < 5 ? 1.2 : q.magnitude <= 1 ? 1.8 : 1.5;
-      t.dash = bp.dash;
+      t.dash = undefined;
       t.cuts = p.cuts?.get(i);
       bf.shown.add(n.person);
     } else {
@@ -1407,7 +1407,11 @@ export function linkShown(q: Pick<LinkPath, 'when' | 'union' | 'ks'>, d: Pick<Li
 }
 
 /** Начертание связи (Г10): сплошная — Писание; штрих [5, 3] — иное происхождение; точки [1, 3] — толкование. */
-export const LINK_DASH: Record<PathStyle, number[]> = { solid: [], dash: [5, 3], dots: [1, 3] };
+export const LINK_DASH: Record<PathStyle, number[]> = { solid: [], dash: [5, 3], dots: [1, 3], faint: [] };
+/** Радиус кольца-призрака на конце обрывка наружу показа (К8), px. */
+export const STUB_GHOST_R = 3.5;
+/** Бледная сплошная (родовая черта народа, Г12; решение 94): доля непрозрачности обычной линии. */
+export const FAINT_A = 0.5;
 /** Черта брака «‖»: две черты 1 px, между осями 3,2 px (K1 § 2.2). */
 export const BAR_GAP = 3.2;
 /** Тон связи — --ink-2 с этой непрозрачностью (тон следа — 0,55): стволы и зубцы читаются чуть яснее следов. */
@@ -1509,7 +1513,7 @@ export function drawLinks(v: SkyContext, p: Pass, d: LinkDraw) {
     if (a0 <= 0.01) continue;
     const pts = q.pts;
     const e = hot ? 1 : pathEmph(p, q) * p.s.intro;
-    ctx.globalAlpha = g0 * a0;
+    ctx.globalAlpha = g0 * a0 * (q.style === 'faint' && !hot ? FAINT_A : 1);
     ctx.strokeStyle = hot ? pal.ink : (pathBranch(bf, p, q) ?? alpha(pal.ink2, Math.min(1, LINK_TONE * e)));
     ctx.lineWidth = hot ? 2 : 1;
     ctx.setLineDash(LINK_DASH[q.style]);
@@ -1589,8 +1593,11 @@ function targetsText(v: SkyContext, ids: readonly string[]): string {
   return ids.length > 3 ? `${head.join('; ')}; ещё ${ids.length - 3}` : head.join('; ');
 }
 
-/** Поставить подпись связи в свободное место у точки и нарисовать её (курсив малого кегля карты, тоном --ink-2). */
-function putLinkText(v: SkyContext, p: Pass, t: LinkText, a: number): Rect | null {
+/**
+ * Поставить подпись связи в свободное место у точки и нарисовать её (курсив малого кегля карты, тоном --ink-2); hold —
+ * погашенная выделением: только держит своё место (labels.ts, claim).
+ */
+function putLinkText(v: SkyContext, p: Pass, t: LinkText, a: number, hold = false): Rect | null {
   const { ctx } = v;
   const size = mapSize(T_MAP_S, v.coarse);
   ctx.font = mapFont(T_MAP_S, { italic: true, coarse: v.coarse });
@@ -1616,8 +1623,8 @@ function putLinkText(v: SkyContext, p: Pass, t: LinkText, a: number): Rect | nul
     const b = textBox(c.tx, c.ty, w, size);
     return { x: b.x, y: b.y - 5, w: b.w, h: b.h + 5 };
   });
-  const b = claim(v, p, boxes, 'plate', t.text, { id: t.id });
-  if (!b) return null;
+  const b = claim(v, p, boxes, 'plate', t.text, { id: t.id, hold });
+  if (!b || hold) return null;
   const c = cands[boxes.indexOf(b)];
   const g0 = ctx.globalAlpha;
   ctx.globalAlpha = g0 * a;
@@ -1630,13 +1637,15 @@ function putLinkText(v: SkyContext, p: Pass, t: LinkText, a: number): Rect | nul
  * Подписи связей (после подписей звёзд, если есть место): цели обрывков длинных связей и родовых черт — «Симеон, 23 Б;
  * Левий, 23 В», «Иаков, 22 П» (Г11, Г12; ТЗ § 3.1); обрывок дочери, стоящей у мужа, — «дочь Ревекка — жена Исаака»
  * (§ 4.2 п. 1); имя матери у ромба на следе отца, если союзов с детьми два и больше (Г8), и «Сиф и его жена» у ромба
- * союза с неназванной женой (решение 75). Для проверок пишет canvas[data-link-texts]: «текст@x,y» через «|».
+ * союза с неназванной женой (решение 75). Имя второго супруга у ромба бездетного брака (этап 13, К6) — вторым проходом,
+ * late, после подписей звёзд: оно не отнимает места у имён звёзд. Для проверок пишет canvas[data-link-texts]: «текст@x,y»
+ * через «|» (оба прохода вместе).
  */
-export function drawLinkLabels(v: SkyContext, p: Pass, d: LinkDraw) {
+export function drawLinkLabels(v: SkyContext, p: Pass, d: LinkDraw, late = false) {
   const { cam } = v;
   const out: string[] = [];
   const onScreen = (x: number, y: number) => x > v.letterW && x < cam.w && y > v.openTop && y < cam.vp.b;
-  for (const st of d.frame.stubs) {
+  for (const st of late ? [] : d.frame.stubs) {
     const lit = st.targets.every((id) => p.emph(id) > 0.5);
     if (st.kind !== 'kid' && !linkShown({ when: 'short', union: st.union, ks: st.ks }, d)) continue;
     const a = lit ? 1 : d.alpha;
@@ -1652,33 +1661,40 @@ export function drawLinkLabels(v: SkyContext, p: Pass, d: LinkDraw) {
       text = st.side === 'parent' ? kidAway(kid, '') : par ? kidOf(kid, par) : '';
     } else text = st.side === 'parent' ? targetsText(v, st.targets) : parent ? nameAt(v, parent) : '';
     if (!text) continue;
-    // подпись обрывка — в полную силу или никак: бледная подпись не держала бы контраста 4,5 : 1
+    // подпись обрывка — в полную силу или никак: бледная подпись не держала бы контраста 4,5 : 1; погашенная держит место
     const e = Math.min(1, Math.max(...st.targets.map((id) => p.emph(id))));
-    if (e < 0.99 && !lit) continue;
-    const b = putLinkText(v, p, { text, x, y, dir: st.dir, right: st.side === 'parent' || st.dir !== 0, id: st.union ?? st.ks }, 1);
+    const hold = e < 0.99 && !lit;
+    const b = putLinkText(v, p, { text, x, y, dir: st.dir, right: st.side === 'parent' || st.dir !== 0, id: st.union ?? st.ks }, 1, hold);
     if (b) out.push(`${text}@${Math.round(x)},${Math.round(y)}`);
   }
   for (const n of d.frame.nodes) {
-    if (n.mother === null || n.kind !== 'union') continue;
+    if (n.mother === null || n.kind !== 'union' || !!n.late !== late) continue;
     const x = n.x + d.dx;
     const y = n.y + d.dy;
     if (!onScreen(x, y)) continue;
     // имя матери — только у союза в полную силу: погашенный выделением союз (и «вероятно» живые на меридиане) подписи не
-    // получает — бледная подпись не держала бы контраста 4,5 : 1
+    // получает — бледная подпись не держала бы контраста 4,5 : 1; её место остаётся за ней (соседи не переезжают)
     const a = Math.min(1, p.emph(n.owner), p.emph(n.from), n.mother ? p.emph(n.mother) : 1);
-    if (a < 0.99 || !(d.alpha > 0.5 || d.expanded.has(n.union))) continue;
+    if (!(d.alpha > 0.5 || d.expanded.has(n.union))) continue;
     const u = ALL_UNIONS.byId.get(n.union);
     const text = n.mother ? nameOf(n.mother) : u ? unionName(u) : '';
     if (!text) continue;
-    const b = putLinkText(v, p, { text, x: x + 5, y, dir: 0, right: true, id: n.union, side2: true }, 1);
+    const b = putLinkText(v, p, { text, x: x + 5, y, dir: 0, right: true, id: n.union, side2: true }, 1, a < 0.99);
     if (b) out.push(`${text}@${Math.round(x)},${Math.round(y)}`);
+  }
+  // первый проход запоминает свои подписи, второй пишет все вместе
+  if (!late) {
+    firstTexts = out;
+    return;
   }
   const ds = (v.ctx.canvas as { dataset?: DOMStringMap } | undefined)?.dataset;
   if (ds) {
-    const s = out.join('|');
+    const s = [...firstTexts, ...out].join('|');
     if (ds.linkTexts !== s) ds.linkTexts = s;
   }
+  firstTexts = [];
 }
+let firstTexts: string[] = [];
 
 /** Обрывок наружу показа (§ 7), px холста: щелчок по нему открывает карточку того лица (src/ui/sky/input.ts). */
 export interface PlanStubHit extends Rect {
@@ -1688,9 +1704,9 @@ export interface PlanStubHit extends Rect {
 }
 
 /**
- * Обрывки наружу показа (§ 7; план неба Q2, SkyPlan.stubs): пунктир от звезды лица показа к краю его строки в сторону
- * лица вне показа и подпись в две строки — «Ревекка, дочь Вафуила» / «жена Исаака; в «Патриархах»». Возвращает поля
- * попадания (подпись и пунктир; не меньше 24 × 24, на касании 44 × 44).
+ * Обрывки наружу показа (§ 7; план неба Q2, SkyPlan.stubs; К8 этапа 13): сплошная черта от звезды лица показа в сторону
+ * лица вне показа, на конце — пунктирное кольцо-призрак, и подпись в две строки — «Ревекка, дочь Вафуила» / «жена Исаака;
+ * в «Патриархах»». Возвращает поля попадания (подпись и черта; не меньше 24 × 24, на касании 44 × 44).
  */
 export function drawPlanStubs(v: SkyContext, p: Pass, stubs: readonly { from: string; to: string; key: LinkKey; words: string; where: string }[]): PlanStubHit[] {
   const { ctx, cam, pal } = v;
@@ -1720,14 +1736,21 @@ export function drawPlanStubs(v: SkyContext, p: Pass, stubs: readonly { from: st
     const r = starRadius(q.magnitude, p.zoomScale) + (q.sex === 'f' ? 2.2 : 0);
     const sx = Math.round(x + r + 6 + k * 10) + 0.5;
     const ey = y + dir * 18;
+    // обрывок наружу показа (К8, решение 93): короткая сплошная черта связи и на конце — пунктирное кольцо-призрак
+    // («лицо нарисовано не здесь»); точки на связях значат только толкование (решение 94)
     ctx.save();
-    ctx.strokeStyle = alpha(pal.ink2, Math.min(1, LINK_TONE * p.emph(st.from)));
+    const tone = alpha(pal.ink2, Math.min(1, LINK_TONE * p.emph(st.from)));
+    ctx.strokeStyle = tone;
     ctx.lineWidth = 1;
-    ctx.setLineDash(LINK_DASH.dots);
+    ctx.setLineDash([]);
     ctx.beginPath();
     ctx.moveTo(x + r + 2, y);
     ctx.lineTo(sx, y);
-    ctx.lineTo(sx, ey);
+    ctx.lineTo(sx, ey - dir * STUB_GHOST_R);
+    ctx.stroke();
+    ctx.setLineDash([1.5, 1.5]);
+    ctx.beginPath();
+    ctx.arc(sx, ey, STUB_GHOST_R, 0, Math.PI * 2);
     ctx.stroke();
     ctx.restore();
     ctx.font = mapFont(T_MAP_S, { italic: true, coarse: v.coarse });

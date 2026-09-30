@@ -1,0 +1,286 @@
+/*
+ * Время на небе и панели (этап 13, T5; решения 99, 102, 111): список моделей хронологии, «Вид» → «Шкала лет» и «Слои»,
+ * панель «О хронологии». Цвета — только токены (tokens.css), обе темы.
+ */
+
+/* ---------- список моделей (решение 102; макет X2 m3-model) ---------- */
+.menu.model [role^='menuitem'] .note {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.menu.model .mi-row {
+  display: block;
+  color: var(--ink);
+}
+/* слово строки («Меняет», «Напряжения», «Годы») — подписью шрифта органов, как подписи полей паспорта */
+.menu.model .mi-row .k {
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  color: var(--ink-2);
+}
+.menu.model [role='menu'] {
+  overflow-y: auto;
+}
+/* у широкого неба список длинный (у каждой модели — что она меняет): он встаёт поверх листа «Вид» от его нижнего края
+   вверх, во всю ширину листа, и не выше неба; над листом ему не хватало места */
+.skyctl .menu.model [role='menu'] {
+  top: auto;
+  bottom: -1px;
+  max-height: calc(100vh - 230px);
+}
+/* открытый список — над строкой показа и строками состояния у верхней кромки неба (.skytop, z-index 6) */
+.skyctl:has(.menu.model [role='menu']) {
+  z-index: 7;
+}
+.menu.model .menu-foot {
+  margin: 0;
+  padding: 8px 14px 9px;
+  border-top: 1px solid var(--rule);
+  color: var(--ink-2);
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+  white-space: normal;
+}
+.skyctl .menu.model [role='menu'] {
+  max-width: none;
+}
+
+/* ---------- «Вид» на широком небе: строки «Шкала лет» и «Слои» ---------- */
+.skyctl .viewpop {
+  grid-template-areas:
+    'scale-lbl scale'
+    'era-lbl era'
+    'axes-lbl axes'
+    'chrono-lbl chrono'
+    'layers-lbl layers'
+    'start-lbl start'
+    'full full';
+}
+.viewpop .era-lbl {
+  grid-area: era-lbl;
+}
+.viewpop .seg.era {
+  grid-area: era;
+  justify-self: start;
+}
+.viewpop .layers-lbl {
+  grid-area: layers-lbl;
+  align-self: start;
+  padding-top: 5px;
+}
+.viewpop .layer-list {
+  grid-area: layers;
+}
+.layer-list {
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  gap: 0 16px;
+}
+.viewctl .layer-list {
+  margin: 0 0 4px;
+}
+@media (max-width: 360px) {
+  .layer-list {
+    grid-template-columns: max-content;
+  }
+}
+
+/* ---------- панель «О хронологии» (решение 102; макет X2 m4-about) ---------- */
+/* «Как читать годы»: запись — числами без переноса внутри года, пояснение — вторым цветом */
+.sheet table.yread th[scope='row'] {
+  width: 42%;
+  padding-right: 14px;
+}
+.sheet table.yread td {
+  color: var(--ink-2);
+}
+.sheet table.yread .mark,
+.sheet .ychain + p .mark {
+  position: static;
+}
+
+/* «Откуда годы»: цепочка от опоры 967 г. до Р. Х. назад к Адаму — узлы (событие и его годы) и связи (числа текста со
+   стихом) по вертикали; то, что зависит от модели, обведено пунктиром. Не нумерованный список — это цепочка, а не шаги */
+.sheet ol.ychain {
+  list-style: none;
+  margin: 8px 0 12px;
+  padding: 0;
+}
+.sheet ol.ychain > li {
+  margin: 0;
+}
+.ychain .node {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 10px;
+  padding: 5px 10px 6px;
+  border: 1px solid var(--rule-strong);
+  background: var(--sheet-2);
+}
+.ychain .node.dep {
+  border-style: dashed;
+  border-color: var(--ink-3);
+}
+.ychain .node .yr {
+  font-variant-numeric: lining-nums tabular-nums;
+  font-weight: 600;
+  color: var(--ink);
+}
+.ychain .node .nm {
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+  color: var(--ink-2);
+}
+.ychain .link {
+  margin-left: 18px;
+  padding: 6px 0 7px 14px;
+  border-left: 1px solid var(--rule-strong);
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+  color: var(--ink-2);
+}
+.ychain .link.dep {
+  border-left-style: dashed;
+  border-left-color: var(--ink-3);
+}
+
+/* таблица моделей: отличия от основной модели — цветом текста и полужирным, прочее — вторым цветом; выбранная модель —
+   тоном листа */
+.ytable-wrap {
+  overflow-x: auto;
+}
+.sheet table.ytable td {
+  color: var(--ink-2);
+  font-variant-numeric: lining-nums tabular-nums;
+  white-space: nowrap;
+}
+.sheet table.ytable td.diff {
+  color: var(--ink);
+  font-weight: 600;
+}
+.sheet table.ytable .on {
+  background: var(--sheet-2);
+}
+.sheet table.ytable thead th {
+  white-space: normal;
+  padding-left: 4px;
+}
+.sheet table.ytable td {
+  padding-left: 4px;
+}
+
+/* ссылка «О хронологии» в тексте оснований и карточки: как ссылка на лицо — подчёркнута, цветом текста */
+button.chrono-link {
+  display: inline;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--ink-3);
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+button.chrono-link:hover {
+  text-decoration-color: currentColor;
+}
+.sheet .seg.era {
+  margin: 4px 0 12px;
+}
+/* обёртка списка моделей (openModelChoice находит в ней кнопку) — без своего места в раскладке */
+.model-wrap {
+  display: contents;
+}
+
+/* ---------- «О карте»: краткий первый слой и оглавление (решение 132) ---------- */
+.sheet .about-brief {
+  font-size: var(--t-lead);
+  line-height: var(--t-lead-lh);
+}
+.sheet .about-toc ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 16px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+}
+.sheet .about-toc li {
+  margin: 0;
+}
+.sheet .about-toc a {
+  /* цель касания — не меньше 24 px (WCAG 2.5.8) */
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--ink-3);
+  text-underline-offset: 2px;
+}
+/* «Текст Писания»: строка и подробности по раскрытию; контрольная сумма — полностью, мелко (справочный слой) */
+.sheet details.bible-text {
+  margin: 0 0 12px;
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+  color: var(--ink-2);
+}
+.sheet details.bible-text summary {
+  cursor: pointer;
+  color: var(--ink);
+}
+.sheet details.bible-text p {
+  margin: 4px 0 0;
+}
+.sheet details.bible-text .sha .k {
+  display: block;
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+}
+.sheet details.bible-text .sha .v {
+  word-break: break-all;
+  display: block;
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  font-variant-numeric: lining-nums tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- телефон: лист карточки во весь экран — полоса времени строкой возврата (решение 123) ---------- */
+@media (max-width: 720px) {
+  :root.strip-thin {
+    --strip-h: 32px;
+  }
+}
+.strip.thin canvas {
+  visibility: hidden;
+}
+.strip .strip-back {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0 16px;
+  border: 0;
+  background: var(--sky);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+  text-align: left;
+  cursor: pointer;
+}
+.strip .strip-back:focus-visible {
+  outline-offset: -3px;
+}

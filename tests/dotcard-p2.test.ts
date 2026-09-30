@@ -140,18 +140,19 @@ describe('команды карточки у точки (решение 76)', ()
     expandUnion('u:adam+eva', 'adam');
     expect(personDotCmds('kain').parents).toBeNull();
   });
-  it('карточка союза: «Раскрыть детей (3)» → «Свернуть детей»; союз родителей у ребёнка — «Раскрыть родителей»; брак без детей — «Раскрыть союз»', () => {
+  // этап 13 (решение 109): на небе — «показать» и «скрыть», «свернуть» — только карточке и листу
+  it('карточка союза: «Показать детей союза (3)» → «Скрыть детей союза»; союз родителей у ребёнка — «Показать родителей»; брак без детей — «Показать союз»', () => {
     const ae = U('u:adam+eva');
-    expect(unionDotCmd(ae, 'adam')?.text).toBe('Раскрыть детей (3)');
+    expect(unionDotCmd(ae, 'adam')?.text).toBe('Показать детей союза (3)');
     expandUnion(ae.id, 'adam');
-    expect(unionDotCmd(ae, 'adam')).toMatchObject({ text: 'Свернуть детей', open: true });
+    expect(unionDotCmd(ae, 'adam')).toMatchObject({ text: 'Скрыть детей союза', open: true });
     startWith('jesus');
     const jm = U('u:iosif-muzh-marii+mariya');
-    expect(unionDotCmd(jm, 'iisus')?.text).toBe('Раскрыть родителей');
+    expect(unionDotCmd(jm, 'iisus')?.text).toBe('Показать родителей');
     expandUnion(jm.id, 'iisus');
     expect(unionDotCmd(jm, 'iisus')?.text).toBe('Скрыть родителей');
     setWork(['david']);
-    expect(unionDotCmd(U('u:david+melkhola'), 'david')?.text).toBe('Раскрыть союз');
+    expect(unionDotCmd(U('u:david+melkhola'), 'david')?.text).toBe('Показать союз');
   });
   it('«Подробнее»: карточка союза справа — от супруга на небе (у точки ребёнка — от родителя, который на небе)', () => {
     const ae = U('u:adam+eva');

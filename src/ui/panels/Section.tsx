@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
 import { byId, lines, persons, loadCard } from '../../data/atlas.ts';
 import { batch } from '@preact/signals';
@@ -14,25 +14,53 @@ import { Sheet, useRemembered } from './Sheet.tsx';
 import { Menu, Segmented } from '../controls.tsx';
 
 // ---------- сквозной раздел (G4; ТЗ § 3.3; CARD-42) ----------
+
+/** Царствования лица по порядку. */
+const byReign = (a: { reign: { start: number }[] }, b: { reign: { start: number }[] }) => a.reign[0].start - b.reign[0].start;
+/**
+ * Три группы царей (этап 13, решение 110; X4 Д3) — одни имена в ярусах эпох, созвездиях и здесь; каждый царь — ровно
+ * в одной группе:
+ *  — «Цари единого царства» — Саул, Иевосфей, Давид, Соломон: царствование над (всем) Израилем или в Хевроне до
+ *    разделения, не в созвездии северных царей;
+ *  — «Цари Иудеи» — от Ровоама: царствование над Иудеей;
+ *  — «Цари Израиля (северного)» — созвездие северных царей.
+ * Авимелех, сын Гедеона («Сихем и Израиль», Суд 9:22), — не царь этих царств и ни в одну группу не входит.
+ */
+export const KING_SETS = {
+  united: 'Цари единого царства',
+  judah: 'Цари Иудеи',
+  israel: 'Цари Израиля (северного)',
+} as const;
+const united = (over: string) => /^(весь )?Израиль$/.test(over) || /^Иудея \(в Хевроне\)$/.test(over);
 export const SETS: { id: string; name: string; kings?: boolean; ids: () => string[] }[] = [
   {
-    id: 'judah',
-    name: 'Цари Иудеи',
+    id: 'united',
+    name: KING_SETS.united,
     kings: true,
     ids: () =>
       persons
-        .filter((p) => p.reign.some((r) => /Иуд/.test(r.over)))
-        .sort((a, b) => a.reign[0].start - b.reign[0].start)
+        .filter((p) => p.group !== 'israel-kings' && p.reign.some((r) => united(r.over)))
+        .sort(byReign)
+        .map((p) => p.id),
+  },
+  {
+    id: 'judah',
+    name: KING_SETS.judah,
+    kings: true,
+    ids: () =>
+      persons
+        .filter((p) => p.reign.some((r) => r.over === 'Иудея'))
+        .sort(byReign)
         .map((p) => p.id),
   },
   {
     id: 'israel',
-    name: 'Цари Израиля',
+    name: KING_SETS.israel,
     kings: true,
     ids: () =>
       persons
         .filter((p) => p.reign.some((r) => /Израил/.test(r.over)) && p.group === 'israel-kings')
-        .sort((a, b) => a.reign[0].start - b.reign[0].start)
+        .sort(byReign)
         .map((p) => p.id),
   },
   { id: 'joseph', name: 'Линия Иосифа', ids: () => lines.joseph.persons.map((p) => p.id) },
@@ -60,12 +88,12 @@ export function openSection(n: number) {
  * Строка царствования (CARD-51) — те же слова, что § 16 карточки (shared.tsx): «семь лет и шесть месяцев над Иудеей,
  * в Хевроне (2 Цар 5:4–5); 1010–1003 гг. до Р. Х. — расч.». Срок и царство — по тексту, годы — по реконструкции.
  */
-function ReignLine({ r, owner }: { r: ReignLike; owner: string }) {
-  const refs = r.refs ?? [];
+function ReignLine({ r, owner, brief = false }: { r: ReignLike; owner: string; brief?: boolean }) {
+  const refs = brief ? [] : (r.refs ?? []);
   return (
     <span class="line">
       {typo(reignOverLine(r))}
-      <Refs refs={refs} owner={owner} tail=";" />
+      {refs.length ? <Refs refs={refs} owner={owner} tail=";" /> : null}
       {refs.length ? ' ' : '; '}
       {typo(reignSpan(r))}
       <Mark calc />
@@ -77,25 +105,65 @@ function ReignLine({ r, owner }: { r: ReignLike; owner: string }) {
  * Возраст при смерти для § 20: названный в данных (с его уровнем достоверности) или сложенный из возраста при воцарении
  * и лет царствования (вывод из стихов этих чисел). Иначе — null: возраст не выдумывается.
  */
-export function deathAge(ch: Chrono | null): { age: number; cert: 'scripture' | 'inference'; refs: string[] } | null {
+export function deathAge(ch: Chrono | null): { age: number; cert: 'scripture' | 'inference'; refs: string[]; basis: string } | null {
   if (!ch) return null;
-  if (ch.died?.age) return { age: ch.died.age, cert: ch.died.cert === 'inference' ? 'inference' : 'scripture', refs: ch.died.refs ?? [] };
+  if (ch.died?.age)
+    return {
+      age: ch.died.age,
+      cert: ch.died.cert === 'inference' ? 'inference' : 'scripture',
+      refs: ch.died.refs ?? [],
+      basis: ch.died.cert === 'inference' ? 'возраст при смерти — вывод из стихов' : 'возраст при смерти назван в Писании',
+    };
   const rs = ch.reign ?? [];
   if (!rs.length || rs[0].ageAtStart === undefined || rs.some((r) => !r.years)) return null;
-  return { age: rs[0].ageAtStart + rs.reduce((s, r) => s + (r.years ?? 0), 0), cert: 'inference', refs: rs.flatMap((r) => r.refs) };
+  const years = rs.reduce((s, r) => s + (r.years ?? 0), 0);
+  return {
+    age: rs[0].ageAtStart + years,
+    cert: 'inference',
+    refs: rs.flatMap((r) => r.refs),
+    // основание сложения (решение 125): «при воцарении 25 лет, царствовал 29 лет»
+    basis: `при воцарении ${yearsWord(rs[0].ageAtStart)}, царствовал${rs.length > 1 ? ' всего' : ''} ${yearsWord(years)}`,
+  };
 }
 
-/** Таблица § 20 «Смерть и погребение» по группе (CARD-42): годы, возраст при смерти, место, погребение, стихи. */
+/**
+ * Пустая ячейка таблицы (этап 13, решение 112; X4 Д11) — три разных знака вместо одного прочерка: раздел составлен,
+ * а сведения нет — «не сообщается» (Писание молчит, решение 6); раздел не составлен — «не составлено» (решение 64);
+ * число не вычислено — «—». Пояснение — строкой под таблицей.
+ */
+function Empty({ why }: { why: 'silent' | 'draft' | 'none' }) {
+  if (why === 'silent') return <span class="none">не сообщается</span>;
+  if (why === 'draft') return <span class="none draft">не составлено</span>;
+  return (
+    <span class="none" title="не вычислено">
+      —
+    </span>
+  );
+}
+
+/** «5 стихов», «1 стих»: надпись раскрытия основания в строке таблицы. */
+const versesN = (n: number) => `${n} ${plural(n, 'стих', 'стиха', 'стихов')}`;
+
+/**
+ * Таблица § 20 «Смерть и погребение» по группе (CARD-42): годы, возраст при смерти, место, погребение, стихи.
+ * Два уровня чтения (этап 13, решение 125; UI-19): в строке — краткое сравнимое значение (срок и годы правления, возраст,
+ * место, погребение); основание — стихи царствования, как сложен возраст, стихи смерти и погребения — раскрывается
+ * в самой строке командой «N стихов» в столбце «Стихи».
+ */
 function DeathTable({ ids, cards, kings }: { ids: string[]; cards: Record<string, Loaded>; kings: boolean }) {
+  const [open, setOpen] = useState<ReadonlySet<string>>(() => new Set());
+  const toggle = (id: string) => setOpen((o) => (o.has(id) ? new Set([...o].filter((x) => x !== id)) : new Set([...o, id])));
   // «Место смерти» — из § 20 (death.place); если его нет ни у кого в группе, столбец не обещает сведений (CARD-51)
   const place = ids.some((id) => !!cards[id]?.card.death?.place);
   const cols = place ? 6 : 5;
+  // в группе есть царица (Гофолия) — столбец «Царь, царица»
+  const queen = kings && ids.some((id) => byId.get(id)?.sex === 'f');
   return (
     <div class="xwrap">
       <table class="xtable">
         <thead>
           <tr>
-            <th scope="col">{kings ? 'Царь' : 'Лицо'}</th>
+            <th scope="col">{kings ? (queen ? 'Царь, царица' : 'Царь') : 'Лицо'}</th>
             <th scope="col">{kings ? 'Годы правления' : 'Годы жизни'}</th>
             <th scope="col">Возраст при смерти</th>
             {place && <th scope="col">Место смерти</th>}
@@ -113,6 +181,8 @@ function DeathTable({ ids, cards, kings }: { ids: string[]; cards: Record<string
             // стихи смерти, погребения и чисел возраста (возраст при воцарении, годы царствования)
             const refs = [...new Set([...(death?.facts ?? []).flatMap((f) => f.refs ?? []), ...(death?.burial ?? []).flatMap((f) => f.refs ?? []), ...(age?.refs ?? [])])];
             const silent = p.silent.includes(20);
+            // § 20 составлен (есть запись о смерти) — чего в нём нет, о том Писание не сообщает; иначе — не составлено
+            const miss: 'silent' | 'draft' = death ? 'silent' : 'draft';
             const reigns = d?.chrono?.reign?.length ? d.chrono.reign : p.reign;
             const byReign = kings && reigns.length > 0;
             const row: ComponentChildren[] = [
@@ -138,7 +208,7 @@ function DeathTable({ ids, cards, kings }: { ids: string[]; cards: Record<string
                 <td key="y" data-label={kings ? 'Годы правления' : 'Годы жизни'}>
                   <div class="v">
                     {byReign ? (
-                      reigns.map((r, i) => <ReignLine key={i} r={r} owner={`${own}r${i}`} />)
+                      reigns.map((r, i) => <ReignLine key={i} r={r} owner={`${own}r${i}`} brief />)
                     ) : (
                       <span class="line">{typo(lifeText(id))}</span>
                     )}
@@ -152,13 +222,13 @@ function DeathTable({ ids, cards, kings }: { ids: string[]; cards: Record<string
                         <Mark cert={age.cert} />
                       </>
                     ) : (
-                      <span class="none">—</span>
+                      <Empty why="none" />
                     )}
                   </div>
                 </td>,
                 place && (
                   <td key="p" data-label="Место смерти">
-                    <div class="v">{death?.place ? typo(death.place) : <span class="none">—</span>}</div>
+                    <div class="v">{death?.place ? typo(death.place) : <Empty why={miss} />}</div>
                   </td>
                 ),
                 <td key="b" data-label="Погребение">
@@ -170,20 +240,61 @@ function DeathTable({ ids, cards, kings }: { ids: string[]; cards: Record<string
                         </span>
                       ))
                     ) : (
-                      <span class="none">—</span>
+                      <Empty why={miss} />
                     )}
                   </div>
                 </td>,
                 <td key="r" data-label="Стихи">
-                  <div class="v">{refs.length ? <Refs refs={refs} owner={own} /> : <span class="none">—</span>}</div>
+                  <div class="v">
+                    {refs.length ? (
+                      <button type="button" class="why xopen" aria-expanded={open.has(id)} aria-controls={`${own}-basis`} onClick={() => toggle(id)}>
+                        {versesN(refs.length)}
+                      </button>
+                    ) : (
+                      <Empty why="none" />
+                    )}
+                  </div>
                 </td>,
               );
             }
+            const shown = open.has(id) && !!d;
+            const deathRefs = [...new Set([...(death?.facts ?? []).flatMap((f) => f.refs ?? []), ...(death?.burial ?? []).flatMap((f) => f.refs ?? [])])];
             return [
-              <tr key={id}>{row}</tr>,
+              <tr key={id} class={shown ? 'open' : undefined}>
+                {row}
+              </tr>,
+              // основание строки (решение 125): стихи царствования, как сложен возраст, стихи смерти и погребения
+              shown ? (
+                <tr key={`${id}-b`} class="basis-row" id={`${own}-basis`}>
+                  <td colspan={cols}>
+                    {byReign &&
+                      reigns.map((r, i) => (
+                        <p key={i} class="xbasis">
+                          <span class="k">{i === 0 ? 'Царствование: ' : ''}</span>
+                          <ReignLine r={r} owner={`${own}r${i}`} />
+                        </p>
+                      ))}
+                    {age ? (
+                      <p class="xbasis">
+                        <span class="k">Возраст при смерти: </span>
+                        {typo(`${yearsWord(age.age)} — ${age.basis}`)}
+                        <Mark cert={age.cert} />
+                        <Refs refs={age.refs} owner={`${own}a`} />
+                      </p>
+                    ) : null}
+                    {deathRefs.length ? (
+                      <p class="xbasis">
+                        <span class="k">Смерть и погребение: </span>
+                        <Refs refs={deathRefs} owner={own} />
+                      </p>
+                    ) : null}
+                  </td>
+                </tr>
+              ) : null,
               <tr key={`${id}-v`} class="verse-row">
                 <td colspan={cols}>
-                  <VerseInsert owner={own} refs={refs} />
+                  <VerseInsert owner={own} refs={deathRefs} />
+                  <VerseInsert owner={`${own}a`} refs={age?.refs ?? []} />
                   {byReign && d ? reigns.map((r, i) => <VerseInsert key={i} owner={`${own}r${i}`} refs={(r as ReignLike).refs ?? []} />) : null}
                 </td>
               </tr>,
@@ -191,6 +302,9 @@ function DeathTable({ ids, cards, kings }: { ids: string[]; cards: Record<string
           })}
         </tbody>
       </table>
+      <p class="muted xlegend">
+        {typo('«не сообщается» — в Писании об этом не сказано; «не составлено» — раздел карточки ещё не составлен; «—» — не вычислено. «N стихов» раскрывает основание строки: стихи и как получен возраст.')}
+      </p>
     </div>
   );
 }
@@ -290,7 +404,7 @@ function SectionList({ ids, n, cards }: { ids: string[]; n: number; cards: Recor
           <P id={id} />
           {p.disambig ? <span class="muted">{typo(`, ${p.disambig}`)}</span> : null}
         </div>
-        <div class="xbody">{body}</div>
+        <BriefBody>{body}</BriefBody>
       </section>
     );
   });
@@ -313,6 +427,41 @@ function SectionList({ ids, n, cards }: { ids: string[]; n: number; cards: Recor
       {line('В Писании не сообщается', silent)}
       {line('Не относится: лица нет в родословиях Мессии', na)}
       {blank > 0 && <p class="muted">{typo(`Ещё у ${blank} ${plural(blank, 'лица', 'лиц', 'лиц')} раздел пока не составлен.`)}</p>}
+    </>
+  );
+}
+
+/**
+ * Раздел лица в сквозном разделе — два уровня чтения (решение 125; UI-19): сначала три строки, чтобы лица сравнивались
+ * рядом; «полностью» раскрывает раздел целиком в самой строке. Короткий раздел — сразу целиком, без команды.
+ */
+function BriefBody({ children }: { children: ComponentChildren }) {
+  const ref = useRef<HTMLDivElement>(null);
+  // высота краткого вида — до низа третьей строки-абзаца раздела (строки не режутся посередине); null — раздел короткий
+  const [cut, setCut] = useState<number | null>(null);
+  const [full, setFull] = useState(false);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el || full) return;
+    const top = el.getBoundingClientRect().top;
+    const lines = [...el.querySelectorAll<HTMLElement>('p, li')].filter((x) => !x.querySelector('p, li'));
+    const third = lines[2];
+    const h = third ? Math.ceil(third.getBoundingClientRect().bottom - top) : null;
+    const next = h !== null && el.scrollHeight > h + 4 ? h : null;
+    if (next !== cut) setCut(next);
+  });
+  const long = cut !== null;
+  return (
+    <>
+      {/* фокус внутри свёрнутого раздела раскрывает его: скрытых остановок Tab нет (решение 116) */}
+      <div class={full || !long ? 'xbody' : 'xbody brief'} ref={ref} style={!full && long ? { '--brief-h': `${cut}px` } : undefined} onFocusIn={() => long && !full && setFull(true)}>
+        {children}
+      </div>
+      {(long || full) && (
+        <button type="button" class="why xmore" aria-expanded={full} onClick={() => setFull(!full)}>
+          {full ? 'кратко' : 'полностью'}
+        </button>
+      )}
     </>
   );
 }

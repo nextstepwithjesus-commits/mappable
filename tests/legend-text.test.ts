@@ -35,7 +35,9 @@ describe('промежуток оценочного года рождения в
       const t = birthSpanText(id);
       if (!t) continue;
       const line = birthLine(c, birthRange(id, c, m.chrono));
-      const range = flat(line).split('возможный промежуток')[1];
+      // этап 13, решение 96: § 8 пишет промежуток словарём дат — «между 1805 и 1755 гг. до Р. Х.» (прежде «возможный
+      // промежуток — …»)
+      const range = flat(line).split(/возможный промежуток|между/)[1];
       expect(nums(t), id).toEqual(nums(range));
     }
   });

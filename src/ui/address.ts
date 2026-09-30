@@ -14,7 +14,9 @@
  *   v — показ неба (этап 11, решение 81; src/ui/work.ts, showKey): «vl» — линии Мессии, «vk» — ключевые лица, «vs» —
  *   набор, «vg.nahorites» — созвездия, «vr.iuda.d.0.f» — род лица; всё небо — без поля; x — связи наружу у созвездий
  *   (0 — без связей, 2 — с роднёй; обрывками — без поля); n — набор показа «набор», если в нём не больше 12 лиц: id через
- *   точку; c — выбранная связь (src/engine/linkkey.ts); u — карточка союза в листе.
+ *   точку; c — выбранная связь (src/engine/linkkey.ts); g — временные гости выбранной связи или лица (решение 93, К3;
+ *   src/ui/show.ts, showGuest): id через точку, пишется сразу за «c»; u — карточка союза в листе; j1 — Лк 3 понят как
+ *   второе родословие Иосифа (решение 130; src/state.ts, lineFlip; без поля — родословие Марии).
  *
  * Прежние адреса работают: «#/david» и «#/moisey?v=…» выбирают лицо, небо летит к нему; «~o1» открывает линии Мессии,
  * «~k1» и «~t1» — набор (древа больше нет, решение 77).
@@ -28,9 +30,9 @@
  */
 import { batch, effect } from '@preact/signals';
 import { byId, graph, lineMembership, models, modelInfo } from '../data/atlas.ts';
-import { linkKeyString, parseLinkKey, type LinkKey } from '../engine/linkkey.ts';
+import { linkKeyString, parseLinkKey, spanInner, type LinkKey } from '../engine/linkkey.ts';
 import {
-  selected, panel, first, second, lambda, modelId, epochMode, searchNotice, setPair, clearPair, PANELS, type Panel,
+  selected, panel, first, second, lambda, modelId, epochMode, lineFlip, searchNotice, setPair, clearPair, PANELS, type Panel,
 } from '../state.ts';
 import { damerau } from '../engine/search.ts';
 import { toAstro, toHist } from '../engine/years.ts';
@@ -44,6 +46,7 @@ import {
 import { selectFromHistory } from './stack.ts';
 import { restoreReveal, selectedUnion, selectUnion, unionById } from './reveal.ts';
 import { selectedLink } from './linkstate.ts';
+import { linkGuests, setGuestsFromAddress } from './show.ts';
 
 export interface View {
   /** год середины окна, исторический */
@@ -76,6 +79,10 @@ export interface Address {
   union?: string;
   /** выбранная связь (этап 11, решение 83; поле «c») */
   link?: LinkKey;
+  /** временные гости (решение 93, К3; поле «g»): лица вне показа, показанные до снятия выбора */
+  guests?: string[];
+  /** Лк 3 — второе родословие Иосифа (решение 130; поле «j1»); нет — родословие Марии */
+  luke?: boolean;
   /** прежние поля до этапа 11 — только разбор: «o1» (только линии Мессии), «k1» (набор), «t1» (древо) */
   only?: boolean;
   work?: boolean;
@@ -85,6 +92,8 @@ export interface Address {
 }
 
 const ID = /^[a-z0-9-]+$/;
+/** Временных гостей в адресе — не больше стольких. */
+const GUESTS_MAX = 8;
 const NUM = /^-?\d+(\.\d+)?$/;
 
 /**
@@ -146,6 +155,10 @@ export function parseAddress(hash: string, has: (id: string) => boolean): Addres
     } else if (k === 'c') {
       const key = parseLinkKey(val);
       if (key && linkExists(key, has)) a.link = key;
+    } else if (k === 'j') a.luke = val === '1';
+    else if (k === 'g') {
+      const ids = [...new Set(val.split('.'))].filter((x) => ID.test(x) && has(x)).slice(0, GUESTS_MAX);
+      if (ids.length) a.guests = ids;
     }
   }
   if (v.year !== undefined && v.width !== undefined && v.lane !== undefined && v.year !== 0) a.view = v as View;
@@ -158,7 +171,7 @@ export function parseAddress(hash: string, has: (id: string) => boolean): Addres
 }
 
 /**
- * Есть ли связь в данных: союз и его ребёнок или супруг, шаг линии Мессии, родство словами Писания. has — есть ли лицо
+ * Есть ли связь в данных: союз и его ребёнок или супруг, шаг линии Мессии, цепочка ленты, родство словами Писания. has — есть ли лицо
  * (адрес разбирается и без данных атласа в тестах, но союзы и линии берутся из атласа).
  */
 export function linkExists(k: LinkKey, has: (id: string) => boolean = (id) => byId.has(id)): boolean {
@@ -175,6 +188,9 @@ export function linkExists(k: LinkKey, has: (id: string) => boolean = (id) => by
       return has(k.child) && lineMembership[k.line].has(k.child);
     case 'kin':
       return has(k.a) && has(k.b) && (graph.kinOf.get(k.a) ?? []).some((e) => (e.from === k.a && e.to === k.b) || (e.from === k.b && e.to === k.a));
+    case 'span':
+      // цепочка ленты (решение 93, К4): оба конца — лица линии, старший раньше младшего
+      return has(k.from) && has(k.to) && spanInner([...lineMembership[k.line].keys()], k) !== null;
   }
 }
 
@@ -190,6 +206,8 @@ export function formatAddress(a: Omit<Address, 'route' | 'full' | 'bad'>): strin
   if (a.scale !== undefined) f.push(`s${a.scale}`);
   if (a.model) f.push(`m${a.model}`);
   if (a.tiers) f.push('e1');
+  // понимание Лк 3 (решение 130): вместе с моделью — годы и ленты читаются по нему
+  if (a.luke) f.push('j1');
   // показ (этап 11): всё небо — без поля; прежние флажки «только линии» и «набор» пишутся показом
   const sh: Show | undefined = a.show ?? (a.only ? { kind: 'lines' } : a.work || a.tree ? { kind: 'set' } : undefined);
   if (sh && sh.kind !== 'all') {
@@ -204,6 +222,8 @@ export function formatAddress(a: Omit<Address, 'route' | 'full' | 'bad'>): strin
   // выбранная связь (решение 83)
   const c = a.link ? linkKeyString(a.link) : null;
   if (c) f.push(`c${c}`);
+  // временные гости (решение 93, К3) — за связью
+  if (a.guests?.length) f.push(`g${a.guests.slice(0, GUESTS_MAX).join('.')}`);
   return `#/${a.id ?? ''}${f.map((x) => `~${x}`).join('')}`;
 }
 
@@ -294,7 +314,7 @@ const pushKey = () => {
   const sh = show.value;
   const c = selectedLink.value;
   // карточка союза — своя запись истории: «назад» возвращает карточку лица (решение 71); показ и связь — тоже (этап 11)
-  return `${id ?? ''}|${panel.value ?? ''}|${b && a && a !== id ? a : ''}|${b ?? ''}|${selectedUnion.value ?? ''}|${showKey(sh)}${showLinksField(sh) ?? ''}|${c ? linkKeyString(c) : ''}`;
+  return `${id ?? ''}|${panel.value ?? ''}|${b && a && a !== id ? a : ''}|${b ?? ''}|${selectedUnion.value ?? ''}|${showKey(sh)}${showLinksField(sh) ?? ''}|${c ? linkKeyString(c) : ''}|${linkGuests.value.join('.')}|${lineFlip.value ? 'j' : ''}`;
 };
 
 /** Вид атласа сейчас — в полях адреса. */
@@ -311,6 +331,7 @@ function snapshot(): Omit<Address, 'route' | 'full' | 'bad'> {
     scale: lambda.peek() === 0 ? 0 : 1,
     model: modelId.peek(),
     tiers: epochMode.peek(),
+    luke: lineFlip.peek() || undefined,
     // своя пропорция читателя, а не временное сжатие строк вписыванием группы (IX-70)
     lanes: skyRef.current?.cam.ownLanes,
     show: show.peek(),
@@ -318,6 +339,7 @@ function snapshot(): Omit<Address, 'route' | 'full' | 'bad'> {
     set: [...shownSet.peek().keys()],
     union: selectedUnion.peek() ?? undefined,
     link: selectedLink.peek() ?? undefined,
+    guests: linkGuests.peek().length ? [...linkGuests.peek()] : undefined,
   };
 }
 
@@ -375,6 +397,8 @@ function applyState(a: Address, history = false, init = false) {
     if (a.model && modelInfo.some((m) => m.id === a.model)) modelId.value = a.model;
     if (a.full) {
       epochMode.value = !!a.tiers;
+      // понимание Лк 3 (решение 130): запись истории и ссылка его воспроизводят
+      lineFlip.value = !!a.luke;
       // показ: адрес с полями вида описывает и его; без поля показа — всё небо. Новый сеанс по такому адресу после
       // выбранного начала — показ как в прошлый раз (решение 68; src/ui/work.ts, firstShow)
       if (a.show || !(init && restoreReveal)) applyShow(a.show ?? { kind: 'all' }, a, !!mark && !mark.link);
@@ -397,6 +421,8 @@ function applyState(a: Address, history = false, init = false) {
   });
   // карточка союза (решение 71) — после выбора лица: выбор лица закрывает её (src/ui/reveal.ts), поэтому не в том же batch
   selectUnion(a.id && a.union ? a.union : null);
+  // временные гости (решение 93, К3) — когда показ, лицо и связь адреса уже стоят; запись без них гостей снимает
+  if (a.full) setGuestsFromAddress(a.guests ?? []);
   searchNotice.value = a.bad ? { text: `Лица с адресом «${a.bad}» в атласе нет. Найдите его по имени.`, ids: nearIds(a.bad) } : null;
 }
 

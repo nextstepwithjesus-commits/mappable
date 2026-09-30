@@ -69,10 +69,11 @@ describe('заголовок и подписи союза', () => {
   });
 });
 
-describe('карточка союза (решение 71)', () => {
+// явные пределы времени: при полном прогоне под нагрузкой тома грузятся дольше 10 с (координатор, этап 13)
+describe('карточка союза (решение 71)', { timeout: 60_000 }, () => {
   beforeAll(async () => {
     await Promise.all(['avraam', 'agar', 'izmail', 'iakov', 'liya', 'sif', 'david', 'mariya', 'iosif-muzh-marii', 'iisus'].map((id) => loadCard(id)));
-  });
+  }, 120_000);
   it('Авраам и Агарь: паспорт «Союз», «Годы», «Стихи»; супруги, дети, происхождение, команда, колофон', () => {
     const t = text('u:avraam+agar', 'avraam');
     expect(t).toMatch(/^Авраам и Агарь Союз Агарь — жена Авраама/);
@@ -80,7 +81,8 @@ describe('карточка союза (решение 71)', () => {
     expect(t).toContain('Сара дала её Авраму «в жену» (Быт 16:3)');
     expect(t).toMatch(/Годы сын родился в \d+ г\. до Р\. Х\. расч\./);
     expect(t).toMatch(/Стихи Быт 16:3; 16:15; 25:12/);
-    expect(t).toContain('Раскрыть на небе');
+    // словарь 109 (этап 13): на небе — «показать» / «скрыть»
+    expect(t).toContain('Показать детей союза');
     expect(t).toMatch(/Супруги Авраам, 2166–1991 гг\. до Р\. Х\. Его другие союзы: Сарра; Хеттура Агарь, /);
     expect(t).toMatch(/Дети от этого союза Измаил, [^]*Быт 16:15–16/);
     expect(t).toMatch(/Происхождение Авраам — родители: Фарра \(мать не названа\)/);
@@ -98,9 +100,14 @@ describe('карточка союза (решение 71)', () => {
   it('дети — по порядку рождения в текущей модели; у ребёнка с союзами — «его союзы: N»', () => {
     const x = u('u:iakov+liya');
     const order = kidsInBirthOrder(x);
+    // этап 13, решение 104: порядок рождения — порядок текста (поле order: Быт 29:32–35; 30:17–21), а у детей без него —
+    // год в текущей модели
+    const ords = order.map((k) => byId.get(k)!.order ?? null).filter((y): y is number => y !== null);
+    expect([...ords].sort((a, b) => a - b)).toEqual(ords);
+    expect(order.map((k) => byId.get(k)!.name)).toEqual(['Рувим', 'Симеон', 'Левий', 'Иуда', 'Иссахар', 'Завулон', 'Дина']);
+    // и годы в текущей модели не убывают: решатель держит порядок текста (chrono-audit)
     const years = order.map((k) => shownYears(models[0].chrono.get(k)!)?.b ?? null).filter((y): y is number => y !== null);
     expect([...years].sort((a, b) => a - b)).toEqual(years);
-    expect(order.map((k) => byId.get(k)!.name).slice(0, 4)).toEqual(['Рувим', 'Симеон', 'Левий', 'Иуда']);
     const t = text('u:iakov+liya', 'iakov');
     expect(t).toMatch(/Иуда \(сын Иакова\), [^—]*— его союзы: 3/);
   });
@@ -111,7 +118,9 @@ describe('карточка союза (решение 71)', () => {
   });
   it('годы союза — рождение первого и последнего ребёнка с пометой «расч.»', () => {
     const y = unionYears(u('u:iakov+liya'))!;
-    expect(y.text.replace(/\u2060/g, '').replace(/\u00a0/g, ' ')).toMatch(/^дети родились (ок\. )?\d+–\d+ гг\. до Р\. Х\.$/);
+    // этап 13, решение 96: годы словарём дат (years.ts), у расчётных — без «ок.»; у детей с оценками — один общий
+    // промежуток «между 1922 и 1910 гг. до Р. Х.», а не «между 1922 и 1910 — ок. 1915 гг.»
+    expect(y.text.replace(/\u2060/g, '').replace(/\u00a0/g, ' ')).toMatch(/^дети родились (между \d+ и \d+ гг\.|\d+–\d+ гг\.|ок\. \d+ г\.) до Р\. Х\.$/);
     expect(unionYears(u('u:david+melkhola'))).toBeNull();
     expect(text('u:david+melkhola', 'david')).toContain('Дети от этого союза в Писании не названы.');
   });
@@ -127,12 +136,12 @@ describe('карточка союза (решение 71)', () => {
     expect(t).toMatch(/^Сиф и его жена Имя жены в Писании не названо Союз отец детей/);
     expect(t).not.toMatch(/реконструкц|образ матери/i);
   });
-  it('команда «Раскрыть на небе» ↔ «Свернуть на небе» — по состоянию союза', () => {
+  it('команда «Показать детей союза» ↔ «Скрыть детей союза» — по состоянию союза (словарь 109)', () => {
     startWith('adam');
     const uid = unionsOf('adam')[0].id;
-    expect(text(uid, 'adam')).toContain('Раскрыть на небе');
+    expect(text(uid, 'adam')).toContain('Показать детей союза');
     expanded.value = { ...expanded.value, [uid]: 'adam' };
-    expect(text(uid, 'adam')).toContain('Свернуть на небе');
+    expect(text(uid, 'adam')).toContain('Скрыть детей союза');
     startWith('adam');
   });
   it('selectUnion: открывает только существующий союз, null — закрывает', () => {

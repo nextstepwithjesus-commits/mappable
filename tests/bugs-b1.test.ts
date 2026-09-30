@@ -232,7 +232,9 @@ describe('путь родства в режиме «только линии» �
 });
 
 describe('формула столбца выбранного лица в ярусах эпох — не за краем холста (хаос: day-390, зерно 1, шаг 20)', () => {
-  it('небо 360 px, выбран Иаков: строки формулы переносятся по словам, её место — внутри холста', async () => {
+  // этап 13, решение 100: у Иакова формулы больше нет — опоры только отец и сыновья, это сказано самим родством; та же
+  // проверка места формулы — на Исааке (опора — брат Измаил)
+  it('небо 360 px, выбран Исаак: строки формулы переносятся по словам, её место — внутри холста', { timeout: 60_000 }, async () => {
     const tiers = await import('../src/render/tiers.ts');
     for (const w of [360, 390, 700, 1440]) {
       const canvas = { getContext: () => recording(), style: {}, width: 0, height: 0, dataset: {} as Record<string, string> } as unknown as HTMLCanvasElement;
@@ -241,21 +243,21 @@ describe('формула столбца выбранного лица в яру�
       const m = atlas.models[0];
       s.setModel(m, 1);
       s.fitAll();
-      const x = s.nodeX('iakov')!;
+      const x = s.nodeX('isaak')!;
       const t = s.tOf(x);
       const vp = s.cam.vp;
       const kx = (vp.r - vp.l) / (s.xOf(t + 150) - s.xOf(t - 150));
-      s.cam.set({ x0: x - (vp.l + (vp.r - vp.l) / 2) / kx, kx, laneTop: s.rowOf(s.node('iakov')!.lane) + (vp.t + vp.b) / 2 / s.cam.kyFor(kx) });
+      s.cam.set({ x0: x - (vp.l + (vp.r - vp.l) / 2) / kx, kx, laneTop: s.rowOf(s.node('isaak')!.lane) + (vp.t + vp.b) / 2 / s.cam.kyFor(kx) });
       tiers.replanTiers(s, m);
       s.setInsets({ top: tiers.tiersBottom(s, m) });
       const state = {
-        model: m, lambda: 1, selected: 'iakov', second: null, hovered: null, focus: null, highlight: null, depth: null, layers: LAYERS, onlyLines: false, meridian: null,
+        model: m, lambda: 1, selected: 'isaak', second: null, hovered: null, focus: null, highlight: null, depth: null, layers: LAYERS, onlyLines: false, meridian: null,
         tensionPersons: new Set(), flow: 0, reduced: true, intro: 1, lineFlip: false, pins: new Set(), reserve: [], plates: null, plateMarks: {}, reveal: null,
       } as State;
       s.draw(state, () => tiers.drawTiers(s, state));
       const f = JSON.parse((canvas as unknown as { dataset: Record<string, string> }).dataset.tiers ?? '{}').formula as { text: string[]; rect: { x: number; y: number; w: number; h: number } } | null;
       expect(f, `${w}`).toBeTruthy();
-      expect(f!.text.join(' '), `${w}`).toMatch(/Иаков родился после рождения/);
+      expect(f!.text.join(' '), `${w}`).toMatch(/Исаак родился после рождения/);
       expect(f!.rect.x, `${w}`).toBeGreaterThanOrEqual(0);
       expect(f!.rect.x + f!.rect.w, `${w}`).toBeLessThanOrEqual(w);
     }

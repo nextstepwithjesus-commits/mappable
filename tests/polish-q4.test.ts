@@ -73,7 +73,8 @@ describe('строка показа: краткие формы (Q4, § 5)', () =
     const show = await import('../src/ui/show.ts');
     for (const [s, want] of [
       [{ kind: 'all' }, /^всё небо$/],
-      [{ kind: 'lines' }, /^линии Мессии — \d+ лиц[а]?$/],
+      // этап 13, решение 110: показ линий зовётся так же, как начало
+      [{ kind: 'lines' }, /^родословие Иисуса Христа \(Мф 1, Лк 3\) — \d+ лиц[а]?$/],
       [{ kind: 'key' }, /^ключевые лица — \d+ лиц[а]?$/],
     ] as const) {
       const sm = show.summaryOf(s as import('../src/ui/show.ts').Show);

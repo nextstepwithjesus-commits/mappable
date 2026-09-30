@@ -1,7 +1,9 @@
-import { useMemo, useRef } from 'preact/hooks';
+import { useEffect, useMemo, useRef } from 'preact/hooks';
+import { signal } from '@preact/signals';
 import { byId, persons } from '../../data/atlas.ts';
-import { model } from '../../state.ts';
-import { goTo, plural } from '../common.tsx';
+import { model, panel } from '../../state.ts';
+import { goTo, plural, ROLE_NAMES } from '../common.tsx';
+import { lifeEpoch } from '../card/shared.tsx';
 import { atlasCoord } from '../../engine/layout.ts';
 import { norm } from '../../engine/text.ts';
 import { lifeText } from '../sky/text.ts';
@@ -37,6 +39,33 @@ export function indexGroups(birth: (id: string) => number | null): [string, stri
   return [...byName.entries()].sort((a, b) => a[0].localeCompare(b[0], 'ru'));
 }
 
+/**
+ * Открыть «Указатель» на букве или с запросом (решение 120: пустой поиск ведёт в «Указатель»). Панель, открытая или
+ * уже открытая, берёт просьбу и сбрасывает её.
+ */
+export const indexAsk = signal<{ letter?: string | null; filter?: string } | null>(null);
+export function openIndex(ask: { letter?: string | null; filter?: string }) {
+  indexAsk.value = ask;
+  panel.value = 'index';
+}
+
+/**
+ * Что стоит у имени (решение 120; UI-22: указатель — не на языке координат): первая роль лица («царь», «пророчица»),
+ * без ролей — краткое название эпохи жизни («Судьи», «Возвращение»); у рода и народа — ничего.
+ */
+export function indexTag(id: string, m = model.value): { text: string; title: string } | null {
+  const p = byId.get(id);
+  if (!p) return null;
+  const r = p.roles.find((x) => x !== 'messiah');
+  if (r) {
+    const t = ROLE_NAMES[r]?.[p.sex === 'f' ? 1 : 0] ?? '';
+    return t ? { text: t, title: t } : null;
+  }
+  if (p.kind === 'people' || p.kind === 'clan') return null;
+  const e = lifeEpoch(id, m.chrono.get(id), m.epochs);
+  return e ? { text: e.short, title: `эпоха: ${e.name}` } : null;
+}
+
 // ---------- указатель (G7; ТЗ § 3.7; CARD-45; VIS-33) ----------
 export function IndexPanel() {
   // буква и фильтр помнятся, пока открыт атлас: панель, открытая снова, стоит там же (D11)
@@ -64,6 +93,23 @@ export function IndexPanel() {
   const list = useRef<HTMLDivElement>(null);
   const field = useRef<HTMLInputElement>(null);
   const found = shown.reduce((n, [, ids]) => n + ids.length, 0);
+  // просьба поиска (решение 120): «ничего не найдено» — указатель на букве запроса
+  const ask = indexAsk.value;
+  useEffect(() => {
+    if (!ask) return;
+    setLetter(ask.letter && letters.includes(ask.letter) ? ask.letter : null);
+    setFilter(ask.filter ?? '');
+    indexAsk.value = null;
+  }, [ask]);
+  const tag = (id: string) => {
+    const t = indexTag(id, m);
+    return t ? (
+      <span class="tag" title={t.title}>
+        {' '}
+        {t.text}
+      </span>
+    ) : null;
+  };
   // «Отобрать» (IX-76): ↓ — на первую строку списка, Enter — к первому найденному лицу; в списке ↑ и ↓ — по строкам,
   // ↑ с первой строки — обратно в поле
   const rows = () => [...(list.current?.querySelectorAll<HTMLButtonElement>('button.row') ?? [])];
@@ -90,12 +136,16 @@ export function IndexPanel() {
   };
   let lastLetter = '';
   return (
-    <Sheet wide title="Указатель" lead={`Все лица атласа (${num(persons.length)}) по алфавиту. Число — столбец неба (сто лет от начала шкалы), буква — строка неба на левой кромке.`}>
+    <Sheet
+      wide
+      title="Указатель"
+      lead={`Все лица атласа (${num(persons.length)}) по алфавиту; у имени — роль или эпоха. Справа мелко — место на небе: число — столбец (сто лет от начала шкалы), буква — строка на левой кромке.`}
+    >
       <div class="letters">
         <Segmented label="Буква" options={[{ value: '', label: 'все' }, ...letters.map((l) => ({ value: l, label: l }))]} value={letter ?? ''} onChange={(v) => setLetter(v || null)} />
       </div>
       <div class="field">
-        <label for="idx-filter">Отобрать:</label>
+        <label for="idx-filter">Найти в указателе:</label>
         <input
           id="idx-filter"
           ref={field}
@@ -104,7 +154,12 @@ export function IndexPanel() {
           onInput={(e) => setFilter((e.target as HTMLInputElement).value)}
           onKeyDown={onFieldKey}
         />
-        {/* сколько найдено — для диктора, пока в поле есть текст (IX-76) */}
+        {/* сколько найдено — видно у поля (решение 120) и слышно диктору, пока в поле есть текст (IX-76) */}
+        {f ? (
+          <span class="idx-count" aria-hidden="true">
+            {found ? `найдено ${num(found)}\u00a0${plural(found, 'лицо', 'лица', 'лиц')}` : 'не найдено'}
+          </span>
+        ) : null}
         <span id="idx-found" class="visually-hidden" aria-live="polite">
           {f ? (found ? `найдено ${found}\u00a0${plural(found, 'лицо', 'лица', 'лиц')}; Enter — к первому, стрелка вниз — к списку` : 'не найдено ни одного лица') : ''}
         </span>
@@ -119,7 +174,10 @@ export function IndexPanel() {
               {ids.length === 1 ? (
                 // отточие — от конца текста до координаты (.lead::after); у координаты свой столбец (VIS-61)
                 <button class={known(ids[0]) ? 'row known' : 'row'} onClick={() => goTo(ids[0])}>
-                  <span class="nm lead">{name}</span>
+                  <span class="nm lead">
+                    {name}
+                    {tag(ids[0])}
+                  </span>
                   <span class="coord">{coord(ids[0])}</span>
                 </button>
               ) : (
@@ -134,7 +192,7 @@ export function IndexPanel() {
                     return (
                       <button class={known(id) ? 'row sub known' : 'row sub'} key={id} onClick={() => goTo(id)}>
                         <span class={yrs || ds ? 'nm' : 'nm lead'}>
-                          {ds ? <span class={yrs ? 'ds' : 'ds lead'}>{typo(ds)}</span> : null}
+                          {ds ? <span class={yrs ? 'ds' : 'ds lead'}>{typo(ds)}</span> : tag(id)}
                           {yrs ? <span class="yrs lead">{yrs}</span> : null}
                         </span>
                         <span class="coord">{coord(id)}</span>

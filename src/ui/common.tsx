@@ -2,11 +2,12 @@ import { Fragment } from 'preact';
 import { signal } from '@preact/signals';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
-import { byId, loadVerses } from '../data/atlas.ts';
-import { parseRef, verseId } from '../engine/books.ts';
+import { byId, loadRefVerses, type RefVerses } from '../data/atlas.ts';
+import { toggleCardFull } from './layout.ts';
+import { verseId } from '../engine/books.ts';
 import type { Sky } from '../render/sky.ts';
 import type { Cert, Role } from '../data/types.ts';
-import { selected, hovered, pickSecond } from '../state.ts';
+import { selected, hovered, pickSecond, panel } from '../state.ts';
 import { typo } from './text/typo.ts';
 import { belowReading, inView } from './sky/view.ts';
 
@@ -89,10 +90,47 @@ export function MarkNote({ label, full }: { label: string; full: string }) {
       </button>
       {open ? (
         <span class="mark-note">
-          {label}{' '}— {full}
+          {label}{' '}— {chronoLinks(label === 'расч.' ? full.replace(/\s*\(см\.[\s\u00a0]«О[\s\u00a0]хронологии»\)/, '') : full)}
+          {/* у расчётного года — куда идти дальше (решение 124; UI-17): как считали и другая модель */}
+          {label === 'расч.' ? (
+            <span class="mark-cmds">
+              <button type="button" class="link chrono-link" onClick={() => void import('./panels/Chronology.tsx').then((m) => m.openChronology())}>
+                О хронологии
+              </button>{' '}
+              <button
+                type="button"
+                class="link chrono-link"
+                onClick={() => {
+                  toggleCardFull(false);
+                  void import('./sky/Controls.tsx').then((m) => m.openModelChoice());
+                }}
+              >
+                Сменить модель
+              </button>
+            </span>
+          ) : null}
         </span>
       ) : null}
     </>
+  );
+}
+
+/**
+ * «О хронологии» в пояснении пометы — ссылка на панель (решение 102; то же, что ChronoText в src/ui/panels/Chronology.tsx,
+ * без её импорта: панель сама зависит от этого модуля).
+ */
+function chronoLinks(text: string): ComponentChildren {
+  // типографика связывает «О» со следующим словом неразрывным пробелом
+  const parts = text.split(/(«О[\s\u00a0]хронологии»)/);
+  if (parts.length === 1) return text;
+  return parts.map((part, i) =>
+    /^«О[\s\u00a0]хронологии»$/.test(part) ? (
+      <button key={i} type="button" class="link chrono-link" onClick={() => (panel.value = 'chronology')}>
+        «О хронологии»
+      </button>
+    ) : (
+      part
+    ),
   );
 }
 
@@ -159,7 +197,11 @@ const hoverOff = (el: HTMLElement | null) => {
 };
 
 /** Ссылка на лицо: выбрать и показать на небе по одному правилу (goTo); наведение и фокус подсвечивают звезду. */
-export function P({ id, children }: { id: string; children?: ComponentChildren }) {
+/**
+ * Ссылка на лицо. inText — имя в тексте факта (src/ui/card/links.tsx, linkNames): data-in="text" отличает его от ссылки
+ * строки родства — проверки уточнений тёзок (tests/card13.test.ts) смотрят на ссылки строк.
+ */
+export function P({ id, children, inText = false }: { id: string; children?: ComponentChildren; inText?: boolean }) {
   const p = byId.get(id);
   const ref = useRef<HTMLButtonElement>(null);
   useEffect(() => () => hoverOff(ref.current), []);
@@ -170,7 +212,7 @@ export function P({ id, children }: { id: string; children?: ComponentChildren }
   };
   const off = (e: Event) => hoverOff(e.currentTarget as HTMLElement);
   return (
-    <button ref={ref} class="person" data-id={id} onClick={() => goTo(id)} onMouseEnter={on} onMouseLeave={off} onFocus={on} onBlur={off}>
+    <button ref={ref} class="person" data-id={id} data-in={inText ? 'text' : undefined} onClick={() => goTo(id)} onMouseEnter={on} onMouseLeave={off} onFocus={on} onBlur={off}>
       {children ?? p.name}
     </button>
   );
@@ -260,24 +302,43 @@ export function VerseInsert({ owner, refs }: { owner: string; refs?: string[] })
   return <Verses refText={r} />;
 }
 
+/**
+ * Стихи ссылки вклейкой (решения 127, 129): весь диапазон, в том числе межглавный («Быт 27:41–28:5»), — по длинам глав
+ * книги (loadRefVerses). Состояний четыре, и ни одно не висит многоточием:
+ * загрузка; стихи (до max, дальше «ещё N стихов»); часть стихов нет в корпусе — это сказано числом; отказ загрузки —
+ * «не удалось загрузить — повторить» (неудача не остаётся в кэше, повтор загружает заново).
+ */
 export function Verses({ refText, max = 3 }: { refText: string; max?: number }) {
-  const [text, setText] = useState<{ n: string; t: string }[] | null>(null);
+  type St = { kind: 'loading' } | { kind: 'ok'; v: RefVerses } | { kind: 'none' } | { kind: 'error' };
+  const [st, setSt] = useState<St>({ kind: 'loading' });
   const [all, setAll] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   useEffect(() => {
-    const p = parseRef(refText);
-    if (!p) return;
     let alive = true;
-    loadVerses(p.book).then((vs) => {
-      if (!alive) return;
-      setText(p.verses.map((v) => ({ n: `${v.chapter}:${v.verse}`, t: vs[verseId(v).slice(p.book.length + 1)] ?? '' })).filter((x) => x.t));
-    });
+    setSt({ kind: 'loading' });
+    loadRefVerses(refText).then(
+      (v) => alive && setSt(v ? { kind: 'ok', v } : { kind: 'none' }),
+      () => alive && setSt({ kind: 'error' }),
+    );
     return () => {
       alive = false;
     };
-  }, [refText]);
-  if (!text) return <div class="verses muted">…</div>;
-  if (!text.length) return <div class="verses muted">Текст стиха не включён в издание.</div>;
-  const shown = all ? text : text.slice(0, max);
+  }, [refText, attempt]);
+  if (st.kind === 'loading') return <div class="verses muted" aria-busy="true">Загрузка стихов</div>;
+  if (st.kind === 'error')
+    return (
+      <div class="verses muted" role="status">
+        Стихи не удалось загрузить —{' '}
+        <button type="button" class="link" onClick={() => setAttempt(attempt + 1)}>
+          повторить
+        </button>
+      </div>
+    );
+  if (st.kind === 'none') return <div class="verses muted">Ссылка не разобрана: стихов для неё в корпусе нет.</div>;
+  const { verses, total, missing } = st.v;
+  const miss = missing > 0 ? `${verses.length ? 'Не включены' : 'В корпусе не найдены'} ${missing}\u00a0${plural(missing, 'стих', 'стиха', 'стихов')} из\u00a0${total}.` : null;
+  if (!verses.length) return <div class="verses muted">{miss}</div>;
+  const shown = all ? verses : verses.slice(0, max);
   return (
     <div class="verses" lang="ru">
       {shown.map((v) => (
@@ -286,11 +347,12 @@ export function Verses({ refText, max = 3 }: { refText: string; max?: number }) 
           {renderBrackets(v.t)}{' '}
         </span>
       ))}
-      {!all && text.length > max && (
+      {!all && verses.length > max && (
         <button class="more" onClick={() => setAll(true)}>
-          ещё{'\u00a0'}{text.length - max}{'\u00a0'}{plural(text.length - max, 'стих', 'стиха', 'стихов')}
+          ещё{'\u00a0'}{verses.length - max}{'\u00a0'}{plural(verses.length - max, 'стих', 'стиха', 'стихов')}
         </button>
       )}
+      {miss ? <span class="verses-miss muted"> {miss}</span> : null}
     </div>
   );
 }

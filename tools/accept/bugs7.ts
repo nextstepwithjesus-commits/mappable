@@ -286,10 +286,12 @@ export const bugs7: Scenario[] = [
   },
   {
     n: 727,
-    title: 'Этап 11, B1 (хаос: day-390, зерно 1, шаг 20): ярусы эпох, выбран Иаков на низком телефоне (лист карточки — шапкой), телефон повернули в 360 × 844 — формула «родился после … умер после …» переносится по словам, не уходит за правый край холста и не закрывает звезду Иакова',
+    // этап 13, решение 100: у Иакова формулы больше нет — его опоры только отец и сыновья («родился после рождения
+    // Исаака» сказано самим родством); та же проверка раскладки — на Исааке, у которого опора — брат Измаил
+    title: 'Этап 11, B1 (хаос: day-390, зерно 1, шаг 20): ярусы эпох, выбран Исаак на низком телефоне (лист карточки — шапкой), телефон повернули в 360 × 844 — формула «родился после … умер после …» переносится по словам, не уходит за правый край холста и не закрывает звезду Исаака',
     view: { width: 844, height: 390, touch: true },
     run: async (p) => {
-      await p.goto(p.url().replace(/#.*$/, '') + '#/iakov~e1');
+      await p.goto(p.url().replace(/#.*$/, '') + '#/isaak~e1');
       await p.waitForTimeout(3000);
       await p.setViewportSize({ width: 360, height: 844 });
       await p.waitForTimeout(2500);
@@ -300,7 +302,7 @@ export const bugs7: Scenario[] = [
       if (!f) return fail('формулы нет');
       if (f.rect.x < 0 || f.rect.x + f.rect.w > w) return fail(`формула за краем: ${Math.round(f.rect.x)}…${Math.round(f.rect.x + f.rect.w)} при ширине ${w}`);
       const sel = ((await p.evaluate(() => (document.querySelector('.sky') as HTMLElement).dataset.sel ?? '')) || '').split(' ').map(Number);
-      if (sel.length === 2 && sel[0] > f.rect.x - 6 && sel[0] < f.rect.x + f.rect.w + 6 && sel[1] > f.rect.y - 6 && sel[1] < f.rect.y + f.rect.h + 6) return fail(`формула на звезде Иакова: ${sel.map(Math.round)} в ${JSON.stringify(f.rect)}`);
+      if (sel.length === 2 && sel[0] > f.rect.x - 6 && sel[0] < f.rect.x + f.rect.w + 6 && sel[1] > f.rect.y - 6 && sel[1] < f.rect.y + f.rect.h + 6) return fail(`формула на звезде Исаака: ${sel.map(Math.round)} в ${JSON.stringify(f.rect)}`);
       const bad = await frameIssues(p);
       return bad.length ? fail(bad.join('; ')) : pass(`${f.text.join(' / ')}: ${Math.round(f.rect.x)}…${Math.round(f.rect.x + f.rect.w)} из ${w}`);
     },

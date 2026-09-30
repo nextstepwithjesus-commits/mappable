@@ -5,26 +5,68 @@
  * Правило (docs/UI-PROMPT.md, <principles> 1): имя ставится в косвенный падеж только функцией склонения
  * (src/ui/text/ru.ts). Если она не справляется (безымянное лицо, составное имя), строка строится без этого лица.
  */
-import { byId, graph, groupById, persons, loadedChrono, loadedCard } from '../../data/atlas.ts';
+import { byId, graph, groupById, persons, loadedChrono, loadedCard, modelDependent, modelInfoOf } from '../../data/atlas.ts';
 import type { ChronoRow } from '../../data/atlas.ts';
-import type { Epoch, Sex } from '../../data/types.ts';
+import type { Cert, Epoch, Sex } from '../../data/types.ts';
 import { P, ROLE_NAMES } from '../common.tsx';
-import { declinableForm, nameCase, realmInstrumental, yearsGen } from '../text/ru.ts';
+import { declinableForm, nameCase, realmInstrumental } from '../text/ru.ts';
 import { typo } from '../text/typo.ts';
-import { formatYear, formatSpan, yearsWord, shownYears, shownBirthRange, toAstro, type LifeDates } from '../../engine/years.ts';
+import { yearsWord, dateText, lifeDates, spanText, toAstro, toHist, type LifeDates } from '../../engine/years.ts';
 
-/** Названия моделей хронологии в колофонах карточки лица и карточки союза. */
-export const MODEL_NAMES: Record<string, string> = {
-  'mt-long': 'масоретские числа, 430 лет в Египте',
-  'mt-short': 'краткое пребывание, 215 лет',
-  lxx: 'числа в скобках Быт 5 и 11',
-  terah70: 'Фарре 70 лет',
-};
+/**
+ * Строка колофона о модели хронологии (решение 96): только у лица, чьи годы действительно меняются между моделями
+ * (IdxPerson.modelDep); название — из сводки моделей сборки (modelInfo, решение 102).
+ */
+export function modelColophon(ids: string[], modelId: string): string {
+  if (!ids.some(modelDependent)) return '';
+  return ` Годы — по модели хронологии «${modelInfoOf(modelId).name}»; в других моделях они иные (см. § 13 и «О хронологии»).`;
+}
 
-/** Перекрёстная ссылка «см. § 8» — команда: переходит к разделу (CARD-31). */
+/** Ослабленное движение (prefers-reduced-motion): переходы без плавной прокрутки (MOB-40). */
+const reduced = () => typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+/**
+ * Раздел n внутри карточки root: свой блок (#sec-n) или сведённая строка «9–12», в которую он входит.
+ */
+export function sectionEl(n: number, root: ParentNode = document): HTMLElement | null {
+  const own = root.querySelector<HTMLElement>(`[id="sec-${n}"]`);
+  if (own) return own;
+  for (const r of root.querySelectorAll<HTMLElement>('.sec[data-to]')) {
+    if (n >= Number(r.dataset.n) && n <= Number(r.dataset.to)) return r;
+  }
+  return null;
+}
+
+/**
+ * Перейти к разделу n (решение 115; UI-03): прокрутка к нему — без плавности при ослабленном движении — и фокус на его
+ * заголовок (tabindex −1), чтобы следующий Tab продолжал чтение там, а не с «см. §».
+ */
+export function goToSection(n: number, root: ParentNode = document): boolean {
+  const el = sectionEl(n, root);
+  if (!el) return false;
+  el.scrollIntoView({ block: 'start', behavior: reduced() ? 'auto' : 'smooth' });
+  const h = el.querySelector<HTMLElement>(`[id="h-${n}"]`) ?? el;
+  if (!h.hasAttribute('tabindex')) h.setAttribute('tabindex', '-1');
+  h.focus({ preventScroll: true });
+  return true;
+}
+
+/**
+ * Перекрёстная ссылка «см. § 8» — команда: переходит к разделу и переносит на его заголовок фокус (CARD-31; решение 115).
+ * Сначала спрашивает карточку (событие seesec): свёрнутую малую карточку она раскрывает и переходит сама; вне карточки —
+ * переход здесь же.
+ */
 export function SeeSec({ n }: { n: number }) {
   return (
-    <button type="button" class="see" onClick={() => document.getElementById(`sec-${n}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' })}>
+    <button
+      type="button"
+      class="see"
+      onClick={(e) => {
+        const from = e.currentTarget as HTMLElement;
+        const ev = new CustomEvent<number>('seesec', { detail: n, bubbles: true, cancelable: true });
+        if (from.dispatchEvent(ev)) goToSection(n, from.closest('.folio') ?? document);
+      }}
+    >
       см.{' '}§{' '}{n}
     </button>
   );
@@ -32,7 +74,6 @@ export function SeeSec({ n }: { n: number }) {
 
 // ---------- годы ----------
 
-const NB = '\u00a0'; // неразрывный пробел перед тире
 
 /**
  * Возможный промежуток года рождения с учётом границ из данных: «не раньше чем через 601 год после рождения Ноя»
@@ -59,25 +100,22 @@ export function birthRange(id: string, c: ChronoRow, chrono: Map<string, ChronoR
   return [Math.min(lo, c.b), Math.max(hi, c.b)];
 }
 
-/** § 8: год рождения. Оценка — с возможным промежутком; у лиц без опор (epochal) годов нет. */
-export function birthLine(c: LifeDates, range?: [number, number]): string {
-  const y = shownYears(c);
-  if (!y) return 'Время не установлено';
-  if (c.cls !== 'estimated') return formatYear(y.b, { approx: y.approx });
-  const [lo, hi] = shownBirthRange(range ? { ...c, bLo: range[0], bHi: range[1] } : c);
-  return `${formatYear(y.b, { approx: true })}; возможный промежуток${NB}— ${formatSpan(lo, hi)}`;
+/**
+ * Годы лица для словаря дат (решение 96) с границами текста (birthRange): одни и те же в паспорте, § 8, § 20 и на
+ * мини-шкале. c — строка модели, chrono — все строки этой модели.
+ */
+export function datesOf(id: string, c: ChronoRow, chrono: Map<string, ChronoRow>): ChronoRow {
+  const [bLo, bHi] = birthRange(id, c, chrono);
+  return { ...c, bLo, bHi };
 }
 
-/** § 20: год смерти и возраст — те же числа, что в паспорте; dAge — ChronoRow.dAge (false — год смерти свой, не по возрасту). */
-export function deathLine(b: number, d: number, cls: string, bLo = b, bHi = b, dAge?: boolean): string {
-  const y = shownYears({ b, bLo, bHi, d, cls: cls as LifeDates['cls'], dAge });
-  if (!y || y.d === null) return '';
-  // «умер младенец» (2 Цар 12:18): возраст меньше года — словом, а не «в возрасте 0 лет»;
-  // после «в возрасте» — родительный падеж: «34 лет», «21 года» (CARD-50).
-  // Свой год смерти (dAge === false: явный год, событие) у оценки — возраст от показанных лет, как в паспорте:
-  // «1040–970, в возрасте 70», а не 68 от неокруглённого рождения (CARD-79)
-  const age = dAge === false && cls === 'estimated' ? y.d - y.b : Math.round(d - b);
-  return `${formatYear(y.d, { approx: y.approx })}, ${age < 1 ? 'младенцем' : `в возрасте ${yearsGen(age)}`}`;
+/**
+ * § 8: год рождения словами словаря (решение 96): «1446 г. до Р. Х.», «ок. 1330 г. до Р. Х.», «между 45 и 20 гг. до
+ * Р. Х.», «не позже 1876 г. до Р. Х.»; у лиц без опор (epochal) годов нет.
+ */
+export function birthLine(c: LifeDates, range?: [number, number]): string {
+  const ld = lifeDates(range ? { ...c, bLo: range[0], bHi: range[1] } : c);
+  return ld ? dateText(ld.birth) : 'Время не установлено';
 }
 
 // ---------- царствование: § 16 карточки и «Сквозной раздел» говорят одними словами (CARD-51) ----------
@@ -97,7 +135,7 @@ export function reignLength(r: ReignLike): string | null {
 
 /** Годы царствования по реконструкции (расч.): «1010–1003 гг. до Р. Х.»; годы в данных — исторические. */
 export function reignSpan(r: ReignLike): string {
-  return r.start === r.end ? formatYear(toAstro(r.start)) : formatSpan(toAstro(r.start), toAstro(r.end));
+  return spanText({ t: toAstro(r.start) }, { t: toAstro(r.end) });
 }
 
 /**
@@ -111,6 +149,68 @@ export function reignOverLine(r: ReignLike): string {
   return len ? `${len} ${where}` : capFirstRu(where);
 }
 const capFirstRu = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+/** Строка о царствовании со стихами: основная или пояснение (соправление, синхронизм, возраст при воцарении). */
+export type ReignWord = { text: string; refs: string[] };
+
+/**
+ * Соправления словами (решения 97, 103; X2 Д9): «792–767 — вместе с отцом, Амасией; один — с 767, в 27-й год
+ * Иеровоама (4 Цар 15:1)»; «750–740 — вместе с сыном, Иоафамом». Перекрытие — с царствованием отца или сына над той же
+ * землёй; «один — с …» — по reign.sole данных; синхронизм текста — числом Писания со стихом, без пометы.
+ * reigns — царствования со стихами (том карточки) или из индекса.
+ */
+/** Промежуток без эры, если она одна (строка под годами, где эра уже названа): «792–767». */
+const spanNoEra = (a: number, b: number) => {
+  const t = spanText({ t: a }, { t: b });
+  return (t.match(/Р\.\u00a0Х\./g) ?? []).length === 1 ? t.replace(/\u00a0гг?\.\u00a0(до|по)\u00a0Р\.\u00a0Х\.$/, '') : t;
+};
+
+export function reignWords(id: string, reigns: (ReignLike & { sole?: number; sync?: { with: string; year: number; refs: string[] }[] })[]): ReignWord[] {
+  const p = byId.get(id);
+  if (!p) return [];
+  const out: ReignWord[] = [];
+  const kinOf = (who: string) => {
+    const q = byId.get(who);
+    return q ? nameCase(q.name, q.sex, 'ins', q.unnamed, q.alt) : null;
+  };
+  const withWord = (role: 'отцом' | 'матерью' | 'сыном' | 'дочерью', who: string) => {
+    const ins = kinOf(who);
+    return ins ? `вместе с ${role}, ${ins}` : `вместе с ${role} (${byId.get(who)?.name ?? who})`;
+  };
+  const syncText = (sy: { with: string; year: number }) => {
+    const g = nameIn(sy.with, 'gen');
+    return g ? `в ${sy.year}-й год ${g}` : null;
+  };
+  const idxReign = (r: ReignLike) => p.reign.find((q) => q.over === r.over && q.start === r.start);
+  const sons = (graph.childrenOf.get(id) ?? []).filter((e) => e.kind === 'father' || e.kind === 'mother').map((e) => e.child);
+  for (const r of reigns) {
+    const sole = (r as { sole?: number }).sole ?? idxReign(r)?.sole;
+    const syncs = (r as { sync?: { with: string; year: number; refs: string[] }[] }).sync ?? idxReign(r)?.sync ?? [];
+    const a0 = toAstro(r.start);
+    const b0 = toAstro(r.end);
+    // с отцом или матерью (в начале царствования), с сыном (в конце): перекрытие царствований одной земли
+    const parents = [p.father, p.mother].filter((x): x is string => !!x);
+    for (const par of parents)
+      for (const q of byId.get(par)?.reign ?? []) {
+        if (q.over !== r.over) continue;
+        const a = Math.max(a0, toAstro(q.start));
+        const b = Math.min(b0, toAstro(q.end));
+        if (b <= a) continue;
+        const sy = sole !== undefined ? syncs[0] : undefined;
+        const alone = sole !== undefined ? `; один — с ${Math.abs(toHist(toAstro(sole)))}${sy && syncText(sy) ? `, ${syncText(sy)}` : ''}` : '';
+        out.push({ text: `${spanNoEra(a, b)} — ${withWord(byId.get(par)!.sex === 'f' ? 'матерью' : 'отцом', par)}${alone}`, refs: sy && alone.includes('-й год') ? sy.refs : [] });
+      }
+    for (const son of sons)
+      for (const q of byId.get(son)?.reign ?? []) {
+        if (q.over !== r.over || toAstro(q.start) <= a0) continue;
+        const a = Math.max(a0, toAstro(q.start));
+        const b = Math.min(b0, toAstro(q.end));
+        if (b <= a) continue;
+        out.push({ text: `${spanNoEra(a, b)} — ${withWord(byId.get(son)!.sex === 'f' ? 'дочерью' : 'сыном', son)}`, refs: [] });
+      }
+  }
+  return out;
+}
 
 // ---------- имена в косвенных падежах ----------
 
@@ -146,8 +246,19 @@ export function nameIn(id: string, cs: 'gen' | 'acc'): string | null {
  * Ссылка на лицо в косвенном падеже; вызывающий заранее проверяет nameIn.
  * after — знак препинания сразу за именем: он держится за ссылку (кнопка — строчный блок, перед знаком возможен перенос).
  */
-export function PersonIn({ id, cs, after }: { id: string; cs: 'gen' | 'acc'; after?: string }) {
-  const link = <P id={id}>{nameIn(id, cs) ?? byId.get(id)?.name ?? id}</P>;
+export function PersonIn({ id, cs, after, dis = false }: { id: string; cs: 'gen' | 'acc'; after?: string; dis?: boolean }) {
+  const name = <P id={id}>{nameIn(id, cs) ?? byId.get(id)?.name ?? id}</P>;
+  // dis — тёзка в карточке (решение 106): уточнение сразу за именем, до знака препинания
+  const q = byId.get(id);
+  const link =
+    dis && q?.disambig ? (
+      <>
+        {name}
+        <span class="muted"> ({typo(q.disambig.replace(/\s*\(([^)]*)\)/g, ', $1'))})</span>
+      </>
+    ) : (
+      name
+    );
   return after ? (
     <span class="nobr">
       {link}
@@ -238,15 +349,34 @@ const NATION_GENTILIC =
   /(^|[^а-яё])((моавитян|аммонитян|идумеян|хеттеян|хананеян|египтян|мадианитян|аморреян|евеян|хорреян|иевусеян|филистимлян|ефиоплян|арамеян|измаильтян|кенеян|амаликитян|мидян|сидонян)(ин|ка))(?![а-яё])/i;
 
 export interface Affiliation {
-  /** строка паспорта «Колено / народ» */
+  /** одной строкой — для строк вне паспорта (небо, «Сквозной раздел»): «моавитянка; в колене Иудином по браку» */
   text: string;
   /** колено, к которому лицо принадлежит по предкам (для «по браку» у жены) */
   tribe: string | null;
+  /**
+   * Происхождение (решение 97; X4 § 2.5): строка паспорта «Колено / народ» без пометы в тексте — «колено Иудино, дом
+   * Давидов»; cert — уровень, помета «толк.» или «выв.» стоит на поле. null — колено по происхождению не вычисляется.
+   */
+  own: { text: string; cert: Cert; fromText?: boolean } | null;
+  /** Строка «По браку»: «колено Иудино (жена Вооза)»; null — брак колена не меняет или колено мужа неизвестно. */
+  marriage: string | null;
 }
 
-type Qual = '' | 'legal' | 'interpretation';
-const QUAL_RANK: Record<Qual, number> = { '': 0, legal: 1, interpretation: 2 };
-const QUAL_TEXT: Record<Qual, string> = { '': '', legal: '\u00a0— по законному отцу', interpretation: '\u00a0— по толкованию' };
+type Qual = '' | 'legal' | 'interpretation' | 'inference';
+const QUAL_RANK: Record<Qual, number> = { '': 0, inference: 1, legal: 1, interpretation: 2 };
+const QUAL_TEXT: Record<Qual, string> = { '': '', inference: '', legal: '\u00a0— по законному отцу', interpretation: '\u00a0— по толкованию' };
+
+/** Колено, названное в записи § 7: «Из колена Вениаминова» (Флп 3:5), «От колена Асирова» (Лк 2:36). */
+const TRIBE_IN_TEXT = /(?:^|[\s«,;:—(])(?:из|от)\s+колена\s+([А-ЯЁ][а-яё]+)/i;
+function tribeInLineage(id: string): { tribe: string; cert: Cert } | null {
+  for (const f of loadedCard(id)?.lineage ?? []) {
+    const m = TRIBE_IN_TEXT.exec(f.text);
+    if (!m) continue;
+    const t = Object.keys(TRIBES).find((k) => TRIBES[k][1].split(' ')[1] === m[1]);
+    if (t) return { tribe: t, cert: f.cert ?? 'scripture' };
+  }
+  return null;
+}
 
 /** Ближайший родоначальник колена или народа по линии отцов и матерей (без связей «по иному указанию»). */
 function byAncestry(id: string, noLegal = false): { founder: string; house: string | null; qual: Qual; self: boolean } | null {
@@ -282,8 +412,8 @@ function byAncestry(id: string, noLegal = false): { founder: string; house: stri
   return { founder: hit.id, house: hit.house, qual: agreed ? '' : hit.qual, self: false };
 }
 
-/** Колено или народ без учёта брака: по предкам, по прозванию в уточнении, по служению левита. */
-function ownAffiliation(id: string): { text: string; tribe: string | null; qual: Qual } | null {
+/** Колено или народ без учёта брака: по предкам, по прозванию в уточнении, по служению левита, по записи § 7. */
+function ownAffiliation(id: string, lineage = true): { text: string; tribe: string | null; qual: Qual } | null {
   const p = byId.get(id);
   if (!p) return null;
   const a = byAncestry(id);
@@ -298,6 +428,9 @@ function ownAffiliation(id: string): { text: string; tribe: string | null; qual:
   const g = NATION_GENTILIC.exec(dis);
   if (g) return { text: g[2].toLowerCase(), tribe: null, qual: '' };
   if (p.roles.includes('levite')) return { text: TRIBES.leviy[0], tribe: 'leviy', qual: '' };
+  // колено названо только в § 7 (решение 97; D9): Павел — «из колена Вениаминова» (Флп 3:5), Анна — Асирова (Лк 2:36)
+  const said = lineage ? tribeInLineage(id) : null;
+  if (said) return { text: TRIBES[said.tribe][0], tribe: said.tribe, qual: said.cert === 'interpretation' ? 'interpretation' : said.cert === 'inference' ? 'inference' : '' };
   return null;
 }
 
@@ -311,20 +444,32 @@ export function affiliation(id: string): Affiliation | null {
   const own = ownAffiliation(id);
   // жена входит в колено мужа: «в колене Иудином по браку» (если своё колено другое, неизвестно или по толкованию)
   let marriage: string | null = null;
+  let married: string | null = null;
   if (p.sex === 'f') {
-    const tribes = new Set<string>();
+    const tribes = new Map<string, string[]>();
     for (const s of graph.spousesOf.get(id) ?? []) {
       if (s.b !== id) continue;
-      const h = ownAffiliation(s.a);
-      if (h?.tribe && h.qual === '') tribes.add(h.tribe);
+      // колено мужа — только по графу: запись § 7 его тома может быть ещё не загружена
+      const h = ownAffiliation(s.a, false);
+      if (h?.tribe && h.qual === '') tribes.set(h.tribe, [...(tribes.get(h.tribe) ?? []), s.a]);
     }
     if (tribes.size === 1) {
-      const t = [...tribes][0];
-      if (!own || own.tribe !== t || own.qual !== '') marriage = `в ${TRIBES[t][2]} по браку`;
+      const [t, men] = [...tribes][0];
+      if (!own || own.tribe !== t || own.qual !== '') {
+        marriage = `в ${TRIBES[t][2]} по браку`;
+        // «колено Иудино (жена Вооза)»; имя не склоняется или мужей несколько — «(муж — Вооз)», «(мужья — …)»
+        const gen = men.length === 1 ? nameIn(men[0], 'gen') : null;
+        const who = gen ? `жена ${gen}` : `${men.length > 1 ? 'мужья' : 'муж'} — ${men.map((x) => byId.get(x)?.name ?? x).join(', ')}`;
+        married = `${TRIBES[t][0]} (${who})`;
+      }
     }
   }
   if (!own && !marriage) return null;
-  return { text: [own?.text, marriage].filter(Boolean).join('; '), tribe: own?.tribe ?? null };
+  const cert: Cert = own?.qual === 'interpretation' ? 'interpretation' : own?.qual === 'inference' ? 'inference' : 'scripture';
+  // помета толкования — на поле (Mark), а не хвостом строки; «по законному отцу» — слова, не уровень
+  const ownText = own ? own.text.replace(QUAL_TEXT.interpretation, '') : null;
+  const fromText = !!own && !byAncestry(id) && !!tribeInLineage(id) && own.tribe === tribeInLineage(id)!.tribe;
+  return { text: [own?.text, marriage].filter(Boolean).join('; '), tribe: own?.tribe ?? null, own: ownText ? { text: ownText, cert, fromText } : null, marriage: married };
 }
 
 /**
@@ -366,6 +511,8 @@ export function constellation(groupId: string): string | null {
 export function birthEpoch(id: string, c: ChronoRow | undefined, epochs: Epoch[]): Epoch | null {
   const p = byId.get(id);
   const people = p?.kind === 'people' || p?.kind === 'clan';
+  // сборка этапа 13 (контракт 1): эпоха года рождения в этой модели — ChronoRow.birthEpoch (есть, когда есть lifeEpoch)
+  if (c && c.cls !== 'epochal' && !people && c.lifeEpoch && c.birthEpoch) return epochs.find((e) => e.id === c.birthEpoch) ?? epochAtYear(epochs, c.b);
   if (c && c.cls !== 'epochal' && !people && epochs.length) return epochAtYear(epochs, c.b);
   const eid = p?.epoch ?? c?.epoch ?? null;
   return epochs.find((e) => e.id === eid) ?? null;
@@ -399,6 +546,44 @@ export function activityEpochs(id: string, c: ChronoRow | undefined, epochs: Epo
   }
   const be = birthEpoch(id, c, epochs);
   return be ? [be] : [];
+}
+
+/**
+ * Эпоха жизни (решение 98; X1 Х1): по засвидетельствованной жизни — первое найденное из
+ *  1. служения или царствования (эпоха, на которую приходится большая часть срока);
+ *  2. событий с годом (§ 17);
+ *  3. поля epoch данных — «эпоха жизни»;
+ *  4. года рождения.
+ * Паспорт, мини-шкала, диктор и § 13 называют одну и ту же эпоху. У народа и рода — эпоха места в родословии.
+ * До контракта 1 (ChronoRow.lifeEpoch от T3) эпоха считается здесь; потом берётся из сборки.
+ */
+export function lifeEpoch(id: string, c: ChronoRow | undefined, epochs: Epoch[]): Epoch | null {
+  const p = byId.get(id);
+  if (!p || !epochs.length) return null;
+  const built = (c as (ChronoRow & { lifeEpoch?: string | null }) | undefined)?.lifeEpoch;
+  if (built) return epochs.find((e) => e.id === built) ?? null;
+  if (p.kind === 'people' || p.kind === 'clan') return birthEpoch(id, c, epochs);
+  let span: [number, number] | null = null;
+  if (p.reign.length) span = [toAstro(Math.min(...p.reign.map((r) => r.start))), toAstro(Math.max(...p.reign.map((r) => r.end)))];
+  else if (p.active) span = [toAstro(p.active[0]), toAstro(p.active[1])];
+  if (span) {
+    const [a, b] = span;
+    let best: Epoch | null = null;
+    let most = -1;
+    for (const e of epochs) {
+      const s = toAstro(e.start);
+      const t = toAstro(e.end);
+      const over = b > a ? Math.min(b, t) - Math.max(a, s) : a >= s && a < t ? 1 : -1;
+      if (over > most) (best = e), (most = over);
+    }
+    if (best && most > 0) return best;
+  }
+  const dated = (loadedCard(id)?.events ?? []).find((e) => e.year !== undefined);
+  if (dated) return epochAtYear(epochs, toAstro(dated.year!));
+  const eid = p.epoch ?? null;
+  const own = eid ? epochs.find((e) => e.id === eid) : null;
+  if (own) return own;
+  return birthEpoch(id, c, epochs);
 }
 
 // ---------- роль словами Писания ----------

@@ -51,21 +51,24 @@ const rect = (p: Page, sel: string) => p.locator(sel).first().boundingBox();
 export const cardshell: Scenario[] = [
   {
     n: 230,
-    title: 'VIS-41, CARD-54, 1440 × 900: § 1 не ниже 480 px; команды — одной строкой: «Показать на небе», «Родство с…», «Разворот с…», «Добавить в набор ▾»; эпохи и легенды лент в шапке нет',
+    title: 'VIS-41 (пересмотр — решение 97), CARD-54, 1440 × 900: § 1 на первом экране; команды — одной строкой: «Показать на небе», «Родство с…», «Разворот с…», «Добавить в набор ▾»; «Эпоха» паспорта видна; легенды лент в шапке нет',
     run: async (p) => {
       const tops: string[] = [];
       for (const id of ['david', 'melkhisedek', 'avraam', 'esfir']) {
         await go(p, `#/${id}`);
         const s = await firstSection(p);
-        if (s.top === null || s.top > 480) return fail(`${id}: § ${s.n} на ${s.top} px`);
+        // этап 13, решение 97 пересматривает VIS-41: паспорт — три строки времени и видимая эпоха, под шапкой — строка
+        // «Разделы карточки» (решение 119); смысл прежний — § 1 на первом экране: заголовок целиком над полосой времени
+        if (s.top === null || s.top + 24 > s.bottom) return fail(`${id}: § ${s.n} на ${s.top} px, край листа ${s.bottom}`);
         tops.push(`${id} ${s.top}`);
       }
       const cmds = await commands(p);
       const names = cmds.map((c) => c.t).join(' | ');
       if (names !== 'Показать на небе | Родство с… | Разворот с… | Добавить в набор') return fail(`команды: ${names}`);
       if (new Set(cmds.map((c) => c.y)).size !== 1) return fail(`команды в ${new Set(cmds.map((c) => c.y)).size} строки`);
+      // этап 13, решение 97: строка «Эпоха» паспорта — видимая (прежде VIS-41: только для диктора)
       const visibleEpoch = await p.evaluate(() => [...document.querySelectorAll('.folio .passport dt')].some((d) => d.textContent === 'Эпоха' && (d as HTMLElement).getBoundingClientRect().width > 2));
-      if (visibleEpoch) return fail('в паспорте видна строка «Эпоха»');
+      if (!visibleEpoch) return fail('в паспорте не видна строка «Эпоха»');
       if (await p.locator('.folio .mast .lines').count()) return fail('в шапке строка-легенда лент');
       // «Скрыть потомков на небе» — пункт выбора «Добавить в набор», а не команда шапки (решение 26)
       if (await p.locator('.folio .actions > button', { hasText: /потомков/ }).count()) return fail('«потомков» — командой шапки');
@@ -74,14 +77,15 @@ export const cardshell: Scenario[] = [
   },
   {
     n: 231,
-    title: 'VIS-41 на ноутбуке: 1280 × 800 — § 1 не ниже 520 px, команды одной строкой; 1024 × 768 — § 1 виден над полосой времени',
+    title: 'VIS-41 (пересмотр — решение 97) на ноутбуке: 1280 × 800 и 1024 × 768 — § 1 виден над полосой времени, команды одной строкой',
     view: { width: 1280, height: 800 },
     run: async (p) => {
       const out: string[] = [];
       for (const id of ['david', 'melkhisedek', 'avraam']) {
         await go(p, `#/${id}`);
         const s = await firstSection(p);
-        if (s.top === null || s.top > 520) return fail(`1280: ${id} — § ${s.n} на ${s.top} px`);
+        // этап 13, решение 97 (пересмотр VIS-41): § 1 — на первом экране, заголовок целиком над полосой времени
+        if (s.top === null || s.top + 24 > s.bottom) return fail(`1280: ${id} — § ${s.n} на ${s.top} px, край листа ${s.bottom}`);
         out.push(`${id} ${s.top}`);
       }
       const cmds = await commands(p);
@@ -118,7 +122,8 @@ export const cardshell: Scenario[] = [
       const close = await p.locator('.folio .card-tab[data-id="david"] .close').getAttribute('aria-label');
       if (!/^Закрыть вкладку: Давид/.test(close ?? '')) return fail(`«×» вкладки: «${close}»`);
       const s = await firstSection(p);
-      if (s.top === null || s.top > 520) return fail(`при вкладке § 1 на ${s.top} px`);
+      // этап 13, решение 97 (пересмотр VIS-41): § 1 — на первом экране и при вкладке
+      if (s.top === null || s.top + 24 > s.bottom) return fail(`при вкладке § 1 на ${s.top} px, край листа ${s.bottom}`);
       // «×» карточки — карточка закрыта, прежняя из стопки не открывается; вкладка остаётся (корешок справа)
       await p.locator('.folio .folio-bar .bar-cmds .close').click();
       await p.waitForTimeout(900);

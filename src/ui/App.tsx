@@ -88,6 +88,7 @@ const PANEL_NAMES: Partial<Record<Exclude<Panel, null>, string>> = {
   section: 'Сквозной раздел',
   legend: 'Условные знаки',
   about: 'О карте',
+  chronology: 'О хронологии',
   epochs: 'Эпохи',
 };
 

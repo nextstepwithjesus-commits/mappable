@@ -3,14 +3,17 @@ import { useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { panel, theme, type Panel } from '../../state.ts';
 import { grid } from '../layout.ts';
 import { showAll } from '../sky/view.ts';
-import { Menu, Segmented } from '../controls.tsx';
+import { Menu, Segmented, type MenuItem } from '../controls.tsx';
 import { Search } from './Search.tsx';
 import { workSet } from '../work.ts';
 import { plural } from '../common.tsx';
 import { WORK_LEAD } from '../panels/Work.tsx';
 import { openStarts } from '../sky/Controls.tsx';
 
-/** Команда выбора начала (решение 68): в «Ещё» и в «Разделах» телефона, последней; открывает лист «Вид» на «Начале». */
+/**
+ * Команда выбора начала (решение 68): в «Меню» телефона; на широком экране — в «Вид → Начало» и во вступлении (этап 13,
+ * решение 111: «Ещё» — только для команд, которые не поместились). Открывает лист «Вид» на «Начале».
+ */
 export const RESTART_LABEL = 'Начать заново…';
 export const RESTART_HINT = 'Выбрать начало: с Адама, с Иисуса Христа, родословие Иисуса Христа, ключевые лица или всё небо';
 
@@ -33,7 +36,8 @@ export const HINTS: Record<Exclude<Panel, null>, string> = {
   kinship: 'Кем одно лицо приходится другому: степень родства, путь по поколениям и стихи',
   section: 'Один раздел карточки у группы лиц, например «Смерть и погребение» у царей Иудеи',
   legend: 'Как читать карту: что значит каждый знак, линия и надпись на небе',
-  about: 'Источник, уровни достоверности, хронология и известные трудности текста',
+  about: 'Источник, уровни достоверности, данные атласа и как с ним начать; годы и модели — в «О хронологии»',
+  chronology: 'Как читать годы атласа, откуда они берутся и что меняет выбор модели',
   epochs: 'Эпохи с годами и основаниями; над небом — ярусы эпох, судей, царей, пророков и событий',
   spread: 'Две карточки рядом',
   view: 'Вид неба',
@@ -63,12 +67,14 @@ const PANELS: { id: Exclude<Panel, null>; label: string }[] = [
 const HELP: { id: Exclude<Panel, null>; label: string; key?: string }[] = [
   { id: 'legend', label: 'Условные знаки', key: 'L' },
   { id: 'about', label: 'О карте' },
+  // панель «О хронологии» (этап 13, решение 102; src/ui/panels/Chronology.tsx) — рядом с «О карте»
+  { id: 'chronology', label: 'О хронологии' },
 ];
 /**
  * В каком порядке команды уходят в «Ещё», когда строке не хватает места: сначала панели с конца ряда,
  * затем справка, последним — «Указатель». Видимые команды остаются в своих группах и на своих местах.
  */
-const COLLAPSE: Exclude<Panel, null>[] = ['section', 'kinship', 'synopsis', 'epochs', 'chapter', 'work', 'about', 'legend', 'index'];
+const COLLAPSE: Exclude<Panel, null>[] = ['section', 'kinship', 'synopsis', 'epochs', 'chapter', 'work', 'chronology', 'about', 'legend', 'index'];
 const SUBTITLE = 'звёздный атлас библейских родословий';
 const THEMES = [
   { value: 'night', label: 'Ночь' },
@@ -76,19 +82,20 @@ const THEMES = [
 ] as const;
 
 /**
- * Какие команды не помещаются в ряд шириной avail (C3; VIS-20, IX-46, MOB-04): ряд — видимые панели, «Ещё», черта
- * и видимая справка; gap — промежуток между соседями ряда. Ширины команд — по образцам (probe). «Ещё» в ряду всегда:
- * в нём последней стоит «Начать заново…» (решение 68), остальное — ушедшие команды.
+ * Какие команды не помещаются в ряд шириной avail (C3; VIS-20, IX-46, MOB-04): ряд — видимые панели, черта и видимая
+ * справка, а если что-то ушло — ещё «Ещё»; gap — промежуток между соседями ряда. Ширины команд — по образцам (probe).
+ * «Ещё» — только когда команды не помещаются (этап 13, решение 111): меню из одного «Начать заново…» больше не бывает.
  */
 export function overflowCommands(avail: number, width: (id: string) => number, gap: number, sep: number, more: number): Set<string> {
   const hidden = new Set<string>();
-  const need = () => {
+  const need = (withMore: boolean) => {
     const shown = [...PANELS, ...HELP].filter((c) => !hidden.has(c.id));
-    const n = shown.length + 2;
-    return shown.reduce((a, c) => a + width(c.id), 0) + sep + more + gap * (n - 1);
+    const n = shown.length + 1 + (withMore ? 1 : 0);
+    return shown.reduce((a, c) => a + width(c.id), 0) + sep + (withMore ? more : 0) + gap * (n - 1);
   };
+  if (need(false) <= avail) return hidden;
   for (const id of COLLAPSE) {
-    if (need() <= avail) break;
+    if (need(true) <= avail) break;
     hidden.add(id);
   }
   return hidden;
@@ -97,9 +104,36 @@ export function overflowCommands(avail: number, width: (id: string) => number, g
 const togglePanel = (id: Exclude<Panel, null>) => (panel.value = panel.value === id ? null : id);
 
 /**
- * Пункты меню «Разделы» телефона (H4; MOB-03, MOB-04): все панели, справка и тема — строками 48 px. Вид атласа один
- * (решение 77): переключателя «Небо | Древо» больше нет; что показано на небе, говорит строка показа у его кромки.
- * Тема — флажок «Дневная карта»: в строке нет места для «Ночь | День».
+ * Группы меню (этап 13, решение 122; UI-15): инструменты по задаче читателя, в этом порядке. Строка задачи у пункта —
+ * что инструмент делает, короче пояснения HINTS: «Синопсис — сравнить родословия Мф 1 и Лк 3».
+ */
+export const MENU_GROUPS: { name: string; ids: Exclude<Panel, null>[] }[] = [
+  { name: 'Искать и читать', ids: ['index', 'chapter', 'epochs'] },
+  { name: 'Исследовать связи', ids: ['kinship', 'synopsis', 'section', 'work'] },
+  { name: 'Справка', ids: ['legend', 'about', 'chronology'] },
+];
+export const TASKS: Partial<Record<Exclude<Panel, null>, string>> = {
+  index: 'все лица по алфавиту',
+  chapter: 'читать родословные главы; имена — ссылки на карточки',
+  epochs: 'эпохи с годами и основаниями',
+  kinship: 'кем одно лицо приходится другому',
+  synopsis: 'сравнить родословия Мф 1 и Лк 3',
+  section: 'сравнить один раздел у группы лиц',
+  work: 'свои лица на небе',
+  legend: 'что значит каждый знак на небе',
+  about: 'источник, достоверность и данные атласа',
+  chronology: 'откуда годы и что меняет модель',
+};
+const groupOf = (id: Exclude<Panel, null>) => MENU_GROUPS.find((g) => g.ids.includes(id))?.name;
+/** Инструменты в порядке групп меню. */
+const byGroups = <T extends { id: Exclude<Panel, null> }>(list: T[]): T[] =>
+  MENU_GROUPS.flatMap((g) => g.ids.map((id) => list.find((c) => c.id === id)).filter((c): c is T => !!c));
+
+/**
+ * Пункты «Меню» телефона (H4; MOB-03, MOB-04; этап 13, решение 109: прежде «Разделы» — слово 24 разделов карточки): все
+ * панели, справка и тема — строками 48 px. Вид атласа один (решение 77): переключателя «Небо | Древо» больше нет; что
+ * показано на небе, говорит строка показа у его кромки. Тема — «Ночь» и «День», те же слова, что у переключателя темы
+ * на широком экране (X4 § 2.1).
  */
 export function phoneMenuItems(
   open: Panel,
@@ -108,19 +142,22 @@ export function phoneMenuItems(
   toggleTheme: () => void,
   workN = 0,
   restart: () => void = openStarts,
-) {
+): (MenuItem & { label: string })[] {
   return [
-    ...[...PANELS, ...HELP].map((c) => ({
-      key: c.id,
+    // этап 13, решение 122: группы «Искать и читать», «Исследовать связи», «Справка» с подписями; у пункта — строка задачи
+    ...byGroups([...PANELS, ...HELP]).map((c) => ({
+      key: c.id as string,
       label: c.id === 'work' ? workLabel(workN) : c.label,
+      note: TASKS[c.id],
+      group: groupOf(c.id),
       checked: open === c.id,
-      // справка отделена чертой от панелей
-      sep: c.id === HELP[0].id,
+      sep: false,
       onSelect: () => select(c.id),
     })),
     // выбор начала (решение 68) — после справки, отдельной группой; не флажок: пункт открывает лист «Вид»
     { key: 'restart', label: RESTART_LABEL, checked: undefined, sep: true, onSelect: restart },
-    { key: 'theme', label: 'Дневная карта', checked: day, sep: true, onSelect: toggleTheme },
+    { key: 'night', label: 'Ночь', checked: !day, sep: true, onSelect: () => day && toggleTheme() },
+    { key: 'day', label: 'День', checked: day, sep: false, onSelect: () => !day && toggleTheme() },
   ];
 }
 
@@ -165,8 +202,8 @@ export function TopBar() {
     return () => ro.disconnect();
   }, [phone]);
 
-  // телефон (H4; MOB-03, MOB-04): одна строка 48 px — название, поиск (при фокусе поле занимает всю строку) и «Разделы»;
-  // список «Разделы» — все панели, справка и тема. Ряд команд — тот же nav.commands, чтобы панели открывались одним путём
+  // телефон (H4; MOB-03, MOB-04): одна строка 48 px — название, поиск (при фокусе поле занимает всю строку) и «Меню»;
+  // список «Меню» — все панели, справка и тема. Ряд команд — тот же nav.commands, чтобы панели открывались одним путём
   if (phone)
     return (
       <header class="top phone">
@@ -175,7 +212,7 @@ export function TopBar() {
         <nav class="commands" aria-label="Панели атласа">
           <Menu
             class="more sections"
-            label="Разделы"
+            label="Меню"
             title="Панели атласа, справка и тема"
             items={phoneMenuItems(panel.value, theme.value === 'day', togglePanel, () => (theme.value = theme.value === 'day' ? 'night' : 'day'), workSet.value.size, openStarts)}
           />
@@ -196,29 +233,28 @@ export function TopBar() {
       {label(c)}
     </button>
   );
+  // «Ещё» — те же группы и строки задач, что в «Меню» телефона (решение 122)
   const moreItems = [
-    ...[...PANELS, ...HELP]
+    ...byGroups([...PANELS, ...HELP])
       .filter((c) => hidden.has(c.id))
-      .map((c, i, all) => ({
+      .map((c) => ({
         key: c.id as string,
         label: label(c),
+        note: TASKS[c.id],
+        group: groupOf(c.id),
         checked: (panel.value === c.id) as boolean | undefined,
-        // справка отделена от панелей чертой, как в самой строке
-        sep: i > 0 && HELP.some((h) => h.id === c.id) && !HELP.some((h) => h.id === all[i - 1].id),
         onSelect: (): void => {
           togglePanel(c.id);
         },
       })),
   ];
-  // выбор начала (решение 68) — последним пунктом «Ещё», после черты; не флажок: пункт открывает лист «Вид»
-  moreItems.push({ key: 'restart', label: RESTART_LABEL, checked: undefined, sep: moreItems.length > 0, onSelect: openStarts });
   return (
     <header class="top">
       <Wordmark>{sub && <small ref={subRef}>{SUBTITLE}</small>}</Wordmark>
       <Search />
       <nav class="commands" ref={nav} aria-label="Панели атласа">
         {PANELS.filter((c) => !hidden.has(c.id)).map(button)}
-        <Menu class="more" label="Ещё" title={moreItems.length > 1 ? 'Другие панели и справка; начать заново' : RESTART_HINT} items={moreItems} />
+        {moreItems.length > 0 && <Menu class="more" label="Ещё" title="Панели и справка, которым не хватило места в строке" items={moreItems} />}
         <span class="sep" aria-hidden="true" />
         {HELP.filter((c) => !hidden.has(c.id)).map(button)}
       </nav>

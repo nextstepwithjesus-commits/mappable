@@ -8,8 +8,9 @@
  * («ещё N путей» в панели).
  *
  * Фраза собирается целиком, начиная с имени первого лица: «Руфь — прабабушка Давида». Пометы:
- *  — «по толкованию (стих)» — только если на пути есть звено уровня `interpretation` или звено «по Луке»
- *    (Каинан, Нирий → Салафиил): ТЗ § 3.2 называет их звеньями по толкованию;
+ *  — «по толкованию (стих)» — только если на пути есть звено уровня `interpretation`;
+ *  — «по Луке (стих)» — звено иного происхождения по Лк 3 (Нирий → Салафиил, Лк 3:27; Илий → Иосиф, Лк 3:23): это текст
+ *    Луки, а не толкование (этап 13, решение 94; прежде ТЗ § 3.2 называло их звеньями по толкованию);
  *  — «по закону (стих)» — законная связь (Иосиф — Иисус Христос, Мф 1:16);
  *  — «по усыновлению (стих)» — приёмное родство.
  * Одинаковые заголовки различаются лицами, через которые идёт путь: «через Соломона», «через Нафана».
@@ -44,7 +45,7 @@ export interface KinLink {
 }
 
 export interface Qualifier {
-  kind: 'adoptive' | 'legal' | 'interpretation';
+  kind: 'adoptive' | 'legal' | 'luke' | 'interpretation';
   refs: string[];
 }
 
@@ -366,10 +367,11 @@ function qualifiersOf(steps: KinStep[]): Qualifier[] {
   };
   add('adoptive', (s) => s.claim === 'adoptive');
   add('legal', (s) => s.claim === 'legal');
+  add('luke', (s) => s.claim === 'by-luke');
   add('interpretation', (s) => s.interpretive);
   return out;
 }
-const QUAL_WORD: Record<Qualifier['kind'], string> = { adoptive: 'по усыновлению', legal: 'по закону', interpretation: 'по толкованию' };
+const QUAL_WORD: Record<Qualifier['kind'], string> = { adoptive: 'по усыновлению', legal: 'по закону', luke: 'по Луке', interpretation: 'по толкованию' };
 /** Пометы пути одной фразой: «, по закону (Мф 1:16) и по толкованию (Лк 3:27)» (CARD-62). */
 const qualText = (qs: Qualifier[]) => (qs.length ? `, ${qs.map((q) => `${QUAL_WORD[q.kind]}${q.refs.length ? ` (${refsText(q.refs)})` : ''}`).join(' и ')}` : '');
 
@@ -422,6 +424,20 @@ function upPaths(g: Graph, from: string, to: string, len: number, rest: Map<stri
   rec(from, 0);
 }
 
+/**
+ * Два прочтения одного стиха в одном пути (этап 13, решение 107; D9, X6 п. 1): Лк 3:23 «Иосиф, Илиев» читается либо
+ * как второе родословие Иосифа (связь Иосифа «по Луке» с Илием), либо как родословие Марии (Илий — отец Марии по
+ * толкованию). Путь, в котором есть обе связи одного родителя — «по Луке» к одному ребёнку и «толкование» к другому, —
+ * склеивает взаимоисключающие прочтения («Иосиф — брат Марии») и не перечисляется. Каждое прочтение в отдельном пути
+ * допустимо: «Иисус Христос — внук Илия» по Луке через Иосифа или по толкованию через Марию.
+ */
+export function mixesReadings(edges: ParentEdge[]): boolean {
+  const byLuke = new Map<string, string>();
+  for (const e of edges) if (e.claim === 'by-luke') byLuke.set(e.parent, e.child);
+  if (!byLuke.size) return false;
+  return edges.some((e) => e.cert === 'interpretation' && e.claim !== 'by-luke' && byLuke.has(e.parent) && byLuke.get(e.parent) !== e.child);
+}
+
 /** Все пути от потомка вверх до предка, от кратчайшего до кратчайшего + WINDOW. */
 function linealPaths(g: Graph, anc: string, desc: string): ParentEdge[][] {
   const rest = bfs(g, anc, 'down');
@@ -429,7 +445,7 @@ function linealPaths(g: Graph, anc: string, desc: string): ParentEdge[][] {
   if (s === undefined) return [];
   const out: ParentEdge[][] = [];
   for (let len = s; len <= s + WINDOW && out.length < MAX_PATHS; len++) upPaths(g, desc, anc, len, rest, new Set(), MAX_PATHS, out);
-  return out;
+  return out.filter((p) => !mixesReadings(p));
 }
 
 interface Lateral {
@@ -464,6 +480,7 @@ function lateralPaths(g: Graph, a: string, b: string): Lateral[] {
           const na = new Set(pa.map((e) => e.child));
           for (const pb of pbs) {
             if (pb.some((e) => na.has(e.child))) continue;
+            if (mixesReadings([...pa, ...pb])) continue;
             out.push({ c, pa, pb });
             if (out.length >= MAX_PATHS) break;
           }
@@ -479,6 +496,9 @@ function lateralPaths(g: Graph, a: string, b: string): Lateral[] {
  * Авия — сын Ровоама и внук Авессалома через мать Мааху (3 Цар 15:2), Зоровавель — сын Салафиила и, по 1 Пар 3:19, Федаии.
  * Первый путь группы (основной) остаётся, остальные становятся его вариантами.
  */
+/** Прочтение пути: есть ли в нём звенья по толкованию и звенья «по Луке». */
+const reading = (r: Relation) => `${r.steps.some((s) => s.interpretive) ? 'i' : ''}${r.steps.some((s) => s.claim === 'by-luke') ? 'l' : ''}`;
+
 function foldVariants(sorted: Relation[]): Relation[] {
   const reps: Relation[] = [];
   for (const r of sorted) {
@@ -487,6 +507,9 @@ function foldVariants(sorted: Relation[]): Relation[] {
     let wins: [number, number][] = [];
     for (const rep of reps) {
       if (rep.steps.length !== r.steps.length || rep.up !== r.up || rep.down !== r.down || rep.lineal !== r.lineal) continue;
+      // обходы разных прочтений не сворачиваются: путь по толкованию (Илий — отец Марии) и путь «по Луке» (Илий — отец
+      // Иосифа), Лк 3:23 (этап 13, решение 107)
+      if (reading(rep) !== reading(r)) continue;
       const base = rep.chain.map((c) => c.id);
       const w: [number, number][] = [];
       for (let i = 0; i < ids.length; i++) {
@@ -576,7 +599,8 @@ export function relate(g: Graph, aId: string, bId: string, maxResults = MAX_PATH
     const to = dir === 'up' ? e.parent : e.child;
     return {
       from, to, kind: dir, term: linkTerm(person(to).sex, dir === 'up' ? 'parent' : 'child', e.claim),
-      cert: e.cert, claim: e.claim, refs: e.refs, gap: e.gap || e.claim === 'ancestor', interpretive: e.cert === 'interpretation' || e.claim === 'by-luke',
+      // «по Луке» — текст Лк 3, а не толкование (решение 94): у пути своя помета «по Луке»
+      cert: e.cert, claim: e.claim, refs: e.refs, gap: e.gap || e.claim === 'ancestor', interpretive: e.cert === 'interpretation',
     };
   };
   const chainOf = (steps: KinStep[]): KinLink[] => [{ id: aId }, ...steps.map((s) => ({ id: s.to, term: s.term, step: s }))];

@@ -101,9 +101,9 @@ export const input3: Scenario[] = [
         /^ArrowRight: С предками: 3 поколения$/,
         /^ArrowDown: С потомками: 3 поколения$/,
         /^ArrowLeft: С потомками: 2 поколения$/,
-        /^End: Свернуть созвездие/,
+        /^End: Скрыть созвездие/,
         /^Home: Только Иессея$/,
-        /^ArrowUp: Свернуть созвездие/,
+        /^ArrowUp: Скрыть созвездие/,
       ];
       const bad = seq.findIndex((s, i) => !want[i].test(flat(s)));
       if (bad >= 0) return fail(`шаг ${bad}: «${seq[bad]}»; путь: ${seq.join(' | ')}`);
@@ -127,7 +127,7 @@ export const input3: Scenario[] = [
       if (subs.join('|') !== 'Добавить в набор:|На небе:') return fail(`подзаголовки: ${subs.join(', ')}`);
       const groups = await m.locator('[role="menu"] > [role="group"]').evaluateAll((gs) => gs.map((g) => `${g.getAttribute('aria-label')}: ${[...g.querySelectorAll('[role^="menuitem"]')].map((b) => (b.textContent ?? '').trim()).join(', ')}`));
       if (!/^Добавить в набор: Только Гедеона, С семьёй, 1/.test(flat(groups[0] ?? ''))) return fail(`первая группа: ${groups[0]}`);
-      if (!/^На небе: .*Свернуть созвездие «Колено Манассиино»/.test(flat(groups[1] ?? ''))) return fail(`вторая группа: ${groups[1]}`);
+      if (!/^На небе: .*Скрыть созвездие «Колено Манассиино»/.test(flat(groups[1] ?? ''))) return fail(`вторая группа: ${groups[1]}`);
       const close = m.locator('.wp-head .close');
       if (!(await close.count())) return fail('у меню нет «×»');
       await close.click();
@@ -473,7 +473,8 @@ export const input3: Scenario[] = [
       const bad = items.find((i) => i.title.length < 20 || i.desc !== i.title);
       if (bad) return fail(`«${bad.t}»: title «${bad.title}», для диктора «${bad.desc}»`);
       const sheet = items.find((i) => i.t === 'изменить');
-      if (!sheet || !/линии Мессии.*Мф 1.*Лк 3/.test(sheet.title) || !/набор/.test(sheet.title)) return fail(`«изменить»: ${sheet?.title}`);
+      // этап 13 (решение 110): показ линий — «Родословие Иисуса Христа (Мф 1, Лк 3)»
+      if (!sheet || !/родословие Иисуса Христа \(Мф 1, Лк 3\)/.test(sheet.title) || !/набор/.test(sheet.title)) return fail(`«изменить»: ${sheet?.title}`);
       return pass(items.map((i) => `${i.t}: ${i.title}`).join(' / '));
     },
   },

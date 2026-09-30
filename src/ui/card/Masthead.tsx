@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
-import { byId, graph, loadCard, loadedCard } from '../../data/atlas.ts';
+import { byId, graph, loadCard, loadedCard, loadedChrono, loadedLastRef, models, modelDependent, modelInfoOf } from '../../data/atlas.ts';
 import type { ChronoRow } from '../../data/atlas.ts';
 import type { Card, Epoch } from '../../data/types.ts';
 import { model } from '../../state.ts';
-import { Mark } from '../common.tsx';
-import { formatYear, lifeSpanText, shownBirthRange, shownYears, shortYear, toAstro, toHist } from '../../engine/years.ts';
-import { activityEpochs, affiliation, birthEpoch, birthRange, constellation, roleLabel } from './shared.tsx';
-import { bySex, pluralPeopleName } from '../text/ru.ts';
+import { Mark, MarkNote, MARK_FULL, Refs, VerseInsert } from '../common.tsx';
+import { dateText, isWide, wideEnds, lastText, lifeDates, lifeText, markTitle, modelYearsText, shownPoint, shownYears, spanText, toAstro, toHist, yearsWord, type DateVal } from '../../engine/years.ts';
+import { affiliation, birthEpoch, birthRange, constellation, datesOf, lifeEpoch, reignLength, reignWords, roleLabel, type ReignLike } from './shared.tsx';
+import { bySex, nameCase, pluralPeopleName } from '../text/ru.ts';
 import { typo, typoTree } from '../text/typo.ts';
 import { YearMark } from './Chrono.tsx';
 import { mapFont, T_UI_S } from '../../render/type.ts';
@@ -32,23 +32,12 @@ export function peopleTime(id: string): string {
 }
 
 /**
- * Годы паспорта. У лица Нового Завета, чей знак на небе стоит у первого засвидетельствованного года (ChronoRow.mark;
- * MAP-69, решение 38), точка оценки рождения не называется: «род. между 40 и 10 гг. до Р. Х.» — тот же промежуток,
- * что в § 8; иначе — как везде (lifeSpanText).
+ * Годы паспорта словами словаря дат (решение 96; engine/years.ts, lifeText): «1040–970 гг. до Р. Х.», «род. между 45 и
+ * 20 гг. до Р. Х.», «ок. 1045–975 гг. до Р. Х.»; границы текста (birthRange) — те же, что в § 8 и на мини-шкале.
  */
 export function passportYears(id: string, c: ChronoRow | undefined, people = isPeople(id)): string {
   if (!c) return '';
-  if (c.mark === undefined || c.cls !== 'estimated' || people) return lifeSpanText(c, { people });
-  const [bLo, bHi] = birthRange(id, c, model.value.chrono);
-  const [lo, hi] = shownBirthRange({ ...c, bLo, bHi });
-  const y = shownYears(c);
-  const hl = toHist(lo);
-  const hh = toHist(hi);
-  const NB = '\u00a0';
-  const span =
-    hl < 0 && hh < 0 ? `${-hl} и ${-hh}${NB}гг.${NB}до${NB}Р.${NB}Х.` : hl > 0 && hh > 0 ? `${hl} и ${hh}${NB}гг.${NB}по${NB}Р.${NB}Х.` : `${formatYear(lo)} и ${formatYear(hi)}`;
-  const death = y && y.d !== null ? `; ум. ${formatYear(y.d, { approx: y.approx })}` : '';
-  return `род. между ${span}${death}`;
+  return lifeText(datesOf(id, c, model.value.chrono), { people });
 }
 
 /** Созвездие повторяет колено («Колено Иудино» и «колено Иудино») — строки «Созвездие» нет. */
@@ -66,12 +55,12 @@ const sameAs = (a: string | null, b: string | undefined) => !!a && !!b && a.toLo
 export function Masthead({ id, actions, axis }: { id: string; actions?: ComponentChildren; axis?: [number, number]; card?: Card | null }) {
   const p = byId.get(id)!;
   const c = model.value.chrono.get(id);
-  const eps = activityEpochs(id, c, model.value.epochs);
+  const life = lifeEpoch(id, c, model.value.epochs);
+  const bornIn = c && c.cls !== 'epochal' ? birthEpoch(id, c, model.value.epochs) : null;
   const tribe = affiliation(id);
   const star = constellation(p.group);
   const people = isPeople(id);
   const years = passportYears(id, c, people);
-  const epochText = eps.length ? (eps.length === 1 ? eps[0].name : `${eps[0].name} — ${eps[eps.length - 1].name}`) : '—';
   return (
     <header class="mast">
       {/* имя — в строчном блоке: черта фокуса — по ширине имени (VIS-56); первая строка обходит команды полосы листа */}
@@ -88,7 +77,7 @@ export function Masthead({ id, actions, axis }: { id: string; actions?: Componen
               <dd>{roleLabel(id)}</dd>
             </>
           ) : null}
-          {star && !sameAs(star, tribe?.text) ? (
+          {star && !sameAs(star, tribe?.own?.text) ? (
             <>
               <dt>Созвездие</dt>
               <dd>
@@ -104,17 +93,23 @@ export function Masthead({ id, actions, axis }: { id: string; actions?: Componen
               </dd>
             </>
           ) : null}
-          {tribe ? (
+          {/* происхождение — своей строкой, помета «толк.» или «выв.» на поле; брак — строкой «По браку» (решение 97; X4 Д9) */}
+          {tribe?.own ? (
             <>
               <dt>Колено / народ</dt>
-              <dd>{tribe.text}</dd>
+              {/* class fact — только у строки с пометой на поле («толк.», «выв.») */}
+              <dd class={tribe.own.cert && tribe.own.cert !== 'scripture' ? 'fact' : undefined}>
+                {tribe.own.text}
+                <Mark cert={tribe.own.cert} />
+              </dd>
             </>
           ) : null}
-          {/* эпоха видна полосой мини-шкалы; диктору шкала не читается — для него строка остаётся текстом */}
-          <div class="visually-hidden">
-            <dt>Эпоха</dt>
-            <dd>{epochText}</dd>
-          </div>
+          {tribe?.marriage ? (
+            <>
+              <dt>По браку</dt>
+              <dd>{tribe.marriage}</dd>
+            </>
+          ) : null}
           {people ? (
             <>
               <dt>Время</dt>
@@ -123,20 +118,33 @@ export function Masthead({ id, actions, axis }: { id: string; actions?: Componen
           ) : (
             <>
               <dt>Годы</dt>
-              {/* class fact: помета «расч.» встаёт на внешнее поле строки, как у фактов разделов */}
+              {/* class fact: помета «расч.» встаёт на внешнее поле строки, как у фактов разделов; её пояснение — своё
+                  у лица: откуда год и зависит ли он от модели (решение 96) */}
               <dd class="fact">
                 {years ? (
                   <>
                     {years}
-                    {/* та же помета, что в § 8: «выв.» у года по порядку перечисления братьев, иначе «расч.» */}
-                    {c ? <YearMark cls={c.cls} byOrder={c.byOrder} /> : <Mark calc />}
+                    {c ? <YearMark id={id} c={c} /> : <Mark calc />}
                   </>
                 ) : (
                   'время не установлено'
                 )}
+                <YearsSub id={id} c={c} />
               </dd>
+              <TimeRows id={id} c={c} />
             </>
           )}
+          {/* эпоха жизни — видимая строка (решение 97, 98; пересматривает VIS-41): та же, что подписана на мини-шкале,
+              что слышит диктор и что называет § 13; второй строкой — эпоха рождения, если она другая */}
+          {!people && life ? (
+            <>
+              <dt>Эпоха</dt>
+              <dd>
+                {life.name}
+                {bornIn && bornIn.id !== life.id ? <span class="pass-sub">{`${bySex(p.sex, 'родился', 'родилась')} в эпоху «${bornIn.name}»`}</span> : null}
+              </dd>
+            </>
+          ) : null}
         </dl>,
       )}
       <LifeBar id={id} axis={axis} />
@@ -145,28 +153,167 @@ export function Masthead({ id, actions, axis }: { id: string; actions?: Componen
 }
 
 /**
- * Подписи концов мини-шкалы — те же годы, что в паспорте. Конец подписывается, только если год смерти есть в паспорте;
- * у лиц без опор (epochal) годов нет, у народа — только время в родословии.
- * Эра («до Р. Х.») — не у конца жизни, а у крайней правой подписи оси (VIS-06): риска конца стоит под самим годом.
+ * Пояснения под годами паспорта (решение 96; X2 § 2.2): о смерти Писание молчит — «последнее упоминание — 30 г. по Р. Х.»
+ * со стихом; в модели не по умолчанию у лица, чьи годы от неё зависят, — «в модели «Основной текст» — 2166–1991 гг.»
  */
-export function lifeBarLabels(c: ChronoRow): { left: string | null; right: string | null } {
-  const y = shownYears(c);
-  if (!y) return { left: null, right: null };
-  // о смерти нет данных — или умер в год рождения (младенец): одна подпись, как в паспорте
-  if (y.d === null || y.d === y.b) return { left: shortYear(y.b, y.approx, false), right: null };
-  const hb = toHist(y.b);
-  const hd = toHist(y.d);
-  return { left: shortYear(y.b, y.approx, hb < 0 && hd > 0), right: shortYear(y.d, y.approx, false) };
+function YearsSub({ id, c }: { id: string; c: ChronoRow | undefined }) {
+  if (!c || c.cls === 'epochal' || c.named) return null;
+  const m = model.value;
+  const out: ComponentChildren[] = [];
+  const lastRef = loadedLastRef(id);
+  if (c.d === null && c.last !== null && Math.round(c.last) > (shownYears(c)?.b ?? c.b))
+    out.push(
+      <span class="pass-sub" key="last">
+        {`о смерти Писание не говорит; ${lastText(c.last)}`}
+        {lastRef ? <Refs refs={[lastRef]} owner={`pass-last|${id}`} /> : null}
+        {lastRef ? <VerseInsert owner={`pass-last|${id}`} refs={[lastRef]} /> : null}
+      </span>,
+    );
+  const base = models[0];
+  const b0 = base.chrono.get(id);
+  if (m.id !== base.id && b0 && modelDependent(id)) {
+    const t = modelYearsText(datesOf(id, b0, base.chrono), modelInfoOf(base.id).short);
+    if (t) out.push(<span class="pass-sub" key="model">{t}</span>);
+  }
+  // строки собраны здесь, внутри компонента: typoTree паспорта до них не доходит — typo на месте
+  return out.length ? typoTree(<>{out}</>) : null;
 }
 
-/** Высота мини-шкалы в CSS-пикселях (VIS-41: эпохи 13, жизнь 4, ось 14); та же в правиле .lifebar (src/styles/folio.css). */
-export const LIFEBAR_H = 44;
-/** Уже этого мини-шкала оставляет на оси только годы жизни (CARD-69): промежуточные круглые годы не помещаются. */
-const LIFEBAR_TICKS_MIN = 320;
+/**
+ * Вторая строка времени паспорта (решение 97): «Царствовал» — сроки по реконструкции Тиле — Янга, соправления словами
+ * («792–767 — вместе с отцом, Амасией; один — с 767, в 27-й год Иеровоама»); иначе «В Писании» — годы засвидетельствованной
+ * деятельности (служение, события: «6 г. до Р. Х. — 30 г. по Р. Х.; от Благовещения до молитвы с апостолами») или, у лица
+ * без годов, время встречи («между 2091 и 2080 гг. до Р. Х.; встреча с Авраамом», Быт 14:17–20).
+ */
+function TimeRows({ id, c }: { id: string; c: ChronoRow | undefined }) {
+  // строки собраны внутри компонента: typoTree паспорта до них не доходит — typo здесь
+  const rows = timeRows(id, c);
+  return rows ? typoTree(rows) : null;
+}
+function timeRows(id: string, c: ChronoRow | undefined) {
+  const p = byId.get(id)!;
+  const vol = loadedChrono(id);
+  const reigns = (vol?.reign?.length ? vol.reign : p.reign.map((r) => ({ ...r, refs: [] as string[] }))) as (ReignLike & { sole?: number; sync?: { with: string; year: number; refs: string[] }[] })[];
+  if (reigns.length) {
+    const start = Math.min(...reigns.map((r) => r.start));
+    const end = Math.max(...reigns.map((r) => r.end));
+    const one = reigns.length === 1 ? reigns[0] : null;
+    const len = one ? reignLength(one) : null;
+    const span = spanText({ t: toAstro(start) }, { t: toAstro(end) });
+    const words = reignWords(id, reigns);
+    const age = reigns.find((r) => r.ageAtStart !== undefined);
+    return (
+      <>
+        <dt>{bySex(p.sex, 'Царствовал', 'Царствовала')}</dt>
+        <dd class="fact">
+          {len ? `${len}: ${span}` : span}
+          <MarkNote label="расч." full={MARK_FULL.reign} />
+          {age ? (
+            <span class="pass-sub">
+              {`${bySex(p.sex, 'воцарился', 'воцарилась')} в ${yearsWord(age.ageAtStart!)}`}
+              <Refs refs={age.refs} owner={`pass-age|${id}`} />
+              <VerseInsert owner={`pass-age|${id}`} refs={age.refs} />
+            </span>
+          ) : null}
+          {/* царствования по отдельности («семь лет и шесть месяцев над Иудеей, в Хевроне») — в § 16: паспорт держит срок,
+              возраст при воцарении и соправления словами (решение 97), без повтора § 16 */}
+          {words.map((w, i) => (
+            <span class="pass-sub" key={`w${i}`}>
+              {w.text}
+              <Refs refs={w.refs} owner={`pass-w${i}|${id}`} />
+              <VerseInsert owner={`pass-w${i}|${id}`} refs={w.refs} />
+            </span>
+          ))}
+        </dd>
+      </>
+    );
+  }
+  const act = vol?.active ?? (p.active ? { from: p.active[0], to: p.active[1], refs: [] as string[], note: undefined } : null);
+  if (act) {
+    return (
+      <>
+        <dt>В Писании</dt>
+        <dd class="fact">
+          {spanText({ t: toAstro(act.from) }, { t: toAstro(act.to) })}
+          <MarkNote label="расч." full="годы засвидетельствованной деятельности — по годам событий, названных в стихах; расчёт атласа" />
+          {act.note || act.refs.length ? (
+            <span class="pass-sub">
+              {act.note ?? ''}
+              <Refs refs={act.refs} owner={`pass-act|${id}`} />
+              <VerseInsert owner={`pass-act|${id}`} refs={act.refs} />
+            </span>
+          ) : null}
+        </dd>
+      </>
+    );
+  }
+  // время не установлено, но встреча названа (Мелхиседек и Аврам, Быт 14:17–20): её время — строкой «В Писании»
+  if (c?.cls === 'epochal' && c.basis?.kind === 'met' && c.basis.ids?.[0] && c.bHi > c.bLo) {
+    const who = c.basis.ids[0];
+    const q = byId.get(who);
+    const ins = q ? nameCase(q.name, q.sex, 'ins', q.unnamed, q.alt) : null;
+    const met = loadedCard(id)?.met?.find((x) => x.id === who);
+    return (
+      <>
+        <dt>В Писании</dt>
+        <dd class="fact">
+          {dateText({ t: c.b, est: true, lo: c.bLo, hi: c.bHi })}
+          <MarkNote label="расч." full={markTitle(c, { dep: modelDependent(id), model: modelInfoOf(model.value.id).short })} />
+          <span class="pass-sub">
+            {ins ? `встреча с ${ins}` : `встреча: ${q?.name ?? who}`}
+            {met ? <Refs refs={met.refs} owner={`pass-met|${id}`} /> : null}
+            {met ? <VerseInsert owner={`pass-met|${id}`} refs={met.refs} /> : null}
+          </span>
+        </dd>
+      </>
+    );
+  }
+  return null;
+}
+
+/**
+ * Подпись года на мини-шкале — теми же словами словаря, что паспорт (решение 96), без «г.» и эры: «1040», «ок. 1330»,
+ * «не позже 1876»; широкая оценка — промежутком «45–20» (в паспорте — «род. между 45 и 20 гг. до Р. Х.»).
+ */
+function scaleYear(v: DateVal): string {
+  if (isWide(v)) {
+    const [a, b] = wideEnds(v).map(toHist);
+    // промежуток через Р. Х. — у каждого конца своя эра: «40 до Р. Х.–30 по Р. Х.» (решение 97)
+    if (a < 0 !== b < 0) return `${Math.abs(a)}\u00a0до\u00a0Р.\u00a0Х.–${b}\u00a0по\u00a0Р.\u00a0Х.`;
+    const t = dateText(v, { era: false });
+    const m = /^между\s(\d+)\sи\s(\d+)$/.exec(t);
+    return m ? `${m[1]}–${m[2]}` : t;
+  }
+  return dateText(v, { era: false });
+}
+
+/**
+ * Подписи концов мини-шкалы — те же годы, что в паспорте. Конец подписывается, только если год смерти есть в паспорте;
+ * у лиц без опор (epochal) годов нет, у народа — только время в родословии.
+ * Эра («до Р. Х.») — не у конца жизни, а у крайней правой подписи оси (VIS-06): риска конца стоит под самим годом;
+ * при переходе через Р. Х. — у каждой подписи (решение 97; lifeBarLayout).
+ */
+export function lifeBarLabels(c: ChronoRow): { left: string | null; right: string | null } {
+  const ld = lifeDates(c);
+  if (!ld) return { left: null, right: null };
+  const left = scaleYear(ld.birth);
+  // о смерти нет данных — или умер в год рождения (младенец): одна подпись, как в паспорте
+  if (!ld.death || shownPoint(ld.death) === shownPoint(ld.birth)) return { left, right: null };
+  const hb = toHist(shownPoint(ld.birth));
+  const hd = toHist(shownPoint(ld.death));
+  return { left: hb < 0 && hd > 0 && !/Р\./.test(left) ? `${left}\u00a0до\u00a0Р.\u00a0Х.` : left, right: scaleYear(ld.death) };
+}
+
+/**
+ * Высота мини-шкалы в CSS-пикселях (решение 97): эпохи 13, жизнь 4, служение или царствование 3, ось и подписи 16;
+ * та же в правиле .lifebar (src/styles/folio.css).
+ */
+export const LIFEBAR_H = 48;
 
 /**
  * Окно мини-шкалы в астрономических годах: у лица без опор и у народа — его эпоха; иначе от раннего края рождения
- * до смерти или последнего события, с полями по 30 %. Развороту — для общей оси двух шапок (объединение окон).
+ * до смерти или последнего события (и до конца царствования или служения), с полями по 30 %. Развороту — для общей
+ * оси двух шапок (объединение окон).
  */
 export function lifeWindow(id: string): [number, number] | null {
   const c = model.value.chrono.get(id);
@@ -176,22 +323,24 @@ export function lifeWindow(id: string): [number, number] | null {
   const ep = byEpoch ? birthEpoch(id, c, epochs) : null;
   if (byEpoch && !ep) return null;
   const [bLo, bHi] = birthRange(id, c, model.value.chrono);
-  const start = ep ? toAstro(ep.start) : bLo;
-  const end = ep ? toAstro(ep.end) : (c.d ?? c.last ?? bHi);
+  const act = activitySpan(id);
+  const start = ep ? toAstro(ep.start) : Math.min(bLo, act?.[0] ?? bLo);
+  const end = ep ? toAstro(ep.end) : Math.max(c.d ?? c.last ?? bHi, act?.[1] ?? -Infinity);
   const span = Math.max(80, end - start);
   return [start - span * 0.3, end + span * 0.3];
 }
 
-/** Полоса эпохи на мини-шкале и её подпись. */
-export type EpochBand = { i: number; name: string; a: number; b: number };
-export type EpochLabel = { text: string; x: number; w: number };
+/** Полоса эпохи на мини-шкале и её подпись. own — эпоха жизни лица (решение 98): полоса выделена, подпись — всегда. */
+export type EpochBand = { i: number; name: string; a: number; b: number; own?: boolean };
+export type EpochLabel = { text: string; x: number; w: number; own?: boolean };
 
 /**
- * Полосы эпох мини-шкалы и их подписи (VIS-63): подпись — только целиком, многоточия нет.
- * — Эпоха рождения лица (born) подписывается всегда: подпись сдвигается в видимую часть своей полосы, а если полоса
- *   у́же слова — выходит за неё, соседние подписи тогда уступают.
- * — Остальные эпохи подписываются, только если слово помещается в видимую часть полосы с запасом 8 px и не задевает
- *   подпись эпохи рождения; иначе полоса без текста, название — в подсказке шкалы.
+ * Полосы эпох мини-шкалы и их подписи (VIS-63; решение 97): подпись — только целиком, многоточия нет.
+ * — Эпоха жизни лица (born — её id) подписывается всегда: полным именем, а если оно не помещается в полосу — кратким
+ *   (Epoch.short, решение 99: «Жизнь Христа»); подпись сдвигается в видимую часть своей полосы, а если полоса у́же
+ *   слова — выходит за неё, соседние подписи тогда уступают.
+ * — Остальные эпохи подписываются, только если полное или краткое имя помещается в видимую часть полосы с запасом
+ *   8 px и не задевает подпись эпохи жизни; иначе полоса без текста, название — в подсказке шкалы.
  * x — год (астрономический) → px; w — ширина шкалы; measure — ширина строки в px.
  */
 export function epochBandLabels(epochs: Epoch[], x: (t: number) => number, w: number, born: string | null, measure: (t: string) => number): { bands: EpochBand[]; labels: EpochLabel[] } {
@@ -200,49 +349,181 @@ export function epochBandLabels(epochs: Epoch[], x: (t: number) => number, w: nu
   epochs.forEach((e, i) => {
     const a = Math.max(0, x(toAstro(e.start)));
     const b = Math.min(w, x(toAstro(e.end)));
-    if (b > a) bands.push({ i, name: e.name, a, b });
+    if (b > a) bands.push({ i, name: e.name, a, b, own: e.id === born });
   });
   const labels: EpochLabel[] = [];
-  const own = bands.find((band) => epochs[band.i].id === born) ?? null;
+  const own = bands.find((band) => band.own) ?? null;
+  const fit = (band: EpochBand) => {
+    const e = epochs[band.i];
+    for (const t of [e.name, e.short].filter((q): q is string => !!q)) if (measure(t) <= band.b - band.a - 2 * PAD) return t;
+    return null;
+  };
   if (own) {
-    const tw = measure(own.name);
+    const e = epochs[own.i];
+    const text = fit(own) ?? (e.short && measure(e.short) < measure(e.name) ? e.short : e.name);
+    const tw = measure(text);
     // в видимую часть своей полосы; не помещается — к её правому краю, но не за края шкалы
     let lx = own.a + PAD;
     if (lx + tw > own.b - PAD) lx = own.b - PAD - tw;
     lx = Math.max(PAD / 2, Math.min(w - PAD / 2 - tw, lx));
-    labels.push({ text: own.name, x: lx, w: tw });
+    labels.push({ text, x: lx, w: tw, own: true });
   }
   for (const band of bands) {
     if (band === own) continue;
-    const tw = measure(band.name);
+    const text = fit(band);
+    if (!text) continue;
+    const tw = measure(text);
     const lx = band.a + PAD;
-    if (tw > band.b - band.a - 2 * PAD) continue;
     if (labels.some((l) => lx < l.x + l.w + 2 * PAD && lx + tw + 2 * PAD > l.x)) continue;
-    labels.push({ text: band.name, x: lx, w: tw });
+    labels.push({ text, x: lx, w: tw });
   }
   return { bands, labels };
 }
 
-/** Круглые годы оси: шаг, при котором на окно приходится 3–5 рисок. */
-function roundTicks(t0: number, t1: number): number[] {
-  const span = t1 - t0;
-  const step = [10, 20, 25, 50, 100, 200, 250, 500, 1000].find((s) => span / s <= 5) ?? 1000;
-  const out: number[] = [];
-  // риски — по историческому счёту (год 0 не существует): 1000 г. до Р. Х. — это астрономический −999
-  for (let h = Math.ceil(toHist(t0) / step) * step; toAstro(h) <= t1; h += step) if (h !== 0) out.push(toAstro(h));
+/** Срок служения или царствования (астрономические годы): царствования — от первого до конца последнего. */
+function activitySpan(id: string): [number, number] | null {
+  const p = byId.get(id);
+  if (!p) return null;
+  if (p.reign.length) return [toAstro(Math.min(...p.reign.map((r) => r.start))), toAstro(Math.max(...p.reign.map((r) => r.end)))];
+  if (p.active) return [toAstro(p.active[0]), toAstro(p.active[1])];
+  return null;
+}
+
+/**
+ * Соправления (решение 97, 103; X2 Д9): годы царствования, которые делятся с отцом или сыном, царствовавшим над той же
+ * землёй («792–767 — вместе с отцом, Амасией»). До контракта 1 (reign.sole) — по пересечению царствований отца и сына.
+ */
+export function coRegencies(id: string): { with: string; a: number; b: number }[] {
+  const p = byId.get(id);
+  if (!p?.reign.length) return [];
+  const kin = [p.father, ...(graph.childrenOf.get(id) ?? []).filter((e) => e.kind === 'father' || e.kind === 'mother').map((e) => e.child)].filter((x): x is string => !!x);
+  const out: { with: string; a: number; b: number }[] = [];
+  for (const r of p.reign)
+    for (const k of kin)
+      for (const q of byId.get(k)?.reign ?? []) {
+        if (q.over !== r.over) continue;
+        const a = Math.max(toAstro(r.start), toAstro(q.start));
+        const b = Math.min(toAstro(r.end), toAstro(q.end));
+        if (b > a) out.push({ with: k, a, b });
+      }
   return out;
 }
 
-/** Эра подписи оси: «до Р. Х.» или «по Р. Х.» — у крайней правой подписи и у первого года по Р. Х., если окно их разделяет. */
-const eraOf = (t: number) => (toHist(t) < 0 ? ' до Р. Х.' : ' по Р. Х.');
+/** Подпись оси мини-шкалы: год (x — середина риски), текст; kind — конец жизни, начало царствования, «Р. Х.». */
+export type AxisLabel = { tick: number; text: string; kind: 'life' | 'reign' | 'era'; x: number; w: number };
 
 /**
- * Мини-шкала жизни в три ряда (F2; VIS-06, VIS-41): эпохи с названиями; жизнь — ядро сплошное, неопределённые края
- * растушёваны, дети — риски, родители — кружки; ось лет — круглые годы и годы паспорта на концах.
- * У лица без опор (epochal) — скобка на всю эпоху «время не установлено» (ТЗ § 3.1); у народа — скобка «без года» (CARD-59).
- * Холст перерисовывается при каждой смене ширины (ручка границы, окно): подписи — всегда Jost 12 px (CARD-69).
+ * Мини-шкала жизни — раскладка без холста (решение 97; X2 § 2.2), для рисунка и проверок:
+ *  — полосы эпох, подписана эпоха жизни (lifeEpoch), она выделена;
+ *  — жизнь: промежуток рождения растушёван, сплошная часть — до смерти или последнего упоминания, дальше след тает;
+ *  — под жизнью — полоса служения или царствования, соправление заштриховано;
+ *  — на оси — только концы жизни, начало царствования и «Р. Х.»; кружков родителей и рисок детей нет;
+ *  — эра у каждой подписи, если окно переходит через Р. Х., иначе — у крайней правой.
+ * У лица без опор — скобка эпохи «время не установлено» (или отрезок встречи, если время задано встречей); у народа —
+ * скобка «без года».
  */
-/** Мини-шкала жизни на фоне эпох; её же показывает образец в «Условных знаках» (G5). */
+export interface LifeBarLayout {
+  bands: EpochBand[];
+  epochLabels: EpochLabel[];
+  life: { lo: number; hi: number; solidTo: number; fade: boolean } | null;
+  act: { a: number; b: number; hatch: [number, number][] } | null;
+  bracket: { a: number; b: number; text: string; x: number; w: number } | null;
+  axis: AxisLabel[];
+}
+export function lifeBarLayout(id: string, win: [number, number], w: number, measure: (t: string) => number, m = model.value): LifeBarLayout | null {
+  const c = m.chrono.get(id);
+  if (!c) return null;
+  const [t0, t1] = win;
+  const x = (t: number) => ((t - t0) / (t1 - t0)) * w;
+  const epochs = m.epochs;
+  const people = isPeople(id);
+  const { bands, labels: epochLabels } = epochBandLabels(epochs, x, w, lifeEpoch(id, c, epochs)?.id ?? null, measure);
+  const byEpoch = c.cls === 'epochal' || people;
+  const crossing = t0 < 1 && t1 > 1;
+  const era = (t: number) => (toHist(t) < 0 ? ' до Р. Х.' : ' по Р. Х.');
+  const axis: AxisLabel[] = [];
+  const put = (tick: number, text: string, kind: AxisLabel['kind']) => axis.push({ tick, text, kind, x: x(tick), w: measure(text) });
+  let life: LifeBarLayout['life'] = null;
+  let act: LifeBarLayout['act'] = null;
+  let bracket: LifeBarLayout['bracket'] = null;
+  if (byEpoch) {
+    const ep = birthEpoch(id, c, epochs);
+    if (ep) {
+      // время задано встречей (Мелхиседек — с Аврамом, Быт 14:17–20): отрезок встречи, а не вся эпоха
+      const met = !people && c.when?.by === 'met' && c.bHi > c.bLo;
+      const a = met ? c.bLo : toAstro(ep.start);
+      const b = met ? c.bHi : toAstro(ep.end);
+      // «встреча с Аврамом»: имя — творительным падежом через склонение; не склоняется — «встреча»
+      const q = met && c.when?.id ? byId.get(c.when.id) : null;
+      const who = q ? nameCase(q.name, q.sex, 'ins', q.unnamed, q.alt) : null;
+      const text = people ? 'без года' : met ? `встреча${who ? ` с ${who}` : ''}` : 'время не установлено';
+      const tw = measure(text);
+      bracket = { a: x(a), b: x(b), text, x: Math.max(0, Math.min(w - tw, (x(a) + x(b)) / 2 - tw / 2)), w: tw };
+    }
+  } else {
+    // те же годы и границы текста, что в паспорте и § 8 (datesOf, словарь дат)
+    const cd = datesOf(id, c, m.chrono);
+    const ld = lifeDates(cd);
+    if (ld) {
+      const { bLo, bHi } = cd;
+      const end = c.d ?? c.last ?? bHi;
+      life = { lo: x(bLo), hi: x(c.cls === 'estimated' ? bHi : bLo), solidTo: x(Math.max(end, bHi)), fade: c.d === null };
+      const { left, right } = lifeBarLabels(cd);
+      const tb = shownPoint(ld.birth);
+      // эру ставит ось (ниже); промежуток через Р. Х. («40 до Р. Х.–30 по Р. Х.») держит обе свои
+      if (left) put(tb, (left.match(/Р\.\u00a0Х\./g) ?? []).length > 1 ? left : left.replace(/\u00a0(до|по)\u00a0Р\.\u00a0Х\.$/, ''), 'life');
+      if (right && ld.death) put(shownPoint(ld.death), right, 'life');
+      // о смерти Писание молчит — конец сплошной части подписан годом последнего упоминания, как в паспорте
+      else if (!ld.death && c.last !== null && c.last - tb > 5) put(c.last, dateText({ t: c.last }, { era: false }), 'life');
+    }
+    const span = activitySpan(id);
+    if (span) {
+      const hatch = coRegencies(id).map((r) => [x(r.a), x(r.b)] as [number, number]);
+      act = { a: x(span[0]), b: x(span[1]), hatch };
+      const p = byId.get(id)!;
+      if (p.reign.length) {
+        const start = toAstro(Math.min(...p.reign.map((r) => r.start)));
+        put(start, `${Math.abs(toHist(start))} — воцарение`, 'reign');
+      }
+    }
+  }
+  if (crossing) put(1, 'Р. Х.', 'era');
+  // эра: при переходе через Р. Х. — у каждого года; иначе — у крайней правой подписи
+  // эра — после последнего числа подписи: «45–20 до Р. Х.», «1010 до Р. Х. — воцарение»
+  if (crossing) for (const l of axis) if (l.kind !== 'era' && !/Р\. Х\./.test(l.text)) (l.text = l.text.replace(/(\d+)(?!.*\d)/, (d) => `${d}${era(l.tick)}`)), (l.w = measure(l.text));
+  // без наложений: концы жизни важнее «Р. Х.», «Р. Х.» — важнее начала царствования
+  const rank = { life: 0, era: 1, reign: 2 } as const;
+  const placed: AxisLabel[] = [];
+  const at = (l: AxisLabel) => Math.max(0, Math.min(w - l.w, l.x - l.w / 2));
+  for (const l of [...axis].sort((a, b) => rank[a.kind] - rank[b.kind] || a.tick - b.tick)) {
+    let lx = at(l);
+    const clash = (q: number) => placed.some((o) => q < o.x + o.w + 8 && q + l.w + 8 > o.x);
+    if (clash(lx) && l.kind === 'life') {
+      // второй конец жизни — сдвинуть от первого, не за края шкалы
+      const other = placed.find((o) => o.kind === 'life');
+      if (other) lx = l.tick > other.tick ? Math.min(w - l.w, other.x + other.w + 8) : Math.max(0, other.x - l.w - 8);
+    }
+    if (clash(lx) || (bracket && lx < bracket.x + bracket.w + 8 && lx + l.w + 8 > bracket.x)) continue;
+    placed.push({ ...l, x: lx });
+  }
+  if (!crossing && placed.length) {
+    const right = [...placed].sort((a, b) => b.x + b.w - (a.x + a.w))[0];
+    const withEra = right.text.replace(/(\d+)(?!.*\d)/, (d) => `${d}${era(right.tick)}`);
+    const ww = measure(withEra);
+    right.text = withEra;
+    right.x = Math.max(0, Math.min(w - ww, right.x));
+    right.w = ww;
+    // эра не должна налезть на соседнюю подпись: соседняя уступает
+    for (const o of [...placed]) if (o !== right && o.x < right.x + right.w + 8 && o.x + o.w + 8 > right.x) placed.splice(placed.indexOf(o), 1);
+  }
+  return { bands, epochLabels, life, act, bracket, axis: placed.sort((a, b) => a.x - b.x) };
+}
+
+/**
+ * Мини-шкала жизни на фоне эпох (решение 97; F2; VIS-06, VIS-41): рисует lifeBarLayout. Её же показывает образец
+ * в «Условных знаках» (G5). Холст перерисовывается при каждой смене ширины (ручка границы, окно): подписи — Jost 12 px
+ * (CARD-69). Для диктора шкала — рисунок: эпоху и годы он слышит из паспорта.
+ */
 export function LifeBar({ id, axis }: { id: string; axis?: [number, number] }) {
   const ref = useRef<HTMLCanvasElement>(null);
   // границы рождения из данных приходят с томом карточки; шапка с сигналами не перерисовывается вместе с Folio,
@@ -269,9 +550,8 @@ export function LifeBar({ id, axis }: { id: string; axis?: [number, number] }) {
   }, []);
   useEffect(() => {
     const cv = ref.current;
-    const c = model.value.chrono.get(id);
     const win = axis ?? lifeWindow(id);
-    if (!cv || !c || !win) return;
+    if (!cv || !win) return;
     const dpr = window.devicePixelRatio || 1;
     const w = cv.clientWidth;
     const h = LIFEBAR_H;
@@ -281,132 +561,82 @@ export function LifeBar({ id, axis }: { id: string; axis?: [number, number] }) {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     const cs = getComputedStyle(document.documentElement);
     const col = (n: string) => cs.getPropertyValue(n).trim();
-    const epochs = model.value.epochs;
-    const people = isPeople(id);
-    const [t0, t1] = win;
-    const x = (t: number) => ((t - t0) / (t1 - t0)) * w;
     // кегль — ступень шкалы интерфейса 12 px (Jost), как подписи полей паспорта: холст не масштабируется (CARD-69)
     const font = mapFont(T_UI_S, { sans: true, coarse: false });
+    const bold = font.replace(/^(\d+)\s/, '600 $1 ').replace(/^normal\s/, '600 ');
     ctx.font = font;
     ctx.textBaseline = 'alphabetic';
-    // ряды по высоте: эпохи 0–13, жизнь 17–21, риски детей 22–26, ось 28, подписи оси — базовая линия 42
+    const L = lifeBarLayout(id, win, w, (t) => ctx.measureText(t).width);
+    if (!L) return;
+    // ряды по высоте: эпохи 0–13, жизнь 17–21, служение 24–27, ось 31, подписи оси — базовая линия 45
     const EPOCH_H = 13;
     const EPOCH_BASE = 10;
     const lifeY = 17;
-    const axisY = 28;
-    const labelY = 42;
-    // ряд 1 — эпохи: соседние различаются светлотой; подписи — только целыми словами, без многоточия (VIS-63)
-    const { bands, labels: epochLabels } = epochBandLabels(epochs, x, w, birthEpoch(id, c, epochs)?.id ?? null, (t) => ctx.measureText(t).width);
-    bands.forEach((band) => {
-      ctx.fillStyle = band.i % 2 ? col('--rule') : col('--sheet-2');
-      ctx.fillRect(band.a, 0, band.b - band.a, EPOCH_H);
-    });
-    ctx.fillStyle = col('--ink-2');
-    for (const l of epochLabels) ctx.fillText(l.text, l.x, EPOCH_BASE);
-    // названия эпох без подписи на полосе — в подсказке шкалы (холст — рисунок; диктору эпоху говорит паспорт)
-    cv.title = bands.map((band) => band.name).join('; ');
+    const actY = 24;
+    const axisY = 31;
+    const labelY = 45;
     const ink = col('--ink');
     const ink2 = col('--ink-2');
-    // ряд 3 — ось: черта и круглые годы; годы паспорта на концах жизни — поверх, круглые рядом с ними не пишутся
+    // ряд 1 — эпохи: соседние различаются светлотой, эпоха жизни — выделена (решение 97)
+    for (const band of L.bands) {
+      ctx.fillStyle = band.own ? col('--rule-strong') : band.i % 2 ? col('--rule') : col('--sheet-2');
+      ctx.fillRect(band.a, 0, band.b - band.a, EPOCH_H);
+    }
+    for (const l of L.epochLabels) {
+      ctx.font = l.own ? bold : font;
+      ctx.fillStyle = l.own ? ink : ink2;
+      ctx.fillText(l.text, l.x, EPOCH_BASE);
+    }
+    ctx.font = font;
+    // названия эпох без подписи на полосе — в подсказке шкалы
+    cv.title = L.bands.map((band) => band.name).join('; ');
+    // ось
     ctx.fillStyle = col('--rule-strong');
     ctx.fillRect(0, axisY, w, 1);
-    type Label = { x: number; w: number; text: string; tick: number; life: boolean };
-    const labels: Label[] = [];
-    const y = shownYears(c);
-    const byEpoch = c.cls === 'epochal' || people;
-    if (!byEpoch && y) {
-      const { left, right } = lifeBarLabels(c);
-      if (left) labels.push({ x: x(y.b), w: ctx.measureText(left).width, text: left, tick: y.b, life: true });
-      if (right && y.d !== null) labels.push({ x: x(y.d), w: ctx.measureText(right).width, text: right, tick: y.d, life: true });
-    }
-    // у лица без опор и у народа — подпись под скобкой эпохи на оси: круглые годы её не перекрывают
-    const bracketEp = byEpoch ? birthEpoch(id, c, epochs) : null;
-    const bracketText = people ? 'без года' : 'время не установлено';
-    let bracketAt: { x: number; w: number } | null = null;
-    if (bracketEp) {
-      const a = x(toAstro(bracketEp.start));
-      const b = x(toAstro(bracketEp.end));
-      const tw = ctx.measureText(bracketText).width;
-      bracketAt = { x: Math.max(0, Math.min(w - tw, (a + b) / 2 - tw / 2)), w: tw };
-    }
-    // круглые годы — только если шкале хватает ширины (CARD-69); окно через начало эры — первый год по Р. Х. с эрой
-    const crossing = toHist(t0) < 0 && toHist(t1) > 0;
-    if (w >= LIFEBAR_TICKS_MIN || byEpoch)
-      for (const t of roundTicks(t0, t1)) labels.push({ x: x(t), w: ctx.measureText(String(Math.abs(toHist(t)))).width, text: String(Math.abs(toHist(t))), tick: t, life: false });
-    // эра — у крайней правой подписи (VIS-06) и у первого года по Р. Х., если окно переходит через эру
-    const place = (l: Label) => Math.max(0, Math.min(w - l.w, l.x - l.w / 2));
-    const lifeLabels = labels.filter((l) => l.life);
-    const roundLabels = labels.filter((l) => !l.life).sort((a, b) => a.tick - b.tick);
-    // концы жизни не налезают друг на друга: правый сдвигается вправо, левый — влево
-    if (lifeLabels.length === 2) {
-      let a = place(lifeLabels[0]);
-      let b = place(lifeLabels[1]);
-      if (a + lifeLabels[0].w + 8 > b) {
-        const mid = (a + lifeLabels[0].w + b) / 2;
-        a = Math.max(0, mid - 4 - lifeLabels[0].w);
-        b = Math.min(w - lifeLabels[1].w, mid + 4);
+    // ряд 2 — жизнь: растушёванное начало (промежуток рождения), сплошная часть, тающий конец (о смерти неизвестно)
+    if (L.life) {
+      const { lo, hi, solidTo, fade } = L.life;
+      if (hi > lo + 1) {
+        const g = ctx.createLinearGradient(lo, 0, hi, 0);
+        g.addColorStop(0, 'rgba(0,0,0,0)');
+        g.addColorStop(1, ink);
+        ctx.fillStyle = g;
+        ctx.fillRect(lo, lifeY, hi - lo, 4);
       }
-      lifeLabels[0].x = a;
-      lifeLabels[1].x = b;
-    } else lifeLabels.forEach((l) => (l.x = place(l)));
-    const taken = lifeLabels.map((l) => [l.x - 8, l.x + l.w + 8] as [number, number]);
-    if (bracketAt) taken.push([bracketAt.x - 8, bracketAt.x + bracketAt.w + 8]);
-    const shownRound: Label[] = [];
-    let eraShown = false;
-    for (const l of roundLabels) {
-      const ad = crossing && toHist(l.tick) > 0 && !eraShown;
-      const text = ad ? `${l.text}${eraOf(l.tick)}` : l.text;
-      const tw = ctx.measureText(text).width;
-      const lx = Math.max(0, Math.min(w - tw, l.x - tw / 2));
-      if (taken.some(([a, b]) => lx < b && lx + tw > a)) continue;
-      if (ad) eraShown = true;
-      taken.push([lx - 6, lx + tw + 6]);
-      shownRound.push({ ...l, x: lx, w: tw, text });
-    }
-    // эра — у крайней правой подписи оси (VIS-06): дописывается справа, риска остаётся под самим годом. Круглому году
-    // у края места под эру нет — он уступает место (он лишь промежуточный); годы жизни сдвигаются влево не дальше
-    // половины своей ширины; не помогло — эра у следующей подписи справа налево
-    const all = [...shownRound, ...lifeLabels].sort((a, b) => b.x + b.w - (a.x + a.w));
-    const want = all.length ? eraOf(all[0].tick) : '';
-    if (all.length && !all.some((l) => l.text.includes(want.trim())))
-      for (const l of [...all]) {
-        const era = eraOf(l.tick);
-        if (era !== want) continue;
-        const ew = ctx.measureText(era).width;
-        const shift = Math.max(0, l.x + l.w + ew - w);
-        const x0 = l.x - shift;
-        const x1 = x0 + l.w + ew;
-        const clash = all.some((o) => o !== l && o.x < x1 + 6 && o.x + o.w > x0 - 6);
-        if (shift > l.w / 2 - 2 || clash) {
-          if (!l.life) {
-            shownRound.splice(shownRound.indexOf(l), 1);
-            all.splice(all.indexOf(l), 1);
-          }
-          continue;
-        }
-        l.x = x0;
-        l.text += era;
-        l.w += ew;
-        break;
-      }
-    for (const l of shownRound) {
-      ctx.fillStyle = col('--rule-strong');
-      ctx.fillRect(x(l.tick) - 0.5, axisY, 1, 4);
-      ctx.fillStyle = col('--ink-3');
-      ctx.fillText(l.text, l.x, labelY);
-    }
-    for (const l of lifeLabels) {
       ctx.fillStyle = ink;
-      ctx.fillRect(x(l.tick) - 0.5, axisY - 2, 1, 6);
-      ctx.fillStyle = ink2;
-      ctx.fillText(l.text, l.x, labelY);
+      ctx.fillRect(hi, lifeY, Math.max(2, solidTo - hi), 4);
+      if (fade) {
+        const g = ctx.createLinearGradient(solidTo, 0, solidTo + 18, 0);
+        g.addColorStop(0, ink);
+        g.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(solidTo, lifeY, 18, 4);
+      }
     }
-    // ряд 2 — жизнь
-    if (byEpoch) {
-      if (!bracketEp) return;
-      // время не установлено или народ: скобка на всю эпоху, без годов (ТЗ § 3.1; CARD-59)
-      const a = x(toAstro(bracketEp.start));
-      const b = x(toAstro(bracketEp.end));
+    // ряд 3 — служение или царствование; соправление — штриховкой
+    if (L.act) {
+      ctx.fillStyle = ink2;
+      ctx.fillRect(L.act.a, actY, Math.max(2, L.act.b - L.act.a), 3);
+      for (const [a, b] of L.act.hatch) {
+        ctx.clearRect(a, actY, b - a, 3);
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(a, actY - 1, b - a, 5);
+        ctx.clip();
+        ctx.strokeStyle = ink2;
+        ctx.lineWidth = 1;
+        for (let q = a - 6; q < b + 6; q += 3) {
+          ctx.beginPath();
+          ctx.moveTo(q, actY + 4);
+          ctx.lineTo(q + 4, actY - 1);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+    }
+    // скобка: время не установлено, встреча, народ без года
+    if (L.bracket) {
+      const { a, b } = L.bracket;
       ctx.strokeStyle = ink2;
       ctx.lineWidth = 1.5;
       ctx.beginPath();
@@ -416,45 +646,14 @@ export function LifeBar({ id, axis }: { id: string; axis?: [number, number] }) {
       ctx.lineTo(b, lifeY + 6);
       ctx.stroke();
       ctx.fillStyle = ink2;
-      if (bracketAt) ctx.fillText(bracketText, bracketAt.x, labelY);
-      return;
+      ctx.fillText(L.bracket.text, L.bracket.x, labelY);
     }
-    if (!y) return;
-    const [bLo, bHi] = birthRange(id, c, model.value.chrono);
-    // жизнь: растушёвка только на неопределённом начале, сплошная часть до смерти или последнего события, дальше — пунктир
-    const g = ctx.createLinearGradient(x(bLo), 0, x(bHi), 0);
-    g.addColorStop(0, 'rgba(0,0,0,0)');
-    g.addColorStop(1, ink);
-    ctx.fillStyle = c.cls === 'exact' ? ink : g;
-    ctx.fillRect(x(bLo), lifeY, Math.max(2, x(bHi) - x(bLo)), 4);
-    ctx.fillStyle = ink;
-    const solidEnd = c.d ?? c.last ?? bHi;
-    if (solidEnd > bHi) ctx.fillRect(x(bHi), lifeY, x(solidEnd) - x(bHi), 4);
-    if (c.d === null) {
-      ctx.setLineDash([2, 3]);
-      ctx.strokeStyle = ink;
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(x(Math.max(solidEnd, bHi)), lifeY + 2);
-      ctx.lineTo(x(Math.max(solidEnd, bHi)) + 12, lifeY + 2);
-      ctx.stroke();
-      ctx.setLineDash([]);
-    }
-    // рождения родителей (кружки 3 px) и детей (риски 1 × 4) — у полосы жизни
-    const p = byId.get(id)!;
-    ctx.strokeStyle = ink2;
-    ctx.lineWidth = 1;
-    for (const par of [p.father, p.mother]) {
-      const pc = par ? model.value.chrono.get(par) : null;
-      if (!pc || pc.cls === 'epochal') continue;
-      ctx.beginPath();
-      ctx.arc(x(pc.b), lifeY + 2, 3, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-    ctx.fillStyle = ink2;
-    for (const e of graph.childrenOf.get(id) ?? []) {
-      const kc = model.value.chrono.get(e.child);
-      if (kc && kc.cls !== 'epochal') ctx.fillRect(x(kc.b) - 0.5, lifeY + 5, 1, 4);
+    // подписи оси: риска под своим годом, текст — не за краями
+    for (const l of L.axis) {
+      ctx.fillStyle = l.kind === 'life' ? ink : col('--rule-strong');
+      ctx.fillRect(Math.round(((l.tick - win[0]) / (win[1] - win[0])) * w) - 0.5, axisY - 2, 1, 6);
+      ctx.fillStyle = l.kind === 'life' ? ink2 : col('--ink-3');
+      ctx.fillText(l.text, l.x, labelY);
     }
   }, [id, model.value, loaded, axis?.[0], axis?.[1], width]);
   // размер — классом .lifebar (src/styles/folio.css): ширина строки, высота LIFEBAR_H

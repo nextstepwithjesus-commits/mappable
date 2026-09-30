@@ -91,9 +91,17 @@ describe('MAP-69: знак у первого засвидетельствова�
       (attested ? column : unattested).push(n.person);
     }
     expect(column).toEqual([]);
-    // без свидетельства может остаться только отец, названный лишь по сыну: «Сосипатр Пирров» (Деян 20:4) — года у Пирра
-    // нет; после сверки томов (этап 11) его оценка вышла из этих лет, и столбец пуст совсем
-    expect(unattested.filter((id) => id !== 'pirr')).toEqual([]);
+    // без свидетельства может остаться только отец, названный лишь по сыну: «Сосипатр Пирров» (Деян 20:4), «семь сынов
+    // Иудейского первосвященника Скевы» (Деян 19:14). Своего года у такого отца нет: его год — поколение до сыновей
+    // (у сынов Скевы с этапа 13 — годы в Ефесе при Павле, 53–56). Отец «по сыну» — без своих событий и хронологии, кроме
+    // эпохи, и с детьми в данных; всякий другой в этих годах — «колонна»
+    const bySonOnly = (id: string) => {
+      const p = g.persons.get(id)!;
+      const own = !!p.card?.events?.length || Object.keys(p.chrono ?? {}).some((k) => k !== 'epoch');
+      return !own && (g.childrenOf.get(id) ?? []).length > 0;
+    };
+    expect(unattested.filter((id) => !bySonOnly(id))).toEqual([]);
+    expect(unattested.filter(bySonOnly).length).toBeLessThanOrEqual(2);
   });
   it('правило — только для оценок без чисел текста, вне коридора и в Новом Завете; у остальных знак в год рождения', () => {
     const res = solve('mt-long');
@@ -197,14 +205,15 @@ describe('CARD-79: смерть не раньше событий жизни — 
       expect(bad).toEqual([]);
     });
   }
-  it('Иоав убит в 970 г. до Р. Х. (3 Цар 2:28–34), не раньше смерти Давида (3 Цар 2:10): «ок. 1040–970 гг. до Р. Х.»', () => {
+  // этап 13 (словарь дат, решение 96): рождение — оценка шире 10 лет, пишется «между», а свой год смерти — без «ок.»
+  it('Иоав убит в 970 г. до Р. Х. (3 Цар 2:28–34), не раньше смерти Давида (3 Цар 2:10): «род. между …, ум. 970 г. до Р. Х.»', () => {
     const res = solve('mt-long');
     const j = res.persons.get('ioav')!;
     const d = res.persons.get('david')!;
     expect(j.dAge).toBe(false);
     expect(shownYears(j)!.d).toBe(toAstro(-970));
     expect(shownYears(j)!.d!).toBeGreaterThanOrEqual(shownYears(d)!.d!);
-    expect(lifeSpanText(j).replace(/[ ⁠]/g, (s) => (s === ' ' ? ' ' : ''))).toBe('ок. 1040–970 гг. до Р. Х.');
+    expect(lifeSpanText(j).replace(/[ ⁠]/g, (s) => (s === ' ' ? ' ' : ''))).toMatch(/^род\. между \d{4} и \d{4}, ум\. 970 г\. до Р\. Х\.$/);
     // смерть по возрасту по-прежнему сдвигается вместе с округлённым рождением: возраст сохраняется
     for (const [id, c] of res.persons) {
       if (c.cls !== 'estimated' || c.d === null || !c.dAge) continue;

@@ -66,26 +66,27 @@ export const union4: Scenario[] = [
   },
   {
     n: 521,
-    title: 'Решение 71: «Раскрыть на небе» в карточке союза — небо «набор» с супругами и детьми союза; «Свернуть на небе» убирает раскрытых через союз',
+    title: 'Решение 71: «Показать детей союза» в карточке союза — небо «набор» с супругами и детьми союза; «Скрыть детей союза» убирает раскрытых через союз (словарь 109)',
     run: async (p) => {
       await open(p, '#/avraam');
       await p.locator('.folio #sec-10 [data-union="u:avraam+agar"]').click();
       await p.waitForTimeout(400);
       const btn = p.locator('.folio .union-reveal');
-      if ((await btn.innerText()).trim() !== 'Раскрыть на небе') return fail(`команда: ${await btn.innerText()}`);
+      if ((await btn.innerText()).trim() !== 'Показать детей союза') return fail(`команда: ${await btn.innerText()}`);
       await btn.click();
       await p.waitForTimeout(1200);
       if ((await skyMode(p)) !== 'work') return fail(`небо не в «наборе»: ${await skyMode(p)}`);
-      if ((await btn.innerText()).trim() !== 'Свернуть на небе') return fail(`после раскрытия команда: ${await btn.innerText()}`);
-      const on = (await p.locator('.folio .union-onsky').innerText()).replace(/\s+/g, ' ');
-      if (!/на небе 3 из 3 лиц союза/.test(on)) return fail(`строка состояния: ${on}`);
+      if ((await btn.innerText()).trim() !== 'Скрыть детей союза') return fail(`после раскрытия команда: ${await btn.innerText()}`);
+      // этап 13, решение 126: счётчик считает то, что говорит подпись — «на небе сейчас» (показ) и «в наборе» (набор)
+      const on = (await p.locator('.folio .union-onsky').allInnerTexts()).join('; ').replace(/\s+/g, ' ');
+      if (!/на небе сейчас 3 из 3 лиц союза/.test(on) || !/в наборе 3 из 3 лиц союза/.test(on)) return fail(`строка состояния: ${on}`);
       const said = await p.locator('.folio .union-actions [role="status"]').innerText();
       // слова «Раскрыто» в интерфейсе больше нет (этап 11, Я30): диктору — что показано на небе «набор» и сколько
       if (!/^На небе «набор» показано ещё: 3 лица/.test(said.replace(/\u00a0/g, ' '))) return fail(`диктору: «${said}»`);
       await btn.click();
       await p.waitForTimeout(800);
-      const off = (await p.locator('.folio .union-onsky').innerText()).replace(/\s+/g, ' ');
-      if ((await btn.innerText()).trim() !== 'Раскрыть на небе' || !/на небе 1 из 3/.test(off)) return fail(`после свёртки: ${await btn.innerText()}; ${off}`);
+      const off = (await p.locator('.folio .union-onsky').allInnerTexts()).join('; ').replace(/\s+/g, ' ');
+      if ((await btn.innerText()).trim() !== 'Показать детей союза' || !/в наборе 1 из 3/.test(off) || !/на небе сейчас \d из 3/.test(off)) return fail(`после свёртки: ${await btn.innerText()}; ${off}`);
       return pass(`${on}; после свёртки — ${off}`);
     },
   },

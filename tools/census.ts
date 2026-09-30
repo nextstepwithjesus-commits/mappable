@@ -15,10 +15,20 @@
  *  Я3  близкие параллели разных связей (< 12°, < 6 px, > 24 px); Я4 одна связь двумя путями;
  *  Я5  косые отрезки связей;                                  Я6  ствол перед детьми, зубец 5–40 px, x не убывает;
  *  Я7  у ствола есть узел; висячих стволов нет;               Я8  пересечение с чужим следом — разрыв ≥ 2 px с каждой стороны;
- *  Я9  штрих — иное происхождение, точки — толкование и нить народа; Я10 цвет связей без выбранного лица;
+ *  Я9  штрих — иное происхождение, точки — только толкование, бледная сплошная — родовая черта народа; Я10 цвет связей без выбранного лица;
  *  Я11 пересечения линий союзов между собой и со следами;    Я12 подписи на чужих звёздах, на линиях, наложения, строка;
  *  Я13 длинные связи на «всех лицах» — обрывками;             Я14 наведение по линии называет её концы, не постороннего;
  *  Я15 доля двусмысленных связей.
+ * Этап 13 (решения 93–95, X3 § 3): сцены показов «ключевые лица», «все колена», «Колено Иудино», «Дом Давидов», род
+ * Давида, Халев, Саул, Ашхур, набор с пропусками, созвездие «Родословие Иисуса Христа»; проверки
+ *  Ч1  путь ленты с ключом шага начинается у родителя шага по data/lines (иначе это «цепочка» span);
+ *  Ч2  концы ломаных выбранной связи — только звезда конца, узел своего союза, призрак или кромка (все ключи кадра);
+ *  Ч3  у связи со скрытым концом есть призрак этого конца;
+ *  Ч4  разреженная нить ленты — только у шага по толкованию; каждый пропуск показа — «+N» с верным числом;
+ *      Я9 на лентах: штрих — только «по закону» и Нирий → Салафиил по Луке;
+ *  Ч5  лицо линии не дальше строки от своей нити (показ «линии Мессии»);
+ *  Ч6  оба супруга на небе → союз связан с обоими (путь союза с его концом, узел на его следе или имя у ромба);
+ *  Ч7  точечный путь связи — только толкование.
  * Тест — tests/census.test.ts (пороги падают тестом).
  */
 
@@ -38,6 +48,7 @@ if (!underVite && typeof process !== 'undefined' && process.argv[1]?.endsWith('c
 }
 
 import type { LinkFrame, LinkPath, LinkStar } from '../src/render/links.ts';
+import type { LinkKey } from '../src/engine/linkkey.ts';
 import type { Show } from '../src/ui/work.ts';
 
 // ---------- модули атласа в node ----------
@@ -54,6 +65,9 @@ const work = await import('../src/ui/work.ts');
 const show = await import('../src/ui/show.ts');
 const state = await import('../src/state.ts');
 const words = await import('../src/ui/linkwords.ts');
+const ribbonsR = await import('../src/render/ribbons.ts');
+const lk = await import('../src/engine/linkkey.ts');
+const reveal = await import('../src/ui/reveal.ts');
 type Sky = InstanceType<typeof skyMod.Sky>;
 
 const LAYERS = { lifelines: true, connectors: true, constellations: true, epochs: true, ribbons: true, tensions: true, ghosts: true, labels: true };
@@ -93,7 +107,11 @@ export interface Scene {
   set?: string[];
   /** семейная сцена (пороги Я1, Я3, Я11 — нулевые) */
   family: boolean;
+  /** общая раскладка показа на масштабе чтения «всех лиц» (большой холст на весь показ, как у сцены all) */
+  reading?: boolean;
 }
+
+const TRIBES = ['reuben', 'simeon', 'levi', 'judah', 'dan', 'naphtali', 'gad', 'asher', 'issachar', 'zebulun', 'joseph', 'benjamin'];
 
 export const SCENES: Record<string, Scene> = {
   all: { id: 'all', title: '«Все лица» целиком', show: { kind: 'all' }, select: null, family: false },
@@ -109,7 +127,21 @@ export const SCENES: Record<string, Scene> = {
   judah: { id: 'judah', title: 'Род Иуды по отцам', show: { kind: 'lineage', id: 'iuda', dir: 'down', gen: null, by: 'father' }, select: 'iuda', family: true },
   benjamin: { id: 'benjamin', title: 'Колено Вениамина', show: { kind: 'groups', groups: ['benjamin'], links: 'stubs' }, select: 'veniamin', family: true },
   lines: { id: 'lines', title: '«Линии Мессии»', show: { kind: 'lines' }, select: null, family: true },
+  // этап 13 (X3 § 3): показы с пропусками и созвездия
+  key: { id: 'key', title: '«Ключевые лица»', show: { kind: 'key' }, select: null, family: false, reading: true },
+  keyMary: { id: 'keyMary', title: '«Ключевые лица», выбрана Мария', show: { kind: 'key' }, select: 'mariya', family: false, reading: true },
+  tribes: { id: 'tribes', title: 'Все колена', show: { kind: 'groups', groups: TRIBES, links: 'stubs' }, select: null, family: false, reading: true },
+  judahT: { id: 'judahT', title: '«Колено Иудино»', show: { kind: 'groups', groups: ['judah'], links: 'stubs' }, select: 'iuda', family: true },
+  davidic: { id: 'davidic', title: '«Дом Давидов»', show: { kind: 'groups', groups: ['davidic'], links: 'stubs' }, select: 'david', family: true },
+  davidBoth: { id: 'davidBoth', title: 'Род Давида, оба направления, 2 поколения', show: { kind: 'lineage', id: 'david', dir: 'both', gen: 2, by: 'father' }, select: 'david', family: true },
+  halev: { id: 'halev', title: 'Халев, сын Есрома: дети', show: { kind: 'lineage', id: 'khalev-syn-esroma', dir: 'down', gen: 1, by: 'father' }, select: 'khalev-syn-esroma', family: true },
+  saul: { id: 'saul', title: 'Саул: дети', show: { kind: 'lineage', id: 'saul', dir: 'down', gen: 1, by: 'father' }, select: 'saul', family: true },
+  ashhur: { id: 'ashhur', title: 'Ашхур: дети', show: { kind: 'lineage', id: 'ashkhur', dir: 'down', gen: 1, by: 'father' }, select: 'ashkhur', family: true },
+  setGap: { id: 'setGap', title: 'Набор с пропусками поколений', show: { kind: 'set' }, select: 'noy', family: true, set: ['adam', 'sif', 'noy', 'sim', 'avraam', 'david', 'mariya', 'iisus'] },
+  messiah: { id: 'messiah', title: 'Созвездие «Родословие Иисуса Христа»', show: { kind: 'groups', groups: ['messiah'], links: 'stubs' }, select: null, family: true },
 };
+/** Сцены этапа 11 (§ 12) — прогон по умолчанию и прежние тесты. */
+export const STAGE11_SCENES = ['all', 'adam', 'noy', 'avraam', 'iakov', 'david', 'nahor', 'judah', 'benjamin', 'lines'];
 
 /** Сцена на небе: показ, набор и выбор — через модель показа (src/ui/show.ts), как у атласа. */
 function applyScene(sc: Scene) {
@@ -182,7 +214,7 @@ function drawState(sc: Scene) {
  * Кадр сцены id вокруг лица at: окно years лет с ним посередине (для «всех лиц» — окно читателя, а не весь холст).
  * select — выбранное лицо (его семья — в полную силу); null — без выбора.
  */
-export function captureAt(id: string, at: string, years: number, o: { width?: number; height?: number; select?: string | null } = {}): Frame {
+export function captureAt(id: string, at: string, years: number, o: { width?: number; height?: number; select?: string | null; extra?: Record<string, unknown> } = {}): Frame {
   const sc = { ...SCENES[id], select: o.select === undefined ? SCENES[id].select : o.select };
   const width = o.width ?? 1440;
   const s = newSky(width, o.height ?? (width < 600 ? 700 : 776), sc);
@@ -193,7 +225,7 @@ export function captureAt(id: string, at: string, years: number, o: { width?: nu
   const vp = s.cam.vp;
   const kx = (vp.r - vp.l) / (s.xOf(t + years / 2) - s.xOf(t - years / 2));
   s.cam.set({ x0: x - (vp.l + (vp.r - vp.l) / 2) / kx, kx, laneTop: s.rowOf(s.nodes[i].lane) + (vp.t + vp.b) / 2 / s.cam.kyFor(kx) });
-  return frameOf(sc, s, 1, width);
+  return frameOf(sc, s, 1, width, o.extra);
 }
 
 /** Нарисовать сцену и снять геометрию кадра. scale — ×1 или ×2; width — ширина окна (1440 или 390). */
@@ -201,9 +233,10 @@ export function capture(id: string, scale = 1, width = 1440): Frame {
   const sc = SCENES[id];
   const height = width < 600 ? 700 : 776;
   let s: Sky;
-  if (!sc.family && sc.show.kind === 'all') {
-    // «все лица» целиком: большой холст на всё небо при масштабе «лицо и поколения вокруг»
-    const ref = newSky(width, height, sc);
+  if (sc.reading || (!sc.family && sc.show.kind === 'all')) {
+    // «все лица» целиком: большой холст на всё небо при масштабе «лицо и поколения вокруг»; показы общей раскладки
+    // («ключевые лица», все колена) — на том же масштабе чтения и тем же холстом (X3 § 3)
+    const ref = newSky(width, height, SCENES.all);
     const kx = allKx(ref, width) * scale;
     const ky = ref.cam.kyFor(kx);
     const m = M();
@@ -363,6 +396,19 @@ export interface Census {
   y14foreign: number;
   /** Я15: двусмысленных связей */
   y15: number;
+  /** этап 13: Ч1 шагов лент от не-родителя; Ч2 выбранных связей от чужой звезды; Ч3 скрытых концов без призрака */
+  ch1: number;
+  ch2: number;
+  ch3: number;
+  /** Ч3: связей кадра со скрытым концом (из них с призраком — ch3of − ch3) */
+  ch3of: number;
+  /** Ч4: разреженная нить не по толкованию, штрих не по закону (Я9 на лентах), «+N» с неверным числом */
+  ch4: number;
+  /** Ч4: разрывов лент «+N» в кадре */
+  ch4gaps: number;
+  ch5: number;
+  ch6: number;
+  ch7: number;
   issues: Issue[];
 }
 
@@ -546,7 +592,9 @@ export function census(f: Frame): Census {
     if (a) a.push(n);
     else nodesOf.set(n.union, [n]);
   }
-  const clanOf = new Set(drawn.filter((q) => q.kind === 'clan' || (q.kind === 'stub' && q.style === 'dots')).map((q) => q.union));
+  // родовая черта (Г12) и её обрывки — горизонтальные обрывки союза (этап 13: сплошные или бледные, не точки)
+  const clanStub = (q: LinkPath) => q.kind === 'stub' && q.key.kind === 'union' && !q.pts.some((v, k) => k % 2 === 1 && v !== q.pts[1]);
+  const clanOf = new Set(drawn.filter((q) => q.kind === 'clan' || clanStub(q)).map((q) => q.union));
   const trunkXs = new Map<string, Set<number>>();
   for (const q of drawn) {
     if (q.kind !== 'trunk' || !q.union) continue;
@@ -620,13 +668,22 @@ export function census(f: Frame): Census {
       add('Я8', n.union, `узел ${n.union} на чужом следе ${nameOf(t.id)}`, n.x, n.y);
     }
 
-  // Я9: штрих — иное происхождение, точки — толкование и нить народа
+  // Я9: штрих — иное происхождение, точки — только толкование (этап 13, решение 94), бледная сплошная — родовая черта
+  // народа (Г12)
   let y9 = 0;
+  const peopleOwner = (q: LinkPath) => {
+    const o = atlas.byId.get(q.ends[0]);
+    return o?.kind === 'people' || o?.kind === 'clan';
+  };
   for (const q of [...drawn]) {
     if (q.style === 'solid') continue;
     const uu = q.union ? words.linkUnion(q.key.kind === 'step' ? q.key : q.key) : null;
     const ok =
-      q.style === 'dash' ? !!uu?.claim && STYLE_DASH.has(uu.claim) && uu.id.includes('~') : q.kind === 'clan' || (q.kind === 'stub' && q.key.kind === 'union' && !q.pts.some((v, k) => k % 2 === 1 && v !== q.pts[1])) || uu?.kidsCert === 'interpretation';
+      q.style === 'dash'
+        ? !!uu?.claim && STYLE_DASH.has(uu.claim) && uu.id.includes('~')
+        : q.style === 'faint'
+          ? (q.kind === 'clan' || (q.kind === 'stub' && q.key.kind === 'union' && !q.pts.some((v, k) => k % 2 === 1 && v !== q.pts[1]))) && peopleOwner(q)
+          : q.kind !== 'clan' && uu?.kidsCert === 'interpretation';
     if (!ok) {
       y9++;
       mark(q.ks, 'Я9');
@@ -674,7 +731,12 @@ export function census(f: Frame): Census {
       }
     }
     // своя линия подписи: у подписи звезды — линии лица, у подписи связи — линии её союза (id подписи — союз)
-    const on = pathSegs.find((s) => !s.ends.includes(own) && s.union !== own && s.ks !== own && segInRect(s.g, { x: b.x + 1, y: b.y + 1, w: b.w - 2, h: b.h - 2 }));
+    // знак «+N» в разрыве ленты (этап 13, К4) стоит на своей ленте: её «цепочки» (обеих линий) — его линии
+    const gapPair = b.kind === 'mark' && own.startsWith('gap:') ? own.slice(4).split('>') : null;
+    // (две «цепочки» от одного лица — Давид … Иисус по Мф и Давид … Мария по Лк — идут вместе по его следу: знак любой
+    // из них стоит на общей дороге)
+    const mine = (s: { ends: string[]; ks: string }) => !!gapPair && s.ks.startsWith('g.') && s.ends[0] === gapPair[0];
+    const on = pathSegs.find((s) => !s.ends.includes(own) && s.union !== own && s.ks !== own && !mine(s) && segInRect(s.g, { x: b.x + 1, y: b.y + 1, w: b.w - 2, h: b.h - 2 }));
     if (on) {
       y12lines++;
       add('Я12', own, `подпись «${b.text}» (${b.kind}) на линии ${on.ks}`, b.x, b.y);
@@ -701,7 +763,11 @@ export function census(f: Frame): Census {
   let y14foreign = 0;
   const s = f.s;
   const sameUnion = (k: import('../src/engine/linkkey.ts').LinkKey, q: LinkPath) =>
-    k.kind === 'step' ? q.key.kind === 'step' && q.key.child === k.child : 'union' in k && k.union === q.union && (q.key.kind !== 'child' || (k.kind === 'child' && k.child === q.key.child) || k.kind === 'union');
+    k.kind === 'step'
+      ? q.key.kind === 'step' && q.key.child === k.child
+      : k.kind === 'span'
+        ? lk.linkKeyString(k) === q.ks
+        : 'union' in k && k.union === q.union && (q.key.kind !== 'child' || (k.kind === 'child' && k.child === q.key.child) || k.kind === 'union');
   for (const q of [...drawn, ...f.ribbons]) {
     const sg = segs(q);
     const total = sg.reduce((a, g) => a + Math.hypot(g[2] - g[0], g[3] - g[1]), 0);
@@ -732,12 +798,198 @@ export function census(f: Frame): Census {
 
   const rowPx = f.ky;
   const y15 = [...kidKeys].filter((k) => bad.has(k)).length;
+  const ch = chChecks(f, add);
   return {
     scene: f.sc.id, scale: f.scale, width: f.width, stars: f.stars.length, kids: kidKeys.size,
     y1, y2, y3, y4, y5, y6, y6of: teeth.length, y7, y8, y8of, y8nodes, y9, y11, y11trails,
-    y12stars, y12lines, y12of: f.boxes.filter((b) => !(b.kind === 'plate' && !b.text)).length, y12overlaps: f.overlaps, rowPx, y13, y14of, y14ends, y14foreign, y15, issues,
+    y12stars, y12lines, y12of: f.boxes.filter((b) => !(b.kind === 'plate' && !b.text)).length, y12overlaps: f.overlaps, rowPx, y13, y14of, y14ends, y14foreign, y15,
+    ...ch, issues,
   };
 }
+
+// ---------- этап 13: правило концов, словарь начертаний, союз с обоими супругами (X3 § 3) ----------
+
+const lineSeq = { joseph: atlas.lines.joseph.persons.map((q) => q.id), mary: atlas.lines.mary.persons.map((q) => q.id) };
+const lineStep = { joseph: new Map(atlas.lines.joseph.persons.map((q) => [q.id, q])), mary: new Map(atlas.lines.mary.persons.map((q) => [q.id, q])) };
+
+/** Проверки Ч1–Ч7 кадра (заголовок модуля). add — запись замечания. */
+function chChecks(f: Frame, add: (check: string, ks: string, text: string, x: number, y: number) => void) {
+  const { s, d } = f;
+  const vp = s.cam.vp;
+  const onSky = (id: string) => {
+    const i = s.indexOf(id);
+    return i !== undefined && s.drawn(i) && !s.hides(id);
+  };
+  const inWindow = (id: string) => {
+    const i = s.indexOf(id);
+    if (i === undefined) return false;
+    const x = s.cam.sx(s.X0[i]);
+    const y = s.cam.sy(s.nodes[i].lane);
+    return x >= vp.l && x <= vp.r && y >= vp.t && y <= vp.b;
+  };
+  // Ч1: шаг ленты (ключ step) начинается у родителя шага по data/lines
+  let ch1 = 0;
+  for (const q of d.frame.paths)
+    if (q.kind === 'ribbon' && q.key.kind === 'step') {
+      const par = words.stepParent(q.key.line, q.key.child);
+      if (par !== q.ends[0]) {
+        ch1++;
+        add('Ч1', q.ks, `${q.key.line === 'joseph' ? 'Мф' : 'Лк'}: ${nameOf(q.ends[0])} → ${nameOf(q.key.child)} (родитель шага — ${par ? nameOf(par) : '—'})`, q.pts[0], q.pts[1]);
+      }
+    }
+  // ключи кадра: все пути, дети союзов на небе и шаги лент к лицам на небе (шаг, чей родитель скрыт, — r.m.mariya)
+  const keys = new Map<string, LinkKey>();
+  for (const q of d.frame.paths) if (q.ks) keys.set(q.ks, q.key);
+  for (const q of d.frame.paths)
+    if (q.key.kind === 'union')
+      for (const kid of words.linkUnion(q.key)?.kids ?? []) {
+        const kk: LinkKey = { kind: 'child', union: q.key.union, child: kid };
+        const ks = lk.linkKeyString(kk);
+        if (ks && onSky(kid)) keys.set(ks, kk);
+      }
+  for (const ln of ['joseph', 'mary'] as const)
+    for (const id of lineSeq[ln]) {
+      if (!onSky(id) || !inWindow(id)) continue;
+      const kk: LinkKey = { kind: 'step', line: ln, child: id };
+      const ks = lk.linkKeyString(kk);
+      if (ks && words.stepParent(ln, id)) keys.set(ks, kk);
+    }
+  // Ч2: концы ломаных выбранной связи — только у своих концов (звезда, узел, призрак, кромка); Ч3: у скрытого конца —
+  // призрак (если на небе есть другой конец связи)
+  let ch2 = 0;
+  let ch3 = 0;
+  let ch3of = 0;
+  for (const [ks, key] of keys) {
+    const ends = words.linkRoles(key).map((e) => e.id);
+    const un = words.linkUnion(key);
+    const legit = new Set([...ends, ...(un ? [un.a, un.b, ...un.kids].filter((x): x is string => !!x) : [])]);
+    const r = marks.selectedRoutes(s, d, key);
+    const hidden = ends.filter((e) => !onSky(e));
+    if (hidden.length && ends.some((e) => onSky(e) && inWindow(e))) {
+      ch3of++;
+      const miss = hidden.filter((e) => !r.ghosts.some((g) => g.id === e));
+      if (miss.length) {
+        ch3++;
+        add('Ч3', ks, `${words.linkTitle(key)}: нет призрака — ${miss.map(nameOf).join(', ')}`, 0, 0);
+      }
+    }
+    const at = new Set<string>();
+    for (const pts of r.all)
+      for (const [x, y] of [[pts[0], pts[1]], [pts[pts.length - 2], pts[pts.length - 1]]]) {
+        if (x < vp.l - 2 || x > vp.r + 2 || y < vp.t - 2 || y > vp.b + 2) continue;
+        if (r.ghosts.some((g) => Math.hypot(g.x - x, g.y - y) < 1)) continue;
+        const st = s.hitStar(x, y, 3);
+        if (st && !legit.has(st.id)) at.add(st.id);
+      }
+    if (at.size) {
+      ch2++;
+      add('Ч2', ks, `${words.linkTitle(key)}: путь от ${[...at].map(nameOf).join(', ')}`, 0, 0);
+    }
+  }
+  // Ч4 и Я9 на лентах: нити кадра против данных линий — разреженная нить только у толкования, штрих — «по закону»
+  // и Нирий → Салафиил по Луке; у каждого пропуска показа — число скрытых
+  let ch4 = 0;
+  let ch4gaps = 0;
+  const rc = ribbonsR.ribbonStrands(s, { lineFlip: false, onlyLines: f.sc.show.kind === 'lines', guide: s.plan.mode === 'work' } as never, { joseph: atlas.lines.joseph.persons, mary: atlas.lines.mary.persons });
+  for (const st of rc.strands) {
+    const ln = st.line;
+    for (let k = 1; k < st.ids.length; k++) {
+      const id = st.ids[k];
+      const step = lineStep[ln].get(id);
+      let weak = false;
+      let legal = false;
+      for (const q of st.points)
+        if (q.u > k - 1 + 0.02 && q.u <= k + 1e-9) {
+          weak ||= q.weak;
+          legal ||= !!q.legal;
+        }
+      const interp = step?.flag === 'interpretation';
+      const other = step?.flag === 'legal' || (ln === 'mary' && id === 'salafiil');
+      const i0 = lineSeq[ln].indexOf(st.ids[k - 1]);
+      const i1 = lineSeq[ln].indexOf(id);
+      const hid = i0 >= 0 && i1 > i0 ? lineSeq[ln].slice(i0 + 1, i1).filter((x) => !onSky(x)).length : 0;
+      const gap = st.gaps?.[k] ?? 0;
+      if (weak && !interp) {
+        ch4++;
+        add('Ч4', `${ln}>${id}`, `точки не по толкованию: ${nameOf(st.ids[k - 1])} → ${nameOf(id)}`, 0, 0);
+      }
+      if (legal && !other) {
+        ch4++;
+        add('Ч4', `${ln}>${id}`, `штрих не по закону: ${nameOf(st.ids[k - 1])} → ${nameOf(id)}`, 0, 0);
+      }
+      if (hid !== gap) {
+        ch4++;
+        add('Ч4', `${ln}>${id}`, `пропуск ${nameOf(st.ids[k - 1])} → ${nameOf(id)}: скрыто ${hid}, «+${gap}»`, 0, 0);
+      }
+      if (gap) ch4gaps++;
+    }
+  }
+  for (const g of ribbonsR.ribbonGapHits(s)) {
+    const seq = lineSeq[g.lines[0]];
+    const hid = seq.slice(seq.indexOf(g.from) + 1, seq.indexOf(g.to)).filter((x) => !onSky(x)).length;
+    if (hid !== g.n) {
+      ch4++;
+      add('Ч4', `${g.from}>${g.to}`, `«+${g.n}» при скрытых ${hid}`, g.cx, g.cy);
+    }
+  }
+  // Ч5: лицо линии не дальше полустроки и амплитуды косы от своей нити — в показе «линии Мессии»
+  let ch5 = 0;
+  if (f.sc.show.kind === 'lines') {
+    const tol = s.cam.ky * 0.5 + 3 + 3;
+    for (const strand of rc.strands) {
+      const pts = strand.points;
+      for (const pid of strand.ids) {
+        const i = s.indexOf(pid);
+        if (i === undefined || !onSky(pid) || !inWindow(pid)) continue;
+        const x = s.cam.sx(s.X0[i]);
+        const y = s.cam.sy(s.nodes[i].lane);
+        let best = Infinity;
+        for (let q = 0; q + 1 < pts.length; q++) {
+          const a = pts[q];
+          const b = pts[q + 1];
+          if (Math.max(a.x, b.x) + rc.dx < x - 40 || Math.min(a.x, b.x) + rc.dx > x + 40) continue;
+          const dd = links.distSeg(x, y, a.x + rc.dx, a.y + rc.dy, b.x + rc.dx, b.y + rc.dy);
+          if (dd < best) best = dd;
+        }
+        if (best > tol) {
+          ch5++;
+          add('Ч5', pid, `${nameOf(pid)} (${strand.line === 'joseph' ? 'золото' : 'лазурь'}): ${best === Infinity ? 'нити нет' : `${Math.round(best)} px`} от нити`, x, y);
+        }
+      }
+    }
+  }
+  // Ч6: оба супруга на небе → союз связан с обоими (путь союза с его концом, узел на его следе, имя у ромба)
+  let ch6 = 0;
+  {
+    const tied = new Set<string>();
+    for (const q of [...f.paths, ...f.ribbons]) if (q.union) for (const e of q.ends) tied.add(`${q.union}|${e}`);
+    for (const n of f.nodes) {
+      tied.add(`${n.union}|${n.owner}`);
+      if (n.mother) tied.add(`${n.union}|${n.mother}`);
+    }
+    for (const u of reveal.unions.byId.values()) {
+      if (!u.a || !u.b || u.claim) continue;
+      if (!onSky(u.a) || !onSky(u.b) || !(inWindow(u.a) || inWindow(u.b))) continue;
+      const ta = tied.has(`${u.id}|${u.a}`);
+      const tb = tied.has(`${u.id}|${u.b}`);
+      if (!ta || !tb) {
+        ch6++;
+        add('Ч6', u.id, `${nameOf(u.a)} и ${nameOf(u.b)}${u.kids.length ? '' : ' (бездетный)'}: ${!tb ? 'жена' : 'муж'} не связан(а)`, 0, 0);
+      }
+    }
+  }
+  // Ч7: точечный путь связи — только толкование
+  let ch7 = 0;
+  for (const q of f.paths) {
+    if (q.style !== 'dots') continue;
+    const un = q.union ? words.linkUnion({ kind: 'union', union: q.union }) : null;
+    if (un?.kidsCert === 'interpretation' && q.kind !== 'clan') continue;
+    ch7++;
+    add('Ч7', q.ks, `точки не по толкованию: ${q.kind} ${words.linkTitle(q.key).slice(0, 60)}`, q.pts[0], q.pts[1]);
+  }
+  return { ch1, ch2, ch3, ch3of, ch4, ch4gaps, ch5, ch6, ch7 };
+}
+
 
 // ---------- пороги § 12 ----------
 
@@ -765,6 +1017,14 @@ export function violations(c: Census): string[] {
   need(!c.y14of || c.y14ends / c.y14of >= 0.95, `Я14: концы ${pct(c.y14ends, c.y14of)}`);
   need(c.y14foreign === 0, `Я14: постороннее лицо ${c.y14foreign}`);
   need(!c.kids || c.y15 / c.kids <= 0.02, `Я15: ${c.y15}/${c.kids}`);
+  // этап 13 (П1–П5): правило концов и словарь начертаний — везде ноль
+  need(c.ch1 === 0, `Ч1: ${c.ch1}`);
+  need(c.ch2 === 0, `Ч2: ${c.ch2}`);
+  need(c.ch3 === 0, `Ч3: ${c.ch3}/${c.ch3of}`);
+  need(c.ch4 === 0, `Ч4: ${c.ch4}`);
+  need(c.ch5 === 0, `Ч5: ${c.ch5}`);
+  need(c.ch6 === 0, `Ч6: ${c.ch6}`);
+  need(c.ch7 === 0, `Ч7: ${c.ch7}`);
   return out;
 }
 
@@ -772,10 +1032,10 @@ const pct = (a: number, b: number) => (b ? `${Math.round((100 * a) / b)} %` : '�
 
 /** Строка таблицы переписи. */
 export function row(c: Census): string {
-  return `| ${c.scene} | ${c.scale} | ${c.width} | ${c.rowPx.toFixed(1)} | ${c.stars} | ${c.kids} | ${c.y1} | ${c.y2} | ${c.y3} | ${c.y4} | ${c.y5} | ${c.y6}/${c.y6of} | ${c.y7} | ${c.y8}/${c.y8of} (${c.y8nodes}) | ${c.y9} | ${c.y11} / ${c.y11trails} | ${c.y12stars} / ${c.y12lines} / ${c.y12overlaps} | ${c.y13} | ${pct(c.y14ends, c.y14of)} / ${c.y14foreign} | ${c.y15} (${pct(c.y15, c.kids)}) |`;
+  return `| ${c.scene} | ${c.scale} | ${c.width} | ${c.rowPx.toFixed(1)} | ${c.stars} | ${c.kids} | ${c.y1} | ${c.y2} | ${c.y3} | ${c.y4} | ${c.y5} | ${c.y6}/${c.y6of} | ${c.y7} | ${c.y8}/${c.y8of} (${c.y8nodes}) | ${c.y9} | ${c.y11} / ${c.y11trails} | ${c.y12stars} / ${c.y12lines} / ${c.y12overlaps} | ${c.y13} | ${pct(c.y14ends, c.y14of)} / ${c.y14foreign} | ${c.y15} (${pct(c.y15, c.kids)}) | ${c.ch1} | ${c.ch2} | ${c.ch3}/${c.ch3of} | ${c.ch4} (+N ${c.ch4gaps}) | ${c.ch5} | ${c.ch6} | ${c.ch7} |`;
 }
 export const HEAD =
-  '| сцена | × | ширина | px/строка | звёзд | связей к детям | Я1 | Я2 | Я3 | Я4 | Я5 | Я6 | Я7 | Я8 (узлов) | Я9 | Я11 линии / следы | Я12 звёзды / линии / наложения | Я13 | Я14 концы / чужие | Я15 |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|';
+  '| сцена | × | ширина | px/строка | звёзд | связей к детям | Я1 | Я2 | Я3 | Я4 | Я5 | Я6 | Я7 | Я8 (узлов) | Я9 | Я11 линии / следы | Я12 звёзды / линии / наложения | Я13 | Я14 концы / чужие | Я15 | Ч1 | Ч2 | Ч3 | Ч4 | Ч5 | Ч6 | Ч7 |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|';
 
 // ---------- прогон ----------
 
@@ -785,7 +1045,7 @@ if (process.env.CENSUS_MAIN === '1') {
     const i = argv.indexOf(`--${k}`);
     return i >= 0 && argv[i + 1] !== undefined ? argv[i + 1] : d;
   };
-  const scenes = arg('scene', Object.keys(SCENES).join(',')).split(',').filter(Boolean);
+  const scenes = arg('scene', STAGE11_SCENES.join(',')).split(',').filter(Boolean);
   const scales = arg('scale', '1,2').split(',').map(Number);
   const widths = arg('width', '1440').split(',').map(Number);
   const top = Number(arg('top', '8'));

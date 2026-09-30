@@ -45,12 +45,11 @@ import { branchesOf, membersOf, type Union } from '../engine/unions.ts';
 import { unions as ALL_UNIONS } from '../ui/reveal.ts';
 import { lowerFirst, nameCase } from '../ui/text/ru.ts';
 import { alpha } from './color.ts';
-import { branchColor, GlowBatch, glowLayers, glows, type MapTheme } from './branches.ts';
+import { branchColor, GlowBatch, glowLayers, type MapTheme } from './branches.ts';
 import { drawGlyph, starRadius } from './glyphs.ts';
-import { insideSky, Placer, spot as labelSpot } from './labels.ts';
 import { branchFrame } from './marks.ts';
-import { branchAlpha, commonBranch } from './trails.ts';
-import { mapFont, mapSize, nameSize, T_MAP_S } from './type.ts';
+import { commonBranch } from './trails.ts';
+import { mapFont, mapSize, T_MAP_S } from './type.ts';
 import { cross, type Rect } from './rect.ts';
 import { KIN_GOLD, LINK_YELLOW, UNION_COLORS } from './branches.ts';
 import type { PlateGap } from './rows.ts';
@@ -190,7 +189,6 @@ export function unionGen(u: Union): string | null {
 
 /** Полуразмер ромба союза, px: 4,5 — ромб 9 px (у касаний — 5). */
 export const DOT_R = 4.5;
-export const DOT_R_TOUCH = 5;
 /** Поле точки в проверке наложений, px от центра: ромб и кольцо выбора; подписи отступают от ромба на столько. */
 export const DOT_FIELD = 8;
 /**
@@ -207,12 +205,6 @@ export const DOT_CLEAR = 9;
 export const DOT_LEAD = 24;
 /** Где по времени стоит точка: доля пути от рождения младшего супруга до рождения первого ребёнка. */
 export const DOT_AT = 0.25;
-
-/** Лицо на небе: узел есть и нарисован в этом кадре. */
-const shownIn = (v: Pick<SkyContext, 'indexOf' | 'drawn'>) => (id: string) => {
-  const i = v.indexOf(id);
-  return i !== undefined && v.drawn(i);
-};
 
 /** Супруги союза, которые на небе (муж, затем жена); ребёнок союза супругом не считается. */
 export function spousesShown(u: Union, shown: (id: string) => boolean): string[] {
@@ -292,24 +284,6 @@ export function dotTime(model: ModelData, u: Union): number | null {
   return young + DOT_AT * (end - young);
 }
 
-/**
- * Где союз на небе по раскладке (px холста), до проверки наложений: центр, пределы по времени (правее звёзд супругов,
- * левее звёзд детей) и вид места — между супругами, у строки одного супруга, у строки ребёнка.
- */
-interface DotSpot {
-  x: number;
-  y: number;
-  lo: number;
-  hi: number;
-  kind: 'between' | 'hang' | 'child';
-  /** половина промежутка между строками супругов (для сдвига вверх и вниз) или отступ от строки */
-  room: number;
-  /** строка лица, у которой стоит точка (у точки между супругами — середина) */
-  ref: number;
-  /** у точки между супругами — где она может стоять по высоте: от строки одного супруга до строки другого с отступами */
-  band?: [number, number];
-}
-
 /** Отступ точки от строки одного лица, px. */
 const hangPx = (ky: number) => Math.max(DOT_HANG.min, Math.min(DOT_HANG.max, ky * DOT_HANG.k));
 
@@ -338,40 +312,6 @@ export function betweenY(band: [number, number], kids: readonly number[]): numbe
   const n = ys.length;
   const mid = n % 2 ? ys[(n - 1) / 2] : (ys[n / 2 - 1] + ys[n / 2]) / 2;
   return Math.max(a, Math.min(b, mid));
-}
-
-function dotSpot(v: SkyContext, p: Pick<Pass, 'zoomScale'>, pl: PlateIn, shown: (id: string) => boolean): DotSpot | null {
-  const { cam, model } = v;
-  const u = pl.union;
-  const t = dotTime(model, u);
-  if (t === null) return null;
-  const at = (id: string) => {
-    const i = v.indexOf(id)!;
-    const q = byId.get(id);
-    return { x: cam.sx(v.X0[i]), y: cam.sy(v.nodes[i].lane), r: starRadius(q?.magnitude ?? 6, p.zoomScale) + (q?.sex === 'f' ? 2.2 : 0), lane: v.nodes[i].lane };
-  };
-  const sp = spousesShown(u, shown).map(at);
-  const kids = u.kids.filter(shown).map(at);
-  const laneOf = (id: string) => model.nodeByPerson.get(id)?.lane;
-  let lo = -Infinity;
-  let hi = Infinity;
-  for (const s of sp) lo = Math.max(lo, s.x + s.r + DOT_CLEAR);
-  for (const k of kids) hi = Math.min(hi, k.x - k.r - DOT_CLEAR);
-  const x0 = Math.max(cam.sx(v.xOf(t)), Math.min(lo + DOT_LEAD, (lo + (Number.isFinite(hi) ? hi : lo + 2 * DOT_LEAD)) / 2));
-  const x = lo <= hi ? Math.max(lo, Math.min(hi, x0)) : (lo + hi) / 2;
-  const hang = hangPx(cam.ky);
-  if (sp.length >= 2) {
-    const band = betweenBand(sp[0].y, sp[1].y, cam.ky);
-    return { x, y: betweenY(band, kids.map((k) => k.y)), lo, hi, kind: 'between', room: Math.abs(sp[0].y - sp[1].y) / 2, ref: (sp[0].y + sp[1].y) / 2, band };
-  }
-  if (sp.length === 1) {
-    const side = hangSide(u, sp[0].lane, laneOf);
-    return { x, y: sp[0].y - side * hang, lo, hi, kind: 'hang', room: hang, ref: sp[0].y };
-  }
-  const kid = u.kids.includes(pl.from) && shown(pl.from) ? pl.from : u.kids.find(shown);
-  if (!kid) return null;
-  const k = at(kid);
-  return { x, y: k.y - parentSide(u, k.lane, laneOf) * hang, lo, hi, kind: 'child', room: hang, ref: k.y };
 }
 
 // ---------- цвет линий к детям ----------
@@ -413,210 +353,8 @@ export const DOT_TONE = 0.82;
 export const KID_LINE_W = 1.5;
 export const SPOUSE_LINE_W = 1.2;
 
-/** Точка союза в кадре: место, лица на небе и их звёзды (px холста). */
-export interface UnionDot {
-  pl: PlateIn;
-  cx: number;
-  cy: number;
-  /** точка встала в открытое небо (иначе линии идут к её месту за краем, а ромба и попадания нет) */
-  placed: boolean;
-  box: Rect | null;
-  hidden: number;
-  /** яркость союза при выделении: по детям на небе, иначе по супругам */
-  e: number;
-  /** супруги на небе: звезда, конец следа и конец места подписи справа от звезды (lab), куда подпись встанет первой */
-  spouses: { id: string; x: number; y: number; r: number; end: number; lab?: number }[];
-  kids: { id: string; x: number; y: number; r: number; t0: number }[];
-  r: number;
-  count: string;
-  countW: number;
-  /**
-   * где «+N» у ромба — там, где нет линий: справа (линий к детям нет), слева (нет скобок от супругов — союз родителей
-   * лица) или под ромбом, дальше от строки лица (есть и те и другие)
-   */
-  countAt: 'r' | 'l' | 'v';
-  /** сторона от строки лица, куда уходит «+N» под ромбом: 1 — вниз, −1 — вверх */
-  away: 1 | -1;
-}
-
-/** Где точка стояла в прошлых кадрах (ключ сдвига): точка, которой хватает места там же, там и остаётся. */
-const placedMemo = new WeakMap<object, Map<string, string>>();
-
-/**
- * Лица, связь которых с родителями рисует точка союза (дети союзов на небе), и пары супругов с точкой: у них нет
- * прежних отводов, гребёнок и знаков брака (trails.ts). Считается до слоя связей.
- */
-export function unionLinks(v: Pick<SkyContext, 'indexOf' | 'drawn'>, plates: readonly PlateIn[]): { kids: Set<string>; pairs: Set<string> } {
-  const shown = shownIn(v);
-  const kids = new Set<string>();
-  const pairs = new Set<string>();
-  for (const pl of plates) {
-    const u = pl.union;
-    for (const k of u.kids) if (shown(k)) kids.add(k);
-    const sp = spousesShown(u, shown);
-    if (sp.length === 2) pairs.add(`${sp[0]}|${sp[1]}`).add(`${sp[1]}|${sp[0]}`);
-  }
-  return { kids, pairs };
-}
-
-/**
- * Места точек союзов в кадре. Вызывается после следов и лент, до звёзд: точка обходит звёзды, ленты, резерв органов
- * неба и другие точки и уходит с линий следов; её поле занимает место в общей проверке наложений — подписи звёзд,
- * которые ставятся позже, её обходят. Раскрытые и открытая в листе карточки — первыми: им лучшие места.
- */
-export function layoutUnionDots(v: SkyContext, p: Pass, plates: readonly PlateIn[], marks: PlateMarks = {}): UnionDot[] {
-  const { ctx, cam } = v;
-  const out: UnionDot[] = [];
-  if (!plates.length) return out;
-  let memo = placedMemo.get(v);
-  if (!memo) placedMemo.set(v, (memo = new Map()));
-  const shown = shownIn(v);
-  const has = (id: string) => v.indexOf(id) !== undefined;
-  // звёзды кадра — как их занимает небо перед подписями (sky.ts): точка их не закрывает
-  const stars = new Placer();
-  for (const i of p.vis) {
-    if (p.starAlpha(i) <= 0.5 || !v.drawn(i)) continue;
-    const q = byId.get(v.nodes[i].person);
-    const r = starRadius(q?.magnitude ?? 6, p.zoomScale) + (q?.sex === 'f' ? 2.2 : 0) + 1.5;
-    const k = q && (q.roles.includes('king') || q.roles.includes('queen')) ? 4 : 0;
-    stars.add({ x: cam.sx(v.X0[i]) - r, y: cam.sy(v.nodes[i].lane) - r - k, w: 2 * r, h: 2 * r + k }, true);
-  }
-  // подписи ставятся после точек и обходят их; но место подписи справа у звезды — первое, куда она встанет, — точка
-  // по возможности оставляет свободным: у выбранного, второго, наведённого лица и лица с фокусом (их подпись обязана
-  // встать) — почти всегда, у остальных — если рядом есть другое место
-  const s = p.s;
-  const must = new Set([s.selected, s.second, s.hovered, s.focus].filter((x): x is string => !!x));
-  v.labelCache.ensure(v);
-  const nameW = v.labelCache.nameW;
-  const siglaW = v.labelCache.siglaW;
-  const names: { box: Rect; cost: number }[] = [];
-  const nameEnd = new Map<string, number>();
-  for (const i of p.vis) {
-    const n = v.nodes[i];
-    if (n.ghost || p.starAlpha(i) <= 0.5 || !v.drawn(i)) continue;
-    const q = byId.get(n.person);
-    if (!q) continue;
-    const x = cam.sx(v.X0[i]);
-    const y = cam.sy(n.lane);
-    if (x < -200 || x > cam.w + 20 || y < v.openTop - 20 || y > cam.vp.b + 20) continue;
-    const w = (nameW[i] > 0 ? nameW[i] : q.name.length * 8) + Math.max(0, siglaW[i] ?? 0) + (p.revealText?.has(q.id) || s.reveal?.has(q.id) ? 14 : 0);
-    const king = q.roles.includes('king') || q.roles.includes('queen');
-    const box = labelSpot('r', x, y, starRadius(q.magnitude, p.zoomScale), w, nameSize(q.magnitude, v.coarse), king).box;
-    names.push({ box, cost: must.has(q.id) ? 300 : 22 });
-    nameEnd.set(q.id, box.x + box.w);
-  }
-  const nameCost = (b: Rect, near: readonly { box: Rect; cost: number }[]) => {
-    let c = 0;
-    for (const nm of near) if (b.x < nm.box.x + nm.box.w && nm.box.x < b.x + b.w && b.y < nm.box.y + nm.box.h && nm.box.y < b.y + b.h) c += nm.cost;
-    return c;
-  };
-  const R = v.coarse ? DOT_R_TOUCH : DOT_R;
-  ctx.font = countFont(v.coarse);
-  // точки, уже поставленные в этом кадре: следующая отходит от них (DOT_APART), чтобы пучки линий разных союзов
-  // одного лица (Иаков и четыре жены) начинались из разных мест
-  const taken: { x: number; y: number }[] = [];
-  /** хорды скобок поставленных точек: от звезды супруга к ромбу */
-  const chords: { id: string; x0: number; y0: number; x1: number; y1: number }[] = [];
-  const rank = (pl: PlateIn) => (pl.union.id === marks.selected ? 0 : pl.open ? 1 : 2);
-  const order = plates.map((pl, k) => ({ pl, k })).sort((a, b) => rank(a.pl) - rank(b.pl) || a.k - b.k);
-  for (const { pl } of order) {
-    const u = pl.union;
-    const spot = dotSpot(v, p, pl, shown);
-    if (!spot) continue;
-    const at = (id: string) => {
-      const i = v.indexOf(id)!;
-      const q = byId.get(id);
-      return { id, x: cam.sx(v.X0[i]), y: cam.sy(v.nodes[i].lane), r: starRadius(q?.magnitude ?? 6, p.zoomScale) + (q?.sex === 'f' ? 2.2 : 0), end: cam.sx(v.X1[i]), t0: v.nodes[i].t0 };
-    };
-    const spouses = spousesShown(u, shown).map((id) => ({ ...at(id), lab: nameEnd.get(id) }));
-    const kids = u.kids.filter(shown).map(at);
-    // союз целиком за краем окна — не рисуется
-    const xs = [spot.x, ...spouses.map((s) => s.x), ...kids.map((k) => k.x)];
-    const ys = [spot.y, ...spouses.map((s) => s.y), ...kids.map((k) => k.y)];
-    if (Math.max(...xs) < -40 || Math.min(...xs) > cam.w + 40 || Math.max(...ys) < v.openTop - 40 || Math.min(...ys) > cam.vp.b + 40) continue;
-    const hidden = pl.open ? 0 : hiddenOf(u, shown, has);
-    const count = hidden ? `+${hidden}` : '';
-    const countW = count ? ctx.measureText(count).width : 0;
-    const e = !p.s.highlight ? 1 : kids.length ? Math.max(...kids.map((k) => p.emph(k.id))) : spouses.length ? Math.min(...spouses.map((s) => p.emph(s.id))) : 1;
-    const countAt: UnionDot['countAt'] = !kids.length ? 'r' : !spouses.length ? 'l' : 'v';
-    const dot: UnionDot = { pl, cx: spot.x, cy: spot.y, placed: false, box: null, hidden, e, spouses, kids, r: R, count, countW, countAt, away: 1 };
-    const csize = mapSize(T_MAP_S, v.coarse);
-    out.push(dot);
-    // места: вдоль времени, затем чуть выше или ниже — у точки между супругами на треть свободного места от середины,
-    // у точки у строки одного лица — дальше от строки
-    // у точки между супругами — в полосе между их строками (band), на треть свободного места от своей высоты
-    const band = spot.band ?? [spot.y, spot.y];
-    const step = 0.35 * Math.max(0, spot.room - DOT_FIELD);
-    const ups = spot.kind === 'between' ? [0, step, -step].map((d) => Math.max(band[0], Math.min(band[1], spot.y + d)) - spot.y) : [0, 6];
-    const dxs = [0, 8, -8, 16, -16, 24, -24, 36, -36, 48, -48, 64, -64, 84, -84, 110, -110, 140];
-    const cands: { x: number; y: number; key: string; score: number; box: Rect; away: 1 | -1 }[] = [];
-    // места подписей у точки — в пределах сдвигов (кадр набора может нести сотни подписей)
-    const near = names.filter((nm) => nm.box.x < spot.x + 200 && nm.box.x + nm.box.w > spot.x - 200 && nm.box.y < spot.y + 80 && nm.box.y + nm.box.h > spot.y - 80);
-    ups.forEach((dy, vi) => {
-      if (vi && ups.indexOf(dy) < vi) return;
-      const sy = spot.kind === 'between' ? spot.y + dy : spot.y + (Math.sign(spot.y - spot.ref) || 1) * dy;
-      for (const dx of dxs) {
-        const x = spot.x + dx;
-        const away = (Math.sign(sy - spot.ref) || 1) as 1 | -1;
-        const box = dotBox(x, sy, countW, countAt, away, csize);
-        const outside = spot.lo <= spot.hi && (x < spot.lo - 0.5 || x > spot.hi + 0.5);
-        const score = Math.abs(dx) + vi * 14 + (outside ? 60 : 0) + nameCost(box, near) + crowdCost(x, sy, taken);
-        cands.push({ x, y: sy, key: `${vi}|${dx}`, score, box, away });
-      }
-    });
-    cands.sort((a, b) => a.score - b.score);
-    const inSky = (b: Rect) => insideSky(v, b);
-    const free = (b: Rect) => inSky(b) && !p.placer.clash(b) && !stars.clash(b, true);
-    // штраф места, дорогой в счёте, — только у мест, которые ещё могут победить: точка на линии следа (+18) и на ленте (+400)
-    // и скобки от супругов не перекрещиваются со скобками уже поставленных точек (жёны одна под другой: скобка нижней
-    // не пересекает скобку верхней), кроме скобок от того же лица
-    const penalty = (c: (typeof cands)[number]) =>
-      (p.lines?.clash({ x: c.x - R, y: c.y - R, w: 2 * R, h: 2 * R }, false) ? 18 : 0) +
-      (p.offRibbon && !p.offRibbon(c.box) ? 400 : 0) +
-      BRACKET_CROSS * spouses.reduce((n, sp) => n + chords.filter((q) => q.id !== sp.id && crossing(sp.x, sp.y, c.x, c.y, q.x0, q.y0, q.x1, q.y1)).length, 0);
-    let got: (typeof cands)[number] | null = null;
-    // место прошлого кадра — первым, если оно свободно и не намного хуже лучшего (точка не прыгает при сдвиге неба)
-    const was = memo.get(u.id);
-    const prev = was ? cands.find((c) => c.key === was) : undefined;
-    if (prev && prev.score <= cands[0].score + 30 && free(prev.box) && prev.score + penalty(prev) <= cands[0].score + 30) got = prev;
-    if (!got) {
-      let best = Infinity;
-      for (const c of cands) {
-        if (c.score >= best) break;
-        if (!free(c.box)) continue;
-        const sc = c.score + penalty(c);
-        if (sc < best) {
-          best = sc;
-          got = c;
-        }
-      }
-    }
-    // места нет — лучшее место в открытом небе, даже на чужой звезде: без точки союз распался бы на линии
-    got ??= cands.find((c) => inSky(c.box) && !p.placer.clash(c.box, false)) ?? null;
-    if (!got) {
-      memo.delete(u.id);
-      continue;
-    }
-    memo.set(u.id, got.key);
-    dot.cx = got.x;
-    dot.cy = got.y;
-    dot.placed = true;
-    dot.box = got.box;
-    dot.away = got.away;
-    p.placer.add(got.box);
-    taken.push({ x: got.x, y: got.y });
-    for (const sp of spouses) chords.push({ id: sp.id, x0: sp.x, y0: sp.y, x1: got.x, y1: got.y });
-    v.ledger.add('plate', plateNames(u), got.box, u.id);
-    // линия ромба в проверке линий: название созвездия и помета не ложатся на точку
-    p.lines?.add({ x: got.x - R, y: got.y - R, w: 2 * R, h: 2 * R });
-  }
-  return out;
-}
-
 const countFont = (coarse: boolean) => mapFont(T_MAP_S, { sans: true, weight: 500, coarse });
 
-/** Штраф места точки за каждое пересечение её скобки со скобкой другой точки (по хордам: звезда супруга — ромб). */
-export const BRACKET_CROSS = 24;
 /** Пересекаются ли отрезки (a–b) и (c–d) внутри (общий конец не считается). */
 export function crossing(ax: number, ay: number, bx: number, by: number, cx: number, cy: number, dx: number, dy: number): boolean {
   const o = (px: number, py: number, qx: number, qy: number, rx: number, ry: number) => (qx - px) * (ry - py) - (qy - py) * (rx - px);
@@ -636,22 +374,6 @@ export function crowdCost(x: number, y: number, taken: readonly { x: number; y: 
     if (d < DOT_APART) c += (DOT_APART - d) * 2;
   }
   return c;
-}
-
-/** Поле точки: ромб с кольцом и «+N» справа, слева или под ромбом (away — сторона от строки лица: 1 — вниз). */
-function dotBox(x: number, y: number, countW: number, at: UnionDot['countAt'], away: number, size: number): Rect {
-  const F = DOT_FIELD;
-  if (!countW) return { x: x - F, y: y - F, w: 2 * F, h: 2 * F };
-  if (at === 'r') return { x: x - F, y: y - F, w: 2 * F + countW + 3, h: 2 * F };
-  if (at === 'l') return { x: x - F - countW - 3, y: y - F, w: 2 * F + countW + 3, h: 2 * F };
-  const w = Math.max(2 * F, countW + 4);
-  return away > 0 ? { x: x - w / 2, y: y - F, w, h: 2 * F + size } : { x: x - w / 2, y: y - F - size, w, h: 2 * F + size };
-}
-/** Где пишется «+N» у ромба (x — начало строки, y — середина строки). */
-function countSpot(d: UnionDot, size: number, away: number): { x: number; y: number } {
-  if (d.countAt === 'r') return { x: d.cx + d.r + 4, y: d.cy };
-  if (d.countAt === 'l') return { x: d.cx - d.r - 4 - d.countW, y: d.cy };
-  return { x: d.cx - d.countW / 2, y: d.cy + away * (d.r + 3 + size * 0.5) };
 }
 
 /**
@@ -708,36 +430,6 @@ export function spouseBracket(
   else ctx.bezierCurveTo(c[2], c[3], c[4], c[5], c[6], c[7]);
   ctx.stroke();
 }
-/** Точки кривой скобки через равные доли параметра (для проверки линий кадра). */
-function bracketSamples(c: number[], n = 8): [number, number][] {
-  if (c.length === 4) return [[c[0], c[1]], [c[2], c[3]]];
-  const out: [number, number][] = [];
-  for (let k = 0; k <= n; k++) {
-    const t = k / n;
-    const a = (1 - t) ** 3;
-    const b = 3 * (1 - t) ** 2 * t;
-    const q = 3 * (1 - t) * t * t;
-    const e = t ** 3;
-    out.push([a * c[0] + b * c[2] + q * c[4] + e * c[6], a * c[1] + b * c[3] + q * c[5] + e * c[7]]);
-  }
-  return out;
-}
-/** Ломаная — в линии кадра (Pass.lines): названия созвездий и пометы семей на неё не ложатся. */
-function addPolyline(pl: Pick<Placer, 'add'> | undefined, pts: readonly [number, number][]) {
-  if (!pl) return;
-  for (let k = 0; k + 1 < pts.length; k++) {
-    const [x0, y0] = pts[k];
-    const [x1, y1] = pts[k + 1];
-    const n = Math.max(1, Math.ceil(Math.hypot(x1 - x0, y1 - y0) / 24));
-    for (let j = 0; j < n; j++) {
-      const ax = x0 + ((x1 - x0) * j) / n;
-      const ay = y0 + ((y1 - y0) * j) / n;
-      const bx = x0 + ((x1 - x0) * (j + 1)) / n;
-      const by = y0 + ((y1 - y0) * (j + 1)) / n;
-      pl.add({ x: Math.min(ax, bx) - 1, y: Math.min(ay, by) - 1, w: Math.abs(bx - ax) + 2, h: Math.abs(by - ay) + 2 });
-    }
-  }
-}
 
 /** Отрезок от ромба (x0, y0) к звезде ребёнка (x1, y1) радиуса r: концы — у края ромба и у края звезды. */
 function kidSegment(x0: number, y0: number, dr: number, x1: number, y1: number, r: number): [number, number, number, number] {
@@ -747,127 +439,6 @@ function kidSegment(x0: number, y0: number, dr: number, x1: number, y1: number, 
   const a = Math.min(dr * 0.75 + 1, l / 2);
   const b = Math.min(r + 1.5, l / 2);
   return [x0 + (dx / l) * a, y0 + (dy / l) * a, x1 - (dx / l) * b, y1 - (dy / l) * b];
-}
-
-/** Знак разрыва (хронологическое напряжение) поперёк отрезка в его середине: две короткие косые черты. */
-function tensionAcross(ctx: CanvasRenderingContext2D, s: [number, number, number, number], color: string) {
-  const [x0, y0, x1, y1] = s;
-  const mx = (x0 + x1) / 2;
-  const my = (y0 + y1) / 2;
-  const l = Math.hypot(x1 - x0, y1 - y0) || 1;
-  const ux = (x1 - x0) / l;
-  const uy = (y1 - y0) / l;
-  // черты наклонены к отрезку, как «//» на следе
-  const nx = -uy + ux * 0.6;
-  const ny = ux + uy * 0.6;
-  const nl = Math.hypot(nx, ny) || 1;
-  ctx.save();
-  ctx.setLineDash([]);
-  ctx.lineWidth = 1;
-  ctx.strokeStyle = color;
-  ctx.beginPath();
-  for (const k of [-1.6, 1.6]) {
-    const cx = mx + ux * k;
-    const cy = my + uy * k;
-    ctx.moveTo(cx - (nx / nl) * 4, cy - (ny / nl) * 4);
-    ctx.lineTo(cx + (nx / nl) * 4, cy + (ny / nl) * 4);
-  }
-  ctx.stroke();
-  ctx.restore();
-}
-
-/**
- * Линии союзов (под звёздами и подписями): скобки от супругов тоном следа и линии к детям цветом ветви со свечением.
- * У наведённой и выбранной точки линии — в полную силу и толще: в гуще семьи видно, какие линии её. Возвращает, что
- * нарисовано, — для проверок приёмки (sky.ts пишет canvas[data-union-lines]): «союз=супруг» и «союз>ребёнок:#цвет».
- */
-export function drawUnionLines(v: SkyContext, p: Pass, dots: readonly UnionDot[], marks: PlateMarks = {}): string[] {
-  const { ctx, pal } = v;
-  const s = p.s;
-  const hl = s.highlight;
-  const intro = s.intro;
-  const bf = branchFrame(v, p);
-  const theme: MapTheme = pal.glow ? 'night' : 'day';
-  const glow = new GlowBatch(glowLayers('branch', theme));
-  const anc = new GlowBatch(glowLayers('ancestor', theme));
-  const log: string[] = [];
-  type Seg = { seg: [number, number, number, number]; color: string; dash: number[]; tension?: string; hot: boolean };
-  const hot = (d: UnionDot) => d.pl.union.id === marks.hover || d.pl.union.id === marks.selected;
-  const segs: Seg[] = [];
-  ctx.save();
-  ctx.setLineDash([]);
-  ctx.lineCap = 'round';
-  // скобки от супругов — тоном следа; отвес скобки не проходит через чужие звёзды (bracketCurve, blocked)
-  const starsAt: { x: number; y: number; r: number; id: string }[] = [];
-  for (const i of p.vis) {
-    if (!v.drawn(i) || p.starAlpha(i) <= 0.5) continue;
-    const q = byId.get(v.nodes[i].person);
-    starsAt.push({ x: v.cam.sx(v.X0[i]), y: v.cam.sy(v.nodes[i].lane), r: starRadius(q?.magnitude ?? 6, p.zoomScale) + (q?.sex === 'f' ? 2.2 : 0), id: v.nodes[i].person });
-  }
-  ctx.lineWidth = SPOUSE_LINE_W;
-  for (const d of dots) {
-    for (const sp of d.spouses) {
-      const e = hot(d) ? 1 : Math.min(p.emph(sp.id), d.e) * intro;
-      ctx.strokeStyle = alpha(hot(d) ? pal.ink : pal.ink2, Math.min(1, (hot(d) ? 0.85 : 0.62) * e));
-      ctx.lineWidth = hot(d) ? SPOUSE_LINE_W + 0.5 : SPOUSE_LINE_W;
-      const blocked = (x: number, y0: number, y1: number) => starsAt.some((q) => q.id !== sp.id && Math.abs(q.x - x) < q.r + 3 && q.y > y0 && q.y < y1);
-      spouseBracket(ctx, sp, { x: d.cx, y: d.cy, r: d.r }, blocked);
-      addPolyline(p.lines, bracketSamples(bracketCurve(sp, { x: d.cx, y: d.cy, r: d.r }, blocked)));
-      log.push(`${d.pl.union.id}=${sp.id}`);
-    }
-  }
-  // линии к детям — цветом ветви: у рода выбранного — его ветвей, у предков — светом текста, у прочих — ветви у родителя
-  const L = s.layers;
-  for (const d of dots) {
-    const u = d.pl.union;
-    const dash = kidDash(u);
-    const par = u.a ?? u.b;
-    const pi = par ? v.indexOf(par) : undefined;
-    const brk = pi !== undefined ? v.nodes[pi].brk : null;
-    const torn = !!par && L.tensions && s.tensionPersons.has(par);
-    for (const k of d.kids) {
-      const seg = kidSegment(d.cx, d.cy, d.r, k.x, k.y, k.r);
-      const bp = bf.paint(k.id);
-      const kind = hl?.get(k.id);
-      let color: string;
-      let hex: string;
-      if (bp) {
-        hex = bp.color;
-        const a = branchAlpha(bp, p.emph(k.id), intro);
-        color = alpha(hex, a);
-        if (glows(bp.gen, false)) glow.add(hex, a, ...seg);
-      } else if (bf.map && (kind === 'anc' || kind === 'self')) {
-        hex = pal.ink;
-        color = alpha(pal.ink2, Math.min(1, p.emph(k.id) * intro));
-        anc.add(pal.ink, intro, ...seg);
-      } else {
-        hex = kidColor(u, k.id, theme);
-        const a = hot(d) ? 1 : Math.min(1, p.emph(k.id) * intro);
-        color = alpha(hex, a);
-        glow.add(hex, a, ...seg);
-      }
-      if (hot(d) && bp) color = alpha(hex, 1);
-      const tension = (torn && s.tensionPersons.has(k.id)) || (brk !== null && brk !== undefined && k.t0 > brk) ? alpha(pal.ink, 0.9 * Math.min(1, p.emph(k.id)) * intro) : undefined;
-      segs.push({ seg, color, dash, tension, hot: hot(d) });
-      log.push(`${u.id}>${k.id}:${hex}`);
-    }
-  }
-  anc.flush(ctx, theme === 'night');
-  glow.flush(ctx, theme === 'night');
-  for (const q of segs) {
-    ctx.lineWidth = q.hot ? KID_LINE_W + 0.75 : KID_LINE_W;
-    ctx.strokeStyle = q.color;
-    ctx.setLineDash(q.dash);
-    ctx.beginPath();
-    ctx.moveTo(q.seg[0], q.seg[1]);
-    ctx.lineTo(q.seg[2], q.seg[3]);
-    ctx.stroke();
-    addPolyline(p.lines, [[q.seg[0], q.seg[1]], [q.seg[2], q.seg[3]]]);
-  }
-  ctx.setLineDash([]);
-  for (const q of segs) if (q.tension) tensionAcross(ctx, q.seg, q.tension);
-  ctx.restore();
-  return log;
 }
 
 /** Ромб союза: заливка (раскрыт) или контур с подложкой цвета неба (свёрнут). */
@@ -996,48 +567,6 @@ function paintCount(ctx: CanvasRenderingContext2D, pal: { ink2: string; halo: st
   ctx.strokeText(text, x, base);
   ctx.fillStyle = color;
   ctx.fillText(text, x, base);
-}
-
-/**
- * Ромбы союзов поверх линий: состояние (залит — раскрыт, полый с «+N» — свёрнут), наведение (ярче, тонкое кольцо),
- * выбор (кольцо, как у выбранной звезды) и фокус клавиатуры (кольцо фокуса). Возвращает попадания (src/ui/sky).
- */
-export function drawUnionDots(v: SkyContext, p: Pass, dots: readonly UnionDot[], marks: PlateMarks = {}): PlateHit[] {
-  const { ctx, pal } = v;
-  const out: PlateHit[] = [];
-  const intro = p.s.intro;
-  for (const d of dots) {
-    if (!d.placed || !d.box) continue;
-    const u = d.pl.union;
-    const hover = marks.hover === u.id;
-    const sel = marks.selected === u.id;
-    // ромб — светом звёзд, чуть тише звезды: такая же точка неба, что лицо, но узел, а не лицо; наведённый и выбранный — ярче
-    const e = hover || sel ? 1 : DOT_TONE * d.e;
-    const color = alpha(pal.ink, Math.min(1, e * intro));
-    paintDot(ctx, d.cx, d.cy, d.r, { open: d.pl.open, color, halo: pal.sky });
-    if (d.count) {
-      const at = countSpot(d, mapSize(T_MAP_S, v.coarse), d.away);
-      paintCount(ctx, pal, v.coarse, at.x, at.y, d.count, color);
-    }
-    ctx.save();
-    ctx.setLineDash([]);
-    const ring = (r: number, w: number, c: string) => {
-      ctx.lineWidth = w;
-      ctx.strokeStyle = c;
-      ctx.beginPath();
-      ctx.arc(d.cx, d.cy, r, 0, Math.PI * 2);
-      ctx.stroke();
-    };
-    if (sel) ring(d.r + 3.5, 1.5, pal.focus);
-    else if (hover) ring(d.r + 3, 1, pal.ink);
-    if (marks.focus === u.id) ring(d.r + (sel ? 6.5 : 5), 2, pal.focus);
-    ctx.restore();
-    // поле попадания — не меньше 18 × 18 (на касании input.ts раздувает до 44)
-    const b = d.box;
-    const g = Math.max(0, (18 - b.h) / 2);
-    out.push({ x: b.x - g, y: b.y - g, w: b.w + 2 * g, h: b.h + 2 * g, uid: u.id, from: d.pl.from, open: d.pl.open, cx: d.cx, cy: d.cy, r: d.r, hidden: d.hidden, ax: d.cx, ay: d.cy });
-  }
-  return out;
 }
 
 // ---------- образец для «Условных знаков» ----------
@@ -1230,6 +759,8 @@ export function drawLinkNodes(v: SkyContext, p: Pass, d: LinkDraw, marks: PlateM
     const own = { x: x - R - 0.5, y: y - R - 0.5, w: 2 * R + 1, h: 2 * R + 1 };
     // знак целиком в открытом небе: у кромки рамки ромб не срезается — его нет
     if (own.x < v.letterW || own.x + own.w > cam.w || own.y < v.openTop || own.y + own.h > cam.vp.b) continue;
+    // под указателем у края («← Давид») ромба не видно: его нет
+    if (p.wayEdges?.some((e) => cross(e, own))) continue;
     if (crowd) {
       if (taken.some((t) => cross(t, own))) continue;
       taken.push(own);

@@ -44,9 +44,10 @@ describe('клавиши набора: чья звезда и что сказа�
     const f = workKey('KeyC', 'david')!;
     expect(f).toEqual({ kind: 'fold', id: 'david' });
     expect(foldDesc.value).toContain('david');
-    expect(workKeyText({ kind: 'fold', id: f.id, hidden: 62 })).toBe('Давид: потомки свёрнуты, скрыто 62 лица');
+    // этап 13, решение 109: на небе — «скрыть» и «показать»
+    expect(workKeyText({ kind: 'fold', id: f.id, hidden: 62 })).toBe('Давид: потомки скрыты на небе, 62 лица');
     const u = workKey('KeyC', 'david')!;
-    expect(workKeyText(u)).toBe('Давид: потомки развёрнуты');
+    expect(workKeyText(u)).toBe('Давид: потомки снова на небе');
     expect(workKey('KeyX', 'david')).toBeNull();
     expect(workKey('KeyD', null)).toBeNull();
   });
@@ -57,8 +58,8 @@ describe('клавиши набора: чья звезда и что сказа�
     ]);
   });
   it('свёртка созвездия вслух — без согласования с названием (UX-51)', () => {
-    expect(groupFoldText('Дом Саулов', true, 65)).toBe('Созвездие «Дом Саулов» свёрнуто: скрыто 65 лиц');
-    expect(groupFoldText('Дом Саулов', false, 0)).toBe('Созвездие «Дом Саулов» развёрнуто');
+    expect(groupFoldText('Дом Саулов', true, 65)).toBe('Созвездие «Дом Саулов» скрыто на небе: 65 лиц');
+    expect(groupFoldText('Дом Саулов', false, 0)).toBe('Созвездие «Дом Саулов» снова на небе');
   });
 });
 

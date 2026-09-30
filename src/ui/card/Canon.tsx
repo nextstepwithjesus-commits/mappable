@@ -154,11 +154,15 @@ export function CanonStrip({ books: counts, first, keyRefs, id }: { books: Recor
     return <span key={b.code} class={`l${canonLevel(n, max)}`} title={`${abbr}${n ? `: ${num(n)} ${plural(n, 'стих', 'стиха', 'стихов')}` : ''}`} />;
   };
   const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 6);
+  // у народа имя — это и имя народа, и имя его земли (Сидон, Офир, Магог; решение 108, X6 п. 3): подпись так и говорит
+  const kind = id ? byId.get(id)?.kind : undefined;
+  // признак сборки (mentions.people) — главный; вид лица — запасной, пока том не загружен
+  const subject = kind === 'clan' ? 'Имя рода' : info?.people || kind === 'people' ? 'Имя народа или земли' : 'Имя';
   return typoTree(
     <>
       {total > 0 && (
         <>
-          <div class="canon" role="img" aria-label={`Имя названо в ${verses(total)}; по книгам Писания`}>
+          <div class="canon" role="img" aria-label={`${subject} названо в ${verses(total)}; по книгам Писания`}>
             {groups.map((g, i) => (
               <span class={`cg${g[0].code === 'Мф' ? ' nt' : ''}`} key={g[0].code} style={{ '--n': g.length }} title={GROUPS[i]?.name}>
                 {g.map(cell)}
@@ -172,7 +176,7 @@ export function CanonStrip({ books: counts, first, keyRefs, id }: { books: Recor
           </div>
           <p class="fact">
             {/* у фразы есть подлежащее (CARD-90); число стихов неотрывно от своей книги: «3 Цар (74)» (VIS-74) */}
-            Имя названо в {verses(total)}
+            {subject} названо в {verses(total)}
             {top.length > 1 ? `; больше всего — ${top.map(([code, n]) => `${refLabel(code)}\u00a0(${num(n)})`).join(', ')}` : top.length ? ` (${refLabel(top[0][0])})` : ''}.
             {info?.scope === 'chapters' ? ` Стихи считаются только в главах, на которые ссылается карточка: ${id ? scopeReason(id) : 'имя встречается и в других значениях'}.` : ''}
           </p>

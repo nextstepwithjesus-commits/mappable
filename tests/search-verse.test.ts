@@ -16,7 +16,10 @@ describe('поиск по стиху: названные и упомянутые
     expect(hits.find((h) => h.id === 'melkhisedek')?.via).toBe('verse');
     expect(hits.find((h) => h.id === 'avraam')?.via).toBe('cited');
     const blocks = personBlocks(hits);
-    expect(blocks.map((b) => b.head)).toEqual(['Названы в стихе', 'Стих упомянут в карточке']);
+    // этап 13, решение 120: у каждой группы — свой счётчик
+    const n = (via: string) => hits.filter((h) => h.via === via).length;
+    const people = (k: number) => `${k}\u00a0${k % 10 === 1 && k % 100 !== 11 ? 'лицо' : [2, 3, 4].includes(k % 10) && ![12, 13, 14].includes(k % 100) ? 'лица' : 'лиц'}`;
+    expect(blocks.map((b) => b.head)).toEqual([`Названы в стихе — ${people(n('verse'))}`, `Стих упомянут в карточке — ${people(n('cited'))}`]);
   });
   it('«Лк 3:23»: слово «Сын» стиха не находит Давида («Сын Иессеев» — только целиком)', () => {
     const hits = searchIndex.search('Лк 3:23', 60);
@@ -34,6 +37,6 @@ describe('поиск по стиху: названные и упомянутые
       if (h) expect(h.via, id).toBe('cited');
     }
     expect(hits.find((h) => h.id === 'avraam')?.via).toBe('verse');
-    expect(personBlocks(hits)[0].head).toBe('Названы в главе');
+    expect(personBlocks(hits)[0].head).toMatch(/^Названы в главе — \d+\u00a0(лицо|лица|лиц)$/);
   });
 });

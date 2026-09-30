@@ -34,7 +34,7 @@ export function Rail({ states, current, onGo }: { states: Record<number, SecStat
     els[Math.max(0, Math.min(els.length - 1, to))].focus();
   };
   return (
-    <nav class="rail" aria-label="Разделы карточки" ref={nav} onKeyDown={onKey}>
+    <nav class="rail" aria-label="Метки разделов карточки" ref={nav} onKeyDown={onKey}>
       {SECTIONS.map((s, i) => {
         const st = states[s.n] ?? 'absent';
         const label = `${s.n} ${s.title} — ${STATE_TEXT[st]}`;

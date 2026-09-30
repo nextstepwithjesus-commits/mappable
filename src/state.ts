@@ -1,21 +1,29 @@
 /** Состояние приложения (сигналы). Адрес страницы отражает выбранное лицо, окно, панель и режимы (src/ui/address.ts). */
 import { signal, computed, effect, batch } from '@preact/signals';
-import { models, byId, graph, loadModel } from './data/atlas.ts';
+import { models, modelInfo, byId, graph, loadModel } from './data/atlas.ts';
 import { relate, type KinStep } from './engine/kinship.ts';
 
 export type Theme = 'night' | 'day';
-export type Panel = null | 'epochs' | 'index' | 'kinship' | 'synopsis' | 'legend' | 'about' | 'section' | 'chapter' | 'spread' | 'view' | 'work';
+export type Panel = null | 'epochs' | 'index' | 'kinship' | 'synopsis' | 'legend' | 'about' | 'chronology' | 'section' | 'chapter' | 'spread' | 'view' | 'work';
 /** Все панели — для разбора адреса (src/ui/address.ts). */
-export const PANELS: readonly Exclude<Panel, null>[] = ['epochs', 'index', 'kinship', 'synopsis', 'legend', 'about', 'section', 'chapter', 'spread', 'view', 'work'];
+export const PANELS: readonly Exclude<Panel, null>[] = ['epochs', 'index', 'kinship', 'synopsis', 'legend', 'about', 'chronology', 'section', 'chapter', 'spread', 'view', 'work'];
 
-const load = <T,>(k: string, d: T): T => {
+/**
+ * Сохранённая настройка с проверкой схемы (этап 13, решение 130): чего нет, что не читается, JSON `null` или значение
+ * чужой схемы (прежний выпуск, ручная правка, другое приложение на том же адресе) — значение по умолчанию; читатель
+ * ничего не теряет. ok — проверка схемы; без неё годится любое значение, кроме null.
+ */
+const load = <T,>(k: string, d: T, ok: (v: unknown) => boolean = (v) => v !== null && v !== undefined): T => {
   try {
     const v = localStorage.getItem(`toledot:${k}`);
-    return v === null ? d : (JSON.parse(v) as T);
+    if (v === null) return d;
+    const parsed: unknown = JSON.parse(v);
+    return ok(parsed) ? (parsed as T) : d;
   } catch {
     return d;
   }
 };
+const isBool = (v: unknown) => typeof v === 'boolean';
 const save = (k: string, v: unknown) => {
   try {
     localStorage.setItem(`toledot:${k}`, JSON.stringify(v));
@@ -37,9 +45,14 @@ const viewerTheme = (): Theme => {
     return 'night';
   }
 };
-export const theme = signal<Theme>(load('theme', viewerTheme()));
-export const modelId = signal<string>(load('model', 'mt-long'));
-export const lambda = signal<number>(load('lambda', 1)); // 1 — масштаб по насыщенности, 0 — истинный
+export const theme = signal<Theme>(load('theme', viewerTheme(), (v) => v === 'night' || v === 'day'));
+export const modelId = signal<string>(load('model', 'mt-long', (v) => typeof v === 'string' && modelInfo.some((m) => m.id === v)));
+export const lambda = signal<number>(load('lambda', 1, (v) => typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 1)); // 1 — «сжатый по плотности лиц», 0 — «равномерный по годам» (решение 124)
+/**
+ * Шкала подписей линейки неба (ТЗ § 3.4; этап 13, решение 102; «Вид» → «Шкала»): 'ad' — до / по Р. Х.; 'am' — лет от
+ * сотворения по числам Быт 5; 11 (расч.); 'byz' — византийская эра, от 5508 г. до Р. Х. (справ.). src/render/frame.ts.
+ */
+export const rulerScale = signal<'ad' | 'am' | 'byz'>(load('ruler', 'ad', (v) => v === 'ad' || v === 'am' || v === 'byz'));
 export const selected = signal<string | null>(null);
 export const second = signal<string | null>(null); // второе лицо (родство, разворот)
 /**
@@ -59,12 +72,44 @@ export const pickMode = signal<null | 'kinship' | 'spread'>(null);
 export const onlyLines = signal(false);
 export const epochMode = signal(false);
 export const meridian = signal<number | null>(null); // год меридиана (астр.)
-export const lineFlip = signal(false); // Лк 3 как второе родословие Иосифа
+/**
+ * Понимание Лк 3 (решение 130): false — родословие Марии (традиционное толкование), true — второе родословие Иосифа.
+ * Хранится в браузере (ключ «toledot:luke»: 'mary' | 'joseph') и — через адрес — в ссылке (src/ui/address.ts, T6).
+ */
+export const lineFlip = signal<boolean>(load<'mary' | 'joseph'>('luke', 'mary', (v) => v === 'mary' || v === 'joseph') === 'joseph');
 export const showSchema = signal(false); // показывать все 24 раздела
-export const layers = signal<Record<string, boolean>>(
-  load('layers', { lifelines: true, connectors: true, constellations: true, epochs: true, ribbons: true, tensions: true, ghosts: true, labels: true }),
-);
-export const introDone = signal<boolean>(load('intro', false));
+/** Слои неба и их имена — в листе «Вид» → «Слои» и в строке показа «Скрыто: связи — вернуть» (решение 111). */
+export const LAYER_NAMES = {
+  lifelines: 'следы жизни',
+  connectors: 'связи',
+  constellations: 'созвездия',
+  epochs: 'эпохи',
+  ribbons: 'линии Мессии',
+  tensions: 'напряжения',
+  ghosts: 'призраки',
+  labels: 'подписи',
+} as const;
+export type LayerKey = keyof typeof LAYER_NAMES;
+export const LAYER_KEYS = Object.keys(LAYER_NAMES) as LayerKey[];
+const ALL_ON = Object.fromEntries(LAYER_KEYS.map((k) => [k, true])) as Record<LayerKey, boolean>;
+/** Сохранённые слои: только известные ключи со значениями да/нет; остальное — по умолчанию (решение 130). */
+const savedLayers = (): Partial<Record<LayerKey, boolean>> => {
+  const v = load<unknown>('layers', {}, (x) => typeof x === 'object' && x !== null && !Array.isArray(x));
+  const out: Partial<Record<LayerKey, boolean>> = {};
+  for (const k of LAYER_KEYS) {
+    const b = (v as Record<string, unknown>)[k];
+    if (typeof b === 'boolean') out[k] = b;
+  }
+  return out;
+};
+export const layers = signal<Record<string, boolean>>({ ...ALL_ON, ...savedLayers() });
+/** Выключенные слои — по порядку LAYER_KEYS (признак «слой выключен» для строки показа; src/ui/modelinfo.ts, layersBar). */
+export const layersOff = computed<LayerKey[]>(() => LAYER_KEYS.filter((k) => layers.value[k] === false));
+/** Включить все слои («вернуть» в строке показа). */
+export function restoreLayers() {
+  layers.value = { ...ALL_ON };
+}
+export const introDone = signal<boolean>(load('intro', false, isBool));
 export const sectionFocus = signal<number | null>(null); // сквозной раздел
 export const pins = signal<string[]>([]); // отмеченные на небе одноимённые
 /** По какому запросу поставлены отметки: для строки «Отмечено N лиц по запросу…» на небе (D9, E10). */
@@ -183,5 +228,7 @@ effect(() => {
 });
 effect(() => save('model', modelId.value));
 effect(() => save('lambda', lambda.value));
+effect(() => save('ruler', rulerScale.value));
 effect(() => save('layers', layers.value));
 effect(() => save('intro', introDone.value));
+effect(() => save('luke', lineFlip.value ? 'joseph' : 'mary'));

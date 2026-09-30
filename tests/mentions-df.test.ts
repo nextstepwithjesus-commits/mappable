@@ -82,9 +82,10 @@ describe('§ 23: семь случаев из сверки с Писанием (
 
 describe('§ 23: счёт у главных лиц не уменьшился', () => {
   // до правки (прежнее правило на тех же данных): Давид — 992 стиха в 28 книгах, Авраам — 282 в 27, Моисей — 784 в 31,
-  // Павел — 120 в 15
+  // Павел — 120 в 15. Этап 13 (решение 108): у Давида из 992 стихов 23 были ложными — описательное «Сын Иессеев» (§ 4)
+  // засчитывалось по первому слову: «Сына» в Мф 1:21, «Сыновья» в 1 Пар 2:8. Настоящих — 969; ложные проверены ниже
   const before: [string, number, number, string[]][] = [
-    ['david', 28, 992, ['Притч', 'Еккл', 'Зах', 'Песн', '1Цар', 'Пс']],
+    ['david', 28, 992 - 23, ['Притч', 'Еккл', 'Зах', 'Песн', '1Цар', 'Пс']],
     ['avraam', 27, 282, ['Втор', 'Пс', 'Мих', 'Лев', 'Мк']],
     ['moisey', 31, 784, ['Суд', '4Цар', 'Мк', 'Рим', 'Дан', '1Кор']],
     ['pavel', 15, 120, ['Еф', 'Кол', '1Фес', '2Фес', '1Тим', 'Тит']],
@@ -96,6 +97,44 @@ describe('§ 23: счёт у главных лиц не уменьшился', (
       for (const b of kept) expect(books(id), b).toContain(b);
       expect(M.mentions.get(id)!.scope).toBe('bible');
     });
+});
+
+describe('§ 23: этап 13 (решение 108) — одно имя одному лицу, дефис, описательные имена', () => {
+  it('Давид: «Сын Иессеев» не засчитывает стихи со словом «Сын» и «Сыновья», где Давида нет', () => {
+    for (const v of ['Мф 1:21', 'Мф 1:23', 'Лк 1:31', 'Лк 1:35', 'Рим 1:4', 'Мф 12:8', '1Пар 2:8', '1Пар 9:40']) expect(verses('david').has(v), v).toBe(false);
+    for (const v of ['Мф 1:1', 'Мф 1:6', 'Рим 1:3', 'Лк 1:32']) expect(verses('david').has(v), v).toBe(true);
+  });
+  it('стих, где имя одно, засчитан одному лицу: тому, у кого полное имя, родня рядом или ссылка точнее', () => {
+    expect(verses('mariya-magdalina').has('Ин 19:25')).toBe(true);
+    expect(verses('mariya-kleopova').has('Ин 19:25')).toBe(true);
+    expect(verses('mariya').has('Ин 19:25')).toBe(false); // «Матерь Его» — не по имени
+    expect(verses('ieroboam').has('4Цар 14:24')).toBe(true); // «Иеровоама, сына Наватова»
+    expect(verses('ieroboam-vtoroy').has('4Цар 14:24')).toBe(false);
+    expect(verses('iakov-menshiy').has('Мф 27:56')).toBe(true); // «мать Иакова и Иосии»
+    expect(verses('iakov-zevedeev').has('Мф 27:56')).toBe(false);
+    expect(verses('ioann-deyan4-6').has('Деян 4:6')).toBe(true);
+    expect(verses('ioann-apostol').has('Деян 4:6')).toBe(false);
+    for (const [a, b, v] of [['gera-1par8-3', 'gera-1par8-5', '1Пар 8:3'], ['gera-1par8-5', 'gera-1par8-3', '1Пар 8:5'], ['melkhiy-lk3-28', 'melkhiy-lk3-24', 'Лк 3:28'], ['iosif-lk3-30', 'iosif-lk3-24', 'Лк 3:30']]) {
+      expect(verses(a).has(v), `${a} ${v}`).toBe(true);
+      expect(verses(b).has(v), `${b} ${v}`).toBe(false);
+    }
+    // сплошная проверка (П19): стих, где имя стоит k раз, засчитан не больше чем k лицам с этим именем
+    expect(M.resolved.length).toBeGreaterThan(10);
+    expect(M.unresolved).toEqual([]);
+  });
+  it('дефис: царь Хирам — не «Хирам-Авий» (2 Пар 2:13); иная форма «Азария» — не первосвященник 2 Пар 26:17, 20', () => {
+    expect(verses('khiram-tsar').has('2Пар 2:13')).toBe(false);
+    expect(verses('khiram-master').has('2Пар 2:13')).toBe(true);
+    for (const v of ['2Пар 26:17', '2Пар 26:20']) expect(verses('oziya').has(v), v).toBe(false);
+    expect(verses('oziya').has('4Цар 15:1')).toBe(true); // «Азария» — сам царь в 4 Цар 15
+    expect(verses('pavel').has('Деян 22:7')).toBe(true); // «Савл, Савл!» — Павел
+  });
+  it('у народа — пометка для подписи § 23 «имя народа или земли»', () => {
+    const people = persons.filter((p) => p.kind === 'people' && M.mentions.has(p.id));
+    expect(people.length).toBeGreaterThan(5);
+    for (const p of people) expect(M.mentions.get(p.id)!.people, p.id).toBe(true);
+    expect(M.mentions.get('david')!.people).toBeUndefined();
+  });
 });
 
 describe('§ 23: правила счёта (tools/mentions.ts)', () => {

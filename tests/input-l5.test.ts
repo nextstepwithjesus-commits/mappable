@@ -15,6 +15,7 @@ import { model } from '../src/state.ts';
 import { menuMove, pickScroll } from '../src/ui/panels/Work.tsx';
 import { RIBBON_R, countBook, ribbonReach } from '../src/ui/sky/input.ts';
 import { BREAK_TEXT, birthSpanText, countText, epochGoText, orderNoteText, orderText, pickBarText, ribbonStepText, tipYears } from '../src/ui/sky/text.ts';
+import { epochSpanText } from '../src/engine/years.ts';
 import { starTipLines } from '../src/ui/sky/Tip.tsx';
 import { isCharKey, LETTER_KEYS } from '../src/ui/keys.ts';
 import { KEY_ROWS, POINTER_ROWS, isLetterRow } from '../src/ui/top/Keys.tsx';
@@ -106,18 +107,23 @@ describe('подсказка звезды: три строки, без клав�
 
 describe('рождение одной строкой (MAP-53)', () => {
   const estimated = [...m.chrono.entries()].filter(([id, c]) => c.cls === 'estimated' && byId.has(id) && !c.named && birthSpanText(id));
-  it('оценка без года смерти: «род. ок. 1780 г. до Р. Х. (расч.), между 1805 и 1755 гг.»', () => {
-    expect(flat(tipYears('iokhaveda'))).toMatch(/^род\. ок\. \d+ г\. до Р\. Х\. \(расч\.\), между \d+ и \d+ гг\.$/);
+  // этап 13, решение 96 (словарь дат): оценка шире 10 лет — «род. между 1805 и 1755 гг. до Р. Х.», без «ок.»; год
+  // подсказки — те же слова, что в паспорте карточки (passportYears), с пометой «расч.»
+  it('оценка без года смерти: «род. между 1805 и 1755 гг. до Р. Х. (расч.)» — как в паспорте', () => {
+    expect(flat(tipYears('iokhaveda'))).toMatch(/^род\. между \d+ и \d+ гг\. до Р\. Х\.( .+)? \(расч\.\)$/);
+    expect(flat(tipYears('iokhaveda'))).not.toMatch(/ок\./);
   });
-  it('одна строка о рождении у каждой оценки; числа промежутка — те же, что у «Родился между …» (§ 8)', () => {
+  it('одна строка о рождении у каждой оценки; промежуток — тот же, что «Родился между …» и паспорт (решение 96)', () => {
     expect(estimated.length).toBeGreaterThan(100);
-    for (const [id, c] of estimated.slice(0, 500)) {
+    for (const [id] of estimated.slice(0, 500)) {
       const t = flat(tipYears(id));
       expect(t.match(/род\./g)?.length ?? 0, id).toBeLessThanOrEqual(1);
       expect(t, id).not.toMatch(/Родил(ся|ась)/);
-      expect(t, id).toMatch(c.byOrder ? /\(выв\.\)/ : /\(расч\.\)/);
-      const span = nums(birthSpanText(id)!);
-      expect(nums(t.split('между')[1]), id).toEqual(span);
+      // «выв.» у года не ставится: из порядка перечисления выводится очерёдность, а не год (решение 96)
+      expect(t, id).toMatch(/\(расч\.\)$/);
+      const b = birthSpanText(id);
+      if (b) expect(nums(t.split('между')[1]).slice(0, 2), id).toEqual(nums(b));
+      else expect(t, id).not.toMatch(/род\. между/);
     }
   });
   it('год по модели — с пометой «расч.»; время не установлено — без пометы', () => {
@@ -129,9 +135,11 @@ describe('рождение одной строкой (MAP-53)', () => {
 
 describe('пояснения подсказки: разрыв «//», порядок перечисления (MAP-51, UX-73, решение 41)', () => {
   it('у лица с разрывом следа — «родословие, вероятно, называет не все поколения (выв.)»', () => {
-    const n = m.nodeByPerson.get('ovid');
-    expect(n?.brk !== null && n!.brk! < n!.t1).toBe(true);
-    const t = starTipLines('ovid', { more: true });
+    // этап 13: после исправления оценок (решение 101) Овид встал в позднее время судей и разрыва у него нет — берётся
+    // первое лицо с разрывом следа
+    const id = [...m.nodeByPerson.entries()].find(([, n]) => n.brk !== null && n.brk! < n.t1)?.[0];
+    expect(id).toBeTruthy();
+    const t = starTipLines(id!, { more: true });
     expect(t.kind).toBe('break');
     expect(flat(t.extra!)).toBe(flat(BREAK_TEXT));
     expect(BREAK_TEXT).toBe('родословие, вероятно, называет не все поколения (выв.)');
@@ -208,10 +216,15 @@ describe('строки неба', () => {
     expect(`${pickBarText('kinship', 'david')} — отменить (Esc)`.length).toBeLessThanOrEqual(85);
   });
   it('эпоха в служебной строке: «Эпоха «Единое царство»: 1050–931 гг. до Р. Х.; щёлкните — небо покажет эпоху» (UX-65)', () => {
-    const e = m.epochs.find((x) => x.id === 'judges') ?? m.epochs[0];
-    const t = flat(epochGoText(e));
-    expect(t).toMatch(new RegExp(`^Эпоха «${e.name}»: (ок\\. )?\\d+–\\d+ гг\\. до Р\\. Х\\.; щёлкните — небо покажет эпоху$`));
-    expect(t).not.toMatch(/\.\./);
+    // этап 13, решения 96 и 99: годы границ — словарём дат (engine/years.ts, epochSpanText), «ок.» — у оценочной границы
+    for (const e of m.epochs.filter((x) => x.end < 0)) {
+      const t = flat(epochGoText(e));
+      expect(t, e.id).toBe(flat(`Эпоха «${e.name}»: ${epochSpanText(e)}; щёлкните — небо покажет эпоху`));
+      expect(t, e.id).toMatch(/^Эпоха «[^»]+»: (ок\. )?\d+/);
+      expect(t, e.id).not.toMatch(/\.\./);
+    }
+    const king = m.epochs.find((x) => !x.startEst && !x.endEst && x.end < 0);
+    if (king) expect(flat(epochGoText(king))).toMatch(/: \d+–\d+ гг\. до Р\. Х\.;/);
   });
 });
 

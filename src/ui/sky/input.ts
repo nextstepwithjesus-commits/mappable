@@ -8,7 +8,7 @@
 import { FRAME_H, type Rect, type Sky } from '../../render/sky.ts';
 import { byId, lines } from '../../data/atlas.ts';
 import { selected, hovered, epochMode, layers, onlyLines, panel, pins, pinsQuery, pickMode, pickSecond, synopsisAt, model } from '../../state.ts';
-import { lineNoteHits, ribbonAt, setRibbonHover } from '../../render/ribbons.ts';
+import { lineNoteHits, ribbonAt, ribbonGapHits, setRibbonHover, type RibbonGapHit } from '../../render/ribbons.ts';
 import { starRadius } from '../../render/glyphs.ts';
 import { setFamilyHover } from '../../render/trails.ts';
 import { goTo, skyRef } from '../common.tsx';
@@ -20,10 +20,12 @@ import { hoverYear } from './meridian.ts';
 import { openSheetAt } from '../sheet.ts';
 import { closeWhich, openWhich, whichOpen } from './Which.tsx';
 import { tipKey, type Tip } from './Tip.tsx';
-import { RULER_H } from '../../render/frame.ts';
-import { foldDescOf, foldGroupOf, unfoldAll } from '../work.ts';
+import { ERA_NOTE, RULER_H } from '../../render/frame.ts';
+import { addPath, foldDescOf, foldGroupOf, show, unfoldAll } from '../work.ts';
+import { setShow, showGuest } from '../show.ts';
 import { MENU_FIRST, dismissedBy, skyMenu } from '../panels/Work.tsx';
-import { dotTipText, epochGoText, plateTipText } from './text.ts';
+import { personGhosts } from '../../render/marks.ts';
+import { dotTipText, epochGoText, gapTipText, lineBetween, plateTipText } from './text.ts';
 import { openPerson, unionById } from '../reveal.ts';
 import { linkHover, plateHover, pressPlate, rememberLinkClick, toggleKids } from './starnav.ts';
 import type { CountHit, PlateHit } from '../../render/plates.ts';
@@ -31,7 +33,8 @@ import type { LinkHit } from '../../render/links.ts';
 import type { PlanStubHit } from '../../render/trails.ts';
 import type { RibbonHit } from '../../render/ribbons.ts';
 import { linkKeyString, sameLink, type LinkKey } from '../../engine/linkkey.ts';
-import { previewLinks, selectedLink } from '../linkstate.ts';
+import { GHOST_WORD, previewLinks, selectedLink, type GhostWhy } from '../linkstate.ts';
+import { typo } from '../text/typo.ts';
 import { linkTitle, linkRefs, refShort } from '../linkwords.ts';
 import { closeDot, dotCard, dotsOn, openDot } from './DotCard.tsx';
 
@@ -40,7 +43,7 @@ export type { Tip };
 /** Линейка лет вверху неба: над ней — меридиан года (D13). */
 const RULER = RULER_H;
 /** Пояснение «≈» масштабной линейки в служебной строке (UX-08). */
-export const APPROX_NOTE = 'Масштаб неравномерный: время растянуто там, где много лиц. Равномерная шкала — «Вид», «Масштаб времени: истинный».';
+export const APPROX_NOTE = 'Масштаб неравномерный: время растянуто там, где много лиц. Равномерная шкала — «Вид», «Масштаб времени: Равномерный по годам».';
 
 export interface PointerInput {
   /** Небо сдвинулось? Подсказка прежнего лица прячется, попадание проверяется заново, когда небо остановится. extra — масштаб времени и модель. */
@@ -457,8 +460,62 @@ export function underPointer(sky: Sky, x: number, y: number, r: number): Under |
   return trail ? { kind: 'trail', id: trail } : null;
 }
 
-/** Шаг ленты под указателем — ключ связи (src/engine/linkkey.ts): «шаг линии к лицу to». */
-export const ribbonKey = (h: Pick<RibbonHit, 'line' | 'to'>): LinkKey => ({ kind: 'step', line: h.line, child: h.to });
+/** Призрак конца выбранной связи под указателем (К3); touch — поле не меньше 44 × 44. */
+export function ghostAt(sky: Pick<Sky, 'linkSel'> & Partial<Pick<Sky, 'hitStar'>>, x: number, y: number, touch = false) {
+  // звезда прямо под указателем важнее поля призрака рядом: поле призрака (24, касанием 44 px) не отнимает звезду
+  if (sky.hitStar?.(x, y, 4)) return null;
+  // призраки концов выбранной связи и родни выбранного лица и лица под указателем (К3, К5; src/render/marks.ts)
+  return [...(sky.linkSel?.ghosts ?? []), ...personGhosts(sky)].find((e) => {
+    const r = touch ? inflate(e, TOUCH_TARGET) : e;
+    return x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h;
+  }) ?? null;
+}
+
+/** Знак «+N» в разрыве ленты под указателем (К4). */
+export function gapAt(sky: object, x: number, y: number, touch = false): RibbonGapHit | null {
+  return ribbonGapHits(sky).find((e) => {
+    const r = touch ? inflate(e, TOUCH_TARGET) : e;
+    return x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h;
+  }) ?? null;
+}
+
+/**
+ * Показать скрытых в разрыве ленты (К4): в наборе — добавить скрытых лиц линии в набор; в прочих показах — перейти
+ * к показу «Родословие Иисуса Христа (Мф 1, Лк 3)» с окном на этом участке.
+ */
+export function openGap(sky: Pick<Sky, 'indexOf' | 'X0' | 'tOf'>, g: Pick<RibbonGapHit, 'lines' | 'from' | 'to'>) {
+  const hid = lineBetween(g.lines[0], g.from, g.to);
+  if (!hid.length) return;
+  if (show.peek().kind === 'set') {
+    addPath([g.from, ...hid, g.to]);
+    return;
+  }
+  const t = (id: string) => {
+    const i = sky.indexOf(id);
+    return i === undefined ? null : sky.tOf(sky.X0[i]);
+  };
+  const a = t(g.from);
+  const b = t(g.to);
+  setShow({ kind: 'lines' }, { anchor: g.to });
+  if (a !== null && b !== null && b > a) {
+    const pad = Math.max(10, (b - a) * 0.08);
+    queueMicrotask(() => showYears(a - pad, b + pad));
+  }
+}
+
+/** Подсказка призрака: «Илий, отец — вне показа «Ключевые лица» — щёлкните, чтобы показать». */
+function ghostTipText(id: string, role: string, why: GhostWhy): string {
+  const p = byId.get(id);
+  if (!p) return '';
+  return typo(`${role ? `${p.name}, ${role}` : p.name} — ${GHOST_WORD[why]} — щёлкните, чтобы показать`);
+}
+
+/**
+ * Шаг ленты под указателем — ключ связи (src/engine/linkkey.ts): «шаг линии к лицу to»; участок, где между from и to
+ * показ скрыл поколения, — «цепочка» span (этап 13, решение 93, К4).
+ */
+export const ribbonKey = (h: Pick<RibbonHit, 'line' | 'to'> & Partial<Pick<RibbonHit, 'from' | 'gap'>>): LinkKey =>
+  h.gap && h.from ? { kind: 'span', line: h.line, from: h.from, to: h.to } : { kind: 'step', line: h.line, child: h.to };
 
 /**
  * Связи у пальца (касание, § 8): линии и узлы в радиусе TOUCH_R и шаг ленты — по одной на ключ, ближайшие первыми.
@@ -642,6 +699,18 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       if (hovered.value) hovered.value = null;
       setHot(true);
       showTip({ kind: 'note', key: `reveal:${foldHit.id}`, text: REVEAL_TIP, x, y, box: { x: foldHit.x, y: foldHit.y, w: foldHit.w, h: foldHit.h } });
+      return;
+    }
+    // призрак конца выбранной связи (К3) и «+N» в разрыве ленты (К4) — команды «показать»
+    const ghost = !edge ? ghostAt(sky, x, y) : null;
+    const gap = !edge && !ghost ? gapAt(sky, x, y) : null;
+    if (ghost || gap) {
+      setPlate(null);
+      setLink(null);
+      if (hovered.value) hovered.value = null;
+      setHot(true);
+      if (ghost) showTip({ kind: 'note', key: `ghost:${ghost.id}`, text: ghostTipText(ghost.id, ghost.role, ghost.why), x, y, box: { x: ghost.x, y: ghost.y, w: ghost.w, h: ghost.h } });
+      else if (gap) showTip({ kind: 'note', key: `gap:${gap.from}:${gap.to}`, text: gapTipText(gap), x, y, box: { x: gap.x, y: gap.y, w: gap.w, h: gap.h } });
       return;
     }
     // выноски точек сравнения линий — ссылки (E6; src/render/ribbons.ts)
@@ -832,6 +901,18 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       showTip(b ? { kind: 'note', key: 'approx', text: APPROX_NOTE, x: p.x, y: p.y, box: { x: b.x, y: b.y, w: b.w, h: b.h } } : null);
       return;
     }
+    // «Р. Х.» на линейке лет — пояснение эры (решение 99; X2 § 2.6; src/render/frame.ts, ERA_NOTE)
+    if (p.y < RULER_H && e.pointerType !== 'touch') {
+      const era = sky.ledger.boxes.find((q) => q.kind === 'frame' && q.text === 'Р. Х.' && p.x >= q.x && p.x <= q.x + q.w && p.y >= q.y && p.y <= q.y + q.h);
+      if (era) {
+        hoverYear(null);
+        if (hovered.value) hovered.value = null;
+        setTierHot(null);
+        setHot(false);
+        showTip({ kind: 'note', key: 'era', text: ERA_NOTE, x: p.x, y: p.y, box: { x: era.x, y: era.y, w: era.w, h: era.h } });
+        return;
+      }
+    }
     if (p.y < RULER) {
       // над линейкой — меридиан года, через 250 мс (D13)
       if (e.pointerType !== 'touch') hoverYear(sky.tOf(sky.cam.wx(p.x)));
@@ -883,6 +964,18 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     });
     if (edge) {
       goTo(edge.id);
+      return;
+    }
+    // призрак конца выбранной связи (К3): лицо встаёт временным гостем до снятия выбора (контракт 3, src/ui/show.ts);
+    // «+N» в разрыве ленты (К4): показать скрытых — тот же глагол, что у «+N» свёрнутого союза
+    const ghost = ghostAt(sky, at.x, at.y, touch);
+    if (ghost) {
+      showGuest(ghost.id);
+      return;
+    }
+    const gap = gapAt(sky, at.x, at.y, touch);
+    if (gap) {
+      openGap(sky, gap);
       return;
     }
     // знак свёрнутого (J5): «+N» у следа — развернуть потомков, строка-подпись — развернуть созвездие

@@ -3,7 +3,7 @@
  * привязано к её шкалам:
  *  — линейка лет вверху: один шаг рисок на окно — по самому сжатому месту, подписи прорежены равномерно и стоят у своих
  *    рисок, граница эр — риска во всю высоту линейки, разрыв шкалы после 100 г. — знаком; под рисками — полоса
- *    плотности шкалы: светлее там, где время растянуто (масштаб «по насыщенности»);
+ *    плотности шкалы: светлее там, где время растянуто (масштаб «сжатый по плотности лиц»);
  *  — служебная строка под линейкой: названия эпох по их годам (прилипают к левому краю), масштабная линейка
  *    «├─ 50 лет ─┤» справа, подписи черт «завершение канона» и «сегодня»;
  *  — левая кромка: буквы строк атласа (engine/layout.ts, atlasRow); нижняя кромка: номера столбцов атласа между
@@ -16,9 +16,10 @@ import { alpha } from './color.ts';
 import { hits, type Rect } from './rect.ts';
 import { mapFont, mapSize, T_MAP_S, T_UI } from './type.ts';
 import { T_CANON_END, T_END } from '../engine/timescale.ts';
-import { toAstro, toHist } from '../engine/years.ts';
+import { dateText, toAstro, toHist } from '../engine/years.ts';
 import { atlasColumn, atlasColumnSpan, atlasRow, atlasRowLanes, atlasRowLetter, ATLAS_BAND } from '../engine/layout.ts';
-import { byId, groupById } from '../data/atlas.ts';
+import { byId, groupById, models } from '../data/atlas.ts';
+import { rulerScale as rulerScaleSignal } from '../state.ts';
 import { nameCase } from '../ui/text/ru.ts';
 import type { Pass, SkyContext, SkyState } from './sky.ts';
 
@@ -92,18 +93,60 @@ function stepsFor(v: SkyContext, a: number, b: number): { tick: number; label: n
   return { tick, label };
 }
 
-/** Риски линейки: круглые исторические годы; до канона и после него — свои шаги (после 100 г. шкала сжата). */
+// ---------- шкала лет линейки (ТЗ § 3.4; этап 13, решение 102): «Вид» → «Шкала» ----------
+
+/**
+ * Шкала подписей линейки: ad — «до / по Р. Х.»; am — лет от сотворения Адама по числам Быт 5; 11 выбранной модели
+ * (расч.); byz — византийская эра, от 5508 г. до Р. Х. (справ.). Выбор — src/state.ts, rulerScale.
+ */
+export type RulerScale = 'ad' | 'am' | 'byz';
+/** Шкала линейки сейчас. */
+export const rulerScale = (_v?: SkyContext): RulerScale => rulerScaleSignal.peek() as RulerScale;
+/** Византийская эра: 1 г. по Р. Х. — 5509 г. от сотворения мира (начало эры — 5508 г. до Р. Х.). */
+export const BYZ_OFFSET = 5508;
+/** Год сотворения Адама в модели неба (астр.): у модели по умолчанию — 4174 г. до Р. Х. */
+export function creationYear(v: Pick<SkyContext, 'model'>): number {
+  return v.model.chrono.get('adam')?.b ?? toAstro(v.model.epochs[0]?.start ?? -4174);
+}
+/** Подпись года на шкале: ad — исторический год (−1446), am — лет от сотворения, byz — год византийской эры. */
+export function scaleValue(v: Pick<SkyContext, 'model'>, t: number, scale: RulerScale = rulerScale()): number {
+  if (scale === 'ad') return toHist(t);
+  return Math.round(t + (scale === 'am' ? -creationYear(v) : BYZ_OFFSET));
+}
+/** Год (астр.) подписи value шкалы scale. */
+function scaleTime(v: Pick<SkyContext, 'model'>, value: number, scale: RulerScale): number {
+  if (scale === 'ad') return toAstro(value);
+  return value - (scale === 'am' ? -creationYear(v) : BYZ_OFFSET);
+}
+/** Эра подписи: ad — знак года; у лет от сотворения и византийской эры одна эра. */
+const eraSign = (h: number, scale: RulerScale) => (scale === 'ad' ? Math.sign(h) : 1);
+/** Слова эр шкалы — у первой нарисованной подписи каждой эры. */
+function eraWords(scale: RulerScale): [number, string][] {
+  if (scale === 'am') return [[1, '\u00a0от\u00a0сотворения']];
+  if (scale === 'byz') return [[1, '\u00a0от\u00a0с.\u00a0м. (визант.)']];
+  return [
+    [-1, '\u00a0до\u00a0Р.\u00a0Х.'],
+    [1, '\u00a0по\u00a0Р.\u00a0Х.'],
+  ];
+}
+
+/**
+ * Риски линейки: круглые годы шкалы (до / по Р. Х., лет от сотворения, византийской эры); до канона и после него —
+ * свои шаги (после 100 г. шкала сжата). h — подпись риски: исторический год или год шкалы.
+ */
 export function yearTicks(v: SkyContext): YearTick[] {
   const cam = v.cam;
+  const scale = rulerScale(v);
   const tL = Math.max(v.scale.knots[0], v.tOf(cam.wx(v.letterW)));
   const tR = Math.min(T_END, v.tOf(cam.wx(cam.w)));
   const out: YearTick[] = [];
   const add = (a: number, b: number) => {
     if (!(b > a)) return;
     const { tick, label } = stepsFor(v, a, b);
-    for (let h = Math.ceil(toHist(a) / tick) * tick; toAstro(h) <= b; h += tick) {
-      if (h === 0) continue;
-      const t = toAstro(h);
+    for (let h = Math.ceil(scaleValue(v, a, scale) / tick) * tick; scaleTime(v, h, scale) <= b; h += tick) {
+      // нулевого года нет; до сотворения и до начала византийской эры подписей нет
+      if (scale === 'ad' ? h === 0 : h < 0) continue;
+      const t = scaleTime(v, h, scale);
       if (t < a) continue;
       out.push({ t, h, major: h % label === 0 });
     }
@@ -170,24 +213,28 @@ export interface EventMark {
  * Ключевые события ТЗ § 3.1 — из каталога эпох этой модели (ModelData.epochs: год и стихи события). Годы событий,
  * заданные числами Писания (Потоп, призвание Аврама), каталог уже пересчитал для модели (engine/epochs.ts; CARD-60).
  */
-const EVENTS: { epoch: string; match: RegExp; name: string }[] = [
+const EVENTS: { epoch: string; match: RegExp; name: string; approx?: boolean }[] = [
   { epoch: 'antediluvian', match: /^Потоп/, name: 'Потоп' },
   { epoch: 'patriarchs', match: /^Аврам в 75 лет/, name: 'Призвание Аврама' },
   { epoch: 'exodus', match: /^Исход/, name: 'Исход' },
   { epoch: 'united', match: /^Закладка храма/, name: 'Закладка храма' },
   { epoch: 'judah-alone', match: /^Разрушение Иерусалима/, name: 'Вавилонский плен' },
   { epoch: 'return', match: /^Указ Кира/, name: 'Возвращение из плена' },
-  { epoch: 'christ', match: /^Рождество/, name: 'Рождество Христово' },
+  // год Рождества — не по числам текста, а по внешней опоре (смерть Ирода, 4 г. до Р. Х.): «ок. 5 г. до Р. Х.» (решение
+  // 102; «О хронологии» — почему Рождество раньше отметки «Р. Х.»)
+  { epoch: 'christ', match: /^Рождество/, name: 'Рождество Христово', approx: true },
 ];
 
-/** «1446 г. до Р. Х.», «30 г. по Р. Х.» */
+/** «1446 г. до Р. Х.», «30 г. по Р. Х.» — словарём дат (engine/years.ts, dateText; решение 96). */
 export function yearText(t: number): string {
-  const h = Math.round(toHist(t));
-  return h < 0 ? `${-h} г. до Р. Х.` : `${h} г. по Р. Х.`;
+  return dateText({ t });
 }
 
 const eventCache = new Map<string, EventMark[]>();
-/** Меридианы событий этой модели. */
+/**
+ * Меридианы событий этой модели. Подпись: «Исход, 1446 г. до Р. Х. (расч.)», «Рождество Христово, ок. 5 г. до Р. Х.».
+ * В модели не по умолчанию у Исхода — «во всех моделях» (решение 102): модель меняет только годы до Исхода.
+ */
 export function eventMarks(v: SkyContext): EventMark[] {
   const m = v.model;
   const hit = eventCache.get(m.id);
@@ -198,7 +245,9 @@ export function eventMarks(v: SkyContext): EventMark[] {
     const ev = ep?.events?.find((x) => e.match.test(x.text));
     if (!ev) continue;
     const t = toAstro(ev.year);
-    out.push({ t, name: e.name, full: `${e.name}, ${yearText(t)} (расч.)`, refs: ev.refs ?? [] });
+    const year = dateText({ t, ...(e.approx ? { approx: true } : {}) });
+    const note = e.approx ? '' : e.name === 'Исход' && m.id !== models[0]?.id ? ' (расч.; во всех моделях — 3 Цар 6:1)' : ' (расч.)';
+    out.push({ t, name: e.name, full: `${e.name}, ${year}${note}`, refs: ev.refs ?? [] });
   }
   eventCache.set(m.id, out);
   return out;
@@ -235,7 +284,7 @@ export function yearsWord(n: number): string {
 
 /**
  * Масштабная линейка в середине окна (E7; UX-08): круглое число лет и длина его отрезка в px — от 40 до 120 px.
- * approx — шкала в окне неравномерна (масштаб «по насыщенности»): число — «≈».
+ * approx — шкала в окне неравномерна (масштаб «сжатый по плотности лиц»): число — «≈».
  */
 export function scaleBar(v: SkyContext): { years: number; px: number; approx: boolean } | null {
   const cam = v.cam;
@@ -262,10 +311,14 @@ export function scaleBar(v: SkyContext): { years: number; px: number; approx: bo
 // ---------- рамка ----------
 
 /**
- * Что ещё пишет служебная строка справа (решения 30, 35): модель хронологии, если она не по умолчанию, и свёрнутое.
- * folds — знаки свёрнутого неба (src/render/rows.ts, planSky): «колено Иудино (358)», «потомки Давида (62)».
+ * Что ещё пишет служебная строка справа (решение 30): свёрнутое. folds — знаки свёрнутого неба (src/render/rows.ts,
+ * planSky): «колено Иудино (358)», «потомки Давида (62)».
  */
 export interface ServiceExtra {
+  /**
+   * @deprecated Модель хронологии больше не пишется в служебной строке (этап 13, решение 102): её называет строка показа
+   * (src/ui/modelinfo.ts, modelBar). Поле читается только прежними вызовами и ничего не рисует.
+   */
   model?: string | null;
   folds?: readonly { kind: 'desc' | 'group'; id: string; count: number }[];
   /** флажок меридиана на служебной строке (marks.ts, meridianFlagAt): надписи строки его обходят (MAP-33) */
@@ -325,10 +378,6 @@ export function foldItemText(f: { kind: 'desc' | 'group'; id: string; count: num
   const g = q ? nameCase(q.name, q.sex, 'gen', q.unnamed) : null;
   return g ? `потомки ${g} (${f.count})` : `${q?.name ?? f.id} — потомки (${f.count})`;
 }
-/** Модель хронологии в служебной строке (решение 35): «модель «Краткое пребывание: 215 лет в Египте»», коротко — до двоеточия. */
-export function modelText(name: string, short = false): string {
-  return `модель «${short ? name.split(':')[0] : name}»`;
-}
 
 /** Линейка: полоса плотности, риски, подписи у своих рисок, граница эр, знак разрыва шкалы. */
 function drawRuler(v: SkyContext, ticks: YearTick[]) {
@@ -338,7 +387,7 @@ function drawRuler(v: SkyContext, ticks: YearTick[]) {
   const base = RULER_H - DENSITY_H - 1;
   // полоса плотности шкалы (MAP-31): светлее — время растянуто; после канона — штриховка сжатого времени
   if (v.lambda > 0.01) {
-    // истинная шкала равномерна до конца канона: растяжение — отношение местного масштаба к ней
+    // равномерная шкала — до конца канона: растяжение — отношение местного масштаба к ней
     const k = v.scale.knots;
     const ci = k.indexOf(T_CANON_END);
     const trueRate = ci > 0 ? (v.scale.xTrue[ci] - v.scale.xTrue[0]) / (T_CANON_END - k[0]) : 0;
@@ -387,17 +436,19 @@ function drawRuler(v: SkyContext, ticks: YearTick[]) {
     ctx.lineTo(x, base);
   }
   ctx.stroke();
-  // граница эр: риска во всю высоту линейки
+  // граница эр: риска во всю высоту линейки (у шкалы «до / по Р. Х.»)
+  const scale = rulerScale(v);
   const xEra = Math.round(cam.sx(v.xOf(1))) + 0.5;
-  const eraIn = xEra > LW + 2 && xEra < W - 2;
+  const eraIn = xEra > LW + 2 && xEra < W - 2 && scale === 'ad';
   if (eraIn) {
     ctx.beginPath();
     ctx.moveTo(xEra, 2);
     ctx.lineTo(xEra, base);
     ctx.stroke();
   }
-  // подписи: у своей риски, по центру; не помещается — не рисуется. Пометка эры «до Р. Х.» / «по Р. Х.» — у первой
-  // подписи эры, после которой ей хватает места (на сжатом участке она закрыла бы соседнюю подпись), иначе — у последней
+  // подписи: у своей риски, по центру; не помещается — не рисуется. Эра («до Р. Х.», «по Р. Х.», «от сотворения») —
+  // в каждом окне, у первой нарисованной подписи каждой эры (этап 13, решение 102; П22): если подписи с эрой тесно,
+  // уступает соседний круглый год, а не эра; если эре нет места ни у одной подписи — она стоит одна в свободном месте
   const labels = ticks.filter((t) => t.major);
   const placed: Rect[] = [];
   if (eraIn) {
@@ -419,38 +470,88 @@ function drawRuler(v: SkyContext, ticks: YearTick[]) {
       return { tk, num, nw, lx: cam.sx(v.xOf(tk.t)) - nw / 2 };
     })
     .filter((q) => q.lx >= LW + 4 && q.lx + q.nw <= W - 4);
-  const eraAt = new Map<number, string>();
-  for (const [sign, era] of [[-1, '\u00a0до\u00a0Р.\u00a0Х.'], [1, '\u00a0по\u00a0Р.\u00a0Х.']] as const) {
-    const group = items.filter((q) => Math.sign(q.tk.h) === sign);
-    if (!group.length) continue;
-    const k = group.findIndex((q) => {
-      const next = items[items.indexOf(q) + 1];
-      const tw = ctx.measureText(q.num + era).width;
-      // то же правило, что у подписей ниже: следующая подпись — не ближе 10 px к полю этой
-      const stop = Math.min(next ? next.lx - 14 : W - 4, ...placed.filter((b) => b.x > q.lx).map((b) => b.x - 12));
-      return q.lx + tw <= stop;
-    });
-    eraAt.set(group[k >= 0 ? k : group.length - 1].tk.h, era);
-  }
+  type Item = (typeof items)[number];
+  const boxOf = (q: Item, text: string) => ({ x: q.lx - 2, y: 11 - fs / 2 - 1, w: ctx.measureText(text).width + 4, h: fs + 2 });
+  // 1) числа без эры — слева направо, не теснее 10 px
   let lastEnd = -Infinity;
-  const written: Rect[] = [];
+  const chosen: { q: Item; text: string; box: Rect }[] = [];
   for (const q of items) {
-    const text = q.num + (eraAt.get(q.tk.h) ?? '');
-    const tw = ctx.measureText(text).width;
-    const box = { x: q.lx - 2, y: 11 - fs / 2 - 1, w: tw + 4, h: fs + 2 };
-    if (q.lx + tw > W - 4 || box.x < lastEnd + 10 || hits(box, placed)) continue;
-    ctx.fillText(text, q.lx, 11);
-    v.ledger.add('frame', text, box);
-    written.push(box);
+    const box = boxOf(q, q.num);
+    if (box.x < lastEnd + 10 || hits(box, placed)) continue;
+    chosen.push({ q, text: q.num, box });
     lastEnd = box.x + box.w;
   }
+  // 2) эра — у первой из нарисованных подписей своей эры, где она помещается; соседи справа уступают ей место
+  const eras = eraWords(scale);
+  const alone: { text: string; sign: number }[] = [];
+  for (const [sign, era] of eras) {
+    const own = chosen.filter((c) => eraSign(c.q.tk.h, scale) === sign);
+    if (!own.length) continue;
+    let done = false;
+    for (const c of own) {
+      const text = c.q.num + era;
+      const box = boxOf(c.q, text);
+      if (box.x + box.w > W - 4 || hits(box, placed)) continue;
+      const k = chosen.indexOf(c);
+      // левый сосед не задет (подпись растёт вправо); правые соседи ближе 10 px — уступают
+      if (k > 0 && chosen[k - 1].box.x + chosen[k - 1].box.w + 10 > box.x) continue;
+      c.text = text;
+      c.box = box;
+      for (let j = k + 1; j < chosen.length && chosen[j].box.x < box.x + box.w + 10; ) chosen.splice(j, 1);
+      done = true;
+      break;
+    }
+    if (!done) alone.push({ text: era.trim(), sign });
+  }
+  const written: Rect[] = [];
+  for (const c of chosen) {
+    ctx.fillText(c.text, c.q.lx, 11);
+    v.ledger.add('frame', c.text, c.box);
+    written.push(c.box);
+  }
+  // эра без подписи рядом: одна, в свободном промежутке линейки — у своих подписей
+  const aloneShown: string[] = [];
+  for (const a of alone) {
+    const tw = ctx.measureText(a.text).width;
+    const own = chosen.filter((c) => eraSign(c.q.tk.h, scale) === a.sign).map((c) => c.box);
+    const taken = [...written, ...placed].sort((p, q) => p.x - q.x);
+    const gaps: [number, number][] = [];
+    let at = LW + 4;
+    for (const b of taken) {
+      if (b.x - 10 > at) gaps.push([at, b.x - 10]);
+      at = Math.max(at, b.x + b.w + 10);
+    }
+    if (W - 4 > at) gaps.push([at, W - 4]);
+    const mid = own.length ? (own[0].x + own[own.length - 1].x + own[own.length - 1].w) / 2 : (LW + W) / 2;
+    const fit = gaps.filter(([p, q]) => q - p >= tw + 4).sort((g, h) => Math.abs((g[0] + g[1]) / 2 - mid) - Math.abs((h[0] + h[1]) / 2 - mid))[0];
+    if (!fit) continue;
+    const x = Math.max(fit[0] + 2, Math.min(fit[1] - tw - 2, mid - tw / 2));
+    const box = { x: x - 2, y: 11 - fs / 2 - 1, w: tw + 4, h: fs + 2 };
+    ctx.fillText(a.text, x, 11);
+    v.ledger.add('frame', a.text, box);
+    written.push(box);
+    aloneShown.push(a.text);
+  }
   for (const b of placed) {
-    ctx.fillText('Р. Х.', b.x + 2, 11);
+    ctx.fillText('Р. Х.', b.x + 2, 11);
     v.ledger.add('frame', 'Р. Х.', b);
+  }
+  // подписи линейки — для проверок приёмки (tools/accept/time13.ts, П22): «1000 до Р. Х.|950|900…»
+  const cv = (ctx as { canvas?: unknown }).canvas as HTMLCanvasElement | undefined;
+  if (cv && typeof cv === 'object' && cv.dataset) {
+    const ruler = [...chosen.map((c) => c.text), ...aloneShown, ...placed.map(() => 'Р. Х.')].join('|');
+    if (cv.dataset.ruler !== ruler) cv.dataset.ruler = ruler;
   }
   // подпись полосы плотности (MAP-31) — один раз, в самом широком промежутке между подписями лет над полосой
   if (v.lambda > 0.01) densityCaption(v, [...written, ...placed], Math.min(W - 4, xBreak));
 }
+
+/**
+ * Подсказка отметки «Р. Х.» на линейке (решение 102; X2 § 2.6): почему меридиан «Рождество Христово» стоит левее неё.
+ * Показывает её input.ts при наведении на надпись «Р. Х.» (ledger, kind 'frame').
+ */
+export const ERA_NOTE =
+  'Р. Х. — начало счёта лет «от Рождества Христова»: 1 г. до Р. Х. и сразу 1 г. по Р. Х., нулевого года нет. Само Рождество — ок. 5 г. до Р. Х.: Иисус родился «во дни царя Ирода» (Мф 2:1), а Ирод умер в 4 г. до Р. Х. Подробнее — «О хронологии».';
 
 /** Подпись полосы плотности шкалы: что значит её светлота (MAP-31). Короче — если длинная не помещается. */
 export const DENSITY_CAPTIONS = ['полоса: светлее — время растянуто', 'светлее — время растянуто'];
@@ -519,17 +620,21 @@ function drawServiceRow(v: SkyContext, extra: ServiceExtra): ServiceHit[] {
   const today = marks.find((m) => m.label === 'сегодня');
   if (today) placeMark(v, today, box, taken, W - 4);
 
-  // масштабная линейка «├─ 50 лет ─┤» (UX-08): у правого края, левее «сегодня», если подпись черты там
+  // масштабная линейка «масштаб ├──┤ 20 лет» (UX-08; этап 13, X2 § 2.6): у правого края, левее «сегодня», если подпись
+  // черты там; слово «масштаб» слева — чтобы число не читалось вместе с названием эпохи («Христос ≈ 50 лет»), и не
+  // ближе 24 px к названию эпохи (место слева от «масштаб» занято)
   const bar = scaleBar(v);
   let right = W - 8;
   if (bar) {
-    const text = `${bar.approx ? '≈ ' : ''}${yearsWord(bar.years)}`;
+    const word = 'масштаб';
+    const text = `${bar.approx ? '≈\u00a0' : ''}${yearsWord(bar.years)}`;
+    const ww = ctx.measureText(word).width;
     const tw = ctx.measureText(text).width;
-    const full = tw + 6 + bar.px;
-    const tx = leftOf(W - 10, full);
-    const bx1 = tx + full;
-    const bx0 = bx1 - bar.px;
-    if (tx > LW + 8) {
+    const full = ww + 6 + bar.px + 6 + tw;
+    const x0 = leftOf(W - 10, full);
+    const bx0 = x0 + ww + 6;
+    const bx1 = bx0 + bar.px;
+    if (x0 > LW + 8) {
       ctx.strokeStyle = pal.ink2;
       ctx.lineWidth = 1;
       ctx.beginPath();
@@ -540,30 +645,20 @@ function drawServiceRow(v: SkyContext, extra: ServiceExtra): ServiceHit[] {
       ctx.moveTo(Math.round(bx1) + 0.5, rowY - 4);
       ctx.lineTo(Math.round(bx1) + 0.5, rowY + 4);
       ctx.stroke();
+      ctx.fillStyle = pal.ink3;
+      ctx.fillText(word, x0, rowY);
       ctx.fillStyle = pal.ink2;
-      ctx.fillText(text, tx, rowY);
-      const b = box(tx, bx1 - tx);
-      v.ledger.add('frame', text, b);
-      taken.push(b);
-      right = tx - 12;
+      ctx.fillText(text, bx1 + 6, rowY);
+      v.ledger.add('frame', word, box(x0, ww));
+      v.ledger.add('frame', text, box(bx1 + 6, tw));
+      // занятое место — с полем 22 px слева: название эпохи встаёт не ближе 24 px
+      taken.push(box(x0 - 22, full + 22));
+      right = x0 - 24;
     }
   }
   const cmds: ServiceHit[] = [];
-  // модель хронологии, если она не по умолчанию (решение 35): целиком, иначе до двоеточия
-  if (extra.model) {
-    ctx.fillStyle = pal.ink;
-    for (const text of [modelText(extra.model), modelText(extra.model, true)]) {
-      const tw = ctx.measureText(text).width;
-      const tx = leftOf(right, tw);
-      if (tx < LW + 8) continue;
-      ctx.fillText(text, tx, rowY);
-      const b = box(tx, tw);
-      v.ledger.add('frame', text, b);
-      taken.push(b);
-      right = tx - 14;
-      break;
-    }
-  }
+  // модели хронологии здесь больше нет (этап 13, решение 102): её называет строка показа у кромки неба
+  // (src/ui/modelinfo.ts, modelBar) — в строке эпох она читалась как ещё одна эпоха
   // свёрнутое (решение 30): «Свёрнуто: колено Иудино (358), потомки Давида (62) — развернуть»; тесно — первые пункты
   // и «ещё N»; каждый пункт разворачивает своё, «развернуть» — всё
   const folds = extra.folds ?? [];
@@ -618,25 +713,37 @@ function drawServiceRow(v: SkyContext, extra: ServiceExtra): ServiceHit[] {
   ctx.fillStyle = pal.ink2;
   // при ярусах эпох названия эпох — в их первом ярусе (tiers.ts), здесь не повторяются
   const tiers = v.openTop > FRAME_H + 20;
-  for (const { e, a, b } of tiers ? [] : eps) {
-    const x0 = Math.max(a, LW) + 6;
-    const x1 = Math.min(b, W) - 6;
-    if (x1 - x0 < 16) continue;
-    // места: начало эпохи, затем — сразу за каждой помехой строки внутри эпохи
-    const starts = [x0, ...taken.filter((t) => t.x + t.w > x0 && t.x < x1).map((t) => t.x + t.w + 8)].filter((x) => x >= x0).sort((p, q) => p - q);
-    done: for (const text of [e.name, e.short]) {
+  // имена одного вида в строке (этап 13, решение 99): полные, если полное помещается у каждой эпохи, где помещается
+  // краткое; иначе — у всех краткие. Краткое имя — узнаваемое сокращение полного (data/epochs.json, short)
+  const spans = (tiers ? [] : eps)
+    .map(({ e, a, b }) => ({ e, x0: Math.max(a, LW) + 6, x1: Math.min(b, W) - 6 }))
+    .filter((q) => q.x1 - q.x0 >= 16);
+  const place = (full: boolean, dry: boolean): boolean => {
+    const mine: Rect[] = [];
+    let all = true;
+    for (const { e, x0, x1 } of spans) {
+      const text = full ? e.name : e.short;
       const tw = ctx.measureText(text).width;
-      for (const x of starts) {
-        if (x + tw > x1) continue;
-        const bx = box(x, tw);
-        if (hits(bx, taken)) continue;
-        ctx.fillText(text, x, rowY);
-        v.ledger.add('frame', text, bx);
-        taken.push(bx);
-        break done;
+      // места: начало эпохи, затем — сразу за каждой помехой строки внутри эпохи
+      const busy = [...taken, ...mine];
+      const starts = [x0, ...busy.filter((t) => t.x + t.w > x0 && t.x < x1).map((t) => t.x + t.w + 8)].filter((x) => x >= x0).sort((p, q) => p - q);
+      const x = starts.find((x) => x + tw <= x1 && !hits(box(x, tw), busy));
+      if (x === undefined) {
+        // эпоха, где не помещается и краткое имя, выбор вида не решает
+        const sw = ctx.measureText(e.short).width;
+        if (full && starts.some((xs) => xs + sw <= x1 && !hits(box(xs, sw), busy))) all = false;
+        continue;
       }
+      const bx = box(x, tw);
+      mine.push(bx);
+      if (dry) continue;
+      ctx.fillText(text, x, rowY);
+      v.ledger.add('frame', text, bx);
+      taken.push(bx);
     }
-  }
+    return all;
+  };
+  place(place(true, true), false);
   return cmds;
 }
 

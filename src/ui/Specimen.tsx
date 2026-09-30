@@ -28,7 +28,7 @@ import { installSpecimenRules, type Pseudo } from './specimen-css.ts';
 import { typo } from './text/typo.ts';
 
 const MAPS: readonly Theme[] = ['night', 'day'];
-const MAP_NAME: Record<Theme, string> = { night: 'Ночная карта', day: 'Дневная карта' };
+const MAP_NAME: Record<Theme, string> = { night: 'Ночь', day: 'День' };
 const noop = () => {};
 
 /** 11,5 → «11,5»; 34 → «34»: без лишних нулей. */
@@ -622,7 +622,7 @@ export const CARD_STATES: readonly { key: string; label: string; id: string; sch
   { key: 'full', label: '24 раздела', id: 'david', schema: false, note: 'Составлены все 24 раздела.' },
   // самая короткая по тому же правилу (tests/specimen.test.ts): у Шухи после круга 3 появился § 12 (племянник Махир),
   // короче теперь Бен-Хур — пять разделов, как ещё у девяти лиц
-  { key: 'short', label: 'самая короткая', id: 'ben-khur', schema: false, note: 'Карточки из одного раздела в атласе нет; это самая короткая.' },
+  { key: 'short', label: 'самая короткая', id: 'iagdiil', schema: false, note: 'Карточки из одного раздела в атласе нет; это самая короткая.' },
 ];
 
 function CardStates() {

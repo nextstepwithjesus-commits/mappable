@@ -48,15 +48,18 @@ describe('CARD-78: эпоха рождения — по году рождени�
         const last = m.epochs[m.epochs.length - 1];
         const lo = ep === first ? -Infinity : toAstro(ep.start);
         const hi = ep === last ? Infinity : toAstro(ep.end);
-        if (c.b < lo || c.b >= hi) bad.push(`${p.id}: ${c.b} вне «${ep.name}»`);
+        // этап 13 (контракт 1, T3): граница эпохи входит в обе — карточка пишет «Исход и странствие в пустыне
+        // (1446–1406 гг. до Р. Х.)», и рождение в 1406 г. лежит в этих границах
+        if (c.b < lo || c.b > hi) bad.push(`${p.id}: ${c.b} вне «${ep.name}»`);
       }
       expect(bad, m.id).toEqual([]);
     }
   });
   it('Иессей: рождение ок. 1085 г. — эпоха «Судьи», а не «Единое царство» из данных; § 8 и § 13 говорят одно', async () => {
     const s = await cardSections('iessey');
-    expect(flat(s.get(13))).toMatch(/^Эпоха рождения: Судьи \(/);
-    expect(flat(s.get(8))).toMatch(/эпоха — Судьи/);
+    // этап 13 (решения 98, 100): § 13 — строка «Эпоха» с эпохой жизни и эпохой рождения, § 8 — эпоха рождения
+    expect(flat(s.get(13))).toMatch(/Эпоха Единое царство \([^)]+\); родился в эпоху «Судьи» \(/);
+    expect(flat(s.get(8))).toMatch(/эпоха рождения — Судьи/);
     expect(byId.get('iessey')!.epoch).toBe('united');
   });
   it('годы в строке § 13 «Эпоха рождения: … (a–b гг.)» заключают показанный год рождения', async () => {
@@ -74,7 +77,9 @@ describe('CARD-78: эпоха рождения — по году рождени�
     expect(bad).toEqual([]);
   });
   it('у лица без годов (epochal) — эпоха из данных с подписью «Эпоха:»', async () => {
-    expect(flat((await cardSections('melkhisedek')).get(13))).toMatch(/^Эпоха: Патриархи/);
+    // этап 13 (решение 100): строка «Эпоха» § 13 идёт после «Откуда годы»; у лица без годов — одна эпоха, без «рождения»
+    expect(flat((await cardSections('melkhisedek')).get(13))).toMatch(/Эпоха Патриархи \(/);
+    expect(flat((await cardSections('melkhisedek')).get(13))).not.toMatch(/в эпоху/);
     const m = models[0];
     expect(epochAtYear(m.epochs, toAstro(-1085)).id).toBe('judges');
   });
@@ -106,7 +111,9 @@ describe('CARD-86: опора формулы § 13 — только родств
     expect(d).toMatch(/Родился за 30 лет до воцарения 2 Цар 5:4/);
     expect(d).not.toMatch(/Амнона/);
     const mo = flat((await cardSections('moisey')).get(13));
-    expect(mo).toMatch(/^Эпоха рождения: Израиль в Египте \([^)]+\)\. Основание года рождения: «Моисей был восьмидесяти/);
+    // этап 13 (решение 100): «Откуда годы» — первой строкой; эпоха рождения — во второй
+    expect(mo).toMatch(/^Откуда годы Основание года рождения: «Моисей был восьмидесяти/);
+    expect(mo).toMatch(/родился в эпоху «Израиль в Египте» \(/);
     expect(mo).not.toMatch(/Гирсама/);
     // запись составителя, ставшая формулой, не повторяется ниже
     expect(mo.match(/Моисей был восьмидесяти/g)?.length).toBe(1);
@@ -116,8 +123,14 @@ describe('CARD-86: опора формулы § 13 — только родств
     expect(flat((await cardSections('sarra')).get(13))).toMatch(/Родилась через 10 лет после мужа, Авраама[;.].*Быт 17:17/);
   });
   it('Авиуд, сын Зоровавеля: опора — Зоровавель (годы служения, Езд 2:2), а не сын Елиаким, чей год выведен из той же цепочки', async () => {
+    // этап 13 (решения 100–101): Зоровавель входит в напряжение «сжатое родословие», а пара, о которой говорит
+    // напряжение, в формулу не идёт — опора вверх теперь Иехония (год по царствованию); сын Елиаким опорой не бывает
+    const { up, down } = formulaAnchors('aviud-syn-zorovavelya', models[0]);
+    expect(up?.id).toBe('iekhoniya');
+    expect(down?.id).not.toBe('eliakim-syn-aviuda');
+    // этап 13, решение 100: цепочка Мф 1:13–16 сжата — в § 13 вместо формулы напряжение «сжатое родословие»
     const t = flat((await cardSections('aviud-syn-zorovavelya')).get(13));
-    expect(t).toMatch(/Родился примерно через \d+ лет после отца, Зоровавеля\. расч\./);
+    expect(t).toMatch(/Среди родни Хронологическое напряжение\. Зоровавель — Авиуд/);
     expect(t).not.toMatch(/Елиакима/);
   });
   it('склонение «-иа» по форме текста «-ия» (1 Пар 3:1): «Далуии», а не «Далуиа»', () => {
@@ -180,14 +193,15 @@ describe('VIS-63: эпохи мини-шкалы — без многоточия
         const { bands, labels } = epochBandLabels(E, x, w, born.id, measure);
         for (const l of labels) {
           expect(l.text).not.toMatch(/…/);
-          expect(E.some((e) => e.name === l.text)).toBe(true);
+          // решение 99: краткое имя — узнаваемое сокращение полного; подпись — полное имя или краткое
+          expect(E.some((e) => e.name === l.text || e.short === l.text)).toBe(true);
         }
-        const own = labels.find((l) => l.text === born.name);
+        const own = labels.find((l) => l.text === born.name || l.text === born.short);
         expect(own, `${w}: ${born.name}`).toBeTruthy();
         if (own!.w <= w - 4) expect(own!.x >= 0 && own!.x + own!.w <= w).toBe(true);
         for (const l of labels) {
           if (l === own) continue;
-          const band = bands.find((b) => b.name === l.text)!;
+          const band = bands.find((b) => b.name === l.text || E[b.i].short === l.text)!;
           expect(l.x + l.w).toBeLessThanOrEqual(band.b);
           expect(l.x + l.w + 8 <= own!.x || l.x >= own!.x + own!.w + 8).toBe(true);
         }
@@ -280,6 +294,7 @@ describe('оболочка: CSS (VIS-62, VIS-66, VIS-70, VIS-79)', () => {
     // и у «Добавить в набор» — «В набор» (то же правило, список селекторов)
     expect(f).toMatch(/@container folio \(max-width: 480px\)\s*\{\s*\.folio \.actions \.show-on-sky \.full\s*[,{][^}]*display:\s*none;/);
     const src = readFileSync(join(__dirname, '../src/ui/Folio.tsx'), 'utf8');
-    expect(src).toMatch(/aria-label="Показать на небе"/);
+    // этап 13 (решение 111): у лица вне показа — «Показать на всём небе»; иначе — «Показать на небе»
+    expect(src).toMatch(/aria-label=\{outside \? 'Показать на всём небе' : 'Показать на небе'\}/);
   });
 });

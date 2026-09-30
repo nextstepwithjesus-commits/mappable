@@ -12,7 +12,7 @@ import type { Page } from 'playwright';
 import { fail, hashId, pass, type Scenario } from './kit.ts';
 import { ADAM, cardOf, clickStar, flat, open, self, starPt, state } from './unify11.ts';
 
-const NAMES = ['С Адама', 'С Иисуса Христа', 'Родословие Иисуса Христа', 'Ключевые лица', 'Всё небо'];
+const NAMES = ['С Адама', 'С Иисуса Христа', 'Родословие Иисуса Христа (Мф 1, Лк 3)', 'Ключевые лица', 'Всё небо'];
 
 /** Главная область: небо (режим холста), полоса времени, органы неба; древа нет. */
 async function area(p: Page): Promise<{ tree: boolean; sky: string | null; strip: boolean; ctl: boolean }> {
@@ -55,17 +55,14 @@ export const view5: Scenario[] = [
   },
   {
     n: 631,
-    title: 'Решение 77: переключателя «Небо | Древо» нет — в верхней строке только поиск, панели и тема; в «Ещё» — «Начать заново…»; команд и клавиш древа нет',
+    title: 'Решения 77, 111: переключателя «Небо | Древо» нет — в верхней строке только поиск, панели и тема; «Ещё» на 1440 нет; команд и клавиш древа нет',
     run: async (p) => {
       await open(p, '#/david');
       if (await p.locator('.top .view-switch').count()) return fail('в верхней строке — переключатель вида');
       const top = flat(await p.locator('.top').innerText());
       if (/Древо/.test(top) || /\bНебо\b/.test(top.replace(/На небе/g, ''))) return fail(`верхняя строка: «${top}»`);
-      await p.locator('.commands .more > button').click();
-      await p.waitForTimeout(200);
-      const items = (await p.locator('.commands .more [role^="menuitem"] .nm').allInnerTexts()).map((t) => t.trim());
-      if (!items.includes('Начать заново…')) return fail(`«Ещё»: ${items.join(' | ')}`);
-      await p.keyboard.press('Escape');
+      // этап 13 (решение 111): «Ещё» — только когда команды не помещаются
+      if (await p.locator('.commands .more').count()) return fail('«Ещё» при 1440');
       await p.keyboard.press('Shift+Slash');
       await p.waitForTimeout(600);
       const keys = flat((await p.locator('table.keys').first().innerText().catch(() => '')) ?? '');
@@ -88,15 +85,14 @@ export const view5: Scenario[] = [
   },
   {
     n: 633,
-    title: 'Решения 68, 77: «Начать заново…» из «Ещё» открывает лист «Вид» на «Начале», фокус — на текущем; набор больше лица — с подтверждением; «С Иисуса Христа» — набор из одного Иисуса Христа и его карточка у звезды',
+    title: 'Решения 68, 77, 111: «Вид → Начало» — набор больше лица заменяется с подтверждением; «С Иисуса Христа» — набор из одного Иисуса Христа и его карточка у звезды',
     run: async (p) => {
       await open(p, '#/~vs', { start: 'adam', extra: { work: [self('adam'), ['eva', { via: 'family', of: 'adam' }]], reveal: { opened: ['adam'], expanded: { 'u:adam+eva': 'adam' } } } });
-      await p.locator('.commands .more > button').click();
-      await p.waitForTimeout(200);
-      await p.locator('.commands .more [role^="menuitem"]', { hasText: 'Начать заново' }).click();
+      // этап 13 (решение 111): «Начать заново…» — в «Вид → Начало» (в «Ещё» его больше нет)
+      await p.locator('.skyctl .view-toggle').click();
       await p.waitForTimeout(600);
-      const f = await p.evaluate(() => ({ in: !!document.activeElement?.closest('.viewpop .starts'), label: document.activeElement?.getAttribute('aria-label') }));
-      if (!f.in || f.label !== 'С Адама') return fail(`фокус: ${JSON.stringify(f)}`);
+      const cur = await p.locator('.viewpop .starts button[aria-current="true"]').getAttribute('aria-label');
+      if (cur !== 'С Адама') return fail(`текущее начало: ${cur}`);
       await p.locator('.viewpop .starts button', { hasText: 'С Иисуса Христа' }).click();
       await p.waitForTimeout(300);
       if (!(await p.locator('.viewpop .starts-ask').count())) return fail('нет вопроса о замене набора');

@@ -33,7 +33,8 @@ export async function pickShow(p: Page, kind: 'Всё небо' | 'Линии М
   const hit = (l: ReturnType<Page['locator']>) => (o.touch ? l.tap() : l.click());
   await hit(p.locator('.sky .showbar .sb-cmd[data-cmd="sheet"]').first());
   await p.waitForTimeout(500);
-  await hit(p.locator('.showsheet .ss-kind', { hasText: kind }).first());
+  // этап 13 (решение 110): показ линий называется «Родословие Иисуса Христа (Мф 1, Лк 3)»
+  await hit(p.locator('.showsheet .ss-kind', { hasText: kind === 'Линии Мессии' ? 'Родословие Иисуса Христа' : kind }).first());
   await p.waitForTimeout(300);
   const apply = p.locator('.showsheet .ss-apply button');
   if (await apply.count()) await hit(apply);

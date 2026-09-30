@@ -1,5 +1,5 @@
 /**
- * Полоса времени (ТЗ § 3.4): от сотворения до 2040 г. в истинном масштабе — эпохи, плотность рождений по 25 лет,
+ * Полоса времени (ТЗ § 3.4): от сотворения до 2040 г. в равномерном масштабе — эпохи, плотность рождений по 25 лет,
  * две линии Мессии схемой развилок, черта «завершение канона», отметка «сегодня», рамка окна неба.
  *
  * Сверху вниз: строка названий эпох (на широкой полосе — две строки лесенкой), ниже — рамка окна; в её поле — бусины
@@ -17,9 +17,12 @@
 import { useEffect, useRef } from 'preact/hooks';
 import { effect, signal } from '@preact/signals';
 import { lines, type ModelData } from '../data/atlas.ts';
-import { model, meridian, theme } from '../state.ts';
+import { model, meridian, selected, theme } from '../state.ts';
+import { grid } from './layout.ts';
+import { sheetStop } from './sheet.ts';
+import '../styles/chronology.css';
 import { skyRef, viewTick } from './common.tsx';
-import { formatSpan, formatYear, toAstro, toHist } from '../engine/years.ts';
+import { dateText, epochSpanText, spanText, toAstro, toHist } from '../engine/years.ts';
 import { readPalette } from '../render/sky.ts';
 import { easeOut } from '../render/camera.ts';
 import { T_UI_S, coarsePointer, mapFont } from '../render/type.ts';
@@ -444,7 +447,7 @@ export function birthsWord(n: number): string {
 
 /** Подпись флажка года над столбиками: год и число рождений в его 25-летии (MAP-45). */
 export function histFlag(t: number, n: number): string {
-  return `${formatYear(t)}: ${n ? `${birthsWord(n)} за ${BIN} лет` : `за ${BIN} лет рождений нет`}`;
+  return `${dateText({ t })}: ${n ? `${birthsWord(n)} за ${BIN} лет` : `за ${BIN} лет рождений нет`}`;
 }
 
 /**
@@ -784,7 +787,7 @@ export function TimeStrip() {
         const mid = (v.a + v.b) / 2;
         const ep = epochAtYear(eps, mid, toAstro);
         cv.setAttribute('aria-valuenow', String(toHist(mid)));
-        cv.setAttribute('aria-valuetext', typo(`Окно карты: ${formatSpan(Math.max(T0, v.a), Math.min(T1, v.b))}${ep ? `; эпоха — ${ep.name}` : ''}`));
+        cv.setAttribute('aria-valuetext', typo(`Окно карты: ${spanText({ t: Math.max(T0, v.a) }, { t: Math.min(T1, v.b) })}${ep ? `; эпоха — ${ep.name}` : ''}`));
       }
       // меридиан: черта через полосу, флажок года — под строкой названий; над столбиками — с числом рождений
       if (meridian.value !== null) {
@@ -802,8 +805,8 @@ export function TimeStrip() {
           overHist && i >= 0 && i < hist.length
             ? histFlag(t, hist[i])
             : unnamed && !labeled.has(unnamed.id)
-              ? typo(`${unnamed.name}: ${formatYear(t)}`)
-              : formatYear(t);
+              ? typo(`${unnamed.name}: ${dateText({ t })}`)
+              : dateText({ t });
         ctx.font = font(500);
         const tw = ctx.measureText(label).width;
         // подпись — справа от черты; если там ручка рамки или край — слева: ручку подпись не закрывает
@@ -1048,8 +1051,21 @@ export function TimeStrip() {
     };
   }, []);
   const epochs = model.value.epochs;
+  // телефон, лист карточки во весь экран (решение 123): полоса свёрнута в тонкую строку возврата — касание опускает лист
+  // на 55 %, и небо с полосой снова видны. Холст остаётся в разметке (размер и состояние не теряются), но скрыт
+  const thin = grid.value.phone && !!selected.value && sheetStop.value === 'full';
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    document.documentElement.classList.toggle('strip-thin', thin);
+    return () => document.documentElement.classList.remove('strip-thin');
+  }, [thin]);
   return (
-    <div class="strip" ref={wrap}>
+    <div class={thin ? 'strip thin' : 'strip'} ref={wrap}>
+      {thin && (
+        <button type="button" class="strip-back" onClick={() => (sheetStop.value = 'half')} title="Опустить карточку: небо и полоса времени снова видны">
+          ‹ Небо и время
+        </button>
+      )}
       {/* ползунок окна карты: стрелки — сдвиг на 10 % (Shift — на 40 %), PageUp и PageDown — эпохи, Home и End — края шкалы */}
       <canvas
         ref={ref}
@@ -1080,7 +1096,7 @@ export function TimeStrip() {
                 glideYears(a, b);
               }}
             >
-              {typo(`${e.name}, ${formatSpan(toAstro(e.start), toAstro(e.end))}`)}
+              {typo(`${e.name}, ${epochSpanText(e)}`)}
             </button>
           </li>
         ))}

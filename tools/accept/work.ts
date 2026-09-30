@@ -777,14 +777,24 @@ const workset: Scenario[] = [
   },
   {
     n: 207,
-    title: 'J4: пустой набор в показе «набор» — строка показа «На небе: набор — 0 лиц», лицо вне показа — «… — вне показа»; «Добавить в набор» в карточке — «набор — 1 лицо»; «всё небо» возвращает небо (этап 11: строка показа вместо строки набора, решение 81)',
+    title: 'J4: пустой набор в показе «набор» — строка показа «На небе: набор пуст…», найденное лицо вне показа — гостем, «Результаты поиска вне показа: 1 — снять» (решение 113); «Добавить в набор» в карточке — «набор — 1 лицо»; «всё небо» возвращает небо (этап 11: строка показа вместо строки набора, решение 81; этап 13, решение 111: пустой набор в листе «Показ» не выбирается, строка говорит, что делать)',
     run: async (p) => {
-      await showSet(p);
+      // пустой набор в листе «Показ» выбрать нельзя (решение 111) — показ «набор» с пустым набором, как после «Очистить набор»
+      await p.evaluate(() => {
+        localStorage.setItem('toledot:work', '[]');
+        sessionStorage.setItem('toledot:show', JSON.stringify({ k: 's' }));
+        sessionStorage.setItem('toledot:skymode', JSON.stringify('work'));
+      });
+      // адрес без вида: иначе вид прежнего сценария в адресе («~y…~w…», показ по умолчанию) главнее памяти сеанса
+      await p.goto(`${p.url().replace(/[?#].*$/, '')}?w207=${Date.now()}#/`);
+      await p.waitForTimeout(2200);
       const bar = p.locator('.sky .showbar');
       const text = async () => nbsp(await bar.innerText()).replace(/\s+/g, ' ').trim();
-      if (!/^На небе: набор — 0 лиц/.test(await text())) return no(`строка показа пустого набора: «${await text()}»`);
+      if (!/^На небе: набор пуст/.test(await text())) return no(`строка показа пустого набора: «${await text()}»`);
       await seek(p, 'Руфь');
-      if (!/Руфь[^;]* — вне показа/.test(await text())) return no(`строка при лице вне показа: «${await text()}»`);
+      // этап 13, решение 113: найденное лицо вне показа встаёт гостем, пока выбрано, — строка «Результаты поиска вне
+      // показа: 1 — снять» вместо «Руфь — вне показа»
+      if (!/Результаты поиска вне показа: 1 — снять/.test(await text()) && !/Руфь[^;]* — вне показа/.test(await text())) return no(`строка при лице вне показа: «${await text()}»`);
       await takeFromCard(p, 'Только Руфи');
       if ((await stored(p)).join(' ') !== 'ruf') return no('«Добавить в набор» не добавило лицо');
       await p.waitForTimeout(800);
@@ -883,7 +893,7 @@ const workset: Scenario[] = [
       await p.waitForTimeout(400);
       const menu = p.locator('.sky .skymenu');
       if (!(await menu.count())) return no('меню неба не открылось');
-      const g = menu.locator('button', { hasText: 'Свернуть созвездие' });
+      const g = menu.locator('button', { hasText: 'Скрыть созвездие' });
       if (!/«Едом»/.test(await g.innerText())) return no(`команда: «${await g.innerText()}»`);
       await g.click();
       await p.waitForTimeout(900);

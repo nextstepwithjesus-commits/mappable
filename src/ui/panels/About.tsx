@@ -1,12 +1,15 @@
-import { anchors, modelInfo, volumes, groupById, builtAt } from '../../data/atlas.ts';
-import { model, modelId, lineFlip, panel } from '../../state.ts';
-import { Refs, VerseInsert, plural } from '../common.tsx';
-import { formatYear, toAstro } from '../../engine/years.ts';
+import { volumes, groupById, builtAt, bibleText } from '../../data/atlas.ts';
+import { lineFlip, panel } from '../../state.ts';
+import { plural } from '../common.tsx';
+import { dateText, toAstro } from '../../engine/years.ts';
 import { Sheet } from './Sheet.tsx';
 import { num, typo } from '../text/typo.ts';
+import { factsOf } from '../modelinfo.ts';
+import { modelId } from '../../state.ts';
+import { ChronoText, openChronology } from './Chronology.tsx';
 
-/** Год якоря по-человечески: «967 г. до Р. Х.»; в вариантах «-966 (Тиле)» → «966 г. до Р. Х. (Тиле)». */
-export const anchorYear = (v: number) => formatYear(toAstro(v));
+/** Год якоря по-человечески (словарь дат, engine/years.ts): «967 г. до Р. Х.»; в вариантах «-966 (Тиле)» → «966 г. до Р. Х. (Тиле)». */
+export const anchorYear = (v: number) => dateText({ t: toAstro(v) });
 export const anchorAlt = (s: string) => s.replace(/^(-?\d+)/, (y) => anchorYear(Number(y)));
 /** Дата сборки данных: «27 сентября 2026 г.» (без второй точки в конце предложения). */
 export const builtDate = (iso: string) => new Date(iso).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }).replace(/\s*г\.?$/, '');
@@ -16,28 +19,77 @@ const LEVELS: [string, string][] = [
   ['', 'прямо сказано в Писании'],
   ['выв.', 'вывод: однозначно следует из сопоставления стихов'],
   ['толк.', 'толкование: распространённое, но не единственное понимание; изложено в примечаниях (§ 24)'],
-  ['расч.', 'год рассчитан по выбранной модели хронологии'],
+  ['расч.', 'год вычислен атласом: по числам текста от внебиблейской опоры или оценён по поколениям; откуда именно и меняется ли он с моделью — в пояснении пометы у лица'],
   ['справ.', 'справочный слой: подлинник имени, этимология, расположение мест — не слова Писания'],
 ];
 
-// ---------- о карте (G6; CARD-44; UX-36) ----------
+/** Разделы «О карте» — для оглавления (решение 132): id заголовка и его название. */
+const PARTS: [string, string][] = [
+  ['about-source', 'Источник'],
+  ['about-levels', 'Уровни достоверности'],
+  ['about-chrono', 'Хронология'],
+  ['about-luke', 'Родословие по Луке'],
+  ['about-data', 'Данные'],
+  ['about-start', 'Начало и раскрытие родословия'],
+];
+const goTo = (id: string) => document.getElementById(id)?.scrollIntoView({ block: 'start' });
+
+// ---------- о карте (G6; CARD-44; UX-36; этап 13, решение 132: краткий первый слой и оглавление) ----------
 export function AboutPanel() {
-  const m = model.value;
   return (
-    <Sheet title="О карте" lead="Источник, уровни достоверности, хронология и известные трудности текста.">
-      <h3>Источник</h3>
+    <Sheet title="О карте" lead="Источник, уровни достоверности, данные атласа и как с ним начать; годы и модели — в «О хронологии».">
+      {/* первый слой — коротко, что это и откуда; подробности — разделами ниже */}
+      <p class="about-brief">
+        <ChronoText text="Атлас показывает родство лиц 66 канонических книг Библии по Синодальному переводу. Каждое имя, родство, число и событие взято из Писания, и у каждого стоит стих. Годы до Р. Х. вычисляет атлас — как, сказано в «О хронологии»; знаки карты объяснены в «Условных знаках»." />
+      </p>
+      <nav class="about-toc" aria-label="Разделы «О карте»">
+        <ul>
+          {PARTS.map(([id, name]) => (
+            <li key={id}>
+              <a
+                href={`#${id}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  goTo(id);
+                }}
+              >
+                {name}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+      <h3 id="about-source">Источник</h3>
       <p>
         {typo(
           'Только 66 канонических книг в Синодальном переводе (1876), в синодальной нумерации стихов. Неканонические книги и добавления (Пс 151, Дан 3:24–90, Дан 13–14, добавления к Есфири) не используются. Слова и числа в квадратных скобках Синодального текста — вставки по греческому переводу — не служат основанием фактов; они показаны в примечаниях и в модели «числа в скобках».',
         )}
       </p>
+      {/* решение 132: происхождение текста и контрольная сумма файла — справочный слой, подробности по раскрытию */}
+      {bibleText && (
+        <details class="bible-text">
+          <summary>{typo(`Текст Писания: ${bibleText.name}`)}</summary>
+          <p>{typo(`Источник файла: ${bibleText.source}.`)}</p>
+          {bibleText.changes && <p>{typo(`Изменения против источника: ${bibleText.changes.replace(/\.$/, '')}.`)}</p>}
+          <p>
+            {typo(
+              `Стихов в файле — ${num(bibleText.verses)}, в сборке атласа (процитированные) — ${num(bibleText.cited)} ${plural(bibleText.cited, 'стих', 'стиха', 'стихов')}.`,
+            )}
+          </p>
+          <p class="sha">
+            <span class="k">Контрольная сумма (SHA 256) файла tools/bible/synodal.tsv</span>{' '}
+            {/* хеш — как есть: <bdi> типографика не трогает (typoTree, RAW), иначе она разбила бы цифры на разряды */}
+            <bdi class="v">{bibleText.sha256}</bdi>
+          </p>
+        </details>
+      )}
       {/* решение 74: что взято из Писания и что — оформление */}
       <p>
         {typo(
           'Из Писания взяты только сведения — имена, родство, числа, события — и у каждого стоит стих. Всё остальное — оформление атласа: знаки звёзд, цвета, силуэты на карточках у звёзд. Силуэт — условный знак (мужчина, женщина, народ, неназванное лицо), а не портрет: изображений лиц в Писании нет. Изображение лица с пометой «худож.» — художественная интерпретация создателей приложения, не изображение из Писания и не основание фактов.',
         )}
       </p>
-      <h3>Уровни достоверности</h3>
+      <h3 id="about-levels">Уровни достоверности</h3>
       <table class="levels">
         <thead>
           <tr>
@@ -54,25 +106,18 @@ export function AboutPanel() {
           ))}
         </tbody>
       </table>
-      <h3>Хронология</h3>
-      <p>{typo('Годы рассчитаны атласом по выбранной модели хронологии; модели расходятся только в годах до 967 г. до Р. Х. Модель выбирается кнопкой «Вид» внизу справа неба, строка «Хронология».')}</p>
-      <dl class="models">
-        {modelInfo.map((mi) => (
-          <div key={mi.id} class={mi.id === modelId.value ? 'on' : ''}>
-            <dt>
-              {mi.name}
-              {mi.id === modelId.value && <span class="muted"> — выбрана</span>}
-            </dt>
-            <dd>{typo(mi.description)}</dd>
-          </div>
-        ))}
-      </dl>
-      <p class="muted">
+      <h3 id="about-chrono">Хронология</h3>
+      <p>
         {typo(
-          'Шкала «лет от сотворения» — расчёт атласа по масоретским числам Быт 5 и 11 (сотворение — 4174 г. до Р. Х. в модели по умолчанию). Это не византийская эра «от сотворения мира» (5508 г. до Р. Х.), принятая в России до 1700 г.',
+          `Годы до Р. Х. атлас вычисляет от одной внебиблейской опоры — 967 г. до Р. Х. — по числам текста, а там, где чисел нет, оценивает по поколениям. Сейчас годы — по модели «${factsOf(modelId.value)?.name ?? ''}». Как читать годы, откуда они, что меняет модель, опоры и напряжения — в панели «О хронологии».`,
         )}
       </p>
-      <h3>Родословие по Луке</h3>
+      <div class="cmds">
+        <button type="button" class="cmd" onClick={openChronology}>
+          О хронологии
+        </button>
+      </div>
+      <h3 id="about-luke">Родословие по Луке</h3>
       <p>
         {typo(
           lineFlip.value
@@ -85,53 +130,7 @@ export function AboutPanel() {
           сравнить и переключить в «Синопсисе»
         </button>
       </div>
-      <h3>Внебиблейские опоры</h3>
-      <p class="muted">{typo('Абсолютные годы невозможны без внешних опор; ниже — принятые значения и другие мнения (ТЗ П-6).')}</p>
-      {/* на узком листе строка таблицы — блоком с подписями полей (MOB-51; WCAG 1.4.10): лист не ездит вбок */}
-      <div class="anchors-wrap">
-      <table class="anchors">
-        <thead>
-          <tr>
-            <th scope="col">Событие</th>
-            <th scope="col">Год</th>
-            <th scope="col">Источник</th>
-          </tr>
-        </thead>
-        <tbody>
-          {anchors.map((a) => (
-            <tr key={a.id}>
-              <th scope="row">
-                {typo(a.event)}
-                <Refs refs={[a.verse]} owner={`an${a.id}`} />
-                <VerseInsert owner={`an${a.id}`} refs={[a.verse]} />
-              </th>
-              <td class="yr" data-label="Год">
-                <div>
-                  <span class="nobr">{anchorYear(a.value)}</span>
-                  {a.alternatives.length ? <div class="muted">или {typo(a.alternatives.map(anchorAlt).join('; '))}</div> : null}
-                </div>
-              </td>
-              <td class="muted" data-label="Источник">
-                <div>{typo(a.source)}</div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      </div>
-      <h3>Хронологические напряжения</h3>
-      <p class="muted">
-        {typo(`Места, где числа текста не сходятся между собой: ${m.tensions.length} в этой модели. Атлас их не сглаживает; у лиц они названы в § 13.`)}
-      </p>
-      <ul class="notes">
-        {m.tensions.slice(0, 80).map((t, i) => (
-          <li key={i}>
-            {typo(t.text)} <Refs refs={t.refs.slice(0, 3)} owner={`tn${i}`} />
-            <VerseInsert owner={`tn${i}`} refs={t.refs.slice(0, 3)} />
-          </li>
-        ))}
-      </ul>
-      <h3>Данные</h3>
+      <h3 id="about-data">Данные</h3>
       <table class="volumes">
         <tbody>
           {volumes.map((v) => (
@@ -150,10 +149,11 @@ export function AboutPanel() {
         )}
       </p>
       {/* решения 67, 68, 70, 72, 77, 81: пять начал, показ и раскрытие родословия шаг за шагом */}
-      <h3>Начало и раскрытие родословия</h3>
+      <h3 id="about-start">Начало и раскрытие родословия</h3>
       <p>
         {typo(
-          'Атлас открывается одним из пяти начал: «С Адама» — только Адам и его карточка; «С Иисуса Христа» — только Иисус Христос, родословие раскрывается вверх, к предкам; «Родословие Иисуса Христа» — обе линии, по Матфею и по Луке; «Ключевые лица» — главные лица истории Писания; «Всё небо» — все лица сразу. Это одно небо: время по горизонтали, звезда — лицо.',
+          // названия начал — те же, что в интерфейсе (src/ui/reveal.ts, STARTS и LINES_TITLE; tests/start-m3.test.ts)
+          'Атлас открывается одним из пяти начал: «С Адама» — только Адам и его карточка; «С Иисуса Христа» — только Иисус Христос, родословие раскрывается вверх, к предкам; «Родословие Иисуса Христа (Мф 1, Лк 3)» — обе линии, по Матфею и по Луке; «Ключевые лица» — главные лица истории Писания; «Всё небо» — все лица сразу. Это одно небо: время по горизонтали, звезда — лицо.',
         )}
       </p>
       <p>

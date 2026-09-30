@@ -44,6 +44,11 @@ export interface Strand {
   /** лица своей линии, по которым построена нить (u — номер в этом списке) */
   ids: string[];
   /**
+   * Пропуски показа (этап 13, решение 93, К4): gaps[k] — сколько лиц линии между ids[k − 1] и ids[k] скрыто показом
+   * (0 или нет — соседи по данным). В разрыве такого шага небо ставит знак «+N»; шаг — связь вида span («цепочка»).
+   */
+  gaps?: number[];
+  /**
    * Плетение (MAP-75): перекрестья косы, где эта нить лежит поверх другой, — пары [начало, конец] в индексах точек
    * этой же нити, включительно. Концы — там, где нити уже разошлись на 2A: подложка верхней нити даёт разрыв только
    * у нижней нити в самом перекрестье. Раздельные участки у линий разной длины, поэтому индексы двух нитей после
@@ -52,14 +57,30 @@ export interface Strand {
   over: [number, number][];
 }
 
+/**
+ * Лицо линии для нити: weak — шаг к нему по толкованию (точки; только Илий → Мария, решение 94); legal — иное
+ * происхождение (штрих: по закону, Нирий → Салафиил по Луке); gap — сколько лиц линии перед ним скрыто показом.
+ */
+export interface RibbonStep {
+  id: string;
+  weak: boolean;
+  legal?: boolean;
+  gap?: number;
+}
+
 export interface RibbonInput {
-  joseph: { id: string; weak: boolean }[];
-  mary: { id: string; weak: boolean }[];
+  joseph: RibbonStep[];
+  mary: RibbonStep[];
   project: (id: string) => Pt | null;
   amplitude: number; // px
   meander: number; // px — наибольшая волна одиночной нити (не больше 0,25·A)
   /** видимая полоса по x (px): поколения целиком за ней считаются грубо — их всё равно не рисуют */
   clip?: [number, number];
+  /**
+   * Наибольший увод средней линии от лица при сглаживании тесных поколений, px (этап 13, X3 Д9, Ч5): нить проходит
+   * не дальше полустроки от своей бусины; если сгладить дальше нельзя, она идёт ближе к звезде. Нет — без предела.
+   */
+  hold?: number;
 }
 
 /**
@@ -194,11 +215,13 @@ const weightAt = (w: number[], u: number) => {
  * Сглаживание идёт внутри участков [a, b] из fixed: концы участков (точки расхождения и схождения) не двигаются,
  * поэтому общие участки у двух линий остаются одинаковыми.
  */
-function smoothDense(pts: Pt[], w: number[], fixed: Set<number>): Pt[] {
+function smoothDense(pts: Pt[], w: number[], fixed: Set<number>, hold = Infinity): Pt[] {
   if (pts.length < 3) return pts;
   let ys = pts.map((p) => p.y);
   for (let it = 0; it < 4; it++) ys = ys.map((y, i) => (i === 0 || i === ys.length - 1 || fixed.has(i) ? y : (ys[i - 1] + 2 * y + ys[i + 1]) / 4));
-  return pts.map((p, i) => (i === 0 || i === pts.length - 1 || fixed.has(i) ? p : { x: p.x, y: p.y * w[i] + ys[i] * (1 - w[i]) }));
+  // сглаженная средняя линия — не дальше hold от своего лица (Ч5): иначе лицо «не на линии»
+  const near = (p: Pt, y: number) => Math.max(p.y - hold, Math.min(p.y + hold, y));
+  return pts.map((p, i) => (i === 0 || i === pts.length - 1 || fixed.has(i) ? p : { x: p.x, y: near(p, p.y * w[i] + ys[i] * (1 - w[i])) }));
 }
 
 /** Смещение, ограниченное радиусом кривизны (петли на крутых поворотах). */
@@ -303,7 +326,7 @@ export function buildRibbons(inp: RibbonInput): Strand[] {
   const A = inp.amplitude;
   const lines = (['joseph', 'mary'] as const).map((line) => {
     const steps = inp[line].map((s) => ({ ...s, p: inp.project(s.id) })).filter((s): s is typeof s & { p: Pt } => !!s.p);
-    return { line, ids: steps.map((s) => s.id), weak: steps.map((s) => s.weak), raw: steps.map((s) => s.p) };
+    return { line, ids: steps.map((s) => s.id), weak: steps.map((s) => s.weak), legal: steps.map((s) => !!s.legal), gaps: steps.map((s) => s.gap ?? 0), raw: steps.map((s) => s.p) };
   });
   const [J, M] = lines;
   const spans = runSpans(J.ids, M.ids);
@@ -319,7 +342,7 @@ export function buildRibbons(inp: RibbonInput): Strand[] {
     const wBraid = nodeWeights(L.raw, waveWeight);
     // средняя линия сглаживается, пока шаг поколения меньше 60 px: чередование полос у соседних лиц — не рябь (MAP-26)
     const wSmooth = nodeWeights(L.raw, (px) => smooth01((px - MEANDER_FULL_PX / 2) / (MEANDER_FULL_PX / 2)));
-    return { my, wBraid, pts: smoothDense(L.raw, wSmooth, fixed), dirs: new Map<number, Pt>() };
+    return { my, wBraid, pts: smoothDense(L.raw, wSmooth, fixed, inp.hold), dirs: new Map<number, Pt>() };
   });
   // касательная на стыках общих и раздельных участков — одна для обеих линий: вдоль общего участка,
   // а у общего участка из одного лица — по сумме направлений обеих линий (излом нити на стыке, находка образца)
@@ -450,11 +473,12 @@ export function buildRibbons(inp: RibbonInput): Strand[] {
         y: s.y + s.ny * off,
         t: Math.max(0, k) / total,
         weak: n > 1 && L.weak[next] && s.u > k + 0.02,
+        ...(n > 1 && L.legal[next] && !L.weak[next] && s.u > k + 0.02 ? { legal: true } : {}),
         u: s.u,
       });
     }
     closeSeg(points.length);
-    out.push({ line: L.line, points, ids: L.ids, over });
+    out.push({ line: L.line, points, ids: L.ids, over, ...(L.gaps.some((x) => x > 0) ? { gaps: L.gaps } : {}) });
   });
   const [js, ms] = out;
   return [ms, js];
@@ -472,6 +496,8 @@ export interface RouteStep {
   weak: boolean;
   /** шаг «по закону» (Иосиф → Иисус, Мф 1:16): от узла союза — штрихом */
   legal?: boolean;
+  /** сколько лиц линии перед этим скрыто показом (Strand.gaps) */
+  gap?: number;
   /** маршрут к этому лицу от предыдущего лица линии; у первого лица линии — пусто */
   pts: number[] | null;
 }
@@ -678,7 +704,8 @@ export function buildRouteRibbons(inp: RouteInput): Strand[] {
       const a = inp.project(L.ids[0])!;
       points.push({ x: a.x, y: a.y, t: 0, weak: false, u: 0 });
     }
-    out.push({ line: L.line, points, ids: L.ids, over });
+    const gaps = L.steps.map((q) => q.gap ?? 0);
+    out.push({ line: L.line, points, ids: L.ids, over, ...(gaps.some((x) => x > 0) ? { gaps } : {}) });
   });
   const [js, ms] = out;
   return [ms, js];
@@ -757,6 +784,6 @@ export function blendStrands(a: Strand[], b: Strand[], f: number): Strand[] {
       });
       if (a0 >= 0 && a1 > a0) over.push([a0, a1]);
     }
-    return { line: sa.line, points: pts, ids: sa.ids, over };
+    return { line: sa.line, points: pts, ids: sa.ids, over, ...(sa.gaps ? { gaps: sa.gaps } : {}) };
   });
 }

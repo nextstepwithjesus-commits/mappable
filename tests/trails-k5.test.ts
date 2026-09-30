@@ -77,9 +77,11 @@ describe('разрыв «//» растянутой жизни (MAP-51; реше�
     expect(grads).toEqual([[150 + trails.BREAK.gap / 2 + 2, 290], [290, 300]]);
     expect(r.calls.some((c) => c[0] === 'lineTo' && c[1] === 290)).toBe(true);
   });
-  it('на небе у Иохаведы, Арама и Овида разрыв; отвод к ребёнку, родившемуся после разрыва, — со знаком', () => {
+  it('на небе у Иохаведы, Арама и Мариам разрыв; отвод к ребёнку, родившемуся после разрыва, — со знаком', () => {
     const m = atlas.models[0];
-    for (const id of ['iokhaveda', 'aram', 'ovid']) {
+    // этап 13: после сверки хронологии (данные этапа 13) жизнь Овида не растянута; тот же случай — Мариам, сестра Моисея
+    // (умерла в Кадесе, Чис 20:1)
+    for (const id of ['iokhaveda', 'aram', 'mariam']) {
       const n = m.nodeByPerson.get(id)!;
       expect(n.brk, id).not.toBe(null);
       expect(n.brk!, id).toBeLessThan(n.t1);

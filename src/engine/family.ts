@@ -109,6 +109,10 @@ type Contour = Map<number, number[]>;
 const GAP = 3;
 /** Строку после чужого следа занимают не раньше чем через REUSE лет: новое лицо не читается продолжением прежнего. */
 export const REUSE = 15;
+/** Штраф за каждую занятую строку, которую пересекает черта брака к жене без детей в показе (царица-мать; X3 Д11). */
+const HIT_WIFE = 40;
+/** Вес пересечения следа лица коридора стволом притока (X3 Д11): втрое тяжелее пересечения прочей занятости. */
+const CORRIDOR_HIT = 3;
 /** Полоса коридора: от −CORRIDOR_K до +CORRIDOR_K. */
 const CORRIDOR_K = 7;
 const BEAM = 64;
@@ -428,6 +432,8 @@ export function familyLayout(S0: ReadonlySet<string>, d: FamilyData, o: FamilyOp
     const iv = pad(spanOf(id));
     addIv(occ, l, iv[0], iv[1]);
   }
+  /** полосы лент между соседними лицами линий: занятость, но не след — ствол через них не пересекает ничьей жизни */
+  const bands: Contour = new Map();
   for (const seq of [d.lines.joseph, d.lines.mary]) {
     const f = seq.filter((id) => corr.has(id));
     for (let i = 1; i < f.length; i++) {
@@ -435,7 +441,10 @@ export function familyLayout(S0: ReadonlySet<string>, d: FamilyData, o: FamilyOp
       const lb = corr.get(f[i])!;
       const a = T0(f[i - 1]);
       const b = T0(f[i]);
-      for (let l = Math.min(la, lb); l <= Math.max(la, lb); l++) addIv(occ, l, Math.min(a, b) - GAP, Math.max(a, b) + GAP);
+      for (let l = Math.min(la, lb); l <= Math.max(la, lb); l++) {
+        addIv(occ, l, Math.min(a, b) - GAP, Math.max(a, b) + GAP);
+        addIv(bands, l, Math.min(a, b) - GAP, Math.max(a, b) + GAP);
+      }
     }
   }
   const rows = new Map<string, number>(corr);
@@ -451,18 +460,30 @@ export function familyLayout(S0: ReadonlySet<string>, d: FamilyData, o: FamilyOp
     }
     return n;
   };
-  /** сколько занятых мест пересекает ствол от строки from до строки to (не включая обе) в год t */
+  const busyAt = (c: Contour, r: number, t: number) => {
+    const arr = c.get(r);
+    if (!arr) return false;
+    const i = firstEnd(arr, t);
+    return 2 * i < arr.length && arr[2 * i] + GAP <= t && t <= arr[2 * i + 1] - GAP;
+  };
+  /**
+   * Сколько занятых мест пересекает ствол от строки from до строки to (не включая обе) в год t: следы и ступени притоков
+   * — в полную меру; след лица коридора — втрое (CORRIDOR_HIT); полоса ленты, где следа нет, — треть (этап 13, X3 Д11:
+   * черта брака царя через след отца хуже, чем через полосу ленты).
+   */
   const trunkHits = (from: number, to: number, t: number) => {
     let n = 0;
     const s = Math.sign(to - from);
     for (let r = from + s; r !== to; r += s) {
-      const arr = occ.get(r);
-      if (!arr) continue;
-      const i = firstEnd(arr, t);
-      if (2 * i < arr.length && arr[2 * i] + GAP <= t && t <= arr[2 * i + 1] - GAP) n++;
+      if (!busyAt(occ, r, t)) continue;
+      n += lives(r, t) ? CORRIDOR_HIT : busyAt(bands, r, t) ? 1 / 3 : 1;
     }
     return n;
   };
+  /** жизни лиц коридора по строкам: в строке r в год t — след лица коридора, а не только полоса ленты */
+  const livesC: Contour = new Map();
+  for (const [id, l] of corr) addIv(livesC, l, T0(id), spanOf(id)[1]);
+  const lives = (r: number, t: number) => hit(livesC.get(r), t, t);
   const had = (k: string) => (prior?.blocks.has(k) ? 1 : 0);
 
   // притоки коридора: каждая единица союза лица коридора — отдельный блок у его строки. Лица — от поздних к ранним
@@ -510,7 +531,10 @@ export function familyLayout(S0: ReadonlySet<string>, d: FamilyData, o: FamilyOp
           found++;
           const firstRow = cr + k + s;
           const hits = trunkHits(cr, firstRow, tu0);
-          const score: number = Math.abs(k) + 3 * hits + 3 * passHits(acc, cr + k) + (pref && pref !== s ? 1.5 : 0) + (pr && pr.side === s && pr.base === cr + k ? -100 : 0);
+          // черта брака царя с царицей-матерью (единица без детей в показе: сын — в коридоре) не пересекает коридор:
+          // её место — по другую сторону, даже если там дальше (этап 13, X3 Д11)
+          const hitW = un.kids.length ? 3 : HIT_WIFE;
+          const score: number = Math.abs(k) + hitW * hits + 3 * passHits(acc, cr + k) + (pref && pref !== s ? 1.5 : 0) + (pr && pr.side === s && pr.base === cr + k ? -100 : 0);
           if (!best || score < best.score) best = { base: cr + k, side: s, acc, pos, tu: tu0, score };
         }
       }

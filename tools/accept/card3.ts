@@ -316,7 +316,8 @@ export const card3: Scenario[] = [
     run: async (p) => {
       await go(p, '#/iessey');
       const i = (await p.locator('.folio #sec-13').innerText()).replace(/\s+/g, ' ');
-      if (!/Эпоха рождения: Судьи/.test(i)) return fail(`Иессей: ${i.slice(0, 80)}`);
+      // этап 13, решение 100: строка «Эпоха» — эпоха жизни и «родился в эпоху …», если эпоха рождения иная
+      if (!/Эпоха Единое царство \([^)]*\); родился в эпоху «Судьи»/.test(i)) return fail(`Иессей: ${i.slice(0, 200)}`);
       await go(p, '#/iisus');
       const j = (await p.locator('.folio #sec-13').innerText()).replace(/\s+/g, ' ');
       if (/после матери/.test(j)) return fail('Иисус: «после матери»');

@@ -3,10 +3,13 @@
  * лист «Вид» над блоком или у колонки. Лист «Вид» — всплывающий на обеих ширинах (IX-80): открыт, пока viewOpen; в адрес
  * и историю не пишется; закрывают его «Вид», Escape, «×» у колонки и нажатие мимо.
  */
-import { byId, modelInfo } from '../../data/atlas.ts';
-import { lambda, modelId, panel, epochMode } from '../../state.ts';
+import { byId } from '../../data/atlas.ts';
+import { lambda, modelId, panel, epochMode, layers, LAYER_KEYS, LAYER_NAMES } from '../../state.ts';
 import { num, typo } from '../text/typo.ts';
-import { Menu } from '../controls.tsx';
+import { Check, Menu } from '../controls.tsx';
+import { DEFAULT_MODEL, factsOf, modelItems, modelsFoot } from '../modelinfo.ts';
+import { EraSwitch, openChronology } from '../panels/Chronology.tsx';
+import '../../styles/chronology.css';
 import { Sheet } from '../panels/Sheet.tsx';
 import { LANES_STEP, TIME_STEP, resetProportions, showAll, stretchBy, zoomBy } from './view.ts';
 import { foldDesc, foldGroups, unfoldAll, workSet } from '../work.ts';
@@ -268,10 +271,13 @@ export const useColumn = (skyW: number, phone: boolean, winH: number) => skyW > 
 /** Шаг масштаба кнопок и клавиш: ×2 за 250 мс (IX-02); привязка — выбранное лицо, если видно, иначе середина неба. */
 const STEP = 2;
 
-/** Масштаб времени: пояснение каждого сегмента — в title (UX-08). */
-const SCALES = [
-  { value: 1, label: 'по насыщенности', title: 'Время растянуто там, где много лиц: шкала неравномерная (≈ у масштабной линейки)' },
-  { value: 0, label: 'истинный', title: 'Равномерная шкала: каждый год одной ширины' },
+/**
+ * Масштаб времени: пояснение каждого сегмента — в title (UX-08). Этап 13, решение 124: «сжатый по плотности лиц» и
+ * «равномерный по годам» вместо «по насыщенности» и «истинный» — «истинный» читался как оценка достоверности.
+ */
+export const SCALES = [
+  { value: 1, label: 'Сжатый по плотности лиц', title: 'Время растянуто там, где много лиц, и сжато там, где их мало: шкала неравномерная (≈ у масштабной линейки)' },
+  { value: 0, label: 'Равномерный по годам', title: 'Каждый год одной ширины' },
 ] as const;
 
 const toggleEpochsPanel = () => (panel.value = panel.value === 'epochs' ? null : 'epochs');
@@ -309,17 +315,87 @@ function ScaleSwitch() {
   );
 }
 
-/** Модель хронологии: список моделей с пояснениями из данных (modelInfo); тот же выбор — в «О карте». */
-function ModelMenu() {
-  const cur = modelInfo.find((m) => m.id === modelId.value) ?? modelInfo[0];
+/** «Меняет: …» → ['Меняет', '…']: слово строки — подписью, как в макете X2 (m3-model). */
+const splitRow = (t: string): [string, string] => {
+  const i = t.indexOf(': ');
+  return i < 0 ? ['', t] : [t.slice(0, i), t.slice(i + 2)];
+};
+function ItemRow({ text }: { text: string }) {
+  const [k, v] = splitRow(text);
   return (
+    <span class="mi-row">
+      {k && <span class="k">{k}</span>} {typo(v)}
+    </span>
+  );
+}
+
+/**
+ * Модель хронологии (этап 13, решение 102): список моделей. У каждой — название, входные числа и что она меняет
+ * на небе и в карточках («Меняет», «Напряжения»; числа считает сборка, src/ui/modelinfo.ts); внизу — что не меняет
+ * ни одна: Исход (1446) и годы после него. Название модели по умолчанию — «Основной текст: 430 лет в Египте».
+ */
+function ModelMenu() {
+  const cur = factsOf(modelId.value) ?? factsOf(DEFAULT_MODEL);
+  const wrap = useRef<HTMLSpanElement>(null);
+  // «Сменить модель» из пояснения пометы «расч.» (решение 124): лист «Вид» открыт — список моделей раскрывается сам
+  const want = modelsFocus.value;
+  useEffect(() => {
+    if (!want) return;
+    modelsFocus.value = false;
+    wrap.current?.querySelector<HTMLButtonElement>('.menu.model > button')?.click();
+  }, [want]);
+  return (
+    <span class="model-wrap" ref={wrap}>
     <Menu
       class="model"
       label={cur?.name ?? ''}
-      title="Модель хронологии"
+      title="Модель хронологии: что она меняет — в пояснении каждой"
       radio
-      items={modelInfo.map((m) => ({ key: m.id, label: m.name, note: typo(m.description), checked: m.id === modelId.value, onSelect: () => (modelId.value = m.id) }))}
+      foot={typo(modelsFoot())}
+      items={modelItems().map((m) => ({
+        key: m.id,
+        label: m.id === DEFAULT_MODEL ? `${m.name} — по умолчанию` : m.name,
+        note: (
+          <>
+            <span class="mi-in">{typo(m.inputs)}</span>
+            {m.years && <ItemRow text={m.years} />}
+            {m.changes && <ItemRow text={m.changes} />}
+            {m.tensions && <ItemRow text={m.tensions} />}
+          </>
+        ),
+        checked: m.id === modelId.value,
+        onSelect: () => (modelId.value = m.id),
+      }))}
     />
+    </span>
+  );
+}
+
+/** Просьба раскрыть список моделей, когда лист «Вид» откроется (openModelChoice). */
+const modelsFocus = signal(false);
+/**
+ * «Сменить модель» (решение 124): лист «Вид» с раскрытым списком моделей хронологии. Зовёт пояснение пометы «расч.»
+ * у даты (src/ui/common.tsx) рядом со ссылкой «О хронологии». На телефоне открытая панель уступает место листу.
+ */
+export function openModelChoice() {
+  if (grid.peek().phone && panel.peek()) panel.value = null;
+  modelsFocus.value = true;
+  viewOpen.value = true;
+}
+
+/**
+ * Слои неба (решение 111): что рисовать — следы жизни, связи, созвездия, эпохи, линии Мессии, напряжения, призраки,
+ * подписи. Выбор запоминается; выключенный слой называет строка показа («Скрыто: связи — вернуть»; src/ui/modelinfo.ts).
+ */
+function LayerList() {
+  return (
+    <div class="checks layer-list" role="group" aria-label="Слои неба">
+      {LAYER_KEYS.map((k) => (
+        <Check key={k} checked={layers.value[k] !== false} onChange={(on) => (layers.value = { ...layers.value, [k]: on })}>
+          {LAYER_NAMES[k]}
+        </Check>
+      ))}
+    </div>
   );
 }
 
@@ -375,11 +451,15 @@ function ViewPop({ toggle }: { toggle: { current: HTMLButtonElement | null } }) 
     () => toggle.current,
   );
   return (
-    <div class="viewpop" id="sky-viewpop" ref={ref} role="group" aria-label="Вид неба: масштаб времени, пропорции, хронология, начало" data-reserve="view">
+    <div class="viewpop" id="sky-viewpop" ref={ref} role="group" aria-label="Вид неба: масштаб времени, шкала лет, пропорции, хронология, слои, начало" data-reserve="view">
       <span class="lbl scale-lbl" aria-hidden="true">
         Масштаб времени
       </span>
       <ScaleSwitch />
+      <span class="lbl era-lbl" aria-hidden="true">
+        Шкала лет
+      </span>
+      <EraSwitch />
       <span class="lbl axes-lbl" aria-hidden="true">
         Пропорции
       </span>
@@ -412,7 +492,24 @@ function ViewPop({ toggle }: { toggle: { current: HTMLButtonElement | null } }) 
         >
           Эпохи
         </button>
+        <button
+          type="button"
+          class="cmd"
+          aria-pressed={panel.value === 'chronology'}
+          title="Как читать годы, откуда они и что меняет модель"
+          onClick={() => {
+            openChronology();
+            viewOpen.value = false;
+          }}
+        >
+          О хронологии
+        </button>
       </div>
+      {/* слои (решение 111): прежде — в конце «Условных знаков», где их не находили */}
+      <span class="lbl layers-lbl" aria-hidden="true">
+        Слои
+      </span>
+      <LayerList />
       {/* начало (решение 68): те же пять начал, что во вступлении; «Начать заново…» открывает лист на этом разделе */}
       <span class="lbl start-lbl" aria-hidden="true">
         Начало
@@ -479,7 +576,7 @@ export function SkyControls() {
         ref={toggle}
         aria-expanded={open}
         aria-controls={open ? 'sky-viewpop' : undefined}
-        title="Масштаб времени, пропорции, хронология, начало"
+        title="Масштаб времени, шкала лет, пропорции, хронология, слои, начало"
         onClick={() => (viewOpen.value = !open)}
       >
         Вид
@@ -512,7 +609,7 @@ export function SkyColumn() {
         <button type="button" class="all fit" title={SKY_HINTS.fit} aria-keyshortcuts="0 Home" onClick={showAll}>
           Вписать
         </button>
-        <button type="button" ref={toggle} aria-expanded={open} title="Масштаб времени, пропорции, хронология, начало" onClick={() => (viewOpen.value = !open)}>
+        <button type="button" ref={toggle} aria-expanded={open} title="Масштаб времени, шкала лет, пропорции, хронология, слои, начало" onClick={() => (viewOpen.value = !open)}>
           Вид
         </button>
       </div>
@@ -548,6 +645,8 @@ export function ViewSheet({ col, toggle }: { col?: { current: HTMLDivElement | n
         </div>
         <h3>Масштаб времени</h3>
         <ScaleSwitch />
+        <h3>Шкала лет</h3>
+        <EraSwitch />
         {/* масштаб по осям (J1): пальцами — щипок по горизонтали или по вертикали; «по умолчанию» — в строке заголовка,
             чтобы лист не рос; «во весь экран» (J2) — не на телефоне */}
         <div class="axes-head">
@@ -583,7 +682,19 @@ export function ViewSheet({ col, toggle }: { col?: { current: HTMLDivElement | n
           >
             Эпохи и их основания
           </button>
+          <button
+            type="button"
+            class="cmd"
+            onClick={() => {
+              viewOpen.value = false;
+              openChronology();
+            }}
+          >
+            О хронологии
+          </button>
         </div>
+        <h3>Слои</h3>
+        <LayerList />
         {/* «развернуть всё» (J5) — последней строкой: слои, масштаб и хронология остаются на своих местах */}
         {anyFolded() && (
           <div class="work-sky">

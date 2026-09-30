@@ -425,6 +425,8 @@ export interface RibbonHit {
   to: string;
   x: number;
   y: number;
+  /** сколько лиц линии между from и to скрыто показом (К4): такой участок — «цепочка» (ключ span), а не шаг данных */
+  gap?: number;
 }
 
 /**
@@ -480,7 +482,8 @@ export function ribbonAt(v: object, x: number, y: number, r = 6): RibbonHit | nu
       const k = Math.min(st.ids.length - 2, Math.floor(q.u));
       if (k < 0) continue;
       bd = d;
-      best = { line: st.line, from: st.ids[k], to: st.ids[k + 1], x, y };
+      const gap = st.gaps?.[k + 1] ?? 0;
+      best = { line: st.line, from: st.ids[k], to: st.ids[k + 1], x, y, ...(gap ? { gap } : {}) };
     }
   }
   return best;
@@ -522,19 +525,33 @@ export function smoothMidline(pts: readonly { x: number; y: number }[], flat: nu
   });
 }
 
-/** Лица линий на небе для нитей: «набор» пропускает скрытых, у звена за скрытыми — разреженная нить (J4; MAP-64). */
+/**
+ * Начертание шага линии по словарю (этап 13, решение 94): точки — только толкование (Илий → Мария); штрих — иное
+ * происхождение: «по закону» (Иосиф → Иисус) и Нирий → Салафиил по Луке (Лк 3:27; у Мф 1:12 и 1 Пар 3:17 отец
+ * Салафиила — Иехония); «только у Луки» (Каинан, Лк 3:36) — текст Луки: сплошная с выноской.
+ */
+export const stepWeak = (st: Pick<LineStep, 'flag'>) => st.flag === 'interpretation';
+export const stepLegal = (ln: 'joseph' | 'mary', st: Pick<LineStep, 'id' | 'flag'>) => st.flag === 'legal' || (ln === 'mary' && st.id === 'salafiil');
+
+/**
+ * Лица линий на небе для нитей. Лицо, скрытое показом или свёрткой, пропускается: нить соединяет соседние видимые лица,
+ * а у шага за скрытыми — число скрытых (gap): в разрыве такого шага стоит «+N» (этап 13, решение 93, К4). Прежде такой
+ * шаг рисовался разреженной нитью, как толкование (J4; MAP-64).
+ */
 function strandSteps(v: SkyContext, s: SkyState, steps: { joseph: readonly LineStep[]; mary: readonly LineStep[] }, ln: 'joseph' | 'mary') {
-  const out: { id: string; weak: boolean; legal: boolean; skipped: boolean }[] = [];
-  let skipped = false;
+  const out: { id: string; weak: boolean; legal: boolean; skipped: boolean; gap: number }[] = [];
+  let gap = 0;
   for (const raw of steps[ln]) {
     const st = s.lineFlip && ln === 'mary' && raw.id === 'mariya' ? { ...raw, id: 'iosif-muzh-marii' } : raw;
     if (v.indexOf(st.id) === undefined) continue;
-    if (s.guide && v.hides(st.id)) {
-      skipped = out.length > 0;
+    if (v.hides(st.id)) {
+      if (out.length) gap++;
       continue;
     }
-    out.push({ id: st.id, weak: skipped || st.flag === 'interpretation' || st.flag === 'luke-only' || (ln === 'mary' && st.id === 'salafiil'), legal: st.flag === 'legal', skipped });
-    skipped = false;
+    // шаг за скрытыми — «цепочка» (К4): сплошная, какое бы ни было начертание шага данных к этому лицу (у Марии в
+    // «ключевых лицах» шаг Илий → Мария — толкование, а нить идёт от Давида)
+    out.push({ id: st.id, weak: !gap && stepWeak(st), legal: !gap && stepLegal(ln, st), skipped: gap > 0, gap });
+    gap = 0;
   }
   return out;
 }
@@ -557,7 +574,7 @@ export function ribbonStrands(v: SkyContext, s: SkyState, steps: { joseph: reado
   // взяли в той же полосе) не меняет ключа строк, а нить прошла бы через скрытое лицо
   const J = strandSteps(v, s, steps, 'joseph');
   const M = strandSteps(v, s, steps, 'mary');
-  const ids = (xs: { id: string; weak: boolean }[]) => xs.map((q) => (q.weak ? `~${q.id}` : q.id)).join(',');
+  const ids = (xs: { id: string; weak: boolean; gap: number }[]) => xs.map((q) => (q.weak ? `~${q.id}` : q.id) + (q.gap ? `+${q.gap}` : '')).join(',');
   // доля маршрута (§ 3): 0 — сплайн обзора, 1 — маршрут масштаба семьи; шаг 0,05 — кэш не перестраивается на каждом кадре
   const f = Math.round(Math.max(0, Math.min(1, v.routeFactor)) * 20) / 20;
   const base = `${v.model.id}|${v.lambda}|${s.lineFlip}|${s.onlyLines}|${cam.w}|${cam.h}|${v.rowsKey}|${!!s.guide}|${ids(J)}|${ids(M)}`;
@@ -595,7 +612,8 @@ export function ribbonStrands(v: SkyContext, s: SkyState, steps: { joseph: reado
       return q && smooth.has(id) ? { x: q.x, y: smooth.get(id)! } : q;
     };
     const A = BRAID_PX;
-    let strands = buildRibbons({ joseph: J, mary: M, project, amplitude: A, meander: A * 0.5, clip: [-RIBBON_MARGIN, cam.w + RIBBON_MARGIN] });
+    // сглаживание тесных поколений держит нить не дальше полустроки от бусины (этап 13, X3 Д9, Ч5)
+    let strands = buildRibbons({ joseph: J, mary: M, project, amplitude: A, meander: A * 0.5, clip: [-RIBBON_MARGIN, cam.w + RIBBON_MARGIN], hold: ky * 0.5 });
     if (f > 0) {
       // маршруты шагов: по узлам союзов кадра (src/render/links.ts, via); звёзды — на своих местах кадра
       const star = (id: string) => {
@@ -604,13 +622,14 @@ export function ribbonStrands(v: SkyContext, s: SkyState, steps: { joseph: reado
         const q = byId.get(id);
         return { x: cam.sx(v.X0[i]), y: cam.sy(v.nodes[i].lane), r: starRadius(q?.magnitude ?? 6, Math.max(0.7, Math.min(1.25, ky / 18))) + (q?.sex === 'f' ? 2.2 : 0) };
       };
+      // шаг за скрытыми лицами («цепочка», К4) — тем же маршрутом по следу старшего до столбца младшего, без узла союза
       const route = (xs: typeof J): RouteStep[] =>
         xs.map((q, k) => {
-          if (k === 0 || q.skipped) return { id: q.id, weak: q.weak, pts: null };
+          if (k === 0) return { id: q.id, weak: q.weak, pts: null };
           const a = star(xs[k - 1].id);
           const b = star(q.id);
-          const via = v.linkVia(`${xs[k - 1].id}>${q.id}`);
-          return { id: q.id, weak: q.weak, legal: q.legal, pts: a && b ? stepRoute(a, b, via ? via.x : b.x - b.r - 9) : null };
+          const via = q.skipped ? null : v.linkVia(`${xs[k - 1].id}>${q.id}`);
+          return { id: q.id, weak: q.weak, legal: q.legal, gap: q.gap, pts: a && b ? stepRoute(a, b, via ? via.x : b.x - b.r - 9) : null };
         });
       const routes = buildRouteRibbons({ joseph: route(J), mary: route(M), project: star, amplitude: A, radius: routeRadius(ky), clip: [-RIBBON_MARGIN, cam.w + RIBBON_MARGIN] });
       strands = blendStrands(strands, routes, f);
@@ -696,6 +715,106 @@ export function drawSkyRibbons(v: SkyContext, s: SkyState, steps: { joseph: read
   }
   ctx.restore();
   return strands;
+}
+
+// ---------- разрывы лент со знаком «+N» (этап 13, решение 93, К4) ----------
+
+/** Знак «+N» в разрыве ленты: место (px холста), линия, видимые соседи и число скрытых между ними. */
+export interface RibbonGapHit extends Rect {
+  /** линии, чей шаг прерван здесь (у общего участка — обе) */
+  lines: ('joseph' | 'mary')[];
+  from: string;
+  to: string;
+  n: number;
+  /** середина знака */
+  cx: number;
+  cy: number;
+}
+const gapHitsOf = new WeakMap<object, RibbonGapHit[]>();
+/** Знаки «+N» лент последнего кадра: подсказка, щелчок — показать скрытых (src/ui/sky/input.ts). */
+export const ribbonGapHits = (v: object): RibbonGapHit[] => gapHitsOf.get(v) ?? [];
+
+/**
+ * Разрывы лент (К4): лента соединяет только соседей по данным. Где между видимыми лицами линии показ скрыл поколения,
+ * нить прерывается, и в разрыве стоит «+N» — того же рисунка, что «+N» у ромба свёрнутого союза: сколько лиц линии
+ * скрыто. У общего участка двух линий знак один. Знак занимает место в проверке наложений: подписи на него не ложатся.
+ */
+export function drawRibbonGaps(v: SkyContext, p: Pass): RibbonGapHit[] {
+  const out: RibbonGapHit[] = [];
+  gapHitsOf.set(v, out);
+  const c = ribbonCaches.get(v);
+  if (!c) return out;
+  const { ctx, pal, cam } = v;
+  const marks = new Map<string, { lines: ('joseph' | 'mary')[]; from: string; to: string; n: number; xs: number[]; ys: number[] }>();
+  for (const st of c.strands) {
+    if (!st.gaps) continue;
+    for (let k = 1; k < st.ids.length; k++) {
+      const n = st.gaps[k] ?? 0;
+      if (!n) continue;
+      const q = pointAt(st.points, k - 0.5);
+      if (!q || q.u > k) continue;
+      const key = `${st.ids[k - 1]}>${st.ids[k]}`;
+      const m = marks.get(key) ?? { lines: [], from: st.ids[k - 1], to: st.ids[k], n, xs: [], ys: [] };
+      m.lines.push(st.line);
+      m.n = Math.max(m.n, n);
+      m.xs.push(q.x + c.dx);
+      m.ys.push(q.y + c.dy);
+      marks.set(key, m);
+    }
+  }
+  if (!marks.size) return out;
+  const size = mapSize(T_MAP_S, v.coarse);
+  ctx.save();
+  ctx.font = mapFont(T_MAP_S, { sans: true, weight: 500, coarse: v.coarse });
+  ctx.textBaseline = 'alphabetic';
+  ctx.lineJoin = 'round';
+  const least = v.coarse ? 44 : 24;
+  for (const m of marks.values()) {
+    const text = `+${m.n}`;
+    const w = ctx.measureText(text).width;
+    // место знака — середина разрыва; занято (соседний знак другой линии, подпись) — дальше вдоль нити
+    const box = (x: number, y: number) => ({ x: x - w / 2 - 5, y: y - size * 0.7 - 2, w: w + 10, h: size * 1.4 + 4 });
+    const spots: { x: number; y: number }[] = [{ x: m.xs.reduce((a, b) => a + b, 0) / m.xs.length, y: m.ys.reduce((a, b) => a + b, 0) / m.ys.length }];
+    for (const st of c.strands) {
+      if (!m.lines.includes(st.line)) continue;
+      const k = st.ids.indexOf(m.to);
+      if (k < 1) continue;
+      for (const f of [0.35, 0.65, 0.2, 0.8, 0.9, 0.1]) {
+        const q = pointAt(st.points, k - 1 + f);
+        if (q && q.u <= k) spots.push({ x: q.x + c.dx, y: q.y + c.dy });
+      }
+    }
+    const inside = (q: { x: number; y: number }) => q.x >= v.letterW && q.x <= cam.w && q.y >= v.openTop && q.y <= cam.vp.b;
+    // не на чужой нити: у двух разрывов от одного лица (Давид … Иисус по Мф, Давид … Мария по Лк) нити идут вместе по его
+    // следу, и знак одной ленты лёг бы на другую
+    const foreign = c.strands.filter((st) => !m.lines.includes(st.line));
+    const clear = (q: { x: number; y: number }) => {
+      const b = box(q.x, q.y);
+      return !foreign.some((st) => st.points.some((t) => t.x + c.dx >= b.x - 2 && t.x + c.dx <= b.x + b.w + 2 && t.y + c.dy >= b.y - 2 && t.y + c.dy <= b.y + b.h + 2));
+    };
+    const at =
+      spots.find((q) => inside(q) && clear(q) && !p.placer.clash(box(q.x, q.y), false)) ?? spots.find((q) => inside(q) && !p.placer.clash(box(q.x, q.y), false)) ?? spots.find(inside);
+    if (!at) continue;
+    const cx = at.x;
+    const cy = at.y;
+    // разрыв: нити под знаком гасятся цветом фона на ширину знака с полями — лента прервана, знак стоит в разрыве
+    const gap = box(cx, cy);
+    v.fillGround(gap.x, gap.x + gap.w, gap.y, gap.h);
+    ctx.strokeStyle = pal.halo;
+    ctx.lineWidth = 3;
+    const base = cy + size * 0.34;
+    ctx.strokeText(text, cx - w / 2, base);
+    ctx.fillStyle = pal.ink2;
+    ctx.fillText(text, cx - w / 2, base);
+    p.placer.add(gap);
+    // в замере подписей знак принадлежит своему разрыву («gap:от>до»): он нарочно стоит на своей ленте
+    v.ledger.add('mark', text, gap, `gap:${m.from}>${m.to}`);
+    const hw = Math.max(gap.w, least);
+    const hh = Math.max(gap.h, least);
+    out.push({ x: cx - hw / 2, y: cy - hh / 2, w: hw, h: hh, lines: m.lines, from: m.from, to: m.to, n: m.n, cx, cy });
+  }
+  ctx.restore();
+  return out;
 }
 
 /** Шаг поколения на экране, при котором средняя линия нити ещё не сглажена (engine/ribbons.ts, MEANDER_FULL_PX). */
@@ -946,6 +1065,16 @@ const noteHitsOf = new WeakMap<object, NoteHit[]>();
 const beads = new WeakMap<object, { bx: number; by: number; low: number; mr: number; id: string; text: string }[]>();
 /** Выноски последнего кадра (src/ui/sky/input.ts: наведение и щелчок). */
 export const lineNoteHits = (v: object): NoteHit[] => noteHitsOf.get(v) ?? [];
+/** Точка сравнения с фокусом клавиатуры в этом кадре (решение 116): её подпись, точка ленты и радиус кольца, px холста. */
+export interface NoteFocus {
+  id: string;
+  box: Rect;
+  x: number;
+  y: number;
+  r: number;
+}
+const noteFocusOf = new WeakMap<object, NoteFocus>();
+export const lineNoteFocus = (v: object): NoteFocus | null => noteFocusOf.get(v) ?? null;
 
 /**
  * Шаги линий на небе: Лк 3 как второе родословие Иосифа меняет Марию на Иосифа; лица, которых нет на небе, пропускаются —
@@ -953,11 +1082,26 @@ export const lineNoteHits = (v: object): NoteHit[] => noteHitsOf.get(v) ?? [];
  * нет и их имён, номеров у бусин, выносок точек сравнения и знаков матерей. Прежде в небе «набор» с «только линиями»
  * имена всех лиц линий висели на пустом небе без звёзд и лент (снимок 14).
  */
-export function skySteps(v: SkyContext, s: SkyState, steps: { joseph: readonly LineStep[]; mary: readonly LineStep[] }) {
-  const fix = (ln: 'joseph' | 'mary') =>
-    steps[ln].map((st) => (s.lineFlip && ln === 'mary' && st.id === 'mariya' ? { ...st, id: 'iosif-muzh-marii' } : st)).filter((st) => v.indexOf(st.id) !== undefined && !v.hides(st.id));
+export function skySteps(v: SkyContext, s: SkyState, steps: { joseph: readonly LineStep[]; mary: readonly LineStep[] }): { joseph: SkyStep[]; mary: SkyStep[] } {
+  const fix = (ln: 'joseph' | 'mary') => {
+    const out: SkyStep[] = [];
+    let gap = 0;
+    for (const raw of steps[ln]) {
+      const st = s.lineFlip && ln === 'mary' && raw.id === 'mariya' ? { ...raw, id: 'iosif-muzh-marii' } : raw;
+      if (v.indexOf(st.id) === undefined) continue;
+      if (v.hides(st.id)) {
+        if (out.length) gap++;
+        continue;
+      }
+      out.push(gap ? { ...st, gap } : st);
+      gap = 0;
+    }
+    return out;
+  };
   return { joseph: fix('joseph'), mary: fix('mary') };
 }
+/** Лицо линии на небе: gap — сколько лиц линии перед ним скрыто показом (К4; шаг к нему — «цепочка»). */
+export type SkyStep = LineStep & { gap?: number };
 
 /** Номер лица в родословии, который стоит у бусины, если имени не хватило места (MAP-59): Мф у Иосифа, Лк у Марии. */
 export function lineNumber(id: string, j: ReadonlyMap<string, LineStep>, m: ReadonlyMap<string, LineStep>): number | null {
@@ -1184,7 +1328,7 @@ export const beadAt = (v: object, id: string) => beadSpots.get(v)?.get(id) ?? nu
 
 /**
  * Женщины Мф 1 в режиме «только линии» (решение 28; UX-46): малый знак матери у звезды сына, под косой (или над ней),
- * тонкая точечная выноска к сыну и подпись «Руфь — мать Овида (Мф 1:5)». Знак — ссылка на карточку матери.
+ * тонкая сплошная выноска к сыну (решение 94) и подпись «Руфь — мать Овида (Мф 1:5)». Знак — ссылка на карточку матери.
  */
 export function drawMt1Women(v: SkyContext, p: Pass, _steps: { joseph: readonly LineStep[]; mary: readonly LineStep[] }) {
   if (!p.s.onlyLines || !p.s.layers.labels) return;
@@ -1219,15 +1363,14 @@ export function drawMt1Women(v: SkyContext, p: Pass, _steps: { joseph: readonly 
       for (const tx of [bx + gr + 4, bx - gr - 4 - tw]) {
         const lb = textBox(tx, base, tw, size);
         if (!insideAll(v, [star, lb]) || hitsAny(p, [star, lb])) continue;
-        // выноска к сыну и знак
-        ctx.strokeStyle = alpha(pal.ink2, 0.9);
-        ctx.lineWidth = 1;
-        ctx.setLineDash([1.5, 2.5]);
+        // выноска к сыну и знак: тонкая сплошная — это подпись, а не связь (решение 94: точки — только толкование)
+        ctx.strokeStyle = alpha(pal.ink2, 0.7);
+        ctx.lineWidth = 0.8;
+        ctx.setLineDash([]);
         ctx.beginPath();
         ctx.moveTo(bx, by - Math.sign(dy) * gr);
         ctx.lineTo(x, y + Math.sign(dy) * (starRadius(byId.get(son)?.magnitude ?? 3, p.zoomScale) + 2));
         ctx.stroke();
-        ctx.setLineDash([]);
         drawGlyph(ctx, bx, by, personGlyph(glyph, false, undefined, { scale: p.zoomScale, color: pal.ink, halo: pal.sky }));
         p.placer.add(star);
         p.placer.add(lb);
@@ -1267,10 +1410,14 @@ export function drawLineNotes(v: SkyContext, p: Pass, steps: { joseph: readonly 
   noteHitsOf.set(v, hitsOut);
   beads.set(v, []);
   beadSpots.set(v, new Map());
-  if (!p.s.onlyLines || !p.s.layers.labels) return hitsOut;
+  noteFocusOf.delete(v);
+  // точка сравнения с фокусом клавиатуры (решение 116) видна и при выключенном слое подписей
+  const focusAt = p.s.noteFocus ?? null;
+  if (!p.s.onlyLines || (!p.s.layers.labels && !focusAt)) return hitsOut;
   const { ctx, cam, pal } = v;
   const st = skySteps(v, p.s, steps);
-  const points = comparePoints(st.joseph, st.mary);
+  // точка с фокусом — первой: её подпись встаёт раньше остальных
+  const points = [...comparePoints(st.joseph, st.mary)].sort((a, b) => Number(b.at === focusAt) - Number(a.at === focusAt));
   const world = ribbonCaches.get(v) ?? { strands: [], dx: 0, dy: 0 };
   // выноска и знак матери — у нарисованной звезды (этап 11, B1)
   const at = (id: string) => {
@@ -1295,6 +1442,8 @@ export function drawLineNotes(v: SkyContext, p: Pass, steps: { joseph: readonly 
     }
   };
   for (const cp of points) {
+    const focus = cp.at === focusAt;
+    if (!focus && !p.s.layers.labels) continue;
     const q = at(cp.at);
     if (!q || !inside(q)) continue;
     ctx.font = font;
@@ -1311,7 +1460,8 @@ export function drawLineNotes(v: SkyContext, p: Pass, steps: { joseph: readonly 
       const cands: { tx: number; ty: number }[] = [];
       for (const dy of dys) for (const dx of [-w / 2, -w + 8, -8, -w - 28, 28]) cands.push({ tx: q.x + dx, ty: q.y + dy });
       const boxes = cands.map((c) => textBox(c.tx, c.ty, w, size));
-      const b = claim(v, p, byStrands(world, boxes), 'note', text);
+      // подпись с фокусом встаёт всегда: если места нет, то и поверх звёзд (первое место в открытом небе)
+      const b = claim(v, p, byStrands(world, boxes), 'note', text) ?? (focus && text === cp.short ? claim(v, p, boxes, 'note', text, { soft: false }) : null);
       if (b) {
         const c = cands[boxes.indexOf(b)];
         placed = { b, tx: c.tx, ty: c.ty, text, w };
@@ -1333,6 +1483,16 @@ export function drawLineNotes(v: SkyContext, p: Pass, steps: { joseph: readonly 
     ctx.font = font;
     write(placed.text, placed.tx, placed.ty, placed.w, pal.ink, true);
     hitsOut.push({ ...placed.b, kind: 'synopsis', id: cp.at });
+    // фокус клавиатуры (решение 116): рамка вокруг подписи и кольцо у точки ленты — цветом фокуса, 2 px
+    if (focus) {
+      ctx.strokeStyle = pal.focus;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(placed.b.x - 3, placed.b.y - 3, placed.b.w + 6, placed.b.h + 6);
+      ctx.beginPath();
+      ctx.arc(q.x, q.y, r + 3, 0, Math.PI * 2);
+      ctx.stroke();
+      noteFocusOf.set(v, { id: cp.at, box: placed.b, x: q.x, y: q.y, r: r + 3 });
+    }
     // мать первых лиц ветвей — знак-спутница у развилки
     if (cp.mother && cp.branch) {
       const a = at(cp.branch.joseph);

@@ -13,7 +13,7 @@
  *  — openGuide(), openLegend('keys') — «Как читать карту» и таблица клавиш (клавиша «?»).
  */
 import { effect, signal } from '@preact/signals';
-import { skyRef } from '../common.tsx';
+import { skyRef, viewTick } from '../common.tsx';
 import { model, onlyLines, panel, pins, second, selected, skyGroup } from '../../state.ts';
 import { graph, lines } from '../../data/atlas.ts';
 import { KY_LO, LANES_MAX, LANES_MIN, easeOut, type Axis, type ViewState } from '../../render/camera.ts';
@@ -898,6 +898,11 @@ export function viewAround(id: string): ViewState | null {
   const W = Math.max(80, vp.r - vp.l - NAME_ROOM - 16);
   const kx = cam.clampKx(W / (xb - xa), (xa + xb) / 2);
   const [, cy] = cam.vpCenter();
+  // окно поставлено под нынешнюю ширину неба; если она сменится (колонка карточки), окно встанет заново (AROUND_MS)
+  if (typeof performance !== 'undefined') {
+    around = { id, w: vp.r - vp.l, until: performance.now() + AROUND_MS };
+    watchAround();
+  }
   return cam.constrain({ x0: xa - (vp.l + 16) / kx, kx, laneTop: s.rowOf(n.lane) + cy / cam.kyFor(kx) });
 }
 
@@ -966,6 +971,17 @@ export function fitReveal(ids: readonly string[], keep: { x: number; y: number }
   return true;
 }
 
+/**
+ * Окно «вокруг лица» ждёт, пока видимая часть неба не устоится (этап 13, решение 111; X4 Д5): начало «С Иисуса Христа»
+ * выбирает лицо, и справа открывается колонка карточки — видимая часть сужается уже после того, как окно поставлено, и
+ * звезда оставалась за правым краем (x = 991 при кромке 940). Пока идёт ожидание (AROUND_MS), ширина видимой части
+ * сменилась, а звезды не видно — окно ставится заново под новую ширину.
+ */
+export const AROUND_MS = 3000;
+let around: { id: string; w: number; until: number } | null = null;
+/** Окно вокруг лица id ещё устанавливается (карточка у звезды его ждёт, src/ui/sky/DotCard.tsx). */
+export const aroundPending = (id: string) => !!around && around.id === id && performance.now() < around.until;
+
 /** Перейти к окну «вокруг лица» (начало «С Адама», «С Иисуса Христа»): animate — прямым переходом. */
 export function showAround(id: string, animate: boolean): boolean {
   const s = skyRef.current;
@@ -979,4 +995,36 @@ export function showAround(id: string, animate: boolean): boolean {
   }
   skyRef.redraw();
   return true;
+}
+
+/**
+ * Видимая часть сменила ширину после окна «вокруг лица» (открылась колонка карточки, лист, панель): лицо за краем —
+ * окно заново, прямым переходом; читатель выбрал другое лицо или время ожидания вышло — ожидание кончается. Следит
+ * по кадрам неба (viewTick); подписка — при первом окне вокруг лица: common.tsx и view.ts импортируют друг друга, и при
+ * загрузке модуля viewTick ещё нет.
+ */
+let aroundWatch: (() => void) | null = null;
+function watchAround() {
+  if (aroundWatch || typeof window === 'undefined') return;
+  aroundWatch = effect(() => {
+    void viewTick.value;
+    const a = around;
+    const s = skyRef.current;
+    if (!a || !s) return;
+    if (performance.now() > a.until || selected.peek() !== a.id) {
+      around = null;
+      return;
+    }
+    const w = s.cam.vp.r - s.cam.vp.l;
+    if (s.cam.moving || Math.abs(w - a.w) < 1) return;
+    a.w = w;
+    if (inView(a.id)) return;
+    const v = viewAround(a.id);
+    // ожидание не продлевается новым окном: срок — от первого окна
+    if (around) around.until = a.until;
+    if (!v) return;
+    flightTarget = null;
+    s.cam.zoomTo(v, REVEAL_MS, skyRef.redraw, reduced());
+    skyRef.redraw();
+  });
 }

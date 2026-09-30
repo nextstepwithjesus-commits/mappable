@@ -230,7 +230,7 @@ export const a11y: Scenario[] = [
   },
   {
     n: 176,
-    title: 'I2: на телефоне панель модальна — небо, карточка и полоса времени inert; «×» снимает inert и возвращает фокус',
+    title: 'I2; решение 117: на телефоне панель — настоящее модальное окно: небо, карточка, полоса времени и верхняя строка inert, Tab ходит внутри листа; «×» снимает inert и возвращает фокус к «Меню»',
     view: PHONE,
     run: async (p) => {
       await p.goto(p.url().replace(/#.*$/, '#/david'));
@@ -240,15 +240,22 @@ export const a11y: Scenario[] = [
       await p.waitForTimeout(600);
       const inert = (await p.evaluate(`['.sky', '.folio', '.strip'].map((s) => !!document.querySelector(s).closest('[inert]'))`)) as boolean[];
       if (inert.some((x) => !x)) return fail(`под листом не inert: ${['небо', 'карточка', 'полоса'].filter((_, i) => !inert[i]).join(', ')}`);
-      if (await p.evaluate(`!!document.querySelector('.top').closest('[inert]')`)) return fail('верхняя строка стала inert');
+      // этап 13 (решение 117; UI-05): фон модального листа — и верхняя строка
+      if (!(await p.evaluate(`!!document.querySelector('.top').closest('[inert]')`))) return fail('верхняя строка доступна под модальным листом');
       const a = await active(p);
       if (a.where !== 'sheet') return fail(`фокус не в листе панели: ${a.tag}`);
+      // Tab не выходит из листа: 40 нажатий — всё в листе
+      for (let i = 0; i < 40; i++) {
+        await p.keyboard.press('Tab');
+        if ((await active(p)).where !== 'sheet') return fail(`Tab вышел из листа на ${i + 1}-м нажатии: ${(await active(p)).tag}`);
+      }
       await p.locator('.sheet .sheet-head .close').tap();
       await p.waitForTimeout(600);
       const left = (await p.evaluate(`document.querySelectorAll('[inert]').length`)) as number;
       if (left) return fail(`после «×» осталось inert: ${left}`);
       const b = await active(p);
-      return b.tag !== 'body' ? pass(`фокус после «×»: ${b.tag} «${b.text}»`) : fail('после «×» фокус потерян');
+      if (b.tag === 'body') return fail('после «×» фокус потерян');
+      return b.where === 'top' && /Меню/.test(b.text) ? pass(`фокус после «×»: ${b.tag} «${b.text}»`) : fail(`фокус после «×» не на «Меню»: ${b.tag} «${b.text}»`);
     },
   },
   {

@@ -147,32 +147,39 @@ export const phone7: Scenario[] = [
   },
   {
     n: 301,
-    title: 'MOB-45: на телефоне при открытой панели «Разделы» раскрываются поверх неё; выбор другой панели заменяет открытую; подсказки поиска — тоже поверх',
+    title: 'MOB-45, решение 117: на телефоне под открытой панелью верхняя строка недоступна; после «×» «Меню» раскрывается поверх неба, «Указатель» открывается одной панелью; подсказки поиска — поверх',
     view: PHONE,
     run: async (p) => {
       await go(p, '#/david');
       await openSection(p, 'Родство');
       if (!(await p.locator('.app > .sheet h2', { hasText: 'Родство' }).count())) return fail('«Родство» не открылось');
+      // этап 13, решение 117: панель — модальное окно, верхняя строка под ней недоступна; «×» закрывает панель, «Меню»
+      // раскрывается поверх неба
+      if (!(await p.evaluate(() => !!document.querySelector('.app > .top')?.closest('[inert]')))) return fail('под панелью верхняя строка доступна');
+      await tap(p, '.app > .sheet .sheet-head .close');
       await tap(p, '.top .sections > button');
       const onTop = (await p.evaluate(`(() => {
         const m = document.querySelector('.top .sections [role=menu]');
         if (!m) return 'нет меню';
-        const bad = [...m.querySelectorAll('[role^=menuitem]')].filter((it) => { const r = it.getBoundingClientRect(); const e = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return !e || !it.contains(e); });
+        // пункты в видимой части списка (длинный список со строками задач прокручивается, решение 122)
+        const mb = m.getBoundingClientRect();
+        const bad = [...m.querySelectorAll('[role^=menuitem]')].filter((it) => { const r = it.getBoundingClientRect(); if (r.top < mb.top || r.bottom > mb.bottom) return false; const e = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return !e || !it.contains(e); });
         return bad.length ? 'пункты под листом: ' + bad.map((b) => b.textContent.trim()).join(', ') : '';
       })()`)) as string;
       if (onTop) return fail(onTop);
       await tap(p, '.top .sections [role^="menuitem"]', 'Указатель');
       const heads = await p.locator('.app > .sheet h2').allInnerTexts();
       if (heads.length !== 1 || heads[0].trim() !== 'Указатель') return fail(`после выбора «Указателя» панели: ${heads.join(', ')}`);
-      // поиск при открытой панели: подсказки над листом
+      // поиск — после закрытия панели (решение 117): подсказки поверх неба
+      await tap(p, '.app > .sheet .sheet-head .close');
       await tap(p, '.top label[for="find"]');
       await p.keyboard.type('Руфь');
       await p.waitForTimeout(400);
       const res = await p.locator('.top .results').boundingBox();
       if (!res) return fail('нет подсказок поиска');
       const hit = await p.evaluate(`(() => { const e = document.elementFromPoint(${res.x + res.width / 2}, ${res.y + Math.min(30, res.height / 2)}); return !!e && !!e.closest('.results'); })()`);
-      if (!hit) return fail('подсказки поиска под листом панели');
-      return pass('меню и подсказки поверх панели; «Указатель» заменил «Родство»');
+      if (!hit) return fail('подсказки поиска под другим слоем');
+      return pass('под панелью верхняя строка недоступна; меню и подсказки — поверх неба');
     },
   },
   {

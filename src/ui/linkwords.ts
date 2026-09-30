@@ -23,10 +23,10 @@
  * косвенного падежа («Иаков и Рахиль — муж и жена» вместо «Рахиль — жена Иакова»). Все сведения — из данных со стихами
  * (граф, союзы src/engine/unions.ts, линии data/lines/*.json); модуль ничего не рисует и не знает о небе.
  */
-import { byId, graph, lines } from '../data/atlas.ts';
+import { byId, graph, lines, loadedCard } from '../data/atlas.ts';
 import type { Cert, Sex } from '../data/types.ts';
 import { BOOKS } from '../engine/books.ts';
-import { linkKeyString, type LinkKey } from '../engine/linkkey.ts';
+import { linkKeyString, spanInner, type LinkKey } from '../engine/linkkey.ts';
 import { kidEdges, type Union } from '../engine/unions.ts';
 import { unions } from './reveal.ts';
 import { bySex, KIN_TERMS, lowerFirst, nameCase, pluralPeopleName, splitKinTerm } from './text/ru.ts';
@@ -56,7 +56,12 @@ export interface LinkLine {
 /** Всё о связи — для карточки связи (src/ui/sky/DotCard.tsx) и слов неба. */
 export interface LinkInfo {
   key: LinkKey;
+  /** заголовок: у связи по толкованию и по выводу первым словом стоит уровень (решение 105) — «По толкованию: …» */
   title: string;
+  /** слово уровня в начале заголовка («По толкованию», «Вывод») или null — Писание */
+  lead: string | null;
+  /** заголовок без слова уровня */
+  body: string;
   refs: string[];
   ends: LinkEnd[];
   /** союз связи: у «союз → ребёнок», черты брака и союза — сам союз; у шага ленты — союз родителя шага и ребёнка */
@@ -66,8 +71,13 @@ export interface LinkInfo {
   /** пометы: вид шага ленты, пропуск поколений, уровень */
   marks: string[];
   lines: LinkLine[];
-  /** пояснение для карточки: «мать не названа в Писании», «родство названо словами Писания; родители не выводятся» */
+  /** пояснение для карточки: «родство названо словами Писания; родители не выводятся» */
   note: string | null;
+  /**
+   * Неназванный конец (решение 75; макет X4 М1): строка карточки «Мать — в Писании не названа». role — подпись строки
+   * («Мать», «Отец», «Жена», «Муж»), text — «в Писании не названа».
+   */
+  missing: { role: string; text: string } | null;
 }
 
 // ---------- лица ----------
@@ -192,9 +202,18 @@ function parentsText(u: Union): string {
   const plain = roles.every((r) => r === 'отец' || r === 'мать');
   if (named.length === 2) return plain ? `${nameOf(u.a!)} и ${midName(u.b!)} — родители` : named.map((x, i) => `${i ? midName(x) : nameOf(x)} — ${roles[i]}`).join(', ');
   const one = named[0];
-  if (!plain || isClaimUnion(u) || peopleUnion(u)) return `${nameOf(one)} — ${roles[0]}`;
-  if (unnamedAmbiguous(u, one)) return `${nameOf(one)} — ${roles[0]}, ${u.a ? 'мать не названа' : 'отец не назван'}`;
+  if (!plain || isClaimUnion(u) || peopleUnion(u) || unnamedAmbiguous(u, one)) return `${nameOf(one)} — ${roles[0]}`;
   return `${unionName(u)} — родители`;
+}
+
+/**
+ * Второй родитель не назван, а «его жена» было бы двусмысленно (у лица есть другие союзы с названными супругами): хвост
+ * строки «мать не названа» — одна форма во всех строках (X4 § 2.3 п. 7): «Иорам — отец; Иосавеф — дочь; мать не названа».
+ */
+function unnamedTail(u: Union): string {
+  const one = u.a ?? u.b;
+  if (!one || (u.a && u.b) || isClaimUnion(u) || peopleUnion(u) || !u.kids.length || !unnamedAmbiguous(u, one)) return '';
+  return `; ${u.a ? 'мать не названа' : 'отец не назван'}`;
 }
 
 // ---------- стихи ----------
@@ -209,6 +228,11 @@ const CERT_RANK: Record<string, number> = { scripture: 0, inference: 1, interpre
 const worst = (cs: readonly Cert[]): Cert => cs.reduce<Cert>((a, b) => ((CERT_RANK[b] ?? 0) > (CERT_RANK[a] ?? 0) ? b : a), 'scripture');
 /** Помета уровня (П-4): «выв.», «толк.»; Писание — без пометы. */
 export const CERT_WORD: Record<string, string> = { inference: 'выв.', interpretation: 'толк.' };
+/**
+ * Слово уровня в начале заголовка связи (решение 105; П17): «По толкованию: Илий и его жена — родители; Мария — дочь»,
+ * «Вывод: Рахиль — жена Иакова». Писание — без слова.
+ */
+export const CERT_LEAD: Record<string, string> = { inference: 'Вывод', interpretation: 'По толкованию' };
 
 /** Связи ребёнка с родителями союза: у союза иного рода — утверждения этого рода, у обычного — отец и мать. */
 export function kidLink(u: Union, kid: string): { refs: string[]; cert: Cert; gap: boolean } {
@@ -379,15 +403,18 @@ const plural = (n: number, one: string, few: string, many: string) => {
   return many;
 };
 
-/** Дети союза числом: «сын», «3 сына», «6 сыновей и дочь», «2 потомка»; детей нет — «детей не названо». */
+/**
+ * Дети союза числом, словами (решение 105): «один сын», «одна дочь», «3 сына», «6 сыновей и одна дочь», «2 потомка»;
+ * детей нет — «детей не названо». «Илий и его жена: одна дочь» — а не «Илий и его жена — дочь».
+ */
 export function kidsCount(u: Union): string {
   const n = u.kids.length;
   if (!n) return 'детей не названо';
-  if (isClaimUnion(u) && u.claim === 'ancestor') return n === 1 ? 'потомок' : `${n} ${plural(n, 'потомок', 'потомка', 'потомков')}`;
+  if (isClaimUnion(u) && u.claim === 'ancestor') return n === 1 ? 'один потомок' : `${n} ${plural(n, 'потомок', 'потомка', 'потомков')}`;
   const girls = u.kids.filter((k) => sexOf(k) === 'f').length;
   const boys = n - girls;
-  const s = boys === 1 ? 'сын' : boys ? `${boys} ${plural(boys, 'сын', 'сына', 'сыновей')}` : '';
-  const d = girls === 1 ? 'дочь' : girls ? `${girls} ${plural(girls, 'дочь', 'дочери', 'дочерей')}` : '';
+  const s = boys === 1 ? 'один сын' : boys ? `${boys} ${plural(boys, 'сын', 'сына', 'сыновей')}` : '';
+  const d = girls === 1 ? 'одна дочь' : girls ? `${girls} ${plural(girls, 'дочь', 'дочери', 'дочерей')}` : '';
   return [s, d].filter(Boolean).join(' и ');
 }
 
@@ -427,7 +454,7 @@ function childTitle(u: Union, kid: string): string {
     const g = one && !(u.a && u.b) ? genOf(one) : null;
     if (g) return `От ${g} произошли ${nameOf(kid)}`;
   }
-  return `${parentsText(u)}; ${nameOf(kid)} — ${childRole(u, kid)}`;
+  return `${parentsText(u)}; ${nameOf(kid)} — ${childRole(u, kid)}${unnamedTail(u)}`;
 }
 
 /** Роль родителя шага ленты: «отец», «мать», «отец по закону» (Иосиф — Иисус, Мф 1:16). */
@@ -443,12 +470,29 @@ const infoCache = new Map<string, LinkInfo | null>();
 export function linkInfo(key: LinkKey): LinkInfo | null {
   const ks = linkKeyString(key);
   if (ks && infoCache.has(ks)) return infoCache.get(ks)!;
-  const out = build(key);
+  const raw = build(key);
+  // уровень — первым словом заголовка (решение 105): «По толкованию: …», «Вывод: …». У союза целиком уровень — худший
+  // из его детей («Адам и Ева: Каин, Авель, Сиф» — выведена только мать Сифа): слово уровня отнесло бы его ко всему
+  // союзу, поэтому у союза — только помета «выв.»
+  const lead = raw && key.kind !== 'union' ? (CERT_LEAD[raw.cert] ?? null) : null;
+  const out: LinkInfo | null = raw ? { ...raw, body: raw.title, lead, title: lead ? `${lead}: ${raw.title}` : raw.title, missing: raw.missing ?? null } : null;
   if (ks) infoCache.set(ks, out);
   return out;
 }
 
-function build(key: LinkKey): LinkInfo | null {
+/** Сведения о связи до слова уровня. */
+type RawInfo = Omit<LinkInfo, 'lead' | 'body' | 'missing'> & { missing?: LinkInfo['missing'] };
+/** Неназванный второй родитель или супруг: подпись строки и слова. */
+const unnamedRow = (u: Union, as: 'parent' | 'spouse'): LinkInfo['missing'] =>
+  as === 'parent'
+    ? u.a
+      ? { role: 'Мать', text: 'в Писании не названа' }
+      : { role: 'Отец', text: 'в Писании не назван' }
+    : u.a
+      ? { role: 'Жена', text: 'имя в Писании не названо' }
+      : { role: 'Муж', text: 'имя в Писании не названо' };
+
+function build(key: LinkKey): RawInfo | null {
   switch (key.kind) {
     case 'child': {
       const u = union(key.union);
@@ -458,7 +502,7 @@ function build(key: LinkKey): LinkInfo | null {
       const marks: string[] = [];
       if (kin.gap) marks.push('пропуск поколений');
       if (CERT_WORD[kin.cert]) marks.push(CERT_WORD[kin.cert]);
-      const missing = !isClaimUnion(u) && parents.length === 1 && !peopleUnion(u) ? (u.a ? 'Мать в Писании не названа' : 'Отец в Писании не назван') : null;
+      const missing = !isClaimUnion(u) && parents.length === 1 && !peopleUnion(u) ? unnamedRow(u, 'parent') : null;
       return {
         key,
         title: typo(childTitle(u, key.child)),
@@ -468,7 +512,8 @@ function build(key: LinkKey): LinkInfo | null {
         cert: kin.cert,
         marks,
         lines: linesOf(parents, key.child),
-        note: kin.gap ? 'Родословие здесь может пропускать поколения' : missing,
+        note: kin.gap ? 'Родословие здесь может пропускать поколения' : null,
+        missing,
       };
     }
     case 'spouse': {
@@ -485,7 +530,8 @@ function build(key: LinkKey): LinkInfo | null {
         cert: u.kind === 'parents' ? 'scripture' : u.cert,
         marks,
         lines: [],
-        note: coparentsOnly(u) ? COPARENTS_NOTE : other ? (u.note ?? null) : u.a ? 'Имя жены в Писании не названо' : 'Имя мужа в Писании не названо',
+        note: coparentsOnly(u) ? COPARENTS_NOTE : other ? (u.note ?? null) : null,
+        missing: other ? null : unnamedRow(u, 'spouse'),
       };
     }
     case 'union': {
@@ -503,7 +549,8 @@ function build(key: LinkKey): LinkInfo | null {
         cert,
         marks: CERT_WORD[cert] ? [CERT_WORD[cert]] : [],
         lines: [],
-        note: coparentsOnly(u) ? COPARENTS_NOTE : !isClaimUnion(u) && parents.length === 1 && kids && !peopleUnion(u) ? (u.a ? 'Имя жены в Писании не названо' : 'Имя мужа в Писании не названо') : null,
+        note: coparentsOnly(u) ? COPARENTS_NOTE : null,
+        missing: !isClaimUnion(u) && parents.length === 1 && kids && !peopleUnion(u) ? unnamedRow(u, 'spouse') : null,
       };
     }
     case 'step': {
@@ -529,6 +576,7 @@ function build(key: LinkKey): LinkInfo | null {
         marks,
         lines: both.length ? both : [{ line: key.line, ref: stepBookRef(s), refs: stepRefs(s), flag: s.flag }],
         note: null,
+        missing: u && !isClaimUnion(u) && !(u.a && u.b) && !peopleUnion(u) ? unnamedRow(u, 'parent') : null,
       };
     }
     case 'kin': {
@@ -551,7 +599,87 @@ function build(key: LinkKey): LinkInfo | null {
         note: 'Родство названо словами Писания; родители из него не выводятся',
       };
     }
+    case 'span':
+      return spanInfo(key);
   }
+}
+
+/** Лица линии line по порядку, от Адама к Иисусу Христу (data/lines). */
+export const lineOrder = (line: Line): string[] => (lines[line]?.persons ?? []).map((x) => x.id);
+
+/**
+ * Скрытые лица цепочки (решение 93, К4): лица линии строго между концами, по порядку; null — запись битая.
+ */
+export const spanHidden = (key: Extract<LinkKey, { kind: 'span' }>): string[] | null => spanInner(lineOrder(key.line), key);
+
+/** Стихи родословия у шагов цепочки одной главой: «Лк 3:23–31»; главы разные — первые три стиха. */
+function spanRefs(steps: readonly Step[]): string[] {
+  const refs = uniq(steps.map((x) => stepBookRef(x)).filter((r): r is string => !!r));
+  const m = refs.map((r) => /^(\S+)\s+(\d+):(\d+)(?:[-–](\d+))?$/.exec(r));
+  if (m.length && m.every((x) => x && x[1] === m[0]![1] && x[2] === m[0]![2])) {
+    const vs = m.flatMap((x) => [Number(x![3]), Number(x![4] ?? x![3])]);
+    const lo = Math.min(...vs);
+    const hi = Math.max(...vs);
+    return [`${m[0]![1]} ${m[0]![2]}:${lo}${hi > lo ? `-${hi}` : ''}`];
+  }
+  return refs.slice(0, 3);
+}
+
+/**
+ * Цепочка (решение 93, К4; X3 § 2.1): «Давид … Мария — 41 поколение по Лк 3; скрыто 40». Цепочка — участок ленты,
+ * где показ скрыл все лица между концами, поэтому скрыто — все внутренние лица; пояснение называет их: «В этом показе
+ * лента сжата: скрыто 40 (Нафан … Илий)». Уровень — худший из шагов цепочки (шаг Илий → Мария — толкование).
+ */
+function spanInfo(key: Extract<LinkKey, { kind: 'span' }>): RawInfo | null {
+  const inner = spanHidden(key);
+  if (!inner || !byId.has(key.from) || !byId.has(key.to)) return null;
+  const steps = [...inner, key.to].map((c) => stepOf(key.line, c)).filter((x): x is Step => !!x);
+  if (steps.length !== inner.length + 1) return null;
+  const certs = steps.map((x) => {
+    const u = x.parent ? unionOfPair(x.parent, x.child) : null;
+    return worst([x.flag === 'interpretation' ? 'interpretation' : 'scripture', u ? kidLink(u, x.child).cert : 'scripture']);
+  });
+  const refs = spanRefs(steps);
+  const n = steps.length;
+  const book = refs.length === 1 ? /^(Мф 1|Лк 3):/.exec(refs[0])?.[1] : null;
+  // цепочка — участок, где показ скрыл все лица между концами (linkkey.ts): скрыто — все внутренние
+  const hid = inner.length;
+  const title = `${nameOf(key.from)} … ${nameOf(key.to)} — ${n} ${plural(n, 'поколение', 'поколения', 'поколений')}${book ? ` по ${book}` : ''}; скрыто ${hid}`;
+  return {
+    key,
+    title: typo(title),
+    refs,
+    ends: [
+      { id: key.from, role: bySex(sexOf(key.from), 'предок', 'прародительница'), side: 'from' },
+      { id: key.to, role: sexOf(key.to) === 'f' ? 'потомок' : 'потомок', side: 'to' },
+    ],
+    union: null,
+    cert: worst(certs),
+    marks: CERT_WORD[worst(certs)] ? [CERT_WORD[worst(certs)]] : [],
+    lines: [{ line: key.line, ref: refs[0] ?? null, refs, flag: 'in-text' }],
+    note: hid ? `В этом показе лента сжата: скрыто ${hid} (${hid > 2 ? `${nameOf(inner[0])} … ${nameOf(inner[hid - 1])}` : inner.map(nameOf).join(', ')})` : null,
+  };
+}
+
+// ---------- «Какая связь?» ----------
+
+/**
+ * Строка списка «Какая связь?» (решение 105; X4 Д2, § 2.3 п. 7) — одна форма для всех связей: «X и Y — родители;
+ * Z — сын»; союз целиком — «Иорам и Гофолия — союз: Охозия и ещё 1»; второй родитель не назван, а «его жена» было бы
+ * двусмысленно, — «Иорам — отец; Иосавеф — дочь; мать не названа». Союз с одним ребёнком — строкой этого ребёнка.
+ */
+export function linkRow(key: LinkKey): string {
+  if (key.kind !== 'union') return linkTitle(key);
+  const u = union(key.union);
+  if (!u) return '';
+  // брак без детей и союз иного рода («Иаков — приёмный отец: Ефрем, Манассия») — своими словами
+  if (!u.kids.length || isClaimUnion(u)) return linkTitle(key);
+  if (u.kids.length === 1) return linkTitle({ kind: 'child', union: u.id, child: u.kids[0] });
+  const one = u.a ?? u.b;
+  const tail = unnamedTail(u);
+  const names = tail && one ? nameOf(one) : unionName(u);
+  const kids = u.kids.length === 2 ? u.kids.map(midName).join(', ') : `${midName(u.kids[0])} и ещё ${u.kids.length - 1}`;
+  return typo(`${names} — союз: ${kids}${tail}`);
 }
 
 // ---------- слова ----------
@@ -600,25 +728,90 @@ export function refSpoken(ref: string): string {
   return typo(b ? `${b.name} ${m![2]}` : ref);
 }
 
+/** Пометы связи без пометы уровня, если уровень уже стоит первым словом заголовка. */
+const marksAfterLead = (i: LinkInfo) => (i.lead ? i.marks.filter((m) => m !== CERT_WORD[i.cert]) : i.marks);
+
 /**
  * Подсказка наведения: заголовок, пометы и главный стих — «Иаков и Рахиль — родители; Иосиф — сын (Быт 30:22–24)»,
- * «Арфаксад — отец; Каинан — сын; только у Луки (Лк 3:36)», «Илий — отец; Мария — дочь; толк. (Лк 3:23)».
+ * «Арфаксад — отец; Каинан — сын; только у Луки (Лк 3:36)», «По толкованию: Илий — отец; Мария — дочь (Лк 3:23)».
  */
 export function linkTip(key: LinkKey): string {
   const i = linkInfo(key);
   if (!i) return '';
-  const marks = i.marks.length ? `; ${i.marks.join(', ')}` : '';
+  const ms = marksAfterLead(i);
+  const marks = ms.length ? `; ${ms.join(', ')}` : '';
   const ref = i.refs[0] ? ` (${refShort(i.refs[0])})` : '';
   return typo(`${i.title}${marks}${ref}`);
 }
 
-/** Для диктора: «Связь: Иаков и Лия — родители; Иуда — сын; Бытие 29:35». */
+/**
+ * Для диктора: «Связь: Иаков и Лия — родители; Иуда — сын; Бытие 29:35»; уровень — сразу за словом «Связь»:
+ * «Связь — по толкованию: Илий и его жена — родители; Мария — дочь; От Луки 3:23».
+ */
 export function linkSpeech(key: LinkKey): string {
   const i = linkInfo(key);
   if (!i) return '';
-  const marks = i.marks.length ? `; ${i.marks.join(', ')}` : '';
+  const ms = marksAfterLead(i);
+  const marks = ms.length ? `; ${ms.join(', ')}` : '';
   const ref = i.refs[0] ? `; ${refSpoken(i.refs[0])}` : '';
-  return typo(`Связь: ${i.title}${marks}${ref}`);
+  const head = i.lead ? `Связь — ${i.lead.toLowerCase()}: ${i.body}` : `Связь: ${i.body}`;
+  return typo(`${head}${marks}${ref}`);
+}
+
+/**
+ * Имя в винительном падеже для команды «показать Илия» — только там, где он совпадает с родительным (одушевлённые
+ * мужского рода на согласную, «й», «ь»: «Илия», «Давида», «Иоанна Крестителя»); иначе null — команда без имени.
+ * Склонение — только функцией ru.ts (nameCase).
+ */
+export function accOf(id: string): string | null {
+  const p = byId.get(id);
+  if (!p || p.unnamed || p.sex !== 'm' || (p.kind && p.kind !== 'person')) return null;
+  if (!p.name.split(' ').every((w) => /[бвгджзклмнпрстфхцчшщйь]$/.test(w))) return null;
+  return genOf(id);
+}
+
+// ---------- основание (решение 105) ----------
+
+/** Предложения текста: по точке, «?» или «!» перед заглавной буквой или кавычкой. */
+const sentences = (t: string) => t.split(/(?<=[.!?])\s+(?=[А-ЯЁ«])/).map((x) => x.trim()).filter(Boolean);
+const escRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+/** Упоминает ли текст лицо id по имени или другой форме имени (целым словом). */
+function names(text: string, id: string): boolean {
+  const p = byId.get(id);
+  if (!p || p.unnamed) return false;
+  return [p.name, ...p.alt].some((n) => n && new RegExp(`(^|[^А-Яа-яЁё])${escRe(n)}([^А-Яа-яЁё]|$)`).test(text));
+}
+const certOrder = ['interpretation', 'identification', 'textual', 'chronology', 'bracket'];
+
+/**
+ * Строка основания карточки связи (решение 105; макет X4 М1): одно предложение — откуда связь, если она не сказана прямо.
+ *  — у черты брака — пояснение брака из данных (первое предложение);
+ *  — иначе — первое предложение § 24 «Примечания» карточки конца связи, где названо имя другого конца (сперва примечания
+ *    толкования, затем отождествления и текстологии): «Первое понимание: Лк 3 — родословие Марии, Илий — Её отец…»;
+ *    from — чья это карточка;
+ *  — такого предложения нет — слова уровня (ТЗ П-4): «в Писании прямо не сказано; следует из сопоставления стихов» у
+ *    вывода, «одно из пониманий текста; в Писании прямо не сказано» у толкования.
+ * Писание — null (строки нет). need — концы, чьи карточки ещё не загружены (их загружает карточка связи).
+ */
+export function linkBasis(key: LinkKey): { text: string; from: string | null; need: string[] } | null {
+  const i = linkInfo(key);
+  if (!i || !i.lead) return null;
+  const generic = { text: i.cert === 'inference' ? 'В Писании прямо не сказано; следует из сопоставления стихов' : 'Одно из пониманий текста; в Писании прямо не сказано', from: null };
+  if (key.kind === 'spouse' || (key.kind === 'union' && !i.union?.kids.length)) {
+    const n = i.union?.note ? sentences(i.union.note)[0] : null;
+    if (n) return { text: n.replace(/[.;]$/, ''), from: null, need: [] };
+  }
+  // младший конец первым: его § 24 говорит о происхождении («Илий — Её отец» у Марии)
+  const ends = [...i.ends.filter((e) => e.side === 'to'), ...i.ends.filter((e) => e.side === 'from')].map((e) => e.id);
+  const need = ends.filter((id) => !loadedCard(id));
+  for (const id of ends) {
+    const notes = [...(loadedCard(id)?.notes ?? [])].sort((a, b) => certOrder.indexOf(a.kind) - certOrder.indexOf(b.kind));
+    const others = ends.filter((x) => x !== id);
+    for (const n of notes)
+      for (const t of sentences(n.text))
+        if (others.some((o) => names(t, o))) return { text: t.replace(/[.;]$/, ''), from: id, need };
+  }
+  return { ...generic, need };
 }
 
 /** Союз связи (у шага ленты — союз родителя шага и ребёнка) или null. */

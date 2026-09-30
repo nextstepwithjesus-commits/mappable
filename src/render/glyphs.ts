@@ -166,7 +166,7 @@ const SIGLA: [string, string][] = [
   ['priest', 'св.'],
   ['judge', 'суд.'],
   ['apostle', 'ап.'],
-  ['patriarch', 'патр.'],
+  ['patriarch', 'праот.'],
   ['levite', 'лев.'],
 ];
 export function roleSigla(roles: string[]): string {

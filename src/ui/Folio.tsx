@@ -4,7 +4,7 @@ import type { ComponentChildren, VNode } from 'preact';
 import { byId, lineMembership, loadCard, loadedCard, loadedChrono } from '../data/atlas.ts';
 import type { Card, Chrono } from '../data/types.ts';
 import { selected, second, pickMode, model, showSchema, panel } from '../state.ts';
-import { grid, unfoldCard } from './layout.ts';
+import { cardFull, grid, toggleCardFull, unfoldCard } from './layout.ts';
 import { skyRef, plural, CAN_PRINT, goTo } from './common.tsx';
 import { lowerFirst } from './text/ru.ts';
 import { typo } from './text/typo.ts';
@@ -12,18 +12,23 @@ import { Masthead, isPeople, passportYears } from './card/Masthead.tsx';
 import { Close } from './controls.tsx';
 import { SECTIONS, PARTS, buildSections, familyIds, contemporaryGroups } from './card/sections.tsx';
 import { Clamp, clampItems } from './card/Clamp.tsx';
-import { Brief, authoredCount } from './card/Brief.tsx';
+import { Brief, authoredCount, briefMovedStatus } from './card/Brief.tsx';
 import { Rail, RailKey, type SecState } from './card/Rail.tsx';
-import { affiliation, MODEL_NAMES } from './card/shared.tsx';
+import { Contents, ContentsMenu, tocNow } from './card/Contents.tsx';
+import { affiliation, goToSection, modelColophon, sectionEl } from './card/shared.tsx';
+import { ChapterReturn } from './panels/Chapter.tsx';
 import { reduced } from './sky/view.ts';
 import { sheetStop, snapSheet, stopsFor, releaseVelocity, type SheetStop } from './sheet.ts';
-import { cardFolded, cardTabs, closeCurrent, isPinned, pinCard, tabLabel, unpinCard, type CardTab } from './stack.ts';
+import { cardFolded, cardTabs, closeCurrent, isPinned, pinCard, rememberPlace, tabLabel, tabOf, unpinCard, type CardTab } from './stack.ts';
 import { WorkButton } from './panels/Work.tsx';
 import { cardTitle, focusCardTitle, focusQuietly } from './focus.ts';
 import { selectedUnion, selectUnion, unionById } from './reveal.ts';
 import { DotSheet } from './sky/DotCard.tsx';
 import { UnionCard, openerSection, unionTitle, unionYears } from './card/Union.tsx';
 import { cardsTick } from './card/star.ts';
+import { outsideOf, show, showContent } from './show.ts';
+import { revealOnAll } from './sky/ShowBar.tsx';
+import { ChronoText } from './panels/Chronology.tsx';
 import type { Union } from '../engine/unions.ts';
 
 export { Masthead, SECTIONS, PARTS, buildSections, familyIds, contemporaryGroups };
@@ -60,7 +65,8 @@ export function sectionStates(id: string, out: Map<number, ComponentChildren>, c
   for (const s of SECTIONS) {
     const n = s.n;
     if (out.has(n)) st[n] = 'content';
-    else if (n === 1 || (n === 5 && p.roles.length) || (n === 7 && affiliation(id))) st[n] = 'header';
+    // § 5, чью единственную запись «Кратко» привело целиком со стихами (решение 121), — тоже «в шапке»
+    else if (n === 1 || (n === 5 && (p.roles.length || briefMovedStatus(id, card))) || (n === 7 && affiliation(id))) st[n] = 'header';
     else if (silent.has(n)) st[n] = 'silent';
     else if (n === 21 && !onLines && !card?.messiahNote?.length) st[n] = 'na';
     else if (people && PEOPLE_NA.has(n)) st[n] = 'na';
@@ -74,7 +80,7 @@ export const naReason = (id: string) => (isPeople(id) ? 'не относится
 
 /**
  * Колофон (F10; CARD-38): точный перечень — где сведения, о чём Писание молчит, что не составлено;
- * модель хронологии — только если у лица есть годы, которые от неё зависят (до 967 г. до Р. Х.).
+ * модель хронологии — только если годы лица меняются между моделями (решение 96).
  */
 export function colophonText(id: string, states: Record<number, SecState>): string {
   const of = (...k: SecState[]) => SECTIONS.filter((s) => k.includes(states[s.n])).map((s) => s.n);
@@ -87,13 +93,10 @@ export function colophonText(id: string, states: Record<number, SecState>): stri
   if (absent.length) parts.push(`не ${absent.length === 1 ? 'составлен' : 'составлены'} — § ${ranges(absent)}`);
   // у народа: «§ 8, 14, 21 не относятся к народу»; у лица — «§ 21 не относится: лицо не входит в линии Мессии»
   if (na.length) parts.push(isPeople(id) ? `§ ${ranges(na)} ${na.length === 1 ? 'не относится' : 'не относятся'} к народу` : '§ 21 не относится: лицо не входит в линии Мессии');
-  const c = model.value.chrono.get(id);
-  // −966 — 967 г. до Р. Х. в астрономическом счёте: 4-й год Соломона, якорь хронологии (3 Цар 6:1);
-  // у народа и рода годов в карточке нет (CARD-59) — и зависимости от модели тоже
-  const dep = c && c.cls !== 'epochal' && !isPeople(id) && c.b < -966;
-  return typo(
-    `${parts.join('; ')}. Ссылки сверены с Синодальным текстом.` + (dep ? ` Годы до 967 г. до Р. Х. — по модели «${MODEL_NAMES[model.value.id] ?? model.value.id}».` : ''),
-  );
+  // строка о модели — только у лица, чьи годы меняются между моделями (решение 96; IdxPerson.modelDep); у народа и рода
+  // годов в карточке нет (CARD-59) — и зависимости от модели тоже
+  const dep = !isPeople(id) && model.value.chrono.get(id)?.cls !== 'epochal' ? modelColophon([id], model.value.id) : '';
+  return typo(`${parts.join('; ')}. Ссылки сверены с Синодальным текстом.${dep}`);
 }
 
 /** Ссылки на стихи и «ещё N ссылок» внутри раздела карточки. */
@@ -209,8 +212,10 @@ export function CardPage({
   // Тело карточки другого лица (или другой модели) строится заново, а не перекраивается из прежнего (CARD-76): разделы
   // с одним номером у двух лиц устроены по-разному (заголовок в строку, списки, вложенные фрагменты), и перекройка роняла
   // Preact на insertBefore — в новой карточке оставались разделы прежнего лица, затем лист переставал обновляться.
-  // Ключ — у тела, «Кратко», рейки и колофона; шапка — по лицу шапки (id).
+  // Ключ — у тела, «Кратко», рейки и колофона, у каждого свой (решение 131: ключи соседей уникальны); шапка — по лицу
+  // шапки (id).
   const bodyKey = `${bodyId}|${m.id}`;
+  const phoneNow = grid.value.phone;
   const lead = useRef<HTMLDivElement>(null);
   const bodyEl = useRef<HTMLDivElement>(null);
   useRefStops(bodyEl, `${bodyKey}|${ready}|${compact}|${schema}`);
@@ -231,7 +236,8 @@ export function CardPage({
     focusQuietly(cardTitle(id) ?? lead.current?.parentElement?.querySelector<HTMLElement>('h2') ?? null);
   }, [bodyKey]);
 
-  const go = (n: number) => {
+  // focus — перенести фокус на заголовок раздела («см. §», решение 115): следующий Tab продолжает чтение там
+  const go = (n: number, focus = false) => {
     const st = states[n];
     if (compact) setOpenFor(bodyId);
     if (st === 'absent' && !schema) showSchema.value = true;
@@ -242,11 +248,37 @@ export function CardPage({
         t?.focus({ preventScroll: true });
         return;
       }
-      const el = document.getElementById(`sec-${n}`);
+      const root = lead.current?.parentElement ?? document;
+      if (focus) {
+        goToSection(n, root);
+        return;
+      }
+      const el = sectionEl(n, root);
       // ослабленное движение — переход без плавной прокрутки (MOB-40)
       el?.scrollIntoView({ behavior: reduced() ? 'auto' : 'smooth', block: 'start' });
     });
   };
+  // «см. § n» в теле карточки (SeeSec): переход — здесь, где известно, свёрнута ли малая карточка и составлен ли раздел
+  const goRef = useRef(go);
+  goRef.current = go;
+  // оглавление для закреплённой полосы листа (FolioBar): текущий раздел со списком, когда имя шапки ушло под полосу
+  useEffect(() => {
+    if (!ready || compact) return;
+    tocNow.value = { id: bodyId, states, go: (n) => goRef.current(n, true) };
+    return () => {
+      if (tocNow.peek()?.id === bodyId) tocNow.value = null;
+    };
+  }, [bodyKey, ready, compact, states]);
+  useEffect(() => {
+    const root = lead.current?.parentElement;
+    if (!root) return;
+    const on = (e: Event) => {
+      e.preventDefault();
+      goRef.current((e as CustomEvent<number>).detail, true);
+    };
+    root.addEventListener('seesec', on);
+    return () => root.removeEventListener('seesec', on);
+  }, [bodyKey]);
 
   // ---------- разделы ----------
   const blocks: ComponentChildren[] = [];
@@ -315,7 +347,7 @@ export function CardPage({
   return (
     <>
       <Masthead key={id} id={id} card={body?.id === id ? card : null} />
-      {status === 'error' ? null : <Brief key={bodyKey} id={bodyId} card={card} />}
+      {status === 'error' ? null : <Brief key={`brief|${bodyKey}`} id={bodyId} card={card} />}
       {actions}
       <div class="mast-rule" aria-hidden="true" ref={lead} />
       {status === 'error' ? (
@@ -331,10 +363,30 @@ export function CardPage({
           Загрузка карточки…
         </p>
       ) : null}
-      {/* рейка — вровень с первым разделом (VIS-07); на телефоне — строка номеров под шапкой */}
-      {ready && !compact ? <Rail key={bodyKey} states={states} current={current} onGo={go} /> : null}
+      {/* рейка — вровень с первым разделом (VIS-07); на телефоне — строка номеров под шапкой, а слева от неё — текущий раздел
+          словами с раскрывающимся оглавлением (решение 119) */}
+      {ready && !compact && phoneNow ? (
+        <div class="rail-row" key={`railrow|${bodyKey}`}>
+          <ContentsMenu states={states} current={current} onGo={(n) => go(n, true)} />
+          <Rail states={states} current={current} onGo={go} />
+        </div>
+      ) : ready && !compact ? (
+        <Rail key={`rail|${bodyKey}`} states={states} current={current} onGo={go} />
+      ) : null}
+      {/* оглавление «Разделы карточки» — названия в шести частях (решение 119; UI-09): в «Карточке на весь экран» — блоком,
+          в колонке — строкой со списком (блок над § 1 увёл бы его с первого экрана, VIS-41) */}
+      {ready && !compact && !phoneNow ? (
+        cardFull.value ? (
+          <Contents key={`toc|${bodyKey}`} states={states} current={current} onGo={(n) => go(n, true)} />
+        ) : (
+          <div class="toc-line" key={`toc|${bodyKey}`}>
+            <ContentsMenu states={states} current={current} onGo={(n) => go(n, true)} label="Разделы карточки" />
+            <FullCmd />
+          </div>
+        )
+      ) : null}
       {ready ? (
-        <div class={stale ? 'folio-body stale' : 'folio-body'} key={bodyKey} ref={bodyEl} aria-busy={stale ? 'true' : undefined}>
+        <div class={stale ? 'folio-body stale' : 'folio-body'} key={`body|${bodyKey}`} ref={bodyEl} aria-busy={stale ? 'true' : undefined}>
           {compact ? (
             <p class="rest">
               <button type="button" class="more" aria-expanded="false" onClick={() => setOpenFor(bodyId)}>
@@ -348,9 +400,12 @@ export function CardPage({
         </div>
       ) : null}
       {ready ? (
-        <footer class="colophon" key={bodyKey}>
+        <footer class="colophon" key={`colophon|${bodyKey}`}>
           {compact ? null : <RailKey states={states} />}
-          <p>{colophonText(bodyId, states)}</p>
+          {/* «см. „О хронологии“» — ссылка на панель (решение 102) */}
+          <p>
+            <ChronoText text={colophonText(bodyId, states)} />
+          </p>
           <div class="cmds">
             <button type="button" class="cmd" aria-pressed={schema} onClick={() => (showSchema.value = !schema)}>
               Показать все 24 раздела
@@ -499,7 +554,7 @@ function useSheetDrag(aside: { current: HTMLElement | null }, on: boolean) {
 
 /**
  * Нижний лист на 214 px — это и есть карточка у звезды (этап 11, решение 77; STAGE11.md § 6): ручка, образ, имя, уточнение
- * и годы, две строки «Родства», команды «Карточка ▴», «Только его род ▾», «Родство с…» и «×». Выбранная связь или ромб
+ * и годы, две строки «Родства», команды «Вся карточка ▴», «Предки и потомки ▾», «Родство с…» и «×». Выбранная связь или ромб
  * союза — их карточка на том же месте. За свободное место лист тянется, как за шапку; касание поднимает лист до 55 %.
  */
 function DotSheetBar({ id, onClose }: { id: string; onClose: () => void }) {
@@ -566,6 +621,8 @@ function SheetBar({ id, stop, onClose, union }: { id: string; stop: SheetStop; o
  */
 function CardActions({ id, phone }: { id: string; phone: boolean }) {
   const pick = pickMode.value;
+  // лицо вне показа (решение 111; X4 Д6 п. 3): «Показать на всём небе» — всё небо и перелёт к лицу (revealOnAll)
+  const outside = outsideOf(show.value, showContent.value, id) === id;
   const toggle = (mode: 'kinship' | 'spread', btn: HTMLButtonElement) => {
     const on = pick !== mode;
     pickMode.value = on ? mode : null;
@@ -584,17 +641,18 @@ function CardActions({ id, phone }: { id: string; phone: boolean }) {
       <button
         type="button"
         class="show-on-sky"
-        title="Перелететь к звезде лица на небе"
-        aria-label="Показать на небе"
+        title={outside ? 'Лица нет в нынешнем показе: показать всё небо и перелететь к его звезде' : 'Перелететь к звезде лица на небе'}
+        aria-label={outside ? 'Показать на всём небе' : 'Показать на небе'}
         onClick={() => {
           // на телефоне лист сначала сворачивается до шапки: перелёт идёт над ним, а не под ним (MOB-15)
           if (phone) sheetStop.value = 'peek';
-          skyRef.flyTo(id);
+          if (outside) revealOnAll(id);
+          else skyRef.flyTo(id);
         }}
       >
-        <span class="full">Показать на небе</span>
+        <span class="full">{outside ? 'Показать на всём небе' : 'Показать на небе'}</span>
         <span class="short" aria-hidden="true">
-          На небе
+          {outside ? 'На всём небе' : 'На небе'}
         </span>
       </button>
       {/* в режиме выбора второго лица надпись и ширина те же — меняется только нажатость (IX-22): ряд не перестраивается,
@@ -710,12 +768,49 @@ export function Folio({ id: forcedId, forceState }: { id?: string; forceState?: 
   const tabs = live ? cardTabs.value.filter((t) => byId.has(t.id)) : [];
   const stop = sheetStop.value;
   const sheet = live && phone && !!id && byId.has(id);
+  // «Карточка на весь экран» (решение 123): лист поверх неба, панелей и полосы времени; они на это время недоступны
+  // клавиатуре и диктору (inert), Escape возвращает небо раньше прочих состояний
+  const full = live && !phone && !spine && cardFull.value;
+  useEffect(() => {
+    if (!full) return;
+    const under = document.querySelectorAll('.app > .app-main, .app > .strip, .app > .sheet, .app > .resizer');
+    for (const el of under) el.setAttribute('inert', '');
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code !== 'Escape' || e.defaultPrevented) return;
+      const t = e.target as HTMLElement | null;
+      if (t && (t.isContentEditable || t instanceof HTMLTextAreaElement || (t instanceof HTMLInputElement && t.type !== 'checkbox'))) return;
+      e.preventDefault();
+      toggleCardFull(false);
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => {
+      for (const el of under) el.removeAttribute('inert');
+      window.removeEventListener('keydown', onKey, true);
+    };
+  }, [full]);
   // карточка союза (решение 71) — вместо карточки лица: лицо остаётся выбранным, вкладки не меняются
   const uid = live && id ? selectedUnion.value : null;
   const union = uid ? (unionById(uid) ?? null) : null;
   useUnionReturn(aside, id ?? null, union?.id ?? null);
   useTabReturn(live ? (id ?? null) : null);
   useSheetDrag(aside, sheet);
+  // место чтения закреплённой карточки (решение 119): запоминается, когда карточку сменяет другая и когда страница
+  // уходит; при новом открытии этой карточки лист возвращается к тому же разделу и месту в нём
+  const place = useRef<{ id: string; sec: number; off: number } | null>(null);
+  const restore = useRef<{ id: string; sec: number; off: number } | null>(null);
+  useEffect(() => {
+    if (!id || !live) return;
+    const mine = id;
+    const save = () => {
+      const pl = place.current;
+      if (pl && pl.id === mine) rememberPlace(mine, pl.sec, pl.off);
+    };
+    window.addEventListener('pagehide', save);
+    return () => {
+      window.removeEventListener('pagehide', save);
+      save();
+    };
+  }, [id, live]);
   useEffect(() => {
     if (!id || !live) return;
     let alive = true;
@@ -727,11 +822,24 @@ export function Folio({ id: forcedId, forceState }: { id?: string; forceState?: 
       .catch(() => alive && setFailed(id))
       .finally(() => clearTimeout(t));
     inner.current?.parentElement?.scrollTo({ top: 0 });
+    place.current = null;
+    const at = tabOf(id)?.at;
+    restore.current = at && at.sec > 1 ? { id, ...at } : null;
     return () => {
       alive = false;
       clearTimeout(t);
     };
   }, [id, attempt, live]);
+  // вернуть место чтения, когда разделы открытой карточки в разметке (после их собственных эффектов — Clamp)
+  useLayoutEffect(() => {
+    const r = restore.current;
+    const el = inner.current?.parentElement;
+    if (!r || r.id !== id || !el || !inner.current?.querySelector('.folio-body:not(.stale)')) return;
+    restore.current = null;
+    const sec = sectionEl(r.sec, inner.current);
+    if (!sec) return;
+    el.scrollTop = sec.getBoundingClientRect().top - el.getBoundingClientRect().top + el.scrollTop + r.off;
+  });
   useEffect(() => {
     const el = inner.current?.parentElement;
     if (!el) return;
@@ -745,6 +853,14 @@ export function Folio({ id: forcedId, forceState }: { id?: string; forceState?: 
       setCurrent(cur);
       // закреплённая полоса получает фон и черту, когда под неё уходит текст (CARD-53, UX-67)
       el.toggleAttribute('data-scrolled', el.scrollTop > BAR_H - 4);
+      // имя шапки ушло под полосу — полоса называет лицо и текущий раздел (решение 119; UI-07)
+      const h2 = el.querySelector<HTMLElement>('.mast h2');
+      el.toggleAttribute('data-name-gone', !!h2 && h2.getBoundingClientRect().bottom < top + BAR_H);
+      // место чтения — раздел и сдвиг от его начала: закреплённая вкладка вернётся к нему (решение 119; UI-08)
+      const at = secs.find((s) => Number(s.dataset.n) === cur);
+      // только пока на листе тело этого лица: прокрутка от смены тела (другое лицо) — не место чтения прежнего
+      if (id && !el.hasAttribute('data-union') && el.querySelector(`[id="title-${CSS.escape(id)}"]`) && !el.querySelector('.folio-body.stale'))
+        place.current = { id, sec: cur, off: at ? Math.round(top - at.getBoundingClientRect().top) : 0 };
       // место в карточке лица — чтобы вернуться на него после карточки союза
       if (!el.hasAttribute('data-union')) personTop.set(el, el.scrollTop);
     };
@@ -833,6 +949,7 @@ export function Folio({ id: forcedId, forceState }: { id?: string; forceState?: 
         ref={aside}
         data-union={union.id}
         data-stop={sheet ? stop : undefined}
+        data-full={full ? '' : undefined}
         onKeyDown={(e) => {
           // Escape в карточке союза возвращает карточку лица — одно видимое состояние (D5); выбор второго лица и
           // открытая панель снимаются раньше, общим порядком (keys.ts)
@@ -853,13 +970,15 @@ export function Folio({ id: forcedId, forceState }: { id?: string; forceState?: 
     );
 
   return (
-    <aside class="folio" aria-label={`Карточка: ${p.name}`} ref={aside} data-stop={sheet ? stop : undefined} data-state={status === 'ok' ? undefined : status}>
+    <aside class="folio" aria-label={`Карточка: ${p.name}`} ref={aside} data-stop={sheet ? stop : undefined} data-state={status === 'ok' ? undefined : status} data-full={full ? '' : undefined}>
       {/* на 214 px лист — карточка у звезды (решение 77); выше — шапка листа и подробная карточка */}
       {sheet && (stop === 'peek' ? <DotSheetBar id={id} onClose={close} /> : <SheetBar id={id} stop={stop} onClose={close} />)}
+      {/* из главы на телефоне — строка возврата «‹ Мф 1:5» сразу под шапкой листа (решение 114; молчит в остальных случаях) */}
+      {sheet && <ChapterReturn id={id} />}
       {/* закреплённые карточки (решение 91): вкладки вверху панели; на телефоне — строками над листом */}
       {sheet && tabs.length > 0 && <CardTabs tabs={tabs} current={id} phone />}
       {live && !phone && tabs.length > 0 && <CardTabs tabs={tabs} current={id} />}
-      {live && !phone && <FolioBar id={id} person onClose={close} />}
+      {live && !phone && <FolioBar id={id} person onClose={close} current={current} />}
       {/* полоса и тело карточки — соседи: имя обходит команды полосы (folio.css, .folio-bar + .folio-inner) */}
       <div class="folio-inner" ref={inner}>
         <CardPage
@@ -907,8 +1026,13 @@ function pinLabel(el: HTMLElement, cmds: HTMLElement, col: HTMLElement, colLeft:
   const short = textWidth(pin, pin.querySelector('.short')?.textContent ?? '') + pad;
   const c = cmds.getBoundingClientRect();
   const others = c.width - pin.getBoundingClientRect().width;
+  // правый край — край полосы, а не команд: команды с полной надписью могут не поместиться в строку полосы и сдвинуться,
+  // и расчёт от их края колебался бы между полной и короткой надписью (этап 13: команд стало четыре — «На весь экран»)
+  const bar = cmds.parentElement!;
+  const bs = getComputedStyle(bar);
+  const right = bar.getBoundingClientRect().right - parseFloat(bs.paddingRight) - parseFloat(bs.borderRightWidth);
   // место имени в первой строке при ширине команды w: от левого края колонки до команд, с зазором 8 px (как --bar-cmds)
-  const room = (w: number) => c.right - others - w - 8 - colLeft;
+  const room = (w: number) => right - others - w - 8 - colLeft;
   const name = textWidth(nm, nm.textContent ?? '');
   el.toggleAttribute('data-pin-short', name > room(full) && name <= room(short));
 }
@@ -922,9 +1046,31 @@ const BAR_H = 36;
  * Полоса лежит на строке имени и прозрачна, пока лист не прокручен (data-scrolled): первый экран не теряет строки; имя
  * обходит её команды (--bar-cmds). У карточки союза команды закрепления нет: закрепляется карточка лица.
  */
-function FolioBar({ id, person = false, onClose, closeLabel = 'Закрыть карточку' }: { id: string; person?: boolean; onClose: () => void; closeLabel?: string }) {
+function FolioBar({ id, person = false, onClose, closeLabel = 'Закрыть карточку', current = 1 }: { id: string; person?: boolean; onClose: () => void; closeLabel?: string; current?: number }) {
+  const p = byId.get(id);
+  const sec = SECTIONS.find((x) => x.n === current);
+  const toc = tocNow.value;
   return (
     <div class="folio-bar">
+      {/* имя с уточнением и текущий раздел — видны, когда имя шапки ушло под полосу (решение 119; UI-07); для диктора
+          есть заголовок карточки и разделов */}
+      {person && p ? (
+        <span class="bar-ctx">
+          <span class="bc-name" aria-hidden="true">
+            <b>{p.name}</b>
+            {p.disambig ? <span class="ds">{typo(`, ${p.disambig}`)}</span> : null}
+          </span>
+          {toc && toc.id === id ? (
+            <span class="bc-sec">
+              <ContentsMenu states={toc.states} current={current} onGo={toc.go} />
+            </span>
+          ) : sec && current > 1 ? (
+            <span class="bc-sec" aria-hidden="true">
+              <span class="n">{sec.n}</span> {sec.title}
+            </span>
+          ) : null}
+        </span>
+      ) : null}
       <span class="bar-cmds">
         {person && <PinCmd id={id} />}
         <button
@@ -938,9 +1084,32 @@ function FolioBar({ id, person = false, onClose, closeLabel = 'Закрыть к
         >
           Свернуть карточку
         </button>
+        {/* «Вернуть небо» — в полосе, пока карточка на весь экран; в колонке «На весь экран» стоит в строке оглавления:
+            четвёртая команда полосы увела бы имя с первой строки (решения 91, 123) */}
+        {cardFull.value ? <FullCmd /> : null}
         <Close label={closeLabel} onClick={onClose} />
       </span>
     </div>
+  );
+}
+
+/**
+ * «На весь экран» ⇄ «Вернуть небо» (решение 123): карточка ложится поверх неба и панелей для сосредоточенного чтения;
+ * та же команда, Escape или открытая панель возвращают всё как было. Фокус остаётся на команде.
+ */
+function FullCmd() {
+  const on = cardFull.value;
+  return (
+    <button
+      type="button"
+      class="cmd full-card"
+      aria-pressed={on}
+      aria-label={on ? 'Вернуть небо и панели' : 'Карточка на весь экран'}
+      title={on ? 'Небо, панели и полоса времени вернутся (Escape)' : 'Карточка займёт весь экран; вернуть — этой же командой или Escape'}
+      onClick={() => toggleCardFull(!on)}
+    >
+      {on ? 'Вернуть небо' : 'На весь экран'}
+    </button>
   );
 }
 
@@ -1063,6 +1232,10 @@ function CardTabs({ tabs, current, phone = false }: { tabs: readonly CardTab[]; 
   return (
     // на телефоне — ещё и .stack-strip: небо оставляет место над строками (src/ui/SkyView.tsx, insets)
     <ul class={phone ? 'card-tabs stack-strip' : 'card-tabs'} ref={root} aria-label="Закреплённые карточки" data-many={tabs.length > 3 ? '' : undefined}>
+      {/* подпись над вкладками (решение 119; UI-08): что это за строки; для диктора — имя списка */}
+      <li class="tabs-cap" aria-hidden="true">
+        Закреплённые карточки
+      </li>
       {tabs.map((t) => {
         const l = tabLabel(t.id);
         const open = t.id === current;

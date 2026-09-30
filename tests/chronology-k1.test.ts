@@ -14,7 +14,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Person, Epoch, Volume } from '../src/data/types.ts';
 import { buildGraph } from '../src/engine/graph.ts';
-import { solveChronology, contemporaries, normFor, spouseBand, siblingPairs, MODELS, type ChronoResult, type ChronoModelId } from '../src/engine/chronology.ts';
+import { solveChronology, contemporaries, normFor, spouseBand, siblingPairs, MODELS, STRETCH_SLACK, type ChronoResult, type ChronoModelId } from '../src/engine/chronology.ts';
 import { modelEpochs, epochDelta, applyEpochDelta } from '../src/engine/epochs.ts';
 import { computeLayout, type LineStep } from '../src/engine/layout.ts';
 import { toAstro, toHist, shownYears, shownBirthRange } from '../src/engine/years.ts';
@@ -55,7 +55,8 @@ describe('CARD-60: эпохи в годах модели (решение 21)', (
     const res = solve('mt-long');
     expect(res.epochs).toBeDefined();
     expect(res.epochs!.map((e) => [e.id, e.start, e.end, e.events.map((x) => x.year)])).toEqual(epochs.map((e) => [e.id, e.start, e.end, e.events.map((x) => x.year)]));
-    expect(epochDelta(epochs, res.epochs!)).toEqual({});
+    // этап 13 (решение 99): основания написаны годами модели — у эпох данных, подставленных тем же modelEpochs, отличий нет
+    expect(epochDelta(modelEpochs(epochs, () => null, 'mt-long'), res.epochs!)).toEqual({});
   });
   it('краткое пребывание: вход в Египет — 1661 г. до Р. Х. (1876 − 215), Аврам — 1951', () => {
     const e = solve('mt-short').epochs!;
@@ -85,9 +86,15 @@ describe('CARD-60: эпохи в годах модели (решение 21)', (
     expect(toAstro(ante.end)).toBe(res.persons.get('noy')!.b + 600);
   });
   it('отличия эпох модели восстанавливаются из файла модели (build-data → atlas.ts)', () => {
+    // этап 13: отличия — от эпох модели по умолчанию (в индексе — они), вместе с основаниями, написанными годами модели
     const m = solve('mt-short').epochs!;
-    expect(applyEpochDelta(epochs, epochDelta(epochs, m))).toEqual(m);
-    expect(modelEpochs(epochs, () => null)).toEqual(epochs);
+    const base = solve('mt-long').epochs!;
+    expect(applyEpochDelta(base, epochDelta(base, m))).toEqual(m);
+    const none = modelEpochs(epochs, () => null);
+    expect(none.map((e) => [e.id, e.start, e.end, e.events])).toEqual(epochs.map((e) => [e.id, e.start, e.end, e.events]));
+    // метки {start}, {end}, {years} подставлены; в «Кратком пребывании» у Египта своё основание — 215 лет
+    for (const e of [...none, ...m]) expect(e.basis, e.id).not.toMatch(/[{}]/);
+    expect(plain(m.find((e) => e.id === 'egypt')!.basis)).toMatch(/на Египет приходится 215 лет/);
   });
 });
 
@@ -110,7 +117,8 @@ describe('CARD-61: супруги одного поколения', () => {
           checked++;
           const diff = Math.abs(w.b - a.b);
           if (diff <= 40) continue;
-          const tense = res.tensions.some((t) => t.kind === 'spouses' && t.persons.includes(s.a) && t.persons.includes(s.b));
+          // запись о супругах или общая запись трудности, в которой оба (430 лет: Амрам — Иохаведа; этап 13, решение 101)
+          const tense = res.tensions.some((t) => t.persons.includes(s.a) && t.persons.includes(s.b));
           if (tense) continue;
           // эпохи долгих поколений (Исаак женился в 40 лет, Иаков — после 84, Быт 25:20; 29:20–28): предел растёт с поколением
           const ep = g.persons.get(s.a)!.chrono?.epoch ?? a.epoch ?? '';
@@ -157,12 +165,13 @@ describe('CARD-61: супруги одного поколения', () => {
 
 describe('MAP-51: растянутые родословия (решение 24)', () => {
   const res = solve('mt-long');
+  // этап 13 (решение 101): одна трудность — одна запись; «Левий → Иохаведа → Моисей» — её строка по границам текста
   it('«Левий → Иохаведа → Моисей»: напряжение-толкование со стихами', () => {
-    const t = res.tensions.find((x) => x.persons.join('|') === 'leviy|iokhaveda|moisey')!;
+    const t = res.tensions.find((x) => ['leviy', 'iokhaveda', 'moisey'].every((id) => x.persons.includes(id)))!;
     expect(t).toBeDefined();
-    expect(t.kind).toBe('stretched');
+    expect(t.kind).toBe('chain');
     expect(t.cert).toBe('interpretation');
-    expect(plain(t.text)).toMatch(/^Левий — Иохаведа — Моисей: .*Вероятно, родословие называет не все поколения\./);
+    expect(plain(t.text)).toMatch(/Левий — Иохаведа — Моисей: .*Вероятно, родословия называют не все поколения/);
     expect(t.refs).toContain('Чис 26:59');
     expect(t.refs).toContain('Исх 12:40');
   });
@@ -188,7 +197,7 @@ describe('MAP-51: растянутые родословия (решение 24)'
       const end = c.d !== null && !rangeOnly ? c.d : c.d !== null ? Math.max(c.dLo ?? c.b, c.lastAttested ?? -Infinity) : c.lastAttested;
       if (end === null) continue;
       const limit = normFor(p.chrono?.epoch ?? c.epoch).lifeMax;
-      if (end - c.b <= limit + 0.5) continue;
+      if (end - c.b <= limit + STRETCH_SLACK) continue;
       if (died?.age !== undefined) continue; // возраст при смерти назван текстом (Аарон — 123 года)
       n++;
       if (c.brk === undefined || Math.abs(c.brk - (c.b + limit)) > 0.01) bad.push(`${id}: нет разрыва`);
@@ -197,8 +206,12 @@ describe('MAP-51: растянутые родословия (решение 24)'
     expect(n).toBeGreaterThanOrEqual(3); // Арам, Иохаведа, Овид
     expect(bad).toEqual([]);
   });
-  it('в модели краткого пребывания напряжений у Моисея нет (ТЗ § 11.2, п. 9)', () => {
-    expect(solve('mt-short').tensions.filter((t) => t.persons.includes('moisey'))).toEqual([]);
+  // ТЗ § 11.2, п. 9 и этап 13 (решение 101; X1 А2): напряжения 430 лет у Моисея нет, остаётся честный остаток
+  // «Левий — Иохаведа — Моисей» по границам текста (Чис 26:59) — одна запись, без 430 лет
+  it('в модели краткого пребывания напряжения 430 лет у Моисея нет — только остаток «Левий — Иохаведа» (ТЗ § 11.2, п. 9)', () => {
+    const ts = solve('mt-short').tensions.filter((t) => t.persons.includes('moisey'));
+    expect(ts.map((t) => t.persons.slice(0, 3))).toEqual([['leviy', 'iokhaveda', 'moisey']]);
+    expect(ts[0].refs).not.toContain('Исх 12:40');
   });
   it('раскладка передаёт разрыв следа узлу неба: brk внутри сплошного следа', () => {
     const lines = {

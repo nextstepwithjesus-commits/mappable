@@ -37,7 +37,7 @@ export const tree5: Scenario[] = [
       await p.waitForTimeout(300);
       if (!(await clickDot(p, 'u:adam+eva'))) return fail('нет ромба союза Адама и Евы');
       const u = flat(await p.locator('.sky .dotcard[data-kind="union"]').innerText());
-      for (const w of ['Адам и Ева', 'Ева — жена Адама', 'Раскрыть детей (3)', 'Карточка союза']) if (!u.includes(w)) return fail(`в карточке союза нет «${w}»: ${u.slice(0, 160)}`);
+      for (const w of ['Адам и Ева', 'Ева — жена Адама', 'Показать детей союза (3)', 'Подробнее о союзе']) if (!u.includes(w)) return fail(`в карточке союза нет «${w}»: ${u.slice(0, 160)}`);
       return pass();
     },
   },
@@ -47,15 +47,15 @@ export const tree5: Scenario[] = [
     run: async (p) => {
       await open(p, '#/adam~vs', { start: 'adam', extra: ADAM });
       if (!(await clickDot(p, 'u:adam+eva'))) return fail('нет ромба союза Адама и Евы');
-      await p.locator('.sky .dotcard .dc-cmds button', { hasText: 'Раскрыть детей' }).click();
+      await p.locator('.sky .dotcard .dc-cmds button', { hasText: 'Показать детей союза' }).click();
       await p.waitForTimeout(1500);
       const s = await state(p);
       if (Number(s.ids) !== 5) return fail(`в показе ${s.ids} лиц`);
       const d = (await dots(p)).find((q) => q.uid === 'u:adam+eva');
       if (!d?.open) return fail('ромб не раскрыт');
       if (hashId(p) !== 'adam') return fail(`выбрано «${hashId(p)}»`);
-      const cmd = p.locator('.sky .dotcard .dc-cmds button', { hasText: 'Свернуть детей' });
-      if (!(await cmd.count())) return fail('команда не стала «Свернуть детей»');
+      const cmd = p.locator('.sky .dotcard .dc-cmds button', { hasText: 'Скрыть детей союза' });
+      if (!(await cmd.count())) return fail('команда не стала «Скрыть детей союза»');
       await cmd.click();
       await p.waitForTimeout(1500);
       return Number((await state(p)).ids) === 1 ? pass() : fail(`после «Свернуть детей» в показе ${(await state(p)).ids} лиц`);
@@ -76,7 +76,7 @@ export const tree5: Scenario[] = [
       if (!(await clickDot(p, 'u:sif+'))) return fail('нет ромба союза Сифа');
       const u = flat(await p.locator('.sky .dotcard[data-kind="union"]').innerText());
       if (!((await p.locator('.sky canvas').getAttribute('data-stars')) ?? '').split(';').some((x) => x.startsWith('enos:'))) return fail('после «Продолжить ветвь» Еноса нет на небе');
-      for (const w of ['Сиф и его жена', 'имя жены в Писании не названо', 'Свернуть детей', 'Другие сыновья и дочери: имена не названы (Быт 5:7)'])
+      for (const w of ['Сиф и его жена', 'имя жены в Писании не названо', 'Скрыть детей союза', 'Другие сыновья и дочери: имена не названы (Быт 5:7)'])
         if (!u.includes(w)) return fail(`в карточке союза Сифа нет «${w}»: ${u.slice(0, 200)}`);
       return pass();
     },
@@ -113,13 +113,13 @@ export const tree5: Scenario[] = [
     run: async (p) => {
       await open(p, '#/adam~vs', { start: 'adam', extra: ADAM });
       if (!(await clickDot(p, 'u:adam+eva'))) return fail('нет ромба союза Адама и Евы');
-      await p.locator('.sky .dotcard .dc-cmds button', { hasText: 'Карточка союза' }).click();
+      await p.locator('.sky .dotcard .dc-cmds button', { hasText: 'Подробнее о союзе' }).click();
       await p.waitForTimeout(1000);
       const f = flat(await p.locator('.folio').innerText());
       if (!/Адам и Ева/.test(f) || !/Дети от этого союза|Супруги/.test(f)) return fail(`справа: ${f.slice(0, 120)}`);
       await open(p, '#/adam~vs', { start: 'adam', extra: ADAM_OPEN });
       if (!(await clickStar(p, 'kain'))) return fail('нет звезды Каина');
-      await p.locator('.sky .dotcard .dc-cmds button', { hasText: /^Карточка$/ }).click();
+      await p.locator('.sky .dotcard .dc-cmds button', { hasText: /^Вся карточка$/ }).click();
       await p.waitForTimeout(1000);
       if (hashId(p) !== 'kain') return fail(`выбрано «${hashId(p)}»`);
       const h = flat((await p.locator('.folio h2').first().textContent()) ?? '');

@@ -48,6 +48,12 @@ const plain = (s: string) => s.replace(/ /g, ' ');
 const b = (m: ChronoModelId, id: string) => solve(m).persons.get(id)!.b;
 const dated = (c: { cls: string }) => c.cls === 'exact' || c.cls === 'calculated';
 const tensionOf = (m: ChronoModelId, ids: string[]): Tension | undefined => solve(m).tensions.find((t) => t.persons.join('|') === ids.join('|'));
+/** Единая запись трудности 430 лет пребывания в Египте (этап 13, решение 101: одна запись на трудность). */
+const sojourn = (m: ChronoModelId): Tension => {
+  const ts = solve(m).tensions.filter((t) => t.text.startsWith('Пребывание в Египте'));
+  expect(ts, m).toHaveLength(1);
+  return ts[0];
+};
 
 describe('ТЗ § 10 и § 11.2 (сценарии 8–9) — на всех данных', () => {
   it('Потоп — 2518, Аврам — 2166, Иосиф в 30 лет — 1885, Исход — 1446 г. до Р. Х.', () => {
@@ -57,9 +63,15 @@ describe('ТЗ § 10 и § 11.2 (сценарии 8–9) — на всех да�
     // Моисею при Исходе — 80 лет (Исх 7:7)
     expect(toHist(Math.round(b('mt-long', 'moisey') + 80))).toBe(-1446);
   });
-  it('у Моисея — напряжение 430 лет пребывания (Исх 12:40); при кратком пребывании напряжений у него нет', () => {
+  // этап 13 (решение 101; X1 А2, П15): при кратком пребывании напряжения 430 лет у Моисея нет, но остаётся «остаток»
+  // Левий — Иохаведа — Моисей по границам текста (Чис 26:59) — сценарий 9 ТЗ выполняется честно, а не молча
+  it('у Моисея — напряжение 430 лет пребывания (Исх 12:40); при кратком пребывании его нет, остаётся только остаток «Левий — Иохаведа»', () => {
     expect(solve('mt-long').tensions.some((t) => t.persons.includes('moisey') && t.refs.includes('Исх 12:40'))).toBe(true);
-    expect(solve('mt-short').tensions.filter((t) => t.persons.includes('moisey'))).toEqual([]);
+    const short = solve('mt-short').tensions.filter((t) => t.persons.includes('moisey'));
+    expect(short.some((t) => t.refs.includes('Исх 12:40') || /430/.test(t.text))).toBe(false);
+    expect(short).toHaveLength(1);
+    expect(short[0].persons.slice(0, 3)).toEqual(['leviy', 'iokhaveda', 'moisey']);
+    expect(plain(short[0].text)).toMatch(/на два поколения не меньше \d+ лет/);
   });
 });
 
@@ -87,10 +99,12 @@ describe('1. Кааф и Мерари вошли в Египет с Иаково
     }
     expect(bad).toEqual([]);
   });
-  it('противоречие цепочки Левия теперь видно напряжением: Амрам рождается после смерти Каафа', () => {
-    const t = tensionOf('mt-long', ['iakov', 'leviy', 'kaaf', 'amram', 'moisey'])!;
-    expect(t).toBeDefined();
-    expect(plain(t.text)).toMatch(/Амрам — примерно через \d+ лет после смерти отца/);
+  // этап 13 (решение 101; X1 Д2): одна трудность — одна запись, текст — по границам текста, без годов-оценок решателя
+  it('противоречие цепочки Левия видно напряжением по границам текста: Моисей рождается после смерти Амрама', () => {
+    const t = sojourn('mt-long');
+    for (const id of ['kaaf', 'amram', 'moisey']) expect(t.persons).toContain(id);
+    expect(plain(t.text)).toContain('Кааф родился не позже 1876 г. до Р. Х., прожил 133 года и умер не позже 1743 г. до Р. Х.');
+    expect(plain(t.text)).toMatch(/Амрам родился не позже 1742 г\. до Р\. Х\., прожил 137 лет и умер не позже 1605 г\. до Р\. Х\.; Моисей родился в 1526 г\. до Р\. Х\. — не меньше чем через 79 лет после смерти отца/);
     expect(t.refs).toContain('Исх 12:40');
   });
 });
@@ -128,24 +142,25 @@ describe('2. Родитель старше ребёнка сильнее «су�
 });
 
 describe('3. Иохаведа: напряжение и у Аарона, и у Мариам', () => {
-  it('«Левий — Иохаведа — Моисей» — как прежде', () => {
-    const t = tensionOf('mt-long', ['leviy', 'iokhaveda', 'moisey'])!;
-    expect(t.kind).toBe('stretched');
-    expect(plain(t.text)).toMatch(/^Левий — Иохаведа — Моисей: по принятым годам от рождения дочери до рождения её сына проходит примерно \d+ лет/);
+  // этап 13: «Левий — Иохаведа — Моисей» — строка общей записи 430 лет, по границам текста: Левий прожил 137 лет
+  // (Исх 6:16), Иохаведа — его дочь (Чис 26:59), значит, при рождении Моисея ей было не меньше 245 лет
+  it('«Левий — Иохаведа — Моисей» — по границам текста, в записи 430 лет', () => {
+    const t = sojourn('mt-long');
+    expect(plain(t.text)).toMatch(/Левий — Иохаведа — Моисей: Левий родился не позже \d+ г\. до Р\. Х\., прожил 137 лет и умер не позже \d+ г\. до Р\. Х\.; Иохаведа родилась не позже \d+ г\. до Р\. Х\.; Моисей родился в 1526 г\. до Р\. Х\., и матери тогда было не меньше \d+ лет\./);
+    expect(plain(t.text)).toContain('Первую разгадку ограничивает Чис 26:59: Иохаведа названа дочерью Левия.');
   });
-  for (const [id, kid] of [['aaron', 'сына'], ['mariam', 'дочери']] as const)
+  for (const id of ['aaron', 'mariam'] as const)
     it(`${id}: в карточке — напряжение с возрастом матери, стихами и толкованием`, () => {
-      const t = solve('mt-long').tensions.find((x) => x.kind === 'stretched' && x.persons.includes('iokhaveda') && x.persons.includes(id))!;
-      expect(t).toBeDefined();
+      const t = sojourn('mt-long');
+      expect(t.persons).toEqual(expect.arrayContaining(['iokhaveda', id]));
       expect(t.cert).toBe('interpretation');
-      const name = g.persons.get(id)!.name;
-      const years = Math.round(b('mt-long', id) - b('mt-long', 'iokhaveda'));
-      expect(years).toBeGreaterThan(140);
-      expect(plain(t.text)).toContain(`Левий — Иохаведа — ${name}: по принятым годам от рождения дочери до рождения её ${kid} проходит примерно ${years} `);
-      expect(plain(t.text)).toMatch(/\(140 лет\)\. Так выходит при 430 годах пребывания в Египте \(Исх 12:40\)\. Вероятно, родословие называет не все поколения\./);
+      expect(plain(t.text)).toMatch(/матери тогда было не меньше \d+ лет/);
+      expect(plain(t.text)).toMatch(/430 лет считаются с прихода Авраама в Ханаан \(скобка Исх 12:40; Гал 3:17\)/);
       expect(t.refs).toEqual(expect.arrayContaining(['Исх 12:40', 'Чис 26:59']));
-      // при кратком пребывании этого напряжения нет
-      expect(solve('mt-short').tensions.some((x) => x.persons.includes('iokhaveda') && x.persons.includes(id))).toBe(false);
+      // при кратком пребывании напряжения 430 лет нет, остаток «Левий — Иохаведа» называет и его (П15)
+      const short = solve('mt-short').tensions.filter((x) => x.persons.includes('iokhaveda') && x.persons.includes(id));
+      expect(short.some((x) => x.refs.includes('Исх 12:40'))).toBe(false);
+      expect(short.map((x) => x.persons.slice(0, 3))).toEqual([['leviy', 'iokhaveda', 'moisey']]);
     });
   it('каждый ребёнок, родившийся после разрыва следа родителя, назван в напряжении вместе с этим родителем', () => {
     const bad: string[] = [];
@@ -167,14 +182,15 @@ describe('3. Иохаведа: напряжение и у Аарона, и у М
 });
 
 describe('5. Сжатое родословие от лица без чисел текста (DG 2.3.2): «Ахан, сын Хармия, сына Завдия, сына Зары» (Нав 7:1)', () => {
+  // этап 13: та же трудность 430 лет — строка общей записи
   it('Зара вошёл в Египет с Иаковом, Ахан — при взятии Иерихона: 3 поколения — не меньше 330 лет при 430 годах пребывания', () => {
-    const t = tensionOf('mt-long', ['zara', 'zimri-syn-zary', 'kharmiy-syn-zimri', 'akhan'])!;
-    expect(t).toBeDefined();
+    const t = sojourn('mt-long');
     expect(t.kind).toBe('chain');
     expect(t.cert).toBe('interpretation');
-    expect(plain(t.text)).toMatch(/^Зара — Зимри — Хармий — Ахан: 3 поколения — не меньше чем \d+ лет, в среднем не меньше чем по \d+ лет на поколение \(Зара родился не позже 1876 г\. до Р\. Х\., Ахан засвидетельствован ещё в 1406 г\. до Р\. Х\./);
-    expect(t.refs).toEqual(expect.arrayContaining(['Исх 12:40', 'Нав 7:1']));
-    expect(tensionOf('mt-short', ['zara', 'zimri-syn-zary', 'kharmiy-syn-zimri', 'akhan'])).toBeUndefined();
+    expect(t.persons).toEqual(expect.arrayContaining(['zara', 'zimri-syn-zary', 'kharmiy-syn-zimri', 'akhan']));
+    expect(plain(t.text)).toMatch(/Зара — Зимри — Хармий — Ахан: 3 поколения — не меньше чем \d+ лет, в среднем не меньше чем по \d+ лет на поколение \(Зара родился не позже 1876 г\. до Р\. Х\., Ахан засвидетельствован ещё в 1406 г\. до Р\. Х\./);
+    expect(t.refs).toContain('Исх 12:40');
+    expect(solve('mt-short').tensions.some((x) => x.persons.includes('akhan'))).toBe(false);
   });
   it('нижняя оценка — без годов-оценок решателя: цепочка, которая не противоречит числам текста (Урий — Веселеил), напряжения не даёт', () => {
     expect(solve('mt-long').tensions.some((t) => t.persons.includes('veseleil-syn-uriya'))).toBe(false);

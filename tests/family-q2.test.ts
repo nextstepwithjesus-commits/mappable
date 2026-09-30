@@ -201,6 +201,9 @@ function stability(S: Set<string>, root: string): Stab {
     for (const u of prev.units.get(s.from) ?? []) {
       const v = now.units.get(s.from)?.find((x) => x.union.id === u.union.id);
       if (!v) continue;
+      // союз, у которого на небе ещё не было ни жены, ни детей (сын — в коридоре: Соломон и Наама — Ровоам), стороны
+      // не имел: его первая постановка — не перестановка (этап 13: царица-мать ставится по другую сторону от коридора)
+      if (!u.wife && !u.kids.length) continue;
       if (v.side !== u.side) st.changed.push(`${u.union.id}: сторона`);
       const m0 = [...(u.wife ? [u.wife] : []), ...u.kids];
       const rel0 = m0.map((x) => prev.rows.get(x)! - a0);

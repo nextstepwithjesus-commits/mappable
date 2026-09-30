@@ -9,7 +9,8 @@ import type { Page } from 'playwright';
 import { pass, fail, secText, type Scenario } from './kit.ts';
 
 /** Текст без неразрывных пробелов и «склеек» (typo): для сверки — обычные пробелы. */
-const flat = (s: string) => s.replace(/[  ⁠]/g, (c) => (c === '⁠' ? '' : ' '));
+// этап 13: подзаголовки § 13 («Откуда годы», «Эпоха», «Среди родни») — отдельными строками; пробелы сводятся
+const flat = (s: string) => s.replace(/[  ⁠]/g, (c) => (c === '⁠' ? '' : ' ')).replace(/\s+/g, ' ');
 /** Открыть адрес заново (с загрузкой страницы). */
 const go = async (p: Page, hash: string, ms = 2800) => {
   const base = p.url().replace(/[?#].*$/, '');
@@ -23,8 +24,13 @@ const passport = async (p: Page, key: string) => {
   for (let k = 0; k < n; k++) if ((await dts.nth(k).innerText()).trim() === key) return flat(await dts.nth(k).locator('xpath=following-sibling::dd[1]').innerText());
   return '';
 };
-/** Первый год строки со знаком эры: «ок. 20 г. до Р. Х.» → −20, «ок. 5 г. по Р. Х.» → 5. */
+/**
+ * Год рождения строки со знаком эры: «ок. 20 г. до Р. Х.» → −20, «ок. 5 г. по Р. Х.» → 5; словарь дат этапа 13
+ * (решение 96): «род. между 45 и 20 гг. до Р. Х.» → середина, −32,5.
+ */
 const signedYear = (s: string) => {
+  const b = /между (\d{1,4}) и (\d{1,4})\s+гг\.\s+(до|по)\s+Р/.exec(s);
+  if (b) return ((b[3] === 'до' ? -1 : 1) * (Number(b[1]) + Number(b[2]))) / 2;
   const m = /(\d{1,4})(?:–\d{1,4})?\s+гг?\.\s+(до|по)\s+Р/.exec(s);
   return m ? (m[2] === 'до' ? -Number(m[1]) : Number(m[1])) : NaN;
 };
@@ -69,11 +75,12 @@ export const chrono3: Scenario[] = [
   },
   {
     n: 322,
-    title: 'CARD-79: Иоав убит в 970 г. до Р. Х., как и событие § 17, — в паспорте «ок. 1040–970», не «…–972», раньше Давида',
+    // этап 13 (словарь дат, решение 96): рождение Иоава — оценка шире 10 лет, «род. между …», смерть — свой год, без «ок.»
+    title: 'CARD-79: Иоав убит в 970 г. до Р. Х., как и событие § 17, — в паспорте «…, ум. 970 г. до Р. Х.», не «…–972», раньше Давида',
     run: async (p) => {
       await go(p, '#/ioav');
       const y = await passport(p, 'Годы');
-      if (!/1040–970 гг\. до Р\. Х\./.test(y)) return fail(`паспорт: «${y}»`);
+      if (!/(–|ум\. )970 гг?\. до Р\. Х\./.test(y) || /972/.test(y)) return fail(`паспорт: «${y}»`);
       const s17 = flat((await p.locator('.folio #sec-17').textContent()) ?? '');
       if (/972/.test(s17)) return fail(`§ 17: «${s17.slice(0, 120)}»`);
       // § 20 строит карточка (src/ui/card/shared.tsx, deathLine): ей нужен признак ChronoRow.dAge — передано владельцу карточки
@@ -82,11 +89,12 @@ export const chrono3: Scenario[] = [
   },
   {
     n: 323,
-    title: 'MAP-53: Валаам (пророк, Чис 22) — промежуток рождения кончается за 12 лет до пророчества: 1475–1420, а не …–1410',
+    // этап 13 (словарь дат): промежуток оценки пишется «между 1475 и 1420 гг. до Р. Х.»
+    title: 'MAP-53: Валаам (пророк, Чис 22) — промежуток рождения кончается за 12 лет до пророчества: между 1475 и 1420, а не …1410',
     run: async (p) => {
       await go(p, '#/valaam');
       const s8 = flat(await secText(p, 8));
-      if (!/1475–1420 гг\. до Р\. Х\./.test(s8)) return fail(`§ 8: «${s8.replace(/\s+/g, ' ').slice(0, 160)}»`);
+      if (!/(1475–1420|между 1475 и 1420) гг\. до Р\. Х\./.test(s8)) return fail(`§ 8: «${s8.replace(/\s+/g, ' ').slice(0, 160)}»`);
       return pass(`§ 8: «${s8.replace(/\s+/g, ' ').slice(0, 120)}»`);
     },
   },

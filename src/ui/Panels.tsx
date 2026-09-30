@@ -12,6 +12,7 @@ import { ChapterPanel } from './panels/Chapter.tsx';
 import { SectionPanel } from './panels/Section.tsx';
 import { LegendPanel } from './panels/Legend.tsx';
 import { AboutPanel } from './panels/About.tsx';
+import { ChronologyPanel } from './panels/Chronology.tsx';
 import { WorkPanel } from './panels/Work.tsx';
 
 /** Лист карточки на телефоне меняет высоту за 260 мс (phone.css): видимая часть неба устанавливается после этого. */
@@ -54,6 +55,8 @@ export function Panels() {
       return <LegendPanel />;
     case 'about':
       return <AboutPanel />;
+    case 'chronology':
+      return <ChronologyPanel />;
     case 'work':
       return <WorkPanel />;
     default:

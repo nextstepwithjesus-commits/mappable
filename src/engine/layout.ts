@@ -650,6 +650,54 @@ export function computeLayout(
       return order.indexOf(b) - order.indexOf(a);
     });
   }
+  // братья по матерям (этап 13, решение 95; X3 § 2.3): у родителя с детьми от двух союзов и больше дети идут группами
+  // по второму родителю — мать (у матери без отца — отец), «мать не названа» (''), родная мать дочери-призрака.
+  // Жена-спутница входит в группу своих детей и стоит у её внутреннего края, дальше её дети от младшего (ТЗ § 8.3 п. 2).
+  // Ближе к родителю — группа, чей первый ребёнок родился позже: ствол внешней группы стоит в год её первого ребёнка
+  // и проходит строки внутренних групп до их рождений, то есть пустые строки. При равенстве ближе «мать не названа»
+  // (её ствол идёт от следа отца), затем — по порядку браков в данных. Жёны без детей от него — ближе всех, как прежде.
+  // Лица коридора не перегруппировываются: их дети — корни притоков, полные опорных лиц (NFR-3). Горизонталь (годы)
+  // не меняется.
+  const grouped = new Set<string>();
+  for (const [p, kids] of kidsOf) {
+    if (spineSet.has(p)) continue;
+    const otherOf = (nid: string): string => {
+      if (isSat(nid)) return nid;
+      const id = nid.startsWith('ghost:') ? nid.slice(6) : nid;
+      const f = fatherOf(g, id);
+      const m = motherOf(g, id);
+      return (f === p ? m : m === p ? f : null) ?? '';
+    };
+    const groups = new Map<string, string[]>();
+    for (const k of kids) {
+      const o = otherOf(k);
+      const a = groups.get(o);
+      if (a) a.push(k);
+      else groups.set(o, [k]);
+    }
+    const withKids = [...groups.entries()].filter(([, ks]) => ks.some((k) => !isSat(k)));
+    if (withKids.length < 2) continue;
+    grouped.add(p);
+    const order = primaryChildren(g, p);
+    const first = (ks: readonly string[]) => Math.min(...ks.filter((k) => !isSat(k)).map(birth));
+    const spouses = g.spousesOf.get(p) ?? [];
+    const marriage = (o: string) => {
+      const i = spouses.findIndex((e) => e.a === o || e.b === o);
+      return i < 0 ? 999 : i;
+    };
+    const childless = [...groups.values()].filter((ks) => ks.every((k) => isSat(k))).flat().sort((a, b) => birth(a) - birth(b));
+    withKids.sort(([oa, a], [ob, b]) => first(b) - first(a) || (oa === '' ? -1 : ob === '' ? 1 : 0) || marriage(oa) - marriage(ob));
+    const next: string[] = [...childless];
+    for (const [, ks] of withKids) {
+      const sat = ks.filter(isSat).sort((a, b) => birth(a) - birth(b));
+      const own = ks.filter((k) => !isSat(k)).sort((a, b) => {
+        const d = birth(b) - birth(a);
+        return Math.abs(d) > 0.5 ? d : order.indexOf(b) - order.indexOf(a);
+      });
+      next.push(...sat, ...own);
+    }
+    kids.splice(0, kids.length, ...next);
+  }
   // --- 3. аккуратные деревья: относительные смещения
   const relOffset = new Map<string, number>(); // смещение узла относительно родителя по раскладке
   const subtree = (nid: string): Contour => {
@@ -687,7 +735,8 @@ export function computeLayout(
     };
     const anchorKids = (p: string) => (kidsOf.get(p) ?? []).filter((k) => !isSat(k) && !spineSet.has(k) && priorDepth(k) !== null);
     // дети лица коридора — корни притоков, а не поддерево: их порядок постановки не меняется
-    const parents = [...kidsOf.keys()].filter((p) => !spineSet.has(p) && anchorKids(p).length >= 2);
+    // у родителей с детьми по матерям (решение 95) группировка важнее прежнего порядка братьев
+    const parents = [...kidsOf.keys()].filter((p) => !spineSet.has(p) && !grouped.has(p) && anchorKids(p).length >= 2);
     const level = (id: string) => {
       let n = 0;
       for (let x = layoutParent.get(id); x && n < 1000; x = layoutParent.get(x)) n++;
@@ -1020,10 +1069,31 @@ export function computeLayout(
     if (a) a.push(n);
     else laneNodes.set(n.lane, [n]);
   }
+  // отвод — по грамматике неба (Г4, Г8; этап 13, решение 95): от узла союза на следе матери, если она спутница отца,
+  // стоит по ту же сторону, что ребёнок, и не дальше двух строк от ближайшего своего ребёнка (src/render/links.ts,
+  // qualifies); иначе — от полосы отца
+  const kidLanesOf = new Map<string, number[]>();
+  for (const n of nodes) {
+    if (n.ghost || n.satelliteOf || n.parentLane === null) continue;
+    const m = motherOf(g, n.person);
+    if (!m) continue;
+    const a = kidLanesOf.get(m);
+    if (a) a.push(n.lane);
+    else kidLanesOf.set(m, [n.lane]);
+  }
+  const dropFrom = (n: LayoutNode): number => {
+    const m = n.ghost ? null : motherOf(g, n.person);
+    const mn = m ? byNode.get(m) : undefined;
+    if (!mn || !mn.satelliteOf || mn.satelliteOf !== n.layoutParent) return n.parentLane!;
+    const side = Math.sign(n.lane - n.parentLane!);
+    const nearest = Math.min(...(kidLanesOf.get(m!) ?? [n.lane]).map((l) => Math.abs(l - mn.lane)));
+    return Math.sign(mn.lane - n.parentLane!) === side && nearest <= 2 ? mn.lane : n.parentLane!;
+  };
   for (const n of nodes) {
     if (n.parentLane === null || n.satelliteOf) continue;
-    const lo = Math.min(n.parentLane, n.lane) + 1;
-    const hi = Math.max(n.parentLane, n.lane) - 1;
+    const from = dropFrom(n);
+    const lo = Math.min(from, n.lane) + 1;
+    const hi = Math.max(from, n.lane) - 1;
     dropLength += Math.abs(n.lane - n.parentLane);
     // отвод приходит в год рождения ребёнка; у знака у первого свидетельства — в оценку рождения внутри полосы (born)
     const at = n.born ?? n.t0;

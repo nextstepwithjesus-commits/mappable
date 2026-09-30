@@ -124,8 +124,10 @@ describe('«Все N на небе» отмечает одноимённых (Т
     for (const id of ids) expect(byId.get(id)!.name).toBe('Иосиф');
     expect(ids).not.toContain('manassiya');
     expect(ids).not.toContain('iosifiya'); // Иосифия — другое имя
-    const group = resultBlocks(hits, { pinned: false, noAll: false }).find((b) => b.head?.startsWith('Иосиф'));
-    if (group) expect(group.rows.length).toBe(ids.length);
+    // группа «Имя совпадает» (решение 120) — те же лица, что отмечает её «Показать на небе»
+    const group = resultBlocks(hits, { pinned: false, noAll: false, q: 'иосиф' }).find((b) => b.group === 'name')!;
+    expect(group.rows.flatMap((r) => (r.kind === 'person' ? [r.id] : [])).sort()).toEqual([...ids].sort());
+    expect(group.rows[0]).toMatchObject({ kind: 'all', group: true, ids });
   });
   it('«Иисус» — все, чьё имя начинается словом «Иисус»: Иисус Христос, Иисус Навин и одноимённые', async () => {
     const { markAllIds } = await import('../src/ui/top/Search.tsx');

@@ -203,7 +203,7 @@ export const map: Scenario[] = [
   },
   {
     n: 143,
-    title: 'E7, решение 1: масштаб «по насыщенности» при первом показе, растяжение шкалы не больше 1 : 6',
+    title: 'E7, решение 1: масштаб «Сжатый по плотности лиц» (решение 124; было «по насыщенности») при первом показе, растяжение шкалы не больше 1 : 6',
     run: async (p) => {
       const { pass, fail } = await import('./kit.ts');
       const { readFileSync } = await import('node:fs');
@@ -220,9 +220,9 @@ export const map: Scenario[] = [
       }
       if (hi / lo > DENSE_MAG + 0.05) return fail(`растяжение 1 : ${(hi / lo).toFixed(1)} (npm run -s data после правки src/engine/timescale.ts)`);
       await p.locator('.skyctl .view-toggle').click();
-      const on = await p.locator('.skyctl').getByText('по насыщенности', { exact: true }).first().getAttribute('aria-pressed');
-      if (on !== 'true') return fail(`при первом показе масштаб не «по насыщенности» (aria-pressed ${on})`);
-      return pass(`растяжение 1 : ${(hi / lo).toFixed(1)}; при первом показе — «по насыщенности»`);
+      const on = await p.locator('.skyctl').getByText('Сжатый по плотности лиц', { exact: true }).first().getAttribute('aria-pressed');
+      if (on !== 'true') return fail(`при первом показе масштаб не «Сжатый по плотности лиц» (aria-pressed ${on})`);
+      return pass(`растяжение 1 : ${(hi / lo).toFixed(1)}; при первом показе — «Сжатый по плотности лиц»`);
     },
   },
 

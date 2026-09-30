@@ -73,6 +73,7 @@ export function Sheet({
       aria-labelledby={hid}
       data-reserve={reserve ? 'sheet' : undefined}
       hidden={!reserve && parked.value}
+      onKeyDown={dialog ? (e) => trapTab(e, ref.current) : undefined}
     >
       {/* шапка: на телефоне прилипает к верху листа, чтобы «×» всегда был под рукой */}
       <header class="sheet-head">
@@ -86,6 +87,32 @@ export function Sheet({
       {typoTree(children)}
     </section>
   );
+}
+
+/** Остановки Tab внутри элемента — видимые и доступные. */
+const TABBABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+export function tabStops(root: HTMLElement): HTMLElement[] {
+  return [...root.querySelectorAll<HTMLElement>(TABBABLE)].filter((el) => !el.closest('[hidden], [inert]') && el.getClientRects().length > 0);
+}
+/**
+ * Модальный лист телефона (решение 117; UI-05): Tab и Shift+Tab ходят по кругу внутри листа — с последней остановки
+ * на первую и обратно; фокус не уходит на недоступный фон.
+ */
+export function trapTab(e: KeyboardEvent, root: HTMLElement | null) {
+  if (e.key !== 'Tab' || !root) return;
+  const stops = tabStops(root);
+  if (!stops.length) return;
+  const first = stops[0];
+  const last = stops[stops.length - 1];
+  const a = document.activeElement;
+  const inside = !!a && root.contains(a);
+  if (e.shiftKey && (a === first || !inside || a === root.querySelector('h2'))) {
+    e.preventDefault();
+    last.focus();
+  } else if (!e.shiftKey && (a === last || !inside)) {
+    e.preventDefault();
+    first.focus();
+  }
 }
 
 /**

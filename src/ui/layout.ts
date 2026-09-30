@@ -21,7 +21,7 @@
  * освободившееся место; панель остаётся колонкой. Одна модель для всех свёрнутых областей.
  */
 import { computed, effect, signal } from '@preact/signals';
-import { panel, selected, type Panel } from '../state.ts';
+import { panel, pickMode, selected, type Panel } from '../state.ts';
 import { cardFolded, cardTabs } from './stack.ts';
 
 export const PHONE_MAX = 720;
@@ -261,6 +261,31 @@ if (typeof window !== 'undefined') {
     shownPanel = p;
     if (!skyFull.peek()) return;
     if ((p && p !== was && panelKind(p) !== 'none') || !canFill.value) skyFull.value = false;
+  });
+}
+
+/**
+ * «Карточка на весь экран» (этап 13, решение 123; UI-16): на широком экране лист карточки ложится поверх неба, панелей
+ * и полосы времени — сосредоточенное чтение; сетка не меняется, небо не пересчитывается. Возврат — та же команда
+ * («Вернуть небо»), Escape, открытие панели, выбор второго лица на небе, «Небо во весь экран» или свёрнутая карточка.
+ * Лицо меняется — режим остаётся: читатель идёт по ссылкам из карточки в карточку. На телефоне режима нет: там лист.
+ */
+export const cardFull = signal(false);
+export const canCardFull = computed(() => viewportWidth.value > PHONE_MAX && !!selected.value && !cardFolded.value && !skyFull.value);
+/** Включить, выключить или переключить «Карточку на весь экран»; включить можно, только когда есть что показать. */
+export function toggleCardFull(on: boolean = !cardFull.peek()) {
+  cardFull.value = on && canCardFull.peek();
+}
+if (typeof window !== 'undefined') {
+  let shown = panel.peek();
+  effect(() => {
+    const p = panel.value;
+    const was = shown;
+    shown = p;
+    const pick = pickMode.value;
+    const can = canCardFull.value;
+    if (!cardFull.peek()) return;
+    if ((p && p !== was) || pick || !can) cardFull.value = false;
   });
 }
 

@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { ROOT } from './bible.ts';
 import { contrast as ratio, linearRgb, CONTRAST_USES } from '../src/ui/contrast.ts';
 import { over, likelyAlpha, CONSTELLATION_DIM, DIM, DIM_LABEL_CONTRAST, CLOUD_DIMMED, dimLabelAlpha, labelGrounds, separateRibbons, RIBBON_LIGHTNESS } from '../src/render/dim.ts';
-import { BRANCH_COLORS, LINK_YELLOW, BRANCH_CONTRAST, BRANCH_DE, BRANCH_FAR_CONTRAST, BRANCH_NAMES, KIN_GOLD, KIN_GOLD_UNDER, UNION_COLORS, UNION_DE, branchColor, branchFade, branchFloor, type MapTheme } from '../src/render/branches.ts';
+import { BRANCH_COLORS, LINK_YELLOW, BRANCH_CONTRAST, BRANCH_DE, BRANCH_FAR_CONTRAST, BRANCH_NAMES, KIN_GOLD, KIN_GOLD_DE, KIN_GOLD_UNDER, UNION_COLORS, UNION_DE, branchColor, branchFade, branchFloor, type MapTheme } from '../src/render/branches.ts';
 
 const css = readFileSync(join(ROOT, 'src/styles/tokens.css'), 'utf8');
 const block = (sel: string) => {
@@ -152,6 +152,20 @@ for (const [t, c] of Object.entries(themes)) {
   if (theme === 'day') for (const g of grounds) check(`точки золотистой дуги на подложке (альфа ${KIN_GOLD_UNDER.a} на ${g})`, ratio(gold, over(KIN_GOLD_UNDER.color, g, KIN_GOLD_UNDER.a)), 3);
   for (const [k, m] of [['обычное зрение', undefined], ...Object.entries(CVD)] as [string, number[][] | undefined][])
     check(`золотистый не похож на жёлтый выбранной связи (${k}), ΔE`, dE(simulate(gold, m), simulate(yellow, m)), m ? 10 : 18);
+  // этап 13, решение 94 (П7): золотистый не похож на золото ленты Иосифа — оба конца градиента, токены и цвета холста
+  const josephGold = [...new Set([c['--gold-1'], c['--gold-2'], lanes[0], lanes[1]])];
+  for (const [k, m] of [['обычное зрение', undefined], ...Object.entries(CVD)] as [string, number[][] | undefined][]) {
+    let d = Infinity;
+    let with_ = '';
+    for (const h of josephGold) {
+      const v = dE(simulate(gold, m), simulate(h, m));
+      if (v < d) {
+        d = v;
+        with_ = h;
+      }
+    }
+    check(`золотистый ${gold} не похож на золото ленты Иосифа (${k}; ближе всех ${with_}), ΔE`, d, m ? KIN_GOLD_DE.cvd : KIN_GOLD_DE.normal);
+  }
 }
 console.log(fail ? `\nНе прошло проверок: ${fail}` : '\nВсе проверки пройдены.');
 process.exit(fail ? 1 : 0);

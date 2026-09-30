@@ -8,7 +8,8 @@ import { P, Refs, VerseInsert, Verses, flyToIds, plural, refLabel } from '../com
 import { grid, unfoldCard } from '../layout.ts';
 import { typo } from '../text/typo.ts';
 import { Segmented } from '../controls.tsx';
-import { Sheet } from './Sheet.tsx';
+import { Sheet, useRemembered } from './Sheet.tsx';
+import { showResults } from '../show.ts';
 
 // ---------- синопсис родословий (G2; ТЗ § 3.2; CARD-40; UX-14; VIS-34; MOB-23) ----------
 
@@ -88,8 +89,13 @@ const inCol = (r: string, col: (typeof OT_COLS)[number]) => {
  */
 export function synopsisRows(flip: boolean, notesOf: (id: string) => Note[] | null = () => null): SynRow[] {
   const J: Side[] = lines.joseph.persons.map((s) => ({ id: s.id, no: s.mt ?? null, flag: s.flag, refs: s.refs }));
+  // второе родословие Иосифа (решения 107, 110): шаг «Илий → Иосиф» — по связи графа «по Луке» (otherParents Иосифа,
+  // Лк 3:23), с её стихами; пока такой записи нет — стих Лк 3:23 самой линии
+  const byLuke = (graph.parentsOf.get('iosif-muzh-marii') ?? []).find((e) => e.parent === 'iliy-otets-marii' && e.claim === 'by-luke');
   const M: Side[] = lines.mary.persons.map((s: LineStep) =>
-    flip && s.id === 'mariya' ? { id: 'iosif-muzh-marii', no: 1, flag: 'in-text', refs: ['Лк 3:23'] } : { id: s.id, no: s.lk ?? null, flag: s.flag, refs: s.refs },
+    flip && s.id === 'mariya'
+      ? { id: 'iosif-muzh-marii', no: 1, flag: byLuke ? 'by-luke' : 'in-text', refs: byLuke?.refs.length ? [...byLuke.refs] : ['Лк 3:23'] }
+      : { id: s.id, no: s.lk ?? null, flag: s.flag, refs: s.refs },
   );
   // общие лица — наибольшая общая подпоследовательность по id
   const n = J.length;
@@ -206,6 +212,19 @@ export function SynopsisPanel() {
   const [whyTop, setWhyTop] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   const segOn = skyGroup.value?.kind === 'segment' ? skyGroup.value.label : null;
+  // решение 125 (UI-19): на телефоне сначала только Мф и Лк; Бытие, 1 Пар и Руфь — по команде
+  const phone = grid.value.phone;
+  const [otOn, setOt] = useRemembered<boolean | null>('synopsis:ot', null);
+  const ot = otOn ?? !phone;
+  const cols = ot ? 7 : 4;
+  // переходы к расхождениям и схождениям (решение 125): строка-вставка участка — в видимую часть листа, фокус — на неё
+  const jump = (at: string) => {
+    const el = box.current?.querySelector<HTMLElement>(`tr.note[data-at="${CSS.escape(at)}"] > td`);
+    const sheet = box.current?.closest<HTMLElement>('.sheet');
+    if (!el || !sheet) return;
+    sheet.scrollTop = (el.closest('tr') as HTMLElement).offsetTop - 60;
+    el.focus({ preventScroll: true });
+  };
 
   // U2: панель, открытая с неба у точки сравнения, стоит у своего участка
   useLayoutEffect(() => {
@@ -231,7 +250,10 @@ export function SynopsisPanel() {
     }
     skyGroup.value = { ids: note.ids, label, kind: 'segment', line: 'both' };
     if (grid.peek().phone) panel.value = null;
-    flyToIds(note.ids);
+    // лица участка вне показа — гостями, пока участок подсвечен (решение 113)
+    const guests = showResults(note.ids, 'synopsis', 'group');
+    if (guests) window.setTimeout(() => flyToIds(note.ids), 120);
+    else flyToIds(note.ids);
   };
 
   const refCell = (row: string, cell: OtCell, c: number): ComponentChildren => {
@@ -309,7 +331,7 @@ export function SynopsisPanel() {
   let preSaid = false;
   for (const [ri, r] of rows.entries()) {
     if (r.kind === 'note') {
-      trs.push(<NoteRow key={r.key} note={r.note} segOn={segOn} onShow={showSegment} />);
+      trs.push(<NoteRow key={r.key} note={r.note} segOn={segOn} onShow={showSegment} cols={cols} />);
       body = 0;
       preLeft = 0;
       continue;
@@ -331,7 +353,7 @@ export function SynopsisPanel() {
             <Name id={r.id} />
           </th>
           {noCell(r.lk, 'lk', false)}
-          {r.ot.map((c, i) => refCell(r.key, c, i))}
+          {ot && r.ot.map((c, i) => refCell(r.key, c, i))}
         </tr>,
       );
       preSaid = true;
@@ -346,7 +368,7 @@ export function SynopsisPanel() {
             <Name id={r.id} />
           </th>
           {jesusLk ? <td class="no-cell ref-cell">{typo('3:23')}</td> : noCell(r.lk, 'lk', false)}
-          {r.ot.map((c, i) => refCell(r.key, c, i))}
+          {ot && r.ot.map((c, i) => refCell(r.key, c, i))}
         </tr>,
       );
     } else {
@@ -358,14 +380,14 @@ export function SynopsisPanel() {
           </th>
           <td class={r.lk ? 'nm lk' : 'nm lk empty'}>{sideName(r.lk, 'lk')}</td>
           {noCell(r.lk, 'lk', false)}
-          {r.ot.map((c, i) => refCell(r.key, c, i))}
+          {ot && r.ot.map((c, i) => refCell(r.key, c, i))}
         </tr>,
       );
     }
     if (openHere)
       trs.push(
         <tr key={`${r.key}-v`} class="verse-row">
-          <td colspan={7}>
+          <td colspan={cols}>
             <Verses refText={openHere} />
           </td>
         </tr>,
@@ -395,16 +417,32 @@ export function SynopsisPanel() {
         </p>
         {whyTop && (loadedCard('iliy-otets-marii')?.notes?.length ?? 0) > 0 ? <WhyInsert id="iliy-otets-marii" owner="syn-why-top" /> : null}
       </div>
+      {/* переходы к расхождениям и схождениям; источники Ветхого Завета — командой (решение 125) */}
+      <div class="syn-jumps" role="group" aria-label="Переходы по синопсису">
+        <span class="k">Перейти:</span>
+        {rows.flatMap((r) => (r.kind === 'note' ? [r.note] : [])).map((n) => (
+          <button key={`${n.kind}-${n.at}`} type="button" class="cmd" onClick={() => jump(noteAt(n))}>
+            {typo(jumpLabel(n))}
+          </button>
+        ))}
+        <button type="button" class="cmd syn-ot" onClick={() => setOt(!ot)}>
+          {ot ? 'Скрыть Быт, 1 Пар и Руф' : 'Показать Быт, 1 Пар и Руф'}
+        </button>
+      </div>
       <div class="syn-wrap" ref={box}>
-        <table class="synopsis">
+        <table class={ot ? 'synopsis' : 'synopsis mtlk'}>
           <colgroup>
             <col class="c-no" />
             <col class="c-nm" />
             <col class="c-nm" />
             <col class="c-no" />
-            <col class="c-ot" />
-            <col class="c-ot" />
-            <col class="c-ot" />
+            {ot && (
+              <>
+                <col class="c-ot" />
+                <col class="c-ot" />
+                <col class="c-ot" />
+              </>
+            )}
           </colgroup>
           <thead>
             <tr>
@@ -416,11 +454,12 @@ export function SynopsisPanel() {
               <th scope="col" class="num" aria-label="Номер у Луки">
                 №
               </th>
-              {OT_COLS.map((c) => (
-                <th scope="col" key={c.key} title={c.title}>
-                  {c.label}
-                </th>
-              ))}
+              {ot &&
+                OT_COLS.map((c) => (
+                  <th scope="col" key={c.key} title={c.title}>
+                    {c.label}
+                  </th>
+                ))}
             </tr>
           </thead>
           <tbody>{trs}</tbody>
@@ -435,6 +474,21 @@ export function SynopsisPanel() {
   );
 }
 
+/** Где стоит строка-вставка участка (data-at): у схождения — само лицо, у расхождения и лишних поколений — лицо перед ними. */
+const noteAt = (n: SynNote) => (n.kind === 'join' ? n.at : (n.prev ?? n.at));
+
+/**
+ * Надпись перехода (решение 125): «расхождение: Давид», «схождение: Салафиил», «только у Луки: Каинан». Имена — в
+ * именительном падеже, без склонения.
+ */
+export function jumpLabel(n: SynNote): string {
+  const nm = (id: string | null) => (id ? (byId.get(id)?.name ?? id) : '');
+  if (n.kind === 'join') return `схождение: ${nm(n.at)}`;
+  if (n.kind === 'split') return `расхождение: ${nm(n.prev)}`;
+  const side = n.mt.length ? n.mt : n.lk;
+  return `${n.mt.length ? 'только у Матфея' : 'только у Луки'}: ${side.map((s) => nm(s.id)).join(', ')}`;
+}
+
 /** Сколько имён у линии на участке: «15 имён». */
 const count = (n: number) => `${n} ${plural(n, 'имя', 'имени', 'имён')}`;
 
@@ -442,7 +496,7 @@ const count = (n: number) => `${n} ${plural(n, 'имя', 'имени', 'имён
  * Вставка перед участком (U2; UX-14): что здесь происходит, со стихами обеих линий, «почему» — ссылкой на примечание
  * карточки, и команда «показать участок на небе». Строки собраны без подстановки имени в падеж.
  */
-function NoteRow({ note, segOn, onShow }: { note: SynNote; segOn: string | null; onShow: (n: SynNote, label: string) => void }) {
+function NoteRow({ note, segOn, onShow, cols = 7 }: { note: SynNote; segOn: string | null; onShow: (n: SynNote, label: string) => void; cols?: number }) {
   const why = WHY[note.kind === 'join' ? note.at : note.kind === 'extra' ? (note.mt[0] ?? note.lk[0]).id : (note.prev ?? '')];
   const owner = `sn-${note.kind}-${note.at}`;
   const prevName = note.prev ? (byId.get(note.prev)?.name ?? '') : '';
@@ -483,8 +537,9 @@ function NoteRow({ note, segOn, onShow }: { note: SynNote; segOn: string | null;
   const whyP = !!why && byId.has(why) && (loadedCard(why)?.notes?.length ?? 0) > 0;
   const [whyOpen, setWhyOpen] = useState(false);
   return (
-    <tr class={`note ${note.kind}`} data-at={note.kind === 'join' ? note.at : (note.prev ?? undefined)}>
-      <td colspan={7}>
+    <tr class={`note ${note.kind}`} data-at={noteAt(note)}>
+      {/* цель перехода «Перейти: …» (решение 125): фокус встаёт на вставку, Tab идёт дальше по её ссылкам */}
+      <td colspan={cols} tabIndex={-1}>
         <p>
           {text}
           {whyP && (

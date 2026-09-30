@@ -170,7 +170,8 @@ export const card: Scenario[] = [
     run: async (p) => {
       await open(p, 'maakha-nalozhnitsa-khaleva');
       const brief = (await p.locator('.folio .brief').innerText()).replace(/\s+/g, ' ').replace(/^Кратко: /, '').trim();
-      if (brief !== 'Наложница Халева. Мать Шевера, Фирханы, Шаафа и Шевы.') return fail(`«Кратко»: «${brief}»`);
+      // этап 13, решение 121: запись § 5, приведённая целиком, — со своим стихом, § 5 её не повторяет
+      if (!/^Наложница Халева\s?1 Пар 2:48\. Мать Шевера, Фирханы, Шаафа и Шевы\.$/.test(brief)) return fail(`«Кратко»: «${brief}»`);
       if (await p.locator('.folio section.sec').count()) return fail('разделы видны до раскрытия');
       const btn = p.locator('.folio .rest button', { hasText: 'Показать все сведения' });
       if (!(await btn.count())) return fail('нет строки «Показать все сведения»');
@@ -240,7 +241,9 @@ export const card: Scenario[] = [
       await p.evaluate(`document.querySelector('.folio').style.setProperty('--sheet-h','100vh')`);
       await p.waitForTimeout(400);
       const rail = p.locator('.folio .rail');
-      const rb = (await rail.boundingBox())!;
+      // этап 13, решение 119: строка под шапкой — название текущего раздела со списком и номера; вся строка — во всю ширину
+      const row = (await p.locator('.folio .rail-row').count()) ? p.locator('.folio .rail-row') : rail;
+      const rb = (await row.boundingBox())!;
       if (rb.height > 60 || rb.width < 300) return fail(`рейка ${Math.round(rb.width)}×${Math.round(rb.height)}`);
       const ten = rail.locator('button').nth(9);
       const tb = (await ten.boundingBox())!;

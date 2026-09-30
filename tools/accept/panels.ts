@@ -229,7 +229,8 @@ export const panels: Scenario[] = [
       await p.waitForTimeout(1500);
       const heads = (await s.locator('table.xtable thead th').allInnerTexts()).map((x) => x.trim());
       // этап 7 (CARD-51): столбец — «Место смерти» (из § 20)
-      if (heads.join('|') !== 'Царь|Годы правления|Возраст при смерти|Место смерти|Погребение|Стихи') return fail(`шапка: ${heads.join('|')}`);
+      // этап 13 (решение 112): в группе царица Гофолия — столбец «Царь, царица»
+      if (heads.join('|') !== 'Царь, царица|Годы правления|Возраст при смерти|Место смерти|Погребение|Стихи') return fail(`шапка: ${heads.join('|')}`);
       const hez = s.locator('table.xtable tbody tr', { has: p.locator('button.person[data-id="ezekiya"]') });
       const age = nb(await hez.locator('td.num').innerText());
       if (!/54 года/.test(age) || !/выв\./.test(age)) return fail(`возраст Езекии: «${age}»`);
@@ -246,14 +247,20 @@ export const panels: Scenario[] = [
   },
   {
     n: 118,
-    title: 'G6: «О карте» по-русски и без служебных строк: годы опор «966 г. до Р. Х.», нет «-966», метрик, «01», двойной точки; модель и Лк 3 — ссылками на свои места',
+    // этап 13, решение 102: опоры, модели и напряжения — в панели «О хронологии», «О карте» ведёт в неё
+    title: 'G6: «О карте» по-русски и без служебных строк: нет «-966», метрик, «01», двойной точки; годы опор «966 г. до Р. Х.» — в «О хронологии» по ссылке; Лк 3 — в «Синопсисе»',
     run: async (p) => {
       await openPanel(p, 'О карте');
       const t = nb(await sheet(p).innerText());
       const bad = [/-\d{2,4}\b/, /persons|lanes|corridor|Assyrian/i, /г\.\./, /^0\d\s/m].find((re) => re.test(t));
       if (bad) return fail(`служебная строка: ${bad}`);
-      if (!/966 г\. до Р\. Х\. \(Тиле\)/.test(t)) return fail('нет «966 г. до Р. Х. (Тиле)»');
       if (await sheet(p).locator('[role="group"][aria-label="Модель хронологии"]').count()) return fail('переключатель модели остался в «О карте»');
+      await sheet(p).getByRole('button', { name: 'О хронологии' }).click();
+      await p.waitForTimeout(600);
+      const c = nb(await sheet(p).innerText());
+      if (!/966 г\. до Р\. Х\. \(Тиле\)/.test(c)) return fail('в «О хронологии» нет «966 г. до Р. Х. (Тиле)»');
+      if (/-\d{3,4}\b/.test(c)) return fail('в «О хронологии» — «-966»');
+      await openPanel(p, 'О карте');
       await sheet(p).getByRole('button', { name: /в «Синопсисе»/ }).click();
       await p.waitForTimeout(600);
       return (await p.locator('section.sheet h2', { hasText: 'Синопсис' }).count()) ? pass('опоры по-русски; Лк 3 — в «Синопсисе»') : fail('команда не открыла «Синопсис»');
@@ -348,7 +355,8 @@ export const panels: Scenario[] = [
       if (!/^Как читать карту: /.test(lead)) return fail(`пояснение: «${lead}»`);
       const heads = (await sh.locator('h3[id^="legend-"]').allInnerTexts()).map((x) => nb(x).trim());
       // вида «Древо» больше нет (этап 11, единый атлас): на его месте, сразу после «Неба», — «Карточки на небе»
-      const want = ['Как читать карту', 'Небо', 'Карточки на небе', 'Знаки', 'Линии', 'Время', 'Карточка', 'Клавиши', 'Слои'];
+      // этап 13, решение 94: «Линии карты» — отдельный раздел после «Линий»
+      const want = ['Как читать карту', 'Небо', 'Карточки на небе', 'Знаки', 'Линии', 'Линии карты', 'Время', 'Карточка', 'Клавиши', 'Слои'];
       if (heads.join('|') !== want.join('|')) return fail(`разделы: ${heads.join(' | ')}`);
       // пройти панель до конца: вырезки из неба рисуются, когда видны
       const total = await sh.evaluate((el) => el.scrollHeight);

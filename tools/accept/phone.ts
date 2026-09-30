@@ -94,10 +94,22 @@ async function tapStar(p: Page, id: string) {
  * Плотные места на виду: середины ближайших пар звёзд (список лиц неба, data-x/y у пунктов), от 4 до 24 px друг от
  * друга, по возрастанию расстояния; не у края видимой части. Место ищется по данным, а не смещением от лица: раскладка
  * меняется (этап 7, K1: сыновья Давида больше не стоят «гребёнкой»), а проверка «Какое лицо?» должна оставаться проверкой.
+ * Этап 13: середина пары не лежит на подписи лица (data-label-boxes холста, с полем 4 px) — касание подписи честно
+ * открывает её лицо, и «Какое лицо?» там не спрашивается; такое место — не плотное место между звёздами. И касание
+ * приходится на холст, а не на строку показа или органы неба над ним.
  */
 export async function denseSpots(p: Page): Promise<{ x: number; y: number; ids: [string, string] }[]> {
   return (await p.evaluate(`(() => {
     const [l, t, r, b] = document.querySelector('.sky').dataset.view.split(' ').map(Number);
+    const labels = ((document.querySelector('.sky > canvas') || {}).dataset?.labelBoxes || '').split(';').filter(Boolean).map((q) => {
+      const [x, y, w, h] = q.slice(q.lastIndexOf(':') + 1).split(',').map(Number);
+      return { x, y, w, h };
+    });
+    const onLabel = (x, y) => labels.some((q) => x >= q.x - 4 && x <= q.x + q.w + 4 && y >= q.y - 4 && y <= q.y + q.h + 4);
+    // и не под строкой показа, органами неба или листом: касание должно прийтись на сам холст
+    const cv = document.querySelector('.sky > canvas');
+    const cr = cv ? cv.getBoundingClientRect() : { left: 0, top: 0 };
+    const onCanvas = (x, y) => document.elementFromPoint(cr.left + x, cr.top + y) === cv;
     const pts = [...document.querySelectorAll('[id^="sky-star-"]')].filter((e) => e.dataset.x)
       .map((e) => ({ id: e.id.slice(9), x: +e.dataset.x, y: +e.dataset.y }))
       .filter((q) => q.x > l + 30 && q.x < r - 30 && q.y > t + 30 && q.y < b - 30);
@@ -105,7 +117,8 @@ export async function denseSpots(p: Page): Promise<{ x: number; y: number; ids: 
     for (let i = 0; i < pts.length; i++)
       for (let j = i + 1; j < pts.length; j++) {
         const d = Math.hypot(pts[i].x - pts[j].x, pts[i].y - pts[j].y);
-        if (d >= 4 && d <= 24) out.push({ d, x: (pts[i].x + pts[j].x) / 2, y: (pts[i].y + pts[j].y) / 2, ids: [pts[i].id, pts[j].id] });
+        const x = (pts[i].x + pts[j].x) / 2, y = (pts[i].y + pts[j].y) / 2;
+        if (d >= 4 && d <= 24 && !onLabel(x, y) && onCanvas(x, y)) out.push({ d, x, y, ids: [pts[i].id, pts[j].id] });
       }
     return out.sort((u, v) => u.d - v.d);
   })()`)) as { x: number; y: number; ids: [string, string] }[];
@@ -280,7 +293,8 @@ export const phone: Scenario[] = [
     title: 'H4: верх телефона — одна строка 48 px (название, поиск, «Разделы»); в «Разделах» все панели, справка и тема; поле при фокусе — во всю строку; 390 и 360',
     view: PHONE,
     run: async (p) => {
-      const ALL = ['Указатель', 'Главы', 'Синопсис', 'Родство', 'Сквозной раздел', 'Условные знаки', 'О карте', 'Дневная карта'];
+      // этап 13 (решение 109): меню «Меню» (прежде «Разделы»), тема — «Ночь» и «День»
+      const ALL = ['Указатель', 'Главы', 'Синопсис', 'Родство', 'Сквозной раздел', 'Условные знаки', 'О карте', 'Ночь', 'День'];
       const notes: string[] = [];
       /** Строка — 48 px, три части в пределах экрана, без прокрутки вбок. */
       const row = async (q: Page, w: number) => {
@@ -315,10 +329,10 @@ export const phone: Scenario[] = [
       const hs = await p.locator('.top .sections [role^="menuitem"]').evaluateAll((es) => es.map((e) => e.getBoundingClientRect().height));
       if (hs.some((h) => h < 48)) return fail(`строка «Разделов» ${Math.min(...hs)} px`);
       const was = await p.evaluate('document.documentElement.dataset.map');
-      await p.locator('.top .sections [role^="menuitem"]', { hasText: 'Дневная карта' }).tap();
+      await p.locator('.top .sections [role^="menuitem"]', { hasText: /^День$/ }).tap();
       await p.waitForTimeout(300);
       const now = await p.evaluate('document.documentElement.dataset.map');
-      if (was === now) return fail('«Дневная карта» не сменила тему');
+      if (was === now) return fail('«День» не сменил тему');
       // поиск: поле в фокусе занимает строку, подсказки — во всю ширину
       await p.locator('.top label[for="find"]').tap();
       await p.waitForTimeout(200);
@@ -580,11 +594,11 @@ export const phone: Scenario[] = [
       const up = p.locator('.folio .sheet-dot .dc-card');
       if ((await sheet(p))?.stop !== 'peek' || !(await up.count()) || (await up.getAttribute('aria-expanded')) !== 'false') return fail('пробел на «Свернуть» не свернул лист до карточки у звезды');
       const nm = ((await up.getAttribute('aria-label')) ?? (await up.innerText())).trim();
-      if (!/^Карточка/.test(nm) || !/развернуть/i.test(nm)) return fail(`имя кнопки «${nm}»`);
+      if (!/^Вся карточка/.test(nm) || !/развернуть/i.test(nm)) return fail(`имя кнопки «${nm}»`);
       await up.focus();
       await p.keyboard.press('Enter');
       await p.waitForTimeout(500);
-      if ((await sheet(p))?.stop !== 'half') return fail('Enter на «Карточка ▴» не поднял лист');
+      if ((await sheet(p))?.stop !== 'half') return fail('Enter на «Вся карточка ▴» не поднял лист');
       // «Какое лицо?»: Escape закрывает список и возвращает фокус на небо
       if (!(await tapDense(p, 'david'))) return fail('список «Какое лицо?» не открылся');
       await p.locator('.which .which-item').first().focus();

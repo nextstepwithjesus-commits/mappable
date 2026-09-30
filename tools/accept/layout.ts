@@ -344,10 +344,10 @@ export const layout: Scenario[] = [
       const a = await selAt(p);
       if (!a) return fail('Авраам не на небе');
       await p.locator('.skyctl .view-toggle').click();
-      await p.locator('.skyctl').getByText('истинный', { exact: true }).click();
+      await p.locator('.skyctl').getByText('Равномерный по годам', { exact: true }).click();
       await p.waitForTimeout(900);
       const b = await selAt(p);
-      await p.locator('.skyctl').getByText('по насыщенности', { exact: true }).click();
+      await p.locator('.skyctl').getByText('Сжатый по плотности лиц', { exact: true }).click();
       await p.waitForTimeout(900);
       const c = await selAt(p);
       if (!b || !c) return fail('лицо пропало');

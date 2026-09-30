@@ -168,10 +168,11 @@ describe('шапка карточки (VIS-41, CARD-59, MOB-52, VIS-06)', () => 
     const dt = /(^|\n)\.passport dt\s*\{([^}]*)\}/.exec(src)![2];
     expect(dt).not.toMatch(/nowrap/);
   });
-  it('эпохи в паспорте видно только полосой мини-шкалы: строка «Эпоха» — для диктора; строки-легенды лент нет', async () => {
+  it('строка «Эпоха» паспорта видна (этап 13, решение 97: эпоха жизни видимой строкой, а не только полосой); строки-легенды лент нет', async () => {
     await loadCard('david');
     const html = renderToString(h(Masthead, { id: 'david' }) as VNode);
-    expect(html).toMatch(/<div class="visually-hidden"><dt>Эпоха<\/dt>/);
+    expect(html).toMatch(/<dt>Эпоха<\/dt><dd>Единое царство/);
+    expect(html).not.toMatch(/<div class="visually-hidden"><dt>Эпоха<\/dt>/);
     expect(html).not.toMatch(/class="lines"/);
     expect(html).not.toMatch(/линия Иосифа/);
     // созвездие не повторяет колено: «Колено Иудино» и «колено Иудино» — одна строка
@@ -195,7 +196,7 @@ describe('шапка карточки (VIS-41, CARD-59, MOB-52, VIS-06)', () => 
   it('мини-шкала: эра — не у года конца жизни (её ставит крайняя правая подпись оси), у начала — только при переходе через эру', () => {
     const m = model.value;
     const d = lifeBarLabels(m.chrono.get('david')!);
-    expect(d.right).toMatch(/^ок\.\s970$/);
+    expect(d.right).toMatch(/^970$/); // этап 13, решение 96: у расчётного года нет «ок.»
     expect(d.left).not.toMatch(/Р\./);
     const j = lifeBarLabels(m.chrono.get('iisus')!);
     expect(j.left).toMatch(/до\sР\.\sХ\.$/);

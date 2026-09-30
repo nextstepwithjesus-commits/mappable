@@ -133,8 +133,20 @@ const clauseStems = (c: Clause) => stemsOf(segText(c.segs));
 
 /** Предложения «Кратко» для лица id. card — тело карточки (для § 5 и § 17); без него — только по индексу. */
 export function briefSentences(id: string, card: Card | null): BriefSentence[] {
+  return buildBrief(id, card).out;
+}
+
+/**
+ * Запись § 5, которую «Кратко» приводит целиком, отдельным предложением и со стихами (решение 121; UI-14): § 5 её не
+ * повторяет дословно — сведения о положении живут в одном месте, в «Кратко» под шапкой. null — такой записи нет.
+ */
+export function briefMovedStatus(id: string, card: Card | null): string | null {
+  return card?.status?.length ? buildBrief(id, card).moved : null;
+}
+
+function buildBrief(id: string, card: Card | null): { out: BriefSentence[]; moved: string | null } {
   const p = byId.get(id);
-  if (!p) return [];
+  if (!p) return { out: [], moved: null };
   const f = p.sex === 'f';
   const people = p.kind === 'people' || p.kind === 'clan';
   const out: BriefSentence[] = [];
@@ -161,6 +173,8 @@ export function briefSentences(id: string, card: Card | null): BriefSentence[] {
   const role = p.roles.includes('messiah') ? 'messiah' : (roles[0] ?? null);
   const st = card?.status?.[0];
   let statusUsed: string | null = null;
+  // запись § 5, которую «Кратко» приводит целиком отдельным предложением со стихами: § 5 её не повторяет (решение 121)
+  let statusMoved: string | null = null;
   let reignNote: BriefSeg[] = [];
   if (role === 'messiah' && !people) {
     // «Христос, Сын Бога Живаго» (§ 5, Мф 16:16) — не «Мессия, Христос» (одно и то же; CARD-65) и не подзаголовок
@@ -202,9 +216,11 @@ export function briefSentences(id: string, card: Card | null): BriefSentence[] {
   }
 
   // 2. положение (§ 5) — если роли нет: «Из храбрых Давида»; короткая запись, без цитаты во всю длину — отдельным предложением
+  // запись § 5 целиком — со своими стихами: § 5 её не повторяет (решение 121; statusMoved)
   if (!first.length && st && st.text.length <= 120 && !/^[«"]/.test(st.text) && !GENTILIC.test(st.text)) {
-    out.push({ segs: [capFirst(st.text.replace(/[.;]\s*$/, ''))], data: true });
+    out.push({ segs: [capFirst(st.text.replace(/[.;]\s*$/, ''))], refs: st.refs, data: true });
     statusUsed = st.text;
+    statusMoved = st.text;
   }
   /** Сказанное отдельными предложениями и первой фразой — для «сказано выше». */
   const saidAll = () => new Set([...out.flatMap((x) => stemsOf(segText(x.segs))), ...said()]);
@@ -341,20 +357,23 @@ export function briefSentences(id: string, card: Card | null): BriefSentence[] {
   const statusFits = !!st && !statusUsed && st.text.length <= 140 && !repeats(st.text);
   if (noFamily && st && statusFits && len() + st.text.length <= BRIEF_MAX_SMALL) {
     absorb(st.text);
-    out.push({ segs: [capFirst(st.text.replace(/[.;]\s*$/, ''))], data: true });
+    out.push({ segs: [capFirst(st.text.replace(/[.;]\s*$/, ''))], refs: st.refs, data: true });
     statusUsed = st.text;
+    statusMoved = st.text;
   }
   if ((small || noFamily) && card) {
     const ev = card.events?.[0];
     const take = (t: string, refs: string[]) => {
-      if (repeats(t)) return;
+      if (repeats(t)) return false;
       if (out.length === 0 || len() + t.length <= (small ? BRIEF_MAX_SMALL : BRIEF_MAX)) {
         absorb(t);
         out.push({ segs: [capFirst(t.replace(/[.;]\s*$/, ''))], refs, data: true });
+        return true;
       }
+      return false;
     };
     if (ev) take(ev.text, ev.refs);
-    else if (small && st && !statusUsed) take(st.text, st.refs);
+    else if (small && st && !statusUsed && take(st.text, st.refs)) statusMoved = st.text;
   }
   // первая фраза собирается из частей: у первой — прописная, у остальных — свой знак перед ними
   if (first.length) {
@@ -377,7 +396,7 @@ export function briefSentences(id: string, card: Card | null): BriefSentence[] {
     if (firstSeen) out.push({ segs: [people ? 'Упомянуто в родословии' : bySex(p.sex, 'Упомянут', 'Упомянута')], refs: [firstSeen] });
     else out.push({ segs: [`${people ? 'Упомянуто' : bySex(p.sex, 'Упомянут', 'Упомянута')} в Писании`] });
   }
-  return out;
+  return { out, moved: statusMoved };
 }
 
 function capFirstSeg(s: BriefSeg): BriefSeg {

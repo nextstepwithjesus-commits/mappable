@@ -2846,6 +2846,18 @@
    "parentRefs": [
     "Мф 1:16"
    ],
+   "otherParents": [
+    {
+     "id": "iliy-otets-marii",
+     "role": "father",
+     "kind": "by-luke",
+     "refs": [
+      "Лк 3:23"
+     ],
+     "cert": "scripture",
+     "note": "Лк 3:23: «Сын Иосифов, Илиев»; понимается двояко — сын или зять Илия (см. § 24)"
+    }
+   ],
    "kin": [
     {
      "id": "iliy-otets-marii",

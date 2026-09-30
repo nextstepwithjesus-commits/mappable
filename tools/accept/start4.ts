@@ -12,7 +12,8 @@
 import type { Page } from 'playwright';
 import { pass, fail, hashId, type Scenario } from './kit.ts';
 
-const NAMES = ['С Адама', 'С Иисуса Христа', 'Родословие Иисуса Христа', 'Ключевые лица', 'Всё небо'];
+// этап 13 (решение 110): начало и показ линий — «Родословие Иисуса Христа (Мф 1, Лк 3)»
+const NAMES = ['С Адама', 'С Иисуса Христа', 'Родословие Иисуса Христа (Мф 1, Лк 3)', 'Ключевые лица', 'Всё небо'];
 const flat = (s: string) => s.replace(/[   ]/g, ' ').replace(/⁠/g, '').replace(/\s+/g, ' ').trim();
 
 /** Открыть заново с памятью браузера: вступление открыто или свёрнуто, начало не выбрано или выбрано. */
@@ -153,7 +154,7 @@ export const start4: Scenario[] = [
       if ((await work(p)).length) return fail(`набор: ${(await work(p)).join(', ')}`);
       const n = Number(await p.evaluate(() => document.documentElement.dataset.showIds ?? '0'));
       const b = await showBar(p);
-      const said = Number(/линии Мессии — (\d+)/.exec(flat(b?.text ?? '').replace(/(\d) (\d)/g, '$1$2'))?.[1]);
+      const said = Number(/родословие Иисуса Христа \(Мф 1, Лк 3\) — (\d+)/.exec(flat(b?.text ?? '').replace(/(\d) (\d)/g, '$1$2'))?.[1]);
       if (!(n > 100) || said !== n) return fail(`строка «${flat(b?.text ?? '')}», в показе ${n}`);
       return (await mode(p)) === 'work' ? pass(`${out.join('; ')}; линии — ${n} лиц`) : fail('небо показывает не только линии');
     },
@@ -260,7 +261,7 @@ export const start4: Scenario[] = [
       if (await p.locator('.viewpop').count()) return fail('лист «Вид» не закрылся');
       if ((await showOf(p)) !== 'l') return fail(`показ: ${await showOf(p)}`);
       const b = await showBar(p);
-      return b && /^На небе: линии Мессии — /.test(flat(b.text)) && !(await work(p)).length ? pass(`«${flat(b.text)}»`) : fail(`строка «${flat(b?.text ?? '')}», набор ${(await work(p)).length}`);
+      return b && /^На небе: родословие Иисуса Христа \(Мф 1, Лк 3\) — /.test(flat(b.text)) && !(await work(p)).length ? pass(`«${flat(b.text)}»`) : fail(`строка «${flat(b?.text ?? '')}», набор ${(await work(p)).length}`);
     },
   },
   {
@@ -280,7 +281,7 @@ export const start4: Scenario[] = [
       await p.locator('.skyctl .view-toggle').click();
       await p.waitForTimeout(300);
       const s = await starts(p, '.viewpop');
-      if (s.find((x) => x.cur)?.t !== 'Родословие Иисуса Христа') return fail('текущее начало не отмечено');
+      if (s.find((x) => x.cur)?.t !== 'Родословие Иисуса Христа (Мф 1, Лк 3)') return fail('текущее начало не отмечено');
       await p.locator('.viewpop .starts button', { hasText: 'С Адама' }).click();
       await p.waitForTimeout(300);
       const ask = flat(await p.locator('.viewpop .starts-ask').innerText().catch(() => ''));
@@ -304,17 +305,17 @@ export const start4: Scenario[] = [
   },
   {
     n: 546,
-    title: 'Решение 68: «Ещё» верхней строки — последним пунктом «Начать заново…»; на 1440 в строке все панели, в «Ещё» только он; пункт открывает лист «Вид» с фокусом на «Начале»',
+    // этап 13 (решение 111): «Ещё» — только когда команды не помещаются; «Начать заново» — в «Вид → Начало» и во вступлении
+    title: 'Решения 68, 111: на 1440 в строке все панели и «Ещё» нет; «Вид» открывает лист с «Началом», фокус — на текущем начале',
     run: async (p) => {
       await fresh(p, { intro: false, start: 'adam', extra: { work: [['adam', { via: 'self', of: 'adam' }]] } });
       const shown = (await p.locator('.commands > button').allInnerTexts()).map((t) => t.trim());
       for (const c of ['Указатель', 'Главы', 'Эпохи', 'Синопсис', 'Родство', 'Сквозной раздел', 'Условные знаки', 'О карте']) if (!shown.includes(c)) return fail(`в строке нет «${c}»`);
-      await p.locator('.commands .more > button').click();
+      if (await p.locator('.commands .more').count()) return fail('«Ещё» при 1440, хотя все команды помещаются');
+      await p.locator('.skyctl .view-toggle').click();
+      await p.waitForTimeout(400);
+      await p.locator('.viewpop .starts button[aria-current="true"]').focus();
       await p.waitForTimeout(200);
-      const items = (await p.locator('.commands .more [role^="menuitem"] .nm').allInnerTexts()).map((t) => t.trim());
-      if (items.join('|') !== 'Начать заново…') return fail(`в «Ещё»: ${items.join(' | ')}`);
-      await p.keyboard.press('Enter');
-      await p.waitForTimeout(600);
       if (!(await p.locator('.viewpop').count())) return fail('лист «Вид» не открылся');
       const f = await p.evaluate(() => ({ in: !!document.activeElement?.closest('.viewpop .starts'), label: document.activeElement?.getAttribute('aria-label'), cur: document.activeElement?.getAttribute('aria-current') }));
       if (!f.in) return fail('фокус не в «Начале»');
@@ -370,7 +371,7 @@ export const start4: Scenario[] = [
   },
   {
     n: 549,
-    title: 'Решение 68: телефон — «Разделы» → «Начать заново…» закрывает открытую панель и открывает лист «Вид» на «Начале»',
+    title: 'Решение 68: телефон — «Меню» → «Начать заново…» открывает лист «Вид» на «Начале»; под открытой панелью «Меню» недоступно (решение 117)',
     view: { width: 390, height: 844, touch: true },
     run: async (p) => {
       await fresh(p, { intro: false });
@@ -382,6 +383,11 @@ export const start4: Scenario[] = [
       };
       await open('Указатель');
       if (!(await p.locator('.app > .sheet').count())) return fail('«Указатель» не открылся');
+      // этап 13, решение 117: панель телефона — модальное окно, верхняя строка под ней недоступна; «×» закрывает панель,
+      // и «Меню» снова в руках
+      if (!(await p.evaluate(() => !!document.querySelector('.app > .top')?.closest('[inert]')))) return fail('под панелью «Меню» доступно');
+      await p.locator('.app > .sheet .sheet-head .close').tap();
+      await p.waitForTimeout(500);
       const items = (await (async () => {
         await p.locator('.top .sections > button').tap();
         await p.waitForTimeout(250);
@@ -391,7 +397,7 @@ export const start4: Scenario[] = [
         return t;
       })());
       const at = items.indexOf('Начать заново…');
-      if (at < 0 || items[at + 1] !== 'Дневная карта' || items[at - 1] !== 'О карте') return fail(`«Разделы»: ${items.join(' | ')}`);
+      if (at < 0 || items[at + 1] !== 'Ночь' || items[at - 1] !== 'О хронологии') return fail(`«Меню»: ${items.join(' | ')}`);
       await open('Начать заново…');
       if (await p.locator('.app > .sheet').count()) return fail('панель осталась открытой');
       const sh = await starts(p, '.sky .sheet');
@@ -413,7 +419,7 @@ export const start4: Scenario[] = [
       await p.locator('.commands > button', { hasText: 'О карте' }).click();
       await p.waitForTimeout(800);
       const a = flat(await p.locator('.app > .sheet').innerText());
-      for (const w of ['Начало и раскрытие родословия', '«Родословие Иисуса Христа»', '«Ключевые лица»', 'только после подтверждения']) if (!a.includes(w)) return fail(`в «О карте» нет «${w}»`);
+      for (const w of ['Начало и раскрытие родословия', '«Родословие Иисуса Христа (Мф 1, Лк 3)»', '«Ключевые лица»', 'только после подтверждения']) if (!a.includes(w)) return fail(`в «О карте» нет «${w}»`);
       return pass();
     },
   },

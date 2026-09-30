@@ -36,13 +36,15 @@ describe('семейные сцены: пороги Я1–Я15 (§ 12)', () => {
         // связи в кадре есть (кроме «линий Мессии» на обзоре, где ленты — сплайн)
         if (id !== 'lines' || scale === 2) expect(c.kids).toBeGreaterThan(0);
       });
-  it('род Иуды по отцам ×1 и ×2: пороги, кроме пересечений стволов со следами через коридор (≤ 17, известный остаток)', () => {
+  it('род Иуды по отцам ×1 и ×2: пороги, пересечения стволов со следами через коридор — не больше 10 (§ 12; этап 13, X3 Д11)', () => {
     for (const scale of [1, 2]) {
       const c = C.census(C.capture('judah', scale, 1440));
       expect(strict(c, [/^Я11 \(следы\)/])).toEqual([]);
-      expect(c.y11trails).toBeLessThanOrEqual(17);
+      // этап 13: черта брака царя с царицей-матерью не пересекает коридор (src/engine/family.ts, CORRIDOR_HIT) — порог § 12
+      // (10) вместо ослабленного 17
+      expect(c.y11trails).toBeLessThanOrEqual(10);
     }
-  });
+  }, 60_000);
   it('телефон 390: все пороги, строка не ниже 32 px', () => {
     for (const id of ['noy', 'adam', 'iakov', 'david', 'nahor']) {
       const c = C.census(C.capture(id, 1, 390));
@@ -92,12 +94,12 @@ describe('«все лица» целиком (§ 4.1): пороги § 12 и в�
       expect(c.y8).toBeLessThanOrEqual(scale === 1 ? 0 : 2);
       expect(c.y8nodes).toBeLessThanOrEqual(8);
       expect(c.y9).toBe(0);
-      // Я11: зубцы двух жён одного отца с детьми, перемешанными по строкам общей раскладки (Ашхур, Шахараим, Саул, Меред;
-      // с этапа 12 — Халев, сын Есрома: Газез от Ефы и Ардон, 1 Пар 2:18; 2:46, на одном x, ×1): у двух отдельных стволов
-      // пересечение неизбежно; прежде у Саула два союза стояли одним ромбом на общей шине — теперь узлы одного следа
-      // разнесены на 2r + 2 px (Г7), и одно пересечение стало видно. Лечение — братья по матерям под одной скобкой (ТЗ § 3.1)
-      // в семейной раскладке, следующий этап
-      expect(c.y11).toBeLessThanOrEqual(scale === 1 ? 5 : 4);
+      // Я11: прежде 5 и 4 — зубцы двух жён одного отца с детьми, перемешанными по строкам общей раскладки (Ашхур,
+      // Шахараим, Саул, Меред, Халев). Этап 13, решение 95: дети отца идут группами по матерям (src/engine/layout.ts), узел
+      // союза — на следе жены-спутницы при любом её удалении (links.ts, qualifies): пересечений нет (П6)
+      expect(c.y11).toBe(0);
+      // связь × чужой след: порог X3 — 74 и 99 (было 90 и 119); на данных сверки этапа 13 — 72 и 95
+      expect(c.y11trails).toBeLessThanOrEqual(scale === 1 ? 74 : 99);
       expect(c.y12lines).toBeLessThanOrEqual(0.01 * c.y12of);
       expect(c.y12overlaps).toBe(0);
       expect(c.y13).toBe(0);
@@ -105,5 +107,110 @@ describe('«все лица» целиком (§ 4.1): пороги § 12 и в�
       // постороннее лицо под указателем на линии — только у случаев Я1 (линия ближе r + 5 к чужой звезде): меньше 0,5 % точек
       expect(c.y14foreign / c.y14of).toBeLessThan(0.005);
       expect(c.y15 / c.kids).toBeLessThanOrEqual(0.02);
+      // этап 13 (решение 95, П6): двусмысленных связей — не больше одной
+      expect(c.y15).toBeLessThanOrEqual(1);
+      // этап 13 (решения 93, 94; П1–П5): правило концов и словарь начертаний на всём небе
+      expect([c.ch1, c.ch2, c.ch3, c.ch4, c.ch6, c.ch7], JSON.stringify(c.issues.filter((q) => q.check.startsWith('Ч')).slice(0, 8))).toEqual([0, 0, 0, 0, 0, 0]);
     }, 60_000);
+});
+
+/**
+ * Этап 13 (STAGE13 § 4, П1–П6; X3 § 3): показы с пропусками поколений и созвездия. Ч1 путь ленты с ключом шага — от
+ * родителя шага; Ч2 концы выбранной связи — свои; Ч3 скрытый конец — призраком; Ч4 точки ленты — только толкование,
+ * «+N» — число скрытых; Ч5 лицо линии на своей нити (показ линий); Ч6 союз связан с обоими супругами; Ч7 точки на связях —
+ * только толкование.
+ */
+describe('этап 13: правило концов, словарь начертаний, союз с обоими супругами (Ч1–Ч7)', () => {
+  const zero = (c: ReturnType<CensusMod['census']>) => [c.ch1, c.ch2, c.ch3, c.ch4, c.ch5, c.ch6, c.ch7];
+  const why = (c: ReturnType<CensusMod['census']>) => JSON.stringify(c.issues.filter((q) => q.check.startsWith('Ч')).slice(0, 8));
+  for (const id of ['key', 'keyMary', 'setGap', 'messiah', 'lines', 'judahT', 'davidic', 'davidBoth', 'halev', 'saul', 'ashhur'])
+    it(`${id}: Ч1–Ч7 — ноль на ×1 и ×2`, () => {
+      for (const scale of [1, 2]) {
+        const c = C.census(C.capture(id, scale, 1440));
+        expect(zero(c), `${id} ×${scale}: ${why(c)}`).toEqual([0, 0, 0, 0, 0, 0, 0]);
+      }
+    }, 60_000);
+  it('«ключевые лица» и набор с пропусками: скрытые поколения — разрывами «+N», у концов вне показа — призраки (снимок 20)', () => {
+    const key = C.census(C.capture('key', 1, 1440));
+    // 16 пропусков лент (X3: столько было точечных шагов) — теперь 16 знаков «+N», у всех верное число
+    expect(key.ch4gaps).toBeGreaterThanOrEqual(12);
+    expect(key.ch3of).toBeGreaterThan(0);
+    const set = C.census(C.capture('setGap', 1, 1440));
+    expect(set.ch4gaps).toBeGreaterThanOrEqual(5);
+    expect(set.ch3of).toBeGreaterThan(0);
+  }, 60_000);
+  it('все колена на масштабе чтения: Ч1–Ч7 — ноль', () => {
+    const c = C.census(C.capture('tribes', 1, 1440));
+    expect(zero(c), why(c)).toEqual([0, 0, 0, 0, 0, 0, 0]);
+  }, 60_000);
+  it('К3, К5: у выбранного лица скрытые показом родитель и родня словами Писания — призраки с подписью «… — вне показа»', async () => {
+    const marks = await import('../src/render/marks.ts');
+    // Мария в «ключевых лицах»: Илий вне показа — призрак «Илий, отец» (толкование, Лк 3:23)
+    const m = C.captureAt('keyMary', 'mariya', 120, { select: 'mariya' });
+    const gm = marks.personGhosts(m.s);
+    expect(gm.map((g) => `${g.id}:${g.role}:${g.why}`)).toContain('iliy-otets-marii:отец:show');
+    // Давид в «ключевых лицах»: сестра Саруия вне показа — призрак с термином «сестра» (1 Пар 2:16)
+    const d = C.captureAt('key', 'david', 120, { select: 'david' });
+    const gd = marks.personGhosts(d.s);
+    expect(gd.map((g) => `${g.id}:${g.role}`)).toContain('saruiya:сестра');
+    // поле попадания не меньше 24 × 24 (щелчок — показать гостем)
+    for (const g of [...gm, ...gd]) expect(Math.min(g.w, g.h)).toBeGreaterThanOrEqual(24 - 0.5);
+    // на «всём небе» скрытых нет — и призраков нет
+    expect(marks.personGhosts(C.captureAt('all', 'david', 120, { select: 'david' }).s)).toEqual([]);
+  }, 120_000);
+  it('Д12: кольца и роли концов выбранной связи не ложатся на чужие имена — снимок 20 (r.m.mariya) на 390 и 1440, «Саруия — сестра Давида»', async () => {
+    const marks = await import('../src/render/marks.ts');
+    const { parseLinkKey } = await import('../src/engine/linkkey.ts');
+    const cases: [string, string, string, number, number][] = [];
+    for (const years of [40, 80, 160])
+      for (const width of [390, 1440]) {
+        cases.push(['key', 'mariya', 'r.m.mariya', width, years], ['keyMary', 'mariya', 'r.m.mariya', width, years]);
+        cases.push(['all', 'david', 'n.david.saruiya', width, years]);
+      }
+    for (const [sc, at, ks, width, years] of cases) {
+      const link = parseLinkKey(ks);
+      expect(link, ks).toBeTruthy();
+      const f = C.captureAt(sc, at, years, { width, extra: { link } });
+      const rects = marks.selectedEndRects(f.s);
+      expect(rects.some((r) => r.kind === 'ring'), `${ks} ${width}: колец нет`).toBe(true);
+      const names = f.s.labelStats().boxes.filter((b) => b.kind === 'star');
+      const bad: string[] = [];
+      // кольцо не закрывает чужих имён; роль — никаких, и своего тоже («дочь» на «Мария», X3 Д12)
+      for (const r of rects)
+        for (const b of names) {
+          if (b.id === r.id && r.kind === 'ring') continue;
+          const w = Math.min(r.box.x + r.box.w, b.x + b.w) - Math.max(r.box.x, b.x);
+          const h = Math.min(r.box.y + r.box.h, b.y + b.h) - Math.max(r.box.y, b.y);
+          if (w > 0 && h > 0) bad.push(`${r.kind} ${r.id} × ${b.text} (${Math.round(w * h)} px²)`);
+        }
+      expect(bad, `${sc} ${ks} ${width} ${years} лет`).toEqual([]);
+    }
+  }, 300_000);
+  it('Г-М (решение 95): в общей раскладке дети по матерям — сериями; перемешаны не больше чем у двух семей вне коридора (Халев, Саул)', async () => {
+    const atlas = await import('../src/data/atlas.ts');
+    const { unions } = await import('../src/ui/reveal.ts');
+    const m = atlas.models[0];
+    const lane = (id: string) => m.nodeByPerson.get(id)?.lane;
+    const spine = new Set([...atlas.lines.joseph.persons, ...atlas.lines.mary.persons].map((q) => q.id));
+    const mixed: string[] = [];
+    for (const [father, us] of unions.of) {
+      if (spine.has(father) || atlas.byId.get(father)?.sex !== 'm') continue;
+      const fl = lane(father);
+      const withKids = us.filter((u) => u.a === father && !u.claim && u.kids.some((k) => lane(k) !== undefined && !spine.has(k)));
+      if (fl === undefined || withKids.length < 2) continue;
+      // по каждую сторону от отца: сколько серий подряд у детей одной матери; серий больше, чем матерей, — перемешаны
+      const bad = [-1, 1].some((side) => {
+        const kids = withKids.flatMap((u) => u.kids.map((k) => ({ l: lane(k), u: u.id })).filter((q): q is { l: number; u: string } => q.l !== undefined && Math.sign(q.l - fl) === side));
+        kids.sort((a, b) => a.l - b.l);
+        const runs = kids.filter((q, i) => i === 0 || q.u !== kids[i - 1].u).length;
+        return runs > new Set(kids.map((q) => q.u)).size;
+      });
+      if (bad) mixed.push(father);
+    }
+    expect(mixed.length, mixed.join(', ')).toBeLessThanOrEqual(2);
+    for (const id of mixed) expect(['khalev-syn-esroma', 'saul']).toContain(id);
+  }, 120_000);
+  it('«Дом Давидов»: черты брака царей с царицами-матерями не через коридор — пересечений со следами не больше 8 (было 13–14; порог X3 — 0, не достигнут: 7–8)', () => {
+    for (const scale of [1, 2]) expect(C.census(C.capture('davidic', scale, 1440)).y11trails).toBeLessThanOrEqual(8);
+  }, 60_000);
 });

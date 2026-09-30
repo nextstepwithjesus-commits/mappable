@@ -25,7 +25,7 @@ import { mapFont, mapSize, T_MAP_S } from './type.ts';
 import { byId, graph } from '../data/atlas.ts';
 import { branchesOf, type Branch } from '../engine/unions.ts';
 import { unions } from '../ui/reveal.ts';
-import { branchColor, branchDash, branchFade, branchFloor, KIN_GOLD, KIN_GOLD_UNDER, type MapTheme } from './branches.ts';
+import { branchColor, branchFade, branchFloor, KIN_GOLD, KIN_GOLD_UNDER, type MapTheme } from './branches.ts';
 import { claim, putLabel, textBox } from './labels.ts';
 import { beadAt, drawBranchLabels, drawKeyLineNames, drawLineNames, drawLineNotes, drawMt1Women } from './ribbons.ts';
 import type { LineStep } from '../engine/layout.ts';
@@ -33,9 +33,12 @@ import type { Rect } from './rect.ts';
 import type { KinStep } from '../engine/kinship.ts';
 import type { Emphasis, Pass, SkyContext, SkyState } from './sky.ts';
 import { linkShown, trailOf, type LifeTrail, type LinkDraw } from './trails.ts';
-import { NODE_R_FAMILY, NODE_R_MAP, routeOver, segmentsOf, type LinkPath, type Seg } from './links.ts';
+import { kidStyle, mainUnion, NODE_R_FAMILY, NODE_R_MAP, otherReading, routeOver, segmentsOf, TRUNK_LEAD, type LinkPath, type Seg } from './links.ts';
+import { LINK_DASH } from './trails.ts';
 import { linkKeyString, type LinkKey } from '../engine/linkkey.ts';
 import { linkRoles } from '../ui/linkwords.ts';
+import { GHOST_WORD, putLinkGhosts, type GhostWhy, type LinkGhost } from '../ui/linkstate.ts';
+import { foldsHiding } from '../ui/work.ts';
 import { LINK_YELLOW, nodeLook, paintUnion } from './plates.ts';
 
 /** Братья и сёстры выбранного лица: ярче погашенного неба, бледнее рода по прямой (UX-34). */
@@ -166,11 +169,10 @@ export function branchMapOf(id: string, model = ''): BranchMap {
   return out;
 }
 
-/** Как рисовать потомка по ветви в этом кадре: цвет ветви (#rrggbb), яркость поколения, штрих следа. */
+/** Как рисовать потомка по ветви в этом кадре: цвет ветви (#rrggbb), яркость поколения (штриха у ветвей нет, решение 94). */
 export interface BranchPaint {
   color: string;
   a: number;
-  dash: readonly number[];
   branch: number;
   gen: number;
 }
@@ -215,7 +217,7 @@ export function branchFrame(v: Pick<SkyContext, 'pal' | 'model'>, p: Pick<Pass, 
       let out = byBranch.get(k);
       if (!out) {
         const color = branchColor(b.branch, theme);
-        out = { color, a: branchFade(b.gen, grounds.length ? branchFloor(color, grounds) : 0), dash: branchDash(b.branch), branch: b.branch, gen: b.gen };
+        out = { color, a: branchFade(b.gen, grounds.length ? branchFloor(color, grounds) : 0), branch: b.branch, gen: b.gen };
         byBranch.set(k, out);
       }
       return out;
@@ -229,15 +231,21 @@ export function branchFrame(v: Pick<SkyContext, 'pal' | 'model'>, p: Pick<Pass, 
 
 // ---------- путь родства (E5) ----------
 
-/** Вид шага пути на небе: кровный и брак — сплошной, по закону — штрих, по термину Писания и по толкованию — точки. */
-export type StepLook = 'blood' | 'legal' | 'term';
+/**
+ * Вид шага пути на небе по словарю начертаний (этап 13, решение 94; X3 Д13): кровный и брак — сплошной; иное
+ * происхождение (по закону, по Луке, усыновление, левират, предок, иное прочтение) — штрих; толкование — точки цвета
+ * текста; родство словом Писания («сестра», «брат») — золотистые точки по дуге, как дуга семьи у звезды.
+ */
+export type StepLook = 'blood' | 'legal' | 'term' | 'interp';
+const OTHER_ORIGIN = new Set(['legal', 'adoptive', 'levirate', 'by-luke', 'ancestor', 'alternative']);
 export function stepLook(st: Pick<KinStep, 'kind' | 'claim' | 'interpretive'>): StepLook {
-  if (st.interpretive || st.kind === 'kin') return 'term';
-  // брак — сплошной (этап 11, Г10: штрих — только иное происхождение: по закону, усыновление, левират)
-  if (st.claim === 'legal' || st.claim === 'adoptive' || st.claim === 'levirate') return 'legal';
+  if (st.interpretive) return 'interp';
+  if (st.kind === 'kin') return 'term';
+  // брак — сплошной (этап 11, Г10: штрих — только иное происхождение)
+  if (OTHER_ORIGIN.has(st.claim)) return 'legal';
   return 'blood';
 }
-const STEP_DASH: Record<StepLook, number[]> = { blood: [], legal: [6, 3], term: [0.5, 4.5] };
+export const STEP_DASH: Record<StepLook, number[]> = { blood: [], legal: [6, 3], term: [0.5, 4.5], interp: [0.5, 4.5] };
 
 /**
  * Ломаная шага: от родителя вдоль его следа до года рождения ребёнка, затем отводом к ребёнку (как связь на небе);
@@ -247,6 +255,15 @@ export function stepRoute(kind: KinStep['kind'], a: { x: number; y: number }, b:
   // ствол связи (src/render/links.ts): путь идёт по нему, а не сквозь звезду ребёнка (этап 11, § 2: «те же маршруты»)
   if (kind === 'down') return trunk != null && trunk < b.x - 1 ? [a, { x: trunk, y: a.y }, { x: trunk, y: b.y }, b] : [a, { x: b.x, y: a.y }, b];
   if (kind === 'up') return trunk != null && trunk < a.x - 1 ? [a, { x: trunk, y: a.y }, { x: trunk, y: b.y }, b] : [a, { x: a.x, y: b.y }, b];
+  // родство словом Писания — по той же дуге, что золотистая дуга семьи (решение 94; К5)
+  if (kind === 'kin' && Math.hypot(b.x - a.x, b.y - a.y) > 1) {
+    const pts = arcPolyline(a, kinArcCtrl(a, b), b);
+    const out: { x: number; y: number }[] = [];
+    for (let k = 0; k < pts.length; k += 2) out.push({ x: pts[k], y: pts[k + 1] });
+    out[0] = a;
+    out[out.length - 1] = b;
+    return out;
+  }
   return [a, b];
 }
 
@@ -297,9 +314,9 @@ export function kinRoutes(v: SkyContext, steps: readonly KinStep[], d?: LinkDraw
 }
 
 /**
- * Путь родства на небе (E5; MAP-18, UX-11): ломаная 2 px цвета --ink на подложке неба; кровные шаги и брак — сплошные,
- * по закону — штрихом, по термину Писания и по толкованию — точками (этап 11, Г10). Рисуется под звёздами: звёзды пути
- * лежат на ломаной, как бусины.
+ * Путь родства на небе (E5; MAP-18, UX-11): ломаная 2 px на подложке неба; кровные шаги и брак — сплошные цвета --ink,
+ * иное происхождение — штрихом, толкование — точками цвета текста, родство словом Писания — золотистыми точками по дуге
+ * (этап 13, решение 94). Рисуется под звёздами: звёзды пути лежат на ломаной, как бусины.
  */
 export function drawKinPath(v: SkyContext, p: Pass) {
   const steps = p.s.kinSteps;
@@ -321,10 +338,13 @@ export function drawKinPath(v: SkyContext, p: Pass) {
     trace(r.pts);
     ctx.stroke();
   }
-  ctx.strokeStyle = pal.ink;
   ctx.lineWidth = 2;
+  const gold = KIN_GOLD[pal.glow ? 'night' : 'day'];
   for (const r of routes) {
-    const dash = STEP_DASH[stepLook(r.st)];
+    const look = stepLook(r.st);
+    const dash = STEP_DASH[look];
+    // слово Писания — золотистыми точками, как дуга семьи; толкование — точками цвета текста; иное происхождение — штрих
+    ctx.strokeStyle = look === 'term' ? gold : pal.ink;
     ctx.setLineDash(dash);
     ctx.lineCap = dash.length ? 'round' : 'butt';
     trace(r.pts);
@@ -513,6 +533,7 @@ export function drawRings(v: SkyContext, p: Pass) {
     const t = [...ghosts, ...drawn].join('|');
     if (ds.kinArcs !== t) ds.kinArcs = t;
   }
+  drawPersonGhosts(v, p);
   for (const id of [s.selected, s.second]) if (id) ring(id, 0);
   // отклик на клавишу набора (IX-51): однократная обводка 300 мс — расходится и гаснет; при ослабленном движении — стоит
   const fl = s.workFlash;
@@ -586,18 +607,19 @@ export function drawKinArcs(v: SkyContext, p: Pass, id: string, seen: Set<string
     const a = at(e.from);
     const b = at(e.to);
     if (!a || !b) continue;
-    const bend = Math.min(120, Math.hypot(b.x - a.x, b.y - a.y) * 0.25 + 12);
-    const cx = Math.min(a.x, b.x) - bend;
-    const cy = (a.y + b.y) / 2;
+    const { x: cx, y: cy } = kinArcCtrl(a, b);
     goldArc(v, a, { x: cx, y: cy }, b);
     drawn?.add(`${e.from}>${e.to}:${e.rel}`);
     if (!p.s.layers.labels) continue;
-    // середина дуги (t = 0,5) и термин слева от неё
-    const mx = 0.25 * a.x + 0.5 * cx + 0.25 * b.x;
-    const my = 0.25 * a.y + 0.5 * cy + 0.25 * b.y;
+    // термин — у середины дуги (t = 0,5), слева или справа от неё; если там тесно — у других точек дуги
     ctx.font = mapFont(T_MAP_S, { italic: true, coarse: v.coarse });
     const w = ctx.measureText(e.rel).width;
-    const spots = [{ tx: mx - w - 4, ty: my + size * 0.35 }, { tx: mx + 4, ty: my + size * 0.35 }];
+    const spots: { tx: number; ty: number }[] = [];
+    for (const t of [0.5, 0.35, 0.65, 0.2, 0.8]) {
+      const mx = (1 - t) * (1 - t) * a.x + 2 * t * (1 - t) * cx + t * t * b.x;
+      const my = (1 - t) * (1 - t) * a.y + 2 * t * (1 - t) * cy + t * t * b.y;
+      spots.push({ tx: mx - w - 4, ty: my + size * 0.35 }, { tx: mx + 4, ty: my + size * 0.35 });
+    }
     const boxes = spots.map((q) => textBox(q.tx, q.ty, w, size));
     const got = claim(v, p, boxes, 'note', e.rel);
     if (!got) continue;
@@ -687,12 +709,148 @@ export interface SelectedLinkInfo {
   routes: number[][];
   /** указатели у края: щелчок — перелёт к лицу (src/ui/sky/input.ts, как указатели frame.ts) */
   edges: (Rect & { id: string })[];
+  /**
+   * призраки концов, скрытых показом или свёрткой (К3): место кольца и поле подписи; щелчок — «показать» (лицо встаёт
+   * временным гостем, src/ui/show.ts, showGuest). why — причина (src/ui/linkstate.ts, GhostWhy)
+   */
+  ghosts: (Rect & { id: string; role: string; why: GhostWhy; cx: number; cy: number })[];
 }
 
-/** Ломаные выбранной связи: весь путь (рисуется жёлтым) и его ядро — путь самой связи без хвостов к родителям (к середине ядра встаёт карточка связи). */
+/** Призрак конца выбранной связи (К3): лицо, место кольца (px) и радиус его знака. */
+/** Призраки родни выбранного лица и лица под указателем в этом кадре (К3, К5): поля попадания, как у призраков связи. */
+const personGhostHits = new WeakMap<object, SelectedLinkInfo['ghosts']>();
+export const personGhosts = (v: object): SelectedLinkInfo['ghosts'] => personGhostHits.get(v) ?? [];
+
+/**
+ * К3, К5 (этап 13, X3 § 2.1): у выбранного лица и у лица под указателем скрытые показом или свёрткой родители и родня
+ * словами Писания встают призраками — пунктирное кольцо в год лица, на полстроки от него (на общей раскладке — в сторону
+ * его настоящей полосы, в семейной — родители выше, родня ниже), подпись «Илий, отец — вне показа». К родителю — короткая
+ * линия начертанием союза (толкование — точки, иное происхождение — штрих), к родне — золотистая дуга с обрывком к
+ * призраку. Супругов и детей правило не касается: скрытые дети — «+N» у ромба, союз — ромб на следе (К6). Щелчок по
+ * призраку показывает лицо гостем (src/ui/sky/input.ts), как у призраков выбранной связи; призраки её концов не
+ * повторяются. Только призраки в окне: указатели у кромки — у концов выбранной связи.
+ */
+function drawPersonGhosts(v: SkyContext, p: Pass) {
+  const out: SelectedLinkInfo['ghosts'] = [];
+  personGhostHits.set(v, out);
+  const s = p.s;
+  const { cam, ctx, pal } = v;
+  if (cam.ky < 5 || !s.layers.ghosts) return;
+  const vp = cam.vp;
+  const taken = new Set(s.link ? selectedRoutes(v, p.links, s.link).ghosts.map((g) => g.id) : []);
+  const family = p.links?.frame.layout === 'family';
+  const spots: GhostSpot[] = [];
+  const hidden = (id: string) => {
+    const i = v.indexOf(id);
+    return i !== undefined && (!v.drawn(i) || v.hides(id));
+  };
+  const why = (id: string): GhostWhy => {
+    const f = foldsHiding(id);
+    return f.desc.length || f.groups.length ? 'folded' : 'show';
+  };
+  const ink = pal.ink2;
+  for (const id of new Set([s.selected, s.hovered])) {
+    if (!id) continue;
+    const i = v.indexOf(id);
+    if (i === undefined || !v.drawn(i) || v.hides(id)) continue;
+    const at = { x: cam.sx(v.X0[i]), y: cam.sy(v.nodes[i].lane) };
+    const place = (gid: string, up: boolean): GhostSpot | null => {
+      const gi = v.indexOf(gid);
+      const q = byId.get(gid);
+      if (gi === undefined || !q) return null;
+      const x = cam.sx(v.X0[gi]);
+      const real = family ? NaN : cam.sy(v.nodes[gi].lane);
+      const dir = Number.isFinite(real) && Math.abs(real - at.y) > 0.5 ? Math.sign(real - at.y) : up ? -1 : 1;
+      const step = Math.max(6, cam.ky * 0.5);
+      const r = starRadius(q.magnitude, 1) + (q.sex === 'f' ? 2.2 : 0);
+      // между строк, на полстроки от лица; если там уже что-то есть (другой призрак, звезда, подпись, «+N» разрыва
+      // ленты) — ещё на строку дальше, затем по другую сторону
+      const free = (y: number) => {
+        const R = r + 4;
+        return !spots.some((o) => Math.hypot(o.x - x, o.y - y) < o.r + r + 8) && !p.placer.clash({ x: x - R, y: y - R, w: 2 * R, h: 2 * R }, true);
+      };
+      const tries = [1, 3, 5, -1, -3, -5].map((k) => at.y + dir * k * step);
+      const y = tries.find(free) ?? tries[0];
+      // призрак за краем окна не рисуется: указатели у кромки — у концов выбранной связи (К2)
+      if (!(x >= vp.l && x <= vp.r && y >= v.openTop && y <= vp.b)) return null;
+      const g = { id: gid, x, y, r };
+      spots.push(g);
+      return g;
+    };
+    // родители — из союза происхождения (другое прочтение Лк 3:23 не рисуется, решение 107)
+    const u = mainUnion(unions, id);
+    if (u && !otherReading(u, s.lineFlip))
+      for (const par of [u.a, u.b]) {
+        if (!par || !hidden(par) || taken.has(par)) continue;
+        const g = place(par, true);
+        const q = byId.get(par);
+        if (!g || !q) continue;
+        taken.add(par);
+        const xs = Math.max(g.x + 2, at.x - TRUNK_LEAD);
+        ctx.save();
+        ctx.strokeStyle = alpha(ink, 0.9);
+        ctx.lineWidth = 1;
+        ctx.setLineDash(LINK_DASH[kidStyle(u)]);
+        ctx.beginPath();
+        ctx.moveTo(g.x + g.r + 3, g.y);
+        ctx.lineTo(xs, g.y);
+        ctx.lineTo(xs, at.y);
+        ctx.lineTo(at.x, at.y);
+        ctx.stroke();
+        ctx.restore();
+        out.push(...drawGhostEnd(v, p, g, q.name, q.sex === 'f' ? 'мать' : 'отец', why(par), ink));
+      }
+    // родня словами Писания (К5): обрывок золотистой дуги к призраку
+    for (const e of graph.kinOf.get(id) ?? []) {
+      const other = e.from === id ? e.to : e.from;
+      if (!hidden(other) || taken.has(other)) continue;
+      const g = place(other, false);
+      const q = byId.get(other);
+      if (!g || !q) continue;
+      taken.add(other);
+      const [a, b] = e.from === id ? [at, g] : [g, at];
+      goldArc(v, a, kinArcCtrl(a, b), b);
+      // термин — кем приходится призрак (у начала дуги), иначе — только имя
+      out.push(...drawGhostEnd(v, p, g, q.name, e.from === other ? e.rel : '', why(other), ink));
+    }
+  }
+}
+
+export interface GhostSpot {
+  id: string;
+  x: number;
+  y: number;
+  r: number;
+}
+
+/**
+ * Ломаные выбранной связи: весь путь (рисуется жёлтым) и его ядро — путь самой связи без хвостов к родителям (к середине
+ * ядра встаёт карточка связи); ghosts — призраки концов, скрытых показом или свёрткой (этап 13, решение 93, К3): жёлтое
+ * идёт от призрака, а не от чужой звезды.
+ */
 export interface SelectedRoutes {
   all: number[][];
   core: number[][];
+  ghosts: GhostSpot[];
+}
+
+/** Вершина дуги родства (золотистая дуга, drawKinArcs): кривая a → c → b. */
+export function kinArcCtrl(a: { x: number; y: number }, b: { x: number; y: number }): { x: number; y: number } {
+  const bend = Math.min(120, Math.hypot(b.x - a.x, b.y - a.y) * 0.25 + 12);
+  return { x: Math.min(a.x, b.x) - bend, y: (a.y + b.y) / 2 };
+}
+
+/** Дуга a → c → b ломаной (для жёлтого выбранной дуги родства по той же кривой, К5): не реже, чем через 6 px. */
+export function arcPolyline(a: { x: number; y: number }, c: { x: number; y: number }, b: { x: number; y: number }): number[] {
+  const len = Math.hypot(c.x - a.x, c.y - a.y) + Math.hypot(b.x - c.x, b.y - c.y);
+  const n = Math.max(8, Math.min(96, Math.ceil(len / 6)));
+  const out: number[] = [];
+  for (let k = 0; k <= n; k++) {
+    const t = k / n;
+    const u = 1 - t;
+    out.push(u * u * a.x + 2 * u * t * c.x + t * t * b.x, u * u * a.y + 2 * u * t * c.y + t * t * b.y);
+  }
+  return out;
 }
 
 /** Кэш путей выбранной связи по кадру связей: пути — в px кадра (при сдвиге неба кадр тот же). */
@@ -710,7 +868,7 @@ export function selectedRoute(v: SkyContext, d: LinkDraw | null | undefined, key
 }
 
 export function selectedRoutes(v: SkyContext, d: LinkDraw | null | undefined, key: LinkKey): SelectedRoutes {
-  const none: SelectedRoutes = { all: [], core: [] };
+  const none: SelectedRoutes = { all: [], core: [], ghosts: [] };
   if (!d) return none;
   const ks = linkKeyString(key) ?? '';
   let byKs = routeCache.get(d.frame);
@@ -722,13 +880,14 @@ export function selectedRoutes(v: SkyContext, d: LinkDraw | null | undefined, ke
     byKs.set(ks, got);
   }
   const shift = (pts: readonly number[]) => pts.map((q, k) => q + (k % 2 ? d.dy : d.dx));
-  return { all: got.all.map(shift), core: got.core.map(shift) };
+  return { all: got.all.map(shift), core: got.core.map(shift), ghosts: got.ghosts.map((g) => ({ ...g, x: g.x + d.dx, y: g.y + d.dy })) };
 }
 
 /** Пути выбранной связи в px кадра связей. */
 function frameRoutes(v: SkyContext, d: LinkDraw, key: LinkKey, ks: string): SelectedRoutes {
   const all: number[][] = [];
   const core: number[][] = [];
+  const ghosts: GhostSpot[] = [];
   const paths = d.frame.paths.filter((q) => linkShown(q, d));
   const t: LifeTrail = { x0: 0, x1: 0, y: 0, cls: 'exact', known: true, solidTo: 0, color: '', width: 1 };
   /** звезда лица в px кадра и конец её следа; null — звезды на небе нет */
@@ -740,15 +899,54 @@ function frameRoutes(v: SkyContext, d: LinkDraw, key: LinkKey, ks: string): Sele
     const tr = trailOf(v, i, t);
     return { x, y, x1: tr ? Math.max(tr.x0, tr.x1) - d.dx : x };
   };
-  if (key.kind === 'step') {
+  /**
+   * Призрак конца id (К3): x — его настоящий год, по вертикали — на полстроки от видимого конца at в сторону его
+   * настоящей полосы (в семейной укладке её нет: родители — выше, дети и прочие — ниже), между строк.
+   */
+  const ghostOf = (id: string, at: { x: number; y: number }, side: 'from' | 'to'): GhostSpot | null => {
+    const i = v.indexOf(id);
+    const q = byId.get(id);
+    if (i === undefined || !q) return null;
+    const x = v.cam.sx(v.X0[i]) - d.dx;
+    const real = d.frame.layout === 'family' ? NaN : v.cam.sy(v.nodes[i].lane) - d.dy;
+    const dir = Number.isFinite(real) && Math.abs(real - at.y) > 0.5 ? Math.sign(real - at.y) : side === 'from' ? -1 : 1;
+    const g = { id, x, y: at.y + dir * Math.max(6, v.cam.ky * 0.5), r: starRadius(q.magnitude, 1) + (q.sex === 'f' ? 2.2 : 0) };
+    ghosts.push(g);
+    return g;
+  };
+  /** Путь между старшим (левее) и младшим концом: по строке старшего до столбца младшего, ступенькой к нему. */
+  const join = (a: { x: number; y: number }, b: { x: number; y: number }): number[] => {
+    const [o, y] = a.x <= b.x ? [a, b] : [b, a];
+    const xs = Math.max(o.x + 2, y.x - TRUNK_LEAD);
+    return Math.abs(o.y - y.y) < 0.5 ? [o.x, o.y, y.x, y.y] : [o.x, o.y, xs, o.y, xs, y.y, y.x, y.y];
+  };
+  const roles = linkRoles(key);
+  if (key.kind === 'step' || key.kind === 'span') {
     for (const q of paths) if (q.kind === 'ribbon' && q.ks === ks) all.push([...q.pts]);
-    return { all, core: all };
+    // шаг, родитель которого скрыт показом (К4: r.m.mariya в «ключевых лицах»), — не по ленте: призрак родителя и
+    // короткое жёлтое от него к ребёнку
+    if (!all.length && key.kind === 'step') {
+      const ends = roles.map((e) => ({ e, s: star(e.id) }));
+      const seen = ends.find((q) => q.s)?.s;
+      if (seen)
+        for (const { e, s: at } of ends) {
+          if (at) continue;
+          const g = ghostOf(e.id, seen, e.side);
+          if (g) all.push(join(g, seen));
+        }
+    }
+    return { all, core: all, ghosts };
   }
   if (key.kind === 'kin') {
     const a = star(key.a);
     const b = star(key.b);
-    if (a && b) all.push([a.x, a.y, b.x, b.y]);
-    return { all, core: all };
+    // дуга родства — жёлтым по той же кривой, что золотистая дуга (К5); скрытый конец — призрак, обрывок дуги к нему
+    const ga = a ? null : b ? ghostOf(key.a, b, 'from') : null;
+    const gb = b ? null : a ? ghostOf(key.b, a, 'to') : null;
+    const pa = a ?? ga;
+    const pb = b ?? gb;
+    if (pa && pb) all.push(arcPolyline(pa, kinArcCtrl(pa, pb), pb));
+    return { all, core: all, ghosts };
   }
   const u = key.union;
   const un = unions.byId.get(u);
@@ -774,23 +972,31 @@ function frameRoutes(v: SkyContext, d: LinkDraw, key: LinkKey, ks: string): Sele
     return node.x > s.x ? [s.x, s.y, node.x, s.y, node.x, node.y] : null;
   };
   const parents = un ? [un.a, un.b].filter((x): x is string => !!x) : [];
-  if (key.kind === 'union') {
-    for (const q of paths) if (q.union === u) core.push([...q.pts]);
+  /** Скрытый родитель или супруг (К3, К6): призрак у узла союза — или, если узла нет, у видимого конца связи. */
+  const ghostRoutes = (hidden: readonly string[], anchor: { x: number; y: number } | null) => {
+    if (!anchor) return;
+    for (const id of hidden) {
+      const g = ghostOf(id, anchor, 'from');
+      if (!g) continue;
+      all.push(node ? [g.x, g.y, Math.max(g.x, node.x), g.y, Math.max(g.x, node.x), node.y] : join(g, anchor));
+    }
+  };
+  const firstSeen = (ids: readonly string[]) => {
+    for (const id of ids) {
+      const q = star(id);
+      if (q) return q;
+    }
+    return null;
+  };
+  if (key.kind === 'union' || key.kind === 'spouse') {
+    for (const q of paths) if (key.kind === 'union' ? q.union === u : q.ks === ks) core.push([...q.pts]);
     all.push(...core);
     for (const id of parents) {
       const r = parentRoute(id);
       if (r) all.push(r);
     }
-    return { all, core };
-  }
-  if (key.kind === 'spouse') {
-    for (const q of paths) if (q.ks === ks) core.push([...q.pts]);
-    all.push(...core);
-    for (const id of parents) {
-      const r = parentRoute(id);
-      if (r) all.push(r);
-    }
-    return { all, core };
+    ghostRoutes(parents.filter((id) => !star(id)), node ?? firstSeen([...parents, ...(un?.kids ?? [])]));
+    return { all, core, ghosts };
   }
   // союз → ребёнок: лента шага или путь от узла по стволу и зубцу к ребёнку; пути родителей к узлу
   const kid = key.child;
@@ -818,7 +1024,174 @@ function frameRoutes(v: SkyContext, d: LinkDraw, key: LinkKey, ks: string): Sele
     const r = parentRoute(id);
     if (r) all.push(r);
   }
-  return { all, core };
+  // скрытые концы (К3): родители — призраками у узла союза (или у ребёнка, если узла в кадре нет); ребёнок — у узла или
+  // у видимого родителя
+  const kidStar = star(kid);
+  ghostRoutes(parents.filter((id) => !star(id)), node ?? kidStar);
+  if (!kidStar) {
+    const at = node ?? firstSeen(parents);
+    const g = at ? ghostOf(kid, at, 'to') : null;
+    if (g && at) all.push(join(at, g));
+  }
+  return { all, core, ghosts };
+}
+
+/**
+ * Призрак конца выбранной связи (К3): пунктирное кольцо «лицо нарисовано не здесь» размером его знака, внутри — цвет
+ * неба (жёлтое к нему кончается у кольца), рядом курсивом «Илий, отец — вне показа». Подпись — через общую проверку
+ * наложений (Д12): не ложится на имена. Конец за краем окна — указатель у кромки с тем же текстом (К2). Возвращает поля
+ * попадания (щелчок — «показать»): кольцо, затем подпись — каждое своё, не общий прямоугольник, который накрыл бы звезду
+ * между ними; пусто — призрак вне холста и указателя нет.
+ */
+function drawGhostEnd(v: SkyContext, p: Pass, g: GhostSpot, name: string, role: string, why: GhostWhy, ink: string): SelectedLinkInfo['ghosts'] {
+  const { ctx, cam, pal } = v;
+  const vp = cam.vp;
+  const size = mapSize(T_MAP_S, v.coarse);
+  const text = `${role ? `${name}, ${role}` : name} — ${GHOST_WORD[why]}`;
+  const least = v.coarse ? 44 : 24;
+  const on = g.x >= vp.l && g.x <= vp.r && g.y >= v.openTop && g.y <= vp.b;
+  if (!on) {
+    // указатель у кромки (К2): «‹ Илий, отец — вне показа»
+    const left = g.x < vp.l;
+    const right = g.x > vp.r;
+    const t = left ? `‹ ${text}` : right ? `${text} ›` : g.y < v.openTop ? `↑ ${text}` : `↓ ${text}`;
+    ctx.font = mapFont(T_MAP_S, { sans: true, weight: 500, coarse: v.coarse });
+    const w = ctx.measureText(t).width;
+    const tx = left ? v.letterW + 6 : right ? vp.r - 6 - w : Math.max(v.letterW + 6, Math.min(vp.r - 6 - w, g.x - w / 2));
+    const ty = left || right ? Math.max(v.openTop + size + 4, Math.min(vp.b - 6, g.y + size * 0.35)) : g.y < v.openTop ? v.openTop + size + 6 : vp.b - 8;
+    const box = textBox(tx, ty, w, size);
+    ctx.save();
+    ctx.fillStyle = pal.glow ? alpha(pal.sky, 0.85) : alpha(LINK_YELLOW.day, 0.9);
+    ctx.fillRect(box.x - 3, box.y - 1, box.w + 6, box.h + 2);
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = ink;
+    ctx.fillText(t, tx, ty);
+    ctx.restore();
+    p.placer.add(box);
+    v.ledger.add('edge', t, box, g.id);
+    return [{ x: box.x - 3, y: box.y - Math.max(0, (least - box.h) / 2), w: box.w + 6, h: Math.max(box.h, least), id: g.id, role, why, cx: g.x, cy: g.y }];
+  }
+  const r = g.r + 3;
+  ctx.save();
+  ctx.fillStyle = pal.sky;
+  ctx.beginPath();
+  ctx.arc(g.x, g.y, r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.setLineDash([2, 2]);
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = ink;
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+  const ring = { x: g.x - r - 1, y: g.y - r - 1, w: 2 * r + 2, h: 2 * r + 2 };
+  p.placer.add(ring);
+  let label: Rect | null = null;
+  if (p.s.layers.labels) {
+    ctx.font = mapFont(T_MAP_S, { italic: true, coarse: v.coarse });
+    const w = ctx.measureText(text).width;
+    // справа, слева, над кольцом, под ним — и на строку выше и ниже справа и слева
+    const spots = [
+      { tx: g.x + r + 4, ty: g.y + size * 0.35 },
+      { tx: g.x - r - 4 - w, ty: g.y + size * 0.35 },
+      { tx: g.x - w / 2, ty: g.y - r - 4 },
+      { tx: g.x - w / 2, ty: g.y + r + 3 + size * 0.8 },
+      { tx: g.x + r + 2, ty: g.y - r - 4 },
+      { tx: g.x - r - 2 - w, ty: g.y - r - 4 },
+      { tx: g.x + r + 2, ty: g.y + r + 3 + size * 0.8 },
+      { tx: g.x - r - 2 - w, ty: g.y + r + 3 + size * 0.8 },
+      // и ещё на строку дальше: у тесной семьи (Давид, Иессей) ближние места заняты именами
+      { tx: g.x - w / 2, ty: g.y - r - 6 - size },
+      { tx: g.x - r - 2 - w, ty: g.y - r - 6 - size },
+      { tx: g.x + r + 2, ty: g.y - r - 6 - size },
+      { tx: g.x - w / 2, ty: g.y + r + 5 + size * 1.8 },
+    ];
+    const boxes = spots.map((c) => textBox(c.tx, c.ty, w, size));
+    const b = claim(v, p, boxes, 'mark', text, { id: g.id }) ?? null;
+    if (b) {
+      const c = spots[boxes.indexOf(b)];
+      ctx.save();
+      ctx.textBaseline = 'alphabetic';
+      ctx.lineJoin = 'round';
+      ctx.strokeStyle = pal.halo;
+      ctx.lineWidth = 3;
+      ctx.strokeText(text, c.tx, c.ty);
+      ctx.fillStyle = ink;
+      ctx.fillText(text, c.tx, c.ty);
+      ctx.restore();
+      label = b;
+    }
+  }
+  // поле не меньше least × least (касание — 44): кольцо — по центру, подпись — по высоте
+  const grow = (h: Rect): Rect => ({
+    x: h.w < least ? h.x - (least - h.w) / 2 : h.x,
+    y: h.h < least ? h.y - (least - h.h) / 2 : h.y,
+    w: Math.max(h.w, least),
+    h: Math.max(h.h, least),
+  });
+  return [ring, ...(label ? [label] : [])].map((h) => ({ ...grow(h), id: g.id, role, why, cx: g.x, cy: g.y }));
+}
+
+/** Места колец и ролей концов выбранной связи в этом кадре (Д12): заняты раньше подписей звёзд. */
+const endPlaces = new WeakMap<object, Map<string, { tx: number; ty: number } | null>>();
+/** Поля колец (у звёзд и призраков) и ролей концов выбранной связи этого кадра, px холста (Д12; для проверок). */
+const endRects = new WeakMap<object, { id: string; kind: 'ring' | 'role'; box: Rect }[]>();
+export const selectedEndRects = (v: object) => endRects.get(v) ?? [];
+/** Радиус кольца конца выбранной связи у звезды лица. */
+const endRing = (q: { magnitude: number; sex: string }, zoom: number) => starRadius(q.magnitude, zoom) + (q.sex === 'f' ? 6.5 : 5);
+
+/**
+ * Д12: кольца концов выбранной связи и их роли («отец», «дочь») проходят общую проверку наложений раньше подписей звёзд:
+ * чужое имя не ложится ни на кольцо, ни на роль (своё имя лица стоит у своей звезды, как прежде: место кольца — его,
+ * Placer owner). Кольца призраков — тоже. Место роли, не нашедшей места, — null: роль не рисуется (она есть в карточке
+ * связи), а не ложится на имя.
+ */
+export function reserveSelectedLink(v: SkyContext, p: Pass) {
+  endPlaces.delete(v);
+  endRects.delete(v);
+  const key = p.s.link;
+  if (!key) return;
+  const rects: { id: string; kind: 'ring' | 'role'; box: Rect }[] = [];
+  const { cam } = v;
+  const vp = cam.vp;
+  const size = mapSize(T_MAP_S, v.coarse);
+  const out = new Map<string, { tx: number; ty: number } | null>();
+  for (const g of selectedRoutes(v, p.links, key).ghosts) {
+    if (g.x < vp.l || g.x > vp.r || g.y < v.openTop || g.y > vp.b) continue;
+    const r = g.r + 3;
+    const ring = { x: g.x - r - 1, y: g.y - r - 1, w: 2 * r + 2, h: 2 * r + 2 };
+    p.placer.add(ring, false, 0, g.id);
+    rects.push({ id: g.id, kind: 'ring', box: ring });
+  }
+  for (const e of linkRoles(key)) {
+    const i = v.indexOf(e.id);
+    const q = byId.get(e.id);
+    if (!q || i === undefined || !v.drawn(i) || v.hides(e.id)) continue;
+    const x = cam.sx(v.X0[i]);
+    const y = cam.sy(v.nodes[i].lane);
+    if (x < vp.l || x > vp.r || y < v.openTop || y > vp.b) continue;
+    const r = endRing(q, p.zoomScale);
+    const ring = { x: x - r - 2, y: y - r - 2, w: 2 * r + 4, h: 2 * r + 4 };
+    p.placer.add(ring, false, 0, e.id);
+    rects.push({ id: e.id, kind: 'ring', box: ring });
+    if (!e.role || !p.s.layers.labels) continue;
+    v.ctx.font = mapFont(T_MAP_S, { italic: true, coarse: v.coarse });
+    const w = v.ctx.measureText(e.role).width;
+    // под звездой, над ней, справа, слева — и на строку дальше
+    const spots = [
+      { tx: x - w / 2, ty: y + r + 3 + size * 0.8 },
+      { tx: x - w / 2, ty: y - r - 4 },
+      { tx: x + r + 4, ty: y + size * 0.3 },
+      { tx: x - r - 4 - w, ty: y + size * 0.3 },
+      { tx: x - w / 2, ty: y + r + 5 + size * 1.8 },
+      { tx: x - w / 2, ty: y - r - 6 - size },
+    ];
+    const boxes = spots.map((c) => textBox(c.tx, c.ty, w, size));
+    const b = claim(v, p, boxes, 'mark', e.role, { id: e.id });
+    out.set(e.id, b ? spots[boxes.indexOf(b)] : null);
+    if (b) rects.push({ id: e.id, kind: 'role', box: b });
+  }
+  endPlaces.set(v, out);
+  endRects.set(v, rects);
 }
 
 /**
@@ -828,10 +1201,13 @@ function frameRoutes(v: SkyContext, d: LinkDraw, key: LinkKey, ks: string): Sele
  */
 export function drawSelectedLink(v: SkyContext, p: Pass): SelectedLinkInfo | null {
   const key = p.s.link;
-  if (!key) return null;
+  if (!key) {
+    putLinkGhosts([]);
+    return null;
+  }
   const { ctx, cam, pal } = v;
   const night = !!pal.glow;
-  const { all: routes, core } = selectedRoutes(v, p.links, key);
+  const { all: routes, core, ghosts: spots } = selectedRoutes(v, p.links, key);
   const roles = linkRoles(key);
   ctx.save();
   // путь идёт по следам концов, а на следе у звезды стоит имя: жёлтый подписей не закрывает (Я24) — под подписью он
@@ -907,15 +1283,30 @@ export function drawSelectedLink(v: SkyContext, p: Pass): SelectedLinkInfo | nul
   const edges: SelectedLinkInfo['edges'] = [];
   const size = mapSize(T_MAP_S, v.coarse);
   const ink = night ? LINK_YELLOW.night : pal.ink;
+  const ghosts: LinkGhost[] = [];
+  const ghostHits: SelectedLinkInfo['ghosts'] = [];
+  const ks = linkKeyString(key) ?? '';
   for (const e of roles) {
     const i = v.indexOf(e.id);
     const q = byId.get(e.id);
-    if (i === undefined || !q || !v.drawn(i)) continue;
+    if (!q) continue;
+    if (i === undefined || !v.drawn(i) || v.hides(e.id)) {
+      // конец не нарисован: вне показа или спрятан свёрткой (К3) — призрак: пунктирное кольцо «лицо нарисовано не
+      // здесь» в его год, подпись «Илий, отец — вне показа»
+      const f = foldsHiding(e.id);
+      const why: GhostWhy = f.desc.length || f.groups.length ? 'folded' : 'show';
+      ghosts.push({ id: e.id, role: e.role, why, ks });
+      const g = spots.find((x) => x.id === e.id);
+      if (g) {
+        ghostHits.push(...drawGhostEnd(v, p, g, q.name, e.role, why, ink));
+      }
+      continue;
+    }
     const x = cam.sx(v.X0[i]);
     const y = cam.sy(v.nodes[i].lane);
     const on = x >= vp.l && x <= vp.r && y >= v.openTop && y <= vp.b;
     if (on) {
-      const r = starRadius(q.magnitude, p.zoomScale) + (q.sex === 'f' ? 6.5 : 5);
+      const r = endRing(q, p.zoomScale);
       ctx.save();
       ctx.lineWidth = 2;
       ctx.strokeStyle = night ? LINK_YELLOW.night : pal.ink;
@@ -932,19 +1323,10 @@ export function drawSelectedLink(v: SkyContext, p: Pass): SelectedLinkInfo | nul
       ctx.arc(x, y, r, 0, Math.PI * 2);
       ctx.stroke();
       ctx.restore();
-      // роль курсивом — под звездой, иначе над ней или справа
-      if (e.role && p.s.layers.labels) {
+      // роль курсивом — под звездой, иначе над ней или сбоку: место занято до подписей звёзд (Д12, reserveSelectedLink)
+      const c = e.role && p.s.layers.labels ? endPlaces.get(v)?.get(e.id) : null;
+      if (c) {
         ctx.font = mapFont(T_MAP_S, { italic: true, coarse: v.coarse });
-        const w = ctx.measureText(e.role).width;
-        const spots = [
-          { tx: x - w / 2, ty: y + r + 3 + size * 0.8 },
-          { tx: x - w / 2, ty: y - r - 4 },
-          { tx: x + r + 4, ty: y + size * 0.3 },
-          { tx: x - r - 4 - w, ty: y + size * 0.3 },
-        ];
-        const boxes = spots.map((c) => textBox(c.tx, c.ty, w, size));
-        const b = claim(v, p, boxes, 'mark', e.role, { id: e.id }) ?? boxes[0];
-        const c = spots[boxes.indexOf(b)];
         ctx.save();
         ctx.textBaseline = 'alphabetic';
         ctx.lineJoin = 'round';
@@ -980,6 +1362,8 @@ export function drawSelectedLink(v: SkyContext, p: Pass): SelectedLinkInfo | nul
     const hit = { x: box.x - 3, y: box.y - Math.max(0, (least - box.h) / 2), w: box.w + 6, h: Math.max(box.h, least), id: e.id };
     edges.push(hit);
     ends.push({ id: e.id, role: e.role, x: tx + w / 2, y: ty - size * 0.35, on: false });
+    ghosts.push({ id: e.id, role: e.role, why: 'edge', ks });
   }
-  return { ks: linkKeyString(key) ?? '', ends, x: n ? sx / n : null, y: n ? sy / n : null, segs: routes.length, routes: routes.map((r) => r.map((q) => Math.round(q * 10) / 10)), edges };
+  putLinkGhosts(ghosts);
+  return { ks, ghosts: ghostHits, ends, x: n ? sx / n : null, y: n ? sy / n : null, segs: routes.length, routes: routes.map((r) => r.map((q) => Math.round(q * 10) / 10)), edges };
 }

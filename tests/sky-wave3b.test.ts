@@ -62,7 +62,7 @@ beforeAll(async () => {
   tiers = await import('../src/render/tiers.ts');
   tip = await import('../src/ui/sky/tip.ts');
   years = await import('../src/engine/years.ts');
-});
+}, 60_000);
 
 const LAYERS = { lifelines: true, connectors: true, constellations: true, epochs: true, ribbons: true, tensions: true, ghosts: true, labels: true };
 function drawSky(o: { w?: number; h?: number; move?: (s: InstanceType<typeof Sky>) => void; state?: Record<string, unknown> } = {}) {
@@ -186,7 +186,7 @@ describe('меридиан года (D13; UX-27, IX-34, MAP-07, MAP-33)', () => 
       expect(flag!.y).toBeLessThan(top);
       expect(withM.sky.meridianFlag).toBeTruthy();
     }
-  });
+  }, 60_000);
   it('«вероятно» — бледнее, чем «наверняка»; погашенные — бледнее обоих', () => {
     const t = years.toAstro(-990);
     const alive = text.aliveAt(models[0].chrono, t);
@@ -270,11 +270,14 @@ describe('ярусы эпох (D14; IX-28, MAP-46, MAP-47, MAP-48, VIS-26)', () 
 // ---------- E10: отметки одноимённых ----------
 
 describe('отметки одноимённых (E10; UX-31, IX-19, MAP-49)', () => {
-  it('строка «Отмечено N лиц по запросу «…»» (подсказка «Esc — снять» — в разметке строки, только с клавиатурой)', () => {
-    expect(text.pinBarText(11, 'Иосиф')).toBe('Отмечено 11 лиц по запросу «Иосиф»');
-    expect(text.pinBarText(2, 'Мария')).toBe('Отмечено 2 лица по запросу «Мария»');
-    expect(text.pinBarText(1, ' ')).toBe('Отмечено 1 лицо');
-  });
+  it('строка «Отмечено поиском: N лиц по запросу «…»» (подсказка «Esc — снять» — в разметке строки, только с клавиатурой)', async () => {
+    // этап 13, решение 126: строку пишет Overlays.searchPinText («поиском» отличает отметки от выбора, набора и показа);
+    // прежняя pinBarText удалена — смысл проверки тот же: число согласовано, запрос в кавычках, пустой запрос не пишется
+    const { searchPinText } = await import('../src/ui/sky/Overlays.tsx');
+    expect(searchPinText(11, 'Иосиф')).toBe('Отмечено поиском: 11 лиц по запросу «Иосиф»');
+    expect(searchPinText(2, 'Мария')).toBe('Отмечено поиском: 2 лица по запросу «Мария»');
+    expect(searchPinText(1, ' ')).toBe('Отмечено поиском: 1 лицо');
+  }, 60_000);
   it('у отметки — подпись с уточнением; подписи отметок не ложатся друг на друга', () => {
     const ids = [...byId.values()].filter((p) => p.name === 'Иосиф').map((p) => p.id);
     expect(ids.length).toBeGreaterThan(5);

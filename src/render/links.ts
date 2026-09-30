@@ -110,7 +110,13 @@ export interface LinkInput {
   /** высота строки, px */
   ky: number;
   /** лица линий Мессии на небе по порядку (после «Лк 3 как второе родословие Иосифа»); null — лент нет */
-  lines: { joseph: readonly string[]; mary: readonly string[]; styles?: ReadonlyMap<string, PathStyle> } | null;
+  lines: {
+    joseph: readonly string[];
+    mary: readonly string[];
+    styles?: ReadonlyMap<string, PathStyle>;
+    /** «линия>лицо» → сколько лиц линии перед ним скрыто показом: шаг к нему — «цепочка» span (этап 13, К4) */
+    gaps?: ReadonlyMap<string, number>;
+  } | null;
   /** союзы набора (показ «набор»): у свёрнутого — полый ромб с «+N» */
   plates?: ReadonlyMap<string, LinkPlate> | null;
   /** x рождения лица, px кадра, — и у лица не на небе (ромб свёрнутого союза встаёт в год первого ребёнка) */
@@ -126,12 +132,23 @@ export interface LinkInput {
    * у чьего следа стоит (жена у мужа, дети у родителя). Грамматика берёт дом лица отсюда, чтобы стволы шли по укладке.
    */
   units?: ReadonlyMap<string, readonly { union: { id: string }; parent: string; wife: string | null; kids: readonly string[] }[]> | null;
+  /** переключатель «Лк 3 как второе родословие Иосифа» (решение 107; otherReading) */
+  flip?: boolean;
 }
 
 // ---------- выход ----------
 
 export type PathKind = 'trunk' | 'tooth' | 'bar' | 'jog' | 'clan' | 'stub' | 'ribbon';
-export type PathStyle = 'solid' | 'dash' | 'dots';
+/**
+ * Начертание пути по словарю (этап 13, решение 94): solid — Писание или вывод; dash — иное происхождение; dots — только
+ * толкование; faint — бледная сплошная: родовая черта народа (Г12), у которого нет следа.
+ */
+export type PathStyle = 'solid' | 'dash' | 'dots' | 'faint';
+/** Родовая черта (Г12): у лица — сплошная (продлённый след или черта в межстрочье), у народа и рода — бледная сплошная. */
+const clanStyle = (id: string): PathStyle => {
+  const q = byId.get(id);
+  return q && (q.kind === 'people' || q.kind === 'clan') ? 'faint' : 'solid';
+};
 /** Когда путь рисуется: всегда; только раскрытым (длинная связь целиком); только свёрнутым (обрывки длинной связи). */
 export type PathWhen = 'always' | 'full' | 'short';
 
@@ -153,6 +170,8 @@ export interface LinkPath {
   cuts: number[];
   /** линия шага ленты (у kind 'ribbon') */
   line?: 'joseph' | 'mary';
+  /** у «цепочки» (ключ span): сколько лиц линии между концами скрыто показом (этап 13, К4) */
+  gap?: number;
 }
 
 /** Узел союза: ◆ (union) — на следе у ствола первого гнезда, • (join) — у стволов следующих гнёзд. */
@@ -167,6 +186,11 @@ export interface LinkNode {
   count: string | null;
   /** подпись у ромба: имя матери, стоящей далеко (Г8) */
   mother: string | null;
+  /**
+   * имя у ромба бездетного брака (этап 13, К6) — после подписей звёзд: имя второго супруга связывает ромб с ним, но не
+   * отнимает места у имён звёзд (trails.ts, drawLinkLabels)
+   */
+  late?: boolean;
   /** лицо, на чьём следе узел */
   owner: string;
   /** лицо, от которого союз показан (карточка союза, раскрытие) */
@@ -212,6 +236,18 @@ const EMPTY: LinkFrame = { layout: 'map', paths: [], nodes: [], stubs: [], via: 
 export function mainUnion(U: Unions, id: string): Union | null {
   const u = U.origin.get(id)?.[0];
   return u && !u.id.includes('~') ? u : null;
+}
+
+/**
+ * Два прочтения Лк 3:23 (решение 107): «Илий — отец Марии» (толкование; лента Марии) и «Илий — отец Иосифа по Луке»
+ * (otherParents Иосифа, claim 'by-luke'). Небо рисует одно — выбранное переключателем «Лк 3 как второе родословие
+ * Иосифа» (ribbons.ts: Мария в линии Луки заменяется Иосифом): союз другого прочтения не рисуется, как и путь родства
+ * не идёт через оба сразу (kinship.ts).
+ */
+const LK323 = { parent: 'iliy-otets-marii', mary: 'mariya', joseph: 'iosif-muzh-marii' } as const;
+export function otherReading(u: Union, flip: boolean): boolean {
+  if (u.a !== LK323.parent && u.b !== LK323.parent) return false;
+  return flip ? u.kids.includes(LK323.mary) && !u.claim : u.kids.includes(LK323.joseph) && u.claim === 'by-luke';
 }
 
 /** Союз иного рода, который рисуется штрихом (Г10): по Луке, усыновление, по другому месту Писания. */
@@ -370,7 +406,7 @@ function mapLinks(inp: LinkInput): LinkFrame {
     if (!s.ghost && s.sat && ghost.has(s.id)) continue;
     if (!s.ghost && s.sat) continue;
     const u = mainUnion(U, s.id);
-    if (!u) continue;
+    if (!u || otherReading(u, !!inp.flip)) continue;
     const g = byUnion.get(u.id);
     if (g) g.kids.push(s);
     else byUnion.set(u.id, { u, kids: [s] });
@@ -417,7 +453,10 @@ function mapLinks(inp: LinkInput): LinkFrame {
     const side = Math.sign(near.y - n.p.y);
     const xs = n.kids[0].x - leadOf(n.kids[0]);
     const reaches = (s: LinkStar, x: number) => s.x1 !== null && s.x1 >= x - 1 && s.x + s.r + 2 < x;
-    const qualifies = dOP <= SPOUSE_ROWS * ky && Math.abs(near.y - o.y) <= MOTHER_ROWS * ky + 1 && Math.sign(o.y - n.p.y) === side && reaches(o, xs);
+    // жена-спутница мужа: общая раскладка ставит её у внутреннего края группы её детей (решение 95) — узел на её следе
+    // при любом удалении от мужа; черта брака идёт к нему через строки внутренних групп, пока они пусты
+    const sat = o.sat === n.p.id;
+    const qualifies = (dOP <= SPOUSE_ROWS * ky || sat) && Math.abs(near.y - o.y) <= MOTHER_ROWS * ky + 1 && Math.sign(o.y - n.p.y) === side && reaches(o, xs);
     // черта брака: от мужа к ромбу на следе жены — или от жены к ромбу на следе мужа, если она стоит рядом
     const linked = qualifies ? reaches(n.p, xs) : dOP <= SPOUSE_ROWS * ky && reaches(o, xs);
     for (const m of ns) {
@@ -631,7 +670,7 @@ function mapLinks(inp: LinkInput): LinkFrame {
     const style = kidStyle(u);
     const near = n.kids.filter((k) => !n.far.has(k.id));
     const plainNear = near.filter((k) => !n.rib.has(k.id));
-    // родовая черта (Г12): у владельца узла нет следа до узла — точками от знака или от конца следа
+    // родовая черта (Г12): у владельца узла нет следа до узла — сплошной чертой от знака или от конца следа (решение 94; у народа — бледной)
     const tail = own.x1 === null ? own.x + own.r + 1.5 : own.x1;
     const clan = tail < x - 1 && plainNear.length + n.far.size > 0;
     // строка узла: на следе владельца; у длинной родовой черты (обрывками, Г12) строку владельца к году детей уже занял
@@ -697,17 +736,24 @@ function mapLinks(inp: LinkInput): LinkFrame {
       }
     }
     // родовая черта (Г12). Гнездо, всех детей которого ведут ленты, черты не получает: к ним идёт сама лента (Г1)
+    // К6 (этап 13, решение 93): оба супруга на небе, а жена не связана с союзом — у союза, чьих детей ведёт лента, черта
+    // брака от её следа к «станции» на следе мужа, если она рядом (не дальше SPOUSE_ROWS) и её след доходит до года
+    // узла; иначе — её имя у ромба (ниже)
+    const bride = !other && n.o && n.first && !n.motherNode && !plainNear.length && near.length ? n.o : null;
+    const barFrom = bride && bride.x1 !== null && bride.x1 >= x - 1 && bride.x + bride.r + 2 < x && Math.abs(bride.y - ny) > 0.5 && Math.abs(bride.y - ny) <= SPOUSE_ROWS * ky ? bride : null;
+    if (barFrom) push({ key: spouseKey(u.id, barFrom.id), kind: 'bar', style: 'solid', pts: [x, Math.min(barFrom.y, ny), x, Math.max(barFrom.y, ny)], ends: [barFrom.id, own.id], union: u.id, when: 'always' }, new Set([barFrom.id, own.id]));
     if (clan) {
       const len = x - tail;
       const ck = unionKey(u.id);
-      if (len <= CLAN_MAX) push({ key: ck, kind: 'clan', style: 'dots', pts: [tail, own.y, x, own.y], ends: [own.id], union: u.id, when: 'always' }, skip);
+      const cs = clanStyle(own.id);
+      if (len <= CLAN_MAX) push({ key: ck, kind: 'clan', style: cs, pts: [tail, own.y, x, own.y], ends: [own.id], union: u.id, when: 'always' }, skip);
       else {
         // целиком — по строке владельца; если узел ушёл между строк (строку занял чужой след), то и черта идёт между строк
         // от обрывка у конца следа: по чужому следу точки не бегут
         const full = ny === own.y ? [tail, own.y, x, own.y] : [tail, own.y, tail + STUB_PX, own.y, tail + STUB_PX, ny, x, ny];
-        push({ key: ck, kind: 'clan', style: 'dots', pts: full, ends: [own.id], union: u.id, when: 'full' }, skip);
-        push({ key: ck, kind: 'stub', style: 'dots', pts: [tail, own.y, tail + STUB_PX, own.y], ends: [own.id], union: u.id, when: 'short' }, skip);
-        push({ key: ck, kind: 'stub', style: 'dots', pts: [x - STUB_PX, ny, x, ny], ends: [own.id], union: u.id, when: 'short' }, skip);
+        push({ key: ck, kind: 'clan', style: cs, pts: full, ends: [own.id], union: u.id, when: 'full' }, skip);
+        push({ key: ck, kind: 'stub', style: cs, pts: [tail, own.y, tail + STUB_PX, own.y], ends: [own.id], union: u.id, when: 'short' }, skip);
+        push({ key: ck, kind: 'stub', style: cs, pts: [x - STUB_PX, ny, x, ny], ends: [own.id], union: u.id, when: 'short' }, skip);
         stubs.push({ key: ck, ks: key(ck), union: u.id, x: tail + STUB_PX, y: own.y, dir: 0, targets: n.kids.map((k) => k.id), side: 'parent', kind: 'clan' });
         stubs.push({ key: ck, ks: key(ck), union: u.id, x: x - STUB_PX, y: ny, dir: 0, targets: [own.id], side: 'child', kind: 'clan' });
       }
@@ -716,8 +762,9 @@ function mapLinks(inp: LinkInput): LinkFrame {
     const count = unionsOf.get(n.p.id) ?? 0;
     // имя матери у ромба на следе отца — если у отца союзов с детьми два и больше (Г8); мать не названа — пустая строка:
     // у ромба тогда название союза «Давид (мать не названа)» (решение 75; trails.ts, drawLinkLabels)
+    // этап 13, К6: мать на небе, не связанная линией, — её имя у ромба всегда (прежде — при двух союзах и больше)
     const farMother =
-      !n.motherNode && n.o && !n.linked && count >= 2 ? n.o.id : !n.motherNode && !n.o && u.b && u.b !== n.p.id && count >= 2 ? u.b : !n.motherNode && !u.b && count >= 2 ? '' : null;
+      !n.motherNode && n.o && !n.linked && !barFrom ? n.o.id : !n.motherNode && !n.o && u.b && u.b !== n.p.id && count >= 2 ? u.b : !n.motherNode && !u.b && count >= 2 ? '' : null;
     nodes.push({
       kind: n.first ? 'union' : 'join',
       union: u.id,
@@ -751,6 +798,8 @@ function mapLinks(inp: LinkInput): LinkFrame {
     nodes.push({ kind: 'union', union: u.id, key: unionKey(u.id), x, y: s.y, open: true, count: null, mother: null, owner: s.id, from: h.id });
   }
 
+  childlessNodes(U.byId.values(), main, withKids, nodes, paths);
+
   // шаги лент без своего гнезда (союз иного рода: Нирий → Салафиил по Луке, Лк 3:27): узел на следе родителя шага
   for (const pk of steps.keys()) {
     if (via.has(pk)) continue;
@@ -770,6 +819,36 @@ function mapLinks(inp: LinkInput): LinkFrame {
 }
 
 // ---------- семейная укладка («Г»): лестница союзов (K3 § 2.1) ----------
+
+/**
+ * Бездетный брак, где супруги не связаны линией (К6, этап 13): союз всё равно виден — ромб на следе мужа после рождения
+ * младшего из супругов, у ромба — имя жены (Г8: «Фамарь» у Ира и у Онана); след мужа кончился раньше — ромб на следе
+ * жены с именем мужа; следов нет — у звезды мужа. Союзы с детьми (withKids) и уже с узлом — мимо.
+ */
+function childlessNodes(us: Iterable<Union>, main: ReadonlyMap<string, LinkStar>, withKids: ReadonlySet<string>, nodes: LinkNode[], paths: readonly LinkPath[]) {
+  for (const u of us) {
+    if (!u.a || !u.b || u.claim || withKids.has(u.id)) continue;
+    const h = main.get(u.a);
+    const w = main.get(u.b);
+    if (!h || !w) continue;
+    const was = nodes.find((q) => q.union === u.id && q.kind === 'union');
+    if (was) {
+      // ромб уже есть (у мужа или жены): второй супруг, не связанный с ним линией, назван у ромба
+      const other = was.owner === u.a ? u.b : u.a;
+      const tied = paths.some((q) => q.union === u.id && q.ends.includes(other)) || was.mother === other;
+      if (!tied && was.mother === null) {
+        was.mother = other;
+        was.late = true;
+      }
+      continue;
+    }
+    const x = Math.round(Math.max(h.x + h.r, w.x + w.r) + 12) + 0.5;
+    const on = [h, w].find((q) => q.x1 !== null && x < q.x1 - 1);
+    const at = on ?? h;
+    const nx = on ? x : Math.round(h.x + h.r + 6) + 0.5;
+    nodes.push({ kind: 'union', union: u.id, key: unionKey(u.id), x: nx, y: at.y, open: true, count: null, mother: at === h ? w.id : h.id, owner: at.id, from: h.id, late: true });
+  }
+}
 
 /** Союзы семейного неба: с ребёнком на небе или оба супруга на небе; утверждения иного рода — кроме «предка». */
 function familyUnions(U: Unions, S: ReadonlySet<string>): Union[] {
@@ -847,7 +926,7 @@ function familyLinks(inp: LinkInput): LinkFrame {
   const byP = new Map<string, Group[]>();
   const lineOnly: { u: Union; p: string; fb: number }[] = [];
   const plates = inp.plates ?? null;
-  const shown = familyUnions(U, S);
+  const shown = familyUnions(U, S).filter((u) => !otherReading(u, !!inp.flip));
   const shownIds = new Set(shown.map((u) => u.id));
   // союзы набора, которых на небе нет целиком (свёрнутые): узел с «+N»
   const collapsed: { u: Union; plate: LinkPlate }[] = [];
@@ -875,9 +954,12 @@ function familyLinks(inp: LinkInput): LinkFrame {
         const dir = Math.sign(Y(k) - Y(p)) as -1 | 1;
         push({ key: ck, kind: 'stub', style: kidStyle(u), pts: [x, Y(p), x, Y(p) + dir * STUB_PX], ends: [p, k], union: u.id, when: 'always' }, new Set([p, k]));
         stubs.push({ key: ck, ks: key(ck), union: u.id, x, y: Y(p) + dir * STUB_PX, dir, targets: [k], side: 'parent', kind: 'kid' });
-        const kx = X(k) - R(k) - 1.5;
-        push({ key: ck, kind: 'stub', style: kidStyle(u), pts: [kx - STUB_PX, Y(k), kx, Y(k)], ends: [p, k], union: u.id, when: 'always' }, new Set([p, k]));
-        stubs.push({ key: ck, ks: key(ck), union: u.id, x: kx - STUB_PX, y: Y(k), dir: 0, targets: [p], side: 'child', kind: 'kid' });
+        // обрывок у самой дочери — вертикалью к её звезде со стороны родителя: слева у звезды входит зубец её своего союза
+        // (Нааман: сын Вениамина и, по Чис 26:40, Белы), две связи одной чертой читались бы одной (этап 13, перепись Я11)
+        const s = -dir as -1 | 1;
+        const ky0 = Y(k) + s * (R(k) + 1.5);
+        push({ key: ck, kind: 'stub', style: kidStyle(u), pts: [X(k), Y(k) + s * (R(k) + 1.5 + STUB_PX), X(k), ky0], ends: [p, k], union: u.id, when: 'always' }, new Set([p, k]));
+        stubs.push({ key: ck, ks: key(ck), union: u.id, x: X(k), y: Y(k) + s * (R(k) + 1.5 + STUB_PX), dir: s, targets: [p], side: 'child', kind: 'kid' });
       }
     const fb = kids.length ? Math.min(...kids.map(X)) : Math.max(X(p) + R(p), other ? X(other) + R(other) : X(p)) + 3 * gap;
     const pr = Y(p);
@@ -938,6 +1020,9 @@ function familyLinks(inp: LinkInput): LinkFrame {
         const q = a[i];
         const far = farOf(q);
         const skip = new Set([p, ...q.members]);
+        // строку родителя к году узла занял чужой след (родовая черта длинная: Сегув — Иаир) — узел между строк, на полстроки
+        // к детям: на чужом следе он читался бы его узлом (Г7; этап 12, Я8 — так же на общей раскладке)
+        if (i === 0 && !q.mother && inp.stars.some((o) => o.id !== p && !o.ghost && Math.abs(o.y - py) < 0.5 && o.x < q.bus && (o.x1 ?? o.x + o.r) > q.bus)) yStart = py + side * (ky / 2);
         const node = q.mother ? Y(q.mother) : yStart;
         // гнёзда (Г3): дети группы сверху вниз — по году; ствол гнезда — не дальше 32 px левее первого ребёнка, зубцы —
         // не длиннее 40 px; следующее гнездо — ступенькой вправо от главного ствола между строками, узел • в развилке
@@ -993,25 +1078,26 @@ function familyLinks(inp: LinkInput): LinkFrame {
           push({ key: nk, kind: 'jog', style: 'solid', pts: [q.bus, far, q.bus, jy, nxt.bus, jy], ends: [p, ...q.members], union: nxt.u.id, when: 'always' }, new Set([p, ...q.members]));
           yStart = jy;
         }
-        // родовая черта (Г12): след родителя (у первой группы стороны) или матери кончился раньше ствола — точками до него
-        const clan = (who: string, y: number) => {
+        // родовая черта (Г12): след родителя (у первой группы стороны) или матери кончился раньше ствола — сплошной чертой до него (решение 94; у народа — бледной)
+        const clan = (who: string, y: number, yNode = y) => {
           const st = main.get(who)!;
           const tail = st.x1 === null ? st.x + st.r + 1.5 : st.x1;
           if (tail >= q.bus - 1) return;
           const ck = unionKey(q.u.id);
           // длинная черта или чужой след на той же строке (строку занимают после чужого следа) — обрывками с подписями
           const busy = inp.stars.some((o) => o.id !== who && Math.abs(o.y - y) < 0.5 && o.x < q.bus && (o.x1 ?? o.x + o.r) > tail);
+          const cs = clanStyle(who);
           if (q.bus - tail <= CLAN_MAX && !busy) {
-            push({ key: ck, kind: 'clan', style: 'dots', pts: [tail, y, q.bus, y], ends: [who], union: q.u.id, when: 'always' }, new Set([who]));
+            push({ key: ck, kind: 'clan', style: cs, pts: [tail, y, q.bus, y], ends: [who], union: q.u.id, when: 'always' }, new Set([who]));
             return;
           }
           const stub = Math.min(STUB_PX, (q.bus - tail) / 3);
-          push({ key: ck, kind: 'stub', style: 'dots', pts: [tail, y, tail + stub, y], ends: [who], union: q.u.id, when: 'always' }, new Set([who]));
-          push({ key: ck, kind: 'stub', style: 'dots', pts: [q.bus - stub, y, q.bus, y], ends: [who], union: q.u.id, when: 'always' }, new Set([who]));
+          push({ key: ck, kind: 'stub', style: cs, pts: [tail, y, tail + stub, y], ends: [who], union: q.u.id, when: 'always' }, new Set([who]));
+          push({ key: ck, kind: 'stub', style: cs, pts: [q.bus - stub, yNode, q.bus, yNode], ends: [who], union: q.u.id, when: 'always' }, new Set([who]));
           stubs.push({ key: ck, ks: key(ck), union: q.u.id, x: tail + stub, y, dir: 0, targets: q.kids.length ? q.kids : q.members, side: 'parent', kind: 'clan' });
-          stubs.push({ key: ck, ks: key(ck), union: q.u.id, x: q.bus - stub, y, dir: 0, targets: [who], side: 'child', kind: 'clan' });
+          stubs.push({ key: ck, ks: key(ck), union: q.u.id, x: q.bus - stub, y: yNode, dir: 0, targets: [who], side: 'child', kind: 'clan' });
         };
-        if (i === 0) clan(p, py);
+        if (i === 0) clan(p, py, node);
         if (q.mother) clan(q.mother, node);
         const pl = plates?.get(q.u.id);
         const was = nodes.find((n) => n.union === q.u.id && n.kind === 'union');
@@ -1021,7 +1107,10 @@ function familyLinks(inp: LinkInput): LinkFrame {
           was.x = q.bus;
           was.y = node;
           was.owner = q.mother;
-        }
+        } else if (Math.abs(was.x - q.bus) > 1 || Math.abs(was.y - node) > 0.5)
+          // дети союза по обе стороны от следа родителя (дочери Авессалома): у ствола второй стороны — свой узел •,
+          // иначе он висел бы без узла (Я7)
+          nodes.push({ kind: 'join', union: q.u.id, key: unionKey(q.u.id), x: q.bus, y: node, open: true, count: null, mother: null, owner: p, from: p });
       }
     }
   }
@@ -1061,6 +1150,8 @@ function familyLinks(inp: LinkInput): LinkFrame {
       push({ key: childKey(u.id, kid), kind: 'tooth', style: kidStyle(u), pts: [Math.round(x) + 0.5, Y(kid), X(kid) - R(kid) - 1.5, Y(kid)], ends: [kid], union: u.id, when: 'always' }, new Set([kid]));
     }
   }
+  // бездетный брак обоих супругов на небе, не связанных линией (К6)
+  childlessNodes(shown, main, new Set(shown.filter((u) => u.kids.some((k) => S.has(k))).map((u) => u.id)), nodes, paths);
   // ленты: через узел своего союза (тройник) — лента выходит из следа родителя у ствола его союза
   for (const u of shown) {
     const n = nodes.find((q) => q.union === u.id);
@@ -1175,12 +1266,14 @@ function ribbonPaths(inp: LinkInput, main: ReadonlyMap<string, LinkStar>, via: R
       const pk = `${a.id}>${b.id}`;
       const was = done.get(pk);
       if (was) continue;
-      const v = via.get(pk);
+      // шаг за скрытыми показом лицами — «цепочка» (К4): ключ span, без узла союза (родитель шага по данным — не a)
+      const gap = inp.lines.gaps?.get(`${line}>${b.id}`) ?? 0;
+      const v = gap ? undefined : via.get(pk);
       const pts = stepRoute(a, b, v ? v.x : b.x - b.r - TRUNK_LEAD);
-      const kk: LinkKey = { kind: 'step', line, child: b.id };
-      // начертание шага (Г10): толкование и «только у Луки» — точки (разреженная нить), иное происхождение — штрих
+      const kk: LinkKey = gap ? { kind: 'span', line, from: a.id, to: b.id } : { kind: 'step', line, child: b.id };
+      // начертание шага (Г10, решение 94): толкование — точки (разреженная нить), иное происхождение — штрих
       const style = inp.lines.styles?.get(`${line}>${b.id}`) ?? 'solid';
-      const path: LinkPath = { key: kk, ks: key(kk), kind: 'ribbon', style, pts, ends: [a.id, b.id], union: v?.union ?? null, when: 'always', cuts: [], line };
+      const path: LinkPath = { key: kk, ks: key(kk), kind: 'ribbon', style, pts, ends: [a.id, b.id], union: v?.union ?? null, when: 'always', cuts: [], line, ...(gap ? { gap } : {}) };
       addCuts(path, trails, new Set([a.id, b.id]), RIBBON_CUT);
       paths.push(path);
       done.set(pk, path);

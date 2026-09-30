@@ -407,7 +407,8 @@ describe('набор из ссылки — временный просмотр (
     expect(work.workNotice.value).toBe(work.EMPTY_LINK_NOTICE);
     expect(overlays.skyBarKind()).toBe('notice');
     // одно тире в строке — перед командой «скрыть»
-    expect(work.EMPTY_LINK_NOTICE).toBe('Ссылка открыта в режиме «набор», но ваш набор пуст: показаны все лица');
+    // этап 13 (решение 109): режимов нет — «в показе «набор»»
+    expect(work.EMPTY_LINK_NOTICE).toBe('Ссылка открыта в показе «набор», но ваш набор пуст: показаны все лица');
     // свой набор есть — «k1» без списка показывает его
     work.workNotice.value = null;
     work.workSet.value = new Map([entry('david')]);

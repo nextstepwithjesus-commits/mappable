@@ -213,7 +213,7 @@ export const sky: Scenario[] = [
   },
   {
     n: 75,
-    title: 'E10 мышью и клавиатурой: «Все N на небе» — строка «Отмечено N лиц по запросу «Иосиф»»; Escape и «Снять» снимают',
+    title: 'E10 мышью и клавиатурой: «Показать на небе» группы «Имя совпадает» — строка «Отмечено поиском: N лиц по запросу «Иосиф»»; Escape и «Снять» снимают',
     run: async (p) => {
       const pinAll = async (how: 'mouse' | 'key') => {
         await p.click('#find');
@@ -231,7 +231,8 @@ export const sky: Scenario[] = [
       const bar = p.locator('.sky .pinbar');
       if (!(await bar.count())) return fail('нет строки отметок');
       const txt = (await bar.innerText()).replace(/\s/g, ' ');
-      const m = /Отмечено (\d+) (лицо|лица|лиц) по запросу «Иосиф»/.exec(txt);
+      // этап 13, решение 126: у отметок своё имя — «Отмечено поиском: N лиц по запросу «…»»
+      const m = /Отмечено поиском: (\d+) (лицо|лица|лиц) по запросу «Иосиф»/.exec(txt);
       if (!m || Number(m[1]) < 5) return fail(`строка: «${txt}»`);
       await p.locator('.sky .pinbar button', { hasText: 'Снять' }).click();
       await p.waitForTimeout(300);

@@ -1,7 +1,8 @@
 /**
  * Карточка союза в листе карточки (решения владельца 67 и 71): брак или связь двух лиц, от которой пошли дети, —
  * отдельный предмет изучения. Вёрстка — как у карточки лица (шапка, паспорт-таблица, заголовки разделов), но без
- * 24 разделов: супруги, дети этого союза по порядку рождения, происхождение каждого супруга, команда «Раскрыть на небе».
+ * 24 разделов: супруги, дети этого союза в порядке перечня, происхождение каждого супруга, команда «Показать детей союза»
+ * (на небе — «показать» / «скрыть», словарь 109).
  *
  * Всё — только из данных атласа (src/engine/unions.ts): связи «отец», «мать», «жена», «наложница» со стихами.
  * Неназванное место — «не названа в Писании»; портретов и «реконструкций» нет.
@@ -9,23 +10,24 @@
  * Здесь же — ссылка на карточку союза (UnionLink) для § 9 и § 10 карточки лица и строки союза для диктора: имя в
  * косвенном падеже ставится только функцией склонения (src/ui/text/ru.ts), иначе — после двоеточия, в именительном.
  */
-import { Fragment } from 'preact';
+import { Fragment, type ComponentChildren } from 'preact';
 import { useLayoutEffect, useRef, useState } from 'preact/hooks';
-import { byId, graph, persons } from '../../data/atlas.ts';
+import { byId, graph, lineMembership, persons } from '../../data/atlas.ts';
 import type { Cert, Sex } from '../../data/types.ts';
 import { kidEdges, membersOf, partnerIn, type Union } from '../../engine/unions.ts';
-import { formatSpan, formatYear, shownYears } from '../../engine/years.ts';
+import { dateText, isWide, lifeDates, shownPoint, shownYears, spanText, type DateVal } from '../../engine/years.ts';
 import { model } from '../../state.ts';
 import { expanded, originOf, selectUnion, toggleUnion, unionsOf } from '../reveal.ts';
 import { skyMode, workSet } from '../work.ts';
+import { show, showContent } from '../show.ts';
 import { Mark, P, Refs, VerseInsert, plural } from '../common.tsx';
 import { bySex, capFirst, childrenNoun, lowerFirst, MESSIAH_BIRTH, nameCase, otherChildLabel, otherParentLabel } from '../text/ru.ts';
 import { typo, typoTree } from '../text/typo.ts';
 import { isPeople, passportYears } from './Masthead.tsx';
 import { YearMark } from './Chrono.tsx';
-import { Clamp } from './Clamp.tsx';
-import { MODEL_NAMES } from './shared.tsx';
+import { datesOf, modelColophon } from './shared.tsx';
 import { focusQuietly } from '../focus.ts';
+import { ChronoText } from '../panels/Chronology.tsx';
 import { familyOrderNote } from '../../render/links.ts';
 import { isClaimUnion, unionName } from '../linkwords.ts';
 
@@ -168,18 +170,102 @@ const birthOf = (id: string): number | null => {
   return c ? shownYears(c)?.b ?? null : null;
 };
 
+/** Место лица в данных: порядок перечисления (тома — по порядку Писания, лица — по порядку текста в томе). */
+const listedAt = (() => {
+  const m = new Map<string, number>();
+  persons.forEach((q, i) => m.set(q.id, i));
+  return m;
+})();
+const listed = (id: string) => listedAt.get(id) ?? 1e9;
+
 /**
- * Дети союза по порядку рождения в текущей модели хронологии. У ребёнка без года — место по порядку данных: он идёт
- * сразу за тем, кто перед ним в данных (сортировка устойчива).
+ * Порядок детей в перечне (решение 104; X4 § 2.2): одинаков в § 10, в «Родстве» у звезды и в карточке союза.
+ *  1. порядок текста — поле order (ord индекса): «Рувим, Симеон, Левий, Иуда…»;
+ *  2. ребёнок без него — по году рождения: он встаёт после последнего ребёнка с порядком текста, родившегося не позже
+ *     его (Мариам — перед Аароном и Моисеем, Исх 2:4; Махалафа — после сыновей Измаила);
+ *  3. при равенстве — по порядку перечисления в данных.
+ * Ребёнок без года получает год того, кто перед ним в данных (первые без года — в начале). Значимость (линии Мессии,
+ * яркость звезды) места не меняет: она показывается знаком (dc-lines).
  */
-export function kidsInBirthOrder(u: Union, yearOf: (id: string) => number | null = birthOf): string[] {
+export function kidsInOrder(ids: readonly string[], yearOf: (id: string) => number | null = birthOf): string[] {
+  const uniq = [...new Set(ids)].sort((a, b) => listed(a) - listed(b));
+  const key = new Map<string, number>();
   let last = -Infinity;
-  const keyed = u.kids.map((k) => {
+  for (const k of uniq) {
     const y = yearOf(k);
     if (y !== null) last = y;
-    return { k, key: y ?? last };
-  });
-  return keyed.sort((a, b) => a.key - b.key).map((x) => x.k);
+    key.set(k, y ?? last);
+  }
+  const ord = (k: string) => byId.get(k)?.order ?? null;
+  const skeleton = uniq.filter((k) => ord(k) !== null).sort((a, b) => ord(a)! - ord(b)! || listed(a) - listed(b));
+  const rest = uniq.filter((k) => ord(k) === null).sort((a, b) => key.get(a)! - key.get(b)! || listed(a) - listed(b));
+  if (!skeleton.length) return rest;
+  // место ребёнка без порядка текста — после последнего ребёнка с порядком, родившегося не позже его
+  const slots: string[][] = skeleton.map(() => []);
+  const head: string[] = [];
+  for (const k of rest) {
+    let at = -1;
+    // при равном годе — по порядку перечисления в данных
+    skeleton.forEach((s, i) => {
+      const ks = key.get(s)!;
+      const kk = key.get(k)!;
+      if (ks < kk || (ks === kk && listed(s) < listed(k))) at = i;
+    });
+    (at < 0 ? head : slots[at]).push(k);
+  }
+  return [...head, ...skeleton.flatMap((s, i) => [s, ...slots[i]])];
+}
+
+/** Дети союза в порядке перечня (kidsInOrder): тот же порядок, что в § 10 и в «Родстве». */
+export function kidsInBirthOrder(u: Union, yearOf: (id: string) => number | null = birthOf): string[] {
+  return kidsInOrder(u.kids, yearOf);
+}
+
+/** Лицо на линии Мессии (Мф 1 или Лк 3): в перечнях его не прячет «ещё N» (решение 104). */
+export const onLine = (id: string) => lineMembership.joseph.has(id) || lineMembership.mary.has(id);
+
+/**
+ * Знак лент у имени в перечне (решение 104: значимость — знаком, а не местом): золотая точка — линия Иосифа, лазурная —
+ * линия по Луке; те же точки, что у имени в карточке у звезды (.dc-lines). Для диктора — подсказка, сам знак — рисунок.
+ */
+export function LineDots({ id }: { id: string }) {
+  const mt = lineMembership.joseph.has(id);
+  const lk = lineMembership.mary.has(id);
+  if (!mt && !lk) return null;
+  const title = mt && lk ? 'Линия Иосифа и линия по Луке' : mt ? 'Линия Иосифа' : 'Линия по Луке';
+  // обёртка — <i>, а не <span>: знак препинания за именем держится в той же .nobr (проверка tests/typo.test.ts)
+  return (
+    <i class="dc-lines ln" aria-hidden="true" title={title}>
+      {mt && <i class="mt" />}
+      {lk && <i class="lk" />}
+    </i>
+  );
+}
+
+/**
+ * Порядок групп детей по второму родителю (CARD-57; решение 104, X4 § 2.2 п. 3): группа с ребёнком линии Мессии — первой
+ * (это не старшинство, а место значимого союза); остальные — в порядке браков (rank — номер союза в unionsOf), без него —
+ * по первому ребёнку группы: порядок текста, если у обоих первых детей один отец и порядок назван, иначе год рождения,
+ * иначе порядок данных; второй родитель не назван — последней. Одно правило для § 10 и «Родства» у звезды.
+ */
+export function compareKidGroups(a: { named: boolean; kids: readonly string[]; rank?: number }, b: { named: boolean; kids: readonly string[]; rank?: number }): number {
+  if (a.named !== b.named) return a.named ? -1 : 1;
+  const la = a.kids.some(onLine);
+  const lb = b.kids.some(onLine);
+  if (la !== lb) return la ? -1 : 1;
+  // остальные союзы — в порядке браков, как их называют данные (unionsOf): у Иакова — Лия, Рахиль, Валла, Зелфа
+  // (Быт 35:23–26), у Давида — Ахиноама, Авигея, Мааха… (2 Цар 3:2–5); строка «Жёны» идёт в том же порядке
+  if (a.rank !== undefined && b.rank !== undefined && a.rank !== b.rank) return a.rank - b.rank;
+  const x = a.kids[0];
+  const y = b.kids[0];
+  if (!x || !y) return 0;
+  const px = byId.get(x);
+  const py = byId.get(y);
+  if (px?.order != null && py?.order != null && px.father && px.father === py.father && px.order !== py.order) return px.order - py.order;
+  const bx = birthOf(x);
+  const by = birthOf(y);
+  if (bx !== null && by !== null && bx !== by) return bx - by;
+  return listed(x) - listed(y);
 }
 
 /**
@@ -187,22 +273,39 @@ export function kidsInBirthOrder(u: Union, yearOf: (id: string) => number | null
  * «сын родился в 1926 г. до Р. Х.». null — детей нет; exact — все годы по числам текста; early — первый год
  * (для колофона: годы до 967 г. до Р. Х. зависят от модели).
  */
-export function unionYears(u: Union): { text: string; exact: boolean; early: number } | null {
+export function unionYears(u: Union): { text: string; exact: boolean; early: number; first: string | null } | null {
   const kids = u.kids.filter((k) => !isPeople(k));
   if (!kids.length) return null;
-  const rows = kids.map((k) => ({ k, c: model.value.chrono.get(k) })).flatMap(({ k, c }) => {
-    const y = c ? shownYears(c) : null;
-    return y && c ? [{ k, b: y.b, approx: y.approx, exact: c.cls === 'exact' }] : [];
+  const m = model.value;
+  // годы детей словами словаря дат (решение 96) — с теми же границами, что паспорт каждого ребёнка (datesOf)
+  const rows = kids.flatMap((k) => {
+    const c = m.chrono.get(k);
+    const ld = c ? lifeDates(datesOf(k, c, m.chrono)) : null;
+    return ld && c ? [{ k, v: ld.birth, t: shownPoint(ld.birth), exact: c.cls === 'exact' }] : [];
   });
   const sexes = kids.map((k) => byId.get(k)?.sex ?? 'm') as Sex[];
   const one = kids.length === 1;
   const who = `${lowerFirst(childrenNoun(sexes))} ${one ? bySex(sexes[0], 'родился', 'родилась') : 'родились'}`;
-  if (!rows.length) return { text: `время рождения ${one ? bySex(sexes[0], 'сына', 'дочери') : 'детей'} не установлено`, exact: false, early: Infinity };
-  const lo = Math.min(...rows.map((r) => r.b));
-  const hi = Math.max(...rows.map((r) => r.b));
-  const approx = rows.some((r) => r.approx);
-  const span = lo === hi ? formatYear(lo, { approx }) : formatSpan(lo, hi, approx);
-  return { text: `${who} ${approx ? '' : 'в '}${span}`, exact: rows.every((r) => r.exact), early: lo };
+  if (!rows.length) return { text: `время рождения ${one ? bySex(sexes[0], 'сына', 'дочери') : 'детей'} не установлено`, exact: false, early: Infinity, first: null };
+  const lo = rows.reduce((a, b) => (b.t < a.t ? b : a));
+  const hi = rows.reduce((a, b) => (b.t > a.t ? b : a));
+  // оба края — оценки (без границы текста): один промежуток на всех детей — «между 1922 и 1909 гг. до Р. Х.», а не
+  // «между 1922 и 1910 — ок. 1915 гг.», где второй год лежит внутри первого промежутка
+  // (край «не раньше / не позже» — граница текста — остаётся своими словами; узкий общий промежуток — прежним «ок.»)
+  const bound = (v: DateVal) => /^не\s/.test(dateText(v));
+  const merged: DateVal | null =
+    lo.v.est && hi.v.est && !bound(lo.v) && !bound(hi.v)
+      ? (() => {
+          const a = Math.min(...rows.map((r) => r.v.lo ?? r.v.t));
+          const b = Math.max(...rows.map((r) => r.v.hi ?? r.v.t));
+          // граница текста у крайнего ребёнка (Рувим — не раньше прихода к Лавану) держит и общий край
+          const pin = rows.some((r) => r.v.pin === 'lo' && (r.v.lo ?? r.v.t) === a) ? 'lo' : rows.some((r) => r.v.pin === 'hi' && (r.v.hi ?? r.v.t) === b) ? 'hi' : undefined;
+          const v: DateVal = { t: Math.round((a + b) / 2), est: true, lo: a, hi: b, ...(pin ? { pin } : {}) };
+          return isWide(v) ? v : null;
+        })()
+      : null;
+  const span = merged ? dateText(merged) : lo.t === hi.t ? dateText(lo.v) : spanText(lo.v, hi.v);
+  return { text: `${who} ${/^\d/.test(span) ? 'в ' : ''}${span}`, exact: rows.every((r) => r.exact), early: lo.t, first: lo.k };
 }
 
 // ---------- стихи и уровни ----------
@@ -237,8 +340,8 @@ const nameCount = (() => {
   return m;
 })();
 
-/** Лицо в перечне карточки союза: ссылка, уточнение одноимённого, годы. */
-function Who({ id }: { id: string }) {
+/** Лицо в перечне карточки союза: ссылка, знак лент (mark, у детей — решение 104), уточнение одноимённого, годы. */
+function Who({ id, mark = false }: { id: string; mark?: boolean }) {
   const q = byId.get(id)!;
   const years = passportYears(id, model.value.chrono.get(id), isPeople(id));
   // скобки внутри уточнения — через запятую, как в разделах карточки: «Илий (сын Матфата, Лк 3:23, …)»
@@ -246,6 +349,7 @@ function Who({ id }: { id: string }) {
   return (
     <>
       <P id={id} />
+      {mark ? <LineDots id={id} /> : null}
       {dis ? <span class="muted"> ({typo(dis)})</span> : null}
       <span class="muted">, {typo(years || (isPeople(id) ? 'без года' : 'время не установлено'))}</span>
     </>
@@ -265,13 +369,22 @@ function kindText(u: Union): string {
   return u.a ? 'отец детей' : 'мать детей';
 }
 
-/** Команда «Раскрыть на небе» / «Свернуть на небе»; строка состояния для диктора — что изменилось на небе. */
+/**
+ * Команда «Показать детей союза» / «Скрыть детей союза» (словарь 109: на небе — «показать» и «скрыть», «свернуть» —
+ * только у карточки и листа); у союза без детей — «Показать союз» / «Скрыть союз». Строка состояния для диктора — что
+ * изменилось на небе.
+ */
 function RevealCommand({ u, from }: { u: Union; from: string }) {
   const open = u.id in expanded.value;
   const [said, setSaid] = useState('');
-  const total = membersOf(u).length;
-  // сколько лиц союза уже на небе — только в небе «набор»: во «Всём небе» на нём все
-  const onSky = skyMode.value === 'work' ? membersOf(u).filter((m) => workSet.value.has(m)).length : null;
+  const members = membersOf(u);
+  const total = members.length;
+  // счётчик считает то, что говорит подпись (решение 126; UI-20): «на небе сейчас» — участники текущего показа (с гостями);
+  // во «Всём небе» на нём все — счётчика нет; «в наборе» — набор, если он не пуст
+  const content = showContent.value;
+  const onSky = show.value.kind === 'all' ? null : members.filter((m) => content.ids.has(m) || content.guests.has(m)).length;
+  const inSet = workSet.value.size || skyMode.value === 'work' ? members.filter((m) => workSet.value.has(m)).length : null;
+  const of = `из ${total} ${plural(total, 'лица', 'лиц', 'лиц')} союза`;
   return (
     <div class="actions union-actions">
       <button
@@ -284,16 +397,41 @@ function RevealCommand({ u, from }: { u: Union; from: string }) {
           const now = workSet.peek().size;
           const n = Math.abs(now - was);
           const who = `${n} ${plural(n, 'лицо', 'лица', 'лиц')}`;
-          setSaid(now >= was ? `На небе «набор» показано ещё: ${who}` : `Свёрнуто, с неба убрано: ${who}`);
+          setSaid(now >= was ? `На небе «набор» показано ещё: ${who}` : `Скрыто, с неба убрано: ${who}`);
         }}
       >
-        {open ? 'Свернуть на небе' : 'Раскрыть на небе'}
+        {u.kids.length ? (open ? 'Скрыть детей союза' : 'Показать детей союза') : open ? 'Скрыть союз' : 'Показать союз'}
       </button>
-      {onSky !== null ? <span class="union-onsky">{typo(`на небе ${onSky} из ${total} ${plural(total, 'лица', 'лиц', 'лиц')} союза`)}</span> : null}
+      {onSky !== null ? <span class="union-onsky">{typo(`на небе сейчас ${onSky} ${of}`)}</span> : null}
+      {inSet !== null ? <span class="union-onsky">{typo(`в наборе ${inSet} ${of}`)}</span> : null}
       <span class="visually-hidden" role="status">
         {said}
       </span>
     </div>
+  );
+}
+
+/** Сколько детей союза видно сразу; остальные — «ещё N записей» (дети линии Мессии видны всегда, решение 104). */
+const KIDS_SHOWN = 8;
+
+/**
+ * Перечень детей союза с «ещё N записей» (решение 104): видны первые KIDS_SHOWN детей и все дети линии Мессии на своих
+ * местах — у Давида и Вирсавии Соломон не уходит под «ещё»; скрытых меньше двух — видны все.
+ */
+function KidsCut({ sig, kids, children }: { sig: string; kids: string[]; children: (shown: string[]) => ComponentChildren }) {
+  const [openFor, setOpenFor] = useState<string | null>(null);
+  const kept = kids.filter((k, i) => i < KIDS_SHOWN || onLine(k));
+  const hidden = kids.length - kept.length;
+  const cut = openFor !== sig && hidden > 1;
+  return (
+    <>
+      {children(cut ? kept : kids)}
+      {cut ? (
+        <button type="button" class="more clamp-more" onClick={() => setOpenFor(sig)}>
+          ещё{'\u00a0'}{hidden}{'\u00a0'}{plural(hidden, 'запись', 'записи', 'записей')}
+        </button>
+      ) : null}
+    </>
   );
 }
 
@@ -327,7 +465,6 @@ export function UnionCard({ u, from }: { u: Union; from?: string | null }) {
     if (os.length) return [{ x, os }];
     return byId.get(x)?.silent.includes(6) ? [{ x, os: [] as Union[] }] : [];
   });
-  const early = years && Number.isFinite(years.early) && years.early < -966;
   const order = familyOrderNote(u.id, m);
   return (
     <>
@@ -356,7 +493,7 @@ export function UnionCard({ u, from }: { u: Union; from?: string | null }) {
                 <dt>Годы</dt>
                 <dd class="fact">
                   {years.text}
-                  {Number.isFinite(years.early) ? <YearMark cls={years.exact ? 'exact' : 'calculated'} /> : null}
+                  {years.first && m.chrono.get(years.first) ? <YearMark id={years.first} c={m.chrono.get(years.first)!} m={m} /> : null}
                   {/* помета порядка с верным диапазоном стихов (этап 11, стык 5; src/render/links.ts): на небе её нет (Г9) */}
                   {order ? <div class="note">годы детей — {order}</div> : null}
                 </dd>
@@ -379,13 +516,32 @@ export function UnionCard({ u, from }: { u: Union; from?: string | null }) {
               <h4 id="uh-spouses">{spouseHead}</h4>
               <ul>
                 {spouses.map((x) => {
-                  const others = unionsOf(x).filter((o) => o.id !== u.id);
+                  const all = unionsOf(x).filter((o) => o.id !== u.id);
+                  // потомки, названные без промежуточных звеньев («из сыновей Давида — Хаттуш», Езд 8:2), — не союз
+                  // (решение 109; X4 § 2.1): своей строкой, а не в «другие союзы»
+                  const far = all.filter((o) => o.claim === 'ancestor');
+                  const others = all.filter((o) => o.claim !== 'ancestor');
+                  const farKids = kidsInOrder(far.flatMap((o) => o.kids));
+                  const farRefs = uniqRefs(far.flatMap((o) => o.refs));
                   return (
                     <li class="fact" key={x}>
                       <Who id={x} />
                       {others.length ? (
                         <div class="note">
                           {byId.get(x)?.sex === 'f' ? 'Её' : 'Его'} другие союзы: <UnionLinks us={others} who={x} />
+                        </div>
+                      ) : null}
+                      {farKids.length ? (
+                        <div class="note fact">
+                          Потомки без промежуточных звеньев:{' '}
+                          {farKids.map((k, i) => (
+                            <Fragment key={k}>
+                              {i ? ', ' : ''}
+                              <P id={k}>{midName(k)}</P>
+                            </Fragment>
+                          ))}
+                          <Refs refs={farRefs} owner={`${ownKey}|far|${x}`} />
+                          <VerseInsert owner={`${ownKey}|far|${x}`} refs={farRefs} />
                         </div>
                       ) : null}
                     </li>
@@ -397,9 +553,11 @@ export function UnionCard({ u, from }: { u: Union; from?: string | null }) {
             <section class="sec long" aria-labelledby="uh-kids">
               <h4 id="uh-kids">{kidsHead}</h4>
               {kids.length ? (
-                <Clamp sig={`${u.id}|kids`} n={10}>
+                <KidsCut sig={`${u.id}|kids`} kids={kids}>
+                  {(shown) => (
                   <ul>
-                    {kids.map((k, i) => {
+                    {shown.map((k) => {
+                      const i = kids.indexOf(k);
                       const kin = kinOf(u, k);
                       const own = unionsOf(k).length;
                       const q = byId.get(k)!;
@@ -407,7 +565,7 @@ export function UnionCard({ u, from }: { u: Union; from?: string | null }) {
                       const owner = `${ownKey}|k${i}`;
                       return (
                         <li class="fact" key={k}>
-                          <Who id={k} />
+                          <Who id={k} mark />
                           <Refs refs={kin.refs} owner={owner} />
                           <Mark cert={kin.cert} />
                           {own ? <span class="muted"> — {bySex(q.sex, 'его', 'её')} союзы: {own}</span> : null}
@@ -422,7 +580,8 @@ export function UnionCard({ u, from }: { u: Union; from?: string | null }) {
                       );
                     })}
                   </ul>
-                </Clamp>
+                  )}
+                </KidsCut>
               ) : (
                 <p class="muted">Дети от этого союза в Писании не названы.</p>
               )}
@@ -459,10 +618,7 @@ export function UnionCard({ u, from }: { u: Union; from?: string | null }) {
       </div>
       <footer class="colophon">
         <p>
-          {typo(
-            'Союз собран из связей «отец», «мать», «жена», «наложница»; у каждой — стих. Ссылки сверены с Синодальным текстом.' +
-              (early ? ` Годы до 967 г. до Р. Х. — по модели «${MODEL_NAMES[m.id] ?? m.id}».` : ''),
-          )}
+          <ChronoText text={'Союз собран из связей «отец», «мать», «жена», «наложница»; у каждой — стих. Ссылки сверены с Синодальным текстом.' + (years ? modelColophon(u.kids, m.id) : '')} />
         </p>
       </footer>
     </>

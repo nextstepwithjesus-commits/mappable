@@ -15,6 +15,7 @@
  */
 import type { Page } from 'playwright';
 import { fail, pass, type Scenario } from './kit.ts';
+import { KIN_GOLD } from '../../src/render/branches.ts';
 
 const PHONE = { width: 390, height: 844, touch: true };
 const ADAM_SET = '#/adam~vs~nadam.eva.kain.avel.sif.enos.kainan.enokh-syn-kaina.irad.mekhiael';
@@ -196,7 +197,7 @@ export const sky12: Scenario[] = [
       const lk = await looks(p);
       const branch = lk.get('u:david+aggifa') ?? '';
       if (!/^#[0-9a-f]{6}$/i.test(branch)) return fail(`ромб «Давид и Аггифа» не цвета ветви: ${branch}`);
-      if (!/^#ffc94d$/i.test(lk.get('u:david+melkhola') ?? '')) return fail(`бездетный союз с Мелхолой не золотистый: ${lk.get('u:david+melkhola')}`);
+      if ((lk.get('u:david+melkhola') ?? '').toLowerCase() !== KIN_GOLD.night.toLowerCase()) return fail(`бездетный союз с Мелхолой не золотистый: ${lk.get('u:david+melkhola')}`);
       const kinds = new Set([...lk.values()]);
       return pass(`без выбора — ${free.size} двухцветных; у Давида цветов: ${kinds.size}`);
     },

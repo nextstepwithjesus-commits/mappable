@@ -7,37 +7,96 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
 import { byId, type ChronoRow } from '../../data/atlas.ts';
-import type { SearchHit } from '../../engine/search.ts';
+import { fixLayout, serviceWord, stems, type SearchHit } from '../../engine/search.ts';
 import { eventMarks } from '../../render/frame.ts';
 import type { SkyContext } from '../../render/sky.ts';
 import { model, theme } from '../../state.ts';
 import { plural } from '../common.tsx';
 import { lifeText } from '../sky/text.ts';
 import { typo } from '../text/typo.ts';
+import { norm } from '../../engine/text.ts';
 import { searchIndex } from './searchIndex.ts';
 
 /**
- * Строка списка: лицо; «Все N на небе» (scope — лица стиха, стихов или главы); «Снять отметки»; «Читать Мф 1 — имена
- * со ссылками» (глава из «Глав», IX-75); «Руфь уже выбрана первой» (выбор второго лица, UX-13 — строка без действия).
- * lead — строка, на которой стоит курсор, пока читатель его не двигал: Enter выбирает её.
+ * Строка списка: лицо; «Все N на небе» (scope — лица стиха, стихов или главы; group — «Показать на небе» своей группы,
+ * решение 120); «Снять отметки»; «Читать Мф 1 — имена со ссылками» (глава из «Глав», IX-75); «Руфь уже выбрана первой»
+ * (выбор второго лица, UX-13 — строка без действия). lead — строка, на которой стоит курсор, пока читатель его не
+ * двигал: Enter выбирает её.
  */
 export type Row =
   | { key: string; kind: 'person'; id: string; hit: SearchHit; grouped: boolean }
-  | { key: string; kind: 'all'; ids: string[]; lead?: boolean; scope?: 'verse' | 'verses' | 'chapter' }
+  | { key: string; kind: 'all'; ids: string[]; lead?: boolean; scope?: 'verse' | 'verses' | 'chapter'; group?: boolean }
   | { key: string; kind: 'unpin' }
+  | { key: string; kind: 'retry' }
   | { key: string; kind: 'read'; ch: string; lead: true }
   | { key: string; kind: 'self'; id: string; lead: true };
-/** Группа строк с подписью: одноимённые, традиционное именование, «возможно, вы искали». */
-export type Block = { head?: string; rows: Row[] };
-
-/** Что делает выбор строки с полем: запрос остаётся выделенным (keep: фокус не открывает список снова) или нет. */
-export type AfterChoose = 'keep' | 'clear' | void;
+/**
+ * Группа строк с подписью: «Имя совпадает», «Другие формы и похожие имена», «Упомянуты рядом», традиционное
+ * именование, лица стиха. ids — кого показывает команда группы «Показать на небе» (решение 120); у группы из одного
+ * лица команды нет — строка лица делает то же.
+ */
+export type Block = { head?: string; rows: Row[]; ids?: string[]; group?: 'name' | 'forms' | 'near' };
 
 /**
- * Строки одноимённых — группой «Иосиф — 10 лиц» на месте самого значимого из них (UX-01); опечатки — под «Возможно,
- * вы искали». Строки-команды («Все N на небе») добавляет поиск верхней строки сам.
+ * Что делает выбор строки с полем: запрос остаётся выделенным (keep: фокус не открывает список снова) или нет; stay —
+ * список остаётся открытым («Повторить загрузку», решение 127: выдача перестраивается на месте).
  */
-export function personBlocks(hits: SearchHit[]): Block[] {
+export type AfterChoose = 'keep' | 'clear' | 'stay' | void;
+
+const people = (n: number) => `${n}\u00a0${plural(n, 'лицо', 'лица', 'лиц')}`;
+/** Первое слово имени лица — ключ одноимённых («Иисус» у Иисуса Христа, Иисуса Навина и всех Иисусов). */
+export const firstWord = (id: string) => norm(byId.get(id)?.name ?? '').split(' ')[0];
+
+/**
+ * Совпадения по группам (решение 120; UI-10: точные, похожие и связанные — не вперемешку).
+ *  - name — «Имя совпадает»: запрос — имя целиком, первое слово имени или его косвенная форма («Иосифа»), у
+ *    одноимённых лучшего совпадения (тот же первый корень: «иосиф» — десять Иосифов, но не Иосифия). Такого нет
+ *    (набирается начало имени, «Иос») — все найденные по имени; exact — было ли совпадение целиком.
+ *  - forms — «Другие формы и похожие имена»: иные имена текста («Иероваал» — Гедеон), имена, похожие по написанию
+ *    (Иосифия при «иосиф», Гемария при «Мария»), опечатки («Навуходонасор» — «Возможно, вы искали»).
+ *  - near — «Упомянуты рядом»: имя запроса стоит в уточнении («сын Давида» — Авессалом) или в описательном имени
+ *    после слова родства («Сын Давида и Вирсавии», «Мать Иисуса»), а не как имя лица.
+ *  - trad — традиционное именование («Богородица» — Мария): своей строкой с синодальной формой.
+ * q — запрос; без него совпадением целиком считается сильное совпадение поиска.
+ */
+export function groupHits(hits: SearchHit[], q = ''): { trad: SearchHit[]; name: SearchHit[]; exact: boolean; forms: SearchHit[]; near: SearchHit[] } {
+  const nq = norm(fixLayout(q)).trim();
+  const qs = nq ? stems(nq) : [];
+  const whole = (h: SearchHit) => {
+    if (!h.strong) return false;
+    if (!nq) return true;
+    const w = firstWord(h.id);
+    return w === nq || norm(byId.get(h.id)?.name ?? '') === nq || stems(w).some((x) => qs.includes(x));
+  };
+  // описательная форма, где имя запроса называет родню или предка: имя «Сын Давида и Вирсавии», иные имена «Матерь
+  // Иисуса», «Корень и потомок Давида», «Мария Иосиева»; но «Иероваал» (Гедеон) и «Навин» (Нон) — другие формы имени
+  const q0 = nq.split(/[^а-я]+/).filter(Boolean)[0] ?? '';
+  const described = (h: SearchHit) => {
+    const w = norm(h.matched).split(/[^а-я]+/).filter(Boolean);
+    if (w.length < 2 || (q0 && w[0] === q0)) return false;
+    if (h.via === 'name' || !q0) return serviceWord(w[0]);
+    return !w[0].startsWith(q0) && !stems(w[0]).some((x) => stems(q0).includes(x));
+  };
+  const trad = hits.filter((h) => h.via === 'tradition');
+  const names = hits.filter((h) => h.via === 'name');
+  const lead = names.find(whole);
+  const key = lead ? firstWord(lead.id) : '';
+  const name = lead ? names.filter((h) => whole(h) && firstWord(h.id) === key) : names.filter((h) => !described(h));
+  const inName = new Set(name.map((h) => h.id));
+  const near = hits.filter((h) => h.via === 'disambig' || ((h.via === 'name' || h.via === 'alt') && !inName.has(h.id) && described(h)));
+  const inNear = new Set(near.map((h) => h.id));
+  const forms = hits.filter((h) => !inNear.has(h.id) && (h.via === 'alt' || h.via === 'fuzzy' || (h.via === 'name' && !inName.has(h.id))));
+  return { trad, name, exact: !!lead, forms, near };
+}
+
+/**
+ * Строки результатов по группам (решение 120): «Имя совпадает — 10 лиц», «Другие формы и похожие имена — 2 лица»,
+ * «Упомянуты рядом — 7 лиц»; у каждой — свой счётчик, команду «Показать на небе» ставит поиск верхней строки
+ * (Search.tsx, resultBlocks). Одноимённые внутри группы — рядом, на месте самого значимого (UX-01); если в группе одно
+ * имя, оно стоит в подписи («Имя совпадает: Иосиф — 10 лиц»), а строка начинается с уточнения. Опечатки — под
+ * «Возможно, вы искали» первой группой. q — запрос: из нескольких слов группа имени называется «Совпадают все слова».
+ */
+export function personBlocks(hits: SearchHit[], q = ''): Block[] {
   const blocks: Block[] = [];
   const person = (h: SearchHit, grouped: boolean): Row => ({ key: h.id, kind: 'person', id: h.id, hit: h, grouped });
   // поиск по стиху или главе — две группы (IX-55, UX-58): «Названы в стихе» и «Стих упомянут в карточке»
@@ -45,41 +104,60 @@ export function personBlocks(hits: SearchHit[]): Block[] {
     const verse = hits.some((h) => /:/.test(h.matched));
     const named = hits.filter((h) => h.via === 'verse');
     const cited = hits.filter((h) => h.via === 'cited');
-    if (named.length) blocks.push({ head: verse ? 'Названы в стихе' : 'Названы в главе', rows: named.map((h) => person(h, false)) });
-    if (cited.length) blocks.push({ head: verse ? 'Стих упомянут в карточке' : 'Глава упомянута в карточке', rows: cited.map((h) => person(h, false)) });
+    if (named.length) blocks.push({ head: `${verse ? 'Названы в стихе' : 'Названы в главе'} — ${people(named.length)}`, rows: named.map((h) => person(h, false)), ids: named.map((h) => h.id) });
+    if (cited.length)
+      blocks.push({ head: `${verse ? 'Стих упомянут в карточке' : 'Глава упомянута в карточке'} — ${people(cited.length)}`, rows: cited.map((h) => person(h, false)), ids: cited.map((h) => h.id) });
     return blocks;
   }
   // по всем словам никого — лица по имени одним блоком (IX-71): «По всем словам ничего; по имени «Иосиф» — 10 лиц»
   const partial = hits[0]?.partial;
   if (partial) {
     const n = hits.length;
-    return [{ head: partialHead(partial, n), rows: hits.map((h) => person(h, byId.get(h.id)?.name === partial && !!byId.get(h.id)?.disambig)) }];
+    return [{ head: partialHead(partial, n), rows: hits.map((h) => person(h, byId.get(h.id)?.name === partial && !!byId.get(h.id)?.disambig)), ids: hits.map((h) => h.id) }];
   }
-  const fuzzy = hits.filter((h) => h.via === 'fuzzy');
-  if (fuzzy.length) blocks.push({ head: 'Возможно, вы искали', rows: fuzzy.map((h) => person(h, false)) });
-  const byName = new Map<string, SearchHit[]>();
-  for (const h of hits) {
-    if (h.via === 'fuzzy') continue;
-    const name = byId.get(h.id)?.name ?? h.id;
-    const g = byName.get(name);
-    if (g) g.push(h);
-    else byName.set(name, [h]);
-  }
-  const done = new Set<string>();
-  for (const h of hits) {
-    if (h.via === 'fuzzy' || done.has(h.id)) continue;
+  const g = groupHits(hits, q);
+  for (const h of g.trad) {
     const p = byId.get(h.id);
-    if (h.via === 'tradition' && p) {
-      done.add(h.id);
-      blocks.push({ head: `«${h.tradition}»: в Синодальном переводе — ${p.name}${p.disambig ? `, ${p.disambig}` : ''}`, rows: [person(h, false)] });
-      continue;
-    }
-    const name = p?.name ?? h.id;
-    const g = (byName.get(name) ?? [h]).filter((x) => !done.has(x.id) && x.via !== 'tradition');
-    for (const x of g) done.add(x.id);
-    if (g.length > 1) blocks.push({ head: `${name} — ${g.length}\u00a0${plural(g.length, 'лицо', 'лица', 'лиц')}`, rows: g.map((x) => person(x, true)) });
-    else blocks.push({ rows: [person(h, false)] });
+    blocks.push({ head: `«${h.tradition}»: в Синодальном переводе — ${p?.name ?? h.id}${p?.disambig ? `, ${p.disambig}` : ''}`, rows: [person(h, false)], ids: [h.id] });
   }
+  // одноимённые — рядом, на месте самого значимого из них
+  const clustered = (list: SearchHit[]) => {
+    const byName = new Map<string, SearchHit[]>();
+    for (const h of list) {
+      const nm = byId.get(h.id)?.name ?? h.id;
+      byName.set(nm, [...(byName.get(nm) ?? []), h]);
+    }
+    return [...byName.values()].flat();
+  };
+  const block = (head: string, list: SearchHit[], group: 'name' | 'forms' | 'near') => {
+    if (!list.length) return;
+    const names = new Set(list.map((h) => byId.get(h.id)?.name ?? h.id));
+    // одно имя на всю группу — в подписи; строки начинаются с уточнения
+    const one = names.size === 1 && list.length > 1 ? [...names][0] : null;
+    blocks.push({ head: `${head}${one ? `: ${one}` : ''} — ${people(list.length)}`, rows: clustered(list).map((h) => person(h, !!one)), ids: list.map((h) => h.id), group });
+  };
+  const nq = norm(fixLayout(q)).trim();
+  const words = nq.split(/[^а-я]+/).filter(Boolean);
+  // начало имени, пока его набирают: «Иос» — «Имя начинается с «Иос»»; «Навин» — «Совпадает слово имени»
+  const nameWords = (h: SearchHit) => norm(byId.get(h.id)?.name ?? '').split(/[^а-я]+/).filter(Boolean);
+  const begins = words.length === 1 && g.name.every((h) => nameWords(h)[0]?.startsWith(nq));
+  const inWord = words.length === 1 && g.name.every((h) => nameWords(h).some((w) => w.startsWith(nq)));
+  const nameHead = g.exact
+    ? 'Имя совпадает'
+    : words.length > 1
+      ? 'Совпадают все слова'
+      : begins
+        ? `Имя начинается с «${q.trim()}»`
+        : inWord
+          ? 'Совпадает слово имени'
+          : 'Имя совпадает частично';
+  const fuzzy = g.forms.some((h) => h.via === 'fuzzy');
+  const formsHead = fuzzy ? 'Возможно, вы искали: похожие имена' : 'Другие формы и похожие имена';
+  // опечатки — первыми: точного совпадения нет, а похожее имя — то, что искали
+  if (fuzzy) block(formsHead, g.forms, 'forms');
+  block(nameHead, g.name, 'name');
+  if (!fuzzy) block(formsHead, g.forms, 'forms');
+  block('Упомянуты рядом', g.near, 'near');
   return blocks;
 }
 
@@ -127,6 +205,11 @@ export interface ComboboxProps {
    * диктору называет статус списка (Search.tsx).
    */
   rowCmd?: { label: (id: string) => string; title: string; hint: string; run: (id: string) => string | void };
+  /**
+   * Команда пустого списка (решение 120: пустой поиск ведёт в «Указатель»): кнопка под «ничего не найдено»; Enter в
+   * поле при пустом списке делает то же.
+   */
+  emptyCmd?: { label: string; run: () => void; keep?: boolean } | null;
 }
 
 /** «По всем словам ничего; по имени «Иосиф» — 10 лиц» (IX-71). */
@@ -170,6 +253,16 @@ export function Combobox(props: ComboboxProps) {
     if (text) setSaid(text);
   };
 
+  // полное уточнение строки под курсором (решение 120): если в строке оно обрезано — строкой у нижнего края списка;
+  // курсор ставят стрелки и мышь, поэтому строка отвечает и фокусу, и наведению
+  const [full, setFull] = useState('');
+  useLayoutEffect(() => {
+    const r = listOpen && active >= 0 ? rows[active] : undefined;
+    const p = r?.kind === 'person' ? byId.get(r.id) : undefined;
+    const el = p?.disambig ? document.getElementById(optId(active))?.querySelector<HTMLElement>('.l1') : null;
+    setFull(p && el && el.scrollWidth > el.clientWidth + 1 ? `${p.name}, ${p.disambig}` : '');
+  }, [active, listOpen, rows.length, q]);
+
   // строка под курсором — в видимой части списка (IX-15)
   useLayoutEffect(() => {
     if (!listOpen || active < 0) return;
@@ -199,6 +292,7 @@ export function Combobox(props: ComboboxProps) {
   };
   const choose = (r: Row) => {
     const after = props.onChoose(r);
+    if (after === 'stay') return;
     close();
     setKept(after === 'keep');
   };
@@ -228,6 +322,10 @@ export function Combobox(props: ComboboxProps) {
     } else if (e.key === 'Enter' && listOpen && rows[active]) {
       e.preventDefault();
       choose(rows[active]);
+    } else if (e.key === 'Enter' && listOpen && q.trim() && props.emptyCmd && !rows.length) {
+      e.preventDefault();
+      props.emptyCmd.run();
+      if (!props.emptyCmd.keep) close();
     } else if (e.key === 'Escape') {
       // Escape действует только в поле: закрыть подсказки, затем очистить, затем уйти из поля (D5)
       e.preventDefault();
@@ -280,8 +378,10 @@ export function Combobox(props: ComboboxProps) {
             setOpen(true);
           }
         }}
-        onBlur={() => {
+        onBlur={(e) => {
           clearTimeout(blurTimer.current);
+          // Tab на кнопку «Указателя» под «ничего не найдено» список не закрывает
+          if (list.current && e.relatedTarget instanceof Node && list.current.contains(e.relatedTarget)) return;
           blurTimer.current = window.setTimeout(close, 150);
         }}
         onKeyDown={onKey}
@@ -351,9 +451,36 @@ export function Combobox(props: ComboboxProps) {
                   </div>
                 );
               })}
+              {full ? (
+                // зрительная подсказка: диктор слышит полное уточнение в самой строке
+                <div class="full" aria-hidden="true">
+                  {typo(full)}
+                </div>
+              ) : null}
             </>
           )}
-          {!rows.length && q.trim() && props.empty ? <div class="empty">{props.empty}</div> : null}
+          {!rows.length && q.trim() && props.empty ? (
+            <div class="empty">
+              {props.empty}
+              {props.emptyCmd ? (
+                <>
+                  <br />
+                  <button
+                    type="button"
+                    class="to-index"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onBlur={() => (blurTimer.current = window.setTimeout(close, 150))}
+                    onClick={() => {
+                      props.emptyCmd?.run();
+                      if (!props.emptyCmd?.keep) close();
+                    }}
+                  >
+                    {props.emptyCmd.label}
+                  </button>
+                </>
+              ) : null}
+            </div>
+          ) : null}
         </div>
       )}
     </div>

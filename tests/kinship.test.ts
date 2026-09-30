@@ -58,9 +58,13 @@ describe('родство на данных атласа', () => {
     expect(luke).toBeDefined();
     expect(luke!.more).toBe(true);
     expect(plain(luke!.sentence)).toContain('через Нафана');
-    expect(plain(luke!.sentence)).toContain('по толкованию (Лк 3:23; 3:27)'); // Илий — отец Марии; Нирий — отец Салафиила
+    // этап 13 (решение 94): Нирий — отец Салафиила — текст Луки, помета «по Луке»; Илий — отец Марии — толкование
+    expect(plain(luke!.sentence)).toContain('по Луке (Лк 3:27) и по толкованию (Лк 3:23)');
     expect(luke!.sources).toEqual(['Лк 3:23-32']);
-    for (const r of rs) expect(plain(r.sentence).includes('по толкованию')).toBe(r.steps.some((s) => s.cert === 'interpretation' || s.claim === 'by-luke'));
+    for (const r of rs) {
+      expect(plain(r.sentence).includes('по толкованию')).toBe(r.steps.some((s) => s.cert === 'interpretation'));
+      expect(plain(r.sentence).includes('по Луке')).toBe(r.steps.some((s) => s.claim === 'by-luke'));
+    }
   });
 
   it('пути длиннее кратчайшего больше чем на 2 поколения прячутся', () => {
@@ -202,13 +206,26 @@ describe('падежи имён', () => {
     expect(accusative('Павел', 'm')).toBe('Павла');
     expect(accusative('Дочь фараонова', 'f')).toBe('дочь фараонову');
   });
-  it('звенья «по Луке» (Нирий → Салафиил, Каинан → Сала) — по толкованию, как в ТЗ § 3.2', () => {
-    expect(plain(first('niriy', 'salafiil'))).toContain('по толкованию (Лк 3:27)');
-    expect(plain(first('kainan-syn-arfaksada', 'sala'))).toContain('по толкованию (Лк 3:35–36)');
-    // путь Руфи к Иисусу Христу через Нафана идёт по Лк 3 до Салафиила — он тоже по толкованию
+  // этап 13 (решение 94; поправка к ТЗ § 3.2): звенья «по Луке» — текст Лк 3, помета «по Луке», а не «по толкованию»
+  it('звенья «по Луке» (Нирий → Салафиил, Каинан → Сала) — «по Луке», не толкование (решение 94)', () => {
+    expect(plain(first('niriy', 'salafiil'))).toContain('по Луке (Лк 3:27)');
+    expect(plain(first('niriy', 'salafiil'))).not.toContain('по толкованию');
+    expect(plain(first('kainan-syn-arfaksada', 'sala'))).toContain('по Луке (Лк 3:35–36)');
+    // путь Руфи к Иисусу Христу через Нафана идёт по Лк 3 до Салафиила — с пометой «по Луке»
     const nathan = shown(relate(graph, 'ruf', 'iisus')).find((r) => plain(r.sentence).includes('через Нафана'))!;
-    expect(plain(nathan.sentence)).toContain('по толкованию (Лк 3:27)');
-    expect(nathan.chain.find((c) => c.id === 'salafiil')?.step?.interpretive).toBe(true);
+    expect(plain(nathan.sentence)).toContain('по Луке (Лк 3:27)');
+    const step = nathan.chain.find((c) => c.id === 'salafiil')?.step;
+    expect(step?.claim).toBe('by-luke');
+    expect(step?.interpretive).toBe(false);
+  });
+  // этап 13 (решение 107): два прочтения Лк 3:23 в одном пути не склеиваются
+  it('Иосиф и Мария — не брат и сестра: путь не соединяет связь Иосифа «по Луке» с толкованием «Илий — отец Марии»', () => {
+    const rs = relate(graph, 'iosif-muzh-marii', 'mariya');
+    expect(rs.some((r) => r.kind === 'blood')).toBe(false);
+    expect(plain(rs[0].sentence)).toBe('Иосиф — муж Марии');
+    // каждое прочтение по отдельности — свой путь: внук Илия через Иосифа (по Луке) и через Марию (по толкованию)
+    const heli = relate(graph, 'iisus', 'iliy-otets-marii').map((r) => plain(r.sentence));
+    expect(heli).toEqual(expect.arrayContaining([expect.stringMatching(/через Иосифа, по закону \(Мф 1:16\) и по Луке \(Лк 3:23\)$/), expect.stringMatching(/через Марию, по толкованию \(Лк 3:23\)$/)]));
   });
   it('в строке родства описательное имя стоит со строчной', () => {
     expect(first('moisey', 'doch-faraona-mat-moiseya')).toBe('Моисей — приёмный сын дочери фараоновой (Исх 2:10)');

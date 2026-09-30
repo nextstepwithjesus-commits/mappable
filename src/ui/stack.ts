@@ -19,10 +19,23 @@ import { selected } from '../state.ts';
 
 const hasWindow = typeof window !== 'undefined';
 
-/** Вкладка закреплённой карточки: лицо и номер цвета (0 … TAB_HUES − 1). */
+/**
+ * Вкладка закреплённой карточки: лицо и номер цвета (0 … TAB_HUES − 1); at — место чтения (решение 119; UI-08):
+ * раздел и сдвиг в пикселях от его начала. Вкладка возвращает к нему карточку при следующем открытии.
+ */
 export interface CardTab {
   id: string;
   hue: number;
+  at?: { sec: number; off: number };
+}
+
+/** Место чтения из памяти — только правдоподобное: раздел 1…24, сдвиг — конечное число в разумных пределах. */
+function readAt(x: unknown): CardTab['at'] | undefined {
+  if (!x || typeof x !== 'object') return undefined;
+  const { sec, off } = x as { sec?: unknown; off?: unknown };
+  if (!Number.isInteger(sec) || (sec as number) < 1 || (sec as number) > 24) return undefined;
+  if (typeof off !== 'number' || !Number.isFinite(off) || Math.abs(off) > 100_000) return undefined;
+  return { sec: sec as number, off: Math.round(off) };
 }
 
 /** Сколько цветов в палитре вкладок (--tab-1 … --tab-8, tokens.css); дальше цвета повторяются. */
@@ -31,8 +44,8 @@ export const TAB_HUES = 8;
 export const TABS_KEY = 'toledot:tabs';
 
 /**
- * Вкладки из памяти браузера: только известные лица, без повторов; цвет — целое 0…7, иначе — наименее занятый.
- * Испорченная запись — вкладок нет.
+ * Вкладки из памяти браузера: только известные лица, без повторов; цвет — целое 0…7, иначе — наименее занятый; место
+ * чтения — только правдоподобное. Испорченная запись, JSON null и чужая схема — вкладок нет, без ошибки (решение 130).
  */
 export function readTabs(raw: string | null, known: (id: string) => boolean = (x) => byId.has(x)): CardTab[] {
   let v: unknown;
@@ -47,7 +60,8 @@ export function readTabs(raw: string | null, known: (id: string) => boolean = (x
     const id = typeof x === 'string' ? x : x && typeof x === 'object' && typeof (x as CardTab).id === 'string' ? (x as CardTab).id : null;
     if (!id || !known(id) || out.some((t) => t.id === id)) continue;
     const h = x && typeof x === 'object' ? (x as CardTab).hue : undefined;
-    out.push({ id, hue: Number.isInteger(h) && (h as number) >= 0 && (h as number) < TAB_HUES ? (h as number) : nextHue(out) });
+    const at = x && typeof x === 'object' ? readAt((x as CardTab).at) : undefined;
+    out.push({ id, hue: Number.isInteger(h) && (h as number) >= 0 && (h as number) < TAB_HUES ? (h as number) : nextHue(out), ...(at ? { at } : {}) });
   }
   return out;
 }
@@ -100,6 +114,18 @@ export const isPinned = (id: string, tabs: readonly CardTab[] = cardTabs.value) 
 export function pinCard(id: string) {
   if (!byId.has(id)) return;
   cardTabs.value = withTab(cardTabs.peek(), id);
+}
+
+/**
+ * Запомнить место чтения закреплённой карточки (решение 119): раздел и сдвиг от его начала. Незакреплённая карточка
+ * места не хранит; то же место — без записи.
+ */
+export function rememberPlace(id: string, sec: number, off: number) {
+  const tabs = cardTabs.peek();
+  const t = tabs.find((x) => x.id === id);
+  const at = readAt({ sec, off });
+  if (!t || (t.at?.sec === at?.sec && t.at?.off === at?.off)) return;
+  cardTabs.value = tabs.map((x) => (x.id === id ? { id: x.id, hue: x.hue, ...(at ? { at } : {}) } : x));
 }
 
 /** «Открепить карточку персонажа» и «×» вкладки: вкладка уходит; текущая карточка (если это она) остаётся открытой. */

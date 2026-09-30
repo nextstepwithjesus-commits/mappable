@@ -26,11 +26,11 @@ import { linkRoles } from '../ui/linkwords.ts';
 import { BIRTH_BAND, daggerAt, drawBirthBand, drawGlyph, personGlyph, starRadius } from './glyphs.ts';
 import { alpha, hexToRgb } from './color.ts';
 import { alphaForContrast, CLOUD_DIMMED, dimLabelAlpha, separateRibbons, WORK_DIM } from './dim.ts';
-import { clearOfRibbons, drawBranchLabels, drawSkyRibbons, ribbonBeads, ribbonCheck, skySteps } from './ribbons.ts';
+import { clearOfRibbons, drawBranchLabels, drawLineNotes, drawRibbonGaps, drawSkyRibbons, lineNoteFocus, ribbonBeads, ribbonCheck, ribbonGapHits, skySteps, stepLegal, stepWeak, type SkyStep } from './ribbons.ts';
 import { drawEventLines, drawFrame, drawGrid, drawTimeMarks, paintWayfinding, placeWayfinding, yearTicks, rateAt, BOTTOM_H, CANON_NOTE, FRAME_H, LETTER_W, LETTER_W_TOUCH, RULER_H, type EdgeHit } from './frame.ts';
-import { claim, clusterShort, clusterText, drawClusterLabel, drawEventLabel, drawFoldMark, drawGroupNames, drawNote, drawStarLabels, foldMarkWidth, groupName, LabelCache, LabelLedger, measureLabels, namesakesInView, Placer, textBox, zoomScaleFor, GROUP_AREA_MIN, type GroupNameSpot, type LabelStats } from './labels.ts';
+import { claim, clusterShort, clusterText, drawClusterLabel, drawEventLabel, drawFoldMark, drawGroupNames, drawNote, GROUP_COVER_FROM, drawStarLabels, foldMarkWidth, groupName, LabelCache, LabelLedger, measureLabels, namesakesInView, Placer, textBox, zoomScaleFor, GROUP_AREA_MIN, type GroupNameSpot, type LabelStats } from './labels.ts';
 import { drawBranchTicks, drawGhostNotes, drawLinkLabels, drawLinks, drawPlanStubs, drawSpineTrails, drawTrails, familyHover, linkShown, trailOf, type LifeTrail, type LinkDraw, type PlanStubHit } from './trails.ts';
-import { branchFrame, drawKinPath, drawLeadNotes, drawMeridian, drawRings, drawSelectedLink, drawWorkMarks, emphasis, kinRoutes, meridianFlagAt, type SelectedLinkInfo } from './marks.ts';
+import { branchFrame, drawKinPath, drawLeadNotes, drawMeridian, drawRings, drawSelectedLink, drawWorkMarks, emphasis, kinRoutes, meridianFlagAt, reserveSelectedLink, type SelectedLinkInfo } from './marks.ts';
 import { coarsePointer, mapFont, mapSize, T_MAP_S } from './type.ts';
 import type { Rect } from './rect.ts';
 import { timeToX, xToTime, hydrateScale, type TimeScale, T_CANON_END, T_END } from '../engine/timescale.ts';
@@ -39,6 +39,7 @@ import type { ClusterInfo, Outline } from '../engine/layout.ts';
 import type { KinStep } from '../engine/kinship.ts';
 import type { ModelData, NodeRow } from '../data/atlas.ts';
 import { byId, graph, groupById, lines } from '../data/atlas.ts';
+import { nameCase } from '../ui/text/ru.ts';
 
 // рамка и атласная координата — src/render/frame.ts; прежние импорты из sky.ts продолжают работать
 export { FRAME_H, BAND, atlasCoord } from './frame.ts';
@@ -120,6 +121,8 @@ export interface SkyState {
   second: string | null;
   hovered: string | null;
   focus: string | null;
+  /** точка сравнения линий с фокусом клавиатуры (решение 116; src/ui/SkyView.tsx): её подпись в рамке, кольцо у точки */
+  noteFocus?: string | null;
   /**
    * Выделение: остальное небо гаснет. self — выбранное лицо и отметки поиска, anc и desc — предки и потомки,
    * path — путь родства и супруги; sure и likely — живые в год меридиана «наверняка» и «вероятно» (D13).
@@ -260,6 +263,8 @@ export interface SkyContext {
 /** Проход кадра: то, что draw() вычисляет один раз и отдаёт слоям. */
 export interface Pass {
   s: SkyState;
+  /** указатели у края к выбранному лицу и второму (frame.ts, placeWayfinding): ромбы союзов под ними не рисуются */
+  wayEdges?: Rect[];
   /** видимые узлы в порядке узлов (без лиц свёрнутых скоплений) */
   vis: number[];
   /** яркость лица при выделении: 1, LIKELY или DIM (marks.ts) */
@@ -634,21 +639,25 @@ export class Sky implements SkyContext {
           mary: lines.mary.persons,
         })
       : null;
-    // начертание шагов лент (Г10): толкование и «только у Луки» — точки, «по закону» и Нирий → Салафиил по Луке — штрих
-    const stepStyle = (ln: 'joseph' | 'mary', q: { id: string; flag: string }): PathStyle | null =>
-      q.flag === 'interpretation' || q.flag === 'luke-only' ? 'dots' : q.flag === 'legal' || (ln === 'mary' && q.id === 'salafiil') ? 'dash' : null;
+    // начертание шагов лент по словарю (этап 13, решение 94; ribbons.ts, stepWeak и stepLegal): точки — только
+    // толкование (Илий → Мария), штрих — «по закону» и Нирий → Салафиил по Луке; «только у Луки» (Каинан) — сплошная.
+    // Шаг за скрытыми показом лицами — «цепочка» (К4): сплошная, со знаком «+N» в разрыве
+    const stepStyle = (ln: 'joseph' | 'mary', q: SkyStep): PathStyle | null => (q.gap ? null : stepWeak(q) ? 'dots' : stepLegal(ln, q) ? 'dash' : null);
     const styles = new Map<string, PathStyle>();
+    const gaps = new Map<string, number>();
     if (st)
       for (const ln of ['joseph', 'mary'] as const)
         for (const q of st[ln]) {
           const y = stepStyle(ln, q);
           if (y) styles.set(`${ln}>${q.id}`, y);
+          if (q.gap) gaps.set(`${ln}>${q.id}`, q.gap);
         }
     const lineIds = st
       ? {
           joseph: st.joseph.map((q) => q.id),
           mary: st.mary.map((q) => q.id),
           styles,
+          gaps,
         }
       : null;
     const plates = s.plates?.length && !s.onlyLines ? s.plates : null;
@@ -662,7 +671,7 @@ export class Sky implements SkyContext {
       !!L.ribbons,
       s.lineFlip,
       [...this.collapsed].join(','),
-      lineIds ? `${lineIds.joseph.length}.${lineIds.mary.length}` : '',
+      lineIds ? `${lineIds.joseph.length}.${lineIds.mary.length}.${[...gaps.values()].join('.')}` : '',
       plates ? plates.map((q) => `${q.union.id}${q.open ? 1 : 0}`).join(',') : '',
       cam.w,
       cam.h,
@@ -708,6 +717,7 @@ export class Sky implements SkyContext {
         long: !family,
         nodeR: family ? NODE_R_FAMILY : NODE_R_MAP,
         units: family ? (this.plan.units ?? null) : null,
+        flip: s.lineFlip,
       });
       c = this.linkCache = {
         key,
@@ -1132,6 +1142,30 @@ export class Sky implements SkyContext {
   }
   hides(id: string): boolean {
     return this.plan.hiddenPersons.has(id);
+  }
+  /**
+   * Кто гость показа лицам показа (X3 Д10): «жена Ашхура», «муж Руфи», «мать Авессалома», «отец Иоава» — по первому
+   * супругу, затем ребёнку в показе; имя склоняется (src/ui/text/ru.ts, nameCase), не склоняется — null.
+   */
+  guestWho(id: string): string | null {
+    const q = byId.get(id);
+    const ids = this.view.show?.ids;
+    if (!q || !ids) return null;
+    const inShow = (x: string | null | undefined) => !!x && x !== id && ids.has(x) && !this.hides(x);
+    const gen = (x: string) => {
+      const o = byId.get(x);
+      return o ? nameCase(o.name, o.sex, 'gen', o.unnamed) : null;
+    };
+    for (const e of graph.spousesOf.get(id) ?? []) {
+      const o = e.a === id ? e.b : e.a;
+      const g = inShow(o) ? gen(o) : null;
+      if (g) return `${q.sex === 'f' ? 'жена' : 'муж'} ${g}`;
+    }
+    for (const e of graph.childrenOf.get(id) ?? []) {
+      const g = inShow(e.child) ? gen(e.child) : null;
+      if (g) return `${q.sex === 'f' ? 'мать' : 'отец'} ${g}`;
+    }
+    return null;
   }
   /** Полосы эпох включены в этом кадре: фон под подписью — их цвет (fillGround). */
   private bandsOn = false;
@@ -1654,10 +1688,15 @@ export class Sky implements SkyContext {
         mary: lines.mary.persons,
       });
       p.offRibbon = (b) => clearOfRibbons(this, b);
+      // разрывы лент со знаком «+N» на месте скрытых показом поколений (К4)
+      drawRibbonGaps(this, p);
     }
     if (L.lifelines && L.ribbons) drawSpineTrails(this, p);
     // путь родства — под звёздами: звёзды пути лежат на ломаной (E5)
     drawKinPath(this, p);
+    // указатели у края — до узлов союзов: ромб под указателем «← Давид» не рисуется (указатель его закрыл бы)
+    const edges = placeWayfinding(this, s, p);
+    p.wayEdges = edges;
     // узлы союзов ◆ и • — над лентами, под звёздами (порядок слоёв § 13): «пересадочные станции» лент
     const nodeHits = lf && settle > 0.01 ? drawLinkNodes(this, p, lf, s.plateMarks ?? {}, settle) : null;
     this.plateHits = nodeHits?.plates ?? [];
@@ -1683,11 +1722,12 @@ export class Sky implements SkyContext {
     if (ribbons) p.ribbonBoxes = this.ribbonBoxes();
     // одноимённые в окне (MAP-66) и свёрнутые потомки (MAP-63, UX-60): их подписям положено уточнение и «+N»
     p.namesakes = namesakesInView(this, p);
-    // гости показа (§ 7): подпись с уточнением «в «Доме Фарры»», если у одноимённого своего уточнения нет
-    if (s.guestWhere && this.plan.guests?.size)
+    // гости показа (§ 7; этап 13, X3 Д10): подпись отвечает «кто» — «Хела, жена Ашхура», «Мааха, мать Авессалома» —
+    // по родне в показе; если такой родни нет — «где»: «в «Доме Фарры»». У одноимённого со своим уточнением — оно
+    if (this.plan.guests?.size)
       for (const id of this.plan.guests) {
         if (p.namesakes.get(id)) continue;
-        const w = s.guestWhere(id);
+        const w = this.guestWho(id) ?? s.guestWhere?.(id) ?? null;
         if (w) p.namesakes.set(id, `, ${w}`);
       }
     p.foldText = new Map(this.plan.marks.filter((m) => m.kind === 'desc').map((m) => [m.id, `+${m.count}`]));
@@ -1704,7 +1744,8 @@ export class Sky implements SkyContext {
         this.ledger.add('note', t.text, t.rect, s.selected);
       }
     }
-    const edges = placeWayfinding(this, s, p);
+    // кольца и роли концов выбранной связи — раньше всех подписей (Д12): имена на них не ложатся
+    reserveSelectedLink(this, p);
     const lineSteps = {
       joseph: lines.joseph.persons,
       mary: lines.mary.persons,
@@ -1713,6 +1754,8 @@ export class Sky implements SkyContext {
     const labelsOn = !!L.labels && settle >= 0.999;
     // подписи шагов пути родства (E5), выноски точек сравнения и подписи лиц линий (E6) — раньше обычных подписей
     if (labelsOn) drawLeadNotes(this, p, lineSteps);
+    // слой подписей выключен, а на точке сравнения фокус клавиатуры (решение 116) — её подпись и кольцо всё равно видны
+    else if (s.noteFocus && settle >= 0.999) drawLineNotes(this, p, lineSteps);
     // знак свёрнутого созвездия — раньше всех подписей звёзд: он вытесняет соседей (решение 30)
     if (L.labels) this.drawFoldMarks(p, 'group');
     const between = () => {
@@ -1735,6 +1778,8 @@ export class Sky implements SkyContext {
     };
     if (labelsOn) drawStarLabels(this, p, between);
     else if (settle >= 0.999) between();
+    // имена у ромбов бездетных браков (этап 13, К6) — после подписей звёзд
+    if (lf && L.labels && settle > 0.99) drawLinkLabels(this, p, lf, true);
     this.groupHits = p.nameBoxes as (Rect & { group: string })[];
     this.drawDaggers(p);
     // метки ветвей выбранного лица (решение 69) — под началом подписей первых детей ветвей
@@ -1806,6 +1851,10 @@ export class Sky implements SkyContext {
       );
       // выбранная связь (§ 8): ключ, концы с ролями и местом (на экране или у края), точка карточки связи
       put('linkSel', this.linkSel ? JSON.stringify(this.linkSel) : '');
+      // разрывы лент «+N» (этап 13, К4): «от>до:N@x,y» через «|» — для приёмки (tools/accept/sky13.ts)
+      const nf = lineNoteFocus(this);
+      put('noteFocus', nf ? `${nf.id}:${[nf.box.x, nf.box.y, nf.box.w, nf.box.h].map(Math.round).join(',')}@${Math.round(nf.x)},${Math.round(nf.y)}` : '');
+      put('gaps', ribbonGapHits(this).map((g) => `${g.from}>${g.to}:${g.n}@${Math.round(g.cx)},${Math.round(g.cy)}`).join('|'));
       // этап 7 (K5), для проверок приёмки tools/accept/skydraw.ts: подписанные лица, пометы и названия (текст), служебная
       // строка, разрывы «//», скобки «время не установлено», метки набора
       const boxes = this.ledger.boxes;
@@ -1907,7 +1956,10 @@ export class Sky implements SkyContext {
       const cands: Rect[] = [];
       for (const dx of name ? [0, 40, 80, 160] : [0])
         for (const dy of [0, -size - 2, size + 2, -2 * size - 4, 2 * size + 4]) cands.push(textBox(x + dx, base + dy, w, size));
-      const got = claim(this, p, cands, 'fold', name ? `${name} ${count}` : `${lead}${count}`, { id: m.id });
+      const text = name ? `${name} ${count}` : `${lead}${count}`;
+      // знак созвездия — то же название созвездия: если у поля тесно (плотная семья у левого края — сыновья Шегараима по
+      // матерям, 1 Пар 8:8–11), он, как название (labels.ts, GROUP_COVER_FROM), может закрыть тусклые звёзды
+      const got = claim(this, p, cands, 'fold', text, { id: m.id }) ?? (name ? claim(this, p, cands, 'fold', text, { id: m.id, coverFrom: GROUP_COVER_FROM }) : null);
       if (!got) continue;
       const bx = got.x + 1.5;
       const by = got.y + 1.5 + 0.8 * size;

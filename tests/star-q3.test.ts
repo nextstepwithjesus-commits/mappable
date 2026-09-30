@@ -37,7 +37,8 @@ describe('блок «Родство» (решение 77; STAGE11.md § 6)', () 
     expect(r.parents.label).toBe('Родители');
     expect(rowText(r.parents)).toBe('[noy] и его жена');
     expect(r.children.label).toBe('Сыновья');
-    expect(rowText(r.children)).toBe('[khush-syn-khama], [mitsraim], [khanaan], [fut]');
+    // этап 13, решение 104: порядок текста (Быт 10:6: «Хуш, Мицраим, Фут и Ханаан»), как в § 10 и карточке союза
+    expect(rowText(r.children)).toBe('[khush-syn-khama], [mitsraim], [fut], [khanaan]');
     expect(r.siblings.label).toBe('Братья');
     expect(rowText(r.siblings)).toBe('[sim], [iafet]');
     // помета порядка — от неба (стык 5, personOrderNote): диапазон стихов, где названы дети этого союза
@@ -83,7 +84,7 @@ describe('блок «Родство» (решение 77; STAGE11.md § 6)', () 
     expect(rowText(rows('asaf').children)).toMatch(/; потомки — \[zikhriy-syn-asafa\]$/);
   });
   it('семья первого поколения — те, кого карточка не закрывает (§ 6): у Хама — отец, сыновья, братья', () => {
-    expect(familyOf('kham')).toEqual(['noy', 'khush-syn-khama', 'mitsraim', 'khanaan', 'fut', 'sim', 'iafet']);
+    expect(familyOf('kham')).toEqual(['noy', 'khush-syn-khama', 'mitsraim', 'fut', 'khanaan', 'sim', 'iafet']);
   });
   it('у народа и рода года нет (решение 23); «Год» — всегда с пометой, как получен', () => {
     const people = persons.find((p) => p.kind === 'people')!;

@@ -8,7 +8,10 @@
  *  spouse — супруг → точка союза (черта брака, ступенька ствола к узлу союза);
  *  union  — союз целиком (ствол и узел союза: «Иаков и Лия — 7 детей»);
  *  step   — шаг линии Мессии (data/lines/*.json: joseph — Мф 1, mary — Лк 3) к лицу child;
- *  kin    — родство словами Писания без родителей (П-8: «сестра», «брат», «родственница»).
+ *  kin    — родство словами Писания без родителей (П-8: «сестра», «брат», «родственница»);
+ *  span   — «цепочка» (этап 13, решение 93, К4): участок ленты линии Мессии между двумя видимыми лицами этой линии,
+ *           между которыми показ скрыл поколения (from — старший конец, to — младший; оба — лица data/lines/<line>.json,
+ *           from стоит в линии раньше to). Шаг данных — вид step; span — только там, где лента сжата показом.
  *
  * Запись для адреса — только [a-z0-9._-] (id лиц — [a-z0-9-], проверено по данным): поля через точку, пустое место — «_».
  * Союз записан тремя полями: муж или отец, жена или мать, вид утверждения (claim иного рода; «_» — кровный союз).
@@ -17,6 +20,7 @@
  *   u.set._._                 — союз Сифа и неназванной жены
  *   r.j.solomon               — шаг линии Иосифа к Соломону (Мф 1:6)
  *   n.david.saruiya           — «Саруия — сестра Давида» (1 Пар 2:16)
+ *   g.m.david.mariya          — цепочка ленты Марии от Давида до Марии (Лк 3:23–31; в показе скрыты Нафан … Илий)
  * Модуль чистый.
  */
 import { unionId } from './unions.ts';
@@ -26,7 +30,11 @@ export type LinkKey =
   | { kind: 'spouse'; union: string; person: string }
   | { kind: 'union'; union: string }
   | { kind: 'step'; line: 'joseph' | 'mary'; child: string }
-  | { kind: 'kin'; a: string; b: string };
+  | { kind: 'kin'; a: string; b: string }
+  | { kind: 'span'; line: 'joseph' | 'mary'; from: string; to: string };
+
+/** Линия Мессии: joseph — Мф 1, mary — Лк 3. */
+export type LineName = 'joseph' | 'mary';
 
 const ID = /^[a-z0-9-]+$/;
 const CLAIM = /^[a-z-]+$/;
@@ -68,6 +76,8 @@ export function linkKeyString(k: LinkKey): string | null {
       return ID.test(k.child) ? `r.${k.line === 'joseph' ? 'j' : 'm'}.${k.child}` : null;
     case 'kin':
       return ID.test(k.a) && ID.test(k.b) ? `n.${k.a}.${k.b}` : null;
+    case 'span':
+      return ID.test(k.from) && ID.test(k.to) && k.from !== k.to ? `g.${k.line === 'joseph' ? 'j' : 'm'}.${k.from}.${k.to}` : null;
   }
 }
 
@@ -91,6 +101,10 @@ export function parseLinkKey(s: string): LinkKey | null {
       return f.length === 3 && (f[1] === 'j' || f[1] === 'm') && ID.test(f[2]) ? { kind: 'step', line: f[1] === 'j' ? 'joseph' : 'mary', child: f[2] } : null;
     case 'n':
       return f.length === 3 && ID.test(f[1]) && ID.test(f[2]) ? { kind: 'kin', a: f[1], b: f[2] } : null;
+    case 'g':
+      return f.length === 4 && (f[1] === 'j' || f[1] === 'm') && ID.test(f[2]) && ID.test(f[3]) && f[2] !== f[3]
+        ? { kind: 'span', line: f[1] === 'j' ? 'joseph' : 'mary', from: f[2], to: f[3] }
+        : null;
     default:
       return null;
   }
@@ -125,5 +139,17 @@ export function linkEnds(k: LinkKey, parentOfStep?: (line: 'joseph' | 'mary', ch
     }
     case 'kin':
       return { from: [k.a], to: [k.b] };
+    case 'span':
+      return { from: [k.from], to: [k.to] };
   }
+}
+
+/**
+ * Скрытые лица цепочки: лица линии строго между from и to (по порядку data/lines, от старшего к младшему). order — ids
+ * линии от Адама к Иисусу. null — from или to не в линии или стоят не по порядку (запись битая).
+ */
+export function spanInner(order: readonly string[], k: Extract<LinkKey, { kind: 'span' }>): string[] | null {
+  const i = order.indexOf(k.from);
+  const j = order.indexOf(k.to);
+  return i >= 0 && j > i ? order.slice(i + 1, j) : null;
 }

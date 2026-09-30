@@ -17,6 +17,7 @@ import type { Person, Volume, Group, Epoch } from '../src/data/types.ts';
 import { ordinalStem } from '../src/engine/chronology.ts';
 import { overlap, REPEAT_SHARE } from '../src/ui/text/repeat.ts';
 import { checkGroups } from './groups-check.ts';
+import { silentConflicts } from './silent-check.ts';
 
 const args = process.argv.slice(2);
 const quiet = args.includes('--quiet');
@@ -30,6 +31,14 @@ const registry: { persons: { id: string; name: string; owner: string }[] } = JSO
 );
 const groupIds = new Set(groups.map((g) => g.id));
 const epochIds = new Set(epochs.map((e) => e.id));
+/**
+ * Внебиблейские опоры (П-6; этап 13, X1 приёмка 10): явный год Нового Завета в данных — сама опора, производный от неё
+ * год (anchors.json, derived: «два года под стражей до Феста — с ок. 57 г.») или его пояснение называет опорный год;
+ * иначе предупреждение.
+ */
+const anchorYears = new Set(
+  (JSON.parse(readFileSync(join(ROOT, 'data/anchors.json'), 'utf8')) as { anchors: { value: number; derived?: { year: number }[] }[] }).anchors.flatMap((a) => [a.value, ...(a.derived ?? []).map((d) => d.year)]),
+);
 const regById = new Map(registry.persons.map((p) => [p.id, p]));
 
 const personsDir = join(ROOT, 'data/persons');
@@ -86,7 +95,7 @@ for (const file of allFiles.concat(targetFiles.filter((f) => !allFiles.includes(
 const PERSON_KEYS = new Set([
   'id', 'name', 'disambig', 'sex', 'father', 'mother', 'parentRefs', 'parentCert', 'motherCert', 'fatherKind', 'order',
   'otherParents', 'spouses', 'kin', 'roles', 'group', 'prominence', 'chrono', 'card', 'unnamed', 'kind', 'fatherGap',
-  '__file', '__vol',
+  'motherGap', '__file', '__vol',
 ]);
 const CARD_KEYS = new Set([
   'original', 'meaning', 'altNames', 'status', 'parentsNote', 'lineage', 'birth', 'spousesNote', 'childrenNote',
@@ -211,6 +220,16 @@ function checkSync(where: string, p: Person, r: NonNullable<NonNullable<Person['
     // число текста может не совпадать с годами царствования по тексту (4 Цар 15:30: «двадцатый год Иоафама» при 16 годах):
     // это напряжение самого текста — предупреждение, а не ошибка; запись должна пояснять его в note
     if (total && (x.year as number) > total + 1 && !x.note) warn(w, `year ${x.year} больше лет царствования «${partner.name}» по тексту (${total}) — поясните в note`);
+    // решение 103 (X1 Х9): «N-й год X» дальше года от начала царствования (или единоличного царствования, sole) — нужна
+    // note с причиной: соправление, единоличное правление, иной счёт
+    if (reigns.length && Number.isInteger(x.year)) {
+      const base = [...reigns].sort((a, b) => a.start - b.start)[0];
+      const astro = (h: number) => (h < 0 ? h + 1 : h);
+      const at = astro(base.start) + (x.year as number) - 1;
+      const own = [astro(r.start), ...(r.sole !== undefined ? [astro(r.sole)] : [])];
+      const off = Math.min(...own.map((o) => Math.abs(at - o)));
+      if (off > 1 && !x.note) err(w, `«${x.year}-й год ${partner.name}» — ${Math.abs(at - astro(r.start))} лет от начала царствования в данных: нужна note с причиной (соправление, единоличное правление, иной счёт)`);
+    }
     if (texts.length && !mentions(texts, namesOf(p))) warn(w, `в стихах нет имени «${p.name}»`);
     if (texts.length && !mentions(texts, namesOf(partner))) warn(w, `в стихах нет имени «${partner.name}»`);
     // год — число самого текста: в стихах есть порядковое «восемнадцатый», «в тридцать девятом году»
@@ -252,6 +271,9 @@ function checkReaderText(where: string, v: unknown, key = '') {
     if (LATIN_OK.has(key) || key === 'id' || key === 'refs' || key === 'script' || !/[А-Яа-яЁё]/.test(v)) return;
     if (/[−-]\d{1,4}(?![\d:])/.test(v) && /(^|[\s(«])[−-]\d/.test(v)) err(where, `год со знаком минус в тексте для читателя: «${v.slice(0, 80)}» — пишите «1446 г. до Р. Х.»`);
     if (/\b[\w-]+\.(json|ts|tsx)\b|data\//.test(v)) err(where, `служебная запись в тексте для читателя: «${v.slice(0, 80)}»`);
+    // «(§ 7.1)» — раздел регламента AUTHORING.md, а у читателя § 7 карточки — «Род, колено, народ» (X1 Г8)
+    if (/§\s*\d+\.\d+/.test(v)) err(where, `ссылка на раздел регламента в тексте для читателя: «${v.slice(0, 80)}»`);
+    if (/\bТЗ\b/.test(v)) err(where, `«ТЗ» в тексте для читателя: «${v.slice(0, 80)}»`);
     if (/[A-Za-z]{3,}/.test(v)) warn(where, `латиница в тексте для читателя: «${v.slice(0, 80)}»`);
     return;
   }
@@ -307,6 +329,11 @@ for (const [id, p] of byId) {
   else if (!p.unnamed && !nameInBible(p.name)) warn(W, `форма имени «${p.name}» не найдена в Синодальном тексте`);
   if (p.kind !== undefined && !['person', 'people', 'founder', 'clan'].includes(p.kind)) err(W, `kind «${p.kind}»`);
   if (p.fatherGap !== undefined && typeof p.fatherGap !== 'boolean') err(W, 'fatherGap: true/false');
+  // пропуск поколений у матери (этап 13, решение 101): мать названа в том же стихе, что и отец через пропуск (Мф 1:5)
+  if (p.motherGap !== undefined) {
+    if (typeof p.motherGap !== 'boolean') err(W, 'motherGap: true/false');
+    else if (p.motherGap && (!p.fatherGap || !p.mother)) err(W, 'motherGap: только вместе с fatherGap и названной матерью («Салмон родил Вооза от Рахавы», Мф 1:5)');
+  }
   if (p.disambig !== undefined && /[A-Za-z]/.test(p.disambig.replace(/\d+:\d+/g, ''))) err(W, 'disambig: латиница в уточнении');
   if (p.sex !== 'm' && p.sex !== 'f') err(W, 'sex: «m» или «f»');
   if (!groupIds.has(p.group)) err(W, `group: неизвестная область «${p.group}» (см. data/groups.json)`);
@@ -415,6 +442,11 @@ for (const [id, p] of byId) {
       checkYear(w, r.end);
       if (r.start > r.end) err(w, 'start > end');
       if (!r.over) err(w, 'over обязателен');
+      // начало единоличного царствования (решение 103): внутри царствования, после его начала
+      if (r.sole !== undefined) {
+        checkYear(`${w}.sole`, r.sole);
+        if (!(r.sole > r.start && r.sole <= r.end)) err(w, `sole ${r.sole}: начало единоличного царствования — после start (${r.start}) и не позже end (${r.end})`);
+      }
       checkRefs(w, r.refs);
       checkSync(w, p, r);
     });
@@ -423,6 +455,17 @@ for (const [id, p] of byId) {
       checkYear(`${W}.chrono.active`, c.active.to);
       if (c.active.from > c.active.to) err(W, 'active: from > to');
       checkRefs(`${W}.chrono.active`, c.active.refs);
+    }
+    // явные годы Нового Завета — от опор anchors.json (П-6)
+    const ntYears: [string, number, string | undefined][] = [
+      ...(c.born?.year !== undefined ? [['born.year', c.born.year, c.born.note] as [string, number, string | undefined]] : []),
+      ...(c.died?.year !== undefined ? [['died.year', c.died.year, c.died.note] as [string, number, string | undefined]] : []),
+      ...(c.active ? ([['active.from', c.active.from, c.active.note], ['active.to', c.active.to, c.active.note]] as [string, number, string | undefined][]) : []),
+    ];
+    for (const [k, y, note] of ntYears) {
+      if (y < 1 || anchorYears.has(y)) continue;
+      const named = [...(note ?? '').matchAll(/(\d{1,3})(?:\s|\u00a0)*(?:г\.|гг\.|году|года)/g)].map((m) => Number(m[1]));
+      if (!named.some((n) => anchorYears.has(n)) && !named.includes(y)) warn(W, `chrono.${k} ${y} г.: год Нового Завета не совпадает с опорой data/anchors.json и не выведен из неё в пояснении (П-6)`);
     }
   }
 
@@ -524,6 +567,11 @@ for (const [id, p] of byId) {
     if (!hasChild) warn(W, 'лицо без единой родственной связи');
   }
 }
+
+// ---------- «Писание молчит» против данных (этап 13, решение 128; tools/silent-check.ts) ----------
+// раздел в card.silent, для которого в данных есть сведения: занятие в § 5 или в ролях, супруги, дети, числа и места
+// рождения и смерти — ошибка: читатель видит «в Писании не сообщается» рядом со сведениями
+for (const x of silentConflicts([...byId.values()])) if (targetIds.has(x.id)) err(x.id, `§ ${x.section} в card.silent («в Писании не сообщается»), а сведения есть: ${x.why}`);
 
 // ---------- граф: циклы, дубли ----------
 {

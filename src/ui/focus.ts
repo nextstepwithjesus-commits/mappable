@@ -32,9 +32,11 @@ export function introFocusTarget(o: { open: boolean; wasInside: boolean; selChan
 }
 
 /**
- * Панели, которые на телефоне ложатся полноэкранным листом (H1): пока такой лист открыт, небо, карточка и полоса
- * времени под ним недоступны клавиатуре и диктору (inert; I2, MOB-32). «Эпохи» — лист на 55 % под ярусами, «Вид» —
- * лист внутри неба: небо над ними видно и отвечает, они не модальны. Верхняя строка остаётся доступной: она над листом.
+ * Панели, которые на телефоне ложатся полноэкранным листом (H1): пока такой лист открыт, он — настоящее модальное окно
+ * (этап 13, решение 117; UI-05): небо, карточка, полоса времени и верхняя строка под ним недоступны клавиатуре и диктору
+ * (inert; I2, MOB-32), Tab ходит по кругу внутри листа (Sheet.tsx), «×» и Escape закрывают его, и фокус возвращается
+ * к инициатору («Меню»). «Эпохи» — лист на 55 % под ярусами, «Вид» — лист внутри неба: небо над ними видно и отвечает,
+ * они не модальны.
  */
 export const modalOnPhone = (p: Panel) => p !== null && p !== 'epochs' && p !== 'view';
 
@@ -49,8 +51,8 @@ export function parkedFor(phone: boolean, p: Panel, mode: 'kinship' | 'spread' |
   return phone && mode !== null && p === mode && modalOnPhone(p);
 }
 export const parked = computed(() => parkedFor(grid.value.phone, panel.value, pickMode.value));
-/** Что закрывает полноэкранный лист панели на телефоне. */
-const UNDER_SHEET = '.app > main > .sky, .app > .folio, .app > .strip';
+/** Что закрывает полноэкранный лист панели на телефоне: всё, кроме самого листа (решение 117). */
+const UNDER_SHEET = '.app > .top, .app > main > .sky, .app > .folio, .app > .strip';
 function setModal(on: boolean) {
   for (const el of document.querySelectorAll(UNDER_SHEET)) el.toggleAttribute('inert', on);
 }

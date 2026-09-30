@@ -8,8 +8,10 @@ import { stems, textNamesOfCard } from '../../engine/search.ts';
 import { panel, skyGroup } from '../../state.ts';
 import { P, flyToIds, refLabel, renderBrackets } from '../common.tsx';
 import { grid } from '../layout.ts';
+import { sheetStop } from '../sheet.ts';
 import { typo } from '../text/typo.ts';
 import { Sheet, useRemembered } from './Sheet.tsx';
+import { showResults } from '../show.ts';
 
 // ---------- чтение глав (G3; ТЗ § 3.7; CARD-41; UX-39; VIS-35) ----------
 export const CHAPTERS = [
@@ -198,6 +200,50 @@ const TOC = (() => {
   return out;
 })();
 
+// ---------- телефон: глава → карточка → назад к стиху (решение 114; UI-02) ----------
+
+/**
+ * Откуда читатель ушёл из главы в карточку на телефоне: глава, стих и лицо. Над карточкой — строка возврата «‹ Мф 1:5»
+ * (ChapterReturn); возврат открывает ту же главу на том же месте (прокрутку помнит Sheet), фокус — на то же имя.
+ */
+export const chapterReturn = signal<{ ch: string; verse: number; id: string } | null>(null);
+
+/** Вернуться к главе и стиху, из которых открыли карточку. */
+export function backToChapter() {
+  const r = chapterReturn.peek();
+  if (!r) return;
+  chapterReturn.value = null;
+  chapterAsk.value = r.ch;
+  panel.value = 'chapter';
+  // после отрисовки главы: имя — в середину листа и в фокус
+  let tries = 0;
+  const focusName = () => {
+    const b = document.querySelector<HTMLElement>(`.sheet .chapter p[data-v="${r.verse}"] .person[data-id="${CSS.escape(r.id)}"]`);
+    if (b) {
+      b.scrollIntoView({ block: 'center' });
+      b.focus({ preventScroll: true });
+    } else if (++tries < 40) window.setTimeout(focusName, 50);
+  };
+  window.setTimeout(focusName, 60);
+}
+
+/**
+ * Строка возврата над карточкой на телефоне (решение 114): «‹ Мф 1:5 — к главе». Видна, пока открыта карточка лица,
+ * в которое перешли из главы. Её ставит лист карточки (src/ui/Folio.tsx) над телом карточки.
+ */
+export function ChapterReturn({ id }: { id: string }) {
+  const r = chapterReturn.value;
+  if (!r || r.id !== id || !grid.value.phone) return null;
+  const at = refLabel(`${r.ch}:${r.verse}`);
+  return (
+    <div class="ch-return">
+      <button type="button" class="cmd" aria-label={`Назад к главе: ${at}`} onClick={backToChapter}>
+        {typo(`‹ ${at}`)}
+      </button>
+    </div>
+  );
+}
+
 /** Глава, которую просит открыть поиск («Мф 1» — «Читать Мф 1 — имена со ссылками», IX-75). */
 const chapterAsk = signal<string | null>(null);
 /** Открыть панель «Главы» на главе ch (из «Глав»): лица главы подсвечиваются на небе, как при выборе в оглавлении. */
@@ -267,7 +313,9 @@ export function ChapterPanel() {
       keepGroup = true;
       panel.value = null;
     }
-    flyToIds(ids);
+    // «Вписать главу»: лица главы вне показа — гостями, пока глава подсвечена (решение 113)
+    if (showResults(ids, 'chapter', 'group')) window.setTimeout(() => flyToIds(ids), 120);
+    else flyToIds(ids);
   };
   return (
     <Sheet title="Чтение глав" lead="Родословные главы Синодального перевода: имена — ссылки на карточки, лица главы подсвечены на небе.">
@@ -286,8 +334,9 @@ export function ChapterPanel() {
         ))}
       </div>
       <div class="cmds">
-        <button class="cmd" disabled={!ids.length} onClick={fit}>
-          вписать лица главы в небо
+        {/* одно действие — одно слово (решение 109): «Вписать», «Вписать связь», «Вписать главу» */}
+        <button class="cmd" disabled={!ids.length} title="Все лица главы — в окне неба" onClick={fit}>
+          Вписать главу
         </button>
         {from > 1 && (
           <button class="cmd" aria-expanded={all} onClick={() => setAll(!all)}>
@@ -299,12 +348,29 @@ export function ChapterPanel() {
         {refLabel(ch)}
         {from > 1 && !all && text?.length ? typo(`:${from}–${text[text.length - 1].n}`) : ''}
       </h3>
-      <div class="chapter" lang="ru">
+      <div
+        class="chapter"
+        lang="ru"
+        onClickCapture={(e) => {
+          // телефон (решение 114): имя в главе — карточка следующим экраном, над ней «‹ Мф 1:5»; глава закрывается, её
+          // подсветка на небе остаётся
+          if (!grid.peek().phone) return;
+          const b = (e.target as Element | null)?.closest<HTMLElement>('.person[data-id]');
+          const v = b?.closest<HTMLElement>('p[data-v]');
+          if (!b || !v) return;
+          chapterReturn.value = { ch, verse: Number(v.dataset.v), id: b.dataset.id! };
+          window.setTimeout(() => {
+            keepGroup = true;
+            panel.value = null;
+            sheetStop.value = 'full';
+          }, 0);
+        }}
+      >
         {!shown ? (
           <p class="muted">…</p>
         ) : (
           shown.map((v) => (
-            <p key={v.n}>
+            <p key={v.n} data-v={v.n}>
               <sup>{v.n}</sup>
               {render(v.parts)}
             </p>

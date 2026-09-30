@@ -8,9 +8,11 @@
  */
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
+import { createHash } from 'node:crypto';
 import { loadBible, ROOT } from './bible.ts';
 import { buildGraph, primaryChildren } from '../src/engine/graph.ts';
-import { solveChronology, noteModelDifferences, MODELS, type ChronoResult, type WhenSpan } from '../src/engine/chronology.ts';
+import { solveChronology, noteModelDifferences, modelDependence, lifeDatesOf, MODELS, type ChronoResult, type WhenSpan, type YearBasis, type BasisKind } from '../src/engine/chronology.ts';
+import type { LifeDates } from '../src/engine/years.ts';
 import { computeLayout, computeOutlines, packSpan, GHOST_SPAN, TRAIL_KINDS, type LineStep, type LayoutResult, type ListDef, type Outline } from '../src/engine/layout.ts';
 import { buildTimeScale, timeToX, xToTime } from '../src/engine/timescale.ts';
 import { epochDelta } from '../src/engine/epochs.ts';
@@ -18,6 +20,7 @@ import { parseRef, verseId, BOOKS } from '../src/engine/books.ts';
 import { splitParentRefs } from '../src/engine/text.ts';
 import { typo } from '../src/ui/text/typo.ts';
 import { refsOf, countMentions } from './mentions.ts';
+import { allDataRefs, refVerses } from './data-refs.ts';
 import type { Person, Volume, Epoch, Group } from '../src/data/types.ts';
 
 const read = <T>(p: string): T => JSON.parse(readFileSync(join(ROOT, p), 'utf8'));
@@ -111,6 +114,52 @@ for (const m of MODELS) {
 
 // в каких моделях напряжения нет — проверено расчётом всех моделей
 noteModelDifferences(results.map((r) => ({ model: r.chrono.model, tensions: r.chrono.tensions })));
+// какие годы меняются между моделями и сводка каждой модели (этап 13, решения 96, 102)
+const dependence = modelDependence(g, results.map((r) => r.chrono));
+console.log(`модели: годы меняются у ${dependence.persons.size} лиц; ${dependence.info.map((m) => `${m.id} — сдвинуто ${m.shifted}, после Исхода ${m.afterExodus.reduce((n, a) => n + a.ids.length, 0)}`).join('; ')}`);
+/**
+ * Годы в других моделях (IdxPerson.modelDep) — id модели → сдвиг k (число), если все годы лица в этой модели — годы модели
+ * по умолчанию, сдвинутые на k лет (так у большинства: всё до Исхода в «Кратком пребывании» — на 215 лет), иначе
+ * [b, bLo − b, bHi − b, d − b | null, класс, признаки, dLo − b, dHi − b]; признаки: 1 — свой год смерти (dAge = false),
+ * 2 — рождение приблизительно, 4 — смерть приблизительно, 8 / 16 — оценка на границе «не раньше» / «не позже»,
+ * 32 — свой год смерти закреплён (src/data/atlas.ts, decodeModelDep).
+ */
+function depRow(c: LifeDates): unknown[] {
+  const b = Math.round(c.b);
+  const rel = (x: number | null | undefined) => (x === null || x === undefined ? null : Math.round(x) - b);
+  const f = (c.dAge === false ? 1 : 0) | (c.bApprox ? 2 : 0) | (c.dApprox ? 4 : 0) | (c.pin === 'lo' ? 8 : 0) | (c.pin === 'hi' ? 16 : 0) | (c.dFixed ? 32 : 0);
+  const row: unknown[] = [b, rel(c.bLo), rel(c.bHi), rel(c.d), c.cls, f];
+  if (c.dAge === false && !c.dFixed) row.push(rel(c.dLo), rel(c.dHi));
+  return row;
+}
+/**
+ * Годы лица в других моделях (IdxPerson.modelDep): массив по моделям после модели по умолчанию (MODELS[1…]) — сдвиг
+ * от годов модели по умолчанию или полная строка; null — годы те же (NFR-2: без имён моделей в каждой записи).
+ */
+function encodeModelDep(id: string, md: Partial<Record<string, LifeDates>> | undefined): unknown[] | undefined {
+  const obj = encodeModelDepObj(id, md);
+  const out = MODELS.slice(1).map((m) => (m.id in obj ? obj[m.id] : null));
+  while (out.length && out[out.length - 1] === null) out.pop();
+  return out.length ? out : undefined;
+}
+function encodeModelDepObj(id: string, md: Partial<Record<string, LifeDates>> | undefined): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  const c0 = results[0].chrono.persons.get(id);
+  for (const [k, c] of Object.entries(md ?? {})) {
+    if (!c) continue;
+    const row = depRow(c);
+    if (c0) {
+      const base = depRow(lifeDatesOf(c0));
+      const shift = (row[0] as number) - (base[0] as number);
+      if (JSON.stringify([shift, ...row.slice(1)]) === JSON.stringify([shift, ...base.slice(1)])) {
+        out[k] = shift;
+        continue;
+      }
+    }
+    out[k] = row;
+  }
+  return out;
+}
 
 // ---------- значимость → звёздная величина (степень интереса по Фурнасу) ----------
 // все ссылки лица — refsOf (tools/mentions.ts)
@@ -148,11 +197,12 @@ ranked.forEach(([id], i) => {
 // ---------- стихи ----------
 const bible = loadBible();
 const cited = new Set<string>();
+// Весь диапазон, без предела длины, и межглавные ссылки — по длинам глав (решение 129): стихи всех ссылок данных,
+// где бы они ни стояли, со стихами хронологических входов (born, died, reign, sync, active), линий, эпох, опор, списков
 const addCited = (r: string) => {
-  const p = parseRef(r, bible.chapterLength);
-  if (!p) return;
-  for (const v of p.verses.slice(0, 40)) cited.add(verseId(v));
+  for (const k of refVerses(r, bible.chapterLength) ?? []) cited.add(k);
 };
+for (const r of allDataRefs()) addCited(r);
 for (const p of persons) for (const r of refsOf(p)) addCited(r);
 for (const e of epochs) { for (const r of e.refs) addCited(r); for (const ev of e.events) for (const r of ev.refs) addCited(r); }
 for (const s of [...joseph.persons, ...mary.persons]) for (const r of s.refs) addCited(r);
@@ -212,14 +262,17 @@ const index = persons.map((p) => {
     ord: p.order ?? null,
     alt: (c?.altNames ?? []).map((a) => a.name),
     ep: p.chrono?.epoch ?? null,
-    // синхронизмы текста «в N-й год X воцарился Y» — для ярусов эпох (MAP-47)
-    reign: (p.chrono?.reign ?? []).map((x) => ({ over: x.over, start: x.start, end: x.end, years: x.years ?? null, ...(x.sync?.length ? { sync: x.sync } : {}) })),
+    mgap: p.motherGap ? 1 : 0,
+    // синхронизмы текста «в N-й год X воцарился Y» — для ярусов эпох (MAP-47); sole — начало единоличного царствования (решение 103)
+    reign: (p.chrono?.reign ?? []).map((x) => ({ over: x.over, start: x.start, end: x.end, years: x.years ?? null, ...(x.sole !== undefined ? { sole: x.sole } : {}), ...(x.sync?.length ? { sync: x.sync } : {}) })),
     active: p.chrono?.active ? [p.chrono.active.from, p.chrono.active.to] : null,
     silent: c?.silent ?? [],
+    // годы в других моделях, где они другие (решения 96, 102; src/data/atlas.ts, decodeModelDep)
+    md: encodeModelDep(p.id, dependence.persons.get(p.id)),
   };
 });
 // значения по умолчанию не пишутся в индекс (NFR-2: индекс неба ≤ 200 КБ gzip); atlas.ts восстанавливает их
-const DEFAULTS: Record<string, unknown> = { d: '', k: 'person', u: 0, r: [], f: null, m: null, fk: 'natural', fg: 0, pc: 'scripture', pRefs: [], op: [], sp: [], kin: [], ord: null, alt: [], books: {}, ep: null, reign: [], active: null, silent: [], filled: [] };
+const DEFAULTS: Record<string, unknown> = { d: '', k: 'person', u: 0, r: [], f: null, m: null, fk: 'natural', fg: 0, pc: 'scripture', pRefs: [], op: [], sp: [], kin: [], ord: null, alt: [], books: {}, ep: null, mgap: 0, reign: [], active: null, silent: [], filled: [], md: undefined };
 const isDefault = (k: string, v: unknown) => k in DEFAULTS && JSON.stringify(DEFAULTS[k]) === JSON.stringify(v);
 const compactIndex = index.map((row) => {
   const o: Record<string, unknown> = {};
@@ -230,12 +283,34 @@ const compactIndex = index.map((row) => {
   return o;
 });
 const yr = (x: number) => Math.round(x);
+/** Основание года — строкой «вид|номера лиц|вверх,вниз|ссылка|опора» (src/data/atlas.ts, decodeBasis). */
+const BASIS_KINDS: BasisKind[] = ['numbers', 'reign', 'year', 'kin', 'order', 'active', 'met', 'mention', 'epoch', 'bounds', 'group', 'interp', 'people'];
+/** Опора явного года (основание «year»): год → id опоры data/anchors.json, в том числе производные годы (derived). */
+const anchorOfYear = new Map<number, string>();
+for (const a of (anchors as { anchors: { id: string; value: number; derived?: { year: number }[] }[] }).anchors) {
+  if (!anchorOfYear.has(a.value)) anchorOfYear.set(a.value, a.id);
+  for (const d of a.derived ?? []) if (!anchorOfYear.has(d.year)) anchorOfYear.set(d.year, a.id);
+}
+/** У явного года — его опора: год рождения, смерти или начала деятельности лица, совпадающий с опорой или производным. */
+function withAnchor(id: string, b: YearBasis): YearBasis {
+  if (b.kind !== 'year' || b.anchor) return b;
+  const c = personById.get(id)?.chrono;
+  for (const y of [c?.born?.year, c?.died?.year, c?.active?.from]) if (y !== undefined && anchorOfYear.has(y)) return { ...b, anchor: anchorOfYear.get(y) };
+  return b;
+}
+function encodeBasis(b: YearBasis): string {
+  const parts = [String(BASIS_KINDS.indexOf(b.kind)), (b.ids ?? []).map((x) => personIndex.get(x) ?? x).join(','), b.gens ? b.gens.join(',') : '', b.ref ?? '', b.anchor ?? ''];
+  while (parts.length > 1 && parts[parts.length - 1] === '') parts.pop();
+  return parts.join('|');
+}
 /** Откуда скобка «время не установлено» — одной буквой (src/data/atlas.ts, decodeWhen). */
 const WHEN_CODE: Record<WhenSpan['by'], string> = {
   met: 'm', kin: 'k', mention: 'r', epoch: 'e', bounds: 'b', group: 'g',
 };
 // хронология и узлы раскладки — массивами по номеру лица в индексе, годы — разностями (сжимаются вдвое лучше)
 const personIndex = new Map(index.map((p, i) => [p.id, i]));
+/** Номер эпохи в data/epochs.json (в индексе эпохи — в том же порядке); −1 — нет или неизвестна. */
+const epochNo = (e: string | null | undefined) => (e ? epochs.findIndex((x) => x.id === e) : -1);
 const pi = (id: string | null) => (id === null ? null : personIndex.get(id) ?? null);
 const models = results.map((res) => ({
   id: res.id,
@@ -244,13 +319,16 @@ const models = results.map((res) => ({
     if (!c) return null;
     const b = yr(c.b);
     const rel = (x: number | null) => (x === null ? null : yr(x) - b);
-    const row: unknown[] = [b, rel(c.bLo), rel(c.bHi), rel(c.d), rel(c.lastAttested), rel(c.dEst), c.cls, c.epoch];
+    // эпоха — номером в data/epochs.json (NFR-2), −1 — нет
+    const row: unknown[] = [b, rel(c.bLo), rel(c.bHi), rel(c.d), rel(c.lastAttested), rel(c.dEst), c.cls, epochNo(c.epoch)];
     // A14: интервал смерти и «умер младенцем»; этап 7 (K1): признаки (1 — народ или род без года рождения, CARD-59;
     // 2 — год по порядку перечисления братьев, MAP-54) и откуда скобка «время не установлено» (MAP-52).
     // Только если есть (atlas.ts восстанавливает null, false и undefined)
     // этап 7, круг 3: 4 — свой год смерти, не по возрасту (dAge = false; CARD-79); год знака у первого засвидетельствованного
     // года (MAP-69) — 14-м полем, разностью от рождения
-    const flags = (c.named ? 1 : 0) | (c.byOrder ? 2 : 0) | (c.dAge === false ? 4 : 0);
+    // этап 13 (контракт 1): 8 — год рождения приблизителен по данным, 64 — год смерти; 16 / 32 — оценка на границе
+    // текста «не раньше» / «не позже»; 128 — свой год смерти закреплён (не оценка)
+    const flags = (c.named ? 1 : 0) | (c.byOrder ? 2 : 0) | (c.dAge === false ? 4 : 0) | (c.bApprox ? 8 : 0) | (c.pin === 'lo' ? 16 : 0) | (c.pin === 'hi' ? 32 : 0) | (c.dApprox ? 64 : 0) | (c.dFixed ? 128 : 0);
     const when = c.when ? `${WHEN_CODE[c.when.by]}${c.when.id ? `:${c.when.id}` : c.when.ref ? `:${c.when.ref}` : ''}` : null;
     const extra: unknown[] = [c.infant ? 1 : 0, flags, when, c.mark === undefined ? null : yr(c.mark) - b];
     let k = extra.length;
@@ -259,9 +337,28 @@ const models = results.map((res) => ({
     return row;
   }),
   tensions: res.chrono.tensions,
+  // этап 13 (контракт 1): эпоха рождения и жизни (номер в data/epochs.json; у жизни −1 — та же, что рождения), основание
+  // года — параллельными массивами по номеру лица (src/data/atlas.ts). Стих последнего упоминания — в теле карточки (NFR-2)
+  ext: (() => {
+    const eIdx = (e: string | null | undefined) => (e ? epochs.findIndex((x) => x.id === e) : -2);
+    const be: (number | null)[] = [];
+    const le: (number | null)[] = [];
+    const bs: (string | null)[] = [];
+    for (const p of index) {
+      const c = res.chrono.persons.get(p.id);
+      const b = c ? eIdx(c.birthEpoch) : -2;
+      const l = c ? eIdx(c.lifeEpoch) : -2;
+      // −1 — та же, что эпоха строки хронологии (ChronoRow.epoch): так у всех лиц, кроме редких (NFR-2)
+      be.push(c && b >= 0 && b === epochNo(c.epoch) ? -1 : b < 0 ? null : b);
+      le.push(l === b ? -1 : l < 0 ? null : l);
+      bs.push(c?.basis ? encodeBasis(withAnchor(p.id, c.basis)) : null);
+    }
+    return { be, le, bs };
+  })(),
   // эпохи в годах модели (CARD-60): только отличия от data/epochs.json — id → [начало, конец, годы событий]
   ...(() => {
-    const d = epochDelta(epochs, res.chrono.epochs ?? epochs);
+    // от эпох модели по умолчанию (в индексе — они, с основаниями в её годах)
+    const d = epochDelta(results[0].chrono.epochs ?? epochs, res.chrono.epochs ?? epochs);
     return Object.keys(d).length ? { epochs: d } : {};
   })(),
   layout: {
@@ -280,11 +377,22 @@ const models = results.map((res) => ({
       return row;
     }),
     // у скоплений (E2) — cluster: годы в десятых долях года, как у контуров
-    blocks: res.layout.blocks.map((bl) =>
-      bl.cluster
-        ? { ...bl, t0: r1(bl.t0), t1: r1(bl.t1), cluster: { ...bl.cluster, t0: r1(bl.cluster.t0), t1: r1(bl.cluster.t1), tc: r1(bl.cluster.tc), span: bl.cluster.span.map(r1) } }
-        : bl,
-    ),
+    // блоки — массивами [id, основание, созвездие, прикреплён к, рядом с, сторона, полоса от, полоса до, t0, t1, размер,
+    // скопление?], лица — номерами в индексе; в скоплении лица и клетки — номерами, клетка — [лицо, строка, столбец, 1 —
+    // отец по сыну] (src/data/atlas.ts, decodeBlock; NFR-2)
+    blocks: res.layout.blocks.map((bl) => {
+      const who = (x: string | null | undefined) => (x === null || x === undefined ? null : personIndex.get(x) ?? x);
+      const row: unknown[] = [bl.id, who(bl.root), bl.group, who(bl.attach), who(bl.near), bl.side, bl.laneMin, bl.laneMax, bl.cluster ? r1(bl.t0) : bl.t0, bl.cluster ? r1(bl.t1) : bl.t1, bl.size];
+      if (bl.cluster) {
+        const c = bl.cluster;
+        row.push({
+          ...c, t0: r1(c.t0), t1: r1(c.t1), tc: r1(c.tc), span: c.span.map(r1),
+          members: c.members.map((x) => who(x)),
+          cells: c.cells.map((x) => (x.patronym ? [who(x.id), x.row, x.col, 1] : [who(x.id), x.row, x.col])),
+        });
+      }
+      return row;
+    }),
     laneMin: res.layout.laneMin,
     laneMax: res.layout.laneMax,
     metrics: res.layout.metrics,
@@ -311,14 +419,32 @@ const models = results.map((res) => ({
   },
   scale: { knots: res.scale.knots.map(r1), xTrue: res.scale.xTrue.map(r1), xDense: res.scale.xDense.map(r1) },
 }));
+// ---------- происхождение текста (решение 132): «О карте» показывает, по какому тексту сверены ссылки ----------
+const bibleFile = readFileSync(join(ROOT, 'tools/bible/synodal.tsv'));
+const bibleText = {
+  name: 'Синодальный перевод (1876), 66 канонических книг, синодальная нумерация стихов',
+  source: 'scrollmapper/bible_databases, formats/json/RusSynodal.json; преобразован в tools/bible/synodal.tsv',
+  changes: 'исключены неканонические книги и добавления (Пс 151, Дан 3:24–90, Дан 13–14), издательские сноски (Иов 2:9; 9:9) и славянское добавление к Иов 42:17; надписание Пс 144 перенесено из Пс 143:15 на своё место; текст стихов не менялся',
+  sha256: createHash('sha256').update(bibleFile).digest('hex'),
+  verses: bible.verses.size,
+  cited: cited.size,
+};
 const atlas = {
   built: new Date().toISOString(),
+  bibleText,
   persons: compactIndex,
   // в индексе — только модель по умолчанию; остальные подгружаются при переключении (src/generated/models/*.json)
   models: models.slice(0, 1),
-  modelInfo: MODELS,
+  // модели со сводкой (решение 102): сдвинуто лиц, годы опорных событий, напряжения, сдвиги после Исхода
+  // сдвиги после Исхода — номерами лиц в индексе (src/data/atlas.ts, modelInfo; NFR-2)
+  modelInfo: dependence.info.map((m) => ({ ...m, afterExodus: m.afterExodus.map((a) => ({ ...a, ids: a.ids.map((x) => personIndex.get(x) ?? x) })) })),
   lines: { joseph, mary },
-  epochs,
+  // эпохи модели по умолчанию: основания — её годами (решение 99; engine/epochs.ts, modelEpochs)
+  // правила границ (startRule, endRule, rule событий) нужны только сборке: годы моделей уже посчитаны (NFR-2)
+  epochs: (def.chrono.epochs ?? epochs).map((e) => {
+    const { startRule: _s, endRule: _e, ...rest } = e as Epoch & { startRule?: unknown; endRule?: unknown };
+    return { ...rest, events: e.events.map((ev) => { const { rule: _r, ...x } = ev as typeof ev & { rule?: unknown }; return x; }) };
+  }),
   groups,
   anchors,
   books: BOOKS,
@@ -372,12 +498,23 @@ for (const v of volumes) {
     const metBy = metByOf.get(p.id);
     if (metBy?.length) card.metBy = metBy;
     const mentions = mentionsOf.get(p.id);
-    cards[p.id] = { card, chrono: p.chrono ?? null, books: booksOf.get(p.id) ?? {}, ...(mentions ? { mentions } : {}) };
+    // стих последнего упоминания — там, где о смерти Писание молчит (модель по умолчанию: какое событие последнее, от модели
+    // не зависит): «последнее упоминание — 30 г. по Р. Х. (Деян 1:14)» (этап 13, решение 96)
+    const c0 = def.chrono.persons.get(p.id);
+    const lastRef = c0 && c0.d === null && c0.lastAttested !== null ? c0.lastRef : undefined;
+    cards[p.id] = { card, chrono: p.chrono ?? null, books: booksOf.get(p.id) ?? {}, ...(mentions ? { mentions } : {}), ...(lastRef ? { lastRef } : {}) };
   }
   writeFileSync(join(gen, 'cards', `${v.volume}.json`), JSON.stringify(cards));
 }
 console.log(`§ 6: стихи родства разделены между отцом и матерью у ${splitCount} лиц`);
-for (const [book, m] of versesByBook) writeFileSync(join(gen, 'verses', `${BOOKS.findIndex((b) => b.code === book).toString().padStart(2, '0')}.json`), JSON.stringify({ book, verses: m }));
+// длины глав книги (число стихов по синодальной нумерации): ссылка «Быт 27:41-28:5» раскрывается в интерфейсе по ним
+// (atlas.ts: loadRefVerses, chapterLengths) — в файле стихов книги, не в индексе неба (NFR-2)
+const chaptersOf = (book: string): number[] => {
+  const out: number[] = [];
+  for (let c = 1; bible.chapterLength(book, c) > 0; c++) out.push(bible.chapterLength(book, c));
+  return out;
+};
+for (const [book, m] of versesByBook) writeFileSync(join(gen, 'verses', `${BOOKS.findIndex((b) => b.code === book).toString().padStart(2, '0')}.json`), JSON.stringify({ book, chapters: chaptersOf(book), verses: m }));
 
 // ---------- родословные главы для чтения ----------
 const CHAPTERS = ['Быт 4', 'Быт 5', 'Быт 10', 'Быт 11', 'Быт 25', 'Быт 36', 'Быт 46', 'Исх 6', 'Руф 4', '1Пар 1', '1Пар 2', '1Пар 3', '1Пар 4', '1Пар 5', '1Пар 6', '1Пар 7', '1Пар 8', '1Пар 9', 'Мф 1', 'Лк 3'];

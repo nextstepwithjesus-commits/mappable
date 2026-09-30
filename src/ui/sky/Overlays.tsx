@@ -5,11 +5,11 @@
  */
 import type { ComponentChildren } from 'preact';
 import { byId } from '../../data/atlas.ts';
-import { introDone, pickMode, pins, pinsQuery, selected, skyGroup, type SkyGroup } from '../../state.ts';
+import { introDone, panel, pickMode, pins, pinsQuery, selected, skyGroup, type SkyGroup } from '../../state.ts';
 import { skyRef, plural } from '../common.tsx';
 import { num, typo, typoTree } from '../text/typo.ts';
 import { Close } from '../controls.tsx';
-import { pickBarText, pinBarText } from './text.ts';
+import { pickBarText } from './text.ts';
 import { introOpen, lanes, openGuide, openLegend, resetProportions } from './view.ts';
 import { adoptLinkSet, leaveLinkSet, linkSet, skyMode, workNotice, workSet } from '../work.ts';
 import { grid } from '../layout.ts';
@@ -56,14 +56,23 @@ export function PickBar({ mode, id }: { mode: 'kinship' | 'spread'; id: string }
 }
 
 /**
- * Отметки поиска (E10; UX-31, IX-19): «Отмечено 6 лиц по запросу «Мария» — снять (Esc)». Снимают «снять», Escape,
- * новый поиск и щелчок по звезде или по пустому небу.
+ * Строка отметок поиска (решение 126: у каждого механизма своё имя и своё завершение): «Отмечено поиском: 6 лиц по
+ * запросу «Мария»». Слово «поиском» отличает отметки от выбора, набора и показа.
+ */
+export function searchPinText(n: number, query: string): string {
+  const q = query.trim();
+  return `Отмечено поиском: ${persons(n)}${q ? ` по запросу «${q}»` : ''}`;
+}
+
+/**
+ * Отметки поиска (E10; UX-31, IX-19; решение 126): «Отмечено поиском: 6 лиц по запросу «Мария» — снять (Esc)». Снимают
+ * «снять», Escape, новый поиск и щелчок по звезде или по пустому небу.
  */
 export function PinBar({ n, query }: { n: number; query: string }) {
   return (
     <SkyBar
       cls="pinbar"
-      text={pinBarText(n, query)}
+      text={searchPinText(n, query)}
       cmds={[
         {
           label: 'снять',
@@ -117,7 +126,10 @@ export function LinkSetBar() {
       text={linkBarText(l.size)}
       cmds={[
         { label: 'добавить в мой набор', title: 'Лица ссылки — в ваш рабочий набор; ваши лица остаются', run: () => void adoptLinkSet() },
-        { label: mineLabel(m), title: m ? 'Небо — ваш рабочий набор; набор ссылки уходит из адреса' : 'Ваш набор пуст: небо — все лица', run: leaveLinkSet },
+        // свой набор пуст (решение 111; X4 § 2.4): «вернуться к моему (0)» ведёт к пустому — вместо неё «всё небо»
+        m
+          ? { label: mineLabel(m), title: 'Небо — ваш рабочий набор; набор ссылки уходит из адреса', run: leaveLinkSet }
+          : { label: 'всё небо', title: 'Ваш набор пуст: небо — все лица; набор ссылки уходит из адреса', run: leaveLinkSet },
       ]}
     />
   );
@@ -257,6 +269,16 @@ const foldToStarts = () => {
   openStarts();
 };
 
+/**
+ * Первый шаг вступления (этап 13, решение 122; UI-13): «Найти человека» — поле поиска верхней строки (фокус; на телефоне
+ * оно раскрывается), «Читать главу» — панель «Главы». Вступление не сворачивается: начала остаются рядом.
+ */
+export function findPerson() {
+  const f = document.getElementById('find');
+  if (f instanceof HTMLInputElement) f.focus();
+}
+export const readChapter = () => (panel.value = 'chapter');
+
 /** Быстрые входы вступления (UX-56; решение 37: и «Руфь» — сценарий 1). */
 export const ENTRIES = ['adam', 'noy', 'avraam', 'moisey', 'ruf', 'david', 'iisus'];
 
@@ -306,6 +328,18 @@ export function Cartouche({ high, low = false }: { high: boolean; low?: boolean 
           <p class="sub">Звёздный атлас библейских родословий</p>
         </>,
       )}
+      {/* первый слой (решение 122): найти человека, читать главу, пять начал; длинный текст — ниже */}
+      <div class="first" role="group" aria-label="Первый шаг">
+        <button type="button" class="find-cmd" title="Поле поиска вверху: имя или стих (клавиша /)" onClick={findPerson}>
+          <span class="nm">Найти человека</span>
+          <span class="ph" aria-hidden="true">
+            {typo('имя или стих: Руфь, Руф 4:21')}
+          </span>
+        </button>
+        <button type="button" class="cmd" title="Родословные главы в Синодальном переводе: имена — ссылки на карточки" onClick={readChapter}>
+          Читать главу
+        </button>
+      </div>
       {/* пять начал (решение 68) — при первом посещении; выбор сворачивает вступление. Быстрые входы — ниже, как прежде */}
       {pick && (
         <div class="pick" role="group" aria-labelledby="starts-title">

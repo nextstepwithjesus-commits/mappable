@@ -9,8 +9,7 @@ import type { Fact } from '../../data/types.ts';
 import type { Union, Unions } from '../../engine/unions.ts';
 import { yearsWord } from '../../engine/years.ts';
 import { model } from '../../state.ts';
-import { lifeText } from '../sky/text.ts';
-import { isPeople } from './Masthead.tsx';
+import { isPeople, passportYears } from './Masthead.tsx';
 import { isClaimUnion } from '../linkwords.ts';
 import { bySex, lowerFirst, nameCase, otherParentLabel } from '../text/ru.ts';
 import { typo } from '../text/typo.ts';
@@ -23,10 +22,10 @@ const gen = (id: string) => {
 
 // ---------- строки лица ----------
 
-/** Годы лица, как в паспорте карточки: «4174–3244 гг. до Р. Х.», «время не установлено». */
+/** Годы лица — та же строка, что в паспорте карточки (passportYears, словарь дат 96): «4174–3244 гг. до Р. Х.». */
 export function yearsLine(id: string): string {
   if (!byId.has(id)) return '';
-  return typo(lifeText(id, { when: false }) || (isPeople(id) ? 'без года' : 'время не установлено'));
+  return typo(passportYears(id, model.value.chrono.get(id)) || (isPeople(id) ? 'без года' : 'время не установлено'));
 }
 
 /** Уточнение одноимённого — коротко, одной строкой (скобки — через запятую). */

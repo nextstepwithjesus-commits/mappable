@@ -55,7 +55,8 @@ export const skyin: Scenario[] = [
       const a = await selAt(p);
       if (!a) return fail('Моисей не на экране');
       const log: string[] = [];
-      for (const name of ['Краткое пребывание', 'Фарре 70', 'Числа в скобках', 'Масоретские числа']) {
+      // этап 13, решение 102: модель по умолчанию — «Основной текст: 430 лет в Египте» («масоретские» — жаргон)
+      for (const name of ['Краткое пребывание', 'Фарре 70', 'Числа в скобках', 'Основной текст']) {
         await pickModel(p, name);
         await p.waitForTimeout(80);
         const mid = await selAt(p);
@@ -221,7 +222,7 @@ export const skyin: Scenario[] = [
       await p.keyboard.press('KeyC');
       await p.waitForTimeout(400);
       const t3 = nbsp(await live(p)).trim();
-      if (!/^Давид: потомки свёрнуты, скрыто \d+ (лицо|лица|лиц)$/.test(t3)) return fail(`объявление С: «${t3}»`);
+      if (!/^Давид: потомки скрыты на небе, \d+ (лицо|лица|лиц)$/.test(t3)) return fail(`объявление С: «${t3}»`);
       await p.keyboard.press('KeyC');
       await p.waitForTimeout(300);
       return pass(`${t1}; ${t2}; ${t3}`);
@@ -362,7 +363,8 @@ export const skyin: Scenario[] = [
         const bar = q.locator('.sky .linkbar');
         if (!(await bar.count())) return fail('новая вкладка: нет строки «Набор по ссылке»');
         const t = nbsp(await bar.innerText()).replace(/\s+/g, ' ').trim();
-        if (!/^Набор по ссылке: 3 лица — добавить в мой набор вернуться к моему \(0\)$/.test(t)) return fail(`новая вкладка: строка «${t}»`);
+        // этап 13 (решение 111): свой набор пуст — «всё небо», а не «вернуться к моему (0)»
+        if (!/^Набор по ссылке: 3 лица — добавить в мой набор всё небо$/.test(t)) return fail(`новая вкладка: строка «${t}»`);
         // небо показывает ровно набор ссылки: подписаны его лица
         const named = ((await q.locator('.sky canvas').first().getAttribute('data-label-ids')) ?? '').split(' ').filter(Boolean);
         if (named.length && named.some((id) => !['david', 'ovid', 'vooz'].includes(id))) return fail(`новая вкладка: на небе не только набор: ${named.join(' ')}`);

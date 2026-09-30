@@ -81,6 +81,60 @@
   width: var(--bar-cmds, 170px);
   height: 36px;
 }
+/* имя с уточнением и текущий раздел в полосе (решение 119; UI-07): видны, когда имя шапки ушло под полосу (data-name-gone
+   ставит Folio.tsx); две строки мелким кеглем — полоса не растёт. Пока имя шапки на виду — невидимы и не занимают строк */
+.folio-bar .bar-ctx {
+  flex: 1 1 0;
+  min-width: 0;
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+}
+.folio[data-name-gone] > .folio-bar .bar-ctx {
+  display: flex;
+}
+/* текущий раздел в полосе — строка со списком разделов (решение 119): мелким кеглем, поле нажатия — вся строка */
+.folio-bar .bc-sec .toc-cur {
+  min-height: 20px;
+  padding: 0;
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  color: var(--ink-2);
+}
+.folio-bar .bc-sec .toc-menu {
+  display: block;
+}
+.folio-bar .bc-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.folio-bar .bc-sec {
+  white-space: nowrap;
+}
+.folio-bar .bc-name {
+  font-family: var(--serif);
+  font-size: var(--t-note);
+  line-height: var(--t-ui-lh);
+  color: var(--ink);
+}
+.folio-bar .bc-name b {
+  font-weight: 600;
+}
+.folio-bar .bc-name .ds {
+  font-style: italic;
+  color: var(--ink-2);
+}
+.folio-bar .bc-sec {
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  color: var(--ink-2);
+}
+.folio-bar .bc-sec .n {
+  font-variant-numeric: lining-nums tabular-nums;
+  margin-right: 0.3em;
+}
 .folio-bar .bar-cmds {
   flex: none;
   display: flex;
@@ -164,6 +218,14 @@
 .folio .card-tab {
   display: flex;
   align-items: center;
+}
+/* подпись над вкладками (решение 119): строчными, как подпись, а не надзаголовок (ТЗ § 5.6) */
+.folio .card-tabs .tabs-cap {
+  padding: 2px 8px 0 26px;
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  color: var(--ink-2);
 }
 .folio .card-tab + .card-tab {
   box-shadow: inset 0 1px 0 var(--rule);
@@ -336,6 +398,12 @@
 .passport dd.fact {
   padding-right: max(40px, 2.5rem);
 }
+/* вторая строка значения паспорта (решение 97): «родилась в эпоху „Межзаветное время“», основание года, соправления —
+   тем же кеглем, светлее значения */
+.passport .pass-sub {
+  display: block;
+  color: var(--ink-2);
+}
 /* «Созвездие» паспорта — ссылка в лист «Показ» на этом созвездии (этап 11, § 5): как имя-ссылка в тексте, строчная */
 .passport .pass-link {
   display: inline;
@@ -375,7 +443,7 @@
 .lifebar {
   display: block;
   width: 100%;
-  height: 44px;
+  height: 48px;
   margin: 4px 0 0;
 }
 /* «Кратко» (F3): кто это — абзац в 2–3 строки под шапкой */
@@ -726,6 +794,13 @@ div.sec[data-to]::before {
 .folio .passport .mark {
   top: 2px;
 }
+/* под пояснением «расч.» — «О хронологии» и «Сменить модель» (решение 124): ссылки-команды своей строкой */
+.mark-cmds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 16px;
+  margin-top: 2px;
+}
 .mark-note {
   display: block;
   margin: 2px 0 4px;
@@ -751,8 +826,11 @@ div.sec[data-to]::before {
 /* ---------- ссылки в тексте (B4; VIS-02, VIS-28) ----------
    Строчные, без рамки: подчёркивание со смещением 3 px вместо border-bottom, поэтому шаг строк не прыгает.
    Кнопка в браузере остаётся строчно-блочной, поэтому у ссылки на стих — свой интерлиньяж 1: её поле не выходит за строку текста.
-   Черта у имени — структурной линией --rule: строки, где почти каждое слово — имя, не превращаются в линованную бумагу;
-   у ссылки на стих черты в покое нет — её отличает гарнитура (Jost 13, --ink-2), черта появляется при наведении и фокусе. */
+   Черта у имени — структурной линией --rule: строки, где почти каждое слово — имя, не превращаются в линованную бумагу.
+   Ссылка на стих узнаётся до наведения (этап 13, решение 121; UI-11): гарнитура (Jost 13, --ink-2) и точечная черта
+   в покое — признак не только цветом и в обеих темах; при наведении и фокусе черта сплошная. Три вида различимы: имя —
+   шрифт текста и сплошная черта --rule; стих — Jost и точечная черта; команда («ещё 43 события», «см. § 24») — Jost
+   и сплошная черта --rule-strong. */
 .person,
 .ref {
   display: inline;
@@ -772,7 +850,9 @@ div.sec[data-to]::before {
   line-height: 1;
   color: var(--ink-2);
   white-space: nowrap;
-  text-decoration-line: none;
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: var(--ink-2);
   font-variant-numeric: lining-nums;
 }
 .ref:hover,
@@ -927,6 +1007,43 @@ div.sec[data-to]::before {
   padding-left: 10px;
   margin: 6px 0;
 }
+/* подзаголовок записи — «Хронологическое напряжение», «Толкование», «Отождествление» (§ 13, § 24; решение 121, UI-14):
+   в длинном разделе — отдельной строкой над записью, с отступом сверху, гарнитурой подписей; в разделе из одной записи
+   (заголовок в строку) — в строку, бледнее. Точка остаётся в тексте: диктор и поиск читают «Толкование. …» фразой */
+.sec .lead {
+  color: var(--ink-3);
+}
+.sec.long .lead {
+  display: block;
+  margin: 10px 0 2px;
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  color: var(--ink-2);
+}
+/* § 13: подпись строки («Откуда годы», «Эпоха», «Среди родни», «Модель»; решение 100) — в строку перед первой записью,
+   гарнитурой подписей, как поле паспорта; подзаголовок напряжения за ней — в строку, полужирным (строку открывает подпись) */
+.sec .row-h {
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: 1;
+  color: var(--ink-2);
+  margin-right: 0.35em;
+}
+.sec.long .row-h + .lead {
+  display: inline;
+  margin: 0;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  font-weight: 600;
+  color: var(--ink);
+}
+.sec.long .tension > .lead,
+.sec.long .clamp > ul > li:first-child > .lead,
+.sec.long .clamp > :first-child > .lead {
+  margin-top: 0;
+}
 
 /* тело прежнего лица, пока грузится том нового (D11; IX-45): бледнее и «занято» для диктора */
 .folio-body.stale {
@@ -1071,6 +1188,168 @@ div.sec[data-to]::before {
   flex: none;
 }
 
+/* ---------- «Карточка на весь экран» (решение 123; UI-16; Folio.tsx, FullCmd) ----------
+   Широкий экран: лист ложится поверх неба, панели и полосы времени (под верхней строкой); сетка и небо не меняются.
+   Колонка текста — по центру, той же меры строки, что в колонке карточки (29em); вкладки и полоса — над ней. */
+@media (min-width: 721px) {
+  .app > .folio[data-full] {
+    position: fixed;
+    top: var(--top-h);
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 40;
+    width: auto;
+    max-width: none;
+    background: var(--sheet);
+    box-shadow: inset 0 1px 0 var(--rule);
+    /* поле слева — до колонки текста 520 px по центру; правое поле колонки считает правило .folio-inner (29em) */
+    --folio-pl: max(68px, calc(50vw - 260px));
+  }
+  .app > .folio[data-full] > .folio-bar {
+    padding-right: max(4px, calc(50vw - 320px));
+  }
+  /* рейка — у колонки текста, а не у края экрана */
+  .app > .folio[data-full] .rail {
+    margin-left: -56px;
+  }
+}
+
+/* ---------- оглавление «Разделы карточки» (решение 119; UI-09; src/ui/card/Contents.tsx) ----------
+   Под шапкой, до первого раздела: строка на часть — римская цифра и имя части, затем названия разделов. Разделы со
+   сведениями — команды (сплошная черта, как у имени), остальные — бледнее, без черты. */
+.card-toc {
+  margin: 14px 0 6px;
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  color: var(--ink-2);
+}
+.toc-h {
+  margin: 0 0 2px;
+  color: var(--ink-2);
+}
+.toc-parts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+/* строка части: номер части — своей колонкой, перенесённые названия встают под названием части, а не под номером */
+.toc-parts > li {
+  display: grid;
+  grid-template-columns: 2.2em minmax(0, 1fr);
+  margin: 0 0 2px;
+  list-style: none;
+}
+.toc-parts .pn {
+  color: var(--ink-3);
+  font-variant-numeric: lining-nums;
+}
+.toc-parts .pt {
+  font-style: italic;
+  color: var(--ink-2);
+}
+.toc-go {
+  display: inline;
+  padding: 0;
+  font: inherit;
+  color: var(--ink);
+  text-align: left;
+  text-decoration: underline 1px var(--rule-strong);
+  text-underline-offset: 3px;
+}
+.toc-go:hover {
+  text-decoration-color: var(--ink);
+}
+.toc-go[aria-current] {
+  font-weight: 600;
+}
+.toc-off {
+  color: var(--ink-3);
+}
+/* колонка карточки: строка «Разделы карточки ▾» под шапкой (решение 119) — на месте блока оглавления */
+.toc-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0 12px;
+  margin: 0 -8px;
+}
+.toc-line .toc-cur {
+  min-height: 28px;
+  color: var(--ink-2);
+}
+@media (pointer: coarse) {
+  .toc-line .toc-cur {
+    min-height: 44px;
+  }
+}
+/* телефон: строка «17 Жизнеописание ▾» слева от строки номеров; список — под ней, поверх текста листа */
+.rail-row {
+  position: relative;
+}
+.toc-menu {
+  position: relative;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+.toc-cur {
+  display: inline-flex;
+  align-items: center;
+  gap: 0 6px;
+  max-width: 100%;
+  min-height: 44px;
+  padding: 0 8px;
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.toc-cur .n {
+  font-variant-numeric: lining-nums tabular-nums;
+  color: var(--ink-2);
+}
+.toc-cur .tri {
+  flex: none;
+  font-size: var(--t-ui-s);
+  color: var(--ink-2);
+}
+.toc-drop {
+  position: absolute;
+  left: 0;
+  top: 100%;
+  z-index: 8;
+  width: min(360px, calc(100vw - 32px));
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 8px 12px;
+  background: var(--sheet);
+  border: 1px solid var(--rule-strong);
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+  color: var(--ink-2);
+}
+/* строки списка — с шагом под палец: поле ссылки 32 px без смены интерлиньяжа (как у .ref в phone.css) */
+.toc-drop .toc-parts > li {
+  margin: 0 0 10px;
+}
+.toc-drop .toc-go {
+  position: relative;
+}
+.toc-drop .toc-go::after {
+  content: '';
+  position: absolute;
+  left: -2px;
+  right: -2px;
+  top: 50%;
+  height: 32px;
+  transform: translateY(-50%);
+}
+
 /* ---------- сенсорный экран: цели помет и рейки не меньше 24 px (WCAG 2.5.8) ---------- */
 @media (pointer: coarse) {
   .folio .mark {
@@ -1135,6 +1414,35 @@ div.sec[data-to]::before {
   }
   .folio .rail::before {
     display: none;
+  }
+  /* строка раздела и номеров (решение 119): закреплена под ручкой листа; номера прокручиваются справа от названия */
+  .folio .rail-row {
+    position: sticky;
+    top: 22px;
+    z-index: 4;
+    display: flex;
+    align-items: stretch;
+    margin: 12px calc(-1 * var(--folio-pr)) 0 calc(-1 * var(--folio-pl));
+    padding: 0 0 0 calc(var(--folio-pl) - 16px);
+    background: var(--sheet);
+    border-bottom: 1px solid var(--rule);
+  }
+  /* в листе — под его шапкой, как прежде одна строка номеров (phone.css, .folio[data-stop] .rail) */
+  .folio[data-stop] .rail-row {
+    top: var(--bar-h);
+  }
+  .folio .rail-row .toc-menu {
+    flex: 0 0 auto;
+    max-width: 58%;
+    border-right: 1px solid var(--rule);
+  }
+  .folio .rail-row .rail {
+    position: static;
+    flex: 1 1 0;
+    min-width: 0;
+    margin: 0;
+    padding: 0 calc(var(--folio-pr) - 8px) 0 4px;
+    border-bottom: 0;
   }
   /* помета «расч.» паспорта — в строке за годами (MOB-52, WCAG 1.4.12), как на узком листе (@container folio выше) */
   .passport {
@@ -1507,4 +1815,11 @@ div.workpick.skymenu .wp-head {
 /* разделы карточки союза — без висячих номеров: у союза нет 24 разделов */
 .folio .union-body > .sec:first-child {
   margin-top: 12px;
+}
+
+/* знак лент у имени в перечнях карточки (решение 104: значимость — знаком, а не местом): те же точки, что в карточке
+   у звезды (.dc-lines, dotcard.css) — золотая у линии Иосифа, лазурная у линии по Луке */
+.folio .dc-lines.ln {
+  margin-left: 3px;
+  vertical-align: 0.1em;
 }

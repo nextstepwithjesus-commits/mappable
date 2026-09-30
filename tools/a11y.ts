@@ -26,7 +26,8 @@ const axeSource = readFileSync(join(ROOT, 'node_modules/axe-core/axe.min.js'), '
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 
 type View = { width: number; height: number; touch?: boolean };
-type Screen = { name: string; hash: string; act?: (p: Page) => Promise<void>; view?: View };
+/** ms — сколько ждать действия (по умолчанию 6 с): перебор плотных мест на телефоне дольше. */
+type Screen = { name: string; hash: string; act?: (p: Page) => Promise<void>; view?: View; ms?: number };
 const PHONE: View = { width: 390, height: 844, touch: true };
 const TABLET: View = { width: 768, height: 1024, touch: true };
 
@@ -154,15 +155,26 @@ const TOUCH: Screen[] = [
     await press(p, '.skyctl.column button', 'Вид');
     await press(p, '.sheet button', 'Эпохи и их основания');
   } },
-  { name: 'телефон: «Какое лицо?»', hash: '#/david', view: PHONE, act: async (p) => {
+  { name: 'телефон: «Какое лицо?»', hash: '#/david', view: PHONE, ms: 20_000, act: async (p) => {
     // касание в плотном месте открывает список «Какое лицо?» (H5): середина ближайшей пары звёзд на виду — место ищется
     // по данным раскладки (tools/accept/phone.ts, denseSpots), а не смещением от Давида
-    for (let k = 0; k < 3; k++) {
+    // окно неба успокоилось (перелёт к Давиду кончился): места считаются по окончательной раскладке
+    const settle = async () => {
+      let prev = '';
+      for (let i = 0; i < 20; i++) {
+        const v = (await p.evaluate(() => (document.querySelector('.sky') as HTMLElement | null)?.dataset.view ?? '')) as string;
+        if (v && v === prev) return;
+        prev = v;
+        await p.waitForTimeout(250);
+      }
+    };
+    for (let k = 0; k < 4; k++) {
+      await settle();
       const q = (await denseSpots(p))[k];
       if (!q) break;
       const box = (await p.locator('.sky canvas').boundingBox())!;
       await p.touchscreen.tap(box.x + q.x, box.y + q.y);
-      await p.waitForTimeout(400);
+      await p.waitForTimeout(600);
       if (await p.locator('.which').count()) return;
       await p.goto(p.url().replace(/#.*$/, '#/david'));
       await p.waitForTimeout(1200);
@@ -207,7 +219,8 @@ async function main() {
         let note = '';
         if (s.act) {
           // экран, который не удалось открыть, проверяется как есть — с пометой
-          await Promise.race([s.act(p), new Promise((_, no) => setTimeout(() => no(new Error('действие не выполнено за 6 с')), 6000))]).catch((e) => {
+          const ms = s.ms ?? 6000;
+          await Promise.race([s.act(p), new Promise((_, no) => setTimeout(() => no(new Error(`действие не выполнено за ${ms / 1000} с`)), ms))]).catch((e) => {
             note = ` (${(e as Error).message.split('\n')[0]})`;
           });
           await p.waitForTimeout(900);

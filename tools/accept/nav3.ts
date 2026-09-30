@@ -223,7 +223,7 @@ export const nav3: Scenario[] = [
       const note = p.locator('.sky .noticebar');
       if (!(await note.count())) return fail('нет строки-пояснения');
       const t1 = txt(await note.innerText());
-      if (!/^Ссылка открыта в режиме «набор», но ваш набор пуст: показаны все лица — скрыть$/.test(t1)) return fail(`строка: «${t1}»`);
+      if (!/^Ссылка открыта в показе «набор», но ваш набор пуст: показаны все лица — скрыть$/.test(t1)) return fail(`строка: «${t1}»`);
       if ((await p.locator('.sky > canvas').getAttribute('data-mode')) !== 'all') return fail('небо не показывает все лица');
       await go(p, '#/david~y-1014~w200~l-0.5~s1~mmt-long~k1~niessey.david', 100);
       await p.reload();
@@ -231,11 +231,12 @@ export const nav3: Scenario[] = [
       const bar = p.locator('.sky .linkbar');
       if (!(await bar.count())) return fail('ссылка со списком: нет строки «Набор по ссылке»');
       const t2 = txt(await bar.innerText());
-      if (!/вернуться к моему \(0\)$/.test(t2)) return fail(`строка: «${t2}»`);
+      // этап 13 (решение 111): свой набор пуст — не «вернуться к моему (0)», а «всё небо»
+      if (!/всё небо$/.test(t2) || /вернуться к моему/.test(t2)) return fail(`строка: «${t2}»`);
       if ((await storedWork(p)) !== '') return fail(`память изменена: ${await storedWork(p)}`);
-      await bar.getByRole('button', { name: 'вернуться к моему (0)' }).click();
+      await bar.getByRole('button', { name: 'всё небо' }).click();
       await p.waitForTimeout(900);
-      if ((await p.locator('.sky > canvas').getAttribute('data-mode')) !== 'all') return fail('«вернуться к моему (0)» оставило пустое небо');
+      if ((await p.locator('.sky > canvas').getAttribute('data-mode')) !== 'all') return fail('«всё небо» оставило пустое небо');
       return pass(`${t1}; ${t2}`);
     },
   },
@@ -361,7 +362,7 @@ export const nav3: Scenario[] = [
         for (let x = 120; x < 1300; x += 90) {
           await p.mouse.click(box.x + x, box.y + y, { button: 'right' });
           await p.waitForTimeout(120);
-          const cmd = menu.locator('button', { hasText: 'Свернуть созвездие' });
+          const cmd = menu.locator('button', { hasText: 'Скрыть созвездие' });
           if (await cmd.count()) {
             group = txt(await cmd.innerText());
             at = { x, y };
@@ -372,7 +373,7 @@ export const nav3: Scenario[] = [
       if (!at) return fail('названия созвездия с меню на этом окне не найдено');
       const before = await cam(p);
       // звёзды у места щелчка — не из свёрнутого: после свёртки строка щелчка на месте
-      await menu.locator('button', { hasText: 'Свернуть созвездие' }).click();
+      await menu.locator('button', { hasText: 'Скрыть созвездие' }).click();
       await p.waitForTimeout(900);
       const after = await cam(p);
       if (Math.abs(after.kx / before.kx - 1) > 1e-3 || Math.abs(after.x0 - before.x0) * after.kx > 1) return fail('свёртка сдвинула время');

@@ -130,7 +130,8 @@ describe('«Кратко» — примеры', () => {
   });
   test('Мария: без «дочери Илия» — это толкование; линия по Луке — по толкованию', () => {
     const t = briefs.get('mariya')!;
-    expect(t).toMatch(/^Дева из Назарета, обручённая Иосифу\. Мать Иисуса Христа\./);
+    // этап 13, решение 121: запись § 5, приведённая целиком, — со своими стихами; § 5 её не повторяет
+    expect(t).toMatch(/^Дева из Назарета, обручённая Иосифу \(Лк 1:26-27; Мф 1:18\)\. Мать Иисуса Христа\./);
     expect(t).not.toMatch(/Илия/);
     expect(t).toContain('по толкованию');
   });
@@ -140,10 +141,25 @@ describe('«Кратко» — примеры', () => {
     expect(t).toContain('законный отец Иисуса Христа');
     expect(t).not.toMatch(/(^|; )отец Иисуса/);
   });
+  test('решение 121: «Кратко» не повторяется дословно в § 5 — запись § 5, приведённая целиком, живёт в «Кратко» со стихами', async () => {
+    const { cardSections } = await import('./helpers/cards.ts');
+    const s5 = (await cardSections('mariya')).get(5) ?? '';
+    expect(s5).not.toMatch(/Дева из Назарета/);
+    expect(s5).toMatch(/Мать Иисуса/);
+    // у наложницы Халева в § 5 одна запись — она в «Кратко»; раздел не пустеет, а стоит «в шапке»
+    const { briefMovedStatus } = await import('../src/ui/card/Brief.tsx');
+    expect(briefMovedStatus('maakha-nalozhnitsa-khaleva', cards.get('maakha-nalozhnitsa-khaleva')!)).toBe('Наложница Халева');
+    const bad: string[] = [];
+    for (const p of persons) {
+      const moved = briefMovedStatus(p.id, cards.get(p.id) ?? null);
+      if (moved && !(briefs.get(p.id) ?? '').includes(moved.replace(/[.;]\s*$/, '').slice(1))) bad.push(p.id);
+    }
+    expect(bad.slice(0, 5)).toEqual([]);
+  });
   test('Руфь, Мааха, Мелхиседек, Закхур', () => {
     // первая фраза — из подзаголовка и § 5 (решение 22; CARD-65): «Моавитянка», а не общее «Праматерь»
     expect(briefs.get('ruf')).toBe('Моавитянка, вдова Махлона, затем жена Вооза; мать Овида.');
-    expect(briefs.get('maakha-nalozhnitsa-khaleva')).toBe('Наложница Халева. Мать Шевера, Фирханы, Шаафа и Шевы.');
+    expect(briefs.get('maakha-nalozhnitsa-khaleva')).toBe('Наложница Халева (1Пар 2:48). Мать Шевера, Фирханы, Шаафа и Шевы.');
     expect(briefs.get('melkhisedek')).toMatch(/^Царь Салимский, священник Бога Всевышнего\. Вынес хлеб и вино Авраму/);
     expect(briefs.get('zakkhur-syn-imriya')).toBe('Сын Имрия. Строил стену подле Иерихонцев (Неем 3:2).');
   });

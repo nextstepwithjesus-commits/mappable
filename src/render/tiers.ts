@@ -25,17 +25,33 @@ import { alpha, hexToRgb } from './color.ts';
 import { hits } from './rect.ts';
 import { contrast } from '../ui/contrast.ts';
 import { byId, graph, loadCard, loadedCard, persons, type ChronoRow, type ModelData } from '../data/atlas.ts';
-import { toAstro } from '../engine/years.ts';
+import { dateText, toAstro } from '../engine/years.ts';
 import type { WhenSpan } from '../engine/chronology.ts';
-import { nameCase } from '../ui/text/ru.ts';
+import { nameCase, realmGenitive } from '../ui/text/ru.ts';
 import { mapFont, mapSize, T_MAP_S, T_UI, T_UI_S } from './type.ts';
 
-export type TierKey = 'epochs' | 'judges' | 'judah' | 'israel' | 'prophets' | 'events';
+export type TierKey = 'epochs' | 'judges' | 'united' | 'judah' | 'israel' | 'prophets' | 'events';
+
+/**
+ * Имена ярусов царей — те же, что у групп «Сквозного раздела» и созвездий (этап 13, решение 110; src/ui/panels/Section.tsx,
+ * KING_SETS): «Цари единого царства» — Саул, Иевосфей, Давид, Соломон; «Цари Иудеи» — от Ровоама; «Цари Израиля
+ * (северного)».
+ */
+export const TIER_NAMES: Record<TierKey, string> = {
+  epochs: 'Эпохи',
+  judges: 'Судьи',
+  united: 'Цари единого царства',
+  judah: 'Цари Иудеи',
+  israel: 'Цари Израиля (северного)',
+  prophets: 'Пророки',
+  events: 'События',
+};
 
 export interface TierBar {
   /** ключ отрезка: уникален среди всех ярусов */
   key: string;
-  kind: 'epoch' | 'person' | 'event';
+  /** sync — штрих синхронизма, чей год лежит вне отрезка своего царя (решение 103): подсказка, щелчок — годы */
+  kind: 'epoch' | 'person' | 'event' | 'sync';
   /** лицо, эпоха или событие */
   id: string;
   label: string;
@@ -54,6 +70,10 @@ export interface TierBar {
   refs?: string[];
   /** годы совместного правления с другим царём того же яруса (штриховка) */
   shared: [number, number][];
+  /** с кем совместно — id лица для каждого промежутка shared (тот же порядок) */
+  sharedWith?: string[];
+  /** начало единоличного царствования (астр.; reign.sole, решение 103): от t0 до sole — вместе с отцом */
+  sole?: number;
   /** «время не установлено» (MAP-48; решение 24): скобка без заливки — годы эпохи или деятельности, а не служения */
   bracket?: boolean;
   /** строка подсказки вместо «Годы служения: …» — откуда взяты годы пророка без годов служения в данных */
@@ -76,6 +96,12 @@ export interface TierSync {
   /** год синхронизма (астр.): начало правления X плюс N − 1 лет («N-й год» — прошёл N − 1 год) */
   t: number;
   refs: string[];
+  /**
+   * Год синхронизма лежит в отрезке своего царя Y (решение 103): вертикаль между отрезками. Иначе — штрих у начала
+   * отрезка Y с подсказкой note: «4 Цар 18:1: в 3-й год Осии (730 г. до Р. Х.); принятое начало — 715 г. до Р. Х.».
+   */
+  inside: boolean;
+  note?: string;
 }
 
 // ---------- ярусы из данных ----------
@@ -92,14 +118,17 @@ export function packRows<T extends { t0: number; t1: number; row: number }>(bars
   return bars;
 }
 
-/** Годы, в которые у отрезка есть соправитель в том же ярусе. */
+/** Годы, в которые у отрезка есть соправитель в том же ярусе, и кто он. */
 function markShared(bars: TierBar[]) {
   for (const a of bars)
     for (const b of bars) {
       if (a === b) continue;
       const lo = Math.max(a.t0, b.t0);
       const hi = Math.min(a.t1, b.t1);
-      if (hi - lo >= 0.5) a.shared.push([lo, hi]);
+      if (hi - lo >= 0.5) {
+        a.shared.push([lo, hi]);
+        (a.sharedWith ??= []).push(b.id);
+      }
     }
 }
 
@@ -233,6 +262,19 @@ function askCards(m: ModelData) {
   }
 }
 
+/**
+ * Подсказка синхронизма вне отрезка царя: «4 Цар 18:1: в 3-й год Осии — 730 г. до Р. Х.; принятое начало — 715 г. до Р. Х.,
+ * см. § 24». Имя X — в родительном падеже, если склоняется, иначе — «в 3-й год царствования: Осия».
+ */
+function syncNote(s: { with: string; year: number; refs: string[]; note?: string }, xId: string, t: number, start: number): string {
+  const x = byId.get(xId);
+  const g = x ? nameCase(x.name, x.sex, 'gen') : null;
+  // ссылка — как refLabel карточки: «4Цар 18:1» → «4 Цар 18:1»
+  const ref = s.refs[0] ? `${s.refs[0].replace(/^([1-4])(\S)/, '$1 $2')}: ` : '';
+  const year = g ? `в ${s.year}-й год ${g}` : `в ${s.year}-й год царствования ${x?.name ?? ''}`;
+  return `${ref}${year} — ${dateText({ t })}; принятое начало — ${dateText({ t: start })}, см. § 24`;
+}
+
 let cache: { model: string; cards: string; tiers: Tier[]; syncs: TierSync[] } | null = null;
 
 function build(m: ModelData) {
@@ -243,6 +285,7 @@ function build(m: ModelData) {
     bar({ key: `ep:${e.id}`, kind: 'epoch', id: e.id, label: e.name, t0: toAstro(e.start), t1: toAstro(e.end), soft: e.id === 'judges' || e.id === 'conquest' }),
   );
   const judges: TierBar[] = [];
+  const united: TierBar[] = [];
   const judah: TierBar[] = [];
   const israel: TierBar[] = [];
   const prophets: TierBar[] = [];
@@ -250,10 +293,13 @@ function build(m: ModelData) {
     p.reign.forEach((r, k) => {
       const b = bar({
         key: `r:${p.id}:${k}`, kind: 'person', id: p.id, label: p.name, t0: toAstro(r.start), t1: Math.max(toAstro(r.end), toAstro(r.start) + 0.6), soft: false,
-        over: r.over, years: r.years, reign: k,
+        over: r.over, years: r.years, reign: k, ...(r.sole !== undefined && r.sole !== r.start ? { sole: toAstro(r.sole) } : {}),
       });
-      if (/Иуд/.test(r.over)) judah.push(b);
-      else if (/Израил/.test(r.over) && !p.roles.includes('judge')) israel.push(b);
+      // группы царей — как в «Сквозном разделе» (решение 110): единое царство — Саул, Иевосфей, Давид (и в Хевроне),
+      // Соломон; Иудея — от Ровоама; Израиль — созвездие северных царей. Авимелех («Сихем и Израиль») — ни в одной
+      if (r.over === 'Иудея') judah.push(b);
+      else if ((/^(весь )?Израиль$/.test(r.over) || r.over === 'Иудея (в Хевроне)') && p.group !== 'israel-kings') united.push(b);
+      else if (/Израил/.test(r.over) && p.group === 'israel-kings' && !p.roles.includes('judge')) israel.push(b);
     });
     if (p.roles.includes('judge') && p.active)
       judges.push(bar({ key: `j:${p.id}`, kind: 'person', id: p.id, label: p.name, t0: toAstro(p.active[0]), t1: Math.max(toAstro(p.active[1]), toAstro(p.active[0]) + 0.6), soft: true }));
@@ -269,16 +315,30 @@ function build(m: ModelData) {
       bar({ key: `ev:${e.id}:${i}`, kind: 'event', id: `${e.id}-${i}`, label: ev.text, t0: toAstro(ev.year), t1: toAstro(ev.year), soft: false, refs: ev.refs, lead: ev.year === e.start || ev.year === e.end }),
     ),
   );
-  for (const b of [...judah, ...israel]) b.shared = [];
+  for (const b of [...united, ...judah, ...israel]) {
+    b.shared = [];
+    delete b.sharedWith;
+  }
+  markShared(united);
   markShared(judah);
   markShared(israel);
+  // начало единоличного царствования (reign.sole, решение 103): от начала до него — вместе с отцом, даже если отрезка отца
+  // в ярусе нет на эти годы
+  for (const b of [...united, ...judah, ...israel]) {
+    if (b.sole === undefined || b.sole - b.t0 < 0.5) continue;
+    if (b.shared.some(([lo, hi]) => lo <= b.t0 + 0.5 && hi >= b.sole! - 0.5)) continue;
+    const father = (graph.parentsOf.get(b.id) ?? []).find((e) => e.kind === 'father')?.parent;
+    b.shared.push([b.t0, b.sole]);
+    (b.sharedWith ??= []).push(father ?? '');
+  }
   const tiers: Tier[] = [
-    { key: 'epochs', name: 'Эпохи', bars: ep },
-    { key: 'judges', name: 'Судьи', bars: packRows(judges) },
-    { key: 'judah', name: 'Цари Иудеи', bars: packRows(judah) },
-    { key: 'israel', name: 'Цари Израиля', bars: packRows(israel) },
-    { key: 'prophets', name: 'Пророки', bars: packRows(prophets) },
-    { key: 'events', name: 'События', bars: events },
+    { key: 'epochs', name: TIER_NAMES.epochs, bars: ep },
+    { key: 'judges', name: TIER_NAMES.judges, bars: packRows(judges) },
+    { key: 'united', name: TIER_NAMES.united, bars: packRows(united) },
+    { key: 'judah', name: TIER_NAMES.judah, bars: packRows(judah) },
+    { key: 'israel', name: TIER_NAMES.israel, bars: packRows(israel) },
+    { key: 'prophets', name: TIER_NAMES.prophets, bars: packRows(prophets) },
+    { key: 'events', name: TIER_NAMES.events, bars: events },
   ];
   // синхронизмы: отрезок Y — в ярусе своего царства, отрезок X — в другом (MAP-47)
   const syncs: TierSync[] = [];
@@ -294,7 +354,12 @@ function build(m: ModelData) {
         // правление X, в котором лежит его N-й год; если таких нет — ближайшее
         const at = (b: TierBar) => b.t0 + s.year - 1;
         const to = xs.find((b) => at(b) >= b.t0 && at(b) <= b.t1 + 0.5) ?? xs.sort((a, b) => Math.abs(at(a) - from.t0) - Math.abs(at(b) - from.t0))[0];
-        syncs.push({ from: from.key, to: to.key, t: at(to), refs: s.refs });
+        const t = at(to);
+        // вертикаль — только внутри отрезка своего царя (решение 103; X1 Б2): год синхронизма вне его отрезка — штрих
+        // у начала отрезка и подсказка с годом текста и принятым началом
+        // расхождение на год — обычный счёт лет царствования (год воцарения или первый полный год): вертикаль
+        const inside = t >= from.t0 - 1.01 && t <= from.t1 + 0.5;
+        syncs.push({ from: from.key, to: to.key, t, refs: s.refs, inside, ...(inside ? {} : { note: syncNote(s, to.id, t, from.sole ?? from.t0) }) });
       }
     });
   cache = { model: m.id, cards, tiers, syncs };
@@ -329,26 +394,75 @@ function relatives(id: string): Set<string> {
   return out;
 }
 
-/** Формула столбца: слева — рождение, справа — смерть. null — надёжно датированной родни нет. */
+/** Формула столбца: слева — рождение, справа — смерть. null — опоры нет. */
 export interface ColumnFormula {
   birth: string | null;
   death: string | null;
+  /** опоры формулы — лица, названные в ней (для проверок: одни родители и дети опорой не бывают) */
+  anchors?: string[];
 }
 
 /**
- * Формула относительной хронологии для краёв столбца выбранного лица (ТЗ § 3.5, § 3.6; MAP-48): «Моисей родился после
- * рождения Аарона и до рождения Гирсама»; «умер после смерти Аарона, при жизни …». Опоры — ближайшая родня с годами по
- * числам текста (точные и расчётные даты), без пар, о которых говорит хронологическое напряжение. Если такая опора
- * есть только с одной стороны, другую даёт само родство: рождение — после рождения отца или матери и до рождения ребёнка
- * (ближайших по году; год ребёнка может быть и оценочным — порядок задаёт родство, а не оценка). Имя родни — только в родительном
- * падеже, который умеет строить склонение (nameCase); не склоняется — опора не берётся. У лица с оценочной датой
- * сравнивается весь промежуток: «после» — только если родня родилась раньше его начала.
+ * Царствования — опоры формулы (этап 13, решение 100): годы по числам текста и реконструкции Тиле — Янга. Порядок —
+ * приоритет земли: Иудея, единое царство, северный Израиль, Вавилон.
+ */
+interface ReignRef {
+  id: string;
+  over: string;
+  t0: number;
+  t1: number;
+  rank: number;
+}
+let reignsCache: ReignRef[] | null = null;
+function reigns(): ReignRef[] {
+  if (!reignsCache) {
+    const rank = (over: string, group: string) =>
+      over === 'Иудея' ? 0 : /^(весь )?Израиль$|^Иудея \(в Хевроне\)$/.test(over) && group !== 'israel-kings' ? 1 : /Израил/.test(over) && group === 'israel-kings' ? 2 : over === 'Вавилон' ? 3 : -1;
+    reignsCache = persons
+      .flatMap((p) => p.reign.map((r) => ({ id: p.id, over: r.over, t0: toAstro(r.start), t1: toAstro(r.end), rank: rank(r.over, p.group) })))
+      .filter((r) => r.rank >= 0)
+      .sort((a, b) => a.rank - b.rank || a.t0 - b.t0);
+  }
+  return reignsCache;
+}
+/**
+ * Правитель, в чьё царствование целиком лёг промежуток [a, b] (астр.): «в царствование Иоаса, царя Иудеи». Сначала земля
+ * своего царствования лица (если он сам царь), затем Иудея, единое царство, Израиль. Себя и соправителей своего
+ * царствования опорой не берёт. null — такого царствования нет или имя не склоняется.
+ */
+function reignAnchor(id: string, a: number, b: number): string | null {
+  const own = reigns().filter((r) => r.id === id);
+  const ownRank = own.length ? Math.min(...own.map((r) => r.rank)) : -1;
+  const cands = reigns()
+    .filter((r) => r.id !== id && r.t0 <= a && b <= r.t1 + 0.5)
+    // соправитель: его царствование перекрывает своё царствование лица — не опора
+    .filter((r) => !own.some((o) => r.t0 < o.t1 && o.t0 < r.t1))
+    .sort((x, y) => (x.rank === ownRank ? -1 : 0) - (y.rank === ownRank ? -1 : 0) || x.rank - y.rank || x.t0 - y.t0);
+  for (const r of cands) {
+    const q = byId.get(r.id);
+    if (!q || q.unnamed) continue;
+    const g = nameCase(q.name, q.sex, 'gen');
+    const realm = realmGenitive(r.over);
+    if (g && realm) return `в царствование ${g}, ${q.sex === 'f' ? 'царицы' : 'царя'} ${realm}`;
+  }
+  return null;
+}
+
+/**
+ * Формула относительной хронологии для краёв столбца выбранного лица (ТЗ § 3.5, § 3.6; MAP-48; этап 13, решение 100):
+ * «Моисей родился после рождения Аарона и до рождения Гирсама»; «Озия родился в царствование Иоаса, царя Иудеи».
+ * Формула опирается на лицо, чей год вычислен по числам текста (точные и расчётные даты), — брата, сестру, супруга или
+ * правителя. Одни родители и дети опорой не бывают: «Адам родился до рождения Сифа», «Мария родилась до рождения Иисуса
+ * Христа» — это сказано самим родством, а не временем; такой формулы нет (X2 Д4 п. 3). Родитель или ребёнок только
+ * дополняют формулу до двусторонней. Если родни-опоры нет — правитель, в чьё царствование целиком лёг промежуток
+ * рождения (смерти). Без пар, о которых говорит хронологическое напряжение. Имя — только в родительном падеже, который
+ * умеет строить склонение (nameCase); не склоняется — опора не берётся. У лица с оценочной датой сравнивается весь
+ * промежуток: «после» — только если родня родилась раньше его начала.
  */
 export function columnFormula(id: string, m: Pick<ModelData, 'chrono' | 'tensions'>): ColumnFormula {
   const p = byId.get(id);
   const me = m.chrono.get(id);
   if (!p || !me || p.kind !== 'person' || me.cls === 'epochal' || me.named) return { birth: null, death: null };
-  const tense = new Set(m.tensions.filter((t) => t.persons.includes(id)).flatMap((t) => t.persons));
   const sure = (c: ChronoRow) => c.cls === 'exact' || c.cls === 'calculated';
   // у точных и расчётных дат — год, у оценочных — промежуток
   const bSpan = (c: ChronoRow): [number, number] => (sure(c) ? [c.b, c.b] : [c.bLo, c.bHi]);
@@ -357,8 +471,27 @@ export function columnFormula(id: string, m: Pick<ModelData, 'chrono' | 'tension
     const q = byId.get(x);
     return q && !q.unnamed ? nameCase(q.name, q.sex, 'gen') : null;
   };
-  const rel = [...relatives(id)]
-    .filter((x) => !tense.has(x))
+  // родители и дети: порядок их рождения задан самим родством — одни они формулу не образуют
+  const parents = new Set((graph.parentsOf.get(id) ?? []).filter(plain).map((e) => e.parent));
+  const kids = new Set((graph.childrenOf.get(id) ?? []).filter(plain).map((e) => e.child));
+  const trivial = (x: string) => parents.has(x) || kids.has(x);
+  // связи, о которых говорит хронологическое напряжение, опорой не бывают: пара из двух лиц («Вооз — Руфь») и звенья
+  // поколений цепочки (одна запись на трудность — «430 лет в Египте»: Левий — Кааф — Амрам — Моисей). Брат из той же
+  // цепочки — опора: порядок Аарона и Моисея сказан текстом (Исх 7:7)
+  const tense = new Set(
+    m.tensions
+      .filter((t) => t.persons.includes(id))
+      .flatMap((t) => (t.persons.length <= 2 ? t.persons : t.persons.filter((x) => trivial(x)))),
+  );
+  // тёзки среди родни (Седекия — брат Иоакима и Седекия — его сын, 1 Пар 3:15–16): имя без уточнения было бы двусмысленным
+  // (решение 106) — такие опорой не берутся
+  const family = [...relatives(id)];
+  const same = (x: string) => {
+    const n = byId.get(x)?.name;
+    return family.filter((y) => byId.get(y)?.name === n).length > 1;
+  };
+  const rel = family
+    .filter((x) => !tense.has(x) && !same(x))
     .map((x) => ({ id: x, c: m.chrono.get(x), g: gen(x) }))
     .filter((r): r is { id: string; c: ChronoRow; g: string } => !!r.c && sure(r.c) && !r.c.named && byId.get(r.id)?.kind === 'person' && r.g !== null);
   const [b0, b1] = bSpan(me);
@@ -367,7 +500,7 @@ export function columnFormula(id: string, m: Pick<ModelData, 'chrono' | 'tension
     edges
       .filter(plain)
       .map((e) => e[who])
-      .filter((x) => !tense.has(x) && byId.get(x)?.kind === 'person')
+      .filter((x) => !tense.has(x) && !same(x) && byId.get(x)?.kind === 'person')
       .map((x) => ({ id: x, c: m.chrono.get(x), g: gen(x) }))
       .filter((r): r is { id: string; c: ChronoRow; g: string } => !!r.c && r.c.cls !== 'epochal' && !r.c.named && r.g !== null);
   const sureBefore = rel.filter((r) => r.c.b < b0).sort((a, b) => b.c.b - a.c.b)[0];
@@ -378,19 +511,35 @@ export function columnFormula(id: string, m: Pick<ModelData, 'chrono' | 'tension
   const after = sureAfter ?? (sureBefore ? kin(graph.childrenOf.get(id) ?? [], 'child').filter((r) => r.c.b > me.b).sort((a, b) => a.c.b - b.c.b)[0] : undefined);
   const f = p.sex === 'f';
   const born = f ? 'родилась' : 'родился';
-  const birth =
-    before || after
-      ? `${p.name} ${born} ${before ? `после рождения ${before.g}` : ''}${before && after ? ' и ' : ''}${after ? `до рождения ${after.g}` : ''}`
-      : null;
+  const anchoredB = (before && !trivial(before.id)) || (after && !trivial(after.id));
+  let birth: string | null = null;
+  const anchors: string[] = [];
+  if (anchoredB) {
+    birth = `${p.name} ${born} ${before ? `после рождения ${before.g}` : ''}${before && after ? ' и ' : ''}${after ? `до рождения ${after.g}` : ''}`;
+    anchors.push(...[before?.id, after?.id].filter((x): x is string => !!x));
+  }
+  else {
+    const r = reignAnchor(id, b0, b1);
+    if (r) birth = `${p.name} ${born} ${r}`;
+  }
   let death: string | null = null;
   const md = dSpan(me);
   if (md) {
     const died = rel.filter((r) => r.c.d !== null && r.c.d < md[0]).sort((a, b) => b.c.d! - a.c.d!)[0];
     const alive = rel.filter((r) => r.c.b < md[0] && r.c.d !== null && r.c.d > md[1]).sort((a, b) => a.c.d! - b.c.d!)[0];
-    if (died || alive)
-      death = `${f ? 'умерла' : 'умер'} ${died ? `после смерти ${died.g}` : ''}${died && alive ? ', ' : ''}${alive ? `при жизни ${alive.g}` : ''}`;
+    const anchoredD = (died && !trivial(died.id)) || (alive && !trivial(alive.id));
+    const dies = f ? 'умерла' : 'умер';
+    if (anchoredD) {
+      death = `${dies} ${died ? `после смерти ${died.g}` : ''}${died && alive ? ', ' : ''}${alive ? `при жизни ${alive.g}` : ''}`;
+      anchors.push(...[died?.id, alive?.id].filter((x): x is string => !!x));
+    }
+    else if (!p.reign.some((r) => toAstro(r.end) >= md[0] - 1)) {
+      // царь, умерший на престоле, опоры не получает: его отрезок в ярусе и есть время смерти
+      const r = reignAnchor(id, md[0], md[1]);
+      if (r) death = `${dies} ${r}`;
+    }
   }
-  return { birth, death };
+  return { birth, death, ...(anchors.length ? { anchors: [...new Set(anchors)] } : {}) };
 }
 
 // ---------- столбец жизни выбранного лица (ТЗ § 3.5; VIS-64, MAP-48; решение 53) ----------
@@ -476,6 +625,14 @@ export interface TierPlan {
   maxH: number;
   /** какие тома карточек с годами пророков были загружены (cardsKey): иной ключ — раскладка устарела */
   cards?: string;
+  /** Ярусы свёрнуты в заголовок (низкое окно, решение 123): сколько ярусов не показано. */
+  header?: number;
+  /**
+   * Мелкие строки (обзор) на узком небе и сенсорном экране: длинные названия ярусов — тоже в две строки (ярус не ниже
+   * TWO_LINE_H), иначе название легло бы на отрезки половины неба. На широком небе в мелких строках название — одной
+   * строкой на подложке поверх начала отрезков; в обычных строках — всегда в две строки. Колонка названий — NAME_COL.
+   */
+  wrap?: boolean;
 }
 
 const visibleIn = (b: TierBar, t0: number, t1: number) => b.t1 >= t0 && b.t0 <= t1;
@@ -498,7 +655,7 @@ interface Squeeze {
 /** Под отрезками строк, не вошедших в ярус, — полоса 4 px с тонкими чертами. */
 const CAPPED_H = 4;
 
-function layoutTiers(tiers: Tier[], t0: number, t1: number, model: string, top: number, q: Squeeze): TierPlan {
+function layoutTiers(tiers: Tier[], t0: number, t1: number, model: string, top: number, q: Squeeze, wrap = false): TierPlan {
   const vis = new Map(tiers.map((t) => [t.key, t.bars.filter((b) => visibleIn(b, t0, t1))]));
   const dropped = new Set(
     tiers
@@ -523,11 +680,11 @@ function layoutTiers(tiers: Tier[], t0: number, t1: number, model: string, top: 
         ? q.eventsCompact
           ? COLLAPSED_H
           : EVENTS_H
-        : Math.max(pitch === PITCH ? 0 : COLLAPSED_H, rows.length * pitch + (capped ? CAPPED_H : 0));
+        : Math.max(TWO_LINE.has(tier.key) && (pitch === PITCH || wrap) ? (pitch === PITCH ? 2 * PITCH : TWO_LINE_H) : pitch === PITCH ? 0 : COLLAPSED_H, rows.length * pitch + (capped ? CAPPED_H : 0));
     blocks.push({ tier, y, h, rows, collapsed, pitch });
     y += h + q.gap;
   }
-  return { model, t0, t1, blocks, bottom: y - q.gap + PAD, maxH: Infinity };
+  return { model, t0, t1, blocks, bottom: y - q.gap + PAD, maxH: Infinity, wrap };
 }
 
 /**
@@ -537,7 +694,7 @@ function layoutTiers(tiers: Tier[], t0: number, t1: number, model: string, top: 
  * по шагам, пока не поместятся: без пустых ярусов; не больше двух строк, затем одной; события одной строкой; мелкие
  * строки; без зазоров; в последнюю очередь уходят ярусы, у которых в окне меньше всего отрезков.
  */
-export function planTiers(tiers: Tier[], t0: number, t1: number, model = '', top = TIER_TOP, compact = false, maxH = Infinity): TierPlan {
+export function planTiers(tiers: Tier[], t0: number, t1: number, model = '', top = TIER_TOP, compact = false, maxH = Infinity, wrap = false): TierPlan {
   const base = { compact, eventsCompact: compact, dropEmpty: false, cap: Infinity, gap: TIER_GAP, drop: 0 };
   const steps: Squeeze[] = [
     base,
@@ -550,8 +707,8 @@ export function planTiers(tiers: Tier[], t0: number, t1: number, model = '', top
     { compact: true, eventsCompact: true, dropEmpty: true, cap: 1, gap: 0, drop: 0 },
   ];
   for (let k = 1; k < tiers.length; k++) steps.push({ compact: true, eventsCompact: true, dropEmpty: true, cap: 1, gap: 0, drop: k });
-  let p = layoutTiers(tiers, t0, t1, model, top, steps[0]);
-  for (let i = 1; i < steps.length && p.bottom - FRAME_H > maxH; i++) p = layoutTiers(tiers, t0, t1, model, top, steps[i]);
+  let p = layoutTiers(tiers, t0, t1, model, top, steps[0], wrap);
+  for (let i = 1; i < steps.length && p.bottom - FRAME_H > maxH; i++) p = layoutTiers(tiers, t0, t1, model, top, steps[i], wrap);
   p.maxH = maxH;
   return p;
 }
@@ -560,6 +717,15 @@ export function planTiers(tiers: Tier[], t0: number, t1: number, model = '', top
 export const TIERS_SHARE = 0.35;
 /** Ниже такой высоты видимого неба (лист карточки поднят) ярусы — в самом сжатом виде, чтобы небу осталось место. */
 const ROOM_MIN = 160;
+/** Названия ярусов — в две строки: на узком небе и на сенсорном экране колонка названий остаётся узкой. */
+const wrapNames = (sky: Sky) => sky.coarse || sky.cam.w < 720;
+/**
+ * Низкое окно (альбомный телефон, масштаб 200 %): ярусы эпох свёрнуты в заголовок — одну строку эпох с подписью
+ * «ярусы свёрнуты: окно низкое» (этап 13, решение 123). Небу остаётся место.
+ */
+export const LOW_SKY = 420;
+export const lowSky = (h: number) => h > 0 && h < LOW_SKY;
+
 /** Сколько px ярусам можно занять при видимом небе от рамки до bottom (px холста). */
 export function tiersBudget(bottom: number): number {
   const room = bottom - FRAME_H;
@@ -584,7 +750,10 @@ function windowOf(sky: Sky): [number, number] {
 export function replanTiers(sky: Sky, m: ModelData): boolean {
   const [a, b] = windowOf(sky);
   const vp = sky.cam.vp;
-  const next = planTiers(buildTiers(m), a, b, m.id, TIER_TOP, compactAt(((vp.r - vp.l) * 1.2) / Math.max(1, b - a)), tiersBudget(vp.b));
+  const low = lowSky(sky.cam.h);
+  const all = buildTiers(m);
+  const next = planTiers(low ? all.filter((t) => t.key === 'epochs') : all, a, b, m.id, TIER_TOP, compactAt(((vp.r - vp.l) * 1.2) / Math.max(1, b - a)), low ? Infinity : tiersBudget(vp.b), wrapNames(sky));
+  if (low) next.header = all.length - 1;
   next.cards = cardsKey(m);
   askCards(m);
   const was = plan?.bottom;
@@ -728,6 +897,29 @@ export function placeEvents(evs: readonly EventMark[], rows: number, left: numbe
 // ---------- отрисовка ----------
 
 /** Штриховка 45° в прямоугольнике: совместные правления (MAP-47, VIS-26). */
+/**
+ * Заливка оценочного отрезка с растушёванными краями (решение 90 в ярусах; X2 § 2.8): у видимого края тон тает к нулю
+ * на 12 px (не больше четверти отрезка). l, r — край отрезка в окне (иначе он за краем, и там заливка ровная).
+ */
+function featherFill(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, color: string, l: boolean, r: boolean) {
+  if (w <= 0) return;
+  const f = Math.min(12, w / 4);
+  const g = ctx.createLinearGradient(x, 0, x + w, 0);
+  g.addColorStop(0, alpha(color, l ? 0 : 1));
+  g.addColorStop(Math.min(0.5, f / w), alpha(color, 1));
+  g.addColorStop(Math.max(0.5, 1 - f / w), alpha(color, 1));
+  g.addColorStop(1, alpha(color, r ? 0 : 1));
+  ctx.fillStyle = g;
+  ctx.fillRect(x, y, w, h);
+}
+
+/** Слово штриховки: соправитель — отец или сын, иначе — «одновременно» (соперники Менаим и Факей). */
+export function hatchWord(id: string, other: string | undefined): string {
+  if (other && (graph.parentsOf.get(id) ?? []).some((e) => e.parent === other && e.kind === 'father')) return 'вместе с отцом';
+  if (other && (graph.parentsOf.get(other) ?? []).some((e) => e.parent === id && e.kind === 'father')) return 'вместе с сыном';
+  return 'одновременно';
+}
+
 function hatch(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, color: string) {
   if (w <= 0) return;
   ctx.save();
@@ -792,10 +984,36 @@ function columnGradient(ctx: CanvasRenderingContext2D, ink: string, k: number, c
   return g;
 }
 
-/** Ширина колонки названий: 88 px, а на сенсорном экране — не уже самого длинного названия с полями. */
-function nameColumn(ctx: CanvasRenderingContext2D, tiers: readonly Tier[], font: string): number {
+/**
+ * Название яруса строками колонки: длинное («Цари Израиля (северного)», «Цари единого царства») — в две строки по словам
+ * (этап 13, решение 110: имена групп царей те же, что в «Сквозном разделе»).
+ */
+export function nameLines(ctx: CanvasRenderingContext2D, name: string, width: number): string[] {
+  if (ctx.measureText(name).width <= width) return [name];
+  const words = name.split(' ');
+  let best: string[] = [name];
+  let bestW = Infinity;
+  for (let k = 1; k < words.length; k++) {
+    const l = [words.slice(0, k).join(' '), words.slice(k).join(' ')];
+    const w = Math.max(...l.map((t) => ctx.measureText(t).width));
+    if (w < bestW) {
+      bestW = w;
+      best = l;
+    }
+  }
+  return best;
+}
+/**
+ * Ярусы, чьё название в колонке — в две строки: у них не меньше двух строк высоты (layoutTiers), в мелких строках —
+ * TWO_LINE_H: название не ложится на отрезки.
+ */
+export const TWO_LINE: ReadonlySet<TierKey> = new Set(['united', 'israel']);
+export const TWO_LINE_H = 26;
+/** Ширина колонки названий: 88 px, а на сенсорном экране — не уже самой длинной строки названия с полями. */
+function nameColumn(ctx: CanvasRenderingContext2D, tiers: readonly Tier[], font: string, wrap: boolean): number {
   ctx.font = font;
-  return Math.max(NAME_COL, Math.ceil(Math.max(...tiers.map((t) => ctx.measureText(t.name).width)) + 9));
+  const lines = tiers.flatMap((t) => (wrap ? nameLines(ctx, t.name, NAME_COL - 9) : [t.name]));
+  return Math.max(NAME_COL, Math.ceil(Math.max(...lines.map((l) => ctx.measureText(l).width)) + 9));
 }
 
 export function drawTiers(sky: Sky, s: SkyState) {
@@ -810,8 +1028,8 @@ export function drawTiers(sky: Sky, s: SkyState) {
   }
   // видимое небо стало выше или ниже (лист карточки на телефоне сменил положение): доля ярусов — заново,
   // и небо под ними сдвигается вместе с их нижним краем
-  const budgetNow = tiersBudget(cam.vp.b);
-  if (plan && plan.model === s.model.id && Math.abs(plan.maxH - budgetNow) > 4) {
+  const budgetNow = lowSky(cam.h) ? Infinity : tiersBudget(cam.vp.b);
+  if (plan && plan.model === s.model.id && (lowSky(cam.h) !== !!plan.header || (!plan.header && Math.abs(plan.maxH - budgetNow) > 4))) {
     replanTiers(sky, s.model);
     if (plan!.bottom !== cam.vp.t) sky.setInsets({ top: plan!.bottom });
   }
@@ -844,7 +1062,7 @@ export function drawTiers(sky: Sky, s: SkyState) {
   const fill = flat ? pal.rule : pal.sheet2;
   const fillSel = flat ? pal.ruleStrong : pal.rule;
   // колонка названий: отрезки, риски и подписи — правее неё
-  const colR = LW + nameColumn(ctx, p.blocks.map((b) => b.tier), nameFont);
+  const colR = LW + nameColumn(ctx, p.blocks.map((b) => b.tier), nameFont, true);
   const x0Of = (b: TierBar) => cam.sx(sky.xOf(b.t0));
   const x1Of = (b: TierBar) => cam.sx(sky.xOf(b.t1));
   const inSelOf = (b: TierBar) => (sel ? b.t1 >= sel.bLo && b.t0 <= (sel.d ?? sel.dEst) : false);
@@ -903,14 +1121,22 @@ export function drawTiers(sky: Sky, s: SkyState) {
   const geoByKey = new Map(geos.map((g) => [g.b.key, g]));
 
   // ---------- синхронизмы: вертикали между царями Иудеи и Израиля (MAP-47), под отрезками ----------
+  // вертикаль — только если год лежит в отрезке своего царя (решение 103); иначе — штрих у начала его отрезка
+  // (рисуется поверх отрезков, ниже) с подсказкой: год текста и принятое начало
   let syncCount = 0;
+  const syncTicks: { g: Geo; sy: TierSync }[] = [];
   ctx.strokeStyle = pal.ink3;
   ctx.lineWidth = 1;
   ctx.beginPath();
   for (const sy of buildSyncs(s.model)) {
     const g1 = geoByKey.get(sy.from);
     const g2 = geoByKey.get(sy.to);
-    if (!g1 || !g2 || g1.di === undefined || g2.di === undefined || g1.blk.pitch < PITCH || g2.blk.pitch < PITCH) continue;
+    if (!g1 || g1.di === undefined || g1.blk.pitch < PITCH) continue;
+    if (!sy.inside) {
+      syncTicks.push({ g: g1, sy });
+      continue;
+    }
+    if (!g2 || g2.di === undefined || g2.blk.pitch < PITCH) continue;
     const x = Math.round(cam.sx(sky.xOf(sy.t))) + 0.5;
     if (x < colR + 1 || x > W) continue;
     const [up, dn] = g1.y < g2.y ? [g1, g2] : [g2, g1];
@@ -922,6 +1148,8 @@ export function drawTiers(sky: Sky, s: SkyState) {
 
   // ---------- отрезки и их подписи ----------
   const labeledIds = new Set<string>();
+  let hatchCaptions = 0;
+  let syncOut = 0;
   for (const blk of p.blocks) {
     const { tier } = blk;
     if (tier.key === 'events') continue;
@@ -964,6 +1192,9 @@ export function drawTiers(sky: Sky, s: SkyState) {
           ctx.lineTo(Math.round(g.x1) - 0.5, y + bh - 1);
         }
         ctx.stroke();
+      } else if (b.soft) {
+        // оценочные границы (судьи, завоевание): края растушёваны — решение 90 и в ярусах (X2 § 2.8), без пунктира
+        featherFill(ctx, a, y, wBar, bh, inSel || hot ? fillSel : fill, g.x0 >= colR, g.x1 <= W);
       } else {
         ctx.fillStyle = inSel || hot ? fillSel : fill;
         ctx.fillRect(a, y, wBar, bh);
@@ -983,12 +1214,6 @@ export function drawTiers(sky: Sky, s: SkyState) {
           const h1 = Math.min(z, cam.sx(sky.xOf(s1)));
           hatch(ctx, h0, y, h1 - h0, bh, alpha(pal.ink3, 0.55));
         }
-      if (b.soft && !b.bracket) {
-        ctx.strokeStyle = pal.ruleStrong;
-        ctx.setLineDash([2, 2]);
-        ctx.strokeRect(Math.round(a) + 0.5, y + 0.5, Math.max(1, Math.round(wBar) - 1), bh - 1);
-        ctx.setLineDash([]);
-      }
       if (hot && !b.bracket) {
         ctx.strokeStyle = pal.ink;
         ctx.lineWidth = 1;
@@ -1030,7 +1255,48 @@ export function drawTiers(sky: Sky, s: SkyState) {
       ctx.fillText(b.label, at.x, y + BAR_H - 2.5);
       labeledIds.add(b.id);
     }
+    // подпись штриховки — прямо в ярусе (решение 103; X2 Д9): «вместе с отцом», «вместе с сыном», «одновременно» —
+    // на заштрихованном промежутке, если он шире подписи и не занят именем отрезка
+    if (!compact && !blk.collapsed)
+      for (const g of mine) {
+        const { b, a, z, y } = g;
+        if (b.bracket || !b.shared.length || g.di === undefined) continue;
+        const at = labelAt.get(b.key);
+        const nameBox = at ? [at.x - 4, at.x + ctx.measureText(b.label).width + 4] : null;
+        b.shared.forEach(([s0, s1], k) => {
+          const h0 = Math.max(a, cam.sx(sky.xOf(s0)));
+          const h1 = Math.min(z, cam.sx(sky.xOf(s1)));
+          const text = hatchWord(b.id, b.sharedWith?.[k]);
+          const tw = ctx.measureText(text).width;
+          // посередине штриховки; имя отрезка на ней — подпись правее имени, если помещается
+          let x = h0 + (h1 - h0 - tw) / 2;
+          if (nameBox && x < nameBox[1] && nameBox[0] < x + tw) x = Math.max(h0 + 5, nameBox[1] + 4);
+          if (x < h0 + 4 || x + tw > h1 - 4) return;
+          if (nameBox && x < nameBox[1] && nameBox[0] < x + tw) return;
+          ctx.fillStyle = inSelOf(b) || tierHot.key === b.key ? fillSel : fill;
+          ctx.fillRect(x - 3, y + 1, tw + 6, BAR_H - 2);
+          ctx.fillStyle = pal.ink3;
+          ctx.fillText(text, x, y + BAR_H - 2.5);
+          hatchCaptions++;
+        });
+      }
   }
+
+  // ---------- штрихи синхронизмов вне отрезка своего царя (решение 103): у начала отрезка, с подсказкой ----------
+  ctx.strokeStyle = pal.ink;
+  ctx.lineWidth = 1.5;
+  for (const { g, sy } of syncTicks) {
+    const x = Math.round(g.x0) + 0.5;
+    if (x < colR + 1 || x > W) continue;
+    ctx.beginPath();
+    ctx.moveTo(x, g.y - 3);
+    ctx.lineTo(x, g.y + g.bh + 3);
+    ctx.stroke();
+    const t0 = Math.min(sy.t, g.b.t0);
+    hitRects.push({ x: x - 4, y: g.y - 3, w: 8, h: g.bh + 6, tier: g.tier, bar: { key: `sy:${sy.from}:${sy.to}`, kind: 'sync', id: g.b.id, label: sy.note ?? '', t0, t1: Math.max(sy.t, g.b.t0), soft: false, row: g.b.row, shared: [], refs: sy.refs } });
+    syncOut++;
+  }
+  ctx.lineWidth = 1;
 
   // ---------- события: риска — только в строке своей подписи; без места для подписи события нет ----------
   let eventsDrawn = 0;
@@ -1128,7 +1394,40 @@ export function drawTiers(sky: Sky, s: SkyState) {
   ctx.stroke();
   ctx.font = nameFont;
   ctx.fillStyle = pal.ink3;
-  for (const blk of p.blocks) ctx.fillText(blk.tier.name, LW + 6, blk.y + Math.min(blk.h, PITCH) / 2 + fs * 0.36);
+  for (const blk of p.blocks) {
+    const ls = nameLines(ctx, blk.tier.name, colR - LW - 9);
+    // вторая строка — если ярус её вмещает; иначе название одной строкой уходит вправо над пустым ярусом, на подложке
+    const two = ls.length > 1 && blk.h >= TWO_LINE_H;
+    const step = blk.h >= 2 * PITCH ? PITCH - 2 : 12;
+    if (two) ls.forEach((l, k) => ctx.fillText(l, LW + 6, blk.y + Math.min(PITCH, step + 2) / 2 + fs * 0.36 + k * step));
+    else {
+      const t = blk.tier.name;
+      const yy = blk.y + Math.min(blk.h, PITCH) / 2 + fs * 0.36;
+      const tw = ctx.measureText(t).width;
+      if (LW + 6 + tw > colR - 3) {
+        ctx.fillStyle = pal.sky;
+        ctx.fillRect(colR, blk.y, LW + 6 + tw + 3 - colR, Math.min(blk.h, PITCH));
+        ctx.fillStyle = pal.ink3;
+      }
+      ctx.fillText(t, LW + 6, yy);
+    }
+  }
+
+  // ---------- ярусы свёрнуты в заголовок (низкое окно, решение 123): подпись у правого края строки эпох ----------
+  if (p.header) {
+    const blk = p.blocks[0];
+    const text = 'ярусы свёрнуты: окно низкое';
+    ctx.font = mapFont(T_MAP_S, { italic: true, coarse: sky.coarse });
+    const tw = ctx.measureText(text).width;
+    const x = W - tw - 8;
+    if (blk && x > colR + 40) {
+      ctx.fillStyle = pal.sky;
+      ctx.fillRect(x - 4, blk.y, tw + 8, Math.min(blk.h, PITCH));
+      ctx.fillStyle = pal.ink3;
+      ctx.fillText(text, x, blk.y + Math.min(blk.h, PITCH) / 2 + fs * 0.36);
+    }
+    ctx.font = nameFont;
+  }
 
   // ---------- формула на краях столбца (ТЗ § 3.5): рождение — у левого края ядра, смерть — у правого ----------
   const placedFormula = selP && core ? drawFormula(sky, s, selP.name, formula!, core, colR, bottom) : null;
@@ -1137,7 +1436,17 @@ export function drawTiers(sky: Sky, s: SkyState) {
   // формула столбца, её место и то, что она обходит (указатели у края, органы неба)
   const state = JSON.stringify({
     col: Math.round(colR - LW),
+    // свёрнуты в заголовок (низкое окно): сколько ярусов не показано
+    header: p.header ?? 0,
     sync: syncCount,
+    // штрихи синхронизмов вне отрезка своего царя и подписи штриховки (решение 103); места — для наведения в приёмке
+    syncOut,
+    hatch: hatchCaptions,
+    ticks: hitRects.filter((h) => h.bar.kind === 'sync').map((h) => [Math.round(h.x + h.w / 2), Math.round(h.y + h.h / 2), h.bar.id]),
+    selBar: (() => {
+      const h = s.selected ? hitRects.find((r) => r.bar.kind === 'person' && r.bar.id === s.selected && r.bar.reign !== undefined) : null;
+      return h ? [Math.round(h.x), Math.round(h.y), Math.round(h.w), Math.round(h.h)] : null;
+    })(),
     events: [eventsDrawn, p.blocks.find((b) => b.tier.key === 'events')?.tier.bars.filter((b) => visibleIn(b, tL, tR)).length ?? 0],
     prophets: [...new Set(geos.filter((g) => g.tier === 'prophets').map((g) => g.b.id))],
     // первая ссылка отрезка пророка — основание, его стих приводит подсказка (MAP-48)

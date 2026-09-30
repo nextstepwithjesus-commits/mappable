@@ -337,7 +337,8 @@ describe('разделы панели', () => {
   it('как читать карту, небо, карточки на небе, знаки, линии, время, карточка, клавиши, слои — по порядку', () => {
     const ids = [...source.matchAll(/<h3 id="(legend-[a-z]+)"/g)].map((x) => x[1]);
     // этап 11 (решение 77): вида «Древо» нет; сразу после «Неба» — карточки у звезды, у ромба и у связи
-    expect(ids).toEqual(['legend-guide', 'legend-sky', 'legend-cards', 'legend-signs', 'legend-lines', 'legend-time', 'legend-card', 'legend-keys', 'legend-layers']);
+    // этап 13, решение 94: «Линии карты» — отдельный раздел после «Линий» (меридианы, контуры, эпохи — не родство)
+    expect(ids).toEqual(['legend-guide', 'legend-sky', 'legend-cards', 'legend-signs', 'legend-lines', 'legend-map', 'legend-time', 'legend-card', 'legend-keys', 'legend-layers']);
   });
   it('название панели — «Условные знаки», пояснение начинается с «Как читать карту:»', () => {
     expect(source).toMatch(/<Sheet title="Условные знаки" lead="Как читать карту: [^"]+">/);

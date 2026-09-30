@@ -116,7 +116,7 @@ function leaderSpot(dx: number, dy: number, x: number, y: number, w: number, siz
  * чужую звезду). Сетка 64 px — проверка без перебора всех прямоугольников.
  */
 export class Placer {
-  private hard = new Map<number, Rect[]>();
+  private hard = new Map<number, (Rect & { owner?: string })[]>();
   private soft = new Map<number, (Rect & { m: number })[]>();
   private static CELL = 64;
   private static keys(r: Rect): number[] {
@@ -129,8 +129,12 @@ export class Placer {
     for (let cx = x0; cx <= x1; cx++) for (let cy = y0; cy <= y1; cy++) out.push((cx + 1024) * 4096 + cy + 1024);
     return out;
   }
-  /** Занять место; soft — звезда величины m (её подпись может закрыть только намного более яркая). */
-  add(r: Rect, soft = false, m = 0) {
+  /**
+   * Занять место; soft — звезда величины m (её подпись может закрыть только намного более яркая). owner — чьё это место:
+   * кольцо конца выбранной связи (Д12) закрыто для чужих имён, а своё имя лица встаёт у своей звезды, как прежде.
+   */
+  add(r: Rect, soft = false, m = 0, owner?: string) {
+    if (owner && !soft) r = { ...r, owner } as Rect & { owner: string };
     for (const k of Placer.keys(r)) {
       if (soft) {
         const a = this.soft.get(k);
@@ -146,11 +150,11 @@ export class Placer {
   }
   /**
    * Прямоугольник ложится на занятое: жёсткое всегда, звёзды — если withSoft; coverFrom — звёзды этой величины и
-   * тусклее закрывать можно (яркое имя на обзоре важнее тусклой точки).
+   * тусклее закрывать можно (яркое имя на обзоре важнее тусклой точки); self — место этого лица (owner) не мешает.
    */
-  clash(r: Rect, withSoft = true, coverFrom = 99): boolean {
+  clash(r: Rect, withSoft = true, coverFrom = 99, self?: string): boolean {
     for (const k of Placer.keys(r)) {
-      for (const o of this.hard.get(k) ?? []) if (cross(r, o)) return true;
+      for (const o of this.hard.get(k) ?? []) if (cross(r, o) && !(self && o.owner === self)) return true;
       if (withSoft) for (const o of this.soft.get(k) ?? []) if (o.m < coverFrom && cross(r, o)) return true;
     }
     return false;
@@ -379,8 +383,10 @@ export function insideSky(v: SkyContext, b: Rect): boolean {
 /**
  * Первое свободное место из candidates: внутри открытого неба, не на резерве и не на занятом. Занимает его и пишет
  * в замер. Для подписей любых слоёв (пути родства, лент, призраков): так они проходят ту же проверку наложений.
+ * hold — только держать место, в замер не писать: подпись, погашенная выделением или меридианом, не рисуется, а место
+ * остаётся за ней, и соседние подписи при наведении меридиана не переезжают (подписи не мигают; ТЗ § 3.1).
  */
-export function claim(v: SkyContext, p: Pass, candidates: Rect[], kind: LabelKind, text: string, o: { id?: string; soft?: boolean; coverFrom?: number } = {}): Rect | null {
+export function claim(v: SkyContext, p: Pass, candidates: Rect[], kind: LabelKind, text: string, o: { id?: string; soft?: boolean; coverFrom?: number; hold?: boolean } = {}): Rect | null {
   // названия, скопления, пояснения и подписи связей не ложатся на ленты линий Мессии: ленты — главное на небе
   // подписи связей при лентах по маршрутам — по самой ленте (Pass.onRibbon): рамка шага от родителя до ребёнка закрыла бы
   // весь след Давида с ромбами его союзов
@@ -392,7 +398,7 @@ export function claim(v: SkyContext, p: Pass, candidates: Rect[], kind: LabelKin
   const b = (onLink ? candidates.find((c) => ok(c) && !onLink(c, o.id ?? '')) : undefined) ?? candidates.find(ok);
   if (!b) return null;
   p.placer.add(b);
-  v.ledger.add(kind, text, b, o.id);
+  if (!o.hold) v.ledger.add(kind, text, b, o.id);
   return b;
 }
 
@@ -592,7 +598,7 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): Label
   const ok = (b: Rect, m: Mode) =>
     insideSky(v, b) &&
     !hits(b, p.reserve) &&
-    (m === 'none' || !p.placer.clash(b, m === 'soft' || m === 'clear' || m === 'free', coverFrom)) &&
+    (m === 'none' || !p.placer.clash(b, m === 'soft' || m === 'clear' || m === 'free', coverFrom, q.id)) &&
     (m !== 'clear' || offRibbon!(b)) &&
     ((m !== 'free' && m !== 'clear') || !onLink?.(b, q.id));
   let at: { tx: number; ty: number; box: Rect; ax?: number; ay?: number; side: Side | 'x' } | null = null;

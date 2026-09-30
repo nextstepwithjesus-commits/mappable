@@ -10,29 +10,31 @@ import { overflowCommands, workLabel, HINTS, phoneMenuItems } from '../src/ui/to
 
 // ширины команд — как у образцов Jost 13 с полями 8 px (порядок строки: панели, затем справка)
 // «В работе» (J3) — замер в сборке на 1440: 65,22 px; «Эпохи» (решение 51) — 54 px
-const W: Record<string, number> = { index: 86, work: 65, chapter: 58, epochs: 54, synopsis: 78, kinship: 72, section: 121, legend: 116, about: 68 };
-const ORDER = ['index', 'work', 'chapter', 'epochs', 'synopsis', 'kinship', 'section', 'legend', 'about'];
+// «О хронологии» (этап 13, решение 102) — рядом с «О карте»
+const W: Record<string, number> = { index: 86, work: 65, chapter: 58, epochs: 54, synopsis: 78, kinship: 72, section: 121, legend: 116, about: 68, chronology: 98 };
+const ORDER = ['index', 'work', 'chapter', 'epochs', 'synopsis', 'kinship', 'section', 'legend', 'about', 'chronology'];
 const GAP = 2;
 const SEP = 21;
 const MORE = 52;
 const width = (id: string) => W[id];
 /**
- * Ширина ряда при данном наборе скрытых команд — так, как его раскладывает TopBar.tsx. «Ещё» в ряду всегда: в нём
- * последним пунктом стоит «Начать заново…» (решение 68).
+ * Ширина ряда при данном наборе скрытых команд — так, как его раскладывает TopBar.tsx. «Ещё» в ряду — только когда
+ * что-то ушло (этап 13, решение 111): «Начать заново…» живёт в «Вид → Начало» и во вступлении.
  */
 function rowWidth(hidden: Set<string>): number {
   const shown = ORDER.filter((id) => !hidden.has(id));
-  const n = shown.length + 2;
-  return shown.reduce((a, id) => a + W[id], 0) + SEP + MORE + GAP * (n - 1);
+  const more = hidden.size > 0;
+  const n = shown.length + 1 + (more ? 1 : 0);
+  return shown.reduce((a, id) => a + W[id], 0) + SEP + (more ? MORE : 0) + GAP * (n - 1);
 }
 const full = rowWidth(new Set());
 
 describe('«Ещё» верхней строки (C3; VIS-20, IX-46, MOB-04)', () => {
-  it('если места хватает, видны все команды; «Ещё» — только с «Начать заново…» (решение 68)', () => {
+  it('если места хватает, видны все команды и «Ещё» нет (решение 111); не хватает 1 px — уходит команда', () => {
     expect([...overflowCommands(full, width, GAP, SEP, MORE)]).toEqual([]);
     expect([...overflowCommands(full + 200, width, GAP, SEP, MORE)]).toEqual([]);
-    // место под «Ещё» учтено всегда: без него на 1 px меньше полного ряда уже уходит команда
-    expect([...overflowCommands(full - MORE - GAP, width, GAP, SEP, MORE)]).not.toEqual([]);
+    // места под «Ещё» полному ряду не нужно; на 1 px меньше — уходит команда, и тогда «Ещё» нужно место
+    expect([...overflowCommands(full - 1, width, GAP, SEP, MORE)]).not.toEqual([]);
   });
   it('ряд никогда не шире отведённого места: вместо прокрутки — «Ещё»', () => {
     for (let avail = full; avail >= SEP + MORE; avail -= 7) {
@@ -48,7 +50,7 @@ describe('«Ещё» верхней строки (C3; VIS-20, IX-46, MOB-04)', (
       if (!seen.length || seen[seen.length - 1].length !== h.length) seen.push(h);
     }
     const order = seen.map((h) => h[h.length - 1]);
-    expect(order).toEqual(['section', 'kinship', 'synopsis', 'epochs', 'chapter', 'work', 'about', 'legend', 'index']);
+    expect(order).toEqual(['section', 'kinship', 'synopsis', 'epochs', 'chapter', 'work', 'chronology', 'about', 'legend', 'index']);
   });
   it('уход одной команды оставляет место для «Ещё»: не хватает 1 px — уходит команда, а «Ещё» помещается', () => {
     const hidden = overflowCommands(full - 1, width, GAP, SEP, MORE);

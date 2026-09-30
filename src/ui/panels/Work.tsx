@@ -1,12 +1,13 @@
 /**
  * Набор (J3; решения владельца 17, 81): панель «Набор», команда «Добавить в набор» с выбором объёма и меню звезды
- * на небе (правая кнопка мыши, долгое касание). Набор — один из показов неба (src/ui/show.ts): «Показать набор на небе»
- * в панели и строка показа у кромки неба (src/ui/sky/ShowBar.tsx).
+ * на небе (правая кнопка мыши, долгое касание). Набор — один из показов неба (src/ui/show.ts): «Набор на небо» в панели
+ * (пустой набор — команда неактивна, решение 111) и строка показа у кромки неба (src/ui/sky/ShowBar.tsx). На небе
+ * лиц и созвездия «скрывают» и «показывают» (решение 109), а не «сворачивают».
  * Состояние набора, неба и свёртки — src/ui/work.ts.
  */
 import type { ComponentChildren } from 'preact';
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
-import { signal } from '@preact/signals';
+import { effect, signal } from '@preact/signals';
 import { byId, groupById, loadCard, loadedCard } from '../../data/atlas.ts';
 import type { Card } from '../../data/types.ts';
 import { model, selected } from '../../state.ts';
@@ -24,8 +25,8 @@ import { StartList } from '../sky/Controls.tsx';
 import { closePerson, opened } from '../reveal.ts';
 import { setShow, show } from '../show.ts';
 import {
-  addToWork, clearWork, foldDesc, foldDescOf, foldGroupOf, foldGroups, hasDescendants, lineOf, removeFromWork, removeWithLine, workOrder,
-  workSet, type Scope, type WorkEntry,
+  addToWork, clearWork, foldDesc, foldDescOf, foldGroupOf, foldGroups, hasDescendants, lineOf, parseSetFile, removeFromWork, removeWithLine, saveSetFile,
+  WORK_URL_MAX, workOrder, workSet, type Scope, type WorkEntry,
 } from '../work.ts';
 
 /** «1 поколение», «2 поколения», «все» — число поколений для предков и потомков. */
@@ -529,8 +530,52 @@ export function memberNote(e: WorkEntry | undefined, kinds: number): string | nu
   return gen ? `${word}, ${gen}` : word;
 }
 
-/** Набор, очищенный последним: «Вернуть» восстанавливает его (без подтверждений и всплывающих окон). */
-let cleared: [string, WorkEntry][] | null = null;
+/**
+ * Набор, очищенный последним: «Вернуть очищенный набор» восстанавливает его (без подтверждений и всплывающих окон).
+ * Решение 126 (UI-24): отмена живёт до следующего изменения набора, а не до закрытия панели — after хранит пустой набор,
+ * получившийся очисткой; любое другое значение набора (добавили лицо, начали заново, открыли набор из файла) её снимает.
+ */
+export const cleared = signal<{ entries: [string, WorkEntry][]; after: ReadonlyMap<string, WorkEntry> } | null>(null);
+effect(() => {
+  const now = workSet.value;
+  const c = cleared.peek();
+  if (c && now !== c.after) cleared.value = null;
+});
+/** Очистить набор с возможностью вернуть его до следующего изменения набора. */
+export function clearWorkUndoable() {
+  const entries = [...workSet.peek()];
+  if (!entries.length) return;
+  clearWork();
+  cleared.value = { entries, after: workSet.peek() };
+}
+/**
+ * Открыть набор из файла (решение 130): набор заменяется лицами файла; прежний можно вернуть до следующего изменения
+ * набора. Что вышло — словами для строки состояния панели.
+ */
+export function openSetText(text: string): string {
+  const r = parseSetFile(text);
+  if ('error' in r) return r.error;
+  const prev = [...workSet.peek()];
+  workSet.value = r.set;
+  if (prev.length) cleared.value = { entries: prev, after: workSet.peek() };
+  const n = r.set.size;
+  return `Открыт набор из файла: ${n} ${plural(n, 'лицо', 'лица', 'лиц')}${r.skipped ? `; не прочитано строк: ${r.skipped} (лиц нет в этом атласе)` : ''}.`;
+}
+
+/** Оговорка о ссылке (решение 130; TOL 007): набор больше 12 лиц ссылка не передаёт — видимым текстом, до отправки. */
+export function setLinkWarning(n: number): string | null {
+  return n > WORK_URL_MAX
+    ? `В наборе ${n} ${plural(n, 'лицо', 'лица', 'лиц')} — больше ${WORK_URL_MAX}, поэтому ссылка на вид передаёт только показ «набор», без его лиц. Чтобы передать сам набор, сохраните его в файл.`
+    : null;
+}
+
+/** Вернуть очищенный набор. */
+export function undoClear() {
+  const c = cleared.peek();
+  if (!c) return;
+  cleared.value = null;
+  workSet.value = new Map(c.entries);
+}
 
 /** Вводка панели (UX-77): то же, что пояснение команды «Набор» в верхней строке. */
 export const WORK_LEAD = 'Лица, собранные вручную; набор помнится в этом браузере. Показ «набор» — только они на небе.';
@@ -543,9 +588,13 @@ export function WorkPanel() {
     return c && c.cls !== 'epochal' ? c.b : null;
   });
   const [open, setOpen] = useRemembered<string | null>('work:open', null);
-  const [undo, setUndo] = useState(false);
   const n = ids.length;
   const folded = foldDesc.value.length + foldGroups.value.length;
+  const file = useRef<HTMLInputElement>(null);
+  // что сделало открытие файла: «Открыт набор из файла: 18 лиц» или почему нет
+  const [fileSaid, setFileSaid] = useState('');
+  const warn = setLinkWarning(n);
+  const undo = cleared.value;
   return (
     <Sheet title={n ? `Набор: ${n} ${plural(n, 'лицо', 'лица', 'лиц')}` : 'Набор'} lead={WORK_LEAD}>
       {/* набор — один из показов неба (решение 81): что на небе, говорит строка показа у его кромки */}
@@ -553,33 +602,54 @@ export function WorkPanel() {
         {show.value.kind === 'set' ? (
           <span class="k">{typo('На небе — набор')}</span>
         ) : (
-          <button type="button" class="cmd" title="Небо покажет только лиц набора; прежний показ вернёт «назад»" onClick={() => setShow({ kind: 'set' })}>
-            Показать набор на небе
+          <button
+            type="button"
+            class="cmd"
+            aria-disabled={n ? undefined : 'true'}
+            aria-describedby={n ? undefined : 'work-empty'}
+            title={n ? 'Небо покажет только лиц набора; прежний показ вернёт «назад»' : 'Набор пуст: соберите его командой «Добавить в набор» в карточке'}
+            onClick={() => n && setShow({ kind: 'set' })}
+          >
+            Набор на небо
           </button>
         )}
       </div>
+      {warn && <p class="work-link">{typo(warn)}</p>}
+      {/* набор в файле (решение 130): передать большой набор, перенести в другой браузер */}
+      <div class="cmds work-file">
+        {n > 0 && (
+          <button type="button" class="cmd" onClick={() => saveSetFile()}>
+            Сохранить набор в файл
+          </button>
+        )}
+        <button type="button" class="cmd" onClick={() => file.current?.click()}>
+          Открыть набор из файла
+        </button>
+        <input
+          ref={file}
+          type="file"
+          accept=".json,application/json"
+          class="visually-hidden"
+          tabIndex={-1}
+          aria-hidden="true"
+          onChange={async (e) => {
+            const input = e.currentTarget as HTMLInputElement;
+            const f = input.files?.[0];
+            input.value = '';
+            if (f) setFileSaid(openSetText(await f.text()));
+          }}
+        />
+      </div>
+      <p class="work-said" role="status">
+        {fileSaid ? typo(fileSaid) : ''}
+      </p>
       {n === 0 ? (
         <>
-          <p class="muted work-empty">
+          <p class="muted work-empty" id="work-empty">
             {typo(
               'Набор пуст. Чтобы собрать его, нажмите «Добавить в набор» в карточке лица — с предками, потомками или семьёй. То же — в строке поиска (Shift+Enter), в «Родстве» (весь путь) и на небе: клавиша В у звезды под указателем, правая кнопка мыши или долгое касание звезды.',
             )}
           </p>
-          {undo && cleared && (
-            <div class="cmds">
-              <button
-                type="button"
-                class="cmd"
-                onClick={() => {
-                  workSet.value = new Map(cleared!);
-                  cleared = null;
-                  setUndo(false);
-                }}
-              >
-                Вернуть очищенный набор
-              </button>
-            </div>
-          )}
         </>
       ) : (
         <>
@@ -609,9 +679,7 @@ export function WorkPanel() {
               type="button"
               class="cmd"
               onClick={() => {
-                cleared = [...workSet.peek()];
-                clearWork();
-                setUndo(true);
+                clearWorkUndoable();
                 setOpen(null);
               }}
             >
@@ -620,6 +688,15 @@ export function WorkPanel() {
           </div>
         </>
       )}
+      {/* отмена очистки или открытия файла — до следующего изменения набора (решение 126) */}
+      {undo && (
+        <div class="cmds">
+          <button type="button" class="cmd" onClick={undoClear}>
+            {`${undo.after.size ? 'Вернуть прежний набор' : 'Вернуть очищенный набор'} (${undo.entries.length})`}
+          </button>
+        </div>
+      )}
+
       {folded > 0 && <FoldList />}
       {/* «Начать заново» (решение 68): те же пять начал, что во вступлении и в листе «Вид»; набор больше одного лица
           заменяется только после подтверждения */}
@@ -648,17 +725,17 @@ function WorkRow({ id, note, open, setOpen }: { id: string; note: string | null;
   );
 }
 
-/** Что свёрнуто на небе (J5): потомки лиц и созвездия — с командой «развернуть» у каждого. */
+/** Что скрыто на небе (J5): потомки лиц и созвездия — с командой «показать» у каждого (решение 109). */
 function FoldList() {
   return (
     <>
-      <h3>Свёрнуто на небе</h3>
+      <h3>Скрыто на небе</h3>
       <ul class="worklist folds">
         {foldDesc.value.map((id) => (
           <li key={`d${id}`}>
             <span class="nm">{typo(`${byId.get(id)?.name ?? id}: потомки`)}</span>
             <button type="button" class="cmd" onClick={() => foldDescOf(id, false)}>
-              развернуть
+              показать
             </button>
           </li>
         ))}
@@ -666,7 +743,7 @@ function FoldList() {
           <li key={`g${g}`}>
             <span class="nm">{typo(`${groupById.get(g)?.name ?? g}: созвездие`)}</span>
             <button type="button" class="cmd" onClick={() => foldGroupOf(g, false)}>
-              развернуть
+              показать
             </button>
           </li>
         ))}
@@ -743,7 +820,7 @@ export function SkyMenu({ bounds }: { bounds: { w: number; h: number } }) {
           close(true);
         }}
       >
-        {typo(`${groupOn ? 'Развернуть' : 'Свернуть'} созвездие «${g.name}»`)}
+        {typo(`${groupOn ? 'Показать' : 'Скрыть'} созвездие «${g.name}»`)}
       </button>
     ) : null;
   // точки союзов лица на небе «набор» (решения 70, 76): скрыть их, раскрытые союзы и раскрытые лица остаются

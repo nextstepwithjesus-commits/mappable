@@ -84,22 +84,36 @@ const inside = (s: SkyT, id: string) => {
 };
 
 describe('шаг пути (E5)', () => {
-  it('ломаная шага: вниз — вдоль следа родителя, затем отводом; вверх — наоборот; по термину — прямой отрезок', () => {
+  it('ломаная шага: вниз — вдоль следа родителя, затем отводом; вверх — наоборот; по термину — по дуге семьи; брак — отрезок', () => {
     const a = { x: 10, y: 20 };
     const b = { x: 50, y: 80 };
     expect(marks.stepRoute('down', a, b)).toEqual([a, { x: 50, y: 20 }, b]);
     expect(marks.stepRoute('up', a, b)).toEqual([a, { x: 10, y: 80 }, b]);
-    expect(marks.stepRoute('kin', a, b)).toEqual([a, b]);
     expect(marks.stepRoute('spouse', a, b)).toEqual([a, b]);
+    // этап 13, решение 94 (X3 Д13): шаг словом Писания — по той же кривой, что золотистая дуга (kinArcCtrl), а не косым отрезком
+    const kin = marks.stepRoute('kin', a, b);
+    expect(kin[0]).toEqual(a);
+    expect(kin[kin.length - 1]).toEqual(b);
+    expect(kin.length).toBeGreaterThan(4);
+    const c = marks.kinArcCtrl(a, b);
+    const mid = kin[Math.floor(kin.length / 2)];
+    // середина дуги — у точки t = 0,5 кривой a → c → b
+    expect(Math.hypot(mid.x - (0.25 * a.x + 0.5 * c.x + 0.25 * b.x), mid.y - (0.25 * a.y + 0.5 * c.y + 0.25 * b.y))).toBeLessThan(6);
   });
-  // этап 11, Г10: штрих — только иное происхождение (по закону, левират, усыновление); брак — сплошной
-  it('начертание: кровный и брак — сплошной, по закону — штрих, по термину и по толкованию — точки', () => {
+  // этап 11, Г10: штрих — только иное происхождение; этап 13, решение 94: по Луке и предок — тоже штрих, толкование —
+  // точки цвета текста, слово Писания — золотистые точки
+  it('начертание: кровный и брак — сплошной, иное происхождение — штрих, слово Писания и толкование — точки разного цвета', () => {
     expect(marks.stepLook({ kind: 'down', claim: 'natural', interpretive: false })).toBe('blood');
     expect(marks.stepLook({ kind: 'down', claim: 'legal', interpretive: false })).toBe('legal');
     expect(marks.stepLook({ kind: 'down', claim: 'levirate', interpretive: false })).toBe('legal');
+    expect(marks.stepLook({ kind: 'up', claim: 'by-luke', interpretive: false })).toBe('legal');
+    expect(marks.stepLook({ kind: 'up', claim: 'ancestor', interpretive: false })).toBe('legal');
     expect(marks.stepLook({ kind: 'spouse', claim: '', interpretive: false })).toBe('blood');
     expect(marks.stepLook({ kind: 'kin', claim: '', interpretive: false })).toBe('term');
-    expect(marks.stepLook({ kind: 'up', claim: 'by-luke', interpretive: true })).toBe('term');
+    expect(marks.stepLook({ kind: 'up', claim: 'by-luke', interpretive: true })).toBe('interp');
+    expect(marks.STEP_DASH.term.length).toBeGreaterThan(0);
+    expect(marks.STEP_DASH.interp.length).toBeGreaterThan(0);
+    expect(marks.STEP_DASH.legal).toEqual([6, 3]);
   });
 });
 

@@ -84,7 +84,23 @@ export interface MenuItem {
   checked?: boolean;
   /** черта перед пунктом: начало другой группы */
   sep?: boolean;
+  /**
+   * Подпись группы (этап 13, решение 122: «Искать и читать», «Исследовать связи», «Справка»): соседние пункты с одной
+   * подписью — в role="group" с видимой подписью над ними. Без поля — пункты как прежде.
+   */
+  group?: string;
   onSelect: () => void;
+}
+
+/** Пункты меню подряд по подписи группы: [{ group, items }], без подписи — group undefined. */
+function runs(items: MenuItem[]): { group?: string; items: MenuItem[] }[] {
+  const out: { group?: string; items: MenuItem[] }[] = [];
+  for (const it of items) {
+    const last = out[out.length - 1];
+    if (last && last.group === it.group) last.items.push(it);
+    else out.push({ group: it.group, items: [it] });
+  }
+  return out;
 }
 
 /**
@@ -94,7 +110,22 @@ export interface MenuItem {
  * radio — пункты взаимоисключающие (menuitemradio), иначе пункты с checked — флажки (menuitemcheckbox).
  * Куда раскрывается список и как выглядит кнопка, решает место (controls.css, .menu в своём ряду).
  */
-export function Menu({ label, title, items, radio, class: cls }: { label: ComponentChildren; title?: string; items: MenuItem[]; radio?: boolean; class?: string }) {
+export function Menu({
+  label,
+  title,
+  items,
+  radio,
+  class: cls,
+  foot,
+}: {
+  label: ComponentChildren;
+  title?: string;
+  items: MenuItem[];
+  radio?: boolean;
+  class?: string;
+  /** строка под пунктами (не пункт): пояснение ко всему списку, диктор слышит её при открытии (aria-describedby) */
+  foot?: ComponentChildren;
+}) {
   const [open, setOpen] = useState(false);
   const wrap = useRef<HTMLDivElement>(null);
   const btn = useRef<HTMLButtonElement>(null);
@@ -170,25 +201,54 @@ export function Menu({ label, title, items, radio, class: cls }: { label: Compon
         {label}
       </button>
       {open && (
-        <div role="menu" id={id} aria-labelledby={`${id}-b`}>
-          {items.map((it) => (
-            <Fragment key={it.key}>
-              {it.sep && <div role="separator" />}
-              <button
-                type="button"
-                role={radio ? 'menuitemradio' : it.checked === undefined ? 'menuitem' : 'menuitemcheckbox'}
-                aria-checked={radio || it.checked !== undefined ? !!it.checked : undefined}
-                tabIndex={-1}
-                onClick={() => {
-                  it.onSelect();
-                  close();
-                }}
-              >
-                <span class="nm">{it.label}</span>
-                {it.note && <span class="note">{it.note}</span>}
-              </button>
-            </Fragment>
-          ))}
+        // длинный список с пояснением внизу (модели хронологии) может прокручиваться: сам список — в порядке Tab, чтобы
+        // прокрутка была доступна с клавиатуры (axe: scrollable-region-focusable); стрелки ходят по пунктам, как прежде
+        <div
+          role="menu"
+          id={id}
+          aria-labelledby={`${id}-b`}
+          aria-describedby={foot ? `${id}-f` : undefined}
+          // список с группами (решение 122) длинный и на телефоне прокручивается — тоже в порядке Tab
+          tabIndex={foot || items.some((it) => it.group) ? 0 : undefined}
+        >
+          {runs(items).map((run, ri) => {
+            const buttons = run.items.map((it) => (
+              <Fragment key={it.key}>
+                {it.sep && <div role="separator" />}
+                <button
+                  type="button"
+                  role={radio ? 'menuitemradio' : it.checked === undefined ? 'menuitem' : 'menuitemcheckbox'}
+                  aria-checked={radio || it.checked !== undefined ? !!it.checked : undefined}
+                  tabIndex={-1}
+                  onClick={() => {
+                    it.onSelect();
+                    close();
+                  }}
+                >
+                  <span class="nm">{it.label}</span>
+                  {it.note && <span class="note">{it.note}</span>}
+                </button>
+              </Fragment>
+            ));
+            if (!run.group) return buttons;
+            const gid = `${id}-g${ri}`;
+            return (
+              <Fragment key={gid}>
+                {ri > 0 && <div role="separator" />}
+                <div role="group" aria-labelledby={gid}>
+                  <div class="menu-group" id={gid}>
+                    {run.group}
+                  </div>
+                  {buttons}
+                </div>
+              </Fragment>
+            );
+          })}
+          {foot && (
+            <p class="menu-foot" id={`${id}-f`} role="none">
+              {foot}
+            </p>
+          )}
         </div>
       )}
     </div>

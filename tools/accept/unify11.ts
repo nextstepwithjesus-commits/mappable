@@ -551,7 +551,7 @@ export const unify11: Scenario[] = [
     run: async (p) => {
       await open(p, '#/iuda~va');
       if (!(await clickStar(p, 'iuda'))) return fail('нет звезды Иуды');
-      await p.locator('.sky .dotcard .dc-cmds .menu > button', { hasText: 'Только его род' }).click();
+      await p.locator('.sky .dotcard .dc-cmds .menu > button', { hasText: 'Предки и потомки' }).click();
       await p.waitForTimeout(300);
       await p.locator('.sky .dotcard [role^="menuitem"]', { hasText: 'Потомки' }).first().click();
       await p.waitForTimeout(2400);
@@ -794,24 +794,44 @@ export const unify11: Scenario[] = [
   },
   {
     n: 823,
-    title: 'Карточка связи мышью (§ 8): наведение на имя в «Родстве» подсвечивает его линию; Enter — карточка связи: заголовок, стихи, «Отец», «Мать», «Сын», «Ленты», «Союз» — ссылка на карточку союза у ромба; «×» и Escape — назад',
+    title: 'Карточка связи мышью (§ 8): наведение на имя в «Родстве» подсвечивает его линию; Enter — карточка связи: заголовок, стихи, «Отец», «Мать», «Сын», «Линия», «Союз» — ссылка на карточку союза у ромба; «×» и Escape — назад',
     run: async (p) => {
       await open(p, '#/iakov~va');
       await clickStar(p, 'iakov');
       // наведение на строку детей — её линии подсвечены (previewLinks: небо пишет их в .sky[data-kin-preview])
+      // краткий вид карточки (§ 6) — сначала «всё родство», затем наведение на строку детей
+      const allRows = p.locator('.sky .dotcard .dc-row.all .dc-more');
+      if (!(await p.locator('.sky .dotcard .dc-row.children').count()) && (await allRows.count())) {
+        await allRows.click();
+        await p.waitForTimeout(500);
+      }
       await p.locator('.sky .dotcard .dc-row.children').hover();
       await p.waitForTimeout(300);
       const e = await judahLink(p);
       if (e) return fail(e);
-      const t = flat(await p.locator('.sky .dotcard[data-kind="link"]').innerText());
-      for (const w of ['Иаков и Лия — родители; Иуда — сын', 'Быт 29:35', 'Отец', 'Мать', 'Сын', 'Ленты', 'эту связь рисуют обе ленты', 'Союз', 'Иаков и Лия', 'Карточка союза', 'Показать концы'])
+      // этап 13: у Иакова на 1440 × 900 карточке связи бывает мало места — краткий вид: заголовок, стихи, концы с ролями;
+      // «всё о связи — ещё N строк» раскрывает «Линию» и «Союз»
+      const lc = p.locator('.sky .dotcard[data-kind="link"]');
+      let brief = '';
+      if (await lc.getAttribute('data-brief').then((v) => v !== null)) {
+        const tb = flat(await lc.innerText());
+        for (const w of ['Иаков и Лия — родители; Иуда — сын', 'Отец', 'Мать', 'Сын']) if (!tb.includes(w)) return fail(`в краткой карточке связи нет «${w}»: ${tb.slice(0, 160)}`);
+        const more = lc.locator('.dc-row.all .dc-more');
+        if (!(await more.count())) return fail('в краткой карточке связи нет «всё о связи»');
+        await more.click();
+        await p.waitForTimeout(500);
+        brief = 'краткий вид → всё о связи; ';
+      }
+      const t = flat(await lc.innerText());
+      // этап 13 (решение 105): строка «Линия» — «обе ленты: Мф 1:2 (золотая), Лк 3:33–34 (лазурная)», команды «Подробнее о союзе», «Вписать связь»
+      for (const w of ['Иаков и Лия — родители; Иуда — сын', 'Быт 29:35', 'Отец', 'Мать', 'Сын', 'Линия', 'обе ленты: Мф 1:2 (золотая), Лк 3:33–34 (лазурная)', 'Союз', 'Иаков и Лия', 'Подробнее о союзе', 'Вписать связь'])
         if (!t.includes(w)) return fail(`в карточке связи нет «${w}»: ${t.slice(0, 160)}`);
       if (!/~ck?/.test(p.url()) && !(await state(p)).link) return fail('связь не записана в адрес');
       await p.locator('.sky .dotcard .dc-row.union .person').click();
       await p.waitForTimeout(900);
       const u = await cardOf(p);
       if (!u || u.kind !== 'union' || !/^Иаков и Лия/.test(flat(u.name))) return fail(`«Союз» открыл ${u ? `${u.kind} «${u.name}»` : 'ничего'}`);
-      return pass();
+      return pass(brief);
     },
   },
   {
@@ -821,9 +841,9 @@ export const unify11: Scenario[] = [
       await open(p, '#/noy~vs~nnoy', { start: 'adam', extra: { work: [self('noy')], reveal: { opened: ['noy'], expanded: {} } } });
       if (!(await clickDot(p, 'u:noy+'))) return fail('нет ромба союза Ноя');
       const t = flat(await p.locator('.sky .dotcard[data-kind="union"]').innerText());
-      for (const w of ['Ной и его жена', 'Раскрыть детей (3)', 'годы детей — по порядку перечисления, Быт 5:32', 'Карточка союза'])
+      for (const w of ['Ной и его жена', 'Показать детей союза (3)', 'годы детей — по порядку перечисления, Быт 5:32', 'Подробнее о союзе'])
         if (!t.includes(w)) return fail(`в карточке союза Ноя нет «${w}»: ${t.slice(0, 200)}`);
-      await p.locator('.sky .dotcard .dc-cmds button', { hasText: 'Карточка союза' }).click();
+      await p.locator('.sky .dotcard .dc-cmds button', { hasText: 'Подробнее о союзе' }).click();
       await p.waitForTimeout(900);
       const folio = flat(await p.locator('.folio').innerText());
       if (!/Ной и его жена/.test(folio)) return fail('справа не карточка союза Ноя');
@@ -850,7 +870,7 @@ export const unify11: Scenario[] = [
       const t = flat(await dot.innerText());
       if (!/^Хам/.test(t) || !/Родители/.test(t) || !/Ной и его жена/.test(t)) return fail(`лист: ${t.slice(0, 120)}`);
       if (!sheet || Math.abs(sheet.height - 214) > 16) return fail(`высота листа ${sheet?.height.toFixed(0)}`);
-      await p.locator('.folio .sheet-dot .dc-cmds button', { hasText: 'Карточка' }).first().tap();
+      await p.locator('.folio .sheet-dot .dc-cmds button', { hasText: 'Вся карточка' }).first().tap();
       await p.waitForTimeout(900);
       const up = await p.locator('.folio').boundingBox();
       return up && up.height > 300 ? pass(`лист ${sheet.height.toFixed(0)} → ${up.height.toFixed(0)} px`) : fail('«Карточка ▴» не подняла лист');
@@ -862,7 +882,7 @@ export const unify11: Scenario[] = [
     run: async (p) => {
       await open(p, '#/iakov~va');
       await clickStar(p, 'iakov');
-      await p.locator('.sky .dotcard .dc-cmds .menu > button', { hasText: 'Только его род' }).click();
+      await p.locator('.sky .dotcard .dc-cmds .menu > button', { hasText: 'Предки и потомки' }).click();
       await p.waitForTimeout(300);
       await p.locator('.sky .dotcard [role^="menuitem"]', { hasText: 'Потомки' }).first().click();
       await p.waitForTimeout(2200);

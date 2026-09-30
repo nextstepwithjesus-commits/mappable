@@ -93,7 +93,8 @@ export const peek6: Scenario[] = [
       const text = flat(await card(p).innerText());
       if (!/Адам/.test(text) || !/4174–3244 гг\. до Р\. Х\./.test(text)) return fail(`в карточке: «${text}»`);
       const cmds = await commands(p);
-      if (cmds.join(' | ') !== 'Карточка | Только его род ▾ | Родство с… | Свернуть ветвь') return fail(`команды: ${cmds.join(' | ')}`);
+      // этап 13 (решение 109): «Вся карточка», «Предки и потомки ▾»
+      if (cmds.join(' | ') !== 'Вся карточка | Предки и потомки ▾ | Родство с… | Скрыть ветвь') return fail(`команды: ${cmds.join(' | ')}`);
       if (!(await card(p).locator('button.close[aria-label]').count())) return fail('нет «×»');
       const cb = await card(p).locator('.dc-cmds button').first().boundingBox();
       if (!cb || cb.height < 31.5) return fail(`поле команды ${cb?.height} px`);
@@ -203,12 +204,12 @@ export const peek6: Scenario[] = [
       for (const w of ['союз', 'Быт 2:22–25', 'Адам и Ева', 'Ева — жена Адама', '3 сына, выв.']) if (!text.includes(w)) return fail(`в карточке нет «${w}»: ${text}`);
       if (!(await card(p).locator('.av').count())) return fail('нет образа союза');
       const cmds = await commands(p);
-      if (cmds.join(' | ') !== 'Раскрыть детей (3) | Карточка союза') return fail(`команды: ${cmds.join(' | ')}`);
+      if (cmds.join(' | ') !== 'Показать детей союза (3) | Подробнее о союзе') return fail(`команды: ${cmds.join(' | ')}`);
       if ((await stored(p)).join(' ') !== 'adam') return fail(`щелчок по точке изменил набор: ${(await stored(p)).join(' ')}`);
       await p.mouse.move(d.x + 1, d.y);
       await p.waitForTimeout(500);
       if (await p.locator('.sky .tip[data-shown]').count()) return fail('подсказка у точки с открытой карточкой');
-      await card(p).locator('.dc-cmds button', { hasText: 'Карточка союза' }).click();
+      await card(p).locator('.dc-cmds button', { hasText: 'Подробнее о союзе' }).click();
       await p.waitForTimeout(900);
       if (!(await p.locator('.folio[data-union="u:adam+eva"]').count())) return fail('справа нет карточки союза');
       if (!(await cardBox(p))) return fail('карточка у точки закрылась после «Карточки союза»');
@@ -288,7 +289,7 @@ export const peek6: Scenario[] = [
       await p.mouse.click(a.x, a.y);
       await p.waitForTimeout(800);
       if (!(await cardBox(p))) return fail('нет карточки у точки');
-      await card(p).locator('.dc-cmds button', { hasText: /^Карточка$/ }).click();
+      await card(p).locator('.dc-cmds button', { hasText: /^Вся карточка$/ }).click();
       await p.waitForTimeout(1000);
       if (await p.locator('.folio.spine').count()) return fail('карточка осталась корешком');
       const f = await p.evaluate(() => document.activeElement?.id ?? '');
@@ -305,8 +306,8 @@ export const peek6: Scenario[] = [
       await p.mouse.click(j.x, j.y);
       await p.waitForTimeout(900);
       const cmds = await commands(p);
-      if (!cmds.includes('Родители')) return fail(`команды: ${cmds.join(' | ')}`);
-      await card(p).locator('.dc-cmds button', { hasText: 'Родители' }).click();
+      if (!cmds.includes('Показать родителей')) return fail(`команды: ${cmds.join(' | ')}`);
+      await card(p).locator('.dc-cmds button', { hasText: 'Показать родителей' }).click();
       await p.waitForTimeout(1300);
       const ids = await stored(p);
       if (!ids.includes('iosif-muzh-marii') || !ids.includes('mariya')) return fail(`набор: ${ids.join(' ')}`);
@@ -341,7 +342,7 @@ export const peek6: Scenario[] = [
       // цели — команды листа и «×» (имена «Родства» — ссылки в тексте: поле касания у них — псевдоэлементом, phone.css)
       const hs = await p.locator('.folio .sheet-dot').locator('.dc-cmds button, .close').evaluateAll((els) => els.filter((e) => (e as HTMLElement).offsetParent).map((e) => e.getBoundingClientRect().height));
       if (hs.some((h) => h < 43.5)) return fail(`низкие цели: ${hs.map(Math.round).join(', ')}`);
-      await p.locator('.folio .sheet-dot .dc-cmds button', { hasText: 'Карточка' }).first().tap();
+      await p.locator('.folio .sheet-dot .dc-cmds button', { hasText: 'Вся карточка' }).first().tap();
       await p.waitForTimeout(1000);
       const sheet2 = (await p.locator('.folio').boundingBox())!;
       return sheet2.height > sheet.height + 100 ? pass(`лист ${Math.round(sheet.height)} → ${Math.round(sheet2.height)} px`) : fail(`лист не поднялся: ${Math.round(sheet.height)} → ${Math.round(sheet2.height)}`);
@@ -449,8 +450,8 @@ export const peek6: Scenario[] = [
       const t = () => p.evaluate(() => (document.activeElement?.closest('.dotcard') ? (document.activeElement as HTMLElement).innerText.trim() : `вне карточки: ${document.activeElement?.tagName}`));
       if ((await t()) !== 'Иосиф') return fail(`фокус после Enter: «${await t()}»`);
       // «Родство» — строка за строкой, затем команды карточки; «Родители» — не дальше восьми Tab
-      for (let i = 0; i < 8 && (await t()) !== 'Родители'; i++) await p.keyboard.press('Tab');
-      if ((await t()) !== 'Родители') return fail(`Tab: «${await t()}»`);
+      for (let i = 0; i < 8 && (await t()) !== 'Показать родителей'; i++) await p.keyboard.press('Tab');
+      if ((await t()) !== 'Показать родителей') return fail(`Tab: «${await t()}»`);
       await p.keyboard.press('Enter');
       await p.waitForTimeout(1300);
       const ids = await stored(p);
