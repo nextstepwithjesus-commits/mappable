@@ -34,7 +34,7 @@ import { linkKeyString, type LinkKey } from '../engine/linkkey.ts';
 import type { Union, Unions } from '../engine/unions.ts';
 import { byId, models, type ModelData } from '../data/atlas.ts';
 import { unions as ALL_UNIONS } from '../ui/reveal.ts';
-import { listingOf, type OrderListing } from './trails.ts';
+import { listingOf, orderListing, type OrderListing } from './trails.ts';
 
 // ---------- правила в числах ----------
 
@@ -1464,7 +1464,10 @@ export function familyOrderNote(unionId: string, m: ModelData = models[0]): stri
  */
 export function personOrderNote(id: string, m: ModelData = models[0]): string | null {
   const u = mainUnion(ALL_UNIONS, id);
-  if (!u) return null;
-  const l = familyOrderListing(u.id, m);
-  return l && l.byOrder.includes(id) ? `по порядку перечисления, ${l.text}, выв.` : null;
+  const l = u ? familyOrderListing(u.id, m) : null;
+  if (l) return l.byOrder.includes(id) ? `по порядку перечисления, ${l.text}, выв.` : null;
+  // в союзе перечня нет (Амнон — единственный сын Ахиноамы): порядок — среди всех детей отца, 1 Пар 3:1–9 (orderListing);
+  // перечень союза есть, но лица не называет (младенец Давида и Вирсавии) — пометы нет (DG 2.3.6)
+  const o = m.chrono.get(id)?.byOrder ? orderListing(id, m) : null;
+  return o ? `по порядку перечисления, ${o.text}, выв.` : null;
 }

@@ -105,14 +105,14 @@ describe('ветви: при равенстве — путь по отцу', () 
 });
 
 describe('один атлас (решение 77; решение 73 отменено)', () => {
-  it('древа нет: любое начало оставляет небо; запись «tree» возвращается к небу', async () => {
-    const { atlasView } = await import('../src/ui/reveal.ts');
+  it('древа нет: вида атласа больше нет (atlasView убран, Q4); любое начало — показ неба', async () => {
+    const mod = await import('../src/ui/reveal.ts');
+    expect('atlasView' in mod).toBe(false);
+    const want = { adam: 'set', all: 'all', lines: 'lines', jesus: 'set', key: 'key' } as const;
     for (const s of ['adam', 'all', 'lines', 'jesus', 'key'] as const) {
       startWith(s);
-      expect(atlasView.value, s).toBe('sky');
+      expect(show.value.kind, s).toBe(want[s]);
     }
-    atlasView.value = 'tree';
-    expect(atlasView.value).toBe('sky');
   });
   it('«С Адама» — набор с одного лица, лицо выбрано, показ «набор»', async () => {
     const { selected } = await import('../src/state.ts');

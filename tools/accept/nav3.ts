@@ -5,7 +5,7 @@
  * движения камеры по кадрам и памяти браузера («toledot:work», «toledot:lanes», «toledot:stack»).
  */
 import type { Page } from 'playwright';
-import { pass, fail, hashId, type Scenario } from './kit.ts';
+import { pass, fail, hashId, pickShow, type Scenario } from './kit.ts';
 
 const cam = async (p: Page) => {
   const [l, t, r, b, x0, kx, laneTop, ky] = ((await p.locator('.sky').getAttribute('data-view')) ?? '').split(' ').map(Number);
@@ -200,8 +200,9 @@ export const nav3: Scenario[] = [
       await p.locator('.sky .linkbar').getByRole('button', { name: 'добавить в мой набор' }).click();
       await p.waitForTimeout(600);
       if ((await storedWork(p)) !== 'avraam sarra iessey david') return fail(`после «добавить»: ${await storedWork(p)}`);
-      const wl = p.locator('.sky .workbar');
-      if (!(await wl.count()) || !/4 лица/.test(txt(await wl.innerText()))) return fail('после «добавить» небо не показывает свой набор из 4 лиц');
+      // свой набор — строка показа «На небе: набор — 4 лица» (этап 11, решение 81: прежде — строка режима «набор»)
+      const wl = p.locator('.sky .showbar .txt');
+      if (!(await wl.count()) || !/набор — 4 лица/.test(txt(await wl.innerText())) || (await p.locator('.sky .linkbar').count())) return fail('после «добавить» небо не показывает свой набор из 4 лиц');
       // третий раз: ссылка — и уход на «#/»
       await setWork(p, ['avraam']);
       await go(p, link, 100);
@@ -240,13 +241,14 @@ export const nav3: Scenario[] = [
   },
   {
     n: 356,
-    title: 'IX-73, UX-68, решение 49: «только линии» у Руфи — окно ±10 поколений, Руфь и Овид в кадре; выключение возвращает прежнее окно за 400 мс',
+    // этап 11 (решение 81): флажок «только линии Мессии» стал показом «Линии Мессии» (лист «Показ»); выключение — «всё
+    // небо» в строке показа
+    title: 'IX-73, UX-68, решение 49: показ «Линии Мессии» у Руфи — окно ±10 поколений, Руфь и Овид в кадре; «всё небо» возвращает прежнее окно за 400 мс',
     run: async (p) => {
       await go(p, '#/ruf', 2800);
       const w0 = win(p);
       const c0 = await cam(p);
-      await p.click('text=только линии Мессии');
-      await p.waitForTimeout(1200);
+      await pickShow(p, 'Линии Мессии', { ms: 1200 });
       const on = win(p);
       if (!(on.w < 3000)) return fail(`вписан весь коридор: окно ${on.w} лет`);
       const ovid = await p.evaluate(() => {
@@ -254,7 +256,7 @@ export const nav3: Scenario[] = [
         return !!b && !!b.dataset.x;
       });
       if (!ovid) return fail('Овида (сына Руфи на линии) нет на экране');
-      const m = await motion(p, () => p.click('text=только линии Мессии'), 1200);
+      const m = await motion(p, () => p.locator('.sky .showbar .sb-cmd', { hasText: 'всё небо' }).click(), 1200);
       const c1 = await cam(p);
       const w1 = win(p);
       if (Math.abs(c1.kx / c0.kx - 1) > 0.01 || Math.abs(c1.x0 - c0.x0) * c1.kx > 3) return fail(`окно не вернулось: ${w0.y}/${w0.w} → ${w1.y}/${w1.w}`);
@@ -266,11 +268,10 @@ export const nav3: Scenario[] = [
   },
   {
     n: 357,
-    title: 'IX-73: в режиме «только линии» небо сдвинули — выключение окно не возвращает, выбранное лицо остаётся в видимой части',
+    title: 'IX-73: в показе «Линии Мессии» небо сдвинули — «всё небо» окно не возвращает, выбранное лицо остаётся в видимой части',
     run: async (p) => {
       await go(p, '#/david', 2800);
-      await p.click('text=только линии Мессии');
-      await p.waitForTimeout(1200);
+      await pickShow(p, 'Линии Мессии', { ms: 1200 });
       const box = (await p.locator('.sky > canvas').boundingBox())!;
       await p.mouse.move(box.x + box.width * 0.4, box.y + box.height * 0.5);
       await p.mouse.down();
@@ -278,7 +279,7 @@ export const nav3: Scenario[] = [
       await p.mouse.up();
       await p.waitForTimeout(700);
       const moved = await cam(p);
-      await p.click('text=только линии Мессии');
+      await p.locator('.sky .showbar .sb-cmd', { hasText: 'всё небо' }).click();
       await p.waitForTimeout(1000);
       const after = await cam(p);
       if (Math.abs(after.kx / moved.kx - 1) > 0.01) return fail(`выключение изменило масштаб: ${moved.kx} → ${after.kx}`);
@@ -329,10 +330,11 @@ export const nav3: Scenario[] = [
   },
   {
     n: 359,
-    title: 'IX-79: «Всё небо» и «Толедот» — 400–600 мс, масштаб только уменьшается, без фазы «приблизить»',
+    // этап 11 (Я30): команда органов неба «Всё небо» стала «Вписать» (на всём небе — то же вписывание всего неба)
+    title: 'IX-79: «Вписать» и «Толедот» — 400–600 мс, масштаб только уменьшается, без фазы «приблизить»',
     run: async (p) => {
       const log: string[] = [];
-      for (const [name, sel] of [['«Всё небо»', '.skyctl button:has-text("Всё небо")'], ['«Толедот»', 'header.top .wordmark']] as const) {
+      for (const [name, sel] of [['«Вписать»', '.skyctl button:has-text("Вписать")'], ['«Толедот»', 'header.top .wordmark']] as const) {
         await go(p, '#/david', 2800);
         const btn = p.locator(sel).first();
         if (!(await btn.count())) return fail(`нет кнопки ${name}`);
@@ -386,7 +388,7 @@ export const nav3: Scenario[] = [
   },
   {
     n: 361,
-    title: 'MOB-73, решение 58: строка режима «набор» на телефоне — одна строка «Только набор: 18 лиц — показать всех», оговорка о ссылке — в подсказке',
+    title: 'MOB-73, решение 58: строка показа «набор» на телефоне — одна строка «набор — 18 лиц — изменить», оговорка о ссылке — в подсказке',
     view: { width: 390, height: 844, touch: true },
     run: async (p) => {
       const ids = ['david', 'iessey', 'ovid', 'vooz', 'ruf', 'solomon', 'salmon', 'avraam', 'isaak', 'iakov', 'iuda', 'fares', 'esrom', 'aram', 'aminadav', 'naasson', 'rovoam', 'aviya'];
@@ -394,14 +396,15 @@ export const nav3: Scenario[] = [
       await p.reload();
       await p.waitForTimeout(1600);
       await go(p, '#/~k1', 2600);
-      const bar = p.locator('.sky .workbar');
-      if (!(await bar.count())) return fail('нет строки режима «набор»');
+      // этап 11 (решение 81): строка режима «набор» — строка показа, на телефоне коротко: «набор — 18 лиц — изменить»
+      const bar = p.locator('.sky .showbar');
+      if (!(await bar.count())) return fail('нет строки показа');
       const n = ((await p.evaluate(`JSON.parse(localStorage.getItem('toledot:work') || '[]').length`)) as number) || 0;
-      const t = txt(await bar.innerText());
-      if (!new RegExp(`^Только набор: ${n} лиц[а]? — показать всех$`).test(t)) return fail(`строка: «${t}»`);
+      const t = txt(await bar.locator('.txt').innerText());
+      if (!new RegExp(`^набор — ${n} лиц[а]? — изменить$`).test(t)) return fail(`строка: «${t}»`);
       const b = (await bar.boundingBox())!;
       if (b.height > 50) return fail(`строка ${b.height} px — не одна строка`);
-      const cmd = (await bar.getByRole('button', { name: 'показать всех' }).boundingBox())!;
+      const cmd = (await bar.locator('.sb-cmd', { hasText: 'изменить' }).boundingBox())!;
       if (cmd.height < 44) return fail(`команда ${cmd.height} px`);
       const title = txt((await bar.locator('.txt').getAttribute('title')) ?? '');
       if (!/не больше 12 лиц/.test(title)) return fail(`подсказка: «${title}»`);

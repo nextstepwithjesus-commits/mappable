@@ -28,7 +28,7 @@ import { model, onlyLines, selected } from '../state.ts';
 import { KEY_IDS, LINE_IDS, unions } from './reveal.ts';
 import { nameCase } from './text/ru.ts';
 import { num } from './text/typo.ts';
-import { foldDesc, parseShow, sameShow, setShowState, show, showAnchor, showKey, showLinksField, showOn, shownSet, type Show } from './work.ts';
+import { foldDesc, parseShow, sameShow, setShowState, show, showAnchor, showKey, showLinksField, showOn, shownSet, WORK_URL_MAX, type Show } from './work.ts';
 
 export { show, showKey, showLinksField, parseShow, sameShow };
 export type { Show, LinksOut, LineageBy, LineageDir, Stub };
@@ -341,8 +341,8 @@ export const skyShow = computed<ShowIn>(() => {
 
 /** Команда части строки показа. */
 export type ShowCmd =
-  /** открыть лист «Показ» («изменить») */
-  | { kind: 'sheet' }
+  /** открыть лист «Показ» («изменить»); lineage — на поле рода лица person */
+  | { kind: 'sheet'; lineage?: string }
   /** перейти к показу («всё небо», «добавить созвездие «Патриархи»») */
   | { kind: 'show'; show: Show }
   /** меню поля рода лица: предки/потомки/оба, поколения, по отцам/по крови */
@@ -353,12 +353,20 @@ export interface SummaryPart {
   text: string;
   cmd?: ShowCmd;
 }
-/** Строка показа: text — предложение «На небе: …» (изменяемые части — с командами), cmds — команды после него. */
+/**
+ * Строка показа: text — предложение «На небе: …» (изменяемые части — с командами), cmds — команды после него.
+ * Узкое небо (строка не помещается в одну строку, ShowBar.tsx): mid — то же предложение без подробностей (основатель,
+ * связи наружу, уточнение имени); short — одна строка «Дом Нахора» — 17 лиц» с одной командой «изменить», подробности —
+ * в листе «Показ».
+ */
 export interface ShowSummary {
   text: readonly SummaryPart[];
   cmds: readonly SummaryPart[];
   /** вся строка без команд — для диктора и подписи */
   label: string;
+  mid: readonly SummaryPart[];
+  short: readonly SummaryPart[];
+  shortCmds: readonly SummaryPart[];
 }
 
 const plural = (n: number, one: string, few: string, many: string) =>
@@ -398,36 +406,46 @@ function stubTarget(s: Show, c: ShowContent): string | null {
 /** Строка показа s. */
 export function summaryOf(s: Show, c: ShowContent = contentOf(s)): ShowSummary {
   const text: SummaryPart[] = [{ text: 'На небе: ' }];
-  const cmds: SummaryPart[] = [{ text: 'изменить', cmd: { kind: 'sheet' } }];
+  const change: SummaryPart = { text: 'изменить', cmd: { kind: 'sheet' } };
+  const cmds: SummaryPart[] = [change];
   const toAll: SummaryPart = { text: 'всё небо', cmd: { kind: 'show', show: { kind: 'all' } } };
   const n = c.ids.size;
+  /** без подробностей (mid) и одной строкой (short); null — как text */
+  let mid: SummaryPart[] | null = null;
+  let short = '';
+  let shortCmd: SummaryPart = change;
   switch (s.kind) {
     case 'all':
       text.push({ text: 'всё небо' });
+      short = 'всё небо';
       break;
     case 'lines':
-      text.push({ text: `линии Мессии — ${personsN(n)}` });
+      text.push({ text: (short = `линии Мессии — ${personsN(n)}`) });
       cmds.push(toAll);
       break;
     case 'key':
-      text.push({ text: `ключевые лица — ${personsN(n)}` });
+      text.push({ text: (short = `ключевые лица — ${personsN(n)}`) });
       cmds.push(toAll);
       break;
     case 'set':
-      text.push({ text: `набор — ${personsN(n)}` });
+      text.push({ text: (short = `набор — ${personsN(n)}`) });
       cmds.push(toAll);
       break;
     case 'groups': {
       const sec = wholeSection(s.groups);
       const names = s.groups.map((g) => `«${groupById.get(g)?.name ?? g}»`);
-      if (sec === 'tribes') text.push({ text: 'все колена' });
-      else text.push({ text: `${s.groups.length > 1 ? 'созвездия' : 'созвездие'} ${names.join(', ')}` });
+      const what = sec === 'tribes' ? 'все колена' : `${s.groups.length > 1 ? 'созвездия' : 'созвездие'} ${names.join(', ')}`;
+      text.push({ text: what });
       const bits = [personsN(n + c.guests.size)];
       if (c.founder) bits.push(`основатель ${byId.get(c.founder)?.name ?? c.founder}`);
       if (s.links === 'stubs') bits.push(c.stubs.length ? `${linksN(c.stubs.length)} наружу` : 'связей наружу нет');
       else if (s.links === 'none') bits.push('без связей наружу');
       else bits.push('с роднёй вне созвездия');
       text.push({ text: ` — ${bits.join('; ')}` });
+      mid = [text[0], { text: `${what} — ${bits[0]}` }];
+      // одной строкой: «Дом Нахора» — 17 лиц»; два созвездия — оба имени; больше — числом
+      const shortWhat = sec === 'tribes' ? 'все колена' : s.groups.length <= 2 ? names.join(', ') : plural(s.groups.length, 'созвездие', 'созвездия', 'созвездий');
+      short = `${shortWhat} — ${bits[0]}`;
       const t = stubTarget(s, c);
       if (t) cmds.push({ text: `добавить созвездие «${groupById.get(t)?.name}»`, cmd: { kind: 'show', show: { ...s, groups: [...s.groups, t] } } });
       cmds.push(toAll);
@@ -438,19 +456,44 @@ export function summaryOf(s: Show, c: ShowContent = contentOf(s)): ShowSummary {
         text: label(cur),
         cmd: { kind: 'menu', field, options: vals.map((v) => ({ label: label(v), show: set(v), current: v === cur })) },
       });
-      text.push(opt<LineageDir>('dir', ['down', 'up', 'both'], (v) => DIR_WORD[v], (v) => ({ ...s, dir: v }), s.dir));
+      const dir = opt<LineageDir>('dir', ['down', 'up', 'both'], (v) => DIR_WORD[v], (v) => ({ ...s, dir: v }), s.dir);
+      text.push(dir);
       const g = nameGen(s.id);
+      const bare = nameCaseBare(s.id);
       text.push({ text: g ? ` ${g} — ` : `: ${fullName(s.id)} — ` });
-      text.push(opt<1 | 2 | 3 | null>('gen', [1, 2, 3, null], genWord, (v) => ({ ...s, gen: v }), s.gen));
-      text.push({ text: '; ' });
-      text.push(opt<LineageBy>('by', ['father', 'blood'], (v) => BY_WORD[v], (v) => ({ ...s, by: v }), s.by));
-      text.push({ text: ` — ${personsN(n + c.guests.size)}` });
+      const rest = [
+        opt<1 | 2 | 3 | null>('gen', [1, 2, 3, null], genWord, (v) => ({ ...s, gen: v }), s.gen),
+        { text: '; ' },
+        opt<LineageBy>('by', ['father', 'blood'], (v) => BY_WORD[v], (v) => ({ ...s, by: v }), s.by),
+        { text: ` — ${personsN(n + c.guests.size)}` },
+      ];
+      text.push(...rest);
+      // без уточнения имени: «потомки ▾ Иакова — 1 поколение ▾; по отцам ▾ — 18 лиц»
+      mid = [text[0], dir, { text: bare ? ` ${bare} — ` : `: ${byId.get(s.id)?.name ?? s.id} — ` }, ...rest];
+      short = bare ? `${DIR_WORD[s.dir]} ${bare} — ${personsN(n + c.guests.size)}` : `род: ${byId.get(s.id)?.name ?? s.id} — ${personsN(n + c.guests.size)}`;
+      shortCmd = { text: 'изменить', cmd: { kind: 'sheet', lineage: s.id } };
       cmds.shift();
       cmds.push(toAll);
       break;
     }
   }
-  return { text, cmds, label: text.map((p) => p.text).join('') };
+  return { text, cmds, label: text.map((p) => p.text).join(''), mid: mid ?? text, short: [{ text: short }], shortCmds: [shortCmd] };
+}
+
+/** Имя без уточнения в родительном падеже: «Иакова»; null — имя не склоняется надёжно. */
+function nameCaseBare(id: string): string | null {
+  const p = byId.get(id);
+  return p ? nameCase(p.name, p.sex, 'gen', p.unnamed, p.alt) : null;
+}
+
+/**
+ * Оговорка о ссылке у показа «набор» (решение 58; MOB-73): набор до 12 лиц передаётся ссылкой списком (решение 34),
+ * длиннее — только показ. Не в самой строке, а в её подсказке (ShowBar.tsx).
+ */
+export function setLinkNote(n: number): string {
+  return n > WORK_URL_MAX
+    ? `Ссылкой передаётся показ «набор»; сам набор — только если в нём не больше ${WORK_URL_MAX} лиц`
+    : `Ссылка на этот вид передаёт и сам набор: в нём не больше ${WORK_URL_MAX} лиц`;
 }
 
 /** Строка показа сейчас; выбранное лицо вне показа — в конце строки: «Давид — вне показа». */
@@ -461,7 +504,7 @@ export const showSummary = computed<ShowSummary>(() => {
   const out = outsideOf(s, c, selected.value);
   if (!out) return sm;
   const part = { text: `; ${fullName(out)} — вне показа` };
-  return { ...sm, text: [...sm.text, part], label: sm.label + part.text };
+  return { ...sm, text: [...sm.text, part], mid: [...sm.mid, part], label: sm.label + part.text };
 });
 
 // ---------- лист «Показ»: разделы созвездий ----------

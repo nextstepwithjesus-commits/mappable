@@ -144,6 +144,16 @@ async function clickAt(p: Page, a: { x: number; y: number }, touch = false) {
   await p.waitForTimeout(700);
 }
 /** Снять выбранную связь: Escape (§ 8). */
+/** Небо встало: окно .sky[data-view] не меняется 200 мс (лист телефона после выбора и снятия связи едет, небо — за ним). */
+async function settled(p: Page) {
+  let was = '';
+  for (let k = 0; k < 20; k++) {
+    const now = (await p.locator('.sky').getAttribute('data-view')) ?? '';
+    if (now === was) return;
+    was = now;
+    await p.waitForTimeout(200);
+  }
+}
 async function clearLink(p: Page) {
   await p.keyboard.press('Escape');
   await p.waitForTimeout(300);
@@ -311,7 +321,8 @@ export const grammar11: Scenario[] = [
         const row = p.locator('.which .which-link[data-link="k.iakov.rakhil._.iosif"]');
         if (!(await row.count())) return fail('«Какая связь?» без связи Иосифа');
         const h = (await row.boundingBox())!.height;
-        if (h < 44) return fail(`строка «Какая связь?» ${h} px`);
+        // строка связи — не ниже 56 px (§ 8: слова связи бывают в две строки)
+        if (h < 56) return fail(`строка «Какая связь?» ${h} px`);
         await row.tap();
         await p.waitForTimeout(600);
         got = await htmlLink(p);
@@ -418,20 +429,30 @@ export const grammar11: Scenario[] = [
   {
     n: 748,
     view: PHONE,
-    title: 'Я23: касание в 18 px от линии — та же связь или «Какая связь?» со строками не ниже 44 px',
+    title: 'Я23: касание в 18 px от линии — та же связь или «Какая связь?»: строки связей не ниже 56 px, строки лиц — 44 px',
     run: async (p) => {
       const out: string[] = [];
       let valid = 0;
       for (const hash of ['#/iakov~vr.iakov.d.1.f', '#/david~vr.david.d.1.f', '#/noy~vr.noy.d.1.f']) {
       await open(p, hash);
       // ленту ловит нарисованная нить (ribbons.ts), а не маршрут журнала: пробы — по стволам, зубцам и чертам брака
-      const all = await linkLog(p);
-      const log = all.filter((q) => ['tooth', 'trunk', 'bar'].includes(q.kind));
-      const o = await origin(p);
-      const st = [...(await stars(p)).values()];
-      for (const q of log) {
+      const kinds = ['tooth', 'trunk', 'bar'];
+      const first = (await linkLog(p)).filter((q) => kinds.includes(q.kind)).map((q) => `${q.kind}|${q.ks}`);
+      for (const want of first) {
+        // журнал и звёзды — заново перед каждой пробой, когда небо встало: выбор связи на телефоне ставит лист на карточку
+        // связи (214 px), и небо над ним становится выше
+        await settled(p);
+        const all = await linkLog(p);
+        const q = all.find((r) => `${r.kind}|${r.ks}` === want);
+        if (!q) continue;
+        const o = await origin(p);
+        // звёзды кадра (canvas[data-stars-at]: «x,y;…»)
+        const st = (await starsOf(p)).map(([x, y]) => ({ x, y }));
         const a = aimAt(q);
-        // проба честная: ближе всех к точке касания — сама линия (на 2 px и больше), звёзд ближе 16 px нет
+        // видимая часть неба (.sky[data-view]: «l t r b …»): под линейкой годов и буквами полос линий не видно
+        const [vl, vt, vr, vb] = ((await p.locator('.sky').getAttribute('data-view')) ?? '').split(' ').map(Number);
+        // проба честная: ближе всех к точке касания — сама линия (на 2 px и больше), звёзд ближе 16 px нет; точка и
+        // ближайшая к ней точка линии — в видимой части неба
         let probe: { x: number; y: number } | null = null;
         for (const [dx, dy] of [[0, 18], [0, -18], [18, 0], [-18, 0]]) {
           const tx = a.x + dx;
@@ -440,7 +461,8 @@ export const grammar11: Scenario[] = [
           const dmin = Math.min(Infinity, ...all.filter((r) => r.ks !== q.ks && r.kind !== 'node' && r.kind !== 'join').flatMap((r) => segs(r).map((g) => distSeg(tx, ty, g))));
           // и не в поле ромба (на касании — 44 × 44): касание там открывает карточку союза
           const nodesNear = nodesOf(all).some(([x, y]) => Math.abs(x - tx) < 24 && Math.abs(y - ty) < 24);
-          if (dq <= 22 && dq + 2 < dmin && !nodesNear && st.every((z) => Math.hypot(z.x - tx, z.y - ty) > 16)) {
+          const open = tx > vl + 4 && tx < vr - 4 && ty > vt + 4 && ty < vb - 4;
+          if (open && dq <= 22 && dq + 2 < dmin && !nodesNear && st.every((z) => Math.hypot(z.x - tx, z.y - ty) > 16)) {
             probe = { x: tx, y: ty };
             break;
           }
@@ -452,6 +474,8 @@ export const grammar11: Scenario[] = [
         const onCanvas = await p.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.tagName === 'CANVAS', { x: o.x + tx, y: o.y + ty });
         if (!onCanvas) continue;
         valid++;
+        const before = await htmlLink(p);
+        if (before) return fail(`${q.ks}: перед пробой выбрана связь ${before} (Escape её не снял)`);
         await p.touchscreen.tap(o.x + tx, o.y + ty);
         await p.waitForTimeout(900);
         const got = await htmlLink(p);
@@ -464,8 +488,9 @@ export const grammar11: Scenario[] = [
           continue;
         }
         if (ask) {
-          const hs = await p.locator('.which .which-item').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().height));
-          if (hs.some((h) => h < 44)) return fail(`строки «Какая связь?» ${hs.join(', ')} px`);
+          // строки лиц — не ниже 44 px, строки связей — не ниже 56 px (§ 8)
+          const hs = await p.locator('.which .which-item').evaluateAll((els) => els.map((e) => ({ h: e.getBoundingClientRect().height, link: e.classList.contains('which-link') })));
+          if (hs.some((q) => q.h < (q.link ? 56 : 44))) return fail(`строки «Какая связь?» ${hs.map((q) => `${q.h}${q.link ? ' (связь)' : ''}`).join(', ')} px`);
           out.push(`${q.ks} → «Какая связь?» (${ask})`);
           await p.keyboard.press('Escape');
           await p.waitForTimeout(300);

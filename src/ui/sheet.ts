@@ -54,10 +54,19 @@ export interface Stops {
   full: number;
 }
 
-/** Высоты положений (px) по месту для листа: между верхней строкой и полосой времени. */
-export function stopsFor(avail: number): Stops {
+/**
+ * Низкий экран (альбомная ориентация, масштаб 200 %): над листом-карточкой остаётся не меньше стольких px неба —
+ * органы неба (колонка 2 × 2) и звезда видны над листом (H6; MOB-26); лист на первом положении — краткая карточка.
+ */
+export const LOW_SKY = 150;
+/** Высота первого положения при месте avail: 214 px, на низком экране — не выше avail − LOW_SKY (но не ниже 104). */
+export const peekFor = (avail: number, low = lowScreen()) => (low ? Math.min(PEEK_H, Math.max(104, Math.round(avail) - LOW_SKY)) : PEEK_H);
+
+/** Высоты положений (px) по месту для листа: между верхней строкой и полосой времени; 55 % — не ниже первого положения. */
+export function stopsFor(avail: number, low = lowScreen()): Stops {
   const full = Math.max(PEEK_H, Math.round(avail));
-  return { peek: Math.min(PEEK_H, full), half: Math.max(PEEK_H, Math.round(full * HALF_SHARE)), full };
+  const peek = Math.min(peekFor(avail, low), full);
+  return { peek, half: Math.max(PEEK_H, peek, Math.round(full * HALF_SHARE)), full };
 }
 
 /** Сколько миллисекунд инерции прибавить к протяжке: взмах перебрасывает лист через ближайшее положение. */

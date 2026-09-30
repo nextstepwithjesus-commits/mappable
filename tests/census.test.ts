@@ -5,9 +5,9 @@
  *
  * Известные остатки (отчёт Q1, числа — в сообщении координатору): на «всех лицах» — узлы союзов, чья строка после конца
  * следа владельца занята чужим следом (общая раскладка не меняется, NFR-3), пересечения зубцов двух жён одного отца
- * с перемешанными по году детьми, названия созвездий на звёздах (прежние, K4: 4); в роде Иуды — стволы через коридор;
- * на 390 px — высота строки 26 px (предел камеры KY_MAX), а не 32. Для них ниже — верхние границы нынешних чисел:
- * рост — поломка.
+ * с перемешанными по году детьми, названия созвездий на звёздах (прежние, K4: 4); в роде Иуды — стволы через коридор.
+ * Для них ниже — верхние границы нынешних чисел: рост — поломка. Высота строки на 390 px — не ниже 32 px (Я12): в
+ * семейной укладке на узком небе строки выше при том же масштабе времени (Q4; src/render/camera.ts, KY_MAX_TALL).
  */
 import { beforeAll, describe, expect, it } from 'vitest';
 
@@ -43,13 +43,36 @@ describe('семейные сцены: пороги Я1–Я15 (§ 12)', () => {
       expect(c.y11trails).toBeLessThanOrEqual(17);
     }
   });
-  it('телефон 390: пороги, кроме высоты строки 32 px (предел камеры 26 px, известный остаток) и подписей на звёздах у «линий Мессии»', () => {
+  it('телефон 390: все пороги, строка не ниже 32 px', () => {
     for (const id of ['noy', 'adam', 'iakov', 'david', 'nahor']) {
       const c = C.census(C.capture(id, 1, 390));
-      expect(strict(c, [/^Я12 \(строка\)/, /^Я12 \(звёзды\)/]), id).toEqual([]);
-      expect(c.rowPx, id).toBeGreaterThanOrEqual(21 - 0.5);
+      expect(strict(c), id).toEqual([]);
+      expect(c.rowPx, id).toBeGreaterThanOrEqual(32 - 0.5);
     }
-  });
+  }, 60_000);
+  it('телефон 390: Авраам, род Иуды, колено Вениамина, «линии Мессии» — строка не ниже 32 px; известные остатки не растут', () => {
+    const at = (id: string) => C.census(C.capture(id, 1, 390));
+    // Авраам: подпись «Агарь» у звезды Исаака (одна; прежде — и на его линии)
+    const av = at('avraam');
+    expect(av.rowPx).toBeGreaterThanOrEqual(32 - 0.5);
+    expect(strict(av, [/^Я12 \(звёзды\)/])).toEqual([]);
+    expect(av.y12stars).toBeLessThanOrEqual(1);
+    // род Иуды: стволы через коридор (Я11 следы ≤ 17), два случая Я1 и одно пересечение союзов — как на 1440 и прежде
+    const ju = at('judah');
+    expect(ju.rowPx).toBeGreaterThanOrEqual(32 - 0.5);
+    expect(ju.y1).toBeLessThanOrEqual(2);
+    expect(ju.y11).toBeLessThanOrEqual(1);
+    expect(ju.y11trails).toBeLessThanOrEqual(17);
+    expect(ju.y8).toBeLessThanOrEqual(1);
+    const be = at('benjamin');
+    expect(be.rowPx).toBeGreaterThanOrEqual(32 - 0.5);
+    expect(strict(be)).toEqual([]);
+    // «линии Мессии» на обзоре: имена лиц линий на тусклых бусинах (было 12 при строке 26 px)
+    const li = at('lines');
+    expect(li.rowPx).toBeGreaterThanOrEqual(32 - 0.5);
+    expect(strict(li, [/^Я12 \(звёзды\)/])).toEqual([]);
+    expect(li.y12stars).toBeLessThanOrEqual(6);
+  }, 60_000);
 });
 
 describe('«все лица» целиком (§ 4.1): пороги § 12 и верхние границы известных остатков', () => {

@@ -75,7 +75,8 @@ export const union4: Scenario[] = [
       const on = (await p.locator('.folio .union-onsky').innerText()).replace(/\s+/g, ' ');
       if (!/на небе 3 из 3 лиц союза/.test(on)) return fail(`строка состояния: ${on}`);
       const said = await p.locator('.folio .union-actions [role="status"]').innerText();
-      if (!/Раскрыто/.test(said)) return fail(`диктору: «${said}»`);
+      // слова «Раскрыто» в интерфейсе больше нет (этап 11, Я30): диктору — что показано на небе «набор» и сколько
+      if (!/^На небе «набор» показано ещё: 3 лица/.test(said.replace(/\u00a0/g, ' '))) return fail(`диктору: «${said}»`);
       await btn.click();
       await p.waitForTimeout(800);
       const off = (await p.locator('.folio .union-onsky').innerText()).replace(/\s+/g, ' ');

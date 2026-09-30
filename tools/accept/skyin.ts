@@ -5,7 +5,7 @@
  * и разметке органов.
  */
 import type { Page } from 'playwright';
-import { pass, fail, hashId, type Check, type Scenario } from './kit.ts';
+import { pass, fail, hashId, pickShow, type Check, type Scenario } from './kit.ts';
 
 const cam = async (p: Page) => {
   const [l, t, r, b, x0, kx, laneTop, ky] = ((await p.locator('.sky').getAttribute('data-view')) ?? '').split(' ').map(Number);
@@ -229,33 +229,34 @@ export const skyin: Scenario[] = [
   },
   {
     n: 255,
-    title: 'UX-62, IX-59, решение 26: переключатель «все лица | набор»; в режиме «набор» у кромки неба — «На небе — только рабочий набор, 2 лица — показать всех»',
+    // этап 11 (решение 81): переключатель «все лица | набор» стал строкой показа — «На небе: набор — 2 лица — изменить
+    // всё небо»; «показать всех» — команда «всё небо»
+    title: 'UX-62, IX-59, решение 26: показ «набор» (лист «Показ»); у кромки неба — «На небе: набор — 2 лица — изменить, всё небо»; «всё небо» возвращает все лица',
     run: async (p) => {
       await go(p, '#/david', 2400);
       await p.evaluate(() => localStorage.setItem('toledot:work', JSON.stringify([['david', { via: 'self', of: 'david' }], ['ruf', { via: 'self', of: 'ruf' }]])));
       await p.reload();
       await p.waitForTimeout(2400);
-      const seg = p.locator('.skyctl .seg button');
-      const labels = (await seg.allInnerTexts()).map((s) => s.trim());
-      if (!labels.includes('все лица') || !labels.includes('набор')) return fail(`переключатель: ${labels.join(' | ')}`);
-      await p.locator('.skyctl .seg button', { hasText: 'набор' }).click();
-      await p.waitForTimeout(1800);
-      const bar = p.locator('.sky .workbar');
-      if (!(await bar.count())) return fail('нет строки режима «набор»');
-      const t = nbsp(await bar.innerText()).replace(/\s+/g, ' ').trim();
-      if (!/^На небе — только рабочий набор, 2 лица — показать всех/.test(t)) return fail(`строка: «${t}»`);
+      await pickShow(p, 'Набор', { ms: 1800 });
+      const bar = p.locator('.sky .showbar');
+      if (!(await bar.count())) return fail('нет строки показа');
+      const t = nbsp(await bar.locator('.txt').innerText()).replace(/\u2060/g, '').replace(/\s+/g, ' ').trim();
+      if (!/^На небе: набор — 2 лица — изменить ?всё небо$/.test(t)) return fail(`строка: «${t}»`);
+      if ((await p.locator('.sky canvas').first().getAttribute('data-mode')) !== 'work') return fail('небо не показывает набор');
       const b = (await bar.boundingBox())!;
       const c = await cam(p);
       const top = (await canvasBox(p)).y;
       if (b.y < top + c.t) return fail(`строка лежит на рамке: верх ${b.y - top}, рамка до ${c.t}`);
-      await bar.getByRole('button', { name: 'показать всех' }).click();
-      await p.waitForTimeout(800);
-      return (await bar.count()) ? fail('«показать всех» не вернуло все лица') : pass(t);
+      await bar.locator('.sb-cmd', { hasText: 'всё небо' }).click();
+      await p.waitForTimeout(900);
+      const t2 = nbsp(await bar.locator('.txt').innerText()).replace(/\u2060/g, '').replace(/\s+/g, ' ').trim();
+      if ((await p.locator('.sky canvas').first().getAttribute('data-mode')) === 'work' || !/^На небе: всё небо/.test(t2)) return fail(`«всё небо» не вернуло все лица: «${t2}»`);
+      return pass(t);
     },
   },
   {
     n: 256,
-    title: 'MOB-54, MOB-56, MOB-57, MOB-67, MOB-07 пальцем, 390 × 844: строка режима «набор» с «показать всех» 44 px; палец у края сдвигает небо; «Какое лицо?» получает фокус; описание неба — без повтора, о жестах; вступление — сначала касания',
+    title: 'MOB-54, MOB-56, MOB-57, MOB-67, MOB-07 пальцем, 390 × 844: строка показа «набор — 3 лица — изменить» с целью 44 px, все лица — листом «Показ»; палец у края сдвигает небо; «Какое лицо?» получает фокус; описание неба — без повтора, о жестах; вступление — сначала касания',
     view: { width: 390, height: 844, touch: true },
     run: async (p) => {
       // набор — в памяти браузера, режим — в адресе (решение 34): адрес без k1 вернул бы все лица
@@ -265,15 +266,24 @@ export const skyin: Scenario[] = [
       await p.reload();
       await p.waitForTimeout(1600);
       await go(p, '#/~k1', 2600);
-      const bar = p.locator('.sky .workbar');
-      if (!(await bar.count())) return fail('нет строки режима «набор»');
-      if (!/3 лица/.test(nbsp(await bar.innerText()))) return fail(`строка: «${await bar.innerText()}»`);
-      const btn = bar.getByRole('button', { name: 'показать всех' });
+      // этап 11 (решение 81): строка показа на телефоне — одной строкой «набор — 3 лица — изменить»; все лица — «Всё
+      // небо» в листе «Показ» («Показать 2 670 лиц»)
+      const bar = p.locator('.sky .showbar');
+      if (!(await bar.count())) return fail('нет строки показа');
+      const bt = nbsp(await bar.locator('.txt').innerText()).replace(/\u2060/g, '').replace(/\s+/g, ' ').trim();
+      if (!/^набор — 3 лица — изменить$/.test(bt)) return fail(`строка: «${bt}»`);
+      const btn = bar.locator('.sb-cmd', { hasText: 'изменить' });
       const h = (await btn.boundingBox())!.height;
       if (h < 44) return fail(`команда ${h} px`);
       await btn.tap();
-      await p.waitForTimeout(800);
-      if (await bar.count()) return fail('касание не вернуло все лица');
+      await p.waitForTimeout(600);
+      await p.locator('.showsheet .ss-kind', { hasText: 'Всё небо' }).first().tap();
+      await p.waitForTimeout(300);
+      const apply = p.locator('.showsheet .ss-apply button');
+      if (!((await apply.boundingBox())!.height >= 44)) return fail('кнопка «Показать» ниже 44 px');
+      await apply.tap();
+      await p.waitForTimeout(900);
+      if ((await p.locator('.sky canvas').first().getAttribute('data-mode')) === 'work') return fail('лист «Показ» не вернул все лица');
       // описание неба для диктора: одно (скрытое, только как описание холста), о жестах
       const d = await p.evaluate(() => ({
         hidden: !!document.getElementById('sky-window')?.hidden && !!document.getElementById('sky-help')?.hidden,
@@ -334,11 +344,11 @@ export const skyin: Scenario[] = [
       await p.evaluate(() => localStorage.setItem('toledot:work', JSON.stringify([['david', { via: 'self', of: 'david' }], ['ovid', { via: 'self', of: 'ovid' }], ['vooz', { via: 'self', of: 'vooz' }]])));
       await p.reload();
       await p.waitForTimeout(2400);
-      await p.locator('.skyctl .seg button', { hasText: 'набор' }).click();
-      await p.waitForTimeout(1500);
+      // этап 11 (решение 81): показ «набор» — лист «Показ»; в адресе — поле показа «~vs» (прежде «~k1»)
+      await pickShow(p, 'Набор', { ms: 1500 });
       const url = p.url();
       const h = decodeURIComponent(new URL(url).hash);
-      if (!/~k1/.test(h) || !/~ndavid\.ovid\.vooz/.test(h)) return fail(`адрес: ${h}`);
+      if (!/~vs/.test(h) || !/~ndavid\.ovid\.vooz/.test(h)) return fail(`адрес: ${h}`);
       const ctx = await p.context().browser()!.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
       try {
         const q = await ctx.newPage();
@@ -361,7 +371,9 @@ export const skyin: Scenario[] = [
         await q.waitForTimeout(600);
         const set = await stored(q);
         if (set.join(' ') !== 'david ovid vooz') return fail(`после «добавить в мой набор»: ${set.join(' ')}`);
-        if (!(await q.locator('.sky .workbar').count()) || (await bar.count())) return fail('после «добавить» — не строка своего набора');
+        // строка своего набора — строка показа «На небе: набор — 3 лица»
+        const own = nbsp(await q.locator('.sky .showbar .txt').innerText()).replace(/\u2060/g, '').replace(/\s+/g, ' ');
+        if ((await bar.count()) || !/набор — 3 лица/.test(own)) return fail(`после «добавить» — не строка своего набора: «${own}»`);
       } finally {
         await ctx.close();
       }
@@ -370,7 +382,7 @@ export const skyin: Scenario[] = [
   },
   {
     n: 258,
-    title: 'IX-64: в режиме «набор» отдаление — не дальше окна набора ×1,5 (не уже 200 лет)',
+    title: 'IX-64: в показе «набор» отдаление — не дальше окна набора ×1,5 (не уже 200 лет); «Вписать» вписывает набор',
     run: async (p) => {
       await p.evaluate(() => localStorage.setItem('toledot:work', JSON.stringify([['david', { via: 'self', of: 'david' }], ['iessey', { via: 'self', of: 'iessey' }], ['ovid', { via: 'self', of: 'ovid' }], ['vooz', { via: 'self', of: 'vooz' }], ['ruf', { via: 'self', of: 'ruf' }]])));
       // атлас читает набор из памяти при загрузке: сначала перезагрузка, потом ссылка «набор» без списка (UX-79: при пустом
@@ -379,7 +391,8 @@ export const skyin: Scenario[] = [
       await p.waitForTimeout(1600);
       await go(p, '#/~k1', 2600);
       if ((await p.locator('.sky canvas').first().getAttribute('data-mode')) !== 'work') return fail('адрес с k1 не включил режим «набор»');
-      await p.locator('.skyctl button', { hasText: 'Всё небо' }).click();
+      // этап 11 (Я30): «Всё небо» органов неба — «Вписать» (весь показ «набор» в окне)
+      await p.locator('.skyctl button', { hasText: 'Вписать' }).click();
       await p.waitForTimeout(1600);
       const fit = hashWin(p);
       const box = await canvasBox(p);

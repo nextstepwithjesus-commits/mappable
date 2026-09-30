@@ -431,7 +431,9 @@ export function underPointer(sky: Sky, x: number, y: number, r: number): Under |
   const star = sky.hitStar(x, y, r);
   const plate = plateAt(sky, x, y);
   const count = plate ? null : countAt(sky, x, y);
-  const line = L.connectors ? sky.linkAt(x, y, LINK_R, false) : null;
+  const hit = L.connectors ? sky.linkAt(x, y, LINK_R, false) : null;
+  // под рамкой неба линии не видно — и не ловится (как у касания, linksNear)
+  const line = hit && hit.x >= sky.letterW && hit.y >= sky.openTop && hit.y <= sky.cam.vp.b ? hit : null;
   const onPlate = !!plate && Math.hypot(x - plate.cx, y - plate.cy) <= plate.r + 3;
   const onCount = !!count && Math.abs(y - (count.y + count.h / 2)) <= 8;
   const onLine = !!line && line.d <= 2;
@@ -462,7 +464,9 @@ export const ribbonKey = (h: Pick<RibbonHit, 'line' | 'to'>): LinkKey => ({ kind
  * Связи у пальца (касание, § 8): линии и узлы в радиусе TOUCH_R и шаг ленты — по одной на ключ, ближайшие первыми.
  */
 export function linksNear(sky: Sky, x: number, y: number, r = TOUCH_R): { key: LinkKey; ks: string; d: number; x: number; y: number }[] {
-  const out = (layers.peek().connectors ? sky.linksAt(x, y, r, false) : []).map((h) => ({ key: h.key, ks: h.ks, d: h.d, x: h.x, y: h.y }));
+  // только видимая часть линии: под рамкой (линейка годов, буквы полос) и под нижней кромкой её не видно — не ловится
+  const open = (h: { x: number; y: number }) => h.x >= sky.letterW && h.y >= sky.openTop && h.y <= sky.cam.vp.b;
+  const out = (layers.peek().connectors ? sky.linksAt(x, y, r, false) : []).filter(open).map((h) => ({ key: h.key, ks: h.ks, d: h.d, x: h.x, y: h.y }));
   if (layers.peek().ribbons) {
     const rib = ribbonAt(sky, x, y, r);
     if (rib) {
@@ -949,8 +953,11 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       // звезда под самым пальцем важнее связей (§ 8: звезда > ◆ > «+N» > линии)
       const tight = c.kind !== 'none' && c.kind !== 'zoom' ? sky.hitStar(at.x, at.y, STAR_FIRST + 2) : null;
       if (tight && c.kind === 'pick') {
-        // палец на самой линии у звезды (зубец к ребёнку короче поля звезды, § 8): не наугад — «лицо или связь» списком
-        const onLine = pickMode.value ? [] : linksNear(sky, at.x, at.y, 6);
+        // палец на самой линии у звезды (зубец к ребёнку короче поля звезды, § 8): не наугад — «лицо или связь» списком.
+        // Только на масштабе, где линии связей видны в полную силу: на обзоре они бледные или их нет (пальцу не видно, что
+        // рядом линия), и касание у звезды с дрожанием выбирает звезду (MOB-09; звезда > линия, § 8)
+        const clear = (sky.linkFrame()?.alpha ?? 0) > 0.5;
+        const onLine = pickMode.value || !clear ? [] : linksNear(sky, at.x, at.y, 6);
         if (onLine.length && tight.d > glyphR(sky, tight.id) + 2) {
           canvas.dataset.tap = 'links';
           openWhich({

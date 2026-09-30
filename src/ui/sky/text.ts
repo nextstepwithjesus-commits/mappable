@@ -6,7 +6,7 @@ import { model } from '../../state.ts';
 import { formatSpan, formatYear, lifeSpanText, shownBirthRange, toAstro, toHist } from '../../engine/years.ts';
 import type { ChronoRow } from '../../data/atlas.ts';
 import type { Epoch } from '../../data/types.ts';
-import { orderSource } from '../../render/trails.ts';
+import { personOrderNote } from '../../render/links.ts';
 import { isPeople } from '../card/Masthead.tsx';
 import { affiliation, birthRange, constellation } from '../card/shared.tsx';
 import { nameCase } from '../text/ru.ts';
@@ -93,13 +93,15 @@ function betweenShort(a: number, b: number): string {
 
 /**
  * Строка подсказки ребёнка, чей год оценён по порядку перечисления (UX-73; решение 41): «год оценён по порядку
- * перечисления (1 Пар 3:1–4), выв.». Ссылка — место, где Писание называет детей по порядку (orderSource,
- * src/render/trails.ts; у сыновей Иакова — рассказ о рождениях). null — год оценён не по порядку или места нет.
+ * перечисления (Быт 29:32–35; 30:17–21), выв.». Ссылка — та же, что в строке «Год» карточки у звезды (этап 11, Г9;
+ * DG 2.3.6: стихи, где названы дети его союза, — personOrderNote, src/render/links.ts). null — год оценён не по порядку
+ * или места нет.
  */
 export function orderText(id: string): string | null {
   const c = model.value.chrono.get(id);
   if (!c?.byOrder) return null;
-  const src = orderSource(id, model.value);
+  const note = personOrderNote(id, model.value);
+  const src = note ? note.replace(/^по порядку перечисления, /, '').replace(/, выв\.$/, '') : null;
   return src ? typo(`год оценён по порядку перечисления (${src}), выв.`) : null;
 }
 

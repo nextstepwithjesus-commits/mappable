@@ -241,6 +241,21 @@
   left: 0;
 }
 
+/* краткий вид (§ 6: полной карточке нет места на небе): имя и годы одной строкой, одна строка «Родства», команды */
+.dc-brief .dc-info {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 10px;
+}
+.dc-brief .dc-nm + .dc-yrs {
+  margin-top: 0;
+}
+.dc-brief .dc-kin {
+  margin-top: 4px;
+  padding-top: 4px;
+}
+
 /* отвод от знака к карточке: прямой — полоской 1 px (.dc-lead), к карточке вдали от знака — отрезком svg (.dc-line) */
 .dc-lead,
 .dc-line {

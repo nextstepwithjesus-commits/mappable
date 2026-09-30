@@ -71,6 +71,7 @@ import { bugs7 } from './accept/bugs7.ts';
 import { show11 } from './accept/show11.ts';
 import { unify11 } from './accept/unify11.ts';
 import { grammar11 } from './accept/grammar11.ts';
+import { polish11 } from './accept/polish11.ts';
 
 const BASE: Scenario[] = [
   {
@@ -622,7 +623,7 @@ const BASE: Scenario[] = [
   },
 ];
 /** Сценарии этапа 3 — в своих файлах, чтобы параллельные агенты не правили один список (номера 30–49, 50–69, 70–89). */
-const SCENARIOS: Scenario[] = [...BASE, ...layout, ...nav, ...sky, ...map, ...card, ...panels, ...phone, ...a11y, ...work, ...chrono, ...cardshell, ...cardtext, ...skyin, ...skydraw, ...strip, ...phone7, ...chrono3, ...sky3, ...family3, ...nav3, ...input3, ...find3, ...strip3, ...card3, ...cardtext3, ...phone3, ...reveal4, ...union4, ...start4, ...colors4, ...tree5, ...view5, ...dots6, ...peek6, ...polish6, ...bugs7, ...show11, ...unify11, ...grammar11];
+const SCENARIOS: Scenario[] = [...BASE, ...layout, ...nav, ...sky, ...map, ...card, ...panels, ...phone, ...a11y, ...work, ...chrono, ...cardshell, ...cardtext, ...skyin, ...skydraw, ...strip, ...phone7, ...chrono3, ...sky3, ...family3, ...nav3, ...input3, ...find3, ...strip3, ...card3, ...cardtext3, ...phone3, ...reveal4, ...union4, ...start4, ...colors4, ...tree5, ...view5, ...dots6, ...peek6, ...polish6, ...bugs7, ...show11, ...unify11, ...grammar11, ...polish11];
 
 /** Имена лиц обеих линий Мессии — из собранного индекса. */
 function lineNames(): Set<string> {

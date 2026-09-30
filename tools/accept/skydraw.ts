@@ -82,18 +82,29 @@ export const skydraw: Scenario[] = [
   },
   {
     n: 274,
-    title: 'MAP-55, MAP-54, MAP-68: у детей Давида — пометы матерей («от Вирсавии»…), у выбранного Давида — «годы — по порядку 1 Пар 3:…, выв.» (решение 41), у младенца — «†» кеглем подписи',
+    // этап 11 (Г8, Г9): помет матерей («от Вирсавии») и порядка на небе нет. Мать видна положением: жёны Давида стоят далеко
+    // от детей — ромбы его союзов на его следе, у ромба — имя матери; помета порядка — в подсказке звезды ребёнка
+    title: 'MAP-55, MAP-54, MAP-68, Г8, Г9: у детей Давида матери — именами у ромбов союзов (помет «от …» на небе нет), помета порядка — в подсказке ребёнка («1 Пар 3:…, выв.»), у младенца — «†» кеглем подписи',
     run: async (p) => {
       await go(p, '#/david~y-1010~w60~l6~s1');
       const n = await notes(p);
-      if (!n.includes('от Вирсавии')) return fail(`нет «от Вирсавии»: ${n.slice(0, 12).join(' | ')}`);
-      const moms = n.filter((t) => /^от [А-ЯЁ]/.test(t));
-      if (moms.length < 3) return fail(`помет матерей ${moms.length}: ${moms.join(', ')}`);
-      // помета порядка — у семьи выбранного лица (решение 41, MAP-73): Давид выбран — она у его детей
-      if (!n.some((t) => /^годы — по порядку 1 Пар 3:/.test(t))) return fail('нет пометы порядка перечисления');
+      if (n.some((t) => /^от [А-ЯЁ]/.test(t))) return fail(`помета матери на небе: ${n.filter((t) => /^от [А-ЯЁ]/.test(t)).join(', ')}`);
+      if (n.some((t) => /по порядку/.test(t))) return fail(`помета порядка на небе: ${n.filter((t) => /по порядку/.test(t)).join('; ')}`);
+      const wives = ['Ахиноама', 'Авигея', 'Мааха', 'Аггифа', 'Авитала', 'Эгла', 'Вирсавия'];
+      const moms = (await cv(p, 'plate-texts')).split('|').filter(Boolean).filter((t) => t.startsWith('u:david+') && wives.includes(t.slice(t.lastIndexOf(':') + 1))).map((t) => t.slice(t.lastIndexOf(':') + 1));
+      if (moms.length < 3) return fail(`имён матерей у ромбов ${moms.length}: ${moms.join(', ')}`);
       if (!(await cv(p, 'label-ids')).split(' ').includes('mladenets-syn-virsavii')) return fail('младенец Давида и Вирсавии без подписи');
       if (await overlaps(p)) return fail(`наложений подписей ${await overlaps(p)}`);
-      return pass(`${moms.join(', ')}; ${n.filter((t) => /^годы — по порядку/.test(t)).join('; ')}`);
+      // подсказка ребёнка: третья строка — через 700 мс неподвижности (IX-58)
+      const box = (await p.locator('.sky > canvas').boundingBox())!;
+      const kid = await star(p, 'adoniya');
+      if (!kid) return fail('нет звезды Адонии');
+      await p.mouse.move(box.x + kid.x, box.y + kid.y);
+      await p.waitForTimeout(1300);
+      const tip = p.locator('.sky .tip[data-shown][data-more]');
+      const t = (await tip.count()) ? (await tip.innerText()).replace(/\u2060/g, '').replace(/\u00a0/g, ' ').replace(/\s+/g, ' ') : '';
+      if (!/год оценён по порядку перечисления \(1 Пар 3:1–\d+\), выв\./.test(t)) return fail(`подсказка Адонии: «${t}»`);
+      return pass(`у ромбов: ${moms.join(', ')}; ${t.slice(t.indexOf('год оценён'))}`);
     },
   },
   {

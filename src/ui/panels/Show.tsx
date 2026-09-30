@@ -25,6 +25,7 @@ import { selected } from '../../state.ts';
 import { countShow, groupSections, setShow, show, withHouses, type GroupRow, type GroupSectionInfo, type LineageBy, type LineageDir, type LinksOut, type Show } from '../show.ts';
 import { workSet } from '../work.ts';
 import { grid } from '../layout.ts';
+import { sheetStop } from '../sheet.ts';
 import { Close } from '../controls.tsx';
 import { plural } from '../common.tsx';
 import { num, typo } from '../text/typo.ts';
@@ -44,6 +45,9 @@ export const showSheet = signal<{ focus: ShowFocus; back: HTMLElement | null; pe
  * стоит фокус (поле «Созвездие» в паспорте подробной карточки, § 5): его раздел раскрыт, «только это» — рядом.
  */
 export function openShowSheet(o: { focus?: ShowFocus; back?: HTMLElement | null; person?: string; group?: string } = {}) {
+  // телефон: лист «Показ» встаёт над листом карточки (show.css, --sheet-cover) — карточка опускается на первое положение,
+  // чтобы выбору показа и команде «Показать» хватило места (прежде «Показать» оставалась под карточкой на 55 %)
+  if (grid.peek().phone && selected.peek() && sheetStop.peek() !== 'peek') sheetStop.value = 'peek';
   showSheet.value = {
     focus: o.focus ?? 'groups',
     back: o.back ?? (typeof document !== 'undefined' ? (document.activeElement as HTMLElement | null) : null),

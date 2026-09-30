@@ -107,18 +107,6 @@ export const expanded = signal<Readonly<Record<string, string>>>(
 );
 if (hasWindow) effect(() => write('reveal', { opened: opened.value, expanded: expanded.value }));
 
-// ---------- вид атласа (решение 73 отменено решением 77) ----------
-
-/**
- * Вида «Древо» больше нет (этап 11, решение 77): атлас — одно небо. Экспорт остаётся, пока его использования не убраны
- * (src/ui/App.tsx и др.); значение всегда 'sky' — запись 'tree' тут же возвращается к небу.
- */
-export type AtlasView = 'sky' | 'tree';
-export const atlasView = signal<AtlasView>('sky');
-effect(() => {
-  if (atlasView.value !== 'sky') atlasView.value = 'sky';
-});
-
 /** Показ начала s (решение 68; этап 11, § 5). */
 export function startShow(s: Start): Show {
   if (s === 'lines') return { kind: 'lines' };

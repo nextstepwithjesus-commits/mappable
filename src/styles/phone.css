@@ -411,6 +411,9 @@
   :root {
     --top-h: 44px;
     --strip-h: 44px;
+    /* лист-карточка на первом положении — не выше места без 150 px неба (src/ui/sheet.ts, peekFor): органы неба и звезда
+       видны над ним; карточка в листе — краткая */
+    --sheet-peek: max(104px, min(214px, calc(var(--sheet-avail) - 150px)));
   }
   .skyctl.column {
     flex-direction: row;
@@ -488,6 +491,10 @@
   min-height: 44px;
   padding: 5px 14px 6px;
   text-align: left;
+}
+/* «Какая связь?» (этап 11, § 8): слова связи бывают в две строки — строка не ниже 56 px (Which.tsx, LINK_ROW) */
+.which-item.which-link {
+  min-height: 56px;
 }
 .which-item:hover,
 .which-item:focus {

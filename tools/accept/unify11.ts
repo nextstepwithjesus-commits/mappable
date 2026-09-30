@@ -2,10 +2,13 @@
  * Сценарии приёмки этапа 11, задача Q3 «Единый вид» (решения 77, 81–83; STAGE11.md § 5–8, § 12), группа unify11: 810–849.
  *  — Я21: один жест — один смысл: 5 лиц × 5 показов — щелчок по звезде открывает у неё карточку с «Родством»; показ
  *    не меняется, камера не сдвигается;
- *  — Я25: место карточки у звезды, у ромба союза и у связи — 7 трудных случаев × {1440, 1024} × {ночь, день}: 0 px²
- *    пересечения с запретными областями (§ 6). Запретное карточка пишет в data-hard (журнал подписей неба, звёзды
- *    и ромбы фокуса, органы неба); сценарий сверяет его с тем, что видит сам: звезда фокуса (data-at), звёзды семьи
- *    из «Родства» (#sky-star-…), ромбы союзов фокуса (canvas[data-dots]), строка показа и органы неба ([data-reserve]);
+ *  — Я25: место карточки у звезды, у ромба союза и у связи — 7 трудных случаев × {1440, 1024} × {ночь, день}: с
+ *    обязательными запретными областями (§ 6: звезда фокуса с подписью, концы связи с подписями, органы неба, строка
+ *    показа, указатели у края) — 0 px²; с желательными (звёзды и подписи семьи первого поколения, ромбы союзов фокуса) —
+ *    0 px², где место есть; где его нет — краткий вид и наименьшее перекрытие (число — в ответе сценария). Запретное
+ *    карточка пишет в data-must и data-want; сценарий сверяет его с тем, что видит сам: знак карточки (data-at), звёзды
+ *    семьи из «Родства» (#sky-star-…), строка показа и органы неба ([data-reserve]) — и сам проверяет, что у краткой
+ *    карточки полной (data-full) места действительно нет;
  *  — Я27 (часть интерфейса): «Дом Нахора» ≤ 3 действий, «все колена» ≤ 3, род Иуды ≤ 3 после поиска, Адам → Ной
  *    в наборе ≤ 11 без «Вписать»;
  *  — Я30: слова — «Древо», «В работе», «Раскрыто» нигде нет; «Всё небо» — только показ, кадр — «Вписать»;
@@ -76,13 +79,16 @@ export async function starPt(p: Page, id: string): Promise<Pt | null> {
         const [x, y] = s.split(' ').map(Number);
         return { x, y };
       }
+      // показ из части лиц: холст пишет места их звёзд каждым кадром (canvas[data-stars] «id:x,y;…»), и за краем окна
+      // тоже; список неба (#sky-star-…) обновляется, только когда небо постоит (SkyA11y)
+      const m = ((document.querySelector('.sky canvas') as HTMLElement | null)?.dataset.stars ?? '').split(';').find((q) => q.startsWith(`${id}:`));
+      if (m) {
+        const [x, y] = m.slice(id.length + 1).split(',').map(Number);
+        return { x, y };
+      }
       const b = document.getElementById(`sky-star-${id}`);
       if (b?.dataset.x) return { x: Number(b.dataset.x), y: Number(b.dataset.y) };
-      // показ из части лиц: холст пишет места их звёзд (canvas[data-stars] «id:x,y;…»), и за краем окна тоже
-      const m = ((document.querySelector('.sky canvas') as HTMLElement | null)?.dataset.stars ?? '').split(';').find((q) => q.startsWith(`${id}:`));
-      if (!m) return null;
-      const [x, y] = m.slice(id.length + 1).split(',').map(Number);
-      return { x, y };
+      return null;
     },
     [id, hashId(p) === id] as const,
   )) as Pt | null;
@@ -113,10 +119,27 @@ export async function cardOf(p: Page) {
       name: (el.querySelector('.dc-nm .nm, h3')?.textContent ?? '').trim(),
       rect: { x: r.left - c.left, y: r.top - c.top, w: r.width, h: r.height },
       hard: el.dataset.hard ?? '',
+      must: el.dataset.must ?? '',
+      want: el.dataset.want ?? '',
+      brief: el.hasAttribute('data-brief'),
+      full: el.dataset.full ?? '',
+      bounds: el.dataset.bounds ?? '',
       at: Number.isFinite(ax) ? { x: ax, y: ay, r: ar } : null,
       family: [...el.querySelectorAll<HTMLElement>('.dc-kin .person[data-id]')].map((b) => b.dataset.id!),
     };
-  })) as null | { kind: string; name: string; rect: Rect; hard: string; at: { x: number; y: number; r: number } | null; family: string[] };
+  })) as null | {
+    kind: string;
+    name: string;
+    rect: Rect;
+    hard: string;
+    must: string;
+    want: string;
+    brief: boolean;
+    full: string;
+    bounds: string;
+    at: { x: number; y: number; r: number } | null;
+    family: string[];
+  };
 }
 
 /** Органы неба, строка показа и лист «Показ» ([data-reserve]) — px холста. */
@@ -141,30 +164,63 @@ const starsOf = (p: Page, ids: string[]) =>
   }, ids) as Promise<Record<string, Pt>>;
 
 /**
- * Я25: карточка не закрывает запретного. Запретное — data-hard карточки и то, что сценарий видит сам: знак, у которого
- * карточка (data-at), органы неба и строка показа, звёзды семьи из «Родства» в видимой части неба. Возвращает
- * замечание или null.
+ * Есть ли полной карточке размера size место в bounds без единого px² запретного: перебор по сетке 16 px, затем 6 px —
+ * та же сетка, что у места карточки (src/ui/sky/DotCard.tsx, placeCard).
  */
-async function placeIssue(p: Page): Promise<string | null> {
+function roomFor(size: { w: number; h: number }, bounds: Rect, bad: Rect[]): boolean {
+  const x1 = bounds.x + bounds.w - size.w;
+  const y1 = bounds.y + bounds.h - size.h;
+  if (x1 < bounds.x || y1 < bounds.y) return false;
+  for (const step of [16, 6])
+    for (let x = bounds.x; x <= x1 + 0.5; x += step)
+      for (let y = bounds.y; y <= y1 + 0.5; y += step) {
+        const q = { x: Math.min(x, x1), y: Math.min(y, y1), ...size };
+        if (bad.every((z) => area(q, z) === 0)) return true;
+      }
+  return false;
+}
+
+/**
+ * Я25 (STAGE11.md § 6, уточнение координатора): запретное — два яруса.
+ *  — Обязательное (data-must карточки и то, что сценарий видит сам: знак, у которого карточка — data-at, органы неба
+ *    и строка показа — [data-reserve]): 0 px² всегда.
+ *  — Желательное (data-want: звёзды и подписи семьи первого поколения, ромбы союзов фокуса; и звёзды семьи из «Родства»,
+ *    которые сценарий видит сам): 0 px², если полной карточке есть место. Если места нет — карточка краткая (data-brief), и
+ *    сценарий сам проверяет, что полной карточке (data-full) места действительно нет; площадь закрытого желательного —
+ *    в ответе (число — в отчёт).
+ * Возвращает { why } — замечание, или { note } — краткий вид и закрытая площадь.
+ */
+export async function placeIssue(p: Page): Promise<{ why?: string; note?: string }> {
   const c = await cardOf(p);
-  if (!c) return 'карточки нет';
+  if (!c) return { why: 'карточки нет' };
   const vp = (await state(p)).view.split(' ').map(Number);
   const [l, t, r, b] = vp;
-  const own: Rect[] = [...(await reserves(p))];
-  if (c.at) own.push({ x: c.at.x - c.at.r, y: c.at.y - c.at.r, w: 2 * c.at.r, h: 2 * c.at.r });
+  const must: Rect[] = [...rects(c.must), ...(await reserves(p))];
+  const mark = c.at ? { x: c.at.x - c.at.r, y: c.at.y - c.at.r, w: 2 * c.at.r, h: 2 * c.at.r } : null;
+  if (mark) must.push(mark);
+  const want: Rect[] = rects(c.want);
   const fam = await starsOf(p, c.family);
   const hard = rects(c.hard);
   for (const [id, q] of Object.entries(fam)) {
     if (q.x < l || q.x > r || q.y < t || q.y > b) continue;
-    own.push({ x: q.x - 3, y: q.y - 3, w: 6, h: 6 });
+    want.push({ x: q.x - 3, y: q.y - 3, w: 6, h: 6 });
     // звезда семьи — в запретном карточки (иначе проверка data-hard неполна)
-    if (!hard.some((h) => q.x >= h.x - 1 && q.x <= h.x + h.w + 1 && q.y >= h.y - 1 && q.y <= h.y + h.h + 1)) return `звезды ${id} нет в запретном карточки`;
+    if (!hard.some((h) => q.x >= h.x - 1 && q.x <= h.x + h.w + 1 && q.y >= h.y - 1 && q.y <= h.y + h.h + 1)) return { why: `звезды ${id} нет в запретном карточки` };
   }
-  const all = [...hard, ...own];
-  const bad = all.map((h) => ({ h, a: area(c.rect, h) })).filter((x) => x.a > 0.5);
-  if (bad.length) return `карточка закрывает ${bad.length} запретных областей: ${bad.slice(0, 3).map((x) => `${Math.round(x.h.x)},${Math.round(x.h.y)} ${Math.round(x.h.w)}×${Math.round(x.h.h)} — ${Math.round(x.a)} px²`).join('; ')}`;
-  if (c.rect.x < l - 1 || c.rect.x + c.rect.w > r + 1 || c.rect.y + c.rect.h > b + 1) return 'карточка за краем неба';
-  return null;
+  if (c.rect.x < l - 1 || c.rect.x + c.rect.w > r + 1 || c.rect.y + c.rect.h > b + 1) return { why: 'карточка за краем неба' };
+  const list = (rs: Rect[]) => rs.map((h) => ({ h, a: area(c.rect, h) })).filter((x) => x.a > 0.5);
+  const say = (xs: { h: Rect; a: number }[]) => xs.slice(0, 3).map((x) => `${Math.round(x.h.x)},${Math.round(x.h.y)} ${Math.round(x.h.w)}×${Math.round(x.h.h)} — ${Math.round(x.a)} px²`).join('; ');
+  const m = list(must);
+  if (m.length) return { why: `карточка закрывает ${m.length} обязательных областей: ${say(m)}` };
+  const w = list(want);
+  if (!c.brief) return w.length ? { why: `полная карточка закрывает ${w.length} желательных областей: ${say(w)}` } : {};
+  // краткий вид — только когда полной карточке места нет
+  const [fw, fh] = c.full.split(',').map(Number);
+  const [bx, by, bw, bh] = c.bounds.split(',').map(Number);
+  if (!(fw > 0 && fh > 0 && bw > 0)) return { why: 'краткая карточка без размера полной (data-full) или места (data-bounds)' };
+  const bad = [...rects(c.must), ...rects(c.want), ...(mark ? [mark] : [])];
+  if (roomFor({ w: fw, h: fh }, { x: bx, y: by, w: bw, h: bh }, bad)) return { why: `краткий вид, хотя полной карточке ${fw}×${fh} место есть` };
+  return { note: `краткий вид, закрыто ${Math.round(w.reduce((s, x) => s + x.a, 0))} px² желательного` };
 }
 
 /** Сдвинуть небо протяжкой на (dx, dy): протяжками не длиннее трети неба, от середины неба. */
@@ -202,7 +258,15 @@ export async function inView(p: Page, id: string): Promise<Pt | null> {
   const inside = (t: Pt) => t.x > c.x + 90 && t.x < c.x + c.width - 90 && t.y > c.y + 130 && t.y < c.y + c.height - 130;
   for (let k = 0; k < 3 && q && !inside(q); k++) {
     await pan(p, c.x + c.width / 2 - q.x, c.y + c.height / 2 - q.y);
+    // места звёзд в списке неба обновляются, когда небо встало (SkyA11y: 600 мс после последнего кадра) — ждать, пока
+    // место звезды не перестанет меняться
     q = await starPt(p, id);
+    for (let t = 0; t < 12; t++) {
+      await p.waitForTimeout(200);
+      const q2 = await starPt(p, id);
+      if (q && q2 && Math.abs(q2.x - q.x) < 0.5 && Math.abs(q2.y - q.y) < 0.5 && t >= 3) break;
+      q = q2;
+    }
   }
   return q && inside(q) ? q : null;
 }
@@ -231,6 +295,12 @@ export async function clickDot(p: Page, uid: string): Promise<boolean> {
  * имени), Enter на имени Иуды. Карточка у звезды Иакова уже открыта.
  */
 async function judahLink(p: Page): Promise<string | null> {
+  // краткий вид карточки (§ 6: полной нет места) — одна строка «Родства»; «всё родство» — вся карточка
+  const all = p.locator('.sky .dotcard .dc-row.all .dc-more');
+  if (!(await p.locator('.sky .dotcard .dc-row.children').count()) && (await all.count())) {
+    await all.click();
+    await p.waitForTimeout(500);
+  }
   const row = p.locator('.sky .dotcard .dc-row.children');
   if (!(await row.count())) return 'в «Родстве» Иакова нет строки детей';
   const more = row.locator('.dc-more');
@@ -345,6 +415,7 @@ const PLACES: { name: string; run: (p: Page, theme: 'night' | 'day') => Promise<
 async function placeCases(p: Page, width: number): Promise<{ ok: boolean; why: string }> {
   const out: string[] = [];
   const bad: string[] = [];
+  const notes: string[] = [];
   for (const theme of ['night', 'day'] as const)
     for (const c of PLACES) {
       const e = await c.run(p, theme);
@@ -352,11 +423,15 @@ async function placeCases(p: Page, width: number): Promise<{ ok: boolean; why: s
         bad.push(`${width} ${theme}, ${c.name}: ${e}`);
         continue;
       }
-      const why = await placeIssue(p);
-      if (why) bad.push(`${width} ${theme}, ${c.name}: ${why}`);
-      else out.push(c.name);
+      const r = await placeIssue(p);
+      if (r.why) bad.push(`${width} ${theme}, ${c.name}: ${r.why}`);
+      else {
+        out.push(c.name);
+        if (r.note) notes.push(`${theme}, ${c.name}: ${r.note}`);
+      }
     }
-  return bad.length ? { ok: false, why: bad.slice(0, 4).join(' | ') } : { ok: true, why: `${out.length} случаев без пересечений` };
+  const tail = notes.length ? `; мест нет — ${notes.join('; ')}` : '';
+  return bad.length ? { ok: false, why: bad.slice(0, 4).join(' | ') } : { ok: true, why: `${out.length} случаев: обязательного 0 px², желательного 0 px² там, где место есть${tail}` };
 }
 
 /** Строки § 5.6 на элементах: тень, скругление больше 2 px, прописные, моноширинный, «·», «→» в тексте. */
@@ -417,7 +492,7 @@ export const unify11: Scenario[] = [
   },
   {
     n: 811,
-    title: 'Я25, 1440 × 900: место карточки — 7 трудных случаев (Хам, Иаков, Давид с детьми, Ной у правого края, Авраам над органами неба, ромб Ноя, связь Иаков — Иуда) ночью и днём: запретного карточка не закрывает (0 px²)',
+    title: 'Я25, 1440 × 900: место карточки — 7 трудных случаев (Хам, Иаков, Давид с детьми, Ной у правого края, Авраам над органами неба, ромб Ноя, связь Иаков — Иуда) ночью и днём: обязательного — 0 px²; желательного — 0 px², где место есть; где нет — краткий вид и наименьшее перекрытие',
     run: async (p) => {
       const r = await placeCases(p, 1440);
       return r.ok ? pass(r.why) : fail(r.why);
@@ -425,7 +500,7 @@ export const unify11: Scenario[] = [
   },
   {
     n: 812,
-    title: 'Я25, 1024 × 768: те же 7 случаев ночью и днём — 0 px² пересечения с запретным',
+    title: 'Я25, 1024 × 768: те же 7 случаев ночью и днём — обязательного 0 px²; желательного 0 px², где место есть; где нет — краткий вид',
     view: { width: 1024, height: 768 },
     run: async (p) => {
       const r = await placeCases(p, 1024);

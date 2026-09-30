@@ -289,28 +289,32 @@ export const find3: Scenario[] = [
   },
   {
     n: 403,
-    title: 'UX-73, UX-80: «Условные знаки» — «+» с числом после имени (кадр неба «Давид +N»); помета «годы — по порядку 1 Пар 2:13–15, выв.» с образцом',
+    // этап 11 (Г9): пометы порядка на небе больше нет — «Условные знаки» говорят, где она теперь: в подсказке звезды и
+    // в карточках; образца неба у неё нет (на небе её не видно)
+    title: 'UX-73, UX-80: «Условные знаки» — «+» с числом после имени (кадр неба «Давид +N»); помета «по порядку перечисления, Быт 29:32–35; 30:17–21, выв.» (у Рувима) — в подсказке и карточках, не на небе',
     run: async (p) => {
       await go(p, '#/~plegend', 2500);
       const t = flat(await p.locator('section.sheet').innerText());
       if (/справа от следа — потомки/.test(t)) return fail('осталось «справа от следа»');
       if (!/«\+» с числом сразу после имени — потомки лица скрыты на небе/.test(t)) return fail('нет строки о «+N» после имени');
-      if (!/Помета у детей «годы — по порядку 1 Пар 2:13–15, выв\.» — годы их рождения оценены по порядку/.test(t)) return fail('нет строки о помете порядка');
-      const pics = await p.locator('section.sheet .legend-row', { hasText: /рождения\s+оценены|числом\s+сразу/ }).locator('canvas').count();
-      return pics === 2 ? pass('обе строки с образцами') : fail(`образцов: ${pics}`);
+      if (!/помета об этом — не на небе, а в подсказке звезды и в строке «Год» карточки у звезды \(у Рувима: по порядку перечисления, Быт 29:32–35; 30:17–21, выв\.\)/.test(t)) return fail('нет строки о помете порядка');
+      if (/Помета у детей «годы — по порядку/.test(t)) return fail('осталась строка о помете порядка на небе');
+      const pics = await p.locator('section.sheet .legend-row', { hasText: /числом\s+сразу/ }).locator('canvas').count();
+      return pics === 1 ? pass('строка «+N» с образцом, строка о помете порядка') : fail(`образцов у «+N»: ${pics}`);
     },
   },
   {
     n: 404,
-    title: 'Решение 51, UX-77: «Эпохи» — команда верхней строки на 1440 (открывает панель «Эпохи»), на 1024 — в «Ещё»; пояснение «В работе» — «набор помнится в этом браузере»',
+    // этап 11 (Я30): команда «В работе» верхней строки называется «Набор» («Набор: N»)
+    title: 'Решение 51, UX-77: «Эпохи» — команда верхней строки на 1440 (открывает панель «Эпохи»), на 1024 — в «Ещё»; пояснение «Набор» — «набор помнится в этом браузере»',
     run: async (p) => {
       const cmd = p.locator('.commands > button', { hasText: /^Эпохи$/ });
       if (!(await cmd.count()) || !(await cmd.isVisible())) return fail('на 1440 «Эпохи» нет в строке');
       await cmd.click();
       await p.waitForTimeout(800);
       if ((await sheetTitle(p)) !== 'Эпохи') return fail(`панель: «${await sheetTitle(p)}»`);
-      const hint = (await p.locator('.commands > button', { hasText: /^В работе/ }).getAttribute('title')) ?? '';
-      if (!/набор помнится в этом браузере/.test(hint) || /сеанс/.test(hint)) return fail(`пояснение «В работе»: «${hint}»`);
+      const hint = (await p.locator('.commands > button', { hasText: /^Набор/ }).getAttribute('title')) ?? '';
+      if (!/набор помнится в этом браузере/.test(hint) || /сеанс/.test(hint)) return fail(`пояснение «Набор»: «${hint}»`);
       await p.setViewportSize({ width: 1024, height: 768 });
       await go(p, '#/');
       const inRow = await p.locator('.commands > button', { hasText: /^Эпохи$/ }).count();

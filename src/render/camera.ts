@@ -27,6 +27,16 @@
 export const KX_MIN = 0.004;
 export const KX_MAX = 12;
 export const KY_MAX = 26;
+/**
+ * Высота строки семейной укладки на узком небе и касании (Я12: не ниже 32 px): предел KY_MAX_TALL и сдвиг кривой
+ * «масштаб → высота строки» до ROW_SHIFT_TALL удвоений — на масштабе чтения строка выше при том же масштабе времени, и
+ * время ради высокой строки приближать меньше. Сдвиг нарастает на ROW_RAMP (удвоения масштаба над 0,014): на мелком
+ * масштабе («Вписать» всего показа) кривая та же, что на карте, и показ помещается по высоте без отдаления времени
+ * (Sky ставит rowCap и rowShift по показу и ширине неба).
+ */
+export const KY_MAX_TALL = 34;
+export const ROW_SHIFT_TALL = 4;
+export const ROW_RAMP: readonly [number, number] = [1.5, 3.5];
 /** Пределы высоты полосы, которую задаёт пропорция полос (J1), px. */
 export const KY_LO = 4;
 export const KY_HI = 60;
@@ -44,7 +54,7 @@ const SETTLE_AFTER = 140;
 const SETTLE_MS = 200;
 /** Поля «всего неба», px: слева — место для звезды Адама, справа — узкое: после 100 г. шкала сжата, и поле в 20 px — это века. */
 const FIT_PAD = { l: 10, r: 6, y: 10 };
-/** Сколько px за краем данных видно всегда. */
+/** Сколько px за краем данных видно всегда: не меньше поля у Адама в показе линий Мессии (24 px; MAP-59, IX-63). */
 const EDGE = 16;
 
 export interface ViewState {
@@ -118,6 +128,10 @@ export class Camera {
   focusLanes = 0;
   /** Пропорция полос (J1): множитель к обычной высоте полосы; 1 — пропорции по умолчанию. */
   lanes = 1;
+  /** Предел обычной высоты полосы, px: KY_MAX, в семейной укладке на узком небе — KY_MAX_TALL (Sky, rowScale). */
+  rowCap = KY_MAX;
+  /** Сдвиг кривой высоты полосы на масштабе чтения, удвоений масштаба (семейная укладка на узком небе — ROW_SHIFT_TALL). */
+  rowShift = 0;
   /**
    * Пропорция читателя, пока небо показывает временную (IX-70): вписывание группы («Все N на небе», путь родства, лица
    * главы) сжимает строки только на время отметок — lanes временная, а своя пропорция читателя ждёт здесь; restoreLanes
@@ -182,7 +196,7 @@ export class Camera {
   /** Обычная высота полосы при масштабе kx (без пропорции полос). */
   kyAuto(kx: number): number {
     const k = this.kyBase(kx);
-    return this.focusLanes > 0 ? Math.max(k, Math.min(KY_MAX, (0.6 * (this.vp.b - this.vp.t)) / this.focusLanes)) : k;
+    return this.focusLanes > 0 ? Math.max(k, Math.min(this.rowCap, (0.6 * (this.vp.b - this.vp.t)) / this.focusLanes)) : k;
   }
   /** Пределы пропорции при масштабе kx: высота полосы — от min(4, обычная) до 60 px. */
   lanesRange(kx = this.kx): [number, number] {
@@ -210,14 +224,22 @@ export class Camera {
     this.laneTop = mid + cy / this.ky;
   }
   private kyBase(kx: number): number {
-    const g = Math.max(this.kyMin(), Math.min(KY_MAX, 3.5 + 3.3 * Math.log2(Math.max(kx, 1e-6) / 0.014)));
+    const cap = this.rowCap;
+    const d = Math.log2(Math.max(kx, 1e-6) / 0.014);
+    // сдвиг — только на масштабе чтения: от ROW_RAMP[0] до ROW_RAMP[1] удвоений он нарастает от 0 до rowShift
+    const shift = this.rowShift * Math.max(0, Math.min(1, (d - ROW_RAMP[0]) / (ROW_RAMP[1] - ROW_RAMP[0])));
+    const g = Math.max(this.kyMin(), Math.min(cap, 3.5 + 3.3 * (d + shift)));
     const f = this.fitK;
     if (!f) return g;
+    // высота строки «всего неба» (строки по высоте видимой части) — не выше KY_MAX и на узком небе: выше неё строку
+    // поднимает только сдвинутая кривая масштаба чтения (иначе малая семья на телефоне вставала бы строками по 34 px уже
+    // на обзоре и уходила под строку показа)
+    const fy = Math.min(KY_MAX, f.ky);
     const u = Math.log2(kx / f.kx) / FIT_BLEND;
-    if (u <= 0) return Math.min(KY_MAX, f.ky);
-    if (u >= 1) return Math.min(KY_MAX, Math.max(f.ky, g));
+    if (u <= 0) return Math.min(cap, fy);
+    if (u >= 1) return Math.min(cap, Math.max(fy, g));
     const s = u * u * (3 - 2 * u);
-    return Math.min(KY_MAX, Math.max(f.ky, Math.exp((1 - s) * Math.log(f.ky) + s * Math.log(g))));
+    return Math.min(cap, Math.max(fy, Math.exp((1 - s) * Math.log(fy) + s * Math.log(g))));
   }
   get ky(): number {
     return this.kyFor(this.kx);
@@ -251,6 +273,11 @@ export class Camera {
    * «в работе» — окно набора ×1,5, но не уже 200 лет (IX-64). null — «всё небо».
    */
   zoomFloor: number | null = null;
+  /**
+   * Поле за краем данных, px, если оно не EDGE (ставит src/ui/sky/view.ts вместе с zoomFloor): в режиме «только линии
+   * Мессии» — 24 px (LINES_PAD), чтобы коридор, вписанный с полями по 24 px, не прижимался к EDGE (MAP-59).
+   */
+  edge: number | null = null;
   /** Самый мелкий масштаб: «всё небо» или предел режима (zoomFloor). */
   kxLo(): number {
     if (this.zoomFloor !== null && this.zoomFloor > 0) return this.zoomFloor;
@@ -279,7 +306,8 @@ export class Camera {
     const dl = f.lane1 - f.lane0;
     // за краем данных всегда можно заглянуть на EDGE px (поля «всего неба»). По времени окно шире данных (коридор линий
     // мельче «всего неба», MAP-59) не центрируется насильно: данные — где угодно внутри окна, с полями не меньше EDGE
-    const overX = Math.max(0.75 * vw * s, EDGE / kx);
+    const edge = this.edge ?? EDGE;
+    const overX = Math.max(0.75 * vw * s, edge / kx);
     const overL = Math.max((vh - dl) / 2, 0.75 * vh * s, EDGE / ky);
     const xa = f.x0 - overX - this.vp.l / kx;
     const xb = f.x1 + overX - this.vp.r / kx;

@@ -215,12 +215,18 @@ export function SkyA11y() {
   useEffect(() => {
     let timer = 0;
     let since = 0;
+    /** места звёзд списка при последнем обновлении */
+    let seen = '';
     const update = () => {
       clearTimeout(timer);
       since = 0;
       const next = listed();
       const pk = (v: { plates: PlateItem[] }) => v.plates.map((q) => `${q.uid}${q.open ? 1 : 0}`).join();
-      setView((prev) => (prev.text === next.text && prev.ids.join() === next.ids.join() && pk(prev) === pk(next) ? prev : next));
+      // места звёзд (data-x, data-y) — тоже часть списка: небо сдвинули, а лица на виду те же — места новые
+      const at = (v: { ids: string[] }) => v.ids.map((id) => screenOf(id)).map((q) => (q ? `${Math.round(q.x)},${Math.round(q.y)}` : '')).join(';');
+      const where = at(next);
+      setView((prev) => (prev.text === next.text && prev.ids.join() === next.ids.join() && pk(prev) === pk(next) && seen === where ? prev : next));
+      seen = where;
     };
     const off = effect(() => {
       void viewTick.value;

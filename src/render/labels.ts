@@ -1041,7 +1041,9 @@ export function drawStarLabels(v: SkyContext, p: Pass, between?: () => void) {
     const pref = cache.level[i] <= p.level ? SIDES[cache.side[i * LEVELS + lv]] : 'r';
     const sides: Side[] = [pref, ...SIDES.filter((x) => x !== pref)];
     const leader = family || q.magnitude <= 1 || p.spine.has(q.id);
-    if (putLabel(v, p, i, { sides, color, alpha: d.alpha * lit, light: d.light, sigla: true, leader })) now[i] = 1;
+    // на масштабе семьи подписаны все, кому хватает места (E1: не меньше 90 %) — и дальними выносками, как в наборе: у края
+    // узкого неба (телефон) ближние места уходят за край или на название созвездия
+    if (putLabel(v, p, i, { sides, color, alpha: d.alpha * lit, light: d.light, sigla: true, leader, far: family })) now[i] = 1;
   }
   if (!hooked) between?.();
   cache.shown = now;

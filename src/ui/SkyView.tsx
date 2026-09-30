@@ -815,8 +815,12 @@ export function SkyView() {
       }
       if (!changed) return;
       skyMenu.value = null;
-      // включили «набор» — вписать набор; вернулись ко всем лицам — то же окно лет и те же полосы, но со всем небом
-      if (sky.model && last.w && v.mode === 'work' && shownMode !== 'work') {
+      // включили «набор» — вписать набор; вернулись ко всем лицам — то же окно лет и те же полосы, но со всем небом.
+      // Показ «линии Мессии» вписывает view.ts (fitLines: коридор или ±10 поколений у выбранного) — его окно не перебивается
+      // вписыванием набора, кто бы из двух ни успел первым (этап 11, B1; сценарий 721)
+      if (sky.model && last.w && v.mode === 'work' && onlyLines.peek()) {
+        /* окно — у fitLines */
+      } else if (sky.model && last.w && v.mode === 'work' && shownMode !== 'work') {
         stopFlight();
         updateZoomFloor();
         const around = single ? viewAround(single) : null;

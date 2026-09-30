@@ -233,7 +233,8 @@ export const input3: Scenario[] = [
   },
   {
     n: 377,
-    title: 'MAP-28, решение 54: наведение на ленту между Овидом и Иессеем — подсказка шага «Овид, отец; Иессей, сын (…)», а не звезды; без стрелки',
+    // этап 11 (§ 8, решение 83): слова связи — «Овид — отец; Иессей — сын (Мф 1:5)» (src/ui/linkwords.ts), как у всех связей
+    title: 'MAP-28, решение 54: наведение на ленту между Овидом и Иессеем — подсказка шага «Овид — отец; Иессей — сын (…)», а не звезды; без стрелки',
     run: async (p) => {
       await go(p, '#/iessey~y-1180~w260~l0~s1', 2600);
       const a = await star(p, 'ovid');
@@ -251,9 +252,11 @@ export const input3: Scenario[] = [
         await p.waitForTimeout(300);
         const t = flat(await p.locator('.sky .tip[data-kind="ribbon"]').innerText()).trim();
         if (/[→←]/.test(t)) return fail(`стрелка в подсказке: «${t}»`);
-        if (!/^Овид, отец; Иессей, сын \((Мф 1:5|Лк 3:32)\)$/.test(t)) return fail(`подсказка ленты: «${t}»`);
-        const ring = await p.evaluate(() => document.querySelector('.sky > canvas')?.classList.contains('hot'));
-        return ring ? fail('над лентой курсор звезды') : pass(`${t}; ${dy} px от середины`);
+        if (!/^Овид — отец; Иессей — сын \((Мф 1:5|Лк 3:32)\)$/.test(t)) return fail(`подсказка ленты: «${t}»`);
+        // этап 11 (§ 8): шаг ленты — связь, он выбирается щелчком: указатель «рука» над лентой — её, а не звезды; подсказки
+        // звезды нет
+        const star = await p.locator('.sky .tip[data-kind="star"]').count();
+        return star ? fail('над лентой — подсказка звезды') : pass(`${t}; ${dy} px от середины`);
       }
       return fail('у середины поколения лента не ловится: подсказка — звезды или её нет');
     },
@@ -458,16 +461,19 @@ export const input3: Scenario[] = [
   },
   {
     n: 384,
-    title: 'UX-21: у флажков «только линии Мессии», «ярусы эпох» и у «все лица | набор» — пояснение при наведении и для диктора',
+    // этап 11 (решение 81): флажок «только линии Мессии» и переключатель «все лица | набор» стали показами — их выбирают
+    // строка показа («изменить» — лист «Показ»); у органов неба остался флажок «ярусы эпох»
+    title: 'UX-21: у флажка «ярусы эпох» и у «изменить» строки показа (линии Мессии, набор — показы) — пояснение при наведении и для диктора',
     run: async (p) => {
       await go(p, '#/', 2000);
-      const items = await p.locator('.skyctl .check, .skyctl .work .seg button').evaluateAll((els) =>
+      const items = await p.locator('.skyctl .check, .sky .showbar .sb-cmd[data-cmd="sheet"]').evaluateAll((els) =>
         els.map((e) => ({ t: (e.textContent ?? '').trim(), title: e.getAttribute('title') ?? '', desc: e.getAttribute('aria-description') ?? e.querySelector('input')?.getAttribute('aria-description') ?? '' })),
       );
-      if (items.length !== 4) return fail(`органов: ${items.length}`);
+      if (items.length !== 2) return fail(`органов: ${items.length}`);
       const bad = items.find((i) => i.title.length < 20 || i.desc !== i.title);
       if (bad) return fail(`«${bad.t}»: title «${bad.title}», для диктора «${bad.desc}»`);
-      if (!/Мф 1.*Лк 3/.test(items[0].title)) return fail(`«${items[0].t}»: ${items[0].title}`);
+      const sheet = items.find((i) => i.t === 'изменить');
+      if (!sheet || !/линии Мессии.*Мф 1.*Лк 3/.test(sheet.title) || !/набор/.test(sheet.title)) return fail(`«изменить»: ${sheet?.title}`);
       return pass(items.map((i) => `${i.t}: ${i.title}`).join(' / '));
     },
   },

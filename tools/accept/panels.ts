@@ -346,9 +346,9 @@ export const panels: Scenario[] = [
       if (h2 !== 'Условные знаки') return fail(`заголовок панели: «${h2}»`);
       const lead = nb((await sh.locator('.lead').innerText()).trim());
       if (!/^Как читать карту: /.test(lead)) return fail(`пояснение: «${lead}»`);
-      const heads = (await sh.locator('h3[id^="legend-"]').allInnerTexts()).map((x) => x.trim());
-      // «Древо» — раздел вида древа (решение 73), сразу после «Неба»
-      const want = ['Как читать карту', 'Небо', 'Древо', 'Знаки', 'Линии', 'Время', 'Карточка', 'Клавиши', 'Слои'];
+      const heads = (await sh.locator('h3[id^="legend-"]').allInnerTexts()).map((x) => nb(x).trim());
+      // вида «Древо» больше нет (этап 11, единый атлас): на его месте, сразу после «Неба», — «Карточки на небе»
+      const want = ['Как читать карту', 'Небо', 'Карточки на небе', 'Знаки', 'Линии', 'Время', 'Карточка', 'Клавиши', 'Слои'];
       if (heads.join('|') !== want.join('|')) return fail(`разделы: ${heads.join(' | ')}`);
       // пройти панель до конца: вырезки из неба рисуются, когда видны
       const total = await sh.evaluate((el) => el.scrollHeight);
@@ -494,7 +494,8 @@ export const panels: Scenario[] = [
       if (Math.abs(h - strip) > 1) return fail(`высота образца ${h}, полосы ${strip}`);
       const a = await sig();
       await p.keyboard.press('Escape');
-      await p.locator('.skyctl').getByText('Всё небо', { exact: true }).click();
+      // «Всё небо» у органов неба стало «Вписать» (этап 11, Я30): вписывание так же сдвигает окно неба
+      await p.locator('.skyctl').getByText('Вписать', { exact: true }).click();
       await p.waitForTimeout(1500);
       await openPanel(p, 'Условные знаки');
       await sh.locator('#legend-time ~ ul .legend-row').first().scrollIntoViewIfNeeded();

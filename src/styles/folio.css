@@ -183,14 +183,18 @@
 }
 /* «Показать на небе» на узком листе — «На небе» (VIS-79, IX-81): при 400 px (1024 × 768) четыре команды — одной строкой.
    Полное название — в имени кнопки для диктора и в подсказке */
-.folio .actions .show-on-sky .short {
+.folio .actions .show-on-sky .short,
+.workbtn > button .short {
   display: none;
 }
-@container folio (max-width: 440px) {
-  .folio .actions .show-on-sky .full {
+/* до 480 px (1280 × 800 — лист 458 px): длинное «Добавить в набор» переносило бы четвёртую команду на вторую строку */
+@container folio (max-width: 480px) {
+  .folio .actions .show-on-sky .full,
+  .folio .actions .workbtn > button .full {
     display: none;
   }
-  .folio .actions .show-on-sky .short {
+  .folio .actions .show-on-sky .short,
+  .folio .actions .workbtn > button .short {
     display: inline;
   }
 }

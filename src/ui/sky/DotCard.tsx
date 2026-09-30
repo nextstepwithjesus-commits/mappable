@@ -44,7 +44,7 @@ import { openShowSheet } from '../panels/Show.tsx';
 import { linkAnchor, previewLinks, selectedLink } from '../linkstate.ts';
 import { kidsCount, linkInfo, linkSpeech, refsShort, refShort, stepParent, unionName, type LinkInfo } from '../linkwords.ts';
 import { grid, unfoldCard } from '../layout.ts';
-import { openSheetAt, sheetStop } from '../sheet.ts';
+import { lowScreen, openSheetAt, sheetStop } from '../sheet.ts';
 import { focusCardTitle, focusQuietly } from '../focus.ts';
 import { skyMenu } from '../panels/Work.tsx';
 import { typo } from '../text/typo.ts';
@@ -73,6 +73,19 @@ export const dotCard = signal<DotCardState | null>(null);
  * («Родство с…», «Разворот с…»): там щелчок выбирает второе лицо.
  */
 export const dotsOn = computed(() => !pickMode.value);
+
+// телефон: карточка связи — в нижнем листе на 214 px (DotSheet), как карточка у звезды. Связь выбрана (касанием,
+// по адресу «~c», из «Родства»), а лист стоит выше — карточки связи не видно: лист встаёт на это положение. После
+// остальных действий выбора (лист нового выбора — src/ui/sheet.ts) — в конце того же хода
+if (typeof window !== 'undefined')
+  effect(() => {
+    const k = selectedLink.value;
+    const id = selected.value;
+    if (!k || !id || !grid.value.phone) return;
+    queueMicrotask(() => {
+      if (selectedLink.peek() && selected.peek() && sheetStop.peek() !== 'peek') sheetStop.value = 'peek';
+    });
+  });
 
 /**
  * Открыть карточку у звезды или ромба союза; focus — поставить фокус в карточку (открыли с клавиатуры); grace — сколько мс
@@ -284,6 +297,8 @@ export const DOT_SIDES: readonly DotSide[] = ['s', 'e', 'n', 'w'];
 export const DOT_LEAD = 10;
 /** Телефон: небо поднимается под карточку, только когда его высота не менялась столько мс (лист карточки встал). */
 export const VP_SETTLE_MS = 300;
+/** Ширина карточки у звезды, px (dotcard.css). */
+const DOT_W = 300;
 /** Отступ карточки от краёв видимой части неба, px. */
 export const DOT_MARGIN = 6;
 /** Самый длинный отвод к карточке в углу неба, px (§ 6). */
@@ -324,6 +339,40 @@ function segCross(s: Segment, r: Rect): boolean {
   const y0 = Math.min(s.y1, s.y2);
   const y1 = Math.max(s.y1, s.y2);
   return x0 <= r.x + r.w && x1 >= r.x && y0 <= r.y + r.h && y1 >= r.y;
+}
+
+/** Пересекаются ли отрезки a и b (концы — не в счёт: отвод начинается у знака). */
+function segsCross(a: { x1: number; y1: number; x2: number; y2: number }, b: { x1: number; y1: number; x2: number; y2: number }): boolean {
+  const d = (ax: number, ay: number, bx: number, by: number, cx: number, cy: number) => (bx - ax) * (cy - ay) - (by - ay) * (cx - ax);
+  const d1 = d(b.x1, b.y1, b.x2, b.y2, a.x1, a.y1);
+  const d2 = d(b.x1, b.y1, b.x2, b.y2, a.x2, a.y2);
+  const d3 = d(a.x1, a.y1, a.x2, a.y2, b.x1, b.y1);
+  const d4 = d(a.x1, a.y1, a.x2, a.y2, b.x2, b.y2);
+  return d1 * d2 < 0 && d3 * d4 < 0;
+}
+/** Проходит ли отрезок через прямоугольник (отсечение Лианга — Барски). */
+function segThrough(sg: { x1: number; y1: number; x2: number; y2: number }, r: Rect): boolean {
+  let t0 = 0;
+  let t1 = 1;
+  const dx = sg.x2 - sg.x1;
+  const dy = sg.y2 - sg.y1;
+  const edges: [number, number][] = [
+    [-dx, sg.x1 - r.x],
+    [dx, r.x + r.w - sg.x1],
+    [-dy, sg.y1 - r.y],
+    [dy, r.y + r.h - sg.y1],
+  ];
+  for (const [pp, q] of edges) {
+    if (pp === 0) {
+      if (q < 0) return false;
+      continue;
+    }
+    const t = q / pp;
+    if (pp < 0) t0 = Math.max(t0, t);
+    else t1 = Math.min(t1, t);
+    if (t0 > t1) return false;
+  }
+  return true;
 }
 
 /** Насколько карточка может отойти от знака по длинному отводу, px: сперва — вплотную. */
@@ -465,6 +514,13 @@ export function placeCard(
       let score = c.d + (c.d > CORNER_LEAD_MAX ? 200 : 0);
       for (const q of soft) if (cross(r, q)) score += q.cost;
       for (const sg of lines) if (segCross(sg, r)) score += sg.cost;
+      // отвод к карточке вдали от знака не пересекает линий семьи и не идёт через звёзды и подписи
+      const lead = { x1: a.x, y1: a.y, x2: Math.max(c.x, Math.min(c.x + w, a.x)), y2: Math.max(c.y, Math.min(c.y + h, a.y)) };
+      if (c.d > a.r + 2) {
+        for (const sg of lines) if (segsCross(lead, sg)) score += 30;
+        for (const q of [...keep, ...o.hard ?? []]) if (segThrough(lead, q)) score += 40;
+        for (const q of soft) if (segThrough(lead, q)) score += 10;
+      }
       if (o.mass) {
         const dx = Math.sign(c.x + w / 2 - a.x);
         const dy = Math.sign(c.y + h / 2 - a.y);
@@ -582,39 +638,50 @@ const labelOf = (id: string): Rect | null => {
 };
 
 /**
- * Что карточка не закрывает никогда (§ 6): звезду фокуса с подписью, ромбы союзов фокуса, звёзды и подписи семьи первого
- * поколения, органы неба, строку показа, указатели у края; у карточки связи — концы связи с подписями. И что по возможности:
- * линии семьи (отрезки: след родителя до ствола, ствол, зубец), прочие подписи, звёзды и ромбы.
+ * Запретные области места карточки (§ 6, уточнение координатора; Я25) по двум ярусам:
+ *  — обязательные (never) — карточка не закрывает их никогда: органы неба, строку показа, лист «Показ», указатели у края,
+ *    звезду фокуса с подписью, у карточки связи — концы связи с подписями;
+ *  — желательные — звёзды семьи первого поколения и ромбы союзов фокуса (keep), подписи семьи (hard): их карточка не
+ *    закрывает, пока на небе есть место; если места нет, карточка ужимается до краткого вида и встаёт там, где закрывает
+ *    меньше всего желательного (placeCard). Небо ради карточки не сдвигается.
+ * Мягкие цены (soft, lines) — линии семьи (след родителя до ствола, ствол, зубец), прочие подписи, звёзды и ромбы.
+ * focus — лицо, чья семья бережётся (у карточки связи — выбранное лицо); ends — концы связи (у карточки союза — супруги
+ * и дети союза: они тоже семья, желательные).
  */
 function obstacles(
   focus: string | null,
   ends: readonly string[],
   a: DotAnchor,
+  endsMust: boolean,
 ): { never: Rect[]; keep: Rect[]; hard: Rect[]; soft: Obstacle[]; lines: Segment[]; mass: { x: number; y: number } | null } {
   const s = skyRef.current!;
-  // Запретное по старшинству (placeCard): never — органы неба, строка показа, лист «Показ», указатели у края; keep —
-  // звезда фокуса с подписью, концы связи с подписями, звёзды семьи и ромбы союзов фокуса; hard — подписи семьи. Пока на
-  // небе есть место, карточка не закрывает ничего из них; если семья заняла всё небо — закрывает меньше всего подписей,
-  // и только если иначе нельзя — звёзды семьи; never — никогда
   const never: Rect[] = [...reserve(), ...s.edgeHits.map((e) => ({ x: e.x, y: e.y, w: e.w, h: e.h }))];
   const keepR: Rect[] = [];
   const hard: Rect[] = [];
   const soft: Obstacle[] = [];
   const lines: Segment[] = [];
-  const keep = new Set<string>(ends);
+  /** обязательные лица: фокус и концы связи; желательные — семья фокуса (и концы, если они не обязательны) */
+  const must = new Set<string>(endsMust ? ends : []);
+  if (focus) must.add(focus);
   const family = focus ? familyOf(focus) : [];
-  if (focus) keep.add(focus);
-  for (const id of family) keep.add(id);
+  const want = new Set<string>([...family, ...(endsMust ? [] : ends)]);
+  for (const id of must) want.delete(id);
   let mx = 0;
   let my = 0;
   let mn = 0;
   const fp = focus ? starAt(focus) : null;
-  for (const id of keep) {
+  for (const id of [...must, ...want]) {
     const q = starAt(id);
     if (!q) continue;
-    keepR.push({ x: q.x - q.r, y: q.y - q.r, w: 2 * q.r, h: 2 * q.r });
+    const star = { x: q.x - q.r, y: q.y - q.r, w: 2 * q.r, h: 2 * q.r };
     const lb = labelOf(id);
-    if (lb) (id === focus || ends.includes(id) ? keepR : hard).push(lb);
+    if (must.has(id)) {
+      never.push(star);
+      if (lb) never.push(lb);
+    } else {
+      keepR.push(star);
+      if (lb) hard.push(lb);
+    }
     if (fp && id !== focus && family.includes(id)) {
       mx += Math.sign(q.x - fp.x);
       my += Math.sign(q.y - fp.y);
@@ -625,7 +692,7 @@ function obstacles(
       lines.push({ x1: p.x, y1: p.y, x2: tx, y2: p.y, cost: 40 }, { x1: tx, y1: p.y, x2: tx, y2: c.y, cost: 40 }, { x1: tx, y1: c.y, x2: c.x, y2: c.y, cost: 40 });
     }
   }
-  // ромбы союзов фокуса — никогда; прочие ромбы — по возможности
+  // ромбы союзов фокуса — желательные; прочие ромбы — по возможности
   const focusUnions = new Set(focus ? [...unionsOf(focus), ...originOf(focus)].map((u) => u.id) : []);
   for (const h of s.plateHits) {
     const r = { x: h.cx - 6, y: h.cy - 6, w: 12, h: 12 };
@@ -633,11 +700,13 @@ function obstacles(
     if (focusUnions.has(h.uid)) keepR.push(r);
     else soft.push({ ...r, cost: 20 });
   }
+  const own = new Set([...must, ...want]);
   for (const b of s.ledger.boxes) {
-    if (b.kind === 'star' && b.id && keep.has(b.id)) continue;
-    // пометы семей, подписи лент, знаки свёрнутого — тоже надписи неба: карточка их не закрывает, если есть место
-    if (b.kind === 'note' || b.kind === 'mark' || b.kind === 'fold' || b.kind === 'group' || b.kind === 'event' || b.kind === 'sticky' || b.kind === 'star')
-      soft.push({ x: b.x, y: b.y, w: b.w, h: b.h, cost: b.kind === 'star' ? 30 : 20 });
+    if (b.kind === 'star' && b.id && own.has(b.id)) continue;
+    // подписи лиц, обрывков и ромбов, пометы семей, подписи лент, знаки свёрнутого — тоже надписи неба: карточка их не
+    // закрывает, если есть место (рамка листа и указатели у края — органы неба, они обязательные)
+    if (b.kind === 'frame' || b.kind === 'edge' || (b.kind === 'plate' && !b.text)) continue;
+    soft.push({ x: b.x, y: b.y, w: b.w, h: b.h, cost: b.kind === 'star' ? 30 : 20 });
   }
   const cam = s.cam;
   for (let i = 0; i < s.nodes.length; i++) {
@@ -664,9 +733,9 @@ function LineMarks({ id }: { id: string }) {
   );
 }
 
-function Cmd({ onRun, children, label, title, cls }: { onRun: () => void; children: string; label?: string; title?: string; cls?: string }) {
+function Cmd({ onRun, children, label, title, cls, expanded }: { onRun: () => void; children: string; label?: string; title?: string; cls?: string; expanded?: boolean }) {
   return (
-    <button type="button" class={cls ? `cmd ${cls}` : 'cmd'} aria-label={label} title={title} onClick={onRun}>
+    <button type="button" class={cls ? `cmd ${cls}` : 'cmd'} aria-label={label} aria-expanded={expanded} title={title} onClick={onRun}>
       {children}
     </button>
   );
@@ -795,24 +864,38 @@ function KinRowView({ row, idx, compact }: { row: KinRow; idx: number; compact?:
   );
 }
 
-/** Блок «Родство»: 3–5 строк (решение 77). compact — телефон на 214 px: две строки. */
-export function KinBlock({ id, compact = false, tight = false }: { id: string; compact?: boolean; tight?: boolean }) {
+/**
+ * Блок «Родство»: 3–5 строк (решение 77). compact — телефон на 214 px: две строки; brief — краткий вид (§ 6): одна
+ * строка и команда «всё родство» (onAll) — карточка снова полная, на месте, где закрывает меньше всего.
+ */
+export function KinBlock({ id, compact = false, brief = false, onAll }: { id: string; compact?: boolean; brief?: boolean; onAll?: () => void }) {
   void cardsTick.value;
   void model.value;
   // «Год»: помета порядка с верным диапазоном стихов — personOrderNote (src/render/links.ts, стык 5)
   const rows = kinRows(id, yearHow(id, personOrderNote(id, model.value)));
-  // телефон (лист на 214 px) — две строки; тесное небо (семья заняла всё небо, § 6) — три: родители, супруги, дети
-  const shown = compact
-    ? rows.filter((r) => r.kind !== 'year' && r.kind !== 'siblings').slice(0, 2)
-    : tight
-      ? rows.filter((r) => r.kind !== 'year' && r.kind !== 'siblings').slice(0, 3)
+  // телефон (лист на 214 px) — две строки; краткий вид (семья заняла всё небо, § 6) — одна: родители, иначе супруги
+  const shown = brief
+    ? rows.filter((r) => r.kind !== 'year' && r.kind !== 'siblings').slice(0, 1)
+    : compact
+      ? rows.filter((r) => r.kind !== 'year' && r.kind !== 'siblings').slice(0, 2)
       : rows;
   if (!shown.length) return null;
+  const more = brief && onAll ? rows.length - shown.length : 0;
   return (
     <dl class="dc-kin" aria-label="Родство">
       {shown.map((r, i) => (
         <KinRowView key={`${r.kind}${i}`} row={r} idx={i} compact={compact} />
       ))}
+      {more > 0 && (
+        <div class="dc-row all">
+          <dt class="dc-lbl" />
+          <dd class="dc-val">
+            <button type="button" class="dc-more" title="Показать всё «Родство» в карточке" onClick={onAll}>
+              {`всё родство — ещё ${more} ${more === 1 ? 'строка' : more < 5 ? 'строки' : 'строк'}`}
+            </button>
+          </dd>
+        </div>
+      )}
     </dl>
   );
 }
@@ -838,7 +921,7 @@ function LineageMenu({ id }: { id: string }) {
   );
 }
 
-export function PersonBody({ id, compact = false, tight = false }: { id: string; compact?: boolean; tight?: boolean }) {
+export function PersonBody({ id, compact = false, brief = false, onAll }: { id: string; compact?: boolean; brief?: boolean; onAll?: () => void }) {
   const p = byId.get(id)!;
   const dis = disLine(id);
   const phone = grid.value.phone;
@@ -846,19 +929,26 @@ export function PersonBody({ id, compact = false, tight = false }: { id: string;
   return (
     <>
       <div class="dc-top">
-        <Avatar id={id} size={40} />
+        {!brief && <Avatar id={id} size={40} />}
         <div class="dc-info">
           <div class="dc-nm">
             <span class="nm">{p.name}</span>
             <LineMarks id={id} />
           </div>
-          {dis && <div class="dc-dis">{dis}</div>}
+          {dis && !brief && <div class="dc-dis">{dis}</div>}
           <div class="dc-yrs">{yearsLine(id)}</div>
         </div>
       </div>
-      <KinBlock id={id} compact={compact} tight={tight} />
+      <KinBlock id={id} compact={compact} brief={brief} onAll={onAll} />
       <div class="dc-cmds">
-        <Cmd onRun={() => showDetails(id, null)} title="Подробная карточка лица: 24 раздела" cls="dc-card">
+        {/* на телефоне «Карточка ▴» разворачивает лист карточки (как «Развернуть» шапки листа) — кнопка с aria-expanded */}
+        <Cmd
+          onRun={() => showDetails(id, null)}
+          title="Подробная карточка лица: 24 раздела"
+          cls="dc-card"
+          label={phone ? 'Карточка: развернуть лист' : undefined}
+          expanded={phone ? false : undefined}
+        >
           {phone ? 'Карточка ▴' : 'Карточка'}
         </Cmd>
         <LineageMenu id={id} />
@@ -866,7 +956,7 @@ export function PersonBody({ id, compact = false, tight = false }: { id: string;
           Родство с…
         </Cmd>
       </div>
-      {(c.branch || c.parents) && (
+      {(c.branch || c.parents) && !brief && (
         <div class="dc-cmds">
           {c.branch && (
             <Cmd
@@ -902,7 +992,7 @@ function othersLine(u: Union): string | null {
   return f ? `Другие сыновья и дочери: имена не названы${f.refs[0] ? ` (${refShort(f.refs[0])})` : ''}` : null;
 }
 
-function UnionBody({ u, from }: { u: Union; from: string }) {
+function UnionBody({ u, from, brief = false }: { u: Union; from: string; brief?: boolean }) {
   const names = unionName(u);
   const kind = unionKindLine(u);
   const ref = u.refs[0] ? refShort(u.refs[0]) : '';
@@ -915,18 +1005,18 @@ function UnionBody({ u, from }: { u: Union; from: string }) {
   return (
     <>
       <div class="dc-top">
-        <UnionAvatar a={u.a} b={u.b} size={40} />
+        {!brief && <UnionAvatar a={u.a} b={u.b} size={40} />}
         <div class="dc-info">
           <div class="dc-nm">
             <span class="nm">{typo(names)}</span>
           </div>
-          {kind && <div class="dc-sub">{typo(kind)}</div>}
+          {kind && !brief && <div class="dc-sub">{typo(kind)}</div>}
           <div class="dc-sub">
             {typo(kids)}
             {ref ? ` (${ref})` : ''}
           </div>
-          {order && <div class="dc-sub">{typo(`годы детей — ${order}`)}</div>}
-          {others && <div class="dc-sub">{typo(others)}</div>}
+          {order && !brief && <div class="dc-sub">{typo(`годы детей — ${order}`)}</div>}
+          {others && !brief && <div class="dc-sub">{typo(others)}</div>}
         </div>
       </div>
       <div class="dc-cmds">
@@ -982,7 +1072,7 @@ function EndRow({ id, role, k }: { id: string; role: string; k: number }) {
   );
 }
 
-function LinkBody({ k }: { k: LinkKey }) {
+function LinkBody({ k, brief = false }: { k: LinkKey; brief?: boolean }) {
   const i = linkInfo(k);
   if (!i) return <p class="dc-note">Связь не найдена в данных.</p>;
   const u = i.union;
@@ -1006,7 +1096,7 @@ function LinkBody({ k }: { k: LinkKey }) {
         {i.ends.map((e, n) => (
           <EndRow key={`${e.id}${n}`} id={e.id} role={e.role} k={n} />
         ))}
-        {lines && (
+        {lines && !brief && (
           <div class="dc-row lines">
             <dt class="dc-lbl">Ленты</dt>
             <dd class="dc-val">
@@ -1014,7 +1104,7 @@ function LinkBody({ k }: { k: LinkKey }) {
             </dd>
           </div>
         )}
-        {u && k.kind !== 'union' && (
+        {u && k.kind !== 'union' && !brief && (
           <div class="dc-row union">
             <dt class="dc-lbl">Союз</dt>
             <dd class="dc-val">
@@ -1035,7 +1125,7 @@ function LinkBody({ k }: { k: LinkKey }) {
           </div>
         )}
       </dl>
-      {i.note && <p class="dc-note">{typo(i.note)}</p>}
+      {i.note && !brief && <p class="dc-note">{typo(i.note)}</p>}
       <div class="dc-cmds">
         {u && (
           <Cmd onRun={() => showDetails(unionSpouse(u, u.a ?? u.b ?? u.kids[0]), u.id)} title="Карточка союза справа: супруги, дети, стихи">
@@ -1071,7 +1161,7 @@ export function DotSheet({ id }: { id: string }) {
   const kind = link ? 'link' : u ? 'union' : 'person';
   return (
     <div
-      class={`dotcard in-sheet dc-${kind}`}
+      class={`dotcard in-sheet dc-${kind}${lowScreen() ? ' dc-brief' : ''}`}
       role="group"
       aria-label={link ? linkSpeech(link) : u && at?.kind === 'union' ? dotLabel(at) : dotLabel({ kind: 'person', id })}
       data-kind={kind}
@@ -1083,7 +1173,14 @@ export function DotSheet({ id }: { id: string }) {
         closeLink(true);
       }}
     >
-      {link ? <LinkBody k={link} /> : u && at?.kind === 'union' ? <UnionBody u={u} from={at.from} /> : <PersonBody id={id} compact />}
+      {/* низкий экран: лист на первом положении ниже 214 px — карточка краткая (имя с годами, одна строка, команды) */}
+      {link ? (
+        <LinkBody k={link} brief={lowScreen()} />
+      ) : u && at?.kind === 'union' ? (
+        <UnionBody u={u} from={at.from} brief={lowScreen()} />
+      ) : (
+        <PersonBody id={id} compact brief={lowScreen()} />
+      )}
     </div>
   );
 }
@@ -1105,9 +1202,15 @@ export function DotCard() {
   /** фокус клавиатуры в карточке: команда, на которой он стоял, может уйти из разметки */
   const inside = useRef(false);
   const [said, setSaid] = useState('');
-  /** тесное небо: полной карточке нет места без запретного (§ 6) — «Родство» в три строки, без «Братьев» и «Года» */
-  const [tight, setTight] = useState(false);
-  const tightRef = useRef(false);
+  /**
+   * Краткий вид (§ 6): полной карточке нет места без желательного — имя, годы, одна строка «Родства», команды. fullSize —
+   * размер полной карточки: как только ей есть место, карточка снова полная.
+   */
+  const [brief, setBrief] = useState(false);
+  const briefRef = useRef(false);
+  const fullSize = useRef<{ w: number; h: number } | null>(null);
+  /** читатель уже работал с карточкой («ещё 13», меню): выросшая по его просьбе карточка краткой не становится */
+  const touched = useRef(false);
   const at = dotCard.value;
   const link = selectedLink.value;
   const on = dotsOn.value;
@@ -1169,20 +1272,41 @@ export function DotCard() {
         cam.animateTo(cam.constrain({ x0: cam.x0, kx: cam.kx, laneTop: cam.laneTop + q.nudge / cam.ky }), 250, skyRef.redraw, reduced());
       }
     } else {
-      if (el.style.width) el.style.width = '';
-      const focus = lk ? (cur?.kind === 'person' ? cur.id : null) : cur?.kind === 'person' ? cur.id : null;
-      // у карточки союза «семья» — супруги и дети союза: их звёзды и подписи она не закрывает (§ 6)
-      const uu = cur?.kind === 'union' ? unionById(cur.uid) : undefined;
-      const ends = lk ? (linkInfo(lk)?.ends.map((e) => e.id) ?? []) : uu ? [uu.a, uu.b, ...uu.kids].filter((x): x is string => !!x) : [];
-      const o = obstacles(lk ? null : focus, lk ? [...ends, ...(focus ? [focus] : [])] : ends, a);
-      q = placeCard(a, size.current, bounds, { ...o, prev: spot.current, fine: !s.cam.moving });
-      // полной карточке нет свободного места — один раз ужать её (новый размер — ResizeObserver и новое место)
-      if (q.free === false && !tightRef.current && cur?.kind === 'person' && !lk) {
-        tightRef.current = true;
-        setTight(true);
+      // узкое небо (планшет с карточкой справа): карточка не шире места для неё — иначе она встала бы на звезду фокуса
+      const need = bounds.w < DOT_W ? `${Math.max(200, Math.floor(bounds.w))}px` : '';
+      if (el.style.width !== need) {
+        el.style.width = need;
+        size.current = { w: el.offsetWidth, h: el.offsetHeight };
       }
-      // запретные области места (§ 6; Я25) — для проверок приёмки (tools/accept/unify11.ts): «x,y,w,h;…» в px холста
-      el.dataset.hard = [...o.never, ...o.keep, ...o.hard].map((r) => [r.x, r.y, r.w, r.h].map(Math.round).join(',')).join(';');
+      // фокус — лицо, чья семья бережётся: у карточки лица — оно само; у карточки связи — лицо карточки, из которой её
+      // открыли, иначе выбранное лицо; у карточки союза — выбранное лицо
+      const focus = cur?.kind === 'person' ? cur.id : lk || cur?.kind === 'union' ? selected.peek() : null;
+      // у карточки союза «семья» — супруги и дети союза (желательные, § 6); у карточки связи концы — обязательные
+      const uu = !lk && cur?.kind === 'union' ? unionById(cur.uid) : undefined;
+      const ends = lk ? (linkInfo(lk)?.ends.map((e) => e.id) ?? []) : uu ? [uu.a, uu.b, ...uu.kids].filter((x): x is string => !!x) : [];
+      const o = obstacles(lk ? (focus && byId.has(focus) ? focus : null) : cur?.kind === 'person' ? focus : null, ends, a, !!lk);
+      const opts = { ...o, prev: spot.current, fine: !s.cam.moving };
+      q = placeCard(a, size.current, bounds, opts);
+      // полной карточке места нет (§ 6): краткий вид — имя, годы, одна строка «Родства», команды; новый размер —
+      // ResizeObserver и новое место. Краткая карточка возвращается к полной, как только полной есть место
+      if (q.free === false && !briefRef.current && !touched.current) {
+        briefRef.current = true;
+        fullSize.current = { ...size.current };
+        setBrief(true);
+      } else if (briefRef.current && fullSize.current && !s.cam.moving && placeCard(a, fullSize.current, bounds, { ...opts, prev: null }).free) {
+        briefRef.current = false;
+        setBrief(false);
+      }
+      // запретные области места (§ 6; Я25) — для проверок приёмки (tools/accept/unify11.ts): «x,y,w,h;…» в px холста;
+      // data-must — обязательные, data-want — желательные, data-full — размер полной карточки (краткий вид), data-bounds —
+      // где карточка может стоять
+      const enc = (rs: readonly Rect[]) => rs.map((r) => [r.x, r.y, r.w, r.h].map(Math.round).join(',')).join(';');
+      el.dataset.must = enc(o.never);
+      el.dataset.want = enc([...o.keep, ...o.hard]);
+      el.dataset.hard = enc([...o.never, ...o.keep, ...o.hard]);
+      el.dataset.bounds = [bounds.x, bounds.y, bounds.w, bounds.h].map(Math.round).join(',');
+      if (briefRef.current && fullSize.current) el.dataset.full = `${Math.round(fullSize.current.w)},${Math.round(fullSize.current.h)}`;
+      else delete el.dataset.full;
       el.dataset.at = [a.x, a.y, a.r].map(Math.round).join(',');
     }
     spot.current = q.key;
@@ -1255,8 +1379,10 @@ export function DotCard() {
   // карточка следует за небом: каждый кадр неба (viewTick) и сдвиг точки связи — место заново
   const key = link ? `link:${ks(link)}` : at ? (at.kind === 'person' ? at.id : at.uid) : '';
   useEffect(() => {
-    tightRef.current = false;
-    setTight(false);
+    briefRef.current = false;
+    fullSize.current = null;
+    touched.current = false;
+    setBrief(false);
     if (!key) return;
     nudged.current = false;
     return effect(() => {
@@ -1311,7 +1437,8 @@ export function DotCard() {
       <div
         ref={ref}
         key={key}
-        class={['dotcard', `dc-${kind}`].join(' ')}
+        class={['dotcard', `dc-${kind}`, brief ? 'dc-brief' : ''].filter(Boolean).join(' ')}
+        data-brief={brief ? '' : undefined}
         role="dialog"
         aria-label={link ? linkSpeech(link) : dotLabel(at!)}
         data-kind={kind}
@@ -1325,6 +1452,10 @@ export function DotCard() {
           else closeDot(true);
         }}
         onFocusIn={() => (inside.current = true)}
+        onPointerDown={() => (touched.current = true)}
+        onKeyDownCapture={(e) => {
+          if (e.key !== 'Tab' && e.key !== 'Escape') touched.current = true;
+        }}
         onFocusOut={(e) => {
           const to = e.relatedTarget as Node | null;
           // фокус ушёл из карточки сам (не потерялся вместе с командой)
@@ -1334,7 +1465,19 @@ export function DotCard() {
           if (previewLinks.peek()) previewLinks.value = null;
         }}
       >
-        {link ? <LinkBody k={link} /> : at!.kind === 'person' ? <PersonBody id={at!.id} tight={tight} /> : <UnionBody u={u!} from={at!.from} />}
+        {link ? <LinkBody k={link} brief={brief} /> : at!.kind === 'person' ? (
+          <PersonBody
+            id={at!.id}
+            brief={brief}
+            onAll={() => {
+              // читатель просит всё «Родство»: карточка полная, и краткой по месту больше не становится
+              touched.current = true;
+              briefRef.current = false;
+              setBrief(false);
+              requestAnimationFrame(() => ref.current?.querySelector<HTMLElement>('.dc-kin .person')?.focus({ preventScroll: true }));
+            }}
+          />
+        ) : <UnionBody u={u!} from={at!.from} brief={brief} />}
         <Close
           label={link ? 'Закрыть карточку связи' : at!.kind === 'person' ? 'Закрыть карточку у звезды' : 'Закрыть карточку союза'}
           onClick={() => {

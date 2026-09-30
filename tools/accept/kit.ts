@@ -23,3 +23,20 @@ export const secText = async (p: Page, n: number) => ((await p.locator(`.folio #
 export type View = { width: number; height: number; touch?: boolean };
 /** Сценарий: номер, название, окно и проверка. */
 export type Scenario = { n: number; title: string; view?: View; run: (p: Page) => Promise<Check> };
+
+/**
+ * Показ неба через лист «Показ» (этап 11, решение 81): «изменить» в строке показа, вид показа («Всё небо», «Линии Мессии»,
+ * «Ключевые лица», «Набор»), на телефоне — «Показать N лиц», на широком экране лист применяется сразу и закрывается «×».
+ * Прежде эти показы включались флажком «только линии Мессии» и переключателем «все лица | набор» у органов неба.
+ */
+export async function pickShow(p: Page, kind: 'Всё небо' | 'Линии Мессии' | 'Ключевые лица' | 'Набор', o: { touch?: boolean; ms?: number } = {}) {
+  const hit = (l: ReturnType<Page['locator']>) => (o.touch ? l.tap() : l.click());
+  await hit(p.locator('.sky .showbar .sb-cmd[data-cmd="sheet"]').first());
+  await p.waitForTimeout(500);
+  await hit(p.locator('.showsheet .ss-kind', { hasText: kind }).first());
+  await p.waitForTimeout(300);
+  const apply = p.locator('.showsheet .ss-apply button');
+  if (await apply.count()) await hit(apply);
+  else if (await p.locator('.showsheet').count()) await hit(p.locator('.showsheet .sheet-head .close').first());
+  await p.waitForTimeout(o.ms ?? 1500);
+}

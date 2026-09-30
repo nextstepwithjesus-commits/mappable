@@ -1084,8 +1084,8 @@ export function drawLinkNodes(v: SkyContext, p: Pass, d: LinkDraw, marks: PlateM
     const lit = hover || sel || marks.focus === n.union || d.lit({ ends: [n.owner, n.from] } as LinkPath);
     return { hover, sel, lit };
   };
-  // на мелком масштабе «всех лиц» ромбы соседних семей сходятся: знак, чьё место занято уже нарисованным ромбом, не
-  // рисуется (семантическое увеличение, ТЗ § 3.1) — выделенные и наведённые первыми
+  // на мелком масштабе ромбы соседних семей сходятся: знак, чьё место занято уже нарисованным ромбом, не рисуется
+  // (семантическое увеличение, ТЗ § 3.1) — выделенные и наведённые первыми
   const map = d.frame.layout === 'map';
   // «все лица» теснее поколения в 18 px: ромбов нет (семья — сгусток; знаки только закрывали бы друг друга и имена)
   if (map && v.genRoom < 0.5) return { plates, counts };
@@ -1099,7 +1099,11 @@ export function drawLinkNodes(v: SkyContext, p: Pass, d: LinkDraw, marks: PlateM
     if (d.frame.ribbonOnly?.has(n.union) && v.routeFactor < 0.5) continue;
     inView.push({ n, x, y, st: state(n) });
   }
-  if (map) inView.sort((a, b) => Number(b.st.lit) - Number(a.st.lit));
+  // и в семейной укладке, когда поколения теснее 24 px (показ, вписанный в узкое небо со строками ниже, J1): ромбы
+  // союзов Давида сходятся в одну точку, ромбы соседних следов — друг на друга; хватает одного знака.
+  // На масштабе чтения ромбы не сходятся (links.ts: соседние — через 2r + 2 px), и каждый союз — со своим знаком (Я7)
+  const crowd = map || v.genRoom < 1;
+  if (crowd) inView.sort((a, b) => Number(b.st.lit) - Number(a.st.lit));
   const taken: Rect[] = [];
   for (const { n, x, y, st } of inView) {
     const { hover, sel, lit } = st;
@@ -1108,7 +1112,7 @@ export function drawLinkNodes(v: SkyContext, p: Pass, d: LinkDraw, marks: PlateM
     const own = { x: x - R - 0.5, y: y - R - 0.5, w: 2 * R + 1, h: 2 * R + 1 };
     // знак целиком в открытом небе: у кромки рамки ромб не срезается — его нет
     if (own.x < v.letterW || own.x + own.w > cam.w || own.y < v.openTop || own.y + own.h > cam.vp.b) continue;
-    if (map) {
+    if (crowd) {
       if (taken.some((t) => cross(t, own))) continue;
       taken.push(own);
     }

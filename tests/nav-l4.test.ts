@@ -420,13 +420,36 @@ describe('набор из ссылки — временный просмотр (
   });
 });
 
-describe('строка «набор» на телефоне (решение 58; MOB-73)', () => {
-  it('коротко, в одну строку; оговорка о ссылке — в подсказке, а не в строке', () => {
-    expect(overlays.workLineText(38, null, true)).toBe('Только набор: 38 лиц');
-    expect(overlays.workLineText(22, null, true)).toBe('Только набор: 22 лица');
-    expect(overlays.workLineText(38, null)).toBe('На небе — только рабочий набор, 38 лиц');
-    expect(overlays.workLineText(38, null)).not.toMatch(/ссылк/);
-    expect(overlays.workLineNote(38)).toMatch(/только если в нём не больше 12 лиц/);
-    expect(overlays.workLineNote(12)).toMatch(/передаёт и сам набор/);
+describe('строка показа на телефоне — коротко, в одну строку (решение 58; MOB-73; этап 11, Q4)', () => {
+  // строка «набор» (прежде workLineText, Overlays.tsx) стала строкой показа (src/ui/show.ts, ShowBar.tsx): на узком небе
+  // она — одной строкой «набор — 38 лиц — изменить», подробности — в листе «Показ»
+  const content = (n: number) =>
+    ({ ids: new Set(Array.from({ length: n }, (_, i) => `x${i}`)), guests: new Set(), stubs: [], layout: 'family', founders: new Set(), plus: new Map() }) as unknown as import('../src/ui/show.ts').ShowContent;
+  it('набор: полная строка «На небе: набор — 38 лиц», коротко «набор — 38 лиц» с одной командой «изменить»', async () => {
+    const show = await import('../src/ui/show.ts');
+    const sm = show.summaryOf({ kind: 'set' }, content(38));
+    expect(sm.label).toBe('На небе: набор — 38 лиц');
+    expect(sm.short.map((q) => q.text).join('')).toBe('набор — 38 лиц');
+    expect(show.summaryOf({ kind: 'set' }, content(22)).short.map((q) => q.text).join('')).toBe('набор — 22 лица');
+    expect(show.summaryOf({ kind: 'set' }, content(1)).short.map((q) => q.text).join('')).toBe('набор — 1 лицо');
+    expect(sm.shortCmds.map((q) => q.text)).toEqual(['изменить']);
+    expect(sm.shortCmds[0].cmd).toEqual({ kind: 'sheet' });
+    // в строке нет оговорки о ссылке и «только рабочий набор»: оговорка — в подсказке строки (setLinkNote)
+    expect(sm.label).not.toMatch(/ссылк|рабочий/);
+    expect(show.setLinkNote(38)).toMatch(/только если в нём не больше 12 лиц/);
+    expect(show.setLinkNote(12)).toMatch(/передаёт и сам набор/);
+  });
+  it('созвездие и род лица: коротко — «Дом Нахора» — N лиц», «потомки Иуды — N лиц»; «изменить» открывает лист на роде лица', async () => {
+    const show = await import('../src/ui/show.ts');
+    const g = show.summaryOf({ kind: 'groups', groups: ['nahorites'], links: 'stubs' });
+    expect(g.short.map((q) => q.text).join('')).toMatch(/^«Дом Нахора» — \d+ лиц$/);
+    // без подробностей: основателя и связей наружу нет, команды — те же
+    expect(g.mid.map((q) => q.text).join('')).toMatch(/^На небе: созвездие «Дом Нахора» — \d+ лиц$/);
+    expect(g.label).toMatch(/основатель Нахор/);
+    const l = show.summaryOf({ kind: 'lineage', id: 'iuda', dir: 'down', gen: null, by: 'father' });
+    expect(l.short.map((q) => q.text).join('')).toMatch(/^потомки Иуды — \d+ лиц[а]?$/);
+    expect(l.shortCmds[0].cmd).toEqual({ kind: 'sheet', lineage: 'iuda' });
+    // без уточнения имени: «потомки ▾ Иуды — все поколения ▾; по отцам ▾»
+    expect(l.mid.map((q) => q.text).join('')).toMatch(/^На небе: потомки Иуды — все поколения; по отцам — \d+/);
   });
 });

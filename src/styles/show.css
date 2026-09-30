@@ -109,6 +109,27 @@
     padding: 0;
   }
 }
+/* короткая строка (ShowBar.tsx, data-level 2 — полная не поместилась в одну строку): «Дом Нахора» — 17 лиц — изменить»;
+   если и она не помещается — показ обрезается многоточием, команда остаётся целой */
+.showbar[data-level='2'] .txt {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  white-space: nowrap;
+}
+.showbar[data-level='2'] .sb-v {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.showbar[data-level='2'] .dash {
+  flex: none;
+  white-space: pre;
+}
+.showbar[data-level='2'] .sb-cmd {
+  flex: none;
+}
 /* телефон: «На небе: всё небо — изменить» — одной строкой, если помещается; иначе — с переносом */
 @media (max-width: 720px) {
   .showbar {
@@ -404,11 +425,12 @@
   color: var(--sheet);
 }
 @media (max-width: 720px) {
+  /* телефон: лист — над листом карточки (--sheet-cover, phone.css), не под ним: «Показать» и все виды показа видны */
   .sky > .sheet.showsheet {
     top: 0;
     left: 0;
     right: 0;
-    bottom: 0;
+    bottom: var(--sheet-cover, 0px);
     width: auto;
     max-height: none;
     border: 0;

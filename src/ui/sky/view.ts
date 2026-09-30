@@ -125,6 +125,8 @@ export function viewForPerson(id: string): ViewState | null {
   const x1 = s.xOf(n.t0 + span * 0.65);
   const cam = s.cam;
   const vp = cam.vp;
+  // окно — по жизни лица, и в семейной укладке тоже: строка 24 px (32 px на телефоне) стоила бы приближения времени в
+  // разы — род Иакова на телефоне сжался бы до 27 лет у рождения Иакова, без единого его ребёнка (Я12 — в отчёте Q4)
   const kx = (vp.r - vp.l) / Math.max(1e-6, x1 - x0);
   const [, cy] = cam.vpCenter();
   // вертикаль камеры — строки (сжатие полос, src/render/rows.ts)
@@ -504,6 +506,7 @@ export function updateZoomFloor() {
   if (!s || !s.model || !(s.cam.w > 0)) return;
   const cam = s.cam;
   cam.zoomFloor = null;
+  cam.edge = null;
   const all = cam.kxLo();
   let floor: number | null = null;
   if (s.plan.mode === 'work') {
@@ -518,6 +521,9 @@ export function updateZoomFloor() {
     const k = linesKx();
     if (k !== null) floor = Math.min(all, k);
   }
+  // показ «линии Мессии» (он же план «набор»): поле у Адама — LINES_PAD, а не общее EDGE, иначе пределы сдвига прижимали
+  // вписанный коридор к 16 px (MAP-59)
+  if (onlyLines.peek()) cam.edge = LINES_PAD;
   cam.zoomFloor = floor;
 }
 
@@ -564,6 +570,13 @@ function viewForWin(w: Win, lanes?: number): ViewState | null {
  */
 export const linesAgain = signal(0);
 
+/**
+ * Переключение «только линии» ждёт кадра — вписывания коридора (этап 11, Я28): окно адреса ставится после него
+ * (src/ui/address.ts, whenSkyReady), иначе коридор, вписанный кадром позже, затирал окно ссылки «#/~y-990~w400~s1~o1».
+ */
+let linesQueued = false;
+export const linesSettling = () => linesQueued;
+
 if (typeof window !== 'undefined') {
   let shown: boolean | null = null;
   let wait = 0;
@@ -583,8 +596,10 @@ if (typeof window !== 'undefined') {
       const s = skyRef?.current;
       if (!s || !s.model || !(s.cam.w > 0) || !linesFrame()) {
         if (tries < 240) wait = requestAnimationFrame(() => apply(tries + 1));
+        else linesQueued = false;
         return;
       }
+      linesQueued = false;
       const first = shown === null;
       if (shown === on) return;
       shown = on;
@@ -598,8 +613,10 @@ if (typeof window !== 'undefined') {
       if (first) return;
       const b = before;
       before = null;
-      // «не двигали»: небо ещё идёт к виду режима или стоит на нём
-      const still = !!b && (cam.moving || cam.near(b.to));
+      // «не двигали»: небо стоит на виде режима — по времени (x0, kx). Строки при смене показа переставляет план неба
+      // (линии Мессии — семейная укладка, всё небо — карта) переходом, и камера в это время движется, — это не движение
+      // читателя; время переход не двигает (§ 10)
+      const still = !!b && Math.abs(cam.kx / b.to.kx - 1) < 1e-3 && Math.abs(cam.x0 - b.to.x0) * cam.kx < 2;
       setFocus(0);
       updateZoomFloor();
       flightTarget = null;
@@ -622,6 +639,8 @@ if (typeof window !== 'undefined') {
       }
       skyRef.redraw();
     };
+    // ждать есть чего, только если показ сменился на линии Мессии: вписывание коридора (выключение окно адреса не затирает)
+    linesQueued = on && shown !== on;
     wait = requestAnimationFrame(() => apply(0));
   });
 }

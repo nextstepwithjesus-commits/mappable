@@ -36,7 +36,7 @@ import { damerau } from '../engine/search.ts';
 import { toAstro, toHist } from '../engine/years.ts';
 import { KX_MAX, KX_MIN, LANES_MAX, LANES_MIN } from '../render/camera.ts';
 import { skyRef, viewTick } from './common.tsx';
-import { HISTORY_MS, holdLinesRows, inView, keepInView, reduced, setStartLanes } from './sky/view.ts';
+import { HISTORY_MS, holdLinesRows, inView, keepInView, linesSettling, reduced, setStartLanes } from './sky/view.ts';
 import {
   EMPTY_LINK_NOTICE, WORK_URL_MAX, linkSet, linkSetFor, parseShow, setShowState, show, showHistory, showKey, showLinksField, shownSet, workNotice,
   workSet, type Show,
@@ -416,7 +416,8 @@ function whenSkyReady(then: () => void, tries = 0, settle = true) {
   const model = s && s.model && s.model.id === modelId.peek() && models.some((m) => m.id === modelId.peek()) && s.lambda === lambda.peek();
   // первый показ и смена сетки: окно или перелёт — после перехода строк к укладке показа (§ 10), иначе цель перелёта
   // берётся с середины перехода и лицо остаётся за краем (род Иуды по адресу)
-  const ready = model && !(settle && s.transitioning);
+  // и после вписывания коридора «только линии», если показ сменился на линии Мессии (view.ts, linesSettling)
+  const ready = model && !(settle && s.transitioning) && !linesSettling();
   if (ready && !settle && tries === 0) {
     then();
     return;
@@ -485,6 +486,9 @@ export function bindAddress(): () => void {
     const panel0 = panel.peek();
     const card0 = !!selected.peek();
     if (!initialLoad) applyState(a, true);
+    // запись включила показ «линии Мессии» (не первый показ): окно — у fitLines, ±10 поколений вокруг выбранного (IX-73);
+    // перелёт к лицу его не перебивает
+    const linesFit = !initialLoad && linesSettling();
     const grid = initialLoad || panel.peek() !== panel0 || !!selected.peek() !== card0;
     lastPush = pushKey();
     applying = false;
@@ -499,7 +503,7 @@ export function bindAddress(): () => void {
       // окно записи — сразу при первом показе, переходом за BACK_MS при «назад» и «вперёд»; адрес называет лицо, но не
       // окно (прежний «#/david»): небо летит к лицу
       if (a.view) applyView(a.view, !initialLoad);
-      else if (a.id) skyRef.flyTo(a.id);
+      else if (a.id && !linesFit) skyRef.flyTo(a.id);
       // адрес пишется, когда небо встало: окно самой записи, а не кадр перехода. Запись истории с окном остаётся какой
       // была; первый показ и адрес без окна дополняются окном
       whenStill(() => {

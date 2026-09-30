@@ -11,7 +11,7 @@ import { num, typo, typoTree } from '../text/typo.ts';
 import { Close } from '../controls.tsx';
 import { pickBarText, pinBarText } from './text.ts';
 import { introOpen, lanes, openGuide, openLegend, resetProportions } from './view.ts';
-import { adoptLinkSet, leaveLinkSet, linkSet, skyMode, workNotice, workSet, WORK_URL_MAX } from '../work.ts';
+import { adoptLinkSet, leaveLinkSet, linkSet, skyMode, workNotice, workSet } from '../work.ts';
 import { grid } from '../layout.ts';
 import { start } from '../reveal.ts';
 import { StartList, openStarts } from './Controls.tsx';
@@ -90,27 +90,6 @@ export function groupBarText(g: Pick<SkyGroup, 'label' | 'kind'>): string {
  */
 export function GroupBar({ group }: { group: SkyGroup }) {
   return <SkyBar cls="groupbar" text={groupBarText(group)} cmds={[{ label: 'снять', run: () => (skyGroup.value = null) }]} esc />;
-}
-
-/**
- * Текст строки режима «набор» (J4; UX-62, MOB-54, VIS-46): пустой набор — как его собрать; выбранное лицо вне набора —
- * «Вооз не в наборе» (имя в начале, без падежа); иначе — «На небе — только рабочий набор, 38 лиц», на телефоне — коротко,
- * в одну строку: «Только набор: 38 лиц» (MOB-73). Оговорка о ссылке — не в строке, а в её подсказке (workLineNote).
- */
-export function workLineText(n: number, outName: string | null, short = false): string {
-  if (outName) return `${outName} не в наборе`;
-  if (!n) return 'Рабочий набор пуст: возьмите лиц клавишей В у звезды или командой «Взять в работу» в карточке';
-  return short ? `Только набор: ${persons(n)}` : `На небе — только рабочий набор, ${persons(n)}`;
-}
-
-/**
- * Подсказка строки «набор» (решение 58; MOB-73): набор до 12 лиц передаётся ссылкой списком (решение 34), длиннее —
- * только режим. Прежняя оговорка «(ссылкой передаётся только режим)» ушла из строки сюда.
- */
-export function workLineNote(n: number): string {
-  return n > WORK_URL_MAX
-    ? `Ссылкой передаётся режим «набор»; сам набор — только если в нём не больше ${WORK_URL_MAX} лиц`
-    : `Ссылка на этот вид передаёт и сам набор: в нём не больше ${WORK_URL_MAX} лиц`;
 }
 
 /** Число лиц со склонением: «1 лицо», «2 лица», «38 лиц». */

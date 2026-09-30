@@ -314,10 +314,19 @@ export function WorkButton({ id }: { id: string }) {
         aria-expanded={open}
         aria-pressed={on}
         aria-controls={open ? `wp-${id}` : undefined}
+        aria-label={on ? undefined : 'Добавить в набор'}
         title={on ? 'Лицо в наборе: добавить родню, скрыть потомков на небе или убрать' : 'Добавить лицо в набор, с роднёй или без; скрыть потомков на небе (клавиши В и С на небе)'}
         onClick={() => setOpen(!open)}
       >
-        {on ? 'В наборе' : 'Добавить в набор'}
+        {/* на узком листе (400 px, 1024 × 768) — «В набор»: четыре команды карточки одной строкой (VIS-79, IX-81) */}
+        {on ? (
+          'В наборе'
+        ) : (
+          <>
+            <span class="full">Добавить в набор</span>
+            <span class="short">В набор</span>
+          </>
+        )}
         <span class="tri" aria-hidden="true">
           {open ? '▴' : '▾'}
         </span>

@@ -44,14 +44,17 @@ async function overlap(p: Page): Promise<number> {
     return Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left)) * Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
   })()`)) as number;
 }
-/** Органы неба доступны: «Всё небо» видно и нажимается (сверху в его середине — он сам). */
+/**
+ * Органы неба доступны: «Вписать» видно и нажимается (сверху в его середине — он сам). Этап 11 (Я30): команда органов
+ * неба «Всё небо» стала «Вписать» — «Всё небо» теперь только показ (строка показа).
+ */
 async function controlsOk(p: Page): Promise<string> {
-  const btn = p.locator('.skyctl button', { hasText: 'Всё' }).first();
-  if (!(await btn.count())) return 'нет «Всё небо»';
+  const btn = p.locator('.skyctl button', { hasText: 'Вписать' }).first();
+  if (!(await btn.count())) return 'нет «Вписать»';
   const b = await btn.boundingBox();
-  if (!b) return '«Всё небо» не видно';
+  if (!b) return '«Вписать» не видно';
   const own = await p.evaluate(`(() => { const e = document.elementFromPoint(${b.x + b.width / 2}, ${b.y + b.height / 2}); return !!e && !!e.closest('.skyctl'); })()`);
-  return own ? '' : '«Всё небо» закрыто';
+  return own ? '' : '«Вписать» закрыто';
 }
 async function tapOrClick(p: Page, loc: ReturnType<Page['locator']>, how: How) {
   if (how === 'touch') await loc.tap();
@@ -250,9 +253,10 @@ export const layout: Scenario[] = [
   },
   {
     n: 38,
-    title: 'U7, 1440: «Всё небо» показывает все полосы, Адама и Иисуса Христа; дальше не отдаляется (D2)',
+    // этап 11 (Я30): команда органов неба «Всё небо» — теперь «Вписать» (весь нынешний показ в окне; показ — всё небо)
+    title: 'U7, 1440: «Вписать» на всём небе показывает все полосы, Адама и Иисуса Христа; дальше не отдаляется (D2)',
     run: async (p) => {
-      const all = p.locator('.skyctl button', { hasText: 'Всё небо' });
+      const all = p.locator('.skyctl button', { hasText: 'Вписать' });
       await p.locator('.skyctl button[aria-label="Приблизить"]').click();
       await p.locator('.skyctl button[aria-label="Приблизить"]').click();
       await p.waitForTimeout(500);
@@ -260,7 +264,7 @@ export const layout: Scenario[] = [
       await all.click();
       await p.waitForTimeout(1600);
       const lanesNow = await allLanes(p);
-      if (lanesNow) return fail(`«Всё небо»: ${lanesNow}`);
+      if (lanesNow) return fail(`«Вписать»: ${lanesNow}`);
       const k = (await view(p)).kx;
       // у предела «−» выключена (aria-disabled, IX-62): нажатие всё равно не отдаляет
       const out = p.locator('.skyctl button[aria-label="Отдалить"]');
@@ -274,7 +278,7 @@ export const layout: Scenario[] = [
         await all.click();
         await p.waitForTimeout(1600);
         const vis = await selVisible(p);
-        if (vis) return fail(`${id} после «Всё небо»: ${vis}`);
+        if (vis) return fail(`${id} после «Вписать»: ${vis}`);
         const l = await allLanes(p);
         if (l) return fail(`${id}: ${l}`);
       }
@@ -283,16 +287,16 @@ export const layout: Scenario[] = [
   },
   {
     n: 39,
-    title: 'U7, телефон 390 × 844: «Всё небо» — все полосы, Адам и Иисус Христос, в том числе над листом карточки',
+    title: 'U7, телефон 390 × 844: «Вписать» на всём небе — все полосы, Адам и Иисус Христос, в том числе над листом карточки',
     view: { width: 390, height: 844, touch: true },
     run: async (p) => {
-      const all = p.locator('.skyctl button', { hasText: 'Всё' });
+      const all = p.locator('.skyctl button', { hasText: 'Вписать' });
       await p.locator('.skyctl button[aria-label="Приблизить"]').tap();
       await p.waitForTimeout(400);
       await all.tap();
       await p.waitForTimeout(1600);
       const l = await allLanes(p);
-      if (l) return fail(`«Всё небо»: ${l}`);
+      if (l) return fail(`«Вписать»: ${l}`);
       for (const id of ['iisus', 'adam']) {
         await p.goto(p.url().replace(/#.*$/, '') + `#/${id}`);
         await p.waitForTimeout(1600);
@@ -507,7 +511,10 @@ export const layout: Scenario[] = [
       }
       if (!started) return fail('перелёт не начался');
       const sky = (await p.locator('.sky canvas').boundingBox())!;
-      await p.mouse.move(sky.x + 60, sky.y + 60);
+      // точка на самом небе: у верхней кромки слева теперь строка показа (этап 11, решение 81) — ниже неё
+      let py = sky.y + 60;
+      while (py < sky.y + sky.height - 60 && !(await p.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.tagName === 'CANVAS', { x: sky.x + 60, y: py }))) py += 20;
+      await p.mouse.move(sky.x + 60, py);
       // указатель нажат и держится: отпускание без сдвига — щелчок по пустому небу, он снимает выбор (D3, агент nav)
       await p.mouse.down();
       await p.waitForTimeout(100); // data-view пишется кадром неба — после нажатия нужен ещё один кадр

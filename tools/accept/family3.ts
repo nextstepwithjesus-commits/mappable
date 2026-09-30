@@ -1,8 +1,9 @@
 /**
  * Сценарии приёмки этапа 7, круг 3 (доработка по второй повторной экспертизе), группа family3: номера 345–349, семьи
  * на небе и коса (src/render/trails.ts, src/engine/ribbons.ts).
- * Проверки — по замерам кадра на холсте неба (src/render/sky.ts, конец draw()): canvas[data-notes] — пометы, знаки
- * брака «‖» и прочие надписи неба через «|»; .sky[data-labels="N/M"] — подписей и пересекающихся пар; звёзды —
+ * Проверки — по замерам кадра на холсте неба (src/render/sky.ts, конец draw()): canvas[data-notes] — пометы и прочие
+ * надписи неба через «|» (этап 11: помет матерей и порядка на небе нет — Г8, Г9); [data-plate-texts] — подписи у ромбов;
+ * [data-links] — пути и узлы связей (черта брака — вид bar); [data-label-boxes] — места подписей лиц; .sky[data-labels="N/M"] — подписей и пересекающихся пар; звёзды —
  * кнопки #sky-star-<id> с data-x, data-y (px холста; src/ui/sky/SkyA11y.tsx).
  */
 import type { Page } from 'playwright';
@@ -22,99 +23,162 @@ const star = (p: Page, id: string) =>
     const b = document.getElementById(`sky-star-${id}`) as HTMLElement | null;
     return b && b.dataset.x ? { x: Number(b.dataset.x), y: Number(b.dataset.y) } : null;
   }, id);
+const flat = (s: string) => s.replace(/\u2060/g, '').replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim();
+/** Подписи у узлов и обрывков (canvas[data-plate-texts]): «ключ союза:текст». */
+const plateTexts = async (p: Page) => (await cv(p, 'plate-texts')).split('|').filter(Boolean).map((t) => ({ key: t.slice(0, t.lastIndexOf(':')), text: t.slice(t.lastIndexOf(':') + 1) }));
+/**
+ * Подсказка звезды после неподвижности (третья строка — через 700 мс, IX-58): текст подсказки или null. Звезда — по
+ * списку неба (#sky-star-…).
+ */
+async function starTip(p: Page, id: string): Promise<string | null> {
+  const box = await p.locator('.sky > canvas').boundingBox();
+  const s = await star(p, id);
+  if (!box || !s) return null;
+  await p.mouse.move(box.x + s.x, box.y + s.y);
+  await p.waitForTimeout(1300);
+  const t = p.locator('.sky .tip[data-shown][data-more]');
+  return (await t.count()) ? flat(await t.innerText()) : null;
+}
+/** Имена жён Давида — подписи у ромбов его союзов на следе отца (Г8). */
+const DAVID_WIVES = ['Ахиноама', 'Авигея', 'Мааха', 'Аггифа', 'Авитала', 'Эгла', 'Вирсавия', 'Мелхола'];
 
 export const family3: Scenario[] = [
   {
     n: 345,
-    title: 'Решение 41, MAP-73: помета «годы — по порядку …, выв.» только у семьи выбранного лица; у сыновей Иакова — рассказ о рождениях Быт 29:32–30:24; 35:16–18',
+    // этап 11 (Г9): помет «годы — по порядку …» на небе нет вовсе — ни без выбора, ни у семьи выбранного лица; помета —
+    // в подсказке звезды и в карточках, с диапазоном стихов, где названы дети этого союза (DG 2.3.6): у сыновей Лии —
+    // рассказ о рождениях Быт 29:32–35; 30:17–21 (а не 1 Пар 2:1–2), у сыновей Валлы — Быт 30:4–8
+    title: 'Решение 41, MAP-73, Г9: помет порядка на небе нет; у сыновей Иакова помета — в подсказке звезды: рассказ о рождениях (Быт 29:32–35; 30:17–21 у Рувима, Быт 30:4–8 у Дана)',
     run: async (p) => {
-      // без выбора — ни одной пометы порядка (было 7 и 8 на экран)
-      for (const hash of ['#/~y-1700~w300~l0~s1', '#/~y-2070~w250~l21~s1', '#/~y-1915~w70~l-2~s1']) {
+      for (const hash of ['#/~y-1700~w300~l0~s1', '#/~y-2070~w250~l21~s1', '#/~y-1915~w70~l-2~s1', '#/iakov']) {
         await go(p, hash, 2200);
-        const n = (await notes(p)).filter((t) => ORDER.test(t));
-        if (n.length) return fail(`${hash}: без выбора пометы порядка: ${n.join('; ')}`);
+        const n = (await notes(p)).filter((t) => ORDER.test(t) || /по порядку/.test(t));
+        if (n.length) return fail(`${hash}: помета порядка на небе: ${n.join('; ')}`);
       }
-      // выбран Иаков — одна помета у его сыновей, со ссылкой на рассказ о рождениях, а не на 1 Пар 2:1–2
-      await go(p, '#/iakov~y-1915~w70~l-2~s1');
-      const n = (await notes(p)).filter((t) => ORDER.test(t));
-      if (n.join('|') !== 'годы — по порядку Быт 29:32–30:24; 35:16–18, выв.') return fail(`у сыновей Иакова: ${n.join(' | ') || 'пометы нет'}`);
       if (await overlaps(p)) return fail(`наложений подписей ${await overlaps(p)}`);
-      return pass(n[0]);
+      const got: string[] = [];
+      for (const [id, want] of [['ruvim', 'Быт 29:32–35; 30:17–21'], ['dan', 'Быт 30:4–8']] as const) {
+        const t = await starTip(p, id);
+        if (!t) return fail(`нет подсказки у звезды ${id}`);
+        if (!t.includes(`год оценён по порядку перечисления (${want}), выв.`)) return fail(`подсказка ${id}: «${t}»`);
+        if (/1 Пар 2/.test(t)) return fail(`подсказка ${id} ссылается на перечень 1 Пар 2: «${t}»`);
+        got.push(`${id}: ${want}`);
+        await p.mouse.move(5, 5);
+        await p.waitForTimeout(300);
+      }
+      return pass(got.join('; '));
     },
   },
   {
     n: 346,
-    title: 'MAP-74: у детей Давида от семи матерей — гребёнки одним начертанием, помета матери у корня; «Как читать карту» объясняет гребёнку',
+    // этап 11 (Г8): помет «от Вирсавии» на небе нет — мать видна положением: ромб союза на её следе, а если жена стоит
+    // далеко от детей (у Давида на всём небе), ромб — на следе отца и у него подписано имя матери
+    title: 'MAP-74, Г8: дети Давида от семи матерей — у ромбов союзов на следе Давида подписаны имена матерей (помет «от …» на небе нет); «Условные знаки» объясняют подпись у ромба',
     run: async (p) => {
       await go(p, '#/~y-1010~w50~l0~s1');
       const n = await notes(p);
-      const moms = n.filter((t) => MOTHER.test(t));
-      if (moms.length < 5 || !moms.includes('от Вирсавии')) return fail(`помет матерей ${moms.length}: ${moms.join(', ')}`);
-      if (n.some((t) => ORDER.test(t))) return fail('помета порядка без выбранного лица');
+      if (n.some((t) => MOTHER.test(t))) return fail(`помета матери на небе: ${n.filter((t) => MOTHER.test(t)).join(', ')}`);
+      if (n.some((t) => ORDER.test(t))) return fail('помета порядка на небе');
+      const moms = (await plateTexts(p)).filter((t) => t.key.startsWith('u:david+') && DAVID_WIVES.includes(t.text)).map((t) => t.text);
+      if (moms.length < 2 || !moms.includes('Вирсавия')) return fail(`имён матерей у ромбов ${moms.length}: ${moms.join(', ')}`);
       if (await overlaps(p)) return fail(`наложений подписей ${await overlaps(p)}`);
       await go(p, '#/~y-1010~w50~l0~s1~plegend', 2200);
-      const rows = (await p.locator('.legend-row').allInnerTexts()).map((t) => t.replace(/\s+/g, ' '));
-      const row = rows.find((t) => /гребёнк/.test(t));
-      if (!row) return fail('в «Как читать карту» нет строки о гребёнке матери');
-      if (rows.some((t) => /разного начертания/.test(t))) return fail('в «Как читать карту» осталось «скобы разного начертания»');
-      return pass(`${moms.join(', ')}; «${row.slice(0, 90)}»`);
+      const rows = (await p.locator('.legend-row').allInnerTexts()).map((t) => flat(t));
+      const row = rows.find((t) => /у ромба подписано имя матери/.test(t));
+      if (!row) return fail('в «Условных знаках» нет строки об имени матери у ромба');
+      if (rows.some((t) => /разного начертания/.test(t))) return fail('в «Условных знаках» осталось «скобы разного начертания»');
+      return pass(`${moms.join(', ')}; «${row.slice(row.indexOf('мать не названа или'), row.indexOf('мать не названа или') + 90)}»`);
     },
   },
   {
     n: 347,
-    title: 'MAP-76: знак брака «‖» занимает место в общей проверке наложений — у Моисея и у Давида знаки есть, наложений нет',
+    // этап 11 (Г4): знак брака «‖» — черта брака, путь от следа мужа к ромбу (data-links, вид bar); подписи лиц на неё не
+    // ложатся, наложений нет. У Давида черты — в его роде (жёны стоят у мужа); на всём небе они далеко от детей (Г8)
+    title: 'MAP-76, Г4: черта брака «‖» — от следа мужа к ромбу; у Моисея и у Давида (его род) черты есть, подписи лиц на них не ложатся, наложений нет',
     run: async (p) => {
       const got: string[] = [];
-      for (const hash of ['#/moisey', '#/david~y-1010~w60~l6~s1']) {
-        await go(p, hash);
-        const marks = (await notes(p)).filter((t) => t === '‖').length;
-        if (!marks) return fail(`${hash}: знаков брака в замере нет`);
+      for (const hash of ['#/moisey', '#/david~vr.david.d.1.f~y-1000~w90~l0']) {
+        await go(p, hash, 3000);
+        const bad = await p.evaluate(() => {
+          const c = document.querySelector('.sky > canvas') as HTMLElement;
+          const bars = (c.dataset.links ?? '').split(';').filter((q) => q.startsWith('bar|'));
+          const boxes = (c.dataset.labelBoxes ?? '').split(';').filter(Boolean).map((q) => {
+            const [id, r] = q.split(':');
+            const [x, y, w, h] = r.split(',').map(Number);
+            return { id, x, y, w, h };
+          });
+          const hit: string[] = [];
+          for (const b of bars) {
+            const [, , ks, pts] = b.split('|');
+            const [x, y0, , y1] = pts.split(',').map(Number);
+            for (const r of boxes) if (x > r.x && x < r.x + r.w && Math.max(y0, y1) > r.y && Math.min(y0, y1) < r.y + r.h) hit.push(`${r.id} на ${ks}`);
+          }
+          return { bars: bars.length, hit };
+        });
+        if (!bad.bars) return fail(`${hash}: черт брака нет`);
+        if (bad.hit.length) return fail(`${hash}: подписи на черте брака: ${bad.hit.join(', ')}`);
         if (await overlaps(p)) return fail(`${hash}: наложений ${await overlaps(p)}`);
-        got.push(`${hash.split('~')[0]}: ${marks}`);
+        got.push(`${hash.split('~')[0]}: ${bad.bars}`);
       }
-      return pass(`знаков брака: ${got.join(', ')}`);
+      return pass(`черт брака: ${got.join(', ')}`);
     },
   },
   {
     n: 348,
-    title: 'MAP-80: режим «набор» — Давид с семьёй: пометы матерей у детей, помета порядка у выбранного Давида, наложений нет',
+    // этап 11 (Г8, Г9): в наборе «Давид с семьёй» мать видна положением — ромб союза на её следе (строка её звезды), помет
+    // матерей и порядка на небе нет; помета порядка — в подсказке звезды ребёнка (Амнон — 1 Пар 3:1–9)
+    title: 'MAP-80, Г8, Г9: показ «набор» — Давид с семьёй: ромбы союзов — на следах матерей, помет на небе нет, помета порядка — в подсказке ребёнка, наложений нет',
     run: async (p) => {
       await go(p, '#/david');
       await p.locator('.folio .workbtn > button').click();
       await p.waitForTimeout(300);
       await p.locator('.workpick button:text-is("С семьёй")').first().click();
       await p.waitForTimeout(400);
-      await go(p, '#/david~k1');
+      await go(p, '#/david~k1', 3000);
       if ((await cv(p, 'mode')) !== 'work') return fail(`небо не в режиме «набор»: ${await cv(p, 'mode')}`);
       const n = await notes(p);
-      const moms = n.filter((t) => MOTHER.test(t));
-      if (moms.length < 3) return fail(`помет матерей ${moms.length}: ${moms.join(', ')}`);
-      if (!n.some((t) => /^годы — по порядку 1 Пар 3:/.test(t))) return fail(`нет пометы порядка у детей Давида: ${n.filter((t) => ORDER.test(t)).join('; ')}`);
+      if (n.some((t) => MOTHER.test(t) || ORDER.test(t))) return fail(`пометы на небе: ${n.filter((t) => MOTHER.test(t) || ORDER.test(t)).join('; ')}`);
+      // ромб союза Давида с названной женой — на строке её звезды (±2 px)
+      const at = await p.evaluate(() => {
+        const c = document.querySelector('.sky > canvas') as HTMLElement;
+        const stars = new Map((c.dataset.stars ?? '').split(';').filter(Boolean).map((q) => {
+          const [id, xy] = q.split(':');
+          return [id, Number(xy.split(',')[1])] as const;
+        }));
+        return (c.dataset.links ?? '').split(';').filter((q) => q.startsWith('node|') && /^u\.david\.[^_.]/.test(q.split('|')[2])).map((q) => {
+          const [, , key, xy] = q.split('|');
+          const wife = key.split('.')[2];
+          return { wife, y: Number(xy.split(',')[1]), wy: stars.get(wife) ?? null };
+        });
+      });
+      const seen = at.filter((q) => q.wy !== null);
+      if (seen.length < 3) return fail(`ромбов у жён на небе ${seen.length}: ${JSON.stringify(at)}`);
+      const off = seen.filter((q) => Math.abs(q.y - q.wy!) > 2);
+      if (off.length) return fail(`ромб не на следе матери: ${off.map((q) => `${q.wife} ${q.y} ≠ ${q.wy}`).join(', ')}`);
+      const t = await starTip(p, 'amnon');
+      if (!t || !t.includes('год оценён по порядку перечисления (1 Пар 3:1–9), выв.')) return fail(`подсказка Амнона: «${t}»`);
       if (await overlaps(p)) return fail(`наложений подписей ${await overlaps(p)}`);
-      return pass(`${moms.join(', ')}`);
+      return pass(`ромбов на следах матерей: ${seen.map((q) => q.wife).join(', ')}; «${t.slice(t.indexOf('год оценён'))}»`);
     },
   },
   {
     n: 349,
-    title: 'Решение 41: наведение на гребёнку показывает помету порядка этой семьи (у детей Давида — «годы — по порядку 1 Пар 3:…»)',
+    // этап 11 (Г9): гребёнок с пометой на небе нет; наведение на звезду ребёнка показывает помету порядка его семьи в
+    // подсказке (третья строка — через 700 мс), и небо при этом помет не рисует
+    title: 'Решение 41, Г9: наведение на звезду ребёнка Давида показывает помету порядка в подсказке («год оценён по порядку перечисления (1 Пар 3:…), выв.»); на небе пометы нет ни до, ни во время, ни после',
     run: async (p) => {
       await go(p, '#/~y-1010~w50~l0~s1');
       if ((await notes(p)).some((t) => ORDER.test(t))) return fail('помета порядка видна без наведения');
-      const box = await p.locator('.sky > canvas').boundingBox();
-      // Авессалом — яркая звезда, она всегда в списке неба (SkyA11y, LIST_MAX)
-      const kid = await star(p, 'avessalom');
-      if (!box || !kid) return fail('нет звезды Авессалома на экране');
-      // ствол гребёнки — на x ребёнка, между его звездой и следом Давида (след Давида — строка 0, середина окна: ~l0)
-      const x = Math.round(kid.x) + 0.5;
-      const y = kid.y + Math.sign(box.height / 2 - kid.y) * 24;
-      await p.mouse.move(box.x + x, box.y + y);
-      await p.waitForTimeout(700);
-      const n = (await notes(p)).filter((t) => ORDER.test(t));
-      if (!n.some((t) => /^годы — по порядку 1 Пар 3:/.test(t))) return fail(`наведение на гребёнку (${x}, ${Math.round(y)}): пометы порядка нет`);
+      const t = await starTip(p, 'avessalom');
+      if (!t) return fail('нет подсказки у звезды Авессалома');
+      if (!/год оценён по порядку перечисления \(1 Пар 3:1–\d+\), выв\./.test(t)) return fail(`подсказка Авессалома: «${t}»`);
+      if ((await notes(p)).some((t) => ORDER.test(t))) return fail('при наведении помета порядка легла на небо');
+      const box = (await p.locator('.sky > canvas').boundingBox())!;
       await p.mouse.move(box.x + 30, box.y + box.height - 30);
       await p.waitForTimeout(700);
+      if (await p.locator('.sky .tip[data-shown][data-kind="star"]').count()) return fail('подсказка осталась после ухода указателя');
       if ((await notes(p)).some((t) => ORDER.test(t))) return fail('помета порядка осталась после ухода указателя');
-      return pass(n.join('; '));
+      return pass(t.slice(t.indexOf('год оценён')));
     },
   },
 ];

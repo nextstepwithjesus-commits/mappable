@@ -272,7 +272,10 @@ describe('оболочка: CSS (VIS-62, VIS-66, VIS-70, VIS-79)', () => {
     expect(b).toMatch(/grid-template-columns:\s*max\(88px, 5\.5rem\) minmax\(0, 1fr\)/);
   });
   it('VIS-79: на узком листе — «На небе», полное название — в имени кнопки', () => {
-    expect(f).toMatch(/@container folio \(max-width: 440px\)\s*\{\s*\.folio \.actions \.show-on-sky \.full\s*\{\s*display:\s*none;/);
+    // порог 480 px (был 440): четвёртая команда стала длиннее («Добавить в набор», этап 11) — на 1024 × 768 лист в 450 px
+    // иначе переносил команды во вторую строку (сценарий 421)
+    // и у «Добавить в набор» — «В набор» (то же правило, список селекторов)
+    expect(f).toMatch(/@container folio \(max-width: 480px\)\s*\{\s*\.folio \.actions \.show-on-sky \.full\s*[,{][^}]*display:\s*none;/);
     const src = readFileSync(join(__dirname, '../src/ui/Folio.tsx'), 'utf8');
     expect(src).toMatch(/aria-label="Показать на небе"/);
   });

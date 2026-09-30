@@ -60,11 +60,16 @@ async function swipe(p: Page, x: number, y: number, dy: number, ms: number, step
   await cdp.detach();
   await p.waitForTimeout(450);
 }
-/** Середина имени в шапке листа — за неё лист тянется. */
+/**
+ * Середина имени в шапке листа — за неё лист тянется. Этап 11 (решение 77): на первом положении (214 px) лист — карточка
+ * у звезды, имя — в её шапке (.sheet-dot .dc-nm); выше — шапка листа (.bar-name).
+ */
 async function barAt(p: Page) {
-  const b = (await p.locator('.folio .sheet-bar .bar-name').boundingBox())!;
+  const b = (await p.locator('.folio .sheet-bar .bar-name, .folio .sheet-dot .dc-nm .nm').first().boundingBox())!;
   return { x: b.x + Math.min(40, b.width / 2), y: b.y + b.height / 2 };
 }
+/** Высота листа на первом положении (src/ui/sheet.ts, PEEK_H): карточка у звезды — 214 px (этап 11; было 104). */
+const PEEK = 214;
 
 /**
  * Коснуться звезды лица: адрес выбирает лицо и ставит небо; «×» снимает выбор, место звезды пересчитывается
@@ -136,20 +141,21 @@ async function openPanel(p: Page, name: string) {
 export const phone: Scenario[] = [
   {
     n: 150,
-    title: 'U8, телефон 390 × 844: касание звезды — лист на 104 px; протяжка — 55 % и 100 %; «Родство» — полноэкранный лист, «×» — к карточке; «Показать на небе» сворачивает лист',
+    // этап 11 (решение 77): первое положение листа — карточка у звезды на 214 px (было 104): имя и годы — в её шапке
+    title: 'U8, телефон 390 × 844: касание звезды — лист-карточка на 214 px; протяжка — 55 % и 100 %; «Родство» — полноэкранный лист, «×» — к карточке; «Показать на небе» сворачивает лист',
     view: PHONE,
     run: async (p) => {
       await tapStar(p, 'david');
       if (hashId(p) !== 'david') return fail(`касание выбрало «${hashId(p)}»`);
       let s = await sheet(p);
-      if (!s || s.stop !== 'peek' || !near(s.h, 104, 2)) return fail(`после касания лист ${s?.stop} ${s?.h.toFixed(0)} px, а не 104`);
-      const name = (await p.locator('.folio .sheet-bar .bar-name').innerText()).trim();
+      if (!s || s.stop !== 'peek' || !near(s.h, PEEK, 2)) return fail(`после касания лист ${s?.stop} ${s?.h.toFixed(0)} px, а не ${PEEK}`);
+      const name = (await p.locator('.folio .sheet-dot .dc-nm .nm').innerText()).trim();
       if (name !== 'Давид') return fail(`в шапке «${name}»`);
-      if (!(await p.locator('.folio .sheet-bar .bar-years').isVisible())) return fail('на шапке нет годов');
+      if (!(await p.locator('.folio .sheet-dot .dc-yrs').isVisible())) return fail('на шапке нет годов');
       // протяжка шапки вверх, медленно: до 55 %
       let a = await barAt(p);
       const half = s.avail * 0.55;
-      await swipe(p, a.x, a.y, -(half - 104), 700, 14);
+      await swipe(p, a.x, a.y, -(half - PEEK), 700, 14);
       s = (await sheet(p))!;
       if (s.stop !== 'half' || !near(s.h, half, 12)) return fail(`после протяжки к 55 % лист ${s.stop} ${s.h.toFixed(0)} px (ждали ${half.toFixed(0)})`);
       // ещё вверх: 100 % — верхняя строка и полоса времени видны
@@ -180,7 +186,7 @@ export const phone: Scenario[] = [
       if (s.stop !== 'peek') return fail(`«Показать на небе» оставил лист ${s.stop}`);
       const vis = await selVisible(p);
       if (vis) return fail(`после «Показать на небе»: ${vis}`);
-      return pass(`104 → ${half.toFixed(0)} → ${s.avail.toFixed(0)} px; «Родство» и «×»; «Показать на небе» — шапка`);
+      return pass(`${PEEK} → ${half.toFixed(0)} → ${s.avail.toFixed(0)} px; «Родство» и «×»; «Показать на небе» — шапка`);
     },
   },
   {
@@ -243,7 +249,7 @@ export const phone: Scenario[] = [
   },
   {
     n: 153,
-    title: 'Решение 12: поиск и ссылки открывают лист на 55 %, касание звезды — на 104 px; выбор второго лица сворачивает лист, «Отменить» возвращает',
+    title: 'Решение 12: поиск и ссылки открывают лист на 55 %, касание звезды — на первом положении (214 px); выбор второго лица сворачивает лист, «Отменить» возвращает',
     view: PHONE,
     run: async (p) => {
       await find(p, 'Руфь');
@@ -327,7 +333,7 @@ export const phone: Scenario[] = [
   },
   {
     n: 155,
-    title: 'H4: полоса времени видна при листе на 104 px и 55 %; указатель у края — над листом, поле касания 44 px',
+    title: 'H4: полоса времени видна при листе на первом положении (214 px) и 55 %; указатель у края — над листом, поле касания 44 px',
     view: PHONE,
     run: async (p) => {
       await find(p, 'Давид');
@@ -341,9 +347,10 @@ export const phone: Scenario[] = [
         if (!topEl) return fail(`лист на ${stop} закрывает полосу времени`);
       }
       // лист на 55 %; небо протянуто вверх так, что Давид ушёл под лист: указатель «↓ Давид» — над листом
-      await p.locator('.folio .sheet-bar .bar-name').tap();
+      // этап 11: на первом положении лист — карточка у звезды (214 px); касание её шапки поднимает лист до 55 %
+      await p.locator('.folio .sheet-bar .bar-name, .folio .sheet-dot .dc-nm .nm').first().tap();
       await p.waitForTimeout(500);
-      if ((await sheet(p))?.stop !== 'half') return fail('касание шапки на 104 px не подняло лист до 55 %');
+      if ((await sheet(p))?.stop !== 'half') return fail(`касание шапки на ${PEEK} px не подняло лист до 55 %`);
       const v0 = await view(p);
       const q0 = (await selAt(p))!;
       const box = (await p.locator('.sky canvas').boundingBox())!;
@@ -391,7 +398,8 @@ export const phone: Scenario[] = [
       const fit = async () => {
         if (await p.locator('.which').count()) await p.locator('.which .close').tap();
         if (await p.locator('.folio .sheet-bar .close').count()) await p.locator('.folio .sheet-bar .close').tap();
-        await p.locator('.skyctl button', { hasText: 'Всё' }).tap();
+        // этап 11 (Я30): «Всё небо» органов неба — теперь «Вписать» (на всём небе вписывает всё небо)
+        await p.locator('.skyctl button', { hasText: 'Вписать' }).tap();
         await p.waitForTimeout(1300);
       };
       await go(p, '#/', 1800);
@@ -473,7 +481,8 @@ export const phone: Scenario[] = [
         const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < innerHeight; };
         // «ещё 5 ссылок» в конце строки ссылок и «см. § 24» — в строке текста: их поле касания — прозрачное продолжение
         // (::after), оно проверяется ниже; межстрочие не меняется
-        const skip = (e) => e.closest('.rail') || e.matches('.person, .ref, .sec .see, .refs .more, .mark, .visually-hidden *') || e.closest('.visually-hidden');
+        // ссылка поля «Созвездие» в паспорте (этап 11: лист «Показ» на созвездии) — тоже ссылка в тексте строки паспорта
+        const skip = (e) => e.closest('.rail') || e.matches('.person, .ref, .sec .see, .refs .more, .mark, .passport .pass-link, .visually-hidden *') || e.closest('.visually-hidden');
         return [...document.querySelectorAll('button, [role^=menuitem], input, a[href]')].filter(vis).filter((e) => !skip(e))
           .map((e) => { const r = e.getBoundingClientRect(); return { t: (e.getAttribute('aria-label') || e.textContent || e.tagName).trim().slice(0, 24), w: r.width, h: r.height }; })
           .filter((r) => r.h < 44 || r.w < 44 && r.t.length < 3);
@@ -489,17 +498,18 @@ export const phone: Scenario[] = [
       // «ещё N ссылок» — команда: поле 44 px (решение 33); «см. § N» — ссылка в тексте: 32 px
       const fields = (await p.evaluate(`(() => {
         const h = (sel) => [...document.querySelectorAll(sel)].map((e) => parseFloat(getComputedStyle(e, '::after').height) || 0);
-        return { more: h('.folio .refs .more'), see: h('.folio .sec .see') };
-      })()`)) as { more: number[]; see: number[] };
+        return { more: h('.folio .refs .more'), see: h('.folio .sec .see'), pass: h('.folio .passport .pass-link') };
+      })()`)) as { more: number[]; see: number[]; pass: number[] };
       if (!fields.more.length) return fail('в карточке Давида нет «ещё N ссылок»');
       if (fields.more.some((x) => x < 44)) return fail(`поле «ещё N ссылок» ${Math.min(...fields.more)} px`);
       if (fields.see.some((x) => x < 32)) return fail(`поле «см. § N» ${Math.min(...fields.see)} px`);
+      if (fields.pass.some((x) => x < 32)) return fail(`поле ссылки паспорта ${Math.min(...fields.pass)} px`);
       return pass(`«ещё N ссылок»: ${fields.more.length} × 44 px`);
     },
   },
   {
     n: 159,
-    title: 'H6: альбомная 844 × 390 — верх и полоса по 44 px, карточка 340 px, колонка кнопок 2 × 2 не на ярусах; масштаб 200 % (720 × 450) — поиск открывает лист на 104 px',
+    title: 'H6: альбомная 844 × 390 — верх и полоса по 44 px, карточка 340 px, колонка кнопок 2 × 2 не на ярусах; масштаб 200 % (720 × 450) — поиск открывает лист на первом положении (214 px)',
     view: { width: 844, height: 390, touch: true },
     run: async (p) => {
       await find(p, 'Давид');
@@ -517,7 +527,8 @@ export const phone: Scenario[] = [
       await p.waitForTimeout(500);
       await find(p, 'Руфь');
       const s = await sheet(p);
-      if (s?.stop !== 'peek' || !near(s.h, 104, 2)) return fail(`720 × 450: поиск открыл лист ${s?.stop} ${s?.h}`);
+      // этап 11: первое положение — карточка у звезды на 214 px (не выше места для листа)
+      if (s?.stop !== 'peek' || !near(s.h, Math.min(PEEK, s.avail), 2)) return fail(`720 × 450: поиск открыл лист ${s?.stop} ${s?.h}`);
       const vis = await selVisible(p);
       if (vis) return fail(`720 × 450: ${vis}`);
       return pass();
@@ -564,8 +575,16 @@ export const phone: Scenario[] = [
       if ((await sheet(p))?.stop !== 'full' || (await t.getAttribute('aria-expanded')) !== 'true') return fail('Enter на «Развернуть» не поднял лист до 100 %');
       await p.keyboard.press('Space');
       await p.waitForTimeout(400);
-      if ((await sheet(p))?.stop !== 'peek' || (await t.getAttribute('aria-expanded')) !== 'false') return fail('пробел на «Свернуть» не свернул лист');
-      if ((await t.getAttribute('aria-label')) !== 'Развернуть карточку') return fail(`имя кнопки «${await t.getAttribute('aria-label')}»`);
+      // этап 11 (решение 77): свёрнутый лист — карточка у звезды (214 px); развернуть его — её команда «Карточка ▴»:
+      // тоже кнопка с aria-expanded
+      const up = p.locator('.folio .sheet-dot .dc-card');
+      if ((await sheet(p))?.stop !== 'peek' || !(await up.count()) || (await up.getAttribute('aria-expanded')) !== 'false') return fail('пробел на «Свернуть» не свернул лист до карточки у звезды');
+      const nm = ((await up.getAttribute('aria-label')) ?? (await up.innerText())).trim();
+      if (!/^Карточка/.test(nm) || !/развернуть/i.test(nm)) return fail(`имя кнопки «${nm}»`);
+      await up.focus();
+      await p.keyboard.press('Enter');
+      await p.waitForTimeout(500);
+      if ((await sheet(p))?.stop !== 'half') return fail('Enter на «Карточка ▴» не поднял лист');
       // «Какое лицо?»: Escape закрывает список и возвращает фокус на небо
       if (!(await tapDense(p, 'david'))) return fail('список «Какое лицо?» не открылся');
       await p.locator('.which .which-item').first().focus();

@@ -92,10 +92,12 @@ describe('шаг пути (E5)', () => {
     expect(marks.stepRoute('kin', a, b)).toEqual([a, b]);
     expect(marks.stepRoute('spouse', a, b)).toEqual([a, b]);
   });
-  it('начертание: кровный — сплошной, по закону и брак — штрих, по термину и по толкованию — точки', () => {
+  // этап 11, Г10: штрих — только иное происхождение (по закону, левират, усыновление); брак — сплошной
+  it('начертание: кровный и брак — сплошной, по закону — штрих, по термину и по толкованию — точки', () => {
     expect(marks.stepLook({ kind: 'down', claim: 'natural', interpretive: false })).toBe('blood');
     expect(marks.stepLook({ kind: 'down', claim: 'legal', interpretive: false })).toBe('legal');
-    expect(marks.stepLook({ kind: 'spouse', claim: '', interpretive: false })).toBe('legal');
+    expect(marks.stepLook({ kind: 'down', claim: 'levirate', interpretive: false })).toBe('legal');
+    expect(marks.stepLook({ kind: 'spouse', claim: '', interpretive: false })).toBe('blood');
     expect(marks.stepLook({ kind: 'kin', claim: '', interpretive: false })).toBe('term');
     expect(marks.stepLook({ kind: 'up', claim: 'by-luke', interpretive: true })).toBe('term');
   });

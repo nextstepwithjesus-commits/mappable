@@ -339,11 +339,11 @@ export const map: Scenario[] = [
       },
       {
         n: 133,
-        title: 'E6, U2 мышью: «только линии Мессии» — коридор вписан, пять выносок точек сравнения; щелчок по выноске «Давид» открывает синопсис',
+        // этап 11 (решение 81): флажок «только линии Мессии» стал показом «Линии Мессии» (лист «Показ»)
+        title: 'E6, U2 мышью: показ «Линии Мессии» — коридор вписан, пять выносок точек сравнения; щелчок по выноске «Давид» открывает синопсис',
         run: async (p) => {
-          const { pass, fail } = await import('./kit.ts');
-          await p.locator('.skyctl label', { hasText: 'только линии Мессии' }).first().click();
-          await p.waitForTimeout(2500);
+          const { pass, fail, pickShow } = await import('./kit.ts');
+          await pickShow(p, 'Линии Мессии', { ms: 2500 });
           const notes = await lineNotes(p);
           const ids = notes.map((q) => q.id).sort();
           if (ids.join() !== [...U2].sort().join()) return fail(`выноски: ${ids.join(', ') || 'нет'}`);

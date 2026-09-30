@@ -16,7 +16,7 @@
  *
  * Общее состояние модули читают через SkyContext (его реализует Sky) и проход кадра Pass; глобального состояния нет.
  */
-import { KX_MIN, type Camera, type Frame, type ViewState } from './camera.ts';
+import { KX_MIN, KY_MAX, KY_MAX_TALL, ROW_SHIFT_TALL, type Camera, type Frame, type ViewState } from './camera.ts';
 import { RowCamera, gapsKey, identityRows, planSky, type FoldMark, type SkyPlan, type SkyView } from './rows.ts';
 import { dotTime, drawLinkNodes, hiddenOf, plateGaps, type PlateHit, type PlateIn, type PlateMarks } from './plates.ts';
 import { buildLinks, LinkHits, linkLog, NODE_R_FAMILY, NODE_R_MAP, type LinkFrame, type LinkHit, type LinkPlate, type LinkStar, type PathStyle } from './links.ts';
@@ -932,6 +932,19 @@ export class Sky implements SkyContext {
     this.updateView();
   }
 
+  /**
+   * Высота строки семейной укладки на узком небе (уже 600 px) и касании (§ 4.2; Я12): на масштабе чтения кривая
+   * «масштаб → высота строки» сдвинута (ROW_SHIFT_TALL) и до KY_MAX_TALL (34 px) — строка не ниже 32 px с меньшим
+   * приближением времени; на мелком масштабе — как на карте. На широком небе — как на карте. w — ширина видимой части.
+   */
+  private rowScale(w = this.cam.vp.r - this.cam.vp.l > 0 ? this.cam.vp.r - this.cam.vp.l : this.cam.w) {
+    const cam = this.cam;
+    const family = !!this.plan && this.plan.layout === 'family';
+    const tall = family && w > 0 && (w < 600 || this.coarse);
+    cam.rowCap = tall ? KY_MAX_TALL : KY_MAX;
+    cam.rowShift = tall ? ROW_SHIFT_TALL : 0;
+  }
+
   /** Поля видимой части (C1, D2): их задаёт SkyView по ярусам, листу карточки, вступлению и органам неба. */
   setInsets(ins: Partial<{ top: number; bottom: number; left: number; right: number }>) {
     const next = { ...this.insets, ...ins };
@@ -971,6 +984,8 @@ export class Sky implements SkyContext {
       cam.setViewport(vp, null, null);
       return;
     }
+    // высота строки семейной укладки — по ширине видимой части (узкое небо — строки выше)
+    this.rowScale(vp.r - vp.l);
     const fit = this.fitFrame();
     // пределы сдвига — вся шкала до 2040 г.: полоса времени и «сегодня» (ТЗ § 11.2, п. 7)
     const frame = { ...fit, x1: this.xOf(T_END) };
@@ -1083,6 +1098,7 @@ export class Sky implements SkyContext {
     const before = keep && this.cam.w > 0 && this.nodes.length === m.nodes.length ? this.rowsNow() : null;
     const topBefore = this.cam.laneTop;
     this.plan = plan;
+    this.rowScale();
     this.cam.rows = plan.rows;
     // полос в сжатом небе — строк: от неё зависит самая низкая полоса (Camera.kyMin)
     this.cam.laneSpan = plan.rows.max - plan.rows.min - 1;
@@ -1218,7 +1234,8 @@ export class Sky implements SkyContext {
     for (const r of this.reserveNow) {
       if (r.w < (vp.r - vp.l) * 0.3) continue;
       if (r.y + r.h >= vp.b - 8 && r.y > (vp.t + vp.b) / 2) bottom = Math.min(bottom, r.y - 4);
-      else if (r.y <= vp.t + 8 && r.y + r.h < (vp.t + vp.b) / 2) top = Math.max(top, r.y + r.h + 4);
+      // строка показа стоит в 12 px от верхней кромки (sky.css, .skytop) — тоже верхний орган
+      else if (r.y <= vp.t + 24 && r.y + r.h < (vp.t + vp.b) / 2) top = Math.max(top, r.y + r.h + 4);
     }
     const tm = this.tOf((x0 + x1) / 2);
     const span = Math.max(x1 - x0, this.xOf(tm + 30) - this.xOf(tm - 30));
@@ -1603,8 +1620,10 @@ export class Sky implements SkyContext {
     if (lf && lf.alpha > 0.5 && !lineOnly && !this.linksStale) {
       const hits = this.linkHits!;
       // своя линия подписи: у подписи звезды — линии лица, у подписи связи (обрывок, имя матери у ромба) — линии её союза
+      // своя связь подписи не мешает (зубец подходит к звезде слева), кроме черты брака (Г4): она встаёт в 12 px правее
+      // звезды супруга, и имя справа от звезды легло бы на неё («Соломон» на черте к дочери фараона)
       p.onLink = (b, id) =>
-        hits.crosses(b, lf.dx, lf.dy, (q) => q.kind !== 'ribbon' && linkShown(q, lf) && !q.ends.includes(id) && q.union !== id && q.ks !== id);
+        hits.crosses(b, lf.dx, lf.dy, (q) => q.kind !== 'ribbon' && linkShown(q, lf) && (q.kind === 'bar' || (!q.ends.includes(id) && q.union !== id && q.ks !== id)));
       // ленты по маршрутам (семейный масштаб): подпись связи не ложится на ленту с её свечением (3 px вокруг)
       if (L.ribbons && this.routeFactor >= 0.5)
         p.onRibbon = (b) => hits.crosses({ x: b.x - 3, y: b.y - 3, w: b.w + 6, h: b.h + 6 }, lf.dx, lf.dy, (q) => q.kind === 'ribbon');
@@ -1767,7 +1786,8 @@ export class Sky implements SkyContext {
         'links',
         lf
           ? linkLog(
-              lf.frame.paths.filter((q) => linkShown(q, lf)),
+              // только нарисованные: связи, погашенные подробностью кадра (не выделенные при alpha ≈ 0), не видны и не ловятся
+              lf.frame.paths.filter((q) => linkShown(q, lf) && (lf.alpha > 0.01 || lf.lit(q))),
               lf.frame.nodes,
               cam.vp,
               lf.dx,
@@ -1781,6 +1801,8 @@ export class Sky implements SkyContext {
       // строка, разрывы «//», скобки «время не установлено», метки набора
       const boxes = this.ledger.boxes;
       put('labelIds', boxes.filter((b) => b.kind === 'star').map((b) => b.id).join(' '));
+      // места подписей лиц — «лицо:x,y,w,h» (tools/accept/family3.ts, 347: подпись не ложится на черту брака)
+      put('labelBoxes', boxes.filter((b) => b.kind === 'star').map((b) => `${b.id}:${[b.x, b.y, b.w, b.h].map(Math.round).join(',')}`).join(';'));
       // этап 11 (B1), для проверок tools/accept/bugs7.ts и tools/_bugs-chaos.ts: лица, чья подпись (имя или номер у бусины)
       // есть в кадре, а звезды нет, — «лицо» через пробел; пусто — у каждой подписи лица нарисована его звезда
       put('bare', bareLabels(boxes, (id) => this.nodeIndex.get(id), p.starsDrawn).join(' '));
@@ -1794,6 +1816,9 @@ export class Sky implements SkyContext {
       // шаги пути родства, нарисованные на небе, — «от>к» (marks.ts, kinRoutes): только между нарисованными звёздами
       put('kinRoutes', s.kinSteps?.length ? kinRoutes(this, s.kinSteps).map((r) => `${r.st.from}>${r.st.to}`).join(' ') : '');
       put('notes', boxes.filter((b) => b.kind === 'note' || b.kind === 'mark' || b.kind === 'group' || b.kind === 'fold').map((b) => b.text.replace(/\u00a0/g, ' ')).join('|'));
+      // подписи у узлов и обрывков (этап 11, Г8): имя матери у ромба союза, «дочь Ревекка — жена Исаака» — «ключ:текст»
+      // (tools/accept/skydraw.ts, 274)
+      put('plateTexts', boxes.filter((b) => b.kind === 'plate' && b.text).map((b) => `${b.id ?? ''}:${b.text.replace(/\u00a0/g, ' ')}`).join('|'));
       // звёзды неба «набор» в этом кадре (решение 76; tools/accept/polish6.ts): «лицо:x,y» — список неба для клавиатуры
       // (SkyA11y) обновляется, только когда небо постоит, а проверке нужен кадр сразу после сдвига
       // звёзды в окне при любом показе (tools/accept/grammar11.ts): точки наведения на линии — не у звёзд (§ 8: звезда

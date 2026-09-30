@@ -230,14 +230,22 @@ describe('органы неба колонкой (IX-56, VIS-51, MOB-26, MOB-46)
 });
 
 describe('строки у кромки неба (VIS-46, UX-62, MOB-54, UX-53, CARD-71)', () => {
-  it('режим «набор»: сколько лиц на небе; вне набора — имя в начале строки; пустой — как собрать', () => {
-    expect(overlays.workLineText(12, null)).toBe('На небе — только рабочий набор, 12 лиц');
-    expect(overlays.workLineText(1, null)).toBe('На небе — только рабочий набор, 1 лицо');
-    // решение 58 (MOB-73): оговорка о ссылке ушла из строки в её подсказку — строка не длиннее, чем нужно
-    expect(overlays.workLineText(22, null)).toBe('На небе — только рабочий набор, 22 лица');
-    expect(overlays.workLineNote(22)).toBe('Ссылкой передаётся режим «набор»; сам набор — только если в нём не больше 12 лиц');
-    expect(overlays.workLineText(3, 'Вооз')).toBe('Вооз не в наборе');
-    expect(overlays.workLineText(0, null)).toMatch(/^Рабочий набор пуст/);
+  it('показ «набор» (этап 11: строка показа вместо строки «набор»): сколько лиц на небе, со склонением; лицо вне показа — в конце строки', async () => {
+    const show = await import('../src/ui/show.ts');
+    const content = (n: number) =>
+      ({ ids: new Set(Array.from({ length: n }, (_, i) => `x${i}`)), guests: new Set(), stubs: [], layout: 'family', founders: new Set(), plus: new Map() }) as unknown as import('../src/ui/show.ts').ShowContent;
+    expect(show.summaryOf({ kind: 'set' }, content(12)).label).toBe('На небе: набор — 12 лиц');
+    expect(show.summaryOf({ kind: 'set' }, content(1)).label).toBe('На небе: набор — 1 лицо');
+    expect(show.summaryOf({ kind: 'set' }, content(22)).label).toBe('На небе: набор — 22 лица');
+    // решение 58 (MOB-73): оговорка о ссылке — не в строке, а в её подсказке
+    expect(show.setLinkNote(22)).toBe('Ссылкой передаётся показ «набор»; сам набор — только если в нём не больше 12 лиц');
+    // команды: «изменить» (лист «Показ») и «всё небо»
+    expect(show.summaryOf({ kind: 'set' }, content(22)).cmds.map((q) => q.text)).toEqual(['изменить', 'всё небо']);
+    // выбранное лицо вне показа — «; Вооз — вне показа» в конце строки (showSummary): вне — только если его нет ни в лицах,
+    // ни в гостях показа; на всём небе «вне» не бывает
+    expect(show.outsideOf({ kind: 'set' }, content(3), 'vooz')).toBe('vooz');
+    expect(show.outsideOf({ kind: 'set' }, { ...content(3), ids: new Set(['vooz']) }, 'vooz')).toBeNull();
+    expect(show.outsideOf({ kind: 'all' }, content(3), 'vooz')).toBeNull();
   });
   it('группа главы: «Отмечены лица главы Мф 1» — без двойного «снять»', () => {
     expect(overlays.groupBarText({ kind: 'chapter', label: 'Лица главы Мф 1' })).toBe('Отмечены лица главы Мф 1');

@@ -224,11 +224,12 @@ export function branchFrame(v: Pick<SkyContext, 'pal' | 'model'>, p: Pick<Pass, 
 
 // ---------- путь родства (E5) ----------
 
-/** Вид шага пути на небе: кровный — сплошной, по закону и брак — штрих, по термину Писания и по толкованию — точки. */
+/** Вид шага пути на небе: кровный и брак — сплошной, по закону — штрих, по термину Писания и по толкованию — точки. */
 export type StepLook = 'blood' | 'legal' | 'term';
 export function stepLook(st: Pick<KinStep, 'kind' | 'claim' | 'interpretive'>): StepLook {
   if (st.interpretive || st.kind === 'kin') return 'term';
-  if (st.kind === 'spouse' || st.claim === 'legal' || st.claim === 'adoptive' || st.claim === 'levirate') return 'legal';
+  // брак — сплошной (этап 11, Г10: штрих — только иное происхождение: по закону, усыновление, левират)
+  if (st.claim === 'legal' || st.claim === 'adoptive' || st.claim === 'levirate') return 'legal';
   return 'blood';
 }
 const STEP_DASH: Record<StepLook, number[]> = { blood: [], legal: [6, 3], term: [0.5, 4.5] };
@@ -291,8 +292,8 @@ export function kinRoutes(v: SkyContext, steps: readonly KinStep[], d?: LinkDraw
 }
 
 /**
- * Путь родства на небе (E5; MAP-18, UX-11): ломаная 2 px цвета --ink на подложке неба; кровные шаги сплошные,
- * по закону и брак — штрихом, по термину Писания и по толкованию — точками. Рисуется под звёздами: звёзды пути
+ * Путь родства на небе (E5; MAP-18, UX-11): ломаная 2 px цвета --ink на подложке неба; кровные шаги и брак — сплошные,
+ * по закону — штрихом, по термину Писания и по толкованию — точками (этап 11, Г10). Рисуется под звёздами: звёзды пути
  * лежат на ломаной, как бусины.
  */
 export function drawKinPath(v: SkyContext, p: Pass) {

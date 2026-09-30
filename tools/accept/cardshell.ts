@@ -374,25 +374,30 @@ export const cardshell: Scenario[] = [
   },
   {
     n: 239,
-    title: 'MOB-64, MOB-50, MOB-52, 390 × 844: шапка листа на 104 px — имя, годы и уточнение целыми строками; Tab в тело свёрнутого листа поднимает его на 55 %; «расч.» паспорта не ложится на годы',
+    // этап 11 (STAGE11 § 6, решение 77): нижнее положение листа — не шапка 104 px, а карточка у звезды 214 px; требования те же:
+    // имя, годы и уточнение — целыми строками внутри листа, текст подробной карточки под ним не виден, Tab в тело — 55 %
+    title: 'MOB-64, MOB-50, MOB-52, 390 × 844: лист на 214 px (карточка у звезды) — имя, годы и уточнение целыми строками; Tab в тело свёрнутого листа поднимает его на 55 %; «расч.» паспорта не ложится на годы',
     view: PHONE,
     run: async (p) => {
       await go(p, '#/david', 2400);
-      await p.locator('.folio .sheet-bar .bar-toggle').tap();
-      await p.waitForTimeout(700);
-      await p.locator('.folio .sheet-bar .bar-toggle').tap();
-      await p.waitForTimeout(800);
+      // к нижнему положению — «Свернуть» шапки листа (на 214 px у листа уже нет «Свернуть»: это карточка у звезды)
+      for (let k = 0; k < 3; k++) {
+        if ((await p.locator('.folio').getAttribute('data-stop')) === 'peek') break;
+        await p.locator('.folio .sheet-bar .bar-toggle').tap();
+        await p.waitForTimeout(800);
+      }
       const peek = await p.evaluate(() => {
         const f = document.querySelector('.folio') as HTMLElement;
         const fr = f.getBoundingClientRect();
-        const lines = ['.bar-name', '.bar-years', '.bar-dis'].map((s) => f.querySelector<HTMLElement>(s)?.getBoundingClientRect() ?? null);
+        const lines = ['.dotcard .dc-nm', '.dotcard .dc-yrs', '.dotcard .dc-dis'].map((s) => f.querySelector<HTMLElement>(`.sheet-bar ${s}`)?.getBoundingClientRect() ?? null);
         const inner = (f.querySelector('.folio-inner') as HTMLElement).getBoundingClientRect();
-        return { stop: f.dataset.stop, h: fr.height, bottom: fr.bottom, lines: lines.map((r) => (r ? [Math.round(r.top), Math.round(r.bottom)] : null)), inner: Math.round(inner.top) };
+        return { stop: f.dataset.stop, h: fr.height, top: fr.top, bottom: fr.bottom, lines: lines.map((r) => (r ? [Math.round(r.top), Math.round(r.bottom)] : null)), inner: Math.round(inner.top) };
       });
       if (peek.stop !== 'peek') return fail(`лист ${peek.stop}`);
-      if (peek.lines.some((l) => !l)) return fail('в шапке нет имени, годов или уточнения');
-      if (peek.lines.some((l) => l![1] > peek.bottom + 0.5)) return fail(`строка шапки режется краем листа: ${JSON.stringify(peek.lines)} при крае ${peek.bottom}`);
-      if (peek.inner < peek.bottom - 1) return fail(`текст листа виден под шапкой: ${peek.inner} < ${peek.bottom}`);
+      if (Math.abs(peek.h - 214) > 2) return fail(`лист на нижнем положении ${Math.round(peek.h)} px, а не 214`);
+      if (peek.lines.some((l) => !l)) return fail('в карточке листа нет имени, годов или уточнения');
+      if (peek.lines.some((l) => l![1] > peek.bottom + 0.5 || l![0] < peek.top - 0.5)) return fail(`строка карточки режется краем листа: ${JSON.stringify(peek.lines)} при крае ${peek.bottom}`);
+      if (peek.inner < peek.bottom - 1) return fail(`текст листа виден под карточкой: ${peek.inner} < ${peek.bottom}`);
       await p.locator('.folio .sheet-bar .close').focus();
       await p.keyboard.press('Tab');
       await p.waitForTimeout(800);
@@ -421,7 +426,7 @@ export const cardshell: Scenario[] = [
         const m = mark.getBoundingClientRect();
         return t.some((r) => r.right > m.left + 1 && r.left < m.right && r.bottom > m.top + 1 && r.top < m.bottom - 1);
       });
-      return clash ? fail('«расч.» ложится на годы при интервалах 1.4.12') : pass('шапка 104 px целыми строками; Tab — лист на 55 %');
+      return clash ? fail('«расч.» ложится на годы при интервалах 1.4.12') : pass('лист 214 px — карточка у звезды целыми строками; Tab — лист на 55 %');
     },
   },
 ];
