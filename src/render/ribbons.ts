@@ -77,10 +77,56 @@ const css = (c: Rgb, a = 1) => (a >= 1 ? `rgb(${c.map(Math.round).join(',')})` :
 
 type Part = 'all' | 'solid' | 'weak' | 'legal';
 
+/** Точек в куске оглавления нити (tracePath): кусок целиком вне полосы или без отрезков нужного вида пропускается. */
+const CHUNK = 64;
+/** Бит вида отрезка i → i+1 по его конечной точке: сплошной, по толкованию, «по закону». */
+const SOLID = 1;
+const WEAK = 2;
+const LEGAL = 4;
+interface Chunks {
+  /** наименьший и наибольший x точек куска c (точки c·CHUNK … (c+1)·CHUNK включительно) */
+  lo: Float64Array;
+  hi: Float64Array;
+  /** виды отрезков куска — биты SOLID, WEAK, LEGAL */
+  kinds: Uint8Array;
+}
+/**
+ * Оглавление нити по кускам (NFR-1): на масштабе семьи нить-маршрут — десятки тысяч точек через 4 px на всю длину линии,
+ * а видна из них сотня-другая. Путь по-прежнему тот же: пропускаются только отрезки, которые tracePath пропустил бы
+ * и так (вне полосы или не своего вида). Точки нити после сборки не меняются (новый масштаб — новый массив точек).
+ */
+const chunkCache = new WeakMap<readonly StrandPoint[], Chunks>();
+function chunksOf(pts: readonly StrandPoint[]): Chunks {
+  let c = chunkCache.get(pts);
+  if (c) return c;
+  const n = Math.max(0, Math.ceil((pts.length - 1) / CHUNK));
+  c = { lo: new Float64Array(n), hi: new Float64Array(n), kinds: new Uint8Array(n) };
+  for (let k = 0; k < n; k++) {
+    const a = k * CHUNK;
+    const b = Math.min(pts.length - 1, a + CHUNK);
+    let lo = Infinity;
+    let hi = -Infinity;
+    let kinds = 0;
+    for (let i = a; i <= b; i++) {
+      const q = pts[i];
+      if (q.x < lo) lo = q.x;
+      if (q.x > hi) hi = q.x;
+      if (i > a) kinds |= q.weak ? WEAK : q.legal ? LEGAL : SOLID;
+    }
+    c.lo[k] = lo;
+    c.hi[k] = hi;
+    c.kinds[k] = kinds;
+  }
+  chunkCache.set(pts, c);
+  return c;
+}
+const PART_BITS: Record<Part, number> = { all: SOLID | WEAK | LEGAL, solid: SOLID, weak: WEAK, legal: LEGAL };
+
 /**
  * Путь нити от from до to (включительно) с отсечением по видимой полосе [x0, x1].
  * part: 'solid' — только сплошные отрезки, 'weak' — только отрезки звеньев по толкованию.
  * Отрезок i → i+1 считается «по толкованию», если такова его конечная точка (так их размечает геометрия).
+ * Куски нити, целиком лежащие вне полосы или без отрезков вида part, пропускаются по оглавлению (chunksOf): путь тот же.
  */
 export function tracePath(ctx: CanvasRenderingContext2D, pts: StrandPoint[], from: number, to: number, part: Part, x0: number, x1: number, ext = 0): boolean {
   ctx.beginPath();
@@ -93,22 +139,32 @@ export function tracePath(ctx: CanvasRenderingContext2D, pts: StrandPoint[], fro
     const d = Math.hypot(a.x - b.x, a.y - b.y) || 1;
     return [a.x + ((a.x - b.x) / d) * ext, a.y + ((a.y - b.y) / d) * ext];
   };
-  for (let i = start; i < end; i++) {
-    const a = pts[i];
-    const b = pts[i + 1];
-    const take = part === 'all' || (part === 'weak' ? b.weak : part === 'legal' ? !b.weak && !!b.legal : !b.weak && !b.legal);
-    if (!take || Math.max(a.x, b.x) < x0 || Math.min(a.x, b.x) > x1) {
+  const ch = chunksOf(pts);
+  const bits = PART_BITS[part];
+  for (let k = Math.floor(start / CHUNK); k * CHUNK < end; k++) {
+    const hiI = Math.min(end, (k + 1) * CHUNK);
+    // кусок вне полосы или без отрезков своего вида: каждый его отрезок был бы пропущен — перо поднято
+    if (!(ch.kinds[k] & bits) || ch.hi[k] < x0 || ch.lo[k] > x1) {
       pen = false;
       continue;
     }
-    if (!pen) {
-      if (ext && i === start) ctx.moveTo(...past(a, b));
-      else ctx.moveTo(a.x, a.y);
-      pen = true;
+    for (let i = Math.max(start, k * CHUNK); i < hiI; i++) {
+      const a = pts[i];
+      const b = pts[i + 1];
+      const take = part === 'all' || (part === 'weak' ? b.weak : part === 'legal' ? !b.weak && !!b.legal : !b.weak && !b.legal);
+      if (!take || Math.max(a.x, b.x) < x0 || Math.min(a.x, b.x) > x1) {
+        pen = false;
+        continue;
+      }
+      if (!pen) {
+        if (ext && i === start) ctx.moveTo(...past(a, b));
+        else ctx.moveTo(a.x, a.y);
+        pen = true;
+      }
+      if (ext && i === end - 1) ctx.lineTo(...past(b, a));
+      else ctx.lineTo(b.x, b.y);
+      any = true;
     }
-    if (ext && i === end - 1) ctx.lineTo(...past(b, a));
-    else ctx.lineTo(b.x, b.y);
-    any = true;
   }
   return any;
 }
@@ -118,12 +174,17 @@ const KNOT_PX = 8;
 /** …и не чаще, чем через такую долю линии (≈ 125 опор на всю линию; поколение — 1/77 ≈ 0,013, опора каждого сохраняется). */
 const KNOT_DT = 0.008;
 
+/** Опоры цвета нити — один раз на массив точек (NFR-1: прежде — в каждом кадре на всю нить). */
+const knotCache = new WeakMap<readonly StrandPoint[], { x: number; t: number }[]>();
+
 /**
  * Опоры цвета вдоль нити: (x, t) в точках, где начинается новое поколение (t — место лица в линии, 0…1), не чаще чем
  * через KNOT_PX и KNOT_DT. x приводится к неубывающему, чтобы градиент был определён. Без прореживания нить-маршрут масштаба
  * семьи (t растёт в каждой точке через 4 px) давала сотни опор на градиент, и кадр масштабирования шёл 50–200 мс.
  */
 export function colorKnots(pts: StrandPoint[]): { x: number; t: number }[] {
+  const was = knotCache.get(pts);
+  if (was) return was;
   const out: { x: number; t: number }[] = [];
   let maxX = -Infinity;
   const last = pts.length - 1;
@@ -135,6 +196,7 @@ export function colorKnots(pts: StrandPoint[]): { x: number; t: number }[] {
     if (i === last && out.length > 1 && x - out[out.length - 1].x < KNOT_PX) out.pop();
     out.push({ x, t: pts[i].t });
   }
+  knotCache.set(pts, out);
   return out;
 }
 
@@ -321,6 +383,23 @@ export function sliceStrand(st: Strand, a: number, b: number): Strand {
   return { line: st.line, ids: st.ids, points: st.points.slice(a, b + 1), over };
 }
 
+/**
+ * Участки нити между соседними выделенными лицами — частями нити (sliceStrand). Зависят только от того, какие лица нити
+ * выделены, поэтому запоминаются на нить и набор выделенных: нить-маршрут масштаба семьи — десятки тысяч точек, и обход
+ * их в каждом кадре при выбранном лице стоил 1–2 мс (NFR-1). Те же части — те же массивы точек: их оглавление и опоры
+ * цвета тоже не строятся заново.
+ */
+const litCache = new WeakMap<Strand, { key: string; parts: Strand[] }>();
+export function litParts(st: Strand, lit: (id: string) => boolean): Strand[] {
+  let key = '';
+  for (const id of st.ids) key += lit(id) ? '1' : '0';
+  const was = litCache.get(st);
+  if (was && was.key === key) return was.parts;
+  const parts = litRanges(st, lit).map(([a, b]) => sliceStrand(st, a, b));
+  litCache.set(st, { key, parts });
+  return parts;
+}
+
 /** Участки нити (индексы точек) между соседними лицами, оба из которых отмечены lit. */
 export function litRanges(st: Strand, lit: (id: string) => boolean): [number, number][] {
   const gen = st.ids.map((id, k) => k + 1 < st.ids.length && lit(id) && lit(st.ids[k + 1]));
@@ -364,6 +443,11 @@ interface RibbonCache {
   kx0: number;
   ky0: number;
   exact: boolean;
+  /**
+   * нити зависят от полосы построения (сплайн обзора: за краем — 4 точки на поколение); нити-маршруты масштаба семьи
+   * (доля маршрута 1) построены на всю длину линии и при сдвиге перестраиваются только дальше RIBBON_FAR
+   */
+  clipped: boolean;
   strands: Strand[];
   grads: Map<string, CanvasGradient>;
   /** сдвиг последнего кадра: экранная точка = точка нити + (dx, dy) */
@@ -373,6 +457,11 @@ interface RibbonCache {
 const ribbonCaches = new WeakMap<object, RibbonCache>();
 /** Запас построения за краем холста, px: пока сдвиг меньше, нити не перестраиваются. */
 const RIBBON_MARGIN = 240;
+/**
+ * Сдвиг, после которого перестраиваются и нити-маршруты (они от полосы построения не зависят): точки нити остаются
+ * близко к холсту, и координаты пути в пределах точности холста (NFR-1: перестройка на масштабе семьи — 40 мс).
+ */
+const RIBBON_FAR = 20000;
 const hovers = new WeakMap<object, RibbonHit | null>();
 
 /** Лента под указателем в точке (x, y) px холста: ближайшая нить не дальше r px; звёзды ловятся раньше (sky.hit). */
@@ -480,7 +569,7 @@ export function ribbonStrands(v: SkyContext, s: SkyState, steps: { joseph: reado
   if (c && c.key !== key && v.scaleMoving && c.base === base && near(cam.kx, c.kx0) && near(ky, c.ky0) && Math.abs((c.x0 - cam.x0) * cam.kx) < RIBBON_MARGIN) {
     c = rescaleRibbons(c, cam.x0, cam.laneTop, cam.kx, ky, key);
     ribbonCaches.set(v, c);
-  } else if (!c || c.key !== key || (!c.exact && !v.scaleMoving) || Math.abs((c.x0 - cam.x0) * cam.kx) > RIBBON_MARGIN - 40) {
+  } else if (!c || c.key !== key || (!c.exact && !v.scaleMoving) || Math.abs((c.x0 - cam.x0) * cam.kx) > (c.clipped ? RIBBON_MARGIN - 40 : RIBBON_FAR)) {
     // точки лиц — по полосам нитей: в «только линиях» на общей раскладке — по полосам раскладки (лица стоят на нитях)
     const at = v.ribbonNodes;
     const raw = (id: string) => {
@@ -526,7 +615,8 @@ export function ribbonStrands(v: SkyContext, s: SkyState, steps: { joseph: reado
       const routes = buildRouteRibbons({ joseph: route(J), mary: route(M), project: star, amplitude: A, radius: routeRadius(ky), clip: [-RIBBON_MARGIN, cam.w + RIBBON_MARGIN] });
       strands = blendStrands(strands, routes, f);
     }
-    c = { key, base, x0: cam.x0, laneTop: cam.laneTop, kx: cam.kx, ky, kx0: cam.kx, ky0: ky, exact: true, strands, grads: new Map(), dx: 0, dy: 0 };
+    // blendStrands при доле 1 отдаёт нити-маршруты как есть: сплайн с его полосой построения в них не входит
+    c = { key, base, x0: cam.x0, laneTop: cam.laneTop, kx: cam.kx, ky, kx0: cam.kx, ky0: ky, exact: true, clipped: f < 0.999, strands, grads: new Map(), dx: 0, dy: 0 };
     ribbonCaches.set(v, c);
   }
   c.dx = (c.x0 - cam.x0) * cam.kx;
@@ -596,7 +686,7 @@ export function drawSkyRibbons(v: SkyContext, s: SkyState, steps: { joseph: read
       const k = hl.get(id);
       return k === 'group' || k === 'path' || k === 'self';
     };
-    const parts = strands.flatMap((st) => litRanges(st, lit).map(([a, b]) => sliceStrand(st, a, b)));
+    const parts = strands.flatMap((st) => litParts(st, lit));
     if (parts.length) drawStrands(ctx, parts, core, ribbonLook(pal, false), cam.w, null, { clip, braid: A });
   }
   // наведённая лента: её нить целиком — в полную силу и чуть шире, с током света к Иисусу (ТЗ § 3.2)

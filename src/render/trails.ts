@@ -1450,6 +1450,37 @@ function pathBranch(bf: ReturnType<typeof branchFrame>, p: Pass, q: LinkPath): s
 }
 
 /**
+ * Рамки путей кадра связей: x0, x1, y0, y1 точек пути i без сдвига кадра — в [4i … 4i + 3]. Кадр связей строится на всё
+ * небо и при сдвиге неба не меняется (пересчёт масштаба даёт новый кадр), поэтому рамки считаются один раз на кадр
+ * связей, а не в каждом кадре неба по всем точкам всех путей (NFR-1).
+ */
+const frameBoxes = new WeakMap<LinkDraw['frame'], Float64Array>();
+function pathBoxes(f: LinkDraw['frame']): Float64Array {
+  let b = frameBoxes.get(f);
+  if (b) return b;
+  b = new Float64Array(f.paths.length * 4);
+  f.paths.forEach((q, i) => {
+    let x0 = Infinity;
+    let x1 = -Infinity;
+    let y0 = Infinity;
+    let y1 = -Infinity;
+    const pts = q.pts;
+    for (let k = 0; k < pts.length; k += 2) {
+      x0 = Math.min(x0, pts[k]);
+      x1 = Math.max(x1, pts[k]);
+      y0 = Math.min(y0, pts[k + 1]);
+      y1 = Math.max(y1, pts[k + 1]);
+    }
+    b![4 * i] = x0;
+    b![4 * i + 1] = x1;
+    b![4 * i + 2] = y0;
+    b![4 * i + 3] = y1;
+  });
+  frameBoxes.set(f, b);
+  return b;
+}
+
+/**
  * Связи кадра (§ 2): стволы, зубцы, черты брака «‖», ступеньки лестницы союзов, родовые черты и обрывки. Тоном текста;
  * у потомков выбранного — цветом ветви (§ 9); наведённая — --ink полной яркостью и на 1 px толще (§ 8). Ленты рисует
  * ribbons.ts, узлы — plates.ts (drawLinkNodes), выбранную связь — marks.ts. Линии занимают место в p.lines: названия
@@ -1465,23 +1496,18 @@ export function drawLinks(v: SkyContext, p: Pass, d: LinkDraw) {
   ctx.save();
   ctx.lineCap = 'butt';
   ctx.lineJoin = 'miter';
-  for (const q of d.frame.paths) {
+  const box = pathBoxes(d.frame);
+  const paths = d.frame.paths;
+  for (let i = 0; i < paths.length; i++) {
+    // путь вне холста — сразу мимо (из тысяч путей неба на холсте — десятки); рамка — из рамок кадра связей (без
+    // сдвига): сдвиг монотонен, поэтому крайние точки те же
+    if (box[4 * i + 1] + dx < -4 || box[4 * i] + dx > W + 4 || box[4 * i + 3] + dy < -4 || box[4 * i + 2] + dy > H + 4) continue;
+    const q = paths[i];
     if (q.kind === 'ribbon' || !linkShown(q, d)) continue;
     const hot = q.ks === d.hover || d.preview.has(q.ks);
     const a0 = hot || d.lit(q) ? 1 : d.alpha;
     if (a0 <= 0.01) continue;
     const pts = q.pts;
-    let x0 = Infinity;
-    let x1 = -Infinity;
-    let y0 = Infinity;
-    let y1 = -Infinity;
-    for (let k = 0; k < pts.length; k += 2) {
-      x0 = Math.min(x0, pts[k] + dx);
-      x1 = Math.max(x1, pts[k] + dx);
-      y0 = Math.min(y0, pts[k + 1] + dy);
-      y1 = Math.max(y1, pts[k + 1] + dy);
-    }
-    if (x1 < -4 || x0 > W + 4 || y1 < -4 || y0 > H + 4) continue;
     const e = hot ? 1 : pathEmph(p, q) * p.s.intro;
     ctx.globalAlpha = g0 * a0;
     ctx.strokeStyle = hot ? pal.ink : (pathBranch(bf, p, q) ?? alpha(pal.ink2, Math.min(1, LINK_TONE * e)));

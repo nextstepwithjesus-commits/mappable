@@ -233,17 +233,24 @@ describe('MAP-52: лица «время не установлено» (реше�
     const bad = epochal.filter(([, c]) => marks.some((y) => Math.abs(c.b - y) < 1)).map(([id]) => id);
     expect(bad).toEqual([]);
   });
-  it('Лука, Филимон, Онисим — годы служения Павла, с которым они названы (Кол 4:14; Флм 1:1, 10, 24)', () => {
-    for (const id of ['luka', 'filimon', 'onisim']) {
-      const c = res.persons.get(id)!;
-      expect(c.when).toEqual({ by: 'met', id: 'pavel' });
-      expect(c.bLo).toBe(toAstro(34));
-      expect(c.bHi).toBe(toAstro(62));
+  // Этап 13 (сверка т. 17): у Луки, Филимона, Онисима, Манаила и Луция теперь свои годы служения по тексту (active);
+  // правила скобки проверяются на лицах, у которых годов по-прежнему нет
+  it('Гиезий — годы служения Елисея, с которым он назван (4 Цар 4:12; 5:20–27); друзья Иова — одна скобка по Иову', () => {
+    const e = g.persons.get('elisey')!.chrono!.active!;
+    const c = res.persons.get('gieziy')!;
+    expect(c.when).toEqual({ by: 'met', id: 'elisey' });
+    expect(c.bLo).toBe(toAstro(e.from));
+    expect(c.bHi).toBe(toAstro(e.to));
+    const friends = ['elifaz-femanityanin', 'vildad', 'sofar'].map((id) => res.persons.get(id)!);
+    for (const f of friends) {
+      expect(f.cls).toBe('epochal');
+      expect(f.when).toEqual({ by: 'met', id: 'iov' });
+      expect([f.bLo, f.bHi]).toEqual([friends[0].bLo, friends[0].bHi]);
     }
   });
-  it('Манаил и Луций — апостольское время по Деян 13:1; братья Господни — не на Рождестве', () => {
-    expect(res.persons.get('manail')!.when).toEqual({ by: 'mention', ref: 'Деян 13:1' });
-    expect(res.persons.get('manail')!.bLo).toBe(toAstro(30));
+  it('Лоида — апостольское время по 2 Тим 1:5; братья Господни — не на Рождестве', () => {
+    expect(res.persons.get('loida')!.when).toEqual({ by: 'mention', ref: '2Тим 1:5' });
+    expect(res.persons.get('loida')!.bLo).toBe(toAstro(30));
     for (const id of ['iosiy-brat-gospoden', 'simon-brat-gospoden', 'iuda-brat-gospoden']) expect(res.persons.get(id)!.b).toBeGreaterThan(toAstro(-5) + 5);
   });
   it('Мелхиседек — в годы Авраама (встреча, Быт 14:18), а не в начале эпохи', () => {
@@ -374,15 +381,15 @@ describe('данные неба и карточки (tools/build-data.ts → src
   it('скобка, её основание, разрыв следа, признаки и эпохи модели доходят до индекса', async () => {
     const { models, loadModel } = await import('../src/data/atlas.ts');
     const m = models[0];
-    expect(m.chrono.get('luka')!.when).toEqual({ by: 'met', id: 'pavel' });
-    expect(m.chrono.get('manail')!.when).toEqual({ by: 'mention', ref: 'Деян 13:1' });
+    expect(m.chrono.get('gieziy')!.when).toEqual({ by: 'met', id: 'elisey' });
+    expect(m.chrono.get('loida')!.when).toEqual({ by: 'mention', ref: '2Тим 1:5' });
     expect(m.chrono.get('ieiel-1par5-7')!.when).toEqual({ by: 'kin', id: 'beera-syn-vaala' });
     expect(m.chrono.get('ludim')!.named).toBe(true);
     expect(m.chrono.get('david')!.named).toBeUndefined();
     expect(m.chrono.get('samus-syn-davida')!.byOrder).toBe(true);
     expect(m.nodeByPerson.get('iokhaveda')!.brk).not.toBeNull();
     expect(m.nodeByPerson.get('david')!.brk).toBeNull();
-    expect(m.nodeByPerson.get('luka')!.trail).toBe('epochal');
+    expect(m.nodeByPerson.get('gieziy')!.trail).toBe('epochal');
     const short = await loadModel('mt-short');
     expect(short!.epochs.find((e) => e.id === 'egypt')!.start).toBe(-1661);
     expect(short!.chrono.get('iosif')!.epoch).toBe('patriarchs');

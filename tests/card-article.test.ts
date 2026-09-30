@@ -293,7 +293,7 @@ describe('F11: малые лица — краткая статья', () => {
     }
     expect(bad.slice(0, 10), `${bad.length} лиц`).toEqual([]);
     expect(small).toBeGreaterThan(100);
-    expect(texts.get('zakkhur-syn-imriya')).toMatch(/Кратко: Сын Имрия\. Строил стену подле Иерихонцев, у Овечьих ворот Неем 3:1–2\. Показать все сведения/);
+    expect(texts.get('zakkhur-syn-imriya')).toMatch(/Кратко: Сын Имрия\. Строил стену подле Иерихонцев Неем 3:2\. Показать все сведения/);
   });
 });
 

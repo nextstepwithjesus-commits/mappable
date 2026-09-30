@@ -241,8 +241,42 @@ export class Camera {
     const s = u * u * (3 - 2 * u);
     return Math.min(cap, Math.max(fy, Math.exp((1 - s) * Math.log(fy) + s * Math.log(g))));
   }
+  /**
+   * Высота полосы нынешнего масштаба — запомненная при тех же входах kyWith (масштаб, пропорция, предел строки, полосы
+   * «только линий», предел и сдвиг высоты, высота холста и видимой части, масштаб «всего неба»). sy() зовёт её для каждой
+   * точки кадра, а кривая высоты — это логарифмы и экспонента (NFR-1). Значение то же, что даёт kyFor(kx). Новый вход
+   * кривой высоты — добавить и сюда.
+   */
+  private kyM: { auto: unknown; kx: number; lanes: number; floor: number; focus: number; cap: number; shift: number; h: number; span: number; t: number; b: number; fkx: number; fky: number; v: number } = {
+    auto: null, kx: NaN, lanes: 0, floor: 0, focus: 0, cap: 0, shift: 0, h: 0, span: 0, t: 0, b: 0, fkx: 0, fky: 0, v: 0,
+  };
   get ky(): number {
-    return this.kyFor(this.kx);
+    const m = this.kyM;
+    const f = this.fitK;
+    const fkx = f ? f.kx : -1;
+    const fky = f ? f.ky : -1;
+    const floor = this.floorPx;
+    // kyAuto подменяют у экземпляра инструменты (tools/census.ts) — подмена сбрасывает запомненное
+    if (
+      m.auto === this.kyAuto && m.kx === this.kx && m.lanes === this.lanes && m.floor === floor && m.focus === this.focusLanes && m.cap === this.rowCap && m.shift === this.rowShift &&
+      m.h === this.h && m.span === this.laneSpan && m.t === this.vp.t && m.b === this.vp.b && m.fkx === fkx && m.fky === fky
+    )
+      return m.v;
+    m.v = this.kyFor(this.kx);
+    m.auto = this.kyAuto;
+    m.kx = this.kx;
+    m.lanes = this.lanes;
+    m.floor = floor;
+    m.focus = this.focusLanes;
+    m.cap = this.rowCap;
+    m.shift = this.rowShift;
+    m.h = this.h;
+    m.span = this.laneSpan;
+    m.t = this.vp.t;
+    m.b = this.vp.b;
+    m.fkx = fkx;
+    m.fky = fky;
+    return m.v;
   }
   sx(x: number): number {
     return (x - this.x0) * this.kx;

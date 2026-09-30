@@ -100,17 +100,21 @@ describe('скобка «время не установлено» (MAP-52)', () 
     const ticks = r.calls.filter((c) => c[0] === 'moveTo' && (c[2] as number) === 40.5 - trails.BRACKET_TICK);
     expect(ticks.length).toBe(2);
   });
-  it('Лука: скобка через годы служения Павла; по годам созвездия (when.by = group) скобки нет', () => {
-    const { s } = drawSky(window(40, 120));
+  it('Гиезий: скобка через годы служения Елисея; по годам созвездия (when.by = group) скобки нет', () => {
+    // этап 13: у Луки (прежний пример) теперь свои годы служения (Кол 4:14; Флм 1:24) — пример того же случая: Гиезий,
+    // названный только при Елисее (4 Цар 4:12; 5:20–27)
+    const { s } = drawSky(window(-825, 120, atlas.models[0].nodeByPerson.get('gieziy')!.lane));
     const b = { x0: 0, x1: 0, y: 0, color: '' };
-    const i = s.indexOf('luka')!;
+    const i = s.indexOf('gieziy')!;
     const got = trails.bracketOf(s, i, b)!;
     expect(got).toBeTruthy();
-    const c = atlas.models[0].chrono.get('luka')!;
+    const c = atlas.models[0].chrono.get('gieziy')!;
+    expect(c.when).toEqual({ by: 'met', id: 'elisey' });
     expect(got.x0).toBeCloseTo(s.cam.sx(s.xOf(c.bLo)), 3);
     expect(got.x1).toBeCloseTo(s.cam.sx(s.xOf(c.bHi)), 3);
-    // знак в середине скобки, не на меридиане Рождества
-    expect(Math.abs(s.nodes[i].t0 - years.toAstro(-5))).toBeGreaterThan(10);
+    // знак в середине скобки, не на начале эпохи «Разделённое царство» (931 г. до Р. Х.)
+    expect(s.nodes[i].t0).toBeCloseTo((c.bLo + c.bHi) / 2, 3);
+    expect(Math.abs(s.nodes[i].t0 - years.toAstro(-931))).toBeGreaterThan(10);
     const group = [...atlas.models[0].chrono].find(([, q]) => q.cls === 'epochal' && q.when?.by === 'group');
     if (group) {
       const k = s.indexOf(group[0]);

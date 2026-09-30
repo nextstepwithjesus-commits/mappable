@@ -145,6 +145,6 @@ describe('«Кратко» — примеры', () => {
     expect(briefs.get('ruf')).toBe('Моавитянка, вдова Махлона, затем жена Вооза; мать Овида.');
     expect(briefs.get('maakha-nalozhnitsa-khaleva')).toBe('Наложница Халева. Мать Шевера, Фирханы, Шаафа и Шевы.');
     expect(briefs.get('melkhisedek')).toMatch(/^Царь Салимский, священник Бога Всевышнего\. Вынес хлеб и вино Авраму/);
-    expect(briefs.get('zakkhur-syn-imriya')).toBe('Сын Имрия. Строил стену подле Иерихонцев, у Овечьих ворот (Неем 3:1-2).');
+    expect(briefs.get('zakkhur-syn-imriya')).toBe('Сын Имрия. Строил стену подле Иерихонцев (Неем 3:2).');
   });
 });

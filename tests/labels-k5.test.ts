@@ -207,9 +207,10 @@ describe('подписи (MAP-06, 56, 66; MOB-53)', () => {
     }
   });
   it('лица «время не установлено» — курсивом; умерший младенцем — «†» перед именем кеглем подписи (MAP-52, MAP-68)', () => {
-    const nt = drawSky({ move: window(40, 120) });
-    const luka = nt.texts.find((q) => q.t === 'Лука');
-    expect(luka?.font).toMatch(/^italic /);
+    // этап 13: у Луки (прежний пример) теперь свои годы служения — пример того же случая: Гиезий (при Елисее)
+    const nt = drawSky({ move: around('gieziy', 120) });
+    const gz = nt.texts.find((q) => q.t === 'Гиезий');
+    expect(gz?.font).toMatch(/^italic /);
     const fam = drawSky({ move: window(-1005, 40, 4) });
     const inf = fam.sky.labelStats().boxes.find((b) => b.id === 'mladenets-syn-virsavii');
     expect(inf).toBeTruthy();

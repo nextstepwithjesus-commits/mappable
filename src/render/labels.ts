@@ -1003,7 +1003,9 @@ export function drawStarLabels(v: SkyContext, p: Pass, between?: () => void) {
     for (const i of all) {
       const q = byId.get(v.nodes[i].person)!;
       const d = dimOf(i);
-      putLabel(v, p, i, { sides: SIDES, color: q.magnitude <= 2 ? pal.ink : pal.ink2, alpha: d.alpha, light: d.light, sigla: true, leader: true, far: true, overStars: true });
+      // в показе линий каждая звезда — бусина линии: имя, которому не нашлось места ни у звезды, ни номером у бусины
+      // (ribbons.ts, drawLineNames), не ложится на соседние бусины — иначе оно прячет лицо линии (этап 13, Я12)
+      putLabel(v, p, i, { sides: SIDES, color: q.magnitude <= 2 ? pal.ink : pal.ink2, alpha: d.alpha, light: d.light, sigla: true, leader: true, far: true, overStars: !lineOnly });
     }
   }
   // 3) обычные — по порогам (на масштабе семьи — все); старшие подписи они не перекрывают. Звёзды величины 0–1 —
@@ -1294,17 +1296,21 @@ export function drawGroupNames(v: SkyContext, p: Pass, spots: GroupNameSpot[]): 
        * Места по средней линии области: название целиком внутри контура (inner — по трём вертикалям: у краёв и
        * в середине названия) или, если так не нашлось, только его середина (область узка или изрезана).
        */
-      const scan = (whole: boolean, cover = GROUP_COVER_FROM) => {
+      const scan = (whole: boolean, cover = GROUP_COVER_FROM, loose = false) => {
         const stepX = Math.max(12, (vx1 - vx0 - (whole ? tw : 0)) / 48);
         const rest: (ReturnType<typeof at> & { lines: number })[] = [];
         const x0 = whole ? vx0 + tw / 2 + 4 : vx0 + 8;
         const x1 = whole ? vx1 - tw / 2 - 4 : vx1 - 8;
+        // loose — середина названия в контуре и по вертикали: строка может выйти за контур на полвысоты
+        const pad = loose ? 0 : hh / 2;
         for (let xc = x0; xc <= x1; xc += stepX) {
           if (!far(at(xc, 0, tw).x)) continue;
           const spans = whole ? spanAnd(spanAnd(ringSpans(o.poly!, xc - tw / 2), ringSpans(o.poly!, xc)), ringSpans(o.poly!, xc + tw / 2)) : ringSpans(o.poly!, xc);
-          const inner = spans.map(([a, b]) => [Math.max(a, v.openTop), Math.min(b, v.cam.vp.b)] as [number, number]).filter(([a, b]) => b - a >= hh);
+          const inner = spans
+            .map(([a, b]) => [Math.max(a, v.openTop + (loose ? hh / 2 : 0)), Math.min(b, v.cam.vp.b - (loose ? hh / 2 : 0))] as [number, number])
+            .filter(([a, b]) => b - a >= (loose ? 1 : hh));
           for (const [a, b] of inner)
-            for (let yc = a + hh / 2; yc <= b - hh / 2; yc += 6) {
+            for (let yc = a + pad; yc <= b - pad; yc += loose ? 3 : 6) {
               const c = at(xc, yc, tw);
               // подписи и звёзды ярче 4-й величины под названием недопустимы — такие места сразу отбрасываются
               if (p.placer.clash(c.box, true, cover)) continue;
@@ -1322,6 +1328,9 @@ export function drawGroupNames(v: SkyContext, p: Pass, spots: GroupNameSpot[]): 
       if (big && xs.length === 0) scan(false);
       // и последним — поверх звёзд 3-й величины: они возвращаются поверх заливки, название пишется с ореолом
       if (big && xs.length === 0) scan(false, GROUP_COVER_FROM - 1);
+      // область тесна (ромбы союзов, подписи событий): середина названия — в контуре, строка может выйти за него на полвысоты
+      // (этап 13: название у крупной области обязательно, MAP-58)
+      if (big && xs.length === 0) scan(false, GROUP_COVER_FROM - 1, true);
     }
   }
   ctx.letterSpacing = '0px';

@@ -30,7 +30,9 @@ async function main() {
     for (const [w, h] of [[1440, 900], [390, 844]] as const) {
       const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: w > 500 ? 1 : 3, colorScheme: 'dark' });
       const page = await ctx.newPage();
-      await page.addInitScript("localStorage.setItem('toledot:intro', 'true')");
+      // проверочные метки кадра (src/render/sky.ts, probes) нужны только сценариям приёмки: у читателя их нет,
+      // и замер идёт так же, как небо работает у читателя
+      await page.addInitScript("localStorage.setItem('toledot:intro', 'true'); localStorage.setItem('toledot:probes', 'off')");
       await page.goto(`http://localhost:${PORT}/`);
       await page.waitForFunction("performance.getEntriesByName('sky-first-frame').length > 0", null, { timeout: 30000 });
       const first = (await page.evaluate("performance.getEntriesByName('sky-first-frame')[0].startTime")) as number;

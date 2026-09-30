@@ -543,14 +543,22 @@ export function TimeStrip() {
         if (k in d) delete d[k];
       } else if (d[k] !== v) d[k] = v;
     };
-    const draw = () => {
-      if (!W || !H) return;
+    /**
+     * Подложка полосы — то, что не зависит от окна неба и меридиана: эпохи, штриховка после канона, эпоха под
+     * указателем и в фокусе, названия эпох и края шкалы. Рисуется в свой холст один раз на размер, тему, модель и
+     * подсветку эпохи и в каждом кадре переносится целиком (NFR-1: полоса перерисовывается в каждом кадре неба). Подложка
+     * непрозрачна и переносится один к одному — пиксели те же, что при рисовании прямо на полосе.
+     */
+    let base: { key: string; model: unknown; cv: HTMLCanvasElement; texts: (Box & { t: string })[]; labeled: Set<string>; epochLabels: string } | null = null;
+    const paintBase = (L: ReturnType<typeof stripRows>): NonNullable<typeof base> => {
+      const bcv = base?.cv ?? document.createElement('canvas');
+      if (bcv.width !== cv.width) bcv.width = cv.width;
+      if (bcv.height !== cv.height) bcv.height = cv.height;
+      const ctx = bcv.getContext('2d')!;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.fillStyle = pal.sky;
       ctx.fillRect(0, 0, W, H);
-      const L = stripRows(H);
       const eps = model.value.epochs;
-      const v = view();
       // эпохи: чередование тона; черты границ — только в поле рамки, под строками названий: черта не пересекает
       // подпись (VIS-65)
       eps.forEach((e, i) => {
@@ -616,9 +624,6 @@ export function TimeStrip() {
         W - 2,
         [[0, PAD, PAD + sw], [0, W - PAD - ew, W - PAD]],
       );
-      // подписано эпох из всех — для проверок приёмки (tools/accept/strip.ts)
-      setData('epochLabels', `${places.size}/${eps.length}`);
-      labeled = new Set(places.keys());
       // прямоугольники текста полосы — для проверки наложений (tools/accept/strip3.ts): строка названий — от 10 px над
       // базовой линией до 3 px под ней
       const texts: (Box & { t: string })[] = [];
@@ -635,6 +640,26 @@ export function TimeStrip() {
         ctx.fillText(e.short, at.x, ROW_Y[at.row]);
         nameBox(e.short, at.x, ROW_Y[at.row], ctx.measureText(e.short).width);
       }
+      // подписано эпох из всех — для проверок приёмки (tools/accept/strip.ts)
+      return { key: '', model: null, cv: bcv, texts, labeled: new Set(places.keys()), epochLabels: `${places.size}/${eps.length}` };
+    };
+    const draw = () => {
+      if (!W || !H) return;
+      const L = stripRows(H);
+      const eps = model.value.epochs;
+      const v = view();
+      const baseKey = [cv.width, cv.height, W, H, dpr, T0, font(), pal.sky, pal.band, pal.rule, pal.ink, pal.ink3, pal.focus, hotEpoch, focusedEpoch.value].join('|');
+      if (!base || base.key !== baseKey || base.model !== model.value) base = { ...paintBase(L), key: baseKey, model: model.value };
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.drawImage(base.cv, 0, 0);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.font = font();
+      ctx.textBaseline = 'alphabetic';
+      const xc = Math.max(0, xOf(CANON_AFTER));
+      const xe = Math.min(W, xOf(T1));
+      setData('epochLabels', base.epochLabels);
+      labeled = base.labeled;
+      const texts: (Box & { t: string })[] = [...base.texts];
       // плотность рождений; вне окна неба — бледнее (VIS-25)
       const max = Math.max(1, ...hist);
       ctx.fillStyle = pal.ink3;

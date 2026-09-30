@@ -15,8 +15,18 @@ import './styles/spread.css';
 import './styles/specimen.css';
 import { App } from './ui/App.tsx';
 import { Specimen } from './ui/Specimen.tsx';
+import { probes } from './render/sky.ts';
 
 async function start() {
+  // проверочные метки кадра (src/render/sky.ts, probes) — только под автоматизацией: сценарии приёмки и снимки их читают;
+  // замер кадров (tools/perf.ts) выключает их ключом «toledot:probes» = off — так, как небо работает у читателя; = on —
+  // включает их в обычном браузере (разбор вручную)
+  try {
+    const want = localStorage.getItem('toledot:probes');
+    probes.on = want === 'on' || (navigator.webdriver === true && want !== 'off');
+  } catch {
+    probes.on = navigator.webdriver === true;
+  }
   // Холст меряет подписи — шрифты должны быть загружены до первой раскладки подписей.
   try {
     await Promise.all([

@@ -282,7 +282,9 @@ describe('точки союзов на холсте (решение 76)', () => 
     const set = ['avraam', 'sarra', 'isaak', 'agar', 'izmail', 'farra'];
     work.workSet.value = new Map(set.map((id) => [id, { via: 'self', of: id }]));
     reveal.opened.value = ['avraam'];
-    const f = frame(set, { plates: reveal.plates.value, at: 'avraam', years: 260 });
+    // этап 13 (X1, сверка т. 04): сыновья Хеттуры рождены не раньше чем через 40 лет после Исаака (Быт 25:1–2, 20) —
+    // при Аврааме 140 лет и старше; окно — 400 лет вокруг рождения Авраама, чтобы в нём был и союз с Хеттурой
+    const f = frame(set, { plates: reveal.plates.value, at: 'avraam', years: 400 });
     const ps = parse(f.data.plates ?? '');
     for (const uid of ['u:avraam+sarra', 'u:avraam+agar', 'u:avraam+khettura']) expect(ps.map((q) => q.uid)).toContain(uid);
     for (let i = 0; i < ps.length; i++) for (let j = i + 1; j < ps.length; j++) expect(cross(ps[i], ps[j])).toBe(false);

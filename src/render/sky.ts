@@ -340,6 +340,15 @@ export interface Pass {
 
 /** Лица линий на нитях в режиме «только линии» (MAP-71; ТЗ § 3.2: «каждое лицо — бусина»). */
 const BEADS = true;
+
+/**
+ * Проверочные метки кадра на холсте (canvas.dataset: связи, ромбы, подписи, звёзды, ленты…) — для сценариев приёмки
+ * (tools/accept) и тестов (tests/). Читателю они не нужны, а строятся в каждом кадре заново: 3–5 мс кадра при протяжке
+ * неба с 5 000 лицами (NFR-1, docs/perf.md). По умолчанию включены — тесты рисуют небо без браузера; атлас в браузере
+ * оставляет их только под автоматизацией (src/main.tsx: navigator.webdriver), замер кадров их выключает, как у читателя
+ * (tools/perf.ts). На то, что нарисовано, они не влияют.
+ */
+export const probes = { on: true };
 /** Сколько лет самое крупное окно видимой части неба (D2; IX-03). */
 const MIN_YEARS = 20;
 /** Семантическое увеличение: подробность растёт с высотой полосы от DETAIL_KY0 до DETAIL_KY1 (≈ ×1,5 по времени). */
@@ -752,8 +761,8 @@ export class Sky implements SkyContext {
   /** Разрывы следов от нарисованных связей (Г7): номер узла → пары «x, полуширина» в px холста. */
   private cutsOf(d: LinkDraw, ribbons: boolean): Map<number, number[]> {
     const out = new Map<number, number[]>();
-    for (const q of d.frame.paths) {
-      if (!q.cuts.length || !linkShown(q, d)) continue;
+    for (const q of pathsWithCuts(d.frame)) {
+      if (!linkShown(q, d)) continue;
       if (q.kind === 'ribbon' ? !ribbons : !(d.alpha > 0.01 || d.lit(q))) continue;
       for (let k = 0; k + 2 < q.cuts.length; k += 3) {
         const a = out.get(q.cuts[k]);
@@ -1760,7 +1769,7 @@ export class Sky implements SkyContext {
     // замер на холсте для проверок этапа 4: «подписано / видимых звёзд» (E1), подробность кадра (E3),
     // знаков свёрнутых скоплений / скоплений (E2)
     const ds = (this.canvas as { dataset?: DOMStringMap }).dataset;
-    if (ds) {
+    if (ds && probes.on) {
       const put = (k: string, v: string) => ds[k] !== v && (ds[k] = v);
       put('named', `${this.ledger.named}/${this.ledger.stars}`);
       // подробность звёзд (облака гаснут с ней) и по осям: «время строки» (решение 25)
@@ -1971,12 +1980,23 @@ export class Sky implements SkyContext {
     }
   }
 
+  /** Величины звёзд узлов кадра (6 — лица нет в данных): один раз на массив узлов, а не поиском по id в каждом кадре. */
+  private mags: { nodes: readonly NodeRow[]; mag: Float64Array } | null = null;
+  private nodeMags(): Float64Array {
+    if (this.mags?.nodes === this.nodes) return this.mags.mag;
+    const mag = new Float64Array(this.nodes.length);
+    for (let i = 0; i < this.nodes.length; i++) mag[i] = byId.get(this.nodes[i].person)?.magnitude ?? 6;
+    this.mags = { nodes: this.nodes, mag };
+    return mag;
+  }
   /** Непрозрачность звёзд этого кадра (E3): выделенные и лица линий в режиме «только линии» — 1, величины 0–2 — 1, мелкие — по подробности. */
   private fillStarAlpha(s: SkyState, spine: Set<string>, detail: number) {
     const hl = s.highlight;
     const A = this.starA;
     const hid = this.plan.hidden;
     const work = this.plan.mode === 'work';
+    const mag = this.nodeMags();
+    const pins = s.pins.size ? s.pins : null;
     for (let i = 0; i < this.nodes.length; i++) {
       const n = this.nodes[i];
       // скрытое набором или свёрткой не рисуется; лица набора в режиме «В работе» видны все (J4, J5)
@@ -1990,12 +2010,12 @@ export class Sky implements SkyContext {
           continue;
         }
       }
-      const q = byId.get(n.person);
       const k = hl?.get(n.person);
+      const pinned = !!pins && pins.has(n.person);
       // лицо свёрнутого скопления видно отдельно, только если это выбранное лицо, путь родства или отметка поиска
-      if (n.block >= 0 && this.collapsed.has(n.block)) A[i] = k === 'self' || k === 'path' || s.pins.has(n.person) ? 1 : 0;
-      else if (k !== undefined || s.pins.has(n.person) || (s.onlyLines && spine.has(n.person))) A[i] = 1;
-      else A[i] = (q?.magnitude ?? 6) <= OVERVIEW_MAG ? 1 : detail;
+      if (n.block >= 0 && this.collapsed.has(n.block)) A[i] = k === 'self' || k === 'path' || pinned ? 1 : 0;
+      else if (k !== undefined || pinned || (s.onlyLines && spine.has(n.person))) A[i] = 1;
+      else A[i] = mag[i] <= OVERVIEW_MAG ? 1 : detail;
     }
   }
 
@@ -2621,6 +2641,14 @@ export function beadNodes(v: SkyContext, nodes: readonly NodeRow[], beads: Reado
  */
 /** Сколько масштаб должен постоять, чтобы кадр связей и пороги подписей строились заново (мс). */
 export const SCALE_SETTLE_MS = 160;
+
+/** Пути кадра связей, разрывающие чужие следы (NFR-1: кадр связей — на всё небо, путей с разрывами — малая доля). */
+const cutPaths = new WeakMap<LinkFrame, LinkFrame['paths']>();
+function pathsWithCuts(f: LinkFrame): LinkFrame['paths'] {
+  let out = cutPaths.get(f);
+  if (!out) cutPaths.set(f, (out = f.paths.filter((q) => q.cuts.length > 0)));
+  return out;
+}
 
 /**
  * Кадр связей при новом масштабе — пересчётом прежнего (на время движения масштаба): x и y кадра линейны по координатам
