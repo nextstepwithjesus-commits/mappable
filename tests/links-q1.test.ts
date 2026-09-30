@@ -159,10 +159,19 @@ describe('выбор линии (§ 8): попадание, жёлтая свя�
     expect(info.ends.map((e) => `${e.id}:${e.role}`).sort()).toEqual(['iakov:отец', 'iosif:сын', 'rakhil:мать']);
     expect(info.ends.every((e) => e.on)).toBe(true);
     expect(info.x).not.toBeNull();
-    // путь выбранной связи — те же отрезки, что у связи в кадре (±1 px): зубец к Иосифу в нём
+    // путь выбранной связи — те же отрезки, что у связи в кадре (±1 px): зубец к Иосифу в нём (этап 12, решение 88: путь
+    // идёт целиком от узла по стволу и зубцу — зубец стал отрезком общей ломаной, а не отдельной)
     const tooth = g.paths.find((q) => q.ks === 'k.iakov.rakhil._.iosif' && q.kind === 'tooth')!;
     const route = marks.selectedRoute(g.s, g.d, k);
-    expect(route.some((r) => r.length === 4 && Math.abs(r[0] - tooth.pts[0]) <= 1 && Math.abs(r[1] - tooth.pts[1]) <= 1)).toBe(true);
+    const near = (x: number, y: number, px: number, py: number) => Math.abs(x - px) <= 1 && Math.abs(y - py) <= 1;
+    const hasTooth = (r: number[]) => {
+      for (let j = 0; j + 3 < r.length; j += 2) {
+        const [x0, y0, x1, y1] = r.slice(j, j + 4);
+        if ((near(x0, y0, tooth.pts[0], tooth.pts[1]) && near(x1, y1, tooth.pts[2], tooth.pts[3])) || (near(x1, y1, tooth.pts[0], tooth.pts[1]) && near(x0, y0, tooth.pts[2], tooth.pts[3]))) return true;
+      }
+      return false;
+    };
+    expect(route.some(hasTooth)).toBe(true);
     // подписи концов обязательны (Я24)
     const named = new Set(g.boxes.filter((b) => b.kind === 'star').map((b) => b.id));
     for (const id of ['iakov', 'rakhil', 'iosif']) expect(named.has(id), id).toBe(true);

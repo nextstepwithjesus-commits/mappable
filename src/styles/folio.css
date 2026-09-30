@@ -13,7 +13,7 @@
   display: none;
 }
 /* ширина листа — для правил узкого листа (помета паспорта в строке): лист меняет ширину ручкой, а не только с окном.
-   Только колонкой: контейнер держит внутри себя закреплённые элементы, а у нижнего листа телефона строка стопки
+   Только колонкой: контейнер держит внутри себя закреплённые элементы, а у нижнего листа телефона строки вкладок
    закреплена у окна (position: fixed) — там те же правила даёт @media */
 @media (min-width: 721px) {
   .folio {
@@ -39,9 +39,9 @@
   padding: 22px max(var(--folio-pr), calc(100% - var(--folio-pl) - 29em)) 36px var(--folio-pl);
 }
 
-/* ---------- закреплённая полоса листа (CARD-53, UX-67; решение 18) ----------
-   На всю ширину листа, 36 px, текст прокручивается под ней: слева — строка стопки «Ещё открыты (N): …», справа —
-   «Свернуть карточку» и «×». Без стопки полоса лежит на строке имени и прозрачна, пока лист не прокручен (data-scrolled
+/* ---------- закреплённая полоса листа (CARD-53, UX-67; решения 18, 91) ----------
+   На всю ширину листа, 36 px, текст прокручивается под ней: справа — «Закрепить карточку персонажа» (у закреплённой —
+   «Открепить…»), «Свернуть карточку» и «×». Полоса лежит на строке имени и прозрачна, пока лист не прокручен (data-scrolled
    ставит Folio.tsx); прокрученный лист — фон --sheet и нижняя линейка --rule. */
 .folio-bar {
   position: sticky;
@@ -53,7 +53,6 @@
   min-height: 36px;
   padding: 2px 4px 2px calc(var(--folio-pl) - 8px);
 }
-.folio-bar[data-stack],
 .folio[data-scrolled] > .folio-bar {
   background: var(--sheet);
 }
@@ -70,12 +69,13 @@
     scroll-padding-top: 48px;
   }
 }
-/* без стопки имя стоит в строке полосы: первая строка имени обходит её команды (--bar-cmds — их ширина в колонке) */
-.folio-bar:not([data-stack]) + .folio-inner {
+/* имя стоит в строке полосы: первая строка имени обходит её команды (--bar-cmds — их ширина в колонке); не помещается
+   рядом — встаёт под ними */
+.folio-bar + .folio-inner {
   margin-top: -36px;
   padding-top: 0;
 }
-.folio-bar:not([data-stack]) + .folio-inner .mast h2::before {
+.folio-bar + .folio-inner .mast h2::before {
   content: '';
   float: right;
   width: var(--bar-cmds, 170px);
@@ -97,52 +97,147 @@
     min-height: 44px;
   }
 }
-/* строка стопки: «Ещё открыты (5):» и имена от недавних к старым; не помещающиеся — многоточием (Folio.tsx, StackSummary) */
-.folio-bar .stack-sum {
-  flex: 1 1 0;
-  min-width: 0;
-  display: flex;
-  align-items: baseline;
-  gap: 0 6px;
-  min-height: 32px;
-  padding: 7px 8px;
-  font-family: var(--sans);
-  font-size: var(--t-ui);
-  line-height: var(--t-ui-lh);
-  color: var(--ink-2);
-  text-align: left;
-  white-space: nowrap;
-}
-.folio-bar .stack-sum .sh {
-  flex: none;
-}
-/* имена — сколько помещается во всё место строки до команд (UX-75, VIS-71; замер — StackSummary), треугольник — сразу
-   за ними */
-.folio-bar .stack-sum .names {
-  flex: 0 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  font-family: var(--serif);
-  font-size: var(--t-note);
-  color: var(--ink);
-}
-.folio-bar .stack-sum .tri,
 .folio .workbtn .tri {
   flex: none;
   margin-left: 4px;
   font-size: var(--t-ui-s);
   color: var(--ink-2);
 }
-.folio-bar .stack-sum:hover {
+/* «Закрепить карточку персонажа» (решение 91): на узком листе — «Закрепить», имя для диктора полное */
+.folio-bar .pin-card {
+  min-height: 32px;
+}
+.folio-bar .pin-card .short {
+  display: none;
+}
+/* имя встаёт в первую строку рядом с командами только при короткой надписи — короткая (Folio.tsx, pinLabel) */
+.folio[data-pin-short] > .folio-bar .pin-card .full {
+  display: none;
+}
+.folio[data-pin-short] > .folio-bar .pin-card .short {
+  display: inline;
+}
+@container folio (max-width: 440px) {
+  .folio-bar .pin-card .full {
+    display: none;
+  }
+  .folio-bar .pin-card .short {
+    display: inline;
+  }
+}
+@media (pointer: coarse) {
+  .folio-bar .pin-card {
+    min-height: 44px;
+  }
+}
+/* в шапке нижнего листа телефона — коротко, как «Развернуть»; полное имя — для диктора */
+.folio .sheet-bar .pin-card {
+  flex: none;
+  min-height: 44px;
+}
+.folio .sheet-bar .pin-card .full {
+  display: none;
+}
+.folio .sheet-bar .pin-card .short {
+  display: inline;
+}
+
+/* ---------- вкладки закреплённых карточек (решение 91; src/ui/Folio.tsx, CardTabs) ----------
+   Строки вверху листа по порядку закрепления: цветная метка 10 px (--tab-1 … --tab-8), имя, уточнение курсивом целыми
+   словами, «×». Раскрытая вкладка (её карточка — ниже) — фон наведения и полужирное имя. Без скруглений и теней: строки
+   разделены линейкой, как строки указателя. */
+.folio [data-hue='1'] { --tab-c: var(--tab-1); }
+.folio [data-hue='2'] { --tab-c: var(--tab-2); }
+.folio [data-hue='3'] { --tab-c: var(--tab-3); }
+.folio [data-hue='4'] { --tab-c: var(--tab-4); }
+.folio [data-hue='5'] { --tab-c: var(--tab-5); }
+.folio [data-hue='6'] { --tab-c: var(--tab-6); }
+.folio [data-hue='7'] { --tab-c: var(--tab-7); }
+.folio [data-hue='8'] { --tab-c: var(--tab-8); }
+.folio .card-tabs {
+  list-style: none;
+  margin: 0;
+  padding: 4px 4px 4px calc(var(--folio-pl) - 26px);
+  border-bottom: 1px solid var(--rule-strong);
+  background: var(--sheet);
+}
+.folio .card-tab {
+  display: flex;
+  align-items: center;
+}
+.folio .card-tab + .card-tab {
+  box-shadow: inset 0 1px 0 var(--rule);
+}
+.folio .card-tab .tab-open {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0 8px;
+  min-height: 32px;
+  padding: 6px 8px;
+  text-align: left;
+  font-family: var(--serif);
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+  color: var(--ink);
+  white-space: nowrap;
+}
+.folio .tab-mark {
+  flex: none;
+  align-self: center;
+  width: 10px;
+  height: 10px;
+  background: var(--tab-c, var(--ink-3));
+}
+.folio .card-tab .nm {
+  flex: none;
+  font-weight: 560;
+}
+.folio .card-tab .ds {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  font-style: italic;
+  color: var(--ink-2);
+}
+.folio .card-tab .tab-open:hover {
   background: var(--sheet-2);
-  color: var(--ink);
 }
-.folio-bar .stack-sum[aria-expanded='true'] {
-  color: var(--ink);
-  box-shadow: inset 0 -2px 0 var(--ink);
-}
-.folio-bar .stack-sum:focus-visible {
+.folio .card-tab .tab-open:focus-visible {
   outline-offset: -2px;
+}
+/* раскрытая вкладка: её карточка — ниже; строка целиком — фоном наведения, метка вытянута на всю высоту, как закладка */
+.folio .card-tab[data-open] {
+  background: var(--sheet-2);
+}
+.folio .card-tab[data-open] .nm {
+  font-weight: 650;
+}
+.folio .card-tab[data-open] .tab-mark {
+  align-self: stretch;
+  height: auto;
+  margin: -6px 0;
+}
+.folio .card-tab .close {
+  position: static;
+  flex: none;
+  float: none;
+  margin: 0;
+}
+@media (pointer: coarse) {
+  .folio .card-tab .tab-open {
+    min-height: 44px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+  .folio .card-tab[data-open] .tab-mark {
+    margin: -12px 0;
+  }
+  .folio .card-tab .close {
+    min-width: 44px;
+    height: 44px;
+  }
 }
 
 /* ---------- шапка (F2; VIS-04, VIS-05, VIS-41) ----------
@@ -922,8 +1017,9 @@ div.sec[data-to]::before {
 .folio.spine .sp-open:focus-visible {
   outline-offset: -2px;
 }
-/* другие открытые карточки — под чертой, имена снизу вверх; не помещающиеся уходят за нижний край корешка */
-.folio.spine .spine-stack {
+/* вкладки закреплённых карточек на корешке (решение 91) — под чертой, имена снизу вверх, у каждого — цветная метка;
+   не помещающиеся уходят за нижний край корешка, их видно в развёрнутом листе */
+.folio.spine .spine-tabs {
   flex: 1 1 0;
   min-height: 0;
   display: flex;
@@ -937,7 +1033,25 @@ div.sec[data-to]::before {
   overflow: hidden;
   border-top: 1px solid var(--rule);
 }
+.folio.spine.tabs-only .spine-tabs {
+  margin: 0;
+  border-top: 0;
+}
+/* подпись корешка без карточки: что за имена на нём */
+.folio.spine .sp-cap {
+  flex: none;
+  padding: 12px 0 8px;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  color: var(--ink-3);
+}
 .folio.spine .sp-open {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   width: 44px;
   padding: 8px 0;
   writing-mode: vertical-rl;
@@ -947,6 +1061,14 @@ div.sec[data-to]::before {
   line-height: var(--t-note-lh);
   color: var(--ink-2);
   white-space: nowrap;
+}
+.folio.spine .sp-open .nm {
+  min-height: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.folio.spine .unfold .tab-mark {
+  flex: none;
 }
 
 /* ---------- сенсорный экран: цели помет и рейки не меньше 24 px (WCAG 2.5.8) ---------- */
@@ -1068,68 +1190,6 @@ div.sec[data-to]::before {
     line-height: var(--t-note-lh);
     color: var(--ink-2);
   }
-}
-
-/* ---------- стопка карточек (J6; решение 18; CARD-52, VIS-48; src/ui/Folio.tsx) ---------- */
-/* раскрытый список — в закреплённой полосе, под строкой стопки: от недавних к старым, «×» у каждой, «Закрыть все» */
-.folio-bar .stack {
-  flex: 1 0 100%;
-  order: 3;
-  list-style: none;
-  margin: 2px 0 6px;
-  padding: 4px 0 0;
-  border-top: 1px solid var(--rule);
-}
-.folio .stack-row {
-  display: flex;
-  align-items: center;
-}
-/* строка — две строки по 20 px: имя и годы, под ними уточнение целыми словами (VIS-48) */
-.folio .stack .sr-open {
-  flex: 1 1 auto;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: baseline;
-  gap: 0 10px;
-  min-width: 0;
-  min-height: 44px;
-  padding: 2px 8px;
-  text-align: left;
-  font-family: var(--serif);
-  font-size: var(--t-note);
-  line-height: var(--t-note-lh);
-  color: var(--ink);
-}
-.folio .stack .sr-open:hover {
-  background: var(--sheet-2);
-}
-.folio .stack .sr-open:focus-visible {
-  outline-offset: -2px;
-}
-.folio .stack .nm {
-  font-size: var(--t-body);
-  font-weight: 560;
-  white-space: nowrap;
-}
-.folio .stack .yrs {
-  font-family: var(--sans);
-  font-size: var(--t-ui-s);
-  line-height: var(--t-ui-s-lh);
-  color: var(--ink-2);
-  font-variant-numeric: lining-nums tabular-nums;
-  white-space: nowrap;
-}
-.folio .stack .ds {
-  grid-column: 1 / -1;
-  font-style: italic;
-  color: var(--ink-2);
-}
-/* «×» строки — в строке, а не в углу листа */
-.folio .stack .close {
-  flex: none;
-}
-.folio .stack .stack-all {
-  margin: 2px 0 0;
 }
 
 /* ---------- «Взять в работу ▾»: выбор объёма в форме органов (J3, VIS-47; src/ui/panels/Work.tsx) ----------
@@ -1357,51 +1417,56 @@ div.workpick.skymenu .wp-head {
 }
 
 @media (max-width: 720px) {
-  /* стопка на телефоне — строка над листом (J6): прокручивается вбок, двигается вместе с листом */
-  .folio .stack-strip {
+  /* вкладки на телефоне (решение 91) — строки над листом: двигаются вместе с ним; больше трёх — прокрутка внутри */
+  .folio .card-tabs.stack-strip {
     position: fixed;
     left: 0;
     right: 0;
     bottom: calc(var(--strip-h) + env(safe-area-inset-bottom) + min(var(--sheet-h, var(--stop-h, 0px)), var(--sheet-avail)));
     z-index: 26;
-    display: flex;
-    overflow-x: auto;
-    margin: 0;
-    padding: 0 0 0 6px;
-    list-style: none;
-    background: var(--sheet);
+    max-height: calc(3 * 45px + 8px);
+    overflow-y: auto;
+    padding: 4px 0 4px 8px;
     border-top: 1px solid var(--rule-strong);
-    scrollbar-width: none;
+    border-bottom: 1px solid var(--rule);
+    overscroll-behavior: contain;
     transition: bottom 260ms var(--ease);
   }
-  .folio[data-drag] .stack-strip {
+  .folio[data-drag] .card-tabs.stack-strip {
     transition: none;
   }
-  .folio .stack-strip li {
-    display: flex;
-    align-items: center;
-    flex: none;
-  }
-  .folio .stack-strip .sr-open {
+  .folio .card-tabs.stack-strip .tab-open {
     min-height: 44px;
-    padding: 0 2px 0 8px;
-    font-family: var(--serif);
-    font-size: var(--t-note);
-    line-height: var(--t-note-lh);
-    color: var(--ink);
-    white-space: nowrap;
+    padding-top: 12px;
+    padding-bottom: 12px;
   }
-  .folio .stack-strip .close {
-    position: static;
-    float: none;
-    margin: 0;
+  .folio .card-tabs.stack-strip .card-tab[data-open] .tab-mark {
+    margin: -12px 0;
+  }
+  .folio .card-tabs.stack-strip .close {
     min-width: 44px;
     height: 44px;
     background: none;
   }
+  /* лицо не выбрано, вкладки есть: только строки вкладок над полосой времени, листа нет */
+  .app > .folio.tabs-only {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: calc(var(--strip-h) + env(safe-area-inset-bottom));
+    width: auto;
+    height: auto;
+    overflow: visible;
+    border-left: 0;
+    background: none;
+    z-index: 25;
+  }
+  .app > .folio.tabs-only .card-tabs.stack-strip {
+    position: static;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .folio .stack-strip {
+  .folio .card-tabs.stack-strip {
     transition: none;
   }
 }

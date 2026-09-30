@@ -1,7 +1,8 @@
 /**
  * Следы и семьи на небе (A14, E4; ТЗ § 3.1; MAP-12, 13, 14, 15, 16, 20, 22; UX-34).
- *  — след честен: оценочное рождение — пунктирное начало, последнее упоминание — сплошной след и пунктир 10 px,
- *    ничего не известно — только пунктир 10 px, условной длины жизни нет; народ, род, младенец — без следа;
+ *  — след честен: оценочное рождение — начало проявляется от звезды, последнее упоминание — сплошной след и тающий
+ *    хвост 10 px, ничего не известно — только тающий хвост 10 px, условной длины жизни нет; народ, род, младенец — без
+ *    следа (этап 12, решение 90: неуверенность — растушёвкой, точек на следе нет);
  *  — знаки: рассеянное скопление у народа, † у умершего младенцем;
  *  — семья: скоба пары «отец — мать», пометы «от Лии», подписи призраков «Рахиль, жена Иакова»;
  *  — выделение рода: предки сплошные, потомки штрихом, братья и сёстры своей степенью, дальше третьего поколения — 70 %.
@@ -83,26 +84,29 @@ const at = (s: SkyT, id: string, k: number) => {
 
 describe('след жизни (A14): у точного и оценочного — разное начертание', () => {
   const base = { x0: 10, y: 50.5, color: '#fff', width: 1.2 };
-  it('оценочное рождение — пунктир от звезды до конца интервала рождения, дальше сплошной', () => {
+  /** Растушёвки: градиенты вдоль следа «x0→x1» (createLinearGradient) по порядку. */
+  const fades = (calls: Call[]) => calls.filter((c) => c[0] === 'createLinearGradient').map((c) => [c[1], c[3]]);
+  it('оценочное рождение — начало проявляется от звезды до конца интервала рождения, дальше сплошной; точек нет', () => {
     const r = recording();
     trails.drawLifeTrail(r.ctx, { ...base, x1: 200, cls: 'estimated', known: true, solidTo: 200, sureFrom: 60 });
-    expect(strokes(r.calls).slice(0, 8)).toEqual([
-      ['setLineDash', trails.TRAIL_DOTS], ['moveTo', 10, 50.5], ['lineTo', 60, 50.5], ['stroke'], ['setLineDash', []],
-      ['moveTo', 60, 50.5], ['lineTo', 200, 50.5], ['stroke'],
-    ]);
+    expect(strokes(r.calls)).toEqual([['moveTo', 10, 50.5], ['lineTo', 60, 50.5], ['stroke'], ['moveTo', 60, 50.5], ['lineTo', 200, 50.5], ['stroke']]);
+    expect(fades(r.calls)).toEqual([[10, 60]]);
+    expect(trails.TRAIL_FADE.start).toBeGreaterThan(0.1);
+    expect(trails.TRAIL_FADE.start).toBeLessThan(0.5);
   });
-  it('последнее упоминание — сплошной до него и пунктир 10 px; ничего не известно — только пунктир 10 px', () => {
+  it('последнее упоминание — сплошной до него и тающий хвост 10 px; ничего не известно — только тающий хвост 10 px', () => {
     let r = recording();
     trails.drawLifeTrail(r.ctx, { ...base, x1: 90 + trails.TAIL_PX, cls: 'calculated', known: false, solidTo: 90 });
-    expect(strokes(r.calls)).toEqual([
-      ['moveTo', 10, 50.5], ['lineTo', 90, 50.5], ['stroke'],
-      ['setLineDash', trails.TRAIL_DOTS], ['moveTo', 90, 50.5], ['lineTo', 100, 50.5], ['stroke'], ['setLineDash', []],
-    ]);
+    expect(strokes(r.calls)).toEqual([['moveTo', 10, 50.5], ['lineTo', 90, 50.5], ['stroke'], ['moveTo', 90, 50.5], ['lineTo', 100, 50.5], ['stroke']]);
+    expect(fades(r.calls)).toEqual([[90, 100]]);
     r = recording();
     trails.drawLifeTrail(r.ctx, { ...base, x1: 10 + trails.TAIL_PX, cls: 'estimated', known: false, solidTo: 10, sureFrom: 80 });
-    expect(strokes(r.calls)).toEqual([['setLineDash', trails.TRAIL_DOTS], ['moveTo', 10, 50.5], ['lineTo', 20, 50.5], ['stroke'], ['setLineDash', []]]);
+    expect(strokes(r.calls)).toEqual([['moveTo', 10, 50.5], ['lineTo', 20, 50.5], ['stroke']]);
+    expect(fades(r.calls)).toEqual([[10, 20]]);
+    // ни в одном следе нет штриха и точек
+    expect(r.calls.some((c) => c[0] === 'setLineDash' && (c[1] as number[]).length)).toBe(false);
   });
-  it('на небе условной длины жизни нет: без смерти и упоминаний след — ровно 10 px пунктира', () => {
+  it('на небе условной длины жизни нет: без смерти и упоминаний след — ровно 10 px растушёвки', () => {
     const { s } = makeSky();
     at(s, 'david', 40);
     const t = { x0: 0, x1: 0, y: 0, cls: 'exact' as const, known: true, solidTo: 0, color: '', width: 1 };

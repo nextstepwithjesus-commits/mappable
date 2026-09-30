@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { ROOT } from './bible.ts';
 import { contrast as ratio, linearRgb, CONTRAST_USES } from '../src/ui/contrast.ts';
 import { over, likelyAlpha, CONSTELLATION_DIM, DIM, DIM_LABEL_CONTRAST, CLOUD_DIMMED, dimLabelAlpha, labelGrounds, separateRibbons, RIBBON_LIGHTNESS } from '../src/render/dim.ts';
-import { BRANCH_COLORS, LINK_YELLOW, BRANCH_CONTRAST, BRANCH_DE, BRANCH_FAR_CONTRAST, BRANCH_NAMES, branchColor, branchFade, branchFloor, type MapTheme } from '../src/render/branches.ts';
+import { BRANCH_COLORS, LINK_YELLOW, BRANCH_CONTRAST, BRANCH_DE, BRANCH_FAR_CONTRAST, BRANCH_NAMES, KIN_GOLD, KIN_GOLD_UNDER, UNION_COLORS, UNION_DE, branchColor, branchFade, branchFloor, type MapTheme } from '../src/render/branches.ts';
 
 const css = readFileSync(join(ROOT, 'src/styles/tokens.css'), 'utf8');
 const block = (sel: string) => {
@@ -123,6 +123,35 @@ for (const [t, c] of Object.entries(themes)) {
     }
     check(`жёлтый не похож на ленты и ветви (${k}; ближе всех ${with_}), ΔE`, d, m ? 10 : 18);
   }
+  // знак союза (этап 12, решение 87; src/render/plates.ts, paintUnion): половины — синяя (муж) и розовая (жена) — графика
+  // ≥ 3 : 1 к небу и полосе эпохи; половины различимы между собой при обычном зрении и каждом виде дальтонизма; двухцветный
+  // знак не читается одним цветом ленты, ветви, жёлтого или текста: хотя бы одна половина далека от каждого из них
+  const U = UNION_COLORS[theme];
+  for (const [k, h] of [['синяя (муж)', U.husband], ['розовая (жена)', U.wife]] as const)
+    for (const g of grounds) check(`знак союза: половина ${k} ${h} на ${g}`, ratio(h, g), 3);
+  const singles = [...new Set([...hues, yellow, c['--ink'], c['--ink-2']])];
+  for (const [k, m] of [['обычное зрение', undefined], ...Object.entries(CVD)] as [string, number[][] | undefined][]) {
+    check(`знак союза: половины различимы (${k}), ΔE`, dE(simulate(U.husband, m), simulate(U.wife, m)), UNION_DE);
+    let d = Infinity;
+    let with_ = '';
+    for (const h of singles) {
+      const v = Math.max(dE(simulate(U.husband, m), simulate(h, m)), dE(simulate(U.wife, m), simulate(h, m)));
+      if (v < d) {
+        d = v;
+        with_ = h;
+      }
+    }
+    check(`знак союза не похож на одноцветную линию (${k}; ближе всех ${with_}), ΔE дальней половины`, d, m ? 10 : 18);
+  }
+  // золотистый семьи лица (решение 89; src/render/marks.ts, goldArc, drawKinArcs): дуги и подписи на них — ≥ 4,5 : 1 к небу
+  // и полосе эпохи (подпись — тем же цветом на ореоле неба); не тот же, что жёлтый выбранной связи: ΔE ≥ 18 при обычном
+  // зрении и ≥ 10 при каждом виде дальтонизма
+  const gold = KIN_GOLD[theme];
+  for (const g of grounds) check(`золотистая дуга семьи и её подпись ${gold} на ${g}`, ratio(gold, g), 4.5);
+  // днём точки дуги лежат на бледно-золотой подложке: и на ней графика ≥ 3 : 1
+  if (theme === 'day') for (const g of grounds) check(`точки золотистой дуги на подложке (альфа ${KIN_GOLD_UNDER.a} на ${g})`, ratio(gold, over(KIN_GOLD_UNDER.color, g, KIN_GOLD_UNDER.a)), 3);
+  for (const [k, m] of [['обычное зрение', undefined], ...Object.entries(CVD)] as [string, number[][] | undefined][])
+    check(`золотистый не похож на жёлтый выбранной связи (${k}), ΔE`, dE(simulate(gold, m), simulate(yellow, m)), m ? 10 : 18);
 }
 console.log(fail ? `\nНе прошло проверок: ${fail}` : '\nВсе проверки пройдены.');
 process.exit(fail ? 1 : 0);

@@ -321,31 +321,35 @@ describe('свёрнутое созвездие — строка «+N» у ме�
   });
 });
 
-describe('«назад» и стопка карточек (решение 50; UX-74)', () => {
+// этап 12, решение 91: стопки нет — «назад» переключает только текущую карточку, закреплённые вкладки не меняются;
+// тот же смысл, что у проверки стопки (решение 50): история не открывает «ещё одну карточку» и не теряет открытые
+describe('«назад» и вкладки закреплённых карточек (решение 50, 91; UX-74)', () => {
   afterEach(() => {
     state.selected.value = null;
-    stack.cardStack.value = [];
+    stack.cardTabs.value = [];
   });
-  it('лицо в стопке — становится активным, состав прежний; закрытое — на месте активной, стопка не растёт', () => {
-    // #/ruf → Давид → Иессей → «×» у Иессея → «Моисей»: стопка Моисей, Давид, Руфь
-    const st = ['moisey', 'david', 'ruf'];
-    expect(stack.historyStack(st, 'moisey', 'david')).toEqual(['david', 'moisey', 'ruf']);
-    expect(stack.historyStack(['david', 'moisey', 'ruf'], 'david', 'iessey')).toEqual(['iessey', 'moisey', 'ruf']);
-    expect(stack.historyStack(['iessey', 'moisey', 'ruf'], 'iessey', 'david')).toEqual(['david', 'moisey', 'ruf']);
-    // карточка закрыта (активной нет) — лицо ложится наверх
-    expect(stack.historyStack(['moisey'], null, 'ruf')).toEqual(['ruf', 'moisey']);
-  });
-  it('selectFromHistory: стопка по истории, выбор — лицо записи', () => {
-    stack.cardStack.value = ['moisey', 'david', 'ruf'];
+  it('selectFromHistory: выбор — лицо записи, вкладки прежние; null — карточка закрыта, вкладки остаются', () => {
+    stack.cardTabs.value = stack.withTab(stack.withTab([], 'moisey'), 'ruf');
+    const before = JSON.stringify(stack.cardTabs.value);
     state.selected.value = 'moisey';
+    stack.cardFolded.value = true;
     stack.selectFromHistory('david');
     expect(state.selected.value).toBe('david');
-    expect(stack.cardStack.value).toEqual(['david', 'moisey', 'ruf']);
-    stack.selectFromHistory('iessey');
-    expect(stack.cardStack.value).toEqual(['iessey', 'moisey', 'ruf']);
+    expect(stack.cardFolded.value).toBe(false);
+    expect(JSON.stringify(stack.cardTabs.value)).toBe(before);
+    stack.selectFromHistory('ruf');
+    expect(state.selected.value).toBe('ruf');
+    expect(JSON.stringify(stack.cardTabs.value)).toBe(before);
     stack.selectFromHistory(null);
     expect(state.selected.value).toBeNull();
-    expect(stack.cardStack.value).toEqual(['iessey', 'moisey', 'ruf']);
+    expect(JSON.stringify(stack.cardTabs.value)).toBe(before);
+  });
+  it('закрыть текущую («×», Escape): выбор снят, вкладки остаются', () => {
+    stack.cardTabs.value = stack.withTab([], 'david');
+    state.selected.value = 'david';
+    stack.closeCurrent();
+    expect(state.selected.value).toBeNull();
+    expect(stack.cardTabs.value.map((t) => t.id)).toEqual(['david']);
   });
 });
 

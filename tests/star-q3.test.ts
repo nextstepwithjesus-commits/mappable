@@ -43,6 +43,8 @@ describe('блок «Родство» (решение 77; STAGE11.md § 6)', () 
     // помета порядка — от неба (стык 5, personOrderNote): диапазон стихов, где названы дети этого союза
     expect(rowText(r.year)).toMatch(/^по порядку перечисления, Быт 5:32.*, выв\.$/);
   });
+  // этап 12, решение 92 («все дети по союзам»): при двух союзах с детьми и больше строка детей — группами «от Лии — …»;
+  // порядок внутри союза — прежний, по рождению
   it('Иаков: четыре жены — наложница помечена; дети по союзам; приёмные сыновья помечены; брат Исав', () => {
     const r = rows('iakov');
     expect(rowText(r.parents)).toBe('[isaak] и [revekka]');
@@ -50,7 +52,8 @@ describe('блок «Родство» (решение 77; STAGE11.md § 6)', () 
     expect(rowText(r.spouses)).toBe('[liya], [rakhil], [valla] (наложница), [zelfa]');
     expect(r.children.label).toBe('Дети');
     const kids = rowText(r.children);
-    expect(kids.startsWith('[ruvim], [simeon], [leviy], [iuda]')).toBe(true);
+    expect(kids.startsWith('от Лии — [ruvim], [simeon], [leviy], [iuda]')).toBe(true);
+    expect(kids).toContain('; от Рахили — [iosif], [veniamin]');
     expect(kids).toContain('[dina]');
     expect(kids).toContain('[manassiya] (приёмный)');
     expect(r.siblings.label).toBe('Брат');

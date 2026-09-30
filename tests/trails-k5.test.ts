@@ -13,7 +13,11 @@ function recording() {
     get: (_o, k) => {
       if (k === 'measureText') return (t: string) => ({ width: t.length * 7 });
       if (k === 'fillText') return (t: string, x: number, y: number) => texts.push({ t, x, y });
-      if (typeof k === 'string' && ['moveTo', 'lineTo', 'stroke', 'setLineDash', 'fillRect'].includes(k)) return (...a: unknown[]) => calls.push([k, ...a]);
+      if (typeof k === 'string' && ['moveTo', 'lineTo', 'stroke', 'setLineDash', 'fillRect', 'createLinearGradient'].includes(k))
+        return (...a: unknown[]) => {
+          calls.push([k, ...a]);
+          return { addColorStop: () => {} };
+        };
       return () => ({ addColorStop: () => {} });
     },
     set: () => true,
@@ -58,7 +62,7 @@ const window = (year: number, span: number, lane = 0) => (s: Sky) => {
 };
 
 describe('разрыв «//» растянутой жизни (MAP-51; решение 24)', () => {
-  it('след: сплошной до разрыва, знак «//» — два косых штриха через след, дальше — пунктир', () => {
+  it('след: сплошной до разрыва, знак «//» — два косых штриха через след, дальше — бледнее (этап 12: без точек)', () => {
     const r = recording();
     trails.drawLifeTrail(r.ctx, { x0: 10, x1: 300, y: 50.5, cls: 'estimated', known: false, solidTo: 290, brk: 150, color: '#fff', width: 1.2 });
     const moves = r.calls.filter((c) => c[0] === 'moveTo' || c[0] === 'lineTo');
@@ -67,9 +71,10 @@ describe('разрыв «//» растянутой жизни (MAP-51; реше�
     // косые штрихи: концы выше и ниже следа
     const slants = moves.filter((c) => Math.abs((c[1] as number) - 150) < 4 && c[2] !== 50.5);
     expect(slants.length).toBe(4);
-    // после разрыва — пунктир до конца засвидетельствованного
-    const dash = r.calls.findIndex((c) => c[0] === 'setLineDash' && (c[1] as number[]).length);
-    expect(dash).toBeGreaterThan(0);
+    // после разрыва — бледнее (растушёвка той же долей яркости) до конца засвидетельствованного, дальше тает; точек нет
+    expect(r.calls.some((c) => c[0] === 'setLineDash' && (c[1] as number[]).length)).toBe(false);
+    const grads = r.calls.filter((c) => c[0] === 'createLinearGradient').map((c) => [c[1], c[3]]);
+    expect(grads).toEqual([[150 + trails.BREAK.gap / 2 + 2, 290], [290, 300]]);
     expect(r.calls.some((c) => c[0] === 'lineTo' && c[1] === 290)).toBe(true);
   });
   it('на небе у Иохаведы, Арама и Овида разрыв; отвод к ребёнку, родившемуся после разрыва, — со знаком', () => {

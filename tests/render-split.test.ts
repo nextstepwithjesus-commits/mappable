@@ -124,17 +124,16 @@ describe('замер наложений подписей (labels.ts)', () => {
 
 describe('одиночный след и отвод (trails.ts): то же, что на небе', () => {
   const strokes = (calls: Call[]) => calls.filter((c) => ['setLineDash', 'moveTo', 'lineTo', 'stroke', 'fillRect'].includes(c[0]));
-  it('известная смерть — сплошной след; неизвестная — сплошной до последнего упоминания и пунктир; эпохальный — точки ≤ 60 px', () => {
+  it('известная смерть — сплошной след; неизвестная — сплошной до последнего упоминания и растушёвка; эпохальный — точки ≤ 60 px', () => {
     const base = { x0: 10, x1: 210, y: 50.5, color: '#fff', width: 1.2 };
     let r = recording();
     trails.drawLifeTrail(r.ctx, { ...base, cls: 'exact', known: true, solidTo: 210 });
     expect(strokes(r.calls)).toEqual([['moveTo', 10, 50.5], ['lineTo', 210, 50.5], ['stroke']]);
     r = recording();
     trails.drawLifeTrail(r.ctx, { ...base, cls: 'calculated', known: false, solidTo: 90 });
-    expect(strokes(r.calls)).toEqual([
-      ['moveTo', 10, 50.5], ['lineTo', 90, 50.5], ['stroke'],
-      ['setLineDash', [1.5, 3]], ['moveTo', 90, 50.5], ['lineTo', 210, 50.5], ['stroke'], ['setLineDash', []],
-    ]);
+    expect(strokes(r.calls)).toEqual([['moveTo', 10, 50.5], ['lineTo', 90, 50.5], ['stroke'], ['moveTo', 90, 50.5], ['lineTo', 210, 50.5], ['stroke']]);
+    // этап 12, решение 90: конец следа тает (градиент 90→210), а не пунктир
+    expect(r.calls.filter((c) => c[0] === 'createLinearGradient').map((c) => [c[1], c[3]])).toEqual([[90, 210]]);
     r = recording();
     trails.drawLifeTrail(r.ctx, { ...base, cls: 'epochal', known: false, solidTo: 10 });
     expect(strokes(r.calls)).toEqual([['setLineDash', [1, 4]], ['moveTo', 10, 50.5], ['lineTo', 70, 50.5], ['stroke'], ['setLineDash', []]]);

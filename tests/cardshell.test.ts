@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { renderToString } from 'preact-render-to-string';
 import { h, type VNode } from 'preact';
-import { afterClose, clipWords, stackSummaryHead, cardFolded, cardStack, STACK_MAX, pushCard } from '../src/ui/stack.ts';
+import { clipWords, cardFolded, cardTabs, withTab, withoutTab, nextHue, readTabs, TAB_HUES, tabLabel } from '../src/ui/stack.ts';
 import { gridFor, panelKind, unfoldCard, SPINE_W, grid } from '../src/ui/layout.ts';
 import { panel, selected, model } from '../src/state.ts';
 import { contrast } from '../src/ui/contrast.ts';
@@ -19,29 +19,51 @@ import { passport } from './helpers/cards.ts';
 
 const css = (f: string) => readFileSync(join(__dirname, '../src/styles', f), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
 
-describe('стопка карточек как вкладки (решение 18; IX-52, UX-49)', () => {
-  it('«×» активной: она уходит из стопки, активной становится самая недавняя из оставшихся', () => {
-    expect(afterClose(['moisey', 'ruf', 'avraam', 'david'], 'moisey', 'moisey')).toEqual({ stack: ['ruf', 'avraam', 'david'], next: 'ruf' });
+// этап 12, решение 91: стопки «Ещё открыты (N)» больше нет — карточка одна текущая, закреплённые — вкладки. Проверки
+// стопки переведены на вкладки с тем же смыслом: закрытие одной не трогает остальные, закрытая не возвращается сама,
+// предел (шесть карточек) снят решением владельца — вкладок сколько угодно, у каждой свой цвет; вне браузера пусто.
+describe('вкладки закреплённых карточек (решение 91; прежде — стопка, решение 18)', () => {
+  it('«×» вкладки убирает только её, порядок остальных прежний; цвета остальных не меняются', () => {
+    let t = withTab([], 'moisey');
+    for (const id of ['ruf', 'avraam', 'david']) t = withTab(t, id);
+    const hues = new Map(t.map((x) => [x.id, x.hue]));
+    const rest = withoutTab(t, 'ruf');
+    expect(rest.map((x) => x.id)).toEqual(['moisey', 'avraam', 'david']);
+    for (const x of rest) expect(x.hue).toBe(hues.get(x.id));
   });
-  it('последняя карточка закрывается совсем; закрытая не возвращается при следующем выборе', () => {
-    expect(afterClose(['david'], 'david', 'david')).toEqual({ stack: [], next: null });
-    // следующий выбор кладёт в стопку только новое лицо
-    expect(pushCard('ruf', afterClose(['david'], 'david', 'david').stack)).toEqual(['ruf']);
+  it('закрытая вкладка не возвращается сама; повторное закрепление не дублирует', () => {
+    const t = withoutTab(withTab([], 'david'), 'david');
+    expect(t).toEqual([]);
+    expect(withTab(withTab([], 'ruf'), 'ruf').map((x) => x.id)).toEqual(['ruf']);
   });
-  it('«×» строки списка убирает только её: активная остаётся', () => {
-    expect(afterClose(['moisey', 'ruf', 'david'], 'moisey', 'ruf')).toEqual({ stack: ['moisey', 'david'], next: 'moisey' });
+  it('вкладок сколько угодно: у первых восьми — разные цвета, дальше — наименее занятый; вне браузера вкладок нет', () => {
+    let t: ReturnType<typeof withTab> = [];
+    const ids = ['adam', 'sif', 'enos', 'kainan', 'maleleil', 'iared', 'enokh', 'mafusal', 'lamekh', 'noy'];
+    for (const id of ids) t = withTab(t, id);
+    expect(t.length).toBe(ids.length);
+    expect(new Set(t.slice(0, TAB_HUES).map((x) => x.hue)).size).toBe(TAB_HUES);
+    expect(t[TAB_HUES].hue).toBe(0);
+    expect(t[TAB_HUES + 1].hue).toBe(1);
+    // освободившийся цвет достаётся следующей вкладке
+    expect(nextHue(withoutTab(t.slice(0, 4), 'sif'))).toBe(1);
+    expect(cardTabs.value).toEqual([]);
   });
-  it('не больше шести карточек; стопка вне браузера пуста', () => {
-    let st: string[] = [];
-    for (const id of ['adam', 'sif', 'enos', 'kainan', 'maleleil', 'iared', 'enokh']) st = pushCard(id, st);
-    expect(st.length).toBe(STACK_MAX);
-    expect(cardStack.value).toEqual([]);
+  it('память браузера: неизвестные лица, повторы и испорченная запись отбрасываются', () => {
+    expect(readTabs('[{"id":"david","hue":3},{"id":"nobody","hue":1},{"id":"david","hue":4},"ruf"]').map((x) => [x.id, x.hue])).toEqual([
+      ['david', 3],
+      ['ruf', 0],
+    ]);
+    expect(readTabs('{oops')).toEqual([]);
+    expect(readTabs('{"id":"david"}')).toEqual([]);
+    expect(readTabs('[{"id":"ruf","hue":99}]')[0].hue).toBe(0);
   });
-  it('строка «Ещё открыты (N):» согласована с «карточка»', () => {
-    expect(stackSummaryHead(1)).toBe('Ещё открыта (1):');
-    expect(stackSummaryHead(5)).toBe('Ещё открыты (5):');
+  it('надпись вкладки: имя целиком, уточнение целыми словами (VIS-48, VIS-71)', () => {
+    const l = tabLabel('ruf');
+    expect(l.name).toBe('Руфь');
+    expect(l.full.startsWith('Руфь')).toBe(true);
+    if (l.dis) expect(l.full).toContain(l.dis.replace(/…$/, ''));
   });
-  it('уточнение в строке стопки — целыми словами, не посреди слова (VIS-48, CARD-52)', () => {
+  it('уточнение во вкладке — целыми словами, не посреди слова (VIS-48, CARD-52)', () => {
     expect(clipWords('муж Марии', 40)).toBe('муж Марии');
     const long = 'Моавитянка, жена Махлона, затем Вооза, прабабушка Давида';
     const c = clipWords(long, 40)!;

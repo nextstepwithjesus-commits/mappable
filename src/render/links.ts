@@ -271,10 +271,17 @@ class Grid<T> {
 
 /** Следы кадра по строкам: какие живые следы пересекает вертикаль (разрывы, длинные связи). */
 class Trails {
-  private rows: { y: number; x0: number; x1: number; i: number; id: string }[] = [];
+  private rows: { y: number; x0: number; x1: number; i: number; id: string; sy: number }[] = [];
   constructor(stars: readonly LinkStar[]) {
-    for (const s of stars) if (s.x1 !== null && s.x1 > s.x + s.r + 1) this.rows.push({ y: s.y, x0: s.x + s.r, x1: s.x1, i: s.i, id: s.id });
+    // строка следа — там, где его рисует trails.ts (trailOf: середина пикселя), а не середина звезды: иначе вертикаль,
+    // кончающаяся у строки, на полпикселя проходит сквозь нарисованный след без разрыва (этап 12, перепись Я8)
+    for (const s of stars) if (s.x1 !== null && s.x1 > s.x + s.r + 1) this.rows.push({ y: Math.round(s.y) + 0.5, x0: s.x, x1: s.x1, i: s.i, id: s.id, sy: s.y });
     this.rows.sort((a, b) => a.y - b.y);
+  }
+  /** Чужой живой след на строке y (середина звезды) у x: узел союза на нём читался бы узлом этого следа (Г7). */
+  foreignAt(x: number, y: number, skip: string): boolean {
+    for (const t of this.rows) if (t.id !== skip && Math.abs(t.sy - y) < 0.75 && x > t.x0 - 0.5 && x < t.x1 + 0.5) return true;
+    return false;
   }
   /** Живые следы, которые вертикаль x (y0…y1, без концов) пересекает, кроме следов лиц skip. */
   crossing(x: number, y0: number, y1: number, skip: ReadonlySet<string>): { i: number; id: string; y: number }[] {
@@ -624,8 +631,15 @@ function mapLinks(inp: LinkInput): LinkFrame {
     const style = kidStyle(u);
     const near = n.kids.filter((k) => !n.far.has(k.id));
     const plainNear = near.filter((k) => !n.rib.has(k.id));
+    // родовая черта (Г12): у владельца узла нет следа до узла — точками от знака или от конца следа
+    const tail = own.x1 === null ? own.x + own.r + 1.5 : own.x1;
+    const clan = tail < x - 1 && plainNear.length + n.far.size > 0;
+    // строка узла: на следе владельца; у длинной родовой черты (обрывками, Г12) строку владельца к году детей уже занял
+    // чужой след — узел на нём читался бы его узлом (Г7), и узел встаёт между строками, на полстроки к детям
+    // (этап 12, перепись Я8: «Хеврон, сын Каафа» на следе Урии)
+    const ny = clan && x - tail > CLAN_MAX && trails.foreignAt(x, own.y, own.id) ? own.y + (Math.sign(n.kids[0].y - own.y) || 1) * (ky / 2) : own.y;
     // вертикаль гнезда по остановкам: узел, второй родитель, дети; черта брака — от второго родителя до узла
-    const stops = [own.y, ...near.map((k) => k.y), ...(other ? [other.y] : [])].sort((a, b) => a - b);
+    const stops = [ny, ...near.map((k) => k.y), ...(other ? [other.y] : [])].sort((a, b) => a - b);
     const lo = stops[0];
     const hi = stops[stops.length - 1];
     const kidYs = plainNear.map((k) => k.y);
@@ -637,10 +651,10 @@ function mapLinks(inp: LinkInput): LinkFrame {
       if (b - a < 0.5) continue;
       const mid = (a + b) / 2;
       // черта брака: между вторым родителем и узлом, без детей между
-      const isBar = !!other && ((mid - own.y) * (mid - other.y) < 0) && !kidYs.some((y) => (y - a) * (y - b) < 0) && !ribYs.some((y) => (y - a) * (y - b) < 0);
+      const isBar = !!other && ((mid - ny) * (mid - other.y) < 0) && !kidYs.some((y) => (y - a) * (y - b) < 0) && !ribYs.some((y) => (y - a) * (y - b) < 0);
       // отрезок, который проходит только лента (к ребёнку линии за узлом и дальше нет других детей)
-      const beyondPlain = !kidYs.some((y) => (y >= b && own.y <= a) || (y <= a && own.y >= b));
-      const ribOnly = !isBar && beyondPlain && ribYs.some((y) => (y >= b && own.y <= a) || (y <= a && own.y >= b));
+      const beyondPlain = !kidYs.some((y) => (y >= b && ny <= a) || (y <= a && ny >= b));
+      const ribOnly = !isBar && beyondPlain && ribYs.some((y) => (y >= b && ny <= a) || (y <= a && ny >= b));
       if (ribOnly) continue;
       if (isBar) push({ key: spouseKey(u.id, other!.id), kind: 'bar', style: 'solid', pts: [x, a, x, b], ends: [other!.id, own.id], union: u.id, when: 'always' }, skip);
       else push({ key: unionKey(u.id), kind: 'trunk', style, pts: [x, a, x, b], ends: [own.id, ...(other ? [other.id] : []), ...near.map((q) => q.id)], union: u.id, when: 'always' }, skip);
@@ -655,44 +669,47 @@ function mapLinks(inp: LinkInput): LinkFrame {
     // ленты: через узел своего шага
     for (const k of near)
       for (const par of [u.a, u.b])
-        if (par && n.rib.has(k.id) && steps.has(`${par}>${k.id}`)) via.set(`${par}>${k.id}`, { x, y: own.y, union: u.id });
+        if (par && n.rib.has(k.id) && steps.has(`${par}>${k.id}`)) via.set(`${par}>${k.id}`, { x, y: ny, union: u.id });
     // длинные связи (Г11): целиком — только раскрытыми; свёрнутыми — обрывки у узла и у каждого дальнего ребёнка
     const far = n.kids.filter((k) => n.far.has(k.id));
     if (far.length) {
       for (const dir of [-1, 1] as const) {
-        const fs = far.filter((k) => Math.sign(k.y - own.y) === dir);
+        const fs = far.filter((k) => Math.sign(k.y - ny) === dir);
         if (!fs.length) continue;
-        const reach = Math.max(...fs.map((k) => Math.abs(k.y - own.y)));
-        const edge = dir < 0 ? Math.min(own.y, ...near.map((k) => k.y), ...(other ? [other.y] : [])) : Math.max(own.y, ...near.map((k) => k.y), ...(other ? [other.y] : []));
+        const reach = Math.max(...fs.map((k) => Math.abs(k.y - ny)));
+        const edge = dir < 0 ? Math.min(ny, ...near.map((k) => k.y), ...(other ? [other.y] : [])) : Math.max(ny, ...near.map((k) => k.y), ...(other ? [other.y] : []));
+        // от края у второго родителя вертикаль идёт от его следа (он связан чертой брака): его след ей не чужой
+        const at = other && Math.abs(edge - other.y) < 0.5 ? [other.id] : [];
         // целиком: от края ближней части до самого дальнего ребёнка
-        push({ key: unionKey(u.id), kind: 'trunk', style, pts: [x, edge, x, own.y + dir * reach], ends: [own.id, ...fs.map((k) => k.id)], union: u.id, when: 'full' }, skip);
+        push({ key: unionKey(u.id), kind: 'trunk', style, pts: [x, edge, x, ny + dir * reach], ends: [own.id, ...at, ...fs.map((k) => k.id)], union: u.id, when: 'full' }, skip);
         // обрывок у узла
         const sy = edge + dir * STUB_PX;
-        push({ key: unionKey(u.id), kind: 'stub', style, pts: [x, edge, x, sy], ends: [own.id, ...fs.map((k) => k.id)], union: u.id, when: 'short' }, skip);
+        push({ key: unionKey(u.id), kind: 'stub', style, pts: [x, edge, x, sy], ends: [own.id, ...at, ...fs.map((k) => k.id)], union: u.id, when: 'short' }, skip);
         stubs.push({ key: unionKey(u.id), ks: key(unionKey(u.id)), union: u.id, x, y: sy, dir, targets: fs.map((k) => k.id), side: 'parent', kind: 'long' });
       }
       for (const k of far) {
         const e = k.x - k.r - 1.5;
-        const dir = Math.sign(own.y - k.y) as -1 | 1;
+        const dir = Math.sign(ny - k.y) as -1 | 1;
         const ck = childKey(u.id, k.id);
         if (e - x > 0.5) push({ key: ck, kind: 'tooth', style, pts: [x, k.y, e, k.y], ends: [own.id, k.id], union: u.id, when: 'always' }, skip);
         push({ key: ck, kind: 'stub', style, pts: [x, k.y + dir * STUB_PX, x, k.y], ends: [own.id, k.id], union: u.id, when: 'short' }, skip);
         stubs.push({ key: ck, ks: key(ck), union: u.id, x, y: k.y + dir * STUB_PX, dir, targets: [own.id], side: 'child', kind: 'long' });
       }
     }
-    // родовая черта (Г12): у владельца узла нет следа до узла — точками от знака или от конца следа. Гнездо, всех детей
-    // которого ведут ленты, черты не получает: к ним идёт сама лента (Г1)
-    const tail = own.x1 === null ? own.x + own.r + 1.5 : own.x1;
-    if (tail < x - 1 && plainNear.length + n.far.size > 0) {
+    // родовая черта (Г12). Гнездо, всех детей которого ведут ленты, черты не получает: к ним идёт сама лента (Г1)
+    if (clan) {
       const len = x - tail;
       const ck = unionKey(u.id);
       if (len <= CLAN_MAX) push({ key: ck, kind: 'clan', style: 'dots', pts: [tail, own.y, x, own.y], ends: [own.id], union: u.id, when: 'always' }, skip);
       else {
-        push({ key: ck, kind: 'clan', style: 'dots', pts: [tail, own.y, x, own.y], ends: [own.id], union: u.id, when: 'full' }, skip);
+        // целиком — по строке владельца; если узел ушёл между строк (строку занял чужой след), то и черта идёт между строк
+        // от обрывка у конца следа: по чужому следу точки не бегут
+        const full = ny === own.y ? [tail, own.y, x, own.y] : [tail, own.y, tail + STUB_PX, own.y, tail + STUB_PX, ny, x, ny];
+        push({ key: ck, kind: 'clan', style: 'dots', pts: full, ends: [own.id], union: u.id, when: 'full' }, skip);
         push({ key: ck, kind: 'stub', style: 'dots', pts: [tail, own.y, tail + STUB_PX, own.y], ends: [own.id], union: u.id, when: 'short' }, skip);
-        push({ key: ck, kind: 'stub', style: 'dots', pts: [x - STUB_PX, own.y, x, own.y], ends: [own.id], union: u.id, when: 'short' }, skip);
+        push({ key: ck, kind: 'stub', style: 'dots', pts: [x - STUB_PX, ny, x, ny], ends: [own.id], union: u.id, when: 'short' }, skip);
         stubs.push({ key: ck, ks: key(ck), union: u.id, x: tail + STUB_PX, y: own.y, dir: 0, targets: n.kids.map((k) => k.id), side: 'parent', kind: 'clan' });
-        stubs.push({ key: ck, ks: key(ck), union: u.id, x: x - STUB_PX, y: own.y, dir: 0, targets: [own.id], side: 'child', kind: 'clan' });
+        stubs.push({ key: ck, ks: key(ck), union: u.id, x: x - STUB_PX, y: ny, dir: 0, targets: [own.id], side: 'child', kind: 'clan' });
       }
     }
     // узел: ◆ у первого гнезда союза, • у следующих
@@ -706,7 +723,7 @@ function mapLinks(inp: LinkInput): LinkFrame {
       union: u.id,
       key: unionKey(u.id),
       x,
-      y: own.y,
+      y: ny,
       open: true,
       count: null,
       mother: n.first ? farMother : null,
@@ -1259,6 +1276,96 @@ function segRect(ax: number, ay: number, bx: number, by: number, x0: number, y0:
     if (t0 > t1) return false;
   }
   return true;
+}
+
+/** Отрезок (x0, y0, x1, y1), px. */
+export type Seg = readonly [number, number, number, number];
+
+/**
+ * Путь по нарисованным линиям от точки a до точки b (этап 12, решение 88: выбранная связь целиком — от звезды родителя
+ * по его следу и стволам до узла союза): кратчайший по длине путь по отрезкам segs. Отрезки соединяются только в точках:
+ * в концах и там, где конец одного лежит на другом (у ствола на следе, у зубца на стволе); пересечение без общей точки —
+ * не соединение (Г7). Точки a и b должны лежать на каком-то отрезке. Возвращает ломаную x0, y0, x1, y1, … без лишних
+ * точек на прямых; null — пути нет.
+ */
+export function routeOver(segs: readonly Seg[], a: { x: number; y: number }, b: { x: number; y: number }): number[] | null {
+  const EPS = 0.8;
+  const P: { x: number; y: number }[] = [];
+  const idx = new Map<string, number>();
+  const id = (x: number, y: number) => {
+    const k = `${Math.round(x * 2)}|${Math.round(y * 2)}`;
+    let i = idx.get(k);
+    if (i === undefined) {
+      i = P.length;
+      P.push({ x, y });
+      idx.set(k, i);
+    }
+    return i;
+  };
+  const ia = id(a.x, a.y);
+  const ib = id(b.x, b.y);
+  if (ia === ib) return [a.x, a.y];
+  for (const s of segs) {
+    id(s[0], s[1]);
+    id(s[2], s[3]);
+  }
+  const adj: { j: number; w: number }[][] = P.map(() => []);
+  for (const s of segs) {
+    const dx = s[2] - s[0];
+    const dy = s[3] - s[1];
+    const l2 = dx * dx + dy * dy;
+    if (l2 < 0.01) continue;
+    const on: { t: number; i: number }[] = [];
+    for (let i = 0; i < P.length; i++) {
+      const q = P[i];
+      const t = ((q.x - s[0]) * dx + (q.y - s[1]) * dy) / l2;
+      if (t < -0.001 || t > 1.001) continue;
+      if (Math.hypot(s[0] + t * dx - q.x, s[1] + t * dy - q.y) < EPS) on.push({ t, i });
+    }
+    on.sort((u, v) => u.t - v.t);
+    for (let k = 0; k + 1 < on.length; k++) {
+      const i = on[k].i;
+      const j = on[k + 1].i;
+      if (i === j) continue;
+      const w = Math.hypot(P[j].x - P[i].x, P[j].y - P[i].y);
+      adj[i].push({ j, w });
+      adj[j].push({ j: i, w });
+    }
+  }
+  // Дейкстра: точек — сотни, простой перебор
+  const dist = new Float64Array(P.length).fill(Infinity);
+  const prev = new Int32Array(P.length).fill(-1);
+  const done = new Uint8Array(P.length);
+  dist[ia] = 0;
+  for (;;) {
+    let u = -1;
+    for (let i = 0; i < P.length; i++) if (!done[i] && dist[i] < Infinity && (u < 0 || dist[i] < dist[u])) u = i;
+    if (u < 0 || u === ib) break;
+    done[u] = 1;
+    for (const e of adj[u])
+      if (dist[u] + e.w < dist[e.j]) {
+        dist[e.j] = dist[u] + e.w;
+        prev[e.j] = u;
+      }
+  }
+  if (!(dist[ib] < Infinity)) return null;
+  const chain: number[] = [];
+  for (let i = ib; i >= 0; i = prev[i]) chain.push(i);
+  chain.reverse();
+  const out: number[] = [];
+  for (let k = 0; k < chain.length; k++) {
+    const q = P[chain[k]];
+    const n = out.length;
+    // точка на прямой между соседними — лишняя
+    if (n >= 2 && k + 1 < chain.length) {
+      const r = P[chain[k + 1]];
+      const px = out[n - 2];
+      const py = out[n - 1];
+      if ((Math.abs(px - q.x) < 0.01 && Math.abs(q.x - r.x) < 0.01) || (Math.abs(py - q.y) < 0.01 && Math.abs(q.y - r.y) < 0.01)) continue;
+    }
+    out.push(q.x, q.y);
+  }
+  return out;
 }
 
 /** Расстояние от точки до отрезка. */

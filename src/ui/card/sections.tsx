@@ -37,6 +37,8 @@ import { BirthLine, RelativeChrono, YearMark } from './Chrono.tsx';
 import { candidateFor, linkCandidates, linkNames, mentionsPerson, type LinkCand } from './links.tsx';
 import { UnionLink } from './Union.tsx';
 import { unionById, unionsOf } from '../reveal.ts';
+import { coparents } from './kinrows.ts';
+import { askCards } from './star.ts';
 import { unionId, type Union } from '../../engine/unions.ts';
 
 type AtlasPerson = NonNullable<ReturnType<typeof byId.get>>;
@@ -1518,8 +1520,13 @@ export function buildSections(
       p.sex === 'm' ? (s.kind === 'concubine' ? 'наложница' : 'жена') : s.kind === 'concubine' ? 'муж; она названа его наложницей' : 'муж';
     // описательное имя уже называет родство («Жена-Ефиоплянка Моисея»): подпись «— жена» была бы тавтологией
     const saysItself = (other: string, s: (typeof sp)[number]['s']) => byId.get(other)!.name.toLowerCase().startsWith(spouseLabel(s).split(';')[0]);
-    const same9 = namesakesIn(id, sp.map((x) => x.other));
-    const fate = placeNotes(card?.spousesNote, sp.map((x) => ({ id: x.other, refs: x.s.refs })));
+    // второй родитель детей, которого текст не называет супругом (решение 92): «Наама, Аммонитянка — мать Ровоама
+    // (3 Цар 14:21)»; словами текста, без слова «жена» (дочери Лота, Фамарь — Иуда). Стихи — те, где назван этот
+    // родитель: из тома ребёнка (parentRefsBy), он подгружается
+    const co = coparents(id);
+    if (co.length) askCards(co.flatMap((x) => x.kids));
+    const same9 = namesakesIn(id, [...sp.map((x) => x.other), ...co.map((x) => x.other)]);
+    const fate = placeNotes(card?.spousesNote, [...sp.map((x) => ({ id: x.other, refs: x.s.refs })), ...co.map((x) => ({ id: x.other, refs: x.refs }))]);
     // пояснения: подробная заметка под строкой заменяет короткое; общее у нескольких жён — одной строкой после группы
     const shortNotes = sp.map((x) => (x.s.note && !(fate.attach.get(x.other) ?? []).some((f) => noteRepeats(x.s.note!, f.text)) ? x.s.note : undefined));
     const { own: own0, shared } = sharedClauses(shortNotes, sp.map((x) => byId.get(x.other)!.sex));
@@ -1533,7 +1540,14 @@ export function buildSections(
       addSeen(seen9, ...out.map((f) => f.text));
       return out;
     });
-    const keep9 = fresh(fate.keep, seen9, sp.flatMap((x) => x.s.refs));
+    const underCo = co.map((x) => {
+      const rowSeen = addSeen(new Set<string>(), byId.get(x.other)!.name, x.dis ?? '', x.role, ...x.kids.map((k) => byId.get(k)!.name));
+      addSeen(seen9, byId.get(x.other)!.name, x.role);
+      const out = fresh(fate.attach.get(x.other), rowSeen, x.refs);
+      addSeen(seen9, ...out.map((f) => f.text));
+      return out;
+    });
+    const keep9 = fresh(fate.keep, seen9, [...sp.flatMap((x) => x.s.refs), ...co.flatMap((x) => x.refs)]);
     /**
      * Три и больше жён (CARD-93): первой строкой — «Жёны: Мелхола, Ахиноама, …, Вирсавия»; ниже — каждая со стихами
      * и пояснением, уже без «— жена»: термин назван в первой строке.
@@ -1542,7 +1556,7 @@ export function buildSections(
     const kinds = summary ? (['wife', 'concubine'] as const).map((k) => ({ k, ids: sp.filter((x) => (x.s.kind === 'concubine' ? 'concubine' : 'wife') === k).map((x) => x.other) })).filter((g) => g.ids.length) : [];
     put(
       9,
-      has(sp, keep9) && (
+      has(sp, co, keep9) && (
         <>
           {summary ? (
             <p class="fact">
@@ -1576,6 +1590,22 @@ export function buildSections(
                   </li>
                   {shared.has(i) ? <li class="note">{L(shared.get(i)!)}</li> : null}
                 </Fragment>
+              ))}
+            </ul>
+          ) : null}
+          {co.length ? (
+            <ul>
+              {co.map((x, i) => (
+                <li class="fact" key={`c${x.other}`}>
+                  <PN id={x.other} dis={same9.has(x.other)} after={x.dis ? ',' : undefined} />
+                  {x.dis ? ` ${x.dis}` : null}
+                  {x.role ? <span class="muted"> — {x.role}</span> : null}
+                  <Refs refs={x.refs} owner={ns + `c9.${i}`} />
+                  <Mark cert={x.union.kidsCert} />
+                  {unionAfter(x.union)}
+                  {subNotes(underCo[i], x.refs, `c9n${i}.`, { ids: [x.other, ...x.kids], label: x.role.split(' ')[0] || undefined })}
+                  <VerseInsert owner={ns + `c9.${i}`} refs={x.refs} />
+                </li>
               ))}
             </ul>
           ) : null}

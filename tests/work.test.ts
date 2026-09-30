@@ -7,7 +7,7 @@ import { describe, it, expect } from 'vitest';
 import { byId, graph, groupById, lines, models } from '../src/data/atlas.ts';
 import { identityRows, planSky, rowsFromHeights, walk, ROW_GAP, type PlanData, type SkyView } from '../src/render/rows.ts';
 import {
-  addPath, addToWork, cardStack, clearWork, lineOf, pushCard, removeFromWork, removeWithLine, scopeIds, STACK_MAX, workOrder, workSet,
+  addPath, addToWork, cardTabs, clearWork, lineOf, withTab, removeFromWork, removeWithLine, scopeIds, workOrder, workSet,
 } from '../src/ui/work.ts';
 
 const m = models[0];
@@ -195,15 +195,17 @@ describe('сжатие полос (J4, J5; src/render/rows.ts)', () => {
   });
 });
 
-describe('стопка карточек (J6)', () => {
-  it('выбор кладёт карточку наверх; повтор не дублирует; не больше шести', () => {
-    let st: string[] = [];
-    for (const id of ['ruf', 'vooz', 'david', 'ruf']) st = pushCard(id, st);
-    expect(st).toEqual(['ruf', 'david', 'vooz']);
-    for (const id of ['adam', 'sif', 'enos', 'kainan', 'maleleil']) st = pushCard(id, st);
-    expect(st.length).toBe(STACK_MAX);
-    expect(st[0]).toBe('maleleil');
-    expect(st).not.toContain('vooz');
-    expect(cardStack.value).toEqual([]);
+// этап 12, решение 91: стопка (J6) заменена вкладками закреплённых карточек — тот же смысл: закрепление кладёт вкладку
+// в конец, повтор не дублирует; предела шести больше нет (решение владельца); вне браузера пусто
+describe('вкладки закреплённых карточек (решение 91; прежде — стопка J6)', () => {
+  it('закрепление кладёт вкладку в конец; повтор не дублирует; предела нет', () => {
+    let t: ReturnType<typeof withTab> = [];
+    for (const id of ['ruf', 'vooz', 'david', 'ruf']) t = withTab(t, id);
+    expect(t.map((x) => x.id)).toEqual(['ruf', 'vooz', 'david']);
+    for (const id of ['adam', 'sif', 'enos', 'kainan', 'maleleil']) t = withTab(t, id);
+    expect(t.length).toBe(8);
+    expect(t[t.length - 1].id).toBe('maleleil');
+    expect(t.map((x) => x.id)).toContain('vooz');
+    expect(cardTabs.value).toEqual([]);
   });
 });

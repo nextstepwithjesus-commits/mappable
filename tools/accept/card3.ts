@@ -151,22 +151,33 @@ export const card3: Scenario[] = [
   },
   {
     n: 423,
-    title: 'VIS-71, UX-75: строка стопки — имена целиком, не поместившиеся — «и ещё N», без многоточия; две карточки — обе по имени',
+    // этап 12, решение 91: строки стопки нет — имена стоят во вкладках; смысл прежний (VIS-71, UX-75): имя целиком, без
+    // многоточия, строка не обрезана краем листа
+    title: 'VIS-71, UX-75 (решение 91): во вкладке — имя целиком, уточнение целыми словами, без обрезки посреди слова; строка вкладки не шире листа',
     run: async (p) => {
       await go(p, '#/david', 1800);
+      const pin = async () => {
+        await p.locator('.folio .folio-bar .pin-card').click();
+        await p.waitForTimeout(250);
+      };
+      await pin();
       await find(p, 'Руфь');
-      const two = (await p.locator('.folio .stack-sum .names').innerText()).trim();
-      if (two !== 'Давид') return fail(`при двух карточках: «${two}»`);
+      await pin();
+      await find(p, 'Иосиф');
+      await pin();
       await find(p, 'Соломон');
-      await find(p, 'Вооз');
-      const t = (await p.locator('.folio .stack-sum .names').innerText()).trim();
-      if (/…/.test(t)) return fail(`многоточие: «${t}»`);
-      if (!/^(Соломон, Руфь, Давид|Соломон, Руфь и ещё 1|Соломон и ещё 2)$/.test(t)) return fail(`строка «${t}»`);
-      const fit = await p.evaluate(() => {
-        const el = document.querySelector('.folio .stack-sum .names') as HTMLElement;
-        return el.scrollWidth <= el.clientWidth + 1;
-      });
-      return fit ? pass(t) : fail(`«${t}» обрезана`);
+      const names = (await p.locator('.folio .card-tabs .nm').allInnerTexts()).map((t) => t.trim());
+      if (names.join(', ') !== 'Давид, Руфь, Иосиф') return fail(`вкладки: ${names.join(', ')}`);
+      if (names.some((n) => /…/.test(n))) return fail(`многоточие в имени: ${names.join(', ')}`);
+      const r = await p.evaluate(`[...document.querySelectorAll('.folio .card-tab')].map((li) => {
+        const b = li.querySelector('.tab-open'); const ds = li.querySelector('.ds');
+        return { fit: b.scrollWidth <= b.clientWidth + 1, ds: ds ? ds.textContent : '', full: b.getAttribute('aria-label') };
+      })`) as { fit: boolean; ds: string; full: string }[];
+      for (const x of r) {
+        if (!x.fit) return fail(`строка вкладки обрезана краем: ${x.full}`);
+        if (x.ds.endsWith('…') && !x.full.replace(/\u00a0/g, ' ').includes(x.ds.slice(0, -1).replace(/\u00a0/g, ' ').replace(/[,;]$/, ''))) return fail(`уточнение не по словам: «${x.ds}» из «${x.full}»`);
+      }
+      return pass(r.map((x) => x.full).join(' | '));
     },
   },
   {

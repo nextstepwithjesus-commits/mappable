@@ -2,10 +2,12 @@
  * Следы жизни и родство на небе (ТЗ § 3.1, «след жизни» и «связи»; A14, E4).
  *
  * След жизни честно показывает меру уверенности (A14; MAP-12, 13, 14):
- *  — смерть известна — сплошной след до неё; у оценочной даты конец — пунктиром до края интервала смерти;
- *  — известно только последнее упоминание — сплошной след до него и пунктир 10 px;
- *  — не известно ничего — только пунктир 10 px от звезды: условной длительности жизни на небе нет;
- *  — оценочное рождение — начало следа пунктиром до конца интервала рождения (bHi);
+ *  — смерть известна — сплошной след до неё; у оценочной даты конец тает к краю интервала смерти;
+ *  — известно только последнее упоминание — сплошной след до него и тающий хвост 10 px;
+ *  — не известно ничего — только тающий хвост 10 px от звезды: условной длительности жизни на небе нет;
+ *  — оценочное рождение — начало следа проявляется от звезды до конца интервала рождения (bHi);
+ *  — неуверенность — растушёвкой, а не точками (этап 12, решение 90): точки на небе значат только толкование
+ *    и «время не установлено» (Г10);
  *  — умерший младенцем, народ или род из таблицы народов, лицо скопления-списка — без следа (знаки — glyphs.ts).
  *
  * Семьи (E4; MAP-15, 16, 20, 22, 73, 74, 76, 80; UX-34):
@@ -48,10 +50,58 @@ import { atlasCoord } from '../engine/layout.ts';
 import { unions as ALL_UNIONS } from '../ui/reveal.ts';
 import { unionName } from '../ui/linkwords.ts';
 
-/** Пунктир неуверенного начала и конца следа. */
-export const TRAIL_DOTS = [1.5, 3];
-/** Пунктир после последнего упоминания, px (MAP-13). */
+/**
+ * Растушёвка неуверенного начала и конца следа (этап 12, решение 90): тот же след, плавно тающий к краю, — вместо
+ * пунктира (точки на небе значат только толкование и «время не установлено», Г10). start — доля яркости у звезды
+ * при оценочном рождении (след проявляется к концу интервала рождения), end — у конца интервала смерти и у конца
+ * короткого хвоста после последнего упоминания.
+ */
+export const TRAIL_FADE = { start: 0.22, end: 0 };
+/** Часть следа за разрывом «//» (MAP-51) — бледнее: доля яркости сплошного следа. */
+export const TRAIL_PALE = 0.45;
+/** Растушёванный хвост после последнего упоминания, px (MAP-13; ТЗ § 3.1, «коротким пунктиром» — теперь растушёвкой). */
 export const TAIL_PX = 10;
+
+/** Разобранные цвета следов: строк цвета на кадр — десятки, следов — тысячи. */
+const rgbaMemo = new Map<string, { rgb: string; a: number } | null>();
+/** Цвет следа как «r, g, b» и непрозрачность — для растушёвки; null — цвет не разобран (растушёвки нет, линия ровная). */
+function rgbaOf(c: string): { rgb: string; a: number } | null {
+  let out = rgbaMemo.get(c);
+  if (out === undefined) {
+    out = parseRgba(c);
+    if (rgbaMemo.size > 512) rgbaMemo.clear();
+    rgbaMemo.set(c, out);
+  }
+  return out;
+}
+function parseRgba(c: string): { rgb: string; a: number } | null {
+  const s = c.trim();
+  if (s.startsWith('#') && (s.length === 7 || s.length === 4)) {
+    const h = s.length === 4 ? s.replace(/[0-9a-f]/gi, (d) => d + d) : s;
+    return { rgb: `${parseInt(h.slice(1, 3), 16)},${parseInt(h.slice(3, 5), 16)},${parseInt(h.slice(5, 7), 16)}`, a: 1 };
+  }
+  const m = /^rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*(?:,\s*([\d.]+)\s*)?\)$/.exec(s);
+  return m ? { rgb: `${m[1]},${m[2]},${m[3]}`, a: m[4] === undefined ? 1 : Number(m[4]) } : null;
+}
+
+/**
+ * Растушёванный участок следа [a, b] на высоте y (решение 90): яркость линейно от k0 у a до k1 у b (доли яркости цвета
+ * color), с просветами cuts. Одна линия с градиентом вдоль неё — без точек и штриха.
+ */
+export function fadeLine(ctx: CanvasRenderingContext2D, a: number, b: number, y: number, color: string, k0: number, k1: number, cuts?: readonly number[]) {
+  if (!(b > a + 0.5)) return;
+  const c = rgbaOf(color);
+  if (c) {
+    const g = ctx.createLinearGradient(a, 0, b, 0);
+    g.addColorStop(0, `rgba(${c.rgb},${+(c.a * k0).toFixed(3)})`);
+    g.addColorStop(1, `rgba(${c.rgb},${+(c.a * k1).toFixed(3)})`);
+    ctx.strokeStyle = g;
+  } else ctx.strokeStyle = color;
+  ctx.beginPath();
+  gapLine(ctx, a, b, y, cuts);
+  ctx.stroke();
+  ctx.strokeStyle = color;
+}
 
 /** Одиночный след жизни в px холста. */
 export interface LifeTrail {
@@ -66,11 +116,11 @@ export interface LifeTrail {
   known: boolean;
   /** где кончается сплошная часть: смерть, начало интервала смерти или последнее упоминание */
   solidTo: number;
-  /** оценочное рождение: до этой x (bHi) начало следа — пунктиром; нет — сплошной от звезды */
+  /** оценочное рождение: до этой x (bHi) начало следа проявляется от звезды (растушёвка); нет — сплошной от звезды */
   sureFrom?: number;
   /**
    * Разрыв (MAP-51; решение 24): x, где кончается правдоподобная часть следа (рождение + предел жизни эпохи). Дальше —
-   * знак «//» и пунктир: сплошная жизнь в 190 и 257 лет — не факт, а растянутое родословие.
+   * знак «//» и бледный след: сплошная жизнь в 190 и 257 лет — не факт, а растянутое родословие.
    */
   brk?: number;
   color: string;
@@ -97,10 +147,6 @@ export function drawBreak(ctx: CanvasRenderingContext2D, x: number, y: number, c
   ctx.stroke();
 }
 
-/**
- * След жизни: пунктир от звезды до sureFrom (оценочное рождение), сплошной до solidTo; дальше до x1 — пунктир,
- * если смерть не известна или дата оценочная. Эпохальная дата — точечный след не длиннее 60 px.
- */
 /**
  * Горизонталь [a, b] на высоте y — с просветами cuts (пары «x, полуширина»): отрезки добавляются в текущий путь.
  * Разрыв (Г7) — просвет в следе там, где его пересекает чужая связь.
@@ -130,6 +176,11 @@ export function gapLine(ctx: CanvasRenderingContext2D, a: number, b: number, y: 
   }
 }
 
+/**
+ * След жизни (решение 90): оценочное рождение — начало следа проявляется от звезды до sureFrom (конец интервала
+ * рождения), дальше сплошной до solidTo; если смерть не известна или дата оценочная — до x1 след тает к краю. За разрывом
+ * «//» — бледнее. Точек и пунктира на следе нет; эпохальная дата («время не установлено») — точечный след не длиннее 60 px.
+ */
 export function drawLifeTrail(ctx: CanvasRenderingContext2D, t: LifeTrail) {
   const { x0, x1, y } = t;
   const cuts = t.cuts;
@@ -144,16 +195,10 @@ export function drawLifeTrail(ctx: CanvasRenderingContext2D, t: LifeTrail) {
     return;
   }
   const solidTo = Math.max(x0, t.solidTo);
-  // оценочное рождение: начало следа до bHi — пунктиром (но не дальше засвидетельствованного)
+  // оценочное рождение: начало следа до bHi проявляется от звезды (но не дальше засвидетельствованного)
   const from = Math.max(x0, Math.min(t.sureFrom ?? x0, solidTo));
-  if (from > x0 + 0.5) {
-    ctx.setLineDash(TRAIL_DOTS);
-    ctx.beginPath();
-    gapLine(ctx, x0, from, y, cuts);
-    ctx.stroke();
-    ctx.setLineDash([]);
-  }
-  // разрыв (MAP-51): сплошная часть кончается у brk, за знаком «//» — пунктир до конца засвидетельствованного
+  if (from > x0 + 0.5) fadeLine(ctx, x0, from, y, t.color, TRAIL_FADE.start, 1, cuts);
+  // разрыв (MAP-51): сплошная часть кончается у brk, за знаком «//» — бледнее до конца засвидетельствованного
   const cut = t.brk !== undefined && t.brk > from + 4 && t.brk < solidTo - 4 ? t.brk : null;
   const solidEnd = cut !== null ? cut - BREAK.gap / 2 - 2 : solidTo;
   if (solidEnd > from + 0.5) {
@@ -163,21 +208,13 @@ export function drawLifeTrail(ctx: CanvasRenderingContext2D, t: LifeTrail) {
     ctx.stroke();
     if (t.dash?.length) ctx.setLineDash([]);
   }
+  const tail = (!t.known || t.cls === 'estimated') && x1 > solidTo + 0.5;
   if (cut !== null) {
     drawBreak(ctx, cut, y, t.color);
-    ctx.setLineDash(TRAIL_DOTS);
-    ctx.beginPath();
-    gapLine(ctx, cut + BREAK.gap / 2 + 2, solidTo, y, cuts);
-    ctx.stroke();
-    ctx.setLineDash([]);
+    fadeLine(ctx, cut + BREAK.gap / 2 + 2, solidTo, y, t.color, TRAIL_PALE, TRAIL_PALE, cuts);
   }
-  if ((!t.known || t.cls === 'estimated') && x1 > solidTo + 0.5) {
-    ctx.setLineDash(TRAIL_DOTS);
-    ctx.beginPath();
-    gapLine(ctx, solidTo, x1, y, cuts);
-    ctx.stroke();
-    ctx.setLineDash([]);
-  }
+  // неизвестная или оценочная смерть: след тает к концу интервала смерти (к концу короткого хвоста)
+  if (tail) fadeLine(ctx, solidTo, x1, y, t.color, cut !== null ? TRAIL_PALE : 1, TRAIL_FADE.end, cuts);
 }
 
 /**
@@ -1386,19 +1423,30 @@ function pathEmph(p: Pass, q: Pick<LinkPath, 'ends'>): number {
   return Math.min(p.emph(e[0]), rest);
 }
 
-/** Цвет ветви у пути к потомкам выбранного (решение 69, § 9): зубец — цветом ребёнка; ствол — общим цветом детей ветви. */
-function pathBranch(bf: ReturnType<typeof branchFrame>, p: Pass, q: LinkPath): string | null {
-  if (!bf.map || q.kind === 'bar' || q.kind === 'jog' || q.kind === 'clan') return null;
+/**
+ * Общий цвет ветви у лиц ids (решение 69): цвет (#rrggbb) и яркость, если все потомки выбранного среди них — одной ветви;
+ * null — среди них нет потомков выбранного или ветви разные. Им красятся ствол союза и его ромб (решение 87).
+ */
+export function commonBranch(bf: ReturnType<typeof branchFrame>, p: Pass, ids: readonly string[], from = 0): { color: string; a: number } | null {
+  if (!bf.map) return null;
   let color: string | null = null;
   let a = 0;
-  for (let k = 1; k < q.ends.length; k++) {
-    const bp = bf.paint(q.ends[k]);
+  for (let k = from; k < ids.length; k++) {
+    const id = ids[k];
+    const bp = bf.paint(id);
     if (!bp) continue;
     if (color && color !== bp.color) return null;
     color = bp.color;
-    a = Math.max(a, branchAlpha(bp, p.emph(q.ends[k]), p.s.intro));
+    a = Math.max(a, branchAlpha(bp, p.emph(id), p.s.intro));
   }
-  return color ? alpha(color, a) : null;
+  return color ? { color, a } : null;
+}
+
+/** Цвет ветви у пути к потомкам выбранного (решение 69, § 9): зубец — цветом ребёнка; ствол — общим цветом детей ветви. */
+function pathBranch(bf: ReturnType<typeof branchFrame>, p: Pass, q: LinkPath): string | null {
+  if (!bf.map || q.kind === 'bar' || q.kind === 'jog' || q.kind === 'clan') return null;
+  const c = commonBranch(bf, p, q.ends, 1);
+  return c ? alpha(c.color, c.a) : null;
 }
 
 /**

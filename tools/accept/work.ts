@@ -505,7 +505,7 @@ const view: Scenario[] = [
 ];
 
 // workset
-// J3–J6 (агент workset): рабочий набор, небо по набору, свёртка, стопка карточек. Проверки — по разметке и замерам неба:
+// J3–J6 (агент workset): рабочий набор, небо по набору, свёртка, стопка карточек (этап 12, решение 91: вкладки). Проверки — по разметке и замерам неба:
 // .sky canvas[data-mode|data-rows|data-named|data-folds|data-fold-hits], .sky[data-labels], localStorage «toledot:work».
 import type { Page } from 'playwright';
 import { pass as ok, fail as no, find as seek, hashId as idOf } from './kit.ts';
@@ -925,54 +925,59 @@ const workset: Scenario[] = [
   },
   {
     n: 213,
-    // этап 7 (решение 18; CARD-52, IX-52, VIS-44): стопка — одна строка «Ещё открыты (N): …», список — по щелчку;
-    // «Свернуть карточку» — корешок 56 px; «×» строки закрывает её карточку
-    title: 'J6 мышью: стопка — строка «Ещё открыты (N)», по щелчку список «имя, годы, уточнение»; щелчок делает активной; «Свернуть карточку» — корешок; «×»',
+    // этап 12, решение 91 (прежде — стопка J6, решение 18): закреплённые карточки — вкладки строками вверху листа
+    // (метка, имя, уточнение, «×»); щелчок по вкладке раскрывает её; «Свернуть карточку» — корешок; «×» вкладки
+    title: 'J6 → решение 91, мышью: закреплённые карточки — вкладки строками «метка, имя, уточнение, ×»; щелчок раскрывает; «Свернуть карточку» — корешок с вкладками; «×» вкладки закрывает только её',
     run: async (p) => {
-      await wgo(p, '#/ruf', 1800);
-      await wgo(p, '#/vooz', 1800);
-      await wgo(p, '#/david', 2000);
-      const sum = p.locator('.folio .folio-bar .stack-sum');
-      const openList = async () => {
-        if ((await sum.getAttribute('aria-expanded')) !== 'true') await sum.click();
+      const pin = async () => {
+        await p.locator('.folio .folio-bar .pin-card').click();
         await p.waitForTimeout(250);
       };
-      const rows = () => p.locator('.folio .stack .stack-row');
-      const ids = async () => rows().evaluateAll((els) => els.map((e) => (e as HTMLElement).dataset.id));
-      if (!/^Ещё открыты \(2\): Вооз, Руфь$/.test(nbsp((await sum.getAttribute('aria-label')) ?? '').replace(/\s+/g, ' '))) return no(`строка стопки: ${await sum.getAttribute('aria-label')}`);
-      await openList();
-      if ((await ids()).join(' ') !== 'vooz ruf') return no(`строки стопки: ${(await ids()).join(' ')}`);
-      const t = nbsp(await rows().first().innerText()).replace(/\s+/g, ' ');
-      if (!/^Вооз род\. ок\. .+ сын Салмона/.test(t)) return no(`строка: «${t}»`);
-      await rows().nth(1).locator('.sr-open').click();
+      await wgo(p, '#/ruf', 1800);
+      await pin();
+      await wgo(p, '#/vooz', 1800);
+      await pin();
+      await wgo(p, '#/david', 2000);
+      const rows = () => p.locator('.folio .card-tabs .card-tab');
+      const ids = async () => rows().evaluateAll((els) => els.map((e) => `${(e as HTMLElement).dataset.id}${e.hasAttribute('data-open') ? '*' : ''}`));
+      if ((await ids()).join(' ') !== 'ruf vooz') return no(`вкладки: ${(await ids()).join(' ')}`);
+      const t = nbsp(await rows().nth(1).locator('.tab-open').innerText()).replace(/\s+/g, ' ');
+      if (!/^Вооз .*Салмона/.test(t)) return no(`строка вкладки: «${t}»`);
+      if (!(await rows().nth(1).locator('.tab-mark').count())) return no('у вкладки нет цветной метки');
+      await rows().first().locator('.tab-open').click();
       await p.waitForTimeout(900);
-      if (idOf(p) !== 'ruf') return no(`после щелчка по Руфи выбрано ${idOf(p)}`);
-      await openList();
-      if ((await ids()).join(' ') !== 'david vooz') return no(`стопка после щелчка: ${(await ids()).join(' ')}`);
+      if (idOf(p) !== 'ruf') return no(`после щелчка по вкладке Руфи выбрано ${idOf(p)}`);
+      if ((await ids()).join(' ') !== 'ruf* vooz') return no(`вкладки после щелчка: ${(await ids()).join(' ')}`);
       await p.locator('.folio .fold-card').click();
       await p.waitForTimeout(500);
       if (!(await p.locator('.folio.spine').count()) || (await p.locator('.folio .mast').count())) return no('«Свернуть карточку» не свернула лист в корешок');
+      if ((await p.locator('.folio.spine .spine-tabs .nm').allInnerTexts()).join(' ') !== 'Вооз') return no('на корешке нет вкладки Вооза');
       await p.locator('.folio.spine .unfold').click();
       await p.waitForTimeout(500);
       if (!(await p.locator('.folio .mast').count())) return no('«развернуть» не развернул');
-      await openList();
-      await rows().first().locator('.close').click();
+      await rows().nth(1).locator('.close').click();
       await p.waitForTimeout(300);
-      return (await ids()).join(' ') === 'vooz' && idOf(p) === 'ruf' ? ok() : no(`после «×» строки: ${(await ids()).join(' ')}, выбрано ${idOf(p)}`);
+      return (await ids()).join(' ') === 'ruf*' && idOf(p) === 'ruf' ? ok() : no(`после «×» вкладки: ${(await ids()).join(' ')}, выбрано ${idOf(p)}`);
     },
   },
   {
     n: 214,
-    title: 'J6: щелчок по звезде на небе кладёт её карточку наверх стопки; стопка — не больше 6 лиц и помнится в сеансе',
+    // этап 12, решение 91: щелчок по звезде открывает карточку на месте текущей (не добавляет вкладку); вкладки помнятся
+    // в браузере; предела шести (J6) больше нет — вкладок сколько угодно
+    title: 'J6 → решение 91: щелчок по звезде открывает её карточку на месте текущей — вкладки не меняются; вкладок больше шести, они помнятся в браузере',
     run: async (p) => {
       await wgo(p, '#/ruf', 1800);
       const ruth = await worldSel(p);
-      for (const id of ['vooz', 'adam', 'sif', 'enos', 'kainan', 'maleleil']) await wgo(p, `#/${id}`, 900);
-      await p.waitForTimeout(800);
-      // стопка кроме активной — из памяти сеанса (список в листе раскрывается только по щелчку, решение 18)
-      const ids = async () => ((await p.evaluate(`JSON.parse(sessionStorage.getItem('toledot:stack') || '{}').ids || []`)) as string[]).filter((x) => x !== idOf(p));
+      const ids = async () => (await p.locator('.folio .card-tabs .card-tab').evaluateAll((els) => els.map((e) => (e as HTMLElement).dataset.id))).join(' ');
+      await p.locator('.folio .folio-bar .pin-card').click();
+      for (const id of ['vooz', 'adam', 'sif', 'enos', 'kainan', 'maleleil']) {
+        await wgo(p, `#/${id}`, 900);
+        await p.locator('.folio .folio-bar .pin-card').click();
+        await p.waitForTimeout(150);
+      }
+      await p.waitForTimeout(500);
       const a = await ids();
-      if (a.length !== 5 || a.includes('ruf')) return no(`строки стопки (6 лиц, Руфь — седьмая): ${a.join(' ')}`);
+      if (a !== 'ruf vooz adam sif enos kainan maleleil') return no(`вкладки (семь): ${a}`);
       // вернуться к Руфи щелчком по её звезде на небе
       await wgo(p, '#/vooz', 1800);
       const pt = await screenOfWorld(p, ruth!);
@@ -980,32 +985,38 @@ const workset: Scenario[] = [
       await p.waitForTimeout(900);
       if (idOf(p) !== 'ruf') return no(`щелчок по звезде Руфи выбрал «${idOf(p)}»`);
       const b = await ids();
-      if (b[0] !== 'vooz' || b.length !== 5) return no(`стопка после щелчка: ${b.join(' ')}`);
+      if (b !== a) return no(`вкладки после щелчка: ${b}`);
       await p.reload();
       await p.waitForTimeout(2200);
       const c = await ids();
-      const shown = ((await p.locator('.folio .folio-bar .stack-sum').getAttribute('aria-label')) ?? '').replace(/\s+/g, ' ');
-      if (!/^Ещё открыты \(5\):/.test(shown)) return no(`строка стопки после перезагрузки: «${shown}»`);
-      return c.join(' ') === b.join(' ') ? ok(`стопка: ruf ${c.join(' ')}`) : no(`после перезагрузки: ${c.join(' ')}`);
+      const open = await p.locator('.folio .card-tab[data-open]').getAttribute('data-id');
+      return c === a && open === 'ruf' ? ok(`вкладки: ${c}`) : no(`после перезагрузки: ${c}; раскрыта ${open}`);
     },
   },
   {
     n: 215,
-    title: 'J6 пальцем, 390 × 844: стопка — строка над листом; касание делает карточку активной',
+    // этап 12, решение 91: на телефоне — те же вкладки строками над листом (прежде — строка стопки)
+    title: 'J6 → решение 91 пальцем, 390 × 844: вкладки — строками над листом; касание раскрывает карточку вкладки',
     view: W_PHONE,
     run: async (p) => {
       await wgo(p, '#/ruf', 1600);
+      const pin = p.locator('.folio .sheet-bar .pin-card');
+      if (!(await pin.count())) return no('в шапке листа нет «Закрепить»');
+      await pin.tap();
+      await p.waitForTimeout(300);
       await wgo(p, '#/david', 2400);
-      const strip = p.locator('.folio .stack-strip');
-      if (!(await strip.count())) return no('нет строки стопки над листом');
+      const strip = p.locator('.folio .card-tabs');
+      if (!(await strip.count())) return no('нет строк вкладок над листом');
       const sb = (await strip.boundingBox())!;
       const fb = (await p.locator('.folio .sheet-bar').boundingBox())!;
-      if (sb.y + sb.height > fb.y + 2) return no(`строка стопки не над листом: ${sb.y + sb.height} > ${fb.y}`);
-      await strip.locator('.sr-open', { hasText: 'Руфь' }).tap();
+      if (sb.y + sb.height > fb.y + 2) return no(`вкладки не над листом: ${sb.y + sb.height} > ${fb.y}`);
+      const row = (await p.locator('.folio .card-tabs .tab-open').first().boundingBox())!;
+      if (row.height < 44) return no(`строка вкладки ${row.height} px`);
+      await strip.locator('.tab-open', { hasText: 'Руфь' }).tap();
       await p.waitForTimeout(900);
       if (idOf(p) !== 'ruf') return no(`после касания выбрано ${idOf(p)}`);
-      const names = (await p.locator('.folio .stack-strip .sr-open').allInnerTexts()).map((t) => t.trim());
-      return names.join(' ') === 'Давид' ? ok() : no(`в строке: ${names.join(', ')}`);
+      const names = (await p.locator('.folio .card-tabs .tab-open .nm').allInnerTexts()).map((t) => t.trim());
+      return names.join(' ') === 'Руфь' ? ok() : no(`в строках: ${names.join(', ')}`);
     },
   },
 ];

@@ -133,6 +133,26 @@
 .dc-val .txt {
   color: var(--ink-2);
 }
+/* имя «Родства»: черта ссылки — у самого имени (.nm), разделитель за ним (.sep) — в той же строке, без черты и цветом
+   пояснений: строка не начинается с запятой, длинное имя переносится внутри кнопки */
+.dc-val .person {
+  text-decoration-line: none;
+}
+.dc-val .person .nm {
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--rule);
+}
+.dc-val .person:hover .nm {
+  text-decoration-color: var(--ink);
+}
+.dc-val .person:active .nm {
+  text-decoration-thickness: 2px;
+}
+.dc-val .person .sep {
+  color: var(--ink-2);
+}
 /* строка «Год» — пояснение, а не ссылки */
 .dc-row.year .dc-val {
   font-family: var(--sans);

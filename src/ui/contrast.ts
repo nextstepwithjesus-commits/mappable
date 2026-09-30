@@ -66,4 +66,8 @@ export const CONTRAST_USES: readonly ContrastUse[] = [
   // поэтому порог 3 : 1 для графики к ней не относится; нужен порог заметности 2,2 : 1 к обеим плоскостям.
   { fg: '--rule-strong', bg: '--sky', min: 2.2, what: 'структурная линия --rule-strong на --sky' },
   { fg: '--rule-strong', bg: '--sheet', min: 2.2, what: 'структурная линия --rule-strong на --sheet' },
+  // метки вкладок закреплённых карточек (решение 91) — графика со смыслом (цвет вкладки): к листу и к раскрытой вкладке
+  ...Array.from({ length: 8 }, (_, i) => `--tab-${i + 1}`).flatMap((fg) =>
+    ['--sheet', '--sheet-2'].map((bg) => ({ fg, bg, min: 3, what: `метка вкладки ${fg} на ${bg}` })),
+  ),
 ];

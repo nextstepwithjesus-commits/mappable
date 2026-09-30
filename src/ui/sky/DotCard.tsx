@@ -3,8 +3,9 @@
  *
  * Карточка у звезды — в любом показе, по щелчку, касанию или Enter на звезде (ввод неба — src/ui/sky/input.ts):
  *  — образ (условный силуэт, решение 74), имя со знаками лент, уточнение, годы;
- *  — блок «Родство» (src/ui/card/kinrows.ts): «Родители», «Жёны» или «Муж», «Сыновья», «Дочери» или «Дети», «Братья и
- *    сёстры», «Год» — как получен год. Наведение и фокус на имени подсвечивают его линию на небе (previewLinks), наведение
+ *  — блок «Родство» (src/ui/card/kinrows.ts): «Родители», «Жёны» или «Муж», «Мать сына» (мать детей, которую текст
+ *    не называет женой; решение 92), «Сыновья», «Дочери» или «Дети» — по союзам, «Братья и сёстры», «Год» — как получен
+ *    год; не вошедшее — «ещё N» и «всё родство — ещё N строк», молча ничего не обрезается. Наведение и фокус на имени подсвечивают его линию на небе (previewLinks), наведение
  *    на строку — все линии строки; щелчок по имени выбирает лицо и летит к нему, если его нет на экране; Enter на имени —
  *    карточка связи (selectedLink), фокус на её заголовке; Escape — назад к той же строке. По строке — стрелками;
  *  — команды «Карточка» (подробная справа), «Только его род ▾» (показ «род лица», src/ui/show.ts), «Родство с…», «×»;
@@ -742,7 +743,7 @@ function Cmd({ onRun, children, label, title, cls, expanded }: { onRun: () => vo
 }
 
 /** Сколько имён строки видно сразу (строка — в одну строку текста: карточка 300 × 180–260 px, § 6); остальные — «ещё N». Родители — все. */
-const ROW_NAMES: Record<string, number> = { parents: 99, spouses: 2, children: 2, siblings: 2, year: 99 };
+const ROW_NAMES: Record<string, number> = { parents: 99, spouses: 2, coparents: 2, children: 2, siblings: 2, year: 99 };
 
 /** Перенести остановку Tab строки на имя el (одна остановка на строку «Родства», по строке — стрелками). */
 function rovingTo(el: HTMLElement) {
@@ -777,18 +778,32 @@ function KinRowView({ row, idx, compact }: { row: KinRow; idx: number; compact?:
     previewLinks.value = keys && keys.length ? keys : null;
   };
   const rowKey = `${row.kind}${idx}`;
+  // разделитель сразу за именем: «Сын Давида и Вирсавии» + «, » не расходятся по строкам
+  const glued = new Set<number>();
+  shown.forEach((p, i) => {
+    const prev = shown[i - 1];
+    if (p.t === 'text' && /^[,;]/.test(p.text) && prev?.t === 'name') glued.add(i);
+  });
   let first = true;
   return (
     <div class={`dc-row ${row.kind}`} data-row={rowKey} onMouseEnter={() => preview(row.keys)} onMouseLeave={() => preview(null)}>
       <dt class="dc-lbl">{row.label}</dt>
       <dd class="dc-val">
         {shown.map((p, i) => {
-          if (p.t === 'text') return <span key={i} class={row.kind === 'year' ? undefined : 'txt'}>{typo(p.text)}</span>;
+          if (p.t === 'text') {
+            // запятая или точка с запятой за именем — внутри кнопки имени (.sep, ниже): строка не начинается с «,»
+            const text = glued.has(i) ? p.text.slice(1) : p.text;
+            return text ? (
+              <span key={i} class={row.kind === 'year' ? undefined : 'txt'}>
+                {typo(text)}
+              </span>
+            ) : null;
+          }
           const q = byId.get(p.id);
           const tab = first ? 0 : -1;
           first = false;
           const tip = linkInfo(p.key);
-          return (
+          const btn = (
             <button
               key={i}
               type="button"
@@ -831,9 +846,16 @@ function KinRowView({ row, idx, compact }: { row: KinRow; idx: number; compact?:
                 if (q) goTo(p.id);
               }}
             >
-              {q?.name ?? p.id}
+              <span class="nm">{q?.name ?? p.id}</span>
+              {/* разделитель за именем — в той же строке, что последнее слово имени, без черты ссылки; диктору не нужен */}
+              {glued.has(i + 1) ? (
+                <span class="sep" aria-hidden="true">
+                  {(shown[i + 1] as { text: string }).text[0]}
+                </span>
+              ) : null}
             </button>
           );
+          return btn;
         })}
         {rest > 0 && (
           <>
@@ -871,6 +893,8 @@ function KinRowView({ row, idx, compact }: { row: KinRow; idx: number; compact?:
 export function KinBlock({ id, compact = false, brief = false, onAll }: { id: string; compact?: boolean; brief?: boolean; onAll?: () => void }) {
   void cardsTick.value;
   void model.value;
+  // запись § 9 о неназванной жене («познал Каин жену свою», Быт 4:17) — в томе карточки: подгрузить (решение 92)
+  useEffect(() => askCards([id]), [id]);
   // «Год»: помета порядка с верным диапазоном стихов — personOrderNote (src/render/links.ts, стык 5)
   const rows = kinRows(id, yearHow(id, personOrderNote(id, model.value)));
   // телефон (лист на 214 px) — две строки; краткий вид (семья заняла всё небо, § 6) — одна: родители, иначе супруги
@@ -880,7 +904,10 @@ export function KinBlock({ id, compact = false, brief = false, onAll }: { id: st
       ? rows.filter((r) => r.kind !== 'year' && r.kind !== 'siblings').slice(0, 2)
       : rows;
   if (!shown.length) return null;
-  const more = brief && onAll ? rows.length - shown.length : 0;
+  // ничего не обрезается молча (решение 92): не вошедшие строки — «всё родство — ещё N строк»; на телефоне — лист
+  // поднимается до половины, к разделам родства подробной карточки
+  const all = onAll ?? (compact ? () => kinInSheet() : undefined);
+  const more = (brief || compact) && all ? rows.length - shown.length : 0;
   return (
     <dl class="dc-kin" aria-label="Родство">
       {shown.map((r, i) => (
@@ -890,7 +917,7 @@ export function KinBlock({ id, compact = false, brief = false, onAll }: { id: st
         <div class="dc-row all">
           <dt class="dc-lbl" />
           <dd class="dc-val">
-            <button type="button" class="dc-more" title="Показать всё «Родство» в карточке" onClick={onAll}>
+            <button type="button" class="dc-more" title={compact ? 'Поднять лист: родство — в разделах 6 и 9–12 карточки' : 'Показать всё «Родство» в карточке'} onClick={all}>
               {`всё родство — ещё ${more} ${more === 1 ? 'строка' : more < 5 ? 'строки' : 'строк'}`}
             </button>
           </dd>
@@ -898,6 +925,20 @@ export function KinBlock({ id, compact = false, brief = false, onAll }: { id: st
       )}
     </dl>
   );
+}
+
+/**
+ * Телефон: «всё родство» листа на 214 px — лист поднимается до половины, к первому разделу родства подробной карточки
+ * (§ 6, иначе § 9), фокус — на его заголовок.
+ */
+function kinInSheet() {
+  sheetStop.value = 'half';
+  window.setTimeout(() => {
+    const sec = document.querySelector<HTMLElement>('.folio #sec-6, .folio #sec-9, .folio #sec-10');
+    if (!sec) return;
+    sec.scrollIntoView({ block: 'start', behavior: reduced() ? 'auto' : 'smooth' });
+    focusQuietly(sec.querySelector<HTMLElement>('h4') ?? sec);
+  }, 320);
 }
 
 /** «Только его род ▾»: потомки, предки, предки и потомки — по отцам, все поколения; «Настроить…» — лист «Показ». */

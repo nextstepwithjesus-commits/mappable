@@ -22,7 +22,7 @@ import { selected, showSchema, theme, type Theme } from '../state.ts';
 import { P, Refs } from './common.tsx';
 import { CONTRAST_USES, contrast } from './contrast.ts';
 import { Check, Close, Segmented } from './controls.tsx';
-import { Folio, PARTS } from './Folio.tsx';
+import { Folio, PARTS, TabsSpecimen } from './Folio.tsx';
 import { PAINTERS, type PainterKey } from './panels/Legend.tsx';
 import { installSpecimenRules, type Pseudo } from './specimen-css.ts';
 import { typo } from './text/typo.ts';
@@ -200,6 +200,15 @@ export const TOKEN_ROLES: Record<string, string> = {
   '--focus': 'кольцо фокуса',
   '--halo': 'подложка под звездой и дневной лентой',
   '--glow': 'свечение лент: 1 — ночью, 0 — днём',
+  // метки вкладок закреплённых карточек (этап 12, решение 91): спокойная палитра, не похожая на ленты, ветви и связь
+  '--tab-1': 'метка вкладки 1: приглушённая роза',
+  '--tab-2': 'метка вкладки 2: песок',
+  '--tab-3': 'метка вкладки 3: серо-бирюзовый',
+  '--tab-4': 'метка вкладки 4: лиловато-серый',
+  '--tab-5': 'метка вкладки 5: олива',
+  '--tab-6': 'метка вкладки 6: сизый',
+  '--tab-7': 'метка вкладки 7: пепельно-розовый',
+  '--tab-8': 'метка вкладки 8: шалфей',
 };
 
 /** Фон, к которому меряется токен, у которого нет порога (он не несёт текста и знаков). */
@@ -747,6 +756,15 @@ export function Specimen() {
         <section aria-labelledby="spec-h-card">
           <h2 id="spec-h-card">Карточка</h2>
           <CardStates />
+        </section>
+        <section aria-labelledby="spec-h-tabs">
+          <h2 id="spec-h-tabs">Вкладки закреплённых карточек</h2>
+          <p class="spec-note">
+            {typo(
+              'Решение 91: закреплённая карточка при выборе другого лица сворачивается в строку вверху листа — цветная метка, имя с уточнением, «×». Восемь цветов спокойной палитры (--tab-1 … --tab-8), раскрыта вторая вкладка.',
+            )}
+          </p>
+          <Themes>{() => <TabsSpecimen />}</Themes>
         </section>
       </main>
     </div>

@@ -22,7 +22,7 @@
  */
 import { computed, effect, signal } from '@preact/signals';
 import { panel, selected, type Panel } from '../state.ts';
-import { cardFolded } from './stack.ts';
+import { cardFolded, cardTabs } from './stack.ts';
 
 export const PHONE_MAX = 720;
 export const SPINE_W = 56;
@@ -264,12 +264,18 @@ if (typeof window !== 'undefined') {
   });
 }
 
-/** Сетка сейчас: по ширине и высоте окна, открытой панели, выбранному лицу, ширинам читателя и «Небу во весь экран». */
-export const grid = computed(() =>
-  gridFor(viewportWidth.value, panelKind(panel.value), !!selected.value, {
+/**
+ * Сетка сейчас: по ширине и высоте окна, открытой панели, выбранному лицу, ширинам читателя и «Небу во весь экран».
+ * Лицо не выбрано, но есть закреплённые карточки (решение 91) — колонка карточки остаётся корешком 56 px с вкладками:
+ * они видны всегда, небо отдаёт им только корешок.
+ */
+export const grid = computed(() => {
+  const sel = !!selected.value;
+  const tabsOnly = !sel && cardTabs.value.length > 0;
+  return gridFor(viewportWidth.value, panelKind(panel.value), sel || tabsOnly, {
     h: viewportHeight.value,
     widths: userWidths.value,
     full: skyFull.value,
-    folded: cardFolded.value,
-  }),
-);
+    folded: cardFolded.value || tabsOnly,
+  });
+});

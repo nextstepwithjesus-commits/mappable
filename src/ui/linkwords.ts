@@ -166,11 +166,20 @@ export function childRole(u: Union | null, kid: string): string {
   return bySex(s, 'сын', 'дочь');
 }
 
-/** Роль супруга: «муж», «жена», «наложница». */
+/**
+ * Роль супруга: «муж», «жена», «наложница». Пара, которую текст называет только родителями детей («имя матери его Наама»,
+ * 3 Цар 14:21; дочери Лота; Фамарь — Иуда), — «отец» и «мать», без слов брака (решение 92).
+ */
 function spouseRole(u: Union, id: string): string {
+  if (coparentsOnly(u)) return parentRole(u, id);
   if (id === u.b) return u.kind === 'concubine' ? 'наложница' : bySex(sexOf(id), 'муж', 'жена');
   return bySex(sexOf(id), 'муж', 'жена');
 }
+
+/** Оба родителя названы, а супругами текст их не называет (решение 92). */
+const coparentsOnly = (u: Union) => u.kind === 'parents' && !!u.a && !!u.b && u.kids.length > 0 && !isClaimUnion(u);
+/** Пояснение к такой паре — в карточке связи. */
+const COPARENTS_NOTE = 'Супругами Писание их не называет: они названы отцом и матерью ребёнка';
 
 /**
  * Родители союза для заголовка связи: «Иаков и Рахиль — родители», «Сиф и его жена — родители», «Иосиф — отец по закону,
@@ -398,6 +407,8 @@ function unionTitleOf(u: Union): string {
 
 /** Черта брака: «Рахиль — жена Иакова», «Иаков — муж Рахили»; имя не склоняется — «Иаков и Рахиль — муж и жена». */
 function spouseTitle(u: Union, person: string): string {
+  // пара только родителей — как союз: «Соломон и Наама: Ровоам»
+  if (coparentsOnly(u)) return unionTitleOf(u);
   const other = person === u.a ? u.b : person === u.b ? u.a : null;
   const role = spouseRole(u, person);
   if (!other) return `${unionName(u)}`;
@@ -474,7 +485,7 @@ function build(key: LinkKey): LinkInfo | null {
         cert: u.kind === 'parents' ? 'scripture' : u.cert,
         marks,
         lines: [],
-        note: other ? (u.note ?? null) : u.a ? 'Имя жены в Писании не названо' : 'Имя мужа в Писании не названо',
+        note: coparentsOnly(u) ? COPARENTS_NOTE : other ? (u.note ?? null) : u.a ? 'Имя жены в Писании не названо' : 'Имя мужа в Писании не названо',
       };
     }
     case 'union': {
@@ -492,7 +503,7 @@ function build(key: LinkKey): LinkInfo | null {
         cert,
         marks: CERT_WORD[cert] ? [CERT_WORD[cert]] : [],
         lines: [],
-        note: !isClaimUnion(u) && parents.length === 1 && kids && !peopleUnion(u) ? (u.a ? 'Имя жены в Писании не названо' : 'Имя мужа в Писании не названо') : null,
+        note: coparentsOnly(u) ? COPARENTS_NOTE : !isClaimUnion(u) && parents.length === 1 && kids && !peopleUnion(u) ? (u.a ? 'Имя жены в Писании не названо' : 'Имя мужа в Писании не названо') : null,
       };
     }
     case 'step': {

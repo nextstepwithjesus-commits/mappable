@@ -419,6 +419,12 @@ html:has(.specimen) body {
     max-width: none;
   }
 }
+/* вкладки закреплённых карточек (решение 91): строки листа без самого листа — во всю колонку темы */
+.spec-tabs.folio {
+  width: auto;
+  overflow: visible;
+  border: 1px solid var(--rule-strong);
+}
 /* пробный элемент: браузер приводит значение токена к rgb() (Specimen.tsx, toHex) */
 .spec-probe {
   color: var(--probe);

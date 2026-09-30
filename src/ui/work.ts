@@ -11,7 +11,7 @@
  *  — skyMode — прежний переключатель «все лица | набор» (J4): теперь производный от показа — «все лица» у показа «всё
  *    небо», «набор» у остальных. Запись в него (прежние органы неба) меняет показ.
  *  — foldDesc, foldGroups — свёрнутые потомки лиц и созвездия (J5); помнятся в сеансе (sessionStorage).
- *  — стопка карточек (J6) — в src/ui/stack.ts.
+ *  — карточка и закреплённые вкладки (решение 91; прежде — стопка карточек J6) — в src/ui/stack.ts.
  * Предки и потомки — по графу (src/engine/graph.ts): отцы и матери, дети; связи по толкованию — только по выбору.
  */
 import { batch, computed, effect, signal } from '@preact/signals';
@@ -511,8 +511,8 @@ if (hasWindow)
     });
   });
 
-// стопка карточек (J6) — src/ui/stack.ts; имена оставлены здесь для прежних импортов
-export { STACK_MAX, cardStack, cardFolded, pushCard, dropCard } from './stack.ts';
+// карточка и закреплённые вкладки (решение 91; прежде — стопка карточек J6) — src/ui/stack.ts; имена — для прежних импортов
+export { cardTabs, cardFolded, pinCard, unpinCard, withTab } from './stack.ts';
 
 // ---------- клавиши (J3, J5; IX-51, MOB-55) ----------
 

@@ -1,6 +1,7 @@
 /**
  * Сценарии приёмки этапа 7 (доработка по повторной экспертизе), группа cardshell (K2): оболочка карточки —
- * первый экран (VIS-41, CARD-54), стопка как вкладки (решение 18; CARD-52, IX-52, UX-49), свёрнутая карточка —
+ * первый экран (VIS-41, CARD-54), закреплённые карточки — вкладки (этап 12, решение 91; прежде — стопка, решение 18;
+ * CARD-52, IX-52, UX-49), свёрнутая карточка —
  * корешок (VIS-44, UX-50), закреплённая полоса (CARD-53, UX-67), рейка (VIS-42, CARD-70), полоса 66 книг (CARD-49),
  * «Добавить в набор» (VIS-47, CARD-75, UX-48; этап 11 — прежде «Взять в работу»), фокус заголовков (VIS-45, VIS-56, CARD-74), лист телефона (MOB-50, MOB-64),
  * живые «Загрузка» и «Ошибка» образца (VIS-55). Номера 230–239.
@@ -16,8 +17,8 @@ const go = async (p: Page, hash: string, ms = 2000) => {
 /** Имена лиц сценариев для поиска. */
 const NAMES: Record<string, string> = { david: 'Давид', avraam: 'Авраам', ruf: 'Руфь', moisey: 'Моисей', mariya: 'Мария', solomon: 'Соломон' };
 /**
- * Открыть карточку лица так, как её открывает читатель, — поиском («/», имя, Enter); стопка живёт в сеансе.
- * Не сменой адреса: адрес — запись истории, а «назад» и адрес не меняют состав стопки (решение 50; UX-74).
+ * Открыть карточку лица так, как её открывает читатель, — поиском («/», имя, Enter); вкладки живут в памяти браузера.
+ * Не сменой адреса: адрес — запись истории, а «назад» и адрес не меняют вкладок (решения 50, 91; UX-74).
  * Поиск выбрал не то лицо — сценарий падает с причиной.
  */
 const hop = async (p: Page, id: string, ms = 1300) => {
@@ -98,58 +99,62 @@ export const cardshell: Scenario[] = [
   },
   {
     n: 232,
-    title: 'Решение 18, CARD-52, IX-52: стопка — одна строка «Ещё открыты (N): …», по щелчку — список от недавних к старым; «×» активной открывает следующую, фокус на её заголовке; «Закрыть все»; Escape стопку не чистит',
+    // этап 12, решение 91: стопки «Ещё открыты (N)» нет — прежняя проверка стопки (решение 18) переведена на вкладки с тем
+    // же смыслом: открытые карточки не теряются (закреплённые — вкладками), «×» закрывает одну, Escape не чистит вкладки,
+    // первый раздел — на первом экране
+    title: 'Решение 91 (прежде 18, CARD-52, IX-52): выбор заменяет карточку — стопки нет; закреплённая — вкладкой вверху листа; «×» карточки закрывает её, вкладки остаются; Escape сворачивает раскрытую закреплённую, фокус на её вкладке; «Открепить карточку персонажа»',
     run: async (p) => {
       await go(p, '#/david', 1800);
-      for (const id of ['avraam', 'ruf', 'moisey', 'mariya']) await hop(p, id);
-      const sum = p.locator('.folio .folio-bar .stack-sum');
-      if ((await sum.count()) !== 1) return fail('нет строки стопки');
-      const label = (await sum.getAttribute('aria-label')) ?? '';
-      if (!/^Ещё открыты \(4\): Моисей, Руфь, Авраам, Давид$/.test(label.replace(/\s+/g, ' '))) return fail(`строка стопки: «${label}»`);
-      if (await p.locator('.folio .stack-row').count()) return fail('список раскрыт без щелчка');
-      const s = await firstSection(p);
-      if (s.top === null || s.top > 520) return fail(`при стопке § 1 на ${s.top} px`);
-      await sum.click();
+      const pin = p.locator('.folio .folio-bar .pin-card');
+      if ((await pin.getAttribute('aria-label')) !== 'Закрепить карточку персонажа') return fail(`команда закрепления: «${await pin.getAttribute('aria-label')}»`);
+      await pin.click();
       await p.waitForTimeout(300);
-      const ids = await p.locator('.folio .stack .stack-row').evaluateAll((els) => els.map((e) => (e as HTMLElement).dataset.id));
-      if (ids.join(' ') !== 'moisey ruf avraam david') return fail(`список: ${ids.join(' ')}`);
-      if (!(await p.locator('.folio .stack button', { hasText: 'Закрыть все' }).count())) return fail('нет «Закрыть все»');
-      // уточнение не обрезано посреди слова
-      const ds = await p.locator('.folio .stack .ds').allInnerTexts();
-      if (ds.some((t) => /[а-яё]…$/.test(t) && !/\s\S+…$/.test(t))) return fail(`уточнение: ${ds.join(' / ')}`);
-      // Escape закрывает список, но не карточку
-      await p.keyboard.press('Escape');
-      await p.waitForTimeout(200);
-      if (hashId(p) !== 'mariya' || (await p.locator('.folio .stack-row').count())) return fail('Escape списка снял не только список');
-      // «×» активной — следующая по недавности, фокус на её заголовке
+      if ((await pin.getAttribute('aria-label')) !== 'Открепить карточку персонажа') return fail('после закрепления команда не сменилась на «Открепить…»');
+      for (const id of ['avraam', 'ruf', 'moisey', 'mariya']) await hop(p, id);
+      if (await p.locator('.folio .stack-sum, .folio .stack').count()) return fail('стопка осталась');
+      if (/Ещё открыт/.test(await p.locator('.folio').innerText())) return fail('строка «Ещё открыты» осталась');
+      const tabs = async () => (await p.locator('.folio .card-tabs .card-tab').evaluateAll((els) => els.map((e) => `${(e as HTMLElement).dataset.id}${e.hasAttribute('data-open') ? '*' : ''}`))).join(' ');
+      if ((await tabs()) !== 'david') return fail(`вкладки: ${await tabs()}`);
+      const close = await p.locator('.folio .card-tab[data-id="david"] .close').getAttribute('aria-label');
+      if (!/^Закрыть вкладку: Давид/.test(close ?? '')) return fail(`«×» вкладки: «${close}»`);
+      const s = await firstSection(p);
+      if (s.top === null || s.top > 520) return fail(`при вкладке § 1 на ${s.top} px`);
+      // «×» карточки — карточка закрыта, прежняя из стопки не открывается; вкладка остаётся (корешок справа)
       await p.locator('.folio .folio-bar .bar-cmds .close').click();
       await p.waitForTimeout(900);
-      if (hashId(p) !== 'moisey') return fail(`после «×» выбрано «${hashId(p)}», а не Моисей`);
-      const focus = await p.evaluate(() => document.activeElement?.id ?? '');
-      if (focus !== 'title-moisey') return fail(`фокус после «×» — на «${focus}»`);
-      const label2 = ((await sum.getAttribute('aria-label')) ?? '').replace(/\s+/g, ' ');
-      if (!/^Ещё открыты \(3\): Руфь, Авраам, Давид$/.test(label2)) return fail(`после «×»: «${label2}»`);
-      // Escape снимает выбор, стопка остаётся; следующий выбор её возвращает
+      if (hashId(p)) return fail(`после «×» выбрано «${hashId(p)}»`);
+      if ((await p.locator('.folio.spine.tabs-only .spine-tabs li').evaluateAll((els) => els.map((e) => (e as HTMLElement).dataset.id))).join(' ') !== 'david') return fail('после «×» нет вкладки на корешке');
+      // вкладка раскрывает карточку
+      await p.locator('.folio.spine .spine-tabs [data-id="david"] .tab-open').click();
+      await p.waitForTimeout(1200);
+      if (hashId(p) !== 'david' || (await tabs()) !== 'david*') return fail(`после вкладки: ${hashId(p)}; ${await tabs()}`);
+      // Escape — раскрытая закреплённая сворачивается во вкладку, фокус на ней; Enter раскрывает снова
+      await p.locator('#title-david').focus();
       await p.keyboard.press('Escape');
-      await p.waitForTimeout(500);
-      if (hashId(p)) return fail('Escape не снял выбор');
-      await hop(p, 'solomon');
-      const label3 = ((await sum.getAttribute('aria-label')) ?? '').replace(/\s+/g, ' ');
-      if (!/^Ещё открыты \(4\): Моисей, Руфь, Авраам, Давид$/.test(label3)) return fail(`после Escape и выбора: «${label3}»`);
-      await sum.click();
-      await p.waitForTimeout(200);
-      await p.locator('.folio .stack button', { hasText: 'Закрыть все' }).click();
-      await p.waitForTimeout(500);
-      if (hashId(p) || (await p.locator('.folio:not([hidden])').count())) return fail('«Закрыть все» не закрыл карточки');
-      await hop(p, 'ruf');
-      return (await sum.count()) ? fail('после «Закрыть все» стопка вернулась') : pass('Моисей, Руфь, Авраам, Давид; «×», Escape, «Закрыть все»');
+      await p.waitForTimeout(700);
+      if (hashId(p)) return fail('Escape не свернул карточку');
+      const f = await p.evaluate(() => (document.activeElement as HTMLElement | null)?.closest('[data-id]')?.getAttribute('data-id') ?? document.activeElement?.className ?? '');
+      if (f !== 'david') return fail(`фокус после Escape — на «${f}»`);
+      await p.keyboard.press('Enter');
+      await p.waitForTimeout(1200);
+      if (hashId(p) !== 'david') return fail('Enter на вкладке не раскрыл карточку');
+      // «Открепить…» — вкладки нет, карточка остаётся текущей
+      await p.locator('.folio .folio-bar .pin-card').click();
+      await p.waitForTimeout(300);
+      if (await p.locator('.folio .card-tabs').count()) return fail('после «Открепить…» вкладка осталась');
+      if (hashId(p) !== 'david') return fail('«Открепить…» закрыл карточку');
+      const store = await p.evaluate(() => localStorage.getItem('toledot:tabs'));
+      return store ? fail(`память браузера после открепления: ${store}`) : pass('Давид: вкладка, «×», корешок, Escape → вкладка, Enter, «Открепить…»');
     },
   },
   {
     n: 233,
-    title: 'VIS-44, UX-50: «Свернуть карточку» — корешок 56 px, небо шире на ширину листа; на корешке — имена стопки; «развернуть» возвращает лист и фокус на заголовок',
+    // этап 12, решение 91: на корешке — вкладки закреплённых карточек (прежде — имена стопки)
+    title: 'VIS-44, UX-50, решение 91: «Свернуть карточку» — корешок 56 px, небо шире на ширину листа; на корешке — вкладки закреплённых карточек; «развернуть» возвращает лист и фокус на заголовок',
     run: async (p) => {
       await go(p, '#/ruf', 1600);
+      await p.locator('.folio .folio-bar .pin-card').click();
+      await p.waitForTimeout(300);
       await hop(p, 'david', 1600);
       const sky0 = (await rect(p, '.sky'))!.width;
       const f0 = (await rect(p, '.folio'))!.width;
@@ -163,7 +168,7 @@ export const cardshell: Scenario[] = [
       const sky1 = (await rect(p, '.sky'))!.width;
       if (Math.abs(w - 56) > 1) return fail(`корешок ${w} px`);
       if (sky1 < sky0 + f0 - 60) return fail(`небо ${sky0} → ${sky1} при листе ${f0}`);
-      const others = (await spine.locator('.sp-open').allInnerTexts()).map((t) => t.trim());
+      const others = (await spine.locator('.sp-open .nm').allInnerTexts()).map((t) => t.trim());
       if (others.join(' ') !== 'Руфь') return fail(`на корешке: ${others.join(', ')}`);
       const focus = await p.evaluate(() => (document.activeElement as HTMLElement | null)?.className ?? '');
       if (!/unfold/.test(focus)) return fail(`фокус после «Свернуть карточку» — на «${focus}»`);
@@ -172,7 +177,7 @@ export const cardshell: Scenario[] = [
       if (await p.locator('.folio.spine').count()) return fail('«развернуть» не развернул');
       const t = await p.evaluate(() => document.activeElement?.id ?? '');
       if (t !== 'title-david') return fail(`фокус после «развернуть» — на «${t}»`);
-      // имя стопки на корешке открывает её карточку развёрнутой
+      // вкладка на корешке открывает её карточку развёрнутой
       await p.locator('.folio .folio-bar .fold-card').click();
       await p.waitForTimeout(700);
       await p.locator('.folio.spine .sp-open', { hasText: 'Руфь' }).click();

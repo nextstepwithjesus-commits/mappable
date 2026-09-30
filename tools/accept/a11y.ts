@@ -265,20 +265,36 @@ export const a11y: Scenario[] = [
       if (hashId(p) !== 'iessey') return fail(`ссылка выбрала «${hashId(p)}»`);
       const b = await active(p);
       if (b.tag === 'body') return fail('после перехода по ссылке фокус потерян');
-      // «×» карточки закрывает её, как вкладку (этап 7, решение 18; IX-52): открыта прежняя карточка — фокус на её заголовке
-      await p.locator('.folio .close').first().focus();
+      // этап 12, решение 91: стопки нет — «×» закрывает карточку, фокус не теряется; прежняя карточка открывается своей
+      // вкладкой (Давид закреплён), фокус — на её заголовке; «×» закреплённой — фокус на её вкладке
+      await p.locator('.folio button.person[data-id="david"]').first().focus();
       await p.keyboard.press('Enter');
       await p.waitForTimeout(900);
-      if (hashId(p) !== 'david') return fail(`после «×» выбрано «${hashId(p)}», а не прежняя карточка — Давид`);
+      await p.locator('.folio .folio-bar .pin-card').focus();
+      await p.keyboard.press('Enter');
+      await p.waitForTimeout(300);
+      await p.locator('.folio #sec-6 button.person[data-id="iessey"]').first().focus();
+      await p.keyboard.press('Enter');
+      await p.waitForTimeout(900);
+      await p.locator('.folio .folio-bar .close').first().focus();
+      await p.keyboard.press('Enter');
+      await p.waitForTimeout(900);
+      if (hashId(p)) return fail(`после «×» выбрано «${hashId(p)}»: стопки больше нет`);
+      const e = await active(p);
+      if (e.tag === 'body') return fail('после «×» карточки фокус потерян');
+      await p.locator('.folio .spine-tabs [data-id="david"] .tab-open').focus();
+      await p.keyboard.press('Enter');
+      await p.waitForTimeout(900);
+      if (hashId(p) !== 'david') return fail(`вкладка открыла «${hashId(p)}», а не Давида`);
       const d = await active(p);
-      if (d.id !== 'title-david') return fail(`после «×» фокус на ${d.tag}#${d.id}, а не на заголовке прежней карточки`);
-      // последняя карточка: «×» закрывает лист, фокус — туда, откуда карточку открыли
-      await p.locator('.folio .close').first().focus();
+      if (d.id !== 'title-david') return fail(`после вкладки фокус на ${d.tag}#${d.id}, а не на заголовке карточки`);
+      // закреплённая карточка: «×» сворачивает её во вкладку — фокус на вкладке
+      await p.locator('.folio .folio-bar .close').first().focus();
       await p.keyboard.press('Enter');
       await p.waitForTimeout(700);
-      if (hashId(p)) return fail('«×» последней карточки не закрыл её');
+      if (hashId(p)) return fail('«×» не закрыл карточку');
       const c = await active(p);
-      return c.tag !== 'body' ? pass(`после ссылки — ${b.tag}#${b.id}; после «×» — #${d.id}, затем ${c.tag}${c.id ? `#${c.id}` : ''}`) : fail('после «×» карточки фокус потерян');
+      return c.tag !== 'body' ? pass(`после ссылки — ${b.tag}#${b.id}; после «×» — ${e.tag}#${e.id}; вкладка — ${d.tag}#${d.id}; «×» закреплённой — ${c.tag} «${c.text}» (${c.where})`) : fail('после «×» карточки фокус потерян');
     },
   },
   {

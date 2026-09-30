@@ -357,7 +357,7 @@ export function SkyView() {
       let left = 0;
       const sheet = document.querySelector<HTMLElement>('.folio:not([hidden])');
       if (sheet && getComputedStyle(sheet).position === 'fixed') bottom = Math.max(0, box.bottom - sheet.getBoundingClientRect().top);
-      // стопка карточек на телефоне — строка над листом (J6): небо под ней тоже закрыто
+      // вкладки закреплённых карточек на телефоне — строки над листом (решение 91; .card-tabs.stack-strip): небо под ними тоже закрыто
       const strip = sheet?.querySelector<HTMLElement>('.stack-strip');
       if (strip && bottom > 0) bottom = Math.max(bottom, box.bottom - strip.getBoundingClientRect().top);
       // вступление-строка на низком небе (MOB-07) — только резерв: оно не отнимает у неба поля

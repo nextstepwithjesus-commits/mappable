@@ -12,7 +12,8 @@ import { birthEpoch, epochAtYear, nameIn } from '../src/ui/card/shared.tsx';
 import { formulaAnchors } from '../src/ui/card/Chrono.tsx';
 import { isPeople, epochBandLabels } from '../src/ui/card/Masthead.tsx';
 import { scopeReason, placeGroupLabels } from '../src/ui/card/Canon.tsx';
-import { colophonText, sectionStates, stackNames } from '../src/ui/Folio.tsx';
+import { colophonText, sectionStates } from '../src/ui/Folio.tsx';
+import { tabLabel } from '../src/ui/stack.ts';
 import { buildSections } from '../src/ui/card/sections.tsx';
 import { declinableForm, nameCase } from '../src/ui/text/ru.ts';
 import { typo, NBSP } from '../src/ui/text/typo.ts';
@@ -195,12 +196,14 @@ describe('VIS-63: эпохи мини-шкалы — без многоточия
   });
 });
 
-describe('VIS-71, UX-75: строка стопки — «Руфь и ещё 2», без многоточия', () => {
-  it('сколько помещается — целиком, остальное — числом', () => {
-    expect(stackNames(['Руфь', 'Соломон', 'Давид'], 3)).toBe('Руфь, Соломон, Давид');
-    expect(stackNames(['Руфь', 'Соломон', 'Давид'], 1)).toBe('Руфь и ещё 2');
-    expect(stackNames(['Руфь', 'Соломон', 'Давид'], 2)).toBe('Руфь, Соломон и ещё 1');
-    expect(stackNames(['Руфь'], 0)).toBe('Руфь');
+// этап 12, решение 91: строки стопки нет — имена стоят во вкладках; смысл прежний: имя целиком, без многоточия
+describe('VIS-71, UX-75: имя во вкладке — целиком, без многоточия; уточнение — целыми словами', () => {
+  it('имя не режется, уточнение не обрывается посреди слова', () => {
+    for (const id of ['ruf', 'david', 'solomon', 'iosif-muzh-marii', 'doch-faraona-zhena-solomona', 'naama']) {
+      const l = tabLabel(id);
+      expect(l.name).not.toMatch(/…/);
+      if (l.dis?.endsWith('…')) expect(l.full.startsWith(`${l.name}, ${l.dis.slice(0, -1)}`)).toBe(true);
+    }
   });
 });
 

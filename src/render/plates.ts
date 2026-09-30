@@ -49,10 +49,10 @@ import { branchColor, GlowBatch, glowLayers, glows, type MapTheme } from './bran
 import { drawGlyph, starRadius } from './glyphs.ts';
 import { insideSky, Placer, spot as labelSpot } from './labels.ts';
 import { branchFrame } from './marks.ts';
-import { branchAlpha } from './trails.ts';
+import { branchAlpha, commonBranch } from './trails.ts';
 import { mapFont, mapSize, nameSize, T_MAP_S } from './type.ts';
 import { cross, type Rect } from './rect.ts';
-import { LINK_YELLOW } from './branches.ts';
+import { KIN_GOLD, LINK_YELLOW, UNION_COLORS } from './branches.ts';
 import type { PlateGap } from './rows.ts';
 import type { Pass, SkyContext } from './sky.ts';
 import { JOIN_R, NODE_R_FAMILY, NODE_R_MAP, type LinkNode, type LinkPath } from './links.ts';
@@ -901,6 +901,90 @@ export function paintDot(ctx: CanvasRenderingContext2D, x: number, y: number, r:
   ctx.restore();
 }
 
+/** Вид знака союза: двухцветный (синяя половина — муж, розовая — жена) или цветом своих линий (решение 87). */
+export interface UnionLook {
+  open: boolean;
+  /** подложка цвета неба */
+  halo: string;
+  theme: MapTheme;
+  /** непрозрачность знака */
+  a: number;
+  /** цвет линий союза (#rrggbb): ветвь выбранного, жёлтый выбранной связи, золотистый семьи; null — двухцветный знак */
+  color?: string | null;
+  /** тонкая обводка, отделяющая цветной ромб от неба (днём — тёмная); null — без неё */
+  edge?: string | null;
+}
+
+/**
+ * Знак союза (этап 12, решение 87): ромб на подложке цвета неба. Без выделения — двухцветный: левая половина синяя (муж),
+ * правая розовая (жена); сразу отличим от круглой звезды лица и не читается цветом ветви или ленты (у тех цвет один).
+ * С цветными линиями — залит их цветом (ветвь выбранного, жёлтый выбранной связи, золотистый семьи лица) с тонкой
+ * обводкой. Раскрыт — залит; свёрнут — полый контур той же величины (цвета — те же, половинами).
+ */
+export function paintUnion(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, o: UnionLook) {
+  const path = (h: number, half: 0 | -1 | 1 = 0) => {
+    ctx.beginPath();
+    if (half === 0) {
+      ctx.moveTo(x, y - h);
+      ctx.lineTo(x + h, y);
+      ctx.lineTo(x, y + h);
+      ctx.lineTo(x - h, y);
+      ctx.closePath();
+    } else {
+      // половина ромба: от верхней вершины через боковую к нижней
+      ctx.moveTo(x, y - h);
+      ctx.lineTo(x + half * h, y);
+      ctx.lineTo(x, y + h);
+      if (o.open) ctx.closePath();
+    }
+  };
+  const a = Math.max(0, Math.min(1, o.a));
+  const U = UNION_COLORS[o.theme];
+  ctx.save();
+  ctx.setLineDash([]);
+  ctx.fillStyle = o.halo;
+  path(r + 1.8);
+  ctx.fill();
+  const w = 1.3;
+  ctx.lineJoin = 'miter';
+  if (o.color) {
+    const c = alpha(o.color, a);
+    if (o.open) {
+      ctx.fillStyle = c;
+      path(r);
+      ctx.fill();
+      if (o.edge) {
+        ctx.strokeStyle = alpha(o.edge, a);
+        ctx.lineWidth = 0.8;
+        path(r);
+        ctx.stroke();
+      }
+    } else {
+      ctx.strokeStyle = c;
+      ctx.lineWidth = w;
+      path(r - w / 2);
+      ctx.stroke();
+    }
+  } else if (o.open) {
+    // двухцветный: розовая заливка целиком и синяя левая половина поверх — шва между половинами нет
+    ctx.fillStyle = alpha(U.wife, a);
+    path(r);
+    ctx.fill();
+    ctx.fillStyle = alpha(U.husband, a);
+    path(r, -1);
+    ctx.fill();
+  } else {
+    ctx.lineWidth = w;
+    ctx.strokeStyle = alpha(U.husband, a);
+    path(r - w / 2, -1);
+    ctx.stroke();
+    ctx.strokeStyle = alpha(U.wife, a);
+    path(r - w / 2, 1);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 /** «+N» свёрнутого союза справа от ромба: малый гротеск, с ореолом цвета неба. */
 function paintCount(ctx: CanvasRenderingContext2D, pal: { ink2: string; halo: string }, coarse: boolean, x: number, y: number, text: string, color: string) {
   ctx.font = countFont(coarse);
@@ -1064,9 +1148,41 @@ export function paintJoin(ctx: CanvasRenderingContext2D, x: number, y: number, c
 /**
  * Узлы союзов кадра (§ 2, «Знаки»): ◆ — 9 px в раскрытом небе, 7 px на «всех лицах»; залит — дети показаны, полый с «+N» —
  * свёрнут; выбранный (карточка союза) — в кольце; наведённый — ярче и в тонком кольце; с фокусом клавиатуры — кольцо
- * фокуса. • — узел следующего гнезда того же союза. Рисуются над лентами и под звёздами: ленты проходят через ромб, как
+ * фокуса. Знак двухцветный (синяя половина — муж, розовая — жена), а с цветными линиями — их цвета (этап 12, решение 87;
+ * paintUnion, nodeLook). • — узел следующего гнезда того же союза. Рисуются над лентами и под звёздами: ленты проходят через ромб, как
  * через пересадочную станцию (§ 3). Возвращает поля попадания ромбов (не меньше 24 × 24) и «+N» (отдельная цель).
  */
+/**
+ * Цвет ромба союза в кадре (этап 12, решение 87): ромб берёт цвет своих линий.
+ *  — союз выбранной связи — жёлтый (его рисует marks.ts, drawSelectedLink, поверх жёлтого пути);
+ *  — линии союза цвета ветви выбранного (дети — потомки выбранного одной ветви) — тот же цвет той же яркости;
+ *  — союз лица под указателем или выбранного (его браки и союз его родителей: семья, чьи дуги родства — золотистые) —
+ *    золотистый;
+ *  — иначе — двухцветный знак союза с яркостью его лиц.
+ * a — непрозрачность знака; edge — тонкая обводка цветного ромба (днём — тёмная, ночью её заменяет подложка неба).
+ */
+export function nodeLook(v: SkyContext, p: Pass, n: Pick<LinkNode, 'union' | 'owner' | 'from'>, hot: boolean): { color: string | null; a: number; edge: string | null } {
+  const theme: MapTheme = v.pal.glow ? 'night' : 'day';
+  const edge = theme === 'day' ? alpha(v.pal.ink, 0.75) : null;
+  const intro = p.s.intro;
+  const k = p.s.link;
+  if (k && (k.kind === 'child' || k.kind === 'union' || k.kind === 'spouse') && k.union === n.union) return { color: LINK_YELLOW[theme], a: intro, edge };
+  const u = ALL_UNIONS.byId.get(n.union);
+  const bf = branchFrame(v, p);
+  if (u && bf.map) {
+    const kids = u.kids.filter((id) => {
+      const i = v.indexOf(id);
+      return i !== undefined && v.drawn(i);
+    });
+    const c = commonBranch(bf, p, kids);
+    if (c) return { color: c.color, a: hot ? 1 : c.a, edge };
+  }
+  const focus = [p.s.hovered, p.s.selected];
+  if (u && focus.some((id) => !!id && (u.a === id || u.b === id || u.kids.includes(id)))) return { color: KIN_GOLD[theme], a: intro, edge };
+  const e = hot ? 1 : DOT_TONE * Math.max(p.emph(n.owner), p.emph(n.from));
+  return { color: null, a: Math.min(1, e * intro), edge: null };
+}
+
 export function drawLinkNodes(v: SkyContext, p: Pass, d: LinkDraw, marks: PlateMarks = {}, settle = 1): { plates: PlateHit[]; counts: CountHit[] } {
   const { ctx, cam, pal } = v;
   const plates: PlateHit[] = [];
@@ -1090,6 +1206,8 @@ export function drawLinkNodes(v: SkyContext, p: Pass, d: LinkDraw, marks: PlateM
   // «все лица» теснее поколения в 18 px: ромбов нет (семья — сгусток; знаки только закрывали бы друг друга и имена)
   if (map && v.genRoom < 0.5) return { plates, counts };
   const inView: { n: LinkNode; x: number; y: number; st: ReturnType<typeof state> }[] = [];
+  // вид нарисованных ромбов — для проверок приёмки (canvas[data-union-looks]): «союз:цвет или two:непрозрачность»
+  const looks: string[] = [];
   for (const n of d.frame.nodes) {
     const x = n.x + d.dx;
     const y = n.y + d.dy;
@@ -1118,12 +1236,15 @@ export function drawLinkNodes(v: SkyContext, p: Pass, d: LinkDraw, marks: PlateM
     }
     const e = hover || sel ? 1 : DOT_TONE * Math.max(p.emph(n.owner), p.emph(n.from));
     const color = alpha(pal.ink, Math.min(1, e * intro));
+    const look = nodeLook(v, p, n, hover || sel);
     ctx.globalAlpha = g0 * a0 * settle;
     if (n.kind === 'join') {
-      paintJoin(ctx, x, y, color, pal.sky);
+      // узел следующего гнезда — тоном линий: цветом союза, если его линии цветные
+      paintJoin(ctx, x, y, look.color ? alpha(look.color, look.a) : color, pal.sky);
       continue;
     }
-    paintDot(ctx, x, y, R, { open: n.open, color, halo: pal.sky });
+    paintUnion(ctx, x, y, R, { open: n.open, halo: pal.sky, theme: v.pal.glow ? 'night' : 'day', a: look.a, color: look.color, edge: look.edge });
+    looks.push(`${n.union}:${look.color ?? 'two'}:${(Math.round(look.a * a0 * settle * 100) / 100).toFixed(2)}`);
     let count: CountHit | null = null;
     if (n.count) {
       ctx.font = countFont(v.coarse);
@@ -1161,6 +1282,11 @@ export function drawLinkNodes(v: SkyContext, p: Pass, d: LinkDraw, marks: PlateM
     if (count) p.placer.add({ x: x + R + 2, y: y - size * 0.6, w: count.w - (count.x - (x + R + 2)) - 2, h: size * 1.2 });
   }
   ctx.globalAlpha = g0;
+  const ds = (ctx.canvas as { dataset?: DOMStringMap } | undefined)?.dataset;
+  if (ds) {
+    const t = looks.join(';');
+    if (ds.unionLooks !== t) ds.unionLooks = t;
+  }
   return { plates, counts };
 }
 
@@ -1184,6 +1310,7 @@ export { LINK_YELLOW };
  */
 export function drawLinkSample(ctx: CanvasRenderingContext2D, pal: LinkSamplePalette, w: number, h: number, sign: LinkSign) {
   const px = (x: number) => Math.round(x) + 0.5;
+  const theme: MapTheme = pal.glow ? 'night' : 'day';
   const tone = alpha(pal.ink2, 0.72);
   const trailTone = alpha(pal.ink2, 0.6);
   const star = (x: number, y: number, magnitude: number, sex: 'm' | 'f' = 'm') => drawGlyph(ctx, x, y, { sex, kind: 'person', magnitude, color: pal.ink, halo: pal.sky });
@@ -1207,9 +1334,9 @@ export function drawLinkSample(ctx: CanvasRenderingContext2D, pal: LinkSamplePal
     case 'node': {
       // залитый ромб (дети показаны) и полый с «+N» (свёрнут): на следе матери
       line([px(8), mid, px(w * 0.46), mid], trailTone, 1.2);
-      paintDot(ctx, px(w * 0.24), mid, NODE_R_FAMILY, { open: true, color: pal.ink, halo: pal.sky });
+      paintUnion(ctx, px(w * 0.24), mid, NODE_R_FAMILY, { open: true, halo: pal.sky, theme, a: 1 });
       line([px(w * 0.56), mid, px(w - 6), mid], trailTone, 1.2);
-      paintDot(ctx, px(w * 0.68), mid, NODE_R_FAMILY, { open: false, color: pal.ink, halo: pal.sky });
+      paintUnion(ctx, px(w * 0.68), mid, NODE_R_FAMILY, { open: false, halo: pal.sky, theme, a: 1 });
       paintCount(ctx, { ink2: pal.ink2, halo: pal.sky }, false, px(w * 0.68) + NODE_R_FAMILY + 4, mid, '+4', pal.ink);
       break;
     }
@@ -1220,7 +1347,7 @@ export function drawLinkSample(ctx: CanvasRenderingContext2D, pal: LinkSamplePal
       line([px(8), top, px(w - 6), top], trailTone, 1.2);
       line([x1, top, x1, low, x1 + 16, low], tone);
       line([x2, top, x2, low, x2 + 16, low], tone);
-      paintDot(ctx, x1, top, NODE_R_FAMILY, { open: true, color: pal.ink, halo: pal.sky });
+      paintUnion(ctx, x1, top, NODE_R_FAMILY, { open: true, halo: pal.sky, theme, a: 1 });
       paintJoin(ctx, x2, top, pal.ink, pal.sky);
       star(x1 + 20, low, 4);
       star(x2 + 20, low, 4);
@@ -1241,7 +1368,7 @@ export function drawLinkSample(ctx: CanvasRenderingContext2D, pal: LinkSamplePal
         line([x, ky, x + 12 + k * 8, ky], tone);
         star(x + 16 + k * 8, ky, 4);
       });
-      paintDot(ctx, x, my, NODE_R_FAMILY, { open: true, color: pal.ink, halo: pal.sky });
+      paintUnion(ctx, x, my, NODE_R_FAMILY, { open: true, halo: pal.sky, theme, a: 1 });
       star(px(10), hy, 3);
       star(px(16), my, 3, 'f');
       break;
@@ -1259,7 +1386,7 @@ export function drawLinkSample(ctx: CanvasRenderingContext2D, pal: LinkSamplePal
       const x = px(w * 0.3);
       line([px(8), top, px(w - 6), top], trailTone, 1.2);
       line([x, top, x, top + 16], tone);
-      paintDot(ctx, x, top, NODE_R_MAP, { open: true, color: pal.ink, halo: pal.sky });
+      paintUnion(ctx, x, top, NODE_R_MAP, { open: true, halo: pal.sky, theme, a: 1 });
       line([x, low - 12, x, low, x + 10, low], tone);
       star(x + 14, low, 4);
       break;
@@ -1291,13 +1418,13 @@ export function drawLinkSample(ctx: CanvasRenderingContext2D, pal: LinkSamplePal
       ctx.lineTo(px(w * 0.8), low);
       ctx.stroke();
       ctx.restore();
-      paintDot(ctx, x, top, NODE_R_FAMILY, { open: true, color: pal.ink, halo: pal.sky });
+      paintUnion(ctx, x, top, NODE_R_FAMILY, { open: true, halo: pal.sky, theme, a: 1 });
       star(px(w * 0.72) + 4, mid, 3);
       star(px(w * 0.8) + 4, low, 3);
       break;
     }
     case 'selected': {
-      // выбранная связь: жёлтый путь и кольца на концах
+      // выбранная связь целиком (решение 88): жёлтый путь от звезды отца по его следу через ромб союза к ребёнку, кольца на концах
       const x = px(w * 0.3);
       const pts = [px(10), top, x, top, x, low, px(w * 0.7), low];
       if (pal.glow) {
@@ -1317,6 +1444,8 @@ export function drawLinkSample(ctx: CanvasRenderingContext2D, pal: LinkSamplePal
         ctx.stroke();
         ctx.restore();
       };
+      // ромб союза на пути — жёлтым (решение 87)
+      paintUnion(ctx, x, top, NODE_R_FAMILY, { open: true, halo: pal.sky, theme, a: 1, color: LINK_YELLOW[theme], edge: pal.glow ? null : alpha(pal.ink, 0.75) });
       star(px(10), top, 3);
       star(px(w * 0.7) + 4, low, 4);
       ring(px(10), top);

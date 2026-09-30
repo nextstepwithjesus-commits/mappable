@@ -2,7 +2,7 @@
  * Сценарии приёмки этапа 7, круг 3 (доработка по второй повторной экспертизе), группа nav3: номера 350–369, камера,
  * адрес и история (L4). Проверки — по окну неба .sky[data-view] («vp.l vp.t vp.r vp.b x0 kx laneTop ky»), месту выбранной
  * звезды .sky[data-sel], месту звёзд в списке неба для диктора (#sky-star-<id> data-x, data-y), адресу, записи
- * движения камеры по кадрам и памяти браузера («toledot:work», «toledot:lanes», «toledot:stack»).
+ * движения камеры по кадрам и памяти браузера («toledot:work», «toledot:lanes», «toledot:tabs»).
  */
 import type { Page } from 'playwright';
 import { pass, fail, hashId, pickShow, type Scenario } from './kit.ts';
@@ -413,10 +413,14 @@ export const nav3: Scenario[] = [
   },
   {
     n: 362,
-    title: 'UX-74, решение 50: «назад» переключает только активную карточку — открытые остаются, закрытая крестиком не добавляется в стопку, а встаёт на место активной; стопка не растёт',
+    // этап 12, решение 91: стопки нет — «назад» переключает только текущую карточку, закреплённые вкладки не меняются;
+    // карточка, закрытая крестиком, вкладкой не становится (тот же смысл, что у прежней проверки стопки)
+    title: 'UX-74, решения 50, 91: «назад» переключает только текущую карточку — вкладки закреплённых не меняются, закрытая крестиком карточка вкладкой не становится',
     run: async (p) => {
       await go(p, '#/ruf', 2600);
-      const stack = async () => ((await p.evaluate(`JSON.parse(sessionStorage.getItem('toledot:stack') || '{}').ids || []`)) as string[]).join(' ');
+      const tabs = async () => ((await p.evaluate(`JSON.parse(localStorage.getItem('toledot:tabs') || '[]').map((t) => t.id)`)) as string[]).join(' ');
+      await p.locator('.folio .folio-bar .pin-card').click();
+      await p.waitForTimeout(300);
       await p.locator('.folio button.person', { hasText: 'Давид' }).first().click();
       await p.waitForTimeout(1600);
       await p.locator('.folio button.person', { hasText: 'Иессей' }).first().click();
@@ -428,17 +432,18 @@ export const nav3: Scenario[] = [
       await p.waitForTimeout(350);
       await p.keyboard.press('Enter');
       await p.waitForTimeout(1800);
-      const s0 = await stack();
-      if (s0 !== 'moisey david ruf') return fail(`стопка до «назад»: ${s0}`);
-      const log = [s0];
+      const s0 = await tabs();
+      if (s0 !== 'ruf') return fail(`вкладки до «назад»: ${s0}`);
+      const log = [`${hashId(p)}: ${s0}`];
       for (let i = 0; i < 3; i++) {
         await p.goBack();
         await p.waitForTimeout(1000);
-        const s = await stack();
+        const s = await tabs();
+        const shown = (await p.locator('.folio .card-tabs .card-tab').evaluateAll((els) => els.map((e) => (e as HTMLElement).dataset.id))).join(' ');
         log.push(`${hashId(p)}: ${s}`);
-        if (s.split(' ').length > 3) return fail(`стопка выросла: ${log.join(' | ')}`);
-        if (s.split(' ')[0] !== hashId(p)) return fail(`активная карточка не лицо записи: ${log.join(' | ')}`);
-        if (!s.includes('moisey') || !s.includes('ruf')) return fail(`из стопки ушли открытые карточки: ${log.join(' | ')}`);
+        if (s !== 'ruf') return fail(`вкладки изменились: ${log.join(' | ')}`);
+        if (hashId(p) && shown !== 'ruf') return fail(`на листе вкладки: ${shown} (${log.join(' | ')})`);
+        if (hashId(p) && !(await p.locator(`.folio #title-${hashId(p)}`).count())) return fail(`текущая карточка — не лицо записи: ${log.join(' | ')}`);
       }
       return pass(log.join(' | '));
     },

@@ -32,11 +32,15 @@ const skyMode = (p: Page) => p.locator('.sky > canvas').getAttribute('data-mode'
 export const union4: Scenario[] = [
   {
     n: 520,
-    title: 'Решение 71: § 10 Авраама — «союз» у сына от Агари открывает карточку союза «Авраам и Агарь» вместо карточки лица; лицо остаётся выбранным, стопка не меняется; «×» возвращает карточку Авраама',
+    // этап 12, решение 91: стопки нет — вместо «стопка не меняется» проверяется, что не меняются вкладки закреплённых карточек
+    title: 'Решение 71: § 10 Авраама — «союз» у сына от Агари открывает карточку союза «Авраам и Агарь» вместо карточки лица; лицо остаётся выбранным, вкладки (решение 91) не меняются и видны над ней; «×» возвращает карточку Авраама',
     run: async (p) => {
       await open(p, '#/sarra');
+      await p.locator('.folio .folio-bar .pin-card').click();
+      await p.waitForTimeout(250);
       await open(p, '#/avraam');
-      const stack0 = (await p.locator('.folio-bar .stack-sum').count()) ? await p.locator('.folio-bar .stack-sum').innerText() : '';
+      const tabs = async () => (await p.locator('.folio .card-tabs .card-tab').evaluateAll((els) => els.map((e) => (e as HTMLElement).dataset.id))).join(' ');
+      const stack0 = await tabs();
       const link = p.locator('.folio #sec-10 [data-union="u:avraam+agar"]');
       if (!(await link.count())) return fail('в § 10 Авраама нет ссылки на союз с Агарью');
       const label = await link.getAttribute('aria-label');
@@ -50,13 +54,14 @@ export const union4: Scenario[] = [
       const heads = (await p.locator('.folio .union-body h4').allInnerTexts()).map(flat);
       if (heads.join('|') !== 'Супруги|Дети от этого союза|Происхождение') return fail(`разделы: ${heads.join(', ')}`);
       if (hashId(p) !== 'avraam') return fail(`выбранное лицо сменилось: ${hashId(p)}`);
-      const stack1 = (await p.locator('.folio-bar .stack-sum').count()) ? await p.locator('.folio-bar .stack-sum').innerText() : '';
-      if (stack1 !== stack0 || !/Сарра/.test(stack1)) return fail(`стопка: «${stack0}» → «${stack1}»`);
+      const stack1 = await tabs();
+      if (stack1 !== stack0 || stack1 !== 'sarra') return fail(`вкладки: «${stack0}» → «${stack1}»`);
+      if (await p.locator('.folio[data-union] .pin-card').count()) return fail('у карточки союза команда закрепления');
       await p.locator('.folio-bar button[aria-label="Закрыть карточку союза"]').click();
       await p.waitForTimeout(500);
       if (await p.locator('.folio[data-union]').count()) return fail('после «×» карточка союза осталась');
       if (!(await p.locator('.folio #title-avraam').count())) return fail('после «×» нет карточки Авраама');
-      return pass(`${dts.join(', ')}; ${heads.join(', ')}; стопка «${stack1}»`);
+      return pass(`${dts.join(', ')}; ${heads.join(', ')}; вкладки «${stack1}»`);
     },
   },
   {
