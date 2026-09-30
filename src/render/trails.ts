@@ -1645,6 +1645,23 @@ export function drawLinkLabels(v: SkyContext, p: Pass, d: LinkDraw, late = false
   const { cam } = v;
   const out: string[] = [];
   const onScreen = (x: number, y: number) => x > v.letterW && x < cam.w && y > v.openTop && y < cam.vp.b;
+  // имя матери у ромба — раньше подписей обрывков (этап 13): после укладки по матерям (решение 95) дети Давида стоят у
+  // своих матерей далеко от него, и подписи обрывков «Авессалом, 32 Н» у ромбов его следа занимали место имён матерей
+  for (const n of d.frame.nodes) {
+    if (n.mother === null || n.kind !== 'union' || !!n.late !== late) continue;
+    const x = n.x + d.dx;
+    const y = n.y + d.dy;
+    if (!onScreen(x, y)) continue;
+    // имя матери — только у союза в полную силу: погашенный выделением союз (и «вероятно» живые на меридиане) подписи не
+    // получает — бледная подпись не держала бы контраста 4,5 : 1; её место остаётся за ней (соседи не переезжают)
+    const a = Math.min(1, p.emph(n.owner), p.emph(n.from), n.mother ? p.emph(n.mother) : 1);
+    if (!(d.alpha > 0.5 || d.expanded.has(n.union))) continue;
+    const u = ALL_UNIONS.byId.get(n.union);
+    const text = n.mother ? nameOf(n.mother) : u ? unionName(u) : '';
+    if (!text) continue;
+    const b = putLinkText(v, p, { text, x: x + 5, y, dir: 0, right: true, id: n.union, side2: true }, 1, a < 0.99);
+    if (b) out.push(`${text}@${Math.round(x)},${Math.round(y)}`);
+  }
   for (const st of late ? [] : d.frame.stubs) {
     const lit = st.targets.every((id) => p.emph(id) > 0.5);
     if (st.kind !== 'kid' && !linkShown({ when: 'short', union: st.union, ks: st.ks }, d)) continue;
@@ -1665,21 +1682,6 @@ export function drawLinkLabels(v: SkyContext, p: Pass, d: LinkDraw, late = false
     const e = Math.min(1, Math.max(...st.targets.map((id) => p.emph(id))));
     const hold = e < 0.99 && !lit;
     const b = putLinkText(v, p, { text, x, y, dir: st.dir, right: st.side === 'parent' || st.dir !== 0, id: st.union ?? st.ks }, 1, hold);
-    if (b) out.push(`${text}@${Math.round(x)},${Math.round(y)}`);
-  }
-  for (const n of d.frame.nodes) {
-    if (n.mother === null || n.kind !== 'union' || !!n.late !== late) continue;
-    const x = n.x + d.dx;
-    const y = n.y + d.dy;
-    if (!onScreen(x, y)) continue;
-    // имя матери — только у союза в полную силу: погашенный выделением союз (и «вероятно» живые на меридиане) подписи не
-    // получает — бледная подпись не держала бы контраста 4,5 : 1; её место остаётся за ней (соседи не переезжают)
-    const a = Math.min(1, p.emph(n.owner), p.emph(n.from), n.mother ? p.emph(n.mother) : 1);
-    if (!(d.alpha > 0.5 || d.expanded.has(n.union))) continue;
-    const u = ALL_UNIONS.byId.get(n.union);
-    const text = n.mother ? nameOf(n.mother) : u ? unionName(u) : '';
-    if (!text) continue;
-    const b = putLinkText(v, p, { text, x: x + 5, y, dir: 0, right: true, id: n.union, side2: true }, 1, a < 0.99);
     if (b) out.push(`${text}@${Math.round(x)},${Math.round(y)}`);
   }
   // первый проход запоминает свои подписи, второй пишет все вместе

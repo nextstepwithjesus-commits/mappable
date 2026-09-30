@@ -397,6 +397,14 @@ export const skyin: Scenario[] = [
       await p.locator('.skyctl button', { hasText: 'Вписать' }).click();
       await p.waitForTimeout(1600);
       const fit = hashWin(p);
+      // предел — окно набора со всеми следами жизни ×1,5 (view.ts, updateZoomFloor): «Вписать» вписывает только звёзды, а
+      // следы (Давид умер в 970 г. до Р. Х.) шире; годы следов — из подписей списка лиц на виду (все годы набора — до Р. Х.)
+      const yrs = (await p.evaluate(() =>
+        [...document.querySelectorAll('#sky-stars button')]
+          .filter((b) => ['david', 'iessey', 'ovid', 'vooz', 'ruf'].some((id) => b.id === `sky-star-${id}`))
+          .flatMap((b) => [...(b.getAttribute('aria-label') ?? '').matchAll(/\d{3,4}/g)].map((m) => Number(m[0]))),
+      )) as number[];
+      const trails = yrs.length ? Math.max(...yrs) - Math.min(...yrs) : 0;
       const box = await canvasBox(p);
       for (let i = 0; i < 12; i++) {
         await p.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
@@ -406,10 +414,10 @@ export const skyin: Scenario[] = [
       await p.waitForTimeout(900);
       const out = hashWin(p);
       if (!(out.w > 0 && fit.w > 0)) return fail(`окно не прочитано: ${p.url()}`);
-      const limit = Math.max(fit.w * 1.5, 200) * 1.08;
-      if (out.w > limit) return fail(`окно набора ${fit.w} лет, после отдаления ${out.w} лет (предел ${Math.round(limit)})`);
+      const limit = Math.max(Math.max(fit.w, trails) * 1.5, 200) * 1.08;
+      if (out.w > limit) return fail(`окно набора ${fit.w} лет (со следами ${trails}), после отдаления ${out.w} лет (предел ${Math.round(limit)})`);
       if ((await p.locator('.skyctl button[aria-label="Отдалить"]').getAttribute('aria-disabled')) !== 'true') return fail('«Отдалить» не выключена у предела');
-      return pass(`${fit.w} → ${out.w} лет`);
+      return pass(`${fit.w} (со следами ${trails}) → ${out.w} лет`);
     },
   },
   {

@@ -207,7 +207,13 @@ export const polish6: Scenario[] = [
       const v = (await p.evaluate(() => (document.querySelector('.sky') as HTMLElement).dataset.view ?? '')).split(' ').map(Number);
       const named = ((await canvasData(p)).labelIds ?? '').split(' ');
       const shown: string[] = [];
-      for (const w of JACOB_WIVES) if (await starAt(p, w)) shown.push(w);
+      // на виду — звезда не под строкой показа и органами неба (этап 13, решение 118: строка показа на телефоне — до двух
+      // строк; как denseSpots в tools/accept/phone.ts)
+      const cv = (await p.locator('.sky > canvas').boundingBox())!;
+      for (const w of JACOB_WIVES) {
+        const q = await starAt(p, w);
+        if (q && (await p.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.tagName === 'CANVAS', { x: cv.x + q.x, y: cv.y + q.y }))) shown.push(w);
+      }
       if (shown.length < 2) return fail(`на виду жён: ${shown.join(', ')}`);
       const miss = shown.filter((w) => !named.includes(w));
       if (miss.length) return fail(`жёны без подписи: ${miss.join(', ')}`);

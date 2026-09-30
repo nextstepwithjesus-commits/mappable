@@ -255,7 +255,8 @@ export const panels: Scenario[] = [
       const bad = [/-\d{2,4}\b/, /persons|lanes|corridor|Assyrian/i, /г\.\./, /^0\d\s/m].find((re) => re.test(t));
       if (bad) return fail(`служебная строка: ${bad}`);
       if (await sheet(p).locator('[role="group"][aria-label="Модель хронологии"]').count()) return fail('переключатель модели остался в «О карте»');
-      await sheet(p).getByRole('button', { name: 'О хронологии' }).click();
+      // ссылка в тексте и команда под абзацем ведут в одну панель
+      await sheet(p).getByRole('button', { name: 'О хронологии', exact: true }).first().click();
       await p.waitForTimeout(600);
       const c = nb(await sheet(p).innerText());
       if (!/966 г\. до Р\. Х\. \(Тиле\)/.test(c)) return fail('в «О хронологии» нет «966 г. до Р. Х. (Тиле)»');
@@ -407,7 +408,8 @@ export const panels: Scenario[] = [
         }).length;
       });
       if (wide) return fail(`образцов за краем листа: ${wide}`);
-      await sh.locator('.legend-toc button', { hasText: 'Линии' }).tap();
+      // «Линии» и «Линии карты» (решение 94) — разные разделы
+      await sh.locator('.legend-toc').getByRole('button', { name: 'Линии', exact: true }).tap();
       await p.waitForTimeout(600);
       const at = await sh.evaluate((el) => {
         const h = el.querySelector('#legend-lines')!.getBoundingClientRect();

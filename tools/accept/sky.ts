@@ -148,7 +148,8 @@ export const sky: Scenario[] = [
       await p.waitForTimeout(600);
       const t = await tipNow(p);
       if (!t?.shown) return fail('подсказка отрезка не показана');
-      if (!/ок\.\s*\d+–⁠?\d+\s*гг\.\s*до\s*Р\.\s*Х\./.test(t.text)) return fail(`в подсказке нет годов: «${t.text}»`);
+      // годы царствования — расчёт по реконструкции, без «ок.» (словарь дат, решение 96)
+      if (!/\d+–⁠?\d+\s*гг\.\s*до\s*Р\.\s*Х\./.test(t.text)) return fail(`в подсказке нет годов: «${t.text.replace(/\s+/g, ' ')}»`);
       if (!/«[^»]+» \(4\s*Цар\s*21:1\)/.test(t.text)) return fail(`в подсказке нет стиха: «${t.text}»`);
       const cls = await p.locator('.sky canvas').getAttribute('class');
       if (!/\bhot\b/.test(cls ?? '')) return fail('над отрезком курсор не «pointer»');

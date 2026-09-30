@@ -4,6 +4,20 @@
  */
 import type { Scenario } from './kit.ts';
 
+/**
+ * Блоки раскладки из src/generated/atlas.json. С этапа 13 сборка пишет их массивами (NFR-2; tools/build-data.ts,
+ * src/data/atlas.ts decodeBlock): [id, основание, созвездие, прикреплён к, рядом с, сторона, полоса от, полоса до, t0, t1,
+ * размер, скопление?]. Прежний вид — объектами.
+ */
+const blocksOf = (L: { blocks: unknown[] }) =>
+  L.blocks.map((b) => (Array.isArray(b) ? { id: b[0], laneMin: b[6], laneMax: b[7], size: b[10], ...(b[11] ? { cluster: b[11] } : {}) } : b)) as {
+    id: number;
+    laneMin: number;
+    laneMax: number;
+    size: number;
+    cluster?: unknown;
+  }[];
+
 export const map: Scenario[] = [
   // data
   // 146–149 — данные неба (агент data): скопления, честные следы, контуры, координаты и синхронизмы.
@@ -19,7 +33,7 @@ export const map: Scenario[] = [
       const atlas = JSON.parse(readFileSync(join(ROOT, 'src/generated/atlas.json'), 'utf8'));
       const lists = JSON.parse(readFileSync(join(ROOT, 'data/lists.json'), 'utf8')).lists as { id: string }[];
       const L = atlas.models[0].layout;
-      const clusters = L.blocks.filter((b: { cluster?: unknown }) => b.cluster) as { id: number; laneMin: number; laneMax: number; cluster: { list: string; name: string; count: number; members: string[] } }[];
+      const clusters = blocksOf(L).filter((b: { cluster?: unknown }) => b.cluster) as { id: number; laneMin: number; laneMax: number; cluster: { list: string; name: string; count: number; members: string[] } }[];
       const heroes = clusters.find((b) => b.cluster.list === 'heroes-david');
       if (!heroes) return fail('нет скопления «Храбрые Давида»');
       if (clusters.length < lists.length - 2) return fail(`скоплений ${clusters.length} из ${lists.length} списков`);
@@ -78,7 +92,7 @@ export const map: Scenario[] = [
       const L = atlas.models[0].layout;
       const O = (L.outlines ?? []) as { g: string; p?: string; n: number; r: number[][]; s: number[][] }[];
       if (O.length < 40) return fail(`контуров ${O.length}`);
-      const blocks3 = (L.blocks as { size: number; cluster?: unknown }[]).filter((x) => !x.cluster && x.size >= 3).length;
+      const blocks3 = (blocksOf(L) as { size: number; cluster?: unknown }[]).filter((x) => !x.cluster && x.size >= 3).length;
       if (O.length >= blocks3) return fail(`контуров ${O.length} при ${blocks3} притоках: не по созвездиям`);
       if (O.some((o) => !o.r.length || o.r.some((ring) => ring.length < 8))) return fail('пустое или вырожденное кольцо');
       if (!O.some((o) => o.g === 'davidic' && o.p === 'judah')) return fail('нет вложенного контура «Дом Давидов» в «Колене Иудином»');

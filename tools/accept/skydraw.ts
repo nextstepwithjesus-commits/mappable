@@ -56,14 +56,16 @@ export const skydraw: Scenario[] = [
   },
   {
     n: 272,
-    title: 'Решение 24, MAP-51: у Иохаведы, Арама и Овида — разрыв «//» на следе; отводы к детям после разрыва — со знаком',
+    // этап 13: после сверки хронологии жизнь Овида не растянута (разрыва нет); тот же случай — Мариам, сестра Моисея
+    // (умерла в Кадесе, Чис 20:1), как в tests/trails-k5.test.ts
+    title: 'Решение 24, MAP-51: у Иохаведы, Арама и Мариам — разрыв «//» на следе; отводы к детям после разрыва — со знаком',
     run: async (p) => {
       const seen = new Set<string>();
-      for (const hash of ['#/~y-1660~w300~l70~s1', '#/~y-1700~w300~l0~s1', '#/~y-1180~w250~l0~s1']) {
+      for (const hash of ['#/~y-1660~w300~l70~s1', '#/~y-1700~w300~l0~s1', '#/mariam~y-1480~w300~s1']) {
         await go(p, hash, 2200);
         for (const id of (await cv(p, 'breaks')).split(' ').filter(Boolean)) seen.add(id);
       }
-      for (const id of ['iokhaveda', 'aram', 'ovid']) if (!seen.has(id)) return fail(`нет разрыва у ${id}; есть: ${[...seen].join(', ')}`);
+      for (const id of ['iokhaveda', 'aram', 'mariam']) if (!seen.has(id)) return fail(`нет разрыва у ${id}; есть: ${[...seen].join(', ')}`);
       return pass(`разрывы: ${[...seen].join(', ')}`);
     },
   },
@@ -73,7 +75,15 @@ export const skydraw: Scenario[] = [
     run: async (p) => {
       await go(p, '#/~y40~w120~l0~s1');
       const br = (await cv(p, 'brackets')).split(' ');
-      for (const id of ['luka', 'filimon', 'onisim']) if (!br.includes(id)) return fail(`нет скобки у ${id}: ${br.join(' ')}`);
+      // этап 13 (решения 98, 101): решатель ставит лиц без годов по эпохе и границам текста — у Луки, Филимона и Онисима
+      // теперь промежуток рождения («род. между 10 г. до Р. Х. и 55 г. по Р. Х.»), и звезда стоит у первого
+      // засвидетельствованного события (L1) — в годы служения Павла, правее его звезды; скобка — если лет нет вовсе
+      const pavel = await star(p, 'pavel');
+      for (const id of ['luka', 'filimon', 'onisim']) {
+        if (br.includes(id)) continue;
+        const q = await star(p, id);
+        if (!q || !pavel || q.x <= pavel.x) return fail(`нет скобки у ${id}, и звезда не в годы служения Павла: ${JSON.stringify(q)} против ${JSON.stringify(pavel)}; скобки: ${br.join(' ')}`);
+      }
       await go(p, '#/~y-2070~w250~l21~s1');
       if (!(await cv(p, 'brackets')).split(' ').includes('melkhisedek')) return fail('нет скобки у Мелхиседека');
       if (await overlaps(p)) return fail(`наложений подписей ${await overlaps(p)}`);
@@ -128,7 +138,8 @@ export const skydraw: Scenario[] = [
     n: 276,
     title: 'Решение 28, UX-46: «только линии» — у Фареса, Вооза и Овида малые знаки Фамари, Раав и Руфи со стихом; выбранная Руфь — не пустое кольцо',
     run: async (p) => {
-      await go(p, '#/~y-1600~w900~l0~s1~o1', 3200);
+      // окно −2050…−950: после сверки хронологии (этап 13) Вооз и Овид — в конце времени Судей (−1127, −1099)
+      await go(p, '#/~y-1500~w1100~l0~s1~o1', 3200);
       const n = await notes(p);
       for (const t of ['Фамарь — мать Фареса (Мф 1:3)', 'Раав — мать Вооза (Мф 1:5)', 'Руфь — мать Овида (Мф 1:5)']) if (!n.includes(t)) return fail(`нет «${t}»: ${n.filter((q) => q.includes('мать')).join(' | ')}`);
       if (await overlaps(p)) return fail(`наложений подписей ${await overlaps(p)}`);

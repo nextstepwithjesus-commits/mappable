@@ -539,7 +539,8 @@ const BASE: Scenario[] = [
       const names = (await items.locator('.nm').allInnerTexts()).map((t) => t.trim());
       if (names.length < 2) return fail(`в списке моделей ${names.length} пунктов`);
       if ((await items.locator('.note').count()) !== names.length) return fail('не у каждой модели есть пояснение');
-      const checked = (await p.locator('.skyctl [role="menuitemradio"][aria-checked="true"] .nm').innerText()).trim();
+      // у модели по умолчанию в списке — приписка «— по умолчанию» (решение 102), на кнопке — только название
+      const checked = (await p.locator('.skyctl [role="menuitemradio"][aria-checked="true"] .nm').innerText()).trim().replace(/ — по умолчанию$/, '');
       if (checked !== was) return fail(`отмечена «${checked}», на кнопке «${was}»`);
       const k = names.findIndex((x) => /Краткое пребывание/.test(x));
       if (k < 0) return fail('нет модели «Краткое пребывание»');
@@ -572,11 +573,11 @@ const BASE: Scenario[] = [
       const sky = (await p.locator('.sky').boundingBox())!;
       const last = (await col.last().boundingBox())!;
       if (last.x + last.width > sky.x + sky.width || last.y + last.height > sky.y + sky.height) return fail('колонка выходит за небо');
-      // тема на телефоне — флажок «Дневная карта» в «Разделах» (H4: верх — одна строка 48 px); команды — без прокрутки
+      // тема на телефоне — пункты «Ночь» и «День» в «Меню» (H4: верх — одна строка 48 px; словарь 109); команды — без прокрутки
       await p.locator('.top .sections > button').tap();
       await p.waitForTimeout(200);
       const items = (await p.locator('.top .sections [role^="menuitem"] .nm').allInnerTexts()).map((t) => t.trim());
-      if (!items.includes('Дневная карта')) return fail('тема недоступна');
+      if (!items.includes('Ночь') || !items.includes('День')) return fail(`тема недоступна: ${items.join(', ')}`);
       await p.keyboard.press('Escape');
       const scroll = (await p.evaluate("(() => { const n = document.querySelector('.commands'); return n.scrollWidth - n.clientWidth; })()")) as number;
       if (scroll > 0) return fail('ряд команд прокручивается');
@@ -605,7 +606,8 @@ const BASE: Scenario[] = [
       await p.locator('.sky .showbar .sb-cmd', { hasText: 'изменить' }).tap();
       await p.waitForTimeout(400);
       const kinds = (await p.locator('.showsheet label.ss-kind .nm').allInnerTexts()).map((t) => t.replace(/\s+/g, ' ').trim());
-      if (!kinds.some((k) => /^Линии Мессии/.test(k))) return fail(`в листе «Показ»: ${kinds.join(' | ')}`);
+      // решение 110: показ линий Мессии называется «Родословие Иисуса Христа (Мф 1, Лк 3)»
+      if (!kinds.some((k) => /^Родословие Иисуса Христа/.test(k))) return fail(`в листе «Показ»: ${kinds.join(' | ')}`);
       await p.locator('.showsheet .sheet-head .close').tap();
       await p.waitForTimeout(300);
       // планшет 768 × 1024 с карточкой: небо уже 520 px — та же колонка; без карточки — блок

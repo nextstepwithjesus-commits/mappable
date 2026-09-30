@@ -121,6 +121,8 @@ export const a11y: Scenario[] = [
       if (role !== 'application' || rd !== 'звёздная карта') return fail(`холст: role «${role}», aria-roledescription «${rd}»`);
       const tabbable = (await p.evaluate(`[...document.querySelectorAll('.sky .visually-hidden button, .sky .visually-hidden a, #sky-stars button')].filter((e) => e.tabIndex >= 0 && e.getClientRects().length).length`)) as number;
       if (tabbable) return fail(`в скрытых списках неба ${tabbable} остановок Tab`);
+      // список обновляется, когда небо остановилось, и не реже раза в 2 с (SkyA11y, MAX_WAIT_MS): пока звёзды зажигаются — ждём
+      await p.waitForFunction(() => document.querySelectorAll('#sky-stars button').length >= 10, null, { timeout: 4000 }).catch(() => undefined);
       const items = await p.locator('#sky-stars button').count();
       if (items < 10) return fail(`в списке лиц на виду ${items} пунктов`);
       await tabToSky(p);

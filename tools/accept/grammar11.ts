@@ -435,7 +435,9 @@ export const grammar11: Scenario[] = [
     run: async (p) => {
       const out: string[] = [];
       let valid = 0;
-      for (const hash of ['#/iakov~vr.iakov.d.1.f', '#/david~vr.david.d.1.f', '#/noy~vr.noy.d.1.f']) {
+      // этап 13: после укладки по матерям (решение 95) у Иакова, Давида и Ноя меньше свободных мест для честной пробы —
+      // сцены Авраама и Аарона добавлены, каждая проба проверяется так же
+      for (const hash of ['#/iakov~vr.iakov.d.1.f', '#/david~vr.david.d.1.f', '#/noy~vr.noy.d.1.f', '#/avraam~vr.avraam.d.1.f', '#/aaron~vr.aaron.d.1.f']) {
       await open(p, hash);
       // ленту ловит нарисованная нить (ribbons.ts), а не маршрут журнала: пробы — по стволам, зубцам и чертам брака
       const kinds = ['tooth', 'trunk', 'bar'];
