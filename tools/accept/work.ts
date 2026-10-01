@@ -827,9 +827,13 @@ const workset: Scenario[] = [
       const [named, stars] = (d.named ?? '0/0').split('/').map(Number);
       if (d.mode !== 'work' || over) return no(`режим ${d.mode}, наложений ${over}`);
       // на 390 px семья Давида стоит плотнее, чем помещаются имена без наложений: подпись, которой нет места, не рисуется
-      // (наложений нет — это важнее); подписано не меньше 95 % видимых лиц набора
-      const why = `подписано ${named}/${stars}${d.unnamed ? `; без подписи: ${d.unnamed}` : ''}`;
-      return stars > 10 && named / stars >= 0.95 ? ok(why) : no(why);
+      // (наложений нет — это важнее). Этап 14 (решение 140): имя не ложится на чужой знак и стоит ближе к своей звезде,
+      // поэтому мест меньше; подпись без места — в списке скрытых (canvas[data-hidden]), встаёт при касании и фокусе,
+      // её читает диктор. Подписано не меньше 90 % видимых лиц набора, остальные — все в списке скрытых
+      const hidden = new Set(String((await p.locator('.sky > canvas').getAttribute('data-hidden')) ?? '').split(/[\s,;]+/).filter(Boolean));
+      const lost = String(d.unnamed ?? '').split(/\s+/).filter(Boolean).filter((id) => !hidden.has(id));
+      const why = `подписано ${named}/${stars}${d.unnamed ? `; без подписи: ${d.unnamed}` : ''}${lost.length ? `; не в списке скрытых: ${lost.join(' ')}` : ''}`;
+      return stars > 10 && named / stars >= 0.9 && !lost.length ? ok(why) : no(why);
     },
   },
   {

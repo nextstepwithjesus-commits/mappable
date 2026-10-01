@@ -366,11 +366,29 @@ const BASE: Scenario[] = [
       const path = (await p.locator('.sky').getAttribute('data-kin-path')) ?? '';
       if (!path) return fail('путь родства Иоав — Давид не показан на небе');
       await p.click('.sheet .close');
-      await p.waitForTimeout(500);
-      const star = await hoverStar(p, (n) => !['Иоав', 'Давид', 'Саруия', 'Иессей'].includes(n));
+      // лист «Родства» закрывается, небо встаёт: список лиц неба обновляется в покое
+      await p.waitForTimeout(1200);
+      // звезда — из списка лиц неба (#sky-stars: места звёзд), а не наугад по подсказке: с этапа 14 наведение на след
+      // родителя до ромба называет связь (решение 159), и щелчок там выбирает связь, а не лицо
+      const cv = (await p.locator('.sky canvas').boundingBox())!;
+      const star = await p.evaluate(
+        ({ skip, h, ox, oy }) => {
+          for (const b of document.querySelectorAll<HTMLElement>('#sky-stars button[data-x]')) {
+            const name = (b.textContent ?? '').trim();
+            const x = Number(b.dataset.x);
+            const y = Number(b.dataset.y);
+            if (!name || skip.includes(name) || !b.id.startsWith('sky-star-') || y < 70 || y > h - 70) continue;
+            // звезда на самом небе, не под строкой показа, органами и карточкой у звезды
+            if (document.elementFromPoint(ox + x, oy + y)?.tagName !== 'CANVAS') continue;
+            return { x, y, name };
+          }
+          return null;
+        },
+        { skip: ['Иоав', 'Давид', 'Саруия', 'Иессей'], h: cv.height, ox: cv.x, oy: cv.y },
+      );
       if (!star) return fail('не нашлось звезды для щелчка');
-      await p.mouse.click(star.x, star.y);
-      await p.waitForTimeout(500);
+      await p.mouse.click(cv.x + star.x, cv.y + star.y);
+      await p.waitForTimeout(900);
       if (['ioav', ''].includes(hashId(p))) return fail(`щелчок по «${star.name}» не выбрал лицо`);
       const after = await p.locator('.sky').getAttribute('data-kin-path');
       return after ? fail(`у «${star.name}» светится прежний путь: ${after}`) : pass();
