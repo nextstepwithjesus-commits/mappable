@@ -1406,6 +1406,12 @@ button.row:focus-visible {
   text-decoration-color: var(--rule-strong);
   text-underline-offset: 3px;
 }
+/* на сенсорном экране команда группы — цель 44 px, как остальные строки выдачи (решение 154; M6, решение 33) */
+@media (pointer: coarse) {
+  .results .grp .result.cmdrow.all {
+    min-height: 44px;
+  }
+}
 .results .full {
   position: sticky;
   bottom: -4px;

@@ -251,6 +251,22 @@
   .folio .sheet-dot .dc-top {
     padding-right: 44px;
   }
+  /* шапка листа = высота краткой карточки (решение 155): имя и годы — одной строкой (длинное имя переносит годы ниже),
+     уточнение — следующей; строки «Родства» на сенсорном экране — по 44 px (решение 154) */
+  .folio .sheet-dot .dc-person .dc-info {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 10px;
+  }
+  .folio .sheet-dot .dc-person .dc-yrs {
+    order: 2;
+    margin-top: 0;
+  }
+  .folio .sheet-dot .dc-person .dc-dis {
+    order: 3;
+    flex: 1 0 100%;
+  }
   .folio .sheet-dot .dc-kin {
     margin: 6px 0 0;
     padding: 4px 0 2px;
@@ -259,9 +275,11 @@
     margin: 2px -8px 0;
     padding: 0;
   }
+  /* команды листа — цели 44 px на сенсорном экране; мышью (масштаб 200 % на компьютере) — 32 px, как у команд карточки:
+     шапка листа = высота краткой карточки, и небу над ней остаётся больше (решение 155; M8) */
   .folio .sheet-dot .dc-cmds .cmd,
   .folio .sheet-dot .dc-cmds .menu > button {
-    min-height: 44px;
+    min-height: 32px;
   }
   .folio .bar-years {
     padding: 0 0 2px;
@@ -530,6 +548,11 @@
   .guide-cmd,
   .menu.model > button,
   .result.cmdrow {
+    min-height: 44px;
+  }
+  /* команды листа карточки у звезды: мышью — 32 px (масштаб 200 % на компьютере), касанием — 44 (решение 155) */
+  .folio .sheet-dot .dc-cmds .cmd,
+  .folio .sheet-dot .dc-cmds .menu > button {
     min-height: 44px;
   }
   .seg button {

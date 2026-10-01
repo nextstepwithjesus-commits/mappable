@@ -101,8 +101,8 @@ describe('шаг пути (E5)', () => {
     expect(Math.hypot(mid.x - (0.25 * a.x + 0.5 * c.x + 0.25 * b.x), mid.y - (0.25 * a.y + 0.5 * c.y + 0.25 * b.y))).toBeLessThan(6);
   });
   // этап 11, Г10: штрих — только иное происхождение; этап 13, решение 94: по Луке и предок — тоже штрих, толкование —
-  // точки цвета текста, слово Писания — золотистые точки
-  it('начертание: кровный и брак — сплошной, иное происхождение — штрих, слово Писания и толкование — точки разного цвета', () => {
+  // точки цвета текста; этап 14, решение 138: слово Писания — сплошной золотистой линией (точки — только толкование)
+  it('начертание: кровный и брак — сплошной, иное происхождение — штрих, слово Писания — сплошной золотистый, толкование — точки', () => {
     expect(marks.stepLook({ kind: 'down', claim: 'natural', interpretive: false })).toBe('blood');
     expect(marks.stepLook({ kind: 'down', claim: 'legal', interpretive: false })).toBe('legal');
     expect(marks.stepLook({ kind: 'down', claim: 'levirate', interpretive: false })).toBe('legal');
@@ -111,7 +111,7 @@ describe('шаг пути (E5)', () => {
     expect(marks.stepLook({ kind: 'spouse', claim: '', interpretive: false })).toBe('blood');
     expect(marks.stepLook({ kind: 'kin', claim: '', interpretive: false })).toBe('term');
     expect(marks.stepLook({ kind: 'up', claim: 'by-luke', interpretive: true })).toBe('interp');
-    expect(marks.STEP_DASH.term.length).toBeGreaterThan(0);
+    expect(marks.STEP_DASH.term).toEqual([]);
     expect(marks.STEP_DASH.interp.length).toBeGreaterThan(0);
     expect(marks.STEP_DASH.legal).toEqual([6, 3]);
   });
@@ -131,7 +131,8 @@ describe('путь на небе (U5): «Иоав — племянник Дав�
     fit(s, ids);
     for (const id of ids) expect(inside(s, id), id).toBe(true);
   });
-  it('ломаная 2 px на подложке, шаг «брат» — точками; подписи «мать» и «брат»; наложений нет', () => {
+  // этап 14, решение 138: шаг словом Писания («брат») — сплошной золотистой линией; точки — только толкование
+  it('ломаная 2 px на подложке, шаг «брат» — сплошной золотистый; подписи «мать» и «брат»; наложений нет', async () => {
     const { s, rec } = makeSky();
     fit(s, pathOf('ioav', 'david').ids);
     rec.calls.length = 0;
@@ -140,7 +141,9 @@ describe('путь на небе (U5): «Иоав — племянник Дав�
     expect(widths).toContain(5);
     expect(widths).toContain(2);
     const dashes = rec.calls.filter((c) => c[0] === 'setLineDash').map((c) => JSON.stringify(c[1]));
-    expect(dashes).toContain(JSON.stringify([0.5, 4.5]));
+    expect(dashes).not.toContain(JSON.stringify([0.5, 4.5]));
+    const { KIN_GOLD } = await import('../src/render/branches.ts');
+    expect(rec.calls.some((c) => c[0] === '=strokeStyle' && (c[1] === KIN_GOLD.night || c[1] === KIN_GOLD.day))).toBe(true);
     const st = s.labelStats();
     const notes = st.boxes.filter((b) => b.kind === 'note').map((b) => b.text);
     expect(notes).toContain('мать');

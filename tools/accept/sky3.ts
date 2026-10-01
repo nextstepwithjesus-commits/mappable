@@ -54,11 +54,15 @@ export const sky3: Scenario[] = [
         await go(p, hash);
         const areas = await list(p, 'group-areas');
         if (areas.length < 5) return fail(`${hash}: областей ${areas.length}`);
-        // «:1» — название в самой области, «:2» — у другой части того же созвездия (повтор не ближе 1 200 px), «:0» — нет
-        const named = areas.filter((a) => !a.endsWith(':0')).length;
-        if (named / areas.length < 0.8) return fail(`${hash}: названы ${named} из ${areas.length}: ${areas.filter((a) => a.endsWith(':0')).join(', ')}`);
+        // «:1» — название в самой области, «:2» — у другой части того же созвездия (повтор не ближе 1 200 px), «:0» — место без
+        // звёзд было, но названия нет; «:3» — места без звёзд под буквами нет ни при какой разрядке (этап 14, решение 140:
+        // название не закрывает лиц), и на этом участке названия нет — оно повторится в другой части области
+        const noRoom = areas.filter((a) => a.endsWith(':3')).length;
+        const named = areas.filter((a) => !a.endsWith(':0') && !a.endsWith(':3')).length;
+        if (noRoom / areas.length > 0.25) return fail(`${hash}: без места для названия ${noRoom} из ${areas.length}`);
+        if (named / (areas.length - noRoom) < 0.8) return fail(`${hash}: названы ${named} из ${areas.length - noRoom} с местом: ${areas.filter((a) => a.endsWith(':0')).join(', ')}`);
         if (await overlaps(p)) return fail(`${hash}: наложений ${await overlaps(p)}`);
-        out.push(`${named}/${areas.length}`);
+        out.push(`${named}/${areas.length - noRoom}${noRoom ? ` (без места ${noRoom})` : ''}`);
       }
       return pass(`названы: ${out.join(', ')}`);
     },

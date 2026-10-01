@@ -88,7 +88,7 @@ function aimAt(q: LogPath): { x: number; y: number } {
  * Точка на пути, до которой от звёзд и узлов (ромбов, «•») не ближе clear px: щелчок по ней — щелчок по линии, а не по
  * звезде или ромбу (§ 8: звезда > ◆ > линия). null — такой точки нет.
  */
-function safeAim(q: LogPath, stars: number[][], nodes: number[][], clear = 13, others: LogPath[] = []): { x: number; y: number } | null {
+function safeAim(q: LogPath, stars: number[][], nodes: number[][], clear = 13, others: LogPath[] = [], labels: number[][] = []): { x: number; y: number } | null {
   const pts: { x: number; y: number; w: number }[] = [];
   for (let k = 0; k + 3 < q.pts.length; k += 2) {
     const [x0, y0, x1, y1] = q.pts.slice(k, k + 4);
@@ -98,13 +98,23 @@ function safeAim(q: LogPath, stars: number[][], nodes: number[][], clear = 13, o
   // и не на общем отрезке с другой связью (ленты Мф и Лк по одному следу до тройника): там щелчок назвал бы любую из них
   const near = others.filter((o) => o.ks !== q.ks && o.kind !== 'node' && o.kind !== 'join').flatMap(segs);
   const ok = pts.filter(
-    (a) => stars.every(([x, y]) => Math.hypot(x - a.x, y - a.y) > clear) && nodes.every(([x, y]) => Math.hypot(x - a.x, y - a.y) > clear) && near.every((g) => distSeg(a.x, a.y, g) > 4),
+    (a) => stars.every(([x, y]) => Math.hypot(x - a.x, y - a.y) > clear) && nodes.every(([x, y]) => Math.hypot(x - a.x, y - a.y) > clear) && near.every((g) => distSeg(a.x, a.y, g) > 4) && !inLabel(labels, a.x, a.y),
   );
   if (!ok.length) return null;
   ok.sort((a, b) => b.w - a.w);
   return ok[0];
 }
 const starsOf = async (p: Page) => ((await canvasData(p)).starsAt ?? '').split(';').filter(Boolean).map((q) => q.split(',').map(Number));
+/**
+ * Рамки подписей кадра (canvas[data-label-boxes]: «лицо:x,y,w,h;…»). Этап 14, решение 154: имя под указателем — это лицо,
+ * линии под подписью не ловятся; точка прицела на линии — вне рамок подписей с запасом pad px.
+ */
+const labelRects = async (p: Page) =>
+  ((await canvasData(p)).labelBoxes ?? '')
+    .split(';')
+    .filter(Boolean)
+    .map((q) => q.slice(q.lastIndexOf(':') + 1).split(',').map(Number));
+const inLabel = (rs: number[][], x: number, y: number, pad = 3) => rs.some(([bx, by, bw, bh]) => x >= bx - pad && x <= bx + bw + pad && y >= by - pad && y <= by + bh + pad);
 const nodesOf = (log: LogPath[]) => log.filter((q) => q.kind === 'node' || q.kind === 'join').map((q) => q.pts);
 /** Отрезки пути. */
 function segs(q: LogPath): [number, number, number, number][] {
@@ -281,6 +291,12 @@ export const grammar11: Scenario[] = [
       const o = await origin(p);
       await p.mouse.click(o.x + js.x, o.y + js.y);
       await p.waitForTimeout(900);
+      // этап 14 (решение 153): при открытой подробной карточке у звезды — легенда семьи; родители — во всём «Родстве»
+      const all = p.locator('.sky .dotcard .dc-row.all .dc-more');
+      if (!(await p.locator('.dotcard button.person[data-link="k.iakov.rakhil._.iosif"]').count()) && (await all.count())) {
+        await all.first().click();
+        await p.waitForTimeout(500);
+      }
       const btn = p.locator('.dotcard button.person[data-link="k.iakov.rakhil._.iosif"]').first();
       if (!(await btn.count())) return fail('в карточке у звезды Иосифа нет строки родителей со связью');
       await btn.focus();
@@ -369,10 +385,15 @@ export const grammar11: Scenario[] = [
       if (!step) return fail('нет шага ленты к Каинану');
       if (step.style !== 'solid') return fail(`начертание шага ${step.style}`);
       const o = await origin(p);
-      // вдоль шага — до первой точки, где небо называет ленту
+      // вдоль шага — до первой точки, где небо называет ленту; этап 14 (решение 154): не в рамке подписи — имя под указателем
+      // называет лицо, а не ленту
+      const labels = await labelRects(p);
       for (const g of segs(step)) {
-        for (const t of [0.5, 0.3, 0.7]) {
-          await p.mouse.move(o.x + g[0] + (g[2] - g[0]) * t, o.y + g[1] + (g[3] - g[1]) * t);
+        for (const t of [0.5, 0.3, 0.7, 0.2, 0.8, 0.4, 0.6, 0.1, 0.9]) {
+          const x = g[0] + (g[2] - g[0]) * t;
+          const y = g[1] + (g[3] - g[1]) * t;
+          if (inLabel(labels, x, y)) continue;
+          await p.mouse.move(o.x + x, o.y + y);
           await p.waitForTimeout(350);
           const tip = await tipText(p);
           if (/только у Луки \(Лк 3:36\)/.test(tip)) return pass(`подсказка: «${tip}»`);
@@ -398,9 +419,11 @@ export const grammar11: Scenario[] = [
         // точка щелчка по линии — дальше 13 px от звёзд и узлов (ближе звезда и ромб важнее линии, § 8)
         const starPts = await starsOf(p);
         const nodePts = nodesOf(all);
+        // и вне рамок подписей (решение 154: имя под указателем — лицо)
+        const labels = await labelRects(p);
         const aims = new Map<LogPath, { x: number; y: number }>();
         for (const q of log) {
-          const a = safeAim(q, starPts, nodePts, 13, all);
+          const a = safeAim(q, starPts, nodePts, 13, all, labels);
           if (a && a.x > 60 && a.x < view!.width - 60 && a.y > 60 && a.y < view!.height - 60) aims.set(q, a);
         }
         const inView = [...aims.keys()];
@@ -455,18 +478,26 @@ export const grammar11: Scenario[] = [
         const a = aimAt(q);
         // видимая часть неба (.sky[data-view]: «l t r b …»): под линейкой годов и буквами полос линий не видно
         const [vl, vt, vr, vb] = ((await p.locator('.sky').getAttribute('data-view')) ?? '').split(' ').map(Number);
+        // этап 14, решение 154: касание в рамке имени, раздвинутой до 24 px, — касание этого лица; проба — вне таких рамок
+        const names = (await labelRects(p)).map(([bx, by, bw, bh]) => [bx - Math.max(0, (24 - bw) / 2) - 2, by - Math.max(0, (24 - bh) / 2), Math.max(24, bw) + 4, Math.max(24, bh)]);
         // проба честная: ближе всех к точке касания — сама линия (на 2 px и больше), звёзд ближе 16 px нет; точка и
         // ближайшая к ней точка линии — в видимой части неба
         let probe: { x: number; y: number } | null = null;
-        for (const [dx, dy] of [[0, 18], [0, -18], [18, 0], [-18, 0]]) {
-          const tx = a.x + dx;
-          const ty = a.y + dy;
+        // этап 14: рамки имён (≥ 24 px) заняли часть неба у линий — точки линии для пробы, кроме прицельной, — ещё и вдоль
+        // её отрезков через каждые 10 px
+        const along = [a, ...segs(q).flatMap(([x0, y0, x1, y1]) => {
+          const len = Math.hypot(x1 - x0, y1 - y0);
+          return Array.from({ length: Math.floor(len / 10) }, (_, k) => ({ x: x0 + ((x1 - x0) * (k + 0.5) * 10) / len, y: y0 + ((y1 - y0) * (k + 0.5) * 10) / len }));
+        })];
+        for (const [b, dx, dy] of along.flatMap((b) => [[0, 18], [0, -18], [18, 0], [-18, 0]].map(([dx, dy]) => [b, dx, dy] as const))) {
+          const tx = b.x + dx;
+          const ty = b.y + dy;
           const dq = Math.min(...segs(q).map((g) => distSeg(tx, ty, g)));
           const dmin = Math.min(Infinity, ...all.filter((r) => r.ks !== q.ks && r.kind !== 'node' && r.kind !== 'join').flatMap((r) => segs(r).map((g) => distSeg(tx, ty, g))));
           // и не в поле ромба (на касании — 44 × 44): касание там открывает карточку союза
           const nodesNear = nodesOf(all).some(([x, y]) => Math.abs(x - tx) < 24 && Math.abs(y - ty) < 24);
           const open = tx > vl + 4 && tx < vr - 4 && ty > vt + 4 && ty < vb - 4;
-          if (open && dq <= 22 && dq + 2 < dmin && !nodesNear && st.every((z) => Math.hypot(z.x - tx, z.y - ty) > 16)) {
+          if (open && dq <= 22 && dq + 2 < dmin && !nodesNear && !inLabel(names, tx, ty, 0) && st.every((z) => Math.hypot(z.x - tx, z.y - ty) > 16)) {
             probe = { x: tx, y: ty };
             break;
           }

@@ -347,7 +347,7 @@ export const phone7: Scenario[] = [
       const state = async () =>
         (await p.evaluate(`(() => { const g = document.querySelector('.guide-cmd'); if (!g) return 'нет'; const vis = getComputedStyle(g).visibility; g.focus(); return vis + (document.activeElement === g ? ' фокус' : ''); })()`)) as string;
       for (const stop of ['half', 'peek']) {
-        if (stop === 'peek') await tap(p, '.folio .actions button', 'Показать на небе');
+        if (stop === 'peek') await tap(p, '.folio .actions button', 'К звезде');
         const s = await state();
         if (s !== 'hidden') return fail(`лист на ${stop}: «Как читать карту» — ${s}`);
       }
@@ -389,7 +389,7 @@ export const phone7: Scenario[] = [
   },
   {
     n: 308,
-    title: 'MOB-48, IX-66: в разметке разворота корешок раздела — первым, затем Давид, затем Соломон; «Показать на небе» Соломона — карточка Соломона, фокус на её заголовке',
+    title: 'MOB-48, IX-66: в разметке разворота корешок раздела — первым, затем Давид, затем Соломон; «К звезде» Соломона — карточка Соломона, фокус на её заголовке',
     run: async (p) => {
       await go(p, '#/david', 2000);
       await p.locator('.folio .actions button', { hasText: 'Разворот с…' }).first().click();
@@ -416,7 +416,7 @@ export const phone7: Scenario[] = [
       const row = p.locator('.spread .row:not(.mastrow)').first();
       const xs = await row.evaluate((r) => [...r.children].map((c) => Math.round(c.getBoundingClientRect().left)));
       if (!(xs[1] < xs[0] && xs[0] < xs[2])) return fail(`места на экране (корешок, Давид, Соломон): ${xs.join(', ')}`);
-      await p.locator('.spread .mastrow .pg').nth(1).locator('button', { hasText: 'Показать на небе' }).click();
+      await p.locator('.spread .mastrow .pg').nth(1).locator('button', { hasText: 'К звезде' }).click();
       await p.waitForTimeout(1600);
       if (await p.locator('.spread').count()) return fail('разворот не закрылся');
       if (hashId(p) !== 'solomon') return fail(`выбрано «${hashId(p)}»`);
@@ -429,7 +429,7 @@ export const phone7: Scenario[] = [
   },
   {
     n: 309,
-    title: 'Разворот на телефоне: «Показать на небе» — разворот закрыт, лист карточки на шапке, звезда видна над ним, фокус на заголовке карточки (IX-66, MOB-15)',
+    title: 'Разворот на телефоне: «К звезде» — разворот закрыт, лист карточки на шапке, звезда видна над ним, фокус на заголовке карточки (IX-66, MOB-15)',
     view: PHONE,
     run: async (p) => {
       await go(p, '#/david');
@@ -442,7 +442,7 @@ export const phone7: Scenario[] = [
       await p.waitForTimeout(400);
       await p.keyboard.press('Enter');
       await p.waitForTimeout(1500);
-      await p.locator('.spread .mastrow .pg').nth(1).locator('button', { hasText: 'Показать на небе' }).tap();
+      await p.locator('.spread .mastrow .pg').nth(1).locator('button', { hasText: 'К звезде' }).tap();
       await p.waitForTimeout(1600);
       if (await p.locator('.spread').count()) return fail('разворот не закрылся');
       if (hashId(p) !== 'solomon') return fail(`выбрано «${hashId(p)}»`);

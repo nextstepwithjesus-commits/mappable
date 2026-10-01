@@ -139,7 +139,8 @@ const DESK: Screen[] = [
 const TOUCH: Screen[] = [
   { name: 'телефон: небо', hash: '#/', view: PHONE },
   { name: 'телефон: лист на 55 %', hash: '#/david', view: PHONE },
-  { name: 'телефон: лист на шапке', hash: '#/david', view: PHONE, act: (p) => press(p, '.folio .actions button', 'Показать на небе') },
+  // команда «К звезде» (прежде «Показать на небе», решение 156) — по своему классу, а не по словам
+  { name: 'телефон: лист на шапке', hash: '#/david', view: PHONE, act: (p) => press(p, '.folio .actions button.show-on-sky') },
   { name: 'телефон: лист на 100 %', hash: '#/david', view: PHONE, act: (p) => press(p, '.folio .sheet-bar .bar-toggle') },
   { name: 'телефон: «Разделы»', hash: '#/david', view: PHONE, act: (p) => press(p, '.top .sections > button') },
   { name: 'телефон: поиск с подсказками', hash: '#/', view: PHONE, act: async (p) => {

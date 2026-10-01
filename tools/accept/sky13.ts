@@ -201,7 +201,7 @@ export const sky13: Scenario[] = [
       const i = heads.indexOf('Линии');
       if (i < 0 || heads[i + 1] !== 'Линии карты') return fail(`разделы: ${heads.join(' | ')}`);
       const t = flat(await p.locator('#legend-lines').locator('xpath=following-sibling::ul[1]').innerText());
-      if (!t.includes('точки цвета текста — только толкование')) return fail('в «Линиях» нет словаря «точки — только толкование»');
+      if (!t.includes('точки — только толкование')) return fail('в «Линиях» нет словаря «точки — только толкование»');
       if (!t.includes('«+N»')) return fail('в «Линиях» нет «+N» разрыва ленты');
       return pass(`разделы: ${heads.join(' | ')}`);
     },

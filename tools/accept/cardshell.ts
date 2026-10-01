@@ -51,7 +51,7 @@ const rect = (p: Page, sel: string) => p.locator(sel).first().boundingBox();
 export const cardshell: Scenario[] = [
   {
     n: 230,
-    title: 'VIS-41 (пересмотр — решение 97), CARD-54, 1440 × 900: § 1 на первом экране; команды — одной строкой: «Показать на небе», «Родство с…», «Разворот с…», «Добавить в набор ▾»; «Эпоха» паспорта видна; легенды лент в шапке нет',
+    title: 'VIS-41 (пересмотр — решение 97), CARD-54, 1440 × 900: § 1 на первом экране; команды — одной строкой: «К звезде» (решение 156), «Родство с…», «Разворот с…», «Добавить в набор ▾»; «Эпоха» паспорта видна; легенды лент в шапке нет',
     run: async (p) => {
       const tops: string[] = [];
       for (const id of ['david', 'melkhisedek', 'avraam', 'esfir']) {
@@ -64,7 +64,7 @@ export const cardshell: Scenario[] = [
       }
       const cmds = await commands(p);
       const names = cmds.map((c) => c.t).join(' | ');
-      if (names !== 'Показать на небе | Родство с… | Разворот с… | Добавить в набор') return fail(`команды: ${names}`);
+      if (names !== 'К звезде | Родство с… | Разворот с… | Добавить в набор') return fail(`команды: ${names}`);
       if (new Set(cmds.map((c) => c.y)).size !== 1) return fail(`команды в ${new Set(cmds.map((c) => c.y)).size} строки`);
       // этап 13, решение 97: строка «Эпоха» паспорта — видимая (прежде VIS-41: только для диктора)
       const visibleEpoch = await p.evaluate(() => [...document.querySelectorAll('.folio .passport dt')].some((d) => d.textContent === 'Эпоха' && (d as HTMLElement).getBoundingClientRect().width > 2));
@@ -386,7 +386,7 @@ export const cardshell: Scenario[] = [
     n: 239,
     // этап 11 (STAGE11 § 6, решение 77): нижнее положение листа — не шапка 104 px, а карточка у звезды 214 px; требования те же:
     // имя, годы и уточнение — целыми строками внутри листа, текст подробной карточки под ним не виден, Tab в тело — 55 %
-    title: 'MOB-64, MOB-50, MOB-52, 390 × 844: лист на 214 px (карточка у звезды) — имя, годы и уточнение целыми строками; Tab в тело свёрнутого листа поднимает его на 55 %; «расч.» паспорта не ложится на годы',
+    title: 'MOB-64, MOB-50, MOB-52, 390 × 844: лист на нижнем положении (карточка у звезды; решение 155 — её высотой) — имя, годы и уточнение целыми строками; Tab в тело свёрнутого листа поднимает его на 55 %; «расч.» паспорта не ложится на годы',
     view: PHONE,
     run: async (p) => {
       await go(p, '#/david', 2400);
@@ -404,7 +404,9 @@ export const cardshell: Scenario[] = [
         return { stop: f.dataset.stop, h: fr.height, top: fr.top, bottom: fr.bottom, lines: lines.map((r) => (r ? [Math.round(r.top), Math.round(r.bottom)] : null)), inner: Math.round(inner.top) };
       });
       if (peek.stop !== 'peek') return fail(`лист ${peek.stop}`);
-      if (Math.abs(peek.h - 214) > 2) return fail(`лист на нижнем положении ${Math.round(peek.h)} px, а не 214`);
+      // этап 14, решение 155: шапка листа — высотой краткой карточки (--sheet-peek на .app ставит лист), прежде 214 px
+      const want = await p.evaluate(() => parseFloat(getComputedStyle(document.querySelector('.app')!).getPropertyValue('--sheet-peek')) || 214);
+      if (Math.abs(peek.h - want) > 2) return fail(`лист на нижнем положении ${Math.round(peek.h)} px, а не ${Math.round(want)}`);
       if (peek.lines.some((l) => !l)) return fail('в карточке листа нет имени, годов или уточнения');
       if (peek.lines.some((l) => l![1] > peek.bottom + 0.5 || l![0] < peek.top - 0.5)) return fail(`строка карточки режется краем листа: ${JSON.stringify(peek.lines)} при крае ${peek.bottom}`);
       if (peek.inner < peek.bottom - 1) return fail(`текст листа виден под карточкой: ${peek.inner} < ${peek.bottom}`);
@@ -436,7 +438,7 @@ export const cardshell: Scenario[] = [
         const m = mark.getBoundingClientRect();
         return t.some((r) => r.right > m.left + 1 && r.left < m.right && r.bottom > m.top + 1 && r.top < m.bottom - 1);
       });
-      return clash ? fail('«расч.» ложится на годы при интервалах 1.4.12') : pass('лист 214 px — карточка у звезды целыми строками; Tab — лист на 55 %');
+      return clash ? fail('«расч.» ложится на годы при интервалах 1.4.12') : pass(`лист ${Math.round(peek.h)} px — карточка у звезды целыми строками; Tab — лист на 55 %`);
     },
   },
 ];

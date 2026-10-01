@@ -290,7 +290,7 @@ export const panels: Scenario[] = [
   },
   {
     n: 120,
-    title: 'G9 мышью: разворот Авраам — Исаак — линейки только между частями, § 1 не выводится, мини-шкалы на общей оси, «Показать на небе» закрывает разворот и выбирает лицо',
+    title: 'G9 мышью: разворот Авраам — Исаак — линейки только между частями, § 1 не выводится, мини-шкалы на общей оси, «К звезде» (решение 156) закрывает разворот и выбирает лицо',
     run: async (p) => {
       await p.goto(p.url().replace(/#.*$/, '') + '#/avraam~pspread~aavraam~bisaak');
       await p.waitForTimeout(2200);
@@ -303,7 +303,7 @@ export const panels: Scenario[] = [
       const partRules = await sp.locator('h3.part').evaluateAll((es) => es.filter((e) => parseFloat(getComputedStyle(e).borderTopWidth) > 0).length);
       if (partRules < 3) return fail(`линеек между частями: ${partRules}`);
       if ((await sp.locator('canvas.lifebar').count()) !== 2) return fail('нет двух мини-шкал');
-      await sp.locator('.mastrow .pg').nth(1).getByRole('button', { name: 'Показать на небе' }).click();
+      await sp.locator('.mastrow .pg').nth(1).getByRole('button', { name: 'К звезде' }).click();
       await p.waitForTimeout(1200);
       if (await p.locator('section.spread').count()) return fail('разворот не закрылся');
       return hashId(p) === 'isaak' ? pass('Исаак выбран, разворот закрыт') : fail(`выбрано: ${hashId(p)}`);

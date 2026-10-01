@@ -23,6 +23,7 @@
 import { computed, effect, signal } from '@preact/signals';
 import { panel, pickMode, selected, type Panel } from '../state.ts';
 import { cardFolded, cardTabs } from './stack.ts';
+import { readingTab } from './card/reading.ts';
 
 export const PHONE_MAX = 720;
 export const SPINE_W = 56;
@@ -291,12 +292,12 @@ if (typeof window !== 'undefined') {
 
 /**
  * Сетка сейчас: по ширине и высоте окна, открытой панели, выбранному лицу, ширинам читателя и «Небу во весь экран».
- * Лицо не выбрано, но есть закреплённые карточки (решение 91) — колонка карточки остаётся корешком 56 px с вкладками:
- * они видны всегда, небо отдаёт им только корешок.
+ * Лицо не выбрано, но есть закреплённые карточки (решение 91) или карточка, свёрнутая снятием выбора (решение 150), —
+ * колонка карточки остаётся корешком 56 px с вкладками: они видны всегда, небо отдаёт им только корешок.
  */
 export const grid = computed(() => {
   const sel = !!selected.value;
-  const tabsOnly = !sel && cardTabs.value.length > 0;
+  const tabsOnly = !sel && (cardTabs.value.length > 0 || !!readingTab.value);
   return gridFor(viewportWidth.value, panelKind(panel.value), sel || tabsOnly, {
     h: viewportHeight.value,
     widths: userWidths.value,

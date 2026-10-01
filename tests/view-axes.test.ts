@@ -149,10 +149,20 @@ describe('ось щипка и кромки неба (J1)', () => {
     expect(pinchAxis(10, -200)).toBe('lanes');
     expect(pinchAxis(100, 100)).toBe(null);
     const at = (deg: number) => pinchAxis(Math.cos((deg * Math.PI) / 180), Math.sin((deg * Math.PI) / 180));
-    expect(at(29)).toBe('time');
-    expect(at(31)).toBe(null);
-    expect(at(59)).toBe(null);
-    expect(at(61)).toBe('lanes');
+    // решение 154 (M10): одна ось — только в секторе 12° у оси; обычный щипок под 20°, 45°, 70° — обе оси
+    expect(PINCH_AXIS_DEG).toBe(12);
+    expect(at(11)).toBe('time');
+    expect(at(13)).toBe(null);
+    expect(at(20)).toBe(null);
+    expect(at(45)).toBe(null);
+    expect(at(70)).toBe(null);
+    expect(at(77)).toBe(null);
+    expect(at(79)).toBe('lanes');
+  });
+  it('щипок на линейке лет или на буквах полос — по оси кромки при любом угле (решение 154)', () => {
+    expect(pinchAxis(100, 100, 'time')).toBe('time');
+    expect(pinchAxis(100, 100, 'lanes')).toBe('lanes');
+    expect(pinchAxis(100, 100, null)).toBe(null);
   });
   it('линейка лет — время, буквы полос — полосы, угол и небо — ничего', () => {
     expect(edgeAxis(300, RULER_H - 4, 18, 700)).toBe('time');

@@ -39,16 +39,16 @@ import { nameCase } from '../ui/text/ru.ts';
 import { refText } from '../engine/kinship.ts';
 import { starRadius } from './glyphs.ts';
 import { mapFont, mapSize, nameSize, T_MAP_S } from './type.ts';
-import { claim, textBox } from './labels.ts';
+import { claim, textBox, type LabelCache } from './labels.ts';
 import { branchColor, branchTickAt, GlowBatch, glowLayers, glows } from './branches.ts';
 import { branchFrame, FAR, type BranchPaint } from './marks.ts';
 import type { Rect } from './rect.ts';
 import type { Emphasis, Palette, Pass, SkyContext } from './sky.ts';
-import type { LinkFrame, LinkPath, PathStyle } from './links.ts';
+import type { LinkFrame, LinkPath, PathStyle, StubMark } from './links.ts';
 import type { LinkKey } from '../engine/linkkey.ts';
 import { atlasCoord } from '../engine/layout.ts';
 import { unions as ALL_UNIONS } from '../ui/reveal.ts';
-import { unionName } from '../ui/linkwords.ts';
+import { linkRoleOf, unionName } from '../ui/linkwords.ts';
 
 /**
  * Растушёвка неуверенного начала и конца следа (этап 12, решение 90): тот же след, плавно тающий к краю, — вместо
@@ -1394,15 +1394,419 @@ export interface LinkDraw {
   alpha: number;
   /** путь выделен (семья выбранного, путь родства, «только линии»): в полную силу при любой подробности */
   lit: (q: LinkPath) => boolean;
+  /**
+   * ярус и видимость пути в этом кадре (этап 14, решение 135; linkLooks): ставит небо (sky.ts, linksFor); без него — по
+   * прежнему правилу (подробность кадра или выделение)
+   */
+  look?: (q: LinkPath) => LinkLook;
+  /**
+   * союзы, чьи длинные связи целиком помещаются в окне (оба конца на экране): рисуются целиком, без обрывков и координат
+   * (этап 14, решение 136, G7); ставит linkLooks по окну кадра с гистерезисом 10 %
+   */
+  inView?: ReadonlySet<string>;
+}
+
+// ---------- ярусы связей (этап 14, решение 135; уточняет решение 25) ----------
+
+/**
+ * Ярус связи: 0 — главный (родители, союзы и дети выбранного, выбранная связь, путь родства), 1 — второй (род выбранного
+ * со второго поколения и связи структурных лиц: величина ≤ 2, лица лент), 2 — контекстный (остальные).
+ */
+export type LinkTier = 0 | 1 | 2;
+export interface LinkLook {
+  tier: LinkTier;
+  /** непрозрачность по ярусу и порогу подписи: 0 — путь не рисуется, не ловится и разрывов не даёт */
+  a: number;
+}
+/** Толщина линии яруса, px: главный — 1,75 с ореолом цвета неба, второй и контекстный — 1 (G10). */
+export const TIER_WIDTH: Readonly<Record<LinkTier, number>> = { 0: 1.75, 1: 1, 2: 1 };
+/** Ореол главного яруса — с каждой стороны линии, px. */
+export const TIER_HALO = 1.5;
+/** Структурное лицо (второй ярус и на обзоре): величина не больше этой или лицо линий Мессии. */
+export const STRUCT_MAG = 2;
+/** Уровень порога подписи для лиц без порога (скопления-списки, «не подписывается по порогу»): масштаб семьи. */
+const NO_LEVEL = 10;
+/** Связь проявляется по порогу подписи своего лица в полосе уровней (2·log2 масштаба) — плавно, без мигания. */
+const TIER_RAMP = 0.4;
+
+/**
+ * Ярусы связей кадра (решение 135): функция «путь → ярус и непрозрачность». Главный и род выбранного — в полную силу на
+ * любом масштабе; остальные (структурные и контекстные) видны, когда на этом масштабе видна подпись их лица — ребёнка
+ * связи (у черты брака — второго супруга): пороги подписей уже посчитаны (labels.ts, LabelCache), поэтому гребёнки
+ * списков 1 Пар уходят вместе с именами, а структура остаётся. Режим «В работе» — всё в полную силу. Одна проверка
+ * порога на путь, с памятью на кадр.
+ */
+export function linkLooks(v: SkyContext, p: Pass, d: Pick<LinkDraw, 'lit' | 'selected'> & Partial<Pick<LinkDraw, 'frame' | 'dx' | 'dy' | 'inView'>>): (q: LinkPath) => LinkLook {
+  const s = p.s;
+  if (d.frame) d.inView = unionsInView(v, d as Pick<LinkDraw, 'frame' | 'dx' | 'dy'>);
+  const sel = s.selected;
+  // прямые связи выбранного: его союзы целиком; союз его родителей — путь к нему и черта брака; так же шаги пути родства
+  const mainU = new Set<string>();
+  const toKid = new Map<string, Set<string>>();
+  const kidOfU = (u: string, kid: string) => (toKid.get(u) ?? toKid.set(u, new Set()).get(u)!).add(kid);
+  if (sel && s.highlight?.get(sel) === 'self') {
+    for (const u of ALL_UNIONS.of.get(sel) ?? []) mainU.add(u.id);
+    for (const u of ALL_UNIONS.origin.get(sel) ?? []) kidOfU(u.id, sel);
+  }
+  for (const st of s.kinSteps ?? []) {
+    if (st.kind !== 'up' && st.kind !== 'down') continue;
+    const [par, kid] = st.kind === 'down' ? [st.from, st.to] : [st.to, st.from];
+    for (const u of ALL_UNIONS.origin.get(kid) ?? []) if (u.a === par || u.b === par) kidOfU(u.id, kid);
+  }
+  const link = s.link;
+  if (link && (link.kind === 'child' || link.kind === 'union' || link.kind === 'spouse')) mainU.add(link.union);
+  const work = p.work;
+  let cache: LabelCache | null = null;
+  if (!work) {
+    v.labelCache.ensure(v);
+    cache = v.labelCache;
+  }
+  const level = p.level;
+  /**
+   * доля видимости подписи лица на этом масштабе (0…1): линия проявляется плавно в полосе уровней до порога подписи —
+   * без мигания и без памяти кадров (два одинаковых кадра одинаковы)
+   */
+  const shown = (id: string): number => {
+    const i = v.indexOf(id);
+    if (i === undefined || !v.drawn(i)) return 0;
+    const L0 = cache ? cache.level[i] : 0;
+    const L = Number.isFinite(L0) ? L0 : NO_LEVEL;
+    return Math.max(0, Math.min(1, (level - (L - TIER_RAMP)) / TIER_RAMP));
+  };
+  const structural = (id: string) => {
+    const q = byId.get(id);
+    return !!q && (q.magnitude <= STRUCT_MAG || p.spine.has(id));
+  };
+  /** лица, по чьим подписям видна связь: ребёнок; у ствола — дети союза на нём; у черты брака — второй супруг */
+  const subjects = (q: LinkPath): string[] => {
+    if (q.key.kind === 'child') return [q.key.child];
+    if (q.key.kind === 'spouse') return q.ends.slice(0, 1);
+    const u = q.union ? ALL_UNIONS.byId.get(q.union) : undefined;
+    if (!u) return q.ends.slice(-1);
+    const kids = q.ends.filter((e) => e !== u.a && e !== u.b);
+    if (kids.length) return kids;
+    const onSky = u.kids.filter((k) => v.indexOf(k) !== undefined);
+    // бездетный брак — по подписям супругов
+    return onSky.length ? onSky : [u.a, u.b].filter((x): x is string => !!x);
+  };
+  const memo = new Map<LinkPath, LinkLook>();
+  // ярус пути и лица, по чьим подписям он виден, от масштаба не зависят: они держатся на сборку кадра (и на её копии,
+  // пересчитанные движением масштаба; С1), пока выбор, путь родства и выбранная связь те же; от масштаба — только доля
+  // видимости подписи, она считается каждый кадр
+  const held = d.frame?.stamp ? heldClasses(d.frame, `${work ? 1 : 0}|${sel ?? ''}|${idOf(s.highlight)}|${idOf(s.kinSteps)}|${idOf(link)}|${d.selected}`) : null;
+  const classOf = (q: LinkPath): PathClass => {
+    const kids = q.union ? toKid.get(q.union) : undefined;
+    const main = (!!q.union && mainU.has(q.union)) || (!!d.selected && q.ks === d.selected) || (!!kids && (q.kind === 'bar' || q.ends.some((e) => kids.has(e))));
+    if (main) return { tier: 0, subj: null };
+    if (d.lit(q)) return { tier: 1, subj: null };
+    const subj = subjects(q);
+    return { tier: subj.some(structural) ? 1 : 2, subj };
+  };
+  return (q) => {
+    const got = memo.get(q);
+    if (got) return got;
+    const k = held ? held.index(q) : -1;
+    let c = k >= 0 ? held!.classes[k] : undefined;
+    if (!c) {
+      c = classOf(q);
+      if (k >= 0) held!.classes[k] = c;
+    }
+    let out: LinkLook;
+    if (!c.subj || work) out = { tier: c.tier, a: 1 };
+    else {
+      let a = 0;
+      for (const id of c.subj) a = Math.max(a, shown(id));
+      out = { tier: c.tier, a };
+    }
+    memo.set(q, out);
+    return out;
+  };
+}
+
+/** Ярус пути без доли видимости: главный и род выбранного (subj = null) — в полную силу, прочие — по подписям subj. */
+interface PathClass {
+  tier: LinkTier;
+  subj: string[] | null;
+}
+/** Номер объекта для ключа кэша (выбор, путь родства, выбранная связь — новые объекты при смене). */
+const ids = new WeakMap<object, number>();
+let idNext = 1;
+const idOf = (o: object | null | undefined) => (o ? (ids.get(o) ?? (ids.set(o, idNext++), idNext - 1)) : 0);
+/** Ярусы путей сборки (по знаку stamp) при одном ключе: номер пути → класс; номер пути в кадре — по его положению. */
+const heldCache = new WeakMap<object, { key: string; classes: (PathClass | undefined)[] }>();
+function heldClasses(f: LinkFrame, key: string): { classes: (PathClass | undefined)[]; index: (q: LinkPath) => number } {
+  let h = heldCache.get(f.stamp!);
+  if (!h || h.key !== key) heldCache.set(f.stamp!, (h = { key, classes: [] }));
+  return { classes: h.classes, index: (q) => (q.n !== undefined && f.paths[q.n] === q ? q.n : -1) };
+}
+
+/** Союзы, чей дальний ход задевает чужую звезду (links.ts, markBlocked): по окну не раскрываются. */
+const blockedCache = new WeakMap<object, Set<string>>();
+function blockedUnions(f: LinkFrame): Set<string> {
+  // на сборку: копии, пересчитанные движением масштаба, — те же пути (С1)
+  const key = f.stamp ?? f;
+  let b = blockedCache.get(key);
+  if (!b) {
+    b = new Set();
+    for (const q of f.paths) if (q.blocked && q.union) b.add(q.union);
+    blockedCache.set(key, b);
+  }
+  return b;
+}
+
+/** Союзы, чьи длинные связи были целиком в окне в прошлом кадре (гистерезис 10 %). */
+const wasInView = new Set<string>();
+
+/**
+ * Союзы с длинными связями (обрывки Г11, длинная черта брака), у которых все концы обрывков в окне неба: их связи —
+ * целиком (решение 136, G7: читатель не ищет по координате лицо, которое стоит в 200 px). Окно — видимая часть неба;
+ * союз, уже раскрытый так, держится, пока концы не уйдут за край дальше 10 % окна (гистерезис, как у подписей).
+ */
+/** Правило окна (решение 136) — включено; перепись «всего неба» на холсте во всё небо его выключает (там окно — всё небо). */
+export const windowRule = { on: true };
+
+function unionsInView(v: SkyContext, d: Pick<LinkDraw, 'frame' | 'dx' | 'dy'>): Set<string> {
+  if (!windowRule.on) return new Set();
+  const blocked = blockedUnions(d.frame);
+  const vp = v.cam.vp;
+  const w = vp.r - vp.l;
+  const h = vp.b - Math.max(vp.t, v.openTop);
+  const out = new Set<string>();
+  const bad = new Set<string>();
+  for (const st of d.frame.stubs) {
+    if (!st.union || st.kind === 'kid') continue;
+    if (bad.has(st.union) || blocked.has(st.union)) continue;
+    const m = wasInView.has(st.union) ? 0.1 : -0.05;
+    const x = st.x + d.dx;
+    const y = st.y + d.dy;
+    if (x >= vp.l - m * w && x <= vp.r + m * w && y >= Math.max(vp.t, v.openTop) - m * h && y <= vp.b + m * h) out.add(st.union);
+    else bad.add(st.union);
+  }
+  for (const u of bad) out.delete(u);
+  wasInView.clear();
+  for (const u of out) wasInView.add(u);
+  return out;
+}
+
+/** Ярус и видимость пути: по d.look, а без него — по прежнему правилу (подробность кадра или выделение). */
+const lookCache = new WeakMap<object, (q: LinkPath) => LinkLook>();
+export function lookOf(v: SkyContext, p: Pass, d: LinkDraw): (q: LinkPath) => LinkLook {
+  if (d.look) return d.look;
+  let f = lookCache.get(d);
+  if (!f) lookCache.set(d, (f = linkLooks(v, p, d)));
+  return f;
+}
+
+// ---------- след родителя до узла — тоже связь (этап 14, решение 159) ----------
+
+/** Станция связи на следе родителя: x последнего узла союза на этом следе (или начала его линии на этой строке), px кадра связей. */
+interface TrailStations {
+  person: string;
+  /** звезда родителя, px кадра */
+  x: number;
+  y: number;
+  r: number;
+  /** союзы по порядку x станций */
+  st: { x: number; union: string }[];
+}
+const stationCache = new WeakMap<LinkFrame, Map<number, TrailStations[]>>();
+
+/**
+ * Станции связей на следах родителей кадра (решение 159): у каждого родителя — x узлов его союзов на его следе и начал
+ * линий его союзов на его строке (черта брака к узлу на следе жены, ступенька лестницы союзов). Один раз на кадр связей,
+ * по строкам.
+ */
+function stationsOf(v: SkyContext, d: LinkDraw): Map<number, TrailStations[]> {
+  let m = stationCache.get(d.frame);
+  if (m) return m;
+  m = new Map();
+  const { cam } = v;
+  const per = new Map<string, TrailStations>();
+  const of = (id: string): TrailStations | null => {
+    let t = per.get(id);
+    if (t) return t;
+    const i = v.indexOf(id);
+    const q = byId.get(id);
+    if (i === undefined || !q || !v.drawn(i) || v.hides(id)) return null;
+    t = { person: id, x: cam.sx(v.X0[i]) - d.dx, y: cam.sy(v.nodes[i].lane) - d.dy, r: starRadius(q.magnitude, 1) + (q.sex === 'f' ? 2.2 : 0), st: [] };
+    per.set(id, t);
+    return t;
+  };
+  const add = (t: TrailStations, x: number, union: string) => {
+    // у союза с несколькими гнёздами (ромб ◆ и узлы • дальше по следу) станция — последняя: след до неё — тоже путь
+    // этого союза (к детям следующих гнёзд)
+    const was = t.st.find((q) => q.union === union);
+    if (was) was.x = Math.max(was.x, x);
+    else t.st.push({ x, union });
+  };
+  for (const n of d.frame.nodes) {
+    // узел союза, чью связь рисует только лента (станция маршрута ленты, решение 79): след до него — это шаг ленты, а
+    // не связь союза; её ловит нарисованная нить (ribbons.ts, ribbonAt)
+    if (n.kind !== 'union' || d.frame.ribbonOnly?.has(n.union)) continue;
+    const t = of(n.owner);
+    if (t && Math.abs(n.y - t.y) < 0.75 && n.x > t.x) add(t, n.x, n.union);
+  }
+  for (const q of d.frame.paths) {
+    if (!q.union || q.kind === 'ribbon' || q.when === 'full') continue;
+    const u = ALL_UNIONS.byId.get(q.union);
+    if (!u) continue;
+    for (const par of [u.a, u.b]) {
+      if (!par) continue;
+      const t = of(par);
+      if (!t) continue;
+      for (let k = 0; k + 1 < q.pts.length; k += 2) if (Math.abs(q.pts[k + 1] - t.y) < 0.75 && q.pts[k] > t.x + t.r) add(t, q.pts[k], q.union);
+    }
+  }
+  for (const t of per.values()) {
+    if (!t.st.length) continue;
+    t.st.sort((a, b) => a.x - b.x);
+    const k = Math.round(t.y);
+    (m.get(k) ?? m.set(k, []).get(k)!).push(t);
+  }
+  stationCache.set(d.frame, m);
+  return m;
+}
+
+/**
+ * Связи по участку следа родителя под точкой (решение 159; x, y — px холста, r — допуск, как у связей): от звезды (или
+ * от прежнего узла) до узла союза след родителя — это его путь к союзу (по нему идёт жёлтое выбранной связи, решение
+ * 88). Возвращает лицо и ключи связей, чьи узлы дальше по следу (по порядку): одна — подсказка и выбор этой связи;
+ * несколько — «Связи дальше по следу» и «Какая связь?». За последним узлом — null: там жизнь лица. Ключ — связь
+ * «союз → ребёнок», если у союза один ребёнок на небе, иначе союз целиком.
+ */
+export function trailLinksAt(v: SkyContext, d: LinkDraw | null | undefined, x: number, y: number, r = 6): { person: string; keys: LinkKey[] } | null {
+  if (!d) return null;
+  const fx = x - d.dx;
+  const fy = y - d.dy;
+  const rows = stationsOf(v, d);
+  let best: { t: TrailStations; dy: number } | null = null;
+  for (let k = Math.floor(fy - r) - 1; k <= Math.ceil(fy + r) + 1; k++)
+    for (const t of rows.get(k) ?? []) {
+      const dy = Math.abs(t.y - fy);
+      if (dy > r || fx < t.x + t.r + 2 || fx > t.st[t.st.length - 1].x - 1) continue;
+      if (!best || dy < best.dy) best = { t, dy };
+    }
+  if (!best) return null;
+  const keys: LinkKey[] = [];
+  for (const s of best.t.st) {
+    if (s.x < fx) continue;
+    const u = ALL_UNIONS.byId.get(s.union);
+    // связь, не нарисованная в этом кадре (ярус погашен), — не цель
+    if (!u || !unionOn(d, u.id, best.t.person, best.t.person)) continue;
+    const kids = u.kids.filter((k) => {
+      const i = v.indexOf(k);
+      return i !== undefined && v.drawn(i) && !v.hides(k);
+    });
+    keys.push(kids.length === 1 ? { kind: 'child', union: u.id, child: kids[0] } : { kind: 'union', union: u.id });
+  }
+  return keys.length ? { person: best.t.person, keys } : null;
+}
+
+/** Пути кадра связей по союзам (один раз на кадр связей). */
+const byUnionCache = new WeakMap<LinkFrame, Map<string, LinkPath[]>>();
+export function pathsOfUnion(f: LinkFrame, u: string): readonly LinkPath[] {
+  let m = byUnionCache.get(f);
+  if (!m) {
+    m = new Map();
+    for (const q of f.paths) if (q.union && q.kind !== 'ribbon') (m.get(q.union) ?? m.set(q.union, []).get(q.union)!).push(q);
+    byUnionCache.set(f, m);
+  }
+  return m.get(u) ?? [];
+}
+
+/**
+ * Видимость узла союза в этом кадре (решение 135): как у самой видимой его линии — наведённой, выделенной или по ярусу;
+ * союз без своих линий (станция ленты, бездетный брак) — по своим лицам: по ярусу их связи «союз».
+ */
+export function unionAlpha(v: SkyContext, p: Pass, d: LinkDraw, u: string): { a: number; tier: LinkTier } {
+  const look = lookOf(v, p, d);
+  let a = 0;
+  let tier: LinkTier = 2;
+  const qs = pathsOfUnion(d.frame, u);
+  for (const q of qs) {
+    if (!linkShown(q, d)) continue;
+    if (q.ks === d.hover || d.preview.has(q.ks)) return { a: 1, tier: 0 };
+    const l = look(q);
+    if (l.a > a) a = l.a;
+    if (l.a > 0.01 && l.tier < tier) tier = l.tier;
+  }
+  if (!qs.length) {
+    const un = ALL_UNIONS.byId.get(u);
+    if (un) {
+      const l = look({ key: { kind: 'union', union: u }, ks: `u:${u}`, kind: 'trunk', style: 'solid', pts: [], ends: [un.a, un.b, ...un.kids].filter((x): x is string => !!x), union: u, when: 'always', cuts: [] });
+      return { a: l.a, tier: l.tier };
+    }
+  }
+  return { a, tier };
+}
+
+/** Путь обрывка у подписи обрывка (тот же ключ, конец в точке подписи): подпись видна, только когда виден он (G6). */
+const stubPathCache = new WeakMap<LinkFrame, Map<string, LinkPath>>();
+export function stubPathOf(f: LinkFrame, st: StubMark): LinkPath | null {
+  // у сборки — по номерам (обрывок → путь): копии, пересчитанные движением масштаба, его делят (С1)
+  if (f.stamp && st.n !== undefined && f.stubs[st.n] === st) {
+    let byN = stubIndexCache.get(f.stamp);
+    if (!byN) {
+      const m = stubMap(f);
+      byN = f.stubs.map((s) => m.get(`${s.ks}@${Math.round(s.x)},${Math.round(s.y)}`)?.n ?? -1);
+      stubIndexCache.set(f.stamp, byN);
+    }
+    const k = byN[st.n];
+    return k >= 0 ? (f.paths[k] ?? null) : null;
+  }
+  return stubMap(f).get(`${st.ks}@${Math.round(st.x)},${Math.round(st.y)}`) ?? null;
+}
+const stubIndexCache = new WeakMap<object, number[]>();
+function stubMap(f: LinkFrame): Map<string, LinkPath> {
+  let m = stubPathCache.get(f);
+  if (!m) {
+    m = new Map();
+    for (const q of f.paths) {
+      if (q.kind !== 'stub' && !(q.kind === 'clan' && q.when !== 'full')) continue;
+      for (let k = 0; k + 1 < q.pts.length; k += 2) m.set(`${q.ks}@${Math.round(q.pts[k])},${Math.round(q.pts[k + 1])}`, q);
+    }
+    stubPathCache.set(f, m);
+  }
+  return m;
+}
+
+/** Узел союза нарисован в этом кадре по ярусу его линий (для переписи и проверок; без кадра — прежнее правило). */
+export function unionOn(d: LinkDraw, u: string, owner: string, from: string): boolean {
+  const f = d.look ?? lookCache.get(d);
+  if (!f) return d.alpha > 0.01 || d.lit({ ends: [owner, from] } as unknown as LinkPath);
+  const qs = pathsOfUnion(d.frame, u);
+  if (!qs.length) return true;
+  if (d.lit({ ends: [owner, from] } as unknown as LinkPath)) return true;
+  let a = 0;
+  for (const q of qs) {
+    if (!linkShown(q, d)) continue;
+    if (q.ks === d.hover || d.preview.has(q.ks)) return true;
+    const l = f(q);
+    if (l.tier === 0 && l.a > 0.01) return true;
+    a = Math.max(a, l.a);
+  }
+  // как у знака (plates.ts, drawLinkNodes): на обзоре ромбы проявляются с подробностью кадра
+  return Math.min(a, d.alpha) > 0.01;
+}
+
+/**
+ * Путь нарисован в этом кадре: по правилу длинных связей (linkShown) и ярусу (решение 135). Без d.look — прежнее правило:
+ * при подробности кадра или выделенным. Им пользуются попадание, разрывы следов, журнал кадра и перепись.
+ */
+export function linkOn(q: LinkPath, d: LinkDraw): boolean {
+  if (!linkShown(q, d)) return false;
+  if (q.ks === d.hover || d.preview.has(q.ks)) return true;
+  const f = d.look ?? lookCache.get(d);
+  return f ? f(q).a > 0.01 : d.alpha > 0.01 || d.lit(q);
 }
 
 /**
  * Путь рисуется в этом кадре: «всегда» — да; длинная связь целиком ('full') — только раскрытой (наведение, выбор, семья
  * выбранного), её обрывки ('short') — только свёрнутой.
  */
-export function linkShown(q: Pick<LinkPath, 'when' | 'union' | 'ks'>, d: Pick<LinkDraw, 'expanded' | 'hover' | 'selected' | 'preview'>): boolean {
+export function linkShown(q: Pick<LinkPath, 'when' | 'union' | 'ks'>, d: Pick<LinkDraw, 'expanded' | 'hover' | 'selected' | 'preview' | 'inView'>): boolean {
   if (q.when === 'always') return true;
-  const open = (!!q.union && d.expanded.has(q.union)) || q.ks === d.hover || q.ks === d.selected || d.preview.has(q.ks);
+  const open = (!!q.union && (d.expanded.has(q.union) || !!d.inView?.has(q.union))) || q.ks === d.hover || q.ks === d.selected || d.preview.has(q.ks);
   return q.when === 'full' ? open : !open;
 }
 
@@ -1497,11 +1901,78 @@ export function drawLinks(v: SkyContext, p: Pass, d: LinkDraw) {
   const { dx, dy } = d;
   const W = cam.w;
   const H = cam.h;
+  const look = lookOf(v, p, d);
   ctx.save();
   ctx.lineCap = 'butt';
   ctx.lineJoin = 'miter';
   const box = pathBoxes(d.frame);
   const paths = d.frame.paths;
+  // ранг пути для разрывов связь × связь (решение 134): наведённая — выше всех, затем по ярусу; невидимый — не режет
+  const rank = (q: LinkPath): number => {
+    if (q.ks === d.hover || d.preview.has(q.ks)) return -1;
+    if (!linkShown(q, d)) return 99;
+    const l = look(q);
+    return l.a <= 0.01 ? 99 : l.tier;
+  };
+  /** разрывы пути под линиями выше по ярусу: номер отрезка → пары «доля длины, полуширина» */
+  const gapsOf = (q: LinkPath, r: number): Map<number, [number, number][]> | null => {
+    const xc = q.xcuts;
+    if (!xc) return null;
+    let out: Map<number, [number, number][]> | null = null;
+    for (let k = 0; k + 3 < xc.length; k += 4) {
+      const o = paths[xc[k + 3]];
+      if (!o) continue;
+      const ro = rank(o);
+      if (ro === 99) continue;
+      // равные ярусы — прерывается горизонталь (как след под вертикалью, Г7)
+      const seg = xc[k];
+      const horiz = Math.abs(q.pts[2 * seg + 1] - q.pts[2 * seg + 3]) < 0.5;
+      if (!(ro < r || (ro === r && horiz))) continue;
+      out ??= new Map();
+      (out.get(seg) ?? out.set(seg, []).get(seg)!).push([xc[k + 1], xc[k + 2]]);
+    }
+    return out;
+  };
+  /** ломаная пути со сдвигом off (черта брака «‖») и разрывами */
+  const trace = (q: LinkPath, gaps: Map<number, [number, number][]> | null, off: number) => {
+    const pts = q.pts;
+    let pen = false;
+    for (let k = 0; k + 3 < pts.length; k += 2) {
+      const ax = pts[k] + dx + off;
+      const ay = pts[k + 1] + dy;
+      const bx = pts[k + 2] + dx + off;
+      const by = pts[k + 3] + dy;
+      const g = gaps?.get(k / 2);
+      if (!g) {
+        if (!pen) ctx.moveTo(ax, ay);
+        ctx.lineTo(bx, by);
+        pen = true;
+        continue;
+      }
+      const len = Math.hypot(bx - ax, by - ay);
+      if (len < 0.01) continue;
+      const ux = (bx - ax) / len;
+      const uy = (by - ay) / len;
+      let at = 0;
+      for (const [t, h] of [...g].sort((m, n) => m[0] - n[0])) {
+        const e = t * len - h;
+        if (e > at) {
+          if (!pen) ctx.moveTo(ax + ux * at, ay + uy * at);
+          ctx.lineTo(ax + ux * e, ay + uy * e);
+        }
+        at = Math.max(at, t * len + h);
+        pen = false;
+      }
+      if (at < len) {
+        ctx.moveTo(ax + ux * at, ay + uy * at);
+        ctx.lineTo(bx, by);
+        pen = true;
+      } else pen = false;
+    }
+  };
+  const offsets = (q: LinkPath) => (q.kind === 'bar' ? [-BAR_GAP / 2, BAR_GAP / 2] : [0]);
+  // главный ярус — после остальных: с ореолом цвета неба поверх контекста (решение 135)
+  const main: { q: LinkPath; a: number; gaps: Map<number, [number, number][]> | null; color: string }[] = [];
   for (let i = 0; i < paths.length; i++) {
     // путь вне холста — сразу мимо (из тысяч путей неба на холсте — десятки); рамка — из рамок кадра связей (без
     // сдвига): сдвиг монотонен, поэтому крайние точки те же
@@ -1509,33 +1980,53 @@ export function drawLinks(v: SkyContext, p: Pass, d: LinkDraw) {
     const q = paths[i];
     if (q.kind === 'ribbon' || !linkShown(q, d)) continue;
     const hot = q.ks === d.hover || d.preview.has(q.ks);
-    const a0 = hot || d.lit(q) ? 1 : d.alpha;
+    const l = look(q);
+    const a0 = hot ? 1 : l.a;
     if (a0 <= 0.01) continue;
-    const pts = q.pts;
+    const gaps = gapsOf(q, hot ? -1 : l.tier);
     const e = hot ? 1 : pathEmph(p, q) * p.s.intro;
-    ctx.globalAlpha = g0 * a0 * (q.style === 'faint' && !hot ? FAINT_A : 1);
-    ctx.strokeStyle = hot ? pal.ink : (pathBranch(bf, p, q) ?? alpha(pal.ink2, Math.min(1, LINK_TONE * e)));
-    ctx.lineWidth = hot ? 2 : 1;
-    ctx.setLineDash(LINK_DASH[q.style]);
-    ctx.beginPath();
-    if (q.kind === 'bar') {
-      for (const off of [-BAR_GAP / 2, BAR_GAP / 2]) {
-        ctx.moveTo(pts[0] + dx + off, pts[1] + dy);
-        for (let k = 2; k < pts.length; k += 2) ctx.lineTo(pts[k] + dx + off, pts[k + 1] + dy);
-      }
-    } else {
-      ctx.moveTo(pts[0] + dx, pts[1] + dy);
-      for (let k = 2; k < pts.length; k += 2) ctx.lineTo(pts[k] + dx, pts[k + 1] + dy);
-    }
-    ctx.stroke();
+    const tone = hot ? pal.ink : (pathBranch(bf, p, q) ?? (l.tier === 0 ? alpha(pal.ink, Math.min(1, e)) : alpha(pal.ink2, Math.min(1, LINK_TONE * e))));
     if (p.lines)
-      for (let k = 0; k + 3 < pts.length; k += 2) {
-        const ax = pts[k] + dx;
-        const ay = pts[k + 1] + dy;
-        const bx = pts[k + 2] + dx;
-        const by = pts[k + 3] + dy;
+      for (let k = 0; k + 3 < q.pts.length; k += 2) {
+        const ax = q.pts[k] + dx;
+        const ay = q.pts[k + 1] + dy;
+        const bx = q.pts[k + 2] + dx;
+        const by = q.pts[k + 3] + dy;
         p.lines.add({ x: Math.min(ax, bx) - 1.5, y: Math.min(ay, by) - 1.5, w: Math.abs(bx - ax) + 3, h: Math.abs(by - ay) + 3 });
       }
+    const a = g0 * a0 * (q.style === 'faint' && !hot ? FAINT_A : 1);
+    if (l.tier === 0 && !hot) {
+      main.push({ q, a, gaps, color: tone });
+      continue;
+    }
+    ctx.globalAlpha = a;
+    ctx.strokeStyle = tone;
+    ctx.lineWidth = hot ? 2 : TIER_WIDTH[l.tier];
+    ctx.setLineDash(LINK_DASH[q.style]);
+    ctx.beginPath();
+    for (const off of offsets(q)) trace(q, gaps, off);
+    ctx.stroke();
+  }
+  if (main.length) {
+    // ореол цвета неба: прямые связи выбранного отделены от фона (G10)
+    ctx.setLineDash([]);
+    ctx.strokeStyle = pal.halo;
+    ctx.lineWidth = TIER_WIDTH[0] + 2 * TIER_HALO;
+    for (const m of main) {
+      ctx.globalAlpha = m.a;
+      ctx.beginPath();
+      for (const off of offsets(m.q)) trace(m.q, m.gaps, off);
+      ctx.stroke();
+    }
+    ctx.lineWidth = TIER_WIDTH[0];
+    for (const m of main) {
+      ctx.globalAlpha = m.a;
+      ctx.strokeStyle = m.color;
+      ctx.setLineDash(LINK_DASH[m.q.style]);
+      ctx.beginPath();
+      for (const off of offsets(m.q)) trace(m.q, m.gaps, off);
+      ctx.stroke();
+    }
   }
   ctx.restore();
   ctx.globalAlpha = g0;
@@ -1553,7 +2044,14 @@ interface LinkText {
   id?: string;
   /** можно и по другую сторону точки (над следом и под ним): имя матери у ромба */
   side2?: boolean;
+  /** обязательная подпись (имя матери у ромба выбранного, решение 137): тесно — выноской не длиннее LEADER_MAX */
+  leader?: boolean;
+  /** тон текста (по умолчанию --ink-2) */
+  ink?: string;
 }
+
+/** Выноска подписи связи — не длиннее (решение 140, К8). */
+export const LINK_LEADER_MAX = 40;
 
 const nameOf = (id: string) => byId.get(id)?.name ?? id;
 /** «Симеон, 23 Б»: имя и атласная координата лица на общей раскладке (ТЗ § 3.1, как в указателе). */
@@ -1588,8 +2086,8 @@ function kidOf(kid: string, parent: string): string {
 const unionsOfKid = (id: string) => ALL_UNIONS.of.get(id) ?? [];
 
 /** Перечень целей обрывка: до трёх имён с координатами, дальше — «ещё N». */
-function targetsText(v: SkyContext, ids: readonly string[]): string {
-  const head = ids.slice(0, 3).map((id) => nameAt(v, id));
+function targetsText(v: SkyContext, ids: readonly string[], name: (id: string) => string = (id) => nameAt(v, id)): string {
+  const head = ids.slice(0, 3).map(name);
   return ids.length > 3 ? `${head.join('; ')}; ещё ${ids.length - 3}` : head.join('; ');
 }
 
@@ -1618,6 +2116,24 @@ function putLinkText(v: SkyContext, p: Pass, t: LinkText, a: number, hold = fals
     const ty = t.dir < 0 ? t.y - 4 : t.y + size + 2;
     cands.push({ tx: t.x + 4, ty }, { tx: t.x - 4 - w, ty }, { tx: t.x - w / 2, ty: t.dir < 0 ? ty - 4 : ty + 4 });
   }
+  const near = cands.length;
+  // обязательная — дальше по сторонам, с выноской к точке (не длиннее 40 px)
+  if (t.leader) {
+    // сетка мест вокруг точки — по длине выноски: ближние первыми (тесный ряд ромбов Давида на узком небе)
+    const more: { tx: number; ty: number; l: number }[] = [];
+    for (let dy = 10; dy <= 38; dy += 4)
+      for (const sgn of [-1, 1])
+        for (let dx = -36; dx <= 36; dx += 6)
+          for (const right of [true, false]) {
+            const ty = sgn < 0 ? t.y - dy : t.y + dy + size * 0.7;
+            const tx = right ? t.x + 8 + dx : t.x - 8 - w + dx;
+            const cx = right ? tx : tx + w;
+            const l = Math.hypot(cx - t.x, ty - size * 0.35 - t.y);
+            if (l <= LINK_LEADER_MAX) more.push({ tx, ty, l });
+          }
+    more.sort((a, b) => a.l - b.l);
+    for (const m of more) cands.push({ tx: m.tx, ty: m.ty });
+  }
   // поле подписи — с запасом над строкой: курсив малого кегля не встаёт вплотную к органам неба и соседним подписям
   const boxes = cands.map((c) => {
     const b = textBox(c.tx, c.ty, w, size);
@@ -1625,12 +2141,70 @@ function putLinkText(v: SkyContext, p: Pass, t: LinkText, a: number, hold = fals
   });
   const b = claim(v, p, boxes, 'plate', t.text, { id: t.id, hold });
   if (!b || hold) return null;
-  const c = cands[boxes.indexOf(b)];
+  const k = boxes.indexOf(b);
+  const c = cands[k];
   const g0 = ctx.globalAlpha;
   ctx.globalAlpha = g0 * a;
-  drawFamilyText(ctx, { halo: v.pal.halo, ink3: v.pal.ink2 }, t.text, c.tx, c.ty, v.coarse);
+  if (k >= near) {
+    // выноска: от края знака у точки к ближнему углу подписи, тонкой линией тона подписи
+    const ex = c.tx > t.x ? c.tx - 2 : c.tx + w + 2;
+    const ey = c.ty - size * 0.35;
+    const len = Math.hypot(ex - t.x, ey - t.y) || 1;
+    ctx.save();
+    ctx.strokeStyle = alpha(t.ink ?? v.pal.ink2, 0.8);
+    ctx.lineWidth = 1;
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(t.x + ((ex - t.x) / len) * 6, t.y + ((ey - t.y) / len) * 6);
+    ctx.lineTo(ex, ey);
+    ctx.stroke();
+    ctx.restore();
+  }
+  drawFamilyText(ctx, { halo: v.pal.halo, ink3: t.ink ?? v.pal.ink2 }, t.text, c.tx, c.ty, v.coarse);
   ctx.globalAlpha = g0;
   return b;
+}
+
+/** Союзы, чьи имена матерей уже поставлены в этом кадре обязательным ярусом (ключ — Placer кадра). */
+const motherPlaced = new WeakMap<object, Set<string>>();
+
+/**
+ * Имена матерей у ромбов выбранного лица — обязательный ярус подписей (этап 14, решение 137; G3): ставятся раньше имён
+ * звёзд (кроме выбранного), тесно — выноской до 40 px; погашенным союз выбранного не бывает. Ответ «от какой жены какие
+ * дети» — словом, а не только цветом ветви. Зовёт небо (sky.ts или labels.ts) до обычных подписей; drawLinkLabels их не
+ * повторяет. Возвращает союзы с поставленным именем.
+ */
+export function drawMotherNames(v: SkyContext, p: Pass, d: LinkDraw | null | undefined): Set<string> {
+  const done = new Set<string>();
+  motherPlaced.set(p.placer, done);
+  const sel = p.s.selected;
+  if (!d || !sel || !p.s.layers.labels || (d.frame.layout === 'map' && v.genRoom < 0.5)) return done;
+  const mine = new Set((ALL_UNIONS.of.get(sel) ?? []).map((u) => u.id));
+  if (!mine.size) return done;
+  const { cam } = v;
+  const out: string[] = [];
+  for (const n of d.frame.nodes) {
+    // обязательный ярус — только настоящие имена матерей; пояснение «Давид (мать не названа)» — обычным ярусом подписей
+    // союза после имён детей (drawLinkLabels): имя ребёнка выбранного важнее пояснения
+    if (!n.mother || n.kind !== 'union' || !mine.has(n.union)) continue;
+    const x = n.x + d.dx;
+    const y = n.y + d.dy;
+    if (!(x > v.letterW && x < cam.w && y > v.openTop && y < cam.vp.b)) continue;
+    const u = ALL_UNIONS.byId.get(n.union);
+    const text = n.mother ? nameOf(n.mother) : u ? unionName(u) : '';
+    if (!text) continue;
+    const b = putLinkText(v, p, { text, x: x + 5, y, dir: 0, right: true, id: n.union, side2: true, leader: true, ink: v.pal.ink }, 1);
+    if (b) {
+      done.add(n.union);
+      out.push(`${text}@${Math.round(x)},${Math.round(y)}`);
+    }
+  }
+  const ds = (v.ctx.canvas as { dataset?: DOMStringMap } | undefined)?.dataset;
+  if (ds) {
+    const t = out.join('|');
+    if (ds.motherNames !== t) ds.motherNames = t;
+  }
+  return done;
 }
 
 /**
@@ -1647,36 +2221,79 @@ export function drawLinkLabels(v: SkyContext, p: Pass, d: LinkDraw, late = false
   const onScreen = (x: number, y: number) => x > v.letterW && x < cam.w && y > v.openTop && y < cam.vp.b;
   // имя матери у ромба — раньше подписей обрывков (этап 13): после укладки по матерям (решение 95) дети Давида стоят у
   // своих матерей далеко от него, и подписи обрывков «Авессалом, 32 Н» у ромбов его следа занимали место имён матерей
-  for (const n of d.frame.nodes) {
-    if (n.mother === null || n.kind !== 'union' || !!n.late !== late) continue;
+  const placed = motherPlaced.get(p.placer);
+  // ромбов на «всех лицах» теснее поколения в 18 px нет (plates.ts, genRoom) — нет и имён у них (G6: подпись без знака)
+  const noNodes = d.frame.layout === 'map' && v.genRoom < 0.5;
+  for (const n of noNodes ? [] : d.frame.nodes) {
+    if (n.mother === null || n.kind !== 'union' || !!n.late !== late || placed?.has(n.union)) continue;
     const x = n.x + d.dx;
     const y = n.y + d.dy;
     if (!onScreen(x, y)) continue;
     // имя матери — только у союза в полную силу: погашенный выделением союз (и «вероятно» живые на меридиане) подписи не
     // получает — бледная подпись не держала бы контраста 4,5 : 1; её место остаётся за ней (соседи не переезжают)
     const a = Math.min(1, p.emph(n.owner), p.emph(n.from), n.mother ? p.emph(n.mother) : 1);
-    if (!(d.alpha > 0.5 || d.expanded.has(n.union))) continue;
+    // имя у ромба — там, где виден сам ромб (ярус его линий, решение 135, и подробность кадра — как у знака), или у
+    // раскрытого союза
+    if (!(Math.min(unionAlpha(v, p, d, n.union).a, d.alpha) > 0.5 || d.expanded.has(n.union))) continue;
     const u = ALL_UNIONS.byId.get(n.union);
     const text = n.mother ? nameOf(n.mother) : u ? unionName(u) : '';
     if (!text) continue;
     const b = putLinkText(v, p, { text, x: x + 5, y, dir: 0, right: true, id: n.union, side2: true }, 1, a < 0.99);
     if (b) out.push(`${text}@${Math.round(x)},${Math.round(y)}`);
   }
+  const look = lookOf(v, p, d);
+  const vp = cam.vp;
+  /** лицо в окне неба (на экране, под рамкой и над листом) */
+  const inWindow = (id: string) => {
+    const i = v.indexOf(id);
+    if (i === undefined || !v.drawn(i)) return false;
+    const x = cam.sx(v.X0[i]);
+    const y = cam.sy(v.nodes[i].lane);
+    return x >= vp.l && x <= vp.r && y >= v.openTop && y <= vp.b;
+  };
+  const named = new Set<string>();
   for (const st of late ? [] : d.frame.stubs) {
-    const lit = st.targets.every((id) => p.emph(id) > 0.5);
+    // выделенная (выбор лица) — только при выделении: без него подпись обрывка не «горит» сама (G6)
+    const lit = !!p.s.highlight && st.targets.every((id) => p.emph(id) > 0.5);
     if (st.kind !== 'kid' && !linkShown({ when: 'short', union: st.union, ks: st.ks }, d)) continue;
-    const a = lit ? 1 : d.alpha;
+    // подпись обрывка видна, только когда видна его линия (решение 136, G6)
+    const sp = stubPathOf(d.frame, st);
+    const a = sp ? (linkShown(sp, d) ? (lit ? Math.max(look(sp).a, d.lit(sp) ? 1 : 0) : look(sp).a) : 0) : lit ? 1 : d.alpha;
     if (a < 0.5) continue;
     const x = st.x + d.dx;
     const y = st.y + d.dy;
     if (!onScreen(x, y)) continue;
     const parent = st.side === 'child' ? st.targets[0] : null;
+    // координата — только если второй конец за краем окна, и одна на лицо: дети одного родителя называют его один раз
+    // (решение 136, G7); у родителя — только дети за краем
+    // (концы в окне, а ход неясен — обрывки остаются, подпись — именем без координаты)
+    const map = d.frame.layout === 'map' && st.kind !== 'kid';
+    // второй конец в окне — имя со стрелкой в его сторону («↑ Давид»), за краем — с координатой («Давид, 32 П»)
+    const arrow = st.dir < 0 ? '↑' : st.dir > 0 ? '↓' : st.side === 'parent' ? '→' : '←';
+    const at = (id: string) => (map && inWindow(id) ? `${arrow} ${nameOf(id)}` : nameAt(v, id));
+    if (st.side === 'child' && st.kind !== 'kid') {
+      if (named.has(st.targets[0])) continue;
+      named.add(st.targets[0]);
+    }
     let text: string;
     if (st.kind === 'kid') {
       const kid = st.key.kind === 'child' ? st.key.child : st.targets[0];
       const par = st.side === 'child' ? st.targets[0] : null;
       text = st.side === 'parent' ? kidAway(kid, '') : par ? kidOf(kid, par) : '';
-    } else text = st.side === 'parent' ? targetsText(v, st.targets) : parent ? nameAt(v, parent) : '';
+    } else if (st.kind === 'spouse') {
+      // длинная черта брака (этап 14, решение 134): «муж — Халев, 24 П» у узла на следе матери, «наложница — Мааха, 22 П» у мужа
+      const who = st.targets[0];
+      const role = linkRoleOf(st.key, who);
+      text = role ? `${role} — ${at(who)}` : at(who);
+    } else if (st.side === 'parent' && map) {
+      // у родителя: дети в окне — одной стрелкой («↓ Гад; Асир»), за краем — с координатами
+      const inW = st.targets.filter(inWindow);
+      const outW = st.targets.filter((id) => !inWindow(id));
+      const parts: string[] = [];
+      if (inW.length) parts.push(`${arrow} ${targetsText(v, inW, nameOf)}`);
+      if (outW.length) parts.push(targetsText(v, outW));
+      text = parts.join('; ');
+    } else text = st.side === 'parent' ? targetsText(v, st.targets) : parent ? at(parent) : '';
     if (!text) continue;
     // подпись обрывка — в полную силу или никак: бледная подпись не держала бы контраста 4,5 : 1; погашенная держит место
     const e = Math.min(1, Math.max(...st.targets.map((id) => p.emph(id))));

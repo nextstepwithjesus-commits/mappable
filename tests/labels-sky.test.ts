@@ -28,6 +28,7 @@ let labels: typeof import('../src/render/labels.ts');
 let models: typeof import('../src/data/atlas.ts').models;
 let byId: typeof import('../src/data/atlas.ts').byId;
 let graph: typeof import('../src/data/atlas.ts').graph;
+let spine: Set<string>;
 type Sky = InstanceType<typeof import('../src/render/sky.ts').Sky>;
 
 beforeAll(async () => {
@@ -37,7 +38,9 @@ beforeAll(async () => {
   });
   sky = await import('../src/render/sky.ts');
   labels = await import('../src/render/labels.ts');
-  ({ models, byId, graph } = await import('../src/data/atlas.ts'));
+  const atlas = await import('../src/data/atlas.ts');
+  ({ models, byId, graph } = atlas);
+  spine = new Set([...atlas.lines.joseph.persons, ...atlas.lines.mary.persons].map((x) => x.id));
 });
 
 const LAYERS = { lifelines: true, connectors: true, constellations: true, epochs: true, ribbons: true, tensions: true, ghosts: true, labels: true };
@@ -114,9 +117,29 @@ describe('подписи без наложений (E1)', () => {
         expect(s.cam.ky).toBeGreaterThanOrEqual(labels.FAMILY_KY);
         const st = s.labelStats();
         expect(st.stars).toBeGreaterThan(5);
-        expect(st.named / st.stars, `${st.named}/${st.stars}`).toBeGreaterThanOrEqual(0.9);
         // замер — и на холсте, для проверок приёмки
         expect((canvas as unknown as { dataset: Record<string, string> }).dataset.named).toBe(`${st.named}/${st.stars}`);
+        if (!(sel && w < labels.NARROW_SKY)) {
+          expect(st.named / st.stars, `${st.named}/${st.stars}`).toBeGreaterThanOrEqual(0.9);
+          return;
+        }
+        // узкое небо при выбранном лице (решение 144; M2): подписи только у рода выбранного и лиц лент — место семье;
+        // прочие погашенные звёзды не подписаны вовсе. Из рода в окне подписано не меньше 90 %, остальные — в списке скрытых
+        const hl = lineage(sel);
+        const fam = new Set(labels.familyOf(sel));
+        const named = new Set(st.boxes.filter((b) => b.kind === 'star').map((b) => b.id!));
+        const rod: string[] = [];
+        for (let i = 0; i < s.nodes.length; i++) {
+          const n = s.nodes[i];
+          if (n.ghost || !s.reachable(i)) continue;
+          const x = s.cam.sx(s.X0[i]);
+          if (x < s.letterW || x > s.cam.w) continue;
+          if (hl.has(n.person) || fam.has(n.person)) rod.push(n.person);
+          else expect(named.has(n.person) && !spine.has(n.person), `${n.person} вне рода подписан`).toBe(false);
+        }
+        const miss = rod.filter((id) => !named.has(id));
+        expect(miss.length / rod.length, `без подписи: ${miss.join(', ')}`).toBeLessThanOrEqual(0.1);
+        for (const id of miss) expect(s.hiddenLabels(), id).toContain(id);
       });
 
   it('у выбранного лица подписаны родители, супруги, дети, братья и сёстры, чьи звёзды в окне (MAP-21, UX-33)', () => {

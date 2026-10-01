@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { effect, signal } from '@preact/signals';
 import { FRAME_H, SCALE_SETTLE_MS, Sky, readPalette, type Emphasis, type Rect, type SkyState } from '../render/sky.ts';
+import { LOW_SKY_H, setLowFrame } from '../render/frame.ts';
 import { byId, groupById, lines, modelInfo } from '../data/atlas.ts';
 import { highlightFor } from '../render/marks.ts';
 import { comparePoints, lineNoteHits, ribbonHover } from '../render/ribbons.ts';
@@ -13,8 +14,8 @@ import { drawTiers, replanTiers, tiersBottom } from '../render/tiers.ts';
 import { typo } from './text/typo.ts';
 import { aliveAt, lifeText, meridianText, placeText } from './sky/text.ts';
 import {
-  allInView, anchorNow, fitReveal, flightTarget, flyToIds, flyToPerson, holdAnchor, inView, introOpen, keepInView, lanes, reduced, screenOf, setReserve, showAround,
-  startLanes, stopFlight, unionFlip, updateZoomFloor, viewAround, linesAgain, fitLines, type Anchor,
+  allInView, anchorNow, fitReveal, flightTarget, flyToIds, flyToPerson, holdAnchor, holdFamily, inView, kinProbe, introOpen, keepInView, lanes, reduced, screenOf, setReserve, showAround,
+  startLanes, stopFlight, unionFlip, updateZoomFloor, viewAround, linesAgain, fitLines, windowHold, reserve, type Anchor,
 } from './sky/view.ts';
 
 /**
@@ -25,7 +26,8 @@ export const noteFocus = signal<string | null>(null);
 import { expanded, hasHidden, opened, plates, selectedUnion, unionById, type Plate } from './reveal.ts';
 import { linkClick, linkHover, plateFocus, plateHover, plateNews } from './sky/starnav.ts';
 import { linkAnchor, previewLinks, selectedLink } from './linkstate.ts';
-import { skyShow, whereOf } from './show.ts';
+import { showKey as showKeyOf, skyShow, whereOf } from './show.ts';
+import { show } from './work.ts';
 import { linkSpeech } from './linkwords.ts';
 import { linkKeyString } from '../engine/linkkey.ts';
 import { computed } from '@preact/signals';
@@ -39,6 +41,7 @@ import { foldDesc, foldGroups, groupFoldText, keyTarget, linkSet, shownIds, skyM
 import { SkyMenu, skyMenu } from './panels/Work.tsx';
 import { isTextField } from './keys.ts';
 import { grid, skyFull, viewportHeight } from './layout.ts';
+import { showSheet } from './panels/Show.tsx';
 
 /**
  * Путь родства, который сейчас можно показать: он идёт от первого лица пары ко второму.
@@ -59,6 +62,8 @@ export function pairPath(): string[] | null {
  *  — workFlash — отклик звезды на клавишу В или С (IX-51): однократная обводка 300 мс с мгновения at (performance.now()).
  */
 export type SkyFrameState = SkyState & {
+  /** органы неба (строка показа, кнопки, лист «Показ») — без резерва одних подписей (карточка у знака, подсказка) */
+  organs?: readonly Rect[];
   modelNote: string | null;
   workMarks: ReadonlySet<string> | null;
   workFlash: { id: string; at: number } | null;
@@ -277,6 +282,8 @@ export function SkyView() {
         linkHover: linkHover.value,
         // гости показа (§ 7): уточнение подписи «в «Доме Фарры»»
         guestWhere: whereOf,
+        // органы неба без карточек у знака и подсказки: родня под ними — «за краем», ей указатель (frame.ts, решение 146)
+        organs: reserve(),
       };
       // переход между укладками (§ 10): при ослабленном движении — сразу конечный кадр
       sky.animate = !reduced();
@@ -337,6 +344,14 @@ export function SkyView() {
       const sel = selected.value ? screenOf(selected.value) : null;
       if (sel) wrap.current!.dataset.sel = `${sel.x.toFixed(1)} ${sel.y.toFixed(1)}`;
       else delete wrap.current!.dataset.sel;
+      // родня выбранного и указатели у края на неё (решение 146) — для проверок приёмки (tools/accept/nav14.ts)
+      // (в покое: в движении кадр не тратится на замер)
+      if (!sky.cam.moving) {
+        const kin = selected.value ? kinProbe(selected.value) : '';
+        if (kin !== wrap.current!.dataset.kin) wrap.current!.dataset.kin = kin;
+        const edges = sky.edgeHits.map((e) => `${e.label}=${(e.ids ?? [e.id]).join(',')}`).join('|');
+        if (edges !== (wrap.current!.dataset.edges ?? '')) wrap.current!.dataset.edges = edges;
+      }
       // пропорция полос устоялась (шаг, протяжка, щипок закончились) — в память браузера и органам неба (J1)
       // временное сжатие строк вписыванием группы (IX-70) — не пропорция читателя: в память идёт своя
       if (!sky.cam.moving && sky.cam.ownLanes !== lanes.peek()) lanes.value = sky.cam.ownLanes;
@@ -467,6 +482,8 @@ export function SkyView() {
       last = { left: r.left, w: r.width, h: r.height };
       setSkyW(r.width);
       setSkyH(r.height);
+      // низкое небо (решение 155; масштаб 200 %, альбомный телефон): рамка одной строкой — линейка и строка эпох вместе
+      setLowFrame(r.height <= LOW_SKY_H);
       sky.resize(r.width, r.height, Math.min(2, window.devicePixelRatio || 1)); // выше 2× разница не видна, а заливка втрое дороже
       sky.setModel(model.value, shownLambda);
       sky.setInsets(insets());
@@ -503,6 +520,8 @@ export function SkyView() {
     const measure = (animate: boolean) => {
       const box = wrap.current!.getBoundingClientRect();
       const out: Rect[] = [];
+      /** органы неба: без резерва одних подписей — карточки у знака и подсказки (контракт 2 этапа 14, data-reserve «dot», «tip») */
+      const organs: Rect[] = [];
       // выбранное лицо было видно, а новый лист («Вид», вступление, строка у кромки) лёг на него — небо сдвигается (принцип 2)
       const sel = selected.peek();
       const selWas = !!sel && !!sky.model && inView(sel);
@@ -517,15 +536,62 @@ export function SkyView() {
           reserveRO.observe(el);
         }
         const b = el.getBoundingClientRect();
-        if (b.width && b.height) out.push({ x: b.left - box.left, y: b.top - box.top, w: b.width, h: b.height });
+        if (!b.width || !b.height) continue;
+        const r = { x: b.left - box.left, y: b.top - box.top, w: b.width, h: b.height };
+        out.push(r);
+        const kind = el.dataset.reserve;
+        // лист «Показ» во всё небо (телефон) — не орган неба: из-под него лицу деваться некуда
+        const cover = kind === 'sheet' && r.w * r.h > 0.6 * box.width * box.height;
+        if (kind !== 'dot' && kind !== 'tip' && !cover) organs.push(r);
       }
+      // подписям и указателям у края — весь резерв; движению неба, «на виду» и месту карточки у знака — органы неба
       reserveRef.current = out;
-      setReserve(out);
+      setReserve(organs);
       applyInsets(animate);
-      if (sel && selWas && !sky.cam.moving && !inView(sel)) keepInView(sel);
+      // из-под листа «Показ» — вбок (решение 147), из-под прочих органов — по вертикали: окно лет то же
+      if (sel && selWas && !sky.cam.moving && !inView(sel)) keepInView(sel, 250, !!showSheet.peek());
       request();
     };
     layoutRef.current = measure;
+    // карточка у знака и подсказка сдвинулись, не меняя размера (контракт 2 этапа 14; S4 шлёт «reserve-move»): резерв
+    // подписей — заново, не чаще кадра
+    let moveRaf = 0;
+    const onReserveMove = () => {
+      if (moveRaf) return;
+      moveRaf = requestAnimationFrame(() => {
+        moveRaf = 0;
+        if (wrap.current) measure(false);
+      });
+    };
+    wrap.current!.addEventListener('reserve-move', onReserveMove);
+    // лист «Показ» под строкой показа открылся или закрылся (решение 147): резерв — заново, когда лист встал; открылся над
+    // выбранным — лицо выходит из-под него сразу, а не при смене показа (тогда оно сдвинулось бы вместе с ней)
+    // Окно до листа — в адресе и истории (view.ts, windowHold); лист закрыли, не сменив показа и не тронув неба, — небо
+    // возвращается к окну до листа
+    let sheetRaf = 0;
+    let beforeSheet: { v: ReturnType<typeof sky.cam.state>; show: string; touched: boolean } | null = null;
+    const touchSheet = () => {
+      if (beforeSheet) beforeSheet.touched = true;
+    };
+    canvas.addEventListener('pointerdown', touchSheet);
+    canvas.addEventListener('wheel', touchSheet, { passive: true });
+    const offSheet = effect(() => {
+      const open = !!showSheet.value;
+      if (open && !beforeSheet && sky.model) beforeSheet = { v: sky.cam.state(), show: showKeyOf(show.peek()), touched: false };
+      windowHold.value = open;
+      if (!open && beforeSheet) {
+        const b = beforeSheet;
+        beforeSheet = null;
+        if (!b.touched && showKeyOf(show.peek()) === b.show && !sky.cam.near(b.v)) {
+          stopFlight();
+          sky.cam.animateTo(sky.cam.constrain(b.v), 250, request, reduced());
+        }
+      }
+      cancelAnimationFrame(sheetRaf);
+      sheetRaf = requestAnimationFrame(() => {
+        sheetRaf = requestAnimationFrame(() => wrap.current && measure(false));
+      });
+    });
 
     // лист карточки на телефоне появляется после отрисовки выбора — размеры берутся в следующем кадре
     skyRef.flyTo = (id: string) =>
@@ -534,6 +600,27 @@ export function SkyView() {
         sky.setInsets(insets());
         flyToPerson(id);
       });
+
+    // ссылка на лицо на экране (решение 146; common.tsx, goTo): когда раскладка устоялась (открылась карточка, лист, карточка
+    // у звезды) и небо стоит — сдвиг к родне, если её в кадре меньше 70 %; читатель взялся за небо или выбрал другое — нет
+    let holdRaf = 0;
+    skyRef.holdFamily = (id: string) => {
+      cancelAnimationFrame(holdRaf);
+      let touched = false;
+      const tick = (n: number) => {
+        if (selected.peek() !== id || touched) return;
+        if (n < 3 || ((sky.cam.moving || sky.transitioning) && n < 90)) {
+          holdRaf = requestAnimationFrame(() => tick(n + 1));
+          return;
+        }
+        holdFamily(id);
+      };
+      const off = () => {
+        touched = true;
+      };
+      canvas.addEventListener('pointerdown', off, { once: true });
+      holdRaf = requestAnimationFrame(() => tick(0));
+    };
 
     // ввод неба (src/ui/sky/input.ts) — первым: его нажатие видит, шёл ли перелёт, прежде чем тот остановится (IX-54)
     const input = attachPointer(sky, canvas, request, setTip);
@@ -787,7 +874,12 @@ export function SkyView() {
       }
       if (openedGroup) foldAt.delete(openedGroup);
       sky.animate = !reduced();
-      const changed = sky.setView(v, toggled ?? flip?.from ?? sh.anchor ?? selected.peek());
+      // смена показа при выбранном лице на виду (решение 147; U5): опора — оно; если оно есть и в новом показе, небо не
+      // вписывает показ заново — лицо остаётся на месте экрана (±2 px), строки едут по вертикали (решение 85)
+      const opora = toggled ?? flip?.from ?? sh.anchor ?? selected.peek();
+      const keepSel = !toggled && !flip && opora && opora === selected.peek() && sky.model && last.w && inView(opora) ? opora : null;
+      const changed = sky.setView(v, opora);
+      const held = !!keepSel && changed && !sky.hides(keepSel) && sky.reachable(keepSel);
       if (changed && hold) {
         const lane = hold.group ? sky.plan.marks.find((k) => k.kind === 'group' && k.id === hold!.group)?.lane : hold.lane;
         if (lane !== undefined) {
@@ -828,6 +920,11 @@ export function SkyView() {
       // вписыванием набора, кто бы из двух ни успел первым (этап 11, B1; сценарий 721)
       if (sky.model && last.w && v.mode === 'work' && onlyLines.peek()) {
         /* окно — у fitLines */
+      } else if (held) {
+        // лицо стоит, где стояло; уйти за край оно может только под органы, появившиеся с новым показом
+        stopFlight();
+        updateZoomFloor();
+        if (!inView(keepSel!)) keepInView(keepSel!, 250, !!showSheet.peek());
       } else if (sky.model && last.w && v.mode === 'work' && shownMode !== 'work') {
         stopFlight();
         updateZoomFloor();
@@ -897,6 +994,13 @@ export function SkyView() {
       offNews();
       offLinkSay();
       offFull();
+      offSheet();
+      wrapEl.removeEventListener('reserve-move', onReserveMove);
+      cancelAnimationFrame(moveRaf);
+      windowHold.value = false;
+      canvas.removeEventListener('pointerdown', touchSheet);
+      canvas.removeEventListener('wheel', touchSheet);
+      cancelAnimationFrame(sheetRaf);
       window.removeEventListener('keydown', onWorkKey);
       clearTimeout(settleTimer);
       clearTimeout(staleTimer);

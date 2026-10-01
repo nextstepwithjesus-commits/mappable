@@ -146,7 +146,8 @@ export async function cardOf(p: Page) {
 const reserves = (p: Page) =>
   p.evaluate(() => {
     const c = document.querySelector('.sky canvas')!.getBoundingClientRect();
-    return [...document.querySelectorAll<HTMLElement>('.sky [data-reserve]')]
+    // этап 14 (решение 153): карточка у звезды и подсказка — тоже резерв подписей, но не органы неба: сама себе она не запрет
+    return [...document.querySelectorAll<HTMLElement>('.sky [data-reserve]:not([data-reserve="dot"]):not([data-reserve="tip"])')]
       .map((e) => e.getBoundingClientRect())
       .filter((r) => r.width > 0 && r.height > 0)
       .map((r) => ({ x: r.left - c.left, y: r.top - c.top, w: r.width, h: r.height }));
@@ -167,17 +168,17 @@ const starsOf = (p: Page, ids: string[]) =>
  * Есть ли полной карточке размера size место в bounds без единого px² запретного: перебор по сетке 16 px, затем 6 px —
  * та же сетка, что у места карточки (src/ui/sky/DotCard.tsx, placeCard).
  */
-function roomFor(size: { w: number; h: number }, bounds: Rect, bad: Rect[]): boolean {
+function roomFor(size: { w: number; h: number }, bounds: Rect, bad: Rect[]): Rect | null {
   const x1 = bounds.x + bounds.w - size.w;
   const y1 = bounds.y + bounds.h - size.h;
-  if (x1 < bounds.x || y1 < bounds.y) return false;
+  if (x1 < bounds.x || y1 < bounds.y) return null;
   for (const step of [16, 6])
     for (let x = bounds.x; x <= x1 + 0.5; x += step)
       for (let y = bounds.y; y <= y1 + 0.5; y += step) {
         const q = { x: Math.min(x, x1), y: Math.min(y, y1), ...size };
-        if (bad.every((z) => area(q, z) === 0)) return true;
+        if (bad.every((z) => area(q, z) === 0)) return q;
       }
-  return false;
+  return null;
 }
 
 /**
@@ -211,15 +212,18 @@ export async function placeIssue(p: Page): Promise<{ why?: string; note?: string
   const list = (rs: Rect[]) => rs.map((h) => ({ h, a: area(c.rect, h) })).filter((x) => x.a > 0.5);
   const say = (xs: { h: Rect; a: number }[]) => xs.slice(0, 3).map((x) => `${Math.round(x.h.x)},${Math.round(x.h.y)} ${Math.round(x.h.w)}×${Math.round(x.h.h)} — ${Math.round(x.a)} px²`).join('; ');
   const m = list(must);
-  if (m.length) return { why: `карточка закрывает ${m.length} обязательных областей: ${say(m)}` };
+  if (m.length) return { why: `карточка ${Math.round(c.rect.x)},${Math.round(c.rect.y)} ${Math.round(c.rect.w)}×${Math.round(c.rect.h)}${c.brief ? ' (краткая)' : ''} в ${c.bounds} закрывает ${m.length} обязательных областей: ${say(m)}` };
   const w = list(want);
   if (!c.brief) return w.length ? { why: `полная карточка закрывает ${w.length} желательных областей: ${say(w)}` } : {};
   // краткий вид — только когда полной карточке места нет
   const [fw, fh] = c.full.split(',').map(Number);
   const [bx, by, bw, bh] = c.bounds.split(',').map(Number);
   if (!(fw > 0 && fh > 0 && bw > 0)) return { why: 'краткая карточка без размера полной (data-full) или места (data-bounds)' };
-  const bad = [...rects(c.must), ...rects(c.want), ...(mark ? [mark] : [])];
-  if (roomFor({ w: fw, h: fh }, { x: bx, y: by, w: bw, h: bh }, bad)) return { why: `краткий вид, хотя полной карточке ${fw}×${fh} место есть` };
+  // data-must и data-want — в целых px (DotCard.tsx, enc): запретное, к которому полная карточка примыкает вплотную, у карточки
+  // перекрыто долями пикселя — запас 1 px (этап 14: место у края неба, 634 = правый край, подпись до 634,3)
+  const bad = [...rects(c.must), ...rects(c.want), ...(mark ? [mark] : [])].map((z) => ({ x: z.x - 1, y: z.y - 1, w: z.w + 2, h: z.h + 2 }));
+  const room = roomFor({ w: fw, h: fh }, { x: bx, y: by, w: bw, h: bh }, bad);
+  if (room) return { why: `краткий вид, хотя полной карточке ${fw}×${fh} место есть (${Math.round(room.x)},${Math.round(room.y)} в ${c.bounds}; запретных ${bad.length})` };
   return { note: `краткий вид, закрыто ${Math.round(w.reduce((s, x) => s + x.a, 0))} px² желательного` };
 }
 
@@ -482,7 +486,8 @@ export const unify11: Scenario[] = [
           const c = await cardOf(p);
           const s1 = await state(p);
           if (!c || c.kind !== 'person' || c.name !== x.name) bad.push(`${x.name} ${v}: карточка ${c ? `${c.kind} «${c.name}»` : 'не открылась'}`);
-          else if (!(await p.locator('.sky .dotcard .dc-kin').count())) bad.push(`${x.name} ${v}: нет «Родства»`);
+          // этап 14 (решение 153): при открытой подробной карточке у звезды — легенда семьи, полное «Родство» — по ссылке
+          else if (!(await p.locator('.sky .dotcard .dc-kin, .sky .dotcard .dc-legend').count())) bad.push(`${x.name} ${v}: нет ни «Родства», ни легенды семьи`);
           else if (s1.show !== s0.show || s1.ids !== s0.ids) bad.push(`${x.name} ${v}: показ ${s0.show}/${s0.ids} → ${s1.show}/${s1.ids}`);
           else if (s1.view !== s0.view) bad.push(`${x.name} ${v}: камера сдвинулась`);
           else n++;
@@ -855,7 +860,7 @@ export const unify11: Scenario[] = [
   },
   {
     n: 825,
-    title: 'Сценарий владельца 9, телефон 390 × 844: касание Хама — нижний лист на 214 px и есть карточка у звезды с «Родством»; второй карточки над небом нет; «Карточка ▴» поднимает лист',
+    title: 'Сценарий владельца 9, телефон 390 × 844: касание Хама — нижний лист высотой краткой карточки (решение 155; прежде 214 px) и есть карточка у звезды с «Родством»; второй карточки над небом нет; «Карточка ▴» поднимает лист',
     view: { width: 390, height: 844, touch: true },
     run: async (p) => {
       await open(p, '#/kham~va');
@@ -869,7 +874,9 @@ export const unify11: Scenario[] = [
       if (!(await dot.count())) return fail('в листе нет карточки у звезды');
       const t = flat(await dot.innerText());
       if (!/^Хам/.test(t) || !/Родители/.test(t) || !/Ной и его жена/.test(t)) return fail(`лист: ${t.slice(0, 120)}`);
-      if (!sheet || Math.abs(sheet.height - 214) > 16) return fail(`высота листа ${sheet?.height.toFixed(0)}`);
+      // этап 14, решение 155: шапка листа — высотой краткой карточки (--sheet-peek на .app), прежде 214 px
+      const want = await p.evaluate(() => parseFloat(getComputedStyle(document.querySelector('.app')!).getPropertyValue('--sheet-peek')) || 214);
+      if (!sheet || Math.abs(sheet.height - want) > 16) return fail(`высота листа ${sheet?.height.toFixed(0)}, карточки ${Math.round(want)}`);
       await p.locator('.folio .sheet-dot .dc-cmds button', { hasText: 'Вся карточка' }).first().tap();
       await p.waitForTimeout(900);
       const up = await p.locator('.folio').boundingBox();

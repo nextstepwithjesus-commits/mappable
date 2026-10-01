@@ -1,11 +1,11 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { signal } from '@preact/signals';
+import { effect, signal } from '@preact/signals';
 import type { ComponentChildren, VNode } from 'preact';
 import { byId, lineMembership, loadCard, loadedCard, loadedChrono } from '../data/atlas.ts';
 import type { Card, Chrono } from '../data/types.ts';
 import { selected, second, pickMode, model, showSchema, panel } from '../state.ts';
 import { cardFull, grid, toggleCardFull, unfoldCard } from './layout.ts';
-import { skyRef, plural, CAN_PRINT, goTo } from './common.tsx';
+import { skyRef, plural, CAN_PRINT, goTo, viewTick } from './common.tsx';
 import { lowerFirst } from './text/ru.ts';
 import { typo } from './text/typo.ts';
 import { Masthead, isPeople, passportYears } from './card/Masthead.tsx';
@@ -18,10 +18,11 @@ import { Contents, ContentsMenu, tocNow } from './card/Contents.tsx';
 import { affiliation, goToSection, modelColophon, sectionEl } from './card/shared.tsx';
 import { ChapterReturn } from './panels/Chapter.tsx';
 import { reduced } from './sky/view.ts';
-import { sheetStop, snapSheet, stopsFor, releaseVelocity, type SheetStop } from './sheet.ts';
+import { lowScreen, peekContent, peekFor, sheetStop, snapSheet, stopsFor, releaseVelocity, type SheetStop } from './sheet.ts';
 import { cardFolded, cardTabs, closeCurrent, isPinned, pinCard, rememberPlace, tabLabel, tabOf, unpinCard, type CardTab } from './stack.ts';
 import { WorkButton } from './panels/Work.tsx';
 import { cardTitle, focusCardTitle, focusQuietly } from './focus.ts';
+import { closeCard, dropReading, readingTab } from './card/reading.ts';
 import { selectedUnion, selectUnion, unionById } from './reveal.ts';
 import { DotSheet } from './sky/DotCard.tsx';
 import { UnionCard, openerSection, unionTitle, unionYears } from './card/Union.tsx';
@@ -171,6 +172,11 @@ function runIn(body: ComponentChildren): VNode<{ class?: string; children?: Comp
   return v.type === 'p' || v.type === 'li' ? v : null;
 }
 
+/** Сколько разделов карточки встаёт за кадр (С1): 24 раздела — за шесть кадров после шапки. */
+const PAGE_STEP = 4;
+/** Первая часть разделов ждёт свободного времени браузера не дольше, мс. */
+const PAGE_FIRST_MS = 300;
+
 /** Состояние тела карточки: разделы, «Загрузка карточки…» (том ещё не пришёл) или «не удалось загрузить». */
 export type BodyStatus = 'ok' | 'loading' | 'error';
 
@@ -199,16 +205,39 @@ export function CardPage({
   const m = model.value;
   // тома других лиц (стихи матери ребёнка в § 9 — решение 92) пришли — разделы собираются заново
   const vols = cardsTick.value;
+  // Разделы нового лица — по частям, по PAGE_STEP разделов за кадр (С1): сборка и отрисовка 24 разделов одним куском занимали
+  // кадр перелёта неба к лицу на сотни миллисекунд. Шапка с паспортом, «Кратко» и команды — сразу (фокус на заголовке и
+  // объявление — как прежде); разделы встают за несколько кадров, рейка и оглавление — с первыми, колофон — с последними.
+  const pageKey = `${bodyId}|${m.id}`;
+  const hasBody = status === 'ok' && !!body;
+  const [laid, setLaid] = useState<{ key: string; n: number } | null>(null);
+  // без кадров браузера (отрисовка в строку — тесты, печать образца) — всё сразу
+  const upTo = typeof requestAnimationFrame !== 'function' ? SECTIONS.length : laid?.key === pageKey ? laid.n : 0;
+  const deferred = upTo === 0;
+  useEffect(() => {
+    if (!hasBody || upTo >= SECTIONS.length) return;
+    const next = () => setLaid({ key: pageKey, n: Math.min(SECTIONS.length, upTo + PAGE_STEP) });
+    // первая часть (с ней — сборка всех разделов, buildSections) — когда браузер свободен, но не позже PAGE_FIRST_MS: в
+    // перелёте свободного времени нет; дальше — кадр за кадром, после того как браузер нарисовал предыдущую часть
+    const w = window as Window & { requestIdleCallback?: (f: () => void, o?: { timeout: number }) => number; cancelIdleCallback?: (h: number) => void };
+    if (upTo === 0 && w.requestIdleCallback) {
+      const h = w.requestIdleCallback(next, { timeout: PAGE_FIRST_MS });
+      return () => w.cancelIdleCallback?.(h);
+    }
+    const raf = requestAnimationFrame(next);
+    return () => cancelAnimationFrame(raf);
+  }, [pageKey, hasBody, upTo]);
   // разделы собираются заново, только когда сменились лицо, том, модель или пришёл том родни: прокрутка меняет лишь
-  // текущий раздел рейки
+  // текущий раздел рейки; до первой части — не собираются
   const { out, states } = useMemo(() => {
+    if (deferred) return { out: new Map<number, ComponentChildren>(), states: {} as Record<number, SecState> };
     const o = buildSections(bodyId, bp, card, m, m.chrono.get(bodyId), '', body?.chrono ?? null);
     return { out: o, states: sectionStates(bodyId, o, card) };
-  }, [bodyId, card, body?.chrono, m, vols]);
+  }, [bodyId, card, body?.chrono, m, vols, deferred]);
   const schema = showSchema.value;
   // малое лицо (F11; CARD-36): меньше трёх записей составителя — «Кратко» и есть статья, разделы — одной строкой
   const compact = !!card && authoredCount(card) < 3 && !schema && openFor !== bodyId;
-  const ready = status === 'ok' && !!body;
+  const ready = status === 'ok' && !!body && !deferred;
   // Тело карточки другого лица (или другой модели) строится заново, а не перекраивается из прежнего (CARD-76): разделы
   // с одним номером у двух лиц устроены по-разному (заголовок в строку, списки, вложенные фрагменты), и перекройка роняла
   // Preact на insertBefore — в новой карточке оставались разделы прежнего лица, затем лист переставал обновляться.
@@ -301,6 +330,8 @@ export function CardPage({
   const shown = (n: number) => states[n] === 'content' || states[n] === 'silent' || states[n] === 'na' || (schema && states[n] === 'absent');
   let lastPart = 0;
   for (const s of SECTIONS) {
+    // разделы — по частям (PAGE_STEP за кадр): дальше upTo — в следующих кадрах
+    if (s.n > upTo) break;
     if (!shown(s.n)) {
       // скрытый раздел (не составлен или в шапке) разрывает сведённую строку: «9–12» — только подряд идущие
       flushRun();
@@ -399,7 +430,7 @@ export function CardPage({
           )}
         </div>
       ) : null}
-      {ready ? (
+      {ready && upTo >= SECTIONS.length ? (
         <footer class="colophon" key={`colophon|${bodyKey}`}>
           {compact ? null : <RailKey states={states} />}
           {/* «см. „О хронологии“» — ссылка на панель (решение 102) */}
@@ -463,7 +494,7 @@ function useSheetDrag(aside: { current: HTMLElement | null }, on: boolean) {
         d.moved = true;
         el.dataset.drag = '';
       }
-      const h = Math.max(0, Math.min(stopsFor(avail()).full, d.h0 - dy));
+      const h = Math.max(0, Math.min(stopsFor(avail(), lowScreen(), peekContent.peek(), skyRef.current?.openTop ?? 0).full, d.h0 - dy));
       el.style.setProperty('--sheet-h', `${Math.round(h)}px`);
       d.pts.push({ t, y });
       while (d.pts.length > 2 && t - d.pts[0].t > 160) d.pts.shift();
@@ -475,10 +506,11 @@ function useSheetDrag(aside: { current: HTMLElement | null }, on: boolean) {
       d = null;
       if (!was || !was.moved) return false;
       const h = el.getBoundingClientRect().height;
-      const to = snapSheet(h, releaseVelocity(was.pts, t), stopsFor(avail()), was.from);
+      const to = snapSheet(h, releaseVelocity(was.pts, t), stopsFor(avail(), lowScreen(), peekContent.peek(), skyRef.current?.openTop ?? 0), was.from);
       delete el.dataset.drag;
       el.style.removeProperty('--sheet-h');
-      if (to === 'close') selected.value = null;
+      // взмах листа вниз — явное закрытие карточки, как «×» (решение 150: вкладки чтения нет)
+      if (to === 'close') closeCard(() => (selected.value = null));
       else sheetStop.value = to;
       return true;
     };
@@ -558,8 +590,10 @@ function useSheetDrag(aside: { current: HTMLElement | null }, on: boolean) {
  * союза — их карточка на том же месте. За свободное место лист тянется, как за шапку; касание поднимает лист до 55 %.
  */
 function DotSheetBar({ id, onClose }: { id: string; onClose: () => void }) {
+  const bar = useRef<HTMLDivElement>(null);
+  usePeekSize(bar);
   return (
-    <div class="sheet-bar sheet-dot">
+    <div class="sheet-bar sheet-dot" ref={bar}>
       <div class="grab" aria-hidden="true">
         <span />
       </div>
@@ -567,6 +601,59 @@ function DotSheetBar({ id, onClose }: { id: string; onClose: () => void }) {
       <Close label="Закрыть карточку" onClick={onClose} />
     </div>
   );
+}
+
+/**
+ * Шапка листа = высота краткой карточки (решение 155; M8): лист на первом положении измеряет свою карточку у звезды —
+ * ручку, карточку и нижнее поле — и ставит --sheet-peek на сетку атласа (.app: по ней считают место неба и органы).
+ * Над листом под рамкой неба остаётся не меньше 140 px данных (sheet.ts, peekFor). Карточка выросла или сжалась
+ * (раскрылась строка, сменилось лицо) — шапка следует за ней.
+ */
+function usePeekSize(bar: { current: HTMLElement | null }) {
+  useLayoutEffect(() => {
+    const el = bar.current;
+    const app = el?.closest<HTMLElement>('.app');
+    if (!el || !app || typeof ResizeObserver === 'undefined') return;
+    const card = el.querySelector<HTMLElement>('.dotcard');
+    const set = () => {
+      if (!card || !el.isConnected) return;
+      const top = el.getBoundingClientRect().top;
+      const cs = getComputedStyle(el);
+      // естественная высота: от верха шапки до низа карточки и нижнее поле шапки, рамка листа сверху
+      const content = Math.ceil(card.getBoundingClientRect().bottom - top + parseFloat(cs.paddingBottom || '0') + 1);
+      const sky = document.querySelector<HTMLElement>('.sky');
+      const avail = sky ? sky.getBoundingClientRect().height : window.innerHeight * 0.8;
+      const frame = skyRef.current?.openTop ?? 0;
+      const h = peekFor(avail, lowScreen(), content, frame);
+      peekContent.value = content;
+      const want = `${h}px`;
+      if (app.style.getPropertyValue('--sheet-peek') !== want) app.style.setProperty('--sheet-peek', want);
+    };
+    set();
+    // карточка выросла или сжалась, небо сменило высоту (поворот, масштаб 200 %, ярусы эпох) — шапка заново; небо при
+    // первом показе ещё не знает своей рамки — ещё раз, когда раскладка устоялась
+    const ro = new ResizeObserver(set);
+    ro.observe(card ?? el);
+    const skyEl = document.querySelector<HTMLElement>('.sky');
+    if (skyEl) ro.observe(skyEl);
+    window.addEventListener('resize', set);
+    const late = window.setTimeout(set, 600);
+    let frameSeen = skyRef.current?.openTop ?? 0;
+    const offFrame = effect(() => {
+      void viewTick.value;
+      const f = skyRef.current?.openTop ?? 0;
+      if (f === frameSeen) return;
+      frameSeen = f;
+      set();
+    });
+    // высота остаётся после ухода шапки (лист поднят до 55 %): при возврате лист встаёт сразу на неё, без скачка
+    return () => {
+      ro.disconnect();
+      offFrame();
+      window.clearTimeout(late);
+      window.removeEventListener('resize', set);
+    };
+  }, []);
 }
 
 /**
@@ -621,7 +708,8 @@ function SheetBar({ id, stop, onClose, union }: { id: string; stop: SheetStop; o
  */
 function CardActions({ id, phone }: { id: string; phone: boolean }) {
   const pick = pickMode.value;
-  // лицо вне показа (решение 111; X4 Д6 п. 3): «Показать на всём небе» — всё небо и перелёт к лицу (revealOnAll)
+  // лицо вне показа (решение 111; X4 Д6 п. 3): «К звезде на всём небе» — всё небо и перелёт к лицу (revealOnAll).
+  // Слова команд (решение 156; U9): перелёт — «К звезде», отметки поиска — «Отметить на небе (N)», гость — «Поставить на небо»
   const outside = outsideOf(show.value, showContent.value, id) === id;
   const toggle = (mode: 'kinship' | 'spread', btn: HTMLButtonElement) => {
     const on = pick !== mode;
@@ -636,13 +724,13 @@ function CardActions({ id, phone }: { id: string; phone: boolean }) {
   usePickReturn();
   return (
     <div class="actions">
-      {/* на узком листе (400 px и уже) — «На небе»: четыре команды — одной строкой (VIS-79, IX-81); имя для диктора —
+      {/* на узком листе (400 px и уже) — «К звезде»: четыре команды — одной строкой (VIS-79, IX-81); имя для диктора —
           полное, видимая надпись входит в него (WCAG 2.5.3) */}
       <button
         type="button"
         class="show-on-sky"
         title={outside ? 'Лица нет в нынешнем показе: показать всё небо и перелететь к его звезде' : 'Перелететь к звезде лица на небе'}
-        aria-label={outside ? 'Показать на всём небе' : 'Показать на небе'}
+        aria-label={outside ? 'К звезде на всём небе' : 'К звезде'}
         onClick={() => {
           // на телефоне лист сначала сворачивается до шапки: перелёт идёт над ним, а не под ним (MOB-15)
           if (phone) sheetStop.value = 'peek';
@@ -650,9 +738,9 @@ function CardActions({ id, phone }: { id: string; phone: boolean }) {
           else skyRef.flyTo(id);
         }}
       >
-        <span class="full">{outside ? 'Показать на всём небе' : 'Показать на небе'}</span>
+        <span class="full">{outside ? 'К звезде на всём небе' : 'К звезде'}</span>
         <span class="short" aria-hidden="true">
-          {outside ? 'На всём небе' : 'На небе'}
+          К звезде
         </span>
       </button>
       {/* в режиме выбора второго лица надпись и ширина те же — меняется только нажатость (IX-22): ряд не перестраивается,
@@ -700,9 +788,11 @@ function usePickReturn() {
  * на её вкладку (useTabReturn), иначе — туда, откуда карточку открыли (src/ui/focus.ts).
  */
 function closeActive(_id: string) {
-  // выбор второго лица относился к закрытой карточке
-  pickMode.value = null;
-  closeCurrent();
+  // выбор второго лица относился к закрытой карточке; «×» — явное закрытие: вкладки чтения нет (решение 150)
+  closeCard(() => {
+    pickMode.value = null;
+    closeCurrent();
+  });
 }
 
 /** После «Свернуть карточку» фокус — на «развернуть» корешка (кнопка «Свернуть карточку» уходит из разметки). */
@@ -924,6 +1014,10 @@ export function Folio({ id: forcedId, forceState }: { id?: string; forceState?: 
 
   const p = id ? byId.get(id) : undefined;
   if (!id || !p) {
+    // выбор снят (Escape, пустое небо): подробная карточка свёрнута во вкладку с именем — корешком справа, на телефоне —
+    // строкой над полосой времени; возвращается одним щелчком, закрывает её только «×» (решение 150)
+    const reading = live ? readingTab.value : null;
+    if (reading && byId.has(reading)) return phone ? <TabsOnly tabs={tabs} reading={reading} /> : <ReadingSpine id={reading} tabs={tabs} />;
     // лицо не выбрано, но есть закреплённые карточки (решение 91): вкладки видны всегда — корешком справа, на телефоне —
     // строками над полосой времени
     if (live && tabs.length) return phone ? <TabsOnly tabs={tabs} /> : <TabsSpine tabs={tabs} />;
@@ -1203,7 +1297,7 @@ function toggleTab(id: string, open: boolean) {
   if (open) {
     focusTabNext = id;
     pickMode.value = null;
-    closeCurrent();
+    closeCard(closeCurrent);
     return;
   }
   goTo(id);
@@ -1226,16 +1320,30 @@ function closeTab(t: CardTab, list: readonly CardTab[]) {
  * с уточнением целыми словами, «×» («Закрыть вкладку …»). Вкладка — кнопка с aria-expanded: у раскрытой (текущая карточка)
  * — true, щелчок сворачивает её; у свёрнутой щелчок раскрывает. На телефоне — те же строки над листом (phone).
  */
-function CardTabs({ tabs, current, phone = false }: { tabs: readonly CardTab[]; current: string | null; phone?: boolean }) {
+function CardTabs({ tabs, current, phone = false, reading = null }: { tabs: readonly CardTab[]; current: string | null; phone?: boolean; reading?: string | null }) {
   const root = useRef<HTMLUListElement>(null);
-  useTabFocus(root, `${tabs.map((t) => t.id).join('|')}#${current ?? ''}`);
+  useTabFocus(root, `${tabs.map((t) => t.id).join('|')}#${current ?? ''}#${reading ?? ''}`);
+  const rl = reading ? tabLabel(reading) : null;
   return (
     // на телефоне — ещё и .stack-strip: небо оставляет место над строками (src/ui/SkyView.tsx, insets)
-    <ul class={phone ? 'card-tabs stack-strip' : 'card-tabs'} ref={root} aria-label="Закреплённые карточки" data-many={tabs.length > 3 ? '' : undefined}>
+    <ul class={phone ? 'card-tabs stack-strip' : 'card-tabs'} ref={root} aria-label={tabs.length ? 'Закреплённые карточки' : 'Свёрнутая карточка'} data-many={tabs.length > 3 ? '' : undefined}>
+      {/* свёрнутая снятием выбора карточка (решение 150): строка с именем — раскрыть, «×» — закрыть */}
+      {reading && rl && (
+        <li class="card-tab reading" data-id={reading}>
+          <button type="button" class="tab-open" aria-expanded="false" aria-label={`${rl.full} — свёрнутая карточка`} title="Раскрыть карточку" onClick={() => reopenReading(reading)}>
+            <span class="tab-mark" aria-hidden="true" />
+            <span class="nm">{rl.name}</span>
+            {rl.dis ? <FitWords class="ds" text={typo(rl.dis)} /> : null}
+          </button>
+          <Close label={`Закрыть карточку: ${rl.full}`} onClick={() => closeReading(reading)} />
+        </li>
+      )}
       {/* подпись над вкладками (решение 119; UI-08): что это за строки; для диктора — имя списка */}
-      <li class="tabs-cap" aria-hidden="true">
-        Закреплённые карточки
-      </li>
+      {tabs.length > 0 && (
+        <li class="tabs-cap" aria-hidden="true">
+          Закреплённые карточки
+        </li>
+      )}
       {tabs.map((t) => {
         const l = tabLabel(t.id);
         const open = t.id === current;
@@ -1352,11 +1460,59 @@ function TabsSpine({ tabs }: { tabs: readonly CardTab[] }) {
   );
 }
 
-/** Телефон, лицо не выбрано, вкладки есть (решение 91): строки вкладок над полосой времени, листа нет. */
-function TabsOnly({ tabs }: { tabs: readonly CardTab[] }) {
+/** Телефон, лицо не выбрано, вкладки есть (решения 91, 150): строки вкладок над полосой времени, листа нет. */
+function TabsOnly({ tabs, reading = null }: { tabs: readonly CardTab[]; reading?: string | null }) {
   return (
-    <aside class="folio tabs-only" aria-label="Закреплённые карточки">
-      <CardTabs tabs={tabs} current={null} phone />
+    <aside class="folio tabs-only" aria-label={reading ? 'Свёрнутая карточка' : 'Закреплённые карточки'}>
+      <CardTabs tabs={tabs} current={null} phone reading={reading} />
+      <TabNews />
+    </aside>
+  );
+}
+
+/** Раскрыть свёрнутую карточку (решение 150): лицо снова выбрано (небо летит к нему, если его нет на экране), фокус — на заголовок. */
+function reopenReading(id: string) {
+  cardFolded.value = false;
+  goTo(id);
+  focusCardTitle(id);
+}
+
+/** «×» свёрнутой карточки: вкладка уходит; фокус — на соседнюю вкладку или на небо. */
+function closeReading(id: string) {
+  dropReading();
+  tell(`Карточка закрыта: ${byId.get(id)?.name ?? id}`);
+  const next = cardTabs.peek()[0];
+  if (next) focusTabNext = next.id;
+  else window.setTimeout(() => document.querySelector<HTMLElement>('.sky canvas')?.focus({ preventScroll: true }), 0);
+}
+
+/**
+ * Свёрнутая снятием выбора карточка на широком экране (решение 150): корешок 56 px, как у «Свернуть карточку», — «×»
+ * закрывает её, имя с «развернуть» возвращает лицо и карточку; ниже — вкладки закреплённых карточек. Фокус был в карточке
+ * и пропал вместе с ней — он возвращается туда, откуда карточку открыли (небо); если некуда — на «развернуть».
+ */
+function ReadingSpine({ id, tabs }: { id: string; tabs: readonly CardTab[] }) {
+  const p = byId.get(id)!;
+  const unfold = useRef<HTMLButtonElement>(null);
+  useLayoutEffect(() => {
+    // фокус возвращается туда, откуда открыли карточку (focus.ts, bindFocus: небо у снятого лица — Escape, сценарий 170);
+    // «развернуть» — только если и после этого фокуса нигде нет
+    const t = window.setTimeout(() => {
+      const a = document.activeElement;
+      if (!a || a === document.body || !a.isConnected) unfold.current?.focus({ preventScroll: true });
+    }, 0);
+    return () => window.clearTimeout(t);
+  }, [id]);
+  return (
+    <aside class="folio spine reading" aria-label={`Карточка: ${p.name} (свёрнута)`} data-id={id}>
+      <Close label={`Закрыть карточку: ${p.name}`} onClick={() => closeReading(id)} />
+      <button type="button" class="unfold" ref={unfold} aria-label={`Развернуть карточку: ${p.name}`} title="Вернуть лицо и развернуть его карточку" onClick={() => reopenReading(id)}>
+        <span class="nm">{p.name}</span>
+        <span class="cmdl" aria-hidden="true">
+          развернуть
+        </span>
+      </button>
+      <SpineTabs tabs={tabs} label="Закреплённые карточки" />
       <TabNews />
     </aside>
   );

@@ -153,6 +153,27 @@
 .dc-val .person .sep {
   color: var(--ink-2);
 }
+/* фраза родства (решение 151): уточнение тёзки — цветом пояснений; помета уровня и шага линии («толк.», «только у Луки») —
+   курсивом гротеска, как пометы на полях карточки; лицо вне показа — бледнее, с точечной чертой (что это значит — строкой
+   под «Родством»: смысл не только цветом) */
+.dc-val .dc-ds {
+  color: var(--ink-2);
+}
+.dc-val .dc-cert {
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  font-style: italic;
+  color: var(--ink-2);
+}
+.dc-val .person.out .nm {
+  color: var(--ink-2);
+  text-decoration-style: dotted;
+}
+.dc-row.out-note .dc-val {
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+}
 /* строка «Год» — пояснение, а не ссылки */
 .dc-row.year .dc-val {
   font-family: var(--sans);
@@ -164,6 +185,107 @@
 /* строка под указателем или с фокусом — её линии подсвечены на небе: подпись строки — цветом текста */
 .dc-row.hot .dc-lbl {
   color: var(--ink);
+}
+/* легенда семьи (решение 153): при открытой подробной карточке карточка у звезды — союзы с образцом цвета ветви (черта,
+   как у имени на небе, branchTickAt) и числом детей, и кто вне показа */
+.dc-legend {
+  margin: 8px -10px 0;
+  padding: 6px 10px 4px;
+  list-style: none;
+  border-top: 1px solid var(--rule);
+  font-family: var(--serif);
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+}
+.dc-legend li {
+  padding: 1px 0;
+}
+.dc-legend .txt {
+  color: var(--ink-2);
+}
+.dc-legend .dc-sw {
+  display: inline-block;
+  width: 12px;
+  height: 3px;
+  /* цвет ветви — переменной из разметки (src/ui/sky/DotCard.tsx, FamilyLegend): в style только переменные (B2) */
+  background: var(--sw);
+  margin: 0 6px 0 0;
+  vertical-align: middle;
+}
+.dc-legend .person + .txt,
+.dc-legend .txt + .dc-sw {
+  margin-left: 0;
+}
+/* союзов много: подпись строки и пары «образец, имя — число детей» в две колонки */
+/* подпись строки и ссылка «всё родство» — в одну строку: легенда не растёт на строку ради ссылки */
+.dc-legend .dc-leg-cap {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.dc-legend .dc-leg-cap .txt {
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  color: var(--ink-3);
+}
+.dc-legend .dc-leg-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 10px;
+}
+.dc-legend .dc-leg {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dc-legend .dc-out-row .txt {
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+}
+@media (pointer: coarse) {
+  .dc-legend li:not(.dc-leg-cap):not(.dc-leg-grid),
+  .dc-legend .dc-leg {
+    min-height: 44px;
+    padding: 12px 0;
+    box-sizing: border-box;
+  }
+}
+/* «Без подписи на небе: Соломон, Нафан и ещё 4» (П1; решения 146, 153): одна строка под «Родством» или легендой — карточка
+   от неё не растёт больше чем на строку и не закрывает новых имён (К6) */
+.dc-hidden {
+  margin: 6px 0 0;
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dc-hidden .txt {
+  color: var(--ink-2);
+}
+@media (pointer: coarse) {
+  .dc-hidden {
+    min-height: 44px;
+    padding: 12px 0;
+    box-sizing: border-box;
+  }
+}
+/* стих строки «Год» (решение 152) — во всю ширину карточки под строкой; пустая — места не занимает */
+.dc-verse {
+  grid-column: 1 / -1;
+}
+.dc-verse:empty {
+  display: none;
+}
+.dc-verse .verses,
+.dc-refs .verses {
+  margin: 4px 0 6px;
+  font-family: var(--serif);
 }
 /* «ещё 9» — команда внутри строки: гротеском, без черты в покое */
 .dc-more {
@@ -320,11 +442,38 @@ svg.dc-line line {
   .dc-link .dc-head {
     padding-right: 36px;
   }
-  /* имена в строке «Родство» — поле касания 32 px без изменения межстрочия, как у ссылок в тексте (phone.css) */
+  /* «Родство» на сенсорном экране (решение 154; M6): строка — не ниже 44 px, имя и «ещё N» — поле касания на всю высоту
+     строки; поля соседних строк не перекрываются. Касание пустого места строки достаётся ближайшему имени (DotCard.tsx,
+     KinRowView). Кегль и вид имён прежние — растёт только шаг строк */
   .dc-val .person,
   .dc-more {
     position: relative;
   }
+  .dc-kin .dc-val {
+    box-sizing: border-box;
+    min-height: 44px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+  .dc-kin .dc-lbl {
+    padding-top: 14px;
+  }
+  /* строка «Год» и строки без ссылок — пояснение: целей нет, шаг прежний */
+  .dc-kin .dc-row.year .dc-val,
+  .dc-kin .dc-row.out-note .dc-val,
+  .dc-kin .dc-row.lines .dc-val,
+  .dc-kin .dc-row.missing .dc-val {
+    min-height: 0;
+    padding-top: 3px;
+    padding-bottom: 3px;
+  }
+  .dc-kin .dc-row.year .dc-lbl,
+  .dc-kin .dc-row.out-note .dc-lbl,
+  .dc-kin .dc-row.lines .dc-lbl,
+  .dc-kin .dc-row.missing .dc-lbl {
+    padding-top: 3px;
+  }
+  .dc-val .person::after,
   .dc-more::after {
     content: '';
     position: absolute;

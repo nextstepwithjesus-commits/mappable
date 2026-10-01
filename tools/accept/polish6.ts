@@ -24,8 +24,10 @@ async function setup(p: Page, o: Scene) {
     localStorage.setItem('toledot:reveal', JSON.stringify({ opened: o.opened ?? [], expanded: o.expanded ?? {} }));
     sessionStorage.setItem('toledot:skymode', JSON.stringify(o.mode ?? 'work'));
   }, o);
-  await p.goto(p.url().replace(/#.*$/, '') + o.hash);
-  await p.reload();
+  // этап 14 (решение 147, S3): показ — в адресе; адрес с окном неба («~y…»), который приложение дописывает сразу, без поля
+  // показа при перезагрузке — «все лица». Поэтому — новая загрузка с коротким адресом (другая строка запроса): показ «набор»
+  // берётся из sessionStorage, как прежде
+  await p.goto(`${p.url().replace(/[?#].*$/, '')}?p6=${Date.now()}${o.hash}`);
   await p.waitForTimeout(2600);
 }
 
@@ -42,10 +44,22 @@ async function frameStar(p: Page, id: string): Promise<Pt | null> {
 /** Звезда лица на холсте (px холста) — из списка неба для клавиатуры (SkyA11y, data-x/data-y). */
 async function starAt(p: Page, id: string): Promise<Pt | null> {
   const el = p.locator(`#sky-star-${id}`);
-  if (!(await el.count())) return null;
-  const x = Number(await el.getAttribute('data-x'));
-  const y = Number(await el.getAttribute('data-y'));
-  return Number.isFinite(x) && Number.isFinite(y) ? { x, y } : null;
+  const read = async (): Promise<Pt | null> => {
+    if (!(await el.count())) return null;
+    const x = Number(await el.getAttribute('data-x'));
+    const y = Number(await el.getAttribute('data-y'));
+    return Number.isFinite(x) && Number.isFinite(y) ? { x, y } : null;
+  };
+  // список неба обновляется через 600 мс после остановки окна неба (SkyA11y; этап 14: на телефоне после выбора небо ещё
+  // сходится к временной пропорции строк, S3): место — когда два чтения через 900 мс совпали
+  let q = await read();
+  for (let k = 0; k < 4; k++) {
+    await p.waitForTimeout(900);
+    const r = await read();
+    if (r && q && r.x === q.x && r.y === q.y) return r;
+    q = r;
+  }
+  return q;
 }
 /** Центры точек союзов (px холста): canvas[data-dots] «союз:раскрыт:x,y:скрыто». */
 async function dotsOf(p: Page): Promise<Map<string, Pt>> {
@@ -65,7 +79,8 @@ async function viewOf(p: Page): Promise<{ l: number; t: number; r: number; b: nu
 const reserves = (p: Page) =>
   p.evaluate(() => {
     const sky = (document.querySelector('.sky') as HTMLElement).getBoundingClientRect();
-    return [...document.querySelectorAll<HTMLElement>('.sky [data-reserve]')]
+    // этап 14 (решение 153): карточка у звезды и подсказка — тоже резерв подписей, но не органы неба: сама себе она не запрет
+    return [...document.querySelectorAll<HTMLElement>('.sky [data-reserve]:not([data-reserve="dot"]):not([data-reserve="tip"])')]
       .map((el) => el.getBoundingClientRect())
       .filter((b) => b.width && b.height)
       .map((b) => ({ x: b.left - sky.left, y: b.top - sky.top, w: b.width, h: b.height }));
@@ -165,6 +180,12 @@ export const polish6: Scenario[] = [
       const cv = (await p.locator('.sky canvas').boundingBox())!;
       await p.mouse.click(cv.x + k.x, cv.y + k.y);
       await p.waitForTimeout(1000);
+      // этап 14 (решение 153): при открытой подробной карточке у звезды — легенда семьи; строка «Год» — во всём «Родстве»
+      const all = p.locator('.sky .dotcard .dc-row.all .dc-more');
+      if (await all.count()) {
+        await all.first().click();
+        await p.waitForTimeout(500);
+      }
       const card = flat(await p.locator('.sky .dotcard[data-placed]').first().innerText().catch(() => ''));
       if (!/по порядку перечисления, Быт 4:[^,]*, выв\./.test(card)) return fail(`строка «Год» у Каина: «${card.slice(0, 200)}»`);
       return (await overlaps(p)) === 0 ? pass('помет на небе нет; «Год» у Каина — по порядку перечисления') : fail('подписи наложились');

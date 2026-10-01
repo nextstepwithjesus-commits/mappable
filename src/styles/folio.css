@@ -438,6 +438,11 @@
     position: static;
     margin: -8px 0 -8px 0.4em;
   }
+  /* стих паспорта на узком листе (решение 152; M12) — во всю ширину паспорта, из-под колонки подписей: не 16–20 знаков
+     в строке, а целая строка листа */
+  .passport .verses {
+    margin-left: calc(-1 * (max(88px, 5.5rem) + 10px));
+  }
 }
 /* мини-шкала жизни (VIS-41, CARD-69): холст на ширину строки, 44 px; высота — LIFEBAR_H в src/ui/card/Masthead.tsx */
 .lifebar {

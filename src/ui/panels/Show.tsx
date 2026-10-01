@@ -26,7 +26,7 @@ import { norm } from '../../engine/text.ts';
 import { fixLayout, stems } from '../../engine/search.ts';
 import { selected } from '../../state.ts';
 import {
-  countShow, groupSections, LINES_TITLE, setShow, show, withHouses, type GroupRow, type GroupSectionInfo, type LineageBy, type LineageDir, type LinksOut, type Show,
+  countShow, groupSections, LINES_TITLE, sameShow, setShow, show, withHouses, type GroupRow, type GroupSectionInfo, type LineageBy, type LineageDir, type LinksOut, type Show,
 } from '../show.ts';
 import { workSet } from '../work.ts';
 import { grid } from '../layout.ts';
@@ -177,18 +177,39 @@ function SheetBody({ focus, person, group }: { focus: ShowFocus; person: string 
   const timer = useRef(0);
   const lastPerson = useRef<string | null>(person ?? (cur.kind === 'lineage' ? cur.id : null) ?? selected.peek());
 
+  /**
+   * Сеанс листа — одна запись истории (решение 147; U4): первая смена показа — новой записью, следующие — в ту же; «назад»
+   * возвращает показ и окно до листа. Показ, который лист поставил сам, — set; пришёл другой извне («назад», строка
+   * показа) — сеанс начинается заново.
+   */
+  const session = useRef<{ pushed: boolean; set: Show | null }>({ pushed: false, set: null });
+  const apply = (s: Show) => {
+    const st = session.current;
+    setShow(s, { history: st.pushed ? 'replace' : 'push' });
+    st.pushed = true;
+    st.set = s;
+  };
   // широкий экран: применяется сразу (серия флажков — через 300 мс); телефон — по «Показать N лиц»
   const setDraft = (s: Show, delay = 0) => {
     setDraftState(s);
     if (s.kind === 'lineage') lastPerson.current = s.id;
     if (phone || !ready(s)) return;
     window.clearTimeout(timer.current);
-    if (delay) timer.current = window.setTimeout(() => setShow(s), delay);
-    else setShow(s);
+    if (delay) timer.current = window.setTimeout(() => apply(s), delay);
+    else apply(s);
   };
   useEffect(() => () => window.clearTimeout(timer.current), []);
-  // другой показ пришёл извне («назад», строка показа) — черновик следует за ним (не на телефоне: там черновик свой)
+  // другой показ пришёл извне («назад», строка показа) — черновик следует за ним (не на телефоне: там черновик свой).
+  // Не при открытии (U10): «Предки и потомки ▾ → Настроить…» открывает черновик рода лица, и нынешний показ («всё
+  // небо») его не затирает
+  const mounted = useRef(false);
   useEffect(() => {
+    if (!mounted.current) {
+      mounted.current = true;
+      return;
+    }
+    const st = session.current;
+    if (st.set && !sameShow(st.set, cur)) session.current = { pushed: false, set: null };
     if (!phone) setDraftState(cur);
   }, [cur]);
 
@@ -367,7 +388,10 @@ function GroupsPart({
             // Нахора» — три действия (Я27), с клавиатуры — «изменить», «нах», Enter (Я32); на телефоне так же
             if (e.key === 'Enter' && found.length >= 1) {
               e.preventDefault();
-              setShow({ kind: 'groups', groups: [...new Set(withHouses(found[0].id))], links });
+              // одна запись сеанса листа (решение 147); на телефоне черновик сам не применяется — применить здесь
+              const next: Show = { kind: 'groups', groups: [...new Set(withHouses(found[0].id))], links };
+              setDraft(next);
+              if (grid.peek().phone) setShow(next);
               closeShowSheet(true);
             } else if (e.key === 'ArrowDown') {
               const first = (e.currentTarget as HTMLElement).closest('.ss-groups')?.querySelector<HTMLElement>('.ss-row input');

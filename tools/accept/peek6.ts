@@ -17,16 +17,21 @@ const PHONE = { width: 390, height: 844, touch: true };
  * раскрытые союзы; адрес hash выбирает лицо.
  */
 async function setup(p: Page, o: { work: string[]; opened?: string[]; expanded?: Record<string, string>; hash: string; start?: string }) {
-  await p.evaluate((o) => {
-    localStorage.setItem('toledot:intro', 'true');
-    localStorage.setItem('toledot:start', JSON.stringify(o.start ?? 'adam'));
-    localStorage.setItem('toledot:view', JSON.stringify('sky'));
-    localStorage.setItem('toledot:work', JSON.stringify(o.work.map((id, i) => [id, { via: i ? 'family' : 'self', of: o.work[0] }])));
-    localStorage.setItem('toledot:reveal', JSON.stringify({ opened: o.opened ?? [], expanded: o.expanded ?? {} }));
-    sessionStorage.setItem('toledot:skymode', JSON.stringify('work'));
-  }, o);
-  await p.goto(p.url().replace(/#.*$/, '') + o.hash);
-  await p.reload();
+  const store = () =>
+    p.evaluate((o) => {
+      localStorage.setItem('toledot:intro', 'true');
+      localStorage.setItem('toledot:start', JSON.stringify(o.start ?? 'adam'));
+      localStorage.setItem('toledot:view', JSON.stringify('sky'));
+      localStorage.setItem('toledot:work', JSON.stringify(o.work.map((id, i) => [id, { via: i ? 'family' : 'self', of: o.work[0] }])));
+      localStorage.setItem('toledot:reveal', JSON.stringify({ opened: o.opened ?? [], expanded: o.expanded ?? {} }));
+      sessionStorage.setItem('toledot:skymode', JSON.stringify('work'));
+    }, o);
+  await store();
+  // этап 14 (решение 147, S3): показ — в адресе; адрес с окном неба («~y…») без поля показа — показ «все лица», и
+  // перезагрузка такого адреса (приложение дописывает окно в адрес сразу) сбросила бы набор. Поэтому — новая загрузка
+  // страницы с коротким адресом (другая строка запроса — не переход по якорю): показ берётся из sessionStorage
+  const base = p.url().replace(/[?#].*$/, '');
+  await p.goto(`${base}?load=${Date.now()}${o.hash}`);
   await p.waitForTimeout(2600);
 }
 const ADAM = { work: ['adam'], opened: ['adam'], hash: '#/adam' };
@@ -36,12 +41,25 @@ const canvasBox = async (p: Page) => (await p.locator('.sky canvas').boundingBox
 /** Звезда лица в координатах страницы — из списка неба для клавиатуры (SkyA11y, data-x/data-y). */
 async function starAt(p: Page, id: string): Promise<{ x: number; y: number } | null> {
   const el = p.locator(`#sky-star-${id}`);
-  if (!(await el.count())) return null;
-  const x = Number(await el.getAttribute('data-x'));
-  const y = Number(await el.getAttribute('data-y'));
-  if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+  const read = async () => {
+    if (!(await el.count())) return null;
+    const x = Number(await el.getAttribute('data-x'));
+    const y = Number(await el.getAttribute('data-y'));
+    const view = await p.evaluate(() => (document.querySelector('.sky') as HTMLElement).dataset.view ?? '');
+    return Number.isFinite(x) && Number.isFinite(y) ? { x, y, view } : null;
+  };
+  // список неба обновляется через 600 мс после остановки окна неба (SkyA11y): место звезды берётся, когда два чтения
+  // через 900 мс совпали вместе с окном неба (этап 14: после перелёта к выбранному небо ещё сходится к своему окну)
+  let q = await read();
+  for (let k = 0; k < 6 && q; k++) {
+    await p.waitForTimeout(900);
+    const r = await read();
+    if (r && r.x === q.x && r.y === q.y && r.view === q.view) break;
+    q = r;
+  }
+  if (!q) return null;
   const b = await canvasBox(p);
-  return { x: b.x + x, y: b.y + y };
+  return { x: b.x + q.x, y: b.y + q.y };
 }
 /** Точка союза в координатах страницы: середина поля попадания (src/render/sky.ts, dataset.plates). */
 async function dotAt(p: Page, uid: string): Promise<{ x: number; y: number } | null> {
@@ -62,7 +80,21 @@ const stored = (p: Page) => p.evaluate(() => (JSON.parse(localStorage.getItem('t
 /** Отвод касается знака (в пределах tol px) и края карточки. */
 async function leadOk(p: Page, at: { x: number; y: number }, c: Box, tol = 14): Promise<string | null> {
   const l = p.locator('.sky .dc-lead:not([hidden])');
-  if (!(await l.count())) return 'нет отвода';
+  if (!(await l.count())) {
+    // карточка в ближнем свободном месте неба (§ 6, Я25: у знака места нет — семья и подписи) — отвод отрезком (svg .dc-line);
+    // этап 14: карточка у звезды стала выше на строку «бледнее — нет в показе» (решение 151), и у края неба так бывает чаще
+    const line = await p.evaluate(() => {
+      const svg = document.querySelector<SVGSVGElement>('.sky svg.dc-line');
+      const ln = svg?.querySelector('line');
+      if (!svg || !ln || svg.style.display === 'none') return null;
+      const r = svg.getBoundingClientRect();
+      return [+ln.getAttribute('x1')!, +ln.getAttribute('y1')!, +ln.getAttribute('x2')!, +ln.getAttribute('y2')!].map((v, i) => v + (i % 2 ? r.top : r.left));
+    });
+    if (!line) return 'нет отвода';
+    const [x1, y1, x2, y2] = line;
+    if (Math.hypot(x1 - at.x, y1 - at.y) > tol) return `отвод далеко от знака: ${Math.round(Math.hypot(x1 - at.x, y1 - at.y))} px`;
+    return inside({ x: x2, y: y2 }, c, 2) ? null : 'отвод не доходит до карточки';
+  }
   const b = (await l.boundingBox())!;
   const ends = b.width <= 2 ? [{ x: b.x, y: b.y }, { x: b.x, y: b.y + b.height }] : [{ x: b.x, y: b.y }, { x: b.x + b.width, y: b.y }];
   const d = (q: { x: number; y: number }) => Math.hypot(q.x - at.x, q.y - at.y);
@@ -93,8 +125,10 @@ export const peek6: Scenario[] = [
       const text = flat(await card(p).innerText());
       if (!/Адам/.test(text) || !/4174–3244 гг\. до Р\. Х\./.test(text)) return fail(`в карточке: «${text}»`);
       const cmds = await commands(p);
-      // этап 13 (решение 109): «Вся карточка», «Предки и потомки ▾»
-      if (cmds.join(' | ') !== 'Вся карточка | Предки и потомки ▾ | Родство с… | Скрыть ветвь') return fail(`команды: ${cmds.join(' | ')}`);
+      // этап 13 (решение 109): «Вся карточка», «Предки и потомки ▾». Этап 14: «Ближайшая родня» первой (решение 145);
+      // подробная карточка открыта справа — у звезды легенда семьи, полное «Родство» — её ссылкой «всё родство» (решение 153);
+      // «Вся карточка» ведёт фокус на заголовок карточки рядом
+      if (cmds.join(' | ') !== 'Ближайшая родня | Вся карточка | Предки и потомки ▾ | Родство с… | Скрыть ветвь') return fail(`команды: ${cmds.join(' | ')}`);
       if (!(await card(p).locator('button.close[aria-label]').count())) return fail('нет «×»');
       const cb = await card(p).locator('.dc-cmds button').first().boundingBox();
       if (!cb || cb.height < 31.5) return fail(`поле команды ${cb?.height} px`);
@@ -255,6 +289,19 @@ export const peek6: Scenario[] = [
         await p.waitForTimeout(250);
       }
       if (id !== 'sky-star-adam') return fail(`кольцо не на Адаме: ${id || 'нет'}`);
+      // этап 14, решение 153: при открытой подробной карточке у звезды — легенда семьи; полное «Родство» — при свёрнутой
+      // подробной: сворачиваем её (фокус возвращается на холст, кольцо — на Адаме)
+      await p.locator('.folio .folio-bar .fold-card').click();
+      await p.waitForTimeout(500);
+      await p.locator('.sky canvas').focus();
+      await p.waitForTimeout(300);
+      for (const key of ['ArrowLeft', 'ArrowRight', 'ArrowUp']) {
+        id = (await p.locator('.sky canvas').getAttribute('aria-activedescendant')) ?? '';
+        if (id === 'sky-star-adam') break;
+        await p.keyboard.press(key);
+        await p.waitForTimeout(250);
+      }
+      if (id !== 'sky-star-adam') return fail(`после свёртки карточки кольцо не на Адаме: ${id || 'нет'}`);
       await p.keyboard.press('Enter');
       await p.waitForTimeout(700);
       const f1 = await p.evaluate(() => ({ t: (document.activeElement as HTMLElement | null)?.innerText?.trim() ?? '', dlg: document.activeElement?.closest('[role="dialog"]')?.getAttribute('aria-label') ?? '' }));
@@ -321,7 +368,7 @@ export const peek6: Scenario[] = [
   },
   {
     n: 688,
-    title: 'Решения 76, 77, телефон 390 × 844: касание Адама — нижний лист на 214 px и есть карточка у звезды (образ, имя, годы, «Родство»), второй карточки над небом нет, звезда не под листом; цели 44 px; «Карточка ▴» поднимает лист',
+    title: 'Решения 76, 77, 155, телефон 390 × 844: касание Адама — нижний лист высотой краткой карточки и есть карточка у звезды (образ, имя, годы, «Родство»), второй карточки над небом нет, звезда не под листом; цели 44 px; «Карточка ▴» поднимает лист',
     view: PHONE,
     run: async (p) => {
       await setup(p, { ...ADAM, hash: '#/' });
@@ -332,7 +379,9 @@ export const peek6: Scenario[] = [
       if (await cardBox(p)) return fail('над небом — карточка у звезды, а должен быть лист');
       const sheet = await p.locator('.folio').boundingBox();
       if (!sheet) return fail('нет листа карточки');
-      if (Math.abs(sheet.height - 214) > 16) return fail(`лист ${Math.round(sheet.height)} px`);
+      // этап 14, решение 155: шапка листа — высотой краткой карточки (--sheet-peek на .app ставит лист), прежде 214 px
+      const want = await p.evaluate(() => parseFloat(getComputedStyle(document.querySelector('.app')!).getPropertyValue('--sheet-peek')) || 214);
+      if (Math.abs(sheet.height - want) > 2) return fail(`лист ${Math.round(sheet.height)} px, карточка ${Math.round(want)} px`);
       const dc = p.locator('.folio .sheet-dot .dotcard');
       if (!(await dc.count())) return fail('в листе нет карточки у звезды');
       const text = flat(await dc.innerText());
@@ -364,7 +413,8 @@ export const peek6: Scenario[] = [
       if (!/#\/david/.test(p.url())) return fail(`выбор: ${p.url()}`);
       const c = await cardBox(p);
       if (!c) return fail('во «всех лицах» нет карточки у звезды');
-      return (await card(p).locator('.dc-kin').count()) ? pass() : fail('в карточке нет «Родства»');
+      // этап 14, решение 153: при открытой подробной карточке — легенда семьи (союзы с цветом ветви), иначе «Родство»
+      return (await card(p).locator('.dc-kin, .dc-legend').count()) ? pass() : fail('в карточке нет ни «Родства», ни легенды семьи');
     },
   },
   {

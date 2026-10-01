@@ -1,13 +1,17 @@
 /** Сценарии приёмки: союзы-точки на небе (решение 76), группа dots6: номера 660–679, союз-точка на небе и линии к детям. */
 import type { Page } from 'playwright';
 import { fail, pass, type Scenario } from './kit.ts';
+import { BRANCH_COLORS, BRANCH_SHADES } from '../../src/render/branches.ts';
 
 const PHONE = { width: 390, height: 844, touch: true };
 
-/** Цвета ветвей в теме (src/render/branches.ts, BRANCH_COLORS и BRANCH_SHADES): линия к ребёнку — одним из них. */
+/**
+ * Цвета ветвей в теме (src/render/branches.ts, BRANCH_COLORS и BRANCH_SHADES): линия к ребёнку — одним из них. Этап 14,
+ * решение 157: палитра — из модуля, а не списком хексов (цвета ветвей поправлены для тританопии).
+ */
 const BRANCH = {
-  night: ['#48fd8b', '#9a75c8', '#e8968e', '#e960a2', '#81fac1', '#477dfe', '#247f46', '#b69cd7', '#99635e', '#ef8dbc', '#67c89a', '#6f9afe'],
-  day: ['#137632', '#8243d8', '#e22a11', '#ce4094', '#1c8a64', '#19459a', '#0a3b19', '#6534a8', '#ac200d', '#7c2659', '#125b42', '#112e66'],
+  night: [...BRANCH_COLORS.night, ...BRANCH_SHADES.night],
+  day: [...BRANCH_COLORS.day, ...BRANCH_SHADES.day],
 };
 
 type Scene = { work: string[]; opened?: string[]; expanded?: Record<string, string>; hash: string; start?: string; theme?: 'night' | 'day'; mode?: 'work' | 'all' };

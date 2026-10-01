@@ -445,6 +445,8 @@ interface RibbonCache {
   kx0: number;
   ky0: number;
   exact: boolean;
+  /** когда нити построены (performance.now): в движении масштаба — не чаще раза в RIBBON_MOTION_MS (С1) */
+  at: number;
   /**
    * нити зависят от полосы построения (сплайн обзора: за краем — 4 точки на поколение); нити-маршруты масштаба семьи
    * (доля маршрута 1) построены на всю длину линии и при сдвиге перестраиваются только дальше RIBBON_FAR
@@ -459,6 +461,11 @@ interface RibbonCache {
 const ribbonCaches = new WeakMap<object, RibbonCache>();
 /** Запас построения за краем холста, px: пока сдвиг меньше, нити не перестраиваются. */
 const RIBBON_MARGIN = 240;
+/**
+ * В движении масштаба (перелёт, колесо, щипок; С1) нити строятся заново не чаще раза в столько мс: между сборками —
+ * пересчёт прежних и за двукратным масштабом, и за запасом построения (кадр перелёта — не дольше 20 мс).
+ */
+const RIBBON_MOTION_MS = 150;
 /**
  * Сдвиг, после которого перестраиваются и нити-маршруты (они от полосы построения не зависят): точки нити остаются
  * близко к холсту, и координаты пути в пределах точности холста (NFR-1: перестройка на масштабе семьи — 40 мс).
@@ -583,10 +590,12 @@ export function ribbonStrands(v: SkyContext, s: SkyState, steps: { joseph: reado
   // масштаб в движении (Я33): нити пересчитываются из прежних (точки линейны по координатам неба), пока масштаб не уйдёт
   // от точной сборки дальше чем вдвое; когда постоит — строятся заново (небо перерисовывает кадр, SkyView)
   const near = (a: number, b: number) => a / b < 2 && b / a < 2;
-  if (c && c.key !== key && v.scaleMoving && c.base === base && near(cam.kx, c.kx0) && near(ky, c.ky0) && Math.abs((c.x0 - cam.x0) * cam.kx) < RIBBON_MARGIN) {
+  const now = performance.now();
+  const fresh = !!c && now - c.at < RIBBON_MOTION_MS;
+  if (c && c.key !== key && v.scaleMoving && c.base === base && (fresh || (near(cam.kx, c.kx0) && near(ky, c.ky0) && Math.abs((c.x0 - cam.x0) * cam.kx) < RIBBON_MARGIN))) {
     c = rescaleRibbons(c, cam.x0, cam.laneTop, cam.kx, ky, key);
     ribbonCaches.set(v, c);
-  } else if (!c || c.key !== key || (!c.exact && !v.scaleMoving) || Math.abs((c.x0 - cam.x0) * cam.kx) > (c.clipped ? RIBBON_MARGIN - 40 : RIBBON_FAR)) {
+  } else if (!c || c.key !== key || (!c.exact && !v.scaleMoving) || (!(v.scaleMoving && fresh) && Math.abs((c.x0 - cam.x0) * cam.kx) > (c.clipped ? RIBBON_MARGIN - 40 : RIBBON_FAR))) {
     // точки лиц — по полосам нитей: в «только линиях» на общей раскладке — по полосам раскладки (лица стоят на нитях)
     const at = v.ribbonNodes;
     const raw = (id: string) => {
@@ -634,8 +643,20 @@ export function ribbonStrands(v: SkyContext, s: SkyState, steps: { joseph: reado
       const routes = buildRouteRibbons({ joseph: route(J), mary: route(M), project: star, amplitude: A, radius: routeRadius(ky), clip: [-RIBBON_MARGIN, cam.w + RIBBON_MARGIN] });
       strands = blendStrands(strands, routes, f);
     }
+    // «по закону» (Иосиф → Иисус, Мф 1:16; Нирий → Салафиил по Луке) — штрих на всей ступеньке шага, от следа родителя до
+    // ребёнка, а не только на отводе у узла (решение 138, G11): короткий отвод в 25 px под дугами родства не читался
+    const legalIds = { joseph: new Set(J.filter((q) => q.legal && !q.weak).map((q) => q.id)), mary: new Set(M.filter((q) => q.legal && !q.weak).map((q) => q.id)) };
+    for (const st of strands) {
+      const lg = legalIds[st.line];
+      if (!lg.size) continue;
+      for (const q of st.points) {
+        const k = Math.floor(q.u - 1e-6);
+        const id = st.ids[k + 1];
+        if (id && lg.has(id) && q.u > k + 0.02 && !q.weak) q.legal = true;
+      }
+    }
     // blendStrands при доле 1 отдаёт нити-маршруты как есть: сплайн с его полосой построения в них не входит
-    c = { key, base, x0: cam.x0, laneTop: cam.laneTop, kx: cam.kx, ky, kx0: cam.kx, ky0: ky, exact: true, clipped: f < 0.999, strands, grads: new Map(), dx: 0, dy: 0 };
+    c = { key, base, x0: cam.x0, laneTop: cam.laneTop, kx: cam.kx, ky, kx0: cam.kx, ky0: ky, exact: true, at: now, clipped: f < 0.999, strands, grads: new Map(), dx: 0, dy: 0 };
     ribbonCaches.set(v, c);
   }
   c.dx = (c.x0 - cam.x0) * cam.kx;
@@ -654,6 +675,79 @@ function rescaleRibbons(c: RibbonCache, x0: number, laneTop: number, kx: number,
   const by = (laneTop - c.laneTop) * ky;
   const strands = c.strands.map((st) => ({ ...st, points: st.points.map((q) => ({ ...q, x: q.x * a + bx, y: q.y * e + by })) }));
   return { ...c, key, x0, laneTop, kx, ky, exact: false, strands, grads: new Map(), dx: 0, dy: 0 };
+}
+
+/** Подписи лент у края видимого участка (решение 138; M11): лента Иосифа — «Мф 1», лента по Луке — «Лк 3». */
+export const RIBBON_TAG: Readonly<Record<'joseph' | 'mary', string>> = { joseph: 'Мф 1', mary: 'Лк 3' };
+
+/**
+ * Подписи лент «Мф 1» и «Лк 3» у левого края видимого участка нити (решение 138, M11): ленты различимы без цвета — при
+ * дальтонизме и в сером. Нить Иосифа — подпись над нитью, по Луке — под нитью; место — общей проверкой наложений
+ * (claim), не на нитях и не на именах; нет места — на следующих точках нити правее (до трети окна). Пишет
+ * canvas[data-ribbon-tags]: «Мф 1@x,y|Лк 3@x,y».
+ */
+export function drawRibbonTags(v: SkyContext, p: Pass) {
+  const { ctx, cam, pal } = v;
+  const c = ribbonCaches.get(v);
+  const out: string[] = [];
+  if (c && p.s.layers.ribbons !== false) {
+    const font = mapFont(T_MAP_S, { italic: true, coarse: v.coarse });
+    const size = mapSize(T_MAP_S, v.coarse);
+    const vp = cam.vp;
+    const x0 = Math.max(vp.l, v.letterW) + 10;
+    const xMax = x0 + (vp.r - x0) / 3;
+    ctx.font = font;
+    for (const st of c.strands) {
+      const text = RIBBON_TAG[st.line];
+      const w = ctx.measureText(text).width;
+      const up = st.line === 'joseph';
+      const cands: { tx: number; ty: number }[] = [];
+      let last = -Infinity;
+      // нить идёт по времени слева направо: первая точка у края окна — двоичным поиском (точек на всё небо — десятки
+      // тысяч на масштабе лица; С1)
+      const pts = st.points;
+      let lo = 0;
+      let hi = pts.length;
+      while (lo < hi) {
+        const mid = (lo + hi) >> 1;
+        if (pts[mid].x + c.dx < x0) lo = mid + 1;
+        else hi = mid;
+      }
+      for (let k = lo; k < pts.length; k++) {
+        const q = pts[k];
+        const x = q.x + c.dx;
+        const y = q.y + c.dy;
+        if (x < x0 || y < v.openTop + size || y > vp.b - size) continue;
+        if (x > xMax) break;
+        if (x - last < 24) continue;
+        last = x;
+        const ty = up ? y - 7 : y + size + 5;
+        cands.push({ tx: x, ty });
+        if (cands.length >= 12) break;
+      }
+      if (!cands.length) continue;
+      const boxes = cands.map((q) => textBox(q.tx, q.ty, w, size));
+      const b = claim(v, p, byStrands(c, boxes), 'note', text, { id: `ribbon:${st.line}` });
+      if (!b) continue;
+      const q = cands[boxes.indexOf(b)];
+      ctx.save();
+      ctx.font = font;
+      ctx.textBaseline = 'alphabetic';
+      ctx.lineJoin = 'round';
+      ctx.strokeStyle = pal.halo;
+      ctx.lineWidth = 3;
+      ctx.strokeText(text, q.tx, q.ty);
+      ctx.fillStyle = pal.ink2;
+      ctx.fillText(text, q.tx, q.ty);
+      ctx.restore();
+      out.push(`${text}@${Math.round(q.tx)},${Math.round(q.ty)}`);
+    }
+  }
+  const ds = (ctx.canvas as { dataset?: DOMStringMap } | undefined)?.dataset;
+  if (ds) {
+    const t = out.join('|');
+    if (ds.ribbonTags !== t) ds.ribbonTags = t;
+  }
 }
 
 /**
@@ -1151,8 +1245,8 @@ const numberHitsOf = new WeakMap<object, LineNumberHit[]>();
 export const lineNumberHits = (v: object): LineNumberHit[] => numberHitsOf.get(v) ?? [];
 
 /**
- * Обязательные имена режима «только линии» (решение 39): раньше выносок и подписей лент, кеглем величины, мельче
- * или с выноской; вытесняют прочие подписи. Лицо одной линии — со своей стороны ленты.
+ * Обязательные имена режима «только линии» (решение 39): раньше выносок и подписей лент, кеглем величины у звезды
+ * или тем же кеглем с выноской (решение 143); вытесняют прочие подписи. Лицо одной линии — со своей стороны ленты.
  */
 export function drawKeyLineNames(v: SkyContext, p: Pass, steps: { joseph: readonly LineStep[]; mary: readonly LineStep[] }) {
   if (!p.s.onlyLines || !p.s.layers.labels) return;
@@ -1164,7 +1258,8 @@ export function drawKeyLineNames(v: SkyContext, p: Pass, steps: { joseph: readon
     const i = v.indexOf(id);
     if (i === undefined || p.labeled.has(i) || !v.drawn(i)) continue;
     const sides = lineSidesOf(id, j, m);
-    for (const t of [{ leader: false }, { size: T_MAP_S, leader: false }, { size: T_MAP_S, leader: true, overStars: true }] as const)
+    // кегль величины не уменьшается (решение 143): у звезды → с выноской тем же кеглем
+    for (const t of [{ leader: false }, { leader: true, overStars: true }] as const)
       if (putLabel(v, p, i, { sides, color: v.pal.ink, alpha: 1, sigla: false, ...t })) break;
   }
 }
@@ -1176,7 +1271,7 @@ const lineSidesOf = (id: string, j: ReadonlySet<string> | ReadonlyMap<string, un
 /**
  * Подписи лиц линий в режиме «только линии» (E6; UX-16; MAP-59, MAP-70; решение 39): подписаны все. Золотые (только Мф)
  * — сверху, лазурные (только Лк) — снизу, общие — сбоку или над и под косой. Порядок попыток: имя кеглем величины
- * у звезды → имя мельче (ступень T_MAP_S) → с выноской → номер у бусины «Мф 17» или «Лк 39» цветом своей ленты:
+ * у звезды → тем же кеглем с выноской (кегль не уменьшается, решение 143) → номер у бусины «Мф 17» или «Лк 39» цветом своей ленты:
  * золотой — над нитью, лазурный — под ней, на своём погашенном фоне (без куска следа или отвода у цифр). Ставятся до
  * обычных подписей, той же проверкой наложений; обязательные имена (drawKeyLineNames) — раньше всех.
  */
@@ -1192,14 +1287,14 @@ export function drawLineNames(v: SkyContext, p: Pass, steps: { joseph: readonly 
   // лицо одной линии — со своей стороны ленты, иначе сбоку, но не по другую сторону: там имя читалось бы
   // как лицо другой линии
   let rest = ids;
-  const tries: { size?: number; leader: boolean }[] = [{ leader: false }, { size: T_MAP_S, leader: false }, { size: T_MAP_S, leader: true }];
+  const tries: { leader: boolean }[] = [{ leader: false }, { leader: true }];
   for (const t of tries) {
     const next: string[] = [];
     for (const id of rest) {
       const i = v.indexOf(id);
       if (i === undefined || p.labeled.has(i)) continue;
       const big = (byId.get(id)?.magnitude ?? 6) <= 1;
-      if (!putLabel(v, p, i, { sides: lineSidesOf(id, j, m), color: pal.ink, alpha: 1, leader: t.leader || big, ...(t.size && !big ? { size: t.size } : {}) })) next.push(id);
+      if (!putLabel(v, p, i, { sides: lineSidesOf(id, j, m), color: pal.ink, alpha: 1, leader: t.leader || big })) next.push(id);
     }
     rest = next;
   }
@@ -1525,6 +1620,7 @@ export function drawLineNotes(v: SkyContext, p: Pass, steps: { joseph: readonly 
  */
 export function drawBranchLabels(v: SkyContext, p: Pass, steps: { joseph: readonly LineStep[]; mary: readonly LineStep[] }) {
   if (!p.s.layers.labels) return;
+  drawRibbonTags(v, p);
   const { ctx, cam, pal } = v;
   const world = ribbonCaches.get(v);
   if (!world) return;

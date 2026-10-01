@@ -26,8 +26,8 @@ import { byId, graph, loadedCard, loadedChrono } from '../../data/atlas.ts';
 import type { Card, Fact, Sex } from '../../data/types.ts';
 import type { LinkKey } from '../../engine/linkkey.ts';
 import { partnerIn, type Union } from '../../engine/unions.ts';
-import { model } from '../../state.ts';
-import { isClaimUnion, unionName } from '../linkwords.ts';
+import { model, pickMode, selected } from '../../state.ts';
+import { childRole, isClaimUnion, kinOf, kinPhrase, parentRole, unionName } from '../linkwords.ts';
 import { originOf, unionsOf } from '../reveal.ts';
 import { bySex, childrenNoun, lowerFirst, nameCase, pluralPeopleName } from '../text/ru.ts';
 import { compareKidGroups, kidsInBirthOrder, onLine } from './Union.tsx';
@@ -37,7 +37,7 @@ import { compareKidGroups, kidsInBirthOrder, onLine } from './Union.tsx';
  * Часть строки: текст или имя-ссылка с ключом своей связи. line — лицо на линии Мессии: «ещё N» строки его не прячет
  * (решение 104), значимость видна знаком лент у имени, а не местом в строке.
  */
-export type KinPart = { t: 'text'; text: string } | { t: 'name'; id: string; key: LinkKey; line?: boolean };
+export type KinPart = { t: 'text'; text: string } | { t: 'name'; id: string; key: LinkKey; line?: boolean; role?: string };
 
 export type KinRowKind = 'parents' | 'spouses' | 'coparents' | 'children' | 'siblings' | 'year';
 
@@ -103,12 +103,19 @@ function kidClaimNote(u: Union, kid: string): string {
 /** Связь ребёнка с отцом союза идёт с пропуском поколений (fatherGap). */
 const gapKid = (u: Union, kid: string) => !!u.a && (graph.parentsOf.get(kid) ?? []).some((e) => e.parent === u.a && e.kind === 'father' && e.gap);
 
-/** Имена через запятую, последнее — через «и» не ставится: строки коротки и режутся «ещё N» (DotCard.tsx). */
-function names(ids: readonly { id: string; key: LinkKey; note?: string }[], sep = ', '): KinPart[] {
+/**
+ * Имена через запятую, последнее — через «и» не ставится: строки коротки и режутся «ещё N» (DotCard.tsx). role — кем лицо
+ * приходится владельцу строки («жена», «сын по закону», «брат по отцу»): из него фраза родства (решение 151) пишет имя
+ * кнопки «Лия — жена», подсказку и список неба.
+ */
+function names(ids: readonly { id: string; key: LinkKey; note?: string; role?: string }[], sep = ', '): KinPart[] {
   const out: KinPart[] = [];
   ids.forEach((x, i) => {
     if (i) out.push({ t: 'text', text: sep });
-    out.push(onLine(x.id) ? { t: 'name', id: x.id, key: x.key, line: true } : { t: 'name', id: x.id, key: x.key });
+    const part: KinPart = { t: 'name', id: x.id, key: x.key };
+    if (onLine(x.id)) part.line = true;
+    if (x.role) part.role = x.role;
+    out.push(part);
     if (x.note) out.push({ t: 'text', text: ` (${x.note})` });
   });
   return out;
@@ -129,7 +136,7 @@ function parentsRow(id: string): KinRow | null {
     if (parts.length) parts.push({ t: 'text', text: '; ' });
     if (isClaimUnion(u)) {
       const p = (u.a ?? u.b)!;
-      parts.push({ t: 'name', id: p, key: childKey(u, id) });
+      parts.push({ t: 'name', id: p, key: childKey(u, id), role: parentRole(u, p) });
       parts.push({ t: 'text', text: ` (${claimNote(u, p)})` });
       if (u.claim !== 'ancestor') onlyAncestors = false;
       continue;
@@ -139,12 +146,12 @@ function parentsRow(id: string): KinRow | null {
     if (gapKid(u, id)) {
       // пропуск поколений: отец — предок, союза с матерью в таком родословии нет
       gap = true;
-      parts.push({ t: 'name', id: u.a!, key: childKey(u, id) });
+      parts.push({ t: 'name', id: u.a!, key: childKey(u, id), role: 'предок' });
       continue;
     }
     named.forEach((p, i) => {
       if (i) parts.push({ t: 'text', text: ' и ' });
-      parts.push({ t: 'name', id: p, key: childKey(u, id) });
+      parts.push({ t: 'name', id: p, key: childKey(u, id), role: parentRole(u, p) });
       if (u.claim === 'legal' && p === u.a) parts.push({ t: 'text', text: ' (по закону)' });
     });
     if (named.length === 1 && !isPeople(named[0]) && !pluralPeople(id)) {
@@ -209,7 +216,8 @@ function spousesRow(id: string, card: Card | null): KinRow | null {
     us.map((u) => {
       const p = partnerIn(u, id)!;
       // у мужа: наложница в строке «Жёны» — с пометой; у жены-наложницы строка «Муж» пометы не требует
-      return { id: p, key: { kind: 'spouse', union: u.id, person: p } as LinkKey, note: !f && many && u.kind === 'concubine' ? 'наложница' : undefined };
+      const role = u.kind === 'concubine' && !f ? 'наложница' : bySex(sexOf(p), 'муж', 'жена');
+      return { id: p, key: { kind: 'spouse', union: u.id, person: p } as LinkKey, note: !f && many && u.kind === 'concubine' ? 'наложница' : undefined, role };
     }),
   );
   if (un) {
@@ -298,7 +306,7 @@ function coparentsRow(id: string): KinRow | null {
       const p = partnerIn(u, id)!;
       const g = kidsGen(u);
       const says = nameOf(p).toLowerCase().startsWith(`${role} `);
-      return { id: p, key: { kind: 'union', union: u.id } as LinkKey, note: one || says ? undefined : `${role} ${g ?? kidsNounGen(u)}` };
+      return { id: p, key: { kind: 'union', union: u.id } as LinkKey, note: one || says ? undefined : `${role} ${g ?? kidsNounGen(u)}`, role: `${role} ${g ?? kidsNounGen(u)}` };
     }),
   );
   const label = one ? `${f ? 'Отец' : 'Мать'} ${kidsNounGen(us[0])}` : f ? 'Отцы детей' : 'Матери детей';
@@ -338,8 +346,8 @@ function fromWhom(u: Union, id: string): string | null {
 function childrenRow(id: string): KinRow | null {
   const us = unionsOf(id).filter((u) => u.kids.length && u.claim !== 'ancestor');
   const seen = new Set<string>();
-  const groups: { u: Union; kids: { id: string; key: LinkKey; note?: string }[] }[] = [];
-  const far: { id: string; key: LinkKey }[] = [];
+  const groups: { u: Union; kids: { id: string; key: LinkKey; note?: string; role?: string }[] }[] = [];
+  const far: { id: string; key: LinkKey; role?: string }[] = [];
   // кровные союзы — в порядке групп § 10 (compareKidGroups: союз с ребёнком линии — первым, затем в порядке браков,
   // второй родитель не назван — последним); последними — союзы иного рода (усыновление, по Луке)
   const all = unionsOf(id);
@@ -349,12 +357,20 @@ function childrenRow(id: string): KinRow | null {
     .sort(compareKidGroups)
     .map((x) => x.u);
   for (const u of [...blood, ...us.filter(isClaimUnion)]) {
-    const g: { id: string; key: LinkKey; note?: string }[] = [];
+    const g: { id: string; key: LinkKey; note?: string; role?: string }[] = [];
     for (const k of kidsInBirthOrder(u)) {
       if (seen.has(k) || k === id) continue;
       seen.add(k);
-      if (!isClaimUnion(u) && gapKid(u, k)) far.push({ id: k, key: childKey(u, k) });
-      else g.push({ id: k, key: childKey(u, k), note: isClaimUnion(u) ? kidClaimNote(u, k) : undefined });
+      // законный сын (Иосиф — Иисус, Мф 1:16): у отца союза — «по закону», как у родителей ребёнка (решение 151)
+      const legal = !isClaimUnion(u) && u.claim === 'legal' && u.a === id;
+      if (!isClaimUnion(u) && gapKid(u, k)) far.push({ id: k, key: childKey(u, k), role: 'потомок' });
+      else
+        g.push({
+          id: k,
+          key: childKey(u, k),
+          note: isClaimUnion(u) ? kidClaimNote(u, k) : legal ? 'по закону' : undefined,
+          role: legal ? `${childRole(u, k)} по закону` : isClaimUnion(u) && u.claim !== 'adoptive' && u.claim !== 'ancestor' ? `${childRole(u, k)} ${kidClaimNote(u, k)}` : childRole(u, k),
+        });
     }
     if (g.length) groups.push({ u, kids: g });
   }
@@ -403,13 +419,14 @@ function siblingsRow(id: string): KinRow | null {
   const own = os[0];
   // свои дети — не братья и сёстры, даже если у них тот же отец (дочери Лота и их сыновья, Быт 19:36–38)
   const seen = new Set<string>([id, ...unionsOf(id).flatMap((u) => u.kids)]);
-  const full: { id: string; key: LinkKey }[] = [];
-  const byFather: { id: string; key: LinkKey }[] = [];
-  const byMother: { id: string; key: LinkKey }[] = [];
+  const full: { id: string; key: LinkKey; role?: string }[] = [];
+  const byFather: { id: string; key: LinkKey; role?: string }[] = [];
+  const byMother: { id: string; key: LinkKey; role?: string }[] = [];
+  const sib = (k: string, by = '') => `${bySex(sexOf(k), 'брат', 'сестра')}${by}`;
   // пропуск поколений (fatherGap; DF1): «из сыновей Гирсама» Шевуил — потомок Гирсама, а не сын, поэтому сыновья
   // Гирсама ему не братья; так же и потомки отца среди его детей — не братья лицу
   if (own && !gapKid(own, id)) {
-    for (const k of kidsInBirthOrder(own)) if (!seen.has(k) && !gapKid(own, k)) (seen.add(k), full.push({ id: k, key: childKey(own, k) }));
+    for (const k of kidsInBirthOrder(own)) if (!seen.has(k) && !gapKid(own, k)) (seen.add(k), full.push({ id: k, key: childKey(own, k), role: sib(k) }));
     for (const [par, list] of [
       [own.a, byFather],
       [own.b, byMother],
@@ -417,17 +434,17 @@ function siblingsRow(id: string): KinRow | null {
       if (!par) continue;
       for (const u of unionsOf(par)) {
         if (u === own || isClaimUnion(u)) continue;
-        for (const k of kidsInBirthOrder(u)) if (!seen.has(k) && !gapKid(u, k)) (seen.add(k), list.push({ id: k, key: childKey(u, k) }));
+        for (const k of kidsInBirthOrder(u)) if (!seen.has(k) && !gapKid(u, k)) (seen.add(k), list.push({ id: k, key: childKey(u, k), role: sib(k, list === byFather ? ' по отцу' : ' по матери') }));
       }
     }
   }
   // родство словами Писания: «брат», «сестра», «младший брат» — без выведения родителей (П-8)
-  const words: { id: string; key: LinkKey }[] = [];
+  const words: { id: string; key: LinkKey; role?: string }[] = [];
   for (const e of graph.kinOf.get(id) ?? []) {
     const other = e.from === id ? e.to : e.from;
     if (seen.has(other) || !/^(младший\s+)?(брат|сестра)$/.test(e.rel)) continue;
     seen.add(other);
-    words.push({ id: other, key: { kind: 'kin', a: e.from, b: e.to } });
+    words.push({ id: other, key: { kind: 'kin', a: e.from, b: e.to }, role: e.from === other ? e.rel : bySex(sexOf(other), 'брат', 'сестра') });
   }
   if (!full.length && !byFather.length && !byMother.length && !words.length) return null;
   const parts: KinPart[] = names([...full, ...words]);
@@ -476,6 +493,44 @@ export function kinRows(id: string, year: string | null = yearHow(id), card: Car
   return rows;
 }
 
+/**
+ * Кем каждое лицо «Родства» приходится лицу id (решение 151): роль и ключ связи — первое упоминание лица в строках.
+ * Для подсказки звезды и списка неба при выбранном лице («Лия — жена Иакова»); одно и то же с карточкой у звезды.
+ */
+const relCache = new Map<string, Map<string, { role: string; key: LinkKey }>>();
+export function relationsOf(id: string): Map<string, { role: string; key: LinkKey }> {
+  const ck = `${id}|${model.peek().id}`;
+  const have = relCache.get(ck);
+  if (have) return have;
+  if (relCache.size > 200) relCache.clear();
+  const out = new Map<string, { role: string; key: LinkKey }>();
+  for (const r of kinRows(id, null)) for (const p of r.parts) if (p.t === 'name' && p.id !== id && !out.has(p.id)) out.set(p.id, { role: p.role ?? '', key: p.key });
+  relCache.set(ck, out);
+  return out;
+}
+
+/**
+ * Тёзки «Родства» лица id (решение 151 по правилу решения 106): лица его строк, чьё имя носит ещё кто-то из них или сам
+ * владелец, — с уточнением при каждом упоминании («Мария (Клеопова)» у Марии). Без уточнения в данных — без пометы.
+ */
+const sameCache = new Map<string, Set<string>>();
+export function kinNamesakes(id: string): Set<string> {
+  const ck = `${id}|${model.peek().id}`;
+  const have = sameCache.get(ck);
+  if (have) return have;
+  if (sameCache.size > 200) sameCache.clear();
+  const byName = new Map<string, string[]>();
+  for (const x of [id, ...relationsOf(id).keys()]) {
+    const q = byId.get(x);
+    if (!q || q.unnamed) continue;
+    byName.set(q.name, [...(byName.get(q.name) ?? []), x]);
+  }
+  const out = new Set<string>();
+  for (const xs of byName.values()) if (xs.length > 1) for (const x of xs) if (x !== id && byId.get(x)?.disambig) out.add(x);
+  sameCache.set(ck, out);
+  return out;
+}
+
 /** Лица семьи первого поколения: родители, супруги, дети, братья и сёстры — их звёзды и подписи карточка не закрывает. */
 export function familyOf(id: string): string[] {
   const out = new Set<string>();
@@ -483,3 +538,17 @@ export function familyOf(id: string): string[] {
   out.delete(id);
   return [...out];
 }
+
+/**
+ * Кем лицо id приходится выбранному (решение 151; одна фраза родства с карточкой у звезды): «жена Иакова», «отец Марии,
+ * толк.», «вне показа»; уточнение — только у тёзки семьи. null — лицо не из «Родства» выбранного или ничего не выбрано.
+ */
+export function selectedKin(id: string): { dis: string | null; text: string } | null {
+  const sel = selected.peek();
+  if (!sel || sel === id || pickMode.peek()) return null;
+  const r = relationsOf(sel).get(id);
+  if (!r || !r.role) return null;
+  const ph = kinPhrase(id, r.role, r.key, { namesake: kinNamesakes(sel).has(id), outside: false });
+  return { dis: ph.dis, text: kinOf(ph, sel) };
+}
+

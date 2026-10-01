@@ -68,8 +68,13 @@ async function barAt(p: Page) {
   const b = (await p.locator('.folio .sheet-bar .bar-name, .folio .sheet-dot .dc-nm .nm').first().boundingBox())!;
   return { x: b.x + Math.min(40, b.width / 2), y: b.y + b.height / 2 };
 }
-/** Высота листа на первом положении (src/ui/sheet.ts, PEEK_H): карточка у звезды — 214 px (этап 11; было 104). */
-const PEEK = 214;
+/**
+ * Высота листа на первом положении: карточка у звезды (этап 11; было 104). Этап 14, решение 155: шапка листа равна высоте
+ * краткой карточки — лист сам ставит её в --sheet-peek на .app (src/ui/Folio.tsx); прежде — постоянные 214 px.
+ */
+async function peekH(p: Page): Promise<number> {
+  return p.evaluate(() => parseFloat(getComputedStyle(document.querySelector('.app')!).getPropertyValue('--sheet-peek')) || 214);
+}
 
 /**
  * Коснуться звезды лица: адрес выбирает лицо и ставит небо; «×» снимает выбор, место звезды пересчитывается
@@ -77,17 +82,25 @@ const PEEK = 214;
  */
 async function tapStar(p: Page, id: string) {
   await go(p, `#/${id}`, 2400);
-  const w = (await p.evaluate(`(() => {
-    const el = document.querySelector('.sky');
-    const [sx, sy] = el.dataset.sel.split(' ').map(Number);
-    const [, , , , x0, kx, laneTop, ky] = el.dataset.view.split(' ').map(Number);
-    return { X: x0 + sx / kx, lane: laneTop - sy / ky };
-  })()`)) as { X: number; lane: number };
   await p.locator('.folio .close').first().tap();
   await p.waitForTimeout(900);
-  const v = await view(p);
+  // этап 14: место звезды — из списка лиц неба (SkyA11y, data-x/y: px холста), когда небо постояло; прежний пересчёт
+  // из окна (data-view) расходился с местом на 20–30 px — касание уходило на ромб союза рядом
+  let at: { x: number; y: number } | null = null;
+  let was = '';
+  // список обновляется, когда небо постояло (SETTLE 600 мс): ждём два одинаковых чтения подряд
+  for (let i = 0; i < 16; i++) {
+    await p.waitForTimeout(300);
+    const q = (await p.evaluate(`(() => { const b = document.getElementById('sky-star-${id}'); return b && b.dataset.x ? { x: +b.dataset.x, y: +b.dataset.y } : null; })()`)) as { x: number; y: number } | null;
+    const k = q ? `${q.x},${q.y}` : '';
+    if (q && k === was) {
+      at = q;
+      break;
+    }
+    was = k;
+  }
   const box = (await p.locator('.sky canvas').boundingBox())!;
-  await p.touchscreen.tap(box.x + (w.X - v.x0) * v.kx, box.y + (v.laneTop - w.lane) * v.ky);
+  if (at) await p.touchscreen.tap(box.x + at.x, box.y + at.y);
   await p.waitForTimeout(1200);
 }
 /**
@@ -155,12 +168,13 @@ export const phone: Scenario[] = [
   {
     n: 150,
     // этап 11 (решение 77): первое положение листа — карточка у звезды на 214 px (было 104): имя и годы — в её шапке
-    title: 'U8, телефон 390 × 844: касание звезды — лист-карточка на 214 px; протяжка — 55 % и 100 %; «Родство» — полноэкранный лист, «×» — к карточке; «Показать на небе» сворачивает лист',
+    title: 'U8, телефон 390 × 844: касание звезды — лист-карточка высотой краткой карточки (решение 155; было 214 px); протяжка — 55 % и 100 %; «Родство» — полноэкранный лист, «×» — к карточке; «К звезде» (решение 156) сворачивает лист',
     view: PHONE,
     run: async (p) => {
       await tapStar(p, 'david');
       if (hashId(p) !== 'david') return fail(`касание выбрало «${hashId(p)}»`);
       let s = await sheet(p);
+      const PEEK = await peekH(p);
       if (!s || s.stop !== 'peek' || !near(s.h, PEEK, 2)) return fail(`после касания лист ${s?.stop} ${s?.h.toFixed(0)} px, а не ${PEEK}`);
       const name = (await p.locator('.folio .sheet-dot .dc-nm .nm').innerText()).trim();
       if (name !== 'Давид') return fail(`в шапке «${name}»`);
@@ -192,19 +206,19 @@ export const phone: Scenario[] = [
       if (await p.locator('.sheet').count()) return fail('«×» не закрыл «Родство»');
       s = (await sheet(p))!;
       if (hashId(p) !== 'david' || s.stop !== 'full') return fail(`после «×» — ${hashId(p)}, лист ${s.stop}`);
-      // «Показать на небе»: лист — на шапку, звезда видна над ним
-      await p.locator('.folio .actions button', { hasText: 'Показать на небе' }).tap();
+      // «К звезде»: лист — на шапку, звезда видна над ним
+      await p.locator('.folio .actions button', { hasText: 'К звезде' }).tap();
       await p.waitForTimeout(1600);
       s = (await sheet(p))!;
-      if (s.stop !== 'peek') return fail(`«Показать на небе» оставил лист ${s.stop}`);
+      if (s.stop !== 'peek') return fail(`«К звезде» оставил лист ${s.stop}`);
       const vis = await selVisible(p);
-      if (vis) return fail(`после «Показать на небе»: ${vis}`);
-      return pass(`${PEEK} → ${half.toFixed(0)} → ${s.avail.toFixed(0)} px; «Родство» и «×»; «Показать на небе» — шапка`);
+      if (vis) return fail(`после «К звезде»: ${vis}`);
+      return pass(`${PEEK} → ${half.toFixed(0)} → ${s.avail.toFixed(0)} px; «Родство» и «×»; «К звезде» — шапка`);
     },
   },
   {
     n: 151,
-    title: 'U8, планшет 768 × 1024: касание звезды — карточка колонкой; «Родство» — колонкой, карточка в корешке; «×» — к карточке; «Показать на небе» — звезда видна',
+    title: 'U8, планшет 768 × 1024: касание звезды — карточка колонкой; «Родство» — колонкой, карточка в корешке; «×» — к карточке; «К звезде» — звезда видна',
     view: TABLET,
     run: async (p) => {
       await tapStar(p, 'david');
@@ -218,7 +232,7 @@ export const phone: Scenario[] = [
       await p.waitForTimeout(600);
       if ((await p.locator('.sheet').count()) || (await p.locator('.folio.spine').count())) return fail('«×» не вернул карточку');
       if (hashId(p) !== 'david') return fail(`после «×» выбрано «${hashId(p)}»`);
-      await p.locator('.folio .actions button', { hasText: 'Показать на небе' }).tap();
+      await p.locator('.folio .actions button', { hasText: 'К звезде' }).tap();
       await p.waitForTimeout(1600);
       const vis = await selVisible(p);
       if (vis) return fail(vis);
@@ -252,6 +266,12 @@ export const phone: Scenario[] = [
         s = (await sheet(p))!;
         if (s.stop !== 'peek') return fail(`протяжка текста вниз оставила лист ${s.stop}`);
       }
+      // этап 14 (решение 155): шапка листа — высотой краткой карточки, и быстрый взмах на 60 px может донести лист до 100 %;
+      // взмах вниз закрывает лист только с шапки — сначала «Свернуть»
+      if ((await sheet(p))?.stop === 'full') {
+        await p.locator('.folio .sheet-bar .bar-toggle').tap();
+        await p.waitForTimeout(600);
+      }
       // взмах вниз с шапки — лист закрыт
       a = await barAt(p);
       await swipe(p, a.x, a.y, 70, 50, 3);
@@ -262,13 +282,13 @@ export const phone: Scenario[] = [
   },
   {
     n: 153,
-    title: 'Решение 12: поиск и ссылки открывают лист на 55 %, касание звезды — на первом положении (214 px); выбор второго лица сворачивает лист, «Отменить» возвращает',
+    title: 'Решения 12, 150: поиск открывает лист на 55 %, ссылка изнутри листа оставляет его на прежнем положении, касание звезды — на первом положении; выбор второго лица сворачивает лист, «Отменить» возвращает',
     view: PHONE,
     run: async (p) => {
       await find(p, 'Руфь');
       let s = await sheet(p);
       if (s?.stop !== 'half') return fail(`поиск открыл лист ${s?.stop}`);
-      // ссылка в карточке — тоже 55 %, даже если лист был на 100 %
+      // ссылка в карточке: этап 14, решение 150 — выбор изнутри листа оставляет лист на прежнем положении (было: всегда 55 %)
       await p.locator('.folio .sheet-bar .bar-toggle').tap();
       await p.waitForTimeout(400);
       if ((await sheet(p))?.stop !== 'full') return fail('«Развернуть» не поднял лист до 100 %');
@@ -277,7 +297,12 @@ export const phone: Scenario[] = [
       await link.tap();
       await p.waitForTimeout(1200);
       s = await sheet(p);
-      if (hashId(p) !== to || s?.stop !== 'half') return fail(`ссылка: ${hashId(p)} (ждали ${to}), лист ${s?.stop}`);
+      if (hashId(p) !== to || s?.stop !== 'full') return fail(`ссылка: ${hashId(p)} (ждали ${to}), лист ${s?.stop} (ждали прежние 100 %)`);
+      // поиск — новый выбор извне листа: снова 55 % (решение 12), с какого бы положения ни начинал лист
+      await p.locator('.folio .sheet-bar .bar-toggle').tap();
+      await p.waitForTimeout(400);
+      await find(p, 'Руфь');
+      if ((await sheet(p))?.stop !== 'half') return fail(`поиск после ссылки открыл лист ${(await sheet(p))?.stop}`);
       // выбор второго лица: лист на шапке, небо видно; «Отменить» — обратно к 55 %
       await p.locator('.folio .actions button', { hasText: 'Родство с…' }).tap();
       await p.waitForTimeout(500);
@@ -353,7 +378,7 @@ export const phone: Scenario[] = [
       await find(p, 'Давид');
       for (const stop of ['half', 'peek']) {
         if (stop === 'peek') {
-          await p.locator('.folio .actions button', { hasText: 'Показать на небе' }).tap();
+          await p.locator('.folio .actions button', { hasText: 'К звезде' }).tap();
           await p.waitForTimeout(1400);
         }
         const strip = (await p.locator('.strip').boundingBox())!;
@@ -364,7 +389,7 @@ export const phone: Scenario[] = [
       // этап 11: на первом положении лист — карточка у звезды (214 px); касание её шапки поднимает лист до 55 %
       await p.locator('.folio .sheet-bar .bar-name, .folio .sheet-dot .dc-nm .nm').first().tap();
       await p.waitForTimeout(500);
-      if ((await sheet(p))?.stop !== 'half') return fail(`касание шапки на ${PEEK} px не подняло лист до 55 %`);
+      if ((await sheet(p))?.stop !== 'half') return fail('касание шапки листа не подняло лист до 55 %');
       const v0 = await view(p);
       const q0 = (await selAt(p))!;
       const box = (await p.locator('.sky canvas').boundingBox())!;
@@ -468,7 +493,7 @@ export const phone: Scenario[] = [
       const notes: string[] = [];
       for (const stop of ['half', 'peek']) {
         if (stop === 'peek') {
-          await p.locator('.folio .actions button', { hasText: 'Показать на небе' }).tap();
+          await p.locator('.folio .actions button', { hasText: 'К звезде' }).tap();
           await p.waitForTimeout(1600);
         }
         const v = await view(p);
@@ -541,8 +566,8 @@ export const phone: Scenario[] = [
       await p.waitForTimeout(500);
       await find(p, 'Руфь');
       const s = await sheet(p);
-      // этап 11: первое положение — карточка у звезды на 214 px (не выше места для листа)
-      if (s?.stop !== 'peek' || !near(s.h, Math.min(PEEK, s.avail), 2)) return fail(`720 × 450: поиск открыл лист ${s?.stop} ${s?.h}`);
+      // этап 11: первое положение — карточка у звезды (этап 14, решение 155: высотой краткой карточки, не выше места для листа)
+      if (s?.stop !== 'peek' || !near(s.h, Math.min(await peekH(p), s.avail), 2)) return fail(`720 × 450: поиск открыл лист ${s?.stop} ${s?.h}`);
       const vis = await selVisible(p);
       if (vis) return fail(`720 × 450: ${vis}`);
       return pass();

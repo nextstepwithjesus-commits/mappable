@@ -14,6 +14,15 @@
  */
 import { effect, signal } from '@preact/signals';
 import { panel, pickMode, selected } from '../state.ts';
+import { grid } from './layout.ts';
+
+/**
+ * Запись истории (контракт 3, src/ui/address.ts): поля применяемой записи и запись положения листа. Адрес подключается
+ * после загрузки модулей (динамический импорт): лист импортируют рано (ввод неба, карточка у звезды), а адрес тянет за
+ * собой всё небо — статический импорт менял бы порядок их инициализации.
+ */
+type HistoryApi = Pick<typeof import('./address.ts'), 'historyApplying' | 'historyFields' | 'patchHistory'>;
+let hist: HistoryApi | null = null;
 
 export type SheetStop = 'peek' | 'half' | 'full';
 
@@ -42,10 +51,29 @@ export function openSheetAt(stop: SheetStop) {
 }
 
 /** Положение для нового выбора: просьба ввода, иначе 55 % (на низком экране — шапка). */
-export function stopForNewSelection(req: { stop: SheetStop; at: number } | null, now: number, low: boolean): SheetStop {
+export function stopForNewSelection(
+  req: { stop: SheetStop; at: number } | null,
+  now: number,
+  low: boolean,
+  o: { history?: string | null; keep?: SheetStop | null } = {},
+): SheetStop {
+  // «назад» и «вперёд» (решение 150): положение листа своей записи истории
+  if (o.history && isStop(o.history)) return o.history;
+  // выбор изнутри листа (имя в «Родстве», ссылка в карточке): лист остаётся, где был (решение 150; M3)
+  if (o.keep) return o.keep;
   if (low) return 'peek';
   if (req && now - req.at < 1000) return req.stop;
   return 'half';
+}
+
+/** Строка — положение листа. */
+export const isStop = (x: unknown): x is SheetStop => x === 'peek' || x === 'half' || x === 'full';
+
+/** Действие пришло из самого листа карточки: щелчок, касание или клавиша внутри .app > .folio. */
+function fromSheet(): boolean {
+  const e = typeof window !== 'undefined' ? window.event : undefined;
+  const t = e?.target;
+  return typeof Element !== 'undefined' && t instanceof Element && !!t.closest('.app > .folio');
 }
 
 export interface Stops {
@@ -59,13 +87,32 @@ export interface Stops {
  * органы неба (колонка 2 × 2) и звезда видны над листом (H6; MOB-26); лист на первом положении — краткая карточка.
  */
 export const LOW_SKY = 150;
-/** Высота первого положения при месте avail: 214 px, на низком экране — не выше avail − LOW_SKY (но не ниже 104). */
-export const peekFor = (avail: number, low = lowScreen()) => (low ? Math.min(PEEK_H, Math.max(104, Math.round(avail) - LOW_SKY)) : PEEK_H);
+/** Самая низкая шапка листа: имя и годы (ТЗ § 3.8). */
+export const PEEK_MIN = 104;
+/** Под данными неба над листом — не меньше стольких px (решение 155; M8): ниже рамки (линейка и строка эпох). */
+export const SKY_DATA_MIN = 140;
+
+/**
+ * Высота краткой карточки в листе (решение 155; M8), измеренная самим листом (Folio.tsx, DotSheetBar): шапка листа
+ * равна ей, а не постоянным 214 px — на масштабе 200 % под командами не остаётся пустых 75 px. null — ещё не измерена.
+ */
+export const peekContent = signal<number | null>(null);
+
+/**
+ * Высота первого положения при месте avail.
+ *  — Карточка измерена (content): ровно её высота, но не ниже PEEK_MIN и так, чтобы над листом под рамкой неба (frame —
+ *    её высота, px) осталось SKY_DATA_MIN px данных (решение 155).
+ *  — Не измерена: 214 px, на низком экране — не выше avail − LOW_SKY (но не ниже 104), как прежде (H6).
+ */
+export function peekFor(avail: number, low = lowScreen(), content: number | null = null, frame = 0): number {
+  if (content === null || !(content > 0)) return low ? Math.min(PEEK_H, Math.max(PEEK_MIN, Math.round(avail) - LOW_SKY)) : PEEK_H;
+  return Math.max(PEEK_MIN, Math.min(Math.round(content), Math.round(avail) - frame - SKY_DATA_MIN));
+}
 
 /** Высоты положений (px) по месту для листа: между верхней строкой и полосой времени; 55 % — не ниже первого положения. */
-export function stopsFor(avail: number, low = lowScreen()): Stops {
+export function stopsFor(avail: number, low = lowScreen(), content: number | null = null, frame = 0): Stops {
   const full = Math.max(PEEK_H, Math.round(avail));
-  const peek = Math.min(peekFor(avail, low), full);
+  const peek = Math.min(peekFor(avail, low, content, frame), full);
   return { peek, half: Math.max(PEEK_H, peek, Math.round(full * HALF_SHARE)), full };
 }
 
@@ -114,10 +161,32 @@ if (typeof window !== 'undefined') {
   effect(() => {
     const id = selected.value;
     if (id && id !== shown) {
-      sheetStop.value = stopForNewSelection(requested, Date.now(), lowScreen());
+      const h = hist?.historyApplying.peek() ?? null;
+      // выбор изнутри открытого листа (шаг по родству) — лист на прежнем положении (решение 150; M3)
+      const keep = shown && fromSheet() ? sheetStop.peek() : null;
+      sheetStop.value = stopForNewSelection(requested, Date.now(), lowScreen(), { history: h?.sheet ?? null, keep });
       requested = null;
     }
     shown = id;
+  });
+  void import('./address.ts').then((a) => {
+    hist = a;
+    // запись истории «назад» или «вперёд» того же лица — положение листа своей записи (решение 150)
+    effect(() => {
+      const h = a.historyApplying.value;
+      if (!h?.sheet || !isStop(h.sheet) || !selected.peek() || sheetStop.peek() === h.sheet) return;
+      sheetStop.value = h.sheet;
+    });
+    // положение листа — поле записи истории (контракт 3; решение 150): пишется в каждую запись и дописывается в текущую,
+    // когда лист встаёт в новое положение. На компьютере листа нет — поля нет
+    a.historyFields(() => (grid.peek().phone && selected.peek() ? { sheet: sheetStop.peek() } : {}));
+    let stopSeen = sheetStop.peek();
+    effect(() => {
+      const st = sheetStop.value;
+      if (st === stopSeen) return;
+      stopSeen = st;
+      if (grid.peek().phone) queueMicrotask(a.patchHistory);
+    });
   });
   // выбор второго лица: лист — на шапке; отмена возвращает прежнее положение, панель выбора — после её закрытия
   let before: SheetStop | null = null;

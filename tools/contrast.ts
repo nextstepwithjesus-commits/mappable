@@ -1,6 +1,7 @@
 /**
  * Проверка цветовых токенов (ТЗ § 3.8, § 5.2): контраст текста ≥ 4,5 : 1, графики ≥ 3 : 1 в обеих темах;
  * две ленты различимы при дейтеранопии, протанопии и тританопии (моделирование Machado, Oliveira & Fernandes, 2009).
+ * Этап 14, решение 157: ветви — и при тританопии; тонкие линии 1–1,5 px — по видимому цвету с прозрачностью (thinOn).
  *   npm run -s contrast
  */
 import { readFileSync } from 'node:fs';
@@ -42,6 +43,36 @@ const simulate = (h: string, m?: number[][]) => {
   return toLab(s);
 };
 const dE = (a: number[], b: number[]) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+
+/**
+ * Тонкая линия, как её видит глаз (этап 14, решение 157; M11): цвет проверяется не сплошным токеном, а линией 1–1,5 px
+ * с её прозрачностью на небе. Модель — сглаженная линия ширины w со случайным положением относительно сетки пикселей
+ * (dpr 1; наклонные, кривые и сдвинутые небом линии): видимая доля — средняя по положениям наибольшая доля покрытия
+ * пикселя (peakCover: 1 px — 0,75; 1,5 px — 0,94; от 2 px — 1); видимый цвет — наложение цвета линии с долей a · доля на
+ * фон. Для тонких линий — ΔE ≥ THIN_DE: линия видна на фоне, две нити лент различимы.
+ */
+function peakCover(w: number): number {
+  const N = 200;
+  let sum = 0;
+  for (let i = 0; i < N; i++) {
+    const c = (i + 0.5) / N;
+    const a = c - w / 2;
+    const b = c + w / 2;
+    let best = 0;
+    for (let k = Math.floor(a); k <= Math.ceil(b); k++) best = Math.max(best, Math.max(0, Math.min(b, k + 1) - Math.max(a, k)));
+    sum += Math.min(1, best);
+  }
+  return sum / N;
+}
+const thinOn = (color: string, ground: string, a: number, w: number) => over(color, ground, Math.max(0, Math.min(1, a * peakCover(w))));
+const THIN_DE = 20;
+/**
+ * Тон линии связи (src/render/trails.ts, LINK_TONE): копия — модуль неба тянет за собой весь холст; равенство держит
+ * tests/touch14.test.ts.
+ */
+const LINK_TONE = 0.72;
+/** Наименьшая ширина нити ленты на холсте, px (src/render/ribbons.ts; S1): обзор и ориентир «набора». */
+const RIBBON_THREAD: Record<MapTheme, { main: number; guide: number }> = { night: { main: 2.1, guide: 1.16 }, day: { main: 2.7, guide: 1.76 } };
 
 let fail = 0;
 const check = (name: string, v: number, min: number) => {
@@ -95,7 +126,8 @@ for (const [t, c] of Object.entries(themes)) {
   }
   for (let i = 6; i < 12; i++) for (const g of grounds) check(`ветвь ${i + 1} (оттенок второго круга) ${branchColor(i, theme)} на ${g}`, ratio(branchColor(i, theme), g), BRANCH_CONTRAST);
   const others = [...new Set([c['--gold-1'], c['--gold-2'], c['--azure-1'], c['--azure-2'], ...lanes, c['--ink']])];
-  for (const [k, m] of [['обычное зрение', undefined], ['deutan', CVD.deutan], ['protan', CVD.protan]] as [string, number[][] | undefined][]) {
+  // этап 14, решение 157 (M11): и при тританопии — ветви и ленты при ней почти сливались
+  for (const [k, m] of [['обычное зрение', undefined], ['deutan', CVD.deutan], ['protan', CVD.protan], ['tritan', CVD.tritan]] as [string, number[][] | undefined][]) {
     const min = m ? BRANCH_DE.cvd : BRANCH_DE.normal;
     let pair = Infinity;
     for (let i = 0; i < branches.length; i++) for (let j = i + 1; j < branches.length; j++) pair = Math.min(pair, dE(simulate(branches[i], m), simulate(branches[j], m)));
@@ -103,6 +135,36 @@ for (const [t, c] of Object.entries(themes)) {
     let rib = Infinity;
     for (const b of branches) for (const o of others) rib = Math.min(rib, dE(simulate(b, m), simulate(o, m)));
     check(`ветви не похожи на ленты и --ink (${k}), ΔE`, rib, min);
+  }
+  // тонкие линии (решение 157; M11). Ленты — нитью настоящей ширины (ribbons.ts, S1): наименьшая на обзоре ночью 2,1 px,
+  // днём 2,7 px (нить и под ней тон своего цвета); ориентир «набора» — ночью 1,16 px, днём 1,76 px, отдельной строкой.
+  // Две нити различимы при обычном зрении и трёх видах дальтонизма (ΔE ≥ THIN_DE)
+  const visions = [['обычное зрение', undefined], ...Object.entries(CVD)] as [string, number[][] | undefined][];
+  for (const [what, w] of [['нить', RIBBON_THREAD[theme].main], ['ориентир «набора»', RIBBON_THREAD[theme].guide]] as const)
+    for (const [k, m] of visions) {
+      let d = Infinity;
+      for (const g of grounds) d = Math.min(d, dE(simulate(thinOn(lanes[0], g, 1, w), m), simulate(thinOn(lanes[2], g, 1, w), m)), dE(simulate(thinOn(lanes[1], g, 1, w), m), simulate(thinOn(lanes[3], g, 1, w), m)));
+      check(`ленты: ${what} ${String(w).replace('.', ',')} px различимы (${k}), ΔE`, d, THIN_DE);
+    }
+  // тонкие линии видны на небе и полосе эпохи (ΔE к фону ≥ THIN_DE): ветви 1 px (второй и контекстный ярус), связи —
+  // --ink-2 с тоном LINK_TONE 1 px, дуги родства — золотистым 1,5 px
+  const thinLines: { what: string; color: string; a: number; w: number }[] = [
+    ...branches.map((b, i) => ({ what: `ветвь ${BRANCH_NAMES[i]}`, color: b, a: 1, w: 1 })),
+    { what: 'связь --ink-2', color: c['--ink-2'], a: LINK_TONE, w: 1 },
+    { what: 'дуга родства золотистым', color: KIN_GOLD[theme], a: 1, w: 1.5 },
+  ];
+  for (const [k, m] of visions) {
+    let d = Infinity;
+    let with_ = '';
+    for (const g of grounds)
+      for (const l of thinLines) {
+        const v = dE(simulate(thinOn(l.color, g, l.a, l.w), m), simulate(g, m));
+        if (v < d) {
+          d = v;
+          with_ = `${l.what} ${l.color} на ${g}`;
+        }
+      }
+    check(`тонкая линия видна на фоне (${k}; хуже всех ${with_}), ΔE`, d, THIN_DE);
   }
   // жёлтый выбранной связи (этап 11, § 9; src/render/plates.ts, LINK_YELLOW; marks.ts, drawSelectedLink): ночью — жёлтая линия
   // к небу и полосе эпохи ≥ 4,5 : 1; днём — жёлтая подложка под линией тона текста, линия к подложке ≥ 4,5 : 1. Жёлтый не похож

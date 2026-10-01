@@ -11,7 +11,7 @@
  * Компонент стоит в .sky сразу после холста (SkyView); атрибуты холста он ставит сам.
  */
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
-import { effect } from '@preact/signals';
+import { effect, signal } from '@preact/signals';
 import { byId } from '../../data/atlas.ts';
 import type { Epoch } from '../../data/types.ts';
 import { focused, selected, model } from '../../state.ts';
@@ -25,6 +25,7 @@ import { screenOf } from './view.ts';
 import { expanded, hasHidden, opened, unionById } from '../reveal.ts';
 import { show, skyMode } from '../work.ts';
 import { dotsOn, openDot } from './DotCard.tsx';
+import { selectedKin } from '../card/kinrows.ts';
 import { openSheetAt } from '../sheet.ts';
 
 const LIST_ID = 'sky-stars';
@@ -36,11 +37,20 @@ export const starDomId = (id: string) => `sky-star-${id}`;
 export const plateDomId = (uid: string) => `sky-plate-${uid.replace(/[^a-z0-9-]/gi, '_')}`;
 
 export const SKY_LABEL = 'Звёздная карта родословий';
+
+/**
+ * Короткое сообщение неба для диктора (решение 151; M7): «детей в данных нет» после «]» у лица без детей, «родителей
+ * в данных нет» после «[». n — счётчик: то же сообщение дважды подряд звучит дважды (неразрывный пробел меняет текст).
+ */
+const skyNews = signal<{ text: string; n: number }>({ text: '', n: 0 });
+export function skySay(text: string) {
+  skyNews.value = { text, n: skyNews.peek().n + 1 };
+}
 export const SKY_HELP =
-  'Стрелки — к ближайшей звезде в эту сторону; Shift со стрелками — сдвиг неба; Enter — открыть карточку звезды с её родством; клавиша меню или Shift и F10 — меню звезды; плюс и минус — масштаб; ноль — всё небо; квадратные скобки — к родителю и к ребёнку; вопросительный знак — все клавиши. Стрелки водят и по ромбам союзов; Enter на звезде или ромбе союза открывает у него карточку, Escape её закрывает. Связь выбирается строкой «Родство» карточки: Tab до строки, Enter на имени — карточка связи; Escape — назад.';
+  'Стрелки — к ближайшей звезде в эту сторону; Shift со стрелками — сдвиг неба; Enter — открыть карточку звезды с её родством; клавиша меню или Shift и F10 — меню звезды; плюс и минус — масштаб; ноль — всё небо; квадратные скобки — к родителю и к ребёнку; вопросительный знак — все клавиши. Стрелки водят и по ромбам союзов; Enter на звезде или ромбе союза открывает у него карточку, Escape её закрывает. Связь выбирается строкой «Родство» карточки: Tab до строки, Enter на имени — карточка связи; Escape — назад. G (п) — к карточке и обратно.';
 /** Справка для сенсорного экрана: жесты вместо клавиш (MOB-67). */
 export const SKY_HELP_TOUCH =
-  'Коснитесь звезды — откроется карточка лица с её родством; касание звезды или ромба союза открывает у него карточку, касание линии — связь, а в гуще линий — список «Какая связь?»; одним пальцем — сдвиг неба, двумя — масштаб; долгое касание звезды — меню звезды; «Всё небо» — вся карта.';
+  'Коснитесь звезды или её имени — откроется карточка лица с её родством; касание звезды или ромба союза открывает у него карточку, касание линии — связь, а в гуще линий — список «Какая связь?»; одним пальцем — сдвиг неба, двумя — масштаб (пальцы строго по горизонтали — только время, по вертикали — только строки); долгое касание звезды — меню звезды; «Всё небо» — вся карта.';
 const coarse = () => typeof window !== 'undefined' && !!window.matchMedia?.('(pointer: coarse)').matches;
 /** Сколько лиц держать в списке: самые яркие на виду, по порядку времени. */
 const LIST_MAX = 40;
@@ -85,9 +95,19 @@ export function windowText(t0: number, t1: number, epochs: readonly Pick<Epoch, 
  */
 const itemLabel = (id: string, sel: string | null) =>
   typo(
-    [starName(id), lifeText(id), skyMode.peek() === 'work' && !opened.peek().includes(id) && hasHidden(id) ? REVEAL_TEXT : ''].filter(Boolean).join('; ') +
+    [starName(id), lifeText(id), relText(id, sel), skyMode.peek() === 'work' && !opened.peek().includes(id) && hasHidden(id) ? REVEAL_TEXT : ''].filter(Boolean).join('; ') +
       (sel === id ? '; выбрано' : ''),
   );
+
+/**
+ * Пункт списка неба при выбранном лице называет отношение к нему (решение 151; M7): «жена Иакова», «отец Марии, толк.»;
+ * лицо не из его «Родства» — «вне семьи выбранного». Стрелки ведут к ближайшей звезде, и диктор сразу говорит, своя ли она.
+ */
+function relText(id: string, sel: string | null): string {
+  if (!sel || sel === id) return '';
+  const k = selectedKin(id);
+  return k ? k.text : 'вне семьи выбранного';
+}
 
 /** Точка союза в списке неба: id союза, лицо, у которого она стоит, раскрыт ли союз. */
 type PlateItem = { uid: string; from: string; open: boolean };
@@ -97,9 +117,12 @@ function listed(): { ids: string[]; text: string; plates: PlateItem[] } {
   const sky = skyRef.current;
   if (!sky || !sky.model) return { ids: [], text: '', plates: [] };
   const shown = starPoints(sky).filter((s) => s.onScreen);
-  const ids = [...shown]
-    .sort((a, b) => a.mag - b.mag || a.x - b.x)
-    .slice(0, LIST_MAX)
+  // звёзды без подписи на небе (контракт 2; решение 140: подпись скрыта до наведения, фокуса или выбора) — в списке
+  // всегда: диктор читает их имена, хотя глазу они сейчас не подписаны
+  const hidden = new Set(sky.hiddenLabels());
+  const top = [...shown].sort((a, b) => a.mag - b.mag || a.x - b.x).slice(0, LIST_MAX);
+  const extra = shown.filter((s) => hidden.has(s.id) && !top.includes(s)).slice(0, LIST_MAX);
+  const ids = [...top, ...extra]
     .sort((a, b) => a.x - b.x || a.y - b.y)
     .map((s) => s.id);
   const vp = sky.cam.vp;
@@ -219,8 +242,11 @@ export function SkyA11y() {
     let since = 0;
     /** места звёзд списка при последнем обновлении */
     let seen = '';
+    /** окно неба при последнем кадре: кадры без сдвига окна (зажигание звёзд, ток света по ленте) не откладывают список */
+    let camSeen = '';
     const update = () => {
       clearTimeout(timer);
+      timer = 0;
       since = 0;
       const next = listed();
       const pk = (v: { plates: PlateItem[] }) => v.plates.map((q) => `${q.uid}${q.open ? 1 : 0}`).join();
@@ -233,6 +259,13 @@ export function SkyA11y() {
     const off = effect(() => {
       void viewTick.value;
       void selected.value;
+      const cam = skyRef.current?.cam;
+      const key = cam ? `${cam.x0} ${cam.kx} ${cam.laneTop} ${cam.ky} ${cam.vp.l} ${cam.vp.t} ${cam.vp.r} ${cam.vp.b}` : '';
+      const still = key === camSeen;
+      camSeen = key;
+      // окно стоит, обновление уже назначено — кадр его не откладывает: места звёзд в списке (data-x, data-y) верны через
+      // 600 мс после остановки неба, а не через 2 с, пока идут кадры без движения
+      if (still && timer) return;
       const now = performance.now();
       if (!since) since = now;
       clearTimeout(timer);
@@ -330,6 +363,10 @@ export function SkyA11y() {
       </p>
       <p class="visually-hidden" aria-live="polite">
         {said}
+      </p>
+      <p class="visually-hidden" aria-live="polite" data-sky-news="">
+        {skyNews.value.text}
+        {skyNews.value.n % 2 ? '\u00a0' : ''}
       </p>
     </>
   );

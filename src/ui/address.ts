@@ -28,7 +28,7 @@
  * Набор из чужой ссылки — временный просмотр (решение 45; IX-69): свой набор читателя не меняется. Записи истории
  * атласа помечены (HistoryMark): их «n» — свой набор в тот момент, и «назад» не выдаёт его за чужую ссылку.
  */
-import { batch, effect } from '@preact/signals';
+import { batch, effect, signal } from '@preact/signals';
 import { byId, graph, lineMembership, models, modelInfo } from '../data/atlas.ts';
 import { linkKeyString, parseLinkKey, spanInner, type LinkKey } from '../engine/linkkey.ts';
 import {
@@ -38,7 +38,7 @@ import { damerau } from '../engine/search.ts';
 import { toAstro, toHist } from '../engine/years.ts';
 import { KX_MAX, KX_MIN, LANES_MAX, LANES_MIN } from '../render/camera.ts';
 import { skyRef, viewTick } from './common.tsx';
-import { HISTORY_MS, holdLinesRows, inView, keepInView, linesSettling, reduced, setStartLanes } from './sky/view.ts';
+import { HISTORY_MS, holdLinesRows, inView, keepInView, linesSettling, reduced, setStartLanes, takeJump, windowHold, windowJump } from './sky/view.ts';
 import {
   EMPTY_LINK_NOTICE, WORK_URL_MAX, linkSet, linkSetFor, parseShow, setShowState, show, showHistory, showKey, showLinksField, shownSet, workNotice,
   workSet, type Show,
@@ -46,7 +46,7 @@ import {
 import { selectFromHistory } from './stack.ts';
 import { restoreReveal, selectedUnion, selectUnion, unionById } from './reveal.ts';
 import { selectedLink } from './linkstate.ts';
-import { linkGuests, setGuestsFromAddress } from './show.ts';
+import { linkGuests, setGuestsFromAddress, windowHooks } from './show.ts';
 
 export interface View {
   /** год середины окна, исторический */
@@ -346,10 +346,63 @@ function snapshot(): Omit<Address, 'route' | 'full' | 'bad'> {
 /**
  * Запись истории, сделанная атласом: её набор (n) — свой набор читателя в тот момент (link = false) или набор из ссылки,
  * который он смотрел (link = true). Адрес без такой отметки пришёл извне — открыт по ссылке или вставлен в строку адреса.
+ * Сверх адреса запись хранит (этап 14, контракт 3): seq — номер записи в сеансе, path — путь исследования (решение 148),
+ * sheet — положение нижнего листа на телефоне (решение 150; пишет src/ui/sheet.ts через historyFields).
  */
-export type HistoryMark = { toledot: 1; link: boolean };
-export const markOf = (state: unknown): HistoryMark | null =>
-  state && typeof state === 'object' && (state as { toledot?: unknown }).toledot === 1 ? { toledot: 1, link: !!(state as { link?: unknown }).link } : null;
+export type HistoryMark = { toledot: 1; link: boolean; seq?: number; path?: string[]; sheet?: string };
+export const markOf = (state: unknown): HistoryMark | null => {
+  if (!state || typeof state !== 'object' || (state as { toledot?: unknown }).toledot !== 1) return null;
+  const s = state as { link?: unknown; seq?: unknown; path?: unknown; sheet?: unknown };
+  const m: HistoryMark = { toledot: 1, link: !!s.link };
+  if (typeof s.seq === 'number') m.seq = s.seq;
+  if (Array.isArray(s.path)) m.path = s.path.filter((x): x is string => typeof x === 'string' && byId.has(x)).slice(-PATH_MAX);
+  if (typeof s.sheet === 'string') m.sheet = s.sheet;
+  return m;
+};
+
+// ---------- поля записи сверх адреса (этап 14, контракт 3) ----------
+
+/** Те же поля записи: путь и положение листа (номер записи сравнивается отдельно). */
+const sameFields = (a: HistoryMark, b: HistoryMark) => (a.path ?? []).join(' ') === (b.path ?? []).join(' ') && (a.sheet ?? '') === (b.sheet ?? '');
+
+/** Поля записи истории, которые пишет не адрес, а их владелец: положение нижнего листа (решение 150). */
+export interface HistoryFields {
+  sheet?: string;
+}
+let fieldsOf: () => HistoryFields = () => ({});
+/**
+ * Подключить поставщика полей записи (src/ui/sheet.ts: положение листа): они пишутся в каждую запись истории — новую
+ * (pushState) и ту же (replaceState).
+ */
+export function historyFields(fn: () => HistoryFields) {
+  fieldsOf = fn;
+}
+/**
+ * Запись истории, которая сейчас применяется («назад», «вперёд»): её поля. Ставится до смены лица и показа записи (в том
+ * же кадре), снимается, когда небо встало, или новой записью. null — запись не применяется: смена лица — новый выбор.
+ */
+export const historyApplying = signal<HistoryFields | null>(null);
+/** Дописать нынешние поля (положение листа) в текущую запись истории, без новой записи и без смены адреса. */
+export function patchHistory() {
+  if (typeof window === 'undefined' || !patcher) return;
+  patcher();
+}
+let patcher: (() => void) | null = null;
+
+/**
+ * Путь исследования (решение 148): лица последних выборов по порядку, не больше PATH_MAX; последнее — выбранное. Новый
+ * выбор дописывается в конец; выбор лица, уже стоящего в пути, обрезает путь до него. Снятие выбора путь не стирает.
+ * «Назад» и «вперёд» возвращают путь своей записи.
+ */
+export const PATH_MAX = 5;
+export const explorePath = signal<readonly string[]>([]);
+/** Путь после выбора id: дописать или обрезать до него. */
+export function pathAfter(path: readonly string[], id: string | null): readonly string[] {
+  if (!id) return path;
+  const i = path.indexOf(id);
+  if (i >= 0) return i === path.length - 1 ? path : path.slice(0, i + 1);
+  return [...path, id].slice(-PATH_MAX);
+}
 
 /**
  * Набор и режим неба из адреса (решения 34 и 45; IX-69, UX-79). own — запись истории атласа со своим набором: её «n» —
@@ -471,7 +524,12 @@ export function bindAddress(): () => void {
   let quiet = false;
   let settleRaf = 0;
 
-  const mark = (): HistoryMark => ({ toledot: 1, link: !!linkSet.peek() });
+  /** номер последней записи сеанса (контракт 3): новая запись — следующий номер, та же запись свой номер сохраняет */
+  let seqTop = markOf(history.state)?.seq ?? 0;
+  const mark = (seq: number): HistoryMark => {
+    const f = fieldsOf();
+    return { toledot: 1, link: !!linkSet.peek(), seq, path: [...explorePath.peek()], ...(f.sheet ? { sheet: f.sheet } : {}) };
+  };
   /** когда адрес записан в последний раз (performance.now) */
   let lastWrite = -Infinity;
   const write = (mode: 'push' | 'replace') => {
@@ -481,13 +539,29 @@ export function bindAddress(): () => void {
     if (location.hash.startsWith('#/specimen')) return;
     const next = formatAddress(snapshot());
     lastPush = pushKey();
-    const m = mark();
     const cur = markOf(history.state);
-    if (location.hash === next && cur && cur.link === m.link) return;
-    if (mode === 'push') history.pushState(m, '', next);
-    else history.replaceState(m, '', next);
+    const m = mark(mode === 'push' || cur?.seq === undefined ? ++seqTop : cur.seq);
+    if (location.hash === next && cur && cur.link === m.link && cur.seq !== undefined && sameFields(cur, m)) return;
+    if (mode === 'push' && !(location.hash === next && cur && cur.link === m.link)) {
+      history.pushState(m, '', next);
+      windowJump.lastPush = performance.now();
+    } else history.replaceState(m, '', next);
     lastWrite = performance.now();
   };
+  // поля записи (положение листа) — в текущую запись, без новой: только когда запись не применяется и новой не ждёт
+  patcher = () => {
+    if (applying || quiet || pushKey() !== lastPush || location.hash.startsWith('#/specimen')) return;
+    const cur = markOf(history.state);
+    if (!cur) return;
+    const m = mark(cur.seq ?? ++seqTop);
+    if (sameFields(cur, m) && cur.seq !== undefined) return;
+    history.replaceState(m, '', location.href);
+  };
+  // возврат из «Ближайшей родни» (решение 145): окно сейчас, окно записи, номер записи и «назад»
+  windowHooks.now = () => currentView();
+  windowHooks.put = (v) => whenSkyReady(() => alive && applyView(v as View, true), 0, true);
+  windowHooks.seq = () => markOf(history.state)?.seq ?? -1;
+  windowHooks.back = () => history.back();
 
   /** Ждать, пока камера не встанет (переход записи, перелёт к лицу), и ещё кадр — затем then. */
   const whenStill = (then: () => void) => {
@@ -508,6 +582,10 @@ export function bindAddress(): () => void {
     clearTimeout(replaceTimer);
     quiet = true;
     applying = true;
+    // поля записи сверх адреса (контракт 3): путь исследования — свой у записи; положение листа — его владельцу
+    const hm = markOf(history.state);
+    historyApplying.value = hm ? { ...(hm.sheet ? { sheet: hm.sheet } : {}) } : {};
+    explorePath.value = hm?.path?.length ? hm.path : a.id ? [a.id] : [];
     // сетка раскладки меняется, если меняется панель или карточка появляется либо уходит: тогда окно ставится через два кадра
     const panel0 = panel.peek();
     const card0 = !!selected.peek();
@@ -539,11 +617,13 @@ export function bindAddress(): () => void {
           keepInView(a.id);
           whenStill(() => {
             quiet = false;
+            historyApplying.value = null;
             write('replace');
           });
           return;
         }
         quiet = false;
+        historyApplying.value = null;
         if (initialLoad || !a.view) write('replace');
       });
     }, 0, grid);
@@ -559,7 +639,12 @@ export function bindAddress(): () => void {
     clearTimeout(replaceTimer);
     // читатель перешёл дальше, не дождавшись конца перехода: новая запись пишет своё окно как обычно
     quiet = false;
+    historyApplying.value = null;
     cancelAnimationFrame(settleRaf);
+    // путь исследования (решение 148): новый выбор лица — в конец пути
+    explorePath.value = pathAfter(explorePath.peek(), selected.peek());
+    // прыжок окна, начатый до новой записи, в неё и попадёт: своей записи ему не нужно
+    takeJump();
     write('push');
   });
   // окно и режимы — та же запись, с задержкой 300 мс. Кадры неба идут и без движения камеры (ток света по ленте под
@@ -571,6 +656,11 @@ export function bindAddress(): () => void {
     const c = skyRef.current?.cam;
     const key = [c?.x0, c?.kx, c?.laneTop, c?.ownLanes, c?.w, lambda.value, modelId.value, epochMode.value].join(' ');
     const set = shownSet.value;
+    // лист «Показ» открыт (решение 147): окно, сдвинутое из-под листа, — не шаг читателя; запишется, когда лист закроют
+    if (windowHold.value) {
+      clearTimeout(replaceTimer);
+      return;
+    }
     if (key === viewKey && set === setSeen) return;
     viewKey = key;
     setSeen = set;
@@ -584,10 +674,12 @@ export function bindAddress(): () => void {
       replaceTimer = window.setTimeout(() => write('replace'), Math.max(0, lastWrite + 350 - performance.now()));
       return;
     }
-    replaceTimer = window.setTimeout(() => write('replace'), 300);
+    // окно встало: прыжок по эпохе (решение 147) — новой записью, иначе — в ту же
+    replaceTimer = window.setTimeout(() => write(takeJump() ? 'push' : 'replace'), 300);
   });
   return () => {
     alive = false;
+    patcher = null;
     clearTimeout(replaceTimer);
     cancelAnimationFrame(settleRaf);
     window.removeEventListener('popstate', onPop);

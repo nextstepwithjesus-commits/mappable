@@ -457,18 +457,18 @@ export const nav: Scenario[] = [
   },
   {
     n: 61,
-    title: '«Показать на небе» — первой строкой группы «Имя совпадает» (решение 120); отметки ставятся, «Снять отметки» и Escape их снимают (D9; IX-19)',
+    title: '«Отметить на небе (N)» (решение 156) — первой строкой группы «Имя совпадает» (решение 120); отметки ставятся, «Снять отметки» и Escape их снимают (D9; IX-19)',
     run: async (p) => {
       await p.click('#find');
       await p.fill('#find', 'иосиф');
       await p.waitForTimeout(300);
       const firstRow = p.locator('#find-results [role="option"]').first();
       const t = (await firstRow.innerText()).trim();
-      // этап 13, решение 120: первая строка группы «Имя совпадает» — её команда «Показать на небе»
+      // этап 13, решение 120: первая строка группы «Имя совпадает» — её команда «Отметить на небе (N)» (решение 156)
       const head = ((await p.locator('#find-results .grp-head').first().innerText()) ?? '').replace(/[\u00a0\u2060]/g, ' ');
       if (!/^Имя совпадает: Иосиф — \d+ лиц$/.test(head)) return fail(`подпись группы — «${head}»`);
-      if (!/^Показать на небе$/.test(t)) return fail(`первая строка — «${t}»`);
-      if ((await firstRow.getAttribute('aria-selected')) === 'true') return fail('курсор стоит на «Показать на небе», а не на первом лице');
+      if (!/^Отметить на небе \(\d+\)$/.test(t)) return fail(`первая строка — «${t}»`);
+      if ((await firstRow.getAttribute('aria-selected')) === 'true') return fail('курсор стоит на «Отметить на небе», а не на первом лице');
       await firstRow.click();
       await p.waitForTimeout(400);
       // тот же запрос: вместо «Все N» — «Снять отметки»
@@ -484,7 +484,7 @@ export const nav: Scenario[] = [
       await p.click('#find');
       await p.waitForTimeout(200);
       const t3 = (await p.locator('#find-results [role="option"]').first().innerText()).trim();
-      return /^Показать на небе$/.test(t3) ? pass(`${head}; ${t}`) : fail(`Escape не снял отметки: «${t3}»`);
+      return /^Отметить на небе \(\d+\)$/.test(t3) ? pass(`${head}; ${t}`) : fail(`Escape не снял отметки: «${t3}»`);
     },
   },
   {

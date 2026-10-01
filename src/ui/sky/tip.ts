@@ -6,7 +6,8 @@
  *  — Ставится по своему настоящему размеру в одно из четырёх положений у звезды: справа снизу, справа сверху,
  *    слева снизу, слева сверху — первое, где она целиком в небе (12 px от краёв), не закрывает выбранное лицо
  *    и органы неба. Звезду под указателем она не закрывает никогда: все положения — снаружи от неё.
- *  — Прячется при любом движении неба (src/ui/sky/input.ts, watchCamera) и при протяжке.
+ *  — Прячется при любом движении неба (src/ui/sky/input.ts, watchCamera), при протяжке и при щелчке (решение 144; U13).
+ *  — Не закрывает путь наведённой связи и, где можно, яркие подписи (решение 144; G13, C8).
  */
 import type { Rect } from '../../render/sky.ts';
 
@@ -37,6 +38,7 @@ export function placeTip(
   avoid: Rect[] = [],
   soft: Rect[] = [],
   sides: readonly TipSide[] = TIP_SIDES,
+  o: { path?: readonly Rect[]; names?: readonly Rect[] } = {},
 ): { x: number; y: number; side: TipSide } {
   const at = (s: TipSide) => ({
     x: s === 'se' || s === 'ne' ? anchor.x + anchor.w + TIP_GAP : anchor.x - TIP_GAP - size.w,
@@ -47,7 +49,14 @@ export function placeTip(
   sides.forEach((side, k) => {
     const p = at(side);
     const r = { x: p.x, y: p.y, w: size.w, h: size.h };
-    const score = (inBounds(r) ? 0 : 1000) + (avoid.some((a) => cross(r, a)) ? 100 : 0) + soft.filter((a) => cross(r, a)).length * 10 + k;
+    // путь наведённой связи (решение 144; G13): каждый закрытый отрезок — дороже органа неба; яркие подписи — по 3
+    const score =
+      (inBounds(r) ? 0 : 1000) +
+      (avoid.some((a) => cross(r, a)) ? 100 : 0) +
+      soft.filter((a) => cross(r, a)).length * 10 +
+      (o.path ?? []).filter((a) => cross(r, a)).length * 40 +
+      (o.names ?? []).filter((a) => cross(r, a)).length * 3 +
+      k;
     if (!best || score < best.score) best = { ...p, side, score };
   });
   const b = best!;

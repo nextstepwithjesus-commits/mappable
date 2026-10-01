@@ -1,6 +1,7 @@
 /**
  * Клавиши всего атласа (на window, по физическим клавишам — KeyboardEvent.code, поэтому и на русской раскладке):
- * «/» — к поиску, «?» — таблица клавиш, Escape — снять одно видимое состояние (D5), J и K — разделы карточки,
+ * «/» — к поиску, «?» — таблица клавиш, Escape — снять одно видимое состояние (D5), J и K — разделы карточки, G («п») —
+ * небо ↔ карточка (решение 149),
  * клавиши неба (src/ui/sky/input.ts, skyKeys) — без фокуса на холсте (D10; IX-38, 40, 41, 42; UX-40).
  * Клавиши-буквы можно выключить (решение 48; WCAG 2.1.4): letterKeys.
  */
@@ -8,7 +9,8 @@ import { effect, signal } from '@preact/signals';
 import { panel, selected, second, pickMode, pins, pinsQuery, skyGroup, clearPair } from '../state.ts';
 import { skyKeys, viewKeys } from './sky/skykeys.ts';
 import { introOpen, openLegend, reduced } from './sky/view.ts';
-import { focusPanelAt, foldIntro } from './focus.ts';
+import { focusCardTitle, focusPanelAt, focusQuietly, foldIntro } from './focus.ts';
+import { canReturn, returnFromFamily } from './show.ts';
 
 /**
  * «?» — таблица клавиш в «Условных знаках» (раздел «Клавиши»), фокус — на её заголовок; повторное нажатие закрывает
@@ -72,16 +74,46 @@ export function stepSection(dir: 1 | -1): HTMLElement | null {
   return to;
 }
 
-/** Видимые состояния, которые снимает Escape. */
-export type EscapeState = { pick: boolean; panel: boolean; pins: boolean; group: boolean; second: boolean; selected: boolean; intro: boolean };
+/**
+ * Видимые состояния, которые снимает Escape. family — небо показывает «Ближайшую родню», и есть куда вернуться
+ * (решение 145; src/ui/show.ts, canReturn).
+ */
+export type EscapeState = { pick: boolean; panel: boolean; pins: boolean; group: boolean; second: boolean; family?: boolean; selected: boolean; intro: boolean };
 
 /**
- * Что снимет следующий Escape (D5): выбор второго лица, панель, отметки поиска, группа, пара, выбранное лицо и последней —
- * вступительная табличка (UX-76): она сворачивается в «Как читать карту», когда ничего другого снимать уже нечего.
+ * Что снимет следующий Escape (D5): выбор второго лица, панель, отметки поиска, группа, пара, «Ближайшая родня» (возврат
+ * к прежнему показу и окну, решение 145; лицо остаётся выбранным), выбранное лицо и последней — вступительная табличка
+ * (UX-76): она сворачивается в «Как читать карту», когда ничего другого снимать уже нечего.
  */
 export function escapeTarget(s: EscapeState): keyof EscapeState | null {
-  const order: (keyof EscapeState)[] = ['pick', 'panel', 'pins', 'group', 'second', 'selected', 'intro'];
+  const order: (keyof EscapeState)[] = ['pick', 'panel', 'pins', 'group', 'second', 'family', 'selected', 'intro'];
   return order.find((k) => s[k]) ?? null;
+}
+
+/** Где был фокус в карточке, когда клавиша «п» увела его на небо (M9): «п» с неба возвращает его туда же. */
+let cardSpot: HTMLElement | null = null;
+/** Фокус сейчас на небе: на холсте или в списке лиц неба. */
+const onSkyNow = (a: Element | null) => !!a && ((a.tagName === 'CANVAS' && !!a.closest('.sky')) || !!a.closest('#sky-stars'));
+
+/**
+ * Клавиша «п» (физическая G; решение 149, M9): небо ↔ карточка. С неба — в карточку выбранного лица, туда, где фокус был
+ * прежде (то же имя «Родства»), иначе на её заголовок; откуда угодно ещё — на небо: кольцо фокуса у выбранного лица
+ * (src/ui/sky/SkyA11y.tsx, enterSky). Возвращает, перешёл ли фокус.
+ */
+export function toggleSkyCard(): boolean {
+  const a = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  const canvas = document.querySelector<HTMLCanvasElement>('.sky > canvas');
+  if (onSkyNow(a)) {
+    const id = selected.peek();
+    if (!id) return false;
+    if (cardSpot && cardSpot.isConnected && cardSpot.closest('.folio:not([hidden]), .dotcard') && focusQuietly(cardSpot)) return true;
+    focusCardTitle(id);
+    return true;
+  }
+  if (!canvas) return false;
+  if (a && a.closest('.folio, .dotcard')) cardSpot = a;
+  canvas.focus({ preventScroll: true });
+  return document.activeElement === canvas;
 }
 
 function onKey(e: KeyboardEvent) {
@@ -110,6 +142,7 @@ function onKey(e: KeyboardEvent) {
       pins: pins.value.length > 0,
       group: !!skyGroup.value,
       second: !!second.value,
+      family: canReturn.value,
       selected: !!selected.value,
       intro: introOpen.value,
     });
@@ -120,6 +153,7 @@ function onKey(e: KeyboardEvent) {
       pinsQuery.value = '';
     } else if (next === 'group') skyGroup.value = null;
     else if (next === 'second') clearPair();
+    else if (next === 'family') returnFromFamily();
     else if (next === 'selected') selected.value = null;
     else if (next === 'intro') foldIntro();
     return;
@@ -130,6 +164,10 @@ function onKey(e: KeyboardEvent) {
   const t = e.target instanceof HTMLElement ? e.target : null;
   // в меню и списках буквы и стрелки — свои
   if (t?.closest('[role="menu"], [role="listbox"]')) return;
+  if (e.code === 'KeyG' && !e.shiftKey) {
+    if (toggleSkyCard()) e.preventDefault();
+    return;
+  }
   if ((e.code === 'KeyJ' || e.code === 'KeyK') && !e.shiftKey) {
     if (stepSection(e.code === 'KeyJ' ? 1 : -1)) e.preventDefault();
     return;

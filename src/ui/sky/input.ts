@@ -14,15 +14,15 @@ import { setFamilyHover } from '../../render/trails.ts';
 import { goTo, skyRef } from '../common.tsx';
 import { tierAt, tierHot, type TierHit } from '../../render/tiers.ts';
 import { toAstro } from '../../engine/years.ts';
-import { panStep, reduced, resetProportions, screenOf, showYears, stopFlight, stretchBy, zoomBy } from './view.ts';
+import { panStep, reduced, resetProportions, revealKin, screenOf, showYears, stopFlight, stretchBy, zoomBy } from './view.ts';
 import type { Axis } from '../../render/camera.ts';
 import { hoverYear } from './meridian.ts';
 import { openSheetAt } from '../sheet.ts';
 import { closeWhich, openWhich, whichOpen } from './Which.tsx';
 import { tipKey, type Tip } from './Tip.tsx';
-import { ERA_NOTE, RULER_H } from '../../render/frame.ts';
+import { ERA_NOTE, ROW_H, RULER_H } from '../../render/frame.ts';
 import { addPath, foldDescOf, foldGroupOf, show, unfoldAll } from '../work.ts';
-import { setShow, showGuest } from '../show.ts';
+import { nearestFamily, setShow, showGuest } from '../show.ts';
 import { MENU_FIRST, dismissedBy, skyMenu } from '../panels/Work.tsx';
 import { personGhosts } from '../../render/marks.ts';
 import { dotTipText, epochGoText, gapTipText, lineBetween, plateTipText } from './text.ts';
@@ -32,10 +32,12 @@ import type { CountHit, PlateHit } from '../../render/plates.ts';
 import type { LinkHit } from '../../render/links.ts';
 import type { PlanStubHit } from '../../render/trails.ts';
 import type { RibbonHit } from '../../render/ribbons.ts';
+import type { LabelBox } from '../../render/labels.ts';
 import { linkKeyString, sameLink, type LinkKey } from '../../engine/linkkey.ts';
 import { GHOST_WORD, previewLinks, selectedLink, type GhostWhy } from '../linkstate.ts';
 import { typo } from '../text/typo.ts';
-import { linkTitle, linkRefs, refShort } from '../linkwords.ts';
+import { kinLabel, kinMarks, linkInfo, linkRow, linkTitle, linkRefs, refShort } from '../linkwords.ts';
+import { relationsOf } from '../card/kinrows.ts';
 import { closeDot, dotCard, dotsOn, openDot } from './DotCard.tsx';
 
 export type { Tip };
@@ -134,14 +136,23 @@ export function wheelStretch(axis: Axis, factor: number, x: number, y: number) {
 
 /** Протяжка по линейке лет или по буквам полос: на столько px — вдвое (время — вправо, полосы — вниз). */
 export const STRETCH_PX = { time: 160, lanes: 120 };
-/** Щипок по одной оси, если пальцы ближе чем на 30° к ней; иначе — обычный масштаб по обеим осям. */
-export const PINCH_AXIS_DEG = 30;
+/**
+ * Щипок по одной оси — только если пальцы почти точно на ней: не дальше 12° от горизонтали или вертикали (решение 154;
+ * M10). Обычный щипок под любым углом между — масштаб по обеим осям: пропорции не меняются случайно. Прежде порог был 30°,
+ * и щипок под 20° незаметно растягивал одно время.
+ */
+export const PINCH_AXIS_DEG = 12;
 
-/** Ось щипка по положению двух пальцев: по горизонтали — время, по вертикали — полосы, наискосок — обе (null). */
-export function pinchAxis(dx: number, dy: number): Axis | null {
+/**
+ * Ось щипка по положению двух пальцев: по горизонтали — время, по вертикали — полосы, наискосок — обе (null). edge — ось
+ * кромки, на которой лежат оба пальца (линейка лет — время, буквы полос — полосы): там щипок растягивает её ось при любом
+ * угле, как протяжка мышью (J1).
+ */
+export function pinchAxis(dx: number, dy: number, edge: Axis | null = null): Axis | null {
+  if (edge) return edge;
   const deg = (Math.atan2(Math.abs(dy), Math.abs(dx)) * 180) / Math.PI;
-  if (deg < PINCH_AXIS_DEG) return 'time';
-  if (deg > 90 - PINCH_AXIS_DEG) return 'lanes';
+  if (deg <= PINCH_AXIS_DEG) return 'time';
+  if (deg >= 90 - PINCH_AXIS_DEG) return 'lanes';
   return null;
 }
 
@@ -262,19 +273,50 @@ export function tapChoice(cands: TapCandidate[], canZoom: boolean): TapChoice {
 /** Подпись под пальцем: касание имени — то же, что касание звезды (на телефоне палец целится в надпись). */
 const LABEL_D = 2;
 
+/** Рамка имени для касания — не ниже стольких px (решение 154; M1): короткое имя «Гад» — цель не меньше пальца. */
+export const NAME_TAP = 24;
+
+/** Подписи, которые называют лицо: имя у звезды и имя у кромки («‹ Евер»). */
+const NAME_KINDS = new Set(['star', 'sticky']);
+
+/**
+ * Лицо, чьё имя под точкой (px холста), или null (решение 154; M1): рамка имени, раздвинутая до NAME_TAP по высоте
+ * и ширине (по ширине — ещё 2 px запаса). Если раздвинутые рамки двух имён перекрылись, — то имя, к чьей середине строки
+ * точка ближе. touch = false — только сама рамка (мышь): текст — защищённый слой и для указателя.
+ */
+export function nameAt(boxes: readonly LabelBox[], x: number, y: number, touch = true): string | null {
+  let best: string | null = null;
+  let bestD = Infinity;
+  for (const b of boxes) {
+    if (!b.id || !NAME_KINDS.has(b.kind)) continue;
+    const q = touch ? inflate(b, NAME_TAP) : b;
+    const slack = touch ? 2 : 0;
+    if (x < q.x - slack || x > q.x + q.w + slack || y < q.y || y > q.y + q.h) continue;
+    const d = Math.abs(y - (b.y + b.h / 2)) + (x < b.x || x > b.x + b.w ? 0.5 : 0);
+    if (d < bestD) {
+      bestD = d;
+      best = b.id;
+    }
+  }
+  return best;
+}
+
+/** Точка — внутри рамки чьего-то имени (без запаса): линии под текстом не ловятся (решения 139, 154). */
+export const inName = (boxes: readonly LabelBox[], x: number, y: number) => nameAt(boxes, x, y, false) !== null;
+
 /**
  * Звёзды в радиусе r от точки (px холста), которые видны и ловят указатель; у лица с двумя знаками — ближайший.
  * Звезда, чья подпись под пальцем (поле подписи — не ниже 24 px), считается в LABEL_D px от касания.
  */
-function tapCandidates(sky: Sky, x: number, y: number, r: number): TapCandidate[] {
+function tapCandidates(sky: Sky, x: number, y: number, r: number, byName = true): TapCandidate[] {
   const cam = sky.cam;
-  const labels = sky.labelStats().boxes.filter((b) => b.kind === 'star' && b.id);
+  const labels = sky.ledger.boxes.filter((b) => b.kind === 'star' && b.id);
   const labeled = new Set(labels.map((b) => b.id!));
   const onLabel = new Set(
     labels
       .filter((b) => {
         const q = inflate(b, 24);
-        return x >= b.x - 2 && x <= b.x + b.w + 2 && y >= q.y && y <= q.y + q.h;
+        return byName && x >= b.x - 2 && x <= b.x + b.w + 2 && y >= q.y && y <= q.y + q.h;
       })
       .map((b) => b.id!),
   );
@@ -411,6 +453,8 @@ export const LINK_R = 6;
  * длиной 5–12 px, весь лежащий у звезды ребёнка, нельзя было бы выбрать мышью.
  */
 export const STAR_FIRST = 12;
+/** На сколько px указатель уходит от места щелчка, чтобы подсказки вернулись (решение 144). */
+export const TIP_UNMUTE = 4;
 
 /** Что под указателем по старшинству (этап 11, § 8): звезда > ◆ > «+N» > зубец > ствол > «‖» > обрывок > лента > след. */
 export type Under =
@@ -420,6 +464,8 @@ export type Under =
   | { kind: 'link'; hit: LinkHit }
   | { kind: 'stub'; stub: PlanStubHit }
   | { kind: 'ribbon'; hit: RibbonHit }
+  /** участок следа родителя до ромба союза, по которому идут несколько связей (решение 159; sky.trailLinkAt, S1–S2) */
+  | { kind: 'trail-links'; person: string; keys: LinkKey[] }
   | { kind: 'trail'; id: string };
 
 /** Радиус знака звезды лица на небе (px холста), как у hitDistance. */
@@ -431,6 +477,9 @@ const glyphR = (sky: Sky, id: string) => starRadius(byId.get(id)?.magnitude ?? 6
  */
 export function underPointer(sky: Sky, x: number, y: number, r: number): Under | null {
   const L = layers.peek();
+  // имя лица под указателем — это лицо (решение 154): ни линия, ни ромб под текстом не перехватывают его
+  const named = nameAt(sky.ledger.boxes, x, y, false);
+  if (named && sky.indexOf(named) !== undefined) return { kind: 'star', id: named, d: 0 };
   const star = sky.hitStar(x, y, r);
   const plate = plateAt(sky, x, y);
   const count = plate ? null : countAt(sky, x, y);
@@ -451,6 +500,16 @@ export function underPointer(sky: Sky, x: number, y: number, r: number): Under |
   }
   if (plate) return { kind: 'plate', plate };
   if (count) return { kind: 'count', count };
+  // нить ленты поверх следа (лента рисуется над следами): шаг ленты, а не «Какая связь?» участка следа под ней
+  const over = !line && L.ribbons ? ribbonAt(sky, x, y, RIBBON_R) : null;
+  if (over) return { kind: 'ribbon', hit: over };
+  // участок следа родителя с несколькими связями (решение 159): раньше следа лица — «Какая связь?» с лицом первой строкой
+  const tl = L.connectors && (!line || line.kind === 'jog') ? sky.trailLinkAt(x, y, LINK_R) : null;
+  if (tl && tl.keys.length >= 2) return { kind: 'trail-links', person: tl.person, keys: tl.keys };
+  // нить ленты рисуется поверх связей: где связь идёт под нитью (шаг ленты по той же строке, что отвод или ствол), указатель
+  // у нити — шаг ленты; связь — только если она заметно ближе нити
+  const top = line && L.ribbons ? ribbonAt(sky, x, y, Math.max(2, Math.min(RIBBON_R, line.d + 1.5))) : null;
+  if (top) return { kind: 'ribbon', hit: top };
   if (line) return { kind: 'link', hit: line };
   const stub = stubAt(sky, x, y);
   if (stub) return { kind: 'stub', stub };
@@ -503,11 +562,11 @@ export function openGap(sky: Pick<Sky, 'indexOf' | 'X0' | 'tOf'>, g: Pick<Ribbon
   }
 }
 
-/** Подсказка призрака: «Илий, отец — вне показа «Ключевые лица» — щёлкните, чтобы показать». */
+/** Подсказка призрака: «Илий, отец — вне показа «Ключевые лица» — щёлкните, чтобы поставить на небо» (решение 156). */
 function ghostTipText(id: string, role: string, why: GhostWhy): string {
   const p = byId.get(id);
   if (!p) return '';
-  return typo(`${role ? `${p.name}, ${role}` : p.name} — ${GHOST_WORD[why]} — щёлкните, чтобы показать`);
+  return typo(`${role ? `${p.name}, ${role}` : p.name} — ${GHOST_WORD[why]} — щёлкните, чтобы поставить на небо`);
 }
 
 /**
@@ -522,7 +581,8 @@ export const ribbonKey = (h: Pick<RibbonHit, 'line' | 'to'> & Partial<Pick<Ribbo
  */
 export function linksNear(sky: Sky, x: number, y: number, r = TOUCH_R): { key: LinkKey; ks: string; d: number; x: number; y: number }[] {
   // только видимая часть линии: под рамкой (линейка годов, буквы полос) и под нижней кромкой её не видно — не ловится
-  const open = (h: { x: number; y: number }) => h.x >= sky.letterW && h.y >= sky.openTop && h.y <= sky.cam.vp.b;
+  // и внутри рамок имён: текст — защищённый слой, линия под именем касанием не ловится (решение 154; M1)
+  const open = (h: { x: number; y: number }) => h.x >= sky.letterW && h.y >= sky.openTop && h.y <= sky.cam.vp.b && !inName(sky.ledger.boxes, h.x, h.y);
   const out = (layers.peek().connectors ? sky.linksAt(x, y, r, false) : []).filter(open).map((h) => ({ key: h.key, ks: h.ks, d: h.d, x: h.x, y: h.y }));
   if (layers.peek().ribbons) {
     const rib = ribbonAt(sky, x, y, r);
@@ -561,13 +621,29 @@ export const REVEAL_TIP = 'У лица есть нераскрытые союз�
 
 /** Название эпохи в служебной строке под указателем (UX-65): эпоха модели и прямоугольник надписи. */
 function serviceEpochAt(sky: Sky, x: number, y: number) {
-  if (y < RULER_H || y >= FRAME_H) return null;
+  // низкое небо (решение 155; frame.ts, setLowFrame): служебной строки нет — её надписи стоят в линейке лет
+  const top = serviceTop();
+  if (y < top || y >= Math.max(FRAME_H, RULER_H)) return null;
   for (const b of sky.ledger.boxes) {
-    if (b.kind !== 'frame' || x < b.x || x > b.x + b.w || b.y < RULER_H - 1 || b.y + b.h > FRAME_H + 1) continue;
+    if (b.kind !== 'frame' || x < b.x || x > b.x + b.w || y < b.y - 1 || y > b.y + b.h + 1 || b.y < top - 1 || b.y + b.h > Math.max(FRAME_H, RULER_H) + 1) continue;
     const e = model.peek().epochs.find((q) => q.name === b.text || q.short === b.text);
     if (e) return { e, box: { x: b.x, y: b.y, w: b.w, h: b.h } };
   }
   return null;
+}
+
+/** Верх служебной строки: под линейкой; на низком небе её нет — надписи строки в самой линейке (решение 155). */
+const serviceTop = () => (ROW_H ? RULER_H : 0);
+
+/**
+ * Команда служебной строки под точкой: название эпохи, «Свёрнуто: … — развернуть» (sky.foldHits) или «≈» масштаба. На
+ * низком небе они стоят в линейке лет: нажатие на них — команда, а не протяжка линейки (решение 155).
+ */
+function serviceCmdAt(sky: Sky, x: number, y: number): boolean {
+  if (y >= Math.max(FRAME_H, RULER_H) || y < serviceTop()) return false;
+  if (serviceEpochAt(sky, x, y)) return true;
+  if (sky.foldHits.some((q) => x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h)) return true;
+  return ROW_H === 0 && sky.ledger.boxes.some((q) => q.kind === 'frame' && q.text.startsWith('≈') && x >= q.x && x <= q.x + q.w && y >= q.y - 1 && y <= q.y + q.h + 1);
 }
 
 /** Небо — к эпохе (UX-65): как щелчок по отрезку эпохи в ярусах — её годы и поля по краям. */
@@ -604,6 +680,53 @@ export function openStarMenu(id: string): boolean {
   };
   requestAnimationFrame(() => focusIn(0));
   return true;
+}
+
+/** Строки «Какая связь?» по ключам: слова связи и первые два стиха. */
+const whichLinks = (keys: readonly LinkKey[]) =>
+  keys.slice(0, ASK_MAX - 1).map((k) => ({ ks: linkKeyString(k) ?? '', text: linkTitle(k), sub: linkRefs(k).slice(0, 2).map(refShort).join('; ') }));
+
+/** Строка списка выбрана: связь по её записи — к точке щелчка. */
+function pickKey(keys: readonly LinkKey[], ks: string, at: { x: number; y: number }) {
+  const s = skyRef.current;
+  const k = keys.find((q) => linkKeyString(q) === ks);
+  if (s && k) chooseLink(s, k, at.x, at.y);
+}
+
+/**
+ * Подсказка участка следа с несколькими связями (решение 159): «Связи дальше по следу: Сим — сын; Хам — сын; Иафет — сын»
+ * — фразой родства (решение 151) от лица следа: кто на другом конце и кем приходится; не больше четырёх, затем «ещё N».
+ */
+export function trailLinksText(person: string, keys: readonly LinkKey[]): string {
+  const words = keys.slice(0, 4).map((k) => {
+    const i = linkInfo(k);
+    const end = i?.ends.find((e) => e.id !== person && e.side === 'to') ?? i?.ends.find((e) => e.id !== person);
+    return end ? kinLabel({ id: end.id, dis: null, role: end.role, marks: kinMarks(k), outside: false }) : linkRow(k);
+  });
+  const more = keys.length > 4 ? `; ещё ${keys.length - 4}` : '';
+  return typo(`Связи дальше по следу: ${words.join('; ')}${more} — щёлкните, чтобы выбрать`);
+}
+
+/** Множественное число роли для сводки скопления: «сыновья», «дочери», «жёны». */
+const ROLE_MANY: Record<string, string> = { сын: 'сыновья', дочь: 'дочери', жена: 'жёны', муж: 'мужья', брат: 'братья', сестра: 'сёстры', отец: 'отцы', мать: 'матери', наложница: 'наложницы', потомок: 'потомки' };
+
+/**
+ * Подсказка скопления семьи «+N» (решение 142; S2): сколько собрано и кто они старшему — словами родства (решение 151):
+ * «13: сыновья и дочь — щёлкните: ближайшая родня». Роль — первое слово роли («сын по закону» — «сын»); не из «Родства»
+ * старшего — «другие».
+ */
+export function pileText(sky: Pick<Sky, 'pilesNow'>, id: string): string {
+  const pile = sky.pilesNow().find((q) => q.id === id);
+  const members = (pile?.members ?? []).filter((m) => m !== id);
+  const rel = relationsOf(id);
+  const counts = new Map<string, number>();
+  for (const m of members) {
+    const r = rel.get(m)?.role.split(' ')[0] || 'другие';
+    counts.set(r, (counts.get(r) ?? 0) + 1);
+  }
+  const words = [...counts].map(([r, n]) => (n > 1 ? (ROLE_MANY[r] ?? r) : r));
+  const list = words.length > 1 ? `${words.slice(0, -1).join(', ')} и ${words[words.length - 1]}` : (words[0] ?? '');
+  return typo(`${members.length}${list ? `: ${list}` : ''} — щёлкните: ближайшая родня`);
 }
 
 export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () => void, setTip: (t: Tip | null) => void): PointerInput {
@@ -643,7 +766,14 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
   // щелчок по пустому небу снимает выбор, но не сразу: второй щелчок того же двойного — масштаб, а не снятие
   let clearTimer = 0;
   let tipNow = '';
+  /**
+   * Где был щелчок: подсказка не возвращается, пока указатель не уйдёт от этого места (решение 144; U13). Щелчок — действие:
+   * то, что он открыл (союз и подписи новой родни, карточку), подсказка не закрывает — и, как резерв подписей (решение 153),
+   * не вытесняет подпись с «+» только что показанного лица (сценарии 752, 816).
+   */
+  let tipMute: { x: number; y: number } | null = null;
   const showTip = (t: Tip | null) => {
+    if (t && tipMute) t = null;
     if (!t && !tipShown) return;
     const k = tipKey(t);
     // та же звезда или тот же отрезок — подсказка стоит, а не переставляется за указателем
@@ -692,6 +822,15 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     const foldHit = sky.foldHits.find((q) => x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h);
     const fold = !!foldHit;
     const edge = fold || sky.edgeHits.some((q) => x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h);
+    // скопление семьи «+N» у подписи старшего (решение 142; S2): кто собран — словами родства (решение 151)
+    if (foldHit?.kind === 'pile') {
+      setPlate(null);
+      setLink(null);
+      if (hovered.value) hovered.value = null;
+      setHot(true);
+      showTip({ kind: 'note', key: `pile:${foldHit.id}`, text: pileText(sky, foldHit.id), x, y, box: { x: foldHit.x, y: foldHit.y, w: foldHit.w, h: foldHit.h } });
+      return;
+    }
     // «+» у подписи лица с нераскрытыми союзами (решение 70)
     if (foldHit?.kind === 'reveal') {
       setPlate(null);
@@ -750,8 +889,15 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       showTip({ kind: 'note', key: `stub:${u.stub.from}:${u.stub.to}`, text: stubTipText(u.stub.to), x, y, box: { x: u.stub.x, y: u.stub.y, w: u.stub.w, h: u.stub.h } });
       return;
     }
+    if (u?.kind === 'trail-links') {
+      showTip({ kind: 'note', key: `tl:${u.person}:${u.keys.map((k) => linkKeyString(k)).join('|')}`, text: trailLinksText(u.person, u.keys), x, y, box: { x: x - 6, y: y - 6, w: 12, h: 12 } });
+      return;
+    }
     if (u?.kind === 'link') {
-      showTip({ kind: 'link', key: u.hit.key, ks: u.hit.ks, x: u.hit.x, y: u.hit.y });
+      // выбранная связь — её карточка уже говорит всё; подсказка её не повторяет (решение 144; U13)
+      const sel = selectedLink.peek();
+      if (sel && sameLink(sel, u.hit.key)) showTip(null);
+      else showTip({ kind: 'link', key: u.hit.key, ks: u.hit.ks, x: u.hit.x, y: u.hit.y });
       return;
     }
     // у звезды с открытой карточкой у точки подсказки нет: имя и годы — в карточке (решение 76)
@@ -816,7 +962,7 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     if (pointers.size === 1)
       drag = {
         x0: p.x, y0: p.y, x: p.x, y: p.y, moved: false, t, type: e.pointerType, stopper, trail: [{ t, x: p.x, y: p.y }],
-        axis: e.pointerType === 'touch' ? null : edgeAxis(p.x, p.y, sky.letterW, sky.cam.vp.b),
+        axis: e.pointerType === 'touch' || serviceCmdAt(sky, p.x, p.y) ? null : edgeAxis(p.x, p.y, sky.letterW, sky.cam.vp.b),
       };
     clearTimeout(longTimer);
     if (pointers.size === 1 && e.pointerType === 'touch')
@@ -825,7 +971,9 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       }, LONG_PRESS_MS);
     if (pointers.size === 2) {
       const [a, b] = [...pointers.values()];
-      const axis = pinchAxis(a.x - b.x, a.y - b.y);
+      // оба пальца на линейке лет или на буквах полос — щипок по её оси (решение 154; J1)
+      const ea = edgeAxis(a.x, a.y, sky.letterW, sky.cam.vp.b);
+      const axis = pinchAxis(a.x - b.x, a.y - b.y, ea && ea === edgeAxis(b.x, b.y, sky.letterW, sky.cam.vp.b) ? ea : null);
       const d = Math.hypot(a.x - b.x, a.y - b.y);
       pinch = { d, cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2, axis, span: axis === 'time' ? Math.abs(a.x - b.x) : axis === 'lanes' ? Math.abs(a.y - b.y) : d };
       drag = null;
@@ -836,6 +984,7 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
   const onMove = (e: PointerEvent) => {
     const p = local(e);
     pointer = e.pointerType === 'touch' ? null : { x: p.x, y: p.y, r: 12 };
+    if (tipMute && Math.hypot(p.x - tipMute.x, p.y - tipMute.y) > TIP_UNMUTE) tipMute = null;
     if (pointers.has(e.pointerId)) pointers.set(e.pointerId, p);
     if (pinch && pointers.size === 2) {
       const [a, b] = [...pointers.values()];
@@ -878,7 +1027,7 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     // открыто меню неба: наведение и подсказки стоят, пока его не закроют (IX-49)
     if (skyMenu.peek()) return;
     // над линейкой лет и буквами полос курсор говорит, что их можно тянуть (J1)
-    const zone = e.pointerType === 'touch' ? null : edgeAxis(p.x, p.y, sky.letterW, sky.cam.vp.b);
+    const zone = e.pointerType === 'touch' || serviceCmdAt(sky, p.x, p.y) ? null : edgeAxis(p.x, p.y, sky.letterW, sky.cam.vp.b);
     canvas.classList.toggle('stretch-x', zone === 'time');
     canvas.classList.toggle('stretch-y', zone === 'lanes');
     // служебная строка: у масштабной линейки «≈» — пояснение неравномерного масштаба (UX-08)
@@ -886,7 +1035,7 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       setPlate(null);
       setLink(null);
     }
-    if (p.y >= RULER_H && p.y < FRAME_H && e.pointerType !== 'touch') {
+    if (e.pointerType !== 'touch' && ((p.y >= RULER_H && p.y < FRAME_H) || (ROW_H === 0 && serviceCmdAt(sky, p.x, p.y)))) {
       hoverYear(null);
       if (hovered.value) hovered.value = null;
       setTierHot(null);
@@ -897,7 +1046,7 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
         showTip({ kind: 'note', key: `epoch:${ep.e.id}`, text: epochGoText(ep.e), x: p.x, y: p.y, box: ep.box });
         return;
       }
-      const b = sky.ledger.boxes.find((q) => q.kind === 'frame' && q.text.startsWith('≈') && p.x >= q.x && p.x <= q.x + q.w);
+      const b = sky.ledger.boxes.find((q) => q.kind === 'frame' && q.text.startsWith('≈') && p.x >= q.x && p.x <= q.x + q.w && p.y >= q.y - 1 && p.y <= q.y + q.h + 1);
       showTip(b ? { kind: 'note', key: 'approx', text: APPROX_NOTE, x: p.x, y: p.y, box: { x: b.x, y: b.y, w: b.w, h: b.h } } : null);
       return;
     }
@@ -954,6 +1103,10 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     }
     // нажатие остановило перелёт или инерцию — и только (IX-54)
     if (d.stopper) return;
+    // щелчок — действие, а не наведение: подсказка уходит (решение 144; U13) и не закрывает то, что щелчок открыл; до
+    // движения указателя её нет и после проверки «что под указателем», когда небо встанет
+    showTip(null);
+    tipMute = { x: d.x0, y: d.y0 };
     // щелчок — там, где нажали: дрожание при отпускании не уводит к соседней звезде
     const at = { x: d.x0, y: d.y0 };
     const touch = d.type === 'touch';
@@ -963,6 +1116,11 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       return at.x >= r.x && at.x <= r.x + r.w && at.y >= r.y && at.y <= r.y + r.h;
     });
     if (edge) {
+      // указатель на родню у края (решение 146; S3): небо сдвигается к ней, выбранное лицо на месте, никого не выбирает
+      if (edge.ids) {
+        revealKin(edge.ids);
+        return;
+      }
       goTo(edge.id);
       return;
     }
@@ -987,6 +1145,8 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       if (fold.kind === 'desc') foldDescOf(fold.id, false);
       else if (fold.kind === 'all') unfoldAll();
       else if (fold.kind === 'reveal') openPerson(fold.id);
+      // скопление семьи «+N» у подписи старшего (решение 142; S2): «Ближайшая родня» его лица (решение 145; S3)
+      else if (fold.kind === 'pile') nearestFamily(fold.id);
       else foldGroupOf(fold.id, false);
       return;
     }
@@ -1037,10 +1197,23 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     const vp = sky.cam.vp;
     const whichAt = { x: rect.left + at.x, y: rect.top + at.y, bounds: { left: rect.left + vp.l, top: rect.top + sky.openTop, right: rect.left + vp.r, bottom: rect.top + vp.b }, back: canvas };
     if (touch) {
+      // касание внутри рамки имени (не ниже 24 px) — то же, что точное касание звезды (решение 154; M1): ни связь, ни ромб,
+      // ни соседняя звезда его не перехватывают
+      // палец на самом знаке другой звезды (до края диска + 3 px) — это касание звезды, а не соседнего имени
+      // рамка имени — по подписям неба (контракт 2, labels.ts: sky.labelAt); имя у кромки «‹ Евер» — своей проверкой
+      const named = sky.labelAt(at.x, at.y, NAME_TAP) ?? nameAt(sky.ledger.boxes, at.x, at.y);
+      const glyph = sky.hitStar(at.x, at.y, STAR_FIRST);
+      const onGlyph = !!glyph && glyph.id !== named && glyph.d <= glyphR(sky, glyph.id) + 3;
+      if (named && !onGlyph && sky.indexOf(named) !== undefined) {
+        canvas.dataset.tap = 'name';
+        chooseStar(named);
+        return;
+      }
       // палец в плотном месте: не наугад — единственная вероятная звезда, список «Какое лицо?» или приближение (H5)
       const cam = sky.cam;
       const canZoom = cam.clampKx(cam.kx * KEY_STEP, cam.wx(at.x)) > cam.kx * 1.2;
-      const c = tapChoice(tapCandidates(sky, at.x, at.y, TOUCH_R), canZoom);
+      // палец на знаке звезды — соседние имена не тянут касание к себе (решение 154)
+      const c = tapChoice(tapCandidates(sky, at.x, at.y, TOUCH_R, !onGlyph), canZoom);
       // что сделало касание — для проверок приёмки (tools/accept/phone.ts)
       canvas.dataset.tap = c.kind;
       // звезда под самым пальцем важнее связей (§ 8: звезда > ◆ > «+N» > линии)
@@ -1082,6 +1255,14 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       }
       const stub = stubAt(sky, at.x, at.y, true);
       if (stub) return pressStub(stub);
+      // участок следа родителя с несколькими связями (решение 159): «Какая связь?» с самим лицом первой строкой
+      const tl = pickMode.value || !layers.peek().connectors ? null : sky.trailLinkAt(at.x, at.y, LINK_R);
+      // (нить ленты под пальцем — шаг ленты: лента поверх следа, её решает выбор связей ниже)
+      if (tl && tl.keys.length >= 2 && !sky.linksAt(at.x, at.y, LINK_R, false).some((h) => h.kind !== 'jog') && !(layers.peek().ribbons && ribbonAt(sky, at.x, at.y, RIBBON_R))) {
+        canvas.dataset.tap = 'links';
+        openWhich({ ids: [tl.person], links: whichLinks(tl.keys), ...whichAt, onPick: chooseStar, onPickLink: (ks) => pickKey(tl.keys, ks, at) });
+        return;
+      }
       // связи у пальца (§ 8): одна — она, несколько на близких расстояниях — «Какая связь?»
       const lc = pickMode.value ? { kind: 'none' as const } : linkChoice(linksNear(sky, at.x, at.y));
       if (lc.kind === 'pick') {
@@ -1130,6 +1311,13 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
         return;
       }
       if (u?.kind === 'stub') return pressStub(u.stub);
+      // участок следа с несколькими связями (решение 159): «Какая связь?» — первой строкой само лицо
+      if (u?.kind === 'trail-links') {
+        if (pickMode.value) return chooseStar(u.person);
+        canvas.dataset.tap = 'links';
+        openWhich({ ids: [u.person], links: whichLinks(u.keys), ...whichAt, onPick: chooseStar, onPickLink: (ks) => pickKey(u.keys, ks, at) });
+        return;
+      }
       // линия связи или шаг ленты (§ 8): выбрать связь; выбор лица не меняется. В режиме выбора второго лица — ничего
       if (u?.kind === 'link' || u?.kind === 'ribbon') {
         if (!pickMode.value) chooseLink(sky, u.kind === 'link' ? u.hit.key : ribbonKey(u.hit), u.kind === 'link' ? u.hit.x : at.x, u.kind === 'link' ? u.hit.y : at.y);

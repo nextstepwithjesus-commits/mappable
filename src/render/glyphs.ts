@@ -74,6 +74,49 @@ export function starRadius(mag: number, scale = 1): number {
   return MAG_R[Math.max(0, Math.min(6, mag))] * scale;
 }
 
+/** Границы нарисованного знака от его центра, px: слева, справа, сверху, снизу (решение 140). */
+export interface GlyphExt {
+  l: number;
+  r: number;
+  t: number;
+  b: number;
+}
+
+/**
+ * Истинные границы знака (решение 140; C5, C9): то, что drawGlyph действительно рисует, — диск, кольцо женщины
+ * (r + 2,2 и половина толщины 0,9), точки народа, восьмилучевая звезда (2,4r), полый знак с толщиной обводки, черта царя
+ * (2r + 4 на r + 3 над диском, у царицы — над кольцом), «†» слева у младенца без подписи. Подложка цвета неба в границы
+ * не входит: на небе её не видно. Кольца состояний (выбор, фокус, наведение, конец связи) добавляет тот, кто их знает.
+ */
+export function glyphExtent(o: Pick<GlyphOpts, 'sex' | 'kind' | 'magnitude' | 'king' | 'messiah' | 'ghost' | 'hollow' | 'infant' | 'scale'>): GlyphExt {
+  const r = starRadius(o.magnitude, o.scale ?? 1);
+  if (o.messiah) {
+    const R = r * 2.4;
+    return { l: R, r: R, t: R, b: R };
+  }
+  let R: number;
+  if (o.kind === 'people' || o.kind === 'clan') {
+    const sc = scatterOf(r, o.scale ?? 1);
+    R = sc.R + sc.d;
+  } else if (o.ghost) R = r + 0.5;
+  else if (o.sex === 'f') R = r + 2.2 + 0.45;
+  else if (o.hollow) R = r + Math.max(1, r * 0.45) / 2;
+  else R = r;
+  const e = { l: R, r: R, t: R, b: R };
+  if (o.king && !o.ghost) {
+    const bar = kingBar(0, 0, r, o.sex);
+    e.t = Math.max(e.t, -bar.y + KING_BAR_W / 2);
+    e.l = Math.max(e.l, r + 2);
+    e.r = Math.max(e.r, r + 2);
+  }
+  if (o.infant && !o.ghost) {
+    const g = daggerAt(0, 0, r + (o.sex === 'f' ? 2.2 : 0));
+    e.l = Math.max(e.l, -g.x + g.half + 0.55);
+    e.t = Math.max(e.t, -g.top);
+  }
+  return e;
+}
+
 export function drawGlyph(ctx: CanvasRenderingContext2D, x: number, y: number, o: GlyphOpts) {
   const r = starRadius(o.magnitude, o.scale ?? 1);
   ctx.save();

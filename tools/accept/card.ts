@@ -111,7 +111,7 @@ export const card: Scenario[] = [
       const row = p.locator('.folio .actions > button, .folio .actions > .workbtn > button');
       const ys = await row.evaluateAll((bs) => bs.map((b) => Math.round(b.getBoundingClientRect().top)));
       const names = (await row.allInnerTexts()).map((t) => t.replace(/[▾▴]/g, '').trim());
-      if (names.join('|') !== 'Показать на небе|Родство с…|Разворот с…|Добавить в набор') return fail(`команды: ${names.join(' | ')}`);
+      if (names.join('|') !== 'К звезде|Родство с…|Разворот с…|Добавить в набор') return fail(`команды: ${names.join(' | ')}`);
       if (new Set(ys).size !== 1) return fail(`команды в ${new Set(ys).size} строки`);
       const close = (await p.locator('.folio .close').first().boundingBox())!;
       const f = (await p.locator('.folio').boundingBox())!;

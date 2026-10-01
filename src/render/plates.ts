@@ -48,7 +48,7 @@ import { alpha } from './color.ts';
 import { branchColor, GlowBatch, glowLayers, type MapTheme } from './branches.ts';
 import { drawGlyph, starRadius } from './glyphs.ts';
 import { branchFrame } from './marks.ts';
-import { commonBranch } from './trails.ts';
+import { commonBranch, unionAlpha } from './trails.ts';
 import { mapFont, mapSize, T_MAP_S } from './type.ts';
 import { cross, type Rect } from './rect.ts';
 import { KIN_GOLD, LINK_YELLOW, UNION_COLORS } from './branches.ts';
@@ -726,8 +726,12 @@ export function drawLinkNodes(v: SkyContext, p: Pass, d: LinkDraw, marks: PlateM
     const ks = linkKeyString(n.key) ?? '';
     const hover = marks.hover === n.union || d.hover === ks || d.preview.has(ks);
     const sel = marks.selected === n.union;
-    const lit = hover || sel || marks.focus === n.union || d.lit({ ends: [n.owner, n.from] } as LinkPath);
-    return { hover, sel, lit };
+    // видимость ромба — как у его линий по ярусу (решение 135): выделенный союз — в полную силу
+    const ua = unionAlpha(v, p, d, n.union);
+    const lit = hover || sel || marks.focus === n.union || d.lit({ ends: [n.owner, n.from] } as LinkPath) || ua.tier === 0;
+    // на обзоре (подробность кадра ниже 1) структурные связи видны без ромбов: знаки союзов проявляются с подробностью,
+    // как прежде, — иначе они отнимали бы места у имён звёзд (решения 25, 135)
+    return { hover, sel, lit, a: Math.min(ua.a, d.alpha) };
   };
   // на мелком масштабе ромбы соседних семей сходятся: знак, чьё место занято уже нарисованным ромбом, не рисуется
   // (семантическое увеличение, ТЗ § 3.1) — выделенные и наведённые первыми
@@ -754,7 +758,7 @@ export function drawLinkNodes(v: SkyContext, p: Pass, d: LinkDraw, marks: PlateM
   const taken: Rect[] = [];
   for (const { n, x, y, st } of inView) {
     const { hover, sel, lit } = st;
-    const a0 = lit ? 1 : d.alpha;
+    const a0 = lit ? 1 : st.a;
     if (a0 <= 0.01) continue;
     const own = { x: x - R - 0.5, y: y - R - 0.5, w: 2 * R + 1, h: 2 * R + 1 };
     // знак целиком в открытом небе: у кромки рамки ромб не срезается — его нет

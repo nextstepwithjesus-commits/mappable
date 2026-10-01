@@ -13,7 +13,8 @@ import { goTo, skyRef } from '../common.tsx';
 import { LANES_STEP, TIME_STEP, panStep, showAll, stopFlight, stretchBy, zoomBy } from './view.ts';
 import { toggleFull } from '../layout.ts';
 import { KEY_STEP, KEY_MS, openStarMenu, stopZoom } from './input.ts';
-import { arrowDir, moveStarFocus } from './starnav.ts';
+import { arrowDir, moveStarFocus, plateFocus, rememberFocus } from './starnav.ts';
+import { skySay } from './SkyA11y.tsx';
 import { focusCardTitle } from '../focus.ts';
 
 // ---------- клавиши неба ----------
@@ -78,8 +79,19 @@ export function skyKeys(e: KeyboardEvent, nav: boolean, onCanvas: boolean, onSky
   const sky = skyRef.current;
   if (!sky) return false;
   const id = selected.value;
+  /**
+   * Переход по родству (решение 149; M5): лицо выбирается, и фокус клавиатуры — на нём же, если он был на небе: одно
+   * текущее лицо, Enter открывает его карточку, диктор называет его (aria-activedescendant, SkyA11y).
+   */
   const go = (to: string | null | undefined) => {
-    if (to && byId.has(to)) goTo(to);
+    if (!to || !byId.has(to)) return;
+    const keep = onSky || focused.peek() !== null;
+    goTo(to);
+    if (keep && selected.peek() === to) {
+      plateFocus.value = null;
+      focused.value = to;
+      rememberFocus(to);
+    }
   };
   switch (e.code) {
     case 'Equal':
@@ -133,7 +145,11 @@ export function skyKeys(e: KeyboardEvent, nav: boolean, onCanvas: boolean, onSky
     case 'BracketLeft': {
       if (!id) return false;
       const par = byId.get(id)?.father ?? byId.get(id)?.mother;
-      if (!par) return false;
+      // без цели — не тишина (M7): диктор слышит, что родителей в данных нет
+      if (!par) {
+        skySay('родителей в данных нет');
+        break;
+      }
       climb = [...climb, id].slice(-200);
       go(par);
       break;
@@ -142,6 +158,10 @@ export function skyKeys(e: KeyboardEvent, nav: boolean, onCanvas: boolean, onSky
       if (!id) return false;
       const r = childFor(id, climb);
       climb = r.path;
+      if (!r.to) {
+        skySay('детей в данных нет');
+        break;
+      }
       go(r.to);
       break;
     }

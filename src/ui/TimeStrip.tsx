@@ -26,7 +26,7 @@ import { dateText, epochSpanText, spanText, toAstro, toHist } from '../engine/ye
 import { readPalette } from '../render/sky.ts';
 import { easeOut } from '../render/camera.ts';
 import { T_UI_S, coarsePointer, mapFont } from '../render/type.ts';
-import { panStep, reduced, showAll, showYears, stopFlight, viewForYears } from './sky/view.ts';
+import { markJump, panStep, reduced, showAll, showYears, stopFlight, viewForYears } from './sky/view.ts';
 import { classifyWheel, wheelNotches, wheelPixels, wheelStretch, wheelZoom, type WheelKind, type WheelSample } from './sky/input.ts';
 import { hoverYear } from './sky/meridian.ts';
 import { typo } from './text/typo.ts';
@@ -487,6 +487,8 @@ function glideYears(a: number, b: number) {
   const s = skyRef.current;
   const v = viewForYears(a, b);
   if (!s || !v) return;
+  // переход к эпохе — прыжок окна: новая запись истории, когда небо встанет (этап 14, решение 147)
+  markJump();
   stopFlight();
   s.cam.animateTo(s.cam.constrain(v), GLIDE_MS, skyRef.redraw, reduced(), easeOut);
   skyRef.redraw();

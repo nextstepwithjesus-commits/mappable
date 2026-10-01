@@ -16,10 +16,15 @@
  * На телефоне — коротко: «модель «Краткое пребывание» — вернуть основную», «Скрыто: 2 слоя — вернуть».
  */
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
-import { clearResults, LINES_TITLE, RESULT_WORD, resultGuests, resultIds, setLinkNote, setShow, show, showContent, showSummary, type ShowCmd, type SummaryPart } from '../show.ts';
-import { pins, pinsQuery, skyGroup } from '../../state.ts';
-import { skyRef } from '../common.tsx';
-import { inView } from './view.ts';
+import {
+  clearResults, LINES_TITLE, RESULT_WORD, resultGuests, resultIds, returnFromFamily, setLinkNote, setShow, show, showContent, showSummary, type ShowCmd, type SummaryPart,
+} from '../show.ts';
+import { pins, pinsQuery, selected, skyGroup } from '../../state.ts';
+import { byId } from '../../data/atlas.ts';
+import { goTo, skyRef } from '../common.tsx';
+import { emptyWindow, inView } from './view.ts';
+import { explorePath } from '../address.ts';
+import { viewportWidth } from '../layout.ts';
 import { barLines, type BarLine } from '../modelinfo.ts';
 import { grid } from '../layout.ts';
 import { Menu } from '../controls.tsx';
@@ -69,11 +74,83 @@ function resultLine(): BarLine | null {
   };
 }
 
+/**
+ * Эпоха без лиц показа (решение 147; U5): после прыжка по эпохе в частичном показе в кадре нет ни одного его лица —
+ * «В показе нет лиц этой эпохи — всё небо». «Всё небо» — показ всего неба, окно эпохи остаётся.
+ */
+export const EMPTY_EPOCH = 'В показе нет лиц этой эпохи';
+function emptyLine(): BarLine | null {
+  if (!emptyWindow.value || show.value.kind === 'all') return null;
+  return {
+    key: 'empty' as BarLine['key'],
+    text: EMPTY_EPOCH,
+    short: 'нет лиц показа в этой эпохе',
+    hint: 'Нынешний показ не содержит лиц этого времени; всё небо покажет всех, кто жил тогда',
+    cmd: 'всё небо',
+    run: () => setShow({ kind: 'all' }),
+  };
+}
+
+/** Путь исследования свёрнут до «‹ Руфь» (решение 148): на 1024 px и уже, на телефоне. */
+export const PATH_FOLD_W = 1100;
+
+/**
+ * Путь исследования (решение 148; U12, инвариант 9): «Путь: Руфь › Давид › Соломон» — до 5 последних выборов, прежние
+ * имена нажимаются (выбор и, если звезды нет на экране, перелёт — как у ссылки), последнее — выбранное лицо. На 1024 px
+ * и на телефоне — «‹ Руфь»: шаг назад по пути. Пунктирного кольца «откуда» нет (решение 93: пунктир — «нарисовано не
+ * здесь»).
+ */
+function PathLine() {
+  const path = explorePath.value;
+  const sel = selected.value;
+  if (!sel || path.length < 2 || path[path.length - 1] !== sel) return null;
+  const name = (id: string) => byId.get(id)?.name ?? id;
+  const full = (id: string) => {
+    const p = byId.get(id);
+    return p ? `${p.name}${p.disambig ? `, ${p.disambig}` : ''}` : id;
+  };
+  const fold = viewportWidth.value <= PATH_FOLD_W;
+  const prev = path[path.length - 2];
+  const label = `Путь: ${path.map(full).join(' › ')}`;
+  return (
+    <span class="sb-line sb-path" data-line="path" aria-label={typo(label)} role="group">
+      {fold ? (
+        <button type="button" class="sb-cmd" data-cmd="path" data-id={prev} title={typo(`Назад по пути: ${full(prev)}`)} onClick={() => goTo(prev, 'link')}>
+          {typo(`‹ ${name(prev)}`)}
+        </button>
+      ) : (
+        <>
+          <span class="sb-t">Путь: </span>
+          {path.map((id, i) => (
+            <span key={`${i}:${id}`} class="sb-step">
+              {i > 0 && (
+                <span class="sep" aria-hidden="true">
+                  {' › '}
+                </span>
+              )}
+              {i < path.length - 1 ? (
+                <button type="button" class="sb-cmd" data-cmd="path" data-id={id} title={typo(full(id))} onClick={() => goTo(id, 'link')}>
+                  {typo(name(id))}
+                </button>
+              ) : (
+                <span class="sb-t" aria-current="true">
+                  {typo(name(id))}
+                </span>
+              )}
+            </span>
+          ))}
+        </>
+      )}
+    </span>
+  );
+}
+
 /** Команда части строки. */
 function runCmd(cmd: ShowCmd, from: HTMLElement | null) {
   if (cmd.kind === 'sheet') openShowSheet(cmd.lineage ? { back: from, focus: 'lineage', person: cmd.lineage } : { back: from });
   else if (cmd.kind === 'show') setShow(cmd.show);
   else if (cmd.kind === 'reveal') revealOnAll(cmd.id);
+  else if (cmd.kind === 'return') returnFromFamily();
 }
 
 /**
@@ -113,7 +190,9 @@ function Part({ part }: { part: SummaryPart }) {
     ? `Лист «Показ»: всё небо, ${lowerFirst(LINES_TITLE)}, ключевые лица, созвездия, предки и потомки лица, набор`
     : cmd.kind === 'reveal'
       ? 'Всё небо — и перелёт к лицу'
-      : undefined;
+      : cmd.kind === 'return'
+        ? 'Показ и окно, с которых пришли в «Ближайшую родню» (Esc)'
+        : undefined;
   return (
     <button
       type="button"
@@ -207,7 +286,8 @@ export function ShowBar() {
   const rest = head ? text.slice(1) : text;
   // строки модели и слоёв (контракт 5): на телефоне — коротко; гости-результаты (решение 113)
   const res = resultLine();
-  const lines = res ? [...barLines.value, res] : barLines.value;
+  const empty = emptyLine();
+  const lines = [...(empty ? [empty] : []), ...barLines.value, ...(res ? [res] : [])];
   const phone = grid.value.phone;
   const extra = lines.map((l) => `${l.text} — ${l.cmd}`).join('. ');
   return (
@@ -242,6 +322,7 @@ export function ShowBar() {
           </button>
         </span>
       ))}
+      <PathLine />
       <span class="visually-hidden" role="status">
         {said}
       </span>

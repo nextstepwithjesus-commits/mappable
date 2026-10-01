@@ -134,14 +134,19 @@ describe('подробность по двум осям (решение 25; MAP-
 });
 
 describe('подписи (MAP-06, 56, 66; MOB-53)', () => {
-  it('Иаков подписан на обзоре (MAP-06); Иисус Христос — на обзоре телефона (MOB-53)', () => {
+  it('Иаков подписан на обзоре (MAP-06); Иисус Христос — на обзоре телефона (MOB-53); при наведении скрытая подпись встаёт', () => {
+    // решение 140: у звезды величины 0 на обзоре тесно — выноской подальше через пустое небо (знак не закрывается)
+    const named = (s: Sky, id: string) => s.labelStats().boxes.some((b) => b.kind === 'star' && b.id === id);
     const ov = drawSky();
-    expect(ov.sky.labelStats().boxes.some((b) => b.kind === 'star' && b.id === 'iakov')).toBe(true);
+    expect(named(ov.sky, 'iakov')).toBe(true);
     const phone = drawSky({ w: 390, h: 700 });
-    expect(phone.sky.labelStats().boxes.some((b) => b.kind === 'star' && b.id === 'iisus')).toBe(true);
+    expect(named(phone.sky, 'iisus')).toBe(true);
     expect(phone.sky.labelStats().overlaps).toBe(0);
-  });
-  it('имя Иисуса Христа на обзоре телефона не закрывает звёзд ярче 4-й величины (гуща царей Иудеи) и не отнимает место у Давида (MOB-53; H5)', () => {
+    // скрытая подпись (контракт 2) встаёт при наведении
+    const hid = phone.sky.hiddenLabels()[0];
+    if (hid) expect(named(drawSky({ w: 390, h: 700, state: { hovered: hid } }).sky, hid), hid).toBe(true);
+  }, 20000);
+  it('имя Иисуса Христа на обзоре телефона не закрывает чужих звёзд (решение 140; прежде — ярче 4-й величины) и не отнимает место у Давида (MOB-53; H5)', () => {
     const { sky: s } = drawSky({ w: 390, h: 700 });
     const boxes = s.labelStats().boxes.filter((b) => b.kind === 'star');
     const jb = boxes.find((b) => b.id === 'iisus')!;
@@ -152,7 +157,7 @@ describe('подписи (MAP-06, 56, 66; MOB-53)', () => {
       if (n.ghost || n.person === 'iisus' || !s.reachable(i)) continue;
       const x = s.cam.sx(s.X0[i]);
       const y = s.cam.sy(n.lane);
-      if (x >= jb.x && x <= jb.x + jb.w && y >= jb.y && y <= jb.y + jb.h && atlas.byId.get(n.person)!.magnitude < 4) covered.push(n.person);
+      if (x >= jb.x && x <= jb.x + jb.w && y >= jb.y && y <= jb.y + jb.h) covered.push(n.person);
     }
     expect(covered).toEqual([]);
     expect(boxes.some((b) => b.id === 'david')).toBe(true);
@@ -211,7 +216,8 @@ describe('подписи (MAP-06, 56, 66; MOB-53)', () => {
     const nt = drawSky({ move: around('gieziy', 120) });
     const gz = nt.texts.find((q) => q.t === 'Гиезий');
     expect(gz?.font).toMatch(/^italic /);
-    const fam = drawSky({ move: window(-1005, 40, 4) });
+    // подпись — при наведении: в тесной семье Давида ей может не найтись места по правилам решения 140
+    const fam = drawSky({ move: window(-1005, 40, 4), state: { hovered: 'mladenets-syn-virsavii' } });
     const inf = fam.sky.labelStats().boxes.find((b) => b.id === 'mladenets-syn-virsavii');
     expect(inf).toBeTruthy();
     const dag = fam.texts.find((q) => q.t.startsWith('†') && q.x >= inf!.x && q.x <= inf!.x + 4);

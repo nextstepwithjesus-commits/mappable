@@ -24,6 +24,7 @@
     "accept": "tsx tools/accept.ts",
     "coords": "tsx tools/coords.ts",
     "a11y": "tsx tools/a11y.ts",
+    "collide": "tsx tools/collide.ts",
     "build:artifact": "npm run data && vite build --mode artifact && tsx tools/artifact-page.ts"
   },
   "license": "UNLICENSED",

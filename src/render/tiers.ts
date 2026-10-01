@@ -582,6 +582,11 @@ export function tintFor(sky: string, ink: string, target = COLUMN_CONTRAST): num
 
 /** Ярусы начинаются под линейкой и служебной строкой рамки (C4), не закрывая их. */
 export const TIER_TOP = FRAME_H + 4;
+/**
+ * Верх первого яруса сейчас (этап 14, решение 155): под рамкой — на низком небе она одной строкой (frame.ts, setLowFrame),
+ * и ярусы встают выше на высоту служебной строки. TIER_TOP — то же для обычной рамки.
+ */
+export const tierTop = () => FRAME_H + 4;
 /** Строка яруса: отрезок 12 px и зазор 4 px (VIS-26). */
 export const PITCH = 16;
 export const BAR_H = 12;
@@ -694,7 +699,7 @@ function layoutTiers(tiers: Tier[], t0: number, t1: number, model: string, top: 
  * по шагам, пока не поместятся: без пустых ярусов; не больше двух строк, затем одной; события одной строкой; мелкие
  * строки; без зазоров; в последнюю очередь уходят ярусы, у которых в окне меньше всего отрезков.
  */
-export function planTiers(tiers: Tier[], t0: number, t1: number, model = '', top = TIER_TOP, compact = false, maxH = Infinity, wrap = false): TierPlan {
+export function planTiers(tiers: Tier[], t0: number, t1: number, model = '', top = tierTop(), compact = false, maxH = Infinity, wrap = false): TierPlan {
   const base = { compact, eventsCompact: compact, dropEmpty: false, cap: Infinity, gap: TIER_GAP, drop: 0 };
   const steps: Squeeze[] = [
     base,
@@ -752,7 +757,7 @@ export function replanTiers(sky: Sky, m: ModelData): boolean {
   const vp = sky.cam.vp;
   const low = lowSky(sky.cam.h);
   const all = buildTiers(m);
-  const next = planTiers(low ? all.filter((t) => t.key === 'epochs') : all, a, b, m.id, TIER_TOP, compactAt(((vp.r - vp.l) * 1.2) / Math.max(1, b - a)), low ? Infinity : tiersBudget(vp.b), wrapNames(sky));
+  const next = planTiers(low ? all.filter((t) => t.key === 'epochs') : all, a, b, m.id, tierTop(), compactAt(((vp.r - vp.l) * 1.2) / Math.max(1, b - a)), low ? Infinity : tiersBudget(vp.b), wrapNames(sky));
   if (low) next.header = all.length - 1;
   next.cards = cardsKey(m);
   askCards(m);

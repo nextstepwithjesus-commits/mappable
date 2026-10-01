@@ -567,7 +567,7 @@ export const skyin: Scenario[] = [
   },
   {
     n: 263,
-    title: 'UX-53, IX-61: протяжка по буквам — за 8 px; метка «строки ×N — сбросить»; двойной щелчок по буквам — сброс; «по умолчанию» доступна, пока пропорция не 1',
+    title: 'UX-53, IX-61: протяжка по буквам — за 8 px; метка «Пропорции изменены — вернуть» (этап 14, решение 154), величина — в подсказке; двойной щелчок по буквам — сброс; «по умолчанию» доступна, пока пропорция не 1',
     run: async (p) => {
       await go(p, '#/~y-1000~w300~l0~s1', 2400);
       const box = await canvasBox(p);
@@ -588,7 +588,9 @@ export const skyin: Scenario[] = [
       const note = p.locator('.sky .lanesbar');
       if (!(await note.count())) return fail('нет метки пропорции строк');
       const t = nbsp(await note.innerText()).replace(/\s+/g, ' ').trim();
-      if (!/^строки ×[\d,]+ — сбросить$/.test(t)) return fail(`метка: «${t}»`);
+      if (t !== 'Пропорции изменены — вернуть') return fail(`метка: «${t}»`);
+      const tip = nbsp((await note.locator('.txt').getAttribute('title')) ?? '');
+      if (!/[Сс]троки ×[\d,]+/.test(tip)) return fail(`подсказка метки: «${tip}»`);
       // «Всё небо»: пропорция на обзоре может упираться в край, но «по умолчанию» доступна
       await p.keyboard.press('Digit0');
       await p.waitForTimeout(1500);

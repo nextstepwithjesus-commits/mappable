@@ -11,10 +11,15 @@ import { selected, hovered, pickSecond, panel } from '../state.ts';
 import { typo } from './text/typo.ts';
 import { belowReading, inView } from './sky/view.ts';
 
-export const skyRef: { current: Sky | null; redraw: () => void; flyTo: (id: string) => void } = {
+/**
+ * Небо для всех: current — само небо, redraw — кадр, flyTo — перелёт к лицу, holdFamily — короткий сдвиг без отдаления,
+ * чтобы в кадре была родня лица (решение 146; ставит SkyView).
+ */
+export const skyRef: { current: Sky | null; redraw: () => void; flyTo: (id: string) => void; holdFamily: (id: string) => void } = {
   current: null,
   redraw: () => {},
   flyTo: () => {},
+  holdFamily: () => {},
 };
 export const viewTick = signal(0);
 
@@ -183,6 +188,9 @@ export function goTo(id: string, from: GoFrom = goFrom()) {
   const below = from === 'link' && belowReading(id);
   selected.value = id;
   if (needsFlight(visible, from, below)) skyRef.flyTo(id);
+  // ссылка на лицо на экране (решение 146): в кадре меньше 70 % его родни первого колена — короткий сдвиг, без отдаления;
+  // щелчок по звезде камеру не двигает (решение 44): родню за краем называют указатели у края
+  else if (from === 'link') skyRef.holdFamily(id);
 }
 
 /** Вписать лица в небо по обеим осям (время и полосы) — одна функция перелёта для всех панелей (D4; src/ui/sky/view.ts). */

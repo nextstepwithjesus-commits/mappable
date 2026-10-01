@@ -816,3 +816,71 @@ export function linkBasis(key: LinkKey): { text: string; from: string | null; ne
 
 /** Союз связи (у шага ленты — союз родителя шага и ребёнка) или null. */
 export const linkUnion = (key: LinkKey): Union | null => linkInfo(key)?.union ?? null;
+
+// ---------- фраза родства (этап 14, решение 151) ----------
+
+/** Помета шага линии Мессии в фразе родства: толкование — уровнем, «у Мф опущен», «только у Луки» — как есть. */
+const STEP_LEVEL: Record<string, string> = { interpretation: 'толк.', 'omitted-by-mt': 'у Мф опущен', 'luke-only': 'только у Луки' };
+
+/**
+ * Пометы связи для фразы родства (решение 151; U6): уровень достоверности («выв.», «толк.») и пометы шага линии Мессии,
+ * если связь — её шаг («толк.» у Илия — отца Марии, «только у Луки» у Каинана). «По закону», «по Луке», «приёмный» — не
+ * пометы, а часть роли («отец по закону»). Писание — пусто.
+ */
+export function kinMarks(key: LinkKey): string[] {
+  const i = linkInfo(key);
+  if (!i) return [];
+  const out: string[] = [];
+  const add = (m: string | undefined) => {
+    if (m && !out.includes(m)) out.push(m);
+  };
+  add(CERT_WORD[i.cert]);
+  for (const l of i.lines) add(STEP_LEVEL[l.flag]);
+  return out;
+}
+
+/** Одна фраза родства (решение 151): кто (имя и уточнение тёзки), кем приходится, уровень, вне показа ли. */
+export interface KinPhrase {
+  id: string;
+  /** уточнение тёзки (решение 106: у одноимённых в семье) или null */
+  dis: string | null;
+  /** кем лицо приходится владельцу строки: «жена», «сын по закону», «брат по отцу», «сестра» */
+  role: string;
+  /** пометы уровня и шага линии: «толк.», «выв.», «только у Луки» */
+  marks: string[];
+  /** лицо вне нынешнего показа неба */
+  outside: boolean;
+}
+
+/** Уточнение тёзки — без вложенных скобок: «Мария (Клеопова)», «Седекия (сын Иоакима)». */
+export const disText = (id: string): string | null => {
+  const d = byId.get(id)?.disambig;
+  return d ? typo(d.replace(/\s*\(([^)]*)\)/g, ', $1')) : null;
+};
+
+/** Фраза родства лица id в строке «Родства» (роль из строки, пометы — из связи key). */
+export function kinPhrase(id: string, role: string, key: LinkKey, o: { namesake?: boolean; outside?: boolean } = {}): KinPhrase {
+  return { id, dis: o.namesake ? disText(id) : null, role, marks: kinMarks(key), outside: !!o.outside };
+}
+
+/** Хвост фразы: «, толк., вне показа». */
+const phraseTail = (ph: KinPhrase) => [...ph.marks, ...(ph.outside ? ['вне показа'] : [])].map((x) => `, ${x}`).join('');
+
+/**
+ * Имя кнопки «Родства» и строки карточки связи (решение 151; M7): «Лия — жена», «Илий — отец, толк.», «Мария (Клеопова) —
+ * сестра, толк., вне показа». Видимое имя входит в него (WCAG 2.5.3).
+ */
+export function kinLabel(ph: KinPhrase): string {
+  const name = nameOf(ph.id);
+  return typo(`${name}${ph.dis ? ` (${ph.dis})` : ''}${ph.role ? ` — ${ph.role}` : ''}${phraseTail(ph)}`);
+}
+
+/**
+ * Родство к лицу of — для подсказки и списка неба (решение 151): «жена Иакова», «сын Давида, толк.»; имя of не склоняется
+ * надёжно — «жена; Иаков» не строится, а пишется «жена (выбрано: Иаков)».
+ */
+export function kinOf(ph: KinPhrase, of: string): string {
+  const g = genOf(of);
+  const who = g ? `${ph.role} ${g}` : `${ph.role} (выбрано: ${nameOf(of)})`;
+  return typo(`${who}${phraseTail(ph)}`);
+}

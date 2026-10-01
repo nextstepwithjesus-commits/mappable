@@ -305,7 +305,9 @@ describe('точки союзов на холсте (решение 76)', () => 
     expect(f.s.foldHits.some((h) => h.kind === 'reveal' && h.id === 'avraam')).toBe(false);
   });
 
-  it('в небе «все лица» точек и линий союзов нет', () => {
+  // этап 14, решение 135: на обзоре «всех лиц» связи — только структурный ярус (лица величины ≤ 2 и лиц линий Мессии):
+  // точек союзов «набора» (решение 76) нет, а журнал линий союзов — без гребёнок мелких лиц
+  it('в небе «все лица» точек союзов набора нет; на обзоре линии союзов — только структурные', () => {
     const rec = recording();
     const canvas = { getContext: () => rec.ctx, style: {}, width: 0, height: 0, dataset: {} as Record<string, string> } as unknown as HTMLCanvasElement;
     const s = new sky.Sky(canvas);
@@ -319,7 +321,13 @@ describe('точки союзов на холсте (решение 76)', () => 
     expect(s.plateHits).toEqual([]);
     const d = (canvas as unknown as { dataset: Record<string, string> }).dataset;
     expect(d.dots ?? '').toBe('');
-    expect(d.unionLines ?? '').toBe('');
+    const spine = new Set([...atlas.lines.joseph.persons, ...atlas.lines.mary.persons].map((q) => q.id));
+    const minor = (d.unionLines ?? '')
+      .split(';')
+      .filter(Boolean)
+      .map((q) => (q.includes('>') ? q.split('>')[1].split(':')[0] : q.split('=')[1]))
+      .filter((id) => !spine.has(id) && (atlas.byId.get(id)?.magnitude ?? 6) > 2);
+    expect(minor).toEqual([]);
   });
 });
 

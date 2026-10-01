@@ -18,6 +18,9 @@ import { model, onlyLines, panel, pins, second, selected, skyGroup } from '../..
 import { graph, lines } from '../../data/atlas.ts';
 import { KY_LO, LANES_MAX, LANES_MIN, easeOut, type Axis, type ViewState } from '../../render/camera.ts';
 import type { Rect } from '../../render/sky.ts';
+import { firstKin } from '../../render/frame.ts';
+import { grid } from '../layout.ts';
+import { show } from '../work.ts';
 
 export const reduced = () => typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
@@ -98,12 +101,97 @@ export function viewForYears(a: number, b: number): ViewState | null {
   return { x0: xa - vp.l / kx, kx, laneTop: lane + cy / cam.kyFor(kx) };
 }
 
+// ---------- окно на время листа «Показ» (этап 14, решение 147) ----------
+
+/**
+ * Лист «Показ» открыт (SkyView): небо, выведшее выбранное лицо из-под листа, — не шаг читателя, адрес такое окно не пишет
+ * (src/ui/address.ts): «назад» после сеанса листа возвращает окно до листа (П3). Лист закрылся без смены показа — окно до
+ * листа возвращается (SkyView).
+ */
+export const windowHold = signal(false);
+
+// ---------- прыжок окна — своя запись истории (этап 14, решение 147; U4) ----------
+
+/**
+ * Прыжок окна (эпоха на полосе времени, лист «Эпохи», ярусы): src/ui/address.ts пишет окно, к которому он пришёл, новой
+ * записью истории, когда небо встанет, — «назад» возвращает прежнее окно. at — когда прыгнули; lastPush — когда адрес
+ * последний раз писал новую запись: прыжок, начатый вместе с ней (смена показа и окно разом), — то же намерение.
+ */
+export const windowJump = { at: -Infinity, lastPush: -Infinity };
+/** Отметить прыжок окна (зовут showYears с перелётом и полоса времени). */
+export function markJump() {
+  if (typeof performance === 'undefined') return;
+  const now = performance.now();
+  if (now - windowJump.lastPush < 120) return;
+  windowJump.at = now;
+  jumpCheck = true;
+  emptyWindow.value = false;
+  watchEmpty();
+}
+/** Прыжок ещё не записан: адрес берёт его один раз. */
+export function takeJump(): boolean {
+  const on = performance.now() - windowJump.at < 6000;
+  windowJump.at = -Infinity;
+  return on;
+}
+
+/**
+ * После прыжка по эпохе в частичном показе в кадре нет ни одного его лица (решение 147; U5: «Исход» в показе линий —
+ * пустое небо): строка показа поясняет «В показе нет лиц этой эпохи — всё небо». Снимается, когда небо сдвинули или
+ * сменили показ.
+ */
+export const emptyWindow = signal(false);
+let jumpCheck = false;
+let emptyKey = '';
+/**
+ * Подписка на кадры неба — при первом прыжке, а не при загрузке модуля: common.tsx и view.ts импортируют друг друга,
+ * и viewTick при загрузке может ещё не существовать (как у watchAround).
+ */
+let emptyWatch: (() => void) | null = null;
+function watchEmpty() {
+  if (emptyWatch || typeof window === 'undefined') return;
+  emptyWatch = effect(() => {
+    void viewTick.value;
+    const s = skyRef?.current;
+    if (!s || !s.model) return;
+    const c = s.cam;
+    const key = `${Math.round(c.x0 * c.kx)} ${c.kx.toFixed(5)} ${Math.round(c.laneTop * c.ky)} ${s.rowsKey}`;
+    if (jumpCheck) {
+      if (c.moving || s.transitioning || performance.now() - windowJump.at < 150) return;
+      jumpCheck = false;
+      emptyKey = key;
+      const partial = show.peek().kind !== 'all';
+      emptyWindow.value = partial && !anyStarInView();
+      return;
+    }
+    if (emptyWindow.peek() && key !== emptyKey) emptyWindow.value = false;
+  });
+}
+/** Есть ли в видимой части хоть одна звезда показа (нарисованная, не призрак). */
+function anyStarInView(): boolean {
+  const s = skyRef.current;
+  if (!s || !s.model) return false;
+  const vp = s.cam.vp;
+  for (let i = 0; i < s.nodes.length; i++) {
+    const n = s.nodes[i];
+    if (n.ghost || !s.drawn(i)) continue;
+    const x = s.cam.sx(s.X0[i]);
+    const x1 = s.cam.sx(s.X1[i]);
+    const y = s.cam.sy(n.lane);
+    // и след жизни, проходящий через окно: лицо эпохи — тот, кто в ней жил
+    if (x1 >= vp.l && x <= vp.r && y >= vp.t && y <= vp.b) return true;
+  }
+  return false;
+}
+
 /** Окно лет [a, b]: щелчок по эпохе (полоса, лист «Эпохи») — перелёт; протяжка рамки полосы — сразу (animate = false). */
 export function showYears(a: number, b: number, animate = true) {
   const s = skyRef.current;
   const v = viewForYears(a, b);
   if (!s || !v) return;
   flightTarget = null;
+  // перелёт к эпохе — прыжок: новая запись истории (решение 147)
+  if (animate) markJump();
   if (animate) flyTo(v);
   else {
     s.cam.stop();
@@ -133,13 +221,169 @@ export function viewForPerson(id: string): ViewState | null {
   return { x0: x0 - vp.l / kx, kx, laneTop: s.rowOf(n.lane) + cy / cam.kyFor(kx) };
 }
 
+/**
+ * Строка на телефоне в окне лица — не теснее стольких px (решение 146; M2): окно лет то же, что на столе, а полосы
+ * выше — временной пропорцией (IX-70), своя пропорция читателя не меняется.
+ */
+export const PHONE_ROW_MIN = 10;
+
+/**
+ * Временная пропорция полос окна лица на телефоне (M2): строка при масштабе kx не ниже PHONE_ROW_MIN px; null — не нужна
+ * (не телефон или строка и так не теснее).
+ */
+export function phoneLanes(kx: number): number | null {
+  const s = skyRef.current;
+  if (!s || !grid.peek().phone) return null;
+  const cam = s.cam;
+  if (cam.kyWith(kx, cam.ownLanes) >= PHONE_ROW_MIN - 0.01) return null;
+  return Math.max(cam.ownLanes, cam.lanesFor(kx, PHONE_ROW_MIN));
+}
+
 /** Перелёт к лицу (все ссылки на лица, поиск, указатели у края): лицо — в видимой части неба. */
 export function flyToPerson(id: string) {
   const s = skyRef.current;
   const v = viewForPerson(id);
   if (!s || !v) return;
-  flyTo(v);
+  // телефон: строки окна лица не теснее 10 px (M2) — пропорция временная, laneTop — для неё
+  const m = phoneLanes(v.kx);
+  if (m !== null) {
+    const [, cy] = s.cam.vpCenter();
+    const n = s.node(id);
+    const to = n ? { ...v, laneTop: s.rowOf(n.lane) + cy / s.cam.kyWith(v.kx, m) } : v;
+    flightTarget = null;
+    s.cam.flyTo(s.cam.constrain(to, m), skyRef.redraw, reduced(), m);
+    skyRef.redraw();
+  } else flyTo(v);
   flightTarget = s.cam.moving ? id : null;
+}
+
+// ---------- переход к родственнику держит семью (решение 146) ----------
+
+/** Ссылка на лицо сдвигает небо, если в кадре меньше этой доли его родни первого колена (U2). */
+export const FAMILY_SHARE = 0.7;
+/** Сдвиг к родне — не дольше, мс; без отдаления. */
+export const FAMILY_MS = 400;
+/** Родни больше стольких — сдвиг ищется по ближайшим по времени (дольше считать незачем: всех всё равно не вместить). */
+const FAMILY_MAX = 80;
+
+/** Родня лица на небе (нарисована, не скрыта показом и свёрткой): id и место на экране. */
+function kinOnSky(id: string): { id: string; x: number; y: number }[] {
+  const s = skyRef.current;
+  if (!s || !s.model) return [];
+  const out: { id: string; x: number; y: number }[] = [];
+  for (const k of firstKin(id)) {
+    const i = s.indexOf(k.id);
+    if (i === undefined || s.hides(k.id) || !s.drawn(i)) continue;
+    const q = screenOf(k.id);
+    if (q) out.push({ id: k.id, ...q });
+  }
+  return out;
+}
+
+/** Рамка «в кадре» для родни: видимая часть без широких органов у верхнего и нижнего края, с полями inView. */
+function frameBox(): { L: number; R: number; T: number; B: number } | null {
+  const s = skyRef.current;
+  if (!s || !s.model) return null;
+  const vp = s.cam.vp;
+  const W = vp.r - vp.l;
+  let top = vp.t;
+  let bottom = vp.b;
+  for (const r of reserveRects) {
+    if (r.w < W * 0.3) continue;
+    if (r.y + r.h >= vp.b - 8 && r.y > (vp.t + vp.b) / 2) bottom = Math.min(bottom, r.y - 8);
+    else if (r.y <= vp.t + 60 && r.y + r.h < (vp.t + vp.b) / 2) top = Math.max(top, r.y + r.h + 8);
+  }
+  return { L: vp.l + MARGIN.l, R: vp.r - MARGIN.r, T: top + MARGIN.t, B: bottom - MARGIN.b };
+}
+
+/** Сколько родни лица в кадре (inView) и сколько её на небе. */
+export function kinShare(id: string): { inside: number; total: number } {
+  const kin = kinOnSky(id);
+  return { inside: kin.filter((k) => inView(k.id)).length, total: kin.length };
+}
+
+/**
+ * Сдвиг неба (px экрана), при котором в кадре больше всего родни лица id, а само лицо остаётся в кадре; из равных —
+ * самый короткий. Масштаб не меняется. null — сдвигать незачем (родни в кадре не меньше FAMILY_SHARE) или нечем.
+ */
+export function familyShift(id: string, share = FAMILY_SHARE): { dx: number; dy: number } | null {
+  const s = skyRef.current;
+  const me = screenOf(id);
+  const f = frameBox();
+  if (!s || !me || !f || !inView(id)) return null;
+  let kin = kinOnSky(id);
+  if (!kin.length) return null;
+  const inside0 = kin.filter((k) => inView(k.id)).length;
+  if (inside0 >= share * kin.length) return null;
+  if (kin.length > FAMILY_MAX) kin = [...kin].sort((a, b) => Math.hypot(a.x - me.x, a.y - me.y) - Math.hypot(b.x - me.x, b.y - me.y)).slice(0, FAMILY_MAX);
+  // лицо остаётся в кадре: пределы сдвига
+  const dxLo = f.L - me.x;
+  const dxHi = f.R - me.x;
+  const dyLo = f.T - me.y;
+  const dyHi = f.B - me.y;
+  const clampX = (d: number) => Math.max(dxLo, Math.min(dxHi, d));
+  const clampY = (d: number) => Math.max(dyLo, Math.min(dyHi, d));
+  const xs = [...new Set([0, ...kin.flatMap((k) => [f.L - k.x, f.R - k.x]).map(clampX)])];
+  const ys = [...new Set([0, ...kin.flatMap((k) => [f.T - k.y, f.B - k.y]).map(clampY)])];
+  let best = { n: -1, cost: Infinity, dx: 0, dy: 0 };
+  for (const dx of xs) {
+    const inX = kin.filter((k) => k.x + dx >= f.L - 0.5 && k.x + dx <= f.R + 0.5);
+    if (inX.length < best.n) continue;
+    for (const dy of ys) {
+      let n = 0;
+      for (const k of inX) if (k.y + dy >= f.T - 0.5 && k.y + dy <= f.B + 0.5) n++;
+      const cost = Math.abs(dx) + Math.abs(dy);
+      if (n > best.n || (n === best.n && cost < best.cost)) best = { n, cost, dx, dy };
+    }
+  }
+  if (best.cost < 2) return null;
+  // и родня ровно у края — на 12 px внутрь, если лицо от этого не уходит за край
+  const dx = clampX(best.dx + Math.sign(best.dx) * 12);
+  const dy = clampY(best.dy + Math.sign(best.dy) * 12);
+  return { dx, dy };
+}
+
+/**
+ * Ссылка на лицо, звезда которого на экране (решение 146; src/ui/common.tsx, goTo): если в кадре меньше 70 % его родни
+ * первого колена — небо сдвигается к ней за ≤ 400 мс, без отдаления. Было ли движение.
+ */
+export function holdFamily(id: string): boolean {
+  const s = skyRef.current;
+  const d = familyShift(id);
+  if (!s || !d) return false;
+  const cam = s.cam;
+  const to = cam.constrain({ x0: cam.x0 - d.dx / cam.kx, kx: cam.kx, laneTop: cam.laneTop + d.dy / cam.ky });
+  if (cam.near(to)) return false;
+  flightTarget = null;
+  cam.animateTo(to, FAMILY_MS, skyRef.redraw, reduced(), easeOut);
+  skyRef.redraw();
+  return true;
+}
+
+/**
+ * Родня выбранного для проверок приёмки (tools/accept/nav14.ts): «лицо:x,y,1» — на небе (1 — в кадре, 0 — за краем),
+ * «лицо:-» — не на небе (вне показа, свёрнуто).
+ */
+export function kinProbe(id: string): string {
+  const s = skyRef.current;
+  if (!s || !s.model) return '';
+  return firstKin(id)
+    .map((k) => {
+      const i = s.indexOf(k.id);
+      const q = i === undefined || s.hides(k.id) || !s.drawn(i) ? null : screenOf(k.id);
+      return q ? `${k.id}:${Math.round(q.x)},${Math.round(q.y)},${inView(k.id) ? 1 : 0}` : `${k.id}:-`;
+    })
+    .join(';');
+}
+
+/**
+ * Указатель у края на родню (решение 146; src/render/frame.ts): небо меняется наименьшим движением, чтобы эти лица были
+ * видны, выбранное лицо остаётся на месте экрана; отдаляется, только если иначе не поместить (revealView).
+ */
+export function revealKin(ids: readonly string[]): boolean {
+  const id = selected.peek();
+  const keep = id ? screenOf(id) : null;
+  return fitReveal(id ? [id, ...ids] : ids, keep);
 }
 
 /**
@@ -334,6 +578,22 @@ if (typeof window !== 'undefined') {
   });
 }
 
+// строки окна лица на телефоне (M2, PHONE_ROW_MIN) — временные, пока лицо выбрано: снятый выбор их возвращает
+if (typeof window !== 'undefined') {
+  let had = false;
+  effect(() => {
+    const sel = !!selected.value;
+    const gone = had && !sel;
+    had = sel;
+    if (!gone || !grid.peek().phone) return;
+    requestAnimationFrame(() => {
+      const s = skyRef?.current;
+      if (!s || s.cam.userLanes === null || groupShown() || onlyLines.peek() || s.cam.moving || selected.peek()) return;
+      restoreOwnLanes();
+    });
+  });
+}
+
 // ---------- «только линии Мессии» (E6; MAP-23) ----------
 
 /** Сколько полос не меньше вписывается в 60 % высоты в режиме «только линии» (MAP-23: ±13 полос). */
@@ -437,6 +697,9 @@ export function fitLines(animate = true, around: string | null = null): ViewStat
   const k = linesKx();
   if (!s || !f || k === null) return null;
   const cam = s.cam;
+  // место выбранного лица на экране — до смены высоты полосы коридора (решение 147): оно там и останется
+  // (только лицо самих линий: мать у бусины сына — Руфь, Фамарь — в показе линий своей звезды не имеет, окно — у сына)
+  const at0 = around && lineAnchor(around) === around && !s.hides(around) && inView(around) ? screenOf(around) : null;
   // полосы коридора — на 60 % высоты, но не выше, чем ±13 полос на ней: косы и следы не раздуваются (MAP-23)
   setFocus(Math.max(FOCUS_MIN, f.lane1 - f.lane0 + 1));
   // коридор может быть мельче «всего неба»: предел отдаления в этом режиме — он (zoomFloor)
@@ -445,12 +708,37 @@ export function fitLines(animate = true, around: string | null = null): ViewStat
   const [, cy] = cam.vpCenter();
   const mid = (f.lane0 + f.lane1) / 2;
   const w = around ? linesAround(around) : null;
-  const kx = w ? cam.clampKx(Math.max(40, vp.r - vp.l - 2 * LINES_PAD - NAME_ROOM) / (w.x1 - w.x0), (w.x0 + w.x1) / 2) : k;
+  let kx = w ? cam.clampKx(Math.max(40, vp.r - vp.l - 2 * LINES_PAD - NAME_ROOM) / (w.x1 - w.x0), (w.x0 + w.x1) / 2) : k;
+  // выбранное лицо на виду и на линиях (решение 147; U5): оно остаётся на своём месте экрана, окно ±10 поколений и
+  // коридор вписываются вокруг него — по целевому плану, под строкой показа
+  const n = around ? s.node(around) : undefined;
+  const at = w && n ? at0 : null;
+  const xa = around ? s.nodeX(around) : null;
+  const box = frameBox();
+  if (at && xa !== null && w) {
+    const L = vp.l + LINES_PAD;
+    const R = vp.r - LINES_PAD - NAME_ROOM;
+    if (xa > w.x0 && at.x > L) kx = Math.min(kx, (at.x - L) / (xa - w.x0));
+    if (w.x1 > xa && R > at.x) kx = Math.min(kx, (R - at.x) / (w.x1 - xa));
+    kx = cam.clampKx(kx, xa);
+  }
   // строки коридора — по высоте (MAP-70): его полосы — на 60 % высоты, а не четверть, чтобы имена лиц линий помещались;
   // пропорция временная (IX-70): в память и адрес не идёт, при выключении режима возвращается своя
-  const m = linesLanes(kx);
-  if (cam.userLanes === null && Math.abs(m / cam.lanes - 1) > 1e-9) cam.userLanes = cam.lanes;
-  const to = cam.constrain({ x0: (w ? w.x0 : f.x0) - (vp.l + LINES_PAD) / kx, kx, laneTop: mid + cy / cam.kyWith(kx, m) }, m);
+  let m = linesLanes(kx);
+  let to: ViewState;
+  if (at && xa !== null && n && box) {
+    const rD = s.rowOf(n.lane);
+    let ky = cam.kyWith(kx, m);
+    if (f.lane1 > rD && at.y > box.T) ky = Math.min(ky, (at.y - box.T) / (f.lane1 - rD));
+    if (rD > f.lane0 && box.B > at.y) ky = Math.min(ky, (box.B - at.y) / (rD - f.lane0));
+    m = Math.max(LANES_MIN, Math.min(LANES_MAX, ky / cam.kyAuto(kx)));
+    if (cam.userLanes === null && Math.abs(m / cam.lanes - 1) > 1e-9) cam.userLanes = cam.lanes;
+    // без constrain: пределы сдвига сдвинули бы лицо, а окно у лица на линиях всегда в пределах данных
+    to = { x0: xa - at.x / kx, kx, laneTop: rD + at.y / cam.kyWith(kx, m) };
+  } else {
+    if (cam.userLanes === null && Math.abs(m / cam.lanes - 1) > 1e-9) cam.userLanes = cam.lanes;
+    to = cam.constrain({ x0: (w ? w.x0 : f.x0) - (vp.l + LINES_PAD) / kx, kx, laneTop: mid + cy / cam.kyWith(kx, m) }, m);
+  }
   flightTarget = null;
   if (animate) cam.zoomTo(to, HOME_MS, skyRef.redraw, reduced(), m);
   else {
@@ -594,7 +882,9 @@ if (typeof window !== 'undefined') {
     const apply = (tries: number) => {
       // модуль читается раньше common.tsx (круговой импорт): небо спрашивается только в кадре
       const s = skyRef?.current;
-      if (!s || !s.model || !(s.cam.w > 0) || !linesFrame()) {
+      // и строки ещё едут к укладке показа (§ 10): вписывать — по целевому плану, а не по кадру перехода (решение 147;
+      // U5: коридор по прежним строкам уходил под строку показа, лицо — на сотни px)
+      if (!s || !s.model || !(s.cam.w > 0) || !linesFrame() || (on && shown !== on && s.transitioning && tries < 120)) {
         if (tries < 240) wait = requestAnimationFrame(() => apply(tries + 1));
         else linesQueued = false;
         return;
@@ -812,7 +1102,7 @@ export function inView(id: string): boolean {
  * за 250 мс так, чтобы оно было видно (D3; IX-08): по горизонтали — на 60 % ширины, если ушло вправо, на 35 % — если влево;
  * по вертикали — в середину, если ушло вверх или вниз. Масштаб не меняется.
  */
-export function keepInView(id: string, ms = 250) {
+export function keepInView(id: string, ms = 250, side = false) {
   const s = skyRef.current;
   const q = screenOf(id);
   if (!s || !q || inView(id)) return;
@@ -824,10 +1114,25 @@ export function keepInView(id: string, ms = 250) {
   else if (q.x > vp.r - MARGIN.r) dx = vp.l + (vp.r - vp.l) * 0.6 - q.x;
   if (q.y < vp.t + MARGIN.t || q.y > vp.b - MARGIN.b) dy = (vp.t + vp.b) / 2 - q.y;
   // под органами неба — выше блока; под строкой у верхней кромки (верхняя половина видимой части) — ниже строки, а не
-  // под самую рамку
+  // под самую рамку: окно лет не меняется. side — лист «Показ» слева (этап 14, решение 147): кратчайшим путём из-под
+  // него — вбок, ниже или выше, сколько позволяет видимая часть
   if (!dx && !dy) {
     const r = reserveRects.find((z) => q.x > z.x - 8 && q.x < z.x + z.w + 8 && q.y > z.y - 8 && q.y < z.y + z.h + 8);
-    if (r) dy = r.y + r.h / 2 < (vp.t + vp.b) / 2 ? r.y + r.h + 24 - q.y : Math.max(vp.t + MARGIN.t, r.y - 40) - q.y;
+    if (r && !side) dy = r.y + r.h / 2 < (vp.t + vp.b) / 2 ? r.y + r.h + 24 - q.y : Math.max(vp.t + MARGIN.t, r.y - 40) - q.y;
+    else if (r) {
+      const opts: [number, number][] = [];
+      const right = r.x + r.w + 24 - q.x;
+      const left = r.x - 24 - q.x;
+      const below = r.y + r.h + 24 - q.y;
+      const above = Math.max(vp.t + MARGIN.t, r.y - 40) - q.y;
+      if (q.x + right <= vp.r - MARGIN.r) opts.push([right, 0]);
+      if (q.x + left >= vp.l + MARGIN.l) opts.push([left, 0]);
+      if (q.y + below <= vp.b - MARGIN.b) opts.push([0, below]);
+      if (q.y + above >= vp.t + MARGIN.t && q.y + above < r.y) opts.push([0, above]);
+      const best = opts.sort((a, b) => Math.hypot(...a) - Math.hypot(...b))[0];
+      if (best) [dx, dy] = best;
+      else dy = r.y + r.h / 2 < (vp.t + vp.b) / 2 ? r.y + r.h + 24 - q.y : Math.max(vp.t + MARGIN.t, r.y - 40) - q.y;
+    }
   }
   const to = cam.constrain({ x0: cam.x0 - dx / cam.kx, kx: cam.kx, laneTop: cam.laneTop + dy / cam.ky });
   flightTarget = null;

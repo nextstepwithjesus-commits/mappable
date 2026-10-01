@@ -373,6 +373,90 @@ export function setShow(s: Show, o: { anchor?: string | null; history?: 'push' |
   setShowState(next, { anchor, history: o.history });
 }
 
+// ---------- «Ближайшая родня» (этап 14, решение 145; контракт 3) ----------
+
+/**
+ * «Ближайшая родня» лица id: показ «предки и потомки, 1 поколение» по крови — родители, дети и (гостями) матери детей,
+ * в семейной укладке «Г»: дети каждой матери стоят группой под своим ромбом (U1).
+ */
+export const nearestShow = (id: string): Show => ({ kind: 'lineage', id, dir: 'both', gen: 1, by: 'blood' });
+/** Показ s — «Ближайшая родня» (предки и потомки, 1 поколение, по крови). */
+export const isNearest = (s: Show): s is Extract<Show, { kind: 'lineage' }> => s.kind === 'lineage' && s.dir === 'both' && s.gen === 1 && s.by === 'blood';
+/** Число лиц «Ближайшей родни» лица id — для пункта «Ближайшая родня — 31». */
+export const nearestCount = (id: string): number => countShow(nearestShow(id));
+
+/**
+ * Окно неба для возврата (src/ui/address.ts подключает свои currentView и постановку окна: show.ts не импортирует адрес,
+ * у адреса — свой импорт show.ts). now — окно сейчас; put — поставить окно переходом, когда небо перестроилось.
+ */
+export const windowHooks: { now: () => unknown; put: (v: unknown) => void; seq: () => number; back: () => void } = {
+  now: () => null,
+  put: () => {},
+  seq: () => -1,
+  back: () => {},
+};
+
+/**
+ * Откуда пришли в «Ближайшую родню»: прежний показ, окно и выбранное лицо в тот момент; seq — номер записи истории
+ * «Ближайшей родни» (src/ui/address.ts): пока читатель на ней, возврат — это «назад». null — возвращаться некуда.
+ */
+export interface FamilyBack {
+  show: Show;
+  view: unknown;
+  id: string | null;
+  seq: number;
+}
+export const familyBack = signal<FamilyBack | null>(null);
+/** Есть куда вернуться одним действием: небо показывает «Ближайшую родню», вход в неё запомнен. */
+export const canReturn = computed(() => !!familyBack.value && isNearest(show.value));
+// ушли из «Ближайшей родни» иначе (лист «Показ», строка показа, «назад» дальше) — возврата больше нет; переход между
+// родными внутри неё (родня другого лица) прежний показ не теряет
+effect(() => {
+  if (familyBack.value && !isNearest(show.value)) familyBack.value = null;
+});
+
+/**
+ * «Ближайшая родня» (решение 145): показ «предки и потомки лица id, 1 поколение» с семейной укладкой. Переход — по
+ * вертикали, лицо-опора неподвижно (решение 85); показ пишется новой записью истории — «назад» возвращает прежний показ
+ * и окно. Прежний показ, окно и лицо запоминаются для «вернуть прежний показ» и Escape (returnFromFamily). Лицо
+ * выбирается, если оно не выбрано. Возвращает, сменился ли показ.
+ */
+export function nearestFamily(id: string): boolean {
+  if (!byId.has(id)) return false;
+  const next = nearestShow(id);
+  const cur = show.peek();
+  if (sameShow(cur, next)) return false;
+  // из «Ближайшей родни» одного лица в родню другого — возврат по-прежнему к показу, с которого начали
+  const from = familyBack.peek() && isNearest(cur) ? familyBack.peek()! : { show: cur, view: windowHooks.now(), id: selected.peek(), seq: -1 };
+  batch(() => {
+    if (selected.peek() !== id) selected.value = id;
+    setShow(next, { anchor: id });
+  });
+  // номер новой записи истории — после того, как адрес её записал (эффект адреса — в том же batch)
+  familyBack.value = { ...from, seq: windowHooks.seq() };
+  return true;
+}
+
+/**
+ * Вернуть прежний показ и окно одним действием (решение 145): «вернуть прежний показ» в строке показа, Escape. Если
+ * читатель стоит на записи «Ближайшей родни» — это «назад» (то же лицо, показ, окно и путь); если он уже шагнул внутри
+ * неё — прежний показ новой записью, с опорой на выбранное лицо, и прежнее окно, если выбрано то же лицо. Было ли что
+ * возвращать.
+ */
+export function returnFromFamily(): boolean {
+  const b = familyBack.peek();
+  if (!b || !isNearest(show.peek())) return false;
+  if (b.seq >= 0 && windowHooks.seq() === b.seq) {
+    windowHooks.back();
+    return true;
+  }
+  const id = selected.peek();
+  familyBack.value = null;
+  setShow(b.show, { anchor: id });
+  if (b.view && id === b.id) windowHooks.put(b.view);
+  return true;
+}
+
 // ---------- план неба: укладка ----------
 
 /** Клетки скоплений общей раскладки по модели (списки без родства, E2): лицо → скопление, строка сетки, годы сетки. */
@@ -519,7 +603,9 @@ export type ShowCmd =
   /** меню поля рода лица: предки/потомки/оба, поколения, по отцам/по крови */
   | { kind: 'menu'; field: 'dir' | 'gen' | 'by'; options: readonly { label: string; show: Show; current: boolean }[] }
   /** «показать на всём небе» (решение 111): выбранное лицо вне показа — всё небо и перелёт к нему */
-  | { kind: 'reveal'; id: string };
+  | { kind: 'reveal'; id: string }
+  /** «вернуть прежний показ» (решение 145): из «Ближайшей родни» — к показу и окну, с которых в неё пришли */
+  | { kind: 'return' };
 
 /** Часть строки показа: текст или изменяемая часть (команда). */
 export interface SummaryPart {
@@ -631,6 +717,19 @@ export function summaryOf(s: Show, c: ShowContent = contentOf(s)): ShowSummary {
       break;
     }
     case 'lineage': {
+      // «Ближайшая родня» (решение 145) — одним именем: «ближайшая родня Давида — 31 лицо»; поля рода меняет лист «Показ»
+      // (без сужения типа: дальше в этой ветви — прочие показы рода)
+      if (s.dir === 'both' && s.gen === 1 && s.by === 'blood') {
+        const bareN = nameCaseBare(s.id);
+        const g = nameGen(s.id);
+        const all = personsN(n + c.guests.size);
+        text.push({ text: g ? `ближайшая родня ${g} — ${all}` : `ближайшая родня: ${fullName(s.id)} — ${all}` });
+        mid = [text[0], { text: bareN ? `ближайшая родня ${bareN} — ${all}` : `ближайшая родня: ${byId.get(s.id)?.name ?? s.id} — ${all}` }];
+        short = bareN ? `ближайшая родня ${bareN} — ${all}` : `ближайшая родня — ${all}`;
+        cmds.splice(0, cmds.length, { text: 'изменить', cmd: { kind: 'sheet', lineage: s.id } }, toAll);
+        shortCmd = { text: 'изменить', cmd: { kind: 'sheet', lineage: s.id } };
+        break;
+      }
       const opt = <T,>(field: 'dir' | 'gen' | 'by', vals: readonly T[], label: (v: T) => string, set: (v: T) => Show, cur: T): SummaryPart => ({
         text: label(cur),
         cmd: { kind: 'menu', field, options: vals.map((v) => ({ label: label(v), show: set(v), current: v === cur })) },
@@ -676,6 +775,8 @@ export function showTitle(s: Show): string {
     case 'groups':
       return wholeSection(s.groups) === 'tribes' ? 'все колена' : s.groups.map((g) => groupById.get(g)?.name ?? g).join(', ');
     case 'lineage':
+      // «Ближайшая родня» (решение 145) — своим именем: «нет в показе «ближайшая родня: Иаков»»
+      if (s.dir === 'both' && s.gen === 1 && s.by === 'blood') return `ближайшая родня: ${byId.get(s.id)?.name ?? s.id}`;
       return `${DIR_WORD[s.dir]}: ${byId.get(s.id)?.name ?? s.id}`;
   }
 }
@@ -706,7 +807,10 @@ export const EMPTY_SET_TEXT = 'набор пуст — добавьте лиц �
 export const showSummary = computed<ShowSummary>(() => {
   const s = show.value;
   const c = showContent.value;
-  const sm = summaryOf(s, c);
+  const sm0 = summaryOf(s, c);
+  // из «Ближайшей родни» — «вернуть прежний показ» первой командой (решение 145), и в краткой строке тоже
+  const back: SummaryPart = { text: 'вернуть прежний показ', cmd: { kind: 'return' } };
+  const sm = canReturn.value ? { ...sm0, cmds: [back, ...sm0.cmds], shortCmds: [back, ...sm0.shortCmds] } : sm0;
   const out = outsideOf(s, c, selected.value);
   if (!out) return sm;
   const part = { text: `; ${fullName(out)} — вне показа` };

@@ -76,18 +76,72 @@ const nameOf = (id: string) => atlas.byId.get(id)?.name ?? id;
 
 // ---------- записывающий холст ----------
 
-/** Холст без рисования: ширина текста — 0,56 кегля на знак (как у переписи K4). */
+// ---------- ширины текста: таблица шрифтов неба (этап 14, контракт 5 S2 → S1; tools/font-widths.json) ----------
+
+interface FontRow {
+  family: string;
+  weight: number;
+  italic: boolean;
+  size: number;
+  spacing: number;
+  em: Record<string, number>;
+}
+const FONT_TABLE: FontRow[] = await (async () => {
+  try {
+    const { readFileSync } = await import('node:fs');
+    const t = JSON.parse(readFileSync(new URL('./font-widths.json', import.meta.url), 'utf8')) as { fonts: Record<string, FontRow> };
+    return Object.values(t.fonts);
+  } catch {
+    return [];
+  }
+})();
+const fontMemo = new Map<string, FontRow | null>();
+/** Строка таблицы для ctx.font: то же семейство и начертание, ближайшие насыщенность и кегль. */
+function fontRow(font: string): FontRow | null {
+  const was = fontMemo.get(font);
+  if (was !== undefined) return was;
+  const italic = /\bitalic\b/.test(font);
+  const weight = Number(/\b(\d{3})\b/.exec(font)?.[1] ?? 400);
+  const size = Number(/(\d+(?:\.\d+)?)px/.exec(font)?.[1] ?? 13);
+  const family = /Jost|sans/i.test(font) && !/Literata/i.test(font) ? 'sans' : 'serif';
+  let best: FontRow | null = null;
+  let bd = Infinity;
+  for (const r of FONT_TABLE) {
+    if (r.family !== family || r.italic !== italic || r.spacing) continue;
+    const d = Math.abs(r.weight - weight) / 100 + Math.abs(r.size - size) / 4;
+    if (d < bd) {
+      bd = d;
+      best = r;
+    }
+  }
+  fontMemo.set(font, best);
+  return best;
+}
+/** Ширина строки шрифтом font, px: по таблице (доли кегля на знак), без неё — 0,56 кегля на знак (оценка K4). */
+export function textWidth(text: string, font: string, letterSpacing = 0): number {
+  const size = Number(/(\d+(?:\.\d+)?)px/.exec(font)?.[1] ?? 13);
+  const r = fontRow(font);
+  if (!r) return text.length * size * 0.56 + letterSpacing * text.length;
+  const avg = r.em['о'] ?? 0.55;
+  let w = 0;
+  for (const ch of text) w += r.em[ch] ?? avg;
+  return w * size + letterSpacing * [...text].length;
+}
+
+/** Холст без рисования: ширина текста — по таблице шрифтов неба (tools/font-widths.json; прежде — 0,56 кегля на знак). */
 function blankCanvas(): HTMLCanvasElement {
   let font = '13px serif';
+  let spacing = 0;
   const px = () => Number(/(\d+(?:\.\d+)?)px/.exec(font)?.[1] ?? 13);
   const ctx = new Proxy({} as Record<string, unknown>, {
     get: (_o, k) => {
-      if (k === 'measureText') return (s: string) => ({ width: s.length * px() * 0.56, actualBoundingBoxAscent: px() * 0.72, actualBoundingBoxDescent: px() * 0.22 });
+      if (k === 'measureText') return (s: string) => ({ width: textWidth(s, font, spacing), actualBoundingBoxAscent: px() * 0.72, actualBoundingBoxDescent: px() * 0.22 });
       if (k === 'canvas') return canvas;
       return () => ({ addColorStop: () => {} });
     },
     set: (_o, k, v) => {
       if (k === 'font') font = String(v);
+      if (k === 'letterSpacing') spacing = parseFloat(String(v)) || 0;
       return true;
     },
   });
@@ -151,7 +205,46 @@ function applyScene(sc: Scene) {
   return show.skyShow.value;
 }
 
+/** Правило окна (trails.ts, windowRule; решение 136): на сборке до этапа 14 его нет. */
+function windowRule(on: boolean) {
+  const w = (trails as unknown as { windowRule?: { on: boolean } }).windowRule;
+  if (w) w.on = on;
+}
+
+/**
+ * Окно кадра связей (links.ts, linkWindow; С1): в приложении связи строятся по звёздам окна и ширины окна с каждой
+ * стороны; перепись меряет кадр по всему небу (пороги — на всё, что построено), поэтому окно выключено. Тест сверяет,
+ * что в окне связи те же (tests/census.test.ts).
+ */
+export function linkWindowRule(on: boolean) {
+  const w = (links as unknown as { linkWindow?: { on: boolean } }).linkWindow;
+  if (w) w.on = on;
+}
+linkWindowRule(false);
+
+/** Пути кадра в видимой части неба: «вид|когда|ключ|x,y,…» (px холста) — для сверки окна кадра связей. */
+export function pathsInView(f: Frame): string[] {
+  const vp = f.s.cam.vp;
+  const d = f.d;
+  const out: string[] = [];
+  for (const q of f.paths) {
+    let x0 = Infinity;
+    let x1 = -Infinity;
+    let y0 = Infinity;
+    let y1 = -Infinity;
+    for (let k = 0; k + 1 < q.pts.length; k += 2) {
+      x0 = Math.min(x0, q.pts[k] + d.dx);
+      x1 = Math.max(x1, q.pts[k] + d.dx);
+      y0 = Math.min(y0, q.pts[k + 1] + d.dy);
+      y1 = Math.max(y1, q.pts[k + 1] + d.dy);
+    }
+    if (x1 >= vp.l && x0 <= vp.r && y1 >= vp.t && y0 <= vp.b) out.push(`${q.kind}|${q.when}|${q.ks}|${q.pts.map((v, k) => Math.round(v + (k % 2 ? d.dy : d.dx))).join(',')}`);
+  }
+  return out.sort();
+}
+
 function newSky(w: number, h: number, sc: Scene): Sky {
+  windowRule(true);
   const s = new skyMod.Sky(blankCanvas());
   s.animate = false;
   s.resize(w, h, 1);
@@ -228,11 +321,59 @@ export function captureAt(id: string, at: string, years: number, o: { width?: nu
   return frameOf(sc, s, 1, width, o.extra);
 }
 
+/** Окно неба адреса «~y…~w…~l…» (src/ui/address.ts, cameraFor): год середины, лет на ширину видимой части, полоса середины. */
+export interface ViewAt {
+  year: number;
+  width: number;
+  lane: number;
+}
+
+/**
+ * Кадр «всего неба» в окне адреса (этап 14, GRAPH STRESS, отчёт G § 6): окно view или окно лица person (как перелёт к
+ * лицу: viewForPerson), выбор select, выбранная связь link, ширина неба width (940 — с открытой карточкой справа).
+ */
+export function captureView(id: string, at: ViewAt | { person: string }, o: { width?: number; height?: number; select?: string | null; link?: LinkKey | null; extra?: Record<string, unknown> } = {}): Frame {
+  const sc = { ...SCENES[id], select: o.select === undefined ? SCENES[id].select : o.select };
+  const width = o.width ?? 1440;
+  const s = newSky(width, o.height ?? (width < 600 ? 700 : 776), sc);
+  const vp = s.cam.vp;
+  const [, cy] = s.cam.vpCenter();
+  if ('person' in at) {
+    const n = s.node(at.person);
+    if (!n) throw new Error(`[${id}] нет лица ${at.person}`);
+    const c = M().chrono.get(at.person);
+    const life = c ? Math.max(40, (c.d ?? c.dEst) - c.b) : 80;
+    const span = Math.max(120, Math.min(900, life * 2.6));
+    const x0 = s.xOf(n.t0 - span * 0.35);
+    const x1 = s.xOf(n.t0 + span * 0.65);
+    const kx = (vp.r - vp.l) / Math.max(1e-6, x1 - x0);
+    s.cam.set({ x0: x0 - vp.l / kx, kx, laneTop: s.rowOf(n.lane) + cy / s.cam.kyFor(kx) });
+  } else {
+    const xc = s.xOf(at.year < 0 ? at.year + 1 : at.year);
+    const half = (vp.r - vp.l) / 2;
+    const span = (kx: number) => s.tOf(xc + half / kx) - s.tOf(xc - half / kx);
+    let lo = Math.log(1e-6);
+    let hi = Math.log(1e4);
+    for (let i = 0; i < 80; i++) {
+      const mid = (lo + hi) / 2;
+      if (span(Math.exp(mid)) > at.width) lo = mid;
+      else hi = mid;
+    }
+    const kx = Math.exp((lo + hi) / 2);
+    const [cx] = s.cam.vpCenter();
+    s.cam.set({ x0: xc - cx / kx, kx, laneTop: s.rowOf(at.lane) + cy / s.cam.kyFor(kx) });
+  }
+  return frameOf(sc, s, 1, width, { ...(o.link ? { link: o.link } : {}), ...(o.extra ?? {}) });
+}
+
 /** Нарисовать сцену и снять геометрию кадра. scale — ×1 или ×2; width — ширина окна (1440 или 390). */
 export function capture(id: string, scale = 1, width = 1440): Frame {
   const sc = SCENES[id];
   const height = width < 600 ? 700 : 776;
   let s: Sky;
+  // холст во всё небо: окно читателя — всё небо, и правило окна (решение 136) раскрыло бы все длинные связи; перепись
+  // «всего неба» считает обрывки, окна читателя — сцены GRAPH STRESS (captureView)
+  windowRule(!(sc.reading || (!sc.family && sc.show.kind === 'all')));
   if (sc.reading || (!sc.family && sc.show.kind === 'all')) {
     // «все лица» целиком: большой холст на всё небо при масштабе «лицо и поколения вокруг»; показы общей раскладки
     // («ключевые лица», все колена) — на том же масштабе чтения и тем же холстом (X3 § 3)
@@ -255,8 +396,13 @@ export function capture(id: string, scale = 1, width = 1440): Frame {
       cam.zoomAt(cx, cy, scale);
     }
   }
+  windowRule(!(sc.reading || (!sc.family && sc.show.kind === 'all')));
   return frameOf(sc, s, scale, width);
 }
+
+/** Путь нарисован (trails.ts, linkOn; на сборке до этапа 14 — прежнее правило): перепись работает и на базе для чисел «до». */
+const T = trails as unknown as { unionOn?: (d: NonNullable<ReturnType<Sky['linkFrame']>>, u: string, owner: string, from: string) => boolean; linkOn?: (q: LinkPath, d: NonNullable<ReturnType<Sky['linkFrame']>>) => boolean; stubPathOf?: (f: LinkFrame, st: LinkFrame['stubs'][number]) => LinkPath | null };
+const on = (q: LinkPath, d: NonNullable<ReturnType<Sky['linkFrame']>>) => (T.linkOn ? T.linkOn(q, d) : trails.linkShown(q, d) && (d.alpha > 0.01 || d.lit(q)));
 
 /** Кадр готового неба: рисует его дважды (места подписей устоялись) и снимает геометрию. */
 export function frameOf(sc: Scene, s: Sky, scale: number, width: number, extra: Record<string, unknown> = {}): Frame {
@@ -266,7 +412,7 @@ export function frameOf(sc: Scene, s: Sky, scale: number, width: number, extra: 
   const d = s.linkFrame();
   if (!d) throw new Error(`[${sc.id}] связей в кадре нет`);
   // нарисованные в кадре пути: по правилу длинных связей и видимые при этой подробности (или выделенные)
-  const shown = d.frame.paths.filter((q) => trails.linkShown(q, d) && (d.alpha > 0.01 || d.lit(q)));
+  const shown = d.frame.paths.filter((q) => on(q, d));
   const lt = { x0: 0, x1: 0, y: 0, cls: 'exact', known: true, solidTo: 0, color: '', width: 1 } as import('../src/render/trails.ts').LifeTrail;
   const tr: Frame['trails'] = [];
   for (let i = 0; i < s.nodes.length; i++) {
@@ -279,7 +425,9 @@ export function frameOf(sc: Scene, s: Sky, scale: number, width: number, extra: 
     paths: shown.filter((q) => q.kind !== 'ribbon'),
     // ленты — по маршрутам только на масштабе семьи; на обзоре нарисован сплайн (ribbons.ts), и маршрут не считается
     ribbons: s.routeFactor >= 0.5 ? shown.filter((q) => q.kind === 'ribbon') : [],
-    nodes: d.frame.nodes.filter((n) => (d.alpha > 0.01 || d.lit({ ends: [n.owner, n.from] } as unknown as LinkPath)) && !(d.frame.ribbonOnly?.has(n.union) && s.routeFactor < 0.5)),
+    // узлы — те, что нарисованы: на «всех лицах» теснее поколения в 18 px ромбов нет (plates.ts, genRoom), видимость — по
+    // ярусу линий союза (решение 135)
+    nodes: d.frame.layout === 'map' && s.genRoom < 0.5 ? [] : d.frame.nodes.filter((n) => (T.unionOn ? T.unionOn(d, n.union, n.owner, n.from) : d.alpha > 0.01 || d.lit({ ends: [n.owner, n.from] } as unknown as LinkPath)) && !(d.frame.ribbonOnly?.has(n.union) && s.routeFactor < 0.5)),
     stars: s.linkStarsNow(), trails: tr,
     boxes: ls.boxes.filter((b) => b.kind !== 'frame' && b.kind !== 'edge'), overlaps: ls.overlaps, ky: s.cam.ky,
   };
@@ -379,8 +527,9 @@ export interface Census {
   y8of: number;
   y8nodes: number;
   y9: number;
-  /** Я11: пересечений линий союзов между собой / со следами */
+  /** Я11: пересечений линий союзов между собой без разрыва / со следами; y11of — всех пересечений связь × связь */
   y11: number;
+  y11of: number;
   y11trails: number;
   /** Я12: подписи на чужих звёздах / на чужих линиях / всего подписей / наложения / высота строки */
   y12stars: number;
@@ -691,8 +840,18 @@ export function census(f: Frame): Census {
     }
   }
 
-  // Я11: пересечения линий союзов между собой и со следами (в семейных сценах)
+  // Я11: пересечения линий союзов между собой без разрыва (этап 14, решение 134: пересечение связей разных союзов —
+  // разрывом нижней по ярусу, как след под вертикалью; links.ts, linkCrossings) и со следами (в семейных сценах);
+  // y11of — всех пересечений связь × связь
   let y11 = 0;
+  let y11of = 0;
+  const pathIdx = new Map(f.d.frame.paths.map((q, i) => [q, i] as const));
+  const hasCut = (a: LinkPath, b: LinkPath) => {
+    const j = pathIdx.get(b);
+    const xc = a.xcuts ?? [];
+    for (let k = 3; k < xc.length; k += 4) if (xc[k] === j) return true;
+    return false;
+  };
   const lineSegs: { g: Seg; q: LinkPath }[] = [];
   for (const q of drawn) for (const g of segs(q)) lineSegs.push({ g, q });
   for (let i = 0; i < lineSegs.length; i++)
@@ -704,6 +863,8 @@ export function census(f: Frame): Census {
       if (Math.max(a.g[1], a.g[3]) < Math.min(b.g[1], b.g[3]) || Math.max(b.g[1], b.g[3]) < Math.min(a.g[1], a.g[3])) continue;
       const p = crossAt(a.g, b.g);
       if (!p) continue;
+      y11of++;
+      if (hasCut(a.q, b.q) || hasCut(b.q, a.q)) continue;
       y11++;
       mark(a.q.ks, 'Я11');
       mark(b.q.ks, 'Я11');
@@ -801,7 +962,7 @@ export function census(f: Frame): Census {
   const ch = chChecks(f, add);
   return {
     scene: f.sc.id, scale: f.scale, width: f.width, stars: f.stars.length, kids: kidKeys.size,
-    y1, y2, y3, y4, y5, y6, y6of: teeth.length, y7, y8, y8of, y8nodes, y9, y11, y11trails,
+    y1, y2, y3, y4, y5, y6, y6of: teeth.length, y7, y8, y8of, y8nodes, y9, y11, y11of, y11trails,
     y12stars, y12lines, y12of: f.boxes.filter((b) => !(b.kind === 'plate' && !b.text)).length, y12overlaps: f.overlaps, rowPx, y13, y14of, y14ends, y14foreign, y15,
     ...ch, issues,
   };
@@ -991,6 +1152,231 @@ function chChecks(f: Frame, add: (check: string, ks: string, text: string, x: nu
 }
 
 
+// ---------- этап 14: GRAPH STRESS (решение 158; отчёт G § 6) ----------
+
+/** Сцена GRAPH STRESS: окно «всего неба», выбор и выбранная связь (отчёт G § 6). */
+export interface GraphScene {
+  id: string;
+  title: string;
+  at: ViewAt | { person: string };
+  select: string | null;
+  link?: string;
+}
+export const GRAPH_SCENES: GraphScene[] = [
+  { id: 'esrom', title: 'Есром, Халев, Ашхур', at: { year: -1839, width: 172, lane: -5.4 }, select: null },
+  { id: 'halev', title: 'Халев выбран, 60 лет', at: { year: -1800, width: 60, lane: -2 }, select: 'khalev-syn-esroma' },
+  { id: 'david', title: 'Давид', at: { person: 'david' }, select: 'david' },
+  { id: 'iakov', title: 'Иаков', at: { person: 'iakov' }, select: 'iakov' },
+  { id: 'iakovDan', title: 'Иаков, связь «Иаков и Валла — Дан»', at: { person: 'iakov' }, select: 'iakov', link: 'k.iakov.valla._.dan' },
+  { id: 'halevLink', title: 'Халев, связь «Халев и Мааха — Шева»', at: { year: -1800, width: 60, lane: -2 }, select: 'khalev-syn-esroma', link: 'k.khalev-syn-esroma.maakha-nalozhnitsa-khaleva._.sheva-syn-khaleva' },
+  { id: 'iuda', title: 'Иуда', at: { year: -1900, width: 70, lane: 0 }, select: 'iuda' },
+  { id: 'ashhur', title: 'Ашхур', at: { person: 'ashkhur' }, select: 'ashkhur' },
+  { id: 'saul', title: 'Саул', at: { person: 'saul' }, select: 'saul' },
+  { id: 'kettura', title: 'Хеттура', at: { year: -1968, width: 172, lane: -16.6 }, select: null },
+  { id: 'benjamin', title: 'Вениамин, 1 Пар 7–8', at: { year: -1839, width: 172, lane: -39 }, select: null },
+  { id: 'edom', title: 'Едом', at: { year: -1968, width: 172, lane: 17.1 }, select: null },
+  { id: 'nations', title: 'Таблица народов', at: { year: -2451, width: 180, lane: -5.4 }, select: null },
+  { id: 'efraim', title: 'Ефрем', at: { year: -1796, width: 172, lane: 28.3 }, select: null },
+  { id: 'return', title: 'Списки возвращения', at: { year: -595, width: 172, lane: 28.3 }, select: null },
+  { id: 'far900', title: 'Дальний масштаб, 900 лет', at: { year: -1500, width: 900, lane: 0 }, select: null },
+  { id: 'far1300', title: 'Дальний масштаб, 1300 лет', at: { year: -1500, width: 1300, lane: 0 }, select: null },
+  { id: 'far2000', title: 'Дальний масштаб, 2000 лет', at: { year: -1500, width: 2000, lane: 0 }, select: null },
+  { id: 'iisus', title: 'Иисус', at: { year: -10, width: 90, lane: 0 }, select: 'iisus' },
+];
+
+/** Числа GRAPH STRESS кадра (решение 158; пороги — STAGE14 § 4, Г1–Г7). */
+export interface GraphCensus {
+  scene: string;
+  width: number;
+  /** Г1: разрывы следа родителя союза его же линиями («свой след разрезан») */
+  ownCut: number;
+  /** Г2: узлов (◆, •) на чужом пути (ближе r + 1 к оси, у черты брака — к её линии); совпадающих вертикалей (|Δx| < 2, > 12 px) */
+  nodeOnPath: number;
+  sameVert: number;
+  /** Г3: Я1 (путь у чужой звезды); y1full — из них на дальних ходах длинных связей, раскрытых выбором или окном (G8) */
+  y1: number;
+  y1full: number;
+  /** Г4: имён матерей у ромбов выбранного — поставлено / положено (в окне) */
+  mothers: number;
+  mothersOf: number;
+  /** Г5: второй родитель союза выбранного с детьми — погашен (нет в выделении) */
+  dimmed: number;
+  /** Г6: путей связей на экране; подписей обрывков без линий */
+  onScreen: number;
+  bareStubText: number;
+  /** Г7: координатных подписей при втором конце в окне; повтор координаты одного лица */
+  coordBoth: number;
+  coordRepeat: number;
+  /** пересечений связь × связь без разрыва */
+  xNoCut: number;
+  issues: Issue[];
+}
+
+const BAR_HALF = 1.6;
+
+/** Проверки GRAPH STRESS по нарисованному кадру. */
+export function graphCensus(f: Frame, scene = f.sc.id): GraphCensus {
+  const { s, d } = f;
+  const issues: Issue[] = [];
+  const add = (check: string, ks: string, text: string, x: number, y: number) => issues.push({ check, ks, text, x, y });
+  const vp = s.cam.vp;
+  const inVp = (x: number, y: number) => x >= vp.l && x <= vp.r && y >= vp.t && y <= vp.b;
+  const segIn = (g: Seg) => Math.max(g[0], g[2]) >= vp.l && Math.min(g[0], g[2]) <= vp.r && Math.max(g[1], g[3]) >= vp.t && Math.min(g[1], g[3]) <= vp.b;
+  const sh = (g: Seg): Seg => [g[0] + d.dx, g[1] + d.dy, g[2] + d.dx, g[3] + d.dy];
+  const paths = f.paths;
+  const idOf = (i: number) => s.nodes[i]?.person;
+  // Г1: свой след разрезан — путь союза режет след одного из родителей этого союза
+  let ownCut = 0;
+  for (const q of paths) {
+    if (!q.union) continue;
+    const u = reveal.unions.byId.get(q.union);
+    if (!u) continue;
+    for (let k = 0; k + 2 < q.cuts.length; k += 3) {
+      const who = idOf(q.cuts[k]);
+      if (who && (who === u.a || who === u.b) && inVp(q.cuts[k + 1] + d.dx, s.cam.sy(s.nodes[q.cuts[k]].lane))) {
+        ownCut++;
+        add('Г1', q.ks, `${q.kind} режет след ${nameOf(who)}`, q.cuts[k + 1], 0);
+      }
+    }
+  }
+  // Г2: узел на чужом пути; совпадающие вертикали разных союзов
+  let nodeOnPath = 0;
+  const R = (f.d.frame.layout === 'family' ? links.NODE_R_FAMILY : links.NODE_R_MAP) + 1;
+  for (const n of f.nodes) {
+    const nx = n.x + d.dx;
+    const ny = n.y + d.dy;
+    if (!inVp(nx, ny)) continue;
+    for (const q of paths) {
+      if (q.union === n.union) continue;
+      let hit = false;
+      for (const g of segs(q)) {
+        const atEnd = Math.hypot(n.x - g[0], n.y - g[1]) < 1 || Math.hypot(n.x - g[2], n.y - g[3]) < 1;
+        if (atEnd) continue;
+        if (links.distSeg(n.x, n.y, g[0], g[1], g[2], g[3]) - (q.kind === 'bar' ? BAR_HALF : 0) < R) hit = true;
+      }
+      if (hit) {
+        nodeOnPath++;
+        add('Г2', n.union, `узел ${n.union} на ${q.kind} ${q.ks}`, nx, ny);
+        break;
+      }
+    }
+  }
+  let sameVert = 0;
+  const vs = paths.flatMap((q) => segs(q).filter((g) => isV(g) && segIn(sh(g))).map((g) => ({ x: g[0], y0: Math.min(g[1], g[3]), y1: Math.max(g[1], g[3]), q })));
+  vs.sort((a, b) => a.x - b.x);
+  const seenSame = new Set<string>();
+  for (let i = 0; i < vs.length; i++)
+    for (let j = i + 1; j < vs.length && vs[j].x - vs[i].x < 2; j++) {
+      if (vs[i].q.union === vs[j].q.union) continue;
+      const ov = Math.min(vs[i].y1, vs[j].y1) - Math.max(vs[i].y0, vs[j].y0);
+      const pk = [vs[i].q.ks, vs[j].q.ks].sort().join('|');
+      if (ov > 12 && !seenSame.has(pk)) {
+        seenSame.add(pk);
+        sameVert++;
+        add('Г2', pk, `совпадающие вертикали ${Math.round(ov)} px`, vs[i].x + d.dx, vs[i].y0 + d.dy);
+      }
+    }
+  // Г3: Я1 — через census()
+  const y1s = links.checkLinks({ ...d.frame, paths: [...paths, ...f.ribbons] }, f.stars, ['always', 'short', 'full']).filter((c) => c.check === 'star');
+  const y1 = y1s.length;
+  const fullKs = new Set(paths.filter((q) => q.when === 'full').map((q) => q.ks));
+  const y1full = links.checkLinks({ ...d.frame, paths: paths.filter((q) => q.when === 'full') }, f.stars, ['full']).filter((c) => c.check === 'star' && fullKs.has(c.ks)).length;
+  // Г4: имена матерей у ромбов выбранного — поставленные (по замеру подписей), а не назначенные
+  const sel = f.sc.select;
+  let mothers = 0;
+  let mothersOf = 0;
+  const boxes = s.labelStats().boxes;
+  if (sel) {
+    const mine = new Set((reveal.unions.of.get(sel) ?? []).map((u) => u.id));
+    for (const n of d.frame.nodes) {
+      if (n.kind !== 'union' || !n.mother || !mine.has(n.union)) continue;
+      const nx = n.x + d.dx;
+      const ny = n.y + d.dy;
+      if (!inVp(nx, ny) || ny < s.openTop) continue;
+      mothersOf++;
+      const name = nameOf(n.mother);
+      if (boxes.some((b) => b.kind === 'plate' && b.id === n.union && b.text === name)) mothers++;
+      else add('Г4', n.union, `у ромба нет имени «${name}»`, nx, ny);
+    }
+  }
+  // Г5: второй родитель союза выбранного с детьми — в выделении
+  let dimmed = 0;
+  if (sel) {
+    const hl = marks.familyHighlight(sel).hl;
+    for (const u of reveal.unions.of.get(sel) ?? []) {
+      if (!u.kids.length || u.id.includes('~')) continue;
+      for (const o of [u.a, u.b]) {
+        if (!o || o === sel) continue;
+        const i = s.indexOf(o);
+        if (i === undefined || !s.drawn(i)) continue;
+        if (!hl.has(o)) {
+          dimmed++;
+          add('Г5', u.id, `${nameOf(o)} погашен(а)`, 0, 0);
+        }
+      }
+    }
+  }
+  // Г6: путей связей на экране; подписи обрывков без линий
+  let onScreen = 0;
+  for (const q of paths) if (segs(q).some((g) => segIn(sh(g)))) onScreen++;
+  const texts = ((s.canvas as unknown as { dataset: Record<string, string> }).dataset.linkTexts ?? '').split('|').filter(Boolean);
+  const stubAt = new Map<string, LinkFrame['stubs'][number]>();
+  for (const st of d.frame.stubs) stubAt.set(`${Math.round(st.x + d.dx)},${Math.round(st.y + d.dy)}`, st);
+  const nodeAt = new Set(d.frame.nodes.map((n) => `${Math.round(n.x + d.dx)},${Math.round(n.y + d.dy)}`));
+  let bareStubText = 0;
+  let coordBoth = 0;
+  let coordRepeat = 0;
+  const parentsNamed = new Map<string, number>();
+  const inWin = (id: string) => {
+    const i = s.indexOf(id);
+    if (i === undefined || !s.drawn(i)) return false;
+    return inVp(s.cam.sx(s.X0[i]), s.cam.sy(s.nodes[i].lane)) && s.cam.sy(s.nodes[i].lane) >= s.openTop;
+  };
+  for (const t of texts) {
+    const at = t.slice(t.lastIndexOf('@') + 1);
+    if (nodeAt.has(at)) continue;
+    const st = stubAt.get(at);
+    if (!st) continue;
+    const sp = T.stubPathOf ? T.stubPathOf(d.frame, st) : (d.frame.paths.find((q) => q.ks === st.ks && q.kind === 'stub' && q.pts.some((v, k) => k % 2 === 0 && Math.abs(v - st.x) < 0.6 && Math.abs(q.pts[k + 1] - st.y) < 0.6)) ?? null);
+    if (sp && !on(sp, d)) {
+      bareStubText++;
+      add('Г6', st.ks, `подпись «${t}» без линии`, st.x + d.dx, st.y + d.dy);
+    }
+    if (st.kind === 'kid' || d.frame.layout !== 'map') continue;
+    // координата в подписи — «Давид, 32 П»
+    const coord = /, \d+ [А-ЯЁ]/.test(t.slice(0, t.lastIndexOf('@')));
+    if (st.side === 'child') {
+      const par = st.targets[0];
+      if (inWin(par) && coord) {
+        coordBoth++;
+        add('Г7', st.ks, `«${t}» при ${nameOf(par)} в окне`, st.x + d.dx, st.y + d.dy);
+      }
+      parentsNamed.set(par, (parentsNamed.get(par) ?? 0) + 1);
+    } else if (coord && st.targets.every(inWin)) {
+      coordBoth++;
+      add('Г7', st.ks, `«${t}» при детях в окне`, st.x + d.dx, st.y + d.dy);
+    }
+  }
+  for (const [par, n] of parentsNamed)
+    if (n > 1) {
+      coordRepeat += n - 1;
+      add('Г7', par, `координата ${nameOf(par)} ×${n}`, 0, 0);
+    }
+  // пересечения связь × связь без разрыва
+  const c = census(f);
+  return { scene, width: f.width, ownCut, nodeOnPath, sameVert, y1, y1full, mothers, mothersOf, dimmed, onScreen, bareStubText, coordBoth, coordRepeat, xNoCut: c.y11, issues: [...issues, ...c.issues.filter((q) => q.check === 'Я11')] };
+}
+
+/** Кадр сцены GRAPH STRESS на ширине неба width (1440, а с открытой карточкой — 940). */
+export function captureGraph(g: GraphScene, width = 1440, select: string | null = g.select): Frame {
+  const link = g.link ? lk.parseLinkKey(g.link) : null;
+  return captureView('all', g.at, { width, select, link });
+}
+
+export const GRAPH_HEAD = '| сцена | ширина | выбор | Г1 свой след | Г2 узел на чужом / вертикали | Я1 (на дальних ходах) | Г4 матери | Г5 погашен | Г6 путей / подписи без линий | Г7 при обоих / повтор | связь×связь без разрыва |\n|---|---|---|---|---|---|---|---|---|---|---|';
+export const graphRow = (c: GraphCensus, sel: string | null) =>
+  `| ${c.scene} | ${c.width} | ${sel ? nameOf(sel) : '—'} | ${c.ownCut} | ${c.nodeOnPath} / ${c.sameVert} | ${c.y1} (${c.y1full}) | ${c.mothersOf ? `${c.mothers}/${c.mothersOf}` : '—'} | ${c.dimmed} | ${c.onScreen} / ${c.bareStubText} | ${c.coordBoth} / ${c.coordRepeat} | ${c.xNoCut} |`;
+
 // ---------- пороги § 12 ----------
 
 /** Нарушенные пороги Я1–Я15 для переписи сцены: пусто — все пороги соблюдены. */
@@ -1032,14 +1418,41 @@ const pct = (a: number, b: number) => (b ? `${Math.round((100 * a) / b)} %` : '�
 
 /** Строка таблицы переписи. */
 export function row(c: Census): string {
-  return `| ${c.scene} | ${c.scale} | ${c.width} | ${c.rowPx.toFixed(1)} | ${c.stars} | ${c.kids} | ${c.y1} | ${c.y2} | ${c.y3} | ${c.y4} | ${c.y5} | ${c.y6}/${c.y6of} | ${c.y7} | ${c.y8}/${c.y8of} (${c.y8nodes}) | ${c.y9} | ${c.y11} / ${c.y11trails} | ${c.y12stars} / ${c.y12lines} / ${c.y12overlaps} | ${c.y13} | ${pct(c.y14ends, c.y14of)} / ${c.y14foreign} | ${c.y15} (${pct(c.y15, c.kids)}) | ${c.ch1} | ${c.ch2} | ${c.ch3}/${c.ch3of} | ${c.ch4} (+N ${c.ch4gaps}) | ${c.ch5} | ${c.ch6} | ${c.ch7} |`;
+  return `| ${c.scene} | ${c.scale} | ${c.width} | ${c.rowPx.toFixed(1)} | ${c.stars} | ${c.kids} | ${c.y1} | ${c.y2} | ${c.y3} | ${c.y4} | ${c.y5} | ${c.y6}/${c.y6of} | ${c.y7} | ${c.y8}/${c.y8of} (${c.y8nodes}) | ${c.y9} | ${c.y11}/${c.y11of} / ${c.y11trails} | ${c.y12stars} / ${c.y12lines} / ${c.y12overlaps} | ${c.y13} | ${pct(c.y14ends, c.y14of)} / ${c.y14foreign} | ${c.y15} (${pct(c.y15, c.kids)}) | ${c.ch1} | ${c.ch2} | ${c.ch3}/${c.ch3of} | ${c.ch4} (+N ${c.ch4gaps}) | ${c.ch5} | ${c.ch6} | ${c.ch7} |`;
 }
 export const HEAD =
   '| сцена | × | ширина | px/строка | звёзд | связей к детям | Я1 | Я2 | Я3 | Я4 | Я5 | Я6 | Я7 | Я8 (узлов) | Я9 | Я11 линии / следы | Я12 звёзды / линии / наложения | Я13 | Я14 концы / чужие | Я15 | Ч1 | Ч2 | Ч3 | Ч4 | Ч5 | Ч6 | Ч7 |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|';
 
 // ---------- прогон ----------
 
-if (process.env.CENSUS_MAIN === '1') {
+if (process.env.CENSUS_MAIN === '1' && process.argv.includes('--graph')) {
+  // GRAPH STRESS (этап 14, решение 158): npx tsx tools/census.ts --graph [--scene esrom,david] [--width 1440,940] [--json out.json]
+  const argv = process.argv.slice(2);
+  const arg = (k: string, d: string) => {
+    const i = argv.indexOf(`--${k}`);
+    return i >= 0 && argv[i + 1] !== undefined ? argv[i + 1] : d;
+  };
+  const pick = arg('scene', '').split(',').filter(Boolean);
+  const widths = arg('width', '1440,940').split(',').map(Number);
+  const out: GraphCensus[] = [];
+  console.log(GRAPH_HEAD);
+  for (const g of GRAPH_SCENES) {
+    if (pick.length && !pick.includes(g.id)) continue;
+    for (const w of widths)
+      for (const sel of g.select ? [null, g.select] : [null]) {
+        if (w !== 1440 && !sel) continue;
+        const c = graphCensus(captureGraph(g, w, sel), g.id);
+        out.push(c);
+        console.log(graphRow(c, sel));
+        for (const q of c.issues.slice(0, Number(arg('top', '4')))) console.log(`    ${q.check}: ${q.text}`);
+      }
+  }
+  const json = arg('json', '');
+  if (json) {
+    const { writeFileSync } = await import('node:fs');
+    writeFileSync(json, JSON.stringify(out, null, 1));
+  }
+} else if (process.env.CENSUS_MAIN === '1') {
   const argv = process.argv.slice(2);
   const arg = (k: string, d: string) => {
     const i = argv.indexOf(`--${k}`);

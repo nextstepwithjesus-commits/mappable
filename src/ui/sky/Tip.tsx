@@ -24,6 +24,7 @@ import type { Rect } from '../../render/sky.ts';
 import type { RibbonHit } from '../../render/ribbons.ts';
 import { dotRect } from './DotCard.tsx';
 import { linkTip } from '../linkwords.ts';
+import { selectedKin } from '../card/kinrows.ts';
 import type { LinkKey } from '../../engine/linkkey.ts';
 
 export type Tip =
@@ -83,6 +84,25 @@ export function kinPreview(id: string): { sentence: string; path: string[]; step
   return out;
 }
 const previewCache = new Map<string, ReturnType<typeof kinPreview>>();
+
+/** Отрезки пути связи ks в последнем кадре неба — прямоугольниками с полем 4 px (px холста). */
+function pathRects(ks: string): Rect[] {
+  const s = skyRef.current;
+  const d = s?.linkFrame();
+  if (!d) return [];
+  const out: Rect[] = [];
+  for (const q of d.frame.paths) {
+    if (q.ks !== ks) continue;
+    for (let i = 0; i + 3 < q.pts.length; i += 2) {
+      const x0 = Math.min(q.pts[i], q.pts[i + 2]) + d.dx;
+      const x1 = Math.max(q.pts[i], q.pts[i + 2]) + d.dx;
+      const y0 = Math.min(q.pts[i + 1], q.pts[i + 3]) + d.dy;
+      const y1 = Math.max(q.pts[i + 1], q.pts[i + 3]) + d.dy;
+      out.push({ x: x0 - 4, y: y0 - 4, w: x1 - x0 + 8, h: y1 - y0 + 8 });
+    }
+  }
+  return out;
+}
 
 /** Прямоугольник звезды с кольцом наведения, px холста. */
 function starBox(id: string): Rect | null {
@@ -159,9 +179,20 @@ export function SkyTip({ tip }: { tip: Tip | null }) {
     else if (tip.kind === 'ribbon' || tip.kind === 'link') anchor = { x: tip.x - 8, y: tip.y - 8, w: 16, h: 16 };
     else anchor = tip.box;
     if (!anchor) return;
-    const p = placeTip(anchor, size, bounds, avoid, reserve(), tip.kind === 'star' ? undefined : ['se', 'sw']);
+    // путь наведённой связи и яркие подписи (решение 144; G13, C8): подсказка встаёт туда, где их меньше; у связи —
+    // со всех четырёх сторон, а не только снизу: конец пути под подсказкой не прячется
+    const path = tip.kind === 'link' ? pathRects(tip.ks) : [];
+    const names = s.ledger.boxes.filter((b) => b.kind === 'star' || b.kind === 'plate' || b.kind === 'mark');
+    const own = (r: Rect) => Math.abs(r.w - size.w) < 1.5 && Math.abs(r.h - size.h) < 1.5;
+    const p = placeTip(anchor, size, bounds, avoid, reserve().filter((r) => !own(r)), tip.kind === 'star' || tip.kind === 'link' ? undefined : ['se', 'sw'], { path, names });
     if (!pos || Math.abs(pos.x - p.x) > 0.5 || Math.abs(pos.y - p.y) > 0.5 || pos.side !== p.side) setPos(p);
   });
+  // подсказка встала или исчезла — резерв подписей заново (data-reserve="tip"; SkyView слушает «reserve-move»)
+  const shownNow = !!tip && shown && !!pos;
+  useEffect(() => {
+    ref.current?.dispatchEvent(new CustomEvent('reserve-move', { bubbles: true }));
+    if (!shownNow) document.querySelector('.sky')?.dispatchEvent(new CustomEvent('reserve-move', { bubbles: true }));
+  }, [shownNow, pos?.x, pos?.y]);
 
   if (!tip) return null;
   const visible = shown && !!pos;
@@ -171,6 +202,7 @@ export function SkyTip({ tip }: { tip: Tip | null }) {
       class="tip"
       role="tooltip"
       data-kind={tip.kind}
+      data-reserve={visible ? 'tip' : undefined}
       data-id={tip.kind === 'star' ? tip.id : tip.kind === 'tier' ? tip.hit.bar.id : tip.kind === 'ribbon' ? `${tip.hit.from} ${tip.hit.to}` : tip.kind === 'link' ? tip.ks : tip.key}
       data-side={pos?.side}
       data-shown={visible ? '' : undefined}
@@ -225,12 +257,20 @@ function StarTip({ id, more, count }: { id: string; more: boolean; count?: { boo
   // выбор второго лица «Родства»: первой строкой — кем лицо приходится первому (IX-22, IX-58); предложение — с имени
   const kin = kinPreview(id);
   const t = starTipLines(id, { more, count, kin: kin?.sentence });
+  // родня выбранного (решение 151): вместо уточнения — кем приходится выбранному, теми же словами, что «Родство»
+  const rel = t.head === 'kin' ? null : selectedKin(id);
   return (
     <>
       {t.head === 'kin' ? (
         <div class="kin">
           <b>{typo(kin!.sentence)}</b>
         </div>
+      ) : rel ? (
+        <>
+          <b>{p.name}</b>
+          {rel.dis && <span class="ds"> ({rel.dis})</span>}
+          <span class="rel">{` — ${rel.text}`}</span>
+        </>
       ) : (
         <>
           <b>{p.name}</b>

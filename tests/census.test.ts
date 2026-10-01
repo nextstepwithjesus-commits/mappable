@@ -81,8 +81,9 @@ describe('«все лица» целиком (§ 4.1): пороги § 12 и в�
   for (const scale of [1, 2])
     it(`×${scale}`, () => {
       const c = C.census(C.capture('all', scale, 1440));
-      // Я1: не больше 4 случаев, каждый — поимённо в отчёте
-      expect(c.y1).toBeLessThanOrEqual(4);
+      // Я1: этап 14 (решение 134, G8: ход ствола обходит звёзды по всей длине) — не больше 2 (было 4; на ×1 — Уззий, сын
+      // Белы, и Кис, сын Иеиля: тесные гнёзда без свободного x)
+      expect(c.y1).toBeLessThanOrEqual(2);
       expect(c.y2).toBe(0);
       expect(c.y3).toBeLessThanOrEqual(20);
       expect(c.y4).toBe(0);
@@ -213,4 +214,79 @@ describe('этап 13: правило концов, словарь начерт�
   it('«Дом Давидов»: черты брака царей с царицами-матерями не через коридор — пересечений со следами не больше 8 (было 13–14; порог X3 — 0, не достигнут: 7–8)', () => {
     for (const scale of [1, 2]) expect(C.census(C.capture('davidic', scale, 1440)).y11trails).toBeLessThanOrEqual(8);
   }, 60_000);
+});
+
+/**
+ * Этап 14, GRAPH STRESS (решение 158; STAGE14 § 4, Г1–Г7; сцены отчёта G § 6): «всё небо» в окне читателя — без выбора
+ * и с выбором, ширина неба 1440 и 940 (с карточкой). Г1 свой след не разрезан; Г2 ромб не на чужом пути, вертикали
+ * разных союзов не совпадают; Г3 Я1 с выбором не больше, чем без; Г4 имена матерей у ромбов выбранного — поставлены;
+ * Г5 второй родитель союза выбранного не погашен; Г6 на дальнем масштабе связей на экран не больше 150 и подписей
+ * обрывков без линий нет; Г7 координата у обрывка — только при втором конце за краем, одна на лицо. Известные остатки
+ * Г2 — верхними границами (рост — поломка): ромб Ефы у черты Маахи (Халев; окна Ашхура и Халева на 940), Лия у черты
+ * Зелфы на 940; на дальних масштабах (ромбы бледны с подробностью кадра) — числа этапа 14.
+ */
+describe('этап 14: GRAPH STRESS (Г1–Г7)', () => {
+  type G = ReturnType<CensusMod['graphCensus']>;
+  const run = (id: string, width: number, sel: string | null | undefined): G => {
+    const g = C.GRAPH_SCENES.find((q) => q.id === id)!;
+    return C.graphCensus(C.captureGraph(g, width, sel === undefined ? g.select : sel), id);
+  };
+  const why = (c: G) => JSON.stringify(c.issues.slice(0, 6).map((q) => `${q.check} ${q.text}`));
+  /** известные остатки Г2: «сцена|ширина|выбор» → узлов на чужом пути не больше */
+  // (Халев на 940 — 0: шина многожёнца разводится, дальний ребёнок тесного гнезда уходит в соседнее, links.ts splitCrowded)
+  const G2_LEFT: Record<string, number> = { 'ashhur|1440|-': 1, 'ashhur|1440|+': 1, 'iakov|940|+': 1, 'iakov|940|-': 1, 'iakovDan|940|+': 1, 'iakovDan|940|-': 1, 'far900|1440|-': 1, 'far1300|1440|-': 8 };
+  const SAME_LEFT: Record<string, number> = { 'far1300|1440|-': 2, 'far2000|1440|-': 2 };
+  for (const g of ['esrom', 'halev', 'david', 'iakov', 'iakovDan', 'halevLink', 'iuda', 'ashhur', 'saul', 'kettura', 'benjamin', 'edom', 'nations', 'efraim', 'return', 'far900', 'far1300', 'far2000', 'iisus'])
+    it(`${g}: Г1, Г2, Г5–Г7 — 1440 без выбора и с выбором, 940 с выбором; Г3 — Я1 с выбором не больше, чем без`, () => {
+      const sc = C.GRAPH_SCENES.find((q) => q.id === g)!;
+      const cases: [number, string | null][] = [[1440, null], ...(sc.select ? ([[1440, sc.select], [940, sc.select], [940, null]] as [number, string | null][]) : [])];
+      const got = new Map<string, G>();
+      for (const [w, sel] of cases) {
+        const c = run(g, w, sel);
+        const k = `${g}|${w}|${sel ? '+' : '-'}`;
+        got.set(k, c);
+        expect(c.ownCut, `Г1 ${k}: ${why(c)}`).toBe(0);
+        expect(c.nodeOnPath, `Г2 узлы ${k}: ${why(c)}`).toBeLessThanOrEqual(G2_LEFT[k] ?? 0);
+        expect(c.sameVert, `Г2 вертикали ${k}: ${why(c)}`).toBeLessThanOrEqual(SAME_LEFT[k] ?? 0);
+        expect(c.dimmed, `Г5 ${k}: ${why(c)}`).toBe(0);
+        expect(c.bareStubText, `Г6 ${k}: ${why(c)}`).toBe(0);
+        expect([c.coordBoth, c.coordRepeat], `Г7 ${k}: ${why(c)}`).toEqual([0, 0]);
+        expect(c.xNoCut, `связь × связь без разрыва ${k}`).toBe(0);
+        if (sel && w === 1440 && c.mothersOf) expect(c.mothers, `Г4 ${k}`).toBe(c.mothersOf);
+        if (sel && w === 940 && c.mothersOf) expect(c.mothers, `Г4 ${k}`).toBe(c.mothersOf);
+      }
+      if (sc.select) {
+        // Г3 (G8): развернувшиеся при выборе длинные связи не задевают чужих звёзд — Я1 на дальних ходах с выбором не больше,
+        // чем без него (на той же ширине неба). Я1 всего кадра с выбором и без сравнивать нельзя: выбор зажигает род
+        // выбранного на любом масштабе (решение 135), и в кадре больше связей
+        // (известный остаток: Давид на 940 — дальний ход к сыновьям, рождённым в Иерусалиме, от ромба у самой звезды Нафана)
+        const G3_LEFT: Record<string, number> = { 'david|940': 1 };
+        for (const w of [1440, 940]) expect(got.get(`${g}|${w}|+`)!.y1full, `Г3 ${g} ${w}`).toBeLessThanOrEqual(got.get(`${g}|${w}|-`)!.y1full + (G3_LEFT[`${g}|${w}`] ?? 0));
+      }
+      // Г6: на 900 годах на экране не больше 150 связей (было 703)
+      if (g === 'far900') expect(got.get('far900|1440|-')!.onScreen).toBeLessThanOrEqual(150);
+    }, 300_000);
+  it('окно кадра связей (С1): в видимой части неба связи те же, что у кадра по всему небу', () => {
+    for (const id of ['david', 'iakov', 'halev', 'iuda', 'far900', 'iisus'])
+      for (const [w, sel] of [[1440, null], [940, 'sel']] as const) {
+        const g = C.GRAPH_SCENES.find((q) => q.id === id)!;
+        if (sel && !g.select) continue;
+        const pick = sel ? g.select : null;
+        C.linkWindowRule(true);
+        let win: string[];
+        try {
+          win = C.pathsInView(C.captureGraph(g, w, pick));
+        } finally {
+          C.linkWindowRule(false);
+        }
+        const all = C.pathsInView(C.captureGraph(g, w, pick));
+        expect(win, `${id} ${w}${sel ? ' с выбором' : ''}`).toEqual(all);
+      }
+  }, 300_000);
+  it('ширины текста переписи — по таблице шрифтов неба (контракт 5, tools/font-widths.json), а не 0,56 кегля', () => {
+    const w = C.textWidth('Давид', '620 16px Literata, serif');
+    // строчные Literata — 0,65–0,68 кегля; заглавная Д — 0,75
+    expect(w / 16).toBeGreaterThan(5 * 0.6);
+    expect(C.textWidth('Давид', '620 16px Literata, serif')).not.toBeCloseTo(5 * 16 * 0.56, 0);
+  });
 });

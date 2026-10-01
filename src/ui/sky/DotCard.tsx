@@ -28,32 +28,37 @@
  * командой карточки, выбор второго лица («Родство с…»). Роль — dialog (не модальный) с именем лица, союза или связи.
  */
 import { computed, effect, signal } from '@preact/signals';
+import { Fragment, type ComponentChildren } from 'preact';
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
-import { byId, loadedCard } from '../../data/atlas.ts';
+import { byId, graph, loadedCard } from '../../data/atlas.ts';
 import type { Rect } from '../../render/sky.ts';
 import type { Union } from '../../engine/unions.ts';
-import { linkKeyString, sameLink, type LinkKey } from '../../engine/linkkey.ts';
-import { focused, model, pickMode, selected } from '../../state.ts';
-import { goTo, skyRef, viewTick } from '../common.tsx';
+import { linkKeyString, type LinkKey } from '../../engine/linkkey.ts';
+import { focused, hovered, model, pickMode, selected, theme } from '../../state.ts';
+import { goTo, Refs, skyRef, VerseInsert, viewTick } from '../common.tsx';
 import { Close, Menu } from '../controls.tsx';
 import { Avatar, UnionAvatar } from '../card/Avatar.tsx';
 import { askCards, cardsTick, disLine, onLines, othersNote, othersUnionOf, unionKindLine, yearsLine } from '../card/star.ts';
-import { familyOf, kinRows, yearHow, type KinPart, type KinRow } from '../card/kinrows.ts';
+import { familyOf, kinNamesakes, kinRows, relationsOf, yearHow, type KinPart, type KinRow } from '../card/kinrows.ts';
+import { kidsInBirthOrder } from '../card/Union.tsx';
+import { branchesOf, partnerIn } from '../../engine/unions.ts';
+import { branchColor } from '../../render/branches.ts';
 import { passportYears, isPeople } from '../card/Masthead.tsx';
 import { closePerson, collapseUnion, expanded, opened, openPerson, originOf, plates, selectedUnion, selectUnion, unionById, unionsOf, unions } from '../reveal.ts';
 import { addPath, foldDesc, foldGroups, foldsHiding, linkSet, workSet } from '../work.ts';
-import { countShow, setShow, show, showContent, showGuest, showTitle } from '../show.ts';
+import { canReturn, countShow, isNearest, nearestCount, nearestFamily, returnFromFamily, setShow, show, showContent, showGuest, showTitle } from '../show.ts';
 import { openShowSheet } from '../panels/Show.tsx';
 import { linkAnchor, linkGhosts, previewLinks, selectedLink, type GhostWhy } from '../linkstate.ts';
-import { accOf, kidsCount, linkBasis, linkInfo, linkSpeech, refsShort, refShort, spanHidden, stepParent, unionName, type LinkInfo } from '../linkwords.ts';
+import { kidsCount, kinLabel, kinPhrase, linkBasis, linkInfo, linkSpeech, refShort, spanHidden, stepParent, unionName, type KinPhrase, type LinkInfo } from '../linkwords.ts';
 import { grid, unfoldCard } from '../layout.ts';
 import { lowScreen, openSheetAt, sheetStop } from '../sheet.ts';
 import { focusCardTitle, focusQuietly } from '../focus.ts';
 import { skyMenu } from '../panels/Work.tsx';
 import { typo } from '../text/typo.ts';
-import { capFirst } from '../text/ru.ts';
+import { bySex, capFirst } from '../text/ru.ts';
 import { starRadius } from '../../render/glyphs.ts';
 import { familyOrderNote, personOrderNote } from '../../render/links.ts';
+import { firstKin } from '../../render/frame.ts';
 import { aroundPending, flyToIds, reduced, reserve, screenOf } from './view.ts';
 import { plateFocus, rememberFocus, toggleKids } from './starnav.ts';
 import { kidsText, unionTitle } from './text.ts';
@@ -67,7 +72,8 @@ export type DotAt = { kind: 'person'; id: string } | { kind: 'union'; uid: strin
  * Открытая карточка: где, выбранное лицо при открытии (его смена не командой карточки закрывает её), фокус — на первое;
  * until — до этого времени (performance.now) знак за краем карточку не закрывает: небо ещё едет к нему (начало «С Адама»).
  */
-export type DotCardState = DotAt & { sel: string | null; focus: boolean; until?: number };
+/** keyboard — открыта с клавиатуры (Enter на звезде, шаг по «Родству»): «Родство» полностью, без легенды (решение 83). */
+export type DotCardState = DotAt & { sel: string | null; focus: boolean; keyboard?: boolean; until?: number };
 
 export const dotCard = signal<DotCardState | null>(null);
 
@@ -97,7 +103,7 @@ if (typeof window !== 'undefined')
 export function openDot(at: DotAt, o: { focus?: boolean; grace?: number } = {}) {
   if (at.kind === 'person' ? !byId.has(at.id) : !unionById(at.uid)) return;
   if (selectedLink.peek()) selectedLink.value = null;
-  dotCard.value = { ...at, sel: selected.peek(), focus: !!o.focus, ...(o.grace && typeof performance !== 'undefined' ? { until: performance.now() + o.grace } : {}) };
+  dotCard.value = { ...at, sel: selected.peek(), focus: !!o.focus, keyboard: !!o.focus, ...(o.grace && typeof performance !== 'undefined' ? { until: performance.now() + o.grace } : {}) };
   // телефон: карточка у звезды — это нижний лист на 214 px (решение 77): лист встаёт на это положение
   if (grid.peek().phone && sheetStop.peek() !== 'peek') sheetStop.value = 'peek';
 }
@@ -116,6 +122,9 @@ export function closeDot(refocus = false) {
   if (!at) return;
   dotCard.value = null;
   lastRect = null;
+  openRows.clear();
+  // карточки больше нет — и её резерва подписей (SkyView слушает «reserve-move» на небе)
+  if (typeof requestAnimationFrame !== 'undefined') requestAnimationFrame(() => document.querySelector('.sky')?.dispatchEvent(new CustomEvent('reserve-move', { bubbles: true })));
   if (!refocus) return;
   const c = canvasEl();
   if (!c) return;
@@ -131,6 +140,9 @@ export function closeDot(refocus = false) {
     plateFocus.value = at.uid;
   }
 }
+
+/** Строки «Родства», раскрытые читателем («ещё N»): лицо и строка; забываются, когда карточка у звезды закрыта. */
+const openRows = new Set<string>();
 
 /** Имя «Родства», из которого открыли карточку связи: Escape возвращает фокус на него (§ 8). */
 let linkFrom: { key: string; name: string; row: string } | null = null;
@@ -597,6 +609,27 @@ export function dockDot(a: DotAnchor, h: number, bounds: Rect, soft: readonly Re
 
 /** Прямоугольник открытой карточки (px холста) — подсказка неба её не закрывает (src/ui/sky/Tip.tsx). */
 let lastRect: Rect | null = null;
+
+/** Пауза после последнего сдвига карточки, мс: тогда небо и замеряет резерв подписей заново. */
+const RESERVE_CALM_MS = 120;
+let reserveTimer = 0;
+/**
+ * Карточка встала на новое место — резерв подписей заново (data-reserve="dot", решение 153; SkyView слушает «reserve-move»).
+ * Не каждым кадром: в перелёте и протяжке карточка едет за звездой, и замер резерва в каждом кадре (размеры органов неба,
+ * новый резерв, перерисовка) отнимал у кадра сотни миллисекунд — нажатие во время перелёта не успевало его остановить
+ * (IX-54, сценарий 252). Замер — когда карточка постояла RESERVE_CALM_MS и небо не едет.
+ */
+function reserveMoved(el: HTMLElement, cam: { readonly moving: boolean }) {
+  window.clearTimeout(reserveTimer);
+  const fire = () => {
+    if (cam.moving) {
+      reserveTimer = window.setTimeout(fire, RESERVE_CALM_MS);
+      return;
+    }
+    if (el.isConnected) el.dispatchEvent(new CustomEvent('reserve-move', { bubbles: true }));
+  };
+  reserveTimer = window.setTimeout(fire, RESERVE_CALM_MS);
+}
 export const dotRect = () => (dotCard.peek() || selectedLink.peek() ? lastRect : null);
 
 /** Радиус звезды лица на экране с кольцом выбора, px. */
@@ -661,9 +694,12 @@ function obstacles(
   ends: readonly string[],
   a: DotAnchor,
   endsMust: boolean,
+  self: { w: number; h: number } | null = null,
 ): { never: Rect[]; keep: Rect[]; hard: Rect[]; soft: Obstacle[]; lines: Segment[]; mass: { x: number; y: number } | null } {
   const s = skyRef.current!;
-  const never: Rect[] = [...reserve(), ...s.edgeHits.map((e) => ({ x: e.x, y: e.y, w: e.w, h: e.h }))];
+  // сама карточка — тоже резерв подписей (data-reserve="dot", решение 153): своего прямоугольника она не избегает
+  const mine = (r: Rect) => !!self && Math.abs(r.w - self.w) < 1.5 && Math.abs(r.h - self.h) < 1.5;
+  const never: Rect[] = [...reserve().filter((r) => !mine(r)), ...s.edgeHits.map((e) => ({ x: e.x, y: e.y, w: e.w, h: e.h }))];
   const keepR: Rect[] = [];
   const hard: Rect[] = [];
   const soft: Obstacle[] = [];
@@ -837,51 +873,150 @@ export function cutRow(parts: readonly KinPart[], limit: number): { shown: KinPa
 /** Ключ связи — строкой для сравнения. */
 const ks = (k: LinkKey) => linkKeyString(k) ?? '';
 
+/** Ссылка на стих в тексте строки: «Быт 5:3», «1 Пар 2:16», «Быт 4:19–22». */
+const REF_IN_TEXT = /(?:[1-4]\s?)?[А-ЯЁ][а-яё]{1,5}\s\d+:\d+(?:[–-]\d+(?::\d+)?)?/g;
+/** Ссылка из текста — в запись данных: «1 Пар 2:16» → «1Пар 2:16», «–» → «-». */
+export const refOfText = (r: string) => r.replace(/^([1-4])\s+/, '$1').replace(/[–—]/g, '-');
+
+/**
+ * Текст со ссылками на стихи (строка «Год», решение 152): ссылки — кнопки, как в подробной карточке (Refs), стих —
+ * вклейкой под строкой (VerseInsert), до трёх стихов.
+ */
+export function RefText({ text, owner, insert = true }: { text: string; owner: string; insert?: boolean }) {
+  const out: ComponentChildren[] = [];
+  const refs: string[] = [];
+  let at = 0;
+  for (const m of text.matchAll(REF_IN_TEXT)) {
+    const r = refOfText(m[0]);
+    if (m.index! > at) out.push(<span key={`t${at}`}>{typo(text.slice(at, m.index))}</span>);
+    out.push(<Refs key={`r${m.index}`} refs={[r]} owner={owner} />);
+    refs.push(r);
+    at = m.index! + m[0].length;
+  }
+  if (at < text.length) out.push(<span key={`t${at}`}>{typo(text.slice(at))}</span>);
+  return (
+    <>
+      {out}
+      {insert && refs.length ? <VerseInsert owner={owner} refs={refs} /> : null}
+    </>
+  );
+}
+
+/** Ссылки текста строки — для вклейки во всю ширину карточки (строка «Год»). */
+export const refsInText = (text: string) => [...text.matchAll(REF_IN_TEXT)].map((m) => refOfText(m[0]));
+
+/** Сенсорный экран (грубый указатель). */
+const coarse = () => typeof window !== 'undefined' && !!window.matchMedia?.('(pointer: coarse)').matches;
+
+/**
+ * Касание пустого места строки «Родства» (подпись строки, промежуток между именами, вторая строка переноса) — ближайшему
+ * имени строки (решение 154; M6): вся строка — цель, поделённая по ближайшему имени. Только на сенсорном экране:
+ * мышью щелчок мимо имени ничего не выбирает.
+ */
+function nearestName(e: MouseEvent) {
+  const t = e.target as HTMLElement | null;
+  if (!coarse() || !t || t.closest('button')) return;
+  const row = t.closest('.dc-row');
+  const items = [...(row?.querySelectorAll<HTMLElement>('.dc-val .person, .dc-val .dc-more') ?? [])];
+  let best: HTMLElement | null = null;
+  let bestD = Infinity;
+  for (const b of items)
+    for (const r of b.getClientRects()) {
+      const dx = Math.max(r.left - e.clientX, 0, e.clientX - r.right);
+      const dy = Math.max(r.top - e.clientY, 0, e.clientY - r.bottom);
+      const d = Math.hypot(dx, dy * 2);
+      if (d < bestD) {
+        bestD = d;
+        best = b;
+      }
+    }
+  if (best) best.click();
+}
+
 /**
  * Строка «Родства»: подпись и имена. Наведение на строку — её линии на небе; на имя и фокус — линия этого имени. Щелчок по
  * имени — выбор лица (и перелёт, если его нет на экране); Enter — карточка связи. По именам строки — стрелки, Home, End.
  */
-function KinRowView({ row, idx, compact }: { row: KinRow; idx: number; compact?: boolean }) {
-  const [all, setAll] = useState(false);
-  const limit = compact ? 3 : (ROW_NAMES[row.kind] ?? 5);
+function KinRowView({ row, idx, compact, onMore, owner }: { row: KinRow; idx: number; compact?: boolean; onMore?: () => void; owner: string }) {
+  // раскрытая «ещё N» строка остаётся раскрытой после карточки связи, открытой с её имени (M9: Escape — к тому же имени)
+  const [all, setAllState] = useState(() => openRows.has(`${owner}|${row.kind}${idx}`));
+  const setAll = (v: boolean) => {
+    if (v) openRows.add(`${owner}|${row.kind}${idx}`);
+    setAllState(v);
+  };
+  // в листе телефона строка — одна строка текста (цель касания 44 px, решение 154): два имени и «ещё N»; родители — все
+  const limit = compact ? Math.min(ROW_NAMES[row.kind] ?? 2, row.kind === 'parents' ? 99 : 2) : (ROW_NAMES[row.kind] ?? 5);
   const { shown, rest, firstHidden } = cutRow(row.parts, all ? Infinity : limit);
   const preview = (keys: readonly LinkKey[] | null) => {
     previewLinks.value = keys && keys.length ? keys : null;
   };
   const rowKey = `${row.kind}${idx}`;
-  // разделитель сразу за именем: «Сын Давида и Вирсавии» + «, » не расходятся по строкам
+  // одна фраза родства (решение 151): тёзки семьи — с уточнением (решение 106), уровень и шаг линии — пометой, лицо вне
+  // показа — бледнее и словами в имени кнопки
+  void model.value;
+  const same = kinNamesakes(owner);
+  const phrase = new Map<number, KinPhrase>();
+  shown.forEach((p, i) => {
+    if (p.t === 'name') phrase.set(i, kinPhrase(p.id, p.role ?? '', p.key, { namesake: same.has(p.id), outside: skyState(p.id) === 'out' }));
+  });
+  // где стоит помета имени: сразу за ним; за его пояснением «(по Луке)»; за хвостом союза «и его жена», если дальше конец
+  // строки или разделитель
+  const markAfter = new Map<number, string>();
+  phrase.forEach((ph, i) => {
+    if (!ph.marks.length) return;
+    let j = i;
+    const nx = shown[i + 1];
+    const nn = shown[i + 2];
+    if (nx?.t === 'text' && /^\s*\(/.test(nx.text)) j = i + 1;
+    else if (nx?.t === 'text' && !/^[,;(]/.test(nx.text) && !/(:|—)\s*$/.test(nx.text) && (!nn || (nn.t === 'text' && /^[,;]/.test(nn.text)))) j = i + 1;
+    markAfter.set(j, ` ${ph.marks.join(', ')}`);
+  });
+  // разделитель сразу за именем: «Сын Давида и Вирсавии» + «, » не расходятся по строкам; у имени с уточнением или пометой
+  // разделитель встаёт за ними (между ними и запятой переноса нет)
   const glued = new Set<number>();
   shown.forEach((p, i) => {
     const prev = shown[i - 1];
-    if (p.t === 'text' && /^[,;]/.test(p.text) && prev?.t === 'name') glued.add(i);
+    if (p.t === 'text' && /^[,;]/.test(p.text) && prev?.t === 'name' && !phrase.get(i - 1)?.dis && !markAfter.has(i - 1)) glued.add(i);
   });
+  const mark = (i: number) =>
+    markAfter.has(i) ? (
+      <span key={`m${i}`} class="dc-cert" aria-hidden="true">
+        {typo(markAfter.get(i)!)}
+      </span>
+    ) : null;
   let first = true;
   return (
-    <div class={`dc-row ${row.kind}`} data-row={rowKey} onMouseEnter={() => preview(row.keys)} onMouseLeave={() => preview(null)}>
+    <div class={`dc-row ${row.kind}`} data-row={rowKey} onMouseEnter={() => preview(row.keys)} onMouseLeave={() => preview(null)} onClick={nearestName}>
       <dt class="dc-lbl">{row.label}</dt>
       <dd class="dc-val">
         {shown.map((p, i) => {
           if (p.t === 'text') {
+            // строка «Год»: ссылки в ней — кнопки с вклейкой стиха (решение 152; U7)
+            if (row.kind === 'year') return <RefText key={i} text={p.text} owner={`dc-year|${owner}`} insert={false} />;
             // запятая или точка с запятой за именем — внутри кнопки имени (.sep, ниже): строка не начинается с «,»
             const text = glued.has(i) ? p.text.slice(1) : p.text;
             return text ? (
-              <span key={i} class={row.kind === 'year' ? undefined : 'txt'}>
-                {typo(text)}
-              </span>
-            ) : null;
+              <Fragment key={i}>
+                <span class="txt">{typo(text)}</span>
+                {mark(i)}
+              </Fragment>
+            ) : (
+              mark(i)
+            );
           }
           const q = byId.get(p.id);
           const tab = first ? 0 : -1;
           first = false;
           const tip = linkInfo(p.key);
+          const ph = phrase.get(i)!;
           const btn = (
             <button
-              key={i}
               type="button"
-              class="person"
+              class={ph.outside ? 'person out' : 'person'}
               data-id={p.id}
               data-link={ks(p.key)}
               tabIndex={tab}
+              aria-label={kinLabel(ph)}
               title={tip ? `${tip.title}${tip.refs[0] ? ` (${refShort(tip.refs[0])})` : ''}. Щелчок — выбрать; Enter — карточка связи` : undefined}
               aria-description="Enter — карточка связи; пробел — выбрать лицо"
               onMouseEnter={(e) => {
@@ -912,9 +1047,11 @@ function KinRowView({ row, idx, compact }: { row: KinRow; idx: number; compact?:
                 rovingTo(to);
                 to.focus();
               }}
-              onClick={() => {
+              onClick={(e) => {
                 previewLinks.value = null;
-                if (q) goTo(p.id);
+                // имя выбирает лицо и сразу открывает его карточку у звезды (решение 153; U11): цепочка «Родства» идёт
+                // без поиска звезды; с клавиатуры (пробел) фокус — в новую карточку
+                if (q) kinStep(p.id, e.detail === 0);
               }}
             >
               <span class="nm">{q?.name ?? p.id}</span>
@@ -926,7 +1063,17 @@ function KinRowView({ row, idx, compact }: { row: KinRow; idx: number; compact?:
               ) : null}
             </button>
           );
-          return btn;
+          return (
+            <Fragment key={i}>
+              {btn}
+              {ph.dis ? (
+                <span class="dc-ds" aria-hidden="true">
+                  {` (${ph.dis})`}
+                </span>
+              ) : null}
+              {mark(i)}
+            </Fragment>
+          );
         })}
         {rest > 0 && (
           <>
@@ -935,8 +1082,13 @@ function KinRowView({ row, idx, compact }: { row: KinRow; idx: number; compact?:
               type="button"
               class="dc-more"
               tabIndex={-1}
-              aria-label={`ещё ${rest}: показать всех`}
+              aria-label={onMore ? `ещё ${rest}: всё родство в карточке` : `ещё ${rest}: показать всех`}
               onClick={(e) => {
+                // лист телефона на шапке: строка не растёт в лист, а лист поднимается к родству подробной карточки
+                if (onMore) {
+                  onMore();
+                  return;
+                }
                 const row = (e.currentTarget as HTMLElement).closest('.dc-row');
                 setAll(true);
                 requestAnimationFrame(() => {
@@ -953,6 +1105,12 @@ function KinRowView({ row, idx, compact }: { row: KinRow; idx: number; compact?:
           </>
         )}
       </dd>
+      {/* стих строки «Год» — вклейкой во всю ширину карточки, под строкой (решение 152; M12) */}
+      {row.kind === 'year' ? (
+        <div class="dc-verse">
+          <VerseInsert owner={`dc-year|${owner}`} refs={row.parts.flatMap((p) => (p.t === 'text' ? refsInText(p.text) : []))} />
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -979,11 +1137,25 @@ export function KinBlock({ id, compact = false, brief = false, onAll }: { id: st
   // поднимается до половины, к разделам родства подробной карточки
   const all = onAll ?? (compact ? () => kinInSheet() : undefined);
   const more = (brief || compact) && all ? rows.length - shown.length : 0;
+  // лица вне показа (решение 151; U14) — бледнее, а что это значит, сказано словами под строками
+  void show.value;
+  void showContent.value;
+  // в листе телефона (compact) строки пояснения нет: лист — краткая карточка, её высота — высота шапки (решение 155);
+  // «вне показа» там — в имени кнопки и точечной чертой
+  const outside = !compact && shown.some((r) => r.parts.some((p) => p.t === 'name' && skyState(p.id) === 'out'));
   return (
     <dl class="dc-kin" aria-label="Родство">
       {shown.map((r, i) => (
-        <KinRowView key={`${r.kind}${i}`} row={r} idx={i} compact={compact} />
+        <KinRowView key={`${r.kind}${i}`} row={r} idx={i} compact={compact} onMore={compact ? all : undefined} owner={id} />
       ))}
+      {outside && (
+        <div class="dc-row out-note">
+          <dt class="dc-lbl" />
+          <dd class="dc-val">
+            <span class="txt">{typo(`бледнее — нет в показе «${showTitle(show.value)}»`)}</span>
+          </dd>
+        </div>
+      )}
       {more > 0 && (
         <div class="dc-row all">
           <dt class="dc-lbl" />
@@ -996,6 +1168,17 @@ export function KinBlock({ id, compact = false, brief = false, onAll }: { id: st
       )}
     </dl>
   );
+}
+
+/**
+ * Шаг по «Родству» (решение 153; U11): имя выбирает лицо (небо летит к нему, если его нет на экране) и сразу открывает
+ * его карточку у звезды — она ждёт звезду, пока небо едет; с клавиатуры фокус — в новую карточку. На телефоне карточка
+ * у звезды — это сам лист: он показывает новое лицо и остаётся на прежнем положении (решение 150).
+ */
+function kinStep(id: string, keyboard: boolean) {
+  goTo(id);
+  if (selected.peek() !== id || !dotsOn.peek() || grid.peek().phone) return;
+  openDot({ kind: 'person', id }, { focus: keyboard, grace: 1500 });
 }
 
 /**
@@ -1024,6 +1207,8 @@ function LineageMenu({ id }: { id: string }) {
       label="Предки и потомки ▾"
       title="Оставить на небе только предков или потомков лица, или тех и других"
       items={[
+        // ясный вид семьи — первым (решение 145; контракт S3): родители, супруги, дети по матерям, 1 поколение
+        { key: 'near', label: typo(`Ближайшая родня — ${nearestCount(id)}`), onSelect: () => nearestFamily(id) },
         item('down', 'Потомки'),
         item('up', 'Предки'),
         item('both', 'Предки и потомки'),
@@ -1033,7 +1218,219 @@ function LineageMenu({ id }: { id: string }) {
   );
 }
 
-export function PersonBody({ id, compact = false, brief = false, onAll }: { id: string; compact?: boolean; brief?: boolean; onAll?: () => void }) {
+/**
+ * «Ближайшая родня» (решение 145; контракт S3, src/ui/show.ts) — команда карточки у звезды; в самой «Ближайшей родне»
+ * этого лица — «Вернуть прежний показ» одним действием.
+ */
+function NearestCmd({ id }: { id: string }) {
+  const s = show.value;
+  const mine = isNearest(s) && s.kind === 'lineage' && s.id === id;
+  if (mine && canReturn.value)
+    return (
+      <Cmd onRun={() => returnFromFamily()} cls="dc-near" title="Прежний показ неба и прежнее окно">
+        Вернуть прежний показ
+      </Cmd>
+    );
+  if (mine) return null;
+  return (
+    <Cmd onRun={() => nearestFamily(id)} cls="dc-near" title={typo(`Родители, супруги и дети по матерям — ${nearestCount(id)}; возврат — Escape или «назад»`)}>
+      Ближайшая родня
+    </Cmd>
+  );
+}
+
+/** Есть ли у лица ветви — союзы с детьми (src/engine/unions.ts, branchesOf): тогда у карточки у звезды легенда семьи. */
+const legendFor = (id: string) => (unions.of.get(id) ?? []).some((u) => !u.claim && u.kids.length > 0);
+
+/**
+ * Легенда семьи (решение 153; U8): карточка у звезды при открытой подробной карточке на широком экране не повторяет её
+ * «Родство», а говорит то, чего нет на небе словами: какой цвет ветви — какой союз (образец цвета, «от Лии — 6 сыновей
+ * и одна дочь»), и кто из родни вне показа. Имя в строке — шаг по родству (kinStep), наведение на строку — линии союза.
+ */
+function FamilyLegend({ id, onAll }: { id: string; onAll?: () => void }) {
+  const th = theme.value;
+  void show.value;
+  void showContent.value;
+  const br = branchesOf(unions, graph, id);
+  const own = (unions.of.get(id) ?? []).filter((u) => !u.claim && u.kids.length);
+  const rows: ComponentChildren[] = [];
+  const sw = (key: string) => {
+    const b = br.keys.indexOf(key);
+    return b < 0 ? null : <i class="dc-sw" aria-hidden="true" style={{ '--sw': branchColor(b, th) }} />;
+  };
+  const preview = (keys: readonly LinkKey[] | null) => {
+    previewLinks.value = keys && keys.length ? keys : null;
+  };
+  // полное «Родство» вместо легенды — ссылкой «всё родство», как у краткой карточки (а не четвёртой командой: строка
+  // команд не растёт, и карточка у звезды остаётся полной там, где ей есть место — решение 153, U8)
+  // обёртка .dc-row.all (display: contents) — та же команда, что «всё родство — ещё N строк» краткой карточки
+  const all = onAll ? (
+    <span class="dc-row all">
+      <button type="button" class="dc-more" title="Показать всё «Родство» в карточке у звезды" onClick={onAll}>
+        всё родство
+      </button>
+    </span>
+  ) : null;
+  if (own.length > 1) {
+    // союзов много (у Давида девять): подпись строки и короткие пары «образец цвета, имя, число детей» в две колонки —
+    // карточка у звезды не растёт на высоту семьи (U8)
+    const female = byId.get(id)?.sex === 'f';
+    rows.push(
+      <li key="cap" class="dc-leg-cap">
+        <span class="txt">{female ? 'Дети по отцам' : 'Дети по матерям'}</span>
+        {all}
+      </li>,
+    );
+    rows.push(
+      <li key="grid" class="dc-leg-grid">
+        {own.map((u) => {
+          const other = partnerIn(u, id);
+          const keys = u.kids.map((k) => ({ kind: 'child', union: u.id, child: k }) as LinkKey);
+          const n = u.kids.filter((k) => k !== id).length;
+          return (
+            <span key={u.id} class="dc-leg" onMouseEnter={() => preview(keys)} onMouseLeave={() => preview(null)}>
+              {sw(u.id)}
+              {other ? (
+                <button
+                  type="button"
+                  class="person"
+                  data-id={other}
+                  aria-label={typo(`${byId.get(other)?.name ?? other} — ${female ? 'отец' : 'мать'}: ${kidsCount(u)}`)}
+                  onClick={(e) => kinStep(other, e.detail === 0)}
+                >
+                  {byId.get(other)?.name ?? other}
+                </button>
+              ) : (
+                <span class="txt">{female ? 'не назван' : 'не названа'}</span>
+              )}
+              <span class="txt" aria-hidden={other ? 'true' : undefined}>{` — ${n}`}</span>
+            </span>
+          );
+        })}
+      </li>,
+    );
+  }
+  else if (own.length === 1) {
+    const u = own[0];
+    const kids = kidsInBirthOrder(u).filter((k) => k !== id);
+    const shown = kids.length > 5 ? kids.slice(0, 4) : kids;
+    rows.push(
+      <li key={u.id}>
+        <span class="txt">{typo(`${capFirst(kidsCount(u))}: `)}</span>
+        {shown.map((k, i) => (
+          <Fragment key={k}>
+            {i ? <span class="txt">, </span> : null}
+            {sw(k)}
+            <button type="button" class="person" data-id={k} aria-label={typo(`${byId.get(k)?.name ?? k} — ${bySex(byId.get(k)?.sex ?? 'm', 'сын', 'дочь')}`)} onClick={(e) => kinStep(k, e.detail === 0)} onMouseEnter={() => preview([{ kind: 'child', union: u.id, child: k }])} onMouseLeave={() => preview(null)}>
+              {byId.get(k)?.name ?? k}
+            </button>
+          </Fragment>
+        ))}
+        {kids.length > shown.length ? <span class="txt">{typo(` и ещё ${kids.length - shown.length}`)}</span> : null}
+      </li>,
+    );
+  }
+  // кто из родни вне показа (U14): число и первые имена; показать — «Ближайшая родня» или карточка
+  const out = [...relationsOf(id).keys()].filter((x) => skyState(x) === 'out');
+  if (out.length)
+    rows.push(
+      <li key="out" class="dc-out-row">
+        <span class="txt">{typo(`нет в показе «${showTitle(show.value)}»: ${out.slice(0, 2).map((x) => byId.get(x)?.name ?? x).join(', ')}${out.length > 2 ? ` и ещё ${out.length - 2}` : ''}`)}</span>
+      </li>,
+    );
+  if (!rows.length) return null;
+  if (all && own.length <= 1) rows.push(<li key="all" class="dc-leg-all">{all}</li>);
+  return (
+    <ul class="dc-legend" aria-label={own.length > 1 ? 'Союзы и цвета ветвей' : 'Семья'}>
+      {rows}
+    </ul>
+  );
+}
+
+/** Сколько имён строки «Без подписи на небе» показывать до «и ещё N»: строка — одна, карточка от неё не растёт (К6). */
+const HIDDEN_NAMES = 2;
+
+/**
+ * «Без подписи на небе: Соломон, Нафан и ещё 4» (П1; решения 146, 153): родня первого колена выбранного лица (родители,
+ * супруги, дети; src/render/frame.ts, firstKin), чья звезда на виду, а подписи места не нашлось (sky.hiddenLabels(),
+ * контракт 2 этапа 14; по значимости). Имя — кнопка: наведение и фокус ставят кольцо на звезду и подсвечивают связь, как
+ * имя в «Родстве»; нажатие выбирает лицо и открывает его карточку у звезды. Строки нет, если все подписаны. Список
+ * обновляется, когда небо стоит: в перелёте и протяжке подписи меняются каждым кадром.
+ */
+function HiddenKin({ id }: { id: string }) {
+  const [ids, setIds] = useState<readonly string[]>([]);
+  useEffect(() => {
+    let timer = 0;
+    const off = effect(() => {
+      void viewTick.value;
+      const s = skyRef.current;
+      if (!s || s.cam.moving) return;
+      const kin = firstKin(id).map((k) => k.id);
+      const set = new Set(kin);
+      const next = s.hiddenLabels().filter((x) => set.has(x));
+      // звезда родни под самой карточкой — тоже без подписи на виду (подписи неба карточку обходят, sky.hiddenLabels() её
+      // не считает: звезды под резервом не видно)
+      const card = lastRect;
+      if (card) {
+        const named = new Set(s.ledger.boxes.filter((b) => b.kind === 'star' && b.id).map((b) => b.id!));
+        for (const x of kin) {
+          if (next.includes(x) || named.has(x) || s.hides(x)) continue;
+          const q = screenOf(x);
+          if (q && q.x >= card.x && q.x <= card.x + card.w && q.y >= card.y && q.y <= card.y + card.h) next.push(x);
+        }
+      }
+      // строка меняет высоту карточки, карточка — резерв подписей: смена списка — после короткой паузы, без дрожи
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => setIds((prev) => (prev.join() === next.join() ? prev : next)), 150);
+    });
+    return () => {
+      off();
+      window.clearTimeout(timer);
+      if (hovered.peek() && firstKin(id).some((k) => k.id === hovered.peek())) hovered.value = null;
+    };
+  }, [id]);
+  if (!ids.length) return null;
+  const rel = relationsOf(id);
+  const shown = ids.slice(0, HIDDEN_NAMES);
+  const more = ids.length - shown.length;
+  const point = (x: string | null, key?: LinkKey) => {
+    hovered.value = x;
+    previewLinks.value = x && key ? [key] : null;
+  };
+  return (
+    <p class="dc-hidden" data-ids={ids.join(' ')}>
+      <span class="txt">Без подписи на небе: </span>
+      {shown.map((x, i) => {
+        const r = rel.get(x);
+        const name = byId.get(x)?.name ?? x;
+        return (
+          <Fragment key={x}>
+            {i ? <span class="txt">, </span> : null}
+            <button
+              type="button"
+              class="person"
+              data-id={x}
+              aria-label={typo(`${name}${r?.role ? ` — ${r.role}` : ''}, без подписи на небе`)}
+              onMouseEnter={() => point(x, r?.key)}
+              onMouseLeave={() => point(null)}
+              onFocus={() => point(x, r?.key)}
+              onBlur={() => point(null)}
+              onClick={(e) => {
+                point(null);
+                kinStep(x, e.detail === 0);
+              }}
+            >
+              {name}
+            </button>
+          </Fragment>
+        );
+      })}
+      {more > 0 ? <span class="txt">{typo(` и ещё ${more}`)}</span> : null}
+    </p>
+  );
+}
+
+export function PersonBody({ id, compact = false, brief = false, legend = false, onAll }: { id: string; compact?: boolean; brief?: boolean; legend?: boolean; onAll?: () => void }) {
   const p = byId.get(id)!;
   const dis = disLine(id);
   const phone = grid.value.phone;
@@ -1051,9 +1448,15 @@ export function PersonBody({ id, compact = false, brief = false, onAll }: { id: 
           <div class="dc-yrs">{yearsLine(id)}</div>
         </div>
       </div>
-      <KinBlock id={id} compact={compact} brief={brief} onAll={onAll} />
+      {/* легенда — только у лица с ветвями (союзы с детьми): без них карточке нечего сказать о цветах, и «Родство» остаётся */}
+      {legend && legendFor(id) ? <FamilyLegend id={id} onAll={onAll} /> : <KinBlock id={id} compact={compact} brief={brief} onAll={onAll} />}
+      {!phone && id === selected.value && <HiddenKin id={id} />}
       <div class="dc-cmds">
-        {/* на телефоне «Вся карточка ▴» разворачивает лист карточки (как «Развернуть» шапки листа) — кнопка с aria-expanded */}
+        {/* «Ближайшая родня» — одним действием (решение 145); на телефоне — первым пунктом «Предки и потомки ▾»: лист короче */}
+        {!phone && <NearestCmd id={id} />}
+        {/* на телефоне «Вся карточка ▴» разворачивает лист карточки (как «Развернуть» шапки листа) — кнопка с aria-expanded;
+            при открытой подробной карточке (легенда семьи) команда остаётся: она ведёт фокус на заголовок карточки рядом
+            (MOB-29, MOB-31; сценарии 170, 173) */}
         <Cmd
           onRun={() => showDetails(id, null)}
           title="Подробная карточка лица: 24 раздела"
@@ -1207,11 +1610,11 @@ function endWhere(id: string, k: LinkKey): GhostWhy | null {
  * строка «нет в показе «ключевые лица» — показать Илия» (или «скрыт на небе — показать»): лицо встаёт временным гостем
  * до снятия выбора (src/ui/show.ts, showGuest); за краем окна — «за краем окна — показать»: вписать связь.
  */
-function EndRow({ id, role, k, n, ends }: { id: string; role: string; k: LinkKey; n: number; ends: readonly string[] }) {
+function EndRow({ id, role, k, n, ends, brief = false }: { id: string; role: string; k: LinkKey; n: number; ends: readonly string[]; brief?: boolean }) {
   const q = byId.get(id);
-  const years = q ? passportYears(id, model.value.chrono.get(id), isPeople(id)) : '';
+  // краткая карточка связи (§ 6: полной нет места) — без годов концов: они во «всё о связи», а строка концов — в одну строку
+  const years = q && !brief ? passportYears(id, model.value.chrono.get(id), isPeople(id)) : '';
   const where = endWhere(id, k);
-  const acc = accOf(id);
   const f = q?.sex === 'f';
   const lead =
     where === 'show' ? `нет в показе «${showTitle(show.value)}» — ` : where === 'folded' ? `${f ? 'скрыта' : 'скрыт'} на небе — ` : where === 'edge' ? 'за краем окна — ' : '';
@@ -1219,7 +1622,8 @@ function EndRow({ id, role, k, n, ends }: { id: string; role: string; k: LinkKey
     <div class="dc-row end" data-row={`end${n}`}>
       <dt class="dc-lbl">{capFirst(role || 'лицо')}</dt>
       <dd class="dc-val">
-        <button type="button" class="person" data-id={id} onClick={() => goTo(id)}>
+        {/* имя кнопки — фраза родства (решение 151): «Илий — отец», «Рахиль — мать, вне показа» */}
+        <button type="button" class="person" data-id={id} aria-label={kinLabel({ id, dis: null, role, marks: [], outside: where === 'show' })} onClick={() => goTo(id)}>
           {q?.name ?? id}
         </button>
         {years && <span class="note">{typo(`, ${years}`)}</span>}
@@ -1231,8 +1635,8 @@ function EndRow({ id, role, k, n, ends }: { id: string; role: string; k: LinkKey
                 показать
               </button>
             ) : (
-              <button type="button" class="dc-show" aria-label={`Показать на небе: ${q?.name ?? id}`} title="Лицо встанет на небо до снятия выбора связи" onClick={() => showGuest(id)}>
-                {acc ? `показать ${acc}` : 'показать'}
+              <button type="button" class="dc-show" aria-label={`Поставить на небо: ${q?.name ?? id}`} title="Лицо встанет на небо гостем до снятия выбора связи" onClick={() => showGuest(id)}>
+                поставить на небо
               </button>
             )}
           </span>
@@ -1324,13 +1728,20 @@ function LinkBody({ k, brief = false, onAll }: { k: LinkKey; brief?: boolean; on
         <h3 id="dc-link-title" tabIndex={-1} data-lead={i.lead ?? undefined}>
           {i.title}
         </h3>
-        {i.refs.length > 0 && <div class="dc-refs">{refsShort(i.refs.slice(0, 4))}{i.refs.length > 4 ? typo(` и ещё ${i.refs.length - 4}`) : ''}</div>}
+        {/* стихи связи — кнопки с вклейкой (решение 152; U7): текст стиха — одним действием, прямо в карточке связи */}
+        {i.refs.length > 0 && (
+          <div class="dc-refs">
+            {/* краткая карточка (§ 6: места мало) — две ссылки и «ещё N»: строка стихов не переносится */}
+            <Refs refs={i.refs} owner={`dc-link|${ks(k)}`} max={brief ? 2 : 4} />
+            <VerseInsert owner={`dc-link|${ks(k)}`} refs={i.refs} />
+          </div>
+        )}
         {!brief && <BasisLine k={k} />}
         {marks.length > 0 && <div class="dc-marks">{typo(marks.join(', '))}</div>}
       </div>
       <dl class="dc-kin">
         {i.ends.map((e, n) => (
-          <EndRow key={`${e.id}${n}`} id={e.id} role={e.role} k={k} n={n} ends={endIds} />
+          <EndRow key={`${e.id}${n}`} id={e.id} role={e.role} k={k} n={n} ends={endIds} brief={brief} />
         ))}
         {i.missing && !brief && <MissingRow role={i.missing.role} text={i.missing.text} />}
         {lines && !brief && (
@@ -1457,7 +1868,6 @@ export function DotCard() {
   const timer = useRef(0);
   /** фокус клавиатуры в карточке: команда, на которой он стоял, может уйти из разметки */
   const inside = useRef(false);
-  const [said, setSaid] = useState('');
   /**
    * Краткий вид (§ 6): полной карточке нет места без желательного — имя, годы, одна строка «Родства», команды. fullSize —
    * размер полной карточки: как только ей есть место, карточка снова полная.
@@ -1467,6 +1877,11 @@ export function DotCard() {
   const fullSize = useRef<{ w: number; h: number } | null>(null);
   /** читатель уже работал с карточкой («ещё 13», меню): выросшая по его просьбе карточка краткой не становится */
   const touched = useRef(false);
+  /**
+   * лицо, у которого читатель попросил «всё родство» вместо легенды семьи (решение 153): полное «Родство», пока открыта
+   * карточка этого лица, — и после карточки связи, открытой из «Родства» (Escape возвращает к тому же имени, M9)
+   */
+  const [kinAllFor, setKinAllFor] = useState<string | null>(null);
   const at = dotCard.value;
   const link = selectedLink.value;
   const on = dotsOn.value;
@@ -1542,18 +1957,25 @@ export function DotCard() {
       // у карточки союза «семья» — супруги и дети союза (желательные, § 6); у карточки связи концы — обязательные
       const uu = !lk && cur?.kind === 'union' ? unionById(cur.uid) : undefined;
       const ends = lk ? (linkInfo(lk)?.ends.map((e) => e.id) ?? []) : uu ? [uu.a, uu.b, ...uu.kids].filter((x): x is string => !!x) : [];
-      const o = obstacles(lk ? (focus && byId.has(focus) ? focus : null) : cur?.kind === 'person' ? focus : null, ends, a, !!lk);
+      const o = obstacles(lk ? (focus && byId.has(focus) ? focus : null) : cur?.kind === 'person' ? focus : null, ends, a, !!lk, size.current);
       const opts = { ...o, prev: spot.current, fine: !s.cam.moving };
       q = placeCard(a, size.current, bounds, opts);
       // полной карточке места нет (§ 6): краткий вид — имя, годы, одна строка «Родства», команды; новый размер —
       // ResizeObserver и новое место. Краткая карточка возвращается к полной, как только полной есть место
-      if (q.free === false && !briefRef.current && !touched.current) {
+      // пока небо едет, место ищется по крупной сетке (fine: false) — «места нет» тогда не окончательно: краткий вид — только
+      // по мелкой сетке, когда небо встало (иначе карточка мигала бы краткой и полной, U8)
+      if (q.free === false && !briefRef.current && !touched.current && s.cam.moving) timer.current = window.setTimeout(place, 160);
+      else if (q.free === false && !briefRef.current && !touched.current) {
         briefRef.current = true;
         fullSize.current = { ...size.current };
         setBrief(true);
       } else if (briefRef.current && fullSize.current && !s.cam.moving && placeCard(a, fullSize.current, bounds, { ...opts, prev: null }).free) {
         briefRef.current = false;
         setBrief(false);
+      } else if (briefRef.current && fullSize.current && s.cam.moving) {
+        // небо ещё едет (вписывание, выведение лица из-под органов неба): последний кадр движения бывает раньше, чем
+        // камера встала, и кадра «в покое» может не быть — проверить место полной карточки, когда небо остановится
+        timer.current = window.setTimeout(place, 160);
       }
       // запретные области места (§ 6; Я25) — для проверок приёмки (tools/accept/unify11.ts): «x,y,w,h;…» в px холста;
       // data-must — обязательные, data-want — желательные, data-full — размер полной карточки (краткий вид), data-bounds —
@@ -1568,8 +1990,12 @@ export function DotCard() {
       el.dataset.at = [a.x, a.y, a.r].map(Math.round).join(',');
     }
     spot.current = q.key;
+    // карточка — резерв подписей (data-reserve="dot", решение 153): встала на новое место — небо заново замеряет резерв
+    // (SkyView слушает «reserve-move»; размер не менялся, и ResizeObserver молчал бы)
+    const moved = el.style.left !== `${Math.round(q.x)}px` || el.style.top !== `${Math.round(q.y)}px`;
     el.style.left = `${Math.round(q.x)}px`;
     el.style.top = `${Math.round(q.y)}px`;
+    if (moved) reserveMoved(el, s.cam);
     el.dataset.side = q.side;
     el.setAttribute('data-placed', '');
     lastRect = { x: q.x, y: q.y, w: size.current.w, h: size.current.h };
@@ -1603,13 +2029,8 @@ export function DotCard() {
     const offMenu = effect(() => {
       if (skyMenu.value) closeDot(false);
     });
-    // объявление выбранной связи для диктора (§ 8): «Связь: Иаков и Лия — родители; Иуда — сын; Бытие 29:35»
-    let was: LinkKey | null = null;
-    const offLink = effect(() => {
-      const k = selectedLink.value;
-      if (k && !sameLink(k, was)) setSaid(linkSpeech(k));
-      was = k;
-    });
+    // объявление выбранной связи для диктора (§ 8) — одно: его делает небо (SkyView, живая область неба); карточка связи
+    // не повторяет его (решение 151; M7: прежде связь звучала дважды)
     // Escape с холста, списка неба или без фокуса — снимает связь, потом карточку (одно видимое состояние, D5)
     const onKey = (e: KeyboardEvent) => {
       if (e.code !== 'Escape' || e.defaultPrevented || (!dotCard.peek() && !selectedLink.peek())) return;
@@ -1627,7 +2048,6 @@ export function DotCard() {
       offSel();
       offOn();
       offMenu();
-      offLink();
       window.removeEventListener('keydown', onKey, true);
       clearTimeout(timer.current);
       closeDot(false);
@@ -1641,6 +2061,10 @@ export function DotCard() {
     fullSize.current = null;
     touched.current = false;
     setBrief(false);
+    setKinAllFor((v) => {
+      const d = dotCard.peek();
+      return d?.kind === 'person' && d.id === v ? v : null;
+    });
     if (!key) return;
     nudged.current = false;
     return effect(() => {
@@ -1676,15 +2100,17 @@ export function DotCard() {
     else if (inside.current && !el.contains(a)) focusFirst();
   });
 
-  const live = (
-    <span class="visually-hidden" role="status">
-      {said}
-    </span>
-  );
+  const live = null;
   if (!on || inSheet || (!at && !link)) return live;
   const u = !link && at?.kind === 'union' ? unionById(at.uid) : undefined;
   if (!link && at?.kind === 'union' && !u) return live;
   const kind = link ? 'link' : at!.kind;
+  // широкий экран, подробная карточка открыта рядом (решение 153; U8): карточка у звезды — легенда семьи, а не второе
+  // «Родство»; полное — по ссылке «всё родство» в легенде, при свёрнутой подробной карточке и на телефоне. Открытая
+  // с клавиатуры (Enter на звезде, шаг по «Родству») — сразу с «Родством»: фокус встаёт на его первое имя, и путь к связи
+  // остаётся в несколько нажатий (решение 83; сценарий владельца 3, 822)
+  const g = grid.value;
+  const legend = !link && at?.kind === 'person' && at.id === selected.value && !at.keyboard && !g.phone && g.folio > 0 && !g.spine && kinAllFor !== at.id;
   return (
     <>
       {live}
@@ -1700,6 +2126,8 @@ export function DotCard() {
         role="dialog"
         aria-label={link ? linkSpeech(link) : dotLabel(at!)}
         data-kind={kind}
+        data-legend={legend ? '' : undefined}
+        data-reserve="dot"
         data-id={link ? ks(link) : at!.kind === 'person' ? at!.id : at!.uid}
         data-dock={phone ? '' : undefined}
         onKeyDown={(e) => {
@@ -1739,11 +2167,13 @@ export function DotCard() {
           <PersonBody
             id={at!.id}
             brief={brief}
+            legend={legend && !brief}
             onAll={() => {
               // читатель просит всё «Родство»: карточка полная, и краткой по месту больше не становится
               touched.current = true;
               briefRef.current = false;
               setBrief(false);
+              setKinAllFor(at!.kind === 'person' ? at!.id : null);
               requestAnimationFrame(() => ref.current?.querySelector<HTMLElement>('.dc-kin .person')?.focus({ preventScroll: true }));
             }}
           />

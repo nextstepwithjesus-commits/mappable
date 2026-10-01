@@ -190,10 +190,14 @@ describe('меридиан года (D13; UX-27, IX-34, MAP-07, MAP-33)', () => 
   it('«вероятно» — бледнее, чем «наверняка»; погашенные — бледнее обоих', () => {
     const t = years.toAstro(-990);
     const alive = text.aliveAt(models[0].chrono, t);
-    const { texts } = drawSky({ move: at(t, 8), state: { meridian: t, highlight: alive } });
+    const { texts, sky: s } = drawSky({ move: at(t, 8), state: { meridian: t, highlight: alive } });
     const name = (id: string) => byId.get(id)!.name;
+    // только подписи звёзд (замер labels.ts): имя у ромба или обрывка (подпись связи) — другая подпись того же лица
+    const stars = s.labelStats().boxes.filter((b) => b.kind === 'star');
+    const inStar = (q: Text) => stars.some((b) => b.text === q.t && q.x >= b.x && q.x <= b.x + b.w && q.y >= b.y && q.y <= b.y + b.h);
     const alphaOf = (kind: 'sure' | 'likely' | 'dim') =>
       starLabels(texts, sky.FRAME_H)
+        .filter(inStar)
         .filter((q) => {
           const ids = [...byId.values()].filter((p) => p.name === q.t).map((p) => p.id);
           const k = ids.map((id) => alive.get(id) ?? 'dim');

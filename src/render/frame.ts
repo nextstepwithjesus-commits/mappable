@@ -9,7 +9,8 @@
  *  — левая кромка: буквы строк атласа (engine/layout.ts, atlasRow); нижняя кромка: номера столбцов атласа между
  *    рисками веков — по ним находится координата указателя «32 П»;
  *  — на самом небе: сетка лет, черты завершения канона и «сегодня», постоянные меридианы событий;
- *  — указатели у края на выбранных лиц за краем окна («→ Давид»).
+ *  — указатели у края на выбранных лиц за краем окна («→ Давид») и на родню выбранного за краем («→ 22 ребёнка»,
+ *    «↑ Иессей, отец»; этап 14, решение 146).
  * Все функции читают небо через SkyContext и ничего в нём не меняют; надписи рамки пишутся в замер подписей (kind 'frame').
  */
 import { alpha } from './color.ts';
@@ -18,17 +19,37 @@ import { mapFont, mapSize, T_MAP_S, T_UI } from './type.ts';
 import { T_CANON_END, T_END } from '../engine/timescale.ts';
 import { dateText, toAstro, toHist } from '../engine/years.ts';
 import { atlasColumn, atlasColumnSpan, atlasRow, atlasRowLanes, atlasRowLetter, ATLAS_BAND } from '../engine/layout.ts';
-import { byId, groupById, models } from '../data/atlas.ts';
+import { byId, graph, groupById, models } from '../data/atlas.ts';
 import { rulerScale as rulerScaleSignal } from '../state.ts';
 import { nameCase } from '../ui/text/ru.ts';
 import type { Pass, SkyContext, SkyState } from './sky.ts';
 
 /** Линейка лет вверху рамки. */
 export const RULER_H = 26;
-/** Служебная строка под линейкой: названия эпох, масштабная линейка, черты канона и «сегодня» (C4, E7). */
-export const ROW_H = 18;
-/** Верхнее поле рамки целиком: ниже него — открытое небо. */
-export const FRAME_H = RULER_H + ROW_H;
+/**
+ * Служебная строка под линейкой: названия эпох, масштабная линейка, черты канона и «сегодня» (C4, E7). На низком небе
+ * (этап 14, решение 155; setLowFrame) её нет — её надписи стоят в линейке, в промежутках между подписями лет.
+ */
+export let ROW_H = 18;
+/** Высота служебной строки на обычном небе. */
+export const ROW_H_FULL = 18;
+/** Верхнее поле рамки целиком: ниже него — открытое небо. Живая привязка: на низком небе — только линейка. */
+export let FRAME_H = RULER_H + ROW_H;
+/** Небо не выше стольких px — низкое: рамка одной строкой (решение 155; масштаб 200 %, альбомный телефон). */
+export const LOW_SKY_H = 520;
+/**
+ * Низкое небо (решение 155; M8): линейка лет и строка эпох — одной строкой, рамка 26 px вместо 44; небу — 18 px данных.
+ * Зовёт SkyView при смене размера неба. Возвращает, сменилась ли рамка.
+ */
+export function setLowFrame(on: boolean): boolean {
+  const h = on ? 0 : ROW_H_FULL;
+  if (ROW_H === h) return false;
+  ROW_H = h;
+  FRAME_H = RULER_H + ROW_H;
+  return true;
+}
+/** Середина строки служебных надписей: под линейкой, а на низком небе — в самой линейке, на высоте подписей лет. */
+const serviceY = () => (ROW_H ? RULER_H + ROW_H / 2 : 11);
 /** Нижняя кромка рамки: риски веков и номера столбцов атласа (E9; MAP-40). */
 export const BOTTOM_H = 16;
 /**
@@ -323,6 +344,8 @@ export interface ServiceExtra {
   folds?: readonly { kind: 'desc' | 'group'; id: string; count: number }[];
   /** флажок меридиана на служебной строке (marks.ts, meridianFlagAt): надписи строки его обходят (MAP-33) */
   flag?: Rect | null;
+  /** занятые места строки сверх флажка: на низком небе — подписи лет линейки (решение 155) */
+  taken?: readonly Rect[];
 }
 /** Команда в служебной строке: прямоугольник (px холста) и что она разворачивает — одно свёрнутое или всё. */
 export type ServiceHit = Rect & { kind: 'desc' | 'group' | 'all'; id: string };
@@ -354,8 +377,9 @@ export function drawFrame(v: SkyContext, ticks: YearTick[], extra: ServiceExtra 
   ctx.lineTo(W, Math.round(bottom) + 0.5);
   ctx.stroke();
 
-  drawRuler(v, ticks);
-  const cmds = drawServiceRow(v, extra);
+  const years = drawRuler(v, ticks);
+  // низкое небо: служебные надписи — в линейке, мимо подписей лет
+  const cmds = drawServiceRow(v, ROW_H ? extra : { ...extra, taken: years });
   drawRowLetters(v);
   drawColumns(v);
   ctx.textBaseline = 'alphabetic';
@@ -379,8 +403,8 @@ export function foldItemText(f: { kind: 'desc' | 'group'; id: string; count: num
   return g ? `потомки ${g} (${f.count})` : `${q?.name ?? f.id} — потомки (${f.count})`;
 }
 
-/** Линейка: полоса плотности, риски, подписи у своих рисок, граница эр, знак разрыва шкалы. */
-function drawRuler(v: SkyContext, ticks: YearTick[]) {
+/** Линейка: полоса плотности, риски, подписи у своих рисок, граница эр, знак разрыва шкалы. Возвращает места подписей лет. */
+function drawRuler(v: SkyContext, ticks: YearTick[]): Rect[] {
   const { ctx, cam, pal } = v;
   const W = cam.w;
   const LW = v.letterW;
@@ -544,6 +568,7 @@ function drawRuler(v: SkyContext, ticks: YearTick[]) {
   }
   // подпись полосы плотности (MAP-31) — один раз, в самом широком промежутке между подписями лет над полосой
   if (v.lambda > 0.01) densityCaption(v, [...written, ...placed], Math.min(W - 4, xBreak));
+  return [...written, ...placed];
 }
 
 /**
@@ -597,11 +622,11 @@ function drawServiceRow(v: SkyContext, extra: ServiceExtra): ServiceHit[] {
   const { ctx, cam, pal } = v;
   const W = cam.w;
   const LW = v.letterW;
-  const rowY = RULER_H + ROW_H / 2;
+  const rowY = serviceY();
   const fs = mapSize(T_MAP_S, v.coarse);
   const box = (x: number, w: number) => ({ x: x - 2, y: rowY - fs / 2 - 1, w: w + 4, h: fs + 2 });
-  // флажок меридиана (MAP-33) — занятое место строки: названия эпох и подписи черт его обходят
-  const taken: Rect[] = extra.flag ? [extra.flag] : [];
+  // флажок меридиана (MAP-33) — занятое место строки: названия эпох и подписи черт его обходят; на низком небе — и подписи лет
+  const taken: Rect[] = [...(extra.flag ? [extra.flag] : []), ...(extra.taken ?? [])];
   /** Левый край строки шириной w, которая кончается не правее xr и не ложится на занятое: сдвиг влево за помеху. */
   const leftOf = (xr: number, w: number): number => {
     let x = xr - w;
@@ -684,7 +709,7 @@ function drawServiceRow(v: SkyContext, extra: ServiceExtra): ServiceHit[] {
         ctx.fillText(q.t, x, rowY);
         if (q.hit) {
           ctx.fillRect(Math.round(x), Math.round(rowY + fs / 2), Math.round(ws[j]), 1);
-          cmds.push({ x: x - 2, y: RULER_H, w: ws[j] + 4, h: ROW_H, ...q.hit });
+          cmds.push({ x: x - 2, y: ROW_H ? RULER_H : 0, w: ws[j] + 4, h: ROW_H || RULER_H, ...q.hit });
         }
         x += ws[j];
       });
@@ -703,7 +728,7 @@ function drawServiceRow(v: SkyContext, extra: ServiceExtra): ServiceHit[] {
   ctx.beginPath();
   const eps = v.model.epochs.map((e) => ({ e, a: cam.sx(v.xOf(toAstro(e.start))), b: cam.sx(v.xOf(toAstro(e.end))) }));
   for (const { a } of eps) {
-    if (a <= LW + 1 || a >= W - 1) continue;
+    if (!ROW_H || a <= LW + 1 || a >= W - 1) continue;
     ctx.moveTo(Math.round(a) + 0.5, RULER_H + 3);
     ctx.lineTo(Math.round(a) + 0.5, FRAME_H - 3);
   }
@@ -768,7 +793,7 @@ function placeMark(v: SkyContext, m: { label: string; x: number }, box: (x: numb
     const b = box(x, tw);
     if (x < v.letterW + 8 || x + tw > Math.min(xr, v.cam.w - 4) || hits(b, taken)) continue;
     ctx.fillStyle = pal.ink3;
-    ctx.fillText(m.label, x, RULER_H + ROW_H / 2);
+    ctx.fillText(m.label, x, serviceY());
     v.ledger.add('frame', m.label, b);
     taken.push(b);
     return true;
@@ -891,6 +916,84 @@ export interface EdgeHit extends Rect {
   label: string;
   lx: number;
   ly: number;
+  /**
+   * Указатель на родню выбранного за краем (решение 146): кого он называет (одно лицо или группа одной роли) и роль. По
+   * щелчку небо сдвигается к ним (src/ui/sky/view.ts, revealKin), а не выбирает одного из них.
+   */
+  ids?: readonly string[];
+  role?: KinRole;
+}
+
+// ---------- родня первого колена (решение 146) ----------
+
+/** Роль в родне первого колена: родитель, супруг, ребёнок. */
+export type KinRole = 'parent' | 'spouse' | 'child';
+/** Лицо родни: id, роль и слово роли в именительном падеже («отец», «жена», «сын»). */
+export interface Kin {
+  id: string;
+  role: KinRole;
+  word: string;
+}
+
+const kinCache = new Map<string, readonly Kin[]>();
+/**
+ * Родня первого колена лица id — родители (отец, мать), супруги и дети, как в замере эксперта U: по одному разу, у
+ * родителей и детей — по основным связям «отец» и «мать» (иные утверждения о родителях и родство словами Писания — не
+ * первое колено). Лицо, бывшее и супругом и родителем, — родитель.
+ */
+export function firstKin(id: string): readonly Kin[] {
+  const hit = kinCache.get(id);
+  if (hit) return hit;
+  const out: Kin[] = [];
+  const seen = new Set<string>([id]);
+  const add = (x: string, role: KinRole, word: string) => {
+    if (seen.has(x) || !byId.has(x)) return;
+    seen.add(x);
+    out.push({ id: x, role, word });
+  };
+  const sexOf = (x: string) => byId.get(x)?.sex;
+  for (const e of graph.parentsOf.get(id) ?? []) if (e.kind === 'father' || e.kind === 'mother') add(e.parent, 'parent', e.kind === 'father' ? 'отец' : 'мать');
+  for (const e of graph.spousesOf.get(id) ?? []) {
+    const x = e.a === id ? e.b : e.a;
+    add(x, 'spouse', sexOf(x) === 'f' ? 'жена' : 'муж');
+  }
+  for (const e of graph.childrenOf.get(id) ?? []) if (e.kind === 'father' || e.kind === 'mother') add(e.child, 'child', sexOf(e.child) === 'f' ? 'дочь' : sexOf(e.child) === 'm' ? 'сын' : 'ребёнок');
+  if (kinCache.size > 256) kinCache.clear();
+  kinCache.set(id, out);
+  return out;
+}
+
+/** «2 ребёнка», «5 детей», «3 жены», «2 мужа», «родители» — группа родни одной роли за краем. */
+export function kinGroupWord(role: KinRole, ks: readonly Kin[]): string {
+  const n = ks.length;
+  const pick = (one: string, few: string, many: string) => (n % 10 === 1 && n % 100 !== 11 ? one : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? few : many);
+  if (role === 'parent') return 'родители';
+  if (role === 'spouse') {
+    const f = ks.every((k) => k.word === 'жена');
+    const m = ks.every((k) => k.word === 'муж');
+    return `${n} ${f ? pick('жена', 'жены', 'жён') : m ? pick('муж', 'мужа', 'мужей') : pick('супруг', 'супруга', 'супругов')}`;
+  }
+  return `${n} ${pick('ребёнок', 'ребёнка', 'детей')}`;
+}
+
+/**
+ * Подпись указателя на родню за краем: одно лицо — «↑ Иессей, отец»; несколько одной роли — «→ 22 ребёнка». Имя — в
+ * именительном падеже, без склонения.
+ */
+export function kinPointerText(arrow: string, role: KinRole, ks: readonly Kin[]): string {
+  if (ks.length === 1) return `${arrow} ${byId.get(ks[0].id)?.name ?? ks[0].id}, ${ks[0].word}`;
+  return `${arrow} ${kinGroupWord(role, ks)}`;
+}
+
+/**
+ * Один указатель на сторону (решение 146): родня разных ролей в одну сторону — через запятую, по старшинству ролей:
+ * «↓ 6 жён, 10 детей», «↑ жена, 9 детей»; одно лицо одной роли — с именем: «↑ Иессей, отец».
+ */
+export function kinSideText(arrow: string, ks: readonly Kin[]): string {
+  const order: KinRole[] = ['parent', 'spouse', 'child'];
+  const parts = order.map((r) => ks.filter((k) => k.role === r)).filter((g) => g.length);
+  if (parts.length === 1) return kinPointerText(arrow, parts[0][0].role, parts[0]);
+  return `${arrow} ${parts.map((g) => (g.length === 1 ? g[0].word : kinGroupWord(g[0].role, g))).join(', ')}`;
 }
 
 /**
@@ -937,6 +1040,102 @@ export function placeWayfinding(v: SkyContext, s: SkyState, p: Pass | null): Edg
     }
     const b = box();
     out.push({ ...b, id, label, lx, ly });
+    placed.push(b);
+    p?.placer.add(b);
+  }
+  out.push(...placeKinPointers(v, s, p, placed));
+  return out;
+}
+
+/** Указателей на родню — не больше стольких: по одному на сторону. */
+const KIN_POINTERS_MAX = 4;
+
+/**
+ * Указатели на родню выбранного за краем окна (решение 146): выбранное лицо на виду, а его родители, супруги или дети —
+ * за краем или под листом. Родня в одну сторону — одним указателем с числом («→ 22 ребёнка», «↓ 6 жён, 10 детей»), одно
+ * лицо — с именем и ролью («↑ Иессей, отец»). Лица вне показа, скрытые свёрткой, — не здесь (их называет карточка: «вне
+ * показа»). Выбрана связь — указатели к её концам рисует marks.ts (контракт 4), здесь их нет.
+ */
+function placeKinPointers(v: SkyContext, s: SkyState, p: Pass | null, placed: Rect[]): EdgeHit[] {
+  const id = s.selected;
+  if (!id || s.link || s.second) return [];
+  const { ctx, cam } = v;
+  // видимая часть: справа — без колонки кнопок узкого неба, слева — без вступления (vp)
+  const W = cam.vp.r;
+  const top = v.openTop;
+  const bottom = cam.vp.b;
+  const left = Math.max(v.letterW, cam.vp.l);
+  const i0 = v.indexOf(id);
+  if (i0 === undefined || v.hides(id)) return [];
+  const sx = cam.sx(v.X0[i0]);
+  const sy = cam.sy(v.nodes[i0].lane);
+  if (!(sx > left && sx < W && sy > top && sy < bottom)) return [];
+  // органы неба (строка показа, кнопки, лист «Показ»; SkyView, organs): родня под ними не видна — ей тоже указатель
+  const organs = (s as SkyState & { organs?: readonly Rect[] }).organs ?? [];
+  const under = (x: number, y: number) => organs.find((r) => x > r.x - 4 && x < r.x + r.w + 4 && y > r.y - 4 && y < r.y + r.h + 4);
+  // родня за краем — по сторонам и ролям; сторона — та, за которую лицо ушло дальше; под органом — к ближнему краю
+  const groups = new Map<string, { arrow: string; ks: Kin[]; xs: number[]; ys: number[] }>();
+  for (const k of firstKin(id)) {
+    const i = v.indexOf(k.id);
+    if (i === undefined || v.hides(k.id) || !v.drawn(i)) continue;
+    const x = cam.sx(v.X0[i]);
+    const y = cam.sy(v.nodes[i].lane);
+    // у самого края звезда видна едва (поля «на виду», src/ui/sky/view.ts, inView): ей тоже указатель
+    const ox = x < left + 12 ? left + 12 - x : x > W - 12 ? x - W + 12 : 0;
+    const oy = y < top + 20 ? top + 20 - y : y > bottom - 16 ? y - bottom + 16 : 0;
+    let arrow: string;
+    if (ox || oy) arrow = oy >= ox ? (y < top ? '↑' : '↓') : x < left ? '←' : '→';
+    else if (under(x, y)) {
+      const d = { '↑': y - top, '↓': bottom - y, '←': x - left, '→': W - x };
+      arrow = (Object.keys(d) as (keyof typeof d)[]).reduce((a, b) => (d[b] < d[a] ? b : a));
+    } else continue;
+    const key = arrow;
+    const g = groups.get(key) ?? { arrow, ks: [], xs: [], ys: [] };
+    g.ks.push(k);
+    g.xs.push(x);
+    g.ys.push(y);
+    groups.set(key, g);
+  }
+  if (!groups.size) return [];
+  const out: EdgeHit[] = [];
+  ctx.font = mapFont(T_UI, { sans: true, weight: 500, coarse: v.coarse });
+  // одна сторона — один указатель: вверх и вниз первыми (там родители и дети чаще всего), затем вбок
+  const sides = ['↑', '↓', '←', '→'];
+  const list = [...groups.values()].sort((a, b) => sides.indexOf(a.arrow) - sides.indexOf(b.arrow)).slice(0, KIN_POINTERS_MAX);
+  for (const g of list) {
+    const label = kinSideText(g.arrow, g.ks);
+    const tw = ctx.measureText(label).width;
+    const mx = g.xs.reduce((a, b) => a + b, 0) / g.xs.length;
+    const my = g.ys.reduce((a, b) => a + b, 0) / g.ys.length;
+    // у своей стороны, по середине группы вдоль края
+    let lx = g.arrow === '←' ? left + 6 : g.arrow === '→' ? W - tw - 10 : Math.max(left + 6, Math.min(W - tw - 10, mx - tw / 2));
+    let ly = g.arrow === '↑' ? top + 18 : g.arrow === '↓' ? bottom - 10 : Math.max(top + 18, Math.min(bottom - 10, my));
+    // место — у своей стороны, по середине группы; занято (органы неба, карточка у звезды, другой указатель) — ближайшее
+    // свободное вдоль того же края, шагами по 10 px
+    const box = (x: number, y: number) => ({ x: x - 5, y: y - 13, w: tw + 10, h: 18 });
+    const taken = [...(s.reserve ?? []), ...placed];
+    const along = g.arrow === '↑' || g.arrow === '↓';
+    const lo = along ? left + 6 : top + 18;
+    const hi = along ? W - tw - 10 : bottom - 10;
+    // знак лица — жёсткое препятствие (решение 140; знаки кадра — в placer до подписей): указатель не ложится на звезду
+    const free = (b: Rect) => !hits(b, taken) && !p?.placer.glyphsIn(b).some((g) => g.a >= 0.12);
+    let found = free(box(lx, ly));
+    for (let d = 10; !found && d <= Math.max(W, bottom - top); d += 10)
+      for (const sgn of [1, -1]) {
+        const c = (along ? lx : ly) + sgn * d;
+        if (c < lo || c > hi) continue;
+        const [x, y] = along ? [c, ly] : [lx, c];
+        if (free(box(x, y))) {
+          lx = x;
+          ly = y;
+          found = true;
+          break;
+        }
+      }
+    if (!found) continue;
+    const b = box(lx, ly);
+    const roles = new Set(g.ks.map((k) => k.role));
+    out.push({ ...b, id: g.ks[0].id, label, lx, ly, ids: g.ks.map((k) => k.id), ...(roles.size === 1 ? { role: g.ks[0].role } : {}) });
     placed.push(b);
     p?.placer.add(b);
   }

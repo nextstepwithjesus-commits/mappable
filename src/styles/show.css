@@ -437,3 +437,23 @@
     padding: 10px 16px 14px;
   }
 }
+
+/* ---------- путь исследования (этап 14, решение 148; ShowBar.tsx, PathLine) ----------
+   «Путь: Руфь › Давид › Соломон» — своей строкой под «На небе: …»: «Путь:» и разделители вторым цветом, прежние имена —
+   команды со штрихом, выбранное — текстом. На 1024 px и уже — «‹ Руфь». */
+.showbar .sb-path {
+  display: block;
+}
+.showbar .sb-path > .sb-t,
+.showbar .sb-path .sep {
+  color: var(--ink-2);
+}
+.showbar .sb-path .sb-step {
+  white-space: nowrap;
+}
+.showbar .sb-path .sb-cmd {
+  padding: 0 2px;
+}
+.showbar .sb-path [aria-current] {
+  color: var(--ink);
+}
