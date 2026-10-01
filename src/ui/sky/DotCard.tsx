@@ -1140,9 +1140,9 @@ export function KinBlock({ id, compact = false, brief = false, onAll }: { id: st
   // лица вне показа (решение 151; U14) — бледнее, а что это значит, сказано словами под строками
   void show.value;
   void showContent.value;
-  // в листе телефона (compact) строки пояснения нет: лист — краткая карточка, её высота — высота шапки (решение 155);
-  // «вне показа» там — в имени кнопки и точечной чертой
-  const outside = !compact && shown.some((r) => r.parts.some((p) => p.t === 'name' && skyState(p.id) === 'out'));
+  // в листе телефона (compact) и в краткой карточке (§ 6: одна строка «Родства») строки пояснения нет: лист — краткая
+  // карточка, её высота — высота шапки (решение 155); «вне показа» там — в имени кнопки и точечной чертой
+  const outside = !compact && !brief && shown.some((r) => r.parts.some((p) => p.t === 'name' && skyState(p.id) === 'out'));
   return (
     <dl class="dc-kin" aria-label="Родство">
       {shown.map((r, i) => (

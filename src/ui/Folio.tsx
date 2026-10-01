@@ -417,7 +417,13 @@ export function CardPage({
         )
       ) : null}
       {ready ? (
-        <div class={stale ? 'folio-body stale' : 'folio-body'} key={`body|${bodyKey}`} ref={bodyEl} aria-busy={stale ? 'true' : undefined}>
+        <div
+          class={stale ? 'folio-body stale' : 'folio-body'}
+          key={`body|${bodyKey}`}
+          ref={bodyEl}
+          aria-busy={stale ? 'true' : undefined}
+          data-partial={upTo < SECTIONS.length ? '' : undefined}
+        >
           {compact ? (
             <p class="rest">
               <button type="button" class="more" aria-expanded="false" onClick={() => setOpenFor(bodyId)}>
@@ -922,13 +928,32 @@ export function Folio({ id: forcedId, forceState }: { id?: string; forceState?: 
   }, [id, attempt, live]);
   // вернуть место чтения, когда разделы открытой карточки в разметке (после их собственных эффектов — Clamp)
   useLayoutEffect(() => {
-    const r = restore.current;
-    const el = inner.current?.parentElement;
-    if (!r || r.id !== id || !el || !inner.current?.querySelector('.folio-body:not(.stale)')) return;
-    restore.current = null;
-    const sec = sectionEl(r.sec, inner.current);
-    if (!sec) return;
-    el.scrollTop = sec.getBoundingClientRect().top - el.getBoundingClientRect().top + el.scrollTop + r.off;
+    /** true — место вернули или возвращать нечего; false — нужного раздела ещё нет. */
+    const tryRestore = () => {
+      const r = restore.current;
+      const el = inner.current?.parentElement;
+      if (!r || r.id !== id || !el) return true;
+      if (!inner.current?.querySelector('.folio-body:not(.stale)')) return false;
+      const sec = sectionEl(r.sec, inner.current);
+      // разделы встают частями (CardPage, С1): нужного ещё нет — ждать следующей части
+      if (!sec && inner.current.querySelector('.folio-body[data-partial]')) return false;
+      restore.current = null;
+      if (sec) el.scrollTop = sec.getBoundingClientRect().top - el.getBoundingClientRect().top + el.scrollTop + r.off;
+      return true;
+    };
+    if (tryRestore()) return;
+    // части разделов — перерисовка самой CardPage, не листа: проверка — кадр за кадром, пока раздел не встанет
+    let raf = 0;
+    let n = 0;
+    const tick = () => {
+      raf = 0;
+      if (tryRestore() || ++n > 120) return;
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => {
+      if (raf) cancelAnimationFrame(raf);
+    };
   });
   useEffect(() => {
     const el = inner.current?.parentElement;

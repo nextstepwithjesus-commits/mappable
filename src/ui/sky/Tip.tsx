@@ -173,6 +173,12 @@ export function SkyTip({ tip }: { tip: Tip | null }) {
       // выбранная звезда и её имя справа
       if (b) avoid.push({ x: b.x - 4, y: b.y - 6, w: b.w + 110, h: b.h + 12 });
     }
+    // указатель и имя наведённого лица (решение 154: имя под указателем — тоже наведение на звезду) подсказка не закрывает
+    if (tip.kind === 'star') {
+      avoid.push({ x: tip.x - 8, y: tip.y - 8, w: 16, h: 16 });
+      const nb = s.ledger.boxes.find((b) => (b.kind === 'star' || b.kind === 'sticky') && b.id === tip.id);
+      if (nb) avoid.push({ x: nb.x - 2, y: nb.y - 2, w: nb.w + 4, h: nb.h + 4 });
+    }
     let anchor: Rect | null;
     if (tip.kind === 'star') anchor = tip.count ? { x: tip.x - 6, y: tip.y - 8, w: 12, h: 16 } : starBox(tip.id);
     else if (tip.kind === 'tier') anchor = { x: tip.x - 1, y: tip.hit.y, w: 2, h: tip.hit.h };

@@ -325,6 +325,10 @@ export const input3: Scenario[] = [
     view: { width: 1024, height: 768 },
     run: async (p) => {
       await go(p, '#/david', 2600);
+      // атлас дописывает окно в адрес («#/david» → «#/david~y…»), когда небо встало (решение 147): ждём этого, иначе
+      // запись окна попадает на открытие листа и выглядит как изменение адреса листом
+      await p.waitForFunction(() => /~y/.test(location.hash), null, { timeout: 5000 }).catch(() => undefined);
+      await p.waitForTimeout(400);
       const url = p.url();
       const h0 = await p.evaluate(() => history.length);
       const btn = p.locator('.skyctl.column button', { hasText: 'Вид' });

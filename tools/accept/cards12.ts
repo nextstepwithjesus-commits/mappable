@@ -47,7 +47,15 @@ async function kin(p: Page): Promise<{ kind: string; label: string; text: string
   return (await p.evaluate(`[...document.querySelectorAll('.sky .dotcard .dc-row:not(.all)')].map((r) => ({
     kind: [...r.classList].find((c) => c !== 'dc-row' && c !== 'hot') || '',
     label: (r.querySelector('.dc-lbl')?.textContent || '').trim(),
-    text: (r.querySelector('.dc-val')?.textContent || '').replace(/[\\u00a0\\u202f\\u2009]/g, ' ').replace(/\\u2060/g, '').replace(/\\s+/g, ' ').trim(),
+    text: (() => {
+      // этап 14 (решение 151): пометы уровня (.dc-cert: «выв.», «толк.») и уточнения тёзок (.dc-ds) — видимые части фразы
+      // родства; строка здесь — имена, как прежде (пометы и уточнения проверяют сценарии 1161 и 1169)
+      const v = r.querySelector('.dc-val');
+      if (!v) return '';
+      const c = v.cloneNode(true);
+      c.querySelectorAll('.dc-cert, .dc-ds').forEach((e) => e.remove());
+      return (c.textContent || '').replace(/[\\u00a0\\u202f\\u2009]/g, ' ').replace(/\\u2060/g, '').replace(/\\s+/g, ' ').replace(/\\s+([,;])/g, '$1').trim();
+    })(),
   }))`)) as { kind: string; label: string; text: string }[];
 }
 /** Раскрыть «ещё N» во всех строках «Родства». */

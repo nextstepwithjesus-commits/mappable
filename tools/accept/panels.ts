@@ -523,7 +523,8 @@ export const panels: Scenario[] = [
       const sec = p.locator('section[aria-labelledby="spec-h-signs"]');
       if (/Образца нет/.test(await sec.innerText())) return fail('в образце осталась строка «Образца нет»');
       const n = await sec.locator('canvas.spec-linecv').count();
-      if (n !== 26) return fail(`образцов следов и родства: ${n} (ждём 13 × 2 темы)`);
+      // этап 14 (решение 149): добавлен образец «фокус клавиатуры — угловые скобки» — 14 × 2 темы
+      if (n !== 28) return fail(`образцов следов и родства: ${n} (ждём 14 × 2 темы)`);
       await sec.locator('canvas.spec-linecv').first().scrollIntoViewIfNeeded();
       const drawn = await sec.evaluate((el) =>
         [...el.querySelectorAll('canvas.spec-linecv')].filter((c) => {
