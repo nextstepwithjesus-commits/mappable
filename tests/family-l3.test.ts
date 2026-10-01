@@ -172,7 +172,9 @@ describe('союзы матерей: у каждого свой ромб и св
     // у каждого союза Давида с детьми на небе — свой ромб на следе Давида, у названной матери — её имя у ромба
     expect(own.length).toBeGreaterThanOrEqual(5);
     for (const n of own) {
-      expect(Math.abs(n.y - yDavid), n.union).toBeLessThan(1);
+      // этап 14, решение 166 (R1-11): ромб союза не из ленты на участке следа с лентой уходит с ленты по своему стволу —
+      // столбец узла по-прежнему на следе Давида (y − off)
+      expect(Math.abs(n.y - (n.off ?? 0) - yDavid), n.union).toBeLessThan(1);
       expect(n.mother ?? '', n.union).toBe(motherOfUnion(n.union) ?? '');
     }
     const names = s.labelStats().boxes.filter((b) => b.kind === 'plate' && b.text).map((b) => b.text);

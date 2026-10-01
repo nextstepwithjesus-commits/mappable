@@ -30,9 +30,9 @@ import { alpha, hexToRgb } from './color.ts';
 import { alphaForContrast, CLOUD_DIMMED, dimLabelAlpha, separateRibbons, WORK_DIM } from './dim.ts';
 import { clearOfRibbons, drawBranchLabels, drawLineNotes, drawRibbonGaps, drawSkyRibbons, lineNoteFocus, ribbonBeads, ribbonCheck, ribbonGapHits, skySteps, stepLegal, stepWeak, type SkyStep } from './ribbons.ts';
 import { drawEventLines, drawFrame, drawGrid, drawTimeMarks, paintWayfinding, placeWayfinding, yearTicks, rateAt, BOTTOM_H, CANON_NOTE, FRAME_H, LETTER_W, LETTER_W_TOUCH, RULER_H, type EdgeHit } from './frame.ts';
-import { claim, clusterShort, clusterText, drawClusterLabel, familyOf, FAMILY_KY, labelFontOf, spot, drawEventLabel, drawFoldMark, drawGroupNames, drawNote, GROUP_COVER_FROM, drawStarLabels, foldMarkWidth, groupName, labelAt, LabelCache, LabelLedger, LineHits, measureLabels, namesakesInView, Placer, textBox, zoomScaleFor, GROUP_AREA_MIN, type GroupNameSpot, type LabelStats } from './labels.ts';
+import { claim, clusterShort, clusterText, drawClusterLabel, familyOf, ownLink, FAMILY_KY, labelFontOf, spot, drawEventLabel, drawFoldMark, drawGroupNames, drawNote, GROUP_COVER_FROM, drawStarLabels, foldMarkWidth, groupName, labelAt, LabelCache, LabelLedger, LineHits, measureLabels, namesakesInView, Placer, textBox, zoomScaleFor, GROUP_AREA_MIN, type GroupNameSpot, type LabelStats } from './labels.ts';
 import { drawBranchTicks, drawGhostNotes, drawLinkLabels, drawLinks, drawPlanStubs, drawSpineTrails, drawTrails, familyHover, linkLooks, linkOn, linkShown, trailLinksAt, trailOf, type LifeTrail, type LinkDraw, type PlanStubHit } from './trails.ts';
-import { branchFrame, drawKinPath, drawLeadNotes, drawMeridian, drawOverlayText, drawRings, drawSelectedLink, drawWorkMarks, emphasis, kinRoutes, meridianFlagAt, overlayRoutes, reserveSelectedLink, ringOuter, type SelectedLinkInfo } from './marks.ts';
+import { branchFrame, drawKinPath, drawLeadNotes, drawMeridian, drawOverlayText, drawRings, drawSelectedLink, drawWorkMarks, emphasis, kinRoutes, meridianFlagAt, overlayRoutes, reserveSelectedLink, ringOuter, unionHoverDim, type SelectedLinkInfo } from './marks.ts';
 import { coarsePointer, mapFont, mapSize, nameSize, T_MAP_S } from './type.ts';
 import type { Rect } from './rect.ts';
 import { timeToX, xToTime, hydrateScale, type TimeScale, T_CANON_END, T_END } from '../engine/timescale.ts';
@@ -72,6 +72,8 @@ export interface Palette {
   dimInk3: number;
   /** непрозрачность линии цвета --ink-3 (контуры созвездий, меридианы событий), при которой контраст к небу ≥ 3 : 1 (E8) */
   lineAlpha: number;
+  /** непрозрачность --ink-3 для контура созвездия: CONTOUR_CONTRAST к небу */
+  contourAlpha: number;
   glow: boolean;
   /** сила двух слоёв свечения лент ночью (широкий, узкий) */
   ribbonGlow: [number, number];
@@ -89,8 +91,15 @@ const RIBBON_TONE = 0.15;
 // затемнение при выделении — src/render/dim.ts (его же проверяет npm run -s contrast)
 export { DIM, LIKELY, WORK_DIM, DIM_LABEL_CONTRAST, CONSTELLATION_DIM, CLOUD_DIMMED, over, alphaForContrast, likelyAlpha, dimLabelAlpha, labelGrounds } from './dim.ts';
 
-/** Контраст линий карты (контуры созвездий, меридианы событий) к небу — как у графики (ТЗ § 3.8): не ниже 3 : 1. */
+/** Контраст линий карты (меридианы событий, сетка) к небу — как у графики (ТЗ § 3.8): не ниже 3 : 1. */
 export const LINE_CONTRAST = 3;
+/**
+ * Контраст контура созвездия к небу (решение 170; V-3): в 1,5 раза ниже связи контекста (3,2 : 1 при выбранном лице) —
+ * контур, тонкий и бледный, не читается связью; граница области — декор, её смысл несёт название
+ */
+export const CONTOUR_CONTRAST = 2;
+/** Толщина контура созвездия, px (решение 170): тоньше связей (1 px). */
+export const CONTOUR_W = 0.75;
 
 export function readPalette(): Palette {
   const cs = getComputedStyle(document.documentElement);
@@ -111,6 +120,7 @@ export function readPalette(): Palette {
     dimInk2: dimLabelAlpha(v('--ink-2'), sky, v('--sky-band'), glow ? CLOUD_DIMMED.night : CLOUD_DIMMED.day),
     dimInk3: dimLabelAlpha(v('--ink-3'), sky, v('--sky-band'), glow ? CLOUD_DIMMED.night : CLOUD_DIMMED.day),
     lineAlpha: alphaForContrast(v('--ink-3'), sky, LINE_CONTRAST), glow,
+    contourAlpha: alphaForContrast(v('--ink-3'), sky, CONTOUR_CONTRAST),
     ribbonGlow: glow ? [num('--ribbon-glow-1', RIBBON_GLOW[0]), num('--ribbon-glow-2', RIBBON_GLOW[1])] : [0, 0],
     ribbonTone: glow ? 0 : num('--ribbon-tone', RIBBON_TONE),
   };
@@ -351,10 +361,10 @@ export interface Pass {
   /** прямоугольник ложится на чужую линию связи кадра (не лица id): подписи обходят линии (Я12; labels.ts) */
   onLink?: (b: Rect, id: string) => boolean;
   /**
-   * через прямоугольник (середину строки подписи) идёт чужая линия — связь, лента, дуга родства, призрак, выбранная связь
-   * или путь родства (решения 139, 141): подпись лица id так не ставится
+   * через рамку строки b идёт линия — связь, дуга родства, призрак, выбранная связь или путь родства; через середину
+   * строки band — лента (решения 139, 141, 163): подпись лица id так не ставится
    */
-  onLine?: (b: Rect, id: string, ribbons?: boolean, perp?: boolean) => boolean;
+  onLine?: (b: Rect, id: string, ribbons?: boolean, perp?: boolean, band?: Rect) => boolean;
   /** скопления семьи на обзоре (решение 142): лицо старшего → «+N» у его подписи */
   pileText?: Map<string, string>;
   /**
@@ -1835,7 +1845,8 @@ export class Sky implements SkyContext {
     const p: Pass = {
       s,
       vis: [],
-      emph: linkDim(s, guestDim(this.plan.guests, familyDim(this, work ? floorAt(emphasis(hl, s.depth), WORK_DIM) : emphasis(hl, s.depth)))),
+      // при наведении на ромб гаснут чужие ветви (решение 172; marks.ts, unionHoverDim)
+      emph: linkDim(s, unionHoverDim(s, guestDim(this.plan.guests, familyDim(this, work ? floorAt(emphasis(hl, s.depth), WORK_DIM) : emphasis(hl, s.depth))))),
       spine,
       level: Math.max(0, 2 * Math.log2(cam.kx / KX_MIN)),
       zoomScale: zoomScaleFor(cam.ky),
@@ -1954,7 +1965,9 @@ export class Sky implements SkyContext {
         // правила принадлежности считают только видимые (GLYPH_SEEN, labels.ts)
         if (a < 0.02) continue;
         // «†» младенца — в его подписи (MAP-68); без подписи знак † рисует drawDaggers, и место слева от звезды он берёт сам
-        const e: GlyphExt = glyphExtent(personGlyph(q, n.ghost, this.model.chrono.get(n.person)?.cls, look, false));
+        const pg = personGlyph(q, n.ghost, this.model.chrono.get(n.person)?.cls, look, false);
+        if (pg.king && !n.ghost && (q.id === s.selected || q.id === s.second)) pg.ring = ringOuter(this, p, q.id);
+        const e: GlyphExt = glyphExtent(pg);
         if (!n.ghost && states.has(q.id)) {
           const R = ringOuter(this, p, q.id);
           if (R > 0) {
@@ -2166,6 +2179,8 @@ export class Sky implements SkyContext {
       // подписи у узлов и обрывков (этап 11, Г8): имя матери у ромба союза, «дочь Ревекка — жена Исаака» — «ключ:текст»
       // (tools/accept/skydraw.ts, 274)
       put('plateTexts', boxes.filter((b) => b.kind === 'plate' && b.text).map((b) => `${b.id ?? ''}:${b.text.replace(/\u00a0/g, ' ')}`).join('|'));
+      // места подписей у ромбов (решение 160; tools/collide.ts, К4): «союз:x,y,w,h» через «|»
+      put('plateBoxes', boxes.filter((b) => b.kind === 'plate' && b.text).map((b) => `${b.id ?? ''}:${[b.x, b.y, b.w, b.h].map(Math.round).join(',')}`).join('|'));
       // звёзды неба «набор» в этом кадре (решение 76; tools/accept/polish6.ts): «лицо:x,y» — список неба для клавиатуры
       // (SkyA11y) обновляется, только когда небо постоит, а проверке нужен кадр сразу после сдвига
       // звёзды в окне при любом показе (tools/accept/grammar11.ts): точки наведения на линии — не у звёзд (§ 8: звезда
@@ -2552,10 +2567,11 @@ export class Sky implements SkyContext {
     if (!this.outlineViews.length) return this.drawBlockOutlines(p);
     const spots: GroupNameSpot[] = [];
     ctx.save();
-    ctx.lineWidth = 1;
+    // контур тоньше и бледнее связей, с прямыми углами (решение 170; V-3): не читается связью
+    ctx.lineWidth = CONTOUR_W;
     // на масштабе семьи контур гаснет до 30 % (MAP-58): от него остаются бессмысленные дуги, а род читается по связям
     const u = Math.max(0, Math.min(1, (cam.ky - FAMILY_FADE[0]) / (FAMILY_FADE[1] - FAMILY_FADE[0])));
-    const la = pal.lineAlpha * (hl ? 0.6 : 1) * (1 - 0.7 * u * u * (3 - 2 * u));
+    const la = pal.contourAlpha * (hl ? 0.6 : 1) * (1 - 0.7 * u * u * (3 - 2 * u));
     // свёрнутое созвездие (J5) — строка-подпись вместо контура; вложенные в него дома тоже
     const folded = (g: string) => {
       for (let x: string | undefined = g, k = 0; x && k < 8; x = groupById.get(x)?.parent, k++) if (this.view.foldGroups.includes(x)) return true;
@@ -2836,24 +2852,21 @@ export class Sky implements SkyContext {
   }
 
   /**
-   * Линии — препятствия для чужих имён (решения 139, 141; C4): через середину строки подписи не проходят связи кадра
-   * (кроме своих; черта брака — и для своего имени), ленты (кроме имён лиц линий: у них свой проход «вне лент»),
-   * маршруты дуг родства, призраков, выбранной связи и пути родства (marks.ts, overlayRoutes — до рисования). Следы и
-   * декор — не препятствия: под подписью они гаснут.
+   * Линии — препятствия для чужих имён (решения 139, 141, 163; C4, R1-04): через рамку строки подписи (b — без поля
+   * ореола) не проходят связи кадра — стволы, зубцы, черты брака, выбранная связь, погашенные связи контекста — и маршруты
+   * дуг родства, призраков, выбранной связи и пути родства (marks.ts, overlayRoutes — до рисования); свои связи — тоже
+   * (зубец к своей звезде и ствол к детям зачёркивали бы своё имя). Разрыв под ореолом не делает пересечение допустимым:
+   * имя на чужой вертикали читается концом связи у этого лица. Ленты — через середину строки band (+3 px свечения; кроме
+   * имён лиц линий: у них свой проход «вне лент»). Следы и декор — не препятствия: под серединой имени они гаснут.
    */
   private lineObstacles(p: Pass, lf: LinkDraw | null, ribbons: boolean) {
     const routes = overlayRoutes(this, p);
     const lh = new LineHits();
-    const s = p.s;
-    const ends = s.link ? new Set(linkRoles(s.link).map((e) => e.id)) : new Set<string>();
     for (const r of routes) {
       if (r.pts.length < 4) continue;
-      // свои лица маршрута — у его концов: дуга выходит из звезды, её имя может стоять рядом
-      const own = new Set<string>([r.id]);
-      for (const k of [0, r.pts.length - 2])
-        for (const g of p.placer.glyphsIn({ x: r.pts[k] - 2, y: r.pts[k + 1] - 2, w: 4, h: 4 })) own.add(g.id);
-      if (r.kind === 'link') for (const id of ends) own.add(id);
-      lh.add(r.pts, own, 1);
+      // маршрут — препятствие и для имён его концов (решение 163): дуга или выбранная связь через своё имя тоже
+      // зачёркивает его; имя встаёт по другую сторону звезды
+      lh.add(r.pts, NO_ROUTE_OWN, Math.min(2.5, Math.max(1, (r.w ?? 1) / 2)));
     }
     const segs = lf && !p.s.onlyLines && !this.linksStale ? linkSegs(lf.frame) : null;
     const off = ribbons ? p.offRibbon : undefined;
@@ -2862,30 +2875,15 @@ export class Sky implements SkyContext {
     const ground = (b: Rect) => this.fillGround(b.x, b.x + b.w, b.y + 0.5, Math.max(0, b.h - 1));
     if (knock) p.knock = ground;
     if (!p.s.onlyLines) p.knockReveal = ground;
-    // погашенные связи (контекст при выбранном лице, 25 %) под подписью гасятся, остальные — препятствие
-    // (только при выбранном лице: выделение меридиана «жив в этот год» подписи не двигает)
-    const hl = s.selected ? s.highlight : null;
-    const weak = (q: LinkPath) => knock && !!hl && !!lf && q.ks !== lf.selected && !lf.lit(q) && (lf.look?.(q).tier ?? 2) !== 0;
-    // свои связи — тоже: зубец к своей звезде слева и ствол к детям справа зачёркивали бы своё имя (замер К5 их считает)
-    p.onLine = (b, id, rib = true, perp = false) =>
-      lh.crosses(b, id) ||
+    const at = (b: Rect): Rect => ({ x: b.x - lf!.dx, y: b.y - lf!.dy, w: b.w, h: b.h });
+    p.onLine = (b, id, rib = true, _perp = false, band = b) =>
+      (lh.crosses(b, id) && ((globalThis as { __lab?: Set<string> }).__lab?.has(id) ? (console.log('LAB', id, 'xline route'), true) : true)) ||
       (!!segs &&
         !!lf &&
-        segs.crosses({ x: b.x - lf.dx, y: b.y - lf.dy, w: b.w, h: b.h }, id, (q, vertical) => {
-          if (!q || !linkOn(q, lf)) return false;
-          if (q.kind === 'ribbon') return rib;
-          if (weak(q)) return false;
-          if (perp && knock) {
-            // под именем первой важности (семья выбранного, отметки, путь) прерываются связи второго яруса — рода, и
-            // отвесные стволы главного; вдоль строки главная связь не идёт, выбранная связь и черта брака — никогда
-            const main = q.ks === lf.selected || (lf.look?.(q).tier ?? 0) === 0;
-            if (!main) return false;
-            if (vertical && q.kind !== 'bar' && q.ks !== lf.selected) return false;
-          }
-          return true;
-        })) ||
+        (segs.crosses(at(b), id, (q) => { const r = !!q && linkOn(q, lf) && q.kind !== 'ribbon' && !ownLink(q.ks, id); if (r && (globalThis as { __lab?: Set<string> }).__lab?.has(id)) console.log('LAB', id, 'xline', q!.kind, q!.ks); return r; }) ||
+          (rib && segs.crosses(at(band), id, (q) => !!q && linkOn(q, lf) && q.kind === 'ribbon')))) ||
       // лента со свечением шире своей нити: середина строки — не ближе 3 px к её полю (ribbons.ts, offStrands: ещё 3 px)
-      (rib && !!off && !off({ x: b.x, y: b.y - 3, w: b.w, h: b.h + 6 }));
+      (rib && !!off && !off({ x: band.x, y: band.y - 3, w: band.w, h: band.h + 6 }));
   }
 
   restars(p: Pass, box: Rect) {
@@ -2936,7 +2934,10 @@ export class Sky implements SkyContext {
       const e = p.emph(q.id) * lit * sa * (this.appear ? this.appear(i) : 1);
       look.color = alpha(pal.ink, e);
       // «†» умершего младенцем — в подписи, кеглем имени (MAP-68); у звезды без подписи — знаком (drawDaggers)
-      drawGlyph(ctx, x, y, personGlyph(q, n.ghost, c?.cls, look, false));
+      const g = personGlyph(q, n.ghost, c?.cls, look, false);
+      // черта царя у выбранного и второго лица — над их кольцом (решение 170; V-6)
+      if (g.king && !n.ghost && (q.id === s.selected || q.id === s.second)) g.ring = ringOuter(this, p, q.id);
+      drawGlyph(ctx, x, y, g);
       p.starsDrawn.add(i);
     }
   }
@@ -3170,11 +3171,13 @@ const LEAD_TRY: [number, number][] = [[16, -14], [16, 14], [-16, -14], [-16, 14]
 /** Отрезки путей кадра связей в сетке (координаты кадра): подписи проверяют середину строки по отрезку (решение 141). */
 const segCache = new WeakMap<LinkFrame, LineHits<LinkPath>>();
 const NO_OWN: ReadonlySet<string> = new Set();
+const NO_ROUTE_OWN: ReadonlySet<string> = new Set();
 function linkSegs(f: LinkFrame): LineHits<LinkPath> {
   let h = segCache.get(f);
   if (h) return h;
   h = new LineHits<LinkPath>();
-  for (const q of f.paths) h.add(q.pts, NO_OWN, 0, q);
+  // полуширина линии: черта брака «‖» — две линии по 2 px от оси пути, прочие — 1 px (рамка имени не задевает их края)
+  for (const q of f.paths) h.add(q.pts, NO_OWN, q.kind === 'bar' ? 2.5 : 1, q);
   segCache.set(f, h);
   return h;
 }
@@ -3237,7 +3240,7 @@ export const ORTHO_PX = 24;
 /** Строка клеток границы на экране — не ниже стольких px (на обзоре — несколько полос). */
 export const ORTHO_ROW_PX = 10;
 /** Скругление углов границы, px (решение 52: не больше 3). */
-export const ORTHO_ROUND = 3;
+export const ORTHO_ROUND = 0;
 
 /**
  * Ортогональные кольца области (решение 52; VIS-77; ТЗ § 3.1): клетки «[k·step, (k + 1)·step) лет × полоса j» (полоса —
@@ -3347,7 +3350,10 @@ export function orthoRings(rings: readonly { t: ArrayLike<number>; lane: ArrayLi
   return loops;
 }
 
-/** Путь ортогонального кольца на экране: отрезки с углами, скруглёнными до ORTHO_ROUND px (не больше половины стороны). */
+/**
+ * Путь ортогонального кольца на экране: отрезки с прямыми углами (решение 170: без скруглений — скруглённый контур читался
+ * связью); ORTHO_ROUND — радиус угла, сейчас 0.
+ */
 function orthoPath(ctx: CanvasRenderingContext2D, xs: ArrayLike<number>, lanes: ArrayLike<number>, cam: Camera) {
   const n = xs.length;
   if (n < 3) return;

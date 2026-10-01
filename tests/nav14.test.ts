@@ -221,6 +221,36 @@ describe('выбранное под органом неба (решение 147)
   });
 });
 
+describe('второй круг: связь при смене лица, окно густой семьи (решения 161, 165)', () => {
+  it('выбор лица, не стоящего на выбранной связи, снимает её; конец связи — оставляет', async () => {
+    const linkstate = await import('../src/ui/linkstate.ts');
+    const key = { kind: 'child', union: 'u:iakov+rakhil', child: 'veniamin' } as const;
+    expect([...show.linkPersons(key)].sort()).toEqual(['iakov', 'rakhil', 'veniamin']);
+    state.selected.value = 'iakov';
+    linkstate.selectedLink.value = key;
+    state.selected.value = 'veniamin';
+    expect(linkstate.selectedLink.peek()).toEqual(key);
+    state.selected.value = 'david';
+    expect(linkstate.selectedLink.peek()).toBeNull();
+    state.selected.value = null;
+  });
+  it('у Давида и Халева сына Есрома семья густая; окно лица на узком небе — по семье, строка не теснее 10 px без пропорции', () => {
+    const s = makeSky(1440, 776);
+    expect(view.familyBox('david')?.dense).toBe(true);
+    expect(view.familyBox('khalev-syn-esroma')?.dense).toBe(true);
+    expect(view.familyBox('ruf')?.dense).toBe(false);
+    // широкое небо: у густой семьи строка не теснее ROW_READ (или вся родня по ширине)
+    const v = view.viewForPerson('khalev-syn-esroma')!;
+    const fam = view.familyBox('khalev-syn-esroma')!;
+    const W = s.cam.vp.r - s.cam.vp.l;
+    const fits = (fam.x1 - fam.x0) * v.kx <= W;
+    expect(s.cam.kyWith(v.kx, s.cam.ownLanes) >= view.ROW_READ - 0.01 || fits).toBe(true);
+    // у негустой семьи окно прежнее — по жизни лица
+    const r = view.viewForPerson('ruf')!;
+    expect(r.kx).toBeGreaterThan(0);
+  });
+});
+
 /** Кадр неба без выделений — для draw в тестах. */
 function baseState(_s?: SkyT) {
   return {

@@ -692,7 +692,8 @@ export function measureLabels(boxes: readonly LabelBox[]): LabelStats {
 
 /** Строка в открытом небе: не выходит за кромки (не срезается — не рисуется). */
 export function insideSky(v: SkyContext, b: Rect): boolean {
-  return b.x > v.letterW + 2 && b.x + b.w < v.cam.w - 4 && b.y >= v.openTop && b.y + b.h <= v.cam.vp.b;
+  // у нижнего края — 4 px запаса: кромка листа карточки на телефоне стоит на px-другой выше края окна неба (К6)
+  return b.x > v.letterW + 2 && b.x + b.w < v.cam.w - 4 && b.y >= v.openTop && b.y + b.h <= v.cam.vp.b - 4;
 }
 
 /**
@@ -701,7 +702,49 @@ export function insideSky(v: SkyContext, b: Rect): boolean {
  * hold — только держать место, в замер не писать: подпись, погашенная выделением или меридианом, не рисуется, а место
  * остаётся за ней, и соседние подписи при наведении меридиана не переезжают (подписи не мигают; ТЗ § 3.1).
  */
-export function claim(v: SkyContext, p: Pass, candidates: Rect[], kind: LabelKind, text: string, o: { id?: string; soft?: boolean; coverFrom?: number; hold?: boolean; softInset?: number } = {}): Rect | null {
+/**
+ * Подпись у точки (решение 160: имя матери и подпись союза у ромба): x, y — точка (ромб), near — сколько первых мест стоят
+ * у самой точки (дальше — с выноской), person — лицо подписи (его звезда своя, а не чужая).
+ */
+export interface ClaimAnchor {
+  x: number;
+  y: number;
+  near: number;
+  person?: string;
+}
+
+/**
+ * Правило принадлежности для подписи у точки (решения 140, 160): под рамкой нет чужого знака; у места при самой точке
+ * чужой яркий знак не ближе рамки, чем точка; у места на выноске — не ближе LEADER_CLEAR, и сама выноска не идёт через
+ * чужой знак. Иначе подпись у ромба читалась бы именем чужой звезды («Лия» у кольца Рахили).
+ */
+function anchorOwns(p: Pass, b: Rect, a: ClaimAnchor, leader: boolean): boolean {
+  const dx = Math.max(0, b.x - a.x, a.x - (b.x + b.w));
+  const dy = Math.max(0, b.y - a.y, a.y - (b.y + b.h));
+  const dA = Math.hypot(dx, dy);
+  const pad = Math.max(leader ? LEADER_CLEAR : dA + 1, 6) + 1;
+  for (const g of p.placer.glyphsIn({ x: b.x - pad, y: b.y - pad, w: b.w + 2 * pad, h: b.h + 2 * pad })) {
+    if (a.person && g.id === a.person) continue;
+    const d = boxGap(b, glyphBox(g));
+    if (d <= 0 && g.a >= GLYPH_SEEN) return false;
+    if (g.a < GLYPH_BRIGHT) continue;
+    if (leader ? d < LEADER_CLEAR : d < dA + 1) return false;
+  }
+  if (leader) {
+    // выноска — от точки к ближнему углу рамки: через чужой знак не идёт
+    const ex = Math.max(b.x, Math.min(a.x, b.x + b.w));
+    const ey = Math.max(b.y, Math.min(a.y, b.y + b.h));
+    const len = Math.hypot(ex - a.x, ey - a.y);
+    for (let t = 6; t < len; t += 3) {
+      const px = a.x + ((ex - a.x) * t) / len;
+      const py = a.y + ((ey - a.y) * t) / len;
+      if (p.placer.glyphsIn({ x: px - 1, y: py - 1, w: 2, h: 2 }).some((g) => g.id !== a.person && g.a >= GLYPH_SEEN)) return false;
+    }
+  }
+  return true;
+}
+
+export function claim(v: SkyContext, p: Pass, candidates: Rect[], kind: LabelKind, text: string, o: { id?: string; soft?: boolean; coverFrom?: number; hold?: boolean; softInset?: number; anchor?: ClaimAnchor } = {}): Rect | null {
   // названия, скопления, пояснения и подписи связей не ложатся на ленты линий Мессии: ленты — главное на небе
   // подписи связей при лентах по маршрутам — по самой ленте (Pass.onRibbon): рамка шага от родителя до ребёнка закрыла бы
   // весь след Давида с ромбами его союзов
@@ -714,7 +757,9 @@ export function claim(v: SkyContext, p: Pass, candidates: Rect[], kind: LabelKin
   // подписей; прописные с выносом «О» выходят за строку на долю px — поле 1 px их покрывает)
   const k = o.softInset ?? 0;
   const free = (b: Rect) => (k ? !p.placer.clash(b, false) && !((o.soft ?? true) && p.placer.clash({ x: b.x + k, y: b.y + k, w: b.w - 2 * k, h: b.h - 2 * k }, true, o.coverFrom)) : !p.placer.clash(b, o.soft ?? true, o.coverFrom));
-  const ok = (b: Rect) => insideSky(v, b) && !hits(b, p.reserve) && !hits(b, avoid) && !(exact && p.onRibbon!(b)) && free(b) && !row(b);
+  const an = o.anchor;
+  const owns = (b: Rect) => !an || anchorOwns(p, b, an, candidates.indexOf(b) >= an.near);
+  const ok = (b: Rect) => insideSky(v, b) && !hits(b, p.reserve) && !hits(b, avoid) && !(exact && p.onRibbon!(b)) && free(b) && !row(b) && owns(b);
   // сначала — место не на чужих линиях связей (этап 11, Я12; sky.ts, Pass.onLink), затем — любое свободное
   const onLink = p.onLink;
   const b = (onLink ? candidates.find((c) => ok(c) && !onLink(c, o.id ?? '')) : undefined) ?? candidates.find(ok);
@@ -749,11 +794,6 @@ interface StarOpts {
    * нет, имя может лечь на чужой знак (но не на подписи)
    */
   reveal?: boolean;
-  /**
-   * подпись первой важности (выбранное, семья, отметки, путь родства): отвесный ствол связи может пройти под серединой её
-   * строки — он прервётся под именем, как дорога под названием на карте (решения 139, 141); вдоль строки связь не идёт
-   */
-  perp?: boolean;
   /**
    * родня первого колена выбранного (решения 137, 144, 146; П1): по правилам места нет — ещё и места вокруг всей звезды
    * (веер выносок до 40 px, над и под ней) без чужого знака под именем и с правилом принадлежности; связи и ленты под
@@ -892,8 +932,10 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): Label
   const q = byId.get(n.person)!;
   const x = cam.sx(v.X0[i]);
   const y = cam.sy(n.lane);
-  // звезда за краем окна не подписывается: для выбранных есть указатели у края (MOB-01)
+  // звезда за краем окна не подписывается: для выбранных есть указатели у края (MOB-01); звезда под органами неба и
+  // карточкой — тоже: имя у невидимой звезды читалось бы подписью соседней (К4: «Аса» у кнопок масштаба на телефоне)
   if (x < v.letterW || x > cam.w || y < v.openTop || y > cam.vp.b) return null;
+  if (hits({ x: x - 1, y: y - 1, w: 2, h: 2 }, p.reserve)) return null;
   const cache = v.labelCache;
   const r = starRadius(q.magnitude, p.zoomScale);
   const king = q.roles.includes('king') || q.roles.includes('queen');
@@ -982,16 +1024,21 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): Label
   /** правило принадлежности: имя читается подписью своей звезды */
   const owned = (b: Rect, leader: boolean) => once(`o${key(b)}${leader ? 'x' : ''}`, () => p.placer.owns(b, own, q.id, size, leader));
   /** через середину строки идут связи, ленты, дуги (lane — своя лента допустима) */
-  const crossed = (b: Rect, lane: boolean, perp = !!o.perp) => once(`l${key(b)}${lane ? 'r' : ''}${perp ? 'p' : ''}`, () => !!onLine?.(midBand(b, size), q.id, !lane, perp && !lane));
-  // 'fan' (масштаб семьи, места вокруг всей звезды): отвесные стволы и связи второго яруса под серединой строки прерываются,
-  // как под именами первой важности (решение 141); вдоль строки связь не идёт
-  // 'fan' на узком небе (телефон, E1: на масштабе семьи подписаны ≥ 90 %): отвесные стволы и связи второго яруса под
-  // серединой строки прерываются, как под именами первой важности (решение 141); на широком небе линии — препятствие
-  const narrowFan = v.cam.vp.r - v.cam.vp.l < NARROW_SKY;
-  const rules = (b: Rect, m: Mode, leader: boolean) => owned(b, leader) && !crossed(b, m === 'lane', !!o.perp || (m === 'fan' && narrowFan));
+  // связи и маршруты — по всей строке (рамка без поля ореола), ленты — по середине строки (решение 163)
+  const crossed = (b: Rect, lane: boolean) =>
+    once(`l${key(b)}${lane ? 'r' : ''}`, () => !!onLine?.({ x: b.x + 1.5, y: b.y + 1.5, w: Math.max(0, b.w - 3), h: Math.max(0, b.h - 3) }, q.id, !lane, false, midBand(b, size)));
+  // правила места (решения 140, 141, 163): имя читается своим, через строку не идут связи и маршруты, через её середину —
+  // ленты; на чужой вертикали имя не стоит ни на каком масштабе (разрыв под ореолом не оправдывает пересечения)
+  const rules = (b: Rect, m: Mode, leader: boolean) => owned(b, leader) && !crossed(b, m === 'lane');
   // явно раскрытое имя без правил: чужая звезда у имени — хуже, чем линия под ним (её под раскрытым именем прервёт разрыв)
-  const ruleCost = (b: Rect, leader: boolean) => (owned(b, leader) ? 0 : 0.6) + (crossed(b, false) ? (p.knockReveal ? 0.1 : 0.3) : 0);
-  const ok = (b: Rect, m: Mode, leader = false) =>
+  const ruleCost = (b: Rect, leader: boolean) => (owned(b, leader) ? 0 : 0.6) + (crossed(b, false) ? 0.5 : 0);
+  const dbg = (globalThis as { __lab?: Set<string> }).__lab?.has(q.id);
+  const ok = (b: Rect, m: Mode, leader = false) => {
+    const r = ok1(b, m, leader);
+    if (dbg && (m === 'soft' || m === 'fan' || m === 'kin')) console.log('LAB', q.id, m, leader ? 'x' : '-', JSON.stringify([Math.round(b.x), Math.round(b.y), Math.round(b.w)]), 'in', insideSky(v, b), 'res', hits(b, p.reserve), 'clash', p.placer.clash(b, false, 99, q.id), 'row', p.placer.rowClash(b, size), 'own', owned(b, leader), 'line', crossed(b, false), '=>', r);
+    return r;
+  };
+  const ok1 = (b: Rect, m: Mode, leader = false) =>
     insideSky(v, b) &&
     !hits(b, p.reserve) &&
     (m === 'none' ||
@@ -1016,17 +1063,50 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): Label
       // выноска лица линии Мессии выходит из звезды на его ленте: лента у её начала — своя
       // (дальняя выноска лица линии и на своём проходе 'lane' ленты не пересекает — только у своей звезды: до 14 px от знака)
       if (strict(m) && (p.placer.glyphsIn(pt).some((g) => g.id !== q.id && g.a >= GLYPH_SEEN) || onLine?.(pt, q.id, (m !== 'lane' || (!!o.wide && d - lead0 > LEADER_MAX)) && !(spineName && t < lead0 + (o.wide ? 14 : 8)), false))) return false;
-      // родня без места по правилам: выноска всё равно не идёт через чужой знак
+      // родня без места по правилам: выноска всё равно не идёт через чужой знак; выноска не пересекает связи (решение 163)
       if (m === 'kin' && p.placer.glyphsIn(pt).some((g) => g.id !== q.id && g.a >= GLYPH_SEEN)) return false;
+      if ((m === 'kin' || m === 'hard') && onLine?.(pt, q.id, false)) return false;
     }
     return true;
+  };
+  /** Места последних проходов (раскрытие, родня, веер): стороны, со сдвигом над и под знаком, выноски и отвесные выноски. */
+  const wideCands = () => {
+    // над знаком и под ним — ещё и со сдвигом: имя кончается или начинается над знаком (место между соседями по строке)
+    const shifted = sides
+      .filter((sd) => sd === 't' || sd === 'b')
+      .flatMap((sd) => {
+        const c = sp(sd, textW + foldW);
+        const d = c.box.w / 2 - r - 2;
+        return d > 4 ? [-d, d].map((k) => ({ tx: c.tx + k, ty: c.ty, box: { ...c.box, x: c.box.x + k }, side: sd, far: 4 })) : [];
+      });
+    const cands: { tx: number; ty: number; box: Rect; ax?: number; ay?: number; side: Side | 'x'; far: number }[] = [
+      ...sides.map((sd) => ({ ...sp(sd, textW + (sd === 'r' ? sigW : 0) + foldW), side: sd, far: 0 })),
+      ...shifted,
+      ...(o.leader ? [...leaders, ...(v.viewMoving ? [] : KIN_LEADERS.filter(short))].map(([dx, dy]) => ({ ...leaderSpot(dx, dy, x, y, textW + foldW, size), side: 'x' as const, far: Math.hypot(dx, dy) })) : []),
+      // имя по центру над звездой или под ней на отвесной выноске (как у лиц линий, SPINE_DROP), до 40 px
+      ...(o.leader && !v.viewMoving
+        ? [14, 20, 26, 32, 38].filter((d) => d - lead0 <= LEADER_MAX && d > lead0 + 3).flatMap((d) =>
+            ([1, -1] as const)
+              .filter((dir) => !vert || dir === vert)
+              .map((dir) => {
+                const w = textW + foldW;
+                const ay = y + dir * d;
+                const ty = dir > 0 ? ay + 2 + (mtr ? mtr.asc : ASC * size) : ay - 2 - (mtr ? mtr.desc : DESC * size);
+                return { tx: x - w / 2, ty, box: textBox(x - w / 2, ty, w, size), ax: x, ay, side: 'x' as const, far: d };
+              }),
+          )
+        : []),
+    ];
+    return cands;
   };
   let at: { tx: number; ty: number; box: Rect; ax?: number; ay?: number; side: Side | 'x' } | null = null;
   /** проход, в котором встала подпись: в строгих (кроме «на ленте») под серединой строки гасятся следы, декор и погашенные связи */
   let mode: Mode = 'none';
   const free: Mode[] = onLink ? ['free'] : [];
   const spineName = p.spine.has(q.id);
-  const lane: Mode[] = spineName ? ['lane'] : [];
+  // своя лента под серединой имени — только в показе «только линии» (там ленты под всеми именами); на обычном небе имя
+  // лица линии — над своей лентой или под ней, а не на ней (решение 172; R2-16: Мария на своей лазурной ленте)
+  const lane: Mode[] = spineName && p.s.onlyLines ? ['lane'] : [];
   // в движении (перелёт, колесо, протяжка) — без прохода по вееру мест: кадр движения короче 20 мс (С1), веер — в покое
   const fan: Mode[] = v.viewMoving ? [] : ['fan'];
   const base: Mode[] = o.force
@@ -1085,37 +1165,12 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): Label
     // места без чужих знаков: из них — где имя читается своим лучше всего
     if (soft === 'hard' || soft === 'kin' || soft === 'fan') {
       let best = Infinity;
-      // над знаком и под ним — ещё и со сдвигом: имя кончается или начинается над знаком (место между соседями по строке)
-      const shifted = sides
-        .filter((sd) => sd === 't' || sd === 'b')
-        .flatMap((sd) => {
-          const c = sp(sd, textW + foldW);
-          const d = c.box.w / 2 - r - 2;
-          return d > 4 ? [-d, d].map((k) => ({ tx: c.tx + k, ty: c.ty, box: { ...c.box, x: c.box.x + k }, side: sd, far: 4 })) : [];
-        });
-      const cands: { tx: number; ty: number; box: Rect; ax?: number; ay?: number; side: Side | 'x'; far: number }[] = [
-        ...sides.map((sd) => ({ ...sp(sd, textW + (sd === 'r' ? sigW : 0) + foldW), side: sd, far: 0 })),
-        ...shifted,
-        ...(o.leader ? [...leaders, ...(v.viewMoving ? [] : KIN_LEADERS.filter(short))].map(([dx, dy]) => ({ ...leaderSpot(dx, dy, x, y, textW + foldW, size), side: 'x' as const, far: Math.hypot(dx, dy) })) : []),
-        // имя по центру над звездой или под ней на отвесной выноске (как у лиц линий, SPINE_DROP), до 40 px
-        ...(o.leader && !v.viewMoving
-          ? [14, 20, 26, 32, 38].filter((d) => d - lead0 <= LEADER_MAX && d > lead0 + 3).flatMap((d) =>
-              ([1, -1] as const)
-                .filter((dir) => !vert || dir === vert)
-                .map((dir) => {
-                  const w = textW + foldW;
-                  const ay = y + dir * d;
-                  const ty = dir > 0 ? ay + 2 + (mtr ? mtr.asc : ASC * size) : ay - 2 - (mtr ? mtr.desc : DESC * size);
-                  return { tx: x - w / 2, ty, box: textBox(x - w / 2, ty, w, size), ax: x, ay, side: 'x' as const, far: d };
-                }),
-            )
-          : []),
-      ];
+      const cands = wideCands();
       for (const c of cands) {
         // 'fan' — по правилам (принадлежность, линии, путь выноски); ближнее место — раньше
         if (!ok(c.box, soft, c.side === 'x') || (c.side === 'x' && !leadClear(c.ax!, c.ay!, soft))) continue;
-        // родня: имя читается своим (правило принадлежности — запрет и здесь), линии под ним прерываются
-        if (soft === 'kin' && !owned(c.box, c.side === 'x')) continue;
+        // родня: имя читается своим и не стоит на чужой линии (правила — запрет и здесь, решения 140, 163)
+        if (soft === 'kin' && !rules(c.box, 'soft', c.side === 'x')) continue;
         // меньше знаков под именем; при равном — место, где имя читается своим (правила принадлежности и линий)
         const score = p.placer.cover(c.box, q.id) + c.far / 40 + ruleCost(c.box, c.side === 'x');
         if (score < best) {
@@ -1129,14 +1184,14 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): Label
     // поверх занятого (выбранное лицо, места нет): та сторона, где под именем меньше занятого — ромбов союзов, подписей
     if (soft === 'none') {
       let best = Infinity;
-      for (const sd of sides) {
-        const c = sp(sd, textW + (sd === 'r' ? sigW : 0) + foldW);
-        if (!ok(c.box, soft)) continue;
-        // меньше всего чужих знаков (с весом по яркости), затем — где имя читается своим, затем — занятого подписями
-        const o = p.placer.cover(c.box, q.id) * 1000 + ruleCost(c.box, false) * 500 + p.placer.overlap(c.box);
+      // те же места, что у раскрытия (выноски не через чужие знаки и связи): меньше всего чужих знаков (с весом по
+      // яркости), затем — где имя читается своим и не стоит на линии, затем — меньше занятого подписями, ближе к звезде
+      for (const c of wideCands()) {
+        if (!ok(c.box, soft) || (c.side === 'x' && !leadClear(c.ax!, c.ay!, 'hard'))) continue;
+        const o = p.placer.cover(c.box, q.id) * 1000 + ruleCost(c.box, c.side === 'x') * 500 + p.placer.overlap(c.box) + c.far;
         if (o < best) {
           best = o;
-          at = { ...c, side: sd };
+          at = c;
         }
       }
       if (at) break;
@@ -1175,6 +1230,7 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): Label
       }
     if (at) break;
   }
+  if ((globalThis as { __lab?: Set<string> }).__lab?.has(q.id)) console.log('LAB', q.id, 'END', mode, at ? JSON.stringify(at) : 'null', JSON.stringify({ ...o, places: undefined, avoid: undefined }));
   if (!at) return null;
   const { tx, ty } = at;
   const knock = knockTrail(v, p, i, at, r);
@@ -1247,6 +1303,37 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): Label
 }
 
 /** Ближайшая семья лица: родители, супруги, дети, братья и сёстры (E1; MAP-21, UX-33). */
+/**
+ * Линия своя для лица (решение 163: препятствие — чужая вертикаль): ключ связи «u.отец.мать._», «k.отец.мать._.ребёнок»,
+ * «s.отец.мать._.супруг» — своя, если лицо — супруг союза, его ребёнок по этой связи или ребёнок этих родителей. Ствол
+ * своих детей и ствол родителей к нему самому имя не зачёркивают: они кончаются у его звезды.
+ */
+export function ownLink(ks: string, id: string): boolean {
+  const k = ks.split('.');
+  if (k.length < 3 || !(k[0] === 'u' || k[0] === 'k' || k[0] === 's')) return false;
+  const [a, b] = [k[1], k[2]];
+  if (a === id || b === id || (k.length > 4 && k[4] === id && k[0] === 'k')) return true;
+  const q = byId.get(id);
+  if (!q) return false;
+  // союз его родителей: отец и мать — те же (неназванный — «_»)
+  return (q.father ? q.father === a : a === '_') && (q.mother ? q.mother === b : b === '_') && !!(q.father || q.mother);
+}
+
+/**
+ * Семья выбранного в порядке права на место подписи (решение 164; R1-05, V-14): родители и супруги → лица линий Мессии
+ * величины ≤ 1 (Соломон и Нафан у Давида, Иуда у Иакова) → дети по степени интереса → прочие (братья и сёстры) по ней же.
+ * Тесно (1024, телефон) — без подписи остаются младшие, а не главные лица семьи.
+ */
+export function familyOrder(id: string, spine: ReadonlySet<string>, rank: (id: string) => number): string[] {
+  const parents = new Set((graph.parentsOf.get(id) ?? []).filter((e) => e.kind === 'father' || e.kind === 'mother').map((e) => e.parent));
+  const mates = new Set((graph.spousesOf.get(id) ?? []).map((e) => (e.a === id ? e.b : e.a)));
+  const kids = new Set(primaryChildren(graph, id));
+  const tier = (x: string) => (parents.has(x) || mates.has(x) ? 0 : spine.has(x) && (byId.get(x)?.magnitude ?? 9) <= 1 ? 1 : kids.has(x) ? 2 : 3);
+  const all = familyOf(id);
+  const at = new Map(all.map((x, k) => [x, k]));
+  return all.sort((a, b) => tier(a) - tier(b) || (tier(a) >= 2 ? rank(a) - rank(b) : 0) || at.get(a)! - at.get(b)!);
+}
+
 export function familyOf(id: string): string[] {
   const out = new Set<string>();
   for (const e of graph.parentsOf.get(id) ?? []) if (e.kind === 'father' || e.kind === 'mother') out.add(e.parent);
@@ -1445,7 +1532,7 @@ export function drawStarLabels(v: SkyContext, p: Pass, between?: () => void) {
   for (const id of new Set([s.selected, s.second, s.hovered, s.focus, ...ends])) {
     const i = idx(id);
     if (!shown(i)) continue;
-    putLabel(v, p, i, { sides: ['r', 'l', 't', 'b'], color: pal.ink, alpha: 1, sigla: true, leader: true, far: true, overStars: true, force: first, reveal: true, perp: true });
+    putLabel(v, p, i, { sides: ['r', 'l', 't', 'b'], color: pal.ink, alpha: 1, sigla: true, leader: true, far: true, overStars: true, force: first, reveal: true });
     first = false;
   }
   // имена матерей у ромбов выбранного — обязательный ярус сразу после него (решение 137, Г4; trails.ts): выноской до 40 px
@@ -1495,22 +1582,22 @@ export function drawStarLabels(v: SkyContext, p: Pass, between?: () => void) {
     const i = idx(id);
     if (!shown(i)) continue;
     const q = byId.get(id)!;
-    putLabel(v, p, i, { sides: SIDES, color: pal.ink, alpha: 1, note: q.disambig ? `, ${q.disambig}` : undefined, leader: true, far: true, overStars: true, perp: true });
+    putLabel(v, p, i, { sides: SIDES, color: pal.ink, alpha: 1, note: q.disambig ? `, ${q.disambig}` : undefined, leader: true, far: true, overStars: true });
   }
   if (hl)
     for (const [id, k] of hl) {
       if (k !== 'path') continue;
       const i = idx(id);
       if (!shown(i) || (lineOnly && !p.spine.has(id))) continue;
-      putLabel(v, p, i, { sides: SIDES, color: pal.ink, alpha: 1, sigla: true, leader: true, far: true, overStars: true, perp: true });
+      putLabel(v, p, i, { sides: SIDES, color: pal.ink, alpha: 1, sigla: true, leader: true, far: true, overStars: true });
     }
   // семья выбранного — раньше всех прочих (решения 137, 144, 146): тесно — выноской до 40 px, затем — место без чужих
   // знаков, где имя читается своим лучше всего (StarOpts.kin)
   if (s.selected && !s.pins.size)
-    for (const id of familyOf(s.selected)) {
+    for (const id of familyOrder(s.selected, p.spine, (x) => cache.rank[idx(x) ?? -1] ?? 1e9)) {
       const i = idx(id);
       if (!shown(i) || (lineOnly && !p.spine.has(id))) continue;
-      const ko: StarOpts = { sides: SIDES, color: pal.ink, alpha: 1, sigla: true, leader: true, far: true, overStars: true, perp: true, kin: true };
+      const ko: StarOpts = { sides: SIDES, color: pal.ink, alpha: 1, sigla: true, leader: true, far: true, overStars: true, kin: true };
       // нет места и так — имя без уточнения одноимённого («Фамарь» вместо «Фамарь, дочь Давида»): у выбранного его
       // родня узнаётся по связи, полное имя — в подсказке и карточке (П1: не тишина)
       if (!putLabel(v, p, i, ko) && p.namesakes?.get(id)) putLabel(v, p, i, { ...ko, note: '' });
@@ -1803,16 +1890,13 @@ export function drawGroupNames(v: SkyContext, p: Pass, spots: GroupNameSpot[], n
       if (!far(c.x, c.box.y + c.box.h / 2)) return false;
       const got = claim(v, p, [c.box], 'group', name, knock ? { coverFrom: cover, softInset: 1 } : { softInset: 1 });
       if (!got) return false;
-      if (knock) {
-        // следы и стволы скоб под названием гасятся цветом фона; тусклые звёзды возвращаются поверх, и название пишется
-        // с ореолом — звезда видна между буквами
-        v.fillGround(got.x, got.x + got.w, got.y, got.h);
-        // звёзды рисуются после подписей (sky.ts): тусклые звёзды под названием видны между буквами и без перерисовки
-        ctx.strokeStyle = pal.halo;
-        ctx.lineWidth = 3;
-        ctx.lineJoin = 'round';
-        ctx.strokeText(name, c.x, c.y);
-      }
+      // под названием контуры, меридианы событий, следы и стволы скоб прерываются (решение 170; V-4): рамка гасится цветом
+      // фона (на обзоре — не по облакам: там только ореол), название пишется с ореолом; звёзд под ним нет (решение 140)
+      if (knock || !low) v.fillGround(got.x, got.x + got.w, got.y, got.h);
+      ctx.strokeStyle = pal.halo;
+      ctx.lineWidth = 3;
+      ctx.lineJoin = 'round';
+      ctx.strokeText(name, c.x, c.y);
       ctx.fillText(name, c.x, c.y);
       boxes.push({ ...got, group: o.group });
       xs.push(c.x);

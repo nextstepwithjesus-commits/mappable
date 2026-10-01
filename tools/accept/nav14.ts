@@ -28,9 +28,9 @@ async function family(p: Page) {
     var c = sky.querySelector('canvas');
     var kin = (sky.dataset.kin || '').split(';').filter(Boolean).map(function (q) { var a = q.split(':'); return { id: a[0], on: a[1] !== '-', inside: a[1].split(',')[2] === '1' }; });
     var labels = (c.dataset.labelIds || '').split(' ').filter(Boolean);
-    var edges = (sky.dataset.edges || '').split('|').filter(Boolean).map(function (e) { var i = e.lastIndexOf('='); return { label: e.slice(0, i), ids: e.slice(i + 1).split(',') }; });
+    var edges = (sky.dataset.edges || '').split('|').filter(Boolean).map(function (e) { var at = e.lastIndexOf('@'); var b = at > 0 ? e.slice(at + 1).split(',').map(Number) : null; var t = at > 0 ? e.slice(0, at) : e; var i = t.lastIndexOf('='); return { label: t.slice(0, i), ids: t.slice(i + 1).split(','), box: b ? { x: b[0], y: b[1], w: b[2], h: b[3] } : null }; });
     return { kin: kin, labels: labels, edges: edges };
-  })()`)) as { kin: { id: string; on: boolean; inside: boolean }[]; labels: string[]; edges: { label: string; ids: string[] }[] };
+  })()`)) as { kin: { id: string; on: boolean; inside: boolean }[]; labels: string[]; edges: { label: string; ids: string[]; box: { x: number; y: number; w: number; h: number } | null }[] };
 }
 
 /** П1: переход по ссылке карточки from → to; родня первого колена учтена (подпись или указатель) и подписана. */
@@ -309,7 +309,7 @@ export const nav14: Scenario[] = [
   },
   {
     n: 1151,
-    title: 'Решение 148: путь исследования «Путь: Руфь › Вооз › Овид» в строке показа; имя пути возвращает к лицу',
+    title: 'Решения 148, 168: «История: Руфь › Овид › Иессей» в строке показа; имя истории возвращает к лицу; «назад» — история своей записи',
     run: async (p) => {
       await find(p, 'Руфь');
       for (const id of ['ovid', 'iessey']) {
@@ -319,33 +319,38 @@ export const nav14: Scenario[] = [
         await p.waitForTimeout(1600);
       }
       const line = p.locator('.sky .showbar .sb-path');
-      if (!(await line.count())) return fail('нет строки пути');
+      if (!(await line.count())) return fail('нет строки истории');
       const t = (await line.innerText()).replace(/\s+/g, ' ').trim();
-      if (!/^Путь: Руфь › Овид › Иессей$/.test(t)) return fail(`строка пути: «${t}»`);
+      if (!/^История: Руфь › Овид › Иессей$/.test(t)) return fail(`строка истории: «${t}»`);
       await line.locator('button[data-id="ruf"]').click();
       await p.waitForTimeout(1600);
-      if (hashId(p) !== 'ruf') return fail(`имя пути выбрало «${hashId(p)}»`);
+      if (hashId(p) !== 'ruf') return fail(`имя в истории выбрало «${hashId(p)}»`);
       const t2 = (await p.locator('.sky .showbar').innerText()).replace(/\s+/g, ' ');
-      if (/Путь:/.test(t2)) return fail(`после возврата к началу пути строка осталась: «${t2}»`);
-      // «назад» возвращает и путь
+      if (/История:/.test(t2)) return fail(`после возврата к началу истории строка осталась: «${t2}»`);
+      // «назад» возвращает и историю
       await p.goBack();
       await p.waitForTimeout(1600);
       const t3 = ((await p.locator('.sky .showbar .sb-path').count()) ? await p.locator('.sky .showbar .sb-path').innerText() : '').replace(/\s+/g, ' ').trim();
-      return /Руфь › Овид › Иессей/.test(t3) ? pass(`«${t}»; «назад» — «${t3}»`) : fail(`после «назад» путь «${t3}»`);
+      if (!/Руфь › Овид › Иессей/.test(t3)) return fail(`после «назад» история «${t3}»`);
+      // новый поиск начинает новую историю (решение 168): «Давид» — один, строки нет
+      await find(p, 'Давид');
+      await p.waitForTimeout(800);
+      const t4 = ((await p.locator('.sky .showbar .sb-path').count()) ? await p.locator('.sky .showbar .sb-path').innerText() : '').replace(/\s+/g, ' ').trim();
+      return t4 === '' ? pass(`«${t}»; «назад» — «${t3}»; новый поиск — новая история`) : fail(`после нового поиска строка «${t4}»`);
     },
   },
   {
     n: 1152,
-    title: 'Решение 148: на 1024 px путь свёрнут до «‹ Овид»',
+    title: 'Решение 148: на 1024 px история свёрнута до «‹ Руфь»',
     view: { width: 1024, height: 768 },
     run: async (p) => {
       await find(p, 'Руфь');
       await p.locator('.folio button.person[data-id="ovid"]').first().click();
       await p.waitForTimeout(1600);
       const line = p.locator('.sky .showbar .sb-path');
-      if (!(await line.count())) return fail('нет строки пути');
+      if (!(await line.count())) return fail('нет строки истории');
       const t = (await line.innerText()).replace(/\s+/g, ' ').trim();
-      if (t !== '‹ Руфь') return fail(`строка пути: «${t}»`);
+      if (t !== '‹ Руфь') return fail(`строка истории: «${t}»`);
       await line.locator('button').click();
       await p.waitForTimeout(1500);
       return hashId(p) === 'ruf' ? pass(`«${t}» — к Руфи`) : fail(`выбрано «${hashId(p)}»`);
@@ -452,13 +457,86 @@ export const nav14: Scenario[] = [
   },
   {
     n: 1157,
-    title: 'Решение 146 (M2): телефон 390 — окно лица по ссылке: строки не теснее 10 px',
+    title: 'Решения 146 (M2) и 165: телефон 390 — окно лица по адресу: строки не теснее 10 px; окно густой семьи (Давид) — по ширине, не w182 стола; родня на небе видна или названа указателем',
     view: { width: 390, height: 844, touch: true },
     run: async (p) => {
       await go(p, '#/', 2000);
       await go(p, '#/iakov', 3200);
       const ky = Number(((await p.locator('.sky').getAttribute('data-view')) ?? '').split(' ')[7]);
-      return ky >= 10 - 0.05 ? pass(`строка ${ky.toFixed(1)} px`) : fail(`строка ${ky.toFixed(1)} px`);
+      if (ky < 10 - 0.05) return fail(`строка ${ky.toFixed(1)} px`);
+      await go(p, '#/', 1500);
+      await go(p, '#/david', 3200);
+      const w = Number(/~w(\d+)/.exec(decodeURIComponent(new URL(p.url()).hash))?.[1] ?? NaN);
+      if (!(w < 182)) return fail(`окно Давида на телефоне w${w} — как на столе`);
+      const f = await family(p);
+      const ptr = new Set(f.edges.flatMap((e) => e.ids));
+      const lost = f.kin.filter((k) => k.on && !k.inside && !ptr.has(k.id) && !f.labels.includes(k.id));
+      return lost.length ? fail(`Давид w${w}: за краем без указателя — ${lost.map((k) => k.id).join(' ')}`) : pass(`Иаков: строка ${ky.toFixed(1)} px; Давид: окно w${w}`);
+    },
+  },
+  {
+    n: 1158,
+    title: 'Решение 161 (R1-02): выбор лица поиском снимает выбранную связь, если лицо не на ней; лицо на связи её сохраняет',
+    run: async (p) => {
+      await go(p, '#/iakov~ck.iakov.rakhil._.veniamin', 3200);
+      const k0 = await p.evaluate(() => document.documentElement.dataset.link ?? '');
+      if (!k0) return fail('связь из адреса не выбрана');
+      // Вениамин — конец связи: выбор его связь оставляет
+      const b = p.locator('.folio button.person[data-id="veniamin"]').first();
+      if (await b.count()) {
+        await b.click();
+        await p.waitForTimeout(1500);
+        const k1 = await p.evaluate(() => document.documentElement.dataset.link ?? '');
+        if (k1 !== k0) return fail(`выбор конца связи снял её: «${k1}»`);
+      }
+      await find(p, 'Давид');
+      await p.waitForTimeout(600);
+      const k2 = await p.evaluate(() => document.documentElement.dataset.link ?? '');
+      if (k2) return fail(`после поиска «Давид» связь осталась: ${k2}`);
+      if (/~c/.test(decodeURIComponent(new URL(p.url()).hash))) return fail(`связь в адресе: ${p.url()}`);
+      const f = await family(p);
+      const foreign = f.edges.filter((e) => /Иаков|Рахиль|Вениамин/.test(e.label));
+      return foreign.length ? fail(`указатели прежней связи: ${foreign.map((e) => e.label).join(' | ')}`) : pass('связь снята, указателей прежней связи нет');
+    },
+  },
+  {
+    n: 1159,
+    title: 'Решения 162 и 169 (R1-03, R2-7, R2-11): телефон — указатель родни только к невидимой звезде, стрелкой к её краю, не ближе 24 px к выбранному; после касания скобок фокуса нет, после клавиатуры — есть',
+    view: { width: 390, height: 844, touch: true },
+    run: async (p) => {
+      const issues: string[] = [];
+      for (const hash of ['#/iakov~y-1960~w220~l0.0~s1', '#/vooz~y-1099~w169~l-3.0~s1', '#/david']) {
+        await go(p, '#/', 1200);
+        await go(p, hash, 3200);
+        const sel = await selAt(p);
+        if (!sel) {
+          issues.push(`${hash}: выбранного нет на небе`);
+          continue;
+        }
+        // касание выбранного: карточка у звезды, лист на шапке
+        const box = (await p.locator('.sky canvas').boundingBox())!;
+        await p.touchscreen.tap(box.x + sel.x, box.y + sel.y);
+        await p.waitForTimeout(1200);
+        const ring = await p.locator('.sky').getAttribute('data-focus-ring');
+        if (ring) issues.push(`${hash}: после касания скобки фокуса у «${ring}»`);
+        const f = await family(p);
+        const s2 = (await selAt(p)) ?? sel;
+        const kin = new Map(f.kin.map((k) => [k.id, k]));
+        for (const e of f.edges) {
+          if (!e.box || e.ids.length === 0 || !e.ids.every((id) => kin.has(id))) continue;
+          for (const id of e.ids) if (kin.get(id)!.inside) issues.push(`${hash}: «${e.label}» указывает на видимую звезду ${id}`);
+          const b = e.box;
+          const d = Math.hypot(Math.max(b.x - s2.x, 0, s2.x - (b.x + b.w)), Math.max(b.y - s2.y, 0, s2.y - (b.y + b.h)));
+          if (d < 24) issues.push(`${hash}: «${e.label}» в ${d.toFixed(0)} px от выбранного`);
+        }
+      }
+      if (issues.length) return fail(issues.join('; '));
+      // клавиатура: Tab до неба — скобки появляются
+      await p.locator('.sky canvas').focus();
+      await p.keyboard.press('ArrowRight');
+      await p.waitForTimeout(300);
+      const ring = await p.locator('.sky').getAttribute('data-focus-ring');
+      return ring ? pass(`касание — без скобок; клавиатура — скобки у «${ring}»`) : fail('после стрелки скобок фокуса нет');
     },
   },
 ];

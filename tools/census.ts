@@ -772,7 +772,8 @@ export function census(f: Frame): Census {
         // узел • следующего гнезда семейной укладки стоит на главном стволе, а не на следе
         if (n.kind === 'join' && f.d.frame.layout === 'family') continue;
         const o = starById.get(n.owner);
-        const onTrail = !!o && (o.x1 ?? o.x) >= n.x - 1.5 && Math.abs(o.y - n.y) < 0.75;
+        // узел, ушедший со следа с ленты по своему стволу (решение 166), стоит на столбце следа: след — на y − off
+        const onTrail = !!o && (o.x1 ?? o.x) >= n.x - 1.5 && Math.abs(o.y - (n.y - ((n as { off?: number }).off ?? 0))) < 0.75;
         if (!onTrail && !clanOf.has(u) && !viaJog) {
           y7++;
           add('Я7', u, `узел ${u} не на следе ${nameOf(n.owner)}`, n.x, n.y);
@@ -1293,6 +1294,14 @@ export function graphCensus(f: Frame, scene = f.sc.id): GraphCensus {
       const nx = n.x + d.dx;
       const ny = n.y + d.dy;
       if (!inVp(nx, ny) || ny < s.openTop) continue;
+      // решение 160: имя у ромба не ставится, если её собственная звезда видна ближе 120 px (имя ставит ярус семьи)
+      const mi = s.indexOf(n.mother);
+      const near = (trails as unknown as { OWN_NAME_NEAR?: number }).OWN_NAME_NEAR;
+      if (near && mi !== undefined && s.drawn(mi)) {
+        const mx = s.cam.sx(s.X0[mi]);
+        const my = s.cam.sy(s.nodes[mi].lane);
+        if (mx >= s.letterW && mx <= s.cam.w && my >= s.openTop && my <= s.cam.vp.b && Math.hypot(mx - nx, my - ny) < near) continue;
+      }
       mothersOf++;
       const name = nameOf(n.mother);
       if (boxes.some((b) => b.kind === 'plate' && b.id === n.union && b.text === name)) mothers++;

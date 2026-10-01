@@ -398,7 +398,8 @@
   padding-top: 4px;
 }
 
-/* отвод от знака к карточке: прямой — полоской 1 px (.dc-lead), к карточке вдали от знака — отрезком svg (.dc-line) */
+/* привязка карточки к знаку (решение 171; V-7): не похожа на связь — точечная, цветом пояснений, с ореолом цвета неба, под
+   которым линии и стволы неба прерываются. Прямая у знака — полоской (.dc-lead), к карточке вдали — отрезком svg (.dc-line) */
 .dc-lead,
 .dc-line {
   position: absolute;
@@ -406,7 +407,10 @@
   pointer-events: none;
 }
 .dc-lead {
-  background: var(--rule-strong);
+  box-sizing: border-box;
+  background: none;
+  border-top: 1px dotted var(--ink-2);
+  box-shadow: 0 0 0 1px var(--sky);
 }
 svg.dc-line {
   left: 0;
@@ -415,8 +419,16 @@ svg.dc-line {
   overflow: visible;
 }
 svg.dc-line line {
-  stroke: var(--rule-strong);
+  fill: none;
+}
+svg.dc-line line.halo {
+  stroke: var(--sky);
+  stroke-width: 3;
+}
+svg.dc-line line.dots {
+  stroke: var(--ink-2);
   stroke-width: 1;
+  stroke-dasharray: 1 3;
 }
 
 /* во весь лист телефона (Folio.tsx): рамки нет — рамка у самого листа */

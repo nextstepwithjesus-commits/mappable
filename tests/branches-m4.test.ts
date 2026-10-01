@@ -119,7 +119,8 @@ describe('свечение (GlowBatch): один путь на цвет и си�
     });
     return { ctx: ctx as unknown as CanvasRenderingContext2D, calls };
   };
-  it('тысяча отрезков двух цветов — два пути на слой; ночью — два слоя в режиме lighter, днём — один тон', () => {
+  // этап 14, решение 170 (V-8): днём у ветвей свечения нет (прежде — один тон под линией), ночью — два слоя, вдвое слабее
+  it('тысяча отрезков двух цветов — два пути на слой; ночью — два слоя в режиме lighter, днём — без свечения', () => {
     for (const night of [true, false]) {
       const r = rec();
       const g = new GlowBatch(glowLayers('branch', night ? 'night' : 'day'));
@@ -127,7 +128,7 @@ describe('свечение (GlowBatch): один путь на цвет и си�
       expect(g.size).toBe(2);
       g.flush(r.ctx, night);
       const strokes = r.calls.filter((c) => c[0] === 'stroke').length;
-      expect(strokes).toBe(2 * (night ? 2 : 1));
+      expect(strokes).toBe(2 * (night ? 2 : 0));
       expect(r.calls.some((c) => c[0] === '=globalCompositeOperation' && c[1] === 'lighter')).toBe(night);
       expect(g.size).toBe(0);
     }

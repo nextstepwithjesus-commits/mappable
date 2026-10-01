@@ -36,8 +36,9 @@ export type MapTheme = 'night' | 'day';
  * (золотистый, KIN_GOLD). Проверка контраста к небу и различимости половин при трёх видах дальтонизма — tools/contrast.ts.
  */
 export const UNION_COLORS: Readonly<Record<MapTheme, { husband: string; wife: string }>> = {
-  night: { husband: '#7aa7f0', wife: '#f79ac6' },
-  day: { husband: '#2b62c2', wife: '#c43d86' },
+  // этап 14, решение 170: половины не похожи на цвета ветвей, их оттенки и обе ленты (ΔE ≥ 20 днём и ночью; перебор S1)
+  night: { husband: '#5599dd', wife: '#ffbbcc' },
+  day: { husband: '#3377dd', wife: '#aa0055' },
 };
 /** Половины знака союза различимы (ΔE CIE76) при обычном зрении и каждом виде дальтонизма — не меньше. */
 export const UNION_DE = 20;
@@ -126,13 +127,17 @@ export function branchFade(gen: number, floor = 0): number {
 
 // ---------- свечение ----------
 
-/** Слои свечения: ширина, px, и сила (доля непрозрачности линии). Ночь — 'lighter', день — тон под линией. */
+/**
+ * Слои свечения: ширина, px, и сила (доля непрозрачности линии). Ночь — 'lighter', день — тон под линией.
+ * Этап 14, решение 170 (V-8): свечение — у лент (ТЗ § 8.4); ветви ночью светятся вдвое слабее (было 0,09 и 0,18), днём — без
+ * свечения (был тон 4,5 px α 0,2): атмосфера не сильнее данных.
+ */
 export const BRANCH_GLOW: Readonly<Record<MapTheme, readonly { width: number; a: number }[]>> = {
   night: [
-    { width: 7, a: 0.09 },
-    { width: 3.6, a: 0.18 },
+    { width: 7, a: 0.045 },
+    { width: 3.6, a: 0.09 },
   ],
-  day: [{ width: 4.5, a: 0.2 }],
+  day: [],
 };
 /** Свечение предков выбранного: мягче ветвей, цветом текста (ночью светлое, днём тёмное). */
 export const ANCESTOR_GLOW: Readonly<Record<MapTheme, readonly { width: number; a: number }[]>> = {

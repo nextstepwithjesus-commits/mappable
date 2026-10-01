@@ -390,13 +390,22 @@ export function patchHistory() {
 let patcher: (() => void) | null = null;
 
 /**
- * Путь исследования (решение 148): лица последних выборов по порядку, не больше PATH_MAX; последнее — выбранное. Новый
- * выбор дописывается в конец; выбор лица, уже стоящего в пути, обрезает путь до него. Снятие выбора путь не стирает.
- * «Назад» и «вперёд» возвращают путь своей записи.
+ * История исследования (решения 148, 168; в строке показа — «История: Руфь › Давид»): лица последних выборов по
+ * порядку, не больше PATH_MAX; последнее — выбранное. Новый выбор дописывается в конец; выбор лица, уже стоящего в
+ * истории, обрезает её до него; выбор из поиска начинает новую. Снятие выбора её не стирает. «Назад» и «вперёд»
+ * возвращают историю своей записи.
  */
 export const PATH_MAX = 5;
 export const explorePath = signal<readonly string[]>([]);
-/** Путь после выбора id: дописать или обрезать до него. */
+/**
+ * Выбор сделан из поиска (решение 168): событие, во время которого выбрано лицо, пришло из поля «Найти» или его списка.
+ */
+export function fromSearch(): boolean {
+  const e = typeof window !== 'undefined' ? window.event : undefined;
+  const t = e?.target;
+  return typeof Element !== 'undefined' && t instanceof Element && !!t.closest('#find, [id^="find-"], header.top .search');
+}
+/** История после выбора id: дописать или обрезать до него. */
 export function pathAfter(path: readonly string[], id: string | null): readonly string[] {
   if (!id) return path;
   const i = path.indexOf(id);
@@ -641,8 +650,10 @@ export function bindAddress(): () => void {
     quiet = false;
     historyApplying.value = null;
     cancelAnimationFrame(settleRaf);
-    // путь исследования (решение 148): новый выбор лица — в конец пути
-    explorePath.value = pathAfter(explorePath.peek(), selected.peek());
+    // путь исследования (решение 148): новый выбор лица — в конец пути; выбор из поиска начинает новую историю (решение
+    // 168; прежняя — «назад» браузера)
+    const sel = selected.peek();
+    explorePath.value = sel && sel !== explorePath.peek().at(-1) && fromSearch() ? [sel] : pathAfter(explorePath.peek(), sel);
     // прыжок окна, начатый до новой записи, в неё и попадёт: своей записи ему не нужно
     takeJump();
     write('push');

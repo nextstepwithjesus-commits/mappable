@@ -258,6 +258,8 @@ export interface LinkNode {
   owner: string;
   /** лицо, от которого союз показан (карточка союза, раскрытие) */
   from: string;
+  /** узел ушёл со следа владельца на столько px по своему стволу (с ленты, решение 166); след — на y − off */
+  off?: number;
 }
 
 /** Подпись обрывка: где кончается отрезок, куда он смотрит, чья связь и кого он называет. */
@@ -438,12 +440,97 @@ export function buildLinks(inp: LinkInput): LinkFrame {
   const drawn = new Set(f.paths.filter((p) => p.kind !== 'ribbon' && p.union).map((p) => p.union!));
   const rib = new Set([...f.via.values()].map((v) => v.union));
   f.ribbonOnly = new Set(f.nodes.filter((n) => rib.has(n.union) && !drawn.has(n.union)).map((n) => n.union));
+  if (inp.layout === 'map') nestBuses(f, inp.stars);
   linkCrossings(f.paths);
   markBlocked(f.paths, inp.stars);
+  offRibbonNodes(f, inp);
   f.stamp = {};
   f.paths.forEach((q, i) => (q.n = i));
   f.stubs.forEach((st, i) => (st.n = i));
   return f;
+}
+
+/**
+ * Шина гнёзд одного союза (решение 172, R1-14): у союза, чьи дети висят на нескольких стволах (ромб ◆ и узлы • дальше
+ * по тому же следу), участок следа от ◆ до последнего • рисуется линией союза — гнёзда читаются одним союзом, а не
+ * «четырьмя матерями». Путь вида 'jog' по строке следа, начертанием ствола союза.
+ */
+function nestBuses(f: LinkFrame, stars: readonly LinkStar[]) {
+  const first = new Map<string, LinkNode>();
+  const last = new Map<string, number>();
+  for (const n of f.nodes) if (n.kind === 'union') first.set(n.union, n);
+  for (const n of f.nodes) {
+    if (n.kind !== 'join') continue;
+    const u = first.get(n.union);
+    if (!u || Math.abs(u.y - n.y) > 0.75 || n.x <= u.x) continue;
+    last.set(n.union, Math.max(last.get(n.union) ?? -Infinity, n.x));
+  }
+  const star = new Map<string, LinkStar>();
+  for (const s of stars) if (!s.ghost) star.set(s.id, s);
+  const clans = new Set(f.paths.filter((q) => q.kind === 'clan').map((q) => q.union));
+  for (const [union, x1] of last) {
+    const u = first.get(union)!;
+    // шина — только по живому следу владельца (у рода, чьи узлы уходят за конец следа, её нет) и без чужих ромбов на ней
+    const o = star.get(u.owner);
+    if (!o || clans.has(union) || x1 > (o.x1 ?? o.x) - 1) continue;
+    if (f.nodes.some((n) => n.union !== union && Math.abs(n.y - u.y) < 0.75 && n.x > u.x - 1 && n.x < x1 + 1)) continue;
+    const trunk = f.paths.find((q) => q.union === union && q.kind === 'trunk');
+    const ends = [...new Set(f.paths.filter((q) => q.union === union && q.kind !== 'ribbon').flatMap((q) => q.ends))];
+    f.paths.push({ key: unionKey(union), ks: key(unionKey(union)), kind: 'jog', style: trunk?.style ?? 'solid', pts: [u.x, u.y, x1, u.y], ends, union, when: 'always', cuts: [] });
+  }
+}
+
+/** Зазор ромба чужого союза от ленты на следе родителя: размах косы, полуширина нити и радиус ромба (решение 166). */
+const RIBBON_NODE_OFF = 3 + 1.5 + 1.5;
+
+/**
+ * Ромбы союзов не из ленты не стоят на ленте (решение 166, R1-11: лента Давида шла через ромбы Авигеи, Ахиноамы,
+ * Маахи — будто линия идёт через эти союзы). Шаг ленты идёт по следу родителя от его звезды до узла своего союза
+ * (via, stepRoute); узел другого союза на этом участке следа уходит со следа по своему стволу или черте брака — к
+ * детям, «на отвод» — на радиус ромба и зазор от нити. Ствол короче — узел остаётся.
+ */
+function offRibbonNodes(f: LinkFrame, inp: LinkInput) {
+  if (!inp.lines || !f.via.size) return;
+  const R = inp.nodeR ?? (inp.layout === 'family' ? NODE_R_FAMILY : NODE_R_MAP);
+  const off = R + RIBBON_NODE_OFF;
+  const star = new Map<string, LinkStar>();
+  for (const s of inp.stars) if (!s.ghost) star.set(s.id, s);
+  // участки следов с лентой: лицо → [x от, x до, союз шага]
+  const spans = new Map<string, [number, number, string][]>();
+  for (const [pk, vv] of f.via) {
+    const par = pk.slice(0, pk.indexOf('>'));
+    const P = star.get(par);
+    if (!P || vv.x <= P.x) continue;
+    (spans.get(par) ?? spans.set(par, []).get(par)!).push([P.x, vv.x, vv.union]);
+  }
+  if (!spans.size) return;
+  for (const n of f.nodes) {
+    const sp = spans.get(n.owner);
+    const P = star.get(n.owner);
+    if (!sp || !P || Math.abs(n.y - P.y) > 0.75) continue;
+    if (!sp.some(([a, b, u]) => u !== n.union && n.x > a + P.r && n.x < b + R + 2)) continue;
+    // ствол или черта брака этого союза из точки узла: куда и на сколько он уходит со следа
+    let dir = 0;
+    let reach = 0;
+    for (const q of f.paths) {
+      if (q.union !== n.union || q.kind === 'ribbon' || q.kind === 'tooth') continue;
+      for (let k = 0; k + 3 < q.pts.length; k += 2) {
+        const [ax, ay, bx, by] = [q.pts[k], q.pts[k + 1], q.pts[k + 2], q.pts[k + 3]];
+        if (Math.abs(ax - bx) > 0.5 || Math.abs(ax - n.x) > 0.5) continue;
+        for (const [y0, y1] of [
+          [ay, by],
+          [by, ay],
+        ])
+          if (Math.abs(y0 - n.y) < 0.75 && Math.abs(y1 - n.y) > reach) {
+            reach = Math.abs(y1 - n.y);
+            dir = Math.sign(y1 - n.y);
+          }
+      }
+    }
+    if (!dir || reach < off + 3) continue;
+    n.y += dir * off;
+    n.off = dir * off;
+  }
 }
 
 /**

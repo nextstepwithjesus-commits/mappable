@@ -106,7 +106,7 @@ async function starsByName(p: Page): Promise<Map<string, { x: number; y: number 
   return m;
 }
 
-type Sel = { ks: string; ends: { id: string; role: string; x: number; y: number; on: boolean }[]; routes: number[][] };
+type Sel = { ks: string; ends: { id: string; role: string; x: number; y: number; on: boolean }[]; routes: number[][]; nodeHoles?: string[] };
 const linkSel = async (p: Page): Promise<Sel | null> => {
   const raw = await data(p, 'link-sel');
   return raw ? (JSON.parse(raw) as Sel) : null;
@@ -143,24 +143,33 @@ export const graph14: Scenario[] = [
   },
   {
     n: 1103,
-    title: 'Г8, G9 (решение 134): связь «Иаков и Валла — Дан» — жёлтое не проходит через чужой ромб; концы — с ролями',
+    // этап 14, второй круг (решение 166, R1-10): жёлтое не обходит чужие ромбы П-образными вырезами (они читались
+    // заходом в те союзы) — идёт прямо поверх, а под чужим ромбом прерывается
+    title: 'Г8, G9, решение 166: связь «Иаков и Валла — Дан» — под чужими ромбами жёлтое прервано, без обходов; концы — с ролями',
     run: async (p) => {
       await go(p, '#/iakov~ck.iakov.valla._.dan', 3600);
       const sel = await linkSel(p);
       if (!sel || sel.ks !== 'k.iakov.valla._.dan') return fail(`выбранная связь: ${sel?.ks ?? 'нет'}`);
-      const nodes = (await rows(p)).filter((q) => (q.kind === 'node' || q.kind === 'join') && unionOf(q.ks) !== 'iakov.valla._');
+      const nodes = (await rows(p)).filter((q) => q.kind === 'node' && unionOf(q.ks) !== 'iakov.valla._');
+      const holes = new Set(sel.nodeHoles ?? []);
+      const under: string[] = [];
       const bad: string[] = [];
       for (const n of nodes)
         for (const r of sel.routes)
           for (const g of segs(r)) {
             const [x, y] = n.pts;
             if (Math.hypot(x - g[0], y - g[1]) < 2 || Math.hypot(x - g[2], y - g[3]) < 2) continue;
-            if (distSeg(x, y, g[0], g[1], g[2], g[3]) < 4.5) bad.push(n.ks);
+            if (distSeg(x, y, g[0], g[1], g[2], g[3]) >= 1.5) continue;
+            under.push(n.ks);
+            if (!holes.has(unionOf(n.ks))) bad.push(n.ks);
           }
-      if (bad.length) return fail(`жёлтое через чужие узлы: ${[...new Set(bad)].join(', ')}`);
+      if (bad.length) return fail(`жёлтое без разрыва под чужими ромбами: ${[...new Set(bad)].join(', ')}`);
+      // обхода нет: ни один отрезок пути не короче 2·(r + 3) поперёк хода (ступенька обхода)
+      const jogs = sel.routes.flatMap((r) => segs(r)).filter((g) => Math.hypot(g[2] - g[0], g[3] - g[1]) < 7 && Math.hypot(g[2] - g[0], g[3] - g[1]) > 0.5).length;
+      if (jogs > 2) return fail(`в пути ${jogs} коротких ступенек — обход чужих ромбов`);
       const roles = sel.ends.map((e) => `${e.id}:${e.role}`);
       if (!roles.includes('valla:мать') || !roles.includes('dan:сын')) return fail(`концы: ${roles.join(' ')}`);
-      return pass(`жёлтое — ${sel.routes.length} ломаных мимо чужих узлов; концы ${roles.join(', ')}`);
+      return pass(`чужих ромбов под путём ${new Set(under).size}, все — с разрывом; концы ${roles.join(', ')}`);
     },
   },
   {

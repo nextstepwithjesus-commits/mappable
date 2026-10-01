@@ -131,19 +131,23 @@ describe('путь на небе (U5): «Иоав — племянник Дав�
     fit(s, ids);
     for (const id of ids) expect(inside(s, id), id).toBe(true);
   });
-  // этап 14, решение 138: шаг словом Писания («брат») — сплошной золотистой линией; точки — только толкование
-  it('ломаная 2 px на подложке, шаг «брат» — сплошной золотистый; подписи «мать» и «брат»; наложений нет', async () => {
+  // этап 14, решение 138: шаг словом Писания («брат») — сплошной; точки — только толкование. Решение 167 (R2-1): путь
+  // родства — одним видом активной связи (слои выбранной связи: ночью жёлтый 2,5 px со свечением 9 и 5 px), «мать» и
+  // «брат» — не разными цветами
+  it('путь — одним видом активной связи, шаг «брат» — сплошной; подписи «мать» и «брат»; наложений нет', async () => {
     const { s, rec } = makeSky();
     fit(s, pathOf('ioav', 'david').ids);
     rec.calls.length = 0;
     draw(s, 'ioav', 'david');
     const widths = rec.calls.filter((c) => c[0] === '=lineWidth').map((c) => c[1]);
-    expect(widths).toContain(5);
-    expect(widths).toContain(2);
+    // слои активной связи (marks.ts, activeLayers): подложка 9 px и линия 2,5 px ночью или 2,2 px днём
+    expect(widths).toContain(9);
+    expect(widths.includes(2.5) || widths.includes(2.2)).toBe(true);
     const dashes = rec.calls.filter((c) => c[0] === 'setLineDash').map((c) => JSON.stringify(c[1]));
     expect(dashes).not.toContain(JSON.stringify([0.5, 4.5]));
     const { KIN_GOLD } = await import('../src/render/branches.ts');
-    expect(rec.calls.some((c) => c[0] === '=strokeStyle' && (c[1] === KIN_GOLD.night || c[1] === KIN_GOLD.day))).toBe(true);
+    // золотистых дуг семьи в режиме «Родство» нет: гаснут все дуги, кроме пути
+    expect(rec.calls.some((c) => c[0] === '=strokeStyle' && (c[1] === KIN_GOLD.night || c[1] === KIN_GOLD.day))).toBe(false);
     const st = s.labelStats();
     const notes = st.boxes.filter((b) => b.kind === 'note').map((b) => b.text);
     expect(notes).toContain('мать');

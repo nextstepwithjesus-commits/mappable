@@ -244,7 +244,7 @@ export const phone: Scenario[] = [
   },
   {
     n: 152,
-    title: 'H2: лист с учётом скорости — короткий взмах поднимает дальше медленной протяжки; взмах вниз закрывает; протяжка текста у начала сворачивает',
+    title: 'H2: лист с учётом скорости — короткий взмах поднимает дальше медленной протяжки; взмах вниз — шапка 104 px с выбором (решение 169), выбор снимает «×»; протяжка текста у начала сворачивает',
     view: PHONE,
     run: async (p) => {
       await tapStar(p, 'david');
@@ -272,12 +272,18 @@ export const phone: Scenario[] = [
         await p.locator('.folio .sheet-bar .bar-toggle').tap();
         await p.waitForTimeout(600);
       }
-      // взмах вниз с шапки — лист закрыт
+      // этап 14, решение 169 (R2-10): взмах вниз с краткой карточки — шапка 104 px, выбор на месте (прежде — лист закрыт и
+      // выбор снят); снимает выбор «×»
       a = await barAt(p);
       await swipe(p, a.x, a.y, 70, 50, 3);
-      if (hashId(p)) return fail(`взмах вниз не закрыл лист: выбрано «${hashId(p)}»`);
-      if (await p.locator('.folio:not([hidden])').count()) return fail('лист остался');
-      return pass(`быстрые 60 px — ${flung}`);
+      s = (await sheet(p))!;
+      if (!s || s.stop !== 'head' || s.h > 104.5) return fail(`взмах вниз: лист ${s?.stop} ${Math.round(s?.h ?? 0)} px, ждали шапку 104 px`);
+      if (hashId(p) !== 'david') return fail(`взмах вниз снял выбор: выбрано «${hashId(p)}»`);
+      await p.locator('.folio .sheet-bar .close').first().tap();
+      await p.waitForTimeout(600);
+      if (hashId(p)) return fail(`«×» не снял выбор: «${hashId(p)}»`);
+      if (await p.locator('.folio:not([hidden])').count()) return fail('после «×» лист остался');
+      return pass(`быстрые 60 px — ${flung}; вниз — шапка ${Math.round(s.h)} px с выбором, «×» закрыл`);
     },
   },
   {

@@ -78,6 +78,11 @@ export interface LinkInfo {
    * («Мать», «Отец», «Жена», «Муж»), text — «в Писании не названа».
    */
   missing: { role: string; text: string } | null;
+  /**
+   * Второй родитель шага ленты по союзу (решение 171; R1-12): «Мать — Вирсавия» у шага Давид → Соломон (Мф 1:6). Только
+   * строка карточки: концы связи на небе — родитель шага и ребёнок, как прежде.
+   */
+  other?: { id: string; role: string } | null;
 }
 
 // ---------- лица ----------
@@ -577,6 +582,11 @@ function build(key: LinkKey): RawInfo | null {
         lines: both.length ? both : [{ line: key.line, ref: stepBookRef(s), refs: stepRefs(s), flag: s.flag }],
         note: null,
         missing: u && !isClaimUnion(u) && !(u.a && u.b) && !peopleUnion(u) ? unnamedRow(u, 'parent') : null,
+        other: (() => {
+          // второй родитель союза шага (не утверждение иного рода): «Мать» у шага отца, «Отец» у шага матери
+          const o = u && !isClaimUnion(u) ? (u.a === s.parent ? u.b : u.b === s.parent ? u.a : null) : null;
+          return o && byId.has(o) ? { id: o, role: sexOf(o) === 'f' ? 'мать' : 'отец' } : null;
+        })(),
       };
     }
     case 'kin': {

@@ -20,6 +20,11 @@ export interface GlyphOpts {
   /** умер младенцем: слева от звезды знак †, следа нет (A14) */
   infant?: boolean;
   scale?: number;
+  /**
+   * у звезды с кольцом состояния (выбор, второе лицо): наружный край кольца от центра, px — черта царя встаёт над ним
+   * (решение 170; V-6: внутри кольца черта сливалась с ним, и знак царя у выбранного пропадал)
+   */
+  ring?: number;
   color: string;
   halo: string;
 }
@@ -65,8 +70,8 @@ export function daggerAt(x: number, y: number, r: number): { x: number; top: num
 /** Толщина черты царя, px (VIS-40). */
 export const KING_BAR_W = 1.5;
 /** Черта царя у звезды радиуса r: длина 2r + 4, высота r + 3 над диском (у женщины — над кольцом r + 2,2). */
-export function kingBar(x: number, y: number, r: number, sex: 'm' | 'f'): { x0: number; x1: number; y: number } {
-  const top = r + (sex === 'f' ? 2.2 : 0) + 3;
+export function kingBar(x: number, y: number, r: number, sex: 'm' | 'f', ring = 0): { x0: number; x1: number; y: number } {
+  const top = Math.max(r + (sex === 'f' ? 2.2 : 0), ring) + 3;
   return { x0: x - r - 2, x1: x + r + 2, y: y - top };
 }
 
@@ -88,7 +93,7 @@ export interface GlyphExt {
  * (2r + 4 на r + 3 над диском, у царицы — над кольцом), «†» слева у младенца без подписи. Подложка цвета неба в границы
  * не входит: на небе её не видно. Кольца состояний (выбор, фокус, наведение, конец связи) добавляет тот, кто их знает.
  */
-export function glyphExtent(o: Pick<GlyphOpts, 'sex' | 'kind' | 'magnitude' | 'king' | 'messiah' | 'ghost' | 'hollow' | 'infant' | 'scale'>): GlyphExt {
+export function glyphExtent(o: Pick<GlyphOpts, 'sex' | 'kind' | 'magnitude' | 'king' | 'messiah' | 'ghost' | 'hollow' | 'infant' | 'scale' | 'ring'>): GlyphExt {
   const r = starRadius(o.magnitude, o.scale ?? 1);
   if (o.messiah) {
     const R = r * 2.4;
@@ -104,8 +109,8 @@ export function glyphExtent(o: Pick<GlyphOpts, 'sex' | 'kind' | 'magnitude' | 'k
   else R = r;
   const e = { l: R, r: R, t: R, b: R };
   if (o.king && !o.ghost) {
-    const bar = kingBar(0, 0, r, o.sex);
-    e.t = Math.max(e.t, -bar.y + KING_BAR_W / 2);
+    const bar = kingBar(0, 0, r, o.sex, o.ring);
+    e.t = Math.max(e.t, -bar.y + (o.ring ? 1 : KING_BAR_W / 2));
     e.l = Math.max(e.l, r + 2);
     e.r = Math.max(e.r, r + 2);
   }
@@ -188,9 +193,9 @@ export function drawGlyph(ctx: CanvasRenderingContext2D, x: number, y: number, o
   }
   if (o.king) {
     // черта царя (VIS-40, MAP-11): длиной 2r + 4, на r + 3 над диском (у царицы — над кольцом), толщиной 1,5 px —
-    // не сливается с подписью и не читается как тире перед именем
-    const b = kingBar(x, y, r, o.sex);
-    ctx.lineWidth = KING_BAR_W;
+    // не сливается с подписью и не читается как тире перед именем; у выбранного — над его кольцом, толщиной 2 px
+    const b = kingBar(x, y, r, o.sex, o.ring);
+    ctx.lineWidth = o.ring ? 2 : KING_BAR_W;
     ctx.beginPath();
     ctx.moveTo(b.x0, b.y);
     ctx.lineTo(b.x1, b.y);

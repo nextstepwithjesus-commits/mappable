@@ -25,12 +25,12 @@ import { mapFont, mapSize, T_MAP_S } from './type.ts';
 import { byId, graph } from '../data/atlas.ts';
 import { branchesOf, type Branch } from '../engine/unions.ts';
 import { unions } from '../ui/reveal.ts';
-import { branchColor, branchFade, branchFloor, KIN_GOLD, KIN_GOLD_UNDER, type MapTheme } from './branches.ts';
+import { branchColor, branchFade, branchFloor, KIN_GOLD, type MapTheme } from './branches.ts';
 import { claim, putLabel, textBox } from './labels.ts';
 import { beadAt, drawBranchLabels, drawKeyLineNames, drawLineNames, drawLineNotes, drawMt1Women } from './ribbons.ts';
 import type { LineStep } from '../engine/layout.ts';
 import type { Rect } from './rect.ts';
-import type { KinStep } from '../engine/kinship.ts';
+import { genitive, type KinStep } from '../engine/kinship.ts';
 import type { Emphasis, Pass, SkyContext, SkyState } from './sky.ts';
 import { linkShown, trailOf, type LifeTrail, type LinkDraw } from './trails.ts';
 import { kidStyle, mainUnion, NODE_R_FAMILY, NODE_R_MAP, otherReading, routeOver, segmentsOf, TRUNK_LEAD, type LinkPath, type Seg } from './links.ts';
@@ -163,6 +163,30 @@ const ALL_GENERATIONS = 1000;
 /** Сколько последних выбранных лиц помнит кэш ветвей. */
 const BRANCH_CACHE = 16;
 const branchCache = new Map<string, BranchMap>();
+
+/** Потомки других ветвей при наведённом ромбе гаснут до стольких (решение 172, R1-09; как дети другой матери, MAP-74). */
+export const UNION_HOVER_DIM = 0.4;
+/**
+ * Яркость с наведённым ромбом союза (решение 172, R1-09): у родителя с несколькими союзами с детьми его потомки по
+ * другим союзам (ветви решения 69) гаснут до UNION_HOVER_DIM — видно, какие дети от этой матери. Родитель — выбранное
+ * лицо, если он супруг в этом союзе, иначе отец союза. Небо (sky.ts) вкладывает её в цепочку яркости.
+ */
+export function unionHoverDim(s: Pick<SkyState, 'plateMarks' | 'selected' | 'model'>, f: (id: string) => number): (id: string) => number {
+  const uid = s.plateMarks?.hover;
+  if (!uid) return f;
+  const u = unions.byId.get(uid);
+  if (!u || !u.kids.length) return f;
+  const par = s.selected && (u.a === s.selected || u.b === s.selected) ? s.selected : (u.a ?? u.b);
+  if (!par) return f;
+  const bm = branchMapOf(par, s.model?.id ?? '');
+  const k = bm.keys.indexOf(uid);
+  // ветви по детям (союз с детьми один) — гасить нечего
+  if (k < 0) return f;
+  return (id) => {
+    const b = bm.desc.get(id);
+    return b && b.branch !== k ? Math.min(UNION_HOVER_DIM, f(id)) : f(id);
+  };
+}
 
 /**
  * Ветви потомков лица id (src/engine/unions.ts, branchesOf по союзам атласа src/ui/reveal.ts) — с кэшем по лицу и модели
@@ -335,38 +359,43 @@ export function kinRoutes(v: SkyContext, steps: readonly KinStep[], d?: LinkDraw
  * иное происхождение — штрихом, толкование — точками цвета текста, родство словом Писания — золотистыми точками по дуге
  * (этап 13, решение 94). Рисуется под звёздами: звёзды пути лежат на ломаной, как бусины.
  */
+/**
+ * Слои активной связи (выбранная связь, путь родства; решения 88, 167): ночью — жёлтый со свечением, днём — линия цвета
+ * текста на жёлтой подложке. Цвет и ширина слоёв, снизу вверх.
+ */
+export function activeLayers(pal: SkyContext['pal']): [string, number][] {
+  return pal.glow ? [[alpha(LINK_YELLOW.night, 0.16), 9], [alpha(LINK_YELLOW.night, 0.3), 5], [LINK_YELLOW.night, 2.5]] : [[alpha(LINK_YELLOW.day, 0.9), 9], [pal.ink, 2.2]];
+}
+
 export function drawKinPath(v: SkyContext, p: Pass) {
   const steps = p.s.kinSteps;
   if (!steps?.length) return;
-  const { ctx, pal } = v;
+  const { ctx, pal, cam } = v;
   const routes = kinRoutes(v, steps, p.links);
   if (!routes.length) return;
-  ctx.save();
+  // путь — одним видом активной связи (решение 167, R2-1): «мать» и «брат» не разными цветами; толкование — точками
+  // верхнего слоя, иное происхождение — штрихом (словарь начертаний, решение 94); у кольца выбранного путь обрезан
+  const hole = ringHoles(v, p);
+  clipHoles(ctx, cam, hole);
   ctx.lineJoin = 'round';
   const trace = (pts: { x: number; y: number }[]) => {
     ctx.beginPath();
     pts.forEach((q, k) => (k ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y)));
   };
-  // подложка цвета неба: путь отделяется от следов и отводов
-  ctx.strokeStyle = pal.halo;
-  ctx.lineWidth = 5;
-  ctx.lineCap = 'round';
-  for (const r of routes) {
-    trace(r.pts);
-    ctx.stroke();
-  }
-  ctx.lineWidth = 2;
-  const gold = KIN_GOLD[pal.glow ? 'night' : 'day'];
-  for (const r of routes) {
-    const look = stepLook(r.st);
-    const dash = STEP_DASH[look];
-    // слово Писания — золотистыми точками, как дуга семьи; толкование — точками цвета текста; иное происхождение — штрих
-    ctx.strokeStyle = look === 'term' ? gold : pal.ink;
-    ctx.setLineDash(dash);
-    ctx.lineCap = dash.length ? 'round' : 'butt';
-    trace(r.pts);
-    ctx.stroke();
-  }
+  const layers = activeLayers(pal);
+  layers.forEach(([color, w], i) => {
+    const top = i === layers.length - 1;
+    for (const r of routes) {
+      const look = stepLook(r.st);
+      const dash = top && look !== 'term' ? STEP_DASH[look] : [];
+      ctx.strokeStyle = color;
+      ctx.lineWidth = w;
+      ctx.setLineDash(dash);
+      ctx.lineCap = dash.length ? 'round' : top ? 'butt' : 'round';
+      trace(r.pts);
+      ctx.stroke();
+    }
+  });
   ctx.setLineDash([]);
   ctx.restore();
 }
@@ -522,21 +551,28 @@ export function drawRings(v: SkyContext, p: Pass, o: OverlayOpts = {}) {
   // призрак жены: дуга от знака в родном роду к её месту у мужа — золотистой дугой семьи (решение 89)
   const ghosts: string[] = [];
   const drawn = new Set<string>();
-  for (const w of wifeArcs(v, p)) {
+  // в режиме «Родство» гаснут все дуги, не входящие в путь (решение 167, R2-1): путь — одним видом активной связи
+  const arcs = !s.kinSteps?.length;
+  // дуги и связи обрезаются у кольца выбранного (+2 px; решение 167, V-5)
+  const hole = ringHoles(v, p);
+  if (hole.length) clipHoles(ctx, cam, hole);
+  for (const w of arcs ? wifeArcs(v, p) : []) {
     goldArc(v, w.a, w.c, w.b);
     ghosts.push(`ghost>${w.id}`);
   }
   // родство по термину Писания (MAP-17): у лица под указателем и у выбранного — золотистая дуга к названному
   // родственнику и термин («сестра»); это соседство по слову Писания, не утверждение о родителях (П-8; решение 89)
   const seen = new Set<string>();
-  if (cam.ky >= 5) for (const id of new Set([s.hovered, s.selected])) if (id) drawKinArcs(v, p, id, seen, drawn, scope.say);
+  if (arcs && cam.ky >= 5) for (const id of new Set([s.hovered, s.selected])) if (id) drawKinArcs(v, p, id, seen, drawn, scope.say);
   // золотистые дуги кадра — для проверок приёмки (canvas[data-kin-arcs]): «от>к:слово» и «ghost>лицо»
   const ds = (ctx.canvas as { dataset?: DOMStringMap } | undefined)?.dataset;
   if (ds) {
     const t = [...ghosts, ...drawn].join('|');
     if (ds.kinArcs !== t) ds.kinArcs = t;
   }
-  drawPersonGhosts(v, p, scope.say);
+  if (arcs) drawPersonGhosts(v, p, scope.say);
+  else personGhostHits.set(v, []);
+  if (hole.length) ctx.restore();
   for (const id of [s.selected, s.second]) if (id) ring(id, 0);
   // отклик на клавишу набора (IX-51): однократная обводка 300 мс — расходится и гаснет; при ослабленном движении — стоит
   const fl = s.workFlash;
@@ -645,6 +681,32 @@ export function ringOuter(v: SkyContext, p: Pass, id: string): number {
   return out;
 }
 
+/** Зазор линий от кольца выбранного, px (решение 167, V-5): дуги и связи не входят в кольцо. */
+export const RING_CLEAR = 2;
+/** Круги, внутри которых линии слоя не рисуются: кольца выбранного и второго лица (+RING_CLEAR), px холста. */
+export function ringHoles(v: SkyContext, p: Pass): { x: number; y: number; r: number }[] {
+  const out: { x: number; y: number; r: number }[] = [];
+  for (const id of [p.s.selected, p.s.second]) {
+    if (!id) continue;
+    const at = ringCenter(v, id);
+    const r = ringOuter(v, p, id);
+    if (at && r > 0) out.push({ x: at.x, y: at.y, r: r + RING_CLEAR });
+  }
+  return out;
+}
+/** ctx.save() и вырез кругов holes из области рисования (evenodd); снять — ctx.restore(). */
+export function clipHoles(ctx: CanvasRenderingContext2D, cam: { w: number; h: number }, holes: readonly { x: number; y: number; r: number }[]) {
+  ctx.save();
+  if (typeof ctx.clip !== 'function') return;
+  ctx.beginPath();
+  ctx.rect(-10, -10, cam.w + 20, cam.h + 20);
+  for (const h of holes) {
+    ctx.moveTo(h.x + h.r, h.y);
+    ctx.arc(h.x, h.y, h.r, 0, Math.PI * 2);
+  }
+  ctx.clip('evenodd');
+}
+
 /** Как рисовать слой поверх подписей (sky.ts): вырезы по подписям, текст — отдельным проходом, указатели у края. */
 export interface OverlayOpts {
   /** прямоугольники текста (px холста): линии и кольца слоя под ними прерываются (решение 139); текст слоя не режется */
@@ -722,13 +784,27 @@ function wifeArcs(v: SkyContext, p: Pass): { id: string; a: { x: number; y: numb
 }
 
 /** Дуги родства словами Писания у наведённого и выбранного лица (MAP-17): ребро, начало, вершина, конец — px холста. */
-function kinArcs(v: SkyContext, id: string, seen: Set<string>): { e: { from: string; to: string; rel: string }; a: { x: number; y: number }; c: { x: number; y: number }; b: { x: number; y: number } }[] {
+interface KinArc {
+  e: { from: string; to: string; rel: string };
+  a: { x: number; y: number };
+  c: { x: number; y: number };
+  b: { x: number; y: number };
+  /** ломаная дуги px холста; у обрывка — только его начало у лица в окне */
+  pts: number[];
+  /** обрывок к лицу вне окна (решение 167): лицо, конец обрывка и куда смотрит указатель */
+  stub: { other: string; x: number; y: number; arrow: string } | null;
+}
+/** Обрывок дуги родства к лицу вне окна — длиной, px (решение 167, R1-08). */
+const KIN_STUB = 28;
+function kinArcs(v: SkyContext, id: string, seen: Set<string>): KinArc[] {
   const { cam } = v;
+  const vp = cam.vp;
   const at = (x: string) => {
     const i = v.indexOf(x);
     return i === undefined || !v.drawn(i) ? null : { x: cam.sx(v.X0[i]), y: cam.sy(v.nodes[i].lane) };
   };
-  const out: ReturnType<typeof kinArcs> = [];
+  const inWin = (q: { x: number; y: number }) => q.x >= Math.max(vp.l, v.letterW) && q.x <= vp.r && q.y >= v.openTop && q.y <= vp.b;
+  const out: KinArc[] = [];
   for (const e of graph.kinOf.get(id) ?? []) {
     const k = `${e.from}|${e.to}|${e.rel}`;
     if (seen.has(k)) continue;
@@ -736,10 +812,37 @@ function kinArcs(v: SkyContext, id: string, seen: Set<string>): { e: { from: str
     const a = at(e.from);
     const b = at(e.to);
     if (!a || !b) continue;
-    out.push({ e, a, c: kinArcCtrl(a, b), b });
+    const c = kinArcCtrl(a, b);
+    const full = arcPolyline(a, c, b);
+    const ia = inWin(a);
+    const ib = inWin(b);
+    if (ia && ib) {
+      out.push({ e, a, c, b, pts: full, stub: null });
+      continue;
+    }
+    if (!ia && !ib) continue;
+    // к лицу вне окна — обрывком у лица в окне: начало дуги на KIN_STUB px и указатель «↑ Ионафан, дядя» (R1-08)
+    const pts = ia ? full : reversePts(full);
+    const stub: number[] = [pts[0], pts[1]];
+    let len = 0;
+    for (let k = 2; k + 1 < pts.length && len < KIN_STUB; k += 2) {
+      len += Math.hypot(pts[k] - pts[k - 2], pts[k + 1] - pts[k - 1]);
+      stub.push(pts[k], pts[k + 1]);
+    }
+    const far = ia ? b : a;
+    const near = ia ? a : b;
+    const dx = far.x - near.x;
+    const dy = far.y - near.y;
+    const arrow = Math.abs(dy) >= Math.abs(dx) ? (dy < 0 ? '↑' : '↓') : dx < 0 ? '←' : '→';
+    out.push({ e, a, c, b, pts: stub, stub: { other: ia ? e.to : e.from, x: stub[stub.length - 2], y: stub[stub.length - 1], arrow } });
   }
   return out;
 }
+const reversePts = (pts: number[]) => {
+  const out: number[] = [];
+  for (let k = pts.length - 2; k >= 0; k -= 2) out.push(pts[k], pts[k + 1]);
+  return out;
+};
 
 /** Маршрут слоя поверх подписей: ломаная px холста, известная до раскладки подписей (решение 139). */
 export interface OverlayRoute {
@@ -764,14 +867,15 @@ export interface OverlayRoute {
 export function overlayRoutes(v: SkyContext, p: Pass): OverlayRoute[] {
   const s = p.s;
   const out: OverlayRoute[] = [];
-  const night = !!v.pal.glow;
-  const goldW = night ? 4 : KIN_GOLD_UNDER.width;
-  for (const w of wifeArcs(v, p)) out.push({ kind: 'ghost', id: w.id, pts: arcPolyline(w.a, w.c, w.b), w: goldW });
-  if (v.cam.ky >= 5) {
+  const goldW = KIN_ARC_W + 1;
+  // в режиме «Родство» гаснут все дуги, кроме пути (решение 167): ни дуг семьи, ни призраков родни
+  const arcs = !s.kinSteps?.length;
+  if (arcs) for (const w of wifeArcs(v, p)) out.push({ kind: 'ghost', id: w.id, pts: arcPolyline(w.a, w.c, w.b), w: goldW });
+  if (arcs && v.cam.ky >= 5) {
     const seen = new Set<string>();
-    for (const id of new Set([s.hovered, s.selected])) if (id) for (const k of kinArcs(v, id, seen)) out.push({ kind: 'kin', id, pts: arcPolyline(k.a, k.c, k.b), w: goldW });
+    for (const id of new Set([s.hovered, s.selected])) if (id) for (const k of kinArcs(v, id, seen)) out.push({ kind: 'kin', id, pts: k.pts, w: goldW });
   }
-  for (const g of ghostPlan(v, p)) out.push({ kind: g.kind === 'parent' ? 'parent' : 'kinGhost', id: g.of, pts: g.pts, w: g.kind === 'parent' ? 1 : goldW });
+  if (arcs) for (const g of ghostPlan(v, p)) out.push({ kind: g.kind === 'parent' ? 'parent' : 'kinGhost', id: g.of, pts: g.pts, w: g.kind === 'parent' ? 1 : goldW });
   if (s.link) {
     const ks = linkKeyString(s.link) ?? '';
     for (const r of selectedRoutes(v, p.links, s.link).all) if (r.length >= 4) out.push({ kind: 'link', id: ks, pts: r, w: 9 });
@@ -819,9 +923,7 @@ export function goldArc(v: Pick<SkyContext, 'ctx' | 'pal'>, a: { x: number; y: n
   ctx.save();
   ctx.lineCap = 'round';
   ctx.setLineDash([]);
-  ctx.strokeStyle = night ? alpha(KIN_GOLD.night, 0.16) : alpha(KIN_GOLD_UNDER.color, KIN_GOLD_UNDER.a);
-  ctx.lineWidth = night ? 4 : KIN_GOLD_UNDER.width;
-  trace();
+  // без свечения и без дневной подложки (решение 167, V-1, V-11): дуга — контекст, а не активный путь
   ctx.strokeStyle = KIN_GOLD[night ? 'night' : 'day'];
   ctx.lineWidth = KIN_ARC_W;
   ctx.setLineDash([]);
@@ -838,22 +940,30 @@ export function drawKinArcs(v: SkyContext, p: Pass, id: string, seen: Set<string
   const { ctx, pal } = v;
   const size = mapSize(T_MAP_S, v.coarse);
   const gold = KIN_GOLD[pal.glow ? 'night' : 'day'];
-  for (const { e, a, c, b } of kinArcs(v, id, seen)) {
-    const { x: cx, y: cy } = c;
-    goldArc(v, a, c, b);
+  for (const k of kinArcs(v, id, seen)) {
+    const { e, a, c, b } = k;
+    if (k.stub) goldLine(v, k.pts);
+    else goldArc(v, a, c, b);
     drawn?.add(`${e.from}>${e.to}:${e.rel}`);
     if (!p.s.layers.labels) continue;
-    // термин — у середины дуги (t = 0,5), слева или справа от неё; если там тесно — у других точек дуги
-    ctx.font = mapFont(T_MAP_S, { italic: true, coarse: v.coarse });
-    const w = ctx.measureText(e.rel).width;
+    // подписи дуг — прямым начертанием (Jost), а не курсивом ролей выбранной связи (решение 167, V-1)
+    ctx.font = mapFont(T_MAP_S, { sans: true, coarse: v.coarse });
+    // обрывок к лицу вне окна: «↑ Ионафан, дядя» (это лицо — дядя), «↑ сестра Давида» (лицо в окне — сестра) — у конца
+    const text = k.stub ? (k.stub.other === e.from ? `${k.stub.arrow} ${nameOf(e.from)}, ${e.rel}` : `${k.stub.arrow} ${e.rel} ${genitive(nameOf(e.to), byId.get(e.to)?.sex === 'f' ? 'f' : 'm')}`) : e.rel;
+    const w = ctx.measureText(text).width;
     const spots: { tx: number; ty: number }[] = [];
-    for (const t of [0.5, 0.35, 0.65, 0.2, 0.8]) {
-      const mx = (1 - t) * (1 - t) * a.x + 2 * t * (1 - t) * cx + t * t * b.x;
-      const my = (1 - t) * (1 - t) * a.y + 2 * t * (1 - t) * cy + t * t * b.y;
-      spots.push({ tx: mx - w - 4, ty: my + size * 0.35 }, { tx: mx + 4, ty: my + size * 0.35 });
-    }
+    if (k.stub) {
+      const { x, y } = k.stub;
+      spots.push({ tx: x + 4, ty: y + size * 0.35 }, { tx: x - w - 4, ty: y + size * 0.35 }, { tx: x - w / 2, ty: y - 5 }, { tx: x - w / 2, ty: y + size + 3 });
+    } else
+      // термин — у середины дуги (t = 0,5), слева или справа от неё; если там тесно — у других точек дуги
+      for (const t of [0.5, 0.35, 0.65, 0.2, 0.8]) {
+        const mx = (1 - t) * (1 - t) * a.x + 2 * t * (1 - t) * c.x + t * t * b.x;
+        const my = (1 - t) * (1 - t) * a.y + 2 * t * (1 - t) * c.y + t * t * b.y;
+        spots.push({ tx: mx - w - 4, ty: my + size * 0.35 }, { tx: mx + 4, ty: my + size * 0.35 });
+      }
     const boxes = spots.map((q) => textBox(q.tx, q.ty, w, size));
-    const got = claim(v, p, boxes, 'note', e.rel);
+    const got = claim(v, p, boxes, 'note', text);
     if (!got) continue;
     const q = spots[boxes.indexOf(got)];
     const font = ctx.font;
@@ -864,12 +974,29 @@ export function drawKinArcs(v: SkyContext, p: Pass, id: string, seen: Set<string
       ctx.lineJoin = 'round';
       ctx.strokeStyle = pal.halo;
       ctx.lineWidth = 3;
-      ctx.strokeText(e.rel, q.tx, q.ty);
+      ctx.strokeText(text, q.tx, q.ty);
       ctx.fillStyle = gold;
-      ctx.fillText(e.rel, q.tx, q.ty);
+      ctx.fillText(text, q.tx, q.ty);
       ctx.restore();
     });
   }
+}
+const nameOf = (id: string) => byId.get(id)?.name ?? id;
+
+/** Обрывок золотистой дуги (решение 167): та же линия, что goldArc, по ломаной px холста. */
+function goldLine(v: Pick<SkyContext, 'ctx' | 'pal'>, pts: readonly number[]) {
+  const { ctx, pal } = v;
+  if (pts.length < 4) return;
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.setLineDash([]);
+  ctx.strokeStyle = KIN_GOLD[pal.glow ? 'night' : 'day'];
+  ctx.lineWidth = KIN_ARC_W;
+  ctx.beginPath();
+  ctx.moveTo(pts[0], pts[1]);
+  for (let k = 2; k + 1 < pts.length; k += 2) ctx.lineTo(pts[k], pts[k + 1]);
+  ctx.stroke();
+  ctx.restore();
 }
 
 /** Флажок меридиана: прямоугольник на служебной строке рамки (px холста), текст и x черты. */
@@ -951,6 +1078,8 @@ export interface SelectedLinkInfo {
    * временным гостем, src/ui/show.ts, showGuest). why — причина (src/ui/linkstate.ts, GhostWhy)
    */
   ghosts: (Rect & { id: string; role: string; why: GhostWhy; cx: number; cy: number })[];
+  /** союзы чужих ромбов под путём: жёлтое под ними прерывается (решение 166) */
+  nodeHoles?: string[];
 }
 
 /** Призрак конца выбранной связи (К3): лицо, место кольца (px) и радиус его знака. */
@@ -1161,61 +1290,12 @@ export function selectedRoutes(v: SkyContext, d: LinkDraw | null | undefined, ke
   return { all: got.all.map(shift), core: got.core.map(shift), ghosts: got.ghosts.map((g) => ({ ...g, x: g.x + d.dx, y: g.y + d.dy })) };
 }
 
-/** Пути выбранной связи в px кадра связей. */
-function frameRoutes(v: SkyContext, d: LinkDraw, key: LinkKey, ks: string): SelectedRoutes {
-  const r = baseRoutes(v, d, key, ks);
-  const own = key.kind === 'child' || key.kind === 'union' || key.kind === 'spouse' ? key.union : null;
-  const R = (d.frame.layout === 'family' ? NODE_R_FAMILY : NODE_R_MAP) + 1.5;
-  const foreign = d.frame.nodes.filter((n) => n.union !== own);
-  const memo = new Map<number[], number[]>();
-  const fix = (pts: number[]) => memo.get(pts) ?? memo.set(pts, detourNodes(pts, foreign, R)).get(pts)!;
-  return { all: r.all.map(fix), core: r.core.map(fix), ghosts: r.ghosts };
-}
-
 /**
- * Жёлтое выбранной связи обходит чужие узлы (решение 134, G9): отрезок пути, проходящий через ромб или • другого союза
- * (ближе r + 1,5 к его центру, не у концов отрезка), огибает его ступенькой на r + 3 px в сторону от узла — чтобы чужой
- * ромб не читался станцией выбранной связи. Ломаная px кадра связей.
+ * Пути выбранной связи в px кадра связей. Чужие ромбы на пути не обходятся (решение 166, R1-10: П-образные вырезы
+ * читались заходом в те союзы): жёлтое идёт прямо поверх, а под чужим ромбом прерывается (drawSelectedLink, holes).
  */
-export function detourNodes(pts: number[], nodes: readonly { x: number; y: number }[], R: number): number[] {
-  if (pts.length < 4 || !nodes.length) return pts;
-  const out: number[] = [pts[0], pts[1]];
-  const h = R + 1.5;
-  for (let k = 0; k + 3 < pts.length; k += 2) {
-    const ax = pts[k];
-    const ay = pts[k + 1];
-    const bx = pts[k + 2];
-    const by = pts[k + 3];
-    const vert = Math.abs(bx - ax) < 0.5;
-    const horiz = Math.abs(by - ay) < 0.5;
-    const hits: { t: number; x: number; y: number }[] = [];
-    if (vert || horiz) {
-      const lo = vert ? Math.min(ay, by) : Math.min(ax, bx);
-      const hi = vert ? Math.max(ay, by) : Math.max(ax, bx);
-      for (const n of nodes) {
-        const along = vert ? n.y : n.x;
-        const across = vert ? Math.abs(n.x - ax) : Math.abs(n.y - ay);
-        if (across >= R || along <= lo + h || along >= hi - h) continue;
-        hits.push({ t: vert ? (n.y - ay) / (by - ay) : (n.x - ax) / (bx - ax), x: n.x, y: n.y });
-      }
-    }
-    hits.sort((p, q) => p.t - q.t);
-    for (const n of hits) {
-      if (vert) {
-        const s = Math.sign(by - ay);
-        const side = n.x > ax + 0.5 ? -1 : 1;
-        const x2 = ax + side * h;
-        out.push(ax, n.y - s * h, x2, n.y - s * h, x2, n.y + s * h, ax, n.y + s * h);
-      } else {
-        const s = Math.sign(bx - ax);
-        const side = n.y > ay + 0.5 ? -1 : 1;
-        const y2 = ay + side * h;
-        out.push(n.x - s * h, ay, n.x - s * h, y2, n.x + s * h, y2, n.x + s * h, ay);
-      }
-    }
-    out.push(bx, by);
-  }
-  return out;
+function frameRoutes(v: SkyContext, d: LinkDraw, key: LinkKey, ks: string): SelectedRoutes {
+  return baseRoutes(v, d, key, ks);
 }
 
 function baseRoutes(v: SkyContext, d: LinkDraw, key: LinkKey, ks: string): SelectedRoutes {
@@ -1690,8 +1770,11 @@ export function drawSelectedLink(v: SkyContext, p: Pass, o: OverlayOpts = {}): S
   // и ромбов других союзов на пути (лестница союзов идёт мимо них); свой ромб — поверх пути, жёлтым (решение 87)
   const own = key.kind === 'child' || key.kind === 'union' || key.kind === 'spouse' ? key.union : null;
   const holes = routes.length ? v.ledger.boxes.filter((b) => b.kind !== 'frame' && b.kind !== 'edge' && !(b.kind === 'plate' && b.text === '' && b.id === own) && hit(b)) : [];
+  // чужие ромбы под путём (решение 166): жёлтое под ними прерывается — для проверок (SelectedLinkInfo.nodeHoles)
+  const nodeHoles = holes.filter((b) => b.kind === 'plate' && b.text === '' && !!b.id).map((b) => b.id!);
   const scope = overlayScope(v, p, { ...o, cuts: [...(o.cuts ?? []), ...holes] });
-  ctx.save();
+  // у кольца выбранного лица путь обрезан (+2 px; решение 167, V-5)
+  clipHoles(ctx, cam, ringHoles(v, p));
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   // все ломаные связи — одним путём на слой: где пути родителей идут по общему стволу, свечение не складывается
@@ -1703,9 +1786,7 @@ export function drawSelectedLink(v: SkyContext, p: Pass, o: OverlayOpts = {}): S
     }
     ctx.stroke();
   };
-  const layers: [string, number][] = night
-    ? [[alpha(LINK_YELLOW.night, 0.16), 9], [alpha(LINK_YELLOW.night, 0.3), 5], [LINK_YELLOW.night, 2.5]]
-    : [[alpha(LINK_YELLOW.day, 0.9), 9], [pal.ink, 2.2]];
+  const layers = activeLayers(pal);
   if (routes.length)
     for (const [color, w] of layers) {
       ctx.strokeStyle = color;
@@ -1849,5 +1930,5 @@ export function drawSelectedLink(v: SkyContext, p: Pass, o: OverlayOpts = {}): S
   }
   scope.end();
   putLinkGhosts(ghosts);
-  return { ks, ghosts: ghostHits, ends, x: n ? sx / n : null, y: n ? sy / n : null, segs: routes.length, routes: routes.map((r) => r.map((q) => Math.round(q * 10) / 10)), edges };
+  return { ks, ghosts: ghostHits, ends, x: n ? sx / n : null, y: n ? sy / n : null, segs: routes.length, routes: routes.map((r) => r.map((q) => Math.round(q * 10) / 10)), edges, nodeHoles };
 }

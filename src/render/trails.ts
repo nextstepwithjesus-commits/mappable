@@ -39,9 +39,9 @@ import { nameCase } from '../ui/text/ru.ts';
 import { refText } from '../engine/kinship.ts';
 import { starRadius } from './glyphs.ts';
 import { mapFont, mapSize, nameSize, T_MAP_S } from './type.ts';
-import { claim, textBox, type LabelCache } from './labels.ts';
+import { claim, FAMILY_KY, textBox, type LabelCache } from './labels.ts';
 import { branchColor, branchTickAt, GlowBatch, glowLayers, glows } from './branches.ts';
-import { branchFrame, FAR, type BranchPaint } from './marks.ts';
+import { branchFrame, clipHoles, FAR, ringHoles, type BranchPaint } from './marks.ts';
 import type { Rect } from './rect.ts';
 import type { Emphasis, Palette, Pass, SkyContext } from './sky.ts';
 import type { LinkFrame, LinkPath, PathStyle, StubMark } from './links.ts';
@@ -132,6 +132,11 @@ export interface LifeTrail {
    * в нём просвет: пересечение не читается узлом.
    */
   cuts?: readonly number[];
+  /**
+   * тон тающих частей следа (начало при оценочном рождении, хвост, бледная часть за разрывом): у потомка ветви —
+   * тон текста, а не цвет ветви — без цветного «хвоста кометы» (решение 170, V-8); нет — тон следа
+   */
+  fade?: string;
 }
 
 /** Знак разрыва «//» на горизонтальном следе у x: два косых штриха через след, между ними — просвет 3 px. */
@@ -197,7 +202,8 @@ export function drawLifeTrail(ctx: CanvasRenderingContext2D, t: LifeTrail) {
   const solidTo = Math.max(x0, t.solidTo);
   // оценочное рождение: начало следа до bHi проявляется от звезды (но не дальше засвидетельствованного)
   const from = Math.max(x0, Math.min(t.sureFrom ?? x0, solidTo));
-  if (from > x0 + 0.5) fadeLine(ctx, x0, from, y, t.color, TRAIL_FADE.start, 1, cuts);
+  const fc = t.fade ?? t.color;
+  if (from > x0 + 0.5) fadeLine(ctx, x0, from, y, fc, TRAIL_FADE.start, 1, cuts);
   // разрыв (MAP-51): сплошная часть кончается у brk, за знаком «//» — бледнее до конца засвидетельствованного
   const cut = t.brk !== undefined && t.brk > from + 4 && t.brk < solidTo - 4 ? t.brk : null;
   const solidEnd = cut !== null ? cut - BREAK.gap / 2 - 2 : solidTo;
@@ -211,10 +217,10 @@ export function drawLifeTrail(ctx: CanvasRenderingContext2D, t: LifeTrail) {
   const tail = (!t.known || t.cls === 'estimated') && x1 > solidTo + 0.5;
   if (cut !== null) {
     drawBreak(ctx, cut, y, t.color);
-    fadeLine(ctx, cut + BREAK.gap / 2 + 2, solidTo, y, t.color, TRAIL_PALE, TRAIL_PALE, cuts);
+    fadeLine(ctx, cut + BREAK.gap / 2 + 2, solidTo, y, fc, TRAIL_PALE, TRAIL_PALE, cuts);
   }
   // неизвестная или оценочная смерть: след тает к концу интервала смерти (к концу короткого хвоста)
-  if (tail) fadeLine(ctx, solidTo, x1, y, t.color, cut !== null ? TRAIL_PALE : 1, TRAIL_FADE.end, cuts);
+  if (tail) fadeLine(ctx, solidTo, x1, y, fc, cut !== null ? TRAIL_PALE : 1, TRAIL_FADE.end, cuts);
 }
 
 /**
@@ -471,7 +477,8 @@ export function drawTrails(v: SkyContext, p: Pass) {
       const bp = bf.paint(id);
       if (bp ? !glows(bp.gen, ky < 5) : !bf.ancestor(id)) continue;
       if (!trailOf(v, i, t) || t.x1 < -8 || t.x0 > cam.w + 8) continue;
-      if (bp) glow.add(bp.color, branchAlpha(bp, p.emph(id), intro), t.x0, t.y, t.x1, t.y);
+      // свечение ветви — только под сплошной частью следа: тающий хвост не светится (решение 170, V-8)
+      if (bp) glow.add(bp.color, branchAlpha(bp, p.emph(id), intro), t.x0, t.y, Math.max(t.x0, Math.min(t.x1, t.solidTo)), t.y);
       else anc.add(pal.ink, intro, t.x0, t.y, t.x1, t.y);
     }
     anc.flush(ctx, bf.theme === 'night');
@@ -489,6 +496,9 @@ export function drawTrails(v: SkyContext, p: Pass) {
       t.width = ky < 5 ? 1.2 : q.magnitude <= 1 ? 1.8 : 1.5;
       t.dash = undefined;
       t.cuts = p.cuts?.get(i);
+      // тающие части — тоном текста: цвет ветви ровный, без цветного хвоста (решение 170, V-8)
+      const e = p.emph(n.person) * intro;
+      t.fade = alpha(pal.ink2, Math.min(1, (ky < 5 ? 0.35 : 0.55) * e * (q.magnitude <= 2 ? 1.25 : 1)));
       bf.shown.add(n.person);
     } else {
       const e = p.emph(n.person) * intro;
@@ -497,6 +507,7 @@ export function drawTrails(v: SkyContext, p: Pass) {
       t.width = ky < 5 ? 1 : q.magnitude <= 1 ? 1.6 : 1.2;
       t.dash = undefined;
       t.cuts = p.cuts?.get(i);
+      t.fade = undefined;
     }
     drawLifeTrail(ctx, t);
     if (p.lines && t.x1 > t.x0 + 1 && t.x1 > 0 && t.x0 < cam.w) p.lines.add({ x: t.x0, y: t.y - 1.5, w: t.x1 - t.x0, h: 3 });
@@ -1418,6 +1429,14 @@ export interface LinkLook {
   /** непрозрачность по ярусу и порогу подписи: 0 — путь не рисуется, не ловится и разрывов не даёт */
   a: number;
 }
+/** Зубец короче этого (px) на пересечениях не прерывается — прерывается пересекающая линия (решение 166). */
+export const SHORT_TOOTH = 40;
+const shortTooth = (q: LinkPath) => {
+  if (q.kind !== 'tooth' || q.pts.length < 4) return false;
+  let len = 0;
+  for (let k = 0; k + 3 < q.pts.length; k += 2) len += Math.hypot(q.pts[k + 2] - q.pts[k], q.pts[k + 3] - q.pts[k + 1]);
+  return len < SHORT_TOOTH;
+};
 /** Толщина линии яруса, px: главный — 1,75 с ореолом цвета неба, второй и контекстный — 1 (G10). */
 export const TIER_WIDTH: Readonly<Record<LinkTier, number>> = { 0: 1.75, 1: 1, 2: 1 };
 /** Ореол главного яруса — с каждой стороны линии, px. */
@@ -1902,7 +1921,8 @@ export function drawLinks(v: SkyContext, p: Pass, d: LinkDraw) {
   const W = cam.w;
   const H = cam.h;
   const look = lookOf(v, p, d);
-  ctx.save();
+  // связи обрезаются у кольца выбранного (+2 px; решение 167, V-5)
+  clipHoles(ctx, cam, ringHoles(v, p));
   ctx.lineCap = 'butt';
   ctx.lineJoin = 'miter';
   const box = pathBoxes(d.frame);
@@ -1917,17 +1937,19 @@ export function drawLinks(v: SkyContext, p: Pass, d: LinkDraw) {
   /** разрывы пути под линиями выше по ярусу: номер отрезка → пары «доля длины, полуширина» */
   const gapsOf = (q: LinkPath, r: number): Map<number, [number, number][]> | null => {
     const xc = q.xcuts;
-    if (!xc) return null;
+    // короткий зубец (до ребёнка, < 40 px) не режется: прерванный, он читался бы штрихом «иное происхождение» (решение
+    // 166, R1-07) — прерывается пересекающая его линия («мостик»)
+    if (!xc || shortTooth(q)) return null;
     let out: Map<number, [number, number][]> | null = null;
     for (let k = 0; k + 3 < xc.length; k += 4) {
       const o = paths[xc[k + 3]];
       if (!o) continue;
       const ro = rank(o);
       if (ro === 99) continue;
-      // равные ярусы — прерывается горизонталь (как след под вертикалью, Г7)
+      // равные ярусы — прерывается горизонталь (как след под вертикалью, Г7); под коротким зубцом — всегда эта линия
       const seg = xc[k];
       const horiz = Math.abs(q.pts[2 * seg + 1] - q.pts[2 * seg + 3]) < 0.5;
-      if (!(ro < r || (ro === r && horiz))) continue;
+      if (!(ro < r || (ro === r && horiz) || shortTooth(o))) continue;
       out ??= new Map();
       (out.get(seg) ?? out.set(seg, []).get(seg)!).push([xc[k + 1], xc[k + 2]]);
     }
@@ -2048,6 +2070,8 @@ interface LinkText {
   leader?: boolean;
   /** тон текста (по умолчанию --ink-2) */
   ink?: string;
+  /** лицо подписи (мать у ромба, супруг у ромба бездетного брака): его знак у точки — не чужой (решение 160) */
+  person?: string;
 }
 
 /** Выноска подписи связи — не длиннее (решение 140, К8). */
@@ -2139,7 +2163,9 @@ function putLinkText(v: SkyContext, p: Pass, t: LinkText, a: number, hold = fals
     const b = textBox(c.tx, c.ty, w, size);
     return { x: b.x, y: b.y - 5, w: b.w, h: b.h + 5 };
   });
-  const b = claim(v, p, boxes, 'plate', t.text, { id: t.id, hold });
+  // правило принадлежности (решения 140, 160): подпись у точки — ближе к ней, чем к чужому знаку; места с номера near —
+  // на выноске; не прошло ни одно — подписи нет
+  const b = claim(v, p, boxes, 'plate', t.text, { id: t.id, hold, anchor: { x: t.x, y: t.y, near, person: t.person } });
   if (!b || hold) return null;
   const k = boxes.indexOf(b);
   const c = cands[k];
@@ -2174,6 +2200,35 @@ const motherPlaced = new WeakMap<object, Set<string>>();
  * дети» — словом, а не только цветом ветви. Зовёт небо (sky.ts или labels.ts) до обычных подписей; drawLinkLabels их не
  * повторяет. Возвращает союзы с поставленным именем.
  */
+/**
+ * Ромб союза на небе (решение 170, V-2): пока имена семьи не видны (строка общей раскладки ниже FAMILY_KY), ромбы — только
+ * у союзов выбранного и второго лица, наведённого лица и выбранной или наведённой связи; на масштабе семьи и в семейной
+ * укладке — все (по ярусу их линий, unionAlpha). Подписи у ромбов — по тому же правилу.
+ */
+export function nodeOnSky(v: SkyContext, p: Pass, d: Pick<LinkDraw, 'frame' | 'hover' | 'selected' | 'preview'>, union: string): boolean {
+  if (d.frame.layout !== 'map' || v.cam.ky >= FAMILY_KY) return true;
+  const s = p.s;
+  const marks = s.plateMarks;
+  if (marks && (marks.hover === union || marks.selected === union || marks.focus === union)) return true;
+  const u = ALL_UNIONS.byId.get(union);
+  if (!u) return false;
+  for (const id of [s.selected, s.second, s.hovered]) if (id && (u.a === id || u.b === id || u.kids.includes(id))) return true;
+  const ks = `u.${union}`;
+  return [d.hover, d.selected, ...d.preview].some((k) => !!k && (k === ks || k.split('.').slice(1, 4).join('.') === union));
+}
+
+/** Её собственное имя у ромба не нужно (решение 160): звезда лица видна в кадре ближе стольких px — имя ставит ярус семьи. */
+export const OWN_NAME_NEAR = 120;
+function ownStarNear(v: SkyContext, id: string, x: number, y: number): boolean {
+  const { cam } = v;
+  const i = v.indexOf(id);
+  if (i === undefined || !v.drawn(i)) return false;
+  const sx = cam.sx(v.X0[i]);
+  const sy = cam.sy(v.nodes[i].lane);
+  if (sx < v.letterW || sx > cam.w || sy < v.openTop || sy > cam.vp.b) return false;
+  return Math.hypot(sx - x, sy - y) < OWN_NAME_NEAR;
+}
+
 export function drawMotherNames(v: SkyContext, p: Pass, d: LinkDraw | null | undefined): Set<string> {
   const done = new Set<string>();
   motherPlaced.set(p.placer, done);
@@ -2190,10 +2245,12 @@ export function drawMotherNames(v: SkyContext, p: Pass, d: LinkDraw | null | und
     const x = n.x + d.dx;
     const y = n.y + d.dy;
     if (!(x > v.letterW && x < cam.w && y > v.openTop && y < cam.vp.b)) continue;
+    // её звезда видна рядом — имя у ромба повторило бы её подпись и спорило бы с ней (решение 160)
+    if (ownStarNear(v, n.mother, x, y)) continue;
     const u = ALL_UNIONS.byId.get(n.union);
     const text = n.mother ? nameOf(n.mother) : u ? unionName(u) : '';
     if (!text) continue;
-    const b = putLinkText(v, p, { text, x: x + 5, y, dir: 0, right: true, id: n.union, side2: true, leader: true, ink: v.pal.ink }, 1);
+    const b = putLinkText(v, p, { text, x: x + 5, y, dir: 0, right: true, id: n.union, side2: true, leader: true, ink: v.pal.ink, person: n.mother }, 1);
     if (b) {
       done.add(n.union);
       out.push(`${text}@${Math.round(x)},${Math.round(y)}`);
@@ -2235,10 +2292,12 @@ export function drawLinkLabels(v: SkyContext, p: Pass, d: LinkDraw, late = false
     // имя у ромба — там, где виден сам ромб (ярус его линий, решение 135, и подробность кадра — как у знака), или у
     // раскрытого союза
     if (!(Math.min(unionAlpha(v, p, d, n.union).a, d.alpha) > 0.5 || d.expanded.has(n.union))) continue;
+    if (n.mother && ownStarNear(v, n.mother, x, y)) continue;
+    if (!nodeOnSky(v, p, d, n.union)) continue;
     const u = ALL_UNIONS.byId.get(n.union);
     const text = n.mother ? nameOf(n.mother) : u ? unionName(u) : '';
     if (!text) continue;
-    const b = putLinkText(v, p, { text, x: x + 5, y, dir: 0, right: true, id: n.union, side2: true }, 1, a < 0.99);
+    const b = putLinkText(v, p, { text, x: x + 5, y, dir: 0, right: true, id: n.union, side2: true, person: n.mother ?? undefined }, 1, a < 0.99);
     if (b) out.push(`${text}@${Math.round(x)},${Math.round(y)}`);
   }
   const look = lookOf(v, p, d);
@@ -2268,9 +2327,9 @@ export function drawLinkLabels(v: SkyContext, p: Pass, d: LinkDraw, late = false
     // (решение 136, G7); у родителя — только дети за краем
     // (концы в окне, а ход неясен — обрывки остаются, подпись — именем без координаты)
     const map = d.frame.layout === 'map' && st.kind !== 'kid';
-    // второй конец в окне — имя со стрелкой в его сторону («↑ Давид»), за краем — с координатой («Давид, 32 П»)
-    const arrow = st.dir < 0 ? '↑' : st.dir > 0 ? '↓' : st.side === 'parent' ? '→' : '←';
-    const at = (id: string) => (map && inWindow(id) ? `${arrow} ${nameOf(id)}` : nameAt(v, id));
+    // второй конец в окне — подписи нет (решение 162: указатель не ставится к видимой звезде, R1-15), за краем — с
+    // координатой («Давид, 32 П»)
+    const at = (id: string) => (map && inWindow(id) ? '' : nameAt(v, id));
     if (st.side === 'child' && st.kind !== 'kid') {
       if (named.has(st.targets[0])) continue;
       named.add(st.targets[0]);
@@ -2284,15 +2343,12 @@ export function drawLinkLabels(v: SkyContext, p: Pass, d: LinkDraw, late = false
       // длинная черта брака (этап 14, решение 134): «муж — Халев, 24 П» у узла на следе матери, «наложница — Мааха, 22 П» у мужа
       const who = st.targets[0];
       const role = linkRoleOf(st.key, who);
-      text = role ? `${role} — ${at(who)}` : at(who);
+      const where = at(who);
+      text = where ? (role ? `${role} — ${where}` : where) : '';
     } else if (st.side === 'parent' && map) {
-      // у родителя: дети в окне — одной стрелкой («↓ Гад; Асир»), за краем — с координатами
-      const inW = st.targets.filter(inWindow);
+      // у родителя: подписаны только дети за краем окна — с координатами (решение 162)
       const outW = st.targets.filter((id) => !inWindow(id));
-      const parts: string[] = [];
-      if (inW.length) parts.push(`${arrow} ${targetsText(v, inW, nameOf)}`);
-      if (outW.length) parts.push(targetsText(v, outW));
-      text = parts.join('; ');
+      text = outW.length ? targetsText(v, outW) : '';
     } else text = st.side === 'parent' ? targetsText(v, st.targets) : parent ? at(parent) : '';
     if (!text) continue;
     // подпись обрывка — в полную силу или никак: бледная подпись не держала бы контраста 4,5 : 1; погашенная держит место

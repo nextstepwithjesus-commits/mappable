@@ -16,7 +16,8 @@ const css = (f: string) => readFileSync(join(__dirname, '../src/styles', f), 'ut
 describe('нижний лист карточки: положения (H2; ТЗ § 3.8; решение владельца 12)', () => {
   const s = stopsFor(740);
   it('три положения: 214 px, 55 % и всё место между верхней строкой и полосой времени', () => {
-    expect(s).toEqual({ peek: PEEK_H, half: Math.round(740 * HALF_SHARE), full: 740 });
+    // этап 14, решение 169: под краткой карточкой — шапка 104 px (ТЗ § 3.8), на неё лист опускают взмахом вниз
+    expect(s).toEqual({ head: 104, peek: PEEK_H, half: Math.round(740 * HALF_SHARE), full: 740 });
     // этап 11 (STAGE11 § 6, решение 77): нижнее положение — не шапка 104 px, а карточка у звезды 214 px с «Родством»
     expect(PEEK_H).toBe(214);
     // низкий экран: 55 % не ниже нижнего положения
@@ -40,9 +41,14 @@ describe('нижний лист карточки: положения (H2; ТЗ �
     expect(snapSheet(640, -0.1, s, 'full')).toBe('full');
     expect(snapSheet(640, -1.2, s, 'full')).toBe('half');
   });
-  it('взмах вниз с шапки или ниже неё закрывает лист; с 55 % — лишь сворачивает', () => {
-    expect(snapSheet(80, -0.8, s, 'peek')).toBe('close');
-    expect(snapSheet(40, 0, s, 'peek')).toBe('close');
+  // этап 14, решение 169 (R2-10): взмах вниз больше не снимает выбор — лист встаёт на шапку 104 px, выбор снимает только «×»;
+  // смысл прежний: лист отвечает на взмах и не теряет читателя
+  it('взмах вниз с краткой карточки или ниже неё — шапка 104 px с выбором; с 55 % — лишь сворачивает', () => {
+    expect(snapSheet(80, -0.8, s, 'peek')).toBe('head');
+    expect(snapSheet(40, 0, s, 'peek')).toBe('head');
+    // с шапки взмахом вниз — та же шапка; вверх — снова краткая карточка или выше
+    expect(snapSheet(90, -1.5, s, 'head')).toBe('head');
+    expect(snapSheet(160, 0.05, s, 'head')).toBe('peek');
     expect(snapSheet(300, -2, s, 'half')).toBe('peek');
     // медленно чуть ниже нижнего положения — лист остаётся (прежде 96 = 104 − 8; этап 11 — 214 − 8)
     expect(snapSheet(PEEK_H - 8, -0.2, s, 'peek')).toBe('peek');

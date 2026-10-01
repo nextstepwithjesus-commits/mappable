@@ -36,7 +36,8 @@
  *  К1 яркие знаки друг на друге — 0;
  *  К2 имя лица на чужом знаке (и название созвездия на знаке); подпись на подписи по глифам; слитые подписи — 0; 0; 0;
  *  К3 линии, нарисованные поверх текста; имя выбранного перечёркнуто — 0; 0;
- *  К4 принадлежность: чужой знак ближе, вплотную, выноска с чужим ближе, далеко без выноски — 0;
+ *  К4 принадлежность: чужой знак ближе, вплотную, выноска с чужим ближе, далеко без выноски, у подписи у ромба чужой
+ *     знак ближе её точки (решение 160) — 0;
  *  К5 связь, лента, дуга или жёлтая связь через середину строки имени лица — не больше 2 % имён сцены;
  *  К6 имена семьи под оверлеем; срезанные краем оверлея подписи — 0; 0;
  *  К7 зазор от кольца выбранного до его имени — не меньше 2 px;
@@ -155,6 +156,10 @@ async function grab(p: Page) {
       links: ds.links ?? '',
       linkSel: ds.linkSel ?? '',
       plateTexts: ds.plateTexts ?? '',
+      plateBoxes: ds.plateBoxes ?? '',
+      dots: ds.dots ?? '',
+      motherNames: ds.motherNames ?? '',
+      linkTexts: ds.linkTexts ?? '',
       notes: ds.notes ?? '',
       named: ds.named ?? '',
       detail: ds.detail ?? '',
@@ -589,16 +594,23 @@ function parse(g: Grab) {
   }
   for (const L of lines) {
     if (L.kind !== 'line') continue;
+    let hitKind = '';
     const hit = L.segs.some(([x0, y0, x1, y1]) =>
-      linkSegs.some(({ seg: s }) => {
+      linkSegs.some(({ seg: s, kind }) => {
         const vert = Math.abs(x1 - x0) < 0.6 && Math.abs(s[2] - s[0]) < 0.6 && Math.abs(x0 - s[0]) < 1.2;
         const hor = Math.abs(y1 - y0) < 0.6 && Math.abs(s[3] - s[1]) < 0.6 && Math.abs(y0 - s[1]) < 1.2;
-        if (vert) return Math.min(Math.max(y0, y1), Math.max(s[1], s[3])) - Math.max(Math.min(y0, y1), Math.min(s[1], s[3])) > 2;
-        if (hor) return Math.min(Math.max(x0, x1), Math.max(s[0], s[2])) - Math.max(Math.min(x0, x1), Math.min(s[0], s[2])) > 2;
-        return false;
+        const ok = vert
+          ? Math.min(Math.max(y0, y1), Math.max(s[1], s[3])) - Math.max(Math.min(y0, y1), Math.min(s[1], s[3])) > 2
+          : hor
+            ? Math.min(Math.max(x0, x1), Math.max(s[0], s[2])) - Math.max(Math.min(x0, x1), Math.min(s[0], s[2])) > 2
+            : false;
+        if (ok) hitKind = kind;
+        return ok;
       }),
     );
-    if (hit) L.kind = 'link';
+    // путь ленты по маршрутам связей (журнал «ribbon|…») — лента, а не связь: её нить приглушённого цвета иначе считалась бы
+    // связью через имя лица линии
+    if (hit) L.kind = hitKind.startsWith('ribbon/') ? 'ribbon' : 'link';
   }
   return { vp, glyphs, texts, lines, circles, knocks, nodes, labelBoxes, raw };
 }
@@ -622,8 +634,24 @@ const MAG0 = (() => {
     return new Set<string>();
   }
 })();
+/** Имена лиц (src/generated/atlas.json, n): своя звезда подписи у ромба — та, чьё имя в подписи (решение 160). */
+const NAMES = (() => {
+  try {
+    const a = JSON.parse(readFileSync(join(ROOT, 'src/generated/atlas.json'), 'utf8')) as { persons: { id: string; n: string }[] };
+    return new Map(a.persons.map((q) => [q.id, q.n]));
+  } catch {
+    return new Map<string, string>();
+  }
+})();
 /** Виды линий порога К5: связь, лента, золотистая дуга, жёлтая выбранная связь. */
 const K5_KINDS = new Set(['link', 'ribbon', 'kin', 'sel']);
+/** Выноска подписи (labels.ts, labelStar): один отрезок толщиной 0,8 px (не след, не связь, не контур). */
+const isLeader = (L: Line) => Math.abs(L.lw - 0.8) < 0.06 && L.segs.length === 1;
+/**
+ * Из них — по всей строке имени и с замаскированными пересечениями (решение 163: стволы, зубцы, черты брака, выбранная
+ * связь; выноски — отдельно): связь и выбранная связь. Ленты и золотистые дуги — по середине строки, как прежде.
+ */
+const K5_FULL = new Set(['link', 'sel']);
 
 interface Finding {
   cls: string;
@@ -772,6 +800,26 @@ function measure(g: Grab, P: Parsed) {
           mx = px;
           my = py;
         }
+        // К5 по решению 163: связь, дуга, выбранная связь — по всей строке имени, и выноска чужой подписи; пересечение,
+        // спрятанное ореолом, разрывом под именем или вырезом, тоже считается (R1-04: разрыв у имени читается концом связи)
+        if (own && (K5_FULL.has(L.kind) || isLeader(L)) && !k5.has(o)) {
+          let full = 0;
+          let fx = 0;
+          let fy = 0;
+          const mineLeader = isLeader(L) && L.segs.some(([x0, y0, x1, y1]) => distBox(x0, y0, t.box) < 3 || distBox(x1, y1, t.box) < 3);
+          if (!mineLeader)
+            for (const [x0, y0, x1, y1] of L.segs) {
+              if (ownGl && Math.abs(y0 - ownGl.y) < 1.2 && Math.abs(y1 - ownGl.y) < 1.2) continue;
+              const l = clipLen(x0, y0, x1, y1, core);
+              if (l <= 0) continue;
+              full += l;
+              [fx, fy] = clipMid(x0, y0, x1, y1, core);
+            }
+          if (full >= 3) {
+            k5.add(o);
+            F.push({ cls: '5 К5 линия через середину имени', what: `${isLeader(L) ? 'выноска' : L.kind} через строку «${label(o)}» (${full.toFixed(0)} px, по всей строке)`, x: fx, y: fy });
+          }
+        }
         if (len < 2) continue;
         // строго: через полосу строчных букв (середина строки), не меньше 3 px — линия зачёркивает имя
         {
@@ -811,7 +859,7 @@ function measure(g: Grab, P: Parsed) {
     }
   }
   // выноска подписи (labels.ts, labelStar): один отрезок толщиной 0,8 px (не след, не связь, не контур)
-  const isLeader = (L: Line) => Math.abs(L.lw - 0.8) < 0.06 && L.segs.length === 1;
+
   // охват знака с его кольцами (выбор, фокус, наведение, конец связи): кольцо — часть знака лица, а не чужая метка
   const ringR = new Map<Glyph, number>();
   // угловые скобки фокуса (решение 149; marks.ts): уголки «⌜ ⌝ ⌞ ⌟» — по два отвесных отрезка 3–8 px вокруг знака;
@@ -980,6 +1028,47 @@ function measure(g: Grab, P: Parsed) {
     if (name.text.length >= 3) ratios.push((name.box.x1 - name.box.x0) / (name.text.length * name.size * 0.56));
   }
   ratios.sort((a, b) => a - b);
+  // К4 у ромбов (решение 160): подпись у ромба (имя матери, подпись союза или обрывка) — чужой яркий знак не ближе её
+  // строки, чем её точка (ромб или конец обрывка), и не ближе 6 px; своя звезда — лицо с именем подписи
+  let plateAmb = 0;
+  {
+    const anchors = [...g.motherNames.split('|'), ...g.linkTexts.split('|')]
+      .filter(Boolean)
+      .map((q) => {
+        const k = q.lastIndexOf('@');
+        const [x, y] = q.slice(k + 1).split(',').map(Number);
+        return { text: q.slice(0, k), x, y };
+      });
+    const texts = g.plateTexts.split('|').filter(Boolean);
+    g.plateBoxes
+      .split('|')
+      .filter(Boolean)
+      .forEach((q, k) => {
+        const parts = q.split(':');
+        const [x, y, w, h] = parts[parts.length - 1].split(',').map(Number);
+        const text = (texts[k] ?? '').slice((texts[k] ?? '').indexOf(':', 2) + 1);
+        const pb = { x0: x, y0: y, x1: x + w, y1: y + h };
+        // строка подписи — нарисованный текст внутри её рамки
+        const ink = P.texts.filter((t) => (t.box.x0 + t.box.x1) / 2 >= pb.x0 && (t.box.x0 + t.box.x1) / 2 <= pb.x1 && (t.box.y0 + t.box.y1) / 2 >= pb.y0 && (t.box.y0 + t.box.y1) / 2 <= pb.y1);
+        if (!ink.length) return;
+        const tb = { x0: Math.min(...ink.map((t) => t.box.x0)), y0: Math.min(...ink.map((t) => t.box.y0)), x1: Math.max(...ink.map((t) => t.box.x1)), y1: Math.max(...ink.map((t) => t.box.y1)) };
+        const an = anchors.filter((a) => a.text === text).sort((a, b) => distBox(a.x, a.y, tb) - distBox(b.x, b.y, tb))[0];
+        if (!an) return;
+        const dA = distBox(an.x, an.y, tb);
+        const name = text.split(/[,(]/)[0].trim();
+        for (const gl of vis) {
+          if (gl.ghost || gl.a < 0.5 || (gl.id && NAMES.get(gl.id) === name)) continue;
+          // точка ромба сама не знак; знак ровно в точке обрывка — его цель (подпись — её имя)
+          if (Math.hypot(gl.x - an.x, gl.y - an.y) < 2) continue;
+          const d = distBox(gl.x, gl.y, tb) - (ringR.get(gl) ?? gl.ext);
+          if (d < 6 && d < dA - 0.5) {
+            plateAmb++;
+            F.push({ cls: '7 у ромба: чужая звезда ближе', what: `«${text}»: чужая ${gl.id ?? '?'} ${d.toFixed(1)} px, своя точка ${dA.toFixed(1)} px`, x: tb.x0, y: tb.y0 });
+            break;
+          }
+        }
+      });
+  }
   // 7. UI↔граф
   const ui = g.ui.map((u) => ({ ...u, box: { x0: u.x, y0: u.y, x1: u.x + u.w, y1: u.y + u.h } }));
   const uiHit = (b: Box) => ui.filter((u) => inter(u.box, b, 0.5));
@@ -1099,6 +1188,7 @@ function measure(g: Grab, P: Parsed) {
       tie,
       leader,
       leaderAmb,
+      plateAmb,
       kingDash,
       glued,
       detached,
@@ -1301,6 +1391,15 @@ export const SCENES: Scene[] = [
   { id: 'phone-david', title: 'Телефон: Давид (лист 55 %)', hash: '#/david~w100', ...PHONE },
   { id: 'phone-david-tap', title: 'Телефон: касание Давида (лист 214 px)', hash: '#/david~w100', ...PHONE, act: both(deselect, tapStar('david')), shot: true },
   { id: 'phone-iakov-360', title: 'Телефон 360: Иаков (лист 55 %)', hash: '#/iakov~w220', width: 360, height: 780, touch: true },
+  // 8. как после поиска (решение 165; R1-06): адрес лица без окна — окно подбирает атлас по ширине и плотности семьи
+  ...(['david', 'iakov', 'khalev-syn-esroma'] as const).flatMap((id) => [
+    { id: `search-${id}`, title: `После поиска: ${id}, 1440`, hash: `#/${id}`, ms: 4200 },
+    { id: `search-${id}-1024`, title: `После поиска: ${id}, 1024`, hash: `#/${id}`, ...W1024, ms: 4200 },
+    { id: `search-${id}-390`, title: `После поиска: ${id}, телефон 390`, hash: `#/${id}`, ...PHONE, ms: 4200 },
+  ]),
+  // окна R1-16 и R2-12: Халев на w400 («Сегув» у звезды Арама), обзор телефона (выноска «Авраам» — в исключении К8)
+  { id: 'khalev-w400', title: 'Халев, сын Есрома, окно 400 лет (R1-16)', hash: '#/khalev-syn-esroma~w400' },
+  { id: 'phone-far', title: 'Телефон: обзор при входе (R2-12)', hash: '#/', ...PHONE },
 ];
 
 // ---------- пороги К1–К8 (STAGE14 § 4) ----------
@@ -1317,8 +1416,8 @@ export function verdict(c: Counts): string[] {
   if (c.adj) out.push(`К2: слитых подписей ${c.adj}`);
   if (over) out.push(`К3: линий поверх текста ${over}`);
   if (c.selCovered) out.push(`К3: имя выбранного перечёркнуто ${c.selCovered}`);
-  if (c.amb + c.glued + c.leaderAmb + c.detached)
-    out.push(`К4: принадлежность — чужой ближе ${c.amb}, вплотную ${c.glued}, выноска ${c.leaderAmb}, далеко ${c.detached}`);
+  if (c.amb + c.glued + c.leaderAmb + c.detached + c.plateAmb)
+    out.push(`К4: принадлежность — чужой ближе ${c.amb}, вплотную ${c.glued}, выноска ${c.leaderAmb}, далеко ${c.detached}, у ромба ${c.plateAmb}`);
   if (c.k5 > Math.floor(0.02 * c.starLabels)) out.push(`К5: линий через середину имени ${c.k5} из ${c.starLabels} (порог ${Math.floor(0.02 * c.starLabels)})`);
   if (c.uiLit) out.push(`К6: имён семьи под оверлеем ${c.uiLit}`);
   if (c.uiCut) out.push(`К6: срезанных подписей ${c.uiCut}`);
@@ -1332,19 +1431,19 @@ export function verdict(c: Counts): string[] {
 type Row = { id: string; title: string; size: string; hash: string; findings: Finding[] } & ReturnType<typeof measure>['counts'];
 /** Таблица по сценам: числа по классам (основа набора COLLISION STRESS) и до пяти примеров на класс. */
 export function summary(rows: Row[]): string {
-  const kh = '| сцена | имён | К1 | К2 имя на знаке / подпись на подписи / слитые | К3 поверх / выбранное | К4 ближе / вплотную / выноска / далеко | К5 (порог) | К6 семья / срезано | К7 px | К8 | итог |';
+  const kh = '| сцена | имён | К1 | К2 имя на знаке / подпись на подписи / слитые | К3 поверх / выбранное | К4 ближе / вплотную / выноска / далеко / у ромба | К5 (порог) | К6 семья / срезано | К7 px | К8 | итог |';
   const kt = [kh, '|' + '---|'.repeat(11)];
   for (const r of rows) {
     const over = Object.values(r.ltOver).reduce((a, b) => a + b, 0);
     const v = verdict(r);
-    kt.push(`| ${r.id} | ${r.starLabels} | ${r.nnLit} | ${r.nlStar} / ${r.ll} / ${r.adj} | ${over} / ${r.selCovered} | ${r.amb} / ${r.glued} / ${r.leaderAmb} / ${r.detached} | ${r.k5} (${Math.floor(0.02 * r.starLabels)}) | ${r.uiLit} / ${r.uiCut} | ${r.selRingGap ?? '—'} | ${r.longLeaders} | ${v.length ? 'НЕТ' : 'да'} |`);
+    kt.push(`| ${r.id} | ${r.starLabels} | ${r.nnLit} | ${r.nlStar} / ${r.ll} / ${r.adj} | ${over} / ${r.selCovered} | ${r.amb} / ${r.glued} / ${r.leaderAmb} / ${r.detached} / ${r.plateAmb} | ${r.k5} (${Math.floor(0.02 * r.starLabels)}) | ${r.uiLit} / ${r.uiCut} | ${r.selRingGap ?? '—'} | ${r.longLeaders} | ${v.length ? 'НЕТ' : 'да'} |`);
   }
   const head = '| сцена | окно | звёзд (ярких) | имён | 1 знак↔знак (ярк.) | 2 знак↔имя / ◆ под именем / черта царя тире | 3 имя↔имя по глифам / вплотную в строку / Placer | 5 линия через текст: все / поверх / по видам / строго (середина строки, ≥ 3 px) | чужая ближе / вплотную / далеко / выносок (чужая ближе) | 7 UI: выбранное, концы, яркие имена, все имена, срезанные, звёзды | ширина/0,56 em p10/p50/p90 |';
   const out = ['## Пороги К1–К8', '', ...kt, '', '## Классы по сценам', '', head, '|' + '---|'.repeat(11)];
   for (const r of rows) {
     const over = Object.values(r.ltOver).reduce((a, b) => a + b, 0);
     const kinds = Object.entries(r.ltKinds).map(([k, v]) => `${k} ${v}`).join(', ');
-    out.push(`| ${r.id} | ${r.size} | ${r.stars} (${r.lit}) | ${r.starLabels} | ${r.nn} (${r.nnLit}) | ${r.nl} / ${r.nodeUnder} / ${r.kingDash} | ${r.ll} / ${r.adj} / ${r.placerOverlaps} | ${r.lt} / ${over} / ${kinds} / ${Object.entries(r.ltStrict).map(([k, v]) => `${k} ${v}`).join(', ')} | ${r.amb} / ${r.glued} / ${r.detached} / ${r.leader} (${r.leaderAmb}) | ${r.uiSel}, ${r.uiEnds}, ${r.uiLit}, ${r.uiLabels}, ${r.uiCut}, ${r.uiStars} | ${r.widthRatio.join(' / ')} |`);
+    out.push(`| ${r.id} | ${r.size} | ${r.stars} (${r.lit}) | ${r.starLabels} | ${r.nn} (${r.nnLit}) | ${r.nl} / ${r.nodeUnder} / ${r.kingDash} | ${r.ll} / ${r.adj} / ${r.placerOverlaps} | ${r.lt} / ${over} / ${kinds} / ${Object.entries(r.ltStrict).map(([k, v]) => `${k} ${v}`).join(', ')} | ${r.amb} / ${r.glued} / ${r.detached} / ${r.leader} (${r.leaderAmb}) / ромб ${r.plateAmb} | ${r.uiSel}, ${r.uiEnds}, ${r.uiLit}, ${r.uiLabels}, ${r.uiCut}, ${r.uiStars} | ${r.widthRatio.join(' / ')} |`);
   }
   out.push('');
   for (const r of rows) {
@@ -1447,7 +1546,7 @@ async function main() {
       const bad = verdict(c);
       if (bad.length) failed.push(`${sc.id}: ${bad.join('; ')}`);
       console.log(
-        `${sc.id.padEnd(22)} ${g.hash.slice(0, 48).padEnd(48)} зв ${String(c.stars).padStart(4)} имён ${String(c.starLabels).padStart(3)} | 1:${c.nn}/${c.nnLit} 2:${c.nl} (имя ${c.nlStar}, созвездие ${c.nlGroup}, ◆ ${c.nodeUnder}, черта ${c.kingDash}) 3:${c.ll} (${c.llStar}) вплотную ${c.adj} 5:${c.lt} ${JSON.stringify(c.ltKinds)} поверх ${JSON.stringify(c.ltOver)} строго ${JSON.stringify(c.ltStrict)} | чужая ближе ${c.amb} вплотную ${c.glued} выносок ${c.leader} (чужая ближе ${c.leaderAmb}) далеко ${c.detached} | UI выбр ${c.uiSel} концы ${c.uiEnds} зв ${c.uiStars} имён ${c.uiLabels} (ярких ${c.uiLit}, срезано ${c.uiCut}) | выбр. имя ${c.selNamed} поверх ${c.selCovered} | Placer ${c.placerOverlaps} вылет ${c.boxOut}/${c.boxOutMax} ширина ${c.widthRatio.join('/')} | К7 ${c.selRingGap ?? '—'} К8 ${c.longLeaders} (опорных до 100 px ${c.wideLeaders}) К5 ${c.k5} ${note || ''} ${((Date.now() - t0) / 1000).toFixed(0)} с | ${bad.length ? 'НЕТ' : 'да'}`,
+        `${sc.id.padEnd(22)} ${g.hash.slice(0, 48).padEnd(48)} зв ${String(c.stars).padStart(4)} имён ${String(c.starLabels).padStart(3)} | 1:${c.nn}/${c.nnLit} 2:${c.nl} (имя ${c.nlStar}, созвездие ${c.nlGroup}, ◆ ${c.nodeUnder}, черта ${c.kingDash}) 3:${c.ll} (${c.llStar}) вплотную ${c.adj} 5:${c.lt} ${JSON.stringify(c.ltKinds)} поверх ${JSON.stringify(c.ltOver)} строго ${JSON.stringify(c.ltStrict)} | чужая ближе ${c.amb} вплотную ${c.glued} выносок ${c.leader} (чужая ближе ${c.leaderAmb}) далеко ${c.detached} у ромба ${c.plateAmb} | UI выбр ${c.uiSel} концы ${c.uiEnds} зв ${c.uiStars} имён ${c.uiLabels} (ярких ${c.uiLit}, срезано ${c.uiCut}) | выбр. имя ${c.selNamed} поверх ${c.selCovered} | Placer ${c.placerOverlaps} вылет ${c.boxOut}/${c.boxOutMax} ширина ${c.widthRatio.join('/')} | К7 ${c.selRingGap ?? '—'} К8 ${c.longLeaders} (опорных до 100 px ${c.wideLeaders}) К5 ${c.k5} ${note || ''} ${((Date.now() - t0) / 1000).toFixed(0)} с | ${bad.length ? 'НЕТ' : 'да'}`,
       );
       await p.context().close();
     }

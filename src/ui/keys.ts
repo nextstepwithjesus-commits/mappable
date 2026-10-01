@@ -227,11 +227,29 @@ function letterGuard(e: KeyboardEvent) {
   e.stopImmediatePropagation();
 }
 
+/**
+ * Последний ввод — с клавиатуры (решение 169; R2-11): скобки фокуса на небе рисуются только после клавиатуры. Касание
+ * и мышь их гасят, даже если фокус остался на холсте (лист карточки, закрываясь, возвращает фокус на небо).
+ */
+export const keyboardInput = signal(false);
+const onAnyKey = (e: KeyboardEvent) => {
+  // клавиши-модификаторы сами по себе (Ctrl + колесо, Shift при щелчке) — не ввод с клавиатуры
+  if (['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) return;
+  if (!keyboardInput.peek()) keyboardInput.value = true;
+};
+const onAnyPointer = () => {
+  if (keyboardInput.peek()) keyboardInput.value = false;
+};
+
 /** Подключить клавиши атласа. Возвращает отписку. */
 export function bindKeys(): () => void {
+  window.addEventListener('keydown', onAnyKey, true);
+  window.addEventListener('pointerdown', onAnyPointer, true);
   window.addEventListener('keydown', letterGuard, true);
   window.addEventListener('keydown', onKey);
   return () => {
+    window.removeEventListener('keydown', onAnyKey, true);
+    window.removeEventListener('pointerdown', onAnyPointer, true);
     window.removeEventListener('keydown', letterGuard, true);
     window.removeEventListener('keydown', onKey);
   };

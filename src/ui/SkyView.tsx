@@ -15,7 +15,7 @@ import { typo } from './text/typo.ts';
 import { aliveAt, lifeText, meridianText, placeText } from './sky/text.ts';
 import {
   allInView, anchorNow, fitReveal, flightTarget, flyToIds, flyToPerson, holdAnchor, holdFamily, inView, kinProbe, introOpen, keepInView, lanes, reduced, screenOf, setReserve, showAround,
-  startLanes, stopFlight, unionFlip, updateZoomFloor, viewAround, linesAgain, fitLines, windowHold, reserve, type Anchor,
+  startLanes, stopFlight, unionFlip, updateZoomFloor, viewAround, linesAgain, fitLines, windowHold, holdSheetWindow, reserve, flightDone, type Anchor,
 } from './sky/view.ts';
 
 /**
@@ -39,7 +39,7 @@ import { SkyA11y } from './sky/SkyA11y.tsx';
 import { DotCard, dotCard } from './sky/DotCard.tsx';
 import { foldDesc, foldGroups, groupFoldText, keyTarget, linkSet, shownIds, skyMode, workIds, workKey, workKeyText, workSet } from './work.ts';
 import { SkyMenu, skyMenu } from './panels/Work.tsx';
-import { isTextField } from './keys.ts';
+import { isTextField, keyboardInput } from './keys.ts';
 import { grid, skyFull, viewportHeight } from './layout.ts';
 import { showSheet } from './panels/Show.tsx';
 
@@ -119,6 +119,9 @@ function anchorLink(sky: Sky) {
   if (at && was && Math.abs(at.x - was.x) < 0.5 && Math.abs(at.y - was.y) < 0.5) return;
   linkAnchor.value = at;
 }
+
+/** Сдвиг к родне после ссылки (решение 146) ждёт, пока раскладка устоится, не дольше стольких мс. */
+const HOLD_WAIT_MS = 1200;
 
 /** Сколько раз небо создавалось (переход «Древо → Небо» создаёт его заново): со второго раза — linesAgain. */
 let mounts = 0;
@@ -263,7 +266,8 @@ export function SkyView() {
       if (flash) again = true;
       const mid = modelId.value;
       const state: SkyFrameState = {
-        model: model.value, lambda: shownLambda, selected: selected.value, second: second.value, hovered: hovered.value, focus: focused.value,
+        // скобки фокуса — только после ввода с клавиатуры (решение 169): касание и мышь их не показывают
+        model: model.value, lambda: shownLambda, selected: selected.value, second: second.value, hovered: hovered.value, focus: keyboardInput.value ? focused.value : null,
         noteFocus: onlyLines.value ? noteFocus.value : null,
         highlight, layers: layers.value, onlyLines: onlyLines.value, meridian: meridian.value,
         tensionPersons, flow: flowing ? flowT : 0, reduced: reduced(), intro, lineFlip: lineFlip.value, pins: new Set(pins.value),
@@ -312,6 +316,8 @@ export function SkyView() {
           again = true;
         }
       }
+      // перелёт кончился — лица перелёта больше нет (view.ts, flightDone)
+      if (!sky.cam.moving) flightDone();
       input.watchCamera(`${shownLambda} ${model.value.id}`);
       watchSettle(`${sky.cam.x0} ${sky.cam.kx} ${sky.cam.w} ${shownLambda} ${model.value.id}`);
       // окно неба — для проверок приёмки (tools/accept/layout.ts): видимая часть, годы и полосы по её краям
@@ -344,12 +350,15 @@ export function SkyView() {
       const sel = selected.value ? screenOf(selected.value) : null;
       if (sel) wrap.current!.dataset.sel = `${sel.x.toFixed(1)} ${sel.y.toFixed(1)}`;
       else delete wrap.current!.dataset.sel;
+      // звезда со скобками фокуса (решение 169: только после клавиатуры) — для проверок приёмки (tools/accept/nav14.ts)
+      const ring = state.focus ?? '';
+      if (ring !== (wrap.current!.dataset.focusRing ?? '')) wrap.current!.dataset.focusRing = ring;
       // родня выбранного и указатели у края на неё (решение 146) — для проверок приёмки (tools/accept/nav14.ts)
       // (в покое: в движении кадр не тратится на замер)
       if (!sky.cam.moving) {
         const kin = selected.value ? kinProbe(selected.value) : '';
         if (kin !== wrap.current!.dataset.kin) wrap.current!.dataset.kin = kin;
-        const edges = sky.edgeHits.map((e) => `${e.label}=${(e.ids ?? [e.id]).join(',')}`).join('|');
+        const edges = sky.edgeHits.map((e) => `${e.label}=${(e.ids ?? [e.id]).join(',')}@${[e.x, e.y, e.w, e.h].map(Math.round).join(',')}`).join('|');
         if (edges !== (wrap.current!.dataset.edges ?? '')) wrap.current!.dataset.edges = edges;
       }
       // пропорция полос устоялась (шаг, протяжка, щипок закончились) — в память браузера и органам неба (J1)
@@ -577,7 +586,11 @@ export function SkyView() {
     canvas.addEventListener('wheel', touchSheet, { passive: true });
     const offSheet = effect(() => {
       const open = !!showSheet.value;
-      if (open && !beforeSheet && sky.model) beforeSheet = { v: sky.cam.state(), show: showKeyOf(show.peek()), touched: false };
+      if (open && !beforeSheet && sky.model) {
+        beforeSheet = { v: sky.cam.state(), show: showKeyOf(show.peek()), touched: false };
+        holdSheetWindow(true);
+      }
+      if (!open) holdSheetWindow(false);
       windowHold.value = open;
       if (!open && beforeSheet) {
         const b = beforeSheet;
@@ -603,22 +616,38 @@ export function SkyView() {
 
     // ссылка на лицо на экране (решение 146; common.tsx, goTo): когда раскладка устоялась (открылась карточка, лист, карточка
     // у звезды) и небо стоит — сдвиг к родне, если её в кадре меньше 70 %; читатель взялся за небо или выбрал другое — нет
+    // Сдвиг — ответ на саму ссылку: не позже HOLD_WAIT_MS после неё и только если читатель тем временем ничего не делал
+    // (нажатие, клавиша, колесо где угодно, другая панель) — иначе небо сдвинулось бы «само» через секунды (сценарий 358)
     let holdRaf = 0;
+    let holdOff: (() => void) | null = null;
     skyRef.holdFamily = (id: string) => {
       cancelAnimationFrame(holdRaf);
+      holdOff?.();
       let touched = false;
-      const tick = (n: number) => {
-        if (selected.peek() !== id || touched) return;
-        if (n < 3 || ((sky.cam.moving || sky.transitioning) && n < 90)) {
-          holdRaf = requestAnimationFrame(() => tick(n + 1));
-          return;
-        }
-        holdFamily(id);
-      };
+      const until = performance.now() + HOLD_WAIT_MS;
+      const panel0 = panel.peek();
       const off = () => {
         touched = true;
       };
-      canvas.addEventListener('pointerdown', off, { once: true });
+      window.addEventListener('pointerdown', off, true);
+      window.addEventListener('keydown', off, true);
+      window.addEventListener('wheel', off, { capture: true, passive: true });
+      const done = () => {
+        window.removeEventListener('pointerdown', off, true);
+        window.removeEventListener('keydown', off, true);
+        window.removeEventListener('wheel', off, true);
+        holdOff = null;
+      };
+      holdOff = done;
+      const tick = (n: number) => {
+        if (selected.peek() !== id || touched || panel.peek() !== panel0 || performance.now() > until) return done();
+        if (n < 3 || sky.cam.moving || sky.transitioning) {
+          holdRaf = requestAnimationFrame(() => tick(n + 1));
+          return;
+        }
+        done();
+        holdFamily(id);
+      };
       holdRaf = requestAnimationFrame(() => tick(0));
     };
 
@@ -717,6 +746,7 @@ export function SkyView() {
       void meridian.value;
       void hovered.value;
       void focused.value;
+      void keyboardInput.value;
       void noteFocus.value;
       void first.value;
       void lineFlip.value;
@@ -995,6 +1025,8 @@ export function SkyView() {
       offLinkSay();
       offFull();
       offSheet();
+      holdOff?.();
+      cancelAnimationFrame(holdRaf);
       wrapEl.removeEventListener('reserve-move', onReserveMove);
       cancelAnimationFrame(moveRaf);
       windowHold.value = false;

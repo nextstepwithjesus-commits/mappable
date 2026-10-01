@@ -48,7 +48,7 @@ import { alpha } from './color.ts';
 import { branchColor, GlowBatch, glowLayers, type MapTheme } from './branches.ts';
 import { drawGlyph, starRadius } from './glyphs.ts';
 import { branchFrame } from './marks.ts';
-import { commonBranch, unionAlpha } from './trails.ts';
+import { commonBranch, nodeOnSky, unionAlpha } from './trails.ts';
 import { mapFont, mapSize, T_MAP_S } from './type.ts';
 import { cross, type Rect } from './rect.ts';
 import { KIN_GOLD, LINK_YELLOW, UNION_COLORS } from './branches.ts';
@@ -748,6 +748,8 @@ export function drawLinkNodes(v: SkyContext, p: Pass, d: LinkDraw, marks: PlateM
     if (x < v.letterW || x > cam.w + 12 || y < v.openTop || y > cam.vp.b) continue;
     // узел союза, чьи связи рисуют только ленты, — станция их маршрута: пока ленты — сплайн обзора, его нет (§ 3)
     if (d.frame.ribbonOnly?.has(n.union) && v.routeFactor < 0.5) continue;
+    // пока имена семьи не видны — ромбы только у выбранного и наведённого (решение 170, V-2)
+    if (!nodeOnSky(v, p, d, n.union)) continue;
     inView.push({ n, x, y, st: state(n) });
   }
   // и в семейной укладке, когда поколения теснее 24 px (показ, вписанный в узкое небо со строками ниже, J1): ромбы

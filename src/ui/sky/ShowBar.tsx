@@ -91,14 +91,16 @@ function emptyLine(): BarLine | null {
   };
 }
 
-/** Путь исследования свёрнут до «‹ Руфь» (решение 148): на 1024 px и уже, на телефоне. */
+/** Слово строки истории исследования (решение 168): «путь» — только у пути родства. */
+export const HISTORY_WORD = 'История';
+/** История исследования свёрнута до «‹ Руфь» (решение 148): на 1024 px и уже, на телефоне. */
 export const PATH_FOLD_W = 1100;
 
 /**
- * Путь исследования (решение 148; U12, инвариант 9): «Путь: Руфь › Давид › Соломон» — до 5 последних выборов, прежние
- * имена нажимаются (выбор и, если звезды нет на экране, перелёт — как у ссылки), последнее — выбранное лицо. На 1024 px
- * и на телефоне — «‹ Руфь»: шаг назад по пути. Пунктирного кольца «откуда» нет (решение 93: пунктир — «нарисовано не
- * здесь»).
+ * История исследования (решения 148, 168; U12, R2-8, инвариант 9): «История: Руфь › Давид › Соломон» — до 5 последних
+ * выборов, прежние имена нажимаются (выбор и, если звезды нет на экране, перелёт — как у ссылки), последнее — выбранное
+ * лицо. Слово «путь» — только у пути родства (решение 109). Новый поиск начинает новую историю. На 1024 px и на телефоне —
+ * «‹ Руфь»: шаг назад. Пунктирного кольца «откуда» нет (решение 93: пунктир — «нарисовано не здесь»).
  */
 function PathLine() {
   const path = explorePath.value;
@@ -111,16 +113,16 @@ function PathLine() {
   };
   const fold = viewportWidth.value <= PATH_FOLD_W;
   const prev = path[path.length - 2];
-  const label = `Путь: ${path.map(full).join(' › ')}`;
+  const label = `${HISTORY_WORD}: ${path.map(full).join(' › ')}`;
   return (
     <span class="sb-line sb-path" data-line="path" aria-label={typo(label)} role="group">
       {fold ? (
-        <button type="button" class="sb-cmd" data-cmd="path" data-id={prev} title={typo(`Назад по пути: ${full(prev)}`)} onClick={() => goTo(prev, 'link')}>
+        <button type="button" class="sb-cmd" data-cmd="path" data-id={prev} title={typo(`Прежнее лицо истории: ${full(prev)}`)} aria-label={typo(`${HISTORY_WORD}: назад к лицу ${full(prev)}`)} onClick={() => goTo(prev, 'link')}>
           {typo(`‹ ${name(prev)}`)}
         </button>
       ) : (
         <>
-          <span class="sb-t">Путь: </span>
+          <span class="sb-t">{`${HISTORY_WORD}: `}</span>
           {path.map((id, i) => (
             <span key={`${i}:${id}`} class="sb-step">
               {i > 0 && (

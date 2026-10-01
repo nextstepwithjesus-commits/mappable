@@ -24,7 +24,14 @@ import { grid } from './layout.ts';
 type HistoryApi = Pick<typeof import('./address.ts'), 'historyApplying' | 'historyFields' | 'patchHistory'>;
 let hist: HistoryApi | null = null;
 
-export type SheetStop = 'peek' | 'half' | 'full';
+/**
+ * Положения листа: head — шапка 104 px (ТЗ § 3.8; решение 169: взмах вниз оставляет выбор на шапке, снимает его только «×»),
+ * peek — краткая карточка (решение 155), half — 55 %, full — 100 %.
+ */
+export type SheetStop = 'head' | 'peek' | 'half' | 'full';
+
+/** Высота шапки листа (ТЗ § 3.8): имя, годы и «×»; небо над ней — почти целиком. */
+export const HEAD_H = 104;
 
 /**
  * Высота листа на первом положении: 214 px — карточка у звезды с «Родством» (этап 11, решение 77; STAGE11.md § 6). Было
@@ -67,7 +74,7 @@ export function stopForNewSelection(
 }
 
 /** Строка — положение листа. */
-export const isStop = (x: unknown): x is SheetStop => x === 'peek' || x === 'half' || x === 'full';
+export const isStop = (x: unknown): x is SheetStop => x === 'head' || x === 'peek' || x === 'half' || x === 'full';
 
 /** Действие пришло из самого листа карточки: щелчок, касание или клавиша внутри .app > .folio. */
 function fromSheet(): boolean {
@@ -77,6 +84,7 @@ function fromSheet(): boolean {
 }
 
 export interface Stops {
+  head: number;
   peek: number;
   half: number;
   full: number;
@@ -113,25 +121,26 @@ export function peekFor(avail: number, low = lowScreen(), content: number | null
 export function stopsFor(avail: number, low = lowScreen(), content: number | null = null, frame = 0): Stops {
   const full = Math.max(PEEK_H, Math.round(avail));
   const peek = Math.min(peekFor(avail, low, content, frame), full);
-  return { peek, half: Math.max(PEEK_H, peek, Math.round(full * HALF_SHARE)), full };
+  return { head: Math.min(HEAD_H, peek), peek, half: Math.max(PEEK_H, peek, Math.round(full * HALF_SHARE)), full };
 }
 
 /** Сколько миллисекунд инерции прибавить к протяжке: взмах перебрасывает лист через ближайшее положение. */
 const PROJECT_MS = 220;
-/** Скорость взмаха вниз, px/мс, которая закрывает лист из шапки. */
+/** Скорость взмаха вниз, px/мс, которая опускает лист из краткой карточки на шапку. */
 const CLOSE_V = 0.5;
 
 /**
  * Куда встать листу после протяжки (MOB-12): h — высота листа при отпускании, v — скорость роста высоты, px/мс
  * (больше нуля — лист тянут вверх), from — положение до протяжки.
- * Ближайшее к «брошенной» высоте h + v·220 мс положение; лист опустили ниже половины шапки или взмахнули вниз,
- * начав от шапки или протянув ниже неё, — 'close'.
+ * Ближайшее к «брошенной» высоте h + v·220 мс положение; лист опустили ниже половины краткой карточки или взмахнули вниз,
+ * начав от неё или протянув ниже, — шапка 104 px: выбор остаётся, снимает его только «×» (решение 169; прежде — закрытие).
  */
-export function snapSheet(h: number, v: number, s: Stops, from: SheetStop): SheetStop | 'close' {
-  if (h < s.peek * 0.5) return 'close';
-  if (v < -CLOSE_V && (from === 'peek' || h < s.peek)) return 'close';
+export function snapSheet(h: number, v: number, s: Stops, from: SheetStop): SheetStop {
+  if (h < s.peek * 0.5) return 'head';
+  if (v < -CLOSE_V && (from === 'peek' || from === 'head' || h < s.peek)) return 'head';
   const at = h + Math.max(-600, Math.min(600, v * PROJECT_MS));
-  const order: SheetStop[] = ['peek', 'half', 'full'];
+  // на шапку — только от краткой карточки или ниже неё: взмах с 55 % лишь сворачивает до краткой карточки
+  const order: SheetStop[] = from === 'peek' || from === 'head' || h < s.peek ? ['head', 'peek', 'half', 'full'] : ['peek', 'half', 'full'];
   let best: SheetStop = 'peek';
   for (const k of order) if (Math.abs(s[k] - at) < Math.abs(s[best] - at)) best = k;
   return best;

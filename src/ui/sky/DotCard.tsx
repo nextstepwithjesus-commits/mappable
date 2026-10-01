@@ -30,7 +30,7 @@
 import { computed, effect, signal } from '@preact/signals';
 import { Fragment, type ComponentChildren } from 'preact';
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
-import { byId, graph, loadedCard } from '../../data/atlas.ts';
+import { byId, graph, lines, loadedCard } from '../../data/atlas.ts';
 import type { Rect } from '../../render/sky.ts';
 import type { Union } from '../../engine/unions.ts';
 import { linkKeyString, type LinkKey } from '../../engine/linkkey.ts';
@@ -689,12 +689,25 @@ const labelOf = (id: string): Rect | null => {
  * focus — лицо, чья семья бережётся (у карточки связи — выбранное лицо); ends — концы связи (у карточки союза — супруги
  * и дети союза: они тоже семья, желательные).
  */
+/**
+ * Продолжение пути выбранного шага ленты (решение 171; R1-12): младший конец шага и следующее лицо той же линии
+ * (Давид → Соломон: Соломон, Ровоам). У прочих связей — пусто.
+ */
+function stepNext(k: LinkKey): string[] {
+  if (k.kind !== 'step' && k.kind !== 'span') return [];
+  const ps = lines[k.line].persons;
+  const child = k.kind === 'step' ? k.child : k.to;
+  const i = ps.findIndex((st) => st.id === child);
+  return i >= 0 && i + 1 < ps.length ? [child, ps[i + 1].id] : [];
+}
+
 function obstacles(
   focus: string | null,
   ends: readonly string[],
   a: DotAnchor,
   endsMust: boolean,
   self: { w: number; h: number } | null = null,
+  next: readonly string[] = [],
 ): { never: Rect[]; keep: Rect[]; hard: Rect[]; soft: Obstacle[]; lines: Segment[]; mass: { x: number; y: number } | null } {
   const s = skyRef.current!;
   // сама карточка — тоже резерв подписей (data-reserve="dot", решение 153): своего прямоугольника она не избегает
@@ -708,7 +721,8 @@ function obstacles(
   const must = new Set<string>(endsMust ? ends : []);
   if (focus) must.add(focus);
   const family = focus ? familyOf(focus) : [];
-  const want = new Set<string>([...family, ...(endsMust ? [] : ends)]);
+  // и продолжение пути выбранного шага ленты (решение 171; R1-12): следующее лицо линии и шаг к нему — желательные
+  const want = new Set<string>([...family, ...(endsMust ? [] : ends), ...next]);
   for (const id of must) want.delete(id);
   let mx = 0;
   let my = 0;
@@ -735,6 +749,13 @@ function obstacles(
       const tx = c.x - 9;
       lines.push({ x1: p.x, y1: p.y, x2: tx, y2: p.y, cost: 40 }, { x1: tx, y1: p.y, x2: tx, y2: c.y, cost: 40 }, { x1: tx, y1: c.y, x2: c.x, y2: c.y, cost: 40 });
     }
+  }
+  // шаг ленты к следующему лицу (next — путь: младший конец шага, затем следующее лицо) — как линия семьи: карточка его
+  // не перечёркивает
+  for (let k = 0; k + 1 < next.length; k++) {
+    const p = starAt(next[k]);
+    const q = starAt(next[k + 1]);
+    if (p && q) lines.push({ x1: p.x, y1: p.y, x2: q.x, y2: q.y, cost: 40 });
   }
   // ромбы союзов фокуса — желательные; прочие ромбы — по возможности
   const focusUnions = new Set(focus ? [...unionsOf(focus), ...originOf(focus)].map((u) => u.id) : []);
@@ -1741,7 +1762,12 @@ function LinkBody({ k, brief = false, onAll }: { k: LinkKey; brief?: boolean; on
       </div>
       <dl class="dc-kin">
         {i.ends.map((e, n) => (
-          <EndRow key={`${e.id}${n}`} id={e.id} role={e.role} k={k} n={n} ends={endIds} brief={brief} />
+          <Fragment key={`${e.id}${n}`}>
+            <EndRow id={e.id} role={e.role} k={k} n={n} ends={endIds} brief={brief} />
+            {/* шаг ленты: второй родитель по союзу — после родителя шага, и в краткой карточке (решение 171; R1-12: «Мать —
+                Вирсавия», Мф 1:6) */}
+            {e.side === 'from' && i.other && <EndRow id={i.other.id} role={i.other.role} k={k} n={i.ends.length} ends={endIds} brief={brief} />}
+          </Fragment>
         ))}
         {i.missing && !brief && <MissingRow role={i.missing.role} text={i.missing.text} />}
         {lines && !brief && (
@@ -1957,7 +1983,7 @@ export function DotCard() {
       // у карточки союза «семья» — супруги и дети союза (желательные, § 6); у карточки связи концы — обязательные
       const uu = !lk && cur?.kind === 'union' ? unionById(cur.uid) : undefined;
       const ends = lk ? (linkInfo(lk)?.ends.map((e) => e.id) ?? []) : uu ? [uu.a, uu.b, ...uu.kids].filter((x): x is string => !!x) : [];
-      const o = obstacles(lk ? (focus && byId.has(focus) ? focus : null) : cur?.kind === 'person' ? focus : null, ends, a, !!lk, size.current);
+      const o = obstacles(lk ? (focus && byId.has(focus) ? focus : null) : cur?.kind === 'person' ? focus : null, ends, a, !!lk, size.current, lk ? stepNext(lk) : []);
       const opts = { ...o, prev: spot.current, fine: !s.cam.moving };
       q = placeCard(a, size.current, bounds, opts);
       // полной карточке места нет (§ 6): краткий вид — имя, годы, одна строка «Родства», команды; новый размер —
@@ -2003,11 +2029,12 @@ export function DotCard() {
     if (q.lead) Object.assign(lead.style, { left: `${q.lead.x}px`, top: `${Math.round(q.lead.y)}px`, width: `${Math.round(q.lead.w)}px`, height: `${Math.round(q.lead.h)}px` });
     if (q.line) {
       line.style.display = 'block';
-      const l = line.querySelector('line')!;
-      l.setAttribute('x1', String(q.line.x1));
-      l.setAttribute('y1', String(q.line.y1));
-      l.setAttribute('x2', String(q.line.x2));
-      l.setAttribute('y2', String(q.line.y2));
+      for (const l of line.querySelectorAll('line')) {
+        l.setAttribute('x1', String(q.line.x1));
+        l.setAttribute('y1', String(q.line.y1));
+        l.setAttribute('x2', String(q.line.x2));
+        l.setAttribute('y2', String(q.line.y2));
+      }
     } else line.style.display = 'none';
     // открыта с клавиатуры — фокус в карточку, когда она встала на место (до этого она невидима)
     if (cur?.focus) {
@@ -2115,8 +2142,10 @@ export function DotCard() {
     <>
       {live}
       <div ref={leadRef} class="dc-lead" hidden aria-hidden="true" />
+      {/* привязка карточки вдали от знака (решение 171; V-7): точечная линия с ореолом цвета неба — не похожа на связь */}
       <svg ref={lineRef} class="dc-line" aria-hidden="true" width="1" height="1">
-        <line x1="0" y1="0" x2="0" y2="0" />
+        <line class="halo" x1="0" y1="0" x2="0" y2="0" />
+        <line class="dots" x1="0" y1="0" x2="0" y2="0" />
       </svg>
       <div
         ref={ref}

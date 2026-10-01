@@ -23,6 +23,7 @@ import { byId, graph, groupById, models } from '../data/atlas.ts';
 import { rulerScale as rulerScaleSignal } from '../state.ts';
 import { nameCase } from '../ui/text/ru.ts';
 import type { Pass, SkyContext, SkyState } from './sky.ts';
+import { ringOuter } from './marks.ts';
 
 /** Линейка лет вверху рамки. */
 export const RULER_H = 26;
@@ -1047,6 +1048,9 @@ export function placeWayfinding(v: SkyContext, s: SkyState, p: Pass | null): Edg
   return out;
 }
 
+/** Расстояние от точки (x, y) до прямоугольника r, px (0 — точка внутри). */
+const rectDist = (r: Rect, x: number, y: number) => Math.hypot(Math.max(r.x - x, 0, x - (r.x + r.w)), Math.max(r.y - y, 0, y - (r.y + r.h)));
+
 /** Указателей на родню — не больше стольких: по одному на сторону. */
 const KIN_POINTERS_MAX = 4;
 
@@ -1080,9 +1084,10 @@ function placeKinPointers(v: SkyContext, s: SkyState, p: Pass | null, placed: Re
     if (i === undefined || v.hides(k.id) || !v.drawn(i)) continue;
     const x = cam.sx(v.X0[i]);
     const y = cam.sy(v.nodes[i].lane);
-    // у самого края звезда видна едва (поля «на виду», src/ui/sky/view.ts, inView): ей тоже указатель
-    const ox = x < left + 12 ? left + 12 - x : x > W - 12 ? x - W + 12 : 0;
-    const oy = y < top + 20 ? top + 20 - y : y > bottom - 16 ? y - bottom + 16 : 0;
+    // указатель — только к невидимой звезде (решение 162; R1-03): за краем видимой части или под органом неба; стрелка —
+    // к тому краю, за который звезда ушла
+    const ox = x < left ? left - x : x > W ? x - W : 0;
+    const oy = y < top ? top - y : y > bottom ? y - bottom : 0;
     let arrow: string;
     if (ox || oy) arrow = oy >= ox ? (y < top ? '↑' : '↓') : x < left ? '←' : '→';
     else if (under(x, y)) {
@@ -1097,6 +1102,7 @@ function placeKinPointers(v: SkyContext, s: SkyState, p: Pass | null, placed: Re
     groups.set(key, g);
   }
   if (!groups.size) return [];
+  const keepR = (p ? ringOuter(v, p, id) : 12) + 24;
   const out: EdgeHit[] = [];
   ctx.font = mapFont(T_UI, { sans: true, weight: 500, coarse: v.coarse });
   // одна сторона — один указатель: вверх и вниз первыми (там родители и дети чаще всего), затем вбок
@@ -1117,21 +1123,34 @@ function placeKinPointers(v: SkyContext, s: SkyState, p: Pass | null, placed: Re
     const along = g.arrow === '↑' || g.arrow === '↓';
     const lo = along ? left + 6 : top + 18;
     const hi = along ? W - tw - 10 : bottom - 10;
-    // знак лица — жёсткое препятствие (решение 140; знаки кадра — в placer до подписей): указатель не ложится на звезду
-    const free = (b: Rect) => !hits(b, taken) && !p?.placer.glyphsIn(b).some((g) => g.a >= 0.12);
-    let found = free(box(lx, ly));
-    for (let d = 10; !found && d <= Math.max(W, bottom - top); d += 10)
-      for (const sgn of [1, -1]) {
-        const c = (along ? lx : ly) + sgn * d;
-        if (c < lo || c > hi) continue;
-        const [x, y] = along ? [c, ly] : [lx, c];
-        if (free(box(x, y))) {
-          lx = x;
-          ly = y;
-          found = true;
-          break;
+    // знак лица — жёсткое препятствие (решение 140; знаки кадра — в placer до подписей): указатель не ложится на звезду;
+    // и не ближе 24 px к выбранному и его кольцу (решение 162; R2-7: «← родители» на кольце Вооза)
+    // Плотное небо (телефон): места без знаков у края нет — второй проход уступает указателю погашенные знаки контекста
+    // (ярче половины — родня, выбранный, лица на виду — по-прежнему препятствие): иначе родня за краем осталась бы
+    // без указателя
+    const freeAt = (b: Rect, aMin: number) => !hits(b, taken) && !p?.placer.glyphsIn(b).some((g) => g.a >= aMin) && rectDist(b, sx, sy) >= keepR;
+    const x0 = lx;
+    const y0 = ly;
+    let found = false;
+    for (const aMin of [0.12, 0.5]) {
+      const free = (b: Rect) => freeAt(b, aMin);
+      lx = x0;
+      ly = y0;
+      found = free(box(lx, ly));
+      for (let d = 10; !found && d <= Math.max(W, bottom - top); d += 10)
+        for (const sgn of [1, -1]) {
+          const c = (along ? x0 : y0) + sgn * d;
+          if (c < lo || c > hi) continue;
+          const [x, y] = along ? [c, y0] : [x0, c];
+          if (free(box(x, y))) {
+            lx = x;
+            ly = y;
+            found = true;
+            break;
+          }
         }
-      }
+      if (found) break;
+    }
     if (!found) continue;
     const b = box(lx, ly);
     const roles = new Set(g.ks.map((k) => k.role));

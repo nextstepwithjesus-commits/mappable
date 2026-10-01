@@ -171,6 +171,21 @@
 .folio[data-pin-short] > .folio-bar .pin-card .short {
   display: inline;
 }
+/* крупный кегль читателя (решение 172; R2-13: корневой кегль 200 %) — тот же узкий лист в единицах кегля: короткая надпись,
+   и команды полосы переносятся строкой, а не уходят за край листа */
+@container folio (max-width: 28rem) {
+  .folio-bar .pin-card .full {
+    display: none;
+  }
+  .folio-bar .pin-card .short {
+    display: inline;
+  }
+}
+.folio-bar .bar-cmds {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: 100%;
+}
 @container folio (max-width: 440px) {
   .folio-bar .pin-card .full {
     display: none;
@@ -389,10 +404,11 @@
   margin: 0;
   font-variant-numeric: lining-nums tabular-nums;
 }
-/* крупный шрифт (MOB-71): длинное значение переносится, а не срезается краем листа; помета — целиком */
+/* крупный шрифт (MOB-71): длинное значение переносится, а не срезается краем листа; помета — целиком. Слово рвётся, только
+   если целиком не помещается в строку (break-word, а не anywhere: «межд/у» — R2-13) */
 .passport dt,
 .passport dd {
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
   hyphens: auto;
 }
 .passport dd.fact {
@@ -442,6 +458,32 @@
      в строке, а целая строка листа */
   .passport .verses {
     margin-left: calc(-1 * (max(88px, 5.5rem) + 10px));
+  }
+}
+/* лист узок для своего кегля (решение 172; R2-13: корневой кегль 200 % на 1440 — колонка значений в 9–10 знаков): паспорт
+   в один столбец — подпись над значением, слова целиком */
+@container folio (max-width: 23rem) {
+  .passport {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    margin-right: 0;
+  }
+  .passport dt:not(:first-child) {
+    margin-top: 6px;
+  }
+  .passport dt,
+  .passport dd {
+    hyphens: manual;
+  }
+  .passport dd.fact {
+    padding-right: 0;
+  }
+  .folio .passport .mark {
+    position: static;
+    margin: -8px 0 -8px 0.4em;
+  }
+  .passport .verses {
+    margin-left: 0;
   }
 }
 /* мини-шкала жизни (VIS-41, CARD-69): холст на ширину строки, 44 px; высота — LIFEBAR_H в src/ui/card/Masthead.tsx */

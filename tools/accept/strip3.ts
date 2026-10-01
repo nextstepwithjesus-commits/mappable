@@ -245,9 +245,11 @@ export const strip3: Scenario[] = [
       if (c.lines.length !== 2) return fail(`черт на небе ${c.lines.length}`);
       if (!(c.feather[0] > 2 && c.feather[1] > 2)) return fail(`растушёвки краёв нет: ${c.feather.join(', ')}`);
       const bottom = c.fill[1];
-      // небо под ярусами: медиана цвета по вертикали в середине ядра и сразу за растушёвкой справа (та же эпоха)
-      const xin = Math.round((c.lines[0] + c.lines[1]) / 2);
-      const xout = Math.round(c.lines[1] + c.feather[1] + 20);
+      // небо под ярусами: медиана цвета по вертикали в ядре и сразу за растушёвкой справа (та же эпоха). Медиана — по
+      // нескольким вертикалям, берётся наименьшая: этап 14 — стволы семьи выбранного (решение 134, шина многожёнца) идут
+      // вертикально и могут лечь ровно на середину ядра, а перекраска неба — на всех вертикалях столбца
+      const xins = [0.2, 0.35, 0.5, 0.65, 0.8].map((f) => Math.round(c.lines[0] + (c.lines[1] - c.lines[0]) * f));
+      const xouts = [20, 32, 44].map((d) => Math.round(c.lines[1] + c.feather[1] + d));
       const lum = (await p.evaluate(`(() => {
         const cv = document.querySelector('.sky > canvas');
         const k = cv.width / cv.getBoundingClientRect().width;
@@ -262,7 +264,7 @@ export const strip3: Scenario[] = [
           v.sort((a, b) => a - b);
           return v[v.length >> 1];
         };
-        return [med(${xin}), med(${xout})];
+        return [Math.min(...${JSON.stringify(xins)}.map(med)), Math.min(...${JSON.stringify(xouts)}.map(med))];
       })()`)) as [number, number];
       const ratio = (Math.max(...lum) + 0.05) / (Math.min(...lum) + 0.05);
       if (ratio > 1.03) return fail(`небо в столбце перекрашено: ${ratio.toFixed(3)} : 1 к небу рядом`);

@@ -16,7 +16,7 @@ import { effect, signal } from '@preact/signals';
 import { skyRef, viewTick } from '../common.tsx';
 import { model, onlyLines, panel, pins, second, selected, skyGroup } from '../../state.ts';
 import { graph, lines } from '../../data/atlas.ts';
-import { KY_LO, LANES_MAX, LANES_MIN, easeOut, type Axis, type ViewState } from '../../render/camera.ts';
+import { KX_MAX, KY_LO, LANES_MAX, LANES_MIN, easeOut, type Axis, type ViewState } from '../../render/camera.ts';
 import type { Rect } from '../../render/sky.ts';
 import { firstKin } from '../../render/frame.ts';
 import { grid } from '../layout.ts';
@@ -72,6 +72,15 @@ export const reserve = () => reserveRects;
 /** Лицо, к которому идёт перелёт: если во время него поменяется видимая часть (открылась карточка), перелёт пересчитается. */
 export let flightTarget: string | null = null;
 
+/**
+ * Перелёт кончился (SkyView, кадр в покое): лица перелёта больше нет. Иначе оно оставалось бы после перелёта, и первая же
+ * смена видимой части при движении камеры (панель открылась, лист встал) снова летела бы к нему — уже к прежнему лицу
+ * (сценарий 358: «Указатель» и Escape у Соломона уводили небо к окну Давида).
+ */
+export function flightDone() {
+  if (flightTarget && !skyRef.current?.cam.moving) flightTarget = null;
+}
+
 /** Прервать перелёт и любую анимацию камеры (D4: любое действие читателя). */
 export function stopFlight() {
   flightTarget = null;
@@ -109,6 +118,15 @@ export function viewForYears(a: number, b: number): ViewState | null {
  * листа возвращается (SkyView).
  */
 export const windowHold = signal(false);
+/**
+ * Окно неба до листа «Показ» (решение 147): лист, открывшись над выбранным, сдвигает небо вбок — это не шаг читателя.
+ * Показ «Линии Мессии», включённый из листа, запоминает для возврата окно до листа (IX-73, сценарий 356), а не сдвинутое.
+ */
+let heldWin: Win | null = null;
+/** Лист «Показ» открылся (SkyView): запомнить окно до него; закрылся — забыть. */
+export function holdSheetWindow(on: boolean) {
+  heldWin = on ? windowNow() : null;
+}
 
 // ---------- прыжок окна — своя запись истории (этап 14, решение 147; U4) ----------
 
@@ -215,10 +233,80 @@ export function viewForPerson(id: string): ViewState | null {
   const vp = cam.vp;
   // окно — по жизни лица, и в семейной укладке тоже: строка 24 px (32 px на телефоне) стоила бы приближения времени в
   // разы — род Иакова на телефоне сжался бы до 27 лет у рождения Иакова, без единого его ребёнка (Я12 — в отчёте Q4)
-  const kx = (vp.r - vp.l) / Math.max(1e-6, x1 - x0);
+  const W = vp.r - vp.l;
+  let kx = W / Math.max(1e-6, x1 - x0);
+  let left = x0;
+  // окно по ширине и плотности семьи (решение 165; R1-06, R2-4): у густой семьи (≥ 4 союзов или ≥ 12 детей) — масштаб,
+  // на котором строка семьи не теснее ROW_READ px, но не теснее, чем нужно, чтобы вся родня первого колена с именами
+  // уместилась по ширине; тогда окно — по родне, а не по жизни лица
+  const fam = familyBox(id);
+  if (fam?.dense) {
+    const room = W - NAME_ROOM - 2 * FAM_PAD;
+    const kFit = room > 40 ? room / Math.max(1e-6, fam.x1 - fam.x0) : kx;
+    const kRead = kxForRow(ROW_READ, kx);
+    const k = Math.max(kx, Math.min(kRead, kFit));
+    if (k > kx * 1.01) kx = cam.clampKx(k, s.nodeX(id) ?? 0);
+    // родня помещается при этом масштабе — окно ставится по ней (лицо в нём и так), иначе — лицо на трети слева
+    const me = s.nodeX(id) ?? x0;
+    left = kx <= kFit * 1.0001 ? Math.min(me - (W * 0.1) / kx, fam.x0 - FAM_PAD / kx) : me - (W * 0.35) / kx;
+  }
   const [, cy] = cam.vpCenter();
   // вертикаль камеры — строки (сжатие полос, src/render/rows.ts)
-  return { x0: x0 - vp.l / kx, kx, laneTop: s.rowOf(n.lane) + cy / cam.kyFor(kx) };
+  return { x0: left - vp.l / kx, kx, laneTop: s.rowOf(n.lane) + cy / cam.kyFor(kx) };
+}
+
+/** Строка семьи, при которой имена читаются (решение 165), px; поле окна у родни по краям, px. */
+export const ROW_READ = 14;
+const FAM_PAD = 16;
+
+/**
+ * Родня первого колена лица на небе (решение 165): мировые x рождений самого лица и родни; dense — у лица не меньше
+ * 4 союзов (супруги и другие родители его детей) или не меньше 12 детей. null — родни на небе нет.
+ */
+export function familyBox(id: string): { x0: number; x1: number; dense: boolean } | null {
+  const s = skyRef.current;
+  if (!s || !s.model) return null;
+  const me = s.nodeX(id);
+  if (me === null) return null;
+  let x0 = me;
+  let x1 = me;
+  let seen = 0;
+  for (const k of firstKin(id)) {
+    const i = s.indexOf(k.id);
+    if (i === undefined || s.hides(k.id) || !s.drawn(i)) continue;
+    const x = s.X0[i];
+    x0 = Math.min(x0, x);
+    x1 = Math.max(x1, x);
+    seen++;
+  }
+  if (!seen) return null;
+  const mates = new Set<string>();
+  let kids = 0;
+  for (const e of graph.spousesOf.get(id) ?? []) mates.add(e.a === id ? e.b : e.a);
+  for (const e of graph.childrenOf.get(id) ?? []) {
+    if (e.kind !== 'father' && e.kind !== 'mother') continue;
+    kids++;
+    for (const q of graph.parentsOf.get(e.child) ?? []) if ((q.kind === 'father' || q.kind === 'mother') && q.parent !== id) mates.add(q.parent);
+  }
+  return { x0, x1, dense: mates.size >= 4 || kids >= 12 };
+}
+
+/** Масштаб, при котором строка (в пропорции читателя) не ниже row px; не меньше from. Поиск делением. */
+function kxForRow(row: number, from: number): number {
+  const s = skyRef.current;
+  if (!s) return from;
+  const cam = s.cam;
+  const ky = (k: number) => cam.kyWith(k, cam.ownLanes);
+  if (ky(from) >= row) return from;
+  let lo = from;
+  let hi = KX_MAX;
+  if (ky(hi) < row) return hi;
+  for (let i = 0; i < 40; i++) {
+    const mid = Math.sqrt(lo * hi);
+    if (ky(mid) >= row) hi = mid;
+    else lo = mid;
+  }
+  return hi;
 }
 
 /**
@@ -239,21 +327,31 @@ export function phoneLanes(kx: number): number | null {
   return Math.max(cam.ownLanes, cam.lanesFor(kx, PHONE_ROW_MIN));
 }
 
+/**
+ * Окно лица (viewForPerson) и пропорция строк для него: на телефоне строки окна лица не теснее 10 px (M2) — пропорция
+ * временная, laneTop — для неё; иначе lanes = null (пропорция прежняя).
+ */
+function personTarget(id: string): { v: ViewState; lanes: number | null } | null {
+  const s = skyRef.current;
+  const v = viewForPerson(id);
+  if (!s || !v) return null;
+  const m = phoneLanes(v.kx);
+  if (m === null) return { v, lanes: null };
+  const [, cy] = s.cam.vpCenter();
+  const n = s.node(id);
+  return { v: n ? { ...v, laneTop: s.rowOf(n.lane) + cy / s.cam.kyWith(v.kx, m) } : v, lanes: m };
+}
+
 /** Перелёт к лицу (все ссылки на лица, поиск, указатели у края): лицо — в видимой части неба. */
 export function flyToPerson(id: string) {
   const s = skyRef.current;
-  const v = viewForPerson(id);
-  if (!s || !v) return;
-  // телефон: строки окна лица не теснее 10 px (M2) — пропорция временная, laneTop — для неё
-  const m = phoneLanes(v.kx);
-  if (m !== null) {
-    const [, cy] = s.cam.vpCenter();
-    const n = s.node(id);
-    const to = n ? { ...v, laneTop: s.rowOf(n.lane) + cy / s.cam.kyWith(v.kx, m) } : v;
+  const t = personTarget(id);
+  if (!s || !t) return;
+  if (t.lanes !== null) {
     flightTarget = null;
-    s.cam.flyTo(s.cam.constrain(to, m), skyRef.redraw, reduced(), m);
+    s.cam.flyTo(s.cam.constrain(t.v, t.lanes), skyRef.redraw, reduced(), t.lanes);
     skyRef.redraw();
-  } else flyTo(v);
+  } else flyTo(t.v);
   flightTarget = s.cam.moving ? id : null;
 }
 
@@ -349,6 +447,19 @@ export function familyShift(id: string, share = FAMILY_SHARE): { dx: number; dy:
  */
 export function holdFamily(id: string): boolean {
   const s = skyRef.current;
+  // густая семья на масштабе мельче её окна (решение 165): приблизиться к окну семьи за те же ≤ 400 мс — без отдаления
+  const fam = s && inView(id) ? familyBox(id) : null;
+  if (s && fam?.dense) {
+    const t = personTarget(id);
+    if (t && t.v.kx > s.cam.kx * 1.15) {
+      flightTarget = null;
+      // пропорция телефона — временная (IX-70): своя пропорция читателя ждёт в userLanes
+      if (t.lanes !== null && s.cam.userLanes === null && Math.abs(t.lanes / s.cam.lanes - 1) > 1e-9) s.cam.userLanes = s.cam.lanes;
+      s.cam.zoomTo(s.cam.constrain(t.v, t.lanes ?? s.cam.lanes), FAMILY_MS, skyRef.redraw, reduced(), t.lanes ?? undefined);
+      skyRef.redraw();
+      return true;
+    }
+  }
   const d = familyShift(id);
   if (!s || !d) return false;
   const cam = s.cam;
@@ -361,7 +472,20 @@ export function holdFamily(id: string): boolean {
 }
 
 /**
- * Родня выбранного для проверок приёмки (tools/accept/nav14.ts): «лицо:x,y,1» — на небе (1 — в кадре, 0 — за краем),
+ * Звезда видна (решение 162): в видимой части неба и не под органом неба — без полей inView. Так же считает указатели
+ * у края frame.ts: к видимой звезде указателя нет.
+ */
+function seenAt(q: { x: number; y: number }): boolean {
+  const s = skyRef.current;
+  if (!s) return false;
+  const vp = s.cam.vp;
+  const left = Math.max(s.letterW, vp.l);
+  if (q.x < left || q.x > vp.r || q.y < s.openTop || q.y > vp.b) return false;
+  return !reserveRects.some((r) => q.x > r.x - 4 && q.x < r.x + r.w + 4 && q.y > r.y - 4 && q.y < r.y + r.h + 4);
+}
+
+/**
+ * Родня выбранного для проверок приёмки (tools/accept/nav14.ts): «лицо:x,y,1» — на небе (1 — видна, 0 — за краем или под органом),
  * «лицо:-» — не на небе (вне показа, свёрнуто).
  */
 export function kinProbe(id: string): string {
@@ -371,7 +495,7 @@ export function kinProbe(id: string): string {
     .map((k) => {
       const i = s.indexOf(k.id);
       const q = i === undefined || s.hides(k.id) || !s.drawn(i) ? null : screenOf(k.id);
-      return q ? `${k.id}:${Math.round(q.x)},${Math.round(q.y)},${inView(k.id) ? 1 : 0}` : `${k.id}:-`;
+      return q ? `${k.id}:${Math.round(q.x)},${Math.round(q.y)},${seenAt(q) ? 1 : 0}` : `${k.id}:-`;
     })
     .join(';');
 }
@@ -899,7 +1023,8 @@ if (typeof window !== 'undefined') {
       shown = on;
       const cam = s.cam;
       if (on) {
-        const win = first ? null : windowNow();
+        // окно до листа «Показ», если показ включён из него (сдвиг из-под листа — не шаг читателя)
+        const win = first ? null : (heldWin ?? windowNow());
         const to = fitLines(!first, first ? null : selected.peek());
         before = win && to ? { win, to } : null;
         return;

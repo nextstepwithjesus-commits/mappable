@@ -174,6 +174,10 @@ function runIn(body: ComponentChildren): VNode<{ class?: string; children?: Comp
 
 /** Сколько разделов карточки встаёт за кадр (С1): 24 раздела — за шесть кадров после шапки. */
 const PAGE_STEP = 4;
+/** Первая часть разделов: части I–II карточки (§ 1–8 — имя, родители, род, рождение). */
+const PAGE_FIRST = 8;
+/** Листы, уже вставшие целиком (лицо | модель): при возврате к ним — сразу целиком. */
+const laidPages = new Set<string>();
 /** Первая часть разделов ждёт свободного времени браузера не дольше, мс. */
 const PAGE_FIRST_MS = 300;
 
@@ -212,14 +216,30 @@ export function CardPage({
   const hasBody = status === 'ok' && !!body;
   const [laid, setLaid] = useState<{ key: string; n: number } | null>(null);
   // без кадров браузера (отрисовка в строку — тесты, печать образца) — всё сразу
-  const upTo = typeof requestAnimationFrame !== 'function' ? SECTIONS.length : laid?.key === pageKey ? laid.n : 0;
+  // лист этого лица уже вставал целиком (возврат из карточки союза, вкладка, разворот) — сразу целиком: фокус возвращается
+  // на ссылку раздела, с которой ушли (решение 71, сценарий 523), и место листа то же
+  const upTo =
+    typeof requestAnimationFrame !== 'function' || laidPages.has(pageKey) ? SECTIONS.length : laid?.key === pageKey ? laid.n : 0;
   const deferred = upTo === 0;
   useEffect(() => {
     if (!hasBody || upTo >= SECTIONS.length) return;
-    const next = () => setLaid({ key: pageKey, n: Math.min(SECTIONS.length, upTo + PAGE_STEP) });
+    const next = () => {
+      // первая часть — части I и II (до § 8): имя, родители, род — то, за чем читатель пришёл; дальше по PAGE_STEP
+      const n = Math.min(SECTIONS.length, upTo + (upTo === 0 ? PAGE_FIRST : PAGE_STEP));
+      if (n >= SECTIONS.length) {
+        if (laidPages.size > 64) laidPages.clear();
+        laidPages.add(pageKey);
+      }
+      setLaid({ key: pageKey, n });
+    };
     // первая часть (с ней — сборка всех разделов, buildSections) — когда браузер свободен, но не позже PAGE_FIRST_MS: в
     // перелёте свободного времени нет; дальше — кадр за кадром, после того как браузер нарисовал предыдущую часть
     const w = window as Window & { requestIdleCallback?: (f: () => void, o?: { timeout: number }) => number; cancelIdleCallback?: (h: number) => void };
+    // небо стоит (щелчок по звезде, ссылка без перелёта) — первая часть сразу: ждать свободного времени не из-за чего
+    if (upTo === 0 && !skyRef.current?.cam.moving) {
+      next();
+      return;
+    }
     if (upTo === 0 && w.requestIdleCallback) {
       const h = w.requestIdleCallback(next, { timeout: PAGE_FIRST_MS });
       return () => w.cancelIdleCallback?.(h);
@@ -515,9 +535,8 @@ function useSheetDrag(aside: { current: HTMLElement | null }, on: boolean) {
       const to = snapSheet(h, releaseVelocity(was.pts, t), stopsFor(avail(), lowScreen(), peekContent.peek(), skyRef.current?.openTop ?? 0), was.from);
       delete el.dataset.drag;
       el.style.removeProperty('--sheet-h');
-      // взмах листа вниз — явное закрытие карточки, как «×» (решение 150: вкладки чтения нет)
-      if (to === 'close') closeCard(() => (selected.value = null));
-      else sheetStop.value = to;
+      // взмах листа вниз — шапка 104 px с выбором (решение 169; R2-10): выбор снимает только «×»
+      sheetStop.value = to;
       return true;
     };
     const inBar = (t: EventTarget | null) => t instanceof Element && !!t.closest('.sheet-bar') && !t.closest('button');
@@ -534,7 +553,11 @@ function useSheetDrag(aside: { current: HTMLElement | null }, on: boolean) {
       if (!el.hasPointerCapture(e.pointerId)) return;
       el.releasePointerCapture(e.pointerId);
       const from = d?.from;
-      if (!end(e.timeStamp) && e.type === 'pointerup' && from === 'peek') sheetStop.value = 'half';
+      // касание шапки поднимает лист на положение выше: с шапки 104 px — к краткой карточке, с краткой — до 55 %
+      if (!end(e.timeStamp) && e.type === 'pointerup') {
+        if (from === 'head') sheetStop.value = 'peek';
+        else if (from === 'peek') sheetStop.value = 'half';
+      }
     };
     // текст листа: касание, прокрученное к началу, тянет лист вниз; на шапке — в обе стороны
     const onTouchStart = (e: TouchEvent) => {
@@ -553,7 +576,7 @@ function useSheetDrag(aside: { current: HTMLElement | null }, on: boolean) {
         const dx = t.clientX - touch.x0;
         const dy = t.clientY - touch.y0;
         if (Math.abs(dy) < DRAG_SLOP || Math.abs(dy) < Math.abs(dx)) return;
-        const peek = sheetStop.peek() === 'peek';
+        const peek = sheetStop.peek() === 'peek' || sheetStop.peek() === 'head';
         if (!(peek || (dy > 0 && touch.top <= 0 && el.scrollTop <= 0))) {
           touch = null;
           return;
@@ -984,7 +1007,7 @@ export function Folio({ id: forcedId, forceState }: { id?: string; forceState?: 
   });
   // лист на шапке показывает начало карточки; строка номеров на телефоне держит текущий раздел на виду (H3)
   useEffect(() => {
-    if (sheet && stop === 'peek') aside.current?.scrollTo({ top: 0 });
+    if (sheet && (stop === 'peek' || stop === 'head')) aside.current?.scrollTo({ top: 0 });
   }, [sheet, stop, id]);
   // фокус клавиатуры ушёл в тело листа, свёрнутого до шапки, — лист поднимается на 55 %: фокус не прячется (MOB-50)
   useEffect(() => {
@@ -1091,7 +1114,7 @@ export function Folio({ id: forcedId, forceState }: { id?: string; forceState?: 
   return (
     <aside class="folio" aria-label={`Карточка: ${p.name}`} ref={aside} data-stop={sheet ? stop : undefined} data-state={status === 'ok' ? undefined : status} data-full={full ? '' : undefined}>
       {/* на 214 px лист — карточка у звезды (решение 77); выше — шапка листа и подробная карточка */}
-      {sheet && (stop === 'peek' ? <DotSheetBar id={id} onClose={close} /> : <SheetBar id={id} stop={stop} onClose={close} />)}
+      {sheet && (stop === 'peek' || stop === 'head' ? <DotSheetBar id={id} onClose={close} /> : <SheetBar id={id} stop={stop} onClose={close} />)}
       {/* из главы на телефоне — строка возврата «‹ Мф 1:5» сразу под шапкой листа (решение 114; молчит в остальных случаях) */}
       {sheet && <ChapterReturn id={id} />}
       {/* закреплённые карточки (решение 91): вкладки вверху панели; на телефоне — строками над листом */}

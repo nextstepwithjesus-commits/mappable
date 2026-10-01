@@ -102,7 +102,7 @@ vi.mock('../src/render/sky.ts', async (orig) => {
 const PAL = {
   sky: '#0d1b34', band: '#13264a', ink: '#e8eef7', ink2: '#8fa2bf', ink3: '#7d8fab', rule: '#2a3b5c', ruleStrong: '#4a5d80',
   gold1: '#e6b550', gold2: '#c9773a', azure1: '#9ccbf5', azure2: '#9edbd0', focus: '#ffd166', halo: '#0d1b34', sheet: '#13264a',
-  sheet2: '#1a2f57', dimInk: 0.4, dimInk2: 0.5, lineAlpha: 0.7, glow: true, ribbonGlow: [0.06, 0.1] as [number, number], ribbonTone: 0,
+  sheet2: '#1a2f57', dimInk: 0.4, dimInk2: 0.5, lineAlpha: 0.7, contourAlpha: 0.5, glow: true, ribbonGlow: [0.06, 0.1] as [number, number], ribbonTone: 0,
 };
 
 const { PAINTERS, CROPS, magnitude, paintCrop, cropState } = await import('../src/ui/panels/Legend.tsx');

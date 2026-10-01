@@ -15,17 +15,18 @@
  * Составы — src/engine/lineage.ts (род лица, созвездия, гости, обрывки).
  */
 import { batch, computed, effect, signal } from '@preact/signals';
-import { byId, graph, groupById, groups, lines, models, persons } from '../data/atlas.ts';
+import { byId, graph, groupById, groups, lineMembership, lines, models, persons } from '../data/atlas.ts';
 import type { Group, GroupSection } from '../data/types.ts';
 import { familyLayout, type FamilyData, type FamilyResult } from '../engine/family.ts';
 import { packSpan } from '../engine/layout.ts';
 import { groupsWith, inGroup, lineageWith, useKinData, type KinData, type LineageBy, type LineageDir, type LinksOut, type Stub } from '../engine/lineage.ts';
 import type { ShowIn } from '../render/rows.ts';
-import { linkKeyString } from '../engine/linkkey.ts';
+import { linkKeyString, spanInner, type LinkKey } from '../engine/linkkey.ts';
+import { linkRoles } from './linkwords.ts';
 import { selectedLink } from './linkstate.ts';
 import { walk } from '../render/rows.ts';
 import { model, onlyLines, pins, selected, skyGroup } from '../state.ts';
-import { KEY_IDS, LINE_IDS, LINES_TITLE, unions } from './reveal.ts';
+import { KEY_IDS, LINE_IDS, LINES_TITLE, unionById, unions } from './reveal.ts';
 
 export { LINES_TITLE };
 import { lowerFirst, nameCase } from './text/ru.ts';
@@ -372,6 +373,44 @@ export function setShow(s: Show, o: { anchor?: string | null; history?: 'push' |
   const anchor = o.anchor === undefined ? selected.peek() : o.anchor;
   setShowState(next, { anchor, history: o.history });
 }
+
+// ---------- выбор лица и выбранная связь (этап 14, решение 161) ----------
+
+/**
+ * Лица выбранной связи: её концы с ролями (src/ui/linkwords.ts), у союза — и его дети (решение 137), у цепочки ленты —
+ * и скрытые звенья между концами.
+ */
+export function linkPersons(k: LinkKey): Set<string> {
+  const out = new Set(linkRoles(k).map((e) => e.id));
+  if (k.kind === 'union' || k.kind === 'child' || k.kind === 'spouse') {
+    const u = unionById(k.union);
+    if (u) for (const id of [u.a, u.b, ...(k.kind === 'union' ? u.kids : [])]) if (id) out.add(id);
+  }
+  if (k.kind === 'span') {
+    out.add(k.from);
+    out.add(k.to);
+    for (const id of spanInner([...lineMembership[k.line].keys()], k) ?? []) out.add(id);
+  }
+  return out;
+}
+/**
+ * Выбор лица — поиском, указателем у края, ссылкой, адресом, клавишей — снимает выбранную связь, если лицо не стоит на
+ * ней (R1-02: после поиска «Давид» связь «Иаков и Рахиль → Вениамин» оставалась в адресе и указателях). Так же, как
+ * щелчок по звезде. Снятие выбора связь не трогает (её снимает Escape по своей очереди).
+ */
+let selSeen = selected.peek();
+let linkSeen = selectedLink.peek();
+effect(() => {
+  const id = selected.value;
+  const k = selectedLink.value;
+  // лицо и связь сменились вместе (адрес, «назад») — это одно состояние, связь остаётся
+  const together = k !== linkSeen;
+  linkSeen = k;
+  if (id === selSeen) return;
+  selSeen = id;
+  if (!id || !k || together) return;
+  if (!linkPersons(k).has(id)) linkSeen = selectedLink.value = null;
+});
 
 // ---------- «Ближайшая родня» (этап 14, решение 145; контракт 3) ----------
 
