@@ -736,7 +736,8 @@ async function main() {
         res = fail(String((e as Error).message).split('\n')[0]);
       }
       if (errors.length) res = fail(`ошибка страницы: ${errors[0]}`);
-      await page.screenshot({ path: join(OUT, `accept-${String(s.n).padStart(2, '0')}.png`) });
+      // снимок — для глаз, не часть проверки: сбой снимка (шрифты не догрузились под нагрузкой) не обрывает прогон
+      await page.screenshot({ path: join(OUT, `accept-${String(s.n).padStart(2, '0')}.png`), timeout: 15000 }).catch(() => undefined);
       console.log(`${res.ok ? 'да ' : 'НЕТ'} ${s.n}. ${s.title}${res.why ? ` — ${res.why}` : ''}`);
       if (!res.ok) failed++;
       await ctx.close();

@@ -218,10 +218,12 @@ describe('вписывание групп сжатием строк (IX-53)', ()
 });
 
 describe('органы неба колонкой (IX-56, VIS-51, MOB-26, MOB-46)', () => {
-  it('колонка: небо уже 760 px, сетка телефона, низкое окно; блок — на широком небе', () => {
-    expect(controls.COLUMN_BELOW).toBe(760);
+  it('колонка: небо уже 700 px, сетка телефона, низкое окно; блок — на широком небе', () => {
+    // этап 14 (решение 150): планшет 768 px без выбранного лица — небо 712 px рядом с корешком карточки, органы — блоком
+    expect(controls.COLUMN_BELOW).toBe(700);
     expect(controls.useColumn(624, false, 768)).toBe(true);
-    expect(controls.useColumn(759, false, 900)).toBe(true);
+    expect(controls.useColumn(699, false, 900)).toBe(true);
+    expect(controls.useColumn(712, false, 1024)).toBe(false);
     expect(controls.useColumn(900, false, 900)).toBe(false);
     expect(controls.useColumn(700, true, 900)).toBe(true);
     expect(controls.useColumn(844, false, 390)).toBe(true);

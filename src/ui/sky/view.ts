@@ -418,6 +418,10 @@ export function showAll() {
     fitLines(true);
     return;
   }
+  // временные строки окна лица на телефоне (M2, PHONE_ROW_MIN) — не для всего неба: вписывание — в своей пропорции
+  // читателя, иначе строки «всего неба» выше видимой части (сценарий 39). Строки отметок и группы (IX-70) — их
+  // возвращает снятие отметок
+  if (s.cam.userLanes !== null && !groupShown()) s.cam.setLanes(s.cam.userLanes);
   // «Вписать» — весь показ, и в семейной укладке тоже (fitWholeState; Я30)
   s.cam.zoomTo(s.fitWholeState(), HOME_MS, skyRef.redraw, reduced());
   skyRef.redraw();
