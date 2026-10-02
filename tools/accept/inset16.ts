@@ -262,7 +262,7 @@ export const inset16: Scenario[] = [
   },
   {
     n: 1230,
-    title: 'Решение 186, ТЗ § 3.8: axe (WCAG 2.2 AA) по врезке ночью и днём, широкий экран и телефон — 0 нарушений',
+    title: 'Решение 186, ТЗ § 3.8: axe (WCAG 2.2 AA) по врезке Давида ночью и днём — 0 нарушений',
     run: async (p) => {
       const out: string[] = [];
       for (const theme of ['night', 'day'] as const) {

@@ -9,6 +9,7 @@ import { join } from 'node:path';
 import { ROOT } from './bible.ts';
 import { contrast as ratio, linearRgb, CONTRAST_USES } from '../src/ui/contrast.ts';
 import { over, likelyAlpha, CONSTELLATION_DIM, DIM, DIM_LABEL_CONTRAST, CLOUD_DIMMED, dimLabelAlpha, labelGrounds, separateRibbons, RIBBON_LIGHTNESS } from '../src/render/dim.ts';
+import { NEBULA_MAX, TRIBE_HUES, TRIBE_HUE_KEYS, TRIBE_NAMES } from '../src/render/branches.ts';
 import { BRANCH_COLORS, LINK_YELLOW, BRANCH_CONTRAST, BRANCH_DE, BRANCH_FAR_CONTRAST, BRANCH_NAMES, KIN_GOLD, KIN_GOLD_DE, KIN_GOLD_UNDER, UNION_COLORS, UNION_DE, branchColor, branchFade, branchFloor, type MapTheme } from '../src/render/branches.ts';
 
 const css = readFileSync(join(ROOT, 'src/styles/tokens.css'), 'utf8');
@@ -43,6 +44,10 @@ const simulate = (h: string, m?: number[][]) => {
   return toLab(s);
 };
 const dE = (a: number[], b: number[]) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+const hexRgb = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+const mixRgb = (a: number[], b: number[], t: number) => a.map((x, i) => x + (b[i] - x) * t);
+/** Пороги оттенков колен (этап 16, приёмка О3): между собой — при обычном зрении и дальтонизме; до лент. */
+const TRIBE_DE = { normal: 20, cvd: 9, ribbons: 18 };
 
 /**
  * Тонкая линия, как её видит глаз (этап 14, решение 157; M11): цвет проверяется не сплошным токеном, а линией 1–1,5 px
@@ -228,6 +233,50 @@ for (const [t, c] of Object.entries(themes)) {
     }
     check(`золотистый ${gold} не похож на золото ленты Иосифа (${k}; ближе всех ${with_}), ΔE`, d, m ? KIN_GOLD_DE.cvd : KIN_GOLD_DE.normal);
   }
+  // оттенки колен (этап 16, решение 183, приёмка О3; src/render/branches.ts, TRIBE_HUES): четыре оттенка различимы — ΔE ≥ 20
+  // при обычном зрении и ≥ 9 при трёх видах дальтонизма; не похожи на ленты (токены и цвета холста) — ΔE ≥ 18; это же цвета
+  // ветвей Иакова («без перескока») — графика ≥ 3 : 1 к небу и полосе эпохи
+  const tribe = TRIBE_HUE_KEYS.map((k) => ({ k, h: TRIBE_HUES[theme][k] }));
+  for (const { k, h } of tribe) for (const g of grounds) check(`оттенок «${TRIBE_NAMES[k].who}» ${h} на ${g}`, ratio(h, g), BRANCH_CONTRAST);
+  for (const [k, m] of [['обычное зрение', undefined], ...Object.entries(CVD)] as [string, number[][] | undefined][]) {
+    let d = Infinity;
+    let with_ = '';
+    for (let i = 0; i < tribe.length; i++)
+      for (let j = i + 1; j < tribe.length; j++) {
+        const v = dE(simulate(tribe[i].h, m), simulate(tribe[j].h, m));
+        if (v < d) {
+          d = v;
+          with_ = `${TRIBE_NAMES[tribe[i].k].who} и ${TRIBE_NAMES[tribe[j].k].who}`;
+        }
+      }
+    check(`оттенки колен различимы (${k}; ближе всех ${with_}), ΔE`, d, m ? TRIBE_DE.cvd : TRIBE_DE.normal);
+  }
+  {
+    let d = Infinity;
+    let with_ = '';
+    for (const { k, h } of tribe)
+      for (const o of [c['--gold-1'], c['--gold-2'], c['--azure-1'], c['--azure-2'], ...lanes]) {
+        const v = dE(simulate(h), simulate(o));
+        if (v < d) {
+          d = v;
+          with_ = `${TRIBE_NAMES[k].who} ${h} и ${o}`;
+        }
+      }
+    check(`оттенки колен не похожи на ленты (${with_}), ΔE`, d, TRIBE_DE.ribbons);
+  }
+  // подписи поверх света (О3): туманность в полную силу (NEBULA_MAX; ночью — сложением, днём — отмывкой) каждого оттенка и
+  // серебра на небе и полосе эпохи — текст --ink ≥ 4,5 : 1. Тусклые подписи (--ink-2, --ink-3) стоят на тёмном ореоле
+  // своего текста (цвет неба, 3 px): он остаётся и над светом (src/render/sky.ts, groundify — текст не трогается)
+  const inkRgb = hexRgb(c['--ink']);
+  const lights = [...tribe.map(({ k, h }) => ({ what: TRIBE_NAMES[k].who, rgb: theme === 'night' ? mixRgb(hexRgb(h), inkRgb, 0.35) : hexRgb(h) })), { what: 'серебро', rgb: inkRgb }];
+  for (const l of lights)
+    for (const g of grounds) {
+      const gr = hexRgb(g);
+      const a = NEBULA_MAX[theme];
+      const bg = theme === 'night' ? gr.map((x, i) => Math.min(255, x + a * l.rgb[i])) : gr.map((x, i) => x + (l.rgb[i] - x) * a);
+      const hex = `#${bg.map((x) => Math.round(x).toString(16).padStart(2, '0')).join('')}`;
+      check(`подпись --ink над туманностью «${l.what}» в полную силу на ${g} (${hex})`, ratio(c['--ink'], hex), 4.5);
+    }
 }
 console.log(fail ? `\nНе прошло проверок: ${fail}` : '\nВсе проверки пройдены.');
 process.exit(fail ? 1 : 0);

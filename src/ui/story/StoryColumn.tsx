@@ -56,7 +56,7 @@ function Fact({ f, focus }: { f: FactRow; focus: string }) {
   if (f.kind === 'branch')
     return (
       <li class="story-fact branch" data-branch={f.i}>
-        <span class="story-sw" aria-hidden="true" style={{ background: branchHue(focus, f.i, theme.value) }} />
+        <span class="story-sw" aria-hidden="true" style={{ '--sw': branchHue(focus, f.i, theme.value) }} />
         {f.other ? (
           <>
             <Who id={f.other} />

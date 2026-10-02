@@ -36,6 +36,9 @@
  *  К1 яркие знаки друг на друге — 0;
  *  К2 имя лица на чужом знаке (и название созвездия на знаке); подпись на подписи по глифам; слитые подписи — 0; 0; 0;
  *  К3 линии, нарисованные поверх текста; имя выбранного перечёркнуто — 0; 0;
+ *  К4′ (этап 16, решение 184): имя основателя у устья (canvas[data-mouths]) — вместо «далеко» и «принадлежности» своя
+ *     проверка: рамка на своём следе за концом перехода (≤ 6 px), у звезды нет второй подписи, путь «звезда — след —
+ *     переход — имя» не прерван чужой подписью, имя не дальше конца перехода + ширины имени; счёт — отдельной строкой.
  *  К4 принадлежность: чужой знак ближе, вплотную, выноска с чужим ближе, далеко без выноски, у подписи у ромба чужой
  *     знак ближе её точки (решение 160) — 0;
  *  К5 связь, лента, дуга или жёлтая связь через середину строки имени лица — не больше 2 % имён сцены; связь и выбранная
@@ -163,6 +166,7 @@ async function grab(p: Page) {
       dots: ds.dots ?? '',
       motherNames: ds.motherNames ?? '',
       cutNames: ds.cutNames ?? '',
+      mouths: ds.mouths ?? '',
       linkTexts: ds.linkTexts ?? '',
       notes: ds.notes ?? '',
       named: ds.named ?? '',
@@ -995,7 +999,54 @@ function measure(g: Grab, P: Parsed) {
   let kingDash = 0;
   let longLeaders = 0;
   let wideLeaders = 0;
+  // К4′ (этап 16, решение 184): имя основателя у устья — своя, более строгая проверка вместо «далеко без выноски» и
+  // «принадлежности» (src/render/sky.ts, canvas[data-mouths] «id:x,y,w,h:путь»; путь — от звезды по своему следу и
+  // переходу до начала имени): (i) рамка касается своего следа за концом перехода (≤ 6 px до конца пути, на той же
+  // строке); (ii) у звезды лица нет второй подписи; (iii) путь не прерван чужой подписью (след и переход — выноска);
+  // (iv) имя не дальше конца перехода + одна ширина имени. Нарушение любого — К4 «нет»
+  const mouths = new Map<string, { box: Box; path: number[] }>();
+  for (const m of String(g.mouths ?? '').split(';').filter(Boolean)) {
+    const [id, b, path] = m.split(':');
+    const [x, y, w, h] = b.split(',').map(Number);
+    mouths.set(id, { box: { x0: x, y0: y, x1: x + w, y1: y + h }, path: (path ?? '').split(',').filter(Boolean).map(Number) });
+  }
+  let mouthNames = 0;
+  let mouthBad = 0;
+  const segBox = (x0: number, y0: number, x1: number, y1: number, b: Box) => {
+    for (let t = 0; t <= 1; t += 0.05) {
+      const x = x0 + (x1 - x0) * t;
+      const y = y0 + (y1 - y0) * t;
+      if (x > b.x0 && x < b.x1 && y > b.y0 && y < b.y1) return true;
+    }
+    return false;
+  };
+  for (const [id, m] of mouths) {
+    mouthNames++;
+    const P = m.path;
+    const bad: string[] = [];
+    if (P.length < 4) bad.push('нет пути');
+    else {
+      const ex = P[P.length - 2];
+      const ey = P[P.length - 1];
+      const b = m.box;
+      // конец пути — начало имени: перед ним конец перехода (предпоследняя точка)
+      const gx = P.length >= 6 ? P[P.length - 4] : P[0];
+      if (!(Math.abs(b.x0 - ex) <= 6 && ey >= b.y0 - 6 && ey <= b.y1 + 6)) bad.push('рамка не на своём следе');
+      if (labelBoxes.filter((q) => q.id === id).length > 1) bad.push('у звезды вторая подпись');
+      for (let k = 0; k + 3 < P.length && !bad.includes('путь прерван чужой подписью'); k += 2)
+        for (const q of labelBoxes) if (q.id !== id && segBox(P[k], P[k + 1], P[k + 2], P[k + 3], inflate(q.box, -1))) {
+          bad.push('путь прерван чужой подписью');
+          break;
+        }
+      if (b.x0 - gx > b.x1 - b.x0 + 6) bad.push('имя дальше конца перехода');
+    }
+    if (bad.length) {
+      mouthBad++;
+      F.push({ cls: '7 К4′ имя у устья', what: `«${label(`star:${id}`)}»: ${bad.join(', ')}`, x: m.box.x0, y: m.box.y0 });
+    }
+  }
   for (const lb of labelBoxes) {
+    if (mouths.has(lb.id)) continue;
     const ts = owners.get(`star:${lb.id}`);
     if (!ts?.length) continue;
     const box = { x0: Math.min(...ts.map((t) => t.box.x0)), y0: Math.min(...ts.map((t) => t.box.y0)), x1: Math.max(...ts.map((t) => t.box.x1)), y1: Math.max(...ts.map((t) => t.box.y1)) };
@@ -1278,6 +1329,8 @@ function measure(g: Grab, P: Parsed) {
       ltStar,
       ltSel,
       amb,
+      mouthNames,
+      mouthBad,
       tie,
       leader,
       leaderAmb,
@@ -1579,8 +1632,8 @@ export function verdict(c: Counts): string[] {
   if (c.adj) out.push(`К2: слитых подписей ${c.adj}`);
   if (over) out.push(`К3: линий поверх текста ${over}`);
   if (c.selCovered) out.push(`К3: имя выбранного перечёркнуто ${c.selCovered}`);
-  if (c.amb + c.glued + c.leaderAmb + c.detached + c.plateAmb)
-    out.push(`К4: принадлежность — чужой ближе ${c.amb}, вплотную ${c.glued}, выноска ${c.leaderAmb}, далеко ${c.detached}, у ромба ${c.plateAmb}`);
+  if (c.amb + c.glued + c.leaderAmb + c.detached + c.plateAmb + (c.mouthBad ?? 0))
+    out.push(`К4: принадлежность — чужой ближе ${c.amb}, вплотную ${c.glued}, выноска ${c.leaderAmb}, далеко ${c.detached}, у ромба ${c.plateAmb}, у устья (К4′) ${c.mouthBad ?? 0} из ${c.mouthNames ?? 0}`);
   if (c.k5 > Math.floor(0.02 * c.starLabels)) out.push(`К5: линий через середину имени ${c.k5} из ${c.starLabels} (порог ${Math.floor(0.02 * c.starLabels)})`);
   if (c.uiLit) out.push(`К6: имён семьи под оверлеем ${c.uiLit}`);
   if (c.uiCut) out.push(`К6: срезанных подписей ${c.uiCut}`);
@@ -1709,7 +1762,7 @@ async function main() {
       const bad = verdict(c);
       if (bad.length) failed.push(`${sc.id}: ${bad.join('; ')}`);
       console.log(
-        `${sc.id.padEnd(22)} ${g.hash.slice(0, 48).padEnd(48)} зв ${String(c.stars).padStart(4)} имён ${String(c.starLabels).padStart(3)} | 1:${c.nn}/${c.nnLit} 2:${c.nl} (имя ${c.nlStar}, созвездие ${c.nlGroup}, ◆ ${c.nodeUnder}, черта ${c.kingDash}) 3:${c.ll} (${c.llStar}) вплотную ${c.adj} 5:${c.lt} ${JSON.stringify(c.ltKinds)} поверх ${JSON.stringify(c.ltOver)} строго ${JSON.stringify(c.ltStrict)} | чужая ближе ${c.amb} вплотную ${c.glued} выносок ${c.leader} (чужая ближе ${c.leaderAmb}) далеко ${c.detached} у ромба ${c.plateAmb} | UI выбр ${c.uiSel} концы ${c.uiEnds} зв ${c.uiStars} имён ${c.uiLabels} (ярких ${c.uiLit}, срезано ${c.uiCut}) | выбр. имя ${c.selNamed} поверх ${c.selCovered} | Placer ${c.placerOverlaps} вылет ${c.boxOut}/${c.boxOutMax} ширина ${c.widthRatio.join('/')} | К7 ${c.selRingGap ?? '—'} К8 ${c.longLeaders} (опорных до 100 px ${c.wideLeaders}) К5 ${c.k5} (разрывов верхней ступени ${c.k5cut}) ${note || ''} ${((Date.now() - t0) / 1000).toFixed(0)} с | ${bad.length ? 'НЕТ' : 'да'}`,
+        `${sc.id.padEnd(22)} ${g.hash.slice(0, 48).padEnd(48)} зв ${String(c.stars).padStart(4)} имён ${String(c.starLabels).padStart(3)} | 1:${c.nn}/${c.nnLit} 2:${c.nl} (имя ${c.nlStar}, созвездие ${c.nlGroup}, ◆ ${c.nodeUnder}, черта ${c.kingDash}) 3:${c.ll} (${c.llStar}) вплотную ${c.adj} 5:${c.lt} ${JSON.stringify(c.ltKinds)} поверх ${JSON.stringify(c.ltOver)} строго ${JSON.stringify(c.ltStrict)} | чужая ближе ${c.amb} вплотную ${c.glued} выносок ${c.leader} (чужая ближе ${c.leaderAmb}) далеко ${c.detached} у ромба ${c.plateAmb} у устья ${c.mouthNames} (К4′ ${c.mouthBad}) | UI выбр ${c.uiSel} концы ${c.uiEnds} зв ${c.uiStars} имён ${c.uiLabels} (ярких ${c.uiLit}, срезано ${c.uiCut}) | выбр. имя ${c.selNamed} поверх ${c.selCovered} | Placer ${c.placerOverlaps} вылет ${c.boxOut}/${c.boxOutMax} ширина ${c.widthRatio.join('/')} | К7 ${c.selRingGap ?? '—'} К8 ${c.longLeaders} (опорных до 100 px ${c.wideLeaders}) К5 ${c.k5} (разрывов верхней ступени ${c.k5cut}) ${note || ''} ${((Date.now() - t0) / 1000).toFixed(0)} с | ${bad.length ? 'НЕТ' : 'да'}`,
       );
       await p.context().close();
     }

@@ -624,7 +624,40 @@ function Signs({ map }: { map: Theme }) {
         ))}
       </div>
       <FamilySigns map={map} />
+      <LightSigns map={map} />
     </div>
+  );
+}
+
+/**
+ * Свет неба (этап 16, решения 182–184, 186): туманность, устье, пыль, огоньки по величине, оттенки колен и знак врезки
+ * семьи — образцами «Условных знаков» (src/ui/panels/Legend.tsx, PAINTERS; рисовальщик неба drawLightSample).
+ */
+const LIGHT: { k: PainterKey; cap: string }[] = [
+  { k: 'lightNebula', cap: 'туманность — неразрешённые следы жизни рода' },
+  { k: 'lightMouth', cap: 'устье — от звезды родоначальника к его роду' },
+  { k: 'lightDust', cap: 'звёздная пыль — лица, ещё не ставшие звёздами' },
+  { k: 'lightHalo', cap: 'огонёк — величина 0, 1, 2' },
+  { k: 'tribeLeah', cap: 'сыны Лии' },
+  { k: 'tribeRachel', cap: 'сыны Рахили' },
+  { k: 'tribeBilhah', cap: 'сыны Валлы' },
+  { k: 'tribeZilpah', cap: 'сыны Зелфы' },
+  { k: 'tribeSilver', cap: 'народы и лица до колен — без оттенка' },
+  { k: 'inset', cap: 'врезка семьи — без шкалы времени' },
+];
+function LightSigns({ map }: { map: Theme }) {
+  return (
+    <>
+      <h4>Свет неба</h4>
+      <div class="spec-states spec-sky">
+        {LIGHT.map((s) => (
+          <figure class="spec-sign spec-line" key={s.k}>
+            <Line map={map} k={s.k} tall />
+            <figcaption class="spec-cap">{s.cap}</figcaption>
+          </figure>
+        ))}
+      </div>
+    </>
   );
 }
 
@@ -799,7 +832,7 @@ export function Specimen() {
         <section aria-labelledby="spec-h-signs">
           <h2 id="spec-h-signs">Условные знаки и линии</h2>
           <p class="spec-note">
-            {typo('Нарисованы теми же функциями, что небо: drawGlyph, buildRibbons, drawStrands, drawLifeTrail, drawDescent, drawBracket и drawMarriage.')}
+            {typo('Нарисованы теми же функциями, что небо: drawGlyph, buildRibbons, drawStrands, drawLifeTrail, drawDescent, drawBracket, drawMarriage и drawLightSample.')}
           </p>
           <Themes>{(m) => <Signs map={m} />}</Themes>
         </section>

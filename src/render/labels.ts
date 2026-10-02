@@ -1177,20 +1177,8 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): Label
       }
     }
   }
-  // имя основателя у устья (решение 184): сразу за концом перехода, на своём следе; чужие знаки, подписи и линии — запрет
   let atMouth = false;
-  if (o.mouth && !o.least) {
-    const w = textW + foldW;
-    const tx = o.mouth.x + 4;
-    const ty = o.mouth.y + (ASC - DESC) * 0.5 * size;
-    const box = textBox(tx, ty, w, size);
-    if (insideSky(v, box) && !hits(box, p.reserve) && !p.placer.clash(box, false, 99, q.id) && !p.placer.rowClash(box, size) && !p.placer.glyphsIn(box).some((g) => g.id !== q.id && g.a >= GLYPH_SEEN) && !crossed(box, false, true)) {
-      at = { tx, ty, box, side: 'r' };
-      mode = 'soft';
-      atMouth = true;
-    }
-  }
-  for (const soft of o.least || at ? [] : passes) {
+  for (const soft of o.least ? [] : passes) {
     mode = soft;
     // своё место сразу за звездой (решение 139: защищённый текст) — только чужие знаки, подписи и линии под запретом
     if (soft === 'self') {
@@ -1290,8 +1278,41 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): Label
       }
     if (at) break;
   }
+  // имя основателя у устья (решение 184; решение координатора к К4): если у звезды в тесном доме места нет — сразу за
+  // концом его перехода, на своём следе (след и переход — выноска); чужие знаки, подписи и линии — запрет
+  if (!at && o.mouth && !o.least) {
+    const w = textW + foldW;
+    const tx = o.mouth.x + 4;
+    const ty = o.mouth.y + (ASC - DESC) * 0.5 * size;
+    const box = textBox(tx, ty, w, size);
+    // путь «звезда — след — переход — имя» — его выноска: на нём нет чужих подписей (К4′), и он занят для следующих
+    const path = mouthPathOf(v, i, tx);
+    const pathFree = () => {
+      for (let k = 0; k + 3 < path.length; k += 2) {
+        const d = Math.hypot(path[k + 2] - path[k], path[k + 3] - path[k + 1]);
+        for (let t = 0; t <= d; t += 3) {
+          const u = d ? t / d : 0;
+          if (p.placer.clash({ x: path[k] + (path[k + 2] - path[k]) * u - 1, y: path[k + 1] + (path[k + 3] - path[k + 1]) * u - 1, w: 2, h: 2 }, false, 99, q.id)) return false;
+        }
+      }
+      return true;
+    };
+    if (insideSky(v, box) && !hits(box, p.reserve) && !p.placer.clash(box, false, 99, q.id) && !p.placer.rowClash(box, size) && !p.placer.glyphsIn(box).some((g) => g.id !== q.id && g.a >= GLYPH_SEEN) && !crossed(box, false, true) && pathFree()) {
+      at = { tx, ty, box, side: 'r' };
+      mode = 'soft';
+      atMouth = true;
+      for (let k = 0; k + 3 < path.length; k += 2) {
+        const d = Math.hypot(path[k + 2] - path[k], path[k + 3] - path[k + 1]);
+        for (let t = 0; t < d; t += 4) {
+          const u = d ? t / d : 0;
+          p.placer.add({ x: path[k] + (path[k + 2] - path[k]) * u - 1, y: path[k + 1] + (path[k + 3] - path[k + 1]) * u - 1, w: 2, h: 2 });
+        }
+      }
+    }
+  }
   if (!at) return null;
   const { tx, ty } = at;
+  if (atMouth) p.mouthNames?.push({ id: q.id, i, box: at.box });
   // у устья свой след под именем гасит разрыв середины строки (ниже), а не полоса от звезды
   const knock = atMouth ? null : knockTrail(v, p, i, at, r);
   if (knock) v.fillGround(knock.x, knock.x + knock.w, knock.y, knock.h);
@@ -1954,6 +1975,27 @@ function mouthOf(v: SkyContext, i: number): { x: number; y: number } | undefined
   const g = glidesOf(n)[0];
   if (!g) return undefined;
   return { x: v.cam.sx(v.xOf(g.t1)), y: v.cam.sy(g.to) };
+}
+/**
+ * Путь имени у устья (решение 184): от звезды узла i по своему следу в полосе рождения до начала перехода, по переходу
+ * (S-кривая laneAt) до его конца и по своему следу до начала имени x — px холста, x0, y0, x1, y1, …
+ */
+function mouthPathOf(v: SkyContext, i: number, x: number): number[] {
+  const n = v.nodes[i];
+  const cam = v.cam;
+  const out = [cam.sx(v.X0[i]), cam.sy(starLaneOf(n))];
+  const g = glidesOf(n)[0];
+  if (!g) return [...out, x, out[1]];
+  const xa = cam.sx(v.xOf(g.t0));
+  const xb = cam.sx(v.xOf(g.t1));
+  out.push(xa, cam.sy(g.from));
+  const k = Math.max(6, Math.min(32, Math.ceil(Math.max(Math.abs(xb - xa), Math.abs(cam.sy(g.to) - cam.sy(g.from))) / 6)));
+  for (let j = 1; j <= k; j++) {
+    const t = g.t0 + ((g.t1 - g.t0) * j) / k;
+    out.push(cam.sx(v.xOf(t)), cam.sy(laneAt(n, t)));
+  }
+  out.push(x, cam.sy(g.to));
+  return out;
 }
 /** Подзаголовок — у созвездий от стольких лиц. */
 export const SUBTITLE_MIN = 40;

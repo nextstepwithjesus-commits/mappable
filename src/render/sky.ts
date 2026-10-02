@@ -384,6 +384,8 @@ export interface Pass {
    * через рамку строки b идёт линия — связь, дуга родства, призрак, выбранная связь или путь родства; через середину
    * строки band — лента (решения 139, 141, 163): подпись лица id так не ставится
    */
+  /** имена основателей у устья (решение 184): лицо, узел, рамка имени — для canvas[data-mouths] (проверка К4′) */
+  mouthNames?: { id: string; i: number; box: Rect }[];
   /** ownBars = false — своя черта брака лица не препятствие (последний строгий проход подписи, labels.ts 'mine') */
   onLine?: (b: Rect, id: string, ribbons?: boolean, perp?: boolean, band?: Rect, ownBars?: boolean) => boolean;
   /** скопления семьи на обзоре (решение 142): лицо старшего → «+N» у его подписи */
@@ -2224,6 +2226,7 @@ export class Sky implements SkyContext {
       labeled: new Set(),
       nameBoxes: [],
       cutNames: [],
+      mouthNames: [],
       ribbonBoxes: [],
       work,
       lines: new Placer(),
@@ -2496,6 +2499,9 @@ export class Sky implements SkyContext {
       put('trans', this.transitioning ? this.transitionT().toFixed(3) : '');
       put('folds', this.plan.marks.map((m) => `${m.kind}:${m.id}:${m.count}`).join(';'));
       put('foldHits', this.foldHits.map((h) => `${h.kind}:${h.id}:${[h.x, h.y, h.w, h.h].map(Math.round).join(',')}`).join(';'));
+      // имена у устья (решение 184; К4′ в tools/collide.ts): «id:x,y,w,h:путь» — путь от звезды по своему следу и переходу
+      // до начала имени (x0,y0,x1,y1,…, px холста)
+      put('mouths', (p.mouthNames ?? []).map((m) => `${m.id}:${[m.box.x, m.box.y, m.box.w, m.box.h].map(Math.round).join(',')}:${this.mouthPath(m.i, m.box).map((v) => Math.round(v * 10) / 10).join(',')}`).join(';'));
       // слой света (решения 182, О2): длительность последней сборки, мс, и число сборок
       put('light', this.light ? `${this.light.lastBuildMs.toFixed(1)} ${this.light.builds} ${this.light.lastBuildSeg}` : '');
       // места названий созвездий (решение 185, сценарий 1212): щелчок по названию — фокус созвездия (src/ui/sky/input.ts)
@@ -2908,6 +2914,18 @@ export class Sky implements SkyContext {
     ctx.globalCompositeOperation = 'destination-out';
     CanvasRenderingContext2D.prototype.fillRect.call(ctx, x, y, w, h);
     ctx.globalCompositeOperation = op;
+  }
+
+  /**
+   * Путь имени у устья (решение 184; К4′): от звезды узла i по своему следу и первому переходу до начала имени —
+   * x0, y0, x1, y1, … px холста. Этот путь и есть выноска имени: на нём не должно быть чужих подписей.
+   */
+  mouthPath(i: number, box: Rect): number[] {
+    const x = this.cam.sx(this.X0[i]);
+    const y = this.starY(i);
+    const b = this.bendsOf(i)?.[0];
+    if (!b) return [x, y, box.x, box.y + box.h / 2];
+    return [x, y, ...b.pts, box.x, b.yb];
   }
 
   /** Кадр слоя света: перенос или сборка (на покое; решение 182). */

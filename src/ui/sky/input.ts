@@ -1274,6 +1274,15 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
         canvas.dataset.tap = 'zoom';
         return;
       }
+      // палец на самом ромбе союза (не дальше r + 3 от его центра), и ромб ближе звезды — это касание ромба (этап 16,
+      // сценарий 707): с решения 173 ромб жены, живущей в доме мужа, стоит в 12 px от её звезды, и «звезда под пальцем»
+      // перехватывала касание видимого знака союза
+      const onPlate = plateAt(sky, at.x, at.y, true);
+      if (onPlate) {
+        const dp = Math.hypot(at.x - onPlate.cx, at.y - onPlate.cy);
+        const near = sky.hitStar(at.x, at.y, STAR_FIRST + 2);
+        if (dp <= onPlate.r + 3 && (!near || dp < near.d)) return pressDot(onPlate);
+      }
       // звезда под самым пальцем важнее связей (§ 8: звезда > ◆ > «+N» > линии)
       const tight = c.kind !== 'none' && c.kind !== 'zoom' ? sky.hitStar(at.x, at.y, STAR_FIRST + 2) : null;
       if (tight && c.kind === 'pick') {

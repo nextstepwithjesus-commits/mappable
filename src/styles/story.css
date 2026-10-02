@@ -107,7 +107,10 @@
   list-style: none;
   font-family: var(--serif);
   font-size: var(--t-note);
-  line-height: 1.375rem;
+  line-height: var(--t-note-lh);
+}
+.story-fact + .story-fact {
+  margin-top: 2px;
 }
 .story-fact {
   position: relative;
@@ -121,9 +124,10 @@
 .story-sw {
   position: absolute;
   left: 0;
-  top: 0.66rem;
+  top: 0.55rem;
   width: 16px;
   height: 3px;
+  background: var(--sw);
 }
 .story-who {
   font: inherit;

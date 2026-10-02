@@ -13,7 +13,7 @@ import { ANCESTRESS, refPerson, tribeKey, tribeRef, type TribeKey } from '../eng
 import { laneAt, smooth, starLaneOf } from '../engine/stays.ts';
 import { branchesOf } from '../engine/unions.ts';
 import { unions } from '../ui/reveal.ts';
-import { branchColor, TRIBE_HUES, type MapTheme, type TribeHueKey } from './branches.ts';
+import { branchColor, NEBULA_MAX, TRIBE_HUES, type MapTheme, type TribeHueKey } from './branches.ts';
 
 const isHue = (k: TribeKey | null | undefined): k is TribeHueKey => k === 'leah' || k === 'rachel' || k === 'bilhah' || k === 'zilpah';
 
@@ -153,8 +153,8 @@ const RES = 0.5;
 const MARGIN = { x: 0.3, y: 0.25 };
 /** Смыв: доля туманности раскрытого созвездия (при приближении она распадается на настоящие следы). */
 export const LIGHT_WASH = 0.14;
-/** Наибольшая непрозрачность туманности: ночью — свет сложением, днём — отмывка. */
-export const NEBULA_MAX = { night: 0.3, day: 0.16 } as const;
+/** Наибольшая непрозрачность туманности — src/render/branches.ts (её читает и npm run -s contrast). */
+export { NEBULA_MAX };
 /** Доля полосы, занятая следами живущих, при которой туманность светит в полную силу (одна для всех видов неба). */
 const NEBULA_REF = 0.42;
 /** Сила света по ключу колена: серебро тусклее цвета, народы — чуть тусклее колен. */
@@ -268,6 +268,21 @@ export class LightLayer {
     groupCell: Uint16Array;
     groupIds: string[];
   } | null = null;
+  /** буферы растра — общие между сборками (сборка на покое не плодит мусор, О2) */
+  private buf: { N: number; f: Float32Array[]; n2: number; h: Float32Array[]; img: ImageData | null; small: HTMLCanvasElement | null } = { N: 0, f: [], n2: 0, h: [], img: null, small: null };
+  private floats(N: number, n2: number) {
+    const b = this.buf;
+    if (b.N !== N) {
+      b.N = N;
+      b.f = Array.from({ length: 5 }, () => new Float32Array(N));
+      b.img = null;
+    } else for (const a of b.f) a.fill(0);
+    if (b.n2 !== n2) {
+      b.n2 = n2;
+      b.h = Array.from({ length: 5 }, () => new Float32Array(n2));
+    } else for (const a of b.h) a.fill(0);
+    return b;
+  }
   /** время последней сборки, мс (замер О2), и её части: следы, размытие, огоньки, сведение, пыль */
   lastBuildMs = 0;
   lastBuildSeg = '';
@@ -443,10 +458,10 @@ export class LightLayer {
       }
       return c;
     };
-    const T = new Float32Array(N);
-    const R = new Float32Array(N);
-    const G = new Float32Array(N);
-    const B = new Float32Array(N);
+    const c2 = Math.ceil(cols / 2);
+    const r2 = Math.ceil(rows / 2);
+    const bufs = this.floats(N, c2 * r2);
+    const [T, R, G, B, tmp] = bufs.f;
     const ky = v.ky;
     const sigY = Math.max(2, Math.min(10, 0.6 * ky));
     const sigX = Math.max(4, Math.min(26, 2.5 * sigY));
@@ -547,13 +562,9 @@ export class LightLayer {
     }
     tm.push(performance.now());
     // размытие в два масштаба: волокна (следы) и облако (род) — облако на половинном растре
-    const tmp = new Float32Array(N);
     const sx = sigX / CELL;
     const sy = sigY / CELL;
-    const c2 = Math.ceil(cols / 2);
-    const r2 = Math.ceil(rows / 2);
-    const half = (a: Float32Array) => {
-      const o = new Float32Array(c2 * r2);
+    const half = (a: Float32Array, o: Float32Array) => {
       for (let r = 0; r < rows; r++) {
         const oo = (r >> 1) * c2;
         const ia = r * cols;
@@ -561,8 +572,8 @@ export class LightLayer {
       }
       return o;
     };
-    const big = [T, R, G, B].map(half);
-    const tmp2 = new Float32Array(c2 * r2);
+    const big = [T, R, G, B].map((a, k) => half(a, bufs.h[k]));
+    const tmp2 = bufs.h[4];
     const bx = (sx * 3.2) / 2;
     const by = (sy * 3.2) / 2;
     for (const a of big) gauss(a, tmp2, c2, r2, bx, by);
@@ -570,8 +581,10 @@ export class LightLayer {
     tm.push(performance.now());
     tm.push(performance.now());
     // сведение: туманность (корень из доли живущих) + огоньки сложением; RGBA без премультипликации
-    const img = new ImageData(cols, rows);
+    if (!bufs.img || bufs.img.width !== cols || bufs.img.height !== rows) bufs.img = new ImageData(cols, rows);
+    const img = bufs.img;
     const px = img.data;
+    px.fill(0);
     const Amax = NEBULA_MAX[theme];
     for (let r = 0; r < rows; r++) {
       const rr = Math.min(r2 - 1, r >> 1);
@@ -597,9 +610,11 @@ export class LightLayer {
         px[o + 3] = 255 * a;
       }
     }
-    const small = document.createElement('canvas');
-    small.width = cols;
-    small.height = rows;
+    const small = (bufs.small ??= document.createElement('canvas'));
+    if (small.width !== cols || small.height !== rows) {
+      small.width = cols;
+      small.height = rows;
+    }
     small.getContext('2d')!.putImageData(img, 0, 0);
     ctx.save();
     ctx.imageSmoothingEnabled = true;

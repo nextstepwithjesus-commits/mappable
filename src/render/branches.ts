@@ -83,6 +83,11 @@ export const TRIBE_HUES: Readonly<Record<MapTheme, Readonly<Record<TribeHueKey, 
   night: { leah: '#9a75c8', rachel: '#30e978', bilhah: '#e8968e', zilpah: '#e960a2' },
   day: { leah: '#8243d8', rachel: '#004d20', bilhah: '#ee341e', zilpah: '#cf4094' },
 };
+/**
+ * Наибольшая непрозрачность туманности слоя света (решение 182; src/render/light.ts): ночью — свет сложением, днём —
+ * отмывка. Подпись --ink над туманностью в полную силу — ≥ 4,5 : 1 (npm run -s contrast, О3).
+ */
+export const NEBULA_MAX: Readonly<Record<MapTheme, number>> = { night: 0.3, day: 0.16 };
 /** Строки легенды света (решение 183): чьи сыны и какие колена. */
 export const TRIBE_NAMES: Readonly<Record<TribeHueKey, { who: string; tribes: string }>> = {
   leah: { who: 'сыны Лии', tribes: 'Рувим, Симеон, Левий, Иуда, Иссахар, Завулон' },
