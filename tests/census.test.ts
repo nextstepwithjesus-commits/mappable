@@ -290,3 +290,29 @@ describe('этап 14: GRAPH STRESS (Г1–Г7)', () => {
     expect(C.textWidth('Давид', '620 16px Literata, serif')).not.toBeCloseTo(5 * 16 * 0.56, 0);
   });
 });
+
+/**
+ * Этап 15, «Отчий дом» (STAGE15 § 4, Ф1–Ф5; решения 173–177, 181): корпус сложных семей конкурса — 24 окна «всего неба»
+ * 2000 × 1000 (tools/census.ts, HOUSE_SCENES: обзор, как на снимках владельца, масштаб семьи и выбранное лицо). Ф1 обрывков
+ * в окне нет (решение 176); Ф2 каждый ребёнок с названной матерью на небе связан со следом матери (175); Ф3 у союза с
+ * обоими супругами на небе — черта брака к ней (174); Ф5 ромб — на следе жены, не на чужом следе или линии, не под лентой
+ * (174, 181); Ф4 «связь × чужой след» на корпусе — не больше 258 по мере переписи (у выпуска 14 — 327; порог STAGE15 —
+ * 231 из 293 по мере D2, то же −21 %).
+ */
+describe('этап 15: «Отчий дом» — Ф1–Ф5 на корпусе', () => {
+  const parts = [C.HOUSE_SCENES.slice(0, 8), C.HOUSE_SCENES.slice(8, 16), C.HOUSE_SCENES.slice(16)];
+  let f4 = 0;
+  parts.forEach((part, k) =>
+    it(`сцены ${part[0].id} … ${part[part.length - 1].id}: Ф1, Ф2, Ф3, Ф5 — ноль`, () => {
+      for (const h of part) {
+        const c = C.houseCensus(C.captureHouse(h), h.id);
+        const why = JSON.stringify(c.issues.slice(0, 6).map((q) => `${q.check} ${q.text}`));
+        expect([c.f1, c.f2, c.f3, c.f5], `${h.id}: ${why}`).toEqual([0, 0, 0, 0]);
+        // в сцене есть что мерить: дети с матерью на небе или союзы
+        expect(c.f2of + c.f3of, h.id).toBeGreaterThan(0);
+        f4 += c.f4;
+      }
+      if (k === parts.length - 1) expect(f4).toBeLessThanOrEqual(258);
+    }, 600_000),
+  );
+});

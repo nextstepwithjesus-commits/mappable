@@ -286,7 +286,8 @@ function StarTip({ id, more, count }: { id: string; more: boolean; count?: { boo
           {p.disambig && <span class="ds">, {p.disambig}</span>}
         </>
       )}
-      <div class="yr">{t.years}</div>
+      {/* строка порядка уступила место строке происхождения — помета «выв.» года по порядку остаётся у самих лет (П-4) */}
+      <div class="yr">{origin && t.kind === 'order' ? tipYears(id, { mark: true }) : t.years}</div>
       {origin && t.kind !== 'count' ? (
         <div class="ex" data-origin="">
           {origin}
@@ -303,7 +304,8 @@ function StarTip({ id, more, count }: { id: string; more: boolean; count?: { boo
  * союз происхождения лица на небе (хотя бы один родитель нарисован в кадре): наведение на ребёнка зажигает его путь
  * (src/render/marks.ts, drawOriginPath), подсказка называет его словами связи (src/ui/linkwords.ts, linkTitle). Третьей
  * строкой, после имени и лет; пояснение «//», порядка или места — только когда строки происхождения нет (подсказка
- * звезды — не больше трёх строк, IX-58), счёт номера у бусины — всегда.
+ * звезды — не больше трёх строк, IX-58), счёт номера у бусины — всегда. Год, оценённый по порядку перечисления, без
+ * своей строки несёт помету «выв.» у самих лет (П-4); место перечисления — в карточке.
  */
 export function originLine(id: string): string | null {
   const u = mainUnion(ALL_UNIONS, id);

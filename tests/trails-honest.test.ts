@@ -126,11 +126,15 @@ describe('след жизни (A14): у точного и оценочного �
   it('народ из таблицы народов, умерший младенцем и призрак — без следа', () => {
     const { s } = makeSky();
     const t = { x0: 0, x1: 0, y: 0, cls: 'exact' as const, known: true, solidTo: 0, color: '', width: 1 };
-    for (const id of ['ludim', 'mladenets-syn-virsavii', 'ghost:rakhil']) {
+    for (const id of ['ludim', 'mladenets-syn-virsavii']) {
       const i = s.indexOf(id);
       expect(i, id).toBeDefined();
       expect(trails.trailOf(s, i!, t), id).toBe(null);
     }
+    // призраки (этап 15, решение 173: жена из далёкого рода в родной семье, бездетный брак у мужа) — без следа
+    const ghosts = s.nodes.map((n, i) => (n.ghost ? i : -1)).filter((i) => i >= 0);
+    expect(ghosts.length).toBeGreaterThan(0);
+    for (const i of ghosts) expect(trails.trailOf(s, i, t), s.nodes[i].id).toBe(null);
     // у Давида смерть известна: сплошной след до неё
     const d = trails.trailOf(s, s.indexOf('david')!, t)!;
     expect(d.known).toBe(true);
@@ -278,15 +282,15 @@ describe('отрисовка на небе: пометы и подписи пр�
     const names = st.boxes.filter((b) => b.kind === 'plate' && b.text).map((b) => b.text);
     expect(names).toContain('Лия');
     expect(st.overlaps).toBe(0);
-    // подписи призраков жён (ТЗ § 3.1): этап 15, решение 173 — призрак жены из далёкого рода стоит в её родной семье
-    // (Рахиль и Лия — у Лавана), её звезда — у мужа; у призрака — «Рахиль, жена Иакова»
-    const g = s.nodes.findIndex((n) => n.id === 'ghost:rakhil');
+    // подписи призраков жён (ТЗ § 3.1): этап 15, решение 173 — призрак жены из далёкого рода стоит в её родной семье, её
+    // звезда — у мужа; у призрака — «Ада, жена Исава» (имя мужа — в родительном падеже через ru.ts)
+    const g = s.nodes.findIndex((n) => n.id === 'ghost:ada-zhena-isava');
     expect(g).toBeGreaterThanOrEqual(0);
     s.cam.x0 = s.X0[g] - 600 / s.cam.kx;
     s.cam.laneTop = s.nodes[g].lane + 380 / s.cam.ky;
-    draw(s, { selected: 'iakov', highlight: marks.familyHighlight('iakov').hl, depth: marks.familyHighlight('iakov').depth });
+    draw(s, { selected: 'isav', highlight: marks.familyHighlight('isav').hl, depth: marks.familyHighlight('isav').depth });
     const st2 = s.labelStats();
-    expect(st2.boxes.filter((b) => b.kind === 'note').map((b) => b.text)).toContain('Рахиль, жена Иакова');
+    expect(st2.boxes.filter((b) => b.kind === 'note').map((b) => b.text)).toContain('Ада, жена Исава');
     expect(st2.overlaps).toBe(0);
   });
 });

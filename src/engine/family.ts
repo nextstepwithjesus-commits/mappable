@@ -85,6 +85,31 @@ export interface FamilyUnit {
   side: 1 | -1;
   /** год ствола: за год до первого ребёнка; у внешней единицы — до рождений детей внутренних (ступенька) */
   trunk: number;
+  /**
+   * Призрак (решение 173): бездетный брак, жена живёт не в семье этого мужа (в родной семье, у другого мужа) — у его
+   * следа её призрак (FamilyResult.ghosts), черта брака — к нему в год trunk. Значение — id жены.
+   */
+  ghost?: string;
+  /**
+   * Дочери этого союза, ушедшие в семью мужа (решение 173): их строка — у мужа, а здесь, среди братьев и сестёр, — их
+   * призрак (FamilyResult.ghosts, id «ghost:<дочь>»); отвод от матери (отца) в год рождения идёт к призраку.
+   */
+  away?: string[];
+}
+
+/**
+ * Призрак (решение 173): у мужа — жена бездетного брака, живущая не в его семье (id «ghost:<жена>@<муж>», год — год
+ * брака); в родной семье — дочь, ушедшая в семью мужа (id «ghost:<дочь>», husband — null, год — рождение). Строка —
+ * в той же нумерации, что FamilyResult.rows.
+ */
+export interface FamilyGhost {
+  /** как узел-призрак неба (engine/house.ts, ghostId) */
+  id: string;
+  person: string;
+  husband: string | null;
+  union: string;
+  row: number;
+  t: number;
 }
 
 export interface FamilyResult {
@@ -107,6 +132,8 @@ export interface FamilyResult {
    * Строка за ней закреплена с рождения (под звезду и бледную часть следа).
    */
   since: Map<string, number>;
+  /** призраки бездетных браков у мужа (решение 173); их строк нет в rows */
+  ghosts: FamilyGhost[];
 }
 
 type Iv = [number, number];
@@ -121,6 +148,8 @@ const GAP = 3;
 export const REUSE = 15;
 /** Штраф за каждую занятую строку, которую пересекает черта брака к жене без детей в показе (царица-мать; X3 Д11). */
 const HIT_WIFE = 40;
+/** Штраф за каждую занятую строку, которую пересекает ствол притока с детьми. */
+const HIT_KIDS = 3;
 /** Вес пересечения следа лица коридора стволом притока (X3 Д11): втрое тяжелее пересечения прочей занятости. */
 const CORRIDOR_HIT = 3;
 /** Полоса коридора: от −CORRIDOR_K до +CORRIDOR_K. */
@@ -181,7 +210,14 @@ interface Unit {
   wife: string | null;
   kids: string[];
   tu: number;
+  /** призрак жены у мужа: id жены */
+  ghost?: string;
+  /** дочери, ушедшие в семью мужа: в этой единице — их призраки на местах детей */
+  away?: string[];
 }
+/** Место призрака в строке, лет: знак и имя. */
+const GHOST_LEN = 12;
+const ghostKey = (w: string, h: string | null) => (h ? `ghost:${w}@${h}` : `ghost:${w}`);
 
 /**
  * Семейная укладка лиц S. Лица S — лица показа и гости; у каждого получается своя строка.
@@ -285,10 +321,12 @@ export function familyLayout(S0: ReadonlySet<string>, d: FamilyData, o: FamilyOp
     const other = u.a === p ? u.b : u.a;
     const wife = other && S.has(other) && home.get(other) === p ? other : null;
     const kids = u.kids.filter((k) => S.has(k) && !spine.has(k) && home.get(k) === p);
+    // дочь, ушедшая в семью мужа (решение 173): в родной семье — её призрак на месте ребёнка, отвод — к нему
+    const away = u.kids.filter((k) => S.has(k) && !spine.has(k) && home.get(k) !== p && wifeOf.has(k) && home.get(k) === wifeOf.get(k));
     const anyKids = u.kids.filter((k) => S.has(k));
     if (!wife && !kids.length && !anyKids.length) continue;
     const tu = anyKids.length ? Math.min(...anyKids.map(T0)) - 1 : T0(wife ?? p) + 20;
-    addU(p, { u, p, wife, kids, tu });
+    addU(p, { u, p, wife, kids, tu, ...(away.length ? { away } : {}) });
   }
   // жёны у мужа без союза в показе — отдельная единица без детей
   for (const [w, h] of wifeOf) {
@@ -309,6 +347,19 @@ export function familyLayout(S0: ReadonlySet<string>, d: FamilyData, o: FamilyOp
     if (loop) continue;
     home.set(id, w);
     addU(w, { u, p: w, wife: id, kids: [], tu: T0(id) + 20 });
+  }
+  // призраки (решение 173, как на небе): бездетный брак, жена живёт не в семье этого мужа (в родной семье — Махалафа и
+  // Авихаиль у Ровоама, Мелхола у Давида; у другого мужа — Фамарь у Ира и Онана, она в семье Иуды) — у следа мужа её
+  // призрак, черта брака короткая. Мужа-гостя, стоящего у жены, это не касается
+  for (const u of shown) {
+    if (!u.a || !u.b || !S.has(u.a) || !S.has(u.b) || u.kids.some((k) => S.has(k))) continue;
+    if (home.get(u.b) === u.a || home.get(u.a) === u.b) continue;
+    if ((units.get(u.a) ?? []).some((x) => x.u.id === u.id)) continue;
+    const ea = spanOf(u.a)[1];
+    const eb = spanOf(u.b)[1];
+    // год брака — как у бездетного брака в доме (engine/house.ts): взрослость младшего, не позже конца жизни обоих
+    const tm = Math.min(Math.max(T0(u.a), T0(u.b)) + 20, ea - 1, eb - 1);
+    addU(u.a, { u, p: u.a, wife: null, kids: [], tu: tm, ghost: u.b });
   }
   // порядок единиц — как в «Отчем доме» (решение 173): позже союз — ближе к родителю; при равенстве — союз с ребёнком
   // линии Мессии (у его черты расходятся ленты, решение 177), затем порядок текста
@@ -370,10 +421,31 @@ export function familyLayout(S0: ReadonlySet<string>, d: FamilyData, o: FamilyOp
   const unitContour = (un: Unit, s: 1 | -1, tu: number, acc: Contour, start: number, pos: Map<string, number>): number => {
     // наружу от родителя (решение 173): мать, за ней дети — младший у матери, старший дальше всех; по обе стороны
     // одинаково. Отвод к старшему в год его рождения проходит строки младших, ещё не рождённых
-    const kids = [...un.kids].sort(kidOrder).reverse();
+    const awaySet = new Set(un.away ?? []);
+    const kids = [...un.kids, ...awaySet].sort(kidOrder).reverse();
     const members = [...(un.wife ? [un.wife] : []), ...kids];
     let prev = start;
+    if (un.ghost) {
+      // призрак: одна строка — знак и имя в год брака
+      const key = ghostKey(un.ghost, un.p);
+      const sub: Contour = new Map([[0, [tu - GAP, tu + GHOST_LEN + GAP]]]);
+      let off = prev + 1;
+      while (collides(acc, sub, s * off)) off++;
+      merge(acc, sub, s * off);
+      pos.set(key, s * off);
+      prev = off;
+    }
     for (const m of members) {
+      if (awaySet.has(m)) {
+        // призрак дочери: зубец от ствола до рождения, знак и имя
+        const sub: Contour = new Map([[0, [tu - GAP, T0(m) + GHOST_LEN + GAP]]]);
+        let off = prev + 1;
+        while (collides(acc, sub, s * off)) off++;
+        merge(acc, sub, s * off);
+        pos.set(ghostKey(m, null), s * off);
+        prev = off;
+        continue;
+      }
       const sub = blockOf(m, s, false);
       if (m !== un.wife) addIv(sub, 0, tu - GAP, T0(m));
       else addIv(sub, 0, tu - GAP, tu + GAP);
@@ -405,7 +477,7 @@ export function familyLayout(S0: ReadonlySet<string>, d: FamilyData, o: FamilyOp
     // решение «посередине» — по данным: у лица один союз с детьми во всём атласе и в нём от CENTER детей (иначе раскрытие
     // второго союза переставляло бы первый)
     const dataUnions = (U.of.get(p) ?? []).filter((u) => !u.claim && u.kids.length);
-    if (CENTER && us.length === 1 && !us[0].wife && dataUnions.length === 1 && dataUnions[0].kids.length >= CENTER && !focusSideOf(us[0])) {
+    if (CENTER && us.length === 1 && !us[0].wife && !us[0].away && dataUnions.length === 1 && dataUnions[0].kids.length >= CENTER && !focusSideOf(us[0])) {
       const un = us[0];
       const kids = [...un.kids].sort(kidOrder);
       const h = Math.ceil(kids.length / 2);
@@ -501,7 +573,7 @@ export function familyLayout(S0: ReadonlySet<string>, d: FamilyData, o: FamilyOp
   // (ствол раннего проходит строки поздних до их рождений); у одного лица — порядок текста, стороны чередуются
   const tribsBy = new Map<string, Unit[]>();
   for (const c of corr.keys()) {
-    const us = (units.get(c) ?? []).filter((un) => un.kids.length || un.wife);
+    const us = (units.get(c) ?? []).filter((un) => un.kids.length || un.wife || un.ghost || un.away);
     if (us.length) tribsBy.set(c, us);
   }
   const lastTu = (c: string) => Math.max(...tribsBy.get(c)!.map((u) => u.tu));
@@ -523,6 +595,12 @@ export function familyLayout(S0: ReadonlySet<string>, d: FamilyData, o: FamilyOp
       [-1, Infinity],
     ]);
     let lastS: 1 | -1 | 0 = 0;
+    // стопка (решение 173): притоки одного лица коридора не перемешиваются строками — каждый следующий (более ранний
+    // союз) встаёт за дальней строкой прежних на своей стороне, а не в их временные промежутки
+    const farRow = new Map<number, number>([
+      [1, cr],
+      [-1, cr],
+    ]);
     for (const un of tribsBy.get(c)!) {
       const key = un.u.id;
       const pr = prior?.blocks.get(key);
@@ -536,15 +614,17 @@ export function familyLayout(S0: ReadonlySet<string>, d: FamilyData, o: FamilyOp
         unitContour(un, s, tu0, acc, 0, pos);
         let k = pr && pr.side === s ? pr.base - cr : 0;
         if (k * s < 0) k = 0;
+        const near = Math.min(...[...acc.keys()].map((r) => r * s));
         let found = 0;
         for (let guard = 0; guard < 4000 && found < 12; guard++, k += s) {
+          if ((cr + k + s * near - farRow.get(s)!) * s <= 0) continue;
           if (!fits(acc, cr + k)) continue;
           found++;
           const firstRow = cr + k + s;
           const hits = trunkHits(cr, firstRow, tu0);
           // черта брака царя с царицей-матерью (единица без детей в показе: сын — в коридоре) не пересекает коридор:
           // её место — по другую сторону, даже если там дальше (этап 13, X3 Д11)
-          const hitW = un.kids.length ? 3 : HIT_WIFE;
+          const hitW = un.kids.length ? HIT_KIDS : HIT_WIFE;
           const score: number = Math.abs(k) + hitW * hits + 3 * passHits(acc, cr + k) + (pref && pref !== s ? 1.5 : 0) + (pr && pr.side === s && pr.base === cr + k ? -100 : 0);
           if (!best || score < best.score) best = { base: cr + k, side: s, acc, pos, tu: tu0, score };
         }
@@ -568,6 +648,7 @@ export function familyLayout(S0: ReadonlySet<string>, d: FamilyData, o: FamilyOp
       for (let r = cr + best.side; r !== best.base + best.side; r += best.side) addIv(pass, r, best.tu - 1, best.tu + 1);
       for (const [q, r] of best.pos) rows.set(q, best.base + r);
       blocks.set(key, { base: best.base, side: best.side });
+      farRow.set(best.side, best.base + best.side * Math.max(...[...best.acc.keys()].map((r) => r * best!.side)));
       lastS = best.side;
       inner.set(best.side, Math.min(inner.get(best.side)!, best.tu, ...un.kids.map(T0)));
     }
@@ -634,19 +715,30 @@ export function familyLayout(S0: ReadonlySet<string>, d: FamilyData, o: FamilyOp
   const used = [...new Set(rows.values())].sort((a, b) => a - b);
   const at = new Map(used.map((r, i) => [r, i]));
   const out = new Map<string, number>();
-  for (const [id, r] of rows) out.set(id, at.get(r)!);
+  const ghosts: FamilyGhost[] = [];
+  const ghostOf = new Map<string, Omit<FamilyGhost, 'row'>>();
+  for (const us of units.values())
+    for (const un of us) {
+      if (un.ghost) ghostOf.set(ghostKey(un.ghost, un.p), { id: ghostKey(un.ghost, un.p), person: un.ghost, husband: un.p, union: un.u.id, t: un.tu });
+      for (const d of un.away ?? []) ghostOf.set(ghostKey(d, null), { id: ghostKey(d, null), person: d, husband: null, union: un.u.id, t: T0(d) });
+    }
+  for (const [id, r] of rows) {
+    const g = ghostOf.get(id);
+    if (g) ghosts.push({ ...g, row: at.get(r)! });
+    else out.set(id, at.get(r)!);
+  }
 
   const unitsOut = new Map<string, FamilyUnit[]>();
   for (const [p, us] of units)
     unitsOut.set(
       p,
-      us.map((un) => ({ union: un.u, parent: p, wife: un.wife, kids: [...un.kids].sort(kidOrder), side: unitSide.get(un.u.id) ?? 1, trunk: trunkT.get(un.u.id) ?? un.tu })),
+      us.map((un) => ({ union: un.u, parent: p, wife: un.wife, kids: [...un.kids].sort(kidOrder), side: unitSide.get(un.u.id) ?? 1, trunk: trunkT.get(un.u.id) ?? un.tu, ...(un.ghost ? { ghost: un.ghost } : {}), ...(un.away ? { away: [...un.away].sort(kidOrder) } : {}) })),
     );
   // жена в семье мужа — с года союза (решение 173)
   const since = new Map<string, number>();
   for (const us of units.values())
     for (const un of us) if (un.wife && home.get(un.wife) === un.p) since.set(un.wife, Math.min(since.get(un.wife) ?? Infinity, un.tu));
-  return { rows: out, count: used.length, prior: { rows, blocks, sides: unitSide }, units: unitsOut, home, spine, since };
+  return { rows: out, count: used.length, prior: { rows, blocks, sides: unitSide }, units: unitsOut, home, spine, since, ghosts };
 }
 
 /**

@@ -967,6 +967,15 @@ export class Sky implements SkyContext {
   private planNodes(): NodeRow[] {
     const pl = this.plan;
     const nl = pl.nodeLane;
+    // прежний вызов набора без показа (тесты, инструменты): связи — семейной грамматикой (linksFor), полосы — общей
+    // раскладки; переходов там нет — лицо на своей полосе жизни, как в семейной укладке (решение 173)
+    if (!this.view.show && pl.mode === 'work' && pl.layout !== 'family') {
+      if (this.vNodes?.plan === pl) return this.vNodes.nodes;
+      const out = this.model.nodes.map((n) => (n.stays || (n.starLane !== undefined && n.starLane !== n.lane) ? { ...n, starLane: n.lane, stays: undefined } : n));
+      this.vNodes = { plan: pl, nodes: out };
+      this.nodesStamp++;
+      return out;
+    }
     if (pl.layout !== 'family' || !nl) {
       if (this.vNodes) {
         this.vNodes = null;
@@ -3213,13 +3222,15 @@ export class Sky implements SkyContext {
       lh.add(r.pts, NO_ROUTE_OWN, Math.min(2.5, Math.max(1, (r.w ?? 1) / 2)));
     }
     // переходы следов (решения 163, 173): чужое имя не ложится на S-кривую — она такая же чужая линия, как ствол. На небе
-    // (решение 178) переходы бледны и почти отвесны у самых звёзд семьи — там они не препятствие, иначе имена главы семьи и его
-    // сыновей не нашли бы места; подпись гасит бледный переход под собой, как след (MAP-56). В режиме «В работе» подписаны
-    // все лица набора (J4) — переход чужого лица набора там тоже гасится под именем
-    if (p.s.layers.lifelines && !p.s.onlyLines && p.tier >= 1 && !p.work)
+    // (решение 178) переходы почти отвесны у самых звёзд отчего дома: там переход сына не препятствие для имён его родителей,
+    // иначе имя главы семьи не нашло бы места (MAP-06). В режиме «В работе» подписаны все лица набора (J4) — переход чужого
+    // лица набора там гасится под именем, как след
+    if (p.s.layers.lifelines && !p.s.onlyLines && !p.work)
       for (const i of p.vis) {
         if (!hasGlides(this.nodes[i]) || !this.drawn(i)) continue;
-        const own = new Set([this.nodes[i].person]);
+        const who = this.nodes[i].person;
+        const q = p.tier < 1 ? byId.get(who) : undefined;
+        const own = new Set([who, ...(q?.father ? [q.father] : []), ...(q?.mother ? [q.mother] : [])]);
         for (const g of this.bendsOf(i) ?? []) {
           if (g.xb < -20 || g.xa > this.cam.w + 20) continue;
           lh.add(g.pts, own, 1);

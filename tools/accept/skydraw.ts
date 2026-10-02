@@ -1,5 +1,6 @@
 /**
- * Сценарии приёмки этапа 7 (доработка по повторной экспертизе), группа skydraw (K5): отрисовка неба. Номера 271–289 (270 занят сценарием группы cardtext).
+ * Сценарии приёмки этапа 7 (доработка по повторной экспертизе), группа skydraw (K5): отрисовка неба. Номера 271–289 (270 занят сценарием группы cardtext);
+ * 286–288 — этап 15 («Отчий дом», решения 173, 178, 179): следы по пребываниям и переходы, наведение, уровни подробности.
  * Проверки — по замерам кадра на холсте неба (src/render/sky.ts, конец draw()): canvas[data-detail], [data-detail-axes],
  * [data-named], [data-label-ids] (подписанные лица), [data-notes] (пометы, подписи лент, номера лиц линий, названия
  * созвездий, знаки свёрнутого — текстом через «|»), [data-service] (служебная строка рамки), [data-breaks] (разрывы «//»),
@@ -8,6 +9,7 @@
  */
 import type { Page } from 'playwright';
 import { pass, fail, type Scenario } from './kit.ts';
+import { REC, SCENES, shoot, type Scene } from '../collide.ts';
 
 const go = async (p: Page, hash: string, ms = 2600) => {
   await p.goto(p.url().replace(/#.*$/, '') + hash);
@@ -27,6 +29,24 @@ async function tab(p: Page, hash: string, o: { session?: Record<string, unknown>
 const cv = (p: Page, k: string) => p.locator('.sky > canvas').getAttribute(`data-${k}`).then((v) => v ?? '');
 const overlaps = async (p: Page) => Number(((await p.locator('.sky').getAttribute('data-labels')) ?? '0/0').split('/')[1]);
 const notes = async (p: Page) => (await cv(p, 'notes')).split('|').filter(Boolean);
+/** Сцена корпуса этапа 15 (tools/collide.ts, s15-*): окно семьи без выбора, как у снимков владельца. */
+const s15 = async (p: Page, id: string, act?: Scene['act']) => {
+  const sc = SCENES.find((q) => q.id === id);
+  if (!sc) throw new Error(`нет сцены ${id}`);
+  await p.addInitScript(REC);
+  await shoot(p, act ? { ...sc, act: async (q, g) => { await sc.act?.(q, g); return act(q, g); } } : sc, p.url());
+};
+/** Переходы следов в окне (canvas[data-glides]): лицо, начало и конец S-кривой в px холста. */
+const glidesOf = async (p: Page) =>
+  (await cv(p, 'glides'))
+    .split(';')
+    .filter(Boolean)
+    .map((q) => {
+      const [id, xy] = q.split(':');
+      const [x0, y0, x1, y1] = xy.split(',').map(Number);
+      return { id, x0, y0, x1, y1 };
+    });
+const canvasAt = async (p: Page) => (await p.locator('.sky > canvas').boundingBox())!;
 const star = (p: Page, id: string) =>
   p.evaluate((id) => {
     const b = document.getElementById(`sky-star-${id}`) as HTMLElement | null;
@@ -346,6 +366,87 @@ export const skydraw: Scenario[] = [
       } finally {
         await ctx.close();
       }
+    },
+  },
+  {
+    n: 286,
+    title: 'Решение 173 «Отчий дом»: сыновья Иакова — звезда в отчем доме, след плавно уходит в колено (5–16 лет, не отвесно), чужой след под переходом прерван; звезда в списке неба — на полосе рождения',
+    run: async (p) => {
+      await s15(p, 's15-iakov-f');
+      const gl = await glidesOf(p);
+      if (gl.length < 4) return fail(`переходов в окне ${gl.length}`);
+      const [tier, pxYear] = (await cv(p, 'tier')).split(' ').map(Number);
+      if (tier !== 2) return fail(`уровень подробности ${tier} (${pxYear} px на год) — ждали масштаб семьи`);
+      // не отвесно: переход идёт не меньше 5 лет
+      const steep = gl.filter((g) => g.x1 - g.x0 < 5 * pxYear * 0.8);
+      if (steep.length) return fail(`отвесные переходы: ${steep.map((g) => `${g.id} ${Math.round(g.x1 - g.x0)} px`).join(', ')}`);
+      // звезда — в начале перехода (полоса рождения): у каждого лица с переходом и звездой в списке неба
+      const bad: string[] = [];
+      let checked = 0;
+      for (const g of gl) {
+        const q = await star(p, g.id);
+        if (!q || q.x > g.x0) continue;
+        const first = gl.filter((h) => h.id === g.id).sort((a, b) => a.x0 - b.x0)[0];
+        if (first !== g) continue;
+        checked++;
+        if (Math.abs(q.y - g.y0) > 1.5) bad.push(`${g.id}: звезда ${q.y}, начало перехода ${g.y0}`);
+      }
+      if (bad.length) return fail(bad.join('; '));
+      if (!checked) return fail('ни у одного лица с переходом звезды в списке неба');
+      const cuts = (await cv(p, 'glide-cuts')).split(' ').filter(Boolean);
+      if (!cuts.length) return fail('переходы в окне не пересекают ни одного чужого следа — проверить разрыв нечем');
+      return pass(`переходов ${gl.length} (${[...new Set(gl.map((g) => g.id))].slice(0, 8).join(', ')}), звёзд на полосе рождения ${checked}, разрывов чужих следов под переходами ${cuts.length}`);
+    },
+  },
+  {
+    n: 287,
+    title: 'Решение 179: наведение на переход выделяет само лицо (подсказка звезды этого лица); наведение на Вениамина — «Иаков и Рахиль — родители; Вениамин — сын»',
+    run: async (p) => {
+      await s15(p, 's15-iakov-f');
+      const c = await canvasAt(p);
+      const gl = (await glidesOf(p)).filter((g) => Math.abs(g.y1 - g.y0) > 30);
+      let hit: string | null = null;
+      for (const g of gl) {
+        // середина S-кривой: на полпути по x и по высоте
+        await p.mouse.move(c.x + (g.x0 + g.x1) / 2, c.y + (g.y0 + g.y1) / 2);
+        await p.waitForTimeout(450);
+        const tip = p.locator('.sky .tip[data-kind="star"][data-shown]');
+        if (!(await tip.count())) continue;
+        const id = await tip.getAttribute('data-id');
+        if (id !== g.id) return fail(`над переходом ${g.id} — подсказка лица ${id}`);
+        hit = g.id;
+        break;
+      }
+      if (!hit) return fail(`ни один из ${gl.length} переходов не поймал наведение`);
+      await p.mouse.move(c.x + 4, c.y + c.height - 4);
+      await p.waitForTimeout(300);
+      const v = await star(p, 'veniamin');
+      if (!v) return fail('звезды Вениамина нет в окне');
+      await p.mouse.move(c.x + v.x, c.y + v.y);
+      await p.waitForTimeout(600);
+      const org = p.locator('.sky .tip[data-kind="star"] [data-origin]');
+      const t = (await org.count()) ? (await org.innerText()).replace(/\u00a0/g, ' ').trim() : '';
+      if (!/^Иаков и Рахиль — родители; Вениамин — сын/.test(t)) return fail(`подсказка Вениамина: «${t}»`);
+      return pass(`переход ${hit} → подсказка лица; Вениамин: «${t}»`);
+    },
+  },
+  {
+    n: 288,
+    title: 'Решение 178: уровни подробности — небо (меньше 7 px на год), обзор семьи (7–24), семья (от 24); призрак «Мелхола, жена Давида» — только на масштабе семьи',
+    run: async (p) => {
+      const tierAt = async (id: string) => {
+        await s15(p, id);
+        return Number((await cv(p, 'tier')).split(' ')[0]);
+      };
+      await go(p, '#/~y-1000~w2500~l0~s1~mmt-long', 2800);
+      const sky = Number((await cv(p, 'tier')).split(' ')[0]);
+      const o = await tierAt('s15-david-o');
+      const oNotes = await notes(p);
+      const f = await tierAt('s15-david-f');
+      const fNotes = await notes(p);
+      if (`${sky}${o}${f}` !== '012') return fail(`уровни: обзор неба ${sky}, обзор семьи ${o}, семья ${f}`);
+      if (oNotes.some((t) => /^Мелхола, жена Давида/.test(t))) return fail('призрак Мелхолы подписан на обзоре семьи');
+      return pass(`уровни 0/1/2; на масштабе семьи пометы призраков: ${fNotes.filter((t) => /, жена /.test(t)).join(', ') || 'нет в окне'}`);
     },
   },
 ];

@@ -1045,7 +1045,14 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): Label
   const rules = (b: Rect, m: Mode, leader: boolean) => owned(b, leader) && !crossed(b, m === 'lane');
   // явно раскрытое имя без правил: чужая звезда у имени — хуже, чем линия под ним (её под раскрытым именем прервёт разрыв)
   const ruleCost = (b: Rect, leader: boolean) => (owned(b, leader) ? 0 : 0.6) + (crossed(b, false) ? 0.5 : 0);
-  const ok = (b: Rect, m: Mode, leader = false) =>
+  const DBG = (globalThis as { __dbg?: string }).__dbg === q.id;
+  const ok0 = (b: Rect, m: Mode, leader = false) => {
+    const r = ok1(b, m, leader);
+    if (DBG) console.log('DBG', r ? 'OK  ' : 'fail', m, Math.round(b.x), Math.round(b.y), Math.round(b.w), 'clash', p.placer.clash(b, false, o.cover ?? 99, q.id), 'row', p.placer.rowClash(b, size), 'owned', owned(b, leader), 'crossed', crossed(b, m === 'lane'), 'res', hits(b, p.reserve), 'inside', insideSky(v, b));
+    return r;
+  };
+  const ok = ok0;
+  const ok1 = (b: Rect, m: Mode, leader = false) =>
     insideSky(v, b) &&
     !hits(b, p.reserve) &&
     (m === 'none' ||

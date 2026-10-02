@@ -126,7 +126,8 @@ describe('сжатие полос (J4, J5; src/render/rows.ts)', () => {
     const shown = m.nodes.map((n, i) => (p.hidden![i] ? null : n)).filter((n): n is NonNullable<typeof n> => !!n);
     expect(shown.every((n) => set.has(n.person) && !n.ghost)).toBe(true);
     expect(new Set(shown.map((n) => n.person)).size).toBe(set.size);
-    const lanes = [...new Set(shown.map((n) => n.lane))].sort((a, b) => a - b);
+    // этап 15 (решение 173): строки лица — и строки его пребываний (звезда в отчем доме)
+    const lanes = [...new Set(shown.flatMap((n) => [n.lane, ...(n.stays ?? []).map((q) => q.lane)]))].sort((a, b) => a - b);
     // строк — не больше, чем полос с лицами набора, и зазоры между родами
     const span = p.rows.max - p.rows.min;
     expect(span).toBeGreaterThanOrEqual(lanes.length);
