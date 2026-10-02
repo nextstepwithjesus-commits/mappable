@@ -49,7 +49,7 @@ export const TRUNK_MIN = 5;
  * src/ui/sky/input.ts, STAR_FIRST) и вне поля ромба (Иосиф у Рахили, Амнон у Ахиноамы: зубцы были по 3 px, щелчок
  * ловили звезда и ромб).
  */
-export const TOOTH_HIT = 16;
+export const TOOTH_HIT = 12;
 /** Ствол — не ближе к середине звезды первого ребёнка гнезда: её радиус, 1,5 px и видимый зубец. */
 export const toothRoom = (s: { r: number }) => Math.max(TRUNK_MIN, s.r + 1.5 + TOOTH_HIT);
 /** Зубец — не длиннее (Г3, Я6). */
@@ -1029,7 +1029,7 @@ function houseLinks(inp: LinkInput): LinkFrame {
       if (Math.min(v.y1, y1) - Math.max(v.y0, y0) > -6) {
         const need = v.wide || sl.wide ? WIDE_GAP : TRUNK_GAP;
         // ближе 4 px две линии читаются одной (черты Эглы и Вирсавии у Давида в 2 px) — как совпадение
-        if (d < need) c += d < 4 ? 1200 : 100 + (300 * (need - d)) / need;
+        if (d < need) c += d < 2 ? 1600 : d < 4 ? 1100 : 100 + (300 * (need - d)) / need;
       }
       // свой узел — на чужой вертикали (решение 181), и у её конца на том же следе (черта чужого союза входила бы в ромб)
       if (ny > v.y0 - 1 && ny < v.y1 + 1 && d < nodeClear + halfW(v.wide)) c += 1200;
@@ -1059,6 +1059,9 @@ function houseLinks(inp: LinkInput): LinkFrame {
     }
     // вертикаль пересекает чужие зубцы (Я11)
     for (const t of teeth.query(x, y0, x, y1)) if (!t.dead && t.u !== u && t.y > y0 + 0.5 && t.y < y1 - 0.5 && x > t.x0 + 0.5 && x < t.x1 - 0.5) c += 100;
+    // свой узел — на чужом зубце (Г2: ромб Рахили на зубце Лии к Дине, когда Дина стоит в строке Рахили)
+    for (const t of teeth.query(x - nodeClear, ny - nodeClear, x + nodeClear, ny + nodeClear))
+      if (!t.dead && t.u !== u && Math.abs(t.y - ny) < nodeClear && x > t.x0 - nodeClear && x < t.x1 + nodeClear) c += 1200;
     return c;
   };
   const ent = new Map<Slot, { dead?: boolean }[]>();
@@ -1136,12 +1139,6 @@ function houseLinks(inp: LinkInput): LinkFrame {
         if (g0) c.hi = Math.min(c.hi, g0.x - nodeGap);
         slots.splice(slots.indexOf(sl), 1, c);
         place(c);
-        continue;
-      }
-      // отдельной черте места до прихода жены в дом нет (её приход позже окна, решение 173) — колонна остаётся с гнездом
-      const wide = colSlot(sl.p, true);
-      if (arrivalOf(sl.p.W, Infinity) + 1 > Math.min(wide.hi, nestSlot(sl.p, 0).x - nodeGap)) {
-        place(sl);
         continue;
       }
       sl.p.merged = false;

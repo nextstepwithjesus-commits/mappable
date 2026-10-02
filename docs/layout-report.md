@@ -9,16 +9,16 @@
  "persons": 2684,
  "lanes": 337,
  "corridorWidth": 13,
- "crossings": 130,
- "corridorCrossings": 20,
- "dropLength": 3939,
+ "crossings": 131,
+ "corridorCrossings": 22,
+ "dropLength": 3949,
  "blocks": 566,
  "clusters": 21,
  "clustered": 700,
  "links": 1394,
- "links8": 81,
+ "links8": 82,
  "linkMax": 26,
- "glides": 73,
+ "glides": 71,
  "ghosts": 29
 }
 ```
@@ -41,7 +41,7 @@
  "links": 1394,
  "links8": 86,
  "linkMax": 35,
- "glides": 69,
+ "glides": 68,
  "ghosts": 28
 }
 ```
@@ -64,7 +64,7 @@
  "links": 1394,
  "links8": 84,
  "linkMax": 35,
- "glides": 71,
+ "glides": 70,
  "ghosts": 27
 }
 ```
@@ -87,7 +87,7 @@
  "links": 1394,
  "links8": 82,
  "linkMax": 36,
- "glides": 71,
+ "glides": 70,
  "ghosts": 29
 }
 ```

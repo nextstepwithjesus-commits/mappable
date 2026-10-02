@@ -50,7 +50,7 @@ const MOVED_173 = ['kham', 'sarra', 'revekka', 'liya', 'leviy', 'simeon', 'dan',
 const RESIDUAL = [
   // Жена, живущая у мужа с рождения, занимает строку с рождения (её доля до прихода — бледная, но строка её): если ближе
   // к мужу место для неё до брака занято, она встаёт дальше того, кто пришёл или родился раньше её черты. План дома
-  // ставит позднее событие первым, но это цена, а не запрет: остаётся 11 случаев на 107 черт и 1 499 отводов.
+  // ставит позднее событие первым, но это цена, а не запрет: остаётся 12 случаев на 107 черт и 1 499 отводов.
   // Гофолия (из далёкого рода) стоит дальше Иосавеф, родившейся раньше черты брака
   'черта u:ioram-syn-iosafata+gofoliya → iosavef',
   // Рицпа (из далёкого рода) стоит дальше Ионафана
@@ -69,6 +69,9 @@ const RESIDUAL = [
   'отвод u:lavan+ → rakhil → liya',
   'черта u:esrom+aviya-zhena-esroma → khalev-syn-esroma',
   'черта u:isaiya+prorochitsa-zhena-isaii → shear-yasuv',
+  // путь зубца Дины (строка свободна от черты Лии до звезды) занял прежнюю строку Рахили в доме Лавана: Рахиль родилась
+  // в той строке, где потом живёт у Иакова, — черта Зелфы проходит её след до прихода
+  'черта u:iakov+zelfa → rakhil',
 ];
 
 let chrono: ChronoResult;
@@ -136,6 +139,34 @@ describe('дом без пересечений по построению (реш
     expect(bars).toBeGreaterThan(80);
     expect(stems).toBeGreaterThan(1000);
     expect(bad.sort()).toEqual([...RESIDUAL].sort());
+  });
+
+  it('зубец не лежит на живом чужом следе: строка ребёнка свободна от черты брака матери до его звезды (решение 175)', () => {
+    const segs = new Map<number, { a: number; e: number; id: string }[]>();
+    for (const n of H.nodes) {
+      if (n.ghost || n.trail === 'list') continue;
+      const end = Math.max(n.t1, n.t0 + 0.5);
+      const ss = n.stays ? n.stays.map((s) => [s.lane, Math.max(s.t0, n.t0), Math.min(s.t1, end)] as const) : [[n.lane, n.t0, end] as const];
+      for (const [l, a0, e] of ss) {
+        const a = n.wed !== undefined ? Math.max(a0, n.wed) : a0;
+        if (e >= a - 0.5) (segs.get(l) ?? segs.set(l, []).get(l)!).push({ a: a - 0.5, e, id: n.person });
+      }
+    }
+    const bad: string[] = [];
+    let n = 0;
+    for (const hu of H.plan.unions.values()) {
+      if (!hu.wife || !hu.resident || hu.barT === null) continue;
+      for (const k of hu.kids) {
+        const kn = N.get(k);
+        if (!kn) continue;
+        n++;
+        const l = starLaneOf(kn);
+        for (const sg of segs.get(l) ?? []) if (sg.id !== k && sg.id !== hu.wife && sg.a < b(k) - 0.5 && sg.e > hu.barT) bad.push(`${hu.union.id} → ${k} на следе ${sg.id}`);
+      }
+    }
+    expect(n).toBeGreaterThan(120);
+    // прежде: Дина в строке Рахили, ещё живой в родном доме, — зубец Лии лежал на её следе
+    expect(bad).toEqual([]);
   });
 
   it('жена, живущая у мужа с рождения (Д7, далёкий род), приходит в дом в год своей черты брака (wed)', () => {

@@ -598,8 +598,35 @@ function parse(g: Grab) {
     const n = nodes[k];
     if (!fills.some((b) => n.x >= b.x0 - 1 && n.x <= b.x1 + 1 && n.y >= b.y0 - 1 && n.y <= b.y1 + 1)) nodes.splice(k, 1);
   }
+  // переход следа (этап 15, решение 173; canvas[data-glides] «лицо:x0,y0,x1,y1»): след с наклонными отрезками внутри рамки
+  // перехода — вид 'glide', владелец — лицо перехода (свой переход через своё имя не считается). Переход — препятствие для
+  // чужого имени (решение 163): К5 — видимое пересечение середины строки (на небе переход бледен и гасится под именем).
+  // Переход узнаётся раньше связей: почти отвесная S-кривая рядом со стволом (переход Вениамина вдоль ствола Гада на
+  // телефоне) иначе совпадала с ним по отрезкам и считалась связью
+  const glideBoxes = g.glides
+    .split(';')
+    .filter(Boolean)
+    .map((q) => {
+      const [id, xy] = q.split(':');
+      const [x0, y0, x1, y1] = xy.split(',').map(Number);
+      return { id, x0: Math.min(x0, x1) - 1.5, x1: Math.max(x0, x1) + 1.5, y0: Math.min(y0, y1) - 1.5, y1: Math.max(y0, y1) + 1.5 };
+    });
+  const glideOf = (L: (typeof lines)[number]) => {
+    if (!glideBoxes.length) return undefined;
+    const slant = L.segs.filter(([, y0, , y1]) => Math.abs(y1 - y0) >= 0.3);
+    // S-кривая идёт вправо на каждом отрезке: отвесный отрезок (ствол, черта) — не переход
+    if (!slant.length || slant.some(([x0, , x1]) => Math.abs(x1 - x0) < 0.05)) return undefined;
+    const own = glideBoxes.find((b) => slant.every(([x0, y0, x1, y1]) => Math.min(x0, x1) >= b.x0 && Math.max(x0, x1) <= b.x1 && Math.min(y0, y1) >= b.y0 && Math.max(y0, y1) <= b.y1));
+    return own ? { own, slant } : undefined;
+  };
+  const glided = new Map<(typeof lines)[number], NonNullable<ReturnType<typeof glideOf>>>();
   for (const L of lines) {
     if (L.kind !== 'line') continue;
+    const q = glideOf(L);
+    if (q) glided.set(L, q);
+  }
+  for (const L of lines) {
+    if (L.kind !== 'line' || glided.has(L)) continue;
     let hitKind = '';
     let hitKs = '';
     const hit = L.segs.some(([x0, y0, x1, y1]) =>
@@ -625,32 +652,14 @@ function parse(g: Grab) {
       L.ks = hitKs;
     }
   }
-  // переход следа (этап 15, решение 173; canvas[data-glides] «лицо:x0,y0,x1,y1»): след с наклонными отрезками внутри рамки
-  // перехода — вид 'glide', владелец — лицо перехода (свой переход через своё имя не считается). Переход — препятствие для
-  // чужого имени (решение 163): К5 — видимое пересечение середины строки (на небе переход бледен и гасится под именем)
-  const glideBoxes = g.glides
-    .split(';')
-    .filter(Boolean)
-    .map((q) => {
-      const [id, xy] = q.split(':');
-      const [x0, y0, x1, y1] = xy.split(',').map(Number);
-      return { id, x0: Math.min(x0, x1) - 1.5, x1: Math.max(x0, x1) + 1.5, y0: Math.min(y0, y1) - 1.5, y1: Math.max(y0, y1) + 1.5 };
-    });
-  if (glideBoxes.length)
-    for (const L of [...lines]) {
-      if (L.kind !== 'line') continue;
-      const slant = L.segs.filter(([, y0, , y1]) => Math.abs(y1 - y0) >= 0.3);
-      // S-кривая идёт вправо на каждом отрезке: отвесный отрезок (ствол, черта) — не переход
-      if (!slant.length || slant.some(([x0, , x1]) => Math.abs(x1 - x0) < 0.05)) continue;
-      const own = glideBoxes.find((b) => slant.every(([x0, y0, x1, y1]) => Math.min(x0, x1) >= b.x0 && Math.max(x0, x1) <= b.x1 && Math.min(y0, y1) >= b.y0 && Math.max(y0, y1) <= b.y1));
-      if (!own) continue;
-      // горизонтали пребываний того же прохода — след, наклонные отрезки — переход
-      const flat = L.segs.filter(([, y0, , y1]) => Math.abs(y1 - y0) < 0.3);
-      if (flat.length) lines.push({ ...L, kind: 'trail', segs: flat });
-      L.kind = 'glide';
-      L.ks = `glide:${own.id}`;
-      L.segs = slant;
-    }
+  for (const [L, { own, slant }] of glided) {
+    // горизонтали пребываний того же прохода — след, наклонные отрезки — переход
+    const flat = L.segs.filter(([, y0, , y1]) => Math.abs(y1 - y0) < 0.3);
+    if (flat.length) lines.push({ ...L, kind: 'trail', segs: flat });
+    L.kind = 'glide';
+    L.ks = `glide:${own.id}`;
+    L.segs = slant;
+  }
   return { vp, glyphs, texts, lines, circles, knocks, nodes, labelBoxes, raw };
 }
 type Parsed = ReturnType<typeof parse>;
@@ -1348,6 +1357,8 @@ const pan = (dx: number, dy: number) => async (p: Page) => {
   await p.mouse.move(c.x + 4, c.y + c.height - 4);
   await p.waitForTimeout(900);
 };
+/** Щелчок ближе стольких px к звезде выбирает звезду, а не связь (src/ui/sky/input.ts, STAR_FIRST). */
+const STAR_FIRST = 12;
 /** Выбрать связь «к ребёнку» лица kid (первый путь tooth из журнала связей с его ключом) — щелчком по середине пути. */
 const clickChildLink = (kid: string) => async (p: Page, g: () => Promise<Grab>) => {
   const s = await g();
@@ -1359,7 +1370,8 @@ const clickChildLink = (kid: string) => async (p: Page, g: () => Promise<Grab>) 
   if (!own.length) return `нет пути к ${kid}`;
   // у ребёнка единственного союза своя часть связи — короткий зубец, ствол — у союза (u.<союз>): щелчок по стволу
   // выбирает ту же связь; берётся середина самого длинного отрезка из своей части и ствола
-  // (ствол — только когда своя часть короче 16 px: ствол союза с несколькими детьми выбирает не одну связь)
+  // (ствол — только когда своя часть короче 12 px — меньше видимого зубца: ствол союза с несколькими детьми выбирает не
+  // одну связь)
   const union = `u.${own[0][2].slice(2, own[0][2].length - kid.length - 1)}`;
   let best = [0, 0];
   let bl = -1;
@@ -1376,7 +1388,30 @@ const clickChildLink = (kid: string) => async (p: Page, g: () => Promise<Grab>) 
     }
   };
   longest(own);
-  if (bl < 16) longest(all.filter((q) => q[2] === union));
+  // на своей части — точка дальше STAR_FIRST (12 px, src/ui/sky/input.ts) от звезды ребёнка: щелчок ближе выбирает звезду;
+  // на коротком зубце (от 12 px) это не середина, а его начало у ствола (до 80 % длины от звезды)
+  const kidAt = s.stars.find((q) => q.id === kid);
+  if (kidAt && bl >= 12) {
+    let far = -1;
+    for (const q of own) {
+      const pts = q[3].split(',').map(Number);
+      for (let k = 0; k + 3 < pts.length; k += 2)
+        for (let t = 0.2; t <= 0.81; t += 0.1) {
+          const x = pts[k] + (pts[k + 2] - pts[k]) * t;
+          const y = pts[k + 1] + (pts[k + 3] - pts[k + 1]) * t;
+          const d = Math.hypot(x - kidAt.x, y - kidAt.y);
+          if (d > far) {
+            far = d;
+            best = [x, y];
+          }
+        }
+    }
+    if (far <= STAR_FIRST + 1) bl = -1;
+  }
+  if (bl < 12) {
+    bl = -1;
+    longest(all.filter((q) => q[2] === union));
+  }
   const pt = await canvasPt(p, best[0], best[1]);
   await p.mouse.click(pt.x, pt.y);
   await p.mouse.move(pt.x + 300, pt.y + 200);

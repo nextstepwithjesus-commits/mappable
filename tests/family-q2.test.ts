@@ -40,6 +40,7 @@ const SCENES: Record<string, { S: Set<string>; root: string }> = {
   'Дом Нахора': { S: withGuests(contentOf({ kind: 'groups', groups: ['nahorites'], links: 'stubs' })), root: 'nakhor-syn-farry' },
   'Род Иуды по отцам': { S: withGuests(contentOf({ kind: 'lineage', id: 'iuda', dir: 'down', gen: null, by: 'father' })), root: 'iuda' },
   'Колено Вениамина': { S: withGuests(contentOf({ kind: 'groups', groups: ['benjamin', 'saulides'], links: 'stubs' })), root: 'veniamin' },
+  Халев: { S: fam(['khalev-syn-esroma']), root: 'khalev-syn-esroma' },
 };
 const FAMILIES = ['Адам', 'Ной', 'Авраам', 'Иаков', 'Давид', 'Дом Нахора'];
 
@@ -180,6 +181,31 @@ describe('Я16: группы сплошные — наружу мать, за н
     // внутри одной семьи (черта и отводы родителя через его же жён и детей) — ни одного
     const r = layoutOf('Род Иуды по отцам');
     expect(xs.filter((x) => r.home.get(x.who) === x.parent).map((x) => x.text)).toEqual([]);
+  });
+
+  it('зубец не лежит на живом чужом следе: строка ребёнка свободна от ствола (черты матери) до его звезды (Иаков, Давид, Иуда, Халев, Авраам)', () => {
+    for (const k of ['Иаков', 'Давид', 'Род Иуды по отцам', 'Халев', 'Авраам']) {
+      const r = layoutOf(k);
+      const end = (id: string) => {
+        const n = models[0].nodeByPerson.get(id);
+        return n ? Math.max(n.t1, n.t0 + 0.5) : T0(id) + 0.5;
+      };
+      const byRow = new Map<number, string[]>();
+      for (const [id, row] of r.rows) (byRow.get(row) ?? byRow.set(row, []).get(row)!).push(id);
+      const bad: string[] = [];
+      for (const [p, us] of r.units)
+        for (const u of us)
+          for (const c of u.kids) {
+            // зубец — от ствола (год trunk у «мать не названа» и у первого гнезда; иначе — год рождения) до звезды
+            const a = Math.min(u.trunk, T0(c));
+            for (const x of byRow.get(r.rows.get(c)!) ?? []) {
+              if (x === c) continue;
+              const from = r.since.get(x) ?? T0(x);
+              if (from < T0(c) && end(x) > a) bad.push(`${k}: ${name(p)} → ${name(c)} (${Math.round(a)}…${Math.round(T0(c))}) на следе ${name(x)}`);
+            }
+          }
+      expect(bad).toEqual([]);
+    }
   });
 
   it('решение 173, стопка: у лица коридора семья каждой матери и дети без названной матери — сплошными блоками, не вперемешку', () => {

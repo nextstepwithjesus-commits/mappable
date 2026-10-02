@@ -173,7 +173,7 @@ const childlessYear = (bh: number, bw: number, eh: number, ew: number) => Math.m
  * План домов поверх раскладки L. only: 'spine' — только дома лиц коридора на пустом небе (шаг 2 конвейера);
  * pin — места шага 2 (дом|лицо → полоса), которые дома коридора сохраняют на шаге 4.
  */
-export function planHouses(H: HouseInput, L: LayoutResult, opts: { only?: 'spine'; pin?: ReadonlyMap<string, number> } = {}): HousePlan {
+export function planHouses(H: HouseInput, L: LayoutResult, opts: { only?: 'spine'; pin?: ReadonlyMap<string, number>; tooth?: boolean } = {}): HousePlan {
   const { g, U, chrono } = H;
   const ch = (id: string) => chrono.persons.get(id)!;
   const node = new Map<string, LayoutNode>();
@@ -362,10 +362,18 @@ export function planHouses(H: HouseInput, L: LayoutResult, opts: { only?: 'spine
     /** Разность пересечений сторон: X(−1) − X(+1) (больше нуля — сторона +1 чище). */
     const crossVote = (xs: { from: number; a: number; b: number; t: number }[], ignore: ReadonlySet<string>) =>
       xs.reduce((q, x) => q + probe(x.from, x.a, x.b, x.t, -1, ignore) - probe(x.from, x.a, x.b, x.t, 1, ignore), 0);
+    /**
+     * Ребёнок дома. Его строка свободна от чужих следов на всём пути зубца — от ствола до звезды (решение 175: дети
+     * одной матери ближе 40 px — на одном стволе, первое гнездо — на колонне союза): у названной матери место — с года
+     * черты брака, а не с рождения (у «мать не названа» отводы — от следа отца каждый в свой год).
+     */
     const kidSlot = (k: string, u: Union, from: 'anchor' | string): Slot | null => {
       const st = stayOf(k, 'birth', A);
       if (!st) return null;
-      return { id: k, kind: 'kid', ev: b(k), live: lv(k, b(k), rsv(k, b(k), st.t1)[1]), reserve: rsv(k, b(k), st.t1), linkT: b(k), from, pref: node.get(k)?.lane ?? null, union: u.id };
+      const r = rsv(k, b(k), st.t1);
+      // путь зубца — ровно с года черты (запас GAP у места ребёнка — с рождения, как прежде)
+      const tooth = from === 'anchor' || !opts.tooth ? b(k) : Math.min(b(k), firstKid(u) - 1 + GAP);
+      return { id: k, kind: 'kid', ev: b(k), live: lv(k, b(k), r[1]), reserve: [tooth, r[1]], linkT: b(k), from, pref: node.get(k)?.lane ?? null, union: u.id };
     };
     for (const u of us) {
       const W = u.a === A ? u.b : null;
@@ -680,7 +688,9 @@ export function computeHouseLayout(g: Graph, chrono: ChronoResult, lines: { jose
   const P0 = planHouses(H, L1, { only: 'spine' });
   const L2 = computeLayout(g, chrono, lines, { ...opts, pre: P0.reserved, cut: P0.cuts });
   const T2 = now();
-  const P = planHouses(H, L2, { pin: P0.pins });
+  // путь зубца (строка ребёнка свободна от черты брака матери до звезды) — в итоговом плане: дома коридора остаются на
+  // местах шага 2, а чужие дома обходят зубцы
+  const P = planHouses(H, L2, { pin: P0.pins, tooth: true });
   const out = applyHouses(H, L2, P);
   return { ...out, ms: { first: T1 - T0, second: T2 - T1, houses: now() - T2 } };
 }
