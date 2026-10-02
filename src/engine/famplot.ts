@@ -277,7 +277,7 @@ export type Prim =
   | { t: 'star'; id: string; x: number; y: number; r: number; sex: 'm' | 'f'; people: boolean; king: boolean; infant: boolean; ink: Ink | null; glow: number; sel?: boolean; a: number }
   | { t: 'line'; x0: number; y0: number; x1: number; y1: number; c1?: [number, number]; c2?: [number, number]; style: LineStyle; ink: Ink; w: number; a: number; off?: number; glow?: boolean; uid?: string; lead?: string; via?: [number, number][] }
   | { t: 'diamond'; uid: string; x: number; y: number; s: number; hollowWife: boolean; hollowAll: boolean; ring: boolean; a: number }
-  | { t: 'label'; x: number; y: number; align: 'left' | 'right' | 'center'; runs: Run[]; sub?: Run[]; sub2?: Run[]; a: number; id?: string; cands?: Cand[]; at?: [number, number, number]; lead?: string }
+  | { t: 'label'; x: number; y: number; align: 'left' | 'right' | 'center'; runs: Run[]; sub?: Run[]; sub2?: Run[]; a: number; id?: string; cands?: Cand[]; at?: [number, number, number]; lead?: string; alt?: { runs: Run[]; sub?: Run[] } }
   | { t: 'dot'; x: number; y: number; r: number; ink: Ink; a: number };
 
 export type Hit =
@@ -346,6 +346,68 @@ export function plotFamily(S: FamScene, G: Geom): Plot {
   return G.comb ? plotComb(S, G) : plotFan(S, G);
 }
 
+/** Ступени ужатия веера: выноска (черта брака до подписи супруги), наименьший луч к ребёнку, точек пыли в строке. */
+const KNOBS = [
+  { lead: 40, akMin: 64, dots: 12 },
+  { lead: 32, akMin: 56, dots: 12 },
+  { lead: 28, akMin: 48, dots: 10 },
+  { lead: 24, akMin: 40, dots: 8 },
+];
+type Knob = (typeof KNOBS)[number];
+
+/** Ширины веера по измеренным подписям: левое поле, место ребёнка справа от ромба, подпись союза. */
+function fanParts(S: FamScene, G: Pick<Geom, 'measure' | 'words' | 'scale'>) {
+  const k = G.scale;
+  const innerOfMap = new Map(S.inner.map((q) => [q.kid, q]));
+  const hasLeft = S.sibs.length + S.kinSibs.length + S.halves.length > 0;
+  // левое поле: братья и сёстры (подписи слева от звёзд) не выходят за край раскладки больше чем на 6 px.
+  // Звёзды братьев — на 34 px левее ромба родителей; ромб — у матери (лицо − 46) или, если мать не названа, на 44 px
+  // правее отца (отец — лицо − 150, но не ближе 34 px к краю)
+  const sibR = (n: FamNode) => rOf(n.mg, G.scale);
+  const wSib = Math.max(0, ...S.sibs.map((x) => sibR(x) + 9 + G.measure(x.name, 'sib')));
+  const wKin = Math.max(0, ...S.kinSibs.map((x) => sibR(x.node) + 9 - 26 + Math.max(G.measure(x.node.name, 'sib'), G.measure(`${x.word}, ${x.ref.replace(/^([1-4])([А-Я])/, '$1 $2')}`, 'word'))));
+  const sibsW = Math.max(wSib, wKin) - 6;
+  const content = !S.parents || !(S.sibs.length + S.kinSibs.length) ? 0 : S.parents.mother ? 80 + sibsW : sibsW > 34 ? 140 + sibsW : 0;
+  const leftW = Math.ceil(Math.max(hasLeft ? (S.sibs.length + S.kinSibs.length > 2 ? 232 : 200) : S.parents ? 150 : 60, content));
+  const kidLab = (kid: string) => {
+    const nd = S.nodes.get(kid)!;
+    const q = innerOfMap.get(kid);
+    return G.measure(nd.name, nd.mg <= 1 ? 'kidStrong' : 'kid') + (q ? G.measure(`, ${G.words.innerWord(kid, q.wife, q.kind)}`, 'word') : 0);
+  };
+  // справа от луча: звезда и подпись ребёнка, у кого есть внуки — ещё столбец «их дети» (точки и «+N»)
+  const kidNeed = (K: Knob) =>
+    Math.max(40, ...S.unions.flatMap((u) => u.kids.map((x) => {
+      const nd = S.nodes.get(x)!;
+      return rOf(nd.mg, k) + 7 + kidLab(x) + (nd.grand ? 14 + K.dots * 4.6 + 22 : 0);
+    })));
+  const wOf = (rs: Run[]) => rs.reduce((q, r) => q + G.measure(r.s, r.font), 0);
+  const tagOf = (u: FamUnion, stack: boolean) => {
+    const partner = u.partner ? S.nodes.get(u.partner)! : null;
+    const kind: Run = { s: stack ? G.words.kind(u.kind) : `, ${G.words.kind(u.kind)}`, font: 'word', ink: 'ink3' };
+    const runs: Run[] = partner ? [{ s: partner.name, font: 'name', ink: 'ink' }, ...(stack ? [] : [kind])] : [{ s: G.words.motherUnnamed(u.kids.length), font: 'word', ink: 'ink3' }];
+    const kin: Run[] | undefined = partner && u.kin ? [{ s: `${u.kin.word}, ${u.kin.ref.replace(/^([1-4])([А-Я])/, '$1 $2')}`, font: 'word', ink: 'ink2' }] : undefined;
+    // в строку: «Сарра, жена» и родство под ней; столбиком: имя, вид союза, родство
+    const sub = stack ? [kind] : kin;
+    const sub2 = stack ? kin : undefined;
+    const lw = Math.max(wOf(runs), wOf(sub ?? []), wOf(sub2 ?? []));
+    // от звезды супруги (или от ромба союза без названной матери) до конца выноски
+    const back = partner ? rOf(partner.mg, k) + 6 + lw + 5 : 10 - 12 + lw + 5;
+    return { partner, runs, sub, sub2, lw, back, lines: 1 + (sub ? 1 : 0) + (sub2 ? 1 : 0) };
+  };
+  return { innerOfMap, leftW, kidNeed, tagOf };
+}
+
+/**
+ * Ширина раскладки веера, при которой семья ложится без ужатия (выноски 40 px, лучи не короче 64, пыль по 12 точек,
+ * подписи супруг в строку): врезка берёт её, если хватает места на экране.
+ */
+export function fanWidth(S: FamScene, G: Pick<Geom, 'measure' | 'words' | 'scale'>): number {
+  const P = fanParts(S, G);
+  const K = KNOBS[0];
+  const needM = Math.max(130, ...S.unions.map((u) => P.tagOf(u, false).back + K.lead));
+  return Math.ceil(P.leftW + needM + 12 + K.akMin + P.kidNeed(K));
+}
+
 function plotFan(S: FamScene, G: Geom): Plot {
   const out: Prim[] = [];
   const top: Prim[] = [];
@@ -375,61 +437,51 @@ function plotFan(S: FamScene, G: Geom): Plot {
   const kidTop = gy.length ? (gy[0].ys[0] ?? gy[0].yc) : G.y + G.h / 2;
   const last = gy[gy.length - 1];
   const kidBot = last ? (last.ys[last.ys.length - 1] ?? last.yc) : kidTop;
-  const innerOfMap = new Map(S.inner.map((q) => [q.kid, q]));
-  const hasLeft = S.sibs.length + S.kinSibs.length + S.halves.length > 0;
-  const leftW = hasLeft ? (S.sibs.length + S.kinSibs.length > 2 ? 232 : 200) : S.parents ? 150 : 60;
+  const { innerOfMap, leftW, kidNeed, tagOf } = fanParts(S, G);
   const fx = G.x + leftW;
   // родители — на 128 px выше лица, указатель к деду — ещё на 50: шапка врезки не задета
   const fy = Math.max(Math.min((kidTop + kidBot) / 2, G.y + G.h - 40), G.y + (S.parents ? (S.parents.up ? 186 : 140) : 40));
   const spanY = Math.max(40, ...gy.map((g) => Math.abs(g.yc - fy)));
-  // место справа от лица: супруги (кольцо 1), веер детей, подписи детей и столбец «их дети» — по измеренной ширине
-  const kidW = Math.max(60, ...groups.flatMap((u) => u.kids.map((k) => G.measure(S.nodes.get(k)!.name, 'kid') + (innerOfMap.has(k) ? G.measure(`, ${G.words.innerWord(k, innerOfMap.get(k)!.wife, innerOfMap.get(k)!.kind)}`, 'word') : 0))));
-  const dustW = groups.some((u) => u.kids.some((k) => S.nodes.get(k)!.grand)) ? 12 * 4.6 + 30 : 0;
-  const restW = G.x + G.w - fx - dustW - kidW - 30;
-  // подпись супруги стоит в строке союза слева от её звезды, черта брака от лица — её выноска (не короче LEAD)
-  const LEAD = 40;
-  const wOf = (rs: Run[]) => rs.reduce((q, r) => q + G.measure(r.s, r.font), 0);
-  const tagOf = (u: FamUnion, stack: boolean) => {
-    const partner = u.partner ? S.nodes.get(u.partner)! : null;
-    const kind: Run = { s: stack ? G.words.kind(u.kind) : `, ${G.words.kind(u.kind)}`, font: 'word', ink: 'ink3' };
-    const runs: Run[] = partner ? [{ s: partner.name, font: 'name', ink: 'ink' }, ...(stack ? [] : [kind])] : [{ s: G.words.motherUnnamed(u.kids.length), font: 'word', ink: 'ink3' }];
-    const kin: Run[] | undefined = partner && u.kin ? [{ s: `${u.kin.word}, ${u.kin.ref.replace(/^([1-4])([А-Я])/, '$1 $2')}`, font: 'word', ink: 'ink2' }] : undefined;
-    // в строку: «Сарра, жена» и родство под ней; столбиком: имя, вид союза, родство
-    const sub = stack ? [kind] : kin;
-    const sub2 = stack ? kin : undefined;
-    const lw = Math.max(wOf(runs), wOf(sub ?? []), wOf(sub2 ?? []));
-    // от звезды супруги (или от ромба союза без названной матери) до конца выноски
-    const back = partner ? rOf(partner.mg, k) + 6 + lw + 5 : 10 - 12 + lw + 5;
-    return { partner, runs, sub, sub2, lw, back, lines: 1 + (sub ? 1 : 0) + (sub2 ? 1 : 0) };
+  const variants = new Map(groups.map((u) => [u.id, { one: tagOf(u, false), two: tagOf(u, true), rows: Math.max(u.kids.length * h, one()) }]));
+  const right = G.x + G.w;
+  const plan = (K: Knob) => {
+    // ширина, что остаётся выноскам и подписям супруг: справа — ромб (12), луч, подпись ребёнка, пыль
+    const budget = right - fx - 12 - K.akMin - kidNeed(K);
+    const tags = new Map(
+      groups.map((u) => {
+        const v = variants.get(u.id)!;
+        // длинная подпись («Фамарь, брак не назван») — вид союза второй строкой, если союзу хватает высоты
+        const stack = v.one.partner && v.one.back + K.lead > budget && v.rows >= v.two.lines * 15 + 4 && v.two.back < v.one.back;
+        return [u.id, stack ? v.two : v.one];
+      }),
+    );
+    const needM = Math.max(0, ...[...tags.values()].map((q) => q.back + K.lead));
+    return { K, budget, tags, needM, fits: needM <= budget };
   };
-  // длинная подпись («Фамарь, брак не назван») не помещается в строку — вид союза уходит второй строкой, если союзу
-  // хватает высоты (две строки детей)
-  const budget = restW - 14 - 64 - LEAD;
-  const tags = new Map(
-    groups.map((u) => {
-      const one1 = tagOf(u, false);
-      const rows = Math.max(u.kids.length * h, one());
-      const two = tagOf(u, true);
-      return [u.id, one1.back > budget && one1.partner && rows >= two.lines * 15 + 4 && two.back < one1.back ? two : one1];
-    }),
-  );
-  const needM = Math.max(0, ...[...tags.values()].map((q) => q.back + LEAD));
-  const aM = Math.max(130, needM, Math.min(230, restW * 0.55));
-  const aKw = Math.max(64, Math.min(160, restW - aM - 14));
+  const PL = KNOBS.map(plan).find((q) => q.fits) ?? plan(KNOBS[KNOBS.length - 1]);
+  const { K, tags, needM } = PL;
+  const LEAD = K.lead;
+  const spare = Math.max(0, PL.budget - Math.max(needM, Math.min(130, PL.budget)));
+  // запас ширины — поровну дуге супруг и вееру детей (дуга не шире 230, веер не шире 160)
+  const aM = Math.min(Math.max(needM, 230), Math.max(needM, Math.min(130, PL.budget)) + spare * 0.5);
+  const aKw = Math.min(160, K.akMin + Math.max(0, PL.budget - aM));
   const bM = spanY + 70;
   const ell = (dy: number, a: number, b: number) => a * Math.sqrt(Math.max(0, 1 - (dy / b) ** 2));
   const focusU = G.focus ? groups.find((u) => u.id === G.focus) : undefined;
   const dimOf = (u: FamUnion) => (focusU && focusU !== u ? 0.62 : 1);
-  const place = new Map<string, { mx: number; my: number; dx: number; le: number }>();
+  const place = new Map<string, { mx: number; my: number; dx: number; le: number; via?: [number, number][] }>();
   const dust: { y: number; n: number; ink: Ink | null; a: number; lx: number; id: string }[] = [];
   const innerOf = innerOfMap;
   order.push({ id: F.id, ring: 'focal' });
+  // черты брака сходятся от лица к общему отвесу (самое левое начало подписи) и дальше идут по строке своего союза:
+  // косая часть черты не заходит в строки чужих подписей
+  const mxOf = (g: (typeof gy)[number]) => fx + Math.max(Math.min(110, aM), ell(g.yc - fy, aM, bM), tags.get(g.u.id)!.back + LEAD);
+  const leCommon = Math.min(...gy.map((g) => mxOf(g) - tags.get(g.u.id)!.back));
   for (const g of gy) {
     const u = g.u;
     const ink = inkOf(u.branch);
-    const dy = g.yc - fy;
     const T = tags.get(u.id)!;
-    const mx = fx + Math.max(110, ell(dy, aM, bM), T.back + LEAD);
+    const mx = mxOf(g);
     const my = g.yc;
     const a = dimOf(u);
     const partner = T.partner;
@@ -438,8 +490,9 @@ function plotFan(S: FamScene, G: Geom): Plot {
     // у начала подписи: черта — выноска подписи, подпись не ложится ни на чужие черты, ни на лучи детей
     const le = mx - T.back;
     const lr = le + 5 + T.lw;
+    const via: [number, number][] | undefined = le - leCommon > 1 ? [[leCommon, my]] : undefined;
     if (partner) {
-      out.push({ t: 'line', x0: fx, y0: fy, x1: le, y1: my, style: STYLE[u.kind], ink: 'ink', w: 1, a: 0.55 * a, uid: u.id, lead: u.id });
+      out.push({ t: 'line', x0: fx, y0: fy, x1: le, y1: my, via, style: STYLE[u.kind], ink: 'ink', w: 1, a: 0.55 * a, uid: u.id, lead: u.id });
       out.push(star(partner, mx, my, k, ink, a));
       at.set(partner.id, { x: mx, y: my, r: rOf(partner.mg, k) });
       hits.push({ kind: 'person', id: partner.id, x: mx, y: my, r: Math.max(10, rOf(partner.mg, k) + 6) });
@@ -448,7 +501,7 @@ function plotFan(S: FamScene, G: Geom): Plot {
       const y0 = T.lines === 3 ? my - 10 : T.lines === 2 && !u.kin ? my - 2 : my + 5;
       top.push({ t: 'label', x: lr, y: y0, align: 'right', runs: T.runs, sub: T.sub, sub2: T.sub2, a, id: partner.id, at: [mx, my, rOf(partner.mg, k)], lead: u.id });
     } else {
-      out.push({ t: 'line', x0: fx, y0: fy, x1: le, y1: my, style: 'thin', ink: 'ink', w: 1, a: 0.45 * a, uid: u.id, lead: u.id });
+      out.push({ t: 'line', x0: fx, y0: fy, x1: le, y1: my, via, style: 'thin', ink: 'ink', w: 1, a: 0.45 * a, uid: u.id, lead: u.id });
       top.push({ t: 'label', x: lr, y: my + 5, align: 'right', runs: T.runs, a, at: [dx, my, 5.2], lead: u.id });
     }
     // дети веером от ромба
@@ -458,7 +511,7 @@ function plotFan(S: FamScene, G: Geom): Plot {
     u.kids.forEach((kid, j) => {
       const nd = S.nodes.get(kid)!;
       const ky = g.ys[j];
-      const kx = dx + Math.max(64, ell(ky - my, aK, bK));
+      const kx = dx + Math.max(K.akMin, ell(ky - my, aK, bK));
       const kInk = inkOf(nd.branch) ?? ink;
       out.push({ t: 'line', x0: dx, y0: my, x1: kx, y1: ky, style: 'ray', ink: kInk ?? 'ink3', w: 1.1, a: 0.85 * a, glow: true, uid: u.id });
       out.push(star(nd, kx, ky, k, kInk, a));
@@ -477,17 +530,17 @@ function plotFan(S: FamScene, G: Geom): Plot {
     });
     if (u.kids.length || partner) top.push({ t: 'diamond', uid: u.id, x: dx, y: my, s: 5.2, hollowWife: !partner, hollowAll: u.kind === 'none' && !!partner, ring: focusU === u, a });
     hits.push({ kind: 'union', uid: u.id, x: dx, y: my, r: 10 });
-    place.set(u.id, { mx: partner ? mx : dx, my, dx, le });
+    place.set(u.id, { mx: partner ? mx : dx, my, dx, le, via });
   }
   // пыль внуков: столбцом «их дети», по точке на каждого ребёнка (данные), бледнее на поколение (решение 69)
   if (dust.some((d) => d.n)) {
-    const colX = Math.min(Math.max(...dust.map((d) => d.lx)) + 18, G.x + G.w - 12 * 4.6 - 4);
+    const colX = Math.max(...dust.filter((d) => d.n).map((d) => d.lx)) + 14;
     top.push({ t: 'label', x: colX, y: Math.min(...dust.map((d) => d.y)) - 16, align: 'left', runs: [{ s: 'их дети', font: 'small', ink: 'ink3' }], a: 1 });
     for (const d of dust) {
       if (!d.n) continue;
-      for (let q = 0; q < Math.min(d.n, 12); q++) top.push({ t: 'dot', x: colX + 2 + q * 4.6, y: d.y + 0.5, r: 1.4, ink: d.ink ?? 'ink3', a: 0.8 * d.a });
-      if (d.n > 12) top.push({ t: 'label', x: colX + 2 + 12 * 4.6 + 2, y: d.y + 4.5, align: 'left', runs: [{ s: `+${d.n - 12}`, font: 'small', ink: 'ink3' }], a: d.a });
-      hits.push({ kind: 'dust', id: d.id, x: colX - 4, y: d.y - 8, w: Math.min(d.n, 12) * 4.6 + (d.n > 12 ? 26 : 8), h: 16 });
+      for (let q = 0; q < Math.min(d.n, K.dots); q++) top.push({ t: 'dot', x: colX + 2 + q * 4.6, y: d.y + 0.5, r: 1.4, ink: d.ink ?? 'ink3', a: 0.8 * d.a });
+      if (d.n > K.dots) top.push({ t: 'label', x: colX + 2 + K.dots * 4.6 + 2, y: d.y + 4.5, align: 'left', runs: [{ s: `+${d.n - K.dots}`, font: 'small', ink: 'ink3' }], a: d.a });
+      hits.push({ kind: 'dust', id: d.id, x: colX - 4, y: d.y - 8, w: Math.min(d.n, K.dots) * 4.6 + (d.n > K.dots ? 26 : 8), h: 16 });
     }
   }
   // родители, указатель к деду, братья и сёстры
@@ -526,9 +579,13 @@ function plotFan(S: FamScene, G: Geom): Plot {
       pd = { x: fxp + 44, y: py };
       if (P0.father) out.push({ t: 'line', x0: fxp, y0: py, x1: pd.x, y1: py, style: 'thin', ink: 'ink', w: 1, a: 0.45 });
       const c = (x: number, y: number): Cand => ({ x, y, align: 'left' });
+      const mu = G.words.motherUnnamed(1);
+      const cut = mu.indexOf(' ');
       top.push({
-        t: 'label', x: pd.x + 9, y: py + 1, align: 'left', runs: [{ s: G.words.motherUnnamed(1), font: 'word', ink: 'ink3' }], a: 1, at: [pd.x, py, 5.2],
+        t: 'label', x: pd.x + 9, y: py + 1, align: 'left', runs: [{ s: mu, font: 'word', ink: 'ink3' }], a: 1, at: [pd.x, py, 5.2],
         cands: steps([c(pd.x + 9, py + 1), c(pd.x + 9, py + 19), c(pd.x + 6, py - 9), c(pd.x - 6, py + 20)], py),
+        // тесно (черты брака к верхним супругам круто идут рядом) — в две строки: «мать / не названа»
+        alt: cut > 0 ? { runs: [{ s: mu.slice(0, cut), font: 'word', ink: 'ink3' }], sub: [{ s: mu.slice(cut + 1), font: 'word', ink: 'ink3' }] } : undefined,
       });
     }
     top.push({ t: 'diamond', uid: P0.uid, x: pd.x, y: pd.y, s: 5.2, hollowWife: !P0.mother, hollowAll: P0.kind === 'none' && !!P0.mother, ring: false, a: 1 });
@@ -585,9 +642,9 @@ function plotFan(S: FamScene, G: Geom): Plot {
     }
   }
   // ленты Мессии по шагу (решение 177): отец → черта → мать → ромб → лицо; лицо → черта → супруга → ромб → ребёнок линии
-  const ribbon = (x0: number, y0: number, x1: number, y1: number, m: boolean, l: boolean, lead?: string) => {
-    if (m) out.push({ t: 'line', x0, y0, x1, y1, style: 'mt', ink: 'ink', w: 1.7, a: 1, off: l ? -4.4 : 0, glow: true, lead });
-    if (l) out.push({ t: 'line', x0, y0, x1, y1, style: 'lk', ink: 'ink', w: 1.7, a: 1, off: m ? 4.4 : 0, glow: true, lead });
+  const ribbon = (x0: number, y0: number, x1: number, y1: number, m: boolean, l: boolean, lead?: string, via?: [number, number][]) => {
+    if (m) out.push({ t: 'line', x0, y0, x1, y1, via, style: 'mt', ink: 'ink', w: 1.7, a: 1, off: l ? -4.4 : 0, glow: true, lead });
+    if (l) out.push({ t: 'line', x0, y0, x1, y1, via, style: 'lk', ink: 'ink', w: 1.7, a: 1, off: m ? 4.4 : 0, glow: true, lead });
   };
   if (P0?.father && pd && (P0.father.mt || P0.father.lk)) {
     const m = P0.father.mt && F.mt;
@@ -604,7 +661,7 @@ function plotFan(S: FamScene, G: Geom): Plot {
       if (!m && !l) continue;
       const q = at.get(kid)!;
       // лента идёт по черте брака до подписи супруги и продолжается от её звезды (подпись прерывает ленту, как дорогу на карте)
-      ribbon(fx, fy, pl.le, pl.my, m, l, u.id);
+      ribbon(fx, fy, pl.le, pl.my, m, l, u.id, pl.via);
       if (pl.mx < pl.dx) ribbon(pl.mx, pl.my, pl.dx, pl.my, m, l);
       ribbon(pl.dx, pl.my, q.x, q.y, m, l);
     }
@@ -836,7 +893,7 @@ function steps(cands: Cand[], anchorY: number): Cand[] {
   return out;
 }
 
-type Box = { x: number; y: number; w: number; h: number };
+export type Box = { x: number; y: number; w: number; h: number };
 type LabelPrim = Extract<Prim, { t: 'label' }>;
 interface Obstacles {
   /** точки линий с полутолщиной (у лент — со смещением нити и ореолом) */
@@ -867,7 +924,8 @@ function obstaclesOf(prims: Prim[]): Obstacles {
   return { pts, marks };
 }
 
-const meets = (a: Box, b: Box) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+/** Рамки подписей (с полями по 2 px) пересекаются больше чем на полпикселя: строки шагом ровно в кегль лишь касаются. */
+const meets = (a: Box, b: Box) => a.x < b.x + b.w - 0.5 && a.x + a.w > b.x + 0.5 && a.y < b.y + b.h - 0.5 && a.y + a.h > b.y + 0.5;
 const circleMeets = (b: Box, c: { x: number; y: number; r: number }) => {
   const dx = c.x - Math.max(b.x, Math.min(c.x, b.x + b.w));
   const dy = c.y - Math.max(b.y, Math.min(c.y, b.y + b.h));
@@ -896,19 +954,33 @@ function resolveLabels(prims: Prim[], G: Geom): Prim[] {
   const boxes: { b: Box; what: string }[] = [];
   for (const p of prims) if (p.t === 'label' && !p.cands) boxes.push({ b: labelBox(p, p, G.measure), what: textOf(p) });
   const outside = (b: Box) => (b.x < G.x - 12 || b.x + b.w > G.x + G.w + 12 ? 1 : 0) + (b.y < G.y - 30 || b.y + b.h > G.y + G.h + 14 ? 1 : 0);
-  for (const p of prims) {
-    if (p.t !== 'label' || !p.cands) continue;
-    let best = p.cands[0];
+  const pick = (p: LabelPrim, cands: Cand[]) => {
+    let best = cands[0];
     let bc = Infinity;
-    for (const c of p.cands) {
+    for (const c of cands) {
       const b = labelBox(p, c, G.measure);
       const q = clashesOf(p, b, O, boxes);
-      const v = (q.marks.length + q.labels.length) * 1000 + q.line * 20 + outside(b) * 5000;
+      // подпись вплотную к чужой на той же строке читается с ней как одна фраза («братья: … Халев») — тоже помеха
+      const near = boxes.filter((o) => meets({ x: b.x - 10, y: b.y, w: b.w + 20, h: b.h }, o.b)).length;
+      const v = (q.marks.length + q.labels.length) * 1000 + near * 500 + q.line * 20 + outside(b) * 5000;
       if (v < bc) {
         bc = v;
         best = c;
       }
       if (v === 0) break;
+    }
+    return { best, bc };
+  };
+  for (const p of prims) {
+    if (p.t !== 'label' || !p.cands) continue;
+    let { best, bc } = pick(p, p.cands);
+    // чистого места нет — второй вид подписи (в две строки), если он есть и встаёт лучше
+    if (bc > 0 && p.alt) {
+      const one = { runs: p.runs, sub: p.sub };
+      Object.assign(p, p.alt);
+      const q = pick(p, p.cands);
+      if (q.bc < bc) ({ best, bc } = q);
+      else Object.assign(p, one);
     }
     p.x = best.x;
     p.y = best.y;
@@ -920,9 +992,9 @@ function resolveLabels(prims: Prim[], G: Geom): Prim[] {
 
 /**
  * Столкновения подписей врезки (для приёмки и тестов): подпись × знак, подпись × подпись, подпись × линия (кроме своей
- * выноски). Пустой список — врезка читается.
+ * выноски); с area — ещё подпись за краем врезки (обрезана). Пустой список — врезка читается.
  */
-export function insetClashes(prims: Prim[], measure: Geom['measure']): string[] {
+export function insetClashes(prims: Prim[], measure: Geom['measure'], area?: Box): string[] {
   const O = obstaclesOf(prims);
   const labels = prims.filter((p): p is LabelPrim => p.t === 'label');
   const out: string[] = [];
@@ -934,6 +1006,7 @@ export function insetClashes(prims: Prim[], measure: Geom['measure']): string[] 
     for (const m of q.marks) out.push(`«${who}» × ${m}`);
     for (const l of q.labels) out.push(`«${who}» × «${l}»`);
     if (q.line) out.push(`«${who}» × линия (${q.line})`);
+    if (area && (b.x < area.x || b.x + b.w > area.x + area.w)) out.push(`«${who}» × край врезки`);
     done.push({ b, what: who });
   }
   return out;

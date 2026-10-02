@@ -9,7 +9,7 @@ import { join } from 'node:path';
 import { byId, graph, lineMembership, models } from '../src/data/atlas.ts';
 import { buildUnions } from '../src/engine/unions.ts';
 import { marriageKind } from '../src/engine/stays.ts';
-import { familyScene, hasFamilyIn, insetClashes, plotFamily, sourceVerse, type FamDeps, type FamScene, type Geom } from '../src/engine/famplot.ts';
+import { familyScene, fanWidth, hasFamilyIn, insetClashes, plotFamily, sourceVerse, type FamDeps, type FamScene, type Geom } from '../src/engine/famplot.ts';
 import { kinTermReverse, nameCase } from '../src/ui/text/ru.ts';
 import { insetSubtitle, insetTitle } from '../src/ui/sky/FamilyInset.tsx';
 
@@ -184,13 +184,16 @@ describe('раскладка врезки: звёзды не ложатся др
     up: (id) => `↑ ${byId.get(id)!.name}`,
     other: (c) => c,
   };
-  for (const comb of [false, true])
+  // широкая врезка — 720 px (раскладка 656); узкая — 600 px (556), но не уже, чем нужно семье (fanWidth: врезка
+  // Давида шире — девять союзов и восемь братьев и сестёр); телефон — гребень 358
+  for (const [comb, w0] of [[false, 656], [false, 556], [true, 358]] as const)
     for (const id of CORPUS)
-      it(`${byId.get(id)!.name}, ${comb ? 'телефон' : 'широкий экран'}`, () => {
+      it(`${byId.get(id)!.name}, ${comb ? 'телефон' : w0 > 600 ? 'широкий экран' : 'узкая врезка'}`, () => {
         const S = scene(id);
+        const w = comb || w0 > 600 ? w0 : Math.max(w0, fanWidth(S, { measure: real, words, scale: 1.35 }));
         const G: Geom = comb
-          ? { x: 16, y: 86, w: 358, h: 520, comb, scale: 1.15, measure, words }
-          : { x: 322, y: 164, w: 656, h: 520, comb, scale: 1.35, measure, words };
+          ? { x: 16, y: 86, w, h: 520, comb, scale: 1.15, measure, words }
+          : { x: 322, y: 164, w, h: 520, comb, scale: 1.35, measure, words };
         const P = plotFamily(S, G);
         const stars = P.prims.filter((p) => p.t === 'star') as Extract<(typeof P.prims)[number], { t: 'star' }>[];
         // каждое лицо сцены, кроме единокровных (они строкой), — звездой ровно один раз
@@ -218,8 +221,13 @@ describe('раскладка врезки: звёзды не ложатся др
         }
         // подписи читаются: подпись × знак, подпись × подпись, подпись × линия (кроме своей выноски) — ни одного
         // столкновения (after-avraam.png: «Хеттура, наложница» на звезде Авраама, «Агарь, жена» на нити ленты)
+        // и ни одна подпись не выходит за край врезки (поля врезки — 22 px, на телефоне — 16)
+        const area = { x: G.x - (comb ? 16 : 22), y: 0, w: G.w + (comb ? 32 : 44), h: 2000 };
         const R = plotFamily(S, { ...G, measure: real });
-        expect(insetClashes(R.prims, real)).toEqual([]);
+        expect(insetClashes(R.prims, real, area)).toEqual([]);
+        // и в низкой врезке (экран 1440 × 900 с открытой карточкой: раскладке остаётся 456 px — строки детей шагом 16)
+        const Rl = plotFamily(S, { ...G, h: comb ? G.h : 456, measure: real });
+        expect(insetClashes(Rl.prims, real, area)).toEqual([]);
         // цвет несут только ленты и ветви (ТЗ § 5.2): слова родства — тоном ink2 курсивом (кегль 'word'), не золотом
         for (const p of P.prims)
           if (p.t === 'label') for (const r of [...p.runs, ...(p.sub ?? [])]) expect(['ink', 'ink2', 'ink3'], `«${r.s}»`).toContain(r.ink);

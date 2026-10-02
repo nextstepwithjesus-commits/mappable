@@ -16,7 +16,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { effect } from '@preact/signals';
 import { byId, graph, lineMembership, loadVerses } from '../../data/atlas.ts';
-import { familyScene, fanHeight, insetClashes, plotFamily, sourceBooks, sourceVerse, type FamScene, type FamUnion, type Hit, type Plot } from '../../engine/famplot.ts';
+import { familyScene, fanHeight, fanWidth, insetClashes, plotFamily, sourceBooks, sourceVerse, type FamScene, type FamUnion, type Geom, type Hit, type Plot } from '../../engine/famplot.ts';
 import { drawInsetBack, drawInsetFrame, drawPlot, insetMeasure, type InsetLook } from '../../render/family-inset.ts';
 import { UNION_COLORS } from '../../render/branches.ts';
 import { branchKeysOf, branchOrTribeColor } from '../../render/light.ts';
@@ -76,6 +76,21 @@ const unionsRef = () => unionsAll;
 
 const KIND_M = { wife: 'жена', concubine: 'наложница', levirate: 'по левирату', none: 'брак не назван' } as const;
 const KIND_F = { wife: 'муж', concubine: 'союз: наложница', levirate: 'муж по левирату', none: 'брак не назван' } as const;
+/** Слова врезки (склонение — src/ui/text/ru.ts). */
+const insetWords = (female: boolean): Geom['words'] => ({
+  kind: (k) => (female ? KIND_F : KIND_M)[k],
+  motherUnnamed: (n) => (female ? 'отец не назван' : n > 1 ? 'матери не названы' : 'мать не названа'),
+  innerWord: (_kid, wife, kind) => {
+    if (kind === 'levirate') return 'по левирату';
+    const w = byId.get(wife);
+    const gn = w ? nameCase(w.name, w.sex, 'gen', w.unnamed, w.alt) : null;
+    return gn ? `муж ${gn}` : 'муж';
+  },
+  halves: (sexes) => halfSiblingsLabel('paternal', sexes),
+  sibs: (sexes) => (sexes.length === 1 ? (sexes[0] === 'f' ? 'сестра' : 'брат') : sexes.every((x) => x === 'm') ? 'братья' : 'братья и сёстры'),
+  up: (id) => `↑ ${byId.get(id)?.name ?? ''}`,
+  other: (claim) => otherParentLabel(claim, 'father').toLowerCase(),
+});
 
 /** Заголовок врезки: «Семья Иакова» (склонение — ru.ts; ненадёжное — имя в начале). */
 export function insetTitle(id: string): string {
@@ -191,6 +206,7 @@ export function FamilyInset() {
   }, [scene]);
 
   const sky = skyRef.current;
+  const coarse = coarsePointer();
   const geo = useMemo(() => {
     if (!scene || !sky || !center) return null;
     const vp = sky.cam.vp;
@@ -214,18 +230,25 @@ export function FamilyInset() {
     else {
       const rc = region ? region.x + region.w / 2 : vpBox.x;
       const right = rc < vpBox.x + vpBox.w / 2;
-      // ширина — до 720 px, но область семьи на небе остаётся видна, если врезке хватает 600 px
+      // ширина — до 720 px, но область семьи на небе остаётся видна, если врезке хватает 600 px и семья в них ложится
       const room = region ? (right ? vpBox.x + vpBox.w - 14 - (region.x + region.w + 24) : region.x - 24 - (vpBox.x + 14)) : vpBox.w - 28;
-      const W = Math.min(vpBox.w - 28, 720, Math.max(600, room));
+      // широкой семье (Давид: девять союзов, восемь братьев и сестёр) — сколько ей нужно, до 860 px: подписи без наложений
+      // важнее, чем видная рядом область на небе
+      const ctx = measureCtx();
+      const wide = ctx ? fanWidth(scene, { measure: insetMeasure(ctx, coarse), words: insetWords(byId.get(scene.focal.id)?.sex === 'f'), scale: 1.35 }) + 44 : 0;
+      const W = Math.min(vpBox.w - 28, Math.max(Math.min(720, Math.max(600, room)), Math.min(860, wide)));
       const x = right ? vpBox.x + vpBox.w - 14 - W : vpBox.x + 14;
       // полоса по высоте: видимая часть неба; строку показа вверху врезка не закрывает, если семье хватает места,
       // а кнопки масштаба внизу закрывает — врезка лежит поверх неба, пока открыта
       let top = vpBox.y + 12;
       const bottom = vpBox.y + vpBox.h - 12;
       const need = HEAD_H + fanHeight(scene) + CARD_H + 24;
+      // строку показа врезка обходит, только если семья ложится и под ней (не меньше 480 px); иначе — закрывает её:
+      // семья без прокрутки важнее
+      const full = Math.max(480, Math.min(need, bottom - top));
       for (const o of organs()) {
         if (o.x > x + W || o.x + o.w < x || o.y + o.h / 2 > vpBox.y + vpBox.h / 2) continue;
-        if (bottom - (o.y + o.h + 8) >= Math.min(need, 480)) top = Math.max(top, o.y + o.h + 8);
+        if (bottom - (o.y + o.h + 8) >= full) top = Math.max(top, o.y + o.h + 8);
       }
       const H = Math.min(bottom - top, HEAD_H + fanHeight(scene) + CARD_H + 24);
       R = { x, y: top + (bottom - top - H) / 2, w: W, h: H };
@@ -233,9 +256,8 @@ export function FamilyInset() {
       if (region && region.x < R.x + R.w && region.x + region.w > R.x && region.y < R.y + R.h && region.y + region.h > R.y) region = null;
     }
     return { vp: vpBox, R, region, phone };
-  }, [scene, sky, center, g.phone, viewTick.value]);
+  }, [scene, sky, center, g.phone, viewTick.value, coarse]);
 
-  const coarse = coarsePointer();
   // раскладка зависит только от прямоугольника врезки: сдвиг неба под врезкой её не пересчитывает (область и выноски —
   // да, они дёшевы)
   const rKey = geo ? `${Math.round(geo.R.x)},${Math.round(geo.R.y)},${Math.round(geo.R.w)},${Math.round(geo.R.h)},${geo.phone}` : '';
@@ -258,25 +280,12 @@ export function FamilyInset() {
       scale: geo.phone ? 1.15 : 1.35,
       measure,
       focus: fu,
-      words: {
-        kind: (k) => (female ? KIND_F : KIND_M)[k],
-        motherUnnamed: (n) => (female ? 'отец не назван' : n > 1 ? 'матери не названы' : 'мать не названа'),
-        innerWord: (_kid, wife, kind) => {
-          if (kind === 'levirate') return 'по левирату';
-          const w = byId.get(wife);
-          const gn = w ? nameCase(w.name, w.sex, 'gen', w.unnamed, w.alt) : null;
-          return gn ? `муж ${gn}` : 'муж';
-        },
-        halves: (sexes) => halfSiblingsLabel('paternal', sexes),
-        sibs: (sexes) => (sexes.length === 1 ? (sexes[0] === 'f' ? 'сестра' : 'брат') : sexes.every((x) => x === 'm') ? 'братья' : 'братья и сёстры'),
-        up: (id) => `↑ ${byId.get(id)?.name ?? ''}`,
-        other: (claim) => otherParentLabel(claim, 'father').toLowerCase(),
-      },
+      words: insetWords(female),
     });
   }, [scene, rKey, focusU, coarse, th]);
   const clash = useMemo(() => {
     const ctx = measureCtx();
-    return plot && ctx ? insetClashes(plot.prims, insetMeasure(ctx, coarse)).join('; ') : '';
+    return plot && ctx && geo ? insetClashes(plot.prims, insetMeasure(ctx, coarse), geo.R).join('; ') : '';
   }, [plot, coarse]);
 
   // рисование: погашенное небо, рамка области, врезка (во время перехода — в промежуточном прямоугольнике)
