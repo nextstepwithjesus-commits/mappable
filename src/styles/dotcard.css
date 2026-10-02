@@ -397,6 +397,28 @@
   margin-top: 4px;
   padding-top: 4px;
 }
+/* краткий вид на мыши плотнее — за счёт пустот, а не содержания и кегля (этап 16, сценарий 1142): поля строк «Родства»,
+   отступы служебной строки и команд; кнопки остаются 32 px (на касании — 44 px, правило ниже не действует) */
+@media (pointer: fine) {
+  .dc-brief .dc-kin {
+    margin-top: 2px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+  }
+  .dc-brief .dc-val {
+    padding: 0 0 1px;
+  }
+  .dc-brief .dc-lbl {
+    padding-top: 2px;
+  }
+  .dc-brief .dc-hidden {
+    margin-top: 3px;
+  }
+  .dc-brief .dc-cmds {
+    margin-top: 2px;
+    padding-top: 0;
+  }
+}
 
 /* привязка карточки к знаку (решение 171; V-7): не похожа на связь — точечная, цветом пояснений, с ореолом цвета неба, под
    которым линии и стволы неба прерываются. Прямая у знака — полоской (.dc-lead), к карточке вдали — отрезком svg (.dc-line) */

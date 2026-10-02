@@ -229,6 +229,9 @@ export function FamilyInset() {
   }, [scene, sky, center, g.phone, viewTick.value]);
 
   const coarse = coarsePointer();
+  // раскладка зависит только от прямоугольника врезки: сдвиг неба под врезкой её не пересчитывает (область и выноски —
+  // да, они дёшевы)
+  const rKey = geo ? `${Math.round(geo.R.x)},${Math.round(geo.R.y)},${Math.round(geo.R.w)},${Math.round(geo.R.h)},${geo.phone}` : '';
   const plot = useMemo<Plot | null>(() => {
     if (!scene || !geo) return null;
     const ctx = measureCtx();
@@ -263,22 +266,20 @@ export function FamilyInset() {
         other: (claim) => otherParentLabel(claim, 'father').toLowerCase(),
       },
     });
-  }, [scene, geo, focusU, coarse, th]);
-
-  const look = useMemo<InsetLook | null>(() => {
-    if (typeof document === 'undefined') return null;
-    const pal = readPalette();
-    return {
-      night: th === 'night', sky: pal.sky, deep: pal.band, ink: pal.ink, ink2: pal.ink2, ink3: pal.ink3, kin: KIN_GOLD[th],
-      mt: [pal.gold1, pal.gold2], lk: [pal.azure1, pal.azure2], husband: UNION_COLORS[th].husband, wife: UNION_COLORS[th].wife,
-      branch: (i) => branchHue(i, th), coarse,
-    };
-  }, [th, coarse]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scene, rKey, focusU, coarse, th]);
 
   // рисование: погашенное небо, рамка области, врезка (во время перехода — в промежуточном прямоугольнике)
   useLayoutEffect(() => {
     const c = cv.current;
-    if (!c || !geo || !plot || !look || !sky) return;
+    if (!c || !geo || !plot || !sky) return;
+    // цвета темы — из токенов в момент рисования (смена темы приходит раньше, чем меняются переменные CSS)
+    const pal = readPalette();
+    const look: InsetLook = {
+      night: th === 'night', sky: pal.sky, deep: pal.band, ink: pal.ink, ink2: pal.ink2, ink3: pal.ink3, kin: KIN_GOLD[th],
+      mt: [pal.gold1, pal.gold2], lk: [pal.azure1, pal.azure2], husband: UNION_COLORS[th].husband, wife: UNION_COLORS[th].wife,
+      branch: (i) => branchHue(i, th), coarse,
+    };
     const dpr = window.devicePixelRatio || 1;
     const W = sky.cam.w;
     const H = sky.cam.h;
@@ -422,6 +423,8 @@ export function FamilyInset() {
           style={{ left: `${R.x}px`, top: `${R.y}px`, width: `${R.w}px`, height: `${R.h}px` }}
           aria-label={`${title} — врезка без шкалы времени`}
           data-family={center}
+          // места звёзд врезки на холсте — «лицо:x,y» (сценарии приёмки 1220–1239)
+          data-at={plot ? [...plot.at].map(([id, q]) => `${id}:${Math.round(q.x)},${Math.round(q.y - scroll)}`).join(';') : ''}
           onPointerMove={onMove}
           onPointerLeave={() => setHover(null)}
           onPointerDown={(ev) => {
