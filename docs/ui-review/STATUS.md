@@ -144,3 +144,4 @@
 | Y1 | Слой света, цвет колен, названия (этап 16) | Б | L | 16 | готово | [STAGE16.md](STAGE16.md), решения 182–184; src/render/light.ts, src/engine/affiliation.ts; О3: ΔE 40/52, при дальтонизме ≥ 18,5; tests/light-s16.test.ts, tools/accept/light16.ts 1240–1244 |
 | Y2 | Семья созвездием — врезка (этап 16) | Б | L | 16 | готово | решение 186; src/engine/famplot.ts, src/render/family-inset.ts, src/ui/sky/FamilyInset.tsx; О5 100 % на шести семьях, data-clash = 0; tests/inset-s16.test.ts, tools/accept/inset16.ts 1220–1230 |
 | Y3 | Рассказ и области (этап 16) | Б | M | 16 | готово | решения 185, 187, 188; data/story.json, src/ui/story/*; О6 — стихи шагов в валидаторе; tests/story-s16.test.ts, tools/accept/story16.ts 1200–1214 |
+| Y4 | Сведение, проверка и выпуск этапов 15–16 | Б | M | 16 | готово | полная приёмка 693 сценария; perf 59,8 / 58,3 кадра/с; axe 0; data/layout-prior.json; sha256 в docs/progress.md |
