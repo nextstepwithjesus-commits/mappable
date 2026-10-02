@@ -24,7 +24,7 @@ import type { ShowIn } from '../render/rows.ts';
 import { linkKeyString, spanInner, type LinkKey } from '../engine/linkkey.ts';
 import { linkRoles } from './linkwords.ts';
 import { selectedLink } from './linkstate.ts';
-import { walk } from '../render/rows.ts';
+import { walk, type FamilyGhostLane } from '../render/rows.ts';
 import { model, onlyLines, pins, selected, skyGroup } from '../state.ts';
 import { KEY_IDS, LINE_IDS, LINES_TITLE, unionById, unions } from './reveal.ts';
 
@@ -538,7 +538,7 @@ export function outsideOf(s: Show, c: ShowContent, sel: string | null): string |
 }
 
 /** Прежняя семейная укладка — априорное условие следующей (устойчивость, § 4.2 п. 6) и опора виртуальных полос. */
-let lastFamily: { res: FamilyResult; lanes: Map<string, number> } | null = null;
+let lastFamily: { res: FamilyResult; lanes: Map<string, number>; ghostLanes: FamilyGhostLane[] } | null = null;
 
 /** Лица, свёрнутые у лиц foldDesc (J5): их потомки, кроме лиц линий Мессии. */
 function foldedOf(S: ReadonlySet<string>, roots: readonly string[]): Set<string> {
@@ -553,7 +553,7 @@ function foldedOf(S: ReadonlySet<string>, roots: readonly string[]): Set<string>
 
 /** Укладки недавних показов: показ и состав → строки (не больше FAMILY_CACHE). */
 const FAMILY_CACHE = 12;
-const familyCache = new Map<string, { res: FamilyResult; lanes: Map<string, number> }>();
+const familyCache = new Map<string, { res: FamilyResult; lanes: Map<string, number>; ghostLanes: FamilyGhostLane[] }>();
 const hashIds = (S: ReadonlySet<string>) => {
   let x = 2166136261;
   for (const id of [...S].sort()) {
@@ -576,7 +576,7 @@ const hashLanes = (lanes: ReadonlyMap<string, number>) => {
  * Семейная укладка лиц S: строки → виртуальные полосы. Опора (anchor) остаётся на своей прежней полосе, если она была
  * в прежней укладке, иначе встаёт на свою полосу общей раскладки; без опоры коридор — у оси.
  */
-export function familyLanes(S: ReadonlySet<string>, o: { focus?: string | null; anchor?: string | null } = {}): { lanes: Map<string, number>; res: FamilyResult } {
+export function familyLanes(S: ReadonlySet<string>, o: { focus?: string | null; anchor?: string | null } = {}): { lanes: Map<string, number>; res: FamilyResult; ghostLanes: FamilyGhostLane[] } {
   const res = familyLayout(S, familyData(), { prior: lastFamily?.res.prior ?? null, focus: o.focus ?? null });
   const m = model.peek();
   let off: number;
@@ -590,8 +590,10 @@ export function familyLanes(S: ReadonlySet<string>, o: { focus?: string | null; 
   }
   const lanes = new Map<string, number>();
   for (const [id, r] of res.rows) lanes.set(id, r + off);
-  lastFamily = { res, lanes };
-  return { lanes, res };
+  // призраки укладки (решение 173: бездетный брак у мужа, дочь, ушедшая к мужу) — тем же сдвигом, что строки лиц
+  const ghostLanes: FamilyGhostLane[] = res.ghosts.map((g) => ({ id: g.id, person: g.person, husband: g.husband, t: g.t, lane: g.row + off }));
+  lastFamily = { res, lanes, ghostLanes };
+  return { lanes, res, ghostLanes };
 }
 
 /**
@@ -625,10 +627,10 @@ export const skyShow = computed<ShowIn>(() => {
     if (familyCache.size >= FAMILY_CACHE) familyCache.delete(familyCache.keys().next().value!);
   }
   familyCache.set(ck, hit);
-  const { lanes, res } = hit;
+  const { lanes, res, ghostLanes } = hit;
   const guests = folded.size ? new Set([...c.guests].filter((x) => S.has(x))) : c.guests;
   const stubs = folded.size ? c.stubs.filter((x) => S.has(x.from)) : c.stubs;
-  return { key: `f|${k}|${hashLanes(lanes)}`, layout: 'family', ids: c.ids, guests, stubs, lanes, anchor, units: res.units, since: res.since };
+  return { key: `f|${k}|${hashLanes(lanes)}|${ghostLanes.map((g) => `${g.id}${g.lane}`).join(',')}`, layout: 'family', ids: c.ids, guests, stubs, lanes, anchor, units: res.units, since: res.since, ghosts: ghostLanes };
 });
 
 // ---------- строка показа ----------

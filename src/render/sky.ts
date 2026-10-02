@@ -987,6 +987,13 @@ export class Sky implements SkyContext {
     // семейная укладка ставит лицо в одну виртуальную полосу: пребывания и переходы общей раскладки (решение 173) к ней
     // не относятся — звезда и след на виртуальной полосе
     const out = this.model.nodes.map((n, i) => (Number.isFinite(nl[i]) && (Math.abs(nl[i] - n.lane) > 1e-9 || n.stays) ? { ...n, lane: nl[i], starLane: nl[i], stays: undefined } : n));
+    // призраки укладки, которых нет среди узлов раскладки (бездетный брак у мужа, дочь в родной семье; решение 173), —
+    // виртуальными узлами-призраками после узлов модели: знак у года союза (рождения), без следа
+    for (const g of pl.extraGhosts ?? [])
+      out.push({
+        id: g.id, person: g.person, ghost: true, lane: g.lane, starLane: g.lane, t0: g.t, t1: g.t, block: -1, parentLane: null, layoutParent: null,
+        satelliteOf: g.husband ?? byId.get(g.person)?.father ?? null, spine: false, trail: 'ghost', brk: null, band: null, born: null,
+      });
     this.vNodes = { plan: pl, nodes: out };
     this.nodesStamp++;
     return out;
@@ -1053,6 +1060,29 @@ export class Sky implements SkyContext {
     this.nodesStamp++;
     this.nodes = this.frameNodes();
     this.cam.onChange();
+  }
+  /**
+   * Места виртуальных узлов (призраки семейной укладки после узлов модели, planNodes): x знака и яркость — массивы неба
+   * растут под них, x считаются каждый кадр (узлов — единицы).
+   */
+  private fitArrays() {
+    const N = this.nodes.length;
+    const M = this.model.nodes.length;
+    if (N <= M) return;
+    if (this.X0.length < N) {
+      const grow = <T extends Float64Array | Float32Array>(a: T, make: (n: number) => T): T => {
+        const b = make(N);
+        b.set(a);
+        return b;
+      };
+      this.X0 = grow(this.X0, (n) => new Float64Array(n));
+      this.X1 = grow(this.X1, (n) => new Float64Array(n));
+      this.starA = grow(this.starA, (n) => new Float32Array(n).fill(1));
+    }
+    for (let i = M; i < N; i++) {
+      this.X0[i] = timeToX(this.scale, this.nodes[i].t0, this.lambda);
+      this.X1[i] = timeToX(this.scale, this.nodes[i].t1, this.lambda);
+    }
   }
   /** Строки узлов сейчас (NaN — узел не на небе). */
   private rowsNow(): Float64Array {
@@ -2096,6 +2126,7 @@ export class Sky implements SkyContext {
     // перехода — с промежуточными (§ 10); в режиме «только линии» на общей раскладке лица линий стоят на нитях (MAP-71)
     this.beads = false;
     this.nodes = this.frameNodes();
+    this.fitArrays();
     if (lineOnly && L.ribbons && BEADS && this.plan.layout !== 'family') {
       this.beads = true;
       this.routeFactor = 0;
@@ -2516,6 +2547,8 @@ export class Sky implements SkyContext {
           .flatMap((i) => (this.bendsOf(i) ?? []).filter((g) => g.xb > 0 && g.xa < cam.w).map((g) => `${this.nodes[i].person}:${[g.xa, g.ya, g.xb, g.yb].map(Math.round).join(',')}`))
           .join(';'),
       );
+      // призраки в кадре (решение 173): «id узла-призрака@x,y» — и виртуальные узлы семейной укладки
+      put('ghosts', p.vis.filter((i) => this.nodes[i].ghost && p.starShown(i)).map((i) => `${this.nodes[i].id}@${Math.round(cam.sx(this.X0[i]))},${Math.round(this.starY(i))}`).join(' '));
       // уровень подробности семьи (решение 178): «уровень px-на-год» (tools/accept/skydraw.ts)
       put('tier', `${p.tier} ${p.pxYear.toFixed(1)}`);
       put('glideCuts', L.lifelines ? this.glideCrossLog().filter((q) => { const x = Number(q.split('@')[1]); return x > 0 && x < cam.w; }).join(' ') : '');
@@ -3248,7 +3281,9 @@ export class Sky implements SkyContext {
       lh.crosses(b, id) ||
       (!!segs &&
         !!lf &&
-        (segs.crosses(at(b), id, (q) => !!q && linkOn(q, lf) && q.kind !== 'ribbon' && (!ownLink(q.ks, id) || q.ks === hov)) ||
+        // своя черта брака — тоже препятствие (решение 163): она выходит со следа под именем мужа и режет текст, а не
+        // кончается у звезды, как ствол и зубец к ребёнку
+        (segs.crosses(at(b), id, (q) => !!q && linkOn(q, lf) && q.kind !== 'ribbon' && (q.kind === 'bar' || !ownLink(q.ks, id) || q.ks === hov)) ||
           (rib && segs.crosses(at(band), id, (q) => !!q && linkOn(q, lf) && q.kind === 'ribbon')))) ||
       // лента со свечением шире своей нити: середина строки — не ближе 3 px к её полю (ribbons.ts, offStrands: ещё 3 px)
       (rib && !!off && !off({ x: band.x, y: band.y - 3, w: band.w, h: band.h + 6 }));

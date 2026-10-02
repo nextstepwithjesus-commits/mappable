@@ -146,6 +146,20 @@ export interface ShowIn {
    * 173, Д7): доля её следа до него бледнее (src/render/trails.ts, LifeTrail.liveFrom)
    */
   since?: ReadonlyMap<string, number> | null;
+  /**
+   * 'family': призраки укладки (src/engine/family.ts, FamilyResult.ghosts; решение 173) — «ghost:<жена>@<муж>» (бездетный
+   * брак у мужа) и «ghost:<дочь>» (дочь, ушедшая к мужу, — в родной семье), с полосой тем же сдвигом, что lanes
+   */
+  ghosts?: readonly FamilyGhostLane[] | null;
+}
+
+/** Призрак семейной укладки на полосе: id узла-призрака неба, лицо, муж (или null), год знака (астр.), полоса. */
+export interface FamilyGhostLane {
+  id: string;
+  person: string;
+  husband: string | null;
+  t: number;
+  lane: number;
 }
 
 /** Что показывает небо: режим, рабочий набор и свёрнутое (src/ui/work.ts). */
@@ -202,6 +216,8 @@ export interface PlanNode {
   satelliteOf: string | null;
   /** пребывания лица (этап 15, решение 173; src/engine/stays.ts): их строки — тоже строки лица */
   stays?: readonly { lane: number }[];
+  /** id узла: у призрака — «ghost:<лицо>» или «ghost:<лицо>@<муж>» (семейная укладка ставит его по ShowIn.ghostLanes) */
+  id?: string;
 }
 
 /** Знак свёрнутого на небе: «+N» справа от следа лица или строка-подпись созвездия. */
@@ -248,6 +264,11 @@ export interface SkyPlan {
   units?: ReadonlyMap<string, readonly FamilyUnit[]> | null;
   /** 'family': год, с которого строка жены — «в семье мужа» (ShowIn.since); 'map' — null */
   since?: ReadonlyMap<string, number> | null;
+  /**
+   * 'family': призраки укладки, которых нет среди узлов раскладки (ShowIn.ghosts): небо добавляет их виртуальными узлами
+   * после узлов модели (src/render/sky.ts, planNodes); 'map' — нет
+   */
+  extraGhosts?: readonly FamilyGhostLane[];
 }
 
 /** Поля плана без показа: прежняя карта. */
@@ -325,7 +346,7 @@ export function planSky(d: PlanData, v: SkyView): FullPlan {
   const s = v.show;
   if (!s) return { ...planMap(d, v), ...MAP_FIELDS };
   const extra = { guests: s.guests, stubs: s.stubs, anchor: s.anchor };
-  if (s.layout === 'family' && s.lanes) return { ...planFamily(d, v, s.lanes, s.key), ...extra, units: s.units ?? null, since: s.since ?? null };
+  if (s.layout === 'family' && s.lanes) return { ...planFamily(d, v, s.lanes, s.key, s.ghosts ?? null), ...extra, units: s.units ?? null, since: s.since ?? null };
   // карта: всё небо или лица показа и гости на полосах общей раскладки (пустые полосы убраны, как в прежнем «наборе»)
   const set = s.ids ? new Set([...s.ids, ...s.guests]) : v.set;
   return { ...planMap(d, { ...v, mode: s.ids ? 'work' : 'all', set }), layout: 'map', nodeLane: null, ...extra };
@@ -516,7 +537,7 @@ function planMap(d: PlanData, v: SkyView): MapPlan {
  * по показу, чтобы кэши подписей и лент перестраивались при смене укладки. Свёрнутые потомки (J5) в укладку не входят
  * (src/ui/show.ts), здесь — только их счёт для «+N».
  */
-function planFamily(d: PlanData, v: SkyView, lanes: ReadonlyMap<string, number>, key: string): MapPlan & { layout: 'family'; nodeLane: Float64Array } {
+function planFamily(d: PlanData, v: SkyView, lanes: ReadonlyMap<string, number>, key: string, ghosts: readonly FamilyGhostLane[] | null = null): MapPlan & { layout: 'family'; nodeLane: Float64Array; extraGhosts: FamilyGhostLane[] } {
   const { nodes } = d;
   const N = nodes.length;
   const hidden = new Uint8Array(N);
@@ -524,9 +545,19 @@ function planFamily(d: PlanData, v: SkyView, lanes: ReadonlyMap<string, number>,
   let lo = Infinity;
   let hi = -Infinity;
   const all = new Map<string, boolean>();
+  const ghostLane = new Map((ghosts ?? []).map((g) => [g.id, g.lane]));
+  // призраки укладки, которых нет среди узлов неба: небо добавит их виртуальными узлами (Sky, planNodes)
+  const have = new Set<string>();
+  for (const n of nodes) if (n.ghost && n.id !== undefined) have.add(n.id);
+  const extraGhosts = (ghosts ?? []).filter((g) => !have.has(g.id));
+  for (const g of extraGhosts) {
+    if (g.lane < lo) lo = g.lane;
+    if (g.lane > hi) hi = g.lane;
+  }
   for (let i = 0; i < N; i++) {
     const n = nodes[i];
-    const l = n.ghost ? undefined : lanes.get(n.person);
+    // призрак — на своей строке укладки (бездетный брак у мужа, дочь в родной семье), если укладка его поставила
+    const l = n.ghost ? (n.id !== undefined ? ghostLane.get(n.id) : undefined) : lanes.get(n.person);
     if (l === undefined || !Number.isFinite(l)) hidden[i] = 1;
     else {
       nodeLane[i] = l;
@@ -546,7 +577,7 @@ function planFamily(d: PlanData, v: SkyView, lanes: ReadonlyMap<string, number>,
   }
   if (!(lo <= hi)) lo = hi = 0;
   const rows: Rows = { ...identityRows(lo, hi), key: `f|${key}` };
-  return { hidden, hiddenPersons, rows, marks, mode: 'work', layout: 'family', nodeLane };
+  return { hidden, hiddenPersons, rows, marks, mode: 'work', layout: 'family', nodeLane, extraGhosts };
 }
 
 /** Полоса-якорь сжатого неба: 0 (ось коридора), если она осталась, иначе ближайшая оставшаяся. */

@@ -426,6 +426,7 @@ export function frameOf(sc: Scene, s: Sky, scale: number, width: number, extra: 
   const glides: Frame['glides'] = [];
   const pathOf = new Map<number, readonly number[]>();
   // доля следа до прихода жены в дом мужа (решение 173: wed, since) — бледная, не жизнь в доме: связи её не режут
+  // (countPale: считать и её — для сравнения с замером выпуска 14, где бледной доли не было)
   const fromOf = new Map<number, number>();
   for (const q of (s.linkStarsNow() as readonly (LinkStar & { from?: number })[])) {
     if (q.ghost) continue;
@@ -435,7 +436,7 @@ export function frameOf(sc: Scene, s: Sky, scale: number, width: number, extra: 
   for (let i = 0; i < s.nodes.length; i++) {
     if (!s.drawn(i)) continue;
     const lp = pathOf.get(i);
-    const live = fromOf.get(i) ?? -Infinity;
+    const live = paleToo ? -Infinity : (fromOf.get(i) ?? -Infinity);
     if (lp) {
       // след с переходом (решение 173): горизонтали пребываний — строками, S-кривые — отрезками
       for (let k = 0; k + 3 < lp.length; k += 2) {
@@ -565,6 +566,8 @@ export interface Census {
   y11: number;
   y11of: number;
   y11trails: number;
+  /** пересечения Я11 со следами: «ключ пути × лицо следа» (для разбора семейных сцен) */
+  y11list: string[];
   /** Я12: подписи на чужих звёздах / на чужих линиях / всего подписей / наложения / высота строки */
   y12stars: number;
   y12lines: number;
@@ -1000,7 +1003,7 @@ export function census(f: Frame): Census {
   const ch = chChecks(f, add);
   return {
     scene: f.sc.id, scale: f.scale, width: f.width, stars: f.stars.length, kids: kidKeys.size,
-    y1, y2, y3, y4, y5, y6, y6of: teeth.length, y7, y8, y8of, y8nodes, y9, y11, y11of, y11trails,
+    y1, y2, y3, y4, y5, y6, y6of: teeth.length, y7, y8, y8of, y8nodes, y9, y11, y11of, y11trails, y11list: crossing.map((c) => `${c.q.ks} × ${nameOf(c.t.id)}`),
     y12stars, y12lines, y12of: f.boxes.filter((b) => !(b.kind === 'plate' && !b.text)).length, y12overlaps: f.overlaps, rowPx, y13, y14of, y14ends, y14foreign, y15,
     ...ch, issues,
   };
@@ -1422,6 +1425,12 @@ export function graphCensus(f: Frame, scene = f.sc.id): GraphCensus {
   return { scene, width: f.width, ownCut, nodeOnPath, sameVert, y1, y1full, mothers, mothersOf, dimmed, onScreen, bareStubText, coordBoth, coordRepeat, xNoCut: c.y11, issues: [...issues, ...c.issues.filter((q) => q.check === 'Я11')] };
 }
 
+let paleToo = false;
+/** Следы кадров переписи — и с бледной долей до прихода в дом (Ф4 «по всем следам», как мерил D2 на выпуске 14). */
+export function countPale(on: boolean) {
+  paleToo = on;
+}
+
 /** Кадр сцены GRAPH STRESS на ширине неба width (1440, а с открытой карточкой — 940). */
 export function captureGraph(g: GraphScene, width = 1440, select: string | null = g.select): Frame {
   const link = g.link ? lk.parseLinkKey(g.link) : null;
@@ -1731,8 +1740,10 @@ export const HEAD =
 // ---------- прогон ----------
 
 if (process.env.CENSUS_MAIN === '1' && process.argv.includes('--house')) {
-  // «Отчий дом» (этап 15, STAGE15 § 4): npx tsx tools/census.ts --house [--scene jacob-o,david-f] [--json out.json]
+  // «Отчий дом» (этап 15, STAGE15 § 4): npx tsx tools/census.ts --house [--scene jacob-o,david-f] [--pale] [--json out.json]
+  // (--pale: следы — и с бледной долей до прихода жены в дом)
   const argv = process.argv.slice(2);
+  countPale(argv.includes('--pale'));
   const arg = (k: string, d: string) => {
     const i = argv.indexOf(`--${k}`);
     return i >= 0 && argv[i + 1] !== undefined ? argv[i + 1] : d;
@@ -1804,6 +1815,7 @@ if (process.env.CENSUS_MAIN === '1' && process.argv.includes('--house')) {
   for (const c of out) {
     const v = violations(c);
     if (v.length) console.log(`\n${c.scene} ×${c.scale} ${c.width}: нарушено ${v.join('; ')}`);
+    if (v.some((t) => t.startsWith('Я11 (следы)'))) console.log(`  Я11 (следы): ${c.y11list.join('; ')}`);
     const byCheck = new Map<string, Issue[]>();
     for (const q of c.issues) (byCheck.get(q.check) ?? byCheck.set(q.check, []).get(q.check)!).push(q);
     for (const [k, qs] of byCheck) console.log(`  ${k}: ${qs.slice(0, top).map((q) => q.text).join('; ')}${qs.length > top ? `; ещё ${qs.length - top}` : ''}`);
