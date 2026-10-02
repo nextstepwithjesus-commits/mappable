@@ -69,6 +69,26 @@ export const BRANCH_COLORS: Readonly<Record<MapTheme, readonly string[]>> = {
   night: ['#30e978', '#9a75c8', '#e8968e', '#e960a2', '#81fac1', '#477dfe'],
   day: ['#004d20', '#8243d8', '#ee341e', '#cf4094', '#03956d', '#154195'],
 };
+/**
+ * Оттенки колен (этап 16, решение 183): свет лица — туманность, устье, ореол — несёт колено по матери его родоначальника
+ * (Быт 35:23–26), пока опорное лицо неба — Иаков (без выбора) или одна из четырёх матерей; тогда же цвет ветви равен
+ * оттенку колена («без перескока»). Это первые четыре цвета ветвей (решение 69) — они уже проходят пороги ветвей и
+ * этапа 16 (О3): ΔE ≥ 20 между собой, ≥ 9 при трёх видах дальтонизма, ≥ 18 до лент (npm run -s contrast). Народы и лица
+ * до колен своего оттенка не имеют: свет — тоном текста (нейтральная пыль, серебро).
+ */
+export type TribeHueKey = 'leah' | 'rachel' | 'bilhah' | 'zilpah';
+export const TRIBE_HUE_KEYS: readonly TribeHueKey[] = ['leah', 'rachel', 'bilhah', 'zilpah'];
+export const TRIBE_HUES: Readonly<Record<MapTheme, Readonly<Record<TribeHueKey, string>>>> = {
+  night: { leah: '#30e978', rachel: '#9a75c8', bilhah: '#e8968e', zilpah: '#e960a2' },
+  day: { leah: '#004d20', rachel: '#8243d8', bilhah: '#ee341e', zilpah: '#cf4094' },
+};
+/** Строки легенды света (решение 183): чьи сыны и какие колена. */
+export const TRIBE_NAMES: Readonly<Record<TribeHueKey, { who: string; tribes: string }>> = {
+  leah: { who: 'сыны Лии', tribes: 'Рувим, Симеон, Левий, Иуда, Иссахар, Завулон' },
+  rachel: { who: 'сыны Рахили', tribes: 'Иосиф (Ефрем, Манассия), Вениамин' },
+  bilhah: { who: 'сыны Валлы', tribes: 'Дан, Неффалим' },
+  zilpah: { who: 'сыны Зелфы', tribes: 'Гад, Асир' },
+};
 /** Названия цветов — для «Условных знаков» и подсказок. */
 export const BRANCH_NAMES: readonly string[] = ['зелёный', 'фиолетовый', 'коралловый', 'розовый', 'мятный', 'синий'];
 /** Цвет ветви к небу и полосе эпохи — не меньше, чем у графики (ТЗ § 3.8). */

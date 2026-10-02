@@ -26,7 +26,8 @@ import { mapFont, mapSize, T_MAP_S } from './type.ts';
 import { byId, graph } from '../data/atlas.ts';
 import { branchesOf, type Branch } from '../engine/unions.ts';
 import { unions } from '../ui/reveal.ts';
-import { branchColor, branchFade, branchFloor, KIN_GOLD, type MapTheme } from './branches.ts';
+import { branchFade, branchFloor, KIN_GOLD, type MapTheme } from './branches.ts';
+import { branchOrTribeColor } from './light.ts';
 import { claim, putLabel, textBox } from './labels.ts';
 import { beadAt, drawBranchLabels, drawKeyLineNames, drawLineNames, drawLineNotes, drawMt1Women } from './ribbons.ts';
 import type { LineStep } from '../engine/layout.ts';
@@ -257,7 +258,8 @@ export function branchFrame(v: Pick<SkyContext, 'pal' | 'model'>, p: Pick<Pass, 
       const k = b.branch * 64 + Math.min(63, b.gen);
       let out = byBranch.get(k);
       if (!out) {
-        const color = branchColor(b.branch, theme);
+        // Иаков и четыре матери — оттенок колена ветви, остальные — цвет ветви (решение 183, «без перескока»)
+        const color = branchOrTribeColor(map.id, map.keys, b.branch, theme);
         out = { color, a: branchFade(b.gen, grounds.length ? branchFloor(color, grounds) : 0), branch: b.branch, gen: b.gen };
         byBranch.set(k, out);
       }

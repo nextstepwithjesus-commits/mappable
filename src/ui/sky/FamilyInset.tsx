@@ -115,6 +115,8 @@ export function FamilyInset() {
   const [scroll, setScroll] = useState(0);
   const lastTap = useRef<{ id: string; at: number } | null>(null);
   const drag = useRef<{ y: number; s: number; moved: boolean } | null>(null);
+  /** после протяжки (прокрутки листа) касание не выбирает лицо */
+  const quietUntil = useRef(0);
   const center = st?.id ?? null;
   const scene = useMemo(() => (center ? familyScene(center, deps()) : null), [center, model.value]);
 
@@ -266,7 +268,6 @@ export function FamilyInset() {
         other: (claim) => otherParentLabel(claim, 'father').toLowerCase(),
       },
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scene, rKey, focusU, coarse, th]);
 
   // рисование: погашенное небо, рамка области, врезка (во время перехода — в промежуточном прямоугольнике)
@@ -371,7 +372,7 @@ export function FamilyInset() {
     (ev.currentTarget as HTMLElement).style.cursor = h ? 'pointer' : '';
   };
   const onClick = (ev: MouseEvent) => {
-    if (drag.current?.moved) return;
+    if (performance.now() < quietUntil.current) return;
     const q = local(ev);
     const h = pick(q.x, q.y);
     if (!h) return;
@@ -430,7 +431,10 @@ export function FamilyInset() {
           onPointerDown={(ev) => {
             if (maxScroll && ev.pointerType !== 'mouse') drag.current = { y: ev.clientY, s: scroll, moved: false };
           }}
-          onPointerUp={() => setTimeout(() => (drag.current = null), 0)}
+          onPointerUp={() => {
+            if (drag.current?.moved) quietUntil.current = performance.now() + 350;
+            drag.current = null;
+          }}
           onWheel={(ev) => {
             // колесо над врезкой не масштабирует небо под ней; длинная семья прокручивается
             ev.preventDefault();

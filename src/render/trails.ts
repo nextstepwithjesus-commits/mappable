@@ -49,7 +49,8 @@ import { refText } from '../engine/kinship.ts';
 import { drawGlyph, starRadius, type GlyphOpts } from './glyphs.ts';
 import { mapFont, mapSize, nameSize, T_MAP_S } from './type.ts';
 import { claim, FAMILY_KY, textBox, type LabelCache } from './labels.ts';
-import { branchColor, branchTickAt, GlowBatch, glowLayers, glows } from './branches.ts';
+import { branchTickAt, GlowBatch, glowLayers, glows } from './branches.ts';
+import { branchOrTribeColor } from './light.ts';
 import { branchFrame, clipHoles, FAR, ringHoles, type BranchPaint } from './marks.ts';
 import type { Rect } from './rect.ts';
 import type { Emphasis, Palette, Pass, SkyContext } from './sky.ts';
@@ -1707,7 +1708,7 @@ export function drawBranchTicks(v: SkyContext, p: Pass) {
     gen[id] = [b.branch, b.gen];
     n++;
   }
-  const colors = map.keys.slice(0, 16).map((_, i) => branchColor(i, bf.theme));
+  const colors = map.keys.slice(0, 16).map((_, i) => branchOrTribeColor(map.id, map.keys, i, bf.theme));
   const out = JSON.stringify({ sel: map.id, n: map.keys.length, shown: bf.shown.size, ticks, colors, gen });
   if (ds.branches !== out) ds.branches = out;
 }

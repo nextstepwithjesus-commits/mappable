@@ -46,6 +46,7 @@ import { unions as ALL_UNIONS } from '../ui/reveal.ts';
 import { lowerFirst, nameCase } from '../ui/text/ru.ts';
 import { alpha } from './color.ts';
 import { branchColor, GlowBatch, glowLayers, type MapTheme } from './branches.ts';
+import { branchKeysOf, branchOrTribeColor } from './light.ts';
 import { drawGlyph, starRadius } from './glyphs.ts';
 import { branchFrame } from './marks.ts';
 import { commonBranch, nodeOnSky, unionAlpha } from './trails.ts';
@@ -337,7 +338,12 @@ export function kidBranch(u: Union, kid: string): number {
   return Math.max(0, u.kids.indexOf(kid));
 }
 /** Цвет линии к ребёнку по ветви у родителя (#rrggbb): тот же, что у ветви при выборе этого родителя. */
-export const kidColor = (u: Union, kid: string, theme: MapTheme): string => branchColor(kidBranch(u, kid), theme);
+export const kidColor = (u: Union, kid: string, theme: MapTheme): string => {
+  const parent = u.a ?? u.b;
+  const b = kidBranch(u, kid);
+  // у Иакова и четырёх матерей — оттенок колена ветви (решение 183, «без перескока»)
+  return parent ? branchOrTribeColor(parent, branchKeysOf(parent), b, theme) : branchColor(b, theme);
+};
 /** Начертание линии к ребёнку: иное происхождение (по закону, по Луке, усыновление) — штрих, по толкованию — точки. */
 export function kidDash(u: Union): number[] {
   if (u.kidsCert === 'interpretation') return [1, 3.5];
