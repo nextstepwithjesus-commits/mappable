@@ -152,8 +152,8 @@ function PathLine() {
 }
 
 /**
- * Созвездие в фокусе (этап 16, решение 185): «В фокусе: Колено Иудино — вернуть». «Вернуть» и Esc снимают фокус и
- * возвращают окно до него.
+ * Созвездие в фокусе (этап 16, решение 185): «В фокусе: Колено Иудино» и отдельная кнопка «Вернуть» (§ 5.6: без
+ * фрагмента через тире). «Вернуть» и Esc снимают фокус и возвращают окно до него.
  */
 function FocusLine() {
   const g = groupFocus.value;
@@ -161,19 +161,16 @@ function FocusLine() {
   const hint = 'Созвездие раскрыто целиком, остальное небо — светом; «вернуть» (Esc) — окно до фокуса';
   return (
     <span class="sb-line" data-line="focus" title={hint}>
-      <span class="sb-t">{typo(`В фокусе: ${groupName(g)}`)}</span>
-      <span class="dash" aria-hidden="true">
-        {' — '}
-      </span>
+      <span class="sb-t">{typo(`В фокусе: ${groupName(g)}`)}</span>{' '}
       <button type="button" class="sb-cmd" data-cmd="focus" title={hint} aria-description={hint} aria-keyshortcuts="Escape" onClick={() => clearGroupFocus()}>
-        вернуть
+        Вернуть
       </button>
     </span>
   );
 }
 
 /**
- * Рассказ открыт, а в колонке — карточка (этап 16, решение 187): «Рассказ, шаг 3 из 8 — к рассказу, выйти».
+ * Рассказ открыт, а в колонке — карточка (этап 16, решение 187): «Рассказ, шаг 3 из 8» и кнопки «К рассказу», «Выйти».
  */
 function StoryLine() {
   const i = storyStep.value;
@@ -181,16 +178,12 @@ function StoryLine() {
   const text = `Рассказ, шаг ${i + 1} из ${STORY_STEPS.length}`;
   return (
     <span class="sb-line" data-line="story" title="В колонке — карточка; рассказ остаётся открытым">
-      <span class="sb-t">{text}</span>
-      <span class="dash" aria-hidden="true">
-        {' — '}
-      </span>
+      <span class="sb-t">{text}</span>{' '}
       <button type="button" class="sb-cmd" data-cmd="story" title="Колонка — снова рассказ" onClick={() => backToStory()}>
-        к рассказу
-      </button>
-      {', '}
+        К рассказу
+      </button>{' '}
       <button type="button" class="sb-cmd" data-cmd="story-exit" title="Закрыть рассказ: окно и выбранное лицо остаются (Esc)" onClick={() => closeStory()}>
-        выйти
+        Выйти
       </button>
     </span>
   );

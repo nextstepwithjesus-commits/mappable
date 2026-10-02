@@ -315,13 +315,9 @@ export function FamilyInset() {
     if (!geo.phone && e >= 1 && scene) drawBirths(ctx, look, scene, R, `${byId.get(scene.focal.id)?.name}: ${lifeText(scene.focal.id)}`);
   });
 
-  // холст врезки — внутри своей обёртки: прямой холст неба один (.sky > canvas — приёмка и ввод неба)
-  if (!st || !scene || !center)
-    return (
-      <div class="fam-layer" hidden>
-        <canvas ref={cv} class="fam-cv" aria-hidden="true" />
-      </div>
-    );
+  // без открытой врезки — ничего в разметке: холст неба под .sky один (приёмка ищет .sky canvas); холст врезки —
+  // в своей обёртке и только пока врезка открыта
+  if (!st || !scene || !center) return null;
   const female = byId.get(center)?.sex === 'f';
   const R = geo?.R;
   const fu = (focusU && scene.unions.find((u) => u.id === focusU)) || scene.unions.find((u) => u.kids.length) || null;
