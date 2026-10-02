@@ -305,6 +305,19 @@ export function nameAt(boxes: readonly LabelBox[], x: number, y: number, touch =
 export const inName = (boxes: readonly LabelBox[], x: number, y: number) => nameAt(boxes, x, y, false) !== null;
 
 /**
+ * Знак, в который собраны прореженные (решение 142; без выбранного лица): щелчок и касание по нему — приближение к нему,
+ * пока собранные не встанут отдельно; одиночный знак и знак у предела масштаба — обычный выбор (false).
+ */
+export function zoomHost(sky: Pick<Sky, 'thinMembers' | 'cam'>, id: string): boolean {
+  if (!sky.thinMembers(id).length) return false;
+  const q = screenOf(id);
+  const cam = sky.cam;
+  if (!q || cam.clampKx(cam.kx * KEY_STEP, cam.wx(q.x)) <= cam.kx * 1.2) return false;
+  zoomBy(KEY_STEP, q, KEY_MS);
+  return true;
+}
+
+/**
  * Звёзды в радиусе r от точки (px холста), которые видны и ловят указатель; у лица с двумя знаками — ближайший.
  * Звезда, чья подпись под пальцем (поле подписи — не ниже 24 px), считается в LABEL_D px от касания.
  */
@@ -329,7 +342,8 @@ function tapCandidates(sky: Sky, x: number, y: number, r: number, byName = true)
     const sx = cam.sx(sky.X0[i]);
     let d = Math.hypot(sx - x, sy - y);
     if (named) d = Math.min(d, LABEL_D);
-    if (d > r || !sky.reachable(i)) continue;
+    // прореженный знак (решение 142) не нарисован: палец целится в знак, в который он собран
+    if (d > r || !sky.reachable(i) || sky.thinned(i)) continue;
     const was = best.get(n.person);
     if (was && was.d <= d) continue;
     best.set(n.person, { id: n.person, d, mag: byId.get(n.person)?.magnitude ?? 6, labeled: labeled.has(n.person), x: sx, y: sy });
@@ -1221,6 +1235,11 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       const c = tapChoice(tapCandidates(sky, at.x, at.y, TOUCH_R, !onGlyph), canZoom);
       // что сделало касание — для проверок приёмки (tools/accept/phone.ts)
       canvas.dataset.tap = c.kind;
+      // палец на знаке, в который собраны прореженные (решение 142): приближение к нему, а не выбор
+      if (c.kind === 'pick' && zoomHost(sky, c.id)) {
+        canvas.dataset.tap = 'zoom';
+        return;
+      }
       // звезда под самым пальцем важнее связей (§ 8: звезда > ◆ > «+N» > линии)
       const tight = c.kind !== 'none' && c.kind !== 'zoom' ? sky.hitStar(at.x, at.y, STAR_FIRST + 2) : null;
       if (tight && c.kind === 'pick') {
@@ -1305,6 +1324,11 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       }
     } else {
       const u = underPointer(sky, at.x, at.y, 12);
+      // щелчок по знаку, в который собраны прореженные (решение 142), — приближение к нему; по имени — выбор
+      if (u?.kind === 'star' && nameAt(sky.ledger.boxes, at.x, at.y, false) !== u.id && zoomHost(sky, u.id)) {
+        canvas.dataset.tap = 'zoom';
+        return;
+      }
       if (u?.kind === 'star' || u?.kind === 'trail') {
         // в режиме «Родство с…» или «Разворот с…» щелчок выбирает второе лицо, первое остаётся
         chooseStar(u.id);

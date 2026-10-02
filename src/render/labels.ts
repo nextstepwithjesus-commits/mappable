@@ -1719,10 +1719,17 @@ export function drawStarLabels(v: SkyContext, p: Pass, between?: () => void) {
   const hidden: number[] = [];
   for (const i of p.vis) {
     const n = v.nodes[i];
-    if (n.ghost || !v.drawn(i) || p.starAlpha(i) <= 0.5) continue;
+    // звёзды, собранные в скопление старшего при выбранном, не нарисованы: их называет «+N» его подписи — не скрытые
+    // подписи; прореженные без выбранного (решение 142) — в скрытых: знак не нарисован, имя читает диктор
+    const thin = !!p.thinned?.has(i);
+    if (n.ghost || !v.drawn(i) || p.starAlpha(i) <= 0.5 || (!thin && !p.starShown(i))) continue;
     const x = cam.sx(v.X0[i]);
     const y = cam.sy(n.lane);
     if (x < v.letterW || x > cam.w || y < v.openTop || y > cam.vp.b) continue;
+    if (thin) {
+      hidden.push(i);
+      continue;
+    }
     // звезда под органами неба и карточкой: в счёт подписанных не входит, но в списке скрытых — её имя читает диктор
     // и называет строка «Без подписи на небе» карточки у звезды (решения 140, 153)
     if (hits({ x: x - 1, y: y - 1, w: 2, h: 2 }, p.reserve)) {

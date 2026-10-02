@@ -10,7 +10,10 @@
  *  — 1130 колена Иуды и Вениамина; 1131–1132 тяжёлые участки (1 Пар 2–8, Быт 10, 36, цари, плен, Новый Завет);
  *  — 1133–1134 телефон, касание Иакова и Давида;
  *  — 1135 узкое небо (решение 144): при выбранном лице подписаны только его род, семья и лица лент;
- *  — 1136 скрытые подписи (контракт 2): лица видимых звёзд без подписи — в canvas[data-hidden], подписанные — нет.
+ *  — 1136 скрытые подписи (контракт 2): лица видимых звёзд без подписи — в canvas[data-hidden], подписанные — нет;
+ *  — 1137 обзор на телефоне без выбранного (решение 142 на любом масштабе, инвариант 13): знаки, которые легли бы друг на
+ *    друга, прорежены — К1 = 0, опорные лица нарисованы, прореженные — в списке неба и в скрытых подписях, без подписи;
+ *    касание знака, в который собраны прореженные, — приближение к нему, а не выбор.
  */
 import type { Page } from 'playwright';
 import { fail, pass, type Check, type Scenario } from './kit.ts';
@@ -137,6 +140,53 @@ export const labels14: Scenario[] = [
       await p.waitForTimeout(700);
       const after = await p.evaluate(() => (document.querySelector('.sky canvas') as HTMLCanvasElement).dataset.labelIds ?? '');
       return after.split(' ').includes(probe) ? pass(`скрытых ${hidden.length}; ${probe} при наведении подписан`) : fail(`${probe} при наведении не подписан`);
+    },
+  },
+  {
+    n: 1137,
+    title: 'Телефон, обзор без выбранного: знаки не ложатся друг на друга — прорежены, рисуется значимый (решение 142, инвариант 13, К1 = 0); Адам, Ной, Авраам, Давид, Иисус Христос нарисованы; касание собранного знака — приближение',
+    view: PHONE,
+    run: async (p) => {
+      await p.addInitScript(REC);
+      const r = await shoot(p, scene('phone-far'), p.url());
+      const bad = verdict(r.m.counts);
+      if (r.m.counts.nn) bad.push(`знаков друг на друге ${r.m.counts.nn}`);
+      // прореженные — canvas[data-thin] «знак:собранные через запятую» через «;»
+      const ds = await p.evaluate(() => {
+        const c = (document.querySelector('.sky canvas') as HTMLCanvasElement).dataset;
+        return { thin: c.thin ?? '', hidden: c.hidden ?? '', labels: c.labelIds ?? '' };
+      });
+      const groups = ds.thin.split(';').filter(Boolean).map((g) => g.split(':'));
+      const thinned = new Set(groups.flatMap(([, m]) => m.split(',')));
+      if (!thinned.size) bad.push('прореженных нет');
+      const drawn = new Set(r.g.stars.map((s) => s.id).filter((id) => !thinned.has(id)));
+      const lost = ['adam', 'noy', 'avraam', 'david', 'iisus'].filter((id) => !drawn.has(id));
+      if (lost.length) bad.push(`не нарисованы: ${lost.join(', ')}`);
+      // прореженный в списке неба (#sky-stars) — среди скрытых подписей и без подписи
+      const hidden = new Set(ds.hidden.split(' '));
+      const named = new Set(ds.labels.split(' '));
+      const listed = r.g.stars.filter((s) => thinned.has(s.id));
+      const notHidden = listed.filter((s) => !hidden.has(s.id)).map((s) => s.id);
+      const labeled = listed.filter((s) => named.has(s.id)).map((s) => s.id);
+      if (notHidden.length) bad.push(`прорежены, но не в скрытых: ${notHidden.join(', ')}`);
+      if (labeled.length) bad.push(`прорежены, но подписаны: ${labeled.join(', ')}`);
+      if (bad.length) return fail(bad.join('; '));
+      // касание знака, в который собраны прореженные, — приближение к нему, а не выбор (соседний нарисованный знак — дальше 30 px)
+      const pts = r.g.stars.filter((s) => drawn.has(s.id));
+      const host = groups
+        .map(([h]) => pts.find((s) => s.id === h))
+        .find((h) => h && h.y > 260 && h.y < r.g.ch - 120 && h.x > 60 && h.x < r.g.cw - 120 && pts.every((o) => o.id === h.id || Math.hypot(o.x - h.x, o.y - h.y) > 30));
+      if (!host) return fail('нет знака с собранными вдали от соседей');
+      const w0 = await p.evaluate(() => (document.querySelector('.sky') as HTMLElement).dataset.view ?? '');
+      const c = (await p.locator('.sky canvas').boundingBox())!;
+      await p.touchscreen.tap(c.x + host.x, c.y + host.y);
+      await p.waitForTimeout(900);
+      const after = await p.evaluate(() => ({ tap: (document.querySelector('.sky canvas') as HTMLCanvasElement).dataset.tap ?? '', view: (document.querySelector('.sky') as HTMLElement).dataset.view ?? '', sel: document.documentElement.dataset.selected ?? '' }));
+      // .sky[data-view] — «л в п н x0 kx верх ky»: kx — px на единицу времени
+      const kx = (v: string) => Number(v.split(' ')[5]);
+      if (after.tap !== 'zoom' || !(kx(after.view) > kx(w0) * 1.4)) return fail(`касание знака ${host.id} с собранными: ${after.tap}, масштаб ${kx(w0)} → ${kx(after.view)}`);
+      if (after.sel) return fail(`касание знака ${host.id} с собранными выбрало ${after.sel}`);
+      return pass(`нарисовано ${drawn.size}, прорежено в окне ${listed.length} (в ${groups.length} знаков), К1 0; касание ${host.id} — приближение`);
     },
   },
 ];

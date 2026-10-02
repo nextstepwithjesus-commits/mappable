@@ -154,7 +154,7 @@ describe('подписи (MAP-06, 56, 66; MOB-53)', () => {
     const covered: string[] = [];
     for (let i = 0; i < s.nodes.length; i++) {
       const n = s.nodes[i];
-      if (n.ghost || n.person === 'iisus' || !s.reachable(i)) continue;
+      if (n.ghost || n.person === 'iisus' || !s.reachable(i) || s.thinned(i)) continue;
       const x = s.cam.sx(s.X0[i]);
       const y = s.cam.sy(n.lane);
       if (x >= jb.x && x <= jb.x + jb.w && y >= jb.y && y <= jb.y + jb.h) covered.push(n.person);

@@ -312,7 +312,42 @@ const view: Scenario[] = [
       const hi = await vcam(p);
       const a = await vlabels(p);
       if (Math.round(hi.ky) !== 60) return vno(`полоса ${hi.ky.toFixed(1)} px, а не 60`);
-      if (a.over || a.named !== a.stars || a.stars < 5) return vno(`60 px: наложений ${a.over}, подписано ${a.named}/${a.stars}`);
+      if (a.over || a.stars < 5) return vno(`60 px: наложений ${a.over}, подписано ${a.named}/${a.stars}`);
+      // второй круг (решение 163, как в 274): имя не стоит на чужой вертикали — где места нет, лицо без подписи; тогда оно в
+      // canvas[data-hidden] и в строке «Без подписи на небе» карточки у звезды (решение 153), если она есть
+      if (a.named !== a.stars) {
+        if (a.named < a.stars * 0.75) return vno(`60 px: подписано ${a.named}/${a.stars}`);
+        const d = (await p.evaluate(`(() => { const c = document.querySelector('.sky canvas'); const r = c.getBoundingClientRect(); const vis = [...document.querySelectorAll('#sky-stars button[data-x]')].map((b) => ({ id: b.id.replace(/^sky-star-/, ''), x: +b.dataset.x, y: +b.dataset.y })).filter((q) => q.x > 0 && q.x < r.width && q.y > 0 && q.y < r.height); return { vis: vis.map((q) => q.id), labels: c.dataset.labelIds ?? '', hidden: c.dataset.hidden ?? '' }; })()`)) as { vis: string[]; labels: string; hidden: string };
+        const named = new Set(d.labels.split(' '));
+        const hidden = new Set(d.hidden.split(' '));
+        const lost = d.vis.filter((id) => !named.has(id) && !hidden.has(id));
+        if (lost.length) return vno(`60 px: без подписи и не в списке скрытых — ${lost.join(', ')}`);
+        // строка «Без подписи на небе» называет родню первого колена выбранного (родители, супруги, дети; DotCard, HiddenKin)
+        const { readFileSync } = await import('node:fs');
+        const { join } = await import('node:path');
+        const { ROOT } = await import('../bible.ts');
+        type P = { id: string; f?: string; m?: string; sp?: { id: string }[] };
+        const persons = (JSON.parse(readFileSync(join(ROOT, 'src/generated/atlas.json'), 'utf8')) as { persons: P[] }).persons;
+        const me = persons.find((q) => q.id === 'david')!;
+        const kin = new Set([me.f, me.m, ...(me.sp ?? []).map((x) => x.id)].filter((x): x is string => !!x));
+        for (const q of persons) if (q.f === 'david' || q.m === 'david' || (q.sp ?? []).some((x) => x.id === 'david')) kin.add(q.id);
+        const bare = d.vis.filter((id) => !named.has(id) && kin.has(id));
+        const at = await p.locator('.sky').getAttribute('data-sel');
+        const cb = await p.locator('.sky > canvas').boundingBox();
+        if (at && cb) {
+          const [sx, sy] = at.split(' ').map(Number);
+          await p.mouse.click(cb.x + sx, cb.y + sy);
+          await p.waitForTimeout(1500);
+          if (await p.locator('.sky .dotcard').count()) {
+            const ids = ((await p.locator('.sky .dotcard .dc-hidden').getAttribute('data-ids', { timeout: 2000 }).catch(() => null)) ?? '').split(' ');
+            const miss = bare.filter((id) => !ids.includes(id));
+            if (miss.length) return vno(`60 px: без подписи и не в строке «Без подписи на небе» — ${miss.join(', ')}`);
+          }
+          await p.keyboard.press('Escape');
+          await p.waitForTimeout(500);
+          await p.locator('.sky canvas').focus();
+        }
+      }
       for (let i = 0; i < 16; i++) {
         await p.keyboard.press('Alt+Minus');
         await p.waitForTimeout(300);

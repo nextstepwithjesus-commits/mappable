@@ -379,6 +379,8 @@ export interface Pass {
   knockReveal?: (b: Rect) => void;
   /** имена верхней ступени 164, под которыми чужая линия разорвана по всей рамке + 3 px (исключение 163; К5 — отдельно) */
   cutNames?: string[];
+  /** прореженные знаки без выбранного (решение 142): не нарисованы, их лица — в скрытых подписях */
+  thinned?: ReadonlySet<number>;
   /** лента по маршруту под прямоугольником (px холста): подписи связей обходят саму ленту, а не рамку шага (§ 3) */
   onRibbon?: (b: Rect) => boolean;
 }
@@ -1585,6 +1587,106 @@ export class Sky implements SkyContext {
   /** Скопления этого кадра: узел старшего → узлы, собранные в его знак. */
   private piles = new Map<number, number[]>();
   /**
+   * Прореженные без выбранного лица (решение 142 на обзоре и любом масштабе; инвариант 13): знак, который лёг бы на знак
+   * значимее (зазор по настоящим фигурам < 1 px), не рисуется и не ловит указатель до приближения; лицо — в списке неба
+   * (#sky-stars, reachable) и в скрытых подписях. Считается при смене масштаба и показа, а не в каждом кадре.
+   */
+  private thin = new Set<number>();
+  private thinKey = '';
+  private thinRefs: unknown[] = [];
+  private thinR = new Map<string, Float64Array>();
+  /** знак узла i прорежен (не нарисован: лёг бы на знак значимее; решение 142) */
+  thinned(i: number | string): boolean {
+    const k = typeof i === 'string' ? this.nodeIndex.get(i) : i;
+    return k !== undefined && this.thin.has(k);
+  }
+  /**
+   * Прореживание знаков без выбранного (решение 142): в мировых координатах масштаба (сдвиг окна его не меняет) — сеткой
+   * 16 px по всем узлам показа; рисуется значимый (меньшая величина, лицо ленты, старший по рождению), остальные — нет.
+   * Наведённое, лицо с фокусом, отметки и концы выбранной связи не прореживаются.
+   */
+  private thinOut(p: Pass) {
+    const { cam } = this;
+    const s = p.s;
+    const keep = new Set([s.hovered, s.focus, ...s.pins, ...(s.link ? linkRoles(s.link).map((e) => e.id) : [])].filter((x): x is string => !!x));
+    // масштаб — ступенями 1/16 октавы: места знаков считаются при ступени не крупнее настоящей (знаки ближе), размер знака —
+    // при ступени не мельче (знаки больше), поэтому зазор нарисованных и между ступенями не меньше 1 px; при сдвиге окна и
+    // наведении (подсветки связи, союза, меридиана) не пересчитывается
+    const qd = (k: number) => 2 ** (Math.floor(Math.log2(k) * 16) / 16);
+    const kx = qd(cam.kx);
+    const ky = qd(cam.ky);
+    const scale = zoomScaleFor(2 ** (Math.ceil(Math.log2(cam.ky) * 16) / 16));
+    const key = `${this.model?.id}|${kx}|${ky}|${cam.rows.key}|${this.nodes.length}|${p.starDetail > 0.02}|${Math.ceil(s.intro * 7)}|${s.onlyLines}|${s.layers.ghosts}|${[...this.collapsed].join(',')}|${[...keep].join(',')}`;
+    if (key === this.thinKey && this.thinRefs[0] === this.plan && this.thinRefs[1] === s.highlight) return;
+    this.thinKey = key;
+    this.thinRefs = [this.plan, s.highlight];
+    const thin = new Set<number>();
+    const all: { i: number; x: number; y: number; R: number; m: number; sp: boolean; keep: boolean }[] = [];
+    // вынос знака узла при этой ступени масштаба — один раз на модель и ступень (их не больше полутора десятков)
+    const rk = `${this.model.id}|${this.nodes.length}|${scale}`;
+    let RR = this.thinR.get(rk);
+    if (!RR) {
+      if (this.thinR.size > 32) this.thinR.clear();
+      RR = new Float64Array(this.nodes.length).fill(-1);
+      this.thinR.set(rk, RR);
+    }
+    for (let i = 0; i < this.nodes.length; i++) {
+      const n = this.nodes[i];
+      if (n.ghost || !this.starShown(s, i)) continue;
+      const q = byId.get(n.person);
+      if (!q) continue;
+      // все показанные знаки, и бледные мелкие (их пунктирные кружки иначе слипаются в пятна); приглушение подсветкой не
+      // учитывается — иначе знаки появлялись бы при наведении
+      if (RR[i] < 0) {
+        const e = glyphExtent({ ...personGlyph(q, false, this.model.chrono.get(n.person)?.cls, { scale, color: '', halo: '' }), king: false, infant: false });
+        RR[i] = Math.max(e.l, e.r, e.t, e.b);
+      }
+      all.push({ i, x: this.X0[i] * kx, y: this.rowOf(n.lane) * ky, R: RR[i], m: q.magnitude, sp: p.spine.has(q.id), keep: keep.has(q.id) });
+    }
+    all.sort((a, b) => Number(b.keep) - Number(a.keep) || a.m - b.m || Number(b.sp) - Number(a.sp) || a.x - b.x || a.i - b.i);
+    // ячейка сетки не меньше суммы двух наибольших знаков: соседей ищут только в соседних ячейках
+    const C = Math.max(16, Math.ceil(2 * all.reduce((m, b) => Math.max(m, b.R), 0) + 1));
+    const grid = new Map<number, typeof all>();
+    const cell = (cx: number, cy: number) => cx * 1_000_003 + cy;
+    const host = new Map<number, number>();
+    for (const b of all) {
+      const cx = Math.floor(b.x / C);
+      const cy = Math.floor(b.y / C);
+      let hit: (typeof all)[number] | null = null;
+      if (!b.keep)
+        for (let x = cx - 1; x <= cx + 1 && !hit; x++)
+          for (let y = cy - 1; y <= cy + 1 && !hit; y++)
+            for (const k of grid.get(cell(x, y)) ?? [])
+              if (Math.hypot(k.x - b.x, k.y - b.y) < k.R + b.R + 1) {
+                hit = k;
+                break;
+              }
+      if (hit) {
+        thin.add(b.i);
+        host.set(b.i, hit.i);
+        continue;
+      }
+      const g = grid.get(cell(cx, cy));
+      if (g) g.push(b);
+      else grid.set(cell(cx, cy), [b]);
+    }
+    this.thin = thin;
+    this.thinHost = host;
+  }
+  /** Знак, в который собран прореженный узел (решение 142): узел → узел нарисованного знака значимее. */
+  private thinHost = new Map<number, number>();
+  /**
+   * Лица, собранные в нарисованный знак лица id (решение 142, без выбранного): пусто — знак одиночный. Для касания и
+   * щелчка (src/ui/sky/input.ts): знак с собранными — приближение к нему, одиночный — выбор.
+   */
+  thinMembers(id: string): string[] {
+    const k = this.nodeIndex.get(id);
+    if (k === undefined || !this.thin.size) return [];
+    const out: string[] = [];
+    for (const [i, h] of this.thinHost) if (h === k) out.push(this.nodes[i].person);
+    return out;
+  }
+  /**
    * Знак не ложится на знак (решение 142; C6): яркие знаки (выделенная семья на обзоре, бусины лент), которые легли бы
    * друг на друга, собираются в скопление — рисуется знак старшего, у его подписи — «+N». Старший — выбранное, второе,
    * наведённое и лицо с фокусом, отметки и концы выбранной связи, затем по величине, линиям Мессии и значимости. Сетка
@@ -1595,6 +1697,17 @@ export class Sky implements SkyContext {
     this.piles.clear();
     const { cam } = this;
     const s = p.s;
+    // без выбранного лица (решение 142, расширено на обзор и любой масштаб; инвариант 13, К1 = 0): знаки, которые легли бы
+    // друг на друга, прорежены — рисуется самый значимый, без «+N»
+    if (!s.selected && !p.work) {
+      this.thinOut(p);
+      for (const i of this.thin) this.piled.add(i);
+      p.thinned = this.thin;
+      return;
+    }
+    this.thin = new Set();
+    this.thinHost = new Map();
+    this.thinKey = '';
     // только при выделенной семье и только на обзоре (решение 142): на масштабе семьи (строка от 14 px) все знаки рисуются
     if (p.work || !s.selected || !s.highlight || cam.ky >= FAMILY_KY) return;
     const keep = new Set([s.selected, s.second, s.hovered, s.focus, ...s.pins, ...(s.link ? linkRoles(s.link).map((e) => e.id) : [])].filter((x): x is string => !!x));
@@ -1687,6 +1800,12 @@ export class Sky implements SkyContext {
     if (this.piles.size) p.pileText = new Map([...this.piles].map(([i, m]) => [this.nodes[i].person, `+${m.length}`]));
   }
   /** Скопления семьи последнего кадра: лицо старшего и собранные в его знак (решение 142; для проверок и «Ближайшей родни»). */
+  /** Прореженные группами «знак:собранные через запятую» (замер canvas[data-thin]). */
+  private thinGroups(): string[] {
+    const g = new Map<number, string[]>();
+    for (const [i, h] of this.thinHost) (g.get(h) ?? g.set(h, []).get(h)!).push(this.nodes[i].person);
+    return [...g].map(([h, m]) => `${this.nodes[h].person}:${m.join(',')}`);
+  }
   pilesNow(): { id: string; members: string[] }[] {
     return [...this.piles].map(([i, m]) => ({ id: this.nodes[i].person, members: m.map((k) => this.nodes[k].person) }));
   }
@@ -1707,7 +1826,8 @@ export class Sky implements SkyContext {
       if (k === undefined) return false;
       i = k;
     }
-    if (!this.drawn(i) || !this.pointable(i)) return false;
+    // прореженный знак (решение 142) — в списке неба и с клавиатуры: фокус его проявляет
+    if (!this.drawn(i) || (!this.pointable(i) && !(this.thin.has(i) && this.starA[i] >= 0.5))) return false;
     const x = this.cam.sx(this.X0[i]);
     const y = this.cam.sy(this.nodes[i].lane);
     return x > this.letterW && x < this.cam.w && y > this.openTop && y < this.cam.vp.b;
@@ -2164,6 +2284,8 @@ export class Sky implements SkyContext {
       put('labelBoxes', boxes.filter((b) => b.kind === 'star').map((b) => `${b.id}:${[b.x, b.y, b.w, b.h].map(Math.round).join(',')}`).join(';'));
       // скрытые подписи (контракт 2; решение 140) — лица видимых звёзд без подписи, по степени интереса (первые 200)
       put('hidden', this.ledger.hidden.slice(0, 200).join(' '));
+      // прореженные без выбранного (решение 142): «знак:собранные через запятую» через «;» (tools/accept/labels14.ts, 1137)
+      put('thin', this.thinGroups().slice(0, 300).join(';'));
       // скопления семьи (решение 142): «старший:+N:собранные через запятую»
       put('piles', this.pilesNow().map((q) => `${q.id}:+${q.members.length}:${q.members.join(',')}`).join(';'));
       // этап 11 (B1), для проверок tools/accept/bugs7.ts и tools/_bugs-chaos.ts: лица, чья подпись (имя или номер у бусины)

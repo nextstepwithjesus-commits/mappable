@@ -39,7 +39,7 @@ async function emptySpot(p: Page): Promise<{ x: number; y: number } | null> {
   return null;
 }
 /** Навести указатель на звезду: спираль от середины неба, пока не появится подсказка. */
-async function starSpot(p: Page, ok: (name: string) => boolean = () => true): Promise<{ x: number; y: number; name: string } | null> {
+async function starSpot(p: Page, ok: (name: string, x: number, y: number) => boolean = () => true): Promise<{ x: number; y: number; name: string } | null> {
   const box = (await p.locator('.sky canvas').boundingBox())!;
   const cx = box.x + box.width * 0.45;
   const cy = box.y + box.height * 0.5;
@@ -55,7 +55,7 @@ async function starSpot(p: Page, ok: (name: string) => boolean = () => true): Pr
       const tip = p.locator('.sky .tip b');
       if (await tip.count()) {
         const name = (await tip.innerText()).trim();
-        if (ok(name)) return { x, y, name };
+        if (ok(name, x, y)) return { x, y, name };
       }
     }
   return null;
@@ -202,7 +202,22 @@ export const nav: Scenario[] = [
     title: 'Телефон 390 × 844: касание с дрожанием 8 px выбирает звезду (D3; MOB-09)',
     view: { width: 390, height: 844, touch: true },
     run: async (p) => {
-      const star = await starSpot(p);
+      // знак, в который на обзоре собраны прореженные (решение 142; canvas[data-thin] «знак:собранные»), касание приближает,
+      // а не выбирает — берётся звезда без собранных; проверка выбора с дрожанием та же
+      const { readFileSync } = await import('node:fs');
+      const { join } = await import('node:path');
+      const { ROOT } = await import('../bible.ts');
+      const names = new Map((JSON.parse(readFileSync(join(ROOT, 'src/generated/atlas.json'), 'utf8')) as { persons: { id: string; n: string }[] }).persons.map((q) => [q.id, q.n]));
+      const thin = await p.evaluate(() => (document.querySelector('.sky canvas') as HTMLCanvasElement).dataset.thin ?? '');
+      const groups = thin.split(';').filter(Boolean).map((g) => g.split(':'));
+      const hosts = new Set(groups.map(([h]) => names.get(h) ?? ''));
+      const thinned = new Set(groups.flatMap(([, m]) => m.split(',')));
+      // и звезда стоит отдельно (в 30 px от точки нет другой звезды списка неба): в плотном месте касание по правилу H5 — список
+      // «Какое лицо?», а не выбор наугад; эта проверка — о дрожании пальца, а не о плотном месте
+      const cb = (await p.locator('.sky canvas').boundingBox())!;
+      const drawn = (await p.evaluate(() => [...document.querySelectorAll<HTMLElement>('#sky-stars button[data-x]')].map((b) => ({ id: b.id.replace(/^sky-star-/, ''), x: +b.dataset.x!, y: +b.dataset.y! })))).filter((q) => !thinned.has(q.id)).map((q) => ({ n: names.get(q.id) ?? '', x: cb.x + q.x, y: cb.y + q.y }));
+      const alone = (n: string, x: number, y: number) => !drawn.some((q) => q.n !== n && Math.hypot(q.x - x, q.y - y) < 30);
+      const star = await starSpot(p, (n, x, y) => !hosts.has(n) && alone(n, x, y));
       if (!star) return fail('не нашлось звезды');
       const cdp = await p.context().newCDPSession(p);
       const pt = (x: number, y: number) => [{ x, y, id: 1, radiusX: 4, radiusY: 4, force: 1 }];

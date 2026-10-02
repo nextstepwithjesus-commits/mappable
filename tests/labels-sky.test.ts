@@ -131,7 +131,7 @@ describe('подписи без наложений (E1)', () => {
         const rod: string[] = [];
         for (let i = 0; i < s.nodes.length; i++) {
           const n = s.nodes[i];
-          if (n.ghost || !s.reachable(i)) continue;
+          if (n.ghost || !s.reachable(i) || s.thinned(i)) continue;
           const x = s.cam.sx(s.X0[i]);
           if (x < s.letterW || x > s.cam.w) continue;
           if (hl.has(n.person) || fam.has(n.person)) rod.push(n.person);

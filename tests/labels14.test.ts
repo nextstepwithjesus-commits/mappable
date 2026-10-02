@@ -101,7 +101,8 @@ function glyphBoxes(s: Sky) {
   const scale = Math.max(0.7, Math.min(1.25, s.cam.ky / 18));
   for (let i = 0; i < s.nodes.length; i++) {
     const n = s.nodes[i];
-    if (n.ghost || !s.reachable(i)) continue;
+    // нарисованные знаки: прореженный (решение 142) в списке неба, но не нарисован
+    if (n.ghost || !s.reachable(i) || s.thinned(i)) continue;
     const q = atlas.byId.get(n.person)!;
     const e = glyphs.glyphExtent({ sex: q.sex, kind: q.kind, magnitude: q.magnitude, king: q.roles.includes('king') || q.roles.includes('queen'), messiah: q.id === 'iisus', scale });
     const x = s.cam.sx(s.X0[i]);
@@ -297,5 +298,54 @@ describe('подписи неба по правилам решений 139–144
     expect(pairs).toEqual([]);
     // на масштабе семьи скоплений нет
     expect(drawSky({ move: around('iakov', 120), state: { selected: 'iakov', highlight: lineage('iakov') } }).sky.pilesNow()).toEqual([]);
+  });
+});
+
+describe('прореживание знаков без выбранного (решение 142 на любом масштабе; инвариант 13, К1 = 0)', () => {
+  /** Нарисованные знаки кадра: центр и наибольший вынос настоящей фигуры (без черты царя, как у К1). */
+  function drawnGlyphs(s: Sky) {
+    const scale = Math.max(0.7, Math.min(1.25, s.cam.ky / 18));
+    return glyphBoxes(s).map((g) => {
+      const q = atlas.byId.get(g.id)!;
+      const e = glyphs.glyphExtent({ sex: q.sex, kind: q.kind, magnitude: q.magnitude, messiah: q.id === 'iisus', scale });
+      return { id: g.id, x: g.x, y: g.y, R: Math.max(e.l, e.r, e.t, e.b) };
+    });
+  }
+  const touching = (gl: ReturnType<typeof drawnGlyphs>) => {
+    const out: string[] = [];
+    for (let a = 0; a < gl.length; a++)
+      for (let b = a + 1; b < gl.length; b++) if (Math.hypot(gl[a].x - gl[b].x, gl[a].y - gl[b].y) < gl[a].R + gl[b].R + 1 - 1e-6) out.push(`${gl[a].id} × ${gl[b].id}`);
+    return out;
+  };
+  for (const [w, h] of [[390, 700], [1440, 776]] as const)
+    it(`обзор ${w} px: знаки не ложатся друг на друга, опорные лица нарисованы, прореженные — в списке неба и в скрытых`, () => {
+      const { sky: s, canvas } = drawSky({ w, h });
+      expect(touching(drawnGlyphs(s))).toEqual([]);
+      for (const id of ['noy', 'avraam', 'david', 'iisus']) expect(s.thinned(id), id).toBe(false);
+      const thin = canvas.dataset.thin.split(';').filter(Boolean).map((g) => g.split(':'));
+      if (w === 390) expect(thin.length).toBeGreaterThan(0);
+      const named = new Set(s.labelStats().boxes.filter((b) => b.kind === 'star').map((b) => b.id));
+      const hidden = new Set(s.hiddenLabels());
+      for (const [host, members] of thin) {
+        expect(s.thinned(host), host).toBe(false);
+        expect(s.thinMembers(host).sort()).toEqual(members.split(',').sort());
+        for (const m of members.split(',')) {
+          expect(named.has(m), m).toBe(false);
+          // в окне и в полную силу — в списке неба (reachable) и среди скрытых подписей
+          if (s.reachable(m)) expect(hidden.has(m), m).toBe(true);
+        }
+      }
+    });
+  it('приближение разводит собранные знаки; при выбранном лице прореживания нет', () => {
+    // на обзоре в знак Давида собраны его потомки-цари; на 600 годах вокруг него они нарисованы отдельно
+    const far = drawSky({ w: 390, h: 700 }).sky;
+    const kids = far.thinMembers('david');
+    expect(kids.length).toBeGreaterThan(0);
+    const near = drawSky({ w: 390, h: 700, move: around('david', 600) }).sky;
+    expect(touching(drawnGlyphs(near))).toEqual([]);
+    for (const id of kids) expect(near.thinned(id), id).toBe(false);
+    expect(kids.filter((id) => near.reachable(id)).length).toBeGreaterThan(0);
+    const sel = drawSky({ w: 390, h: 700, state: { selected: 'david', highlight: lineage('david') } }).sky;
+    expect(sel.nodes.some((_, i) => sel.thinned(i))).toBe(false);
   });
 });
