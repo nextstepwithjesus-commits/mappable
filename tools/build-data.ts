@@ -408,6 +408,8 @@ const models = results.map((res) => ({
       if (st[st.length - 1].lane !== n.lane) throw new Error(`пребывания ${n.person}: последняя полоса ${st[st.length - 1].lane} ≠ полосе узла ${n.lane}`);
       return row;
     }),
+    // приход в дом мужа жены, живущей там с рождения (Д7; LayoutNode.wed): [лицо, год − рождение]
+    wd: res.layout.nodes.filter((n) => !n.ghost && n.wed !== undefined).map((n) => [personIndex.get(n.person)!, n.wed! - yr(res.chrono.persons.get(n.person)?.b ?? 0)]),
     // годы черт брака (engine/stays.ts, unionYear): [муж, жена, год] — лица номерами в индексе
     uy: [...res.layout.unionYears].map(([uid, t]) => {
       const u = /^u:([^+]*)\+([^~]*)$/.exec(uid);

@@ -100,6 +100,13 @@ export interface FamilyResult {
   home: Map<string, string | null>;
   /** лица коридора */
   spine: Set<string>;
+  /**
+   * Жена в семье мужа (решение 173, «Отчий дом»): год, с которого её строка — в семье мужа (год союза: за год до первого
+   * ребёнка в показе; у бездетного — взрослость). До него она в дом мужа ещё не пришла: её доля следа до брака у мужа —
+   * не жизнь в доме (рисуется бледно или не рисуется), и черта более раннего союза, стоящего дальше, её не пересекает.
+   * Строка за ней закреплена с рождения (под звезду и бледную часть следа).
+   */
+  since: Map<string, number>;
 }
 
 type Iv = [number, number];
@@ -543,6 +550,18 @@ export function familyLayout(S0: ReadonlySet<string>, d: FamilyData, o: FamilyOp
         }
       }
       if (!best) continue;
+      // «мать не названа» у лица коридора (решение 175: отводы — от следа отца): ствол в год до первого ребёнка прошёл
+      // бы живые следы лиц коридора между отцом и детьми (Нафан и Соломон — у сыновей Давида, рождённых в Иерусалиме);
+      // ствол — раньше их рождений (ступень), дальше — зубцы по строкам детей, где в эти годы пусто
+      if (!un.wife && un.kids.length) {
+        const far = Math.max(...[...best.pos.values()].map((r) => Math.abs(r))) * best.side + best.base;
+        const lo = Math.min(cr, far);
+        const hi = Math.max(cr, far);
+        const lastKid = Math.max(...un.kids.map(T0));
+        let t = best.tu;
+        for (const [q, r] of corr) if (r > lo && r < hi && T0(q) <= lastKid && T0(q) > t - GAP) t = Math.min(t, T0(q) - 2);
+        best.tu = Math.max(t, T0(c) + 13);
+      }
       unitSide.set(key, best.side);
       trunkT.set(key, best.tu);
       merge(occ, best.acc, best.base);
@@ -623,7 +642,11 @@ export function familyLayout(S0: ReadonlySet<string>, d: FamilyData, o: FamilyOp
       p,
       us.map((un) => ({ union: un.u, parent: p, wife: un.wife, kids: [...un.kids].sort(kidOrder), side: unitSide.get(un.u.id) ?? 1, trunk: trunkT.get(un.u.id) ?? un.tu })),
     );
-  return { rows: out, count: used.length, prior: { rows, blocks, sides: unitSide }, units: unitsOut, home, spine };
+  // жена в семье мужа — с года союза (решение 173)
+  const since = new Map<string, number>();
+  for (const us of units.values())
+    for (const un of us) if (un.wife && home.get(un.wife) === un.p) since.set(un.wife, Math.min(since.get(un.wife) ?? Infinity, un.tu));
+  return { rows: out, count: used.length, prior: { rows, blocks, sides: unitSide }, units: unitsOut, home, spine, since };
 }
 
 /**

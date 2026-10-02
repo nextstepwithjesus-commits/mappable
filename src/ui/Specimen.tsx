@@ -23,7 +23,7 @@ import { P, Refs } from './common.tsx';
 import { CONTRAST_USES, contrast } from './contrast.ts';
 import { Check, Close, Segmented } from './controls.tsx';
 import { Folio, PARTS, TabsSpecimen } from './Folio.tsx';
-import { PAINTERS, type PainterKey } from './panels/Legend.tsx';
+import { FAMILY_LEGEND, PAINTERS, type PainterKey } from './panels/Legend.tsx';
 import { installSpecimenRules, type Pseudo } from './specimen-css.ts';
 import { typo } from './text/typo.ts';
 
@@ -70,7 +70,7 @@ function paletteOf(map: Theme): Palette {
 }
 
 /** Холст, который перерисовывается при смене размера; draw получает контекст и размер в пикселях CSS. */
-function Canvas({ draw, deps, class: cls, label }: { draw: (ctx: CanvasRenderingContext2D, w: number, h: number) => void; deps: unknown[]; class: string; label?: string }) {
+function Canvas({ draw, deps, class: cls, label, height }: { draw: (ctx: CanvasRenderingContext2D, w: number, h: number) => void; deps: unknown[]; class: string; label?: string; height?: number }) {
   const ref = useRef<HTMLCanvasElement>(null);
   useLayoutEffect(() => {
     const cv = ref.current!;
@@ -86,7 +86,11 @@ function Canvas({ draw, deps, class: cls, label }: { draw: (ctx: CanvasRendering
     ro.observe(cv);
     return () => ro.disconnect();
   }, deps);
-  return label ? <canvas ref={ref} class={cls} role="img" aria-label={label} /> : <canvas ref={ref} class={cls} aria-hidden="true" />;
+  return label ? (
+    <canvas ref={ref} class={cls} style={height !== undefined ? { height: `${height}px` } : undefined} role="img" aria-label={label} />
+  ) : (
+    <canvas ref={ref} class={cls} style={height !== undefined ? { height: `${height}px` } : undefined} aria-hidden="true" />
+  );
 }
 
 // ---------- кегли ----------
@@ -619,7 +623,40 @@ function Signs({ map }: { map: Theme }) {
           </figure>
         ))}
       </div>
+      <FamilySigns map={map} />
     </div>
+  );
+}
+
+/**
+ * «Семья на небе» (этап 15, решение 180): восемь знаков «Отчего дома» — те же образцы и слова, что в начале «Условных
+ * знаков» (src/ui/panels/Legend.tsx, FAMILY_LEGEND; рисовальщик неба drawFamilySample).
+ */
+function FamilySigns({ map }: { map: Theme }) {
+  return (
+    <>
+      <h4>Семья на небе</h4>
+      <ul class="spec-list spec-family">
+        {FAMILY_LEGEND.map((r) => (
+          <li key={r.k}>
+            <Canvas
+              class="spec-ribbons"
+              height={r.h}
+              deps={[map]}
+              draw={(ctx, w, h) => {
+                const pal = paletteOf(map);
+                ctx.fillStyle = pal.sky;
+                ctx.fillRect(0, 0, w, h);
+                PAINTERS[r.k](ctx, pal, w, h);
+              }}
+            />
+            <p>
+              {r.head}. {r.text}
+            </p>
+          </li>
+        ))}
+      </ul>
+    </>
   );
 }
 

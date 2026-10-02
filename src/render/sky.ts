@@ -1984,13 +1984,16 @@ export class Sky implements SkyContext {
     return hits;
   }
   /** Разрывы чужих следов под переходами кадра (решение 173), добавленные к разрывам под связями (Г7). */
-  private glideCuts(cuts: Map<number, number[]> | undefined): Map<number, number[]> | undefined {
+  private glideCuts(cuts: Map<number, number[]> | undefined, ribbons: ReadonlySet<string> | null): Map<number, number[]> | undefined {
     const hits = this.glideCrossings();
     if (!hits.length) return cuts;
     const cam = this.cam;
     const out = cuts ?? new Map<number, number[]>();
     for (const h of hits) {
       if (!this.drawn(h.j) || !this.drawn(h.g)) continue;
+      // след лица линий Мессии лежит под лентой, а его тонкая линия — над ней (drawSpineTrails): переход идёт под лентой,
+      // и разрыв на ленте читался бы засечкой
+      if (ribbons?.has(this.nodes[h.j].person)) continue;
       const x = cam.sx(this.xOf(h.t));
       if (x < -10 || x > cam.w + 10) continue;
       const a = out.get(h.j);
@@ -2188,7 +2191,7 @@ export class Sky implements SkyContext {
     p.guests = this.plan.guests;
     p.cuts = lf ? this.cutsOf(lf, !!L.ribbons && this.routeFactor >= 0.5) : undefined;
     // переход идёт поверх чужого следа с разрывом под собой (решение 173; D2, С6): пересечение — не соединение
-    if (L.lifelines) p.cuts = this.glideCuts(p.cuts);
+    if (L.lifelines) p.cuts = this.glideCuts(p.cuts, L.ribbons ? spine : null);
     // подписи обходят линии связей (Я12); в «только линиях» подписи лиц линий ставятся по лентам (UX-16), не по связям
     if (lf && lf.alpha > 0.5 && !lineOnly && !this.linksStale) {
       const hits = this.linkHits!;
@@ -2471,6 +2474,16 @@ export class Sky implements SkyContext {
       // (SkyA11y) обновляется, только когда небо постоит, а проверке нужен кадр сразу после сдвига
       // звёзды в окне при любом показе (tools/accept/grammar11.ts): точки наведения на линии — не у звёзд (§ 8: звезда
       // ближе 12 px важнее линии)
+      // переходы следов в окне (решение 173; tools/accept/skydraw.ts): «лицо:x0,y0,x1,y1» — начало и конец S-кривой, px холста;
+      // разрывы чужих следов под переходами — «переход>след@x»
+      put(
+        'glides',
+        p.vis
+          .filter((i) => hasGlides(this.nodes[i]) && this.drawn(i))
+          .flatMap((i) => (this.bendsOf(i) ?? []).filter((g) => g.xb > 0 && g.xa < cam.w).map((g) => `${this.nodes[i].person}:${[g.xa, g.ya, g.xb, g.yb].map(Math.round).join(',')}`))
+          .join(';'),
+      );
+      put('glideCuts', L.lifelines ? this.glideCrossLog().filter((q) => { const x = Number(q.split('@')[1]); return x > 0 && x < cam.w; }).join(' ') : '');
       put('starsAt', p.vis.filter((i) => this.drawn(i) && !this.nodes[i].ghost).slice(0, 2000).map((i) => `${Math.round(cam.sx(this.X0[i]))},${Math.round(this.starY(i))}`).join(';'));
       put('stars', this.plan.mode === 'work' ? p.vis.filter((i) => this.drawn(i) && !this.nodes[i].ghost).slice(0, 240).map((i) => `${this.nodes[i].person}:${Math.round(cam.sx(this.X0[i]))},${Math.round(this.starY(i))}`).join(';') : '');
       // места помет семей в небе «набор» (решение 76; tools/accept/polish6.ts): «x,y,w,h» — помета не на линиях к детям

@@ -1162,19 +1162,53 @@ function placeKinPointers(v: SkyContext, s: SkyState, p: Pass | null, placed: Re
   return out;
 }
 
+/** Стрелка указателя у края по стороне. */
+export const EDGE_ARROW: Readonly<Record<'up' | 'down' | 'left' | 'right', string>> = { up: '↑', down: '↓', left: '←', right: '→' };
+
+/** Поле указателя у края вокруг его текста (lx, ly — начало строки на базовой линии; tw — ширина текста). */
+const edgeBox = (lx: number, ly: number, tw: number): Rect => ({ x: lx - 5, y: ly - 13, w: tw + 10, h: 18 });
+
+/**
+ * Рисовальщик указателя у края — и указателя шатра (решение 176: «↑ Лия: Рувим, Симеон, Левий»), тем же начертанием на
+ * небе и в легенде «Семья на небе» (решение 180): плашка цвета неба в тонкой рамке, гротеск 500. x, y — начало строки
+ * на базовой линии; dir — сторона стрелки; text — без стрелки. Возвращает поле указателя.
+ */
+export function drawTentPointer(
+  ctx: CanvasRenderingContext2D,
+  pal: { sky: string; ruleStrong: string; ink: string },
+  x: number,
+  y: number,
+  dir: 'up' | 'down' | 'left' | 'right',
+  text: string,
+  coarse = false,
+): Rect {
+  const label = `${EDGE_ARROW[dir]} ${text}`;
+  ctx.save();
+  ctx.font = mapFont(T_UI, { sans: true, weight: 500, coarse });
+  ctx.textBaseline = 'alphabetic';
+  const b = edgeBox(x, y, ctx.measureText(label).width);
+  paintEdge(ctx, pal, b, label, x, y);
+  ctx.restore();
+  return b;
+}
+
+function paintEdge(ctx: CanvasRenderingContext2D, pal: { sky: string; ruleStrong: string; ink: string }, e: Rect, label: string, lx: number, ly: number) {
+  ctx.fillStyle = pal.sky;
+  ctx.fillRect(e.x, e.y, e.w, e.h);
+  ctx.strokeStyle = pal.ruleStrong;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(e.x - 0.5, e.y - 0.5, e.w + 1, e.h + 1);
+  ctx.fillStyle = pal.ink;
+  ctx.fillText(label, lx, ly);
+}
+
 /** Нарисовать указатели у края (после рамки и ярусов) и записать их в замер. */
 export function paintWayfinding(v: SkyContext, edges: EdgeHit[]) {
   const { ctx, pal } = v;
   ctx.font = mapFont(T_UI, { sans: true, weight: 500, coarse: v.coarse });
   ctx.textBaseline = 'alphabetic';
   for (const e of edges) {
-    ctx.fillStyle = pal.sky;
-    ctx.fillRect(e.x, e.y, e.w, e.h);
-    ctx.strokeStyle = pal.ruleStrong;
-    ctx.lineWidth = 1;
-    ctx.strokeRect(e.x - 0.5, e.y - 0.5, e.w + 1, e.h + 1);
-    ctx.fillStyle = pal.ink;
-    ctx.fillText(e.label, e.lx, e.ly);
+    paintEdge(ctx, pal, e, e.label, e.lx, e.ly);
     v.ledger.add('edge', e.label, { x: e.x, y: e.y, w: e.w, h: e.h }, e.id);
   }
 }

@@ -26,7 +26,7 @@ vi.mock('../src/render/glyphs.ts', async (orig) => {
 });
 vi.mock('../src/render/trails.ts', async (orig) => {
   const m = await orig<typeof import('../src/render/trails.ts')>();
-  return { ...m, drawLifeTrail: vi.fn(m.drawLifeTrail), drawDescent: vi.fn(m.drawDescent), drawBracket: vi.fn(m.drawBracket), drawMarriage: vi.fn(m.drawMarriage), drawEpochBracket: vi.fn(m.drawEpochBracket), drawFamilyText: vi.fn(m.drawFamilyText) };
+  return { ...m, drawLifeTrail: vi.fn(m.drawLifeTrail), drawDescent: vi.fn(m.drawDescent), drawBracket: vi.fn(m.drawBracket), drawMarriage: vi.fn(m.drawMarriage), drawEpochBracket: vi.fn(m.drawEpochBracket), drawFamilyText: vi.fn(m.drawFamilyText), drawFamilySample: vi.fn(m.drawFamilySample) };
 });
 vi.mock('../src/render/ribbons.ts', async (orig) => {
   const m = await orig<typeof import('../src/render/ribbons.ts')>();
@@ -105,7 +105,7 @@ const PAL = {
   sheet2: '#1a2f57', dimInk: 0.4, dimInk2: 0.5, lineAlpha: 0.7, contourAlpha: 0.5, glow: true, ribbonGlow: [0.06, 0.1] as [number, number], ribbonTone: 0,
 };
 
-const { PAINTERS, CROPS, magnitude, paintCrop, cropState } = await import('../src/ui/panels/Legend.tsx');
+const { PAINTERS, CROPS, FAMILY_LEGEND, magnitude, paintCrop, cropState } = await import('../src/ui/panels/Legend.tsx');
 const glyphs = await import('../src/render/glyphs.ts');
 const trails = await import('../src/render/trails.ts');
 const ribbons = await import('../src/render/ribbons.ts');
@@ -146,6 +146,7 @@ const spies = {
   drawWorkMark: vi.mocked(marks.drawWorkMark),
   drawBirthBand: vi.mocked(glyphs.drawBirthBand),
   drawFamilyText: vi.mocked(trails.drawFamilyText),
+  drawFamilySample: vi.mocked(trails.drawFamilySample),
   drawBranchSample: vi.mocked(branches.drawBranchSample),
   drawUnionSample: vi.mocked(plates.drawUnionSample),
   drawLinkSample: vi.mocked(plates.drawLinkSample),
@@ -196,6 +197,39 @@ describe('образцы — функции неба, а не свои копи�
     }
     // прежних образцов связей больше нет: их знаков на небе нет (STAGE11 § 2, «С неба уходят»)
     for (const k of ['descent', 'mother', 'tension', 'bracket', 'mothers', 'order', 'marriage', 'marriageFar', 'family', 'plates']) expect(k in PAINTERS, k).toBe(false);
+  });
+  it('«Семья на небе» (этап 15, решение 180): восемь знаков в порядке решения — образцами неба drawFamilySample', () => {
+    const signs = {
+      familyGlide: 'glide', familyUnions: 'unions', familyNoMother: 'nomother', familyKids: 'kids',
+      familyGhost: 'ghost', familyTent: 'tent', familyStation: 'station', familyCross: 'cross',
+    } as const;
+    for (const [k, sign] of Object.entries(signs) as [keyof typeof signs, (typeof signs)[keyof typeof signs]][]) {
+      const s = paint(k, 420, 64);
+      // образец — функция неба с этим знаком, во всю ширину строки; своих линий у образца нет
+      expect(s.drawFamilySample.mock.calls.map((c) => c.slice(2)), k).toEqual([[420, 64, sign]]);
+    }
+    // строки легенды — те же восемь знаков по порядку решения 180, у каждой — заголовок и пояснение
+    expect(FAMILY_LEGEND.map((r) => signs[r.k as keyof typeof signs])).toEqual([...trails.FAMILY_SIGNS]);
+    for (const r of FAMILY_LEGEND) expect(r.head.length * r.text.length, r.k).toBeGreaterThan(0);
+  });
+  it('знаки «Семьи на небе» рисуют небесные рисовальщики: след с переходом, ромб по виду союза, черта брака по виду', () => {
+    // настоящий рисовальщик (без шпиона-обёртки): что он зовёт
+    const real = vi.mocked(trails.drawFamilySample).getMockImplementation()!;
+    const s = sink();
+    for (const k of Object.values(spies)) k.mockClear();
+    real(s.ctx, PAL as never, 420, 56, 'glide');
+    // след звезды — drawLifeTrail с переходом (S-кривая, решение 173), чужой след под переходом — с разрывом
+    const t = trails.sampleBend(10, 60, 5, 45);
+    expect(t.pts.length / 2).toBeGreaterThanOrEqual(7);
+    expect(t.pts[1]).toBe(5);
+    expect(t.pts[t.pts.length - 1]).toBe(45);
+    // переход не вертикален: x растёт по всей ломаной
+    for (let k = 2; k < t.pts.length; k += 2) expect(t.pts[k]).toBeGreaterThan(t.pts[k - 2]);
+    expect(trails.barOffsets({ kind: 'bar', bar: 'wife' })).toHaveLength(2);
+    expect(trails.barOffsets({ kind: 'bar', bar: 'concubine' })).toHaveLength(1);
+    expect(trails.barOffsets({ kind: 'bar', bar: 'levirate' })).toHaveLength(2);
+    expect(trails.barOffsets({ kind: 'bar', bar: 'none' })).toHaveLength(1);
+    expect(trails.barWidth({ kind: 'bar', bar: 'none' })).toBeLessThan(1);
   });
   it('семь величин звезды — drawGlyph с величинами 0…6', () => {
     const seen: number[] = [];
@@ -338,7 +372,8 @@ describe('разделы панели', () => {
     const ids = [...source.matchAll(/<h3 id="(legend-[a-z]+)"/g)].map((x) => x[1]);
     // этап 11 (решение 77): вида «Древо» нет; сразу после «Неба» — карточки у звезды, у ромба и у связи
     // этап 13, решение 94: «Линии карты» — отдельный раздел после «Линий» (меридианы, контуры, эпохи — не родство)
-    expect(ids).toEqual(['legend-guide', 'legend-sky', 'legend-cards', 'legend-signs', 'legend-lines', 'legend-map', 'legend-time', 'legend-card', 'legend-keys', 'legend-layers']);
+    // этап 15, решение 180: «Семья на небе» — в начале «Условных знаков», сразу после «Как читать карту»
+    expect(ids).toEqual(['legend-guide', 'legend-family', 'legend-sky', 'legend-cards', 'legend-signs', 'legend-lines', 'legend-map', 'legend-time', 'legend-card', 'legend-keys', 'legend-layers']);
   });
   it('название панели — «Условные знаки», пояснение начинается с «Как читать карту:»', () => {
     expect(source).toMatch(/<Sheet title="Условные знаки" lead="Как читать карту: [^"]+">/);

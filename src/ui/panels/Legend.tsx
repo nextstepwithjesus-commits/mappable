@@ -33,7 +33,7 @@ import { drawFoldMark } from '../../render/labels.ts';
 import { eventMarks } from '../../render/frame.ts';
 import { FRAME_H, readPalette, Sky, type Palette, type SkyState } from '../../render/sky.ts';
 import {
-  drawDescent, drawEpochBracket, drawLifeTrail, ghostNote, TAIL_PX, type LifeTrail,
+  drawDescent, drawEpochBracket, drawFamilySample, drawLifeTrail, ghostNote, TAIL_PX, type FamilySign, type LifeTrail,
 } from '../../render/trails.ts';
 import type { SkyView } from '../../render/rows.ts';
 import { lambda, lineFlip, model, theme } from '../../state.ts';
@@ -84,8 +84,22 @@ const px = (v: number) => Math.round(v) + 0.5;
 
 /** Знак грамматики связей — образцом неба (drawLinkSample). */
 const linkSign = (sign: LinkSign): Painter => (ctx, pal, w, h) => drawLinkSample(ctx, pal, w, h, sign);
+/** Знак «Семьи на небе» (этап 15, решение 180) — образцом неба drawFamilySample (src/render/trails.ts). */
+const familySign = (sign: FamilySign): Painter => (ctx, pal, w, h) => drawFamilySample(ctx, pal, w, h, sign);
 
 export const PAINTERS = {
+  /**
+   * «Семья на небе» (этап 15, решение 180): лицо со следом и переходом, союз по виду брака, мать не названа, дети от
+   * следа матери, призрак, указатель шатра, станция ленты, пересечение и соединение — образцами неба drawFamilySample
+   */
+  familyGlide: familySign('glide'),
+  familyUnions: familySign('unions'),
+  familyNoMother: familySign('nomother'),
+  familyKids: familySign('kids'),
+  familyGhost: familySign('ghost'),
+  familyTent: familySign('tent'),
+  familyStation: familySign('station'),
+  familyCross: familySign('cross'),
   man: signTrail({}),
   woman: signTrail({ sex: 'f' }),
   people: sign({ kind: 'people', magnitude: 2 }),
@@ -630,6 +644,7 @@ export const GLOSSARY: [string, string][] = [
 
 /** Разделы панели после «Как читать карту». */
 const PARTS = [
+  ['legend-family', 'Семья на небе'],
   ['legend-sky', 'Небо'],
   ['legend-cards', 'Карточки на небе'],
   ['legend-signs', 'Знаки'],
@@ -643,6 +658,61 @@ const PARTS = [
 
 /** Состояния рейки — все четыре вида меток. */
 const RAIL_ALL: Record<number, SecState> = { 1: 'content', 2: 'silent', 3: 'absent', 21: 'na' };
+
+/**
+ * «Семья на небе» (этап 15, решение 180) — восемь знаков «Отчего дома» в начале «Условных знаков», образцы — тем же
+ * рисовальщиком, что небо (drawFamilySample). Те же образцы и слова — в #/specimen (src/ui/Specimen.tsx).
+ */
+export const FAMILY_LEGEND: readonly { k: PainterKey; h: number; head: string; text: string }[] = [
+  {
+    k: 'familyGlide', h: 56, head: 'Лицо, след и переход',
+    text: 'Звезда — рождение в доме отца, у матери; след вправо — жизнь. Если жизнь идёт в другой полосе — в колене или в доме мужа, — тот же след плавно переходит туда. Переход — не связь: у него нет узлов, а чужой след под ним прерывается.',
+  },
+  {
+    k: 'familyUnions', h: 64, head: 'Союз',
+    text: 'Ромб стоит на следе жены: левая половина — муж, правая — жена. От следа мужа к ромбу — черта брака: двойная — жена, одинарная — наложница, двойная штрихом — левират, брак по закону деверя (Быт 38:8), тонкая с полыми половинами — брак в Писании не назван (Иуда и Фамарь). У вдовы, вышедшей замуж снова, — несколько черт по порядку времени.',
+  },
+  {
+    k: 'familyNoMother', h: 56, head: 'Мать не названа',
+    text: 'Ромб с полой половиной жены стоит на следе отца; отводы к детям идут от него.',
+  },
+  {
+    k: 'familyKids', h: 64, head: 'Дети — от следа матери',
+    text: 'Ствол в год рождения идёт от следа матери, зубец — к звезде: чья линия, та и мать. Дети, рождённые рядом, — на одном стволе; следующее гнездо той же матери — точка на её следе.',
+  },
+  {
+    k: 'familyGhost', h: 50, head: 'Призрак',
+    text: 'Полый пунктирный знак: лицо нарисовано не здесь. Так отмечены бездетный брак у мужа (Мелхола у Давида, 2 Цар 6:23) и жена из далёкого рода в её родной семье. Щелчок по призраку — перелёт к самой звезде.',
+  },
+  {
+    k: 'familyTent', h: 44, head: 'Указатель шатра',
+    text: 'Конец связи за краем окна: у кромки — указатель с именами матери и её детей, одна строка на союз и сторону. Обрывков внутри окна нет.',
+  },
+  {
+    k: 'familyStation', h: 64, head: 'Станция ленты',
+    text: 'Шаг ленты Мессии уходит со следа отца у черты брака матери ребёнка: у Давида ленты к Соломону и Нафану расходятся у черты Вирсавии (1 Пар 3:5).',
+  },
+  {
+    k: 'familyCross', h: 56, head: 'Пересечение — не соединение',
+    text: 'Где линия идёт через чужой след, нижняя прерывается. Соединение — только ромб, точка гнезда, зубец у звезды и касание черты.',
+  },
+];
+
+function FamilyLegend() {
+  return (
+    <>
+      <h3 id="legend-family">Семья на небе</h3>
+      <p class="muted">Лицо рождается в доме отца, у матери, и своим следом уходит туда, где проходит его жизнь; союз читается по знаку на следе жены.</p>
+      <ul class="legend">
+        {FAMILY_LEGEND.map((r) => (
+          <Wide key={r.k} s={<Paint draw={PAINTERS[r.k]} h={r.h} />}>
+            <b>{r.head}.</b> {r.text}
+          </Wide>
+        ))}
+      </ul>
+    </>
+  );
+}
 
 export function LegendPanel() {
   // перечитать образцы при смене темы
@@ -670,6 +740,8 @@ export function LegendPanel() {
           </button>
         ))}
       </nav>
+
+      <FamilyLegend />
 
       <h3 id="legend-sky">Небо</h3>
       <p class="muted">Небо — лист звёздного атласа: по горизонтали время, по вертикали — роды и колена.</p>

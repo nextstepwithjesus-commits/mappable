@@ -706,6 +706,11 @@ export function applyHouses(H: HouseInput, L: LayoutResult, P: HousePlan): Omit<
         n.starLane = out[0].lane;
         n.stays = out;
       }
+      // жена в доме мужа с рождения (Д7, далёкий род): год прихода — год её первой черты брака в этом доме
+      if (st[0].kind === 'wife' && st[0].house) {
+        const ys = [...P.unions.values()].filter((u) => u.anchor === st[0].house && u.wife === n.person && u.resident && u.barT !== null).map((u) => u.barT!);
+        if (ys.length) n.wed = yr(Math.min(...ys));
+      }
     }
     nodes.push(n);
   }

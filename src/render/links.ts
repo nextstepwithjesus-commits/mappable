@@ -29,7 +29,7 @@
 import { linkKeyString, type LinkKey } from '../engine/linkkey.ts';
 import type { Union, Unions } from '../engine/unions.ts';
 import { marriageKind, unionYear, type MarriageKind, type UnionYears } from '../engine/stays.ts';
-import { byId, models, type ModelData } from '../data/atlas.ts';
+import { byId, graph, models, type ModelData } from '../data/atlas.ts';
 import { unions as ALL_UNIONS } from '../ui/reveal.ts';
 import { listingOf, orderListing, type OrderListing } from './trails.ts';
 
@@ -100,8 +100,13 @@ export function linkKinOf(ids: Iterable<string>, U: Pick<Unions, 'of' | 'origin'
 /** Разрыв следа на пересечении, px с каждой стороны (Г7); у ленты — RIBBON_CUT. */
 export const TRAIL_CUT = 3;
 export const RIBBON_CUT = 7;
-/** Родовая черта длиннее стольких px через строку, занятую чужим следом, идёт между строк (Г12). */
-export const CLAN_MAX = 160;
+/**
+ * Пропуск поколений (решение 176: связь целиком, обрывков нет): ребёнок родился позже конца следа родителя больше чем на
+ * столько лет (на GAP_YEARS_MARKED, если родословие пропускает поколения — fatherGap) — связи через века на небе нет;
+ * родство называют карточка и путь родства. У народа и рода (Быт 10) — родовая черта, как прежде.
+ */
+export const GAP_YEARS = 60;
+export const GAP_YEARS_MARKED = 30;
 /** Ромб союза: 9 px в раскрытом небе, 7 px на «всех лицах» (§ 2, «Знаки»): полуразмеры. */
 export const NODE_R_FAMILY = 4.5;
 export const NODE_R_MAP = 3.5;
@@ -132,6 +137,11 @@ export interface LinkStar {
    * след горизонталь y от x до x1 (y — звезда, полоса рождения)
    */
   path?: readonly number[];
+  /**
+   * x px, с которого след лица — жизнь в этом доме (решение 173: жена в доме мужа с года брака — семейная укладка since,
+   * небо wed); до него — бледная доля следа: связи её не режут разрывом, узел на ней не «чужой». Нет — от звезды
+   */
+  from?: number;
 }
 
 /** Союз набора (src/ui/reveal.ts, plates): раскрыт ли, сколько его лиц не на небе, от кого показан. */
@@ -170,15 +180,15 @@ export interface LinkInput {
    * семейная укладка (src/engine/family.ts, FamilyUnit; план неба Q2, SkyPlan.units): единицы союзов по родителю — кто
    * у чьего следа стоит (жена у мужа, дети у родителя). Грамматика берёт дом лица отсюда, чтобы стволы шли по укладке.
    */
-  units?: ReadonlyMap<string, readonly { union: { id: string }; parent: string; wife: string | null; kids: readonly string[] }[]> | null;
+  units?: ReadonlyMap<string, readonly { union: { id: string }; parent: string; wife: string | null; kids: readonly string[]; trunk?: number }[]> | null;
   /** переключатель «Лк 3 как второе родословие Иосифа» (решение 107; otherReading) */
   flip?: boolean;
   /** уровень подробности семьи (решение 178; sky.ts, familyTier): 0 — небо, 1 — обзор семьи, 2 — семья */
   tier?: 0 | 1 | 2;
   /** px x кадра для года t (астр., как node.t0): черта брака в год unionYear (решение 174) */
   xAt?: (t: number) => number;
-  /** модель неба: годы черт брака (src/engine/stays.ts, unionYear); нет — первая модель атласа */
-  model?: UnionYears;
+  /** модель неба: годы черт брака (src/engine/stays.ts, unionYear) и годы лиц; нет — первая модель атласа */
+  model?: UnionYears & Partial<Pick<ModelData, 'chrono' | 'nodeByPerson'>>;
 }
 
 // ---------- выход ----------
@@ -427,9 +437,16 @@ class Trails {
   constructor(stars: readonly LinkStar[]) {
     for (const s of stars) {
       const p = s.path;
+      // до начала живой доли (жена в доме мужа с года брака) след бледен: разрывов и «чужих» узлов на нём нет
+      const from = s.from ?? -Infinity;
       if (p && p.length >= 4) {
         for (let k = 0; k + 3 < p.length; k += 2) {
-          const [x0, y0, x1, y1] = [p[k], p[k + 1], p[k + 2], p[k + 3]];
+          let [x0, y0, x1, y1] = [p[k], p[k + 1], p[k + 2], p[k + 3]];
+          if (x1 <= from) continue;
+          if (x0 < from) {
+            y0 += ((y1 - y0) * (from - x0)) / (x1 - x0);
+            x0 = from;
+          }
           if (x1 - x0 < 0.01) continue;
           if (Math.abs(y1 - y0) < 0.01) this.rows.push({ y: y0, x0, x1, i: s.i, id: s.id, sy: y0 });
           else {
@@ -441,7 +458,7 @@ class Trails {
       }
       // строка следа — там, где его рисует trails.ts (trailOf: середина пикселя), а не середина звезды: иначе вертикаль,
       // кончающаяся у строки, на полпикселя проходит сквозь нарисованный след без разрыва (этап 12, перепись Я8)
-      if (s.x1 !== null && s.x1 > s.x + s.r + 1) this.rows.push({ y: Math.round(s.y) + 0.5, x0: s.x, x1: s.x1, i: s.i, id: s.id, sy: s.y });
+      if (s.x1 !== null && s.x1 > Math.max(s.x + s.r + 1, from)) this.rows.push({ y: Math.round(s.y) + 0.5, x0: Math.max(s.x, from), x1: s.x1, i: s.i, id: s.id, sy: s.y });
     }
     this.rows.sort((a, b) => a.y - b.y);
   }
@@ -452,6 +469,26 @@ class Trails {
       for (const g of this.slopes.query(x - 1, y - 1, x + 1, y + 1)) {
         if (g.id === skip || x < g.x0 || x > g.x1) continue;
         if (Math.abs(g.y0 + ((g.y1 - g.y0) * (x - g.x0)) / (g.x1 - g.x0) - y) < 0.75) return true;
+      }
+    return false;
+  }
+  /** Чужой живой след на строке y между x0 и x1 (родовая черта по строке легла бы на него, Г7). */
+  rowBusy(y: number, x0: number, x1: number, skip: string): boolean {
+    let a = 0;
+    let b = this.rows.length;
+    while (a < b) {
+      const m = (a + b) >> 1;
+      if (this.rows[m].y < y - 2) a = m + 1;
+      else b = m;
+    }
+    for (let k = a; k < this.rows.length && this.rows[k].y <= y + 2; k++) {
+      const t = this.rows[k];
+      if (t.id !== skip && Math.min(Math.abs(t.sy - y), Math.abs(t.y - y)) < 0.75 && t.x1 > x0 + 0.5 && t.x0 < x1 - 0.5) return true;
+    }
+    if (this.any)
+      for (const g of this.slopes.query(x0, y - 1, x1, y + 1)) {
+        if (g.id === skip || g.x1 <= x0 || g.x0 >= x1) continue;
+        if (Math.min(g.y0, g.y1) < y + 0.75 && Math.max(g.y0, g.y1) > y - 0.75) return true;
       }
     return false;
   }
@@ -694,6 +731,32 @@ function houseLinks(inp: LinkInput): LinkFrame {
   const model = inp.model ?? models[0];
   const yAt = (s: LinkStar, x: number) => trailYAt(s, x);
   const plates = inp.plates ?? null;
+  const years = inp.model?.chrono && inp.model.nodeByPerson ? (inp.model as Pick<ModelData, 'chrono' | 'nodeByPerson'>) : models[0];
+  /** Ребёнок k рождён через века после конца следа родителя par (пропуск поколений, GAP_YEARS): у лица, не у народа. */
+  const afterLife = (par: string, k: string, u: Union): boolean => {
+    const q = byId.get(par);
+    if (!q || q.kind === 'people' || q.kind === 'clan') return false;
+    const n = years.nodeByPerson.get(par);
+    const b = years.chrono.get(k)?.b ?? years.nodeByPerson.get(k)?.t0;
+    if (!n || b === undefined || n.t1 <= n.t0) return false;
+    const gap = (graph.parentsOf.get(k) ?? []).some((e) => (e.parent === u.a || e.parent === u.b) && e.gap);
+    return b - n.t1 > (gap ? GAP_YEARS_MARKED : GAP_YEARS);
+  };
+
+  const stars = new Grid<LinkStar>(32);
+  let maxR = 0;
+  for (const s of inp.stars) {
+    stars.add(s.x - s.r, s.y - s.r, s.x + s.r, s.y + s.r, s);
+    maxR = Math.max(maxR, s.r);
+  }
+  /** Чужая звезда у горизонтали y (x0…x1) ближе r + 5 (Г5). */
+  const starOnRow = (y: number, x0: number, x1: number, skip: string) => {
+    for (const q of stars.query(x0 - maxR - STAR_CLEAR, y - maxR - STAR_CLEAR, x1 + maxR + STAR_CLEAR, y + maxR + STAR_CLEAR))
+      if (q.id !== skip && distSeg(q.x, q.y, x0, y, x1, y) < q.r + STAR_CLEAR) return true;
+    return false;
+  };
+  const unitYear = new Map<string, number>();
+  for (const us of inp.units?.values() ?? []) for (const q of us) if (q.trunk !== undefined && Number.isFinite(q.trunk)) unitYear.set(q.union.id, q.trunk);
 
   // ---------- союзы кадра ----------
   /** Союз пары «муж — жена» (у призрака бездетного брака satelliteOf — муж): бездетный — призрак у мужа. */
@@ -735,9 +798,11 @@ function houseLinks(inp: LinkInput): LinkFrame {
     }
     const O = W && !W.ghost ? W : F;
     if (!O) continue;
-    // дети: настоящая звезда или призрак в родной семье — ближайший к следу владельца
+    // дети: настоящая звезда или призрак в родной семье — ближайший к следу владельца; ребёнок через века после конца
+    // следа родителя (пропуск поколений) — без связи на небе
     const kids: LinkStar[] = [];
     for (const k of plain) {
+      if (afterLife(O.id, k, u)) continue;
       const imgs = [...(main.has(k) ? [main.get(k)!] : []), ...(ghostsOf.get(k) ?? []).filter((g) => !marriageGhost(g))];
       if (!imgs.length) continue;
       let best = imgs[0];
@@ -749,8 +814,9 @@ function houseLinks(inp: LinkInput): LinkFrame {
     if (!kids.length && !rib.length && kidIds.length) continue;
     const kind = marriageKind(u);
     const look: NodeLook = !u.a ? 'no-father' : !u.b ? 'no-mother' : kind;
-    const t = unionYear(u.id, model);
-    const xw = t !== null && inp.xAt ? inp.xAt(t) : null;
+    // год черты: в семейной укладке — год союза её единицы (family.ts, FamilyUnit.trunk), на небе — договор 1 (unionYear)
+    const t = (fam ? unitYear.get(u.id) : undefined) ?? unionYear(u.id, model);
+    const xw = t !== null && t !== undefined && inp.xAt ? inp.xAt(t) : null;
     if (kids.length || rib.length) for (const q of [u.a, u.b]) if (q) withKidsOf.set(q, (withKidsOf.get(q) ?? 0) + 1);
     // гнёзда: дети ближе 40 px от ствола первого — на одном стволе (Г3)
     const nests: LinkStar[][] = [];
@@ -771,12 +837,6 @@ function houseLinks(inp: LinkInput): LinkFrame {
   }
 
   // ---------- места вертикалей ----------
-  const stars = new Grid<LinkStar>(32);
-  let maxR = 0;
-  for (const s of inp.stars) {
-    stars.add(s.x - s.r, s.y - s.r, s.x + s.r, s.y + s.r, s);
-    maxR = Math.max(maxR, s.r);
-  }
   type Vert = { x: number; y0: number; y1: number; u: string; wide: boolean; dead?: boolean };
   type NodeAt = { x: number; y: number; u: string; dead?: boolean };
   type Tooth = { x0: number; x1: number; y: number; u: string; dead?: boolean };
@@ -816,12 +876,19 @@ function houseLinks(inp: LinkInput): LinkFrame {
       hi = Math.min(want + 16, n0 ? next - WIDE_GAP : next);
       if (!n0) want = Math.min(want, hi);
     } else {
-      // брак без детей на небе: на обоих следах — правее звёзд, левее концов следов
-      const end = Math.min(F ? tailOf(F) : Infinity, W && !W.ghost ? tailOf(W) : Infinity) - 1;
+      // брак без детей на небе: на обоих следах — правее звёзд, левее концов следов (у следа, кончившегося раньше, — родовая
+      // черта до черты брака); в год брака или ближе всего к нему
+      // призрак жены у мужа (бездетный брак, жена живёт не у него; решение 173) — ромб справа от призрака
+      const tails = [F ? tailOf(F) : Infinity, W && !W.ghost ? tailOf(W) : W ? W.x + W.r + 3 + 3 * WIDE_GAP : Infinity];
+      const end = Math.min(...tails) - 1;
+      const end2 = Math.max(...tails.filter(Number.isFinite)) - 1;
       want = p.xw ?? Math.max(F ? F.x + F.r : -Infinity, W ? W.x + W.r : -Infinity) + 12;
-      lo = Math.max(lo0, want - 12);
-      hi = Math.min(want + 24, end);
-      if (hi < lo || !(want < end + 24)) {
+      lo = lo0;
+      // окно — пока оба следа идут; тесно (следы-метки лиц без дат по 10 px) — дальше по более длинному, у короткого —
+      // родовая черта до черты брака
+      hi = end >= lo0 + 2 * WIDE_GAP ? end : Math.min(end2, lo0 + 3 * WIDE_GAP);
+      want = Math.max(lo, Math.min(end >= lo0 ? end : hi, want));
+      if (hi < lo) {
         // места на её следе нет: ромб на следе мужа с её именем (К6)
         p.W = null;
         p.label = p.u.b;
@@ -967,26 +1034,27 @@ function houseLinks(inp: LinkInput): LinkFrame {
    * бледной), а если строку к году x занял чужой след — между строк, на полстроки к dir (узел на чужом следе читался бы
    * его узлом, Г7).
    */
-  const reach = (s: LinkStar, x: number, union: string, dir: number): number => {
+  const reach = (s: LinkStar, x: number, union: string, dir: number, ck: LinkKey = unionKey(union), ends: string[] = [s.id]): number => {
     const tail = tailOf(s);
     const y = yAt(s, x);
     if (tail >= x - 1) return y;
     const ty = yAt(s, tail);
     const cs = clanStyle(s.id);
-    const ck = unionKey(union);
-    if (x - tail > CLAN_MAX && trails.foreignAt(x, ty, s.id)) {
+    // по своей строке, если она до узла пуста; строку после конца следа занял чужой след или звезда — между строк
+    if (trails.rowBusy(ty, tail + 1, x, s.id) || starOnRow(ty, tail + 1, x, s.id)) {
       const ny = ty + (dir || 1) * (ky / 2);
       const bend = Math.min(16, (x - tail) / 3);
-      push({ key: ck, kind: 'clan', style: cs, pts: [tail, ty, tail + bend, ty, tail + bend, ny, x, ny], ends: [s.id], union });
+      push({ key: ck, kind: 'clan', style: cs, pts: [tail, ty, tail + bend, ty, tail + bend, ny, x, ny], ends, union });
       return ny;
     }
-    push({ key: ck, kind: 'clan', style: cs, pts: [tail, ty, x, ty], ends: [s.id], union });
+    push({ key: ck, kind: 'clan', style: cs, pts: [tail, ty, x, ty], ends, union });
     return ty;
   };
   for (const p of plans) {
     const u = p.u;
     const x = p.col;
     if (!Number.isFinite(x)) continue;
+    const at0 = paths.length;
     const style = kidStyle(u);
     const pl = plates?.get(u.id);
     const kidDir = p.kids.length ? Math.sign(p.kids[0].y - p.O.y) : p.rib.length ? Math.sign(p.rib[0].y - p.O.y) : 1;
@@ -995,9 +1063,10 @@ function houseLinks(inp: LinkInput): LinkFrame {
     const ny = at.ghost ? at.y : reach(at, x, u.id, kidDir);
     // черта брака: от мужа к ромбу на следе жены, вид союза — начертанием (решение 174)
     if (p.F && p.W && p.F !== at) {
-      const fy = reach(p.F, x, u.id, Math.sign(ny - yAt(p.F, x)));
+      // у мужа, чей след кончился раньше, — родовая черта к черте брака тем же ключом (видна вместе с ней)
+      const fy = reach(p.F, x, u.id, Math.sign(ny - yAt(p.F, x)), spouseKey(u.id, p.F.id), [p.F.id, at.id]);
       if (Math.abs(fy - ny) > 0.5) {
-        push({ key: spouseKey(u.id, p.F.id), kind: 'bar', style: p.kind === 'levirate' ? 'dash' : 'solid', pts: [x, fy, x, ny], ends: [p.F.id, at.id], union: u.id, bar: p.kind, ...(p.childless ? { childless: true } : {}) });
+        push({ key: spouseKey(u.id, p.F.id), kind: 'bar', style: p.kind === 'levirate' ? 'dash' : 'solid', pts: [x, fy, x, ny], ends: [p.F.id, at.id], union: u.id, bar: p.kind });
       }
     }
     const node: LinkNode = {
@@ -1039,6 +1108,8 @@ function houseLinks(inp: LinkInput): LinkFrame {
         }
         via.set(`${par}>${k.id}`, { x: sx, y: yAt(P, sx), union: u.id });
       }
+    // бездетный брак — все его линии (черта, родовые черты к ней) видны вместе (решение 178)
+    if (p.childless) for (let k = at0; k < paths.length; k++) paths[k].childless = true;
   }
 
   // шаги лент без своего союза в кадре (союз иного рода: Нирий → Салафиил по Луке, Лк 3:27): узел на следе родителя шага

@@ -17,7 +17,7 @@
  *  Я7  у ствола есть узел; висячих стволов нет;               Я8  пересечение с чужим следом — разрыв ≥ 2 px с каждой стороны;
  *  Я9  штрих — иное происхождение, точки — только толкование, бледная сплошная — родовая черта народа; Я10 цвет связей без выбранного лица;
  *  Я11 пересечения линий союзов между собой и со следами;    Я12 подписи на чужих звёздах, на линиях, наложения, строка;
- *  Я13 длинные связи на «всех лицах» — обрывками;             Я14 наведение по линии называет её концы, не постороннего;
+ *  Я13 обрывков нет (этап 15, решение 176: связь целиком); Я14 наведение по линии называет её концы, не постороннего;
  *  Я15 доля двусмысленных связей.
  * Этап 13 (решения 93–95, X3 § 3): сцены показов «ключевые лица», «все колена», «Колено Иудино», «Дом Давидов», род
  * Давида, Халев, Саул, Ашхур, набор с пропусками, созвездие «Родословие Иисуса Христа»; проверки
@@ -70,6 +70,8 @@ const lk = await import('../src/engine/linkkey.ts');
 const reveal = await import('../src/ui/reveal.ts');
 type Sky = InstanceType<typeof skyMod.Sky>;
 
+/** y следа звезды в x (links.ts, trailYAt; на сборке до этапа 15 — строка звезды): перепись меряет и «до». */
+const trailY = (st: LinkStar, x: number): number => (links as { trailYAt?: (s: LinkStar, x: number) => number }).trailYAt?.(st, x) ?? st.y;
 const LAYERS = { lifelines: true, connectors: true, constellations: true, epochs: true, ribbons: true, tensions: true, ghosts: true, labels: true };
 const M = () => atlas.models[0];
 const nameOf = (id: string) => atlas.byId.get(id)?.name ?? id;
@@ -287,8 +289,10 @@ export interface Frame {
   /** нарисованные узлы (◆ и •) */
   nodes: LinkFrame['nodes'];
   stars: readonly LinkStar[];
-  /** живые следы: узел, лицо, строка, от и до (px) */
+  /** живые следы: узел, лицо, строка, от и до (px); у лица с переходом — горизонтали его пребываний (решение 173) */
   trails: { i: number; id: string; y: number; x0: number; x1: number }[];
+  /** участки переходов следов (решение 173): отрезки S-кривых, px */
+  glides: { i: number; id: string; g: [number, number, number, number] }[];
   boxes: ReturnType<Sky['labelStats']>['boxes'];
   overlaps: number;
   ky: number;
@@ -415,8 +419,22 @@ export function frameOf(sc: Scene, s: Sky, scale: number, width: number, extra: 
   const shown = d.frame.paths.filter((q) => on(q, d));
   const lt = { x0: 0, x1: 0, y: 0, cls: 'exact', known: true, solidTo: 0, color: '', width: 1 } as import('../src/render/trails.ts').LifeTrail;
   const tr: Frame['trails'] = [];
+  const glides: Frame['glides'] = [];
+  const pathOf = new Map<number, readonly number[]>();
+  for (const q of s.linkStarsNow()) if (!q.ghost && q.path && q.path.length >= 4) pathOf.set(q.i, q.path);
   for (let i = 0; i < s.nodes.length; i++) {
     if (!s.drawn(i)) continue;
+    const lp = pathOf.get(i);
+    if (lp) {
+      // след с переходом (решение 173): горизонтали пребываний — строками, S-кривые — отрезками
+      for (let k = 0; k + 3 < lp.length; k += 2) {
+        const [x0, y0, x1, y1] = [lp[k], lp[k + 1], lp[k + 2], lp[k + 3]];
+        if (x1 - x0 < 0.01) continue;
+        if (Math.abs(y1 - y0) < 0.01) tr.push({ i, id: s.nodes[i].person, y: y0, x0, x1 });
+        else glides.push({ i, id: s.nodes[i].person, g: [x0, y0, x1, y1] });
+      }
+      continue;
+    }
     if (trails.trailOf(s, i, lt) && lt.x1 > lt.x0 + 1) tr.push({ i, id: s.nodes[i].person, y: lt.y, x0: lt.x0, x1: lt.x1 });
   }
   const ls = s.labelStats();
@@ -428,7 +446,7 @@ export function frameOf(sc: Scene, s: Sky, scale: number, width: number, extra: 
     // узлы — те, что нарисованы: на «всех лицах» теснее поколения в 18 px ромбов нет (plates.ts, genRoom), видимость — по
     // ярусу линий союза (решение 135)
     nodes: d.frame.layout === 'map' && s.genRoom < 0.5 ? [] : d.frame.nodes.filter((n) => (T.unionOn ? T.unionOn(d, n.union, n.owner, n.from) : d.alpha > 0.01 || d.lit({ ends: [n.owner, n.from] } as unknown as LinkPath)) && !(d.frame.ribbonOnly?.has(n.union) && s.routeFactor < 0.5)),
-    stars: s.linkStarsNow(), trails: tr,
+    stars: s.linkStarsNow(), trails: tr, glides,
     boxes: ls.boxes.filter((b) => b.kind !== 'frame' && b.kind !== 'edge'), overlaps: ls.overlaps, ky: s.cam.ky,
   };
 }
@@ -537,7 +555,7 @@ export interface Census {
   y12of: number;
   y12overlaps: number;
   rowPx: number;
-  /** Я13: длинных связей целиком (должны быть обрывками) */
+  /** Я13: обрывков (этап 15, решение 176: должно быть 0) */
   y13: number;
   /** Я14: точек / названы оба конца / названо постороннее лицо */
   y14of: number;
@@ -773,7 +791,7 @@ export function census(f: Frame): Census {
         if (n.kind === 'join' && f.d.frame.layout === 'family') continue;
         const o = starById.get(n.owner);
         // узел, ушедший со следа с ленты по своему стволу (решение 166), стоит на столбце следа: след — на y − off
-        const onTrail = !!o && (o.x1 ?? o.x) >= n.x - 1.5 && Math.abs(o.y - (n.y - ((n as { off?: number }).off ?? 0))) < 0.75;
+        const onTrail = !!o && (o.x1 ?? o.x) >= n.x - 1.5 && Math.abs(trailY(o, n.x) - (n.y - ((n as { off?: number }).off ?? 0))) < 0.75;
         if (!onTrail && !clanOf.has(u) && !viaJog) {
           y7++;
           add('Я7', u, `узел ${u} не на следе ${nameOf(n.owner)}`, n.x, n.y);
@@ -798,6 +816,13 @@ export function census(f: Frame): Census {
         if (t.y <= lo || t.y >= hi || q.ends.includes(t.id)) continue;
         if (g[0] <= t.x0 + 0.5 || g[0] >= t.x1 - 0.5) continue;
         crossing.push({ q, t, x: g[0] });
+      }
+      // переходы следов (решение 173): вертикаль режет S-кривую там, где она проходит x
+      for (const gl of f.glides) {
+        const [ax, ay, bx, by] = gl.g;
+        if (q.ends.includes(gl.id) || g[0] <= ax + 0.5 || g[0] >= bx - 0.5) continue;
+        const y = ay + ((by - ay) * (g[0] - ax)) / (bx - ax);
+        if (y > lo && y < hi) crossing.push({ q, t: { i: gl.i, id: gl.id, y, x0: ax, x1: bx }, x: g[0] });
       }
     }
   for (const c of crossing) {
@@ -905,18 +930,14 @@ export function census(f: Frame): Census {
     }
   }
 
-  // Я13: длинные связи на «всех лицах»: ствол длиннее 8 строк через живые чужие следы — только обрывками
+  // Я13 (этап 15, решение 176: связь целиком): обрывков нет — ни путей вида 'stub', ни путей, нарисованных только свёрнутыми
+  // (прежде — «длинные связи на всех лицах — обрывками»)
   let y13 = 0;
-  if (f.d.frame.layout === 'map')
-    for (const q of drawn) {
-      if (q.kind !== 'trunk' || q.when !== 'always') continue;
-      const [x, a, , b] = q.pts;
-      if (Math.abs(b - a) <= links.LONG_ROWS * f.ky) continue;
-      if (crossing.some((c) => c.q === q)) {
-        y13++;
-        mark(q.ks, 'Я13');
-        add('Я13', q.ks, `ствол ${Math.abs(b - a).toFixed(0)} px целиком`, x, a);
-      }
+  for (const q of drawn)
+    if (q.kind === 'stub' || q.when === 'short') {
+      y13++;
+      mark(q.ks, 'Я13');
+      add('Я13', q.ks, `обрывок ${q.ks}`, q.pts[0], q.pts[1]);
     }
 
   // Я14: наведение по линии (точки через 6 px, без 14 px у концов) — что назовёт атлас (как src/ui/sky/input.ts, underPointer)
@@ -1386,6 +1407,256 @@ export const GRAPH_HEAD = '| сцена | ширина | выбор | Г1 сво
 export const graphRow = (c: GraphCensus, sel: string | null) =>
   `| ${c.scene} | ${c.width} | ${sel ? nameOf(sel) : '—'} | ${c.ownCut} | ${c.nodeOnPath} / ${c.sameVert} | ${c.y1} (${c.y1full}) | ${c.mothersOf ? `${c.mothers}/${c.mothersOf}` : '—'} | ${c.dimmed} | ${c.onScreen} / ${c.bareStubText} | ${c.coordBoth} / ${c.coordRepeat} | ${c.xNoCut} |`;
 
+// ---------- этап 15: «Отчий дом» (решения 173–181; STAGE15 § 4, Ф1–Ф5) ----------
+
+/**
+ * Сцена корпуса этапа 15 (конкурс, D2: tools/_d2-scenes.ts): окно «всего неба» 2000 × 1000 — обзор, как на снимках
+ * владельца (113 лет на окно), масштаб семьи, выбранное лицо. По вертикали окно идёт за домом главы семьи fam: полоса
+ * середины окна — полоса его жизни и сдвиг dl (у выпуска 14 — ровно окно D2).
+ */
+export interface HouseScene {
+  id: string;
+  fam: string;
+  year: number;
+  width: number;
+  dl: number;
+  sel?: string;
+}
+export const HOUSE_SCENES: HouseScene[] = [
+  { id: 'jacob-o', fam: 'iakov', year: -1951, width: 113, dl: -8 },
+  { id: 'jacob-f', fam: 'iakov', year: -1925, width: 48, dl: -4 },
+  { id: 'jacob-sel', fam: 'iakov', year: -1951, width: 113, dl: -8, sel: 'iakov' },
+  { id: 'abraham-o', fam: 'avraam', year: -2080, width: 200, dl: -4 },
+  { id: 'abraham-f', fam: 'avraam', year: -2070, width: 110, dl: -1 },
+  { id: 'david-o', fam: 'david', year: -1005, width: 113, dl: 0 },
+  { id: 'david-f', fam: 'david', year: -1003, width: 45, dl: 0 },
+  { id: 'david-sel', fam: 'david', year: -1005, width: 113, dl: 0, sel: 'david' },
+  { id: 'caleb-o', fam: 'khalev-syn-esroma', year: -1790, width: 113, dl: 8 },
+  { id: 'caleb-f', fam: 'khalev-syn-esroma', year: -1788, width: 60, dl: 8 },
+  { id: 'esau-o', fam: 'isav', year: -1960, width: 113, dl: -3 },
+  { id: 'esau-f', fam: 'isav', year: -1950, width: 60, dl: -3 },
+  { id: 'rovoam-o', fam: 'rovoam', year: -955, width: 113, dl: -2 },
+  { id: 'rovoam-f', fam: 'rovoam', year: -950, width: 45, dl: -2 },
+  { id: 'iuda-o', fam: 'iuda', year: -1897, width: 113, dl: -3 },
+  { id: 'nahor-o', fam: 'nakhor-syn-farry', year: -2116, width: 113, dl: 8 },
+  { id: 'shegaraim-o', fam: 'shegaraim', year: -1310, width: 113, dl: 10 },
+  { id: 'saul-o', fam: 'saul', year: -1057, width: 113, dl: -4 },
+  { id: 'lot-o', fam: 'lot', year: -2079, width: 113, dl: -2 },
+  { id: 'ashkhur-o', fam: 'ashkhur', year: -1788, width: 113, dl: -4 },
+  { id: 'mered-o', fam: 'mered', year: -988, width: 113, dl: -4 },
+  { id: 'esrom-o', fam: 'esrom', year: -1819, width: 113, dl: -4 },
+  { id: 'vooz-o', fam: 'vooz', year: -1100, width: 113, dl: -1 },
+  { id: 'irodiada-o', fam: 'irodiada', year: 15, width: 113, dl: -9 },
+];
+
+/** Кадр сцены корпуса: окно 2000 × 1000, полоса середины — полоса жизни главы семьи и сдвиг сцены. */
+export function captureHouse(h: HouseScene, select: string | null = h.sel ?? null): Frame {
+  const lane = (M().nodeByPerson.get(h.fam)?.lane ?? 0) + h.dl;
+  return captureView('all', { year: h.year, width: h.width, lane }, { width: 2000, height: 1000, select });
+}
+
+/** Числа «Отчего дома» кадра (STAGE15 § 4). */
+export interface HouseCensus {
+  scene: string;
+  /** Ф1: обрывков в окне — немых и подписанных (пути вида 'stub' и нарисованные только свёрнутыми, 'short') */
+  f1: number;
+  /** Ф2: детей в окне, чья мать названа и на небе, а связь их союза нарисована: не связанных со следом матери / всего */
+  f2: number;
+  f2of: number;
+  /** Ф3: союзов в окне с обоими супругами на небе: без черты брака к ней / всего */
+  f3: number;
+  f3of: number;
+  /** Ф4: пересечений «связь × чужой след» в окне (путь связи — не лента; след — не концов пути) */
+  f4: number;
+  /** Ф5: неоднозначных ромбов в окне (не на следе жены, на чужом следе или линии, под лентой) / ромбов в окне */
+  f5: number;
+  f5of: number;
+  issues: Issue[];
+}
+
+/** Проверки Ф1–Ф5 по нарисованному кадру. */
+export function houseCensus(f: Frame, scene = f.sc.id): HouseCensus {
+  const { s, d } = f;
+  const issues: Issue[] = [];
+  const add = (check: string, ks: string, text: string, x: number, y: number) => issues.push({ check, ks, text, x, y });
+  const vp = s.cam.vp;
+  const L = Math.max(vp.l, s.letterW);
+  const T = Math.max(vp.t, s.openTop);
+  // всё — в px кадра связей; окно — со сдвигом неба (у переписи он нулевой)
+  const inVp = (x: number, y: number) => x + d.dx >= L && x + d.dx <= vp.r && y + d.dy >= T && y + d.dy <= vp.b;
+  const segIn = (g: Seg) => Math.max(g[0], g[2]) + d.dx >= L && Math.min(g[0], g[2]) + d.dx <= vp.r && Math.max(g[1], g[3]) + d.dy >= T && Math.min(g[1], g[3]) + d.dy <= vp.b;
+  const U = reveal.unions;
+  const imgs = new Map<string, LinkStar[]>();
+  for (const st of f.stars) (imgs.get(st.id) ?? imgs.set(st.id, []).get(st.id)!).push(st);
+  const mainOf = (id: string) => imgs.get(id)?.find((q) => !q.ghost) ?? null;
+  const polyOf = (st: LinkStar): readonly number[] | null => (st.path && st.path.length >= 4 ? st.path : st.x1 !== null && st.x1 > st.x + 0.5 ? [st.x, st.y, st.x1, st.y] : null);
+  // родовые черты союзов (Г12): продолжение следа лица до узла
+  const clans = f.paths.filter((q) => q.kind === 'clan');
+  /** точка на следе лица id (любом его изображении: след, призрак, родовая черта до узла) */
+  const onTrailOf = (id: string, x: number, y: number, tol = 1.2): boolean => {
+    for (const st of imgs.get(id) ?? []) {
+      const p = polyOf(st);
+      if (p) {
+        for (let k = 0; k + 3 < p.length; k += 2) if (links.distSeg(x, y, p[k], p[k + 1], p[k + 2], p[k + 3]) < tol) return true;
+      } else if (Math.hypot(st.x - x, st.y - y) < st.r + 2) return true;
+      if (st.ghost && Math.hypot(st.x - x, st.y - y) < st.r + 14 && Math.abs(st.y - y) < tol) return true;
+    }
+    for (const q of clans) if (q.ends[0] === id) for (const g of segs(q)) if (links.distSeg(x, y, g[0], g[1], g[2], g[3]) < tol) return true;
+    return false;
+  };
+  const drawn = f.paths;
+  const byUnion = new Map<string, LinkPath[]>();
+  for (const q of drawn) if (q.union) (byUnion.get(q.union) ?? byUnion.set(q.union, []).get(q.union)!).push(q);
+  const nodesOf = new Map<string, LinkFrame['nodes']>();
+  for (const n of f.nodes) (nodesOf.get(n.union) ?? nodesOf.set(n.union, []).get(n.union)!).push(n);
+
+  // Ф1: обрывки в окне
+  let f1 = 0;
+  for (const q of drawn)
+    if ((q.kind === 'stub' || q.when === 'short') && segs(q).some(segIn)) {
+      f1++;
+      add('Ф1', q.ks, `обрывок ${q.ks}`, q.pts[0] + d.dx, q.pts[1] + d.dy);
+    }
+
+  // Ф2: дети в окне с матерью на небе — путь союза от ребёнка доходит до следа матери (или черта брака и ромб на её следе
+  // у ребёнка линии Мессии)
+  let f2 = 0;
+  let f2of = 0;
+  const ribTo = new Set(d.frame.paths.filter((q) => q.kind === 'ribbon').map((q) => `${q.union ?? ''}>${q.ends[1]}`));
+  for (const st of f.stars) {
+    if (st.ghost || !inVp(st.x, st.y)) continue;
+    const u = links.mainUnion(U, st.id);
+    if (!u || !u.b || !u.a || !mainOf(u.b)) continue;
+    const own = byUnion.get(u.id) ?? [];
+    const rib = ribTo.has(`${u.id}>${st.id}`);
+    const toKid = own.filter((q) => q.ends.includes(st.id) && q.ends[q.ends.length - 1] === st.id);
+    if (!toKid.length && !rib) continue;
+    f2of++;
+    let ok = false;
+    if (toKid.length) {
+      // заливка по путям союза: отрезки соединены, если конец одного лежит на другом
+      const all = own.flatMap((q) => segs(q).map((g) => ({ g, q })));
+      const seen = new Set<number>();
+      const queue: number[] = [];
+      all.forEach((e, i) => {
+        if (toKid.includes(e.q)) {
+          seen.add(i);
+          queue.push(i);
+        }
+      });
+      const touch = (a: Seg, b: Seg) =>
+        [[a[0], a[1]], [a[2], a[3]]].some(([x, y]) => links.distSeg(x, y, b[0], b[1], b[2], b[3]) < 1) ||
+        [[b[0], b[1]], [b[2], b[3]]].some(([x, y]) => links.distSeg(x, y, a[0], a[1], a[2], a[3]) < 1);
+      while (queue.length && !ok) {
+        const i = queue.shift()!;
+        const g = all[i].g;
+        if (onTrailOf(u.b, g[0], g[1]) || onTrailOf(u.b, g[2], g[3])) ok = true;
+        for (const n of nodesOf.get(u.id) ?? []) if (n.owner === u.b && links.distSeg(n.x, n.y, g[0], g[1], g[2], g[3]) < 1) ok = true;
+        all.forEach((e, j) => {
+          if (!seen.has(j) && touch(g, e.g)) {
+            seen.add(j);
+            queue.push(j);
+          }
+        });
+      }
+    } else {
+      ok = (nodesOf.get(u.id) ?? []).some((n) => n.kind === 'union' && onTrailOf(u.b!, n.x, n.y)) || own.some((q) => q.kind === 'bar' && segs(q).some((g) => onTrailOf(u.b!, g[0], g[1]) || onTrailOf(u.b!, g[2], g[3])));
+    }
+    if (!ok) {
+      f2++;
+      add('Ф2', u.id, `${nameOf(st.id)}: не связан(а) со следом матери ${nameOf(u.b)}`, st.x + d.dx, st.y + d.dy);
+    }
+  }
+
+  // Ф3: союз в окне, оба супруга на небе — черта брака от его следа к её следу (или к её призраку)
+  let f3 = 0;
+  let f3of = 0;
+  for (const [uid, qs] of [...byUnion, ...[...nodesOf.keys()].filter((k) => !byUnion.has(k)).map((k) => [k, [] as LinkPath[]] as const)]) {
+    const u = U.byId.get(uid);
+    if (!u || !u.a || !u.b || u.claim || !mainOf(u.a) || !imgs.get(u.b)?.length) continue;
+    const seen = qs.some((q) => segs(q).some(segIn)) || (nodesOf.get(uid) ?? []).some((n) => inVp(n.x, n.y));
+    if (!seen) continue;
+    f3of++;
+    const ok = qs.some((q) => q.kind === 'bar' && segs(q).some((g) => (onTrailOf(u.b!, g[0], g[1]) && onTrailOf(u.a!, g[2], g[3])) || (onTrailOf(u.a!, g[0], g[1]) && onTrailOf(u.b!, g[2], g[3]))));
+    if (!ok) {
+      f3++;
+      add('Ф3', uid, `${nameOf(u.a)} и ${nameOf(u.b)}: черты брака нет`, 0, 0);
+    }
+  }
+
+  // Ф4: связь × чужой след в окне
+  let f4 = 0;
+  const tsegs: { g: Seg; id: string }[] = [...f.trails.map((t) => ({ g: [t.x0, t.y, t.x1, t.y] as Seg, id: t.id })), ...f.glides.map((t) => ({ g: t.g as Seg, id: t.id }))];
+  for (const q of drawn)
+    for (const g0 of segs(q)) {
+      const g: Seg = [g0[0] + d.dx, g0[1] + d.dy, g0[2] + d.dx, g0[3] + d.dy];
+      if (!segIn(g0)) continue;
+      for (const t of tsegs) {
+        if (q.ends.includes(t.id)) continue;
+        if (Math.max(g[0], g[2]) < Math.min(t.g[0], t.g[2]) || Math.min(g[0], g[2]) > Math.max(t.g[0], t.g[2])) continue;
+        const p = crossAt(g, t.g);
+        if (p && p[0] >= L && p[0] <= vp.r && p[1] >= T && p[1] <= vp.b) f4++;
+      }
+    }
+
+  // Ф5: ромбы в окне — на следе жены (если она на небе), не на чужом следе, не на чужой линии, не под лентой
+  let f5 = 0;
+  let f5of = 0;
+  const R = d.frame.layout === 'family' ? links.NODE_R_FAMILY : links.NODE_R_MAP;
+  const stations = new Set([...d.frame.via.values()].map((v) => v.union));
+  const rc = ribbonsR.ribbonStrands(s, { lineFlip: false, onlyLines: f.sc.show.kind === 'lines', guide: s.plan.mode === 'work' } as never, { joseph: atlas.lines.joseph.persons, mary: atlas.lines.mary.persons });
+  for (const n of f.nodes) {
+    if (n.kind !== 'union' || !inVp(n.x, n.y)) continue;
+    f5of++;
+    const u = U.byId.get(n.union);
+    const members = new Set(u ? [u.a, u.b, ...u.kids].filter((x): x is string => !!x) : []);
+    const why: string[] = [];
+    const y0 = n.y - ((n as { off?: number }).off ?? 0);
+    if (u?.a && u.b && imgs.get(u.b)?.length && !onTrailOf(u.b, n.x, y0)) why.push(`не на следе ${nameOf(u.b)}`);
+    for (const t of tsegs)
+      if (!members.has(t.id) && links.distSeg(n.x + d.dx, n.y + d.dy, t.g[0], t.g[1], t.g[2], t.g[3]) < R) {
+        why.push(`на следе ${nameOf(t.id)}`);
+        break;
+      }
+    for (const q of drawn)
+      if (q.union !== n.union && segs(q).some((g) => links.distSeg(n.x, n.y, g[0], g[1], g[2], g[3]) < R + 1)) {
+        why.push(`на линии ${q.ks}`);
+        break;
+      }
+    // лента: по маршруту (масштаб семьи) или нитью обзора; станция своего шага на следе родителя — не «под лентой»
+    const own = (par: string) => stations.has(n.union) && n.owner === par;
+    for (const q of f.ribbons)
+      if (!own(q.ends[0]) && segs(q).some((g) => links.distSeg(n.x, n.y, g[0], g[1], g[2], g[3]) < R + 1)) {
+        why.push(`под лентой ${q.ks}`);
+        break;
+      }
+    if (!f.ribbons.length && s.routeFactor < 0.5)
+      for (const strand of rc.strands) {
+        if (strand.ids.includes(n.owner) && stations.has(n.union)) continue;
+        const pts = strand.points;
+        let hit = false;
+        for (let k = 0; k + 1 < pts.length && !hit; k++) {
+          const a = pts[k];
+          const b = pts[k + 1];
+          if (Math.max(a.x, b.x) + rc.dx < n.x + d.dx - 12 || Math.min(a.x, b.x) + rc.dx > n.x + d.dx + 12) continue;
+          if (links.distSeg(n.x + d.dx, n.y + d.dy, a.x + rc.dx, a.y + rc.dy, b.x + rc.dx, b.y + rc.dy) < R + 1) hit = true;
+        }
+        if (hit) {
+          why.push(`под лентой ${strand.line}`);
+          break;
+        }
+      }
+    if (why.length) {
+      f5++;
+      add('Ф5', n.union, `ромб ${n.union}: ${why.join('; ')}`, n.x + d.dx, n.y + d.dy);
+    }
+  }
+  return { scene, f1, f2, f2of, f3, f3of, f4, f5, f5of, issues };
+}
+
+export const HOUSE_HEAD = '| сцена | выбор | Ф1 обрывки | Ф2 дети не у матери | Ф3 союз без черты | Ф4 связь × след | Ф5 ромбы |\n|---|---|---|---|---|---|---|';
+export const houseRow = (c: HouseCensus, sel: string | null) => `| ${c.scene} | ${sel ? nameOf(sel) : '—'} | ${c.f1} | ${c.f2}/${c.f2of} | ${c.f3}/${c.f3of} | ${c.f4} | ${c.f5}/${c.f5of} |`;
+
 // ---------- пороги § 12 ----------
 
 /** Нарушенные пороги Я1–Я15 для переписи сцены: пусто — все пороги соблюдены. */
@@ -1434,7 +1705,31 @@ export const HEAD =
 
 // ---------- прогон ----------
 
-if (process.env.CENSUS_MAIN === '1' && process.argv.includes('--graph')) {
+if (process.env.CENSUS_MAIN === '1' && process.argv.includes('--house')) {
+  // «Отчий дом» (этап 15, STAGE15 § 4): npx tsx tools/census.ts --house [--scene jacob-o,david-f] [--json out.json]
+  const argv = process.argv.slice(2);
+  const arg = (k: string, d: string) => {
+    const i = argv.indexOf(`--${k}`);
+    return i >= 0 && argv[i + 1] !== undefined ? argv[i + 1] : d;
+  };
+  const pick = arg('scene', '').split(',').filter(Boolean);
+  const out: HouseCensus[] = [];
+  console.log(HOUSE_HEAD);
+  for (const h of HOUSE_SCENES) {
+    if (pick.length && !pick.includes(h.id)) continue;
+    const c = houseCensus(captureHouse(h), h.id);
+    out.push(c);
+    console.log(houseRow(c, h.sel ?? null));
+    for (const q of c.issues.slice(0, Number(arg('top', '4')))) console.log(`    ${q.check}: ${q.text}`);
+  }
+  const sum = (k: 'f1' | 'f2' | 'f2of' | 'f3' | 'f3of' | 'f4' | 'f5' | 'f5of') => out.reduce((a, c) => a + c[k], 0);
+  console.log(`| всего | — | ${sum('f1')} | ${sum('f2')}/${sum('f2of')} | ${sum('f3')}/${sum('f3of')} | ${sum('f4')} | ${sum('f5')}/${sum('f5of')} |`);
+  const json = arg('json', '');
+  if (json) {
+    const { writeFileSync } = await import('node:fs');
+    writeFileSync(json, JSON.stringify(out, null, 1));
+  }
+} else if (process.env.CENSUS_MAIN === '1' && process.argv.includes('--graph')) {
   // GRAPH STRESS (этап 14, решение 158): npx tsx tools/census.ts --graph [--scene esrom,david] [--width 1440,940] [--json out.json]
   const argv = process.argv.slice(2);
   const arg = (k: string, d: string) => {

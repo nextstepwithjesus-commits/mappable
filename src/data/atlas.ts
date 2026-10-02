@@ -157,6 +157,11 @@ export interface NodeRow {
    */
   starLane?: number;
   stays?: Stay[];
+  /**
+   * Жена в доме мужа с рождения (решение 173, Д7): год прихода в дом мужа. Доля следа до него — бледно; черты и отводы
+   * через неё — не пересечение с живым членом дома.
+   */
+  wed?: number;
 }
 
 export interface ModelData {
@@ -209,9 +214,10 @@ interface RawAtlas {
     ext?: { be: (number | null)[]; le: (number | null)[]; bs: (string | null)[] };
     /**
      * st — пребывания (решение 173): [лицо, полоса рождения, затем на каждый переход начало − b, конец − b, полоса
-     * прихода]; uy — годы черт брака [муж, жена, год] (tools/build-data.ts; engine/stays.ts).
+     * прихода]; uy — годы черт брака [муж, жена, год]; wd — приход жены, живущей у мужа с рождения, [лицо, год − b]
+     * (tools/build-data.ts; engine/stays.ts).
      */
-    layout: { nodes: RawNode[]; blocks: RawBlock[]; laneMin: number; laneMax: number; metrics: Record<string, number>; outlines?: RawOutline[]; st?: number[][]; uy?: [number, number, number][] };
+    layout: { nodes: RawNode[]; blocks: RawBlock[]; laneMin: number; laneMax: number; metrics: Record<string, number>; outlines?: RawOutline[]; st?: number[][]; uy?: [number, number, number][]; wd?: [number, number][] };
     scale: { knots: number[]; xTrue: number[]; xDense: number[] };
   }[];
   modelInfo: unknown;
@@ -419,6 +425,10 @@ function decodeModel(m: RawModel): ModelData {
     n.starLane = r[1];
     n.stays = stays;
   }
+  for (const [k, d] of m.layout.wd ?? []) {
+    const n = nodeOf.get(persons[k].id);
+    if (n) n.wed = (chrono.get(n.person)?.b ?? n.t0) + d;
+  }
   const unionYears = new Map<string, number>((m.layout.uy ?? []).map(([a, w, t]) => [unionId(persons[a].id, persons[w].id), t]));
   // эпохи модели: в файле модели — только отличия от data/epochs.json (tools/build-data.ts, engine/epochs.ts)
   const modelEpochs = applyEpochDelta(epochs, m.epochs);
@@ -582,6 +592,8 @@ export const graph: Graph = buildGraph(
       otherParents: p.otherParents.map((o) => ({ id: o.id, role: o.role, kind: o.kind as never, refs: o.refs, cert: o.cert })),
       spouses: p.spouses.map((s) => ({ id: s.id, kind: s.kind as never, refs: s.refs, cert: s.cert, note: s.note })),
       kin: p.kin,
+      // роли — для союзов (engine/unions.ts: мать царя без связи супругов, решение 174)
+      ...(p.roles.length ? { roles: p.roles } : {}),
     }),
   ),
 );

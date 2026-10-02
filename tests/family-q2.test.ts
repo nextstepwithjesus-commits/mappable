@@ -105,6 +105,47 @@ describe('Я16: группы сплошные — наружу мать, за н
     expect(us[us.length - 1].union.id).toBe('u:iakov+liya');
   });
 
+  it('решение 173: черта брака и отводы в год своего события не пересекают тех, кто в эти годы уже в семье (Иаков, Давид, Авраам)', () => {
+    for (const k of ['Иаков', 'Давид', 'Авраам']) {
+      const r = layoutOf(k);
+      const row = (id: string) => r.rows.get(id)!;
+      const S = SCENES[k].S;
+      /** в год t лицо уже в семье и живо: жена — с года прихода (since), остальные — с рождения до конца места */
+      const present = (id: string, t: number) => {
+        const from = r.since.get(id) ?? T0(id);
+        return from < t && t <= D.span(id)[1];
+      };
+      const bad: string[] = [];
+      const cross = (what: string, a: number, b: number, t: number, skip: string[]) => {
+        for (const x of S) {
+          if (skip.includes(x) || !r.rows.has(x)) continue;
+          const rx = row(x);
+          if (rx > Math.min(a, b) && rx < Math.max(a, b) && present(x, t)) bad.push(`${k}: ${what} (${Math.round(t)}) — через ${name(x)}`);
+        }
+      };
+      for (const [p, us] of r.units)
+        for (const u of us) {
+          if (u.wife) {
+            cross(`черта ${name(p)} — ${name(u.wife)}`, row(p), row(u.wife), u.trunk, [p, u.wife]);
+            for (const c of u.kids) cross(`отвод ${name(u.wife)} → ${name(c)}`, row(u.wife), row(c), T0(c), [p, u.wife, c]);
+          } else if (u.kids.length) {
+            // мать не названа: ствол от следа отца в год ствола, зубцы — по строкам детей
+            const far = u.kids.reduce((m, c) => (Math.abs(row(c) - row(p)) > Math.abs(m - row(p)) ? row(c) : m), row(p));
+            cross(`ствол ${name(p)}`, row(p), far + Math.sign(far - row(p)), u.trunk, [p, ...u.kids]);
+          }
+        }
+      expect(bad).toEqual([]);
+      // жёны — в семье мужа с года союза: Лия — за год до Рувима, Вирсавия — до первого сына
+      if (k === 'Иаков') expect(r.since.get('liya')).toBe(T0('ruvim') - 1);
+      if (k === 'Давид') {
+        expect(r.since.get('virsaviya')).toBe(Math.min(...r.units.get('david')!.find((u) => u.wife === 'virsaviya')!.kids.map(T0)) - 1);
+        // сыновья, рождённые в Иерусалиме (мать не названа): ствол — до рождения Нафана и Соломона, чьи строки он проходит
+        const un = r.units.get('david')!.find((u) => u.union.id === 'u:david+')!;
+        expect(un.trunk).toBeLessThan(Math.min(T0('nafan-syn-davida'), T0('solomon')));
+      }
+    }
+  });
+
   it('большая семья одного союза: Иафет посередине своих семерых сыновей (Быт 10:2)', () => {
     const r = layoutOf('Ной');
     const sons = r.units.get('iafet')![0].kids;

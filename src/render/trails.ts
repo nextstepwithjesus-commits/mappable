@@ -37,7 +37,7 @@ import { primaryChildren } from '../engine/graph.ts';
 import { BOOK_INDEX } from '../engine/books.ts';
 import { nameCase } from '../ui/text/ru.ts';
 import { refText } from '../engine/kinship.ts';
-import { starRadius } from './glyphs.ts';
+import { drawGlyph, starRadius, type GlyphOpts } from './glyphs.ts';
 import { mapFont, mapSize, nameSize, T_MAP_S } from './type.ts';
 import { claim, FAMILY_KY, textBox, type LabelCache } from './labels.ts';
 import { branchColor, branchTickAt, GlowBatch, glowLayers, glows } from './branches.ts';
@@ -49,7 +49,13 @@ import type { LinkKey } from '../engine/linkkey.ts';
 import { atlasCoord } from '../engine/layout.ts';
 import { unions as ALL_UNIONS } from '../ui/reveal.ts';
 import { linkRoleOf, unionName } from '../ui/linkwords.ts';
-import { glidesOf, laneAt, starLaneOf, type StayNode } from '../engine/stays.ts';
+import { glidesOf, laneAt, smooth, starLaneOf, type MarriageKind, type StayNode } from '../engine/stays.ts';
+import { NODE_R_FAMILY, TRAIL_CUT, type NodeLook } from './links.ts';
+import { paintJoin, paintUnion } from './plates.ts';
+import { drawTentPointer } from './frame.ts';
+import { drawStrands, ribbonLook } from './ribbons.ts';
+import { buildRibbons } from '../engine/ribbons.ts';
+import type { MapTheme } from './branches.ts';
 
 /**
  * Растушёвка неуверенного начала и конца следа (этап 12, решение 90): тот же след, плавно тающий к краю, — вместо
@@ -2553,7 +2559,11 @@ export function nodeOnSky(v: SkyContext, p: Pass, d: Pick<LinkDraw, 'frame' | 'h
   return [d.hover, d.selected, ...d.preview].some((k) => !!k && (k === ks || k.split('.').slice(1, 4).join('.') === union));
 }
 
-/** Её собственное имя у ромба не нужно (решение 160): звезда лица видна в кадре ближе стольких px — имя ставит ярус семьи. */
+/**
+ * Её собственное имя у ромба не нужно (решения 160, 173): звезда жены видна в кадре ближе стольких px и стоит в том же
+ * доме, что ромб (на той же строке её следа) — имя ставит ярус семьи. Звезда в другом доме (жена пришла в дом мужа
+ * переходом) или дальше — имя у ромба нужно: по нему читается, чья это черта.
+ */
 export const OWN_NAME_NEAR = 120;
 function ownStarNear(v: SkyContext, id: string, x: number, y: number): boolean {
   const { cam } = v;
@@ -2562,6 +2572,8 @@ function ownStarNear(v: SkyContext, id: string, x: number, y: number): boolean {
   const sx = cam.sx(v.X0[i]);
   const sy = cam.sy(starLaneOf(v.nodes[i]));
   if (sx < v.letterW || sx > cam.w || sy < v.openTop || sy > cam.vp.b) return false;
+  // ромб — на её следе в год черты: если след там уже в другой строке, звезда — в отчем доме
+  if (hasGlides(v.nodes[i]) && Math.abs(sy - y) > 1.5) return false;
   return Math.hypot(sx - x, sy - y) < OWN_NAME_NEAR;
 }
 
@@ -2791,4 +2803,198 @@ export function drawPlanStubs(v: SkyContext, p: Pass, stubs: readonly { from: st
     if (ds.planStubs !== s) ds.planStubs = s;
   }
   return out;
+}
+
+// ---------- легенда «Семья на небе» (этап 15, решение 180) ----------
+
+/**
+ * Путь связи без разрывов — тем же начертанием, что у drawLinks: черта брака по виду союза (barOffsets, barWidth), штрих
+ * и точки по словарю (LINK_DASH). Для образцов легенды «Семья на небе» и образца #/specimen.
+ */
+export function strokeLinkPath(ctx: CanvasRenderingContext2D, q: Pick<LinkPath, 'kind' | 'bar' | 'style' | 'pts'>, color: string, width: number = TIER_WIDTH[1]) {
+  const pts = q.pts;
+  if (pts.length < 4) return;
+  ctx.save();
+  ctx.lineCap = 'butt';
+  ctx.strokeStyle = color;
+  ctx.lineWidth = width * barWidth(q);
+  ctx.setLineDash(LINK_DASH[q.style]);
+  ctx.beginPath();
+  for (const off of barOffsets(q)) {
+    ctx.moveTo(pts[0] + off, pts[1]);
+    for (let k = 2; k + 1 < pts.length; k += 2) ctx.lineTo(pts[k] + off, pts[k + 1]);
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+/**
+ * Переход для образца: S-кривая (smoothstep) от (xa, ya) до (xb, yb) — та же форма и та же выборка, что у bendsOf
+ * (там — по годам, здесь — по x, в образце время линейно).
+ */
+export function sampleBend(xa: number, xb: number, ya: number, yb: number): Bend {
+  const k = Math.max(6, Math.min(64, Math.ceil(Math.max(Math.abs(xb - xa), Math.abs(yb - ya)) / 5)));
+  const pts: number[] = [];
+  for (let j = 0; j <= k; j++) pts.push(xa + ((xb - xa) * j) / k, ya + (yb - ya) * smooth(j / k));
+  return { xa, xb, ya, yb, pts };
+}
+
+/** Знаки легенды «Семья на небе» (решение 180), по порядку легенды. */
+export type FamilySign = 'glide' | 'unions' | 'nomother' | 'kids' | 'ghost' | 'tent' | 'station' | 'cross';
+export const FAMILY_SIGNS: readonly FamilySign[] = ['glide', 'unions', 'nomother', 'kids', 'ghost', 'tent', 'station', 'cross'];
+
+/**
+ * Образец знака «Семьи на небе» (решение 180; src/ui/panels/Legend.tsx, src/ui/Specimen.tsx): те же рисовальщики и тона,
+ * что у неба, — след с переходом (drawLifeTrail), знак лица (drawGlyph), черта брака и отводы (strokeLinkPath — правила
+ * drawLinks), ромб союза по виду (plates.ts, paintUnion), точка гнезда (paintJoin), ленты (drawStrands), указатель шатра
+ * (frame.ts), подпись-помета (drawFamilyText). Пиксели CSS, w × h; фон — небо (правило .legend-sample).
+ */
+export function drawFamilySample(ctx: CanvasRenderingContext2D, pal: Palette, w: number, h: number, sign: FamilySign) {
+  const px = (v: number) => Math.round(v) + 0.5;
+  const theme: MapTheme = pal.glow ? 'night' : 'day';
+  const trailTone = alpha(pal.ink2, 0.55 * 1.25);
+  const linkTone = alpha(pal.ink2, LINK_TONE);
+  const R = NODE_R_FAMILY;
+  const life = (x0: number, x1: number, y: number, o: Partial<LifeTrail> = {}) =>
+    drawLifeTrail(ctx, { x0, x1, y, cls: 'exact', known: true, solidTo: x1, color: trailTone, width: 1.2, ...o });
+  const star = (x: number, y: number, sex: 'm' | 'f' = 'm', magnitude = 3, o: Partial<GlyphOpts> = {}) =>
+    drawGlyph(ctx, x, y, { sex, kind: 'person', magnitude, color: pal.ink, halo: pal.sky, ...o });
+  const person = (x: number, y: number, x1: number, sex: 'm' | 'f' = 'm', t: Partial<LifeTrail> = {}) => {
+    life(x, x1, y, t);
+    star(x, y, sex);
+  };
+  const link = (pts: number[], o: Partial<Pick<LinkPath, 'kind' | 'bar' | 'style'>> = {}) =>
+    strokeLinkPath(ctx, { kind: o.kind ?? 'trunk', bar: o.bar, style: o.style ?? 'solid', pts }, linkTone);
+  const union = (x: number, y: number, look?: NodeLook) => paintUnion(ctx, x, y, R, { open: true, halo: pal.sky, theme, a: 1, look });
+  /** черта брака от следа мужа (yH) к ромбу на следе жены (yW) */
+  const bar = (x: number, yH: number, yW: number, kind: MarriageKind, look: NodeLook = kind) => {
+    link([x, yH, x, yW - Math.sign(yW - yH) * R], { kind: 'bar', bar: kind, style: kind === 'levirate' ? 'dash' : 'solid' });
+    union(x, yW, look);
+  };
+  const note = (text: string, x: number, y: number) => drawFamilyText(ctx, pal, text, x, y);
+  ctx.save();
+  ctx.lineCap = 'butt';
+  switch (sign) {
+    case 'glide': {
+      // лицо рождается в доме отца (звезда наверху), его след плавно переходит в полосу жизни; чужой след под переходом
+      // прерывается
+      const top = px(h * 0.24);
+      const mid = px(h * 0.52);
+      const low = px(h * 0.8);
+      const xa = Math.round(w * 0.36);
+      const xb = Math.round(w * 0.62);
+      const g = sampleBend(xa, xb, top, low);
+      const xc = (xa + xb) / 2;
+      life(8, w - 8, mid, { cuts: [xc, TRAIL_CUT] });
+      person(16, top, w - 8, 'm', { bends: [g] });
+      break;
+    }
+    case 'unions': {
+      // четыре союза: жена, наложница, левират, брак не назван — черта от мужа (сверху) к ромбу на следе жены
+      const kinds: [MarriageKind, string][] = [['wife', 'жена'], ['concubine', 'наложница'], ['levirate', 'левират'], ['none', 'брак не назван']];
+      const top = px(10);
+      const low = px(h - 26);
+      const cw = w / kinds.length;
+      kinds.forEach(([kind, cap], k) => {
+        const x0 = k * cw;
+        const x = px(x0 + cw * 0.42);
+        life(x0 + 6, x0 + cw - 8, top);
+        life(x0 + 6, x0 + cw - 8, low);
+        bar(x, top, low, kind);
+        note(cap, x0 + 6, h - 6);
+      });
+      break;
+    }
+    case 'nomother': {
+      // мать не названа: половина ромба на следе отца, ствол и зубцы — от следа отца
+      const top = px(h * 0.22);
+      const k1 = px(h * 0.56);
+      const k2 = px(h * 0.84);
+      const x = px(w * 0.3);
+      person(14, top, w - 8);
+      link([x, top + R, x, k2]);
+      link([x, k1, x + 14, k1]);
+      link([x, k2, x + 30, k2]);
+      union(x, top, 'no-mother');
+      star(x + 18, k1);
+      star(x + 34, k2);
+      break;
+    }
+    case 'kids': {
+      // дети — от следа матери: ствол в год рождения и зубец к звезде; следующее гнездо — точка на её следе
+      const top = px(h * 0.14);
+      const mo = px(h * 0.42);
+      const k1 = px(h * 0.66);
+      const k2 = px(h * 0.88);
+      const xu = px(w * 0.24);
+      const xj = px(w * 0.62);
+      person(14, top, w - 8);
+      person(30, mo, w - 8, 'f');
+      bar(xu, top, mo, 'wife');
+      link([xu, mo + R, xu, k2]);
+      link([xu, k1, xu + 12, k1]);
+      link([xu, k2, xu + 30, k2]);
+      star(xu + 16, k1);
+      star(xu + 34, k2, 'f');
+      link([xj, mo, xj, k1, xj + 12, k1]);
+      paintJoin(ctx, xj, mo, pal.ink, pal.sky);
+      star(xj + 16, k1);
+      break;
+    }
+    case 'ghost': {
+      // призрак: бездетный брак у мужа — черта к ромбу и полый пунктирный знак жены «лицо нарисовано не здесь»
+      const top = px(h * 0.26);
+      const low = px(h * 0.74);
+      const x = px(w * 0.42);
+      person(14, top, w - 8);
+      bar(x, top, low, 'wife');
+      star(x + 16, low, 'f', 3, { ghost: true });
+      note('Мелхола, жена Давида', x + 26, low + 4);
+      break;
+    }
+    case 'tent': {
+      // указатель шатра (решение 176): мать и её дети за краем окна — одна строка у кромки на союз и сторону; черта брака
+      // идёт к кромке целиком
+      const low = px(h * 0.8);
+      const x = px(w * 0.22);
+      person(14, low, w - 8);
+      link([x, low, x, 0], { kind: 'bar', bar: 'wife' });
+      drawTentPointer(ctx, pal, x + 10, 15, 'up', 'Лия: Рувим, Симеон, Левий');
+      break;
+    }
+    case 'station': {
+      // станция ленты: шаг ленты уходит со следа отца у черты брака матери ребёнка — у Давида ленты к Соломону и
+      // Нафану расходятся у черты Вирсавии
+      const yF = px(h * 0.4);
+      const yM = px(h * 0.78);
+      const xu = Math.round(w * 0.42);
+      const at: Record<string, [number, number]> = { g: [10, yF], f: [xu, yF], s: [w - 24, px(h * 0.14)], n: [w - 24, px(h * 0.9)] };
+      const project = (id: string) => ({ x: at[id][0], y: at[id][1] });
+      life(xu + 10, w - 8, yF);
+      person(xu - 34, yM, w - 8, 'f');
+      bar(px(xu), yF, yM, 'wife');
+      const strands = buildRibbons({ joseph: ['g', 'f', 's'].map((id) => ({ id, weak: false })), mary: ['g', 'f', 'n'].map((id) => ({ id, weak: false })), project, amplitude: 3, meander: 0 });
+      drawStrands(ctx, strands, 2.4, ribbonLook(pal), w);
+      star(at.s[0], at.s[1], 'm', 2);
+      star(at.n[0], at.n[1], 'm', 2);
+      break;
+    }
+    case 'cross': {
+      // пересечение — не соединение: под чужой вертикалью след прерывается; соединение — ромб на следе и зубец у звезды
+      const top = px(h * 0.18);
+      const mid = px(h * 0.5);
+      const low = px(h * 0.84);
+      const x1 = px(w * 0.28);
+      const x2 = px(w * 0.68);
+      person(10, top, w * 0.5);
+      life(8, w - 8, mid, { cuts: [x1, TRAIL_CUT] });
+      link([x1, top, x1, low, x1 + 14, low]);
+      star(x1 + 18, low);
+      link([x2, mid + R, x2, low, x2 + 14, low]);
+      union(x2, mid, 'no-mother');
+      star(x2 + 18, low);
+      break;
+    }
+  }
+  ctx.restore();
 }
