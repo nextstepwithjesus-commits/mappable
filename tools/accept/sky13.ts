@@ -196,6 +196,17 @@ export const sky13: Scenario[] = [
           .map((q) => q.split('|'))
           .filter((q) => q[0] === 'bar' && q[2]?.startsWith(`s.${KH}.`) && q[2].endsWith(`.${KH}`))
           .map((q) => q[3].split(',').map(Number));
+      // небо доезжает по инерции — ждать, пока окно (.sky[data-view]) не встанет
+      const settle = async () => {
+        let was = '';
+        for (let k = 0; k < 25; k++) {
+          const now = (await p.locator('.sky').getAttribute('data-view')) ?? '';
+          if (now === was) break;
+          was = now;
+          await p.waitForTimeout(200);
+        }
+        await p.waitForTimeout(400);
+      };
       const drag = async (dy: number) => {
         const step = Math.max(-box.height / 3, Math.min(box.height / 3, dy));
         const x0 = box.x + box.width * 0.85;
@@ -204,7 +215,7 @@ export const sky13: Scenario[] = [
         await p.mouse.move(x0, box.y + box.height / 2, { steps: 4 });
         await p.mouse.move(x0, box.y + box.height / 2 + step / 2, { steps: 4 });
         await p.mouse.up();
-        await p.waitForTimeout(700);
+        await settle();
       };
       if (ys.length < 4) {
         let rs = await roots();
@@ -219,12 +230,16 @@ export const sky13: Scenario[] = [
           await drag(dy);
           rs = await roots();
         }
-        if (rs.length) {
+        for (let k = 0; k < 4 && rs.length && (await childRows()).length < 4; k++) {
+          // колесо — у середины корней черт (строка дома), затем строка дома снова к середине неба
           const cx = rs.reduce((a, q) => a + q[0], 0) / rs.length;
-          for (let k = 0; k < 4 && (await childRows()).length < 4; k++) {
-            await p.mouse.move(box.x + cx, box.y + box.height / 2);
-            await p.mouse.wheel(0, -240);
-            await p.waitForTimeout(1200);
+          await p.mouse.move(box.x + cx, box.y + rs[0][1]);
+          await p.mouse.wheel(0, -240);
+          await settle();
+          rs = await roots();
+          if (rs.length && Math.abs(box.height / 2 - rs[0][1]) > 80) {
+            await drag(box.height / 2 - rs[0][1]);
+            rs = await roots();
           }
         }
         ys = await childRows();

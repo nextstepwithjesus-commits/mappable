@@ -38,7 +38,7 @@ import { listingOf, orderListing, type OrderListing } from './trails.ts';
 /** Ствол — на столько px левее звезды первого ребёнка гнезда (Г3: 8–10). */
 export const TRUNK_LEAD = 9;
 /** Отступ ствола от середины звезды ребёнка: край знака и видимый зубец со своей целью щелчка (toothRoom, не меньше 9 px). */
-export const leadOf = (s: { r: number }) => Math.max(TRUNK_LEAD, toothRoom(s));
+export const leadOf = (s: { r: number }, hit = TOOTH_HIT) => Math.max(TRUNK_LEAD, toothRoom(s, hit));
 /** Наименьший шаг между узлами разных союзов на одном следе: ромб с подложкой цвета неба (r + 1,8) не задевает соседний. */
 const nodeGapOf = (inp: Pick<LinkInput, 'nodeR' | 'layout'>) => 2 * (inp.nodeR ?? (inp.layout === 'family' ? NODE_R_FAMILY : NODE_R_MAP)) + 2;
 /** Ствол — не дальше стольких px левее первого ребёнка (Я6: рождение − 32) и не ближе (рождение − 5). */
@@ -51,7 +51,9 @@ export const TRUNK_MIN = 5;
  */
 export const TOOTH_HIT = 12;
 /** Ствол — не ближе к середине звезды первого ребёнка гнезда: её радиус, 1,5 px и видимый зубец. */
-export const toothRoom = (s: { r: number }) => Math.max(TRUNK_MIN, s.r + 1.5 + TOOTH_HIT);
+export const toothRoom = (s: { r: number }, hit = TOOTH_HIT) => Math.max(TRUNK_MIN, s.r + 1.5 + hit);
+/** Видимый зубец на обзоре (строки теснее 6 px): связи там бледны и не цель щелчка — прежний отступ ствола (край и 3 px). */
+const TOOTH_FAR = 3;
 /** Зубец — не длиннее (Г3, Я6). */
 export const TOOTH_MAX = 40;
 /** Вертикали разных союзов — не ближе (Г6); если одна из них черта брака или лента — не ближе WIDE_GAP. */
@@ -700,6 +702,8 @@ interface Plan {
   childless: boolean;
   /** брак без детей, которому на живой доле её следа нет места среди её союзов: ромб на следе мужа с её именем (К6) */
   k6?: boolean;
+  /** на обзоре: вертикаль совпала с вертикалью более значимого союза и не разошлась — союз не рисуется */
+  hidden?: boolean;
   /** x года черты брака, px (договор 1, unionYear); null — года нет */
   xw: number | null;
   /** гнёзда детей: дети ближе 40 px — на одном стволе (решение 175) */
@@ -744,6 +748,10 @@ interface Slot {
 function houseLinks(inp: LinkInput): LinkFrame {
   const fam = inp.layout === 'family';
   const { ky } = inp;
+  // отступ ствола: видимый зубец со своей целью щелчка — на подробном небе; на обзоре — короткий
+  const hit = ky >= 6 ? TOOTH_HIT : TOOTH_FAR;
+  const room = (s: { r: number }) => toothRoom(s, hit);
+  const lead = (s: { r: number }) => leadOf(s, hit);
   const U = inp.unions;
   const R = inp.nodeR ?? (fam ? NODE_R_FAMILY : NODE_R_MAP);
   const nodeGap = 2 * R + 2;
@@ -850,7 +858,7 @@ function houseLinks(inp: LinkInput): LinkFrame {
     const nests: LinkStar[][] = [];
     for (const k of kids) {
       const g = nests[nests.length - 1];
-      if (g && k.x - (g[0].x - toothRoom(g[0])) <= TOOTH_MAX) g.push(k);
+      if (g && k.x - (g[0].x - room(g[0])) <= TOOTH_MAX) g.push(k);
       else nests.push([k]);
     }
     plans.push({ u, kind, F, W, O, kids, rib, look, label: null, late: false, childless, xw, nests, merged: false, col: NaN, xs: [] });
@@ -888,7 +896,8 @@ function houseLinks(inp: LinkInput): LinkFrame {
   const onGlide = (q: LinkStar | null, x: number): boolean => {
     const pp = q?.path;
     if (!pp) return false;
-    for (let k = 0; k + 3 < pp.length; k += 2) if (x > pp[k] + 0.5 && x < pp[k + 2] - 0.5 && Math.abs(pp[k + 3] - pp[k + 1]) > 0.5) return true;
+    // склон — ломаная из коротких отрезков (на крутом месте короче пикселя по x): x между концами отрезка с подъёмом
+    for (let k = 0; k + 3 < pp.length; k += 2) if (x >= pp[k] - 0.5 && x <= pp[k + 2] + 0.5 && Math.abs(pp[k + 3] - pp[k + 1]) > 0.5) return true;
     return false;
   };
   /** Нижний предел вертикали союза: правее звёзд его лиц. */
@@ -908,13 +917,14 @@ function houseLinks(inp: LinkInput): LinkFrame {
     let hi: number;
     if (p.merged) {
       const first = n0[0];
-      want = p.xw !== null ? Math.min(p.xw, first.x - leadOf(first)) : first.x - leadOf(first);
+      want = p.xw !== null ? Math.min(p.xw, first.x - lead(first)) : first.x - lead(first);
       lo = Math.max(lo0, first.x - TRUNK_MAX, Math.max(...n0.map((k) => k.x)) - TOOTH_MAX);
-      hi = first.x - toothRoom(first);
+      hi = first.x - room(first);
     } else if (n0 || p.rib.length) {
       // у союза только с ребёнком линии — до самой его звезды: станция ленты у черты (решение 177), а черта — не раньше
       // прихода матери в дом (у матери царя он бывает за год до рождения)
-      const next = n0 ? n0[0].x - leadOf(n0[0]) : p.rib[0].x - p.rib[0].r - 2;
+      // (черта мимо звезды ребёнка линии — не ближе r + 5: его строка бывает между строками отца и матери)
+      const next = n0 ? n0[0].x - lead(n0[0]) : p.rib[0].x - p.rib[0].r - STAR_CLEAR - 1;
       want = p.xw ?? next;
       lo = Math.max(lo0, Math.min(want, next) - (wideWin ? 2 * TRUNK_MAX : TRUNK_MAX));
       hi = Math.min(want + 16, n0 ? next - (wideWin ? nodeGap : WIDE_GAP) : next);
@@ -953,7 +963,16 @@ function houseLinks(inp: LinkInput): LinkFrame {
       }
     }
     // черта брака — не раньше прихода жены в дом мужа (решение 173: конец её перехода, начало живой доли следа wed/since)
-    const arr = arrivalOf(p.W, hi) + 1;
+    // у союза только с ребёнком линии — окно до самой его звезды, если мать пришла позже отступа от неё (царица-мать:
+    // черта к её следу в доме мужа, а не к месту до прихода; решение 173 важнее зазора у звезды)
+    // (если черта там не идёт мимо самой звезды: строка ребёнка — не между строками отца и матери)
+    const near = !p.merged && !p.nests.length && p.rib.length ? p.rib[0].x - p.rib[0].r - 2 : hi;
+    const arr = arrivalOf(p.W, near) + 1;
+    if (arr > hi && arr <= near && p.W && F) {
+      const [a, b] = span([yAt(F, arr), yAt(p.W, arr)]);
+      const ky0 = p.rib[0].y;
+      if (!(ky0 > a - p.rib[0].r - STAR_CLEAR && ky0 < b + p.rib[0].r + STAR_CLEAR)) hi = arr;
+    }
     if (arr > lo && arr <= hi) {
       lo = arr;
       want = Math.max(want, lo);
@@ -968,9 +987,9 @@ function houseLinks(inp: LinkInput): LinkFrame {
   const nestSlot = (p: Plan, n: number): Slot => {
     const g = p.nests[n];
     const first = g[0];
-    const w = first.x - leadOf(first);
+    const w = first.x - lead(first);
     let l = Math.max(p.O.x + p.O.r + 3, first.x - TRUNK_MAX, Math.max(...g.map((k) => k.x)) - TOOTH_MAX);
-    const h = first.x - toothRoom(first);
+    const h = first.x - room(first);
     // ствол — от живой доли следа матери (после её перехода в дом мужа), если гнездо это позволяет
     const arr = arrivalOf(p.O, h) + 1;
     if (arr > l && arr <= h) l = arr;
@@ -999,7 +1018,7 @@ function houseLinks(inp: LinkInput): LinkFrame {
     const n0 = p.nests[0];
     if (n0) {
       const first = n0[0];
-      const t0 = first.x - leadOf(first);
+      const t0 = first.x - lead(first);
       // черта — не раньше прихода жены в дом (решение 173): год брака до её прихода — у первого гнезда
       const want = Math.max(p.xw !== null ? Math.min(p.xw, t0) : t0, Math.min(arrivalOf(W, t0) + 1, t0));
       // первое гнездо — на колонне, если черта у рождения первого ребёнка и дети не по сторону отца от матери
@@ -1020,7 +1039,7 @@ function houseLinks(inp: LinkInput): LinkFrame {
     const par = new Set([sl.p.O.id, ...(sl.p.F ? [sl.p.F.id] : []), ...(sl.p.W ? [sl.p.W.id] : [])]);
     let c = Math.abs(x - sl.want) * (x > sl.want ? 2 : 1);
     // черта брака — от строки дома мужа, не с его перехода (у Халева, Ашхура черты шли бы вдоль склона)
-    if (sl.n < 0 && sl.fy !== null && onGlide(sl.p.F, x)) c += 1000;
+    if (sl.n < 0 && sl.fy !== null && onGlide(sl.p.F, x)) c += 3000;
     for (const v of verts.query(x - WIDE_GAP, y0 - 7, x + WIDE_GAP, y1 + 7)) {
       if (v.dead || v.u === u) continue;
       const d = Math.abs(v.x - x);
@@ -1028,8 +1047,8 @@ function houseLinks(inp: LinkInput): LinkFrame {
       // (одна кончается на следе, где начинается другая): одна линия через след читалась бы одной связью
       if (Math.min(v.y1, y1) - Math.max(v.y0, y0) > -6) {
         const need = v.wide || sl.wide ? WIDE_GAP : TRUNK_GAP;
-        // ближе 4 px две линии читаются одной (черты Эглы и Вирсавии у Давида в 2 px) — как совпадение
-        if (d < need) c += d < 2 ? 1600 : d < 4 ? 1100 : 100 + (300 * (need - d)) / need;
+        // ближе 8 px (Г6) — как совпадение: второй проход и отдельная черта левее гнезда ищут место
+        if (d < need) c += d < 3 ? 1200 : d < TRUNK_GAP ? 1050 : 100 + (300 * (need - d)) / need;
       }
       // свой узел — на чужой вертикали (решение 181), и у её конца на том же следе (черта чужого союза входила бы в ромб)
       if (ny > v.y0 - 1 && ny < v.y1 + 1 && d < nodeClear + halfW(v.wide)) c += 1200;
@@ -1052,7 +1071,7 @@ function houseLinks(inp: LinkInput): LinkFrame {
     for (const s of stars.query(x - maxR - STAR_CLEAR, y0 - maxR - 16, Math.max(x, ...kids.map((k) => k.x)) + maxR + STAR_CLEAR, y1 + maxR + 16)) {
       if (par.has(s.id)) continue;
       // чужие звёзды у вертикали (Г5); звезда прямо над или под её концом — вертикаль читалась бы связью этого лица
-      if (Math.abs(s.x - x) < s.r + STAR_CLEAR && s.y >= y0 - s.r && s.y <= y1 + s.r) c += 1000;
+      if (Math.abs(s.x - x) < s.r + STAR_CLEAR && s.y >= y0 - s.r && s.y <= y1 + s.r) c += 1100;
       else if (Math.abs(s.x - x) < s.r + 2 && s.y >= y0 - s.r - 16 && s.y <= y1 + s.r + 16) c += 300;
       // чужие звёзды на зубцах
       if (s.x > x) for (const k of kids) if (k !== s && s.x < k.x && Math.abs(s.y - k.y) < s.r + STAR_CLEAR) c += 1000;
@@ -1120,13 +1139,38 @@ function houseLinks(inp: LinkInput): LinkFrame {
       place(sl);
     }
   };
-  // (на обзоре, где строки теснее 6 px, ромбов и подробных связей не видно — без него)
+  // (на обзоре, где строки теснее 6 px, ромбов и подробных связей не видно — без него; там заново ставятся только
+  // вертикали, совпавшие с вертикалью другого союза: ближе 3 px дольше 12 px читались бы одной линией, Г2)
   if (ky >= 6) repass();
+  else {
+    const sameOf = (sl: Slot) => [...verts.query(sl.x - 3, sl.y0, sl.x + 3, sl.y1)].filter((v) => !v.dead && v.u !== sl.p.u.id && Math.abs(v.x - sl.x) < 3 && Math.min(v.y1, sl.y1) - Math.max(v.y0, sl.y0) > 12);
+    for (const sl of slots) {
+      if (!sameOf(sl).length) continue;
+      for (const e of ent.get(sl) ?? []) e.dead = true;
+      place(sl);
+    }
+    // развести не вышло (у Давида семь союзов в 3 px следа) — на обзоре остаётся более значимый союз: с ребёнком линии,
+    // с бо́льшим числом детей на небе; остальные — с масштаба подробнее (решение 178)
+    const weight = (p: Plan) => p.rib.length * 100 + p.kids.length * 10 + (p.childless ? 0 : 1);
+    const byU = new Map(plans.map((p) => [p.u.id, p] as const));
+    for (const sl of slots) {
+      if (sl.n >= 0 || sl.p.hidden) continue;
+      for (const v of sameOf(sl)) {
+        const o = byU.get(v.u);
+        if (!o || o.hidden) continue;
+        const drop = weight(o) > weight(sl.p) || (weight(o) === weight(sl.p) && o.u.id < sl.p.u.id) ? sl.p : o;
+        drop.hidden = true;
+        for (const q of slots) if (q.p === drop) for (const e of ent.get(q) ?? []) e.dead = true;
+        if (drop === sl.p) break;
+      }
+    }
+  }
   // колонна с первым гнездом у чужой звезды (Г5): черта брака и ромб — своей вертикалью левее, первое гнездо — своим
   // стволом с «•» (место у звёзд одной вертикали на двоих не нашлось)
   if (ky >= 6) {
     for (const sl of [...slots]) {
-      if (sl.n >= 0 || cost(yOn(sl, sl.x), sl.x) < 1000) continue;
+      const was = sl.n >= 0 ? 0 : cost(yOn(sl, sl.x), sl.x);
+      if (sl.n >= 0 || was < 1000) continue;
       for (const e of ent.get(sl) ?? []) e.dead = true;
       if (!sl.p.merged) {
         // колонна без гнезда (черта к ребёнку линии, черта у позднего первого ребёнка) — шире окно
@@ -1146,11 +1190,45 @@ function houseLinks(inp: LinkInput): LinkFrame {
       const g = nestSlot(sl.p, 0);
       slots.splice(slots.indexOf(sl), 1, c, g);
       place(g);
-      c.hi = Math.min(c.hi, g.x - nodeGap);
+      let gs = [g];
+      // и ствол первого гнезда — у чужой звезды (Нафан в окне иерусалимских сыновей Давида): первый ребёнок — своим
+      // стволом левее, остальные — следующим гнездом
+      const before = cost(yOn(g, g.x), g.x);
+      if (before >= 1000 && sl.p.nests[0].length > 1) {
+        for (const e of ent.get(g) ?? []) e.dead = true;
+        const [first, ...rest] = sl.p.nests[0];
+        sl.p.nests.splice(0, 1, [first], rest);
+        for (const q of slots) if (q.p === sl.p && q.n >= 1) q.n += 1;
+        const g0 = nestSlot(sl.p, 0);
+        const g1 = nestSlot(sl.p, 1);
+        slots.splice(slots.indexOf(g), 1, g0, g1);
+        place(g1);
+        g0.hi = Math.min(g0.hi, g1.x - TRUNK_GAP);
+        place(g0);
+        gs = [g0, g1];
+        // не лучше одного ствола (второе гнездо встало к другой звезде) — гнездо прежнее
+        if (Math.max(cost(yOn(g0, g0.x), g0.x), cost(yOn(g1, g1.x), g1.x)) >= before) {
+          for (const q of gs) for (const e of ent.get(q) ?? []) e.dead = true;
+          slots.splice(slots.indexOf(g0), 2, g);
+          sl.p.nests.splice(0, 2, [first, ...rest]);
+          for (const q of slots) if (q.p === sl.p && q.n >= 2) q.n -= 1;
+          place(g);
+          gs = [g];
+        }
+      }
+      c.hi = Math.min(c.hi, gs[0].x - nodeGap);
       place(c);
+      // раздельные черта и ствол не лучше общей колонны (черта ушла на переход мужа, к чужой звезде) — колонна прежняя
+      if (gs.length === 1 && Math.max(cost(yOn(c, c.x), c.x), cost(yOn(g, g.x), g.x)) >= was) {
+        for (const q of [c, g]) for (const e of ent.get(q) ?? []) e.dead = true;
+        slots.splice(slots.indexOf(c), 2, sl);
+        sl.p.merged = true;
+        place(sl);
+      }
     }
   }
   for (const sl of slots) {
+    if (sl.p.hidden) continue;
     if (sl.n < 0) sl.p.col = sl.x;
     else sl.p.xs[sl.n] = sl.x;
   }

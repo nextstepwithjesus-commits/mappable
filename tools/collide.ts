@@ -1413,6 +1413,9 @@ const clickChildLink = (kid: string) => async (p: Page, g: () => Promise<Grab>) 
     longest(all.filter((q) => q[2] === union));
   }
   const pt = await canvasPt(p, best[0], best[1]);
+  // как рукой: сначала навести (наведённая связь отодвигает имена своих концов, сценарий 747), затем щёлкнуть
+  await p.mouse.move(pt.x, pt.y, { steps: 4 });
+  await p.waitForTimeout(400);
   await p.mouse.click(pt.x, pt.y);
   await p.mouse.move(pt.x + 300, pt.y + 200);
   await p.waitForTimeout(1200);

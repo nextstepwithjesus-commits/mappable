@@ -358,7 +358,15 @@ export const graph14: Scenario[] = [
         await p.mouse.move(x0, y0 + step / 2, { steps: 4 });
         await p.mouse.move(x0, y0 + step, { steps: 4 });
         await p.mouse.up();
-        await p.waitForTimeout(500);
+        // небо доезжает по инерции — ждать, пока окно (.sky[data-view]) не встанет
+        let was = '';
+        for (let k = 0; k < 20; k++) {
+          const now = (await p.locator('.sky').getAttribute('data-view')) ?? '';
+          if (now === was) break;
+          was = now;
+          await p.waitForTimeout(200);
+        }
+        await p.waitForTimeout(300);
       };
       // дом Халева — выше его звезды (указатели шатра «↑ Азува» у верхней кромки): небо — вниз, пока не покажутся черты
       let rs = await roots();

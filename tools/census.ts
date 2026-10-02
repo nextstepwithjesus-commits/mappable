@@ -989,10 +989,14 @@ export function census(f: Frame): Census {
         const line = s.linkAt(x, y, 6, q.kind === 'ribbon');
         const r = star ? glyphs.starRadius(atlas.byId.get(star.id)?.magnitude ?? 6, labels.zoomScaleFor(s.cam.ky)) + (atlas.byId.get(star.id)?.sex === 'f' ? 2.2 : 0) : 0;
         if (star && !(line && line.d <= 2 && star.d > r + 5)) {
-          if (!q.ends.includes(star.id)) y14foreign++;
+          if (!q.ends.includes(star.id)) {
+            y14foreign++;
+            add('Я14', q.ks, `постороннее лицо ${nameOf(star.id)}`, x, y);
+          }
           continue;
         }
         if (line && sameUnion(line.key, q)) y14ends++;
+        else add('Я14', q.ks, `не названа своя связь (${line ? line.ks : 'ничего'})`, x, y);
       }
       at += len;
     }

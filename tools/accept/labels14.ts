@@ -133,8 +133,13 @@ export const labels14: Scenario[] = [
       const named = new Set(r.g.labelBoxes.split(';').filter(Boolean).map((q) => q.slice(0, q.lastIndexOf(':'))));
       const both = hidden.filter((x) => named.has(x));
       if (both.length) return fail(`и подписаны, и скрыты: ${both.join(', ')}`);
-      // скрытая подпись встаёт при наведении на звезду (явное раскрытие)
-      const probe = hidden.find((id) => r.g.stars.some((s) => s.id === id));
+      // скрытая подпись встаёт при наведении на звезду (явное раскрытие). Проба — звезда в открытом небе: под органом неба
+      // (кнопки масштаба, строка показа) указатель наводится на орган, а у самой кромки (этап 15: в семье Давида первыми
+      // в скрытых оказались звёзды у нижней кромки и у кнопок масштаба) имени негде встать ни с какой стороны
+      const [vl, vt, vr, vb] = r.g.view.split(' ').map(Number);
+      const open = (q: { x: number; y: number }) =>
+        q.x >= vl + 30 && q.x <= vr - 30 && q.y >= vt + 30 && q.y <= vb - 30 && !r.g.ui.some((u) => q.x >= u.x - 30 && q.x <= u.x + u.w + 30 && q.y >= u.y - 30 && q.y <= u.y + u.h + 30);
+      const probe = hidden.find((id) => r.g.stars.some((s) => s.id === id && open(s)));
       if (!probe) return pass(`скрытых нет; подписей ${named.size}`);
       const st = r.g.stars.find((s) => s.id === probe)!;
       const c = (await p.locator('.sky canvas').boundingBox())!;

@@ -1059,6 +1059,7 @@ export class Sky implements SkyContext {
     this.trans = null;
     this.nodesStamp++;
     this.nodes = this.frameNodes();
+    this.fitArrays();
     this.cam.onChange();
   }
   /**
@@ -1108,6 +1109,7 @@ export class Sky implements SkyContext {
     if (!moved && !leaving.length) return;
     this.trans = { t0: performance.now(), from, to, leaving };
     this.nodes = this.frameNodes();
+    this.fitArrays();
   }
 
   constructor(canvas: HTMLCanvasElement) {
@@ -1314,6 +1316,7 @@ export class Sky implements SkyContext {
     if (this.scale && this.lambda >= 0) this.updateView();
     this.trans = null;
     this.nodes = this.frameNodes();
+    this.fitArrays();
     if (hold) {
       const lane = hold.i !== null && Number.isFinite(this.nodes[hold.i].lane) ? this.nodes[hold.i].lane : hold.lane;
       this.cam.laneTop = plan.rows.row(lane) + hold.sy / this.cam.ky;
