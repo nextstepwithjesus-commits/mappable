@@ -49,6 +49,7 @@ import type { LinkKey } from '../engine/linkkey.ts';
 import { atlasCoord } from '../engine/layout.ts';
 import { unions as ALL_UNIONS } from '../ui/reveal.ts';
 import { linkRoleOf, unionName } from '../ui/linkwords.ts';
+import { glidesOf, laneAt, starLaneOf, type StayNode } from '../engine/stays.ts';
 
 /**
  * Растушёвка неуверенного начала и конца следа (этап 12, решение 90): тот же след, плавно тающий к краю, — вместо
@@ -59,6 +60,25 @@ import { linkRoleOf, unionName } from '../ui/linkwords.ts';
 export const TRAIL_FADE = { start: 0.22, end: 0 };
 /** Часть следа за разрывом «//» (MAP-51) — бледнее: доля яркости сплошного следа. */
 export const TRAIL_PALE = 0.45;
+/**
+ * Уровень подробности семьи на небе (этап 15, решение 178; уточняет 135): 0 — небо, 1 — обзор семьи, 2 — семья. Кадр
+ * несёт его в Pass.tier (sky.ts), связи — в LinkInput.tier (links.ts).
+ */
+export type FamilyTier = 0 | 1 | 2;
+/** Пороги уровней 178, px на год у середины окна: небо — меньше sky, обзор семьи — до family, семья — от family. */
+export const FAMILY_TIER = { sky: 7, family: 24 } as const;
+/** Уровень по местному масштабу времени (px на год). */
+export const familyTier = (pxYear: number): FamilyTier => (pxYear < FAMILY_TIER.sky ? 0 : pxYear < FAMILY_TIER.family ? 1 : 2);
+/**
+ * Доля проявления того, что приходит с порогом at (px на год): 0 ниже at / √1,5, 1 выше at · √1,5, между — плавно
+ * (ТЗ § 3.1: «переходы плавные, в полосе ×1,5 масштаба»; без мигания и без памяти кадров).
+ */
+export function tierAlpha(pxYear: number, at: number): number {
+  const u = Math.log(pxYear / at) / Math.log(1.5) + 0.5;
+  const c = Math.max(0, Math.min(1, u));
+  return c * c * (3 - 2 * c);
+}
+
 /** Растушёванный хвост после последнего упоминания, px (MAP-13; ТЗ § 3.1, «коротким пунктиром» — теперь растушёвкой). */
 export const TAIL_PX = 10;
 
@@ -89,6 +109,11 @@ function parseRgba(c: string): { rgb: string; a: number } | null {
  * color), с просветами cuts. Одна линия с градиентом вдоль неё — без точек и штриха.
  */
 export function fadeLine(ctx: CanvasRenderingContext2D, a: number, b: number, y: number, color: string, k0: number, k1: number, cuts?: readonly number[]) {
+  fadeSpan(ctx, { y }, a, b, color, k0, k1, cuts);
+}
+
+/** Растушёванный участок [a, b] следа t — по его переходам (решение 173): яркость вдоль x, как у fadeLine. */
+function fadeSpan(ctx: CanvasRenderingContext2D, t: Pick<LifeTrail, 'y' | 'bends'>, a: number, b: number, color: string, k0: number, k1: number, cuts?: readonly number[], which = 3) {
   if (!(b > a + 0.5)) return;
   const c = rgbaOf(color);
   if (c) {
@@ -98,7 +123,7 @@ export function fadeLine(ctx: CanvasRenderingContext2D, a: number, b: number, y:
     ctx.strokeStyle = g;
   } else ctx.strokeStyle = color;
   ctx.beginPath();
-  gapLine(ctx, a, b, y, cuts);
+  trailPath(ctx, t, a, b, cuts, which);
   ctx.stroke();
   ctx.strokeStyle = color;
 }
@@ -137,6 +162,219 @@ export interface LifeTrail {
    * тон текста, а не цвет ветви — без цветного «хвоста кометы» (решение 170, V-8); нет — тон следа
    */
   fade?: string;
+  /**
+   * Переходы следа (этап 15, решение 173 «Отчий дом»): лицо рождается в доме отца у матери (y — высота звезды) и плавной
+   * S-кривой уходит в полосу своей жизни. Переход — часть следа лица, а не связь: тот же тон и толщина. По порядку x;
+   * нет — след прямой на высоте y.
+   */
+  bends?: Bend[];
+  /** доля яркости переходов против следа (решение 178: на обзоре неба переходы бледнее); нет — 1 */
+  bendAlpha?: number;
+}
+
+/**
+ * Переход следа (решение 173) в px холста: S-кривая (smoothstep по годам, src/engine/stays.ts, laneAt) от (xa, ya)
+ * до (xb, yb) ломаной pts = [x0, y0, x1, y1, …] слева направо.
+ */
+export interface Bend {
+  xa: number;
+  xb: number;
+  ya: number;
+  yb: number;
+  pts: number[];
+}
+
+/** Узел с переходами: у лица больше одного пребывания (договор 1). Без выделения памяти — для проверки всех узлов кадра. */
+export const hasGlides = (n: StayNode): boolean => !!n.stays && n.stays.length > 1;
+
+/**
+ * Переходы следа узла n в px холста (решение 173): выборка S-кривой laneAt по годам — шаг не крупнее 5 px по большей
+ * оси, не меньше 6 и не больше 64 точек на переход. null — переходов нет. Одна и та же выборка у следа, попадания
+ * (sky.ts, hitTrail), препятствий подписей и путей связей (links.ts, LinkStar.path).
+ */
+export function bendsOf(v: Pick<SkyContext, 'cam' | 'xOf'>, n: StayNode): Bend[] | null {
+  if (!hasGlides(n)) return null;
+  const { cam } = v;
+  const out: Bend[] = [];
+  for (const g of glidesOf(n)) {
+    const xa = cam.sx(v.xOf(g.t0));
+    const xb = cam.sx(v.xOf(g.t1));
+    // концы — на высотах горизонталей следа (полпикселя, как у trailOf): переход стыкуется с ними без ступеньки
+    const ya = Math.round(cam.sy(g.from)) + 0.5;
+    const yb = Math.round(cam.sy(g.to)) + 0.5;
+    const k = Math.max(6, Math.min(64, Math.ceil(Math.max(Math.abs(xb - xa), Math.abs(yb - ya)) / 5)));
+    const pts: number[] = [];
+    for (let j = 0; j <= k; j++) {
+      const t = g.t0 + ((g.t1 - g.t0) * j) / k;
+      if (j === 0) pts.push(xa, ya);
+      else if (j === k) pts.push(xb, yb);
+      else pts.push(cam.sx(v.xOf(t)), cam.sy(laneAt(n, t)));
+    }
+    out.push({ xa, xb, ya, yb, pts });
+  }
+  return out;
+}
+
+/** Высота следа в x (px холста): до первого перехода — звезда, на переходе — по его ломаной, после — его конец. */
+export function trailY(t: Pick<LifeTrail, 'y' | 'bends'>, x: number): number {
+  const bs = t.bends;
+  if (!bs?.length) return t.y;
+  let y = t.y;
+  for (const g of bs) {
+    if (x <= g.xa) return y;
+    if (x < g.xb) {
+      const p = g.pts;
+      for (let k = 0; k + 3 < p.length; k += 2)
+        if (x <= p[k + 2]) {
+          const w = p[k + 2] - p[k];
+          return w > 1e-9 ? p[k + 1] + ((p[k + 3] - p[k + 1]) * (x - p[k])) / w : p[k + 3];
+        }
+      return g.yb;
+    }
+    y = g.yb;
+  }
+  return y;
+}
+
+/**
+ * Отрезки следа на участке x ∈ [a, b] (px холста): горизонтали пребываний и отрезки ломаных переходов — по порядку.
+ * which: 1 — только горизонтали, 2 — только переходы, 3 — всё. Без разрывов: для свечения ветвей, препятствий подписей.
+ */
+export function trailSegs(t: Pick<LifeTrail, 'y' | 'bends'>, a: number, b: number, fn: (x0: number, y0: number, x1: number, y1: number, bend: boolean) => void, which = 3) {
+  if (!(b > a)) return;
+  const bs = t.bends;
+  if (!bs?.length) {
+    if (which & 1) fn(a, t.y, b, t.y, false);
+    return;
+  }
+  let x = a;
+  let y = t.y;
+  for (const g of bs) {
+    if (g.xb <= x) {
+      y = g.yb;
+      continue;
+    }
+    if (g.xa >= b) break;
+    if (g.xa > x && which & 1) fn(x, y, Math.min(g.xa, b), y, false);
+    if (which & 2) {
+      const lo = Math.max(x, g.xa);
+      const hi = Math.min(b, g.xb);
+      const p = g.pts;
+      for (let k = 0; k + 3 < p.length; k += 2) {
+        const x0 = p[k];
+        const x1 = p[k + 2];
+        if (x1 <= lo || x0 >= hi) continue;
+        const ya = x0 >= lo ? p[k + 1] : p[k + 1] + ((p[k + 3] - p[k + 1]) * (lo - x0)) / (x1 - x0 || 1);
+        const yb = x1 <= hi ? p[k + 3] : p[k + 1] + ((p[k + 3] - p[k + 1]) * (hi - x0)) / (x1 - x0 || 1);
+        fn(Math.max(x0, lo), ya, Math.min(x1, hi), yb, true);
+      }
+    }
+    x = Math.min(b, g.xb);
+    y = g.yb;
+    if (x >= b) return;
+  }
+  if (which & 1) fn(x, y, b, y, false);
+}
+
+/**
+ * Ломаная нарисованного следа (px холста) от звезды до конца: [x0, y0, x1, y1, …] слева направо — горизонтали
+ * пребываний и выборка переходов (решение 173). Для путей связей (links.ts, LinkStar.path): ромб на следе жены в год
+ * черты, ствол от следа матери в год рождения, разрывы следа под связями.
+ */
+export function trailPolyline(t: Pick<LifeTrail, 'x0' | 'x1' | 'y' | 'bends'>): number[] {
+  const out: number[] = [];
+  trailSegs(t, t.x0, Math.max(t.x0 + 0.01, t.x1), (ax, ay, bx, by) => {
+    const n = out.length;
+    if (!n || Math.abs(out[n - 2] - ax) > 0.01 || Math.abs(out[n - 1] - ay) > 0.01) out.push(ax, ay);
+    out.push(bx, by);
+  });
+  return out;
+}
+
+/**
+ * Отрезок ломаной (x0, y0)–(x1, y1) — в текущий путь с просветами: круги радиуса h вокруг точек следа над x разрывов
+ * (cuts — пары «x, полуширина»). Вертикаль чужой связи над переходом прерывает его так же, как горизонталь следа (Г7).
+ */
+function gapSeg(ctx: CanvasRenderingContext2D, x0: number, y0: number, x1: number, y1: number, holes: readonly number[] | null) {
+  if (!holes?.length) {
+    ctx.moveTo(x0, y0);
+    ctx.lineTo(x1, y1);
+    return;
+  }
+  const dx = x1 - x0;
+  const dy = y1 - y0;
+  const len2 = dx * dx + dy * dy;
+  if (len2 < 1e-9) return;
+  const out: [number, number][] = [];
+  for (let k = 0; k + 2 < holes.length; k += 3) {
+    // пересечение отрезка с кругом (cx, cy, r): параметры u ∈ [0, 1]
+    const fx = x0 - holes[k];
+    const fy = y0 - holes[k + 1];
+    const r = holes[k + 2];
+    const bq = 2 * (fx * dx + fy * dy);
+    const cq = fx * fx + fy * fy - r * r;
+    const disc = bq * bq - 4 * len2 * cq;
+    if (disc <= 0) continue;
+    const s = Math.sqrt(disc);
+    const u0 = (-bq - s) / (2 * len2);
+    const u1 = (-bq + s) / (2 * len2);
+    if (u1 <= 0 || u0 >= 1) continue;
+    out.push([Math.max(0, u0), Math.min(1, u1)]);
+  }
+  if (!out.length) {
+    ctx.moveTo(x0, y0);
+    ctx.lineTo(x1, y1);
+    return;
+  }
+  out.sort((p, q) => p[0] - q[0]);
+  let u = 0;
+  for (const [a, b] of out) {
+    if (a > u) {
+      ctx.moveTo(x0 + dx * u, y0 + dy * u);
+      ctx.lineTo(x0 + dx * a, y0 + dy * a);
+    }
+    u = Math.max(u, b);
+  }
+  if (u < 1) {
+    ctx.moveTo(x0 + dx * u, y0 + dy * u);
+    ctx.lineTo(x1, y1);
+  }
+}
+
+/** Просветы на переходах следа: круги (x, y на следе, полуширина) из разрывов cuts по x. */
+function bendHoles(t: Pick<LifeTrail, 'y' | 'bends'>, cuts: readonly number[] | undefined): number[] | null {
+  if (!cuts?.length || !t.bends?.length) return null;
+  const out: number[] = [];
+  for (const g of t.bends)
+    for (let k = 0; k + 1 < cuts.length; k += 2) {
+      const x = cuts[k];
+      const h = cuts[k + 1];
+      if (x + h < g.xa || x - h > g.xb) continue;
+      out.push(x, trailY(t, x), h);
+    }
+  return out.length ? out : null;
+}
+
+/**
+ * Участок следа [a, b] (px холста) — в текущий путь: горизонтали пребываний с просветами cuts (gapLine) и ломаные
+ * переходов с просветами вокруг точек пересечения. which — как у trailSegs.
+ */
+export function trailPath(ctx: CanvasRenderingContext2D, t: Pick<LifeTrail, 'y' | 'bends'>, a: number, b: number, cuts?: readonly number[], which = 3) {
+  if (!t.bends?.length) {
+    if (which & 1) gapLine(ctx, a, b, t.y, cuts);
+    return;
+  }
+  const holes = which & 2 ? bendHoles(t, cuts) : null;
+  trailSegs(
+    t,
+    a,
+    b,
+    (x0, y0, x1, y1, bend) => {
+      if (bend) gapSeg(ctx, x0, y0, x1, y1, holes);
+      else gapLine(ctx, x0, x1, y0, cuts);
+    },
+    which,
+  );
 }
 
 /** Знак разрыва «//» на горизонтальном следе у x: два косых штриха через след, между ними — просвет 3 px. */
@@ -187,11 +425,25 @@ export function gapLine(ctx: CanvasRenderingContext2D, a: number, b: number, y: 
  * «//» — бледнее. Точек и пунктира на следе нет; эпохальная дата («время не установлено») — точечный след не длиннее 60 px.
  */
 export function drawLifeTrail(ctx: CanvasRenderingContext2D, t: LifeTrail) {
+  const ba = t.bendAlpha ?? 1;
+  if (!t.bends?.length || ba >= 0.999) return lifeTrailPass(ctx, t, 3);
+  // переходы бледнее следа (решение 178): горизонтали и переходы — двумя проходами
+  lifeTrailPass(ctx, t, 1);
+  if (ba <= 0.01) return;
+  const g = ctx.globalAlpha;
+  ctx.globalAlpha = g * ba;
+  lifeTrailPass(ctx, t, 2);
+  ctx.globalAlpha = g;
+}
+
+/** Проход следа: which — 1 горизонтали пребываний, 2 переходы, 3 всё (trailSegs). */
+function lifeTrailPass(ctx: CanvasRenderingContext2D, t: LifeTrail, which: number) {
   const { x0, x1, y } = t;
   const cuts = t.cuts;
   ctx.strokeStyle = t.color;
   ctx.lineWidth = t.width;
   if (t.cls === 'epochal') {
+    if (!(which & 1)) return;
     ctx.setLineDash([1, 4]);
     ctx.beginPath();
     gapLine(ctx, x0, Math.min(x1, x0 + 60), y, cuts);
@@ -203,24 +455,25 @@ export function drawLifeTrail(ctx: CanvasRenderingContext2D, t: LifeTrail) {
   // оценочное рождение: начало следа до bHi проявляется от звезды (но не дальше засвидетельствованного)
   const from = Math.max(x0, Math.min(t.sureFrom ?? x0, solidTo));
   const fc = t.fade ?? t.color;
-  if (from > x0 + 0.5) fadeLine(ctx, x0, from, y, fc, TRAIL_FADE.start, 1, cuts);
+  if (from > x0 + 0.5) fadeSpan(ctx, t, x0, from, fc, TRAIL_FADE.start, 1, cuts, which);
   // разрыв (MAP-51): сплошная часть кончается у brk, за знаком «//» — бледнее до конца засвидетельствованного
   const cut = t.brk !== undefined && t.brk > from + 4 && t.brk < solidTo - 4 ? t.brk : null;
   const solidEnd = cut !== null ? cut - BREAK.gap / 2 - 2 : solidTo;
   if (solidEnd > from + 0.5) {
     if (t.dash?.length) ctx.setLineDash(t.dash as number[]);
+    ctx.strokeStyle = t.color;
     ctx.beginPath();
-    gapLine(ctx, from, solidEnd, y, cuts);
+    trailPath(ctx, t, from, solidEnd, cuts, which);
     ctx.stroke();
     if (t.dash?.length) ctx.setLineDash([]);
   }
   const tail = (!t.known || t.cls === 'estimated') && x1 > solidTo + 0.5;
   if (cut !== null) {
-    drawBreak(ctx, cut, y, t.color);
-    fadeLine(ctx, cut + BREAK.gap / 2 + 2, solidTo, y, fc, TRAIL_PALE, TRAIL_PALE, cuts);
+    if (which & 1) drawBreak(ctx, cut, trailY(t, cut), t.color);
+    fadeSpan(ctx, t, cut + BREAK.gap / 2 + 2, solidTo, fc, TRAIL_PALE, TRAIL_PALE, cuts, which);
   }
   // неизвестная или оценочная смерть: след тает к концу интервала смерти (к концу короткого хвоста)
-  if (tail) fadeLine(ctx, solidTo, x1, y, fc, cut !== null ? TRAIL_PALE : 1, TRAIL_FADE.end, cuts);
+  if (tail) fadeSpan(ctx, t, solidTo, x1, fc, cut !== null ? TRAIL_PALE : 1, TRAIL_FADE.end, cuts, which);
 }
 
 /**
@@ -242,7 +495,10 @@ export function trailOf(v: SkyContext, i: number, out: LifeTrail): LifeTrail | n
   const known = c.d !== null;
   const loose = c.cls === 'estimated' || c.cls === 'epochal';
   out.x0 = x0;
-  out.y = Math.round(cam.sy(n.lane)) + 0.5;
+  // звезда — в полосе рождения (решение 173), дальше след идёт по пребываниям и переходам
+  out.y = Math.round(cam.sy(starLaneOf(n))) + 0.5;
+  out.bends = hasGlides(n) ? (bendsOf(v, n) ?? undefined) : undefined;
+  out.bendAlpha = undefined;
   out.cls = c.cls;
   out.known = known;
   out.solidTo = sure;
@@ -302,7 +558,7 @@ export function bracketOf(v: SkyContext, i: number, out: EpochBracket): EpochBra
   const { cam } = v;
   out.x0 = cam.sx(v.xOf(c.bLo));
   out.x1 = cam.sx(v.xOf(c.bHi));
-  out.y = Math.round(cam.sy(n.lane)) + 0.5;
+  out.y = Math.round(cam.sy(starLaneOf(n))) + 0.5;
   return out;
 }
 
@@ -458,6 +714,13 @@ export function branchAlpha(bp: Pick<BranchPaint, 'a'>, emph: number, intro = 1)
 }
 
 /**
+ * Яркость переходов против следа (решения 173, 178): на небе (меньше 7 px на год) — BEND_SKY, к обзору семьи — плавно
+ * в полную силу (полоса ×1,5 масштаба).
+ */
+export const BEND_SKY = 0.45;
+export const bendAlpha = (p: Pick<Pass, 'pxYear'>): number => BEND_SKY + (1 - BEND_SKY) * tierAlpha(p.pxYear ?? FAMILY_TIER.family, FAMILY_TIER.sky);
+
+/**
  * Следы жизни видимых лиц (слой «следы жизни»). На обзоре (полоса ниже 5 px) — тоньше и бледнее. Потомки выбранного
  * лица — цветом своей ветви со свечением, предки — с мягким свечением (решение 69; branches.ts).
  */
@@ -477,9 +740,12 @@ export function drawTrails(v: SkyContext, p: Pass) {
       const bp = bf.paint(id);
       if (bp ? !glows(bp.gen, ky < 5) : !bf.ancestor(id)) continue;
       if (!trailOf(v, i, t) || t.x1 < -8 || t.x0 > cam.w + 8) continue;
-      // свечение ветви — только под сплошной частью следа: тающий хвост не светится (решение 170, V-8)
-      if (bp) glow.add(bp.color, branchAlpha(bp, p.emph(id), intro), t.x0, t.y, Math.max(t.x0, Math.min(t.x1, t.solidTo)), t.y);
-      else anc.add(pal.ink, intro, t.x0, t.y, t.x1, t.y);
+      // свечение ветви — только под сплошной частью следа: тающий хвост не светится (решение 170, V-8); по переходам
+      // следа — тоже (решение 173: переход — часть следа)
+      if (bp) {
+        const a = branchAlpha(bp, p.emph(id), intro);
+        trailSegs(t, t.x0, Math.max(t.x0, Math.min(t.x1, t.solidTo)), (x0, y0, x1, y1) => glow.add(bp.color, a, x0, y0, x1, y1));
+      } else trailSegs(t, t.x0, t.x1, (x0, y0, x1, y1) => anc.add(pal.ink, intro, x0, y0, x1, y1));
     }
     anc.flush(ctx, bf.theme === 'night');
     glow.flush(ctx, bf.theme === 'night');
@@ -509,8 +775,15 @@ export function drawTrails(v: SkyContext, p: Pass) {
       t.cuts = p.cuts?.get(i);
       t.fade = undefined;
     }
+    // переходы (решение 173): на небе — бледнее следа, на обзоре семьи и ближе — в полную силу (решение 178); у выделенных —
+    // как сам след
+    if (t.bends) t.bendAlpha = bp || p.s.highlight?.has(n.person) ? 1 : bendAlpha(p);
     drawLifeTrail(ctx, t);
-    if (p.lines && t.x1 > t.x0 + 1 && t.x1 > 0 && t.x0 < cam.w) p.lines.add({ x: t.x0, y: t.y - 1.5, w: t.x1 - t.x0, h: 3 });
+    if (p.lines && t.x1 > t.x0 + 1 && t.x1 > 0 && t.x0 < cam.w) {
+      const lines = p.lines;
+      if (!t.bends) lines.add({ x: t.x0, y: t.y - 1.5, w: t.x1 - t.x0, h: 3 });
+      else trailSegs(t, t.x0, t.x1, (x0, y0, x1, y1) => lines.add({ x: Math.min(x0, x1), y: Math.min(y0, y1) - 1.5, w: Math.abs(x1 - x0), h: Math.abs(y1 - y0) + 3 }));
+    }
     if (p.shown && t.brk !== undefined && t.brk > v.letterW && t.brk < cam.w && t.y > v.openTop && t.y < cam.vp.b) p.shown.breaks.add(n.person);
   }
   // лица «время не установлено» — скобкой вместо следа (MAP-52)
@@ -948,8 +1221,9 @@ export function drawDescents(v: SkyContext, p: Pass): FamilyNote[] {
     if (pi !== undefined && !v.drawn(pi)) continue;
     // родитель скрыт рабочим набором или свёрткой (J4, J5): связь не рисуется — её конец висел бы в пустоте
     if (n.layoutParent && v.hides(n.layoutParent)) continue;
-    const y0 = cam.sy(n.parentLane);
-    const y1 = cam.sy(n.lane);
+    // отвод — от следа родителя в год рождения ребёнка к звезде ребёнка (полоса рождения; решение 173)
+    const y0 = pi !== undefined ? cam.sy(laneAt(v.nodes[pi], n.born ?? n.t0)) : cam.sy(n.parentLane);
+    const y1 = cam.sy(starLaneOf(n));
     // у лица со знаком у первого свидетельства (решение 38; MAP-69) отвод приходит в оценку рождения — внутрь полосы
     // промежутка рождения, а не в год знака: иначе он висел бы за концом следа родителя
     const x = Math.round(cam.sx(n.born !== null && n.born !== undefined ? v.xOf(n.born) : v.X0[i])) + 0.5;
@@ -1029,7 +1303,7 @@ export function drawDescents(v: SkyContext, p: Pass): FamilyNote[] {
         if (g.mother) {
           const mi2 = v.indexOf(g.mother);
           if (mi2 !== undefined && !v.hides(g.mother)) {
-            const my = cam.sy(v.nodes[mi2].lane);
+            const my = cam.sy(laneAt(v.nodes[mi2], v.nodes[cl[0].i].t0));
             if (my > lo + 1 && my < hi - 1 && my !== g.y0) {
               knot.y = my;
               knot.color = alpha(pal.ink2, 0.9 * eBase);
@@ -1134,10 +1408,10 @@ export function drawDescents(v: SkyContext, p: Pass): FamilyNote[] {
       const n = v.nodes[i];
       if (!n.ghost) continue;
       const ri = v.indexOf(n.person);
-      const husband = (ri !== undefined ? v.nodes[ri].satelliteOf : null) ?? byId.get(n.person)?.spouses[0]?.id ?? null;
+      const husband = n.satelliteOf ?? (ri !== undefined ? v.nodes[ri].satelliteOf : null) ?? byId.get(n.person)?.spouses[0]?.id ?? null;
       const q = byId.get(n.person);
       if (!q) continue;
-      notes.push({ text: ghostNote(n.person, husband), x: cam.sx(v.X0[i]), y: cam.sy(n.lane), at: 'star', r: starRadius(q.magnitude, p.zoomScale) });
+      notes.push({ text: ghostNote(n.person, husband), x: cam.sx(v.X0[i]), y: cam.sy(starLaneOf(n)), at: 'star', r: starRadius(q.magnitude, p.zoomScale) });
     }
   return notes;
 }
@@ -1152,7 +1426,8 @@ function collectMarriages(v: SkyContext, p: Pass, out: FamilyNote[]) {
   const hl = p.s.highlight;
   for (const i of p.vis) {
     const n = v.nodes[i];
-    if (!n.satelliteOf) continue;
+    // призрак бездетного брака (решение 173) — без знака «‖»: его брак рисует черта союза (links.ts, LinkPath.childless)
+    if (!n.satelliteOf || n.ghost) continue;
     // пара с точкой союза на небе «набор» (решение 76): супругов соединяют скобки к точке — знака «‖» нет
     if (p.unionPairs?.has(`${n.satelliteOf}|${n.person}`)) continue;
     const hi = v.indexOf(n.satelliteOf);
@@ -1166,8 +1441,8 @@ function collectMarriages(v: SkyContext, p: Pass, out: FamilyNote[]) {
       at: 'marriage',
       x: Math.max(x, xw + 6),
       xMin: xw + 6,
-      yH: cam.sy(v.nodes[hi].lane),
-      yW: cam.sy(n.lane),
+      yH: cam.sy(laneAt(v.nodes[hi], fc ?? n.t0)),
+      yW: cam.sy(laneAt(n, fc ?? n.t0)),
       near: cam.ky * 3.2,
       color: lit ? alpha(pal.ink, Math.min(1, e)) : alpha(pal.ink3, 0.8 * e),
       alpha: ctx.globalAlpha,
@@ -1217,12 +1492,13 @@ export function drawGhostNotes(v: SkyContext, p: Pass) {
   const notes: FamilyNote[] = [];
   for (const i of p.vis) {
     const n = v.nodes[i];
-    if (!n.ghost) continue;
+    // призраки и их подписи — на масштабе семьи (решение 178); у выделенных (семья выбранного) — и раньше
+    if (!n.ghost || !(p.tier >= 2 || p.s.highlight?.has(n.person)) || p.starAlpha(i) < 0.5) continue;
     const ri = v.indexOf(n.person);
-    const husband = (ri !== undefined ? v.nodes[ri].satelliteOf : null) ?? byId.get(n.person)?.spouses[0]?.id ?? null;
+    const husband = n.satelliteOf ?? (ri !== undefined ? v.nodes[ri].satelliteOf : null) ?? byId.get(n.person)?.spouses[0]?.id ?? null;
     const q = byId.get(n.person);
     if (!q) continue;
-    notes.push({ text: ghostNote(n.person, husband), x: cam.sx(v.X0[i]), y: cam.sy(n.lane), at: 'star', r: starRadius(q.magnitude, p.zoomScale) });
+    notes.push({ text: ghostNote(n.person, husband), x: cam.sx(v.X0[i]), y: cam.sy(starLaneOf(n)), at: 'star', r: starRadius(q.magnitude, p.zoomScale) });
   }
   placeNotes(v, p, notes);
 }
@@ -1481,6 +1757,12 @@ export function linkLooks(v: SkyContext, p: Pass, d: Pick<LinkDraw, 'lit' | 'sel
     cache = v.labelCache;
   }
   const level = p.level;
+  // уровни подробности семьи (решение 178): на небе (меньше 7 px на год) — только связи структурных лиц и выбранного,
+  // с обзора семьи — все отводы и черты; бездетные браки — на масштабе семьи (от 24 px на год) и у выбранного. Переходы —
+  // плавные, в полосе ×1,5 масштаба (tierAlpha)
+  const pxYear = p.pxYear ?? Infinity;
+  const ctxA = tierAlpha(pxYear, FAMILY_TIER.sky);
+  const famA = tierAlpha(pxYear, FAMILY_TIER.family);
   /**
    * доля видимости подписи лица на этом масштабе (0…1): линия проявляется плавно в полосе уровней до порога подписи —
    * без мигания и без памяти кадров (два одинаковых кадра одинаковы)
@@ -1533,8 +1815,10 @@ export function linkLooks(v: SkyContext, p: Pass, d: Pick<LinkDraw, 'lit' | 'sel
     let out: LinkLook;
     if (!c.subj || work) out = { tier: c.tier, a: 1 };
     else {
-      let a = 0;
-      for (const id of c.subj) a = Math.max(a, shown(id));
+      // структурные — по порогу подписи их лица и все с обзора семьи; контекстные — только с обзора семьи (решение 178)
+      let a = ctxA;
+      if (c.tier === 1) for (const id of c.subj) a = Math.max(a, shown(id));
+      if (q.childless) a = Math.min(a, famA);
       out = { tier: c.tier, a };
     }
     memo.set(q, out);
@@ -1618,12 +1902,16 @@ export function lookOf(v: SkyContext, p: Pass, d: LinkDraw): (q: LinkPath) => Li
 
 // ---------- след родителя до узла — тоже связь (этап 14, решение 159) ----------
 
-/** Станция связи на следе родителя: x последнего узла союза на этом следе (или начала его линии на этой строке), px кадра связей. */
+/**
+ * Станции связей на участке следа родителя: x узлов его союзов на этом участке (горизонталь одного пребывания, решение
+ * 173), px кадра связей.
+ */
 interface TrailStations {
   person: string;
-  /** звезда родителя, px кадра */
+  /** начало участка: звезда родителя (первое пребывание) или конец перехода в это пребывание, px кадра */
   x: number;
   y: number;
+  /** радиус знака у звезды (первое пребывание); у пребывания после перехода — 0 */
   r: number;
   /** союзы по порядку x станций */
   st: { x: number; union: string }[];
@@ -1632,8 +1920,9 @@ const stationCache = new WeakMap<LinkFrame, Map<number, TrailStations[]>>();
 
 /**
  * Станции связей на следах родителей кадра (решение 159): у каждого родителя — x узлов его союзов на его следе и начал
- * линий его союзов на его строке (черта брака к узлу на следе жены, ступенька лестницы союзов). Один раз на кадр связей,
- * по строкам.
+ * линий его союзов на его строке (черта брака к узлу на следе жены, ступенька лестницы союзов). След с переходами
+ * (решение 173) делится на участки по пребываниям: станции считаются на своём участке, от его начала. Один раз на кадр
+ * связей, по строкам.
  */
 function stationsOf(v: SkyContext, d: LinkDraw): Map<number, TrailStations[]> {
   let m = stationCache.get(d.frame);
@@ -1641,14 +1930,39 @@ function stationsOf(v: SkyContext, d: LinkDraw): Map<number, TrailStations[]> {
   m = new Map();
   const { cam } = v;
   const per = new Map<string, TrailStations>();
-  const of = (id: string): TrailStations | null => {
-    let t = per.get(id);
-    if (t) return t;
+  const shapes = new Map<string, { x: number; y: number; r: number; bends: Bend[] | null } | null>();
+  const shapeOf = (id: string) => {
+    if (shapes.has(id)) return shapes.get(id)!;
     const i = v.indexOf(id);
     const q = byId.get(id);
-    if (i === undefined || !q || !v.drawn(i) || v.hides(id)) return null;
-    t = { person: id, x: cam.sx(v.X0[i]) - d.dx, y: cam.sy(v.nodes[i].lane) - d.dy, r: starRadius(q.magnitude, 1) + (q.sex === 'f' ? 2.2 : 0), st: [] };
-    per.set(id, t);
+    let out: { x: number; y: number; r: number; bends: Bend[] | null } | null = null;
+    if (i !== undefined && q && v.drawn(i) && !v.hides(id)) {
+      const n = v.nodes[i];
+      // переходы — в px кадра связей (без сдвига кадра)
+      const bends = bendsOf(v, n)?.map((g) => ({ xa: g.xa - d.dx, xb: g.xb - d.dx, ya: g.ya - d.dy, yb: g.yb - d.dy, pts: g.pts.map((c, k) => c - (k % 2 ? d.dy : d.dx)) })) ?? null;
+      out = { x: cam.sx(v.X0[i]) - d.dx, y: cam.sy(starLaneOf(n)) - d.dy, r: starRadius(q.magnitude, 1) + (q.sex === 'f' ? 2.2 : 0), bends };
+    }
+    shapes.set(id, out);
+    return out;
+  };
+  /** участок следа лица id над x на высоте y (px кадра): его станции; null — там не горизонталь его следа */
+  const of = (id: string, x: number, y: number): TrailStations | null => {
+    const sh = shapeOf(id);
+    if (!sh) return null;
+    let x0 = sh.x;
+    let y0 = sh.y;
+    let first = true;
+    for (const g of sh.bends ?? []) {
+      if (x < g.xa) break;
+      if (x <= g.xb) return null;
+      x0 = g.xb;
+      y0 = g.yb;
+      first = false;
+    }
+    if (Math.abs(y - y0) >= 0.75) return null;
+    const key = `${id}@${Math.round(y0 * 4)}`;
+    let t = per.get(key);
+    if (!t) per.set(key, (t = { person: id, x: x0, y: y0, r: first ? sh.r : 0, st: [] }));
     return t;
   };
   const add = (t: TrailStations, x: number, union: string) => {
@@ -1662,8 +1976,8 @@ function stationsOf(v: SkyContext, d: LinkDraw): Map<number, TrailStations[]> {
     // узел союза, чью связь рисует только лента (станция маршрута ленты, решение 79): след до него — это шаг ленты, а
     // не связь союза; её ловит нарисованная нить (ribbons.ts, ribbonAt)
     if (n.kind !== 'union' || d.frame.ribbonOnly?.has(n.union)) continue;
-    const t = of(n.owner);
-    if (t && Math.abs(n.y - t.y) < 0.75 && n.x > t.x) add(t, n.x, n.union);
+    const t = of(n.owner, n.x, n.y);
+    if (t && n.x > t.x) add(t, n.x, n.union);
   }
   for (const q of d.frame.paths) {
     if (!q.union || q.kind === 'ribbon' || q.when === 'full') continue;
@@ -1671,9 +1985,10 @@ function stationsOf(v: SkyContext, d: LinkDraw): Map<number, TrailStations[]> {
     if (!u) continue;
     for (const par of [u.a, u.b]) {
       if (!par) continue;
-      const t = of(par);
-      if (!t) continue;
-      for (let k = 0; k + 1 < q.pts.length; k += 2) if (Math.abs(q.pts[k + 1] - t.y) < 0.75 && q.pts[k] > t.x + t.r) add(t, q.pts[k], q.union);
+      for (let k = 0; k + 1 < q.pts.length; k += 2) {
+        const t = of(par, q.pts[k], q.pts[k + 1]);
+        if (t && q.pts[k] > t.x + t.r) add(t, q.pts[k], q.union);
+      }
     }
   }
   for (const t of per.values()) {
@@ -1841,6 +2156,15 @@ export const STUB_GHOST_R = 3.5;
 export const FAINT_A = 0.5;
 /** Черта брака «‖»: две черты 1 px, между осями 3,2 px (K1 § 2.2). */
 export const BAR_GAP = 3.2;
+/**
+ * Черта брака по виду союза (решение 174; links.ts, LinkPath.bar): жена — двойная «‖», наложница — одинарная «|»,
+ * левират — двойная штрихом (штрих — «по закону», решение 138: начертание даёт style 'dash'), брак в Писании не назван
+ * (союз виден только через детей: Иуда и Фамарь, Лот и дочери) — тонкая одинарная. Без вида — «‖», как прежде.
+ */
+export const barOffsets = (q: Pick<LinkPath, 'kind' | 'bar'>): number[] => (q.kind !== 'bar' ? [0] : q.bar === 'concubine' || q.bar === 'none' ? [0] : [-BAR_GAP / 2, BAR_GAP / 2]);
+/** Тонкая черта «брак не назван» — доля толщины линии яруса. */
+export const BAR_THIN = 0.6;
+export const barWidth = (q: Pick<LinkPath, 'kind' | 'bar'>): number => (q.kind === 'bar' && q.bar === 'none' ? BAR_THIN : 1);
 /** Тон связи — --ink-2 с этой непрозрачностью (тон следа — 0,55): стволы и зубцы читаются чуть яснее следов. */
 export const LINK_TONE = 0.72;
 
@@ -1996,7 +2320,7 @@ export function drawLinks(v: SkyContext, p: Pass, d: LinkDraw) {
       } else pen = false;
     }
   };
-  const offsets = (q: LinkPath) => (q.kind === 'bar' ? [-BAR_GAP / 2, BAR_GAP / 2] : [0]);
+  const offsets = barOffsets;
   // главный ярус — после остальных: с ореолом цвета неба поверх контекста (решение 135)
   const main: { q: LinkPath; a: number; gaps: Map<number, [number, number][]> | null; color: string }[] = [];
   for (let i = 0; i < paths.length; i++) {
@@ -2027,7 +2351,7 @@ export function drawLinks(v: SkyContext, p: Pass, d: LinkDraw) {
     }
     ctx.globalAlpha = a;
     ctx.strokeStyle = tone;
-    ctx.lineWidth = hot ? 2 : TIER_WIDTH[l.tier];
+    ctx.lineWidth = (hot ? 2 : TIER_WIDTH[l.tier]) * barWidth(q);
     ctx.setLineDash(LINK_DASH[q.style]);
     ctx.beginPath();
     for (const off of offsets(q)) trace(q, gaps, off);
@@ -2037,16 +2361,16 @@ export function drawLinks(v: SkyContext, p: Pass, d: LinkDraw) {
     // ореол цвета неба: прямые связи выбранного отделены от фона (G10)
     ctx.setLineDash([]);
     ctx.strokeStyle = pal.halo;
-    ctx.lineWidth = TIER_WIDTH[0] + 2 * TIER_HALO;
     for (const m of main) {
       ctx.globalAlpha = m.a;
+      ctx.lineWidth = TIER_WIDTH[0] * barWidth(m.q) + 2 * TIER_HALO;
       ctx.beginPath();
       for (const off of offsets(m.q)) trace(m.q, m.gaps, off);
       ctx.stroke();
     }
-    ctx.lineWidth = TIER_WIDTH[0];
     for (const m of main) {
       ctx.globalAlpha = m.a;
+      ctx.lineWidth = TIER_WIDTH[0] * barWidth(m.q);
       ctx.strokeStyle = m.color;
       ctx.setLineDash(LINK_DASH[m.q.style]);
       ctx.beginPath();
@@ -2086,7 +2410,7 @@ const nameOf = (id: string) => byId.get(id)?.name ?? id;
 function nameAt(v: SkyContext, id: string): string {
   const i = v.indexOf(id);
   const n = i === undefined ? undefined : v.model.nodes[i];
-  return n ? `${nameOf(id)}, ${atlasCoord(n.t0, n.lane)}` : nameOf(id);
+  return n ? `${nameOf(id)}, ${atlasCoord(n.t0, starLaneOf(n))}` : nameOf(id);
 }
 /** Родство дочери (сына), стоящей у мужа (§ 4.2 п. 1): «дочь Ревекка — жена Исаака»; падеж — ru.ts, без него — через тире. */
 function kidAway(kid: string, parent: string): string {
@@ -2228,7 +2552,7 @@ function ownStarNear(v: SkyContext, id: string, x: number, y: number): boolean {
   const i = v.indexOf(id);
   if (i === undefined || !v.drawn(i)) return false;
   const sx = cam.sx(v.X0[i]);
-  const sy = cam.sy(v.nodes[i].lane);
+  const sy = cam.sy(starLaneOf(v.nodes[i]));
   if (sx < v.letterW || sx > cam.w || sy < v.openTop || sy > cam.vp.b) return false;
   return Math.hypot(sx - x, sy - y) < OWN_NAME_NEAR;
 }
@@ -2311,7 +2635,7 @@ export function drawLinkLabels(v: SkyContext, p: Pass, d: LinkDraw, late = false
     const i = v.indexOf(id);
     if (i === undefined || !v.drawn(i)) return false;
     const x = cam.sx(v.X0[i]);
-    const y = cam.sy(v.nodes[i].lane);
+    const y = cam.sy(starLaneOf(v.nodes[i]));
     return x >= vp.l && x <= vp.r && y >= v.openTop && y <= vp.b;
   };
   const named = new Set<string>();
@@ -2403,12 +2727,12 @@ export function drawPlanStubs(v: SkyContext, p: Pass, stubs: readonly { from: st
     const q = byId.get(st.from);
     if (!q) continue;
     const x = cam.sx(v.X0[i]);
-    const y = cam.sy(n.lane);
+    const y = cam.sy(starLaneOf(n));
     if (x < v.letterW || x > cam.w || y < v.openTop || y > cam.vp.b) continue;
     // куда смотрит обрывок: к строке лица вне показа на общей раскладке; несколько обрывков одного лица — веером
     const j = v.indexOf(st.to);
-    const lf = v.model.nodes[i].lane;
-    const lt = j === undefined ? lf : v.model.nodes[j].lane;
+    const lf = starLaneOf(v.model.nodes[i]);
+    const lt = j === undefined ? lf : starLaneOf(v.model.nodes[j]);
     const dir = lt > lf ? -1 : 1;
     const k = seen.get(`${st.from}${dir}`) ?? 0;
     seen.set(`${st.from}${dir}`, k + 1);

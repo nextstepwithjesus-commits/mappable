@@ -41,7 +41,9 @@ import { refText } from '../engine/kinship.ts';
 import { BOOK_INDEX, parseRef } from '../engine/books.ts';
 import { cross, hits, type Rect } from './rect.ts';
 import type { Pass, SkyContext } from './sky.ts';
-import { drawMotherNames } from './trails.ts';
+import { drawMotherNames, hasGlides } from './trails.ts';
+import { laneAt, starLaneOf } from '../engine/stays.ts';
+import type { NodeRow } from '../data/atlas.ts';
 
 /** Сколько самых значимых живых подписать сверх обычных порогов, когда стоит меридиан (D13; IX-34). */
 const MERIDIAN_EXTRA = 8;
@@ -574,7 +576,7 @@ export class LabelCache {
         const kx = KX_MIN * Math.pow(2, lv / 2);
         const ky = v.cam.kyFor(kx);
         const r = starRadius(p.magnitude, zoomScaleFor(ky));
-        const b = spot(sd, v.X0[i] * kx, -v.rowOf(nodes[i].lane) * ky, r, full[i], size, king).box;
+        const b = spot(sd, v.X0[i] * kx, -v.rowOf(starLaneOf(nodes[i])) * ky, r, full[i], size, king).box;
         return [b.x, b.y, b.x + b.w, b.y + b.h];
       };
       const fits = (lv: number, b: number[]) => {
@@ -907,7 +909,7 @@ export function knockTrail(v: SkyContext, p: Pass, i: number, at: { box: Rect; s
   const clouds = !s.onlyLines && !p.work && p.starDetail < 0.99;
   if (!drawn || clouds) return null;
   const x = v.cam.sx(v.X0[i]);
-  const yt = Math.round(v.cam.sy(n.lane)) + 0.5;
+  const yt = Math.round(v.cam.sy(starLaneOf(n))) + 0.5;
   const band = (a: number, b: number): Rect => ({ x: a, y: yt - 2.5, w: b - a, h: 5 });
   const off = spine ? p.offRibbon : undefined;
   if (at.side === 'r') {
@@ -940,7 +942,8 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): Label
   const n = v.nodes[i];
   const q = byId.get(n.person)!;
   const x = cam.sx(v.X0[i]);
-  const y = cam.sy(n.lane);
+  // подпись — у звезды, в полосе рождения (решение 173)
+  const y = cam.sy(starLaneOf(n));
   // звезда за краем окна не подписывается: для выбранных есть указатели у края (MOB-01); звезда под органами неба и
   // карточкой — тоже: имя у невидимой звезды читалось бы подписью соседней (К4: «Аса» у кнопок масштаба на телефоне)
   if (x < v.letterW || x > cam.w || y < v.openTop || y > cam.vp.b) return null;
@@ -1471,7 +1474,7 @@ export function namesakesInView(v: SkyContext, p: Pass): Map<string, string> {
     // (звёзды, собранные в скопление старшего, не нарисованы: их называет «+N» его подписи — не скрытые подписи)
     if (n.ghost || !v.drawn(i) || !p.starShown(i) || p.starAlpha(i) <= 0.5) continue;
     const x = cam.sx(v.X0[i]);
-    const y = cam.sy(n.lane);
+    const y = cam.sy(starLaneOf(n));
     if (x < v.letterW || x > cam.w || y < v.openTop || y > cam.vp.b) continue;
     const name = byId.get(n.person)!.name;
     const a = byName.get(name);
@@ -1569,13 +1572,13 @@ export function drawStarLabels(v: SkyContext, p: Pass, between?: () => void) {
       const q = byId.get(v.nodes[i].person)!;
       if (i === ij || q.magnitude > 1 || !shown(i) || !(cache.nameW[i] > 0)) continue;
       const x = cam.sx(v.X0[i]);
-      const y = cam.sy(v.nodes[i].lane);
+      const y = cam.sy(starLaneOf(v.nodes[i]));
       if (x < v.letterW || x > cam.w || y < v.openTop || y > cam.vp.b) continue;
       avoid.push(spot('r', x, y, starRadius(q.magnitude, p.zoomScale), cache.nameW[i], nameSize(q.magnitude, v.coarse)).box);
     }
     // на обзоре — первым и слева от звезды, на уровне лент: над ними, затем под ними (MAP-81); соседи уступают место
     const jx = cam.sx(v.X0[ij]);
-    const jy = cam.sy(v.nodes[ij].lane);
+    const jy = cam.sy(starLaneOf(v.nodes[ij]));
     const R = starRadius(0, p.zoomScale) * 2.4;
     const half = ((ASC + DESC) * nameSize(0, v.coarse)) / 2;
     // строка — над лентами (нити косы и их поле — до 6 px от оси), затем под ними
@@ -1695,7 +1698,7 @@ export function drawStarLabels(v: SkyContext, p: Pass, between?: () => void) {
       if (n.ghost || p.labeled.has(i)) continue;
       const k = hl.get(n.person);
       if (k !== 'sure' && k !== 'likely') continue;
-      const y = cam.sy(n.lane);
+      const y = cam.sy(starLaneOf(n));
       if (y < top || y > bottom) continue;
       extra.push(i);
     }
@@ -1724,7 +1727,7 @@ export function drawStarLabels(v: SkyContext, p: Pass, between?: () => void) {
     const thin = !!p.thinned?.has(i);
     if (n.ghost || !v.drawn(i) || p.starAlpha(i) <= 0.5 || (!thin && !p.starShown(i))) continue;
     const x = cam.sx(v.X0[i]);
-    const y = cam.sy(n.lane);
+    const y = cam.sy(starLaneOf(n));
     if (x < v.letterW || x > cam.w || y < v.openTop || y > cam.vp.b) continue;
     if (thin) {
       hidden.push(i);
@@ -1763,7 +1766,8 @@ function stickyNames(v: SkyContext, p: Pass) {
     const x0 = cam.sx(v.X0[i]);
     const x1 = cam.sx(v.X1[i]);
     if (x0 >= cam.vp.l || x1 < left + 60) continue;
-    const y = cam.sy(n.lane);
+    // след у левого края — в полосе того года (решение 173: пребывание или переход)
+    const y = trailYAt(v, n, left);
     if (y < v.openTop || y > cam.vp.b) continue;
     list.push(i);
   }
@@ -1776,7 +1780,9 @@ function stickyNames(v: SkyContext, p: Pass) {
     const w = ctx.measureText(text).width;
     const x1 = cam.sx(v.X1[i]);
     if (left + w + 8 > x1) continue;
-    const y = Math.round(cam.sy(n.lane)) + 0.5;
+    const y = Math.round(trailYAt(v, n, left)) + 0.5;
+    // подпись лежит на следе: под ней след не переходит в другую полосу
+    if (hasGlides(n) && Math.abs(trailYAt(v, n, left + w + 8) - y) > 1) continue;
     const ty = y - 3;
     const b = claim(v, p, [textBox(left, ty, w, size)], 'sticky', q.name, { id: q.id });
     if (!b) continue;
@@ -1791,6 +1797,11 @@ function stickyNames(v: SkyContext, p: Pass) {
     ctx.globalAlpha = 1;
     p.labeled.add(i);
   }
+}
+
+/** Высота следа узла n над x (px холста): полоса в год под x (договор 1, src/engine/stays.ts, laneAt). */
+function trailYAt(v: Pick<SkyContext, 'cam' | 'tOf'>, n: NodeRow, x: number): number {
+  return v.cam.sy(hasGlides(n) ? laneAt(n, v.tOf(v.cam.wx(x))) : n.lane);
 }
 
 // ---------- названия созвездий ----------

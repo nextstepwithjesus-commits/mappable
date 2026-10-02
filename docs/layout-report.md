@@ -9,9 +9,9 @@
  "persons": 2684,
  "lanes": 337,
  "corridorWidth": 13,
- "crossings": 144,
- "corridorCrossings": 67,
- "dropLength": 5296,
+ "crossings": 128,
+ "corridorCrossings": 48,
+ "dropLength": 5065,
  "blocks": 566,
  "clusters": 21,
  "clustered": 700
@@ -25,11 +25,11 @@
 ```
 {
  "persons": 2684,
- "lanes": 337,
+ "lanes": 335,
  "corridorWidth": 13,
- "crossings": 131,
- "corridorCrossings": 64,
- "dropLength": 5271,
+ "crossings": 111,
+ "corridorCrossings": 45,
+ "dropLength": 5017,
  "blocks": 566,
  "clusters": 21,
  "clustered": 700
@@ -43,11 +43,11 @@
 ```
 {
  "persons": 2684,
- "lanes": 333,
+ "lanes": 330,
  "corridorWidth": 11,
- "crossings": 130,
- "corridorCrossings": 51,
- "dropLength": 5155,
+ "crossings": 131,
+ "corridorCrossings": 37,
+ "dropLength": 4896,
  "blocks": 566,
  "clusters": 21,
  "clustered": 700
@@ -61,11 +61,11 @@
 ```
 {
  "persons": 2684,
- "lanes": 334,
+ "lanes": 330,
  "corridorWidth": 15,
- "crossings": 144,
- "corridorCrossings": 80,
- "dropLength": 5205,
+ "crossings": 116,
+ "corridorCrossings": 43,
+ "dropLength": 4932,
  "blocks": 566,
  "clusters": 21,
  "clustered": 700

@@ -13,7 +13,8 @@ import { loadBible, ROOT } from './bible.ts';
 import { buildGraph, primaryChildren } from '../src/engine/graph.ts';
 import { solveChronology, noteModelDifferences, modelDependence, lifeDatesOf, MODELS, type ChronoResult, type WhenSpan, type YearBasis, type BasisKind } from '../src/engine/chronology.ts';
 import type { LifeDates } from '../src/engine/years.ts';
-import { computeLayout, computeOutlines, packSpan, GHOST_SPAN, TRAIL_KINDS, type LineStep, type LayoutResult, type ListDef, type Outline } from '../src/engine/layout.ts';
+import { computeOutlines, packSpan, GHOST_SPAN, TRAIL_KINDS, type LineStep, type ListDef, type Outline } from '../src/engine/layout.ts';
+import { computeHouseLayout, type HouseLayout } from '../src/engine/house.ts';
 import { buildTimeScale, timeToX, xToTime } from '../src/engine/timescale.ts';
 import { epochDelta } from '../src/engine/epochs.ts';
 import { parseRef, verseId, BOOKS } from '../src/engine/books.ts';
@@ -94,12 +95,13 @@ const groupParents: Record<string, string> = Object.fromEntries(groups.filter((g
 // блоков сохраняются (src/engine/layout.ts, п. 8); снимок обновляет только npm run -s coords -- --accept. Снимок — модели
 // по умолчанию, и условие ставится только ей: в других моделях годы другие, и прежние места ухудшили бы их метрики
 const prior = existsSync(join(ROOT, 'data/coords-snapshot.json')) ? read<{ persons: { id: string; lane: number }[] }>('data/coords-snapshot.json').persons : [];
-const results: { id: string; chrono: ChronoResult; layout: LayoutResult; scale: ReturnType<typeof buildTimeScale>; outlines: Outline[] }[] = [];
+const results: { id: string; chrono: ChronoResult; layout: HouseLayout; scale: ReturnType<typeof buildTimeScale>; outlines: Outline[] }[] = [];
 for (const m of MODELS) {
   const t0 = performance.now();
   const chrono = solveChronology(g, epochs, m.id);
   // эпохи в годах этой модели (CARD-60): время скоплений «по эпохе» — тоже по ним
-  const layout = computeLayout(g, chrono, lines, { lists, epochs: chrono.epochs ?? epochs, ...(m.id === MODELS[0].id ? { prior } : {}) });
+  // «Отчий дом» (решение 173; src/engine/house.ts): первый проход раскладки, дома коридора, второй проход, все дома
+  const layout = computeHouseLayout(g, chrono, lines, { lists, epochs: chrono.epochs ?? epochs, ...(m.id === MODELS[0].id ? { prior } : {}) });
   // насыщенность времени — по годам решателя и месту лиц в полосах, как до честных следов и скоплений (A14, E2):
   // масштаб «по насыщенности» от них не меняется
   const births = [...chrono.persons.values()].map((c) => c.b);
@@ -109,7 +111,8 @@ for (const m of MODELS) {
   // контуры созвездий (E8) — в единицах масштаба «по насыщенности», вершины — в годах
   const outlines = computeOutlines(g, layout, (t) => timeToX(scale, t, 1), (x) => xToTime(scale, x, 1), groupParents);
   results.push({ id: m.id, chrono, layout, scale, outlines });
-  console.log(`модель ${m.id}: ${(performance.now() - t0).toFixed(0)} мс · напряжений ${chrono.tensions.length} · контуров ${outlines.length} · метрики ${JSON.stringify(layout.metrics)}`);
+  const P = layout.plan;
+  console.log(`модель ${m.id}: ${(performance.now() - t0).toFixed(0)} мс (раскладка ${layout.ms.first.toFixed(0)} + второй проход ${layout.ms.second.toFixed(0)} + дома ${layout.ms.houses.toFixed(0)}) · напряжений ${chrono.tensions.length} · контуров ${outlines.length} · домов ${P.houses}, переходов ${P.glides.length}, призраков ${P.natalGhosts.length} + ${P.ghosts.length} · метрики ${JSON.stringify(layout.metrics)}`);
 }
 
 // в каких моделях напряжения нет — проверено расчётом всех моделей
@@ -368,9 +371,10 @@ const models = results.map((res) => ({
     // t1 — конец рисуемого следа (layout.ts, п. 7); след — номер в TRAIL_KINDS: life, people, infant, list, ghost, epochal
     nodes: res.layout.nodes.map((n) => {
       const ghost = n.id.startsWith('ghost:');
-      const person = ghost ? n.id.slice(6) : n.id;
+      const person = n.person;
       const k = personIndex.get(person)!;
       const b = yr(res.chrono.persons.get(person)?.b ?? 0); // так же считает atlas.ts
+      // призрак бездетного брака у мужа (решение 173): satelliteOf — муж; его id — «ghost:<лицо>@<муж>» (atlas.ts)
       const row = [ghost ? -(k + 1) : k, n.lane, yr(n.t0) - b, yr(n.t1) - yr(n.t0), n.block, n.parentLane, pi(n.layoutParent), pi(n.satelliteOf), n.spine ? 1 : 0, TRAIL_KINDS.indexOf(n.trail)];
       if (n.brk !== undefined || n.band) row.push(n.brk === undefined ? null : yr(n.brk) - yr(n.t0));
       if (n.band) row.push(yr(n.band[0]) - yr(n.t0), yr(n.band[1]) - yr(n.t0), yr(n.born!) - yr(n.t0));
@@ -392,6 +396,23 @@ const models = results.map((res) => ({
         });
       }
       return row;
+    }),
+    // «Отчий дом» (решение 173; src/engine/stays.ts): пребывания — только у лиц с переходом: [лицо, полоса рождения,
+    // затем на каждый переход — начало − рождение, конец − рождение, полоса прихода]; полоса жизни — последняя (= полоса
+    // узла). Годы — целые, от рождения по хронологии модели (как у узлов)
+    st: res.layout.nodes.filter((n) => !n.ghost && n.stays && n.stays.length > 1).map((n) => {
+      const b = yr(res.chrono.persons.get(n.person)?.b ?? 0);
+      const st = n.stays!;
+      const row: number[] = [personIndex.get(n.person)!, st[0].lane];
+      for (let j = 1; j < st.length; j++) row.push(st[j - 1].t1 - b, st[j].t0 - b, st[j].lane);
+      if (st[st.length - 1].lane !== n.lane) throw new Error(`пребывания ${n.person}: последняя полоса ${st[st.length - 1].lane} ≠ полосе узла ${n.lane}`);
+      return row;
+    }),
+    // годы черт брака (engine/stays.ts, unionYear): [муж, жена, год] — лица номерами в индексе
+    uy: [...res.layout.unionYears].map(([uid, t]) => {
+      const u = /^u:([^+]*)\+([^~]*)$/.exec(uid);
+      if (!u) throw new Error(`год черты брака: союз ${uid}`);
+      return [personIndex.get(u[1])!, personIndex.get(u[2])!, t];
     }),
     laneMin: res.layout.laneMin,
     laneMax: res.layout.laneMax,

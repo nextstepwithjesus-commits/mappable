@@ -32,6 +32,7 @@
  */
 import { linkKeyString, type LinkKey } from '../engine/linkkey.ts';
 import type { Union, Unions } from '../engine/unions.ts';
+import type { MarriageKind, UnionYears } from '../engine/stays.ts';
 import { byId, models, type ModelData } from '../data/atlas.ts';
 import { unions as ALL_UNIONS } from '../ui/reveal.ts';
 import { listingOf, orderListing, type OrderListing } from './trails.ts';
@@ -146,6 +147,12 @@ export interface LinkStar {
   ghost: boolean;
   /** жена-спутница мужа на общей раскладке: её родная семья связана с её призраком */
   sat: string | null;
+  /**
+   * ломаная нарисованного следа, px кадра (x0, y0, x1, y1, … слева направо): пребывания и S-кривые переходов «Отчего
+   * дома» (решение 173; src/engine/stays.ts) — той же выборкой, что рисует trails.ts; только у лица с переходом. Нет —
+   * след горизонталь y от x до x1 (y — звезда, полоса рождения)
+   */
+  path?: readonly number[];
 }
 
 /** Союз набора (src/ui/reveal.ts, plates): раскрыт ли, сколько его лиц не на небе, от кого показан. */
@@ -187,6 +194,12 @@ export interface LinkInput {
   units?: ReadonlyMap<string, readonly { union: { id: string }; parent: string; wife: string | null; kids: readonly string[] }[]> | null;
   /** переключатель «Лк 3 как второе родословие Иосифа» (решение 107; otherReading) */
   flip?: boolean;
+  /** уровень подробности семьи (решение 178; sky.ts, familyTier): 0 — небо, 1 — обзор семьи, 2 — семья */
+  tier?: 0 | 1 | 2;
+  /** px x кадра для года t (астр., как node.t0): черта брака в год unionYear (решение 174) */
+  xAt?: (t: number) => number;
+  /** модель неба: годы черт брака (src/engine/stays.ts, unionYear); нет — первая модель атласа */
+  model?: UnionYears;
 }
 
 // ---------- выход ----------
@@ -235,7 +248,20 @@ export interface LinkPath {
   blocked?: boolean;
   /** номер пути в сборке кадра (buildLinks): у копий, пересчитанных движением масштаба, тот же (С1) */
   n?: number;
+  /**
+   * вид союза у черты брака (kind 'bar'; решение 174, src/engine/stays.ts, marriageKind): жена — двойная «‖», наложница —
+   * одинарная «|», левират — двойная штрихом, брак не назван — тонкая одинарная
+   */
+  bar?: MarriageKind;
+  /** путь бездетного брака (решение 178: на небе и обзоре семьи — только у выбранного, на масштабе семьи — всегда) */
+  childless?: boolean;
 }
+
+/**
+ * Знак союза по виду (решение 174; plates.ts, paintUnion): половины ромба — муж и жена; полая половина — лицо не
+ * названо ('no-mother' — ромб на следе отца, 'no-father' — на следе матери); 'none' — брак не назван: обе половины полые.
+ */
+export type NodeLook = MarriageKind | 'no-mother' | 'no-father';
 
 /** Узел союза: ◆ (union) — на следе у ствола первого гнезда, • (join) — у стволов следующих гнёзд. */
 export interface LinkNode {
@@ -260,6 +286,10 @@ export interface LinkNode {
   from: string;
   /** узел ушёл со следа владельца на столько px по своему стволу (с ленты, решение 166); след — на y − off */
   off?: number;
+  /** вид знака союза (решение 174); нет — двухцветный залитый ромб */
+  look?: NodeLook;
+  /** бездетный брак (решение 178: на небе и обзоре семьи — только у выбранного, на масштабе семьи — всегда) */
+  childless?: boolean;
 }
 
 /** Подпись обрывка: где кончается отрезок, куда он смотрит, чья связь и кого он называет. */

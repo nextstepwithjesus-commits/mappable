@@ -21,7 +21,7 @@
 import { KX_MIN, KY_MAX, KY_MAX_TALL, ROW_SHIFT_TALL, type Camera, type Frame, type ViewState } from './camera.ts';
 import { RowCamera, gapsKey, identityRows, planSky, type FoldMark, type SkyPlan, type SkyView } from './rows.ts';
 import { dotTime, drawLinkNodes, hiddenOf, plateGaps, type PlateHit, type PlateIn, type PlateMarks } from './plates.ts';
-import { buildLinks, LinkHits, linkKinOf, linkLog, linkMotionNear, linkSpan, linkSpanOk, NODE_R_FAMILY, NODE_R_MAP, type LinkFrame, type LinkHit, type LinkPath, type LinkPlate, type LinkStar, type PathStyle } from './links.ts';
+import { buildLinks, TRAIL_CUT, LinkHits, linkKinOf, linkLog, linkMotionNear, linkSpan, linkSpanOk, NODE_R_FAMILY, NODE_R_MAP, type LinkFrame, type LinkHit, type LinkPath, type LinkPlate, type LinkStar, type PathStyle } from './links.ts';
 import { linkKeyString, type LinkKey } from '../engine/linkkey.ts';
 import { unions as ALL_UNIONS } from '../ui/reveal.ts';
 import { linkRoleOf, linkRoles } from '../ui/linkwords.ts';
@@ -31,6 +31,9 @@ import { alphaForContrast, CLOUD_DIMMED, dimLabelAlpha, separateRibbons, WORK_DI
 import { clearOfRibbons, drawBranchLabels, drawLineNotes, drawRibbonGaps, drawSkyRibbons, lineNoteFocus, ribbonBeads, ribbonCheck, ribbonGapHits, skySteps, stepLegal, stepWeak, type SkyStep } from './ribbons.ts';
 import { drawEventLines, drawFrame, drawGrid, drawTimeMarks, paintWayfinding, placeWayfinding, yearTicks, rateAt, BOTTOM_H, CANON_NOTE, FRAME_H, LETTER_W, LETTER_W_TOUCH, RULER_H, type EdgeHit } from './frame.ts';
 import { claim, clusterShort, clusterText, drawClusterLabel, familyOf, ownLink, FAMILY_KY, labelFontOf, spot, drawEventLabel, drawFoldMark, drawGroupNames, drawNote, GROUP_COVER_FROM, drawStarLabels, foldMarkWidth, groupName, labelAt, LabelCache, LabelLedger, LineHits, measureLabels, namesakesInView, Placer, textBox, zoomScaleFor, GROUP_AREA_MIN, type GroupNameSpot, type LabelStats } from './labels.ts';
+import { bendsOf, FAMILY_TIER, familyTier, hasGlides, tierAlpha, trailPolyline, trailSegs, type Bend, type FamilyTier } from './trails.ts';
+import { glidesOf, laneAt, starLaneOf } from '../engine/stays.ts';
+export { FAMILY_TIER, familyTier, tierAlpha, type FamilyTier } from './trails.ts';
 import { drawBranchTicks, drawGhostNotes, drawLinkLabels, drawLinks, drawPlanStubs, drawSpineTrails, drawTrails, familyHover, linkLooks, linkOn, linkShown, trailLinksAt, trailOf, type LifeTrail, type LinkDraw, type PlanStubHit } from './trails.ts';
 import { branchFrame, drawKinPath, drawLeadNotes, drawMeridian, drawOverlayText, drawRings, drawSelectedLink, drawWorkMarks, emphasis, kinRoutes, meridianFlagAt, overlayRoutes, reserveSelectedLink, ringOuter, unionHoverDim, type SelectedLinkInfo } from './marks.ts';
 import { coarsePointer, mapFont, mapSize, nameSize, T_MAP_S } from './type.ts';
@@ -294,6 +297,14 @@ export interface Pass {
   spine: Set<string>;
   /** уровень масштаба подписей: 2·log2(kx / KX_MIN); «всё небо» на телефоне мельче KX_MIN — уровень 0 */
   level: number;
+  /**
+   * Уровень подробности семьи (этап 15, решение 178; уточняет 135): 0 — небо (меньше 7 px на год у середины окна): следы,
+   * звёзды, ленты, переходы бледно, союзы и отводы — только у структурных лиц и выбранного; 1 — обзор семьи (7–24 px на
+   * год): ромбы, черты, все отводы; 2 — семья (от 24 px на год): слова вида союза, бездетные браки, призраки.
+   */
+  tier: FamilyTier;
+  /** местный масштаб времени у середины окна, px на год: по нему tierAlpha даёт плавный переход уровней */
+  pxYear: number;
   /** масштаб знаков по высоте полосы */
   zoomScale: number;
   /**
@@ -383,6 +394,16 @@ export interface Pass {
   thinned?: ReadonlySet<number>;
   /** лента по маршруту под прямоугольником (px холста): подписи связей обходят саму ленту, а не рамку шага (§ 3) */
   onRibbon?: (b: Rect) => boolean;
+}
+
+/**
+ * Копия узла в полосе lane (переход между укладками, § 10): пребывания и звезда сдвигаются вместе с полосой жизни —
+ * дом едет целиком, без излома переходов (решение 173).
+ */
+function shiftLane(n: NodeRow, lane: number): NodeRow {
+  const d = lane - n.lane;
+  if (!n.stays) return { ...n, lane, ...(n.starLane !== undefined ? { starLane: n.starLane + d } : {}) };
+  return { ...n, lane, starLane: starLaneOf(n) + d, stays: n.stays.map((st) => ({ ...st, lane: st.lane + d })) };
 }
 
 /** Лица линий на нитях в режиме «только линии» (MAP-71; ТЗ § 3.2: «каждое лицо — бусина»). */
@@ -669,11 +690,14 @@ export class Sky implements SkyContext {
       const q = byId.get(n.person);
       if (!q) return null;
       const tr = trailOf(this, i, t);
+      // звезда — в полосе рождения; у лица с переходами — ломаная следа той же выборкой, что рисует trails.ts (решение 173)
+      const path = tr?.bends ? trailPolyline(tr) : undefined;
       return {
         i,
         id: n.person,
         x: cam.sx(this.X0[i]),
-        y: cam.sy(n.lane),
+        y: cam.sy(starLaneOf(n)),
+        ...(path ? { path } : {}),
         r: starRadius(q.magnitude, p.zoomScale) + (q.sex === 'f' ? 2.2 : 0),
         x1: tr ? Math.max(tr.x0, tr.x1) : null,
         ghost: n.ghost,
@@ -752,7 +776,7 @@ export class Sky implements SkyContext {
     ].join('|');
     // что меняется само в движении: свёрнутые с масштабом скопления, «только нарисованные», размер холста (карточка
     // открылась во время перелёта)
-    const key = `${base}|${[...this.collapsed].join(',')}|${this.drawnOnly ? 1 : 0}|${cam.w}|${cam.h}`;
+    const key = `${base}|${[...this.collapsed].join(',')}|${this.drawnOnly ? 1 : 0}|${cam.w}|${cam.h}|${p.tier}`;
     let c = this.linkCache;
     // масштаб в движении (перелёт, колесо, щипок; С1) — кадр связей не строится: прежний пересчитывается (пути в px
     // масштабируются вокруг начала координат неба), и свёрнутые с масштабом скопления его не сбрасывают; дальше чем
@@ -800,6 +824,10 @@ export class Sky implements SkyContext {
         nodeR: family ? NODE_R_FAMILY : NODE_R_MAP,
         units: family ? (this.plan.units ?? null) : null,
         flip: s.lineFlip,
+        // уровень подробности семьи (решение 178), годы черт брака модели неба и x года (решение 174)
+        tier: p.tier,
+        xAt: (t) => cam.sx(this.xOf(t)),
+        model: this.model,
       });
       c = this.linkCache = {
         key,
@@ -895,7 +923,7 @@ export class Sky implements SkyContext {
     const t = this.trailLinkAt(x, y, Math.max(r, 6));
     if (!t) return [];
     const i = this.nodeIndex.get(t.person);
-    const ty = i !== undefined ? this.cam.sy(this.nodes[i].lane) : y;
+    const ty = i !== undefined ? this.trailYAt(i, x) : y;
     return t.keys.map((key) => ({ key, ks: linkKeyString(key) ?? '', kind: 'jog' as const, d: Math.abs(y - ty), x, y: ty, union: 'union' in key ? key.union : null }));
   }
   /**
@@ -937,7 +965,9 @@ export class Sky implements SkyContext {
       return this.model.nodes;
     }
     if (this.vNodes?.plan === pl) return this.vNodes.nodes;
-    const out = this.model.nodes.map((n, i) => (Number.isFinite(nl[i]) && Math.abs(nl[i] - n.lane) > 1e-9 ? { ...n, lane: nl[i] } : n));
+    // семейная укладка ставит лицо в одну виртуальную полосу: пребывания и переходы общей раскладки (решение 173) к ней
+    // не относятся — звезда и след на виртуальной полосе
+    const out = this.model.nodes.map((n, i) => (Number.isFinite(nl[i]) && (Math.abs(nl[i] - n.lane) > 1e-9 || n.stays) ? { ...n, lane: nl[i], starLane: nl[i], stays: undefined } : n));
     this.vNodes = { plan: pl, nodes: out };
     this.nodesStamp++;
     return out;
@@ -969,7 +999,7 @@ export class Sky implements SkyContext {
       const b = tr.to[i];
       if (!Number.isFinite(a) || !Number.isFinite(b) || Math.abs(a - b) < 1e-6) return n;
       const lane = rows.lane(a + (b - a) * u);
-      return Math.abs(lane - n.lane) > 1e-9 ? { ...n, lane } : n;
+      return Math.abs(lane - n.lane) > 1e-9 ? shiftLane(n, lane) : n;
     });
   }
   /**
@@ -1301,6 +1331,14 @@ export class Sky implements SkyContext {
     ctx.restore();
   }
 
+  /** Местный масштаб времени у середины видимой части неба, px на год (решение 178: уровни подробности семьи). */
+  pxPerYear(): number {
+    const cam = this.cam;
+    const cx = cam.vp.r > cam.vp.l ? (cam.vp.l + cam.vp.r) / 2 : cam.w / 2;
+    const t = this.tOf(cam.wx(cx));
+    const k = (this.xOf(t + 0.5) - this.xOf(t - 0.5)) * cam.kx;
+    return Number.isFinite(k) && k > 0 ? k : cam.kx;
+  }
   xOf(t: number): number {
     return timeToX(this.scale, t, this.lambda);
   }
@@ -1641,7 +1679,7 @@ export class Sky implements SkyContext {
         const e = glyphExtent({ ...personGlyph(q, false, this.model.chrono.get(n.person)?.cls, { scale, color: '', halo: '' }), king: false, infant: false });
         RR[i] = Math.max(e.l, e.r, e.t, e.b);
       }
-      all.push({ i, x: this.X0[i] * kx, y: this.rowOf(n.lane) * ky, R: RR[i], m: q.magnitude, sp: p.spine.has(q.id), keep: keep.has(q.id) });
+      all.push({ i, x: this.X0[i] * kx, y: this.rowOf(starLaneOf(n)) * ky, R: RR[i], m: q.magnitude, sp: p.spine.has(q.id), keep: keep.has(q.id) });
     }
     all.sort((a, b) => Number(b.keep) - Number(a.keep) || a.m - b.m || Number(b.sp) - Number(a.sp) || a.x - b.x || a.i - b.i);
     // ячейка сетки не меньше суммы двух наибольших знаков: соседей ищут только в соседних ячейках
@@ -1721,7 +1759,7 @@ export class Sky implements SkyContext {
       const lit = Math.max(0, Math.min(1, s.intro * 7 - q.magnitude));
       if (p.emph(q.id) * lit * this.starA[i] <= 0.8) continue;
       const x = cam.sx(this.X0[i]);
-      const y = cam.sy(n.lane);
+      const y = cam.sy(starLaneOf(n));
       if (x < -20 || x > cam.w + 20 || y < -20 || y > cam.h + 20) continue;
       const e = glyphExtent({ ...personGlyph(q, false, this.model.chrono.get(n.person)?.cls, { scale, color: '', halo: '' }), king: false, infant: false });
       bright.push({ i, x, y, R: Math.max(e.l, e.r, e.t, e.b), q });
@@ -1773,7 +1811,7 @@ export class Sky implements SkyContext {
         if (i === host.i || this.piled.has(i) || !this.starShown(s, i)) continue;
         const n = this.nodes[i];
         const x = cam.sx(this.X0[i]);
-        const y = cam.sy(n.lane);
+        const y = cam.sy(starLaneOf(n));
         if (Math.abs(x - host.x) > w + 60 || Math.abs(y - host.y) > 60) continue;
         const o = byId.get(n.person);
         if (!o) continue;
@@ -1829,7 +1867,7 @@ export class Sky implements SkyContext {
     // прореженный знак (решение 142) — в списке неба и с клавиатуры: фокус его проявляет
     if (!this.drawn(i) || (!this.pointable(i) && !(this.thin.has(i) && this.starA[i] >= 0.5))) return false;
     const x = this.cam.sx(this.X0[i]);
-    const y = this.cam.sy(this.nodes[i].lane);
+    const y = this.starY(i);
     return x > this.letterW && x < this.cam.w && y > this.openTop && y < this.cam.vp.b;
   }
 
@@ -1847,7 +1885,7 @@ export class Sky implements SkyContext {
     for (let i = 0; i < this.nodes.length; i++) {
       const n = this.nodes[i];
       const x = cam.sx(this.X0[i]);
-      const y = cam.sy(n.lane);
+      const y = cam.sy(starLaneOf(n));
       if (Math.abs(y - sy) > radius + ky) continue;
       if (y < this.openTop || !this.drawn(i) || !this.pointable(i)) continue;
       const dx = x - sx;
@@ -1865,14 +1903,127 @@ export class Sky implements SkyContext {
     const cam = this.cam;
     if (sy < this.openTop || sx < this.letterW || sy > cam.vp.b) return null;
     const ky = cam.ky;
+    const r = Math.max(3, ky * 0.35);
     for (let i = 0; i < this.nodes.length; i++) {
       const n = this.nodes[i];
+      // след с переходами (решение 173) — ломаная: пребывания и S-кривые; наведение на переход — само лицо (решение 179)
+      if (hasGlides(n)) {
+        if (!this.drawn(i) || !this.pointable(i)) continue;
+        if (this.trailDist(i, sx, sy) <= r) return n.person;
+        continue;
+      }
       const y = cam.sy(n.lane);
-      if (Math.abs(y - sy) > Math.max(3, ky * 0.35)) continue;
+      if (Math.abs(y - sy) > r) continue;
       if (!this.drawn(i) || !this.pointable(i)) continue;
       if (sx >= cam.sx(this.X0[i]) && sx <= cam.sx(this.X1[i])) return n.person;
     }
     return null;
+  }
+  /** Высота звезды узла i, px холста: полоса рождения (решение 173; src/engine/stays.ts, starLaneOf). */
+  starY(i: number): number {
+    return this.cam.sy(starLaneOf(this.nodes[i]));
+  }
+  /** Высота следа узла i над x (px холста): полоса в год под x — пребывание или переход (договор 1, laneAt). */
+  trailYAt(i: number, sx: number): number {
+    const n = this.nodes[i];
+    return this.cam.sy(hasGlides(n) ? laneAt(n, this.tOf(this.cam.wx(sx))) : n.lane);
+  }
+  /** Переходы следа узла i в px холста (trails.ts, bendsOf); null — переходов нет. */
+  bendsOf(i: number): Bend[] | null {
+    return bendsOf(this, this.nodes[i]);
+  }
+  /** Пересечения переходов с чужими следами по узлам кадра (решение 173): след j, год (астр.), лицо перехода g. */
+  private glideX: { nodes: readonly NodeRow[]; hits: { j: number; t: number; g: number }[] } | null = null;
+  private glideCrossings(): { j: number; t: number; g: number }[] {
+    if (this.glideX?.nodes === this.nodes) return this.glideX.hits;
+    // переход между укладками и бусины «только линий» — узлы каждого кадра новые: разрывов под переходами нет
+    if (this.trans || this.beads) return [];
+    const nodes = this.nodes;
+    const hits: { j: number; t: number; g: number }[] = [];
+    const gl: number[] = [];
+    for (let i = 0; i < nodes.length; i++) if (hasGlides(nodes[i]) && !nodes[i].ghost) gl.push(i);
+    if (gl.length) {
+      // горизонтали следов по полосам: узел и годы пребывания
+      const byLane = new Map<number, number[]>();
+      const put = (lane: number, j: number, a: number, b: number) => {
+        const q = byLane.get(lane);
+        if (q) q.push(j, a, b);
+        else byLane.set(lane, [j, a, b]);
+      };
+      for (let j = 0; j < nodes.length; j++) {
+        const n = nodes[j];
+        if (n.ghost || n.trail !== 'life' || !(n.t1 > n.t0)) continue;
+        if (hasGlides(n)) for (const st of n.stays!) put(st.lane, j, Math.max(n.t0, st.t0), Math.min(n.t1, st.t1));
+        else put(n.lane, j, n.t0, n.t1);
+      }
+      const lanes = [...byLane.keys()].sort((a, b) => a - b);
+      for (const gi of gl)
+        for (const g of glidesOf(nodes[gi])) {
+          const lo = Math.min(g.from, g.to);
+          const hi = Math.max(g.from, g.to);
+          if (!(hi - lo > 1e-6) || !(g.t1 > g.t0)) continue;
+          for (const L of lanes) {
+            if (L <= lo + 1e-6) continue;
+            if (L >= hi - 1e-6) break;
+            // доля пути S-кривой (smoothstep) до полосы L — обратная ступень бисекцией
+            const u = (L - g.from) / (g.to - g.from);
+            let a = 0;
+            let b = 1;
+            for (let k = 0; k < 24; k++) {
+              const m = (a + b) / 2;
+              if (m * m * (3 - 2 * m) < u) a = m;
+              else b = m;
+            }
+            const t = g.t0 + (g.t1 - g.t0) * ((a + b) / 2);
+            const q = byLane.get(L)!;
+            for (let k = 0; k + 2 < q.length; k += 3) if (q[k] !== gi && t >= q[k + 1] && t <= q[k + 2]) hits.push({ j: q[k], t, g: gi });
+          }
+        }
+    }
+    this.glideX = { nodes, hits };
+    return hits;
+  }
+  /** Разрывы чужих следов под переходами кадра (решение 173), добавленные к разрывам под связями (Г7). */
+  private glideCuts(cuts: Map<number, number[]> | undefined): Map<number, number[]> | undefined {
+    const hits = this.glideCrossings();
+    if (!hits.length) return cuts;
+    const cam = this.cam;
+    const out = cuts ?? new Map<number, number[]>();
+    for (const h of hits) {
+      if (!this.drawn(h.j) || !this.drawn(h.g)) continue;
+      const x = cam.sx(this.xOf(h.t));
+      if (x < -10 || x > cam.w + 10) continue;
+      const a = out.get(h.j);
+      if (a) a.push(x, TRAIL_CUT);
+      else out.set(h.j, [x, TRAIL_CUT]);
+    }
+    return out;
+  }
+  /** Пересечения переходов с чужими следами (для проверок): «переход>след@x» в px холста. */
+  glideCrossLog(): string[] {
+    return this.glideCrossings()
+      .filter((h) => this.drawn(h.j) && this.drawn(h.g))
+      .map((h) => `${this.nodes[h.g].person}>${this.nodes[h.j].person}@${Math.round(this.cam.sx(this.xOf(h.t)))}`);
+  }
+  /**
+   * Расстояние от точки (px холста) до нарисованного следа узла i — по горизонталям пребываний и ломаным переходов от
+   * звезды до конца следа (X1); Infinity — точка не над следом.
+   */
+  trailDist(i: number, sx: number, sy: number): number {
+    const cam = this.cam;
+    const x0 = cam.sx(this.X0[i]);
+    const x1 = cam.sx(this.X1[i]);
+    if (sx < x0 - 6 || sx > x1 + 6) return Infinity;
+    const shape = { y: Math.round(this.starY(i)) + 0.5, bends: this.bendsOf(i) ?? undefined };
+    let best = Infinity;
+    trailSegs(shape, x0, x1, (ax, ay, bx, by) => {
+      const dx = bx - ax;
+      const dy = by - ay;
+      const l2 = dx * dx + dy * dy;
+      const u = l2 > 1e-9 ? Math.max(0, Math.min(1, ((sx - ax) * dx + (sy - ay) * dy) / l2)) : 0;
+      best = Math.min(best, Math.hypot(sx - (ax + dx * u), sy - (ay + dy * u)));
+    });
+    return best;
   }
 
   /** Где стоит флажок меридиана (px холста) — для проверок. */
@@ -1962,10 +2113,13 @@ export class Sky implements SkyContext {
       this.collapsed.clear();
       this.rings = [];
     } else this.markClusters(dd.stars);
-    this.fillStarAlpha(s, spine, dd.stars);
+    const pxYear = this.pxPerYear();
+    this.fillStarAlpha(s, spine, dd.stars, pxYear);
     const starA = this.starA;
     const p: Pass = {
       s,
+      tier: familyTier(pxYear),
+      pxYear,
       vis: [],
       // при наведении на ромб гаснут чужие ветви (решение 172; marks.ts, unionHoverDim)
       emph: linkDim(s, unionHoverDim(s, guestDim(this.plan.guests, familyDim(this, work ? floorAt(emphasis(hl, s.depth), WORK_DIM) : emphasis(hl, s.depth))))),
@@ -2033,6 +2187,8 @@ export class Sky implements SkyContext {
     p.links = lf;
     p.guests = this.plan.guests;
     p.cuts = lf ? this.cutsOf(lf, !!L.ribbons && this.routeFactor >= 0.5) : undefined;
+    // переход идёт поверх чужого следа с разрывом под собой (решение 173; D2, С6): пересечение — не соединение
+    if (L.lifelines) p.cuts = this.glideCuts(p.cuts);
     // подписи обходят линии связей (Я12); в «только линиях» подписи лиц линий ставятся по лентам (UX-16), не по связям
     if (lf && lf.alpha > 0.5 && !lineOnly && !this.linksStale) {
       const hits = this.linkHits!;
@@ -2079,7 +2235,7 @@ export class Sky implements SkyContext {
         const n = this.nodes[i];
         const q = byId.get(n.person)!;
         const x = cam.sx(this.X0[i]);
-        const y = cam.sy(n.lane);
+        const y = cam.sy(starLaneOf(n));
         if (x < -20 || x > cam.w + 20 || y < -20 || y > cam.h + 20) continue;
         const lit = Math.max(0, Math.min(1, s.intro * 7 - q.magnitude));
         // меридиан года гасит неживых лишь на время наведения на шкалу: правила подписей — как без него (подписи не мигают)
@@ -2312,8 +2468,8 @@ export class Sky implements SkyContext {
       // (SkyA11y) обновляется, только когда небо постоит, а проверке нужен кадр сразу после сдвига
       // звёзды в окне при любом показе (tools/accept/grammar11.ts): точки наведения на линии — не у звёзд (§ 8: звезда
       // ближе 12 px важнее линии)
-      put('starsAt', p.vis.filter((i) => this.drawn(i) && !this.nodes[i].ghost).slice(0, 2000).map((i) => `${Math.round(cam.sx(this.X0[i]))},${Math.round(cam.sy(this.nodes[i].lane))}`).join(';'));
-      put('stars', this.plan.mode === 'work' ? p.vis.filter((i) => this.drawn(i) && !this.nodes[i].ghost).slice(0, 240).map((i) => `${this.nodes[i].person}:${Math.round(cam.sx(this.X0[i]))},${Math.round(cam.sy(this.nodes[i].lane))}`).join(';') : '');
+      put('starsAt', p.vis.filter((i) => this.drawn(i) && !this.nodes[i].ghost).slice(0, 2000).map((i) => `${Math.round(cam.sx(this.X0[i]))},${Math.round(this.starY(i))}`).join(';'));
+      put('stars', this.plan.mode === 'work' ? p.vis.filter((i) => this.drawn(i) && !this.nodes[i].ghost).slice(0, 240).map((i) => `${this.nodes[i].person}:${Math.round(cam.sx(this.X0[i]))},${Math.round(this.starY(i))}`).join(';') : '');
       // места помет семей в небе «набор» (решение 76; tools/accept/polish6.ts): «x,y,w,h» — помета не на линиях к детям
       put('noteBoxes', this.plan.mode === 'work' ? boxes.filter((b) => b.kind === 'note').map((b) => [b.x, b.y, b.w, b.h].map(Math.round).join(',')).join(';') : '');
       put('service', boxes.filter((b) => b.kind === 'frame' && b.y >= RULER_H - 1 && b.y + b.h <= FRAME_H + 1).map((b) => b.text.replace(/\u00a0/g, ' ')).join('|'));
@@ -2351,7 +2507,8 @@ export class Sky implements SkyContext {
         if (i === undefined || !this.drawn(i)) continue;
         const q = byId.get(m.id);
         const x0 = cam.sx(this.X0[i]);
-        y = cam.sy(this.nodes[i].lane);
+        // звезда в окне — у звезды (полоса рождения); за левым краем — у следа в год края (решение 173)
+        y = x0 >= cam.vp.l ? this.starY(i) : this.trailYAt(i, cam.vp.l);
         if (y < this.openTop || y > cam.vp.b) continue;
         if (x0 >= cam.vp.l) {
           if (x0 > cam.w) continue;
@@ -2423,7 +2580,7 @@ export class Sky implements SkyContext {
       if (!near.has(id) || out.some((h) => h.kind === 'pile' && h.id === id)) continue;
       const q = byId.get(id);
       const x = cam.sx(this.X0[i]);
-      const y = cam.sy(this.nodes[i].lane);
+      const y = this.starY(i);
       if (!q || x < this.letterW || x > cam.w || y < this.openTop || y > cam.vp.b) continue;
       const count = `+${m.length}`;
       const { cw } = foldMarkWidth(ctx, this.coarse, '', count);
@@ -2446,7 +2603,7 @@ export class Sky implements SkyContext {
       for (const st of line) {
         const i = this.nodeIndex.get(st.id);
         if (i === undefined) continue;
-        const pt: [number, number] = [cam.sx(this.X0[i]), cam.sy(this.nodes[i].lane)];
+        const pt: [number, number] = [cam.sx(this.X0[i]), this.starY(i)];
         if (prev && Math.max(prev[0], pt[0]) > 0 && Math.min(prev[0], pt[0]) < cam.w) {
           const x0 = Math.min(prev[0], pt[0]);
           const y0 = Math.min(prev[1], pt[1]);
@@ -2501,7 +2658,10 @@ export class Sky implements SkyContext {
     return mag;
   }
   /** Непрозрачность звёзд этого кадра (E3): выделенные и лица линий в режиме «только линии» — 1, величины 0–2 — 1, мелкие — по подробности. */
-  private fillStarAlpha(s: SkyState, spine: Set<string>, detail: number) {
+  private fillStarAlpha(s: SkyState, spine: Set<string>, detail: number, pxYear = FAMILY_TIER.family * 2) {
+    // призраки (решение 173: жена из далёкого рода в родной семье, бездетный брак у мужа) — на масштабе семьи (решение 178);
+    // у выделенных и в режиме «В работе» — всегда
+    const ghostA = tierAlpha(pxYear, FAMILY_TIER.family);
     const hl = s.highlight;
     const A = this.starA;
     const hid = this.plan.hidden;
@@ -2526,7 +2686,7 @@ export class Sky implements SkyContext {
       // лицо свёрнутого скопления видно отдельно, только если это выбранное лицо, путь родства или отметка поиска
       if (n.block >= 0 && this.collapsed.has(n.block)) A[i] = k === 'self' || k === 'path' || pinned ? 1 : 0;
       else if (k !== undefined || pinned || (s.onlyLines && spine.has(n.person))) A[i] = 1;
-      else A[i] = mag[i] <= OVERVIEW_MAG ? 1 : detail;
+      else A[i] = (mag[i] <= OVERVIEW_MAG ? 1 : detail) * (n.ghost ? ghostA : 1);
     }
   }
 
@@ -2906,8 +3066,20 @@ export class Sky implements SkyContext {
     for (let i = 0; i < this.nodes.length; i++) {
       if (hid && hid[i]) continue;
       const n = this.nodes[i];
-      const y = cam.sy(n.lane);
-      if (y < -20 || y > H + 20) continue;
+      if (hasGlides(n)) {
+        // след с переходами (решение 173): виден, если в окно приходится хоть одно пребывание или переход
+        let lo = Infinity;
+        let hi = -Infinity;
+        for (const st of n.stays!) {
+          const y = cam.sy(st.lane);
+          if (y < lo) lo = y;
+          if (y > hi) hi = y;
+        }
+        if (hi < -20 || lo > H + 20) continue;
+      } else {
+        const y = cam.sy(n.lane);
+        if (y < -20 || y > H + 20) continue;
+      }
       const x0 = cam.sx(this.X0[i]);
       const x1 = cam.sx(this.X1[i]);
       if (x1 < -40 || x0 > W + 40) {
@@ -2996,6 +3168,16 @@ export class Sky implements SkyContext {
       // зачёркивает его; имя встаёт по другую сторону звезды
       lh.add(r.pts, NO_ROUTE_OWN, Math.min(2.5, Math.max(1, (r.w ?? 1) / 2)));
     }
+    // переходы следов (решения 163, 173): чужое имя не ложится на S-кривую — она такая же чужая линия, как ствол
+    if (p.s.layers.lifelines && !p.s.onlyLines)
+      for (const i of p.vis) {
+        if (!hasGlides(this.nodes[i]) || !this.drawn(i)) continue;
+        const own = new Set([this.nodes[i].person]);
+        for (const g of this.bendsOf(i) ?? []) {
+          if (g.xb < -20 || g.xa > this.cam.w + 20) continue;
+          lh.add(g.pts, own, 1);
+        }
+      }
     const segs = lf && !p.s.onlyLines && !this.linksStale ? linkSegs(lf.frame) : null;
     const off = ribbons ? p.offRibbon : undefined;
     // разрыв под текстом — на подробном небе без облаков и не в «только линиях» (там ленты под всеми именами)
@@ -3020,7 +3202,7 @@ export class Sky implements SkyContext {
     const { cam } = this;
     const inside = p.vis.filter((i) => {
       const x = cam.sx(this.X0[i]);
-      const y = cam.sy(this.nodes[i].lane);
+      const y = this.starY(i);
       return x >= box.x - 6 && x <= box.x + box.w + 6 && y >= box.y - 6 && y <= box.y + box.h + 6;
     });
     this.ctx.save();
@@ -3057,7 +3239,7 @@ export class Sky implements SkyContext {
       const q = byId.get(n.person)!;
       const c = this.model.chrono.get(n.person);
       const x = cam.sx(this.X0[i]);
-      const y = cam.sy(n.lane);
+      const y = cam.sy(starLaneOf(n));
       if (x < -20 || x > W + 20) continue;
       // зажигание по величине
       const lit = Math.max(0, Math.min(1, intro * 7 - q.magnitude));
@@ -3084,7 +3266,7 @@ export class Sky implements SkyContext {
       const x0 = cam.sx(this.xOf(n.band[0]));
       const x1 = Math.min(cam.sx(this.xOf(n.band[1])), cam.sx(this.X0[i]));
       if (x1 < -4 || x0 > cam.w + 4) continue;
-      const y = Math.round(cam.sy(n.lane)) + 0.5;
+      const y = Math.round(cam.sy(starLaneOf(n))) + 0.5;
       drawBirthBand(ctx, {
         x0,
         x1,
@@ -3148,7 +3330,7 @@ export class Sky implements SkyContext {
       if (this.starA[i] <= 0.02 || this.piled.has(i)) continue;
       const q = byId.get(n.person)!;
       const x = cam.sx(this.X0[i]);
-      const y = cam.sy(n.lane);
+      const y = cam.sy(starLaneOf(n));
       if (x < -20 || x > cam.w + 20) continue;
       const r = starRadius(q.magnitude, p.zoomScale) + (q.sex === 'f' ? 2.2 : 0);
       const g = daggerAt(x, y, r);
@@ -3234,7 +3416,8 @@ export function beadNodes(v: SkyContext, nodes: readonly NodeRow[], beads: Reado
     if (i === undefined || !Number.isFinite(y)) continue;
     const lane = v.laneOf(v.cam.wLane(y));
     if (Number.isFinite(lane) && Math.abs(lane - nodes[i].lane) > 1e-3) {
-      out[i] = { ...nodes[i], lane };
+      // бусина на нити (MAP-71): лицо — в одной точке нити, без пребываний и переходов (решение 173)
+      out[i] = { ...nodes[i], lane, starLane: lane, stays: undefined };
       moved.set(id, lane);
     }
   }

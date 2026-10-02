@@ -29,6 +29,9 @@
  *    есть опорные лица, стоит на прежней стороне (PRIOR_SIDE_W), а его основание — на ближайшей к прежней полосе, где
  *    контур свободен; внутри притока братья с опорными лицами в поддеревьях стоят в прежнем порядке. Поэтому после правок
  *    данных и хронологии опорные лица сдвигаются по полосе только там, где этого требует непересечение жизней в полосе.
+ * 9. «Отчий дом» (этап 15, решение 173; src/engine/house.ts): второй проход. Дома лиц коридора, поставленные на
+ *    пустом небе, занимают свои строки сразу за коридором (opts.pre), а место лица, рождённого в таком доме, в полосе
+ *    его жизни начинается с ухода из дома (opts.cut). Остальное — как в первом проходе.
  *
  * Здесь же — контуры созвездий (computeOutlines, E8) и атласные координаты (atlasCoord, E9).
  */
@@ -38,6 +41,7 @@ import type { ChronoResult } from './chronology.ts';
 import type { Person } from '../data/types.ts';
 import { compareRefs, parseRef, verseId } from './books.ts';
 import { toAstro, toHist } from './years.ts';
+import type { Stay } from './stays.ts';
 
 export interface LineStep {
   id: string;
@@ -91,6 +95,13 @@ export interface LayoutNode {
    */
   band?: [number, number];
   born?: number;
+  /**
+   * «Отчий дом» (этап 15, решение 173; src/engine/house.ts): lane — полоса жизни, starLane — полоса рождения (звезда
+   * в отчем доме у матери), stays — пребывания по порядку, между соседними — переход (src/engine/stays.ts). Нет полей —
+   * лицо всю жизнь в полосе lane. Полосу в год t небо спрашивает только через laneAt (engine/stays.ts).
+   */
+  starLane?: number;
+  stays?: Stay[];
 }
 
 /** Список имён без родства (data/lists.json). */
@@ -174,6 +185,16 @@ export interface LayoutMetrics {
   /** скоплений и лиц в них */
   clusters: number;
   clustered: number;
+  /**
+   * «Отчий дом» (решение 173; engine/house.ts, houseMetrics): связей «союз → ребёнок» на небе, из них длиннее 8 строк,
+   * длиннейшая (строк); переходов; призраков. crossings, corridorCrossings и dropLength у раскладки с домами считаются
+   * по тем же связям: от следа матери (не названа — отца) в год рождения к звезде ребёнка.
+   */
+  links?: number;
+  links8?: number;
+  linkMax?: number;
+  glides?: number;
+  ghosts?: number;
 }
 
 export interface LayoutResult {
@@ -445,6 +466,16 @@ export function computeLayout(
     epochs?: { id: string; start: number; end: number }[];
     /** Априорное условие (п. 8): полосы опорных лиц прежнего выпуска (data/coords-snapshot.json). */
     prior?: { id: string; lane: number }[];
+    /**
+     * «Отчий дом» (п. 9; решение 173; src/engine/house.ts): строки домов лиц коридора — заняты до притоков, сразу за
+     * коридором (дом — часть хребта неба).
+     */
+    pre?: { lane: number; a: number; b: number }[];
+    /**
+     * «Отчий дом» (п. 9): у лица, рождённого в доме лица коридора, место в полосе жизни начинается с ухода из дома (год);
+     * Infinity — места в полосе жизни нет: лицо живёт в доме (жена в доме мужа, сын без своего дома).
+     */
+    cut?: ReadonlyMap<string, number>;
   } = {},
 ): LayoutResult {
   const K = opts.corridorK ?? 7;
@@ -455,7 +486,15 @@ export function computeLayout(
 
   /** Место в полосе: след и запас под имя (не рисуется); у лица «время не установлено» — скобка; у лица со знаком
    *  у первого свидетельства — и полоса рождения (MAP-69), кроме лиц коридора. */
-  const span = (id: string): Iv => packSpan(spineIds.has(id) ? { ...ch(id), mark: undefined } : ch(id));
+  const span0 = (id: string): Iv => packSpan(spineIds.has(id) ? { ...ch(id), mark: undefined } : ch(id));
+  /** Место в полосе жизни: у лица, рождённого в доме лица коридора, — с ухода из дома (п. 9, opts.cut). */
+  const span = (id: string): Iv => {
+    const s = span0(id);
+    const c = opts.cut?.get(id);
+    if (c === undefined) return s;
+    if (!Number.isFinite(c)) return [s[1] + 1e5, s[1] + 1e5 + 1];
+    return [Math.max(s[0], c), Math.max(s[1], c + 1)];
+  };
   /**
    * Рисуемый след (п. 7): t1 — конец жизни, в которой данные уверены. Смерть только в допустимом интервале
    * (died.range: «в царствование Давида») — сплошной след до начала интервала или до последнего события,
@@ -769,6 +808,8 @@ export function computeLayout(
   // --- 4. коридор в глобальной занятости + огибающая лент
   const occ = new Occupancy();
   for (const id of spine) occ.add(corridorLane.get(id)!, padded(span(id)));
+  // дома лиц коридора (п. 9) — сразу за коридором, до притоков
+  for (const r of opts.pre ?? []) occ.add(r.lane, [r.a, r.b]);
   // ленты идут от рождения к рождению: занимаем промежуточные полосы
   const ribbonSeqs = [jIds, mIds];
   for (const seq of ribbonSeqs) {

@@ -1394,6 +1394,15 @@ const I_FAM = '#/iakov~y-1962~w220~l-2.0~s1~mmt-long';
 const W1280 = { width: 1280, height: 800 };
 const W1024 = { width: 1024, height: 768 };
 const PHONE = { width: 390, height: 844, touch: true };
+/** Корпус этапа 15: имя сцены, глава семьи, ширина окна обзора семьи и масштаба семьи (лет), заглавие. */
+const FAMILY15: [string, string, number, number, string][] = [
+  ['iakov', 'iakov', 113, 48, 'Иаков'],
+  ['david', 'david', 113, 45, 'Давид'],
+  ['avraam', 'avraam', 200, 110, 'Авраам'],
+  ['khalev', 'khalev-syn-esroma', 113, 60, 'Халев, сын Есрома'],
+  ['isav', 'isav', 113, 60, 'Исав'],
+  ['iuda', 'iuda', 113, 60, 'Иуда и Фамарь'],
+];
 
 /**
  * Сцены COLLISION STRESS (раздел 5 отчёта C): самые тяжёлые участки на трёх масштабах (w2500 и шире — обзор, w300–400 —
@@ -1458,6 +1467,17 @@ export const SCENES: Scene[] = [
   // окна R1-16 и R2-12: Халев на w400 («Сегув» у звезды Арама), обзор телефона (выноска «Авраам» — в исключении К8)
   { id: 'khalev-w400', title: 'Халев, сын Есрома, окно 400 лет (R1-16)', hash: '#/khalev-syn-esroma~w400' },
   { id: 'phone-far', title: 'Телефон: обзор при входе (R2-12)', hash: '#/', ...PHONE },
+  // корпус этапа 15 («Отчий дом», решения 173–181): тяжёлые семьи на обзоре семьи (≈ 113 лет на экран, как снимки
+  // владельца) и на масштабе семьи (45–60 лет), без выбора — окно ставится по звезде главы семьи, затем выбор снимается;
+  // переходы следов (решение 173) — такие же препятствия для имён, как следы (К1–К8 и по переходам)
+  ...FAMILY15.flatMap(([id, fam, o, f, title]) => [
+    { id: `s15-${id}-o`, title: `${title}, обзор семьи`, hash: `#/${fam}~w${o}~s1~mmt-long`, at: 0.25, act: deselect, shot: true },
+    { id: `s15-${id}-f`, title: `${title}, семья`, hash: `#/${fam}~w${f}~s1~mmt-long`, at: 0.2, act: deselect },
+  ]),
+  { id: 's15-iakov-sel', title: 'Иаков выбран, обзор семьи', hash: '#/iakov~w113~s1~mmt-long', at: 0.25, shot: true },
+  { id: 's15-david-sel', title: 'Давид выбран, обзор семьи', hash: '#/david~w113~s1~mmt-long', at: 0.25 },
+  { id: 's15-famar-sel', title: 'Фамарь выбрана, семья', hash: '#/famar~w60~s1~mmt-long', at: 0.3 },
+  { id: 's15-iakov-hover', title: 'Иаков: наведение на Вениамина', hash: '#/iakov~w113~s1~mmt-long', at: 0.25, act: both(deselect, hoverStar('veniamin')), shot: true },
 ];
 
 // ---------- пороги К1–К8 (STAGE14 § 4) ----------

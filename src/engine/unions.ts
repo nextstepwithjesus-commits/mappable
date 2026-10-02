@@ -39,6 +39,11 @@ export interface Union {
   claim?: string;
   /** уровень достоверности происхождения детей (худший из связей «отец/мать» детей союза) */
   kidsCert: Cert;
+  /**
+   * Мать — мать царя (роль queen-mother), а связи супругов в данных нет: «имя матери его Наама» (3 Цар 14:21). Брак с
+   * царём текст не называет (marriageKind — 'none', src/engine/stays.ts); флаг — для слов подсказки (решение 174).
+   */
+  queenMother?: true;
 }
 
 const CERT_RANK: Record<Cert, number> = { scripture: 0, inference: 1, interpretation: 2 } as Record<Cert, number>;
@@ -88,6 +93,7 @@ export function buildUnions(g: Graph): Unions {
         kids: [],
         claim,
         kidsCert: 'scripture',
+        ...(!s && a && b && g.persons.get(b)?.roles?.includes('queen-mother') ? { queenMother: true as const } : {}),
       };
       byIdU.set(id, u);
     }

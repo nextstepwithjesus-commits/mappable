@@ -10,6 +10,8 @@ import type { LifeDates } from '../engine/years.ts';
 import { applyEpochDelta } from '../engine/epochs.ts';
 import type { BlockInfo, ClusterInfo, LineStep, Outline, TrailKind } from '../engine/layout.ts';
 import { TRAIL_KINDS } from '../engine/layout.ts';
+import type { Stay } from '../engine/stays.ts';
+import { unionId } from '../engine/unions.ts';
 import type { Graph } from '../engine/graph.ts';
 import { buildGraph } from '../engine/graph.ts';
 import type { Person } from './types.ts';
@@ -148,6 +150,13 @@ export interface NodeRow {
    */
   band: [number, number] | null;
   born: number | null;
+  /**
+   * «Отчий дом» (этап 15, решение 173; src/engine/stays.ts): lane — полоса жизни, starLane — полоса рождения, stays —
+   * пребывания по порядку (между соседними — переход). Нет полей — лицо всю жизнь в полосе lane. Полосу в год t —
+   * только через laneAt (engine/stays.ts).
+   */
+  starLane?: number;
+  stays?: Stay[];
 }
 
 export interface ModelData {
@@ -168,6 +177,8 @@ export interface ModelData {
    * Потоп, рождение Аврама, приход Иакова в Египет), сдвигаются вместе с моделью.
    */
   epochs: Epoch[];
+  /** Годы черт брака (решение 173; engine/house.ts): id союза → год (астр.). Читать через unionYear (engine/stays.ts). */
+  unionYears: Map<string, number>;
 }
 
 export interface LineFile {
@@ -196,7 +207,11 @@ interface RawAtlas {
      * эпоха рождения), основание года (строка, decodeBasis).
      */
     ext?: { be: (number | null)[]; le: (number | null)[]; bs: (string | null)[] };
-    layout: { nodes: RawNode[]; blocks: RawBlock[]; laneMin: number; laneMax: number; metrics: Record<string, number>; outlines?: RawOutline[] };
+    /**
+     * st — пребывания (решение 173): [лицо, полоса рождения, затем на каждый переход начало − b, конец − b, полоса
+     * прихода]; uy — годы черт брака [муж, жена, год] (tools/build-data.ts; engine/stays.ts).
+     */
+    layout: { nodes: RawNode[]; blocks: RawBlock[]; laneMin: number; laneMax: number; metrics: Record<string, number>; outlines?: RawOutline[]; st?: number[][]; uy?: [number, number, number][] };
     scale: { knots: number[]; xTrue: number[]; xDense: number[] };
   }[];
   modelInfo: unknown;
@@ -377,14 +392,34 @@ function decodeModel(m: RawModel): ModelData {
     const ghost = n[0] < 0;
     const person = persons[ghost ? -n[0] - 1 : n[0]].id;
     const t0 = (chrono.get(person)?.b ?? 0) + n[2];
+    // призрак бездетного брака у мужа (решение 173; engine/house.ts, ghostId) — «ghost:<лицо>@<муж>»
+    const sat = idAt(n[7]);
     return {
-      id: ghost ? `ghost:${person}` : person, person, ghost, lane: n[1], t0, t1: t0 + n[3], block: n[4],
+      id: ghost ? (sat ? `ghost:${person}@${sat}` : `ghost:${person}`) : person, person, ghost, lane: n[1], t0, t1: t0 + n[3], block: n[4],
       parentLane: n[5], layoutParent: idAt(n[6]), satelliteOf: idAt(n[7]), spine: !!n[8], trail: TRAIL_KINDS[n[9] ?? 0],
       brk: n[10] === undefined || n[10] === null ? null : t0 + n[10],
       band: n[11] === undefined ? null : [t0 + n[11], t0 + n[12]!],
       born: n[13] === undefined ? null : t0 + n[13],
     };
   });
+  // «Отчий дом» (решение 173): пребывания лиц с переходом; первое — с рождения, последнее — до конца следа
+  const nodeOf = new Map(nodes.filter((n) => !n.ghost).map((n) => [n.person, n]));
+  for (const r of m.layout.st ?? []) {
+    const person = persons[r[0]].id;
+    const n = nodeOf.get(person);
+    if (!n) continue;
+    const b = chrono.get(person)?.b ?? n.t0;
+    const stays: Stay[] = [{ lane: r[1], t0: b, t1: b }];
+    for (let k = 2; k + 2 < r.length; k += 3) {
+      stays[stays.length - 1].t1 = b + r[k];
+      stays.push({ lane: r[k + 2], t0: b + r[k + 1], t1: b + r[k + 1] });
+    }
+    const last = stays[stays.length - 1];
+    last.t1 = Math.max(n.t1, last.t0);
+    n.starLane = r[1];
+    n.stays = stays;
+  }
+  const unionYears = new Map<string, number>((m.layout.uy ?? []).map(([a, w, t]) => [unionId(persons[a].id, persons[w].id), t]));
   // эпохи модели: в файле модели — только отличия от data/epochs.json (tools/build-data.ts, engine/epochs.ts)
   const modelEpochs = applyEpochDelta(epochs, m.epochs);
   // контуры: годы — десятыми, полосы — двадцатыми, вершины колец — разностями (tools/build-data.ts)
@@ -408,6 +443,7 @@ function decodeModel(m: RawModel): ModelData {
   return {
     id: m.id, chrono, tensions: m.tensions, nodes, outlines, nodeByPerson: new Map(nodes.filter((n) => !n.ghost).map((n) => [n.person, n])),
     blocks: m.layout.blocks.map(decodeBlock), laneMin: m.layout.laneMin, laneMax: m.layout.laneMax, metrics: m.layout.metrics, scale: m.scale, epochs: modelEpochs,
+    unionYears,
   };
 }
 
