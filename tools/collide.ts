@@ -631,24 +631,43 @@ function parse(g: Grab) {
   }
   for (const L of lines) {
     if (L.kind !== 'line' || glided.has(L)) continue;
+    // вид путей журнала, с которыми линия совпадает на наибольшей длине (этап 16): нить ленты на изгибах проходит и по
+    // чертам брака (в isav-mid нить Арама — по черте s.isaak.revekka у x 264 и s.iuda.famar у x 537, а по маршрутам лент
+    // r.j.iakov, r.j.esrom, r.j.aram — трижды), и первое совпадение называло всю нить чертой; по сумме длин нить — лента,
+    // отвесная черта — связь, как прежде; при равенстве — первое совпадение, как прежде
     let hitKind = '';
     let hitKs = '';
-    const hit = L.segs.some(([x0, y0, x1, y1]) =>
-      linkSegs.some(({ seg: s, kind, ks }) => {
+    const got = new Map<string, number>();
+    const byKind = new Map<string, number>();
+    for (const [x0, y0, x1, y1] of L.segs)
+      for (const { seg: s, kind, ks } of linkSegs) {
         const vert = Math.abs(x1 - x0) < 0.6 && Math.abs(s[2] - s[0]) < 0.6 && Math.abs(x0 - s[0]) < 1.2;
         const hor = Math.abs(y1 - y0) < 0.6 && Math.abs(s[3] - s[1]) < 0.6 && Math.abs(y0 - s[1]) < 1.2;
-        const ok = vert
-          ? Math.min(Math.max(y0, y1), Math.max(s[1], s[3])) - Math.max(Math.min(y0, y1), Math.min(s[1], s[3])) > 2
+        const len = vert
+          ? Math.min(Math.max(y0, y1), Math.max(s[1], s[3])) - Math.max(Math.min(y0, y1), Math.min(s[1], s[3]))
           : hor
-            ? Math.min(Math.max(x0, x1), Math.max(s[0], s[2])) - Math.max(Math.min(x0, x1), Math.min(s[0], s[2])) > 2
-            : false;
-        if (ok) {
-          hitKind = kind;
-          hitKs = ks;
+            ? Math.min(Math.max(x0, x1), Math.max(s[0], s[2])) - Math.max(Math.min(x0, x1), Math.min(s[0], s[2]))
+            : 0;
+        if (len > 2) {
+          got.set(`${kind}|${ks}`, (got.get(`${kind}|${ks}`) ?? 0) + len);
+          const kk = kind.split('/')[0];
+          byKind.set(kk, (byKind.get(kk) ?? 0) + len);
         }
-        return ok;
-      }),
-    );
+      }
+    let top = '';
+    let topLen = 0;
+    for (const [k, len] of byKind)
+      if (len > topLen) {
+        topLen = len;
+        top = k;
+      }
+    let best = 0;
+    for (const [k, len] of got)
+      if (k.split('/')[0] === top && len > best) {
+        best = len;
+        [hitKind, hitKs] = k.split('|');
+      }
+    const hit = best > 0;
     // путь ленты по маршрутам связей (журнал «ribbon|…») — лента, а не связь: её нить приглушённого цвета иначе считалась бы
     // связью через имя лица линии
     if (hit) {
