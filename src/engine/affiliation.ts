@@ -25,7 +25,8 @@ export const ANCESTRESS: Readonly<Record<string, HueKey>> = { liya: 'leah', rakh
 /** Опорное лицо неба без выбора (решение 183). */
 export const REF_DEFAULT = 'iakov';
 
-/** Сыновья Иакова и Иосифа — родоначальники колен (как в карточке, src/ui/card/shared.tsx, TRIBES) → мать. */
+/** Сыновья Иакова и Иосифа — родоначальники колен → мать. Шире карточки (src/ui/card/shared.tsx, TRIBES): здесь и Иосиф —
+ * свет колена по матери нужен и его дому; поэтому byAncestry карточки остаётся своим. */
 export const TRIBE_MOTHER: Readonly<Record<string, HueKey>> = {
   ruvim: 'leah',
   simeon: 'leah',
