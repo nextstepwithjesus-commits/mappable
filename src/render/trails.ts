@@ -2467,6 +2467,8 @@ interface LinkText {
   ink?: string;
   /** лицо подписи (мать у ромба, супруг у ромба бездетного брака): его знак у точки — не чужой (решение 160) */
   person?: string;
+  /** x самой точки (середина ромба), если подпись отодвинута от неё (x): по ней — правило принадлежности (решение 160) */
+  ax?: number;
 }
 
 /** Выноска подписи связи — не длиннее (решение 140, К8). */
@@ -2523,7 +2525,7 @@ function putLinkText(v: SkyContext, p: Pass, t: LinkText, a: number, hold = fals
   });
   // правило принадлежности (решения 140, 160): подпись у точки — ближе к ней, чем к чужому знаку; места с номера near —
   // на выноске; не прошло ни одно — подписи нет
-  const b = claim(v, p, boxes, 'plate', t.text, { id: t.id, hold, anchor: { x: t.x, y: t.y, near, person: t.person } });
+  const b = claim(v, p, boxes, 'plate', t.text, { id: t.id, hold, anchor: { x: t.ax ?? t.x, y: t.y, near, person: t.person } });
   if (!b || hold) return null;
   const k = boxes.indexOf(b);
   const c = cands[k];
@@ -2643,7 +2645,7 @@ export function drawMotherNames(v: SkyContext, p: Pass, d: LinkDraw | null | und
     const lab = unionLabel(v, n, x, y, true);
     if (!lab) continue;
     const text = lab.text;
-    const b = putLinkText(v, p, { text, x: x + 5, y, dir: 0, right: true, id: n.union, side2: true, leader: true, ink: v.pal.ink, person: lab.person }, 1);
+    const b = putLinkText(v, p, { text, x: x + 5, ax: x, y, dir: 0, right: true, id: n.union, side2: true, leader: true, ink: v.pal.ink, person: lab.person }, 1);
     if (b) {
       done.add(n.union);
       out.push(`${text}@${Math.round(x)},${Math.round(y)}`);
@@ -2691,7 +2693,7 @@ export function drawLinkLabels(v: SkyContext, p: Pass, d: LinkDraw, late = false
     if (!lab) continue;
     const a = Math.min(1, p.emph(n.owner), p.emph(n.from), lab.person ? p.emph(lab.person) : 1);
     const text = lab.text;
-    const b = putLinkText(v, p, { text, x: x + 5, y, dir: 0, right: true, id: n.union, side2: true, person: lab.person }, 1, a < 0.99);
+    const b = putLinkText(v, p, { text, x: x + 5, ax: x, y, dir: 0, right: true, id: n.union, side2: true, person: lab.person }, 1, a < 0.99);
     if (b) out.push(`${text}@${Math.round(x)},${Math.round(y)}`);
   }
   // первый проход запоминает свои подписи, второй пишет все вместе

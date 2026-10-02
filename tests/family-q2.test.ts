@@ -14,11 +14,12 @@
 import { describe, expect, it } from 'vitest';
 import { familyLayout, type FamilyPrior, type FamilyResult } from '../src/engine/family.ts';
 import { membersOf } from '../src/engine/unions.ts';
-import { byId, lines, models } from '../src/data/atlas.ts';
+import { byId, graph, lines, models } from '../src/data/atlas.ts';
 import { unions } from '../src/ui/reveal.ts';
 import { contentOf, familyData } from '../src/ui/show.ts';
 
 const D = familyData();
+const LINE = new Set([...D.lines.joseph, ...D.lines.mary]);
 const T0 = D.t0;
 const name = (id: string) => byId.get(id)?.name ?? id;
 
@@ -62,8 +63,11 @@ describe('Я16: группы сплошные — наружу мать, за н
           if (us[i - 1].kids.length && us[i].kids.length)
             expect(T0(us[i - 1].kids[0]), `${k}: ${name(p)}: союз ${us[i - 1].union.id} раньше ${us[i].union.id}`).toBeGreaterThanOrEqual(T0(us[i].kids[0]));
         for (const u of us) {
-          // наружу от родителя: мать, затем дети от младшего к старшему (u.kids — от старшего)
-          const members = [...(u.wife ? [u.wife] : []), ...[...u.kids].reverse()];
+          // наружу от родителя: мать, затем дети от младшего к старшему (u.kids — от старшего); ребёнок, которого текст
+          // называет и отцом лица линии Мессии (Федаия, 1 Пар 3:19), стоит у родителя первым — его связь с лентой не
+          // идёт через строки братьев
+          const toLine = (x: string) => (graph.childrenOf.get(x) ?? []).some((e) => LINE.has(e.child));
+          const members = [...(u.wife ? [u.wife] : []), ...[...u.kids].reverse().filter((x) => !toLine(x))];
           if (members.length < 2) continue;
           checked++;
           // мать с детьми — по одну сторону от родителя (дети связаны со следом матери)
@@ -231,12 +235,15 @@ describe('Я16: группы сплошные — наружу мать, за н
     expect(sons.length - above).toBeGreaterThanOrEqual(3);
   });
 
-  it('Давид: Вирсавия — ближе всех жён (её союз позже хевронских), хевронские союзы — лестницей по обе стороны', () => {
+  it('Давид: Вирсавия — ближе всех матерей (её союз позже хевронских), хевронские союзы — лестницей по обе стороны', () => {
     const r = layoutOf('Давид');
     const us = r.units.get('david')!;
-    // решение 173: ближе всех — дети, рождённые в Иерусалиме, чья мать не названа (1 Пар 3:5–9; 14:4–7), затем Вирсавия
-    // (при равном годе союза с Эглой — союз с ребёнком линии Мессии ближе: у его черты расходятся ленты, решение 177)
-    expect(us.filter((u) => u.wife)[0].union.id).toBe('u:david+virsaviya');
+    // решение 173: ближе всех — жёны без детей в показе (Мелхола: год её брака — оценка, черта короткая), затем дети,
+    // рождённые в Иерусалиме, чья мать не названа (1 Пар 3:5–9; 14:4–7), затем Вирсавия (при равном годе союза с Эглой —
+    // союз с ребёнком линии Мессии ближе: у его черты расходятся ленты, решение 177)
+    const lone = us.findIndex((u) => !u.wife || u.kids.length);
+    expect(us.slice(0, lone).every((u) => u.wife && !u.kids.length)).toBe(true);
+    expect(us.filter((u) => u.wife && u.kids.length)[0].union.id).toBe('u:david+virsaviya');
     expect(new Set(us.map((u) => u.side)).size).toBe(2);
   });
 

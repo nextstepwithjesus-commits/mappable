@@ -290,28 +290,70 @@ export const graph14: Scenario[] = [
   {
     n: 1111,
     // у Давида след от звезды до ромба Вирсавии — путь обеих лент (Соломон, Нафан): там лента и есть связь (решение 79),
-    // и подсказка — шаг ленты; несколько союзов на следе без лент — у Халева, сына Есрома
-    title: 'Решение 159: след Халева у звезды — через него идут пути нескольких его союзов: подсказка «Связи дальше по следу»',
+    // и подсказка — шаг ленты; несколько союзов на следе без лент — у Халева, сына Есрома.
+    // Этап 15 («Отчий дом», решение 173): Халев рождается в доме Есрома и переходит в свой дом; черты его браков и стволы
+    // детей от матери не названной — на его следе в его доме (после перехода), туда и наводим: строку дома — по корням
+    // черт его браков (data-links, вид bar, первый конец — на его следе), небо сдвигается к ней перетаскиванием
+    title: 'Решение 159: след Халева в его доме — через него идут пути нескольких его союзов: подсказка «Связи дальше по следу»',
     run: async (p) => {
       await go(p, '#/khalev-syn-esroma');
       const c = await canvasBox(p);
-      const star = await p.evaluate(() => {
-        const s = (document.querySelector('.sky') as HTMLElement).dataset.sel;
-        if (!s) return null;
-        const [x, y] = s.split(' ').map(Number);
-        return { x, y };
-      });
-      if (!star) return fail('выбранной звезды Халева нет');
-      // станции на следе Халева — узлы и концы линий его союзов на его строке; точка — между первыми двумя: дальше по
-      // следу ещё несколько союзов
-      const xs = [...new Set((await rows(p)).flatMap((q) => segs(q.pts.length >= 4 ? q.pts : [...q.pts, ...q.pts]).flatMap((g) => [[g[0], g[1]], [g[2], g[3]]]).filter(([x, y]) => Math.abs(y - star.y) < 1.5 && x > star.x + 6).map(([x]) => Math.round(x))))].sort((a, b) => a - b);
+      const KH = 'khalev-syn-esroma';
+      const roots = async () =>
+        (await rows(p)).filter((q) => q.kind === 'bar' && q.ks.startsWith(`s.${KH}.`) && q.ks.endsWith(`.${KH}`)).map((q) => ({ x: q.pts[0], y: q.pts[1] }));
+      // строка дома — та, где корней больше
+      const rowOf = (list: { y: number }[]) => {
+        const by = new Map<number, number>();
+        for (const q of list) by.set(Math.round(q.y), (by.get(Math.round(q.y)) ?? 0) + 1);
+        return [...by].sort((a, b) => b[1] - a[1])[0][0];
+      };
+      // перетаскивание неба на dy px (шагами, чтобы указатель оставался над холстом)
+      const drag = async (dy: number) => {
+        const step = Math.max(-c.height / 3, Math.min(c.height / 3, dy));
+        const x0 = c.x + c.width * 0.85;
+        const y0 = c.y + c.height / 2 - step / 2;
+        await p.mouse.move(x0, y0);
+        await p.mouse.down();
+        await p.mouse.move(x0, y0 + step / 2, { steps: 4 });
+        await p.mouse.move(x0, y0 + step, { steps: 4 });
+        await p.mouse.up();
+        await p.waitForTimeout(500);
+      };
+      // дом Халева — выше его звезды (указатели шатра «↑ Азува» у верхней кромки): небо — вниз, пока не покажутся черты
+      let rs = await roots();
+      for (let k = 0; k < 12 && !rs.length; k++) {
+        await drag(c.height / 3);
+        rs = await roots();
+      }
+      if (!rs.length) return fail('черт браков Халева в кадре нет и выше его звезды');
+      // строка дома — к середине холста
+      for (let k = 0; k < 8; k++) {
+        const dy = c.height / 2 - rowOf(rs);
+        if (Math.abs(dy) < 40) break;
+        await drag(dy);
+        rs = await roots();
+        if (!rs.length) return fail('черты браков Халева пропали при сдвиге неба');
+      }
+      const y = rowOf(rs);
+      if (y < 0 || y > c.height) return fail(`строка дома Халева вне холста: ${y}`);
+      // станции на следе Халева в его доме — узлы и концы линий его союзов на этой строке; точка — между соседними,
+      // разошедшимися на 24 px: дальше по следу ещё несколько союзов
+      const xs = [
+        ...new Set(
+          (await rows(p))
+            .filter((q) => q.ks.includes(`.${KH}.`) || q.ks.endsWith(`.${KH}`))
+            .flatMap((q) => segs(q.pts.length >= 4 ? q.pts : [...q.pts, ...q.pts]).flatMap((g) => [[g[0], g[1]], [g[2], g[3]]]))
+            .filter(([x, yy]) => Math.abs(yy - y) < 1.5 && x > 0 && x < c.width)
+            .map(([x]) => Math.round(x)),
+        ),
+      ].sort((a, b) => a - b);
       const gap = xs.findIndex((x, k) => k > 0 && x - xs[k - 1] >= 24);
-      if (gap < 1) return fail(`на следе Халева нет двух станций дальше 24 px: ${xs.join(', ')}`);
-      await p.mouse.move(c.x + (xs[gap - 1] + xs[gap]) / 2, c.y + star.y);
+      if (gap < 1) return fail(`на следе Халева в его доме нет двух станций дальше 24 px: ${xs.join(', ')}`);
+      await p.mouse.move(c.x + (xs[gap - 1] + xs[gap]) / 2, c.y + y);
       await p.waitForTimeout(700);
       const tip = ((await p.locator('.tip').first().textContent().catch(() => '')) ?? '').replace(/\s+/g, ' ');
-      if (!/Связи дальше по следу/.test(tip)) return fail(`подсказка на следе (x ${Math.round((xs[gap - 1] + xs[gap]) / 2)}; станции ${xs.join(', ')}): «${tip.slice(0, 120)}»`);
-      return pass(`подсказка «${tip.trim().slice(0, 100)}»`);
+      if (!/Связи дальше по следу/.test(tip)) return fail(`подсказка на следе (x ${Math.round((xs[gap - 1] + xs[gap]) / 2)}, y ${y}; станции ${xs.join(', ')}): «${tip.slice(0, 120)}»`);
+      return pass(`строка дома ${y}, станции ${xs.join(', ')}; подсказка «${tip.trim().slice(0, 100)}»`);
     },
   },
 ];

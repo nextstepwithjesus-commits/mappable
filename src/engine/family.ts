@@ -13,7 +13,11 @@
  *     чем позже союз (год до первого ребёнка в показе), тем ближе к родителю; при равенстве — союз с ребёнком линии
  *     Мессии, затем порядок текста (порядок брака, порядок супругов в данных, первый ребёнок). Внутри единицы наружу от родителя — мать, за ней её дети:
  *     младший у матери, старший дальше всех (при равном годе — по порядку перечисления). Поэтому отвод от следа матери
- *     в год рождения и ствол внешней единицы проходят только строки, которые в этот год ещё пусты.
+ *     в год рождения и ствол внешней единицы проходят только строки, которые в этот год ещё пусты. Жена без детей
+ *     в показе — ближе всех (год её брака — оценка); ребёнок, которого текст называет и отцом лица линии Мессии
+ *     (Федаия), — у родителя первым. Призраки (решение 173): бездетный брак, жена живёт не в семье мужа, — её призрак
+ *     у мужа в свободной строке дома; дочь, ушедшая в семью мужа, — призраком среди братьев. У лица коридора притоки
+ *     стоят стопкой, не вперемешку.
  *  3. Стороны решаются по данным, а не по раскрытому: у лица с двумя союзами с детьми и больше единицы чередуются
  *     выше и ниже следа; у лица с одним союзом, пятью детьми и больше и без матери в показе родитель стоит
  *     посередине — старшие выше, младшие ниже (у каждой половины младший — у родителя). Мать с детьми — всегда по одну
@@ -215,6 +219,8 @@ interface Unit {
   /** дочери, ушедшие в семью мужа: в этой единице — их призраки на местах детей */
   away?: string[];
 }
+/** Жена без детей в показе (единица только с женой): её год брака — оценка, место — в свободной строке дома. */
+const isLone = (x: Unit) => !!x.wife && !x.kids.length && !x.away;
 /** Место призрака в строке, лет: знак и имя. */
 const GHOST_LEN = 12;
 const ghostKey = (w: string, h: string | null) => (h ? `ghost:${w}@${h}` : `ghost:${w}`);
@@ -366,7 +372,11 @@ export function familyLayout(S0: ReadonlySet<string>, d: FamilyData, o: FamilyOp
   const lineKid = (x: Unit) => (x.u.kids.some((k) => S.has(k) && spine.has(k)) ? 0 : 1);
   for (const [p, a] of units) {
     const ord = (U.of.get(p) ?? []).map((u) => u.id);
-    a.sort((x, y) => y.tu - x.tu || lineKid(x) - lineKid(y) || (ord.indexOf(x.u.id) + 1 || 999) - (ord.indexOf(y.u.id) + 1 || 999));
+    // жена без детей в показе — у мужа, ближе всех: год её союза — оценка (взрослость), а не событие; её черта короткая,
+    // а дальние черты проходят её строку только после её прихода (Азува у Халева: иначе её черта шла бы через 13 строк
+    // семей наложниц и детей «мать не названа», рождённых в те же годы)
+    const lone = (x: Unit) => (isLone(x) ? 0 : 1);
+    a.sort((x, y) => lone(x) - lone(y) || y.tu - x.tu || lineKid(x) - lineKid(y) || (ord.indexOf(x.u.id) + 1 || 999) - (ord.indexOf(y.u.id) + 1 || 999));
   }
 
   // ---------- «песочные часы» ----------
@@ -422,18 +432,33 @@ export function familyLayout(S0: ReadonlySet<string>, d: FamilyData, o: FamilyOp
     // наружу от родителя (решение 173): мать, за ней дети — младший у матери, старший дальше всех; по обе стороны
     // одинаково. Отвод к старшему в год его рождения проходит строки младших, ещё не рождённых
     const awaySet = new Set(un.away ?? []);
-    const kids = [...un.kids, ...awaySet].sort(kidOrder).reverse();
+    // ребёнок, которого текст называет и отцом лица линии Мессии (Федаия — отец Зоровавеля по 1 Пар 3:19), — у родителя,
+    // ближе братьев: его связь с лентой не идёт через их строки
+    const toLine = (k: string) => ((g.childrenOf.get(k) ?? []).some((e) => spineAll.has(e.child)) ? 0 : 1);
+    const kids = [...un.kids, ...awaySet].sort(kidOrder).reverse().sort((x, y) => toLine(x) - toLine(y));
     const members = [...(un.wife ? [un.wife] : []), ...kids];
     let prev = start;
-    if (un.ghost) {
-      // призрак: одна строка — знак и имя в год брака
-      const key = ghostKey(un.ghost, un.p);
-      const sub: Contour = new Map([[0, [tu - GAP, tu + GHOST_LEN + GAP]]]);
-      let off = prev + 1;
-      while (collides(acc, sub, s * off)) off++;
+    if (un.ghost || isLone(un)) {
+      // призрак (знак и имя в год брака) и жена без детей в показе — в ближайшей строке дома, где есть место, а черта
+      // к ним в год брака проходит только пустые строки: строки семьи переиспользуются, отдельная строка — если места нет
+      const key = un.ghost ? ghostKey(un.ghost, un.p) : un.wife!;
+      const sub: Contour = un.ghost ? new Map([[0, [tu - GAP, tu + GHOST_LEN + GAP]]]) : blockOf(un.wife!, s, false);
+      if (!un.ghost) addIv(sub, 0, tu - GAP, tu + GAP);
+      // ближайшая свободная строка до первой, занятой в год брака (дальше черта её пересекла бы); иначе — за семьями
+      let off = 0;
+      for (let k = 1; k <= prev + 1; k++) {
+        if (!collides(acc, sub, s * k)) {
+          off = k;
+          break;
+        }
+        if (hit(acc.get(s * k), tu, tu)) break;
+      }
+      if (!off) for (off = prev + 1; collides(acc, sub, s * off); off++);
       merge(acc, sub, s * off);
-      pos.set(key, s * off);
-      prev = off;
+      if (un.ghost) pos.set(key, s * off);
+      else for (const [q, r] of rel.get(un.wife!)!) pos.set(q, r + s * off);
+      for (let k = 1; k < off; k++) addIv(acc, s * k, tu - 1, tu + 1);
+      return Math.max(prev, off);
     }
     for (const m of members) {
       if (awaySet.has(m)) {
@@ -490,7 +515,8 @@ export function familyLayout(S0: ReadonlySet<string>, d: FamilyData, o: FamilyOp
       rel.set(p, pos);
       return acc;
     }
-    us.forEach((un, i) => {
+    // призраки — после семей: в свободные строки дома (жёны без детей в показе — первыми, у родителя)
+    [...us.filter((x) => !x.ghost), ...us.filter((x) => x.ghost)].forEach((un, i) => {
       let s: 1 | -1 = side;
       const dIdx = dataUnions.findIndex((x) => x.id === un.u.id);
       const at = dIdx >= 0 ? dIdx : i;
@@ -502,6 +528,7 @@ export function familyLayout(S0: ReadonlySet<string>, d: FamilyData, o: FamilyOp
       const tu = Math.min(un.tu, inner.get(s)! - 2);
       trunkT.set(un.u.id, tu);
       const prev = unitContour(un, s, tu, acc, last.get(s)!, pos);
+      if (un.ghost || isLone(un)) return;
       last.set(s, prev);
       inner.set(s, Math.min(inner.get(s)!, firstOf(un), tu));
     });
@@ -630,6 +657,8 @@ export function familyLayout(S0: ReadonlySet<string>, d: FamilyData, o: FamilyOp
         }
       }
       if (!best) continue;
+      // стороны и стволы вложенных единиц — по выбранной стороне (перебор сторон переписывал их последней пробой)
+      unitContour(un, best.side, best.tu, new Map(), 0, new Map());
       // «мать не названа» у лица коридора (решение 175: отводы — от следа отца): ствол в год до первого ребёнка прошёл
       // бы живые следы лиц коридора между отцом и детьми (Нафан и Соломон — у сыновей Давида, рождённых в Иерусалиме);
       // ствол — раньше их рождений (ступень), дальше — зубцы по строкам детей, где в эти годы пусто

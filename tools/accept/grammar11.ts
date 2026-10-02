@@ -114,6 +114,15 @@ const labelRects = async (p: Page) =>
     .split(';')
     .filter(Boolean)
     .map((q) => q.slice(q.lastIndexOf(':') + 1).split(',').map(Number));
+/**
+ * Рамки указателей у края неба (.sky[data-edges]: «подпись=лица@x,y,w,h|…»; этап 15, решение 176: указатели шатра и
+ * родни у кромки — свои цели щелчка, перелёт к лицу): точка прицела на линии — и вне их.
+ */
+const edgeRects = async (p: Page) =>
+  (((await p.locator('.sky').getAttribute('data-edges')) ?? '') as string)
+    .split('|')
+    .filter(Boolean)
+    .map((q) => q.slice(q.lastIndexOf('@') + 1).split(',').map(Number));
 const inLabel = (rs: number[][], x: number, y: number, pad = 3) => rs.some(([bx, by, bw, bh]) => x >= bx - pad && x <= bx + bw + pad && y >= by - pad && y <= by + bh + pad);
 const nodesOf = (log: LogPath[]) => log.filter((q) => q.kind === 'node' || q.kind === 'join').map((q) => q.pts);
 /** Отрезки пути. */
@@ -330,10 +339,49 @@ export const grammar11: Scenario[] = [
         if (!tooth) return fail('зубец к Иосифу ушёл из кадра');
         aim = safeAim(tooth, [], nodesOf(log), 22);
       }
+      // этап 15 («Отчий дом»): дети Рахили стоят у края открытого неба — под строкой показа («потомки Иакова —
+      // 1 поколение») или у листа карточки, где у кромки стоят указатели шатра; зубец выводим на середину открытой
+      // части неба (самый длинный отрезок по вертикали, где сверху — холст), перетаскиванием
+      for (let k = 0; k < 3 && aim; k++) {
+        const ax = o0.x + aim.x;
+        const free = await p.evaluate(
+          ({ x, y0, y1 }) => {
+            let best = { a: 0, b: 0 };
+            let run = -1;
+            for (let y = y0; y <= y1; y += 4) {
+              const e = document.elementFromPoint(x, y);
+              const ok = !!e && e.matches('.sky canvas');
+              if (ok && run < 0) run = y;
+              if ((!ok || y + 4 > y1) && run >= 0) {
+                if (y - run > best.b - best.a) best = { a: run, b: y };
+                run = -1;
+              }
+            }
+            return best;
+          },
+          { x: ax, y0: o0.y, y1: o0.y + 844 },
+        );
+        const mid = (free.a + free.b) / 2 - o0.y;
+        const dy = mid - aim.y;
+        if (Math.abs(dy) < 30) break;
+        await p.mouse.move(ax + 120, o0.y + mid - dy / 2);
+        await p.mouse.down();
+        await p.mouse.move(ax + 120, o0.y + mid, { steps: 4 });
+        await p.mouse.move(ax + 120, o0.y + mid + dy / 2, { steps: 4 });
+        await p.mouse.up();
+        // небо после перетаскивания доезжает по инерции: касание в движении только останавливает его
+        await settled(p);
+        await p.waitForTimeout(400);
+        log = await linkLog(p);
+        tooth = log.find((q) => q.kind === 'tooth' && q.ks === 'k.iakov.rakhil._.iosif');
+        if (!tooth) return fail('зубец к Иосифу ушёл из кадра');
+        aim = safeAim(tooth, [], nodesOf(log), 22);
+      }
       if (!aim) return fail('на зубце нет точки дальше 22 px от ромбов');
       await clickAt(p, aim, true);
       let got = await htmlLink(p);
-      if (!got && (await p.locator('.which').count())) {
+      const which = await p.locator('.which').count();
+      if (!got && which) {
         const row = p.locator('.which .which-link[data-link="k.iakov.rakhil._.iosif"]');
         if (!(await row.count())) return fail('«Какая связь?» без связи Иосифа');
         const h = (await row.boundingBox())!.height;
@@ -343,7 +391,7 @@ export const grammar11: Scenario[] = [
         await p.waitForTimeout(600);
         got = await htmlLink(p);
       }
-      if (got !== 'k.iakov.rakhil._.iosif') return fail(`выбрана «${got}»`);
+      if (got !== 'k.iakov.rakhil._.iosif') return fail(`выбрана «${got}» (касание ${Math.round(aim.x)}, ${Math.round(aim.y)}; зубец ${tooth.pts.join(',')}; «Какая связь?» ${which}; адрес ${p.url().split('#')[1]})`);
       return pass('касание выбрало связь');
     },
   },
@@ -419,8 +467,8 @@ export const grammar11: Scenario[] = [
         // точка щелчка по линии — дальше 13 px от звёзд и узлов (ближе звезда и ромб важнее линии, § 8)
         const starPts = await starsOf(p);
         const nodePts = nodesOf(all);
-        // и вне рамок подписей (решение 154: имя под указателем — лицо)
-        const labels = await labelRects(p);
+        // и вне рамок подписей (решение 154: имя под указателем — лицо) и указателей у края (решение 176: щелчок — перелёт)
+        const labels = [...(await labelRects(p)), ...(await edgeRects(p))];
         const aims = new Map<LogPath, { x: number; y: number }>();
         for (const q of log) {
           const a = safeAim(q, starPts, nodePts, 13, all, labels);
@@ -440,7 +488,7 @@ export const grammar11: Scenario[] = [
           const ok = !!got && (s?.ends.length ?? 0) >= need && card >= need && hashId(p) === before && /~c/.test(p.url());
           // тот же союз: у зубца — связь с его ребёнком, у ствола — союз, у «‖» — супруг, у ленты — шаг
           const same = got === q.ks || (keyKind(q.ks) === 'u' && got.startsWith('u.') && got === q.ks);
-          if (!ok || !same) bad.push(`${hash} ${q.kind} ${q.ks} → «${got}» (концов ${s?.ends.length ?? 0}, строк ${card})`);
+          if (!ok || !same) bad.push(`${hash} ${q.kind} ${q.ks} @${Math.round(aims.get(q)!.x)},${Math.round(aims.get(q)!.y)} → «${got}» (концов ${s?.ends.length ?? 0}, строк ${card}; адрес ${p.url().split('#')[1]})`);
           kinds.set(q.kind, (kinds.get(q.kind) ?? 0) + 1);
           done++;
           await clearLink(p);

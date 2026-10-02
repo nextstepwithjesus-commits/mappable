@@ -37,13 +37,21 @@ import { listingOf, orderListing, type OrderListing } from './trails.ts';
 
 /** Ствол — на столько px левее звезды первого ребёнка гнезда (Г3: 8–10). */
 export const TRUNK_LEAD = 9;
-/** Отступ ствола от середины звезды ребёнка: 9 px, у крупной звезды — край знака и ещё 3 px видимого зубца. */
-export const leadOf = (s: { r: number }) => Math.max(TRUNK_LEAD, s.r + 4.5);
+/** Отступ ствола от середины звезды ребёнка: край знака и видимый зубец со своей целью щелчка (toothRoom, не меньше 9 px). */
+export const leadOf = (s: { r: number }) => Math.max(TRUNK_LEAD, toothRoom(s));
 /** Наименьший шаг между узлами разных союзов на одном следе: ромб с подложкой цвета неба (r + 1,8) не задевает соседний. */
 const nodeGapOf = (inp: Pick<LinkInput, 'nodeR' | 'layout'>) => 2 * (inp.nodeR ?? (inp.layout === 'family' ? NODE_R_FAMILY : NODE_R_MAP)) + 2;
 /** Ствол — не дальше стольких px левее первого ребёнка (Я6: рождение − 32) и не ближе (рождение − 5). */
 export const TRUNK_MAX = 32;
 export const TRUNK_MIN = 5;
+/**
+ * Видимый зубец — не короче (px): его начало у ствола лежит дальше знака звезды и ещё 5 px (src/ui/sky/input.ts,
+ * STAR_FIRST: точное наведение на линию вне знака звезды) — у отвода своя цель щелчка, не перехваченная ни звездой
+ * ребёнка, ни ромбом (Иосиф у Рахили, Амнон у Ахиноамы: зубцы были по 3 px).
+ */
+export const TOOTH_HIT = 9;
+/** Ствол — не ближе к середине звезды первого ребёнка гнезда: её радиус, 1,5 px и видимый зубец. */
+export const toothRoom = (s: { r: number }) => Math.max(TRUNK_MIN, s.r + 1.5 + TOOTH_HIT);
 /** Зубец — не длиннее (Г3, Я6). */
 export const TOOTH_MAX = 40;
 /** Вертикали разных союзов — не ближе (Г6); если одна из них черта брака или лента — не ближе WIDE_GAP. */
@@ -840,7 +848,7 @@ function houseLinks(inp: LinkInput): LinkFrame {
     const nests: LinkStar[][] = [];
     for (const k of kids) {
       const g = nests[nests.length - 1];
-      if (g && k.x - (g[0].x - leadOf(g[0])) <= TOOTH_MAX) g.push(k);
+      if (g && k.x - (g[0].x - toothRoom(g[0])) <= TOOTH_MAX) g.push(k);
       else nests.push([k]);
     }
     plans.push({ u, kind, F, W, O, kids, rib, look, label: null, late: false, childless, xw, nests, merged: false, col: NaN, xs: [] });
@@ -893,7 +901,7 @@ function houseLinks(inp: LinkInput): LinkFrame {
       const first = n0[0];
       want = p.xw !== null ? Math.min(p.xw, first.x - leadOf(first)) : first.x - leadOf(first);
       lo = Math.max(lo0, first.x - TRUNK_MAX, Math.max(...n0.map((k) => k.x)) - TOOTH_MAX);
-      hi = first.x - TRUNK_MIN;
+      hi = first.x - toothRoom(first);
     } else if (n0 || p.rib.length) {
       // у союза только с ребёнком линии — до самой его звезды: станция ленты у черты (решение 177), а черта — не раньше
       // прихода матери в дом (у матери царя он бывает за год до рождения)
@@ -915,6 +923,15 @@ function houseLinks(inp: LinkInput): LinkFrame {
       // родовая черта до черты брака
       hi = end >= lo0 + 2 * WIDE_GAP ? end : Math.min(end2, lo0 + 3 * WIDE_GAP);
       want = Math.max(lo, Math.min(end >= lo0 ? end : hi, want));
+      // жена пришла в дом мужа позже окна у звёзд (решение 173; её след-метка кончился до прихода, у Азувы и Иериофы,
+      // жён Халева): черта — в год прихода, не раньше, у её следа — родовая черта до неё; иначе черта шла бы к мужу,
+      // ещё живущему в отчем доме, через всё небо
+      const came = W && !W.ghost ? arrivalOf(W, Infinity) + 1 : -Infinity;
+      if (Number.isFinite(came) && came > hi && came <= end2) {
+        lo = came;
+        hi = Math.min(end2, came + 3 * WIDE_GAP);
+        want = Math.max(lo, Math.min(hi, p.xw ?? lo));
+      }
       if (hi < lo || p.k6) {
         // места на её следе нет: ромб на следе мужа с её именем (К6)
         p.W = null;
@@ -944,7 +961,7 @@ function houseLinks(inp: LinkInput): LinkFrame {
     const first = g[0];
     const w = first.x - leadOf(first);
     let l = Math.max(p.O.x + p.O.r + 3, first.x - TRUNK_MAX, Math.max(...g.map((k) => k.x)) - TOOTH_MAX);
-    const h = first.x - TRUNK_MIN;
+    const h = first.x - toothRoom(first);
     // ствол — от живой доли следа матери (после её перехода в дом мужа), если гнездо это позволяет
     const arr = arrivalOf(p.O, h) + 1;
     if (arr > l && arr <= h) l = arr;
