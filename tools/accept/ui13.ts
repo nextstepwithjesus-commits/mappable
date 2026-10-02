@@ -533,7 +533,7 @@ export const ui13: Scenario[] = [
   },
   {
     n: 1017,
-    title: 'Решение 122 (UI-13, UI-15): вступление — «Найти человека», «Читать главу» и пять начал первым слоем; «Меню» телефона — группами «Искать и читать», «Исследовать связи», «Справка» со строками задач',
+    title: 'Решение 122 (UI-13, UI-15): вступление — «Найти человека», «Читать главу» и шесть начал (решение 187) первым слоем; «Меню» телефона — группами «Искать и читать», «Исследовать связи», «Справка» со строками задач',
     run: async (p) => {
       await p.goto(`${p.url().replace(/[?#].*$/, '')}?i122=${Date.now()}#/`);
       await p.evaluate(() => {
@@ -546,7 +546,8 @@ export const ui13: Scenario[] = [
       const first = (await p.locator('.cartouche .first button').allInnerTexts()).map(flat);
       if (!/^Найти человека/.test(first[0] ?? '') || first[1] !== 'Читать главу') return fail(`первый слой: ${first.join(' | ')}`);
       const starts = await p.locator('.cartouche .starts button').count();
-      if (starts !== 5) return fail(`начал: ${starts}`);
+      // этап 16 (решение 187): шестое начало — «Рассказ: от Адама до Иисуса Христа»
+      if (starts !== 6) return fail(`начал: ${starts}`);
       // первый слой — выше начал и длинного текста
       const y = async (sel: string) => (await p.locator(sel).first().boundingBox())?.y ?? 1e9;
       if (!((await y('.cartouche .first')) < (await y('.cartouche .starts')) && (await y('.cartouche .starts')) < (await y('.cartouche .long')))) return fail('порядок слоёв вступления');
