@@ -7,6 +7,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { contrast } from '../src/ui/contrast.ts';
+import { starLaneOf } from '../src/engine/stays.ts';
 
 const css = readFileSync(join(__dirname, '../src/styles/tokens.css'), 'utf8');
 const block = (sel: string) => {
@@ -86,7 +87,8 @@ const around = (id: string, span: number, mult = 1) => (s: Sky) => {
   const vp = s.cam.vp;
   const vw = vp.r - vp.l;
   const kx = vw / (s.xOf(t + span / 2) - s.xOf(t - span / 2));
-  s.cam.set({ x0: x - (vp.l + vw / 2) / kx, kx, laneTop: s.node(id)!.lane + (vp.t + vp.b) / 2 / s.cam.kyFor(kx) });
+  // окно — у звезды лица: в полосе рождения (этап 15, решение 173)
+  s.cam.set({ x0: x - (vp.l + vw / 2) / kx, kx, laneTop: starLaneOf(s.node(id)!) + (vp.t + vp.b) / 2 / s.cam.kyFor(kx) });
 };
 /** Окно в `span` лет вокруг года (исторического) и полосы. */
 const window = (year: number, span: number, lane = 0) => (s: Sky) => {
@@ -156,7 +158,7 @@ describe('подписи (MAP-06, 56, 66; MOB-53)', () => {
       const n = s.nodes[i];
       if (n.ghost || n.person === 'iisus' || !s.reachable(i) || s.thinned(i)) continue;
       const x = s.cam.sx(s.X0[i]);
-      const y = s.cam.sy(n.lane);
+      const y = s.starY(i);
       if (x >= jb.x && x <= jb.x + jb.w && y >= jb.y && y <= jb.y + jb.h) covered.push(n.person);
     }
     expect(covered).toEqual([]);
@@ -204,7 +206,8 @@ describe('подписи (MAP-06, 56, 66; MOB-53)', () => {
     expect(b).toBeTruthy();
     const i = s.indexOf('moisey')!;
     const x = s.cam.sx(s.X0[i]);
-    const y = Math.round(s.cam.sy(s.nodes[i].lane)) + 0.5;
+    // подпись и её полоса — у звезды: в полосе рождения (решение 173)
+    const y = Math.round(s.starY(i)) + 0.5;
     if (b.x > x) {
       // заливка фона — от края звезды до конца подписи, поперёк следа
       const k = fills.find((f) => f.x > x && f.x < x + 12 && f.y <= y - 1 && f.y + f.h >= y + 1 && f.x + f.w >= b.x + b.w - 2);

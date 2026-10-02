@@ -7,6 +7,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { Camera, easeOut, type Frame } from '../src/render/camera.ts';
 import { inertia, INERTIA_MAX, INERTIA_MS, AXIS_SLOP, edgeAxis } from '../src/ui/sky/input.ts';
 import { TIP_DELAY, TIP_MORE } from '../src/ui/sky/tip.ts';
+import { starLaneOf } from '../src/engine/stays.ts';
 
 const frame: Frame = { x0: 0, x1: 10_000, lane0: -100, lane1: 100 };
 function cam() {
@@ -156,7 +157,8 @@ function makeSky(w = 1440, h = 776): SkyT {
   common.skyRef.current = s;
   return s;
 }
-const at = (s: SkyT, id: string) => ({ x: s.cam.sx(s.nodeX(id)!), y: s.cam.sy(s.node(id)!.lane) });
+// место лица — его звезда: в полосе рождения (этап 15, решение 173; src/engine/stays.ts, starLaneOf)
+const at = (s: SkyT, id: string) => ({ x: s.cam.sx(s.nodeX(id)!), y: s.cam.sy(starLaneOf(s.node(id)!)) });
 
 describe('смена модели хронологии держит выбранное лицо (IX-48; решение 35)', () => {
   it('при любой смене модели выбранное лицо сдвигается не больше чем на 1 px — по обеим осям', async () => {
@@ -171,7 +173,8 @@ describe('смена модели хронологии держит выбран
           if (from === to) continue;
           s.setModel(from, 1);
           const n = s.node(id)!;
-          s.cam.set({ x0: s.nodeX(id)! - 340 / 0.09, kx: 0.09, laneTop: s.rowOf(n.lane) + 400 / s.cam.kyFor(0.09) });
+          // звезда лица — в окне (полоса рождения, решение 173)
+          s.cam.set({ x0: s.nodeX(id)! - 340 / 0.09, kx: 0.09, laneTop: s.rowOf(starLaneOf(n)) + 400 / s.cam.kyFor(0.09) });
           state.selected.value = id;
           const a = view.anchorNow()!;
           expect(a.id).toBe(id);

@@ -176,6 +176,12 @@ export interface LifeTrail {
   bends?: Bend[];
   /** доля яркости переходов против следа (решение 178: на обзоре неба переходы бледнее); нет — 1 */
   bendAlpha?: number;
+  /**
+   * Где след становится «живым» (px холста): жена, живущая в доме мужа с рождения (решение 173, Д7), — с года прихода в
+   * дом (NodeRow.wed; в семейной укладке — FamilyResult.since). Доля следа до этой x — бледнее (TRAIL_PALE): её строка
+   * ещё не её дом; разрывов и чужих узлов на ней нет (links.ts, LinkStar.from). Нет — след живой от звезды.
+   */
+  liveFrom?: number;
 }
 
 /**
@@ -431,6 +437,30 @@ export function gapLine(ctx: CanvasRenderingContext2D, a: number, b: number, y: 
  * «//» — бледнее. Точек и пунктира на следе нет; эпохальная дата («время не установлено») — точечный след не длиннее 60 px.
  */
 export function drawLifeTrail(ctx: CanvasRenderingContext2D, t: LifeTrail) {
+  const lf = t.liveFrom;
+  if (lf !== undefined && lf > t.x0 + 0.5) {
+    // доля следа до прихода в дом мужа — бледнее (решение 173, Д7): тот же след двумя проходами с вырезом по x
+    const g = ctx.globalAlpha;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(-1e5, -1e5, lf + 1e5, 2e5);
+    ctx.clip();
+    ctx.globalAlpha = g * TRAIL_PALE;
+    trailPasses(ctx, t);
+    ctx.restore();
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(lf, -1e5, 2e5, 2e5);
+    ctx.clip();
+    trailPasses(ctx, t);
+    ctx.restore();
+    return;
+  }
+  trailPasses(ctx, t);
+}
+
+/** След с переходами: горизонтали и переходы (бледнее на обзоре неба, решение 178). */
+function trailPasses(ctx: CanvasRenderingContext2D, t: LifeTrail) {
   const ba = t.bendAlpha ?? 1;
   if (!t.bends?.length || ba >= 0.999) return lifeTrailPass(ctx, t, 3);
   // переходы бледнее следа (решение 178): горизонтали и переходы — двумя проходами
@@ -505,6 +535,9 @@ export function trailOf(v: SkyContext, i: number, out: LifeTrail): LifeTrail | n
   out.y = Math.round(cam.sy(starLaneOf(n))) + 0.5;
   out.bends = hasGlides(n) ? (bendsOf(v, n) ?? undefined) : undefined;
   out.bendAlpha = undefined;
+  // жена в доме мужа с рождения (решение 173, Д7): живой след — с года прихода в дом
+  const live = v.liveYear?.(i) ?? null;
+  out.liveFrom = live !== null && live > n.t0 ? cam.sx(v.xOf(live)) : undefined;
   out.cls = c.cls;
   out.known = known;
   out.solidTo = sure;

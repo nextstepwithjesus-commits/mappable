@@ -141,6 +141,11 @@ export interface ShowIn {
    * от строки родителя и год ствола (у внешней единицы — до рождений детей внутренних: ступенька «лестницы союзов»).
    */
   units?: ReadonlyMap<string, readonly FamilyUnit[]> | null;
+  /**
+   * 'family': жена → год (астр.), с которого её строка — «в семье мужа» (src/engine/family.ts, FamilyResult.since; решение
+   * 173, Д7): доля её следа до него бледнее (src/render/trails.ts, LifeTrail.liveFrom)
+   */
+  since?: ReadonlyMap<string, number> | null;
 }
 
 /** Что показывает небо: режим, рабочий набор и свёрнутое (src/ui/work.ts). */
@@ -195,6 +200,8 @@ export interface PlanNode {
   ghost: boolean;
   spine: boolean;
   satelliteOf: string | null;
+  /** пребывания лица (этап 15, решение 173; src/engine/stays.ts): их строки — тоже строки лица */
+  stays?: readonly { lane: number }[];
 }
 
 /** Знак свёрнутого на небе: «+N» справа от следа лица или строка-подпись созвездия. */
@@ -239,6 +246,8 @@ export interface SkyPlan {
   anchor?: string | null;
   /** 'family': единицы союзов укладки по родителю (ShowIn.units); 'map' — null */
   units?: ReadonlyMap<string, readonly FamilyUnit[]> | null;
+  /** 'family': год, с которого строка жены — «в семье мужа» (ShowIn.since); 'map' — null */
+  since?: ReadonlyMap<string, number> | null;
 }
 
 /** Поля плана без показа: прежняя карта. */
@@ -316,7 +325,7 @@ export function planSky(d: PlanData, v: SkyView): FullPlan {
   const s = v.show;
   if (!s) return { ...planMap(d, v), ...MAP_FIELDS };
   const extra = { guests: s.guests, stubs: s.stubs, anchor: s.anchor };
-  if (s.layout === 'family' && s.lanes) return { ...planFamily(d, v, s.lanes, s.key), ...extra, units: s.units ?? null };
+  if (s.layout === 'family' && s.lanes) return { ...planFamily(d, v, s.lanes, s.key), ...extra, units: s.units ?? null, since: s.since ?? null };
   // карта: всё небо или лица показа и гости на полосах общей раскладки (пустые полосы убраны, как в прежнем «наборе»)
   const set = s.ids ? new Set([...s.ids, ...s.guests]) : v.set;
   return { ...planMap(d, { ...v, mode: s.ids ? 'work' : 'all', set }), layout: 'map', nodeLane: null, ...extra };
@@ -386,14 +395,21 @@ function planMap(d: PlanData, v: SkyView): MapPlan {
   const occupied = new Uint8Array(L);
   const shown = new Uint8Array(L);
   const block = new Int32Array(L).fill(-2);
-  for (let i = 0; i < N; i++) {
-    const j = nodes[i].lane - laneMin;
-    if (j < 0 || j >= L) continue;
+  const mark = (lane: number, i: number) => {
+    const j = lane - laneMin;
+    if (j < 0 || j >= L) return;
     occupied[j] = 1;
     if (!hidden[i]) {
       shown[j] = 1;
       if (block[j] === -2) block[j] = nodes[i].block;
     }
+  };
+  for (let i = 0; i < N; i++) {
+    mark(nodes[i].lane, i);
+    // пребывания лица (этап 15, решение 173): строка звезды в отчем доме и строки до перехода — тоже строки лица; переход
+    // между ними проходит сжатые строки, их держать не нужно
+    const st = nodes[i].stays;
+    if (st) for (const q of st) if (q.lane !== nodes[i].lane) mark(q.lane, i);
   }
   const h = new Float64Array(L);
   for (let j = 0; j < L; j++) h[j] = shown[j] || (!work && !occupied[j]) ? 1 : 0;

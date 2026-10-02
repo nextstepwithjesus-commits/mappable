@@ -280,6 +280,11 @@ export interface SkyContext {
   readonly ribbonNodes: readonly NodeRow[];
   /** ступенька шага ленты «родитель>ребёнок» (x px холста) у узла его союза (src/render/links.ts); null — узла нет */
   linkVia(pk: string): { x: number; y: number } | null;
+  /**
+   * Год (астр.), с которого след узла i «живой» (решение 173, Д7): жена в доме мужа с рождения — год прихода в дом
+   * (NodeRow.wed; в семейной укладке — FamilyResult.since); null — след живой от звезды
+   */
+  liveYear?(i: number): number | null;
   /** ключ связей кадра: кэш лент по маршрутам перестраивается при его смене */
   readonly linksKey: string;
 }
@@ -690,14 +695,17 @@ export class Sky implements SkyContext {
       const q = byId.get(n.person);
       if (!q) return null;
       const tr = trailOf(this, i, t);
-      // звезда — в полосе рождения; у лица с переходами — ломаная следа той же выборкой, что рисует trails.ts (решение 173)
+      // звезда — в полосе рождения; у лица с переходами — ломаная следа той же выборкой, что рисует trails.ts (решение 173);
+      // у жены в доме мужа с рождения — x, с которого след живой (Д7)
       const path = tr?.bends ? trailPolyline(tr) : undefined;
+      const from = tr?.liveFrom;
       return {
         i,
         id: n.person,
         x: cam.sx(this.X0[i]),
         y: cam.sy(starLaneOf(n)),
         ...(path ? { path } : {}),
+        ...(from !== undefined ? { from } : {}),
         r: starRadius(q.magnitude, p.zoomScale) + (q.sex === 'f' ? 2.2 : 0),
         x1: tr ? Math.max(tr.x0, tr.x1) : null,
         ghost: n.ghost,
@@ -1919,6 +1927,13 @@ export class Sky implements SkyContext {
     }
     return null;
   }
+  liveYear(i: number): number | null {
+    const n = this.nodes[i];
+    if (!n || n.ghost) return null;
+    // семейная укладка: строка жены «в семье мужа» — с года since (src/engine/family.ts, FamilyResult.since)
+    if (this.plan.layout === 'family') return this.plan.since?.get(n.person) ?? null;
+    return n.wed ?? null;
+  }
   /** Высота звезды узла i, px холста: полоса рождения (решение 173; src/engine/stays.ts, starLaneOf). */
   starY(i: number): number {
     return this.cam.sy(starLaneOf(this.nodes[i]));
@@ -2001,6 +2016,12 @@ export class Sky implements SkyContext {
       else out.set(h.j, [x, TRAIL_CUT]);
     }
     return out;
+  }
+  /** Разрывы следов последнего кадра (под связями и переходами): номер узла → пары «x, полуширина». */
+  private lastCuts: Map<number, number[]> | null = null;
+  /** Разрывы следа узла i в последнем кадре (для проверок): пары «x px холста, полуширина»; нет — следа без разрывов. */
+  cutsNow(i: number): readonly number[] | undefined {
+    return this.lastCuts?.get(i);
   }
   /** Пересечения переходов с чужими следами (для проверок): «переход>след@x» в px холста. */
   glideCrossLog(): string[] {
@@ -2192,6 +2213,7 @@ export class Sky implements SkyContext {
     p.cuts = lf ? this.cutsOf(lf, !!L.ribbons && this.routeFactor >= 0.5) : undefined;
     // переход идёт поверх чужого следа с разрывом под собой (решение 173; D2, С6): пересечение — не соединение
     if (L.lifelines) p.cuts = this.glideCuts(p.cuts, L.ribbons ? spine : null);
+    this.lastCuts = p.cuts ?? null;
     // подписи обходят линии связей (Я12); в «только линиях» подписи лиц линий ставятся по лентам (UX-16), не по связям
     if (lf && lf.alpha > 0.5 && !lineOnly && !this.linksStale) {
       const hits = this.linkHits!;
@@ -3184,10 +3206,13 @@ export class Sky implements SkyContext {
       // зачёркивает его; имя встаёт по другую сторону звезды
       lh.add(r.pts, NO_ROUTE_OWN, Math.min(2.5, Math.max(1, (r.w ?? 1) / 2)));
     }
-    // переходы следов (решения 163, 173): чужое имя не ложится на S-кривую — она такая же чужая линия, как ствол
+    // переходы следов (решения 163, 173): чужое имя не ложится на S-кривую — она такая же чужая линия, как ствол. На небе
+    // (решение 178) переходы бледны и почти отвесны у самых звёзд семьи — там они препятствие только у выделенных, иначе
+    // имена главы семьи и его сыновей не нашли бы места; подпись гасит бледный переход под собой, как след (MAP-56)
     if (p.s.layers.lifelines && !p.s.onlyLines)
       for (const i of p.vis) {
         if (!hasGlides(this.nodes[i]) || !this.drawn(i)) continue;
+        if ((p.tier < 1 || p.work) && !p.s.highlight?.has(this.nodes[i].person)) continue;
         const own = new Set([this.nodes[i].person]);
         for (const g of this.bendsOf(i) ?? []) {
           if (g.xb < -20 || g.xa > this.cam.w + 20) continue;

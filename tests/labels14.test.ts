@@ -5,6 +5,7 @@
  * В браузере те же пороги меряет tools/collide.ts (COLLISION STRESS) по настоящей отрисовке.
  */
 import { beforeAll, describe, expect, it } from 'vitest';
+import { starLaneOf } from '../src/engine/stays.ts';
 
 type Op = { k: string; t?: string; x?: number; y?: number; r?: number };
 /**
@@ -92,7 +93,8 @@ const around = (id: string, years: number) => (s: Sky) => {
   const vp = s.cam.vp;
   const vw = vp.r - vp.l;
   const kx = vw / (s.xOf(t + years / 2) - s.xOf(t - years / 2));
-  s.cam.set({ x0: x - (vp.l + vw / 2) / kx, kx, laneTop: s.node(id)!.lane + (vp.t + vp.b) / 2 / s.cam.kyFor(kx) });
+  // окно — у звезды лица: в полосе рождения (этап 15, решение 173)
+  s.cam.set({ x0: x - (vp.l + vw / 2) / kx, kx, laneTop: starLaneOf(s.node(id)!) + (vp.t + vp.b) / 2 / s.cam.kyFor(kx) });
 };
 
 /** Знаки кадра: центр и истинные границы (glyphs.ts, glyphExtent) у звёзд, которые можно навести. */
@@ -106,7 +108,8 @@ function glyphBoxes(s: Sky) {
     const q = atlas.byId.get(n.person)!;
     const e = glyphs.glyphExtent({ sex: q.sex, kind: q.kind, magnitude: q.magnitude, king: q.roles.includes('king') || q.roles.includes('queen'), messiah: q.id === 'iisus', scale });
     const x = s.cam.sx(s.X0[i]);
-    const y = s.cam.sy(n.lane);
+    // знак лица — в полосе рождения (решение 173)
+    const y = s.cam.sy(starLaneOf(n));
     out.push({ id: n.person, x, y, b: { x: x - e.l, y: y - e.t, w: e.l + e.r, h: e.t + e.b } });
   }
   return out;
@@ -242,7 +245,7 @@ describe('подписи неба по правилам решений 139–144
       const i = s.indexOf(id);
       if (i === undefined || !s.reachable(i)) continue;
       const x = s.cam.sx(s.X0[i]);
-      const y = s.cam.sy(s.nodes[i].lane);
+      const y = s.starY(i);
       const inside = x >= vp.l && x <= vp.r && y >= vp.t && y <= vp.b;
       if (inside) inFrame++;
       if (inside) expect(named.has(id) !== hidden.has(id), `${id}: подписан или скрыт — одно из двух`).toBe(true);
@@ -262,7 +265,7 @@ describe('подписи неба по правилам решений 139–144
     const names = new Set(s.labelStats().boxes.filter((b) => b.kind === 'star').map((b) => b.text));
     const i = s.indexOf('david')!;
     const x = s.cam.sx(s.X0[i]);
-    const y = s.cam.sy(s.nodes[i].lane);
+    const y = s.starY(i);
     // кольцо выбранного — дуга с центром в его звезде шире самого знака
     const r0 = glyphs.starRadius(0, Math.max(0.7, Math.min(1.25, s.cam.ky / 18)));
     const ring = ops.findLastIndex((o) => o.k === 'arc' && Math.abs(o.x! - x) < 0.6 && Math.abs(o.y! - y) < 0.6 && o.r! > r0 + 3);

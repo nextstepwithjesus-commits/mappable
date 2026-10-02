@@ -737,10 +737,13 @@ function houseLinks(inp: LinkInput): LinkFrame {
     const q = byId.get(par);
     if (!q || q.kind === 'people' || q.kind === 'clan') return false;
     const n = years.nodeByPerson.get(par);
+    const c = years.chrono.get(par);
     const b = years.chrono.get(k)?.b ?? years.nodeByPerson.get(k)?.t0;
-    if (!n || b === undefined || n.t1 <= n.t0) return false;
+    // конец жизни родителя: год смерти или его оценка, а без них — конец нарисованного следа
+    const end = c ? (c.d ?? c.dEst) : n && n.t1 > n.t0 ? n.t1 : undefined;
+    if (end === undefined || b === undefined) return false;
     const gap = (graph.parentsOf.get(k) ?? []).some((e) => (e.parent === u.a || e.parent === u.b) && e.gap);
-    return b - n.t1 > (gap ? GAP_YEARS_MARKED : GAP_YEARS);
+    return b - end > (gap ? GAP_YEARS_MARKED : GAP_YEARS);
   };
 
   const stars = new Grid<LinkStar>(32);
@@ -792,8 +795,12 @@ function houseLinks(inp: LinkInput): LinkFrame {
     if (!kidIds.length) {
       // брак без детей на небе: черта и ромб, если оба супруга на небе (жена — и призраком у мужа)
       if (!F || !u.b || u.claim) continue;
+      // призрак бездетного брака у этого мужа; нет его — изображение жены, ближайшее к следу мужа (её звезда или призрак в
+      // родной семье): черта не идёт через всё небо к звезде в чужом доме
       const g = (ghostsOf.get(u.b) ?? []).find((q) => q.sat === F.id && marriageGhost(q));
-      W = g ?? W;
+      const imgs = [...(W ? [W] : []), ...(ghostsOf.get(u.b) ?? []).filter((q) => !marriageGhost(q) || q.sat === F.id)];
+      const near = imgs.reduce<LinkStar | null>((b, q) => (!b || Math.abs(q.y - yAt(F, q.x)) < Math.abs(b.y - yAt(F, b.x)) ? q : b), null);
+      W = g ?? near ?? W;
       if (!W) continue;
     }
     const O = W && !W.ghost ? W : F;
@@ -802,7 +809,10 @@ function houseLinks(inp: LinkInput): LinkFrame {
     // следа родителя (пропуск поколений) — без связи на небе
     const kids: LinkStar[] = [];
     for (const k of plain) {
-      if (afterLife(O.id, k, u)) continue;
+      if (afterLife(O.id, k, u)) {
+        issues.push(`века:${u.id}>${k}`);
+        continue;
+      }
       const imgs = [...(main.has(k) ? [main.get(k)!] : []), ...(ghostsOf.get(k) ?? []).filter((g) => !marriageGhost(g))];
       if (!imgs.length) continue;
       let best = imgs[0];
@@ -845,21 +855,17 @@ function houseLinks(inp: LinkInput): LinkFrame {
   const teeth = new Grid<Tooth>(24);
   const slots: Slot[] = [];
   const span = (ys: number[]): [number, number] => [Math.min(...ys), Math.max(...ys)];
-  for (const p of plans) {
+  /** Нижний предел вертикали союза: правее звёзд его лиц. */
+  const lo0Of = (p: Plan) => Math.max(p.O.x + p.O.r + 3, p.F ? p.F.x + p.F.r + 3 : -Infinity, p.W ? p.W.x + p.W.r + 3 : -Infinity);
+  /**
+   * Колонна союза (черта брака и ромб): с первым гнездом детей (merged) — у рождения первого ребёнка; без него — в год
+   * черты, левее ствола первого гнезда (wide — шире окно: место у звёзд не нашлось на колонне с гнездом).
+   */
+  const colSlot = (p: Plan, wideWin = false): Slot => {
     const { F, W, O } = p;
     const bar = !!F && !!W;
-    const lo0 = Math.max(O.x + O.r + 3, F ? F.x + F.r + 3 : -Infinity, W ? W.x + W.r + 3 : -Infinity);
+    const lo0 = lo0Of(p);
     const n0 = p.nests[0];
-    if (n0) {
-      const first = n0[0];
-      const t0 = first.x - leadOf(first);
-      const want = p.xw !== null ? Math.min(p.xw, t0) : t0;
-      // первое гнездо — на колонне, если черта у рождения первого ребёнка и дети не по сторону отца от матери
-      const yW = W ? yAt(W, want) : 0;
-      const yF = F ? yAt(F, want) : 0;
-      const wrongSide = bar && Math.abs(yW - yF) > 0.5 && n0.some((k) => Math.sign(k.y - yW) === Math.sign(yF - yW));
-      p.merged = want >= first.x - TRUNK_MAX - 0.5 && !wrongSide;
-    }
     const colKids = p.merged ? n0 : [];
     let want: number;
     let lo: number;
@@ -872,9 +878,9 @@ function houseLinks(inp: LinkInput): LinkFrame {
     } else if (n0 || p.rib.length) {
       const next = n0 ? n0[0].x - leadOf(n0[0]) : p.rib[0].x - p.rib[0].r - 4;
       want = p.xw ?? next;
-      lo = Math.max(lo0, want - 16);
-      hi = Math.min(want + 16, n0 ? next - WIDE_GAP : next);
-      if (!n0) want = Math.min(want, hi);
+      lo = Math.max(lo0, Math.min(want, next) - (wideWin ? 2 * TRUNK_MAX : TRUNK_MAX));
+      hi = Math.min(want + 16, n0 ? next - (wideWin ? nodeGap : WIDE_GAP) : next);
+      want = Math.min(want, hi);
     } else {
       // брак без детей на небе: на обоих следах — правее звёзд, левее концов следов (у следа, кончившегося раньше, — родовая
       // черта до черты брака); в год брака или ближе всего к нему
@@ -903,17 +909,36 @@ function houseLinks(inp: LinkInput): LinkFrame {
     const ny = p.W ? yAt(p.W, xq) : yAt(p.O, xq);
     const fy = bar && p.W ? (F ? yAt(F, xq) : null) : null;
     const [y0, y1] = span([ny, ...(fy !== null ? [fy] : []), ...colKids.map((k) => k.y)]);
-    slots.push({ p, n: -1, kids: colKids, wide: fy !== null, want, lo, hi, y0, y1, ny, fy, x: xq });
-    p.nests.forEach((g, n) => {
-      if (n === 0 && p.merged) return;
-      const first = g[0];
-      const w = first.x - leadOf(first);
-      const l = Math.max(O.x + O.r + 3, first.x - TRUNK_MAX, Math.max(...g.map((k) => k.x)) - TOOTH_MAX);
-      const h = first.x - TRUNK_MIN;
-      const x = Math.max(l, Math.min(h, w));
-      const oy = yAt(p.O, x);
-      const [a, b] = span([oy, ...g.map((k) => k.y)]);
-      slots.push({ p, n, kids: g, wide: false, want: w, lo: l, hi: h, y0: a, y1: b, ny: oy, fy: null, x });
+    return { p, n: -1, kids: colKids, wide: fy !== null, want, lo, hi, y0, y1, ny, fy, x: xq };
+  };
+  /** Ствол гнезда n: в год рождения первого ребёнка гнезда − отступ, от следа владельца (матери). */
+  const nestSlot = (p: Plan, n: number): Slot => {
+    const g = p.nests[n];
+    const first = g[0];
+    const w = first.x - leadOf(first);
+    const l = Math.max(p.O.x + p.O.r + 3, first.x - TRUNK_MAX, Math.max(...g.map((k) => k.x)) - TOOTH_MAX);
+    const h = first.x - TRUNK_MIN;
+    const x = Math.max(l, Math.min(h, w));
+    const oy = yAt(p.O, x);
+    const [a, b] = span([oy, ...g.map((k) => k.y)]);
+    return { p, n, kids: g, wide: false, want: w, lo: l, hi: h, y0: a, y1: b, ny: oy, fy: null, x };
+  };
+  for (const p of plans) {
+    const { F, W } = p;
+    const n0 = p.nests[0];
+    if (n0) {
+      const first = n0[0];
+      const t0 = first.x - leadOf(first);
+      const want = p.xw !== null ? Math.min(p.xw, t0) : t0;
+      // первое гнездо — на колонне, если черта у рождения первого ребёнка и дети не по сторону отца от матери
+      const yW = W ? yAt(W, want) : 0;
+      const yF = F ? yAt(F, want) : 0;
+      const wrongSide = !!F && !!W && Math.abs(yW - yF) > 0.5 && n0.some((k) => Math.sign(k.y - yW) === Math.sign(yF - yW));
+      p.merged = want >= first.x - TRUNK_MAX - 0.5 && !wrongSide;
+    }
+    slots.push(colSlot(p));
+    p.nests.forEach((_, n) => {
+      if (!(n === 0 && p.merged)) slots.push(nestSlot(p, n));
     });
   }
   // звёзды, мимо которых линии не идут: все, кроме родителей союза (дети — со своими зубцами, отступ не меньше r + 5)
@@ -922,11 +947,12 @@ function houseLinks(inp: LinkInput): LinkFrame {
     const { y0, y1, ny, kids } = sl;
     const par = new Set([sl.p.O.id, ...(sl.p.F ? [sl.p.F.id] : []), ...(sl.p.W ? [sl.p.W.id] : [])]);
     let c = Math.abs(x - sl.want) * (x > sl.want ? 2 : 1);
-    for (const v of verts.query(x - WIDE_GAP, y0 - 1, x + WIDE_GAP, y1 + 1)) {
+    for (const v of verts.query(x - WIDE_GAP, y0 - 7, x + WIDE_GAP, y1 + 7)) {
       if (v.dead || v.u === u) continue;
       const d = Math.abs(v.x - x);
-      // вертикали других союзов (решение 175): ближе 8 px (12 px у черты брака) — дороже к совпадению
-      if (Math.min(v.y1, y1) - Math.max(v.y0, y0) > 0.5) {
+      // вертикали других союзов (решение 175): ближе 8 px (12 px у черты брака) — дороже к совпадению; и встык по высоте
+      // (одна кончается на следе, где начинается другая): одна линия через след читалась бы одной связью
+      if (Math.min(v.y1, y1) - Math.max(v.y0, y0) > -6) {
         const need = v.wide || sl.wide ? WIDE_GAP : TRUNK_GAP;
         if (d < need) c += d < 2 ? 1200 : 100 + (300 * (need - d)) / need;
       }
@@ -948,10 +974,11 @@ function houseLinks(inp: LinkInput): LinkFrame {
       // чужой узел на своём зубце
       if (m.x > x + 0.5) for (const k of kids) if (Math.abs(m.y - k.y) < 1 && m.x < k.x - k.r) c += 1200;
     }
-    for (const s of stars.query(x - maxR - STAR_CLEAR, y0 - maxR - STAR_CLEAR, Math.max(x, ...kids.map((k) => k.x)) + maxR + STAR_CLEAR, y1 + maxR + STAR_CLEAR)) {
+    for (const s of stars.query(x - maxR - STAR_CLEAR, y0 - maxR - 16, Math.max(x, ...kids.map((k) => k.x)) + maxR + STAR_CLEAR, y1 + maxR + 16)) {
       if (par.has(s.id)) continue;
-      // чужие звёзды у вертикали (Г5)
+      // чужие звёзды у вертикали (Г5); звезда прямо над или под её концом — вертикаль читалась бы связью этого лица
       if (Math.abs(s.x - x) < s.r + STAR_CLEAR && s.y >= y0 - s.r && s.y <= y1 + s.r) c += 1000;
+      else if (Math.abs(s.x - x) < s.r + 2 && s.y >= y0 - s.r - 16 && s.y <= y1 + s.r + 16) c += 300;
       // чужие звёзды на зубцах
       if (s.x > x) for (const k of kids) if (k !== s && s.x < k.x && Math.abs(s.y - k.y) < s.r + STAR_CLEAR) c += 1000;
     }
@@ -1014,6 +1041,33 @@ function houseLinks(inp: LinkInput): LinkFrame {
       for (const e of ent.get(sl) ?? []) e.dead = true;
       place(sl);
     }
+  // колонна с первым гнездом у чужой звезды (Г5): черта брака и ромб — своей вертикалью левее, первое гнездо — своим
+  // стволом с «•» (место у звёзд одной вертикали на двоих не нашлось)
+  if (ky >= 6)
+    for (const sl of [...slots]) {
+      if (sl.n >= 0 || cost(yOn(sl, sl.x), sl.x) < 1000) continue;
+      for (const e of ent.get(sl) ?? []) e.dead = true;
+      if (!sl.p.merged) {
+        // колонна без гнезда (черта к ребёнку линии, черта у позднего первого ребёнка) — шире окно
+        if (!sl.p.nests.length && !sl.p.rib.length) {
+          place(sl);
+          continue;
+        }
+        const c = colSlot(sl.p, true);
+        const g0 = slots.find((q) => q.p === sl.p && q.n === 0);
+        if (g0) c.hi = Math.min(c.hi, g0.x - nodeGap);
+        slots.splice(slots.indexOf(sl), 1, c);
+        place(c);
+        continue;
+      }
+      sl.p.merged = false;
+      const c = colSlot(sl.p, true);
+      const g = nestSlot(sl.p, 0);
+      slots.splice(slots.indexOf(sl), 1, c, g);
+      place(g);
+      c.hi = Math.min(c.hi, g.x - nodeGap);
+      place(c);
+    }
   for (const sl of slots) {
     if (sl.n < 0) sl.p.col = sl.x;
     else sl.p.xs[sl.n] = sl.x;
@@ -1034,21 +1088,22 @@ function houseLinks(inp: LinkInput): LinkFrame {
    * бледной), а если строку к году x занял чужой след — между строк, на полстроки к dir (узел на чужом следе читался бы
    * его узлом, Г7).
    */
-  const reach = (s: LinkStar, x: number, union: string, dir: number, ck: LinkKey = unionKey(union), ends: string[] = [s.id]): number => {
+  const reach = (s: LinkStar, x: number, union: string, dir: number, ck: LinkKey = unionKey(union), ends: string[] = [s.id]): ((x: number) => number) => {
     const tail = tailOf(s);
-    const y = yAt(s, x);
-    if (tail >= x - 1) return y;
+    if (tail >= x - 1) return (q) => yAt(s, q);
     const ty = yAt(s, tail);
     const cs = clanStyle(s.id);
     // по своей строке, если она до узла пуста; строку после конца следа занял чужой след или звезда — между строк
     if (trails.rowBusy(ty, tail + 1, x, s.id) || starOnRow(ty, tail + 1, x, s.id)) {
-      const ny = ty + (dir || 1) * (ky / 2);
+      const d0 = dir || 1;
       const bend = Math.min(16, (x - tail) / 3);
+      const sides = [d0 * 0.5, -d0 * 0.5, d0 * 1.5, -d0 * 1.5].map((k) => ty + k * ky);
+      const ny = sides.find((y) => !trails.rowBusy(y, tail + bend, x, s.id) && !starOnRow(y, tail + bend, x, s.id)) ?? sides[0];
       push({ key: ck, kind: 'clan', style: cs, pts: [tail, ty, tail + bend, ty, tail + bend, ny, x, ny], ends, union });
-      return ny;
+      return (q) => (q <= tail + 1 ? yAt(s, q) : q < tail + bend ? ty : ny);
     }
     push({ key: ck, kind: 'clan', style: cs, pts: [tail, ty, x, ty], ends, union });
-    return ty;
+    return (q) => (q <= tail + 1 ? yAt(s, q) : ty);
   };
   for (const p of plans) {
     const u = p.u;
@@ -1060,11 +1115,14 @@ function houseLinks(inp: LinkInput): LinkFrame {
     const kidDir = p.kids.length ? Math.sign(p.kids[0].y - p.O.y) : p.rib.length ? Math.sign(p.rib[0].y - p.O.y) : 1;
     // ромб: на следе жены (у призрака бездетного брака — у призрака), иначе на следе владельца
     const at = p.W ?? p.O;
-    const ny = at.ghost ? at.y : reach(at, x, u.id, kidDir);
+    // строка владельца: по следу, после его конца — одна родовая черта до самого дальнего узла союза
+    const far = Math.max(x, ...p.xs.filter(Number.isFinite));
+    const line = at.ghost ? () => at.y : reach(at, far, u.id, kidDir);
+    const ny = line(x);
     // черта брака: от мужа к ромбу на следе жены, вид союза — начертанием (решение 174)
     if (p.F && p.W && p.F !== at) {
       // у мужа, чей след кончился раньше, — родовая черта к черте брака тем же ключом (видна вместе с ней)
-      const fy = reach(p.F, x, u.id, Math.sign(ny - yAt(p.F, x)), spouseKey(u.id, p.F.id), [p.F.id, at.id]);
+      const fy = reach(p.F, x, u.id, Math.sign(ny - yAt(p.F, x)), spouseKey(u.id, p.F.id), [p.F.id, at.id])(x);
       if (Math.abs(fy - ny) > 0.5) {
         push({ key: spouseKey(u.id, p.F.id), kind: 'bar', style: p.kind === 'levirate' ? 'dash' : 'solid', pts: [x, fy, x, ny], ends: [p.F.id, at.id], union: u.id, bar: p.kind });
       }
@@ -1081,7 +1139,7 @@ function houseLinks(inp: LinkInput): LinkFrame {
     p.nests.forEach((g, n) => {
       const xn = n === 0 && p.merged ? x : p.xs[n];
       if (!Number.isFinite(xn)) return;
-      const oy = n === 0 && p.merged ? ny : reach(p.O, xn, u.id, Math.sign(g[0].y - yAt(p.O, xn)));
+      const oy = n === 0 && p.merged ? ny : p.O === at ? line(xn) : yAt(p.O, xn);
       if (!(n === 0 && p.merged)) nodes.push({ kind: 'join', union: u.id, key: unionKey(u.id), x: xn, y: oy, open: true, count: null, mother: null, owner: p.O.id, from: (p.F ?? p.O).id });
       const ids = g.map((k) => k.id);
       const ends = [p.O.id, ...(other ? [other] : []), ...ids];

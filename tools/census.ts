@@ -27,7 +27,8 @@
  *  Ч4  разреженная нить ленты — только у шага по толкованию; каждый пропуск показа — «+N» с верным числом;
  *      Я9 на лентах: штрих — только «по закону» и Нирий → Салафиил по Луке;
  *  Ч5  лицо линии не дальше строки от своей нити (показ «линии Мессии»);
- *  Ч6  оба супруга на небе → союз связан с обоими (путь союза с его концом, узел на его следе или имя у ромба);
+ *  Ч6  оба супруга на небе → союз связан с обоими (путь союза с его концом, узел на его следе или имя у ромба); бездетный
+ *      брак — если он нарисован на этом уровне (этап 15, решение 178: на масштабе семьи и у выбранного);
  *  Ч7  точечный путь связи — только толкование.
  * Тест — tests/census.test.ts (пороги падают тестом).
  */
@@ -72,6 +73,8 @@ type Sky = InstanceType<typeof skyMod.Sky>;
 
 /** y следа звезды в x (links.ts, trailYAt; на сборке до этапа 15 — строка звезды): перепись меряет и «до». */
 const trailY = (st: LinkStar, x: number): number => (links as { trailYAt?: (s: LinkStar, x: number) => number }).trailYAt?.(st, x) ?? st.y;
+/** Полоса звезды узла (решение 173: полоса рождения; src/engine/stays.ts, starLaneOf) — и на сборке до этапа 15. */
+const starLane = (n: { lane: number; starLane?: number; stays?: readonly { lane: number }[] }) => n.starLane ?? n.stays?.[0]?.lane ?? n.lane;
 const LAYERS = { lifelines: true, connectors: true, constellations: true, epochs: true, ribbons: true, tensions: true, ghosts: true, labels: true };
 const M = () => atlas.models[0];
 const nameOf = (id: string) => atlas.byId.get(id)?.name ?? id;
@@ -421,21 +424,33 @@ export function frameOf(sc: Scene, s: Sky, scale: number, width: number, extra: 
   const tr: Frame['trails'] = [];
   const glides: Frame['glides'] = [];
   const pathOf = new Map<number, readonly number[]>();
-  for (const q of s.linkStarsNow()) if (!q.ghost && q.path && q.path.length >= 4) pathOf.set(q.i, q.path);
+  // доля следа до прихода жены в дом мужа (решение 173: wed, since) — бледная, не жизнь в доме: связи её не режут
+  const fromOf = new Map<number, number>();
+  for (const q of (s.linkStarsNow() as readonly (LinkStar & { from?: number })[])) {
+    if (q.ghost) continue;
+    if (q.path && q.path.length >= 4) pathOf.set(q.i, q.path);
+    if (q.from !== undefined) fromOf.set(q.i, q.from);
+  }
   for (let i = 0; i < s.nodes.length; i++) {
     if (!s.drawn(i)) continue;
     const lp = pathOf.get(i);
+    const live = fromOf.get(i) ?? -Infinity;
     if (lp) {
       // след с переходом (решение 173): горизонтали пребываний — строками, S-кривые — отрезками
       for (let k = 0; k + 3 < lp.length; k += 2) {
-        const [x0, y0, x1, y1] = [lp[k], lp[k + 1], lp[k + 2], lp[k + 3]];
+        let [x0, y0, x1, y1] = [lp[k], lp[k + 1], lp[k + 2], lp[k + 3]];
+        if (x1 <= live) continue;
+        if (x0 < live) {
+          y0 += ((y1 - y0) * (live - x0)) / (x1 - x0);
+          x0 = live;
+        }
         if (x1 - x0 < 0.01) continue;
         if (Math.abs(y1 - y0) < 0.01) tr.push({ i, id: s.nodes[i].person, y: y0, x0, x1 });
         else glides.push({ i, id: s.nodes[i].person, g: [x0, y0, x1, y1] });
       }
       continue;
     }
-    if (trails.trailOf(s, i, lt) && lt.x1 > lt.x0 + 1) tr.push({ i, id: s.nodes[i].person, y: lt.y, x0: lt.x0, x1: lt.x1 });
+    if (trails.trailOf(s, i, lt) && lt.x1 > Math.max(lt.x0, live) + 1) tr.push({ i, id: s.nodes[i].person, y: lt.y, x0: Math.max(lt.x0, live), x1: lt.x1 });
   }
   const ls = s.labelStats();
   return {
@@ -1007,7 +1022,7 @@ function chChecks(f: Frame, add: (check: string, ks: string, text: string, x: nu
     const i = s.indexOf(id);
     if (i === undefined) return false;
     const x = s.cam.sx(s.X0[i]);
-    const y = s.cam.sy(s.nodes[i].lane);
+    const y = s.cam.sy(starLane(s.nodes[i]));
     return x >= vp.l && x <= vp.r && y >= vp.t && y <= vp.b;
   };
   // Ч1: шаг ленты (ключ step) начинается у родителя шага по data/lines
@@ -1125,7 +1140,7 @@ function chChecks(f: Frame, add: (check: string, ks: string, text: string, x: nu
         const i = s.indexOf(pid);
         if (i === undefined || !onSky(pid) || !inWindow(pid)) continue;
         const x = s.cam.sx(s.X0[i]);
-        const y = s.cam.sy(s.nodes[i].lane);
+        const y = s.cam.sy(starLane(s.nodes[i]));
         let best = Infinity;
         for (let q = 0; q + 1 < pts.length; q++) {
           const a = pts[q];
@@ -1150,8 +1165,17 @@ function chChecks(f: Frame, add: (check: string, ks: string, text: string, x: nu
       tied.add(`${n.union}|${n.owner}`);
       if (n.mother) tied.add(`${n.union}|${n.mother}`);
     }
+    // этап 15 (решение 178): бездетный брак виден только на масштабе семьи и у выбранного — союз, не нарисованный на этом
+    // уровне вовсе, не проверяется; нарисованный — связан с обоими супругами
+    const drawnU = new Set<string>();
+    for (const q of [...f.paths, ...f.ribbons]) if (q.union) drawnU.add(q.union);
+    for (const n of f.nodes) drawnU.add(n.union);
+    // масштаб семьи (от 24 px на год у середины окна) или супруг выбран — бездетный брак обязан быть нарисован
+    const pxYear = (s as unknown as { pxPerYear?: () => number }).pxPerYear?.() ?? Infinity;
+    const famScale = pxYear >= 24;
     for (const u of reveal.unions.byId.values()) {
       if (!u.a || !u.b || u.claim) continue;
+      if (!u.kids.length && !drawnU.has(u.id) && !famScale && f.sc.select !== u.a && f.sc.select !== u.b) continue;
       if (!onSky(u.a) || !onSky(u.b) || !(inWindow(u.a) || inWindow(u.b))) continue;
       const ta = tied.has(`${u.id}|${u.a}`);
       const tb = tied.has(`${u.id}|${u.b}`);
@@ -1320,7 +1344,7 @@ export function graphCensus(f: Frame, scene = f.sc.id): GraphCensus {
       const near = (trails as unknown as { OWN_NAME_NEAR?: number }).OWN_NAME_NEAR;
       if (near && mi !== undefined && s.drawn(mi)) {
         const mx = s.cam.sx(s.X0[mi]);
-        const my = s.cam.sy(s.nodes[mi].lane);
+        const my = s.cam.sy(starLane(s.nodes[mi]));
         if (mx >= s.letterW && mx <= s.cam.w && my >= s.openTop && my <= s.cam.vp.b && Math.hypot(mx - nx, my - ny) < near) continue;
       }
       mothersOf++;
@@ -1360,7 +1384,7 @@ export function graphCensus(f: Frame, scene = f.sc.id): GraphCensus {
   const inWin = (id: string) => {
     const i = s.indexOf(id);
     if (i === undefined || !s.drawn(i)) return false;
-    return inVp(s.cam.sx(s.X0[i]), s.cam.sy(s.nodes[i].lane)) && s.cam.sy(s.nodes[i].lane) >= s.openTop;
+    return inVp(s.cam.sx(s.X0[i]), s.cam.sy(starLane(s.nodes[i]))) && s.cam.sy(starLane(s.nodes[i])) >= s.openTop;
   };
   for (const t of texts) {
     const at = t.slice(t.lastIndexOf('@') + 1);

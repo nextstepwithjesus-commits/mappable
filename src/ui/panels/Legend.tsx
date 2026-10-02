@@ -698,22 +698,6 @@ export const FAMILY_LEGEND: readonly { k: PainterKey; h: number; head: string; t
   },
 ];
 
-function FamilyLegend() {
-  return (
-    <>
-      <h3 id="legend-family">Семья на небе</h3>
-      <p class="muted">Лицо рождается в доме отца, у матери, и своим следом уходит туда, где проходит его жизнь; союз читается по знаку на следе жены.</p>
-      <ul class="legend">
-        {FAMILY_LEGEND.map((r) => (
-          <Wide key={r.k} s={<Paint draw={PAINTERS[r.k]} h={r.h} />}>
-            <b>{r.head}.</b> {r.text}
-          </Wide>
-        ))}
-      </ul>
-    </>
-  );
-}
-
 export function LegendPanel() {
   // перечитать образцы при смене темы
   void theme.value;
@@ -741,7 +725,16 @@ export function LegendPanel() {
         ))}
       </nav>
 
-      <FamilyLegend />
+      {/* «Семья на небе» (этап 15, решение 180) — первым после «Как читать карту»: восемь знаков «Отчего дома» */}
+      <h3 id="legend-family">Семья на небе</h3>
+      <p class="muted">Лицо рождается в доме отца, у матери, и своим следом уходит туда, где проходит его жизнь; союз читается по знаку на следе жены.</p>
+      <ul class="legend">
+        {FAMILY_LEGEND.map((r) => (
+          <Wide key={r.k} s={<Paint draw={PAINTERS[r.k]} h={r.h} />}>
+            <b>{r.head}.</b> {r.text}
+          </Wide>
+        ))}
+      </ul>
 
       <h3 id="legend-sky">Небо</h3>
       <p class="muted">Небо — лист звёздного атласа: по горизонтали время, по вертикали — роды и колена.</p>

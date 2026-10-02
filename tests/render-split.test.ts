@@ -153,9 +153,15 @@ describe('одиночный след и отвод (trails.ts): то же, чт
     const c = models[0].chrono.get('david')!;
     const x0 = s.cam.sx(s.X0[i]);
     const x1 = s.cam.sx(s.X1[i]);
-    const y = Math.round(s.cam.sy(s.nodes[i].lane)) + 0.5;
+    // этап 15 (решение 173): звезда — в полосе рождения (отчий дом), след идёт по пребываниям и переходам — те же поля,
+    // что у неба (trailOf), и тот же рисовальщик
+    const y = Math.round(s.starY(i)) + 0.5;
+    const t = trails.trailOf(s, i, { x0: 0, x1: 0, y: 0, cls: 'exact', known: true, solidTo: 0, color: 'c', width: 1.6 })!;
+    expect([t.x0, t.y, t.cls, t.known]).toEqual([x0, y, c.cls, c.d !== null]);
+    expect(t.solidTo).toBeCloseTo(c.d !== null ? x1 : s.cam.sx(s.xOf(c.last!)), 6);
     const r = recording();
-    trails.drawLifeTrail(r.ctx, { x0, x1, y, cls: c.cls, known: c.d !== null, solidTo: c.d !== null ? x1 : s.cam.sx(s.xOf(c.last!)), color: 'c', width: 1.6 });
+    // разрывы — те же, что у неба: под переходами чужих следов (решение 173) и под связями (Г7)
+    trails.drawLifeTrail(r.ctx, { ...t, color: 'c', width: 1.6, cuts: s.cutsNow(i) });
     const mine = strokes(r.calls);
     const at = calls.findIndex((q, k) => q[0] === 'moveTo' && q[1] === x0 && q[2] === y && calls[k + 1]?.[0] === 'lineTo');
     expect(at).toBeGreaterThan(0);

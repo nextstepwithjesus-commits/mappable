@@ -628,7 +628,7 @@ export const skyShow = computed<ShowIn>(() => {
   const { lanes, res } = hit;
   const guests = folded.size ? new Set([...c.guests].filter((x) => S.has(x))) : c.guests;
   const stubs = folded.size ? c.stubs.filter((x) => S.has(x.from)) : c.stubs;
-  return { key: `f|${k}|${hashLanes(lanes)}`, layout: 'family', ids: c.ids, guests, stubs, lanes, anchor, units: res.units };
+  return { key: `f|${k}|${hashLanes(lanes)}`, layout: 'family', ids: c.ids, guests, stubs, lanes, anchor, units: res.units, since: res.since };
 });
 
 // ---------- строка показа ----------
