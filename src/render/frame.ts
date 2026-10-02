@@ -1275,6 +1275,7 @@ function placeKinPointers(v: SkyContext, s: SkyState, p: Pass | null, placed: Re
     // у своей стороны, по середине группы вдоль края
     let lx = g.arrow === '←' ? left + 6 : g.arrow === '→' ? W - tw - 10 : Math.max(left + 6, Math.min(W - tw - 10, mx - tw / 2));
     let ly = g.arrow === '↑' ? top + 18 : g.arrow === '↓' ? bottom - 10 : Math.max(top + 18, Math.min(bottom - 10, my));
+    const ly0 = ly;
     // место — у своей стороны, по середине группы; занято (органы неба, карточка у звезды, другой указатель) — ближайшее
     // свободное вдоль того же края, шагами по 10 px
     const box = (x: number, y: number) => ({ x: x - 5, y: y - 13, w: tw + 10, h: 18 });
@@ -1289,10 +1290,13 @@ function placeKinPointers(v: SkyContext, s: SkyState, p: Pass | null, placed: Re
     // без указателя
     const freeAt = (b: Rect, aMin: number) => !hits(b, taken) && !p?.placer.glyphsIn(b).some((g) => g.a >= aMin) && rectDist(b, sx, sy) >= keepR;
     const x0 = lx;
-    const y0 = ly;
     let found = false;
-    for (const aMin of [0.12, 0.5]) {
+    // у края вверх и вниз нет полосы без знаков родни (густая семья на узком небе: дети Давида у нижней кромки) — третий
+    // проход ставит указатель на строку-две от кромки внутрь: родня за краем без указателя не остаётся (решение 146)
+    const tries: [number, number][] = [[0.12, 0], [0.5, 0], ...(along ? ([[0.5, 1], [0.5, 2]] as [number, number][]) : [])];
+    for (const [aMin, row] of tries) {
       const free = (b: Rect) => freeAt(b, aMin);
+      const y0 = ly0 + (g.arrow === '↑' ? row : -row) * 18;
       lx = x0;
       ly = y0;
       found = free(box(lx, ly));
