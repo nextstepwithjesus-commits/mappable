@@ -94,7 +94,9 @@ const groupParents: Record<string, string> = Object.fromEntries(groups.filter((g
 // априорное условие раскладки (ТЗ § 8.3, п. 5; NFR-3): полосы опорных лиц прежнего выпуска — стороны созвездий и места
 // блоков сохраняются (src/engine/layout.ts, п. 8); снимок обновляет только npm run -s coords -- --accept. Снимок — модели
 // по умолчанию, и условие ставится только ей: в других моделях годы другие, и прежние места ухудшили бы их метрики
-const prior = existsSync(join(ROOT, 'data/coords-snapshot.json')) ? read<{ persons: { id: string; lane: number }[] }>('data/coords-snapshot.json').persons : [];
+// априорное условие — полосы первого прохода (до «Отчего дома»), а не итог раскладки из снимка координат: итог после дома
+// (полоса последнего пребывания) как условие первого прохода сдвигал бы опорных лиц при каждой пересборке
+const prior = existsSync(join(ROOT, 'data/layout-prior.json')) ? read<{ persons: { id: string; lane: number }[] }>('data/layout-prior.json').persons : [];
 const results: { id: string; chrono: ChronoResult; layout: HouseLayout; scale: ReturnType<typeof buildTimeScale>; outlines: Outline[] }[] = [];
 for (const m of MODELS) {
   const t0 = performance.now();

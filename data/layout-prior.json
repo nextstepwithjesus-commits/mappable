@@ -1,0 +1,705 @@
+{
+ "about": "Априорное условие раскладки (ТЗ § 8.3, п. 5; src/engine/layout.ts, opts.prior): полосы опорных лиц в первом проходе раскладки, до «Отчего дома» (этап 15, решение 173). Это вход раскладки, а не её итог: итог проверяет снимок data/coords-snapshot.json (npm run -s coords). Файл меняется только вместе с намеренной перестройкой первого прохода.",
+ "persons": [
+  {
+   "id": "adam",
+   "name": "Адам",
+   "lane": -3
+  },
+  {
+   "id": "eva",
+   "name": "Ева",
+   "lane": -7
+  },
+  {
+   "id": "kain",
+   "name": "Каин",
+   "lane": -6
+  },
+  {
+   "id": "sif",
+   "name": "Сиф",
+   "lane": -2
+  },
+  {
+   "id": "enos",
+   "name": "Енос",
+   "lane": -1
+  },
+  {
+   "id": "kainan",
+   "name": "Каинан",
+   "lane": 0
+  },
+  {
+   "id": "maleleil",
+   "name": "Малелеил",
+   "lane": 1
+  },
+  {
+   "id": "iared",
+   "name": "Иаред",
+   "lane": 2
+  },
+  {
+   "id": "enokh",
+   "name": "Енох",
+   "lane": 3
+  },
+  {
+   "id": "mafusal",
+   "name": "Мафусал",
+   "lane": 4
+  },
+  {
+   "id": "lamekh",
+   "name": "Ламех",
+   "lane": 5
+  },
+  {
+   "id": "noy",
+   "name": "Ной",
+   "lane": 3
+  },
+  {
+   "id": "sim",
+   "name": "Сим",
+   "lane": 2
+  },
+  {
+   "id": "kham",
+   "name": "Хам",
+   "lane": -4
+  },
+  {
+   "id": "arfaksad",
+   "name": "Арфаксад",
+   "lane": 1
+  },
+  {
+   "id": "sala",
+   "name": "Сала",
+   "lane": 0
+  },
+  {
+   "id": "ever",
+   "name": "Евер",
+   "lane": -1
+  },
+  {
+   "id": "falek",
+   "name": "Фалек",
+   "lane": -2
+  },
+  {
+   "id": "ragav",
+   "name": "Рагав",
+   "lane": -3
+  },
+  {
+   "id": "serukh",
+   "name": "Серух",
+   "lane": -4
+  },
+  {
+   "id": "nakhor",
+   "name": "Нахор",
+   "lane": -5
+  },
+  {
+   "id": "farra",
+   "name": "Фарра",
+   "lane": -6
+  },
+  {
+   "id": "iov",
+   "name": "Иов",
+   "lane": 62
+  },
+  {
+   "id": "avraam",
+   "name": "Авраам",
+   "lane": -5
+  },
+  {
+   "id": "sarra",
+   "name": "Сарра",
+   "lane": -12
+  },
+  {
+   "id": "lot",
+   "name": "Лот",
+   "lane": -28
+  },
+  {
+   "id": "izmail",
+   "name": "Измаил",
+   "lane": -16
+  },
+  {
+   "id": "melkhisedek",
+   "name": "Мелхиседек",
+   "lane": 21
+  },
+  {
+   "id": "isaak",
+   "name": "Исаак",
+   "lane": -3
+  },
+  {
+   "id": "revekka",
+   "name": "Ревекка",
+   "lane": -6
+  },
+  {
+   "id": "iakov",
+   "name": "Иаков",
+   "lane": -2
+  },
+  {
+   "id": "isav",
+   "name": "Исав",
+   "lane": -29
+  },
+  {
+   "id": "liya",
+   "name": "Лия",
+   "lane": -9
+  },
+  {
+   "id": "rakhil",
+   "name": "Рахиль",
+   "lane": -4
+  },
+  {
+   "id": "ruvim",
+   "name": "Рувим",
+   "lane": 18
+  },
+  {
+   "id": "leviy",
+   "name": "Левий",
+   "lane": 66
+  },
+  {
+   "id": "simeon",
+   "name": "Симеон",
+   "lane": 69
+  },
+  {
+   "id": "iuda",
+   "name": "Иуда",
+   "lane": -1
+  },
+  {
+   "id": "dan",
+   "name": "Дан",
+   "lane": -15
+  },
+  {
+   "id": "gad",
+   "name": "Гад",
+   "lane": -7
+  },
+  {
+   "id": "neffalim",
+   "name": "Неффалим",
+   "lane": 7
+  },
+  {
+   "id": "issakhar",
+   "name": "Иссахар",
+   "lane": 51
+  },
+  {
+   "id": "asir",
+   "name": "Асир",
+   "lane": -58
+  },
+  {
+   "id": "zavulon",
+   "name": "Завулон",
+   "lane": 3
+  },
+  {
+   "id": "iosif",
+   "name": "Иосиф",
+   "lane": 28
+  },
+  {
+   "id": "famar",
+   "name": "Фамарь",
+   "lane": -6
+  },
+  {
+   "id": "veniamin",
+   "name": "Вениамин",
+   "lane": -22
+  },
+  {
+   "id": "fares",
+   "name": "Фарес",
+   "lane": 0
+  },
+  {
+   "id": "manassiya",
+   "name": "Манассия",
+   "lane": 36
+  },
+  {
+   "id": "efrem",
+   "name": "Ефрем",
+   "lane": 30
+  },
+  {
+   "id": "esrom",
+   "name": "Есром",
+   "lane": -1
+  },
+  {
+   "id": "girson",
+   "name": "Гирсон",
+   "lane": 164
+  },
+  {
+   "id": "kaaf",
+   "name": "Кааф",
+   "lane": 68
+  },
+  {
+   "id": "merari",
+   "name": "Мерари",
+   "lane": 132
+  },
+  {
+   "id": "amram",
+   "name": "Амрам",
+   "lane": 69
+  },
+  {
+   "id": "mariam",
+   "name": "Мариам",
+   "lane": 85
+  },
+  {
+   "id": "aaron",
+   "name": "Аарон",
+   "lane": 78
+  },
+  {
+   "id": "moisey",
+   "name": "Моисей",
+   "lane": 71
+  },
+  {
+   "id": "naasson",
+   "name": "Наассон",
+   "lane": 0
+  },
+  {
+   "id": "khalev",
+   "name": "Халев",
+   "lane": -46
+  },
+  {
+   "id": "iisus-navin",
+   "name": "Иисус Навин",
+   "lane": 40
+  },
+  {
+   "id": "eleazar",
+   "name": "Елеазар",
+   "lane": 81
+  },
+  {
+   "id": "raav",
+   "name": "Раав",
+   "lane": -3
+  },
+  {
+   "id": "valaam",
+   "name": "Валаам",
+   "lane": -8
+  },
+  {
+   "id": "gofoniil",
+   "name": "Гофониил",
+   "lane": 8
+  },
+  {
+   "id": "finees",
+   "name": "Финеес",
+   "lane": 83
+  },
+  {
+   "id": "gedeon",
+   "name": "Гедеон",
+   "lane": -10
+  },
+  {
+   "id": "iliy-svyashchennik",
+   "name": "Илий",
+   "lane": -112
+  },
+  {
+   "id": "ieffay",
+   "name": "Иеффай",
+   "lane": 11
+  },
+  {
+   "id": "vooz",
+   "name": "Вооз",
+   "lane": -1
+  },
+  {
+   "id": "ruf",
+   "name": "Руфь",
+   "lane": -3
+  },
+  {
+   "id": "ovid",
+   "name": "Овид",
+   "lane": 0
+  },
+  {
+   "id": "samson",
+   "name": "Самсон",
+   "lane": 9
+  },
+  {
+   "id": "samuil",
+   "name": "Самуил",
+   "lane": 116
+  },
+  {
+   "id": "saul",
+   "name": "Саул",
+   "lane": -121
+  },
+  {
+   "id": "iessey",
+   "name": "Иессей",
+   "lane": -1
+  },
+  {
+   "id": "ionafan",
+   "name": "Ионафан",
+   "lane": -130
+  },
+  {
+   "id": "idifun",
+   "name": "Идифун",
+   "lane": 144
+  },
+  {
+   "id": "sadok",
+   "name": "Садок",
+   "lane": 91
+  },
+  {
+   "id": "ievosfey",
+   "name": "Иевосфей",
+   "lane": -127
+  },
+  {
+   "id": "david",
+   "name": "Давид",
+   "lane": 0
+  },
+  {
+   "id": "asaf",
+   "name": "Асаф",
+   "lane": 178
+  },
+  {
+   "id": "ioav",
+   "name": "Иоав",
+   "lane": 20
+  },
+  {
+   "id": "eman",
+   "name": "Еман",
+   "lane": 119
+  },
+  {
+   "id": "virsaviya",
+   "name": "Вирсавия",
+   "lane": -15
+  },
+  {
+   "id": "avessalom",
+   "name": "Авессалом",
+   "lane": 14
+  },
+  {
+   "id": "nafan-prorok",
+   "name": "Нафан",
+   "lane": -37
+  },
+  {
+   "id": "solomon",
+   "name": "Соломон",
+   "lane": 1
+  },
+  {
+   "id": "rovoam",
+   "name": "Ровоам",
+   "lane": 2
+  },
+  {
+   "id": "ieroboam",
+   "name": "Иеровоам",
+   "lane": -37
+  },
+  {
+   "id": "aviya",
+   "name": "Авия",
+   "lane": 3
+  },
+  {
+   "id": "asa",
+   "name": "Аса",
+   "lane": 4
+  },
+  {
+   "id": "amvriy",
+   "name": "Амврий",
+   "lane": -28
+  },
+  {
+   "id": "iosafat",
+   "name": "Иосафат",
+   "lane": 5
+  },
+  {
+   "id": "akhav",
+   "name": "Ахав",
+   "lane": -29
+  },
+  {
+   "id": "iezavel",
+   "name": "Иезавель",
+   "lane": -30
+  },
+  {
+   "id": "iliya",
+   "name": "Илия",
+   "lane": -8
+  },
+  {
+   "id": "ioram-syn-iosafata",
+   "name": "Иорам",
+   "lane": 3
+  },
+  {
+   "id": "elisey",
+   "name": "Елисей",
+   "lane": -22
+  },
+  {
+   "id": "gofoliya",
+   "name": "Гофолия",
+   "lane": 9
+  },
+  {
+   "id": "iiuy",
+   "name": "Ииуй",
+   "lane": 31
+  },
+  {
+   "id": "okhoziya-syn-iorama",
+   "name": "Охозия",
+   "lane": 2
+  },
+  {
+   "id": "ioas-syn-okhozii",
+   "name": "Иоас",
+   "lane": 1
+  },
+  {
+   "id": "ioas-syn-ioakhaza",
+   "name": "Иоас",
+   "lane": 33
+  },
+  {
+   "id": "amasiya",
+   "name": "Амасия",
+   "lane": 2
+  },
+  {
+   "id": "oziya",
+   "name": "Озия",
+   "lane": 3
+  },
+  {
+   "id": "osiya-prorok",
+   "name": "Осия",
+   "lane": 22
+  },
+  {
+   "id": "ioafam",
+   "name": "Иоафам",
+   "lane": 1
+  },
+  {
+   "id": "isaiya",
+   "name": "Исаия",
+   "lane": -21
+  },
+  {
+   "id": "akhaz",
+   "name": "Ахаз",
+   "lane": 2
+  },
+  {
+   "id": "ezekiya",
+   "name": "Езекия",
+   "lane": 4
+  },
+  {
+   "id": "manassiya-tsar",
+   "name": "Манассия",
+   "lane": 3
+  },
+  {
+   "id": "amon-tsar",
+   "name": "Амон",
+   "lane": 2
+  },
+  {
+   "id": "ieremiya",
+   "name": "Иеремия",
+   "lane": 46
+  },
+  {
+   "id": "iosiya",
+   "name": "Иосия",
+   "lane": 1
+  },
+  {
+   "id": "ioakim-tsar",
+   "name": "Иоаким",
+   "lane": 3
+  },
+  {
+   "id": "navukhodonosor",
+   "name": "Навуходоносор",
+   "lane": 19
+  },
+  {
+   "id": "iezekiil",
+   "name": "Иезекииль",
+   "lane": 33
+  },
+  {
+   "id": "daniil",
+   "name": "Даниил",
+   "lane": -19
+  },
+  {
+   "id": "sedekiya",
+   "name": "Седекия",
+   "lane": -7
+  },
+  {
+   "id": "iekhoniya",
+   "name": "Иехония",
+   "lane": 2
+  },
+  {
+   "id": "salafiil",
+   "name": "Салафиил",
+   "lane": 0
+  },
+  {
+   "id": "iisus-syn-iosedeka",
+   "name": "Иисус",
+   "lane": 105
+  },
+  {
+   "id": "kir",
+   "name": "Кир",
+   "lane": -7
+  },
+  {
+   "id": "zorovavel",
+   "name": "Зоровавель",
+   "lane": 1
+  },
+  {
+   "id": "zakhariya-syn-varakhii",
+   "name": "Захария",
+   "lane": 17
+  },
+  {
+   "id": "esfir",
+   "name": "Есфирь",
+   "lane": -16
+  },
+  {
+   "id": "iosif-muzh-marii",
+   "name": "Иосиф",
+   "lane": 2
+  },
+  {
+   "id": "mariya",
+   "name": "Мария",
+   "lane": -1
+  },
+  {
+   "id": "ioann-krestitel",
+   "name": "Иоанн Креститель",
+   "lane": -9
+  },
+  {
+   "id": "irod-velikiy",
+   "name": "Ирод",
+   "lane": -24
+  },
+  {
+   "id": "iisus",
+   "name": "Иисус Христос",
+   "lane": 0
+  },
+  {
+   "id": "irod-antipa",
+   "name": "Ирод",
+   "lane": 16
+  },
+  {
+   "id": "andrey",
+   "name": "Андрей",
+   "lane": -30
+  },
+  {
+   "id": "ioann-apostol",
+   "name": "Иоанн",
+   "lane": -42
+  },
+  {
+   "id": "iakov-zevedeev",
+   "name": "Иаков",
+   "lane": -43
+  },
+  {
+   "id": "petr",
+   "name": "Пётр",
+   "lane": 42
+  },
+  {
+   "id": "iuda-iskariot",
+   "name": "Иуда",
+   "lane": 46
+  },
+  {
+   "id": "varnava",
+   "name": "Варнава",
+   "lane": 23
+  },
+  {
+   "id": "pavel",
+   "name": "Павел",
+   "lane": 17
+  }
+ ]
+}

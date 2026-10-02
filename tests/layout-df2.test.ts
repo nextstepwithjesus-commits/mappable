@@ -56,7 +56,7 @@ describe('приток с опорными лицами — на прежней 
   });
 });
 
-describe('опорные лица на всех данных (data/coords-snapshot.json)', () => {
+describe('опорные лица на всех данных (первый проход; data/layout-prior.json)', () => {
   function allPersons(): Person[] {
     const out: Person[] = [];
     const seen = new Set<string>();
@@ -73,7 +73,7 @@ describe('опорные лица на всех данных (data/coords-snapsh
     mary: read<{ persons: LineStep[] }>('data/lines/mary.json').persons.filter((s) => g.persons.has(s.id)),
   };
   const lists = read<{ lists: ListDef[] }>('data/lists.json').lists;
-  const snap = read<{ persons: { id: string; lane: number }[] }>('data/coords-snapshot.json').persons.filter((s) => g.persons.has(s.id));
+  const snap = read<{ persons: { id: string; lane: number }[] }>('data/layout-prior.json').persons.filter((s) => g.persons.has(s.id));
   const spine = new Set([...lines.joseph, ...lines.mary].map((s) => s.id));
   let res: ChronoResult;
   let free: LayoutResult;

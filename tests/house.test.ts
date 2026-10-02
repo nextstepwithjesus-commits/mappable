@@ -41,7 +41,8 @@ const lines = {
   mary: read<{ persons: LineStep[] }>('data/lines/mary.json').persons.filter((s) => g.persons.has(s.id)),
 };
 const lists = read<{ lists: ListDef[] }>('data/lists.json').lists;
-const snap = read<{ persons: { id: string; name: string; lane: number }[] }>('data/coords-snapshot.json').persons.filter((s) => g.persons.has(s.id));
+// полосы первого прохода прежнего выпуска (до дома): условие раскладки, с ним сравниваются сдвиги решения 173
+const snap = read<{ persons: { id: string; name: string; lane: number }[] }>('data/layout-prior.json').persons.filter((s) => g.persons.has(s.id));
 const name = (id: string) => g.persons.get(id)?.name ?? id;
 
 /** Сдвиги полосы жизни опорных лиц по решению 173 (жёны — в доме мужа; колена — за домом Иакова; Кир — за домом Зоровавеля). */
