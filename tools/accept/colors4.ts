@@ -30,26 +30,33 @@ const star = (p: Page, id: string) =>
     return b && b.dataset.x ? { x: Number(b.dataset.x), y: Number(b.dataset.y) } : null;
   }, id);
 const hex = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+/** Нейтральный тон следов и сетки — «Туманность» ТЗ § 5.2: цвет ветви от него должен отличаться. */
+const NEBULA = { night: '#8FA2BF', day: '#5A6A84' } as const;
 /**
- * Пиксели следа лица id справа от звезды (px холста): сколько из них близки к цвету ветви color. Подпись справа от звезды
- * закрывает начало следа — поэтому просматривается полоса от 8 до 320 px, по три строки.
+ * Пиксели следа лица id справа от звезды (px холста): сколько из них близки к цвету ветви color — и ближе к нему, чем к
+ * нейтральному тону следа (иначе светлый нейтральный след без выбора считался бы «цветом ветви»). Подпись справа от
+ * звезды закрывает начало следа — поэтому просматривается полоса от 8 до 320 px, по три строки.
  */
-const near = (p: Page, id: string, color: string) =>
+const near = (p: Page, id: string, color: string, theme: 'night' | 'day' = 'night') =>
   star(p, id).then((s) =>
     s
       ? p.evaluate(
-          ({ s, c }) => {
+          ({ s, c, n }) => {
             const cv = document.querySelector('.sky > canvas') as HTMLCanvasElement;
             const k = cv.width / cv.getBoundingClientRect().width;
             const ctx = cv.getContext('2d')!;
             let hits = 0;
             for (let dy = -1; dy <= 1; dy++) {
               const d = ctx.getImageData(Math.round((s.x + 8) * k), Math.round((s.y + dy) * k), Math.round(312 * k), 1).data;
-              for (let i = 0; i < d.length; i += 4) if (Math.abs(d[i] - c[0]) + Math.abs(d[i + 1] - c[1]) + Math.abs(d[i + 2] - c[2]) < 90) hits++;
+              for (let i = 0; i < d.length; i += 4) {
+                const dc = Math.abs(d[i] - c[0]) + Math.abs(d[i + 1] - c[1]) + Math.abs(d[i + 2] - c[2]);
+                const dn = Math.abs(d[i] - n[0]) + Math.abs(d[i + 1] - n[1]) + Math.abs(d[i + 2] - n[2]);
+                if (dc < 90 && dc < dn) hits++;
+              }
             }
             return hits;
           },
-          { s, c: hex(color) },
+          { s, c: hex(color), n: hex(NEBULA[theme]) },
         )
       : -1,
   );
@@ -126,14 +133,14 @@ export const colors4: Scenario[] = [
           if (!f) return fail(`${theme}: нет замера ветвей`);
           const color = f.colors[f.gen.izmail?.[0] ?? -1];
           if (!color) return fail(`${theme}: Измаила нет среди нарисованных цветом`);
-          const hits = await near(q, 'izmail', color);
+          const hits = await near(q, 'izmail', color, theme);
           if (!(hits >= 20)) return fail(`${theme}: у следа Измаила пикселей цвета ${color} — ${hits}`);
           out.push(`${theme}: ${hits} px цвета ${color}`);
           // без выбранного лица — ни цвета, ни замера
           await q.goto(q.url().replace(/#.*$/, '') + '#/~y-1950~w500~l0~s1');
           await q.waitForTimeout(2200);
           if (await frame(q)) return fail(`${theme}: без выбранного лица замер ветвей остался`);
-          const after = await near(q, 'izmail', color);
+          const after = await near(q, 'izmail', color, theme);
           if (after >= hits / 3) return fail(`${theme}: без выбора у следа Измаила ещё ${after} px цвета ветви`);
         } finally {
           await q.close();
