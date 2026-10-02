@@ -2911,9 +2911,16 @@ export class Sky implements SkyContext {
   private cutRect(x: number, y: number, w: number, h: number) {
     const ctx = this.ctx;
     const op = ctx.globalCompositeOperation;
+    const fill = ctx.fillStyle;
+    const a = ctx.globalAlpha;
+    // вырез — полной непрозрачностью и цветом неба (destination-out берёт только альфу; цвет — для замеров кадра)
     ctx.globalCompositeOperation = 'destination-out';
+    ctx.fillStyle = this.pal.sky;
+    ctx.globalAlpha = 1;
     CanvasRenderingContext2D.prototype.fillRect.call(ctx, x, y, w, h);
     ctx.globalCompositeOperation = op;
+    ctx.fillStyle = fill;
+    ctx.globalAlpha = a;
   }
 
   /**
