@@ -50,7 +50,7 @@ const MOVED_173 = ['kham', 'sarra', 'revekka', 'liya', 'leviy', 'simeon', 'dan',
 const RESIDUAL = [
   // Жена, живущая у мужа с рождения, занимает строку с рождения (её доля до прихода — бледная, но строка её): если ближе
   // к мужу место для неё до брака занято, она встаёт дальше того, кто пришёл или родился раньше её черты. План дома
-  // ставит позднее событие первым, но это цена, а не запрет: остаётся 6 случаев на 107 черт и 1 499 отводов.
+  // ставит позднее событие первым, но это цена, а не запрет: остаётся 11 случаев на 107 черт и 1 499 отводов.
   // Гофолия (из далёкого рода) стоит дальше Иосавеф, родившейся раньше черты брака
   'черта u:ioram-syn-iosafata+gofoliya → iosavef',
   // Рицпа (из далёкого рода) стоит дальше Ионафана
@@ -61,6 +61,14 @@ const RESIDUAL = [
   'отвод u:akhav+ → gofoliya → iezavel',
   'отвод u:elifaz-syn-isava+ → kenaz-syn-elifaza → famna-nalozhnitsa-elifaza',
   'отвод u:ierakhmeil+ → akhiya-syn-ierakhmeila → afara',
+  // сторона дома выбрана и по пересечениям чужих следов (дом Фарры — не через коридор Сима…Авраама; −13 пересечений
+  // переписи «все лица»): на этой стороне старший брат Нахор встал ближе Арана и Сарры, а у Лавана, Есрома и Исаии
+  // строки легли иначе — внутри дома по одному пересечению
+  'отвод u:farra+ → aran → nakhor-syn-farry',
+  'отвод u:farra+ → sarra → nakhor-syn-farry',
+  'отвод u:lavan+ → rakhil → liya',
+  'черта u:esrom+aviya-zhena-esroma → khalev-syn-esroma',
+  'черта u:isaiya+prorochitsa-zhena-isaii → shear-yasuv',
 ];
 
 let chrono: ChronoResult;
@@ -142,7 +150,7 @@ describe('дом без пересечений по построению (реш
       expect(n.wed, n.person).toBe(Math.min(...us.map((u) => H.unionYears.get(u.union.id)!)));
       expect(n.wed!, n.person).toBeGreaterThan(b(n.person));
     }
-    for (const id of ['valla', 'zelfa', 'revekka', 'rakhil', 'liya']) expect(N.get(id)!.wed, id).toBeDefined();
+    for (const id of ['valla', 'zelfa', 'avitala', 'egla']) expect(N.get(id)!.wed, id).toBeDefined();
   });
 
   it('правила раскладки те же: в одной полосе следы (пребывания) не пересекаются', () => {
@@ -323,7 +331,7 @@ describe('опорные лица (NFR-3; Ф6)', () => {
   it('стороны созвездий с опорными лицами — как в снимке, кроме жён и лиц, живущих в доме лица коридора', () => {
     const spine = new Set([...lines.joseph, ...lines.mary].map((s) => s.id));
     const flips = snap.filter((s) => !spine.has(s.id) && N.get(s.id) && Math.sign(N.get(s.id)!.lane) !== Math.sign(s.lane)).map((s) => s.id);
-    expect(flips.sort()).toEqual(['famar', 'liya', 'sarra', 'sedekiya', 'virsaviya']);
+    expect(flips.sort()).toEqual(['famar', 'liya', 'sedekiya', 'virsaviya']);
   });
 });
 

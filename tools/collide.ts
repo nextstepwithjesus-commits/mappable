@@ -156,6 +156,7 @@ async function grab(p: Page) {
       hidden: ds.hidden ?? '',
       starsAt: ds.starsAt ?? '',
       links: ds.links ?? '',
+      glides: ds.glides ?? '',
       linkSel: ds.linkSel ?? '',
       plateTexts: ds.plateTexts ?? '',
       plateBoxes: ds.plateBoxes ?? '',
@@ -569,6 +570,31 @@ function parse(g: Grab) {
     const x0 = Math.min(...L.segs.map((q) => Math.min(q[0], q[2])));
     if (starPts.some(([sx, sy]) => Math.abs(sy - y) < 0.9 && x0 >= sx - 2)) L.kind = 'trail';
   }
+  // переход следа (этап 15, решение 173; canvas[data-glides] «лицо:x0,y0,x1,y1»): след с наклонными отрезками внутри рамки
+  // перехода — вид 'glide', владелец — лицо перехода (свой переход через своё имя не считается). Переход — такое же
+  // препятствие для чужого имени, как связь (решение 163): К5 по всей строке
+  const glideBoxes = g.glides
+    .split(';')
+    .filter(Boolean)
+    .map((q) => {
+      const [id, xy] = q.split(':');
+      const [x0, y0, x1, y1] = xy.split(',').map(Number);
+      return { id, x0: Math.min(x0, x1) - 1.5, x1: Math.max(x0, x1) + 1.5, y0: Math.min(y0, y1) - 1.5, y1: Math.max(y0, y1) + 1.5 };
+    });
+  if (glideBoxes.length)
+    for (const L of [...lines]) {
+      if (L.kind !== 'line') continue;
+      const slant = L.segs.filter(([, y0, , y1]) => Math.abs(y1 - y0) >= 0.3);
+      if (!slant.length) continue;
+      const own = glideBoxes.find((b) => slant.every(([x0, y0, x1, y1]) => Math.min(x0, x1) >= b.x0 && Math.max(x0, x1) <= b.x1 && Math.min(y0, y1) >= b.y0 && Math.max(y0, y1) <= b.y1));
+      if (!own) continue;
+      // горизонтали пребываний того же прохода — след, наклонные отрезки — переход
+      const flat = L.segs.filter(([, y0, , y1]) => Math.abs(y1 - y0) < 0.3);
+      if (flat.length) lines.push({ ...L, kind: 'trail', segs: flat });
+      L.kind = 'glide';
+      L.ks = `glide:${own.id}`;
+      L.segs = slant;
+    }
   // пути связей из журнала — для пометки «link»
   const linkSegs: { kind: string; ks: string; seg: number[] }[] = [];
   const nodes: { kind: string; x: number; y: number; ks: string }[] = [];
@@ -677,14 +703,14 @@ const NAMES = (() => {
   }
 })();
 /** Виды линий порога К5: связь, лента, золотистая дуга, жёлтая выбранная связь. */
-const K5_KINDS = new Set(['link', 'ribbon', 'kin', 'sel']);
+const K5_KINDS = new Set(['link', 'ribbon', 'kin', 'sel', 'glide']);
 /** Выноска подписи (labels.ts, labelStar): один отрезок толщиной 0,8 px (не след, не связь, не контур). */
 const isLeader = (L: Line) => Math.abs(L.lw - 0.8) < 0.06 && L.segs.length === 1;
 /**
  * Из них — по всей строке имени и с замаскированными пересечениями (решение 163: стволы, зубцы, черты брака, выбранная
  * связь; выноски — отдельно): связь и выбранная связь. Ленты и золотистые дуги — по середине строки, как прежде.
  */
-const K5_FULL = new Set(['link', 'sel']);
+const K5_FULL = new Set(['link', 'sel', 'glide']);
 
 interface Finding {
   cls: string;
@@ -837,7 +863,7 @@ function measure(g: Grab, P: Parsed) {
         }
         // К5 по решению 163: связь, дуга, выбранная связь — по всей строке имени, и выноска чужой подписи; пересечение,
         // спрятанное ореолом, разрывом под именем или вырезом, тоже считается (R1-04: разрыв у имени читается концом связи)
-        if (own && (K5_FULL.has(L.kind) || isLeader(L)) && !k5.has(o) && !(L.kind === 'link' && ownLink(L.ks, own))) {
+        if (own && (K5_FULL.has(L.kind) || isLeader(L)) && !k5.has(o) && !(L.kind === 'link' && ownLink(L.ks, own)) && !(L.kind === 'glide' && L.ks === `glide:${own}`)) {
           let full = 0;
           let fx = 0;
           let fy = 0;
@@ -884,7 +910,7 @@ function measure(g: Grab, P: Parsed) {
           }
           // К5: связь, лента, дуга или жёлтая связь через середину строки ЧУЖОГО имени (лента под именем лица линии
           // Мессии — его своя: она прерывается под именем в замере класса 5 «строго», но в порог не входит)
-          if (sl >= 3 && own && K5_KINDS.has(L.kind) && !(L.kind === 'ribbon' && SPINE.has(own)) && !(L.kind === 'link' && ownLink(L.ks, own)) && !k5.has(o) && !k5cut.has(o)) {
+          if (sl >= 3 && own && K5_KINDS.has(L.kind) && !(L.kind === 'ribbon' && SPINE.has(own)) && !(L.kind === 'link' && ownLink(L.ks, own)) && !(L.kind === 'glide' && L.ks === `glide:${own}`) && !k5.has(o) && !k5cut.has(o)) {
             k5.add(o);
             F.push({ cls: '5 К5 линия через середину имени', what: `${L.kind} через «${label(o)}» (${sl.toFixed(0)} px)`, x: t.box.x0, y: t.box.y0 });
           }

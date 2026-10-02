@@ -277,8 +277,16 @@ describe('отрисовка на небе: пометы и подписи пр�
     expect(notes.filter((t) => /^от [А-ЯЁ]/.test(t))).toEqual([]);
     const names = st.boxes.filter((b) => b.kind === 'plate' && b.text).map((b) => b.text);
     expect(names).toContain('Лия');
-    // подписи призраков жён — прежние (ТЗ § 3.1)
-    expect(notes.some((t) => /, жена /.test(t))).toBe(true);
     expect(st.overlaps).toBe(0);
+    // подписи призраков жён (ТЗ § 3.1): этап 15, решение 173 — призрак жены из далёкого рода стоит в её родной семье
+    // (Рахиль и Лия — у Лавана), её звезда — у мужа; у призрака — «Рахиль, жена Иакова»
+    const g = s.nodes.findIndex((n) => n.id === 'ghost:rakhil');
+    expect(g).toBeGreaterThanOrEqual(0);
+    s.cam.x0 = s.X0[g] - 600 / s.cam.kx;
+    s.cam.laneTop = s.nodes[g].lane + 380 / s.cam.ky;
+    draw(s, { selected: 'iakov', highlight: marks.familyHighlight('iakov').hl, depth: marks.familyHighlight('iakov').depth });
+    const st2 = s.labelStats();
+    expect(st2.boxes.filter((b) => b.kind === 'note').map((b) => b.text)).toContain('Рахиль, жена Иакова');
+    expect(st2.overlaps).toBe(0);
   });
 });

@@ -28,6 +28,7 @@ import type { Cert, Sex } from '../data/types.ts';
 import { BOOKS } from '../engine/books.ts';
 import { linkKeyString, spanInner, type LinkKey } from '../engine/linkkey.ts';
 import { kidEdges, type Union } from '../engine/unions.ts';
+import { marriageKind } from '../engine/stays.ts';
 import { unions } from './reveal.ts';
 import { bySex, KIN_TERMS, lowerFirst, nameCase, pluralPeopleName, splitKinTerm } from './text/ru.ts';
 import { typo } from './text/typo.ts';
@@ -423,30 +424,62 @@ export function kidsCount(u: Union): string {
   return [s, d].filter(Boolean).join(' и ');
 }
 
-/** Заголовок союза: «Ной и его жена: Сим, Хам, Иафет», «Иаков и Лия: 6 сыновей и дочь», «Давид и Мелхола — муж и жена». */
+/**
+ * Вид союза словом (решение 174; src/engine/stays.ts, marriageKind) — в подсказке и карточке связи: «наложница»,
+ * «левират»; у жены и у пары без записи о браке — пусто (у такой пары свой оборот: «брак в Писании не назван»).
+ */
+export function unionKindWord(u: Union): string {
+  if (isClaimUnion(u) || !u.a || !u.b) return '';
+  const k = marriageKind(u);
+  return k === 'concubine' ? 'наложница' : k === 'levirate' ? 'левират' : '';
+}
+
+/**
+ * Заголовок союза: «Ной и его жена: Сим, Хам, Иафет», «Иаков и Лия: 6 сыновей и дочь», «Иаков и Валла, наложница: Дан,
+ * Неффалим», «Давид и Мелхола — муж и жена», «Онан и Фамарь — муж и жена, левират».
+ */
 function unionTitleOf(u: Union): string {
   const name = unionName(u);
+  const word = unionKindWord(u);
   if (!u.kids.length) {
-    if (u.a && u.b) return `${name} — ${u.kind === 'concubine' ? 'муж и наложница' : 'муж и жена'}`;
+    if (u.a && u.b) return `${name} — ${u.kind === 'concubine' ? 'муж и наложница' : 'муж и жена'}${word === 'левират' ? ', левират' : ''}`;
     return name;
   }
   if (isClaimUnion(u)) {
     const one = (u.a ?? u.b)!;
     return `${nameOf(one)} — ${parentRole(u, one)}: ${kidsWords(u)}`;
   }
-  return `${name}: ${kidsWords(u)}`;
+  return `${name}${word ? `, ${word}` : ''}: ${kidsWords(u)}`;
+}
+
+/**
+ * Черта брака пары, которую текст называет только родителями (решение 174, «брак в Писании не назван»): у матери царя —
+ * «Наама — мать Ровоама; брак с Соломоном в Писании не назван»; у прочих (Иуда и Фамарь, Лот и дочери — Быт 38; 19) —
+ * заголовок союза и та же оговорка. Без надёжного склонения — заголовок союза.
+ */
+function coparentsBarTitle(u: Union): string {
+  const tail = 'брак в Писании не назван';
+  if (u.queenMother && u.a && u.b && u.kids.length) {
+    const kid = genOf(u.kids[0]);
+    const p = byId.get(u.a);
+    const ins = p ? nameCase(p.name, p.sex, 'ins', p.unnamed, p.alt) : null;
+    if (kid && ins) return `${nameOf(u.b)} — мать ${kid}; брак с ${ins} в Писании не назван`;
+  }
+  return `${unionTitleOf(u)}; ${tail}`;
 }
 
 /** Черта брака: «Рахиль — жена Иакова», «Иаков — муж Рахили»; имя не склоняется — «Иаков и Рахиль — муж и жена». */
 function spouseTitle(u: Union, person: string): string {
-  // пара только родителей — как союз: «Соломон и Наама: Ровоам»
-  if (coparentsOnly(u)) return unionTitleOf(u);
+  // пара только родителей: «Наама — мать Ровоама; брак с Соломоном в Писании не назван» (решение 174)
+  if (coparentsOnly(u)) return coparentsBarTitle(u);
   const other = person === u.a ? u.b : person === u.b ? u.a : null;
   const role = spouseRole(u, person);
   if (!other) return `${unionName(u)}`;
+  // левират — словом вида после родства (решение 174): «Фамарь — жена Онана; левират»
+  const lev = unionKindWord(u) === 'левират' ? '; левират' : '';
   const g = genOf(other);
-  if (g) return `${nameOf(person)} — ${role} ${g}`;
-  return `${nameOf(u.a!)} и ${midName(u.b!)} — ${u.kind === 'concubine' ? 'муж и наложница' : 'муж и жена'}`;
+  if (g) return `${nameOf(person)} — ${role} ${g}${lev}`;
+  return `${nameOf(u.a!)} и ${midName(u.b!)} — ${u.kind === 'concubine' ? 'муж и наложница' : 'муж и жена'}${lev}`;
 }
 
 /**

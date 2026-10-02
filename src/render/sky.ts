@@ -883,7 +883,9 @@ export class Sky implements SkyContext {
       alpha: detail,
       // выделенные связи (семья выбранного, путь) — в полную силу при любой подробности; остальные, и в показе «линии Мессии»,
       // проявляются с подробностью: на обзоре ленты — сплайн, стволов и ромбов у них нет (§ 3)
-      lit: (q) => !!(hl && q.ends.every((id) => hl.has(id))),
+      // меридиан года («наверняка», «вероятно») подсвечивает живых, а не их связи (как у отводов, trails.ts, linkKind): связи
+      // идут по уровням решения 178
+      lit: (q) => !!(hl && q.ends.every((id) => { const k = hl.get(id); return k !== undefined && k !== 'sure' && k !== 'likely'; })),
     };
     // ярусы связей (решение 135; trails.ts, linkLooks): путь → ярус и непрозрачность; по ним же — попадание, разрывы, журнал
     d.look = linkLooks(this, p, d);
@@ -2505,6 +2507,8 @@ export class Sky implements SkyContext {
           .flatMap((i) => (this.bendsOf(i) ?? []).filter((g) => g.xb > 0 && g.xa < cam.w).map((g) => `${this.nodes[i].person}:${[g.xa, g.ya, g.xb, g.yb].map(Math.round).join(',')}`))
           .join(';'),
       );
+      // уровень подробности семьи (решение 178): «уровень px-на-год» (tools/accept/skydraw.ts)
+      put('tier', `${p.tier} ${p.pxYear.toFixed(1)}`);
       put('glideCuts', L.lifelines ? this.glideCrossLog().filter((q) => { const x = Number(q.split('@')[1]); return x > 0 && x < cam.w; }).join(' ') : '');
       put('starsAt', p.vis.filter((i) => this.drawn(i) && !this.nodes[i].ghost).slice(0, 2000).map((i) => `${Math.round(cam.sx(this.X0[i]))},${Math.round(this.starY(i))}`).join(';'));
       put('stars', this.plan.mode === 'work' ? p.vis.filter((i) => this.drawn(i) && !this.nodes[i].ghost).slice(0, 240).map((i) => `${this.nodes[i].person}:${Math.round(cam.sx(this.X0[i]))},${Math.round(this.starY(i))}`).join(';') : '');
@@ -2723,8 +2727,10 @@ export class Sky implements SkyContext {
       const pinned = !!pins && pins.has(n.person);
       // лицо свёрнутого скопления видно отдельно, только если это выбранное лицо, путь родства или отметка поиска
       if (n.block >= 0 && this.collapsed.has(n.block)) A[i] = k === 'self' || k === 'path' || pinned ? 1 : 0;
+      // призрак — с масштаба семьи; у семьи выбранного и пути родства — всегда (меридиан года «живы» призраков не зажигает)
+      else if (n.ghost && !pinned && (k === undefined || k === 'sure' || k === 'likely')) A[i] = (mag[i] <= OVERVIEW_MAG ? 1 : detail) * ghostA;
       else if (k !== undefined || pinned || (s.onlyLines && spine.has(n.person))) A[i] = 1;
-      else A[i] = (mag[i] <= OVERVIEW_MAG ? 1 : detail) * (n.ghost ? ghostA : 1);
+      else A[i] = mag[i] <= OVERVIEW_MAG ? 1 : detail;
     }
   }
 
@@ -3207,12 +3213,12 @@ export class Sky implements SkyContext {
       lh.add(r.pts, NO_ROUTE_OWN, Math.min(2.5, Math.max(1, (r.w ?? 1) / 2)));
     }
     // переходы следов (решения 163, 173): чужое имя не ложится на S-кривую — она такая же чужая линия, как ствол. На небе
-    // (решение 178) переходы бледны и почти отвесны у самых звёзд семьи — там они препятствие только у выделенных, иначе
-    // имена главы семьи и его сыновей не нашли бы места; подпись гасит бледный переход под собой, как след (MAP-56)
-    if (p.s.layers.lifelines && !p.s.onlyLines)
+    // (решение 178) переходы бледны и почти отвесны у самых звёзд семьи — там они не препятствие, иначе имена главы семьи и его
+    // сыновей не нашли бы места; подпись гасит бледный переход под собой, как след (MAP-56). В режиме «В работе» подписаны
+    // все лица набора (J4) — переход чужого лица набора там тоже гасится под именем
+    if (p.s.layers.lifelines && !p.s.onlyLines && p.tier >= 1 && !p.work)
       for (const i of p.vis) {
         if (!hasGlides(this.nodes[i]) || !this.drawn(i)) continue;
-        if ((p.tier < 1 || p.work) && !p.s.highlight?.has(this.nodes[i].person)) continue;
         const own = new Set([this.nodes[i].person]);
         for (const g of this.bendsOf(i) ?? []) {
           if (g.xb < -20 || g.xa > this.cam.w + 20) continue;

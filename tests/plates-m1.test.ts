@@ -293,9 +293,14 @@ describe('точки союзов на холсте (решение 76)', () => 
     const lines = (f.data.unionLines ?? '').split(';');
     for (const l of ['u:avraam+agar>izmail']) expect(lines.some((x) => x.startsWith(l)), l).toBe(true);
     expect(lines.some((x) => x.startsWith('u:avraam+sarra>isaak'))).toBe(false);
+    // этап 15 (решения 173, 174): ромб — на следе жены в год черты брака; след Сарры переходом пришёл из дома Фарры в дом
+    // Авраама — ромб на её следе там, а не на строке её звезды
+    const lf = f.s.linkFrame()!;
     for (const w of ['sarra', 'agar']) {
       const d = dots(f.data.dots ?? '').find((x) => x.uid === `u:avraam+${w}`)!;
-      expect(Math.abs(d.y - at(f, w).y), w).toBeLessThanOrEqual(1);
+      const st = f.s.linkStarsNow().find((q) => q.id === w && !q.ghost)!;
+      // (журнал точек — в целых px: на переходе следа наклон добавляет к округлению x и y до полупикселя)
+      expect(Math.abs(d.y - (links.trailYAt(st, d.x - lf.dx) + lf.dy)), w).toBeLessThanOrEqual(1.5);
     }
   });
 

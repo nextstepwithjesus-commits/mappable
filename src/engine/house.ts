@@ -345,6 +345,23 @@ export function planHouses(H: HouseInput, L: LayoutResult, opts: { only?: 'spine
       const s = v !== 0 ? Math.sign(v) : fallback !== 0 ? Math.sign(fallback) : balance <= 0 ? 1 : -1;
       return s > 0 ? 1 : -1;
     };
+    /**
+     * Сколько живых следов пересекла бы связь в год t от полосы from до ближайшей полосы стороны sd, свободной на
+     * [a; b] (оценка до постановки: решение 173, Д3 — при выборе стороны дома важны и переходы, и пересечения).
+     */
+    const probe = (from: number, a: number, b2: number, t: number, sd: 1 | -1, ignore: ReadonlySet<string>): number => {
+      for (let d = 1; d <= 60; d++) {
+        const l = from + sd * d;
+        if (!occ.free(l, a - GAP, b2 + GAP_H, '')) continue;
+        let c = 0;
+        for (let k = Math.min(from, l) + 1; k < Math.max(from, l); k++) if (occ.liveAt(k, t, ignore)) c++;
+        return c;
+      }
+      return 0;
+    };
+    /** Разность пересечений сторон: X(−1) − X(+1) (больше нуля — сторона +1 чище). */
+    const crossVote = (xs: { from: number; a: number; b: number; t: number }[], ignore: ReadonlySet<string>) =>
+      xs.reduce((q, x) => q + probe(x.from, x.a, x.b, x.t, -1, ignore) - probe(x.from, x.a, x.b, x.t, 1, ignore), 0);
     const kidSlot = (k: string, u: Union, from: 'anchor' | string): Slot | null => {
       const st = stayOf(k, 'birth', A);
       if (!st) return null;
@@ -383,7 +400,9 @@ export function planHouses(H: HouseInput, L: LayoutResult, opts: { only?: 'spine
         const glidesIn = !!wst && wst.t0 > b(W) + 0.01;
         const from0 = glidesIn ? laneAt(W, wst!.t0 - 1) : aLane;
         const lenAt = (sd: number) => plain.reduce((q, k, i) => q + Math.abs((node.get(k)?.lane ?? aLane) - (aLane + sd * (2 + i))), 0) + 2 * Math.abs(from0 - (aLane + sd));
-        const vote = lenAt(-1) - lenAt(1);
+        // и пересечения: черта брака в год прихода не через живые следы (царица-мать у царя в коридоре: Наама у Соломона)
+        const barX = wst ? crossVote([{ from: aLane, a: wst.t0, b: Math.min(wst.t1, wst.t0 + LABEL_ROOM), t: firstKid(u) - 1 }], new Set([A, W, 'ribbon'])) : 0;
+        const vote = lenAt(-1) - lenAt(1) + CROSS_W * barX;
         const side = pickSide(vote, (node.get(W)?.lane ?? aLane) - aLane);
         hu.side = side;
         hu.barT = firstKid(u) - 1;
@@ -398,7 +417,9 @@ export function planHouses(H: HouseInput, L: LayoutResult, opts: { only?: 'spine
         if (merged && W) hu.barT = firstKid(u) - 1;
         const from = merged && W ? W : 'anchor';
         const ks = plain.map((k) => kidSlot(k, u, from)).filter((x): x is Slot => !!x);
-        const vote = 3 * ribbonKids.reduce((q, k) => q + Math.sign(node.get(k)!.lane - aLane), 0) + (merged && W ? 4 * Math.sign(laneAt(W, t) - aLane) : sideVotes(plain));
+        // и пересечения: отводы от следа отца в годы рождений не через живые следы (дом Фарры — не через коридор)
+        const kidX = merged ? 0 : crossVote(plain.map((k) => ({ from: aLane, a: b(k), b: b(k) + C_STAY, t: b(k) })), new Set([A, ...plain, 'ribbon']));
+        const vote = 3 * ribbonKids.reduce((q, k) => q + Math.sign(node.get(k)!.lane - aLane), 0) + (merged && W ? 4 * Math.sign(laneAt(W, t) - aLane) : sideVotes(plain)) + CROSS_W * kidX;
         const side = pickSide(vote, 0);
         hu.side = side;
         // дети без названной матери — каждый своей связью от следа отца; группой на одной стороне

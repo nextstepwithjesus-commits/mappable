@@ -33,8 +33,8 @@ import type { LineStep } from '../engine/layout.ts';
 import type { Rect } from './rect.ts';
 import { genitive, type KinStep } from '../engine/kinship.ts';
 import type { Emphasis, Pass, SkyContext, SkyState } from './sky.ts';
-import { linkShown, trailOf, type LifeTrail, type LinkDraw } from './trails.ts';
-import { kidStyle, mainUnion, NODE_R_FAMILY, NODE_R_MAP, otherReading, routeOver, segmentsOf, TRUNK_LEAD, type LinkPath, type Seg } from './links.ts';
+import { linkShown, trailOf, trailPolyline, type LifeTrail, type LinkDraw } from './trails.ts';
+import { farDescendant, kidStyle, mainUnion, NODE_R_FAMILY, NODE_R_MAP, otherReading, routeOver, segmentsOf, TRUNK_LEAD, type LinkPath, type Seg } from './links.ts';
 import { LINK_DASH } from './trails.ts';
 import { linkKeyString, type LinkKey } from '../engine/linkkey.ts';
 import { childRole, linkMarks, linkRoles } from '../ui/linkwords.ts';
@@ -806,7 +806,7 @@ function kinArcs(v: SkyContext, id: string, seen: Set<string>): KinArc[] {
   };
   const inWin = (q: { x: number; y: number }) => q.x >= Math.max(vp.l, v.letterW) && q.x <= vp.r && q.y >= v.openTop && q.y <= vp.b;
   const out: KinArc[] = [];
-  for (const e of graph.kinOf.get(id) ?? []) {
+  for (const e of [...(graph.kinOf.get(id) ?? []), ...gapKin(v, id)]) {
     const k = `${e.from}|${e.to}|${e.rel}`;
     if (seen.has(k)) continue;
     seen.add(k);
@@ -839,6 +839,22 @@ function kinArcs(v: SkyContext, id: string, seen: Set<string>): KinArc[] {
   }
   return out;
 }
+/**
+ * Связи «через века» лица id (пропуск поколений; links.ts, farDescendant): на небе линией их нет (решение 176), у
+ * выбранного и наведённого — дуга родства «потомок» (Боган — потомок Рувима, Нав 15:6).
+ */
+function gapKin(v: Pick<SkyContext, 'model'>, id: string): { from: string; to: string; rel: string }[] {
+  const out: { from: string; to: string; rel: string }[] = [];
+  for (const u of unions.of.get(id) ?? []) {
+    if (u.claim) continue;
+    for (const k of u.kids) if (farDescendant(id, k, u, v.model)) out.push({ from: k, to: id, rel: GAP_WORD });
+  }
+  const u = mainUnion(unions, id);
+  if (u) for (const par of [u.a, u.b]) if (par && farDescendant(par, id, u, v.model)) out.push({ from: id, to: par, rel: GAP_WORD });
+  return out;
+}
+/** Слово дуги связи «через века»: кем приходится лицо у начала дуги. */
+export const GAP_WORD = 'потомок';
 const reversePts = (pts: number[]) => {
   const out: number[] = [];
   for (let k = pts.length - 2; k >= 0; k -= 2) out.push(pts[k], pts[k + 1]);
@@ -1316,7 +1332,9 @@ function baseRoutes(v: SkyContext, d: LinkDraw, key: LinkKey, ks: string, origin
     const x = v.cam.sx(v.X0[i]) - d.dx;
     const y = v.cam.sy(starLaneOf(v.nodes[i])) - d.dy;
     const tr = trailOf(v, i, t);
-    return { x, y, x1: tr ? Math.max(tr.x0, tr.x1) - d.dx : x };
+    // у лица с переходом (решение 173) — ломаная его следа той же выборкой, что рисует trails.ts
+    const poly = tr?.bends ? trailPolyline(tr).map((q, k) => q - (k % 2 ? d.dy : d.dx)) : null;
+    return { x, y, x1: tr ? Math.max(tr.x0, tr.x1) - d.dx : x, poly };
   };
   /**
    * Призрак конца id (К3): x — его настоящий год, по вертикали — на полстроки от видимого конца at в сторону его
@@ -1373,19 +1391,25 @@ function baseRoutes(v: SkyContext, d: LinkDraw, key: LinkKey, ks: string, origin
   const own = paths.filter((q) => q.union === u && q.kind !== 'ribbon');
   const segs = (qs: readonly LinkPath[]): Seg[] => qs.flatMap((q) => segmentsOf(q));
   /** след лица по его строке — от звезды вправо до конца следа или до дальней точки линий на этой строке */
-  const trailSeg = (s: { x: number; y: number; x1: number }, among: readonly Seg[]): Seg => {
-    let x1 = s.x1;
+  const trailSeg = (s: { x: number; y: number; x1: number; poly: number[] | null }, among: readonly Seg[]): Seg[] => {
+    // след с переходами — ломаной; конец — до дальней точки линий на строке его конца (родовая черта, узел за концом)
+    const pts = s.poly && s.poly.length >= 4 ? s.poly : [s.x, s.y, s.x1, s.y];
+    const ly = pts[pts.length - 1];
+    let x1 = pts[pts.length - 2];
     for (const g of among)
-      for (const [x, y] of [[g[0], g[1]], [g[2], g[3]]]) if (Math.abs(y - s.y) < 0.8 && x > x1) x1 = x;
-    return [s.x, s.y, Math.max(s.x, x1), s.y];
+      for (const [x, y] of [[g[0], g[1]], [g[2], g[3]]]) if (Math.abs(y - ly) < 0.8 && x > x1) x1 = x;
+    const out: Seg[] = [];
+    for (let k = 0; k + 3 < pts.length; k += 2) out.push([pts[k], pts[k + 1], pts[k + 2], pts[k + 3]]);
+    if (x1 > pts[pts.length - 2] + 0.01) out.push([pts[pts.length - 2], ly, x1, ly]);
+    if (!out.length) out.push([s.x, s.y, Math.max(s.x, x1), s.y]);
+    return out;
   };
   /** путь родителя id от его звезды до узла союза: по нарисованным линиям, иначе — по своему следу до столбца узла и к узлу */
   const parentRoute = (id: string): number[] | null => {
     const s = star(id);
     if (!s || !node) return null;
-    const ladder = paths.filter((q) => q.union !== u && q.kind !== 'ribbon' && q.kind !== 'tooth' && q.kind !== 'stub' && (q.ends[0] === id || (q.kind === 'bar' && q.ends.includes(id))));
-    const base = [...segs(own), ...segs(ladder)];
-    const r = routeOver([...base, trailSeg(s, base)], { x: s.x, y: s.y }, node);
+    const base = segs(own);
+    const r = routeOver([...base, ...trailSeg(s, base)], { x: s.x, y: s.y }, node);
     if (r) return r;
     if (Math.abs(node.y - s.y) < 0.5) return [s.x, s.y, node.x, s.y];
     return node.x > s.x ? [s.x, s.y, node.x, s.y, node.x, node.y] : null;
@@ -1426,7 +1450,7 @@ function baseRoutes(v: SkyContext, d: LinkDraw, key: LinkKey, ks: string, origin
     const end = { x: tooth.pts[tooth.pts.length - 2], y: tooth.pts[tooth.pts.length - 1] };
     const ownerStar = node ? star(node.owner) : null;
     const base = segs(own);
-    const r = node ? routeOver(ownerStar ? [...base, trailSeg(ownerStar, base)] : base, end, node) : null;
+    const r = node ? routeOver(ownerStar ? [...base, ...trailSeg(ownerStar, base)] : base, end, node) : null;
     if (r) core.push(r);
     else {
       // узла в кадре нет: зубец и ствол до строки ребёнка, как прежде

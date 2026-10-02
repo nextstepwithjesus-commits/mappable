@@ -651,6 +651,24 @@ const BAR_HALF = 2.1;
  */
 export const RIB_STEP = 6;
 
+/**
+ * Ребёнок kid союза u рождён через века после конца жизни родителя par (пропуск поколений: GAP_YEARS, у родословия с
+ * пропуском — GAP_YEARS_MARKED): у лица, не у народа и рода. Такой связи линией на небе нет — её показывает дуга родства
+ * «потомок» у выбранного и наведённого (marks.ts, kinArcs), карточка и путь родства.
+ */
+export function farDescendant(par: string, kid: string, u: Pick<Union, 'a' | 'b'>, m: Pick<ModelData, 'chrono' | 'nodeByPerson'> = models[0]): boolean {
+  const q = byId.get(par);
+  if (!q || q.kind === 'people' || q.kind === 'clan') return false;
+  const n = m.nodeByPerson.get(par);
+  const c = m.chrono.get(par);
+  const b = m.chrono.get(kid)?.b ?? m.nodeByPerson.get(kid)?.t0;
+  // конец жизни родителя: год смерти или его оценка, а без них — конец нарисованного следа
+  const end = c ? (c.d ?? c.dEst) : n && n.t1 > n.t0 ? n.t1 : undefined;
+  if (end === undefined || b === undefined) return false;
+  const gap = (graph.parentsOf.get(kid) ?? []).some((e) => (e.parent === u.a || e.parent === u.b) && e.gap);
+  return b - end > (gap ? GAP_YEARS_MARKED : GAP_YEARS);
+}
+
 /** Союз кадра: супруги на небе, владелец узла и отводов, дети, вид союза, гнёзда и места вертикалей. */
 interface Plan {
   u: Union;
@@ -732,19 +750,7 @@ function houseLinks(inp: LinkInput): LinkFrame {
   const yAt = (s: LinkStar, x: number) => trailYAt(s, x);
   const plates = inp.plates ?? null;
   const years = inp.model?.chrono && inp.model.nodeByPerson ? (inp.model as Pick<ModelData, 'chrono' | 'nodeByPerson'>) : models[0];
-  /** Ребёнок k рождён через века после конца следа родителя par (пропуск поколений, GAP_YEARS): у лица, не у народа. */
-  const afterLife = (par: string, k: string, u: Union): boolean => {
-    const q = byId.get(par);
-    if (!q || q.kind === 'people' || q.kind === 'clan') return false;
-    const n = years.nodeByPerson.get(par);
-    const c = years.chrono.get(par);
-    const b = years.chrono.get(k)?.b ?? years.nodeByPerson.get(k)?.t0;
-    // конец жизни родителя: год смерти или его оценка, а без них — конец нарисованного следа
-    const end = c ? (c.d ?? c.dEst) : n && n.t1 > n.t0 ? n.t1 : undefined;
-    if (end === undefined || b === undefined) return false;
-    const gap = (graph.parentsOf.get(k) ?? []).some((e) => (e.parent === u.a || e.parent === u.b) && e.gap);
-    return b - end > (gap ? GAP_YEARS_MARKED : GAP_YEARS);
-  };
+  const afterLife = (par: string, k: string, u: Union) => farDescendant(par, k, u, years);
 
   const stars = new Grid<LinkStar>(32);
   let maxR = 0;
@@ -855,6 +861,17 @@ function houseLinks(inp: LinkInput): LinkFrame {
   const teeth = new Grid<Tooth>(24);
   const slots: Slot[] = [];
   const span = (ys: number[]): [number, number] => [Math.min(...ys), Math.max(...ys)];
+  /**
+   * x прихода лица в дом (решение 173): конец последнего перехода следа до hi и начало живой доли следа (LinkStar.from:
+   * wed — на небе, since — в семейной укладке); −∞ — лицо в доме с рождения.
+   */
+  const arrivalOf = (q: LinkStar | null, hi: number): number => {
+    if (!q || q.ghost) return -Infinity;
+    let a = q.from ?? -Infinity;
+    const pp = q.path;
+    if (pp) for (let k = 0; k + 3 < pp.length; k += 2) if (Math.abs(pp[k + 3] - pp[k + 1]) > 0.01 && pp[k + 2] <= hi + 0.5) a = Math.max(a, pp[k + 2]);
+    return a;
+  };
   /** Нижний предел вертикали союза: правее звёзд его лиц. */
   const lo0Of = (p: Plan) => Math.max(p.O.x + p.O.r + 3, p.F ? p.F.x + p.F.r + 3 : -Infinity, p.W ? p.W.x + p.W.r + 3 : -Infinity);
   /**
@@ -876,7 +893,9 @@ function houseLinks(inp: LinkInput): LinkFrame {
       lo = Math.max(lo0, first.x - TRUNK_MAX, Math.max(...n0.map((k) => k.x)) - TOOTH_MAX);
       hi = first.x - TRUNK_MIN;
     } else if (n0 || p.rib.length) {
-      const next = n0 ? n0[0].x - leadOf(n0[0]) : p.rib[0].x - p.rib[0].r - 4;
+      // у союза только с ребёнком линии — до самой его звезды: станция ленты у черты (решение 177), а черта — не раньше
+      // прихода матери в дом (у матери царя он бывает за год до рождения)
+      const next = n0 ? n0[0].x - leadOf(n0[0]) : p.rib[0].x - p.rib[0].r - 2;
       want = p.xw ?? next;
       lo = Math.max(lo0, Math.min(want, next) - (wideWin ? 2 * TRUNK_MAX : TRUNK_MAX));
       hi = Math.min(want + 16, n0 ? next - (wideWin ? nodeGap : WIDE_GAP) : next);
@@ -905,6 +924,12 @@ function houseLinks(inp: LinkInput): LinkFrame {
         p.O = F ?? O;
       }
     }
+    // черта брака — не раньше прихода жены в дом мужа (решение 173: конец её перехода, начало живой доли следа wed/since)
+    const arr = arrivalOf(p.W, hi) + 1;
+    if (arr > lo && arr <= hi) {
+      lo = arr;
+      want = Math.max(want, lo);
+    }
     const xq = Math.max(lo, Math.min(hi, want));
     const ny = p.W ? yAt(p.W, xq) : yAt(p.O, xq);
     const fy = bar && p.W ? (F ? yAt(F, xq) : null) : null;
@@ -916,8 +941,11 @@ function houseLinks(inp: LinkInput): LinkFrame {
     const g = p.nests[n];
     const first = g[0];
     const w = first.x - leadOf(first);
-    const l = Math.max(p.O.x + p.O.r + 3, first.x - TRUNK_MAX, Math.max(...g.map((k) => k.x)) - TOOTH_MAX);
+    let l = Math.max(p.O.x + p.O.r + 3, first.x - TRUNK_MAX, Math.max(...g.map((k) => k.x)) - TOOTH_MAX);
     const h = first.x - TRUNK_MIN;
+    // ствол — от живой доли следа матери (после её перехода в дом мужа), если гнездо это позволяет
+    const arr = arrivalOf(p.O, h) + 1;
+    if (arr > l && arr <= h) l = arr;
     const x = Math.max(l, Math.min(h, w));
     const oy = yAt(p.O, x);
     const [a, b] = span([oy, ...g.map((k) => k.y)]);
@@ -1136,11 +1164,48 @@ function houseLinks(inp: LinkInput): LinkFrame {
     nodes.push(node);
     // второй родитель у отводов (концы путей): связан чертой брака
     const other = p.F && p.W && p.F.id !== p.O.id ? p.F.id : null;
+    /**
+     * Шина гнёзд (см. ниже): межстрочье у ближнего к владельцу ребёнка следующих гнёзд; null — стволы от следа владельца
+     * проходят не больше чужих живых следов, чем ствол колонны до шины и стволы от шины.
+     */
+    const busOf = (q: Plan, cx: number, cy: number, ln: (x: number) => number): { y: number } | null => {
+      const rest = q.nests.map((g, n) => ({ g, n })).filter(({ n }) => !(n === 0 && q.merged) && Number.isFinite(q.xs[n]));
+      if (!rest.length || q.O !== at) return null;
+      const dir = Math.sign(rest[0].g[0].y - cy);
+      if (!dir || rest.some(({ g }) => g.some((k) => Math.sign(k.y - cy) !== dir))) return null;
+      const near = dir > 0 ? Math.min(...rest.flatMap(({ g }) => g.map((k) => k.y))) : Math.max(...rest.flatMap(({ g }) => g.map((k) => k.y)));
+      const by = near - (dir * ky) / 2;
+      const skip = new Set([q.O.id, ...q.kids.map((k) => k.id)]);
+      const far = (g: LinkStar[]) => (dir > 0 ? Math.max(...g.map((k) => k.y)) : Math.min(...g.map((k) => k.y)));
+      let direct = 0;
+      let viaBus = trails.crossing(cx, cy, by, skip).length;
+      for (const { g, n } of rest) {
+        direct += trails.crossing(q.xs[n], ln(q.xs[n]), far(g), skip).length;
+        viaBus += trails.crossing(q.xs[n], by, far(g), skip).length;
+      }
+      if (viaBus >= direct) return null;
+      // ствол колонны до шины (у колонны с первым гнездом — от его дальнего ребёнка, если шина дальше)
+      const ends = [q.O.id, ...(other ? [other] : []), ...rest.flatMap(({ g }) => g.map((k) => k.id))];
+      const from = q.merged ? far(q.nests[0]) : cy;
+      if ((by - from) * dir > 0.5) push({ key: unionKey(q.u.id), kind: 'trunk', style, pts: [cx, from, cx, by], ends, union: q.u.id });
+      return { y: by };
+    };
+    // шина гнёзд между строками у детей (решение 175, «следующее гнездо — „•“»): если стволы следующих гнёзд от следа
+    // владельца прошли бы чужие живые следы (между отцом и детьми неназванной матери — чужой дом), они висят на шине —
+    // горизонтали в межстрочье у ближнего ребёнка, к которой от колонны союза идёт один ствол; «•» — на шине
+    const bus = busOf(p, x, ny, line);
     p.nests.forEach((g, n) => {
       const xn = n === 0 && p.merged ? x : p.xs[n];
       if (!Number.isFinite(xn)) return;
-      const oy = n === 0 && p.merged ? ny : p.O === at ? line(xn) : yAt(p.O, xn);
+      const onBus = !!bus && !(n === 0 && p.merged);
+      const oy = n === 0 && p.merged ? ny : onBus ? bus!.y : p.O === at ? line(xn) : yAt(p.O, xn);
       if (!(n === 0 && p.merged)) nodes.push({ kind: 'join', union: u.id, key: unionKey(u.id), x: xn, y: oy, open: true, count: null, mother: null, owner: p.O.id, from: (p.F ?? p.O).id });
+      if (onBus) {
+        // шина — отрезками от колонны к каждому гнезду по порядку (конец каждого — у «•» своего гнезда)
+        const prev = n === 0 || (n === 1 && !p.merged) ? x : p.xs[n - 1];
+        const x0 = Number.isFinite(prev) ? prev : x;
+        if (xn - x0 > 0.5) push({ key: unionKey(u.id), kind: 'jog', style, pts: [x0, bus!.y, xn, bus!.y], ends: [p.O.id, ...(other ? [other] : []), ...g.map((k) => k.id)], union: u.id });
+      }
       const ids = g.map((k) => k.id);
       const ends = [p.O.id, ...(other ? [other] : []), ...ids];
       const up = g.filter((k) => k.y < oy - 0.5).map((k) => k.y);

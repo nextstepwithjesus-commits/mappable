@@ -10,6 +10,15 @@
  *    и «время не установлено» (Г10);
  *  — умерший младенцем, народ или род из таблицы народов, лицо скопления-списка — без следа (знаки — glyphs.ts).
  *
+ * «Отчий дом» (этап 15, решения 173, 178, 179; договор 1 — src/engine/stays.ts): след идёт по пребываниям лица. Звезда —
+ * в полосе рождения (отчий дом, у матери), между пребываниями — переход: S-кривая (smoothstep по годам) тем же тоном и
+ * толщиной, что след; переход — часть следа, а не связь. Выборка перехода одна на всех (bendsOf): рисунок, попадание
+ * (sky.ts, hitTrail, trailDist), препятствия подписей (sky.ts, lineObstacles) и пути связей (links.ts, LinkStar.path).
+ * На небе (меньше 7 px на год) переходы бледнее (bendAlpha); разрывы под связями — и на переходах (просветы вокруг точки
+ * пересечения), а чужой след под переходом прерывается (sky.ts, glideCuts). Жена, живущая в доме мужа с рождения, —
+ * бледная доля следа до года прихода в дом (LifeTrail.liveFrom). Знаки легенды «Семья на небе» (решение 180) —
+ * drawFamilySample теми же рисовальщиками.
+ *
  * Семьи (E4; MAP-15, 16, 20, 22, 73, 74, 76, 80; UX-34):
  *  — дети одной матери, рождённые рядом, — на своей короткой гребёнке: тонкий сплошной ствол от следа отца и зубцы
  *    к звёздам детей; гребёнки разных матерей одного отца сдвинуты на 3 px, у корня гребёнки (у ребёнка, ближайшего
@@ -44,12 +53,11 @@ import { branchColor, branchTickAt, GlowBatch, glowLayers, glows } from './branc
 import { branchFrame, clipHoles, FAR, ringHoles, type BranchPaint } from './marks.ts';
 import type { Rect } from './rect.ts';
 import type { Emphasis, Palette, Pass, SkyContext } from './sky.ts';
-import type { LinkFrame, LinkPath, PathStyle, StubMark } from './links.ts';
+import type { LinkFrame, LinkNode, LinkPath, PathStyle, StubMark } from './links.ts';
 import type { LinkKey } from '../engine/linkkey.ts';
-import { atlasCoord } from '../engine/layout.ts';
 import { unions as ALL_UNIONS } from '../ui/reveal.ts';
-import { linkRoleOf, unionName } from '../ui/linkwords.ts';
-import { glidesOf, laneAt, smooth, starLaneOf, type MarriageKind, type StayNode } from '../engine/stays.ts';
+import { unionName } from '../ui/linkwords.ts';
+import { glidesOf, laneAt, marriageKind, smooth, starLaneOf, type MarriageKind, type StayNode } from '../engine/stays.ts';
 import { NODE_R_FAMILY, TRAIL_CUT, type NodeLook } from './links.ts';
 import { paintJoin, paintUnion } from './plates.ts';
 import { drawTentPointer } from './frame.ts';
@@ -377,11 +385,22 @@ export function trailPath(ctx: CanvasRenderingContext2D, t: Pick<LifeTrail, 'y' 
     return;
   }
   const holes = which & 2 ? bendHoles(t, cuts) : null;
+  // ломаная перехода без просветов — одним подпутём: стыки отрезков без зазоров у концов линий
+  let px = NaN;
+  let py = NaN;
   trailSegs(
     t,
     a,
     b,
     (x0, y0, x1, y1, bend) => {
+      if (bend && !holes) {
+        if (Math.abs(x0 - px) > 1e-6 || Math.abs(y0 - py) > 1e-6) ctx.moveTo(x0, y0);
+        ctx.lineTo(x1, y1);
+        px = x1;
+        py = y1;
+        return;
+      }
+      px = NaN;
       if (bend) gapSeg(ctx, x0, y0, x1, y1, holes);
       else gapLine(ctx, x0, x1, y0, cuts);
     },
@@ -1540,7 +1559,8 @@ export function drawGhostNotes(v: SkyContext, p: Pass) {
   for (const i of p.vis) {
     const n = v.nodes[i];
     // призраки и их подписи — на масштабе семьи (решение 178); у выделенных (семья выбранного) — и раньше
-    if (!n.ghost || !(p.tier >= 2 || p.s.highlight?.has(n.person)) || p.starAlpha(i) < 0.5) continue;
+    const k = p.s.highlight?.get(n.person);
+    if (!n.ghost || !(p.tier >= 2 || (k !== undefined && k !== 'sure' && k !== 'likely')) || p.starAlpha(i) < 0.5) continue;
     const ri = v.indexOf(n.person);
     const husband = n.satelliteOf ?? (ri !== undefined ? v.nodes[ri].satelliteOf : null) ?? byId.get(n.person)?.spouses[0]?.id ?? null;
     const q = byId.get(n.person);
@@ -2453,43 +2473,6 @@ interface LinkText {
 export const LINK_LEADER_MAX = 40;
 
 const nameOf = (id: string) => byId.get(id)?.name ?? id;
-/** «Симеон, 23 Б»: имя и атласная координата лица на общей раскладке (ТЗ § 3.1, как в указателе). */
-function nameAt(v: SkyContext, id: string): string {
-  const i = v.indexOf(id);
-  const n = i === undefined ? undefined : v.model.nodes[i];
-  return n ? `${nameOf(id)}, ${atlasCoord(n.t0, starLaneOf(n))}` : nameOf(id);
-}
-/** Родство дочери (сына), стоящей у мужа (§ 4.2 п. 1): «дочь Ревекка — жена Исаака»; падеж — ru.ts, без него — через тире. */
-function kidAway(kid: string, parent: string): string {
-  const k = byId.get(kid);
-  if (!k) return '';
-  const word = k.sex === 'f' ? 'дочь' : 'сын';
-  const spouse = (unionsOfKid(kid).find((u) => u.a && u.b && (u.a === kid || u.b === kid)) ?? null);
-  const other = spouse ? (spouse.a === kid ? spouse.b : spouse.a) : null;
-  const o = other ? byId.get(other) : undefined;
-  if (!o) return `${word} ${k.name}`;
-  const gen = nameCase(o.name, o.sex, 'gen', o.unnamed, o.alt);
-  const role = k.sex === 'f' ? 'жена' : 'муж';
-  void parent;
-  return gen ? `${word} ${k.name} — ${role} ${gen}` : `${word} ${k.name}; ${role} — ${o.name}`;
-}
-/** Сторона ребёнка у обрывка к родной семье: «дочь Вафуила»; без падежа — «отец — Вафуил». */
-function kidOf(kid: string, parent: string): string {
-  const k = byId.get(kid);
-  const q = byId.get(parent);
-  if (!k || !q) return '';
-  const gen = nameCase(q.name, q.sex, 'gen', q.unnamed, q.alt);
-  if (gen) return `${k.sex === 'f' ? 'дочь' : 'сын'} ${gen}`;
-  return `${q.sex === 'f' ? 'мать' : 'отец'} — ${q.name}`;
-}
-const unionsOfKid = (id: string) => ALL_UNIONS.of.get(id) ?? [];
-
-/** Перечень целей обрывка: до трёх имён с координатами, дальше — «ещё N». */
-function targetsText(v: SkyContext, ids: readonly string[], name: (id: string) => string = (id) => nameAt(v, id)): string {
-  const head = ids.slice(0, 3).map(name);
-  return ids.length > 3 ? `${head.join('; ')}; ещё ${ids.length - 3}` : head.join('; ');
-}
-
 /**
  * Поставить подпись связи в свободное место у точки и нарисовать её (курсив малого кегля карты, тоном --ink-2); hold —
  * погашенная выделением: только держит своё место (labels.ts, claim).
@@ -2610,6 +2593,35 @@ function ownStarNear(v: SkyContext, id: string, x: number, y: number): boolean {
   return Math.hypot(sx - x, sy - y) < OWN_NAME_NEAR;
 }
 
+/** Слово вида союза у ромба на масштабе семьи (решение 174): «Валла, наложница», «Онан, левират». */
+export const KIND_WORD: Readonly<Partial<Record<MarriageKind, string>>> = { concubine: 'наложница', levirate: 'левират', none: 'брак не назван' };
+
+/**
+ * Подпись у ромба союза (решения 160, 173, 174): кто и что. Ромб на следе отца (мать не на небе или не названа) — имя матери
+ * из узла (LinkNode.mother; '' — «мать не названа», название союза). Ромб на следе жены:
+ *  — её имя, если её звезда в другом доме (пришла переходом) или дальше 120 px (ownStarNear); рядом — имени нет (мужей
+ *    повторного брака называют сами черты от их следов);
+ *  — на масштабе семьи (решение 178) и у союзов выбранного — слово вида: «Валла, наложница», «Онан, левират»; без имени —
+ *    одно слово.
+ * null — подписи нет. person — лицо подписи (его знак у ромба — не чужой, решение 160).
+ */
+export function unionLabel(v: SkyContext, n: Pick<LinkNode, 'kind' | 'union' | 'owner' | 'mother'>, x: number, y: number, words: boolean): { text: string; person: string | undefined } | null {
+  if (n.kind !== 'union') return null;
+  const u = ALL_UNIONS.byId.get(n.union);
+  if (n.mother !== null) {
+    if (n.mother && ownStarNear(v, n.mother, x, y)) return null;
+    const text = n.mother ? nameOf(n.mother) : u ? unionName(u) : '';
+    return text ? { text, person: n.mother || undefined } : null;
+  }
+  if (!u || !u.a || !u.b || n.owner !== u.b) return null;
+  const wife = u.b;
+  const who = ownStarNear(v, wife, x, y) ? null : wife;
+  const word = words ? KIND_WORD[marriageKind(u)] : undefined;
+  if (!who && !word) return null;
+  const text = who ? (word ? `${nameOf(who)}, ${word}` : nameOf(who)) : word!;
+  return { text, person: who ?? wife };
+}
+
 export function drawMotherNames(v: SkyContext, p: Pass, d: LinkDraw | null | undefined): Set<string> {
   const done = new Set<string>();
   motherPlaced.set(p.placer, done);
@@ -2620,18 +2632,18 @@ export function drawMotherNames(v: SkyContext, p: Pass, d: LinkDraw | null | und
   const { cam } = v;
   const out: string[] = [];
   for (const n of d.frame.nodes) {
-    // обязательный ярус — только настоящие имена матерей; пояснение «Давид (мать не названа)» — обычным ярусом подписей
-    // союза после имён детей (drawLinkLabels): имя ребёнка выбранного важнее пояснения
-    if (!n.mother || n.kind !== 'union' || !mine.has(n.union)) continue;
+    // обязательный ярус — только настоящие имена; пояснение «Давид (мать не названа)» — обычным ярусом подписей союза после
+    // имён детей (drawLinkLabels): имя ребёнка выбранного важнее пояснения
+    if (n.mother === '' || n.kind !== 'union' || !mine.has(n.union)) continue;
     const x = n.x + d.dx;
     const y = n.y + d.dy;
     if (!(x > v.letterW && x < cam.w && y > v.openTop && y < cam.vp.b)) continue;
-    // её звезда видна рядом — имя у ромба повторило бы её подпись и спорило бы с ней (решение 160)
-    if (ownStarNear(v, n.mother, x, y)) continue;
-    const u = ALL_UNIONS.byId.get(n.union);
-    const text = n.mother ? nameOf(n.mother) : u ? unionName(u) : '';
-    if (!text) continue;
-    const b = putLinkText(v, p, { text, x: x + 5, y, dir: 0, right: true, id: n.union, side2: true, leader: true, ink: v.pal.ink, person: n.mother }, 1);
+    // её звезда видна рядом и в том же доме — имя у ромба повторило бы её подпись и спорило бы с ней (решения 160, 173);
+    // у союзов выбранного — со словом вида (решение 174)
+    const lab = unionLabel(v, n, x, y, true);
+    if (!lab) continue;
+    const text = lab.text;
+    const b = putLinkText(v, p, { text, x: x + 5, y, dir: 0, right: true, id: n.union, side2: true, leader: true, ink: v.pal.ink, person: lab.person }, 1);
     if (b) {
       done.add(n.union);
       out.push(`${text}@${Math.round(x)},${Math.round(y)}`);
@@ -2646,12 +2658,12 @@ export function drawMotherNames(v: SkyContext, p: Pass, d: LinkDraw | null | und
 }
 
 /**
- * Подписи связей (после подписей звёзд, если есть место): цели обрывков длинных связей и родовых черт — «Симеон, 23 Б;
- * Левий, 23 В», «Иаков, 22 П» (Г11, Г12; ТЗ § 3.1); обрывок дочери, стоящей у мужа, — «дочь Ревекка — жена Исаака»
- * (§ 4.2 п. 1); имя матери у ромба на следе отца, если союзов с детьми два и больше (Г8), и «Сиф и его жена» у ромба
- * союза с неназванной женой (решение 75). Имя второго супруга у ромба бездетного брака (этап 13, К6) — вторым проходом,
- * late, после подписей звёзд: оно не отнимает места у имён звёзд. Для проверок пишет canvas[data-link-texts]: «текст@x,y»
- * через «|» (оба прохода вместе).
+ * Подписи у ромбов союзов (после подписей звёзд, если есть место; unionLabel): имя жены у ромба на её следе, если её
+ * звезда в другом доме или дальше 120 px (решения 160, 173), на масштабе семьи — со словом вида союза (решение 174); имя
+ * матери у ромба на следе отца, если её нет на небе (Г8), и «Сиф и его жена» у ромба союза с неназванной женой (решение
+ * 75). Обрывков связей и их подписей больше нет (решение 176): связь видна целиком, конец за краем называет указатель
+ * шатра (frame.ts). Имя у ромба бездетного брака (этап 13, К6) — вторым проходом, late, после подписей звёзд. Для
+ * проверок пишет canvas[data-link-texts]: «текст@x,y» через «|» (оба прохода вместе).
  */
 export function drawLinkLabels(v: SkyContext, p: Pass, d: LinkDraw, late = false) {
   const { cam } = v;
@@ -2662,80 +2674,24 @@ export function drawLinkLabels(v: SkyContext, p: Pass, d: LinkDraw, late = false
   const placed = motherPlaced.get(p.placer);
   // ромбов на «всех лицах» теснее поколения в 18 px нет (plates.ts, genRoom) — нет и имён у них (G6: подпись без знака)
   const noNodes = d.frame.layout === 'map' && v.genRoom < 0.5;
+  // слова вида союза — на масштабе семьи (решения 174, 178)
+  const words = p.tier >= 2;
   for (const n of noNodes ? [] : d.frame.nodes) {
-    if (n.mother === null || n.kind !== 'union' || !!n.late !== late || placed?.has(n.union)) continue;
+    if (n.kind !== 'union' || !!n.late !== late || placed?.has(n.union)) continue;
     const x = n.x + d.dx;
     const y = n.y + d.dy;
     if (!onScreen(x, y)) continue;
     // имя матери — только у союза в полную силу: погашенный выделением союз (и «вероятно» живые на меридиане) подписи не
     // получает — бледная подпись не держала бы контраста 4,5 : 1; её место остаётся за ней (соседи не переезжают)
-    const a = Math.min(1, p.emph(n.owner), p.emph(n.from), n.mother ? p.emph(n.mother) : 1);
     // имя у ромба — там, где виден сам ромб (ярус его линий, решение 135, и подробность кадра — как у знака), или у
     // раскрытого союза
     if (!(Math.min(unionAlpha(v, p, d, n.union).a, d.alpha) > 0.5 || d.expanded.has(n.union))) continue;
-    if (n.mother && ownStarNear(v, n.mother, x, y)) continue;
     if (!nodeOnSky(v, p, d, n.union)) continue;
-    const u = ALL_UNIONS.byId.get(n.union);
-    const text = n.mother ? nameOf(n.mother) : u ? unionName(u) : '';
-    if (!text) continue;
-    const b = putLinkText(v, p, { text, x: x + 5, y, dir: 0, right: true, id: n.union, side2: true, person: n.mother ?? undefined }, 1, a < 0.99);
-    if (b) out.push(`${text}@${Math.round(x)},${Math.round(y)}`);
-  }
-  const look = lookOf(v, p, d);
-  const vp = cam.vp;
-  /** лицо в окне неба (на экране, под рамкой и над листом) */
-  const inWindow = (id: string) => {
-    const i = v.indexOf(id);
-    if (i === undefined || !v.drawn(i)) return false;
-    const x = cam.sx(v.X0[i]);
-    const y = cam.sy(starLaneOf(v.nodes[i]));
-    return x >= vp.l && x <= vp.r && y >= v.openTop && y <= vp.b;
-  };
-  const named = new Set<string>();
-  for (const st of late ? [] : d.frame.stubs) {
-    // выделенная (выбор лица) — только при выделении: без него подпись обрывка не «горит» сама (G6)
-    const lit = !!p.s.highlight && st.targets.every((id) => p.emph(id) > 0.5);
-    if (st.kind !== 'kid' && !linkShown({ when: 'short', union: st.union, ks: st.ks }, d)) continue;
-    // подпись обрывка видна, только когда видна его линия (решение 136, G6)
-    const sp = stubPathOf(d.frame, st);
-    const a = sp ? (linkShown(sp, d) ? (lit ? Math.max(look(sp).a, d.lit(sp) ? 1 : 0) : look(sp).a) : 0) : lit ? 1 : d.alpha;
-    if (a < 0.5) continue;
-    const x = st.x + d.dx;
-    const y = st.y + d.dy;
-    if (!onScreen(x, y)) continue;
-    const parent = st.side === 'child' ? st.targets[0] : null;
-    // координата — только если второй конец за краем окна, и одна на лицо: дети одного родителя называют его один раз
-    // (решение 136, G7); у родителя — только дети за краем
-    // (концы в окне, а ход неясен — обрывки остаются, подпись — именем без координаты)
-    const map = d.frame.layout === 'map' && st.kind !== 'kid';
-    // второй конец в окне — подписи нет (решение 162: указатель не ставится к видимой звезде, R1-15), за краем — с
-    // координатой («Давид, 32 П»)
-    const at = (id: string) => (map && inWindow(id) ? '' : nameAt(v, id));
-    if (st.side === 'child' && st.kind !== 'kid') {
-      if (named.has(st.targets[0])) continue;
-      named.add(st.targets[0]);
-    }
-    let text: string;
-    if (st.kind === 'kid') {
-      const kid = st.key.kind === 'child' ? st.key.child : st.targets[0];
-      const par = st.side === 'child' ? st.targets[0] : null;
-      text = st.side === 'parent' ? kidAway(kid, '') : par ? kidOf(kid, par) : '';
-    } else if (st.kind === 'spouse') {
-      // длинная черта брака (этап 14, решение 134): «муж — Халев, 24 П» у узла на следе матери, «наложница — Мааха, 22 П» у мужа
-      const who = st.targets[0];
-      const role = linkRoleOf(st.key, who);
-      const where = at(who);
-      text = where ? (role ? `${role} — ${where}` : where) : '';
-    } else if (st.side === 'parent' && map) {
-      // у родителя: подписаны только дети за краем окна — с координатами (решение 162)
-      const outW = st.targets.filter((id) => !inWindow(id));
-      text = outW.length ? targetsText(v, outW) : '';
-    } else text = st.side === 'parent' ? targetsText(v, st.targets) : parent ? at(parent) : '';
-    if (!text) continue;
-    // подпись обрывка — в полную силу или никак: бледная подпись не держала бы контраста 4,5 : 1; погашенная держит место
-    const e = Math.min(1, Math.max(...st.targets.map((id) => p.emph(id))));
-    const hold = e < 0.99 && !lit;
-    const b = putLinkText(v, p, { text, x, y, dir: st.dir, right: st.side === 'parent' || st.dir !== 0, id: st.union ?? st.ks }, 1, hold);
+    const lab = unionLabel(v, n, x, y, words);
+    if (!lab) continue;
+    const a = Math.min(1, p.emph(n.owner), p.emph(n.from), lab.person ? p.emph(lab.person) : 1);
+    const text = lab.text;
+    const b = putLinkText(v, p, { text, x: x + 5, y, dir: 0, right: true, id: n.union, side2: true, person: lab.person }, 1, a < 0.99);
     if (b) out.push(`${text}@${Math.round(x)},${Math.round(y)}`);
   }
   // первый проход запоминает свои подписи, второй пишет все вместе

@@ -25,6 +25,9 @@ import { rulerScale as rulerScaleSignal } from '../state.ts';
 import { nameCase } from '../ui/text/ru.ts';
 import type { Pass, SkyContext, SkyState } from './sky.ts';
 import { ringOuter } from './marks.ts';
+import { unionName } from '../ui/linkwords.ts';
+import { unions as ALL_UNIONS } from '../ui/reveal.ts';
+import type { LinkPath } from './links.ts';
 
 /** Линейка лет вверху рамки. */
 export const RULER_H = 26;
@@ -924,6 +927,8 @@ export interface EdgeHit extends Rect {
    */
   ids?: readonly string[];
   role?: KinRole;
+  /** указатель шатра (решение 176): союз, чьи концы за краем он называет */
+  union?: string;
 }
 
 // ---------- родня первого колена (решение 146) ----------
@@ -1045,7 +1050,147 @@ export function placeWayfinding(v: SkyContext, s: SkyState, p: Pass | null): Edg
     placed.push(b);
     p?.placer.add(b);
   }
-  out.push(...placeKinPointers(v, s, p, placed));
+  const tents = placeTentPointers(v, s, p, placed);
+  const covered = new Set(tents.flatMap((e) => e.ids ?? []));
+  out.push(...tents, ...placeKinPointers(v, s, p, placed, covered));
+  return out;
+}
+
+/** Указателей шатра на кадр — не больше стольких (у выбранного, выбранной и наведённой связи — сверх них). */
+export const TENT_POINTERS_MAX = 4;
+/** Имён в указателе шатра — не больше стольких, дальше «и ещё N». */
+const TENT_NAMES = 3;
+
+/** Строка указателя шатра: «Лия: Рувим, Симеон, Левий», «Валла: Дан и ещё 1», «Иаков и Рахиль». */
+export function tentText(union: string, ids: readonly string[]): string {
+  const u = ALL_UNIONS.byId.get(union);
+  const name = (id: string) => byId.get(id)?.name ?? id;
+  if (!u) return ids.map(name).join(', ');
+  const kids = ids.filter((id) => u.kids.includes(id));
+  const parents = ids.filter((id) => !u.kids.includes(id));
+  // заглавие — мать (у кого чей шатёр), а без неё — название союза: «Давид (мать не названа)»
+  const title = u.b ? name(u.b) : unionName(u);
+  if (!kids.length) return parents.length === 1 && u.a && u.b ? name(parents[0]) : unionName(u);
+  const shown = kids.slice(0, TENT_NAMES).map(name);
+  const more = kids.length - shown.length;
+  return `${title}: ${shown.join(', ')}${more > 0 ? ` и ещё ${more}` : ''}`;
+}
+
+/**
+ * Указатели шатра у кромки (решение 176: связь рисуется целиком; если её конец за краем окна — у кромки указатель):
+ * «↑ Лия: Рувим, Симеон, Левий» — одна строка на союз и сторону. Конец связи — конец нарисованного пути союза (зубец —
+ * ребёнок, черта брака — муж и жена, ствол — владелец отводов) за краем видимой части неба или под органом неба. Сначала —
+ * союзы выбранного лица, выбранной и наведённой связи; без выбора — и прочие союзы на обзоре семьи и масштабе семьи
+ * (решение 178), не больше TENT_POINTERS_MAX. Место — у своей кромки против выхода линии, вдоль кромки до свободного (как у указателей на
+ * родню, решение 146). Щелчок — небо сдвигается к названным (EdgeHit.ids).
+ */
+function placeTentPointers(v: SkyContext, s: SkyState, p: Pass | null, placed: Rect[]): EdgeHit[] {
+  const d = p?.links;
+  if (!p || !d) return [];
+  const { ctx, cam } = v;
+  const W = cam.vp.r;
+  const top = v.openTop;
+  const bottom = cam.vp.b;
+  const left = Math.max(v.letterW, cam.vp.l);
+  const organs = (s as SkyState & { organs?: readonly Rect[] }).organs ?? [];
+  const under = (x: number, y: number) => organs.some((r) => x > r.x - 4 && x < r.x + r.w + 4 && y > r.y - 4 && y < r.y + r.h + 4);
+  const on = (q: LinkPath) => q.ks === d.hover || d.preview.has(q.ks) || (d.look ? d.look(q).a > 0.01 : d.alpha > 0.01);
+  const inside = (x: number, y: number) => x >= left && x <= W && y >= top && y <= bottom && !under(x, y);
+  /** сторона, за которую ушла точка: по большему выходу; под органом — к ближней кромке */
+  const sideOf = (x: number, y: number): '↑' | '↓' | '←' | '→' | null => {
+    const ox = x < left ? left - x : x > W ? x - W : 0;
+    const oy = y < top ? top - y : y > bottom ? y - bottom : 0;
+    if (ox || oy) return oy >= ox ? (y < top ? '↑' : '↓') : x < left ? '←' : '→';
+    if (!under(x, y)) return null;
+    const dd = { '↑': y - top, '↓': bottom - y, '←': x - left, '→': W - x } as const;
+    return (Object.keys(dd) as (keyof typeof dd)[]).reduce((a, b) => (dd[b] < dd[a] ? b : a));
+  };
+  // союзы выбранного, выбранной и наведённой связи — первыми
+  const main = new Set<string>();
+  const sel = s.selected;
+  if (sel) for (const u of [...(ALL_UNIONS.of.get(sel) ?? []), ...(ALL_UNIONS.origin.get(sel) ?? [])]) main.add(u.id);
+  for (const k of [s.link, s.linkHover]) if (k && (k.kind === 'child' || k.kind === 'union' || k.kind === 'spouse')) main.add(k.union);
+  type G = { union: string; arrow: '↑' | '↓' | '←' | '→'; ids: string[]; at: number[] };
+  const groups = new Map<string, G>();
+  const seenIn = new Set<string>();
+  for (const q of d.frame.paths) {
+    if (!q.union || q.kind === 'ribbon' || q.kind === 'clan' || !on(q)) continue;
+    // путь виден в окне хоть одним отрезком
+    let vis = false;
+    for (let k = 0; k + 3 < q.pts.length && !vis; k += 2) {
+      const [ax, ay, bx, by] = [q.pts[k] + d.dx, q.pts[k + 1] + d.dy, q.pts[k + 2] + d.dx, q.pts[k + 3] + d.dy];
+      vis = Math.max(ax, bx) >= left && Math.min(ax, bx) <= W && Math.max(ay, by) >= top && Math.min(ay, by) <= bottom;
+    }
+    if (!vis) continue;
+    seenIn.add(q.union);
+  }
+  for (const q of d.frame.paths) {
+    if (!q.union || !seenIn.has(q.union) || q.kind === 'ribbon' || q.kind === 'clan' || !on(q)) continue;
+    // концы пути: зубец — ребёнок у своего конца; черта брака — муж (начало) и жена (конец); ствол — владелец (начало)
+    const n = q.pts.length;
+    const ends: [string, number, number][] = [];
+    if (q.kind === 'tooth' && q.key.kind === 'child') ends.push([q.key.child, q.pts[n - 2], q.pts[n - 1]]);
+    else if (q.kind === 'bar') ends.push([q.ends[0], q.pts[0], q.pts[1]], [q.ends[1], q.pts[n - 2], q.pts[n - 1]]);
+    else if (q.kind === 'trunk') ends.push([q.ends[0], q.pts[0], q.pts[1]]);
+    for (const [id, x0, y0] of ends) {
+      const x = x0 + d.dx;
+      const y = y0 + d.dy;
+      if (inside(x, y)) continue;
+      const arrow = sideOf(x, y);
+      if (!arrow) continue;
+      // выход линии к кромке: у вертикали — её x, у горизонтали — её y
+      const exit = arrow === '↑' || arrow === '↓' ? Math.max(left, Math.min(W, x)) : Math.max(top, Math.min(bottom, y));
+      const key = `${q.union}|${arrow}`;
+      const g = groups.get(key) ?? { union: q.union, arrow, ids: [], at: [] };
+      if (!g.ids.includes(id)) g.ids.push(id);
+      g.at.push(exit);
+      groups.set(key, g);
+    }
+  }
+  if (!groups.size) return [];
+  // при выборе — только связи выбранного (фокус); без выбора — и прочие союзы на обзоре семьи и масштабе семьи
+  const list = [...groups.values()].filter((g) => main.has(g.union) || (!sel && !s.link && p.tier >= 1));
+  list.sort((a, b) => Number(main.has(b.union)) - Number(main.has(a.union)) || b.ids.length - a.ids.length || (a.union < b.union ? -1 : 1));
+  const out: EdgeHit[] = [];
+  ctx.save();
+  ctx.font = mapFont(T_UI, { sans: true, weight: 500, coarse: v.coarse });
+  let rest = TENT_POINTERS_MAX;
+  for (const g of list) {
+    const mine = main.has(g.union);
+    if (!mine && rest <= 0) break;
+    const label = `${g.arrow} ${tentText(g.union, g.ids)}`;
+    const tw = ctx.measureText(label).width;
+    const along = g.arrow === '↑' || g.arrow === '↓';
+    const mid = g.at.reduce((a, b) => a + b, 0) / g.at.length;
+    const x0 = g.arrow === '←' ? left + 6 : g.arrow === '→' ? W - tw - 10 : Math.max(left + 6, Math.min(W - tw - 10, mid - tw / 2));
+    const y0 = g.arrow === '↑' ? top + 18 : g.arrow === '↓' ? bottom - 10 : Math.max(top + 18, Math.min(bottom - 10, mid + 4));
+    const lo = along ? left + 6 : top + 18;
+    const hi = along ? W - tw - 10 : bottom - 10;
+    const taken = [...(s.reserve ?? []), ...placed];
+    const free = (b: Rect) => !hits(b, taken) && !p.placer.glyphsIn(b).some((q) => q.a >= 0.5) && !organs.some((r) => hits(b, [r]));
+    let lx = x0;
+    let ly = y0;
+    let found = free(edgeBox(lx, ly, tw));
+    for (let dd = 10; !found && dd <= Math.max(W, bottom - top); dd += 10)
+      for (const sgn of [1, -1]) {
+        const c = (along ? x0 : y0) + sgn * dd;
+        if (c < lo || c > hi) continue;
+        const [x, y] = along ? [c, y0] : [x0, c];
+        if (free(edgeBox(x, y, tw))) {
+          lx = x;
+          ly = y;
+          found = true;
+          break;
+        }
+      }
+    if (!found) continue;
+    const b = edgeBox(lx, ly, tw);
+    out.push({ ...b, id: g.ids[0], label, lx, ly, ids: g.ids, union: g.union });
+    placed.push(b);
+    p.placer.add(b);
+    if (!mine) rest--;
+  }
+  ctx.restore();
   return out;
 }
 
@@ -1061,7 +1206,7 @@ const KIN_POINTERS_MAX = 4;
  * лицо — с именем и ролью («↑ Иессей, отец»). Лица вне показа, скрытые свёрткой, — не здесь (их называет карточка: «вне
  * показа»). Выбрана связь — указатели к её концам рисует marks.ts (контракт 4), здесь их нет.
  */
-function placeKinPointers(v: SkyContext, s: SkyState, p: Pass | null, placed: Rect[]): EdgeHit[] {
+function placeKinPointers(v: SkyContext, s: SkyState, p: Pass | null, placed: Rect[], covered: ReadonlySet<string> = new Set()): EdgeHit[] {
   const id = s.selected;
   if (!id || s.link || s.second) return [];
   const { ctx, cam } = v;
@@ -1081,6 +1226,8 @@ function placeKinPointers(v: SkyContext, s: SkyState, p: Pass | null, placed: Re
   // родня за краем — по сторонам и ролям; сторона — та, за которую лицо ушло дальше; под органом — к ближнему краю
   const groups = new Map<string, { arrow: string; ks: Kin[]; xs: number[]; ys: number[] }>();
   for (const k of firstKin(id)) {
+    // родня, которую уже назвал указатель шатра её союза (решение 176), — не второй раз
+    if (covered.has(k.id)) continue;
     const i = v.indexOf(k.id);
     if (i === undefined || v.hides(k.id) || !v.drawn(i)) continue;
     const x = cam.sx(v.X0[i]);
