@@ -37,7 +37,7 @@ async function family(p: Page) {
  * Верхняя ступень решения 164 у лица id: родители, супруги и лица линий Мессии величины ≤ 1 в его семье первого колена
  * (по собранному атласу src/generated/atlas.json: модуль атласа в node не грузится). Эти имена подписаны всегда.
  */
-async function topTier(id: string): Promise<Set<string>> {
+export async function topTier(id: string): Promise<Set<string>> {
   const { readFileSync } = await import('node:fs');
   const { join } = await import('node:path');
   const { ROOT } = await import('../bible.ts');

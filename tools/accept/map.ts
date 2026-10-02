@@ -3,6 +3,7 @@
  * Файл общий для трёх агентов — у каждого свой блок; правки только точечными вставками в свой блок.
  */
 import type { Scenario } from './kit.ts';
+import { topTier } from './nav14.ts';
 
 /**
  * Блоки раскладки из src/generated/atlas.json. С этапа 13 сборка пишет их массивами (NFR-2; tools/build-data.ts,
@@ -132,7 +133,7 @@ export const map: Scenario[] = [
   // вкладка с адресом вида «#/david~y-1010~w50~l0~s1».
   ...([
     [140, 'E1, U12: 1440 — 0 наложений подписей на обзоре, в масштабе эпохи, поколений и семьи; с Давидом и без', undefined],
-    [141, 'E1, U12, решение 163: телефон 390×844 — 0 наложений подписей на обзоре и трёх масштабах; на масштабе семьи без выбранного подписано ≥ 75 % видимых звёзд (имя не на чужой вертикали), каждый неподписанный — в canvas[data-hidden]', { width: 390, height: 844, touch: true }],
+    [141, 'E1, U12, решения 163, 164: телефон 390×844 — 0 наложений подписей на обзоре и трёх масштабах; на масштабе семьи без выбранного подписано ≥ 75 % видимых звёзд, с выбранным — верхняя ступень подписана вся и ≥ 55 % (имя не на чужой вертикали), каждый неподписанный — в canvas[data-hidden]', { width: 390, height: 844, touch: true }],
   ] as const).map(([n, title, view]) => ({
     n,
     title,
@@ -141,11 +142,11 @@ export const map: Scenario[] = [
       const { pass, fail } = await import('./kit.ts');
       const base = p.url().replace(/#.*$/, '');
       const notes: string[] = [];
-      const states: [string, string, boolean][] = [];
+      const states: [string, string, boolean, string][] = [];
       for (const id of ['', 'david'])
         for (const [name, w] of [['обзор', 0], ['эпоха', 700], ['поколения', 180], ['семья', 50]] as const)
-          states.push([`${name}${id ? ' + Давид' : ''}`, w ? `#/${id}~y-1010~w${w}~l0~s1` : `#/${id}`, name === 'семья']);
-      for (const [name, hash, family] of states) {
+          states.push([`${name}${id ? ' + Давид' : ''}`, w ? `#/${id}~y-1010~w${w}~l0~s1` : `#/${id}`, name === 'семья', id]);
+      for (const [name, hash, family, id] of states) {
         const q = await p.context().newPage();
         try {
           await q.goto(base + hash);
@@ -156,7 +157,19 @@ export const map: Scenario[] = [
           // решение 163 (второй круг): на узком небе имя не встаёт на чужую вертикаль — порог семьи 75 %, неподписанные — в
           // списке скрытых (диктор читает, касание и фокус ставят подпись); на широком — прежние 90 %
           const narrow = (q.viewportSize()?.width ?? 1440) < 600;
-          if (family && stars > 0 && named / stars < (narrow ? 0.75 : 0.9)) return fail(`${name}: подписано ${named} из ${stars} видимых звёзд`);
+          // с выбранным лицом на узком небе — правило семьи выбранного (решение 164, как сценарий 1142): верхняя ступень
+          // подписана вся, доля подписанных — не ниже 55 % (этап 15: восемь черт брака Давида и стволы его сыновей стоят
+          // забором, имя не встаёт на чужую вертикаль)
+          const chosen = family && narrow && !!id;
+          if (family && stars > 0 && named / stars < (chosen ? 0.55 : narrow ? 0.75 : 0.9)) return fail(`${name}: подписано ${named} из ${stars} видимых звёзд`);
+          if (chosen) {
+            const c = q.locator('.sky canvas');
+            const labels = ((await c.getAttribute('data-label-ids')) ?? '').split(' ').filter(Boolean);
+            const seen = ((await c.getAttribute('data-stars')) ?? '').split(';').filter(Boolean).map((x) => x.split(':')[0]);
+            const top = await topTier(id);
+            const miss = seen.filter((x) => top.has(x) && !labels.includes(x));
+            if (miss.length) return fail(`${name}: верхняя ступень без подписи: ${miss.join(' ')}`);
+          }
           if (family && narrow) {
             const hidden = ((await q.locator('.sky canvas').getAttribute('data-hidden')) ?? '').split(' ').filter(Boolean);
             if (hidden.length < stars - named) return fail(`${name}: без подписи и не в списке скрытых ${stars - named - hidden.length}`);
