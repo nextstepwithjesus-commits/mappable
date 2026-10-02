@@ -2524,8 +2524,10 @@ function putLinkText(v: SkyContext, p: Pass, t: LinkText, a: number, hold = fals
     return { x: b.x, y: b.y - 5, w: b.w, h: b.h + 5 };
   });
   // правило принадлежности (решения 140, 160): подпись у точки — ближе к ней, чем к чужому знаку; места с номера near —
-  // на выноске; не прошло ни одно — подписи нет
-  const b = claim(v, p, boxes, 'plate', t.text, { id: t.id, hold, anchor: { x: t.ax ?? t.x, y: t.y, near, person: t.person } });
+  // на выноске; не прошло ни одно — подписи нет. Чужая линия через подпись недопустима (решение 163): ромб стоит на следе
+  // самой жены (174) — она узнаётся по следу и звезде, имя у ромба вторично; тесно — подписи нет (в подсказке и для
+  // диктора оно остаётся), а не подпись на соседней черте брака (перепись «все лица», Я12: Аггифа, Авитала у Давида)
+  const b = claim(v, p, boxes, 'plate', t.text, { id: t.id, hold, anchor: { x: t.ax ?? t.x, y: t.y, near, person: t.person }, strict: true });
   if (!b || hold) return null;
   const k = boxes.indexOf(b);
   const c = cands[k];

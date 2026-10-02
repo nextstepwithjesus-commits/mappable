@@ -3287,13 +3287,21 @@ export class Sky implements SkyContext {
     const at = (b: Rect): Rect => ({ x: b.x - lf!.dx, y: b.y - lf!.dy, w: b.w, h: b.h });
     // наведённая связь — препятствие и для имён своих концов: подсказка у связи не сдвигает имя на неё (сценарий 747)
     const hov = p.s.linkHover ? linkKeyString(p.s.linkHover) : null;
+    // своя линия имени (решение 163): ствол союза родителей — свой, только если кончается у этого лица (ends); ствол,
+    // идущий мимо его звезды к младшим братьям, — чужая вертикаль через имя (перепись «все лица», Я12: Оцем на стволе
+    // Иессея, Шуни на стволе Гада)
+    const ownFor = (q: LinkPath, id: string) => {
+      if (!ownLink(q.ks, id)) return false;
+      const k = q.ks.split('.');
+      return !(k[0] === 'u' && k[1] !== id && k[2] !== id && !q.ends.includes(id));
+    };
     p.onLine = (b, id, rib = true, _perp = false, band = b) =>
       lh.crosses(b, id) ||
       (!!segs &&
         !!lf &&
         // своя черта брака — тоже препятствие (решение 163): она выходит со следа под именем мужа и режет текст, а не
         // кончается у звезды, как ствол и зубец к ребёнку
-        (segs.crosses(at(b), id, (q) => !!q && linkOn(q, lf) && q.kind !== 'ribbon' && (q.kind === 'bar' || !ownLink(q.ks, id) || q.ks === hov)) ||
+        (segs.crosses(at(b), id, (q) => !!q && linkOn(q, lf) && q.kind !== 'ribbon' && (q.kind === 'bar' || !ownFor(q, id) || q.ks === hov)) ||
           (rib && segs.crosses(at(band), id, (q) => !!q && linkOn(q, lf) && q.kind === 'ribbon')))) ||
       // лента со свечением шире своей нити: середина строки — не ближе 3 px к её полю (ribbons.ts, offStrands: ещё 3 px)
       (rib && !!off && !off({ x: band.x, y: band.y - 3, w: band.w, h: band.h + 6 }));

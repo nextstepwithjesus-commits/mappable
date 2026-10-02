@@ -746,7 +746,7 @@ function anchorOwns(p: Pass, b: Rect, a: ClaimAnchor, leader: boolean): boolean 
   return true;
 }
 
-export function claim(v: SkyContext, p: Pass, candidates: Rect[], kind: LabelKind, text: string, o: { id?: string; soft?: boolean; coverFrom?: number; hold?: boolean; softInset?: number; anchor?: ClaimAnchor } = {}): Rect | null {
+export function claim(v: SkyContext, p: Pass, candidates: Rect[], kind: LabelKind, text: string, o: { id?: string; soft?: boolean; coverFrom?: number; hold?: boolean; softInset?: number; anchor?: ClaimAnchor; strict?: boolean } = {}): Rect | null {
   // названия, скопления, пояснения и подписи связей не ложатся на ленты линий Мессии: ленты — главное на небе
   // подписи связей при лентах по маршрутам — по самой ленте (Pass.onRibbon): рамка шага от родителя до ребёнка закрыла бы
   // весь след Давида с ромбами его союзов
@@ -765,9 +765,10 @@ export function claim(v: SkyContext, p: Pass, candidates: Rect[], kind: LabelKin
   // вплотную к блоку (C6)
   const res = (b: Rect) => (kind === 'group' ? { x: b.x - 4, y: b.y - 4, w: b.w + 8, h: b.h + 8 } : b);
   const ok = (b: Rect) => insideSky(v, b) && !hits(res(b), p.reserve) && !hits(b, avoid) && !(exact && p.onRibbon!(b)) && free(b) && !row(b) && owns(b);
-  // сначала — место не на чужих линиях связей (этап 11, Я12; sky.ts, Pass.onLink), затем — любое свободное
+  // сначала — место не на чужих линиях связей (этап 11, Я12; sky.ts, Pass.onLink), затем — любое свободное; strict — только
+  // не на чужих линиях (подписи у ромбов: линия через имя недопустима, решение 163; тесно — подписи нет, имя — в подсказке)
   const onLink = p.onLink;
-  const b = (onLink ? candidates.find((c) => ok(c) && !onLink(c, o.id ?? '')) : undefined) ?? candidates.find(ok);
+  const b = (onLink ? candidates.find((c) => ok(c) && !onLink(c, o.id ?? '')) : undefined) ?? (o.strict && onLink ? undefined : candidates.find(ok));
   if (!b) return null;
   // строка подписи: подписи звёзд на этой же строке встают не ближе 0,5 кегля (решение 140)
   if (kind === 'event') p.placer.add(b);

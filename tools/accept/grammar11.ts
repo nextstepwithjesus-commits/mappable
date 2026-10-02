@@ -485,8 +485,13 @@ export const grammar11: Scenario[] = [
         // точка щелчка по линии — дальше 13 px от звёзд и узлов (ближе звезда и ромб важнее линии, § 8)
         const starPts = await starsOf(p);
         const nodePts = nodesOf(all);
-        // и вне рамок подписей (решение 154: имя под указателем — лицо) и указателей у края (решение 176: щелчок — перелёт)
-        const labels = [...(await labelRects(p)), ...(await edgeRects(p))];
+        // и вне рамок подписей (решение 154: имя под указателем — лицо), указателей у края (решение 176: щелчок — перелёт)
+        // и полей ромбов (canvas[data-plates]: не меньше 24 × 24 — квадрат шире круга 13 px у узла)
+        const plateRects = ((await canvasData(p)).plates ?? '')
+          .split(';')
+          .filter(Boolean)
+          .map((q) => q.slice(q.lastIndexOf(':') + 1).split(',').map(Number));
+        const labels = [...(await labelRects(p)), ...(await edgeRects(p)), ...plateRects];
         const aims = new Map<LogPath, { x: number; y: number }>();
         for (const q of log) {
           const a = safeAim(q, starPts, nodePts, 13, all, labels);
