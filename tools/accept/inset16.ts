@@ -9,6 +9,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { ROOT } from '../bible.ts';
 import { pass, fail, hashId, type Scenario } from './kit.ts';
+import { axeOn } from './unify11.ts';
 
 type P = { id: string; n: string; s: string; f?: string; m?: string; sp?: { id: string; kind: string }[] };
 let atlas: Map<string, P> | null = null;
@@ -257,6 +258,25 @@ export const inset16: Scenario[] = [
       await off.click();
       await p.waitForTimeout(700);
       return (await inset(p).count()) ? fail('«по времени» не закрыло врезку') : pass('переключение в обе стороны');
+    },
+  },
+  {
+    n: 1230,
+    title: 'Решение 186, ТЗ § 3.8: axe (WCAG 2.2 AA) по врезке ночью и днём, широкий экран и телефон — 0 нарушений',
+    run: async (p) => {
+      const out: string[] = [];
+      for (const theme of ['night', 'day'] as const) {
+        await p.evaluate((t) => localStorage.setItem('toledot:theme', JSON.stringify(t)), theme);
+        await go(p, `#/david~fdavid&t=${theme}`.replace(/&t=.*$/, ''));
+        await p.reload();
+        await p.waitForTimeout(3000);
+        if (!(await inset(p).count())) {
+          out.push(`${theme}: врезка не открылась`);
+          continue;
+        }
+        out.push(...(await axeOn(p, '.sky .fam-inset')).map((x) => `${theme}: ${x}`));
+      }
+      return out.length ? fail(out.slice(0, 5).join(' | ')) : pass('0 нарушений');
     },
   },
 ];

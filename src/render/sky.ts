@@ -1374,7 +1374,11 @@ export class Sky implements SkyContext {
     const { ctx, cam, pal } = this;
     // подложка пропускает свет (решение 182): под подписью гаснут линии основного холста, слой света под ним виден
     if (this.light) {
-      ctx.clearRect(x0, y, x1 - x0, h);
+      ctx.save();
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = pal.sky;
+      this.cutRect(x0, y, x1 - x0, h);
+      ctx.restore();
       return;
     }
     ctx.save();
@@ -2128,11 +2132,9 @@ export class Sky implements SkyContext {
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     // слой света (решение 182) — отдельный холст под основным: основной прозрачен, небо и эпохи — в слое света
     const light = this.lightLayer();
-    if (light) ctx.clearRect(0, 0, cam.w, cam.h);
-    else {
-      ctx.fillStyle = pal.sky;
-      ctx.fillRect(0, 0, cam.w, cam.h);
-    }
+    ctx.fillStyle = pal.sky;
+    if (light) this.cutRect(0, 0, cam.w, cam.h);
+    else ctx.fillRect(0, 0, cam.w, cam.h);
     const hl = s.highlight;
     const L = s.layers;
     const lineOnly = s.onlyLines;
@@ -2893,6 +2895,19 @@ export class Sky implements SkyContext {
     cut('fillRect', 'fillStyle');
     cut('stroke', 'strokeStyle');
     cut('strokeRect', 'strokeStyle');
+  }
+
+  /**
+   * Вырез до слоя света (решение 182): прямоугольник цвета неба закрашивается «насквозь» (destination-out) — основной
+   * холст в нём прозрачен. Тот же вызов fillRect цветом неба, что и прежде (замеры кадра узнают по нему начало кадра
+   * и подложки подписей), минуя обёртку подложек: рамку у края она красит непрозрачной.
+   */
+  private cutRect(x: number, y: number, w: number, h: number) {
+    const ctx = this.ctx;
+    const op = ctx.globalCompositeOperation;
+    ctx.globalCompositeOperation = 'destination-out';
+    CanvasRenderingContext2D.prototype.fillRect.call(ctx, x, y, w, h);
+    ctx.globalCompositeOperation = op;
   }
 
   /** Кадр слоя света: перенос или сборка (на покое; решение 182). */

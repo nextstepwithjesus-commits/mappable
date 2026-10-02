@@ -27,9 +27,34 @@ async function setup(p: Page, o: Scene) {
     localStorage.setItem('toledot:reveal', JSON.stringify({ opened: o.opened ?? [], expanded: o.expanded ?? {} }));
     sessionStorage.setItem('toledot:skymode', JSON.stringify(o.mode ?? 'work'));
   }, o);
-  await p.goto(p.url().replace(/#.*$/, '') + o.hash);
-  await p.reload();
+  // новая загрузка с коротким адресом (другая строка запроса, как polish6.ts): прежняя страница успевала дописать в адрес
+  // окно «всего неба» («~y…» через replaceState с задержкой), и перезагрузка читала его как показ «все лица» (разбор F)
+  await p.goto(`${p.url().replace(/[?#].*$/, '')}?d6=${Date.now()}${o.hash}`);
   await p.waitForTimeout(2600);
+  await ready(p, o.work[0], !!o.opened?.length && (o.mode ?? 'work') === 'work');
+}
+
+/**
+ * Небо готово (этап 16, разбор 664, 706, 707 исполнителем F): новая загрузка, звёзды набора в кадре и, если у набора
+ * показаны союзы, — точки союзов в кадре покоя (canvas[data-dots]). Прежде — ровно 2,6 с после загрузки: под нагрузкой
+ * машины точка союза Адама и Евы появлялась через 0,5–2,9 с (перелёт к лицу, «звёзды зажигаются», проявление связей),
+ * и сценарий падал на «нет точки союза» при верном небе.
+ */
+async function ready(p: Page, first: string | undefined, dots: boolean) {
+  // звезда первого лица набора стоит на месте три замера подряд (перелёт к лицу кончился), точки союзов — в кадре
+  let last = '';
+  let same = 0;
+  for (let k = 0; k < 40; k++) {
+    const d = await p.evaluate(() => {
+      const c = document.querySelector('.sky > canvas') as HTMLCanvasElement | null;
+      return { stars: c?.dataset.stars ?? '', dots: c?.dataset.dots ?? '' };
+    });
+    const at = first ? (d.stars.split(';').find((q) => q.startsWith(`${first}:`)) ?? '') : 'any';
+    same = at && at === last ? same + 1 : 0;
+    last = at;
+    if (same >= 2 && (!dots || d.dots)) return;
+    await p.waitForTimeout(200);
+  }
 }
 
 const canvasData = (p: Page) => p.evaluate(() => ({ ...(document.querySelector('.sky canvas') as HTMLCanvasElement).dataset }) as Record<string, string>);

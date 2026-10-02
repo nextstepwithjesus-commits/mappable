@@ -48,6 +48,11 @@ vi.mock('../src/render/branches.ts', async (orig) => {
   const m = await orig<typeof import('../src/render/branches.ts')>();
   return { ...m, drawBranchSample: vi.fn(m.drawBranchSample) };
 });
+// свет неба и врезка семьи (этап 16, решения 182–184, 186) — образцом неба drawLightSample
+vi.mock('../src/render/light.ts', async (orig) => {
+  const m = await orig<typeof import('../src/render/light.ts')>();
+  return { ...m, drawLightSample: vi.fn(m.drawLightSample) };
+});
 vi.mock('../src/engine/ribbons.ts', async (orig) => {
   const m = await orig<typeof import('../src/engine/ribbons.ts')>();
   return { ...m, buildRibbons: vi.fn(m.buildRibbons) };
@@ -114,6 +119,7 @@ const labels = await import('../src/render/labels.ts');
 const marks = await import('../src/render/marks.ts');
 const branches = await import('../src/render/branches.ts');
 const plates = await import('../src/render/plates.ts');
+const light = await import('../src/render/light.ts');
 const { models, byId } = await import('../src/data/atlas.ts');
 
 /** Холст, который принимает любые вызовы; ширина текста — 7 px на знак. */
@@ -150,6 +156,7 @@ const spies = {
   drawBranchSample: vi.mocked(branches.drawBranchSample),
   drawUnionSample: vi.mocked(plates.drawUnionSample),
   drawLinkSample: vi.mocked(plates.drawLinkSample),
+  drawLightSample: vi.mocked(light.drawLightSample),
 };
 type SpyName = keyof typeof spies;
 
