@@ -266,8 +266,14 @@ export const sky12: Scenario[] = [
             const c = document.querySelector('.sky canvas') as HTMLCanvasElement;
             const k = c.width / c.getBoundingClientRect().width;
             const g = c.getContext('2d')!.getImageData(Math.round(x0 * k), Math.round(y * k), Math.round(90 * k), 1).data;
+            // этап 16, решение 182: основной холст прозрачен, свет — отдельным холстом; пиксель — на цвет неба по альфе
+            const sky = getComputedStyle(document.documentElement).getPropertyValue('--sky').trim();
+            const bg = [1, 3, 5].map((i) => parseInt(sky.slice(i, i + 2), 16));
             const out: number[] = [];
-            for (let i = 0; i < g.length; i += 4) out.push(g[i] + g[i + 1] + g[i + 2]);
+            for (let i = 0; i < g.length; i += 4) {
+              const al = g[i + 3] / 255;
+              out.push([0, 1, 2].reduce((a, j) => a + g[i + j] * al + bg[j] * (1 - al), 0));
+            }
             return out;
           },
           { x0, y: Math.round(s.y) },

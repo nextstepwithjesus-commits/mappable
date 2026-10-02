@@ -45,12 +45,18 @@ const near = (p: Page, id: string, color: string, theme: 'night' | 'day' = 'nigh
             const cv = document.querySelector('.sky > canvas') as HTMLCanvasElement;
             const k = cv.width / cv.getBoundingClientRect().width;
             const ctx = cv.getContext('2d')!;
+            // этап 16, решение 182: основной холст прозрачен, свет — отдельным холстом; пиксель накладывается на цвет неба по
+            // своей альфе — то, что прежде давала заливка неба под следом
+            const sky = getComputedStyle(document.documentElement).getPropertyValue('--sky').trim();
+            const g = [1, 3, 5].map((i) => parseInt(sky.slice(i, i + 2), 16));
             let hits = 0;
             for (let dy = -1; dy <= 1; dy++) {
               const d = ctx.getImageData(Math.round((s.x + 8) * k), Math.round((s.y + dy) * k), Math.round(312 * k), 1).data;
               for (let i = 0; i < d.length; i += 4) {
-                const dc = Math.abs(d[i] - c[0]) + Math.abs(d[i + 1] - c[1]) + Math.abs(d[i + 2] - c[2]);
-                const dn = Math.abs(d[i] - n[0]) + Math.abs(d[i + 1] - n[1]) + Math.abs(d[i + 2] - n[2]);
+                const al = d[i + 3] / 255;
+                const px = [0, 1, 2].map((j) => d[i + j] * al + g[j] * (1 - al));
+                const dc = Math.abs(px[0] - c[0]) + Math.abs(px[1] - c[1]) + Math.abs(px[2] - c[2]);
+                const dn = Math.abs(px[0] - n[0]) + Math.abs(px[1] - n[1]) + Math.abs(px[2] - n[2]);
                 if (dc < 90 && dc < dn) hits++;
               }
             }
@@ -177,7 +183,9 @@ export const colors4: Scenario[] = [
                     const d = cv.getContext('2d')!.getImageData(Math.round((s.x + 8) * k), Math.round(s.y * k), Math.round(300 * k), 1).data;
                     const ts: number[] = [];
                     for (let i = 0; i < d.length; i += 4) {
-                      const v = [d[i] - g[0], d[i + 1] - g[1], d[i + 2] - g[2]];
+                      // этап 16, решение 182: основной холст прозрачен, свет — отдельным холстом; пиксель — на цвет неба по альфе
+                      const al = d[i + 3] / 255;
+                      const v = [d[i] * al - g[0] * al, d[i + 1] * al - g[1] * al, d[i + 2] * al - g[2] * al];
                       const t = (v[0] * u[0] + v[1] * u[1] + v[2] * u[2]) / uu;
                       const res = Math.hypot(v[0] - t * u[0], v[1] - t * u[1], v[2] - t * u[2]);
                       if (t > 0.1 && res < 0.2 * Math.sqrt(uu) * t + 10) ts.push(t);

@@ -254,11 +254,15 @@ export const strip3: Scenario[] = [
         const cv = document.querySelector('.sky > canvas');
         const k = cv.width / cv.getBoundingClientRect().width;
         const y0 = Math.round((${bottom} + 30) * k), y1 = Math.round((cv.getBoundingClientRect().height - 140) * k);
+        // этап 16, решение 182: основной холст прозрачен, свет — отдельным холстом; пиксель — на цвет неба по альфе
+        const sky = getComputedStyle(document.documentElement).getPropertyValue('--sky').trim();
+        const bg = [1, 3, 5].map((i) => parseInt(sky.slice(i, i + 2), 16));
         const med = (x) => {
           const d = cv.getContext('2d').getImageData(Math.round(x * k), y0, 1, y1 - y0).data;
           const v = [];
           for (let i = 0; i < d.length; i += 4) {
-            const ch = [d[i], d[i + 1], d[i + 2]].map((u) => { u /= 255; return u <= 0.03928 ? u / 12.92 : Math.pow((u + 0.055) / 1.055, 2.4); });
+            const al = d[i + 3] / 255;
+            const ch = [0, 1, 2].map((j) => d[i + j] * al + bg[j] * (1 - al)).map((u) => { u /= 255; return u <= 0.03928 ? u / 12.92 : Math.pow((u + 0.055) / 1.055, 2.4); });
             v.push(0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2]);
           }
           v.sort((a, b) => a - b);
