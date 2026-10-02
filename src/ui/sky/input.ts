@@ -1417,12 +1417,18 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     const lit = lightAt && familyTier(sky.pxPerYear()) === 0 ? lightAt.call(sky, at.x, at.y) : null;
     clearTimeout(clearTimer);
     clearTimer = window.setTimeout(() => {
-      if (lit && focusGroup(lit, 'light')) return;
-      if (pins.value.length) {
-        pins.value = [];
-        pinsQuery.value = '';
+      // выбранное лицо или отметки — первый щелчок по небу снимает их, как прежде (D3; D5 — одно видимое состояние за раз):
+      // туманность лежит почти везде на уровне «Небо», и фокус по свету отнял бы у читателя «щелчок по пустому небу»;
+      // фокус созвездия по свету — щелчком по небу без выбора
+      if (pins.value.length || selected.value) {
+        if (pins.value.length) {
+          pins.value = [];
+          pinsQuery.value = '';
+        }
+        if (selected.value) selected.value = null;
+        return;
       }
-      if (selected.value) selected.value = null;
+      if (lit) focusGroup(lit, 'light');
     }, 260);
   };
   const onWheel = (e: WheelEvent) => {

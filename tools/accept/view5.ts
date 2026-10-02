@@ -12,7 +12,8 @@ import type { Page } from 'playwright';
 import { fail, hashId, pass, type Scenario } from './kit.ts';
 import { ADAM, cardOf, clickStar, flat, open, self, starPt, state } from './unify11.ts';
 
-const NAMES = ['С Адама', 'С Иисуса Христа', 'Родословие Иисуса Христа (Мф 1, Лк 3)', 'Ключевые лица', 'Всё небо'];
+// этап 16 (решение 187): шестое начало — «Рассказ: от Адама до Иисуса Христа»
+const NAMES = ['С Адама', 'С Иисуса Христа', 'Родословие Иисуса Христа (Мф 1, Лк 3)', 'Ключевые лица', 'Всё небо', 'Рассказ: от Адама до Иисуса Христа'];
 
 /** Главная область: небо (режим холста), полоса времени, органы неба; древа нет. */
 async function area(p: Page): Promise<{ tree: boolean; sky: string | null; strip: boolean; ctl: boolean }> {
@@ -32,7 +33,7 @@ const work = async (p: Page) => ((await p.evaluate(() => JSON.parse(localStorage
 export const view5: Scenario[] = [
   {
     n: 630,
-    title: 'Решение 77: первое посещение — вступление с пятью началами; «С Адама» открывает небо (не древо): полоса времени и органы неба на месте, набор из Адама, у его звезды — карточка; в адресе нет «~t1»',
+    title: 'Решение 77: первое посещение — вступление с шестью началами (решение 187); «С Адама» открывает небо (не древо): полоса времени и органы неба на месте, набор из Адама, у его звезды — карточка; в адресе нет «~t1»',
     run: async (p) => {
       await p.evaluate(() => {
         localStorage.setItem('toledot:cartouche', 'open');

@@ -290,17 +290,19 @@ export class LightLayer {
 
   constructor(readonly sky: HTMLCanvasElement) {
     const parent = sky.parentElement!;
-    // .sky — своя сцена наложения: холст света с z-index −1 встаёт под основной холст и над фоном страницы
-    parent.style.isolation = 'isolate';
+    // слой света — в разметке перед основным холстом, оба позиционированы без z-index: свет рисуется под холстом и над фоном
+    // неба. .sky своей сценой наложения не становится (isolation): листы и окна внутри неба («Вид», «Показ») поднимаются над
+    // нижним листом карточки, как прежде (сценарий 157)
+    sky.style.position = 'relative';
     this.host = document.createElement('div');
     this.host.className = 'sky-light';
     this.host.setAttribute('aria-hidden', 'true');
-    Object.assign(this.host.style, { position: 'absolute', left: '0', top: '0', width: '100%', height: '100%', overflow: 'hidden', zIndex: '-1', pointerEvents: 'none' });
+    Object.assign(this.host.style, { position: 'absolute', left: '0', top: '0', width: '100%', height: '100%', overflow: 'hidden', pointerEvents: 'none' });
     const root = this.host.attachShadow({ mode: 'closed' });
     this.cv = document.createElement('canvas');
     Object.assign(this.cv.style, { position: 'absolute', left: '0', top: '0', transformOrigin: '0 0', willChange: 'transform' });
     root.appendChild(this.cv);
-    parent.appendChild(this.host);
+    parent.insertBefore(this.host, sky);
     this.ctx = this.cv.getContext('2d', { alpha: false })!;
   }
 

@@ -28,7 +28,8 @@ export const light16: Scenario[] = [
     title: 'Решение 182, О2: слой света — отдельный холст под прозрачным основным; сборка на покое ≤ 40 мс, сдвиг — перенос без сборки',
     run: async (p) => {
       await go(p, '#/~y-1900~w4600~l0~s1');
-      const host = await p.evaluate(`(() => { const h = document.querySelector('.sky > .sky-light'); return !!h && getComputedStyle(h).zIndex === '-1'; })()`);
+      // под холстом: перед ним в разметке, оба позиционированы без z-index (своей сцены наложения у .sky нет — сценарий 157)
+      const host = await p.evaluate(`(() => { const h = document.querySelector('.sky > .sky-light'); const c = document.querySelector('.sky > canvas'); return !!h && !!c && h.nextElementSibling === c && getComputedStyle(h).zIndex === 'auto' && getComputedStyle(c).position !== 'static' && getComputedStyle(h.parentElement).isolation !== 'isolate'; })()`);
       if (!host) return fail('нет обёртки слоя света .sky > .sky-light под холстом');
       // основной холст прозрачен там, где на нём ничего нет (небо — в слое света)
       const alpha0 = (await p.evaluate(`(() => { const c = document.querySelector('.sky > canvas'); const k = c.width / c.getBoundingClientRect().width; return c.getContext('2d').getImageData(Math.round(c.clientWidth * 0.06 * k), Math.round(c.clientHeight * 0.9 * k), 1, 1).data[3]; })()`)) as number;
