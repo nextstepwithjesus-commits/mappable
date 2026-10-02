@@ -1028,7 +1028,9 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): Label
   // 'cut' — верхняя ступень 164 без чистого места: принадлежность и знаки — как в 'kin', линия под именем разрывается
   // 'mine' — последний строгий проход: те же правила, но своя черта брака под именем не запрет — имя ставится, а черта
   // под ним прерывается (защищённый текст, решение 139; у многожёнца черты стоят у самой звезды — сценарий 208)
-  type Mode = 'clear' | 'free' | 'soft' | 'lane' | 'fan' | 'mine' | 'kin' | 'cut' | 'hard' | 'none';
+  // 'self' — звезда величины 0–1 на масштабе семьи подписана всегда: без чистого места имя встаёт сразу за звездой
+  // (сторона 'r') на свою ленту или свой след, без правила принадлежности; чужие линии и знаки — запрет и здесь
+  type Mode = 'clear' | 'free' | 'soft' | 'lane' | 'fan' | 'mine' | 'self' | 'kin' | 'cut' | 'hard' | 'none';
   const offRibbon = p.offRibbon;
   const onLink = p.onLink;
   const onLine = p.onLine;
@@ -1134,7 +1136,8 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): Label
         : o.fan
           ? [...free, 'soft', ...lane, ...fan, 'mine']
           : [...free, 'soft', ...lane, 'mine'];
-  const passes: Mode[] = offRibbon && spineName ? ['clear', ...base] : base;
+  const selfPass: Mode[] = q.magnitude <= 1 && cam.ky >= FAMILY_KY && !v.viewMoving && !o.least ? ['self'] : [];
+  const passes: Mode[] = [...(offRibbon && spineName ? ['clear' as Mode, ...base] : base), ...selfPass];
   const vert = o.vertical ?? lineSideOf(q.id);
   const sides = vert === -1 ? o.sides.filter((x) => x !== 'b') : vert === 1 ? o.sides.filter((x) => x !== 't') : o.sides;
   const all = [...LEADERS, ...(o.far ? FAR_LEADERS : []), ...(o.wide ? WIDE_LEADERS : [])].filter(short);
@@ -1165,6 +1168,14 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): Label
   }
   for (const soft of o.least ? [] : passes) {
     mode = soft;
+    // своё место сразу за звездой (решение 139: защищённый текст) — только чужие знаки, подписи и линии под запретом
+    if (soft === 'self') {
+      const c = sp('r', textW + sigW + foldW);
+      const b = c.box;
+      if (insideSky(v, b) && !hits(b, p.reserve) && !p.placer.clash(b, false, 99, q.id) && !p.placer.glyphsIn(b).some((g) => g.id !== q.id && g.a >= GLYPH_SEEN) && !crossed(b, false, true)) at = { ...c, side: 'r' };
+      if (at) break;
+      continue;
+    }
     for (const q of o.places ?? []) {
       const tx = q.xr - textW - foldW;
       const ty = q.yc + (ASC - DESC) * 0.5 * size;
@@ -1259,7 +1270,7 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): Label
   const kn = (strict(mode) || mode === 'kin' ? p.knock : undefined) ?? (reveal || mode === 'kin' ? p.knockReveal : undefined);
   // своя черта брака под именем ('mine'): разрыв по всей рамке + 2 px — черта прерывается, имя читается (решение 139)
   const ground = p.knockReveal ?? p.knock;
-  if (mode === 'mine' && ground && crossed(at.box, false)) ground({ x: at.box.x - 2, y: at.box.y - 2, w: at.box.w + 4, h: at.box.h + 4 });
+  if ((mode === 'mine' || mode === 'self') && ground && crossed(at.box, false)) ground({ x: at.box.x - 2, y: at.box.y - 2, w: at.box.w + 4, h: at.box.h + 4 });
   // верхняя ступень 164 на чужой линии ('cut', и раскрытое имя поверх линии): разрыв по всей рамке + 3 px (исключение 163)
   else if (o.top && !strict(mode) && mode !== 'kin' && crossed(at.box, false) && p.knockReveal) {
     p.knockReveal({ x: at.box.x - 3, y: at.box.y - 3, w: at.box.w + 6, h: at.box.h + 6 });

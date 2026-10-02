@@ -124,6 +124,7 @@ export function startNote(s: Start): string {
     lines: 'обе линии, по Матфею и по Луке',
     key: `главные лица Писания, ${num(KEY_IDS.length)} ${plural(KEY_IDS.length, 'лицо', 'лица', 'лиц')}`,
     all: `все ${num(n)} ${plural(n, 'лицо', 'лица', 'лиц')} сразу`,
+    story: 'восемь шагов по эпохам, со стихами',
   }[s];
 }
 

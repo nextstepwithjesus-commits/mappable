@@ -31,6 +31,8 @@ import { outsideOf, show, showContent } from './show.ts';
 import { revealOnAll } from './sky/ShowBar.tsx';
 import { ChronoText } from './panels/Chronology.tsx';
 import type { Union } from '../engine/unions.ts';
+import { storyShown } from './story/state.ts';
+import { StoryBody } from './story/StoryColumn.tsx';
 
 export { Masthead, SECTIONS, PARTS, buildSections, familyIds, contemporaryGroups };
 export type { SecState };
@@ -1058,8 +1060,17 @@ export function Folio({ id: forcedId, forceState }: { id?: string; forceState?: 
     ro.observe(cmds);
     ro.observe(col);
     return () => ro.disconnect();
-  }, [id, phone, live, tabs.length, spine, union?.id]);
+    // рассказ ушёл из колонки (этап 16): та же полоса появилась заново — место под её команды считается снова
+  }, [id, phone, live, tabs.length, spine, union?.id, storyShown.value]);
 
+  // рассказ (этап 16, решение 187): колонка рассказа на месте карточки, на телефоне — нижний лист; тот же лист (сетка,
+  // протяжка, видимая часть неба), карточка — командой рассказа «Карточка …»
+  if (live && storyShown.value)
+    return (
+      <aside class="folio story" aria-label="Рассказ" ref={aside} data-stop={phone ? stop : undefined}>
+        <StoryBody phone={phone} />
+      </aside>
+    );
   const p = id ? byId.get(id) : undefined;
   if (!id || !p) {
     // выбор снят (Escape, пустое небо): подробная карточка свёрнута во вкладку с именем — корешком справа, на телефоне —

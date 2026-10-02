@@ -11,7 +11,7 @@ import { ROOT } from './bible.ts';
 import { parseRef, verseId } from '../src/engine/books.ts';
 
 /** Файлы данных, кроме томов лиц, в которых стоят ссылки. */
-export const DATA_REF_FILES = ['epochs.json', 'anchors.json', 'lines/joseph.json', 'lines/mary.json', 'groups.json', 'lists.json'];
+export const DATA_REF_FILES = ['epochs.json', 'anchors.json', 'lines/joseph.json', 'lines/mary.json', 'groups.json', 'lists.json', 'story.json'];
 
 /** Ссылки во вложенном значении JSON: строки, которые parseRef разбирает целиком. */
 export function refsIn(v: unknown, out = new Set<string>()): Set<string> {

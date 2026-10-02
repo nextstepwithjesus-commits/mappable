@@ -83,7 +83,7 @@ export interface FamScene {
   /** братья и сёстры словами Писания без названных общих родителей (П-8): «сестра», 1 Пар 2:16 */
   kinSibs: { node: FamNode; word: string; ref: string }[];
   /** единокровные (по отцу) — группами по матерям */
-  halves: { mother: string | null; kids: FamNode[] }[];
+  halves: { mother: string | null; motherName: string | null; kids: FamNode[] }[];
   unions: FamUnion[];
   /** браки детей с супругой лица: ребёнок → супруга, вид и стих */
   inner: { kid: string; wife: string; kind: MarriageKind; ref: string }[];
@@ -162,7 +162,7 @@ export function familyScene(id: string, D: FamDeps): FamScene | null {
       for (const u of U.of.get(origin.a) ?? []) {
         if (u.id === origin.id || u.claim || !u.kids.length) continue;
         const kids = [...u.kids].sort(order).filter((k) => k !== id && !nodes.has(k)).map((k) => node(k, 'half'));
-        if (kids.length) halves.push({ mother: u.b, kids });
+        if (kids.length) halves.push({ mother: u.b, motherName: u.b ? (g.persons.get(u.b)?.name ?? null) : null, kids });
       }
   }
   // родство словами Писания: братья и сёстры без общих родителей в данных; слова о супруге
@@ -283,7 +283,8 @@ export type Hit =
   | { kind: 'person'; id: string; x: number; y: number; r: number }
   | { kind: 'union'; uid: string; x: number; y: number; r: number }
   | { kind: 'dust'; id: string; x: number; y: number; w: number; h: number }
-  | { kind: 'up'; id: string; x: number; y: number; w: number; h: number };
+  | { kind: 'up'; id: string; x: number; y: number; w: number; h: number }
+  | { kind: 'name'; id: string; x: number; y: number; w: number; h: number };
 
 export interface Plot {
   prims: Prim[];
@@ -355,15 +356,17 @@ function plotFan(S: FamScene, G: Geom): Plot {
   // строки детей по союзам; шаг строки — сколько позволяет высота (не меньше 17 px)
   const groups = S.unions;
   const n = groups.length;
+  // союз без детей или с одним ребёнком — строка не уже 20–26 px: подписи супруги нужна высота
   let h = 26;
-  const gap = () => Math.max(8, h * 0.5);
-  const need = () => groups.reduce((s, u) => s + Math.max(u.kids.length * h, 26), 0) + Math.max(0, n - 1) * gap();
-  while (h > 17 && need() > G.h) h -= 0.5;
+  const one = () => Math.max(20, Math.min(26, h + 6));
+  const gap = () => Math.max(6, h * 0.45);
+  const need = () => groups.reduce((s, u) => s + Math.max(u.kids.length * h, one()), 0) + Math.max(0, n - 1) * gap();
+  while (h > 16 && need() > G.h) h -= 0.5;
   const T = need();
   let y = G.y + Math.max(0, (G.h - T) / 2);
   const gy: { u: FamUnion; yc: number; ys: number[] }[] = [];
   for (const u of groups) {
-    const gh = Math.max(u.kids.length * h, 26);
+    const gh = Math.max(u.kids.length * h, one());
     const ys = u.kids.map((_, j) => y + (gh - u.kids.length * h) / 2 + j * h + h / 2);
     gy.push({ u, yc: ys.length ? (ys[0] + ys[ys.length - 1]) / 2 : y + gh / 2, ys });
     y += gh + gap();
@@ -374,7 +377,8 @@ function plotFan(S: FamScene, G: Geom): Plot {
   const hasLeft = S.sibs.length + S.kinSibs.length + S.halves.length > 0;
   const leftW = hasLeft ? (S.sibs.length + S.kinSibs.length > 2 ? 232 : 200) : S.parents ? 150 : 60;
   const fx = G.x + leftW;
-  const fy = Math.max(Math.min((kidTop + kidBot) / 2, G.y + G.h - 40), G.y + (S.parents ? 128 : 40));
+  // родители — на 128 px выше лица, указатель к деду — ещё на 50: шапка врезки не задета
+  const fy = Math.max(Math.min((kidTop + kidBot) / 2, G.y + G.h - 40), G.y + (S.parents ? (S.parents.up ? 186 : 140) : 40));
   const spanY = Math.max(40, ...gy.map((g) => Math.abs(g.yc - fy)));
   const aM = Math.min(210, (G.w - leftW) * 0.36);
   const bM = spanY + 70;
@@ -436,7 +440,7 @@ function plotFan(S: FamScene, G: Geom): Plot {
       if (inn) runs.push({ s: `, ${G.words.innerWord(kid, inn.wife, inn.kind)}`, font: 'word', ink: 'ink3' });
       top.push({ t: 'label', x: lx, y: ky + 5, align: 'left', runs, a, id: kid });
       const lw = runs.reduce((s, q) => s + G.measure(q.s, q.font), 0);
-      hits.push({ kind: 'person', id: kid, x: lx + lw / 2, y: ky, r: 0 });
+      hits.push({ kind: 'name', id: kid, x: lx, y: ky - 10, w: lw, h: 18 });
       dust.push({ y: ky, n: nd.grand, ink: kInk, a, lx: lx + lw, id: kid });
     });
     if (u.kids.length || partner) top.push({ t: 'diamond', uid: u.id, x: dx, y: my, s: 5.2, hollowWife: !partner, hollowAll: u.kind === 'none' && !!partner, ring: focusU === u, a });
@@ -525,7 +529,7 @@ function plotFan(S: FamScene, G: Geom): Plot {
       top.push({ t: 'label', x: G.x + 4, y: sy, align: 'left', runs: [{ s: `${G.words.halves(S.halves.flatMap((q) => q.kids.map((x) => x.sex)))}:`, font: 'word', ink: 'ink3' }], a: 1 });
       sy += 17;
       for (const q of S.halves) {
-        const runs: Run[] = [{ s: `${q.mother ? S.nodes.get(q.mother)?.name ?? '' : G.words.motherUnnamed(q.kids.length)}: `, font: 'note', ink: 'ink3' }];
+        const runs: Run[] = [{ s: `${q.motherName ?? G.words.motherUnnamed(q.kids.length)}: `, font: 'note', ink: 'ink3' }];
         q.kids.forEach((x, i) => runs.push({ s: x.name + (i < q.kids.length - 1 ? ', ' : ''), font: 'note', ink: 'ink2' }));
         // перенос по ширине левого поля
         for (const line of wrapRuns(runs, leftW - 16, G.measure)) {
@@ -762,6 +766,7 @@ function resolveLabels(prims: Prim[], G: Geom): Prim[] {
     for (const s of stars) if (s.x + s.r > b.x && s.x - s.r < b.x + b.w && s.y + s.r > b.y && s.y - s.r < b.y + b.h) c += 6;
     for (const o of boxes) if (o.x < b.x + b.w && o.x + o.w > b.x && o.y < b.y + b.h && o.y + o.h > b.y) c += 30;
     if (b.x < G.x - 12 || b.x + b.w > G.x + G.w + 12) c += 50;
+    if (b.y < G.y - 30 || b.y + b.h > G.y + G.h + 14) c += 50;
     return c;
   };
   for (const p of prims) {
@@ -786,5 +791,5 @@ function resolveLabels(prims: Prim[], G: Geom): Prim[] {
 /** Высота раскладки веера, которой хватит семье: шаг строки 26 px (меньше — до 17 px). */
 export function fanHeight(S: FamScene): number {
   const rows = S.unions.reduce((s, u) => s + Math.max(u.kids.length, 1), 0);
-  return Math.max(rows * 26 + Math.max(0, S.unions.length - 1) * 13, S.parents ? 300 : 160, (S.sibs.length + S.kinSibs.length) * 21 + 200);
+  return Math.max(rows * 26 + Math.max(0, S.unions.length - 1) * 12, S.parents ? 330 : 160, (S.sibs.length + S.kinSibs.length) * 21 + 230);
 }

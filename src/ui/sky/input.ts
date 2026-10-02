@@ -5,7 +5,7 @@
  * лет — время, по буквам полос — полосы; щипок по горизонтали — время, по вертикали — полосы, наискосок — обычный масштаб.
  * Клавиши неба — в src/ui/sky/skykeys.ts.
  */
-import { FRAME_H, type Rect, type Sky } from '../../render/sky.ts';
+import { FRAME_H, familyTier, type Rect, type Sky } from '../../render/sky.ts';
 import { byId, lines } from '../../data/atlas.ts';
 import { selected, hovered, epochMode, layers, onlyLines, panel, pins, pinsQuery, pickMode, pickSecond, synopsisAt, model } from '../../state.ts';
 import { lineNoteHits, ribbonAt, ribbonGapHits, setRibbonHover, type RibbonGapHit } from '../../render/ribbons.ts';
@@ -39,6 +39,8 @@ import { typo } from '../text/typo.ts';
 import { kinLabel, kinMarks, linkInfo, linkRow, linkTitle, linkRefs, refShort } from '../linkwords.ts';
 import { relationsOf } from '../card/kinrows.ts';
 import { closeDot, dotCard, dotsOn, openDot } from './DotCard.tsx';
+import { focusGroup } from '../story/areas.ts';
+import { openFamilyInset } from './inset.ts';
 
 export type { Tip };
 
@@ -1166,11 +1168,23 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       if (fold.kind === 'desc') foldDescOf(fold.id, false);
       else if (fold.kind === 'all') unfoldAll();
       else if (fold.kind === 'reveal') openPerson(fold.id);
-      // скопление семьи «+N» у подписи старшего (решение 142; S2): «Ближайшая родня» его лица (решение 145; S3)
-      else if (fold.kind === 'pile') nearestFamily(fold.id);
+      // скопление семьи «+N» у подписи старшего (решение 142; S2): на уровне «Небо» и касанием — врезка «Семья
+      // созвездием» (этап 16, решение 186), иначе — «Ближайшая родня» его лица (решение 145; S3)
+      else if (fold.kind === 'pile') {
+        if (!((touch || familyTier(sky.pxPerYear()) === 0) && !pickMode.value && openFamilyInset(fold.id, 'cluster'))) nearestFamily(fold.id);
+      }
       else foldGroupOf(fold.id, false);
       return;
     }
+    // название созвездия (этап 16, решение 185): фокус созвездия — перелёт «вписать», созвездие раскрыто целиком,
+    // остальное небо остаётся светом. Касание — по строке названия высотой не меньше 24 px
+    const gname = pickMode.value
+      ? null
+      : sky.groupHits.find((q) => {
+          const r = touch && q.h < 24 ? { x: q.x, y: q.y - (24 - q.h) / 2, w: q.w, h: 24 } : q;
+          return at.x >= r.x && at.x <= r.x + r.w && at.y >= r.y && at.y <= r.y + r.h;
+        });
+    if (gname && focusGroup(gname.group, 'name')) return;
     // название эпохи в служебной строке — небо к эпохе (UX-65); выбор лица не меняется
     const ep = touch ? null : serviceEpochAt(sky, at.x, at.y);
     if (ep) {
@@ -1367,8 +1381,13 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       closeDot();
       return;
     }
+    // свет созвездия под указателем на уровне «Небо» (этап 16, решение 185): туманность или устье колена — фокус созвездия
+    // (src/render/light.ts, lightGroupAt); второй щелчок того же двойного — масштаб, поэтому тоже с задержкой
+    const lightAt = (sky as { lightGroupAt?: (x: number, y: number) => string | null }).lightGroupAt;
+    const lit = lightAt && familyTier(sky.pxPerYear()) === 0 ? lightAt.call(sky, at.x, at.y) : null;
     clearTimeout(clearTimer);
     clearTimer = window.setTimeout(() => {
+      if (lit && focusGroup(lit, 'light')) return;
       if (pins.value.length) {
         pins.value = [];
         pinsQuery.value = '';

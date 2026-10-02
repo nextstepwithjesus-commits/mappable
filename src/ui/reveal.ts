@@ -25,6 +25,7 @@ import { buildUnions, membersOf, type Union } from '../engine/unions.ts';
 import { selected } from '../state.ts';
 import { num } from './text/typo.ts';
 import { parseStored, setShowState, show, showRestored, workSet, type Show, type WorkEntry } from './work.ts';
+import { STORY_TITLE } from './story/state.ts';
 
 // ---------- хранилище ----------
 
@@ -68,13 +69,15 @@ const personsWord = (n: number) => (n % 10 === 1 && n % 100 !== 11 ? 'лицо' 
  */
 export const LINES_TITLE = 'Родословие Иисуса Христа (Мф 1, Лк 3)';
 
-export type Start = 'adam' | 'jesus' | 'lines' | 'key' | 'all';
+export type Start = 'adam' | 'jesus' | 'lines' | 'key' | 'all' | 'story';
 export const STARTS: readonly { value: Start; label: string; hint: string }[] = [
   { value: 'adam', label: 'С Адама', hint: 'На небе только Адам и его карточка. «+N» у ромба союза раскрывает детей, и так дальше.' },
   { value: 'jesus', label: 'С Иисуса Христа', hint: 'На небе только Иисус Христос и его карточка. «Родители» раскрывают родословие вверх, до Адама.' },
   { value: 'lines', label: LINES_TITLE, hint: 'Обе линии — по Матфею и по Луке — от Адама до Иисуса Христа.' },
   { value: 'key', label: 'Ключевые лица', hint: 'Главные лица истории Писания; щелчок по звезде открывает карточку и родство.' },
   { value: 'all', label: 'Всё небо', hint: `Все ${num(persons.length)} ${personsWord(persons.length)} на звёздном небе; созвездия можно сворачивать.` },
+  // шестое начало (этап 16, решение 187): src/ui/story/story.ts
+  { value: 'story', label: STORY_TITLE, hint: 'Восемь шагов по эпохам — от Адама до Иисуса Христа, у каждого шага стих; «Дальше» ведёт небо к следующему шагу.' },
 ];
 
 /** Выбранное начало; null — ещё не выбирали (первое посещение: атлас предлагает выбрать). */
@@ -116,6 +119,7 @@ if (hasWindow) effect(() => write('reveal', { opened: opened.value, expanded: ex
 /** Показ начала s (решение 68; этап 11, § 5). */
 export function startShow(s: Start): Show {
   if (s === 'lines') return { kind: 'lines' };
+  if (s === 'story') return { kind: 'all' };
   if (s === 'key') return { kind: 'key' };
   if (s === 'all') return { kind: 'all' };
   return { kind: 'set' };
@@ -127,6 +131,12 @@ export function startShow(s: Start): Show {
  * и «Всё небо» — одноимённые показы, набор читателя они не трогают.
  */
 export function startWith(s: Start) {
+  // рассказ (решение 187): всё небо и первый шаг; модуль рассказа тянет за собой небо — без круга импортов
+  if (s === 'story') {
+    start.value = s;
+    void import('./story/story.ts').then((m) => m.openStory(0));
+    return;
+  }
   batch(() => {
     start.value = s;
     if (s === 'adam' || s === 'jesus') {

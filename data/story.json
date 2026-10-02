@@ -48,7 +48,7 @@
       "title": "Судьи",
       "epoch": "judges",
       "focus": "vooz",
-      "frame": { "persons": ["salmon", "vooz", "ruf", "ovid", "iessey", "gedeon", "samuil"], "years": [-1400, -1030] },
+      "frame": { "persons": ["salmon", "vooz", "ruf", "ovid", "iessey"], "years": [-1400, -1030] },
       "refs": ["Суд 2:16", "Руф 4:17"],
       "facts": ["lines"]
     },

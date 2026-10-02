@@ -24,6 +24,7 @@ import { computed, effect, signal } from '@preact/signals';
 import { panel, pickMode, selected, type Panel } from '../state.ts';
 import { cardFolded, cardTabs } from './stack.ts';
 import { readingTab } from './card/reading.ts';
+import { storyShown } from './story/state.ts';
 
 export const PHONE_MAX = 720;
 export const SPINE_W = 56;
@@ -296,12 +297,14 @@ if (typeof window !== 'undefined') {
  * колонка карточки остаётся корешком 56 px с вкладками: они видны всегда, небо отдаёт им только корешок.
  */
 export const grid = computed(() => {
-  const sel = !!selected.value;
+  // рассказ (этап 16, решение 187) — колонка карточки, развёрнутая: в ней рассказ, карточка — его командой
+  const story = storyShown.value;
+  const sel = !!selected.value || story;
   const tabsOnly = !sel && (cardTabs.value.length > 0 || !!readingTab.value);
   return gridFor(viewportWidth.value, panelKind(panel.value), sel || tabsOnly, {
     h: viewportHeight.value,
     widths: userWidths.value,
     full: skyFull.value,
-    folded: cardFolded.value || tabsOnly,
+    folded: (cardFolded.value || tabsOnly) && !story,
   });
 });

@@ -667,6 +667,72 @@ export function flyToIds(ids: readonly string[]) {
   skyRef.redraw();
 }
 
+/**
+ * Кадр шага рассказа (этап 16, решение 187): по времени — окно лет [a, b] (астр.) во всю ширину видимой части; по
+ * вертикали — строки лиц ids в середине свободной полосы (без широких органов неба у кромок), не выше 80 % её. Строки не
+ * помещаются — сжимается высота строки (как у viewForIds: до 4 px, для многих строк — временно до 1,5 px), время
+ * остаётся окном шага. Лиц нет на небе — середина видимой части по вертикали остаётся.
+ */
+export function viewForFrame(ids: readonly string[], a: number, b: number): GroupView | null {
+  const s = skyRef.current;
+  if (!s || !s.model) return null;
+  const xa = s.xOf(Math.min(a, b));
+  const xb = s.xOf(Math.max(a, b));
+  if (!(xb > xa)) return null;
+  const cam = s.cam;
+  const vp = cam.vp;
+  const W = vp.r - vp.l;
+  const plan = W / (xb - xa);
+  const kx = cam.clampKx(plan, (xa + xb) / 2);
+  let top = vp.t;
+  let bottom = vp.b;
+  for (const r of reserveRects) {
+    if (r.w < W * 0.3) continue;
+    if (r.y + r.h >= vp.b - 8 && r.y > (vp.t + vp.b) / 2) bottom = Math.min(bottom, r.y - 8);
+    else if (r.y <= vp.t + 60 && r.y + r.h < (vp.t + vp.b) / 2) top = Math.max(top, r.y + r.h + 8);
+  }
+  const H = Math.max(80, bottom - top);
+  const cy = (top + bottom) / 2;
+  // окно по плану — от левого края; масштаб упёрся в предел — середина окна у середины кадра
+  const x0 = Math.abs(kx / plan - 1) < 1e-9 ? xa - vp.l / kx : (xa + xb) / 2 - cam.vpCenter()[0] / kx;
+  const rows = ids.map((id) => s.node(id)).filter((n): n is NonNullable<typeof n> => !!n).map((n) => s.rowOf(starLaneOf(n)));
+  if (!rows.length) return { x0, kx, laneTop: cam.wLane(cy) + cy / cam.kyWith(kx, cam.ownLanes), lanes: cam.ownLanes };
+  const l0 = Math.min(...rows);
+  const l1 = Math.max(...rows);
+  const n = l1 - l0 + 1;
+  let floor = KY_LO;
+  let m = cam.ownLanes;
+  const fits = (mm: number, fl = floor) => cam.kyWith(kx, mm, fl) * n <= H * 0.8;
+  if (!fits(m)) {
+    const auto = cam.kyAuto(kx);
+    const want = (H * 0.8) / n;
+    m = cam.lanesAt(kx, want / auto);
+    if (!fits(m) && want >= GROUP_KY_MIN && want < KY_LO) {
+      floor = want;
+      m = Math.max(LANES_MIN, want / auto);
+    }
+  }
+  return { x0, kx, laneTop: (l0 + l1) / 2 + cy / cam.kyWith(kx, m, floor), lanes: m, floor: floor < KY_LO ? floor : undefined };
+}
+
+/**
+ * Камера к виду группы g (рассказ, фокус созвездия): how — 'flight' — перелёт ван Вейка — Нёйса (ТЗ § 3.7; «Дальше»),
+ * 'back' — переход за BACK-время без «отдалить — приблизить» (решение 46; «Назад» рассказа), 'jump' — сразу. При
+ * ослабленном движении — всегда сразу.
+ */
+export function moveTo(g: GroupView, how: 'flight' | 'back' | 'jump' = 'flight') {
+  const s = skyRef.current;
+  if (!s || !s.model) return;
+  flightTarget = null;
+  const to = s.cam.constrain(g, g.lanes, g.floor);
+  if (how === 'back' && !reduced()) {
+    // пропорция кадра — временная, как у перелёта к группе (IX-70): своя пропорция читателя остаётся в userLanes
+    if (Math.abs(g.lanes / s.cam.lanes - 1) > 1e-9 && s.cam.userLanes === null) s.cam.userLanes = s.cam.lanes;
+    s.cam.zoomTo(to, HISTORY_MS, skyRef.redraw, false, g.lanes);
+  } else s.cam.flyTo(to, skyRef.redraw, how === 'jump' || reduced(), g.lanes, g.floor);
+  skyRef.redraw();
+}
+
 /** За столько мс возвращается пропорция читателя, когда отметки сняты (IX-70). */
 export const RESTORE_MS = 250;
 /** На небе отметки поиска, группа панели (глава, участок синопсиса) или путь пары — то, ради чего сжаты строки. */

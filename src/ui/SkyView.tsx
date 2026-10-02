@@ -37,6 +37,7 @@ import { CARTOUCHE_BESIDE, Cartouche, GuideCommand, SkyBars, lanesChanged, skyBa
 import { SkyTip, kinPreview, shownTipStar } from './sky/Tip.tsx';
 import { SkyA11y } from './sky/SkyA11y.tsx';
 import { DotCard, dotCard } from './sky/DotCard.tsx';
+import { FamilyInset } from './sky/FamilyInset.tsx';
 import { foldDesc, foldGroups, groupFoldText, keyTarget, linkSet, shownIds, skyMode, workIds, workKey, workKeyText, workSet } from './work.ts';
 import { SkyMenu, skyMenu } from './panels/Work.tsx';
 import { isTextField, keyboardInput } from './keys.ts';
@@ -1087,6 +1088,8 @@ export function SkyView() {
         <SkyA11y />
         {/* карточка у звезды или точки союза в небе «набор» (решение 76): сразу после холста — Tab с неба ведёт в неё */}
         <DotCard />
+        {/* врезка «Семья созвездием» (решение 186): без открытой врезки ничего не рисует */}
+        <FamilyInset />
         {/* строки у кромки неба — под служебной строкой рамки (VIS-46, MAP-67): выбор второго лица, отметки поиска, группа,
             режим «набор» (UX-62, MOB-54), пропорция строк (UX-53) */}
         <SkyBars />

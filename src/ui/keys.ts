@@ -11,6 +11,10 @@ import { skyKeys, viewKeys } from './sky/skykeys.ts';
 import { introOpen, openLegend, reduced } from './sky/view.ts';
 import { focusCardTitle, focusPanelAt, focusQuietly, foldIntro } from './focus.ts';
 import { canReturn, returnFromFamily } from './show.ts';
+import { groupFocus, storyStep } from './story/state.ts';
+import { closeStory, nextStep, prevStep } from './story/story.ts';
+import { clearGroupFocus } from './story/areas.ts';
+import { closeFamilyInset, familyInset, toggleFamilyInset } from './sky/inset.ts';
 
 /**
  * «?» — таблица клавиш в «Условных знаках» (раздел «Клавиши»), фокус — на её заголовок; повторное нажатие закрывает
@@ -76,17 +80,31 @@ export function stepSection(dir: 1 | -1): HTMLElement | null {
 
 /**
  * Видимые состояния, которые снимает Escape. family — небо показывает «Ближайшую родню», и есть куда вернуться
- * (решение 145; src/ui/show.ts, canReturn).
+ * (решение 145; src/ui/show.ts, canReturn). Этап 16: inset — врезка «Семья созвездием» (решение 186; первой), area —
+ * созвездие в фокусе (решение 185), story — рассказ (решение 187: «Выйти на небо»).
  */
-export type EscapeState = { pick: boolean; panel: boolean; pins: boolean; group: boolean; second: boolean; family?: boolean; selected: boolean; intro: boolean };
+export type EscapeState = {
+  inset?: boolean;
+  pick: boolean;
+  panel: boolean;
+  pins: boolean;
+  group: boolean;
+  second: boolean;
+  area?: boolean;
+  family?: boolean;
+  story?: boolean;
+  selected: boolean;
+  intro: boolean;
+};
 
 /**
- * Что снимет следующий Escape (D5): выбор второго лица, панель, отметки поиска, группа, пара, «Ближайшая родня» (возврат
- * к прежнему показу и окну, решение 145; лицо остаётся выбранным), выбранное лицо и последней — вступительная табличка
- * (UX-76): она сворачивается в «Как читать карту», когда ничего другого снимать уже нечего.
+ * Что снимет следующий Escape (D5): врезка семьи (этап 16), выбор второго лица, панель, отметки поиска, группа, пара,
+ * фокус созвездия (окно до фокуса), «Ближайшая родня» (возврат к прежнему показу и окну, решение 145; лицо остаётся
+ * выбранным), рассказ («Выйти на небо»: окно и лицо остаются), выбранное лицо и последней — вступительная табличка (UX-76):
+ * она сворачивается в «Как читать карту», когда ничего другого снимать уже нечего.
  */
 export function escapeTarget(s: EscapeState): keyof EscapeState | null {
-  const order: (keyof EscapeState)[] = ['pick', 'panel', 'pins', 'group', 'second', 'family', 'selected', 'intro'];
+  const order: (keyof EscapeState)[] = ['inset', 'pick', 'panel', 'pins', 'group', 'second', 'area', 'family', 'story', 'selected', 'intro'];
   return order.find((k) => s[k]) ?? null;
 }
 
@@ -137,23 +155,29 @@ function onKey(e: KeyboardEvent) {
   if (e.code === 'Escape' && !typing && !e.defaultPrevented) {
     // каждое нажатие снимает одно видимое состояние, по порядку (D5); вступительная табличка — последней (UX-76)
     const next = escapeTarget({
+      inset: !!familyInset.value,
       pick: !!pickMode.value,
       panel: !!panel.value,
       pins: pins.value.length > 0,
       group: !!skyGroup.value,
       second: !!second.value,
+      area: !!groupFocus.value,
       family: canReturn.value,
+      story: storyStep.value !== null,
       selected: !!selected.value,
       intro: introOpen.value,
     });
-    if (next === 'pick') pickMode.value = null;
+    if (next === 'inset') closeFamilyInset();
+    else if (next === 'pick') pickMode.value = null;
     else if (next === 'panel') panel.value = null;
     else if (next === 'pins') {
       pins.value = [];
       pinsQuery.value = '';
     } else if (next === 'group') skyGroup.value = null;
     else if (next === 'second') clearPair();
+    else if (next === 'area') clearGroupFocus();
     else if (next === 'family') returnFromFamily();
+    else if (next === 'story') closeStory();
     else if (next === 'selected') selected.value = null;
     else if (next === 'intro') foldIntro();
     return;
@@ -164,6 +188,17 @@ function onKey(e: KeyboardEvent) {
   const t = e.target instanceof HTMLElement ? e.target : null;
   // в меню и списках буквы и стрелки — свои
   if (t?.closest('[role="menu"], [role="listbox"]')) return;
+  // рассказ (этап 16, решение 187): PageDown и PageUp — следующий и предыдущий шаг; в панели и в карточке они листают текст
+  if ((e.code === 'PageDown' || e.code === 'PageUp') && storyStep.value !== null && !e.shiftKey && !t?.closest('.sheet, .folio:not(.story), [role="slider"]')) {
+    if (e.code === 'PageDown' ? nextStep() : prevStep()) e.preventDefault();
+    return;
+  }
+  // врезка «Семья созвездием» (этап 16, решение 186): Shift + F (на русской раскладке — Shift + А); F без Shift — «Небо
+  // во весь экран» (J2): одна клавиша — одно значение
+  if (e.code === 'KeyF' && e.shiftKey) {
+    if (toggleFamilyInset()) e.preventDefault();
+    return;
+  }
   if (e.code === 'KeyG' && !e.shiftKey) {
     if (toggleSkyCard()) e.preventDefault();
     return;

@@ -3307,9 +3307,12 @@ export class Sky implements SkyContext {
         // своя черта — не запрет: имя ставится, черта под ним прерывается (защищённый текст, решение 139); у многожёнца
         // черты стоят у самой звезды, и иначе имени Давида не оставалось места (сценарий 208). Чужие — запрет всегда (163)
         (segs.crosses(at(b), id, (q) => !!q && linkOn(q, lf) && q.kind !== 'ribbon' && ((q.kind === 'bar' && (ownBars || !ownBar(q, id))) || (q.kind !== 'bar' && !ownFor(q, id)) || q.ks === hov)) ||
-          (rib && segs.crosses(at(band), id, (q) => !!q && linkOn(q, lf) && q.kind === 'ribbon')))) ||
-      // лента со свечением шире своей нити: середина строки — не ближе 3 px к её полю (ribbons.ts, offStrands: ещё 3 px)
-      (rib && !!off && !off({ x: band.x, y: band.y - 3, w: band.w, h: band.h + 6 }));
+          // своя лента лица линии (входящая и выходящие у его звезды) в последнем строгом проходе — как свой след: имя
+          // встаёт на неё сразу за звездой, лента под именем прерывается (защищённый текст, решение 139); чужая — запрет
+          (rib && segs.crosses(at(band), id, (q) => !!q && linkOn(q, lf) && q.kind === 'ribbon' && (ownBars || !q.ends.includes(id)))))) ||
+      // лента со свечением шире своей нити: середина строки — не ближе 3 px к её полю (ribbons.ts, offStrands: ещё 3 px);
+      // в последнем строгом проходе у лица линии поле свечения своей ленты не запрет (чужие ленты проверены по отрезкам)
+      (rib && !!off && (ownBars || !p.spine.has(id)) && !off({ x: band.x, y: band.y - 3, w: band.w, h: band.h + 6 }));
   }
 
   restars(p: Pass, box: Rect) {

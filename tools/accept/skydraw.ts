@@ -426,7 +426,8 @@ export const skydraw: Scenario[] = [
       const v = await star(p, 'veniamin');
       if (!v) return fail('звезды Вениамина нет в окне');
       await p.mouse.move(c.x + v.x, c.y + v.y);
-      await p.waitForTimeout(600);
+      // строка происхождения — третья строка подсказки, через 700 мс неподвижности (IX-58)
+      await p.waitForTimeout(1100);
       const org = p.locator('.sky .tip[data-kind="star"] [data-origin]');
       const t = (await org.count()) ? (await org.innerText()).replace(/\u00a0/g, ' ').trim() : '';
       if (!/^Иаков и Рахиль — родители; Вениамин — сын/.test(t)) return fail(`подсказка Вениамина: «${t}»`);

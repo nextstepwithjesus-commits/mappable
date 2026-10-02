@@ -17,8 +17,12 @@
  */
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import {
-  clearResults, LINES_TITLE, RESULT_WORD, resultGuests, resultIds, returnFromFamily, setLinkNote, setShow, show, showContent, showSummary, type ShowCmd, type SummaryPart,
+  clearResults, isNearest, LINES_TITLE, RESULT_WORD, resultGuests, resultIds, returnFromFamily, setLinkNote, setShow, show, showContent, showSummary, type ShowCmd, type SummaryPart,
 } from '../show.ts';
+import { groupFocus, storyCard, storyStep, STORY_STEPS } from '../story/state.ts';
+import { backToStory, closeStory } from '../story/story.ts';
+import { clearGroupFocus, groupName } from '../story/areas.ts';
+import { closeFamilyInset, familyInset, openFamilyInset } from './inset.ts';
 import { pins, pinsQuery, selected, skyGroup } from '../../state.ts';
 import { byId } from '../../data/atlas.ts';
 import { goTo, skyRef } from '../common.tsx';
@@ -143,6 +147,74 @@ function PathLine() {
           ))}
         </>
       )}
+    </span>
+  );
+}
+
+/**
+ * Созвездие в фокусе (этап 16, решение 185): «В фокусе: Колено Иудино — вернуть». «Вернуть» и Esc снимают фокус и
+ * возвращают окно до него.
+ */
+function FocusLine() {
+  const g = groupFocus.value;
+  if (!g) return null;
+  const hint = 'Созвездие раскрыто целиком, остальное небо — светом; «вернуть» (Esc) — окно до фокуса';
+  return (
+    <span class="sb-line" data-line="focus" title={hint}>
+      <span class="sb-t">{typo(`В фокусе: ${groupName(g)}`)}</span>
+      <span class="dash" aria-hidden="true">
+        {' — '}
+      </span>
+      <button type="button" class="sb-cmd" data-cmd="focus" title={hint} aria-description={hint} aria-keyshortcuts="Escape" onClick={() => clearGroupFocus()}>
+        вернуть
+      </button>
+    </span>
+  );
+}
+
+/**
+ * Рассказ открыт, а в колонке — карточка (этап 16, решение 187): «Рассказ, шаг 3 из 8 — к рассказу, выйти».
+ */
+function StoryLine() {
+  const i = storyStep.value;
+  if (i === null || !storyCard.value) return null;
+  const text = `Рассказ, шаг ${i + 1} из ${STORY_STEPS.length}`;
+  return (
+    <span class="sb-line" data-line="story" title="В колонке — карточка; рассказ остаётся открытым">
+      <span class="sb-t">{text}</span>
+      <span class="dash" aria-hidden="true">
+        {' — '}
+      </span>
+      <button type="button" class="sb-cmd" data-cmd="story" title="Колонка — снова рассказ" onClick={() => backToStory()}>
+        к рассказу
+      </button>
+      {', '}
+      <button type="button" class="sb-cmd" data-cmd="story-exit" title="Закрыть рассказ: окно и выбранное лицо остаются (Esc)" onClick={() => closeStory()}>
+        выйти
+      </button>
+    </span>
+  );
+}
+
+/**
+ * «Ближайшая родня» — по времени или созвездием (этап 16, решение 186; договор F): «созвездием» открывает врезку семьи
+ * лица, «по времени» закрывает её; нынешний вид — начертанием (aria-pressed).
+ */
+function NearestView() {
+  const sh = show.value;
+  if (!isNearest(sh)) return null;
+  const on = familyInset.value?.id === sh.id;
+  return (
+    <span class="sb-line sb-near" data-line="near" role="group" aria-label="Ближайшая родня: вид">
+      <button type="button" class="sb-cmd" data-cmd="near-time" aria-pressed={!on} title="Родня на небе по времени: год рождения — по горизонтали" onClick={() => closeFamilyInset()}>
+        по времени
+      </button>
+      <span class="sep" aria-hidden="true">
+        {' | '}
+      </span>
+      <button type="button" class="sb-cmd" data-cmd="near-inset" aria-pressed={on} title="Семья созвездием — врезка без шкалы времени: дети по порядку рождения (Shift + F)" onClick={() => openFamilyInset(sh.id, 'near')}>
+        созвездием
+      </button>
     </span>
   );
 }
@@ -324,6 +396,9 @@ export function ShowBar() {
           </button>
         </span>
       ))}
+      <FocusLine />
+      <StoryLine />
+      <NearestView />
       <PathLine />
       <span class="visually-hidden" role="status">
         {said}

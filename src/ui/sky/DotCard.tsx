@@ -62,6 +62,7 @@ import { firstKin } from '../../render/frame.ts';
 import { aroundPending, flyToIds, reduced, reserve, screenOf } from './view.ts';
 import { plateFocus, rememberFocus, toggleKids } from './starnav.ts';
 import { kidsText, unionTitle } from './text.ts';
+import { familyInset, hasFamily, openFamilyInset } from './inset.ts';
 import '../../styles/dotcard.css';
 
 // ---------- состояние ----------
@@ -1229,7 +1230,15 @@ function LineageMenu({ id }: { id: string }) {
       title="Оставить на небе только предков или потомков лица, или тех и других"
       items={[
         // ясный вид семьи — первым (решение 145; контракт S3): родители, супруги, дети по матерям, 1 поколение
-        { key: 'near', label: typo(`Ближайшая родня — ${nearestCount(id)}`), onSelect: () => nearestFamily(id) },
+        // на телефоне «Ближайшая родня» открывается созвездием (решение 186): семья на 390 px по оси лет не читается
+        {
+          key: 'near',
+          label: typo(`Ближайшая родня — ${nearestCount(id)}`),
+          onSelect: () => {
+            if (grid.peek().phone && openFamilyInset(id, 'near')) dotCard.value = null;
+            else nearestFamily(id);
+          },
+        },
         item('down', 'Потомки'),
         item('up', 'Предки'),
         item('both', 'Предки и потомки'),
@@ -1256,6 +1265,24 @@ function NearestCmd({ id }: { id: string }) {
   return (
     <Cmd onRun={() => nearestFamily(id)} cls="dc-near" title={typo(`Родители, супруги и дети по матерям — ${nearestCount(id)}; возврат — Escape или «назад»`)}>
       Ближайшая родня
+    </Cmd>
+  );
+}
+
+/**
+ * «Семья созвездием» (решение 186): врезка семьи без шкалы времени — родители, супруги, дети веером от матерей, пыль
+ * внуков. Команды нет, если врезка этого лица уже открыта или лицу нечего показать (нет ни родителей, ни союзов).
+ */
+function InsetCmd({ id }: { id: string }) {
+  if (familyInset.value?.id === id || !hasFamily(id)) return null;
+  return (
+    <Cmd
+      onRun={() => {
+        // одна карточка на небе за раз (решение 77): врезка заменяет карточку у звезды
+        if (openFamilyInset(id, 'card')) dotCard.value = null;
+      }}
+      cls="dc-fam" title="Семья лица одной картиной: жёны, дети по матерям, внуки числом; без шкалы времени (Shift + F)">
+      Семья созвездием
     </Cmd>
   );
 }
@@ -1475,6 +1502,8 @@ export function PersonBody({ id, compact = false, brief = false, legend = false,
       <div class="dc-cmds">
         {/* «Ближайшая родня» — одним действием (решение 145); на телефоне — первым пунктом «Предки и потомки ▾»: лист короче */}
         {!phone && <NearestCmd id={id} />}
+        {/* «Семья созвездием» — врезка семьи на небе (решение 186) */}
+        <InsetCmd id={id} />
         {/* на телефоне «Вся карточка ▴» разворачивает лист карточки (как «Развернуть» шапки листа) — кнопка с aria-expanded;
             при открытой подробной карточке (легенда семьи) команда остаётся: она ведёт фокус на заголовок карточки рядом
             (MOB-29, MOB-31; сценарии 170, 173) */}

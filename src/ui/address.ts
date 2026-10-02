@@ -16,7 +16,9 @@
  *   (0 — без связей, 2 — с роднёй; обрывками — без поля); n — набор показа «набор», если в нём не больше 12 лиц: id через
  *   точку; c — выбранная связь (src/engine/linkkey.ts); g — временные гости выбранной связи или лица (решение 93, К3;
  *   src/ui/show.ts, showGuest): id через точку, пишется сразу за «c»; u — карточка союза в листе; j1 — Лк 3 понят как
- *   второе родословие Иосифа (решение 130; src/state.ts, lineFlip; без поля — родословие Марии).
+ *   второе родословие Иосифа (решение 130; src/state.ts, lineFlip; без поля — родословие Марии); r — шаг рассказа с единицы
+ *   (этап 16, решение 187; src/ui/story/story.ts), z — созвездие в фокусе (решение 185; src/ui/story/areas.ts), f — врезка
+ *   «Семья созвездием» лица (решение 186; src/ui/sky/inset.ts).
  *
  * Прежние адреса работают: «#/david» и «#/moisey?v=…» выбирают лицо, небо летит к нему; «~o1» открывает линии Мессии,
  * «~k1» и «~t1» — набор (древа больше нет, решение 77).
@@ -29,7 +31,7 @@
  * атласа помечены (HistoryMark): их «n» — свой набор в тот момент, и «назад» не выдаёт его за чужую ссылку.
  */
 import { batch, effect, signal } from '@preact/signals';
-import { byId, graph, lineMembership, models, modelInfo } from '../data/atlas.ts';
+import { byId, graph, groupById, lineMembership, models, modelInfo } from '../data/atlas.ts';
 import { linkKeyString, parseLinkKey, spanInner, type LinkKey } from '../engine/linkkey.ts';
 import {
   selected, panel, first, second, lambda, modelId, epochMode, lineFlip, searchNotice, setPair, clearPair, PANELS, type Panel,
@@ -47,6 +49,10 @@ import { selectFromHistory } from './stack.ts';
 import { restoreReveal, selectedUnion, selectUnion, unionById } from './reveal.ts';
 import { selectedLink } from './linkstate.ts';
 import { linkGuests, setGuestsFromAddress, windowHooks } from './show.ts';
+import { storyStep, groupFocus } from './story/state.ts';
+import { storyFromAddress } from './story/story.ts';
+import { groupFocusFromAddress } from './story/areas.ts';
+import { familyInset } from './sky/inset.ts';
 
 export interface View {
   /** год середины окна, исторический */
@@ -83,6 +89,12 @@ export interface Address {
   guests?: string[];
   /** Лк 3 — второе родословие Иосифа (решение 130; поле «j1»); нет — родословие Марии */
   luke?: boolean;
+  /** шаг рассказа (этап 16, решение 187; поле «r» — номер шага с единицы), здесь — с нуля */
+  story?: number;
+  /** созвездие в фокусе (решение 185; поле «z») */
+  area?: string;
+  /** врезка «Семья созвездием» (решение 186; поле «f»): чья семья */
+  inset?: string;
   /** прежние поля до этапа 11 — только разбор: «o1» (только линии Мессии), «k1» (набор), «t1» (древо) */
   only?: boolean;
   work?: boolean;
@@ -156,6 +168,9 @@ export function parseAddress(hash: string, has: (id: string) => boolean): Addres
       const key = parseLinkKey(val);
       if (key && linkExists(key, has)) a.link = key;
     } else if (k === 'j') a.luke = val === '1';
+    else if (k === 'r' && /^\d{1,2}$/.test(val) && Number(val) >= 1) a.story = Number(val) - 1;
+    else if (k === 'z' && ID.test(val) && groupById.has(val)) a.area = val;
+    else if (k === 'f' && ID.test(val) && has(val)) a.inset = val;
     else if (k === 'g') {
       const ids = [...new Set(val.split('.'))].filter((x) => ID.test(x) && has(x)).slice(0, GUESTS_MAX);
       if (ids.length) a.guests = ids;
@@ -224,6 +239,10 @@ export function formatAddress(a: Omit<Address, 'route' | 'full' | 'bad'>): strin
   if (c) f.push(`c${c}`);
   // временные гости (решение 93, К3) — за связью
   if (a.guests?.length) f.push(`g${a.guests.slice(0, GUESTS_MAX).join('.')}`);
+  // рассказ, фокус созвездия, врезка семьи (этап 16, решения 185–187)
+  if (a.story !== undefined && a.story >= 0) f.push(`r${a.story + 1}`);
+  if (a.area) f.push(`z${a.area}`);
+  if (a.inset) f.push(`f${a.inset}`);
   return `#/${a.id ?? ''}${f.map((x) => `~${x}`).join('')}`;
 }
 
@@ -314,7 +333,8 @@ const pushKey = () => {
   const sh = show.value;
   const c = selectedLink.value;
   // карточка союза — своя запись истории: «назад» возвращает карточку лица (решение 71); показ и связь — тоже (этап 11)
-  return `${id ?? ''}|${panel.value ?? ''}|${b && a && a !== id ? a : ''}|${b ?? ''}|${selectedUnion.value ?? ''}|${showKey(sh)}${showLinksField(sh) ?? ''}|${c ? linkKeyString(c) : ''}|${linkGuests.value.join('.')}|${lineFlip.value ? 'j' : ''}`;
+  // шаг рассказа, фокус созвездия и врезка семьи (этап 16) — тоже: каждый шаг рассказа — своя запись (решение 187)
+  return `${id ?? ''}|${panel.value ?? ''}|${b && a && a !== id ? a : ''}|${b ?? ''}|${selectedUnion.value ?? ''}|${showKey(sh)}${showLinksField(sh) ?? ''}|${c ? linkKeyString(c) : ''}|${linkGuests.value.join('.')}|${lineFlip.value ? 'j' : ''}|${storyStep.value ?? ''}|${groupFocus.value ?? ''}|${familyInset.value?.id ?? ''}`;
 };
 
 /** Вид атласа сейчас — в полях адреса. */
@@ -340,6 +360,9 @@ function snapshot(): Omit<Address, 'route' | 'full' | 'bad'> {
     union: selectedUnion.peek() ?? undefined,
     link: selectedLink.peek() ?? undefined,
     guests: linkGuests.peek().length ? [...linkGuests.peek()] : undefined,
+    story: storyStep.peek() ?? undefined,
+    area: groupFocus.peek() ?? undefined,
+    inset: familyInset.peek()?.id,
   };
 }
 
@@ -485,6 +508,15 @@ function applyState(a: Address, history = false, init = false) {
   selectUnion(a.id && a.union ? a.union : null);
   // временные гости (решение 93, К3) — когда показ, лицо и связь адреса уже стоят; запись без них гостей снимает
   if (a.full) setGuestsFromAddress(a.guests ?? []);
+  // рассказ, фокус созвездия, врезка семьи (этап 16): запись их воспроизводит, запись без них — снимает; окно — адреса
+  if (a.full) {
+    // адрес без окна (ссылка «#/iakov~r3») — небо к кадру шага, а не к лицу
+    storyFromAddress(a.story ?? null, !a.view);
+    groupFocusFromAddress(a.area ?? null);
+    const fi = familyInset.peek();
+    if (a.inset && (!fi || fi.id !== a.inset)) familyInset.value = { id: a.inset, from: 'address' };
+    else if (!a.inset && fi) familyInset.value = null;
+  }
   searchNotice.value = a.bad ? { text: `Лица с адресом «${a.bad}» в атласе нет. Найдите его по имени.`, ids: nearIds(a.bad) } : null;
 }
 
@@ -616,7 +648,7 @@ export function bindAddress(): () => void {
       // окно записи — сразу при первом показе, переходом за BACK_MS при «назад» и «вперёд»; адрес называет лицо, но не
       // окно (прежний «#/david»): небо летит к лицу
       if (a.view) applyView(a.view, !initialLoad);
-      else if (a.id && !linesFit) skyRef.flyTo(a.id);
+      else if (a.id && !linesFit && a.story === undefined) skyRef.flyTo(a.id);
       // адрес пишется, когда небо встало: окно самой записи, а не кадр перехода. Запись истории с окном остаётся какой
       // была; первый показ и адрес без окна дополняются окном
       whenStill(() => {

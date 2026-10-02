@@ -630,6 +630,41 @@ if (!volumeMode) {
   for (const r of registry.persons) if (!byId.has(r.id)) warn(`registry:${r.id}`, `лицо из реестра (том ${r.owner}) ещё не создано`);
 }
 
+// ---------- рассказ (data/story.json; этап 16, решение 187; приёмка О6) ----------
+// Шаги: эпоха есть, опорное лицо и лица кадра есть, годы окна по порядку, один-два стиха — каждый стих есть в каноническом
+// Синодальном тексте (checkRefs); опорное лицо — в кадре; строки из графа — только известных видов.
+if (!volumeMode && existsSync(join(ROOT, 'data/story.json'))) {
+  const story: { title?: unknown; steps?: unknown } = JSON.parse(readFileSync(join(ROOT, 'data/story.json'), 'utf8'));
+  const STEP_KEYS = new Set(['id', 'short', 'title', 'epoch', 'focus', 'frame', 'refs', 'facts']);
+  const FACTS = new Set(['branches', 'lines']);
+  if (typeof story.title !== 'string' || !story.title.trim()) err('story', 'нет заглавия рассказа (title)');
+  const steps = Array.isArray(story.steps) ? (story.steps as Record<string, unknown>[]) : [];
+  if (!steps.length) err('story', 'нет шагов (steps)');
+  const seenStep = new Set<string>();
+  steps.forEach((st, i) => {
+    const W = `story[${i}] ${String(st.id ?? '')}`;
+    for (const k of Object.keys(st)) if (!STEP_KEYS.has(k)) err(W, `неизвестное поле «${k}»`);
+    if (typeof st.id !== 'string' || !ID_RE.test(st.id)) err(W, 'id: латиница в нижнем регистре, цифры и дефис');
+    else if (seenStep.has(st.id)) err(W, 'дублирующийся id шага');
+    else seenStep.add(st.id);
+    for (const k of ['short', 'title'] as const) if (typeof st[k] !== 'string' || !/^[А-ЯЁ]/.test(st[k] as string)) err(W, `${k}: по-русски, с прописной`);
+    if (typeof st.short === 'string' && st.short.length > 12) err(W, 'short: не длиннее 12 знаков (ряд шагов)');
+    if (typeof st.epoch !== 'string' || !epochIds.has(st.epoch)) err(W, `epoch: нет эпохи «${String(st.epoch)}»`);
+    if (typeof st.focus !== 'string' || !byId.has(st.focus)) err(W, `focus: нет лица «${String(st.focus)}»`);
+    const fr = st.frame as { persons?: unknown; years?: unknown } | undefined;
+    const ps = Array.isArray(fr?.persons) ? (fr!.persons as unknown[]) : null;
+    if (!ps || !ps.length) err(W, 'frame.persons: непустой список лиц кадра');
+    for (const id of ps ?? []) if (typeof id !== 'string' || !byId.has(id)) err(W, `frame.persons: нет лица «${String(id)}»`);
+    if (ps && typeof st.focus === 'string' && !ps.includes(st.focus)) err(W, 'опорное лицо — не в кадре (frame.persons)');
+    const ys = fr?.years;
+    if (!Array.isArray(ys) || ys.length !== 2 || !ys.every((y) => Number.isInteger(y) && y !== 0) || !((ys[0] as number) < (ys[1] as number)))
+      err(W, 'frame.years: [начало, конец] — целые исторические годы по порядку, без нулевого');
+    if (!Array.isArray(st.refs) || st.refs.length < 1 || st.refs.length > 2) err(W, 'refs: один-два стиха');
+    checkRefs(W, st.refs);
+    if (!Array.isArray(st.facts) || (st.facts as unknown[]).some((f) => !FACTS.has(f as string))) err(W, 'facts: только branches и lines');
+  });
+}
+
 // ---------- созвездия: разделы, вложенность, родоначальники (data/groups.json; этап 11, решение 82) ----------
 if (!volumeMode) for (const i of checkGroups(groups, byId)) err(i.where, i.msg);
 

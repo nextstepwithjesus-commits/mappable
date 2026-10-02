@@ -1,0 +1,232 @@
+/* ---------- рассказ (этап 16, решение 187): колонка на месте карточки, на телефоне — нижний лист ----------
+   ТЗ § 5: текст Literata 16/24, команды Jost; без скруглённых плашек и теней (§ 5.6); ряд шагов — имена, текущий шаг —
+   начертанием и чертой (решение 188: не степпер из кружков). */
+.folio.story {
+  --folio-pl: 40px;
+  --folio-pr: 32px;
+}
+.story-in {
+  padding: 18px var(--folio-pr) 28px var(--folio-pl);
+  max-width: 32em;
+}
+.story-bar .story-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+  color: var(--ink-2);
+}
+.story-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  margin: 10px 0 14px;
+  padding: 0 0 8px;
+  list-style: none;
+  border-bottom: 1px solid var(--rule);
+}
+.story-steps button {
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+  color: var(--ink-2);
+  background: none;
+  border: 0;
+  padding: 4px 0 3px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+.story-steps button:hover {
+  color: var(--ink);
+}
+.story-steps button[aria-current='step'] {
+  color: var(--ink);
+  font-weight: 600;
+  border-bottom-color: var(--ink);
+}
+.story-title {
+  font-family: var(--serif);
+  font-size: var(--t-title);
+  line-height: var(--t-title-lh);
+  font-weight: 500;
+  margin: 0;
+}
+.story-sub {
+  font-family: var(--serif);
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+  color: var(--ink-2);
+  margin: 2px 0 0;
+}
+.story-mk {
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  color: var(--ink-3);
+}
+.story-sum {
+  font-family: var(--serif);
+  font-size: var(--t-body);
+  line-height: var(--t-body-lh);
+  margin: 12px 0 0;
+}
+.story-verse {
+  margin: 14px 0 0;
+}
+.story-verse blockquote {
+  margin: 0;
+  padding: 0;
+  font-family: var(--serif);
+}
+/* стихи — та же вклейка, что в карточке (src/ui/common.tsx, Verses), кеглем текста */
+.story-verse .verses {
+  margin: 0;
+  padding: 2px 0 2px 14px;
+  border-left: 2px solid var(--ink-3);
+  font-size: var(--t-body);
+  line-height: var(--t-body-lh);
+}
+.story-verse blockquote .verses sup {
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  color: var(--ink-3);
+  margin-right: 2px;
+}
+.story-verse .story-ref {
+  margin: 4px 0 0 16px;
+}
+.story-ref {
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  color: var(--ink-2);
+}
+.story-facts {
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--serif);
+  font-size: var(--t-note);
+  line-height: 1.375rem;
+}
+.story-fact {
+  position: relative;
+  padding-left: 26px;
+}
+.story-fact.lines {
+  padding-left: 0;
+  color: var(--ink-2);
+}
+/* черта цвета ветви — та же, что под именем на небе (src/render/branches.ts, BRANCH_TICK) */
+.story-sw {
+  position: absolute;
+  left: 0;
+  top: 0.66rem;
+  width: 16px;
+  height: 3px;
+}
+.story-who {
+  font: inherit;
+  color: var(--ink);
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+.story-who:hover {
+  text-decoration-style: solid;
+}
+.story-cmds {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+}
+.story-cmds button {
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  min-height: 36px;
+  padding: 6px 16px;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--rule-strong);
+  cursor: pointer;
+}
+.story-cmds button:disabled {
+  color: var(--ink-3);
+  border-color: var(--rule);
+  cursor: default;
+}
+.story-cmds .story-next {
+  background: var(--ink);
+  color: var(--sky);
+  border-color: var(--ink);
+}
+.story-cmds .story-exit,
+.story-cmds .story-back {
+  border-color: transparent;
+  padding: 6px 4px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.story-cmds .story-exit {
+  margin-left: auto;
+}
+.story-card {
+  margin: 16px 0 0;
+}
+.story-card .cmd {
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+}
+
+/* ---------- телефон: нижний лист рассказа ---------- */
+@media (max-width: 720px) {
+  .folio.story {
+    --folio-pl: 16px;
+    --folio-pr: 16px;
+  }
+  .folio.story .story-in {
+    padding-top: 0;
+  }
+  .folio.story .sheet-bar {
+    margin: 0 calc(-1 * var(--folio-pr)) 0 calc(-1 * var(--folio-pl));
+    padding: 0 var(--folio-pr) 4px var(--folio-pl);
+  }
+  .folio.story .grab {
+    margin-left: 0;
+  }
+  .folio.story .story-steps {
+    display: none;
+  }
+  .folio.story .story-title {
+    margin-top: 4px;
+  }
+  .folio.story .story-cmds {
+    margin-top: 10px;
+  }
+  .folio.story .story-cmds:not(.second) button {
+    flex: 1 1 0;
+    min-height: 44px;
+    font-size: var(--t-body);
+  }
+  .folio.story .story-cmds.second {
+    justify-content: center;
+  }
+  .folio.story .story-cmds.second button {
+    min-height: 44px;
+  }
+  .folio.story .story-cmds.second .story-exit {
+    margin-left: 0;
+  }
+}
+
+/* строка показа (этап 16): вид «Ближайшей родни» — нынешний начертанием (решение 186), «В фокусе: …», «Рассказ, шаг …» */
+.showbar .sb-near .sb-cmd[aria-pressed='true'] {
+  font-weight: 600;
+  text-decoration: none;
+  cursor: default;
+}
