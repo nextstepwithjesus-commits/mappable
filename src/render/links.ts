@@ -45,11 +45,11 @@ const nodeGapOf = (inp: Pick<LinkInput, 'nodeR' | 'layout'>) => 2 * (inp.nodeR ?
 export const TRUNK_MAX = 32;
 export const TRUNK_MIN = 5;
 /**
- * Видимый зубец — не короче (px): его начало у ствола лежит дальше знака звезды и ещё 5 px (src/ui/sky/input.ts,
- * STAR_FIRST: точное наведение на линию вне знака звезды) — у отвода своя цель щелчка, не перехваченная ни звездой
- * ребёнка, ни ромбом (Иосиф у Рахили, Амнон у Ахиноамы: зубцы были по 3 px).
+ * Видимый зубец — не короче (px): у отвода своя цель щелчка — не меньше 12 px вне поля звезды ребёнка (знак и ещё 5 px,
+ * src/ui/sky/input.ts, STAR_FIRST) и вне поля ромба (Иосиф у Рахили, Амнон у Ахиноамы: зубцы были по 3 px, щелчок
+ * ловили звезда и ромб).
  */
-export const TOOTH_HIT = 9;
+export const TOOTH_HIT = 16;
 /** Ствол — не ближе к середине звезды первого ребёнка гнезда: её радиус, 1,5 px и видимый зубец. */
 export const toothRoom = (s: { r: number }) => Math.max(TRUNK_MIN, s.r + 1.5 + TOOTH_HIT);
 /** Зубец — не длиннее (Г3, Я6). */
@@ -641,7 +641,9 @@ export function linkCrossings(paths: LinkPath[]) {
         const ax = o.pts[2 * h.k];
         const bx = o.pts[2 * h.k + 2];
         const y = o.pts[2 * h.k + 1];
-        if (y <= lo + 2 || y >= hi - 2 || x0 <= Math.min(ax, bx) + 2 || x0 >= Math.max(ax, bx) - 2) continue;
+        // у самого конца (ближе 1,5 px) — стык, а не пересечение; дальше — разрыв (перепись считает пересечением всё, что
+        // дальше 2 px от концов: зубец, начатый в 2 px от чужой черты, — пересечение)
+        if (y <= lo + 1.5 || y >= hi - 1.5 || x0 <= Math.min(ax, bx) + 1.5 || x0 >= Math.max(ax, bx) - 1.5) continue;
         (q.xcuts ??= []).push(k, (y - y0) / (y1 - y0), XCUT, h.p);
         (o.xcuts ??= []).push(h.k, (x0 - ax) / (bx - ax), XCUT + (q.kind === 'bar' ? BAR_HALF : 0), i);
       }
@@ -882,6 +884,13 @@ function houseLinks(inp: LinkInput): LinkFrame {
     if (pp) for (let k = 0; k + 3 < pp.length; k += 2) if (Math.abs(pp[k + 3] - pp[k + 1]) > 0.01 && pp[k + 2] <= hi + 0.5) a = Math.max(a, pp[k + 2]);
     return a;
   };
+  /** x на переходе следа q (между пребываниями, решение 173): черта брака с него — по склону, не от строки дома. */
+  const onGlide = (q: LinkStar | null, x: number): boolean => {
+    const pp = q?.path;
+    if (!pp) return false;
+    for (let k = 0; k + 3 < pp.length; k += 2) if (x > pp[k] + 0.5 && x < pp[k + 2] - 0.5 && Math.abs(pp[k + 3] - pp[k + 1]) > 0.5) return true;
+    return false;
+  };
   /** Нижний предел вертикали союза: правее звёзд его лиц. */
   const lo0Of = (p: Plan) => Math.max(p.O.x + p.O.r + 3, p.F ? p.F.x + p.F.r + 3 : -Infinity, p.W ? p.W.x + p.W.r + 3 : -Infinity);
   /**
@@ -1010,6 +1019,8 @@ function houseLinks(inp: LinkInput): LinkFrame {
     const { y0, y1, ny, kids } = sl;
     const par = new Set([sl.p.O.id, ...(sl.p.F ? [sl.p.F.id] : []), ...(sl.p.W ? [sl.p.W.id] : [])]);
     let c = Math.abs(x - sl.want) * (x > sl.want ? 2 : 1);
+    // черта брака — от строки дома мужа, не с его перехода (у Халева, Ашхура черты шли бы вдоль склона)
+    if (sl.n < 0 && sl.fy !== null && onGlide(sl.p.F, x)) c += 1000;
     for (const v of verts.query(x - WIDE_GAP, y0 - 7, x + WIDE_GAP, y1 + 7)) {
       if (v.dead || v.u === u) continue;
       const d = Math.abs(v.x - x);
@@ -1017,7 +1028,8 @@ function houseLinks(inp: LinkInput): LinkFrame {
       // (одна кончается на следе, где начинается другая): одна линия через след читалась бы одной связью
       if (Math.min(v.y1, y1) - Math.max(v.y0, y0) > -6) {
         const need = v.wide || sl.wide ? WIDE_GAP : TRUNK_GAP;
-        if (d < need) c += d < 2 ? 1200 : 100 + (300 * (need - d)) / need;
+        // ближе 4 px две линии читаются одной (черты Эглы и Вирсавии у Давида в 2 px) — как совпадение
+        if (d < need) c += d < 4 ? 1200 : 100 + (300 * (need - d)) / need;
       }
       // свой узел — на чужой вертикали (решение 181), и у её конца на том же следе (черта чужого союза входила бы в ромб)
       if (ny > v.y0 - 1 && ny < v.y1 + 1 && d < nodeClear + halfW(v.wide)) c += 1200;
@@ -1124,6 +1136,12 @@ function houseLinks(inp: LinkInput): LinkFrame {
         if (g0) c.hi = Math.min(c.hi, g0.x - nodeGap);
         slots.splice(slots.indexOf(sl), 1, c);
         place(c);
+        continue;
+      }
+      // отдельной черте места до прихода жены в дом нет (её приход позже окна, решение 173) — колонна остаётся с гнездом
+      const wide = colSlot(sl.p, true);
+      if (arrivalOf(sl.p.W, Infinity) + 1 > Math.min(wide.hi, nestSlot(sl.p, 0).x - nodeGap)) {
+        place(sl);
         continue;
       }
       sl.p.merged = false;
@@ -1418,7 +1436,10 @@ function clearVia(inp: LinkInput, main: ReadonlyMap<string, LinkStar>, via: Map<
       const ok = (x: number) =>
         block.every((s) => Math.abs(s.x - x) >= s.r + STAR_CLEAR) && lanes.every((q) => Math.abs(q.x - x) >= WIDE_GAP) && others.every((q) => Math.abs(q.x - x) >= gap);
       if (ok(x0)) continue;
-      const left = P.x;
+      // станция союза с ромбом — у его черты, левее не дальше 1,5 px (решение 177: шаг уходит со следа отца у черты брака
+      // матери; сдвиг на пиксель с чужой вертикали — та же черта на вид)
+      const col = own && drawnU.has(own) ? nodes.find((q) => q.union === own && q.kind === 'union')?.x : undefined;
+      const left = Math.max(P.x, (col ?? -Infinity) - 1.5);
       const right = K.x - K.r - 1;
       let best: number | null = null;
       for (let d = 1; d <= REACH && best === null; d++)

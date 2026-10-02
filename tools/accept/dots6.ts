@@ -61,6 +61,14 @@ async function linesOf(p: Page) {
 }
 /** Место звезды лица на холсте — из списка неба для клавиатуры (SkyA11y, data-x/data-y). */
 async function starAt(p: Page, id: string): Promise<{ x: number; y: number } | null> {
+  // этап 15 (решение 173): место нарисованной звезды — из кадра (canvas[data-stars] «лицо:x,y»): жена-спутница стоит
+  // строкой у мужа, и её звезда — не в полосе узла модели; список неба (#sky-star-…) — если в кадре её нет
+  const drawn = await p.evaluate((id) => {
+    const c = document.querySelector('.sky > canvas') as HTMLElement | null;
+    const q = (c?.dataset.stars ?? '').split(';').find((r) => r.startsWith(`${id}:`));
+    return q ? q.slice(id.length + 1).split(',').map(Number) : null;
+  }, id);
+  if (drawn && drawn.length === 2 && drawn.every(Number.isFinite)) return { x: drawn[0], y: drawn[1] };
   const el = p.locator(`#sky-star-${id}`);
   if (!(await el.count())) return null;
   const x = Number(await el.getAttribute('data-x'));

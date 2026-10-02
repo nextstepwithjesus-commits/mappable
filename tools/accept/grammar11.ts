@@ -138,6 +138,19 @@ function distSeg(px: number, py: number, [ax, ay, bx, by]: [number, number, numb
   const t = l2 ? Math.max(0, Math.min(1, ((px - ax) * ex + (py - ay) * ey) / l2)) : 0;
   return Math.hypot(ax + t * ex - px, ay + t * ey - py);
 }
+/** Точки пути правее x0 (отрезки, начинающиеся левее, обрезаются по x0). */
+function clipLeft(pts: number[], x0: number): number[] {
+  const out: number[] = [];
+  for (let k = 0; k + 3 < pts.length; k += 2) {
+    let [ax, ay, bx, by] = pts.slice(k, k + 4);
+    if (Math.max(ax, bx) < x0) continue;
+    if (ax < x0) [ax, ay] = [x0, ay + ((by - ay) * (x0 - ax)) / (bx - ax || 1)];
+    if (bx < x0) [bx, by] = [x0, by + ((ay - by) * (x0 - bx)) / (ax - bx || 1)];
+    if (out.length && out[out.length - 2] === ax && out[out.length - 1] === ay) out.push(bx, by);
+    else out.push(ax, ay, bx, by);
+  }
+  return out;
+}
 /** Ключ связи по пути журнала: зубец — связь с ребёнком, ствол и узел — союз, «‖» — супруг, лента — шаг. */
 const keyKind = (ks: string) => ks.split('.')[0];
 
@@ -397,7 +410,7 @@ export const grammar11: Scenario[] = [
   },
   {
     n: 745,
-    title: 'Давид: лестница союзов; ленты Мф и Лк расходятся в узле «Давид и Вирсавия» (Я17: лента выходит из узла своего шага, ±2 px)',
+    title: 'Давид: лестница союзов; ленты Мф и Лк расходятся в узле «Давид и Вирсавия» (Я17: лента выходит из узла своего шага, ±2 px; решение 177: мимо ромба — не дальше 12 px)',
     run: async (p) => {
       await open(p, '#/david~vr.david.d.1.f');
       const log = await linkLog(p);
@@ -409,14 +422,19 @@ export const grammar11: Scenario[] = [
       if (!node) return fail('нет ромба «Давид и Вирсавия»');
       const [nx, ny] = node.pts;
       const out: string[] = [];
-      // тройник союза (K3 § 2.1): лента идёт по следу Давида до столбца узла и уходит к ребёнку ступенькой из него
+      // тройник союза (K3 § 2.1): лента идёт по следу Давида до столбца узла и уходит к ребёнку ступенькой из него.
+      // Этап 15 (решение 177): станция — у черты брака матери; если мать стоит между отцом и ребёнком линии, ступенька
+      // идёт правее ромба на его радиус и зазор (links.ts, RIB_STEP: не дальше 12 px), и ромб под лентой не прячется
       for (const ks of ['r.j.solomon', 'r.m.nafan-syn-davida']) {
         const r = log.find((q) => q.kind === 'ribbon' && q.ks === ks);
         if (!r) return fail(`нет шага ленты ${ks}`);
         const vert = segs(r).filter(([x0, y0, x1, y1]) => Math.abs(x0 - x1) < 0.5 && Math.abs(y0 - y1) > 0.5);
-        const d = Math.min(...vert.map((g) => Math.abs(g[0] - nx)));
-        if (!(d <= 2)) return fail(`${ks}: ступенька в ${d.toFixed(1)} px от столбца узла (${nx}, ${ny})`);
-        out.push(`${ks}: ${d.toFixed(1)} px`);
+        const g = vert.reduce((a, b) => (Math.abs(b[0] - nx) < Math.abs(a[0] - nx) ? b : a));
+        const d = Math.abs(g[0] - nx);
+        // ступенька проходит строку ромба — мать между отцом и ребёнком
+        const across = Math.min(g[1], g[3]) < ny - 0.5 && Math.max(g[1], g[3]) > ny + 0.5;
+        if (across ? !(d >= 4 && d <= 12) : !(d <= 2)) return fail(`${ks}: ступенька в ${d.toFixed(1)} px от столбца узла (${nx}, ${ny})${across ? ', мимо ромба' : ''}`);
+        out.push(`${ks}: ${d.toFixed(1)} px${across ? ' (мимо ромба)' : ''}`);
       }
       return pass(`${nodes.length} ромбов, ${bars.length} черт брака; ${out.join(', ')}`);
     },
@@ -479,7 +497,21 @@ export const grammar11: Scenario[] = [
         for (let k = 0; k < want; k++) {
           const q = inView[Math.floor(rand() * inView.length)];
           const before = hashId(p);
-          await clickAt(p, aims.get(q)!);
+          // этап 15 (решение 176, связь целиком): шаг ленты идёт по следу отца от самой его звезды — и под «липким» именем
+          // его следа у левого края (MAP-10; имя под указателем — лицо, решение 154). Таких имён нет в рамках подписей
+          // звёзд: точку, где подсказка называет лицо, сдвигаем вдоль пути вправо
+          let aim = aims.get(q)!;
+          for (let t = 0; t < 6; t++) {
+            const o = await origin(p);
+            await p.mouse.move(o.x + aim.x, o.y + aim.y);
+            await p.waitForTimeout(250);
+            if (!(await p.locator('.sky .tip[data-shown][data-kind="star"]').count())) break;
+            const next = safeAim({ ...q, pts: clipLeft(q.pts, aim.x + 40) }, starPts, nodePts, 13, all, labels);
+            if (!next) break;
+            aim = next;
+          }
+          aims.set(q, aim);
+          await clickAt(p, aim);
           const got = await htmlLink(p);
           const s = await sel(p);
           const card = await p.locator('.dotcard.dc-link .dc-row.end').count();

@@ -133,12 +133,32 @@ export const graph14: Scenario[] = [
   },
   {
     n: 1102,
-    title: 'Г4 (решение 137): Давид выбран — имена матерей у ромбов поставлены (не меньше пяти: Ахиноама, Авигея, Мааха, Вирсавия…)',
+    // этап 15 (решение 174): ромб союза — на следе жены; мать названа её собственной подписью на строке ромба (подпись
+    // звезды — левее ромба, на той же строке: canvas[data-label-boxes]) или, если её звезда далеко или не на небе, —
+    // именем у ромба (canvas[data-mother-names], решения 137, 160)
+    title: 'Г4 (решения 137, 174): Давид выбран — у ромбов его союзов мать названа: своей подписью на строке ромба или именем у ромба (не меньше пяти: Ахиноама, Авигея, Мааха, Вирсавия…)',
     run: async (p) => {
       await go(p, '#/david');
       const m = (await data(p, 'mother-names')).split('|').filter(Boolean);
-      if (m.length < 5) return fail(`имён матерей у ромбов: ${m.length} (${m.join(', ')})`);
-      return pass(`у ромбов Давида: ${m.map((q) => q.split('@')[0]).join(', ')}`);
+      const at = m.map((q) => q.slice(q.lastIndexOf('@') + 1).split(',').map(Number));
+      const labels = (await data(p, 'label-boxes'))
+        .split(';')
+        .filter(Boolean)
+        .map((q) => {
+          const i = q.lastIndexOf(':');
+          const [x, y, w, h] = q.slice(i + 1).split(',').map(Number);
+          return { id: q.slice(0, i), x, y, w, h };
+        });
+      const named: string[] = [];
+      for (const n of (await rows(p)).filter((q) => q.kind === 'node' && /^u\.david\.[^_.]/.test(q.ks))) {
+        const wife = n.ks.split('.')[2];
+        const [x, y] = n.pts;
+        const own = labels.some((b) => b.id === wife && Math.abs(b.y + b.h / 2 - y) <= 4 && b.x + b.w <= x + 1);
+        const plate = at.some(([ax, ay]) => Math.abs(ax - x) <= 2 && Math.abs(ay - y) <= 2);
+        if (own || plate) named.push(`${wife}${own ? '' : ' (у ромба)'}`);
+      }
+      if (named.length < 5) return fail(`матерей названо ${named.length}: ${named.join(', ')}; имена у ромбов: ${m.join(', ')}`);
+      return pass(`у ромбов Давида: ${named.join(', ')}`);
     },
   },
   {
@@ -257,24 +277,45 @@ export const graph14: Scenario[] = [
     title: 'Решение 159: след Мехиаеля от звезды до ромба — связь «Мехиаель — Мафусал»: подсказка связи, щелчок выбирает её',
     run: async (p) => {
       await go(p, '#/mekhiael');
-      const all = await rows(p);
-      const node = all.find((q) => q.kind === 'node' && unionOf(q.ks) === 'mekhiael._._');
-      if (!node) return fail('ромба союза Мехиаеля в кадре нет');
       const c = await canvasBox(p);
-      // Мехиаель выбран: место его звезды — .sky[data-sel] (px холста)
-      const star = await p.evaluate(() => {
-        const s = (document.querySelector('.sky') as HTMLElement).dataset.sel;
-        if (!s) return null;
-        const [x, y] = s.split(' ').map(Number);
-        return { x, y };
-      });
-      if (!star) return fail('выбранной звезды Мехиаеля нет');
-      // имя под указателем — это лицо (решение 154): точка — на свободном от подписей участке следа между звездой и ромбом
-      const y = node.pts[1];
-      const boxes = (await data(p, 'label-boxes')).split(';').filter(Boolean).map((q) => q.split(':')[1].split(',').map(Number));
-      let lo = star.x + 8;
-      const hi = node.pts[0] - 6;
-      for (const [bx, by, bw, bh] of boxes) if (y >= by - 1 && y <= by + bh + 1 && bx < hi && bx + bw > lo) lo = Math.max(lo, bx + bw + 2);
+      // свободный от подписей и от поля ромба участок следа между звездой и ромбом (px холста): [lo, hi] на строке y
+      const free = async () => {
+        const all = await rows(p);
+        const node = all.find((q) => q.kind === 'node' && unionOf(q.ks) === 'mekhiael._._');
+        // Мехиаель выбран: место его звезды — .sky[data-sel] (px холста)
+        const star = await p.evaluate(() => {
+          const s = (document.querySelector('.sky') as HTMLElement).dataset.sel;
+          if (!s) return null;
+          const [x, y] = s.split(' ').map(Number);
+          return { x, y };
+        });
+        if (!node || !star) return { node, star, lo: 0, hi: 0, y: 0 };
+        // имя под указателем — это лицо (решение 154): точка — на свободном от подписей участке следа между звездой и ромбом
+        const y = node.pts[1];
+        const boxes = (await data(p, 'label-boxes')).split(';').filter(Boolean).map((q) => q.split(':')[1].split(',').map(Number));
+        let lo = star.x + 8;
+        // и вне поля ромба (canvas[data-plates] «союз:раскрыт:x,y,w,h», не меньше 24 × 24): там подсказка — ромба
+        const plate = (await data(p, 'plates'))
+          .split(';')
+          .filter((q) => q.startsWith('u:mekhiael+'))
+          .map((q) => q.slice(q.lastIndexOf(':') + 1).split(',').map(Number))[0];
+        const hi = Math.min(node.pts[0] - 6, plate ? plate[0] - 2 : Infinity);
+        for (const [bx, by, bw, bh] of boxes) if (y >= by - 1 && y <= by + bh + 1 && bx < hi && bx + bw > lo) lo = Math.max(lo, bx + bw + 2);
+        return { node, star, lo, hi, y };
+      };
+      let f = await free();
+      if (!f.node) return fail('ромба союза Мехиаеля в кадре нет');
+      if (!f.star) return fail('выбранной звезды Мехиаеля нет');
+      // этап 15: зубец ребёнка — не короче 16 px (у отвода своя цель щелчка), и ромб союза с одним ребёнком стоит дальше
+      // от его звезды; на крупном масштабе след между подписью Мехиаеля и полем ромба короче 3 px — ближе (колесо у ромба)
+      for (let k = 0; k < 4 && f.hi - f.lo < 6 && f.node; k++) {
+        await p.mouse.move(c.x + f.node.pts[0], c.y + f.node.pts[1]);
+        await p.mouse.wheel(0, -240);
+        await p.waitForTimeout(1200);
+        f = await free();
+      }
+      const { node, star, lo, hi, y } = f;
+      if (!node || !star) return fail('ромб или звезда Мехиаеля ушли из кадра');
       if (hi - lo < 3) return fail(`след между звездой (${star.x}) и ромбом (${node.pts[0]}) весь под подписями`);
       const x = (lo + hi) / 2;
       await p.mouse.move(c.x + x, c.y + y);

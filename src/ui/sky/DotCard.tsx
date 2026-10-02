@@ -63,7 +63,6 @@ import { aroundPending, flyToIds, reduced, reserve, screenOf } from './view.ts';
 import { plateFocus, rememberFocus, toggleKids } from './starnav.ts';
 import { kidsText, unionTitle } from './text.ts';
 import '../../styles/dotcard.css';
-import { starLaneOf } from '../../engine/stays.ts';
 
 // ---------- состояние ----------
 
@@ -778,7 +777,7 @@ function obstacles(
   for (let i = 0; i < s.nodes.length; i++) {
     if (!s.drawn(i)) continue;
     const x = cam.sx(s.X0[i]);
-    const y = cam.sy(starLaneOf(s.nodes[i]));
+    const y = s.starY(i);
     if (x < cam.vp.l || x > cam.vp.r || y < s.openTop || y > cam.vp.b || (Math.abs(x - a.x) < 1 && Math.abs(y - a.y) < 1)) continue;
     soft.push({ x: x - 6, y: y - 6, w: 12, h: 12, cost: 20 });
   }

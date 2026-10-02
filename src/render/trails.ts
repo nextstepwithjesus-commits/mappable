@@ -2553,6 +2553,14 @@ function putLinkText(v: SkyContext, p: Pass, t: LinkText, a: number, hold = fals
 
 /** Союзы, чьи имена матерей уже поставлены в этом кадре обязательным ярусом (ключ — Placer кадра). */
 const motherPlaced = new WeakMap<object, Set<string>>();
+/** Имя у ромба в кадре: лицо и точка ромба (unionLabel, said). */
+interface NodeName {
+  id: string;
+  x: number;
+  y: number;
+}
+/** имена у ромбов этого кадра (по Placer прохода): соседний ромб того же лица имени не повторяет */
+const nodeNames = new WeakMap<object, NodeName[]>();
 
 /**
  * Имена матерей у ромбов выбранного лица — обязательный ярус подписей (этап 14, решение 137; G3): ставятся раньше имён
@@ -2605,28 +2613,34 @@ export const KIND_WORD: Readonly<Partial<Record<MarriageKind, string>>> = { conc
  *    повторного брака называют сами черты от их следов);
  *  — на масштабе семьи (решение 178) и у союзов выбранного — слово вида: «Валла, наложница», «Онан, левират»; без имени —
  *    одно слово.
- * null — подписи нет. person — лицо подписи (его знак у ромба — не чужой, решение 160).
+ * Имя, уже написанное в кадре у соседнего ромба ближе 120 px (said), не повторяется: у трёх союзов Фамари на её следе —
+ * одно «Фамарь, брак не назван», дальше одно слово вида («левират») или ничего: повтор имени занимал место имён детей.
+ * null — подписи нет. person — лицо, названное подписью (его знак у ромба — не чужой, решение 160); у одного слова вида
+ * его нет: слово — подпись ромба, и её звезда ближе ромба читалась бы чужой (К4). whose — чья подпись (её погашение).
  */
-export function unionLabel(v: SkyContext, n: Pick<LinkNode, 'kind' | 'union' | 'owner' | 'mother'>, x: number, y: number, words: boolean): { text: string; person: string | undefined } | null {
+export function unionLabel(v: SkyContext, n: Pick<LinkNode, 'kind' | 'union' | 'owner' | 'mother'>, x: number, y: number, words: boolean, said?: readonly NodeName[]): { text: string; person: string | undefined; whose: string | undefined } | null {
   if (n.kind !== 'union') return null;
   const u = ALL_UNIONS.byId.get(n.union);
+  const near = (id: string) => ownStarNear(v, id, x, y) || !!said?.some((q) => q.id === id && Math.hypot(q.x - x, q.y - y) < OWN_NAME_NEAR);
   if (n.mother !== null) {
-    if (n.mother && ownStarNear(v, n.mother, x, y)) return null;
+    if (n.mother && near(n.mother)) return null;
     const text = n.mother ? nameOf(n.mother) : u ? unionName(u) : '';
-    return text ? { text, person: n.mother || undefined } : null;
+    return text ? { text, person: n.mother || undefined, whose: n.mother || undefined } : null;
   }
   if (!u || !u.a || !u.b || n.owner !== u.b) return null;
   const wife = u.b;
-  const who = ownStarNear(v, wife, x, y) ? null : wife;
+  const who = near(wife) ? null : wife;
   const word = words ? KIND_WORD[marriageKind(u)] : undefined;
   if (!who && !word) return null;
   const text = who ? (word ? `${nameOf(who)}, ${word}` : nameOf(who)) : word!;
-  return { text, person: who ?? wife };
+  return { text, person: who ?? undefined, whose: wife };
 }
 
 export function drawMotherNames(v: SkyContext, p: Pass, d: LinkDraw | null | undefined): Set<string> {
   const done = new Set<string>();
   motherPlaced.set(p.placer, done);
+  const said: NodeName[] = [];
+  nodeNames.set(p.placer, said);
   const sel = p.s.selected;
   if (!d || !sel || !p.s.layers.labels || (d.frame.layout === 'map' && v.genRoom < 0.5)) return done;
   const mine = new Set((ALL_UNIONS.of.get(sel) ?? []).map((u) => u.id));
@@ -2642,11 +2656,12 @@ export function drawMotherNames(v: SkyContext, p: Pass, d: LinkDraw | null | und
     if (!(x > v.letterW && x < cam.w && y > v.openTop && y < cam.vp.b)) continue;
     // её звезда видна рядом и в том же доме — имя у ромба повторило бы её подпись и спорило бы с ней (решения 160, 173);
     // у союзов выбранного — со словом вида (решение 174)
-    const lab = unionLabel(v, n, x, y, true);
+    const lab = unionLabel(v, n, x, y, true, said);
     if (!lab) continue;
     const text = lab.text;
     const b = putLinkText(v, p, { text, x: x + 5, ax: x, y, dir: 0, right: true, id: n.union, side2: true, leader: true, ink: v.pal.ink, person: lab.person }, 1);
     if (b) {
+      if (lab.person) said.push({ id: lab.person, x, y });
       done.add(n.union);
       out.push(`${text}@${Math.round(x)},${Math.round(y)}`);
     }
@@ -2674,6 +2689,8 @@ export function drawLinkLabels(v: SkyContext, p: Pass, d: LinkDraw, late = false
   // имя матери у ромба — раньше подписей обрывков (этап 13): после укладки по матерям (решение 95) дети Давида стоят у
   // своих матерей далеко от него, и подписи обрывков «Авессалом, 32 Н» у ромбов его следа занимали место имён матерей
   const placed = motherPlaced.get(p.placer);
+  let said = nodeNames.get(p.placer);
+  if (!said) nodeNames.set(p.placer, (said = []));
   // ромбов на «всех лицах» теснее поколения в 18 px нет (plates.ts, genRoom) — нет и имён у них (G6: подпись без знака)
   const noNodes = d.frame.layout === 'map' && v.genRoom < 0.5;
   // слова вида союза — на масштабе семьи (решения 174, 178)
@@ -2689,11 +2706,12 @@ export function drawLinkLabels(v: SkyContext, p: Pass, d: LinkDraw, late = false
     // раскрытого союза
     if (!(Math.min(unionAlpha(v, p, d, n.union).a, d.alpha) > 0.5 || d.expanded.has(n.union))) continue;
     if (!nodeOnSky(v, p, d, n.union)) continue;
-    const lab = unionLabel(v, n, x, y, words);
+    const lab = unionLabel(v, n, x, y, words, said);
     if (!lab) continue;
-    const a = Math.min(1, p.emph(n.owner), p.emph(n.from), lab.person ? p.emph(lab.person) : 1);
+    const a = Math.min(1, p.emph(n.owner), p.emph(n.from), lab.whose ? p.emph(lab.whose) : 1);
     const text = lab.text;
     const b = putLinkText(v, p, { text, x: x + 5, ax: x, y, dir: 0, right: true, id: n.union, side2: true, person: lab.person }, 1, a < 0.99);
+    if (b && lab.person) said.push({ id: lab.person, x, y });
     if (b) out.push(`${text}@${Math.round(x)},${Math.round(y)}`);
   }
   // первый проход запоминает свои подписи, второй пишет все вместе

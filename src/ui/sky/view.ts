@@ -1210,11 +1210,10 @@ export function holdAnchor(a: Anchor, vertical = false) {
 export function screenOf(id: string): { x: number; y: number } | null {
   const s = skyRef.current;
   if (!s || !s.model) return null;
-  const x = s.nodeX(id);
-  const n = s.node(id);
-  if (x === null || !n) return null;
-  // звезда — в полосе рождения (решение 173; src/engine/stays.ts)
-  return { x: s.cam.sx(x), y: s.cam.sy(starLaneOf(n)) };
+  const i = s.indexOf(id);
+  if (i === undefined) return null;
+  // место нарисованной звезды (Sky.starY: полоса рождения узла кадра, решение 173) — то же, что пишет canvas[data-stars]
+  return { x: s.cam.sx(s.X0[i]), y: s.starY(i) };
 }
 
 /** Поля, в которых звезда считается «видной»: справа — место для имени (IX-08). */

@@ -164,23 +164,71 @@ export const sky13: Scenario[] = [
       };
       // строки детей — по подписям имён кадра (canvas[data-label-boxes] «id:x,y,w,h»): мелкие звёзды в списке неба
       // не значатся, а подпись стоит в строке своей звезды
-      const raw = (await p.locator('.sky canvas').getAttribute('data-label-boxes')) ?? '';
-      const at = new Map(
-        raw
+      const childRows = async () => {
+        const raw = (await p.locator('.sky canvas').getAttribute('data-label-boxes')) ?? '';
+        const at = new Map(
+          raw
+            .split(';')
+            .filter(Boolean)
+            .map((q) => {
+              const i = q.lastIndexOf(':');
+              const [, y, , h] = q.slice(i + 1).split(',').map(Number);
+              return [q.slice(0, i), y + h / 2] as const;
+            }),
+        );
+        const out: { id: string; g: string; y: number }[] = [];
+        for (const [g, ids] of Object.entries(groups))
+          for (const id of ids) {
+            const y = at.get(id);
+            if (y !== undefined) out.push({ id, g, y });
+          }
+        return out;
+      };
+      // этап 15 («Отчий дом», решение 173): Халев рождается в доме Есрома и переходит в свой дом — его жёны и дети
+      // стоят там, выше его звезды; небо — вниз (перетаскиванием), пока дети не покажутся
+      let ys = await childRows();
+      const box = (await p.locator('.sky canvas').boundingBox())!;
+      // строка дома — по корням черт браков Халева (canvas[data-links], вид bar: первая точка — на его следе)
+      const KH = 'khalev-syn-esroma';
+      const roots = async () =>
+        (((await p.locator('.sky canvas').getAttribute('data-links')) ?? '') as string)
           .split(';')
-          .filter(Boolean)
-          .map((q) => {
-            const i = q.lastIndexOf(':');
-            const [, y, , h] = q.slice(i + 1).split(',').map(Number);
-            return [q.slice(0, i), y + h / 2] as const;
-          }),
-      );
-      const ys: { id: string; g: string; y: number }[] = [];
-      for (const [g, ids] of Object.entries(groups))
-        for (const id of ids) {
-          const y = at.get(id);
-          if (y !== undefined) ys.push({ id, g, y });
+          .map((q) => q.split('|'))
+          .filter((q) => q[0] === 'bar' && q[2]?.startsWith(`s.${KH}.`) && q[2].endsWith(`.${KH}`))
+          .map((q) => q[3].split(',').map(Number));
+      const drag = async (dy: number) => {
+        const step = Math.max(-box.height / 3, Math.min(box.height / 3, dy));
+        const x0 = box.x + box.width * 0.85;
+        await p.mouse.move(x0, box.y + box.height / 2 - step / 2);
+        await p.mouse.down();
+        await p.mouse.move(x0, box.y + box.height / 2, { steps: 4 });
+        await p.mouse.move(x0, box.y + box.height / 2 + step / 2, { steps: 4 });
+        await p.mouse.up();
+        await p.waitForTimeout(700);
+      };
+      if (ys.length < 4) {
+        let rs = await roots();
+        for (let k = 0; k < 12 && !rs.length; k++) {
+          await drag(box.height / 3);
+          rs = await roots();
         }
+        // дом — к середине неба, затем ближе (колесо у его середины): подписи детей видны на масштабе семьи
+        for (let k = 0; k < 6 && rs.length; k++) {
+          const dy = box.height / 2 - rs[0][1];
+          if (Math.abs(dy) < 40) break;
+          await drag(dy);
+          rs = await roots();
+        }
+        if (rs.length) {
+          const cx = rs.reduce((a, q) => a + q[0], 0) / rs.length;
+          for (let k = 0; k < 4 && (await childRows()).length < 4; k++) {
+            await p.mouse.move(box.x + cx, box.y + box.height / 2);
+            await p.mouse.wheel(0, -240);
+            await p.waitForTimeout(1200);
+          }
+        }
+        ys = await childRows();
+      }
       if (ys.length < 4) return fail(`детей Халева в окне мало: ${ys.map((q) => q.id).join(', ')}`);
       const order = [...ys].sort((a, b) => a.y - b.y).map((q) => q.g);
       let runs = 1;

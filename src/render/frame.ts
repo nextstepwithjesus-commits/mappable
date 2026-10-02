@@ -1060,18 +1060,21 @@ export function placeWayfinding(v: SkyContext, s: SkyState, p: Pass | null): Edg
 export const TENT_POINTERS_MAX = 4;
 /** Имён в указателе шатра — не больше стольких, дальше «и ещё N». */
 const TENT_NAMES = 3;
+/** Открытое небо уже стольких px — узкое: указателей шатра по одному на сторону, с одним именем. */
+const NARROW_SKY = 600;
 
 /** Строка указателя шатра: «Лия: Рувим, Симеон, Левий», «Валла: Дан и ещё 1», «Иаков и Рахиль». */
-export function tentText(union: string, ids: readonly string[]): string {
+export function tentText(union: string, ids: readonly string[], names = TENT_NAMES): string {
   const u = ALL_UNIONS.byId.get(union);
   const name = (id: string) => byId.get(id)?.name ?? id;
   if (!u) return ids.map(name).join(', ');
   const kids = ids.filter((id) => u.kids.includes(id));
   const parents = ids.filter((id) => !u.kids.includes(id));
-  // заглавие — мать (у кого чей шатёр), а без неё — название союза: «Давид (мать не названа)»
-  const title = u.b ? name(u.b) : unionName(u);
+  // заглавие — мать (у кого чей шатёр), а без неё — отец: «Давид: Иеремоф» (не «Давид (мать не названа): …» —
+  // указатель короче и не закрывает имён на узком небе)
+  const title = u.b ? name(u.b) : u.a ? name(u.a) : unionName(u);
   if (!kids.length) return parents.length === 1 && u.a && u.b ? name(parents[0]) : unionName(u);
-  const shown = kids.slice(0, TENT_NAMES).map(name);
+  const shown = kids.slice(0, names).map(name);
   const more = kids.length - shown.length;
   return `${title}: ${shown.join(', ')}${more > 0 ? ` и ещё ${more}` : ''}`;
 }
@@ -1155,10 +1158,15 @@ function placeTentPointers(v: SkyContext, s: SkyState, p: Pass | null, placed: R
   ctx.save();
   ctx.font = mapFont(T_UI, { sans: true, weight: 500, coarse: v.coarse });
   let rest = TENT_POINTERS_MAX;
+  // узкое небо (телефон): у кромки — один указатель на сторону и одно имя в нём («↓ Давид: Евеар и ещё 5»), иначе
+  // указатели, поставленные раньше подписей, вытесняли бы имена лиц с открытого неба
+  const narrow = W - left < NARROW_SKY;
+  const perSide = new Map<string, number>();
   for (const g of list) {
     const mine = main.has(g.union);
     if (!mine && rest <= 0) break;
-    const label = `${g.arrow} ${tentText(g.union, g.ids)}`;
+    if (narrow && (perSide.get(g.arrow) ?? 0) >= 1) continue;
+    const label = `${g.arrow} ${tentText(g.union, g.ids, narrow ? 1 : TENT_NAMES)}`;
     const tw = ctx.measureText(label).width;
     const along = g.arrow === '↑' || g.arrow === '↓';
     const mid = g.at.reduce((a, b) => a + b, 0) / g.at.length;
@@ -1167,7 +1175,9 @@ function placeTentPointers(v: SkyContext, s: SkyState, p: Pass | null, placed: R
     const lo = along ? left + 6 : top + 18;
     const hi = along ? W - tw - 10 : bottom - 10;
     const taken = [...(s.reserve ?? []), ...placed];
-    const free = (b: Rect) => !hits(b, taken) && !p.placer.glyphsIn(b).some((q) => q.a >= 0.5) && !organs.some((r) => hits(b, [r]));
+    // на узком небе — и с полем для подписей звёзд у указателя (его ставят раньше имён: не вытеснять их)
+    const room = (b: Rect): Rect => (narrow ? { x: b.x - 30, y: b.y - 8, w: b.w + 60, h: b.h + 16 } : b);
+    const free = (b: Rect) => !hits(b, taken) && !p.placer.glyphsIn(room(b)).some((q) => q.a >= 0.5) && !organs.some((r) => hits(b, [r]));
     let lx = x0;
     let ly = y0;
     let found = free(edgeBox(lx, ly, tw));
@@ -1188,6 +1198,7 @@ function placeTentPointers(v: SkyContext, s: SkyState, p: Pass | null, placed: R
     out.push({ ...b, id: g.ids[0], label, lx, ly, ids: g.ids, union: g.union });
     placed.push(b);
     p.placer.add(b);
+    perSide.set(g.arrow, (perSide.get(g.arrow) ?? 0) + 1);
     if (!mine) rest--;
   }
   ctx.restore();

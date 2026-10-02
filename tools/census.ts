@@ -1818,7 +1818,8 @@ if (process.env.CENSUS_MAIN === '1' && process.argv.includes('--house')) {
     if (v.some((t) => t.startsWith('Я11 (следы)'))) console.log(`  Я11 (следы): ${c.y11list.join('; ')}`);
     const byCheck = new Map<string, Issue[]>();
     for (const q of c.issues) (byCheck.get(q.check) ?? byCheck.set(q.check, []).get(q.check)!).push(q);
-    for (const [k, qs] of byCheck) console.log(`  ${k}: ${qs.slice(0, top).map((q) => q.text).join('; ')}${qs.length > top ? `; ещё ${qs.length - top}` : ''}`);
+    // у Я11 текст общий — с ключами пересекающихся путей
+    for (const [k, qs] of byCheck) console.log(`  ${k}: ${qs.slice(0, top).map((q) => (k === 'Я11' ? `${q.ks} @${Math.round(q.x)},${Math.round(q.y)}` : q.text)).join('; ')}${qs.length > top ? `; ещё ${qs.length - top}` : ''}`);
   }
   const json = arg('json', '');
   if (json) {

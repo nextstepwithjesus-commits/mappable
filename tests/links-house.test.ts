@@ -123,6 +123,8 @@ describe('175, 176: дети — от следа матери; связь цел
     expect(frame.tentText('u:iakov+liya', ['ruvim', 'simeon', 'leviy', 'issakhar']).replace(/ /g, ' ')).toBe('Лия: Рувим, Симеон, Левий и ещё 1');
     expect(frame.tentText('u:iakov+valla', ['dan'])).toBe('Валла: Дан');
     expect(frame.tentText('u:iakov+rakhil', ['iakov'])).toBe('Иаков');
+    // мать не названа — заглавие отец (указатель короче на узком небе)
+    expect(frame.tentText('u:david+', ['ieremof-syn-davida'])).toBe('Давид: Иеромоф');
   });
 });
 
@@ -135,8 +137,9 @@ describe('177, 179: станция ленты у черты брака мате�
       const v = f.d.frame.via.get(pk)!;
       expect(v, pk).toBeTruthy();
       expect(v.union, pk).toBe('u:david+virsaviya');
-      // у черты: в x ромба или правее его на радиус и зазор (мать между отцом и ребёнком — лента мимо ромба)
-      expect(v.x - n.x, pk).toBeGreaterThanOrEqual(-0.5);
+      // у черты: в x ромба (левее не дальше 1,5 px — сдвиг с чужой вертикали) или правее его на радиус и зазор (мать
+      // между отцом и ребёнком — лента мимо ромба)
+      expect(v.x - n.x, pk).toBeGreaterThanOrEqual(-1.5);
       expect(v.x - n.x, pk).toBeLessThanOrEqual(links.NODE_R_MAP + links.RIB_STEP + 0.5);
     }
   });

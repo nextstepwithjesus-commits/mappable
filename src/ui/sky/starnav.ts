@@ -14,7 +14,6 @@ import { keepInView, screenOf } from './view.ts';
 import { collapseUnion, expandUnion, isExpanded, selectUnion, unionById } from '../reveal.ts';
 import { plateSayText } from './text.ts';
 import { openSheetAt } from '../sheet.ts';
-import { starLaneOf } from '../../engine/stays.ts';
 
 // ---------- союзы на небе «набор» (решения 70, 76) ----------
 
@@ -174,8 +173,8 @@ export function starPoints(sky: Sky): (StarPoint & { mag: number; onScreen: bool
     const n = sky.nodes[i];
     if (n.ghost) continue;
     const x = cam.sx(sky.X0[i]);
-    // звезда — в полосе рождения (решение 173)
-    const y = cam.sy(starLaneOf(n));
+    // место нарисованной звезды (Sky.starY: полоса рождения узла кадра, решение 173)
+    const y = sky.starY(i);
     const mag = byId.get(n.person)?.magnitude ?? 6;
     if (sky.reachable(i)) {
       out.push({ id: n.person, x, y, mag, onScreen: true });

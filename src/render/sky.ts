@@ -3257,10 +3257,17 @@ export class Sky implements SkyContext {
     // переходы следов (решения 163, 173): чужое имя не ложится на S-кривую — она такая же чужая линия, как ствол. На небе
     // (решение 178, меньше 7 px на год) переходы бледны и почти отвесны у самых звёзд отчего дома — там они не препятствие:
     // имена главы семьи и отметок поиска иначе не нашли бы места (MAP-06, E10); К5 считает лишь видимое пересечение середины
-    // строки. В режиме «В работе» подписаны все лица набора (J4) — переход чужого лица набора гасится под именем, как след
-    if (p.s.layers.lifelines && !p.s.onlyLines && p.tier >= 1 && !p.work)
+    // строки. В режиме «В работе» подписаны все лица набора (J4) — переход чужого лица набора гасится под именем, как след.
+    // Переходы рода выбранного яркие и на небе (выделение, свечение ветви): они — препятствие и там (Ревекка через «Иаков»)
+    const hlNow = p.s.highlight;
+    const brightGlide = (id: string) => {
+      const k = hlNow?.get(id);
+      return k !== undefined && k !== 'sure' && k !== 'likely';
+    };
+    if (p.s.layers.lifelines && !p.s.onlyLines && !p.work && (p.tier >= 1 || hlNow))
       for (const i of p.vis) {
         if (!hasGlides(this.nodes[i]) || !this.drawn(i)) continue;
+        if (p.tier < 1 && !brightGlide(this.nodes[i].person)) continue;
         const own = new Set([this.nodes[i].person]);
         for (const g of this.bendsOf(i) ?? []) {
           if (g.xb < -20 || g.xa > this.cam.w + 20) continue;
