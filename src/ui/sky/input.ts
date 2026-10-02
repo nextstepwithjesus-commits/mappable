@@ -1137,7 +1137,12 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       return;
     }
     // знак свёрнутого (J5): «+N» у следа — развернуть потомков, строка-подпись — развернуть созвездие
+    // палец на имени другого лица (решение 154): раздвинутое до 44 px поле знака свёрнутого («+N» семьи, «+» у имени) его
+    // не перехватывает — только сам знак под пальцем (Т1: «Валла» у скопления детей Рахили)
+    const nameHere = touch ? (sky.labelAt(at.x, at.y, NAME_TAP) ?? nameAt(sky.ledger.boxes, at.x, at.y)) : null;
     const fold = sky.foldHits.find((e) => {
+      const inRaw = at.x >= e.x && at.x <= e.x + e.w && at.y >= e.y && at.y <= e.y + e.h;
+      if (nameHere && nameHere !== e.id && !inRaw) return false;
       const r = touch ? inflate(e, TOUCH_TARGET) : e;
       return at.x >= r.x && at.x <= r.x + r.w && at.y >= r.y && at.y <= r.y + r.h;
     });

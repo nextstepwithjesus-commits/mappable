@@ -946,7 +946,7 @@ export function drawKinArcs(v: SkyContext, p: Pass, id: string, seen: Set<string
     else goldArc(v, a, c, b);
     drawn?.add(`${e.from}>${e.to}:${e.rel}`);
     if (!p.s.layers.labels) continue;
-    // подписи дуг — прямым начертанием (Jost), а не курсивом ролей выбранной связи (решение 167, V-1)
+    // подписи дуг — прямым начертанием гротеска, а не курсивом ролей выбранной связи (решение 167, V-1)
     ctx.font = mapFont(T_MAP_S, { sans: true, coarse: v.coarse });
     // обрывок к лицу вне окна: «↑ Ионафан, дядя» (это лицо — дядя), «↑ сестра Давида» (лицо в окне — сестра) — у конца
     const text = k.stub ? (k.stub.other === e.from ? `${k.stub.arrow} ${nameOf(e.from)}, ${e.rel}` : `${k.stub.arrow} ${e.rel} ${genitive(nameOf(e.to), byId.get(e.to)?.sex === 'f' ? 'f' : 'm')}`) : e.rel;

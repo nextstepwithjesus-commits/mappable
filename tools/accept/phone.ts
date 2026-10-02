@@ -61,6 +61,18 @@ async function swipe(p: Page, x: number, y: number, dy: number, ms: number, step
   await p.waitForTimeout(450);
 }
 /**
+ * Касание пальцем в (x, y) теми же событиями и тем же счётом времени, что и протяжка swipe: после взмаха с явным временем
+ * касание Playwright (своё время событий) браузер иногда не считал касанием — щелчка не было (этап 14, сценарий 152).
+ */
+async function touchTap(p: Page, x: number, y: number) {
+  const cdp = await p.context().newCDPSession(p);
+  const pt = [{ x, y, id: 1, radiusX: 4, radiusY: 4, force: 1 }];
+  const t0 = Date.now() / 1000;
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: pt, timestamp: t0 });
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [], timestamp: t0 + 0.06 });
+  await cdp.detach();
+}
+/**
  * Середина имени в шапке листа — за неё лист тянется. Этап 11 (решение 77): на первом положении (214 px) лист — карточка
  * у звезды, имя — в её шапке (.sheet-dot .dc-nm); выше — шапка листа (.bar-name).
  */
@@ -268,8 +280,12 @@ export const phone: Scenario[] = [
       }
       // этап 14 (решение 155): шапка листа — высотой краткой карточки, и быстрый взмах на 60 px может донести лист до 100 %;
       // взмах вниз закрывает лист только с шапки — сначала «Свернуть»
+      // касание сразу после взмаха браузер тратит на остановку инерции взмаха (жест «остановить бросок») — щелчка нет;
+      // касание — когда инерция прошла
       if ((await sheet(p))?.stop === 'full') {
-        await p.locator('.folio .sheet-bar .bar-toggle').tap();
+        await p.waitForTimeout(1500);
+        const tb = (await p.locator('.folio .sheet-bar .bar-toggle').boundingBox())!;
+        await touchTap(p, tb.x + tb.width / 2, tb.y + tb.height / 2);
         await p.waitForTimeout(600);
       }
       // этап 14, решение 169 (R2-10): взмах вниз с краткой карточки — шапка 104 px, выбор на месте (прежде — лист закрыт и
@@ -279,9 +295,13 @@ export const phone: Scenario[] = [
       s = (await sheet(p))!;
       if (!s || s.stop !== 'head' || s.h > 104.5) return fail(`взмах вниз: лист ${s?.stop} ${Math.round(s?.h ?? 0)} px, ждали шапку 104 px`);
       if (hashId(p) !== 'david') return fail(`взмах вниз снял выбор: выбрано «${hashId(p)}»`);
-      await p.locator('.folio .sheet-bar .close').first().tap();
-      await p.waitForTimeout(600);
-      if (hashId(p)) return fail(`«×» не снял выбор: «${hashId(p)}»`);
+      const x = p.locator('.app > .folio .sheet-bar > .close').first();
+      const xb = await x.boundingBox();
+      if (!xb) return fail('на шапке листа нет «×»');
+      await p.waitForTimeout(1500);
+      await touchTap(p, xb.x + xb.width / 2, xb.y + xb.height / 2);
+      await p.waitForTimeout(900);
+      if (hashId(p)) return fail(`«×» не снял выбор: «${hashId(p)}»; лист ${(await sheet(p))?.stop}`);
       if (await p.locator('.folio:not([hidden])').count()) return fail('после «×» лист остался');
       return pass(`быстрые 60 px — ${flung}; вниз — шапка ${Math.round(s.h)} px с выбором, «×» закрыл`);
     },
