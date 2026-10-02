@@ -1026,12 +1026,14 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): Label
   // нет чужого знака, соседняя подпись на строке не ближе 0,5 кегля, через середину строки не идут связи, ленты и дуги
   // 'fan' — те же правила, что у 'soft', но места вокруг всей звезды (веер выносок, отвесные выноски)
   // 'cut' — верхняя ступень 164 без чистого места: принадлежность и знаки — как в 'kin', линия под именем разрывается
-  type Mode = 'clear' | 'free' | 'soft' | 'lane' | 'fan' | 'kin' | 'cut' | 'hard' | 'none';
+  // 'mine' — последний строгий проход: те же правила, но своя черта брака под именем не запрет — имя ставится, а черта
+  // под ним прерывается (защищённый текст, решение 139; у многожёнца черты стоят у самой звезды — сценарий 208)
+  type Mode = 'clear' | 'free' | 'soft' | 'lane' | 'fan' | 'mine' | 'kin' | 'cut' | 'hard' | 'none';
   const offRibbon = p.offRibbon;
   const onLink = p.onLink;
   const onLine = p.onLine;
   // 'lane' — как 'soft', но лента под серединой строки допустима: лицо линии Мессии стоит на своей ленте
-  const strict = (m: Mode) => m === 'clear' || m === 'free' || m === 'soft' || m === 'lane' || m === 'fan';
+  const strict = (m: Mode) => m === 'clear' || m === 'free' || m === 'soft' || m === 'lane' || m === 'fan' || m === 'mine';
   // одни и те же места проверяются в нескольких проходах: принадлежность и линии — один раз на место
   const memo = new Map<string, boolean>();
   const once = (k: string, f: () => boolean) => {
@@ -1044,11 +1046,11 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): Label
   const owned = (b: Rect, leader: boolean) => once(`o${key(b)}${leader ? 'x' : ''}`, () => p.placer.owns(b, own, q.id, size, leader));
   /** через середину строки идут связи, ленты, дуги (lane — своя лента допустима) */
   // связи и маршруты — по всей строке (рамка без поля ореола), ленты — по середине строки (решение 163)
-  const crossed = (b: Rect, lane: boolean) =>
-    once(`l${key(b)}${lane ? 'r' : ''}`, () => !!onLine?.({ x: b.x + 1.5, y: b.y + 1.5, w: Math.max(0, b.w - 3), h: Math.max(0, b.h - 3) }, q.id, !lane, false, midBand(b, size)));
+  const crossed = (b: Rect, lane: boolean, mine = false) =>
+    once(`l${key(b)}${lane ? 'r' : ''}${mine ? 'm' : ''}`, () => !!onLine?.({ x: b.x + 1.5, y: b.y + 1.5, w: Math.max(0, b.w - 3), h: Math.max(0, b.h - 3) }, q.id, !lane, false, midBand(b, size), !mine));
   // правила места (решения 140, 141, 163): имя читается своим, через строку не идут связи и маршруты, через её середину —
   // ленты; на чужой вертикали имя не стоит ни на каком масштабе (разрыв под ореолом не оправдывает пересечения)
-  const rules = (b: Rect, m: Mode, leader: boolean) => owned(b, leader) && !crossed(b, m === 'lane');
+  const rules = (b: Rect, m: Mode, leader: boolean) => owned(b, leader) && !crossed(b, m === 'lane', m === 'mine');
   // явно раскрытое имя без правил: чужая звезда у имени — хуже, чем линия под ним (её под раскрытым именем прервёт разрыв)
   const ruleCost = (b: Rect, leader: boolean) => (owned(b, leader) ? 0 : 0.6) + (crossed(b, false) ? 0.5 : 0);
   const ok = (b: Rect, m: Mode, leader = false) =>
@@ -1075,7 +1077,7 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): Label
       if (p.placer.clash(pt, false, 99, q.id)) return false;
       // выноска лица линии Мессии выходит из звезды на его ленте: лента у её начала — своя
       // (дальняя выноска лица линии и на своём проходе 'lane' ленты не пересекает — только у своей звезды: до 14 px от знака)
-      if (strict(m) && (p.placer.glyphsIn(pt).some((g) => g.id !== q.id && g.a >= GLYPH_SEEN) || onLine?.(pt, q.id, (m !== 'lane' || (!!o.wide && d - lead0 > LEADER_MAX)) && !(spineName && t < lead0 + (o.wide ? 14 : 8)), false))) return false;
+      if (strict(m) && (p.placer.glyphsIn(pt).some((g) => g.id !== q.id && g.a >= GLYPH_SEEN) || onLine?.(pt, q.id, (m !== 'lane' || (!!o.wide && d - lead0 > LEADER_MAX)) && !(spineName && t < lead0 + (o.wide ? 14 : 8)), false, undefined, m !== 'mine'))) return false;
       // родня без места по правилам: выноска всё равно не идёт через чужой знак; выноска не пересекает связи (решение 163)
       if ((m === 'kin' || m === 'cut') && p.placer.glyphsIn(pt).some((g) => g.id !== q.id && g.a >= GLYPH_SEEN)) return false;
       if ((m === 'kin' || m === 'cut' || m === 'hard') && onLine?.(pt, q.id, false)) return false;
@@ -1124,14 +1126,14 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): Label
   const fan: Mode[] = v.viewMoving ? [] : ['fan'];
   const cut: Mode[] = o.top && !v.viewMoving ? ['cut'] : [];
   const base: Mode[] = o.force
-    ? [...free, 'soft', ...lane, ...cut, 'hard', 'none']
+    ? [...free, 'soft', ...lane, 'mine', ...cut, 'hard', 'none']
     : reveal
-      ? [...free, 'soft', ...lane, ...cut, 'hard']
+      ? [...free, 'soft', ...lane, 'mine', ...cut, 'hard']
       : o.kin
-        ? [...free, 'soft', ...lane, ...fan, 'kin', ...cut]
+        ? [...free, 'soft', ...lane, ...fan, 'mine', 'kin', ...cut]
         : o.fan
-          ? [...free, 'soft', ...lane, ...fan]
-          : [...free, 'soft', ...lane];
+          ? [...free, 'soft', ...lane, ...fan, 'mine']
+          : [...free, 'soft', ...lane, 'mine'];
   const passes: Mode[] = offRibbon && spineName ? ['clear', ...base] : base;
   const vert = o.vertical ?? lineSideOf(q.id);
   const sides = vert === -1 ? o.sides.filter((x) => x !== 'b') : vert === 1 ? o.sides.filter((x) => x !== 't') : o.sides;
@@ -1255,8 +1257,11 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): Label
   // (лицо линии Мессии на своей ленте — и лента под серединой его имени прерывается, как след: инвариант 15). Явно
   // раскрытое имя (выбранное, наведённое, фокус), вставшее без правил: и связи под его серединой прерываются
   const kn = (strict(mode) || mode === 'kin' ? p.knock : undefined) ?? (reveal || mode === 'kin' ? p.knockReveal : undefined);
+  // своя черта брака под именем ('mine'): разрыв по всей рамке + 2 px — черта прерывается, имя читается (решение 139)
+  const ground = p.knockReveal ?? p.knock;
+  if (mode === 'mine' && ground && crossed(at.box, false)) ground({ x: at.box.x - 2, y: at.box.y - 2, w: at.box.w + 4, h: at.box.h + 4 });
   // верхняя ступень 164 на чужой линии ('cut', и раскрытое имя поверх линии): разрыв по всей рамке + 3 px (исключение 163)
-  if (o.top && !strict(mode) && mode !== 'kin' && crossed(at.box, false) && p.knockReveal) {
+  else if (o.top && !strict(mode) && mode !== 'kin' && crossed(at.box, false) && p.knockReveal) {
     p.knockReveal({ x: at.box.x - 3, y: at.box.y - 3, w: at.box.w + 6, h: at.box.h + 6 });
     p.cutNames?.push(q.id);
   } else if (kn) kn(midBand(at.box, size));

@@ -380,7 +380,8 @@ export interface Pass {
    * через рамку строки b идёт линия — связь, дуга родства, призрак, выбранная связь или путь родства; через середину
    * строки band — лента (решения 139, 141, 163): подпись лица id так не ставится
    */
-  onLine?: (b: Rect, id: string, ribbons?: boolean, perp?: boolean, band?: Rect) => boolean;
+  /** ownBars = false — своя черта брака лица не препятствие (последний строгий проход подписи, labels.ts 'mine') */
+  onLine?: (b: Rect, id: string, ribbons?: boolean, perp?: boolean, band?: Rect, ownBars?: boolean) => boolean;
   /** скопления семьи на обзоре (решение 142): лицо старшего → «+N» у его подписи */
   pileText?: Map<string, string>;
   /**
@@ -3295,13 +3296,17 @@ export class Sky implements SkyContext {
       const k = q.ks.split('.');
       return !(k[0] === 'u' && k[1] !== id && k[2] !== id && !q.ends.includes(id));
     };
-    p.onLine = (b, id, rib = true, _perp = false, band = b) =>
+    // своя черта брака лица: она выходит со следа под его именем (решение 163, сценарий 347)
+    const ownBar = (q: LinkPath, id: string) => q.kind === 'bar' && (q.ends.includes(id) || ownLink(q.ks, id));
+    p.onLine = (b, id, rib = true, _perp = false, band = b, ownBars = true) =>
       lh.crosses(b, id) ||
       (!!segs &&
         !!lf &&
         // своя черта брака — тоже препятствие (решение 163): она выходит со следа под именем мужа и режет текст, а не
-        // кончается у звезды, как ствол и зубец к ребёнку
-        (segs.crosses(at(b), id, (q) => !!q && linkOn(q, lf) && q.kind !== 'ribbon' && (q.kind === 'bar' || !ownFor(q, id) || q.ks === hov)) ||
+        // кончается у звезды, как ствол и зубец к ребёнку. Без чистого места (ownBars = false; labels.ts, проход 'mine')
+        // своя черта — не запрет: имя ставится, черта под ним прерывается (защищённый текст, решение 139); у многожёнца
+        // черты стоят у самой звезды, и иначе имени Давида не оставалось места (сценарий 208). Чужие — запрет всегда (163)
+        (segs.crosses(at(b), id, (q) => !!q && linkOn(q, lf) && q.kind !== 'ribbon' && ((q.kind === 'bar' && (ownBars || !ownBar(q, id))) || (q.kind !== 'bar' && !ownFor(q, id)) || q.ks === hov)) ||
           (rib && segs.crosses(at(band), id, (q) => !!q && linkOn(q, lf) && q.kind === 'ribbon')))) ||
       // лента со свечением шире своей нити: середина строки — не ближе 3 px к её полю (ribbons.ts, offStrands: ещё 3 px)
       (rib && !!off && !off({ x: band.x, y: band.y - 3, w: band.w, h: band.h + 6 }));

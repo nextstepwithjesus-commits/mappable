@@ -1,0 +1,86 @@
+{
+  "about": "Рассказ «От Адама до Иисуса Христа» (этап 16, решение 187): восемь шагов по эпохам. У шага — эпоха (data/epochs.json), опорное лицо (выбирается на небе: цвет ветвей по решениям 69 и 183), кадр (лица, которые вписываются, и годы окна — исторические), один-два стиха (refs) и строки из графа (facts: branches — ветви опорного лица по союзам; lines — ленты Мессии у опорного лица). Текст шага собирается только из данных: описание эпохи, стихи Синодального перевода, строки графа. Проверка — tools/validate.ts.",
+  "title": "Рассказ: от Адама до Иисуса Христа",
+  "steps": [
+    {
+      "id": "adam",
+      "short": "Адам",
+      "title": "Родословие Адама",
+      "epoch": "antediluvian",
+      "focus": "adam",
+      "frame": { "persons": ["adam", "sif", "enos", "enokh", "mafusal", "lamekh", "noy"], "years": [-4250, -2900] },
+      "refs": ["Быт 5:1"],
+      "facts": ["lines"]
+    },
+    {
+      "id": "patriarchs",
+      "short": "Патриархи",
+      "title": "Патриархи",
+      "epoch": "patriarchs",
+      "focus": "avraam",
+      "frame": { "persons": ["farra", "avraam", "isaak", "iakov", "izmail"], "years": [-2250, -1830] },
+      "refs": ["Быт 15:5"],
+      "facts": ["branches"]
+    },
+    {
+      "id": "tribes",
+      "short": "Колена",
+      "title": "Двенадцать колен",
+      "epoch": "patriarchs",
+      "focus": "iakov",
+      "frame": { "persons": ["iakov", "ruvim", "simeon", "leviy", "iuda", "issakhar", "zavulon", "dan", "neffalim", "gad", "asir", "iosif", "veniamin"], "years": [-2030, -1700] },
+      "refs": ["Быт 49:28"],
+      "facts": ["branches"]
+    },
+    {
+      "id": "exodus",
+      "short": "Исход",
+      "title": "Исход",
+      "epoch": "exodus",
+      "focus": "moisey",
+      "frame": { "persons": ["amram", "iokhaveda", "moisey", "aaron"], "years": [-1600, -1380] },
+      "refs": ["Исх 12:40-41"],
+      "facts": ["branches"]
+    },
+    {
+      "id": "judges",
+      "short": "Судьи",
+      "title": "Судьи",
+      "epoch": "judges",
+      "focus": "vooz",
+      "frame": { "persons": ["salmon", "vooz", "ruf", "ovid", "iessey", "gedeon", "samuil"], "years": [-1400, -1030] },
+      "refs": ["Суд 2:16", "Руф 4:17"],
+      "facts": ["lines"]
+    },
+    {
+      "id": "kingdom",
+      "short": "Царство",
+      "title": "Единое царство",
+      "epoch": "united",
+      "focus": "david",
+      "frame": { "persons": ["iessey", "david", "virsaviya", "solomon", "nafan-syn-davida", "rovoam"], "years": [-1090, -900] },
+      "refs": ["2Цар 7:12-13"],
+      "facts": ["lines"]
+    },
+    {
+      "id": "exile",
+      "short": "Плен",
+      "title": "Плен и возвращение",
+      "epoch": "exile",
+      "focus": "zorovavel",
+      "frame": { "persons": ["iekhoniya", "salafiil", "zorovavel"], "years": [-660, -440] },
+      "refs": ["Мф 1:12"],
+      "facts": ["lines"]
+    },
+    {
+      "id": "gospel",
+      "short": "Евангелие",
+      "title": "Евангельская история",
+      "epoch": "christ",
+      "focus": "iisus",
+      "frame": { "persons": ["iakov-otets-iosifa", "iliy-otets-marii", "iosif-muzh-marii", "mariya", "iisus"], "years": [-110, 40] },
+      "refs": ["Мф 1:17", "Лк 3:23"],
+      "facts": ["lines"]
+    }
+  ]
+}
