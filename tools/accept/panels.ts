@@ -459,7 +459,10 @@ export const panels: Scenario[] = [
       const sh = sheet(p);
       const probe = () =>
         sh.evaluate((el) => {
-          const crop = el.querySelector('.legend-row canvas.legend-sample') as HTMLCanvasElement;
+          // вырезка неба — первый образец раздела «Небо» (этап 15: раньше него — образцы «Семьи на небе», прозрачные холсты
+          // поверх фона CSS, решение 180)
+          const head = el.querySelector('#legend-sky')!;
+          const crop = [...el.querySelectorAll('.legend-row canvas.legend-sample')].find((c) => head.compareDocumentPosition(c) & Node.DOCUMENT_POSITION_FOLLOWING) as HTMLCanvasElement;
           const mag = el.querySelector('.legend-mag canvas') as HTMLCanvasElement;
           const sky = getComputedStyle(document.documentElement).getPropertyValue('--sky').trim();
           // фон рамки — у левого края вырезки, знак величины 0 — в середине своего холста
@@ -469,7 +472,10 @@ export const panels: Scenario[] = [
         });
       const hex = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
       const near = (a: number[], b: number[]) => a.every((v, i) => Math.abs(v - b[i]) <= 6);
-      await sh.locator('.legend-row canvas.legend-sample').first().scrollIntoViewIfNeeded();
+      await sh.evaluate((el) => {
+        const head = el.querySelector('#legend-sky')!;
+        ([...el.querySelectorAll('.legend-row canvas.legend-sample')].find((c) => head.compareDocumentPosition(c) & Node.DOCUMENT_POSITION_FOLLOWING) as HTMLElement).scrollIntoView({ block: 'center' });
+      });
       await p.waitForTimeout(400);
       const night = await probe();
       await p.locator('.top > .seg button', { hasText: 'День' }).click();
