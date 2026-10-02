@@ -132,7 +132,7 @@ export const map: Scenario[] = [
   // вкладка с адресом вида «#/david~y-1010~w50~l0~s1».
   ...([
     [140, 'E1, U12: 1440 — 0 наложений подписей на обзоре, в масштабе эпохи, поколений и семьи; с Давидом и без', undefined],
-    [141, 'E1, U12: телефон 390×844 — 0 наложений подписей на обзоре и трёх масштабах; на масштабе семьи подписано ≥ 90 %', { width: 390, height: 844, touch: true }],
+    [141, 'E1, U12, решение 163: телефон 390×844 — 0 наложений подписей на обзоре и трёх масштабах; на масштабе семьи без выбранного подписано ≥ 75 % видимых звёзд (имя не на чужой вертикали), каждый неподписанный — в canvas[data-hidden]', { width: 390, height: 844, touch: true }],
   ] as const).map(([n, title, view]) => ({
     n,
     title,
@@ -153,7 +153,14 @@ export const map: Scenario[] = [
           const [, m] = ((await q.locator('.sky').getAttribute('data-labels')) ?? '0/0').split('/').map(Number);
           const [named, stars] = ((await q.locator('.sky canvas').getAttribute('data-named')) ?? '0/0').split('/').map(Number);
           if (m !== 0) return fail(`${name}: наложений подписей ${m}`);
-          if (family && stars > 0 && named / stars < 0.9) return fail(`${name}: подписано ${named} из ${stars} видимых звёзд`);
+          // решение 163 (второй круг): на узком небе имя не встаёт на чужую вертикаль — порог семьи 75 %, неподписанные — в
+          // списке скрытых (диктор читает, касание и фокус ставят подпись); на широком — прежние 90 %
+          const narrow = (q.viewportSize()?.width ?? 1440) < 600;
+          if (family && stars > 0 && named / stars < (narrow ? 0.75 : 0.9)) return fail(`${name}: подписано ${named} из ${stars} видимых звёзд`);
+          if (family && narrow) {
+            const hidden = ((await q.locator('.sky canvas').getAttribute('data-hidden')) ?? '').split(' ').filter(Boolean);
+            if (hidden.length < stars - named) return fail(`${name}: без подписи и не в списке скрытых ${stars - named - hidden.length}`);
+          }
           notes.push(`${name} ${named}/${stars}`);
         } finally {
           await q.close();

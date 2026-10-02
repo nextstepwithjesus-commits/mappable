@@ -377,6 +377,8 @@ export interface Pass {
    * имя важнее облака под ним; нет — в «только линиях» (решения 139, 141)
    */
   knockReveal?: (b: Rect) => void;
+  /** имена верхней ступени 164, под которыми чужая линия разорвана по всей рамке + 3 px (исключение 163; К5 — отдельно) */
+  cutNames?: string[];
   /** лента по маршруту под прямоугольником (px холста): подписи связей обходят саму ленту, а не рамку шага (§ 3) */
   onRibbon?: (b: Rect) => boolean;
 }
@@ -1861,6 +1863,7 @@ export class Sky implements SkyContext {
       placer: new Placer(),
       labeled: new Set(),
       nameBoxes: [],
+      cutNames: [],
       ribbonBoxes: [],
       work,
       lines: new Placer(),
@@ -2179,6 +2182,8 @@ export class Sky implements SkyContext {
       // подписи у узлов и обрывков (этап 11, Г8): имя матери у ромба союза, «дочь Ревекка — жена Исаака» — «ключ:текст»
       // (tools/accept/skydraw.ts, 274)
       put('plateTexts', boxes.filter((b) => b.kind === 'plate' && b.text).map((b) => `${b.id ?? ''}:${b.text.replace(/\u00a0/g, ' ')}`).join('|'));
+      // имена верхней ступени 164 с разрывом чужой линии по всей рамке (исключение 163; tools/collide.ts, К5 — отдельно)
+      put('cutNames', (p.cutNames ?? []).join(' '));
       // места подписей у ромбов (решение 160; tools/collide.ts, К4): «союз:x,y,w,h» через «|»
       put('plateBoxes', boxes.filter((b) => b.kind === 'plate' && b.text).map((b) => `${b.id ?? ''}:${[b.x, b.y, b.w, b.h].map(Math.round).join(',')}`).join('|'));
       // звёзды неба «набор» в этом кадре (решение 76; tools/accept/polish6.ts): «лицо:x,y» — список неба для клавиатуры
@@ -2877,10 +2882,10 @@ export class Sky implements SkyContext {
     if (!p.s.onlyLines) p.knockReveal = ground;
     const at = (b: Rect): Rect => ({ x: b.x - lf!.dx, y: b.y - lf!.dy, w: b.w, h: b.h });
     p.onLine = (b, id, rib = true, _perp = false, band = b) =>
-      (lh.crosses(b, id) && ((globalThis as { __lab?: Set<string> }).__lab?.has(id) ? (console.log('LAB', id, 'xline route'), true) : true)) ||
+      lh.crosses(b, id) ||
       (!!segs &&
         !!lf &&
-        (segs.crosses(at(b), id, (q) => { const r = !!q && linkOn(q, lf) && q.kind !== 'ribbon' && !ownLink(q.ks, id); if (r && (globalThis as { __lab?: Set<string> }).__lab?.has(id)) console.log('LAB', id, 'xline', q!.kind, q!.ks); return r; }) ||
+        (segs.crosses(at(b), id, (q) => !!q && linkOn(q, lf) && q.kind !== 'ribbon' && !ownLink(q.ks, id)) ||
           (rib && segs.crosses(at(band), id, (q) => !!q && linkOn(q, lf) && q.kind === 'ribbon')))) ||
       // лента со свечением шире своей нити: середина строки — не ближе 3 px к её полю (ribbons.ts, offStrands: ещё 3 px)
       (rib && !!off && !off({ x: band.x, y: band.y - 3, w: band.w, h: band.h + 6 }));

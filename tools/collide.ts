@@ -38,7 +38,9 @@
  *  К3 линии, нарисованные поверх текста; имя выбранного перечёркнуто — 0; 0;
  *  К4 принадлежность: чужой знак ближе, вплотную, выноска с чужим ближе, далеко без выноски, у подписи у ромба чужой
  *     знак ближе её точки (решение 160) — 0;
- *  К5 связь, лента, дуга или жёлтая связь через середину строки имени лица — не больше 2 % имён сцены;
+ *  К5 связь, лента, дуга или жёлтая связь через середину строки имени лица — не больше 2 % имён сцены; связь и выбранная
+ *     связь — по всей строке, и замаскированные тоже (решение 163); разрыв чужой линии по всей рамке имени верхней ступени
+ *     164 + 3 px — отдельной строкой, не нарушение;
  *  К6 имена семьи под оверлеем; срезанные краем оверлея подписи — 0; 0;
  *  К7 зазор от кольца выбранного до его имени — не меньше 2 px;
  *  К8 выносок длиннее 40 px — 0, кроме опорных лиц величины 0 на обзоре без выбранного (до 100 px, Иисус Христос —
@@ -159,6 +161,7 @@ async function grab(p: Page) {
       plateBoxes: ds.plateBoxes ?? '',
       dots: ds.dots ?? '',
       motherNames: ds.motherNames ?? '',
+      cutNames: ds.cutNames ?? '',
       linkTexts: ds.linkTexts ?? '',
       notes: ds.notes ?? '',
       named: ds.named ?? '',
@@ -321,6 +324,8 @@ interface Line {
   holes: Box[];
   /** цвет (для разбора находок) */
   col: string;
+  /** ключ связи из журнала (canvas[data-links]), если линия — связь */
+  ks?: string;
 }
 
 /** Цвет операции; у градиента — цвет его середины (REC: «grad:цвет»), без точек — «grad». */
@@ -595,8 +600,9 @@ function parse(g: Grab) {
   for (const L of lines) {
     if (L.kind !== 'line') continue;
     let hitKind = '';
+    let hitKs = '';
     const hit = L.segs.some(([x0, y0, x1, y1]) =>
-      linkSegs.some(({ seg: s, kind }) => {
+      linkSegs.some(({ seg: s, kind, ks }) => {
         const vert = Math.abs(x1 - x0) < 0.6 && Math.abs(s[2] - s[0]) < 0.6 && Math.abs(x0 - s[0]) < 1.2;
         const hor = Math.abs(y1 - y0) < 0.6 && Math.abs(s[3] - s[1]) < 0.6 && Math.abs(y0 - s[1]) < 1.2;
         const ok = vert
@@ -604,13 +610,19 @@ function parse(g: Grab) {
           : hor
             ? Math.min(Math.max(x0, x1), Math.max(s[0], s[2])) - Math.max(Math.min(x0, x1), Math.min(s[0], s[2])) > 2
             : false;
-        if (ok) hitKind = kind;
+        if (ok) {
+          hitKind = kind;
+          hitKs = ks;
+        }
         return ok;
       }),
     );
     // путь ленты по маршрутам связей (журнал «ribbon|…») — лента, а не связь: её нить приглушённого цвета иначе считалась бы
     // связью через имя лица линии
-    if (hit) L.kind = hitKind.startsWith('ribbon/') ? 'ribbon' : 'link';
+    if (hit) {
+      L.kind = hitKind.startsWith('ribbon/') ? 'ribbon' : 'link';
+      L.ks = hitKs;
+    }
   }
   return { vp, glyphs, texts, lines, circles, knocks, nodes, labelBoxes, raw };
 }
@@ -634,6 +646,27 @@ const MAG0 = (() => {
     return new Set<string>();
   }
 })();
+/** Родители лиц (src/generated/atlas.json, f, m): своя ли связь лицу (решение 163; как labels.ts, ownLink). */
+const PARENTS = (() => {
+  try {
+    const a = JSON.parse(readFileSync(join(ROOT, 'src/generated/atlas.json'), 'utf8')) as { persons: { id: string; f?: string; m?: string }[] };
+    return new Map(a.persons.map((q) => [q.id, { f: q.f ?? null, m: q.m ?? null }]));
+  } catch {
+    return new Map<string, { f: string | null; m: string | null }>();
+  }
+})();
+/** Связь своя для лица: он супруг союза, ребёнок по этой связи или ребёнок этих родителей (labels.ts, ownLink). */
+function ownLink(ks: string | undefined, id: string): boolean {
+  const k = (ks ?? '').split('.');
+  if (k.length < 3 || !(k[0] === 'u' || k[0] === 'k' || k[0] === 's')) return false;
+  const [a, b] = [k[1], k[2]];
+  if (a === id || b === id || (k.length > 4 && k[4] === id && k[0] === 'k')) return true;
+  // черта брака родителей — не линия ребёнка: имя на ней читалось бы супругом (Г4; MAP-76)
+  if (k[0] === 's') return false;
+  const q = PARENTS.get(id);
+  if (!q) return false;
+  return (q.f ? q.f === a : a === '_') && (q.m ? q.m === b : b === '_') && !!(q.f || q.m);
+}
 /** Имена лиц (src/generated/atlas.json, n): своя звезда подписи у ромба — та, чьё имя в подписи (решение 160). */
 const NAMES = (() => {
   try {
@@ -773,6 +806,8 @@ function measure(g: Grab, P: Parsed) {
   const strict: Record<string, number> = {};
   const strictSeen = new Set<string>();
   const k5 = new Set<string>();
+  const k5cut = new Set<string>();
+  const cutSet = new Set(g.cutNames.split(' ').filter(Boolean));
   const over: Record<string, number> = {};
   let ltStar = 0;
   let ltSel = 0;
@@ -802,7 +837,7 @@ function measure(g: Grab, P: Parsed) {
         }
         // К5 по решению 163: связь, дуга, выбранная связь — по всей строке имени, и выноска чужой подписи; пересечение,
         // спрятанное ореолом, разрывом под именем или вырезом, тоже считается (R1-04: разрыв у имени читается концом связи)
-        if (own && (K5_FULL.has(L.kind) || isLeader(L)) && !k5.has(o)) {
+        if (own && (K5_FULL.has(L.kind) || isLeader(L)) && !k5.has(o) && !(L.kind === 'link' && ownLink(L.ks, own))) {
           let full = 0;
           let fx = 0;
           let fy = 0;
@@ -815,7 +850,15 @@ function measure(g: Grab, P: Parsed) {
               full += l;
               [fx, fy] = clipMid(x0, y0, x1, y1, core);
             }
-          if (full >= 3) {
+          // верхняя ступень 164 (canvas[data-cut-names]): чужая линия разорвана по всей рамке имени + 3 px — отдельной
+          // строкой «разрыв под именем верхней ступени», если разрыв (заливка фоном после линии) действительно её покрывает
+          const covered = (px: number, py: number) => knocks.some((k) => k.i > L.i && px >= k.box.x0 - 0.5 && px <= k.box.x1 + 0.5 && py >= k.box.y0 - 0.5 && py <= k.box.y1 + 0.5);
+          if (full >= 3 && cutSet.has(own) && !isLeader(L) && covered(fx, fy) && covered(core.x0 - 2, (core.y0 + core.y1) / 2) && covered(core.x1 + 2, (core.y0 + core.y1) / 2)) {
+            if (!k5cut.has(o)) {
+              k5cut.add(o);
+              F.push({ cls: '5 разрыв под именем верхней ступени', what: `${L.kind} разорвана под «${label(o)}» (${full.toFixed(0)} px)`, x: fx, y: fy });
+            }
+          } else if (full >= 3) {
             k5.add(o);
             F.push({ cls: '5 К5 линия через середину имени', what: `${isLeader(L) ? 'выноска' : L.kind} через строку «${label(o)}» (${full.toFixed(0)} px, по всей строке)`, x: fx, y: fy });
           }
@@ -841,7 +884,7 @@ function measure(g: Grab, P: Parsed) {
           }
           // К5: связь, лента, дуга или жёлтая связь через середину строки ЧУЖОГО имени (лента под именем лица линии
           // Мессии — его своя: она прерывается под именем в замере класса 5 «строго», но в порог не входит)
-          if (sl >= 3 && own && K5_KINDS.has(L.kind) && !(L.kind === 'ribbon' && SPINE.has(own)) && !k5.has(o)) {
+          if (sl >= 3 && own && K5_KINDS.has(L.kind) && !(L.kind === 'ribbon' && SPINE.has(own)) && !(L.kind === 'link' && ownLink(L.ks, own)) && !k5.has(o) && !k5cut.has(o)) {
             k5.add(o);
             F.push({ cls: '5 К5 линия через середину имени', what: `${L.kind} через «${label(o)}» (${sl.toFixed(0)} px)`, x: t.box.x0, y: t.box.y0 });
           }
@@ -888,9 +931,24 @@ function measure(g: Grab, P: Parsed) {
       const quads = new Set(same.map((q) => `${Math.sign(q.x - gl.x)}${Math.sign(q.y - gl.y)}`));
       if (quads.size >= 3) R = Math.max(R, h + c.lw / 2);
     }
-    if (R > gl.ext) ringR.set(gl, R);
+    // кольцо — шире самого диска (черта царя над кольцом у выбранного, решение 170, дальше кольца — по ext не сравнивать)
+    const disc = Math.max(0, ...gl.discs.map((d) => Math.hypot(d[0] - gl.x, d[1] - gl.y) + d[2]));
+    if (R > disc) ringR.set(gl, R);
   }
   const extOf = (gl: Glyph) => ringR.get(gl) ?? gl.ext;
+  /**
+   * Зазор от знака до рамки текста по его настоящим частям: диски — по радиусу, отрезки (черта царя, лучи) — по отрезку;
+   * у знака с кольцом состояния — по кольцу. Круг по самой дальней точке (ext) завышал знак царя снизу на длину черты.
+   */
+  const gapOf = (gl: Glyph, b: Box): number => {
+    const R = ringR.get(gl);
+    // у выбранного кольцо — его часть, а черта царя стоит над кольцом (решение 170): ближняя из частей
+    let g = R !== undefined ? distBox(gl.x, gl.y, b) - R : Infinity;
+    for (const [x, y, r] of gl.discs) g = Math.min(g, distBox(x, y, b) - r);
+    for (const [x0, y0, x1, y1, h] of gl.segs)
+      for (let t = 0; t <= 1; t += 0.125) g = Math.min(g, distBox(x0 + (x1 - x0) * t, y0 + (y1 - y0) * t, b) - h);
+    return Number.isFinite(g) ? g : distBox(gl.x, gl.y, b) - gl.ext;
+  };
   // принадлежность: чужая звезда ближе к имени, чем своя
   let amb = 0;
   let tie = 0;
@@ -927,10 +985,8 @@ function measure(g: Grab, P: Parsed) {
         const midX = Math.abs((pb.x0 + pb.x1) / 2 - q.x) < 1.5;
         const top = midX && q.y > pb.y1 && q.y - pb.y1 < r + 9;
         const bot = midX && q.y < pb.y0 && pb.y0 - q.y < r + 6;
-        if (sideR || sideL || top || bot) {
-          own = q;
-          break;
-        }
+        // подходят несколько (подпись между двумя звёздами одного столбца) — ближняя по рамке
+        if ((sideR || sideL || top || bot) && (!own || distBox(q.x, q.y, pb) < distBox(own.x, own.y, pb))) own = q;
       }
       if (!own && leaderSeg) {
         const [x0, y0] = leaderSeg.segs[0];
@@ -938,12 +994,12 @@ function measure(g: Grab, P: Parsed) {
       }
     }
     if (!own) continue;
-    const dOwn = distBox(own.x, own.y, box) - extOf(own);
+    const dOwn = gapOf(own, box);
     let best: Glyph | null = null;
     let bd = Infinity;
     for (const gl of vis) {
       if (gl === own || gl.ghost || gl.a < 0.5) continue;
-      const d = distBox(gl.x, gl.y, box) - extOf(gl);
+      const d = gapOf(gl, box);
       if (d < bd) {
         bd = d;
         best = gl;
@@ -952,7 +1008,8 @@ function measure(g: Grab, P: Parsed) {
     // выноска: тонкий отрезок от края своей звезды к углу подписи (labels.ts, labelStar: side 'x')
     const leaderOf = (L: Line) =>
       isLeader(L) &&
-      L.segs.some(([x0, y0, x1, y1]) => (Math.hypot(x0 - own!.x, y0 - own!.y) < extOf(own!) + 4 && distBox(x1, y1, box) < 4) || (Math.hypot(x1 - own!.x, y1 - own!.y) < extOf(own!) + 4 && distBox(x0, y0, box) < 4));
+      // (начало выноски — у дальней части знака: черта царя над кольцом выбранного, решение 170)
+      L.segs.some(([x0, y0, x1, y1]) => (Math.hypot(x0 - own!.x, y0 - own!.y) < Math.max(extOf(own!), own!.ext) + 4 && distBox(x1, y1, box) < 4) || (Math.hypot(x1 - own!.x, y1 - own!.y) < Math.max(extOf(own!), own!.ext) + 4 && distBox(x0, y0, box) < 4));
     const leadLine = lines.find(leaderOf);
     const hasLeader = !!leadLine;
     if (hasLeader) {
@@ -1060,7 +1117,7 @@ function measure(g: Grab, P: Parsed) {
           if (gl.ghost || gl.a < 0.5 || (gl.id && NAMES.get(gl.id) === name)) continue;
           // точка ромба сама не знак; знак ровно в точке обрывка — его цель (подпись — её имя)
           if (Math.hypot(gl.x - an.x, gl.y - an.y) < 2) continue;
-          const d = distBox(gl.x, gl.y, tb) - (ringR.get(gl) ?? gl.ext);
+          const d = gapOf(gl, tb);
           if (d < 6 && d < dA - 0.5) {
             plateAmb++;
             F.push({ cls: '7 у ромба: чужая звезда ближе', what: `«${text}»: чужая ${gl.id ?? '?'} ${d.toFixed(1)} px, своя точка ${dA.toFixed(1)} px`, x: tb.x0, y: tb.y0 });
@@ -1207,6 +1264,7 @@ function measure(g: Grab, P: Parsed) {
       k5: k5.size,
       longLeaders,
       wideLeaders,
+      k5cut: k5cut.size,
     },
     uiWhat,
     findings: F,
@@ -1546,7 +1604,7 @@ async function main() {
       const bad = verdict(c);
       if (bad.length) failed.push(`${sc.id}: ${bad.join('; ')}`);
       console.log(
-        `${sc.id.padEnd(22)} ${g.hash.slice(0, 48).padEnd(48)} зв ${String(c.stars).padStart(4)} имён ${String(c.starLabels).padStart(3)} | 1:${c.nn}/${c.nnLit} 2:${c.nl} (имя ${c.nlStar}, созвездие ${c.nlGroup}, ◆ ${c.nodeUnder}, черта ${c.kingDash}) 3:${c.ll} (${c.llStar}) вплотную ${c.adj} 5:${c.lt} ${JSON.stringify(c.ltKinds)} поверх ${JSON.stringify(c.ltOver)} строго ${JSON.stringify(c.ltStrict)} | чужая ближе ${c.amb} вплотную ${c.glued} выносок ${c.leader} (чужая ближе ${c.leaderAmb}) далеко ${c.detached} у ромба ${c.plateAmb} | UI выбр ${c.uiSel} концы ${c.uiEnds} зв ${c.uiStars} имён ${c.uiLabels} (ярких ${c.uiLit}, срезано ${c.uiCut}) | выбр. имя ${c.selNamed} поверх ${c.selCovered} | Placer ${c.placerOverlaps} вылет ${c.boxOut}/${c.boxOutMax} ширина ${c.widthRatio.join('/')} | К7 ${c.selRingGap ?? '—'} К8 ${c.longLeaders} (опорных до 100 px ${c.wideLeaders}) К5 ${c.k5} ${note || ''} ${((Date.now() - t0) / 1000).toFixed(0)} с | ${bad.length ? 'НЕТ' : 'да'}`,
+        `${sc.id.padEnd(22)} ${g.hash.slice(0, 48).padEnd(48)} зв ${String(c.stars).padStart(4)} имён ${String(c.starLabels).padStart(3)} | 1:${c.nn}/${c.nnLit} 2:${c.nl} (имя ${c.nlStar}, созвездие ${c.nlGroup}, ◆ ${c.nodeUnder}, черта ${c.kingDash}) 3:${c.ll} (${c.llStar}) вплотную ${c.adj} 5:${c.lt} ${JSON.stringify(c.ltKinds)} поверх ${JSON.stringify(c.ltOver)} строго ${JSON.stringify(c.ltStrict)} | чужая ближе ${c.amb} вплотную ${c.glued} выносок ${c.leader} (чужая ближе ${c.leaderAmb}) далеко ${c.detached} у ромба ${c.plateAmb} | UI выбр ${c.uiSel} концы ${c.uiEnds} зв ${c.uiStars} имён ${c.uiLabels} (ярких ${c.uiLit}, срезано ${c.uiCut}) | выбр. имя ${c.selNamed} поверх ${c.selCovered} | Placer ${c.placerOverlaps} вылет ${c.boxOut}/${c.boxOutMax} ширина ${c.widthRatio.join('/')} | К7 ${c.selRingGap ?? '—'} К8 ${c.longLeaders} (опорных до 100 px ${c.wideLeaders}) К5 ${c.k5} (разрывов верхней ступени ${c.k5cut}) ${note || ''} ${((Date.now() - t0) / 1000).toFixed(0)} с | ${bad.length ? 'НЕТ' : 'да'}`,
       );
       await p.context().close();
     }

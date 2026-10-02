@@ -33,7 +33,34 @@ async function family(p: Page) {
   })()`)) as { kin: { id: string; on: boolean; inside: boolean }[]; labels: string[]; edges: { label: string; ids: string[]; box: { x: number; y: number; w: number; h: number } | null }[] };
 }
 
-/** П1: переход по ссылке карточки from → to; родня первого колена учтена (подпись или указатель) и подписана. */
+/**
+ * Верхняя ступень решения 164 у лица id: родители, супруги и лица линий Мессии величины ≤ 1 в его семье первого колена
+ * (по собранному атласу src/generated/atlas.json: модуль атласа в node не грузится). Эти имена подписаны всегда.
+ */
+async function topTier(id: string): Promise<Set<string>> {
+  const { readFileSync } = await import('node:fs');
+  const { join } = await import('node:path');
+  const { ROOT } = await import('../bible.ts');
+  type P = { id: string; f?: string; m?: string; mg: number; sp?: { id: string }[] };
+  const a = JSON.parse(readFileSync(join(ROOT, 'src/generated/atlas.json'), 'utf8')) as { persons: P[]; lines: Record<string, { persons: { id: string }[] }> };
+  const by = new Map(a.persons.map((q) => [q.id, q]));
+  const spine = new Set(Object.values(a.lines).flatMap((l) => l.persons.map((x) => x.id)));
+  const me = by.get(id)!;
+  const out = new Set<string>([me.f, me.m, ...(me.sp ?? []).map((q) => q.id)].filter((x): x is string => !!x));
+  for (const q of a.persons) {
+    if ((q.sp ?? []).some((x) => x.id === id)) out.add(q.id);
+    const kid = q.f === id || q.m === id;
+    const sib = (!!me.f && q.f === me.f) || (!!me.m && q.m === me.m);
+    if ((kid || (sib && q.id !== id)) && spine.has(q.id) && q.mg <= 1) out.add(q.id);
+  }
+  return out;
+}
+
+/**
+ * П1: переход по ссылке карточки from → to; родня первого колена учтена: подписана, названа указателем у края (за краем)
+ * или стоит в canvas[data-hidden] и в строке «Без подписи на небе» карточки у звезды. Решение 164 (второй круг): верхняя
+ * ступень — родители, супруги, лица лент величины ≤ 1 — в кадре подписана всегда; доля подписанных — не ниже labeled.
+ */
 async function linkKeepsFamily(p: Page, from: string, to: string, labeled = 0.7) {
   await go(p, from, 3000);
   const b = p.locator(`.folio button.person[data-id="${to}"]`).first();
@@ -65,10 +92,14 @@ async function linkKeepsFamily(p: Page, from: string, to: string, labeled = 0.7)
     }
   }
   const lab = on.filter((k) => f.labels.includes(k.id));
-  const miss = on.filter((k) => !f.labels.includes(k.id) && !ptr.has(k.id) && !row.includes(k.id)).map((k) => k.id);
+  const hidden = ((await p.locator('.sky canvas').getAttribute('data-hidden')) ?? '').split(' ');
+  const miss = on.filter((k) => !f.labels.includes(k.id) && !ptr.has(k.id) && !(row.includes(k.id) && (!k.inside || hidden.includes(k.id)))).map((k) => k.id);
   const share = lab.length / on.length;
-  const why = `родни ${on.length}, в кадре ${on.filter((k) => k.inside).length}, подписано ${lab.length} (${Math.round(share * 100)} %), указатели: ${f.edges.map((e) => e.label).join(' | ') || 'нет'}${row.length ? `, «Без подписи на небе»: ${row.length}` : ''}`;
+  const top = await topTier(to);
+  const topMiss = on.filter((k) => k.inside && top.has(k.id) && !f.labels.includes(k.id)).map((k) => k.id);
+  const why = `родни ${on.length}, в кадре ${on.filter((k) => k.inside).length}, подписано ${lab.length} (${Math.round(share * 100)} %), верхняя ступень ${on.filter((k) => k.inside && top.has(k.id)).length - topMiss.length}/${on.filter((k) => k.inside && top.has(k.id)).length}, указатели: ${f.edges.map((e) => e.label).join(' | ') || 'нет'}${row.length ? `, «Без подписи на небе»: ${row.length}` : ''}`;
   if (miss.length) return fail(`${why}; не учтены: ${miss.join(' ')}`);
+  if (topMiss.length) return fail(`${why}; верхняя ступень без подписи: ${topMiss.join(' ')}`);
   return share >= labeled ? pass(why) : fail(`${why}; подписано меньше ${Math.round(labeled * 100)} %`);
 }
 
@@ -125,9 +156,11 @@ export const nav14: Scenario[] = [
   },
   {
     n: 1142,
-    title: 'П1 (решения 146, 153): Руфь → Давид по ссылке, 1024 — учтено подписью, указателем у края или строкой «Без подписи на небе» карточки у звезды',
+    // второй круг (решения 163, 164): имя не на чужой вертикали — тесная семья Давида на 1024 с карточкой подписана не вся;
+    // верхняя ступень 164 подписана всегда, остальные учтены строкой «Без подписи на небе», доля подписанных — пол регрессии
+    title: 'П1 (решения 146, 153, 164): Руфь → Давид по ссылке, 1024 — верхняя ступень подписана, остальные учтены подписью, указателем у края или строкой «Без подписи на небе»; подписано ≥ 55 %',
     view: { width: 1024, height: 768 },
-    run: (p) => linkKeepsFamily(p, '#/ruf~y-1099~w169~l-3.0~s1', 'david'),
+    run: (p) => linkKeepsFamily(p, '#/ruf~y-1099~w169~l-3.0~s1', 'david', 0.55),
   },
   {
     n: 1143,

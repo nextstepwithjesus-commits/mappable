@@ -103,7 +103,28 @@ export const skydraw: Scenario[] = [
       const wives = ['Ахиноама', 'Авигея', 'Мааха', 'Аггифа', 'Авитала', 'Эгла', 'Вирсавия'];
       const moms = (await cv(p, 'plate-texts')).split('|').filter(Boolean).filter((t) => t.startsWith('u:david+') && wives.includes(t.slice(t.lastIndexOf(':') + 1))).map((t) => t.slice(t.lastIndexOf(':') + 1));
       if (moms.length < 3) return fail(`имён матерей у ромбов ${moms.length}: ${moms.join(', ')}`);
-      if (!(await cv(p, 'label-ids')).split(' ').includes('mladenets-syn-virsavii')) return fail('младенец Давида и Вирсавии без подписи');
+      // второй круг (решение 163): имя не стоит на чужой вертикали — в гребёнке стволов Давида у младенца места может не
+      // быть; тогда он в canvas[data-hidden] и в строке «Без подписи на небе» карточки у звезды Давида (решение 153)
+      let infant = 'подписан';
+      if (!(await cv(p, 'label-ids')).split(' ').includes('mladenets-syn-virsavii')) {
+        if (!(await cv(p, 'hidden')).split(' ').includes('mladenets-syn-virsavii')) return fail('младенец Давида и Вирсавии без подписи и не в списке скрытых');
+        const at = await p.locator('.sky').getAttribute('data-sel');
+        const cb = await p.locator('.sky > canvas').boundingBox();
+        if (!at || !cb) return fail('нет места выбранной звезды');
+        const [sx, sy] = at.split(' ').map(Number);
+        await p.mouse.click(cb.x + sx, cb.y + sy);
+        await p.waitForTimeout(1500);
+        // карточка у звезды — там, где она есть (узкое небо, набор); на широком экране с листом карточки её нет, и младенец
+        // учтён списком скрытых (диктор, контракт 2) и разделом «Дети» листа
+        if (await p.locator('.sky .dotcard').count()) {
+          const ids = (await p.locator('.sky .dotcard .dc-hidden').getAttribute('data-ids', { timeout: 2000 }).catch(() => null)) ?? '';
+          if (!ids.split(' ').includes('mladenets-syn-virsavii')) return fail('младенец без подписи и не в строке «Без подписи на небе»');
+          infant = 'в строке «Без подписи на небе»';
+        } else infant = 'в списке скрытых (карточки у звезды при листе нет)';
+        await p.keyboard.press('Escape');
+        await p.waitForTimeout(500);
+        await go(p, '#/david~y-1010~w60~l6~s1');
+      }
       if (await overlaps(p)) return fail(`наложений подписей ${await overlaps(p)}`);
       // подсказка ребёнка: третья строка — через 700 мс неподвижности (IX-58)
       const box = (await p.locator('.sky > canvas').boundingBox())!;
@@ -114,7 +135,7 @@ export const skydraw: Scenario[] = [
       const tip = p.locator('.sky .tip[data-shown][data-more]');
       const t = (await tip.count()) ? (await tip.innerText()).replace(/\u2060/g, '').replace(/\u00a0/g, ' ').replace(/\s+/g, ' ') : '';
       if (!/год оценён по порядку перечисления \(1 Пар 3:1–\d+\), выв\./.test(t)) return fail(`подсказка Адонии: «${t}»`);
-      return pass(`у ромбов: ${moms.join(', ')}; ${t.slice(t.indexOf('год оценён'))}`);
+      return pass(`у ромбов: ${moms.join(', ')}; младенец ${infant}; ${t.slice(t.indexOf('год оценён'))}`);
     },
   },
   {
