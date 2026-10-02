@@ -537,8 +537,28 @@ export function outsideOf(s: Show, c: ShowContent, sel: string | null): string |
   return s.kind !== 'all' && sel && byId.has(sel) && !c.ids.has(sel) && !c.guests.has(sel) ? sel : null;
 }
 
-/** Прежняя семейная укладка — априорное условие следующей (устойчивость, § 4.2 п. 6) и опора виртуальных полос. */
-let lastFamily: { res: FamilyResult; lanes: Map<string, number>; ghostLanes: FamilyGhostLane[] } | null = null;
+/**
+ * Прежняя семейная укладка — опора виртуальных полос (решение 85: опора неподвижна) и, только при раскрытии того же
+ * набора, априорное условие следующей (устойчивость, этап 11, § 4.2 п. 6; Я19). kind и ids — показ и состав, из
+ * которых она получена.
+ */
+let lastFamily: { res: FamilyResult; lanes: Map<string, number>; ghostLanes: FamilyGhostLane[]; kind?: string; ids?: ReadonlySet<string> } | null = null;
+
+/**
+ * Прежняя укладка — априорное условие новой, только если это шаг раскрытия набора (этап 11, решения 67–72): прежний и
+ * новый показ — «набор», и новый состав только добавляет к прежнему или только убирает из него. Иначе укладка зависит
+ * только от состава: один и тот же вид не меняется от того, какой показ был перед ним (этап 15).
+ */
+function revealStep(kind: string, S: ReadonlySet<string>): boolean {
+  const prev = lastFamily;
+  if (!prev || prev.kind !== 'set' || kind !== 'set' || !prev.ids) return false;
+  const P = prev.ids;
+  let sub = true;
+  let sup = true;
+  for (const x of S) if (!P.has(x)) { sub = false; break; }
+  for (const x of P) if (!S.has(x)) { sup = false; break; }
+  return sub || sup;
+}
 
 /** Лица, свёрнутые у лиц foldDesc (J5): их потомки, кроме лиц линий Мессии. */
 function foldedOf(S: ReadonlySet<string>, roots: readonly string[]): Set<string> {
@@ -553,7 +573,7 @@ function foldedOf(S: ReadonlySet<string>, roots: readonly string[]): Set<string>
 
 /** Укладки недавних показов: показ и состав → строки (не больше FAMILY_CACHE). */
 const FAMILY_CACHE = 12;
-const familyCache = new Map<string, { res: FamilyResult; lanes: Map<string, number>; ghostLanes: FamilyGhostLane[] }>();
+const familyCache = new Map<string, { res: FamilyResult; lanes: Map<string, number>; ghostLanes: FamilyGhostLane[]; kind?: string; ids?: ReadonlySet<string> }>();
 const hashIds = (S: ReadonlySet<string>) => {
   let x = 2166136261;
   for (const id of [...S].sort()) {
@@ -576,8 +596,12 @@ const hashLanes = (lanes: ReadonlyMap<string, number>) => {
  * Семейная укладка лиц S: строки → виртуальные полосы. Опора (anchor) остаётся на своей прежней полосе, если она была
  * в прежней укладке, иначе встаёт на свою полосу общей раскладки; без опоры коридор — у оси.
  */
-export function familyLanes(S: ReadonlySet<string>, o: { focus?: string | null; anchor?: string | null } = {}): { lanes: Map<string, number>; res: FamilyResult; ghostLanes: FamilyGhostLane[] } {
-  const res = familyLayout(S, familyData(), { prior: lastFamily?.res.prior ?? null, focus: o.focus ?? null });
+export function familyLanes(
+  S: ReadonlySet<string>,
+  o: { focus?: string | null; anchor?: string | null; kind?: string } = {},
+): { lanes: Map<string, number>; res: FamilyResult; ghostLanes: FamilyGhostLane[]; kind?: string; ids?: ReadonlySet<string> } {
+  const prior = revealStep(o.kind ?? '', S) ? lastFamily!.res.prior : null;
+  const res = familyLayout(S, familyData(), { prior, focus: o.focus ?? null });
   const m = model.peek();
   let off: number;
   const a = o.anchor && res.rows.has(o.anchor) ? o.anchor : null;
@@ -592,8 +616,8 @@ export function familyLanes(S: ReadonlySet<string>, o: { focus?: string | null; 
   for (const [id, r] of res.rows) lanes.set(id, r + off);
   // призраки укладки (решение 173: бездетный брак у мужа, дочь, ушедшая к мужу) — тем же сдвигом, что строки лиц
   const ghostLanes: FamilyGhostLane[] = res.ghosts.map((g) => ({ id: g.id, person: g.person, husband: g.husband, t: g.t, lane: g.row + off }));
-  lastFamily = { res, lanes, ghostLanes };
-  return { lanes, res, ghostLanes };
+  lastFamily = { res, lanes, ghostLanes, kind: o.kind, ids: new Set(S) };
+  return lastFamily;
 }
 
 /**
@@ -623,7 +647,7 @@ export const skyShow = computed<ShowIn>(() => {
     familyCache.delete(ck);
     lastFamily = hit;
   } else {
-    hit = familyLanes(S, { focus, anchor });
+    hit = familyLanes(S, { focus, anchor, kind: s.kind });
     if (familyCache.size >= FAMILY_CACHE) familyCache.delete(familyCache.keys().next().value!);
   }
   familyCache.set(ck, hit);

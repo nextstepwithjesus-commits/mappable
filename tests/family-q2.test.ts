@@ -16,7 +16,7 @@ import { familyLayout, type FamilyPrior, type FamilyResult } from '../src/engine
 import { membersOf } from '../src/engine/unions.ts';
 import { byId, graph, lines, models } from '../src/data/atlas.ts';
 import { unions } from '../src/ui/reveal.ts';
-import { contentOf, familyData } from '../src/ui/show.ts';
+import { contentOf, familyData, familyLanes } from '../src/ui/show.ts';
 
 const D = familyData();
 const LINE = new Set([...D.lines.joseph, ...D.lines.mary]);
@@ -406,6 +406,31 @@ describe('Я19: устойчивость при раскрытии', () => {
       const again = familyLayout(SCENES[k].S, D, { prior: r.prior });
       expect(Object.fromEntries(again.rows), k).toEqual(Object.fromEntries(r.rows));
     }
+  });
+});
+
+describe('укладка показа не зависит от прежнего показа (этап 15; кроме раскрытия набора — Я19)', () => {
+  const davidic = withGuests(contentOf({ kind: 'groups', groups: ['davidic'], links: 'stubs' }));
+  const rowsOf = (r: FamilyResult) => Object.fromEntries([...r.rows].sort((a, b) => a[0].localeCompare(b[0])));
+  it('«Дом Давидов» после рода Иуды, после Ноя и сам по себе — одни и те же строки и призраки', () => {
+    const fresh = familyLayout(davidic, D);
+    const afterJudah = (familyLanes(SCENES['Род Иуды по отцам'].S, { kind: 'lineage' }), familyLanes(davidic, { kind: 'groups' }));
+    const afterNoy = (familyLanes(SCENES['Ной'].S, { kind: 'lineage' }), familyLanes(davidic, { kind: 'groups' }));
+    for (const r of [afterJudah.res, afterNoy.res]) {
+      expect(rowsOf(r)).toEqual(rowsOf(fresh));
+      expect(r.ghosts).toEqual(fresh.ghosts);
+      expect([...r.units].map(([p, us]) => [p, us.map((u) => `${u.union.id}:${u.side}:${Math.round(u.trunk)}`)])).toEqual([...fresh.units].map(([p, us]) => [p, us.map((u) => `${u.union.id}:${u.side}:${Math.round(u.trunk)}`)]));
+    }
+  });
+  it('раскрытие набора — устойчиво: новый состав набора, добавляющий к прежнему, укладывается с прежней укладкой как условием', () => {
+    const S1 = new Set(['iakov', 'liya', 'ruvim', 'simeon']);
+    const S2 = new Set([...S1, 'rakhil', 'iosif', 'veniamin']);
+    const r1 = familyLanes(S1, { kind: 'set' }).res;
+    const r2 = familyLanes(S2, { kind: 'set' }).res;
+    expect(rowsOf(r2)).toEqual(rowsOf(familyLayout(S2, D, { prior: r1.prior })));
+    // другой показ между шагами — условие не переносится: состав «набора» не связан с прежним показом
+    familyLanes(SCENES['Ной'].S, { kind: 'lineage' });
+    expect(rowsOf(familyLanes(S2, { kind: 'set' }).res)).toEqual(rowsOf(familyLayout(S2, D)));
   });
 });
 
