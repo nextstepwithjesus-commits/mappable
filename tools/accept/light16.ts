@@ -31,7 +31,7 @@ export const light16: Scenario[] = [
       const host = await p.evaluate(`(() => { const h = document.querySelector('.sky > .sky-light'); return !!h && getComputedStyle(h).zIndex === '-1'; })()`);
       if (!host) return fail('нет обёртки слоя света .sky > .sky-light под холстом');
       // основной холст прозрачен там, где на нём ничего нет (небо — в слое света)
-      const alpha0 = await p.evaluate(`(() => { const c = document.querySelector('.sky > canvas'); const k = c.width / c.getBoundingClientRect().width; return c.getContext('2d').getImageData(Math.round(c.clientWidth * 0.06 * k), Math.round(c.clientHeight * 0.9 * k), 1, 1).data[3]; })()`);
+      const alpha0 = (await p.evaluate(`(() => { const c = document.querySelector('.sky > canvas'); const k = c.width / c.getBoundingClientRect().width; return c.getContext('2d').getImageData(Math.round(c.clientWidth * 0.06 * k), Math.round(c.clientHeight * 0.9 * k), 1, 1).data[3]; })()`)) as number;
       if (alpha0 > 0) return fail(`основной холст непрозрачен в пустом месте (альфа ${alpha0})`);
       // сборки на покое после приближения колесом: лучшая из трёх ≤ 40 мс (машина общая; первая сборка — холодная)
       const box = (await p.locator('.sky > canvas').boundingBox())!;
