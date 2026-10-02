@@ -12,7 +12,7 @@
 import type { FontKey, Ink, Plot, Prim } from '../engine/famplot.ts';
 import { fontPx } from '../engine/famplot.ts';
 import { alpha } from './color.ts';
-import { FONT_SANS, FONT_SERIF, mapSize } from './type.ts';
+import { mapFont, T_UI_S } from './type.ts';
 
 export interface InsetLook {
   night: boolean;
@@ -32,10 +32,10 @@ export interface InsetLook {
   coarse: boolean;
 }
 
-const WEIGHT: Record<FontKey, string> = { name: '520', kid: '420', kidStrong: '600', focal: '620', word: 'italic 400', small: '400', sib: '420', note: '400' };
-/** Строка ctx.font для ключа шрифта врезки (кегль — шкала холста с масштабом текста браузера, решение 57). */
+const WEIGHT: Record<FontKey, number> = { name: 520, kid: 420, kidStrong: 600, focal: 620, word: 400, small: 400, sib: 420, note: 400 };
+/** Строка ctx.font для ключа шрифта врезки (кегль — шкала холста с масштабом текста браузера, решение 57; src/render/type.ts). */
 export function insetFont(f: FontKey, coarse: boolean): string {
-  return `${WEIGHT[f]} ${mapSize(fontPx(f), coarse)}px ${f === 'small' ? FONT_SANS : FONT_SERIF}`;
+  return mapFont(fontPx(f), { sans: f === 'small', weight: WEIGHT[f], italic: f === 'word', coarse });
 }
 
 /** Ширина строки шрифта f — мерило для раскладки (src/engine/famplot.ts, Geom.measure). */
@@ -273,7 +273,7 @@ function drawPrim(ctx: CanvasRenderingContext2D, p: Prim, L: InsetLook) {
       ctx.stroke();
     }
     if (p.infant) {
-      ctx.font = `400 12px ${FONT_SERIF}`;
+      ctx.font = mapFont(T_UI_S, { coarse: L.coarse });
       ctx.textAlign = 'right';
       ctx.fillText('†', p.x - r - 4, p.y + 4);
     }

@@ -21,7 +21,7 @@ import { drawInsetBack, drawInsetFrame, drawPlot, insetMeasure, type InsetLook }
 import { KIN_GOLD, UNION_COLORS } from '../../render/branches.ts';
 import { branchKeysOf, branchOrTribeColor } from '../../render/light.ts';
 import { readPalette } from '../../render/sky.ts';
-import { coarsePointer, FONT_SANS, mapSize } from '../../render/type.ts';
+import { coarsePointer, mapFont, T_UI_S } from '../../render/type.ts';
 import { model, selected, theme } from '../../state.ts';
 import { grid } from '../layout.ts';
 import { plural, renderBrackets, skyRef, viewTick } from '../common.tsx';
@@ -594,7 +594,7 @@ function sourceOf(u: FamUnion, female: boolean) {
  */
 function drawBirths(ctx: CanvasRenderingContext2D, L: InsetLook, S: FamScene, R: Box, life: string) {
   ctx.save();
-  ctx.font = `400 ${mapSize(12, L.coarse)}px ${FONT_SANS}`;
+  ctx.font = mapFont(T_UI_S, { sans: true, coarse: L.coarse });
   ctx.fillStyle = L.ink3;
   ctx.textBaseline = 'alphabetic';
   ctx.textAlign = 'left';

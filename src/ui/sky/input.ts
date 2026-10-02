@@ -510,6 +510,9 @@ export function underPointer(sky: Sky, x: number, y: number, r: number): Under |
   if (star && (star.d <= STAR_FIRST || !(plate || count || line))) {
     const exact = (onPlate || onCount || onLine) && star.d > glyphR(sky, star.id) + 5;
     if (!exact) {
+      // указатель на самом знаке звезды (не дальше r + 3) — это лицо, всегда: ни нить ленты, ни отвод у звезды его не
+      // перехватывают (этап 16, сценарий 810: в показе «Линии Мессии» щелчок по Сифу, Иакову, Давиду выбирал ленту)
+      if (star.d <= glyphR(sky, star.id) + 3) return { kind: 'star', id: star.id, d: star.d };
       // лента важнее знака, если указатель к нити ближе, чем к знаку (MAP-28)
       const reach = L.ribbons ? ribbonReach(hitDistance(sky, star.id, x, y)) : 0;
       const rib = reach > 0 ? ribbonAt(sky, x, y, reach) : null;

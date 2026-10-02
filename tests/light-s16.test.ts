@@ -11,7 +11,7 @@
 import { describe, expect, it } from 'vitest';
 import { byId, groupById, models } from '../src/data/atlas.ts';
 import { ANCESTRESS, REF_DEFAULT, refPerson, tribeKey, tribeRef } from '../src/engine/affiliation.ts';
-import { starLaneOf } from '../src/engine/stays.ts';
+import { laneAt, starLaneOf } from '../src/engine/stays.ts';
 import { BRANCH_COLORS, TRIBE_HUES, branchColor } from '../src/render/branches.ts';
 import { branchHue, branchKeysOf, branchOrTribeColor, mouthsOf, tribeHue } from '../src/render/light.ts';
 import { groupSubtitle, groupTitleSize } from '../src/render/labels.ts';
@@ -97,7 +97,25 @@ describe('устья колен (решение 182, О4)', () => {
   const mouths = mouthsOf(m);
   it('устья есть у колен — дельта от дома Иакова', () => {
     const groups = new Set(mouths.map((q) => q.group));
-    for (const g of ['reuben', 'simeon', 'levi', 'judah', 'dan', 'gad', 'asher', 'benjamin']) expect(groups.has(g), g).toBe(true);
+    for (const g of ['reuben', 'simeon', 'levi', 'dan', 'gad', 'asher', 'benjamin']) expect(groups.has(g), g).toBe(true);
+  });
+  // колено без устья — только если основатель уже стоит в середине рода: медиана полос живых лиц рода через 70 лет после
+  // его рождения (окно ±60 лет) ближе 2 полос к полосе его рождения (у Иуды — коридор линий Мессии проходит через род)
+  it('колено без устья — основатель уже в середине своего рода', () => {
+    const groups = new Set(mouths.map((q) => q.group));
+    for (const g of ['reuben', 'simeon', 'levi', 'judah', 'issachar', 'zebulun', 'dan', 'naphtali', 'gad', 'asher', 'benjamin', 'ephraim', 'manasseh']) {
+      if (groups.has(g)) continue;
+      const fid = groupById.get(g)!.founder!;
+      const f = m.nodeByPerson.get(fid)!;
+      const tEnd = f.t0 + 70;
+      const lanes = m.nodes
+        .filter((n) => !n.ghost && (n.trail === 'life' || n.trail === 'infant') && n.person !== fid && byId.get(n.person)?.group === g)
+        .filter((n) => Math.min(n.t1, tEnd + 60) >= Math.max(n.t0, tEnd - 60))
+        .map((n) => laneAt(n, (Math.max(n.t0, tEnd - 60) + Math.min(n.t1, tEnd + 60)) / 2))
+        .sort((a, b) => a - b);
+      if (!lanes.length) continue;
+      expect(Math.abs(lanes[Math.floor(lanes.length / 2)] - starLaneOf(f)), g).toBeLessThan(2);
+    }
   });
   it('каждое устье — основатель созвездия из данных, от его звезды (год рождения, полоса рождения)', () => {
     for (const q of mouths) {

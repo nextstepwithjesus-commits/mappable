@@ -33,12 +33,16 @@
   position: relative;
 }
 .fam-inset .fi-trail {
-  font: var(--t-ui-s) / var(--t-ui-s-lh) var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  font-family: var(--sans);
   color: var(--ink-3);
   margin-bottom: 2px;
 }
 .fam-inset .fi-trail button {
-  font: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
   color: var(--ink-2);
   background: none;
   border: 0;
@@ -49,16 +53,25 @@
 }
 .fam-inset .fi-title {
   margin: 0;
-  font: 500 var(--t-title) / var(--t-title-lh) var(--serif);
+  font-weight: 500;
+  font-size: var(--t-title);
+  line-height: var(--t-title-lh);
+  font-family: var(--serif);
 }
 .fam-inset .fi-sub {
   margin: 2px 0 0;
-  font: italic 400 var(--t-body) / var(--t-body-lh) var(--serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: var(--t-body);
+  line-height: var(--t-body-lh);
+  font-family: var(--serif);
   color: var(--ink-2);
 }
 .fam-inset .fi-years {
   margin: 2px 0 0;
-  font: var(--t-ui-s) / var(--t-ui-s-lh) var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  font-family: var(--sans);
   color: var(--ink-3);
 }
 .fam-inset .fi-cmds {
@@ -70,7 +83,9 @@
 }
 .fam-inset .fi-cmds button,
 .fam-inset .fi-read {
-  font: var(--t-ui) / var(--t-ui-lh) var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+  font-family: var(--sans);
   color: var(--ink);
   background: none;
   border: 0;
@@ -88,7 +103,9 @@
   margin: 0;
   max-width: 230px;
   text-align: right;
-  font: var(--t-ui-s) / var(--t-ui-s-lh) var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  font-family: var(--sans);
   color: var(--ink-3);
 }
 .fam-inset .fi-src {
@@ -112,15 +129,24 @@
   flex-direction: column;
 }
 .fam-inset .fi-nm {
-  font: 500 var(--t-lead) / var(--t-lead-lh) var(--serif);
+  font-weight: 500;
+  font-size: var(--t-lead);
+  line-height: var(--t-lead-lh);
+  font-family: var(--serif);
 }
 .fam-inset .fi-kind {
-  font: italic 400 var(--t-note) / var(--t-note-lh) var(--serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+  font-family: var(--serif);
   color: var(--ink-2);
 }
 .fam-inset .fi-ref {
   display: block;
-  font: var(--t-ui-s) / var(--t-ui-s-lh) var(--sans);
+  font-size: var(--t-ui-s);
+  line-height: var(--t-ui-s-lh);
+  font-family: var(--sans);
   color: var(--ink-3);
 }
 .fam-inset .fi-q {
@@ -128,7 +154,10 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  font: 400 var(--t-note) / var(--t-note-lh) var(--serif);
+  font-weight: 400;
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+  font-family: var(--serif);
   quotes: '«' '»';
 }
 .fam-inset .fi-q .br {

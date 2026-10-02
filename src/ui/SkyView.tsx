@@ -99,6 +99,46 @@ const revealIds = computed<ReadonlySet<string> | null>(() => {
 });
 
 /**
+ * Смена показа при выбранном лице на виду (решения 85, 147; этап 16, сценарий 1146): лицо держится на месте, а звёзды нового
+ * показа могли встать под верхние органы неба (строку показа). Тогда строки сжимаются вокруг лица — ровно настолько, чтобы
+ * звёзды вышли из-под органов, не ниже пола высоты строки (camera.ts, lanesRange); лицо остаётся на месте экрана. Пропорция —
+ * временная (setTempLanes): своя пропорция читателя не меняется. Если пола не хватает — строки сжимаются до пола.
+ */
+function clearTopOrgans(sky: Sky, id: string) {
+  const cam = sky.cam;
+  const q = screenOf(id);
+  if (!q) return;
+  const mid = (cam.vp.t + cam.vp.b) / 2;
+  const organs = reserve().filter((r) => r.y + r.h / 2 < mid && r.w > 0 && r.h > 0);
+  if (!organs.length) return;
+  const pts: { x: number; y: number }[] = [];
+  for (let i = 0; i < sky.nodes.length; i++) {
+    if (!sky.drawn(i) || sky.nodes[i].ghost) continue;
+    const x = cam.sx(sky.X0[i]);
+    if (x < cam.vp.l || x > cam.vp.r) continue;
+    pts.push({ x, y: sky.starY(i) });
+  }
+  const covered = (k: number) =>
+    pts.some((s) => {
+      const y = q.y + (s.y - q.y) * k;
+      return y >= cam.vp.t && organs.some((o) => s.x > o.x - 6 && s.x < o.x + o.w + 6 && y > o.y - 6 && y < o.y + o.h + 6);
+    });
+  if (!covered(1)) return;
+  const ky0 = cam.ky;
+  const m0 = cam.lanes;
+  const lo = cam.lanesRange()[0];
+  let m = m0;
+  for (let n = 0; n < 60 && m > lo; n++) {
+    m = Math.max(lo, m * 0.97);
+    if (!covered(cam.kyWith(cam.kx, m) / ky0)) break;
+  }
+  if (m === m0) return;
+  const lane = cam.wLane(q.y);
+  cam.setTempLanes(m);
+  cam.laneTop = lane + q.y / cam.ky;
+}
+
+/**
  * linkAnchor (src/ui/linkstate.ts) по кадру: у выбранной мышью связи — точка щелчка (со сдвигом неба), иначе середина
  * её пути в окне; null — связи нет или её пути нет в окне. Сигнал меняется, только если точка сдвинулась больше чем на 0,5 px.
  */
@@ -956,6 +996,7 @@ export function SkyView() {
         stopFlight();
         updateZoomFloor();
         if (!inView(keepSel!)) keepInView(keepSel!, 250, !!showSheet.peek());
+        else clearTopOrgans(sky, keepSel!);
       } else if (sky.model && last.w && v.mode === 'work' && shownMode !== 'work') {
         stopFlight();
         updateZoomFloor();
