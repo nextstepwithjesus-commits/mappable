@@ -1,38 +1,34 @@
 /**
- * Связи кадра (этап 11, решения 78, 79; STAGE11.md § 2–4, § 8) — одна грамматика родства для всего неба.
+ * Связи кадра — одна грамматика семьи для всего неба: «Отчий дом» (этап 15, решения 174–177, 181; STAGE15.md; прежде —
+ * этап 11, решения 78, 79; STAGE11.md § 2–4).
  *
- * Модуль чистый: по местам звёзд и следов кадра (px), союзам (src/engine/unions.ts) и укладке он строит геометрию
- * связей, ничего не рисуя. Рисуют её trails.ts (стволы, зубцы, черты брака, родовые черты, обрывки, разрывы следов),
- * plates.ts (узлы ◆ и •, «+N»), ribbons.ts (ленты по маршрутам через узлы) и marks.ts (выбранная связь).
+ * Модуль чистый: по местам звёзд и следов кадра (px; у лица с переходом — ломаная следа, LinkStar.path), союзам
+ * (src/engine/unions.ts), году черты брака и виду союза (договор 1, src/engine/stays.ts: unionYear, marriageKind) он
+ * строит геометрию связей, ничего не рисуя. Рисуют её trails.ts (стволы, зубцы, черты брака, родовые черты, разрывы
+ * следов), plates.ts (ромбы и «•», «+N»), ribbons.ts (ленты через станции) и marks.ts (выбранная связь, путь
+ * происхождения).
  *
- * Грамматика (Г1–Г12):
- *  — одна связь — одна линия: к ребёнку линии Мессии ведёт лента, ствола и зубца к нему нет;
- *  — горизонталь — время, вертикаль — поколение: от следа родителя (или от узла союза) — вертикальный ствол, от ствола —
- *    горизонтальные зубцы к звёздам детей; косых отрезков нет;
- *  — ствол стоит на 8–10 px левее звезды первого ребёнка своего гнезда (сдвиг влево — до 24 px, не левее узла союза);
- *    зубец — 5–40 px; дети одного союза дальше 40 px друг от друга — отдельные гнёзда, у каждого свой ствол и узел •;
- *  — узел союза ◆ — на следе матери, если она стоит рядом с мужем и не дальше двух строк от детей; иначе на следе отца
- *    (мать не названа, стоит далеко): у ромба тогда её имя, если у отца союзов с детьми два и больше;
- *  — от мужа к ромбу на следе жены идёт черта брака «‖» (а к ромбу на следе мужа — от жены, если она рядом);
- *  — линия не проходит через чужую звезду (зазор r + 5 px), вертикали разных союзов — не ближе 8 px (12 px, если одна
- *    из них — черта брака или лента);
+ * Грамматика:
+ *  — союз — двухцветный ромб на следе жены в год черты брака; от мужа к нему — черта брака, вид союза — начертанием
+ *    (LinkPath.bar: жена «‖», наложница «|», левират «‖» штрихом, брак не назван — тонкая «|» и полые половины ромба);
+ *    мать не названа — ромб с полой половиной жены на следе отца; повторные браки — свои черты к следу жены по времени;
+ *  — дети — отводом от следа матери (мать не названа — отца): ствол в год рождения − отступ (8–10 px, до 32 px), зубец
+ *    5–40 px к звезде; дети ближе 40 px — на одном стволе, следующее гнездо — «•» на её следе; первое гнездо — на
+ *    колонне союза, если черта брака у рождения первого ребёнка;
+ *  — вертикали разных союзов — не ближе 8 px (12 px, если одна из них — черта брака или лента); линия не ближе r + 5 px к
+ *    чужой звезде; ромб не на чужой линии (решение 181);
  *  — пересечение с чужим следом — разрыв следа по 3 px с каждой стороны (у ленты — 7 px), соединение — только в узле;
- *  — на «всех лицах» длинная связь (больше 8 строк через живые чужие следы) — двумя обрывками с подписью цели;
- *  — у родителя без следа до узла (народ; след кончился раньше) — родовая черта точками, длиннее 160 px — обрывками.
- *
- * Две укладки:
- *  — 'map' («все лица», «все колена», ключевые лица): строки общей раскладки, союзы — по гнёздам детей (перечень
- *    правок K3 § 2.10 и K4 П1–П2: стволы левее детей, реестр стволов кадра, разрывы, обрывки, родовая черта);
- *  — 'family' (набор, род лица, созвездия, линии Мессии): семейная укладка «Г» (src/engine/family.ts), у каждого
- *    родителя по сторонам — одна «лестница союзов» (K3 § 2.1): ствол от следа родителя проходит группы союзов в порядке
- *    удаления, между группами делает ступеньку вправо; узел союза — на следе матери, зубцы — к её детям.
+ *  — связь целиком: обрывков нет (решение 176), конец за краем окна называет указатель шатра у кромки (frame.ts); у
+ *    родителя, чей след кончился раньше узла, — родовая черта до узла (Г12; у народа — бледная);
+ *  — к ребёнку линии Мессии ведёт лента, ствола и зубца к нему нет; её станция — у черты брака его матери на следе
+ *    родителя шага (решение 177).
  *
  * Всё — в px кадра, для которого строилось (ribbons.ts так же кэширует нити): при сдвиге неба геометрия та же, небо
  * рисует её со сдвигом. Ключи связей — src/engine/linkkey.ts; ими пользуются попадание, подсказка, выбор и адрес «~c».
  */
 import { linkKeyString, type LinkKey } from '../engine/linkkey.ts';
 import type { Union, Unions } from '../engine/unions.ts';
-import type { MarriageKind, UnionYears } from '../engine/stays.ts';
+import { marriageKind, unionYear, type MarriageKind, type UnionYears } from '../engine/stays.ts';
 import { byId, models, type ModelData } from '../data/atlas.ts';
 import { unions as ALL_UNIONS } from '../ui/reveal.ts';
 import { listingOf, orderListing, type OrderListing } from './trails.ts';
@@ -55,11 +51,6 @@ export const TRUNK_GAP = 8;
 export const WIDE_GAP = 12;
 /** Зазор линии до чужой звезды сверх её радиуса (Г5). */
 export const STAR_CLEAR = 5;
-/**
- * Чужая звезда у дальнего хода длинной связи (рисуется раскрытым — при выборе, наведении и когда оба конца в окне; G8):
- * штраф выбора x ствола — меньше, чем у звезды на ближней части (1000), остальное обходит ступенька дальнего хода.
- */
-export const FULL_STAR = 300;
 /**
  * Масштаб в движении (перелёт, колесо, щипок; С1): кадр связей не строится заново, а пересчитывается из точной сборки,
  * пока масштаб не дальше стольких раз от неё; дальше маршруты в px растянулись бы (ствол «за 9 px до ребёнка» — за
@@ -106,23 +97,11 @@ export function linkKinOf(ids: Iterable<string>, U: Pick<Unions, 'of' | 'origin'
   }
   return out;
 }
-/** Совместных перестановок соседей по шине на кадр связей (второй проход buildLinks, решение 134). */
-export const JOINT_MAX = 12;
 /** Разрыв следа на пересечении, px с каждой стороны (Г7); у ленты — RIBBON_CUT. */
 export const TRAIL_CUT = 3;
 export const RIBBON_CUT = 7;
-/** Длинная связь на «всех лицах» (Г11): больше стольких строк — и через живые чужие следы. */
-export const LONG_ROWS = 8;
-/** Обрывок длинной связи, px. */
-export const STUB_PX = 16;
-/** Родовая черта длиннее стольких px — обрывками (Г12). */
+/** Родовая черта длиннее стольких px через строку, занятую чужим следом, идёт между строк (Г12). */
 export const CLAN_MAX = 160;
-/** Мать — узлом своего союза, если она не дальше стольких строк от ближайшего ребёнка (Г8). */
-export const MOTHER_ROWS = 2;
-/** Жена стоит «у мужа» на общей раскладке — не дальше стольких строк (спутница — соседняя строка). */
-export const SPOUSE_ROWS = 3.5;
-/** Семейная укладка: дочь, стоящая у мужа, дальше стольких строк от родной семьи — обрывком (§ 4.2 п. 1). */
-export const FAR_KID_ROWS = 4;
 /** Ромб союза: 9 px в раскрытом небе, 7 px на «всех лицах» (§ 2, «Знаки»): полуразмеры. */
 export const NODE_R_FAMILY = 4.5;
 export const NODE_R_MAP = 3.5;
@@ -215,7 +194,10 @@ const clanStyle = (id: string): PathStyle => {
   const q = byId.get(id);
   return q && (q.kind === 'people' || q.kind === 'clan') ? 'faint' : 'solid';
 };
-/** Когда путь рисуется: всегда; только раскрытым (длинная связь целиком); только свёрнутым (обрывки длинной связи). */
+/**
+ * Когда путь рисуется. С этапа 15 (решение 176: связь целиком, обрывков нет) — всегда 'always'; 'full' и 'short' (длинная
+ * связь целиком только раскрытой, обрывками свёрнутой) остались в типе для прежних читателей кадра.
+ */
 export type PathWhen = 'always' | 'full' | 'short';
 
 /** Путь связи: ломаная из горизонтальных и вертикальных отрезков, px кадра. */
@@ -292,7 +274,10 @@ export interface LinkNode {
   childless?: boolean;
 }
 
-/** Подпись обрывка: где кончается отрезок, куда он смотрит, чья связь и кого он называет. */
+/**
+ * Подпись обрывка: где кончается отрезок, куда он смотрит, чья связь и кого он называет. С этапа 15 обрывков нет (решение
+ * 176): LinkFrame.stubs пуст, тип — для прежних читателей кадра.
+ */
 export interface StubMark {
   key: LinkKey;
   ks: string;
@@ -410,18 +395,64 @@ class Grid<T> {
   }
 }
 
-/** Следы кадра по строкам: какие живые следы пересекает вертикаль (разрывы, длинные связи). */
+/**
+ * y следа лица в x, px кадра (решение 173): по ломаной следа (LinkStar.path — пребывания и переходы), до её начала и
+ * после конца — по крайней точке; без ломаной — строка звезды.
+ */
+export function trailYAt(s: Pick<LinkStar, 'y' | 'path'>, x: number): number {
+  const p = s.path;
+  if (!p || p.length < 4) return s.y;
+  if (x <= p[0]) return p[1];
+  for (let k = 2; k + 1 < p.length; k += 2) {
+    if (x > p[k]) continue;
+    const x0 = p[k - 2];
+    const x1 = p[k];
+    return x1 - x0 < 1e-9 ? p[k + 1] : p[k - 1] + ((p[k + 1] - p[k - 1]) * (x - x0)) / (x1 - x0);
+  }
+  return p[p.length - 1];
+}
+
+/** Конец нарисованного следа лица, px; у народа и лица без следа — край знака. */
+const tailOf = (s: LinkStar) => (s.x1 === null ? s.x + s.r + 1.5 : s.path && s.path.length >= 4 ? Math.max(s.x1, s.path[s.path.length - 2]) : s.x1);
+
+/**
+ * Следы кадра: какие живые следы пересекает вертикаль (разрывы Г7) и есть ли чужой след в точке (узел союза на нём
+ * читался бы его узлом). Горизонтальные участки — строками по y (двоичный поиск), участки переходов (решение 173) — сеткой
+ * по x: их на небе — десятки.
+ */
 class Trails {
   private rows: { y: number; x0: number; x1: number; i: number; id: string; sy: number }[] = [];
+  private slopes = new Grid<{ x0: number; y0: number; x1: number; y1: number; i: number; id: string }>(48);
+  private any = false;
   constructor(stars: readonly LinkStar[]) {
-    // строка следа — там, где его рисует trails.ts (trailOf: середина пикселя), а не середина звезды: иначе вертикаль,
-    // кончающаяся у строки, на полпикселя проходит сквозь нарисованный след без разрыва (этап 12, перепись Я8)
-    for (const s of stars) if (s.x1 !== null && s.x1 > s.x + s.r + 1) this.rows.push({ y: Math.round(s.y) + 0.5, x0: s.x, x1: s.x1, i: s.i, id: s.id, sy: s.y });
+    for (const s of stars) {
+      const p = s.path;
+      if (p && p.length >= 4) {
+        for (let k = 0; k + 3 < p.length; k += 2) {
+          const [x0, y0, x1, y1] = [p[k], p[k + 1], p[k + 2], p[k + 3]];
+          if (x1 - x0 < 0.01) continue;
+          if (Math.abs(y1 - y0) < 0.01) this.rows.push({ y: y0, x0, x1, i: s.i, id: s.id, sy: y0 });
+          else {
+            this.slopes.add(x0, Math.min(y0, y1), x1, Math.max(y0, y1), { x0, y0, x1, y1, i: s.i, id: s.id });
+            this.any = true;
+          }
+        }
+        continue;
+      }
+      // строка следа — там, где его рисует trails.ts (trailOf: середина пикселя), а не середина звезды: иначе вертикаль,
+      // кончающаяся у строки, на полпикселя проходит сквозь нарисованный след без разрыва (этап 12, перепись Я8)
+      if (s.x1 !== null && s.x1 > s.x + s.r + 1) this.rows.push({ y: Math.round(s.y) + 0.5, x0: s.x, x1: s.x1, i: s.i, id: s.id, sy: s.y });
+    }
     this.rows.sort((a, b) => a.y - b.y);
   }
-  /** Чужой живой след на строке y (середина звезды) у x: узел союза на нём читался бы узлом этого следа (Г7). */
+  /** Чужой живой след на строке y у x: узел союза на нём читался бы узлом этого следа (Г7). */
   foreignAt(x: number, y: number, skip: string): boolean {
     for (const t of this.rows) if (t.id !== skip && Math.abs(t.sy - y) < 0.75 && x > t.x0 - 0.5 && x < t.x1 + 0.5) return true;
+    if (this.any)
+      for (const g of this.slopes.query(x - 1, y - 1, x + 1, y + 1)) {
+        if (g.id === skip || x < g.x0 || x > g.x1) continue;
+        if (Math.abs(g.y0 + ((g.y1 - g.y0) * (x - g.x0)) / (g.x1 - g.x0) - y) < 0.75) return true;
+      }
     return false;
   }
   /** Живые следы, которые вертикаль x (y0…y1, без концов) пересекает, кроме следов лиц skip. */
@@ -441,6 +472,12 @@ class Trails {
       const t = this.rows[k];
       if (x > t.x0 + 0.5 && x < t.x1 - 0.5 && !skip.has(t.id)) out.push({ i: t.i, id: t.id, y: t.y });
     }
+    if (this.any)
+      for (const g of this.slopes.query(x, lo, x, hi)) {
+        if (skip.has(g.id) || x <= g.x0 + 0.5 || x >= g.x1 - 0.5) continue;
+        const y = g.y0 + ((g.y1 - g.y0) * (x - g.x0)) / (g.x1 - g.x0);
+        if (y > lo && y < hi && !out.some((q) => q.i === g.i)) out.push({ i: g.i, id: g.id, y });
+      }
     return out;
   }
 }
@@ -462,54 +499,19 @@ function addCuts(path: LinkPath, trails: Trails, skip: ReadonlySet<string>, half
 
 // ---------- построение ----------
 
-/** Связи кадра по укладке. */
+/** Связи кадра по укладке: одна грамматика «Отчего дома» для общей раскладки и семейной укладки (решения 174–177). */
 export function buildLinks(inp: LinkInput): LinkFrame {
   if (!inp.stars.length) return { ...EMPTY, layout: inp.layout, via: new Map() };
-  const f = inp.layout === 'family' ? familyLinks(inp) : mapLinks(inp);
+  const f = houseLinks(inp);
   // узлы-«станции» лент: союз шага ленты, у которого своих линий в кадре нет
   const drawn = new Set(f.paths.filter((p) => p.kind !== 'ribbon' && p.union).map((p) => p.union!));
   const rib = new Set([...f.via.values()].map((v) => v.union));
   f.ribbonOnly = new Set(f.nodes.filter((n) => rib.has(n.union) && !drawn.has(n.union)).map((n) => n.union));
-  if (inp.layout === 'map') nestBuses(f, inp.stars);
   linkCrossings(f.paths);
-  markBlocked(f.paths, inp.stars);
   offRibbonNodes(f, inp);
   f.stamp = {};
   f.paths.forEach((q, i) => (q.n = i));
-  f.stubs.forEach((st, i) => (st.n = i));
   return f;
-}
-
-/**
- * Шина гнёзд одного союза (решение 172, R1-14): у союза, чьи дети висят на нескольких стволах (ромб ◆ и узлы • дальше
- * по тому же следу), участок следа от ◆ до последнего • рисуется линией союза — гнёзда читаются одним союзом, а не
- * «четырьмя матерями». Путь вида 'jog' по строке следа, начертанием ствола союза.
- */
-function nestBuses(f: LinkFrame, stars: readonly LinkStar[]) {
-  const first = new Map<string, LinkNode>();
-  const last = new Map<string, number>();
-  for (const n of f.nodes) if (n.kind === 'union') first.set(n.union, n);
-  for (const n of f.nodes) {
-    if (n.kind !== 'join') continue;
-    const u = first.get(n.union);
-    if (!u || Math.abs(u.y - n.y) > 0.75 || n.x <= u.x) continue;
-    last.set(n.union, Math.max(last.get(n.union) ?? -Infinity, n.x));
-  }
-  const star = new Map<string, LinkStar>();
-  for (const s of stars) if (!s.ghost) star.set(s.id, s);
-  const clans = new Set(f.paths.filter((q) => q.kind === 'clan').map((q) => q.union));
-  for (const [union, x1] of last) {
-    const u = first.get(union)!;
-    // шина — только по живому следу владельца (у рода, чьи узлы уходят за конец следа, её нет) и без чужих ромбов на ней
-    const o = star.get(u.owner);
-    if (!o || clans.has(union) || x1 > (o.x1 ?? o.x) - 1) continue;
-    if (f.nodes.some((n) => n.union !== union && Math.abs(n.y - u.y) < 0.75 && n.x > u.x - 1 && n.x < x1 + 1)) continue;
-    // и не по участку следа, где идёт маршрут ленты (решение 79: там связь — лента)
-    if ([...f.via].some(([pk, vv]) => pk.startsWith(`${u.owner}>`) && vv.x > u.x - 1)) continue;
-    const trunk = f.paths.find((q) => q.union === union && q.kind === 'trunk');
-    const ends = [...new Set(f.paths.filter((q) => q.union === union && q.kind !== 'ribbon').flatMap((q) => q.ends))];
-    f.paths.push({ key: unionKey(union), ks: key(unionKey(union)), kind: 'jog', style: trunk?.style ?? 'solid', pts: [u.x, u.y, x1, u.y], ends, union, when: 'always', cuts: [] });
-  }
 }
 
 /** Зазор ромба чужого союза от ленты на следе родителя: размах косы, полуширина нити и радиус ромба (решение 166). */
@@ -565,29 +567,6 @@ function offRibbonNodes(f: LinkFrame, inp: LinkInput) {
   }
 }
 
-/**
- * Дальние ходы ('full'), задевающие чужие звёзды (ближе r + 5): такой ход окно не раскрывает (решение 136 — длинная
- * связь целиком, когда оба конца в окне, — только если она ясна; иначе обрывки с именем), его раскрывает только выбор.
- */
-function markBlocked(paths: LinkPath[], stars: readonly LinkStar[]) {
-  const grid = new Grid<LinkStar>(32);
-  let maxR = 0;
-  for (const s of stars)
-    if (!s.ghost) {
-      grid.add(s.x - s.r, s.y - s.r, s.x + s.r, s.y + s.r, s);
-      maxR = Math.max(maxR, s.r);
-    }
-  for (const q of paths) {
-    if (q.when !== 'full' || q.kind === 'ribbon') continue;
-    const ends = new Set(q.ends);
-    q.blocked = segmentsOf(q).some(([x0, y0, x1, y1]) => {
-      for (const s of grid.query(Math.min(x0, x1) - maxR - STAR_CLEAR, Math.min(y0, y1) - maxR - STAR_CLEAR, Math.max(x0, x1) + maxR + STAR_CLEAR, Math.max(y0, y1) + maxR + STAR_CLEAR))
-        if (!ends.has(s.id) && distSeg(s.x, s.y, x0, y0, x1, y1) < s.r + STAR_CLEAR - 0.01) return true;
-      return false;
-    });
-  }
-}
-
 /** Полуширина разрыва линии под чужой вертикалью: 3 px, под чертой брака «‖» — и ещё половина её ширины. */
 const XCUT = TRAIL_CUT;
 
@@ -627,921 +606,442 @@ export function linkCrossings(paths: LinkPath[]) {
 /** Половина ширины черты брака «‖» (trails.ts, BAR_GAP 3,2 и толщина линии). */
 const BAR_HALF = 2.1;
 
-// ---------- общая раскладка («все лица») ----------
+// ---------- «Отчий дом»: одна грамматика союза (этап 15, решения 174–177, 181) ----------
 
 /**
- * Ступенька дальнего хода (G8): y — межстрочье последней ступеньки (дети за ней висят на x2); mid — средний столбец
- * двойной ступеньки (от y1 до y — по столбцу mid), если прямой и одной ступеньки не хватило.
+ * Станция ленты сдвигается с черты брака вправо на столько px сверх радиуса ромба, если мать стоит между отцом и
+ * ребёнком линии: лента не ложится на ромб матери (решение 177: «ромб под лентой не прячется»).
  */
-interface Jog {
-  y: number;
-  x2: number;
-  mid?: { x: number; y1: number };
-}
+export const RIB_STEP = 6;
 
-interface Nest {
+/** Союз кадра: супруги на небе, владелец узла и отводов, дети, вид союза, гнёзда и места вертикалей. */
+interface Plan {
   u: Union;
-  /** родитель, чей след несёт узел, если мать не узлом */
-  p: LinkStar;
-  /** второй родитель на небе (мать или отец) */
-  o: LinkStar | null;
+  kind: MarriageKind;
+  /** муж или отец на небе */
+  F: LinkStar | null;
+  /** жена или мать на небе (у брака без детей на небе — и её призрак у мужа) */
+  W: LinkStar | null;
+  /** владелец отводов: мать, если её звезда на небе, иначе отец (решение 175) */
+  O: LinkStar;
+  /** дети союза на небе (не ленты), по x */
   kids: LinkStar[];
-  /** дети ленты: связь с ними рисует лента */
-  rib: Set<string>;
-  /** первое гнездо союза */
-  first: boolean;
-  /** узел — на следе второго родителя (матери) */
-  motherNode: boolean;
-  /** второй родитель связан чертой брака */
-  linked: boolean;
-  /** черта брака длиннее 8 строк через живые чужие следы: на «всех лицах» — обрывками (решение 134) */
-  longBar?: boolean;
-  /**
-   * дальний ход длинной связи со ступенькой (G8): прямой ход задевал бы чужие звёзды — по стволу до межстрочья y, по нему
-   * до x2 и дальше вверх или вниз к дальним детям; по направлению (−1 — вверх, 1 — вниз)
-   */
-  jog?: Map<number, Jog>;
+  /** дети ленты: связь с ними рисует лента, её станция — у черты брака (решение 177) */
+  rib: LinkStar[];
+  look: NodeLook;
+  /** подпись у ромба: имя матери не на небе, «мать не названа» (пусто), имя второго супруга без черты */
+  label: string | null;
+  late: boolean;
+  childless: boolean;
+  /** x года черты брака, px (договор 1, unionYear); null — года нет */
+  xw: number | null;
+  /** гнёзда детей: дети ближе 40 px — на одном стволе (решение 175) */
+  nests: LinkStar[][];
+  /** первое гнездо — на колонне союза: черта брака и ствол одной вертикалью */
+  merged: boolean;
+  /** x колонны союза (черта брака, ромб) и стволов гнёзд */
+  col: number;
+  xs: number[];
+}
+
+/** Вертикаль к постановке: колонна союза (n = −1: черта брака, ромб, первое гнездо) или ствол гнезда n. */
+interface Slot {
+  p: Plan;
+  n: number;
+  kids: LinkStar[];
+  /** черта брака на вертикали: соседи — не ближе 12 px (решение 175) */
+  wide: boolean;
+  want: number;
+  lo: number;
+  hi: number;
+  y0: number;
+  y1: number;
+  /** строка узла на вертикали (ромб или «•») */
+  ny: number;
+  /** строка отца у черты брака */
+  fy: number | null;
   x: number;
-  far: Set<string>;
-  sameUnion: number;
-  /** желаемый x ствола: у рождения первого ребёнка, а у нескольких союзов одного следа — с шагом узлов (Г7) */
-  pref?: number;
 }
-
-/** Дети союза, разобранные по гнёздам (стволам), до постановки. */
-interface Grouped {
-  u: Union;
-  p: LinkStar;
-  o: LinkStar | null;
-  rib: Set<string>;
-  groups: LinkStar[][];
-}
-
-/** Окно x ствола гнезда до постановки: от «дальний ребёнок − TOOTH_MAX» (и «первый − TRUNK_MAX») до «первый − TRUNK_MIN». */
-const windowOf = (g: readonly LinkStar[], rib: ReadonlySet<string>): [number, number] => {
-  const first = g[0];
-  const maxTooth = Math.max(first.x, ...g.filter((k) => !rib.has(k.id)).map((k) => k.x));
-  return [Math.max(first.x - TRUNK_MAX, maxTooth - TOOTH_MAX), first.x - TRUNK_MIN];
-};
 
 /**
- * Шина многожёнца (этап 14, решение 134, G2): у двух союзов одного родителя гнёзда с первыми детьми почти у одного x и
- * общими строками, а окна их стволов не вмещают двух вертикалей с шагом WIDE_GAP — развести их нельзя, и ромб одного
- * ложится на черту другого (Халев: Ефа и Мааха на 60 годах). Тогда дальний ребёнок одного из гнёзд, чьё окно от этого
- * шире, переходит в следующее гнездо своего союза (или в новое, с узлом • на том же следе). Не больше четырёх шагов на пару.
+ * Связи кадра одной грамматикой «Отчего дома» (решения 174–177, 181) — для общей раскладки и семейной укладки:
+ *  — ромб союза — на следе жены в год черты брака, от мужа к нему — черта брака (вид — начертанием: LinkPath.bar);
+ *    мать не названа или не на небе — ромб на следе отца (полая половина или её имя); отец не на небе — на следе матери;
+ *  — дети — отводом от следа матери: ствол в год рождения − отступ, зубец к звезде; дети ближе 40 px — на одном стволе
+ *    (первое гнездо — на колонне союза, если черта брака у рождения), следующее гнездо — «•» на её следе;
+ *  — вертикали разных союзов не ближе 8 px, у черты брака — 12 px; линия не ближе r + 5 к чужой звезде; ромб не на
+ *    чужой линии (решение 181) — ценой места по сетке кадра;
+ *  — связь целиком, без обрывков (решение 176): у следа, кончившегося раньше узла, — родовая черта до него (Г12);
+ *  — ребёнок линии Мессии — лентой со станции у черты брака своей матери на следе отца (решение 177).
  */
-function splitCrowded(grouped: Grouped[]) {
-  const byP = new Map<string, Grouped[]>();
-  for (const q of grouped) byP.set(q.p.id, [...(byP.get(q.p.id) ?? []), q]);
-  const spanOf = (q: Grouped, g: readonly LinkStar[]) => {
-    const ys = [q.p.y, ...(q.o ? [q.o.y] : []), ...g.map((k) => k.y)];
-    return [Math.min(...ys), Math.max(...ys)];
-  };
-  /** наибольший шаг двух вертикалей в окнах пары */
-  const room = (a: [number, number], b: [number, number]) => Math.max(a[1] - b[0], b[1] - a[0]);
-  /** гнездо без дальнего ребёнка: ребёнок — в следующее гнездо своего союза, если оно его принимает, иначе в новое */
-  const split = (q: Grouped, i: number) => {
-    const g = q.groups[i];
-    const k = g.pop()!;
-    const next = q.groups[i + 1];
-    if (next && Math.max(...next.map((m) => m.x)) - (k.x - leadOf(k)) <= TOOTH_MAX) next.unshift(k);
-    else q.groups.splice(i + 1, 0, [k]);
-  };
-  const canSplit = (q: Grouped, i: number) => q.groups[i].length >= 2 && !q.rib.has(q.groups[i][q.groups[i].length - 1].id);
-  const without = (q: Grouped, i: number) => windowOf(q.groups[i].slice(0, -1), q.rib);
-  for (const qs of byP.values()) {
-    if (qs.length < 2) continue;
-    for (let a = 0; a < qs.length; a++)
-      for (let b = a + 1; b < qs.length; b++) {
-        const A = qs[a];
-        const B = qs[b];
-        for (let ia = 0; ia < A.groups.length; ia++)
-          for (let ib = 0; ib < B.groups.length; ib++)
-            for (let step = 0; step < 4; step++) {
-              const ga = A.groups[ia];
-              const gb = B.groups[ib];
-              if (Math.abs(ga[0].x - gb[0].x) >= WIDE_GAP) break;
-              const [sa, sb] = [spanOf(A, ga), spanOf(B, gb)];
-              if (Math.min(sa[1], sb[1]) - Math.max(sa[0], sb[0]) <= 1) break;
-              const [wa, wb] = [windowOf(ga, A.rib), windowOf(gb, B.rib)];
-              if (room(wa, wb) >= WIDE_GAP) break;
-              const ra = canSplit(A, ia) ? room(without(A, ia), wb) : -Infinity;
-              const rb = canSplit(B, ib) ? room(wa, without(B, ib)) : -Infinity;
-              if (ra === -Infinity && rb === -Infinity) break;
-              if (ra >= rb) split(A, ia);
-              else split(B, ib);
-            }
-      }
-  }
-}
-
-function mapLinks(inp: LinkInput): LinkFrame {
+function houseLinks(inp: LinkInput): LinkFrame {
+  const fam = inp.layout === 'family';
   const { ky } = inp;
   const U = inp.unions;
-  const main = new Map<string, LinkStar>();
-  const ghost = new Map<string, LinkStar>();
-  for (const s of inp.stars) (s.ghost ? ghost : main).set(s.id, s);
-  const steps = stepPairs(inp.lines);
+  const R = inp.nodeR ?? (fam ? NODE_R_FAMILY : NODE_R_MAP);
+  const nodeGap = 2 * R + 2;
+  const nodeClear = R + 2;
+  const halfW = (wide: boolean) => (wide ? 2.1 : 0.5);
   const issues: string[] = [];
-  // дети по союзам: у жены-спутницы родная семья — у её призрака
-  const byUnion = new Map<string, { u: Union; kids: LinkStar[] }>();
+  const main = new Map<string, LinkStar>();
+  const ghostsOf = new Map<string, LinkStar[]>();
   for (const s of inp.stars) {
-    if (!s.ghost && s.sat && ghost.has(s.id)) continue;
-    if (!s.ghost && s.sat) continue;
-    const u = mainUnion(U, s.id);
-    if (!u || otherReading(u, !!inp.flip)) continue;
-    const g = byUnion.get(u.id);
-    if (g) g.kids.push(s);
-    else byUnion.set(u.id, { u, kids: [s] });
+    if (!s.ghost) main.set(s.id, s);
+    else (ghostsOf.get(s.id) ?? ghostsOf.set(s.id, []).get(s.id)!).push(s);
   }
-  // союзы с детьми на каждого родителя (подпись матери у ромба — только при двух и больше, Г8)
-  const unionsOf = new Map<string, number>();
-  for (const { u } of byUnion.values()) for (const p of [u.a, u.b]) if (p) unionsOf.set(p, (unionsOf.get(p) ?? 0) + 1);
+  const steps = stepPairs(inp.lines);
+  const trails = new Trails(inp.stars);
+  const model = inp.model ?? models[0];
+  const yAt = (s: LinkStar, x: number) => trailYAt(s, x);
+  const plates = inp.plates ?? null;
 
-  const nests: Nest[] = [];
-  const grouped: Grouped[] = [];
-  for (const { u, kids } of byUnion.values()) {
-    const pa = u.a ? main.get(u.a) : undefined;
-    const pb = u.b ? main.get(u.b) : undefined;
-    const p = pa ?? pb;
-    if (!p) continue;
-    const o = pa && pb ? pb : null;
+  // ---------- союзы кадра ----------
+  /** Союз пары «муж — жена» (у призрака бездетного брака satelliteOf — муж): бездетный — призрак у мужа. */
+  const pairUnion = (h: string, w: string) => (U.of.get(w) ?? []).find((q) => q.a === h && q.b === w && !q.claim) ?? null;
+  /** Призрак бездетного брака (у мужа) — не изображение лица в родной семье. */
+  const marriageGhost = (g: LinkStar) => !!g.sat && !(pairUnion(g.sat, g.id)?.kids.length ?? 1);
+  // союзы детей кадра: общая раскладка — союз происхождения (кровные отец и мать); семейная — все союзы показа
+  const S = new Set(main.keys());
+  const shownU: Union[] = [];
+  const seenU = new Set<string>();
+  const take = (u: Union | null | undefined) => {
+    if (!u || seenU.has(u.id) || otherReading(u, !!inp.flip)) return;
+    seenU.add(u.id);
+    shownU.push(u);
+  };
+  if (fam) for (const u of familyUnions(U, S)) take(u);
+  else
+    for (const s of inp.stars) {
+      take(mainUnion(U, s.id));
+      // браки лиц кадра (бездетные и с детьми не на небе): ромб и черта, если оба супруга на небе
+      if (!s.ghost) for (const u of U.of.get(s.id) ?? []) if (!u.claim && u.a && u.b) take(u);
+    }
+  // сколько союзов с детьми на небе у родителя: имя матери не на небе у ромба — при двух и больше (Г8)
+  const withKidsOf = new Map<string, number>();
+  const plans: Plan[] = [];
+  for (const u of shownU) {
+    const F = u.a ? (main.get(u.a) ?? null) : null;
+    let W = u.b ? (main.get(u.b) ?? null) : null;
+    const kidIds = u.kids.filter((k) => main.has(k) || ghostsOf.has(k));
+    const ribIds = kidIds.filter((k) => main.has(k) && ((!!u.a && steps.has(`${u.a}>${k}`)) || (!!u.b && steps.has(`${u.b}>${k}`))));
+    const plain = kidIds.filter((k) => !ribIds.includes(k));
+    const childless = !u.kids.length;
+    if (!kidIds.length) {
+      // брак без детей на небе: черта и ромб, если оба супруга на небе (жена — и призраком у мужа)
+      if (!F || !u.b || u.claim) continue;
+      const g = (ghostsOf.get(u.b) ?? []).find((q) => q.sat === F.id && marriageGhost(q));
+      W = g ?? W;
+      if (!W) continue;
+    }
+    const O = W && !W.ghost ? W : F;
+    if (!O) continue;
+    // дети: настоящая звезда или призрак в родной семье — ближайший к следу владельца
+    const kids: LinkStar[] = [];
+    for (const k of plain) {
+      const imgs = [...(main.has(k) ? [main.get(k)!] : []), ...(ghostsOf.get(k) ?? []).filter((g) => !marriageGhost(g))];
+      if (!imgs.length) continue;
+      let best = imgs[0];
+      for (const q of imgs) if (Math.abs(q.y - yAt(O, q.x)) < Math.abs(best.y - yAt(O, best.x))) best = q;
+      kids.push(best);
+    }
     kids.sort((a, b) => a.x - b.x || a.y - b.y);
-    const rib = new Set(kids.filter((k) => (u.a && steps.has(`${u.a}>${k.id}`)) || (u.b && steps.has(`${u.b}>${k.id}`))).map((k) => k.id));
-    // гнёзда: дети одного союза ближе TOOTH_MAX от ствола первого — на одном стволе (Г3)
-    const groups: LinkStar[][] = [];
+    const rib = ribIds.map((k) => main.get(k)!).sort((a, b) => a.x - b.x);
+    if (!kids.length && !rib.length && kidIds.length) continue;
+    const kind = marriageKind(u);
+    const look: NodeLook = !u.a ? 'no-father' : !u.b ? 'no-mother' : kind;
+    const t = unionYear(u.id, model);
+    const xw = t !== null && inp.xAt ? inp.xAt(t) : null;
+    if (kids.length || rib.length) for (const q of [u.a, u.b]) if (q) withKidsOf.set(q, (withKidsOf.get(q) ?? 0) + 1);
+    // гнёзда: дети ближе 40 px от ствола первого — на одном стволе (Г3)
+    const nests: LinkStar[][] = [];
     for (const k of kids) {
-      const g = groups[groups.length - 1];
+      const g = nests[nests.length - 1];
       if (g && k.x - (g[0].x - leadOf(g[0])) <= TOOTH_MAX) g.push(k);
-      else groups.push([k]);
+      else nests.push([k]);
     }
-    grouped.push({ u, p, o, rib, groups });
+    plans.push({ u, kind, F, W, O, kids, rib, look, label: null, late: false, childless, xw, nests, merged: false, col: NaN, xs: [] });
   }
-  splitCrowded(grouped);
-  for (const { u, p, o, rib, groups } of grouped)
-    groups.forEach((g, n) => nests.push({ u, p, o, kids: g, rib, first: n === 0, motherNode: false, linked: false, x: g[0].x - leadOf(g[0]), far: new Set(), sameUnion: n }));
-
-  // узел союза: на следе матери, если она у мужа и не дальше двух строк от детей (Г4, Г8). Решает первое гнездо союза;
-  // черта брака — только у него (одна связь — одна линия), следующие гнёзда висят на том же следе узлами •
-  const byU = new Map<string, Nest[]>();
-  for (const n of nests) {
-    const a = byU.get(n.u.id);
-    if (a) a.push(n);
-    else byU.set(n.u.id, [n]);
-  }
-  for (const ns of byU.values()) {
-    const n = ns[0];
-    if (!n.o) continue;
-    const plain = n.kids.filter((k) => !n.rib.has(k.id));
-    const ks = plain.length ? plain : n.kids;
-    const o = n.o;
-    const dOP = Math.abs(o.y - n.p.y);
-    const near = ks.reduce((b, k) => (Math.abs(k.y - o.y) < Math.abs(b.y - o.y) ? k : b), ks[0]);
-    const side = Math.sign(near.y - n.p.y);
-    const xs = n.kids[0].x - leadOf(n.kids[0]);
-    const reaches = (s: LinkStar, x: number) => s.x1 !== null && s.x1 >= x - 1 && s.x + s.r + 2 < x;
-    // жена-спутница мужа: общая раскладка ставит её у внутреннего края группы её детей (решение 95) — узел на её следе
-    // при любом удалении от мужа; черта брака идёт к нему через строки внутренних групп, пока они пусты
-    const sat = o.sat === n.p.id;
-    const qualifies = (dOP <= SPOUSE_ROWS * ky || sat) && Math.abs(near.y - o.y) <= MOTHER_ROWS * ky + 1 && Math.sign(o.y - n.p.y) === side && reaches(o, xs);
-    // этап 14 (решение 134, G1): ствол союза проходит через след второго родителя — это соединение, а не пересечение:
-    // узел встаёт на это пересечение (у детей), мужу — черта брака; след мужа до узла не доходит — узел на его строке,
-    // от узла к ней — черта брака. Прежде её след резался разрывом, как чужой
-    const os = Math.sign(o.y - n.p.y);
-    const through = !qualifies && dOP > 0.5 && reaches(o, xs) && ks.some((k) => Math.sign(k.y - n.p.y) === os && Math.abs(k.y - n.p.y) > dOP + 0.5);
-    const mother = qualifies || (through && reaches(n.p, xs));
-    // черта брака: от мужа к ромбу на следе жены — или от жены к ромбу на следе мужа, если она стоит рядом
-    const linked = through || (qualifies ? reaches(n.p, xs) : dOP <= SPOUSE_ROWS * ky && reaches(o, xs));
-    // следующие гнёзда: узел • на следе матери, если она связана с союзом (узел или черта у первого гнезда) — или если их
-    // ствол сам проходит через её след (Вениамин ниже Рахили: ствол к нему резал её след)
-    const throughM = (m: Nest, xm: number) => reaches(o, xm) && m.kids.some((k) => !m.rib.has(k.id) && Math.sign(k.y - n.p.y) === os && Math.abs(k.y - n.p.y) > dOP + 0.5);
-    // и наоборот: гнездо на следе матери, чьи дети по ту сторону отца, — узел • на следе отца (ствол Шеломифа от Маахи
-    // резал след Ровоама)
-    const beyondP = (m: Nest) => m.kids.some((k) => !m.rib.has(k.id) && Math.sign(k.y - n.p.y) === -os && Math.abs(k.y - n.p.y) > 0.5);
-    for (const m of ns) {
-      const xm = m.kids[0].x - leadOf(m.kids[0]);
-      m.motherNode = (mother && (m === n || reaches(o, xm))) || (m !== n && (mother || linked) && dOP > 0.5 && throughM(m, xm));
-      if (m !== n && m.motherNode && dOP > 0.5 && reaches(n.p, xm) && beyondP(m)) m.motherNode = false;
-      m.linked = linked && m === n;
-    }
+  for (const p of plans) {
+    const u = p.u;
+    if (p.W || !p.kids.length && !p.rib.length) continue;
+    // ромб на следе отца: имя матери, которая не на небе, или «мать не названа» — если у отца союзов с детьми два и больше
+    const n = withKidsOf.get(p.O.id) ?? 0;
+    if (u.b && u.b !== p.O.id && n >= 2) p.label = u.b;
+    else if (!u.b && u.a && n >= 2) p.label = '';
   }
 
-  // звёзды: сетка для зазора Г5
+  // ---------- места вертикалей ----------
   const stars = new Grid<LinkStar>(32);
   let maxR = 0;
   for (const s of inp.stars) {
     stars.add(s.x - s.r, s.y - s.r, s.x + s.r, s.y + s.r, s);
     maxR = Math.max(maxR, s.r);
   }
-  const trails = new Trails(inp.stars);
-  // реестр вертикалей кадра (Г6): x, y0…y1, союз, широкая (черта брака или лента)
-  // full — дальний ход длинной связи (рисуется только раскрытым: выбор, наведение): близость к нему дешевле (G8)
-  type Vert = { x: number; y0: number; y1: number; u: string; wide: boolean; full: boolean; dead?: boolean };
-  const verts = new Grid<Vert>(24);
-  // реестр зубцов кадра: горизонтали x0…x1 на высоте y, союз
-  type Tooth = { x0: number; x1: number; y: number; u: string; dead?: boolean };
-  const teeth = new Grid<Tooth>(24);
-  // реестр узлов кадра: два ромба разных союзов на одном следе ближе ширины знака с подложкой — один знак на вид (Г7)
+  type Vert = { x: number; y0: number; y1: number; u: string; wide: boolean; dead?: boolean };
   type NodeAt = { x: number; y: number; u: string; dead?: boolean };
+  type Tooth = { x0: number; x1: number; y: number; u: string; dead?: boolean };
+  const verts = new Grid<Vert>(24);
   const nodeAt = new Grid<NodeAt>(24);
-  const nodeGap = nodeGapOf(inp);
-
-  const owner = (n: Nest) => (n.motherNode ? n.o! : n.p);
-  // порядок: сначала гнёзда лент (коридор), затем по времени. Гнёзда одного отца, чьи стволы стоят в одном окне по
-  // времени (шина многожёнца: Халев, Мааха и Ефа), — от длинной вертикали к короткой: внешняя черта брака встаёт первой,
-  // а узлы внутренних союзов — сбоку от неё, а не под ней (решение 134, G2)
-  const extent = (n: Nest) => {
-    const ys = [owner(n).y, ...n.kids.map((k) => k.y), ...(n.linked ? [(n.motherNode ? n.p : n.o!).y] : [])];
-    return Math.max(...ys) - Math.min(...ys);
-  };
-  const cluster = new Map<Nest, number>();
-  {
-    const byP = new Map<string, Nest[]>();
-    for (const n of nests) (byP.get(n.p.id) ?? byP.set(n.p.id, []).get(n.p.id)!).push(n);
-    for (const ns of byP.values()) {
-      ns.sort((a, b) => a.kids[0].x - b.kids[0].x);
-      let start = -Infinity;
-      let last = -Infinity;
-      for (const n of ns) {
-        if (n.kids[0].x - last > TRUNK_MAX) start = n.kids[0].x;
-        last = n.kids[0].x;
-        cluster.set(n, start);
-      }
+  const teeth = new Grid<Tooth>(24);
+  const slots: Slot[] = [];
+  const span = (ys: number[]): [number, number] => [Math.min(...ys), Math.max(...ys)];
+  for (const p of plans) {
+    const { F, W, O } = p;
+    const bar = !!F && !!W;
+    const lo0 = Math.max(O.x + O.r + 3, F ? F.x + F.r + 3 : -Infinity, W ? W.x + W.r + 3 : -Infinity);
+    const n0 = p.nests[0];
+    if (n0) {
+      const first = n0[0];
+      const t0 = first.x - leadOf(first);
+      const want = p.xw !== null ? Math.min(p.xw, t0) : t0;
+      // первое гнездо — на колонне, если черта у рождения первого ребёнка и дети не по сторону отца от матери
+      const yW = W ? yAt(W, want) : 0;
+      const yF = F ? yAt(F, want) : 0;
+      const wrongSide = bar && Math.abs(yW - yF) > 0.5 && n0.some((k) => Math.sign(k.y - yW) === Math.sign(yF - yW));
+      p.merged = want >= first.x - TRUNK_MAX - 0.5 && !wrongSide;
     }
-  }
-  const order = [...nests].sort((a, b) => {
-    const ra = a.kids.some((k) => a.rib.has(k.id)) ? 0 : 1;
-    const rb = b.kids.some((k) => b.rib.has(k.id)) ? 0 : 1;
-    if (ra !== rb) return ra - rb;
-    const ca = cluster.get(a)!;
-    const cb = cluster.get(b)!;
-    if (a.p === b.p && ca === cb) return extent(b) - extent(a) || a.kids[0].x - b.kids[0].x;
-    return Math.min(ca, a.kids[0].x) - Math.min(cb, b.kids[0].x) || a.kids[0].x - b.kids[0].x || a.kids[0].y - b.kids[0].y;
-  });
-
-  /** Строки, которые проходит вертикаль гнезда: узел, связанный второй родитель, дети без лент и с лентами. */
-  const spanOf = (n: Nest, kids: readonly LinkStar[]) => {
-    const own = owner(n);
-    const ys = [own.y, ...kids.map((k) => k.y)];
-    if (n.linked) ys.push((n.motherNode ? n.p : n.o!).y);
-    return [Math.min(...ys), Math.max(...ys)] as const;
-  };
-  const members = (n: Nest) => new Set([n.p.id, ...(n.o ? [n.o.id] : []), ...n.kids.map((k) => k.id)]);
-  /** Пределы ствола гнезда: не левее узла на следе (звезда владельца и второго родителя), не правее рождения − 5. */
-  /** Правый предел ствола: рождение первого ребёнка − 5, а у узла на следе матери — и не дальше конца её следа. */
-  const hiOf = (n: Nest): number => {
-    const own = owner(n);
-    const hi = n.kids[0].x - TRUNK_MIN;
-    return n.motherNode && own.x1 !== null ? Math.min(hi, own.x1 - 0.5) : hi;
-  };
-  const boundsOf = (n: Nest): [number, number] => {
-    const own = owner(n);
-    const other = n.linked ? (n.motherNode ? n.p : n.o) : null;
-    const firstX = n.kids[0].x;
-    let lo = Math.max(firstX - TRUNK_MAX, own.x + own.r + 3);
-    if (other) lo = Math.max(lo, other.x + other.r + 3);
-    const maxTooth = Math.max(...n.kids.filter((k) => !n.rib.has(k.id)).map((k) => k.x), firstX);
-    return [Math.max(lo, maxTooth - TOOTH_MAX), hiOf(n)];
-  };
-  // узлы нескольких гнёзд на одном следе — с шагом nodeGap заранее: справа налево от желаемых мест (слева простора больше),
-  // затем слева направо до нижних пределов. Жадный разбор по одному гнезду ставил бы первый узел туда, где второму уже
-  // некуда встать (Халев: три союза в 18 px следа)
-  {
-    const byOwner = new Map<string, Nest[]>();
-    for (const n of nests) {
-      const k = owner(n).id;
-      const a = byOwner.get(k);
-      if (a) a.push(n);
-      else byOwner.set(k, [n]);
-    }
-    for (const ns of byOwner.values()) {
-      if (ns.length < 2) continue;
-      const rows = ns.map((n) => {
-        const [lo, hi] = boundsOf(n);
-        const want = Math.round(Math.max(lo, Math.min(hi, n.kids[0].x - leadOf(n.kids[0])))) + 0.5;
-        return { n, lo, hi, want, p: want };
-      });
-      rows.sort((a, b) => a.want - b.want);
-      for (let i = rows.length - 2; i >= 0; i--) rows[i].p = Math.min(rows[i].p, rows[i + 1].p - nodeGap);
-      for (let i = 0; i < rows.length; i++) {
-        const r = rows[i];
-        if (r.p < r.lo) r.p = Math.ceil(r.lo - 0.5) + 0.5;
-        if (i && r.p < rows[i - 1].p + nodeGap) r.p = rows[i - 1].p + nodeGap;
-        if (r.p > r.hi) r.p = Math.floor(r.hi - 0.5) + 0.5;
-      }
-      for (const r of rows) r.n.pref = r.p;
-    }
-  }
-
-  /**
-   * Дальний ход длинной связи (G8: при выборе лица его длинные связи разворачиваются): прямой вертикалью, если она не
-   * задевает чужих звёзд; иначе — одной ступенькой в межстрочье, после которой вертикаль идёт другим столбцом (в пределах
-   * зубцов дальних детей). Звёзды столбцов считаются один раз на столбец, ступенька — перебором межстрочий.
-   */
-  const farJog = (n: Nest, own: LinkStar, other: LinkStar | null): Map<number, Jog> | undefined => {
-    const out = new Map<number, Jog>();
-    const near = n.kids.filter((k) => !n.far.has(k.id));
-    const mine = new Set([own.id, ...(other ? [other.id] : []), ...n.kids.map((k) => k.id)]);
-    for (const dir of [-1, 1] as const) {
-      const fs = n.kids.filter((k) => n.far.has(k.id) && Math.sign(k.y - own.y) === dir);
-      if (!fs.length) continue;
-      const ys = [own.y, ...near.map((k) => k.y), ...(n.linked && other ? [other.y] : [])];
-      const edge = dir < 0 ? Math.min(...ys) : Math.max(...ys);
-      const reach = dir < 0 ? Math.min(...fs.map((k) => k.y)) : Math.max(...fs.map((k) => k.y));
-      const lo = Math.min(edge, reach);
-      const hi = Math.max(edge, reach);
-      /** чужие звёзды столбца x между a и b (по их радиусу) */
-      const column = (x: number): [number, number][] => {
-        const out2: [number, number][] = [];
-        for (const st of stars.query(x - maxR - STAR_CLEAR, lo - maxR, x + maxR + STAR_CLEAR, hi + maxR))
-          if (!mine.has(st.id) && !st.ghost && Math.abs(st.x - x) < st.r + STAR_CLEAR) out2.push([st.y - st.r, st.y + st.r]);
-        return out2;
-      };
-      const count = (col: [number, number][], a: number, b: number) => {
-        let c = 0;
-        for (const [p, q] of col) if (q > Math.min(a, b) + 0.5 && p < Math.max(a, b) - 0.5) c++;
-        return c;
-      };
-      const base = column(n.x);
-      const straight = count(base, edge, reach);
-      if (!straight) continue;
-      let best: { y: number; x2: number; c: number } | null = null;
-      const cols = new Map<number, [number, number][]>();
-      for (let j = 0; j < 48; j++) {
-        const y = edge + dir * (j + 0.5) * ky;
-        if (dir * (reach - y) < ky * 0.5) break;
-        // дети за ступенькой — со второго столбца: зубцы к ним не длиннее 40 px и не короче 5
-        const beyond = fs.filter((k) => dir * (k.y - y) > 0);
-        const x2lo = Math.max(Math.max(...beyond.map((k) => k.x)) - TOOTH_MAX, Math.min(...beyond.map((k) => k.x)) - TRUNK_MAX);
-        const x2hi = Math.min(...beyond.map((k) => k.x - leadOf(k))) + (TRUNK_LEAD - TRUNK_MIN);
-        const before = count(base, edge, y);
-        if (best && before >= best.c) continue;
-        // чужие звёзды у межстрочья y — одним запросом на строку (а не на каждый x2; С1)
-        const x2a = Math.ceil(x2lo - 0.5) + 0.5;
-        const row: LinkStar[] = [];
-        for (const st of stars.query(Math.min(n.x, x2a) - maxR, y - maxR - STAR_CLEAR, Math.max(n.x, x2hi) + maxR, y + maxR + STAR_CLEAR))
-          if (!mine.has(st.id) && !st.ghost && Math.abs(st.y - y) < st.r + STAR_CLEAR) row.push(st);
-        for (let x2 = x2a; x2 <= x2hi; x2 += 1) {
-          if (Math.abs(x2 - n.x) < 2) continue;
-          let col = cols.get(x2);
-          if (!col) cols.set(x2, (col = column(x2)));
-          let c = before + count(col, y, reach);
-          const xa = Math.min(n.x, x2);
-          const xb = Math.max(n.x, x2);
-          for (const st of row) if (st.x > xa - st.r && st.x < xb + st.r) c++;
-          const score = c * 1000 + Math.abs(x2 - n.x) + Math.abs(y - edge) / ky;
-          if (!best || score < best.c * 1000 + 0.5) {
-            if (!best || c < best.c || (c === best.c && score < best.c * 1000 + Math.abs(best.x2 - n.x) + Math.abs(best.y - edge) / ky)) best = { y, x2, c };
-          }
-        }
-      }
-      // чужие звёзды у межстрочья y — одним запросом на строку для всех x двойной ступеньки (С1)
-      const rows = new Map<number, LinkStar[]>();
-      const hline = (y: number, xa: number, xb: number) => {
-        let row = rows.get(y);
-        if (!row) {
-          row = [];
-          const fx = fs.map((k) => k.x);
-          const x0 = Math.min(n.x - 80, ...fx) - TRUNK_MAX - maxR - 2;
-          const x1 = Math.max(n.x + 40, ...fx) + TRUNK_LEAD + maxR + 2;
-          for (const st of stars.query(x0, y - maxR - STAR_CLEAR, x1, y + maxR + STAR_CLEAR)) if (!mine.has(st.id) && !st.ghost && Math.abs(st.y - y) < st.r + STAR_CLEAR) row.push(st);
-          rows.set(y, row);
-        }
-        const lo = Math.min(xa, xb);
-        const hi = Math.max(xa, xb);
-        let c = 0;
-        for (const st of row) if (st.x > lo - st.r && st.x < hi + st.r) c++;
-        return c;
-      };
-      let jog: Jog | null = best && best.c < straight ? { y: best.y, x2: best.x2 } : null;
-      // двойная ступенька: средний столбец — любой в стороне (он не несёт зубцов), дети — со столбца у них
-      if (!best || best.c > 0) {
-        const firstFar = dir < 0 ? Math.max(...fs.map((k) => k.y)) : Math.min(...fs.map((k) => k.y));
-        const x2lo = Math.max(Math.max(...fs.map((k) => k.x)) - TOOTH_MAX, Math.min(...fs.map((k) => k.x)) - TRUNK_MAX);
-        const x2hi = Math.min(...fs.map((k) => k.x - leadOf(k))) + (TRUNK_LEAD - TRUNK_MIN);
-        let b2: { c: number; s: number; j: Jog } | null = null;
-        // нижняя часть (до столбца детей) — одна на y2: лучший x2 для каждого межстрочья, затем средний столбец
-        const tails: { y2: number; x2: number; c: number }[] = [];
-        for (let z = 0; z < 2; z++) {
-          const y2 = firstFar - dir * (z + 0.5) * ky;
-          let bt: { x2: number; c: number } | null = null;
-          for (let x2 = Math.ceil(x2lo - 0.5) + 0.5; x2 <= x2hi; x2 += 1) {
-            let c2 = cols.get(x2);
-            if (!c2) cols.set(x2, (c2 = column(x2)));
-            const c = count(c2, y2, reach);
-            if (!bt || c < bt.c || (c === bt.c && Math.abs(x2 - n.x) < Math.abs(bt.x2 - n.x))) bt = { x2, c };
-          }
-          if (bt) tails.push({ y2, ...bt });
-        }
-        for (let a = 0; a < 2; a++) {
-          const y1 = edge + dir * (a + 0.5) * ky;
-          const c0 = count(base, edge, y1);
-          for (const t of tails) {
-            if (dir * (t.y2 - y1) < ky) continue;
-            for (let xm = Math.round(n.x - 80) + 0.5; xm <= n.x + 40; xm += 2) {
-              let cm = cols.get(xm);
-              if (!cm) cols.set(xm, (cm = column(xm)));
-              const c1 = c0 + t.c + count(cm, y1, t.y2);
-              if (b2 && c1 > b2.c) continue;
-              const c = c1 + hline(y1, n.x, xm) + hline(t.y2, xm, t.x2);
-              const sc = Math.abs(xm - n.x) * 0.5 + Math.abs(t.x2 - xm) * 0.5;
-              if (!b2 || c < b2.c || (c === b2.c && sc < b2.s)) b2 = { c, s: sc, j: { y: t.y2, x2: t.x2, mid: { x: xm, y1 } } };
-            }
-          }
-        }
-        if (b2 && b2.c < (best ? best.c : straight) && b2.c < straight) jog = b2.j;
-      }
-      if (jog) out.set(dir, jog);
-    }
-    return out.size ? out : undefined;
-  };
-  // зазор ромба от чужого пути (решение 134: ромб не стоит на чужом пути, r + 2) и половина ширины вертикали
-  const nodeClear = (inp.nodeR ?? NODE_R_MAP) + 2;
-  const halfW = (wide: boolean) => (wide ? 2.1 : 0.5);
-  // соседи по шине (гнёзда одного отца в одном окне времени): внешняя вертикаль оставляет место узлам ещё не поставленных
-  const peers = new Map<string, Nest[]>();
-  for (const n of nests) {
-    const k = `${n.p.id}|${cluster.get(n)}`;
-    (peers.get(k) ?? peers.set(k, []).get(k)!).push(n);
-  }
-  const placed = new Set<Nest>();
-  // ромбы бездетных браков (childlessNodes) — заранее в реестр узлов: стволы не проходят через них (G2: союз Потифара на
-  // стволе Иакова и Рахили); место — то же, что потом даст childlessNodes без сдвига
-  {
-    const kidsU = new Set(nests.map((n) => n.u.id));
-    for (const u of U.byId.values()) {
-      if (!u.a || !u.b || u.claim || kidsU.has(u.id)) continue;
-      const h = main.get(u.a);
-      const w = main.get(u.b);
-      if (!h || !w) continue;
-      const x = Math.round(Math.max(h.x + h.r, w.x + w.r) + 12) + 0.5;
-      const at = [h, w].find((q) => q.x1 !== null && x < q.x1 - 1);
-      const nx = at ? x : Math.round(h.x + h.r + 6) + 0.5;
-      const y = (at ?? h).y;
-      nodeAt.add(nx, y, nx, y, { x: nx, y, u: u.id });
-    }
-  }
-  const bounds = new Map<Nest, [number, number]>();
-  const boundsMemo = (m: Nest) => bounds.get(m) ?? bounds.set(m, boundsOf(m)).get(m)!;
-  // записи гнезда в реестрах (для второго прохода) и его цена места
-  const ent = new Map<Nest, { dead?: boolean }[]>();
-  const costs = new Map<Nest, (x: number) => number>();
-  /** окна мест гнезда (середины пикселей) — для совместного перебора второго прохода */
-  const windows = new Map<Nest, number[]>();
-  const placeNest = (n: Nest, force?: number) => {
-    n.far.clear();
-    n.jog = undefined;
-    const mine: { dead?: boolean }[] = [];
-    ent.set(n, mine);
-    const addV = (x0: number, y0: number, x1: number, y1: number, e: Vert) => {
-      mine.push(e);
-      verts.add(x0, y0, x1, y1, e);
-    };
-    const own = owner(n);
-    const other = n.linked ? (n.motherNode ? n.p : n.o) : null;
-    const plain = n.kids.filter((k) => !n.rib.has(k.id));
-    const firstX = n.kids[0].x;
-    const skip = members(n);
-    // соединённые с вертикалью лица: владелец узла, второй родитель с чертой брака и дети; следы остальных она пересекает
-    // с разрывом, а звёзды остальных (мать без черты, дети лент) обходит (Г5, Г7)
-    const tied = new Set([own.id, ...(other ? [other.id] : []), ...plain.map((k) => k.id)]);
-    // длинные связи (Г11): ребёнок дальше 8 строк от узла, и вертикаль к нему пересекает живые чужие следы
-    if (inp.long) {
-      const x0 = firstX - leadOf(n.kids[0]);
-      for (const k of plain) if (Math.abs(k.y - own.y) > LONG_ROWS * ky && trails.crossing(x0, own.y, k.y, tied).length) n.far.add(k.id);
-    }
-    const near = n.kids.filter((k) => !n.far.has(k.id));
-    // длинная черта брака (решение 134): от мужа к узлу на следе матери у детей — больше 8 строк
-    const barLong = !!other && !!inp.long && Math.abs(other.y - own.y) > LONG_ROWS * ky;
-    const [y0, y1] = barLong ? spanOf({ ...n, linked: false }, near) : spanOf(n, near);
-    // весь ход — и дальний, что рисуется только раскрытым (G8: выбранное лицо разворачивает свои длинные связи)
-    const [F0, F1] = spanOf(n, n.kids);
-    const wide = n.linked || near.some((k) => n.rib.has(k.id));
-    // пределы ствола: не левее узла на следе (звезда владельца и второго родителя), не правее рождения − 5
-    let lo = Math.max(firstX - TRUNK_MAX, own.x + own.r + 3);
-    if (other) lo = Math.max(lo, other.x + other.r + 3);
-    const hi = hiOf(n);
-    const maxTooth = Math.max(...plain.map((k) => k.x), firstX);
-    lo = Math.max(lo, maxTooth - TOOTH_MAX);
-    const inNear = (a: number, b: number) => Math.min(b, y1) - Math.max(a, y0) > 0.5;
-    const peerList = (peers.get(`${n.p.id}|${cluster.get(n)}`) ?? []).filter((m) => m !== n && !placed.has(m) && m.u !== n.u);
-    const pending = peerList.filter((m) => owner(m).y > F0 + 0.5 && owner(m).y < F1 - 0.5);
-    // строки, где этот союз стоит станцией (узел, конец черты брака), и соседи, у которых станция на той же строке (след
-    // Иакова: ромб Лии и концы черт Зелфы, Валлы, Рахили) — им остаётся место через шаг узлов
-    const rowsOf = (m: Nest) => {
-      const o = m.linked ? (m.motherNode ? m.p : m.o) : null;
-      return [owner(m).y, ...(o ? [o.y] : [])];
-    };
-    const myRows = rowsOf(n);
-    const sameRow = peerList.filter((m) => rowsOf(m).some((y) => myRows.some((z) => Math.abs(y - z) < 0.5)));
-    // обрывки длинных связей (у узла и у каждого дальнего ребёнка) и длинной черты брака: у их концов — звёзды обходятся
-    const stubBits: [number, number][] = [];
-    if (n.far.size) {
-      const edgeUp = Math.min(own.y, ...near.map((k) => k.y));
-      const edgeDn = Math.max(own.y, ...near.map((k) => k.y));
-      for (const k of plain)
-        if (n.far.has(k.id)) {
-          const dir = Math.sign(own.y - k.y);
-          stubBits.push([k.y, k.y + dir * STUB_PX]);
-          stubBits.push(k.y < own.y ? [edgeUp, edgeUp - STUB_PX] : [edgeDn, edgeDn + STUB_PX]);
-        }
-    }
-    if (barLong && other) {
-      const dir = Math.sign(other.y - own.y);
-      stubBits.push([own.y, own.y + dir * STUB_PX], [other.y, other.y - dir * STUB_PX]);
-    }
-    // всё, что цена места читает из реестров и звёзд, — одним запросом на гнездо по полосе всех его кандидатов (а не по
-    // запросу на кандидата): ход длинной связи бывает в сотни px, а кандидатов — до 65
-    const kidsX = Math.max(firstX, ...plain.map((k) => k.x));
-    const QX0 = lo - WIDE_GAP - maxR - STAR_CLEAR - nodeGap - 4;
-    const QX1 = Math.max(hi + WIDE_GAP + maxR + STAR_CLEAR + nodeGap + 4, kidsX);
-    let V: Vert[] = [];
-    let N: NodeAt[] = [];
-    let S: LinkStar[] = [];
-    let TT: Tooth[] = [];
-    const collect = () => {
-      V = [...verts.query(QX0, F0 - 1, QX1, F1 + 1)].filter((v) => !v.dead && v.u !== n.u.id);
-      N = [...nodeAt.query(QX0, F0 - 1, QX1, F1 + 1)].filter((m) => !m.dead && m.u !== n.u.id);
-      S = [...stars.query(QX0, F0 - maxR - STAR_CLEAR - STUB_PX, QX1, F1 + maxR + STAR_CLEAR + STUB_PX)];
-      TT = [...teeth.query(QX0, F0, QX1, F1)].filter((t) => !t.dead && t.u !== n.u.id);
-    };
-    collect();
-    const cost = (x: number): number => {
-      let c = 0;
-      // узлу ещё не поставленного соседа по шине останется место сбоку от этой вертикали
-      for (const m of sameRow) {
-        const [mlo, mhi] = boundsMemo(m);
-        const a = Math.ceil(mlo - 0.5) + 0.5;
-        const b = Math.floor(Math.min(mhi, m.kids[0].x - m.kids[0].r - STAR_CLEAR) - 0.5) + 0.5;
-        if (!(a <= x - nodeGap || b >= x + nodeGap)) c += 150;
-      }
-      for (const m of pending) {
-        const [mlo, mhi] = boundsMemo(m);
-        const g = nodeClear + halfW(wide);
-        // кандидаты соседа — середины пикселей в его пределах, и его ствол не ближе r + 5 к звезде его первого ребёнка
-        const a = Math.ceil(mlo - 0.5) + 0.5;
-        const b = Math.floor(Math.min(mhi, m.kids[0].x - m.kids[0].r - STAR_CLEAR) - 0.5) + 0.5;
-        if (!(a <= x - g || b >= x + g)) c += 150;
-      }
-      for (const v of V) {
-        const d = Math.abs(v.x - x);
-        // вертикали других союзов (Г6): штраф растёт к совпадению — совпадающие вертикали читались бы одной линией (G2)
-        if (d < WIDE_GAP && Math.min(v.y1, F1) - Math.max(v.y0, F0) > 0.5) {
-          const need = v.wide || wide ? WIDE_GAP : TRUNK_GAP;
-          if (d < need) {
-            const w = !v.full && inNear(v.y0, v.y1) ? 1 : 0.3;
-            c += w * (d < 2 ? 1200 : 100 + (300 * (need - d)) / need);
-          }
-        }
-        // ромб не на чужом пути (решение 134, G2): узел этого союза — на вертикали другого
-        if (own.y > v.y0 + 0.5 && own.y < v.y1 - 0.5 && d < nodeClear + halfW(v.wide)) c += v.full ? 400 : 1200;
-        // свои зубцы пересекают вертикали других союзов (Я11)
-        if (v.x > x + 0.5)
-          for (const k of plain) if (!n.far.has(k.id) && v.x < k.x - k.r - 2 && k.y > v.y0 + 0.5 && k.y < v.y1 - 0.5) c += v.full ? 30 : 100;
-      }
-      for (const m of N) {
-        const d = Math.abs(m.x - x);
-        // чужой узел — на этой вертикали
-        if (Math.abs(m.y - own.y) >= 1 && m.y > F0 + 0.5 && m.y < F1 - 0.5 && d < nodeClear + halfW(wide)) c += m.y > y0 + 0.5 && m.y < y1 - 0.5 ? 1200 : 400;
-        // узел другого союза на том же следе рядом: ромбы слились бы в один (Г7) — хуже близкой вертикали, лучше звезды;
-        // если места нет (очень тесная семья на мелком масштабе), лучше ромбы вплотную, чем один поверх другого
-        if (Math.abs(m.y - own.y) < 1 && d < nodeGap) c += 200 + (400 * (nodeGap - d)) / nodeGap;
-        // черта брака входит в след второго родителя у чужого ромба: она читалась бы связью с тем союзом (G2)
-        if (other && Math.abs(m.y - other.y) < 1 && d < nodeGap) c += d < nodeClear + halfW(true) ? 1200 : 200 + (400 * (nodeGap - d)) / nodeGap;
-        // чужой узел на зубце
-        if (m.x > x + 0.5) for (const k of plain) if (!n.far.has(k.id) && Math.abs(m.y - k.y) < 1 && m.x < k.x - k.r) c += 1200;
-      }
-      for (const s of S) {
-        const dx = Math.abs(s.x - x);
-        // чужие звёзды у вертикали (свои дети с зубцами стоят дальше r + 5 сами); у дальнего хода — дешевле (G8)
-        if (dx < s.r + STAR_CLEAR && s.id !== own.id && !(other && s.id === other.id) && s.y >= F0 - s.r && s.y <= F1 + s.r) c += s.y >= y0 - s.r && s.y <= y1 + s.r ? 1000 : tied.has(s.id) ? 0 : FULL_STAR;
-        // звёзды у обрывков длинных связей: у узла и у каждого дальнего ребёнка (Г11)
-        if (dx < s.r + STAR_CLEAR && !tied.has(s.id)) for (const [a, b] of stubBits) if (s.y >= Math.min(a, b) - s.r && s.y <= Math.max(a, b) + s.r) c += 1000;
-        // чужие звёзды на зубцах
-        if (s.x > x && !skip.has(s.id)) for (const k of plain) if (!n.far.has(k.id) && s.x < k.x && Math.abs(s.y - k.y) < s.r + STAR_CLEAR) c += 1000;
-      }
-      // вертикаль пересекает зубцы других союзов (Я11)
-      for (const t of TT) if (t.y > F0 + 0.5 && t.y < F1 - 0.5 && x > t.x0 + 0.5 && x < t.x1 - 0.5) c += t.y > y0 + 0.5 && t.y < y1 - 0.5 ? 100 : 30;
-      return c;
-    };
-    const lead = leadOf(n.kids[0]);
-    let best = Math.max(lo, Math.min(hi, firstX - lead));
-    windows.set(n, lo > hi ? [Math.floor(lo) + 0.5] : Array.from({ length: Math.max(1, Math.floor(hi - 0.5) - Math.ceil(lo - 0.5) + 1) }, (_, k) => Math.ceil(lo - 0.5) + 0.5 + k));
-    if (force !== undefined) best = force;
-    else if (lo > hi) {
-      best = lo;
-      issues.push(`тесно:${n.u.id}`);
+    const colKids = p.merged ? n0 : [];
+    let want: number;
+    let lo: number;
+    let hi: number;
+    if (p.merged) {
+      const first = n0[0];
+      want = p.xw !== null ? Math.min(p.xw, first.x - leadOf(first)) : first.x - leadOf(first);
+      lo = Math.max(lo0, first.x - TRUNK_MAX, Math.max(...n0.map((k) => k.x)) - TOOTH_MAX);
+      hi = first.x - TRUNK_MIN;
+    } else if (n0 || p.rib.length) {
+      const next = n0 ? n0[0].x - leadOf(n0[0]) : p.rib[0].x - p.rib[0].r - 4;
+      want = p.xw ?? next;
+      lo = Math.max(lo0, want - 16);
+      hi = Math.min(want + 16, n0 ? next - WIDE_GAP : next);
+      if (!n0) want = Math.min(want, hi);
     } else {
-      let bc = Infinity;
-      // кандидаты — сразу в серединах пикселей: округление после выбора не съедает зазор до звезды
-      const pref = n.pref ?? Math.round(firstX - lead) + 0.5;
-      const cands: number[] = [];
-      for (let d = 0; d <= TRUNK_MAX; d++) {
-        if (pref - d >= lo && pref - d <= hi) cands.push(pref - d);
-        if (d && pref + d >= lo && pref + d <= hi) cands.push(pref + d);
+      // брак без детей на небе: на обоих следах — правее звёзд, левее концов следов
+      const end = Math.min(F ? tailOf(F) : Infinity, W && !W.ghost ? tailOf(W) : Infinity) - 1;
+      want = p.xw ?? Math.max(F ? F.x + F.r : -Infinity, W ? W.x + W.r : -Infinity) + 12;
+      lo = Math.max(lo0, want - 12);
+      hi = Math.min(want + 24, end);
+      if (hi < lo || !(want < end + 24)) {
+        // места на её следе нет: ромб на следе мужа с её именем (К6)
+        p.W = null;
+        p.label = p.u.b;
+        p.late = true;
+        want = (F ?? O).x + (F ?? O).r + 6;
+        lo = want;
+        hi = want;
+        p.O = F ?? O;
       }
-      for (const x of cands) {
-        const c = cost(x) + Math.abs(x - pref) * (x > pref ? 2 : 1);
-        if (c < bc) {
-          bc = c;
-          best = x;
-          if (c < 1) break;
-        }
-      }
-      if (bc >= 100) issues.push(`${bc >= 1000 ? 'звезда' : 'рядом'}:${n.u.id}`);
     }
-    n.x = Math.floor(best) + 0.5;
-    placed.add(n);
-    // длинные связи — по окончательному x ствола: он мог уйти от пробного и пересечь живые следы (Г11)
-    if (inp.long)
-      for (const k of plain)
-        if (!n.far.has(k.id) && Math.abs(k.y - own.y) > LONG_ROWS * ky && trails.crossing(n.x, own.y, k.y, tied).length) n.far.add(k.id);
-    n.longBar = barLong && !!other && trails.crossing(n.x, own.y, other.y, tied).length > 0;
-    if (n.far.size) n.jog = farJog(n, own, other);
-    const nearKids = n.kids.filter((k) => !n.far.has(k.id));
-    const [fy0, fy1] = n.longBar ? spanOf({ ...n, linked: false }, nearKids) : spanOf(n, nearKids);
-    addV(n.x, fy0, n.x, fy1, { x: n.x, y0: fy0, y1: fy1, u: n.u.id, wide, full: false });
-    // дальний ход (раскрытым) и обрывки (свёрнутым) — тоже в реестр: другие союзы не встают на них (G2, G8)
-    const [gy0, gy1] = spanOf(n, n.kids);
-    if (gy0 < fy0 - 0.5 || gy1 > fy1 + 0.5) addV(n.x, gy0, n.x, gy1, { x: n.x, y0: gy0, y1: gy1, u: n.u.id, wide, full: true });
-    const stubAt = (a: number, b: number) => addV(n.x, Math.min(a, b), n.x, Math.max(a, b), { x: n.x, y0: Math.min(a, b), y1: Math.max(a, b), u: n.u.id, wide, full: false });
-    for (const k of plain) if (n.far.has(k.id)) stubAt(k.y, k.y + Math.sign(own.y - k.y) * STUB_PX);
-    if (n.far.size) {
-      if (gy0 < fy0 - 0.5) stubAt(fy0, fy0 - STUB_PX);
-      if (gy1 > fy1 + 0.5) stubAt(fy1, fy1 + STUB_PX);
-    }
-    if (n.longBar && other) {
-      const dir = Math.sign(other.y - own.y);
-      stubAt(other.y, other.y - dir * STUB_PX);
-    }
-    const na: NodeAt = { x: n.x, y: own.y, u: n.u.id };
-    mine.push(na);
-    nodeAt.add(n.x, own.y, n.x, own.y, na);
-    // зубцы гнезда — в реестр: вертикали других союзов их не пересекают (Я11)
-    for (const k of plain)
-      if (!n.far.has(k.id)) {
-        const t: Tooth = { x0: n.x, x1: k.x - k.r - 1.5, y: k.y, u: n.u.id };
-        mine.push(t);
-        teeth.add(n.x, k.y, k.x, k.y, t);
-      }
-    costs.set(n, (x: number) => {
-      collect();
-      return cost(x);
+    const xq = Math.max(lo, Math.min(hi, want));
+    const ny = p.W ? yAt(p.W, xq) : yAt(p.O, xq);
+    const fy = bar && p.W ? (F ? yAt(F, xq) : null) : null;
+    const [y0, y1] = span([ny, ...(fy !== null ? [fy] : []), ...colKids.map((k) => k.y)]);
+    slots.push({ p, n: -1, kids: colKids, wide: fy !== null, want, lo, hi, y0, y1, ny, fy, x: xq });
+    p.nests.forEach((g, n) => {
+      if (n === 0 && p.merged) return;
+      const first = g[0];
+      const w = first.x - leadOf(first);
+      const l = Math.max(O.x + O.r + 3, first.x - TRUNK_MAX, Math.max(...g.map((k) => k.x)) - TOOTH_MAX);
+      const h = first.x - TRUNK_MIN;
+      const x = Math.max(l, Math.min(h, w));
+      const oy = yAt(p.O, x);
+      const [a, b] = span([oy, ...g.map((k) => k.y)]);
+      slots.push({ p, n, kids: g, wide: false, want: w, lo: l, hi: h, y0: a, y1: b, ny: oy, fy: null, x });
     });
-  };
-  for (const n of order) placeNest(n);
-  // второй проход (решение 134): гнездо, чьё место заняли поставленные позже (их черта прошла через его ромб, звезда на
-  // его вертикали), ставится заново — уже зная всех соседей; его прежние записи в реестрах гаснут
-  const kill = (n: Nest) => {
-    for (const e of ent.get(n) ?? []) e.dead = true;
-  };
-  // совместный перебор — дорогой: только на масштабе, где строки не теснее 10 px (на обзоре конфликты повсюду и ромбов
-  // всё равно нет), и не больше JOINT_MAX раз на кадр связей
-  let joint = ky >= 10 ? JOINT_MAX : 0;
-  // на обзоре (строка теснее 6 px — связи проявляются с подробностью, решение 25) второго прохода нет: конфликты там
-  // повсюду, а ромбов и подробных связей не видно
-  for (const n of ky >= 6 ? order : []) {
-    const c = costs.get(n);
-    if (!c || c(n.x) < 1000) continue;
-    kill(n);
-    placeNest(n);
-    if (costs.get(n)!(n.x) < 1000 || joint <= 0) continue;
-    // совместно с соседом по шине (гнёзда того же отца рядом по времени): Ефа и Мааха у Халева — ромб одной на черте
-    // другой, пока второй не уступит место; перебор мест соседа, гнездо — лучшим местом при каждом. Только с соседом,
-    // без которого место гнезда стало бы чистым (виновник), — безнадёжные места (звезда) не перебираются
-    const culprit = (m: Nest) => {
-      const es = ent.get(m) ?? [];
-      const alive = es.filter((e) => !e.dead);
-      for (const e of alive) e.dead = true;
-      const c = costs.get(n)!(n.x);
-      for (const e of alive) e.dead = false;
-      return c < 1000;
-    };
-    const near = (peers.get(`${n.p.id}|${cluster.get(n)}`) ?? []).filter((m) => m !== n && Math.abs(m.x - n.x) < 2 * WIDE_GAP && culprit(m)).slice(0, 2);
-    if (!near.length) continue;
-    joint--;
-    let bestT = costs.get(n)!(n.x) + near.reduce((a, m) => a + costs.get(m)!(m.x), 0);
-    let bestPick: { m: Nest; xm: number; xn: number } | null = null;
-    for (const m of near) {
-      const x0 = m.x;
-      for (const xm of (windows.get(m) ?? []).filter((_, k) => k % 2 === 0)) {
-        kill(m);
-        placeNest(m, xm);
-        kill(n);
-        placeNest(n);
-        const t = costs.get(n)!(n.x) + costs.get(m)!(m.x) + near.filter((o) => o !== m).reduce((a, o) => a + costs.get(o)!(o.x), 0) + Math.abs(xm - x0);
-        if (t < bestT - 1) {
-          bestT = t;
-          bestPick = { m, xm, xn: n.x };
-        }
+  }
+  // звёзды, мимо которых линии не идут: все, кроме родителей союза (дети — со своими зубцами, отступ не меньше r + 5)
+  const cost = (sl: Slot, x: number): number => {
+    const u = sl.p.u.id;
+    const { y0, y1, ny, kids } = sl;
+    const par = new Set([sl.p.O.id, ...(sl.p.F ? [sl.p.F.id] : []), ...(sl.p.W ? [sl.p.W.id] : [])]);
+    let c = Math.abs(x - sl.want) * (x > sl.want ? 2 : 1);
+    for (const v of verts.query(x - WIDE_GAP, y0 - 1, x + WIDE_GAP, y1 + 1)) {
+      if (v.dead || v.u === u) continue;
+      const d = Math.abs(v.x - x);
+      // вертикали других союзов (решение 175): ближе 8 px (12 px у черты брака) — дороже к совпадению
+      if (Math.min(v.y1, y1) - Math.max(v.y0, y0) > 0.5) {
+        const need = v.wide || sl.wide ? WIDE_GAP : TRUNK_GAP;
+        if (d < need) c += d < 2 ? 1200 : 100 + (300 * (need - d)) / need;
       }
-      kill(m);
-      placeNest(m, x0);
+      // свой узел — на чужой вертикали (решение 181)
+      if (ny > v.y0 + 0.5 && ny < v.y1 - 0.5 && d < nodeClear + halfW(v.wide)) c += 1200;
+      if (sl.fy !== null && sl.fy > v.y0 + 0.5 && sl.fy < v.y1 - 0.5 && d < 2) c += 400;
+      // чужая вертикаль пересекает свои зубцы (Я11)
+      if (v.x > x + 0.5) for (const k of kids) if (v.x < k.x - k.r - 2 && k.y > v.y0 + 0.5 && k.y < v.y1 - 0.5) c += 100;
     }
-    kill(n);
-    if (bestPick) {
-      kill(bestPick.m);
-      placeNest(bestPick.m, bestPick.xm);
-      placeNest(n, bestPick.xn);
-    } else placeNest(n);
+    for (const m of nodeAt.query(x - nodeGap, y0 - 1, x + nodeGap, y1 + 1)) {
+      if (m.dead || m.u === u) continue;
+      const d = Math.abs(m.x - x);
+      // чужой узел на этой вертикали
+      if (Math.abs(m.y - ny) >= 1 && m.y > y0 + 0.5 && m.y < y1 - 0.5 && d < nodeClear + halfW(sl.wide)) c += 1200;
+      // узлы разных союзов на одном следе ближе ширины знака: один знак на вид (Г7)
+      if (Math.abs(m.y - ny) < 1 && d < nodeGap) c += 200 + (400 * (nodeGap - d)) / nodeGap;
+      // черта брака входит в след мужа у чужого ромба: читалась бы связью с тем союзом
+      if (sl.fy !== null && Math.abs(m.y - sl.fy) < 1 && d < nodeGap) c += d < nodeClear + halfW(true) ? 1200 : 200 + (400 * (nodeGap - d)) / nodeGap;
+      // чужой узел на своём зубце
+      if (m.x > x + 0.5) for (const k of kids) if (Math.abs(m.y - k.y) < 1 && m.x < k.x - k.r) c += 1200;
+    }
+    for (const s of stars.query(x - maxR - STAR_CLEAR, y0 - maxR - STAR_CLEAR, Math.max(x, ...kids.map((k) => k.x)) + maxR + STAR_CLEAR, y1 + maxR + STAR_CLEAR)) {
+      if (par.has(s.id)) continue;
+      // чужие звёзды у вертикали (Г5)
+      if (Math.abs(s.x - x) < s.r + STAR_CLEAR && s.y >= y0 - s.r && s.y <= y1 + s.r) c += 1000;
+      // чужие звёзды на зубцах
+      if (s.x > x) for (const k of kids) if (k !== s && s.x < k.x && Math.abs(s.y - k.y) < s.r + STAR_CLEAR) c += 1000;
+    }
+    // вертикаль пересекает чужие зубцы (Я11)
+    for (const t of teeth.query(x, y0, x, y1)) if (!t.dead && t.u !== u && t.y > y0 + 0.5 && t.y < y1 - 0.5 && x > t.x0 + 0.5 && x < t.x1 - 0.5) c += 100;
+    return c;
+  };
+  const ent = new Map<Slot, { dead?: boolean }[]>();
+  const yOn = (sl: Slot, x: number): Slot => {
+    // строки концов вертикали — в её x (переход следа меняет строку по времени)
+    const p = sl.p;
+    const ny = sl.n < 0 ? (p.W ? yAt(p.W, x) : yAt(p.O, x)) : yAt(p.O, x);
+    const fy = sl.fy !== null && p.F ? yAt(p.F, x) : null;
+    const [y0, y1] = span([ny, ...(fy !== null ? [fy] : []), ...sl.kids.map((k) => k.y)]);
+    return { ...sl, ny, fy, y0, y1 };
+  };
+  const place = (sl: Slot) => {
+    let best = Math.round(sl.x - 0.5) + 0.5;
+    if (sl.lo > sl.hi + 0.01) issues.push(`тесно:${sl.p.u.id}`);
+    else {
+      let bc = Infinity;
+      const pref = Math.round(Math.max(sl.lo, Math.min(sl.hi, sl.want)) - 0.5) + 0.5;
+      const a = Math.ceil(sl.lo - 0.5) + 0.5;
+      const b = Math.floor(sl.hi - 0.5) + 0.5;
+      const reach = Math.max(pref - a, b - pref);
+      for (let d = 0; d <= reach; d++)
+        for (const x of d ? [pref - d, pref + d] : [pref]) {
+          if (x < a - 1e-6 || x > b + 1e-6) continue;
+          const c = cost(sl, x);
+          if (c < bc) {
+            bc = c;
+            best = x;
+          }
+        }
+      if (bc >= 100) issues.push(`${bc >= 1000 ? 'звезда' : 'рядом'}:${sl.p.u.id}`);
+    }
+    const q = yOn(sl, best);
+    Object.assign(sl, { x: best, ny: q.ny, fy: q.fy, y0: q.y0, y1: q.y1 });
+    const mine: { dead?: boolean }[] = [];
+    ent.set(sl, mine);
+    const v: Vert = { x: best, y0: sl.y0, y1: sl.y1, u: sl.p.u.id, wide: sl.wide };
+    verts.add(best, sl.y0, best, sl.y1, v);
+    const n: NodeAt = { x: best, y: sl.ny, u: sl.p.u.id };
+    nodeAt.add(best, sl.ny, best, sl.ny, n);
+    mine.push(v, n);
+    for (const k of sl.kids) {
+      const t: Tooth = { x0: best, x1: k.x - k.r - 1.5, y: k.y, u: sl.p.u.id };
+      teeth.add(best, k.y, k.x, k.y, t);
+      mine.push(t);
+    }
+  };
+  // ромбы бездетных браков и колонны союзов — по времени; при равных — сверху вниз
+  slots.sort((a, b) => a.want - b.want || a.y0 - b.y0 || (a.p.u.id < b.p.u.id ? -1 : a.p.u.id > b.p.u.id ? 1 : a.n - b.n));
+  for (const sl of slots) place(sl);
+  // второй проход: место, которое заняли поставленные позже (их линия прошла через ромб, звезда на вертикали), — заново,
+  // уже зная всех соседей (на обзоре, где строки теснее 6 px, ромбов и подробных связей не видно — без него)
+  if (ky >= 6)
+    for (const sl of slots) {
+      if (cost(yOn(sl, sl.x), sl.x) < 1000) continue;
+      for (const e of ent.get(sl) ?? []) e.dead = true;
+      place(sl);
+    }
+  for (const sl of slots) {
+    if (sl.n < 0) sl.p.col = sl.x;
+    else sl.p.xs[sl.n] = sl.x;
   }
 
-  // пути
+  // ---------- пути ----------
   const paths: LinkPath[] = [];
   const nodes: LinkNode[] = [];
-  const stubs: StubMark[] = [];
   const via = new Map<string, { x: number; y: number; union: string }>();
-  // разрыв — у каждого следа, который путь пересекает, кроме следов его концов: соединение бывает только в узле (Г7)
-  const push = (p: Omit<LinkPath, 'ks' | 'cuts'>, _cut: ReadonlySet<string>, half = TRAIL_CUT) => {
-    const path: LinkPath = { ...p, ks: key(p.key), cuts: [] };
+  const push = (p: Omit<LinkPath, 'ks' | 'cuts' | 'when'>, half = TRAIL_CUT) => {
+    const path: LinkPath = { ...p, ks: key(p.key), cuts: [], when: 'always' };
     addCuts(path, trails, new Set(p.ends), half);
     paths.push(path);
     return path;
   };
-  for (const n of nests) {
-    const u = n.u;
-    const own = owner(n);
-    const other = n.linked ? (n.motherNode ? n.p : n.o) : null;
-    const x = n.x;
-    const skip = members(n);
+  /**
+   * Строка следа s у x и родовая черта (Г12), если след кончился раньше: сплошной чертой от конца следа (у народа —
+   * бледной), а если строку к году x занял чужой след — между строк, на полстроки к dir (узел на чужом следе читался бы
+   * его узлом, Г7).
+   */
+  const reach = (s: LinkStar, x: number, union: string, dir: number): number => {
+    const tail = tailOf(s);
+    const y = yAt(s, x);
+    if (tail >= x - 1) return y;
+    const ty = yAt(s, tail);
+    const cs = clanStyle(s.id);
+    const ck = unionKey(union);
+    if (x - tail > CLAN_MAX && trails.foreignAt(x, ty, s.id)) {
+      const ny = ty + (dir || 1) * (ky / 2);
+      const bend = Math.min(16, (x - tail) / 3);
+      push({ key: ck, kind: 'clan', style: cs, pts: [tail, ty, tail + bend, ty, tail + bend, ny, x, ny], ends: [s.id], union });
+      return ny;
+    }
+    push({ key: ck, kind: 'clan', style: cs, pts: [tail, ty, x, ty], ends: [s.id], union });
+    return ty;
+  };
+  for (const p of plans) {
+    const u = p.u;
+    const x = p.col;
+    if (!Number.isFinite(x)) continue;
     const style = kidStyle(u);
-    const near = n.kids.filter((k) => !n.far.has(k.id));
-    const plainNear = near.filter((k) => !n.rib.has(k.id));
-    // родовая черта (Г12): у владельца узла нет следа до узла — сплошной чертой от знака или от конца следа (решение 94; у народа — бледной)
-    const tail = own.x1 === null ? own.x + own.r + 1.5 : own.x1;
-    const clan = tail < x - 1 && plainNear.length + n.far.size > 0;
-    // строка узла: на следе владельца; у длинной родовой черты (обрывками, Г12) строку владельца к году детей уже занял
-    // чужой след — узел на нём читался бы его узлом (Г7), и узел встаёт между строками, на полстроки к детям
-    // (этап 12, перепись Я8: «Хеврон, сын Каафа» на следе Урии)
-    const ny = clan && x - tail > CLAN_MAX && trails.foreignAt(x, own.y, own.id) ? own.y + (Math.sign(n.kids[0].y - own.y) || 1) * (ky / 2) : own.y;
-    // вертикаль гнезда по остановкам: узел, второй родитель, дети; черта брака — от второго родителя до узла
-    const stops = [ny, ...near.map((k) => k.y), ...(other ? [other.y] : [])].sort((a, b) => a - b);
-    const lo = stops[0];
-    const hi = stops[stops.length - 1];
-    const kidYs = plainNear.map((k) => k.y);
-    const ribYs = near.filter((k) => n.rib.has(k.id)).map((k) => k.y);
-    // отрезки вертикали между соседними остановками
-    for (let k = 0; k + 1 < stops.length; k++) {
-      const a = stops[k];
-      const b = stops[k + 1];
-      if (b - a < 0.5) continue;
-      const mid = (a + b) / 2;
-      // черта брака: между вторым родителем и узлом, без детей между
-      const isBar = !!other && ((mid - ny) * (mid - other.y) < 0) && !kidYs.some((y) => (y - a) * (y - b) < 0) && !ribYs.some((y) => (y - a) * (y - b) < 0);
-      // отрезок, который проходит только лента (к ребёнку линии за узлом и дальше нет других детей)
-      const beyondPlain = !kidYs.some((y) => (y >= b && ny <= a) || (y <= a && ny >= b));
-      const ribOnly = !isBar && beyondPlain && ribYs.some((y) => (y >= b && ny <= a) || (y <= a && ny >= b));
-      if (ribOnly) continue;
-      if (isBar && n.longBar) {
-        // длинная черта брака (решение 134): целиком — раскрытой; свёрнутой — обрывки у узла и у мужа с подписями
-        // «Халев, 24 П» у узла (кто муж) и «Мааха, 22 П» у мужа (кто жена)
-        const sk = spouseKey(u.id, other!.id);
-        push({ key: sk, kind: 'bar', style: 'solid', pts: [x, a, x, b], ends: [other!.id, own.id], union: u.id, when: 'full' }, skip);
-        const dir = Math.sign(other!.y - ny) as -1 | 1;
-        push({ key: sk, kind: 'stub', style: 'solid', pts: [x, ny, x, ny + dir * STUB_PX], ends: [other!.id, own.id], union: u.id, when: 'short' }, skip);
-        push({ key: sk, kind: 'stub', style: 'solid', pts: [x, other!.y - dir * STUB_PX, x, other!.y], ends: [other!.id, own.id], union: u.id, when: 'short' }, skip);
-        stubs.push({ key: sk, ks: key(sk), union: u.id, x, y: ny + dir * STUB_PX, dir, targets: [other!.id], side: 'child', kind: 'spouse' });
-        stubs.push({ key: sk, ks: key(sk), union: u.id, x, y: other!.y - dir * STUB_PX, dir: -dir as -1 | 1, targets: [own.id], side: 'parent', kind: 'spouse' });
-      } else if (isBar) push({ key: spouseKey(u.id, other!.id), kind: 'bar', style: 'solid', pts: [x, a, x, b], ends: [other!.id, own.id], union: u.id, when: 'always' }, skip);
-      else push({ key: unionKey(u.id), kind: 'trunk', style, pts: [x, a, x, b], ends: [own.id, ...(other ? [other.id] : []), ...near.map((q) => q.id)], union: u.id, when: 'always' }, skip);
-    }
-    void lo;
-    void hi;
-    // зубцы
-    for (const k of plainNear) {
-      const e = k.x - k.r - 1.5;
-      if (e - x > 0.5) push({ key: childKey(u.id, k.id), kind: 'tooth', style, pts: [x, k.y, e, k.y], ends: [own.id, ...(other ? [other.id] : []), k.id], union: u.id, when: 'always' }, skip);
-    }
-    // ленты: через узел своего шага
-    for (const k of near)
-      for (const par of [u.a, u.b])
-        if (par && n.rib.has(k.id) && steps.has(`${par}>${k.id}`)) via.set(`${par}>${k.id}`, { x, y: ny, union: u.id });
-    // длинные связи (Г11): целиком — только раскрытыми; свёрнутыми — обрывки у узла и у каждого дальнего ребёнка
-    const far = n.kids.filter((k) => n.far.has(k.id));
-    if (far.length) {
-      for (const dir of [-1, 1] as const) {
-        const fs = far.filter((k) => Math.sign(k.y - ny) === dir);
-        if (!fs.length) continue;
-        const reach = Math.max(...fs.map((k) => Math.abs(k.y - ny)));
-        const edge = dir < 0 ? Math.min(ny, ...near.map((k) => k.y), ...(other ? [other.y] : [])) : Math.max(ny, ...near.map((k) => k.y), ...(other ? [other.y] : []));
-        // от края у второго родителя вертикаль идёт от его следа (он связан чертой брака): его след ей не чужой
-        const at = other && Math.abs(edge - other.y) < 0.5 ? [other.id] : [];
-        // целиком: от края ближней части до самого дальнего ребёнка — прямо или со ступенькой в межстрочье (G8)
-        const jg = n.jog?.get(dir);
-        const full = jg?.mid
-          ? [x, edge, x, jg.mid.y1, jg.mid.x, jg.mid.y1, jg.mid.x, jg.y, jg.x2, jg.y, jg.x2, ny + dir * reach]
-          : jg
-            ? [x, edge, x, jg.y, jg.x2, jg.y, jg.x2, ny + dir * reach]
-            : [x, edge, x, ny + dir * reach];
-        push({ key: unionKey(u.id), kind: 'trunk', style, pts: full, ends: [own.id, ...at, ...fs.map((k) => k.id)], union: u.id, when: 'full' }, skip);
-        // обрывок у узла
-        const sy = edge + dir * STUB_PX;
-        push({ key: unionKey(u.id), kind: 'stub', style, pts: [x, edge, x, sy], ends: [own.id, ...at, ...fs.map((k) => k.id)], union: u.id, when: 'short' }, skip);
-        stubs.push({ key: unionKey(u.id), ks: key(unionKey(u.id)), union: u.id, x, y: sy, dir, targets: fs.map((k) => k.id), side: 'parent', kind: 'long' });
+    const pl = plates?.get(u.id);
+    const kidDir = p.kids.length ? Math.sign(p.kids[0].y - p.O.y) : p.rib.length ? Math.sign(p.rib[0].y - p.O.y) : 1;
+    // ромб: на следе жены (у призрака бездетного брака — у призрака), иначе на следе владельца
+    const at = p.W ?? p.O;
+    const ny = at.ghost ? at.y : reach(at, x, u.id, kidDir);
+    // черта брака: от мужа к ромбу на следе жены, вид союза — начертанием (решение 174)
+    if (p.F && p.W && p.F !== at) {
+      const fy = reach(p.F, x, u.id, Math.sign(ny - yAt(p.F, x)));
+      if (Math.abs(fy - ny) > 0.5) {
+        push({ key: spouseKey(u.id, p.F.id), kind: 'bar', style: p.kind === 'levirate' ? 'dash' : 'solid', pts: [x, fy, x, ny], ends: [p.F.id, at.id], union: u.id, bar: p.kind, ...(p.childless ? { childless: true } : {}) });
       }
-      for (const k of far) {
+    }
+    const node: LinkNode = {
+      kind: 'union', union: u.id, key: unionKey(u.id), x, y: ny,
+      open: !pl || pl.open || pl.hidden === 0, count: pl && !pl.open && pl.hidden > 0 ? `+${pl.hidden}` : null,
+      mother: p.label, owner: at.id, from: pl?.from ?? (p.F ?? p.O).id, look: p.look,
+      ...(p.late ? { late: true } : {}), ...(p.childless ? { childless: true } : {}),
+    };
+    nodes.push(node);
+    // второй родитель у отводов (концы путей): связан чертой брака
+    const other = p.F && p.W && p.F.id !== p.O.id ? p.F.id : null;
+    p.nests.forEach((g, n) => {
+      const xn = n === 0 && p.merged ? x : p.xs[n];
+      if (!Number.isFinite(xn)) return;
+      const oy = n === 0 && p.merged ? ny : reach(p.O, xn, u.id, Math.sign(g[0].y - yAt(p.O, xn)));
+      if (!(n === 0 && p.merged)) nodes.push({ kind: 'join', union: u.id, key: unionKey(u.id), x: xn, y: oy, open: true, count: null, mother: null, owner: p.O.id, from: (p.F ?? p.O).id });
+      const ids = g.map((k) => k.id);
+      const ends = [p.O.id, ...(other ? [other] : []), ...ids];
+      const up = g.filter((k) => k.y < oy - 0.5).map((k) => k.y);
+      const dn = g.filter((k) => k.y > oy + 0.5).map((k) => k.y);
+      if (up.length) push({ key: unionKey(u.id), kind: 'trunk', style, pts: [xn, oy, xn, Math.min(...up)], ends, union: u.id });
+      if (dn.length) push({ key: unionKey(u.id), kind: 'trunk', style, pts: [xn, oy, xn, Math.max(...dn)], ends, union: u.id });
+      for (const k of g) {
         const e = k.x - k.r - 1.5;
-        const dir = Math.sign(ny - k.y) as -1 | 1;
-        const ck = childKey(u.id, k.id);
-        // за ступенькой дальнего хода ребёнок висит на втором столбце
-        const jg = n.jog?.get(-dir);
-        const kx = jg && -dir * (k.y - jg.y) > 0 ? jg.x2 : x;
-        if (e - kx > 0.5) push({ key: ck, kind: 'tooth', style, pts: [kx, k.y, e, k.y], ends: [own.id, k.id], union: u.id, when: 'always' }, skip);
-        push({ key: ck, kind: 'stub', style, pts: [kx, k.y + dir * STUB_PX, kx, k.y], ends: [own.id, k.id], union: u.id, when: 'short' }, skip);
-        stubs.push({ key: ck, ks: key(ck), union: u.id, x: kx, y: k.y + dir * STUB_PX, dir, targets: [own.id], side: 'child', kind: 'long' });
+        if (e - xn > 0.5) push({ key: childKey(u.id, k.id), kind: 'tooth', style, pts: [xn, k.y, e, k.y], ends: [p.O.id, ...(other ? [other] : []), k.id], union: u.id });
       }
-    }
-    // родовая черта (Г12). Гнездо, всех детей которого ведут ленты, черты не получает: к ним идёт сама лента (Г1)
-    // К6 (этап 13, решение 93): оба супруга на небе, а жена не связана с союзом — у союза, чьих детей ведёт лента, черта
-    // брака от её следа к «станции» на следе мужа, если она рядом (не дальше SPOUSE_ROWS) и её след доходит до года
-    // узла; иначе — её имя у ромба (ниже)
-    const bride = !other && n.o && n.first && !n.motherNode && !plainNear.length && near.length ? n.o : null;
-    const barFrom = bride && bride.x1 !== null && bride.x1 >= x - 1 && bride.x + bride.r + 2 < x && Math.abs(bride.y - ny) > 0.5 && Math.abs(bride.y - ny) <= SPOUSE_ROWS * ky ? bride : null;
-    if (barFrom) push({ key: spouseKey(u.id, barFrom.id), kind: 'bar', style: 'solid', pts: [x, Math.min(barFrom.y, ny), x, Math.max(barFrom.y, ny)], ends: [barFrom.id, own.id], union: u.id, when: 'always' }, new Set([barFrom.id, own.id]));
-    if (clan) {
-      const len = x - tail;
-      const ck = unionKey(u.id);
-      const cs = clanStyle(own.id);
-      if (len <= CLAN_MAX) push({ key: ck, kind: 'clan', style: cs, pts: [tail, own.y, x, own.y], ends: [own.id], union: u.id, when: 'always' }, skip);
-      else {
-        // целиком — по строке владельца; если узел ушёл между строк (строку занял чужой след), то и черта идёт между строк
-        // от обрывка у конца следа: по чужому следу точки не бегут
-        const full = ny === own.y ? [tail, own.y, x, own.y] : [tail, own.y, tail + STUB_PX, own.y, tail + STUB_PX, ny, x, ny];
-        push({ key: ck, kind: 'clan', style: cs, pts: full, ends: [own.id], union: u.id, when: 'full' }, skip);
-        push({ key: ck, kind: 'stub', style: cs, pts: [tail, own.y, tail + STUB_PX, own.y], ends: [own.id], union: u.id, when: 'short' }, skip);
-        push({ key: ck, kind: 'stub', style: cs, pts: [x - STUB_PX, ny, x, ny], ends: [own.id], union: u.id, when: 'short' }, skip);
-        stubs.push({ key: ck, ks: key(ck), union: u.id, x: tail + STUB_PX, y: own.y, dir: 0, targets: n.kids.map((k) => k.id), side: 'parent', kind: 'clan' });
-        stubs.push({ key: ck, ks: key(ck), union: u.id, x: x - STUB_PX, y: ny, dir: 0, targets: [own.id], side: 'child', kind: 'clan' });
-      }
-    }
-    // узел: ◆ у первого гнезда союза, • у следующих
-    const count = unionsOf.get(n.p.id) ?? 0;
-    // имя матери у ромба на следе отца — если у отца союзов с детьми два и больше (Г8); мать не названа — пустая строка:
-    // у ромба тогда название союза «Давид (мать не названа)» (решение 75; trails.ts, drawLinkLabels)
-    // этап 13, К6: мать на небе, не связанная линией, — её имя у ромба всегда (прежде — при двух союзах и больше)
-    const farMother =
-      !n.motherNode && n.o && !n.linked && !barFrom ? n.o.id : !n.motherNode && !n.o && u.b && u.b !== n.p.id && count >= 2 ? u.b : !n.motherNode && !u.b && count >= 2 ? '' : null;
-    nodes.push({
-      kind: n.first ? 'union' : 'join',
-      union: u.id,
-      key: unionKey(u.id),
-      x,
-      y: ny,
-      open: true,
-      count: null,
-      mother: n.first ? farMother : null,
-      owner: own.id,
-      from: n.p.id,
     });
-  }
-
-  // бездетные браки жён-спутниц: ромб на следе жены у её звезды, черта брака от мужа (Г4)
-  const withKids = new Set(nests.map((n) => n.u.id));
-  for (const s of inp.stars) {
-    if (s.ghost || !s.sat) continue;
-    const h = main.get(s.sat);
-    if (!h) continue;
-    const u = (U.of.get(s.id) ?? []).find((q) => (q.a === h.id && q.b === s.id) || (q.b === h.id && q.a === s.id));
-    if (!u || withKids.has(u.id) || s.x1 === null) continue;
-    if (Math.abs(h.y - s.y) > SPOUSE_ROWS * ky || h.x1 === null) continue;
-    // этап 14 (решение 134, G2): черты брака жён одного мужа не совпадают (Азува и Иериофа у Халева) — следующая встаёт
-    // правее на шаг вертикалей; ромб не на чужой черте, черта не через чужой ромб
-    const y0 = Math.min(h.y, s.y);
-    const y1 = Math.max(h.y, s.y);
-    const x0 = Math.round(Math.min(s.x1 - 2, Math.max(s.x + s.r, h.x + h.r) + 12)) + 0.5;
-    const busy = (x: number) =>
-      [...verts.query(x - WIDE_GAP, y0, x + WIDE_GAP, y1)].some((v) => !v.dead && Math.abs(v.x - x) < WIDE_GAP && Math.min(v.y1, y1) - Math.max(v.y0, y0) > 0.5) ||
-      [...verts.query(x - nodeClear - 3, s.y - 1, x + nodeClear + 3, s.y + 1)].some((v) => !v.dead && s.y > v.y0 + 0.5 && s.y < v.y1 - 0.5 && Math.abs(v.x - x) < nodeClear + 2.1) ||
-      [...nodeAt.query(x - nodeGap, y0 - 1, x + nodeGap, y1 + 1)].some((m) => !m.dead && ((m.y > y0 + 0.5 && m.y < y1 - 0.5 && Math.abs(m.x - x) < nodeClear + 2.1) || ((Math.abs(m.y - s.y) < 1 || Math.abs(m.y - h.y) < 1) && Math.abs(m.x - x) < nodeGap)));
-    // места на её следе нет — без черты: ромб на следе мужа с её именем (childlessNodes, К6)
-    let x = x0;
-    for (let k = 1; busy(x); k++) {
-      x = x0 + k * TRUNK_GAP;
-      if (k > 6 || x >= Math.min(s.x1 - 2, h.x1 - 1)) {
-        x = NaN;
-        break;
+    // ленты: станция у черты брака матери на следе родителя шага (решение 177)
+    for (const k of p.rib)
+      for (const par of [u.a, u.b]) {
+        if (!par || !steps.has(`${par}>${k.id}`)) continue;
+        const P = main.get(par);
+        if (!P) continue;
+        let sx = x;
+        if (p.W && !p.W.ghost && P === p.F) {
+          const py = yAt(P, x);
+          // мать — между отцом и ребёнком линии: лента выходит у черты, но правее ромба
+          if ((ny - py) * (k.y - ny) > 0 && x + R + RIB_STEP < k.x - k.r - 3) sx = x + R + RIB_STEP;
+        }
+        via.set(`${par}>${k.id}`, { x: sx, y: yAt(P, sx), union: u.id });
       }
-    }
-    if (!(x > s.x + s.r + 1) || x >= h.x1) continue;
-    verts.add(x, y0, x, y1, { x, y0, y1, u: u.id, wide: true, full: false });
-    nodeAt.add(x, s.y, x, s.y, { x, y: s.y, u: u.id });
-    const skip = new Set([s.id, h.id]);
-    const path: LinkPath = { key: spouseKey(u.id, h.id), ks: '', kind: 'bar', style: 'solid', pts: [x, h.y, x, s.y], ends: [h.id, s.id], union: u.id, when: 'always', cuts: [] };
-    path.ks = key(path.key);
-    addCuts(path, trails, skip, TRAIL_CUT);
-    paths.push(path);
-    nodes.push({ kind: 'union', union: u.id, key: unionKey(u.id), x, y: s.y, open: true, count: null, mother: null, owner: s.id, from: h.id });
   }
 
-  // ромб бездетного брака не встаёт на чужую вертикаль и вплотную к чужому ромбу (решение 134, G2: союз Соломона с
-  // дочерью фараона на обрывке Давида)
-  const freeNode = (x: number, y: number, u: string) =>
-    ![...verts.query(x - nodeClear - 3, y - 1, x + nodeClear + 3, y + 1)].some((v) => !v.dead && v.u !== u && y >= v.y0 - 0.5 && y <= v.y1 + 0.5 && Math.abs(v.x - x) < nodeClear + halfW(v.wide)) &&
-    ![...nodeAt.query(x - nodeGap, y - 1, x + nodeGap, y + 1)].some((m) => !m.dead && m.u !== u && Math.abs(m.y - y) < 1 && Math.abs(m.x - x) < nodeGap) &&
-    !nodes.some((m) => m.union !== u && Math.abs(m.y - y) < 1 && Math.abs(m.x - x) < nodeGap);
-  childlessNodes(U.byId.values(), main, withKids, nodes, paths, freeNode);
-
-  // шаги лент без своего гнезда (союз иного рода: Нирий → Салафиил по Луке, Лк 3:27): узел на следе родителя шага
+  // шаги лент без своего союза в кадре (союз иного рода: Нирий → Салафиил по Луке, Лк 3:27): узел на следе родителя шага
   for (const pk of steps.keys()) {
     if (via.has(pk)) continue;
     const [pa, ka] = pk.split('>');
@@ -1551,50 +1051,59 @@ function mapLinks(inp: LinkInput): LinkFrame {
     const u = (U.origin.get(ka) ?? []).find((q) => q.a === pa || q.b === pa);
     if (!u) continue;
     const x = Math.round(Math.max(P.x + P.r + 3, K.x - TRUNK_LEAD)) + 0.5;
-    via.set(pk, { x, y: P.y, union: u.id });
-    if (!nodes.some((q) => q.union === u.id)) nodes.push({ kind: 'union', union: u.id, key: unionKey(u.id), x, y: P.y, open: true, count: null, mother: null, owner: P.id, from: P.id });
+    via.set(pk, { x, y: yAt(P, x), union: u.id });
+    if (!nodes.some((q) => q.union === u.id)) nodes.push({ kind: 'union', union: u.id, key: unionKey(u.id), x, y: yAt(P, x), open: true, count: null, mother: null, owner: P.id, from: P.id, look: !u.a ? 'no-father' : !u.b ? 'no-mother' : marriageKind(u) });
   }
+
+  if (fam) collapsedNodes(inp, main, nodes, paths, push);
   clearVia(inp, main, via, paths, nodes);
   ribbonPaths(inp, main, via, trails, paths);
-  return { layout: 'map', paths, nodes, stubs, via, issues };
+  return { layout: inp.layout, paths, nodes, stubs: [], via, issues };
 }
 
-// ---------- семейная укладка («Г»): лестница союзов (K3 § 2.1) ----------
-
 /**
- * Бездетный брак, где супруги не связаны линией (К6, этап 13): союз всё равно виден — ромб на следе мужа после рождения
- * младшего из супругов, у ромба — имя жены (Г8: «Фамарь» у Ира и у Онана); след мужа кончился раньше — ромб на следе
- * жены с именем мужа; следов нет — у звезды мужа. Союзы с детьми (withKids) и уже с узлом — мимо.
+ * Свёрнутые союзы набора (показ «набор»): полый ромб с «+N» — у следа родителя (к детям) или у строки ребёнка (к
+ * родителям). Поле ромба и «+N» на одной строке — около 48 px: соседний ромб той же строки — не ближе, правее.
  */
-function childlessNodes(us: Iterable<Union>, main: ReadonlyMap<string, LinkStar>, withKids: ReadonlySet<string>, nodes: LinkNode[], paths: readonly LinkPath[], free: (x: number, y: number, u: string) => boolean = () => true) {
-  for (const u of us) {
-    if (!u.a || !u.b || u.claim || withKids.has(u.id)) continue;
-    const h = main.get(u.a);
-    const w = main.get(u.b);
-    if (!h || !w) continue;
-    const was = nodes.find((q) => q.union === u.id && q.kind === 'union');
-    if (was) {
-      // ромб уже есть (у мужа или жены): второй супруг, не связанный с ним линией, назван у ромба
-      const other = was.owner === u.a ? u.b : u.a;
-      const tied = paths.some((q) => q.union === u.id && q.ends.includes(other)) || was.mother === other;
-      if (!tied && was.mother === null) {
-        was.mother = other;
-        was.late = true;
-      }
-      continue;
+function collapsedNodes(inp: LinkInput, main: ReadonlyMap<string, LinkStar>, nodes: LinkNode[], _paths: LinkPath[], push: (p: Omit<LinkPath, 'ks' | 'cuts' | 'when'>) => LinkPath) {
+  const plates = inp.plates;
+  if (!plates) return;
+  const U = inp.unions;
+  const S = new Set(main.keys());
+  const shownIds = new Set(nodes.map((n) => n.union));
+  const SHUT_W = 48;
+  const gap = TRUNK_LEAD;
+  const shutX = (x0: number, y: number) => {
+    let x = x0;
+    for (let k = 0; k < 8; k++) {
+      const hit = nodes.find((q) => Math.abs(q.y - y) < 1 && Math.abs(q.x - x) < SHUT_W);
+      if (!hit) break;
+      x = hit.x + SHUT_W;
     }
-    const x = Math.round(Math.max(h.x + h.r, w.x + w.r) + 12) + 0.5;
-    const on = [h, w].find((q) => q.x1 !== null && x < q.x1 - 1);
-    const at = on ?? h;
-    let nx = on ? x : Math.round(h.x + h.r + 6) + 0.5;
-    // правее по следу, пока место занято чужой вертикалью или ромбом (на следе — не дальше его конца)
-    for (let k = 0; k < 8 && !free(nx, at.y, u.id); k++) {
-      const nxt = nx + 2 * NODE_R_MAP + 3;
-      if (on && nxt >= on.x1! - 1) break;
-      if (!on) break;
-      nx = nxt;
+    return x;
+  };
+  const list: { u: Union; plate: LinkPlate; at: number }[] = [];
+  for (const [uid, pl] of plates) {
+    const u = U.byId.get(uid);
+    if (!u || pl.open || pl.hidden <= 0 || shownIds.has(uid)) continue;
+    list.push({ u, plate: pl, at: Math.min(...u.kids.map((k) => inp.xOf?.(k) ?? Infinity)) });
+  }
+  list.sort((a, b) => a.at - b.at);
+  for (const { u, plate } of list) {
+    const par = [u.a, u.b].find((x) => !!x && S.has(x) && !u.kids.includes(x)) ?? null;
+    const kid = u.kids.find((k) => S.has(k)) ?? null;
+    const look: NodeLook = !u.a ? 'no-father' : !u.b ? 'no-mother' : marriageKind(u);
+    if (par && (plate.dir === 'down' || !kid)) {
+      const P = main.get(par)!;
+      const xs = u.kids.map((k) => inp.xOf?.(k) ?? null).filter((v): v is number => v !== null);
+      const x = shutX(Math.max(P.x + P.r + 6, xs.length ? Math.min(...xs) - gap : P.x + P.r + 3 * gap), P.y);
+      nodes.push({ kind: 'union', union: u.id, key: unionKey(u.id), x: Math.round(x) + 0.5, y: trailYAt(P, x), open: false, count: `+${plate.hidden}`, mother: null, owner: par, from: plate.from, look });
+    } else if (kid) {
+      const K = main.get(kid)!;
+      const x = Math.round(K.x - K.r - 1.5 - 2 * gap) + 0.5;
+      nodes.push({ kind: 'union', union: u.id, key: unionKey(u.id), x, y: K.y, open: false, count: `+${plate.hidden}`, mother: null, owner: kid, from: plate.from, look });
+      push({ key: childKey(u.id, kid), kind: 'tooth', style: kidStyle(u), pts: [x, K.y, K.x - K.r - 1.5, K.y], ends: [kid], union: u.id });
     }
-    nodes.push({ kind: 'union', union: u.id, key: unionKey(u.id), x: nx, y: at.y, open: true, count: null, mother: at === h ? w.id : h.id, owner: at.id, from: h.id, late: true });
   }
 }
 
@@ -1608,315 +1117,6 @@ function familyUnions(U: Unions, S: ReadonlySet<string>): Union[] {
     if (u.kids.some((k) => S.has(k)) || (u.a && u.b && S.has(u.a) && S.has(u.b))) out.push(u);
   }
   return out;
-}
-
-/**
- * Где стоит лицо семейного неба (K3 § 2.2 п. 1): жена — у мужа, если у них есть дети на небе или её родителей на небе
- * нет; остальные — у союза своих родителей (у отца, а без него — у матери); лица линий Мессии — в коридоре (null).
- */
-export function familyHome(U: Unions, S: ReadonlySet<string>, spine: ReadonlySet<string>): Map<string, string | null> {
-  const shown = familyUnions(U, S);
-  const wifeOf = new Map<string, string>();
-  for (const u of shown) {
-    if (u.id.includes('~') || !u.a || !u.b || !S.has(u.a) || !S.has(u.b) || spine.has(u.b)) continue;
-    const hasKids = u.kids.some((k) => S.has(k));
-    const natal = U.origin.get(u.b)?.find((o) => !o.id.includes('~') && ((o.a && S.has(o.a)) || (o.b && S.has(o.b))));
-    const prev = wifeOf.get(u.b);
-    if ((hasKids || !natal) && (!prev || hasKids)) wifeOf.set(u.b, u.a);
-  }
-  const home = new Map<string, string | null>();
-  for (const id of S) {
-    if (spine.has(id)) home.set(id, null);
-    else if (wifeOf.has(id)) home.set(id, wifeOf.get(id)!);
-    else {
-      const o = U.origin.get(id)?.find((x) => !x.id.includes('~') && ((x.a && S.has(x.a)) || (x.b && S.has(x.b))));
-      home.set(id, o ? (o.a && S.has(o.a) ? o.a : o.b) : null);
-    }
-  }
-  return home;
-}
-
-function familyLinks(inp: LinkInput): LinkFrame {
-  const { ky } = inp;
-  const U = inp.unions;
-  const gap = TRUNK_LEAD;
-  const main = new Map<string, LinkStar>();
-  for (const s of inp.stars) if (!s.ghost) main.set(s.id, s);
-  const S = new Set(main.keys());
-  const spine = new Set([...(inp.lines?.joseph ?? []), ...(inp.lines?.mary ?? [])].filter((id) => S.has(id)));
-  const home = familyHome(U, S, spine);
-  // дом лица по укладке (стык 2): жена — у мужа, дети — у родителя своей единицы
-  if (inp.units)
-    for (const [parent, us] of inp.units)
-      for (const u of us) {
-        if (!S.has(parent)) continue;
-        if (u.wife && S.has(u.wife) && !spine.has(u.wife)) home.set(u.wife, parent);
-        for (const k of u.kids) if (S.has(k) && !spine.has(k)) home.set(k, parent);
-      }
-  const steps = stepPairs(inp.lines);
-  const trails = new Trails(inp.stars);
-  const issues: string[] = [];
-  const paths: LinkPath[] = [];
-  const nodes: LinkNode[] = [];
-  const stubs: StubMark[] = [];
-  const via = new Map<string, { x: number; y: number; union: string }>();
-  const push = (p: Omit<LinkPath, 'ks' | 'cuts'>, skip: ReadonlySet<string>) => {
-    const path: LinkPath = { ...p, ks: key(p.key), cuts: [] };
-    addCuts(path, trails, skip, TRAIL_CUT);
-    paths.push(path);
-    return path;
-  };
-  const Y = (id: string) => main.get(id)!.y;
-  const X = (id: string) => main.get(id)!.x;
-  const R = (id: string) => main.get(id)!.r;
-  const ribbon = (u: Union, k: string) => (!!u.a && steps.has(`${u.a}>${k}`)) || (!!u.b && steps.has(`${u.b}>${k}`));
-  type Group = { u: Union; side: number; members: string[]; kids: string[]; mother: string | null; nearR: number; fb: number; bus: number; style: PathStyle };
-  const byP = new Map<string, Group[]>();
-  const lineOnly: { u: Union; p: string; fb: number }[] = [];
-  const plates = inp.plates ?? null;
-  const shown = familyUnions(U, S).filter((u) => !otherReading(u, !!inp.flip));
-  const shownIds = new Set(shown.map((u) => u.id));
-  // союзы набора, которых на небе нет целиком (свёрнутые): узел с «+N»
-  const collapsed: { u: Union; plate: LinkPlate }[] = [];
-  if (plates)
-    for (const [uid, pl] of plates) {
-      const u = U.byId.get(uid);
-      if (!u) continue;
-      if (!pl.open && pl.hidden > 0 && !shownIds.has(uid)) collapsed.push({ u, plate: pl });
-    }
-
-  for (const u of shown) {
-    const p = u.a && S.has(u.a) ? u.a : u.b && S.has(u.b) ? u.b : null;
-    if (!p) continue;
-    const kids = u.kids.filter((k) => S.has(k));
-    const o0 = [u.a, u.b].find((x) => !!x && x !== p && S.has(x) && !u.kids.includes(x)) ?? null;
-    const other = o0 && home.get(o0) === p ? o0 : null;
-    const isNear = (k: string) => Math.abs(Y(k) - Y(p)) <= FAR_KID_ROWS * ky + 0.5;
-    const plain = kids.filter((k) => !ribbon(u, k) && (home.get(k) === p || isNear(k)));
-    const style = kidStyle(u);
-    // дальние дети (дочь, ставшая женой лица из показа, § 4.2 п. 1) — обрывками у своего ствола и у самой дочери
-    for (const k of kids)
-      if (!ribbon(u, k) && home.get(k) !== p && !isNear(k)) {
-        const ck = childKey(u.id, k);
-        const x = Math.max(X(p) + R(p) + 4, Math.min(...kids.map(X)) - gap);
-        const dir = Math.sign(Y(k) - Y(p)) as -1 | 1;
-        push({ key: ck, kind: 'stub', style: kidStyle(u), pts: [x, Y(p), x, Y(p) + dir * STUB_PX], ends: [p, k], union: u.id, when: 'always' }, new Set([p, k]));
-        stubs.push({ key: ck, ks: key(ck), union: u.id, x, y: Y(p) + dir * STUB_PX, dir, targets: [k], side: 'parent', kind: 'kid' });
-        // обрывок у самой дочери — вертикалью к её звезде со стороны родителя: слева у звезды входит зубец её своего союза
-        // (Нааман: сын Вениамина и, по Чис 26:40, Белы), две связи одной чертой читались бы одной (этап 13, перепись Я11)
-        const s = -dir as -1 | 1;
-        const ky0 = Y(k) + s * (R(k) + 1.5);
-        push({ key: ck, kind: 'stub', style: kidStyle(u), pts: [X(k), Y(k) + s * (R(k) + 1.5 + STUB_PX), X(k), ky0], ends: [p, k], union: u.id, when: 'always' }, new Set([p, k]));
-        stubs.push({ key: ck, ks: key(ck), union: u.id, x: X(k), y: Y(k) + s * (R(k) + 1.5 + STUB_PX), dir: s, targets: [p], side: 'child', kind: 'kid' });
-      }
-    const fb = kids.length ? Math.min(...kids.map(X)) : Math.max(X(p) + R(p), other ? X(other) + R(other) : X(p)) + 3 * gap;
-    const pr = Y(p);
-    const bySide = new Map<number, string[]>();
-    for (const m of [...(other ? [other] : []), ...plain]) {
-      const s = Math.sign(Y(m) - pr) || 1;
-      const a = bySide.get(s);
-      if (a) a.push(m);
-      else bySide.set(s, [m]);
-    }
-    if (!bySide.size) {
-      lineOnly.push({ u, p, fb });
-      continue;
-    }
-    for (const [side, ms] of bySide) {
-      const d = ms.map((m) => Math.abs(Y(m) - pr));
-      const a = byP.get(p);
-      const g: Group = { u, side, members: ms, kids: ms.filter((m) => m !== other), mother: other && ms.includes(other) ? other : null, nearR: Math.min(...d), fb, bus: 0, style };
-      if (a) a.push(g);
-      else byP.set(p, [g]);
-    }
-  }
-
-  // звёзды кадра, мимо которых идут стволы (Г5)
-  const clear = inp.stars.filter((st) => !st.ghost);
-  for (const [p, gs] of byP) {
-    const py = Y(p);
-    for (const side of [1, -1]) {
-      const a = gs.filter((q) => q.side === side).sort((q1, q2) => q1.nearR - q2.nearR);
-      if (!a.length) continue;
-      // ствол группы i — не правее первого рождения этой и всех внешних групп: он проходит строки только своей группы;
-      // чужая звезда на его пути (ребёнок коридора, лицо другой семьи) — ствол левее неё на r + 5 (Г5)
-      for (let i = a.length - 1; i >= 0; i--) {
-        const q = a[i];
-        const own = q.kids.length ? Math.min(...q.kids.map((k) => X(k) - leadOf(main.get(k)!))) : q.fb - gap;
-        const outer = i + 1 < a.length ? a[i + 1].bus : Infinity;
-        let b = Math.min(own, outer);
-        const ys = [py, ...q.members.map(Y)];
-        const lo = Math.min(...ys);
-        const hi = Math.max(...ys);
-        const mine = new Set([p, ...q.members]);
-        for (let pass = 0; pass < 3; pass++)
-          for (const st of clear) {
-            if (mine.has(st.id) || st.y < lo - 0.5 || st.y > hi + 0.5) continue;
-            if (st.x > b - 0.5 && st.x - (st.r + STAR_CLEAR) < b) b = st.x - st.r - STAR_CLEAR - 1;
-          }
-        b = Math.max(b, X(p) + R(p) + 4);
-        if (q.mother) b = Math.max(b, X(q.mother) + R(q.mother) + 4);
-        // к середине пикселя — влево: зазор до звезды справа не съедается округлением
-        q.bus = Math.floor(b) + 0.5;
-      }
-      // лестница идёт только вправо: внутренний ствол, сдвинутый вправо звездой матери, тянет за собой внешние
-      for (let i = 1; i < a.length; i++) a[i].bus = Math.max(a[i].bus, a[i - 1].bus);
-      const farOf = (q: Group) => q.members.reduce((f, m) => (Math.abs(Y(m) - py) > Math.abs(f - py) ? Y(m) : f), py);
-      const nearOf = (q: Group) => q.members.reduce((f, m) => (Math.abs(Y(m) - py) < Math.abs(f - py) ? Y(m) : f), farOf(q));
-      let yStart = py;
-      for (let i = 0; i < a.length; i++) {
-        const q = a[i];
-        const far = farOf(q);
-        const skip = new Set([p, ...q.members]);
-        // строку родителя к году узла занял чужой след (родовая черта длинная: Сегув — Иаир) — узел между строк, на полстроки
-        // к детям: на чужом следе он читался бы его узлом (Г7; этап 12, Я8 — так же на общей раскладке)
-        if (i === 0 && !q.mother && inp.stars.some((o) => o.id !== p && !o.ghost && Math.abs(o.y - py) < 0.5 && o.x < q.bus && (o.x1 ?? o.x + o.r) > q.bus)) yStart = py + side * (ky / 2);
-        const node = q.mother ? Y(q.mother) : yStart;
-        // гнёзда (Г3): дети группы сверху вниз — по году; ствол гнезда — не дальше 32 px левее первого ребёнка, зубцы —
-        // не длиннее 40 px; следующее гнездо — ступенькой вправо от главного ствола между строками, узел • в развилке
-        const kids = [...q.kids].sort((k1, k2) => Y(k1) - Y(k2) || X(k1) - X(k2));
-        const nests: { x: number; kids: string[] }[] = [{ x: q.bus, kids: [] }];
-        for (const k of kids) {
-          const cur = nests[nests.length - 1];
-          const lead = X(k) - cur.x;
-          if (cur.kids.length ? lead > TOOTH_MAX : lead > TRUNK_MAX) nests.push({ x: Math.max(cur.x, Math.floor(X(k) - leadOf(main.get(k)!)) + 0.5), kids: [k] });
-          else cur.kids.push(k);
-        }
-        const first = nests[0].kids;
-        // главный ствол: от начала (след родителя или ступенька лестницы) через мать и первое гнездо до дальнего лица группы;
-        // черта брака — от начала до ромба матери, если между ними нет детей первого гнезда
-        const firstYs = first.map(Y);
-        const barFree = !!q.mother && !firstYs.some((y) => (y - yStart) * (y - node) < 0);
-        const stops = [...new Set([yStart, far, ...(q.mother ? [node] : []), ...firstYs])].sort((m, n) => m - n);
-        for (let k = 0; k + 1 < stops.length; k++) {
-          const s0 = stops[k];
-          const s1 = stops[k + 1];
-          if (s1 - s0 < 0.5) continue;
-          const mid = (s0 + s1) / 2;
-          const isBar = barFree && (mid - yStart) * (mid - node) < 0;
-          if (isBar) push({ key: spouseKey(q.u.id, p), kind: 'bar', style: 'solid', pts: [q.bus, s0, q.bus, s1], ends: [p, q.mother!], union: q.u.id, when: 'always' }, skip);
-          else push({ key: unionKey(q.u.id), kind: 'trunk', style: q.style, pts: [q.bus, s0, q.bus, s1], ends: [p, ...q.members], union: q.u.id, when: 'always' }, skip);
-        }
-        const tooth = (x: number, k: string) => {
-          const kx = X(k) - R(k) - 1.5;
-          const len = X(k) - x;
-          if (len > TOOTH_MAX + 0.5 || len < TRUNK_MIN - 0.5) issues.push(`зубец:${q.u.id}>${k}:${Math.round(len)}`);
-          if (kx - x > 0.5) push({ key: childKey(q.u.id, k), kind: 'tooth', style: q.style, pts: [x, Y(k), kx, Y(k)], ends: [p, ...(q.mother ? [q.mother] : []), k], union: q.u.id, when: 'always' }, skip);
-        };
-        for (const k of first) tooth(q.bus, k);
-        // следующие гнёзда: ступенька от главного ствола между строками и свой ствол через своих детей
-        let prevY = first.length ? Math.max(...firstYs.map((y) => y)) : q.mother ? node : yStart;
-        if (first.length && Y(q.kids[0]) < node) prevY = Math.max(...firstYs);
-        for (let n = 1; n < nests.length; n++) {
-          const ns = nests[n];
-          const y0 = Y(ns.kids[0]);
-          const y1 = Y(ns.kids[ns.kids.length - 1]);
-          const jy = (prevY + y0) / 2;
-          push({ key: unionKey(q.u.id), kind: 'jog', style: q.style, pts: [q.bus, jy, ns.x, jy], ends: [p, ...(q.mother ? [q.mother] : []), ...ns.kids], union: q.u.id, when: 'always' }, skip);
-          push({ key: unionKey(q.u.id), kind: 'trunk', style: q.style, pts: [ns.x, jy, ns.x, y1], ends: [p, ...(q.mother ? [q.mother] : []), ...ns.kids], union: q.u.id, when: 'always' }, skip);
-          nodes.push({ kind: 'join', union: q.u.id, key: unionKey(q.u.id), x: q.bus, y: jy, open: true, count: null, mother: null, owner: q.mother ?? p, from: p });
-          for (const k of ns.kids) tooth(ns.x, k);
-          prevY = y1;
-        }
-        if (i + 1 < a.length) {
-          const nxt = a[i + 1];
-          const jy = (far + nearOf(nxt)) / 2;
-          const nk = nxt.mother ? spouseKey(nxt.u.id, p) : unionKey(nxt.u.id);
-          // хвост ствола к ступеньке и сама ступенька — путь родителя к следующему союзу
-          push({ key: nk, kind: 'jog', style: 'solid', pts: [q.bus, far, q.bus, jy, nxt.bus, jy], ends: [p, ...q.members], union: nxt.u.id, when: 'always' }, new Set([p, ...q.members]));
-          yStart = jy;
-        }
-        // родовая черта (Г12): след родителя (у первой группы стороны) или матери кончился раньше ствола — сплошной чертой до него (решение 94; у народа — бледной)
-        const clan = (who: string, y: number, yNode = y) => {
-          const st = main.get(who)!;
-          const tail = st.x1 === null ? st.x + st.r + 1.5 : st.x1;
-          if (tail >= q.bus - 1) return;
-          const ck = unionKey(q.u.id);
-          // длинная черта или чужой след на той же строке (строку занимают после чужого следа) — обрывками с подписями
-          const busy = inp.stars.some((o) => o.id !== who && Math.abs(o.y - y) < 0.5 && o.x < q.bus && (o.x1 ?? o.x + o.r) > tail);
-          const cs = clanStyle(who);
-          if (q.bus - tail <= CLAN_MAX && !busy) {
-            push({ key: ck, kind: 'clan', style: cs, pts: [tail, y, q.bus, y], ends: [who], union: q.u.id, when: 'always' }, new Set([who]));
-            return;
-          }
-          const stub = Math.min(STUB_PX, (q.bus - tail) / 3);
-          push({ key: ck, kind: 'stub', style: cs, pts: [tail, y, tail + stub, y], ends: [who], union: q.u.id, when: 'always' }, new Set([who]));
-          push({ key: ck, kind: 'stub', style: cs, pts: [q.bus - stub, yNode, q.bus, yNode], ends: [who], union: q.u.id, when: 'always' }, new Set([who]));
-          stubs.push({ key: ck, ks: key(ck), union: q.u.id, x: tail + stub, y, dir: 0, targets: q.kids.length ? q.kids : q.members, side: 'parent', kind: 'clan' });
-          stubs.push({ key: ck, ks: key(ck), union: q.u.id, x: q.bus - stub, y: yNode, dir: 0, targets: [who], side: 'child', kind: 'clan' });
-        };
-        if (i === 0) clan(p, py, node);
-        if (q.mother) clan(q.mother, node);
-        const pl = plates?.get(q.u.id);
-        const was = nodes.find((n) => n.union === q.u.id && n.kind === 'union');
-        if (!was)
-          nodes.push({ kind: 'union', union: q.u.id, key: unionKey(q.u.id), x: q.bus, y: node, open: !pl || pl.open || pl.hidden === 0, count: pl && !pl.open && pl.hidden > 0 ? `+${pl.hidden}` : null, mother: null, owner: q.mother ?? p, from: pl?.from ?? p });
-        else if (q.mother) {
-          was.x = q.bus;
-          was.y = node;
-          was.owner = q.mother;
-        } else if (Math.abs(was.x - q.bus) > 1 || Math.abs(was.y - node) > 0.5)
-          // дети союза по обе стороны от следа родителя (дочери Авессалома): у ствола второй стороны — свой узел •,
-          // иначе он висел бы без узла (Я7)
-          nodes.push({ kind: 'join', union: q.u.id, key: unionKey(q.u.id), x: q.bus, y: node, open: true, count: null, mother: null, owner: p, from: p });
-      }
-    }
-  }
-  for (const l of lineOnly) {
-    if (nodes.some((n) => n.union === l.u.id)) continue;
-    const pl = plates?.get(l.u.id);
-    nodes.push({
-      kind: 'union', union: l.u.id, key: unionKey(l.u.id), x: Math.round(Math.max(l.fb - gap, X(l.p) + R(l.p) + 4)) + 0.5, y: Y(l.p),
-      open: !pl || pl.open || pl.hidden === 0, count: pl && !pl.open && pl.hidden > 0 ? `+${pl.hidden}` : null, mother: null, owner: l.p, from: pl?.from ?? l.p,
-    });
-  }
-  // свёрнутые союзы набора: полый ромб с «+N» — у следа родителя (к детям) или у строки ребёнка (к родителям). Поле ромба
-  // и «+N» на одной строке — около 48 px (24 × 24 у ромба и у числа): соседний ромб той же строки — не ближе, правее
-  const SHUT_W = 48;
-  const shutX = (x0: number, y: number) => {
-    let x = x0;
-    for (let k = 0; k < 8; k++) {
-      const hit = nodes.find((q) => Math.abs(q.y - y) < 1 && Math.abs(q.x - x) < SHUT_W);
-      if (!hit) break;
-      x = hit.x + SHUT_W;
-    }
-    return x;
-  };
-  const order = collapsed
-    .map((c) => ({ ...c, at: Math.min(...c.u.kids.map((k) => inp.xOf?.(k) ?? Infinity)) }))
-    .sort((a, b) => a.at - b.at);
-  for (const { u, plate } of order) {
-    const par = [u.a, u.b].find((x) => !!x && S.has(x) && !u.kids.includes(x)) ?? null;
-    const kid = u.kids.find((k) => S.has(k)) ?? null;
-    if (par && (plate.dir === 'down' || !kid)) {
-      const xs = u.kids.map((k) => inp.xOf?.(k) ?? null).filter((v): v is number => v !== null);
-      const x = shutX(Math.max(X(par) + R(par) + 6, xs.length ? Math.min(...xs) - gap : X(par) + R(par) + 3 * gap), Y(par));
-      nodes.push({ kind: 'union', union: u.id, key: unionKey(u.id), x: Math.round(x) + 0.5, y: Y(par), open: false, count: `+${plate.hidden}`, mother: null, owner: par, from: plate.from });
-    } else if (kid) {
-      const x = X(kid) - R(kid) - 1.5 - 2 * gap;
-      nodes.push({ kind: 'union', union: u.id, key: unionKey(u.id), x: Math.round(x) + 0.5, y: Y(kid), open: false, count: `+${plate.hidden}`, mother: null, owner: kid, from: plate.from });
-      push({ key: childKey(u.id, kid), kind: 'tooth', style: kidStyle(u), pts: [Math.round(x) + 0.5, Y(kid), X(kid) - R(kid) - 1.5, Y(kid)], ends: [kid], union: u.id, when: 'always' }, new Set([kid]));
-    }
-  }
-  // бездетный брак обоих супругов на небе, не связанных линией (К6)
-  childlessNodes(shown, main, new Set(shown.filter((u) => u.kids.some((k) => S.has(k))).map((u) => u.id)), nodes, paths);
-  // ленты: через узел своего союза (тройник) — лента выходит из следа родителя у ствола его союза
-  for (const u of shown) {
-    const n = nodes.find((q) => q.union === u.id);
-    if (!n) continue;
-    for (const k of u.kids)
-      if (S.has(k) && ribbon(u, k))
-        for (const par of [u.a, u.b]) {
-          if (!par || !steps.has(`${par}>${k}`) || !S.has(par)) continue;
-          const pr = Y(par);
-          const mr = n.owner !== par && main.has(n.owner) ? Y(n.owner) : pr;
-          const adjacent = Math.abs(mr - pr) <= ky + 0.5 && Math.sign(mr - pr) === Math.sign(Y(k) - pr);
-          via.set(`${par}>${k}`, { x: n.x, y: adjacent ? n.y : pr, union: u.id });
-        }
-  }
-  clearVia(inp, main, via, paths);
-  ribbonPaths(inp, main, via, trails, paths);
-  return { layout: 'family', paths, nodes, stubs, via, issues };
 }
 
 // ---------- ленты по маршрутам (решение 79; § 3) ----------

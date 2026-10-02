@@ -336,7 +336,8 @@ function tapCandidates(sky: Sky, x: number, y: number, r: number, byName = true)
   const best = new Map<string, TapCandidate>();
   for (let i = 0; i < sky.nodes.length; i++) {
     const n = sky.nodes[i];
-    const sy = cam.sy(n.lane);
+    // звезда — в полосе рождения (решение 173)
+    const sy = sky.starY(i);
     const named = onLabel.has(n.person);
     if (!named && Math.abs(sy - y) > r) continue;
     const sx = cam.sx(sky.X0[i]);
@@ -385,9 +386,10 @@ export function hitDistance(sky: Sky, id: string, x: number, y: number): number 
     const n = sky.nodes[i];
     if (n.person !== id) continue;
     const sx = cam.sx(sky.X0[i]);
-    const sy = cam.sy(n.lane);
+    const sy = sky.starY(i);
     best = Math.min(best, Math.max(0, Math.hypot(sx - x, sy - y) - r));
-    if (x >= sx && x <= cam.sx(sky.X1[i])) best = Math.min(best, Math.abs(sy - y));
+    // след — по пребываниям и переходам (решение 173): расстояние до ломаной
+    if (x >= sx && x <= cam.sx(sky.X1[i])) best = Math.min(best, sky.trailDist(i, x, y));
   }
   return best;
 }

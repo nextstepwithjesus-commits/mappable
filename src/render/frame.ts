@@ -13,6 +13,7 @@
  *    «↑ Иессей, отец»; этап 14, решение 146).
  * Все функции читают небо через SkyContext и ничего в нём не меняют; надписи рамки пишутся в замер подписей (kind 'frame').
  */
+import { starLaneOf } from '../engine/stays.ts';
 import { alpha } from './color.ts';
 import { hits, type Rect } from './rect.ts';
 import { mapFont, mapSize, T_MAP_S, T_UI } from './type.ts';
@@ -1014,7 +1015,7 @@ export function placeWayfinding(v: SkyContext, s: SkyState, p: Pass | null): Edg
     // лицо скрыто рабочим набором или свёрткой (J4, J5): указывать некуда
     if (i === undefined || v.hides(id)) continue;
     const x = cam.sx(v.X0[i]);
-    const y = cam.sy(v.nodes[i].lane);
+    const y = cam.sy(starLaneOf(v.nodes[i]));
     const inside = x > v.letterW && x < W && y > top && y < bottom;
     if (inside) continue;
     const name = byId.get(id)!.name;
@@ -1072,7 +1073,7 @@ function placeKinPointers(v: SkyContext, s: SkyState, p: Pass | null, placed: Re
   const i0 = v.indexOf(id);
   if (i0 === undefined || v.hides(id)) return [];
   const sx = cam.sx(v.X0[i0]);
-  const sy = cam.sy(v.nodes[i0].lane);
+  const sy = cam.sy(starLaneOf(v.nodes[i0]));
   if (!(sx > left && sx < W && sy > top && sy < bottom)) return [];
   // органы неба (строка показа, кнопки, лист «Показ»; SkyView, organs): родня под ними не видна — ей тоже указатель
   const organs = (s as SkyState & { organs?: readonly Rect[] }).organs ?? [];
@@ -1083,7 +1084,7 @@ function placeKinPointers(v: SkyContext, s: SkyState, p: Pass | null, placed: Re
     const i = v.indexOf(k.id);
     if (i === undefined || v.hides(k.id) || !v.drawn(i)) continue;
     const x = cam.sx(v.X0[i]);
-    const y = cam.sy(v.nodes[i].lane);
+    const y = cam.sy(starLaneOf(v.nodes[i]));
     // указатель — только к невидимой звезде (решение 162; R1-03): за краем видимой части или под органом неба; стрелка —
     // к тому краю, за который звезда ушла
     const ox = x < left ? left - x : x > W ? x - W : 0;

@@ -10,6 +10,7 @@
  *   Ночью лента гаснет до 0,55, днём — не ниже 0,85.
  * — Звено по толкованию — разреженная нить без свечения и тона.
  */
+import { starLaneOf } from '../engine/stays.ts';
 import { BRAID_PX, blendStrands, buildRibbons, buildRouteRibbons, runSpans, type RouteStep, type Strand, type StrandPoint } from '../engine/ribbons.ts';
 import { stepRoute } from './links.ts';
 import type { LineStep } from '../engine/layout.ts';
@@ -600,7 +601,7 @@ export function ribbonStrands(v: SkyContext, s: SkyState, steps: { joseph: reado
     const at = v.ribbonNodes;
     const raw = (id: string) => {
       const i = v.indexOf(id);
-      return i === undefined ? null : { x: cam.sx(v.X0[i]), y: cam.sy(at[i].lane) };
+      return i === undefined ? null : { x: cam.sx(v.X0[i]), y: cam.sy(starLaneOf(at[i])) };
     };
     // средняя линия раздельных участков (ветвей) при растянутых строках — сглажена (MAP-62); развилки и схождения на месте
     const flat = Math.min(1, cam.kyWith(cam.kx, 1) / ky);
@@ -629,7 +630,7 @@ export function ribbonStrands(v: SkyContext, s: SkyState, steps: { joseph: reado
         const i = v.indexOf(id);
         if (i === undefined) return null;
         const q = byId.get(id);
-        return { x: cam.sx(v.X0[i]), y: cam.sy(v.nodes[i].lane), r: starRadius(q?.magnitude ?? 6, Math.max(0.7, Math.min(1.25, ky / 18))) + (q?.sex === 'f' ? 2.2 : 0) };
+        return { x: cam.sx(v.X0[i]), y: cam.sy(starLaneOf(v.nodes[i])), r: starRadius(q?.magnitude ?? 6, Math.max(0.7, Math.min(1.25, ky / 18))) + (q?.sex === 'f' ? 2.2 : 0) };
       };
       // шаг за скрытыми лицами («цепочка», К4) — тем же маршрутом по следу старшего до столбца младшего, без узла союза
       const route = (xs: typeof J): RouteStep[] =>
@@ -929,7 +930,7 @@ export function ribbonCheck(v: SkyContext, p: Pass, steps: { joseph: readonly Li
   const st = skySteps(v, p.s, steps);
   const on = (i: number) => {
     const x = cam.sx(v.X0[i]);
-    const y = cam.sy(v.nodes[i].lane);
+    const y = cam.sy(starLaneOf(v.nodes[i]));
     return x > v.letterW && x < cam.w && y > v.openTop && y < cam.vp.b ? { x, y } : null;
   };
   // строка и амплитуда косы, но не меньше 16 px: средняя линия тесных поколений сглажена (MAP-26, MAP-62)
@@ -1313,7 +1314,7 @@ export function drawLineNames(v: SkyContext, p: Pass, steps: { joseph: readonly 
     // номер — у нарисованной бусины (этап 11, B1)
     if (i === undefined || !p.starShown(i)) continue;
     const x = cam.sx(v.X0[i]);
-    const y = cam.sy(v.nodes[i].lane);
+    const y = cam.sy(starLaneOf(v.nodes[i]));
     if (x < v.letterW || x > cam.w || y < v.openTop || y > cam.vp.b) continue;
     const r = starRadius(byId.get(id)?.magnitude ?? 6, p.zoomScale);
     let any = false;
@@ -1441,7 +1442,7 @@ export function drawMt1Women(v: SkyContext, p: Pass, _steps: { joseph: readonly 
     // знак матери стоит у звезды сына: сына нет в кадре (скрыт набором) — нет и знака (этап 11, B1; снимок 14: Фамарь)
     if (i === undefined || !mq || !p.starShown(i)) continue;
     const x = cam.sx(v.X0[i]);
-    const y = cam.sy(v.nodes[i].lane);
+    const y = cam.sy(starLaneOf(v.nodes[i]));
     if (x < v.letterW + 20 || x > cam.w - 20 || y < v.openTop || y > cam.vp.b) continue;
     const g = gen(son);
     const text = g ? `${mq.name} — мать ${g} (${refText(w.ref)})` : `${mq.name} (${refText(w.ref)})`;
@@ -1517,7 +1518,7 @@ export function drawLineNotes(v: SkyContext, p: Pass, steps: { joseph: readonly 
   // выноска и знак матери — у нарисованной звезды (этап 11, B1)
   const at = (id: string) => {
     const i = v.indexOf(id);
-    return i === undefined || !p.starShown(i) ? null : { x: cam.sx(v.X0[i]), y: cam.sy(v.nodes[i].lane), i };
+    return i === undefined || !p.starShown(i) ? null : { x: cam.sx(v.X0[i]), y: cam.sy(starLaneOf(v.nodes[i])), i };
   };
   const size = mapSize(T_UI_S, v.coarse);
   const font = mapFont(T_UI_S, { coarse: v.coarse });
@@ -1671,7 +1672,7 @@ export function drawBranchLabels(v: SkyContext, p: Pass, steps: { joseph: readon
   };
   const inWindow = (id: string) => {
     const i = v.indexOf(id);
-    return i !== undefined && inside({ x: cam.sx(v.X0[i]), y: cam.sy(v.nodes[i].lane) });
+    return i !== undefined && inside({ x: cam.sx(v.X0[i]), y: cam.sy(starLaneOf(v.nodes[i])) });
   };
   // набор (J4) и сжатые строки (свёртка, J5): подпись ветви — только у первого видимого лица ветви, попавшего в окно
   const strict = !!p.s.guide || p.work || v.rowsKey !== '';

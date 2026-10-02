@@ -54,7 +54,7 @@ import { cross, type Rect } from './rect.ts';
 import { KIN_GOLD, LINK_YELLOW, UNION_COLORS } from './branches.ts';
 import type { PlateGap } from './rows.ts';
 import type { Pass, SkyContext } from './sky.ts';
-import { JOIN_R, NODE_R_FAMILY, NODE_R_MAP, type LinkNode, type LinkPath } from './links.ts';
+import { JOIN_R, NODE_R_FAMILY, NODE_R_MAP, type LinkNode, type LinkPath, type NodeLook } from './links.ts';
 import type { LinkDraw } from './trails.ts';
 import { linkKeyString } from '../engine/linkkey.ts';
 
@@ -484,6 +484,11 @@ export interface UnionLook {
   color?: string | null;
   /** тонкая обводка, отделяющая цветной ромб от неба (днём — тёмная); null — без неё */
   edge?: string | null;
+  /**
+   * вид союза (решение 174; links.ts, NodeLook): половина не названного лица — полая ('no-mother' — жены, 'no-father' —
+   * мужа); брак в Писании не назван ('none') — обе половины полые. Нет — обе залиты
+   */
+  look?: NodeLook | null;
 }
 
 /**
@@ -493,7 +498,7 @@ export interface UnionLook {
  * обводкой. Раскрыт — залит; свёрнут — полый контур той же величины (цвета — те же, половинами).
  */
 export function paintUnion(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, o: UnionLook) {
-  const path = (h: number, half: 0 | -1 | 1 = 0) => {
+  const path = (h: number, half: 0 | -1 | 1 = 0, closed = o.open) => {
     ctx.beginPath();
     if (half === 0) {
       ctx.moveTo(x, y - h);
@@ -506,11 +511,14 @@ export function paintUnion(ctx: CanvasRenderingContext2D, x: number, y: number, 
       ctx.moveTo(x, y - h);
       ctx.lineTo(x + half * h, y);
       ctx.lineTo(x, y + h);
-      if (o.open) ctx.closePath();
+      if (closed) ctx.closePath();
     }
   };
   const a = Math.max(0, Math.min(1, o.a));
   const U = UNION_COLORS[o.theme];
+  // полые половины (решение 174): лицо не названо — его половина; брак не назван — обе
+  const hollowH = o.look === 'none' || o.look === 'no-father';
+  const hollowW = o.look === 'none' || o.look === 'no-mother';
   ctx.save();
   ctx.setLineDash([]);
   ctx.fillStyle = o.halo;
@@ -518,9 +526,22 @@ export function paintUnion(ctx: CanvasRenderingContext2D, x: number, y: number, 
   ctx.fill();
   const w = 1.3;
   ctx.lineJoin = 'miter';
+  /** половина: залитая или полая (контур с внутренней диагональю) */
+  const half = (side: -1 | 1, color: string, hollow: boolean) => {
+    if (hollow) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = w;
+      path(r - w / 2, side, true);
+      ctx.stroke();
+    } else {
+      ctx.fillStyle = color;
+      path(r, side, true);
+      ctx.fill();
+    }
+  };
   if (o.color) {
     const c = alpha(o.color, a);
-    if (o.open) {
+    if (o.open && !hollowH && !hollowW) {
       ctx.fillStyle = c;
       path(r);
       ctx.fill();
@@ -530,13 +551,16 @@ export function paintUnion(ctx: CanvasRenderingContext2D, x: number, y: number, 
         path(r);
         ctx.stroke();
       }
+    } else if (o.open) {
+      half(-1, c, hollowH);
+      half(1, c, hollowW);
     } else {
       ctx.strokeStyle = c;
       ctx.lineWidth = w;
       path(r - w / 2);
       ctx.stroke();
     }
-  } else if (o.open) {
+  } else if (o.open && !hollowH && !hollowW) {
     // двухцветный: розовая заливка целиком и синяя левая половина поверх — шва между половинами нет
     ctx.fillStyle = alpha(U.wife, a);
     path(r);
@@ -544,6 +568,9 @@ export function paintUnion(ctx: CanvasRenderingContext2D, x: number, y: number, 
     ctx.fillStyle = alpha(U.husband, a);
     path(r, -1);
     ctx.fill();
+  } else if (o.open) {
+    half(-1, alpha(U.husband, a), hollowH);
+    half(1, alpha(U.wife, a), hollowW);
   } else {
     ctx.lineWidth = w;
     ctx.strokeStyle = alpha(U.husband, a);
@@ -780,7 +807,7 @@ export function drawLinkNodes(v: SkyContext, p: Pass, d: LinkDraw, marks: PlateM
       paintJoin(ctx, x, y, look.color ? alpha(look.color, look.a) : color, pal.sky);
       continue;
     }
-    paintUnion(ctx, x, y, R, { open: n.open, halo: pal.sky, theme: v.pal.glow ? 'night' : 'day', a: look.a, color: look.color, edge: look.edge });
+    paintUnion(ctx, x, y, R, { open: n.open, halo: pal.sky, theme: v.pal.glow ? 'night' : 'day', a: look.a, color: look.color, edge: look.edge, look: n.look });
     looks.push(`${n.union}:${look.color ?? 'two'}:${(Math.round(look.a * a0 * settle * 100) / 100).toFixed(2)}`);
     let count: CountHit | null = null;
     if (n.count) {

@@ -751,6 +751,7 @@ export function drawTrails(v: SkyContext, p: Pass) {
     glow.flush(ctx, bf.theme === 'night');
   }
   ctx.lineCap = 'butt';
+  const hov = p.s.hovered;
   for (const i of p.vis) {
     if (!trailOf(v, i, t)) continue;
     const n = v.nodes[i];
@@ -766,6 +767,13 @@ export function drawTrails(v: SkyContext, p: Pass) {
       const e = p.emph(n.person) * intro;
       t.fade = alpha(pal.ink2, Math.min(1, (ky < 5 ? 0.35 : 0.55) * e * (q.magnitude <= 2 ? 1.25 : 1)));
       bf.shown.add(n.person);
+    } else if (n.person === hov) {
+      // наведённое лицо (решение 179): весь его след — со звезды через переходы до конца — ярче и на полпикселя толще
+      t.color = alpha(pal.ink, Math.min(1, 0.85 * intro));
+      t.width = (ky < 5 ? 1 : q.magnitude <= 1 ? 1.6 : 1.2) + 0.5;
+      t.dash = undefined;
+      t.cuts = p.cuts?.get(i);
+      t.fade = undefined;
     } else {
       const e = p.emph(n.person) * intro;
       const a = (ky < 5 ? 0.35 : 0.55) * e * (q.magnitude <= 2 ? 1.25 : 1);
@@ -777,7 +785,7 @@ export function drawTrails(v: SkyContext, p: Pass) {
     }
     // переходы (решение 173): на небе — бледнее следа, на обзоре семьи и ближе — в полную силу (решение 178); у выделенных —
     // как сам след
-    if (t.bends) t.bendAlpha = bp || p.s.highlight?.has(n.person) ? 1 : bendAlpha(p);
+    if (t.bends) t.bendAlpha = bp || n.person === hov || p.s.highlight?.has(n.person) ? 1 : bendAlpha(p);
     drawLifeTrail(ctx, t);
     if (p.lines && t.x1 > t.x0 + 1 && t.x1 > 0 && t.x0 < cam.w) {
       const lines = p.lines;

@@ -10,6 +10,7 @@ import { lifeText } from '../sky/text.ts';
 import { Sheet, useRemembered } from './Sheet.tsx';
 import { num, typo } from '../text/typo.ts';
 import { Segmented } from '../controls.tsx';
+import { starLaneOf } from '../../engine/stays.ts';
 
 /** Известное лицо — полужирным в указателе (CARD-45): яркая звезда неба. */
 const KNOWN_MAG = 2;
@@ -87,7 +88,8 @@ export function IndexPanel() {
     const n = m.nodeByPerson.get(id);
     const c = m.chrono.get(id);
     // координата — там, где звезда стоит на карте: у лиц скоплений это клетка сетки (n.t0), а не год рождения
-    return n && c ? atlasCoord(n.t0, n.lane) : '';
+    // координата ведёт читателя к звезде лица — в полосе рождения (решение 173)
+    return n && c ? atlasCoord(n.t0, starLaneOf(n)) : '';
   };
   const known = (id: string) => (byId.get(id)?.magnitude ?? 6) <= KNOWN_MAG;
   const list = useRef<HTMLDivElement>(null);

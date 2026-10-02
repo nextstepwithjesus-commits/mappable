@@ -17,6 +17,7 @@
  * своей ветви со свечением, бледнее с каждым поколением; предки — мягким свечением (branchFrame; цвета и свечение —
  * src/render/branches.ts, рисуют следы и отводы — src/render/trails.ts).
  */
+import { starLaneOf } from '../engine/stays.ts';
 import { alpha } from './color.ts';
 import { DIM, LIKELY } from './dim.ts';
 import { starRadius } from './glyphs.ts';
@@ -341,7 +342,7 @@ export function kinRoutes(v: SkyContext, steps: readonly KinStep[], d?: LinkDraw
   // висел бы в пустоте, где звезды нет (этап 11, B1: путь «Руфь — Давид» шёл от Овида к пустому месту Руфи)
   const at = (id: string) => {
     const i = v.indexOf(id);
-    return i === undefined || v.hides(id) || !v.drawn(i) ? null : { x: cam.sx(v.X0[i]), y: cam.sy(v.nodes[i].lane) };
+    return i === undefined || v.hides(id) || !v.drawn(i) ? null : { x: cam.sx(v.X0[i]), y: cam.sy(starLaneOf(v.nodes[i])) };
   };
   const out: { st: KinStep; pts: { x: number; y: number }[] }[] = [];
   for (const st of steps) {
@@ -514,7 +515,7 @@ export function drawWorkMarks(v: SkyContext, p: Pass) {
     const q = byId.get(id);
     if (!q) continue;
     const x = cam.sx(v.X0[i]);
-    const y = cam.sy(v.nodes[i].lane);
+    const y = cam.sy(starLaneOf(v.nodes[i]));
     if (x < v.letterW || x > cam.w || y < v.openTop || y > cam.vp.b) continue;
     const r = starRadius(q.magnitude, p.zoomScale) + (q.sex === 'f' ? 2.2 : 0);
     const king = q.roles.includes('king') || q.roles.includes('queen');
@@ -652,7 +653,7 @@ const PIN_GAP = { f: 8.5, m: 7 } as const;
 function ringCenter(v: SkyContext, id: string): { x: number; y: number } | null {
   const i = v.indexOf(id);
   if (i === undefined || v.hides(id)) return null;
-  if (v.drawn(i)) return { x: v.cam.sx(v.X0[i]), y: v.cam.sy(v.nodes[i].lane) };
+  if (v.drawn(i)) return { x: v.cam.sx(v.X0[i]), y: v.cam.sy(starLaneOf(v.nodes[i])) };
   return beadAt(v, id);
 }
 
@@ -775,8 +776,8 @@ function wifeArcs(v: SkyContext, p: Pass): { id: string; a: { x: number; y: numb
     const gi = v.indexOf(`ghost:${id}`);
     const ri = v.indexOf(id);
     if (gi === undefined || ri === undefined || !v.drawn(gi) || !v.drawn(ri)) continue;
-    const a = { x: cam.sx(v.X0[gi]), y: cam.sy(v.nodes[gi].lane) };
-    const b = { x: cam.sx(v.X0[ri]), y: cam.sy(v.nodes[ri].lane) };
+    const a = { x: cam.sx(v.X0[gi]), y: cam.sy(starLaneOf(v.nodes[gi])) };
+    const b = { x: cam.sx(v.X0[ri]), y: cam.sy(starLaneOf(v.nodes[ri])) };
     const bend = Math.min(160, Math.abs(b.y - a.y) * 0.25 + 30);
     out.push({ id, a, c: { x: Math.min(a.x, b.x) - bend, y: (a.y + b.y) / 2 }, b });
   }
@@ -801,7 +802,7 @@ function kinArcs(v: SkyContext, id: string, seen: Set<string>): KinArc[] {
   const vp = cam.vp;
   const at = (x: string) => {
     const i = v.indexOf(x);
-    return i === undefined || !v.drawn(i) ? null : { x: cam.sx(v.X0[i]), y: cam.sy(v.nodes[i].lane) };
+    return i === undefined || !v.drawn(i) ? null : { x: cam.sx(v.X0[i]), y: cam.sy(starLaneOf(v.nodes[i])) };
   };
   const inWin = (q: { x: number; y: number }) => q.x >= Math.max(vp.l, v.letterW) && q.x <= vp.r && q.y >= v.openTop && q.y <= vp.b;
   const out: KinArc[] = [];
@@ -1167,13 +1168,13 @@ function ghostPlan(v: SkyContext, p: Pass): GhostItem[] {
     if (!id) continue;
     const i = v.indexOf(id);
     if (i === undefined || !v.drawn(i) || v.hides(id)) continue;
-    const at = { x: cam.sx(v.X0[i]), y: cam.sy(v.nodes[i].lane) };
+    const at = { x: cam.sx(v.X0[i]), y: cam.sy(starLaneOf(v.nodes[i])) };
     const place = (gid: string, up: boolean): GhostSpot | null => {
       const gi = v.indexOf(gid);
       const q = byId.get(gid);
       if (gi === undefined || !q) return null;
       const x = cam.sx(v.X0[gi]);
-      const real = family ? NaN : cam.sy(v.nodes[gi].lane);
+      const real = family ? NaN : cam.sy(starLaneOf(v.nodes[gi]));
       const dir = Number.isFinite(real) && Math.abs(real - at.y) > 0.5 ? Math.sign(real - at.y) : up ? -1 : 1;
       const step = Math.max(6, cam.ky * 0.5);
       const r = starRadius(q.magnitude, 1) + (q.sex === 'f' ? 2.2 : 0);
@@ -1274,15 +1275,15 @@ export function selectedRoute(v: SkyContext, d: LinkDraw | null | undefined, key
   return selectedRoutes(v, d, key).all;
 }
 
-export function selectedRoutes(v: SkyContext, d: LinkDraw | null | undefined, key: LinkKey): SelectedRoutes {
+export function selectedRoutes(v: SkyContext, d: LinkDraw | null | undefined, key: LinkKey, origin = false): SelectedRoutes {
   const none: SelectedRoutes = { all: [], core: [], ghosts: [] };
   if (!d) return none;
-  const ks = linkKeyString(key) ?? '';
+  const ks = (linkKeyString(key) ?? '') + (origin ? '|origin' : '');
   let byKs = routeCache.get(d.frame);
   if (!byKs) routeCache.set(d.frame, (byKs = new Map()));
   let got = byKs.get(ks);
   if (!got) {
-    got = frameRoutes(v, d, key, ks);
+    got = frameRoutes(v, d, key, ks, origin);
     if (byKs.size > 8) byKs.clear();
     byKs.set(ks, got);
   }
@@ -1294,11 +1295,15 @@ export function selectedRoutes(v: SkyContext, d: LinkDraw | null | undefined, ke
  * Пути выбранной связи в px кадра связей. Чужие ромбы на пути не обходятся (решение 166, R1-10: П-образные вырезы
  * читались заходом в те союзы): жёлтое идёт прямо поверх, а под чужим ромбом прерывается (drawSelectedLink, holes).
  */
-function frameRoutes(v: SkyContext, d: LinkDraw, key: LinkKey, ks: string): SelectedRoutes {
-  return baseRoutes(v, d, key, ks);
+function frameRoutes(v: SkyContext, d: LinkDraw, key: LinkKey, ks: string, origin = false): SelectedRoutes {
+  return baseRoutes(v, d, key, origin ? ks.slice(0, -'|origin'.length) : ks, origin);
 }
 
-function baseRoutes(v: SkyContext, d: LinkDraw, key: LinkKey, ks: string): SelectedRoutes {
+/**
+ * origin — путь происхождения ребёнка (решение 179): из путей родителей к узлу — только путь отца (по его следу, черте
+ * брака к ромбу на следе матери), и у ребёнка линии Мессии тоже; отец не на небе — путь матери.
+ */
+function baseRoutes(v: SkyContext, d: LinkDraw, key: LinkKey, ks: string, origin = false): SelectedRoutes {
   const all: number[][] = [];
   const core: number[][] = [];
   const ghosts: GhostSpot[] = [];
@@ -1309,7 +1314,7 @@ function baseRoutes(v: SkyContext, d: LinkDraw, key: LinkKey, ks: string): Selec
     const i = v.indexOf(id);
     if (i === undefined || !v.drawn(i) || v.hides(id)) return null;
     const x = v.cam.sx(v.X0[i]) - d.dx;
-    const y = v.cam.sy(v.nodes[i].lane) - d.dy;
+    const y = v.cam.sy(starLaneOf(v.nodes[i])) - d.dy;
     const tr = trailOf(v, i, t);
     return { x, y, x1: tr ? Math.max(tr.x0, tr.x1) - d.dx : x };
   };
@@ -1322,7 +1327,7 @@ function baseRoutes(v: SkyContext, d: LinkDraw, key: LinkKey, ks: string): Selec
     const q = byId.get(id);
     if (i === undefined || !q) return null;
     const x = v.cam.sx(v.X0[i]) - d.dx;
-    const real = d.frame.layout === 'family' ? NaN : v.cam.sy(v.nodes[i].lane) - d.dy;
+    const real = d.frame.layout === 'family' ? NaN : v.cam.sy(starLaneOf(v.nodes[i])) - d.dy;
     const dir = Number.isFinite(real) && Math.abs(real - at.y) > 0.5 ? Math.sign(real - at.y) : side === 'from' ? -1 : 1;
     const g = { id, x, y: at.y + dir * Math.max(6, v.cam.ky * 0.5), r: starRadius(q.magnitude, 1) + (q.sex === 'f' ? 2.2 : 0) };
     ghosts.push(g);
@@ -1433,8 +1438,10 @@ function baseRoutes(v: SkyContext, d: LinkDraw, key: LinkKey, ks: string): Selec
   all.push(...core);
   // родитель шага ленты ведёт к ребёнку лентой: его путь к узлу — в ней
   const byRibbon = new Set(rib.map((q) => q.ends[0]));
+  // путь происхождения (решение 179): отец → черта брака → ромб — и у ребёнка линии (станция у черты его матери)
+  const lead = origin ? (parents.find((id) => id === un?.a && star(id)) ?? parents.find((id) => star(id)) ?? null) : null;
   for (const id of parents) {
-    if (byRibbon.has(id)) continue;
+    if (origin ? id !== lead : byRibbon.has(id)) continue;
     const r = parentRoute(id);
     if (r) all.push(r);
   }
@@ -1448,6 +1455,70 @@ function baseRoutes(v: SkyContext, d: LinkDraw, key: LinkKey, ks: string): Selec
     if (g && at) all.push(join(at, g));
   }
   return { all, core, ghosts };
+}
+
+/**
+ * Путь происхождения ребёнка при наведении (решение 179): от звезды отца по его следу до черты брака, по черте — к ромбу
+ * на следе матери, по её следу — к стволу своего гнезда, по стволу и зубцу — к ребёнку; у ребёнка линии Мессии — лента
+ * шага от станции у черты брака матери. Отец не на небе — от звезды матери. Ломаные — в px холста; пусто — союза
+ * ребёнка в кадре нет.
+ */
+export function originRoute(v: SkyContext, d: LinkDraw | null | undefined, child: string): number[][] {
+  const u = mainUnion(unions, child);
+  if (!d || !u) return [];
+  return selectedRoutes(v, d, { kind: 'child', union: u.id, child }, true).all;
+}
+
+/**
+ * Нарисовать путь происхождения ребёнка (решение 179) видом наведённой связи (trails.ts: тон текста, 2 px): под чужими
+ * ромбами и подписями путь прерывается, у кольца выбранного — обрезан (решения 139, 166, 167). Подсказку («Иаков и
+ * Рахиль — родители; Вениамин — сын») даёт небо по ключу { kind: 'child', union, child } (linkwords.ts, linkTip).
+ */
+export function drawOriginPath(v: SkyContext, p: Pass, child: string) {
+  const d = p.links;
+  const routes = originRoute(v, d, child);
+  if (!routes.length || !d) return;
+  const { ctx, cam, pal } = v;
+  const u = mainUnion(unions, child);
+  const hit = (b: Rect) =>
+    routes.some((r) => {
+      for (let k = 0; k + 3 < r.length; k += 2) {
+        const x0 = Math.min(r[k], r[k + 2]) - 2;
+        const x1 = Math.max(r[k], r[k + 2]) + 2;
+        const y0 = Math.min(r[k + 1], r[k + 3]) - 2;
+        const y1 = Math.max(r[k + 1], r[k + 3]) + 2;
+        if (x1 >= b.x && x0 <= b.x + b.w && y1 >= b.y && y0 <= b.y + b.h) return true;
+      }
+      return false;
+    });
+  // чужие ромбы и подписи на пути — разрыв; свой ромб — поверх пути
+  const holes = v.ledger.boxes.filter((b) => b.kind !== 'frame' && b.kind !== 'edge' && !(b.kind === 'plate' && b.text === '' && b.id === u?.id) && hit(b));
+  const scope = overlayScope(v, p, { cuts: holes });
+  ctx.save();
+  clipHoles(ctx, cam, ringHoles(v, p));
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.setLineDash([]);
+  ctx.strokeStyle = pal.ink;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (const pts of routes) {
+    ctx.moveTo(pts[0], pts[1]);
+    for (let k = 2; k < pts.length; k += 2) ctx.lineTo(pts[k], pts[k + 1]);
+  }
+  ctx.stroke();
+  ctx.restore();
+  scope.end();
+  if (!u) return;
+  const R = d.frame.layout === 'family' ? NODE_R_FAMILY : NODE_R_MAP;
+  for (const n of d.frame.nodes) {
+    if (n.union !== u.id || n.kind !== 'union') continue;
+    const x = n.x + d.dx;
+    const y = n.y + d.dy;
+    if (x - R < v.letterW || x + R > cam.w || y - R < v.openTop || y + R > cam.vp.b) continue;
+    const look = nodeLook(v, p, n, true);
+    paintUnion(ctx, x, y, R, { open: n.open, halo: pal.sky, theme: pal.glow ? 'night' : 'day', a: 1, color: look.color, edge: look.edge, look: n.look });
+  }
 }
 
 /**
@@ -1597,7 +1668,7 @@ function crowdedEnds(v: SkyContext, p: Pass, ks: string, ids: readonly string[])
   const at = new Map<string, { x: number; y: number }>();
   for (const id of ids) {
     const i = v.indexOf(id);
-    if (i !== undefined && v.drawn(i) && !v.hides(id)) at.set(id, { x: cam.sx(v.X0[i]), y: cam.sy(v.nodes[i].lane) });
+    if (i !== undefined && v.drawn(i) && !v.hides(id)) at.set(id, { x: cam.sx(v.X0[i]), y: cam.sy(starLaneOf(v.nodes[i])) });
   }
   const out = new Set<string>();
   if (at.size) {
@@ -1606,7 +1677,7 @@ function crowdedEnds(v: SkyContext, p: Pass, ks: string, ids: readonly string[])
       const n = v.nodes[i];
       if (n.ghost || mine.has(n.person) || !v.drawn(i)) continue;
       const x = cam.sx(v.X0[i]);
-      const y = cam.sy(n.lane);
+      const y = cam.sy(starLaneOf(n));
       for (const [id, q] of pts) if (!out.has(id) && Math.abs(q.x - x) < END_CROWD && Math.abs(q.y - y) < END_CROWD && Math.hypot(q.x - x, q.y - y) < END_CROWD) out.add(id);
     }
   }
@@ -1657,7 +1728,7 @@ function frameEnds(v: SkyContext, p: Pass, key: LinkKey): SelectedEnd[] {
     const drawn = i !== undefined && v.drawn(i) && !v.hides(e.id);
     const g = drawn ? null : (ghosts.find((q) => q.id === e.id) ?? null);
     const x = drawn ? cam.sx(v.X0[i!]) : g ? g.x : null;
-    const y = drawn ? cam.sy(v.nodes[i!].lane) : g ? g.y : null;
+    const y = drawn ? cam.sy(starLaneOf(v.nodes[i!])) : g ? g.y : null;
     const on = x !== null && y !== null && x >= vp.l && x <= vp.r && y >= v.openTop && y <= vp.b;
     return { ...e, drawn, on, x, y, crowd: drawn && crowd.has(e.id) };
   });
@@ -1804,7 +1875,7 @@ export function drawSelectedLink(v: SkyContext, p: Pass, o: OverlayOpts = {}): S
       const y = n.y + d.dy;
       if (x - R < v.letterW || x + R > cam.w || y - R < v.openTop || y + R > cam.vp.b) continue;
       const look = nodeLook(v, p, n, true);
-      paintUnion(ctx, x, y, R, { open: n.open, halo: pal.sky, theme: night ? 'night' : 'day', a: 1, color: look.color, edge: look.edge });
+      paintUnion(ctx, x, y, R, { open: n.open, halo: pal.sky, theme: night ? 'night' : 'day', a: 1, color: look.color, edge: look.edge, look: n.look });
     }
   }
   // середина пути в окне: к ней встаёт карточка связи

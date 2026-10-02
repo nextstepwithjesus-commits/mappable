@@ -3,8 +3,9 @@
  * на сценах критика K3 — Адам, Ной, Авраам, Иаков, Давид, «Дом Нахора», род Иуды по отцам, колено Вениамина — и коридор
  * линий Мессии без «горба».
  *
- *  Я16 — группы сплошные: сверху вниз мать, под ней её дети по году рождения; строки чужого союза того же родителя
- *        между ними не встают;
+ *  Я16 — группы сплошные и по «Отчему дому» (этап 15, решение 173; прежде — «сверху вниз мать, под ней её дети по году
+ *        рождения»): позже союз — ближе к родителю; наружу от родителя мать, за ней её дети — младший у матери, старший
+ *        дальше всех; мать с детьми — по одну сторону; строки чужого союза того же родителя между ними не встают;
  *  Я18 — строк не больше лиц; род Иуды по отцам — не больше 90, колено Вениамина — не больше 80;
  *  Я19 — устойчивость при раскрытии по одному союзу от корня: перестановок пар прежних лиц нет (в роде Иуды —
  *        не больше 0,05 %), лица сдвигаются только наружу от опоры, второй союз не меняет первый;
@@ -48,45 +49,60 @@ const layoutOf = (k: string) => {
   return r;
 };
 
-describe('Я16: группы сплошные — мать, под ней её дети по году рождения', () => {
+describe('Я16: группы сплошные — наружу мать, за ней её дети от младшего (решение 173)', () => {
   for (const k of Object.keys(SCENES))
     it(k, () => {
       const r = layoutOf(k);
       const row = (id: string) => r.rows.get(id)!;
       let checked = 0;
-      for (const [p, us] of r.units)
+      for (const [p, us] of r.units) {
+        const pr = row(p);
+        // позже союз — ближе к родителю: единицы — по году ствола (год до первого ребёнка в показе), поздние первыми
+        for (let i = 1; i < us.length; i++)
+          if (us[i - 1].kids.length && us[i].kids.length)
+            expect(T0(us[i - 1].kids[0]), `${k}: ${name(p)}: союз ${us[i - 1].union.id} раньше ${us[i].union.id}`).toBeGreaterThanOrEqual(T0(us[i].kids[0]));
         for (const u of us) {
-          const members = [...(u.wife ? [u.wife] : []), ...u.kids];
+          // наружу от родителя: мать, затем дети от младшего к старшему (u.kids — от старшего)
+          const members = [...(u.wife ? [u.wife] : []), ...[...u.kids].reverse()];
           if (members.length < 2) continue;
           checked++;
-          // сверху вниз (строка больше — выше): мать, затем дети по году рождения
-          for (let i = 1; i < members.length; i++)
-            expect(row(members[i - 1]), `${k}: ${name(p)}, союз ${u.union.id}: ${name(members[i - 1])} выше ${name(members[i])}`).toBeGreaterThan(row(members[i]));
-          // между ними — ни одного лица другого союза того же родителя
-          const hi = row(members[0]);
-          const lo = row(members[members.length - 1]);
-          for (const v of us) {
-            if (v === u) continue;
-            for (const x of [...(v.wife ? [v.wife] : []), ...v.kids]) {
-              const rx = row(x);
-              expect(rx > lo && rx < hi, `${k}: ${name(x)} (союз ${v.union.id}) внутри группы ${u.union.id}`).toBe(false);
+          // мать с детьми — по одну сторону от родителя (дети связаны со следом матери)
+          if (u.wife) for (const x of u.kids) expect(Math.sign(row(x) - pr), `${k}: ${name(x)} по ту же сторону, что ${name(u.wife)}`).toBe(Math.sign(row(u.wife) - pr));
+          // на каждой стороне — дальше от родителя по порядку «мать, младший … старший»
+          for (const sd of [1, -1]) {
+            const side = members.filter((x) => Math.sign(row(x) - pr) === sd);
+            for (let i = 1; i < side.length; i++)
+              expect(Math.abs(row(side[i]) - pr), `${k}: ${name(p)}, союз ${u.union.id}: ${name(side[i - 1])} ближе к родителю, чем ${name(side[i])}`).toBeGreaterThan(Math.abs(row(side[i - 1]) - pr));
+            if (side.length < 2) continue;
+            // между ними — ни одного лица другого союза того же родителя
+            const lo = Math.min(...side.map(row));
+            const hi = Math.max(...side.map(row));
+            for (const v of us) {
+              if (v === u) continue;
+              for (const x of [...(v.wife ? [v.wife] : []), ...v.kids]) {
+                const rx = row(x);
+                expect(rx > lo && rx < hi, `${k}: ${name(x)} (союз ${v.union.id}) внутри группы ${u.union.id}`).toBe(false);
+              }
             }
           }
         }
+      }
       expect(checked).toBeGreaterThan(0);
     });
 
-  it('дети — по годам: у Иакова сверху вниз Лия, Рувим, Симеон, Левий, Иссахар, Завулон, Дина; Рахиль, Иосиф, Вениамин', () => {
+  it('у Иакова наружу: Лия, Дина, Завулон, Иссахар, Левий, Симеон, Рувим; Рахиль, Вениамин, Иосиф; ближе всех — Рахиль, дальше всех — Лия', () => {
     const r = layoutOf('Иаков');
-    const order = (ids: string[]) => ids.map((id) => r.rows.get(id)!);
-    const desc = (xs: number[]) => xs.every((x, i) => i === 0 || xs[i - 1] > x);
-    expect(desc(order(['liya', 'ruvim', 'simeon', 'leviy', 'issakhar', 'zavulon', 'dina'])), 'Лия и её дети').toBe(true);
-    expect(desc(order(['rakhil', 'iosif', 'veniamin'])), 'Рахиль и её дети').toBe(true);
+    const j = r.rows.get('iakov')!;
+    const dist = (ids: string[]) => ids.map((id) => Math.abs(r.rows.get(id)! - j));
+    const asc = (xs: number[]) => xs.every((x, i) => i === 0 || xs[i - 1] < x);
+    expect(asc(dist(['liya', 'dina', 'zavulon', 'issakhar', 'leviy', 'simeon', 'ruvim'])), 'Лия и её дети').toBe(true);
+    expect(asc(dist(['rakhil', 'veniamin', 'iosif'])), 'Рахиль и её дети').toBe(true);
     // стороны по данным: у лица с несколькими союзами с детьми единицы чередуются выше и ниже следа
-    const sides = r.units.get('iakov')!.map((u) => u.side);
-    expect(new Set(sides).size, 'союзы Иакова по обе стороны следа').toBe(2);
-    // союз с ребёнком линии Мессии (Иуда, сын Лии) — первым, ближе к коридору
-    expect(r.units.get('iakov')![0].union.id).toBe('u:iakov+liya');
+    const us = r.units.get('iakov')!;
+    expect(new Set(us.map((u) => u.side)).size, 'союзы Иакова по обе стороны следа').toBe(2);
+    // позже союз — ближе (решение 173): Рахиль (Иосиф родился последним из одиннадцати) — первой, Лия — последней
+    expect(us[0].union.id).toBe('u:iakov+rakhil');
+    expect(us[us.length - 1].union.id).toBe('u:iakov+liya');
   });
 
   it('большая семья одного союза: Иафет посередине своих семерых сыновей (Быт 10:2)', () => {
@@ -98,10 +114,12 @@ describe('Я16: группы сплошные — мать, под ней её �
     expect(sons.length - above).toBeGreaterThanOrEqual(3);
   });
 
-  it('Давид: союз с Вирсавией — первым (ленты расходятся в его узле), хевронские союзы — лестницей по обе стороны', () => {
+  it('Давид: Вирсавия — ближе всех жён (её союз позже хевронских), хевронские союзы — лестницей по обе стороны', () => {
     const r = layoutOf('Давид');
     const us = r.units.get('david')!;
-    expect(us[0].union.id).toBe('u:david+virsaviya');
+    // решение 173: ближе всех — дети, рождённые в Иерусалиме, чья мать не названа (1 Пар 3:5–9; 14:4–7), затем Вирсавия
+    // (при равном годе союза с Эглой — союз с ребёнком линии Мессии ближе: у его черты расходятся ленты, решение 177)
+    expect(us.filter((u) => u.wife)[0].union.id).toBe('u:david+virsaviya');
     expect(new Set(us.map((u) => u.side)).size).toBe(2);
   });
 

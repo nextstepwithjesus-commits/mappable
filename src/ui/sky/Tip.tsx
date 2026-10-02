@@ -23,7 +23,9 @@ import { placeTip, TIP_DELAY, TIP_MARGIN, TIP_MORE, TIP_WARM, type TipSide } fro
 import type { Rect } from '../../render/sky.ts';
 import type { RibbonHit } from '../../render/ribbons.ts';
 import { dotRect } from './DotCard.tsx';
-import { linkTip } from '../linkwords.ts';
+import { linkTip, linkTitle } from '../linkwords.ts';
+import { mainUnion } from '../../render/links.ts';
+import { unions as ALL_UNIONS } from '../reveal.ts';
 import { selectedKin } from '../card/kinrows.ts';
 import type { LinkKey } from '../../engine/linkkey.ts';
 
@@ -265,6 +267,7 @@ function StarTip({ id, more, count }: { id: string; more: boolean; count?: { boo
   const t = starTipLines(id, { more, count, kin: kin?.sentence });
   // родня выбранного (решение 151): вместо уточнения — кем приходится выбранному, теми же словами, что «Родство»
   const rel = t.head === 'kin' ? null : selectedKin(id);
+  const origin = t.head === 'kin' ? null : originLine(id);
   return (
     <>
       {t.head === 'kin' ? (
@@ -284,9 +287,36 @@ function StarTip({ id, more, count }: { id: string; more: boolean; count?: { boo
         </>
       )}
       <div class="yr">{t.years}</div>
-      {t.extra ? <div class={t.kind === 'place' ? 'ds' : 'ex'}>{t.extra}</div> : null}
+      {origin && t.kind !== 'count' ? (
+        <div class="ex" data-origin="">
+          {origin}
+        </div>
+      ) : t.extra ? (
+        <div class={t.kind === 'place' ? 'ds' : 'ex'}>{t.extra}</div>
+      ) : null}
     </>
   );
+}
+
+/**
+ * Строка происхождения в подсказке звезды (этап 15, решение 179): «Иаков и Рахиль — родители; Вениамин — сын» — когда
+ * союз происхождения лица на небе (хотя бы один родитель нарисован в кадре): наведение на ребёнка зажигает его путь
+ * (src/render/marks.ts, drawOriginPath), подсказка называет его словами связи (src/ui/linkwords.ts, linkTitle). Третьей
+ * строкой, после имени и лет; пояснение «//», порядка или места — только когда строки происхождения нет (подсказка
+ * звезды — не больше трёх строк, IX-58), счёт номера у бусины — всегда.
+ */
+export function originLine(id: string): string | null {
+  const u = mainUnion(ALL_UNIONS, id);
+  const s = skyRef.current;
+  if (!u || !s) return null;
+  const onSky = [u.a, u.b].some((par) => {
+    if (!par) return false;
+    const i = s.indexOf(par);
+    return i !== undefined && s.drawn(i) && !s.hides(par);
+  });
+  if (!onSky) return null;
+  const t = linkTitle({ kind: 'child', union: u.id, child: id });
+  return t ? typo(t) : null;
 }
 
 /** Первый стих основания: для царя — стих о его царствовании, для пророка — надписание или стих служения. */

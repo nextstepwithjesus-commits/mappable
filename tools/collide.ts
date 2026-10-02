@@ -1288,6 +1288,8 @@ interface Scene {
   ms?: number;
   /** где по ширине окна поставить звезду выбранного (доля), по умолчанию 0,3 */
   at?: number;
+  /** год середины окна (исторический) вместо места звезды по ширине: полоса — по звезде выбранного */
+  mid?: number;
 }
 
 const canvasPt = async (p: Page, x: number, y: number) => {
@@ -1387,6 +1389,22 @@ const deselect = async (p: Page) => {
   await p.waitForTimeout(900);
 };
 
+/**
+ * Снять выбор, не трогая окно: тот же адрес без лица (Escape возвращает прежнее окно — сцена ушла бы с семьи). w, mid —
+ * ширина окна и год середины, если перелёт к лицу поставил своё окно (семейное окно у лица с домом шире заданного).
+ */
+const unselectAt = (w?: number, mid?: number) => async (p: Page) => {
+  const h = await p.evaluate(() => location.hash);
+  let bare = h.replace(/^#\/[^~]*/, '#/');
+  if (w !== undefined) bare = bare.replace(/~w[\d.]+/, `~w${w}`);
+  if (mid !== undefined) bare = bare.replace(/~y-?[\d.]+/, `~y${mid}`);
+  const base = p.url().replace(/[?#].*$/, '');
+  await p.goto(`${base}?c=${Date.now()}${bare}`);
+  await p.waitForTimeout(2600);
+  await p.mouse.move(2, 600);
+  await p.waitForTimeout(300);
+};
+
 /** Адреса сцен эксперта C (раздел 5 отчёта; collide.json выпуска 0871b45): окно задано целиком — сцену можно повторить. */
 const D_FAM = '#/david~y-1020~w100~l0.0~s1~mmt-long';
 const D_ROD = '#/david~y-1013~w182~l1.2~s1~mmt-long~vr.david.d.1.f';
@@ -1395,13 +1413,15 @@ const W1280 = { width: 1280, height: 800 };
 const W1024 = { width: 1024, height: 768 };
 const PHONE = { width: 390, height: 844, touch: true };
 /** Корпус этапа 15: имя сцены, глава семьи, ширина окна обзора семьи и масштаба семьи (лет), заглавие. */
-const FAMILY15: [string, string, number, number, string][] = [
-  ['iakov', 'iakov', 113, 48, 'Иаков'],
-  ['david', 'david', 113, 45, 'Давид'],
-  ['avraam', 'avraam', 200, 110, 'Авраам'],
-  ['khalev', 'khalev-syn-esroma', 113, 60, 'Халев, сын Есрома'],
-  ['isav', 'isav', 113, 60, 'Исав'],
-  ['iuda', 'iuda', 113, 60, 'Иуда и Фамарь'],
+const FAMILY15: [string, string, number, number, string, number, number][] = [
+  // имя сцены, глава семьи, окно обзора семьи и масштаба семьи (лет), заглавие, год середины обзора и семьи (окна
+  // снимков владельца и сцен D2, tools/_d2-scenes.ts)
+  ['iakov', 'iakov', 113, 48, 'Иаков', -1951, -1925],
+  ['david', 'david', 113, 45, 'Давид', -1005, -1003],
+  ['avraam', 'avraam', 200, 110, 'Авраам', -2080, -2070],
+  ['khalev', 'khalev-syn-esroma', 113, 60, 'Халев, сын Есрома', -1790, -1788],
+  ['isav', 'isav', 113, 60, 'Исав', -1960, -1950],
+  ['iuda', 'iuda', 113, 60, 'Иуда и Фамарь', -1897, -1880],
 ];
 
 /**
@@ -1470,14 +1490,14 @@ export const SCENES: Scene[] = [
   // корпус этапа 15 («Отчий дом», решения 173–181): тяжёлые семьи на обзоре семьи (≈ 113 лет на экран, как снимки
   // владельца) и на масштабе семьи (45–60 лет), без выбора — окно ставится по звезде главы семьи, затем выбор снимается;
   // переходы следов (решение 173) — такие же препятствия для имён, как следы (К1–К8 и по переходам)
-  ...FAMILY15.flatMap(([id, fam, o, f, title]) => [
-    { id: `s15-${id}-o`, title: `${title}, обзор семьи`, hash: `#/${fam}~w${o}~s1~mmt-long`, at: 0.25, act: deselect, shot: true },
-    { id: `s15-${id}-f`, title: `${title}, семья`, hash: `#/${fam}~w${f}~s1~mmt-long`, at: 0.2, act: deselect },
+  ...FAMILY15.flatMap(([id, fam, o, f, title, mo, mf]) => [
+    { id: `s15-${id}-o`, title: `${title}, обзор семьи`, hash: `#/${fam}~w${o}~s1~mmt-long`, mid: mo, act: unselectAt(o, mo), shot: true },
+    { id: `s15-${id}-f`, title: `${title}, семья`, hash: `#/${fam}~w${f}~s1~mmt-long`, mid: mf, act: unselectAt(f, mf) },
   ]),
-  { id: 's15-iakov-sel', title: 'Иаков выбран, обзор семьи', hash: '#/iakov~w113~s1~mmt-long', at: 0.25, shot: true },
-  { id: 's15-david-sel', title: 'Давид выбран, обзор семьи', hash: '#/david~w113~s1~mmt-long', at: 0.25 },
-  { id: 's15-famar-sel', title: 'Фамарь выбрана, семья', hash: '#/famar~w60~s1~mmt-long', at: 0.3 },
-  { id: 's15-iakov-hover', title: 'Иаков: наведение на Вениамина', hash: '#/iakov~w113~s1~mmt-long', at: 0.25, act: both(deselect, hoverStar('veniamin')), shot: true },
+  { id: 's15-iakov-sel', title: 'Иаков выбран, обзор семьи', hash: '#/iakov~w113~s1~mmt-long', mid: -1951, shot: true },
+  { id: 's15-david-sel', title: 'Давид выбран, обзор семьи', hash: '#/david~w113~s1~mmt-long', mid: -1005 },
+  { id: 's15-famar-sel', title: 'Фамарь выбрана, семья', hash: '#/famar~w60~s1~mmt-long', mid: -1880 },
+  { id: 's15-iakov-hover', title: 'Иаков: наведение на Вениамина', hash: '#/iakov~w113~s1~mmt-long', mid: -1951, act: both(unselectAt(113, -1951), hoverStar('veniamin')), shot: true },
 ];
 
 // ---------- пороги К1–К8 (STAGE14 § 4) ----------
@@ -1567,7 +1587,7 @@ export async function shoot(p: Page, sc: Scene, base: string) {
       const y = Number(/~y(-?[\d.]+)/.exec(st.hash)?.[1]);
       const w = Number(/~w([\d.]+)/.exec(st.hash)?.[1]);
       if (!Number.isFinite(y) || !Number.isFinite(w)) break;
-      const ny = Math.round(y + ((sx - (vl + vr) / 2) * w) / (vr - vl) + Number(wq[1]) * (0.5 - (sc.at ?? 0.3)));
+      const ny = sc.mid ?? Math.round(y + ((sx - (vl + vr) / 2) * w) / (vr - vl) + Number(wq[1]) * (0.5 - (sc.at ?? 0.3)));
       const nl = (laneTop - sy / ky).toFixed(1);
       const fixed = st.hash.replace(/~y-?[\d.]+/, `~y${ny}`).replace(/~w[\d.]+/, `~w${wq[1]}`).replace(/~l-?[\d.]+/, `~l${nl}`);
       if (fixed === st.hash && it > 0) break;

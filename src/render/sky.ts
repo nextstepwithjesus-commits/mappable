@@ -35,7 +35,7 @@ import { bendsOf, FAMILY_TIER, familyTier, hasGlides, tierAlpha, trailPolyline, 
 import { glidesOf, laneAt, starLaneOf } from '../engine/stays.ts';
 export { FAMILY_TIER, familyTier, tierAlpha, type FamilyTier } from './trails.ts';
 import { drawBranchTicks, drawGhostNotes, drawLinkLabels, drawLinks, drawPlanStubs, drawSpineTrails, drawTrails, familyHover, linkLooks, linkOn, linkShown, trailLinksAt, trailOf, type LifeTrail, type LinkDraw, type PlanStubHit } from './trails.ts';
-import { branchFrame, drawKinPath, drawLeadNotes, drawMeridian, drawOverlayText, drawRings, drawSelectedLink, drawWorkMarks, emphasis, kinRoutes, meridianFlagAt, overlayRoutes, reserveSelectedLink, ringOuter, unionHoverDim, type SelectedLinkInfo } from './marks.ts';
+import { branchFrame, drawOriginPath, drawKinPath, drawLeadNotes, drawMeridian, drawOverlayText, drawRings, drawSelectedLink, drawWorkMarks, emphasis, kinRoutes, meridianFlagAt, overlayRoutes, reserveSelectedLink, ringOuter, unionHoverDim, type SelectedLinkInfo } from './marks.ts';
 import { coarsePointer, mapFont, mapSize, nameSize, T_MAP_S } from './type.ts';
 import type { Rect } from './rect.ts';
 import { timeToX, xToTime, hydrateScale, type TimeScale, T_CANON_END, T_END } from '../engine/timescale.ts';
@@ -2357,6 +2357,9 @@ export class Sky implements SkyContext {
     // шаг наведённой ленты объясняет подсказка («Давид — отец; Соломон — сын (Мф 1:6)», src/ui/sky/Tip.tsx; решение 54):
     // подписи шага на холсте нет — две надписи об одном сразу не нужны. Лента по-прежнему подсвечивается с током света
     drawRings(this, p, { cuts, deferText: true });
+    // путь происхождения наведённого лица (решение 179): след отца → черта → ромб → след матери → отвод — видом наведённой
+    // связи; подсказку «Иаков и Рахиль — родители; Вениамин — сын» даёт подсказка звезды (src/ui/sky/Tip.tsx, originLine)
+    if (s.hovered && lf && L.connectors && !s.linkHover && !lineOnly && settle > 0.99) drawOriginPath(this, p, s.hovered);
     // выбранная связь (§ 8) — поверх всего неба: жёлтый путь, кольца с ролями на концах, указатели у края
     this.linkSel = drawSelectedLink(this, p, { cuts, deferText: true });
     drawOverlayText(this, p);

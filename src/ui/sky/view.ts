@@ -21,6 +21,7 @@ import type { Rect } from '../../render/sky.ts';
 import { firstKin } from '../../render/frame.ts';
 import { grid } from '../layout.ts';
 import { show } from '../work.ts';
+import { laneAt, starLaneOf } from '../../engine/stays.ts';
 
 export const reduced = () => typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
@@ -195,8 +196,9 @@ function anyStarInView(): boolean {
     if (n.ghost || !s.drawn(i)) continue;
     const x = s.cam.sx(s.X0[i]);
     const x1 = s.cam.sx(s.X1[i]);
-    const y = s.cam.sy(n.lane);
-    // и след жизни, проходящий через окно: лицо эпохи — тот, кто в ней жил
+    // и след жизни, проходящий через окно: лицо эпохи — тот, кто в ней жил; след — по пребываниям (решение 173): полоса
+    // в год середины видимого отрезка следа
+    const y = s.cam.sy(laneAt(n, s.tOf(s.cam.wx((Math.max(x, vp.l) + Math.min(x1, vp.r)) / 2))));
     if (x1 >= vp.l && x <= vp.r && y >= vp.t && y <= vp.b) return true;
   }
   return false;
@@ -252,7 +254,7 @@ export function viewForPerson(id: string): ViewState | null {
   }
   const [, cy] = cam.vpCenter();
   // вертикаль камеры — строки (сжатие полос, src/render/rows.ts)
-  return { x0: left - vp.l / kx, kx, laneTop: s.rowOf(n.lane) + cy / cam.kyFor(kx) };
+  return { x0: left - vp.l / kx, kx, laneTop: s.rowOf(starLaneOf(n)) + cy / cam.kyFor(kx) };
 }
 
 /** Строка семьи, при которой имена читаются (решение 165), px; поле окна у родни по краям, px. */
@@ -339,7 +341,7 @@ function personTarget(id: string): { v: ViewState; lanes: number | null } | null
   if (m === null) return { v, lanes: null };
   const [, cy] = s.cam.vpCenter();
   const n = s.node(id);
-  return { v: n ? { ...v, laneTop: s.rowOf(n.lane) + cy / s.cam.kyWith(v.kx, m) } : v, lanes: m };
+  return { v: n ? { ...v, laneTop: s.rowOf(starLaneOf(n)) + cy / s.cam.kyWith(v.kx, m) } : v, lanes: m };
 }
 
 /** Перелёт к лицу (все ссылки на лица, поиск, указатели у края): лицо — в видимой части неба. */
@@ -589,8 +591,8 @@ export function viewForIds(ids: readonly string[], minYears = 60): GroupView | n
   const x0 = Math.min(...pts.map((q) => q.x));
   const x1 = Math.max(...pts.map((q) => q.x));
   // по строкам экрана: при сжатии полос (J4, J5) лица набора ближе, чем их полосы
-  const l0 = Math.min(...pts.map((q) => s.rowOf(q.n.lane)));
-  const l1 = Math.max(...pts.map((q) => s.rowOf(q.n.lane)));
+  const l0 = Math.min(...pts.map((q) => s.rowOf(starLaneOf(q.n))));
+  const l1 = Math.max(...pts.map((q) => s.rowOf(starLaneOf(q.n))));
   const rows = l1 - l0 + 1;
   const tMid = s.tOf((x0 + x1) / 2);
   const xMid = (x0 + x1) / 2;
@@ -749,8 +751,8 @@ export function linesFrame(): { x0: number; x1: number; lane0: number; lane1: nu
     if (!(n.spine || onLine.has(n.person)) || n.ghost || (hid && hid[i])) return;
     x0 = Math.min(x0, s.X0[i]);
     x1 = Math.max(x1, s.X0[i]);
-    lane0 = Math.min(lane0, s.rowOf(n.lane));
-    lane1 = Math.max(lane1, s.rowOf(n.lane));
+    lane0 = Math.min(lane0, s.rowOf(starLaneOf(n)));
+    lane1 = Math.max(lane1, s.rowOf(starLaneOf(n)));
   });
   return x1 > x0 ? { x0, x1, lane0, lane1 } : null;
 }
@@ -855,7 +857,7 @@ export function fitLines(animate = true, around: string | null = null): ViewStat
   let m = linesLanes(kx);
   let to: ViewState;
   if (at && xa !== null && n && box) {
-    const rD = s.rowOf(n.lane);
+    const rD = s.rowOf(starLaneOf(n));
     let ky = cam.kyWith(kx, m);
     if (f.lane1 > rD && at.y > box.T) ky = Math.min(ky, (at.y - box.T) / (f.lane1 - rD));
     if (rD > f.lane0 && box.B > at.y) ky = Math.min(ky, (box.B - at.y) / (rD - f.lane0));
@@ -1201,7 +1203,7 @@ export function holdAnchor(a: Anchor, vertical = false) {
   const x = a.id ? s.nodeX(a.id) : s.xOf(a.t);
   if (x !== null) s.cam.x0 = x - a.sx / s.cam.kx;
   const n = vertical && a.id ? s.node(a.id) : undefined;
-  if (n) s.cam.laneTop = s.rowOf(n.lane) + a.sy / s.cam.ky;
+  if (n) s.cam.laneTop = s.rowOf(starLaneOf(n)) + a.sy / s.cam.ky;
 }
 
 /** Экранное место звезды лица (px холста). */
@@ -1211,7 +1213,8 @@ export function screenOf(id: string): { x: number; y: number } | null {
   const x = s.nodeX(id);
   const n = s.node(id);
   if (x === null || !n) return null;
-  return { x: s.cam.sx(x), y: s.cam.sy(n.lane) };
+  // звезда — в полосе рождения (решение 173; src/engine/stays.ts)
+  return { x: s.cam.sx(x), y: s.cam.sy(starLaneOf(n)) };
 }
 
 /** Поля, в которых звезда считается «видной»: справа — место для имени (IX-08). */
@@ -1337,7 +1340,7 @@ export function viewAround(id: string): ViewState | null {
     around = { id, w: vp.r - vp.l, until: performance.now() + AROUND_MS };
     watchAround();
   }
-  return cam.constrain({ x0: xa - (vp.l + 16) / kx, kx, laneTop: s.rowOf(n.lane) + cy / cam.kyFor(kx) });
+  return cam.constrain({ x0: xa - (vp.l + 16) / kx, kx, laneTop: s.rowOf(starLaneOf(n)) + cy / cam.kyFor(kx) });
 }
 
 /**
@@ -1358,11 +1361,11 @@ export function revealView(ids: readonly string[], keep: { x: number; y: number 
   const B = vp.b - MARGIN.b;
   // точка, которая остаётся на месте экрана: лицо, от которого раскрыли, иначе первое лицо
   const ax = keep ? keep.x : cam.sx(pts[0].x);
-  const ay = keep ? keep.y : cam.sy(pts[0].n.lane);
+  const ay = keep ? keep.y : cam.sy(starLaneOf(pts[0].n));
   const awx = cam.wx(ax);
   const arow = cam.wLane(ay);
   const xs = [awx, ...pts.map((q) => q.x)];
-  const rs = [arow, ...pts.map((q) => s.rowOf(q.n.lane))];
+  const rs = [arow, ...pts.map((q) => s.rowOf(starLaneOf(q.n)))];
   const x0 = Math.min(...xs);
   const x1 = Math.max(...xs);
   const r0 = Math.min(...rs);
