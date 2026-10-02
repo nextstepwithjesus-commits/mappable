@@ -2775,6 +2775,26 @@ export class Sky implements SkyContext {
     this.mags = { nodes: this.nodes, mag };
     return mag;
   }
+  private groupsIx: { nodes: readonly NodeRow[]; of: Int32Array; names: string[] } | null = null;
+  /** Созвездие каждого узла номером (−1 — нет) и имена созвездий — по массиву узлов. */
+  private nodeGroups(): { of: Int32Array; names: string[] } {
+    if (this.groupsIx?.nodes === this.nodes) return this.groupsIx;
+    const of = new Int32Array(this.nodes.length);
+    const names: string[] = [];
+    const at = new Map<string, number>();
+    for (let i = 0; i < this.nodes.length; i++) {
+      const g = byId.get(this.nodes[i].person)?.group;
+      if (!g) {
+        of[i] = -1;
+        continue;
+      }
+      let k = at.get(g);
+      if (k === undefined) at.set(g, (k = names.push(g) - 1));
+      of[i] = k;
+    }
+    this.groupsIx = { nodes: this.nodes, of, names };
+    return this.groupsIx;
+  }
   /** Непрозрачность звёзд этого кадра (E3): выделенные и лица линий в режиме «только линии» — 1, величины 0–2 — 1, мелкие — по подробности. */
   private fillStarAlpha(s: SkyState, spine: Set<string>, detail: number, pxYear = FAMILY_TIER.family * 2) {
     // призраки (решение 173: жена из далёкого рода в родной семье, бездетный брак у мужа) — на масштабе семьи (решение 178);
@@ -2791,12 +2811,17 @@ export class Sky implements SkyContext {
     const focus = groupFocus.peek();
     const factors = this.model ? revealFactors(this.model.outlines, this.model.scale) : null;
     const tDetail = detailOf(this.cam).time;
-    const rv = new Map<string, number>();
+    // созвездие узла — номером (память по массиву узлов), раскрытие — одно на созвездие в кадре
+    const gix = this.nodeGroups();
+    const rv = new Float64Array(gix.names.length).fill(-1);
     const revealOf = (i: number) => {
-      const g = byId.get(this.nodes[i].person)?.group;
-      if (!g || !factors) return detail;
-      let r = rv.get(g);
-      if (r === undefined) rv.set(g, (r = focus ? groupReveal(g, this.cam.ky, factors, focus) : Math.max(tDetail, groupReveal(g, this.cam.ky, factors, null))));
+      const k = gix.of[i];
+      if (k < 0 || !factors) return detail;
+      let r = rv[k];
+      if (r < 0) {
+        const g = gix.names[k];
+        rv[k] = r = focus ? groupReveal(g, this.cam.ky, factors, focus) : Math.max(tDetail, groupReveal(g, this.cam.ky, factors, null));
+      }
       return r;
     };
     for (let i = 0; i < this.nodes.length; i++) {
@@ -2871,15 +2896,30 @@ export class Sky implements SkyContext {
   private groundify() {
     const ctx = this.ctx as CanvasRenderingContext2D & Record<string, unknown>;
     const sky = this;
+    // ответ по строке стиля — из памяти (вызовов fill и stroke в кадре тысячи, разных стилей — десятки); память — до смены
+    // палитры (тема)
+    let memoPal: unknown = null;
+    const memo = new Map<string, boolean>();
     const ground = (st: unknown): boolean => {
       if (typeof st !== 'string') return false;
       const p = sky.pal;
+      if (memoPal !== p) {
+        memoPal = p;
+        memo.clear();
+      }
+      const hit = memo.get(st);
+      if (hit !== undefined) return hit;
       const c = st.trim().toLowerCase();
-      if (c[0] === '#') return c === p.sky.toLowerCase() || c === p.band.toLowerCase() || c === p.halo.toLowerCase();
-      const m = /^rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(c);
-      if (!m) return false;
-      const rgb = `${m[1]},${m[2]},${m[3]}`;
-      return [p.sky, p.band, p.halo].some((h) => hexToRgb(h).join(',') === rgb);
+      let r: boolean;
+      if (c[0] === '#') r = c === p.sky.toLowerCase() || c === p.band.toLowerCase() || c === p.halo.toLowerCase();
+      else {
+        const m = /^rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(c);
+        const rgb = m ? `${m[1]},${m[2]},${m[3]}` : '';
+        r = !!m && [p.sky, p.band, p.halo].some((h) => hexToRgb(h).join(',') === rgb);
+      }
+      if (memo.size > 512) memo.clear();
+      memo.set(st, r);
+      return r;
     };
     const cut = (name: 'fill' | 'stroke' | 'fillRect' | 'strokeRect', style: 'fillStyle' | 'strokeStyle') => {
       const f = ctx[name] as (...a: unknown[]) => void;
@@ -2980,7 +3020,10 @@ export class Sky implements SkyContext {
       mouths: this.plan.layout === 'family' ? [] : mouthsOf(m),
       intro: s.intro,
     };
-    light.frame(inp, cam.moving || this.scaleMoving || this.viewMoving || !!this.trans);
+    // протяжка рукой (src/ui/sky/input.ts, класс dragging) — тоже движение: камера в ней не «едет», и выход за запас слоя
+    // посреди протяжки пересобирал свет (30–60 мс на кадр, О1); сборка — в покое
+    const dragging = typeof this.canvas.classList !== 'undefined' && this.canvas.classList.contains('dragging');
+    light.frame(inp, cam.moving || this.scaleMoving || this.viewMoving || !!this.trans || dragging);
   }
   private lightView() {
     const cam = this.cam;

@@ -1138,6 +1138,8 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
         const g = inertia(d.trail, performance.now());
         if (sky.cam.glide(g.dx, g.dy, INERTIA_MS, request, reduced())) request();
       }
+      // протяжка кончилась: кадр покоя — слой света собирается по новому окну (решение 182; в протяжке он только переносится)
+      if (d.moved) request();
       return;
     }
     // нажатие остановило перелёт или инерцию — и только (IX-54)
