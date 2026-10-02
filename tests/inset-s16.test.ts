@@ -9,7 +9,7 @@ import { join } from 'node:path';
 import { byId, graph, lineMembership, models } from '../src/data/atlas.ts';
 import { buildUnions } from '../src/engine/unions.ts';
 import { marriageKind } from '../src/engine/stays.ts';
-import { familyScene, hasFamilyIn, plotFamily, sourceVerse, type FamDeps, type FamScene, type Geom } from '../src/engine/famplot.ts';
+import { familyScene, hasFamilyIn, insetClashes, plotFamily, sourceVerse, type FamDeps, type FamScene, type Geom } from '../src/engine/famplot.ts';
 import { kinTermReverse, nameCase } from '../src/ui/text/ru.ts';
 import { insetSubtitle, insetTitle } from '../src/ui/sky/FamilyInset.tsx';
 
@@ -171,6 +171,10 @@ describe('карточка источника: стих, где мать и её
 
 describe('раскладка врезки: звёзды не ложатся друг на друга и стоят в своих границах', () => {
   const measure: Geom['measure'] = (s, f) => s.length * (f === 'focal' ? 20 : f === 'name' ? 16 : 14) * 0.56;
+  // ширина по Literata в браузере (средняя ширина знака на кегль, замер tools/_f-measure.ts) с запасом 6 %: для проверки
+  // столкновений подписей нужна ширина не меньше настоящей
+  const EM: Record<string, [number, number]> = { name: [16, 0.575], kid: [14, 0.565], kidStrong: [14, 0.582], focal: [20, 0.584], word: [13, 0.539], small: [12, 0.497], sib: [14, 0.565], note: [13, 0.564] };
+  const real: Geom['measure'] = (s, f) => s.length * EM[f][0] * EM[f][1] * 1.06;
   const words: Geom['words'] = {
     kind: (k) => ({ wife: 'жена', concubine: 'наложница', levirate: 'по левирату', none: 'брак не назван' })[k],
     motherUnnamed: (n) => (n > 1 ? 'матери не названы' : 'мать не названа'),
@@ -211,6 +215,18 @@ describe('раскладка врезки: звёзды не ложатся др
           if (!u) continue;
           const end = stars.find((s) => Math.abs(s.x - l.x1) < 0.5 && Math.abs(s.y - l.y1) < 0.5);
           expect(end && u.kids.includes(end.id), `луч союза ${u.id} кончается не у его ребёнка`).toBe(true);
+        }
+        // подписи читаются: подпись × знак, подпись × подпись, подпись × линия (кроме своей выноски) — ни одного
+        // столкновения (after-avraam.png: «Хеттура, наложница» на звезде Авраама, «Агарь, жена» на нити ленты)
+        const R = plotFamily(S, { ...G, measure: real });
+        expect(insetClashes(R.prims, real)).toEqual([]);
+        // цвет несут только ленты и ветви (ТЗ § 5.2): слова родства — тоном ink2 курсивом (кегль 'word'), не золотом
+        for (const p of P.prims)
+          if (p.t === 'label') for (const r of [...p.runs, ...(p.sub ?? [])]) expect(['ink', 'ink2', 'ink3'], `«${r.s}»`).toContain(r.ink);
+        if (id === 'avraam' && !comb) {
+          const sarah = P.prims.find((p) => p.t === 'label' && p.id === 'sarra') as Extract<(typeof P.prims)[number], { t: 'label' }>;
+          expect(sarah.sub?.[0]).toMatchObject({ font: 'word', ink: 'ink2' });
+          expect(sarah.sub?.[0].s).toMatch(/^сестра, Быт 20:12$/);
         }
       });
 });

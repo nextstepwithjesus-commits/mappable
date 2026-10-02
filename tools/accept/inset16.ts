@@ -83,7 +83,7 @@ export const inset16: Scenario[] = [
   },
   {
     n: 1221,
-    title: 'Решение 186, О5: Давид по адресу «~fdavid» — 9 союзов, 22 ребёнка, 11 от неназванных матерей; Мелхола — бездетный брак; источник союза с Вирсавией — 1 Пар 3:5',
+    title: 'Решение 186, О5: Давид по адресу «~fdavid» — 9 союзов, 22 ребёнка, 11 от неназванных матерей; Мелхола — бездетный брак; источник союза с Вирсавией — 1 Пар 3:5; подписи врезки шести семей без столкновений',
     run: async (p) => {
       await go(p, '#/david~fdavid');
       if ((await inset(p).getAttribute('data-family')) !== 'david') return fail('врезка Давида по адресу не открылась');
@@ -98,7 +98,17 @@ export const inset16: Scenario[] = [
       await p.waitForTimeout(800);
       const src = (await p.locator('.fam-inset .fi-src').innerText()).replace(/\s+/g, ' ');
       if (!/1 Пар 3:5/.test(src) || !/Вирсавии/.test(src)) return fail(`карточка источника: «${src}»`);
-      return pass(`${h.sub}; ${mel}; источник: ${src.slice(0, 90)}…`);
+      // подписи врезки на шести семьях (настоящие шрифты): подпись × знак, × подпись, × линия кроме своей выноски — 0
+      // (after-avraam.png: «Хеттура, наложница» на звезде Авраама, «Агарь, жена» на нити ленты)
+      const clash: string[] = [];
+      for (const id of ['iakov', 'david', 'avraam', 'iuda', 'khalev-syn-esroma', 'isav']) {
+        await go(p, `#/${id}~f${id}`, 2600);
+        if ((await inset(p).getAttribute('data-family')) !== id) return fail(`врезка ${id} по адресу не открылась`);
+        const c = (await inset(p).getAttribute('data-clash')) ?? '?';
+        if (c) clash.push(`${id}: ${c}`);
+      }
+      if (clash.length) return fail(`столкновения подписей: ${clash.join(' | ')}`);
+      return pass(`${h.sub}; ${mel}; источник: ${src.slice(0, 90)}…; подписи шести семей — без столкновений`);
     },
   },
   {
@@ -216,6 +226,8 @@ export const inset16: Scenario[] = [
       if (!(await p.locator('.sky .fam-inset.fam-sheet').count())) return fail('лист «Семья» не открылся');
       const h = await head(p);
       if (h.title !== 'Семья Иакова') return fail(`шапка: ${JSON.stringify(h)}`);
+      const clash = (await inset(p).getAttribute('data-clash')) ?? '?';
+      if (clash) return fail(`столкновения подписей листа: ${clash}`);
       // касание Иосифа на холсте врезки: место — из списка (у каждой строки — кнопка; место звезды берём из data-at)
       const pos = await p.evaluate(() => (document.querySelector('.fam-inset') as HTMLElement).dataset.at ?? '');
       const m = new RegExp('iosif:(-?[\\d.]+),(-?[\\d.]+)').exec(pos);
@@ -225,7 +237,7 @@ export const inset16: Scenario[] = [
       await p.waitForTimeout(1200);
       if (hashId(p) !== 'iosif') return fail(`касание выбрало «${hashId(p)}»`);
       if (!(await p.locator('.sky .fam-inset.fam-sheet').count())) return fail('лист «Семья» закрылся после выбора');
-      return pass('лист «Семья»; Иосиф выбран касанием, лист на месте');
+      return pass('лист «Семья» без столкновений подписей; Иосиф выбран касанием, лист на месте');
     },
   },
   {

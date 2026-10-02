@@ -622,7 +622,9 @@ export class LightLayer {
     // ночью — свет сложением, днём — отмывка поверх неба
     ctx.globalCompositeOperation = pal.glow ? 'lighter' : 'source-over';
     ctx.drawImage(small, 0, 0, cols * CELL, rows * CELL);
-    // огоньки (решение 182): ореол по величине звезды, цвет колена — спрайтами при сборке (в кадре — ни одного)
+    // огоньки (решение 182): ореол по величине звезды, цвет колена — спрайтами при сборке (в кадре — ни одного). Ночью —
+    // наибольшим из ореолов ('lighten'), а не сложением: тесная семья (сыны Иакова) не сливается в белое пятно
+    if (pal.glow) ctx.globalCompositeOperation = 'lighten';
     const mm = haloMaxMag(inp.detail);
     const zs = Math.sqrt(Math.max(1, Math.min(1.6, ky / 20)));
     for (let i = 0; i < inp.nodes.length; i++) {

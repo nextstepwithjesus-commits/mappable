@@ -10,7 +10,7 @@
  * Модуль чистый: раскладку даёт src/engine/famplot.ts, цвета темы и ветвей — вызывающий (InsetLook).
  */
 import type { FontKey, Ink, Plot, Prim } from '../engine/famplot.ts';
-import { fontPx } from '../engine/famplot.ts';
+import { fontPx, lineSamples } from '../engine/famplot.ts';
 import { alpha } from './color.ts';
 import { mapFont, T_UI_S } from './type.ts';
 
@@ -22,7 +22,6 @@ export interface InsetLook {
   ink: string;
   ink2: string;
   ink3: string;
-  kin: string;
   mt: [string, string];
   lk: [string, string];
   husband: string;
@@ -61,8 +60,6 @@ function inkColor(L: InsetLook, ink: Ink): string {
       return L.ink2;
     case 'ink3':
       return L.ink3;
-    case 'kin':
-      return L.kin;
     default:
       return L.branch(Number(ink.slice(1)));
   }
@@ -156,14 +153,11 @@ export function drawPlot(ctx: CanvasRenderingContext2D, plot: Plot, L: InsetLook
 }
 
 function path(ctx: CanvasRenderingContext2D, p: Extract<Prim, { t: 'line' }>, off: number) {
-  const L = Math.hypot(p.x1 - p.x0, p.y1 - p.y0) || 1;
-  const nx = (-(p.y1 - p.y0) / L) * off;
-  const ny = ((p.x1 - p.x0) / L) * off;
+  // те же точки, по которым врезка ищет столкновения подписей (famplot.lineSamples): смещение — по местной нормали
+  const pts = lineSamples(p, off);
   ctx.beginPath();
-  ctx.moveTo(p.x0 + nx, p.y0 + ny);
-  if (p.c1 && p.c2) ctx.bezierCurveTo(p.c1[0] + nx, p.c1[1] + ny, p.c2[0] + nx, p.c2[1] + ny, p.x1 + nx, p.y1 + ny);
-  else if (p.c1) ctx.quadraticCurveTo(p.c1[0] + nx, p.c1[1] + ny, p.x1 + nx, p.y1 + ny);
-  else ctx.lineTo(p.x1 + nx, p.y1 + ny);
+  ctx.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
 }
 
 function drawPrim(ctx: CanvasRenderingContext2D, p: Prim, L: InsetLook) {
@@ -174,6 +168,7 @@ function drawPrim(ctx: CanvasRenderingContext2D, p: Prim, L: InsetLook) {
     const w = p.w;
     const color = st === 'mt' ? L.mt[0] : st === 'lk' ? L.lk[0] : inkColor(L, p.ink);
     ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
     // свечение лучей ветвей и лент — ночью, вдвое слабее лент (решение 170)
     if (p.glow && L.night && (st === 'ray' || st === 'mt' || st === 'lk')) {
       ctx.save();
@@ -342,6 +337,7 @@ function drawPrim(ctx: CanvasRenderingContext2D, p: Prim, L: InsetLook) {
     };
     line(p.runs, p.y);
     if (p.sub) line(p.sub, p.y + 15);
+    if (p.sub2) line(p.sub2, p.y + 30);
   }
   ctx.restore();
 }

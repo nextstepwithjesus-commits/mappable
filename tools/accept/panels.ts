@@ -531,7 +531,8 @@ export const panels: Scenario[] = [
       if (/Образца нет/.test(await sec.innerText())) return fail('в образце осталась строка «Образца нет»');
       const n = await sec.locator('canvas.spec-linecv').count();
       // этап 14 (решение 149): добавлен образец «фокус клавиатуры — угловые скобки» — 14 × 2 темы
-      if (n !== 28) return fail(`образцов следов и родства: ${n} (ждём 14 × 2 темы)`);
+      // этап 16 (решения 182–184): добавлены 10 знаков «Свет неба» (src/ui/Specimen.tsx, LightSigns) — 24 × 2 темы
+      if (n !== 48) return fail(`образцов следов, родства и света: ${n} (ждём 24 × 2 темы)`);
       await sec.locator('canvas.spec-linecv').first().scrollIntoViewIfNeeded();
       const drawn = await sec.evaluate((el) =>
         [...el.querySelectorAll('canvas.spec-linecv')].filter((c) => {

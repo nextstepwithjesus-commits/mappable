@@ -41,7 +41,7 @@ const near = (p: Page, id: string, color: string, theme: 'night' | 'day' = 'nigh
   star(p, id).then((s) =>
     s
       ? p.evaluate(
-          ({ s, c, n }) => {
+          ({ s, id, c, n }) => {
             const cv = document.querySelector('.sky > canvas') as HTMLCanvasElement;
             const k = cv.width / cv.getBoundingClientRect().width;
             const ctx = cv.getContext('2d')!;
@@ -49,10 +49,20 @@ const near = (p: Page, id: string, color: string, theme: 'night' | 'day' = 'nigh
             // своей альфе — то, что прежде давала заливка неба под следом
             const sky = getComputedStyle(document.documentElement).getPropertyValue('--sky').trim();
             const g = [1, 3, 5].map((i) => parseInt(sky.slice(i, i + 2), 16));
+            // этап 15 (решение 173): лицо рождается в доме отца у матери и переходом (S-кривая, canvas[data-glides]) уходит
+            // в полосу своей жизни — след идёт по строке звезды до перехода, по кривой и дальше по строке жизни
+            const gl = (cv.dataset.glides ?? '').split(';').map((q) => q.split(':')).filter((q) => q[0] === id).map((q) => q[1].split(',').map(Number));
             let hits = 0;
-            for (let dy = -1; dy <= 1; dy++) {
-              const d = ctx.getImageData(Math.round((s.x + 8) * k), Math.round((s.y + dy) * k), Math.round(312 * k), 1).data;
-              for (let i = 0; i < d.length; i += 4) {
+            for (let x = s.x + 8; x < s.x + 320; x++) {
+              // строка следа в столбце x (без именованных функций: page.evaluate получает текст функции)
+              let y = s.y;
+              for (const [x0, y0, x1, y1] of gl) {
+                if (x <= x0) break;
+                const t = Math.min(1, (x - x0) / Math.max(1, x1 - x0));
+                y = y0 + (y1 - y0) * t * t * (3 - 2 * t);
+              }
+              const d = ctx.getImageData(Math.round(x * k), Math.round((y - 1) * k), 1, Math.round(3 * k)).data;
+              for (let i = 0; i < d.length; i += 4 * Math.max(1, Math.round(k))) {
                 const al = d[i + 3] / 255;
                 const px = [0, 1, 2].map((j) => d[i + j] * al + g[j] * (1 - al));
                 const dc = Math.abs(px[0] - c[0]) + Math.abs(px[1] - c[1]) + Math.abs(px[2] - c[2]);
@@ -62,7 +72,7 @@ const near = (p: Page, id: string, color: string, theme: 'night' | 'day' = 'nigh
             }
             return hits;
           },
-          { s, c: hex(color), n: hex(NEBULA[theme]) },
+          { s, id, c: hex(color), n: hex(NEBULA[theme]) },
         )
       : -1,
   );
@@ -180,16 +190,21 @@ export const colors4: Scenario[] = [
                     const g = [1, 3, 5].map((i) => parseInt(sky.slice(i, i + 2), 16));
                     const u = c.map((x, j) => x - g[j]);
                     const uu = u[0] * u[0] + u[1] * u[1] + u[2] * u[2];
-                    const d = cv.getContext('2d')!.getImageData(Math.round((s.x + 8) * k), Math.round(s.y * k), Math.round(300 * k), 1).data;
-                    const ts: number[] = [];
-                    for (let i = 0; i < d.length; i += 4) {
-                      // этап 16, решение 182: основной холст прозрачен, свет — отдельным холстом; пиксель — на цвет неба по альфе
-                      const al = d[i + 3] / 255;
-                      const v = [d[i] * al - g[0] * al, d[i + 1] * al - g[1] * al, d[i + 2] * al - g[2] * al];
-                      const t = (v[0] * u[0] + v[1] * u[1] + v[2] * u[2]) / uu;
-                      const res = Math.hypot(v[0] - t * u[0], v[1] - t * u[1], v[2] - t * u[2]);
-                      if (t > 0.1 && res < 0.2 * Math.sqrt(uu) * t + 10) ts.push(t);
+                    // этап 16, решение 182: основной холст прозрачен, свет — отдельным холстом; пиксель — на цвет неба по альфе.
+                    // Строка звезды и по строке выше и ниже, по столбцу — наибольшая доля: след в 1–1,5 px ложится между
+                    // строками пикселей, и одна строка ловила его край (прежде край дотягивала до порога полоса эпохи под ним)
+                    const best = new Map<number, number>();
+                    for (const dy of [-1, 0, 1]) {
+                      const d = cv.getContext('2d')!.getImageData(Math.round((s.x + 8) * k), Math.round(s.y * k) + dy, Math.round(300 * k), 1).data;
+                      for (let i = 0; i < d.length; i += 4) {
+                        const al = d[i + 3] / 255;
+                        const v = [d[i] * al - g[0] * al, d[i + 1] * al - g[1] * al, d[i + 2] * al - g[2] * al];
+                        const t = (v[0] * u[0] + v[1] * u[1] + v[2] * u[2]) / uu;
+                        const res = Math.hypot(v[0] - t * u[0], v[1] - t * u[1], v[2] - t * u[2]);
+                        if (t > 0.1 && res < 0.2 * Math.sqrt(uu) * t + 10) best.set(i, Math.max(best.get(i) ?? 0, t));
+                      }
                     }
+                    const ts = [...best.values()];
                     ts.sort((a, b) => a - b);
                     return ts.length >= 8 ? ts[Math.floor(ts.length / 2)] : -ts.length;
                   },

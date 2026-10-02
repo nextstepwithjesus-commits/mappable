@@ -16,9 +16,9 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { effect } from '@preact/signals';
 import { byId, graph, lineMembership, loadVerses } from '../../data/atlas.ts';
-import { familyScene, fanHeight, plotFamily, sourceBooks, sourceVerse, type FamScene, type FamUnion, type Hit, type Plot } from '../../engine/famplot.ts';
+import { familyScene, fanHeight, insetClashes, plotFamily, sourceBooks, sourceVerse, type FamScene, type FamUnion, type Hit, type Plot } from '../../engine/famplot.ts';
 import { drawInsetBack, drawInsetFrame, drawPlot, insetMeasure, type InsetLook } from '../../render/family-inset.ts';
-import { KIN_GOLD, UNION_COLORS } from '../../render/branches.ts';
+import { UNION_COLORS } from '../../render/branches.ts';
 import { branchKeysOf, branchOrTribeColor } from '../../render/light.ts';
 import { readPalette } from '../../render/sky.ts';
 import { coarsePointer, mapFont, T_UI_S } from '../../render/type.ts';
@@ -274,6 +274,10 @@ export function FamilyInset() {
       },
     });
   }, [scene, rKey, focusU, coarse, th]);
+  const clash = useMemo(() => {
+    const ctx = measureCtx();
+    return plot && ctx ? insetClashes(plot.prims, insetMeasure(ctx, coarse)).join('; ') : '';
+  }, [plot, coarse]);
 
   // рисование: погашенное небо, рамка области, врезка (во время перехода — в промежуточном прямоугольнике)
   useLayoutEffect(() => {
@@ -282,7 +286,7 @@ export function FamilyInset() {
     // цвета темы — из токенов в момент рисования (смена темы приходит раньше, чем меняются переменные CSS)
     const pal = readPalette();
     const look: InsetLook = {
-      night: th === 'night', sky: pal.sky, deep: pal.band, ink: pal.ink, ink2: pal.ink2, ink3: pal.ink3, kin: KIN_GOLD[th],
+      night: th === 'night', sky: pal.sky, deep: pal.band, ink: pal.ink, ink2: pal.ink2, ink3: pal.ink3,
       mt: [pal.gold1, pal.gold2], lk: [pal.azure1, pal.azure2], husband: UNION_COLORS[th].husband, wife: UNION_COLORS[th].wife,
       branch: (i) => hueOf(scene!.focal.id, i, th), coarse,
     };
@@ -434,6 +438,8 @@ export function FamilyInset() {
           // места звёзд врезки на холсте — «лицо:x,y» (сценарии приёмки 1220–1239)
           data-at={plot ? [...plot.at].map(([id, q]) => `${id}:${Math.round(q.x)},${Math.round(q.y - scroll)}`).join(';') : ''}
           // пыль внуков — «лицо:x,y» середины поля щелчка (сценарий 1225)
+          // столкновения подписей врезки (подпись × знак, × подпись, × линия кроме своей выноски) — пусто, если нет (сценарий 1221)
+          data-clash={clash}
           data-dust={plot ? plot.hits.flatMap((h) => (h.kind === 'dust' ? [`${h.id}:${Math.round(h.x + 6)},${Math.round(h.y + h.h / 2 - scroll)}`] : [])).join(';') : ''}
           onPointerMove={onMove}
           onPointerLeave={() => setHover(null)}
