@@ -5,840 +5,980 @@
    "id": "adam",
    "name": "Адам",
    "lane": -3,
+   "star": -3,
    "t0": -4173
   },
   {
    "id": "eva",
    "name": "Ева",
    "lane": -7,
+   "star": -7,
    "t0": -4173
   },
   {
    "id": "kain",
    "name": "Каин",
    "lane": -6,
+   "star": -9,
    "t0": -4072
   },
   {
    "id": "sif",
    "name": "Сиф",
    "lane": -2,
+   "star": -2,
    "t0": -4043
   },
   {
    "id": "enos",
    "name": "Енос",
    "lane": -1,
+   "star": -1,
    "t0": -3938
   },
   {
    "id": "kainan",
    "name": "Каинан",
    "lane": 0,
+   "star": 0,
    "t0": -3848
   },
   {
    "id": "maleleil",
    "name": "Малелеил",
    "lane": 1,
+   "star": 1,
    "t0": -3778
   },
   {
    "id": "iared",
    "name": "Иаред",
    "lane": 2,
+   "star": 2,
    "t0": -3713
   },
   {
    "id": "enokh",
    "name": "Енох",
    "lane": 3,
+   "star": 3,
    "t0": -3551
   },
   {
    "id": "mafusal",
    "name": "Мафусал",
    "lane": 4,
+   "star": 4,
    "t0": -3486
   },
   {
    "id": "lamekh",
    "name": "Ламех",
    "lane": 5,
+   "star": 5,
    "t0": -3299
   },
   {
    "id": "noy",
    "name": "Ной",
    "lane": 3,
+   "star": 3,
    "t0": -3117
   },
   {
    "id": "sim",
    "name": "Сим",
    "lane": 2,
+   "star": 2,
    "t0": -2615
   },
   {
    "id": "kham",
    "name": "Хам",
-   "lane": -4,
+   "lane": -6,
+   "star": -4,
    "t0": -2614
   },
   {
    "id": "arfaksad",
    "name": "Арфаксад",
    "lane": 1,
+   "star": 1,
    "t0": -2515
   },
   {
    "id": "sala",
    "name": "Сала",
    "lane": 0,
+   "star": 0,
    "t0": -2480
   },
   {
    "id": "ever",
    "name": "Евер",
    "lane": -1,
+   "star": -1,
    "t0": -2450
   },
   {
    "id": "falek",
    "name": "Фалек",
    "lane": -2,
+   "star": -2,
    "t0": -2416
   },
   {
    "id": "ragav",
    "name": "Рагав",
    "lane": -3,
+   "star": -3,
    "t0": -2386
   },
   {
    "id": "serukh",
    "name": "Серух",
    "lane": -4,
+   "star": -4,
    "t0": -2354
   },
   {
    "id": "nakhor",
    "name": "Нахор",
    "lane": -5,
+   "star": -5,
    "t0": -2324
   },
   {
    "id": "farra",
    "name": "Фарра",
    "lane": -6,
+   "star": -6,
    "t0": -2295
   },
   {
    "id": "iov",
    "name": "Иов",
    "lane": 62,
+   "star": 62,
    "t0": -2166
   },
   {
    "id": "avraam",
    "name": "Авраам",
    "lane": -5,
+   "star": -5,
    "t0": -2165
   },
   {
    "id": "sarra",
    "name": "Сарра",
-   "lane": -12,
+   "lane": -7,
+   "star": -12,
    "t0": -2155
   },
   {
    "id": "lot",
    "name": "Лот",
    "lane": -28,
+   "star": -28,
    "t0": -2140
   },
   {
    "id": "izmail",
    "name": "Измаил",
    "lane": -16,
+   "star": -8,
    "t0": -2079
   },
   {
    "id": "melkhisedek",
    "name": "Мелхиседек",
    "lane": 21,
+   "star": 21,
    "t0": -2071
   },
   {
    "id": "isaak",
    "name": "Исаак",
    "lane": -3,
+   "star": -3,
    "t0": -2065
   },
   {
    "id": "revekka",
    "name": "Ревекка",
-   "lane": -6,
+   "lane": -12,
+   "star": 11,
    "t0": -2043
   },
   {
    "id": "iakov",
    "name": "Иаков",
    "lane": -2,
+   "star": -2,
    "t0": -2005
   },
   {
    "id": "isav",
    "name": "Исав",
    "lane": -29,
+   "star": -13,
    "t0": -2005
   },
   {
    "id": "liya",
    "name": "Лия",
-   "lane": -9,
+   "lane": 5,
+   "star": 11,
    "t0": -1948
   },
   {
    "id": "rakhil",
    "name": "Рахиль",
    "lane": -4,
+   "star": -4,
    "t0": -1945
   },
   {
    "id": "ruvim",
    "name": "Рувим",
    "lane": 18,
+   "star": 11,
    "t0": -1921
   },
   {
    "id": "leviy",
    "name": "Левий",
-   "lane": 66,
+   "lane": 67,
+   "star": 9,
    "t0": -1920
   },
   {
    "id": "simeon",
    "name": "Симеон",
-   "lane": 69,
+   "lane": 70,
+   "star": 10,
    "t0": -1920
   },
   {
    "id": "iuda",
    "name": "Иуда",
    "lane": -1,
+   "star": -1,
    "t0": -1919
   },
   {
    "id": "dan",
    "name": "Дан",
-   "lane": -15,
+   "lane": -19,
+   "star": 4,
    "t0": -1919
   },
   {
    "id": "gad",
    "name": "Гад",
-   "lane": -7,
+   "lane": -10,
+   "star": -8,
    "t0": -1918
   },
   {
    "id": "neffalim",
    "name": "Неффалим",
-   "lane": 7,
+   "lane": 13,
+   "star": 3,
    "t0": -1918
   },
   {
    "id": "issakhar",
    "name": "Иссахар",
    "lane": 51,
+   "star": 8,
    "t0": -1917
   },
   {
    "id": "asir",
    "name": "Асир",
    "lane": -58,
+   "star": -7,
    "t0": -1917
   },
   {
    "id": "zavulon",
    "name": "Завулон",
-   "lane": 3,
+   "lane": 5,
+   "star": 7,
    "t0": -1916
   },
   {
    "id": "iosif",
    "name": "Иосиф",
    "lane": 28,
+   "star": -6,
    "t0": -1914
   },
   {
    "id": "famar",
    "name": "Фамарь",
-   "lane": -6,
+   "lane": 2,
+   "star": 2,
    "t0": -1908
   },
   {
    "id": "veniamin",
    "name": "Вениамин",
    "lane": -22,
+   "star": -5,
    "t0": -1908
   },
   {
    "id": "fares",
    "name": "Фарес",
    "lane": 0,
+   "star": 0,
    "t0": -1894
   },
   {
    "id": "manassiya",
    "name": "Манассия",
    "lane": 36,
+   "star": 36,
    "t0": -1884
   },
   {
    "id": "efrem",
    "name": "Ефрем",
    "lane": 30,
+   "star": 35,
    "t0": -1877
   },
   {
    "id": "esrom",
    "name": "Есром",
    "lane": -1,
+   "star": -1,
    "t0": -1876
   },
   {
    "id": "girson",
    "name": "Гирсон",
    "lane": 164,
+   "star": 77,
    "t0": -1876
   },
   {
    "id": "kaaf",
    "name": "Кааф",
-   "lane": 68,
+   "lane": 69,
+   "star": 69,
    "t0": -1875
   },
   {
    "id": "merari",
    "name": "Мерари",
    "lane": 132,
+   "star": 68,
    "t0": -1875
   },
   {
    "id": "amram",
    "name": "Амрам",
-   "lane": 69,
+   "lane": 70,
+   "star": 70,
    "t0": -1700
   },
   {
    "id": "mariam",
    "name": "Мариам",
    "lane": 85,
+   "star": 85,
    "t0": -1550
   },
   {
    "id": "aaron",
    "name": "Аарон",
-   "lane": 78,
+   "lane": 79,
+   "star": 84,
    "t0": -1529
   },
   {
    "id": "moisey",
    "name": "Моисей",
-   "lane": 71,
+   "lane": 72,
+   "star": 83,
    "t0": -1525
   },
   {
    "id": "naasson",
    "name": "Наассон",
    "lane": 0,
+   "star": 0,
    "t0": -1496
   },
   {
    "id": "khalev",
    "name": "Халев",
    "lane": -46,
+   "star": -46,
    "t0": -1484
   },
   {
    "id": "iisus-navin",
    "name": "Иисус Навин",
    "lane": 40,
+   "star": 40,
    "t0": -1478
   },
   {
    "id": "eleazar",
    "name": "Елеазар",
    "lane": 81,
+   "star": 83,
    "t0": -1474
   },
   {
    "id": "raav",
    "name": "Раав",
    "lane": -3,
+   "star": -3,
    "t0": -1439
   },
   {
    "id": "valaam",
    "name": "Валаам",
    "lane": -8,
+   "star": -8,
    "t0": -1439
   },
   {
    "id": "gofoniil",
    "name": "Гофониил",
    "lane": 8,
+   "star": 8,
    "t0": -1433
   },
   {
    "id": "finees",
    "name": "Финеес",
    "lane": 83,
+   "star": 78,
    "t0": -1430
   },
   {
    "id": "gedeon",
    "name": "Гедеон",
    "lane": -10,
+   "star": -10,
    "t0": -1191
   },
   {
    "id": "iliy-svyashchennik",
    "name": "Илий",
    "lane": -112,
+   "star": -112,
    "t0": -1164
   },
   {
    "id": "ieffay",
    "name": "Иеффай",
    "lane": 11,
+   "star": 12,
    "t0": -1131
   },
   {
    "id": "vooz",
    "name": "Вооз",
    "lane": -1,
+   "star": -1,
    "t0": -1127
   },
   {
    "id": "ruf",
    "name": "Руфь",
    "lane": -3,
+   "star": -3,
    "t0": -1123
   },
   {
    "id": "ovid",
    "name": "Овид",
    "lane": 0,
+   "star": 0,
    "t0": -1099
   },
   {
    "id": "samson",
    "name": "Самсон",
    "lane": 9,
+   "star": 9,
    "t0": -1097
   },
   {
    "id": "samuil",
    "name": "Самуил",
    "lane": 116,
+   "star": 116,
    "t0": -1096
   },
   {
    "id": "saul",
    "name": "Саул",
    "lane": -121,
+   "star": -121,
    "t0": -1085
   },
   {
    "id": "iessey",
    "name": "Иессей",
    "lane": -1,
+   "star": -1,
    "t0": -1071
   },
   {
    "id": "ionafan",
    "name": "Ионафан",
    "lane": -130,
+   "star": -130,
    "t0": -1068
   },
   {
    "id": "idifun",
    "name": "Идифун",
    "lane": 144,
+   "star": 144,
    "t0": -1065
   },
   {
    "id": "sadok",
    "name": "Садок",
    "lane": 91,
+   "star": 91,
    "t0": -1052
   },
   {
    "id": "ievosfey",
    "name": "Иевосфей",
    "lane": -127,
+   "star": -127,
    "t0": -1049
   },
   {
    "id": "david",
    "name": "Давид",
    "lane": 0,
+   "star": 0,
    "t0": -1039
   },
   {
    "id": "asaf",
    "name": "Асаф",
    "lane": 178,
+   "star": 178,
    "t0": -1039
   },
   {
    "id": "ioav",
    "name": "Иоав",
    "lane": 20,
+   "star": 20,
    "t0": -1037
   },
   {
    "id": "eman",
    "name": "Еман",
    "lane": 119,
+   "star": 119,
    "t0": -1032
   },
   {
    "id": "virsaviya",
    "name": "Вирсавия",
-   "lane": -15,
+   "lane": 5,
+   "star": 5,
    "t0": -1023
   },
   {
    "id": "avessalom",
    "name": "Авессалом",
    "lane": 14,
+   "star": 12,
    "t0": -1006
   },
   {
    "id": "nafan-prorok",
    "name": "Нафан",
    "lane": -37,
+   "star": -37,
    "t0": -1002
   },
   {
    "id": "solomon",
    "name": "Соломон",
    "lane": 1,
+   "star": 1,
    "t0": -997
   },
   {
    "id": "rovoam",
    "name": "Ровоам",
    "lane": 2,
+   "star": 2,
    "t0": -971
   },
   {
    "id": "ieroboam",
    "name": "Иеровоам",
    "lane": -37,
+   "star": -37,
    "t0": -961
   },
   {
    "id": "aviya",
    "name": "Авия",
    "lane": 3,
+   "star": 3,
    "t0": -945
   },
   {
    "id": "asa",
    "name": "Аса",
    "lane": 4,
+   "star": 4,
    "t0": -927
   },
   {
    "id": "amvriy",
    "name": "Амврий",
    "lane": -28,
+   "star": -28,
    "t0": -924
   },
   {
    "id": "iosafat",
    "name": "Иосафат",
    "lane": 5,
+   "star": 5,
    "t0": -907
   },
   {
    "id": "akhav",
    "name": "Ахав",
    "lane": -29,
+   "star": -29,
    "t0": -903
   },
   {
    "id": "iezavel",
    "name": "Иезавель",
    "lane": -30,
+   "star": -30,
    "t0": -902
   },
   {
    "id": "iliya",
    "name": "Илия",
    "lane": -8,
+   "star": -8,
    "t0": -892
   },
   {
    "id": "ioram-syn-iosafata",
    "name": "Иорам",
    "lane": 3,
+   "star": 3,
    "t0": -884
   },
   {
    "id": "elisey",
    "name": "Елисей",
    "lane": -22,
+   "star": -22,
    "t0": -884
   },
   {
    "id": "gofoliya",
    "name": "Гофолия",
    "lane": 9,
+   "star": 9,
    "t0": -877
   },
   {
    "id": "iiuy",
    "name": "Ииуй",
    "lane": 31,
+   "star": 31,
    "t0": -874
   },
   {
    "id": "okhoziya-syn-iorama",
    "name": "Охозия",
    "lane": 2,
+   "star": 2,
    "t0": -862
   },
   {
    "id": "ioas-syn-okhozii",
    "name": "Иоас",
    "lane": 1,
+   "star": 1,
    "t0": -841
   },
   {
    "id": "ioas-syn-ioakhaza",
    "name": "Иоас",
    "lane": 33,
+   "star": 33,
    "t0": -827
   },
   {
    "id": "amasiya",
    "name": "Амасия",
    "lane": 2,
+   "star": 2,
    "t0": -820
   },
   {
    "id": "oziya",
    "name": "Озия",
    "lane": 3,
+   "star": 3,
    "t0": -807
   },
   {
    "id": "osiya-prorok",
    "name": "Осия",
    "lane": 22,
+   "star": 22,
    "t0": -785
   },
   {
    "id": "ioafam",
    "name": "Иоафам",
    "lane": 1,
+   "star": 1,
    "t0": -774
   },
   {
    "id": "isaiya",
    "name": "Исаия",
    "lane": -21,
+   "star": -21,
    "t0": -768
   },
   {
    "id": "akhaz",
    "name": "Ахаз",
    "lane": 2,
+   "star": 2,
    "t0": -754
   },
   {
    "id": "ezekiya",
    "name": "Езекия",
    "lane": 4,
+   "star": 4,
    "t0": -739
   },
   {
    "id": "manassiya-tsar",
    "name": "Манассия",
    "lane": 3,
+   "star": 3,
    "t0": -708
   },
   {
    "id": "amon-tsar",
    "name": "Амон",
    "lane": 2,
+   "star": 2,
    "t0": -663
   },
   {
    "id": "ieremiya",
    "name": "Иеремия",
    "lane": 46,
+   "star": 46,
    "t0": -660
   },
   {
    "id": "iosiya",
    "name": "Иосия",
    "lane": 1,
+   "star": 1,
    "t0": -647
   },
   {
    "id": "ioakim-tsar",
    "name": "Иоаким",
    "lane": 3,
+   "star": 3,
    "t0": -633
   },
   {
    "id": "navukhodonosor",
    "name": "Навуходоносор",
    "lane": 19,
+   "star": 19,
    "t0": -629
   },
   {
    "id": "iezekiil",
    "name": "Иезекииль",
    "lane": 33,
+   "star": 33,
    "t0": -625
   },
   {
    "id": "daniil",
    "name": "Даниил",
    "lane": -19,
+   "star": -19,
    "t0": -624
   },
   {
    "id": "sedekiya",
    "name": "Седекия",
-   "lane": -7,
+   "lane": 6,
+   "star": 6,
    "t0": -617
   },
   {
    "id": "iekhoniya",
    "name": "Иехония",
    "lane": 2,
+   "star": 2,
    "t0": -615
   },
   {
    "id": "salafiil",
    "name": "Салафиил",
    "lane": 0,
+   "star": 0,
    "t0": -591
   },
   {
    "id": "iisus-syn-iosedeka",
    "name": "Иисус",
    "lane": 105,
+   "star": 105,
    "t0": -573
   },
   {
    "id": "kir",
    "name": "Кир",
-   "lane": -7,
+   "lane": -14,
+   "star": -14,
    "t0": -571
   },
   {
    "id": "zorovavel",
    "name": "Зоровавель",
    "lane": 1,
+   "star": 1,
    "t0": -564
   },
   {
    "id": "zakhariya-syn-varakhii",
    "name": "Захария",
    "lane": 17,
+   "star": 17,
    "t0": -552
   },
   {
    "id": "esfir",
    "name": "Есфирь",
    "lane": -16,
+   "star": -16,
    "t0": -539
   },
   {
    "id": "iosif-muzh-marii",
    "name": "Иосиф",
    "lane": 2,
+   "star": 2,
    "t0": -32
   },
   {
    "id": "mariya",
    "name": "Мария",
    "lane": -1,
+   "star": -1,
    "t0": -30
   },
   {
    "id": "ioann-krestitel",
    "name": "Иоанн Креститель",
    "lane": -9,
+   "star": -9,
    "t0": -5
   },
   {
    "id": "irod-velikiy",
    "name": "Ирод",
    "lane": -24,
+   "star": -24,
    "t0": -5
   },
   {
    "id": "iisus",
    "name": "Иисус Христос",
    "lane": 0,
+   "star": 0,
    "t0": -4
   },
   {
    "id": "irod-antipa",
    "name": "Ирод",
    "lane": 16,
+   "star": 16,
    "t0": 26
   },
   {
    "id": "andrey",
    "name": "Андрей",
    "lane": -30,
+   "star": -30,
    "t0": 26
   },
   {
    "id": "ioann-apostol",
    "name": "Иоанн",
    "lane": -42,
+   "star": -42,
    "t0": 26
   },
   {
    "id": "iakov-zevedeev",
    "name": "Иаков",
    "lane": -43,
+   "star": -43,
    "t0": 26
   },
   {
    "id": "petr",
    "name": "Пётр",
    "lane": 42,
+   "star": 42,
    "t0": 26
   },
   {
    "id": "iuda-iskariot",
    "name": "Иуда",
    "lane": 46,
+   "star": 46,
    "t0": 26
   },
   {
    "id": "varnava",
    "name": "Варнава",
    "lane": 23,
+   "star": 23,
    "t0": 30
   },
   {
    "id": "pavel",
    "name": "Павел",
    "lane": 17,
+   "star": 17,
    "t0": 34
   }
  ]
