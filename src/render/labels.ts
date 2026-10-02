@@ -2012,7 +2012,7 @@ export function groupSubtitle(gid: string): string {
   const fq = f ? byId.get(f) : undefined;
   return `${fq ? `родоначальник ${fq.name}; ` : ''}${n} ${lits(n)}`;
 }
-/** Подзаголовок под названием: курсив Literata, тоном второго текста, с ореолом; не ложится на подписи и звёзды. */
+/** Подзаголовок под названием: курсив шрифта карты, тоном второго текста, с ореолом; не ложится на подписи и звёзды. */
 function drawSubtitle(v: SkyContext, p: Pass, text: string, x: number, yBelow: number, a: number) {
   const { ctx, pal } = v;
   const size = mapSize(T_UI_S, v.coarse);
