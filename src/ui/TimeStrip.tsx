@@ -534,6 +534,8 @@ export function TimeStrip() {
     let dragging = false;
     /** эпоха, к которой поведёт щелчок под указателем (IX-50): подсвечена */
     let hotEpoch: string | null = null;
+    /** Эпоха середины окна неба (этап 16, решение 188): её название — начертанием и чертой под ним. */
+    let curEpoch: string | null = null;
     /** указатель над столбиками: флажок года называет число рождений (MAP-45) */
     let overHist = false;
     /** указатель над строкой названий: флажок называет эпоху, если её подписи на полосе нет (VIS-65) */
@@ -623,12 +625,17 @@ export function TimeStrip() {
       const sw = ctx.measureText(startLabel).width;
       const ew = ctx.measureText(endLabel).width;
       const places = placeEpochLabels(
-        eps.map((e) => ({ id: e.id, x0: xOf(toAstro(e.start)), x1: xOf(toAstro(e.end)), w: ctx.measureText(e.short).width })),
+        // текущая эпоха набрана полужирным — её ширина по своему начертанию (решение 188)
+        eps.map((e) => {
+          ctx.font = e.id === curEpoch ? font(600) : font();
+          return { id: e.id, x0: xOf(toAstro(e.start)), x1: xOf(toAstro(e.end)), w: ctx.measureText(e.short).width };
+        }),
         L.names,
         2,
         W - 2,
         [[0, PAD, PAD + sw], [0, W - PAD - ew, W - PAD]],
       );
+      ctx.font = font();
       // прямоугольники текста полосы — для проверки наложений (tools/accept/strip3.ts): строка названий — от 10 px над
       // базовой линией до 3 px под ней
       const texts: (Box & { t: string })[] = [];
@@ -641,10 +648,16 @@ export function TimeStrip() {
       for (const e of eps) {
         const at = places.get(e.id);
         if (!at) continue;
-        ctx.fillStyle = e.id === hotEpoch ? pal.ink : pal.ink3;
+        const cur = e.id === curEpoch;
+        // текущая эпоха (решение 188) — начертанием и чертой 2 px под названием, тоном текста; не степпер из кружков
+        ctx.font = cur ? font(600) : font();
+        ctx.fillStyle = cur || e.id === hotEpoch ? pal.ink : pal.ink3;
         ctx.fillText(e.short, at.x, ROW_Y[at.row]);
-        nameBox(e.short, at.x, ROW_Y[at.row], ctx.measureText(e.short).width);
+        const w = ctx.measureText(e.short).width;
+        if (cur) ctx.fillRect(at.x, ROW_Y[at.row] + 2, w, 2);
+        nameBox(e.short, at.x, ROW_Y[at.row], w);
       }
+      ctx.font = font();
       // подписано эпох из всех — для проверок приёмки (tools/accept/strip.ts)
       return { key: '', model: null, cv: bcv, texts, labeled: new Set(places.keys()), epochLabels: `${places.size}/${eps.length}` };
     };
@@ -653,7 +666,8 @@ export function TimeStrip() {
       const L = stripRows(H);
       const eps = model.value.epochs;
       const v = view();
-      const baseKey = [cv.width, cv.height, W, H, dpr, T0, font(), pal.sky, pal.band, pal.rule, pal.ink, pal.ink3, pal.focus, hotEpoch, focusedEpoch.value].join('|');
+      curEpoch = v ? (epochAtYear(eps, (v.a + v.b) / 2, toAstro)?.id ?? null) : null;
+      const baseKey = [cv.width, cv.height, W, H, dpr, T0, font(), pal.sky, pal.band, pal.rule, pal.ink, pal.ink3, pal.focus, hotEpoch, focusedEpoch.value, curEpoch].join('|');
       if (!base || base.key !== baseKey || base.model !== model.value) base = { ...paintBase(L), key: baseKey, model: model.value };
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.drawImage(base.cv, 0, 0);
@@ -785,6 +799,8 @@ export function TimeStrip() {
         }
         // окно в годах — для проверок приёмки (tools/accept.ts)
         wrap.current!.dataset.window = `${v.a.toFixed(1)} ${v.b.toFixed(1)}`;
+        // эпоха середины окна — её название выделено (решение 188); для проверок приёмки (tools/accept/story16.ts)
+        wrap.current!.dataset.epoch = curEpoch ?? '';
         // ползунок для клавиатуры и диктора (MOB-35, MOB-49): середина окна, окно словами и эпоха середины
         const mid = (v.a + v.b) / 2;
         const ep = epochAtYear(eps, mid, toAstro);

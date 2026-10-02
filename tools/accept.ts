@@ -83,6 +83,7 @@ import { chrono13 } from './accept/chrono13.ts';
 import { touch14 } from './accept/touch14.ts';
 import { nav14 } from './accept/nav14.ts';
 import { graph14 } from './accept/graph14.ts';
+import { story16 } from './accept/story16.ts';
 
 const BASE: Scenario[] = [
   {
@@ -676,7 +677,7 @@ const BASE: Scenario[] = [
   },
 ];
 /** Сценарии этапа 3 — в своих файлах, чтобы параллельные агенты не правили один список (номера 30–49, 50–69, 70–89). */
-const SCENARIOS: Scenario[] = [...BASE, ...layout, ...nav, ...sky, ...map, ...card, ...panels, ...phone, ...a11y, ...work, ...chrono, ...cardshell, ...cardtext, ...skyin, ...skydraw, ...strip, ...phone7, ...chrono3, ...sky3, ...family3, ...nav3, ...input3, ...find3, ...strip3, ...card3, ...cardtext3, ...phone3, ...reveal4, ...union4, ...start4, ...colors4, ...tree5, ...view5, ...dots6, ...peek6, ...polish6, ...bugs7, ...show11, ...unify11, ...grammar11, ...polish11, ...cards12, ...sky12, ...ui13, ...card13, ...time13, ...sky13, ...chrono13, ...nav14, ...touch14, ...graph14, ...labels14];
+const SCENARIOS: Scenario[] = [...BASE, ...layout, ...nav, ...sky, ...map, ...card, ...panels, ...phone, ...a11y, ...work, ...chrono, ...cardshell, ...cardtext, ...skyin, ...skydraw, ...strip, ...phone7, ...chrono3, ...sky3, ...family3, ...nav3, ...input3, ...find3, ...strip3, ...card3, ...cardtext3, ...phone3, ...reveal4, ...union4, ...start4, ...colors4, ...tree5, ...view5, ...dots6, ...peek6, ...polish6, ...bugs7, ...show11, ...unify11, ...grammar11, ...polish11, ...cards12, ...sky12, ...ui13, ...card13, ...time13, ...sky13, ...chrono13, ...nav14, ...touch14, ...graph14, ...labels14, ...story16];
 
 /** Имена лиц обеих линий Мессии — из собранного индекса. */
 function lineNames(): Set<string> {

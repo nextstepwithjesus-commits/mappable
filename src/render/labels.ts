@@ -889,6 +889,8 @@ const FOLD_GAP = 5;
 
 /** Зазор между концом подписи и продолжением следа, px (VIS-76): след начинается за подписью, а не у её последней буквы. */
 export const KNOCK_GAP = 3;
+/** Отступы имени по своему следу в последнем проходе звезды величины 0–1 (labels.ts, 'self'), px. */
+const SELF_STEP = [0, 6, 12, 18, 24, 30];
 
 /**
  * Где погасить свой след под подписью (MAP-56, MOB-76, VIS-76): полоса высотой 5 px по следу от края звезды до конца
@@ -1170,9 +1172,16 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): Label
     mode = soft;
     // своё место сразу за звездой (решение 139: защищённый текст) — только чужие знаки, подписи и линии под запретом
     if (soft === 'self') {
-      const c = sp('r', textW + sigW + foldW);
-      const b = c.box;
-      if (insideSky(v, b) && !hits(b, p.reserve) && !p.placer.clash(b, false, 99, q.id) && !p.placer.glyphsIn(b).some((g) => g.id !== q.id && g.a >= GLYPH_SEEN) && !crossed(b, false, true)) at = { ...c, side: 'r' };
+      // сразу за звездой; знак союза или метка на своём следе у звезды — имя отступает по следу за неё (до 30 px)
+      const c0 = sp('r', textW + sigW + foldW);
+      for (const dx of SELF_STEP) {
+        const c = { ...c0, tx: c0.tx + dx, box: { ...c0.box, x: c0.box.x + dx } };
+        const b = c.box;
+        if (insideSky(v, b) && !hits(b, p.reserve) && !p.placer.clash(b, false, 99, q.id) && !p.placer.glyphsIn(b).some((g) => g.id !== q.id && g.a >= GLYPH_SEEN) && !crossed(b, false, true)) {
+          at = { ...c, side: 'r' };
+          break;
+        }
+      }
       if (at) break;
       continue;
     }

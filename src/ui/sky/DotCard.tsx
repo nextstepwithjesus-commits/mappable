@@ -562,19 +562,21 @@ export function placeCard(
   if (!best) {
     // свободного места нет: сперва — не закрывая never и keep, меньше всего подписей семьи по площади; нет и такого —
     // не закрывая never, меньше всего keep (в 10 раз дороже) и подписей; never и сам знак — никогда
-    const least = (tier: readonly Rect[], weight: (q: Rect) => number) => {
+    const least = (tier: readonly Rect[], weight: (q: Rect) => number, each = 0) => {
       let out: { x: number; y: number; score: number } | null = null;
       for (const c of cands) {
         const r = { x: c.x, y: c.y, w, h };
         if (cross(r, mark) || tier.some((q) => cross(r, q))) continue;
         let score = c.d * 0.5;
         for (const q of hard) score += overlap(r, q) * weight(q);
+        // каждая закрытая звезда семьи — лицо без подписи: счёт лиц, а не только площадь (этап 16, сценарий 1142)
+        if (each) for (const q of keep) if (cross(r, q)) score += each;
         if (!out || score < out.score) out = { x: c.x, y: c.y, score };
       }
       return out;
     };
     const kept = new Set(keep);
-    best = least([...never, ...keep], () => 4) ?? least(never, (q) => (kept.has(q) ? 40 : 4));
+    best = least([...never, ...keep], () => 4) ?? least(never, (q) => (kept.has(q) ? 40 : 4), 4000);
     if (!best) return { ...strip(at), free: false };
   }
   const px = Math.max(best.x, Math.min(best.x + w, a.x));
@@ -702,6 +704,28 @@ function stepNext(k: LinkKey): string[] {
   return i >= 0 && i + 1 < ps.length ? [child, ps[i + 1].id] : [];
 }
 
+/**
+ * Верхняя ступень решения 164 у лица id — родители, супруги и лица линий Мессии величины ≤ 1 среди детей, братьев
+ * и сестёр: их имена на небе подписаны всегда, поэтому карточка у звезды их звёзд и подписей не закрывает никогда
+ * (как фокус; этап 16, сценарий 1142 — «Отчий дом» поставил жён Давида под карточку). Отбор — как у tools/accept/nav14.ts,
+ * topTier.
+ */
+function topTierOf(id: string): Set<string> {
+  const p = byId.get(id);
+  const out = new Set<string>();
+  if (!p) return out;
+  if (p.father) out.add(p.father);
+  if (p.mother) out.add(p.mother);
+  for (const e of graph.spousesOf.get(id) ?? []) out.add(e.a === id ? e.b : e.a);
+  const spine = (x: string) => lines.joseph.persons.some((st) => st.id === x) || lines.mary.persons.some((st) => st.id === x);
+  const strong = (x: string) => spine(x) && (byId.get(x)?.magnitude ?? 9) <= 1;
+  for (const e of graph.childrenOf.get(id) ?? []) if ((e.kind === 'father' || e.kind === 'mother') && strong(e.child)) out.add(e.child);
+  for (const par of [p.father, p.mother])
+    if (par) for (const e of graph.childrenOf.get(par) ?? []) if (e.child !== id && (e.kind === 'father' || e.kind === 'mother') && strong(e.child)) out.add(e.child);
+  out.delete(id);
+  return out;
+}
+
 function obstacles(
   focus: string | null,
   ends: readonly string[],
@@ -718,9 +742,12 @@ function obstacles(
   const hard: Rect[] = [];
   const soft: Obstacle[] = [];
   const lines: Segment[] = [];
-  /** обязательные лица: фокус и концы связи; желательные — семья фокуса (и концы, если они не обязательны) */
+  /** обязательные лица: фокус, концы связи и верхняя ступень семьи фокуса (решение 164); желательные — остальная семья */
   const must = new Set<string>(endsMust ? ends : []);
-  if (focus) must.add(focus);
+  if (focus) {
+    must.add(focus);
+    for (const x of topTierOf(focus)) must.add(x);
+  }
   const family = focus ? familyOf(focus) : [];
   // и продолжение пути выбранного шага ленты (решение 171; R1-12): следующее лицо линии и шаг к нему — желательные
   const want = new Set<string>([...family, ...(endsMust ? [] : ends), ...next]);
@@ -1239,6 +1266,11 @@ function LineageMenu({ id }: { id: string }) {
             else nearestFamily(id);
           },
         },
+        // «Семья созвездием» — врезка семьи на небе без шкалы времени (решение 186); на телефоне её открывает и пункт выше.
+        // Пункт меню, а не пятая команда: карточка у звезды не растёт и не закрывает семью (решения 153, 164; сценарий 1142)
+        ...(!grid.peek().phone && hasFamily(id) && familyInset.value?.id !== id
+          ? [{ key: 'inset', label: 'Семья созвездием', onSelect: () => (openFamilyInset(id, 'card') ? (dotCard.value = null) : null) }]
+          : []),
         item('down', 'Потомки'),
         item('up', 'Предки'),
         item('both', 'Предки и потомки'),
@@ -1265,24 +1297,6 @@ function NearestCmd({ id }: { id: string }) {
   return (
     <Cmd onRun={() => nearestFamily(id)} cls="dc-near" title={typo(`Родители, супруги и дети по матерям — ${nearestCount(id)}; возврат — Escape или «назад»`)}>
       Ближайшая родня
-    </Cmd>
-  );
-}
-
-/**
- * «Семья созвездием» (решение 186): врезка семьи без шкалы времени — родители, супруги, дети веером от матерей, пыль
- * внуков. Команды нет, если врезка этого лица уже открыта или лицу нечего показать (нет ни родителей, ни союзов).
- */
-function InsetCmd({ id }: { id: string }) {
-  if (familyInset.value?.id === id || !hasFamily(id)) return null;
-  return (
-    <Cmd
-      onRun={() => {
-        // одна карточка на небе за раз (решение 77): врезка заменяет карточку у звезды
-        if (openFamilyInset(id, 'card')) dotCard.value = null;
-      }}
-      cls="dc-fam" title="Семья лица одной картиной: жёны, дети по матерям, внуки числом; без шкалы времени (Shift + F)">
-      Семья созвездием
     </Cmd>
   );
 }
@@ -1502,8 +1516,6 @@ export function PersonBody({ id, compact = false, brief = false, legend = false,
       <div class="dc-cmds">
         {/* «Ближайшая родня» — одним действием (решение 145); на телефоне — первым пунктом «Предки и потомки ▾»: лист короче */}
         {!phone && <NearestCmd id={id} />}
-        {/* «Семья созвездием» — врезка семьи на небе (решение 186) */}
-        <InsetCmd id={id} />
         {/* на телефоне «Вся карточка ▴» разворачивает лист карточки (как «Развернуть» шапки листа) — кнопка с aria-expanded;
             при открытой подробной карточке (легенда семьи) команда остаётся: она ведёт фокус на заголовок карточки рядом
             (MOB-29, MOB-31; сценарии 170, 173) */}
