@@ -474,6 +474,8 @@ function nestBuses(f: LinkFrame, stars: readonly LinkStar[]) {
     const o = star.get(u.owner);
     if (!o || clans.has(union) || x1 > (o.x1 ?? o.x) - 1) continue;
     if (f.nodes.some((n) => n.union !== union && Math.abs(n.y - u.y) < 0.75 && n.x > u.x - 1 && n.x < x1 + 1)) continue;
+    // и не по участку следа, где идёт маршрут ленты (решение 79: там связь — лента)
+    if ([...f.via].some(([pk, vv]) => pk.startsWith(`${u.owner}>`) && vv.x > u.x - 1)) continue;
     const trunk = f.paths.find((q) => q.union === union && q.kind === 'trunk');
     const ends = [...new Set(f.paths.filter((q) => q.union === union && q.kind !== 'ribbon').flatMap((q) => q.ends))];
     f.paths.push({ key: unionKey(union), ks: key(unionKey(union)), kind: 'jog', style: trunk?.style ?? 'solid', pts: [u.x, u.y, x1, u.y], ends, union, when: 'always', cuts: [] });

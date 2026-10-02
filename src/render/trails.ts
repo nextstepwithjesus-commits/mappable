@@ -1706,6 +1706,10 @@ export function trailLinksAt(v: SkyContext, d: LinkDraw | null | undefined, x: n
       if (!best || dy < best.dy) best = { t, dy };
     }
   if (!best) return null;
+  // участок следа, по которому идёт маршрут ленты (от звезды до узла шага; на масштабе семьи), — шаг ленты: лента и
+  // есть связь (решение 79), её ловит нарисованная нить, а не союз по следу
+  if (v.routeFactor >= 0.5)
+    for (const [pk, vv] of d.frame.via) if (pk.startsWith(`${best.t.person}>`) && fx <= vv.x + 1) return null;
   const keys: LinkKey[] = [];
   for (const s of best.t.st) {
     if (s.x < fx) continue;
