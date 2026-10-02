@@ -35,6 +35,8 @@ import { CONSTELLATION_DIM, DIM, likelyAlpha, WORK_DIM } from './dim.ts';
 const MESSIAH = 'iisus';
 import { mapFont, mapSize, nameFontWith, nameSize, siglaFont, textScale, T_MAP_S, T_NOTE, T_UI_S } from './type.ts';
 import { byId, graph, groupById, lines } from '../data/atlas.ts';
+import { inFocus } from '../ui/story/density.ts';
+import { groupFocus } from '../ui/story/state.ts';
 import { linkRoles } from '../ui/linkwords.ts';
 import { primaryChildren, siblings } from '../engine/graph.ts';
 import { refText } from '../engine/kinship.ts';
@@ -42,7 +44,7 @@ import { BOOK_INDEX, parseRef } from '../engine/books.ts';
 import { cross, hits, type Rect } from './rect.ts';
 import type { Pass, SkyContext } from './sky.ts';
 import { drawMotherNames, hasGlides } from './trails.ts';
-import { laneAt, starLaneOf } from '../engine/stays.ts';
+import { glidesOf, laneAt, starLaneOf } from '../engine/stays.ts';
 import type { NodeRow } from '../data/atlas.ts';
 
 /** Сколько самых значимых живых подписать сверх обычных порогов, когда стоит меридиан (D13; IX-34). */
@@ -817,6 +819,11 @@ interface StarOpts {
    * звезды до 40 px и отвесные выноски над ней и под ней, по тем же правилам (решения 140, 141)
    */
   fan?: boolean;
+  /**
+   * устье (решение 184): у основателя созвездия — конец его перехода из отчего дома в свою полосу, px холста. Имя
+   * сначала ищет место там, на своём следе (не в тесном доме), — на обзоре и среднем масштабе
+   */
+  mouth?: { x: number; y: number };
   /** по какую сторону звезды можно ставить подпись: −1 — не ниже середины (лицо только линии Иосифа), 1 — не выше (Марии) */
   vertical?: -1 | 1;
   /** погашенная выделением: без полужирного (MOB-41) */
@@ -1138,7 +1145,9 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): Label
         : o.fan
           ? [...free, 'soft', ...lane, ...fan, 'mine']
           : [...free, 'soft', ...lane, 'mine'];
-  const selfPass: Mode[] = q.magnitude <= 1 && cam.ky >= FAMILY_KY && !v.viewMoving && !o.least ? ['self'] : [];
+  // при выбранном лице семью ставят ступени 164 (родня, 'cut'), а карточка у звезды ищет место по уже поставленным
+  // подписям: своё место за звездой там сдвигало бы карточку на имена семьи (К6, сценарии 1125, 1134)
+  const selfPass: Mode[] = q.magnitude <= 1 && cam.ky >= FAMILY_KY && !p.s.selected && !v.viewMoving && !o.least ? ['self'] : [];
   const passes: Mode[] = [...(offRibbon && spineName ? ['clear' as Mode, ...base] : base), ...selfPass];
   const vert = o.vertical ?? lineSideOf(q.id);
   const sides = vert === -1 ? o.sides.filter((x) => x !== 'b') : vert === 1 ? o.sides.filter((x) => x !== 't') : o.sides;
@@ -1168,7 +1177,20 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): Label
       }
     }
   }
-  for (const soft of o.least ? [] : passes) {
+  // имя основателя у устья (решение 184): сразу за концом перехода, на своём следе; чужие знаки, подписи и линии — запрет
+  let atMouth = false;
+  if (o.mouth && !o.least) {
+    const w = textW + foldW;
+    const tx = o.mouth.x + 4;
+    const ty = o.mouth.y + (ASC - DESC) * 0.5 * size;
+    const box = textBox(tx, ty, w, size);
+    if (insideSky(v, box) && !hits(box, p.reserve) && !p.placer.clash(box, false, 99, q.id) && !p.placer.rowClash(box, size) && !p.placer.glyphsIn(box).some((g) => g.id !== q.id && g.a >= GLYPH_SEEN) && !crossed(box, false, true)) {
+      at = { tx, ty, box, side: 'r' };
+      mode = 'soft';
+      atMouth = true;
+    }
+  }
+  for (const soft of o.least || at ? [] : passes) {
     mode = soft;
     // своё место сразу за звездой (решение 139: защищённый текст) — только чужие знаки, подписи и линии под запретом
     if (soft === 'self') {
@@ -1270,7 +1292,8 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): Label
   }
   if (!at) return null;
   const { tx, ty } = at;
-  const knock = knockTrail(v, p, i, at, r);
+  // у устья свой след под именем гасит разрыв середины строки (ниже), а не полоса от звезды
+  const knock = atMouth ? null : knockTrail(v, p, i, at, r);
   if (knock) v.fillGround(knock.x, knock.x + knock.w, knock.y, knock.h);
   // разрыв под текстом (решения 139, 141): следы, сетка, контуры, меридианы и погашенные связи под серединой строки
   // гасятся цветом фона — звёзды рисуются после подписей и не гаснут; связи, ленты и дуги через середину строки не идут
@@ -1680,6 +1703,7 @@ export function drawStarLabels(v: SkyContext, p: Pass, between?: () => void) {
   // узкое небо при выбранном лице (решение 144; M2): подписи вне рода выбранного и лент не ставятся — место семье
   const narrow = !!s.selected && !!hl && !p.work && cam.vp.r - cam.vp.l < NARROW_SKY;
   const cand: number[] = [];
+  const focusG = groupFocus.peek();
   for (const i of p.vis) {
     const n = v.nodes[i];
     if (n.ghost || p.labeled.has(i) || i === messiahOut) continue;
@@ -1687,8 +1711,9 @@ export function drawStarLabels(v: SkyContext, p: Pass, between?: () => void) {
     if (narrow && !hl!.has(n.person) && !p.spine.has(n.person) && !s.pins.has(n.person)) continue;
     if (p.starAlpha(i) <= 0.5) continue;
     const need = cache.level[i] - (cache.shown[i] ? HYSTERESIS : 0);
-    // звёзды величины 0 (Авраам, Иаков, Давид…) — кандидаты на любом масштабе: тесно у звезды — с выноской (MAP-06)
-    if (!family && !(p.level >= need) && byId.get(n.person)!.magnitude > 0) continue;
+    // звёзды величины 0 (Авраам, Иаков, Давид…) — кандидаты на любом масштабе: тесно у звезды — с выноской (MAP-06);
+    // созвездие в фокусе (решение 185) раскрыто целиком — с именами на любом масштабе
+    if (!family && !(p.level >= need) && byId.get(n.person)!.magnitude > 0 && !(focusG && inFocus(byId.get(n.person)!.group, focusG))) continue;
     cand.push(i);
   }
   cand.sort((a, b) => cache.rank[a] - cache.rank[b]);
@@ -1714,7 +1739,7 @@ export function drawStarLabels(v: SkyContext, p: Pass, between?: () => void) {
     // на масштабе семьи подписаны все, кому хватает места (E1: не меньше 90 %) — и дальними выносками, как в наборе: у края
     // узкого неба (телефон) ближние места уходят за край или на название созвездия; звёзды величины 0–1 — и на обзоре
     // (MAP-06): выноска не длиннее 40 px (решение 140)
-    const so: StarOpts = { sides, color, alpha: d.alpha * lit, light: d.light, sigla: true, leader, far: family || q.magnitude <= 1 || p.spine.has(q.id), fan: family };
+    const so: StarOpts = { sides, color, alpha: d.alpha * lit, light: d.light, sigla: true, leader, far: family || q.magnitude <= 1 || p.spine.has(q.id), fan: family, mouth: family ? undefined : mouthOf(v, i) };
     // звезда величины 0 на обзоре без выбранного (MAP-06; исключение К8): у звезды тесно — выноской до 100 px через пустое
     // небо (знак не закрывается, выноска не пересекает выносок, связей и лент)
     if (putLabel(v, p, i, so) || (q.magnitude === 0 && !family && !s.selected && !v.viewMoving && p.starDetail < 0.99 && putLabel(v, p, i, { ...so, wide: true }))) now[i] = 1;
@@ -1896,6 +1921,76 @@ export const groupName = (group: string) => (groupById.get(group)?.name ?? group
 /** Разрядка названий созвездий; поуже — последнее место на крупной области, где обычной разрядке нет места между звёзд. */
 const GROUP_SPACING = '0.22em';
 const GROUP_SPACING_TIGHT = '0.1em';
+
+// ---------- названия созвездий на обзоре (этап 16, решение 184) ----------
+
+/** Число лиц созвездия вместе с вложенными (дом Давидов — в колене Иудином). */
+let groupCounts: Map<string, number> | null = null;
+function groupCount(gid: string): number {
+  if (!groupCounts) {
+    groupCounts = new Map();
+    for (const q of byId.values())
+      for (let g = groupById.get(q.group), k = 0; g && k < 8; g = g.parent ? groupById.get(g.parent) : undefined, k++) groupCounts.set(g.id, (groupCounts.get(g.id) ?? 0) + 1);
+  }
+  return groupCounts.get(gid) ?? 0;
+}
+/** Кегль названия созвездия на обзоре: 200 лиц и больше — 17, 60 и больше — 14; прочие — обычный (0). */
+export const GROUP_BIG: readonly [number, number][] = [[200, 17], [60, 14]];
+export function groupTitleSize(gid: string): number {
+  const n = groupCount(gid);
+  for (const [k, sz] of GROUP_BIG) if (n >= k) return sz;
+  return 0;
+}
+/** Основатели созвездий (данные groups.founder): их имена стоят у устья (решение 184). */
+let founders: Set<string> | null = null;
+/**
+ * Устье лица узла i (решение 184): конец его первого перехода из отчего дома в свою полосу, px холста; null — лицо не
+ * основатель созвездия или полосы не меняет.
+ */
+function mouthOf(v: SkyContext, i: number): { x: number; y: number } | undefined {
+  if (!founders) founders = new Set([...groupById.values()].map((g) => g.founder).filter((x): x is string => !!x));
+  const n = v.nodes[i];
+  if (!founders.has(n.person)) return undefined;
+  const g = glidesOf(n)[0];
+  if (!g) return undefined;
+  return { x: v.cam.sx(v.xOf(g.t1)), y: v.cam.sy(g.to) };
+}
+/** Подзаголовок — у созвездий от стольких лиц. */
+export const SUBTITLE_MIN = 40;
+const lits = (n: number) => {
+  const a = n % 10;
+  const b = n % 100;
+  return a === 1 && b !== 11 ? 'лицо' : a >= 2 && a <= 4 && (b < 12 || b > 14) ? 'лица' : 'лиц';
+};
+/** Подзаголовок созвездия из данных (решение 184): «родоначальник Левий; 540 лиц»; без основателя — «290 лиц». */
+export function groupSubtitle(gid: string): string {
+  const n = groupCount(gid);
+  if (n < SUBTITLE_MIN) return '';
+  const f = groupById.get(gid)?.founder;
+  const fq = f ? byId.get(f) : undefined;
+  return `${fq ? `родоначальник ${fq.name}; ` : ''}${n} ${lits(n)}`;
+}
+/** Подзаголовок под названием: курсив Literata, тоном второго текста, с ореолом; не ложится на подписи и звёзды. */
+function drawSubtitle(v: SkyContext, p: Pass, text: string, x: number, yBelow: number, a: number) {
+  const { ctx, pal } = v;
+  const size = mapSize(T_UI_S, v.coarse);
+  ctx.save();
+  ctx.font = mapFont(T_UI_S, { italic: true, coarse: v.coarse });
+  ctx.letterSpacing = '0px';
+  const w = ctx.measureText(text).width;
+  const y = yBelow + 4 + ASC * size;
+  const box = textBox(x, y, w, size);
+  if (claim(v, p, [box], 'note', text, { softInset: 1 })) {
+    ctx.strokeStyle = pal.halo;
+    ctx.lineWidth = 3;
+    ctx.lineJoin = 'round';
+    ctx.globalAlpha = a;
+    ctx.strokeText(text, x, y);
+    ctx.fillStyle = pal.ink2;
+    ctx.fillText(text, x, y);
+  }
+  ctx.restore();
+}
 /** Название созвездия повторяется не чаще, чем через столько px (ТЗ § 3.1: «через каждые ~1 200 px»). */
 export const GROUP_REPEAT_PX = 1200;
 /**
@@ -1907,7 +2002,7 @@ export const GROUP_REPEAT_PX = 1200;
 export function drawGroupNames(v: SkyContext, p: Pass, spots: GroupNameSpot[], noRoom?: Set<string>): (Rect & { group: string })[] {
   const { ctx, pal } = v;
   const hl = p.s.highlight;
-  const fs = mapSize(T_MAP_S, v.coarse);
+  let fs = mapSize(T_MAP_S, v.coarse);
   // у каждого прямоугольника — созвездие: по названию открывается меню «Свернуть созвездие» (J5; src/ui/sky/input.ts)
   const boxes: (Rect & { group: string })[] = [];
   const done = new Set<string>();
@@ -1943,6 +2038,10 @@ export function drawGroupNames(v: SkyContext, p: Pass, spots: GroupNameSpot[], n
   };
   for (const o of [...spots].sort((a, b) => b.size - a.size)) {
     const name = groupName(o.group);
+    // на обзоре крупные созвездия набраны крупнее (решение 184): кегль по числу лиц созвездия
+    const gsz = low ? groupTitleSize(o.group) : 0;
+    fs = mapSize(gsz || T_MAP_S, v.coarse);
+    ctx.font = mapFont(gsz || T_MAP_S, { sans: true, weight: 500, coarse: v.coarse });
     let tw = ctx.measureText(name).width;
     ink = inkOf(name);
     const cands: ReturnType<typeof at>[] = [];
@@ -1987,6 +2086,9 @@ export function drawGroupNames(v: SkyContext, p: Pass, spots: GroupNameSpot[], n
       ctx.lineJoin = 'round';
       ctx.strokeText(name, c.x, c.y);
       ctx.fillText(name, c.x, c.y);
+      // подзаголовок из данных под первым названием (решение 184): «родоначальник Левий; 540 лиц»
+      const sub = low && !done.has(o.group) ? groupSubtitle(o.group) : '';
+      if (sub) drawSubtitle(v, p, sub, c.x, c.y + ink.d, gsz ? 1 : 0.9);
       boxes.push({ ...got, group: o.group });
       xs.push(c.x);
       done.add(o.group);

@@ -156,20 +156,30 @@ export const inset16: Scenario[] = [
   },
   {
     n: 1225,
-    title: 'Решение 186: пыль внуков — щелчок по точкам детей Иуды во врезке Иакова открывает семью Иуды; путь шагов «Иаков › Иуда»',
+    title: 'Решение 186: пыль внуков — щелчок по точкам детей Иуды во врезке Иакова открывает семью Иуды; путь шагов «Иаков › Иуда»; то же — командой списка с клавиатуры',
     run: async (p) => {
       await go(p, '#/iakov~fiakov');
-      // семья сына — второй кнопкой строки списка (та же команда, что щелчок по пыли его детей)
-      const btn = p.locator('.sky .fam-inset ul li', { hasText: /^Иуда;/ }).locator('button', { hasText: 'Семья Иуды' });
-      if (!(await btn.count())) return fail('у строки Иуды нет команды «Семья Иуды»');
-      await btn.first().click();
+      const dust = (await inset(p).getAttribute('data-dust')) ?? '';
+      const m = /(?:^|;)iuda:(-?\d+),(-?\d+)/.exec(dust);
+      if (!m) return fail(`у Иуды во врезке нет пыли внуков: ${dust.slice(0, 120)}`);
+      const cv = (await p.locator('.fam-layer canvas').boundingBox())!;
+      await p.mouse.click(cv.x + Number(m[1]), cv.y + Number(m[2]));
       await p.waitForTimeout(1200);
       const h = await head(p);
-      if (h.family !== 'iuda' || h.title !== 'Семья Иуды') return fail(`после шага: ${JSON.stringify(h)}`);
+      if (h.family !== 'iuda' || h.title !== 'Семья Иуды') return fail(`после щелчка по пыли: ${JSON.stringify(h)}`);
       const trail = ((await p.locator('.fam-inset .fi-trail').innerText().catch(() => '')) ?? '').replace(/\s+/g, ' ').trim();
       if (trail !== 'Иаков › Иуда') return fail(`путь шагов: «${trail}»`);
       if (hashId(p) !== 'iuda') return fail(`выбрано «${hashId(p)}»`);
-      return pass(`${h.title}; путь «${trail}»`);
+      // с клавиатуры: шаг назад по пути и снова к Иуде — командой строки списка
+      await p.locator('.fam-inset .fi-trail button', { hasText: 'Иаков' }).click();
+      await p.waitForTimeout(900);
+      const btn = p.locator('.sky .fam-inset ul li', { hasText: /^Иуда;/ }).locator('button', { hasText: 'Семья Иуды' });
+      if (!(await btn.count())) return fail('у строки Иуды нет команды «Семья Иуды»');
+      await btn.first().focus();
+      await p.keyboard.press('Enter');
+      await p.waitForTimeout(1000);
+      const k = await head(p);
+      return k.family === 'iuda' ? pass(`${h.title}; путь «${trail}»; с клавиатуры — тоже`) : fail(`с клавиатуры: ${JSON.stringify(k)}`);
     },
   },
   {
@@ -215,6 +225,38 @@ export const inset16: Scenario[] = [
       if (hashId(p) !== 'iosif') return fail(`касание выбрало «${hashId(p)}»`);
       if (!(await p.locator('.sky .fam-inset.fam-sheet').count())) return fail('лист «Семья» закрылся после выбора');
       return pass('лист «Семья»; Иосиф выбран касанием, лист на месте');
+    },
+  },
+  {
+    n: 1228,
+    title: 'Решение 186: Shift + F (на русской раскладке — Shift + А) открывает врезку выбранного лица и закрывает её; F без Shift — прежнее «Небо во весь экран»',
+    run: async (p) => {
+      await go(p, '#/iakov');
+      await p.locator('.sky canvas').first().focus();
+      await p.keyboard.press('Shift+KeyF');
+      await p.waitForTimeout(1000);
+      if ((await inset(p).getAttribute('data-family').catch(() => null)) !== 'iakov') return fail('Shift + F не открыл врезку Иакова');
+      await p.keyboard.press('Shift+KeyF');
+      await p.waitForTimeout(700);
+      return (await inset(p).count()) ? fail('повторное Shift + F не закрыло врезку') : pass('открыта и закрыта');
+    },
+  },
+  {
+    n: 1229,
+    title: 'Решение 186: строка «Ближайшей родни» — «по времени | созвездием»: «созвездием» открывает врезку того же лица, «по времени» закрывает; выбранное начертанием',
+    run: async (p) => {
+      await go(p, '#/iakov~vr.iakov.b.1.b');
+      const on = p.locator('.sky .showbar [data-cmd="near-inset"]');
+      const off = p.locator('.sky .showbar [data-cmd="near-time"]');
+      if (!(await on.count()) || !(await off.count())) return fail('в строке показа нет «по времени | созвездием»');
+      if ((await off.getAttribute('aria-pressed')) !== 'true') return fail('без врезки не выделено «по времени»');
+      await on.click();
+      await p.waitForTimeout(1000);
+      if ((await inset(p).getAttribute('data-family').catch(() => null)) !== 'iakov') return fail('«созвездием» не открыло врезку');
+      if ((await on.getAttribute('aria-pressed')) !== 'true') return fail('при врезке не выделено «созвездием»');
+      await off.click();
+      await p.waitForTimeout(700);
+      return (await inset(p).count()) ? fail('«по времени» не закрыло врезку') : pass('переключение в обе стороны');
     },
   },
 ];

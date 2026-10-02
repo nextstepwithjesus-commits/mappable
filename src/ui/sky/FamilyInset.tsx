@@ -18,7 +18,8 @@ import { effect } from '@preact/signals';
 import { byId, graph, lineMembership, loadVerses } from '../../data/atlas.ts';
 import { familyScene, fanHeight, plotFamily, sourceBooks, sourceVerse, type FamScene, type FamUnion, type Hit, type Plot } from '../../engine/famplot.ts';
 import { drawInsetBack, drawInsetFrame, drawPlot, insetMeasure, type InsetLook } from '../../render/family-inset.ts';
-import { branchColor, KIN_GOLD, UNION_COLORS } from '../../render/branches.ts';
+import { KIN_GOLD, UNION_COLORS } from '../../render/branches.ts';
+import { branchKeysOf, branchOrTribeColor } from '../../render/light.ts';
 import { readPalette } from '../../render/sky.ts';
 import { coarsePointer, FONT_SANS, mapSize } from '../../render/type.ts';
 import { model, selected, theme } from '../../state.ts';
@@ -45,8 +46,12 @@ const PHONE_CARD = 104;
 
 type Box = { x: number; y: number; w: number; h: number };
 
-/** Цвет ветви i — как на небе (решение 69). */
-const branchHue = (i: number, th: 'night' | 'day') => branchColor(i, th);
+/**
+ * Цвет ветви i лица в центре врезки — тот же, что у неба (решения 69, 183): у Иакова и четырёх матерей — оттенок колена
+ * (сыны Лии, Рахили, Валлы, Зелфы), без перескока; у прочих — цвет ветви по кругу. Ветви врезки — ветви её центра,
+ * даже если выбран его ребёнок (src/render/light.ts).
+ */
+const hueOf = (center: string, i: number, th: 'night' | 'day') => branchOrTribeColor(center, branchKeysOf(center), i, th);
 
 const deps = () => {
   const chrono = model.peek().chrono;
@@ -279,7 +284,7 @@ export function FamilyInset() {
     const look: InsetLook = {
       night: th === 'night', sky: pal.sky, deep: pal.band, ink: pal.ink, ink2: pal.ink2, ink3: pal.ink3, kin: KIN_GOLD[th],
       mt: [pal.gold1, pal.gold2], lk: [pal.azure1, pal.azure2], husband: UNION_COLORS[th].husband, wife: UNION_COLORS[th].wife,
-      branch: (i) => branchHue(i, th), coarse,
+      branch: (i) => hueOf(scene!.focal.id, i, th), coarse,
     };
     const dpr = window.devicePixelRatio || 1;
     const W = sky.cam.w;
@@ -349,7 +354,7 @@ export function FamilyInset() {
     return best;
   };
   const local = (ev: { clientX: number; clientY: number }) => {
-    const r = cv.current!.getBoundingClientRect();
+    const r = (cv.current ?? document.querySelector('.fam-layer canvas'))?.getBoundingClientRect() ?? { left: 0, top: 0 };
     return { x: ev.clientX - r.left, y: ev.clientY - r.top };
   };
   const unionOf = (id: string) => plot?.order.find((o) => o.id === id)?.uid ?? null;
@@ -372,6 +377,8 @@ export function FamilyInset() {
     (ev.currentTarget as HTMLElement).style.cursor = h ? 'pointer' : '';
   };
   const onClick = (ev: MouseEvent) => {
+    // команды шапки и карточки источника, список лиц — свои кнопки; щелчок по ним не выбирает звезду под ними
+    if ((ev.target as Element | null)?.closest?.('button, a, q') || !cv.current) return;
     if (performance.now() < quietUntil.current) return;
     const q = local(ev);
     const h = pick(q.x, q.y);
@@ -426,6 +433,8 @@ export function FamilyInset() {
           data-family={center}
           // места звёзд врезки на холсте — «лицо:x,y» (сценарии приёмки 1220–1239)
           data-at={plot ? [...plot.at].map(([id, q]) => `${id}:${Math.round(q.x)},${Math.round(q.y - scroll)}`).join(';') : ''}
+          // пыль внуков — «лицо:x,y» середины поля щелчка (сценарий 1225)
+          data-dust={plot ? plot.hits.flatMap((h) => (h.kind === 'dust' ? [`${h.id}:${Math.round(h.x + 6)},${Math.round(h.y + h.h / 2 - scroll)}`] : [])).join(';') : ''}
           onPointerMove={onMove}
           onPointerLeave={() => setHover(null)}
           onPointerDown={(ev) => {
@@ -513,7 +522,7 @@ export function FamilyInset() {
             ))}
           </ul>
           {fu && (
-            <footer class="fi-src" style={{ '--fi-sw': fu.branch === null ? 'var(--ink-3)' : branchHue(fu.branch, th) }}>
+            <footer class="fi-src" style={{ '--fi-sw': fu.branch === null ? 'var(--ink-3)' : hueOf(center, fu.branch, th) }}>
               <div class="fi-who">
                 <span class="fi-nm">{fu.partner ? byId.get(fu.partner)?.name : unionWord(fu, female)}</span>
                 {fu.partner && <span class="fi-kind">{unionWord(fu, female)}</span>}

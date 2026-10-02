@@ -109,7 +109,7 @@ describe('шаги рассказа (решение 187; приёмка О6)', (
       const j = JSON.parse(readFileSync(join(dir, f), 'utf8')) as { book: string; verses: Record<string, string> };
       byBook.set(j.book, j.verses);
     }
-    const tsv = new Map(
+    const tsv = new Map<string, string>(
       readFileSync(join(__dirname, '..', 'tools/bible/synodal.tsv'), 'utf8')
         .split('\n')
         .filter(Boolean)

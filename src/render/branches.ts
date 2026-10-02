@@ -79,8 +79,9 @@ export const BRANCH_COLORS: Readonly<Record<MapTheme, readonly string[]>> = {
 export type TribeHueKey = 'leah' | 'rachel' | 'bilhah' | 'zilpah';
 export const TRIBE_HUE_KEYS: readonly TribeHueKey[] = ['leah', 'rachel', 'bilhah', 'zilpah'];
 export const TRIBE_HUES: Readonly<Record<MapTheme, Readonly<Record<TribeHueKey, string>>>> = {
-  night: { leah: '#30e978', rachel: '#9a75c8', bilhah: '#e8968e', zilpah: '#e960a2' },
-  day: { leah: '#004d20', rachel: '#8243d8', bilhah: '#ee341e', zilpah: '#cf4094' },
+  // сынов Лии больше всех (Левий и Иуда — половина неба): им — самый спокойный из четырёх, фиолетовый
+  night: { leah: '#9a75c8', rachel: '#30e978', bilhah: '#e8968e', zilpah: '#e960a2' },
+  day: { leah: '#8243d8', rachel: '#004d20', bilhah: '#ee341e', zilpah: '#cf4094' },
 };
 /** Строки легенды света (решение 183): чьи сыны и какие колена. */
 export const TRIBE_NAMES: Readonly<Record<TribeHueKey, { who: string; tribes: string }>> = {

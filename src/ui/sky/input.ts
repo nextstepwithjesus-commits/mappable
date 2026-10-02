@@ -39,7 +39,7 @@ import { typo } from '../text/typo.ts';
 import { kinLabel, kinMarks, linkInfo, linkRow, linkTitle, linkRefs, refShort } from '../linkwords.ts';
 import { relationsOf } from '../card/kinrows.ts';
 import { closeDot, dotCard, dotsOn, openDot } from './DotCard.tsx';
-import { focusGroup } from '../story/areas.ts';
+import { focusGroup, groupMembers, groupName } from '../story/areas.ts';
 import { openFamilyInset } from './inset.ts';
 
 export type { Tip };
@@ -580,6 +580,13 @@ export function openGap(sky: Pick<Sky, 'indexOf' | 'X0' | 'tOf'>, g: Pick<Ribbon
   }
 }
 
+/** Подсказка названия созвездия (этап 16, решение 185): «Колено Иудино: 259 лиц. Щёлкните — вписать и раскрыть созвездие». */
+export function groupTipText(gid: string): string {
+  const n = groupMembers(gid).length;
+  const word = n % 10 === 1 && n % 100 !== 11 ? 'лицо' : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 'лица' : 'лиц';
+  return typo(`${groupName(gid)}: ${n} ${word}. Щёлкните — вписать и раскрыть созвездие (в фокусе; Esc — вернуть)`);
+}
+
 /** Подсказка призрака: «Илий, отец — вне показа «Ключевые лица» — щёлкните, чтобы поставить на небо» (решение 156). */
 function ghostTipText(id: string, role: string, why: GhostWhy): string {
   const p = byId.get(id);
@@ -856,6 +863,17 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       if (hovered.value) hovered.value = null;
       setHot(true);
       showTip({ kind: 'note', key: `reveal:${foldHit.id}`, text: REVEAL_TIP, x, y, box: { x: foldHit.x, y: foldHit.y, w: foldHit.w, h: foldHit.h } });
+      return;
+    }
+    // название созвездия (этап 16, решение 185) — команда: «рука» и подсказка «Колено Иудино — 259 лиц: щёлкните, чтобы
+    // вписать и раскрыть созвездие»
+    const gHit = !edge && !pickMode.value ? sky.groupHits.find((q) => x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h) : undefined;
+    if (gHit) {
+      setPlate(null);
+      setLink(null);
+      if (hovered.value) hovered.value = null;
+      setHot(true);
+      showTip({ kind: 'note', key: `group:${gHit.group}`, text: groupTipText(gHit.group), x, y, box: { x: gHit.x, y: gHit.y, w: gHit.w, h: gHit.h } });
       return;
     }
     // призрак конца выбранной связи (К3) и «+N» в разрыве ленты (К4) — команды «показать»

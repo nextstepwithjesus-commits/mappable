@@ -687,7 +687,9 @@ function plotComb(S: FamScene, G: Geom): Plot {
       out.push(star(nd, xk, y, k, kInk, a, { glow: glowOf(nd.mg) * 0.7 }));
       const r = rOf(nd.mg, k);
       at.set(kid, { x: xk, y, r });
-      hits.push({ kind: 'person', id: kid, x: xk + 40, y, r: 22 });
+      // касание: звезда (22 px) и вся строка имени (решение 154: цели касания ≥ 44 px по высоте строки — сколько позволяет шаг)
+      hits.push({ kind: 'person', id: kid, x: xk, y, r: 22 });
+      hits.push({ kind: 'name', id: kid, x: xk, y: y - h / 2, w: Math.max(80, G.measure(nd.name, 'kid') + 30), h });
       order.push({ id: kid, ring: 'kid', uid: u.id });
       top.push({ t: 'label', x: xk + r + 7, y: y + 5, align: 'left', runs: [{ s: nd.name, font: nd.mg <= 1 ? 'kidStrong' : 'kid', ink: 'ink' }], a, id: kid });
       if (nd.mt || nd.lk) rib(dx, my, xk, y, nd.mt && F.mt, nd.lk && F.lk);

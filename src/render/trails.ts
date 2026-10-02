@@ -2660,7 +2660,9 @@ export function drawMotherNames(v: SkyContext, p: Pass, d: LinkDraw | null | und
     // её звезда видна рядом и в том же доме — имя у ромба повторило бы её подпись и спорило бы с ней (решения 160, 173);
     // у союзов выбранного — со словом вида (решение 174)
     const lab = unionLabel(v, n, x, y, true, said);
-    if (!lab) continue;
+    // одно слово вида («наложница») — не имя: оно идёт обычным ярусом после подписей звёзд (drawLinkLabels), иначе заняло
+    // бы место имени самой жены, а супруги выбранного подписаны всегда (решение 164)
+    if (!lab?.person) continue;
     const text = lab.text;
     const b = putLinkText(v, p, { text, x: x + 5, ax: x, y, dir: 0, right: true, id: n.union, side2: true, leader: true, ink: v.pal.ink, person: lab.person }, 1);
     if (b) {
@@ -2696,9 +2698,12 @@ export function drawLinkLabels(v: SkyContext, p: Pass, d: LinkDraw, late = false
   if (!said) nodeNames.set(p.placer, (said = []));
   // ромбов на «всех лицах» теснее поколения в 18 px нет (plates.ts, genRoom) — нет и имён у них (G6: подпись без знака)
   const noNodes = d.frame.layout === 'map' && v.genRoom < 0.5;
-  // слова вида союза — на масштабе семьи (решения 174, 178)
-  const words = p.tier >= 2;
+  // слова вида союза — на масштабе семьи (решения 174, 178) и у союзов выбранного (одно слово без имени — отсюда, после
+  // подписей звёзд: drawMotherNames его не ставит)
+  const sel = p.s.selected;
+  const mine = new Set(sel ? (ALL_UNIONS.of.get(sel) ?? []).map((u) => u.id) : []);
   for (const n of noNodes ? [] : d.frame.nodes) {
+    const words = p.tier >= 2 || mine.has(n.union);
     if (n.kind !== 'union' || !!n.late !== late || placed?.has(n.union)) continue;
     const x = n.x + d.dx;
     const y = n.y + d.dy;

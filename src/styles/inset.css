@@ -168,3 +168,15 @@
 .sky:has(.fam-sheet) .showbar {
   visibility: hidden;
 }
+/* касание (решение 154): цели команд врезки — не ниже 44 px */
+@media (pointer: coarse) {
+  .fam-inset .fi-cmds button,
+  .fam-inset .fi-read,
+  .fam-inset .fi-trail button {
+    min-height: 44px;
+    padding: 0 6px;
+  }
+  .fam-inset.fam-sheet .fi-cmds {
+    top: -10px;
+  }
+}

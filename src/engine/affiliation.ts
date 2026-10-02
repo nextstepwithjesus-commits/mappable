@@ -133,6 +133,27 @@ export function groupMother(gid: string): HueKey | null {
 }
 
 const memo = new Map<string, TribeKey>();
+const lineMemo = new Map<string, TribeKey | null>();
+/**
+ * Колено по линии предков для цвета (быстро, с памятью по предкам): родоначальник колена → мать, родоначальник народа →
+ * народы; иначе — по отцу, без отца — по матери (Чис 1:2, 18). Для строки паспорта — byAncestry (уровни достоверности).
+ */
+function lineKey(id: string, depth = 0): TribeKey | null {
+  const hit = lineMemo.get(id);
+  if (hit !== undefined) return hit;
+  if (TRIBE_MOTHER[id]) return TRIBE_MOTHER[id];
+  if (isNationFounder(id)) return 'nations';
+  if (depth > 160) return null;
+  lineMemo.set(id, null);
+  let k: TribeKey | null = null;
+  const ps = graph.parentsOf.get(id) ?? [];
+  const f = ps.find((e) => e.kind === 'father');
+  const m = ps.find((e) => e.kind === 'mother');
+  if (f) k = lineKey(f.parent, depth + 1);
+  if (!k && m) k = lineKey(m.parent, depth + 1);
+  lineMemo.set(id, k);
+  return k;
+}
 /** Ключ по родословию без брака: колено по предкам, сын или дочь Иакова, прозвание, служение левита. */
 function ownKey(id: string): TribeKey | null {
   if (ANCESTRESS[id]) return ANCESTRESS[id];
@@ -140,8 +161,8 @@ function ownKey(id: string): TribeKey | null {
   if (!p) return null;
   // дети Иакова — по матери (Дина, дочь Лии, Быт 30:21)
   if (p.father === REF_DEFAULT && p.mother && ANCESTRESS[p.mother]) return ANCESTRESS[p.mother];
-  const a = byAncestry(id);
-  if (a) return TRIBE_MOTHER[a.founder] ?? 'nations';
+  const a = lineKey(id);
+  if (a) return a;
   const dis = p.disambig ?? '';
   for (const [re, tribe] of TRIBE_GENTILIC) if (re.test(dis)) return TRIBE_MOTHER[tribe];
   if (p.roles.includes('levite')) return 'leah';

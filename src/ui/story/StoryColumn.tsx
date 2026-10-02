@@ -16,7 +16,7 @@ import { selected, theme } from '../../state.ts';
 import { goTo, Verses } from '../common.tsx';
 import { typo } from '../text/typo.ts';
 import { refText } from '../../engine/kinship.ts';
-import { branchColor } from '../../render/branches.ts';
+import { branchHue } from '../../render/light.ts';
 import { factRows, type FactRow } from './facts.ts';
 import {
   STORY_STEPS, STORY_TITLE, closeStory, goStep, nextStep, openStoryCard, prevStep, returnToStep, stepEpoch, stepSub, storyMoved, storySaid, storyStep,
@@ -48,12 +48,15 @@ function Names({ ids }: { ids: readonly string[] }) {
   );
 }
 
-/** Строка из графа: ветвь (черта цвета ветви неба, мать — дети, стих) или место на лентах Мессии. */
-function Fact({ f }: { f: FactRow }) {
+/**
+ * Строка из графа: ветвь (черта цвета ветви неба, мать — дети, стих) или место на лентах Мессии. Цвет черты — тот же,
+ * что у ветви на небе (src/render/light.ts, branchHue): у Иакова и его жён — оттенок колена, «без перескока» (решение 183).
+ */
+function Fact({ f, focus }: { f: FactRow; focus: string }) {
   if (f.kind === 'branch')
     return (
       <li class="story-fact branch" data-branch={f.i}>
-        <span class="story-sw" aria-hidden="true" style={{ background: branchColor(f.i, theme.value) }} />
+        <span class="story-sw" aria-hidden="true" style={{ background: branchHue(focus, f.i, theme.value) }} />
         {f.other ? (
           <>
             <Who id={f.other} />
@@ -194,7 +197,7 @@ export function StoryBody({ phone }: { phone: boolean }) {
       {facts.length > 0 && (
         <ul class="story-facts" aria-label={facts[0].kind === 'branch' ? 'Ветви опорного лица' : 'Ленты Мессии'}>
           {facts.map((f, k) => (
-            <Fact key={k} f={f} />
+            <Fact key={k} f={f} focus={st.focus} />
           ))}
         </ul>
       )}

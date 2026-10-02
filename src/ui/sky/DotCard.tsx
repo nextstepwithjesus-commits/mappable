@@ -42,7 +42,7 @@ import { askCards, cardsTick, disLine, onLines, othersNote, othersUnionOf, union
 import { familyOf, kinNamesakes, kinRows, relationsOf, yearHow, type KinPart, type KinRow } from '../card/kinrows.ts';
 import { kidsInBirthOrder } from '../card/Union.tsx';
 import { branchesOf, partnerIn } from '../../engine/unions.ts';
-import { branchColor } from '../../render/branches.ts';
+import { branchOrTribeColor } from '../../render/light.ts';
 import { passportYears, isPeople } from '../card/Masthead.tsx';
 import { closePerson, collapseUnion, expanded, opened, openPerson, originOf, plates, selectedUnion, selectUnion, unionById, unionsOf, unions } from '../reveal.ts';
 import { addPath, foldDesc, foldGroups, foldsHiding, linkSet, workSet } from '../work.ts';
@@ -1318,7 +1318,8 @@ function FamilyLegend({ id, onAll }: { id: string; onAll?: () => void }) {
   const rows: ComponentChildren[] = [];
   const sw = (key: string) => {
     const b = br.keys.indexOf(key);
-    return b < 0 ? null : <i class="dc-sw" aria-hidden="true" style={{ '--sw': branchColor(b, th) }} />;
+    // цвет ветви — как на небе: у Иакова и четырёх матерей — оттенок колена, без перескока (решения 69, 183; src/render/light.ts)
+    return b < 0 ? null : <i class="dc-sw" aria-hidden="true" style={{ '--sw': branchOrTribeColor(id, br.keys, b, th) }} />;
   };
   const preview = (keys: readonly LinkKey[] | null) => {
     previewLinks.value = keys && keys.length ? keys : null;

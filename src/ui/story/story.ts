@@ -16,8 +16,6 @@ import { pickMode, selected, model, panel } from '../../state.ts';
 import { skyRef, viewTick } from '../common.tsx';
 import { moveTo, viewForFrame, type GroupView } from '../sky/view.ts';
 import { setShow, show } from '../show.ts';
-import { grid } from '../layout.ts';
-import { openSheetAt } from '../sheet.ts';
 import { toAstro } from '../../engine/years.ts';
 import { epochSpanText } from '../../engine/years.ts';
 import { STORY_STEPS, groupFocus, stepAt, storyCard, storyMoved, storyStep, type StoryStep } from './state.ts';
@@ -125,11 +123,8 @@ export function goStep(i: number, how: 'flight' | 'back' | 'jump' | 'none' = 'fl
     storyMoved.value = false;
     if (groupFocus.peek()) groupFocus.value = null;
     if (pickMode.peek()) pickMode.value = null;
-    if (selected.peek() !== st.focus) {
-      // телефон: лист рассказа — на краткой карточке, небо над ним показывает кадр
-      if (grid.peek().phone) openSheetAt('peek');
-      selected.value = st.focus;
-    }
+    // телефон: лист рассказа остаётся в своём положении (выбор изнутри листа, src/ui/sheet.ts), при первом шаге — 55 %
+    if (selected.peek() !== st.focus) selected.value = st.focus;
   });
   storySaid.value = stepAnnounce(idx);
   if (how !== 'none') frame(idx, how);

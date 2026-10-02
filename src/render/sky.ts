@@ -45,6 +45,10 @@ import type { KinStep } from '../engine/kinship.ts';
 import type { ModelData, NodeRow } from '../data/atlas.ts';
 import { byId, graph, groupById, lines } from '../data/atlas.ts';
 import { nameCase } from '../ui/text/ru.ts';
+import { LightLayer, mouthsOf, type LightInput } from './light.ts';
+import { refPerson } from '../engine/affiliation.ts';
+import { groupReveal, inFocus, revealFactors } from '../ui/story/density.ts';
+import { groupFocus } from '../ui/story/state.ts';
 
 // рамка и атласная координата — src/render/frame.ts; прежние импорты из sky.ts продолжают работать
 export { FRAME_H, BAND, atlasCoord } from './frame.ts';
@@ -1368,6 +1372,11 @@ export class Sky implements SkyContext {
   private bandsOn = false;
   fillGround(x0: number, x1: number, y: number, h: number) {
     const { ctx, cam, pal } = this;
+    // подложка пропускает свет (решение 182): под подписью гаснут линии основного холста, слой света под ним виден
+    if (this.light) {
+      ctx.clearRect(x0, y, x1 - x0, h);
+      return;
+    }
     ctx.save();
     ctx.globalAlpha = 1;
     ctx.fillStyle = pal.sky;
@@ -2117,8 +2126,13 @@ export class Sky implements SkyContext {
   draw(s: SkyState, under?: () => void) {
     const { ctx, cam, pal } = this;
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
-    ctx.fillStyle = pal.sky;
-    ctx.fillRect(0, 0, cam.w, cam.h);
+    // слой света (решение 182) — отдельный холст под основным: основной прозрачен, небо и эпохи — в слое света
+    const light = this.lightLayer();
+    if (light) ctx.clearRect(0, 0, cam.w, cam.h);
+    else {
+      ctx.fillStyle = pal.sky;
+      ctx.fillRect(0, 0, cam.w, cam.h);
+    }
     const hl = s.highlight;
     const L = s.layers;
     const lineOnly = s.onlyLines;
@@ -2221,12 +2235,13 @@ export class Sky implements SkyContext {
     for (const r of s.reserve ?? []) p.placer.add(r);
 
     this.bandsOn = !!L.epochs;
-    if (L.epochs) this.drawEpochBands();
+    if (L.epochs && !light) this.drawEpochBands();
     drawTimeMarks(this);
     const events = drawEventLines(this);
     const ticks = yearTicks(this);
     drawGrid(this, ticks);
-    if (!lineOnly && !work) this.drawClouds(dd.stars, !!hl);
+    if (light) this.lightFrame(light, s, p, !lineOnly && !work && !under);
+    else if (!lineOnly && !work) this.drawClouds(dd.stars, !!hl);
     const constellations = L.constellations && !lineOnly && !work;
     const spots = constellations ? this.drawConstellations(p) : [];
     p.vis = this.visible(p);
@@ -2234,7 +2249,10 @@ export class Sky implements SkyContext {
     this.pileUp(p);
     if (!lineOnly && !work) this.drawClusters(p);
     // следы и связи проявляются с подробностью кадра; выделенные — всегда в полную силу
-    const lit = (i: number) => lineOnly || (!!hl && hl.has(this.nodes[i].person)) || s.pins.has(this.nodes[i].person);
+    // созвездие в фокусе (решение 185) раскрыто целиком: его следы и связи — в полную силу на любом масштабе
+    const focusG = groupFocus.peek();
+    const inFocusOf = (i: number) => !!focusG && inFocus(byId.get(this.nodes[i].person)?.group ?? '', focusG);
+    const lit = (i: number) => lineOnly || (!!hl && hl.has(this.nodes[i].person)) || s.pins.has(this.nodes[i].person) || inFocusOf(i);
     const layer = (draw: (q: Pass) => void) => {
       if (detail >= 0.99) return draw(p);
       const faint = p.vis.filter((i) => !lit(i));
@@ -2476,6 +2494,10 @@ export class Sky implements SkyContext {
       put('trans', this.transitioning ? this.transitionT().toFixed(3) : '');
       put('folds', this.plan.marks.map((m) => `${m.kind}:${m.id}:${m.count}`).join(';'));
       put('foldHits', this.foldHits.map((h) => `${h.kind}:${h.id}:${[h.x, h.y, h.w, h.h].map(Math.round).join(',')}`).join(';'));
+      // слой света (решения 182, О2): длительность последней сборки, мс, и число сборок
+      put('light', this.light ? `${this.light.lastBuildMs.toFixed(1)} ${this.light.builds} ${this.light.lastBuildSeg}` : '');
+      // места названий созвездий (решение 185, сценарий 1212): щелчок по названию — фокус созвездия (src/ui/sky/input.ts)
+      put('groupHits', this.groupHits.map((h) => `${h.group}:${[h.x, h.y, h.w, h.h].map(Math.round).join(',')}`).join(';'));
       // точки союзов (решения 70, 76): «союз:раскрыт (1/0):x,y,w,h» — поле попадания, для проверок приёмки
       // tools/accept/reveal4.ts; центры ромбов и «+N» — canvas[data-dots], линии — canvas[data-union-lines] (plates.ts)
       put('plates', this.plateHits.map((h) => `${h.uid}:${h.open ? 1 : 0}:${[h.x, h.y, h.w, h.h].map(Math.round).join(',')}`).join(';'));
@@ -2756,6 +2778,19 @@ export class Sky implements SkyContext {
     const work = this.plan.mode === 'work';
     const mag = this.nodeMags();
     const pins = s.pins.size ? s.pins : null;
+    // свой порог раскрытия созвездия и фокус (решение 185; src/ui/story/density.ts): у звёзд величины больше 2 — по
+    // «своей» высоте строки созвездия; созвездие в фокусе раскрыто целиком, прочие остаются светом
+    const focus = groupFocus.peek();
+    const factors = this.model ? revealFactors(this.model.outlines, this.model.scale) : null;
+    const tDetail = detailOf(this.cam).time;
+    const rv = new Map<string, number>();
+    const revealOf = (i: number) => {
+      const g = byId.get(this.nodes[i].person)?.group;
+      if (!g || !factors) return detail;
+      let r = rv.get(g);
+      if (r === undefined) rv.set(g, (r = focus ? groupReveal(g, this.cam.ky, factors, focus) : Math.max(tDetail, groupReveal(g, this.cam.ky, factors, null))));
+      return r;
+    };
     for (let i = 0; i < this.nodes.length; i++) {
       const n = this.nodes[i];
       // скрытое набором или свёрткой не рисуется; лица набора в режиме «В работе» видны все (J4, J5)
@@ -2776,7 +2811,7 @@ export class Sky implements SkyContext {
       // призрак — с масштаба семьи; у семьи выбранного и пути родства — всегда (меридиан года «живы» призраков не зажигает)
       else if (n.ghost && !pinned && (k === undefined || k === 'sure' || k === 'likely')) A[i] = (mag[i] <= OVERVIEW_MAG ? 1 : detail) * ghostA;
       else if (k !== undefined || pinned || (s.onlyLines && spine.has(n.person))) A[i] = 1;
-      else A[i] = mag[i] <= OVERVIEW_MAG ? 1 : detail;
+      else A[i] = mag[i] <= OVERVIEW_MAG ? 1 : revealOf(i);
     }
   }
 
@@ -2794,6 +2829,130 @@ export class Sky implements SkyContext {
         ctx.fillRect(a, 0, b - a, H);
       }
     });
+  }
+
+  // ---------- слой света (этап 16, решения 182, 183, 185) ----------
+
+  /** Слой света под основным холстом; null — без страницы (тесты) или холст ещё не в документе: прежние облака. */
+  private light: LightLayer | null = null;
+  private lightTried = false;
+  /** номера планов показа для ключа слоя света (план — новый объект при смене показа) */
+  private planIds = new WeakMap<object, number>();
+  private planSeq = 0;
+  private lightLayer(): LightLayer | null {
+    if (this.light || this.lightTried) return this.light;
+    const parent = typeof document !== 'undefined' ? this.canvas.parentElement : null;
+    if (!parent || typeof parent.attachShadow !== 'function' || typeof ImageData === 'undefined') return null;
+    this.lightTried = true;
+    try {
+      this.light = new LightLayer(this.canvas);
+      this.groundify();
+    } catch {
+      this.light = null;
+    }
+    return this.light;
+  }
+
+  /**
+   * Подложки пропускают свет (решение 182): основной холст прозрачен, и всё, что он закрашивал цветом неба или полосы
+   * эпохи — ореолы знаков, вырезы под лентами и связями, подложки, — теперь вырезается до слоя света
+   * (destination-out с той же непрозрачностью). Над слоем без света вид тот же; над туманностью и огоньком под
+   * знаком нет тёмной дыры. Не трогаются: ореолы текста (тёмный ореол держит контраст подписи над светом, ТЗ § 3.8) и
+   * рамка неба у края холста (линейка, буквы полос, нижняя строка — непрозрачные, как прежде).
+   */
+  private groundify() {
+    const ctx = this.ctx as CanvasRenderingContext2D & Record<string, unknown>;
+    const sky = this;
+    const ground = (st: unknown): boolean => {
+      if (typeof st !== 'string') return false;
+      const p = sky.pal;
+      const c = st.trim().toLowerCase();
+      if (c[0] === '#') return c === p.sky.toLowerCase() || c === p.band.toLowerCase() || c === p.halo.toLowerCase();
+      const m = /^rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(c);
+      if (!m) return false;
+      const rgb = `${m[1]},${m[2]},${m[3]}`;
+      return [p.sky, p.band, p.halo].some((h) => hexToRgb(h).join(',') === rgb);
+    };
+    const cut = (name: 'fill' | 'stroke' | 'fillRect' | 'strokeRect', style: 'fillStyle' | 'strokeStyle') => {
+      const f = ctx[name] as (...a: unknown[]) => void;
+      ctx[name] = function (this: CanvasRenderingContext2D, ...a: unknown[]) {
+        // рамка неба у края холста — непрозрачная, как прежде
+        if (name === 'fillRect') {
+          const [x, y, w, h] = a as number[];
+          const c = sky.cam;
+          if (x <= 0.5 || y <= 0.5 || x + w >= c.w - 0.5 || y + h >= c.h - 0.5) return f.apply(this, a);
+        }
+        if (!sky.light || !ground(this[style])) return f.apply(this, a);
+        const op = this.globalCompositeOperation;
+        this.globalCompositeOperation = 'destination-out';
+        f.apply(this, a);
+        this.globalCompositeOperation = op;
+      } as never;
+    };
+    cut('fill', 'fillStyle');
+    cut('fillRect', 'fillStyle');
+    cut('stroke', 'strokeStyle');
+    cut('strokeRect', 'strokeStyle');
+  }
+
+  /** Кадр слоя света: перенос или сборка (на покое; решение 182). */
+  private lightFrame(light: LightLayer, s: SkyState, p: Pass, nebula: boolean) {
+    const cam = this.cam;
+    const m = this.model;
+    let pid = this.planIds.get(this.plan);
+    if (pid === undefined) this.planIds.set(this.plan, (pid = ++this.planSeq));
+    const focus = groupFocus.peek();
+    const factors = revealFactors(m.outlines, m.scale);
+    const ky = cam.ky;
+    const hl = s.highlight;
+    const inp: LightInput = {
+      key: [
+        this.pal.glow ? 'n' : 'd',
+        this.pal.sky,
+        m.id,
+        this.lambda,
+        pid,
+        s.selected ?? '',
+        s.second ?? '',
+        hl ? hl.size : 0,
+        s.depth?.size ?? 0,
+        focus ?? '',
+        nebula ? 1 : 0,
+        this.bandsOn ? 1 : 0,
+        s.intro < 1 ? Math.ceil(s.intro * 4) : 'i',
+        this.nodes.length,
+        s.layers.ghosts ? 1 : 0,
+      ].join('|'),
+      view: this.lightView(),
+      pal: { sky: this.pal.sky, band: this.pal.band, ink: this.pal.ink, glow: !!this.pal.glow },
+      nodes: this.nodes,
+      X0: this.X0,
+      X1: this.X1,
+      xOf: (t) => this.xOf(t),
+      starA: this.starA,
+      bands: this.bandsOn ? this.epochX.filter((_, k) => k % 2 === 1) : null,
+      nebula,
+      detail: p.starDetail,
+      reveal: (gid) => groupReveal(gid, ky, factors, focus),
+      emph: (id) => p.emph(id),
+      ref: refPerson(s.selected),
+      spine: p.spine,
+      mouths: this.plan.layout === 'family' ? [] : mouthsOf(m),
+      intro: s.intro,
+    };
+    light.frame(inp, cam.moving || this.scaleMoving || this.viewMoving || !!this.trans);
+  }
+  private lightView() {
+    const cam = this.cam;
+    return { w: cam.w, h: cam.h, kx: cam.kx, ky: cam.ky, x0: cam.x0, laneTop: cam.laneTop, rowsKey: cam.rows.key, sx: (x: number) => cam.sx(x), sy: (l: number) => cam.sy(l) };
+  }
+  /** Созвездие, чей свет (туманность или устье) под точкой (x, y) px холста (решение 185: щелчок по свету — фокус). */
+  lightGroupAt(x: number, y: number): string | null {
+    return this.light ? this.light.groupAt(x, y, this.lightView()) : null;
+  }
+  /** Замер О2: длительность последней сборки слоя света, мс, и число сборок. */
+  get lightStats(): { ms: number; builds: number } | null {
+    return this.light ? { ms: this.light.lastBuildMs, builds: this.light.builds } : null;
   }
 
   // ---------- облака плотности (E3) ----------

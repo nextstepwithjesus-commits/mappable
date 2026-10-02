@@ -136,7 +136,8 @@ export const start4: Scenario[] = [
         if (labels(s) !== NAMES.join('|')) return fail(`${w}: начала: ${labels(s)}`);
         const cols = new Set(s.map((x) => Math.round(x.l))).size;
         const rows = new Set(s.map((x) => Math.round(x.top))).size;
-        if (cols !== 2 || rows !== 3) return fail(`${w}: начала ${cols} столбца × ${rows} строки`);
+        // этап 16 (решение 187): шесть начал — третье и шестое во всю ширину сетки: 2 + 1 + 2 + 1 = 4 строки
+        if (cols !== 2 || rows !== 4) return fail(`${w}: начала ${cols} столбца × ${rows} строки`);
         const r = (await p.evaluate(`(() => {
           const c = document.querySelector('.cartouche'), cb = c.getBoundingClientRect(), l = c.querySelector('.long').getBoundingClientRect();
           const e = [...c.querySelectorAll('.entry button')].map((b) => b.getBoundingClientRect().bottom);
@@ -146,7 +147,7 @@ export const start4: Scenario[] = [
         if (r.scroll > 1) return fail(`${w}: вступление прокручивается на ${r.scroll} px`);
         if (!r.long || !r.entries) return fail(`${w}: главная фраза или входы за краем вступления`);
         if (r.over) return fail(`${w}: название начала не помещается в свою клетку`);
-        out.push(`${w}: 2 × 3`);
+        out.push(`${w}: 2 × 4`);
       }
       await p.locator('.cartouche .starts button', { hasText: 'Родословие Иисуса Христа' }).click();
       await p.waitForTimeout(2000);

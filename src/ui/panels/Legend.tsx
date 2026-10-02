@@ -26,7 +26,8 @@ import { Avatar, UnnamedAvatar } from '../card/Avatar.tsx';
 import { alpha } from '../../render/color.ts';
 import { drawBirthBand, drawGlyph, roleSigla, starRadius, type GlyphOpts } from '../../render/glyphs.ts';
 import { drawWorkMark, focusBrackets, focusHalf, highlightFor } from '../../render/marks.ts';
-import { drawBranchSample } from '../../render/branches.ts';
+import { drawBranchSample, TRIBE_HUE_KEYS, TRIBE_NAMES } from '../../render/branches.ts';
+import { drawLightSample, type LightSign } from '../../render/light.ts';
 import { drawLinkSample, type LinkSign } from '../../render/plates.ts';
 import { drawStrands, lineNoteHits, ribbonLook } from '../../render/ribbons.ts';
 import { drawFoldMark } from '../../render/labels.ts';
@@ -84,6 +85,8 @@ const px = (v: number) => Math.round(v) + 0.5;
 
 /** Знак грамматики связей — образцом неба (drawLinkSample). */
 const linkSign = (sign: LinkSign): Painter => (ctx, pal, w, h) => drawLinkSample(ctx, pal, w, h, sign);
+/** Знак света неба (этап 16, решения 182–184) и врезки семьи (решение 186) — образцом неба drawLightSample (src/render/light.ts). */
+const lightSign = (sign: LightSign): Painter => (ctx, pal, w, h) => drawLightSample(ctx, { ...pal, glow: !!pal.glow }, w, h, sign);
 /** Знак «Семьи на небе» (этап 15, решение 180) — образцом неба drawFamilySample (src/render/trails.ts). */
 const familySign = (sign: FamilySign): Painter => (ctx, pal, w, h) => drawFamilySample(ctx, pal, w, h, sign);
 
@@ -92,6 +95,17 @@ export const PAINTERS = {
    * «Семья на небе» (этап 15, решение 180): лицо со следом и переходом, союз по виду брака, мать не названа, дети от
    * следа матери, призрак, указатель шатра, станция ленты, пересечение и соединение — образцами неба drawFamilySample
    */
+  /** свет неба (этап 16, решения 182–184): туманность, устье, пыль, огоньки по величине и по коленам; врезка семьи (186) */
+  lightNebula: lightSign('nebula'),
+  lightMouth: lightSign('mouth'),
+  lightDust: lightSign('dust'),
+  lightHalo: lightSign('halo'),
+  tribeLeah: lightSign('leah'),
+  tribeRachel: lightSign('rachel'),
+  tribeBilhah: lightSign('bilhah'),
+  tribeZilpah: lightSign('zilpah'),
+  tribeSilver: lightSign('silver'),
+  inset: lightSign('inset'),
   familyGlide: familySign('glide'),
   familyUnions: familySign('unions'),
   familyNoMother: familySign('nomother'),
@@ -614,6 +628,9 @@ function Wide({ s, children }: { s: ComponentChildren; children: ComponentChildr
   );
 }
 
+/** Образец оттенка колена (решение 183). */
+const TRIBE_PAINTER = { leah: 'tribeLeah', rachel: 'tribeRachel', bilhah: 'tribeBilhah', zilpah: 'tribeZilpah' } as const;
+
 /** Ширина образца в строке с пояснением справа. */
 const SW = 96;
 const P = (k: PainterKey, h = 26) => <Paint draw={PAINTERS[k]} w={SW} h={h} />;
@@ -734,6 +751,11 @@ export function LegendPanel() {
             <b>{r.head}.</b> {r.text}
           </Wide>
         ))}
+        {/* врезка «Семья созвездием» (этап 16, решение 186): знак — образцом неба drawLightSample('inset') */}
+        <Wide s={<Paint draw={PAINTERS.inset} h={70} />}>
+          <b>Врезка семьи — без шкалы времени: дети по порядку рождения сверху вниз.</b> Пунктирная рамка на небе — место
+          семьи, две выноски ведут к врезке; в ней дети расходятся веером от матери.
+        </Wide>
       </ul>
 
       <h3 id="legend-sky">Небо</h3>
@@ -760,10 +782,34 @@ export function LegendPanel() {
           Точечная черта с подписью вдоль неё — постоянный меридиан события: Потоп, призвание Аврама, Исход, закладка
           храма, плен, возвращение, Рождество Христово.
         </Wide>
-        <Wide s={C('clouds', 90)}>
-          На обзоре — облака: чем светлее, тем больше лиц родилось в этом месте неба. Видны только самые яркие звёзды;
-          при приближении облака гаснут, проявляются все звёзды, следы и связи.
+        {/* свет неба (этап 16, решения 182–184): образцы — те же функции, что слой света (src/render/light.ts) */}
+        <Wide s={<Paint draw={PAINTERS.lightNebula} h={70} />}>
+          На обзоре — туманности: это следы жизни лиц, слишком тесные, чтобы различить каждый. Чем больше лиц рода жило в
+          эти годы в этих строках неба, тем туманность ярче. Видны только самые яркие звёзды; при приближении туманность
+          распадается на настоящие следы и гаснет, проявляются все звёзды и связи.
         </Wide>
+        <Row s={P('lightMouth', 40)}>
+          Устье — мазок от звезды родоначальника в отчем доме к середине его рода: так из дома Иакова выходят колена
+        </Row>
+        <Row s={P('lightDust')}>звёздная пыль — лица, ещё не ставшие звёздами на этом масштабе: каждая точка — лицо</Row>
+        <Row s={P('lightHalo', 40)}>
+          огонёк — величина звезды: ореол у звёзд 0–2 на обзоре и 0–4 вблизи, ярче у более значимых лиц; лучей нет — лучи
+          только у звезды Иисуса Христа
+        </Row>
+        {TRIBE_HUE_KEYS.map((k) => (
+          <Row key={k} s={P(TRIBE_PAINTER[k], 34)}>
+            {TRIBE_NAMES[k].who} — {TRIBE_NAMES[k].tribes}
+          </Row>
+        ))}
+        <Row s={P('tribeSilver', 34)}>народы и лица до колен — свет без оттенка</Row>
+        <li class="legend-row legend-wide">
+          <span class="legend-text">
+            Цвет огонька и туманности — колено по матери его родоначальника (Быт 35:23–26), пока опорное лицо неба — Иаков:
+            без выбора, при выборе Иакова и при выборе одной из четырёх матерей. Колено считается по отцам; если родословие
+            не доведено до сына Иакова — по созвездию, у жён — по колену мужа. При выборе другого лица свет без оттенка, а
+            цвет переходит к ветвям выбранного лица. Линии и текст цвета колена не несут.
+          </span>
+        </li>
         <Wide s={C('house', 110)}>
           Сплошной контур — созвездие: род, колено. Пунктирный контур внутри — дом внутри колена (здесь — священники, сыны
           Аароновы, в колене Левиином). Названия созвездий набраны прописными вразрядку и не закрывают звёзд: где места
@@ -849,8 +895,8 @@ export function LegendPanel() {
         <li class="legend-row legend-wide">
           <span class="legend-text">
             {/* имена начал — те же, что в интерфейсе (STARTS, LINES_TITLE в src/ui/reveal.ts; tests/start-m3.test.ts) */}
-            Начало — «С Адама», «С Иисуса Христа», «Родословие Иисуса Христа (Мф 1, Лк 3)», «Ключевые лица» или «Всё небо»
-            — выбирается при первом посещении. Первые два начинают набор с одного лица, его карточка у звезды открыта;
+            Начало — «С Адама», «С Иисуса Христа», «Родословие Иисуса Христа (Мф 1, Лк 3)», «Ключевые лица», «Всё небо»
+            или «Рассказ: от Адама до Иисуса Христа» — выбирается при первом посещении. Первые два начинают набор с одного лица, его карточка у звезды открыта;
             «Родословие Иисуса Христа (Мф 1, Лк 3)» — показ линий Мессии; «Ключевые лица» и «Всё небо» — одноимённые показы.
             «Начать заново» — в листе «Вид», в панели «Набор» и в меню «Ещё».
           </span>
