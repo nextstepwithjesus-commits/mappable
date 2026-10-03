@@ -16,7 +16,7 @@ import { contrast, linearRgb } from '../src/ui/contrast.ts';
 import { over } from '../src/render/dim.ts';
 import {
   BRANCH_COLORS, BRANCH_CONTRAST, BRANCH_DE, BRANCH_FADE, BRANCH_FAR_CONTRAST, BRANCH_SHADES, branchColor, branchFade, branchFloor,
-  branchTickAt, drawBranchSample, GlowBatch, glowLayers, type MapTheme,
+  branchTickAt, drawBranchSample, GlowBatch, GLOWS_ON, glowLayers, type MapTheme,
 } from '../src/render/branches.ts';
 
 // ---------- цвета темы из tokens.css ----------
@@ -109,7 +109,7 @@ describe('палитра ветвей (решение 69)', () => {
   });
 });
 
-describe('свечение (GlowBatch): один путь на цвет и силу, ночью — lighter', () => {
+describe('свечение (GlowBatch): один путь на цвет и силу; этап 17 — свечения нет (решение 191)', () => {
   type Call = [string, ...unknown[]];
   const rec = () => {
     const calls: Call[] = [];
@@ -119,17 +119,19 @@ describe('свечение (GlowBatch): один путь на цвет и си�
     });
     return { ctx: ctx as unknown as CanvasRenderingContext2D, calls };
   };
-  // этап 14, решение 170 (V-8): днём у ветвей свечения нет (прежде — один тон под линией), ночью — два слоя, вдвое слабее
-  it('тысяча отрезков двух цветов — два пути на слой; ночью — два слоя в режиме lighter, днём — без свечения', () => {
+  // этап 14, решение 170 (V-8): днём у ветвей свечения нет. Этап 17, решение 191 (просьба владельца 3 октября: «эти
+  // совершенно непонятные свечения вносят путаницу»): свечения нет и ночью — пакет собирает пути и при сбросе только
+  // очищается, не рисуя ни одного слоя и не включая режим lighter
+  it('тысяча отрезков двух цветов — два пути; сброс ничего не рисует ни ночью, ни днём (решение 191)', () => {
+    expect(GLOWS_ON).toBe(false);
     for (const night of [true, false]) {
       const r = rec();
       const g = new GlowBatch(glowLayers('branch', night ? 'night' : 'day'));
       for (let k = 0; k < 1000; k++) g.add(k % 2 ? '#48fd8b' : '#9a75c8', 1, k, 0, k, 10);
       expect(g.size).toBe(2);
       g.flush(r.ctx, night);
-      const strokes = r.calls.filter((c) => c[0] === 'stroke').length;
-      expect(strokes).toBe(2 * (night ? 2 : 0));
-      expect(r.calls.some((c) => c[0] === '=globalCompositeOperation' && c[1] === 'lighter')).toBe(night);
+      expect(r.calls.filter((c) => c[0] === 'stroke').length).toBe(0);
+      expect(r.calls.some((c) => c[0] === '=globalCompositeOperation' && c[1] === 'lighter')).toBe(false);
       expect(g.size).toBe(0);
     }
   });
@@ -137,7 +139,7 @@ describe('свечение (GlowBatch): один путь на цвет и си�
     expect(glowLayers('branch', 'night', true)).toEqual(glowLayers('branch', 'night').slice(-1));
     expect(glowLayers('ancestor', 'day', true).length).toBe(1);
   });
-  it('образец для «Условных знаков» рисует три цвета ветвей и свечение', () => {
+  it('образец для «Условных знаков» рисует три цвета ветвей без свечения (решение 191)', () => {
     const r = rec();
     drawBranchSample(r.ctx, { glow: true, sky: TOK.night['--sky'], band: TOK.night['--sky-band'], ink: TOK.night['--ink'], ink2: TOK.night['--ink-2'] }, 240, 64);
     const styles = r.calls.filter((c) => c[0] === '=strokeStyle').map((c) => String(c[1]));
@@ -145,7 +147,7 @@ describe('свечение (GlowBatch): один путь на цвет и си�
       const [R, G, B] = rgb(c);
       expect(styles.some((s) => s.startsWith(`rgba(${R},${G},${B},`)), c).toBe(true);
     }
-    expect(r.calls.some((c) => c[0] === '=globalCompositeOperation' && c[1] === 'lighter')).toBe(true);
+    expect(r.calls.some((c) => c[0] === '=globalCompositeOperation' && c[1] === 'lighter')).toBe(false);
   });
 });
 
@@ -254,7 +256,7 @@ describe('на небе (trails.ts): следы и отводы потомков
     const [r, g, b] = rgb(hex);
     return `rgba(${r},${g},${b},`;
   };
-  it('Авраам выбран: след Измаила — фиолетовым, отводы к потомкам — цветом ветви и штрихом [4, 3]; свечение — lighter', () => {
+  it('Авраам выбран: след Измаила — фиолетовым, отводы к потомкам — цветом ветви и штрихом [4, 3]; свечения нет (решение 191)', () => {
     const { s, rec } = makeSky();
     s.cam.zoomAt(720, 400, 40);
     s.cam.x0 = s.nodeX('izmail')! - 600 / s.cam.kx;
@@ -270,7 +272,7 @@ describe('на небе (trails.ts): следы и отводы потомков
     trails.drawTrails(s, p);
     const styles = rec.calls.filter((c) => c[0] === '=strokeStyle').map((c) => String(c[1]));
     expect(styles.some((x) => x === `${rgba(BRANCH_COLORS.night[1])}1)`)).toBe(true);
-    expect(rec.calls.some((c) => c[0] === '=globalCompositeOperation' && c[1] === 'lighter')).toBe(true);
+    expect(rec.calls.some((c) => c[0] === '=globalCompositeOperation' && c[1] === 'lighter')).toBe(false);
     rec.calls.length = 0;
     trails.drawDescents(s, p);
     // отвод к сыну Измаила: цвет ветви во втором поколении (0,75) и штрих потомка

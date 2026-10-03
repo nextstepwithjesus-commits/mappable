@@ -209,6 +209,9 @@ export function glowLayers(kind: 'branch' | 'ancestor', theme: MapTheme, overvie
  * Свечение кадра: отрезки собираются по цвету и силе и рисуются одним путём на слой — перекрытия внутри пути
  * не складываются (в режиме 'lighter' на стыках нет «бусин»), а путей на кадр — десятки, а не тысячи.
  */
+/** Свечение под линиями (решения 69, 183, лампа рода) — выключено решением 191 (этап 17): владелец — «свечения вносят путаницу». */
+export const GLOWS_ON = false;
+
 export class GlowBatch {
   private paths = new Map<string, { color: string; a: number; seg: number[] }>();
   constructor(private layers: readonly { width: number; a: number }[]) {}
@@ -226,6 +229,11 @@ export class GlowBatch {
   }
   /** Нарисовать и очистить: ночью — 'lighter', днём — обычным наложением. */
   flush(ctx: CanvasRenderingContext2D, night: boolean) {
+    // свечений под линиями нет (этап 17, решение 191): цвет ветви несёт сама линия
+    if (!GLOWS_ON) {
+      this.paths.clear();
+      return;
+    }
     if (!this.paths.size) return;
     ctx.save();
     // свечение — оформление под линией, а не линия: замеры кадра (tools/collide.ts) его не считают (метка на время рисования)

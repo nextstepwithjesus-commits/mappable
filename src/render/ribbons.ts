@@ -45,8 +45,8 @@ export interface RibbonLook {
 
 /** Ширина слоёв свечения — в долях ширины нити (VIS-30: core × 3,5 и × 2,4). */
 export const GLOW_WIDTH: [number, number] = [3.5, 2.4];
-/** Дневная лента (MAP-50): подложка не уже 6 px, тон на 1 px шире подложки, нить толще на 0,6 px. */
-export const DAY_HALO_MIN = 6;
+/** Дневная лента (MAP-50): подложка не уже 4 px (решение 191: была 6 — лента перекрывала соседние линии), тон на 1 px шире подложки, нить толще на 0,6 px. */
+export const DAY_HALO_MIN = 4;
 export const DAY_CORE_PLUS = 0.6;
 
 /**
@@ -783,7 +783,8 @@ export function drawSkyRibbons(v: SkyContext, s: SkyState, steps: { joseph: read
   const { strands, dx, dy } = c;
   const clip: [number, number] = [-24 - dx, cam.w + 24 - dx];
   // в режиме «В работе» (J4) ленты — тонкий ориентир
-  const core = Math.max(2.1, Math.min(3.6, ky / 6)) * boost * (s.guide ? 0.55 : 1);
+  // нить тоньше (решение 191, владелец: «слишком толстые и перекрывают другие линии»): 1,6–2,6 px
+  const core = Math.max(1.6, Math.min(2.6, ky / 7)) * boost * (s.guide ? 0.55 : 1);
   const flow = s.flow && !s.reduced ? s.flow * 0.02 : null;
   const hl = s.highlight;
   const hover = ribbonHover(v);

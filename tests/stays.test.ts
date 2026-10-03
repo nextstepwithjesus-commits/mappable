@@ -57,57 +57,23 @@ describe('laneAt: пребывания и переход', () => {
   });
 });
 
-describe('собранный индекс неба: пребывания и годы черт брака (src/generated/atlas.json)', () => {
+/**
+ * Этап 17, решение 190 (docs/ui-review/STAGE17.md; просьба владельца 3 октября: «сейчас вообще непонятный фарш»): небо
+ * вернулось к раскладке этапа 14 — «Отчий дом» (173–181) снят, у лиц нет пребываний и переходов, год черты брака не
+ * назначается. Проверки пребываний собранного индекса (полоса рождения в доме отца, Рувим уходит в колено, годы черт брака,
+ * Мелхола у двух мужей) сняты вместе с раскладкой; договор laneAt / starLaneOf (выше) остаётся — им пользуются следы и подписи.
+ */
+describe('собранный индекс неба: раскладка этапа 14 — пребываний нет (решение 190)', () => {
   const m = models[0];
-  const withStays = m.nodes.filter((n) => !n.ghost && n.stays);
-  it('у лиц с переходом — полоса рождения, пребывания по порядку, последняя полоса = полоса жизни', () => {
-    expect(withStays.length).toBeGreaterThan(40);
-    for (const n of withStays) {
-      const st = n.stays!;
-      expect(st.length).toBeGreaterThanOrEqual(2);
-      expect(n.starLane).toBe(st[0].lane);
-      expect(st[st.length - 1].lane, n.person).toBe(n.lane);
-      for (let k = 1; k < st.length; k++) {
-        expect(st[k].lane, n.person).not.toBe(st[k - 1].lane);
-        expect(st[k].t0, n.person).toBeGreaterThan(st[k - 1].t1);
-      }
-      // первое пребывание — с рождения по хронологии модели
-      expect(st[0].t0).toBe(m.chrono.get(n.person)!.b);
-      expect(laneAt(n, st[0].t0)).toBe(n.starLane);
-      expect(laneAt(n, st[st.length - 1].t0)).toBe(n.lane);
+  it('ни у одного лица нет переходов: полоса звезды — полоса жизни в любой год', () => {
+    for (const n of m.nodes) {
+      expect(n.stays, n.id).toBeUndefined();
+      expect(starLaneOf(n), n.id).toBe(n.lane);
+      expect(glidesOf(n), n.id).toEqual([]);
     }
   });
-  it('у остальных лиц полоса рождения — полоса жизни', () => {
-    for (const n of m.nodes) if (!n.stays) expect(starLaneOf(n)).toBe(n.lane);
-  });
-  it('Иаков → Иуда: Иуда — лицо коридора, полоса одна; Рувим родился в доме Иакова и ушёл в колено', () => {
-    const iuda = m.nodeByPerson.get('iuda')!;
-    expect(iuda.stays).toBeUndefined();
-    const ruvim = m.nodeByPerson.get('ruvim')!;
-    expect(ruvim.stays?.length).toBe(2);
-    const iakov = m.nodeByPerson.get('iakov')!;
-    expect(Math.abs(starLaneOf(ruvim) - iakov.lane)).toBeLessThanOrEqual(13);
-    expect(Math.abs(ruvim.lane - iakov.lane)).toBeGreaterThan(13);
-  });
-  it('годы черт брака: жена приходит в дом мужа за год до первого ребёнка союза; Давид и Вирсавия, Иаков и Лия', () => {
-    for (const uid of ['u:david+virsaviya', 'u:iakov+liya', 'u:avraam+khettura']) {
-      const u = unions.byId.get(uid)!;
-      const first = Math.min(...u.kids.map((k) => m.chrono.get(k)!.b));
-      expect(unionYear(uid, m), uid).toBe(first - 1);
-    }
-    // жена, приходящая переходом, — в год черты брака уже в доме мужа
-    const lia = m.nodeByPerson.get('virsaviya')!;
-    expect(laneAt(lia, unionYear('u:david+virsaviya', m)!)).toBe(lia.lane);
-  });
-  it('у союза без черты брака (мать не названа, «по Луке») года нет', () => {
-    expect(unionYear('u:david+', m)).toBeNull();
-    expect(unionYear('u:iliy+~by-luke', m)).toBeNull();
-  });
-  it('бездетный брак с призраком — год есть: Мелхола у Давида и у Фалтия', () => {
-    expect(unionYear('u:david+melkhola', m)).not.toBeNull();
-    expect(unionYear('u:faltiy-syn-laisha+melkhola', m)).not.toBeNull();
-    const gh = m.nodes.filter((n) => n.ghost && n.person === 'melkhola');
-    expect(gh.map((n) => n.id).sort()).toEqual(['ghost:melkhola@david', 'ghost:melkhola@faltiy-syn-laisha']);
+  it('года черт брака нет ни у одного союза — ромб стоит на следе отца в год первого ребёнка (links.ts)', () => {
+    for (const uid of ['u:david+virsaviya', 'u:iakov+liya', 'u:david+', 'u:iliy+~by-luke', 'u:david+melkhola']) expect(unionYear(uid, m), uid).toBeNull();
   });
 });
 

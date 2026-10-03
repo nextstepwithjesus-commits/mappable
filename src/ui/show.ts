@@ -614,8 +614,8 @@ export function familyLanes(
   }
   const lanes = new Map<string, number>();
   for (const [id, r] of res.rows) lanes.set(id, r + off);
-  // призраки укладки (решение 173: бездетный брак у мужа, дочь, ушедшая к мужу) — тем же сдвигом, что строки лиц
-  const ghostLanes: FamilyGhostLane[] = res.ghosts.map((g) => ({ id: g.id, person: g.person, husband: g.husband, t: g.t, lane: g.row + off }));
+  // призраков «Отчего дома» в семейной укладке нет (решение 190: укладка этапа 14)
+  const ghostLanes: FamilyGhostLane[] = [];
   lastFamily = { res, lanes, ghostLanes, kind: o.kind, ids: new Set(S) };
   return lastFamily;
 }
@@ -654,7 +654,7 @@ export const skyShow = computed<ShowIn>(() => {
   const { lanes, res, ghostLanes } = hit;
   const guests = folded.size ? new Set([...c.guests].filter((x) => S.has(x))) : c.guests;
   const stubs = folded.size ? c.stubs.filter((x) => S.has(x.from)) : c.stubs;
-  return { key: `f|${k}|${hashLanes(lanes)}|${ghostLanes.map((g) => `${g.id}${g.lane}`).join(',')}`, layout: 'family', ids: c.ids, guests, stubs, lanes, anchor, units: res.units, since: res.since, ghosts: ghostLanes };
+  return { key: `f|${k}|${hashLanes(lanes)}|${ghostLanes.map((g) => `${g.id}${g.lane}`).join(',')}`, layout: 'family', ids: c.ids, guests, stubs, lanes, anchor, units: res.units, ghosts: ghostLanes };
 });
 
 // ---------- строка показа ----------

@@ -1825,12 +1825,6 @@ export function linkLooks(v: SkyContext, p: Pass, d: Pick<LinkDraw, 'lit' | 'sel
     cache = v.labelCache;
   }
   const level = p.level;
-  // уровни подробности семьи (решение 178): на небе (меньше 7 px на год) — только связи структурных лиц и выбранного,
-  // с обзора семьи — все отводы и черты; бездетные браки — на масштабе семьи (от 24 px на год) и у выбранного. Переходы —
-  // плавные, в полосе ×1,5 масштаба (tierAlpha)
-  const pxYear = p.pxYear ?? Infinity;
-  const ctxA = tierAlpha(pxYear, FAMILY_TIER.sky);
-  const famA = tierAlpha(pxYear, FAMILY_TIER.family);
   /**
    * доля видимости подписи лица на этом масштабе (0…1): линия проявляется плавно в полосе уровней до порога подписи —
    * без мигания и без памяти кадров (два одинаковых кадра одинаковы)
@@ -1885,10 +1879,9 @@ export function linkLooks(v: SkyContext, p: Pass, d: Pick<LinkDraw, 'lit' | 'sel
     // и разрывы пересечений
     if (!c.subj || work || lineageOf(p, q)) out = { tier: c.tier, a: 1 };
     else {
-      // структурные — по порогу подписи их лица и все с обзора семьи; контекстные — только с обзора семьи (решение 178)
-      let a = ctxA;
-      if (c.tier === 1) for (const id of c.subj) a = Math.max(a, shown(id));
-      if (q.childless) a = Math.min(a, famA);
+      // по порогам подписей лиц связи, как на этапе 14 (решение 190: уровни подробности 178 сняты вместе с «Отчим домом»)
+      let a = 0;
+      for (const id of c.subj) a = Math.max(a, shown(id));
       out = { tier: c.tier, a };
     }
     memo.set(q, out);
@@ -2653,10 +2646,9 @@ function putLinkText(v: SkyContext, p: Pass, t: LinkText, a: number, hold = fals
     return { x: b.x, y: b.y - 5, w: b.w, h: b.h + 5 };
   });
   // правило принадлежности (решения 140, 160): подпись у точки — ближе к ней, чем к чужому знаку; места с номера near —
-  // на выноске; не прошло ни одно — подписи нет. Чужая линия через подпись недопустима (решение 163): ромб стоит на следе
-  // самой жены (174) — она узнаётся по следу и звезде, имя у ромба вторично; тесно — подписи нет (в подсказке и для
-  // диктора оно остаётся), а не подпись на соседней черте брака (перепись «все лица», Я12: Аггифа, Авитала у Давида)
-  const b = claim(v, p, boxes, 'plate', t.text, { id: t.id, hold, anchor: { x: t.ax ?? t.x, y: t.y, near, person: t.person }, strict: true });
+  // на выноске; не прошло ни одно — подписи нет. Ромб союза снова на следе отца (решение 190, как на этапе 14): мать
+  // узнаётся только по имени у ромба, поэтому строгий запрет чужой линии через подпись (этап 15, ромб на следе жены) снят
+  const b = claim(v, p, boxes, 'plate', t.text, { id: t.id, hold, anchor: { x: t.ax ?? t.x, y: t.y, near, person: t.person } });
   if (!b || hold) return null;
   const k = boxes.indexOf(b);
   const c = cands[k];

@@ -53,10 +53,6 @@ const M = () => atlas.models[0];
 const open = (uid: string, from: string): PlateIn => ({ union: U(uid), from, dir: 'down', open: true });
 
 const ADAM_KIDS = ['adam', 'eva', 'kain', 'avel', 'sif'];
-let linksMod: typeof import('../src/render/links.ts');
-beforeAll(async () => {
-  linksMod = await import('../src/render/links.ts');
-});
 const JACOB = ['iakov', 'liya', 'ruvim', 'simeon', 'leviy', 'iuda', 'issakhar', 'zavulon', 'dina', 'rakhil', 'iosif', 'veniamin', 'valla', 'dan', 'neffalim', 'zelfa', 'gad', 'asir'];
 const JACOB_UNIONS = ['u:iakov+liya', 'u:iakov+rakhil', 'u:iakov+valla', 'u:iakov+zelfa'];
 
@@ -184,13 +180,7 @@ describe('точка союза между супругами — ближе к 
       const q = ds.get(uid);
       expect(q, uid).toBeTruthy();
       const w = star(s, uid.split('+')[1]);
-      // этап 15 (решения 173, 174): ромб — на следе матери в год черты брака; звезда её может стоять в отчем доме, поэтому
-      // сверка — со следом над x ромба (sky.ts, trailYAt), а не со строкой звезды
-      const lf = s.linkFrame()!;
-      const ls = s.linkStarsNow().find((t) => t.id === uid.split('+')[1] && !t.ghost)!;
-      const n = lf.frame.nodes.find((m) => m.union === uid && m.kind === 'union')!;
-      expect(Math.abs(n.y - linksMod.trailYAt(ls, n.x)), uid).toBeLessThanOrEqual(1);
-      expect(Math.hypot(q!.x - (n.x + lf.dx), q!.y - (n.y + lf.dy)), uid).toBeLessThanOrEqual(1);
+      expect(Math.abs(q!.y - w.y), uid).toBeLessThanOrEqual(1.5);
       // на следе: правее звезды матери
       expect(q!.x, uid).toBeGreaterThan(w.x);
     }

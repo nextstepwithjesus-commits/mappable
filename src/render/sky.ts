@@ -89,10 +89,9 @@ export interface Palette {
 }
 
 /**
- * Сила свечения и тона лент (B6, VIS-30, MAP-50).
- * TODO(ds): вынести в tokens.css как --ribbon-glow-1, --ribbon-glow-2, --ribbon-tone; пока токенов нет, действуют эти значения.
+ * Сила тона лент днём (B6, VIS-30, MAP-50). Свечения лент нет (решение 191).
+ * TODO(ds): вынести в tokens.css как --ribbon-tone; пока токена нет, действует это значение.
  */
-const RIBBON_GLOW: [number, number] = [0.06, 0.1];
 const RIBBON_TONE = 0.15;
 
 // затемнение при выделении — src/render/dim.ts (его же проверяет npm run -s contrast)
@@ -128,7 +127,8 @@ export function readPalette(): Palette {
     dimInk3: dimLabelAlpha(v('--ink-3'), sky, v('--sky-band'), glow ? CLOUD_DIMMED.night : CLOUD_DIMMED.day),
     lineAlpha: alphaForContrast(v('--ink-3'), sky, LINE_CONTRAST), glow,
     contourAlpha: alphaForContrast(v('--ink-3'), sky, CONTOUR_CONTRAST),
-    ribbonGlow: glow ? [num('--ribbon-glow-1', RIBBON_GLOW[0]), num('--ribbon-glow-2', RIBBON_GLOW[1])] : [0, 0],
+    // свечения лент нет (решение 191): ночью лента — нить без ореола, как и днём
+    ribbonGlow: [0, 0],
     ribbonTone: glow ? 0 : num('--ribbon-tone', RIBBON_TONE),
   };
 }
@@ -2813,7 +2813,19 @@ export class Sky implements SkyContext {
     if (s.hovered && lf && L.connectors && !s.linkHover && !lineOnly && settle > 0.99) drawOriginPath(this, p, s.hovered);
     // наведённая связь — целиком (просьба владельца 3 октября): пути родителей по следам к ромбу, ромб, ствол и зубец; та же
     // связь уже выбрана — её рисует жёлтый путь
-    if (s.linkHover && lf && L.connectors && !lineOnly && settle > 0.99 && linkKeyString(s.linkHover) !== (s.link ? linkKeyString(s.link) : null)) drawLinkRoute(this, p, s.linkHover);
+    let hoverRoute = '';
+    if (s.linkHover && lf && L.connectors && !lineOnly && settle > 0.99 && linkKeyString(s.linkHover) !== (s.link ? linkKeyString(s.link) : null)) {
+      const rs = drawLinkRoute(this, p, s.linkHover);
+      if (rs.length) hoverRoute = `${linkKeyString(s.linkHover)}:${rs.length}`;
+    }
+    {
+      // проба для проверок: какая наведённая связь нарисована целиком и сколькими отрезками пути
+      const ds = (this.canvas as { dataset?: DOMStringMap }).dataset;
+      if (ds && probes.on) {
+        if (hoverRoute) ds.linkRoute = hoverRoute;
+        else if (ds.linkRoute !== undefined) delete ds.linkRoute;
+      }
+    }
     // выбранная связь (§ 8) — поверх всего неба: жёлтый путь, кольца с ролями на концах, указатели у края
     this.linkSel = drawSelectedLink(this, p, { cuts, deferText: true });
     drawOverlayText(this, p);
@@ -3249,6 +3261,9 @@ export class Sky implements SkyContext {
   private planIds = new WeakMap<object, number>();
   private planSeq = 0;
   private lightLayer(): LightLayer | null {
+    // этап 17, решение 191: слоя света нет — туманность, ореолы и пыль владелец назвал путаницей («совершенно непонятные
+    // свечения»); фон — небо, полосы эпох, облака плотности на обзоре и области созвездий, как на этапе 14
+    if (!LIGHT_ON) return null;
     if (this.light || this.lightTried) return this.light;
     const parent = typeof document !== 'undefined' ? this.canvas.parentElement : null;
     if (!parent || typeof parent.attachShadow !== 'function' || typeof ImageData === 'undefined') return null;
@@ -4253,6 +4268,8 @@ export const SCALE_SETTLE_MS = 160;
  * задерживала отпускание, и инерции не было (сценарий 253)
  */
 const PAN_MARGIN = { x: 0.3, y: 0.25 };
+/** Слой света (решение 182) — выключен решением 191 (этап 17); код слоя оставлен для образца и проверок света. */
+const LIGHT_ON = false;
 /** Через столько мс покоя небо рисуется в кэш сдвига. */
 const PAN_DELAY = 180;
 /** Наибольшая площадь кэша сдвига, px устройства (предел холста Safari — 16 777 216). */

@@ -1459,18 +1459,29 @@ function baseRoutes(v: SkyContext, d: LinkDraw, key: LinkKey, ks: string, origin
   const rib = paths.filter((q) => q.kind === 'ribbon' && q.ends[1] === kid && q.union === u);
   for (const q of rib) core.push([...q.pts]);
   const tooth = own.find((q) => q.ks === ks && q.kind === 'tooth') ?? own.find((q) => q.ks === ks);
-  if (tooth) {
-    const end = { x: tooth.pts[tooth.pts.length - 2], y: tooth.pts[tooth.pts.length - 1] };
+  // зубца нет (ребёнок стоит у самого ствола раскрытого союза: Иаков и Рахиль → Иосиф) — конец ствола союза у ребёнка
+  const kidAt = tooth ? null : star(kid);
+  let trunkEnd: { x: number; y: number } | null = null;
+  if (!tooth && kidAt)
+    for (const q of own) {
+      if (q.kind !== 'trunk' || !q.ends.includes(kid)) continue;
+      for (const k of [0, q.pts.length - 2]) {
+        const e = { x: q.pts[k], y: q.pts[k + 1] };
+        if (Math.abs(e.y - kidAt.y) < 1 && (!trunkEnd || Math.abs(e.x - kidAt.x) < Math.abs(trunkEnd.x - kidAt.x))) trunkEnd = e;
+      }
+    }
+  if (tooth || trunkEnd) {
+    const end = tooth ? { x: tooth.pts[tooth.pts.length - 2], y: tooth.pts[tooth.pts.length - 1] } : trunkEnd!;
     const ownerStar = node ? star(node.owner) : null;
     const base = segs(own);
     const r = node ? routeOver(ownerStar ? [...base, ...trailSeg(ownerStar, base)] : base, end, node) : null;
     if (r) core.push(r);
-    else {
+    else if (tooth) {
       // узла в кадре нет: зубец и ствол до строки ребёнка, как прежде
       core.push([...tooth.pts]);
       const x = tooth.pts[0];
       for (const q of own) if (q.kind === 'trunk' && Math.abs(q.pts[0] - x) < 0.5) core.push([...q.pts]);
-    }
+    } else for (const q of own) if (q.kind === 'trunk' && q.ends.includes(kid)) core.push([...q.pts]);
   }
   all.push(...core);
   // родитель шага ленты ведёт к ребёнку лентой: его путь к узлу — в ней
@@ -1527,11 +1538,12 @@ export function drawOriginPath(v: SkyContext, p: Pass, child: string) {
  * зубец до ребёнка; черта брака — пути обоих супругов к ромбу; союз — все его линии и пути супругов. Вид — как у пути
  * происхождения (тон текста, 2 px); шаг ленты, цепочка и дуга родства и так рисуются целиком.
  */
-export function drawLinkRoute(v: SkyContext, p: Pass, key: LinkKey) {
+export function drawLinkRoute(v: SkyContext, p: Pass, key: LinkKey): number[][] {
   const d = p.links;
-  if (!d || (key.kind !== 'child' && key.kind !== 'spouse' && key.kind !== 'union')) return;
+  if (!d || (key.kind !== 'child' && key.kind !== 'spouse' && key.kind !== 'union')) return [];
   const routes = selectedRoutes(v, d, key).all;
   if (routes.length) strokeRoutes(v, p, d, routes, key.union);
+  return routes;
 }
 
 /** Ломаные routes видом наведённой связи: под чужими ромбами и подписями — разрыв, у кольца выбранного — обрезаны; свой ромб — поверх. */

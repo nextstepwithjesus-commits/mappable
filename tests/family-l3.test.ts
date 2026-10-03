@@ -159,31 +159,26 @@ describe('порядок перечисления: ссылка — место, 
 // ---------- MAP-74, MAP-80: гребёнки матерей ----------
 
 describe('союзы матерей: у каждого свой ромб и свои зубцы (MAP-74; этап 11, Г4, Г6, Г8)', () => {
-  it('у детей Давида от семи матерей — сплошные линии без штриха; помет «от …» нет, ромб каждой матери — на её следе у черты брака от Давида', () => {
+  it('у детей Давида от семи матерей — сплошные линии без штриха; помет «от …» нет, у ромба на следе Давида — имя матери', () => {
     const { s, calls } = drawSky(window(-1010, 50, 0));
     // ни одного прежнего штриха (штрих [5, 3] — только иное происхождение, точки [1, 3] — толкование и нить народа, Г10)
     const dashes = new Set(calls.filter((c) => c[0] === 'setLineDash').map((c) => JSON.stringify(c[1])));
     for (const d of ['[3,2]', '[1,2]', '[5,2,1,2]']) expect(dashes.has(d), d).toBe(false);
-    // этап 11, Г8: мать видна по самой линии; пометы «от Вирсавии» у ребёнка ушли с неба
+    // этап 11, Г8: мать видна по положению или по имени у ромба; пометы «от Вирсавии» у ребёнка ушли с неба
     expect(notesOf(s).filter((b) => /^от [А-ЯЁ]/.test(b.text))).toEqual([]);
-    const { d, paths, nodes } = drawnLinks(s);
-    const star = new Map(s.linkStarsNow().filter((q) => !q.ghost).map((q) => [q.id, q]));
-    // этап 15 (решения 174, 181): ромб союза Давида с названной матерью — на следе матери (в год черты брака), от следа
-    // Давида к нему — черта брака; мать не названа — ромб с полой половиной на следе Давида
-    const named = nodes.filter((n) => n.kind === 'union' && n.union.startsWith('u:david+') && motherOfUnion(n.union) && star.has(motherOfUnion(n.union)!) && n.childless !== true);
-    expect(named.length).toBeGreaterThanOrEqual(5);
-    for (const n of named) {
-      const m = motherOfUnion(n.union)!;
-      expect(n.owner, n.union).toBe(m);
-      expect(Math.abs(n.y - d.dy - links.trailYAt(star.get(m)!, n.x - d.dx)), n.union).toBeLessThan(1);
-      expect(paths.some((q) => q.kind === 'bar' && q.union === n.union && q.ends.includes('david') && Math.abs(q.pts[0] - n.x) < 0.5), n.union).toBe(true);
-      expect(n.mother, n.union).toBe(null);
+    const yDavid = s.cam.sy(s.node('david')!.lane);
+    const { nodes } = drawnLinks(s);
+    const own = nodes.filter((n) => n.kind === 'union' && n.union.startsWith('u:david+') && n.owner === 'david');
+    // у каждого союза Давида с детьми на небе — свой ромб на следе Давида, у названной матери — её имя у ромба
+    expect(own.length).toBeGreaterThanOrEqual(5);
+    for (const n of own) {
+      // этап 14, решение 166 (R1-11): ромб союза не из ленты на участке следа с лентой уходит с ленты по своему стволу —
+      // столбец узла по-прежнему на следе Давида (y − off)
+      expect(Math.abs(n.y - (n.off ?? 0) - yDavid), n.union).toBeLessThan(1);
+      expect(n.mother ?? '', n.union).toBe(motherOfUnion(n.union) ?? '');
     }
-    const unnamed = nodes.find((n) => n.kind === 'union' && n.union === 'u:david+');
-    if (unnamed) {
-      expect(unnamed.owner).toBe('david');
-      expect(unnamed.look).toBe('no-mother');
-    }
+    const names = s.labelStats().boxes.filter((b) => b.kind === 'plate' && b.text).map((b) => b.text);
+    expect(names).toContain('Вирсавия');
     expect(s.labelStats().overlaps).toBe(0);
   });
   it('союзы разных матерей одного отца не сливаются: ромбы не ближе 2r + 1, вертикали не ближе 8 px, у зубца — ребёнок своего союза', () => {

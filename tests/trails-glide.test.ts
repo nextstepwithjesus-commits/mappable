@@ -29,7 +29,6 @@ function recording() {
 
 let sky: typeof import('../src/render/sky.ts');
 let trails: typeof import('../src/render/trails.ts');
-let stays: typeof import('../src/engine/stays.ts');
 let atlas: typeof import('../src/data/atlas.ts');
 type Sky = InstanceType<typeof import('../src/render/sky.ts').Sky>;
 
@@ -40,7 +39,6 @@ beforeAll(async () => {
   });
   sky = await import('../src/render/sky.ts');
   trails = await import('../src/render/trails.ts');
-  stays = await import('../src/engine/stays.ts');
   atlas = await import('../src/data/atlas.ts');
 });
 
@@ -151,74 +149,18 @@ describe('след по пребываниям: ломаная перехода 
   });
 });
 
-describe('небо «Отчего дома» на семье Иакова', () => {
-  it('звезда — в полосе рождения; переходы в окне не отвесны; чужие следы под переходами прерваны', () => {
+/**
+ * «Небо „Отчего дома“ на семье Иакова» (звезда в полосе рождения, переходы, указатель над переходом — решение 179, уровни
+ * подробности 178) снято на этапе 17 вместе с раскладкой (решение 190, docs/ui-review/STAGE17.md): переходов на небе нет.
+ * Рисовальщик ломаной (выше) остаётся и проверяется на условных узлах. Здесь — что на собранном небе переходов нет.
+ */
+describe('небо этапа 17 на семье Иакова: раскладка этапа 14, переходов нет (решение 190)', () => {
+  it('ни одного перехода в окне семьи Иакова; звёзды — на полосах своих следов', () => {
     const { s, data } = jacob(60);
-    const glides = data.glides.split(';').filter(Boolean).map((q) => {
-      const [id, xy] = q.split(':');
-      const [x0, y0, x1, y1] = xy.split(',').map(Number);
-      return { id, x0, y0, x1, y1 };
-    });
-    expect(glides.length).toBeGreaterThan(3);
-    for (const g of glides) {
-      // не отвесный: переход идёт 5–16 лет — на масштабе семьи не меньше 5 лет по x
-      expect(g.x1 - g.x0, g.id).toBeGreaterThanOrEqual(5 * s.pxPerYear() * 0.8);
-      const i = s.indexOf(g.id)!;
-      const n = s.nodes[i];
-      // звезда — в полосе рождения (первое пребывание), след после перехода — в полосе другого пребывания
-      expect(Math.abs(s.starY(i) - s.cam.sy(stays.starLaneOf(n))), g.id).toBeLessThan(1e-6);
-      expect(n.stays!.length, g.id).toBeGreaterThan(1);
+    expect(data.glides ?? '').toBe('');
+    for (const id of ['iakov', 'ruvim', 'iuda', 'iosif', 'veniamin']) {
+      const v = s.indexOf(id)!;
+      expect(s.starY(v), id).toBeCloseTo(s.cam.sy(s.nodes[v].lane), 6);
     }
-    // звезда Вениамина — у Рахили (отчий дом), полоса жизни — в колене
-    const v = s.indexOf('veniamin')!;
-    expect(stays.starLaneOf(s.nodes[v])).not.toBe(s.nodes[v].lane);
-    // список звёзд кадра (canvas[data-stars-at]) несёт её на полосе рождения
-    expect(data.starsAt.split(';')).toContain(`${Math.round(s.cam.sx(s.X0[v]))},${Math.round(s.starY(v))}`);
-    // переход поверх чужого следа — с разрывом под собой (D2, С6)
-    const cuts = data.glideCuts.split(' ').filter(Boolean);
-    expect(cuts.length).toBeGreaterThan(0);
-    const [who, rest] = cuts[0].split('>');
-    const [, x] = rest.split('@');
-    const j = s.nodes.findIndex((n) => n.person === rest.split('@')[0] && !n.ghost);
-    const c = s.cutsNow(j) ?? [];
-    expect(c.some((_, k) => k % 2 === 0 && Math.abs(c[k] - Number(x)) < 1), `${who} над ${rest}`).toBe(true);
-  });
-  it('указатель над переходом ловит само лицо (решение 179); над звездой — звезду', () => {
-    const { s, data } = jacob(60);
-    const glides = data.glides.split(';').filter(Boolean);
-    let caught = 0;
-    for (const q of glides) {
-      const [id, xy] = q.split(':');
-      const [x0, y0, x1, y1] = xy.split(',').map(Number);
-      const i = s.indexOf(id)!;
-      // середина S-кривой — по году середины перехода
-      const xm = (x0 + x1) / 2;
-      const ym = s.trailYAt(i, xm);
-      if (Math.abs(y1 - y0) < 4) continue;
-      expect(Math.abs(ym - (y0 + y1) / 2), id).toBeLessThan(Math.abs(y1 - y0) * 0.2 + 2);
-      if (s.hitTrail(xm, ym) === id) caught++;
-      // в стороне от перехода (не на нём и не на чужом следе рядом) — не это лицо
-      expect(s.trailDist(i, xm + 40, ym), id).toBeGreaterThan(5);
-    }
-    expect(caught).toBeGreaterThan(0);
-    const v = s.indexOf('veniamin')!;
-    expect(s.hitStar(s.cam.sx(s.X0[v]), s.starY(v), 6)?.id).toBe('veniamin');
-  });
-  it('уровни подробности (решение 178): на небе контекстных связей нет, с обзора семьи — все; переходы на небе бледнее', () => {
-    const far = jacob(2500);
-    const fd = far.s.linkFrame();
-    expect(far.data.glides).toBeDefined();
-    if (fd?.look) {
-      const ctx = fd.frame.paths.filter((q) => q.kind !== 'ribbon' && fd.look!(q).tier === 2);
-      expect(ctx.length).toBeGreaterThan(0);
-      for (const q of ctx) expect(fd.look!(q).a, q.ks).toBe(0);
-    }
-    const mid = jacob(113);
-    const md = mid.s.linkFrame()!;
-    const pxYear = mid.s.pxPerYear();
-    expect(pxYear).toBeGreaterThanOrEqual(7 * 1.5);
-    const ctx2 = md.frame.paths.filter((q) => q.kind !== 'ribbon' && !q.childless && md.look!(q).tier === 2);
-    expect(ctx2.length).toBeGreaterThan(0);
-    for (const q of ctx2) expect(md.look!(q).a, q.ks).toBe(1);
   });
 });

@@ -57,9 +57,9 @@ describe('токены цвета (B1; VIS-18, VIS-30)', () => {
     expect(night).toMatchObject({ '--sheet': '#14284a', '--sheet-2': '#1b3358', '--rule': '#2a4470', '--rule-strong': '#4a6590', '--ink-3': '#8fa0bc' });
     expect(day).toMatchObject({ '--sky': '#e9eef4', '--sheet': '#ffffff', '--sheet-2': '#eef2f7', '--rule': '#c6d0dd', '--rule-strong': '#8e9fb6', '--ink-3': '#56637a' });
   });
-  it('ленты — значения ТЗ § 5.2', () => {
+  it('ленты — значения ТЗ § 5.2 (дневная лазурь светлее — решение 191)', () => {
     expect(night).toMatchObject({ '--gold-1': '#e6b550', '--gold-2': '#c9773a', '--azure-1': '#9ccbf5', '--azure-2': '#9edbd0' });
-    expect(day).toMatchObject({ '--gold-1': '#9a6a12', '--gold-2': '#8e4a1e', '--azure-1': '#2b64a8', '--azure-2': '#1f7a70' });
+    expect(day).toMatchObject({ '--gold-1': '#9a6a12', '--gold-2': '#8e4a1e', '--azure-1': '#5280da', '--azure-2': '#1f7a70' });
   });
   it('цвета тем — #rrggbb: холст разбирает их сам (src/render/color.ts)', () => {
     for (const t of [night, day]) for (const [k, v] of Object.entries(t)) if (!['--glow', 'color-scheme'].includes(k)) expect(v, k).toMatch(/^#[0-9a-f]{6}$/);

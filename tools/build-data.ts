@@ -13,8 +13,8 @@ import { loadBible, ROOT } from './bible.ts';
 import { buildGraph, primaryChildren } from '../src/engine/graph.ts';
 import { solveChronology, noteModelDifferences, modelDependence, lifeDatesOf, MODELS, type ChronoResult, type WhenSpan, type YearBasis, type BasisKind } from '../src/engine/chronology.ts';
 import type { LifeDates } from '../src/engine/years.ts';
-import { computeOutlines, packSpan, GHOST_SPAN, TRAIL_KINDS, type LineStep, type ListDef, type Outline } from '../src/engine/layout.ts';
-import { computeHouseLayout, type HouseLayout } from '../src/engine/house.ts';
+import { computeLayout, computeOutlines, packSpan, GHOST_SPAN, TRAIL_KINDS, type LineStep, type ListDef, type Outline } from '../src/engine/layout.ts';
+import type { HouseLayout } from '../src/engine/house.ts';
 import { buildTimeScale, timeToX, xToTime } from '../src/engine/timescale.ts';
 import { epochDelta } from '../src/engine/epochs.ts';
 import { parseRef, verseId, BOOKS } from '../src/engine/books.ts';
@@ -102,8 +102,17 @@ for (const m of MODELS) {
   const t0 = performance.now();
   const chrono = solveChronology(g, epochs, m.id);
   // эпохи в годах этой модели (CARD-60): время скоплений «по эпохе» — тоже по ним
-  // «Отчий дом» (решение 173; src/engine/house.ts): первый проход раскладки, дома коридора, второй проход, все дома
-  const layout = computeHouseLayout(g, chrono, lines, { lists, epochs: chrono.epochs ?? epochs, ...(m.id === MODELS[0].id ? { prior } : {}) });
+  // этап 17, решение 190: небо — раскладкой этапа 14 (первый проход, src/engine/layout.ts): дети — в своих полосах, отвод
+  // к ребёнку прямой, без переходов «Отчего дома» (решение 173 отменено по просьбе владельца 3 октября: «в старом атласе
+  // было значительно понятнее»). Пребываний, переходов и годов черт брака нет
+  const t1 = performance.now();
+  const L1 = computeLayout(g, chrono, lines, { lists, epochs: chrono.epochs ?? epochs, ...(m.id === MODELS[0].id ? { prior } : {}) });
+  const layout: HouseLayout = {
+    ...L1,
+    unionYears: new Map(),
+    plan: { stays: new Map(), glides: [], ghosts: [], unions: new Map(), starLane: new Map(), issues: [], houses: 0, moved: [], reserved: [], pins: new Map(), cuts: new Map(), natalGhosts: [] },
+    ms: { first: performance.now() - t1, second: 0, houses: 0 },
+  };
   // насыщенность времени — по годам решателя и месту лиц в полосах, как до честных следов и скоплений (A14, E2):
   // масштаб «по насыщенности» от них не меняется
   const births = [...chrono.persons.values()].map((c) => c.b);

@@ -58,14 +58,7 @@ describe('снимок 13: Ной во «всех лицах» (сценарий
     const sim = star(f, 'sim');
     for (const q of f.paths)
       if (!q.ends.includes('sim')) for (const [x0, y0, x1, y1] of links.segmentsOf(q)) expect(links.distSeg(sim.x, sim.y, x0, y0, x1, y1), q.ks).toBeGreaterThanOrEqual(sim.r + links.STAR_CLEAR - 0.01);
-    // этап 15, решение 178 (уточняет 135): на небе (меньше 7 px на год, здесь — 700 лет на экран) — отводы структурных лиц
-    // (Хам, величина 2), контекстных (Иафет, величина 3) — с обзора семьи (7–24 px на год)
-    const tooth = (g: Frame, kid: string) => pathsTo(g, kid).some((q) => q.kind === 'tooth' && q.key.kind === 'child' && q.key.union === 'u:noy+');
-    expect(tooth(f, 'kham'), 'kham').toBe(true);
-    expect(f.s.pxPerYear()).toBeLessThan(7);
-    const near = C.captureAt('all', 'noy', 150, { select: null });
-    expect(near.s.pxPerYear()).toBeGreaterThanOrEqual(7);
-    for (const kid of ['kham', 'iafet']) expect(tooth(near, kid), `${kid} на обзоре семьи`).toBe(true);
+    for (const kid of ['kham', 'iafet']) expect(pathsTo(f, kid).some((q) => q.kind === 'tooth' && q.key.kind === 'child' && q.key.union === 'u:noy+'), kid).toBe(true);
     // грамматика кадра: косых отрезков нет, зубцы 5–40 px, стволы разных союзов не рядом, звёзды не задеты
     const seen = inView(f);
     expect(links.checkLinks({ ...f.d.frame, paths: [...f.paths, ...f.ribbons].filter(seen) }, f.stars).filter((i) => i.check !== 'gap')).toEqual([]);
