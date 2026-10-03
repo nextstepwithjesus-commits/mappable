@@ -3225,6 +3225,7 @@ export class Sky implements SkyContext {
     this.lightTried = true;
     try {
       this.light = new LightLayer(this.canvas);
+      this.light.onDevice = () => this.cam.onChange();
       this.groundify();
     } catch {
       this.light = null;

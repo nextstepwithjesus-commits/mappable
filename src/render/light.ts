@@ -359,13 +359,18 @@ export class LightLayer {
     this.devSoon(dpr);
     return null;
   }
+  /**
+   * Копия под плотность готова: небо перерисовывается один раз (sky.ts). Иначе покоящийся кадр оставался со светом,
+   * положенным растянутым растром, а следующий кадр (наведение) — уже с копией: свет на ±1 уровень другой по всему небу
+   */
+  onDevice: (() => void) | null = null;
   private devSoon(dpr: number) {
     if (this.devTimer !== null) return;
     this.devTimer = setTimeout(() => {
       this.devTimer = null;
       if (!this.built) return;
       if (this.moving) return this.devSoon(dpr);
-      this.makeDevice(dpr);
+      if (this.makeDevice(dpr)) this.onDevice?.();
     }, 120);
   }
   private makeDevice(dpr: number): HTMLCanvasElement | null {
