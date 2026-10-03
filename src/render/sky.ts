@@ -2158,10 +2158,12 @@ export class Sky implements SkyContext {
    * кадра тоже: холст не остаётся прозрачным, отложенный текст не теряется.
    */
   draw(s: SkyState, under?: () => void) {
+    if (this.panFrame(s, under)) return;
     this.holes = [];
     this.unwind();
     try {
       this.drawScene(s, under);
+      this.panSoon(s, under);
     } catch (e) {
       // сбой кадра: вырезы неизвестны — свет под весь кадр, холст не остаётся с дырами
       this.holes = null;
@@ -2176,6 +2178,206 @@ export class Sky implements SkyContext {
       const light = this.light;
       if (light) light.paintHoles(this.ctx, this.dpr, this.cam.w, this.cam.h, this.pal.sky, this.holes);
     }
+  }
+
+  // ---------- кэш сдвига (рецензия 3 октября: протяжка 20–30 кадров/с на масштабе семьи) ----------
+
+  /**
+   * Небо с запасом по краям (PAN_MARGIN — тот же, что у растра света), нарисованное в простое после кадра покоя: в кадрах
+   * сдвига (протяжка, инерция, клавиши; масштаб и состояние те же) кадр — одна копия этого холста со сдвигом и рамка
+   * листа поверх, без раскладки и растеризации неба. Подписи стоят, как в покое; кадр покоя после сдвига — обычный.
+   */
+  private pan: {
+    cv: HTMLCanvasElement;
+    key: string;
+    x0: number;
+    laneTop: number;
+    kx: number;
+    ky: number;
+    lanes: number;
+    rows: string;
+    w: number;
+    h: number;
+    W: number;
+    H: number;
+    dpr: number;
+  } | null = null;
+  private panCv: HTMLCanvasElement | null = null;
+  private panTimer: ReturnType<typeof setTimeout> | null = null;
+  /** кадр рисуется в кэш сдвига (renderPan): без движения, без сборки света, без рамки */
+  private caching = false;
+
+  /** Ключ состояния кадра для кэша сдвига: всё, кроме места окна и наведения (кэш — без него), что меняет нарисованное небо. */
+  private panKey(s: SkyState): string {
+    const pm = s.plateMarks;
+    return [
+      this.model.id,
+      this.lambda,
+      this.rowsKey,
+      this.nodesStamp,
+      this.planIds.get(this.plan) ?? 0,
+      this.pal.sky,
+      s.selected ?? '',
+      s.second ?? '',
+      s.focus ?? '',
+      s.noteFocus ?? '',
+      this.objId(s.highlight),
+      this.objId(s.layers),
+      s.onlyLines ? 1 : 0,
+      s.meridian ?? '',
+      s.lineFlip ? 1 : 0,
+      [...(s.pins ?? [])].join(','),
+      this.objId(s.kinSteps),
+      s.depth ?? '',
+      s.modelNote ?? '',
+      this.objId(s.workMarks),
+      this.objId(s.plates),
+      pm ? `${pm.focus ?? ''}/${pm.selected ?? ''}` : '',
+      this.objId(s.reveal),
+      this.objId(s.link),
+      this.objId(s.linkPreview),
+      this.objId(s.tensionPersons),
+    ].join('|');
+  }
+
+  /** Кадр сдвига из кэша: копия неба со сдвигом и рамка листа. false — кэша нет или он не годится (обычный кадр). */
+  private panFrame(s: SkyState, under?: () => void): boolean {
+    const c = this.pan;
+    const cam = this.cam;
+    if (!c || under || !this.animate || typeof performance === 'undefined') return false;
+    if (c.kx !== cam.kx || c.ky !== cam.ky || c.lanes !== cam.lanes || c.rows !== cam.rows.key || c.w !== cam.w || c.h !== cam.h || c.dpr !== this.dpr) return false;
+    if (this.trans || !(s.intro >= 1) || s.flow || s.workFlash) return false;
+    const now = performance.now();
+    const view = `${cam.x0}|${cam.laneTop}`;
+    if (view !== this.lastView) {
+      this.lastView = view;
+      this.viewAt = now;
+    }
+    const dragging = !!this.canvas.classList?.contains('dragging');
+    if (!(cam.moving || dragging || now - this.viewAt < SCALE_SETTLE_MS)) return false;
+    if (c.key !== this.panKey(s)) return false;
+    const dx = (c.x0 - cam.x0) * cam.kx;
+    const dy = (cam.laneTop - c.laneTop) * cam.ky;
+    if (dx > 0.5 || dy > 0.5 || dx + c.W < cam.w - 0.5 || dy + c.H < cam.h - 0.5) return false;
+    // кадр покоя после сдвига — по таймеру, как у обычного кадра движения
+    this.viewMoving = true;
+    this.scaleMoving = false;
+    if (this.viewTimer) clearTimeout(this.viewTimer);
+    this.viewTimer = setTimeout(() => {
+      this.viewTimer = null;
+      this.cam.onChange();
+    }, SCALE_SETTLE_MS + 30);
+    const { ctx, dpr, pal } = this;
+    const light = this.light;
+    light?.follow(this.lightView());
+    this.holes = [];
+    this.unwind();
+    try {
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.drawImage(c.cv, Math.round(dx * dpr), Math.round(dy * dpr));
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      drawFrame(this, yearTicks(this), { model: s.modelNote, folds: this.plan.marks, flag: meridianFlagAt(this, s) });
+    } finally {
+      this.unwind();
+      if (light) light.paintHoles(ctx, dpr, cam.w, cam.h, pal.sky, this.holes);
+    }
+    const ds = (this.canvas as { dataset?: DOMStringMap }).dataset;
+    if (ds && probes.on) ds.panFrames = String(Number(ds.panFrames ?? 0) + 1);
+    return true;
+  }
+
+  /** После кадра покоя — кэш сдвига в простое (PAN_DELAY), если небо стоит и ничего не анимируется. */
+  private panSoon(s: SkyState, under?: () => void) {
+    if (typeof document === 'undefined' || typeof window === 'undefined') return;
+    if (this.panTimer !== null) clearTimeout(this.panTimer);
+    this.panTimer = null;
+    if (!this.animate || under || this.viewMoving || this.scaleMoving || this.trans || !(s.intro >= 1) || s.flow || s.workFlash) return;
+    const cam = this.cam;
+    const key = this.panKey(s);
+    const c = this.pan;
+    // кэш уже годится для этого окна (кадр покоя на том же месте — наведение, перерисовка)
+    if (c && c.key === key && c.kx === cam.kx && c.ky === cam.ky && c.w === cam.w && c.h === cam.h && c.dpr === this.dpr && c.rows === cam.rows.key) {
+      const dx = (c.x0 - cam.x0) * cam.kx;
+      const dy = (cam.laneTop - c.laneTop) * cam.ky;
+      if (Math.abs(dx + (c.W - cam.w) / 2) < 2 && Math.abs(dy + (c.H - cam.h) / 2) < 2) return;
+    }
+    this.panTimer = setTimeout(() => {
+      this.panTimer = null;
+      if (this.cam.moving || this.viewMoving || this.scaleMoving || this.trans) return;
+      if (this.panKey(s) !== key) return;
+      this.renderPan(s, key);
+    }, PAN_DELAY);
+  }
+
+  /** Нарисовать небо с запасом PAN_MARGIN в холст кэша сдвига: тот же кадр, другая камера и холст, состояние неба — прежнее. */
+  private renderPan(s: SkyState, key: string) {
+    const cam = this.cam;
+    const dpr = this.dpr;
+    const mx = Math.round(cam.w * PAN_MARGIN.x);
+    const my = Math.round(cam.h * PAN_MARGIN.y);
+    const W = cam.w + 2 * mx;
+    const H = cam.h + 2 * my;
+    if (W * H * dpr * dpr > PAN_MAX_PX) {
+      this.pan = null;
+      return;
+    }
+    const cv = this.panCv ?? (this.panCv = document.createElement('canvas'));
+    const pw = Math.round(W * dpr);
+    const ph = Math.round(H * dpr);
+    if (cv.width !== pw || cv.height !== ph) {
+      cv.width = pw;
+      cv.height = ph;
+    }
+    const pctx = cv.getContext('2d');
+    if (!pctx) return;
+    const marked = cv as HTMLCanvasElement & { __ground?: boolean };
+    if (this.light && !marked.__ground) {
+      this.groundify(pctx);
+      marked.__ground = true;
+    }
+    // камера кэша: то же окно со сдвигом на запас; видимая часть — весь холст кэша (органы неба над ним не стоят)
+    const vcam = Object.create(cam) as Camera;
+    const x0 = cam.x0 - mx / cam.kx;
+    const laneTop = cam.laneTop + my / cam.ky;
+    Object.assign(vcam, { w: W, h: H, x0, laneTop, vp: { l: 0, t: 0, r: W, b: H } });
+    // состояние неба — до и после то же: поля, которые кадр переписывает, и наборы, которые он заполняет
+    const self = this as unknown as Record<string, unknown>;
+    const keep = { ...self };
+    Object.assign(self, {
+      ctx: pctx,
+      canvas: cv,
+      cam: vcam,
+      caching: true,
+      ledger: new LabelLedger(),
+      collapsed: new Set<number>(),
+      piled: new Set<number>(),
+      groupNoRoom: new Set<string>(),
+      piles: new Map<number, number[]>(),
+      thin: new Set<number>(),
+      thinHost: new Map<number, number>(),
+      holes: [],
+      saveDepth: 0,
+    });
+    const light = this.light;
+    let done: typeof this.pan = null;
+    try {
+      pctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      // без наведения (звезда, связь, ромб под указателем): в сдвиге его нет, а кэш не перерисовывается при каждом наведении
+      this.drawScene({ ...s, hovered: null, linkHover: null, plateMarks: s.plateMarks ? { ...s.plateMarks, hover: null } : s.plateMarks, reserve: [], organs: [] } as SkyState);
+      this.flushPending?.();
+      this.unwind();
+      if (light) light.paintHoles(pctx, dpr, W, H, this.pal.sky, this.holes, this.lightView());
+      done = { cv, key, x0, laneTop, kx: cam.kx, ky: cam.ky, lanes: cam.lanes, rows: cam.rows.key, w: cam.w, h: cam.h, W, H, dpr };
+    } catch {
+      done = null;
+    } finally {
+      this.flushPending?.();
+      for (const k of Object.keys(self)) if (!(k in keep)) delete self[k];
+      Object.assign(self, keep);
+    }
+    this.pan = done;
   }
 
   /** Глубина save() холста неба (считает обёртка groundify): лишние уровни снимаются в начале и в конце кадра. */
@@ -2232,7 +2434,10 @@ export class Sky implements SkyContext {
     // ленты по маршрутам связей (§ 3): на масштабе семьи; на обзоре — прежний сплайн; в «только линиях» на карте — сплайн;
     // поколения линии на экране теснее 24 px — тоже сплайн (маршруты шли бы зигзагом сквозь бусины; ТЗ § 3.2)
     // масштаб в движении (Я33): кадр связей и пороги подписей — пересчётом прежних, пока масштаб не постоит
-    {
+    if (this.caching) {
+      this.scaleMoving = false;
+      this.viewMoving = false;
+    } else {
       const scale = `${cam.kx}|${cam.ky}|${cam.lanes}`;
       const now = performance.now();
       if (scale !== this.lastScale) {
@@ -2330,7 +2535,8 @@ export class Sky implements SkyContext {
     if (L.epochs && !light) this.drawEpochBands();
     // свет — фоном, первым после неба, тем же переносом, что и весь кадр (эпохи — в нём); вырезы подложек он заполнит
     // в конце кадра (draw, paintHoles)
-    if (light) {
+    if (light && this.caching) light.paintBase(ctx, this.dpr, cam.w, cam.h, pal.sky, this.lightView());
+    else if (light) {
       this.lightFrame(light, s, p, !lineOnly && !work && !under);
       light.paintBase(ctx, this.dpr, cam.w, cam.h, pal.sky);
     }
@@ -2553,6 +2759,9 @@ export class Sky implements SkyContext {
     flushText();
 
     under?.();
+    // небо в кэш сдвига (renderPan): без рамки, меридиана и указателей у края — они у края экрана, кадр сдвига рисует
+    // рамку поверх копии
+    if (this.caching) return;
     // флажок меридиана — место на служебной строке до рамки: её надписи его обходят (MAP-33)
     const flag = meridianFlagAt(this, s);
     const cmds = drawFrame(this, ticks, {
@@ -2998,8 +3207,8 @@ export class Sky implements SkyContext {
    * вокруг. Не трогаются: ореолы текста (тёмный ореол держит контраст подписи над светом, ТЗ § 3.8) и рамка неба у края
    * холста (линейка, буквы полос, нижняя строка — непрозрачные, как прежде).
    */
-  private groundify() {
-    const ctx = this.ctx as CanvasRenderingContext2D & Record<string, unknown>;
+  private groundify(target: CanvasRenderingContext2D = this.ctx) {
+    const ctx = target as CanvasRenderingContext2D & Record<string, unknown>;
     const sky = this;
     // ответ по строке стиля — из памяти (вызовов fill и stroke в кадре тысячи, разных стилей — десятки); память — до смены
     // палитры (тема)
@@ -3971,6 +4180,12 @@ export function beadNodes(v: SkyContext, nodes: readonly NodeRow[], beads: Reado
  */
 /** Сколько масштаб должен постоять, чтобы кадр связей и пороги подписей строились заново (мс). */
 export const SCALE_SETTLE_MS = 160;
+/** Запас кэша сдвига по краям (доля окна): чуть меньше запаса растра света (light.ts, MARGIN) — свет покрывает весь кэш. */
+const PAN_MARGIN = { x: 0.25, y: 0.2 };
+/** Через столько мс покоя небо рисуется в кэш сдвига. */
+const PAN_DELAY = 180;
+/** Наибольшая площадь кэша сдвига, px устройства (предел холста Safari — 16 777 216). */
+const PAN_MAX_PX = 16_000_000;
 
 /** Пути кадра связей, разрывающие чужие следы (NFR-1: кадр связей — на всё небо, путей с разрывами — малая доля). */
 const cutPaths = new WeakMap<LinkFrame, LinkFrame['paths']>();

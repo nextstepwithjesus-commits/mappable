@@ -392,11 +392,21 @@ export class LightLayer {
    * огоньки. ctx — холст неба, dpr — его плотность; за краем растра (в движении, до сборки на покое) и до первой сборки —
    * заливка неба.
    */
-  paintBase(ctx: CanvasRenderingContext2D, dpr: number, w: number, h: number, sky: string) {
+  paintBase(ctx: CanvasRenderingContext2D, dpr: number, w: number, h: number, sky: string, view?: LightView) {
     ctx.save();
     ctx.globalCompositeOperation = 'source-over';
-    this.blit(ctx, dpr, w, h, sky);
+    this.blit(ctx, dpr, w, h, sky, this.at(view));
     ctx.restore();
+  }
+
+  /** Перенос растра под вид view (небо в кэше сдвига, sky.ts): без сборки и без смены переноса кадра; без view — кадра. */
+  private at(view?: LightView): { a: number; d: number; e: number; f: number } | null {
+    return view && this.built ? this.transform(view) : this.cur;
+  }
+
+  /** Кадр сдвига из кэша (sky.ts, panFrame): содержимое то же — растр только переносится под нынешний вид. */
+  follow(view: LightView) {
+    if (this.built) this.cur = this.transform(view);
   }
 
   /**
@@ -406,11 +416,11 @@ export class LightLayer {
    * копированием 1:1, те же пиксели, что у фона; растяжение (колесо, перелёт) — весь растр с отсечением по полосам.
    * holes = null — рамки неизвестны: под весь кадр (дороже, но верно). Сотни рамок отсечением стоили ~10 мс кадра.
    */
-  paintHoles(ctx: CanvasRenderingContext2D, dpr: number, w: number, h: number, sky: string, holes: readonly { x: number; y: number; w: number; h: number }[] | null) {
+  paintHoles(ctx: CanvasRenderingContext2D, dpr: number, w: number, h: number, sky: string, holes: readonly { x: number; y: number; w: number; h: number }[] | null, view?: LightView) {
     if (holes && !holes.length) return;
     const runs = holes ? tileRuns(holes, ctx.canvas.width, ctx.canvas.height) : null;
     if (runs && !runs.length) return;
-    const t = this.cur;
+    const t = this.at(view);
     // та же копия, что взял фон этого кадра (blit → device): готова — да, нет — исходный растр
     const d = this.dev;
     const dev = t && this.built && t.a === 1 && t.d === 1 && d && d.dpr === dpr && d.builds === this.builds ? d.cv : null;
@@ -439,7 +449,7 @@ export class LightLayer {
         for (const r of runs) ctx.rect(r.x, r.y, r.w, r.h);
         ctx.clip();
       }
-      this.blit(ctx, dpr, w, h, sky);
+      this.blit(ctx, dpr, w, h, sky, t);
     }
     ctx.restore();
   }
@@ -449,8 +459,7 @@ export class LightLayer {
    * неба заходят на край растра на 1 px (без щели при округлении переноса), растр на стыке главнее: фоном (source-over)
    * полосы кладутся до растра, в вырезы (destination-over, ниже нарисованного) — после.
    */
-  private blit(ctx: CanvasRenderingContext2D, dpr: number, w: number, h: number, sky: string) {
-    const t = this.cur;
+  private blit(ctx: CanvasRenderingContext2D, dpr: number, w: number, h: number, sky: string, t: { a: number; d: number; e: number; f: number } | null) {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.globalAlpha = 1;
     ctx.imageSmoothingEnabled = true;
