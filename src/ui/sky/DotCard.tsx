@@ -757,6 +757,7 @@ function obstacles(
   endsMust: boolean,
   self: { w: number; h: number } | null = null,
   next: readonly string[] = [],
+  union: { a?: string | null; b?: string | null; kids: readonly string[] } | null = null,
 ): { never: Rect[]; keep: Rect[]; hard: Rect[]; soft: Obstacle[]; lines: Segment[]; mass: { x: number; y: number } | null } {
   const s = skyRef.current!;
   // сама карточка — тоже резерв подписей (data-reserve="dot", решение 153): своего прямоугольника она не избегает
@@ -800,6 +801,22 @@ function obstacles(
       const [p, c] = q.x >= fp.x ? [fp, q] : [q, fp];
       const tx = c.x - 9;
       lines.push({ x1: p.x, y1: p.y, x2: tx, y2: p.y, cost: 40 }, { x1: tx, y1: p.y, x2: tx, y2: c.y, cost: 40 }, { x1: tx, y1: c.y, x2: c.x, y2: c.y, cost: 40 });
+    }
+  }
+  // у карточки союза (фокуса нет) — линии самого союза: от супругов к ромбу и от ромба к детям (шина, ствол, зубец; § 2):
+  // карточка у ромба не ложится на ствол к ребёнку (рецензия 3 октября: «Вениамин и его жена» закрывала ствол к Беле)
+  if (!focus && union) {
+    // линия супруга входит в ромб сбоку — бережётся её последний участок у ромба: прямой отрезок от звезды супруга
+    // (проверка — по охватывающему прямоугольнику, segCross) лёг бы на всё небо между ними
+    for (const id of [union.a, union.b]) {
+      const q = id ? starAt(id) : null;
+      if (q) lines.push({ x1: a.x + (q.x < a.x ? -32 : 32), y1: a.y, x2: a.x, y2: a.y, cost: 40 });
+    }
+    for (const id of union.kids) {
+      const c = starAt(id);
+      if (!c) continue;
+      const tx = c.x > a.x + 9 ? c.x - 9 : a.x;
+      lines.push({ x1: a.x, y1: a.y, x2: tx, y2: a.y, cost: 40 }, { x1: tx, y1: a.y, x2: tx, y2: c.y, cost: 40 }, { x1: tx, y1: c.y, x2: c.x, y2: c.y, cost: 40 });
     }
   }
   // шаг ленты к следующему лицу (next — путь: младший конец шага, затем следующее лицо) — как линия семьи: карточка его
@@ -2049,7 +2066,7 @@ export function DotCard() {
       // у карточки союза «семья» — супруги и дети союза (желательные, § 6); у карточки связи концы — обязательные
       const uu = !lk && cur?.kind === 'union' ? unionById(cur.uid) : undefined;
       const ends = lk ? (linkInfo(lk)?.ends.map((e) => e.id) ?? []) : uu ? [uu.a, uu.b, ...uu.kids].filter((x): x is string => !!x) : [];
-      const o = obstacles(lk ? (focus && byId.has(focus) ? focus : null) : cur?.kind === 'person' ? focus : null, ends, a, !!lk, size.current, lk ? stepNext(lk) : []);
+      const o = obstacles(lk ? (focus && byId.has(focus) ? focus : null) : cur?.kind === 'person' ? focus : null, ends, a, !!lk, size.current, lk ? stepNext(lk) : [], uu ?? null);
       const opts = { ...o, prev: spot.current, fine: !s.cam.moving };
       q = placeCard(a, size.current, bounds, opts);
       // полной карточке места нет (§ 6): краткий вид — имя, годы, одна строка «Родства», команды; новый размер —

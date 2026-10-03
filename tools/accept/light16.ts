@@ -11,7 +11,10 @@
  *  — 1244 имена у устья (решение 184, К4′): каждое имя в canvas[data-mouths] — у своего следа за концом перехода;
  *  — 1245 «окна» при протяжке (жалоба владельца 3 октября): наведение на звёзды, протяжка, колесо и выбор не оставляют
  *    на холсте неба ни save() без restore() (canvas[data-save-leak]), ни прозрачного пикселя — прежде подсветка пути
- *    происхождения у наведённой звезды оставляла отсечение по подписям пути, и места подписей застывали прошлым кадром.
+ *    происхождения у наведённой звезды оставляла отсечение по подписям пути, и места подписей застывали прошлым кадром;
+ *  — 1246 подсветка рода «как лампочка» (просьба владельца 3 октября; canvas[data-lineage]): у Иакова черты брака и шины
+ *    всех четырёх союзов — цветом своей ветви (матери), путь к родителям горит; у Вениамина (один союз, ветви по сыновьям)
+ *    горят черта, шина и стволы к сыновьям и путь к Иакову и Рахили.
  */
 import type { Page } from 'playwright';
 import { fail, pass, type Scenario } from './kit.ts';
@@ -165,6 +168,35 @@ export const light16: Scenario[] = [
         out.push(`${hash.split('~')[0]}: ${stars.length} звёзд`);
       }
       return pass(`баланс save/restore, прозрачных пикселей нет — ${out.join('; ')}`);
+    },
+  },
+  {
+    n: 1246,
+    title: 'Просьба владельца 3 октября: выбор лица зажигает весь род — черты брака, шины, стволы и зубцы потомков цветом ветви (у Иакова — цветом матери), путь к родителям — светом рода; серых кусков нет',
+    run: async (p) => {
+      const lin = async () => {
+        const raw = ((await p.locator('.sky > canvas').getAttribute('data-lineage')) ?? '').split(' ').filter(Boolean);
+        return new Map(raw.map((x) => {
+          const [k, v] = x.split(':');
+          const [n, c] = v.split('/').map(Number);
+          return [k, { n, c }] as const;
+        }));
+      };
+      // окно выбора по умолчанию (как после щелчка): в нём и союзы Иакова, и союз Исаака и Ревекки
+      await go(p, '#/iakov', 3200);
+      const j = await lin();
+      const bar = j.get('desc.bar');
+      if (!bar || bar.n < 4 || bar.c !== bar.n) return fail(`Иаков: черты брака рода ${bar ? `${bar.c} цветом из ${bar.n}` : 'не нарисованы'} (нужны все четыре союза цветом матери)`);
+      const jog = j.get('desc.jog');
+      if (jog && jog.c !== jog.n) return fail(`Иаков: шины союзов цветом ${jog.c} из ${jog.n}`);
+      if (![...j.keys()].some((k) => k.startsWith('anc.'))) return fail('Иаков: путь к родителям (Исаак и Ревекка) не горит');
+      await go(p, '#/veniamin', 3200);
+      const v = await lin();
+      const vk = [...v.keys()];
+      if (!vk.some((k) => k === 'desc.trunk' || k === 'desc.jog')) return fail(`Вениамин: ствол и шина к сыновьям не горят (${vk.join(', ')})`);
+      if (!vk.some((k) => k.startsWith('anc.'))) return fail('Вениамин: путь к Иакову и Рахили не горит');
+      const fmt = (m: Map<string, { n: number; c: number }>) => [...m].map(([k, x]) => `${k} ${x.c}/${x.n}`).join(', ');
+      return pass(`Иаков: ${fmt(j)}; Вениамин: ${fmt(v)}`);
     },
   },
 ];

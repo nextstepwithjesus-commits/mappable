@@ -495,7 +495,13 @@ export class LabelCache {
   /** Сбросить пороги: догрузился шрифт (ширины имён). Следующий кадр считает их заново. */
   invalidate() {
     this.key = '';
+    this.metric = null;
   }
+  /**
+   * замеры имён и порядок интереса — от узлов и шрифтов (часть ключа core), а не от вида: смена одного вида (открылась
+   * карточка, «всё небо») пересчитывает только пороги, без повторного measureText по всем узлам
+   */
+  private metric: { core: string; nodes: readonly unknown[]; full: Float64Array; order: number[] } | null = null;
 
   /**
    * Пороги для текущей модели, масштаба времени, высоты холста и масштаба «всего неба». Смена одного только вида (высота
@@ -503,6 +509,7 @@ export class LabelCache {
    * стоят по прежним, а новые считаются, когда небо постоит (С1: кадр выбора и перелёта — без пересчёта порогов)
    */
   ensure(v: SkyContext) {
+    if (v.caching && this.key) return;
     const f = v.cam.fitK;
     // сжатие полос (J4, J5) меняет места звёзд по вертикали: пороги считаются по строкам экрана
     // и пропорция полос (J1): высота строки меняет места подписей по вертикали
@@ -536,35 +543,49 @@ export class LabelCache {
     this.level = new Float64Array(n).fill(Infinity);
     this.side = new Uint8Array(n * LEVELS);
     this.shown = new Uint8Array(n);
-    const ctx = v.ctx;
-    const widths = new Float64Array(n);
-    this.nameW = widths;
-    this.nameAsc = new Float64Array(n).fill(NaN);
-    this.nameDesc = new Float64Array(n).fill(NaN);
-    this.siglaW = new Float64Array(n).fill(-1);
-    // место подписи в порогах — с «†» младенца (MAP-68); ширина имени — шрифтом узла (курсив у лица без времени)
-    const full = new Float64Array(n);
-    for (let i = 0; i < n; i++) {
-      const p = byId.get(nodes[i].person)!;
-      if (nodes[i].ghost) continue;
-      ctx.font = labelFontOf(v, i);
-      const mt = ctx.measureText(p.name);
-      widths[i] = mt.width;
-      if (Number.isFinite(mt.actualBoundingBoxAscent) && Number.isFinite(mt.actualBoundingBoxDescent)) {
-        this.nameAsc[i] = mt.actualBoundingBoxAscent;
-        this.nameDesc[i] = mt.actualBoundingBoxDescent;
+    let m = this.metric;
+    if (!m || m.core !== core || m.nodes !== nodes || this.nameW.length !== n) {
+      const ctx = v.ctx;
+      const widths = new Float64Array(n);
+      this.nameW = widths;
+      this.nameAsc = new Float64Array(n).fill(NaN);
+      this.nameDesc = new Float64Array(n).fill(NaN);
+      this.siglaW = new Float64Array(n).fill(-1);
+      // место подписи в порогах — с «†» младенца (MAP-68); ширина имени — шрифтом узла (курсив у лица без времени)
+      const full = new Float64Array(n);
+      for (let i = 0; i < n; i++) {
+        const p = byId.get(nodes[i].person)!;
+        if (nodes[i].ghost) continue;
+        ctx.font = labelFontOf(v, i);
+        const mt = ctx.measureText(p.name);
+        widths[i] = mt.width;
+        if (Number.isFinite(mt.actualBoundingBoxAscent) && Number.isFinite(mt.actualBoundingBoxDescent)) {
+          this.nameAsc[i] = mt.actualBoundingBoxAscent;
+          this.nameDesc[i] = mt.actualBoundingBoxDescent;
+        }
+        full[i] = widths[i] + (infantAt(v, i) ? ctx.measureText(DAGGER).width : 0);
       }
-      full[i] = widths[i] + (infantAt(v, i) ? ctx.measureText(DAGGER).width : 0);
+      const order = [...Array(n).keys()]
+        .filter((i) => !nodes[i].ghost)
+        .sort((a, b) => {
+          const pa = byId.get(nodes[a].person)!;
+          const pb = byId.get(nodes[b].person)!;
+          return pa.magnitude - pb.magnitude || Number(nodes[b].spine) - Number(nodes[a].spine) || pb.prominence - pa.prominence || a - b;
+        });
+      this.rank = new Int32Array(n).fill(n);
+      order.forEach((i, k) => (this.rank[i] = k));
+      m = this.metric = { core, nodes, full, order };
     }
-    const order = [...Array(n).keys()]
-      .filter((i) => !nodes[i].ghost)
-      .sort((a, b) => {
-        const pa = byId.get(nodes[a].person)!;
-        const pb = byId.get(nodes[b].person)!;
-        return pa.magnitude - pb.magnitude || Number(nodes[b].spine) - Number(nodes[a].spine) || pb.prominence - pa.prominence || a - b;
-      });
-    this.rank = new Int32Array(n).fill(n);
-    order.forEach((i, k) => (this.rank[i] = k));
+    const { full, order } = m;
+    // масштаб каждого уровня — один раз на пересчёт, а не на узел (kyFor — логарифмы и экспонента)
+    const lvKx = new Float64Array(LEVELS);
+    const lvKy = new Float64Array(LEVELS);
+    const lvZs = new Float64Array(LEVELS);
+    for (let lv = 0; lv < LEVELS; lv++) {
+      lvKx[lv] = KX_MIN * Math.pow(2, lv / 2);
+      lvKy[lv] = v.cam.kyFor(lvKx[lv]);
+      lvZs[lv] = zoomScaleFor(lvKy[lv]);
+    }
     const grids: Map<number, number[][]>[] = Array.from({ length: LEVELS }, () => new Map());
     const cell = 96;
     const cellKey = (cx: number, cy: number) => cx * 1_000_003 + cy;
@@ -574,11 +595,10 @@ export class LabelCache {
       if (nodes[i].trail === 'list') continue;
       const size = nameSize(p.magnitude, v.coarse);
       const king = p.roles.includes('king') || p.roles.includes('queen');
+      const row = v.rowOf(starLaneOf(nodes[i]));
       const boxAt = (lv: number, sd: Side) => {
-        const kx = KX_MIN * Math.pow(2, lv / 2);
-        const ky = v.cam.kyFor(kx);
-        const r = starRadius(p.magnitude, zoomScaleFor(ky));
-        const b = spot(sd, v.X0[i] * kx, -v.rowOf(starLaneOf(nodes[i])) * ky, r, full[i], size, king).box;
+        const r = starRadius(p.magnitude, lvZs[lv]);
+        const b = spot(sd, v.X0[i] * lvKx[lv], -row * lvKy[lv], r, full[i], size, king).box;
         return [b.x, b.y, b.x + b.w, b.y + b.h];
       };
       const fits = (lv: number, b: number[]) => {
@@ -590,10 +610,17 @@ export class LabelCache {
       };
       // минимальный уровень, начиная с которого подпись помещается (в одном из положений) на всех более крупных уровнях
       const chosen = new Int8Array(LEVELS).fill(-1);
+      const boxes: number[][] = [];
       let found = Infinity;
       for (let lv = LEVELS - 1; lv >= 0; lv--) {
         let k = -1;
-        for (let s = 0; s < SIDES.length && k < 0; s++) if (fits(lv, boxAt(lv, SIDES[s]))) k = s;
+        for (let s = 0; s < SIDES.length && k < 0; s++) {
+          const b = boxAt(lv, SIDES[s]);
+          if (fits(lv, b)) {
+            k = s;
+            boxes[lv] = b;
+          }
+        }
         if (k < 0) break;
         chosen[lv] = k;
         found = lv;
@@ -605,9 +632,8 @@ export class LabelCache {
       found = Math.max(found, minLv);
       this.level[i] = found;
       for (let lv = found; lv < LEVELS; lv++) {
-        const k = chosen[lv];
-        this.side[i * LEVELS + lv] = k;
-        const b = boxAt(lv, SIDES[k]);
+        this.side[i * LEVELS + lv] = chosen[lv];
+        const b = boxes[lv];
         const g = grids[lv];
         for (let cx = Math.floor(b[0] / cell); cx <= Math.floor(b[2] / cell); cx++)
           for (let cy = Math.floor(b[1] / cell); cy <= Math.floor(b[3] / cell); cy++) {
@@ -2294,6 +2320,8 @@ export function clusterShort(c: { name: string; count: number }): string {
  * Подпись у знака скопления или над его сеткой: справа, слева, сверху или снизу от anchor (прямоугольник знака).
  * Возвращает прямоугольник или null, если места нет.
  */
+/** Ширина подписи скопления, px, при которой она ещё может встать слева от знака. */
+const CLUSTER_LEFT_MAX = 180;
 export function drawClusterLabel(v: SkyContext, p: Pass, text: string, anchor: Rect, a: number, prefer: 'side' | 'above' = 'side'): Rect | null {
   const { ctx, pal } = v;
   const font = mapFont(T_UI_S, { italic: true, coarse: v.coarse });
@@ -2305,7 +2333,10 @@ export function drawClusterLabel(v: SkyContext, p: Pass, text: string, anchor: R
   const left = { tx: anchor.x - 6 - w, ty: ym };
   const above = { tx: anchor.x, ty: anchor.y - 3 - DESC * size };
   const below = { tx: anchor.x, ty: anchor.y + anchor.h + 3 + ASC * size };
-  const order = prefer === 'above' ? [above, below, right, left] : [right, left, above, below];
+  // слева от знака — только короткая строка: длинная уходила влево через другие эпохи и читалась подписью чужих лиц
+  // («Храбрые Давида…» у Иосифа на обзоре; рецензия 3 октября) — тогда пробуется строка короче (clusterLabels)
+  const sideways = w <= CLUSTER_LEFT_MAX ? [right, left] : [right];
+  const order = prefer === 'above' ? [above, below, ...sideways] : [...sideways, above, below];
   const cands = order.map((c) => ({ c, box: textBox(c.tx, c.ty, w, size) }));
   const got = claim(v, p, cands.map((c) => c.box), 'cluster', text);
   if (!got) return null;

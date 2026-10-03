@@ -225,6 +225,11 @@ export type Emphasis = 'self' | 'anc' | 'desc' | 'path' | 'sure' | 'likely' | 's
 export interface SkyContext {
   readonly ctx: CanvasRenderingContext2D;
   readonly cam: Camera;
+  /**
+   * кадр рисуется в кэш сдвига (renderPan) камерой с запасом по краям: пороги подписей — прежние, по окну неба
+   * (labels.ts, LabelCache.ensure), иначе каждая сборка кэша дважды пересчитывала бы их — для запаса и снова для окна
+   */
+  readonly caching?: boolean;
   readonly pal: Palette;
   /** сенсорный экран: кегли холста не мельче 12,5 px */
   readonly coarse: boolean;
@@ -2204,8 +2209,8 @@ export class Sky implements SkyContext {
   } | null = null;
   private panCv: HTMLCanvasElement | null = null;
   private panTimer: ReturnType<typeof setTimeout> | null = null;
-  /** кадр рисуется в кэш сдвига (renderPan): без движения, без сборки света, без рамки */
-  private caching = false;
+  /** кадр рисуется в кэш сдвига (renderPan): без движения, без сборки света, без рамки, без пересчёта порогов подписей */
+  caching = false;
 
   /** Ключ состояния кадра для кэша сдвига: всё, кроме места окна и наведения (кэш — без него), что меняет нарисованное небо. */
   private panKey(s: SkyState): string {
@@ -2256,9 +2261,22 @@ export class Sky implements SkyContext {
     const dragging = !!this.canvas.classList?.contains('dragging');
     if (!(cam.moving || dragging || now - this.viewAt < SCALE_SETTLE_MS)) return false;
     if (c.key !== this.panKey(s)) return false;
-    const dx = (c.x0 - cam.x0) * cam.kx;
-    const dy = (cam.laneTop - c.laneTop) * cam.ky;
-    if (dx > 0.5 || dy > 0.5 || dx + c.W < cam.w - 0.5 || dy + c.H < cam.h - 0.5) return false;
+    let cc = c;
+    let dx = (cc.x0 - cam.x0) * cam.kx;
+    let dy = (cam.laneTop - cc.laneTop) * cam.ky;
+    const out = () => dx > 0.5 || dy > 0.5 || dx + cc.W < cam.w - 0.5 || dy + cc.H < cam.h - 0.5;
+    if (out()) {
+      // протяжка рукой вышла за запас кэша: кэш собирается заново вокруг нынешнего окна — один кадр дороже, дальше снова
+      // перенос (иначе каждый кадр до отпускания рисовался бы целиком: 70–125 мс при плотности 2× без видеокарты).
+      // Перелёт и скольжение после отпускания — обычными кадрами
+      if (!dragging) return false;
+      this.renderPan(s, c.key);
+      if (!this.pan) return false;
+      cc = this.pan;
+      dx = (cc.x0 - cam.x0) * cam.kx;
+      dy = (cam.laneTop - cc.laneTop) * cam.ky;
+      if (out()) return false;
+    }
     // кадр покоя после сдвига — по таймеру, как у обычного кадра движения
     this.viewMoving = true;
     this.scaleMoving = false;
@@ -2276,7 +2294,7 @@ export class Sky implements SkyContext {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.globalAlpha = 1;
       ctx.globalCompositeOperation = 'source-over';
-      ctx.drawImage(c.cv, Math.round(dx * dpr), Math.round(dy * dpr));
+      ctx.drawImage(cc.cv, Math.round(dx * dpr), Math.round(dy * dpr));
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       drawFrame(this, yearTicks(this), { model: s.modelNote, folds: this.plan.marks, flag: meridianFlagAt(this, s) });
     } finally {
@@ -2315,13 +2333,27 @@ export class Sky implements SkyContext {
   private renderPan(s: SkyState, key: string) {
     const cam = this.cam;
     const dpr = this.dpr;
-    const mx = Math.round(cam.w * PAN_MARGIN.x);
-    const my = Math.round(cam.h * PAN_MARGIN.y);
+    // запас — по пределу площади холста: на большом экране высокой плотности он уже, но кэш есть
+    let f = 1;
+    let mx = 0;
+    let my = 0;
+    for (let k = 0; k < 12; k++, f *= 0.85) {
+      mx = Math.round(cam.w * PAN_MARGIN.x * f);
+      my = Math.round(cam.h * PAN_MARGIN.y * f);
+      if ((cam.w + 2 * mx) * (cam.h + 2 * my) * dpr * dpr <= PAN_MAX_PX) break;
+    }
     const W = cam.w + 2 * mx;
     const H = cam.h + 2 * my;
-    if (W * H * dpr * dpr > PAN_MAX_PX) {
+    if (W * H * dpr * dpr > PAN_MAX_PX || (mx < 24 && my < 24)) {
       this.pan = null;
       return;
+    }
+    // свет должен покрыть весь кэш: растр собран вокруг окна, где небо стояло раньше, — иначе у дальнего края кэша полоса
+    // без света. Сборка — вокруг нынешнего окна по входу последнего кадра (содержимое то же: ключ кэша не сменился)
+    const light0 = this.light;
+    if (light0 && this.lightInp) {
+      const view = this.lightView();
+      if (!light0.covers(view, this.lightInp.key, mx, my)) light0.build({ ...this.lightInp, view });
     }
     const cv = this.panCv ?? (this.panCv = document.createElement('canvas'));
     const pw = Math.round(W * dpr);
@@ -3387,8 +3419,11 @@ export class Sky implements SkyContext {
     // протяжка рукой (src/ui/sky/input.ts, класс dragging) — тоже движение: камера в ней не «едет», и выход за запас слоя
     // посреди протяжки пересобирал свет (30–60 мс на кадр, О1); сборка — в покое
     const dragging = typeof this.canvas.classList !== 'undefined' && this.canvas.classList.contains('dragging');
+    this.lightInp = inp;
     light.frame(inp, cam.moving || this.scaleMoving || this.viewMoving || !!this.trans || dragging);
   }
+  /** Вход последней сборки света (кадр неба): кэш сдвига по нему собирает свет вокруг нынешнего окна (renderPan). */
+  private lightInp: LightInput | null = null;
   private lightView() {
     const cam = this.cam;
     return { w: cam.w, h: cam.h, kx: cam.kx, ky: cam.ky, x0: cam.x0, laneTop: cam.laneTop, rowsKey: cam.rows.key, sx: (x: number) => cam.sx(x), sy: (l: number) => cam.sy(l) };
@@ -3571,12 +3606,10 @@ export class Sky implements SkyContext {
       const rings = this.orthoOf(ov);
       ctx.beginPath();
       for (const r of rings) orthoPath(ctx, r.x, r.lane, cam);
-      if (ov.foreign) {
-        ctx.fillStyle = alpha(pal.ink, 0.035);
-        ctx.fill('evenodd');
-      }
+      // народ вне Израиля — точечной границей, без заливки (ТЗ § 3.1): светлые ступенчатые прямоугольники заливки с резким
+      // краем на масштабе семьи принимали за «окна» (рецензия 3 октября)
       ctx.strokeStyle = alpha(pal.ink3, la);
-      ctx.setLineDash(ov.o.parent ? [3, 3] : []);
+      ctx.setLineDash(ov.foreign ? [1.2, 3] : ov.o.parent ? [3, 3] : []);
       ctx.stroke();
       const slots = ov.o.slots.map((sl) => ({
         x0: cam.sx(this.xOf(sl.t0)),

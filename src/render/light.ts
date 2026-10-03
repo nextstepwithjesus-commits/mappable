@@ -404,6 +404,22 @@ export class LightLayer {
     return view && this.built ? this.transform(view) : this.cur;
   }
 
+  /**
+   * Покрывает ли собранный растр вид view с запасом ex, ey px по краям, без растяжения (кэш сдвига неба, sky.ts,
+   * renderPan). Нет — свет собирается заново вокруг нынешнего окна: иначе у дальнего края кэша осталась бы полоса без
+   * туманности, эпох и огоньков, вспыхивающая при отпускании (растр собирается в покое, только когда окно ушло дальше
+   * 0,85 запаса, а кэш строится вокруг окна).
+   */
+  covers(view: LightView, key: string, ex: number, ey: number): boolean {
+    const b = this.built;
+    if (!b || b.key !== key || b.view.rowsKey !== view.rowsKey || b.view.w !== view.w || b.view.h !== view.h) return false;
+    const t = this.transform(view);
+    if (Math.abs(t.a - 1) > 1e-9 || Math.abs(t.d - 1) > 1e-9) return false;
+    const iw = this.cv.width / RES;
+    const ih = this.cv.height / RES;
+    return t.e <= -ex + 0.5 && t.f <= -ey + 0.5 && t.e + iw >= view.w + ex - 0.5 && t.f + ih >= view.h + ey - 0.5;
+  }
+
   /** Кадр сдвига из кэша (sky.ts, panFrame): содержимое то же — растр только переносится под нынешний вид. */
   follow(view: LightView) {
     if (this.built) this.cur = this.transform(view);

@@ -2445,6 +2445,21 @@ export function drawLinks(v: SkyContext, p: Pass, d: LinkDraw) {
       for (let k = 0; k + 3 < q.pts.length; k += 2) glow.add(gc, a, q.pts[k] + dx, q.pts[k + 1] + dy, q.pts[k + 2] + dx, q.pts[k + 3] + dy);
     }
     glow.flush(ctx, night);
+    // замер для проверок (tools/accept/light16.ts, 1246): пути рода кадра по видам — «вид:всего/цветом ветви»
+    const ds = (ctx.canvas as { dataset?: DOMStringMap } | undefined)?.dataset;
+    if (ds) {
+      const by = new Map<string, [number, number]>();
+      for (const [q, l] of lin) {
+        const k = `${lineageOf(p, q)}.${q.kind}`;
+        const c = by.get(k) ?? [0, 0];
+        c[0]++;
+        if (l.color !== alpha(lineInk, p.s.intro)) c[1]++;
+        by.set(k, c);
+      }
+      const out = [...by].sort().map(([k, [n, c]]) => `${k}:${n}/${c}`).join(' ');
+      if (out) ds.lineage = out;
+      else if (ds.lineage !== undefined) delete ds.lineage;
+    }
   }
   // главный ярус — после остальных: с ореолом цвета неба поверх контекста (решение 135)
   const main: { q: LinkPath; a: number; gaps: Map<number, [number, number][]> | null; color: string }[] = [];

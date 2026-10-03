@@ -744,6 +744,9 @@ function drawServiceRow(v: SkyContext, extra: ServiceExtra): ServiceHit[] {
   const eps = v.model.epochs.map((e) => ({ e, a: cam.sx(v.xOf(toAstro(e.start))), b: cam.sx(v.xOf(toAstro(e.end))) }));
   for (const { a } of eps) {
     if (!ROW_H || a <= LW + 1 || a >= W - 1) continue;
+    // граница эпохи не перечёркивает надписи строки: «сегодня», масштаб, свёрнутое, черту канона (рецензия 3 октября,
+    // телефон: риски шли через «≈ 1000 лет» и «сегодня»)
+    if (taken.some((t) => a >= t.x - 1 && a <= t.x + t.w + 1)) continue;
     ctx.moveTo(Math.round(a) + 0.5, RULER_H + 3);
     ctx.lineTo(Math.round(a) + 0.5, FRAME_H - 3);
   }

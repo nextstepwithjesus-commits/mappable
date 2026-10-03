@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { effect, signal } from '@preact/signals';
-import { FRAME_H, SCALE_SETTLE_MS, Sky, readPalette, type Emphasis, type Rect, type SkyState } from '../render/sky.ts';
+import { FRAME_H, SCALE_SETTLE_MS, Sky, probes, readPalette, type Emphasis, type Rect, type SkyState } from '../render/sky.ts';
 import { LOW_SKY_H, setLowFrame } from '../render/frame.ts';
 import { byId, groupById, lines, modelInfo } from '../data/atlas.ts';
 import { highlightFor } from '../render/marks.ts';
@@ -371,36 +371,40 @@ export function SkyView() {
         wrap.current!.style.setProperty('--sky-top', `${Math.round(vp.t)}px`);
         requestAnimationFrame(() => wrap.current && layoutRef.current(false));
       }
-      // замер подписей кадра — для проверок этапа 4: «нарисовано подписей/пересекающихся пар» (src/render/labels.ts)
-      const ls = sky.labelStats();
-      const labelsKey = `${ls.boxes.length}/${ls.overlaps}`;
-      if (labelsKey !== shownLabels) {
-        shownLabels = labelsKey;
-        wrap.current!.dataset.labels = labelsKey;
-        // какие подписи наложились — «вид:текст~вид:текст» (этап 11, B1; tools/_bugs-chaos.ts): пусто — наложений нет
-        wrap.current!.dataset.overlapPairs = ls.pairs.map(([a, b]) => `${ls.boxes[a].kind}:${ls.boxes[a].text}~${ls.boxes[b].kind}:${ls.boxes[b].text}`).join(';');
-      }
-      // флажок меридиана — для проверок приёмки (tools/accept/sky.ts): есть ли меридиан и что на флажке
-      if (meridianLabel) wrap.current!.dataset.meridian = meridianLabel;
-      else delete wrap.current!.dataset.meridian;
-      // выноски точек сравнения линий (E6) — для проверок приёмки (tools/accept/map.ts): «лицо:x,y,w,h;…» в px холста
-      const notesKey = lineNoteHits(sky).filter((h) => h.kind === 'synopsis').map((h) => `${h.id}:${[h.x, h.y, h.w, h.h].map(Math.round).join(',')}`).join(';');
-      if (notesKey) wrap.current!.dataset.lineNotes = notesKey;
-      else delete wrap.current!.dataset.lineNotes;
-      // где звезда выбранного лица (px холста) — «выбранное лицо видно» проверяется по ней
-      const sel = selected.value ? screenOf(selected.value) : null;
-      if (sel) wrap.current!.dataset.sel = `${sel.x.toFixed(1)} ${sel.y.toFixed(1)}`;
-      else delete wrap.current!.dataset.sel;
-      // звезда со скобками фокуса (решение 169: только после клавиатуры) — для проверок приёмки (tools/accept/nav14.ts)
-      const ring = state.focus ?? '';
-      if (ring !== (wrap.current!.dataset.focusRing ?? '')) wrap.current!.dataset.focusRing = ring;
-      // родня выбранного и указатели у края на неё (решение 146) — для проверок приёмки (tools/accept/nav14.ts)
-      // (в покое: в движении кадр не тратится на замер)
-      if (!sky.cam.moving) {
-        const kin = selected.value ? kinProbe(selected.value) : '';
-        if (kin !== wrap.current!.dataset.kin) wrap.current!.dataset.kin = kin;
-        const edges = sky.edgeHits.map((e) => `${e.label}=${(e.ids ?? [e.id]).join(',')}@${[e.x, e.y, e.w, e.h].map(Math.round).join(',')}`).join('|');
-        if (edges !== (wrap.current!.dataset.edges ?? '')) wrap.current!.dataset.edges = edges;
+      // проверочные метки кадра (замер подписей, выноски, выбранное, родня у края) — только для проверок приёмки: у читателя
+      // их нет (src/main.tsx, probes), и кадр протяжки не тратит время на замер наложений подписей (рецензия 3 октября)
+      if (probes.on) {
+        // замер подписей кадра — для проверок этапа 4: «нарисовано подписей/пересекающихся пар» (src/render/labels.ts)
+        const ls = sky.labelStats();
+        const labelsKey = `${ls.boxes.length}/${ls.overlaps}`;
+        if (labelsKey !== shownLabels) {
+          shownLabels = labelsKey;
+          wrap.current!.dataset.labels = labelsKey;
+          // какие подписи наложились — «вид:текст~вид:текст» (этап 11, B1; tools/_bugs-chaos.ts): пусто — наложений нет
+          wrap.current!.dataset.overlapPairs = ls.pairs.map(([a, b]) => `${ls.boxes[a].kind}:${ls.boxes[a].text}~${ls.boxes[b].kind}:${ls.boxes[b].text}`).join(';');
+        }
+        // флажок меридиана — для проверок приёмки (tools/accept/sky.ts): есть ли меридиан и что на флажке
+        if (meridianLabel) wrap.current!.dataset.meridian = meridianLabel;
+        else delete wrap.current!.dataset.meridian;
+        // выноски точек сравнения линий (E6) — для проверок приёмки (tools/accept/map.ts): «лицо:x,y,w,h;…» в px холста
+        const notesKey = lineNoteHits(sky).filter((h) => h.kind === 'synopsis').map((h) => `${h.id}:${[h.x, h.y, h.w, h.h].map(Math.round).join(',')}`).join(';');
+        if (notesKey) wrap.current!.dataset.lineNotes = notesKey;
+        else delete wrap.current!.dataset.lineNotes;
+        // где звезда выбранного лица (px холста) — «выбранное лицо видно» проверяется по ней
+        const sel = selected.value ? screenOf(selected.value) : null;
+        if (sel) wrap.current!.dataset.sel = `${sel.x.toFixed(1)} ${sel.y.toFixed(1)}`;
+        else delete wrap.current!.dataset.sel;
+        // звезда со скобками фокуса (решение 169: только после клавиатуры) — для проверок приёмки (tools/accept/nav14.ts)
+        const ring = state.focus ?? '';
+        if (ring !== (wrap.current!.dataset.focusRing ?? '')) wrap.current!.dataset.focusRing = ring;
+        // родня выбранного и указатели у края на неё (решение 146) — для проверок приёмки (tools/accept/nav14.ts)
+        // (в покое: в движении кадр не тратится на замер)
+        if (!sky.cam.moving) {
+          const kin = selected.value ? kinProbe(selected.value) : '';
+          if (kin !== wrap.current!.dataset.kin) wrap.current!.dataset.kin = kin;
+          const edges = sky.edgeHits.map((e) => `${e.label}=${(e.ids ?? [e.id]).join(',')}@${[e.x, e.y, e.w, e.h].map(Math.round).join(',')}`).join('|');
+          if (edges !== (wrap.current!.dataset.edges ?? '')) wrap.current!.dataset.edges = edges;
+        }
       }
       // пропорция полос устоялась (шаг, протяжка, щипок закончились) — в память браузера и органам неба (J1)
       // временное сжатие строк вписыванием группы (IX-70) — не пропорция читателя: в память идёт своя
