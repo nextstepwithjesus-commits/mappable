@@ -948,6 +948,8 @@ export function knockTrail(v: SkyContext, p: Pass, i: number, at: { box: Rect; s
  * Лицо линии Мессии сначала ищет место вне лент (MAP-56): имя на своей ленте не читается. Подпись справа от звезды
  * гасит под собой свой след полосой цвета фона (MAP-56): между звездой, именем и сокращением роли след не читается дефисом.
  */
+/** Запись «места нет» в кадре покоя (Pass.labelRecord): в кадрах сдвига звезда не перебирает места заново. */
+const NO_SPOT = 'none-spot';
 export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): LabelAt | null {
   if (p.labeled.has(i)) return null;
   // подпись — только у звезды, нарисованной в этом кадре в полную силу (этап 11, B1): та же проверка, что у звёзд (sky.ts,
@@ -1180,6 +1182,8 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): Label
   // кадр сдвига (sky.ts, Pass.labelReuse): место кадра покоя относительно звезды, если оно в небе, не под органами и не
   // занято подписью звезды, въехавшей в кадр раньше по очереди; иначе — обычный перебор
   const rk = !o.least ? p.labelReuse?.get(q.id) : undefined;
+  // в кадре покоя места не нашлось — в сдвиге его нет и подавно (перебор всех мест в каждом кадре стоил дороже всего)
+  if (rk && rk.mode === NO_SPOT) return null;
   if (rk) {
     const box = { x: x + rk.bx, y: y + rk.by, w: rk.bw, h: rk.bh };
     if (insideSky(v, box) && !hits(box, p.reserve) && !p.placer.clash(box, false, 99, q.id)) {
@@ -1320,7 +1324,10 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): Label
       }
     }
   }
-  if (!at) return null;
+  if (!at) {
+    if (p.labelRecord && !o.least) p.labelRecord.set(q.id, { dx: 0, dy: 0, bx: 0, by: 0, bw: 0, bh: 0, side: 'r', mode: NO_SPOT });
+    return null;
+  }
   const { tx, ty } = at;
   if (atMouth) p.mouthNames?.push({ id: q.id, i, box: at.box });
   // у устья свой след под именем гасит разрыв середины строки (ниже), а не полоса от звезды

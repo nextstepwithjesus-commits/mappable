@@ -228,6 +228,9 @@ export class GlowBatch {
   flush(ctx: CanvasRenderingContext2D, night: boolean) {
     if (!this.paths.size) return;
     ctx.save();
+    // свечение — оформление под линией, а не линия: замеры кадра (tools/collide.ts) его не считают (метка на время рисования)
+    const tagged = ctx as CanvasRenderingContext2D & { __decor?: boolean };
+    tagged.__decor = true;
     ctx.setLineDash([]);
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
@@ -245,6 +248,7 @@ export class GlowBatch {
         ctx.stroke();
       }
     }
+    tagged.__decor = false;
     ctx.restore();
     this.paths.clear();
   }

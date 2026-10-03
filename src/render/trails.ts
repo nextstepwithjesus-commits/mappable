@@ -1881,7 +1881,9 @@ export function linkLooks(v: SkyContext, p: Pass, d: Pick<LinkDraw, 'lit' | 'sel
       if (k >= 0) held!.classes[k] = c;
     }
     let out: LinkLook;
-    if (!c.subj || work) out = { tier: c.tier, a: 1 };
+    // путь рода выбранного (lineageOf) — в полную силу на любом масштабе: его видят и рисование, и подписи (препятствие),
+    // и разрывы пересечений
+    if (!c.subj || work || lineageOf(p, q)) out = { tier: c.tier, a: 1 };
     else {
       // структурные — по порогу подписи их лица и все с обзора семьи; контекстные — только с обзора семьи (решение 178)
       let a = ctxA;

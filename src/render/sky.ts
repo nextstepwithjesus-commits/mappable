@@ -2579,6 +2579,8 @@ export class Sky implements SkyContext {
     if (ds && probes.on) {
       const put = (k: string, v: string) => ds[k] !== v && (ds[k] = v);
       put('named', `${this.ledger.named}/${this.ledger.stars}`);
+      // подписи кадра сдвига на местах кадра покоя (Pass.labelReuse): «повтор/записей», в покое — пусто
+      put('labelReuse', p.labelReuse ? `${p.labelReuse.size}` : '');
       // подробность звёзд (облака гаснут с ней) и по осям: «время строки» (решение 25)
       put('detail', dd.stars.toFixed(2));
       put('detailAxes', `${dd.time.toFixed(2)} ${dd.rows.toFixed(2)}`);

@@ -142,3 +142,28 @@ describe('названия созвездий на обзоре (решение 
     expect(groupSubtitle('dan')).toBe('');
   });
 });
+
+describe('свет в вырезы кадра — полосами плиток (рецензия 3 октября: сотни рамок отсечением стоили ~10 мс кадра)', () => {
+  it('полосы покрывают каждую рамку, соседние плитки строки сливаются, за холстом — обрезаны', async () => {
+    const { tileRuns } = await import('../src/render/light.ts');
+    const rects = [
+      { x: 10, y: 10, w: 20, h: 8 },
+      { x: 70, y: 12, w: 30, h: 6 },
+      { x: 300, y: 130, w: 10, h: 10 },
+      { x: 990, y: 500, w: 40, h: 40 },
+    ];
+    const runs = tileRuns(rects, 1000, 520);
+    // каждая точка рамки в пределах холста — в какой-нибудь полосе (рамка на двух строках плиток — в двух полосах)
+    const cover = (r: { x: number; y: number; w: number; h: number }) => {
+      for (let x = r.x; x < Math.min(1000, r.x + r.w); x += 2)
+        for (let y = r.y; y < Math.min(520, r.y + r.h); y += 2) if (!runs.some((q) => x >= q.x && x < q.x + q.w && y >= q.y && y < q.y + q.h)) return false;
+      return true;
+    };
+    for (const r of rects) expect(cover(r)).toBe(true);
+    // первые две рамки — плитки 0 и 1 первой строки: одна полоса
+    expect(runs.filter((q) => q.y === 0)).toEqual([{ x: 0, y: 0, w: 128, h: 64 }]);
+    // за краем холста полос нет
+    for (const q of runs) expect(q.x + q.w <= 1000 && q.y + q.h <= 520).toBe(true);
+    expect(tileRuns([], 1000, 520)).toEqual([]);
+  });
+});

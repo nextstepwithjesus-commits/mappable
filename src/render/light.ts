@@ -147,6 +147,38 @@ export interface LightInput {
 
 /** Шаг растра туманности, px. */
 const CELL = 6;
+/** Плитка рамок вырезов (px устройства): вырезы кадра заполняются светом полосами плиток (LightLayer.paintHoles). */
+const HOLE_TILE = 64;
+/** Полосы плиток, задетых рамками rects (px устройства), по строкам плиток; в пределах холста W × H. */
+export function tileRuns(rects: readonly { x: number; y: number; w: number; h: number }[], W: number, H: number): { x: number; y: number; w: number; h: number }[] {
+  const T = HOLE_TILE;
+  const cols = Math.ceil(W / T);
+  const rows = Math.ceil(H / T);
+  const on = new Uint8Array(cols * rows);
+  for (const r of rects) {
+    const c0 = Math.max(0, Math.floor(r.x / T));
+    const c1 = Math.min(cols - 1, Math.floor((r.x + r.w - 1e-6) / T));
+    const r0 = Math.max(0, Math.floor(r.y / T));
+    const r1 = Math.min(rows - 1, Math.floor((r.y + r.h - 1e-6) / T));
+    for (let y = r0; y <= r1; y++) for (let x = c0; x <= c1; x++) on[y * cols + x] = 1;
+  }
+  const out: { x: number; y: number; w: number; h: number }[] = [];
+  for (let y = 0; y < rows; y++) {
+    let x = 0;
+    while (x < cols) {
+      if (!on[y * cols + x]) {
+        x++;
+        continue;
+      }
+      const a = x;
+      while (x < cols && on[y * cols + x]) x++;
+      const px = a * T;
+      const py = y * T;
+      out.push({ x: px, y: py, w: Math.min(W, x * T) - px, h: Math.min(H, py + T) - py });
+    }
+  }
+  return out;
+}
 /** Наибольшая площадь копии растра под плотность экрана, px устройства (предел Safari — 16 777 216). */
 const DEV_MAX_PX = 16_000_000;
 /** Разрешение холста света к CSS px: свет мягкий, полоса эпохи и пыль от половинного растра не теряют (О2: сборка ≤ 40 мс). */
@@ -368,21 +400,47 @@ export class LightLayer {
   }
 
   /**
-   * Свет в вырезы кадра — последним, под нарисованное (destination-over), только в рамках holes (px устройства): кадр
-   * вырезал подложки и ореолы (sky.ts, groundify, fillGround), эта же копия растра тем же переносом их заполняет. holes =
-   * null — рамки вырезов неизвестны: под весь кадр (дороже, но верно).
+   * Свет в вырезы кадра — последним, под нарисованное (destination-over), только там, где кадр вырезал подложки и ореолы
+   * (sky.ts, groundify, fillGround; holes — их рамки в px устройства). Рамки собираются в плитки HOLE_TILE px и полосы
+   * плиток по строкам. Копия растра под плотность экрана (перенос без растяжения) — участок за участком прямым
+   * копированием 1:1, те же пиксели, что у фона; растяжение (колесо, перелёт) — весь растр с отсечением по полосам.
+   * holes = null — рамки неизвестны: под весь кадр (дороже, но верно). Сотни рамок отсечением стоили ~10 мс кадра.
    */
   paintHoles(ctx: CanvasRenderingContext2D, dpr: number, w: number, h: number, sky: string, holes: readonly { x: number; y: number; w: number; h: number }[] | null) {
     if (holes && !holes.length) return;
+    const runs = holes ? tileRuns(holes, ctx.canvas.width, ctx.canvas.height) : null;
+    if (runs && !runs.length) return;
+    const t = this.cur;
+    // та же копия, что взял фон этого кадра (blit → device): готова — да, нет — исходный растр
+    const d = this.dev;
+    const dev = t && this.built && t.a === 1 && t.d === 1 && d && d.dpr === dpr && d.builds === this.builds ? d.cv : null;
     ctx.save();
-    if (holes) {
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.beginPath();
-      for (const r of holes) ctx.rect(r.x, r.y, r.w, r.h);
-      ctx.clip();
-    }
     ctx.globalCompositeOperation = 'destination-over';
-    this.blit(ctx, dpr, w, h, sky);
+    ctx.globalAlpha = 1;
+    if (runs && dev && t) {
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.imageSmoothingEnabled = true;
+      ctx.fillStyle = sky;
+      const ox = Math.round(t.e * dpr);
+      const oy = Math.round(t.f * dpr);
+      for (const r of runs) {
+        const x0 = Math.max(r.x, ox);
+        const y0 = Math.max(r.y, oy);
+        const x1 = Math.min(r.x + r.w, ox + dev.width);
+        const y1 = Math.min(r.y + r.h, oy + dev.height);
+        if (x1 > x0 && y1 > y0) ctx.drawImage(dev, x0 - ox, y0 - oy, x1 - x0, y1 - y0, x0, y0, x1 - x0, y1 - y0);
+        // за краем растра — небо (под растром уже непрозрачно: destination-over его не трогает); мимо обёртки подложек
+        CanvasRenderingContext2D.prototype.fillRect.call(ctx, r.x, r.y, r.w, r.h);
+      }
+    } else {
+      if (runs) {
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.beginPath();
+        for (const r of runs) ctx.rect(r.x, r.y, r.w, r.h);
+        ctx.clip();
+      }
+      this.blit(ctx, dpr, w, h, sky);
+    }
     ctx.restore();
   }
 

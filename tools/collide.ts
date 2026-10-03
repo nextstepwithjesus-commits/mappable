@@ -73,7 +73,8 @@ const REC = String.raw`window.__name = window.__name || ((f) => f);
   const last = (p) => { if (!p.sub.length) p.sub.push([]); return p.sub[p.sub.length - 1]; };
   // свет под кадр (src/render/light.ts, paintUnder: destination-over) — под всем нарисованным, кадр он не закрывает;
   // подложки — вырезы (destination-out) цветом неба: в замере — подложка, как прежде заливка неба
-  const W = (name, f) => { const o = P[name]; if (!o) return; P[name] = function () { if (R.on && sky(this) && this.globalCompositeOperation !== 'destination-over') { try { f(this, arguments); } catch (e) {} } return o.apply(this, arguments); }; };
+  // свечение под линиями (src/render/branches.ts, GlowBatch: метка __decor) — оформление, а не линия: не в замере
+  const W = (name, f) => { const o = P[name]; if (!o) return; P[name] = function () { if (R.on && sky(this) && this.globalCompositeOperation !== 'destination-over' && !this.__decor) { try { f(this, arguments); } catch (e) {} } return o.apply(this, arguments); }; };
   W('beginPath', (c) => { c.__p = np(); });
   W('moveTo', (c, a) => { P0(c).sub.push([a[0], a[1]]); });
   W('lineTo', (c, a) => { last(P0(c)).push(a[0], a[1]); });
