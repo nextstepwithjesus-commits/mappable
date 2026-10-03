@@ -551,12 +551,36 @@ export function placeCard(
     }
     return out;
   };
+  /**
+   * Места вплотную к краям запретного: под и над каждым прямоугольником, слева и справа от него, у краёв неба. Щель
+   * между строкой показа и подписью семьи бывает на 1–4 px выше карточки — сетка 6 px её не ловит (сценарий 812,
+   * Давид на 1024 px: щель 182,6 px, карточка 179 px). Края — целые px наружу: место после округления не заходит на край.
+   */
+  const edges = () => {
+    const xs = new Set<number>([bounds.x, x1, Math.round(a.x - w / 2)]);
+    const ys = new Set<number>([bounds.y, y1, Math.round(a.y - h / 2)]);
+    for (const q of [mark, ...hard]) {
+      xs.add(Math.ceil(q.x + q.w));
+      xs.add(Math.floor(q.x - w));
+      ys.add(Math.ceil(q.y + q.h));
+      ys.add(Math.floor(q.y - h));
+    }
+    const out: { x: number; y: number; d: number }[] = [];
+    for (const x of xs) if (x >= bounds.x && x <= x1) for (const y of ys) if (y >= bounds.y && y <= y1) out.push({ x, y, d: near(x, y) });
+    return out.sort((p, q) => p.d - q.d);
+  };
   let cands = grid(GRID);
   let best = pick(cands);
-  // по сетке 16 px свободного нет — мельче, 6 px: щель между подписями семьи бывает уже шага сетки
+  // по сетке 16 px свободного нет — мельче, 6 px: щель между подписями семьи бывает уже шага сетки; нет и там — вплотную
+  // к краям запретного
   if (!best && o.fine !== false) {
     cands = grid(6);
     best = pick(cands);
+    if (!best) {
+      const e = edges();
+      best = pick(e);
+      cands = [...cands, ...e];
+    }
   }
   const found = !!best;
   if (!best) {
