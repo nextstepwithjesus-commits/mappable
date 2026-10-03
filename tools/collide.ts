@@ -67,12 +67,13 @@ const REC = String.raw`window.__name = window.__name || ((f) => f);
   // точки в сам градиент
   const G = CanvasGradient.prototype; const AC = G.addColorStop;
   G.addColorStop = function (o, c) { (this.__s || (this.__s = [])).push(String(c)); return AC.apply(this, arguments); };
-  // узор света (src/render/light.ts, patternFor) — подложка цветом неба, совпадающая с фоном
-  const col = (s) => (typeof s === 'string' ? s : s && s.__ground ? s.__ground : 'grad:' + ((s && s.__s && s.__s[s.__s.length >> 1]) || ''));
+  const col = (s) => (typeof s === 'string' ? s : 'grad:' + ((s && s.__s && s.__s[s.__s.length >> 1]) || ''));
   const np = () => ({ sub: [], arcs: [] });
   const P0 = (c) => c.__p || (c.__p = np());
   const last = (p) => { if (!p.sub.length) p.sub.push([]); return p.sub[p.sub.length - 1]; };
-  const W = (name, f) => { const o = P[name]; if (!o) return; P[name] = function () { if (R.on && sky(this)) { try { f(this, arguments); } catch (e) {} } return o.apply(this, arguments); }; };
+  // свет под кадр (src/render/light.ts, paintUnder: destination-over) — под всем нарисованным, кадр он не закрывает;
+  // подложки — вырезы (destination-out) цветом неба: в замере — подложка, как прежде заливка неба
+  const W = (name, f) => { const o = P[name]; if (!o) return; P[name] = function () { if (R.on && sky(this) && this.globalCompositeOperation !== 'destination-over') { try { f(this, arguments); } catch (e) {} } return o.apply(this, arguments); }; };
   W('beginPath', (c) => { c.__p = np(); });
   W('moveTo', (c, a) => { P0(c).sub.push([a[0], a[1]]); });
   W('lineTo', (c, a) => { last(P0(c)).push(a[0], a[1]); });
@@ -108,7 +109,11 @@ const REC = String.raw`window.__name = window.__name || ((f) => f);
   };
   W('fillText', TX('f'));
   W('strokeText', TX('s'));
-  // начало кадра — и копия света во весь холст (src/render/light.ts, paintBase: небо под растром не заливается)
+  // начало кадра со светом — очистка холста (свет ляжет под кадр в его конце)
+  W('clearRect', (c, a) => {
+    const M = T(c);
+    if (a[0] <= 0 && a[1] <= 0 && a[2] * M[0] >= c.canvas.width - 2 && a[3] * M[3] >= c.canvas.height - 2) R.cur = [];
+  });
   W('drawImage', (c, a) => {
     const M = T(c);
     const img = a[0];

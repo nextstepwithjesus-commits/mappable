@@ -1520,7 +1520,8 @@ export function drawOriginPath(v: SkyContext, p: Pass, child: string) {
   // чужие ромбы и подписи на пути — разрыв; свой ромб — поверх пути
   const holes = v.ledger.boxes.filter((b) => b.kind !== 'frame' && b.kind !== 'edge' && !(b.kind === 'plate' && b.text === '' && b.id === u?.id) && hit(b));
   const scope = overlayScope(v, p, { cuts: holes });
-  ctx.save();
+  // clipHoles сама делает save(); лишний save() здесь оставлял после кадра отсечение по подписям пути (вырезы overlayScope)
+  // во всех следующих кадрах — места подписей не перерисовывались, в них застывал прошлый кадр («окна» при протяжке)
   clipHoles(ctx, cam, ringHoles(v, p));
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';

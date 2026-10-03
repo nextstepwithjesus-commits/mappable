@@ -1374,13 +1374,15 @@ export class Sky implements SkyContext {
   private bandsOn = false;
   fillGround(x0: number, x1: number, y: number, h: number) {
     const { ctx, cam, pal } = this;
-    // подложка пропускает свет (решение 182): под подписью гаснут линии основного холста, слой света под ним виден
+    // подложка пропускает свет (решение 182): под подписью линии кадра вырезаются, свет ляжет в вырез в конце кадра
     if (this.light) {
       ctx.save();
       ctx.globalAlpha = 1;
-      ctx.fillStyle = this.light.patternFor(ctx, this.dpr, pal.sky) ?? pal.sky;
-      ctx.imageSmoothingEnabled = !this.light.exact();
+      ctx.globalCompositeOperation = 'destination-out';
+      // цвет выреза не важен (важна альфа); цвет неба — замерам кадра (tools/collide.ts): это подложка
+      ctx.fillStyle = pal.sky;
       CanvasRenderingContext2D.prototype.fillRect.call(ctx, x0, y, x1 - x0, h);
+      this.hole(x0, y, x1, y + h, 0);
       ctx.restore();
       return;
     }
@@ -2130,15 +2132,49 @@ export class Sky implements SkyContext {
    * Кадр неба. under — то, что лежит поверх звёзд, но под меридианом, рамкой и указателями у края: ярусы эпох
    * (src/render/tiers.ts; их рисует SkyView). Меридиан проходит и через ярусы, указатели у края не уходят под них.
    */
+  /**
+   * Кадр неба. Со слоем света (решение 182) кадр рисуется на прозрачном холсте, подложки и ореолы в нём вырезаются
+   * (groundify, fillGround), а свет кладётся последним, под всё нарисованное (LightLayer.paintUnder) — и после сбоя
+   * кадра тоже: холст не остаётся прозрачным, отложенный текст не теряется.
+   */
   draw(s: SkyState, under?: () => void) {
+    this.holes = [];
+    this.unwind();
+    try {
+      this.drawScene(s, under);
+    } catch (e) {
+      // сбой кадра: вырезы неизвестны — свет под весь кадр, холст не остаётся с дырами
+      this.holes = null;
+      throw e;
+    } finally {
+      this.flushPending?.();
+      // save() без restore() — состояние (и отсечение!) осталось бы на холсте до конца сеанса: места под ним не
+      // перерисовывались бы ни этим кадром, ни следующими. Кадр снимает лишние уровни сам; их число — в замере (saveLeak)
+      const leak = this.unwind();
+      const ds = (this.canvas as { dataset?: DOMStringMap }).dataset;
+      if (ds && probes.on && (leak || ds.saveLeak)) ds.saveLeak = String(Number(ds.saveLeak ?? 0) + leak);
+      const light = this.light;
+      if (light) light.paintHoles(this.ctx, this.dpr, this.cam.w, this.cam.h, this.pal.sky, this.holes);
+    }
+  }
+
+  /** Глубина save() холста неба (считает обёртка groundify): лишние уровни снимаются в начале и в конце кадра. */
+  private saveDepth = 0;
+  private unwind(): number {
+    const n = this.saveDepth;
+    while (this.saveDepth > 0) this.ctx.restore();
+    return n;
+  }
+
+  private drawScene(s: SkyState, under?: () => void) {
     const { ctx, cam, pal } = this;
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
-    // свет (решение 182) — в том же холсте: небо, затем растр света (paintBase, ниже), затем всё прочее; подложки и ореолы —
-    // узором того же растра (groundify, fillGround)
     const light = this.lightLayer();
-    ctx.fillStyle = pal.sky;
-    // со светом небо под растром не заливается (он непрозрачен): заливка — полосами за его краем (paintBase)
-    if (!light || !light.ready()) ctx.fillRect(0, 0, cam.w, cam.h);
+    // без света — заливка неба; со светом фон кладёт сам свет (paintBase, ниже), до того кадр ничего не рисует
+    if (!light) {
+      ctx.fillStyle = pal.sky;
+      ctx.fillRect(0, 0, cam.w, cam.h);
+    }
     const hl = s.highlight;
     const L = s.layers;
     const lineOnly = s.onlyLines;
@@ -2243,7 +2279,8 @@ export class Sky implements SkyContext {
 
     this.bandsOn = !!L.epochs;
     if (L.epochs && !light) this.drawEpochBands();
-    // свет — первым после неба, тем же переносом, что и весь кадр (эпохи — в нём)
+    // свет — фоном, первым после неба, тем же переносом, что и весь кадр (эпохи — в нём); вырезы подложек он заполнит
+    // в конце кадра (draw, paintHoles)
     if (light) {
       this.lightFrame(light, s, p, !lineOnly && !work && !under);
       light.paintBase(ctx, this.dpr, cam.w, cam.h, pal.sky);
@@ -2894,11 +2931,10 @@ export class Sky implements SkyContext {
 
   /**
    * Подложки пропускают свет (решение 182): всё, что кадр закрашивал цветом неба или полосы эпохи, — ореолы знаков,
-   * вырезы под лентами и связями, подложки, — рисуется узором света этого кадра (LightLayer.patternFor) с той же
-   * непрозрачностью: подложка совпадает с фоном под ней, над туманностью и огоньком тёмной дыры нет. Холст один и
-   * непрозрачный: прозрачных вырезов до отдельного слоя больше нет (в них браузеры с аппаратной компоновкой показывали
-   * свет из соседнего места). Не трогаются: ореолы текста (тёмный ореол держит контраст подписи над светом, ТЗ § 3.8) и
-   * рамка неба у края холста (линейка, буквы полос, нижняя строка — непрозрачные, как прежде).
+   * вырезы под лентами и связями, подложки, — вырезается в кадре с той же непрозрачностью (destination-out); свет ляжет
+   * под кадр в его конце одной копией растра (draw, LightLayer.paintUnder) и заполнит вырезы теми же пикселями, что и фон
+   * вокруг. Не трогаются: ореолы текста (тёмный ореол держит контраст подписи над светом, ТЗ § 3.8) и рамка неба у края
+   * холста (линейка, буквы полос, нижняя строка — непрозрачные, как прежде).
    */
   private groundify() {
     const ctx = this.ctx as CanvasRenderingContext2D & Record<string, unknown>;
@@ -2928,6 +2964,44 @@ export class Sky implements SkyContext {
       memo.set(st, r);
       return r;
     };
+    // рамка текущего пути (px кадра до переноса холста) — для рамки выреза; перенос холста, сменившийся посреди пути, —
+    // рамка ненадёжна (вырез тогда заполняется светом под весь кадр)
+    const pb = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity, tv: 0 };
+    let tv = 0;
+    const pt = (x: number, y: number, r = 0) => {
+      if (x - r < pb.x0) pb.x0 = x - r;
+      if (y - r < pb.y0) pb.y0 = y - r;
+      if (x + r > pb.x1) pb.x1 = x + r;
+      if (y + r > pb.y1) pb.y1 = y + r;
+    };
+    const wrap = (name: string, on: (a: number[]) => void) => {
+      const f = ctx[name] as ((...a: unknown[]) => void) | undefined;
+      if (typeof f !== 'function') return;
+      ctx[name] = function (this: CanvasRenderingContext2D, ...a: unknown[]) {
+        on(a as number[]);
+        return f.apply(this, a);
+      } as never;
+    };
+    wrap('beginPath', () => {
+      pb.x0 = pb.y0 = Infinity;
+      pb.x1 = pb.y1 = -Infinity;
+      pb.tv = tv;
+    });
+    wrap('moveTo', (a) => pt(a[0], a[1]));
+    wrap('lineTo', (a) => pt(a[0], a[1]));
+    wrap('rect', (a) => (pt(a[0], a[1]), pt(a[0] + a[2], a[1] + a[3])));
+    wrap('roundRect', (a) => (pt(a[0], a[1]), pt(a[0] + a[2], a[1] + a[3])));
+    wrap('arc', (a) => pt(a[0], a[1], Math.abs(a[2])));
+    wrap('ellipse', (a) => pt(a[0], a[1], Math.max(Math.abs(a[2]), Math.abs(a[3]))));
+    wrap('arcTo', (a) => (pt(a[0], a[1]), pt(a[2], a[3])));
+    wrap('quadraticCurveTo', (a) => (pt(a[0], a[1]), pt(a[2], a[3])));
+    wrap('bezierCurveTo', (a) => (pt(a[0], a[1]), pt(a[2], a[3]), pt(a[4], a[5])));
+    for (const m of ['setTransform', 'transform', 'translate', 'scale', 'rotate', 'resetTransform']) wrap(m, () => void tv++);
+    wrap('save', () => void sky.saveDepth++);
+    wrap('restore', () => {
+      tv++;
+      if (sky.saveDepth > 0) sky.saveDepth--;
+    });
     const cut = (name: 'fill' | 'stroke' | 'fillRect' | 'strokeRect', style: 'fillStyle' | 'strokeStyle') => {
       const f = ctx[name] as (...a: unknown[]) => void;
       ctx[name] = function (this: CanvasRenderingContext2D, ...a: unknown[]) {
@@ -2938,23 +3012,48 @@ export class Sky implements SkyContext {
           if (x <= 0.5 || y <= 0.5 || x + w >= c.w - 0.5 || y + h >= c.h - 0.5) return f.apply(this, a);
         }
         if (!sky.light || !ground(this[style])) return f.apply(this, a);
-        // подложка — узором света этого кадра: совпадает с фоном, тёмной дыры в свете нет
-        const pat = sky.light.patternFor(this, sky.dpr, sky.pal.sky);
-        if (!pat) return f.apply(this, a);
-        const keep = this[style];
-        const smooth = this.imageSmoothingEnabled;
-        this[style] = pat;
-        // узор лёг пиксель в пиксель (копия растра под плотность экрана): выборка без сглаживания — дешевле, вид тот же
-        this.imageSmoothingEnabled = !sky.light.exact();
+        // подложка — вырез с той же непрозрачностью (цвет стиля держит свою альфу); свет ляжет в него в конце кадра
+        // (draw, paintHoles) — рамка выреза запоминается
+        const pad = name === 'stroke' || name === 'strokeRect' ? this.lineWidth : 0;
+        if (name === 'fillRect' || name === 'strokeRect') {
+          const [x, y, w, h] = a as number[];
+          sky.hole(Math.min(x, x + w), Math.min(y, y + h), Math.max(x, x + w), Math.max(y, y + h), pad);
+        } else if (a.length && typeof a[0] === 'object') sky.holes = null;
+        else if (pb.tv !== tv) sky.holes = null;
+        else if (pb.x1 >= pb.x0) sky.hole(pb.x0, pb.y0, pb.x1, pb.y1, pad);
+        const op = this.globalCompositeOperation;
+        this.globalCompositeOperation = 'destination-out';
         f.apply(this, a);
-        this.imageSmoothingEnabled = smooth;
-        this[style] = keep;
+        this.globalCompositeOperation = op;
       } as never;
     };
     cut('fill', 'fillStyle');
     cut('fillRect', 'fillStyle');
     cut('stroke', 'strokeStyle');
     cut('strokeRect', 'strokeStyle');
+  }
+
+  /**
+   * Вырезы кадра (px устройства) — где свет ляжет под нарисованное в конце кадра (LightLayer.paintHoles); null — рамки
+   * неизвестны (путь Path2D, перенос посреди пути, сбой кадра): свет под весь кадр.
+   */
+  private holes: Rect[] | null = [];
+  /** Запомнить вырез: рамка x0, y0 – x1, y1 в px кадра до переноса холста, pad — толщина обводки (её половина и запас угла). */
+  hole(x0: number, y0: number, x1: number, y1: number, pad: number) {
+    if (!this.holes) return;
+    if (this.holes.length > 4000) {
+      this.holes = null;
+      return;
+    }
+    const m = this.ctx.getTransform();
+    const xs = [m.a * x0 + m.c * y0, m.a * x1 + m.c * y0, m.a * x0 + m.c * y1, m.a * x1 + m.c * y1];
+    const ys = [m.b * x0 + m.d * y0, m.b * x1 + m.d * y0, m.b * x0 + m.d * y1, m.b * x1 + m.d * y1];
+    // обводка: половина толщины с запасом угла (сопряжение «острый угол» выходит дальше половины), сглаживание — 2 px
+    const k = Math.max(Math.hypot(m.a, m.b), Math.hypot(m.c, m.d));
+    const e = pad * k * 2 + 2;
+    const ax = Math.floor(Math.min(...xs) + m.e - e);
+    const ay = Math.floor(Math.min(...ys) + m.f - e);
+    this.holes.push({ x: ax, y: ay, w: Math.ceil(Math.max(...xs) + m.e + e) - ax, h: Math.ceil(Math.max(...ys) + m.f + e) - ay });
   }
 
 
@@ -3437,7 +3536,9 @@ export class Sky implements SkyContext {
         writable: true,
         value: (t: string, x: number, y: number, w?: number) => q.push({ m, t: String(t), x, y, w, st: snap() }),
       });
-    return () => {
+    const flush = () => {
+      if (this.flushPending !== flush) return;
+      this.flushPending = null;
       for (const m of ['fillText', 'strokeText'] as const) {
         const d = had[m];
         if (d) Object.defineProperty(ctx, m, d);
@@ -3462,7 +3563,11 @@ export class Sky implements SkyContext {
       }
       ctx.restore();
     };
+    this.flushPending = flush;
+    return flush;
   }
+  /** вывод отложенного текста кадра (holdText), если кадр его ещё не вывел: draw зовёт его и после сбоя кадра */
+  private flushPending: (() => void) | null = null;
 
   /** Нарисовать draw с вырезами по прямоугольникам holes (clip evenodd, поле 1 px): линии под текстом прерываются. */
   private clipOut(holes: readonly Rect[], draw: () => void) {

@@ -147,6 +147,8 @@ export interface LightInput {
 
 /** Шаг растра туманности, px. */
 const CELL = 6;
+/** Наибольшая площадь копии растра под плотность экрана, px устройства (предел Safari — 16 777 216). */
+const DEV_MAX_PX = 16_000_000;
 /** Разрешение холста света к CSS px: свет мягкий, полоса эпохи и пыль от половинного растра не теряют (О2: сборка ≤ 40 мс). */
 const RES = 0.5;
 /** Запас слоя за краем неба (доля ширины и высоты): сдвиг неба внутри запаса — перенос без сборки. */
@@ -252,10 +254,12 @@ function haloSprite(color: string, night: boolean): HTMLCanvasElement {
 }
 
 /**
- * Слой света неба: туманность, устья, пыль и огоньки — растр вне документа, сборка на покое. В кадр он рисуется тем же
- * холстом неба, первым слоем (paintBase), а подложки и ореолы — узором того же растра (patternFor): отдельный слой
- * документа под прозрачным холстом браузеры с аппаратной компоновкой выводили не в один кадр с ним, и в вырезах под
- * подписями и ореолами виднелся свет из соседнего места — «окна» с обрывками полос и волокон, ездившие при сдвиге.
+ * Слой света неба: туманность, устья, пыль и огоньки — растр вне документа, сборка на покое. В кадр он кладётся тем же
+ * холстом неба: первым — фоном (paintBase), а в конце кадра — в вырезы подложек и ореолов (paintHoles, destination-over
+ * с отсечением по их рамкам). Фон и вырезы заполняет одна и та же копия растра одним и тем же переносом (отсечение не
+ * меняет выборку пикселей) — разойтись им нечем. Два прежних устройства — отдельный слой документа под прозрачным холстом
+ * и узор того же растра в подложках (CanvasPattern) — зависели от того, как браузер сводит два источника, и у владельца
+ * в вырезах виднелся свет другого места: «окна» с обрывками ореолов и линий, ездившие при сдвиге неба.
  */
 export class LightLayer {
   private readonly cv: HTMLCanvasElement;
@@ -302,15 +306,40 @@ export class LightLayer {
   dispose() {
     this.cur = null;
     this.dev = null;
+    if (this.devTimer !== null) clearTimeout(this.devTimer);
+    this.devTimer = null;
   }
 
-  /** Растр, растянутый под плотность экрана (одна копия на сборку): кадр его только копирует со сдвигом. */
+  /**
+   * Растр, растянутый под плотность экрана (одна копия на сборку): кадр его только копирует со сдвигом. Копия стоит
+   * десятки мс (растяжение всего растра с запасом) — она делается не в кадре, а в простое после сборки (devSoon); до того
+   * кадр берёт исходный растр с растяжением (и фон, и вырезы — одним источником).
+   */
   private dev: { cv: HTMLCanvasElement; dpr: number; builds: number } | null = null;
+  private devTimer: ReturnType<typeof setTimeout> | null = null;
+  /** небо двигалось в последнем кадре (frame): копия под плотность не делается посреди движения */
+  private moving = false;
   private device(dpr: number): HTMLCanvasElement | null {
     if (typeof document === 'undefined') return null;
     if (this.dev && this.dev.dpr === dpr && this.dev.builds === this.builds) return this.dev.cv;
+    this.devSoon(dpr);
+    return null;
+  }
+  private devSoon(dpr: number) {
+    if (this.devTimer !== null) return;
+    this.devTimer = setTimeout(() => {
+      this.devTimer = null;
+      if (!this.built) return;
+      if (this.moving) return this.devSoon(dpr);
+      this.makeDevice(dpr);
+    }, 120);
+  }
+  private makeDevice(dpr: number): HTMLCanvasElement | null {
     const w = Math.ceil((this.cv.width / RES) * dpr);
     const h = Math.ceil((this.cv.height / RES) * dpr);
+    // Safari не даёт холст больше 16,7 Мпикс (на iPhone и iPad — и меньше общей памяти холстов): такой холст пуст. Большой
+    // экран высокой плотности — без копии, перенос из исходного растра с растяжением
+    if (w * h > DEV_MAX_PX) return null;
     const cv = this.dev?.cv ?? document.createElement('canvas');
     if (cv.width !== w || cv.height !== h) {
       cv.width = w;
@@ -321,100 +350,102 @@ export class LightLayer {
     g.imageSmoothingEnabled = true;
     g.drawImage(this.cv, 0, 0, w, h);
     this.dev = { cv, dpr, builds: this.builds };
-    this.pats.delete(cv);
     return cv;
   }
 
-  /** Свет кадра — копия растра под плотность экрана со сдвигом (без растяжения): узор ложится пиксель в пиксель. */
-  exact(): boolean {
-    const t = this.cur;
-    return !!t && t.a === 1 && t.d === 1 && !!this.dev;
-  }
-
-  /** Растр собран: кадр не заливает небо под ним (paintBase кладёт небо только за его краем). */
-  ready(): boolean {
-    return !!this.cur && !!this.built;
-  }
-
   /**
-   * Свет в кадр холста неба — первым, непрозрачной копией: фон, эпохи, туманность, огоньки. Подложки подписей и ореолы
-   * знаков рисуются поверх узором из того же растра того же кадра (patternFor): они совпадают с фоном до пикселя и не
-   * вырезают в свете тёмных дыр. Один холст и один перенос на кадр: отдельный слой документа под прозрачным холстом
-   * браузеры с аппаратной компоновкой выводили не в один кадр с ним, и в вырезах виднелся свет из соседнего места.
-   * ctx — холст неба, dpr — его плотность; за краем растра (в движении, до сборки на покое) — заливка неба.
+   * Свет фоном кадра — первым, непрозрачной копией (source-over: самое дешёвое наложение, О1): небо, эпохи, туманность,
+   * огоньки. ctx — холст неба, dpr — его плотность; за краем растра (в движении, до сборки на покое) и до первой сборки —
+   * заливка неба.
    */
   paintBase(ctx: CanvasRenderingContext2D, dpr: number, w: number, h: number, sky: string) {
-    const t = this.cur;
     ctx.save();
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.globalCompositeOperation = 'source-over';
-    ctx.globalAlpha = 1;
-    ctx.imageSmoothingEnabled = true;
-    if (t && this.built) {
-      // небо — полосами за краем растра (в движении, до сборки на покое); мимо обёртки подложек (sky.ts, groundify)
-      const iw = (this.cv.width / RES) * t.a;
-      const ih = (this.cv.height / RES) * t.d;
-      const x0 = Math.max(0, t.e);
-      const y0 = Math.max(0, t.f);
-      const x1 = Math.min(w, t.e + iw);
-      const y1 = Math.min(h, t.f + ih);
-      const fill = (x: number, y: number, ww: number, hh: number) => ww > 0 && hh > 0 && CanvasRenderingContext2D.prototype.fillRect.call(ctx, x, y, ww, hh);
-      ctx.fillStyle = sky;
-      fill(0, 0, w, y0);
-      fill(0, y1, w, h - y1);
-      fill(0, y0, x0, y1 - y0);
-      fill(x1, y0, w - x1, y1 - y0);
-      // перенос без растяжения (сдвиг неба) — копией растра, заранее растянутого под плотность экрана: без сглаживания в
-      // каждом кадре (телефон, О1); растяжение (колесо, перелёт) — из исходного растра
-      const dev = t.a === 1 && t.d === 1 ? this.device(dpr) : null;
-      if (dev) {
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx.drawImage(dev, Math.round(t.e * dpr), Math.round(t.f * dpr));
-      } else ctx.drawImage(this.cv, t.e, t.f, (this.cv.width / RES) * t.a, (this.cv.height / RES) * t.d);
-    }
+    this.blit(ctx, dpr, w, h, sky);
     ctx.restore();
   }
 
   /**
-   * Узор света для подложек и ореолов в этом кадре: тот же растр и перенос, что у фона (paintBase), в пространстве
-   * нынешнего переноса ctx. null — света ещё нет (подложка — цветом неба).
+   * Свет в вырезы кадра — последним, под нарисованное (destination-over), только в рамках holes (px устройства): кадр
+   * вырезал подложки и ореолы (sky.ts, groundify, fillGround), эта же копия растра тем же переносом их заполняет. holes =
+   * null — рамки вырезов неизвестны: под весь кадр (дороже, но верно).
    */
-  patternFor(ctx: CanvasRenderingContext2D, dpr: number, sky: string): CanvasPattern | null {
-    const t = this.cur;
-    if (!t || !this.built || typeof DOMMatrix === 'undefined' || typeof ctx.getTransform !== 'function') return null;
-    const dev = t.a === 1 && t.d === 1 ? this.device(dpr) : null;
-    const src = dev ?? this.cv;
-    let pat = this.pats.get(src);
-    if (!pat) {
-      const q = ctx.createPattern(src, 'no-repeat');
-      if (!q) return null;
-      // замеры кадра (tools/collide.ts) узнают подложку по цвету неба
-      (q as CanvasPattern & { __ground?: string }).__ground = sky;
-      this.pats.set(src, (pat = q));
+  paintHoles(ctx: CanvasRenderingContext2D, dpr: number, w: number, h: number, sky: string, holes: readonly { x: number; y: number; w: number; h: number }[] | null) {
+    if (holes && !holes.length) return;
+    ctx.save();
+    if (holes) {
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.beginPath();
+      for (const r of holes) ctx.rect(r.x, r.y, r.w, r.h);
+      ctx.clip();
     }
-    // узор → px устройства: копия со сдвигом или растяжение исходного растра; затем — в пространство нынешнего переноса
-    // (перенос холста у подложек почти всегда один — тогда узор не перестраивается)
-    const m = ctx.getTransform();
-    const key = `${m.a},${m.b},${m.c},${m.d},${m.e},${m.f}|${t.a},${t.d},${t.e},${t.f}|${dpr}|${dev ? 1 : 0}`;
-    if (this.patKey.get(pat) !== key) {
-      const toDev = dev ? new DOMMatrix([1, 0, 0, 1, Math.round(t.e * dpr), Math.round(t.f * dpr)]) : new DOMMatrix([(dpr * t.a) / RES, 0, 0, (dpr * t.d) / RES, dpr * t.e, dpr * t.f]);
-      pat.setTransform(m.inverse().multiply(toDev));
-      this.patKey.set(pat, key);
-    }
-    return pat;
+    ctx.globalCompositeOperation = 'destination-over';
+    this.blit(ctx, dpr, w, h, sky);
+    ctx.restore();
   }
-  private pats = new WeakMap<HTMLCanvasElement, CanvasPattern>();
-  private patKey = new WeakMap<CanvasPattern, string>();
+
+  /**
+   * Копия света в кадр текущим наложением: растр переносом кадра, небо — за его краем (или всё небо до сборки). Полосы
+   * неба заходят на край растра на 1 px (без щели при округлении переноса), растр на стыке главнее: фоном (source-over)
+   * полосы кладутся до растра, в вырезы (destination-over, ниже нарисованного) — после.
+   */
+  private blit(ctx: CanvasRenderingContext2D, dpr: number, w: number, h: number, sky: string) {
+    const t = this.cur;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.globalAlpha = 1;
+    ctx.imageSmoothingEnabled = true;
+    ctx.fillStyle = sky;
+    const fill = (x: number, y: number, ww: number, hh: number) => ww > 0 && hh > 0 && CanvasRenderingContext2D.prototype.fillRect.call(ctx, x, y, ww, hh);
+    if (!t || !this.built) {
+      fill(0, 0, w, h);
+      return;
+    }
+    // небо — полосами за краем растра (в движении, до сборки на покое)
+    const iw = (this.cv.width / RES) * t.a;
+    const ih = (this.cv.height / RES) * t.d;
+    const x0 = Math.max(0, t.e + 1);
+    const y0 = Math.max(0, t.f + 1);
+    const x1 = Math.min(w, t.e + iw - 1);
+    const y1 = Math.min(h, t.f + ih - 1);
+    const strips = () => {
+      fill(0, 0, w, y0);
+      fill(0, y1, w, h - y1);
+      fill(0, y0, x0, y1 - y0);
+      fill(x1, y0, w - x1, y1 - y0);
+    };
+    const under = ctx.globalCompositeOperation === 'destination-over';
+    if (!under) strips();
+    // перенос без растяжения (сдвиг неба) — копией растра, заранее растянутой под плотность экрана: без сглаживания в
+    // каждом кадре (телефон, О1); растяжение (колесо, перелёт) — из исходного растра
+    const dev = t.a === 1 && t.d === 1 ? this.device(dpr) : null;
+    if (dev) {
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.drawImage(dev, Math.round(t.e * dpr), Math.round(t.f * dpr));
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    } else ctx.drawImage(this.cv, t.e, t.f, (this.cv.width / RES) * t.a, (this.cv.height / RES) * t.d);
+    if (under) strips();
+  }
 
   /**
    * Кадр неба: слой собирается, если изменилось содержимое (тема, показ, выбор…) или — в покое — масштаб, строки,
    * выход за запас; иначе только переносится и растягивается (перенос растра в paintBase), без сборки. moving — небо движется.
    */
   frame(inp: LightInput, moving: boolean) {
+    this.moving = moving;
     const v = inp.view;
     const b = this.built;
-    const sameContent = !!b && b.key === inp.key && b.view.rowsKey === v.rowsKey && b.view.w === v.w && b.view.h === v.h;
+    const sameGeom = !!b && b.view.rowsKey === v.rowsKey && b.view.w === v.w && b.view.h === v.h;
+    const sameContent = sameGeom && b!.key === inp.key;
     const sameScale = !!b && Math.abs(b.view.kx - v.kx) < 1e-9 * v.kx && Math.abs(b.view.ky - v.ky) < 1e-9 * v.ky;
+    // содержимое сменилось посреди движения (выбор лица запускает перелёт): прежний свет переносится до покоя, сборка
+    // (60–180 мс) — в кадре покоя, а не посреди анимации; строки неба те же — перенос верен
+    if (b && moving && sameGeom && !sameContent) {
+      const t = this.transform(v);
+      if (t.a > 0.25 && t.a < 4 && t.d > 0.25 && t.d < 4) {
+        this.apply(t);
+        return;
+      }
+    }
     if (b && sameContent) {
       const t = this.transform(v);
       const shift = Math.abs(t.e + b.mx) < b.mx * 0.85 && Math.abs(t.f + b.my) < b.my * 0.85;
@@ -523,7 +554,6 @@ export class LightLayer {
     this.lastBuildMs = performance.now() - t0;
     this.builds++;
     // узор из прежнего растра — снимок: после сборки он другой
-    this.pats.delete(this.cv);
   }
 
   private paint(

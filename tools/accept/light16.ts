@@ -8,7 +8,10 @@
  *  — 1242 названия созвездий на обзоре (решение 184): у крупных — подзаголовок из данных «родоначальник …; N лиц»;
  *  — 1243 «Условные знаки»: строки света (туманность, устье, пыль, огонёк, четыре колена), знак врезки семьи и шестое
  *    начало «Рассказ: от Адама до Иисуса Христа»;
- *  — 1244 имена у устья (решение 184, К4′): каждое имя в canvas[data-mouths] — у своего следа за концом перехода.
+ *  — 1244 имена у устья (решение 184, К4′): каждое имя в canvas[data-mouths] — у своего следа за концом перехода;
+ *  — 1245 «окна» при протяжке (жалоба владельца 3 октября): наведение на звёзды, протяжка, колесо и выбор не оставляют
+ *    на холсте неба ни save() без restore() (canvas[data-save-leak]), ни прозрачного пикселя — прежде подсветка пути
+ *    происхождения у наведённой звезды оставляла отсечение по подписям пути, и места подписей застывали прошлым кадром.
  */
 import type { Page } from 'playwright';
 import { fail, pass, type Scenario } from './kit.ts';
@@ -121,6 +124,47 @@ export const light16: Scenario[] = [
         if (Math.abs(x - ex) > 6 || ey < y - 6 || ey > y + h + 6) return fail(`«${id}»: имя не у своего следа (${x},${y} против ${ex},${ey})`);
       }
       return pass(`имён у устья: ${raw.length}`);
+    },
+  },
+  {
+    n: 1245,
+    title: 'Жалоба владельца 3 октября: наведение на звёзды, протяжка, колесо и выбор не оставляют на холсте ни save() без restore(), ни прозрачного пикселя — «окон» с прошлым кадром нет',
+    run: async (p) => {
+      const scan = `(() => { const cv = document.querySelector('.sky > canvas'); const d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i] < 255) n++; return n; })()`;
+      const out: string[] = [];
+      for (const hash of ['#/~y-1900~w150~l-2~s1', '#/david~y-1000~w120~l0~s1', '#/iakov', '#/veniamin', '#/~y-1535~w5592~l18~s1']) {
+        await go(p, hash, 2600);
+        const box = (await p.locator('.sky > canvas').boundingBox())!;
+        // наведение на звёзды по очереди: у каждой — подсветка пути происхождения (marks.ts, drawOriginPath)
+        const stars = (await p.evaluate(`[...document.querySelectorAll('#sky-stars button[data-x]')].slice(0, 14).map((b) => [Number(b.dataset.x), Number(b.dataset.y)])`)) as [number, number][];
+        for (const [x, y] of stars) {
+          await p.mouse.move(box.x + x, box.y + y);
+          await p.waitForTimeout(60);
+        }
+        // протяжка с курсором над звёздами, колесо, щелчок по звезде
+        let x = box.x + box.width * 0.55;
+        let y = box.y + box.height * 0.5;
+        await p.mouse.move(x, y);
+        await p.mouse.down();
+        for (let k = 0; k < 5; k++) {
+          x -= 37;
+          y += 11;
+          await p.mouse.move(x, y, { steps: 2 });
+        }
+        await p.mouse.up();
+        await p.mouse.wheel(0, -200);
+        await p.waitForTimeout(900);
+        if (stars.length) {
+          await p.mouse.click(box.x + stars[0][0], box.y + stars[0][1]);
+          await p.waitForTimeout(900);
+        }
+        const leak = (await p.locator('.sky > canvas').getAttribute('data-save-leak')) ?? '0';
+        if (leak !== '0') return fail(`${hash}: save() без restore() — ${leak} уровней снято страховкой кадра`);
+        const clear = (await p.evaluate(scan)) as number;
+        if (clear) return fail(`${hash}: прозрачных пикселей ${clear}`);
+        out.push(`${hash.split('~')[0]}: ${stars.length} звёзд`);
+      }
+      return pass(`баланс save/restore, прозрачных пикселей нет — ${out.join('; ')}`);
     },
   },
 ];
