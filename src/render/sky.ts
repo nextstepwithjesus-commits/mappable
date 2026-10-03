@@ -2374,10 +2374,12 @@ export class Sky implements SkyContext {
     const x0 = cam.x0 - mx / cam.kx;
     const laneTop = cam.laneTop + my / cam.ky;
     Object.assign(vcam, { w: W, h: H, x0, laneTop, vp: { l: 0, t: 0, r: W, b: H } });
-    // состояние неба — до и после то же: поля, которые кадр переписывает, и наборы, которые он заполняет
-    const self = this as unknown as Record<string, unknown>;
-    const keep = { ...self };
-    Object.assign(self, {
+    // кадр кэша рисует двойник неба (Object.create): всё, что кадр записывает, — поля, реестры попаданий по объекту неба
+    // (призраки родни, рамки семей, концы связи; marks.ts, trails.ts), отложенный текст — остаётся у двойника. Само небо
+    // не меняется: касание после сборки кэша попадает в то, что нарисовано на экране, а не в места кэша со сдвигом на
+    // запас (касание у линии Иакова и Лии ставило гостем Ревекку, сценарий 748)
+    const twin = Object.create(this) as this;
+    Object.assign(twin, {
       ctx: pctx,
       canvas: cv,
       cam: vcam,
@@ -2391,23 +2393,26 @@ export class Sky implements SkyContext {
       thinHost: new Map<number, number>(),
       holes: [],
       saveDepth: 0,
+      flushPending: null,
     });
+    const pc = pctx as CanvasRenderingContext2D & { __sky?: Sky };
+    pc.__sky = twin;
     const light = this.light;
     let done: typeof this.pan = null;
     try {
       pctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       // без наведения (звезда, связь, ромб под указателем): в сдвиге его нет, а кэш не перерисовывается при каждом наведении
-      this.drawScene({ ...s, hovered: null, linkHover: null, plateMarks: s.plateMarks ? { ...s.plateMarks, hover: null } : s.plateMarks, reserve: [], organs: [] } as SkyState);
-      this.flushPending?.();
-      this.unwind();
-      if (light) light.paintHoles(pctx, dpr, W, H, this.pal.sky, this.holes, this.lightView());
+      twin.drawScene({ ...s, hovered: null, linkHover: null, plateMarks: s.plateMarks ? { ...s.plateMarks, hover: null } : s.plateMarks, reserve: [], organs: [] } as SkyState);
+      twin.flushPending?.();
+      twin.unwind();
+      if (light) light.paintHoles(pctx, dpr, W, H, this.pal.sky, twin.holes, twin.lightView());
       done = { cv, key, x0, laneTop, kx: cam.kx, ky: cam.ky, lanes: cam.lanes, rows: cam.rows.key, w: cam.w, h: cam.h, W, H, dpr };
     } catch {
       done = null;
     } finally {
-      this.flushPending?.();
-      for (const k of Object.keys(self)) if (!(k in keep)) delete self[k];
-      Object.assign(self, keep);
+      twin.flushPending?.();
+      twin.unwind();
+      pc.__sky = undefined;
     }
     this.pan = done;
   }
@@ -3242,14 +3247,17 @@ export class Sky implements SkyContext {
    */
   private groundify(target: CanvasRenderingContext2D = this.ctx) {
     const ctx = target as CanvasRenderingContext2D & Record<string, unknown>;
-    const sky = this;
+    // обёртки пишут вырезы, глубину save() и номер переноса тому небу, для которого холст рисуется сейчас: холст кэша
+    // сдвига рисует двойник неба (renderPan, ctx.__sky), основной холст — само небо
+    const owner = this;
+    const sk = (): Sky => (ctx.__sky as Sky | undefined) ?? owner;
     // ответ по строке стиля — из памяти (вызовов fill и stroke в кадре тысячи, разных стилей — десятки); память — до смены
     // палитры (тема)
     let memoPal: unknown = null;
     const memo = new Map<string, boolean>();
     const ground = (st: unknown): boolean => {
       if (typeof st !== 'string') return false;
-      const p = sky.pal;
+      const p = sk().pal;
       if (memoPal !== p) {
         memoPal = p;
         memo.clear();
@@ -3288,7 +3296,7 @@ export class Sky implements SkyContext {
     wrap('beginPath', () => {
       pb.x0 = pb.y0 = Infinity;
       pb.x1 = pb.y1 = -Infinity;
-      pb.tv = sky.tver;
+      pb.tv = sk().tver;
     });
     wrap('moveTo', (a) => pt(a[0], a[1]));
     wrap('lineTo', (a) => pt(a[0], a[1]));
@@ -3299,11 +3307,11 @@ export class Sky implements SkyContext {
     wrap('arcTo', (a) => (pt(a[0], a[1]), pt(a[2], a[3])));
     wrap('quadraticCurveTo', (a) => (pt(a[0], a[1]), pt(a[2], a[3])));
     wrap('bezierCurveTo', (a) => (pt(a[0], a[1]), pt(a[2], a[3]), pt(a[4], a[5])));
-    for (const m of ['setTransform', 'transform', 'translate', 'scale', 'rotate', 'resetTransform']) wrap(m, () => void sky.tver++);
-    wrap('save', () => void sky.saveDepth++);
+    for (const m of ['setTransform', 'transform', 'translate', 'scale', 'rotate', 'resetTransform']) wrap(m, () => void sk().tver++);
+    wrap('save', () => void sk().saveDepth++);
     wrap('restore', () => {
-      sky.tver++;
-      if (sky.saveDepth > 0) sky.saveDepth--;
+      sk().tver++;
+      if (sk().saveDepth > 0) sk().saveDepth--;
     });
     const cut = (name: 'fill' | 'stroke' | 'fillRect' | 'strokeRect', style: 'fillStyle' | 'strokeStyle') => {
       const f = ctx[name] as (...a: unknown[]) => void;
@@ -3311,19 +3319,19 @@ export class Sky implements SkyContext {
         // рамка неба у края холста — непрозрачная, как прежде
         if (name === 'fillRect') {
           const [x, y, w, h] = a as number[];
-          const c = sky.cam;
+          const c = sk().cam;
           if (x <= 0.5 || y <= 0.5 || x + w >= c.w - 0.5 || y + h >= c.h - 0.5) return f.apply(this, a);
         }
-        if (!sky.light || !ground(this[style])) return f.apply(this, a);
+        if (!sk().light || !ground(this[style])) return f.apply(this, a);
         // подложка — вырез с той же непрозрачностью (цвет стиля держит свою альфу); свет ляжет в него в конце кадра
         // (draw, paintHoles) — рамка выреза запоминается
         const pad = name === 'stroke' || name === 'strokeRect' ? this.lineWidth : 0;
         if (name === 'fillRect' || name === 'strokeRect') {
           const [x, y, w, h] = a as number[];
-          sky.hole(Math.min(x, x + w), Math.min(y, y + h), Math.max(x, x + w), Math.max(y, y + h), pad);
-        } else if (a.length && typeof a[0] === 'object') sky.holes = null;
-        else if (pb.tv !== sky.tver) sky.holes = null;
-        else if (pb.x1 >= pb.x0) sky.hole(pb.x0, pb.y0, pb.x1, pb.y1, pad);
+          sk().hole(Math.min(x, x + w), Math.min(y, y + h), Math.max(x, x + w), Math.max(y, y + h), pad);
+        } else if (a.length && typeof a[0] === 'object') sk().holes = null;
+        else if (pb.tv !== sk().tver) sk().holes = null;
+        else if (pb.x1 >= pb.x0) sk().hole(pb.x0, pb.y0, pb.x1, pb.y1, pad);
         const op = this.globalCompositeOperation;
         this.globalCompositeOperation = 'destination-out';
         f.apply(this, a);
