@@ -153,6 +153,8 @@ const DEV_MAX_PX = 16_000_000;
 const RES = 0.5;
 /** Запас слоя за краем неба (доля ширины и высоты): сдвиг неба внутри запаса — перенос без сборки. */
 const MARGIN = { x: 0.3, y: 0.25 };
+/** Не чаще стольких мс свет собирается посреди движения, если окно неба вышло за край растра. */
+const MOVE_BUILD_MS = 250;
 /** Смыв: доля туманности раскрытого созвездия (при приближении она распадается на настоящие следы). */
 export const LIGHT_WASH = 0.14;
 /** Наибольшая непрозрачность туманности — src/render/branches.ts (её читает и npm run -s contrast). */
@@ -451,16 +453,25 @@ export class LightLayer {
       const shift = Math.abs(t.e + b.mx) < b.mx * 0.85 && Math.abs(t.f + b.my) < b.my * 0.85;
       // в движении слой терпит растяжение до 4 раз (перелёт, колесо): сборка — в покое
       const inside = shift && (moving ? t.a > 0.25 && t.a < 4 && t.d > 0.25 && t.d < 4 : t.a > 0.5 && t.a < 2 && t.d > 0.5 && t.d < 2);
-      // в движении — перенос и растяжение собранного, и за запасом тоже (край слоя пуст до покоя): сборка посреди протяжки
-      // стоила 10–60 мс кадра (О1); в покое — сборка, если масштаб другой или окно вышло за запас
+      // в движении — перенос и растяжение собранного (сборка в каждом кадре протяжки стоила 10–60 мс, О1); но окно неба
+      // вышло за край растра — свет собирается заново и в движении, не чаще раза в MOVE_BUILD_MS: иначе за краем полоса
+      // без туманности, эпох и огоньков, вспыхивающая при отпускании (рецензия 3 октября). В покое — сборка, если масштаб
+      // другой или окно вышло за запас
       const stretch = t.a > 0.25 && t.a < 4 && t.d > 0.25 && t.d < 4;
-      if ((moving && stretch) || (sameScale && inside)) {
+      const iw = (this.cv.width / RES) * t.a;
+      const ih = (this.cv.height / RES) * t.d;
+      const covers = t.e <= 0.5 && t.f <= 0.5 && t.e + iw >= v.w - 0.5 && t.f + ih >= v.h - 0.5;
+      const late = typeof performance === 'undefined' || performance.now() - this.moveBuildAt >= MOVE_BUILD_MS;
+      if ((moving && stretch && (covers || !late)) || (sameScale && inside)) {
         this.apply(t);
         return;
       }
     }
+    if (moving && typeof performance !== 'undefined') this.moveBuildAt = performance.now();
     this.build(inp);
   }
+  /** когда свет последний раз собирался посреди движения (performance.now) */
+  private moveBuildAt = -Infinity;
 
   /** Перенос и растяжение собранного слоя под нынешний вид (px холста неба). */
   private transform(v: LightView) {

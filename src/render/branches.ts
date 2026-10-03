@@ -165,6 +165,24 @@ export const BRANCH_GLOW: Readonly<Record<MapTheme, readonly { width: number; a:
   ],
   day: [],
 };
+/**
+ * Свечение пути рода выбранного (просьба владельца 3 октября: «вся генеалогия должна загораться, как лампочка»): под
+ * каждой связью рода — от предков к выбранному, от него к жёнам и детям и дальше по потомкам — мягкий свет её цвета:
+ * ночью — в режиме 'lighter', днём — тон под линией. У связи без цвета ветви свет нейтральный: днём — тёплый
+ * (LINEAGE_WARM), ночью — цветом текста.
+ */
+export const LINEAGE_GLOW: Readonly<Record<MapTheme, readonly { width: number; a: number }[]>> = {
+  night: [
+    { width: 9, a: 0.05 },
+    { width: 4.5, a: 0.11 },
+  ],
+  day: [
+    { width: 10, a: 0.14 },
+    { width: 5, a: 0.26 },
+  ],
+};
+/** Нейтральный свет рода днём — тёплый, как свет лампы (на светлом небе тон текста читался бы тенью). */
+export const LINEAGE_WARM = '#F2B632';
 /** Свечение предков выбранного: мягче ветвей, цветом текста (ночью светлое, днём тёмное). */
 export const ANCESTOR_GLOW: Readonly<Record<MapTheme, readonly { width: number; a: number }[]>> = {
   night: [

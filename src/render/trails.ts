@@ -49,7 +49,7 @@ import { refText } from '../engine/kinship.ts';
 import { drawGlyph, starRadius, type GlyphOpts } from './glyphs.ts';
 import { mapFont, mapSize, nameSize, T_MAP_S } from './type.ts';
 import { claim, FAMILY_KY, textBox, type LabelCache } from './labels.ts';
-import { branchTickAt, GlowBatch, glowLayers, glows } from './branches.ts';
+import { branchTickAt, GlowBatch, glowLayers, glows, LINEAGE_GLOW, LINEAGE_WARM } from './branches.ts';
 import { branchOrTribeColor } from './light.ts';
 import { branchFrame, clipHoles, FAR, ringHoles, type BranchPaint } from './marks.ts';
 import type { Rect } from './rect.ts';
@@ -2265,10 +2265,43 @@ export function commonBranch(bf: ReturnType<typeof branchFrame>, p: Pass, ids: r
   return color ? { color, a } : null;
 }
 
-/** Цвет ветви у пути к потомкам выбранного (решение 69, § 9): зубец — цветом ребёнка; ствол — общим цветом детей ветви. */
+/**
+ * Путь рода выбранного (просьба владельца 3 октября: подсветка «как лампочка» — горит вся генеалогия, без серых кусков):
+ * 'desc' — путь союза, где родитель — выбранный или его потомок, к детям-потомкам (черта брака, ствол, шина, зубец);
+ * 'anc' — путь союза предков к предку или к самому выбранному. Второй супруг союза потомка (невестка, зять) в выделение
+ * рода не входит — прежде из-за него ствол и шина союза гасли («половина светится, половина нет»).
+ */
+export function lineageOf(p: Pick<Pass, 's'>, q: Pick<LinkPath, 'union' | 'key' | 'ends'>): 'desc' | 'anc' | null {
+  const hl = p.s.highlight;
+  const sel = p.s.selected;
+  if (!hl || !sel || hl.get(sel) !== 'self' || !q.union) return null;
+  const u = ALL_UNIONS.byId.get(q.union);
+  if (!u) return null;
+  const pa = u.a ? hl.get(u.a) : undefined;
+  const pb = u.b ? hl.get(u.b) : undefined;
+  const kids = q.key.kind === 'child' ? [q.key.child] : q.key.kind === 'spouse' ? u.kids : q.ends.filter((e) => e !== u.a && e !== u.b);
+  const served = kids.length ? kids : u.kids;
+  if ((pa === 'self' || pa === 'desc' || pb === 'self' || pb === 'desc') && served.some((k) => hl.get(k) === 'desc')) return 'desc';
+  if ((pa === 'anc' || pb === 'anc') && served.some((k) => hl.get(k) === 'anc' || hl.get(k) === 'self')) return 'anc';
+  // бездетный брак выбранного — его черта тоже горит
+  if (q.key.kind === 'spouse' && (pa === 'self' || pb === 'self')) return 'desc';
+  return null;
+}
+
+/**
+ * Цвет ветви у пути к потомкам выбранного (решение 69, § 9): зубец — цветом ребёнка; ствол, шина и черта брака — общим
+ * цветом детей-потомков, которых путь ведёт (у черты — всех детей союза); разные ветви — null (путь горит светом рода).
+ */
+function pathBranchOf(bf: ReturnType<typeof branchFrame>, p: Pass, q: LinkPath): { color: string; a: number } | null {
+  if (!bf.map || q.kind === 'clan') return null;
+  if (q.kind === 'bar' || q.key.kind === 'spouse') {
+    const u = q.union ? ALL_UNIONS.byId.get(q.union) : undefined;
+    return u && u.kids.length ? commonBranch(bf, p, u.kids) : null;
+  }
+  return commonBranch(bf, p, q.ends, 1);
+}
 function pathBranch(bf: ReturnType<typeof branchFrame>, p: Pass, q: LinkPath): string | null {
-  if (!bf.map || q.kind === 'bar' || q.kind === 'jog' || q.kind === 'clan') return null;
-  const c = commonBranch(bf, p, q.ends, 1);
+  const c = pathBranchOf(bf, p, q);
   return c ? alpha(c.color, c.a) : null;
 }
 
@@ -2389,6 +2422,28 @@ export function drawLinks(v: SkyContext, p: Pass, d: LinkDraw) {
     }
   };
   const offsets = barOffsets;
+  // путь рода выбранного (lineageOf): в полную силу, главной толщиной, цветом ветви или светом рода, со свечением под
+  // линией — сперва свечение всех путей рода кадра (под всеми линиями), потом сами линии
+  const night = bf.theme === 'night';
+  const lineInk = pal.ink;
+  const lin = new Map<LinkPath, { color: string; a: number }>();
+  {
+    const glow = new GlowBatch(LINEAGE_GLOW[bf.theme]);
+    for (let i = 0; i < paths.length; i++) {
+      if (box[4 * i + 1] + dx < -4 || box[4 * i] + dx > W + 4 || box[4 * i + 3] + dy < -4 || box[4 * i + 2] + dy > H + 4) continue;
+      const q = paths[i];
+      if (q.kind === 'ribbon' || !linkShown(q, d)) continue;
+      const kind = lineageOf(p, q);
+      if (!kind) continue;
+      const br = kind === 'desc' ? pathBranchOf(bf, p, q) : null;
+      const a = br ? br.a : p.s.intro;
+      lin.set(q, { color: br ? alpha(br.color, br.a) : alpha(lineInk, p.s.intro), a });
+      const gc = br ? br.color : night ? lineInk : LINEAGE_WARM;
+      // свечение — по средней линии пути (у двойной черты брака — между её штрихами): оно шире самой линии
+      for (let k = 0; k + 3 < q.pts.length; k += 2) glow.add(gc, a, q.pts[k] + dx, q.pts[k + 1] + dy, q.pts[k + 2] + dx, q.pts[k + 3] + dy);
+    }
+    glow.flush(ctx, night);
+  }
   // главный ярус — после остальных: с ореолом цвета неба поверх контекста (решение 135)
   const main: { q: LinkPath; a: number; gaps: Map<number, [number, number][]> | null; color: string }[] = [];
   for (let i = 0; i < paths.length; i++) {
@@ -2399,11 +2454,12 @@ export function drawLinks(v: SkyContext, p: Pass, d: LinkDraw) {
     if (q.kind === 'ribbon' || !linkShown(q, d)) continue;
     const hot = q.ks === d.hover || d.preview.has(q.ks);
     const l = look(q);
-    const a0 = hot ? 1 : l.a;
+    const ln = lin.get(q);
+    const a0 = hot || ln ? 1 : l.a;
     if (a0 <= 0.01) continue;
     const gaps = gapsOf(q, hot ? -1 : l.tier);
     const e = hot ? 1 : pathEmph(p, q) * p.s.intro;
-    const tone = hot ? pal.ink : (pathBranch(bf, p, q) ?? (l.tier === 0 ? alpha(pal.ink, Math.min(1, e)) : alpha(pal.ink2, Math.min(1, LINK_TONE * e))));
+    const tone = hot ? pal.ink : ln ? ln.color : (pathBranch(bf, p, q) ?? (l.tier === 0 ? alpha(pal.ink, Math.min(1, e)) : alpha(pal.ink2, Math.min(1, LINK_TONE * e))));
     if (p.lines)
       for (let k = 0; k + 3 < q.pts.length; k += 2) {
         const ax = q.pts[k] + dx;
@@ -2419,7 +2475,7 @@ export function drawLinks(v: SkyContext, p: Pass, d: LinkDraw) {
     }
     ctx.globalAlpha = a;
     ctx.strokeStyle = tone;
-    ctx.lineWidth = (hot ? 2 : TIER_WIDTH[l.tier]) * barWidth(q);
+    ctx.lineWidth = (hot ? 2 : ln ? TIER_WIDTH[0] : TIER_WIDTH[l.tier]) * barWidth(q);
     ctx.setLineDash(LINK_DASH[q.style]);
     ctx.beginPath();
     for (const off of offsets(q)) trace(q, gaps, off);

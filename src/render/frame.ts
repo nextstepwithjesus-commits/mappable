@@ -408,6 +408,8 @@ export function foldItemText(f: { kind: 'desc' | 'group'; id: string; count: num
   return g ? `потомки ${g} (${f.count})` : `${q?.name ?? f.id} — потомки (${f.count})`;
 }
 
+/** Ступеней насыщенности полосы плотности шкалы (на глаз неотличимо от непрерывной). */
+const DENSITY_STEPS = 24;
 /** Линейка: полоса плотности, риски, подписи у своих рисок, граница эр, знак разрыва шкалы. Возвращает места подписей лет. */
 function drawRuler(v: SkyContext, ticks: YearTick[]): Rect[] {
   const { ctx, cam, pal } = v;
@@ -421,7 +423,9 @@ function drawRuler(v: SkyContext, ticks: YearTick[]): Rect[] {
     const ci = k.indexOf(T_CANON_END);
     const trueRate = ci > 0 ? (v.scale.xTrue[ci] - v.scale.xTrue[0]) / (T_CANON_END - k[0]) : 0;
     const canonRate = (v.xOf(T_CANON_END) - v.xOf(k[0])) / (T_CANON_END - k[0]);
-    // шаг 4 px; год у следующего шага — по местному масштабу (без обратного поиска на каждом шаге)
+    // шаг 4 px; год у следующего шага — по местному масштабу (без обратного поиска на каждом шаге). Насыщенность —
+    // ступенями (DENSITY_STEPS): столбцы одной ступени — одним путём (сотни заливок в каждом кадре стоили ~3 мс кадра)
+    const cols: number[][] = Array.from({ length: DENSITY_STEPS + 1 }, () => []);
     let t = v.tOf(cam.wx(LW + 2));
     for (let x = LW; x < W; x += 4) {
       if (t > T_CANON_END) break;
@@ -429,11 +433,17 @@ function drawRuler(v: SkyContext, ticks: YearTick[]): Rect[] {
       if (t >= v.scale.knots[0]) {
         const s = r / (trueRate || canonRate);
         const u = Math.max(0, Math.min(1, 0.5 + Math.log(s) / Math.log(36)));
-        ctx.fillStyle = alpha(pal.ink2, (0.08 + 0.62 * u) * Math.min(1, v.lambda));
-        ctx.fillRect(x, RULER_H - DENSITY_H - 0.5, 4, DENSITY_H);
+        cols[Math.round(u * DENSITY_STEPS)].push(x);
       }
       t += r > 0 ? 4 / (r * cam.kx) : 1;
     }
+    cols.forEach((xs, k) => {
+      if (!xs.length) return;
+      ctx.fillStyle = alpha(pal.ink2, (0.08 + (0.62 * k) / DENSITY_STEPS) * Math.min(1, v.lambda));
+      ctx.beginPath();
+      for (const x of xs) ctx.rect(x, RULER_H - DENSITY_H - 0.5, 4, DENSITY_H);
+      ctx.fill();
+    });
   }
   const xBreak = cam.sx(v.xOf(T_CANON_END));
   if (xBreak < W - 4) {

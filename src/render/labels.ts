@@ -1177,8 +1177,18 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): Label
       }
     }
   }
+  // кадр сдвига (sky.ts, Pass.labelReuse): место кадра покоя относительно звезды, если оно в небе, не под органами и не
+  // занято подписью звезды, въехавшей в кадр раньше по очереди; иначе — обычный перебор
+  const rk = !o.least ? p.labelReuse?.get(q.id) : undefined;
+  if (rk) {
+    const box = { x: x + rk.bx, y: y + rk.by, w: rk.bw, h: rk.bh };
+    if (insideSky(v, box) && !hits(box, p.reserve) && !p.placer.clash(box, false, 99, q.id)) {
+      at = { tx: x + rk.dx, ty: y + rk.dy, box, side: rk.side, ...(rk.ax !== undefined && rk.ay !== undefined ? { ax: x + rk.ax, ay: y + rk.ay } : {}) };
+      mode = rk.mode as Mode;
+    }
+  }
   let atMouth = false;
-  for (const soft of o.least ? [] : passes) {
+  for (const soft of o.least || at ? [] : passes) {
     mode = soft;
     // своё место сразу за звездой (решение 139: защищённый текст) — только чужие знаки, подписи и линии под запретом
     if (soft === 'self') {
@@ -1387,6 +1397,18 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): Label
   v.ledger.add('star', q.name, at.box, q.id);
   p.labeled.add(i);
   if (note && p.shown) p.shown.noted.push(`${q.name}#${note}`);
+  if (p.labelRecord && !atMouth)
+    p.labelRecord.set(q.id, {
+      dx: tx - x,
+      dy: ty - y,
+      bx: at.box.x - x,
+      by: at.box.y - y,
+      bw: at.box.w,
+      bh: at.box.h,
+      side: at.side,
+      ...(at.ax !== undefined && at.ay !== undefined ? { ax: at.ax - x, ay: at.ay - y } : {}),
+      mode,
+    });
   return { box: at.box, tx, ty, side: at.side, fold };
 }
 

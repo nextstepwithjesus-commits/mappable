@@ -294,7 +294,27 @@ export interface SkyContext {
 }
 
 /** Проход кадра: то, что draw() вычисляет один раз и отдаёт слоям. */
+/** Место подписи звезды относительно самой звезды (px) и проход, которым она встала (labels.ts, labelStar). */
+export interface LabelSpot {
+  dx: number;
+  dy: number;
+  bx: number;
+  by: number;
+  bw: number;
+  bh: number;
+  side: 'l' | 'r' | 't' | 'b' | 'x';
+  ax?: number;
+  ay?: number;
+  mode: string;
+}
+
 export interface Pass {
+  /**
+   * места подписей кадра покоя (запись) и их повтор в кадрах сдвига при том же масштабе и состоянии: при сдвиге
+   * взаимное расположение звёзд и линий то же, и перебор мест (до 40 % кадра протяжки) не нужен — подписи не прыгают
+   */
+  labelRecord?: Map<string, LabelSpot> | null;
+  labelReuse?: Map<string, LabelSpot> | null;
   s: SkyState;
   /** указатели у края к выбранному лицу и второму (frame.ts, placeWayfinding): ромбы союзов под ними не рисуются */
   wayEdges?: Rect[];
@@ -2160,6 +2180,8 @@ export class Sky implements SkyContext {
 
   /** Глубина save() холста неба (считает обёртка groundify): лишние уровни снимаются в начале и в конце кадра. */
   private saveDepth = 0;
+  /** Номер переноса холста: растёт при каждой его смене (обёртка groundify) — матрица переноса берётся заново только тогда. */
+  private tver = 0;
   private unwind(): number {
     const n = this.saveDepth;
     while (this.saveDepth > 0) this.ctx.restore();
@@ -2276,6 +2298,33 @@ export class Sky implements SkyContext {
       },
     };
     for (const r of s.reserve ?? []) p.placer.add(r);
+    // подписи в сдвиге (протяжка, инерция; масштаб и состояние те же) — на местах кадра покоя относительно своих звёзд
+    {
+      const key = [
+        cam.kx,
+        cam.ky,
+        cam.lanes,
+        cam.w,
+        cam.h,
+        this.model.id,
+        this.lambda,
+        this.rowsKey,
+        this.nodesStamp,
+        this.planIds.get(this.plan) ?? (this.planIds.set(this.plan, ++this.planSeq), this.planSeq),
+        s.selected ?? '',
+        s.hovered ?? '',
+        this.objId(s.highlight),
+        this.objId(s.kinSteps),
+        this.objId(s.link),
+        this.pal.sky,
+        JSON.stringify(s.layers),
+        s.onlyLines ? 1 : 0,
+        Math.round(s.intro * 100),
+        s.depth ?? '',
+      ].join('|');
+      if (!this.viewMoving) this.labelMemo = { key, spots: (p.labelRecord = new Map()) };
+      else if (!this.scaleMoving && !this.trans && this.labelMemo?.key === key) p.labelReuse = this.labelMemo.spots;
+    }
 
     this.bandsOn = !!L.epochs;
     if (L.epochs && !light) this.drawEpochBands();
@@ -2909,6 +2958,17 @@ export class Sky implements SkyContext {
 
   // ---------- слой света (этап 16, решения 182, 183, 185) ----------
 
+  /** места подписей последнего кадра покоя и ключ его состояния (Pass.labelRecord, labelReuse) */
+  private labelMemo: { key: string; spots: Map<string, LabelSpot> } | null = null;
+  private objIds = new WeakMap<object, number>();
+  private objSeq = 0;
+  private objId(o: unknown): number {
+    if (!o || typeof o !== 'object') return 0;
+    let k = this.objIds.get(o);
+    if (k === undefined) this.objIds.set(o, (k = ++this.objSeq));
+    return k;
+  }
+
   /** Слой света под основным холстом; null — без страницы (тесты) или холст ещё не в документе: прежние облака. */
   private light: LightLayer | null = null;
   private lightTried = false;
@@ -2967,7 +3027,6 @@ export class Sky implements SkyContext {
     // рамка текущего пути (px кадра до переноса холста) — для рамки выреза; перенос холста, сменившийся посреди пути, —
     // рамка ненадёжна (вырез тогда заполняется светом под весь кадр)
     const pb = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity, tv: 0 };
-    let tv = 0;
     const pt = (x: number, y: number, r = 0) => {
       if (x - r < pb.x0) pb.x0 = x - r;
       if (y - r < pb.y0) pb.y0 = y - r;
@@ -2985,7 +3044,7 @@ export class Sky implements SkyContext {
     wrap('beginPath', () => {
       pb.x0 = pb.y0 = Infinity;
       pb.x1 = pb.y1 = -Infinity;
-      pb.tv = tv;
+      pb.tv = sky.tver;
     });
     wrap('moveTo', (a) => pt(a[0], a[1]));
     wrap('lineTo', (a) => pt(a[0], a[1]));
@@ -2996,10 +3055,10 @@ export class Sky implements SkyContext {
     wrap('arcTo', (a) => (pt(a[0], a[1]), pt(a[2], a[3])));
     wrap('quadraticCurveTo', (a) => (pt(a[0], a[1]), pt(a[2], a[3])));
     wrap('bezierCurveTo', (a) => (pt(a[0], a[1]), pt(a[2], a[3]), pt(a[4], a[5])));
-    for (const m of ['setTransform', 'transform', 'translate', 'scale', 'rotate', 'resetTransform']) wrap(m, () => void tv++);
+    for (const m of ['setTransform', 'transform', 'translate', 'scale', 'rotate', 'resetTransform']) wrap(m, () => void sky.tver++);
     wrap('save', () => void sky.saveDepth++);
     wrap('restore', () => {
-      tv++;
+      sky.tver++;
       if (sky.saveDepth > 0) sky.saveDepth--;
     });
     const cut = (name: 'fill' | 'stroke' | 'fillRect' | 'strokeRect', style: 'fillStyle' | 'strokeStyle') => {
@@ -3019,7 +3078,7 @@ export class Sky implements SkyContext {
           const [x, y, w, h] = a as number[];
           sky.hole(Math.min(x, x + w), Math.min(y, y + h), Math.max(x, x + w), Math.max(y, y + h), pad);
         } else if (a.length && typeof a[0] === 'object') sky.holes = null;
-        else if (pb.tv !== tv) sky.holes = null;
+        else if (pb.tv !== sky.tver) sky.holes = null;
         else if (pb.x1 >= pb.x0) sky.hole(pb.x0, pb.y0, pb.x1, pb.y1, pad);
         const op = this.globalCompositeOperation;
         this.globalCompositeOperation = 'destination-out';
@@ -3528,7 +3587,17 @@ export class Sky implements SkyContext {
     if (typeof ctx.getTransform !== 'function' || typeof ctx.setTransform !== 'function') return () => {};
     type St = { font: string; fill: CanvasRenderingContext2D['fillStyle']; stroke: CanvasRenderingContext2D['strokeStyle']; lw: number; lj: CanvasLineJoin; a: number; ls: string; ta: CanvasTextAlign; tb: CanvasTextBaseline; M: DOMMatrix };
     const q: { m: 'fillText' | 'strokeText'; t: string; x: number; y: number; w?: number; st: St }[] = [];
-    const snap = (): St => ({ font: ctx.font, fill: ctx.fillStyle, stroke: ctx.strokeStyle, lw: ctx.lineWidth, lj: ctx.lineJoin, a: ctx.globalAlpha, ls: (ctx as { letterSpacing?: string }).letterSpacing ?? '', ta: ctx.textAlign, tb: ctx.textBaseline, M: ctx.getTransform() });
+    // матрица переноса — та же, пока перенос не менялся (tver; без обёртки groundify — каждый раз)
+    let mv = -1;
+    let mm: DOMMatrix | null = null;
+    const matrix = () => {
+      if (!this.light || mv !== this.tver || !mm) {
+        mm = ctx.getTransform();
+        mv = this.tver;
+      }
+      return mm;
+    };
+    const snap = (): St => ({ font: ctx.font, fill: ctx.fillStyle, stroke: ctx.strokeStyle, lw: ctx.lineWidth, lj: ctx.lineJoin, a: ctx.globalAlpha, ls: (ctx as { letterSpacing?: string }).letterSpacing ?? '', ta: ctx.textAlign, tb: ctx.textBaseline, M: matrix() });
     const had = { fillText: Object.getOwnPropertyDescriptor(ctx, 'fillText'), strokeText: Object.getOwnPropertyDescriptor(ctx, 'strokeText') };
     for (const m of ['fillText', 'strokeText'] as const)
       Object.defineProperty(ctx, m, {
@@ -3546,18 +3615,22 @@ export class Sky implements SkyContext {
       }
       if (!q.length) return;
       ctx.save();
+      // свойства ставятся, только когда меняются: разбор строки шрифта и цвета на каждую надпись дорог (Safari — особенно)
+      let was: St | null = null;
+      const ls = 'letterSpacing' in ctx;
       for (const o of q) {
         const st = o.st;
-        ctx.setTransform(st.M);
-        ctx.font = st.font;
-        ctx.fillStyle = st.fill;
-        ctx.strokeStyle = st.stroke;
-        ctx.lineWidth = st.lw;
-        ctx.lineJoin = st.lj;
-        ctx.globalAlpha = st.a;
-        if ('letterSpacing' in ctx) (ctx as { letterSpacing: string }).letterSpacing = st.ls || '0px';
-        ctx.textAlign = st.ta;
-        ctx.textBaseline = st.tb;
+        if (!was || st.M !== was.M) ctx.setTransform(st.M);
+        if (!was || st.font !== was.font) ctx.font = st.font;
+        if (!was || st.fill !== was.fill) ctx.fillStyle = st.fill;
+        if (!was || st.stroke !== was.stroke) ctx.strokeStyle = st.stroke;
+        if (!was || st.lw !== was.lw) ctx.lineWidth = st.lw;
+        if (!was || st.lj !== was.lj) ctx.lineJoin = st.lj;
+        if (!was || st.a !== was.a) ctx.globalAlpha = st.a;
+        if (ls && (!was || st.ls !== was.ls)) (ctx as { letterSpacing: string }).letterSpacing = st.ls || '0px';
+        if (!was || st.ta !== was.ta) ctx.textAlign = st.ta;
+        if (!was || st.tb !== was.tb) ctx.textBaseline = st.tb;
+        was = st;
         if (o.w === undefined) ctx[o.m](o.t, o.x, o.y);
         else ctx[o.m](o.t, o.x, o.y, o.w);
       }
