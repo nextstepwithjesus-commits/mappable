@@ -51,7 +51,7 @@ import { mapFont, mapSize, nameSize, T_MAP_S } from './type.ts';
 import { claim, FAMILY_KY, textBox, type LabelCache } from './labels.ts';
 import { branchTickAt, GlowBatch, glowLayers, glows, LINEAGE_GLOW, LINEAGE_WARM } from './branches.ts';
 import { branchOrTribeColor } from './light.ts';
-import { branchFrame, clipHoles, FAR, ringHoles, type BranchPaint } from './marks.ts';
+import { branchFrame, clipHoles, FAR, ringHoles, selectedRoutes, type BranchPaint } from './marks.ts';
 import type { Rect } from './rect.ts';
 import type { Emphasis, Palette, Pass, SkyContext } from './sky.ts';
 import type { LinkFrame, LinkNode, LinkPath, PathStyle, StubMark } from './links.ts';
@@ -2288,6 +2288,61 @@ export function lineageOf(p: Pick<Pass, 's'>, q: Pick<LinkPath, 'union' | 'key' 
   // бездетный брак выбранного — его черта тоже горит
   if (q.key.kind === 'spouse' && (pa === 'self' || pb === 'self')) return 'desc';
   return null;
+}
+
+/**
+ * Пути супругов и родителей выбранного лица к ромбам союзов (просьба владельца 3 октября: «где его жёны, где дети»).
+ * Звезда жены стоит в её родной семье, а ромб союза — на её следе, в год брака или первого ребёнка. Прежде путь от звезды
+ * жены до ромба был её обычным следом и не загорался: жена читалась отдельно от мужа. Теперь у каждого союза выбранного
+ * горит путь второго супруга от его звезды по его следу до ромба — цветом ветви союза (как черта брака и дети союза);
+ * у союза родителей — пути отца и матери к ромбу, светом рода. Свечение — как у линий рода; рисуется до звёзд и с вырезами
+ * под подписями (sky.ts). Возвращает, чьи пути нарисованы: «spouse:id», «parent:id» — для проверок.
+ */
+export function drawFamilyRoutes(v: SkyContext, p: Pass): string[] {
+  const sel = p.s.selected;
+  const d = p.links;
+  const hl = p.s.highlight;
+  if (!sel || !d || !hl || hl.get(sel) !== 'self') return [];
+  const { ctx, pal } = v;
+  const bf = branchFrame(v, p);
+  const night = bf.theme === 'night';
+  const lamp = alpha(pal.ink, p.s.intro);
+  const warm = night ? pal.ink : LINEAGE_WARM;
+  const items: { route: number[]; color: string; glow: string; a: number; tag: string }[] = [];
+  for (const u of ALL_UNIONS.of.get(sel) ?? []) {
+    const other = u.a === sel ? u.b : u.a;
+    if (!other || v.hides(other)) continue;
+    const r = selectedRoutes(v, d, { kind: 'spouse', union: u.id, person: other }).parents?.get(other);
+    if (!r || r.length < 4) continue;
+    const br = u.kids.length ? commonBranch(bf, p, u.kids) : null;
+    items.push({ route: r, color: br ? alpha(br.color, br.a) : lamp, glow: br ? br.color : warm, a: br ? br.a : p.s.intro, tag: `spouse:${other}` });
+  }
+  for (const u of ALL_UNIONS.origin.get(sel) ?? []) {
+    const rs = selectedRoutes(v, d, { kind: 'union', union: u.id }).parents;
+    for (const id of [u.a, u.b]) {
+      const r = id && !v.hides(id) ? rs?.get(id) : undefined;
+      if (!r || r.length < 4) continue;
+      items.push({ route: r, color: lamp, glow: warm, a: p.s.intro, tag: `parent:${id}` });
+    }
+  }
+  if (!items.length) return [];
+  const glow = new GlowBatch(LINEAGE_GLOW[bf.theme]);
+  for (const it of items) for (let k = 0; k + 3 < it.route.length; k += 2) glow.add(it.glow, it.a, it.route[k], it.route[k + 1], it.route[k + 2], it.route[k + 3]);
+  glow.flush(ctx, night);
+  ctx.save();
+  ctx.setLineDash([]);
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.lineWidth = TIER_WIDTH[0];
+  for (const it of items) {
+    ctx.strokeStyle = it.color;
+    ctx.beginPath();
+    ctx.moveTo(it.route[0], it.route[1]);
+    for (let k = 2; k + 1 < it.route.length; k += 2) ctx.lineTo(it.route[k], it.route[k + 1]);
+    ctx.stroke();
+  }
+  ctx.restore();
+  return items.map((it) => it.tag);
 }
 
 /**

@@ -1258,6 +1258,8 @@ export interface SelectedRoutes {
   all: number[][];
   core: number[][];
   ghosts: GhostSpot[];
+  /** путь каждого названного родителя (супруга) на небе от его звезды по его следу до узла союза — по id лица */
+  parents?: Map<string, number[]>;
 }
 
 /** Вершина дуги родства (золотистая дуга, drawKinArcs): кривая a → c → b. */
@@ -1306,7 +1308,12 @@ export function selectedRoutes(v: SkyContext, d: LinkDraw | null | undefined, ke
     byKs.set(ks, got);
   }
   const shift = (pts: readonly number[]) => pts.map((q, k) => q + (k % 2 ? d.dy : d.dx));
-  return { all: got.all.map(shift), core: got.core.map(shift), ghosts: got.ghosts.map((g) => ({ ...g, x: g.x + d.dx, y: g.y + d.dy })) };
+  return {
+    all: got.all.map(shift),
+    core: got.core.map(shift),
+    ghosts: got.ghosts.map((g) => ({ ...g, x: g.x + d.dx, y: g.y + d.dy })),
+    parents: new Map([...(got.parents ?? [])].map(([id, r]) => [id, shift(r)])),
+  };
 }
 
 /**
@@ -1325,6 +1332,7 @@ function baseRoutes(v: SkyContext, d: LinkDraw, key: LinkKey, ks: string, origin
   const all: number[][] = [];
   const core: number[][] = [];
   const ghosts: GhostSpot[] = [];
+  const byParent = new Map<string, number[]>();
   const paths = d.frame.paths.filter((q) => linkShown(q, d));
   const t: LifeTrail = { x0: 0, x1: 0, y: 0, cls: 'exact', known: true, solidTo: 0, color: '', width: 1 };
   /** звезда лица в px кадра и конец её следа; null — звезды на небе нет */
@@ -1438,10 +1446,13 @@ function baseRoutes(v: SkyContext, d: LinkDraw, key: LinkKey, ks: string, origin
     all.push(...core);
     for (const id of parents) {
       const r = parentRoute(id);
-      if (r) all.push(r);
+      if (r) {
+        all.push(r);
+        byParent.set(id, r);
+      }
     }
     ghostRoutes(parents.filter((id) => !star(id)), node ?? firstSeen([...parents, ...(un?.kids ?? [])]));
-    return { all, core, ghosts };
+    return { all, core, ghosts, parents: byParent };
   }
   // союз → ребёнок: лента шага или путь от узла по стволу и зубцу к ребёнку; пути родителей к узлу
   const kid = key.child;
@@ -1469,7 +1480,10 @@ function baseRoutes(v: SkyContext, d: LinkDraw, key: LinkKey, ks: string, origin
   for (const id of parents) {
     if (origin ? id !== lead : byRibbon.has(id)) continue;
     const r = parentRoute(id);
-    if (r) all.push(r);
+    if (r) {
+      all.push(r);
+      byParent.set(id, r);
+    }
   }
   // скрытые концы (К3): родители — призраками у узла союза (или у ребёнка, если узла в кадре нет); ребёнок — у узла или
   // у видимого родителя
@@ -1480,7 +1494,7 @@ function baseRoutes(v: SkyContext, d: LinkDraw, key: LinkKey, ks: string, origin
     const g = at ? ghostOf(kid, at, 'to') : null;
     if (g && at) all.push(join(at, g));
   }
-  return { all, core, ghosts };
+  return { all, core, ghosts, parents: byParent };
 }
 
 /**
@@ -1504,8 +1518,26 @@ export function drawOriginPath(v: SkyContext, p: Pass, child: string) {
   const d = p.links;
   const routes = originRoute(v, d, child);
   if (!routes.length || !d) return;
+  strokeRoutes(v, p, d, routes, mainUnion(unions, child)?.id ?? null);
+}
+
+/**
+ * Наведённая связь целиком (просьба владельца 3 октября: связь из нескольких линий — двойная черта брака, ствол, зубец —
+ * при наведении подсвечивалась частью): «союз → ребёнок» — пути родителей от их звёзд по следам до ромба, ромб, ствол и
+ * зубец до ребёнка; черта брака — пути обоих супругов к ромбу; союз — все его линии и пути супругов. Вид — как у пути
+ * происхождения (тон текста, 2 px); шаг ленты, цепочка и дуга родства и так рисуются целиком.
+ */
+export function drawLinkRoute(v: SkyContext, p: Pass, key: LinkKey) {
+  const d = p.links;
+  if (!d || (key.kind !== 'child' && key.kind !== 'spouse' && key.kind !== 'union')) return;
+  const routes = selectedRoutes(v, d, key).all;
+  if (routes.length) strokeRoutes(v, p, d, routes, key.union);
+}
+
+/** Ломаные routes видом наведённой связи: под чужими ромбами и подписями — разрыв, у кольца выбранного — обрезаны; свой ромб — поверх. */
+function strokeRoutes(v: SkyContext, p: Pass, d: LinkDraw, routes: readonly number[][], union: string | null) {
   const { ctx, cam, pal } = v;
-  const u = mainUnion(unions, child);
+  const u = union ? { id: union } : null;
   const hit = (b: Rect) =>
     routes.some((r) => {
       for (let k = 0; k + 3 < r.length; k += 2) {

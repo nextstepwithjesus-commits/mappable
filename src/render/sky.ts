@@ -34,8 +34,8 @@ import { claim, clusterShort, clusterText, drawClusterLabel, familyOf, ownLink, 
 import { bendsOf, FAMILY_TIER, familyTier, hasGlides, tierAlpha, trailPolyline, trailSegs, type Bend, type FamilyTier } from './trails.ts';
 import { glidesOf, laneAt, starLaneOf } from '../engine/stays.ts';
 export { FAMILY_TIER, familyTier, tierAlpha, type FamilyTier } from './trails.ts';
-import { drawBranchTicks, drawGhostNotes, drawLinkLabels, drawLinks, drawPlanStubs, drawSpineTrails, drawTrails, familyHover, linkLooks, linkOn, linkShown, trailLinksAt, trailOf, type LifeTrail, type LinkDraw, type PlanStubHit } from './trails.ts';
-import { branchFrame, drawOriginPath, drawKinPath, drawLeadNotes, drawMeridian, drawOverlayText, drawRings, drawSelectedLink, drawWorkMarks, emphasis, kinRoutes, meridianFlagAt, overlayRoutes, reserveSelectedLink, ringOuter, unionHoverDim, type SelectedLinkInfo } from './marks.ts';
+import { drawBranchTicks, drawFamilyRoutes, drawGhostNotes, drawLinkLabels, drawLinks, drawPlanStubs, drawSpineTrails, drawTrails, familyHover, linkLooks, linkOn, linkShown, trailLinksAt, trailOf, type LifeTrail, type LinkDraw, type PlanStubHit } from './trails.ts';
+import { branchFrame, drawLinkRoute, drawOriginPath, drawKinPath, drawLeadNotes, drawMeridian, drawOverlayText, drawRings, drawSelectedLink, drawWorkMarks, emphasis, kinRoutes, meridianFlagAt, overlayRoutes, reserveSelectedLink, ringOuter, unionHoverDim, type SelectedLinkInfo } from './marks.ts';
 import { coarsePointer, mapFont, mapSize, nameSize, T_MAP_S } from './type.ts';
 import type { Rect } from './rect.ts';
 import { timeToX, xToTime, hydrateScale, type TimeScale, T_CANON_END, T_END } from '../engine/timescale.ts';
@@ -2776,6 +2776,22 @@ export class Sky implements SkyContext {
     // имена у ромбов бездетных браков (этап 13, К6) — после подписей звёзд
     if (lf && L.labels && settle > 0.99) drawLinkLabels(this, p, lf, true);
     this.groupHits = p.nameBoxes as (Rect & { group: string })[];
+    // пути супругов и родителей выбранного к ромбам союзов (просьба владельца 3 октября: «где его жёны, где дети»): до
+    // звёзд — знаки на концах пути поверх него; под подписями путь прерывается
+    let familyRoutes: string[] = [];
+    if (s.selected && lf && L.connectors && !lineOnly && settle > 0.99)
+      this.clipOut(
+        this.ledger.boxes.filter((b) => b.kind !== 'frame'),
+        () => (familyRoutes = drawFamilyRoutes(this, p)),
+      );
+    {
+      const ds = (this.canvas as { dataset?: DOMStringMap }).dataset;
+      if (ds && probes.on) {
+        const fr = familyRoutes.join(' ');
+        if (fr) ds.familyRoutes = fr;
+        else if (ds.familyRoutes !== undefined) delete ds.familyRoutes;
+      }
+    }
     // звёзды — после того как подписи заняли места (решения 139, 140): разрывы следов, сетки и погашенных связей под
     // подписями звёзд не задевают; подписи на чужие знаки не ставятся — знак рисуется всегда
     this.drawStars(p);
@@ -2795,6 +2811,9 @@ export class Sky implements SkyContext {
     // путь происхождения наведённого лица (решение 179): след отца → черта → ромб → след матери → отвод — видом наведённой
     // связи; подсказку «Иаков и Рахиль — родители; Вениамин — сын» даёт подсказка звезды (src/ui/sky/Tip.tsx, originLine)
     if (s.hovered && lf && L.connectors && !s.linkHover && !lineOnly && settle > 0.99) drawOriginPath(this, p, s.hovered);
+    // наведённая связь — целиком (просьба владельца 3 октября): пути родителей по следам к ромбу, ромб, ствол и зубец; та же
+    // связь уже выбрана — её рисует жёлтый путь
+    if (s.linkHover && lf && L.connectors && !lineOnly && settle > 0.99 && linkKeyString(s.linkHover) !== (s.link ? linkKeyString(s.link) : null)) drawLinkRoute(this, p, s.linkHover);
     // выбранная связь (§ 8) — поверх всего неба: жёлтый путь, кольца с ролями на концах, указатели у края
     this.linkSel = drawSelectedLink(this, p, { cuts, deferText: true });
     drawOverlayText(this, p);

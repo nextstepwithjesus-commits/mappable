@@ -39,6 +39,7 @@ import { inFocus } from '../ui/story/density.ts';
 import { groupFocus } from '../ui/story/state.ts';
 import { linkRoles } from '../ui/linkwords.ts';
 import { primaryChildren, siblings } from '../engine/graph.ts';
+import { unions as ALL_UNIONS } from '../ui/reveal.ts';
 import { refText } from '../engine/kinship.ts';
 import { BOOK_INDEX, parseRef } from '../engine/books.ts';
 import { cross, hits, type Rect } from './rect.ts';
@@ -1484,6 +1485,33 @@ export function familyOrder(id: string, spine: ReadonlySet<string>, rank: (id: s
   return all.sort((a, b) => tier(a) - tier(b) || (tier(a) >= 2 ? rank(a) - rank(b) : 0) || at.get(a)! - at.get(b)!);
 }
 
+/**
+ * Кем лицо id приходится выбранному sel — слово у подписи семьи выбранного (просьба владельца 3 октября: «где его жёны,
+ * где дети»): «жена», «наложница», «муж», «отец», «мать», «сын», «дочь», «брат», «сестра», у детей одного из родителей —
+ * «брат по отцу», «сестра по матери». Супруг важнее кровного родства (Сарра у Авраама — «жена», хотя и дочь его отца,
+ * Быт 20:12). Пара, которую Писание называет только родителями детей (решение 92), — «мать его детей», «отец её детей».
+ * Имя слово не склоняет: «Сарра, жена». null — одним словом степень не называется (народ, утверждение иного рода).
+ */
+export function kinWordTo(sel: string, id: string): string | null {
+  const q = byId.get(id);
+  if (!q || q.kind === 'people' || q.kind === 'clan') return null;
+  const f = q.sex === 'f';
+  for (const u of ALL_UNIONS.of.get(sel) ?? []) {
+    if (!((u.a === sel && u.b === id) || (u.b === sel && u.a === id))) continue;
+    if (u.kind === 'parents' && u.a && u.b && u.kids.length) return f ? 'мать его детей' : 'отец её детей';
+    if (id === u.b) return u.kind === 'concubine' ? 'наложница' : f ? 'жена' : 'муж';
+    return f ? 'жена' : 'муж';
+  }
+  for (const e of graph.parentsOf.get(sel) ?? []) if (e.parent === id && (e.kind === 'father' || e.kind === 'mother')) return e.kind === 'father' ? 'отец' : 'мать';
+  if (primaryChildren(graph, sel).includes(id)) return f ? 'дочь' : 'сын';
+  const sib = siblings(graph, sel).find((x) => x.id === id);
+  if (sib) {
+    const w = f ? 'сестра' : 'брат';
+    return sib.kind === 'paternal' ? `${w} по отцу` : sib.kind === 'maternal' ? `${w} по матери` : w;
+  }
+  return null;
+}
+
 export function familyOf(id: string): string[] {
   const out = new Set<string>();
   for (const e of graph.parentsOf.get(id) ?? []) if (e.kind === 'father' || e.kind === 'mother') out.add(e.parent);
@@ -1678,13 +1706,21 @@ export function drawStarLabels(v: SkyContext, p: Pass, between?: () => void) {
 
   // верхняя ступень 164 у выбранного: родители, супруги, лица лент величины ≤ 1 — подписаны всегда (исключение 163 — разрыв)
   const topOf = s.selected ? familyTier(s.selected, p.spine) : () => 9;
+  /** слово родства к выбранному у подписи его семьи: «, жена» (kinWordTo); в показе линий и у самого выбранного — нет */
+  const relNote = (id: string | null | undefined): string | undefined => {
+    if (!s.selected || !id || id === s.selected || lineOnly || p.work) return undefined;
+    const w = kinWordTo(s.selected, id);
+    return w ? `, ${w}` : undefined;
+  };
   // 1) обязательные: у правого края — слева от звезды; выбранное — первым и без проверки; концы выбранной связи (§ 8, Я24)
   let first = true;
   const ends = s.link ? linkRoles(s.link).map((e) => e.id) : [];
   for (const id of new Set([s.selected, s.second, s.hovered, s.focus, ...ends])) {
     const i = idx(id);
     if (!shown(i)) continue;
-    putLabel(v, p, i, { sides: ['r', 'l', 't', 'b'], color: pal.ink, alpha: 1, sigla: true, leader: true, far: true, overStars: true, force: first, reveal: true, top: id === s.selected || topOf(id!) <= 1 });
+    const o1: StarOpts = { sides: ['r', 'l', 't', 'b'], color: pal.ink, alpha: 1, sigla: true, leader: true, far: true, overStars: true, force: first, reveal: true, top: id === s.selected || topOf(id!) <= 1 };
+    const kw = first ? undefined : relNote(id);
+    if (!(kw && putLabel(v, p, i, { ...o1, note: kw }))) putLabel(v, p, i, o1);
     first = false;
   }
   // имена матерей у ромбов выбранного — обязательный ярус сразу после него (решение 137, Г4; trails.ts): выноской до 40 px
@@ -1747,7 +1783,9 @@ export function drawStarLabels(v: SkyContext, p: Pass, between?: () => void) {
       if (k !== 'path') continue;
       const i = idx(id);
       if (!shown(i) || (lineOnly && !p.spine.has(id))) continue;
-      putLabel(v, p, i, { sides: SIDES, color: pal.ink, alpha: 1, sigla: true, leader: true, far: true, overStars: true });
+      const o2: StarOpts = { sides: SIDES, color: pal.ink, alpha: 1, sigla: true, leader: true, far: true, overStars: true };
+      const kw = relNote(id);
+      if (!(kw && putLabel(v, p, i, { ...o2, note: kw }))) putLabel(v, p, i, o2);
     }
   // семья выбранного — раньше всех прочих (решения 137, 144, 146): тесно — выноской до 40 px, затем — место без чужих
   // знаков, где имя читается своим лучше всего (StarOpts.kin)
@@ -1756,9 +1794,11 @@ export function drawStarLabels(v: SkyContext, p: Pass, between?: () => void) {
       const i = idx(id);
       if (!shown(i) || (lineOnly && !p.spine.has(id))) continue;
       const ko: StarOpts = { sides: SIDES, color: pal.ink, alpha: 1, sigla: true, leader: true, far: true, overStars: true, kin: true, top: topOf(id) <= 1 };
-      // нет места и так — имя без уточнения одноимённого («Фамарь» вместо «Фамарь, дочь Давида»): у выбранного его
-      // родня узнаётся по связи, полное имя — в подсказке и карточке (П1: не тишина)
-      if (!putLabel(v, p, i, ko) && p.namesakes?.get(id)) putLabel(v, p, i, { ...ko, note: '' });
+      // кем приходится выбранному — словом у имени («Сарра, жена», «Исаак, сын»); нет места со словом — с уточнением
+      // одноимённого, затем просто имя («Фамарь» вместо «Фамарь, дочь Давида»): у выбранного его родня узнаётся по связи,
+      // полное имя — в подсказке и карточке (П1: не тишина)
+      const kw = relNote(id);
+      if (!(kw && putLabel(v, p, i, { ...ko, note: kw })) && !putLabel(v, p, i, ko) && p.namesakes?.get(id)) putLabel(v, p, i, { ...ko, note: '' });
     }
   // рабочий набор (J4): в режиме «В работе» подписаны все лица набора — по степени интереса, с выноской, если у звезды тесно;
   // погашенные выделением — не ниже 70 % (MAP-64) и 4,5 : 1 (решение 31)
