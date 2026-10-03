@@ -1,6 +1,7 @@
 /**
  * Сценарии приёмки этапа 7 (доработка по повторной экспертизе), группа skydraw (K5): отрисовка неба. Номера 271–289 (270 занят сценарием группы cardtext);
- * 286–288 — этап 15 («Отчий дом», решения 173, 178, 179): следы по пребываниям и переходы, наведение, уровни подробности.
+ * 286–288 — этап 15 («Отчий дом», решения 173, 178, 179); на этапе 17 (решения 190, 191) — небо без переходов, связь
+ * целиком при наведении, путь происхождения, без слоя света.
  * Проверки — по замерам кадра на холсте неба (src/render/sky.ts, конец draw()): canvas[data-detail], [data-detail-axes],
  * [data-named], [data-label-ids] (подписанные лица), [data-notes] (пометы, подписи лент, номера лиц линий, названия
  * созвездий, знаки свёрнутого — текстом через «|»), [data-service] (служебная строка рамки), [data-breaks] (разрывы «//»),
@@ -373,54 +374,38 @@ export const skydraw: Scenario[] = [
   },
   {
     n: 286,
-    title: 'Решение 173 «Отчий дом»: сыновья Иакова — звезда в отчем доме, след плавно уходит в колено (5–16 лет, не отвесно), чужой след под переходом прерван; звезда в списке неба — на полосе рождения',
+    // этап 17, решение 190 (docs/ui-review/STAGE17.md): «Отчий дом» (173) снят — переходов нет; прежде здесь проверялись
+    // переходы сыновей Иакова из отчего дома в колено
+    title: 'Решение 190: семья Иакова на небе этапа 14 — переходов нет; наведение на зубец Вениамина рисует связь «Иаков и Рахиль → Вениамин» целиком (canvas[data-link-route])',
     run: async (p) => {
-      await s15(p, 's15-iakov-f');
+      await go(p, '#/iakov', 3000);
       const gl = await glidesOf(p);
-      if (gl.length < 4) return fail(`переходов в окне ${gl.length}`);
-      const [tier, pxYear] = (await cv(p, 'tier')).split(' ').map(Number);
-      if (tier !== 2) return fail(`уровень подробности ${tier} (${pxYear} px на год) — ждали масштаб семьи`);
-      // не отвесно: переход идёт не меньше 5 лет
-      const steep = gl.filter((g) => g.x1 - g.x0 < 5 * pxYear * 0.8);
-      if (steep.length) return fail(`отвесные переходы: ${steep.map((g) => `${g.id} ${Math.round(g.x1 - g.x0)} px`).join(', ')}`);
-      // звезда — в начале перехода (полоса рождения): у каждого лица с переходом и звездой в списке неба
-      const bad: string[] = [];
-      let checked = 0;
-      for (const g of gl) {
-        const q = await star(p, g.id);
-        if (!q || q.x > g.x0) continue;
-        const first = gl.filter((h) => h.id === g.id).sort((a, b) => a.x0 - b.x0)[0];
-        if (first !== g) continue;
-        checked++;
-        if (Math.abs(q.y - g.y0) > 1.5) bad.push(`${g.id}: звезда ${q.y}, начало перехода ${g.y0}`);
+      if (gl.length) return fail(`переходов в окне ${gl.length}: ${gl.map((g) => g.id).join(', ')}`);
+      const c = await canvasAt(p);
+      const v = await star(p, 'veniamin');
+      if (!v) return fail('звезды Вениамина нет в окне');
+      // зубец к ребёнку — горизонталь на его строке слева от звезды
+      for (const dx of [8, 11, 14, 18]) {
+        await p.mouse.move(c.x + v.x - dx, c.y + v.y);
+        await p.waitForTimeout(350);
+        const r = await cv(p, 'link-route');
+        if (!r) continue;
+        if (!/^k\.iakov\.rakhil\._\.veniamin:\d+$/.test(r)) return fail(`наведена связь ${r}`);
+        const n = Number(r.split(':')[1]);
+        // пути: от узла к ребёнку и от каждого из родителей к узлу
+        if (n < 2) return fail(`связь нарисована частью: путей ${n}`);
+        return pass(`переходов 0; наведение в ${dx} px слева от Вениамина — «${r}»`);
       }
-      if (bad.length) return fail(bad.join('; '));
-      if (!checked) return fail('ни у одного лица с переходом звезды в списке неба');
-      const cuts = (await cv(p, 'glide-cuts')).split(' ').filter(Boolean);
-      if (!cuts.length) return fail('переходы в окне не пересекают ни одного чужого следа — проверить разрыв нечем');
-      return pass(`переходов ${gl.length} (${[...new Set(gl.map((g) => g.id))].slice(0, 8).join(', ')}), звёзд на полосе рождения ${checked}, разрывов чужих следов под переходами ${cuts.length}`);
+      return fail('наведение на зубец Вениамина не выбрало связь');
     },
   },
   {
     n: 287,
-    title: 'Решение 179: наведение на переход выделяет само лицо (подсказка звезды этого лица); наведение на Вениамина — «Иаков и Рахиль — родители; Вениамин — сын»',
+    // этап 17, решение 190: наведение на переход (179) снято вместе с переходами; путь происхождения остаётся
+    title: 'Решение 179: наведение на Вениамина — путь происхождения и строка подсказки «Иаков и Рахиль — родители; Вениамин — сын»',
     run: async (p) => {
-      await s15(p, 's15-iakov-f');
+      await go(p, '#/iakov', 3000);
       const c = await canvasAt(p);
-      const gl = (await glidesOf(p)).filter((g) => Math.abs(g.y1 - g.y0) > 30);
-      let hit: string | null = null;
-      for (const g of gl) {
-        // середина S-кривой: на полпути по x и по высоте
-        await p.mouse.move(c.x + (g.x0 + g.x1) / 2, c.y + (g.y0 + g.y1) / 2);
-        await p.waitForTimeout(450);
-        const tip = p.locator('.sky .tip[data-kind="star"][data-shown]');
-        if (!(await tip.count())) continue;
-        const id = await tip.getAttribute('data-id');
-        if (id !== g.id) return fail(`над переходом ${g.id} — подсказка лица ${id}`);
-        hit = g.id;
-        break;
-      }
-      if (!hit) return fail(`ни один из ${gl.length} переходов не поймал наведение`);
       await p.mouse.move(c.x + 4, c.y + c.height - 4);
       await p.waitForTimeout(300);
       const v = await star(p, 'veniamin');
@@ -431,26 +416,20 @@ export const skydraw: Scenario[] = [
       const org = p.locator('.sky .tip[data-kind="star"] [data-origin]');
       const t = (await org.count()) ? (await org.innerText()).replace(/\u00a0/g, ' ').trim() : '';
       if (!/^Иаков и Рахиль — родители; Вениамин — сын/.test(t)) return fail(`подсказка Вениамина: «${t}»`);
-      return pass(`переход ${hit} → подсказка лица; Вениамин: «${t}»`);
+      return pass(`Вениамин: «${t}»`);
     },
   },
   {
     n: 288,
-    title: 'Решение 178: уровни подробности — небо (меньше 7 px на год), обзор семьи (7–24), семья (от 24); призрак «Мелхола, жена Давида» — только на масштабе семьи',
+    // этап 17, решение 191: уровни подробности 178 сняты вместе с «Отчим домом», свечения и слой света выключены
+    title: 'Решение 191: свечений нет — слой света не собирается ни на обзоре, ни на масштабе семьи, ни днём',
     run: async (p) => {
-      const tierAt = async (id: string) => {
-        await s15(p, id);
-        return Number((await cv(p, 'tier')).split(' ')[0]);
-      };
       await go(p, '#/~y-1000~w2500~l0~s1~mmt-long', 2800);
-      const sky = Number((await cv(p, 'tier')).split(' ')[0]);
-      const o = await tierAt('s15-david-o');
-      const oNotes = await notes(p);
-      const f = await tierAt('s15-david-f');
-      const fNotes = await notes(p);
-      if (`${sky}${o}${f}` !== '012') return fail(`уровни: обзор неба ${sky}, обзор семьи ${o}, семья ${f}`);
-      if (oNotes.some((t) => /^Мелхола, жена Давида/.test(t))) return fail('призрак Мелхолы подписан на обзоре семьи');
-      return pass(`уровни 0/1/2; на масштабе семьи пометы призраков: ${fNotes.filter((t) => /, жена /.test(t)).join(', ') || 'нет в окне'}`);
+      const far = await cv(p, 'light');
+      await s15(p, 's15-david-f');
+      const fam = await cv(p, 'light');
+      if (far || fam) return fail(`слой света собран: обзор «${far}», семья «${fam}»`);
+      return pass('слоя света нет на обзоре и на масштабе семьи');
     },
   },
 ];

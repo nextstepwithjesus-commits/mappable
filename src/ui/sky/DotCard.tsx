@@ -600,7 +600,9 @@ export function placeCard(
       return out;
     };
     const kept = new Set(keep);
-    best = least([...never, ...keep], () => 4) ?? least(never, (q) => (kept.has(q) ? 40 : 4), 4000);
+    // и того нет — меньше всего never (в 10 раз дороже keep), но не на самом знаке: звезда под своей карточкой — хуже всего
+    const nev = new Set(never);
+    best = least([...never, ...keep], () => 4) ?? least(never, (q) => (kept.has(q) ? 40 : 4), 4000) ?? least([], (q) => (nev.has(q) ? 400 : kept.has(q) ? 40 : 4), 4000);
     if (!best) return { ...strip(at), free: false };
   }
   const px = Math.max(best.x, Math.min(best.x + w, a.x));
@@ -728,28 +730,6 @@ function stepNext(k: LinkKey): string[] {
   return i >= 0 && i + 1 < ps.length ? [child, ps[i + 1].id] : [];
 }
 
-/**
- * Верхняя ступень решения 164 у лица id — родители, супруги и лица линий Мессии величины ≤ 1 среди детей, братьев
- * и сестёр: их имена на небе подписаны всегда, поэтому карточка у звезды их звёзд и подписей не закрывает никогда
- * (как фокус; этап 16, сценарий 1142 — «Отчий дом» поставил жён Давида под карточку). Отбор — как у tools/accept/nav14.ts,
- * topTier.
- */
-function topTierOf(id: string): Set<string> {
-  const p = byId.get(id);
-  const out = new Set<string>();
-  if (!p) return out;
-  if (p.father) out.add(p.father);
-  if (p.mother) out.add(p.mother);
-  for (const e of graph.spousesOf.get(id) ?? []) out.add(e.a === id ? e.b : e.a);
-  const spine = (x: string) => lines.joseph.persons.some((st) => st.id === x) || lines.mary.persons.some((st) => st.id === x);
-  const strong = (x: string) => spine(x) && (byId.get(x)?.magnitude ?? 9) <= 1;
-  for (const e of graph.childrenOf.get(id) ?? []) if ((e.kind === 'father' || e.kind === 'mother') && strong(e.child)) out.add(e.child);
-  for (const par of [p.father, p.mother])
-    if (par) for (const e of graph.childrenOf.get(par) ?? []) if (e.child !== id && (e.kind === 'father' || e.kind === 'mother') && strong(e.child)) out.add(e.child);
-  out.delete(id);
-  return out;
-}
-
 function obstacles(
   focus: string | null,
   ends: readonly string[],
@@ -767,12 +747,14 @@ function obstacles(
   const hard: Rect[] = [];
   const soft: Obstacle[] = [];
   const lines: Segment[] = [];
-  /** обязательные лица: фокус, концы связи и верхняя ступень семьи фокуса (решение 164); желательные — остальная семья */
+  /**
+   * обязательные лица: фокус и концы связи; желательные — семья фокуса. Верхняя ступень семьи (родители, супруги, сильные
+   * лица линий) была обязательной в «Отчем доме» (этап 16, сценарий 1142); на небе этапа 14 (решение 190) у тесной семьи
+   * Давида на планшете она не оставляла карточке места, и карточка вставала на саму звезду (сценарии 151, 812) — ступень
+   * снова желательная, как вся семья
+   */
   const must = new Set<string>(endsMust ? ends : []);
-  if (focus) {
-    must.add(focus);
-    for (const x of topTierOf(focus)) must.add(x);
-  }
+  if (focus) must.add(focus);
   const family = focus ? familyOf(focus) : [];
   // и продолжение пути выбранного шага ленты (решение 171; R1-12): следующее лицо линии и шаг к нему — желательные
   const want = new Set<string>([...family, ...(endsMust ? [] : ends), ...next]);
