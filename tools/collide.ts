@@ -67,7 +67,8 @@ const REC = String.raw`window.__name = window.__name || ((f) => f);
   // точки в сам градиент
   const G = CanvasGradient.prototype; const AC = G.addColorStop;
   G.addColorStop = function (o, c) { (this.__s || (this.__s = [])).push(String(c)); return AC.apply(this, arguments); };
-  const col = (s) => (typeof s === 'string' ? s : 'grad:' + ((s && s.__s && s.__s[s.__s.length >> 1]) || ''));
+  // узор света (src/render/light.ts, patternFor) — подложка цветом неба, совпадающая с фоном
+  const col = (s) => (typeof s === 'string' ? s : s && s.__ground ? s.__ground : 'grad:' + ((s && s.__s && s.__s[s.__s.length >> 1]) || ''));
   const np = () => ({ sub: [], arcs: [] });
   const P0 = (c) => c.__p || (c.__p = np());
   const last = (p) => { if (!p.sub.length) p.sub.push([]); return p.sub[p.sub.length - 1]; };
@@ -107,7 +108,17 @@ const REC = String.raw`window.__name = window.__name || ((f) => f);
   };
   W('fillText', TX('f'));
   W('strokeText', TX('s'));
-  W('drawImage', () => { R.cur.push({ k: 'I' }); });
+  // начало кадра — и копия света во весь холст (src/render/light.ts, paintBase: небо под растром не заливается)
+  W('drawImage', (c, a) => {
+    const M = T(c);
+    const img = a[0];
+    const n = a.length;
+    const dx = n >= 9 ? a[5] : a[1], dy = n >= 9 ? a[6] : a[2];
+    const dw = n >= 9 ? a[7] : n >= 5 ? a[3] : img && img.width, dh = n >= 9 ? a[8] : n >= 5 ? a[4] : img && img.height;
+    const x0 = M[0] * dx + M[4], y0 = M[3] * dy + M[5], x1 = M[0] * (dx + dw) + M[4], y1 = M[3] * (dy + dh) + M[5];
+    if (x0 <= 1 && y0 <= 1 && x1 >= c.canvas.width - 1 && y1 >= c.canvas.height - 1) R.cur = [];
+    R.cur.push({ k: 'I' });
+  });
 })();`;
 
 /** Состояние страницы и кадр: всё в px холста (CSS). */

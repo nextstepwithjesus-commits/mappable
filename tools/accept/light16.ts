@@ -25,15 +25,16 @@ const light = async (p: Page) => {
 export const light16: Scenario[] = [
   {
     n: 1240,
-    title: 'Решение 182, О2: слой света — отдельный холст под прозрачным основным; сборка на покое ≤ 40 мс, сдвиг — перенос без сборки',
+    title: 'Решение 182, О2: свет — в том же холсте неба, под всем нарисованным (отдельного слоя документа нет: вырезы не показывают свет из соседнего места); сборка на покое ≤ 40 мс, сдвиг — перенос без сборки',
     run: async (p) => {
       await go(p, '#/~y-1900~w4600~l0~s1');
-      // под холстом: перед ним в разметке, оба позиционированы без z-index (своей сцены наложения у .sky нет — сценарий 157)
-      const host = await p.evaluate(`(() => { const h = document.querySelector('.sky > .sky-light'); const c = document.querySelector('.sky > canvas'); return !!h && !!c && h.nextElementSibling === c && getComputedStyle(h).zIndex === 'auto' && getComputedStyle(c).position !== 'static' && getComputedStyle(h.parentElement).isolation !== 'isolate'; })()`);
-      if (!host) return fail('нет обёртки слоя света .sky > .sky-light под холстом');
-      // основной холст прозрачен там, где на нём ничего нет (небо — в слое света)
+      // свет — в том же холсте (src/render/light.ts, paintUnder): отдельного слоя документа под небом нет, холст неба
+      // непрозрачен и в пустом месте — там свет и небо, а не прозрачность (браузеры с аппаратной компоновкой выводили
+      // отдельный слой не в один кадр с холстом, и вырезы под подписями показывали свет из соседнего места)
+      const layers = (await p.evaluate(`document.querySelectorAll('.sky .sky-light').length`)) as number;
+      if (layers) return fail(`отдельный слой света в документе: ${layers}`);
       const alpha0 = (await p.evaluate(`(() => { const c = document.querySelector('.sky > canvas'); const k = c.width / c.getBoundingClientRect().width; return c.getContext('2d').getImageData(Math.round(c.clientWidth * 0.06 * k), Math.round(c.clientHeight * 0.9 * k), 1, 1).data[3]; })()`)) as number;
-      if (alpha0 > 0) return fail(`основной холст непрозрачен в пустом месте (альфа ${alpha0})`);
+      if (alpha0 < 255) return fail(`холст неба прозрачен в пустом месте (альфа ${alpha0})`);
       // сборки на покое после приближения колесом: лучшая из трёх ≤ 40 мс (машина общая; первая сборка — холодная)
       const box = (await p.locator('.sky > canvas').boundingBox())!;
       const times: number[] = [];
@@ -45,7 +46,7 @@ export const light16: Scenario[] = [
       }
       const best = Math.min(...times);
       if (!(best <= 40)) return fail(`сборка слоя на покое ${times.map((t) => t.toFixed(1)).join(', ')} мс (нужно ≤ 40)`);
-      // сдвиг в пределах запаса — перенос (CSS transform), без новой сборки
+      // сдвиг в пределах запаса — перенос собранного растра, без новой сборки
       const before = (await light(p)).builds;
       await p.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
       await p.mouse.down();

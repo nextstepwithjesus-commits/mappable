@@ -1378,8 +1378,9 @@ export class Sky implements SkyContext {
     if (this.light) {
       ctx.save();
       ctx.globalAlpha = 1;
-      ctx.fillStyle = pal.sky;
-      this.cutRect(x0, y, x1 - x0, h);
+      ctx.fillStyle = this.light.patternFor(ctx, this.dpr, pal.sky) ?? pal.sky;
+      ctx.imageSmoothingEnabled = !this.light.exact();
+      CanvasRenderingContext2D.prototype.fillRect.call(ctx, x0, y, x1 - x0, h);
       ctx.restore();
       return;
     }
@@ -2132,11 +2133,12 @@ export class Sky implements SkyContext {
   draw(s: SkyState, under?: () => void) {
     const { ctx, cam, pal } = this;
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
-    // слой света (решение 182) — отдельный холст под основным: основной прозрачен, небо и эпохи — в слое света
+    // свет (решение 182) — в том же холсте: небо, затем растр света (paintBase, ниже), затем всё прочее; подложки и ореолы —
+    // узором того же растра (groundify, fillGround)
     const light = this.lightLayer();
     ctx.fillStyle = pal.sky;
-    if (light) this.cutRect(0, 0, cam.w, cam.h);
-    else ctx.fillRect(0, 0, cam.w, cam.h);
+    // со светом небо под растром не заливается (он непрозрачен): заливка — полосами за его краем (paintBase)
+    if (!light || !light.ready()) ctx.fillRect(0, 0, cam.w, cam.h);
     const hl = s.highlight;
     const L = s.layers;
     const lineOnly = s.onlyLines;
@@ -2241,12 +2243,16 @@ export class Sky implements SkyContext {
 
     this.bandsOn = !!L.epochs;
     if (L.epochs && !light) this.drawEpochBands();
+    // свет — первым после неба, тем же переносом, что и весь кадр (эпохи — в нём)
+    if (light) {
+      this.lightFrame(light, s, p, !lineOnly && !work && !under);
+      light.paintBase(ctx, this.dpr, cam.w, cam.h, pal.sky);
+    }
     drawTimeMarks(this);
     const events = drawEventLines(this);
     const ticks = yearTicks(this);
     drawGrid(this, ticks);
-    if (light) this.lightFrame(light, s, p, !lineOnly && !work && !under);
-    else if (!lineOnly && !work) this.drawClouds(dd.stars, !!hl);
+    if (!light && !lineOnly && !work) this.drawClouds(dd.stars, !!hl);
     const constellations = L.constellations && !lineOnly && !work;
     const spots = constellations ? this.drawConstellations(p) : [];
     p.vis = this.visible(p);
@@ -2887,10 +2893,11 @@ export class Sky implements SkyContext {
   }
 
   /**
-   * Подложки пропускают свет (решение 182): основной холст прозрачен, и всё, что он закрашивал цветом неба или полосы
-   * эпохи — ореолы знаков, вырезы под лентами и связями, подложки, — теперь вырезается до слоя света
-   * (destination-out с той же непрозрачностью). Над слоем без света вид тот же; над туманностью и огоньком под
-   * знаком нет тёмной дыры. Не трогаются: ореолы текста (тёмный ореол держит контраст подписи над светом, ТЗ § 3.8) и
+   * Подложки пропускают свет (решение 182): всё, что кадр закрашивал цветом неба или полосы эпохи, — ореолы знаков,
+   * вырезы под лентами и связями, подложки, — рисуется узором света этого кадра (LightLayer.patternFor) с той же
+   * непрозрачностью: подложка совпадает с фоном под ней, над туманностью и огоньком тёмной дыры нет. Холст один и
+   * непрозрачный: прозрачных вырезов до отдельного слоя больше нет (в них браузеры с аппаратной компоновкой показывали
+   * свет из соседнего места). Не трогаются: ореолы текста (тёмный ореол держит контраст подписи над светом, ТЗ § 3.8) и
    * рамка неба у края холста (линейка, буквы полос, нижняя строка — непрозрачные, как прежде).
    */
   private groundify() {
@@ -2931,10 +2938,17 @@ export class Sky implements SkyContext {
           if (x <= 0.5 || y <= 0.5 || x + w >= c.w - 0.5 || y + h >= c.h - 0.5) return f.apply(this, a);
         }
         if (!sky.light || !ground(this[style])) return f.apply(this, a);
-        const op = this.globalCompositeOperation;
-        this.globalCompositeOperation = 'destination-out';
+        // подложка — узором света этого кадра: совпадает с фоном, тёмной дыры в свете нет
+        const pat = sky.light.patternFor(this, sky.dpr, sky.pal.sky);
+        if (!pat) return f.apply(this, a);
+        const keep = this[style];
+        const smooth = this.imageSmoothingEnabled;
+        this[style] = pat;
+        // узор лёг пиксель в пиксель (копия растра под плотность экрана): выборка без сглаживания — дешевле, вид тот же
+        this.imageSmoothingEnabled = !sky.light.exact();
         f.apply(this, a);
-        this.globalCompositeOperation = op;
+        this.imageSmoothingEnabled = smooth;
+        this[style] = keep;
       } as never;
     };
     cut('fill', 'fillStyle');
@@ -2943,25 +2957,6 @@ export class Sky implements SkyContext {
     cut('strokeRect', 'strokeStyle');
   }
 
-  /**
-   * Вырез до слоя света (решение 182): прямоугольник цвета неба закрашивается «насквозь» (destination-out) — основной
-   * холст в нём прозрачен. Тот же вызов fillRect цветом неба, что и прежде (замеры кадра узнают по нему начало кадра
-   * и подложки подписей), минуя обёртку подложек: рамку у края она красит непрозрачной.
-   */
-  private cutRect(x: number, y: number, w: number, h: number) {
-    const ctx = this.ctx;
-    const op = ctx.globalCompositeOperation;
-    const fill = ctx.fillStyle;
-    const a = ctx.globalAlpha;
-    // вырез — полной непрозрачностью и цветом неба (destination-out берёт только альфу; цвет — для замеров кадра)
-    ctx.globalCompositeOperation = 'destination-out';
-    ctx.fillStyle = this.pal.sky;
-    ctx.globalAlpha = 1;
-    CanvasRenderingContext2D.prototype.fillRect.call(ctx, x, y, w, h);
-    ctx.globalCompositeOperation = op;
-    ctx.fillStyle = fill;
-    ctx.globalAlpha = a;
-  }
 
   /**
    * Путь имени у устья (решение 184; К4′): от звезды узла i по своему следу и первому переходу до начала имени —

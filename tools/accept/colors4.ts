@@ -178,37 +178,53 @@ export const colors4: Scenario[] = [
         if (!ge || !gr || ge[0] !== gr[0]) return fail(`Исав ${ge}, Рувим ${gr}: не одна ветвь`);
         if (!(ge[1] === 2 && gr[1] === 3)) return fail(`поколения Исава ${ge[1]} и Рувима ${gr[1]}`);
         const color = f.colors[ge[0]];
-        // доля цвета ветви в пикселях следа (над цветом неба): медиана по пикселям, похожим на цвет ветви
+        // доля цвета ветви в пикселях следа (над местной подложкой): медиана по пикселям, похожим на цвет ветви
         const share = (id: string) =>
           star(q, id).then((s) =>
             s
               ? q.evaluate(
-                  ({ s, c }) => {
+                  ({ s, id, c }) => {
                     const cv = document.querySelector('.sky > canvas') as HTMLCanvasElement;
                     const k = cv.width / cv.getBoundingClientRect().width;
-                    const sky = getComputedStyle(document.documentElement).getPropertyValue('--sky').trim();
-                    const g = [1, 3, 5].map((i) => parseInt(sky.slice(i, i + 2), 16));
-                    const u = c.map((x, j) => x - g[j]);
-                    const uu = u[0] * u[0] + u[1] * u[1] + u[2] * u[2];
-                    // этап 16, решение 182: основной холст прозрачен, свет — отдельным холстом; пиксель — на цвет неба по альфе.
-                    // Строка звезды и по строке выше и ниже, по столбцу — наибольшая доля: след в 1–1,5 px ложится между
+                    const ctx = cv.getContext('2d')!;
+                    // этап 16, решение 182 (после жалобы на прозрачные окна): свет рисуется в том же холсте неба, под следом —
+                    // не ровный цвет неба, а свет и подложки. Доля цвета ветви считается над местной подложкой: она плавная
+                    // (растр света в половину разрешения), её цвет в столбце — среднее пикселей на 6 px выше и ниже следа, если
+                    // они согласны (иначе там чужой след или подпись, и столбец пропускается). След идёт, как в near(), по строке
+                    // звезды до перехода (canvas[data-glides], решение 173) и дальше по строке жизни; столбцы самой кривой
+                    // пропускаются — там след крут и строка его не ловит
+                    const gl = (cv.dataset.glides ?? '').split(';').map((q) => q.split(':')).filter((q) => q[0] === id).map((q) => q[1].split(',').map(Number));
+                    // Строка следа и по строке выше и ниже, по столбцу — наибольшая доля: след в 1–1,5 px ложится между
                     // строками пикселей, и одна строка ловила его край (прежде край дотягивала до порога полоса эпохи под ним)
                     const best = new Map<number, number>();
-                    for (const dy of [-1, 0, 1]) {
-                      const d = cv.getContext('2d')!.getImageData(Math.round((s.x + 8) * k), Math.round(s.y * k) + dy, Math.round(300 * k), 1).data;
-                      for (let i = 0; i < d.length; i += 4) {
-                        const al = d[i + 3] / 255;
-                        const v = [d[i] * al - g[0] * al, d[i + 1] * al - g[1] * al, d[i + 2] * al - g[2] * al];
+                    for (let x = s.x + 8; x < s.x + 308; x++) {
+                      let y = s.y;
+                      let bend = false;
+                      for (const [x0, , x1, y1] of gl) {
+                        if (x <= x0) break;
+                        if (x < x1) bend = true;
+                        else y = y1;
+                      }
+                      if (bend) continue;
+                      const up = ctx.getImageData(Math.round(x * k), Math.round((y - 6) * k), 1, 1).data;
+                      const dn = ctx.getImageData(Math.round(x * k), Math.round((y + 6) * k), 1, 1).data;
+                      if (Math.abs(up[0] - dn[0]) + Math.abs(up[1] - dn[1]) + Math.abs(up[2] - dn[2]) > 18) continue;
+                      const g = [0, 1, 2].map((j) => (up[j] + dn[j]) / 2);
+                      const u = c.map((v, j) => v - g[j]);
+                      const uu = u[0] * u[0] + u[1] * u[1] + u[2] * u[2];
+                      for (const dy of [-1, 0, 1]) {
+                        const d = ctx.getImageData(Math.round(x * k), Math.round(y * k) + dy, 1, 1).data;
+                        const v = [d[0] - g[0], d[1] - g[1], d[2] - g[2]];
                         const t = (v[0] * u[0] + v[1] * u[1] + v[2] * u[2]) / uu;
                         const res = Math.hypot(v[0] - t * u[0], v[1] - t * u[1], v[2] - t * u[2]);
-                        if (t > 0.1 && res < 0.2 * Math.sqrt(uu) * t + 10) best.set(i, Math.max(best.get(i) ?? 0, t));
+                        if (t > 0.1 && res < 0.2 * Math.sqrt(uu) * t + 10) best.set(x, Math.max(best.get(x) ?? 0, t));
                       }
                     }
                     const ts = [...best.values()];
                     ts.sort((a, b) => a - b);
                     return ts.length >= 8 ? ts[Math.floor(ts.length / 2)] : -ts.length;
                   },
-                  { s, c: hex(color) },
+                  { s, id, c: hex(color) },
                 )
               : -100,
           );

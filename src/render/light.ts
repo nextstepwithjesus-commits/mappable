@@ -251,11 +251,16 @@ function haloSprite(color: string, night: boolean): HTMLCanvasElement {
   return c;
 }
 
-/** Слой света неба: туманность, устья, пыль и огоньки — отдельный холст под основным, сборка на покое. */
+/**
+ * Слой света неба: туманность, устья, пыль и огоньки — растр вне документа, сборка на покое. В кадр он рисуется тем же
+ * холстом неба, первым слоем (paintBase), а подложки и ореолы — узором того же растра (patternFor): отдельный слой
+ * документа под прозрачным холстом браузеры с аппаратной компоновкой выводили не в один кадр с ним, и в вырезах под
+ * подписями и ореолами виднелся свет из соседнего места — «окна» с обрывками полос и волокон, ездившие при сдвиге.
+ */
 export class LightLayer {
-  /** обёртка (div в .sky): холст — в закрытой тени, селекторы «.sky canvas» его не видят */
-  readonly host: HTMLDivElement;
   private readonly cv: HTMLCanvasElement;
+  /** перенос растра в кадр (px холста неба): последний выбранный frame — его и рисует paint */
+  private cur: { a: number; d: number; e: number; f: number } | null = null;
   private readonly ctx: CanvasRenderingContext2D;
   private built: {
     key: string;
@@ -289,39 +294,121 @@ export class LightLayer {
   builds = 0;
 
   constructor(readonly sky: HTMLCanvasElement) {
-    const parent = sky.parentElement!;
-    // слой света — в разметке перед основным холстом, оба позиционированы без z-index: свет рисуется под холстом и над фоном
-    // неба. .sky своей сценой наложения не становится (isolation): листы и окна внутри неба («Вид», «Показ») поднимаются над
-    // нижним листом карточки, как прежде (сценарий 157)
-    sky.style.position = 'relative';
-    this.host = document.createElement('div');
-    this.host.className = 'sky-light';
-    this.host.setAttribute('aria-hidden', 'true');
-    Object.assign(this.host.style, { position: 'absolute', left: '0', top: '0', width: '100%', height: '100%', overflow: 'hidden', pointerEvents: 'none' });
-    const root = this.host.attachShadow({ mode: 'closed' });
+    // растр вне документа: в разметке неба слоя нет, наложение листов и окон неба — прежнее (сценарий 157)
     this.cv = document.createElement('canvas');
-    Object.assign(this.cv.style, { position: 'absolute', left: '0', top: '0', transformOrigin: '0 0', willChange: 'transform' });
-    root.appendChild(this.cv);
-    parent.insertBefore(this.host, sky);
     this.ctx = this.cv.getContext('2d', { alpha: false })!;
   }
 
   dispose() {
-    this.host.remove();
+    this.cur = null;
+    this.dev = null;
   }
 
-  /** Холст неба сдвинут внутри своей области (буквы полос, рамка): слой встаёт ровно под ним. */
-  private place() {
-    const s = this.sky;
-    this.host.style.left = `${s.offsetLeft}px`;
-    this.host.style.top = `${s.offsetTop}px`;
-    this.host.style.width = `${s.clientWidth}px`;
-    this.host.style.height = `${s.clientHeight}px`;
+  /** Растр, растянутый под плотность экрана (одна копия на сборку): кадр его только копирует со сдвигом. */
+  private dev: { cv: HTMLCanvasElement; dpr: number; builds: number } | null = null;
+  private device(dpr: number): HTMLCanvasElement | null {
+    if (typeof document === 'undefined') return null;
+    if (this.dev && this.dev.dpr === dpr && this.dev.builds === this.builds) return this.dev.cv;
+    const w = Math.ceil((this.cv.width / RES) * dpr);
+    const h = Math.ceil((this.cv.height / RES) * dpr);
+    const cv = this.dev?.cv ?? document.createElement('canvas');
+    if (cv.width !== w || cv.height !== h) {
+      cv.width = w;
+      cv.height = h;
+    }
+    const g = cv.getContext('2d', { alpha: false });
+    if (!g) return null;
+    g.imageSmoothingEnabled = true;
+    g.drawImage(this.cv, 0, 0, w, h);
+    this.dev = { cv, dpr, builds: this.builds };
+    this.pats.delete(cv);
+    return cv;
+  }
+
+  /** Свет кадра — копия растра под плотность экрана со сдвигом (без растяжения): узор ложится пиксель в пиксель. */
+  exact(): boolean {
+    const t = this.cur;
+    return !!t && t.a === 1 && t.d === 1 && !!this.dev;
+  }
+
+  /** Растр собран: кадр не заливает небо под ним (paintBase кладёт небо только за его краем). */
+  ready(): boolean {
+    return !!this.cur && !!this.built;
   }
 
   /**
+   * Свет в кадр холста неба — первым, непрозрачной копией: фон, эпохи, туманность, огоньки. Подложки подписей и ореолы
+   * знаков рисуются поверх узором из того же растра того же кадра (patternFor): они совпадают с фоном до пикселя и не
+   * вырезают в свете тёмных дыр. Один холст и один перенос на кадр: отдельный слой документа под прозрачным холстом
+   * браузеры с аппаратной компоновкой выводили не в один кадр с ним, и в вырезах виднелся свет из соседнего места.
+   * ctx — холст неба, dpr — его плотность; за краем растра (в движении, до сборки на покое) — заливка неба.
+   */
+  paintBase(ctx: CanvasRenderingContext2D, dpr: number, w: number, h: number, sky: string) {
+    const t = this.cur;
+    ctx.save();
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 1;
+    ctx.imageSmoothingEnabled = true;
+    if (t && this.built) {
+      // небо — полосами за краем растра (в движении, до сборки на покое); мимо обёртки подложек (sky.ts, groundify)
+      const iw = (this.cv.width / RES) * t.a;
+      const ih = (this.cv.height / RES) * t.d;
+      const x0 = Math.max(0, t.e);
+      const y0 = Math.max(0, t.f);
+      const x1 = Math.min(w, t.e + iw);
+      const y1 = Math.min(h, t.f + ih);
+      const fill = (x: number, y: number, ww: number, hh: number) => ww > 0 && hh > 0 && CanvasRenderingContext2D.prototype.fillRect.call(ctx, x, y, ww, hh);
+      ctx.fillStyle = sky;
+      fill(0, 0, w, y0);
+      fill(0, y1, w, h - y1);
+      fill(0, y0, x0, y1 - y0);
+      fill(x1, y0, w - x1, y1 - y0);
+      // перенос без растяжения (сдвиг неба) — копией растра, заранее растянутого под плотность экрана: без сглаживания в
+      // каждом кадре (телефон, О1); растяжение (колесо, перелёт) — из исходного растра
+      const dev = t.a === 1 && t.d === 1 ? this.device(dpr) : null;
+      if (dev) {
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.drawImage(dev, Math.round(t.e * dpr), Math.round(t.f * dpr));
+      } else ctx.drawImage(this.cv, t.e, t.f, (this.cv.width / RES) * t.a, (this.cv.height / RES) * t.d);
+    }
+    ctx.restore();
+  }
+
+  /**
+   * Узор света для подложек и ореолов в этом кадре: тот же растр и перенос, что у фона (paintBase), в пространстве
+   * нынешнего переноса ctx. null — света ещё нет (подложка — цветом неба).
+   */
+  patternFor(ctx: CanvasRenderingContext2D, dpr: number, sky: string): CanvasPattern | null {
+    const t = this.cur;
+    if (!t || !this.built || typeof DOMMatrix === 'undefined' || typeof ctx.getTransform !== 'function') return null;
+    const dev = t.a === 1 && t.d === 1 ? this.device(dpr) : null;
+    const src = dev ?? this.cv;
+    let pat = this.pats.get(src);
+    if (!pat) {
+      const q = ctx.createPattern(src, 'no-repeat');
+      if (!q) return null;
+      // замеры кадра (tools/collide.ts) узнают подложку по цвету неба
+      (q as CanvasPattern & { __ground?: string }).__ground = sky;
+      this.pats.set(src, (pat = q));
+    }
+    // узор → px устройства: копия со сдвигом или растяжение исходного растра; затем — в пространство нынешнего переноса
+    // (перенос холста у подложек почти всегда один — тогда узор не перестраивается)
+    const m = ctx.getTransform();
+    const key = `${m.a},${m.b},${m.c},${m.d},${m.e},${m.f}|${t.a},${t.d},${t.e},${t.f}|${dpr}|${dev ? 1 : 0}`;
+    if (this.patKey.get(pat) !== key) {
+      const toDev = dev ? new DOMMatrix([1, 0, 0, 1, Math.round(t.e * dpr), Math.round(t.f * dpr)]) : new DOMMatrix([(dpr * t.a) / RES, 0, 0, (dpr * t.d) / RES, dpr * t.e, dpr * t.f]);
+      pat.setTransform(m.inverse().multiply(toDev));
+      this.patKey.set(pat, key);
+    }
+    return pat;
+  }
+  private pats = new WeakMap<HTMLCanvasElement, CanvasPattern>();
+  private patKey = new WeakMap<CanvasPattern, string>();
+
+  /**
    * Кадр неба: слой собирается, если изменилось содержимое (тема, показ, выбор…) или — в покое — масштаб, строки,
-   * выход за запас; иначе только переносится и растягивается (CSS transform), без растра. moving — небо движется.
+   * выход за запас; иначе только переносится и растягивается (перенос растра в paintBase), без сборки. moving — небо движется.
    */
   frame(inp: LightInput, moving: boolean) {
     const v = inp.view;
@@ -355,8 +442,7 @@ export class LightLayer {
     return { a, d, e, f };
   }
   private apply(t: { a: number; d: number; e: number; f: number }) {
-    const s = `matrix(${t.a},0,0,${t.d},${t.e},${t.f})`;
-    if (this.cv.style.transform !== s) this.cv.style.transform = s;
+    this.cur = t;
   }
 
   /** Созвездие, чей свет (туманность или устье) под точкой (x, y) px холста неба; null — света нет. */
@@ -392,7 +478,6 @@ export class LightLayer {
   build(inp: LightInput) {
     const t0 = performance.now();
     const v = inp.view;
-    this.place();
     const W = Math.max(1, Math.round(v.w));
     const H = Math.max(1, Math.round(v.h));
     const mx = Math.round(W * MARGIN.x);
@@ -437,6 +522,8 @@ export class LightLayer {
     this.apply({ a: 1, d: 1, e: -mx, f: -my });
     this.lastBuildMs = performance.now() - t0;
     this.builds++;
+    // узор из прежнего растра — снимок: после сборки он другой
+    this.pats.delete(this.cv);
   }
 
   private paint(
