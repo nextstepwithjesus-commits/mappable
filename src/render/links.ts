@@ -85,11 +85,13 @@ export function linkSpan(cam: { x0: number; kx: number; w: number }): { x0: numb
 }
 /**
  * Кадр связей, собранный по полосе span, ещё годен для окна cam: до края полосы с обеих сторон — не меньше половины
- * запаса (иначе при сдвиге неба кадр строится заново).
+ * запаса (иначе при сдвиге неба кадр строится заново). view — окно неба, от ширины которого считается запас (по
+ * умолчанию — сама камера).
  */
-export function linkSpanOk(span: { x0: number; x1: number }, cam: { x0: number; kx: number; w: number }): boolean {
+export function linkSpanOk(span: { x0: number; x1: number }, cam: { x0: number; kx: number; w: number }, view: { w: number } = cam): boolean {
   const w = cam.w / cam.kx;
-  const slack = (LINK_MARGIN / 2) * w;
+  // запас — от ширины окна неба (view): у камеры кэша сдвига (sky.ts, renderPan) холст шире окна
+  const slack = (LINK_MARGIN / 2) * (view.w / cam.kx);
   return cam.x0 - slack >= span.x0 - 1e-6 && cam.x0 + w + slack <= span.x1 + 1e-6;
 }
 /**

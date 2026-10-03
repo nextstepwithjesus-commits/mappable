@@ -767,6 +767,8 @@ export class Sky implements SkyContext {
     }
     return out;
   }
+  /** Размер окна неба для ключа кадра связей у двойника кэша сдвига (renderPan); у самого неба — null (размер камеры). */
+  private linkSize: { w: number; h: number } | null = null;
   /** Связи кадра (кэш) и что из них нарисовать в этом кадре. */
   private linksFor(p: Pass, s: SkyState, detail: number): LinkDraw | null {
     const cam = this.cam;
@@ -816,7 +818,10 @@ export class Sky implements SkyContext {
     ].join('|');
     // что меняется само в движении: свёрнутые с масштабом скопления, «только нарисованные», размер холста (карточка
     // открылась во время перелёта)
-    const key = `${base}|${[...this.collapsed].join(',')}|${this.drawnOnly ? 1 : 0}|${cam.w}|${cam.h}|${p.tier}`;
+    // кадр кэша сдвига (renderPan) — по размеру окна неба, а не холста кэша: кадр связей переносится, а не строится заново
+    // (сборка связей — больше половины сборки кэша); годность полосы span для камеры кэша проверяет linkSpanOk
+    const size = this.linkSize ?? cam;
+    const key = `${base}|${[...this.collapsed].join(',')}|${this.drawnOnly ? 1 : 0}|${size.w}|${size.h}|${p.tier}`;
     let c = this.linkCache;
     // масштаб в движении (перелёт, колесо, щипок; С1) — кадр связей не строится: прежний пересчитывается (пути в px
     // масштабируются вокруг начала координат неба), и свёрнутые с масштабом скопления его не сбрасывают; дальше чем
@@ -828,7 +833,7 @@ export class Sky implements SkyContext {
         return null;
       }
       if (c.kx !== cam.kx || c.ky !== cam.ky) c = this.linkCache = rescaleLinks(c, cam);
-    } else if (!c || c.key !== key || c.kx !== cam.kx || c.ky !== cam.ky || (!c.exact && !this.scaleMoving) || (!!c.span && !linkSpanOk(c.span, cam))) {
+    } else if (!c || c.key !== key || c.kx !== cam.kx || c.ky !== cam.ky || (!c.exact && !this.scaleMoving) || (!!c.span && !linkSpanOk(c.span, cam, size))) {
       const span = family ? null : linkSpan(cam);
       const stars = this.linkStars(p, span);
       const shown = (id: string) => {
@@ -2394,6 +2399,7 @@ export class Sky implements SkyContext {
       holes: [],
       saveDepth: 0,
       flushPending: null,
+      linkSize: { w: cam.w, h: cam.h },
     });
     const pc = pctx as CanvasRenderingContext2D & { __sky?: Sky };
     pc.__sky = twin;
@@ -4222,8 +4228,12 @@ export function beadNodes(v: SkyContext, nodes: readonly NodeRow[], beads: Reado
  */
 /** Сколько масштаб должен постоять, чтобы кадр связей и пороги подписей строились заново (мс). */
 export const SCALE_SETTLE_MS = 160;
-/** Запас кэша сдвига по краям (доля окна): чуть меньше запаса растра света (light.ts, MARGIN) — свет покрывает весь кэш. */
-const PAN_MARGIN = { x: 0.25, y: 0.2 };
+/**
+ * Запас кэша сдвига по краям (доля окна): чуть меньше запаса растра света (light.ts, MARGIN) — свет покрывает весь кэш.
+ * 0,3 ширины: бросок на 240 px при открытой карточке (небо 940 px) остаётся в кэше — перестройка кэша посреди броска
+ * задерживала отпускание, и инерции не было (сценарий 253)
+ */
+const PAN_MARGIN = { x: 0.3, y: 0.25 };
 /** Через столько мс покоя небо рисуется в кэш сдвига. */
 const PAN_DELAY = 180;
 /** Наибольшая площадь кэша сдвига, px устройства (предел холста Safari — 16 777 216). */
