@@ -23,45 +23,30 @@ const go = async (p: Page, hash: string, ms = 3000) => {
   await p.goto(p.url().replace(/#.*$/, '') + hash);
   await p.waitForTimeout(ms);
 };
-const light = async (p: Page) => {
-  const v = ((await p.locator('.sky > canvas').getAttribute('data-light')) ?? '').split(' ');
-  return { ms: Number(v[0]), builds: Number(v[1]) };
-};
 
 export const light16: Scenario[] = [
   {
     n: 1240,
-    title: 'Решение 182, О2: свет — в том же холсте неба, под всем нарисованным (отдельного слоя документа нет: вырезы не показывают свет из соседнего места); сборка на покое ≤ 40 мс, сдвиг — перенос без сборки',
+    // этап 17, решение 191 (docs/ui-review/STAGE17.md): слой света выключен по просьбе владельца («свечения вносят
+    // путаницу»); прежде здесь проверялись время сборки слоя (≤ 40 мс) и перенос без сборки при сдвиге
+    title: 'Решение 182, О2, этап 17 — решение 191: отдельного слоя документа под небом нет, холст неба непрозрачен; слой света не собирается ни на покое, ни при сдвиге',
     run: async (p) => {
       await go(p, '#/~y-1900~w4600~l0~s1');
-      // свет — в том же холсте (src/render/light.ts, paintUnder): отдельного слоя документа под небом нет, холст неба
-      // непрозрачен и в пустом месте — там свет и небо, а не прозрачность (браузеры с аппаратной компоновкой выводили
-      // отдельный слой не в один кадр с холстом, и вырезы под подписями показывали свет из соседнего места)
       const layers = (await p.evaluate(`document.querySelectorAll('.sky .sky-light').length`)) as number;
       if (layers) return fail(`отдельный слой света в документе: ${layers}`);
       const alpha0 = (await p.evaluate(`(() => { const c = document.querySelector('.sky > canvas'); const k = c.width / c.getBoundingClientRect().width; return c.getContext('2d').getImageData(Math.round(c.clientWidth * 0.06 * k), Math.round(c.clientHeight * 0.9 * k), 1, 1).data[3]; })()`)) as number;
       if (alpha0 < 255) return fail(`холст неба прозрачен в пустом месте (альфа ${alpha0})`);
-      // сборки на покое после приближения колесом: лучшая из трёх ≤ 40 мс (машина общая; первая сборка — холодная)
       const box = (await p.locator('.sky > canvas').boundingBox())!;
-      const times: number[] = [];
-      for (let k = 0; k < 3; k++) {
-        await p.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-        await p.mouse.wheel(0, k % 2 ? 240 : -240);
-        await p.waitForTimeout(1300);
-        times.push((await light(p)).ms);
-      }
-      const best = Math.min(...times);
-      if (!(best <= 40)) return fail(`сборка слоя на покое ${times.map((t) => t.toFixed(1)).join(', ')} мс (нужно ≤ 40)`);
-      // сдвиг в пределах запаса — перенос собранного растра, без новой сборки
-      const before = (await light(p)).builds;
       await p.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      await p.mouse.wheel(0, -240);
+      await p.waitForTimeout(1300);
       await p.mouse.down();
       await p.mouse.move(box.x + box.width / 2 + 60, box.y + box.height / 2 + 10, { steps: 6 });
       await p.mouse.up();
       await p.waitForTimeout(900);
-      const after = (await light(p)).builds;
-      if (after !== before) return fail(`сдвиг на 60 px пересобрал слой (сборок ${before} → ${after})`);
-      return pass(`сборки ${times.map((t) => t.toFixed(1)).join(', ')} мс; сдвиг — перенос`);
+      const probe = (await p.locator('.sky > canvas').getAttribute('data-light')) ?? '';
+      if (probe) return fail(`слой света собран: «${probe}»`);
+      return pass('слоя света нет; холст непрозрачен');
     },
   },
   {
@@ -186,7 +171,9 @@ export const light16: Scenario[] = [
       await go(p, '#/iakov', 3200);
       const j = await lin();
       const bar = j.get('desc.bar');
-      if (!bar || bar.n < 4 || bar.c !== bar.n) return fail(`Иаков: черты брака рода ${bar ? `${bar.c} цветом из ${bar.n}` : 'не нарисованы'} (нужны все четыре союза цветом матери)`);
+      // на небе этапа 14 (решение 190) ромб союза с Лией — на следе Иакова, черты брака у него нет: черт — три (Рахиль,
+      // Валла, Зелфа), и все — цветом матери (прежде, в «Отчем доме», черта была у каждой из четырёх жён)
+      if (!bar || bar.n < 3 || bar.c !== bar.n) return fail(`Иаков: черты брака рода ${bar ? `${bar.c} цветом из ${bar.n}` : 'не нарисованы'} (нужны все черты брака цветом матери)`);
       const jog = j.get('desc.jog');
       if (jog && jog.c !== jog.n) return fail(`Иаков: шины союзов цветом ${jog.c} из ${jog.n}`);
       if (![...j.keys()].some((k) => k.startsWith('anc.'))) return fail('Иаков: путь к родителям (Исаак и Ревекка) не горит');

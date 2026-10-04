@@ -641,8 +641,9 @@ export function bindAddress(): () => void {
     if (a.bad) setTimeout(() => document.getElementById('find')?.focus(), 100);
     whenSkyReady(() => {
       if (!alive) return;
-      // пропорция полос (J1) — до окна: высота полосы решает, где середина окна по вертикали
-      if (a.lanes !== undefined || a.full) skyRef.current?.cam.setLanes(a.lanes ?? 1);
+      // пропорция полос (J1) — до окна: высота полосы решает, где середина окна по вертикали. Ссылка на шаг рассказа без
+      // окна («#/iakov~r3») — пропорцию ставит кадр шага (сжатые строки: на небе этапа 14 сыновья Иакова — в своих коленах)
+      if ((a.lanes !== undefined || a.full) && !(a.story !== undefined && a.story !== null && !a.view)) skyRef.current?.cam.setLanes(a.lanes ?? 1);
       // в режиме «только линии» строки временно по высоте коридора (MAP-70): своя пропорция — в адресе и памяти
       holdLinesRows();
       // окно записи — сразу при первом показе, переходом за BACK_MS при «назад» и «вперёд»; адрес называет лицо, но не
