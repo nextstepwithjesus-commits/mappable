@@ -1069,6 +1069,9 @@ if (typeof window !== 'undefined') {
   let again = 0;
   effect(() => {
     const on = onlyLines.value;
+    // окно до листа «Показ» — сейчас: лист закрывается (holdSheetWindow(false)) раньше, чем режим дождётся конца перехода
+    // строк, и тогда возврат шёл бы к окну, сдвинутому листом (сценарий 356)
+    const held = heldWin;
     if (linesAgain.value !== again) {
       again = linesAgain.value;
       shown = null;
@@ -1092,7 +1095,7 @@ if (typeof window !== 'undefined') {
       const cam = s.cam;
       if (on) {
         // окно до листа «Показ», если показ включён из него (сдвиг из-под листа — не шаг читателя)
-        const win = first ? null : (heldWin ?? windowNow());
+        const win = first ? null : (held ?? heldWin ?? windowNow());
         const to = fitLines(!first, first ? null : selected.peek());
         before = win && to ? { win, to } : null;
         return;
