@@ -471,13 +471,15 @@ export const input3: Scenario[] = [
     n: 384,
     // этап 11 (решение 81): флажок «только линии Мессии» и переключатель «все лица | набор» стали показами — их выбирают
     // строка показа («изменить» — лист «Показ»); у органов неба остался флажок «ярусы эпох»
-    title: 'UX-21: у флажка «ярусы эпох» и у «изменить» строки показа (линии Мессии, набор — показы) — пояснение при наведении и для диктора',
+    title: 'UX-21: у флажков «ярусы эпох» и «линии Мессии» (слой, решение 192) и у «изменить» строки показа (линии Мессии, набор — показы) — пояснение при наведении и для диктора',
     run: async (p) => {
       await go(p, '#/', 2000);
       const items = await p.locator('.skyctl .check, .sky .showbar .sb-cmd[data-cmd="sheet"]').evaluateAll((els) =>
         els.map((e) => ({ t: (e.textContent ?? '').trim(), title: e.getAttribute('title') ?? '', desc: e.getAttribute('aria-description') ?? e.querySelector('input')?.getAttribute('aria-description') ?? '' })),
       );
-      if (items.length !== 2) return fail(`органов: ${items.length}`);
+      // этап 17 (решение 192): у органов неба снова флажок слоя «линии Мессии» — ленты убираются одним нажатием
+      if (items.length !== 3) return fail(`органов: ${items.length}`);
+      if (!items.some((i) => i.t === 'линии Мессии')) return fail(`нет флажка «линии Мессии»: ${items.map((i) => i.t).join(', ')}`);
       const bad = items.find((i) => i.title.length < 20 || i.desc !== i.title);
       if (bad) return fail(`«${bad.t}»: title «${bad.title}», для диктора «${bad.desc}»`);
       const sheet = items.find((i) => i.t === 'изменить');

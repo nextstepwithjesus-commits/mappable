@@ -2930,6 +2930,8 @@ export class Sky implements SkyContext {
       put('bare', bareLabels(boxes, (id) => this.nodeIndex.get(id), p.starsDrawn).join(' '));
       // лента не обрывается между соседними видимыми лицами линии и идёт у их звёзд (ribbons.ts, ribbonCheck); пусто — да
       put('ribbonGaps', ribbons ? ribbonCheck(this, p, lineSteps).join(' ') : '');
+      // ленты линий Мессии на небе (слой «линии Мессии», решение 192): 1 — рисуются, 0 — слой выключен
+      put('ribbons', ribbons ? '1' : '0');
       // подписи за краем холста — «вид:текст»; пусто — ни одна подпись не срезана краем
       put('out', boxes.filter((b) => b.x < -0.5 || b.y < -0.5 || b.x + b.w > cam.w + 0.5 || b.y + b.h > cam.h + 0.5).map((b) => `${b.kind}:${b.text}`).join('|'));
       // размер кадра и цвет неба, которыми он нарисован: после смены ширины и темы — новые (tools/_bugs-chaos.ts)

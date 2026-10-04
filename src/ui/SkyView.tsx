@@ -310,7 +310,8 @@ export function SkyView() {
         // скобки фокуса — только после ввода с клавиатуры (решение 169): касание и мышь их не показывают
         model: model.value, lambda: shownLambda, selected: selected.value, second: second.value, hovered: hovered.value, focus: keyboardInput.value ? focused.value : null,
         noteFocus: onlyLines.value ? noteFocus.value : null,
-        highlight, layers: layers.value, onlyLines: onlyLines.value, meridian: meridian.value,
+        // в показе «Линии Мессии» ленты — сам показ: слой лент выключен — в этом показе они всё равно рисуются (решение 192)
+        highlight, layers: onlyLines.value && layers.value.ribbons === false ? { ...layers.value, ribbons: true } : layers.value, onlyLines: onlyLines.value, meridian: meridian.value,
         tensionPersons, flow: flowing ? flowT : 0, reduced: reduced(), intro, lineFlip: lineFlip.value, pins: new Set(pins.value),
         reserve: reserveRef.current, meridianLabel, kinSteps: pair ? kinSteps.current : (preview?.steps ?? null), depth: hlf?.depth ?? null,
         modelNote: mid !== modelInfo[0]?.id ? (modelInfo.find((m) => m.id === mid)?.name ?? null) : null,

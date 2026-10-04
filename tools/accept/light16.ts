@@ -17,7 +17,7 @@
  *    горят черта, шина и стволы к сыновьям и путь к Иакову и Рахили.
  */
 import type { Page } from 'playwright';
-import { fail, pass, type Scenario } from './kit.ts';
+import { fail, pass, pickShow, type Scenario } from './kit.ts';
 
 const go = async (p: Page, hash: string, ms = 3000) => {
   await p.goto(p.url().replace(/#.*$/, '') + hash);
@@ -184,6 +184,40 @@ export const light16: Scenario[] = [
       if (!vk.some((k) => k.startsWith('anc.'))) return fail('Вениамин: путь к Иакову и Рахили не горит');
       const fmt = (m: Map<string, { n: number; c: number }>) => [...m].map(([k, x]) => `${k} ${x.c}/${x.n}`).join(', ');
       return pass(`Иаков: ${fmt(j)}; Вениамин: ${fmt(v)}`);
+    },
+  },
+  {
+    n: 1247,
+    // этап 17, решение 192 (просьба владельца 4 октября: «из-за этих линий я теряю связи»)
+    title: 'Решение 192: флажок «линии Мессии» в блоке неба убирает ленты и возвращает их; без лент связь Исаака и Ревекки с Иаковым — обычной линией; выбор запоминается; в показе «Линии Мессии» флажок недоступен',
+    run: async (p) => {
+      const cv = (k: string) => p.locator('.sky > canvas').getAttribute(`data-${k}`).then((v) => v ?? '');
+      const box = p.locator('.skyctl .lines-check input');
+      await go(p, '#/iakov', 3200);
+      if ((await cv('ribbons')) !== '1') return fail(`ленты не нарисованы до выключения: «${await cv('ribbons')}»`);
+      if (!(await box.isChecked())) return fail('флажок «линии Мессии» снят при включённых лентах');
+      await box.click();
+      await p.waitForTimeout(700);
+      if ((await cv('ribbons')) !== '0') return fail('флажок не убрал ленты');
+      const bar = ((await p.locator('.sky .showbar').innerText()) ?? '').replace(/\s+/g, ' ');
+      if (!/Скрыто: линии Мессии/.test(bar)) return fail(`строка показа не называет скрытый слой: «${bar}»`);
+      const links = (await cv('links')).split(';').filter(Boolean).map((q) => q.split('|')[2]);
+      if (!links.some((ks) => /^k\.isaak\.revekka\._\.iakov$/.test(ks))) return fail('без лент нет линии «Исаак и Ревекка → Иаков»');
+      const saved = (await p.evaluate(() => localStorage.getItem('toledot:layers'))) ?? '';
+      if (!/"ribbons":false/.test(saved)) return fail(`выбор не запомнен: ${saved}`);
+      await go(p, '#/iakov', 3000);
+      if ((await cv('ribbons')) !== '0' || (await box.isChecked())) return fail('после перезагрузки ленты вернулись');
+      // показ «Линии Мессии» — ленты и есть показ: рисуются при выключенном слое, флажок включён и недоступен
+      await pickShow(p, 'Линии Мессии', { ms: 1500 });
+      if ((await cv('ribbons')) !== '1') return fail('в показе «Линии Мессии» лент нет');
+      if (!(await box.isDisabled()) || !(await box.isChecked())) return fail('в показе «Линии Мессии» флажок доступен или снят');
+      await p.locator('.sky .showbar .sb-cmd', { hasText: 'всё небо' }).click();
+      await p.waitForTimeout(1200);
+      if ((await cv('ribbons')) !== '0') return fail('после показа «Линии Мессии» слой лент снова включился');
+      await box.click();
+      await p.waitForTimeout(700);
+      if ((await cv('ribbons')) !== '1') return fail('флажок не вернул ленты');
+      return pass('ленты убираются и возвращаются; без лент «Исаак и Ревекка → Иаков» — обычной линией; выбор запомнен');
     },
   },
 ];

@@ -4,7 +4,7 @@
  * и историю не пишется; закрывают его «Вид», Escape, «×» у колонки и нажатие мимо.
  */
 import { byId } from '../../data/atlas.ts';
-import { lambda, modelId, panel, epochMode, layers, LAYER_KEYS, LAYER_NAMES } from '../../state.ts';
+import { lambda, modelId, panel, epochMode, layers, onlyLines, LAYER_KEYS, LAYER_NAMES } from '../../state.ts';
 import { num, typo } from '../text/typo.ts';
 import { Check, Menu } from '../controls.tsx';
 import { DEFAULT_MODEL, factsOf, modelItems, modelsFoot } from '../modelinfo.ts';
@@ -107,6 +107,7 @@ function ZoomButton({ dir }: { dir: 1 | -1 }) {
  */
 export const SKY_HINTS = {
   tiers: 'Над небом — ярусы по годам: эпохи, судьи, цари Иудеи и Израиля, служения пророков, события',
+  lines: 'Ленты родословия Иисуса Христа (Мф 1, Лк 3) поверх неба; без них связи лиц линии видны обычными линиями родства',
   fit: 'Вписать: весь нынешний показ в окне (0, Home)',
 } as const;
 
@@ -295,12 +296,34 @@ function HintCheck({ checked, onChange, hint, children }: { checked: boolean; on
   );
 }
 
-/** Флажок слоя неба: ярусы эпох. Линии Мессии — показ (решение 81), не слой. */
+/** Флажок слоя неба: ярусы эпох. Показ «Линии Мессии» — строка показа (решение 81); слой лент — флажок LinesCheck. */
 function LayerChecks() {
   return (
     <HintCheck checked={epochMode.value} onChange={(v) => (epochMode.value = v)} hint={SKY_HINTS.tiers}>
       ярусы эпох
     </HintCheck>
+  );
+}
+
+/**
+ * Флажок слоя «линии Мессии» на виду (этап 17, решение 192; просьба владельца 4 октября: «из-за этих линий я теряю
+ * связи»): ленты можно убрать с неба одним нажатием, а не только в листе «Вид». Без лент связи лиц линии рисуются
+ * обычными стволами и зубцами (src/render/sky.ts, linksFor: шагов лент нет). В показе «Линии Мессии» ленты — сам показ,
+ * флажок там включён и недоступен. Выбор запоминается, как у слоёв листа «Вид».
+ */
+function LinesCheck() {
+  const lines = onlyLines.value;
+  return (
+    <label class={`check${lines ? ' off' : ''}`} title={SKY_HINTS.lines}>
+      <input
+        type="checkbox"
+        checked={lines || layers.value.ribbons !== false}
+        disabled={lines}
+        aria-description={SKY_HINTS.lines}
+        onChange={(e) => (layers.value = { ...layers.value, ribbons: (e.currentTarget as HTMLInputElement).checked })}
+      />
+      линии Мессии
+    </label>
   );
 }
 
@@ -558,6 +581,9 @@ export function SkyControls() {
     <div class="skyctl" role="group" aria-label="Вид неба" data-reserve="controls">
       <div class="layers">
         <LayerChecks />
+      </div>
+      <div class="lines-check">
+        <LinesCheck />
       </div>
       <div class="zoom">
         <ZoomButton dir={-1} />

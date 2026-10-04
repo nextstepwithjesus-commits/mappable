@@ -415,6 +415,12 @@
   align-items: center;
   gap: 0 10px;
 }
+/* флажок слоя «линии Мессии» (решение 192) — вторая строка слева, напротив «Вид» */
+.skyctl .lines-check {
+  grid-area: work-lbl;
+  display: flex;
+  align-items: center;
+}
 .skyctl .zoom {
   grid-area: zoom;
   justify-self: end;
