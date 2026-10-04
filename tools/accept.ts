@@ -457,7 +457,8 @@ const BASE: Scenario[] = [
     title: 'Подсказка не остаётся от прежнего лица после сдвига и перелёта',
     run: async (p) => {
       await find(p, 'Давид');
-      const tipNow = async () => ((await p.locator('.sky .tip b').count()) ? (await p.locator('.sky .tip b').innerText()).trim() : '');
+      // одним чтением: подсказка может уйти между проверкой наличия и чтением текста (тогда innerText ждал бы её 30 с)
+      const tipNow = async () => ((await p.evaluate(() => (document.querySelector('.sky .tip b') as HTMLElement | null)?.innerText ?? '')) as string).trim();
       const star = await hoverStar(p, () => true);
       if (!star) return fail('не нашлось звезды');
       // сдвиг клавишами — Shift + стрелка (стрелка без Shift ведёт фокус по звёздам, I1): указатель остаётся над небом, звезда уезжает из-под него
