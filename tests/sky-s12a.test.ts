@@ -182,7 +182,9 @@ describe('знак союза (решение 87)', () => {
     expect(r.calls.filter((c) => c[0] === 'fill').length).toBe(2);
     expect(r.calls.filter((c) => c[0] === 'stroke').length).toBe(1);
   });
-  it('без выбора — двухцветный; у выбранного Давида ромбы его союзов с детьми — цвета их ветвей, бездетный союз — золотистый', () => {
+  // этап 18, решение 193 (владелец 4 октября: «у каждой линии по каждой жене или наложнице должен быть свой цвет»): бездетный
+  // союз выбранного — тоже своим цветом ветви (прежде — золотистый, как вся родня), не совпадающим с цветами других союзов
+  it('без выбора — двухцветный; у выбранного Давида ромбы его союзов с детьми — цвета их ветвей, бездетный союз — свой цвет', () => {
     const f = C.captureAt('all', 'david', 160, { select: null });
     const looks0 = (f.s.canvas.dataset.unionLooks ?? '').split(';').filter(Boolean);
     expect(looks0.length).toBeGreaterThan(5);
@@ -197,7 +199,13 @@ describe('знак союза (решение 87)', () => {
     const adon = bf.desc.get('adoniya')!;
     const theme = g.s.pal.glow ? 'night' : 'day';
     expect(looks.get('u:david+aggifa')).toBe(branches.branchColor(adon.branch, theme));
-    expect(looks.get('u:david+melkhola')).toBe(branches.KIN_GOLD[theme]);
+    const mel = looks.get('u:david+melkhola');
+    expect(mel).toBeTruthy();
+    expect(mel).not.toBe(branches.KIN_GOLD[theme]);
+    expect(Array.from({ length: 24 }, (_, k) => branches.branchColor(k, theme))).toContain(mel);
+    const others = [...looks].filter(([u]) => u.startsWith('u:david+') && u !== 'u:david+melkhola').map(([, c]) => c);
+    expect(others.length).toBeGreaterThan(3);
+    expect(others, `Мелхола ${mel}`).not.toContain(mel);
   });
   it('выбранная связь — ромб её союза жёлтый', () => {
     const f = C.capture('iakov', 1, 1440);

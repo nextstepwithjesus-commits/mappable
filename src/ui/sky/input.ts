@@ -10,7 +10,7 @@ import { byId, lines } from '../../data/atlas.ts';
 import { selected, hovered, epochMode, layers, onlyLines, panel, pins, pinsQuery, pickMode, pickSecond, synopsisAt, model } from '../../state.ts';
 import { lineNoteHits, ribbonAt, ribbonGapHits, setRibbonHover, type RibbonGapHit } from '../../render/ribbons.ts';
 import { starRadius } from '../../render/glyphs.ts';
-import { setFamilyHover } from '../../render/trails.ts';
+import { setFamilyHover, unionFanHits } from '../../render/trails.ts';
 import { goTo, skyRef } from '../common.tsx';
 import { tierAt, tierHot, type TierHit } from '../../render/tiers.ts';
 import { toAstro } from '../../engine/years.ts';
@@ -521,6 +521,10 @@ export function underPointer(sky: Sky, x: number, y: number, r: number): Under |
   }
   if (plate) return { kind: 'plate', plate };
   if (count) return { kind: 'count', count };
+  // дорожка веера союзов выбранного (решение 193): союз целиком — с его детьми и путём жены; дорожка рисуется поверх лент
+  // и следов, поэтому и ловится раньше них
+  const fan = L.connectors ? fanAt(sky, x, y) : null;
+  if (fan) return { kind: 'link', hit: fan };
   // нить ленты поверх следа (лента рисуется над следами): шаг ленты, а не «Какая связь?» участка следа под ней
   const over = !line && L.ribbons ? ribbonAt(sky, x, y, RIBBON_R) : null;
   if (over) return { kind: 'ribbon', hit: over };
@@ -538,6 +542,31 @@ export function underPointer(sky: Sky, x: number, y: number, r: number): Under |
   if (rib) return { kind: 'ribbon', hit: rib };
   const trail = sky.hitTrail(x, y);
   return trail ? { kind: 'trail', id: trail } : null;
+}
+
+/** Ближе стольких px к дорожке веера союзов указатель выбирает её союз. */
+const FAN_R = 3;
+/** Дорожка веера союзов выбранного под указателем (решение 193): как попадание в линию союза целиком. */
+function fanAt(sky: Sky, x: number, y: number): LinkHit | null {
+  let best: LinkHit | null = null;
+  for (const f of unionFanHits(sky)) {
+    const p = f.pts;
+    for (let k = 0; k + 3 < p.length; k += 2) {
+      const ax = p[k];
+      const ay = p[k + 1];
+      const dx = p[k + 2] - ax;
+      const dy = p[k + 3] - ay;
+      const l2 = dx * dx + dy * dy;
+      const t = l2 > 0 ? Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / l2)) : 0;
+      const qx = ax + t * dx;
+      const qy = ay + t * dy;
+      const d = Math.hypot(x - qx, y - qy);
+      if (d > FAN_R || (best && best.d <= d)) continue;
+      const key: LinkKey = { kind: 'union', union: f.union };
+      best = { key, ks: linkKeyString(key) ?? '', kind: 'trunk', d, x: qx, y: qy, union: f.union };
+    }
+  }
+  return best;
 }
 
 /** Призрак конца выбранной связи под указателем (К3); touch — поле не меньше 44 × 44. */

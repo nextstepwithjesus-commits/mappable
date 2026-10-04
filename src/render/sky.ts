@@ -34,7 +34,7 @@ import { claim, clusterShort, clusterText, drawClusterLabel, familyOf, ownLink, 
 import { bendsOf, FAMILY_TIER, familyTier, hasGlides, tierAlpha, trailPolyline, trailSegs, type Bend, type FamilyTier } from './trails.ts';
 import { glidesOf, laneAt, starLaneOf } from '../engine/stays.ts';
 export { FAMILY_TIER, familyTier, tierAlpha, type FamilyTier } from './trails.ts';
-import { drawBranchTicks, drawFamilyRoutes, drawGhostNotes, drawLinkLabels, drawLinks, drawPlanStubs, drawSpineTrails, drawTrails, familyHover, linkLooks, linkOn, linkShown, trailLinksAt, trailOf, type LifeTrail, type LinkDraw, type PlanStubHit } from './trails.ts';
+import { clearUnionFan, drawBranchTicks, drawFamilyRoutes, drawUnionFan, planUnionFan, trailStubs, drawGhostNotes, drawLinkLabels, drawLinks, drawPlanStubs, drawSpineTrails, drawTrails, familyHover, linkLooks, linkOn, linkShown, trailLinksAt, trailOf, type LifeTrail, type LinkDraw, type PlanStubHit } from './trails.ts';
 import { branchFrame, drawLinkRoute, drawOriginPath, drawKinPath, drawLeadNotes, drawMeridian, drawOverlayText, drawRings, drawSelectedLink, drawWorkMarks, emphasis, kinRoutes, meridianFlagAt, overlayRoutes, reserveSelectedLink, ringOuter, unionHoverDim, type SelectedLinkInfo } from './marks.ts';
 import { coarsePointer, mapFont, mapSize, nameSize, T_MAP_S } from './type.ts';
 import type { Rect } from './rect.ts';
@@ -2638,6 +2638,11 @@ export class Sky implements SkyContext {
     }
     if (!lf) this.linkDraw = null;
     if (L.lifelines) layer((q) => drawTrails(this, q));
+    // следы выключены — связки от звезды до последнего союза (решение 193): ромбы и черты брака не висят в пустоте
+    else if (lf) {
+      const stubs = trailStubs(this, lf);
+      layer((q) => drawTrails(this, q, stubs));
+    }
     // промежутки рождения у лиц, чей знак стоит у первого засвидетельствованного года (решение 38; MAP-69)
     if (L.lifelines) layer((q) => this.drawBirthBands(q));
     if (lf && settle > 0.01) {
@@ -2779,17 +2784,30 @@ export class Sky implements SkyContext {
     // пути супругов и родителей выбранного к ромбам союзов (просьба владельца 3 октября: «где его жёны, где дети»): до
     // звёзд — знаки на концах пути поверх него; под подписями путь прерывается
     let familyRoutes: string[] = [];
+    let fan: string[] = [];
     if (s.selected && lf && L.connectors && !lineOnly && settle > 0.99)
       this.clipOut(
         this.ledger.boxes.filter((b) => b.kind !== 'frame'),
         () => (familyRoutes = drawFamilyRoutes(this, p)),
       );
+    // веер союзов от звезды выбранного (решение 193): по цветной дорожке на союз. Подписи его обходят (lineObstacles);
+    // под подписью дорожка прерывается только по строке текста (рамка без полей): поля рамки над и под строкой резали
+    // дорожки, идущие в 3–10 px от следа, на куски («обрывки», жалоба владельца)
+    if (s.selected && lf && L.connectors && !lineOnly && settle > 0.99)
+      this.clipOut(
+        this.ledger.boxes.filter((b) => b.kind !== 'frame').map((b) => ({ ...b, y: b.y + 5, h: Math.max(0, b.h - 9) })),
+        () => (fan = drawUnionFan(this, p)),
+      );
+    else clearUnionFan(this);
     {
       const ds = (this.canvas as { dataset?: DOMStringMap }).dataset;
       if (ds && probes.on) {
         const fr = familyRoutes.join(' ');
         if (fr) ds.familyRoutes = fr;
         else if (ds.familyRoutes !== undefined) delete ds.familyRoutes;
+        const fn = fan.join(' ');
+        if (fn) ds.unionFan = fn;
+        else if (ds.unionFan !== undefined) delete ds.unionFan;
       }
     }
     // звёзды — после того как подписи заняли места (решения 139, 140): разрывы следов, сетки и погашенных связей под
@@ -3968,6 +3986,8 @@ export class Sky implements SkyContext {
       // зачёркивает его; имя встаёт по другую сторону звезды
       lh.add(r.pts, NO_ROUTE_OWN, Math.min(2.5, Math.max(1, (r.w ?? 1) / 2)));
     }
+    // дорожки веера союзов выбранного (решение 193) — тоже чужая линия для имён: подпись их обходит, а не режет
+    for (const f of planUnionFan(this, p)) lh.add(f.pts, NO_ROUTE_OWN, 1.6);
     // переходы следов (решения 163, 173): чужое имя не ложится на S-кривую — она такая же чужая линия, как ствол. На небе
     // (решение 178, меньше 7 px на год) переходы бледны и почти отвесны у самых звёзд отчего дома — там они не препятствие:
     // имена главы семьи и отметок поиска иначе не нашли бы места (MAP-06, E10); К5 считает лишь видимое пересечение середины

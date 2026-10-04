@@ -33,7 +33,7 @@
 import { linkKeyString, type LinkKey } from '../engine/linkkey.ts';
 import type { Union, Unions } from '../engine/unions.ts';
 import { byId, graph, models, type ModelData } from '../data/atlas.ts';
-import type { MarriageKind } from '../engine/stays.ts';
+import { marriageKind, type MarriageKind } from '../engine/stays.ts';
 import { unions as ALL_UNIONS } from '../ui/reveal.ts';
 import { listingOf, orderListing, type OrderListing } from './trails.ts';
 
@@ -451,6 +451,36 @@ function addCuts(path: LinkPath, trails: Trails, skip: ReadonlySet<string>, half
 
 // ---------- построение ----------
 
+/**
+ * Вид союза на небе (этап 18, решение 193; консилиум 4 октября: «наложницы на небе не отличаются от жён»): черта брака —
+ * по виду союза из данных (жена — двойная «‖», наложница — одинарная «|», брак не назван — тонкая одинарная, левират —
+ * двойная штрихом), знак союза — полыми половинами (наложница — полая половина жены; брак не назван — обе; не названо
+ * лицо — его половина). На этапе 14 вид не записывался, и все черты были двойными, хотя «Условные знаки» обещали иное.
+ */
+function unionKinds(f: LinkFrame, U: Unions) {
+  const kindOf = new Map<string, MarriageKind>();
+  const kind = (id: string): MarriageKind | null => {
+    if (kindOf.has(id)) return kindOf.get(id)!;
+    const u = U.byId.get(id);
+    const k = u ? marriageKind(u) : null;
+    if (k) kindOf.set(id, k);
+    return k;
+  };
+  for (const q of f.paths) {
+    if (q.kind !== 'bar' || !q.union) continue;
+    const k = kind(q.union);
+    if (!k) continue;
+    q.bar = k;
+    if (k === 'levirate' && q.style === 'solid') q.style = 'dash';
+  }
+  for (const n of f.nodes) {
+    if (n.kind !== 'union' || n.look) continue;
+    const u = U.byId.get(n.union);
+    if (!u) continue;
+    n.look = !u.a ? 'no-father' : !u.b ? 'no-mother' : (kind(n.union) ?? undefined);
+  }
+}
+
 /** Связи кадра по укладке. */
 export function buildLinks(inp: LinkInput): LinkFrame {
   if (!inp.stars.length) return { ...EMPTY, layout: inp.layout, via: new Map() };
@@ -460,6 +490,7 @@ export function buildLinks(inp: LinkInput): LinkFrame {
   const rib = new Set([...f.via.values()].map((v) => v.union));
   f.ribbonOnly = new Set(f.nodes.filter((n) => rib.has(n.union) && !drawn.has(n.union)).map((n) => n.union));
   if (inp.layout === 'map') nestBuses(f, inp.stars);
+  unionKinds(f, inp.unions);
   linkCrossings(f.paths);
   markBlocked(f.paths, inp.stars);
   offRibbonNodes(f, inp);

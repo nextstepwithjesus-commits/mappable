@@ -49,18 +49,19 @@ import { refText } from '../engine/kinship.ts';
 import { drawGlyph, starRadius, type GlyphOpts } from './glyphs.ts';
 import { mapFont, mapSize, nameSize, T_MAP_S } from './type.ts';
 import { claim, FAMILY_KY, textBox, type LabelCache } from './labels.ts';
-import { branchTickAt, GlowBatch, glowLayers, glows, LINEAGE_GLOW, LINEAGE_WARM } from './branches.ts';
+import { branchColor, branchTickAt, GlowBatch, glowLayers, glows, LINEAGE_GLOW, LINEAGE_WARM } from './branches.ts';
 import { branchOrTribeColor } from './light.ts';
 import { branchFrame, clipHoles, FAR, ringHoles, selectedRoutes, type BranchPaint } from './marks.ts';
 import type { Rect } from './rect.ts';
 import type { Emphasis, Palette, Pass, SkyContext } from './sky.ts';
 import type { LinkFrame, LinkNode, LinkPath, PathStyle, StubMark } from './links.ts';
 import type { LinkKey } from '../engine/linkkey.ts';
+import type { Union } from '../engine/unions.ts';
 import { unions as ALL_UNIONS } from '../ui/reveal.ts';
 import { unionName } from '../ui/linkwords.ts';
 import { glidesOf, laneAt, marriageKind, smooth, starLaneOf, type MarriageKind, type StayNode } from '../engine/stays.ts';
-import { NODE_R_FAMILY, TRAIL_CUT, type NodeLook } from './links.ts';
-import { paintJoin, paintUnion } from './plates.ts';
+import { NODE_R_FAMILY, NODE_R_MAP, TRAIL_CUT, type NodeLook } from './links.ts';
+import { nodeLook, paintJoin, paintUnion } from './plates.ts';
 import { drawTentPointer } from './frame.ts';
 import { drawStrands, ribbonLook } from './ribbons.ts';
 import { buildRibbons } from '../engine/ribbons.ts';
@@ -783,7 +784,24 @@ export const bendAlpha = (p: Pick<Pass, 'pxYear'>): number => BEND_SKY + (1 - BE
  * Следы жизни видимых лиц (слой «следы жизни»). На обзоре (полоса ниже 5 px) — тоньше и бледнее. Потомки выбранного
  * лица — цветом своей ветви со свечением, предки — с мягким свечением (решение 69; branches.ts).
  */
-export function drawTrails(v: SkyContext, p: Pass) {
+/**
+ * Связка при выключенных следах (решение 193; владелец 4 октября: «если я отключаю следы жизни, вообще не понятно,
+ * откуда появляются жёны и наложницы и всё древо»): у каждого лица — его след от звезды до последнего узла его союзов
+ * (станции решения 159): это часть пути к союзу, а не время жизни. Номер узла неба → x конца связки, px холста.
+ */
+export function trailStubs(v: SkyContext, d: LinkDraw): Map<number, number> {
+  const out = new Map<number, number>();
+  for (const list of stationsOf(v, d).values())
+    for (const t of list) {
+      const i = v.indexOf(t.person);
+      if (i === undefined || !t.st.length) continue;
+      const x = t.st[t.st.length - 1].x + d.dx;
+      out.set(i, Math.max(out.get(i) ?? -Infinity, x));
+    }
+  return out;
+}
+
+export function drawTrails(v: SkyContext, p: Pass, stubs?: ReadonlyMap<number, number>) {
   const { ctx, cam, pal } = v;
   const ky = cam.ky;
   const intro = p.s.intro;
@@ -791,7 +809,7 @@ export function drawTrails(v: SkyContext, p: Pass) {
   const t: LifeTrail = { x0: 0, x1: 0, y: 0, cls: 'exact', known: true, solidTo: 0, color: '', width: 1 };
   // ветви выбранного лица (решение 69): свечение потомков цветом ветви и предков — мягким светом — под следами
   const bf = branchFrame(v, p);
-  if (bf.map) {
+  if (bf.map && !stubs) {
     const glow = new GlowBatch(glowLayers('branch', bf.theme, ky < 5));
     const anc = new GlowBatch(glowLayers('ancestor', bf.theme, ky < 5));
     for (const i of p.vis) {
@@ -813,6 +831,14 @@ export function drawTrails(v: SkyContext, p: Pass) {
   const hov = p.s.hovered;
   for (const i of p.vis) {
     if (!trailOf(v, i, t)) continue;
+    if (stubs) {
+      // связка: от звезды до последнего узла союзов, сплошной; дальше — ничего (время жизни скрыто)
+      const xe = stubs.get(i);
+      if (xe === undefined || xe <= t.x0 + 1) continue;
+      t.x1 = Math.min(t.x1, xe);
+      t.solidTo = t.x1;
+      t.brk = undefined;
+    }
     const n = v.nodes[i];
     const q = byId.get(n.person)!;
     const bp = bf.paint(n.person);
@@ -853,6 +879,7 @@ export function drawTrails(v: SkyContext, p: Pass) {
     }
     if (p.shown && t.brk !== undefined && t.brk > v.letterW && t.brk < cam.w && t.y > v.openTop && t.y < cam.vp.b) p.shown.breaks.add(n.person);
   }
+  if (stubs) return;
   // лица «время не установлено» — скобкой вместо следа (MAP-52)
   const b: EpochBracket = { x0: 0, x1: 0, y: 0, color: '' };
   for (const i of p.vis) {
@@ -2283,6 +2310,177 @@ export function lineageOf(p: Pick<Pass, 's'>, q: Pick<LinkPath, 'union' | 'key' 
   return null;
 }
 
+/** Шаг дорожек веера союзов (решение 193), px. */
+export const FAN_STEP = 3.5;
+/** Дорожек на сторону следа не больше стольких: дальние союзы идут по крайней дорожке. */
+export const FAN_MAX = 4;
+/** Дорожки веера последнего кадра — по небу (у двойника кэша сдвига свои): союз и ломаная в px холста. */
+const fanHitMap = new WeakMap<object, { union: string; pts: number[] }[]>();
+/** Дорожки веера союзов, нарисованные небом v в последнем кадре (для наведения, src/ui/sky/input.ts). */
+export const unionFanHits = (v: object): readonly { union: string; pts: number[] }[] => fanHitMap.get(v) ?? [];
+/** Кадр без веера: дорожек для наведения нет. */
+export const clearUnionFan = (v: object) => void fanHitMap.set(v, []);
+
+/**
+ * Цвет союзов выбранного лица (решение 193; владелец 4 октября: «у каждой линии по каждой жене или наложнице должен быть
+ * свой цвет»): союз с детьми — цветом ветви его детей (решения 69, 183: у Иакова — оттенки колен матерей); бездетный
+ * союз и союз, дети которого разошлись по своим ветвям (единственный союз с детьми: ветвь — ребёнок), — следующими
+ * цветами ветвей, по порядку союзов, без повторов среди союзов лица. Пусто — лицо не выбрано.
+ */
+const unionColorMemo = new WeakMap<object, Map<string, { color: string; a: number }>>();
+export function unionColors(bf: ReturnType<typeof branchFrame>, p: Pass): Map<string, { color: string; a: number }> {
+  const hit = unionColorMemo.get(bf);
+  if (hit) return hit;
+  const out = new Map<string, { color: string; a: number }>();
+  unionColorMemo.set(bf, out);
+  const sel = p.s.selected;
+  if (!sel || !bf.map) return out;
+  const own = ALL_UNIONS.of.get(sel) ?? [];
+  const used = new Set<string>();
+  const rest: Union[] = [];
+  for (const u of own) {
+    const br = u.kids.length ? commonBranch(bf, p, u.kids) : null;
+    if (br && !used.has(br.color)) {
+      out.set(u.id, br);
+      used.add(br.color);
+    } else rest.push(u);
+  }
+  // свободные цвета ветвей — после ветвей лица (map.keys), чтобы не совпасть с цветом чужой ветви его потомков
+  let k = bf.map.keys.length;
+  for (const u of rest) {
+    let c = branchColor(k++, bf.theme);
+    for (let tries = 0; used.has(c) && tries < 16; tries++) c = branchColor(k++, bf.theme);
+    used.add(c);
+    out.set(u.id, { color: c, a: p.s.intro });
+  }
+  return out;
+}
+
+/**
+ * Веер союзов выбранного лица (решение 193; идея владельца 4 октября: «от кружочка самого персонажа сразу несколько
+ * линий в зависимости от союзов, разноцветных», «на большом расстоянии — с отступом от разных линий, чтобы не было каши»):
+ * от звезды выбранного по дорожке на каждый союз, своим цветом (unionColors), вдоль его строки до места, где путь
+ * союза уходит со строки — к ромбу на его строке или к черте брака к ромбу на строке жены. Дорожки разведены на
+ * FAN_STEP px по обе стороны следа: союз, чей путь уходит вниз, — снизу, вверх — сверху, ромб на самой строке — со
+ * стороны его детей. Порядок без пересечений: у ромбов на строке ближе к оси — тот, кто сходит раньше; у уходящих со
+ * строки дальше от оси — тот, кто сходит раньше (съезд с края, как на схеме метро). Путь жены к ромбу — тем же цветом
+ * (drawFamilyRoutes), дети — цветом ветви (тот же цвет). Возвращает «союз:сторона×дорожка» для проверок.
+ */
+export type FanLane = { union: string; xe: number; side: 1 | -1; onRow: boolean; color: { color: string; a: number } };
+const fanPlans = new WeakMap<object, { lane: FanLane; pts: number[] }[]>();
+/**
+ * Дорожки веера союзов выбранного лица в этом кадре (решение 193): ломаные в px холста. Считаются один раз на проход
+ * кадра — до подписей: подписи обходят дорожки, как чужие линии (sky.ts, lineObstacles), а не режут их.
+ */
+export function planUnionFan(v: SkyContext, p: Pass): { lane: FanLane; pts: number[] }[] {
+  const was = fanPlans.get(p);
+  if (was) return was;
+  const polys: { lane: FanLane; pts: number[] }[] = [];
+  fanPlans.set(p, polys);
+  const sel = p.s.selected;
+  const d = p.links;
+  const hl = p.s.highlight;
+  if (!sel || !d || !hl || hl.get(sel) !== 'self' || p.s.onlyLines || !p.s.layers.connectors) return polys;
+  const i = v.indexOf(sel);
+  const q = byId.get(sel);
+  if (i === undefined || !q || !v.drawn(i) || v.hides(sel)) return polys;
+  const { cam } = v;
+  const sx = cam.sx(v.X0[i]);
+  const sy = cam.sy(starLaneOf(v.nodes[i]));
+  const colors = unionColors(branchFrame(v, p), p);
+  const r0 = starRadius(q.magnitude, p.zoomScale) + (q.sex === 'f' ? 2.2 : 0) + 1;
+  const lanes: FanLane[] = [];
+  for (const u of ALL_UNIONS.of.get(sel) ?? []) {
+    const other: string | null = u.a === sel ? u.b : u.a;
+    const key: LinkKey = other ? { kind: 'spouse', union: u.id, person: other } : { kind: 'union', union: u.id };
+    const r = selectedRoutes(v, d, key).parents?.get(sel);
+    const c = colors.get(u.id);
+    if (!r || r.length < 4 || !c) continue;
+    if (Math.abs(r[0] - sx) > 2 || Math.abs(r[1] - sy) > 1.5) continue;
+    // съезд: последняя точка пути на строке звезды; дальше путь уходит вверх или вниз (черта брака) или кончается в ромбе
+    let k = 2;
+    while (k + 1 < r.length && Math.abs(r[k + 1] - sy) < 0.75) k += 2;
+    const xe = r[k - 2];
+    if (xe - sx < r0 + 8) continue;
+    const away = k + 1 < r.length ? r[k + 1] - sy : 0;
+    let side: 1 | -1 = away > 0 ? 1 : -1;
+    if (away === 0) {
+      // ромб на самой строке — дорожка со стороны его детей
+      let sum = 0;
+      for (const kid of u.kids) {
+        const j = v.indexOf(kid);
+        if (j !== undefined) sum += cam.sy(starLaneOf(v.nodes[j])) - sy;
+      }
+      side = sum < 0 ? -1 : 1;
+    }
+    lanes.push({ union: u.id, xe, side, onRow: away === 0, color: c });
+  }
+  if (!lanes.length) return polys;
+  const step = Math.max(2.5, Math.min(FAN_STEP, cam.ky / 6));
+  for (const side of [1, -1] as const) {
+    const mine = lanes.filter((l) => l.side === side);
+    // от оси наружу: ромбы на строке — по порядку съезда; уходящие со строки — от позднего съезда к раннему
+    const order = [...mine.filter((l) => l.onRow).sort((a, b) => a.xe - b.xe), ...mine.filter((l) => !l.onRow).sort((a, b) => b.xe - a.xe)];
+    order.forEach((l, n) => {
+      const off = side * Math.min(n + 1, FAN_MAX) * step;
+      const a = Math.abs(off);
+      const x0 = sx + r0;
+      const pts = [x0, sy + off * 0.35, x0 + a, sy + off];
+      // ромб на строке — дорожка сходит к нему косо; черта брака — дорожка встречает её сбоку на своей высоте
+      if (l.onRow) pts.push(Math.max(x0 + a, l.xe - a - 4), sy + off, l.xe, sy);
+      else pts.push(l.xe, sy + off);
+      polys.push({ lane: l, pts });
+    });
+  }
+  return polys;
+}
+
+export function drawUnionFan(v: SkyContext, p: Pass): string[] {
+  const polys = planUnionFan(v, p);
+  fanHitMap.set(v, []);
+  if (!polys.length) return [];
+  const { ctx, pal } = v;
+  ctx.save();
+  ctx.setLineDash([]);
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  // подложка цветом неба под всеми дорожками, потом цвет: соседние дорожки не сливаются
+  const path = (pts: number[]) => {
+    ctx.beginPath();
+    ctx.moveTo(pts[0], pts[1]);
+    for (let k = 2; k + 1 < pts.length; k += 2) ctx.lineTo(pts[k], pts[k + 1]);
+  };
+  ctx.strokeStyle = alpha(pal.sky, 0.9);
+  ctx.lineWidth = 3.2;
+  for (const f of polys) {
+    path(f.pts);
+    ctx.stroke();
+  }
+  ctx.lineWidth = 1.6;
+  for (const f of polys) {
+    ctx.strokeStyle = alpha(f.lane.color.color, Math.max(0.6, f.lane.color.a));
+    path(f.pts);
+    ctx.stroke();
+  }
+  ctx.restore();
+  // ромбы союзов выбранного — поверх дорожек: дорожка входит в ромб, а не закрывает его
+  const d = p.links;
+  if (d) {
+    const mine = new Set(polys.map((f) => f.lane.union));
+    const R = d.frame.layout === 'family' ? NODE_R_FAMILY : NODE_R_MAP;
+    for (const n of d.frame.nodes) {
+      if (n.kind !== 'union' || !mine.has(n.union)) continue;
+      const x = n.x + d.dx;
+      const y = n.y + d.dy;
+      if (x - R < v.letterW || x + R > v.cam.w || y - R < v.openTop || y + R > v.cam.vp.b) continue;
+      const look = nodeLook(v, p, n, false);
+      paintUnion(ctx, x, y, R, { open: n.open, halo: pal.sky, theme: pal.glow ? 'night' : 'day', a: look.a, color: look.color, edge: look.edge, look: n.look });
+    }
+  }
+  fanHitMap.set(v, polys.map((f) => ({ union: f.lane.union, pts: f.pts })));
+  return polys.map((f, n) => `${f.lane.union}:${f.lane.side > 0 ? '+' : '-'}${n}`);
+}
+
 /**
  * Пути супругов и родителей выбранного лица к ромбам союзов (просьба владельца 3 октября: «где его жёны, где дети»).
  * Звезда жены стоит в её родной семье, а ромб союза — на её следе, в год брака или первого ребёнка. Прежде путь от звезды
@@ -2307,8 +2505,9 @@ export function drawFamilyRoutes(v: SkyContext, p: Pass): string[] {
     if (!other || v.hides(other)) continue;
     const r = selectedRoutes(v, d, { kind: 'spouse', union: u.id, person: other }).parents?.get(other);
     if (!r || r.length < 4) continue;
-    const br = u.kids.length ? commonBranch(bf, p, u.kids) : null;
-    items.push({ route: r, color: br ? alpha(br.color, br.a) : lamp, glow: br ? br.color : warm, a: br ? br.a : p.s.intro, tag: `spouse:${other}` });
+    // цвет союза — тот же, что у дорожки веера, черты брака, ромба и детей (решение 193, unionColors)
+    const br = unionColors(bf, p).get(u.id) ?? null;
+    items.push({ route: r, color: br ? alpha(br.color, Math.max(0.6, br.a)) : lamp, glow: br ? br.color : warm, a: br ? br.a : p.s.intro, tag: `spouse:${other}` });
   }
   for (const u of ALL_UNIONS.origin.get(sel) ?? []) {
     const rs = selectedRoutes(v, d, { kind: 'union', union: u.id }).parents;
@@ -2346,7 +2545,8 @@ function pathBranchOf(bf: ReturnType<typeof branchFrame>, p: Pass, q: LinkPath):
   if (!bf.map || q.kind === 'clan') return null;
   if (q.kind === 'bar' || q.key.kind === 'spouse') {
     const u = q.union ? ALL_UNIONS.byId.get(q.union) : undefined;
-    return u && u.kids.length ? commonBranch(bf, p, u.kids) : null;
+    // союз выбранного — своим цветом и без детей (решение 193): черта брака — того же цвета, что путь жены и дорожка веера
+    return (q.union ? unionColors(bf, p).get(q.union) : undefined) ?? (u && u.kids.length ? commonBranch(bf, p, u.kids) : null);
   }
   return commonBranch(bf, p, q.ends, 1);
 }

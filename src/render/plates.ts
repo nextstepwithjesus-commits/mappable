@@ -49,7 +49,7 @@ import { branchColor, GlowBatch, glowLayers, type MapTheme } from './branches.ts
 import { branchKeysOf, branchOrTribeColor } from './light.ts';
 import { drawGlyph, starRadius } from './glyphs.ts';
 import { branchFrame } from './marks.ts';
-import { commonBranch, nodeOnSky, unionAlpha } from './trails.ts';
+import { commonBranch, nodeOnSky, unionAlpha, unionColors } from './trails.ts';
 import { mapFont, mapSize, T_MAP_S } from './type.ts';
 import { cross, type Rect } from './rect.ts';
 import { KIN_GOLD, LINK_YELLOW, UNION_COLORS } from './branches.ts';
@@ -522,9 +522,10 @@ export function paintUnion(ctx: CanvasRenderingContext2D, x: number, y: number, 
   };
   const a = Math.max(0, Math.min(1, o.a));
   const U = UNION_COLORS[o.theme];
-  // полые половины (решение 174): лицо не названо — его половина; брак не назван — обе
+  // полые половины (решение 174): лицо не названо — его половина; брак не назван — обе; наложница — половина жены
+  // (решение 193: не полный брак — полый знак, как одинарная черта)
   const hollowH = o.look === 'none' || o.look === 'no-father';
-  const hollowW = o.look === 'none' || o.look === 'no-mother';
+  const hollowW = o.look === 'none' || o.look === 'no-mother' || o.look === 'concubine';
   ctx.save();
   ctx.setLineDash([]);
   ctx.fillStyle = o.halo;
@@ -732,6 +733,9 @@ export function nodeLook(v: SkyContext, p: Pass, n: Pick<LinkNode, 'union' | 'ow
   const u = ALL_UNIONS.byId.get(n.union);
   const bf = branchFrame(v, p);
   if (u && bf.map) {
+    // союз выбранного — своим цветом (решение 193; trails.ts, unionColors): у бездетного тоже
+    const own = unionColors(bf, p).get(n.union);
+    if (own) return { color: own.color, a: hot ? 1 : Math.max(0.6, own.a), edge };
     const kids = u.kids.filter((id) => {
       const i = v.indexOf(id);
       return i !== undefined && v.drawn(i);
