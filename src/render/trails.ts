@@ -2315,9 +2315,9 @@ export const FAN_STEP = 3.5;
 /** Дорожек на сторону следа не больше стольких: дальние союзы идут по крайней дорожке. */
 export const FAN_MAX = 4;
 /** Дорожки веера последнего кадра — по небу (у двойника кэша сдвига свои): союз и ломаная в px холста. */
-const fanHitMap = new WeakMap<object, { union: string; pts: number[] }[]>();
+const fanHitMap = new WeakMap<object, { union: string; pts: number[]; axis: number }[]>();
 /** Дорожки веера союзов, нарисованные небом v в последнем кадре (для наведения, src/ui/sky/input.ts). */
-export const unionFanHits = (v: object): readonly { union: string; pts: number[] }[] => fanHitMap.get(v) ?? [];
+export const unionFanHits = (v: object): readonly { union: string; pts: number[]; axis: number }[] => fanHitMap.get(v) ?? [];
 /** Кадр без веера: дорожек для наведения нет. */
 export const clearUnionFan = (v: object) => void fanHitMap.set(v, []);
 
@@ -2477,7 +2477,8 @@ export function drawUnionFan(v: SkyContext, p: Pass): string[] {
       paintUnion(ctx, x, y, R, { open: n.open, halo: pal.sky, theme: pal.glow ? 'night' : 'day', a: look.a, color: look.color, edge: look.edge, look: n.look });
     }
   }
-  fanHitMap.set(v, polys.map((f) => ({ union: f.lane.union, pts: f.pts })));
+  // ось — строка следа выбранного: указатель ближе к ней, чем к дорожке, ловит след (станции решения 159), а не союз
+  fanHitMap.set(v, polys.map((f) => ({ union: f.lane.union, pts: f.pts, axis: f.pts[1] - (f.pts[3] - f.pts[1]) * (0.35 / 0.65) })));
   return polys.map((f, n) => `${f.lane.union}:${f.lane.side > 0 ? '+' : '-'}${n}`);
 }
 

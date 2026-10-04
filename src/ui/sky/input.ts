@@ -562,6 +562,8 @@ function fanAt(sky: Sky, x: number, y: number): LinkHit | null {
       const qy = ay + t * dy;
       const d = Math.hypot(x - qx, y - qy);
       if (d > FAN_R || (best && best.d <= d)) continue;
+      // указатель на самом следе выбранного (ближе к его строке, чем к дорожке) — это след: «Связи дальше по следу»
+      if (Math.abs(y - f.axis) < Math.abs(y - qy)) continue;
       const key: LinkKey = { kind: 'union', union: f.union };
       best = { key, ks: linkKeyString(key) ?? '', kind: 'trunk', d, x: qx, y: qy, union: f.union };
     }
