@@ -179,7 +179,9 @@ export const sky12: Scenario[] = [
   },
   {
     n: 873,
-    title: 'Решение 87: без выбора ромбы союзов — двухцветные; у выбранного Давида ромбы его союзов с детьми — цветов ветвей, бездетный союз и союз родителей — золотистые',
+    // этап 18, решение 193 (владелец 4 октября: «у каждой линии по каждой жене или наложнице свой цвет»): бездетный союз
+    // выбранного — своим цветом ветви, а не золотистым; союз родителей — золотистый, как прежде
+    title: 'Решение 87: без выбора ромбы союзов — двухцветные; у выбранного Давида ромбы его союзов — каждый своего цвета (с детьми — цвета ветвей, бездетный с Мелхолой — свой, решение 193)',
     run: async (p) => {
       await open(p, '#/david');
       for (let k = 0; k < 3; k++) {
@@ -197,7 +199,10 @@ export const sky12: Scenario[] = [
       const lk = await looks(p);
       const branch = lk.get('u:david+aggifa') ?? '';
       if (!/^#[0-9a-f]{6}$/i.test(branch)) return fail(`ромб «Давид и Аггифа» не цвета ветви: ${branch}`);
-      if ((lk.get('u:david+melkhola') ?? '').toLowerCase() !== KIN_GOLD.night.toLowerCase()) return fail(`бездетный союз с Мелхолой не золотистый: ${lk.get('u:david+melkhola')}`);
+      const mel = (lk.get('u:david+melkhola') ?? '').toLowerCase();
+      if (!/^#[0-9a-f]{6}$/.test(mel) || mel === KIN_GOLD.night.toLowerCase()) return fail(`бездетный союз с Мелхолой не своим цветом: ${mel}`);
+      const own = [...lk].filter(([u]) => u.startsWith('u:david+')).map(([, c]) => c.toLowerCase());
+      if (new Set(own).size !== own.length) return fail(`у союзов Давида повторяются цвета: ${[...lk].filter(([u]) => u.startsWith('u:david+')).map(([u, c]) => `${u} ${c}`).join(', ')}`);
       const kinds = new Set([...lk.values()]);
       return pass(`без выбора — ${free.size} двухцветных; у Давида цветов: ${kinds.size}`);
     },
