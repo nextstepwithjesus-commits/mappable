@@ -76,6 +76,17 @@ export function focusQuietly(el: HTMLElement | null): boolean {
   return document.activeElement === el;
 }
 
+/**
+ * Переход по оглавлению справки: раздел — в начало листа, фокус — на его заголовок (этап 19, аудит Д-03): клавиатура и
+ * диктор продолжают с раздела, а не из оглавления.
+ */
+export function goToSection(id: string) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.scrollIntoView({ block: 'start' });
+  focusQuietly(el);
+}
+
 /** Холст неба — запасное место для фокуса. */
 const skyCanvas = () => document.querySelector<HTMLElement>('.sky canvas');
 

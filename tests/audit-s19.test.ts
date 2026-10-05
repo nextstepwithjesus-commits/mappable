@@ -147,3 +147,11 @@ describe('П-02: неизменное выделение — тот же объ�
     expect(highlightFor('ioav', ['ioav', 'david'])).not.toBe(highlightFor('ioav', [...path]));
   });
 });
+
+describe('Н-04: окно уходящей записи', () => {
+  it('withView меняет только поля окна y, w, l и сохраняет остальные поля записи', async () => {
+    const { withView } = await import('../src/ui/address.ts');
+    expect(withView('#/david~y-1010~w240~l2.5~h1.5~pepochs', { year: -1000, width: 120.4, lane: 3.04 })).toBe('#/david~y-1000~w120~l3.0~h1.5~pepochs');
+    expect(withView('#/david', { year: -1000, width: 120, lane: -3 })).toBe('#/david~y-1000~w120~l-3.0');
+  });
+});

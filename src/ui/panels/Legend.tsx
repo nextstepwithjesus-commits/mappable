@@ -28,6 +28,7 @@ import { drawBirthBand, drawGlyph, roleSigla, starRadius, type GlyphOpts } from 
 import { drawWorkMark, focusBrackets, focusHalf, highlightFor } from '../../render/marks.ts';
 import { drawBranchSample } from '../../render/branches.ts';
 import { drawLightSample, type LightSign } from '../../render/light.ts';
+import { goToSection } from '../focus.ts';
 import { drawLinkSample, type LinkSign } from '../../render/plates.ts';
 import { drawStrands, lineNoteHits, ribbonLook } from '../../render/ribbons.ts';
 import { drawFoldMark } from '../../render/labels.ts';
@@ -708,7 +709,7 @@ export const FAMILY_LEGEND: readonly { k?: PainterKey; crop?: CropKey; h: number
 export function LegendPanel() {
   // перечитать образцы при смене темы
   void theme.value;
-  const go = (id: string) => document.getElementById(id)?.scrollIntoView({ block: 'start' });
+  const go = goToSection;
   const rachel = ghostNote('rakhil', 'iakov');
   return (
     <Sheet title="Условные знаки" lead="Как читать карту: что значит каждый знак, линия и надпись на небе.">

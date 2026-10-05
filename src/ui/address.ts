@@ -549,6 +549,13 @@ function whenSkyReady(then: () => void, tries = 0, settle = true) {
   requestAnimationFrame(() => whenSkyReady(then, tries + 1, settle));
 }
 
+/** Адрес с другим окном: поля y, w, l заменены (остальные поля записи — как были). */
+export function withView(hash: string, v: View): string {
+  const [head, ...rest] = hash.split('~');
+  const keep = rest.filter((f) => !/^(y-?\d+|w\d+|l-?\d+(\.\d+)?)$/.test(f));
+  return [head, `y${Math.round(v.year)}`, `w${Math.max(1, Math.round(v.width))}`, `l${(Math.round(v.lane * 10) / 10).toFixed(1)}`, ...keep].join('~');
+}
+
 /** Пропорция полос в нынешнем адресе (поле «h»; без него — 1). */
 const lanesInAddress = (): number => {
   const m = /~h(\d+(?:\.\d+)?)(?=~|$)/.exec(location.hash);
@@ -560,6 +567,10 @@ export function bindAddress(): () => void {
   let lastPush = '';
   let applying = false;
   let replaceTimer = 0;
+  // окно, сдвинутое за последние 300 мс, ещё не записано в нынешнюю запись (этап 19, аудит Н-04)
+  let windowPending = false;
+  // номер перехода (этап 19, аудит Н-01): отложенное окно записи «назад» не ставится, если читатель уже сделал новый шаг
+  let gen = 0;
   let alive = true;
   /** запись истории применяется («назад», «вперёд», первый показ): адрес не пишется, пока небо не встанет (IX-74) */
   let quiet = false;
@@ -600,7 +611,10 @@ export function bindAddress(): () => void {
   };
   // возврат из «Ближайшей родни» (решение 145): окно сейчас, окно записи, номер записи и «назад»
   windowHooks.now = () => currentView();
-  windowHooks.put = (v) => whenSkyReady(() => alive && applyView(v as View, true), 0, true);
+  windowHooks.put = (v) => {
+    const g = gen;
+    whenSkyReady(() => alive && g === gen && applyView(v as View, true), 0, true);
+  };
   windowHooks.seq = () => markOf(history.state)?.seq ?? -1;
   windowHooks.back = () => history.back();
 
@@ -619,8 +633,10 @@ export function bindAddress(): () => void {
     const a = parseAddress(location.hash, (id) => byId.has(id));
     // переход на образец: выбор не сбрасывать, main.tsx сменит маршрут
     if (a.route === 'specimen') return;
+    const g = ++gen;
     // запись, отложенная до «назад», относилась к прежней записи: в новую она не пишется (IX-74)
     clearTimeout(replaceTimer);
+    windowPending = false;
     quiet = true;
     applying = true;
     // поля записи сверх адреса (контракт 3): путь исследования — свой у записи; положение листа — его владельцу
@@ -640,7 +656,8 @@ export function bindAddress(): () => void {
     // неверный адрес: открыт поиск с сообщением и похожими лицами (IX-44)
     if (a.bad) setTimeout(() => document.getElementById('find')?.focus(), 100);
     whenSkyReady(() => {
-      if (!alive) return;
+      // читатель сделал новый шаг, пока небо готовилось: окно этой записи уже не его (Н-01)
+      if (!alive || g !== gen) return;
       // пропорция полос (J1) — до окна: высота полосы решает, где середина окна по вертикали. Ссылка на шаг рассказа без
       // окна («#/iakov~r3») — пропорцию ставит кадр шага (сжатые строки: на небе этапа 14 сыновья Иакова — в своих коленах)
       if ((a.lanes !== undefined || a.full) && !(a.story !== undefined && a.story !== null && !a.view)) skyRef.current?.cam.setLanes(a.lanes ?? 1);
@@ -653,6 +670,7 @@ export function bindAddress(): () => void {
       // адрес пишется, когда небо встало: окно самой записи, а не кадр перехода. Запись истории с окном остаётся какой
       // была; первый показ и адрес без окна дополняются окном
       whenStill(() => {
+        if (g !== gen) return;
         // адрес называет лицо без окна, а перелёт оставил его за краем (семейная укладка: окно не мельче строк показа, а
         // перелёт рассчитан на жизнь лица, у Хама — 900 лет оценки) — небо сдвигается к лицу, масштаб прежний
         if (!a.view && a.id && a.id === selected.peek() && !inView(a.id)) {
@@ -678,7 +696,16 @@ export function bindAddress(): () => void {
   const offPush = effect(() => {
     const key = pushKey();
     if (applying || key === lastPush) return;
+    gen++;
     clearTimeout(replaceTimer);
+    // окно, сдвинутое перед новым шагом и ещё не записанное, — в уходящую запись: «назад» вернёт его, а не более старое
+    // (этап 19, аудит Н-04). Камера ещё на месте: перелёт к новому лицу начнётся со следующего кадра
+    if (windowPending && !quiet) {
+      windowPending = false;
+      const v = currentView();
+      const cur = history.state;
+      if (v && !location.hash.startsWith('#/specimen')) history.replaceState(cur, '', withView(location.hash, v));
+    }
     // читатель перешёл дальше, не дождавшись конца перехода: новая запись пишет своё окно как обычно
     quiet = false;
     historyApplying.value = null;
@@ -703,6 +730,7 @@ export function bindAddress(): () => void {
     // лист «Показ» открыт (решение 147): окно, сдвинутое из-под листа, — не шаг читателя; запишется, когда лист закроют
     if (windowHold.value) {
       clearTimeout(replaceTimer);
+      windowPending = false;
       return;
     }
     if (key === viewKey && set === setSeen) return;
@@ -719,7 +747,11 @@ export function bindAddress(): () => void {
       return;
     }
     // окно встало: прыжок по эпохе (решение 147) — новой записью, иначе — в ту же
-    replaceTimer = window.setTimeout(() => write(takeJump() ? 'push' : 'replace'), 300);
+    windowPending = true;
+    replaceTimer = window.setTimeout(() => {
+      windowPending = false;
+      write(takeJump() ? 'push' : 'replace');
+    }, 300);
   });
   return () => {
     alive = false;

@@ -1148,10 +1148,20 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     const p = local(e);
     pointers.delete(e.pointerId);
     canvas.classList.remove('dragging');
+    const pinched = !!pinch;
     if (pointers.size < 2) pinch = null;
     const d = drag;
     drag = null;
     clearTimeout(longTimer);
+    // щипок кончился, один палец остался — он тянет небо дальше, без нового касания (этап 19, аудит И-02); это продолжение
+    // жеста, а не щелчок: протяжка уже идёт
+    if (pinched && pointers.size === 1 && e.type !== 'pointercancel') {
+      const [q] = [...pointers.values()];
+      const t = performance.now();
+      drag = { x0: q.x, y0: q.y, x: q.x, y: q.y, moved: true, t, type: e.pointerType, stopper: false, trail: [{ t, x: q.x, y: q.y }], axis: null };
+      canvas.classList.add('dragging');
+      return;
+    }
     // долгое касание открыло меню — это не щелчок; и отпущенный палец не нажимает пункт меню, открывшегося под ним
     // (совместимые mousedown/click после touchend; меню с целями 44 px выше места под пальцем — решение 33)
     if (d?.long) {
@@ -1163,7 +1173,9 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       calm = window.setTimeout(rehit, 120);
     }
     if (!d || e.type === 'pointercancel') return;
-    if (!isClick(Math.hypot(p.x - d.x0, p.y - d.y0), performance.now() - d.t, d.type)) {
+    // протяжка, вернувшаяся к точке нажатия, — всё равно протяжка (этап 19, аудит И-01): решает пройденный путь, а не
+    // расстояние от начала до конца
+    if (d.moved || !isClick(Math.hypot(p.x - d.x0, p.y - d.y0), performance.now() - d.t, d.type)) {
       // бросок: небо скользит ещё ≈ 325 мс с замедлением; при ослабленном движении — нет (решение 37; IX-05)
       if (d.moved && !d.axis && pointers.size === 0) {
         const g = inertia(d.trail, performance.now());

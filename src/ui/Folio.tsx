@@ -900,6 +900,9 @@ export function Folio({ id: forcedId, forceState }: { id?: string; forceState?: 
       if (e.code !== 'Escape' || e.defaultPrevented) return;
       const t = e.target as HTMLElement | null;
       if (t && (t.isContentEditable || t instanceof HTMLTextAreaElement || (t instanceof HTMLInputElement && t.type !== 'checkbox'))) return;
+      // открытый в карточке список («Добавить в набор ▾», «Разделы карточки») закрывается первым Escape, полный экран —
+      // следующим (этап 19, аудит Д-03): слушатель на window ловит клавишу раньше самих списков
+      if (document.querySelector('.folio .workbtn > [aria-expanded="true"], .folio .toc-menu > [aria-expanded="true"]')) return;
       e.preventDefault();
       toggleCardFull(false);
     };

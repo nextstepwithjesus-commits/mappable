@@ -192,7 +192,9 @@ export function IndexPanel() {
                     const yrs = typo(lifeText(id));
                     const ds = byId.get(id)!.disambig;
                     return (
-                      <button class={known(id) ? 'row sub known' : 'row sub'} key={id} onClick={() => goTo(id)}>
+                      // доступное имя — с общим словом группы: диктор читает «Захария, сын Иодая…», а не одно уточнение
+                      // (этап 19, аудит Д-04: у 1479 кнопок тёзок имени не было)
+                      <button class={known(id) ? 'row sub known' : 'row sub'} key={id} onClick={() => goTo(id)} aria-label={[name, ds, yrs, coord(id)].filter(Boolean).join(', ')}>
                         <span class={yrs || ds ? 'nm' : 'nm lead'}>
                           {ds ? <span class={yrs ? 'ds' : 'ds lead'}>{typo(ds)}</span> : tag(id)}
                           {yrs ? <span class="yrs lead">{yrs}</span> : null}

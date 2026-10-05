@@ -193,8 +193,10 @@ function SheetBody({ focus, person, group }: { focus: ShowFocus; person: string 
   const setDraft = (s: Show, delay = 0) => {
     setDraftState(s);
     if (s.kind === 'lineage') lastPerson.current = s.id;
-    if (phone || !ready(s)) return;
+    // прежний отложенный показ снимается всегда — и когда новый черновик ещё не готов (флажок сняли быстрее 300 мс):
+    // иначе небо применило бы уже отменённый выбор (этап 19, аудит К-06)
     window.clearTimeout(timer.current);
+    if (phone || !ready(s)) return;
     if (delay) timer.current = window.setTimeout(() => apply(s), delay);
     else apply(s);
   };

@@ -7,6 +7,7 @@ import { num, typo } from '../text/typo.ts';
 import { factsOf } from '../modelinfo.ts';
 import { modelId } from '../../state.ts';
 import { ChronoText, openChronology } from './Chronology.tsx';
+import { goToSection } from '../focus.ts';
 
 /** Год якоря по-человечески (словарь дат, engine/years.ts): «967 г. до Р. Х.»; в вариантах «-966 (Тиле)» → «966 г. до Р. Х. (Тиле)». */
 export const anchorYear = (v: number) => dateText({ t: toAstro(v) });
@@ -32,7 +33,7 @@ const PARTS: [string, string][] = [
   ['about-data', 'Данные'],
   ['about-start', 'Начало и раскрытие родословия'],
 ];
-const goTo = (id: string) => document.getElementById(id)?.scrollIntoView({ block: 'start' });
+const goTo = goToSection;
 
 // ---------- о карте (G6; CARD-44; UX-36; этап 13, решение 132: краткий первый слой и оглавление) ----------
 export function AboutPanel() {

@@ -9,6 +9,7 @@ import { ChronoText } from './Chronology.tsx';
 import { Sheet, flyToYears } from './Sheet.tsx';
 import { typo } from '../text/typo.ts';
 import { Check } from '../controls.tsx';
+import { goToSection } from '../focus.ts';
 
 /**
  * Границы эпохи словами — одно правило для листа «Эпохи», § 13, подсказки и ярусов (engine/years.ts, epochSpanText;
@@ -93,7 +94,7 @@ export function EpochsPanel() {
             return [
               <tr key={e.id} class={here ? 'here' : undefined} aria-current={here ? 'true' : undefined}>
                 <th scope="row">
-                  <a href={`#ep-${e.id}`} onClick={(ev) => { ev.preventDefault(); document.getElementById(`ep-${e.id}`)?.scrollIntoView({ block: 'start' }); }}>
+                  <a href={`#ep-${e.id}`} onClick={(ev) => { ev.preventDefault(); goToSection(`ep-${e.id}`); }}>
                     {e.name}
                   </a>
                   {here && sel ? <span class="muted"> — здесь: {sel.name}</span> : null}

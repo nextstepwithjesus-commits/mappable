@@ -3,7 +3,7 @@ import type { ComponentChildren } from 'preact';
 import { byId, graph, loadCard, loadedCard, loadedChrono, loadedLastRef, models, modelDependent, modelInfoOf } from '../../data/atlas.ts';
 import type { ChronoRow } from '../../data/atlas.ts';
 import type { Card, Epoch } from '../../data/types.ts';
-import { model } from '../../state.ts';
+import { model, theme } from '../../state.ts';
 import { Mark, MarkNote, MARK_FULL, Refs, VerseInsert } from '../common.tsx';
 import { dateText, isWide, wideEnds, lastText, lifeDates, lifeText, markTitle, modelYearsText, shownPoint, shownYears, spanText, toAstro, toHist, yearsWord, type DateVal } from '../../engine/years.ts';
 import { affiliation, birthEpoch, birthRange, constellation, datesOf, lifeEpoch, reignLength, reignWords, roleLabel, type ReignLike } from './shared.tsx';
@@ -563,7 +563,9 @@ export function LifeBar({ id, axis }: { id: string; axis?: [number, number] }) {
     const col = (n: string) => cs.getPropertyValue(n).trim();
     // кегль — ступень шкалы интерфейса 12 px (Jost), как подписи полей паспорта: холст не масштабируется (CARD-69)
     const font = mapFont(T_UI_S, { sans: true, coarse: false });
-    const bold = font.replace(/^(\d+)\s/, '600 $1 ').replace(/^normal\s/, '600 ');
+    // полужирное начертание той же строки шрифта: «400 12px …» → «600 12px …» (было «600 400 12px …» — холст отвергает
+    // такую строку молча, и подпись своей эпохи оставалась обычной; этап 19, аудит Т-01)
+    const bold = /^\d{3}\s/.test(font) ? font.replace(/^\d{3}\s/, '600 ') : font.replace(/^(\d+(?:\.\d+)?px)/, '600 $1').replace(/^normal\s/, '600 ');
     ctx.font = font;
     ctx.textBaseline = 'alphabetic';
     const L = lifeBarLayout(id, win, w, (t) => ctx.measureText(t).width);
@@ -655,7 +657,8 @@ export function LifeBar({ id, axis }: { id: string; axis?: [number, number] }) {
       ctx.fillStyle = l.kind === 'life' ? ink2 : col('--ink-3');
       ctx.fillText(l.text, l.x, labelY);
     }
-  }, [id, model.value, loaded, axis?.[0], axis?.[1], width]);
+    // тема — в зависимостях: цвета холста читаются из CSS, при смене «Ночь/День» шкала перерисовывается (этап 19, А-02)
+  }, [id, model.value, loaded, axis?.[0], axis?.[1], width, theme.value]);
   // размер — классом .lifebar (src/styles/folio.css): ширина строки, высота LIFEBAR_H
   return <canvas class="lifebar" ref={ref} aria-hidden="true" />;
 }

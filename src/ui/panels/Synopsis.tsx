@@ -235,10 +235,13 @@ export function SynopsisPanel() {
     if (el && sheet) sheet.scrollTop = el.offsetTop - 60;
     synopsisAt.value = null;
   }, [synopsisAt.value, rows]);
-  // участок на небе снимается вместе с панелью
+  // участок на небе снимается вместе с панелью — но не тот, что панель только что показала, закрываясь сама: на
+  // телефоне «показать участок» закрывает панель, чтобы открыть небо с этим участком (этап 19, аудит К-07)
+  const keepSegment = useRef<object | null>(null);
   useEffect(
     () => () => {
-      if (skyGroup.peek()?.kind === 'segment') skyGroup.value = null;
+      const g = skyGroup.peek();
+      if (g?.kind === 'segment' && g !== keepSegment.current) skyGroup.value = null;
     },
     [],
   );
@@ -248,8 +251,12 @@ export function SynopsisPanel() {
       skyGroup.value = null;
       return;
     }
-    skyGroup.value = { ids: note.ids, label, kind: 'segment', line: 'both' };
-    if (grid.peek().phone) panel.value = null;
+    const seg = { ids: note.ids, label, kind: 'segment' as const, line: 'both' as const };
+    skyGroup.value = seg;
+    if (grid.peek().phone) {
+      keepSegment.current = seg;
+      panel.value = null;
+    }
     // лица участка вне показа — гостями, пока участок подсвечен (решение 113)
     const guests = showResults(note.ids, 'synopsis', 'group');
     if (guests) window.setTimeout(() => flyToIds(note.ids), 120);
