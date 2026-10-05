@@ -1649,3 +1649,39 @@ button.row:focus-visible {
     width: 540px;
   }
 }
+/* «Вот родословие…» Бытия (этап 19): свёрнутый список над текстом главы — одиннадцать мест, стих и лица */
+.toledot {
+  margin: 0 0 10px;
+}
+.toledot summary {
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+  color: var(--ink-2);
+  cursor: pointer;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+}
+.toledot ul {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+}
+.toledot li {
+  margin: 0 0 3px;
+}
+.toledot li button.link {
+  text-decoration: underline;
+  text-decoration-color: var(--rule-strong);
+  text-underline-offset: 2px;
+}
+.toledot li button.link[aria-pressed='true'] {
+  font-weight: 600;
+}
+.toledot .mark {
+  position: static;
+  margin: 0 0 0 0.3em;
+}

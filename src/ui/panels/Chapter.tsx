@@ -6,7 +6,7 @@ import { BOOKS } from '../../engine/books.ts';
 import { norm, nameMatcher } from '../../engine/text.ts';
 import { stems, textNamesOfCard } from '../../engine/search.ts';
 import { panel, skyGroup } from '../../state.ts';
-import { P, flyToIds, refLabel, renderBrackets } from '../common.tsx';
+import { MarkNote, P, flyToIds, refLabel, renderBrackets } from '../common.tsx';
 import { grid } from '../layout.ts';
 import { sheetStop } from '../sheet.ts';
 import { typo } from '../text/typo.ts';
@@ -36,6 +36,25 @@ export const CHAPTERS = [
   'Мф 1',
   'Лк 3',
 ];
+/**
+ * Одиннадцать мест Бытия, которые начинаются словами «Вот родословие…», «Вот житие…», «Вот происхождение…» (этап 19).
+ * Слова — Синодального текста (npm run verse); лица — те, чьё родословие или житие названо. Глава из CHAPTERS
+ * открывается здесь же, остальные — ссылкой на стих.
+ */
+export const TOLEDOT: readonly { ref: string; words: string; ids: readonly string[] }[] = [
+  { ref: 'Быт 2:4', words: 'Вот происхождение неба и земли', ids: [] },
+  { ref: 'Быт 5:1', words: 'Вот родословие Адама', ids: ['adam'] },
+  { ref: 'Быт 6:9', words: 'Вот житие Ноя', ids: ['noy'] },
+  { ref: 'Быт 10:1', words: 'Вот родословие сынов Ноевых: Сима, Хама и Иафета', ids: ['sim', 'kham', 'iafet'] },
+  { ref: 'Быт 11:10', words: 'Вот родословие Сима', ids: ['sim'] },
+  { ref: 'Быт 11:27', words: 'Вот родословие Фарры', ids: ['farra'] },
+  { ref: 'Быт 25:12', words: 'Вот родословие Измаила, сына Авраамова', ids: ['izmail'] },
+  { ref: 'Быт 25:19', words: 'Вот родословие Исаака, сына Авраамова', ids: ['isaak'] },
+  { ref: 'Быт 36:1', words: 'Вот родословие Исава, он же Едом', ids: ['isav'] },
+  { ref: 'Быт 36:9', words: 'И вот родословие Исава, отца Идумеев, на горе Сеир', ids: ['isav'] },
+  { ref: 'Быт 37:2', words: 'Вот житие Иакова', ids: ['iakov'] },
+];
+
 /** С какого стиха глава открывается: родословие Лк 3 начинается с 3:23 (стихи до него — по команде). */
 export const FIRST_VERSE: Record<string, number> = { 'Лк 3': 23 };
 
@@ -344,6 +363,7 @@ export function ChapterPanel() {
           </button>
         )}
       </div>
+      <Toledot open={(c) => setCh(c)} current={ch} />
       <h3 class="ch-title">
         {refLabel(ch)}
         {from > 1 && !all && text?.length ? typo(`:${from}–${text[text.length - 1].n}`) : ''}
@@ -380,6 +400,51 @@ export function ChapterPanel() {
     </Sheet>
   );
 }
+/**
+ * «Вот родословие…» Бытия (этап 19): одиннадцать начальных слов разделов книги со стихом и лицами. Стих главы из списка
+ * чтения открывает её здесь же; имя — ссылка на лицо. Еврейское слово «толедот» — справочно.
+ */
+function Toledot({ open, current }: { open: (ch: string) => void; current: string }) {
+  return (
+    <details class="toledot">
+      <summary>«Вот родословие…» в Бытии — 11 мест</summary>
+      <p class="muted">
+        Бытие одиннадцать раз начинает рассказ словами «Вот родословие…», «Вот житие…» или «Вот происхождение…». По-еврейски
+        это одно слово — «толедот», отсюда название атласа <MarkNote label="справ." full="справочно: слово подлинника, не текст Синодального перевода" />
+      </p>
+      <ul>
+        {TOLEDOT.map((r) => {
+          const ch = r.ref.replace(/:\d+$/, '');
+          const here = CHAPTERS.includes(ch);
+          return (
+            <li key={r.ref}>
+              {here ? (
+                <button type="button" class="link" aria-pressed={current === ch} onClick={() => open(ch)}>
+                  {refLabel(r.ref)}
+                </button>
+              ) : (
+                <span>{refLabel(r.ref)}</span>
+              )}{' '}
+              {typo(`«${r.words}»`)}
+              {r.ids.length ? (
+                <>
+                  {' — '}
+                  {r.ids.map((id, k) => (
+                    <span key={id}>
+                      {k ? ', ' : ''}
+                      <P id={id} />
+                    </span>
+                  ))}
+                </>
+              ) : null}
+            </li>
+          );
+        })}
+      </ul>
+    </details>
+  );
+}
+
 /** «Вписать в небо» на телефоне закрывает лист: подсветка главы остаётся на небе. */
 let keepGroup = false;
 

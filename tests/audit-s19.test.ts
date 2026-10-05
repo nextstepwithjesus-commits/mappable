@@ -195,3 +195,20 @@ describe('скругление угла «ствол — последний зу
     for (const [t] of teeth) expect(trunks.some(([q]) => q.union === t.union && Math.abs(q.pts[q.pts.length - 2] - t.pts[0]) < 0.6 && Math.abs(q.pts[q.pts.length - 1] - t.pts[1]) < 0.6)).toBe(true);
   }, 120_000);
 });
+
+describe('«Вот родословие…» Бытия (этап 19)', () => {
+  it('одиннадцать мест: слова — начало стиха Синодального текста, лица — в атласе', async () => {
+    const { TOLEDOT } = await import('../src/ui/panels/Chapter.tsx');
+    const { loadBible } = await import('../tools/bible.ts');
+    const { parseRef, verseId } = await import('../src/engine/books.ts');
+    const { byId } = await import('../src/data/atlas.ts');
+    const bible = loadBible();
+    expect(TOLEDOT).toHaveLength(11);
+    for (const r of TOLEDOT) {
+      const pr = parseRef(r.ref)!;
+      const text = bible.verses.get(verseId(pr.verses[0])) ?? '';
+      expect(text.startsWith(r.words), `${r.ref}: «${text.slice(0, 60)}»`).toBe(true);
+      for (const id of r.ids) expect(byId.has(id), id).toBe(true);
+    }
+  });
+});
