@@ -75,7 +75,10 @@ async function ruKey(p: Page, key: string, code: string, vk: number, shift = fal
 export const a11y: Scenario[] = [
   {
     n: 170,
-    title: 'U9: от начала страницы до неба не больше 15 Tab; стрелками до Давида; Enter — карточка у звезды, фокус в ней; «?» — таблица клавиш; «Карточка» — фокус на заголовке; Escape возвращает фокус',
+    // этап 20 (решение 194): на широком экране карточки у звезды нет — Enter на звезде открывает карточку справа, фокус —
+    // на первое имя её «Родства» (путь к связи — Enter на имени, решение 83); команды «Карточка» больше нет: карточка и есть
+    // колонка справа; Escape с имени «Родства» снимает выбор и возвращает фокус на небо
+    title: 'U9: от начала страницы до неба не больше 15 Tab; стрелками до Давида; Enter — карточка справа, фокус на первом имени её «Родства»; «?» — таблица клавиш; Escape возвращает фокус в «Родство», следующий — на небо',
     run: async (p) => {
       const tabs = await tabToSky(p);
       if (tabs < 0 || tabs > 15) return fail(`до неба ${tabs < 0 ? 'больше 40' : tabs} нажатий Tab`);
@@ -83,30 +86,24 @@ export const a11y: Scenario[] = [
       if (!start) return fail('фокус на небе, но звезды с фокусом нет (нет кольца)');
       const walk = await arrowsTo(p, 'david');
       if (walk.steps < 0) return fail(`стрелками до Давида не дошли: ${walk.path.slice(0, 20).join(' → ')}`);
-      // этап 11 (решения 77, 83): Enter на звезде открывает у неё карточку с «Родством», фокус — в ней (первое имя
-      // «Родства»: связь — Enter на имени, § 8); подробная карточка справа — её команда «Карточка», фокус — на заголовке
       await p.keyboard.press('Enter');
       await p.waitForTimeout(900);
       if (hashId(p) !== 'david') return fail(`Enter выбрал «${hashId(p)}»`);
-      const inDot = () => p.evaluate(`(() => { const c = document.querySelector('.sky .dotcard'); return c && c.contains(document.activeElement) ? c.getAttribute('aria-label') : ''; })()`) as Promise<string>;
-      const d1 = await inDot();
-      if (!/^Давид/.test(d1)) return fail(`после Enter фокус не в карточке у звезды Давида: ${JSON.stringify(await active(p))}`);
+      if (await p.locator('.sky .dotcard').count()) return fail('на широком экране на небе — карточка у звезды');
+      const inKin = () => p.evaluate(`(() => { const c = document.querySelector('.folio .kin-col'); return c && c.contains(document.activeElement) ? c.getAttribute('aria-label') : ''; })()`) as Promise<string>;
+      const d1 = await inKin();
+      if (!/Давид/.test(d1)) return fail(`после Enter фокус не в «Родстве» Давида справа: ${JSON.stringify(await active(p))}`);
       await p.keyboard.press('Shift+Slash');
       await p.waitForTimeout(800);
       const a2 = await active(p);
       if (a2.where !== 'sheet' || a2.id !== 'legend-keys') return fail(`«?»: фокус на ${a2.tag}#${a2.id} (${a2.where || 'вне панели'}), а не на «Клавиши»`);
       await p.keyboard.press('Escape');
       await p.waitForTimeout(500);
-      if (!/^Давид/.test(await inDot())) return fail(`Escape из таблицы клавиш: фокус на ${JSON.stringify(await active(p))}, а не в карточке у звезды`);
-      await p.locator('.sky .dotcard .dc-card').focus();
-      await p.keyboard.press('Enter');
-      await p.waitForTimeout(700);
-      const a1 = await active(p);
-      if (a1.id !== 'title-david') return fail(`«Карточка»: фокус на ${a1.tag}#${a1.id}, а не на заголовке карточки`);
+      if (!/Давид/.test(await inKin())) return fail(`Escape из таблицы клавиш: фокус на ${JSON.stringify(await active(p))}, а не в «Родстве»`);
       await p.keyboard.press('Escape');
       await p.waitForTimeout(700);
       const a4 = await active(p);
-      if (hashId(p)) return fail('Escape с заголовка не закрыл карточку');
+      if (hashId(p)) return fail('Escape с «Родства» не снял выбор');
       if (a4.tag !== 'canvas' || a4.desc !== 'sky-star-david') return fail(`после карточки фокус на ${a4.tag}${a4.desc ? ` (${a4.desc})` : ''}, а не на небе у Давида`);
       return pass(`Tab до неба: ${tabs}; стрелок до Давида: ${walk.steps} (${walk.path.join(' → ')})`);
     },
@@ -165,7 +162,9 @@ export const a11y: Scenario[] = [
   },
   {
     n: 173,
-    title: 'I1: Enter на пункте списка лиц неба (диктор) открывает у звезды карточку-диалог с именем лица, фокус в ней; «Карточка» — фокус на заголовке подробной карточки (MOB-29, MOB-31)',
+    // этап 20 (решение 194): на широком экране карточки у звезды нет — Enter открывает карточку справа (регион колонки
+    // с именем лица), фокус — на первом имени её «Родства» (у лица без родни — на заголовке карточки)
+    title: 'I1: Enter на пункте списка лиц неба (диктор) открывает карточку лица справа, фокус — на первом имени её «Родства» с подписью «Родство: имя» (MOB-29, MOB-31)',
     run: async (p) => {
       const btn = p.locator('#sky-stars button').first();
       const id = ((await btn.getAttribute('id')) ?? '').replace(/^sky-star-/, '');
@@ -173,17 +172,11 @@ export const a11y: Scenario[] = [
       await p.keyboard.press('Enter');
       await p.waitForTimeout(900);
       if (hashId(p) !== id) return fail(`Enter на «${id}» выбрал «${hashId(p)}»`);
-      // этап 11 (решение 77): Enter открывает у звезды карточку с «Родством» — диалог с именем лица, фокус в нём;
-      // «Карточка» — подробная карточка, фокус на её заголовке
-      const dlg = (await p.evaluate(`(() => { const c = document.querySelector('.sky .dotcard'); return c && c.contains(document.activeElement) ? { role: c.getAttribute('role'), label: c.getAttribute('aria-label') } : null; })()`)) as { role: string; label: string } | null;
-      if (!dlg || dlg.role !== 'dialog') return fail(`фокус не в карточке у звезды: ${JSON.stringify(await active(p))}`);
-      const name = (await p.evaluate(`document.getElementById('sky-star-${id}')?.textContent ?? ''`)) as string;
-      if (!dlg.label.startsWith(name.trim())) return fail(`имя диалога «${dlg.label}», а лицо «${name}»`);
-      await p.locator('.sky .dotcard .dc-card').focus();
-      await p.keyboard.press('Enter');
-      await p.waitForTimeout(700);
-      const a = await active(p);
-      return a.id === `title-${id}` ? pass(`${id}: «${dlg.label}»`) : fail(`«Карточка»: фокус на ${a.tag}#${a.id}, а не на заголовке карточки`);
+      if (await p.locator('.sky .dotcard').count()) return fail('на широком экране на небе — карточка у звезды');
+      const at = (await p.evaluate(`(() => { const a = document.activeElement; const k = a && a.closest('.folio .kin-col'); return { kin: k ? k.getAttribute('aria-label') : null, id: a ? a.id : '', hasKin: !!document.querySelector('.folio .kin-col .person') }; })()`)) as { kin: string | null; id: string; hasKin: boolean };
+      const name = ((await p.evaluate(`document.getElementById('sky-star-${id}')?.textContent ?? ''`)) as string).trim();
+      if (at.hasKin) return at.kin === `Родство: ${name}` ? pass(`${id}: «${at.kin}»`) : fail(`фокус не в «Родстве» карточки: ${JSON.stringify(await active(p))}`);
+      return at.id === `title-${id}` ? pass(`${id}: родни нет — фокус на заголовке`) : fail(`фокус на ${JSON.stringify(await active(p))}, а не на заголовке карточки`);
     },
   },
   {

@@ -20,7 +20,7 @@
 .cmd,
 .commands > button,
 .commands .more > button,
-.folio .actions button,
+.folio .actions button:not([role^='menuitem']),
 .pickbar button {
   display: inline-flex;
   align-items: center;
@@ -36,7 +36,7 @@
 .cmd:hover,
 .commands > button:hover,
 .commands .more > button:hover,
-.folio .actions button:hover,
+.folio .actions button:not([role^='menuitem']):hover,
 .pickbar button:hover {
   background: var(--sheet-2);
   color: var(--ink);
@@ -44,7 +44,7 @@
 .cmd:active,
 .commands > button:active,
 .commands .more > button:active,
-.folio .actions button:active,
+.folio .actions button:not([role^='menuitem']):active,
 .pickbar button:active {
   background: var(--rule);
   color: var(--ink);
@@ -53,14 +53,14 @@
 .cmd[aria-current]:not([aria-current='false']),
 .commands > button[aria-pressed='true'],
 .commands .more > button[aria-expanded='true'],
-.folio .actions button[aria-pressed='true'] {
+.folio .actions button:not([role^='menuitem'])[aria-pressed='true'] {
   color: var(--ink);
   box-shadow: inset 0 -2px 0 var(--ink);
 }
 .cmd:focus-visible,
 .commands > button:focus-visible,
 .commands .more > button:focus-visible,
-.folio .actions button:focus-visible,
+.folio .actions button:not([role^='menuitem']):focus-visible,
 .pickbar button:focus-visible {
   outline-offset: -2px;
 }

@@ -11,7 +11,9 @@ import { focused, selected } from '../../state.ts';
 import { detailOf, OVERVIEW_MAG, type Sky } from '../../render/sky.ts';
 import { skyRef } from '../common.tsx';
 import { keepInView, screenOf } from './view.ts';
-import { collapseUnion, expandUnion, isExpanded, selectUnion, unionById } from '../reveal.ts';
+import { collapseUnion, expandUnion, expanded, isExpanded, selectUnion, unionById } from '../reveal.ts';
+import { workSet } from '../work.ts';
+import type { Union } from '../../engine/unions.ts';
 import { plateSayText } from './text.ts';
 import { openSheetAt } from '../sheet.ts';
 
@@ -244,3 +246,27 @@ export const starName = (id: string) => {
   const p = byId.get(id);
   return p ? `${p.name}${p.disambig ? `, ${p.disambig}` : ''}` : id;
 };
+
+/**
+ * Команда раскрытия у карточки союза — словами неба (этап 13, решение 109: на небе «показать» и «скрыть»; «свернуть» —
+ * только карточке и листу). Ромб у лица-ребёнка (союз его родителей): «Показать родителей» — родители, братья и сёстры
+ * на небе, «Скрыть родителей». Ромб у супруга: «Показать детей союза (3)», «Показать ещё (6)» (часть детей уже на небе),
+ * «Скрыть детей союза»; брак без детей или все дети на небе, а супруга нет — «Показать союз», «Скрыть союз». Всё уже на
+ * небе и союз не раскрыт — команды нет.
+ */
+export function unionDotCmd(u: Union, from: string): { text: string; label?: string; open: boolean } | null {
+  const open = u.id in expanded.value;
+  const set = workSet.value;
+  if (u.kids.includes(from) && from !== u.a && from !== u.b) {
+    if (open) return { text: 'Скрыть родителей', label: 'Скрыть родителей: убрать с неба союз родителей', open: true };
+    return [u.a, u.b, ...u.kids].some((x) => x && !set.has(x)) ? { text: 'Показать родителей', label: 'Показать родителей: родители, братья и сёстры на небе', open: false } : null;
+  }
+  const hidden = u.kids.filter((k) => !set.has(k)).length;
+  if (u.kids.length && (open || hidden > 0)) {
+    if (open) return { text: 'Скрыть детей союза', open: true };
+    if (hidden === u.kids.length) return { text: `Показать детей союза (${hidden})`, open: false };
+    return { text: `Показать ещё (${hidden})`, label: `Показать ещё (${hidden}): остальных детей союза`, open: false };
+  }
+  if (open) return { text: 'Скрыть союз', open: true };
+  return [u.a, u.b].some((x) => x && !set.has(x)) ? { text: 'Показать союз', label: 'Показать союз: оба супруга на небе', open: false } : null;
+}

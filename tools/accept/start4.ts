@@ -53,7 +53,7 @@ async function showBar(p: Page) {
 }
 /** Карточка у звезды лица id открыта (решение 77): диалог .dotcard вида «лицо» с его именем. */
 const cardAt = (p: Page, name: string) =>
-  p.evaluate((nm) => [...document.querySelectorAll('.dotcard[data-kind="person"][data-placed], .sheet-dot .dotcard')].some((c) => c.querySelector('.nm')?.textContent?.trim() === nm), name);
+  p.evaluate((nm) => [...document.querySelectorAll('.dotcard[data-kind="person"][data-placed], .sheet-dot .dotcard, aside.folio:has(.kin-col) .mast')].some((c) => c.querySelector('.nm')?.textContent?.trim() === nm), name);
 /** Кнопки начал в элементе sel: названия, текущее, размеры. */
 async function starts(p: Page, sel: string) {
   return (await p.evaluate(`[...document.querySelectorAll(${JSON.stringify(sel)} + ' .starts button')].map((b) => {

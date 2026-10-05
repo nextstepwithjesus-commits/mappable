@@ -26,7 +26,7 @@ import { nearestFamily, setShow, showGuest } from '../show.ts';
 import { MENU_FIRST, dismissedBy, skyMenu } from '../panels/Work.tsx';
 import { personGhosts } from '../../render/marks.ts';
 import { dotTipText, epochGoText, gapTipText, lineBetween, plateTipText } from './text.ts';
-import { openPerson, unionById } from '../reveal.ts';
+import { openPerson, selectUnion, selectedUnion, unionById } from '../reveal.ts';
 import { linkHover, plateHover, pressPlate, rememberLinkClick, toggleKids } from './starnav.ts';
 import type { CountHit, PlateHit } from '../../render/plates.ts';
 import type { LinkHit } from '../../render/links.ts';
@@ -38,7 +38,8 @@ import { GHOST_WORD, previewLinks, selectedLink, type GhostWhy } from '../linkst
 import { typo } from '../text/typo.ts';
 import { kinLabel, kinMarks, linkInfo, linkRow, linkTitle, linkRefs, refShort } from '../linkwords.ts';
 import { relationsOf } from '../card/kinrows.ts';
-import { closeDot, dotCard, dotsOn, openDot } from './DotCard.tsx';
+import { closeDot, dotCard, dotsOn, openDot, openUnionCol } from './DotCard.tsx';
+import { grid, unfoldCard } from '../layout.ts';
 import { focusGroup, groupMembers, groupName } from '../story/areas.ts';
 import { openFamilyInset } from './inset.ts';
 
@@ -362,7 +363,16 @@ function tapCandidates(sky: Sky, x: number, y: number, r: number, byName = true)
 function chooseStar(id: string) {
   if (pins.value.length) pins.value = [];
   if (pickSecond(id)) return;
-  if (id !== selected.value) openSheetAt('peek');
+  const was = selected.value;
+  if (id !== was) openSheetAt('peek');
+  // широкий экран (решение 194): карточки у звезды нет — лицо в колонке справа; выбранная связь уступает место его
+  // карточке, повторный щелчок по выбранной звезде разворачивает свёрнутую колонку
+  if (!grid.peek().phone) {
+    if (selectedLink.peek()) selectedLink.value = null;
+    // карточка союза в колонке уступает место карточке лица (одна карточка за раз)
+    if (selectedUnion.peek()) selectUnion(null);
+    if (id === was && grid.peek().spine) unfoldCard();
+  }
   selected.value = id;
   if (dotsOn.peek()) openDot({ kind: 'person', id });
 }
@@ -941,8 +951,9 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       // карточку у ромба; у ромба с открытой карточкой подсказки нет — всё сказано в карточке
       const un = unionById(plate.uid);
       const card = dotCard.peek();
-      const dots = dotsOn.peek();
-      if (!un || (dots && card?.kind === 'union' && card.uid === plate.uid)) showTip(null);
+      // широкий экран (решение 194): щелчок открывает карточку союза в колонке — подсказка та же, что у карточки у ромба
+      const dots = dotsOn.peek() || (!grid.peek().phone && !pickMode.peek());
+      if (!un || (dotsOn.peek() && card?.kind === 'union' && card.uid === plate.uid) || (dots && selectedUnion.peek() === plate.uid)) showTip(null);
       else {
         const text = dots ? dotTipText(un) : plateTipText(un, plate.open);
         showTip({ kind: 'note', key: `plate:${plate.uid}:${dots ? 'dot' : plate.open ? 1 : 0}`, text, x, y, box: { x: plate.x, y: plate.y, w: plate.w, h: plate.h } });
@@ -1285,8 +1296,10 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     }
     // ромб союза (решение 76): карточка у ромба, раскрытие — её командой; без карточки у ромба (выбор второго лица) —
     // раскрыть или свернуть союз, как прежде
+    // широкий экран (решение 194): карточка союза — в колонке справа, раскрытие на небе — её командой
     const pressDot = (h: PlateHit) => {
       if (dotsOn.peek()) openDot({ kind: 'union', uid: h.uid, from: h.from });
+      else if (!grid.peek().phone && !pickMode.peek()) openUnionCol(h.uid, h.from);
       else pressPlate(h.uid, h.from);
     };
     // обрывок наружу показа (§ 7): карточка того лица — оно встаёт на небо гостем, небо летит к нему
@@ -1454,6 +1467,11 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     // открыта карточка у точки — щелчок по пустому небу закрывает только её: одно видимое состояние за раз (D5)
     if (dotCard.peek()) {
       closeDot();
+      return;
+    }
+    // широкий экран (решение 194): карточка союза в колонке — сначала она, назад к карточке лица
+    if (selectedUnion.peek() && !grid.peek().phone) {
+      selectUnion(null);
       return;
     }
     // свет созвездия под указателем на уровне «Небо» (этап 16, решение 185): туманность или устье колена — фокус созвездия

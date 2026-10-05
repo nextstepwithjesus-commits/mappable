@@ -412,8 +412,10 @@ export function briefText(id: string, card: Card | null): string {
 
 /** Абзац «Кратко» под шапкой; у предложений, взятых из текста (у малых лиц), — стихи со вклейкой. */
 /** ns — приставка вклеек стихов: «Кратко» в панели «В работе» раскрывает свои стихи, а не стихи листа карточки. */
-export function Brief({ id, card, ns = '' }: { id: string; card: Card | null; ns?: string }) {
-  const ss = briefSentences(id, card);
+/** lines — фраза о родословии Иисуса Христа; в карточке её говорит строка паспорта «Линия Мессии» (решение 195) — без повтора. */
+export function Brief({ id, card, ns = '', lines = true }: { id: string; card: Card | null; ns?: string; lines?: boolean }) {
+  const ls = lines ? null : linesSentence(id);
+  const ss = briefSentences(id, card).filter((x) => !ls || !(x.segs.length === 1 && x.segs[0] === ls));
   if (!ss.length) return null;
   // имена в записях, взятых из текста (§ 5, § 17), — ссылки, как в разделах (F12)
   const cands = ss.some((x) => x.data) ? linkCandidates(id, (card?.met ?? []).map((m) => m.id)) : [];

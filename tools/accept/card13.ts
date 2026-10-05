@@ -164,7 +164,7 @@ export const card13: Scenario[] = [
         if (!sameOrder(ten, kids) || kids.some((k) => !ten.includes(k))) why.push(`${id} § 10: ${ten.slice(0, 8).join(',')}`);
         // «Родство» у звезды: видимые имена строки детей — в том же порядке
         if (await clickStar(p, id)) {
-          const kin = await idsIn(p, '.sky .dotcard .dc-row.children');
+          const kin = await idsIn(p, ':is(.sky .dotcard, .folio .kin-col, aside.folio[data-link] .dotcard) .dc-row.children');
           if (!sameOrder(kin, kids)) why.push(`${id} «Родство»: ${kin.join(',')}`);
         }
         // карточка союза: по ссылке «союз» у группы детей

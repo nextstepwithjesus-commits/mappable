@@ -8,6 +8,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { expandUnion, expanded, opened, startWith, unions } from '../src/ui/reveal.ts';
 import { linkSet, skyMode, workSet, type WorkEntry } from '../src/ui/work.ts';
 import { onlyLines, pickMode, selected } from '../src/state.ts';
+import { viewportWidth } from '../src/ui/layout.ts';
 import {
   closeDot, continueDot, dockDot, DOT_LEAD, dotCard, dotLabel, dotsOn, foldDot, openDot, parentsDot, personDotCmds, placeDot, unionDotCmd, unionSpouse,
   type Obstacle,
@@ -193,9 +194,18 @@ describe('где есть карточка у точки (dotsOn) и одна к
     pickMode.value = null;
     onlyLines.value = false;
   });
-  it('в любом показе — «набор», «все лица», набор из ссылки, «линии Мессии»; нет только при выборе второго лица (этап 11, решение 77)', () => {
+  it('на телефоне — в любом показе: «набор», «все лица», набор из ссылки, «линии Мессии»; нет при выборе второго лица и на широком экране (решения 77, 194)', () => {
     // прежде (решение 76) карточка у точки была только в небе «набор» своего набора; этап 11 (STAGE11 § 1, § 6):
-    // щелчок, касание или Enter на любой звезде в любом показе открывает у неё карточку с «Родством»
+    // щелчок, касание или Enter на любой звезде в любом показе открывает у неё карточку с «Родством».
+    // Этап 20 (решение 194, просьба владельца): на широком экране карточек на небе нет — «Родство», союз и связь открываются
+    // в колонке карточки справа; карточка у звезды осталась только на телефоне, где она — нижний лист на 214 px
+    const w = viewportWidth.peek();
+    viewportWidth.value = 1440;
+    expect(dotsOn.value).toBe(false);
+    selected.value = 'adam';
+    openDot({ kind: 'person', id: 'adam' });
+    expect(dotCard.value).toBeNull();
+    viewportWidth.value = 390;
     expect(dotsOn.value).toBe(true);
     skyMode.value = 'all';
     expect(dotsOn.value).toBe(true);
@@ -213,8 +223,12 @@ describe('где есть карточка у точки (dotsOn) и одна к
     expect(dotsOn.value).toBe(false);
     pickMode.value = null;
     expect(dotsOn.value).toBe(true);
+    viewportWidth.value = w;
   });
   it('новая карточка сменяет прежнюю; карточка помнит выбор при открытии; неизвестное лицо и союз не открываются', () => {
+    // этап 20, решение 194: карточка у звезды — только на телефоне (нижний лист)
+    const w = viewportWidth.peek();
+    viewportWidth.value = 390;
     selected.value = 'adam';
     openDot({ kind: 'person', id: 'adam' });
     expect(dotCard.value).toMatchObject({ kind: 'person', id: 'adam', sel: 'adam', focus: false });
@@ -225,6 +239,7 @@ describe('где есть карточка у точки (dotsOn) и одна к
     expect(dotCard.value).toMatchObject({ kind: 'union', uid: 'u:adam+eva' });
     closeDot();
     expect(dotCard.value).toBeNull();
+    viewportWidth.value = w;
   });
 });
 
@@ -232,7 +247,8 @@ describe('справка неба для клавиатуры и касания'
   // этап 11 (решение 78): знак союза на небе — ромб союза (так же называют его «Условные знаки»), а не «точка союза»
   it('Enter на звезде или ромбе союза открывает у него карточку, Escape закрывает', () => {
     expect(SKY_HELP).toMatch(/ромбам союзов/);
-    expect(SKY_HELP).toMatch(/Enter на звезде или ромбе союза открывает у него карточку/);
+    // этап 20, решение 194: на широком экране карточка открывается в колонке справа, а не у знака на небе
+    expect(SKY_HELP).toMatch(/Enter на звезде или ромбе союза открывает его карточку в колонке справа/);
     expect(SKY_HELP).toMatch(/Escape её закрывает/);
     expect(SKY_HELP_TOUCH).toMatch(/касание звезды или ромба союза открывает у него карточку/);
   });

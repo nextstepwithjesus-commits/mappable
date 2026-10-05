@@ -14,7 +14,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { effect, signal } from '@preact/signals';
 import { byId } from '../../data/atlas.ts';
 import type { Epoch } from '../../data/types.ts';
-import { focused, selected, model } from '../../state.ts';
+import { focused, selected, model, pickMode } from '../../state.ts';
 import { goTo, plural, skyRef, viewTick } from '../common.tsx';
 import { formatSpan, toAstro, toHist } from '../../engine/years.ts';
 import { typo } from '../text/typo.ts';
@@ -24,7 +24,9 @@ import { focusCardTitle } from '../focus.ts';
 import { screenOf } from './view.ts';
 import { expanded, hasHidden, opened, unionById } from '../reveal.ts';
 import { show, skyMode } from '../work.ts';
-import { dotsOn, openDot } from './DotCard.tsx';
+import { dotsOn, openDot, openUnionCol } from './DotCard.tsx';
+import { focusKinFirst } from '../focus.ts';
+import { grid, unfoldCard } from '../layout.ts';
 import { selectedKin } from '../card/kinrows.ts';
 import { openSheetAt } from '../sheet.ts';
 
@@ -47,7 +49,7 @@ export function skySay(text: string) {
   skyNews.value = { text, n: skyNews.peek().n + 1 };
 }
 export const SKY_HELP =
-  'Стрелки — к ближайшей звезде в эту сторону; Shift со стрелками — сдвиг неба; Enter — открыть карточку звезды с её родством; клавиша меню или Shift и F10 — меню звезды; плюс и минус — масштаб; ноль — всё небо; квадратные скобки — к родителю и к ребёнку; вопросительный знак — все клавиши. Стрелки водят и по ромбам союзов; Enter на звезде или ромбе союза открывает у него карточку, Escape её закрывает. Связь выбирается строкой «Родство» карточки: Tab до строки, Enter на имени — карточка связи; Escape — назад. G (п) — к карточке и обратно.';
+  'Стрелки — к ближайшей звезде в эту сторону; Shift со стрелками — сдвиг неба; Enter — открыть карточку звезды с её родством; клавиша меню или Shift и F10 — меню звезды; плюс и минус — масштаб; ноль — всё небо; квадратные скобки — к родителю и к ребёнку; вопросительный знак — все клавиши. Стрелки водят и по ромбам союзов; Enter на звезде или ромбе союза открывает его карточку в колонке справа, Escape её закрывает. Связь выбирается строкой «Родство» карточки: Tab до строки, Enter на имени — карточка связи; Escape — назад. G (п) — к карточке и обратно.';
 /** Справка для сенсорного экрана: жесты вместо клавиш (MOB-67). */
 export const SKY_HELP_TOUCH =
   'Коснитесь звезды или её имени — откроется карточка лица с её родством; касание звезды или ромба союза открывает у него карточку, касание линии — связь, а в гуще линий — список «Какая связь?»; одним пальцем — сдвиг неба, двумя — масштаб (пальцы строго по горизонтали — только время, по вертикали — только строки); долгое касание звезды — меню звезды; «Всё небо» — вся карта.';
@@ -147,12 +149,23 @@ function choose(id: string) {
     return;
   }
   goTo(id);
+  // широкий экран (решение 194): карточки у звезды нет — колонка карточки разворачивается, фокус — на первое имя её
+  // «Родства» (путь «звезда → родство → связь» в несколько нажатий, решение 83)
+  if (!pickMode.peek() && selected.peek() === id && !grid.peek().phone) {
+    if (grid.peek().spine) unfoldCard();
+    focusKinFirst(id);
+    return;
+  }
   focusCardTitle(id);
 }
 
-/** Ромб союза с клавиатуры: карточка у ромба с фокусом на первой команде; при выборе второго лица — раскрыть или свернуть. */
+/**
+ * Ромб союза с клавиатуры: карточка у ромба с фокусом на первой команде; на широком экране — карточка союза в колонке
+ * (решение 194); при выборе второго лица — раскрыть или свернуть.
+ */
 function chooseUnion(uid: string, from: string) {
   if (dotsOn.peek()) openDot({ kind: 'union', uid, from }, { focus: true });
+  else if (!grid.peek().phone && !pickMode.peek()) openUnionCol(uid, from, true);
   else pressPlate(uid, from);
 }
 
@@ -172,6 +185,8 @@ export function SkyA11y() {
   const exp = expanded.value;
   // небо «набор»: пункты открывают карточку у точки (решение 76)
   const dots = dotsOn.value;
+  // широкий экран (решение 194): Enter на ромбе открывает карточку союза в колонке, а не раскрывает его
+  const col = !grid.value.phone && !pickMode.value;
   // «дети показаны / скрыты» — только в показе «набор» (X4 Д13)
   const inSet = show.value.kind === 'set';
 
@@ -337,7 +352,7 @@ export function SkyA11y() {
                 id={plateDomId(q.uid)}
                 tabIndex={-1}
                 aria-label={plateItemText(u, open, inSet)}
-                aria-expanded={dots ? undefined : open}
+                aria-expanded={dots || col ? undefined : open}
                 aria-haspopup={dots ? 'dialog' : undefined}
                 onClick={() => chooseUnion(q.uid, q.from)}
                 onFocus={() => {

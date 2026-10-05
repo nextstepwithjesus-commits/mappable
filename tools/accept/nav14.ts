@@ -87,7 +87,7 @@ async function linkKeepsFamily(p: Page, from: string, to: string, labeled = 0.7)
       on = f.kin.filter((k) => k.on);
       ptr = new Set(f.edges.flatMap((e) => e.ids));
       // весь список строки (первые имена — кнопками, остальные — «и ещё N») — в data-ids
-      const ids = (await p.locator('.sky .dotcard .dc-hidden').getAttribute('data-ids').catch(() => null)) ?? '';
+      const ids = (await p.locator(':is(.sky .dotcard, .folio .kin-col, aside.folio[data-link] .dotcard) .dc-hidden').getAttribute('data-ids').catch(() => null)) ?? '';
       row = ids.split(' ').filter(Boolean);
     }
   }
@@ -259,11 +259,11 @@ export const nav14: Scenario[] = [
       if (!st) return fail('Давид не на небе');
       await p.mouse.click(box.x + st.x, box.y + st.y);
       await p.waitForTimeout(1200);
-      const menu = p.locator('.dotcard .dc-lineage > button').first();
+      const menu = p.locator(':is(.dotcard, .folio .actions) .dc-lineage > button').first();
       if (!(await menu.count())) return fail('нет меню «Предки и потомки ▾» в карточке у звезды');
       await menu.click();
       await p.waitForTimeout(300);
-      await p.locator('.dotcard [role="menuitem"]:has-text("Настроить")').first().click();
+      await p.locator(':is(.dotcard, .folio .actions) [role="menuitem"]:has-text("Настроить")').first().click();
       await p.waitForTimeout(900);
       const on = await p.locator('.showsheet .ss-kinds input:checked').getAttribute('value');
       const who = (await p.locator('.showsheet .ss-lineage .who').count()) ? (await p.locator('.showsheet .ss-lineage .who').innerText()).trim() : '';
@@ -283,7 +283,7 @@ export const nav14: Scenario[] = [
       // действие 1 — звезда; действие 2 — команда карточки у звезды
       await p.mouse.click(box.x + s0.x, box.y + s0.y);
       await p.waitForTimeout(1200);
-      const cmd = p.locator('.dotcard .dc-near').first();
+      const cmd = p.locator(':is(.dotcard, .folio .actions) .dc-near').first();
       if (!(await cmd.count())) return fail('нет команды «Ближайшая родня» в карточке у звезды');
       await cmd.click();
       await p.waitForTimeout(2500);
@@ -319,7 +319,7 @@ export const nav14: Scenario[] = [
       if (!s0) return fail('Давид не на небе');
       await p.mouse.click(box.x + s0.x, box.y + s0.y);
       await p.waitForTimeout(1200);
-      const cmd = p.locator('.dotcard .dc-near').first();
+      const cmd = p.locator(':is(.dotcard, .folio .actions) .dc-near').first();
       if (!(await cmd.count())) return fail('нет команды «Ближайшая родня»');
       await cmd.click();
       await p.waitForTimeout(2500);

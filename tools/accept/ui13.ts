@@ -118,7 +118,7 @@ export const ui13: Scenario[] = [
     title: 'Снимок 20 заново (решения 93, 105): шаг «Илий → Мария» в «ключевых лицах» — «По толкованию: …», «нет в показе «ключевые лица» — поставить на небо» (решение 156); щелчок — Илий гостем, адрес «~g»; «назад» — гостя нет, связь выбрана',
     run: async (p) => {
       await open(p, '#/mariya~vk~cr.m.mariya', { start: 'key', ms: 3400 });
-      const card = p.locator('.sky .dotcard[data-kind="link"]');
+      const card = p.locator(':is(.sky .dotcard[data-kind="link"], aside.folio[data-link] .dotcard)');
       if (!(await card.count())) return fail('нет карточки связи');
       const h = flat(await card.locator('h3').innerText());
       if (!/^По толкованию: Илий — отец; Мария — дочь$/.test(h)) return fail(`заголовок «${h}»`);
@@ -145,7 +145,7 @@ export const ui13: Scenario[] = [
     title: 'Карточка связи (решение 105): строка основания из § 24, «Мать — в Писании не названа», «Союз: Илий и его жена: одна дочь», «Линия» — правда о показе, «Подробнее о союзе», «Вписать связь»',
     run: async (p) => {
       await open(p, '#/mariya~vk~ck.iliy-otets-marii._._.mariya', { start: 'key', ms: 3600 });
-      const card = p.locator('.sky .dotcard[data-kind="link"]');
+      const card = p.locator(':is(.sky .dotcard[data-kind="link"], aside.folio[data-link] .dotcard)');
       if (!(await card.count())) return fail('нет карточки связи');
       const t = flat(await card.innerText());
       for (const w of [
@@ -163,7 +163,7 @@ export const ui13: Scenario[] = [
       // то же на всём небе: лента здесь рисует шаг — «скрыта» нет, конец в показе (краткий вид карточки строк «Линия»
       // не показывает — тогда проверяется только, что лжи нет)
       await open(p, '#/mariya~ck.iliy-otets-marii._._.mariya', { start: 'all', ms: 3600 });
-      const t2 = flat(await p.locator('.sky .dotcard[data-kind="link"]').innerText());
+      const t2 = flat(await p.locator(':is(.sky .dotcard[data-kind="link"], aside.folio[data-link] .dotcard)').innerText());
       if (/лента скрыта/.test(t2)) return fail(`всё небо: ${t2.slice(0, 300)}`);
       if (/Линия/.test(t2) && !/Линия по Луке \(лазурная лента\), Лк 3:23/.test(t2)) return fail(`всё небо: ${t2.slice(0, 300)}`);
       return /нет в показе/.test(t2) ? fail('на всём небе — «нет в показе»') : pass();
@@ -175,16 +175,16 @@ export const ui13: Scenario[] = [
     run: async (p) => {
       // Ламех и Цилла — Ноема: мать выведена (X4; D1)
       await open(p, '#/noema~ck.lamekh-kainit.tsilla._.noema', { start: 'all', ms: 3400 });
-      let card = p.locator('.sky .dotcard[data-kind="link"] h3');
+      let card = p.locator(':is(.sky .dotcard[data-kind="link"], aside.folio[data-link] .dotcard) h3');
       if (!(await card.count())) return fail('нет карточки связи Ноемы');
       const h = flat(await card.innerText());
       if (!/^Вывод: /.test(h)) return fail(`заголовок «${h}»`);
-      if (!(await p.locator('.sky .dotcard .dc-basis').count())) return fail('нет строки основания');
+      if (!(await p.locator(':is(.sky .dotcard, .folio .kin-col, aside.folio[data-link] .dotcard) .dc-basis').count())) return fail('нет строки основания');
       await open(p, '#/iosif~ck.iakov.rakhil._.iosif', { start: 'all', ms: 3400 });
-      card = p.locator('.sky .dotcard[data-kind="link"] h3');
+      card = p.locator(':is(.sky .dotcard[data-kind="link"], aside.folio[data-link] .dotcard) h3');
       const h2 = flat(await card.innerText());
       if (h2 !== 'Иаков и Рахиль — родители; Иосиф — сын') return fail(`заголовок «${h2}»`);
-      return (await p.locator('.sky .dotcard .dc-basis').count()) ? fail('у связи Писания — строка основания') : pass(`«${h}»`);
+      return (await p.locator(':is(.sky .dotcard, .folio .kin-col, aside.folio[data-link] .dotcard) .dc-basis').count()) ? fail('у связи Писания — строка основания') : pass(`«${h}»`);
     },
   },
   {
@@ -324,7 +324,7 @@ export const ui13: Scenario[] = [
               }
               if (st.card) {
                 const has = (await q.evaluate(
-                  (nm) => [...document.querySelectorAll('.dotcard[data-kind="person"][data-placed], .sheet-dot .dotcard')].some((c) => c.querySelector('.nm')?.textContent?.trim() === nm),
+                  (nm) => [...document.querySelectorAll('.dotcard[data-kind="person"][data-placed], .sheet-dot .dotcard, aside.folio:has(.kin-col) .mast')].some((c) => c.querySelector('.nm')?.textContent?.trim() === nm),
                   st.card,
                 )) as boolean;
                 if (!has) {
@@ -367,12 +367,12 @@ export const ui13: Scenario[] = [
       const c = await cardOf(p);
       if (!c || c.kind !== 'person') return fail('нет карточки у звезды');
       // краткий вид — «всё родство»
-      const all = p.locator('.sky .dotcard .dc-row.all .dc-more');
+      const all = p.locator(':is(.sky .dotcard, .folio .kin-col, aside.folio[data-link] .dotcard) .dc-row.all .dc-more');
       if (await all.count()) {
         await all.click();
         await p.waitForTimeout(500);
       }
-      const row = p.locator('.sky .dotcard .dc-row.children');
+      const row = p.locator(':is(.sky .dotcard, .folio .kin-col, aside.folio[data-link] .dotcard) .dc-row.children');
       if (!(await row.count())) return fail('нет строки детей');
       const t = flat(await row.innerText());
       for (const w of ['Соломон', 'Нафан']) if (!t.includes(w)) return fail(`в строке детей нет «${w}»: ${t}`);

@@ -133,6 +133,28 @@ export function focusCardTitle(id: string) {
 /** Сколько кадров ждать заголовка карточки (≈ 0,5 с). */
 const TITLE_WAIT_FRAMES = 30;
 
+/**
+ * Карточка открыта с клавиатуры на широком экране (этап 20, решение 194): карточки у звезды нет — фокус на первое имя
+ * «Родства» в колонке справа (путь «звезда → родство → связь» в несколько нажатий, решение 83), когда колонка его покажет
+ * (не дольше полусекунды); у лица без «Родства» и на телефоне — на заголовок карточки. Свёрнутая колонка разворачивается.
+ */
+export function focusKinFirst(id: string) {
+  if (grid.peek().phone) {
+    focusCardTitle(id);
+    return;
+  }
+  let frames = 0;
+  const attempt = () => {
+    if (selected.peek() !== id) return;
+    const col = document.querySelector<HTMLElement>(`.folio .kin-col[data-id="${CSS.escape(id)}"]`);
+    const first = col?.querySelector<HTMLElement>('.dc-val .person[tabindex="0"]');
+    if (first) focusQuietly(first);
+    else if (++frames < TITLE_WAIT_FRAMES) requestAnimationFrame(attempt);
+    else focusCardTitle(id);
+  };
+  later(attempt);
+}
+
 /** Подключить перенос фокуса (App). Возвращает отписку. */
 export function bindFocus(): () => void {
   let shownPanel = panel.peek();

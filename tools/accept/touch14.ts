@@ -47,7 +47,8 @@ async function dotOf(p: Page, id: string): Promise<boolean> {
   if (!q) return false;
   await p.mouse.click(q.x, q.y);
   await p.waitForTimeout(900);
-  return (await p.locator(`.sky .dotcard[data-placed][data-id="${id}"]`).count()) > 0;
+  // этап 20 (решение 194): на широком экране карточка у звезды — это карточка справа с «Родством» этого лица
+  return (await p.locator(`.sky .dotcard[data-placed][data-id="${id}"], .folio .kin-col[data-id="${id}"]`).count()) > 0;
 }
 
 /**
@@ -169,10 +170,10 @@ export const touch14: Scenario[] = [
         await open(p, `#/${id}`, { ms: 4500 });
         if (!(await dotOf(p, id))) return fail(`${id}: нет карточки у звезды`);
         await kinAll(p);
-        const labels = await p.locator('.sky .dotcard .dc-kin .person').evaluateAll((bs) => bs.map((b) => (b.getAttribute('aria-label') ?? '').replace(/[\u00a0\u202f]/g, ' ').replace(/[\u2060\u00ad]/g, '').replace(/\s+/g, ' ').trim()));
+        const labels = await p.locator(':is(.sky .dotcard, .folio .kin-col, aside.folio[data-link] .dotcard) .dc-kin .person').evaluateAll((bs) => bs.map((b) => (b.getAttribute('aria-label') ?? '').replace(/[\u00a0\u202f]/g, ' ').replace(/[\u2060\u00ad]/g, '').replace(/\s+/g, ' ').trim()));
         for (const r of rs) if (!labels.some((l) => r.test(l))) return fail(`${id}: нет «${r.source}» среди ${labels.join(' / ')}`);
         // видно глазу: помета и уточнение — не только в имени кнопки
-        const text = flat(await p.locator('.sky .dotcard .dc-kin').innerText());
+        const text = flat(await p.locator(':is(.sky .dotcard, .folio .kin-col, aside.folio[data-link] .dotcard) .dc-kin').innerText());
         if (id === 'mariya' && !/Мария \(Клеопова\) толк\./.test(text)) return fail(`Мария: в строке «${text}»`);
         got.push(`${id}: ${labels.length} имён`);
       }
@@ -184,7 +185,7 @@ export const touch14: Scenario[] = [
     title: 'П6, решение 152: стих из карточки связи и из строки «Год» — одним действием (кнопка с вклейкой)',
     run: async (p) => {
       await open(p, '#/iakov~ck.iakov.rakhil._.iosif', { ms: 4500 });
-      const ref = p.locator('.sky .dotcard .dc-refs button.ref').first();
+      const ref = p.locator(':is(.sky .dotcard, .folio .kin-col, aside.folio[data-link] .dotcard) .dc-refs button.ref').first();
       if (!(await ref.count())) return fail('в карточке связи ссылки — не кнопки');
       await ref.click();
       await p.waitForTimeout(900);
@@ -194,17 +195,19 @@ export const touch14: Scenario[] = [
       await open(p, '#/salafiil', { ms: 4500 });
       if (!(await dotOf(p, 'salafiil'))) return fail('нет карточки у звезды Салафиила');
       await kinAll(p);
-      const y = p.locator('.sky .dotcard .dc-row.year button.ref').first();
+      const y = p.locator(':is(.sky .dotcard, .folio .kin-col, aside.folio[data-link] .dotcard) .dc-row.year button.ref').first();
       if (!(await y.count())) return fail('в строке «Год» ссылка — не кнопка');
       await y.click();
       await p.waitForTimeout(900);
-      const yv = flat((await p.locator('.sky .dotcard .dc-verse .verses').first().textContent().catch(() => '')) ?? '');
+      const yv = flat((await p.locator(':is(.sky .dotcard, .folio .kin-col, aside.folio[data-link] .dotcard) .dc-verse .verses').first().textContent().catch(() => '')) ?? '');
       return /Салафиил/.test(yv) ? pass('карточка связи и «Год»: стих — первым щелчком') : fail(`вклейка «Года»: «${yv.slice(0, 80)}»`);
     },
   },
   {
     n: 1163,
-    title: 'П8, решение 153: Давид, подробная карточка открыта — у звезды легенда семьи (на 1920), а где полной карточке нет места у звезды, — краткая (§ 6); имён детей и «+N» под карточкой у звезды нет (1440, 1280, 1024)',
+    // этап 20 (решение 194): карточки у звезды на широком экране нет — легенда цветов жён (решение 153) стала образцами
+    // цвета ветви в строке детей «Родства» справа; небо ничем не закрыто: имён детей под карточкой быть не может
+    title: 'П8, решения 153, 194: Давид — в «Родстве» справа дети по матерям с образцами цвета ветви (не меньше 8), на небе карточки нет (1920, 1440, 1280, 1024)',
     run: async (p) => {
       const out: string[] = [];
       for (const [W, H] of [
@@ -215,28 +218,12 @@ export const touch14: Scenario[] = [
       ]) {
         await p.setViewportSize({ width: W, height: H });
         await open(p, '#/david~y-1013~w182~l0.0~s1', { ms: 4500 });
-        if (!(await dotOf(p, 'david'))) return fail(`${W}: нет карточки у звезды`);
+        if (!(await dotOf(p, 'david'))) return fail(`${W}: нет карточки Давида`);
         await p.waitForTimeout(600);
-        // строкой: внутри page.evaluate именованные стрелки tsx оборачивает в __name, которого в странице нет
-        const r = (await p.evaluate(`(() => {
-          var c = document.querySelector('.sky canvas'); var cr = c.getBoundingClientRect();
-          var dc = document.querySelector('.sky .dotcard[data-placed]'); if (!dc) return null;
-          var d = dc.getBoundingClientRect(); var R = { x: d.left - cr.left, y: d.top - cr.top, w: d.width, h: d.height };
-          var hit = function (b) { return b.x < R.x + R.w && b.x + b.w > R.x && b.y < R.y + R.h && b.y + b.h > R.y; };
-          var boxes = (c.dataset.labelBoxes || '').split(';').filter(Boolean).map(function (q) { var i = q.lastIndexOf(':'); var a = q.slice(i + 1).split(',').map(Number); return { id: q.slice(0, i), x: a[0], y: a[1], w: a[2], h: a[3] }; });
-          var gaps = (c.dataset.gaps || '').split('|').filter(Boolean).map(function (g) { var m = /@(-?\\d+),(-?\\d+)/.exec(g); return m ? { x: +m[1], y: +m[2] } : null; }).filter(Boolean);
-          return { legend: dc.hasAttribute('data-legend'), brief: dc.hasAttribute('data-brief'), full: dc.dataset.full || '', sw: dc.querySelectorAll('.dc-sw').length, reserve: dc.dataset.reserve || '', under: boxes.filter(hit).map(function (b) { return b.id; }), gaps: gaps.filter(function (g) { return g.x > R.x && g.x < R.x + R.w && g.y > R.y && g.y < R.y + R.h; }).length };
-        })()`)) as { legend: boolean; brief: boolean; full: string; sw: number; reserve: string; under: string[]; gaps: number } | null;
-        if (!r) return fail(`${W}: карточка у звезды не встала`);
-        if (!r.legend) return fail(`${W}: карточка у звезды не в виде легенды семьи (подробная карточка открыта)`);
-        // легенда Давида — 300 × 262 px; в показе «всё небо» на 1440 и уже её некуда поставить, не закрыв подписей семьи, —
-        // тогда краткая карточка (§ 6, решение 77), а не полная поверх детей
-        if (r.sw < 8 && !(r.brief && r.full)) return fail(`${W}: нет легенды семьи (образцов ${r.sw}) и карточка не краткая`);
-        if (W === 1920 && r.sw < 8) return fail(`${W}: место есть, а легенды семьи нет (образцов ${r.sw})`);
-        if (r.reserve !== 'dot') return fail(`${W}: карточка не в резерве подписей`);
-        const sons = r.under.filter((id) => /syn-davida|^(solomon|amnon|avessalom|adoniya|daluia|nafan-syn-davida|famar-doch-davida|safatiya|ieferaam|ivkhar|elisua|nogag|nafek|iafia|elisama|eliada|elifelet|ieromof)/.test(id));
-        if (sons.length || r.gaps) return fail(`${W}: под карточкой дети ${sons.join(', ') || '—'}, «+N» — ${r.gaps}`);
-        out.push(`${W}: ${r.sw >= 8 ? `легенда (${r.sw} цветов)` : `краткая (полная ${r.full})`}, под карточкой ${r.under.length} чужих подписей`);
+        if (await p.locator('.sky .dotcard').count()) return fail(`${W}: на небе — карточка у звезды`);
+        const sw = await p.locator('.folio .kin-col .dc-row.children .dc-sw').count();
+        if (sw < 8) return fail(`${W}: образцов цвета в строке детей ${sw}`);
+        out.push(`${W}: ${sw} цветов`);
       }
       return pass(out.join('; '));
     },
@@ -441,7 +428,7 @@ export const touch14: Scenario[] = [
       await open(p, '#/iakov', { ms: 4500 });
       if (!(await dotOf(p, 'iakov'))) return fail('нет карточки у звезды Иакова');
       await kinAll(p);
-      const labels = await p.locator('.sky .dotcard .dc-kin .person').evaluateAll((bs) => bs.map((b) => (b.getAttribute('aria-label') ?? '').replace(/[\u00a0\u202f]/g, ' ').replace(/[\u2060\u00ad]/g, '').replace(/\s+/g, ' ').trim()));
+      const labels = await p.locator(':is(.sky .dotcard, .folio .kin-col, aside.folio[data-link] .dotcard) .dc-kin .person').evaluateAll((bs) => bs.map((b) => (b.getAttribute('aria-label') ?? '').replace(/[\u00a0\u202f]/g, ' ').replace(/[\u2060\u00ad]/g, '').replace(/\s+/g, ' ').trim()));
       const bare = labels.filter((l) => !/ — \S/.test(l));
       if (!labels.length || bare.length) return fail(`имена без отношения: ${bare.join(' / ') || 'кнопок нет'}`);
       if (!labels.includes('Лия — жена')) return fail(`нет «Лия — жена»: ${labels.join(' / ')}`);
@@ -450,7 +437,7 @@ export const touch14: Scenario[] = [
       if (!/жена Иакова/.test(flat(item))) return fail(`пункт неба Лии: «${item}»`);
       // связь через «Родство»: Enter на имени — одно объявление
       await listen(p);
-      const name = p.locator('.sky .dotcard .dc-kin .person[data-id="liya"]').first();
+      const name = p.locator(':is(.sky .dotcard, .folio .kin-col, aside.folio[data-link] .dotcard) .dc-kin .person[data-id="liya"]').first();
       await name.focus();
       await p.keyboard.press('Enter');
       await p.waitForTimeout(1500);
@@ -472,7 +459,7 @@ export const touch14: Scenario[] = [
       if (!/^Отметить на небе \(\d+\)$/.test(cmd)) return fail(`команда группы: «${cmd}»`);
       await p.keyboard.press('Escape');
       await open(p, '#/mariya~vk~mmt-short~cr.m.mariya', { start: 'key', ms: 4000 });
-      const out = p.locator('.sky .dotcard .dc-out .dc-show').first();
+      const out = p.locator(':is(.sky .dotcard, .folio .kin-col, aside.folio[data-link] .dotcard) .dc-out .dc-show').first();
       if (!(await out.count())) return fail('у конца связи вне показа нет команды');
       const t = flat(await out.innerText());
       return t === 'поставить на небо' ? pass('«К звезде», «Отметить на небе (N)», «поставить на небо»') : fail(`гость: «${t}»`);
@@ -486,12 +473,12 @@ export const touch14: Scenario[] = [
       await open(p, '#/ruf', { ms: 4500 });
       if (!(await dotOf(p, 'ruf'))) return fail('нет карточки у звезды Руфи');
       await kinAll(p);
-      const name = p.locator('.sky .dotcard .dc-kin .person[data-id="vooz"]').first();
+      const name = p.locator(':is(.sky .dotcard, .folio .kin-col, aside.folio[data-link] .dotcard) .dc-kin .person[data-id="vooz"]').first();
       if (!(await name.count())) return fail('в «Родстве» Руфи нет Вооза');
       await name.click();
       await p.waitForTimeout(2200);
       if (hashId(p) !== 'vooz') return fail(`выбрано «${hashId(p)}»`);
-      const card = await p.locator('.sky .dotcard[data-placed][data-id="vooz"]').count();
+      const card = await p.locator('.sky .dotcard[data-placed][data-id="vooz"], .folio .kin-col[data-id="vooz"]').count();
       return card ? pass('Вооз выбран, его карточка у звезды открыта') : fail('карточка у звезды Вооза не открылась');
     },
   },

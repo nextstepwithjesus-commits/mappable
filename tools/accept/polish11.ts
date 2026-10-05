@@ -219,17 +219,17 @@ export const polish11: Scenario[] = [
         // место нашлось — краткий вид не нужен; тогда и «всё родство» нет
         return (await placeIssue(p)).why ? fail(`полная карточка: ${(await placeIssue(p)).why}`) : pass('полной карточке место нашлось');
       }
-      const rows = await p.locator('.sky .dotcard .dc-kin .dc-row:not(.all)').count();
+      const rows = await p.locator(':is(.sky .dotcard, .folio .kin-col) .dc-kin .dc-row:not(.all)').count();
       if (rows !== 1) return fail(`в краткой карточке строк «Родства»: ${rows}`);
-      if (await p.locator('.sky .dotcard .dc-top .av').count()) return fail('в краткой карточке — образ');
-      const all = p.locator('.sky .dotcard .dc-row.all .dc-more');
+      if (await p.locator(':is(.sky .dotcard, .folio .kin-col) .dc-top .av').count()) return fail('в краткой карточке — образ');
+      const all = p.locator(':is(.sky .dotcard, .folio .kin-col) .dc-row.all .dc-more');
       if (!(await all.count())) return fail('нет «всё родство»');
       const label = (await all.innerText()).trim();
       await all.click();
       await p.waitForTimeout(900);
       const d = await cardOf(p);
       if (!d || d.brief) return fail('после «всё родство» карточка краткая');
-      if (!(await p.locator('.sky .dotcard .dc-row.children').count())) return fail('после «всё родство» нет строки детей');
+      if (!(await p.locator(':is(.sky .dotcard, .folio .kin-col) .dc-row.children').count())) return fail('после «всё родство» нет строки детей');
       // небо сдвинули — полная карточка остаётся полной (читатель просил её)
       await pan(p, 40, 0);
       if ((await cardOf(p))?.brief) return fail('после сдвига неба карточка снова краткая');

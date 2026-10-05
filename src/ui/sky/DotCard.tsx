@@ -30,7 +30,7 @@
 import { computed, effect, signal } from '@preact/signals';
 import { Fragment, type ComponentChildren } from 'preact';
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
-import { byId, graph, lines, loadedCard } from '../../data/atlas.ts';
+import { byId, graph, lines } from '../../data/atlas.ts';
 import type { Rect } from '../../render/sky.ts';
 import type { Union } from '../../engine/unions.ts';
 import { linkKeyString, type LinkKey } from '../../engine/linkkey.ts';
@@ -38,9 +38,9 @@ import { focused, hovered, model, pickMode, selected, theme } from '../../state.
 import { goTo, Refs, skyRef, VerseInsert, viewTick } from '../common.tsx';
 import { Close, Menu } from '../controls.tsx';
 import { Avatar, UnionAvatar } from '../card/Avatar.tsx';
-import { askCards, cardsTick, disLine, onLines, othersNote, othersUnionOf, unionKindLine, yearsLine } from '../card/star.ts';
+import { askCards, cardsTick, disLine, onLines, unionKindLine, yearsLine } from '../card/star.ts';
 import { familyOf, kinNamesakes, kinRows, relationsOf, yearHow, type KinPart, type KinRow } from '../card/kinrows.ts';
-import { kidsInBirthOrder } from '../card/Union.tsx';
+import { kidsInBirthOrder, othersLine } from '../card/Union.tsx';
 import { branchesOf, partnerIn } from '../../engine/unions.ts';
 import { branchOrTribeColor } from '../../render/light.ts';
 import { passportYears, isPeople } from '../card/Masthead.tsx';
@@ -52,7 +52,7 @@ import { linkAnchor, linkGhosts, previewLinks, selectedLink, type GhostWhy } fro
 import { kidsCount, kinLabel, kinPhrase, linkBasis, linkInfo, linkSpeech, refShort, spanHidden, stepParent, unionName, type KinPhrase, type LinkInfo } from '../linkwords.ts';
 import { grid, unfoldCard } from '../layout.ts';
 import { lowScreen, openSheetAt, sheetStop } from '../sheet.ts';
-import { focusCardTitle, focusQuietly } from '../focus.ts';
+import { focusCardTitle, focusKinFirst, focusQuietly } from '../focus.ts';
 import { skyMenu } from '../panels/Work.tsx';
 import { typo } from '../text/typo.ts';
 import { bySex, capFirst } from '../text/ru.ts';
@@ -60,7 +60,8 @@ import { starRadius } from '../../render/glyphs.ts';
 import { familyOrderNote, personOrderNote } from '../../render/links.ts';
 import { firstKin } from '../../render/frame.ts';
 import { aroundPending, flyToIds, reduced, reserve, screenOf } from './view.ts';
-import { plateFocus, rememberFocus, toggleKids } from './starnav.ts';
+export { focusKinFirst };
+import { plateFocus, rememberFocus, toggleKids, unionDotCmd } from './starnav.ts';
 import { kidsText, unionTitle } from './text.ts';
 import { familyInset, hasFamily, openFamilyInset } from './inset.ts';
 import '../../styles/dotcard.css';
@@ -79,10 +80,11 @@ export type DotCardState = DotAt & { sel: string | null; focus: boolean; keyboar
 export const dotCard = signal<DotCardState | null>(null);
 
 /**
- * Где щелчок по звезде открывает карточку у звезды: во всех показах (решение 77); нет её только при выборе второго лица
- * («Родство с…», «Разворот с…»): там щелчок выбирает второе лицо.
+ * Где щелчок по звезде открывает карточку у звезды: только на телефоне, где она — нижний лист на 214 px (решение 77);
+ * на широком экране карточек на небе нет (этап 20, решение 194): лицо, союз и связь открываются в колонке карточки
+ * справа (src/ui/Folio.tsx). Нет её и при выборе второго лица («Родство с…», «Разворот с…»): там щелчок выбирает второе лицо.
  */
-export const dotsOn = computed(() => !pickMode.value);
+export const dotsOn = computed(() => !pickMode.value && grid.value.phone);
 
 // телефон: карточка связи — в нижнем листе на 214 px (DotSheet), как карточка у звезды. Связь выбрана (касанием,
 // по адресу «~c», из «Родства»), а лист стоит выше — карточки связи не видно: лист встаёт на это положение. После
@@ -102,6 +104,8 @@ if (typeof window !== 'undefined')
  * карточка ждёт свой знак, если его ещё нет на экране (небо перелетает к нему).
  */
 export function openDot(at: DotAt, o: { focus?: boolean; grace?: number } = {}) {
+  // широкий экран (решение 194): карточки у звезды нет — её содержимое в колонке карточки
+  if (!grid.peek().phone) return;
   if (at.kind === 'person' ? !byId.has(at.id) : !unionById(at.uid)) return;
   if (selectedLink.peek()) selectedLink.value = null;
   dotCard.value = { ...at, sel: selected.peek(), focus: !!o.focus, keyboard: !!o.focus, ...(o.grace && typeof performance !== 'undefined' ? { until: performance.now() + o.grace } : {}) };
@@ -165,7 +169,7 @@ export function closeLink(refocus = true) {
   linkFrom = null;
   if (!refocus) return;
   requestAnimationFrame(() => {
-    const card = document.querySelector<HTMLElement>('.dotcard, .sheet-dot');
+    const card = document.querySelector<HTMLElement>('.dotcard:not(.in-folio), .sheet-dot, .folio .kin-col');
     const back = from ? card?.querySelector<HTMLElement>(`.dc-row[data-row="${from.row}"] .person[data-id="${CSS.escape(from.name)}"]`) : null;
     if (back) {
       rovingTo(back);
@@ -243,29 +247,8 @@ export function parentsDot(id: string) {
   if (org) toggleKids(org.id, id);
 }
 
-/**
- * Команда раскрытия у карточки союза — словами неба (этап 13, решение 109: на небе «показать» и «скрыть»; «свернуть» —
- * только карточке и листу). Ромб у лица-ребёнка (союз его родителей): «Показать родителей» — родители, братья и сёстры
- * на небе, «Скрыть родителей». Ромб у супруга: «Показать детей союза (3)», «Показать ещё (6)» (часть детей уже на небе),
- * «Скрыть детей союза»; брак без детей или все дети на небе, а супруга нет — «Показать союз», «Скрыть союз». Всё уже на
- * небе и союз не раскрыт — команды нет.
- */
-export function unionDotCmd(u: Union, from: string): { text: string; label?: string; open: boolean } | null {
-  const open = u.id in expanded.value;
-  const set = workSet.value;
-  if (u.kids.includes(from) && from !== u.a && from !== u.b) {
-    if (open) return { text: 'Скрыть родителей', label: 'Скрыть родителей: убрать с неба союз родителей', open: true };
-    return [u.a, u.b, ...u.kids].some((x) => x && !set.has(x)) ? { text: 'Показать родителей', label: 'Показать родителей: родители, братья и сёстры на небе', open: false } : null;
-  }
-  const hidden = u.kids.filter((k) => !set.has(k)).length;
-  if (u.kids.length && (open || hidden > 0)) {
-    if (open) return { text: 'Скрыть детей союза', open: true };
-    if (hidden === u.kids.length) return { text: `Показать детей союза (${hidden})`, open: false };
-    return { text: `Показать ещё (${hidden})`, label: `Показать ещё (${hidden}): остальных детей союза`, open: false };
-  }
-  if (open) return { text: 'Скрыть союз', open: true };
-  return [u.a, u.b].some((x) => x && !set.has(x)) ? { text: 'Показать союз', label: 'Показать союз: оба супруга на небе', open: false } : null;
-}
+export { unionDotCmd };
+
 
 /** Кого выбрать для карточки союза справа: супруга, который на небе (лицо у ромба, если это супруг), иначе лицо у ромба. */
 export function unionSpouse(u: Union, from: string): string {
@@ -282,6 +265,8 @@ const revealOn = () => show.value.kind === 'set' && !linkSet.value;
  */
 function showDetails(id: string, uid: string | null) {
   const phone = grid.peek().phone;
+  // широкий экран (решение 194): карточка связи стоит в колонке — «Подробнее о союзе» сменяет её карточкой союза
+  if (!phone && selectedLink.peek()) selectedLink.value = null;
   selectFromDot(id, phone ? 'half' : 'peek');
   if (uid) selectUnion(uid);
   else if (selectedUnion.peek()) selectUnion(null);
@@ -1009,7 +994,10 @@ function nearestName(e: MouseEvent) {
  * Строка «Родства»: подпись и имена. Наведение на строку — её линии на небе; на имя и фокус — линия этого имени. Щелчок по
  * имени — выбор лица (и перелёт, если его нет на экране); Enter — карточка связи. По именам строки — стрелки, Home, End.
  */
-function KinRowView({ row, idx, compact, onMore, owner }: { row: KinRow; idx: number; compact?: boolean; onMore?: () => void; owner: string }) {
+/** Сколько имён строки «Родства» в колонке карточки (решение 194): места больше, чем у звезды, — имена видны сразу. */
+const COL_NAMES: Record<string, number> = { parents: 99, spouses: 12, coparents: 12, children: 30, siblings: 16 };
+
+function KinRowView({ row, idx, compact, onMore, owner, col = false, sw }: { row: KinRow; idx: number; compact?: boolean; onMore?: () => void; owner: string; col?: boolean; sw?: (key: string) => string | null }) {
   // раскрытая «ещё N» строка остаётся раскрытой после карточки связи, открытой с её имени (M9: Escape — к тому же имени)
   const [all, setAllState] = useState(() => openRows.has(`${owner}|${row.kind}${idx}`));
   const setAll = (v: boolean) => {
@@ -1017,7 +1005,13 @@ function KinRowView({ row, idx, compact, onMore, owner }: { row: KinRow; idx: nu
     setAllState(v);
   };
   // в листе телефона строка — одна строка текста (цель касания 44 px, решение 154): два имени и «ещё N»; родители — все
-  const limit = compact ? Math.min(ROW_NAMES[row.kind] ?? 2, row.kind === 'parents' ? 99 : 2) : (ROW_NAMES[row.kind] ?? 5);
+  const limit = col ? (COL_NAMES[row.kind] ?? 8) : compact ? Math.min(ROW_NAMES[row.kind] ?? 2, row.kind === 'parents' ? 99 : 2) : (ROW_NAMES[row.kind] ?? 5);
+  // колонка: дети разных матерей — каждая группа своей строкой, с образцом цвета ветви, как на небе (решение 194)
+  const groupBreak = (p: KinPart) => col && row.kind === 'children' && p.t === 'text' && p.text.startsWith('; ');
+  const swatch = (key: string | undefined, k: number | string) => {
+    const c = key && sw ? sw(key) : null;
+    return c ? <i key={`sw${k}`} class="dc-sw" aria-hidden="true" style={{ '--sw': c }} /> : null;
+  };
   const { shown, rest, firstHidden } = cutRow(row.parts, all ? Infinity : limit);
   const preview = (keys: readonly LinkKey[] | null) => {
     previewLinks.value = keys && keys.length ? keys : null;
@@ -1048,7 +1042,7 @@ function KinRowView({ row, idx, compact, onMore, owner }: { row: KinRow; idx: nu
   const glued = new Set<number>();
   shown.forEach((p, i) => {
     const prev = shown[i - 1];
-    if (p.t === 'text' && /^[,;]/.test(p.text) && prev?.t === 'name' && !phrase.get(i - 1)?.dis && !markAfter.has(i - 1)) glued.add(i);
+    if (p.t === 'text' && /^[,;]/.test(p.text) && prev?.t === 'name' && !phrase.get(i - 1)?.dis && !markAfter.has(i - 1) && !groupBreak(p)) glued.add(i);
   });
   const mark = (i: number) =>
     markAfter.has(i) ? (
@@ -1065,10 +1059,23 @@ function KinRowView({ row, idx, compact, onMore, owner }: { row: KinRow; idx: nu
           if (p.t === 'text') {
             // строка «Год»: ссылки в ней — кнопки с вклейкой стиха (решение 152; U7)
             if (row.kind === 'year') return <RefText key={i} text={p.text} owner={`dc-year|${owner}`} insert={false} />;
+            // группа детей другой матери в колонке — с новой строки: «; » уходит, перед группой — образец цвета ветви
+            if (groupBreak(p)) {
+              const rest = p.text.slice(2);
+              return (
+                <Fragment key={i}>
+                  {mark(i)}
+                  <br />
+                  {swatch(p.union, i)}
+                  {rest ? <span class="txt">{typo(rest)}</span> : null}
+                </Fragment>
+              );
+            }
             // запятая или точка с запятой за именем — внутри кнопки имени (.sep, ниже): строка не начинается с «,»
             const text = glued.has(i) ? p.text.slice(1) : p.text;
             return text ? (
               <Fragment key={i}>
+                {col && row.kind === 'children' ? swatch(p.union, i) : null}
                 <span class="txt">{typo(text)}</span>
                 {mark(i)}
               </Fragment>
@@ -1135,8 +1142,12 @@ function KinRowView({ row, idx, compact, onMore, owner }: { row: KinRow; idx: nu
               ) : null}
             </button>
           );
+          // образец цвета ветви (колонка, решение 194): у матери группы детей — цвет её союза; у детей одного союза — свой
+          // цвет у каждого, как на небе (src/engine/unions.ts, branchesOf)
+          const swKey = col && row.kind === 'children' ? (p.key.kind === 'union' ? p.key.union : p.key.kind === 'child' ? p.id : undefined) : undefined;
           return (
             <Fragment key={i}>
+              {swatch(swKey, `n${i}`)}
               {btn}
               {ph.dis ? (
                 <span class="dc-ds" aria-hidden="true">
@@ -1191,7 +1202,7 @@ function KinRowView({ row, idx, compact, onMore, owner }: { row: KinRow; idx: nu
  * Блок «Родство»: 3–5 строк (решение 77). compact — телефон на 214 px: две строки; brief — краткий вид (§ 6): одна
  * строка и команда «всё родство» (onAll) — карточка снова полная, на месте, где закрывает меньше всего.
  */
-export function KinBlock({ id, compact = false, brief = false, onAll }: { id: string; compact?: boolean; brief?: boolean; onAll?: () => void }) {
+export function KinBlock({ id, compact = false, brief = false, onAll, col = false }: { id: string; compact?: boolean; brief?: boolean; onAll?: () => void; col?: boolean }) {
   void cardsTick.value;
   void model.value;
   // запись § 9 о неназванной жене («познал Каин жену свою», Быт 4:17) — в томе карточки: подгрузить (решение 92)
@@ -1199,11 +1210,24 @@ export function KinBlock({ id, compact = false, brief = false, onAll }: { id: st
   // «Год»: помета порядка с верным диапазоном стихов — personOrderNote (src/render/links.ts, стык 5)
   const rows = kinRows(id, yearHow(id, personOrderNote(id, model.value)));
   // телефон (лист на 214 px) — две строки; краткий вид (семья заняла всё небо, § 6) — одна: родители, иначе супруги
-  const shown = brief
-    ? rows.filter((r) => r.kind !== 'year' && r.kind !== 'siblings').slice(0, 1)
-    : compact
-      ? rows.filter((r) => r.kind !== 'year' && r.kind !== 'siblings').slice(0, 2)
-      : rows;
+  // колонка карточки (решение 194): все строки; «Год» — только со стихом («по порядку перечисления, Быт 4:1–2, выв.»,
+  // «по числам Писания, Быт 5:3»): общую оценку по поколениям уже говорят помета «расч.» паспорта и § 13
+  const shown = col
+    ? rows.filter((r) => r.kind !== 'year' || r.parts.some((x) => x.t === 'text' && refsInText(x.text).length > 0))
+    : brief
+      ? rows.filter((r) => r.kind !== 'year' && r.kind !== 'siblings').slice(0, 1)
+      : compact
+        ? rows.filter((r) => r.kind !== 'year' && r.kind !== 'siblings').slice(0, 2)
+        : rows;
+  // цвета ветвей выбранного лица — те же, что на небе (решения 69, 183): образцы в строке детей колонки
+  const th = theme.value;
+  const br = col && id === selected.value ? branchesOf(unions, graph, id) : null;
+  const sw = br
+    ? (key: string) => {
+        const b = br.keys.indexOf(key);
+        return b < 0 ? null : branchOrTribeColor(id, br.keys, b, th);
+      }
+    : undefined;
   if (!shown.length) return null;
   // ничего не обрезается молча (решение 92): не вошедшие строки — «всё родство — ещё N строк»; на телефоне — лист
   // поднимается до половины, к разделам родства подробной карточки
@@ -1218,7 +1242,7 @@ export function KinBlock({ id, compact = false, brief = false, onAll }: { id: st
   return (
     <dl class="dc-kin" aria-label="Родство">
       {shown.map((r, i) => (
-        <KinRowView key={`${r.kind}${i}`} row={r} idx={i} compact={compact} onMore={compact ? all : undefined} owner={id} />
+        <KinRowView key={`${r.kind}${i}`} row={r} idx={i} compact={compact} onMore={compact ? all : undefined} owner={id} col={col} sw={sw} />
       ))}
       {outside && (
         <div class="dc-row out-note">
@@ -1243,14 +1267,73 @@ export function KinBlock({ id, compact = false, brief = false, onAll }: { id: st
 }
 
 /**
+ * «Родство» в колонке карточки (этап 20, решение 194): то, что прежде было в карточке у звезды, — строками под шапкой,
+ * подписи — как у паспорта. Наведение и фокус на имени подсвечивают его линию на небе (previewLinks), Enter — карточка
+ * связи в колонке; обратно — звезда под указателем на небе (hovered) подсвечивает своё имя в строках. Дети разных матерей —
+ * каждая группа своей строкой, с образцом цвета ветви, как на небе.
+ */
+export function KinCol({ id }: { id: string }) {
+  const ref = useRef<HTMLElement>(null);
+  useEffect(
+    () =>
+      effect(() => {
+        const h = hovered.value;
+        const el = ref.current;
+        if (!el) return;
+        for (const b of el.querySelectorAll('.person.sky-hot')) b.classList.remove('sky-hot');
+        if (h) for (const b of el.querySelectorAll(`.person[data-id="${CSS.escape(h)}"]`)) b.classList.add('sky-hot');
+      }),
+    [id],
+  );
+  const p = byId.get(id);
+  return (
+    <section
+      class="kin-col"
+      ref={ref}
+      data-id={id}
+      aria-label={typo(`Родство: ${p?.name ?? id}`)}
+      onMouseLeave={() => {
+        if (previewLinks.peek()) previewLinks.value = null;
+      }}
+    >
+      <KinBlock id={id} col />
+    </section>
+  );
+}
+
+/**
  * Шаг по «Родству» (решение 153; U11): имя выбирает лицо (небо летит к нему, если его нет на экране) и сразу открывает
  * его карточку у звезды — она ждёт звезду, пока небо едет; с клавиатуры фокус — в новую карточку. На телефоне карточка
  * у звезды — это сам лист: он показывает новое лицо и остаётся на прежнем положении (решение 150).
  */
 function kinStep(id: string, keyboard: boolean) {
   goTo(id);
-  if (selected.peek() !== id || !dotsOn.peek() || grid.peek().phone) return;
+  if (selected.peek() !== id) return;
+  // широкий экран (решение 194): «Родство» — в колонке карточки; с клавиатуры (пробел) фокус — на первое имя «Родства»
+  // нового лица, и цепочка идёт дальше без мыши
+  if (!grid.peek().phone) {
+    if (keyboard) focusKinFirst(id);
+    return;
+  }
+  if (!dotsOn.peek()) return;
   openDot({ kind: 'person', id }, { focus: keyboard, grace: 1500 });
+}
+
+/**
+ * Союз на широком экране (решение 194): щелчок или Enter на ромбе — карточка союза в колонке справа. Сначала выбирается
+ * супруг, у которого стоит ромб (смена лица снимает союз, src/ui/reveal.ts), потом — союз; связь снимается. focus —
+ * открыли с клавиатуры: свёрнутая колонка разворачивается, фокус — на заголовок карточки союза.
+ */
+export function openUnionCol(uid: string, from: string, focus = false) {
+  const u = unionById(uid);
+  if (!u) return;
+  if (selectedLink.peek()) selectedLink.value = null;
+  const id = unionSpouse(u, from);
+  if (byId.has(id) && selected.peek() !== id) selected.value = id;
+  selectUnion(uid);
+  if (!focus) return;
+  if (grid.peek().spine) unfoldCard();
+  focusUnionTitle();
 }
 
 /**
@@ -1268,7 +1351,7 @@ function kinInSheet() {
 }
 
 /** «Предки и потомки ▾» (решение 109): потомки, предки, те и другие — по отцам, все поколения; «Настроить…» — лист «Показ». */
-function LineageMenu({ id }: { id: string }) {
+export function LineageMenu({ id }: { id: string }) {
   const item = (dir: 'down' | 'up' | 'both', label: string) => {
     const n = countShow({ kind: 'lineage', id, dir, gen: null, by: 'father' });
     return { key: dir, label: typo(`${label} — ${n}`), onSelect: () => lineageShow(id, dir) };
@@ -1307,7 +1390,7 @@ function LineageMenu({ id }: { id: string }) {
  * «Ближайшая родня» (решение 145; контракт S3, src/ui/show.ts) — команда карточки у звезды; в самой «Ближайшей родне»
  * этого лица — «Вернуть прежний показ» одним действием.
  */
-function NearestCmd({ id }: { id: string }) {
+export function NearestCmd({ id }: { id: string }) {
   const s = show.value;
   const mine = isNearest(s) && s.kind === 'lineage' && s.id === id;
   if (mine && canReturn.value)
@@ -1580,19 +1663,6 @@ export function PersonBody({ id, compact = false, brief = false, legend = false,
 
 const CERT: Record<string, string> = { inference: 'выв.', interpretation: 'толк.' };
 
-/** «Другие сыновья и дочери» (Быт 5:4): у союза отца, который «родил сынов и дочерей», — строка со стихом. */
-function othersLine(u: Union): string | null {
-  void cardsTick.value;
-  if (!u.a || othersUnionOf(unions, u.a)?.id !== u.id) return null;
-  const card = loadedCard(u.a);
-  if (!card) {
-    askCards([u.a]);
-    return null;
-  }
-  const f = othersNote(card);
-  return f ? `Другие сыновья и дочери: имена не названы${f.refs[0] ? ` (${refShort(f.refs[0])})` : ''}` : null;
-}
-
 function UnionBody({ u, from, brief = false }: { u: Union; from: string; brief?: boolean }) {
   const names = unionName(u);
   const kind = unionKindLine(u);
@@ -1788,7 +1858,7 @@ function BasisLine({ k }: { k: LinkKey }) {
  * концы с ролями и строки «вне показа», команды; остальное («Линия», «Союз», основание, неназванный конец) — по
  * «всё о связи — ещё N строк» (onAll): карточка снова полная.
  */
-function LinkBody({ k, brief = false, onAll }: { k: LinkKey; brief?: boolean; onAll?: () => void }) {
+export function LinkBody({ k, brief = false, onAll }: { k: LinkKey; brief?: boolean; onAll?: () => void }) {
   const i = linkInfo(k);
   if (!i) return <p class="dc-note">Связь не найдена в данных.</p>;
   const u = i.union;
@@ -1850,11 +1920,13 @@ function LinkBody({ k, brief = false, onAll }: { k: LinkKey; brief?: boolean; on
               <button
                 type="button"
                 class="person"
-                title="Карточка союза у его ромба на небе"
-                onClick={() => {
+                title={grid.value.phone ? 'Карточка союза у его ромба на небе' : 'Карточка союза справа'}
+                onClick={(e) => {
                   const from = u.a ?? u.b ?? u.kids[0];
                   selectedLink.value = null;
-                  openDot({ kind: 'union', uid: u.id, from });
+                  // широкий экран (решение 194): карточка союза — в колонке, на месте карточки связи
+                  if (!grid.peek().phone) openUnionCol(u.id, from, e.detail === 0);
+                  else openDot({ kind: 'union', uid: u.id, from });
                 }}
               >
                 {typo(unionName(u))}

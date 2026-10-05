@@ -17,7 +17,10 @@ import type { Cert, Sex } from '../../data/types.ts';
 import { kidEdges, membersOf, partnerIn, type Union } from '../../engine/unions.ts';
 import { dateText, isWide, lifeDates, shownPoint, shownYears, spanText, type DateVal } from '../../engine/years.ts';
 import { model } from '../../state.ts';
-import { expanded, originOf, selectUnion, toggleUnion, unionsOf } from '../reveal.ts';
+import { expanded, originOf, selectUnion, toggleUnion, unions, unionsOf } from '../reveal.ts';
+import { askCards, cardsTick, othersNote, othersUnionOf } from './star.ts';
+import { loadedCard } from '../../data/atlas.ts';
+import { refShort } from '../linkwords.ts';
 import { skyMode, workSet } from '../work.ts';
 import { show, showContent } from '../show.ts';
 import { Mark, P, Refs, VerseInsert, plural } from '../common.tsx';
@@ -27,6 +30,7 @@ import { isPeople, passportYears } from './Masthead.tsx';
 import { YearMark } from './Chrono.tsx';
 import { datesOf, modelColophon } from './shared.tsx';
 import { focusQuietly } from '../focus.ts';
+import { toggleKids, unionDotCmd } from '../sky/starnav.ts';
 import { ChronoText } from '../panels/Chronology.tsx';
 import { familyOrderNote } from '../../render/links.ts';
 import { isClaimUnion, unionName } from '../linkwords.ts';
@@ -376,6 +380,10 @@ function kindText(u: Union): string {
  */
 function RevealCommand({ u, from }: { u: Union; from: string }) {
   const open = u.id in expanded.value;
+  // показ «набор» (этап 20, решение 194): команда — словами карточки у ромба, которой на широком экране больше нет:
+  // «Показать детей союза (3)», «Показать ещё (6)», «Показать родителей» (ромб у ребёнка), «Скрыть детей союза»; раскрытие —
+  // как с ромба (toggleKids): объявление небом, число лиц
+  const sky = show.value.kind === 'set' ? unionDotCmd(u, from) : null;
   const [said, setSaid] = useState('');
   const members = membersOf(u);
   const total = members.length;
@@ -391,16 +399,18 @@ function RevealCommand({ u, from }: { u: Union; from: string }) {
         type="button"
         class="union-reveal"
         title={open ? 'Убрать с неба лиц, раскрытых через этот союз' : 'Показать на небе «набор» обоих супругов и всех детей этого союза'}
+        aria-label={sky?.label}
         onClick={() => {
           const was = workSet.peek().size;
-          toggleUnion(u.id, from);
+          if (sky) toggleKids(u.id, from);
+          else toggleUnion(u.id, from);
           const now = workSet.peek().size;
           const n = Math.abs(now - was);
           const who = `${n} ${plural(n, 'лицо', 'лица', 'лиц')}`;
           setSaid(now >= was ? `На небе «набор» показано ещё: ${who}` : `Скрыто, с неба убрано: ${who}`);
         }}
       >
-        {u.kids.length ? (open ? 'Скрыть детей союза' : 'Показать детей союза') : open ? 'Скрыть союз' : 'Показать союз'}
+        {sky ? sky.text : u.kids.length ? (open ? 'Скрыть детей союза' : 'Показать детей союза') : open ? 'Скрыть союз' : 'Показать союз'}
       </button>
       {onSky !== null ? <span class="union-onsky">{typo(`на небе сейчас ${onSky} ${of}`)}</span> : null}
       {inSet !== null ? <span class="union-onsky">{typo(`в наборе ${inSet} ${of}`)}</span> : null}
@@ -435,6 +445,19 @@ function KidsCut({ sig, kids, children }: { sig: string; kids: string[]; childre
   );
 }
 
+/** «Другие сыновья и дочери» (Быт 5:4): у союза отца, который «родил сынов и дочерей», — строка со стихом. */
+export function othersLine(u: Union): string | null {
+  void cardsTick.value;
+  if (!u.a || othersUnionOf(unions, u.a)?.id !== u.id) return null;
+  const card = loadedCard(u.a);
+  if (!card) {
+    askCards([u.a]);
+    return null;
+  }
+  const f = othersNote(card);
+  return f ? `Другие сыновья и дочери: имена не названы${f.refs[0] ? ` (${refShort(f.refs[0])})` : ''}` : null;
+}
+
 /**
  * Карточка союза (решение 71). u — союз; from — лицо, из карточки которого пришли: от него союз раскрывается на небе
  * (не член союза — первый супруг). Заголовок получает фокус, если фокус потерялся (ссылка «союз» ушла из разметки
@@ -466,6 +489,8 @@ export function UnionCard({ u, from }: { u: Union; from?: string | null }) {
     return byId.get(x)?.silent.includes(6) ? [{ x, os: [] as Union[] }] : [];
   });
   const order = familyOrderNote(u.id, m);
+  // «другие сыновья и дочери» (Быт 5:4) — как прежде в карточке у ромба (этап 20, решение 194: она теперь здесь)
+  const others = othersLine(u);
   return (
     <>
       <header class="mast union-mast">
@@ -497,6 +522,12 @@ export function UnionCard({ u, from }: { u: Union; from?: string | null }) {
                   {/* помета порядка с верным диапазоном стихов (этап 11, стык 5; src/render/links.ts): на небе её нет (Г9) */}
                   {order ? <div class="note">годы детей — {order}</div> : null}
                 </dd>
+              </>
+            ) : null}
+            {others ? (
+              <>
+                <dt>Другие дети</dt>
+                <dd>{typo(lowerFirst(others.replace(/^Другие сыновья и дочери: /, 'сыновья и дочери: ')))}</dd>
               </>
             ) : null}
             <dt>Стихи</dt>

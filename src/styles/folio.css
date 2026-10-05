@@ -1870,3 +1870,172 @@ div.workpick.skymenu .wp-head {
   margin-left: 3px;
   vertical-align: 0.1em;
 }
+
+/* ---------- «Родство» и команды неба в колонке (этап 20, решение 194; src/ui/sky/DotCard.tsx, KinCol) ----------
+   Карточки на небе на широком экране нет: её «Родство» — здесь, под шапкой, той же сеткой, что паспорт (подпись поля
+   Jost 12 слева, имена Literata 14 справа). Дети разных матерей — каждая группа своей строкой, перед ней — образец цвета
+   ветви, как на небе. Звезда под указателем на небе подсвечивает своё имя (.sky-hot). */
+.kin-col {
+  margin: 10px 0 2px;
+}
+.kin-col .dc-kin {
+  grid-template-columns: max(88px, 5.5rem) minmax(0, 1fr);
+  column-gap: 10px;
+  margin: 0;
+  padding: 0;
+  border-top: 0;
+}
+.kin-col .dc-lbl {
+  padding-top: 2px;
+  color: var(--ink-2);
+  white-space: normal;
+}
+.kin-col .dc-val {
+  padding: 0 0 6px;
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+}
+.kin-col .dc-sw {
+  display: inline-block;
+  width: 12px;
+  height: 3px;
+  /* цвет ветви — переменной из разметки (KinRowView): в style только переменные (B2) */
+  background: var(--sw);
+  margin: 0 6px 0 0;
+  vertical-align: middle;
+}
+.kin-col .dc-val .person.sky-hot .nm,
+.kin-col .dc-val .person:focus-visible .nm {
+  color: var(--ink);
+  text-decoration-color: var(--ink);
+}
+.kin-col .dc-row.hot .dc-lbl {
+  color: var(--ink);
+}
+/* команды неба (К звезде, Ближайшая родня, Предки и потомки ▾) — первой строкой, сравнение и набор — второй */
+.folio .actions.sky-cmds + .actions {
+  margin-top: 0;
+}
+.folio .actions .menu {
+  position: relative;
+}
+.folio .actions .menu [role='menu'] {
+  top: 100%;
+  left: 0;
+}
+/* строка паспорта «Линия Мессии» (решение 195): у каждой ленты — своя строка с образцом её цвета */
+.passport .pass-line {
+  display: block;
+}
+.passport .pass-line .swatch {
+  width: 14px;
+  margin-right: 6px;
+}
+
+/* ---------- карточка связи в колонке (решение 194) ----------
+   Та же разметка, что у карточки связи на небе (LinkBody), но во всю колонку: без рамки и места у линии. */
+.dotcard.in-folio {
+  position: static;
+  width: auto;
+  max-width: none;
+  border: 0;
+  padding: 0;
+  background: none;
+  visibility: visible;
+}
+/* заголовок связи — под закреплённой полосой листа (её команды стоят справа в первой строке) */
+.folio[data-link] .folio-inner {
+  padding-top: 44px;
+}
+.folio[data-link] .dc-link .dc-head {
+  padding-right: 0;
+}
+.folio[data-link] .dotcard.in-folio h3 {
+  font-size: var(--t-lead);
+  line-height: var(--t-lead-lh);
+}
+.folio[data-link] .dc-kin {
+  margin: 10px 0 0;
+  padding: 8px 0 0;
+}
+.folio[data-link] .dc-cmds {
+  margin: 10px 0 0 -8px;
+  padding: 2px 0 0;
+  border-top: 0;
+}
+
+/* ---------- иерархия текста карточки (этап 20, решение 195; советники: «текст сливается в одно пятно») ----------
+   Четыре ступени вместо одной: часть — курсив кеглем вводки; заголовок раздела — полужирный кеглем вводки (18, а не 16,
+   как текст); подпись поля в записи («Отец:», «Жёны:», «Сын от Салмона:») — гротеском 12, как поле паспорта; текст — 16.
+   Запись от записи — отбивкой 10 px и висячим отступом 12 px: начало каждого факта видно по левому краю, без линеек и
+   коробок (§ 5.6). Ссылки на стихи — тише (--ink-3) и держатся за последнее слово факта: строка не начинается ссылкой. */
+.folio .sec {
+  margin-bottom: 20px;
+}
+.folio .sec h4 {
+  font-size: var(--t-lead);
+  line-height: var(--t-lead-lh);
+}
+/* заголовок в строку — того же кегля, но шаг строк абзаца прежний (24): первая строка не выше остальных */
+.folio .runin h4 {
+  line-height: var(--t-body-lh);
+}
+.folio .sec.long h4 {
+  margin-bottom: 6px;
+}
+.folio .part {
+  margin: 36px 0 12px;
+  font-size: var(--t-lead);
+  line-height: var(--t-lead-lh);
+}
+.folio .part .pn {
+  top: 6px;
+}
+.folio .folio-body > .part:first-child {
+  margin-top: 16px;
+}
+.folio .sec li {
+  margin-bottom: 10px;
+  padding-left: 12px;
+  text-indent: -12px;
+}
+.folio .sec li :where(div, p, ul, li, blockquote, dl) {
+  text-indent: 0;
+}
+.folio .sec .fl {
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: 1;
+  color: var(--ink-2);
+}
+.folio .sec .ref,
+.folio .sec .refsep {
+  color: var(--ink-3);
+}
+.folio .sec .ref {
+  text-decoration-color: var(--ink-3);
+}
+.folio .sec .ref:hover,
+.folio .sec .ref[aria-expanded='true'] {
+  color: var(--ink);
+  text-decoration-color: var(--ink);
+}
+.folio .sec .refs::before {
+  content: '\00a0';
+}
+
+/* образ лица в шапке (решение 74, этап 20 — решение 194): слева от имени, имя и уточнение обтекают его; паспорт — под ним */
+.mast-av {
+  float: left;
+  margin: 6px 14px 4px 0;
+  line-height: 0;
+}
+.mast .passport,
+.mast .lifebar,
+.mast > .brief {
+  clear: left;
+}
+/* уточнение в несколько строк стоит целиком справа от образа, а не подтекает под него */
+.mast-av ~ .dis {
+  display: flow-root;
+}

@@ -39,12 +39,12 @@ async function hop(p: Page, id: string, ms = 1500) {
 }
 /** Строки «Родства» открытой карточки у звезды: вид строки, подпись, текст. Краткий вид раскрывается «всё родство». */
 async function kin(p: Page): Promise<{ kind: string; label: string; text: string }[]> {
-  const all = p.locator('.sky .dotcard .dc-row.all .dc-more');
+  const all = p.locator(':is(.sky .dotcard, .folio .kin-col) .dc-row.all .dc-more');
   if (await all.count()) {
     await all.click();
     await p.waitForTimeout(500);
   }
-  return (await p.evaluate(`[...document.querySelectorAll('.sky .dotcard .dc-row:not(.all)')].map((r) => ({
+  return (await p.evaluate(`[...document.querySelectorAll(':is(.sky .dotcard, .folio .kin-col) .dc-row:not(.all)')].map((r) => ({
     kind: [...r.classList].find((c) => c !== 'dc-row' && c !== 'hot') || '',
     label: (r.querySelector('.dc-lbl')?.textContent || '').trim(),
     text: (() => {
@@ -61,13 +61,13 @@ async function kin(p: Page): Promise<{ kind: string; label: string; text: string
 /** Раскрыть «ещё N» во всех строках «Родства». */
 async function moreAll(p: Page) {
   // краткая карточка у звезды (этап 13): сначала «всё родство — ещё N строк», затем «ещё N» в каждой строке
-  const all = p.locator('.sky .dotcard .dc-row.all .dc-more');
+  const all = p.locator(':is(.sky .dotcard, .folio .kin-col) .dc-row.all .dc-more');
   if (await all.count()) {
     await all.click();
     await p.waitForTimeout(500);
   }
   for (let i = 0; i < 6; i++) {
-    const m = p.locator('.sky .dotcard .dc-row:not(.all) .dc-more');
+    const m = p.locator(':is(.sky .dotcard, .folio .kin-col) .dc-row:not(.all) .dc-more');
     if (!(await m.count())) return;
     await m.first().click();
     await p.waitForTimeout(250);
@@ -467,7 +467,7 @@ export const cards12: Scenario[] = [
       const wives = sp.text.split(', ');
       if (wives.length !== 8 || wives[7] !== 'Вирсавия') return fail(`жёны: ${sp.text}`);
       const ch = row(all, 'children')!;
-      const kids = await p.locator('.sky .dotcard .dc-row.children .person').count();
+      const kids = await p.locator(':is(.sky .dotcard, .folio .kin-col) .dc-row.children .person').count();
       if (kids !== 22) return fail(`детей в строке: ${kids} (${ch.text})`);
       // этап 13, решение 104 (X4 § 2.2 п. 3; CARD-57): союз с ребёнком линии (Вирсавия — Соломон, Нафан) — первым
       if (!/^от Вирсавии — Сын Давида и Вирсавии, Самус, Совав, Нафан, Соломон; от Ахиноамы — Амнон; от Авигеи — Далуиа;/.test(ch.text) || !/мать не названа — Евеар/.test(ch.text)) return fail(`дети: ${ch.text}`);
@@ -493,7 +493,7 @@ export const cards12: Scenario[] = [
         const ch = row(all, 'children');
         if (sp?.text !== w.sp) return fail(`${id}, жёны: ${sp?.text}`);
         if (!ch || !w.ch.test(ch.text)) return fail(`${id}, дети: ${ch?.text}`);
-        const n = await p.locator('.sky .dotcard .dc-row.children .person').count();
+        const n = await p.locator(':is(.sky .dotcard, .folio .kin-col) .dc-row.children .person').count();
         if (n !== w.n) return fail(`${id}: детей ${n}, а не ${w.n}`);
         out.push(`${id}: ${n}`);
       }
@@ -551,12 +551,12 @@ export const cards12: Scenario[] = [
     run: async (p) => {
       if (!(await dot(p, 'solomon'))) return fail('звезда Соломона не на экране');
       await kin(p);
-      const nm = p.locator('.sky .dotcard .dc-row.coparents .person', { hasText: 'Наама' });
+      const nm = p.locator(':is(.sky .dotcard, .folio .kin-col) .dc-row.coparents .person', { hasText: 'Наама' });
       if (!(await nm.count())) return fail('в «Родстве» нет Наамы');
       await nm.focus();
       await p.keyboard.press('Enter');
       await p.waitForTimeout(700);
-      const card = p.locator('.sky .dotcard[data-kind="link"]');
+      const card = p.locator(':is(.sky .dotcard[data-kind="link"], aside.folio[data-link] .dotcard)');
       if (!(await card.count())) return fail('карточка связи не открылась');
       const txt = flat(await card.innerText());
       if (/(^|\s)(муж|жена)(\s|$|,)/.test(txt)) return fail(`в карточке связи — «муж» или «жена»: ${txt.slice(0, 200)}`);

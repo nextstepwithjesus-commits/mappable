@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
-import { byId, graph, loadCard, loadedCard, loadedChrono, loadedLastRef, models, modelDependent, modelInfoOf } from '../../data/atlas.ts';
+import { byId, graph, lineMembership, loadCard, loadedCard, loadedChrono, loadedLastRef, models, modelDependent, modelInfoOf } from '../../data/atlas.ts';
 import type { ChronoRow } from '../../data/atlas.ts';
 import type { Card, Epoch } from '../../data/types.ts';
 import { model, theme } from '../../state.ts';
@@ -52,7 +52,7 @@ const sameAs = (a: string | null, b: string | undefined) => !!a && !!b && a.toLo
  * card — том карточки, когда он пришёл: шапка с сигналами перерисовывается только при смене свойств, а слово ремесла
  * в роли («плотник», а не «мастер») берётся из текстов тома (roleLabel).
  */
-export function Masthead({ id, actions, axis }: { id: string; actions?: ComponentChildren; axis?: [number, number]; card?: Card | null }) {
+export function Masthead({ id, actions, axis, lead, avatar }: { id: string; actions?: ComponentChildren; axis?: [number, number]; card?: Card | null; lead?: ComponentChildren; avatar?: ComponentChildren }) {
   const p = byId.get(id)!;
   const c = model.value.chrono.get(id);
   const life = lifeEpoch(id, c, model.value.epochs);
@@ -63,11 +63,15 @@ export function Masthead({ id, actions, axis }: { id: string; actions?: Componen
   const years = passportYears(id, c, people);
   return (
     <header class="mast">
+      {/* образ лица (решение 74) — слева от имени: на широком экране карточки у звезды нет (решение 194), и силуэт —
+          здесь; уточнение обтекает его */}
+      {avatar ? <span class="mast-av">{avatar}</span> : null}
       {/* имя — в строчном блоке: черта фокуса — по ширине имени (VIS-56); первая строка обходит команды полосы листа */}
       <h2 id={`title-${id}`} tabIndex={-1}>
         <span class="nm">{p.name}</span>
       </h2>
       {p.disambig ? <div class="dis">{typo(p.disambig)}</div> : null}
+      {lead}
       {actions}
       {typoTree(
         <dl class="passport">
@@ -77,7 +81,8 @@ export function Masthead({ id, actions, axis }: { id: string; actions?: Componen
               <dd>{roleLabel(id)}</dd>
             </>
           ) : null}
-          {star && !sameAs(star, tribe?.own?.text) ? (
+          {/* созвездие повторяет колено по браку («Колено Иудино» и «колено Иудино (жена Салмона)») — строки нет (решение 195) */}
+          {star && !sameAs(star, tribe?.own?.text) && !sameAs(star, tribe?.marriage?.replace(/\s*\(.*\)$/, '')) ? (
             <>
               <dt>Созвездие</dt>
               <dd>
@@ -145,10 +150,61 @@ export function Masthead({ id, actions, axis }: { id: string; actions?: Componen
               </dd>
             </>
           ) : null}
+          <LinesRow id={id} />
         </dl>,
       )}
       <LifeBar id={id} axis={axis} />
     </header>
+  );
+}
+
+/** Стих шага линии: у линии Иосифа — из Мф 1, у линии по Луке — из Лк 3; иначе первый. */
+const lineRef = (refs: readonly string[], book: RegExp) => refs.find((r) => book.test(r)) ?? refs[0];
+
+/**
+ * Строка паспорта «Линия Мессии» (этап 20, решение 195): место лица в родословиях Иисуса Христа — номер у Матфея и у Луки
+ * со стихом, образец цвета ленты. Прежде это знали только § 21 в конце карточки и фраза «Кратко» без номеров. Строго по
+ * data/lines (lineMembership); у Самого Иисуса Христа строки нет — с Него родословия начинаются (§ 21).
+ */
+export function lineItems(id: string): { line: 'joseph' | 'mary'; text: string; ref?: string }[] {
+  if (id === 'iisus') return [];
+  const j = lineMembership.joseph.get(id);
+  const m = lineMembership.mary.get(id);
+  const out: { line: 'joseph' | 'mary'; text: string; ref?: string }[] = [];
+  if (j) {
+    const text = j.mt
+      ? `у Матфея — ${j.mt}-е имя`
+      : j.flag === 'omitted-by-mt'
+        ? 'линия Иосифа; у Матфея опущен'
+        : j.flag === 'before-matthew'
+          ? 'линия Иосифа, до Авраама'
+          : 'линия Иосифа';
+    out.push({ line: 'joseph', text, ref: lineRef(j.refs, /^Мф\s/) });
+  }
+  if (m) {
+    const text = m.lk ? `у Луки — ${m.lk}-е имя` : m.flag === 'interpretation' ? 'линия по Луке — по толкованию' : 'линия по Луке';
+    out.push({ line: 'mary', text, ref: lineRef(m.refs, /^Лк\s/) });
+  }
+  return out;
+}
+
+function LinesRow({ id }: { id: string }) {
+  const items = lineItems(id);
+  if (!items.length) return null;
+  return (
+    <>
+      <dt>{items.length > 1 ? 'Линии Мессии' : 'Линия Мессии'}</dt>
+      <dd class="pass-lines">
+        {items.map((x) => (
+          <span class="pass-line" key={x.line}>
+            <span class={`swatch ${x.line === 'joseph' ? 'gold' : 'azure'}`} aria-hidden="true" />
+            {typo(x.text)}
+            {x.ref ? <Refs refs={[x.ref]} owner={`pass-line-${x.line}|${id}`} /> : null}
+            {x.ref ? <VerseInsert owner={`pass-line-${x.line}|${id}`} refs={[x.ref]} /> : null}
+          </span>
+        ))}
+      </dd>
+    </>
   );
 }
 

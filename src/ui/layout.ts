@@ -25,6 +25,7 @@ import { panel, pickMode, selected, type Panel } from '../state.ts';
 import { cardFolded, cardTabs } from './stack.ts';
 import { readingTab } from './card/reading.ts';
 import { storyShown } from './story/state.ts';
+import { selectedLink } from './linkstate.ts';
 
 export const PHONE_MAX = 720;
 export const SPINE_W = 56;
@@ -299,7 +300,9 @@ if (typeof window !== 'undefined') {
 export const grid = computed(() => {
   // рассказ (этап 16, решение 187) — колонка карточки, развёрнутая: в ней рассказ, карточка — его командой
   const story = storyShown.value;
-  const sel = !!selected.value || story;
+  // выбранная связь на широком экране (решение 194): её карточка — в колонке, даже если лицо не выбрано
+  const link = !!selectedLink.value && viewportWidth.value > PHONE_MAX;
+  const sel = !!selected.value || story || link;
   const tabsOnly = !sel && (cardTabs.value.length > 0 || !!readingTab.value);
   return gridFor(viewportWidth.value, panelKind(panel.value), sel || tabsOnly, {
     h: viewportHeight.value,

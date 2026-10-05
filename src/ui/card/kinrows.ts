@@ -37,7 +37,8 @@ import { compareKidGroups, kidsInBirthOrder, onLine } from './Union.tsx';
  * Часть строки: текст или имя-ссылка с ключом своей связи. line — лицо на линии Мессии: «ещё N» строки его не прячет
  * (решение 104), значимость видна знаком лент у имени, а не местом в строке.
  */
-export type KinPart = { t: 'text'; text: string } | { t: 'name'; id: string; key: LinkKey; line?: boolean; role?: string };
+/** union — у начала группы детей одного союза («от Лии — », «мать не названа — »): образец цвета ветви в колонке (решение 194). */
+export type KinPart = { t: 'text'; text: string; union?: string } | { t: 'name'; id: string; key: LinkKey; line?: boolean; role?: string };
 
 export type KinRowKind = 'parents' | 'spouses' | 'coparents' | 'children' | 'siblings' | 'year';
 
@@ -390,8 +391,8 @@ function childrenRow(id: string): KinRow | null {
       }
       const from = fromWhom(g.u, id);
       const other = partnerIn(g.u, id);
-      if (from) parts.push({ t: 'text', text: `${from} — ` });
-      else if (!other) parts.push({ t: 'text', text: `${sexOf(id) === 'f' ? 'отец не назван' : 'мать не названа'} — ` });
+      if (from) parts.push({ t: 'text', text: `${from} — `, union: g.u.id });
+      else if (!other) parts.push({ t: 'text', text: `${sexOf(id) === 'f' ? 'отец не назван' : 'мать не названа'} — `, union: g.u.id });
       else parts.push({ t: 'name', id: other, key: { kind: 'union', union: g.u.id } }, { t: 'text', text: ': ' });
       parts.push(...names(g.kids));
     }

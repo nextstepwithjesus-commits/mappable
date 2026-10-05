@@ -8,14 +8,14 @@
  * сдвигают небо: кольца фокуса там нет, водить нечего.
  */
 import { byId, graph, lineMembership } from '../../data/atlas.ts';
-import { selected, hovered, focused, panel, epochMode } from '../../state.ts';
+import { selected, hovered, focused, panel, epochMode, pickMode } from '../../state.ts';
 import { goTo, skyRef } from '../common.tsx';
 import { LANES_STEP, TIME_STEP, panStep, showAll, stopFlight, stretchBy, zoomBy } from './view.ts';
-import { toggleFull } from '../layout.ts';
+import { grid, toggleFull, unfoldCard } from '../layout.ts';
 import { KEY_STEP, KEY_MS, openStarMenu, stopZoom } from './input.ts';
 import { arrowDir, moveStarFocus, plateFocus, rememberFocus } from './starnav.ts';
 import { skySay } from './SkyA11y.tsx';
-import { focusCardTitle } from '../focus.ts';
+import { focusCardTitle, focusKinFirst } from '../focus.ts';
 
 // ---------- клавиши неба ----------
 
@@ -190,8 +190,12 @@ export function skyKeys(e: KeyboardEvent, nav: boolean, onCanvas: boolean, onSky
       const to = focused.value ?? hovered.value;
       if (!onCanvas || !to) return false;
       goTo(to);
-      // карточка открылась — фокус на её заголовок (MOB-31); выбрано второе лицо — фокус возьмёт открытая панель
-      focusCardTitle(to);
+      // карточка открылась — фокус на её заголовок (MOB-31); выбрано второе лицо — фокус возьмёт открытая панель;
+      // широкий экран (решение 194) — на первое имя «Родства» в колонке справа
+      if (!pickMode.peek() && selected.peek() === to && !grid.peek().phone) {
+        if (grid.peek().spine) unfoldCard();
+        focusKinFirst(to);
+      } else focusCardTitle(to);
       break;
     }
     default:

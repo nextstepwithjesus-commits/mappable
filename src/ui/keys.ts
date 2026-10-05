@@ -15,6 +15,7 @@ import { groupFocus, storyStep } from './story/state.ts';
 import { closeStory, nextStep, prevStep } from './story/story.ts';
 import { clearGroupFocus } from './story/areas.ts';
 import { closeFamilyInset, familyInset, toggleFamilyInset } from './sky/inset.ts';
+import { selectUnion, selectedUnion } from './reveal.ts';
 
 /**
  * «?» — таблица клавиш в «Условных знаках» (раздел «Клавиши»), фокус — на её заголовок; повторное нажатие закрывает
@@ -93,6 +94,8 @@ export type EscapeState = {
   area?: boolean;
   family?: boolean;
   story?: boolean;
+  /** карточка союза в колонке на месте карточки лица (решения 71, 194): Escape возвращает карточку лица */
+  union?: boolean;
   selected: boolean;
   intro: boolean;
 };
@@ -104,7 +107,7 @@ export type EscapeState = {
  * она сворачивается в «Как читать карту», когда ничего другого снимать уже нечего.
  */
 export function escapeTarget(s: EscapeState): keyof EscapeState | null {
-  const order: (keyof EscapeState)[] = ['inset', 'pick', 'panel', 'pins', 'group', 'second', 'area', 'family', 'story', 'selected', 'intro'];
+  const order: (keyof EscapeState)[] = ['inset', 'pick', 'panel', 'pins', 'group', 'second', 'area', 'family', 'story', 'union', 'selected', 'intro'];
   return order.find((k) => s[k]) ?? null;
 }
 
@@ -164,6 +167,7 @@ function onKey(e: KeyboardEvent) {
       area: !!groupFocus.value,
       family: canReturn.value,
       story: storyStep.value !== null,
+      union: !!selectedUnion.value && !!selected.value,
       selected: !!selected.value,
       intro: introOpen.value,
     });
@@ -178,6 +182,7 @@ function onKey(e: KeyboardEvent) {
     else if (next === 'area') clearGroupFocus();
     else if (next === 'family') returnFromFamily();
     else if (next === 'story') closeStory();
+    else if (next === 'union') selectUnion(null);
     else if (next === 'selected') selected.value = null;
     else if (next === 'intro') foldIntro();
     return;

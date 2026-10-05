@@ -314,12 +314,12 @@ export const grammar11: Scenario[] = [
       await p.mouse.click(o.x + js.x, o.y + js.y);
       await p.waitForTimeout(900);
       // этап 14 (решение 153): при открытой подробной карточке у звезды — легенда семьи; родители — во всём «Родстве»
-      const all = p.locator('.sky .dotcard .dc-row.all .dc-more');
-      if (!(await p.locator('.dotcard button.person[data-link="k.iakov.rakhil._.iosif"]').count()) && (await all.count())) {
+      const all = p.locator(':is(.sky .dotcard, .folio .kin-col) .dc-row.all .dc-more');
+      if (!(await p.locator(':is(.dotcard, .kin-col) button.person[data-link="k.iakov.rakhil._.iosif"]').count()) && (await all.count())) {
         await all.first().click();
         await p.waitForTimeout(500);
       }
-      const btn = p.locator('.dotcard button.person[data-link="k.iakov.rakhil._.iosif"]').first();
+      const btn = p.locator(':is(.dotcard, .kin-col) button.person[data-link="k.iakov.rakhil._.iosif"]').first();
       if (!(await btn.count())) return fail('в карточке у звезды Иосифа нет строки родителей со связью');
       await btn.focus();
       await p.keyboard.press('Enter');

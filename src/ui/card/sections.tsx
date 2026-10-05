@@ -806,11 +806,11 @@ function Contemporaries({ id, m, card, ns }: { id: string; m: ModelData; card: C
                 <li class="fact" key={key}>
                   {g ? (
                     <>
-                      <span class="muted">{many ? 'Другие жёны' : 'Другая жена'} </span>
-                      <Glued after={<span class="muted">:</span>}>{g}</Glued>{' '}
+                      <span class="muted fl">{many ? 'Другие жёны' : 'Другая жена'} </span>
+                      <Glued after={<span class="muted fl">:</span>}>{g}</Glued>{' '}
                     </>
                   ) : (
-                    <span class="muted">{many ? 'Другие жёны того же мужа' : 'Другая жена того же мужа'}: </span>
+                    <span class="muted fl">{many ? 'Другие жёны того же мужа' : 'Другая жена того же мужа'}: </span>
                   )}
                   <InlineList ids={r.ids} item={(x, after) => <PN id={x} after={after} years={ys(x)} />} />
                   <Refs refs={r.refs} owner={key} />
@@ -848,7 +848,7 @@ function Contemporaries({ id, m, card, ns }: { id: string; m: ModelData; card: C
             data.kin.length <= KIN_FLAT_MAX ? (
               // до 8 имён по близости степени, остальные — «ещё N»
               <p class="fact">
-                <span class="muted">Родня: </span>
+                <span class="muted fl">Родня: </span>
                 {(kinAll ? data.kin : data.kin.slice(0, KIN_SHOW)).map((x, i, a) => kinItem(x, i, i === a.length - 1))}
                 {!kinAll && data.kin.length > KIN_SHOW ? (
                   <>
@@ -884,7 +884,7 @@ function Contemporaries({ id, m, card, ns }: { id: string; m: ModelData; card: C
                 </p>
                 {gs.map((g) => (
                   <p key={g.label}>
-                    <span class="muted">{g.label}: </span>
+                    <span class="muted fl">{g.label}: </span>
                     <InlineList ids={g.ids} item={(x, after) => <PN id={x} lower after={after} years={ys(x)} />} />
                   </p>
                 ))}
@@ -1715,13 +1715,13 @@ export function buildSections(
       fate6.attach.delete(who);
       return subNotes(fs, refs, key, { ids: [who], label });
     };
-    if (p.father) rows.push(<li class="fact" key="f">{fLabel}: <PN id={p.father} lower dis={D(p.father)} /><Refs refs={fRefs} owner={ns + 'p6f'} /><Mark cert={pc} />{p.fatherGap && <span class="muted"> — родословие здесь может пропускать поколения</span>}{under6(p.father, fRefs, 'p6fn.')}<VerseInsert owner={ns + 'p6f'} refs={fRefs} /></li>);
-    if (p.mother) rows.push(<li class="fact" key="m">{people ? 'Произошли от' : 'Мать'}: <PN id={p.mother} lower dis={D(p.mother)} /><Refs refs={mRefs} owner={ns + 'p6m'} /><Mark cert={p.motherCert} />{under6(p.mother, mRefs, 'p6mn.')}<VerseInsert owner={ns + 'p6m'} refs={mRefs} /></li>);
+    if (p.father) rows.push(<li class="fact" key="f"><span class="fl">{fLabel}: </span><PN id={p.father} lower dis={D(p.father)} /><Refs refs={fRefs} owner={ns + 'p6f'} /><Mark cert={pc} />{p.fatherGap && <span class="muted"> — родословие здесь может пропускать поколения</span>}{under6(p.father, fRefs, 'p6fn.')}<VerseInsert owner={ns + 'p6f'} refs={fRefs} /></li>);
+    if (p.mother) rows.push(<li class="fact" key="m"><span class="fl">{people ? 'Произошли от' : 'Мать'}: </span><PN id={p.mother} lower dis={D(p.mother)} /><Refs refs={mRefs} owner={ns + 'p6m'} /><Mark cert={p.motherCert} />{under6(p.mother, mRefs, 'p6mn.')}<VerseInsert owner={ns + 'p6m'} refs={mRefs} /></li>);
     p.otherParents.forEach((o, i) =>
       rows.push(
         // «Приёмная мать: дочь фараонова», «Приёмный отец: Мардохей» — вид и роль одним словосочетанием, согласованным по роду
         <li class="fact" key={`o${i}`}>
-          {otherParentLabel(o.kind, o.role)}: <PN id={o.id} lower dis={D(o.id)} />
+          <span class="fl">{otherParentLabel(o.kind, o.role)}: </span><PN id={o.id} lower dis={D(o.id)} />
           <Refs refs={o.refs} owner={ns + `p6o${i}`} />
           <Mark cert={o.cert} />
           {under6(o.id, o.refs, `p6on${i}.`, otherParentLabel(o.kind, o.role))}
@@ -1733,7 +1733,7 @@ export function buildSections(
       rows.push(
         // стих второго звена (родитель родителя; первое — в строке родителя выше): этап 19, К-04, ТЗ П-3
         <li class="fact" key={`g${i}`}>
-          {r.label}: <PN id={r.ids[0]} lower dis={D(r.ids[0])} />
+          <span class="fl">{r.label}: </span><PN id={r.ids[0]} lower dis={D(r.ids[0])} />
           <Refs refs={r.refs} owner={ns + `p6g${i}`} />
           <MarkNote label="выв." full="вывод: родитель родителя — по двум связям, записанным в Писании" />
           <VerseInsert owner={ns + `p6g${i}`} refs={r.refs} />
@@ -1834,7 +1834,7 @@ export function buildSections(
               {kinds.map((g, gi) => (
                 <Fragment key={g.k}>
                   {gi ? ' ' : ''}
-                  <span class="muted">{gi ? lowerFirst(spouseKindLabel(g.k, g.ids.length)) : spouseKindLabel(g.k, g.ids.length)}: </span>
+                  <span class="muted fl">{gi ? lowerFirst(spouseKindLabel(g.k, g.ids.length)) : spouseKindLabel(g.k, g.ids.length)}: </span>
                   <InlineList ids={g.ids} item={(x, after) => <PN id={x} dis={same9.has(x) || D(x)} after={after} />} tail={gi < kinds.length - 1 ? ';' : '.'} />
                 </Fragment>
               ))}
@@ -1900,7 +1900,7 @@ export function buildSections(
         const refs = messiah ? MESSIAH_BIRTH.fatherRefs : k.parentRefs;
         return (
           <li class="fact" key={`l${kid}`}>
-            {bySex(k.sex, 'Законный сын', 'Законная дочь')}: <Glued after={k.mother ? (mother ? ',' : ';') : undefined}><P id={kid} /></Glued>
+            <span class="fl">{bySex(k.sex, 'Законный сын', 'Законная дочь')}: </span><Glued after={k.mother ? (mother ? ',' : ';') : undefined}><P id={kid} /></Glued>
             {k.mother ? (mother ? <> {bySex(k.sex, 'рождённый', 'рождённая')} {mother}</> : <> мать — <PN id={k.mother} lower dis={D(k.mother)} /></>) : null}
             <Refs refs={refs} owner={ns + `c10l${i}`} />
             {unionAfter(unionById(unionId(id, k.mother ?? null)))}
@@ -1912,7 +1912,7 @@ export function buildSections(
       const refs = messiah ? MESSIAH_BIRTH.mother.refs : k.parentRefs;
       return (
         <li class="fact" key={`l${kid}`}>
-          {bySex(k.sex, 'Сын', 'Дочь')}: <Glued after={messiah ? undefined : ';'}><P id={kid} /></Glued>
+          <span class="fl">{bySex(k.sex, 'Сын', 'Дочь')}: </span><Glued after={messiah ? undefined : ';'}><P id={kid} /></Glued>
           {messiah ? <> — {MESSIAH_BIRTH.mother.text}</> : <> законный отец — <PN id={k.father!} lower dis={D(k.father!)} /></>}
           <Refs refs={refs} owner={ns + `c10l${i}`} />
           {unionAfter(unionById(unionId(k.father ?? null, id)))}
@@ -1970,13 +1970,13 @@ export function buildSections(
         <>
           {all.length ? (
             <p key={`g${gen}`}>
-              <span class="muted">{descendantsNoun(gen, sexes(all))}: </span>
+              <span class="muted fl">{descendantsNoun(gen, sexes(all))}: </span>
               <GroupList groups={groups} item={item} keep={onLine} />
             </p>
           ) : null}
           {people.length ? (
             <p key={`g${gen}p`}>
-              <span class="muted">{peoplesLabel(gen, owner)}: </span>
+              <span class="muted fl">{peoplesLabel(gen, owner)}: </span>
               <InlineList ids={people} item={item} keep={onLine} />
             </p>
           ) : null}
@@ -2060,7 +2060,7 @@ export function buildSections(
     };
     const row = (key: string, label: ComponentChildren, ids: string[], refs: string[] = [], u?: Union) => (
       <p key={key} class={refs.length ? 'fact' : undefined}>
-        <span class="muted">{label}: </span>
+        <span class="muted fl">{label}: </span>
         {kidsList(ids)}
         <Refs refs={refs} owner={ns + `c10r${key}`} />
         {unionAfter(u)}
@@ -2081,7 +2081,7 @@ export function buildSections(
       const nt = noteFor(ids);
       return (
         <p key="single" class={nt.refs.length ? 'fact' : undefined}>
-          <span class="muted">{nt.lead ? typo(nt.lead) : childrenNoun(sexes(ids))}: </span>
+          <span class="muted fl">{nt.lead ? typo(nt.lead) : childrenNoun(sexes(ids))}: </span>
           {ids.map((x, i) => {
             const par = parentOf(x);
             const g = caseD(par, 'gen');
@@ -2128,8 +2128,8 @@ export function buildSections(
         return (
           <Fragment key={other}>
             <p key={`m${other}`} class={nt.refs.length ? 'fact' : undefined}>
-              <span class="muted">{noun} от </span>
-              <Glued after={<span class="muted">:</span>}>{g}</Glued>{' '}
+              <span class="muted fl">{noun} от </span>
+              <Glued after={<span class="muted fl">:</span>}>{g}</Glued>{' '}
               {kidsList(ids)}
               <Refs refs={nt.refs} owner={ns + `c10m${other}`} />
               {unionAfter(groupUnion(other))}
@@ -2142,7 +2142,7 @@ export function buildSections(
       return (
         <Fragment key={other}>
           <p key={`m${other}`} class={nt.refs.length ? 'fact' : undefined}>
-            <span class="muted">{noun}: </span>
+            <span class="muted fl">{noun}: </span>
             {kidsList(ids, ';')}
             <span class="muted"> {byId.get(other)?.sex === 'f' ? 'мать' : 'отец'} — </span>
             <PN id={other} lower dis={D(other)} />
@@ -2174,7 +2174,7 @@ export function buildSections(
             const refs = es.length <= 3 ? [...new Set(es.flatMap((e) => e.refs))] : [];
             return (
               <p class="fact" key={`c${claim}`}>
-                <span class="muted">{otherChildLabel(claim, sexes(ids))}: </span>
+                <span class="muted fl">{otherChildLabel(claim, sexes(ids))}: </span>
                 <InlineList ids={ids} item={(x, after) => <PN id={x} lower dis={same10.has(x) || D(x) || undefined} after={after} />} />
                 <Refs refs={refs} owner={ns + `c10o${i}`} />
                 <Mark cert={es[0].cert} />
@@ -2239,7 +2239,7 @@ export function buildSections(
       const refs = opts.refs ?? groupRefs(ids);
       return (
         <p class="fact" key={key}>
-          <span class="muted">{label}: </span>
+          <span class="muted fl">{label}: </span>
           <InlineList ids={ids} item={item} />
           {opts.tail}
           <Refs refs={refs} owner={ns + `b11${key}`} />
@@ -2275,7 +2275,7 @@ export function buildSections(
       const refs = groupRefs(ids);
       rows.push(
         <p class="fact" key={kind}>
-          <span class="muted">{halfSiblingsLabel(kind, sexesOf(ids))}: </span>
+          <span class="muted fl">{halfSiblingsLabel(kind, sexesOf(ids))}: </span>
           {[...by].map(([other, xs], gi) => {
             const g = other ? caseD(other, 'gen') : null;
             const last = gi === by.size - 1;
@@ -2308,7 +2308,7 @@ export function buildSections(
     }
     const termRows = [...byTerm.values()].map(({ t, ...g }, i) => (
       <li class="fact" key={`k${t}`}>
-        <span class="muted">{capFirst(g.ids.length > 1 ? pluralKin(t) : t)}: </span>
+        <span class="muted fl">{capFirst(g.ids.length > 1 ? pluralKin(t) : t)}: </span>
         <InlineList ids={g.ids} item={item} />
         <Refs refs={g.refs} owner={ns + `ks11.${i}`} />
         <Mark cert={g.cert} />
@@ -2587,7 +2587,7 @@ export function buildSections(
       if (!listed.length) return null;
       return (
         <li class="fact" key={role}>
-          <span class="muted">{placeRoleLabel(role, p.sex, people)}: </span>
+          <span class="muted fl">{placeRoleLabel(role, p.sex, people)}: </span>
           <PlaceList places={listed} owner={ns + `p15.${role}`} link={L} />
           {see ? (
             <>
@@ -3010,7 +3010,7 @@ function PeriodToc({ parts, counts, anchor }: { parts: LifePart[]; counts: numbe
   };
   return (
     <p class="periods">
-      <span class="muted">По периодам: </span>
+      <span class="muted fl">По периодам: </span>
       {parts.map((r, k) => (
         <Fragment key={k}>
           {k ? ' ' : ''}

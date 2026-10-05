@@ -190,7 +190,7 @@ export const polish6: Scenario[] = [
     // этап 11 (решение 78, Г9): порядок рождения виден по положению, помет «годы — по порядку …» на небе нет ни в каком
     // масштабе; их текст — в строке «Год» карточки у звезды ребёнка (и в подсказке, в карточке союза). Прежняя проверка «помета
     // не на линиях» заменена проверкой, что пометы на небе нет, а строка «Год» у Каина называет место перечисления
-    title: 'Задача P3, изъян 1; этап 11 (Г9): выбран Адам, союз с Евой раскрыт — помет порядка на небе нет (обычный масштаб и «Вписать»); у звезды Каина строка «Год» — «по порядку перечисления, Быт 4:…, выв.»',
+    title: 'Задача P3, изъян 1; этап 11 (Г9): выбран Адам, союз с Евой раскрыт — помет порядка на небе нет (обычный масштаб и «Вписать»); у Каина в «Родстве» карточки справа строка «Год» — «по порядку перечисления, Быт 4:…, выв.» (решение 194)',
     run: async (p) => {
       await setup(p, ADAM_OPEN);
       for (const step of ['обычный', '«Вписать»']) {
@@ -204,13 +204,8 @@ export const polish6: Scenario[] = [
       const cv = (await p.locator('.sky canvas').boundingBox())!;
       await p.mouse.click(cv.x + k.x, cv.y + k.y);
       await p.waitForTimeout(1000);
-      // этап 14 (решение 153): при открытой подробной карточке у звезды — легенда семьи; строка «Год» — во всём «Родстве»
-      const all = p.locator('.sky .dotcard .dc-row.all .dc-more');
-      if (await all.count()) {
-        await all.first().click();
-        await p.waitForTimeout(500);
-      }
-      const card = flat(await p.locator('.sky .dotcard[data-placed]').first().innerText().catch(() => ''));
+      // этап 20 (решение 194): карточки у звезды на широком экране нет — строка «Год» со стихом — в «Родстве» карточки справа
+      const card = flat(await p.locator('.folio .kin-col').first().innerText().catch(() => ''));
       if (!/по порядку перечисления, Быт 4:[^,]*, выв\./.test(card)) return fail(`строка «Год» у Каина: «${card.slice(0, 200)}»`);
       return (await overlaps(p)) === 0 ? pass('помет на небе нет; «Год» у Каина — по порядку перечисления') : fail('подписи наложились');
     },
@@ -267,7 +262,9 @@ export const polish6: Scenario[] = [
   },
   {
     n: 706,
-    title: 'Задача P3, изъян 5: карточка у точки союза Адама и Евы (раскрыт) не закрывает точку и звёзды семьи; лист без тени и скругления, 1 px или двойная рамка; в командах нет стрелок',
+    // этап 20 (решение 194): карточки у точки на широком экране нет — карточка союза справа, небо открыто; проверка «не
+    // закрывает точку и звёзды семьи» стала проверкой, что на небе карточки нет; лист и команды — те же требования
+    title: 'Задача P3, изъян 5; решение 194: щелчок по точке союза Адама и Евы (раскрыт) — карточка союза справа, на небе карточки нет (точка и звёзды семьи открыты); лист без тени и скругления; в командах нет стрелок',
     run: async (p) => {
       for (const theme of ['night', 'day'] as const) {
         await setup(p, { ...ADAM_OPEN, theme });
@@ -276,22 +273,16 @@ export const polish6: Scenario[] = [
         const cv = (await p.locator('.sky canvas').boundingBox())!;
         await p.mouse.click(cv.x + d.x, cv.y + d.y);
         await p.waitForTimeout(900);
-        const card = p.locator('.sky .dotcard[data-placed]');
-        const b = await card.boundingBox();
-        if (!b) return fail(`${theme}: нет карточки у точки`);
-        const box = { x: b.x - cv.x, y: b.y - cv.y, w: b.width, h: b.height };
-        if (inside(d, box, 4)) return fail(`${theme}: карточка на точке союза`);
-        for (const id of ADAM_KIDS) {
-          const q = await starAt(p, id);
-          if (q && inside(q, box, 3)) return fail(`${theme}: карточка на звезде ${id}`);
-        }
+        if (await p.locator('.sky .dotcard').count()) return fail(`${theme}: на небе — карточка у точки`);
+        const card = p.locator('aside.folio[data-union="u:adam+eva"]');
+        if (!(await card.count())) return fail(`${theme}: справа нет карточки союза`);
         const css = await card.evaluate((el) => {
           const c = getComputedStyle(el);
-          return { shadow: c.boxShadow, radius: c.borderTopLeftRadius, width: c.borderTopWidth, style: c.borderTopStyle };
+          return { shadow: c.boxShadow, radius: c.borderTopLeftRadius };
         });
         if (css.shadow !== 'none' || css.radius !== '0px') return fail(`${theme}: тень или скругление: ${JSON.stringify(css)}`);
-        const cmds = (await card.locator('.dc-cmds button').allInnerTexts()).join(' | ');
-        if (/[→←↗>]/.test(cmds)) return fail(`${theme}: стрелки в командах: ${cmds}`);
+        const cmds = (await card.locator('button').allInnerTexts()).join(' | ');
+        if (/[→←↗]/.test(cmds)) return fail(`${theme}: стрелки в командах: ${cmds}`);
       }
       return pass();
     },

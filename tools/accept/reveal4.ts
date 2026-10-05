@@ -81,7 +81,14 @@ async function toggleVia(p: Page, q: Plate): Promise<string | null> {
   await clickPlate(p, q);
   await p.waitForTimeout(500);
   const card = p.locator(`.sky .dotcard[data-kind="union"][data-id="${q.uid}"][data-placed]`);
-  if (!(await card.count())) return null;
+  // этап 20 (решение 194): на широком экране карточка союза — в колонке справа, команда раскрытия — её «union-reveal»
+  if (!(await card.count())) {
+    const col = p.locator(`.folio[data-union="${q.uid}"] .union-reveal`);
+    if (!(await col.count())) return null;
+    const text = (await col.first().innerText()).trim();
+    await col.first().click();
+    return text;
+  }
   const cmd = card.locator('.dc-cmds button', { hasText: /^(Раскрыть|Свернуть|Скрыть|Показать)/ });
   if (!(await cmd.count())) return null;
   const text = (await cmd.first().innerText()).trim();
@@ -127,7 +134,7 @@ export const reveal4: Scenario[] = [
   },
   {
     n: 501,
-    title: 'Решение 76: щелчок по точке союза открывает карточку у точки, набор не меняется; её «Раскрыть детей (3)» раскрывает союз: Ева, Каин, Авель и Сиф на небе, точка раскрыта, небо не прыгает (Адам на месте экрана), звёзды не под точкой; объявление «Раскрыт союз Адама и Евы: 4 лица»',
+    title: 'Решения 76, 194: щелчок по точке союза открывает карточку союза (на широком экране — справа), набор не меняется; её «Показать детей союза (3)» раскрывает союз: Ева, Каин, Авель и Сиф на небе, точка раскрыта, небо не прыгает (Адам на месте экрана), звёзды не под точкой; объявление «Раскрыт союз Адама и Евы: 4 лица»',
     run: async (p) => {
       await setup(p, ADAM);
       const q0 = await plateOf(p, 'u:adam+eva');
@@ -152,8 +159,8 @@ export const reveal4: Scenario[] = [
       }
       const said = await liveText(p);
       if (!/Раскрыт союз Адама и Евы: 4 лица/.test(said)) return fail(`объявление: «${said}»`);
-      // карточка у точки остаётся, её команда — теперь свёртка
-      const now = (await p.locator('.sky .dotcard .dc-cmds button').allInnerTexts()).map((t) => t.trim());
+      // карточка союза остаётся, её команда — теперь свёртка (этап 20, решение 194: карточка — в колонке справа)
+      const now = (await p.locator('.sky .dotcard .dc-cmds button, .folio[data-union] .union-reveal').allInnerTexts()).map((t) => t.trim());
       if (!now.includes('Скрыть детей союза')) return fail(`команды карточки после раскрытия: ${now.join(' | ')}`);
       const d = await canvasData(p);
       return pass(`точка ${q0.x},${q0.y} → ${q1.x},${q1.y}; Адам на месте; подписи ${d.named}`);
@@ -202,7 +209,7 @@ export const reveal4: Scenario[] = [
   },
   {
     n: 504,
-    title: 'Решение 76: щелчок по звезде в небе «набор» — карточка лица справа и карточка у звезды; её «Продолжить ветвь» показывает точку союза Каина, команда становится «Свернуть ветвь»; повторный щелчок по звезде точку не прячет',
+    title: 'Решения 76, 194: щелчок по звезде в небе «набор» — карточка лица справа (на небе карточки нет); её «Продолжить ветвь» показывает точку союза Каина, команда становится «Скрыть ветвь»; повторный щелчок по звезде точку не прячет',
     run: async (p) => {
       await setup(p, ADAM_OPEN);
       const k = await starAt(p, 'kain');
@@ -212,12 +219,14 @@ export const reveal4: Scenario[] = [
       await p.waitForTimeout(900);
       if (!/#\/kain/.test(p.url())) return fail(`выбрано не лицо Каина: ${p.url()}`);
       if (await plateOf(p, 'u:kain+')) return fail('точка союза Каина появилась без команды');
-      const go = p.locator('.sky .dotcard[data-kind="person"][data-id="kain"] .dc-cmds button', { hasText: 'Продолжить ветвь' });
-      if (!(await go.count())) return fail('в карточке у звезды нет «Продолжить ветвь»');
+      // этап 20 (решение 194): карточки у звезды на широком экране нет — «Продолжить ветвь» в строке команд неба карточки справа
+      const go = p.locator('.folio .actions.sky-cmds button', { hasText: 'Продолжить ветвь' });
+      if (await p.locator('.sky .dotcard').count()) return fail('на широком экране на небе — карточка у звезды');
+      if (!(await go.count())) return fail('в карточке Каина справа нет «Продолжить ветвь»');
       await go.click();
       await p.waitForTimeout(900);
       if (!(await plateOf(p, 'u:kain+'))) return fail(`нет точки союза Каина: ${(await canvasData(p)).plates}`);
-      if (!(await p.locator('.sky .dotcard .dc-cmds button', { hasText: 'Скрыть ветвь' }).count())) return fail('команда не стала «Свернуть ветвь»');
+      if (!(await p.locator('.folio .actions.sky-cmds button', { hasText: 'Скрыть ветвь' }).count())) return fail('команда не стала «Скрыть ветвь»');
       await p.mouse.click(at.x, at.y);
       await p.waitForTimeout(700);
       const r = await reveal(p);
@@ -244,7 +253,7 @@ export const reveal4: Scenario[] = [
   },
   {
     n: 506,
-    title: 'Клавиатура: стрелками — к точке союза (холст называет её), Enter открывает карточку у точки с фокусом на «Раскрыть детей (3)», Enter раскрывает; объявление в живой области',
+    title: 'Клавиатура: стрелками — к точке союза (холст называет её), Enter открывает карточку союза справа, фокус на её заголовке (решение 194); её «Показать детей союза (3)» — Enter раскрывает; объявление в живой области',
     run: async (p) => {
       await setup(p, ADAM);
       await p.locator('.sky canvas').focus();
@@ -261,8 +270,13 @@ export const reveal4: Scenario[] = [
       if (!/^Союз Адама и Евы/.test(label.replace(/ /g, ' '))) return fail(`пункт точки союза: «${label}»`);
       await p.keyboard.press('Enter');
       await p.waitForTimeout(600);
-      const focus = await p.evaluate(() => (document.activeElement?.closest('.dotcard') ? (document.activeElement as HTMLElement).innerText.trim() : ''));
-      if (focus !== 'Показать детей союза (3)') return fail(`фокус после Enter: «${focus}»`);
+      // этап 20 (решение 194): Enter на ромбе открывает карточку союза справа, фокус — на её заголовке; команда раскрытия —
+      // в ней, словами прежней карточки у ромба
+      const focus = await p.evaluate(() => document.activeElement?.id ?? '');
+      if (focus !== 'union-title') return fail(`фокус после Enter: «${focus}», а не на заголовке карточки союза`);
+      const cmd = p.locator('.folio[data-union="u:adam+eva"] .union-reveal');
+      if (((await cmd.innerText().catch(() => '')) ?? '').trim() !== 'Показать детей союза (3)') return fail(`команда карточки союза: «${await cmd.innerText().catch(() => '')}»`);
+      await cmd.focus();
       await p.keyboard.press('Enter');
       await p.waitForTimeout(1000);
       const ids = await stored(p);

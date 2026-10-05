@@ -61,9 +61,9 @@ export const inset16: Scenario[] = [
       const [x, y] = at.split(' ').map(Number);
       await p.mouse.click(box.x + x, box.y + y);
       await p.waitForTimeout(900);
-      await p.locator('.sky .dotcard .dc-lineage > button').click();
+      await p.locator(':is(.sky .dotcard, .folio .kin-col, aside.folio[data-link] .dotcard) .dc-lineage > button').click();
       await p.waitForTimeout(300);
-      const item = p.locator('.sky .dotcard [role="menuitem"]', { hasText: 'Семья созвездием' });
+      const item = p.locator(':is(.sky .dotcard, .folio .actions) [role="menuitem"]', { hasText: 'Семья созвездием' });
       if (!(await item.count())) return fail('в меню «Предки и потомки ▾» нет «Семья созвездием»');
       await item.first().click();
       await p.waitForTimeout(1200);
@@ -217,11 +217,11 @@ export const inset16: Scenario[] = [
       const [x, y] = at.split(' ').map(Number);
       await p.touchscreen.tap(box.x + x, box.y + y);
       await p.waitForTimeout(900);
-      const menu = p.locator('.dotcard .dc-lineage > button').first();
+      const menu = p.locator(':is(.dotcard, .folio .actions) .dc-lineage > button').first();
       if (!(await menu.count())) return fail('нет меню «Предки и потомки ▾»');
       await menu.tap();
       await p.waitForTimeout(300);
-      await p.locator('.dotcard [role="menuitem"]', { hasText: 'Ближайшая родня' }).first().tap();
+      await p.locator(':is(.dotcard, .folio .actions) [role="menuitem"]', { hasText: 'Ближайшая родня' }).first().tap();
       await p.waitForTimeout(1500);
       if (!(await p.locator('.sky .fam-inset.fam-sheet').count())) return fail('лист «Семья» не открылся');
       const h = await head(p);

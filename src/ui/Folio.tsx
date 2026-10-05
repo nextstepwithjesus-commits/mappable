@@ -8,7 +8,8 @@ import { cardFull, grid, toggleCardFull, unfoldCard } from './layout.ts';
 import { skyRef, plural, CAN_PRINT, goTo, viewTick } from './common.tsx';
 import { lowerFirst } from './text/ru.ts';
 import { typo } from './text/typo.ts';
-import { Masthead, isPeople, passportYears } from './card/Masthead.tsx';
+import { Masthead, isPeople, lineItems, passportYears } from './card/Masthead.tsx';
+import { Avatar } from './card/Avatar.tsx';
 import { Close } from './controls.tsx';
 import { SECTIONS, PARTS, buildSections, familyIds, contemporaryGroups } from './card/sections.tsx';
 import { Clamp, clampItems } from './card/Clamp.tsx';
@@ -24,7 +25,10 @@ import { WorkButton } from './panels/Work.tsx';
 import { cardTitle, focusCardTitle, focusQuietly } from './focus.ts';
 import { closeCard, dropReading, readingTab } from './card/reading.ts';
 import { selectedUnion, selectUnion, unionById } from './reveal.ts';
-import { DotSheet } from './sky/DotCard.tsx';
+import { DotSheet, KinCol, LineageMenu, LinkBody, NearestCmd, closeLink, personDotCmds, continueDot, foldDot, parentsDot } from './sky/DotCard.tsx';
+import { selectedLink } from './linkstate.ts';
+import { linkKeyString } from '../engine/linkkey.ts';
+import { linkSpeech } from './linkwords.ts';
 import { UnionCard, openerSection, unionTitle, unionYears } from './card/Union.tsx';
 import { cardsTick } from './card/star.ts';
 import { outsideOf, show, showContent } from './show.ts';
@@ -194,13 +198,15 @@ export type BodyStatus = 'ok' | 'loading' | 'error';
  * status — вместо разделов строка «Загрузка карточки…» или сообщение «не удалось загрузить» с «Повторить» (onRetry).
  */
 export function CardPage({
-  id, body, stale = false, current = 0, actions, status = 'ok', onRetry,
+  id, body, stale = false, current = 0, actions, kin, status = 'ok', onRetry,
 }: {
   id: string;
   body: { id: string; card: Card | null; chrono: Chrono | null } | null;
   stale?: boolean;
   current?: number;
   actions?: ComponentChildren;
+  /** «Родство» в колонке (решение 194): под шапкой, перед командами */
+  kin?: ComponentChildren;
   status?: BodyStatus;
   onRetry?: () => void;
 }) {
@@ -399,8 +405,9 @@ export function CardPage({
 
   return (
     <>
-      <Masthead key={id} id={id} card={body?.id === id ? card : null} />
-      {status === 'error' ? null : <Brief key={`brief|${bodyKey}`} id={bodyId} card={card} />}
+      {/* «Кратко» — под именем и уточнением, до паспорта: кто это — одной фразой, затем сведения таблицей (решение 195) */}
+      <Masthead key={id} id={id} card={body?.id === id ? card : null} avatar={phoneNow ? null : <Avatar id={id} size={56} />} lead={status === 'error' ? null : <Brief key={`brief|${bodyKey}`} id={bodyId} card={card} lines={!lineItems(bodyId).length} />} />
+      {kin}
       {actions}
       <div class="mast-rule" aria-hidden="true" ref={lead} />
       {status === 'error' ? (
@@ -753,27 +760,37 @@ function CardActions({ id, phone }: { id: string; phone: boolean }) {
     if (pickFrom) window.setTimeout(() => document.querySelector<HTMLElement>('.sky canvas')?.focus({ preventScroll: true }), 0);
   };
   usePickReturn();
+  // широкий экран (решение 194): команды карточки у звезды — здесь: «Ближайшая родня», «Предки и потомки ▾», в показе
+  // «набор» — раскрытие ветви и родителей; первая строка — небо, вторая — сравнение и набор
+  const set = !phone && show.value.kind === 'set' ? personDotCmds(id) : null;
+  const sky = phone ? null : (
+    <div class="actions sky-cmds">
+      <ToStar id={id} phone={phone} outside={outside} />
+      <NearestCmd id={id} />
+      <LineageMenu id={id} />
+      {set?.branch && (
+        <button
+          type="button"
+          onClick={() => (set.branch === 'more' ? continueDot(id) : foldDot(id))}
+          title={set.branch === 'more' ? 'Показать на небе ромбы союзов лица: его браки и союз родителей' : 'Убрать ромбы союзов лица и раскрытое от них'}
+        >
+          {set.branch === 'more' ? 'Продолжить ветвь' : 'Скрыть ветвь'}
+        </button>
+      )}
+      {set?.parents && (
+        <button type="button" onClick={() => parentsDot(id)} title={set.parents === 'show' ? 'Родители, братья и сёстры — на небо' : 'Убрать с неба союз родителей, показанный от лица'}>
+          {set.parents === 'show' ? 'Показать родителей' : 'Скрыть родителей'}
+        </button>
+      )}
+    </div>
+  );
   return (
+    <>
+    {sky}
     <div class="actions">
       {/* на узком листе (400 px и уже) — «К звезде»: четыре команды — одной строкой (VIS-79, IX-81); имя для диктора —
           полное, видимая надпись входит в него (WCAG 2.5.3) */}
-      <button
-        type="button"
-        class="show-on-sky"
-        title={outside ? 'Лица нет в нынешнем показе: показать всё небо и перелететь к его звезде' : 'Перелететь к звезде лица на небе'}
-        aria-label={outside ? 'К звезде на всём небе' : 'К звезде'}
-        onClick={() => {
-          // на телефоне лист сначала сворачивается до шапки: перелёт идёт над ним, а не под ним (MOB-15)
-          if (phone) sheetStop.value = 'peek';
-          if (outside) revealOnAll(id);
-          else skyRef.flyTo(id);
-        }}
-      >
-        <span class="full">{outside ? 'К звезде на всём небе' : 'К звезде'}</span>
-        <span class="short" aria-hidden="true">
-          К звезде
-        </span>
-      </button>
+      {phone ? <ToStar id={id} phone={phone} outside={outside} /> : null}
       {/* в режиме выбора второго лица надпись и ширина те же — меняется только нажатость (IX-22): ряд не перестраивается,
           а что делать дальше, говорит строка у кромки неба */}
       <button type="button" aria-pressed={pick === 'kinship'} title="Как связаны это лицо и второе: выберите его на небе или в поиске" onClick={(e) => toggle('kinship', e.currentTarget)}>
@@ -784,6 +801,30 @@ function CardActions({ id, phone }: { id: string; phone: boolean }) {
       </button>
       <WorkButton id={id} />
     </div>
+    </>
+  );
+}
+
+/** «К звезде» (решение 156; U9): перелёт к лицу; лица нет в показе — «К звезде на всём небе» (решение 111). */
+function ToStar({ id, phone, outside }: { id: string; phone: boolean; outside: boolean }) {
+  return (
+    <button
+      type="button"
+      class="show-on-sky"
+      title={outside ? 'Лица нет в нынешнем показе: показать всё небо и перелететь к его звезде' : 'Перелететь к звезде лица на небе'}
+      aria-label={outside ? 'К звезде на всём небе' : 'К звезде'}
+      onClick={() => {
+        // на телефоне лист сначала сворачивается до шапки: перелёт идёт над ним, а не под ним (MOB-15)
+        if (phone) sheetStop.value = 'peek';
+        if (outside) revealOnAll(id);
+        else skyRef.flyTo(id);
+      }}
+    >
+      <span class="full">{outside ? 'К звезде на всём небе' : 'К звезде'}</span>
+      <span class="short" aria-hidden="true">
+        К звезде
+      </span>
+    </button>
   );
 }
 
@@ -1074,6 +1115,34 @@ export function Folio({ id: forcedId, forceState }: { id?: string; forceState?: 
         <StoryBody phone={phone} />
       </aside>
     );
+  // карточка связи (решение 194): на широком экране — в колонке, на месте карточки лица (как карточка союза, решение 71);
+  // «×» и Escape снимают выбор связи, фокус — на имя «Родства», с которого её открыли (closeLink)
+  const link = live && !phone && !spine ? selectedLink.value : null;
+  if (link)
+    return (
+      <aside
+        class="folio"
+        aria-label={`Карточка связи: ${linkSpeech(link)}`}
+        ref={aside}
+        data-link={linkKeyString(link) ?? ''}
+        data-full={full ? '' : undefined}
+        onKeyDown={(e) => {
+          if (e.key !== 'Escape' || e.defaultPrevented || pickMode.peek() || panel.peek()) return;
+          e.preventDefault();
+          e.stopPropagation();
+          closeLink(true);
+        }}
+      >
+        {tabs.length > 0 && <CardTabs tabs={tabs} current={id ?? null} />}
+        <FolioBar id={id ?? ''} onClose={() => closeLink(true)} closeLabel="Закрыть карточку связи" />
+        <div class="folio-inner" ref={inner} key={`link|${linkKeyString(link)}`}>
+          <div class="dotcard in-folio dc-link" data-kind="link" data-placed="">
+            <LinkBody k={link} />
+          </div>
+        </div>
+        <TabNews />
+      </aside>
+    );
   const p = id ? byId.get(id) : undefined;
   if (!id || !p) {
     // выбор снят (Escape, пустое небо): подробная карточка свёрнута во вкладку с именем — корешком справа, на телефоне —
@@ -1143,6 +1212,7 @@ export function Folio({ id: forcedId, forceState }: { id?: string; forceState?: 
           stale={stale}
           current={current}
           actions={<CardActions id={id} phone={phone} />}
+          kin={phone ? null : <KinCol id={id} />}
           status={status}
           onRetry={() => setAttempt((a) => a + 1)}
         />

@@ -91,7 +91,9 @@ describe('справка без древа (решение 77)', () => {
   it('«Условные знаки»: раздела «Древо» нет, есть «Карточки на небе» — карточка у звезды, образы, карточка связи', () => {
     const legend = src('src/ui/panels/Legend.tsx');
     expect(legend).not.toContain('id="legend-tree"');
-    expect(legend).toContain('<h3 id="legend-cards">Карточки на небе</h3>');
+    // этап 20, решение 194: карточек на небе на широком экране нет — раздел назван «Родство и связи» (лицо, союз и связь
+    // открываются в колонке справа); id прежний
+    expect(legend).toContain('<h3 id="legend-cards">Родство и связи</h3>');
     expect(legend).toContain('<AvatarSamples />');
     expect(legend).toContain('карточка связи');
     expect(legend).toMatch(/Щелчок по линии — связь выделяется жёлтым/);

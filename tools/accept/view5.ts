@@ -120,7 +120,7 @@ export const view5: Scenario[] = [
   },
   {
     n: 635,
-    title: 'Решение 77: что перешло из древа на атлас — у звезды Адама в наборе «Продолжить ветвь» нет (его союз показан), у Каина после раскрытия — «Продолжить ветвь»; «Родители» у Сифа; образ-силуэт в карточке',
+    title: 'Решения 77, 194: что перешло из древа на атлас — у Каина после раскрытия в карточке справа «Продолжить ветвь» показывает ромб его союза; образ-силуэт в шапке карточки',
     run: async (p) => {
       await open(p, '#/adam~vs', {
         start: 'adam',
@@ -130,10 +130,11 @@ export const view5: Scenario[] = [
         },
       });
       if (!(await clickStar(p, 'kain'))) return fail('нет звезды Каина');
-      const k = flat(await p.locator('.sky .dotcard[data-kind="person"]').innerText());
-      if (!k.includes('Продолжить ветвь')) return fail(`карточка Каина: ${k.slice(0, 160)}`);
-      if (!(await p.locator('.sky .dotcard .av').count())) return fail('в карточке нет образа');
-      await p.locator('.sky .dotcard .dc-cmds button', { hasText: 'Продолжить ветвь' }).click();
+      // этап 20 (решение 194): карточка Каина — справа; «Продолжить ветвь» — в строке команд неба, образ — в шапке
+      const k = flat(await p.locator('.folio .actions.sky-cmds').innerText());
+      if (!k.includes('Продолжить ветвь')) return fail(`команды карточки Каина: ${k.slice(0, 160)}`);
+      if (!(await p.locator('.folio .mast-av .av').count())) return fail('в карточке нет образа');
+      await p.locator('.folio .actions.sky-cmds button', { hasText: 'Продолжить ветвь' }).click();
       await p.waitForTimeout(1200);
       const d = ((await p.locator('.sky canvas').getAttribute('data-dots')) ?? '').split(';').map((x) => x.split(':')[0] + ':' + x.split(':')[1]);
       if (!d.some((x) => x.startsWith('u:kain+'))) return fail(`ромба союза Каина нет: ${d.join(', ')}`);
@@ -142,14 +143,14 @@ export const view5: Scenario[] = [
   },
   {
     n: 636,
-    title: 'Решение 77: «Условные знаки» — раздела «Древо» нет; раздел «Карточки на небе» — карточка у звезды с «Родством», образы (силуэты, «худож.»), карточка связи; «О карте» — строка показа и карточка у звезды',
+    title: 'Решения 77, 194: «Условные знаки» — раздела «Древо» нет; раздел «Родство и связи» — карточка с «Родством», образы (силуэты, «худож.»), карточка связи; «О карте» — строка показа и «Родство»',
     run: async (p) => {
       await open(p, '#/');
       await p.locator('.commands > button', { hasText: 'Условные знаки' }).click();
       await p.waitForTimeout(800);
       const sheet = p.locator('.app > .sheet');
       if (await sheet.locator('#legend-tree').count()) return fail('есть раздел «Древо»');
-      if (!(await sheet.locator('#legend-cards').count())) return fail('нет раздела «Карточки на небе»');
+      if (!(await sheet.locator('#legend-cards').count())) return fail('нет раздела «Родство и связи» (прежде «Карточки на небе», решение 194)');
       if ((await sheet.locator('.av').count()) < 5) return fail('нет образцов образов');
       const t = flat(await sheet.innerText());
       for (const w of ['«Родство»', 'карточка связи', '«худож.»']) if (!t.includes(w)) return fail(`в «Условных знаках» нет ${w}`);

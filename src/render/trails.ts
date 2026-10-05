@@ -2755,6 +2755,9 @@ export function drawLinks(v: SkyContext, p: Pass, d: LinkDraw) {
   }
   // главный ярус — после остальных: с ореолом цвета неба поверх контекста (решение 135)
   const main: { q: LinkPath; a: number; gaps: Map<number, [number, number][]> | null; color: string }[] = [];
+  // связи под указателем и на строке «Родство» карточки (previewLinks) — последними, поверх главного яруса, с ореолом:
+  // у выбранного лица его связи уже цветные и яркие, и наведение на имя в колонке должно быть видно сразу (решение 194)
+  const hotList: typeof main = [];
   const gapMarks: { q: LinkPath; a: number; color: string }[] = [];
   for (let i = 0; i < paths.length; i++) {
     // путь вне холста — сразу мимо (из тысяч путей неба на холсте — десятки); рамка — из рамок кадра связей (без
@@ -2781,7 +2784,11 @@ export function drawLinks(v: SkyContext, p: Pass, d: LinkDraw) {
     const a = g0 * a0 * (q.style === 'faint' && !hot ? FAINT_A : 1);
     // родословие здесь пропускает поколения (fatherGap; «предок» без промежуточных звеньев) — «//» на зубце к ребёнку
     if (q.kind === 'tooth' && q.key.kind === 'child' && gapKid(q.key.union, q.key.child)) gapMarks.push({ q, a, color: tone });
-    if (l.tier === 0 && !hot) {
+    if (hot) {
+      hotList.push({ q, a, gaps, color: tone });
+      continue;
+    }
+    if (l.tier === 0) {
       main.push({ q, a, gaps, color: tone });
       continue;
     }
@@ -2807,6 +2814,26 @@ export function drawLinks(v: SkyContext, p: Pass, d: LinkDraw) {
     for (const m of main) {
       ctx.globalAlpha = m.a;
       ctx.lineWidth = TIER_WIDTH[0] * barWidth(m.q);
+      ctx.strokeStyle = m.color;
+      ctx.setLineDash(LINK_DASH[m.q.style]);
+      ctx.beginPath();
+      for (const off of offsets(m.q)) trace(m.q, m.gaps, off);
+      ctx.stroke();
+    }
+  }
+  if (hotList.length) {
+    ctx.setLineDash([]);
+    ctx.strokeStyle = pal.halo;
+    for (const m of hotList) {
+      ctx.globalAlpha = m.a;
+      ctx.lineWidth = HOT_WIDTH * barWidth(m.q) + 2 * TIER_HALO;
+      ctx.beginPath();
+      for (const off of offsets(m.q)) trace(m.q, m.gaps, off);
+      ctx.stroke();
+    }
+    for (const m of hotList) {
+      ctx.globalAlpha = m.a;
+      ctx.lineWidth = HOT_WIDTH * barWidth(m.q);
       ctx.strokeStyle = m.color;
       ctx.setLineDash(LINK_DASH[m.q.style]);
       ctx.beginPath();
@@ -2895,6 +2922,8 @@ export function elbowsOf(f: LinkFrame): Map<LinkPath, { trimEnd?: boolean; arcFr
 }
 
 /** Зубец короче — без знака пропуска поколений: на нём «//» лёг бы на звезду или ствол. */
+/** Толщина связи под указателем и на строке «Родство» карточки (решение 194): толще главного яруса, поверх него. */
+const HOT_WIDTH = 2.5;
 export const GAP_MARK_MIN = 14;
 const gapMemo = new Map<string, boolean>();
 /**
