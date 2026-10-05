@@ -2657,16 +2657,37 @@ export function drawLinks(v: SkyContext, p: Pass, d: LinkDraw) {
     }
     return out;
   };
+  // скругление угла «ствол — последний зубец» (этап 19): ствол кончается за радиус до угла, зубец начинается дугой
+  const round = elbowsOf(d.frame);
   /** ломаная пути со сдвигом off (черта брака «‖») и разрывами */
   const trace = (q: LinkPath, gaps: Map<number, [number, number][]> | null, off: number) => {
     const pts = q.pts;
+    const rq = off === 0 ? round.get(q) : undefined;
+    const last = pts.length - 4;
     let pen = false;
     for (let k = 0; k + 3 < pts.length; k += 2) {
-      const ax = pts[k] + dx + off;
-      const ay = pts[k + 1] + dy;
-      const bx = pts[k + 2] + dx + off;
-      const by = pts[k + 3] + dy;
+      let ax = pts[k] + dx + off;
+      let ay = pts[k + 1] + dy;
+      let bx = pts[k + 2] + dx + off;
+      let by = pts[k + 3] + dy;
       const g = gaps?.get(k / 2);
+      if (!g && rq) {
+        const len = Math.hypot(bx - ax, by - ay);
+        if (k === last && rq.trimEnd && len > 2 * ELBOW_R) {
+          // ствол: конец — за радиус до угла, дальше дугу рисует зубец
+          bx -= ((bx - ax) / len) * ELBOW_R;
+          by -= ((by - ay) / len) * ELBOW_R;
+        }
+        if (k === 0 && rq.arcFrom && len > ELBOW_R + 2) {
+          const sx = Math.sign(bx - ax) || 1;
+          ctx.moveTo(ax, ay - rq.arcFrom * ELBOW_R);
+          ctx.arcTo(ax, ay, ax + sx * ELBOW_R, ay, ELBOW_R);
+          ax += sx * ELBOW_R;
+          ctx.lineTo(bx, by);
+          pen = true;
+          continue;
+        }
+      }
       if (!g) {
         if (!pen) ctx.moveTo(ax, ay);
         ctx.lineTo(bx, by);
@@ -2843,6 +2864,34 @@ export function drawLinks(v: SkyContext, p: Pass, d: LinkDraw) {
   }
   ctx.restore();
   ctx.globalAlpha = g0;
+}
+
+/** Радиус скругления угла «ствол — последний зубец», px (этап 19; «как на схеме метро»). */
+export const ELBOW_R = 4;
+const elbowMemo = new WeakMap<LinkFrame, Map<LinkPath, { trimEnd?: boolean; arcFrom?: number }>>();
+/**
+ * Углы «ствол — последний зубец» кадра связей: у ствола, который кончается там, где начинается зубец того же союза
+ * (последний ребёнок на стволе), конец укорачивается на радиус, а зубец начинается дугой. arcFrom — откуда шёл ствол:
+ * 1 — сверху вниз, −1 — снизу вверх. Остальные зубцы отходят от ствола под прямым углом, как прежде.
+ */
+export function elbowsOf(f: LinkFrame): Map<LinkPath, { trimEnd?: boolean; arcFrom?: number }> {
+  const have = elbowMemo.get(f);
+  if (have) return have;
+  const out = new Map<LinkPath, { trimEnd?: boolean; arcFrom?: number }>();
+  const teeth = new Map<string, LinkPath[]>();
+  for (const q of f.paths) if (q.kind === 'tooth' && q.union) (teeth.get(q.union) ?? teeth.set(q.union, []).get(q.union)!).push(q);
+  for (const q of f.paths) {
+    if (q.kind !== 'trunk' || !q.union || q.pts.length < 4) continue;
+    const n = q.pts.length;
+    const [ex, ey, px, py] = [q.pts[n - 2], q.pts[n - 1], q.pts[n - 4], q.pts[n - 3]];
+    if (Math.abs(ex - px) > 0.5) continue;
+    const tooth = (teeth.get(q.union) ?? []).find((t) => t.style === q.style && Math.abs(t.pts[0] - ex) < 0.6 && Math.abs(t.pts[1] - ey) < 0.6 && Math.abs(t.pts[3] - t.pts[1]) < 0.5);
+    if (!tooth) continue;
+    out.set(q, { trimEnd: true });
+    out.set(tooth, { arcFrom: Math.sign(ey - py) || 1 });
+  }
+  elbowMemo.set(f, out);
+  return out;
 }
 
 /** Зубец короче — без знака пропуска поколений: на нём «//» лёг бы на звезду или ствол. */

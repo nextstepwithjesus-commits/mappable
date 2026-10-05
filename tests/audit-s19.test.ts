@@ -180,3 +180,18 @@ describe('пропуск поколений на связи (этап 19)', () =
     expect(T.gapKid('u:avraam+sarra', 'isaak')).toBe(false);
   }, 120_000);
 });
+
+describe('скругление угла «ствол — последний зубец» (этап 19)', () => {
+  it('у Иакова: стволы с последним зубцом того же союза — в списке углов; геометрия путей не меняется', async () => {
+    const C = await import('../tools/census.ts');
+    const T = await import('../src/render/trails.ts');
+    const f = C.captureView('all', { person: 'iakov' }, { select: 'iakov' });
+    const el = T.elbowsOf(f.d.frame);
+    const trunks = [...el].filter(([q, r]) => q.kind === 'trunk' && r.trimEnd);
+    const teeth = [...el].filter(([q, r]) => q.kind === 'tooth' && r.arcFrom);
+    expect(trunks.length).toBeGreaterThan(0);
+    expect(teeth.length).toBe(trunks.length);
+    // зубец угла начинается там, где кончается его ствол
+    for (const [t] of teeth) expect(trunks.some(([q]) => q.union === t.union && Math.abs(q.pts[q.pts.length - 2] - t.pts[0]) < 0.6 && Math.abs(q.pts[q.pts.length - 1] - t.pts[1]) < 0.6)).toBe(true);
+  }, 120_000);
+});
