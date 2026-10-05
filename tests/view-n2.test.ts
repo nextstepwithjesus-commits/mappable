@@ -110,7 +110,8 @@ describe('справка без древа (решение 77)', () => {
     expect('TREE_POINTER_ROWS' in keys).toBe(false);
     const t = text(h(KeysTable, {}) as VNode);
     expect(t).not.toMatch(/древ/i);
-    expect(KEY_ROWS.some((r) => /«Родстве» карточки у звезды/.test(r.what))).toBe(true);
+    // этап 20 (решение 194): «Родство» — в карточке справа (на телефоне — в листе), не «у звезды»
+    expect(KEY_ROWS.some((r) => /в «Родстве» карточки — Tab/.test(r.what))).toBe(true);
     expect(KEY_ROWS.some((r) => /на имени в «Родстве» — карточка связи/.test(r.what))).toBe(true);
     expect(POINTER_ROWS.map((r) => r.how)).toContain('щелчок по звезде');
     expect(POINTER_ROWS.find((r) => r.how === 'наведение и щелчок по линии')?.what).toMatch(/жёлтым/);

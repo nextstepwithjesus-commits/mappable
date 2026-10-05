@@ -52,7 +52,7 @@ const spouseRow = async (p: Page, name: string) => (await rows(p)).find((t) => t
 export const inset16: Scenario[] = [
   {
     n: 1220,
-    title: 'Решение 186, О5: «Семья созвездием» Иакова из карточки у звезды — «Семья Иакова», «12 сыновей и дочь Дина», подпись масштаба; дети по матерям, Валла — наложница, Зелфа — жена',
+    title: 'Решения 186, 194, О5: «Семья созвездием» Иакова из карточки (справа) — «Семья Иакова», «12 сыновей и дочь Дина», подпись масштаба; дети по матерям, Валла — наложница, Зелфа — жена',
     run: async (p) => {
       await go(p, '#/iakov~y-1560~w1500~l-4~s1');
       const at = await p.locator('.sky').getAttribute('data-sel');
@@ -61,7 +61,8 @@ export const inset16: Scenario[] = [
       const [x, y] = at.split(' ').map(Number);
       await p.mouse.click(box.x + x, box.y + y);
       await p.waitForTimeout(900);
-      await p.locator(':is(.sky .dotcard, .folio .kin-col, aside.folio[data-link] .dotcard) .dc-lineage > button').click();
+      // этап 20 (решение 194): «Предки и потомки ▾» — в строке команд неба карточки справа
+      await p.locator(':is(.sky .dotcard, .folio .actions) .dc-lineage > button').first().click();
       await p.waitForTimeout(300);
       const item = p.locator(':is(.sky .dotcard, .folio .actions) [role="menuitem"]', { hasText: 'Семья созвездием' });
       if (!(await item.count())) return fail('в меню «Предки и потомки ▾» нет «Семья созвездием»');

@@ -1065,6 +1065,8 @@ function KinRowView({ row, idx, compact, onMore, owner, col = false, sw }: { row
               return (
                 <Fragment key={i}>
                   {mark(i)}
+                  {/* разделитель групп для диктора и копирования текста; на глаз — новая строка */}
+                  <span class="visually-hidden">; </span>
                   <br />
                   {swatch(p.union, i)}
                   {rest ? <span class="txt">{typo(rest)}</span> : null}
@@ -2187,11 +2189,13 @@ export function DotCard() {
       const cur = dotCard.peek();
       if (cur && cur.sel !== id) closeDot(false);
     });
+    // закрывать — только открытую карточку у звезды: на широком экране её нет (решение 194), а closeDot снимает и выбранную
+    // связь — связь из адреса («~c») пропадала бы при первой отрисовке
     const offOn = effect(() => {
-      if (!dotsOn.value) closeDot(false);
+      if (!dotsOn.value && dotCard.peek()) closeDot(false);
     });
     const offMenu = effect(() => {
-      if (skyMenu.value) closeDot(false);
+      if (skyMenu.value && dotCard.peek()) closeDot(false);
     });
     // объявление выбранной связи для диктора (§ 8) — одно: его делает небо (SkyView, живая область неба); карточка связи
     // не повторяет его (решение 151; M7: прежде связь звучала дважды)

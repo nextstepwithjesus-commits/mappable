@@ -189,7 +189,7 @@ export const touch14: Scenario[] = [
       if (!(await ref.count())) return fail('в карточке связи ссылки — не кнопки');
       await ref.click();
       await p.waitForTimeout(900);
-      const v = flat((await p.locator('.sky .dotcard .verses').first().textContent().catch(() => '')) ?? '');
+      const v = flat((await p.locator(':is(.sky .dotcard, aside.folio[data-link] .dotcard) .verses').first().textContent().catch(() => '')) ?? '');
       if (!/вспомнил Бог о Рахили/.test(v)) return fail(`вклейка: «${v.slice(0, 80)}»`);
       // строка «Год» (Салафиил: «по порядку перечисления, 1 Пар 3:17–18, выв.»)
       await open(p, '#/salafiil', { ms: 4500 });

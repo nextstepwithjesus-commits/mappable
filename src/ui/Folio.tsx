@@ -1258,7 +1258,9 @@ function pinLabel(el: HTMLElement, cmds: HTMLElement, col: HTMLElement, colLeft:
   const bs = getComputedStyle(bar);
   const right = bar.getBoundingClientRect().right - parseFloat(bs.paddingRight) - parseFloat(bs.borderRightWidth);
   // место имени в первой строке при ширине команды w: от левого края колонки до команд, с зазором 8 px (как --bar-cmds)
-  const room = (w: number) => right - others - w - 8 - colLeft;
+  // имя начинается правее образа лица (решение 194: образ — слева от имени), а не у края колонки
+  const left = Math.max(colLeft, nm.getBoundingClientRect().left);
+  const room = (w: number) => right - others - w - 8 - left;
   const name = textWidth(nm, nm.textContent ?? '');
   el.toggleAttribute('data-pin-short', name > room(full) && name <= room(short));
 }
