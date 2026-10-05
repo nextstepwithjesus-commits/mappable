@@ -183,6 +183,8 @@ export interface BlockInfo {
 
 export interface LayoutMetrics {
   persons: number;
+  /** лица линий Мессии, которым не хватило полос коридора (этап 19, Р-01): должен быть пуст — иначе сборка падает */
+  corridorOverflow?: string[];
   lanes: number;
   corridorWidth: number;
   crossings: number;
@@ -569,6 +571,7 @@ export function computeLayout(
     lanes: Int8Array;
     ends: Float64Array;
   }
+  const corridorOverflow: string[] = [];
   let beam: State[] = [{ cost: 0, lanes: new Int8Array(spineOrder.length), ends: new Float64Array(nL).fill(-Infinity) }];
   for (let i = 0; i < spineOrder.length; i++) {
     const id = spineOrder[i];
@@ -597,7 +600,9 @@ export function computeLayout(
       }
     }
     if (!next.length) {
-      // не хватило полос: расширить нельзя внутри поиска — ставим в наименее занятую
+      // не хватило полос: расширить нельзя внутри поиска — ставим в наименее занятую. Это нарушение правил коридора
+      // (наложение или чужая сторона): сборка о нём говорит громко (этап 19, аудит Р-01), а не выдаёт за обычный успех
+      corridorOverflow.push(id);
       for (const st of beam) {
         let best = 0;
         for (let li = 0; li < nL; li++) if (st.ends[li] < st.ends[best]) best = li;
@@ -1174,6 +1179,7 @@ export function computeLayout(
     laneMax,
     metrics: {
       persons: nodes.filter((n) => !n.ghost).length, lanes: laneMax - laneMin + 1, corridorWidth, crossings, corridorCrossings, dropLength,
+      ...(corridorOverflow.length ? { corridorOverflow } : {}),
       blocks: blocks.length, clusters: clusters.length, clustered: clusters.reduce((s, b) => s + b.size, 0),
     },
   };

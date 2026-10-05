@@ -1166,8 +1166,33 @@ export class Sky implements SkyContext {
     const fonts = typeof document !== 'undefined' ? (document as { fonts?: FontFaceSet }).fonts : undefined;
     fonts?.addEventListener?.('loadingdone', () => {
       this.labelCache.invalidate();
+      // растр кэша сдвига несёт прежние ширины и кегль: на первой протяжке после догрузки шрифта он вернул бы старый
+      // текст (этап 19, аудит П-03)
+      this.pan = null;
       this.cam.onChange();
     });
+    // счёт save()/restore() холста — и без слоя света (этап 19, аудит П-05): кадр снимает лишние уровни сам, а замер
+    // saveLeak видит утечку. Прежде счёт ставила только обёртка слоя света, выключенного решением 191
+    if (!LIGHT_ON) this.countSaves(this.ctx);
+  }
+
+  /** Счёт глубины save() холста для unwind (без вырезов слоя света): обёртка save/restore и номер переноса. */
+  private countSaves(target: CanvasRenderingContext2D) {
+    const ctx = target as CanvasRenderingContext2D & Record<string, unknown>;
+    const owner = this;
+    const sk = (): Sky => (ctx.__sky as Sky | undefined) ?? owner;
+    const save = ctx.save;
+    const restore = ctx.restore;
+    if (typeof save !== 'function' || typeof restore !== 'function') return;
+    ctx.save = function (this: CanvasRenderingContext2D) {
+      sk().saveDepth++;
+      return save.call(this);
+    };
+    ctx.restore = function (this: CanvasRenderingContext2D) {
+      sk().tver++;
+      if (sk().saveDepth > 0) sk().saveDepth--;
+      return restore.call(this);
+    };
   }
 
   resize(w: number, h: number, dpr: number) {
@@ -2401,6 +2426,9 @@ export class Sky implements SkyContext {
     const marked = cv as HTMLCanvasElement & { __ground?: boolean };
     if (this.light && !marked.__ground) {
       this.groundify(pctx);
+      marked.__ground = true;
+    } else if (!this.light && !marked.__ground) {
+      this.countSaves(pctx);
       marked.__ground = true;
     }
     // камера кэша: то же окно со сдвигом на запас; видимая часть — весь холст кэша (органы неба над ним не стоят)

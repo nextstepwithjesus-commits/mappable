@@ -278,7 +278,12 @@ export interface ChronoResult {
   epochs?: Epoch[];
 }
 
-const EXODUS = toAstro(-1446);
+/**
+ * Исход — 480-й год до 4-го года Соломона (3 Цар 6:1: прошло 479 лет) от якоря data/anchors.json (solomon-4, −967).
+ * Согласованность с якорем проверяет tests/audit-s19.test.ts (этап 19, аудит Х-07).
+ */
+export const EXODUS_HIST = -1446;
+const EXODUS = toAstro(EXODUS_HIST);
 
 /** Типичные длины поколения по эпохам (для мягких ограничений). */
 export interface GenNorm {

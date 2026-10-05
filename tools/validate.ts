@@ -397,7 +397,10 @@ for (const [id, p] of byId) {
 
   (p.kin ?? []).forEach((k, i) => {
     const w = `${W}.kin[${i}]`;
-    if (!k || !refExists(k.id)) err(w, `нет лица «${k?.id}»`);
+    // пустая запись — ошибка с адресом, а не исключение валидатора (этап 19, аудит Б-01)
+    if (!k || typeof k !== 'object') return err(w, 'пустая запись родства');
+    if (!refExists(k.id)) err(w, `нет лица «${k.id}»`);
+    if (k.id === p.id) err(w, 'родство с самим собой');
     if (!k.rel || typeof k.rel !== 'string') err(w, 'rel обязателен (по-русски)');
     checkCert(w, k.cert);
     allTexts.push(...checkRefs(w, k.refs));
@@ -421,7 +424,8 @@ for (const [id, p] of byId) {
         if (o && (!refExists(o.from) || typeof o.years !== 'number')) err(W, `born.${k}: { from: id, years: число }`);
       }
       if ((b.year !== undefined || b.range) && (b.year ?? b.range![1]) < -1446) warn(W, 'абсолютный год до Исхода: допустим, только если выведен от Исхода (Моисей, Аарон, Халев); иначе — fatherAge / offset / notAfter / notBefore / epoch');
-      if (b.range) { checkYear(W, b.range[0]); checkYear(W, b.range[1]); if (b.range[0] > b.range[1]) err(W, 'born.range: начало > конца'); }
+      if (b.range && (!Array.isArray(b.range) || b.range.length !== 2 || b.range.some((y) => typeof y !== 'number'))) err(W, 'born.range: два года [начало, конец]');
+      else if (b.range) { checkYear(W, b.range[0]); checkYear(W, b.range[1]); if (b.range[0] > b.range[1]) err(W, 'born.range: начало > конца'); }
       const hasData = b.year !== undefined || b.fatherAge !== undefined || b.motherAge !== undefined || b.offset;
       if (hasData) checkRefs(`${W}.chrono.born`, b.refs);
       else if (b.refs) checkRefs(`${W}.chrono.born`, b.refs, false);
@@ -432,7 +436,8 @@ for (const [id, p] of byId) {
       checkYear(`${W}.chrono.died.year`, d.year);
       if (d.age !== undefined && (typeof d.age !== 'number' || d.age < 0 || d.age > 1000)) err(W, 'died.age вне 0–1000');
       if (d.ageBracket !== undefined && (typeof d.ageBracket !== 'number' || d.ageBracket < 0 || d.ageBracket > 1000)) err(W, 'died.ageBracket вне 0–1000');
-      if (d.range) { checkYear(W, d.range[0]); checkYear(W, d.range[1]); if (d.range[0] > d.range[1]) err(W, 'died.range: начало > конца'); }
+      if (d.range && (!Array.isArray(d.range) || d.range.length !== 2 || d.range.some((y) => typeof y !== 'number'))) err(W, 'died.range: два года [начало, конец]');
+      else if (d.range) { checkYear(W, d.range[0]); checkYear(W, d.range[1]); if (d.range[0] > d.range[1]) err(W, 'died.range: начало > конца'); }
       if (d.year !== undefined || d.age !== undefined) checkRefs(`${W}.chrono.died`, d.refs);
       checkCert(`${W}.chrono.died`, d.cert);
     }
@@ -525,7 +530,9 @@ for (const [id, p] of byId) {
       if (!s.quote) return err(w, 'quote');
       if (texts) {
         const clean = (t: string) => norm(t).replace(/[«»"„“”'’`.,;:!?()\-–—…]/g, ' ').replace(/\s+/g, ' ').trim();
-        const hay = clean(texts.join(' '));
+        // текст в [квадратных скобках] Синодального перевода — не основание факта (CLAUDE.md, ТЗ П-2): цитата сверяется
+        // с текстом без скобок (этап 19, аудит Б-02)
+        const hay = clean(stripBrackets(texts.join(' ')));
         const needle = clean(s.quote);
         if (!hay.includes(needle)) err(w, `цитата не совпадает с текстом ${s.ref}: «${s.quote.slice(0, 60)}…»`);
       }
@@ -610,14 +617,32 @@ for (const lf of lineFiles) {
     const parentId = line.persons[i - 1].id;
     const child = byId.get(line.persons[i].id);
     const W = `line:${lf} ${parentId} → ${line.persons[i].id}`;
-    if (!byId.has(parentId)) { warn(W, `нет лица «${parentId}»`); continue; }
-    if (!child) { warn(W, `нет лица «${line.persons[i].id}»`); continue; }
+    // звено линии без лица — ошибка полной проверки (этап 19, аудит Б-04): сборка выбросила бы его молча
+    if (!byId.has(parentId)) { err(W, `нет лица «${parentId}»`); continue; }
+    if (!child) { err(W, `нет лица «${line.persons[i].id}»`); continue; }
     const supported =
       child.father === parentId ||
       child.mother === parentId ||
       (child.otherParents ?? []).some((o) => o.id === parentId);
     if (!supported) err(W, 'шаг линии не подтверждён связью в данных (father / mother / otherParents)');
   }
+}
+
+// счёт родословий (ТЗ § 1 п. 3, § 10; этап 19, аудит Б-04): Мф 1:17 — три раза по 14 (mt 1…42 подряд, mtGroup по 14);
+// у Луки — 75 предков от Иосифа до Адама: lk 2…75 в линии по Луке ровно по разу, по убыванию от Адама
+if (!volumeMode) {
+  const read = (lf: string): LineStep[] & { mtGroup?: number }[] => JSON.parse(readFileSync(join(ROOT, `data/lines/${lf}.json`), 'utf8')).persons;
+  const J = read('joseph') as (LineStep & { mtGroup?: number })[];
+  const mt = J.filter((s) => s.mt !== undefined).map((s) => s.mt!);
+  if (mt.join(',') !== Array.from({ length: 42 }, (_, i) => i + 1).join(',')) err('line:joseph', `номера Мф 1 — не 1…42 по порядку: ${mt.join(',')}`);
+  for (const g of [1, 2, 3]) {
+    const n = J.filter((s) => s.mtGroup === g).length;
+    if (n !== 14) err('line:joseph', `Мф 1:17: в ${g}-й четырнадцати ${n} родов`);
+  }
+  const M = read('mary');
+  const lk = M.filter((s) => s.lk !== undefined).map((s) => s.lk!);
+  if (lk.join(',') !== Array.from({ length: 74 }, (_, i) => 75 - i).join(',')) err('line:mary', `номера Лк 3 — не 75…2 по порядку от Адама: ${lk.join(',')}`);
+  for (const s of J) if (s.lk !== undefined && !M.some((q) => q.id === s.id && q.lk === s.lk)) err(`line:joseph ${s.id}`, `номер Лк ${s.lk} не совпадает с линией по Луке`);
 }
 
 // ---------- эпохи ----------

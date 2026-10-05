@@ -155,3 +155,13 @@ describe('Н-04: окно уходящей записи', () => {
     expect(withView('#/david', { year: -1000, width: 120, lane: -3 })).toBe('#/david~y-1000~w120~l-3.0');
   });
 });
+
+describe('Х-07: якорь Соломона и Исход согласованы', () => {
+  it('4-й год Соломона (data/anchors.json) − 479 лет (3 Цар 6:1) = Исход решателя', async () => {
+    const { readFileSync } = await import('node:fs');
+    const anchors = JSON.parse(readFileSync('data/anchors.json', 'utf8')).anchors as { id: string; value: number }[];
+    const sol = anchors.find((a) => a.id === 'solomon-4')!;
+    const { EXODUS_HIST } = await import('../src/engine/chronology.ts');
+    expect(sol.value - 479).toBe(EXODUS_HIST);
+  });
+});

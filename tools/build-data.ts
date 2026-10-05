@@ -107,6 +107,9 @@ for (const m of MODELS) {
   // было значительно понятнее»). Пребываний, переходов и годов черт брака нет
   const t1 = performance.now();
   const L1 = computeLayout(g, chrono, lines, { lists, epochs: chrono.epochs ?? epochs, ...(m.id === MODELS[0].id ? { prior } : {}) });
+  // коридору линий Мессии не хватило полос (этап 19, аудит Р-01): лицо легло бы на чужое или на сторону другой линии —
+  // сборка не выдаёт это за успех
+  if (L1.metrics.corridorOverflow?.length) throw new Error(`модель ${m.id}: коридору линий Мессии не хватило полос у ${L1.metrics.corridorOverflow.join(', ')} — увеличьте K в src/engine/layout.ts`);
   const layout: HouseLayout = {
     ...L1,
     unionYears: new Map(),
