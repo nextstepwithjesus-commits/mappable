@@ -1685,3 +1685,14 @@ button.row:focus-visible {
   position: static;
   margin: 0 0 0 0.3em;
 }
+/* «Вот родословие…» на сенсорном экране (этап 19, MOB-39): ссылка на стих и строка списка — цель касания 44 px */
+@media (pointer: coarse) {
+  .toledot summary {
+    min-height: 44px;
+  }
+  .toledot li button.link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+}

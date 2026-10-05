@@ -107,12 +107,13 @@ export const card3: Scenario[] = [
   },
   {
     n: 421,
-    title: 'VIS-79, IX-81, 1024 × 768: четыре команды карточки — одной строкой, «К звезде» и «В набор» (решение 156) (полные названия — в имени кнопок)',
+    title: 'VIS-79, IX-81, 1024 × 768, решение 194: команды неба — одной строкой («К звезде», «Ближайшая родня», «Предки и потомки ▾»), команды сравнения — одной строкой, «В набор» (решение 156) (полные названия — в имени кнопок)',
     view: { width: 1024, height: 768 },
     run: async (p) => {
       await go(p, '#/david');
       const r = await p.evaluate(() =>
-        [...document.querySelectorAll<HTMLElement>('.folio .actions > button, .folio .actions > .workbtn > button')].map((b) => ({
+        // этап 20 (решение 194): «К звезде» — в строке команд неба выше; здесь — строка сравнения и набора
+        [...document.querySelectorAll<HTMLElement>('.folio .actions:not(.sky-cmds) > button, .folio .actions:not(.sky-cmds) > .workbtn > button')].map((b) => ({
           t: b.innerText.replace(/[▾▴]/g, '').replace(/\s+/g, ' ').trim(),
           name: b.getAttribute('aria-label') ?? b.innerText.trim(),
           y: Math.round(b.getBoundingClientRect().top),
@@ -120,10 +121,13 @@ export const card3: Scenario[] = [
       );
       const names = r.map((x) => x.t).join(' | ');
       // этап 11: «Добавить в набор» (Я30: слово «набор») на узком листе — «В набор», полное название — в имени кнопки
-      if (names !== 'К звезде | Родство с… | Разворот с… | В набор') return fail(`команды: ${names}`);
+      if (names !== 'Родство с… | Разворот с… | В набор') return fail(`команды: ${names}`);
       if (new Set(r.map((x) => x.y)).size !== 1) return fail(`команды в ${new Set(r.map((x) => x.y)).size} строки`);
-      if (r[0].name !== 'К звезде') return fail(`имя первой кнопки «${r[0].name}»`);
-      if (r[3].name !== 'Добавить в набор') return fail(`имя четвёртой кнопки «${r[3].name}»`);
+      if (r[2].name !== 'Добавить в набор') return fail(`имя третьей кнопки «${r[2].name}»`);
+      const star = await p.locator('.folio .actions.sky-cmds .show-on-sky').getAttribute('aria-label');
+      if (star !== 'К звезде') return fail(`имя «К звезде» — «${star}»`);
+      const skyRows = await p.locator('.folio .actions.sky-cmds > button, .folio .actions.sky-cmds .menu > button').evaluateAll((bs) => new Set(bs.map((b) => Math.round(b.getBoundingClientRect().top))).size);
+      if (skyRows !== 1) return fail(`команды неба в ${skyRows} строки`);
       return pass(names);
     },
   },

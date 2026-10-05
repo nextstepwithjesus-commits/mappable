@@ -276,6 +276,9 @@ export const cardtext: Scenario[] = [
           await p.waitForTimeout(2600);
           if (errs.length) return fail(`${a} → ${b}: ${errs[0].slice(0, 120)}`);
           const title = flat(await p.locator(`.folio h2#title-${b}`).first().innerText({ timeout: 3000 }).catch(() => '—'));
+          // этап 19 (аудит К-04): у вычисленных строк § 12 появились стихи, записи выросли, и у Моисея «Иофор — тесть» ушёл
+          // под «ещё N записей» — раздел раскрывается целиком: проверка — что это § 12 нового лица, а не предел 8 строк
+          await unclamp(p, 12);
           const s12 = flat(await secText(p, 12));
           if (title === '—' || !has12.test(s12) || not12.test(s12)) return fail(`${a} → ${b}: заголовок «${title}», § 12 «${s12.slice(0, 120)}»`);
           // последний раздел — тоже нового лица: § 23 называет его книги, а не прежнего

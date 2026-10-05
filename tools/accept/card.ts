@@ -25,8 +25,10 @@ export const card: Scenario[] = [
     title: 'F5: карточка Давида — не больше 6 экранов по 900 px (было 12), каждый раздел — до 8 строк и «ещё N …»',
     run: async (p) => {
       await open(p, 'david');
-      const h = (await p.evaluate(`document.querySelector('.folio-inner').scrollHeight`)) as number;
-      if (h > 6 * 900) return fail(`высота листа ${h} px — ${(h / 900).toFixed(1)} экрана`);
+      // этап 20 (решение 194): «Родство» карточки у звезды переехало в лист (у Давида — 511 px) — его высота не в счёте;
+      // решение 195: отбивки между разделами (16 px) и записями (6 px) разделяют факты — 250 px на лист Давида
+      const h = (await p.evaluate(`document.querySelector('.folio-inner').scrollHeight - (document.querySelector('.folio .kin-col')?.getBoundingClientRect().height ?? 0)`)) as number;
+      if (h > 6 * 900 + 250) return fail(`высота листа без «Родства» ${h} px — ${(h / 900).toFixed(1)} экрана`);
       const secs = await sectionHeights(p);
       // 8 строк текста 16/24 и вклейки мельче; запас — на абзацный отступ между записями
       const tall = secs.filter((s) => s.lines > 8 + 2.5 && s.n !== '23');
@@ -105,13 +107,17 @@ export const card: Scenario[] = [
   {
     n: 93,
     // этап 7 (CARD-54, VIS-41; решение 26): четыре команды одной строкой — «Добавить в набор ▾» стоит в том же ряду (этап 11, Я30)
-    title: 'F2, F10, CARD-54: четыре команды одной строкой, «×» в углу; «Все 24 раздела» и печать — в колофоне',
+    title: 'F2, F10, CARD-54, решение 194: команды неба строкой «К звезде», «Ближайшая родня», «Предки и потомки ▾», ниже три команды одной строкой; «×» в углу; «Все 24 раздела» и печать — в колофоне',
     run: async (p) => {
       await open(p, 'ruf');
-      const row = p.locator('.folio .actions > button, .folio .actions > .workbtn > button');
+      // этап 20 (решение 194): команды карточки у звезды переехали сюда — строкой команд неба выше («К звезде»,
+      // «Ближайшая родня», «Предки и потомки ▾»); строка сравнения и набора — три команды одной строкой
+      const row = p.locator('.folio .actions:not(.sky-cmds) > button, .folio .actions:not(.sky-cmds) > .workbtn > button');
       const ys = await row.evaluateAll((bs) => bs.map((b) => Math.round(b.getBoundingClientRect().top)));
       const names = (await row.allInnerTexts()).map((t) => t.replace(/[▾▴]/g, '').trim());
-      if (names.join('|') !== 'К звезде|Родство с…|Разворот с…|Добавить в набор') return fail(`команды: ${names.join(' | ')}`);
+      if (names.join('|') !== 'Родство с…|Разворот с…|Добавить в набор') return fail(`команды: ${names.join(' | ')}`);
+      const sky = (await p.locator('.folio .actions.sky-cmds > button, .folio .actions.sky-cmds .menu > button').allInnerTexts()).map((t) => t.replace(/[▾▴]/g, '').trim()).join('|');
+      if (sky !== 'К звезде|Ближайшая родня|Предки и потомки') return fail(`команды неба: ${sky}`);
       if (new Set(ys).size !== 1) return fail(`команды в ${new Set(ys).size} строки`);
       const close = (await p.locator('.folio .close').first().boundingBox())!;
       const f = (await p.locator('.folio').boundingBox())!;
@@ -137,7 +143,10 @@ export const card: Scenario[] = [
       if (!(await b.count())) return fail('нет «Кратко»');
       const t = (await b.innerText()).replace(/\s+/g, ' ').replace(/^Кратко: /, '').trim();
       // дети — по значимости (этап 7, CARD-65): Соломон раньше Нафана
-      if (!/^Царь Иудеи, затем всего Израиля, сын Иессея из колена Иудина; царствовал 40 лет; отец Соломона и Нафана\. В родословии Иисуса Христа по обеим линиям\.$/.test(t)) return fail(`«${t}»`);
+      // этап 20 (решение 195): «В родословии Иисуса Христа по обеим линиям» — строкой паспорта «Линии Мессии» с номерами
+      if (!/^Царь Иудеи, затем всего Израиля, сын Иессея из колена Иудина; царствовал 40 лет; отец Соломона и Нафана\.$/.test(t)) return fail(`«${t}»`);
+      const ln = (await p.locator('.folio .passport .pass-lines').innerText().catch(() => '')).replace(/\s+/g, ' ');
+      if (!/у Матфея — 14-е имя/.test(ln) || !/у Луки — 42-е имя/.test(ln)) return fail(`строка «Линии Мессии»: «${ln}»`);
       const rule = (await p.locator('.folio .mast-rule').boundingBox())!;
       const bb = (await b.boundingBox())!;
       if (bb.y > rule.y) return fail('«Кратко» не над двойной чертой');

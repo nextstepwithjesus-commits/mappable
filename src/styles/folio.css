@@ -1970,7 +1970,7 @@ div.workpick.skymenu .wp-head {
    Запись от записи — отбивкой 10 px и висячим отступом 12 px: начало каждого факта видно по левому краю, без линеек и
    коробок (§ 5.6). Ссылки на стихи — тише (--ink-3) и держатся за последнее слово факта: строка не начинается ссылкой. */
 .folio .sec {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 .folio .sec h4 {
   font-size: var(--t-lead);
@@ -1984,7 +1984,7 @@ div.workpick.skymenu .wp-head {
   margin-bottom: 6px;
 }
 .folio .part {
-  margin: 36px 0 12px;
+  margin: 28px 0 10px;
   font-size: var(--t-lead);
   line-height: var(--t-lead-lh);
 }
@@ -1995,7 +1995,7 @@ div.workpick.skymenu .wp-head {
   margin-top: 16px;
 }
 .folio .sec li {
-  margin-bottom: 10px;
+  margin-bottom: 6px;
   padding-left: 12px;
   text-indent: -12px;
 }

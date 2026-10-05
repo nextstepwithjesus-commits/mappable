@@ -29,19 +29,24 @@ const hop = async (p: Page, id: string, ms = 1300) => {
   await p.waitForTimeout(ms);
   if (hashId(p) !== id) throw new Error(`поиск «${NAMES[id] ?? id}» выбрал «${hashId(p)}», а не ${id}`);
 };
-/** Верх первого раздела карточки и нижний край видимой части листа (над полосой времени). */
+/**
+ * Верх первого блока сведений карточки и нижний край видимой части листа (над полосой времени). Этап 20 (решение 195):
+ * под шапкой — «Родство» (прежде оно было в карточке у звезды); первый экран — шапка и «Родство», а § 1 у большой семьи
+ * (Давид) уходит ниже. Без «Родства» (Мелхиседек) первый блок — по-прежнему § 1.
+ */
 const firstSection = (p: Page) =>
   p.evaluate(() => {
-    const s = document.querySelector('.folio-body .sec') as HTMLElement | null;
+    const s = (document.querySelector('.folio .kin-col') ?? document.querySelector('.folio-body .sec')) as HTMLElement | null;
     const f = document.querySelector('.folio') as HTMLElement;
     const strip = document.querySelector('.strip') as HTMLElement | null;
     const bottom = Math.min(f.getBoundingClientRect().bottom, strip ? strip.getBoundingClientRect().top : innerHeight);
-    return { top: s ? Math.round(s.getBoundingClientRect().top) : null, n: s?.dataset.n ?? null, bottom: Math.round(bottom) };
+    return { top: s ? Math.round(s.getBoundingClientRect().top) : null, n: s?.dataset.n ?? (s ? 'Родство' : null), bottom: Math.round(bottom) };
   });
 /** Команды шапки: подписи без «▾» и их верхние края. */
+/** Этап 20 (решение 194): команды неба («К звезде», «Ближайшая родня», «Предки и потомки ▾») — своей строкой выше. */
 const commands = (p: Page) =>
   p.evaluate(() =>
-    [...document.querySelectorAll<HTMLElement>('.folio .actions > button, .folio .actions > .workbtn > button')].map((b) => ({
+    [...document.querySelectorAll<HTMLElement>('.folio .actions:not(.sky-cmds) > button, .folio .actions:not(.sky-cmds) > .workbtn > button')].map((b) => ({
       t: b.innerText.replace(/[▾▴]/g, '').replace(/\s+/g, ' ').trim(),
       y: Math.round(b.getBoundingClientRect().top),
     })),
@@ -51,7 +56,7 @@ const rect = (p: Page, sel: string) => p.locator(sel).first().boundingBox();
 export const cardshell: Scenario[] = [
   {
     n: 230,
-    title: 'VIS-41 (пересмотр — решение 97), CARD-54, 1440 × 900: § 1 на первом экране; команды — одной строкой: «К звезде» (решение 156), «Родство с…», «Разворот с…», «Добавить в набор ▾»; «Эпоха» паспорта видна; легенды лент в шапке нет',
+    title: 'VIS-41 (пересмотры — решения 97, 195), CARD-54, 1440 × 900: «Родство» (у лица без родни — § 1) на первом экране; команды неба — строкой «К звезде» (решение 156), «Ближайшая родня», «Предки и потомки ▾»; ниже одной строкой «Родство с…», «Разворот с…», «Добавить в набор ▾»; «Эпоха» паспорта видна; легенды лент в шапке нет',
     run: async (p) => {
       const tops: string[] = [];
       for (const id of ['david', 'melkhisedek', 'avraam', 'esfir']) {
@@ -64,7 +69,9 @@ export const cardshell: Scenario[] = [
       }
       const cmds = await commands(p);
       const names = cmds.map((c) => c.t).join(' | ');
-      if (names !== 'К звезде | Родство с… | Разворот с… | Добавить в набор') return fail(`команды: ${names}`);
+      if (names !== 'Родство с… | Разворот с… | Добавить в набор') return fail(`команды: ${names}`);
+      const sky = (await p.locator('.folio .actions.sky-cmds > button, .folio .actions.sky-cmds .menu > button').allInnerTexts()).map((t) => t.replace(/[▾▴]/g, '').trim()).join(' | ');
+      if (!/^К звезде \| Ближайшая родня \| Предки и потомки/.test(sky)) return fail(`команды неба: ${sky}`);
       if (new Set(cmds.map((c) => c.y)).size !== 1) return fail(`команды в ${new Set(cmds.map((c) => c.y)).size} строки`);
       // этап 13, решение 97: строка «Эпоха» паспорта — видимая (прежде VIS-41: только для диктора)
       const visibleEpoch = await p.evaluate(() => [...document.querySelectorAll('.folio .passport dt')].some((d) => d.textContent === 'Эпоха' && (d as HTMLElement).getBoundingClientRect().width > 2));
@@ -77,7 +84,7 @@ export const cardshell: Scenario[] = [
   },
   {
     n: 231,
-    title: 'VIS-41 (пересмотр — решение 97) на ноутбуке: 1280 × 800 и 1024 × 768 — § 1 виден над полосой времени, команды одной строкой',
+    title: 'VIS-41 (пересмотры — решения 97, 195) на ноутбуке: 1280 × 800 и 1024 × 768 — «Родство» (у лица без родни — § 1) видно над полосой времени, команды сравнения — одной строкой',
     view: { width: 1280, height: 800 },
     run: async (p) => {
       const out: string[] = [];

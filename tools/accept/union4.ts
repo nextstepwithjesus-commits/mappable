@@ -86,7 +86,8 @@ export const union4: Scenario[] = [
       await btn.click();
       await p.waitForTimeout(800);
       const off = (await p.locator('.folio .union-onsky').allInnerTexts()).join('; ').replace(/\s+/g, ' ');
-      if ((await btn.innerText()).trim() !== 'Показать детей союза' || !/в наборе 1 из 3/.test(off) || !/на небе сейчас \d из 3/.test(off)) return fail(`после свёртки: ${await btn.innerText()}; ${off}`);
+      // этап 20 (решение 194): в показе «набор» команда говорит словами прежней карточки у ромба — с числом скрытых детей
+      if (!/^Показать детей союза( \(\d+\))?$/.test((await btn.innerText()).trim()) || !/в наборе 1 из 3/.test(off) || !/на небе сейчас \d из 3/.test(off)) return fail(`после свёртки: ${await btn.innerText()}; ${off}`);
       return pass(`${on}; после свёртки — ${off}`);
     },
   },

@@ -550,7 +550,7 @@
   .cmd,
   .commands > button,
   .commands .more > button,
-  .folio .actions button,
+  .folio .actions button:not([role^='menuitem']),
   .pickbar button,
   .wordmark,
   .guide-cmd,

@@ -14,6 +14,8 @@ import { cardTitle, focusQuietly } from '../focus.ts';
 
 /** Сколько строк текста показывает раздел до «ещё N …». */
 export const CLAMP_LINES = 8;
+/** Отбивка между записями до этапа 20, px: в предел «8 строк» входит только она. */
+const CLAMP_GAP_WAS = 5;
 
 type Item = { node: VNode; list: VNode | null };
 
@@ -137,8 +139,15 @@ export function Clamp({ sig, n, children }: { sig: string; n: number; children: 
       return;
     }
     const lh = parseFloat(getComputedStyle(el).lineHeight) || 24;
-    const limit = el.getBoundingClientRect().top + CLAMP_LINES * lh + 2;
-    let at = els.findIndex((x, i) => i > 0 && x.getBoundingClientRect().bottom > limit);
+    // «8 строк» — строки текста: отбивки между записями (этап 20, решение 195: 10 px между фактами) в предел не входят —
+    // иначе раздел показывал бы меньше записей, чем прежде, только оттого, что они отделены друг от друга
+    let gaps = 0;
+    const limit = () => el.getBoundingClientRect().top + CLAMP_LINES * lh + 2 + gaps;
+    let at = els.findIndex((x, i) => {
+      // прежняя отбивка записи (5 px) в предел входит, как и раньше; прибавка этапа 20 — нет
+      if (i > 0) gaps += Math.max(0, x.getBoundingClientRect().top - els[i - 1].getBoundingClientRect().bottom - CLAMP_GAP_WAS);
+      return i > 0 && x.getBoundingClientRect().bottom > limit();
+    });
     // одна скрытая запись в одну-две строки не стоит строки «ещё 1 …»: команда заняла бы почти то же место
     if (at >= 0 && items.length - at === 1 && els[at].getBoundingClientRect().height <= 2 * lh) at = -1;
     if (at < 0) at = items.length;
