@@ -1154,6 +1154,27 @@ export function newNamesIn(text: string, known: string[]): boolean {
   const words = text.replace(/^[«"„(\s]+/, '').split(/[^А-Яа-яЁё]+/).slice(1);
   return words.some((w) => w.length >= 4 && /^[А-ЯЁ]/.test(w) && !NOT_NAMES.test(w.toLowerCase()) && !isKnown(w) && isPersonWord(w));
 }
+/**
+ * Есть ли в пояснении слово сверх строки (этап 19, К-03): строка — имена её лиц (все формы) и термин родства.
+ * «Брат его Гелем» при строке «брат Гелем» — нет; «Жена не названа» при строке «мать» — да.
+ */
+export function saysMore(text: string, ids: string[], label?: string): boolean {
+  const row = addSeen(new Set<string>(), label, ...ids.flatMap((x) => {
+    const q = byId.get(x);
+    return q ? [q.name, ...q.alt] : [];
+  }));
+  // «приёмная мать» уже говорит «воспитан… как сына» (CARD-81: Моисей и дочь фараонова)
+  if (label && /приёмн|приемн/i.test(label)) for (const w of ['восп', 'сына', 'дочь']) row.add(w);
+  // падежи имени и слова строки: «дочь» и «дочерью», «Лия» и «Лию» — по первым трём буквам
+  const row3 = new Set([...row].map((w) => w.slice(0, 3)));
+  return stemsOf(text).some((w) => !row.has(w) && !row3.has(w.slice(0, 3)));
+}
+/** Записи группы по достоверности, в порядке первого появления (этап 19, К-01): помета ставится каждой подгруппе. */
+function byCert<T extends { cert?: Cert }>(claim: string, es: T[]): [string, T[]][] {
+  const m = new Map<string, T[]>();
+  for (const e of es) (m.get(e.cert ?? '') ?? m.set(e.cert ?? '', []).get(e.cert ?? '')!).push(e);
+  return [...m.values()].map((g) => [claim, g]);
+}
 /** Основа имени без конечной гласной: «Урия» — «ури», «Саул» — «саул». */
 const nameStem = (w: string) => (w.length > 3 && /[аяйьоеиыу]$/.test(w) ? w.slice(0, -1) : w);
 
@@ -1200,6 +1221,8 @@ export function trimRowRepeat(text: string, names: string[], label?: string): st
   // «Родственница Елисаветы, жены…» — не повтор строки: слово строки снимается, только если перед ним стояло имя
   if (label && named) {
     const l = esc(label);
+    // «Ионафан, „дядя Давидов“, — советник…» при строке «дядя»: слово строки в кавычках — тоже повтор (этап 19)
+    t = t.replace(new RegExp(`^«${l}[^»]*»[\\s,—]*`, 'i'), '');
     t = t.replace(new RegExp(`^${l}(\\s+и)?(\\s+(одновременно|также|тоже))?(\\s+|$)`, 'i'), '');
     t = t.replace(new RegExp(`,?\\s*—\\s*(его|её|ее)\\s+${l}\\s*$`, 'i'), '');
   }
@@ -1271,7 +1294,9 @@ export function derivedKin(id: string): DerivedRow[] {
       .map((k) => ({ other: k.from === e.parent ? k.to : k.from, refs: k.refs }))
       .filter((x, i, a) => !taken.has(x.other) && !sibs.includes(x.other) && a.findIndex((y) => y.other === x.other) === i);
     for (const x of sibs) taken.add(x);
-    if (sibs.length) out.push({ section: 12, label: derivedKinLabel('uncle', side, sibs.length, sibs.map((x) => byId.get(x)!.sex)), ids: sibs, refs: [] });
+    // стихи обоих звеньев (этап 19, К-04; ТЗ П-3): родитель лица и его братья — дети одного родителя
+    const sibRefs = widestPerChapter([...(byId.get(e.parent)?.parentRefs ?? []), ...sibs.flatMap((x) => byId.get(x)!.parentRefs)]).slice(0, 3);
+    if (sibs.length) out.push({ section: 12, label: derivedKinLabel('uncle', side, sibs.length, sibs.map((x) => byId.get(x)!.sex)), ids: sibs, refs: sibRefs });
     for (const x of viaKin) {
       taken.add(x.other);
       const q = byId.get(x.other)!;
@@ -1295,45 +1320,55 @@ export function derivedKin(id: string): DerivedRow[] {
     }
   }
   // свойственники: родители супругов; супруги детей
-  const inlaw = new Map<string, { via: string[]; kind: 'parent' | 'child' }>();
+  // у каждого свойственника — стихи обоих звеньев: брака и родства (этап 19, К-04)
+  const inlaw = new Map<string, { via: string[]; kind: 'parent' | 'child'; refs: string[] }>();
+  const kidOnly = new Set<string>();
   for (const s of graph.spousesOf.get(id) ?? []) {
     const sp = s.a === id ? s.b : s.a;
     for (const g of (graph.parentsOf.get(sp) ?? []).filter(plainLink)) {
       if (taken.has(g.parent)) continue;
-      const v = inlaw.get(g.parent) ?? { via: [], kind: 'parent' as const };
+      const v = inlaw.get(g.parent) ?? { via: [], kind: 'parent' as const, refs: [] };
       if (!v.via.includes(sp)) v.via.push(sp);
+      v.refs.push(...s.refs, ...g.refs);
       inlaw.set(g.parent, v);
     }
   }
   for (const k of kidsOf(id)) {
+    const kidRefs = (graph.parentsOf.get(k) ?? []).find((e) => e.parent === id)?.refs ?? [];
+    for (const r of kidRefs) kidOnly.add(r);
     for (const s of graph.spousesOf.get(k) ?? []) {
       const sp = s.a === k ? s.b : s.a;
       if (taken.has(sp) || sp === id) continue;
-      const v = inlaw.get(sp) ?? { via: [], kind: 'child' as const };
+      const v = inlaw.get(sp) ?? { via: [], kind: 'child' as const, refs: [] };
       if (!v.via.includes(k)) v.via.push(k);
+      // стихи брака — первыми: родство с ребёнком уже со стихами в § 10
+      v.refs.push(...s.refs, ...kidRefs);
       inlaw.set(sp, v);
     }
   }
   // невестки и зятья — по детям: «Невестки: Лия, Рахиль, Валла, Зелфа, жёны Иакова»
   const byChild = new Map<string, string[]>();
+  const childRefs = new Map<string, string[]>();
   for (const [x, v] of inlaw) {
     taken.add(x);
     const q = byId.get(x)!;
     if (v.kind === 'child') {
       const key = `${v.via.join('+')}|${q.sex}`;
       byChild.set(key, [...(byChild.get(key) ?? []), x]);
+      // стихи браков группы — первыми, общие стихи ребёнка — в конце (у четырёх жён Иакова — Быт 29–30, а не рождение Иакова)
+      childRefs.set(key, [...(childRefs.get(key) ?? []), ...v.refs]);
       continue;
     }
     const role = p.sex === 'f' ? (q.sex === 'f' ? 'mother-in-law-f' : 'father-in-law-f') : q.sex === 'f' ? 'mother-in-law' : 'father-in-law';
     // «Свекровь: Ноеминь, мать Махлона»
-    out.push({ section: 12, label: derivedKinLabel(role, '', 1), ids: [x], via: { ids: v.via, word: bySex(q.sex, 'отец', 'мать') }, refs: [] });
+    out.push({ section: 12, label: derivedKinLabel(role, '', 1), ids: [x], via: { ids: v.via, word: bySex(q.sex, 'отец', 'мать') }, refs: widestPerChapter(v.refs).slice(0, 3) });
   }
   for (const [key, xs] of byChild) {
     const [via, sex] = key.split('|') as [string, 'm' | 'f'];
     const many = xs.length > 1;
     const role = sex === 'f' ? 'daughter-in-law' : 'son-in-law';
     const word = sex === 'f' ? (many ? 'жёны' : 'жена') : many ? 'мужья' : 'муж';
-    out.push({ section: 12, label: derivedKinLabel(role, '', xs.length), ids: xs, via: { ids: via.split('+'), word }, refs: [] });
+    out.push({ section: 12, label: derivedKinLabel(role, '', xs.length), ids: xs, via: { ids: via.split('+'), word }, refs: widestPerChapter([...(childRefs.get(key) ?? [])].sort((x, y) => Number(kidOnly.has(x)) - Number(kidOnly.has(y)))).slice(0, 3) });
   }
   return out;
 }
@@ -1515,15 +1550,17 @@ export function buildSections(
   );
   const facts = (fs: Fact[] | undefined, key: string) => (fs && fs.length ? <ul>{fs.map((f, i) => fact(f, key, i))}</ul> : null);
   /**
-   * Заметки под строкой: текст и стихи, которых у строки нет. Пояснение показывается, только если в нём есть новые
-   * имена или стихи (CARD-81); начало и конец, которые повторяют строку («Сарра — жена и…»), опускаются.
+   * Заметки под строкой: текст и стихи, которых у строки нет. Пояснение показывается, если в нём есть новые стихи, имена
+   * или слова (CARD-81; этап 19, К-03): пересказ строки — имена её лиц и термин («Брат его Гелем», «Сестра — Иосавеф») —
+   * опускается, сведение при тех же стихах («Сирота: „не было у нее ни отца, ни матери“», «Любил Рахиль больше, нежели
+   * Лию») — нет. Начало и конец, которые повторяют строку («Сарра — жена и…»), опускаются.
    * row — лица строки и её термин («жена», «двоюродный брат»).
    */
   const subNotes = (fs: Fact[] | undefined, rowRefs: string[], key: string, row: { ids: string[]; label?: string } = { ids: [] }) =>
     fs?.flatMap((f, i) => {
       const own = f.refs.filter((r) => !rowRefs.some((q) => refKey(q) === refKey(r)));
       const text = trimRowRepeat(f.text, row.ids.flatMap((x) => [byId.get(x)?.name ?? '']).filter(Boolean), row.label);
-      if (!own.length && (!text || !newNamesIn(text, [...row.ids, id]))) return [];
+      if (!own.length && (!text || !(newNamesIn(text, [...row.ids, id]) || saysMore(text, [...row.ids, id], row.label)))) return [];
       return [
         <div class="note fact" key={`${key}${i}`}>
           {text ? L(text) : null}
@@ -1672,11 +1709,11 @@ export function buildSections(
       ...(p.mother ? [{ id: p.mother, refs: mRefs }] : []),
       ...p.otherParents.map((o) => ({ id: o.id, refs: o.refs })),
     ]);
-    const under6 = (who: string, refs: string[], key: string) => {
+    const under6 = (who: string, refs: string[], key: string, label?: string) => {
       const fs = fate6.attach.get(who);
       if (!fs) return null;
       fate6.attach.delete(who);
-      return subNotes(fs, refs, key, { ids: [who] });
+      return subNotes(fs, refs, key, { ids: [who], label });
     };
     if (p.father) rows.push(<li class="fact" key="f">{fLabel}: <PN id={p.father} lower dis={D(p.father)} /><Refs refs={fRefs} owner={ns + 'p6f'} /><Mark cert={pc} />{p.fatherGap && <span class="muted"> — родословие здесь может пропускать поколения</span>}{under6(p.father, fRefs, 'p6fn.')}<VerseInsert owner={ns + 'p6f'} refs={fRefs} /></li>);
     if (p.mother) rows.push(<li class="fact" key="m">{people ? 'Произошли от' : 'Мать'}: <PN id={p.mother} lower dis={D(p.mother)} /><Refs refs={mRefs} owner={ns + 'p6m'} /><Mark cert={p.motherCert} />{under6(p.mother, mRefs, 'p6mn.')}<VerseInsert owner={ns + 'p6m'} refs={mRefs} /></li>);
@@ -1687,16 +1724,19 @@ export function buildSections(
           {otherParentLabel(o.kind, o.role)}: <PN id={o.id} lower dis={D(o.id)} />
           <Refs refs={o.refs} owner={ns + `p6o${i}`} />
           <Mark cert={o.cert} />
-          {under6(o.id, o.refs, `p6on${i}.`)}
+          {under6(o.id, o.refs, `p6on${i}.`, otherParentLabel(o.kind, o.role))}
           <VerseInsert owner={ns + `p6o${i}`} refs={o.refs} />
         </li>,
       ),
     );
     derived.filter((r) => r.section === 6).forEach((r, i) =>
       rows.push(
+        // стих второго звена (родитель родителя; первое — в строке родителя выше): этап 19, К-04, ТЗ П-3
         <li class="fact" key={`g${i}`}>
           {r.label}: <PN id={r.ids[0]} lower dis={D(r.ids[0])} />
+          <Refs refs={r.refs} owner={ns + `p6g${i}`} />
           <MarkNote label="выв." full="вывод: родитель родителя — по двум связям, записанным в Писании" />
+          <VerseInsert owner={ns + `p6g${i}`} refs={r.refs} />
         </li>,
       ),
     );
@@ -2128,7 +2168,7 @@ export function buildSections(
         <>
           {legal.length ? <ul>{legal.map(legalRow)}</ul> : null}
           {childRows}
-          {[...byClaim].map(([claim, es], i) => {
+          {[...byClaim].flatMap(([claim, all]) => byCert(claim, all)).map(([claim, es], i, arr) => {
             const ids = es.map((e) => e.child);
             // стихи — при небольшой группе; у большой они в § 6 каждого потомка
             const refs = es.length <= 3 ? [...new Set(es.flatMap((e) => e.refs))] : [];
@@ -2137,8 +2177,9 @@ export function buildSections(
                 <span class="muted">{otherChildLabel(claim, sexes(ids))}: </span>
                 <InlineList ids={ids} item={(x, after) => <PN id={x} lower dis={same10.has(x) || D(x) || undefined} after={after} />} />
                 <Refs refs={refs} owner={ns + `c10o${i}`} />
-                <Mark cert={es.every((e) => e.cert === es[0].cert) ? es[0].cert : undefined} />
-                {unionAfter(unionById(p.sex === 'f' ? unionId(null, id, claim) : unionId(id, null, claim)))}
+                <Mark cert={es[0].cert} />
+                {/* «союз» — один раз на вид утверждения: у второй подгруппы по достоверности та же карточка союза */}
+                {i && arr[i - 1][0] === claim ? null : unionAfter(unionById(p.sex === 'f' ? unionId(null, id, claim) : unionId(id, null, claim)))}
                 <VerseInsert owner={ns + `c10o${i}`} refs={refs} />
               </p>
             );
@@ -2254,16 +2295,18 @@ export function buildSections(
     }
     // названные словом Писания — группой по слову: «Сёстры: Саруия, Авигея (1 Пар 2:16)», «Сестра по отцу: Сарра (Быт 20:12)»
     const fate = placeNotes(card?.siblingsNote, kinAll.map((x) => ({ id: x.other, refs: x.k.refs })));
-    const byTerm = new Map<string, { ids: string[]; refs: string[]; cert?: Cert }>();
+    // группа — по слову и достоверности (этап 19, К-01): «Брат: Иуда толк.» (Иуд 1:1) не сливается с «Брат: Иисус Христос»
+    // без пометы — иначе помета пропала бы у обоих
+    const byTerm = new Map<string, { t: string; ids: string[]; refs: string[]; cert?: Cert }>();
     for (const { other, k } of kinAll) {
       const t = termOf(k, other);
-      const g = byTerm.get(t) ?? { ids: [], refs: [], cert: k.cert };
+      const key = `${t}|${k.cert ?? ''}`;
+      const g = byTerm.get(key) ?? { t, ids: [], refs: [], cert: k.cert };
       g.ids.push(other);
       for (const r of k.refs) if (!g.refs.some((q) => refKey(q) === refKey(r))) g.refs.push(r);
-      if (g.cert !== k.cert) g.cert = undefined;
-      byTerm.set(t, g);
+      byTerm.set(key, g);
     }
-    const termRows = [...byTerm].map(([t, g], i) => (
+    const termRows = [...byTerm.values()].map(({ t, ...g }, i) => (
       <li class="fact" key={`k${t}`}>
         <span class="muted">{capFirst(g.ids.length > 1 ? pluralKin(t) : t)}: </span>
         <InlineList ids={g.ids} item={item} />

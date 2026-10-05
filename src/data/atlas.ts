@@ -36,7 +36,7 @@ export interface IdxPerson {
   motherCert: Cert;
   parentRefs: string[];
   otherParents: { id: string; role: 'father' | 'mother'; kind: string; cert: Cert; refs: string[] }[];
-  spouses: { id: string; kind: string; refs: string[]; cert: Cert; note?: string }[];
+  spouses: { id: string; kind: string; refs: string[]; cert: Cert; note?: string; order?: number }[];
   kin: { id: string; rel: string; refs: string[]; cert: Cert }[];
   order: number | null;
   alt: string[];
@@ -590,7 +590,7 @@ export const graph: Graph = buildGraph(
       father: p.father, mother: p.mother, parentRefs: p.parentRefs, parentCert: p.parentCert, motherCert: p.motherCert, order: p.order ?? undefined,
       fatherKind: p.fatherKind === 'legal' ? 'legal' : undefined, fatherGap: p.fatherGap, motherGap: p.motherGap,
       otherParents: p.otherParents.map((o) => ({ id: o.id, role: o.role, kind: o.kind as never, refs: o.refs, cert: o.cert })),
-      spouses: p.spouses.map((s) => ({ id: s.id, kind: s.kind as never, refs: s.refs, cert: s.cert, note: s.note })),
+      spouses: p.spouses.map((s) => ({ id: s.id, kind: s.kind as never, refs: s.refs, cert: s.cert, note: s.note, order: s.order })),
       kin: p.kin,
       // роли — для союзов (engine/unions.ts: мать царя без связи супругов, решение 174)
       ...(p.roles.length ? { roles: p.roles } : {}),

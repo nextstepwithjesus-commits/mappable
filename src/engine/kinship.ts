@@ -22,6 +22,10 @@ import { parseRef, BOOK_INDEX } from './books.ts';
 // склонение имён — общее с карточкой (src/ui/text/ru.ts: беглые гласные, несклоняемые, описательные имена)
 import { nameCase } from '../ui/text/ru.ts';
 
+const CERT_RANK: Record<Cert, number> = { scripture: 0, inference: 1, interpretation: 2 } as Record<Cert, number>;
+/** Худшая из двух достоверностей: путь из двух звеньев не твёрже слабого. */
+const worseCert = (a: Cert, b: Cert): Cert => ((CERT_RANK[a] ?? 0) >= (CERT_RANK[b] ?? 0) ? a : b);
+
 /** Звено пути: `to` приходится `from` тем, что названо в `term` («сын», «мать», «сестра», «муж»). */
 export interface KinStep {
   from: string;
@@ -842,9 +846,13 @@ export function relate(g: Graph, aId: string, bId: string, maxResults = MAX_PATH
   const spouseEdges = (id: string) => (g.spousesOf.get(id) ?? []).map((s) => ({ id: s.a === id ? s.b : s.a, s }));
   const childrenOf = (id: string) => (g.childrenOf.get(id) ?? []).filter((e) => e.kind === 'father' || e.kind === 'mother');
   // братья и сёстры: по общим родителям и по слову Писания «брат», «сестра» (Саруия и Авигея — сёстры Давида, 1 Пар 2:16)
+  // связь через общего родителя — из двух рёбер (этап 19, А-01): стихи обоих и худшая достоверность, иначе толкование
+  // одного звена («Ховав — сын Рагуила» — толк.) пропадало бы в «Моисей — муж Сепфоры, сестры Ховава»
   const sibLinks = (id: string): { id: string; refs: string[]; cert: Cert }[] => {
     const out = new Map<string, { id: string; refs: string[]; cert: Cert }>();
-    for (const e of natural(id)) for (const c of childrenOf(e.parent)) if (c.child !== id && !out.has(c.child)) out.set(c.child, { id: c.child, refs: c.refs, cert: c.cert });
+    for (const e of natural(id))
+      for (const c of childrenOf(e.parent))
+        if (c.child !== id && !out.has(c.child)) out.set(c.child, { id: c.child, refs: [...new Set([...e.refs, ...c.refs])], cert: worseCert(e.cert, c.cert) });
     for (const { other, k } of kinSibs(id)) if (!out.has(other)) out.set(other, { id: other, refs: k.refs, cert: k.cert });
     return [...out.values()];
   };

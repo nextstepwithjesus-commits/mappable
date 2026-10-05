@@ -242,7 +242,8 @@ export function aliveAt(chrono: Map<string, ChronoRow>, t: number): Map<string, 
     if (c.cls === 'epochal') continue;
     const end = c.d ?? c.dEst;
     if (t < c.b || t > end) continue;
-    const certainEnd = c.d ?? c.last;
+    // ранний край известной смерти (этап 19, Х-02), но не раньше последнего засвидетельствованного события
+    const certainEnd = c.d !== null ? Math.max(c.dLo ?? c.d, c.last ?? -Infinity) : c.last;
     out.set(id, t >= c.bHi && certainEnd !== null && t <= certainEnd ? 'sure' : 'likely');
   }
   return out;

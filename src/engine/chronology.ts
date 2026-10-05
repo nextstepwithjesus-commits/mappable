@@ -2615,6 +2615,15 @@ export function modelDependence(g: Graph, results: ChronoResult[]): { persons: M
   return { persons, info };
 }
 
+/**
+ * До какого года лицо наверняка живо: ранний край известной смерти (dLo), но не раньше последнего засвидетельствованного
+ * события; без известной смерти — последнее засвидетельствованное событие или рождение.
+ */
+function surelyAlive(p: { b: number; d: number | null; dLo: number | null; lastAttested: number | null }): number {
+  if (p.d === null) return p.lastAttested ?? p.b;
+  return Math.max(p.dLo ?? p.d, p.lastAttested ?? -Infinity);
+}
+
 /** Лица, чьи жизни пересекаются с жизнью данного: «наверняка» — по крайним оценкам, «вероятно» — по центральным. */
 export function contemporaries(res: ChronoResult, id: string, limit = 40): { id: string; sure: boolean }[] {
   const me = res.persons.get(id);
@@ -2627,7 +2636,8 @@ export function contemporaries(res: ChronoResult, id: string, limit = 40): { id:
     const oEnd = o.d ?? o.dEst;
     const overlap = Math.min(myEnd, oEnd) - Math.max(me.b, o.b);
     if (overlap <= 0) continue;
-    const sureEnd = Math.min(me.d ?? (me.lastAttested ?? me.b), o.d ?? (o.lastAttested ?? o.b));
+    // надёжный конец жизни — ранний край смерти (этап 19, Х-02): «наверняка» — при любых годах в пределах расчёта
+    const sureEnd = Math.min(surelyAlive(me), surelyAlive(o));
     const sure = sureEnd - Math.max(me.bHi, o.bHi) > 0;
     out.push({ id: oid, sure, overlap });
   }

@@ -271,7 +271,8 @@ const index = persons.map((p) => {
     mc: p.motherCert ?? p.parentCert ?? 'scripture',
     pRefs: p.parentRefs ?? [],
     op: (p.otherParents ?? []).map((o) => ({ id: o.id, role: o.role, kind: o.kind, cert: o.cert, refs: o.refs })),
-    sp: (p.spouses ?? []).map((s) => ({ id: s.id, kind: s.kind, refs: s.refs, cert: s.cert ?? 'scripture', ...(s.note ? { note: s.note } : {}) })),
+    // порядок брака (order) — в поставку (этап 19, Б-07): без него Мелхола выходила «Фалтий, потом Давид»
+    sp: (p.spouses ?? []).map((s) => ({ id: s.id, kind: s.kind, refs: s.refs, cert: s.cert ?? 'scripture', ...(s.note ? { note: s.note } : {}), ...(s.order !== undefined ? { order: s.order } : {}) })),
     kin: (p.kin ?? []).map((k) => ({ id: k.id, rel: k.rel, refs: k.refs, cert: k.cert ?? 'scripture' })),
     ord: p.order ?? null,
     alt: (c?.altNames ?? []).map((a) => a.name),
