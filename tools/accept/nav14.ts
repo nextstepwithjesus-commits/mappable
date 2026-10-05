@@ -87,8 +87,12 @@ async function linkKeepsFamily(p: Page, from: string, to: string, labeled = 0.7)
       on = f.kin.filter((k) => k.on);
       ptr = new Set(f.edges.flatMap((e) => e.ids));
       // весь список строки (первые имена — кнопками, остальные — «и ещё N») — в data-ids
-      const ids = (await p.locator(':is(.sky .dotcard, .folio .kin-col, aside.folio[data-link] .dotcard) .dc-hidden').getAttribute('data-ids').catch(() => null)) ?? '';
+      const ids = (await p.locator('.sky .dotcard .dc-hidden').getAttribute('data-ids', { timeout: 1500 }).catch(() => null)) ?? '';
       row = ids.split(' ').filter(Boolean);
+      // этап 20 (решение 194): на широком экране карточки у звезды нет — «Родство» карточки справа называет всю родню
+      // выбранного (наведение на имя подсвечивает его звезду и линию): лицо без подписи учтено им, как прежде строкой
+      // «Без подписи на небе»
+      if (!row.length) row = await p.locator('.folio .kin-col .person[data-id]').evaluateAll((bs) => bs.map((b) => (b as HTMLElement).dataset.id!));
     }
   }
   const lab = on.filter((k) => f.labels.includes(k.id));

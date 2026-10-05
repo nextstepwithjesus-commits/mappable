@@ -145,7 +145,7 @@ export const card: Scenario[] = [
       // дети — по значимости (этап 7, CARD-65): Соломон раньше Нафана
       // этап 20 (решение 195): «В родословии Иисуса Христа по обеим линиям» — строкой паспорта «Линии Мессии» с номерами
       if (!/^Царь Иудеи, затем всего Израиля, сын Иессея из колена Иудина; царствовал 40 лет; отец Соломона и Нафана\.$/.test(t)) return fail(`«${t}»`);
-      const ln = (await p.locator('.folio .passport .pass-lines').innerText().catch(() => '')).replace(/\s+/g, ' ');
+      const ln = (await p.locator('.folio .passport .pass-lines').innerText().catch(() => '')).replace(/\u2060/g, '').replace(/\s+/g, ' ');
       if (!/у Матфея — 14-е имя/.test(ln) || !/у Луки — 42-е имя/.test(ln)) return fail(`строка «Линии Мессии»: «${ln}»`);
       const rule = (await p.locator('.folio .mast-rule').boundingBox())!;
       const bb = (await b.boundingBox())!;
