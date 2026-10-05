@@ -867,7 +867,7 @@ export function drawLinkNodes(v: SkyContext, p: Pass, d: LinkDraw, marks: PlateM
 // ---------- образцы знаков грамматики связей («Условные знаки»; Q3 пишет подписи) ----------
 
 /** Знак грамматики связей для образца: ◆, •, ствол с зубцами, разрыв, обрывок, лента в узле, выбранная связь. */
-export type LinkSign = 'node' | 'join' | 'trunk' | 'cut' | 'stub' | 'ribbon' | 'selected';
+export type LinkSign = 'node' | 'join' | 'trunk' | 'cut' | 'stub' | 'ribbon' | 'selected' | 'kinds' | 'fan';
 
 /** Палитра образца знаков связей: тема (glow — ночь), небо, текст, ленты. */
 export interface LinkSamplePalette extends UnionSamplePalette {
@@ -945,6 +945,55 @@ export function drawLinkSample(ctx: CanvasRenderingContext2D, pal: LinkSamplePal
       paintUnion(ctx, x, my, NODE_R_FAMILY, { open: true, halo: pal.sky, theme, a: 1 });
       star(px(10), hy, 3);
       star(px(16), my, 3, 'f');
+      break;
+    }
+    case 'kinds': {
+      // вид союза (решение 193), слева направо: жена — «‖» и залитый ромб; наложница — «|» и полая половина жены;
+      // левират — «‖» штрихом; брак не назван — тонкая «|», обе половины полые. След мужа сверху, ромб — на следе жены
+      const kinds: { look: NodeLook; bars: number[]; dash: number[]; width: number }[] = [
+        { look: 'wife', bars: [-BAR_HALF, BAR_HALF], dash: [], width: 1 },
+        { look: 'concubine', bars: [0], dash: [], width: 1 },
+        { look: 'levirate', bars: [-BAR_HALF, BAR_HALF], dash: [3, 2], width: 1 },
+        { look: 'none', bars: [0], dash: [], width: 0.6 },
+      ];
+      line([px(8), top, px(w - 6), top], trailTone, 1.2);
+      kinds.forEach((k, i) => {
+        const x = px(w * (0.14 + i * 0.24));
+        line([x - w * 0.09, low, x + w * 0.09, low], trailTone, 1.2);
+        for (const o of k.bars) line([x + o, top, x + o, low - NODE_R_FAMILY], tone, k.width, k.dash);
+        paintUnion(ctx, x, low, NODE_R_FAMILY, { open: true, halo: pal.sky, theme, a: 1, look: k.look });
+      });
+      break;
+    }
+    case 'fan': {
+      // веер союзов выбранного (решение 193): от его звезды — по цветной дорожке на союз, тем же цветом — ромб и дети
+      const sx = px(16);
+      const y = mid;
+      line([sx, y, px(w - 6), y], trailTone, 1.2);
+      const lanes = [
+        { off: -3.5, x: w * 0.36, ky: top - 6 },
+        { off: 3.5, x: w * 0.56, ky: low + 4 },
+        { off: -7, x: w * 0.78, ky: px(4) },
+      ];
+      lanes.forEach((l, i) => {
+        const c = branchColor(i, theme);
+        const lx = px(l.x);
+        ctx.save();
+        ctx.strokeStyle = pal.sky;
+        ctx.lineWidth = 3.2;
+        ctx.beginPath();
+        ctx.moveTo(sx, y + l.off * 0.35);
+        ctx.lineTo(sx + 8, y + l.off);
+        ctx.lineTo(lx, y + l.off);
+        ctx.stroke();
+        ctx.restore();
+        line([sx, y + l.off * 0.35, sx + 8, y + l.off, lx, y + l.off], c, 1.6);
+        line([lx, y + l.off, lx, l.ky], c, 1);
+        line([lx, l.ky, lx + 12, l.ky], c, 1);
+        paintUnion(ctx, lx, y + l.off, NODE_R_FAMILY, { open: true, halo: pal.sky, theme, a: 1, color: c });
+        star(lx + 16, l.ky, 4, i === 1 ? 'f' : 'm');
+      });
+      star(sx, y, 2);
       break;
     }
     case 'cut': {

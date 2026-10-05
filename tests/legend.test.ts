@@ -205,19 +205,21 @@ describe('образцы — функции неба, а не свои копи�
     // прежних образцов связей больше нет: их знаков на небе нет (STAGE11 § 2, «С неба уходят»)
     for (const k of ['descent', 'mother', 'tension', 'bracket', 'mothers', 'order', 'marriage', 'marriageFar', 'family', 'plates']) expect(k in PAINTERS, k).toBe(false);
   });
-  it('«Семья на небе» (этап 15, решение 180): восемь знаков в порядке решения — образцами неба drawFamilySample', () => {
-    const signs = {
-      familyGlide: 'glide', familyUnions: 'unions', familyNoMother: 'nomother', familyKids: 'kids',
-      familyGhost: 'ghost', familyTent: 'tent', familyStation: 'station', familyCross: 'cross',
-    } as const;
-    for (const [k, sign] of Object.entries(signs) as [keyof typeof signs, (typeof signs)[keyof typeof signs]][]) {
+  // «Семья на небе» этапа 19 (вместо восьми знаков «Отчего дома» решения 180, снятых решением 190 вместе с ним: на небе
+  // их нет, а легенда, учившая им, вводила в заблуждение — аудит 5 октября, К-12)
+  it('«Семья на небе» (этап 19): союз, вид союза, веер выбранного, связка без следов — вырезками неба и образцами drawLinkSample', () => {
+    for (const [k, sign] of [['linkKinds', 'kinds'], ['linkFan', 'fan']] as const) {
       const s = paint(k, 420, 64);
-      // образец — функция неба с этим знаком, во всю ширину строки; своих линий у образца нет
-      expect(s.drawFamilySample.mock.calls.map((c) => c.slice(2)), k).toEqual([[420, 64, sign]]);
+      expect(s.drawLinkSample.mock.calls.map((c) => c.slice(2)), k).toEqual([[420, 64, sign]]);
     }
-    // строки легенды — те же восемь знаков по порядку решения 180, у каждой — заголовок и пояснение
-    expect(FAMILY_LEGEND.map((r) => signs[r.k as keyof typeof signs])).toEqual([...trails.FAMILY_SIGNS]);
-    for (const r of FAMILY_LEGEND) expect(r.head.length * r.text.length, r.k).toBeGreaterThan(0);
+    expect(FAMILY_LEGEND.map((r) => r.head)).toEqual(['Союз', 'Вид союза', 'Выбранное лицо', 'Следы жизни выключены']);
+    // вырезки настоящего неба: Иаков без выбора, выбранный (веер), выбранный при выключенных следах
+    expect(FAMILY_LEGEND.map((r) => r.crop ?? null)).toEqual(['family', null, 'familySel', 'familyStubs']);
+    expect(cropState(models[0], 1, CROPS.familySel.state()).selected).toBe('iakov');
+    expect(cropState(models[0], 1, CROPS.familyStubs.state()).layers.lifelines).toBe(false);
+    // знаки «Отчего дома» и света неба сняты из образцов
+    for (const k of ['familyGlide', 'familyStation', 'familyTent', 'lightNebula', 'lightMouth', 'lightDust', 'lightHalo', 'tribeLeah', 'tribeSilver']) expect(k in PAINTERS, k).toBe(false);
+    for (const r of FAMILY_LEGEND) expect(r.text, r.head).not.toMatch(/свечен|туманност|устье|Отч(ий|его) дом|на следе жены|станци/i);
   });
   it('знаки «Семьи на небе» рисуют небесные рисовальщики: след с переходом, ромб по виду союза, черта брака по виду', () => {
     // настоящий рисовальщик (без шпиона-обёртки): что он зовёт

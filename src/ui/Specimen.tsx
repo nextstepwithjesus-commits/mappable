@@ -630,25 +630,14 @@ function Signs({ map }: { map: Theme }) {
 }
 
 /**
- * Свет неба (этап 16, решения 182–184, 186): туманность, устье, пыль, огоньки по величине, оттенки колен и знак врезки
- * семьи — образцами «Условных знаков» (src/ui/panels/Legend.tsx, PAINTERS; рисовальщик неба drawLightSample).
+ * Знак врезки «Семья созвездием» (решение 186) — образцом «Условных знаков» (src/ui/panels/Legend.tsx, PAINTERS).
+ * Знаки света неба (этап 16) сняты решением 191: слоя света на небе нет.
  */
-const LIGHT: { k: PainterKey; cap: string }[] = [
-  { k: 'lightNebula', cap: 'туманность — неразрешённые следы жизни рода' },
-  { k: 'lightMouth', cap: 'устье — от звезды родоначальника к его роду' },
-  { k: 'lightDust', cap: 'звёздная пыль — лица, ещё не ставшие звёздами' },
-  { k: 'lightHalo', cap: 'огонёк — величина 0, 1, 2' },
-  { k: 'tribeLeah', cap: 'сыны Лии' },
-  { k: 'tribeRachel', cap: 'сыны Рахили' },
-  { k: 'tribeBilhah', cap: 'сыны Валлы' },
-  { k: 'tribeZilpah', cap: 'сыны Зелфы' },
-  { k: 'tribeSilver', cap: 'народы и лица до колен — без оттенка' },
-  { k: 'inset', cap: 'врезка семьи — без шкалы времени' },
-];
+const LIGHT: { k: PainterKey; cap: string }[] = [{ k: 'inset', cap: 'врезка семьи — без шкалы времени' }];
 function LightSigns({ map }: { map: Theme }) {
   return (
     <>
-      <h4>Свет неба</h4>
+      <h4>Врезка семьи</h4>
       <div class="spec-states spec-sky">
         {LIGHT.map((s) => (
           <figure class="spec-sign spec-line" key={s.k}>
@@ -662,15 +651,16 @@ function LightSigns({ map }: { map: Theme }) {
 }
 
 /**
- * «Семья на небе» (этап 15, решение 180): восемь знаков «Отчего дома» — те же образцы и слова, что в начале «Условных
- * знаков» (src/ui/panels/Legend.tsx, FAMILY_LEGEND; рисовальщик неба drawFamilySample).
+ * «Семья на небе» (этап 19): союз, вид союза и веер союзов выбранного — те же образцы и слова, что в начале «Условных
+ * знаков» (src/ui/panels/Legend.tsx, FAMILY_LEGEND; рисовальщик неба drawLinkSample). Строки только с вырезкой неба
+ * (следы выключены) — в панели, здесь их нет.
  */
 function FamilySigns({ map }: { map: Theme }) {
   return (
     <>
       <h4>Семья на небе</h4>
       <ul class="spec-list spec-family">
-        {FAMILY_LEGEND.map((r) => (
+        {FAMILY_LEGEND.filter((r) => r.k).map((r) => (
           <li key={r.k}>
             <Canvas
               class="spec-ribbons"
@@ -680,7 +670,7 @@ function FamilySigns({ map }: { map: Theme }) {
                 const pal = paletteOf(map);
                 ctx.fillStyle = pal.sky;
                 ctx.fillRect(0, 0, w, h);
-                PAINTERS[r.k](ctx, pal, w, h);
+                PAINTERS[r.k!](ctx, pal, w, h);
               }}
             />
             <p>
