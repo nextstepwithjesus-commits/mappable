@@ -55,7 +55,7 @@ import { branchFrame, clipHoles, FAR, ringHoles, selectedRoutes, type BranchPain
 import type { Rect } from './rect.ts';
 import type { Emphasis, Palette, Pass, SkyContext } from './sky.ts';
 import type { LinkFrame, LinkNode, LinkPath, PathStyle, StubMark } from './links.ts';
-import type { LinkKey } from '../engine/linkkey.ts';
+import { unionParts, type LinkKey } from '../engine/linkkey.ts';
 import type { Union } from '../engine/unions.ts';
 import { unions as ALL_UNIONS } from '../ui/reveal.ts';
 import { unionName } from '../ui/linkwords.ts';
@@ -419,6 +419,18 @@ export function drawBreak(ctx: CanvasRenderingContext2D, x: number, y: number, c
   for (const dx of [-BREAK.gap / 2, BREAK.gap / 2]) {
     ctx.moveTo(x + dx - BREAK.slant / 2, y + BREAK.h);
     ctx.lineTo(x + dx + BREAK.slant / 2, y - BREAK.h);
+  }
+  ctx.stroke();
+}
+
+/** Знак разрыва «//» поперёк вертикали (ствол к ребёнку): два косых штриха через линию у y, между ними просвет. */
+export function drawBreakAcross(ctx: CanvasRenderingContext2D, x: number, y: number, color: string) {
+  ctx.strokeStyle = color;
+  ctx.setLineDash([]);
+  ctx.beginPath();
+  for (const dy of [-BREAK.gap / 2, BREAK.gap / 2]) {
+    ctx.moveTo(x - BREAK.h, y + dy + BREAK.slant / 2);
+    ctx.lineTo(x + BREAK.h, y + dy - BREAK.slant / 2);
   }
   ctx.stroke();
 }
@@ -2722,6 +2734,7 @@ export function drawLinks(v: SkyContext, p: Pass, d: LinkDraw) {
   }
   // главный ярус — после остальных: с ореолом цвета неба поверх контекста (решение 135)
   const main: { q: LinkPath; a: number; gaps: Map<number, [number, number][]> | null; color: string }[] = [];
+  const gapMarks: { q: LinkPath; a: number; color: string }[] = [];
   for (let i = 0; i < paths.length; i++) {
     // путь вне холста — сразу мимо (из тысяч путей неба на холсте — десятки); рамка — из рамок кадра связей (без
     // сдвига): сдвиг монотонен, поэтому крайние точки те же
@@ -2745,6 +2758,8 @@ export function drawLinks(v: SkyContext, p: Pass, d: LinkDraw) {
         p.lines.add({ x: Math.min(ax, bx) - 1.5, y: Math.min(ay, by) - 1.5, w: Math.abs(bx - ax) + 3, h: Math.abs(by - ay) + 3 });
       }
     const a = g0 * a0 * (q.style === 'faint' && !hot ? FAINT_A : 1);
+    // родословие здесь пропускает поколения (fatherGap; «предок» без промежуточных звеньев) — «//» на зубце к ребёнку
+    if (q.kind === 'tooth' && q.key.kind === 'child' && gapKid(q.key.union, q.key.child)) gapMarks.push({ q, a, color: tone });
     if (l.tier === 0 && !hot) {
       main.push({ q, a, gaps, color: tone });
       continue;
@@ -2778,8 +2793,73 @@ export function drawLinks(v: SkyContext, p: Pass, d: LinkDraw) {
       ctx.stroke();
     }
   }
+  // «//» пропуска поколений (этап 19): на середине зубца не короче GAP_MARK_MIN — просвет цвета неба и два косых штриха,
+  // как разрыв следа (MAP-51); подсказка связи говорит «пропуск поколений» (linkwords.ts, kidLink)
+  const marked: string[] = [];
+  if (gapMarks.length) {
+    ctx.setLineDash([]);
+    ctx.lineWidth = 1;
+    // пути союзов с отмеченными детьми: ствол и зубцы братьев — чтобы короткий зубец отметить на стволе
+    const of = new Map<string, LinkPath[]>();
+    for (const m of gapMarks) if (m.q.union) of.set(m.q.union, []);
+    for (const q of paths) if (q.union && of.has(q.union) && (q.kind === 'trunk' || q.kind === 'tooth')) of.get(q.union)!.push(q);
+    for (const m of gapMarks) {
+      const [x0, y, x1] = [m.q.pts[0] + dx, m.q.pts[1] + dy, m.q.pts[2] + dx];
+      if (x1 < 0 || x0 > W || y < 0 || y > H) continue;
+      let at: { x: number; y: number; vertical: boolean } | null = null;
+      if (Math.abs(x1 - x0) >= GAP_MARK_MIN) at = { x: Math.round((x0 + x1) / 2) + 0.5, y, vertical: false };
+      else {
+        // зубец короткий — знак на стволе над ребёнком, если этот отрезок ствола ведёт только к нему (он последний на
+        // стволе) и не короче GAP_MARK_MIN
+        const own = of.get(m.q.union ?? '') ?? [];
+        const trunk = own.find((q) => q.kind === 'trunk' && Math.abs(q.pts[0] - m.q.pts[0]) < 0.6 && Math.abs(q.pts[q.pts.length - 1] - m.q.pts[1]) < 0.6);
+        if (trunk) {
+          const ny = trunk.pts[1];
+          const dir = Math.sign(m.q.pts[1] - ny);
+          const sib = own.filter((q) => q !== m.q && q.kind === 'tooth' && Math.abs(q.pts[0] - m.q.pts[0]) < 0.6).map((q) => q.pts[1]);
+          const prev = sib.filter((sy) => (sy - ny) * dir > 0 && (m.q.pts[1] - sy) * dir > 0).reduce((b, sy) => ((sy - b) * dir > 0 ? sy : b), ny);
+          const seg = Math.abs(m.q.pts[1] - prev);
+          if (seg >= GAP_MARK_MIN) at = { x: x0, y: y - dir * Math.min(9, seg / 2), vertical: true };
+        }
+      }
+      if (!at) continue;
+      ctx.globalAlpha = m.a;
+      ctx.fillStyle = pal.sky;
+      if (at.vertical) {
+        ctx.fillRect(at.x - 2.5, at.y - BREAK.gap / 2 - 1, 5, BREAK.gap + 2);
+        drawBreakAcross(ctx, at.x, at.y, m.color);
+      } else {
+        ctx.fillRect(at.x - BREAK.gap / 2 - 1, at.y - 2.5, BREAK.gap + 2, 5);
+        drawBreak(ctx, at.x, at.y, m.color);
+      }
+      if (m.q.key.kind === 'child') marked.push(m.q.key.child);
+    }
+  }
+  const dsg = (ctx.canvas as { dataset?: DOMStringMap } | undefined)?.dataset;
+  if (dsg) {
+    const v = marked.join(' ');
+    if (v) dsg.gapMarks = v;
+    else if (dsg.gapMarks !== undefined) delete dsg.gapMarks;
+  }
   ctx.restore();
   ctx.globalAlpha = g0;
+}
+
+/** Зубец короче — без знака пропуска поколений: на нём «//» лёг бы на звезду или ствол. */
+export const GAP_MARK_MIN = 14;
+const gapMemo = new Map<string, boolean>();
+/**
+ * Ребёнок союза — через пропуск поколений: у отца союза ребро с fatherGap (Мф 1:8 «Иорам родил Озию» — три царя опущены)
+ * или союз — утверждение «предок» (Исмаил «из племени царского», 4 Цар 25:25).
+ */
+export function gapKid(union: string, child: string): boolean {
+  const k = `${union}|${child}`;
+  const have = gapMemo.get(k);
+  if (have !== undefined) return have;
+  const parts = unionParts(union);
+  const r = !!parts && (parts.claim === 'ancestor' || (graph.parentsOf.get(child) ?? []).some((e) => e.kind === 'father' && e.parent === parts.a && e.gap));
+  gapMemo.set(k, r);
+  return r;
 }
 
 /** Подпись обрывка или узла на небе: текст, точка привязки и куда от неё ставить. */

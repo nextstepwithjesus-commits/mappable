@@ -165,3 +165,18 @@ describe('Х-07: якорь Соломона и Исход согласован�
     expect(sol.value - 479).toBe(EXODUS_HIST);
   });
 });
+
+describe('пропуск поколений на связи (этап 19)', () => {
+  it('ребёнок через fatherGap — «//» на зубце или стволе; обычный ребёнок — без знака', async () => {
+    const C = await import('../tools/census.ts');
+    const T = await import('../src/render/trails.ts');
+    const { graph } = await import('../src/data/atlas.ts');
+    const gapEdge = (graph.parentsOf.get('iokim-syn-siloma') ?? []).find((e) => e.kind === 'father')!;
+    expect(gapEdge.gap).toBe(true);
+    const f = C.captureView('all', { person: 'iokim-syn-siloma' }, { select: null });
+    const ds = (f.s.canvas as unknown as { dataset: Record<string, string> }).dataset;
+    expect((ds.gapMarks ?? '').split(' ')).toContain('iokim-syn-siloma');
+    // Исаак — сын Авраама без пропуска
+    expect(T.gapKid('u:avraam+sarra', 'isaak')).toBe(false);
+  }, 120_000);
+});

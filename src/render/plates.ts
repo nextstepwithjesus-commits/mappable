@@ -49,7 +49,7 @@ import { branchColor, GlowBatch, glowLayers, type MapTheme } from './branches.ts
 import { branchKeysOf, branchOrTribeColor } from './light.ts';
 import { drawGlyph, starRadius } from './glyphs.ts';
 import { branchFrame } from './marks.ts';
-import { commonBranch, nodeOnSky, unionAlpha, unionColors } from './trails.ts';
+import { BREAK, commonBranch, drawBreak, nodeOnSky, unionAlpha, unionColors } from './trails.ts';
 import { mapFont, mapSize, T_MAP_S } from './type.ts';
 import { cross, type Rect } from './rect.ts';
 import { KIN_GOLD, LINK_YELLOW, UNION_COLORS } from './branches.ts';
@@ -867,7 +867,7 @@ export function drawLinkNodes(v: SkyContext, p: Pass, d: LinkDraw, marks: PlateM
 // ---------- образцы знаков грамматики связей («Условные знаки»; Q3 пишет подписи) ----------
 
 /** Знак грамматики связей для образца: ◆, •, ствол с зубцами, разрыв, обрывок, лента в узле, выбранная связь. */
-export type LinkSign = 'node' | 'join' | 'trunk' | 'cut' | 'stub' | 'ribbon' | 'selected' | 'kinds' | 'fan';
+export type LinkSign = 'node' | 'join' | 'trunk' | 'cut' | 'stub' | 'ribbon' | 'selected' | 'kinds' | 'fan' | 'gap';
 
 /** Палитра образца знаков связей: тема (glow — ночь), небо, текст, ленты. */
 export interface LinkSamplePalette extends UnionSamplePalette {
@@ -994,6 +994,19 @@ export function drawLinkSample(ctx: CanvasRenderingContext2D, pal: LinkSamplePal
         star(lx + 16, l.ky, 4, i === 1 ? 'f' : 'm');
       });
       star(sx, y, 2);
+      break;
+    }
+    case 'gap': {
+      // пропуск поколений (этап 19): ствол от ромба и зубец к ребёнку с «//» — родословие здесь пропускает поколения
+      const x = px(w * 0.3);
+      line([px(8), top, px(w - 6), top], trailTone, 1.2);
+      line([x, top, x, low, px(w * 0.7), low], tone);
+      paintUnion(ctx, x, top, NODE_R_FAMILY, { open: true, halo: pal.sky, theme, a: 1 });
+      const mx = px(w * 0.5);
+      ctx.fillStyle = pal.sky;
+      ctx.fillRect(mx - BREAK.gap / 2 - 1, low - 2.5, BREAK.gap + 2, 5);
+      drawBreak(ctx, mx, low, tone);
+      star(px(w * 0.7) + 4, low, 4);
       break;
     }
     case 'cut': {
