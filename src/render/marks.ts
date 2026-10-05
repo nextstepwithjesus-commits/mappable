@@ -131,6 +131,18 @@ function familyHighlightOf(id: string): Highlight {
  * лица пути, концы и выбранное; иначе — род выбранного лица. Нет выбранного и группы — выделения нет.
  */
 export function highlightFor(id: string | null, path: readonly string[] | null, group?: readonly string[] | null): Highlight | null {
+  // тот же выбор, та же группа, тот же путь — тот же объект (этап 19, аудит П-02): небо узнаёт неизменное выделение по
+  // тождеству объекта (кэш сдвига, Sky.panKey), и новый Map на каждом кадре лишал протяжку быстрого пути
+  const key = `${id ?? ''}|${group?.join(',') ?? ''}|${path?.join(',') ?? ''}`;
+  if (!group?.length && !path?.length) return computeHighlight(id, path, group);
+  if (lastHl && lastHl.key === key) return lastHl.v;
+  const v = computeHighlight(id, path, group);
+  lastHl = { key, v };
+  return v;
+}
+let lastHl: { key: string; v: Highlight | null } | null = null;
+
+function computeHighlight(id: string | null, path: readonly string[] | null, group?: readonly string[] | null): Highlight | null {
   if (group?.length) {
     const m = new Map<string, Emphasis>(group.map((g) => [g, 'group']));
     if (id) m.set(id, 'self');

@@ -77,3 +77,73 @@ describe('Б-07: порядок брака из данных', () => {
     expect(own.indexOf('david')).toBeLessThan(own.indexOf('faltiy-syn-laisha'));
   });
 });
+
+describe('В-02: в показе «линии Мессии» нить проходит через звёзды и при растянутых строках', () => {
+  // допуск — как у Ч5 переписи (tools/census.ts: полстроки и амплитуда косы), но не больше 20 px при любой пропорции строк
+  it('строки ×1, ×1,5 и ×2: каждое лицо линии не дальше 20 px от своей нити (было до 77 px у Езекии при ×1,5)', async () => {
+    const C = await import('../tools/census.ts');
+    const ribbons = await import('../src/render/ribbons.ts');
+    const { lines } = await import('../src/data/atlas.ts');
+    const { distSeg } = await import('../src/render/links.ts');
+    for (const k of [1, 1.5, 2]) {
+      const f = C.capture('lines');
+      f.s.cam.setLanes(k);
+      C.frameOf(C.SCENES.lines, f.s, 1, 1440);
+      const s = f.s;
+      const rc = ribbons.ribbonStrands(s, { lineFlip: false, onlyLines: true } as never, { joseph: lines.joseph.persons, mary: lines.mary.persons });
+      const tol = Math.min(s.cam.ky * 0.5, 14) + 6;
+      const far: string[] = [];
+      for (const st of rc.strands) {
+        for (const pid of st.ids) {
+          const i = s.indexOf(pid);
+          if (i === undefined || s.hides(pid)) continue;
+          const x = s.cam.sx(s.X0[i]);
+          const y = s.cam.sy(s.nodes[i].lane);
+          if (x < 0 || x > s.cam.w || y < 0 || y > s.cam.h) continue;
+          // тесные поколения (соседи на нити ближе 24 px, ТЗ § 3.2) — по сглаженной линии без ряби: допуск — строка
+          const k = st.ids.indexOf(pid);
+          const nx = (q: string | undefined) => (q && s.indexOf(q) !== undefined ? s.cam.sx(s.X0[s.indexOf(q)!]) : null);
+          const gaps = [nx(st.ids[k - 1]), nx(st.ids[k + 1])].filter((g): g is number => g !== null).map((g) => Math.abs(g - x));
+          const lim = gaps.length && Math.min(...gaps) < ribbons.RIPPLE_PX ? s.cam.ky + 6 : tol;
+          let best = Infinity;
+          const P = st.points;
+          for (let q = 0; q + 1 < P.length; q++) best = Math.min(best, distSeg(x, y, P[q].x + rc.dx, P[q].y + rc.dy, P[q + 1].x + rc.dx, P[q + 1].y + rc.dy));
+          if (best > lim) far.push(`${pid} ${Math.round(best)} px`);
+        }
+      }
+      expect(far, `строки ×${k}`).toEqual([]);
+    }
+  }, 120_000);
+});
+
+describe('В-03: прозрачность к готовому rgba', () => {
+  it('alpha(alpha(c, .75), 1) — допустимый цвет холста, прозрачности перемножаются', async () => {
+    const { alpha } = await import('../src/render/color.ts');
+    expect(alpha('rgba(23,34,56,0.75)', 1)).toBe('rgba(23,34,56,0.75)');
+    expect(alpha(alpha('#172238', 0.75), 0.5)).toBe('rgba(23,34,56,0.375)');
+    expect(alpha('rgb(1,2,3)', 0.5)).toBe('rgba(1,2,3,0.5)');
+  });
+});
+
+describe('В-01: веер союзов Давида — у каждой дорожки своя высота', () => {
+  it('десять союзов Давида: дорожки на разной высоте, ни одна не легла на другую', async () => {
+    const C = await import('../tools/census.ts');
+    const trails = await import('../src/render/trails.ts');
+    const f = C.captureView('all', { person: 'david' }, { select: 'david' });
+    const hits = trails.unionFanHits(f.s);
+    expect(hits.length).toBeGreaterThanOrEqual(8);
+    const ys = hits.map((h) => Math.round(h.pts[3] * 4));
+    expect(new Set(ys).size, hits.map((h) => `${h.union}:${h.pts[3]}`).join(' ')).toBe(ys.length);
+  }, 120_000);
+});
+
+describe('П-02: неизменное выделение — тот же объект', () => {
+  it('группа панели и путь родства: повторный вызов highlightFor отдаёт тот же объект (кэш сдвига узнаёт его)', async () => {
+    const { highlightFor } = await import('../src/render/marks.ts');
+    const g = ['avraam', 'isaak', 'iakov'];
+    expect(highlightFor('avraam', null, [...g])).toBe(highlightFor('avraam', null, [...g]));
+    const path = ['ioav', 'saruiya', 'david'];
+    expect(highlightFor('ioav', [...path])).toBe(highlightFor('ioav', [...path]));
+    expect(highlightFor('ioav', ['ioav', 'david'])).not.toBe(highlightFor('ioav', [...path]));
+  });
+});

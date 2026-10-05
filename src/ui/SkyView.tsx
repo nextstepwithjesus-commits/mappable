@@ -195,6 +195,14 @@ export function SkyView() {
     let dirty = true;
     let raf = 0;
     let staleTimer = 0;
+    // неизменные между кадрами объекты состояния неба (этап 19, П-02): выделение отметок и слои показа линий
+    let pinHl: { key: string; hl: Map<string, Emphasis> | null } = { key: '', hl: null };
+    type Layers = Record<string, boolean>;
+    let ribbonLayers: { from: Layers; to: Layers } | null = null;
+    const withRibbons = (l: Layers): Layers => {
+      if (ribbonLayers?.from !== l) ribbonLayers = { from: l, to: { ...l, ribbons: true } };
+      return ribbonLayers.to;
+    };
     let introStart = introDone.value || reduced() ? -1 : performance.now();
     let flowStart = 0;
     let morph: { from: number; to: number; start: number; anchor: Anchor } | null = null;
@@ -267,9 +275,10 @@ export function SkyView() {
       // участок синопсиса) — лица группы; иначе путь родства или род выбранного лица (E4, E5; src/render/marks.ts)
       const pinned = pins.value;
       const hlf = pinned.length ? null : highlightFor(selected.value, path, skyGroup.value?.ids);
-      let highlight: Map<string, Emphasis> | null = pinned.length
-        ? new Map<string, Emphasis>([...pinned, ...(selected.value ? [selected.value] : [])].map((x) => [x, 'self']))
-        : (hlf?.hl ?? null);
+      // отметки — тот же объект, пока те же отметки и выбор (этап 19, П-02: кэш сдвига узнаёт выделение по тождеству)
+      const pinKey = pinned.length ? `${pinned.join(',')}|${selected.value ?? ''}` : '';
+      if (pinKey !== pinHl.key) pinHl = { key: pinKey, hl: pinned.length ? new Map<string, Emphasis>([...pinned, ...(selected.value ? [selected.value] : [])].map((x) => [x, 'self'])) : null };
+      let highlight: Map<string, Emphasis> | null = pinned.length ? pinHl.hl : (hlf?.hl ?? null);
       // какой путь родства светится на небе — для проверок приёмки (tools/accept.ts)
       const pathKey = pair && selected.value ? pair.join(' ') : '';
       if (pathKey !== shownPath.current) {
@@ -311,7 +320,7 @@ export function SkyView() {
         model: model.value, lambda: shownLambda, selected: selected.value, second: second.value, hovered: hovered.value, focus: keyboardInput.value ? focused.value : null,
         noteFocus: onlyLines.value ? noteFocus.value : null,
         // в показе «Линии Мессии» ленты — сам показ: слой лент выключен — в этом показе они всё равно рисуются (решение 192)
-        highlight, layers: onlyLines.value && layers.value.ribbons === false ? { ...layers.value, ribbons: true } : layers.value, onlyLines: onlyLines.value, meridian: meridian.value,
+        highlight, layers: onlyLines.value && layers.value.ribbons === false ? withRibbons(layers.value) : layers.value, onlyLines: onlyLines.value, meridian: meridian.value,
         tensionPersons, flow: flowing ? flowT : 0, reduced: reduced(), intro, lineFlip: lineFlip.value, pins: new Set(pins.value),
         reserve: reserveRef.current, meridianLabel, kinSteps: pair ? kinSteps.current : (preview?.steps ?? null), depth: hlf?.depth ?? null,
         modelNote: mid !== modelInfo[0]?.id ? (modelInfo.find((m) => m.id === mid)?.name ?? null) : null,

@@ -564,6 +564,9 @@ function strandSteps(v: SkyContext, s: SkyState, steps: { joseph: readonly LineS
   return out;
 }
 
+/** Поколения ближе этого на экране — «тесные» (ТЗ § 3.2: коса и бусины без ряби). */
+export const RIPPLE_PX = 24;
+
 /** Радиус ступеньки ленты на масштабе семьи (§ 3: 8–16 px) — по высоте строки. */
 export const routeRadius = (ky: number) => Math.max(8, Math.min(16, ky * 0.5));
 
@@ -603,8 +606,14 @@ export function ribbonStrands(v: SkyContext, s: SkyState, steps: { joseph: reado
       const i = v.indexOf(id);
       return i === undefined ? null : { x: cam.sx(v.X0[i]), y: cam.sy(starLaneOf(at[i])) };
     };
-    // средняя линия раздельных участков (ветвей) при растянутых строках — сглажена (MAP-62); развилки и схождения на месте
+    // средняя линия раздельных участков (ветвей) при растянутых строках — сглажена (MAP-62); развилки и схождения на месте.
+    // Только когда лица линий стоят на нитях (beadNodes): иначе звёзды остаются в своих строках, и сглаженная нить шла бы
+    // мимо них — у Иосафата, Езекии и всей ленты Луки на 30–77 px при строках ×1,5 (этап 19, аудит В-02)
     const flat = Math.min(1, cam.kyWith(cam.kx, 1) / ky);
+    // звёзды не на нитях (этап 19, В-02) — сглаженная средняя линия держится у звезды не дальше трети обычной строки:
+    // цари стоят на своей нити. Тесные поколения (соседи ближе 24 px — правило ряби ТЗ § 3.2) в пределах строки от
+    // сглаженной линии (лица Луки в двух строках через одну) — по ней, как прежде: нить через каждое была бы пилой
+    const keep = v.onBeads ? Infinity : cam.kyWith(cam.kx, 1) * 0.3;
     const smooth = new Map<string, number>();
     const jIds = J.map((q) => q.id);
     const mIds = M.map((q) => q.id);
@@ -614,7 +623,15 @@ export function ribbonStrands(v: SkyContext, s: SkyState, steps: { joseph: reado
         const part = xs.slice(a, b + 1);
         const pts = part.map(raw);
         if (pts.some((q) => !q)) continue;
-        smoothMidline(pts as { x: number; y: number }[], flat).forEach((y, k) => k > 0 && k < part.length - 1 && smooth.set(part[k], y));
+        smoothMidline(pts as { x: number; y: number }[], flat).forEach((y, k) => {
+          if (k <= 0 || k >= part.length - 1) return;
+          const q = pts as { x: number; y: number }[];
+          const tight = Math.min(q[k].x - q[k - 1].x, q[k + 1].x - q[k].x) < RIPPLE_PX;
+          const y0 = q[k].y;
+          // тесное поколение рядом со сглаженной линией (не дальше строки) — по ней; дальше (цари в горе Иосафата и
+          // Езекии) — нить идёт к звезде
+          smooth.set(part[k], tight && Math.abs(y - y0) <= ky ? y : Math.max(y0 - keep, Math.min(y0 + keep, y)));
+        });
       }
     }
     const project = (id: string) => {
@@ -622,8 +639,10 @@ export function ribbonStrands(v: SkyContext, s: SkyState, steps: { joseph: reado
       return q && smooth.has(id) ? { x: q.x, y: smooth.get(id)! } : q;
     };
     const A = BRAID_PX;
-    // сглаживание тесных поколений держит нить не дальше полустроки от бусины (этап 13, X3 Д9, Ч5)
-    let strands = buildRibbons({ joseph: J, mary: M, project, amplitude: A, meander: A * 0.5, clip: [-RIBBON_MARGIN, cam.w + RIBBON_MARGIN], hold: ky * 0.5 });
+    // сглаживание тесных поколений держит нить не дальше полустроки от бусины (этап 13, X3 Д9, Ч5) — полустроки обычной
+    // пропорции: при растянутых строках нить не уходит от звезды дальше, чем при обычных (этап 19, В-02)
+    const hold = Math.min(ky, cam.kyWith(cam.kx, 1)) * 0.5;
+    let strands = buildRibbons({ joseph: J, mary: M, project, amplitude: A, meander: A * 0.5, clip: [-RIBBON_MARGIN, cam.w + RIBBON_MARGIN], hold });
     if (f > 0) {
       // маршруты шагов: по узлам союзов кадра (src/render/links.ts, via); звёзды — на своих местах кадра
       const star = (id: string) => {

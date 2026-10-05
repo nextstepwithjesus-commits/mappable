@@ -15,7 +15,10 @@ export function mix(a: string, b: string, t: number): string {
 
 /** Готовые строки alpha(): её зовут для каждого следа и подписи в каждом кадре, а цветов и уровней — десятки. */
 const alphaMemo = new Map<string, Map<number, string>>();
-/** Цвет с прозрачностью a (из #rrggbb или rgb(…)). */
+/**
+ * Цвет с прозрачностью a (из #rrggbb, rgb(…) или rgba(…)). У rgba(…) прозрачности перемножаются: alpha(alpha(c, .75), a)
+ * — это c с прозрачностью .75·a, а не строка «rgba(r,g,b,.75,a)», которую холст отвергает молча (этап 19, аудит В-03).
+ */
 export function alpha(c: string, a: number): string {
   let byA = alphaMemo.get(c);
   if (!byA) {
@@ -25,10 +28,12 @@ export function alpha(c: string, a: number): string {
   }
   let out = byA.get(a);
   if (out !== undefined) return out;
+  const m = /^\s*rgba\(\s*([^,]+),\s*([^,]+),\s*([^,]+),\s*([^)]+)\)\s*$/.exec(c);
   if (c.trim().startsWith('#')) {
     const [r, g, b] = hexToRgb(c);
     out = `rgba(${r},${g},${b},${a})`;
-  } else out = c.replace('rgb(', 'rgba(').replace(')', `,${a})`);
+  } else if (m) out = `rgba(${m[1]},${m[2]},${m[3]},${+(Number(m[4]) * a).toFixed(4)})`;
+  else out = c.replace('rgb(', 'rgba(').replace(')', `,${a})`);
   if (byA.size > 512) byA.clear();
   byA.set(a, out);
   return out;

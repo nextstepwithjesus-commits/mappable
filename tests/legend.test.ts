@@ -212,13 +212,15 @@ describe('образцы — функции неба, а не свои копи�
       const s = paint(k, 420, 64);
       expect(s.drawLinkSample.mock.calls.map((c) => c.slice(2)), k).toEqual([[420, 64, sign]]);
     }
-    expect(FAMILY_LEGEND.map((r) => r.head)).toEqual(['Союз', 'Вид союза', 'Выбранное лицо', 'Следы жизни выключены']);
+    expect(FAMILY_LEGEND.map((r) => r.head)).toEqual(['Союз', 'Вид союза', 'Выбранное лицо', 'Указатель у кромки', 'Следы жизни выключены']);
     // вырезки настоящего неба: Иаков без выбора, выбранный (веер), выбранный при выключенных следах
-    expect(FAMILY_LEGEND.map((r) => r.crop ?? null)).toEqual(['family', null, 'familySel', 'familyStubs']);
+    expect(FAMILY_LEGEND.map((r) => r.crop ?? null)).toEqual(['family', null, 'familySel', null, 'familyStubs']);
+    // указатель шатра — рисовальщиком неба (drawTentPointer внутри drawFamilySample('tent'))
+    expect(paint('linkTent', 420, 44).drawFamilySample.mock.calls.map((c) => c.slice(2))).toEqual([[420, 44, 'tent']]);
     expect(cropState(models[0], 1, CROPS.familySel.state()).selected).toBe('iakov');
     expect(cropState(models[0], 1, CROPS.familyStubs.state()).layers.lifelines).toBe(false);
     // знаки «Отчего дома» и света неба сняты из образцов
-    for (const k of ['familyGlide', 'familyStation', 'familyTent', 'lightNebula', 'lightMouth', 'lightDust', 'lightHalo', 'tribeLeah', 'tribeSilver']) expect(k in PAINTERS, k).toBe(false);
+    for (const k of ['familyGlide', 'familyStation', 'lightNebula', 'lightMouth', 'lightDust', 'lightHalo', 'tribeLeah', 'tribeSilver']) expect(k in PAINTERS, k).toBe(false);
     for (const r of FAMILY_LEGEND) expect(r.text, r.head).not.toMatch(/свечен|туманност|устье|Отч(ий|его) дом|на следе жены|станци/i);
   });
   it('знаки «Семьи на небе» рисуют небесные рисовальщики: след с переходом, ромб по виду союза, черта брака по виду', () => {

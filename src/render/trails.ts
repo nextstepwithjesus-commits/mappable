@@ -2416,13 +2416,23 @@ export function planUnionFan(v: SkyContext, p: Pass): { lane: FanLane; pts: numb
     lanes.push({ union: u.id, xe, side, onRow: away === 0, color: c });
   }
   if (!lanes.length) return polys;
-  const step = Math.max(2.5, Math.min(FAN_STEP, cam.ky / 6));
+  const step0 = Math.max(2.5, Math.min(FAN_STEP, cam.ky / 6));
+  // ромб на самой строке — дорожка с любой стороны: лишние сверх FAN_MAX уходят на другую сторону, если там есть место
   for (const side of [1, -1] as const) {
     const mine = lanes.filter((l) => l.side === side);
+    const room = FAN_MAX - lanes.filter((l) => l.side === -side).length;
+    const flex = mine.filter((l) => l.onRow).sort((a, b) => b.xe - a.xe);
+    for (let k = 0; k < Math.min(mine.length - FAN_MAX, room, flex.length); k++) flex[k].side = -side as 1 | -1;
+  }
+  for (const side of [1, -1] as const) {
+    const mine = lanes.filter((l) => l.side === side);
+    // больше FAN_MAX на сторону (Давид, десять союзов) — шаг сжимается: у каждой дорожки своя высота, как бы их ни было
+    // много (этап 19, аудит В-01: пятая и следующие легли бы на четвёртую — цвет одного союза, выбор другого)
+    const step = mine.length > FAN_MAX ? Math.max(2, (step0 * FAN_MAX) / mine.length) : step0;
     // от оси наружу: ромбы на строке — по порядку съезда; уходящие со строки — от позднего съезда к раннему
     const order = [...mine.filter((l) => l.onRow).sort((a, b) => a.xe - b.xe), ...mine.filter((l) => !l.onRow).sort((a, b) => b.xe - a.xe)];
     order.forEach((l, n) => {
-      const off = side * Math.min(n + 1, FAN_MAX) * step;
+      const off = side * (n + 1) * step;
       const a = Math.abs(off);
       const x0 = sx + r0;
       const pts = [x0, sy + off * 0.35, x0 + a, sy + off];

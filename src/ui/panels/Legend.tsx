@@ -34,7 +34,7 @@ import { drawFoldMark } from '../../render/labels.ts';
 import { eventMarks } from '../../render/frame.ts';
 import { FRAME_H, readPalette, Sky, type Palette, type SkyState } from '../../render/sky.ts';
 import {
-  drawDescent, drawEpochBracket, drawLifeTrail, ghostNote, TAIL_PX, type LifeTrail,
+  drawDescent, drawEpochBracket, drawFamilySample, drawLifeTrail, ghostNote, TAIL_PX, type LifeTrail,
 } from '../../render/trails.ts';
 import type { SkyView } from '../../render/rows.ts';
 import { lambda, lineFlip, model, theme } from '../../state.ts';
@@ -95,6 +95,8 @@ export const PAINTERS = {
    */
   linkKinds: linkSign('kinds'),
   linkFan: linkSign('fan'),
+  /** указатель шатра у кромки (решение 176) — тем же рисовальщиком, что у неба (drawTentPointer) */
+  linkTent: ((ctx, pal, w, h) => drawFamilySample(ctx, pal, w, h, 'tent')) as Painter,
   /** врезка «Семья созвездием» (решение 186) */
   inset: lightSign('inset'),
   man: signTrail({}),
@@ -692,6 +694,10 @@ export const FAMILY_LEGEND: readonly { k?: PainterKey; crop?: CropKey; h: number
   {
     k: 'linkFan', crop: 'familySel', h: 220, head: 'Выбранное лицо',
     text: 'От его звезды к каждому союзу идёт своя дорожка, у каждой жены и наложницы — свой цвет. Дорожки разведены, как съезды с дороги, и не пересекаются. Тем же цветом — путь жены от её звезды, черта брака, ромб, дети и родословие этой жены дальше. Наведите указатель на дорожку — выделится весь союз: путь жены, ромб, ствол и дети.',
+  },
+  {
+    k: 'linkTent', h: 44, head: 'Указатель у кромки',
+    text: 'Конец союза за краем окна: у кромки — указатель с именем матери и её детей, одна строка на союз и сторону («↑ Лия: Рувим, Симеон, Левий»). Щелчок по нему сдвигает небо к ним.',
   },
   {
     crop: 'familyStubs', h: 200, head: 'Следы жизни выключены',

@@ -1241,6 +1241,8 @@ export function drawTiers(sky: Sky, s: SkyState) {
         ctx.fillStyle = pal.sky;
         ctx.fillRect(at.x - 2, y, tw + 4, BAR_H);
         paintColumn(at.x - 2, y, tw + 4, BAR_H);
+        // вынесенное имя короткого отрезка — тоже его: наведение и щелчок по имени выбирают отрезок (этап 19, аудит В-06)
+        hitRects.push({ x: at.x - 2, y, w: tw + 4, h: BAR_H, bar: b, tier: tier.key });
       } else if (at.where === 'spill') {
         ctx.fillStyle = pal.sky;
         ctx.fillRect(at.x - 2, y, tw + 4, BAR_H);

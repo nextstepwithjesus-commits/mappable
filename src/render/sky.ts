@@ -37,7 +37,7 @@ export { FAMILY_TIER, familyTier, tierAlpha, type FamilyTier } from './trails.ts
 import { clearUnionFan, drawBranchTicks, drawFamilyRoutes, drawUnionFan, planUnionFan, trailStubs, drawGhostNotes, drawLinkLabels, drawLinks, drawPlanStubs, drawSpineTrails, drawTrails, familyHover, linkLooks, linkOn, linkShown, trailLinksAt, trailOf, type LifeTrail, type LinkDraw, type PlanStubHit } from './trails.ts';
 import { branchFrame, drawLinkRoute, drawOriginPath, drawKinPath, drawLeadNotes, drawMeridian, drawOverlayText, drawRings, drawSelectedLink, drawWorkMarks, emphasis, kinRoutes, meridianFlagAt, overlayRoutes, reserveSelectedLink, ringOuter, unionHoverDim, type SelectedLinkInfo } from './marks.ts';
 import { coarsePointer, mapFont, mapSize, nameSize, T_MAP_S } from './type.ts';
-import type { Rect } from './rect.ts';
+import { hits, type Rect } from './rect.ts';
 import { timeToX, xToTime, hydrateScale, type TimeScale, T_CANON_END, T_END } from '../engine/timescale.ts';
 import { toAstro } from '../engine/years.ts';
 import type { ClusterInfo, Outline } from '../engine/layout.ts';
@@ -287,6 +287,11 @@ export interface SkyContext {
   readonly viewMoving: boolean;
   /** узлы, по полосам которых строятся нити лент: в режиме «только линии» на общей раскладке — узлы раскладки */
   readonly ribbonNodes: readonly NodeRow[];
+  /**
+   * лица линий в этом кадре стоят на нитях (MAP-71, beadNodes): тогда нить можно сглаживать — звёзды пойдут за ней;
+   * иначе нить обязана пройти через звёзды (этап 19, В-02)
+   */
+  readonly onBeads: boolean;
   /** ступенька шага ленты «родитель>ребёнок» (x px холста) у узла его союза (src/render/links.ts); null — узла нет */
   linkVia(pk: string): { x: number; y: number } | null;
   /**
@@ -686,6 +691,9 @@ export class Sky implements SkyContext {
   private nodesStamp = 0;
   get ribbonNodes(): readonly NodeRow[] {
     return this.beads ? this.model.nodes : this.nodes;
+  }
+  get onBeads(): boolean {
+    return this.beads;
   }
   get linksKey(): string {
     const c = this.linkCache;
@@ -2147,6 +2155,8 @@ export class Sky implements SkyContext {
   meridianFlag: Rect | null = null;
   /** Указатели на выбранных за краем экрана («→ Давид»): по щелчку — перелёт. */
   edgeHits: EdgeHit[] = [];
+  /** указатели у края последнего полного кадра: кадр сдвига повторяет те, чьи лица всё ещё за краем (этап 19, П-04) */
+  private wayEdges: EdgeHit[] = [];
 
   /** Замер подписей последнего кадра: прямоугольники и число пересекающихся пар (labels.ts). */
   labelStats(): LabelStats & { stars: number; named: number } {
@@ -2302,6 +2312,10 @@ export class Sky implements SkyContext {
       ctx.drawImage(cc.cv, Math.round(dx * dpr), Math.round(dy * dpr));
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       drawFrame(this, yearTicks(this), { model: s.modelNote, folds: this.plan.marks, flag: meridianFlagAt(this, s) });
+      // указатели у края — не часть мира, растр их не несёт (этап 19, аудит П-04): к выбранному — заново по камере, к родне
+      // и шатрам — с прошлого полного кадра, пока их лица за краем; полный кадр после остановки ставит их заново
+      this.edgeHits = this.panEdges(s);
+      paintWayfinding(this, this.edgeHits);
     } finally {
       this.unwind();
       if (light) light.paintHoles(ctx, dpr, cam.w, cam.h, pal.sky, this.holes);
@@ -2309,6 +2323,21 @@ export class Sky implements SkyContext {
     const ds = (this.canvas as { dataset?: DOMStringMap }).dataset;
     if (ds && probes.on) ds.panFrames = String(Number(ds.panFrames ?? 0) + 1);
     return true;
+  }
+
+  /** Указатели у края для кадра сдвига: к выбранному и второму — по нынешней камере, остальные — с прошлого полного кадра. */
+  private panEdges(s: SkyState): EdgeHit[] {
+    const fresh = placeWayfinding(this, s, null);
+    const cam = this.cam;
+    const out = (id: string) => {
+      const i = this.indexOf(id);
+      if (i === undefined) return false;
+      const x = cam.sx(this.X0[i]);
+      const y = cam.sy(starLaneOf(this.nodes[i]));
+      return !(x > this.letterW && x < cam.w && y > this.openTop && y < cam.vp.b);
+    };
+    const keep = this.wayEdges.filter((e) => e.ids?.length && e.ids.every(out) && !fresh.some((f) => hits(f, [e])));
+    return [...fresh, ...keep];
   }
 
   /** После кадра покоя — кэш сдвига в простое (PAN_DELAY), если небо стоит и ничего не анимируется. */
@@ -2864,6 +2893,7 @@ export class Sky implements SkyContext {
     this.foldHits = [...(p.foldHits ?? []), ...cmds];
     this.meridianFlag = drawMeridian(this, s, flag);
     paintWayfinding(this, edges);
+    this.wayEdges = edges;
     // указатели у края к концам выбранной связи (§ 8): щелчок — перелёт, как у указателей рамки
     this.edgeHits = [
       ...edges,
