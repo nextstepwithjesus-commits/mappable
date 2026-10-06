@@ -112,7 +112,10 @@ export const card: Scenario[] = [
       await open(p, 'ruf');
       // этап 20 (решение 194): команды карточки у звезды переехали сюда — строкой команд неба выше («К звезде»,
       // «Ближайшая родня», «Предки и потомки ▾»); строка сравнения и набора — три команды одной строкой
-      const row = p.locator('.folio .actions:not(.sky-cmds) > button, .folio .actions:not(.sky-cmds) > .workbtn > button');
+      // этап 21 (решение 197): строка «Шаги карты» (.map-cmds: на всём небе — «Только это лицо») — своя строка между ними
+      const row = p.locator('.folio .actions:not(.sky-cmds):not(.map-cmds) > button, .folio .actions:not(.sky-cmds):not(.map-cmds) > .workbtn > button');
+      const steps = (await p.locator('.folio .actions.map-cmds > button').allInnerTexts()).map((t) => t.trim()).join('|');
+      if (steps !== 'Только это лицо') return fail(`шаги карты на всём небе: «${steps}»`);
       const ys = await row.evaluateAll((bs) => bs.map((b) => Math.round(b.getBoundingClientRect().top)));
       const names = (await row.allInnerTexts()).map((t) => t.replace(/[▾▴]/g, '').trim());
       if (names.join('|') !== 'Родство с…|Разворот с…|Добавить в набор') return fail(`команды: ${names.join(' | ')}`);

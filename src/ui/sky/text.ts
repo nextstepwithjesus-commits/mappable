@@ -383,14 +383,16 @@ export function dotTipText(u: Union): string {
 const spouseWords = (id: string) => (byId.get(id)?.sex === 'f' ? { one: 'Муж', many: 'Мужья', acc1: 'мужа', accN: 'мужей' } : { one: 'Жена', many: 'Жёны', acc1: 'жену', accN: 'жён' });
 
 /**
- * Надпись команды шага вперёд (решение 197): «Жена и дети», «Жёны и дети», у женщины — «Муж и дети», «Мужья и дети»;
- * супруг не назван — «Дети»; супруги уже на карте — «Все дети (13)».
+ * Надпись команды шага вперёд (решение 197): один брак — «Жена и дети», у женщины — «Муж и дети»; несколько браков —
+ * сначала супруги: «Жёны (4)», «Мужья (2)»; супруг не назван — «Дети»; супруги уже на карте — «Все дети (13)».
  */
 export function forwardLabel(id: string, f: { kind: 'union' | 'spouses' | 'kids'; spouses: number; kids: number }): string {
   if (f.kind === 'kids') return `Все дети (${f.kids})`;
   const w = spouseWords(id);
   if (!f.spouses) return f.kids ? 'Дети' : w.one;
   const sp = f.spouses > 1 ? w.many : w.one;
+  // несколько браков — шаг раскрывает только супругов (дети — ромбами союзов и следующим шагом): «Жёны (4)», не «и дети»
+  if (f.kind === 'spouses') return f.spouses > 1 ? `${sp} (${f.spouses})` : sp;
   return f.kids ? `${sp} и дети` : sp;
 }
 /** Для диктора у звезды: «можно раскрыть жену и детей», «можно раскрыть родителей». */
@@ -399,7 +401,8 @@ export function stepsSayText(id: string, c: { forward: { kind: 'union' | 'spouse
   if (c.forward) {
     const w = spouseWords(id);
     const f = c.forward;
-    const what = f.kind === 'kids' ? 'всех детей' : f.spouses ? `${f.spouses > 1 ? w.accN : w.acc1}${f.kids ? ' и детей' : ''}` : 'детей';
+    const what =
+      f.kind === 'kids' ? 'всех детей' : f.kind === 'spouses' ? (f.spouses > 1 ? `${w.accN} (${f.spouses})` : w.acc1) : f.spouses ? `${f.spouses > 1 ? w.accN : w.acc1}${f.kids ? ' и детей' : ''}` : 'детей';
     out.push(`можно раскрыть ${what}`);
   }
   if (c.back) out.push('можно раскрыть родителей');

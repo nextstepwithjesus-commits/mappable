@@ -112,8 +112,9 @@ export const card3: Scenario[] = [
     run: async (p) => {
       await go(p, '#/david');
       const r = await p.evaluate(() =>
-        // этап 20 (решение 194): «К звезде» — в строке команд неба выше; здесь — строка сравнения и набора
-        [...document.querySelectorAll<HTMLElement>('.folio .actions:not(.sky-cmds) > button, .folio .actions:not(.sky-cmds) > .workbtn > button')].map((b) => ({
+        // этап 20 (решение 194): «К звезде» — в строке команд неба выше; здесь — строка сравнения и набора (этап 21,
+        // решение 197: строка «Шаги карты» — своя)
+        [...document.querySelectorAll<HTMLElement>('.folio .actions:not(.sky-cmds):not(.map-cmds) > button, .folio .actions:not(.sky-cmds):not(.map-cmds) > .workbtn > button')].map((b) => ({
           t: b.innerText.replace(/[▾▴]/g, '').replace(/\s+/g, ' ').trim(),
           name: b.getAttribute('aria-label') ?? b.innerText.trim(),
           y: Math.round(b.getBoundingClientRect().top),

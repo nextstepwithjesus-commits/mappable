@@ -43,10 +43,13 @@ const firstSection = (p: Page) =>
     return { top: s ? Math.round(s.getBoundingClientRect().top) : null, n: s?.dataset.n ?? (s ? 'Родство' : null), bottom: Math.round(bottom) };
   });
 /** Команды шапки: подписи без «▾» и их верхние края. */
-/** Этап 20 (решение 194): команды неба («К звезде», «Ближайшая родня», «Предки и потомки ▾») — своей строкой выше. */
+/**
+ * Этап 20 (решение 194): команды неба («К звезде», «Ближайшая родня», «Предки и потомки ▾») — своей строкой выше; этап 21
+ * (решение 197): строка «Шаги карты» (.map-cmds) — своей строкой ниже них.
+ */
 const commands = (p: Page) =>
   p.evaluate(() =>
-    [...document.querySelectorAll<HTMLElement>('.folio .actions:not(.sky-cmds) > button, .folio .actions:not(.sky-cmds) > .workbtn > button')].map((b) => ({
+    [...document.querySelectorAll<HTMLElement>('.folio .actions:not(.sky-cmds):not(.map-cmds) > button, .folio .actions:not(.sky-cmds):not(.map-cmds) > .workbtn > button')].map((b) => ({
       t: b.innerText.replace(/[▾▴]/g, '').replace(/\s+/g, ' ').trim(),
       y: Math.round(b.getBoundingClientRect().top),
     })),

@@ -87,6 +87,7 @@ import { story16 } from './accept/story16.ts';
 import { inset16 } from './accept/inset16.ts';
 import { light16 } from './accept/light16.ts';
 import { s19 } from './accept/s19.ts';
+import { map21 } from './accept/map21.ts';
 
 const BASE: Scenario[] = [
   {
@@ -615,8 +616,9 @@ const BASE: Scenario[] = [
       if (!(await sheet.count())) return fail('«Вид» не открыл лист');
       const text = await sheet.innerText();
       // флажка «только линии Мессии» в листе «Вид» больше нет (решение 81): линии Мессии — показ в листе «Показ», ниже
-      // решение 124: «Сжатый по плотности лиц» и «Равномерный по годам» вместо «по насыщенности» и «истинный»
-      for (const w of ['ярусы эпох', 'Сжатый по плотности лиц', 'Равномерный по годам', 'Хронология']) if (!text.includes(w)) return fail(`в листе нет «${w}»`);
+      // решение 124: «Сжатый по плотности лиц» и «Равномерный по годам» вместо «по насыщенности» и «истинный»;
+      // решение 196 (этап 21): «Сжатый по плотности лиц» стал «По эпохам» — линейка называет эпохи
+      for (const w of ['ярусы эпох', 'По эпохам', 'Равномерный по годам', 'Хронология']) if (!text.includes(w)) return fail(`в листе нет «${w}»`);
       await sheet.getByText('ярусы эпох', { exact: true }).tap();
       await p.waitForTimeout(300);
       if (!(await p.locator('.sky[data-tiers="on"]').count())) return fail('флажок в листе не включил ярусы');
@@ -681,7 +683,7 @@ const BASE: Scenario[] = [
   },
 ];
 /** Сценарии этапа 3 — в своих файлах, чтобы параллельные агенты не правили один список (номера 30–49, 50–69, 70–89). */
-const SCENARIOS: Scenario[] = [...BASE, ...layout, ...nav, ...sky, ...map, ...card, ...panels, ...phone, ...a11y, ...work, ...chrono, ...cardshell, ...cardtext, ...skyin, ...skydraw, ...strip, ...phone7, ...chrono3, ...sky3, ...family3, ...nav3, ...input3, ...find3, ...strip3, ...card3, ...cardtext3, ...phone3, ...reveal4, ...union4, ...start4, ...colors4, ...tree5, ...view5, ...dots6, ...peek6, ...polish6, ...bugs7, ...show11, ...unify11, ...grammar11, ...polish11, ...cards12, ...sky12, ...ui13, ...card13, ...time13, ...sky13, ...chrono13, ...nav14, ...touch14, ...graph14, ...labels14, ...story16, ...inset16, ...light16, ...s19];
+const SCENARIOS: Scenario[] = [...BASE, ...layout, ...nav, ...sky, ...map, ...card, ...panels, ...phone, ...a11y, ...work, ...chrono, ...cardshell, ...cardtext, ...skyin, ...skydraw, ...strip, ...phone7, ...chrono3, ...sky3, ...family3, ...nav3, ...input3, ...find3, ...strip3, ...card3, ...cardtext3, ...phone3, ...reveal4, ...union4, ...start4, ...colors4, ...tree5, ...view5, ...dots6, ...peek6, ...polish6, ...bugs7, ...show11, ...unify11, ...grammar11, ...polish11, ...cards12, ...sky12, ...ui13, ...card13, ...time13, ...sky13, ...chrono13, ...nav14, ...touch14, ...graph14, ...labels14, ...story16, ...inset16, ...light16, ...s19, ...map21];
 
 /** Имена лиц обеих линий Мессии — из собранного индекса. */
 function lineNames(): Set<string> {
@@ -722,6 +724,19 @@ async function main() {
   await new Promise((r) => setTimeout(r, 2500));
   const exe = existsSync('/opt/pw-browsers/chromium') ? '/opt/pw-browsers/chromium' : undefined;
   const browser = await chromium.launch({ executablePath: exe });
+  // Начало «Всё небо», если сценарий не выбрал другое. До этапа 21 новый читатель видел всё небо, и сценарии проверяют на
+  // нём свои вещи; с решения 200 новый читатель видит карту «Адам и Иисус Христос» — её проверяют сценарии
+  // tools/accept/map21.ts (они убирают этот ключ). Скрипт ставится каждому окну, и тем, что сценарии открывают сами, и
+  // кладёт начало один раз, при первой загрузке окна: сценарий, где начало не выбрано, убирает ключ — своим скриптом (он
+  // идёт после этого) или до перехода (open, tools/accept/unify11.ts), — и ключ не возвращается
+  const newContext = browser.newContext.bind(browser);
+  browser.newContext = async (o) => {
+    const c = await newContext(o);
+    await c.addInitScript(
+      "if (!localStorage.getItem('accept:seeded')) { localStorage.setItem('accept:seeded', '1'); if (localStorage.getItem('toledot:start') === null) localStorage.setItem('toledot:start', JSON.stringify('all')); }",
+    );
+    return c;
+  };
   let failed = 0;
   try {
     for (const s of SCENARIOS) {

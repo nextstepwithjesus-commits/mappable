@@ -1036,8 +1036,14 @@ export function SkyView() {
           if (!(single && showAround(single, false))) {
             sky.fitAll();
             // набор не вписался (телефон: Адам и Иисус Христос на концах времени, а предел масштаба не даёт показать всё
-            // время; этап 21, решение 200) — окно у самого раннего лица набора, остальное назовут указатели у края
-            if (![...v.set].some((id) => inView(id))) {
+            // время; этап 21, решение 200) — окно у самого раннего лица набора, остальное назовут указатели у края.
+            // Проверка — только по времени: строки кадра «набор» в этот миг ещё прежние (переход), а годы уже верны
+            const vp = sky.cam.vp;
+            const inTime = (id: string) => {
+              const q = screenOf(id);
+              return !!q && q.x >= vp.l && q.x <= vp.r;
+            };
+            if (![...v.set].some(inTime)) {
               const early = [...v.set].sort((a, b) => (sky.nodeX(a) ?? 0) - (sky.nodeX(b) ?? 0))[0];
               if (early) showAround(early, false);
             }

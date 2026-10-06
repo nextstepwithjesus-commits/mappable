@@ -1535,10 +1535,15 @@ function watchAround() {
 }
 
 /**
- * Небо следует за шагом карты (этап 21, решение 197): после «+» раскрытое должно быть видно и читаемо. Если кто-то из ids
- * (лицо, у которого раскрыли, и раскрытые) за краем видимой части или под органами неба, или раскрытое стоит теснее
- * MIN_STEP_PX по времени (обзор всего родословия: семья Адама — в одной точке), а приблизить ещё можно, — перелёт
- * «вписать» к ним (flyToIds). Иначе камера стоит: опора перехода (лицо, у которого раскрыли) остаётся на месте.
+ * Небо следует за шагом карты (этап 21, решение 197): после «+» раскрытое должно быть видно и читаемо, а соседи по карте —
+ * оставаться в кадре, сколько можно (сценарий приёмки 1305: Адам → Сиф → Енос без потери Адама).
+ *  — Раскрытое стоит теснее MIN_STEP_PX по времени (обзор всего родословия: семья Адама — в одной точке), а приблизить
+ *    ещё можно, — перелёт к нему, но не во всю ширину: годы раскрытого занимают половину окна, по краям — место для
+ *    следующего шага вперёд и назад.
+ *  — Кто-то из ids (лицо, у которого раскрыли, и раскрытые) за краем видимой части или под органами неба — небо
+ *    сдвигается ровно настолько, чтобы раскрытое вошло (с местом для имени справа), не приближаясь; не помещается при
+ *    нынешнем масштабе — вписывается с отдалением.
+ * Иначе камера стоит: опора перехода (лицо, у которого раскрыли) остаётся на месте.
  */
 export const MIN_STEP_PX = 140;
 export function followStep(ids: readonly string[]) {
@@ -1551,18 +1556,35 @@ export function followStep(ids: readonly string[]) {
   const span = Math.max(...xs) - Math.min(...xs);
   const cam = s.cam;
   const canZoom = cam.clampKx(cam.kx * 1.5, cam.wx(cam.vpCenter()[0])) > cam.kx * 1.2;
-  // тесно — приблизить и вписать
+  // тесно — приблизить: годы раскрытого — на половину окна (окно вдвое шире их), раскрытое посередине
   if (ids.length > 1 && span < MIN_STEP_PX && canZoom) {
-    flyToIds(ids);
+    const ws = ids.map((id) => s.nodeX(id)).filter((x): x is number => x !== null);
+    const years = ws.length ? s.tOf(Math.max(...ws)) - s.tOf(Math.min(...ws)) : 0;
+    const g = viewForIds(ids, Math.max(60, 2 * years));
+    if (!g) return;
+    flightTarget = null;
+    cam.flyTo(cam.constrain(g, g.lanes, g.floor), skyRef.redraw, reduced(), g.lanes, g.floor);
+    skyRef.redraw();
     return;
   }
   if (!hidden) return;
-  // за краем — вписать, но не приближать сверх нынешнего масштаба: небо сдвигается или отдаляется, крупность не скачет
+  // за краем — не приближать сверх нынешнего масштаба: небо сдвигается ровно настолько, чтобы раскрытое вошло, или
+  // отдаляется, если не входит; крупность не скачет
   const g = viewForIds(ids);
   if (!g) return;
   if (g.kx > cam.kx) {
-    const cx = g.x0 + cam.vpCenter()[0] / g.kx;
-    g.x0 = cx - cam.vpCenter()[0] / cam.kx;
+    const vp = cam.vp;
+    const L = vp.l + MARGIN.l + 8;
+    const R = vp.r - NAME_ROOM;
+    const lo = Math.min(...xs);
+    const hi = Math.max(...xs);
+    let dx = 0;
+    if (hi - lo <= R - L) dx = lo < L ? L - lo : hi > R ? R - hi : 0;
+    if (hi - lo <= R - L) g.x0 = cam.x0 - dx / cam.kx;
+    else {
+      const cx = g.x0 + cam.vpCenter()[0] / g.kx;
+      g.x0 = cx - cam.vpCenter()[0] / cam.kx;
+    }
     g.kx = cam.kx;
   }
   flightTarget = null;

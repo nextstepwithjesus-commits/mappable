@@ -701,7 +701,8 @@ export function handleTipText(id: string, dir: 'fwd' | 'back'): string {
   if (!f) return typo(`${name}: всё уже на карте`);
   const what = forwardLabel(id, f).toLowerCase();
   const tail = f.kind === 'spouses' ? '; у каждого союза — ромб с числом детей' : '';
-  return typo(`${name}: ${what} — щёлкните, чтобы раскрыть (])${tail}`);
+  // «]» делает то же, что рукоятка, только у одного союза (раскрывает союз, где родился ребёнок, и ведёт к нему)
+  return typo(`${name}: ${what} — щёлкните, чтобы раскрыть${f.kind === 'union' ? ' (])' : ''}${tail}`);
 }
 
 /** Название эпохи в служебной строке под указателем (UX-65): эпоха модели и прямоугольник надписи. */
