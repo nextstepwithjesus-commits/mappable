@@ -403,7 +403,9 @@ export const nav3: Scenario[] = [
       const n = ((await p.evaluate(`JSON.parse(localStorage.getItem('toledot:work') || '[]').length`)) as number) || 0;
       const t = txt(await bar.locator('.txt').innerText());
       if (!new RegExp(`^набор — ${n} лиц[а]? — изменить$`).test(t)) return fail(`строка: «${t}»`);
-      const b = (await bar.boundingBox())!;
+      // этап 21 (решения 199, 207): под строкой показа — своя строка шагов («Отменить шаг», «К началу»), когда карта
+      // не нетронутое начало; одной строкой должна быть сама строка показа
+      const b = (await bar.locator('.txt').boundingBox())!;
       if (b.height > 50) return fail(`строка ${b.height} px — не одна строка`);
       const cmd = (await bar.locator('.sb-cmd', { hasText: 'изменить' }).boundingBox())!;
       if (cmd.height < 44) return fail(`команда ${cmd.height} px`);

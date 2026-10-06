@@ -510,7 +510,7 @@ export function mapSayText(m: { kind: string; id: string; added: readonly string
     case 'only':
       return typo(`${name}: на карте только это лицо; дальше — командами карточки «Жена и дети», «Родители» или знаком ⊕ у звезды`);
     case 'restart':
-      return typo(`Карта снова с начала: Адам и Иисус Христос${m.removed ? `, скрыто ${personsN(m.removed)}` : ''}; вернуть прежнюю — «Отменить шаг», Ctrl+Z`);
+      return typo(`Карта снова с начала: ${m.added.map((x) => byId.get(x)?.name ?? x).join(' и ')}${m.removed ? `, скрыто ${personsN(m.removed)}` : ''}; вернуть прежнюю — «Отменить шаг», Ctrl+Z`);
     default:
       return '';
   }

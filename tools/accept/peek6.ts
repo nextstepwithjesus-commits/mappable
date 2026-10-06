@@ -98,7 +98,11 @@ export const peek6: Scenario[] = [
       const kt = flat(await kin.innerText());
       if (!/Ева/.test(kt)) return fail(`в «Родстве» нет Евы: «${kt}»`);
       const cmds = (await p.locator('.folio .actions.sky-cmds > button, .folio .actions.sky-cmds .menu > button').allInnerTexts()).map((t) => flat(t));
-      for (const w of ['К звезде', 'Ближайшая родня', 'Предки и потомки ▾', 'Скрыть ветвь']) if (!cmds.includes(w)) return fail(`команды: ${cmds.join(' | ')}`);
+      for (const w of ['К звезде', 'Ближайшая родня', 'Предки и потомки ▾']) if (!cmds.includes(w)) return fail(`команды: ${cmds.join(' | ')}`);
+      // этап 21 (решение 197): «Скрыть ветвь» и «Продолжить ветвь» строки команд неба заменил блок «Шаги карты»: у Адама
+      // начала «С Адама» — «Жена и дети»
+      const steps = (await p.locator('.folio .map-cmds > button').allInnerTexts()).map((t) => flat(t));
+      if (!steps.includes('Жена и дети')) return fail(`шаги карты: ${steps.join(' | ')}`);
       const cb = await p.locator('.folio .actions.sky-cmds > button').first().boundingBox();
       if (!cb || cb.height < 31.5) return fail(`поле команды ${cb?.height} px`);
       return pass(cmds.join(' | '));
@@ -294,25 +298,27 @@ export const peek6: Scenario[] = [
   },
   {
     n: 687,
-    // этап 20 (решение 194): «Показать родителей» — в строке команд неба карточки справа
-    title: 'Решения 76, 194: «С Иисуса Христа» — щелчок по звезде Иисуса Христа, в карточке справа «Показать родителей»: Иосиф и Мария на небе, команда — «Скрыть родителей»; «Скрыть родителей» убирает их',
+    // этап 20 (решение 194): «Показать родителей» — в строке команд неба карточки справа; этап 21 (решение 197) — шаг
+    // карты «Родители»
+    title: 'Решения 76, 194, 197: «С Иисуса Христа» — щелчок по звезде Иисуса Христа, в карточке справа шаг «Родители»: Иосиф и Мария на небе, команда — «Скрыть родителей»; «Скрыть родителей» убирает их',
     run: async (p) => {
       await setup(p, { work: ['iisus'], opened: ['iisus'], hash: '#/iisus', start: 'jesus' });
       const j = await starAt(p, 'iisus');
       if (!j) return fail('нет звезды Иисуса Христа');
       await p.mouse.click(j.x, j.y);
       await p.waitForTimeout(900);
-      const cmds = async () => (await p.locator('.folio .actions.sky-cmds > button').allInnerTexts()).map((t) => t.trim());
-      if (!(await cmds()).includes('Показать родителей')) return fail(`команды: ${(await cmds()).join(' | ')}`);
-      await p.locator('.folio .actions.sky-cmds > button', { hasText: 'Показать родителей' }).click();
+      // этап 21 (решения 197, 198): «Показать родителей» и «Скрыть родителей» — шаги карты «Родители» и «Свернуть предков»
+      const cmds = async () => (await p.locator('.folio .map-cmds > button').allInnerTexts()).map((t) => t.trim());
+      if (!(await cmds()).includes('Родители')) return fail(`шаги карты: ${(await cmds()).join(' | ')}`);
+      await p.locator('.folio .map-cmds > button', { hasText: 'Родители' }).click();
       await p.waitForTimeout(1300);
       const ids = await stored(p);
       if (!ids.includes('iosif-muzh-marii') || !ids.includes('mariya')) return fail(`набор: ${ids.join(' ')}`);
-      if (!(await cmds()).includes('Скрыть родителей')) return fail(`команды после: ${(await cmds()).join(' | ')}`);
-      await p.locator('.folio .actions.sky-cmds > button', { hasText: 'Скрыть родителей' }).click();
+      if (!(await cmds()).includes('Свернуть предков')) return fail(`шаги карты после: ${(await cmds()).join(' | ')}`);
+      await p.locator('.folio .map-cmds > button', { hasText: 'Свернуть предков' }).click();
       await p.waitForTimeout(1000);
       const back = await stored(p);
-      return back.join(' ') === 'iisus' ? pass() : fail(`после «Скрыть родителей»: ${back.join(' ')}`);
+      return back.join(' ') === 'iisus' ? pass() : fail(`после «Свернуть предков»: ${back.join(' ')}`);
     },
   },
   {
@@ -437,15 +443,18 @@ export const peek6: Scenario[] = [
       const t = () => p.evaluate(() => (document.activeElement?.closest('.dotcard, .folio') ? (((document.activeElement as HTMLElement).querySelector('.nm') as HTMLElement | null) ?? (document.activeElement as HTMLElement)).innerText.trim() : `вне карточки: ${document.activeElement?.tagName}`));
       if ((await t()) !== 'Иосиф') return fail(`фокус после Enter: «${await t()}»`);
       // «Родство» — строка за строкой, затем команды карточки; «Родители» — не дальше восьми Tab
-      for (let i = 0; i < 8 && (await t()) !== 'Показать родителей'; i++) await p.keyboard.press('Tab');
-      if ((await t()) !== 'Показать родителей') return fail(`Tab: «${await t()}»`);
+      // этап 21 (решения 197, 209): «Показать родителей» — шаг карты «Родители» в блоке «Шаги карты» после команд неба;
+      // после шага фокус не падает в body — на «Свернуть предков» (команда, вставшая на место «Родителей») или первой команде
+      for (let i = 0; i < 12 && (await t()) !== 'Родители'; i++) await p.keyboard.press('Tab');
+      if ((await t()) !== 'Родители') return fail(`Tab: «${await t()}»`);
       await p.keyboard.press('Enter');
       await p.waitForTimeout(1300);
       const ids = await stored(p);
       if (!ids.includes('iosif-muzh-marii') || !ids.includes('mariya')) return fail(`набор: ${ids.join(' ')}`);
-      if ((await t()) !== 'Скрыть родителей') return fail(`фокус после команды: «${await t()}»`);
+      const f = await t();
+      if (!f || !(await p.evaluate(() => !!document.activeElement?.closest('.map-cmds')))) return fail(`фокус после команды: «${f}»`);
       const said = await p.evaluate(() => [...document.querySelectorAll('.sky [aria-live]')].map((e) => (e.textContent ?? '').trim()).join(' | '));
-      return /Раскрыт союз/.test(said.replace(/\u00a0/g, ' ')) ? pass() : fail(`живая область: «${said}»`);
+      return /раскрыты родители/.test(said.replace(/\u00a0/g, ' ')) ? pass(`фокус: «${f}»`) : fail(`живая область: «${said}»`);
     },
   },
 ];

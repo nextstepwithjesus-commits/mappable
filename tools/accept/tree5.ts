@@ -75,13 +75,14 @@ export const tree5: Scenario[] = [
     run: async (p) => {
       await open(p, '#/adam~vs', { start: 'adam', extra: ADAM_OPEN });
       if (!(await clickStar(p, 'sif'))) return fail('нет звезды Сифа');
-      await p.locator('.folio .actions.sky-cmds button', { hasText: 'Продолжить ветвь' }).click();
+      // этап 21 (решение 197): «Продолжить ветвь» заменил шаг карты вперёд — у Сифа «Дети» (жена не названа)
+      await p.locator('.folio .map-cmds .step-fwd').click();
       await p.waitForTimeout(1400);
       await p.keyboard.press('Escape');
       await p.waitForTimeout(300);
       if (!(await clickDot(p, 'u:sif+'))) return fail('нет ромба союза Сифа');
       const u = flat(await p.locator('.folio[data-union="u:sif+"]').innerText());
-      if (!((await p.locator('.sky canvas').getAttribute('data-stars')) ?? '').split(';').some((x) => x.startsWith('enos:'))) return fail('после «Продолжить ветвь» Еноса нет на небе');
+      if (!((await p.locator('.sky canvas').getAttribute('data-stars')) ?? '').split(';').some((x) => x.startsWith('enos:'))) return fail('после шага вперёд Еноса нет на небе');
       for (const w of ['Сиф и его жена', 'Имя жены в Писании не названо', 'Скрыть детей союза', 'сыновья и дочери: имена не названы (Быт 5:7)'])
         if (!u.includes(w)) return fail(`в карточке союза Сифа нет «${w}»: ${u.slice(0, 200)}`);
       return pass();
@@ -98,18 +99,19 @@ export const tree5: Scenario[] = [
       if (!(await p.locator('.folio .mast-av .av .s').count())) return fail('в карточке нет звезды');
       const t = flat(await p.locator('.folio .kin-col').innerText());
       if (!/Родители Иосиф \(по закону\) и Мария/.test(t)) return fail(`«Родство»: ${t.slice(0, 200)}`);
-      const par = p.locator('.folio .actions.sky-cmds button', { hasText: /^Показать родителей$/ });
-      if (await par.count()) {
-        await par.click();
-        await p.waitForTimeout(1400);
-      }
+      // этап 21 (решения 197, 198): «Показать родителей» и «Скрыть родителей» стали шагами карты «Родители» и «Свернуть
+      // предков» (блок «Шаги карты» карточки)
+      const par = p.locator('.folio .map-cmds .step-back');
+      if (!(await par.count())) return fail('в карточке нет шага «Родители»');
+      await par.click();
+      await p.waitForTimeout(1400);
       const d = (await dots(p)).find((q) => q.uid === 'u:iosif-muzh-marii+mariya');
       if (!d) return fail('ромба союза Иосифа и Марии нет');
-      const hide = p.locator('.folio .actions.sky-cmds button', { hasText: 'Скрыть родителей' });
-      if (!(await hide.count())) return pass('союз родителей показан с начала');
+      const hide = p.locator('.folio .map-cmds .step-fanc');
+      if (!(await hide.count())) return fail('в карточке нет «Свернуть предков»');
       await hide.click();
       await p.waitForTimeout(1400);
-      return (await dots(p)).some((q) => q.uid === 'u:iosif-muzh-marii+mariya' && q.open) ? fail('«Скрыть родителей» не убрал союз') : pass();
+      return (await dots(p)).some((q) => q.uid === 'u:iosif-muzh-marii+mariya' && q.open) ? fail('«Свернуть предков» не убрал союз') : pass();
     },
   },
   {
@@ -158,7 +160,7 @@ export const tree5: Scenario[] = [
   },
   {
     n: 606,
-    title: 'Решение 77, телефон 390 × 844: касание Каина в наборе — лист на 214 px с карточкой у звезды: силуэт, «Родство», «Продолжить ветвь»; команды — 44 px',
+    title: 'Решения 77, 197, телефон 390 × 844: касание Каина в наборе — лист на 214 px с карточкой у звезды: силуэт, «Родство», шаг карты «Дети»; команды — 44 px',
     view: { width: 390, height: 844, touch: true },
     run: async (p) => {
       await open(p, '#/adam~vs', { start: 'adam', extra: ADAM_OPEN });
@@ -170,7 +172,8 @@ export const tree5: Scenario[] = [
       if (!(await sheet.count())) return fail('нет листа-карточки');
       if (!(await sheet.locator('svg.av').count())) return fail('в листе нет силуэта');
       const t = flat(await sheet.innerText());
-      if (!/^Каин/.test(t) || !/Родители/.test(t) || !/Продолжить ветвь/.test(t)) return fail(`лист: ${t.slice(0, 160)}`);
+      // этап 21 (решение 197): «Продолжить ветвь» — шаг карты «Дети» (жена Каина не названа)
+      if (!/^Каин/.test(t) || !/Родители/.test(t) || !(await sheet.locator('.dc-cmds .step-fwd').count())) return fail(`лист: ${t.slice(0, 160)}`);
       const low = (await sheet.locator('.dc-cmds button').evaluateAll((bs) => bs.map((b) => b.getBoundingClientRect().height))).filter((h) => h < 43.5);
       return low.length ? fail(`низкие команды: ${low.join(', ')}`) : pass();
     },

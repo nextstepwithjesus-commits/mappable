@@ -9,11 +9,12 @@
  * справка — о карточке у звезды, «Родстве», связях и строке показа; на телефоне карточка у звезды — нижний лист.
  */
 import type { Page } from 'playwright';
-import { fail, hashId, pass, type Scenario } from './kit.ts';
+import { fail, hashId, pass, skySettled, type Scenario } from './kit.ts';
 import { ADAM, cardOf, clickStar, flat, open, self, starPt, state } from './unify11.ts';
 
-// этап 16 (решение 187): шестое начало — «Рассказ: от Адама до Иисуса Христа»
-const NAMES = ['С Адама', 'С Иисуса Христа', 'Родословие Иисуса Христа (Мф 1, Лк 3)', 'Ключевые лица', 'Всё небо', 'Рассказ: от Адама до Иисуса Христа'];
+// этап 16 (решение 187): шестое начало — «Рассказ: от Адама до Иисуса Христа»; этап 21 (решение 200): первое — «Адам
+// и Иисус Христос», начало нового читателя
+const NAMES = ['Адам и Иисус Христос', 'С Адама', 'С Иисуса Христа', 'Родословие Иисуса Христа (Мф 1, Лк 3)', 'Ключевые лица', 'Всё небо', 'Рассказ: от Адама до Иисуса Христа'];
 
 /** Главная область: небо (режим холста), полоса времени, органы неба; древа нет. */
 async function area(p: Page): Promise<{ tree: boolean; sky: string | null; strip: boolean; ctl: boolean }> {
@@ -33,7 +34,7 @@ const work = async (p: Page) => ((await p.evaluate(() => JSON.parse(localStorage
 export const view5: Scenario[] = [
   {
     n: 630,
-    title: 'Решение 77: первое посещение — вступление с шестью началами (решение 187); «С Адама» открывает небо (не древо): полоса времени и органы неба на месте, набор из Адама, у его звезды — карточка; в адресе нет «~t1»',
+    title: 'Решение 77: первое посещение — вступление с семью началами (решения 187, 200); «С Адама» открывает небо (не древо): полоса времени и органы неба на месте, набор из Адама, у его звезды — карточка; в адресе нет «~t1»',
     run: async (p) => {
       await p.evaluate(() => {
         localStorage.setItem('toledot:cartouche', 'open');
@@ -120,7 +121,7 @@ export const view5: Scenario[] = [
   },
   {
     n: 635,
-    title: 'Решения 77, 194: что перешло из древа на атлас — у Каина после раскрытия в карточке справа «Продолжить ветвь» показывает ромб его союза; образ-силуэт в шапке карточки',
+    title: 'Решения 77, 194, 197: что перешло из древа на атлас — у Каина после раскрытия в карточке справа шаг карты «Дети» показывает ромб его союза; образ-силуэт в шапке карточки',
     run: async (p) => {
       await open(p, '#/adam~vs', {
         start: 'adam',
@@ -130,12 +131,14 @@ export const view5: Scenario[] = [
         },
       });
       if (!(await clickStar(p, 'kain'))) return fail('нет звезды Каина');
-      // этап 20 (решение 194): карточка Каина — справа; «Продолжить ветвь» — в строке команд неба, образ — в шапке
-      const k = flat(await p.locator('.folio .actions.sky-cmds').innerText());
-      if (!k.includes('Продолжить ветвь')) return fail(`команды карточки Каина: ${k.slice(0, 160)}`);
+      // этап 20 (решение 194): карточка Каина — справа, образ — в шапке; этап 21 (решение 197): «Продолжить ветвь» — шаг
+      // карты вперёд в блоке «Шаги карты» («Дети»: жена Каина не названа)
+      const k = p.locator('.folio .map-cmds .step-fwd');
+      if (!(await k.count())) return fail('в карточке Каина нет шага карты вперёд');
       if (!(await p.locator('.folio .mast-av .av').count())) return fail('в карточке нет образа');
-      await p.locator('.folio .actions.sky-cmds button', { hasText: 'Продолжить ветвь' }).click();
-      await p.waitForTimeout(1200);
+      await k.click();
+      await p.waitForTimeout(300);
+      await skySettled(p);
       const d = ((await p.locator('.sky canvas').getAttribute('data-dots')) ?? '').split(';').map((x) => x.split(':')[0] + ':' + x.split(':')[1]);
       if (!d.some((x) => x.startsWith('u:kain+'))) return fail(`ромба союза Каина нет: ${d.join(', ')}`);
       return pass();

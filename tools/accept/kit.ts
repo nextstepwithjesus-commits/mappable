@@ -41,3 +41,25 @@ export async function pickShow(p: Page, kind: 'Всё небо' | 'Линии М
   else if (await p.locator('.showsheet').count()) await hit(p.locator('.showsheet .sheet-head .close').first());
   await p.waitForTimeout(o.ms ?? 1500);
 }
+
+/**
+ * Небо встало (этап 21): места звёзд и рукоятки шагов кадра (canvas[data-stars], [data-handles]) не меняются три замера
+ * подряд — перелёт и переход после шага карты кончились. Прежние сценарии ждали ровно 1,1–1,3 с, а небо после шага
+ * следует за раскрытым (решение 207) — под нагрузкой машины дольше.
+ */
+export async function skySettled(p: Page) {
+  let last = '';
+  let same = 0;
+  for (let k = 0; k < 40 && same < 3; k++) {
+    await p.waitForTimeout(150);
+    const now = await p.evaluate(() => {
+      const c = document.querySelector<HTMLElement>('.sky > canvas');
+      return `${c?.dataset.stars ?? ''}|${c?.dataset.handles ?? ''}|${c?.dataset.trans ?? ''}`;
+    });
+    if (now === last) same++;
+    else {
+      same = 0;
+      last = now;
+    }
+  }
+}

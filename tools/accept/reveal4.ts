@@ -1,6 +1,6 @@
 /** Сценарии приёмки: раскрытие родословия и союзы (решения 67–72), группа reveal4: номера 500–519, раскрытие на небе и карточки союзов на небе. */
 import type { Page } from 'playwright';
-import { fail, pass, type Scenario } from './kit.ts';
+import { fail, pass, skySettled, type Scenario } from './kit.ts';
 
 /** Картуш союза на холсте: «союз:раскрыт:x,y,w,h» (src/render/sky.ts, dataset.plates). */
 type Plate = { uid: string; open: boolean; x: number; y: number; w: number; h: number };
@@ -107,7 +107,13 @@ const stored = (p: Page) =>
   p.evaluate(() => (JSON.parse(localStorage.getItem('toledot:work') ?? '[]') as [string, unknown][]).map((r) => r[0]).sort());
 const reveal = (p: Page) => p.evaluate(() => JSON.parse(localStorage.getItem('toledot:reveal') ?? '{}') as { opened: string[]; expanded: Record<string, string> });
 const liveText = (p: Page) => p.evaluate(() => [...document.querySelectorAll('.sky [aria-live]')].map((e) => (e.textContent ?? '').replace(/ /g, ' ').trim()).join(' | '));
-const near = (a: Plate, b: Plate, d: number) => Math.abs(a.x - b.x) <= d && Math.abs(a.y - b.y) <= d;
+/** Рукоятка шага карты лица (этап 21, решение 197; canvas[data-handles] «лицо:fwd|back:x,y»), px холста. */
+async function handleOf(p: Page, id: string, dir: 'fwd' | 'back'): Promise<{ x: number; y: number } | null> {
+  const h = ((await canvasData(p)).handles ?? '').split(';').find((q) => q.startsWith(`${id}:${dir}:`));
+  if (!h) return null;
+  const [x, y] = h.split(':')[2].split(',').map(Number);
+  return { x, y };
+}
 const inside = (pt: { x: number; y: number }, r: Plate) => pt.x > r.x && pt.x < r.x + r.w && pt.y > r.y && pt.y < r.y + r.h;
 
 const ADAM = { work: ['adam'], opened: ['adam'], hash: '#/adam' };
@@ -119,7 +125,7 @@ const windowYears = (p: Page) => Number(/~w(\d+)/.exec(decodeURIComponent(new UR
 export const reveal4: Scenario[] = [
   {
     n: 500,
-    title: 'С Адама: на небе Адам и полая точка союза «Адам и Ева» (решение 76); у Адама нет «+» (его союзы показаны); окно — не всё небо',
+    title: 'С Адама: на небе Адам и полая точка союза «Адам и Ева» (решение 76); у Адама «⊕» шага вперёд (решение 197; прежде «+» не было, раз союзы показаны); окно — не всё небо',
     run: async (p) => {
       await setup(p, ADAM);
       const d = await canvasData(p);
@@ -127,7 +133,9 @@ export const reveal4: Scenario[] = [
       const q = await plateOf(p, 'u:adam+eva');
       if (!q) return fail(`нет точки союза «Адам и Ева»: ${d.plates || 'точек нет'}`);
       if (q.open) return fail('точка союза раскрыта до щелчка');
-      if ((d.foldHits ?? '').includes('reveal:adam:')) return fail('у Адама «+», хотя его союзы показаны');
+      // этап 21 (решение 197): «⊕» шага вперёд стоит у лица, у которого впереди скрыты супруги или дети, и при показанном
+      // ромбе союза — он раскрывает то же, что «+N» ромба («Жена и дети»); прежде (решение 70) «+» уходил, когда союзы показаны
+      if (!(d.foldHits ?? '').includes('reveal:adam:')) return fail('у Адама нет «⊕» шага вперёд');
       const w = Number(/~w(\d+)/.exec(decodeURIComponent(new URL(p.url()).hash))?.[1] ?? NaN);
       return w < 1500 ? pass(`поле точки ${q.w}×${q.h} px; окно ${w} лет`) : fail(`окно ${w} лет — почти всё небо`);
     },
@@ -209,7 +217,9 @@ export const reveal4: Scenario[] = [
   },
   {
     n: 504,
-    title: 'Решения 76, 194: щелчок по звезде в небе «набор» — карточка лица справа (на небе карточки нет); её «Продолжить ветвь» показывает точку союза Каина, команда становится «Скрыть ветвь»; повторный щелчок по звезде точку не прячет',
+    // этап 21 (решение 197): «Продолжить ветвь» строки команд неба заменили команды «Шаги карты» карточки — «Жена и
+    // дети», «Дети» и т. д. (то же, что «⊕» справа от звезды)
+    title: 'Решения 76, 194, 197: щелчок по звезде в небе «набор» — карточка лица справа (на небе карточки нет); её шаг карты «Дети» раскрывает союз Каина — точка союза на небе, дети на карте; повторный щелчок по звезде точку не прячет',
     run: async (p) => {
       await setup(p, ADAM_OPEN);
       const k = await starAt(p, 'kain');
@@ -218,19 +228,18 @@ export const reveal4: Scenario[] = [
       await p.mouse.click(at.x, at.y);
       await p.waitForTimeout(900);
       if (!/#\/kain/.test(p.url())) return fail(`выбрано не лицо Каина: ${p.url()}`);
-      if (await plateOf(p, 'u:kain+')) return fail('точка союза Каина появилась без команды');
-      // этап 20 (решение 194): карточки у звезды на широком экране нет — «Продолжить ветвь» в строке команд неба карточки справа
-      const go = p.locator('.folio .actions.sky-cmds button', { hasText: 'Продолжить ветвь' });
       if (await p.locator('.sky .dotcard').count()) return fail('на широком экране на небе — карточка у звезды');
-      if (!(await go.count())) return fail('в карточке Каина справа нет «Продолжить ветвь»');
+      const go = p.locator('.folio .map-cmds .step-fwd');
+      if (!(await go.count())) return fail('в карточке Каина справа нет шага карты вперёд');
+      const label = (await go.innerText()).trim();
       await go.click();
-      await p.waitForTimeout(900);
+      await p.waitForTimeout(300);
+      await skySettled(p);
+      if (!(await stored(p)).includes('enokh-syn-kaina')) return fail(`«${label}» не раскрыл детей Каина: ${(await stored(p)).join(' ')}`);
       if (!(await plateOf(p, 'u:kain+'))) return fail(`нет точки союза Каина: ${(await canvasData(p)).plates}`);
-      if (!(await p.locator('.folio .actions.sky-cmds button', { hasText: 'Скрыть ветвь' }).count())) return fail('команда не стала «Скрыть ветвь»');
       await p.mouse.click(at.x, at.y);
       await p.waitForTimeout(700);
-      const r = await reveal(p);
-      return (await plateOf(p, 'u:kain+')) && r.opened.includes('kain') ? pass() : fail('повторный щелчок спрятал точку союза Каина');
+      return (await plateOf(p, 'u:kain+')) ? pass(`шаг «${label}»`) : fail('повторный щелчок спрятал точку союза Каина');
     },
   },
   {
@@ -329,51 +338,50 @@ export const reveal4: Scenario[] = [
   },
   {
     n: 509,
-    // этап 11 (решение 78, Г4): ромб свёрнутого союза — на строке ребёнка, раскрытого — на следе родителя у тройника лент
-    title: 'С Иисуса Христа: ромб союза «Иосиф и Мария» на строке Иисуса Христа слева; «Раскрыть родителей» в карточке у ромба раскрывает родителей — ромб на следе родителя у тройника лент, почти на том же месте экрана (сдвиг — только чтобы вписать родителей), родители на виду',
+    // этап 21 (решение 197): нераскрытый ромб союза родителей у лица больше не ставится — его заменила рукоятка «⊕» шага
+    // назад слева от звезды; раскрытый союз родителей — ромбом на следе родителя у тройника лент, как прежде (Г4)
+    title: 'С Иисуса Христа: «⊕» шага назад слева от звезды Иисуса Христа (решение 197; прежде — ромб союза «Иосиф и Мария»); щелчок раскрывает родителей — ромб их союза на следе родителя у тройника лент, родители на виду',
     run: async (p) => {
       await setup(p, { work: ['iisus'], opened: ['iisus'], hash: '#/iisus', start: 'jesus' });
       const uid = 'u:iosif-muzh-marii+mariya';
-      const q0 = await plateOf(p, uid);
+      const h = await handleOf(p, 'iisus', 'back');
       const j = await starAt(p, 'iisus');
-      if (!q0 || !j) return fail(`нет точки союза или звезды: ${(await canvasData(p)).plates}`);
-      // этап 11 (решение 78, Г4): родителей на небе нет — ромб свёрнутого союза на строке Иисуса Христа, левее звезды (прежде —
-      // точка над звездой слева)
-      if (!(q0.x + q0.w <= j.x && Math.abs(q0.y + q0.h / 2 - j.y) <= 2)) return fail(`ромб союза не на строке звезды слева: ${q0.x},${q0.y} ${q0.w}×${q0.h}, звезда ${j.x},${j.y}`);
-      // решение 76: раскрытие — командой карточки у точки
-      const cmd = await toggleVia(p, q0);
-      if (cmd !== 'Показать родителей') return fail(`команда карточки у точки: «${cmd}»`);
-      await p.waitForTimeout(1300);
+      if (!h || !j) return fail(`нет рукоятки шага назад или звезды: ${(await canvasData(p)).handles}`);
+      if (!(h.x < j.x && Math.abs(h.y - j.y) <= 24)) return fail(`«⊕» не слева от звезды: ${h.x},${h.y}, звезда ${j.x},${j.y}`);
+      if (await plateOf(p, uid)) return fail('у Иисуса Христа и ромб союза родителей, и «⊕»');
+      const at = await pageAt(p, h.x, h.y);
+      await p.mouse.click(at.x, at.y);
+      await p.waitForTimeout(1500);
       const ids = await stored(p);
       if (!ids.includes('iosif-muzh-marii') || !ids.includes('mariya')) return fail(`набор: ${ids.join(' ')}`);
       const q1 = await plateOf(p, uid);
-      if (!q1 || !q1.open) return fail('точка союза не раскрыта');
+      if (!q1 || !q1.open) return fail('союз родителей не раскрыт');
       const js = await starAt(p, 'iosif-muzh-marii');
       const ms = await starAt(p, 'mariya');
       if (!js || !ms) return fail('родителей нет на виду');
       const vp = (await p.evaluate(() => (document.querySelector('.sky') as HTMLElement).dataset.view ?? '')).split(' ').map(Number);
       if (js.x < vp[0] || ms.x < vp[0] || js.x > vp[2] || ms.x > vp[2]) return fail(`родители за краем: Иосиф ${js.x}, Мария ${ms.x}`);
-      // этап 11 (Г4, § 3): у раскрытого союза ромб — на следе родителя, у тройника, из которого ленты уходят к Иисусу Христу
       const cy = q1.y + q1.h / 2;
-      if (Math.abs(cy - js.y) > 2 && Math.abs(cy - ms.y) > 2) return fail(`ромб союза не на следе Иосифа или Марии: ${cy} при следах ${js.y}, ${ms.y}`);
-      return near(q0, q1, 80) ? pass(`точка ${q0.x},${q0.y} → ${q1.x},${q1.y}`) : fail(`точка союза сдвинулась: ${q0.x},${q0.y} → ${q1.x},${q1.y}`);
+      return Math.abs(cy - js.y) <= 2 || Math.abs(cy - ms.y) <= 2 ? pass() : fail(`ромб союза не на следе Иосифа или Марии: ${cy} при следах ${js.y}, ${ms.y}`);
     },
   },
   {
     n: 510,
-    title: 'Начало с одного лица: окно — вокруг него с запасом на поколение-два (Адам — до рождения внуков, Иисус Христос — от рождения дедов), не всё небо; точка союза на виду',
+    // этап 21 (решение 197): у Иисуса Христа вместо ромба союза родителей — «⊕» шага назад слева от звезды
+    title: 'Начало с одного лица: окно — вокруг него с запасом на поколение-два (Адам — до рождения внуков, Иисус Христос — от рождения дедов), не всё небо; у Адама точка союза на виду, у Иисуса Христа — «⊕» к родителям',
     run: async (p) => {
       const out: string[] = [];
       for (const [id, uid, lo, hi] of [
         ['adam', 'u:adam+eva', 150, 600],
-        ['iisus', 'u:iosif-muzh-marii+mariya', 60, 250],
+        ['iisus', '', 60, 250],
       ] as const) {
         await setup(p, { work: [id], opened: [id], hash: '#/', start: id === 'adam' ? 'adam' : 'jesus' });
         const w = windowYears(p);
         if (!(w >= lo && w <= hi)) return fail(`${id}: окно ${w} лет, ждали ${lo}–${hi}`);
         const s = await starAt(p, id);
         if (!s) return fail(`${id}: звезды нет на виду`);
-        if (!(await plateOf(p, uid))) return fail(`${id}: нет точки союза ${uid}`);
+        if (uid && !(await plateOf(p, uid))) return fail(`${id}: нет точки союза ${uid}`);
+        if (!uid && !(await handleOf(p, id, 'back'))) return fail(`${id}: нет «⊕» шага назад`);
         out.push(`${id} — ${w} лет`);
       }
       return pass(out.join('; '));

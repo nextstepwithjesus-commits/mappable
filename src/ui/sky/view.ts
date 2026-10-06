@@ -1354,6 +1354,45 @@ export function keepInView(id: string, ms = 250, side = false) {
   cam.animateTo(to, ms, skyRef.redraw, reduced());
 }
 
+/**
+ * Первый экран карты «набор» (рецензия этапа 21, сценарий 707): лица карты, которые по времени в окне, но лежат под
+ * органом неба (строка показа на телефоне — в две строки, со строкой шагов), выходят из-под него сдвигом по вертикали —
+ * если так на виду больше лиц, а лицо keep (выбранное) остаётся на виду. Окно лет и масштаб не меняются.
+ */
+export function uncoverSet(ids: readonly string[], keep: string | null, ms = 250): boolean {
+  const s = skyRef.current;
+  if (!s || !s.model) return false;
+  const cam = s.cam;
+  const vp = cam.vp;
+  const pts = ids.map(screenOf).filter((q): q is { x: number; y: number } => !!q && q.x >= vp.l + MARGIN.l && q.x <= vp.r - MARGIN.r);
+  const under = (x: number, y: number) => reserveRects.find((r) => x > r.x - 8 && x < r.x + r.w + 8 && y > r.y - 8 && y < r.y + r.h + 8);
+  const seen = (x: number, y: number) => y >= vp.t + MARGIN.t && y <= vp.b - MARGIN.b && !under(x, y);
+  const count = (dy: number) => pts.filter((q) => seen(q.x, q.y + dy)).length;
+  const now = count(0);
+  if (now === pts.length) return false;
+  const k = keep ? screenOf(keep) : null;
+  // сдвиги-кандидаты: каждое закрытое лицо — сразу под свой орган или над ним, как в keepInView
+  const cands = new Set<number>();
+  for (const q of pts) {
+    const r = under(q.x, q.y);
+    if (!r) continue;
+    cands.add(r.y + r.h + 24 - q.y);
+    cands.add(Math.max(vp.t + MARGIN.t, r.y - 40) - q.y);
+  }
+  let best = 0;
+  let most = now;
+  for (const dy of [...cands].sort((a, b) => Math.abs(a) - Math.abs(b))) {
+    if (k && !seen(k.x, k.y + dy)) continue;
+    const n = count(dy);
+    if (n > most) [best, most] = [dy, n];
+  }
+  if (!best) return false;
+  const to = cam.constrain({ x0: cam.x0, kx: cam.kx, laneTop: cam.laneTop + best / cam.ky });
+  flightTarget = null;
+  cam.animateTo(to, ms, skyRef.redraw, reduced());
+  return true;
+}
+
 // ---------- раскрытие на небе «набор» (решения 68, 70) ----------
 
 /** Вписывание раскрытых лиц — за столько мс (не больше 600), прямым переходом, без «отдалить — приблизить». */
@@ -1561,6 +1600,8 @@ function watchAround() {
  * Иначе камера стоит: опора перехода (лицо, у которого раскрыли) остаётся на месте.
  */
 export const MIN_STEP_PX = 140;
+/** Место справа от звезды для имени с пометой и «⊕» шага вперёд («Малелеил праот. ⊕»), px. */
+const STEP_ROOM = 170;
 export function followStep(ids: readonly string[]) {
   const s = skyRef.current;
   if (!s || !s.model) return;
@@ -1582,20 +1623,26 @@ export function followStep(ids: readonly string[]) {
     skyRef.redraw();
     return;
   }
-  if (!hidden) return;
-  // за краем — не приближать сверх нынешнего масштаба: небо сдвигается ровно настолько, чтобы раскрытое вошло, или
-  // отдаляется, если не входит; крупность не скачет
+  const vp = cam.vp;
+  // слева — место для «⊕» шага назад у звезды (рецензия этапа 21: Иаков у самого края, его «⊕» к родителям за краем);
+  // справа — для имени с пометой и «⊕» шага вперёд (сценарий 816: звезда в кадре, а её «⊕» — у самого края)
+  const L = vp.l + MARGIN.l + 28;
+  const R = vp.r - STEP_ROOM;
+  const lo = Math.min(...xs);
+  const hi = Math.max(...xs);
+  if (!hidden && lo >= L && hi <= R) return;
+  // за краем — не приближать сверх нынешнего масштаба: небо сдвигается, чтобы раскрытое вошло, или отдаляется, если не
+  // входит; крупность не скачет
   const g = viewForIds(ids);
   if (!g) return;
-  if (g.kx > cam.kx) {
-    const vp = cam.vp;
-    // слева — место для «⊕» шага назад у звезды (рецензия этапа 21: Иаков у самого края, его «⊕» к родителям за краем)
-    const L = vp.l + MARGIN.l + 28;
-    const R = vp.r - NAME_ROOM;
-    const lo = Math.min(...xs);
-    const hi = Math.max(...xs);
+  // звезда в кадре, но имени и «⊕» тесно у края — только сдвиг, без отдаления
+  if (g.kx > cam.kx || !hidden) {
+    // раскрытое за правым краем встаёт к 0,62 ширины, за левым — к 0,38, а не вплотную к краю: за ним место для его «⊕»
+    // и следующего поколения, иначе на линии Адам → Ной небо приходилось тянуть на каждом шаге (сценарий 816); прежнее
+    // поколение остаётся в кадре — раскрытое не уходит за другой край
+    const W = vp.r - vp.l;
     let dx = 0;
-    if (hi - lo <= R - L) dx = lo < L ? L - lo : hi > R ? R - hi : 0;
+    if (hi - lo <= R - L) dx = lo < L ? Math.max(L - lo, Math.min(R - hi, vp.l + 0.38 * W - lo)) : hi > R ? Math.min(R - hi, Math.max(L - lo, vp.l + 0.62 * W - hi)) : 0;
     if (hi - lo <= R - L) g.x0 = cam.x0 - dx / cam.kx;
     else {
       const cx = g.x0 + cam.vpCenter()[0] / g.kx;

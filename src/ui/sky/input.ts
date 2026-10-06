@@ -26,6 +26,7 @@ import { nearestFamily, setShow, showGuest } from '../show.ts';
 import { MENU_FIRST, dismissedBy, skyMenu } from '../panels/Work.tsx';
 import { personGhosts } from '../../render/marks.ts';
 import { dotTipText, epochGoText, forwardLabel, gapTipText, lineBetween, plateTipText } from './text.ts';
+import { byEpochs } from '../../render/axis.ts';
 import { backWhat, mapCmds, selectUnion, selectedUnion, stepBack, stepForward, unionById } from '../reveal.ts';
 import { linkHover, plateHover, pressPlate, rememberLinkClick, toggleKids } from './starnav.ts';
 import type { CountHit, PlateHit } from '../../render/plates.ts';
@@ -723,8 +724,9 @@ export function handleTipText(id: string, dir: 'fwd' | 'back'): string {
 
 /** Название эпохи в служебной строке под указателем (UX-65): эпоха модели и прямоугольник надписи. */
 function serviceEpochAt(sky: Sky, x: number, y: number) {
-  // низкое небо (решение 155; frame.ts, setLowFrame): служебной строки нет — её надписи стоят в линейке лет
-  const top = serviceTop();
+  // низкое небо (решение 155; frame.ts, setLowFrame): служебной строки нет — её надписи стоят в линейке лет; шкала «По
+  // эпохам» (решение 196): названия эпох — в самой линейке, и они так же ведут небо к эпохе (рецензия этапа 21)
+  const top = byEpochs(sky) ? 0 : serviceTop();
   if (y < top || y >= Math.max(FRAME_H, RULER_H)) return null;
   for (const b of sky.ledger.boxes) {
     if (b.kind !== 'frame' || x < b.x || x > b.x + b.w || y < b.y - 1 || y > b.y + b.h + 1 || b.y < top - 1 || b.y + b.h > Math.max(FRAME_H, RULER_H) + 1) continue;
@@ -742,7 +744,7 @@ const serviceTop = () => (ROW_H ? RULER_H : 0);
  * низком небе они стоят в линейке лет: нажатие на них — команда, а не протяжка линейки (решение 155).
  */
 function serviceCmdAt(sky: Sky, x: number, y: number): boolean {
-  if (y >= Math.max(FRAME_H, RULER_H) || y < serviceTop()) return false;
+  if (y >= Math.max(FRAME_H, RULER_H) || y < (byEpochs(sky) ? 0 : serviceTop())) return false;
   if (serviceEpochAt(sky, x, y)) return true;
   if (sky.foldHits.some((q) => x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h)) return true;
   return ROW_H === 0 && sky.ledger.boxes.some((q) => q.kind === 'frame' && q.text.startsWith('≈') && x >= q.x && x <= q.x + q.w && y >= q.y - 1 && y <= q.y + q.h + 1);
@@ -1149,7 +1151,8 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       setPlate(null);
       setLink(null);
     }
-    if (e.pointerType !== 'touch' && ((p.y >= RULER_H && p.y < FRAME_H) || (ROW_H === 0 && serviceCmdAt(sky, p.x, p.y)))) {
+    // шкала «По эпохам»: названия эпох — в самой линейке (решение 196) и такие же команды
+    if (e.pointerType !== 'touch' && ((p.y >= RULER_H && p.y < FRAME_H) || ((ROW_H === 0 || byEpochs(sky)) && serviceCmdAt(sky, p.x, p.y)))) {
       hoverYear(null);
       if (hovered.value) hovered.value = null;
       setTierHot(null);
@@ -1270,11 +1273,13 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     const nameHere = touch ? (sky.labelAt(at.x, at.y, NAME_TAP) ?? nameAt(sky.ledger.boxes, at.x, at.y)) : null;
     // палец на звезде (рецензия этапа 21): касание звезды открывает её карточку — раздутое поле «⊕» рядом его не перехватывает
     const starHere = touch ? (sky.hitStar(at.x, at.y, 10)?.id ?? null) : null;
+    // и ромб союза под пальцем (сценарий 707: касание ромба «Адам и Ева» — карточка союза, а не шаг соседнего «⊕»)
+    const plateHere = touch && sky.plateHits.some((q) => at.x >= q.x - 4 && at.x <= q.x + q.w + 4 && at.y >= q.y - 4 && at.y <= q.y + q.h + 4);
     const fold = sky.foldHits.find((e) => {
       const inRaw = at.x >= e.x && at.x <= e.x + e.w && at.y >= e.y && at.y <= e.y + e.h;
       if (nameHere && nameHere !== e.id && !inRaw) return false;
       // у «⊕» шага — и своё имя, и любая звезда под пальцем важнее раздутого поля: имя и звезда — карточка лица
-      if ((e.kind === 'reveal' || e.kind === 'reveal-up') && !inRaw && (nameHere || starHere)) return false;
+      if ((e.kind === 'reveal' || e.kind === 'reveal-up') && !inRaw && (nameHere || starHere || plateHere)) return false;
       const r = touch ? inflate(e, TOUCH_TARGET) : e;
       return at.x >= r.x && at.x <= r.x + r.w && at.y >= r.y && at.y <= r.y + r.h;
     });

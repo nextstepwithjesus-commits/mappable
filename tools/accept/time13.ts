@@ -147,7 +147,8 @@ export const time13: Scenario[] = [
       await check('390');
       if (bad.length) return fail(`без эры: ${bad.join('; ')}`);
       await p.setViewportSize({ width: 1440, height: 900 });
-      for (const w of ['~y-2000~w1500', '~y-1000~w300', '~y0~w80']) {
+      // масштаб «По эпохам» — явно (~s1): шкала хранится между посещениями, а выше открывались окна с ~s0
+      for (const w of ['~y-2000~w1500~s1', '~y-1000~w300~s1', '~y0~w80~s1']) {
         await open(p, `#/${w}`, { start: 'all', ms: 1500 });
         const r = (await p.evaluate(() => (document.querySelector('.sky canvas') as HTMLElement).dataset.ruler)) ?? '';
         if (!r || /\d/.test(r)) bad.push(`«По эпохам» ${w}: «${r.slice(0, 40)}»`);

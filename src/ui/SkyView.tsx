@@ -17,7 +17,7 @@ import { aliveAt, lifeText, mapSayText, meridianText, placeText } from './sky/te
 import { historyNews } from './history.ts';
 import {
   allInView, anchorNow, fitReveal, followStep, flightTarget, flyToIds, flyToPerson, holdAnchor, holdFamily, inView, kinProbe, introOpen, keepInView, lanes, reduced, screenOf, setReserve, showAround,
-  startLanes, stopFlight, unionFlip, updateZoomFloor, viewAround, linesAgain, fitLines, windowHold, holdSheetWindow, reserve, flightDone, type Anchor,
+  startLanes, stopFlight, uncoverSet, unionFlip, updateZoomFloor, viewAround, linesAgain, fitLines, windowHold, holdSheetWindow, reserve, flightDone, type Anchor,
 } from './sky/view.ts';
 
 /**
@@ -229,6 +229,17 @@ export function SkyView() {
      */
     let escapeOrgans = true;
     let firstEscape = true;
+    /**
+     * Первый экран карты (сценарий 707): до первого действия читателя на небе и не дольше 3 с после загрузки органы неба
+     * ещё встают (строка показа на телефоне получает строку шагов) — лица карты выходят из-под них (uncoverSet)
+     */
+    const firstUntil = performance.now() + 3000;
+    let readerActed = false;
+    /** камера двигалась в прошлом кадре: на первом экране проверка — и когда встанет перелёт к выбранному */
+    let camWas = false;
+    const acted = () => {
+      readerActed = true;
+    };
     /** прежний кадр при смене модели: растворяется поверх нового (IX-48) */
     let fade: { img: HTMLCanvasElement; start: number } | null = null;
     /** отклик звезды на клавишу набора (IX-51) */
@@ -396,9 +407,14 @@ export function SkyView() {
       // карта «набор» встала (переход и перелёт кончились) после первого показа или смены органов неба: ни одно лицо карты
       // не видно — лицо, которое по времени в окне, уходит из-под органа кратчайшим путём (рецензия этапа 21: на альбомном
       // телефоне Адам под строкой показа, на планшете — под вступлением). Сдвиг неба читателем проверку не зовёт
+      const firstScreen = !readerActed && performance.now() < firstUntil;
+      if (camWas && !sky.cam.moving && firstScreen) escapeOrgans = true;
+      camWas = sky.cam.moving;
       if (escapeOrgans && shownMode !== null && !sky.cam.moving && !sky.transitioning && sky.model && last.w) {
         escapeOrgans = false;
-        const ids = sky.plan.mode === 'work' && !selected.peek() ? [...workSet.peek().keys()] : [];
+        const all = sky.plan.mode === 'work' ? [...workSet.peek().keys()] : [];
+        const sel = selected.peek();
+        const ids = sel ? [] : all;
         const vp = sky.cam.vp;
         const inTime = ids.filter((x) => {
           const q = screenOf(x);
@@ -413,7 +429,10 @@ export function SkyView() {
           : undefined;
         const to = inTime[0] ?? near;
         if (to && !ids.some((x) => inView(x))) keepInView(to, 250, true);
-        if (ids.length) firstEscape = false;
+        // первый экран: часть лиц карты под органом неба (строка показа на телефоне — в две строки) — небо сдвигается по
+        // вертикали, если так на виду больше лиц, а выбранное остаётся на виду (сценарий 707)
+        else if (all.length && firstScreen) uncoverSet(all, sel);
+        if (all.length) firstEscape = false;
       }
       input.watchCamera(`${shownLambda} ${model.value.id}`);
       watchSettle(`${sky.cam.x0} ${sky.cam.kx} ${sky.cam.w} ${shownLambda} ${model.value.id}`);
@@ -695,6 +714,7 @@ export function SkyView() {
       });
     };
     wrap.current!.addEventListener('reserve-move', onReserveMove);
+    for (const ev of ['pointerdown', 'wheel', 'keydown'] as const) wrap.current!.addEventListener(ev, acted, { capture: true, passive: true });
     // лист «Показ» под строкой показа открылся или закрылся (решение 147): резерв — заново, когда лист встал; открылся над
     // выбранным — лицо выходит из-под него сразу, а не при смене показа (тогда оно сдвинулось бы вместе с ней)
     // Окно до листа — в адресе и истории (view.ts, windowHold); лист закрыли, не сменив показа и не тронув неба, — небо
@@ -1200,6 +1220,7 @@ export function SkyView() {
       holdOff?.();
       cancelAnimationFrame(holdRaf);
       wrapEl.removeEventListener('reserve-move', onReserveMove);
+      for (const ev of ['pointerdown', 'wheel', 'keydown'] as const) wrapEl.removeEventListener(ev, acted, { capture: true });
       cancelAnimationFrame(moveRaf);
       windowHold.value = false;
       canvas.removeEventListener('pointerdown', touchSheet);

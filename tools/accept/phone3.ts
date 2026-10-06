@@ -126,7 +126,7 @@ export const phone3: Scenario[] = [
   },
   {
     n: 453,
-    title: 'VIS-84, UX-70: 1024 × 768 и 1366 × 768 — входы двумя ровными строками; фраза «Каждая звезда — человек…» видна без прокрутки таблички; 1440 × 900 — вся «Как читать карту»',
+    title: 'VIS-84, UX-70: 1024 × 768 и 1366 × 768 — входы одной строкой или двумя ровными; фраза «Каждая звезда — человек…» видна без прокрутки таблички; 1440 × 900 — вся «Как читать карту»',
     view: { width: 1024, height: 768 },
     run: async (p) => {
       const out: string[] = [];
@@ -138,7 +138,9 @@ export const phone3: Scenario[] = [
         await p.setViewportSize({ width: w, height: h });
         await introOpen(p);
         const rows = rowsOf(await entries(p));
-        if (rows.length !== 2 || Math.abs(rows[0] - rows[1]) > 1) return fail(`${w} × ${h}: строки входов ${rows.join(' + ')}`);
+        // этап 21: на невысоком окне вступление шире (до половины окна, решение 207) — все семь входов одной строкой;
+        // уже — двумя ровными строками, как прежде
+        if (!(rows.length === 1 || (rows.length === 2 && Math.abs(rows[0] - rows[1]) <= 1))) return fail(`${w} × ${h}: строки входов ${rows.join(' + ')}`);
         const r = (await p.evaluate(`(() => {
           const c = document.querySelector('.cartouche'), l = c.querySelector('.long');
           const cb = c.getBoundingClientRect(), lb = l.getBoundingClientRect();

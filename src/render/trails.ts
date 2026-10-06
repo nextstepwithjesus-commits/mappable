@@ -1735,6 +1735,9 @@ export function drawBranchTicks(v: SkyContext, p: Pass) {
   }
   const ds = (v.ctx.canvas as { dataset?: DOMStringMap } | undefined)?.dataset;
   if (!ds) return;
+  // следы выключены (пошаговая карта, этап 21, решение 201): ветви видны по линиям союзов и подписям — цветом нарисованы
+  // все потомки с подписью в кадре
+  if (map && !bf.shown.size) for (const b of v.ledger.boxes) if (b.kind === 'star' && b.id && bf.paint(b.id)) bf.shown.add(b.id);
   if (!map || !bf.shown.size) {
     if (ds.branches !== undefined) delete ds.branches;
     return;

@@ -291,20 +291,24 @@ export const dots6: Scenario[] = [
   },
   {
     n: 667,
-    // этап 11 (Г4): ромб свёрнутого союза встаёт в год первого ребёнка на его строке (следа родителей на небе нет)
-    title: 'Решения 76, 78: «С Иисуса Христа» — полый ромб союза Иосифа и Марии с «+2» левее звезды Иисуса Христа на его строке; связь от него к Иисусу Христу',
+    // этап 21 (решение 197): нераскрытого ромба союза родителей у лица нет — шаг назад делает рукоятка «⊕» слева от звезды
+    // (прежде, этап 11, Г4: полый ромб союза Иосифа и Марии с «+2» на строке Иисуса Христа)
+    title: 'Решения 76, 78, 197: «С Иисуса Христа» — «⊕» шага назад левее звезды Иисуса Христа на его строке, ромба союза родителей нет; подсказка называет Иосифа и Марию; подписи не наложились',
     run: async (p) => {
       await setup(p, { work: ['iisus'], opened: ['iisus'], hash: '#/iisus', start: 'jesus' });
-      const q = (await dotsOf(p)).find((d) => d.uid === 'u:iosif-muzh-marii+mariya');
       const j = await starAt(p, 'iisus');
-      if (!q || !j) return fail(`нет точки или звезды: ${(await canvasData(p)).dots}`);
-      if (q.open || q.hidden !== 2) return fail(`точка: раскрыта ${q.open}, скрыто ${q.hidden}`);
-      if (!(q.x < j.x - 8)) return fail(`ромб не левее звезды: ${q.x} при ${j.x}`);
-      // этап 11 (Г4): родителей на небе нет — ромб на строке Иисуса Христа, у ствола к нему
-      if (Math.abs(q.y - j.y) > 1.5) return fail(`ромб не на строке Иисуса Христа: ${q.y} при ${j.y}`);
-      const log = await linkLog(p);
-      if (!log.some((r) => (r.kind === 'tooth' || r.kind === 'ribbon' || r.kind === 'trunk') && r.ks.endsWith('iisus'))) return fail('нет связи к Иисусу Христу');
-      return (await overlaps(p)) === 0 ? pass(`точка ${q.x},${q.y}, звезда ${j.x},${j.y}`) : fail('подписи наложились');
+      const h = ((await canvasData(p)).handles ?? '').split(';').find((q) => q.startsWith('iisus:back:'));
+      if (!j || !h) return fail(`нет звезды или «⊕» шага назад: ${(await canvasData(p)).handles}`);
+      const [hx, hy] = h.split(':')[2].split(',').map(Number);
+      if (!(hx < j.x - 8)) return fail(`«⊕» не левее звезды: ${hx} при ${j.x}`);
+      if (Math.abs(hy - j.y) > 24) return fail(`«⊕» не у строки Иисуса Христа: ${hy} при ${j.y}`);
+      if ((await dotsOf(p)).some((d) => d.uid === 'u:iosif-muzh-marii+mariya')) return fail('и ромб союза родителей, и «⊕»');
+      const cv = (await p.locator('.sky canvas').boundingBox())!;
+      await p.mouse.move(cv.x + hx, cv.y + hy);
+      await p.waitForTimeout(400);
+      const tip = ((await p.locator('.sky .tip').first().textContent()) ?? '').replace(/\s+/g, ' ');
+      if (!/Иосиф/.test(tip) || !/Мария/.test(tip)) return fail(`подсказка «⊕»: «${tip}»`);
+      return (await overlaps(p)) === 0 ? pass(`«⊕» ${hx},${hy}, звезда ${j.x},${j.y}; «${tip.trim()}»`) : fail('подписи наложились');
     },
   },
   {

@@ -77,8 +77,8 @@ export type Start = 'both' | 'adam' | 'jesus' | 'lines' | 'key' | 'all' | 'story
 export const BOTH_IDS: readonly string[] = ['adam', 'iisus'];
 export const STARTS: readonly { value: Start; label: string; hint: string }[] = [
   // начало по умолчанию (этап 21, решение 200)
-  { value: 'both', label: 'Адам и Иисус Христос', hint: 'Начало и конец родословия; между ними — свёрнутые линии Мессии. «+» у звезды раскрывает семью: справа — жёны и дети, слева — родители.' },
-  { value: 'adam', label: 'С Адама', hint: 'На небе только Адам и его карточка. «+N» у ромба союза раскрывает детей, и так дальше.' },
+  { value: 'both', label: 'Адам и Иисус Христос', hint: 'Начало и конец родословия; между ними — свёрнутые линии Мессии. «⊕» у звезды раскрывает семью: справа — супруги и дети, слева — родители.' },
+  { value: 'adam', label: 'С Адама', hint: 'На небе только Адам и его карточка. «⊕» справа раскрывает жену и детей, и так дальше.' },
   { value: 'jesus', label: 'С Иисуса Христа', hint: 'На небе только Иисус Христос и его карточка. «Родители» раскрывают родословие вверх, до Адама.' },
   { value: 'lines', label: LINES_TITLE, hint: 'Обе линии — по Матфею и по Луке — от Адама до Иисуса Христа.' },
   { value: 'key', label: 'Ключевые лица', hint: 'Главные лица истории Писания; щелчок по звезде открывает карточку и родство.' },
@@ -101,23 +101,37 @@ export const KEY_IDS: readonly string[] = [...new Set([...persons.filter((p) => 
 export const LINE_IDS: readonly string[] = [...new Set([...lineMembership.joseph.keys(), ...lineMembership.mary.keys()])].filter((id) => byId.has(id));
 
 /** Набор — нетронутое начало «Адам и Иисус Христос» (решение 200): заменить его можно без вопроса. */
-export const untouchedStart = (): boolean => {
+export const untouchedStart = (): boolean => untouched(BOTH_IDS);
+/** Набор — нетронутые лица ids: только они, закреплённые, ничего не раскрыто. */
+function untouched(ids: readonly string[]): boolean {
   const set = workSet.peek();
-  return set.size === BOTH_IDS.length && BOTH_IDS.every((id) => set.get(id)?.via === 'self') && !Object.keys(expanded.peek()).length;
+  return set.size === ids.length && ids.every((id) => set.get(id)?.via === 'self') && !Object.keys(expanded.peek()).length;
+}
+/**
+ * Начало карты для «К началу»: выбранное начало карты — «С Адама», «С Иисуса Христа»; иначе «Адам и Иисус Христос»
+ * (рецензия этапа 21: читатель, начавший с Адама, возвращается к Адаму).
+ */
+export const mapStart = (): 'both' | 'adam' | 'jesus' => {
+  const s = start.peek();
+  return s === 'adam' || s === 'jesus' ? s : 'both';
 };
+/** Карта — нетронутое своё начало: «К началу» ничего бы не изменило. */
+export const untouchedMap = (): boolean => untouched(startIds(mapStart()));
 
 /**
- * «К началу» строки шагов (решения 199–200): карта снова «Адам и Иисус Христос», небо вписывает её (restartTick читает
- * SkyView), диктор называет шаг; вернуть прежнюю карту — «Отменить шаг».
+ * «К началу» строки шагов (решения 199–200): карта снова со своего начала — «Адам и Иисус Христос», а у начавшего «С
+ * Адама» или «С Иисуса Христа» — с него; небо вписывает её (restartTick читает SkyView), диктор называет шаг; вернуть
+ * прежнюю карту — «Отменить шаг».
  */
 export const restartTick = signal(0);
 export function restartMap() {
   const before = workSet.peek().size;
+  const s = mapStart();
   batch(() => {
-    startWith('both');
+    startWith(s);
     restartTick.value++;
   });
-  tell({ kind: 'restart', id: BOTH_IDS[0], added: [], removed: Math.max(0, before - BOTH_IDS.length) });
+  tell({ kind: 'restart', id: startIds(s)[0], added: [...startIds(s)], removed: Math.max(0, before - startIds(s).length) });
 }
 
 /** Лица, с которых начинается небо при начале s. */

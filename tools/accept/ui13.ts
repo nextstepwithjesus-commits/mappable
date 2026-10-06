@@ -544,10 +544,14 @@ export const ui13: Scenario[] = [
       await p.reload();
       await p.waitForTimeout(2000);
       const first = (await p.locator('.cartouche .first button').allInnerTexts()).map(flat);
-      if (!/^Найти человека/.test(first[0] ?? '') || first[1] !== 'Читать главу') return fail(`первый слой: ${first.join(' | ')}`);
+      // этап 21 (решения 202, 207): в первом слое, рядом с поиском, — каталог «Ветхий Завет», «Новый Завет»: второй путь к
+      // лицу («в поиске… либо выбираем раздел Ветхий или Новый Завет»); «Читать главу» — после него
+      if (!/^Найти человека/.test(first[0] ?? '') || !first.includes('Читать главу') || !first.includes('Ветхий Завет') || !first.includes('Новый Завет'))
+        return fail(`первый слой: ${first.join(' | ')}`);
       const starts = await p.locator('.cartouche .starts button').count();
-      // этап 16 (решение 187): шестое начало — «Рассказ: от Адама до Иисуса Христа»
-      if (starts !== 6) return fail(`начал: ${starts}`);
+      // этап 16 (решение 187): шестое начало — «Рассказ: от Адама до Иисуса Христа»; этап 21 (решение 200): седьмое и
+      // первое — «Адам и Иисус Христос», пошаговая карта с двух концов родословия
+      if (starts !== 7) return fail(`начал: ${starts}`);
       // первый слой — выше начал и длинного текста
       const y = async (sel: string) => (await p.locator(sel).first().boundingBox())?.y ?? 1e9;
       if (!((await y('.cartouche .first')) < (await y('.cartouche .starts')) && (await y('.cartouche .starts')) < (await y('.cartouche .long')))) return fail('порядок слоёв вступления');

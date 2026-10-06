@@ -296,12 +296,17 @@ export const input3: Scenario[] = [
     run: async (p) => {
       await go(p, '#/david', 2600);
       const c = await canvasBox(p);
+      // этап 21 (решение 196): на шкале «По эпохам» (по умолчанию) названия эпох — в самой линейке (canvas[data-ruler]),
+      // на «Равномерном по годам» — в служебной строке (data-service); и там и там название — команда
       const service = (await p.locator('.sky > canvas').getAttribute('data-service')) ?? '';
-      if (!service.includes('Единое царство')) return fail(`в служебной строке: «${service}»`);
-      // название — слева направо по служебной строке (24–44 px)
+      const ruler = (await p.locator('.sky > canvas').getAttribute('data-ruler')) ?? '';
+      const inRuler = /Единое царство|Царство/.test(ruler);
+      if (!service.includes('Единое царство') && !inRuler) return fail(`ни в линейке, ни в служебной строке: «${ruler}» / «${service}»`);
+      // название — слева направо по линейке (0–26 px) или по служебной строке (24–44 px)
+      const row = inRuler ? 13 : 34;
       let found = -1;
       for (let x = 30; x < c.width - 40 && found < 0; x += 12) {
-        await p.mouse.move(c.x + x, c.y + 34);
+        await p.mouse.move(c.x + x, c.y + row);
         await p.waitForTimeout(40);
         const cur = await p.locator('.sky > canvas').evaluate((el) => getComputedStyle(el).cursor);
         if (cur !== 'pointer') continue;
@@ -314,7 +319,7 @@ export const input3: Scenario[] = [
       // словарь дат (решение 96): концы разного вида — каждый со своей пометой, «ок. 1375 г. — 1050 г. до Р. Х.»
       if (!/^Эпоха «[^»]+»: ((ок\. )?\d+–\d+ гг\.|(ок\. )?\d+ г\. — (ок\. )?\d+ г\.) до Р\. Х\.; щёлкните — небо покажет эпоху$/.test(t)) return fail(`подсказка: «${t}»`);
       const v0 = await view(p);
-      await p.mouse.click(c.x + found, c.y + 34);
+      await p.mouse.click(c.x + found, c.y + row);
       await p.waitForTimeout(900);
       const v1 = await view(p);
       if (Math.abs(v1[5] / v0[5] - 1) < 0.02 && Math.abs(v1[4] - v0[4]) < 1) return fail('щелчок по названию эпохи не сдвинул небо');

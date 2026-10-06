@@ -24,7 +24,7 @@ import type { Page } from 'playwright';
 import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { ROOT } from '../bible.ts';
-import { fail, hashId, pass, type Scenario } from './kit.ts';
+import { fail, hashId, pass, skySettled, type Scenario } from './kit.ts';
 
 type Rect = { x: number; y: number; w: number; h: number };
 type Pt = { x: number; y: number };
@@ -611,7 +611,7 @@ export const unify11: Scenario[] = [
   },
   {
     n: 816,
-    title: 'Я27: Адам → Ной в наборе — не больше 11 действий и без «Вписать»: «+N» у ромбов и «+» у имён по линии Сифа (сдвиг неба, если цель у края, — тоже действие)',
+    title: 'Я27: Адам → Ной в наборе — не больше 11 действий и без «Вписать»: «+N» у ромбов и «⊕» у имён по линии Сифа (сдвиг неба, если цель у края, — тоже действие)',
     run: async (p) => {
       await open(p, '#/adam~vs', { start: 'adam', extra: ADAM });
       const LINE = ['adam', 'sif', 'enos', 'kainan', 'maleleil', 'iared', 'enokh', 'mafusal', 'lamekh', 'noy'];
@@ -624,6 +624,10 @@ export const unify11: Scenario[] = [
       const reach = async (x: number, y: number) => {
         if (x < c.width - 160 && y < c.height - 160) return false;
         await pan(p, Math.min(0, c.width / 2 - x), Math.min(0, c.height / 2 - y));
+        // этап 21: указатель, протянувший небо, остаётся на цели — на линии к ней; подсказка связи закрывает «⊕», а под
+        // подсказкой небо ничего не рисует (решение 144). Читатель ведёт указатель к «⊕» — уводим его с цели
+        await p.mouse.move(c.x + 8, c.y + c.height - 8);
+        await p.waitForTimeout(300);
         acts++;
         steps.push('сдвиг');
         return true;
@@ -640,7 +644,9 @@ export const unify11: Scenario[] = [
           await p.mouse.click(c.x + +f[2] + +f[4] / 2, c.y + +f[3] + +f[5] / 2);
           acts++;
           steps.push(`+ ${who}`);
-          await p.waitForTimeout(1300);
+          // этап 21 (решение 207): после шага небо следует за раскрытым — ждать, пока встанет, а не 1,3 с
+          await p.waitForTimeout(300);
+          await skySettled(p);
           // у лица с одним союзом «+» сразу раскрывает и детей (решение координатора по Я27): следующий уже на небе
           if (await onSky(next)) continue;
           d = (await dots(p)).find((q) => q.uid.startsWith(`u:${who}+`) && !q.open && q.hidden > 0);
@@ -653,7 +659,8 @@ export const unify11: Scenario[] = [
         await p.mouse.click(c.x + d.x + 14, c.y + d.y);
         acts++;
         steps.push(`+N ${who}`);
-        await p.waitForTimeout(1300);
+        await p.waitForTimeout(300);
+        await skySettled(p);
         if (!(await onSky(next))) return fail(`после «+N» у ${who} ${next} не на небе (${steps.join(', ')})`);
       }
       const why = `${acts} действий: ${steps.join(', ')}`;

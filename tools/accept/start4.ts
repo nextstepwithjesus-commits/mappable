@@ -13,8 +13,9 @@ import type { Page } from 'playwright';
 import { pass, fail, hashId, type Scenario } from './kit.ts';
 
 // этап 13 (решение 110): начало и показ линий — «Родословие Иисуса Христа (Мф 1, Лк 3)»
-// этап 16 (решение 187): шестое начало — «Рассказ: от Адама до Иисуса Христа»
-const NAMES = ['С Адама', 'С Иисуса Христа', 'Родословие Иисуса Христа (Мф 1, Лк 3)', 'Ключевые лица', 'Всё небо', 'Рассказ: от Адама до Иисуса Христа'];
+// этап 16 (решение 187): шестое начало — «Рассказ: от Адама до Иисуса Христа»; этап 21 (решение 200): первое — «Адам
+// и Иисус Христос», начало нового читателя
+const NAMES = ['Адам и Иисус Христос', 'С Адама', 'С Иисуса Христа', 'Родословие Иисуса Христа (Мф 1, Лк 3)', 'Ключевые лица', 'Всё небо', 'Рассказ: от Адама до Иисуса Христа'];
 const flat = (s: string) => s.replace(/[   ]/g, ' ').replace(/⁠/g, '').replace(/\s+/g, ' ').trim();
 
 /** Открыть заново с памятью браузера: вступление открыто или свёрнуто, начало не выбрано или выбрано. */
@@ -39,16 +40,24 @@ const showOf = (p: Page) => p.evaluate(() => document.documentElement.dataset.sh
 /** Набор из памяти браузера: id по порядку. */
 const work = async (p: Page) => ((await p.evaluate(() => JSON.parse(localStorage.getItem('toledot:work') ?? '[]'))) as [string, unknown][]).map((r) => r[0]);
 const startOf = (p: Page) => p.evaluate(() => JSON.parse(localStorage.getItem('toledot:start') ?? 'null') as string | null);
-/** Строка показа у кромки неба (этап 11; на месте прежней строки «Раскрыто N лиц»): текст, команды, высота. */
+/**
+ * Строка показа у кромки неба (этап 11; на месте прежней строки «Раскрыто N лиц»): текст, команды, высота. Этап 21
+ * (решение 199): под ней — своя строка шагов («Отменить шаг», «К началу»); строка показа — без неё: текст, команды и
+ * высота до строки шагов.
+ */
 async function showBar(p: Page) {
   return (await p.evaluate(`(() => {
     const b = document.querySelector('.skytop .showbar');
     if (!b) return null;
     const vis = (e) => getComputedStyle(e).display !== 'none' && e.getBoundingClientRect().width > 0;
     const r = b.getBoundingClientRect();
-    const over = [...b.querySelectorAll('*')].some((e) => e.scrollWidth > e.clientWidth + 1 && getComputedStyle(e).overflow === 'hidden');
-    return { text: b.textContent.replace(/\s*—\s*/g, ' — '), cut: over ? 1 : 0, h: r.height, l: r.left, r: r.right, W: innerWidth,
-      cmds: [...b.querySelectorAll('.sb-cmd')].filter(vis).map((x) => x.textContent.trim()) };
+    const steps = b.querySelector('.sb-steps');
+    const bottom = steps ? steps.getBoundingClientRect().top : r.bottom;
+    const own = (e) => !e.closest('.sb-steps');
+    const over = [...b.querySelectorAll('*')].filter(own).some((e) => e.scrollWidth > e.clientWidth + 1 && getComputedStyle(e).overflow === 'hidden');
+    const text = [...b.childNodes].filter((n) => !(n.nodeType === 1 && n.closest('.sb-steps'))).map((n) => n.textContent).join('');
+    return { text: text.replace(/\s*—\s*/g, ' — '), cut: over ? 1 : 0, h: bottom - r.top, l: r.left, r: r.right, W: innerWidth,
+      cmds: [...b.querySelectorAll('.sb-cmd')].filter(vis).filter(own).map((x) => x.textContent.trim()) };
   })()`)) as { text: string; cut: number; h: number; l: number; r: number; W: number; cmds: string[] } | null;
 }
 /** Карточка у звезды лица id открыта (решение 77): диалог .dotcard вида «лицо» с его именем. */
@@ -95,7 +104,7 @@ export const start4: Scenario[] = [
       if (s.some((x) => !x.note)) return fail('у начала нет пояснения');
       if (s.some((x) => x.cur)) return fail('при первом посещении начало уже отмечено');
       const entry = await p.locator('.cartouche .entry button').first().boundingBox();
-      if (!entry || entry.y < s[4].top + s[4].h - 1) return fail('быстрые входы не ниже начал');
+      if (!entry || entry.y < s[s.length - 1].top + s[s.length - 1].h - 1) return fail('быстрые входы не ниже начал');
       if ((await p.locator('.cartouche .entry button').count()) !== 7) return fail('быстрых входов не семь');
       await p.locator('.cartouche .starts button', { hasText: 'С Адама' }).click();
       await p.waitForTimeout(2200);
@@ -153,7 +162,8 @@ export const start4: Scenario[] = [
       await p.waitForTimeout(2000);
       // этап 11 (решение 81): «Родословие Иисуса Христа» — показ «линии Мессии», набор не заменяется
       if ((await showOf(p)) !== 'l') return fail(`показ: ${await showOf(p)}`);
-      if ((await work(p)).length) return fail(`набор: ${(await work(p)).join(', ')}`);
+      // этап 21 (решение 200): у нового читателя набор — начало «Адам и Иисус Христос»; показ линий его не меняет
+      if ((await work(p)).join(' ') !== 'adam iisus') return fail(`набор: ${(await work(p)).join(', ')}`);
       const n = Number(await p.evaluate(() => document.documentElement.dataset.showIds ?? '0'));
       const b = await showBar(p);
       const said = Number(/родословие Иисуса Христа \(Мф 1, Лк 3\) — (\d+)/.exec(flat(b?.text ?? '').replace(/(\d) (\d)/g, '$1$2'))?.[1]);
@@ -240,13 +250,15 @@ export const start4: Scenario[] = [
   },
   {
     n: 544,
-    title: 'Решения 68, 81: вступление закрыто, начало не выбрано — показ «всё небо», строка «На небе: всё небо — изменить»; в листе «Вид» — «Начало» без отметки; «Родословие Иисуса Христа» закрывает лист и показывает обе линии',
+    // этап 21 (решение 200): новый читатель видит пошаговую карту «Адам и Иисус Христос» (прежде — всё небо, решение 68)
+    title: 'Решения 68, 81, 200: вступление закрыто, начало не выбрано — пошаговая карта «Адам и Иисус Христос», строка «На небе: набор — 2 лица — изменить | всё небо»; в листе «Вид» — «Начало» без отметки; «Родословие Иисуса Христа» закрывает лист и показывает обе линии',
     run: async (p) => {
       await fresh(p, { intro: false });
       if (await p.locator('.sky .cartouche').count()) return fail('вступление открыто');
-      if ((await mode(p)) !== 'all' || (await showOf(p)) !== 'a') return fail(`небо: ${await mode(p)}, показ ${await showOf(p)}`);
+      if ((await mode(p)) !== 'work' || (await showOf(p)) !== 's') return fail(`небо: ${await mode(p)}, показ ${await showOf(p)}`);
+      if ((await work(p)).join(' ') !== 'adam iisus') return fail(`набор: ${(await work(p)).join(', ')}`);
       const b0 = await showBar(p);
-      if (!b0 || flat(b0.text) !== 'На небе: всё небо — изменить') return fail(`строка показа: «${flat(b0?.text ?? '')}»`);
+      if (!b0 || !/^На небе: набор — 2 лица — изменить/.test(flat(b0.text))) return fail(`строка показа: «${flat(b0?.text ?? '')}»`);
       await p.locator('.skyctl .view-toggle').click();
       await p.waitForTimeout(400);
       const s = await starts(p, '.viewpop');
@@ -263,7 +275,7 @@ export const start4: Scenario[] = [
       if (await p.locator('.viewpop').count()) return fail('лист «Вид» не закрылся');
       if ((await showOf(p)) !== 'l') return fail(`показ: ${await showOf(p)}`);
       const b = await showBar(p);
-      return b && /^На небе: родословие Иисуса Христа \(Мф 1, Лк 3\) — /.test(flat(b.text)) && !(await work(p)).length ? pass(`«${flat(b.text)}»`) : fail(`строка «${flat(b?.text ?? '')}», набор ${(await work(p)).length}`);
+      return b && /^На небе: родословие Иисуса Христа \(Мф 1, Лк 3\) — /.test(flat(b.text)) && (await work(p)).join(' ') === 'adam iisus' ? pass(`«${flat(b.text)}»`) : fail(`строка «${flat(b?.text ?? '')}», набор ${(await work(p)).join(' ')}`);
     },
   },
   {
@@ -410,13 +422,14 @@ export const start4: Scenario[] = [
   },
   {
     n: 550,
-    title: 'Решения 67–72, 76–78: «Условные знаки» — союз на небе ромбом, плюс нераскрытых союзов, подсветка ветвей, пять начал; в «Клавишах» — щелчок по звезде и по ромбу союза, Enter на них; «О карте» — абзац о началах и раскрытии',
+    // этап 21 (решение 197): «плюс без числа после имени» стал рукояткой шага — «Плюс в кольце — шаг карты»
+    title: 'Решения 67–72, 76–78, 197: «Условные знаки» — союз на небе ромбом, плюс в кольце — шаг карты, подсветка ветвей, пять начал; в «Клавишах» — щелчок по звезде и по ромбу союза, Enter на них; «О карте» — абзац о началах и раскрытии',
     run: async (p) => {
       await fresh(p, { intro: false });
       await p.locator('.commands > button', { hasText: 'Условные знаки' }).click();
       await p.waitForTimeout(800);
       const t = flat(await p.locator('.app > .sheet').innerText());
-      for (const w of ['Союз на небе', 'Плюс без числа после имени', 'Подсветка ветвей выбранного лица', '«С Иисуса Христа»', '«Начать заново»', 'щелчок по ромбу союза', 'на звезде или ромбе союза', 'щелчок по звезде'])
+      for (const w of ['Союз на небе', 'Плюс в кольце — шаг карты', 'Подсветка ветвей выбранного лица', '«С Иисуса Христа»', '«Начать заново»', 'щелчок по ромбу союза', 'на звезде или ромбе союза', 'щелчок по звезде'])
         if (!t.includes(w)) return fail(`в «Условных знаках» нет «${w}»`);
       await p.locator('.commands > button', { hasText: 'О карте' }).click();
       await p.waitForTimeout(800);

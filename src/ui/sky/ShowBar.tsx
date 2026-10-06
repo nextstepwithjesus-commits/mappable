@@ -36,7 +36,7 @@ import { typo } from '../text/typo.ts';
 import { lowerFirst } from '../text/ru.ts';
 import { openShowSheet, showSheet } from '../panels/Show.tsx';
 import { canRedo, canUndo, redo, undo } from '../history.ts';
-import { expanded, restartMap, untouchedStart } from '../reveal.ts';
+import { expanded, mapStart, restartMap, STARTS, untouchedMap } from '../reveal.ts';
 import { linkSet, workSet } from '../work.ts';
 
 /**
@@ -183,7 +183,7 @@ function StepsLine() {
   void workSet.value;
   void expanded.value;
   const own = show.value.kind === 'set' && !linkSet.value;
-  const fresh = own && !untouchedStart();
+  const fresh = own && !untouchedMap();
   if (!undoOn && !redoOn && !fresh) return null;
   // фокус после команды (WCAG 2.4.3; рецензия этапа 21): «Отменить шаг», которой больше нет, не роняет фокус в body —
   // он на той же команде, иначе на соседней, иначе на первой команде строки показа
@@ -222,7 +222,7 @@ function StepsLine() {
       {fresh && (
         <>
           {(undoOn || redoOn) && ' '}
-          <button type="button" class="sb-cmd" data-cmd="restart" title="Снова начало: Адам и Иисус Христос, всё остальное свёрнуто (отменяется, Ctrl+Z)" onClick={() => {
+          <button type="button" class="sb-cmd" data-cmd="restart" title={`Снова начало «${STARTS.find((q) => q.value === mapStart())?.label ?? ''}», всё остальное свёрнуто (отменяется, Ctrl+Z)`} onClick={() => {
             restartMap();
             keep('restart');
           }}>

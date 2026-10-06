@@ -11,7 +11,7 @@
  *    Я29 (переход), Я34 (data-bare).
  */
 import type { Page } from 'playwright';
-import { fail, hashId, pass, type Scenario } from './kit.ts';
+import { fail, hashId, pass, skySettled, type Scenario } from './kit.ts';
 
 const PHONE = { width: 390, height: 844, touch: true };
 
@@ -746,7 +746,9 @@ export const grammar11: Scenario[] = [
           if (!fold) return fail(`нет «+» у ${who}`);
           const [fx, fy, fw, fh] = fold.split(':')[2].split(',').map(Number);
           await p.mouse.click(o.x + fx + fw / 2, o.y + fy + fh / 2);
-          await p.waitForTimeout(1100);
+          // этап 21 (решение 207): после шага небо следует за раскрытым — ждать, пока встанет
+          await p.waitForTimeout(300);
+          await skySettled(p);
           node = await shutOf();
         }
         if (!node) {
@@ -754,7 +756,8 @@ export const grammar11: Scenario[] = [
           return fail(`нет «+N» у союзов ${who}`);
         }
         await p.mouse.click(o.x + node.pts[0] + 13, o.y + node.pts[1]);
-        await p.waitForTimeout(1100);
+        await p.waitForTimeout(300);
+        await skySettled(p);
         const after = await orderOf();
         if (!after.includes(want)) return fail(`после ${who} нет ${want}`);
         // прежние лица в прежнем порядке строк (Я19: перестановок нет)
