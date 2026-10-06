@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, it, expect } from 'vitest';
 import type { Person, Epoch } from '../src/data/types.ts';
 import { buildGraph, siblings } from '../src/engine/graph.ts';
@@ -7,7 +9,7 @@ import { toAstro, toHist, addYears, formatSpan } from '../src/engine/years.ts';
 import { bloodTerm, relate } from '../src/engine/kinship.ts';
 import { fixLayout, stem, SearchIndex } from '../src/engine/search.ts';
 import { splitRuns } from '../src/engine/ribbons.ts';
-import { buildTimeScale, timeToX, xToTime } from '../src/engine/timescale.ts';
+import { buildTimeScale, eraGenerations, MIN_GENS, timeToX, xToTime } from '../src/engine/timescale.ts';
 import epochsJson from '../data/epochs.json' with { type: 'json' };
 import { nameMatcher, norm } from '../src/engine/text.ts';
 
@@ -172,6 +174,38 @@ describe('ленты', () => {
     expect(runs.map((r) => r.kind)).toEqual(['shared', 'joseph', 'mary', 'shared']);
     expect(runs[1].ids).toEqual(['b', 'c', 'd']);
     expect(runs[2].ids).toEqual(['b', 'x', 'y', 'd']);
+  });
+});
+
+describe('поколения эпох (этап 21, решение 196)', () => {
+  it('цепочка «родитель → ребёнок» внутри эпохи; родитель из другой эпохи начинает её заново; не меньше MIN_GENS', () => {
+    const P = [
+      { id: 'a', parent: null, b: -1000, epoch: 'x' },
+      { id: 'b', parent: 'a', b: -970, epoch: 'x' },
+      { id: 'c', parent: 'b', b: -940, epoch: 'x' },
+      { id: 'd', parent: 'c', b: -900, epoch: 'y' },
+      { id: 'e', parent: 'd', b: -870, epoch: 'y' },
+      { id: 'f', parent: null, b: -880, epoch: 'y' },
+    ];
+    const E = [
+      { id: 'x', start: -1010, end: -910 },
+      { id: 'y', start: -910, end: -800 },
+      { id: 'z', start: -800, end: -700 },
+    ];
+    const g = eraGenerations(P, E);
+    expect(g.map((q) => [q.id, q.gens])).toEqual([
+      ['x', 3],
+      ['y', MIN_GENS],
+      ['z', MIN_GENS],
+    ]);
+  });
+  it('на данных атласа: до Потопа — 11 поколений (Быт 5: Адам … Ной и его сыновья), сохраняются в масштабе модели', async () => {
+    const { models } = await import('../src/data/atlas.ts');
+    const { hydrateScale } = await import('../src/engine/timescale.ts');
+    const raw = JSON.parse(readFileSync(join(__dirname, '../src/generated/atlas.json'), 'utf8')).models[0].scale;
+    const ts = hydrateScale(raw);
+    expect(ts.gens?.get('antediluvian')).toBe(11);
+    for (const e of models[0].epochs) expect(ts.gens?.get(e.id) ?? 0, e.id).toBeGreaterThanOrEqual(MIN_GENS);
   });
 });
 

@@ -1,11 +1,13 @@
 /**
  * Рамка неба (ТЗ § 3.1, «рамка листа»; § 3.4; C4, E7, E9; VIS-21, VIS-23, MAP-09, 30–35, 40, UX-07–10, MOB-08) и то, что
  * привязано к её шкалам:
- *  — линейка лет вверху: один шаг рисок на окно — по самому сжатому месту, подписи прорежены равномерно и стоят у своих
- *    рисок, граница эр — риска во всю высоту линейки, разрыв шкалы после 100 г. — знаком; под рисками — полоса
- *    плотности шкалы: светлее там, где время растянуто (масштаб «сжатый по плотности лиц»);
- *  — служебная строка под линейкой: названия эпох по их годам (прилипают к левому краю), масштабная линейка
- *    «├─ 50 лет ─┤» справа, подписи черт «завершение канона» и «сегодня»;
+ *  — линейка вверху. У масштаба «По эпохам» (этап 21, решение 196; src/render/axis.ts) — линейка эпох: граница эпохи —
+ *    риска во всю высоту, название — посередине видимой части эпохи, лет нет. У масштаба «Равномерный по годам» — линейка
+ *    лет: один шаг рисок на окно — по самому сжатому месту, подписи прорежены равномерно и стоят у своих рисок, граница
+ *    эр — риска во всю высоту линейки, разрыв шкалы после 100 г. — знаком;
+ *  — служебная строка под линейкой: у линейки лет — названия эпох по их годам (прилипают к левому краю); масштабная
+ *    линейка справа — «масштаб ├─ 50 лет ─┤», у линейки эпох — «поколение ├─┤ ≈ 48 лет»; подписи черт «завершение
+ *    канона» и «сегодня»;
  *  — левая кромка: буквы строк атласа (engine/layout.ts, atlasRow); нижняя кромка: номера столбцов атласа между
  *    рисками веков — по ним находится координата указателя «32 П»;
  *  — на самом небе: сетка лет, черты завершения канона и «сегодня», постоянные меридианы событий;
@@ -28,6 +30,9 @@ import { ringOuter } from './marks.ts';
 import { unionName } from '../ui/linkwords.ts';
 import { unions as ALL_UNIONS } from '../ui/reveal.ts';
 import type { LinkPath } from './links.ts';
+import { byEpochs } from './axis.ts';
+
+export { byEpochs };
 
 /** Линейка лет вверху рамки. */
 export const RULER_H = 26;
@@ -161,6 +166,8 @@ function eraWords(scale: RulerScale): [number, string][] {
  * свои шаги (после 100 г. шкала сжата). h — подпись риски: исторический год или год шкалы.
  */
 export function yearTicks(v: SkyContext): YearTick[] {
+  // шкала «по эпохам» (решение 196): линейка называет эпохи, лет на ней нет — год в карточке и на полосе времени
+  if (byEpochs(v)) return [];
   const cam = v.cam;
   const scale = rulerScale(v);
   const tL = Math.max(v.scale.knots[0], v.tOf(cam.wx(v.letterW)));
@@ -310,14 +317,27 @@ export function yearsWord(n: number): string {
 
 /**
  * Масштабная линейка в середине окна (E7; UX-08): круглое число лет и длина его отрезка в px — от 40 до 120 px.
- * approx — шкала в окне неравномерна (масштаб «сжатый по плотности лиц»): число — «≈».
+ * approx — шкала в окне неравномерна (масштаб «По эпохам»): число — «≈». gen — отрезок одного поколения эпохи под
+ * серединой окна (решение 196): «поколение ≈ 48 лет».
  */
-export function scaleBar(v: SkyContext): { years: number; px: number; approx: boolean } | null {
+export function scaleBar(v: SkyContext): { years: number; px: number; approx: boolean; gen?: boolean } | null {
   const cam = v.cam;
   const [cx] = cam.vpCenter();
   const tC = v.tOf(cam.wx(cx));
   const rate = rateAt(v, tC);
   if (!(rate > 0)) return null;
+  // шкала «по эпохам» (решение 196): отрезок одного поколения эпохи под серединой окна и его годы — «поколение ≈ 48 лет»;
+  // поколение шире 160 px (крупный план) — обычная линейка лет
+  if (byEpochs(v)) {
+    const e = v.model.epochs.find((q) => tC >= toAstro(q.start) && tC < toAstro(q.end));
+    const g = e ? v.scale.gens?.get(e.id) : undefined;
+    if (e && g) {
+      const per = (toAstro(e.end) - toAstro(e.start)) / g;
+      const px = per * rate;
+      const years = per < 20 ? Math.max(1, Math.round(per)) : Math.round(per / 5) * 5;
+      if (px >= 12 && px <= 160) return { years, px, approx: true, gen: true };
+    }
+  }
   const nice = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000];
   const years = [...nice].reverse().find((n) => n * rate <= 120) ?? 1;
   if (years * rate < 12) return null;
@@ -412,6 +432,7 @@ export function foldItemText(f: { kind: 'desc' | 'group'; id: string; count: num
 const DENSITY_STEPS = 24;
 /** Линейка: полоса плотности, риски, подписи у своих рисок, граница эр, знак разрыва шкалы. Возвращает места подписей лет. */
 function drawRuler(v: SkyContext, ticks: YearTick[]): Rect[] {
+  if (byEpochs(v)) return drawEpochRuler(v);
   const { ctx, cam, pal } = v;
   const W = cam.w;
   const LW = v.letterW;
@@ -587,6 +608,70 @@ function drawRuler(v: SkyContext, ticks: YearTick[]): Rect[] {
 }
 
 /**
+ * Линейка шкалы «по эпохам» (этап 21, решение 196): граница эпохи — риска во всю высоту линейки, название — посередине
+ * видимой части эпохи (полные имена, если полное помещается у каждой эпохи, где помещается краткое; иначе краткие —
+ * решение 99). Лет нет: год лица — в карточке, год окна — на полосе времени внизу. После канона — прежняя штриховка
+ * сжатого времени. При ярусах эпох названия стоят в их первом ярусе (tiers.ts) — здесь только риски.
+ */
+function drawEpochRuler(v: SkyContext): Rect[] {
+  const { ctx, cam, pal } = v;
+  const W = cam.w;
+  const LW = v.letterW;
+  const xBreak = cam.sx(v.xOf(T_CANON_END));
+  if (xBreak < W - 4) {
+    ctx.strokeStyle = alpha(pal.ink3, 0.8);
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let x = Math.max(LW, xBreak) + 2; x < W; x += 4) {
+      ctx.moveTo(x, RULER_H - 1);
+      ctx.lineTo(x + 3, RULER_H - DENSITY_H - 1);
+    }
+    ctx.stroke();
+  }
+  const eps = v.model.epochs.map((e) => ({ e, a: cam.sx(v.xOf(toAstro(e.start))), b: cam.sx(v.xOf(toAstro(e.end))) }));
+  ctx.strokeStyle = pal.ink3;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (const { a } of eps) {
+    if (a <= LW + 1 || a >= W - 1) continue;
+    ctx.moveTo(Math.round(a) + 0.5, 3);
+    ctx.lineTo(Math.round(a) + 0.5, RULER_H - 1);
+  }
+  ctx.stroke();
+  const written: Rect[] = [];
+  const names: string[] = [];
+  const tiers = v.openTop > FRAME_H + 20;
+  const cv = (ctx as { canvas?: unknown }).canvas as HTMLCanvasElement | undefined;
+  if (!tiers) {
+    ctx.font = mapFont(T_MAP_S, { sans: true, weight: 500, coarse: v.coarse });
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = pal.ink2;
+    const fs = mapSize(T_MAP_S, v.coarse);
+    const y = RULER_H / 2;
+    const spans = eps.map(({ e, a, b }) => ({ e, x0: Math.max(a, LW) + 6, x1: Math.min(b, W) - 6 })).filter((q) => q.x1 - q.x0 >= 16);
+    const fits = (text: string, q: (typeof spans)[number]) => ctx.measureText(text).width <= q.x1 - q.x0;
+    const full = spans.every((q) => fits(q.e.name, q) || !fits(q.e.short, q));
+    for (const q of spans) {
+      const text = full ? q.e.name : q.e.short;
+      const tw = ctx.measureText(text).width;
+      if (tw > q.x1 - q.x0) continue;
+      const x = (q.x0 + q.x1) / 2 - tw / 2;
+      const box = { x: x - 2, y: y - fs / 2 - 1, w: tw + 4, h: fs + 2 };
+      ctx.fillText(text, x, y);
+      v.ledger.add('frame', text, box);
+      written.push(box);
+      names.push(text);
+    }
+  }
+  // подписи линейки — для проверок приёмки (как у линейки лет): «Судьи|Единое царство|Разделённое царство»
+  if (cv && typeof cv === 'object' && cv.dataset) {
+    const ruler = names.join('|');
+    if (cv.dataset.ruler !== ruler) cv.dataset.ruler = ruler;
+  }
+  return written;
+}
+
+/**
  * Подсказка отметки «Р. Х.» на линейке (решение 102; X2 § 2.6): почему меридиан «Рождество Христово» стоит левее неё.
  * Показывает её input.ts при наведении на надпись «Р. Х.» (ledger, kind 'frame').
  */
@@ -666,7 +751,8 @@ function drawServiceRow(v: SkyContext, extra: ServiceExtra): ServiceHit[] {
   const bar = scaleBar(v);
   let right = W - 8;
   if (bar) {
-    const word = 'масштаб';
+    // шкала «по эпохам» (решение 196): «поколение ├──┤ ≈ 48 лет»
+    const word = bar.gen ? 'поколение' : 'масштаб';
     const text = `${bar.approx ? '≈\u00a0' : ''}${yearsWord(bar.years)}`;
     const ww = ctx.measureText(word).width;
     const tw = ctx.measureText(text).width;
@@ -741,7 +827,8 @@ function drawServiceRow(v: SkyContext, extra: ServiceExtra): ServiceHit[] {
   // под флажком меридиана и другой надписью строки — сразу за ней, в пределах эпохи (MAP-33)
   ctx.strokeStyle = alpha(pal.rule, 1);
   ctx.beginPath();
-  const eps = v.model.epochs.map((e) => ({ e, a: cam.sx(v.xOf(toAstro(e.start))), b: cam.sx(v.xOf(toAstro(e.end))) }));
+  // шкала «по эпохам» (решение 196): эпохи названы в линейке — здесь их нет
+  const eps = byEpochs(v) ? [] : v.model.epochs.map((e) => ({ e, a: cam.sx(v.xOf(toAstro(e.start))), b: cam.sx(v.xOf(toAstro(e.end))) }));
   for (const { a } of eps) {
     if (!ROW_H || a <= LW + 1 || a >= W - 1) continue;
     // граница эпохи не перечёркивает надписи строки: «сегодня», масштаб, свёрнутое, черту канона (рецензия 3 октября,

@@ -88,10 +88,12 @@ const VIEWS: [string, ((s: Sky) => void) | undefined][] = [
   ['Рождество', window(-10, 80)],
 ];
 
+// этап 21, решение 196: линейка лет — у масштаба «Равномерный по годам» (λ = 0); у масштаба «По эпохам» (λ = 1) линейка
+// называет эпохи — её проверки ниже («линейка эпох») и в tests/time13.test.ts
 describe('линейка лет (E7; MAP-30, UX-08)', () => {
   for (const [name, move] of VIEWS)
     it(`${name}: один шаг рисок на окно; подписи — у своих рисок, по кратным одного шага, без наложений`, () => {
-      const { sky: s, texts } = drawSky({ move });
+      const { sky: s, texts } = drawSky({ move, lambda: 0 });
       const ticks = frame.yearTicks(s).filter((t) => t.t <= T_CANON_END);
       expect(ticks.length).toBeGreaterThan(3);
       const steps = new Set<number>();
@@ -116,7 +118,7 @@ describe('линейка лет (E7; MAP-30, UX-08)', () => {
     });
 
   it('эра: «до Р. Х.» у первой подписи до Рождества, «по Р. Х.» — у первой после; граница эр — риска во всю высоту', () => {
-    const { sky: s, texts, calls } = drawSky({ move: window(-10, 80) });
+    const { sky: s, texts, calls } = drawSky({ move: window(-10, 80), lambda: 0 });
     const ruler = texts.filter((q) => q.base === 'middle' && q.y < frame.RULER_H);
     expect(ruler.filter((q) => /до Р\. Х\./.test(q.t)).length).toBe(1);
     expect(ruler.filter((q) => /по Р\. Х\./.test(q.t)).length).toBe(1);
@@ -130,22 +132,50 @@ describe('линейка лет (E7; MAP-30, UX-08)', () => {
   });
 
   it('после 100 г. шкала сжата: свой шаг рисок; знак разрыва', () => {
-    const { sky: s } = drawSky();
+    const { sky: s } = drawSky({ lambda: 0 });
     const post = frame.yearTicks(s).filter((t) => t.t > T_CANON_END);
     for (const t of post) expect(t.h % 100).toBe(0);
   });
+});
+
+describe('линейка эпох (этап 21, решение 196)', () => {
+  for (const [name, move] of VIEWS)
+    it(`${name}: «По эпохам» — рисок лет нет, эпохи названы в линейке без наложений; граница эпохи — риска во всю высоту`, () => {
+      const { sky: s, texts, calls } = drawSky({ move });
+      expect(frame.byEpochs(s)).toBe(true);
+      expect(frame.yearTicks(s)).toEqual([]);
+      const names = new Set(models[0].epochs.flatMap((e) => [e.name, e.short]));
+      const ruler = texts.filter((q) => q.base === 'middle' && q.y < frame.RULER_H);
+      expect(ruler.length, name).toBeGreaterThan(0);
+      for (const q of ruler) expect(names.has(q.t), q.t).toBe(true);
+      expect(s.labelStats().overlaps).toBe(0);
+      // риска границы эпохи в окне — от верха линейки (3 px) до её низа
+      const bounds = models[0].epochs.map((e) => Math.round(s.cam.sx(s.xOf(toAstro(e.start)))) + 0.5).filter((x) => x > s.letterW + 1 && x < s.cam.w - 1);
+      for (const x of bounds) expect(calls.some((c, k) => c[0] === 'moveTo' && c[1] === x && c[2] === 3 && calls[k + 1]?.[0] === 'lineTo'), `риска у ${x}`).toBe(true);
+    });
 });
 
 describe('масштабная линейка и слова (E7; UX-08)', () => {
   // шесть окон неба подряд: под нагрузкой общей машины — больше 5 с (явный срок, как у других тяжёлых тестов неба)
   it('«├─ 50 лет ─┤»: круглое число лет, отрезок 12–120 px; «≈» — только при неравномерной шкале', { timeout: 60_000 }, () => {
     for (const [, move] of VIEWS) {
-      const { sky: s } = drawSky({ move });
-      const b = frame.scaleBar(s)!;
-      expect(b).toBeTruthy();
-      expect([1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000]).toContain(b.years);
-      expect(b.px).toBeGreaterThanOrEqual(12);
-      expect(b.px).toBeLessThanOrEqual(120);
+      // круглые годы — у линейки лет (λ = 0) и у крупного плана «По эпохам», где поколение шире 160 px
+      for (const lambda of [0, 1]) {
+        const { sky: s } = drawSky({ move, lambda });
+        const b = frame.scaleBar(s)!;
+        expect(b).toBeTruthy();
+        if (b.gen) {
+          // «поколение ≈ 48 лет» (решение 196): годы поколения эпохи под серединой окна, отрезок 12–160 px
+          expect(lambda).toBe(1);
+          expect(Number.isInteger(b.years) && b.years > 0).toBe(true);
+          expect(b.px).toBeGreaterThanOrEqual(12);
+          expect(b.px).toBeLessThanOrEqual(160);
+          continue;
+        }
+        expect([1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000]).toContain(b.years);
+        expect(b.px).toBeGreaterThanOrEqual(12);
+        expect(b.px).toBeLessThanOrEqual(120);
+      }
     }
     const { sky: t } = drawSky({ lambda: 0 });
     expect(frame.scaleBar(t)!.approx).toBe(false);
@@ -176,8 +206,8 @@ describe('меридианы событий и эпохи (E7; MAP-32, 35, UX-10
     for (const e of ev) expect(e.refs.length, e.name).toBeGreaterThan(0);
     expect(ev.find((e) => e.name === 'Исход')!.full).toBe('Исход, 1446 г. до Р. Х. (расч.)');
   });
-  it('названия эпох — в служебной строке, по своим годам', () => {
-    const { sky: s, texts } = drawSky({ move: window(-1000, 700) });
+  it('названия эпох — в служебной строке, по своим годам (масштаб «Равномерный по годам»; «По эпохам» — в линейке, выше)', () => {
+    const { sky: s, texts } = drawSky({ move: window(-1000, 700), lambda: 0 });
     const row = texts.filter((q) => q.y > frame.RULER_H && q.y < frame.FRAME_H && q.base === 'middle');
     const names = models[0].epochs.flatMap((e) => [e.name, e.short]);
     const eps = row.filter((q) => names.includes(q.t));
@@ -229,7 +259,7 @@ describe('координаты на карте (E9; UX-07, MAP-34, MOB-08)', () 
   });
 });
 
-describe('масштаб времени «Сжатый по плотности лиц» (решение 124; прежде «по насыщенности») — растяжение не больше 1 : 6 (решение 1; MAP-31)', () => {
+describe('масштаб времени «По эпохам» (решение 196; прежде «Сжатый по плотности лиц», «по насыщенности») — растяжение не больше 1 : 6 (решение 1; MAP-31)', () => {
   const ratio = (ts: ReturnType<typeof buildTimeScale>) => {
     let lo = Infinity;
     let hi = 0;

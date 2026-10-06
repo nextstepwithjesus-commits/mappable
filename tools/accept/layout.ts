@@ -347,7 +347,7 @@ export const layout: Scenario[] = [
       await p.locator('.skyctl').getByText('Равномерный по годам', { exact: true }).click();
       await p.waitForTimeout(900);
       const b = await selAt(p);
-      await p.locator('.skyctl').getByText('Сжатый по плотности лиц', { exact: true }).click();
+      await p.locator('.skyctl').getByText('По эпохам', { exact: true }).click();
       await p.waitForTimeout(900);
       const c = await selAt(p);
       if (!b || !c) return fail('лицо пропало');

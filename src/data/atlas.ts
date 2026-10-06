@@ -176,7 +176,7 @@ export interface ModelData {
   metrics: Record<string, number>;
   /** контуры созвездий (E8): кольца в годах и полосах, места под название */
   outlines: Outline[];
-  scale: { knots: number[]; xTrue: number[]; xDense: number[] };
+  scale: { knots: number[]; xTrue: number[]; xDense: number[]; gens?: [string, number][] };
   /**
    * Эпохи в годах этой модели (CARD-60; engine/epochs.ts): границы и события, заданные числами Писания (сотворение,
    * Потоп, рождение Аврама, приход Иакова в Египет), сдвигаются вместе с моделью.
@@ -218,7 +218,7 @@ interface RawAtlas {
      * (tools/build-data.ts; engine/stays.ts).
      */
     layout: { nodes: RawNode[]; blocks: RawBlock[]; laneMin: number; laneMax: number; metrics: Record<string, number>; outlines?: RawOutline[]; st?: number[][]; uy?: [number, number, number][]; wd?: [number, number][] };
-    scale: { knots: number[]; xTrue: number[]; xDense: number[] };
+    scale: { knots: number[]; xTrue: number[]; xDense: number[]; gens?: [string, number][] };
   }[];
   modelInfo: unknown;
   lines: unknown;

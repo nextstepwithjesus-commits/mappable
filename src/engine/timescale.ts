@@ -1,10 +1,17 @@
 /**
- * Масштаб времени (ТЗ § 3.4, § 8.3 п. 4).
+ * Масштаб времени (ТЗ § 3.4, § 8.3 п. 4; этап 21, решение 196).
  *
  * Две монотонные функции «год → x», нормированные к одной ширине:
- *  — истинная: линейная, но с разрывом шкалы после завершения канона (100–2040 гг. сжаты в фиксированный отрезок);
- *  — по насыщенности: ширина отрезка времени растёт с плотностью лиц, увеличение ограничено (не более MAG раз);
- *    между узлами — монотонная кубическая интерполяция Фрича — Карлсона (гладкая, без «изломов» на границах).
+ *  — истинная («Равномерный по годам»): линейная, но с разрывом шкалы после завершения канона (100–2040 гг. сжаты
+ *    в фиксированный отрезок);
+ *  — по эпохам (этап 21, решение 196; прежде «Сжатый по плотности лиц», решения 1, 124, «по насыщенности»): ширина
+ *    отрезка времени растёт с плотностью лиц, увеличение ограничено (не более DENSE_MAG раз). Рамка неба в этом режиме
+ *    называет эпохи, а не годы (src/render/axis.ts): год лица — в карточке, год окна — на полосе времени внизу. Поколения
+ *    эпох (eraGenerations) — для масштабной линейки «поколение ≈ N лет».
+ *    Ширину эпохи по числу поколений проверяли (этап 21): равный шаг поколений, но семья Иакова и Египет сжимались на треть,
+ *    и проверки читаемости всего неба (tests/census.test.ts: пересечения связей со следами, ромбы на чужих чертах) не
+ *    проходили ни при какой доле поколений от 0,35 до 1 — геометрия осталась прежней.
+ *    Между узлами — монотонная кубическая интерполяция Фрича — Карлсона (гладкая, без «изломов» на границах).
  * Промежуточные состояния: x = (1 − λ)·x_true + λ·x_dense.
  */
 import { toAstro } from './years.ts';
@@ -28,6 +35,8 @@ export interface TimeScale {
   mTrue: number[]; // касательные для интерполяции
   mDense: number[];
   breakT: number; // начало разрыва шкалы (истинный режим)
+  /** поколений в эпохах (рамка «по эпохам», решение 196); нет — рамка размечена годами в обоих режимах */
+  gens?: ReadonlyMap<string, number>;
 }
 
 export function fritschCarlson(x: number[], y: number[]): number[] {
@@ -56,11 +65,49 @@ export function fritschCarlson(x: number[], y: number[]): number[] {
   return m;
 }
 
+/** Эпоха для рамки «по эпохам» (решение 196): годы — астрономические, gens — поколений, рождённых в эпохе. */
+export interface EraSpan {
+  id: string;
+  start: number;
+  end: number;
+  gens: number;
+}
+/** Доля поколений в ширине эпохи (решение 196): остальное — по плотности лиц. */
+export let ERA_BLEND = 0.35;
+export const setEraBlend = (k: number) => (ERA_BLEND = k);
+/** Меньше стольких поколений в эпохе не считается: у Исхода, Плена и эпох без рождений линейка «поколение» не нулевая. */
+export const MIN_GENS = 2;
+
+/**
+ * Поколения эпох (решение 196): у каждого лица — номер в цепочке «родитель → ребёнок» внутри эпохи его рождения
+ * (родитель — отец, а если его нет — мать; родитель из другой эпохи начинает цепочку заново), у эпохи — самая длинная
+ * цепочка. Лица без эпохи не считаются. Порядок лиц не важен: цепочки считаются по рождению.
+ */
+export function eraGenerations(
+  persons: readonly { id: string; parent: string | null; b: number; epoch: string | null }[],
+  epochs: readonly { id: string; start: number; end: number }[],
+): EraSpan[] {
+  const by = new Map(persons.map((p) => [p.id, p]));
+  const k = new Map<string, number>();
+  const sorted = [...persons].sort((a, b) => a.b - b.b);
+  const gens = new Map<string, number>();
+  for (const p of sorted) {
+    if (!p.epoch) continue;
+    const par = p.parent ? by.get(p.parent) : undefined;
+    const v = par && par.epoch === p.epoch && k.has(par.id) ? k.get(par.id)! + 1 : 0;
+    k.set(p.id, v);
+    gens.set(p.epoch, Math.max(gens.get(p.epoch) ?? 0, v + 1));
+  }
+  return epochs.map((e) => ({ id: e.id, start: e.start, end: e.end, gens: Math.max(MIN_GENS, gens.get(e.id) ?? 0) }));
+}
+
 /**
  * @param births — годы рождения (астр.) всех лиц
  * @param spans — промежутки жизни [начало, конец] для оценки «насыщенности» (сколько следов живёт одновременно)
+ * @param eras — эпохи с поколениями (eraGenerations): масштабная линейка «поколение ≈ N лет» и линейка эпох (решение 196);
+ *               без них (синтетические данные) рамка размечена годами в обоих режимах
  */
-export function buildTimeScale(births: number[], spans: [number, number][]): TimeScale {
+export function buildTimeScale(births: number[], spans: [number, number][], eras?: readonly EraSpan[]): TimeScale {
   // начало шкалы — сотворение по масоретским числам или раньше, если модель (числа в скобках) удревняет Адама
   const minBirth = births.reduce((a, b) => Math.min(a, b), Infinity);
   const start = minBirth - 20 < T_START ? Math.floor((minBirth - 20) / BIN) * BIN : T_START;
@@ -129,6 +176,7 @@ export function buildTimeScale(births: number[], spans: [number, number][]): Tim
     const postYears = T_END - T_CANON_END;
     for (let i = canonBins; i < nb; i++) w[i] = (postTotal * (knots[i + 1] - knots[i])) / postYears;
   };
+  const byEra = !!eras && eras.length > 0;
   norm(wTrue);
   norm(wDense);
   const cum = (w: Float64Array) => {
@@ -138,7 +186,10 @@ export function buildTimeScale(births: number[], spans: [number, number][]): Tim
   };
   const xTrue = cum(wTrue);
   const xDense = cum(wDense);
-  return { knots, xTrue, xDense, mTrue: fritschCarlson(knots, xTrue), mDense: fritschCarlson(knots, xDense), breakT: T_CANON_END };
+  return {
+    knots, xTrue, xDense, mTrue: fritschCarlson(knots, xTrue), mDense: fritschCarlson(knots, xDense), breakT: T_CANON_END,
+    ...(byEra ? { gens: new Map(eras!.map((e) => [e.id, e.gens])) } : {}),
+  };
 }
 
 function hermite(ts: TimeScale, xs: number[], ms: number[], t: number): number {
@@ -160,7 +211,7 @@ function hermite(ts: TimeScale, xs: number[], ms: number[], t: number): number {
   return (2 * s3 - 3 * s2 + 1) * xs[lo] + (s3 - 2 * s2 + s) * h * ms[lo] + (-2 * s3 + 3 * s2) * xs[hi] + (s3 - s2) * h * ms[hi];
 }
 
-/** Год → горизонтальная координата мира при смешении λ ∈ [0, 1] (0 — истинный, 1 — по насыщенности). */
+/** Год → горизонтальная координата мира при смешении λ ∈ [0, 1] (0 — истинный, 1 — по эпохам). */
 export function timeToX(ts: TimeScale, t: number, lambda: number): number {
   const a = hermite(ts, ts.xTrue, ts.mTrue, t);
   if (lambda <= 0) return a;
@@ -187,8 +238,9 @@ export function yearsPerUnit(ts: TimeScale, t: number, lambda: number): number {
 }
 
 /** Восстановить масштаб из сохранённых узлов (касательные пересчитываются). */
-export function hydrateScale(raw: { knots: number[]; xTrue: number[]; xDense: number[] }): TimeScale {
+export function hydrateScale(raw: { knots: number[]; xTrue: number[]; xDense: number[]; gens?: [string, number][] }): TimeScale {
   return {
+    ...(raw.gens ? { gens: new Map(raw.gens) } : {}),
     knots: raw.knots,
     xTrue: raw.xTrue,
     xDense: raw.xDense,

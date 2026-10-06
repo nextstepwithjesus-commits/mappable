@@ -322,7 +322,7 @@ export const nav: Scenario[] = [
       const ctx = await p.context().browser()!.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
       try {
         const q = await ctx.newPage();
-        // новая вкладка: своё хранилище, в нём — масштаб «Сжатый по плотности лиц»
+        // новая вкладка: своё хранилище, в нём — масштаб «По эпохам»
         await q.addInitScript("localStorage.setItem('toledot:intro', 'true'); localStorage.setItem('toledot:lambda', '1')");
         await q.goto(url);
         await q.waitForTimeout(3000);

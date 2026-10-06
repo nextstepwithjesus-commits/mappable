@@ -10,12 +10,12 @@ import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync, rmSync
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { loadBible, ROOT } from './bible.ts';
-import { buildGraph, primaryChildren } from '../src/engine/graph.ts';
+import { buildGraph, fatherOf, motherOf, primaryChildren } from '../src/engine/graph.ts';
 import { solveChronology, noteModelDifferences, modelDependence, lifeDatesOf, MODELS, type ChronoResult, type WhenSpan, type YearBasis, type BasisKind } from '../src/engine/chronology.ts';
-import type { LifeDates } from '../src/engine/years.ts';
+import { toAstro, type LifeDates } from '../src/engine/years.ts';
 import { computeLayout, computeOutlines, packSpan, GHOST_SPAN, TRAIL_KINDS, type LineStep, type ListDef, type Outline } from '../src/engine/layout.ts';
 import type { HouseLayout } from '../src/engine/house.ts';
-import { buildTimeScale, timeToX, xToTime } from '../src/engine/timescale.ts';
+import { buildTimeScale, eraGenerations, timeToX, xToTime, type EraSpan } from '../src/engine/timescale.ts';
 import { epochDelta } from '../src/engine/epochs.ts';
 import { parseRef, verseId, BOOKS } from '../src/engine/books.ts';
 import { splitParentRefs } from '../src/engine/text.ts';
@@ -97,7 +97,7 @@ const groupParents: Record<string, string> = Object.fromEntries(groups.filter((g
 // априорное условие — полосы первого прохода (до «Отчего дома»), а не итог раскладки из снимка координат: итог после дома
 // (полоса последнего пребывания) как условие первого прохода сдвигал бы опорных лиц при каждой пересборке
 const prior = existsSync(join(ROOT, 'data/layout-prior.json')) ? read<{ persons: { id: string; lane: number }[] }>('data/layout-prior.json').persons : [];
-const results: { id: string; chrono: ChronoResult; layout: HouseLayout; scale: ReturnType<typeof buildTimeScale>; outlines: Outline[] }[] = [];
+const results: { id: string; chrono: ChronoResult; layout: HouseLayout; scale: ReturnType<typeof buildTimeScale>; outlines: Outline[]; eras: EraSpan[] }[] = [];
 for (const m of MODELS) {
   const t0 = performance.now();
   const chrono = solveChronology(g, epochs, m.id);
@@ -121,10 +121,16 @@ for (const m of MODELS) {
   const births = [...chrono.persons.values()].map((c) => c.b);
   const spans = [...chrono.persons.values()].map((c) => packSpan(c));
   for (const n of layout.nodes) if (n.ghost) spans.push([n.t0, n.t0 + GHOST_SPAN]);
-  const scale = buildTimeScale(births, spans);
+  // шкала «по эпохам» (этап 21, решение 196): ширина эпохи — по числу поколений, рождённых в ней (эпохи — в годах модели)
+  const eras = eraGenerations(
+    [...chrono.persons].map(([id, c]) => ({ id, parent: fatherOf(g, id) ?? motherOf(g, id), b: c.b, epoch: c.epoch })),
+    (chrono.epochs ?? epochs).map((e) => ({ id: e.id, start: toAstro(e.start), end: toAstro(e.end) })),
+  );
+  const scale = buildTimeScale(births, spans, eras);
+  if (m.id === MODELS[0].id) console.log(`шкала по эпохам: ${eras.map((e) => `${e.id} ${e.gens}`).join(', ')}`);
   // контуры созвездий (E8) — в единицах масштаба «по насыщенности», вершины — в годах
   const outlines = computeOutlines(g, layout, (t) => timeToX(scale, t, 1), (x) => xToTime(scale, x, 1), groupParents);
-  results.push({ id: m.id, chrono, layout, scale, outlines });
+  results.push({ id: m.id, chrono, layout, scale, outlines, eras });
   const P = layout.plan;
   console.log(`модель ${m.id}: ${(performance.now() - t0).toFixed(0)} мс (раскладка ${layout.ms.first.toFixed(0)} + второй проход ${layout.ms.second.toFixed(0)} + дома ${layout.ms.houses.toFixed(0)}) · напряжений ${chrono.tensions.length} · контуров ${outlines.length} · домов ${P.houses}, переходов ${P.glides.length}, призраков ${P.natalGhosts.length} + ${P.ghosts.length} · метрики ${JSON.stringify(layout.metrics)}`);
 }
@@ -455,7 +461,8 @@ const models = results.map((res) => ({
       s: o.slots.map((s) => [Math.round(s.lane * 20), s.h, Math.round(s.t0 * 10), Math.round(s.t1 * 10)]),
     })),
   },
-  scale: { knots: res.scale.knots.map(r1), xTrue: res.scale.xTrue.map(r1), xDense: res.scale.xDense.map(r1) },
+  // gens — поколений в эпохах (шкала «по эпохам», решение 196): масштабная линейка «поколение ≈ N лет»
+  scale: { knots: res.scale.knots.map(r1), xTrue: res.scale.xTrue.map(r1), xDense: res.scale.xDense.map(r1), gens: res.eras.map((e) => [e.id, e.gens]) },
 }));
 // ---------- происхождение текста (решение 132): «О карте» показывает, по какому тексту сверены ссылки ----------
 const bibleFile = readFileSync(join(ROOT, 'tools/bible/synodal.tsv'));

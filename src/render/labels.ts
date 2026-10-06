@@ -26,6 +26,7 @@
  * `.sky[data-labels="N/M"]`: N — нарисовано подписей, M — наложений (для проверок этапа 4); на холсте —
  * `data-named="n/m"`: подписано n из m видимых звёзд.
  */
+import { byEpochs } from './axis.ts';
 import { KX_MIN } from './camera.ts';
 import { starRadius, roleSigla, type GlyphExt } from './glyphs.ts';
 import { alpha } from './color.ts';
@@ -2404,8 +2405,9 @@ export function drawEventLabel(v: SkyContext, p: Pass, x: number, full: string, 
   const font = mapFont(T_MAP_S, { italic: true, coarse: v.coarse });
   const fs = mapSize(T_MAP_S, v.coarse);
   ctx.font = font;
-  // на обзоре и на узком небе — только название: год читается по линейке, а строка не закрывает небо
-  const texts = p.detail < 0.5 || cam.w < 720 ? [short] : [full, short];
+  // на обзоре и на узком небе — только название: год читается по линейке, а строка не закрывает небо; на шкале «по эпохам»
+  // (решение 196) — тоже только название: год события — в подсказке меридиана и на полосе времени
+  const texts = p.detail < 0.5 || cam.w < 720 || byEpochs(v) ? [short] : [full, short];
   for (const text of texts) {
     const tw = ctx.measureText(text).width;
     // у верхнего края, у нижнего, затем — первое свободное место вдоль черты

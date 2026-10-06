@@ -127,6 +127,8 @@ describe('П22: эра на линейке в каждом окне (решен�
     expect(bad, bad.slice(0, 5).join('; ')).toEqual([]);
     expect(n).toBeGreaterThanOrEqual(100);
   });
+  // этап 21, решение 196: строка «масштаб» и названия эпох в служебной строке — у масштаба «Равномерный по годам»; у масштаба
+  // «По эпохам» эпохи названы в линейке, а масштабная линейка — «поколение ≈ N лет» (проверка ниже)
   it('«масштаб ├──┤ 20 лет»: слово слева от отрезка, название эпохи не ближе 24 px; имена эпох одного вида', () => {
     for (const [w, h, span] of [
       [1440, -1000, 200],
@@ -134,7 +136,7 @@ describe('П22: эра на линейке в каждом окне (решен�
       [390, -1000, 150],
       [1440, -2000, 1500],
     ] as const) {
-      const { s } = drawAt(w, h, span);
+      const { s } = drawAt(w, h, span, 0);
       const row = s.labelStats().boxes.filter((b) => b.kind === 'frame' && b.y >= frame.RULER_H - 1 && b.y + b.h <= frame.FRAME_H + 1);
       const word = row.find((b) => b.text === 'масштаб');
       expect(word, `${w} ${h}`).toBeTruthy();
@@ -145,6 +147,42 @@ describe('П22: эра на линейке в каждом окне (решен�
       const short = names.filter((b) => eps.some((e) => e.short === b.text && e.name !== b.text));
       expect(full.length === 0 || short.length === 0, `${w} ${h}: ${names.map((b) => b.text).join(', ')}`).toBe(true);
       expect(row.some((b) => b.text.startsWith('модель'))).toBe(false);
+    }
+  });
+  it('«По эпохам» (решение 196): эпохи — в линейке, имена одного вида, лет на линейке нет; «поколение ├──┤ ≈ N лет» справа', () => {
+    for (const [w, h, span] of [
+      [1440, -1000, 200],
+      [390, -10, 90],
+      [390, -1000, 150],
+      [1440, -2000, 1500],
+      [1440, -2000, 4300],
+    ] as const) {
+      const { s } = drawAt(w, h, span, 1);
+      const boxes = s.labelStats().boxes.filter((b) => b.kind === 'frame');
+      const ruler = boxes.filter((b) => b.y + b.h <= frame.RULER_H + 1);
+      const eps = atlas.models[0].epochs;
+      const names = ruler.filter((b) => eps.some((e) => e.name === b.text || e.short === b.text));
+      expect(names.length, `${w} ${h} ${span}`).toBeGreaterThanOrEqual(1);
+      expect(ruler.filter((b) => /\d/.test(b.text)), `${w} ${h} ${span}: года на линейке`).toEqual([]);
+      // полное имя, отличное от краткого, и краткое, отличное от полного, вместе не стоят (имя «Патриархи» — и то и другое)
+      const full = names.filter((b) => eps.some((e) => e.name === b.text && e.short !== b.text));
+      const short = names.filter((b) => eps.some((e) => e.short === b.text && e.name !== b.text));
+      expect(full.length === 0 || short.length === 0, `${w} ${h}: ${names.map((b) => b.text).join(', ')}`).toBe(true);
+      // каждое название — посередине видимой части своей эпохи
+      for (const b of names) {
+        const e = eps.find((q) => q.name === b.text || q.short === b.text)!;
+        const mid = s.tOf(s.cam.wx(b.x + b.w / 2));
+        expect(mid, b.text).toBeGreaterThanOrEqual(years.toAstro(e.start) - 1);
+        expect(mid, b.text).toBeLessThanOrEqual(years.toAstro(e.end) + 1);
+      }
+      const row = boxes.filter((b) => b.y >= frame.RULER_H - 1 && b.y + b.h <= frame.FRAME_H + 1);
+      expect(row.filter((b) => eps.some((e) => e.name === b.text || e.short === b.text)), 'эпохи не повторяются в служебной строке').toEqual([]);
+      const bar = frame.scaleBar(s);
+      if (bar?.gen) {
+        expect(row.some((b) => b.text === 'поколение'), `${w} ${h} ${span}`).toBe(true);
+        expect(bar.px).toBeGreaterThanOrEqual(12);
+        expect(bar.px).toBeLessThanOrEqual(160);
+      }
     }
   });
   it('меридиан Рождества — «ок. 5 г. до Р. Х.», у Исхода в модели не по умолчанию — «во всех моделях»', () => {
