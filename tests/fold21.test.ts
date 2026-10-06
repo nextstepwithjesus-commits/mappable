@@ -106,3 +106,70 @@ describe('шаги карты (решение 197)', () => {
     linkSet.value = null;
   });
 });
+
+/**
+ * Рецензия этапа 21 (библеист): шаг называет супругов словами текста, раскрывает только детей, а не «из сыновей» и не
+ * усыновлённых, два прочтения Лк 3:23 — одно, по переключателю; свёртка одного прочтения не убирает другого.
+ */
+describe('правда шагов (рецензия этапа 21)', () => {
+  beforeEach(() => startWith('adam', 'iisus'));
+
+  it('Давид: «Все дети» — без Исмаила, сына Нафании, и Хаттуша («из сыновей Давида»); Иаков — без усыновлённых Ефрема и Манассии', () => {
+    startWith('david');
+    stepForward('david');
+    stepForward('david');
+    expect(workSet.peek().has('solomon') || workSet.peek().has('solomon-tsar') || [...workSet.peek().keys()].some((x) => x.startsWith('solomon'))).toBe(true);
+    expect(workSet.peek().has('ismail-syn-nafanii')).toBe(false);
+    expect(workSet.peek().has('khattush-iz-synovey-davida')).toBe(false);
+    startWith('iakov');
+    stepForward('iakov');
+    stepForward('iakov');
+    expect(workSet.peek().has('iosif')).toBe(true);
+    expect(workSet.peek().has('efrem')).toBe(false);
+    expect(workSet.peek().has('manassiya')).toBe(false);
+  });
+
+  it('Илий: по умолчанию (Лк 3 — родословие Марии) шаг вперёд раскрывает Марию, при переключателе — Иосифа; не обоих', async () => {
+    const { lineFlip } = await import('../src/state.ts');
+    startWith('iliy-otets-marii');
+    stepForward('iliy-otets-marii');
+    expect(workSet.peek().has('mariya')).toBe(true);
+    expect(workSet.peek().has('iosif-muzh-marii')).toBe(false);
+    lineFlip.value = true;
+    try {
+      startWith('iliy-otets-marii');
+      stepForward('iliy-otets-marii');
+      expect(workSet.peek().has('iosif-muzh-marii')).toBe(true);
+      expect(workSet.peek().has('mariya')).toBe(false);
+    } finally {
+      lineFlip.value = false;
+    }
+  });
+
+  it('свёртка потомков Каинана (Лк 3:36) не убирает Салу, пока на карте Арфаксад (Быт 11:12); свёртка Арфаксада — убирает', () => {
+    startWith('arfaksad');
+    stepForward('arfaksad');
+    expect(workSet.peek().has('sala')).toBe(true);
+    expect(workSet.peek().has('kainan-syn-arfaksada')).toBe(true);
+    foldDescendantsOf('kainan-syn-arfaksada');
+    expect(workSet.peek().has('sala')).toBe(true);
+    foldDescendantsOf('arfaksad');
+    expect(workSet.peek().has('sala')).toBe(false);
+    expect(workSet.peek().has('kainan-syn-arfaksada')).toBe(false);
+  });
+
+  // Валла — «в жену» (Быт 30:4) и «наложница» (Быт 35:22): в данных — наложница с этой заметкой
+  it('слова супругов — по тексту: Иаков — «Жёны и наложница (4)», Лот — «Жена и матери детей (3)», Иуда — «Жена и мать детей (2)», Фамарь — «Мужья и отец детей (3)»', async () => {
+    const { forwardLabel } = await import('../src/ui/sky/text.ts');
+    const label = (id: string) => {
+      startWith(id);
+      const f = mapCmds(id).forward;
+      return f ? forwardLabel(id, f) : '';
+    };
+    expect(label('iakov')).toBe('Жёны и наложница (4)');
+    expect(label('lot')).toBe('Жена и матери детей (3)');
+    expect(label('iuda')).toBe('Жена и мать детей (2)');
+    expect(label('famar')).toBe('Мужья и отец детей (3)');
+    expect(label('adam')).toBe('Жена и дети');
+  });
+});

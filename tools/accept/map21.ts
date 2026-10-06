@@ -3,15 +3,15 @@
  *  — 1302 новый читатель: карта «Адам и Иисус Христос», между ними — нить линий Мессии, у Адама «⊕» вперёд, у Иисуса
  *    Христа — назад; линейка называет эпохи;
  *  — 1303 «⊕» справа от Адама — жена и дети одним щелчком; небо вписывает раскрытое; диктор называет шаг;
- *  — 1304 Иаков из поиска: сначала жёны (подсказка «жёны (4)»), у каждого союза — ромб с числом детей; затем все дети;
+ *  — 1304 Иаков из поиска: сначала жёны (подсказка «жёны и наложница (4)»: Валла — Быт 35:22), у каждого союза — ромб с числом детей; затем все дети;
  *    «⊕» слева — родители, братья и сёстры;
  *  — 1305 «Свернуть потомков» Сифа не трогает ветвь Каина и Еву; «Свернуть потомков» Адама (все люди — его потомки)
  *    и «Свернуть предков» Иисуса Христа в карточке возвращают начало;
  *  — 1306 «Только это лицо» со всего неба: на карте один Сиф; Ctrl+Z возвращает всё небо;
- *  — 1307 журнал шагов: Ctrl+Z, Ctrl+Shift+Z, Ctrl+Y, кнопки строки показа, «Начать заново» (отменяется); в поле поиска
+ *  — 1307 журнал шагов: Ctrl+Z, Ctrl+Shift+Z, Ctrl+Y, кнопки строки показа, «К началу» (отменяется); в поле поиска
  *    Ctrl+Z — отмена поля, а не карты;
  *  — 1308 клавиши «]», «[» и «С» на карте;
- *  — 1309 «Указатель»: Новый Завет без Авраама, с Иосифом, мужем Марии; книга Руфь — 21 лицо; имя из указателя встаёт на
+ *  — 1309 «Указатель»: Новый Завет без Авраама, с Иосифом, мужем Марии; книга Руфь — 20 лиц (Моав, сын Лота, в ней не назван: «поля Моавитские»); имя из указателя встаёт на
  *    карту закреплённым;
  *  — 1310 телефон 390 × 844: первый экран у Адама, касание «⊕» у края поля 44 px, команды листа не ниже 44 px;
  *  — 1311 axe (WCAG 2.2 AA): карточка с командами шагов, строка шагов, «Указатель» с частью Писания и книгой — 0 нарушений.
@@ -153,7 +153,7 @@ export const map21: Scenario[] = [
   },
   {
     n: 1304,
-    title: 'Этап 21, решение 197: Иаков из поиска — сначала жёны (подсказка «жёны (4)»), у каждого союза ромб «+N»; затем все дети; «⊕» слева — родители, братья и сёстры',
+    title: 'Этап 21, решение 197: Иаков из поиска — сначала жёны (подсказка «жёны и наложница (4)»: Валла — Быт 35:22), у каждого союза ромб «+N»; затем все дети; «⊕» слева — родители, братья и сёстры',
     run: async (p) => {
       await open(p, '#/', NEW);
       await seek(p, 'Иаков');
@@ -163,7 +163,7 @@ export const map21: Scenario[] = [
       await p.mouse.move(h.x, h.y);
       await p.waitForTimeout(400);
       const tip = flat((await p.locator('.sky .tip').first().textContent()) ?? '');
-      if (!tip.includes('жёны (4)')) return fail(`подсказка рукоятки: «${tip}»`);
+      if (!tip.includes('жёны и наложница (4)')) return fail(`подсказка рукоятки: «${tip}»`);
       await step(p, 'iakov', 'fwd');
       let on = (await ids(p)).split(' ');
       const wives = ['liya', 'rakhil', 'valla', 'zelfa'];
@@ -206,7 +206,7 @@ export const map21: Scenario[] = [
       await cmd(p, 'fdesc').click();
       await settle(p);
       if ((await ids(p)) !== 'adam iisus') return fail(`после свёртки потомков Адама: ${await ids(p)}`);
-      if (await p.locator('.sky .sb-steps [data-cmd="restart"]').count()) return fail('у нетронутого начала осталась «Начать заново»');
+      if (await p.locator('.sky .sb-steps [data-cmd="restart"]').count()) return fail('у нетронутого начала осталась «К началу»');
       await seek(p, 'Иисус Христос');
       if (!(await step(p, 'iisus', 'back'))) return fail('у Иисуса Христа нет рукоятки «назад»');
       if (!(await ids(p)).split(' ').includes('mariya')) return fail(`«Родители» не раскрыли Марию: ${await ids(p)}`);
@@ -238,7 +238,7 @@ export const map21: Scenario[] = [
   },
   {
     n: 1307,
-    title: 'Этап 21, решение 199: журнал шагов — Ctrl+Z, Ctrl+Shift+Z, Ctrl+Y, «Отменить шаг», «Вернуть шаг», «Начать заново» (тоже отменяется); в поле поиска Ctrl+Z не трогает карту',
+    title: 'Этап 21, решение 199: журнал шагов — Ctrl+Z, Ctrl+Shift+Z, Ctrl+Y, «Отменить шаг», «Вернуть шаг», «К началу» (тоже отменяется, небо вписывает начало); в поле поиска Ctrl+Z не трогает карту',
     run: async (p) => {
       await open(p, '#/', NEW);
       await step(p, 'adam', 'fwd');
@@ -266,10 +266,13 @@ export const map21: Scenario[] = [
       if ((await ids(p)) !== one) return fail(`Ctrl+Y: ${await ids(p)}`);
       await p.locator('.sky .sb-steps [data-cmd="restart"]').click();
       await settle(p);
-      if ((await ids(p)) !== 'adam iisus') return fail(`«Начать заново»: ${await ids(p)}`);
+      if ((await ids(p)) !== 'adam iisus') return fail(`«К началу»: ${await ids(p)}`);
+      // рецензия этапа 21: «К началу» вписывает начало — в кадре и Адам, и Иисус Христос
+      const both = await inFrame(p);
+      if (!both.has('adam') || !both.has('iisus')) return fail(`после «К началу» в кадре: ${[...both].join(' ')}`);
       await p.locator('.sky .sb-steps [data-cmd="undo"]').click();
       await settle(p);
-      if ((await ids(p)) !== one) return fail(`отмена «Начать заново»: ${await ids(p)}`);
+      if ((await ids(p)) !== one) return fail(`отмена «К началу»: ${await ids(p)}`);
       await p.click('#find');
       await p.keyboard.type('Ной');
       await p.keyboard.press('Control+KeyZ');
@@ -300,7 +303,7 @@ export const map21: Scenario[] = [
   },
   {
     n: 1309,
-    title: 'Этап 21, решение 202: «Указатель» — Новый Завет без Авраама и с Иосифом, мужем Марии; книга Руфь — 21 лицо; имя из указателя встаёт на карту закреплённым',
+    title: 'Этап 21, решение 202: «Указатель» — Новый Завет без Авраама и с Иосифом, мужем Марии; книга Руфь — 20 лиц (Моав, сын Лота, в ней не назван: «поля Моавитские»); имя из указателя встаёт на карту закреплённым',
     run: async (p) => {
       await open(p, '#/', NEW);
       await p.locator('header.top button', { hasText: 'Указатель' }).first().click();
@@ -317,7 +320,7 @@ export const map21: Scenario[] = [
       await sheet.locator('.book-pick select').selectOption({ label: 'Руфь' });
       await p.waitForTimeout(400);
       const rows = await sheet.locator('.idx button.row').count();
-      if (rows !== 21) return fail(`в книге Руфь ${rows} лиц, а не 21`);
+      if (rows !== 20) return fail(`в книге Руфь ${rows} лиц, а не 20`);
       await sheet.locator('.idx button.row', { hasText: 'Руфь' }).first().click();
       await settle(p);
       const via = (await mapOf(p)).get('ruf');

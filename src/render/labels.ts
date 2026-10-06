@@ -1415,7 +1415,10 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): Label
     end += sigW;
   }
   let fold: Rect | undefined;
-  if (o.fold) {
+  // «⊕» шага вперёд — всегда справа от звезды (рецензия этапа 21: слева от звезды — шаг назад). Подпись легла слева от
+  // звезды — знак не пишется после имени; его ставит небо справа от знака звезды (sky.ts, drawFwdHandles)
+  const fwdLeft = o.fold === REVEAL && end + FOLD_GAP + handleSize(v.coarse) / 2 < x;
+  if (o.fold && !fwdLeft) {
     ctx.globalAlpha = 1;
     if (o.fold === REVEAL) {
       const d = handleSize(v.coarse);
@@ -1674,7 +1677,7 @@ export function putLabel(v: SkyContext, p: Pass, i: number, o: StarOpts): LabelA
   const color = epochalAt(v, i) && o.color === v.pal.ink && o.alpha < 1 ? v.pal.ink2 : o.color;
   const note = o.note ?? (p.namesakes?.get(q.id) || undefined);
   const at = labelStar(v, p, i, { ...o, color, ...(note ? { note } : {}), ...(fold ? { fold } : {}) });
-  if (at?.fold && p.foldHits) p.foldHits.push({ ...at.fold, kind: desc ? 'desc' : pile ? 'pile' : 'reveal', id: q.id });
+  if (at?.fold && p.foldHits) p.foldHits.push({ ...(desc || pile ? at.fold : hitAtLeast(at.fold)), kind: desc ? 'desc' : pile ? 'pile' : 'reveal', id: q.id });
   return at;
 }
 
@@ -2349,6 +2352,15 @@ export function drawFoldMark(ctx: CanvasRenderingContext2D, pal: { ink2: string;
 export const REVEAL = '+';
 /** Поперечник рукоятки шага карты, px: 13, на сенсорном экране 16 (поле касания шире — src/ui/sky/input.ts). */
 export const handleSize = (coarse: boolean) => (coarse ? 16 : 13);
+/**
+ * Поле цели «⊕» для мыши — не меньше 24 × 24 px вокруг знака (WCAG 2.5.8; рецензия этапа 21): сам знак 13 px, поле —
+ * с той же серединой. Палец получает 44 × 44 при попадании (src/ui/sky/input.ts, TOUCH_TARGET).
+ */
+export function hitAtLeast(r: { x: number; y: number; w: number; h: number }, n = 24) {
+  const w = Math.max(r.w, n);
+  const h = Math.max(r.h, n);
+  return { x: r.x + r.w / 2 - w / 2, y: r.y + r.h / 2 - h / 2, w, h };
+}
 /**
  * Рукоятка шага карты (этап 21, решение 197): плюс в тонком кольце — «здесь можно раскрыть». Справа от подписи — супруги
  * и дети, слева от звезды — родители. Кольцо и плюс — цветом ссылок неба (--ink-2), с ореолом неба под ними: знак читается

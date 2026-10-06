@@ -36,7 +36,7 @@ import { typo } from '../text/typo.ts';
 import { lowerFirst } from '../text/ru.ts';
 import { openShowSheet, showSheet } from '../panels/Show.tsx';
 import { canRedo, canUndo, redo, undo } from '../history.ts';
-import { expanded, startWith, untouchedStart } from '../reveal.ts';
+import { expanded, restartMap, untouchedStart } from '../reveal.ts';
 import { linkSet, workSet } from '../work.ts';
 
 /**
@@ -174,7 +174,8 @@ function FocusLine() {
 
 /**
  * Шаги карты (этап 21, решение 199): «Отменить шаг» (Ctrl+Z), «Вернуть шаг» (Ctrl+Shift+Z) — когда есть что отменять
- * и возвращать; «Начать заново» — на своей карте, если она уже не нетронутое начало «Адам и Иисус Христос».
+ * и возвращать; «К началу» — на своей карте, если она уже не нетронутое начало «Адам и Иисус Христос» (прежде «Начать
+ * заново»: так же называлась команда «Начать заново…» меню «Ещё», которая открывает выбор начал, — рецензия этапа 21).
  */
 function StepsLine() {
   const undoOn = canUndo.value;
@@ -184,17 +185,36 @@ function StepsLine() {
   const own = show.value.kind === 'set' && !linkSet.value;
   const fresh = own && !untouchedStart();
   if (!undoOn && !redoOn && !fresh) return null;
+  // фокус после команды (WCAG 2.4.3; рецензия этапа 21): «Отменить шаг», которой больше нет, не роняет фокус в body —
+  // он на той же команде, иначе на соседней, иначе на первой команде строки показа
+  const keep = (cmd: string) => {
+    requestAnimationFrame(() =>
+      setTimeout(() => {
+        if (document.activeElement && document.activeElement !== document.body) return;
+        const bar = document.querySelector<HTMLElement>('.sky .showbar');
+        const btn =
+          bar?.querySelector<HTMLButtonElement>(`.sb-steps [data-cmd="${cmd}"]`) ?? bar?.querySelector<HTMLButtonElement>('.sb-steps button') ?? bar?.querySelector<HTMLButtonElement>('.sb-cmd');
+        btn?.focus();
+      }),
+    );
+  };
   return (
     <span class="sb-line sb-steps" data-line="steps" role="group" aria-label="Шаги карты">
       {undoOn && (
-        <button type="button" class="sb-cmd" data-cmd="undo" aria-keyshortcuts="Control+Z" title="Отменить последний шаг карты (Ctrl+Z)" onClick={() => undo()}>
+        <button type="button" class="sb-cmd" data-cmd="undo" aria-keyshortcuts="Control+Z" title="Отменить последний шаг карты (Ctrl+Z)" onClick={() => {
+            undo();
+            keep('undo');
+          }}>
           Отменить шаг
         </button>
       )}
       {redoOn && (
         <>
           {undoOn && ' '}
-          <button type="button" class="sb-cmd" data-cmd="redo" aria-keyshortcuts="Control+Shift+Z" title="Вернуть отменённый шаг (Ctrl+Shift+Z)" onClick={() => redo()}>
+          <button type="button" class="sb-cmd" data-cmd="redo" aria-keyshortcuts="Control+Shift+Z" title="Вернуть отменённый шаг (Ctrl+Shift+Z)" onClick={() => {
+            redo();
+            keep('redo');
+          }}>
             Вернуть шаг
           </button>
         </>
@@ -202,8 +222,11 @@ function StepsLine() {
       {fresh && (
         <>
           {(undoOn || redoOn) && ' '}
-          <button type="button" class="sb-cmd" data-cmd="restart" title="Снова начало: Адам и Иисус Христос, всё остальное свёрнуто (отменяется, Ctrl+Z)" onClick={() => startWith('both')}>
-            Начать заново
+          <button type="button" class="sb-cmd" data-cmd="restart" title="Снова начало: Адам и Иисус Христос, всё остальное свёрнуто (отменяется, Ctrl+Z)" onClick={() => {
+            restartMap();
+            keep('restart');
+          }}>
+            К началу
           </button>
         </>
       )}

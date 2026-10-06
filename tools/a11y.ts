@@ -27,7 +27,8 @@ const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 
 type View = { width: number; height: number; touch?: boolean };
 /** ms — сколько ждать действия (по умолчанию 6 с): перебор плотных мест на телефоне дольше. */
-type Screen = { name: string; hash: string; act?: (p: Page) => Promise<void>; view?: View; ms?: number };
+/** fresh — новый читатель (начало не выбрано): пошаговая карта «Адам и Иисус Христос» (этап 21, решение 200). */
+type Screen = { name: string; hash: string; act?: (p: Page) => Promise<void>; view?: View; ms?: number; fresh?: boolean };
 const PHONE: View = { width: 390, height: 844, touch: true };
 const TABLET: View = { width: 768, height: 1024, touch: true };
 
@@ -133,6 +134,26 @@ const DESK: Screen[] = [
   { name: 'набор на небе: раскрытый союз и выбранное лицо', hash: '#/sif', act: (p) => openSet(p, SET_ENOS) },
   // выбранная связь (этап 11, § 8): жёлтый путь, кольца, карточка связи с концами
   { name: 'выбранная связь: Ной и его жена → Хам', hash: '#/noy~ck.noy._._.kham' },
+  // пошаговая карта нового читателя (этап 21, решения 197–200): рукоятки «⊕», шаг у Адама, карточка с командами шагов,
+  // строка «Отменить шаг», «Указатель» с частью Писания
+  { name: 'пошаговая карта: первый экран', hash: '#/', fresh: true },
+  { name: 'пошаговая карта: шаг у Адама и карточка Сифа', hash: '#/', fresh: true, act: async (p) => {
+    await p.waitForTimeout(1500);
+    const box = (await p.locator('.sky canvas').boundingBox())!;
+    const h = ((await p.locator('.sky canvas').getAttribute('data-handles')) ?? '').split(';').find((q) => q.startsWith('adam:fwd:'));
+    if (!h) throw new Error('у Адама нет рукоятки');
+    const [x, y] = h.split(':')[2].split(',').map(Number);
+    await p.mouse.click(box.x + x, box.y + y);
+    await p.waitForTimeout(1800);
+    await p.click('#find');
+    await p.fill('#find', 'Сиф');
+    await p.waitForTimeout(250);
+    await p.keyboard.press('Enter');
+  } },
+  { name: 'пошаговая карта: «Указатель», Новый Завет', hash: '#/', fresh: true, act: async (p) => {
+    await p.locator('.commands').getByText('Указатель', { exact: true }).click();
+    await p.locator('.sheet .canon button', { hasText: 'Новый Завет' }).click();
+  } },
 ];
 
 // телефон и планшет (H1–H7): касание, листы, «Разделы», «Какое лицо?»
@@ -215,6 +236,8 @@ async function main() {
         const ctx = await browser.newContext({ viewport: { width: v.width, height: v.height }, isMobile: !!v.touch, hasTouch: !!v.touch });
         const p = await ctx.newPage();
         await p.addInitScript(`localStorage.setItem('toledot:intro','true');localStorage.setItem('toledot:theme', JSON.stringify('${theme}'))`);
+        // прежние экраны — на начале «Всё небо» (до этапа 21 его видел новый читатель); новый читатель — экраны fresh
+        if (!s.fresh) await p.addInitScript(`if (localStorage.getItem('toledot:start') === null) localStorage.setItem('toledot:start', JSON.stringify('all'))`);
         await p.goto(`http://localhost:${PORT}/${s.hash}`);
         await p.waitForTimeout(v.touch ? 2200 : 1500);
         let note = '';

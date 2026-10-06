@@ -8,6 +8,7 @@
  * то, что можно было вернуть. Применение снимка само в журнал не пишется.
  */
 import { batch, effect, signal } from '@preact/signals';
+import { byId } from '../data/atlas.ts';
 import { expanded, opened } from './reveal.ts';
 import { foldDesc, foldGroups, parseShow, setShowState, show, showKey, showLinksField, workSet, type WorkEntry } from './work.ts';
 
@@ -108,15 +109,38 @@ function apply(s: Snap) {
   flags();
 }
 
-/** Отменить последний шаг карты. Возвращает, было ли что отменять. */
+const tellNews = (text: string) => (historyNews.value = { text, n: (historyNews.peek()?.n ?? 0) + 1 });
+/** Имена списком: до пяти, дальше — «и ещё N». */
+const names = (ids: string[]) => {
+  const ns = ids.map((x) => byId.get(x)?.name ?? x);
+  return ns.length <= 5 ? ns.join(', ') : `${ns.slice(0, 5).join(', ')} и ещё ${ns.length - 5}`;
+};
+/** Что изменилось на карте между снимками — словами для диктора (рецензия этапа 21: «Шаг отменён» не называл, что вернулось). */
+function diffText(a: Snap, b: Snap): string {
+  const was = new Set(a.set.map(([id]) => id));
+  const now = new Set(b.set.map(([id]) => id));
+  const back = [...now].filter((x) => !was.has(x));
+  const gone = [...was].filter((x) => !now.has(x));
+  const out: string[] = [];
+  if (back.length) out.push(`на карту вернулись ${names(back)}`);
+  if (gone.length) out.push(`с карты ушли ${names(gone)}`);
+  if (!out.length && a.show !== b.show) out.push(b.show === 'a' ? 'на небе снова все лица' : 'небо сменило показ');
+  return out.join('; ');
+}
+
+/** Отменить последний шаг карты. Возвращает, было ли что отменять (пустой журнал — диктор говорит «отменять нечего»). */
 export function undo(): boolean {
   // незаписанное изменение (в этой же задаче) — сначала в журнал
   if (queued) commit();
   const prev = past.pop();
-  if (!prev || !current) return false;
+  if (!prev || !current) {
+    tellNews('Отменять нечего');
+    return false;
+  }
+  const d = diffText(current, prev);
   future.push(current);
   apply(prev);
-  historyNews.value = { text: 'Шаг отменён', n: (historyNews.peek()?.n ?? 0) + 1 };
+  tellNews(`Шаг отменён${d ? `: ${d}` : ''}`);
   return true;
 }
 
@@ -124,10 +148,14 @@ export function undo(): boolean {
 export function redo(): boolean {
   if (queued) commit();
   const next = future.pop();
-  if (!next || !current) return false;
+  if (!next || !current) {
+    tellNews('Возвращать нечего');
+    return false;
+  }
+  const d = diffText(current, next);
   past.push(current);
   apply(next);
-  historyNews.value = { text: 'Шаг возвращён', n: (historyNews.peek()?.n ?? 0) + 1 };
+  tellNews(`Шаг возвращён${d ? `: ${d}` : ''}`);
   return true;
 }
 
@@ -139,9 +167,17 @@ export function historyKeys(e: KeyboardEvent): boolean {
   const mod = e.ctrlKey || e.metaKey;
   if (!mod || e.altKey) return false;
   const t = e.target;
-  if (t instanceof HTMLElement && (t.isContentEditable || t.closest('input, textarea, select'))) return false;
-  if (e.code === 'KeyZ') return e.shiftKey ? redo() : undo();
-  if (e.code === 'KeyY' && !e.shiftKey) return redo();
+  if (typeof HTMLElement !== 'undefined' && t instanceof HTMLElement && (t.isContentEditable || t.closest('input, textarea, select'))) return false;
+  // клавиша обработана и при пустом журнале: диктор говорит «отменять нечего»
+  if (e.code === 'KeyZ') {
+    if (e.shiftKey) redo();
+    else undo();
+    return true;
+  }
+  if (e.code === 'KeyY' && !e.shiftKey) {
+    redo();
+    return true;
+  }
   return false;
 }
 

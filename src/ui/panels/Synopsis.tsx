@@ -407,7 +407,7 @@ export function SynopsisPanel() {
         <Segmented
           label="Как понимать Лк 3"
           options={[
-            { value: 'mary', label: 'Лк 3 — родословие Марии (традиционно)' },
+            { value: 'mary', label: 'Лк 3 — родословие Марии (толкование)' },
             { value: 'joseph', label: 'Лк 3 — второе родословие Иосифа' },
           ]}
           value={flip ? 'joseph' : 'mary'}

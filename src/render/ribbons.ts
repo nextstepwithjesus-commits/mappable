@@ -702,10 +702,26 @@ export const RIBBON_TAG: Readonly<Record<'joseph' | 'mary', string>> = { joseph:
 
 /**
  * Подписи лент «Мф 1» и «Лк 3» у левого края видимого участка нити (решение 138, M11): ленты различимы без цвета — при
- * дальтонизме и в сером. Нить Иосифа — подпись над нитью, по Луке — под нитью; место — общей проверкой наложений
+ * дальтонизме и в сером. Подпись — с внешней стороны своей нити (обычно нить Иосифа — над, по Луке — под; где нити меняются
+ * местами, у разрыва или в косе, — по самим нитям); место — общей проверкой наложений
  * (claim), не на нитях и не на именах; нет места — на следующих точках нити правее (до трети окна). Пишет
  * canvas[data-ribbon-tags]: «Мф 1@x,y|Лк 3@x,y».
  */
+/** Высота нити (мировые px) в точке x: точки нити идут по x слева направо; вне нити — null. */
+function strandYAt(pts: readonly { x: number; y: number }[], x: number): number | null {
+  if (!pts.length || x < pts[0].x || x > pts[pts.length - 1].x) return null;
+  let lo = 0;
+  let hi = pts.length - 1;
+  while (hi - lo > 1) {
+    const mid = (lo + hi) >> 1;
+    if (pts[mid].x <= x) lo = mid;
+    else hi = mid;
+  }
+  const a = pts[lo];
+  const b = pts[hi];
+  return b.x === a.x ? a.y : a.y + ((b.y - a.y) * (x - a.x)) / (b.x - a.x);
+}
+
 export function drawRibbonTags(v: SkyContext, p: Pass) {
   const { ctx, cam, pal } = v;
   const c = ribbonCaches.get(v);
@@ -733,6 +749,9 @@ export function drawRibbonTags(v: SkyContext, p: Pass) {
         if (pts[mid].x + c.dx < x0) lo = mid + 1;
         else hi = mid;
       }
+      // сторона подписи — по самим нитям в этой точке (рецензия этапа 21): там, где нити идут через разрыв или косу,
+      // золотая бывает и ниже лазурной; подпись — с внешней стороны своей нити, у пересечения нитей её нет
+      const other = c.strands.find((x) => x !== st);
       for (let k = lo; k < pts.length; k++) {
         const q = pts[k];
         const x = q.x + c.dx;
@@ -740,8 +759,11 @@ export function drawRibbonTags(v: SkyContext, p: Pass) {
         if (x < x0 || y < v.openTop + size || y > vp.b - size) continue;
         if (x > xMax) break;
         if (x - last < 24) continue;
+        const oy = other ? strandYAt(other.points, q.x) : null;
+        if (oy !== null && Math.abs(oy - q.y) < 3) continue;
         last = x;
-        const ty = up ? y - 7 : y + size + 5;
+        const above = oy === null ? up : q.y < oy;
+        const ty = above ? y - 7 : y + size + 5;
         cands.push({ tx: x, ty });
         if (cands.length >= 12) break;
       }
@@ -852,7 +874,8 @@ export const ribbonGapHits = (v: object): RibbonGapHit[] => gapHitsOf.get(v) ?? 
 /**
  * Разрывы лент (К4): лента соединяет только соседей по данным. Где между видимыми лицами линии показ скрыл поколения,
  * нить прерывается, и в разрыве стоит «+N» — того же рисунка, что «+N» у ромба свёрнутого союза: сколько лиц линии
- * скрыто. У общего участка двух линий знак один. Знак занимает место в проверке наложений: подписи на него не ложатся.
+ * скрыто. У общего участка двух линий (то же число скрытых) знак один, иначе у каждой нити свой. Знак занимает место в
+ * проверке наложений: подписи на него не ложатся.
  */
 export function drawRibbonGaps(v: SkyContext, p: Pass): RibbonGapHit[] {
   const out: RibbonGapHit[] = [];
@@ -868,10 +891,11 @@ export function drawRibbonGaps(v: SkyContext, p: Pass): RibbonGapHit[] {
       if (!n) continue;
       const q = pointAt(st.points, k - 0.5);
       if (!q || q.u > k) continue;
-      const key = `${st.ids[k - 1]}>${st.ids[k]}`;
+      // общий знак — только у общего участка (одно и то же число скрытых); у разрывов с разным числом (Адам … Иисус
+      // Христос: по линии Иосифа скрыто 62 поколения, по Луке — 74) у каждой нити свой знак (рецензия этапа 21)
+      const key = `${st.ids[k - 1]}>${st.ids[k]}#${n}`;
       const m = marks.get(key) ?? { lines: [], from: st.ids[k - 1], to: st.ids[k], n, xs: [], ys: [] };
       m.lines.push(st.line);
-      m.n = Math.max(m.n, n);
       m.xs.push(q.x + c.dx);
       m.ys.push(q.y + c.dy);
       marks.set(key, m);
@@ -898,7 +922,31 @@ export function drawRibbonGaps(v: SkyContext, p: Pass): RibbonGapHit[] {
         const q = pointAt(st.points, k - 1 + f);
         if (q && q.u <= k) spots.push({ x: q.x + c.dx, y: q.y + c.dy });
       }
+      // разрыв длиннее окна (Адам … Иисус Христос на крупном плане): места — и на видимом участке нити, у середины окна
+      const a = pointAt(st.points, k - 1);
+      const lo = a ? st.points.indexOf(a) : -1;
+      if (lo >= 0) {
+        const mid = (cam.vp.l + cam.vp.r) / 2;
+        let best: StrandPoint | null = null;
+        for (let i = lo; i < st.points.length && st.points[i].u <= k; i++) {
+          const q = st.points[i];
+          if (!best || Math.abs(q.x + c.dx - mid) < Math.abs(best.x + c.dx - mid)) best = q;
+        }
+        if (best) spots.push({ x: best.x + c.dx, y: best.y + c.dy });
+      }
     }
+    // и рядом со своей нитью, с внешней стороны (над ней, если она выше другой нити, иначе под ней): у двух знаков одного
+    // разрыва (Адам … Иисус Христос: +62 и +74) нити идут рядом, и места на самих нитях заняты друг другом
+    const own = m.lines.length === 1 ? c.strands.find((st) => st.line === m.lines[0]) : undefined;
+    const twin = own ? c.strands.find((st) => st !== own) : undefined;
+    if (own && twin)
+      for (const q of spots.slice()) {
+        const oy = strandYAt(twin.points, q.x - c.dx);
+        // у перекрестья нитей сторона не читается: знак там не ставится
+        if (oy !== null && Math.abs(oy - (q.y - c.dy)) < 5) continue;
+        const side = oy === null ? (own.line === 'joseph' ? -1 : 1) : q.y - c.dy < oy ? -1 : 1;
+        spots.push({ x: q.x, y: q.y + side * (size * 1.4 + 6) });
+      }
     const inside = (q: { x: number; y: number }) => q.x >= v.letterW && q.x <= cam.w && q.y >= v.openTop && q.y <= cam.vp.b;
     // не на чужой нити: у двух разрывов от одного лица (Давид … Иисус по Мф, Давид … Мария по Лк) нити идут вместе по его
     // следу, и знак одной ленты лёг бы на другую

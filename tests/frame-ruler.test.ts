@@ -159,19 +159,12 @@ describe('масштабная линейка и слова (E7; UX-08)', () => 
   // шесть окон неба подряд: под нагрузкой общей машины — больше 5 с (явный срок, как у других тяжёлых тестов неба)
   it('«├─ 50 лет ─┤»: круглое число лет, отрезок 12–120 px; «≈» — только при неравномерной шкале', { timeout: 60_000 }, () => {
     for (const [, move] of VIEWS) {
-      // круглые годы — у линейки лет (λ = 0) и у крупного плана «По эпохам», где поколение шире 160 px
+      // круглые годы — и на «Равномерном по годам» (λ = 0), и на «По эпохам» (λ = 1): линейку «поколение ≈ N лет»
+      // (решение 196) сняла рецензия этапа 21 — длина поколения выходила из оценок решателя, а не из чисел текста
       for (const lambda of [0, 1]) {
         const { sky: s } = drawSky({ move, lambda });
         const b = frame.scaleBar(s)!;
         expect(b).toBeTruthy();
-        if (b.gen) {
-          // «поколение ≈ 48 лет» (решение 196): годы поколения эпохи под серединой окна, отрезок 12–160 px
-          expect(lambda).toBe(1);
-          expect(Number.isInteger(b.years) && b.years > 0).toBe(true);
-          expect(b.px).toBeGreaterThanOrEqual(12);
-          expect(b.px).toBeLessThanOrEqual(160);
-          continue;
-        }
         expect([1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000]).toContain(b.years);
         expect(b.px).toBeGreaterThanOrEqual(12);
         expect(b.px).toBeLessThanOrEqual(120);

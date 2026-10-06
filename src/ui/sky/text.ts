@@ -1,6 +1,8 @@
 /** Строки неба: годы и место лица в подсказке и объявлении, строки подсказки звезды и ленты, строка выбора второго лица. */
 import { byId, graph, lines } from '../../data/atlas.ts';
 import { kidEdges, type Union } from '../../engine/unions.ts';
+import type { PartnerKind } from '../fold.ts';
+import type { StepForward } from '../reveal.ts';
 import { kidsCount, plateNames, plateSub, unionGen } from '../../render/plates.ts';
 import { model } from '../../state.ts';
 import { epochSpanText, formatYear, shownBirthRange, toHist } from '../../engine/years.ts';
@@ -130,11 +132,22 @@ export function lineBetween(line: 'joseph' | 'mary', from: string, to: string): 
  * Подсказка знака «+N» в разрыве ленты (этап 13, решение 93, К4): «скрыто 40 поколений по Лк 3: Нафан … Илий —
  * щёлкните, чтобы показать». Имена — в именительном, без подстановки в падеж.
  */
-export function gapTipText(g: { lines: readonly ('joseph' | 'mary')[]; from: string; to: string; n: number }): string {
-  const src = g.lines.map((l) => (l === 'joseph' ? 'Мф 1' : 'Лк 3'));
+export function gapTipText(g: { lines: readonly ('joseph' | 'mary')[]; from: string; to: string; n: number }, flip = false): string {
   const hid = lineBetween(g.lines[0], g.from, g.to);
-  const first = byId.get(hid[0] ?? '')?.name;
-  const last = byId.get(hid[hid.length - 1] ?? '')?.name;
+  // источник — по самим скрытым лицам (рецензия этапа 21): линия Иосифа до Авраама — по Быт 5; 11 (Матфей начинает
+  // с Авраама, Мф 1:2), от Авраама — по Мф 1; линия по Луке — Лк 3
+  const src = g.lines.map((l) => {
+    if (l === 'mary') return 'Лк 3';
+    const pre = lines.joseph.persons.findIndex((x) => x.id === 'avraam');
+    const at = (id: string) => lines.joseph.persons.findIndex((x) => x.id === id);
+    const before = hid.some((id) => at(id) >= 0 && at(id) < pre);
+    const after = hid.some((id) => at(id) >= pre);
+    return before && after ? 'Быт 5; 11 и Мф 1' : before ? 'Быт 5; 11' : 'Мф 1';
+  });
+  // Лк 3:23 называет Иосифа; Мария на этом месте — по толкованию (переключатель «Лк 3» — второе родословие Иосифа)
+  const nameOf = (id: string) => (id === 'mariya' && g.lines.includes('mary') ? (flip ? byId.get('iosif-muzh-marii')?.name : `${byId.get(id)?.name} (по толкованию)`) : byId.get(id)?.name);
+  const first = nameOf(hid[0] ?? '');
+  const last = nameOf(hid[hid.length - 1] ?? '');
   const who = first ? (hid.length > 1 && last ? `${first} … ${last}` : first) : '';
   return typo(`В этом показе скрыто ${g.n} ${plural(g.n, 'поколение', 'поколения', 'поколений')} по ${src.join(' и ')}${who ? `: ${who}` : ''} — щёлкните, чтобы показать`);
 }
@@ -379,30 +392,84 @@ export function dotTipText(u: Union): string {
 
 // ---------- шаги и свёртки карты (этап 21, решения 197–199) ----------
 
-/** Пол супругов лица: у мужчины — жёны, у женщины — мужья. */
-const spouseWords = (id: string) => (byId.get(id)?.sex === 'f' ? { one: 'Муж', many: 'Мужья', acc1: 'мужа', accN: 'мужей' } : { one: 'Жена', many: 'Жёны', acc1: 'жену', accN: 'жён' });
+/**
+ * Слова супругов шага (рецензия этапа 21): кем приходится супруг по тексту — жена (муж), наложница или только мать (отец)
+ * детей, когда брак Писание не называет (Иуда и Фамарь, мать царя, «другая женщина» Галаада). Формы: [ед., мн.] в
+ * именительном и винительном падежах.
+ */
+type Forms = { nom: [string, string]; acc: [string, string] };
+const PARTNER_WORDS: Record<'m' | 'f', Record<PartnerKind, Forms>> = {
+  m: {
+    wife: { nom: ['жена', 'жёны'], acc: ['жену', 'жён'] },
+    concubine: { nom: ['наложница', 'наложницы'], acc: ['наложницу', 'наложниц'] },
+    parent: { nom: ['мать детей', 'матери детей'], acc: ['мать детей', 'матерей детей'] },
+  },
+  f: {
+    wife: { nom: ['муж', 'мужья'], acc: ['мужа', 'мужей'] },
+    concubine: { nom: ['отец детей', 'отцы детей'], acc: ['отца детей', 'отцов детей'] },
+    parent: { nom: ['отец детей', 'отцы детей'], acc: ['отца детей', 'отцов детей'] },
+  },
+};
+const sexOf = (id: string): 'm' | 'f' => (byId.get(id)?.sex === 'f' ? 'f' : 'm');
+const cap = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
+const joinAnd = (xs: string[]) => (xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} и ${xs[xs.length - 1]}`);
+
+/** Супруги шага одной фразой: «жена и матери детей», «жёны и наложницы»; c — падеж. Отцы детей у женщины — одной группой. */
+function partnersPhrase(id: string, kinds: readonly PartnerKind[], c: 'nom' | 'acc'): string {
+  const w = PARTNER_WORDS[sexOf(id)];
+  const groups = new Map<string, number>();
+  for (const k of kinds) {
+    const f = w[k];
+    groups.set(f.nom[0], (groups.get(f.nom[0]) ?? 0) + 1);
+  }
+  const parts: string[] = [];
+  for (const k of ['wife', 'concubine', 'parent'] as const) {
+    const f = w[k];
+    const n = groups.get(f.nom[0]);
+    if (!n) continue;
+    groups.delete(f.nom[0]);
+    parts.push(f[c][n > 1 ? 1 : 0]);
+  }
+  return joinAnd(parts);
+}
+
+/** Один союз: супруг и дети — «жена и дети», «наложница и дети»; брак не назван — «дети и их мать» («дети и их отец»). */
+function unionPhrase(id: string, k: PartnerKind, kids: boolean, c: 'nom' | 'acc'): string {
+  const f = PARTNER_WORDS[sexOf(id)][k];
+  const one = f[c][0];
+  if (!kids) return one;
+  const children = c === 'nom' ? 'дети' : 'детей';
+  if (k === 'parent' || (k === 'concubine' && sexOf(id) === 'f')) {
+    const their = sexOf(id) === 'f' ? (c === 'nom' ? 'их отец' : 'их отца') : 'их мать';
+    return `${children} и ${their}`;
+  }
+  return `${one} и ${children}`;
+}
 
 /**
- * Надпись команды шага вперёд (решение 197): один брак — «Жена и дети», у женщины — «Муж и дети»; несколько браков —
- * сначала супруги: «Жёны (4)», «Мужья (2)»; супруг не назван — «Дети»; супруги уже на карте — «Все дети (13)».
+ * Надпись команды шага вперёд (решение 197): один союз — «Жена и дети», «Наложница и дети», «Дети и их мать» (брак не
+ * назван), у женщины — «Муж и дети»; несколько союзов — сначала супруги: «Жёны (4)», «Жена и матери детей (3)»; супруг
+ * не назван — «Дети»; супруги уже на карте — «Все дети (13)». Надпись называет только то, что раскроет щелчок.
  */
-export function forwardLabel(id: string, f: { kind: 'union' | 'spouses' | 'kids'; spouses: number; kids: number }): string {
+export function forwardLabel(id: string, f: StepForward): string {
   if (f.kind === 'kids') return `Все дети (${f.kids})`;
-  const w = spouseWords(id);
-  if (!f.spouses) return f.kids ? 'Дети' : w.one;
-  const sp = f.spouses > 1 ? w.many : w.one;
-  // несколько браков — шаг раскрывает только супругов (дети — ромбами союзов и следующим шагом): «Жёны (4)», не «и дети»
-  if (f.kind === 'spouses') return f.spouses > 1 ? `${sp} (${f.spouses})` : sp;
-  return f.kids ? `${sp} и дети` : sp;
+  if (!f.spouses) return f.kids ? 'Дети' : '';
+  if (f.kind === 'spouses') return cap(partnersPhrase(id, f.kinds, 'nom')) + (f.spouses > 1 ? ` (${f.spouses})` : '');
+  return cap(unionPhrase(id, f.kinds[0] ?? 'wife', f.kids > 0, 'nom'));
 }
 /** Для диктора у звезды: «можно раскрыть жену и детей», «можно раскрыть родителей». */
-export function stepsSayText(id: string, c: { forward: { kind: 'union' | 'spouses' | 'kids'; spouses: number; kids: number } | null; back: number }): string {
+export function stepsSayText(id: string, c: { forward: StepForward | null; back: number }): string {
   const out: string[] = [];
   if (c.forward) {
-    const w = spouseWords(id);
     const f = c.forward;
     const what =
-      f.kind === 'kids' ? 'всех детей' : f.kind === 'spouses' ? (f.spouses > 1 ? `${w.accN} (${f.spouses})` : w.acc1) : f.spouses ? `${f.spouses > 1 ? w.accN : w.acc1}${f.kids ? ' и детей' : ''}` : 'детей';
+      f.kind === 'kids'
+        ? 'всех детей'
+        : !f.spouses
+          ? 'детей'
+          : f.kind === 'spouses'
+            ? partnersPhrase(id, f.kinds, 'acc') + (f.spouses > 1 ? ` (${f.spouses})` : '')
+            : unionPhrase(id, f.kinds[0] ?? 'wife', f.kids > 0, 'acc');
     out.push(`можно раскрыть ${what}`);
   }
   if (c.back) out.push('можно раскрыть родителей');
@@ -421,18 +488,17 @@ const personsN = (n: number) => `${n} ${plural(n, 'лицо', 'лица', 'ли�
  * «Адам: на карте жена и дети — Ева, Каин, Авель, Сиф», «Иаков: на карте жёны — Лия, Рахиль, Валла, Зелфа; у каждой — ромб
  * с детьми», «Сиф: потомки свёрнуты, скрыто 12 лиц», «Сиф: на карте только это лицо».
  */
-export function mapSayText(m: { kind: string; id: string; added: readonly string[]; removed: number }, size: number): string {
+export function mapSayText(m: { kind: string; id: string; added: readonly string[]; removed: number; kinds?: readonly PartnerKind[] }, size: number): string {
   const name = byId.get(m.id)?.name ?? m.id;
-  const w = spouseWords(m.id);
   const total = `на карте ${personsN(size)}`;
   switch (m.kind) {
     case 'union': {
-      const sp = m.added.filter((x) => (graph.spousesOf.get(m.id) ?? []).some((e) => e.a === x || e.b === x));
-      const what = sp.length ? `${w.one.toLowerCase()} и дети` : 'дети';
+      const k = m.kinds?.[0];
+      const what = k ? unionPhrase(m.id, k, m.added.length > 1, 'nom') : 'дети';
       return typo(`${name}: раскрыты ${what} — ${namesList(m.added)}; ${total}`);
     }
     case 'spouses':
-      return typo(`${name}: раскрыты ${m.added.length > 1 ? w.many.toLowerCase() : w.one.toLowerCase()} — ${namesList(m.added)}; у каждого союза — ромб с числом детей; ${total}`);
+      return typo(`${name}: раскрыты ${partnersPhrase(m.id, m.kinds ?? m.added.map(() => 'wife' as const), 'nom')} — ${namesList(m.added)}; у каждого союза — ромб с числом детей; ${total}`);
     case 'kids':
       return typo(`${name}: раскрыты все дети — ${namesList(m.added)}; ${total}`);
     case 'parents':
@@ -442,7 +508,9 @@ export function mapSayText(m: { kind: string; id: string; added: readonly string
     case 'fold-anc':
       return typo(`${name}: предки свёрнуты${m.removed ? `, скрыто ${personsN(m.removed)}` : ''}; ${total}`);
     case 'only':
-      return typo(`${name}: на карте только это лицо; дальше — шагами «+»`);
+      return typo(`${name}: на карте только это лицо; дальше — командами карточки «Жена и дети», «Родители» или знаком ⊕ у звезды`);
+    case 'restart':
+      return typo(`Карта снова с начала: Адам и Иисус Христос${m.removed ? `, скрыто ${personsN(m.removed)}` : ''}; вернуть прежнюю — «Отменить шаг», Ctrl+Z`);
     default:
       return '';
   }

@@ -7,7 +7,7 @@
  */
 import { FRAME_H, familyTier, type Rect, type Sky } from '../../render/sky.ts';
 import { byId, lines } from '../../data/atlas.ts';
-import { selected, hovered, epochMode, layers, onlyLines, panel, pins, pinsQuery, pickMode, pickSecond, synopsisAt, model } from '../../state.ts';
+import { selected, hovered, epochMode, layers, lineFlip, onlyLines, panel, pins, pinsQuery, pickMode, pickSecond, synopsisAt, model } from '../../state.ts';
 import { lineNoteHits, ribbonAt, ribbonGapHits, setRibbonHover, type RibbonGapHit } from '../../render/ribbons.ts';
 import { starRadius } from '../../render/glyphs.ts';
 import { setFamilyHover, unionFanHits } from '../../render/trails.ts';
@@ -26,7 +26,7 @@ import { nearestFamily, setShow, showGuest } from '../show.ts';
 import { MENU_FIRST, dismissedBy, skyMenu } from '../panels/Work.tsx';
 import { personGhosts } from '../../render/marks.ts';
 import { dotTipText, epochGoText, forwardLabel, gapTipText, lineBetween, plateTipText } from './text.ts';
-import { mapCmds, selectUnion, selectedUnion, stepBack, stepForward, unionById } from '../reveal.ts';
+import { backWhat, mapCmds, selectUnion, selectedUnion, stepBack, stepForward, unionById } from '../reveal.ts';
 import { linkHover, plateHover, pressPlate, rememberLinkClick, toggleKids } from './starnav.ts';
 import type { CountHit, PlateHit } from '../../render/plates.ts';
 import type { LinkHit } from '../../render/links.ts';
@@ -689,20 +689,36 @@ export function chooseLink(sky: Pick<Sky, 'cam'>, key: LinkKey, x: number, y: nu
 export const REVEAL_TIP = 'У лица есть нераскрытые союзы — щёлкните, чтобы показать их на небе';
 
 /**
- * Подсказка рукоятки шага карты (этап 21, решение 197): что откроет щелчок, словами и числом — «Иаков: жёны (4) —
+ * Подсказка рукоятки шага карты (этап 21, решение 197): что откроет щелчок, словами и числом — «Иаков: жёны и наложница (4) —
  * щёлкните, чтобы раскрыть; у каждой — ромб с детьми», «Иисус Христос: родители — щёлкните, чтобы раскрыть». Имя —
  * в именительном падеже, двоеточием (не подставляется в падеж без склонения).
  */
 export function handleTipText(id: string, dir: 'fwd' | 'back'): string {
   const name = byId.get(id)?.name ?? id;
   const c = mapCmds(id);
-  if (dir === 'back') return typo(`${name}: родители, братья и сёстры — щёлкните, чтобы раскрыть ([)`);
+  if (dir === 'back') {
+    // ровно то, что раскроется: имена родителей с видом утверждения и число братьев и сестёр (рецензия этапа 21)
+    const b = backWhat(id);
+    const how: Record<string, string> = { 'by-luke': 'по Лк 3', ancestor: 'предок', adoptive: 'усыновление', alternative: 'по иному родословию', legal: 'по закону', levirate: 'по закону о деверстве' };
+    const ps = b.parents.map((q) => {
+      const n = byId.get(q.id)?.name ?? q.id;
+      const note = q.interp ? 'по толкованию' : q.claim ? how[q.claim] : '';
+      return note ? `${n} (${note})` : n;
+    });
+    const male = b.sibs.every((x) => byId.get(x)?.sex === 'm');
+    const female = b.sibs.every((x) => byId.get(x)?.sex === 'f');
+    const one = b.sibs.length === 1 ? `${male ? 'брат' : 'сестра'} ${byId.get(b.sibs[0])?.name ?? b.sibs[0]}` : '';
+    const sibs = one || (b.sibs.length ? `${male ? 'братья' : female ? 'сёстры' : 'братья и сёстры'} (${b.sibs.length})` : '');
+    const what = [ps.length ? ps.join(' и ') : '', sibs].filter(Boolean).join(', ');
+    return typo(`${name}: ${what || 'родители'} — щёлкните, чтобы раскрыть ([ или х)`);
+  }
   const f = c.forward;
   if (!f) return typo(`${name}: всё уже на карте`);
   const what = forwardLabel(id, f).toLowerCase();
   const tail = f.kind === 'spouses' ? '; у каждого союза — ромб с числом детей' : '';
-  // «]» делает то же, что рукоятка, только у одного союза (раскрывает союз, где родился ребёнок, и ведёт к нему)
-  return typo(`${name}: ${what} — щёлкните, чтобы раскрыть${f.kind === 'union' ? ' (])' : ''}${tail}`);
+  // «]» (на русской раскладке «ъ») делает то же, что рукоятка, только у одного союза: раскрывает союз, где родился
+  // ребёнок, и ведёт к нему
+  return typo(`${name}: ${what} — щёлкните, чтобы раскрыть${f.kind === 'union' ? ' (] или ъ)' : ''}${tail}`);
 }
 
 /** Название эпохи в служебной строке под указателем (UX-65): эпоха модели и прямоугольник надписи. */
@@ -946,7 +962,7 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       if (hovered.value) hovered.value = null;
       setHot(true);
       if (ghost) showTip({ kind: 'note', key: `ghost:${ghost.id}`, text: ghostTipText(ghost.id, ghost.role, ghost.why), x, y, box: { x: ghost.x, y: ghost.y, w: ghost.w, h: ghost.h } });
-      else if (gap) showTip({ kind: 'note', key: `gap:${gap.from}:${gap.to}`, text: gapTipText(gap), x, y, box: { x: gap.x, y: gap.y, w: gap.w, h: gap.h } });
+      else if (gap) showTip({ kind: 'note', key: `gap:${gap.from}:${gap.to}`, text: gapTipText(gap, lineFlip.peek()), x, y, box: { x: gap.x, y: gap.y, w: gap.w, h: gap.h } });
       return;
     }
     // выноски точек сравнения линий — ссылки (E6; src/render/ribbons.ts)
@@ -1252,9 +1268,13 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     // палец на имени другого лица (решение 154): раздвинутое до 44 px поле знака свёрнутого («+N» семьи, «+» у имени) его
     // не перехватывает — только сам знак под пальцем (Т1: «Валла» у скопления детей Рахили)
     const nameHere = touch ? (sky.labelAt(at.x, at.y, NAME_TAP) ?? nameAt(sky.ledger.boxes, at.x, at.y)) : null;
+    // палец на звезде (рецензия этапа 21): касание звезды открывает её карточку — раздутое поле «⊕» рядом его не перехватывает
+    const starHere = touch ? (sky.hitStar(at.x, at.y, 10)?.id ?? null) : null;
     const fold = sky.foldHits.find((e) => {
       const inRaw = at.x >= e.x && at.x <= e.x + e.w && at.y >= e.y && at.y <= e.y + e.h;
       if (nameHere && nameHere !== e.id && !inRaw) return false;
+      // у «⊕» шага — и своё имя, и любая звезда под пальцем важнее раздутого поля: имя и звезда — карточка лица
+      if ((e.kind === 'reveal' || e.kind === 'reveal-up') && !inRaw && (nameHere || starHere)) return false;
       const r = touch ? inflate(e, TOUCH_TARGET) : e;
       return at.x >= r.x && at.x <= r.x + r.w && at.y >= r.y && at.y <= r.y + r.h;
     });

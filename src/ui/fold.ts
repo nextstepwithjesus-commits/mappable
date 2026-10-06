@@ -8,8 +8,10 @@
  *    («Убрать из набора»). Поэтому «Свернуть потомков Адама» из начала «Адам и Иисус Христос» возвращает начало;
  *  — лицо, у которого сворачивают, всегда остаётся на карте; если оно держалось только на свёрнутом (его раскрыли от
  *    родителя, а свёрнуты предки), оно закрепляется;
- *  — свёртка потомков убирает потомков лица (по отцам и матерям и иным утверждениям текста, без толкований — как у
- *    «с потомками» набора) и супругов лица и его потомков, если у супруга на карте нет своей родни (родителей);
+ *  — свёртка потомков убирает потомков лица — по тем же связям, по которым их раскрывают шаги (отцы и матери, иные
+ *    утверждения текста, толкования), — и супругов лица и его потомков, если у супруга на карте нет своей родни. Ребёнок
+ *    по иному утверждению (Сала — сын Каинана по Лк 3:36) остаётся, если на карте его основной отец (Арфаксад, Быт 11:12)
+ *    и тот не уходит: свёртка одного прочтения не убирает другого (рецензия этапа 21);
  *  — свёртка предков убирает предков лица;
  *  — после свёртки уходит всё, что больше не связано родством или браком ни с этим лицом, ни с закреплёнными: братья
  *    и сёстры, чьи родители свёрнуты, родня свёрнутой жены. Закреплённое лицо свёрнутой части (Адам при свёртке предков
@@ -18,7 +20,11 @@
  *  — раскрытые союзы, у которых ушёл кто-то из лиц, становятся снова свёрнутыми («+N» у ромба).
  *
  * Шаг вперёд (решение 197): у лица один союз — супруг и все дети сразу; союзов несколько — сначала супруги (у каждого
- * ромб своего цвета с «+N»), следующий шаг — все дети. Шаг назад — союз родителей: родители, братья и сёстры.
+ * ромб своего цвета с «+N»), следующий шаг — все дети. Дети шага — те, кого текст называет детьми лица: основные отец
+ * и мать, сыновство по Луке и по иным родословиям; не «из сыновей» далёкого предка (Хаттуш, Езд 8:2) и не усыновление
+ * (Ефрем и Манассия у Иакова, Быт 48:5) — их раскрывает шаг назад от самого лица. Два прочтения Лк 3:23 (Илий — отец
+ * Марии по толкованию или Иосифа по Луке) — одно, по переключателю «Лк 3» (lineFlip). Шаг назад — союзы происхождения
+ * лица: родители, братья и сёстры.
  */
 import type { Graph } from '../engine/graph.ts';
 import { membersOf, type Union, type Unions } from '../engine/unions.ts';
@@ -37,15 +43,35 @@ export interface MapState {
 export interface FoldData {
   graph: Graph;
   unions: Unions;
+  /** Лк 3 — второе родословие Иосифа (переключатель «Лк 3», src/state.ts lineFlip): Илий — отец Иосифа, а не Марии */
+  flip?: boolean;
+}
+
+/** Союз иного утверждения о происхождении (по Луке, «из сыновей», усыновление…): у него в id — «~вид». */
+const otherClaim = (u: Union) => u.id.includes('~');
+/** Иные утверждения, которые называют лицо сыном: шаг вперёд раскрывает их детей. */
+const SONSHIP = new Set(['by-luke', 'alternative']);
+
+/**
+ * Союзы шага вперёд от лица (решение 197; рецензия этапа 21): основные союзы и союзы сыновства по тексту (по Луке, иные
+ * родословия). Не «из сыновей» (ancestor) и не усыновление (adoptive). Если у лица есть и союз по толкованию, и союз по
+ * Луке (Илий: Мария по толкованию, Иосиф по Лк 3:23), — один из них, по переключателю «Лк 3».
+ */
+export function stepUnions(d: FoldData, id: string): Union[] {
+  let us = (d.unions.of.get(id) ?? []).filter((u) => !otherClaim(u) || SONSHIP.has(u.claim ?? ''));
+  const interp = us.filter((u) => !otherClaim(u) && u.kidsCert === 'interpretation');
+  const luke = us.filter((u) => otherClaim(u) && u.claim === 'by-luke');
+  if (interp.length && luke.length) us = us.filter((u) => !(d.flip ? interp : luke).includes(u));
+  return us;
 }
 
 const pinned = (s: MapState, id: string) => s.set.get(id)?.via === 'self';
 
-/** Соседи лица по родству и браку (все утверждения о родителях, кроме толкований — как у свёртки). */
+/** Соседи лица по родству и браку: все утверждения о родителях, и по толкованию — шаги раскрывают и по ним. */
 function neighbours(d: FoldData, id: string): string[] {
   const out: string[] = [];
-  for (const e of d.graph.parentsOf.get(id) ?? []) if (e.cert !== 'interpretation') out.push(e.parent);
-  for (const e of d.graph.childrenOf.get(id) ?? []) if (e.cert !== 'interpretation') out.push(e.child);
+  for (const e of d.graph.parentsOf.get(id) ?? []) out.push(e.parent);
+  for (const e of d.graph.childrenOf.get(id) ?? []) out.push(e.child);
   for (const e of d.graph.spousesOf.get(id) ?? []) out.push(e.a === id ? e.b : e.a);
   return out;
 }
@@ -94,9 +120,34 @@ function settle(d: FoldData, s: MapState, id: string, gone: Set<string>, anchors
   return { set: next, expanded, opened: s.opened.filter((x) => x !== id && next.has(x)) };
 }
 
+/**
+ * Потомки лица id, которых убирает свёртка: по всем связям «родитель → ребёнок» (и по толкованию, и по иным утверждениям);
+ * ребёнок по иному утверждению не уходит, если на карте его основной отец или мать и они не уходят (Сала при Арфаксаде,
+ * когда сворачивают Каинана). Ребёнок, оставленный так, ещё может уйти, если до него дойдут по основной связи.
+ */
+function descendantsToFold(d: FoldData, s: MapState, id: string): Set<string> {
+  const gone = new Set<string>();
+  const going = (x: string) => x === id || gone.has(x);
+  const queue = [id];
+  for (let i = 0; i < queue.length; i++) {
+    const x = queue[i];
+    for (const e of d.graph.childrenOf.get(x) ?? []) {
+      const c = e.child;
+      if (going(c)) continue;
+      if (e.kind !== 'father' && e.kind !== 'mother') {
+        const main = (d.graph.parentsOf.get(c) ?? []).filter((q) => q.kind === 'father' || q.kind === 'mother');
+        if (main.some((q) => s.set.has(q.parent) && !going(q.parent))) continue;
+      }
+      gone.add(c);
+      queue.push(c);
+    }
+  }
+  return gone;
+}
+
 /** Свернуть потомков лица id (решение 198). */
 export function foldDescendants(d: FoldData, s: MapState, id: string): MapState {
-  const desc = new Set(walk(d.graph, id, 'down', null, { other: true }).keys());
+  const desc = descendantsToFold(d, s, id);
   const gone = new Set<string>();
   const anchors = new Set<string>();
   for (const x of s.set.keys()) if (desc.has(x)) (pinned(s, x) ? anchors : gone).add(x);
@@ -115,7 +166,7 @@ export function foldDescendants(d: FoldData, s: MapState, id: string): MapState 
 
 /** Свернуть предков лица id (решение 198). */
 export function foldAncestors(d: FoldData, s: MapState, id: string): MapState {
-  const anc = new Set(walk(d.graph, id, 'up', null, { other: true }).keys());
+  const anc = new Set(walk(d.graph, id, 'up', null, { other: true, interp: true }).keys());
   const gone = new Set<string>();
   const anchors = new Set<string>();
   for (const x of s.set.keys()) if (anc.has(x)) (pinned(s, x) ? anchors : gone).add(x);
@@ -130,8 +181,7 @@ export function foldOnly(id: string): MapState {
 /** Есть ли на карте потомки лица или его супруги — есть ли что сворачивать вперёд. */
 export function hasShownDescendants(d: FoldData, s: MapState, id: string): boolean {
   if (!s.set.has(id)) return false;
-  const desc = walk(d.graph, id, 'down', null, { other: true });
-  for (const x of desc.keys()) if (s.set.has(x) && !pinned(s, x)) return true;
+  for (const x of descendantsToFold(d, s, id)) if (s.set.has(x) && !pinned(s, x)) return true;
   for (const e of d.graph.spousesOf.get(id) ?? []) {
     const z = e.a === id ? e.b : e.a;
     if (s.set.has(z) && !pinned(s, z) && !(d.graph.parentsOf.get(z) ?? []).some((p) => s.set.has(p.parent))) return true;
@@ -142,24 +192,36 @@ export function hasShownDescendants(d: FoldData, s: MapState, id: string): boole
 /** Есть ли на карте предки лица — есть ли что сворачивать назад. */
 export function hasShownAncestors(d: FoldData, s: MapState, id: string): boolean {
   if (!s.set.has(id)) return false;
-  for (const x of walk(d.graph, id, 'up', null, { other: true }).keys()) if (s.set.has(x) && !pinned(s, x)) return true;
+  for (const x of walk(d.graph, id, 'up', null, { other: true, interp: true }).keys()) if (s.set.has(x) && !pinned(s, x)) return true;
   return false;
 }
 
 /** Супруг лица id в союзе u (другое лицо союза); null — не назван. */
 export const partnerOf = (u: Union, id: string): string | null => (u.a === id ? u.b : u.b === id ? u.a : null);
 
-/** Что скрыто впереди лица: супруги и дети его союзов не на карте. */
-export function forwardHidden(d: FoldData, s: MapState, id: string): { spouses: string[]; kids: number; unions: Union[] } {
-  const unions = d.unions.of.get(id) ?? [];
+/**
+ * Кем супруг приходится лицу по тексту — для слов шага (рецензия этапа 21: «жена» — только там, где Писание называет
+ * брак): 'wife' — жена или муж; 'concubine' — наложница; 'parent' — названы только родителями детей (Иуда и Фамарь,
+ * мать царя, «другая женщина» Галаада).
+ */
+export type PartnerKind = 'wife' | 'concubine' | 'parent';
+export const partnerKind = (u: Union): PartnerKind => (u.kind === 'wife' ? 'wife' : u.kind === 'concubine' ? 'concubine' : 'parent');
+
+/** Что скрыто впереди лица: супруги и дети его союзов шага не на карте; kinds — кем приходятся скрытые супруги. */
+export function forwardHidden(d: FoldData, s: MapState, id: string): { spouses: string[]; kids: number; unions: Union[]; kinds: PartnerKind[] } {
+  const unions = stepUnions(d, id);
   const spouses: string[] = [];
+  const kinds: PartnerKind[] = [];
   let kids = 0;
   for (const u of unions) {
     const p = partnerOf(u, id);
-    if (p && !s.set.has(p) && !spouses.includes(p)) spouses.push(p);
+    if (p && !s.set.has(p) && !spouses.includes(p)) {
+      spouses.push(p);
+      kinds.push(partnerKind(u));
+    }
     for (const k of u.kids) if (!s.set.has(k)) kids++;
   }
-  return { spouses, kids, unions };
+  return { spouses, kids, unions, kinds };
 }
 
 /** Что скрыто позади лица: родители, братья и сёстры в его союзах происхождения не на карте. */

@@ -40,7 +40,7 @@ import type { Person, Group } from '../src/data/types.ts';
 import type { BibleText } from './bible.ts';
 
 /** Все ссылки лица; notes: false — без примечаний § 24 (они часто ведут к другим лицам: «не смешивать с…»). */
-export function refsOf(p: Person, opts: { notes?: boolean } = {}): string[] {
+export function refsOf(p: Person, opts: { notes?: boolean; later?: boolean; scripture?: boolean } = {}): string[] {
   const out = new Set<string>();
   const add = (r?: string[] | string) => {
     if (!r) return;
@@ -54,7 +54,9 @@ export function refsOf(p: Person, opts: { notes?: boolean } = {}): string[] {
   if (c) {
     add(c.meaning?.refs);
     for (const a of c.altNames ?? []) add(a.refs);
-    for (const k of ['status', 'parentsNote', 'lineage', 'spousesNote', 'childrenNote', 'siblingsNote', 'kinNote', 'chronoNote', 'withGod', 'messiahNote', 'laterMentions'] as const) for (const f of c[k] ?? []) add(f.refs);
+    for (const k of ['status', 'parentsNote', 'lineage', 'spousesNote', 'childrenNote', 'siblingsNote', 'kinNote', 'chronoNote', 'withGod', 'messiahNote'] as const) for (const f of c[k] ?? []) add(f.refs);
+    // § 22 — упоминания в других книгах: у имени колена или народа это часто колено или народ, а не само лицо
+    if (opts.later !== false) for (const f of c.laterMentions ?? []) add(f.refs);
     for (const f of c.birth?.facts ?? []) add(f.refs);
     for (const f of c.death?.facts ?? []) add(f.refs);
     for (const f of c.death?.burial ?? []) add(f.refs);
@@ -63,9 +65,11 @@ export function refsOf(p: Person, opts: { notes?: boolean } = {}): string[] {
     for (const o of c.offices ?? []) add(o.refs);
     for (const e of c.events ?? []) add(e.refs);
     for (const s of c.sayings ?? []) add(s.ref);
-    add(c.scripture?.first);
-    add(c.scripture?.key);
-    add(c.scripture?.all);
+    if (opts.scripture !== false) {
+      add(c.scripture?.first);
+      add(c.scripture?.key);
+      add(c.scripture?.all);
+    }
     if (opts.notes !== false) for (const n of c.notes ?? []) add(n.refs);
   }
   for (const r of p.chrono?.reign ?? []) add(r.refs);

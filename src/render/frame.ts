@@ -6,7 +6,7 @@
  *    лет: один шаг рисок на окно — по самому сжатому месту, подписи прорежены равномерно и стоят у своих рисок, граница
  *    эр — риска во всю высоту линейки, разрыв шкалы после 100 г. — знаком;
  *  — служебная строка под линейкой: у линейки лет — названия эпох по их годам (прилипают к левому краю); масштабная
- *    линейка справа — «масштаб ├─ 50 лет ─┤», у линейки эпох — «поколение ├─┤ ≈ 48 лет»; подписи черт «завершение
+ *    линейка справа — «масштаб ├─ 50 лет ─┤», у линейки эпох — «масштаб ├─┤ ≈ 50 лет» (годы в окне неравномерны); подписи черт «завершение
  *    канона» и «сегодня»;
  *  — левая кромка: буквы строк атласа (engine/layout.ts, atlasRow); нижняя кромка: номера столбцов атласа между
  *    рисками веков — по ним находится координата указателя «32 П»;
@@ -317,27 +317,17 @@ export function yearsWord(n: number): string {
 
 /**
  * Масштабная линейка в середине окна (E7; UX-08): круглое число лет и длина его отрезка в px — от 40 до 120 px.
- * approx — шкала в окне неравномерна (масштаб «По эпохам»): число — «≈». gen — отрезок одного поколения эпохи под
- * серединой окна (решение 196): «поколение ≈ 48 лет».
+ * approx — шкала в окне неравномерна (масштаб «По эпохам»): число — «≈».
  */
-export function scaleBar(v: SkyContext): { years: number; px: number; approx: boolean; gen?: boolean } | null {
+export function scaleBar(v: SkyContext): { years: number; px: number; approx: boolean } | null {
   const cam = v.cam;
   const [cx] = cam.vpCenter();
   const tC = v.tOf(cam.wx(cx));
   const rate = rateAt(v, tC);
   if (!(rate > 0)) return null;
-  // шкала «по эпохам» (решение 196): отрезок одного поколения эпохи под серединой окна и его годы — «поколение ≈ 48 лет»;
-  // поколение шире 160 px (крупный план) — обычная линейка лет
-  if (byEpochs(v)) {
-    const e = v.model.epochs.find((q) => tC >= toAstro(q.start) && tC < toAstro(q.end));
-    const g = e ? v.scale.gens?.get(e.id) : undefined;
-    if (e && g) {
-      const per = (toAstro(e.end) - toAstro(e.start)) / g;
-      const px = per * rate;
-      const years = per < 20 ? Math.max(1, Math.round(per)) : Math.round(per / 5) * 5;
-      if (px >= 12 && px <= 160) return { years, px, approx: true, gen: true };
-    }
-  }
+  // «поколение ≈ N лет» (решение 196) снято после рецензии этапа 21: средняя длина поколения эпохи выходила из оценок
+  // самого решателя, а не из чисел текста (до Потопа ≈ 150 при возрасте отцов в Быт 5 от 65 до 187 лет), — линейка
+  // и на шкале «По эпохам» местная, в годах, с «≈»: годы в окне неравномерны
   const nice = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000];
   const years = [...nice].reverse().find((n) => n * rate <= 120) ?? 1;
   if (years * rate < 12) return null;
@@ -751,8 +741,7 @@ function drawServiceRow(v: SkyContext, extra: ServiceExtra): ServiceHit[] {
   const bar = scaleBar(v);
   let right = W - 8;
   if (bar) {
-    // шкала «по эпохам» (решение 196): «поколение ├──┤ ≈ 48 лет»
-    const word = bar.gen ? 'поколение' : 'масштаб';
+    const word = 'масштаб';
     const text = `${bar.approx ? '≈\u00a0' : ''}${yearsWord(bar.years)}`;
     const ww = ctx.measureText(word).width;
     const tw = ctx.measureText(text).width;

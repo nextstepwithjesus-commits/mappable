@@ -978,11 +978,16 @@ export function holdLinesRows() {
 
 /** Окно набора ×1,5, но не уже 200 лет — предел отдаления в режиме «в работе» (IX-64). */
 export const WORK_ZOOM_OUT = 1.5;
-export const WORK_MIN_YEARS = 200;
+/**
+ * Отдалить небо «набор» можно не меньше чем до окна в столько лет (IX-64: было 200). Пошаговая карта из одного лица
+ * («Только это лицо», этап 21) иначе не отдалялась дальше 256 лет: ни эпохи вокруг, ни соседних поколений (рецензия
+ * этапа 21) — теперь до тысячелетия.
+ */
+export const WORK_MIN_YEARS = 1000;
 
 /**
  * Предел отдаления по режиму неба (Camera.zoomFloor): в режиме «в работе» — окно набора со всеми следами ×1,5, но
- * не уже 200 лет (IX-64); в режиме «только линии» — коридор линий с полями по 24 px (MAP-59); иначе — «всё небо».
+ * не уже WORK_MIN_YEARS лет (IX-64); в режиме «только линии» — коридор линий с полями по 24 px (MAP-59); иначе — «всё небо».
  * Зовётся при смене режима и видимой части (SkyView).
  */
 export function updateZoomFloor() {
@@ -1248,7 +1253,8 @@ if (typeof window !== 'undefined')
 // ---------- привязка при смене масштаба времени и модели (D15; ТЗ § 11.2 п. 6; IX-35, IX-48) ----------
 
 /** Что держать на месте: выбранное лицо на экране (sx, sy) или год t середины видимой части (id = null). */
-export type Anchor = { id: string | null; sx: number; sy: number; t: number };
+/** years — годы у левого и правого края видимой части: при смене масштаба времени окно лет сохраняется (решение 196). */
+export type Anchor = { id: string | null; sx: number; sy: number; t: number; years?: [number, number] };
 
 /** Якорь сейчас: выбранное лицо, если его звезда в видимой части, иначе год в середине видимой части. */
 export function anchorNow(): Anchor | null {
@@ -1256,19 +1262,28 @@ export function anchorNow(): Anchor | null {
   if (!s || !s.model) return null;
   const id = selected.peek();
   const vp = s.cam.vp;
+  const years: [number, number] = [s.tOf(s.cam.wx(vp.l)), s.tOf(s.cam.wx(vp.r))];
   const q = id ? screenOf(id) : null;
-  if (id && q && q.x >= vp.l && q.x <= vp.r && q.y >= vp.t && q.y <= vp.b) return { id, sx: q.x, sy: q.y, t: 0 };
+  if (id && q && q.x >= vp.l && q.x <= vp.r && q.y >= vp.t && q.y <= vp.b) return { id, sx: q.x, sy: q.y, t: 0, years };
   const [cx, cy] = s.cam.vpCenter();
-  return { id: null, sx: cx, sy: cy, t: s.tOf(s.cam.wx(cx)) };
+  return { id: null, sx: cx, sy: cy, t: s.tOf(s.cam.wx(cx)), years };
 }
 
 /**
  * Поставить камеру так, чтобы якорь был на прежнем месте экрана: по горизонтали — всегда; по вертикали (vertical) —
- * строка лица под прежней точкой: смена модели хронологии меняет полосы раскладки у всех, кроме лиц линий (IX-48).
+ * строка лица под прежней точкой: смена модели хронологии меняет полосы раскладки у всех, кроме лиц линий (IX-48);
+ * keepYears — и окно прежних лет (смена масштаба времени).
  */
-export function holdAnchor(a: Anchor, vertical = false) {
+export function holdAnchor(a: Anchor, vertical = false, keepYears = false) {
   const s = skyRef.current;
   if (!s || !s.model) return;
+  // смена масштаба времени (рецензия этапа 21): окно тех же лет — иначе на «Равномерном по годам» семья Адама, сжатая
+  // «По эпохам», не помещалась бы в окно прежней крупности
+  if (keepYears && a.years) {
+    const vp = s.cam.vp;
+    const w = s.xOf(a.years[1]) - s.xOf(a.years[0]);
+    if (w > 0) s.cam.kx = s.cam.clampKx((vp.r - vp.l) / w, s.xOf((a.years[0] + a.years[1]) / 2));
+  }
   const x = a.id ? s.nodeX(a.id) : s.xOf(a.t);
   if (x !== null) s.cam.x0 = x - a.sx / s.cam.kx;
   const n = vertical && a.id ? s.node(a.id) : undefined;
@@ -1574,7 +1589,8 @@ export function followStep(ids: readonly string[]) {
   if (!g) return;
   if (g.kx > cam.kx) {
     const vp = cam.vp;
-    const L = vp.l + MARGIN.l + 8;
+    // слева — место для «⊕» шага назад у звезды (рецензия этапа 21: Иаков у самого края, его «⊕» к родителям за краем)
+    const L = vp.l + MARGIN.l + 28;
     const R = vp.r - NAME_ROOM;
     const lo = Math.min(...xs);
     const hi = Math.max(...xs);

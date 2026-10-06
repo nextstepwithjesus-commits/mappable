@@ -183,6 +183,10 @@
 .cartouche .entry button {
   display: inline-flex;
   align-items: center;
+  /* цель не меньше 24 × 24 и мышью (WCAG 2.5.8; рецензия этапа 21: «Адам» 31,7 × 18, «Ной» 23,5 × 18) */
+  min-height: 24px;
+  min-width: 24px;
+  justify-content: center;
   margin: 0 12px 4px 0;
   color: var(--ink);
   text-decoration: underline 1px var(--rule-strong);

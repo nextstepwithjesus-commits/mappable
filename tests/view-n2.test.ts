@@ -83,7 +83,8 @@ describe('вступление и «Как читать карту» (решен
       expect(g).toContain(w);
     expect(g).not.toMatch(/древ|Небо \| Древо/i);
     expect(html(h(ReadingGuide, { both: false }) as VNode)).toMatch(/class="for-touch"/);
-    expect(g).toContain('Годы сверху — время');
+    // этап 21 (решение 196; рецензия): линейка сверху по умолчанию называет эпохи — «Годы сверху — время» стало неверно
+    expect(g).toContain('Время идёт слева направо: линейка сверху называет эпохи');
   });
 });
 

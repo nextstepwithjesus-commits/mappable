@@ -18,7 +18,7 @@ import type { HouseLayout } from '../src/engine/house.ts';
 import { buildTimeScale, eraGenerations, timeToX, xToTime, type EraSpan } from '../src/engine/timescale.ts';
 import { epochDelta } from '../src/engine/epochs.ts';
 import { encodeBooks, parseRef, verseId, BOOKS } from '../src/engine/books.ts';
-import { splitParentRefs } from '../src/engine/text.ts';
+import { nameMatcher, norm, splitParentRefs } from '../src/engine/text.ts';
 import { typo } from '../src/ui/text/typo.ts';
 import { refsOf, countMentions } from './mentions.ts';
 import { allDataRefs, refVerses } from './data-refs.ts';
@@ -256,12 +256,57 @@ if (existsSync(gen)) rmSync(gen, { recursive: true });
 mkdirSync(join(gen, 'cards'), { recursive: true });
 mkdirSync(join(gen, 'verses'), { recursive: true });
 
-/** Книги лица для каталога (решение 202): где названо по имени (§ 23), иначе — книги стихов его родства и списка. */
+/**
+ * Каталог по книгам (решение 202; рецензия этапа 21): книги, где лицо названо как лицо.
+ *  — Лицо со счётом по всей Библии (§ 23) — книги стихов, где стоит само имя или его падеж и притяжательное («Моава»,
+ *    «Илиев»), а не прилагательное и не имя жителей («поля Моавитские», «Руфь Моавитянка» — не Моав, сын Лота).
+ *  — Лицо со счётом в главах карточки (тёзки, имена колен и народов) — книги, где имя стоит в главах его карточки и
+ *    родства; у имени колена или народа — без § 22–23 (Ефрем у Осии — колено, а не сын Иосифа). Лицо без имени (жена
+ *    Пилата) — книги стихов его карточки и родства.
+ */
+const NOT_PERSON_SUFFIX = /^(ит|ск|ян|лян|ейск|еян)/;
+function namedAsPerson(p: Person, text: string): boolean {
+  const names = [p.name, ...(p.card?.altNames ?? []).filter((a) => a.kind !== 'title' && a.kind !== 'epithet').map((a) => a.name)];
+  const words = (text.match(/[А-ЯЁ][а-яё]*(?:[-—–][А-ЯЁа-яё][а-яё]*)*/g) ?? []).map((w) => norm(w));
+  return names.some((n) => {
+    const first = norm(n).split(/\s+/)[0];
+    const re = nameMatcher(n);
+    const stem = first.replace(/[аяйьоеиыую]$/, '');
+    return words.some((w) => re.test(` ${w} `) && w.length <= stem.length + 4 && !NOT_PERSON_SUFFIX.test(w.slice(stem.length)));
+  });
+}
+/** Имена колен и народов неба («Колено Ефремово», «Моав») — у лица с таким именем § 22–23 говорят чаще о народе. */
+const nationWords = groups.filter((gr) => gr.kind === 'tribe' || gr.kind === 'nation').flatMap((gr) => norm(gr.name).split(/[^а-я-]+/).filter((w) => w.length > 2));
+const eponymOf = (p: Person) => (p.kind ?? 'person') !== 'person' || nationWords.some((w) => nameMatcher(p.name).test(` ${w} `));
 function booksOfPerson(p: Person): string[] {
-  const named = Object.keys(booksOf.get(p.id) ?? {});
-  if (named.length) return named;
-  const refs = [...(p.parentRefs ?? []), ...(p.otherParents ?? []).flatMap((o) => o.refs), ...(p.spouses ?? []).flatMap((x) => x.refs), ...(p.kin ?? []).flatMap((k) => k.refs)];
+  const vs = counted.verses.get(p.id);
+  const epo = eponymOf(p);
+  const refs = refsOf(p, { notes: false, later: !epo, scripture: !epo });
   for (const e of g.childrenOf.get(p.id) ?? []) refs.push(...e.refs);
+  // главы стихов карточки и родства (без § 22–24): у счёта в главах карточки имя берётся только из них
+  const chapters = new Set<string>();
+  for (const r of refs) {
+    const pr = parseRef(r, bible.chapterLength);
+    if (pr?.chapterOnly) chapters.add(`${pr.book} ${pr.chapterOnly}`);
+    else for (const v of pr?.verses ?? []) chapters.add(`${v.book} ${v.chapter}`);
+  }
+  const whole = mentionsOf.get(p.id)?.scope === 'bible';
+  const books = new Set<string>();
+  for (const v of vs ?? []) {
+    const t = bible.verses.get(v);
+    const pr = parseRef(v);
+    const ch = pr?.verses[0] ? `${pr.verses[0].book} ${pr.verses[0].chapter}` : '';
+    if (t && pr && (whole || chapters.has(ch)) && namedAsPerson(p, t)) books.add(pr.book);
+  }
+  // Иисус Христос: «Иисус» у Него общий с тёзками (Иисус Навин), и счёт идёт в главах карточки, — но «Христос» и «Иисус»
+  // книг Нового Завета — Он (послания называют Его почти в каждой главе; Ветхий Завет «Христа» по имени не называет)
+  if (p.id === 'iisus')
+    for (const [v, t] of bible.verses) {
+      const b = parseRef(v)?.book;
+      if (b && BOOKS.find((q) => q.code === b)?.t === 'nt' && /Христ|Иисус/.test(t)) books.add(b);
+    }
+  if (books.size) return [...books];
+  // имя в стихах не стоит (безымянные: жена Пилата) — книги стихов карточки и родства
   return [...new Set(refs.map((r) => parseRef(r)?.book).filter((b): b is string => !!b))];
 }
 const r1 = (x: number) => Math.round(x * 10) / 10;

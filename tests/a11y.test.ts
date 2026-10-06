@@ -82,7 +82,7 @@ describe('окно неба для диктора (I3; MOB-34)', () => {
     const two = epochs.filter((e) => e.id === 'judges' || e.id === 'united');
     expect(flat(windowText(toAstro(-1100), toAstro(-1000), two, 1))).toContain('эпохи «Судьи», «Единое царство»; видно 1 лицо.');
     const all = flat(windowText(toAstro(-4174), 100, epochs, 62));
-    expect(all).toContain('эпохи от «Первозданный мир» до «Апостольская Церковь»; видно 62 лица.');
+    expect(all).toContain('эпохи от «Первый мир» до «Апостольская Церковь»; видно 62 лица.');
     expect(all).toMatch(/^На карте 4200 г\. до Р\. Х\. — 100 г\. по Р\. Х\./);
     expect(flat(windowText(toAstro(-500), toAstro(-490), [], 0))).toBe('На карте 500–490 гг. до Р. Х.; звёзд не видно.');
   });

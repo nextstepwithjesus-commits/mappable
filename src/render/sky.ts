@@ -30,7 +30,7 @@ import { alpha, hexToRgb } from './color.ts';
 import { alphaForContrast, CLOUD_DIMMED, dimLabelAlpha, separateRibbons, WORK_DIM } from './dim.ts';
 import { clearOfRibbons, drawBranchLabels, drawLineNotes, drawRibbonGaps, drawSkyRibbons, lineNoteFocus, ribbonBeads, ribbonCheck, ribbonGapHits, skySteps, stepLegal, stepWeak, type SkyStep } from './ribbons.ts';
 import { drawEventLines, drawFrame, drawGrid, drawTimeMarks, paintWayfinding, placeWayfinding, yearTicks, rateAt, BOTTOM_H, CANON_NOTE, FRAME_H, LETTER_W, LETTER_W_TOUCH, RULER_H, type EdgeHit } from './frame.ts';
-import { claim, clusterShort, clusterText, drawClusterLabel, drawHandle, handleSize, familyOf, ownLink, FAMILY_KY, labelFontOf, spot, drawEventLabel, drawFoldMark, drawGroupNames, drawNote, GROUP_COVER_FROM, drawStarLabels, foldMarkWidth, groupName, labelAt, LabelCache, LabelLedger, LineHits, measureLabels, namesakesInView, Placer, textBox, zoomScaleFor, GROUP_AREA_MIN, type GroupNameSpot, type LabelStats } from './labels.ts';
+import { claim, clusterShort, clusterText, drawClusterLabel, drawHandle, handleSize, hitAtLeast, familyOf, ownLink, FAMILY_KY, labelFontOf, spot, drawEventLabel, drawFoldMark, drawGroupNames, drawNote, GROUP_COVER_FROM, drawStarLabels, foldMarkWidth, groupName, labelAt, LabelCache, LabelLedger, LineHits, measureLabels, namesakesInView, Placer, textBox, zoomScaleFor, GROUP_AREA_MIN, type GroupNameSpot, type LabelStats } from './labels.ts';
 import { bendsOf, FAMILY_TIER, familyTier, hasGlides, tierAlpha, trailPolyline, trailSegs, type Bend, type FamilyTier } from './trails.ts';
 import { glidesOf, laneAt, starLaneOf } from '../engine/stays.ts';
 export { FAMILY_TIER, familyTier, tierAlpha, type FamilyTier } from './trails.ts';
@@ -2822,6 +2822,8 @@ export class Sky implements SkyContext {
       this.drawFoldMarks(p, 'desc');
       // «+N» скопления семьи, не вставший в подпись старшего (решение 142)
       if (L.labels) this.drawPileMarks(p);
+      // «⊕» шага вперёд у лица, чья подпись легла слева от звезды или не встала, — справа от знака звезды (решение 197)
+      if (work && !lineOnly && s.reveal?.size && settle >= 0.999) this.drawFwdHandles(p, s.reveal);
       // подписи лент «через Соломона (Мф 1)» — важнее подписей звёзд величины 2–6 (UX-45)
       if (ribbons && !lineOnly && L.labels) drawBranchLabels(this, p, lineSteps);
       for (const { x, e } of events) drawEventLabel(this, p, x, e.full, e.name);
@@ -3150,6 +3152,39 @@ export class Sky implements SkyContext {
    * 'reveal-up'). Место — у самой звезды, слева; занято — чуть выше или ниже; негде — рукоятки нет (шаг есть в карточке,
    * в меню звезды и клавишей «[»).
    */
+  /**
+   * «⊕» шага вперёд справа от знака звезды (рецензия этапа 21): у лица, чья подпись легла слева от звезды или не встала,
+   * знак не пишется после имени — иначе он стоял бы слева от звезды, где «⊕» значит шаг назад. Место — у звезды справа,
+   * над лентой и под ней, затем чуть правее.
+   */
+  private drawFwdHandles(p: Pass, ids: ReadonlySet<string>) {
+    const { ctx, cam, pal } = this;
+    const size = mapSize(T_MAP_S, this.coarse);
+    const out = p.foldHits ?? [];
+    const cw = handleSize(this.coarse);
+    for (const id of ids) {
+      if (out.some((h) => h.kind === 'reveal' && h.id === id)) continue;
+      const i = this.nodeIndex.get(id);
+      if (i === undefined || !this.drawn(i) || !p.starShown(i)) continue;
+      const x0 = cam.sx(this.X0[i]);
+      const y = this.starY(i);
+      if (x0 < this.letterW || x0 > cam.vp.r - 16 || y < this.openTop || y > cam.vp.b) continue;
+      const g = p.placer.glyphsIn({ x: x0 - 1, y: y - 1, w: 2, h: 2 }).find((q) => q.id === id);
+      const right = g ? g.e.r : starRadius(byId.get(id)?.magnitude ?? 6, p.zoomScale);
+      const x = x0 + right + 4;
+      const base = y + size * 0.35;
+      const cands: Rect[] = [];
+      for (const dx of [0, 6, 12]) for (const dy of [0, -size - 2, size + 2]) cands.push(textBox(x + dx, base + dy, cw, size));
+      const got = claim(this, p, cands, 'fold', '+', { id });
+      if (!got) continue;
+      drawHandle(ctx, pal, got.x + got.w / 2, got.y + got.h / 2, this.coarse);
+      // поле 24 × 24 — не на знак звезды: щелчок по звезде остаётся щелчком по ней
+      const hf = hitAtLeast(got);
+      const cut = Math.max(0, x0 + right + 1 - hf.x);
+      out.push({ ...hf, x: hf.x + cut, w: hf.w - cut, kind: 'reveal', id });
+    }
+  }
+
   private drawBackHandles(p: Pass, ids: ReadonlySet<string>) {
     const { ctx, cam, pal } = this;
     const size = mapSize(T_MAP_S, this.coarse);
@@ -3172,7 +3207,8 @@ export class Sky implements SkyContext {
       const got = claim(this, p, cands, 'fold', '+', { id });
       if (!got) continue;
       drawHandle(ctx, pal, got.x + got.w / 2, got.y + got.h / 2, this.coarse);
-      out.push({ ...got, kind: 'reveal-up', id });
+      const hb = hitAtLeast(got);
+      out.push({ ...hb, w: Math.min(hb.w, x0 - left - 1 - hb.x), kind: 'reveal-up', id });
     }
   }
 

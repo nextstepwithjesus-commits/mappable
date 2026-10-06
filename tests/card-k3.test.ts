@@ -263,7 +263,8 @@ describe('поручения координатора после K1: напря�
       const c = m.chrono.get(id)!;
       if (c.basis?.kind === 'order') expect(markTitle(c, { dep: false, model: 'Основной текст' }), id).toMatch(/порядка перечисления/);
     }
-    expect(sec('iaval', 8)).toMatch(/Первозданный мир расч\./);
+    // эпоха «Первый мир» (2 Пет 2:5; прежде «Первозданный мир» — рецензия этапа 21: слово Писания)
+    expect(sec('iaval', 8)).toMatch(/Первый мир расч\./);
   });
   it('§ 14: народы и роды не попадают в современники лиц (asResult передаёт named)', () => {
     const m = models[0];

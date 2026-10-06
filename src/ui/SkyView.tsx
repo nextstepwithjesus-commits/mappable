@@ -25,7 +25,7 @@ import {
  * их видимый фокус — на небе: подпись у точки ленты в рамке и кольцо у точки (src/render/ribbons.ts, drawLineNotes).
  */
 export const noteFocus = signal<string | null>(null);
-import { expanded, foldAncestorsOf, foldDescendantsOf, mapCmds, mapNews, plates, selectedUnion, unionById, type Plate } from './reveal.ts';
+import { expanded, foldAncestorsOf, foldDescendantsOf, mapCmds, mapNews, plates, restartTick, selectedUnion, unionById, type Plate } from './reveal.ts';
 import { linkClick, linkHover, plateFocus, plateHover, plateNews } from './sky/starnav.ts';
 import { linkAnchor, previewLinks, selectedLink } from './linkstate.ts';
 import { showKey as showKeyOf, skyShow, whereOf } from './show.ts';
@@ -223,6 +223,12 @@ export function SkyView() {
     let introStart = introDone.value || reduced() ? -1 : performance.now();
     let flowStart = 0;
     let morph: { from: number; to: number; start: number; anchor: Anchor } | null = null;
+    /**
+     * Проверить, когда небо встанет, не закрыто ли органами неба всё, что видно на карте «набор» (после первого показа
+     * и после смены органов: вступление, строка показа, листы; рецензия этапа 21).
+     */
+    let escapeOrgans = true;
+    let firstEscape = true;
     /** прежний кадр при смене модели: растворяется поверх нового (IX-48) */
     let fade: { img: HTMLCanvasElement; start: number } | null = null;
     /** отклик звезды на клавишу набора (IX-51) */
@@ -256,7 +262,7 @@ export function SkyView() {
         const e = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
         shownLambda = morph.from + (morph.to - morph.from) * e;
         sky.setModel(model.value, shownLambda);
-        holdAnchor(morph.anchor);
+        holdAnchor(morph.anchor, false, true);
         if (t >= 1) {
           // лицо остаётся на месте, даже если окно теперь выходит за край данных: вернёт его первый же сдвиг (упор)
           if (!morph.anchor.id) sky.cam.clampNow();
@@ -387,6 +393,28 @@ export function SkyView() {
       }
       // перелёт кончился — лица перелёта больше нет (view.ts, flightDone)
       if (!sky.cam.moving) flightDone();
+      // карта «набор» встала (переход и перелёт кончились) после первого показа или смены органов неба: ни одно лицо карты
+      // не видно — лицо, которое по времени в окне, уходит из-под органа кратчайшим путём (рецензия этапа 21: на альбомном
+      // телефоне Адам под строкой показа, на планшете — под вступлением). Сдвиг неба читателем проверку не зовёт
+      if (escapeOrgans && shownMode !== null && !sky.cam.moving && !sky.transitioning && sky.model && last.w) {
+        escapeOrgans = false;
+        const ids = sky.plan.mode === 'work' && !selected.peek() ? [...workSet.peek().keys()] : [];
+        const vp = sky.cam.vp;
+        const inTime = ids.filter((x) => {
+          const q = screenOf(x);
+          return !!q && q.x >= vp.l && q.x <= vp.r;
+        });
+        // при первом показе — и ближайшее к окну лицо, если по времени в окне никого (вступление на планшете сужает окно)
+        const near = firstEscape
+          ? ids
+              .map((x) => ({ x, q: screenOf(x) }))
+              .filter((e) => !!e.q)
+              .sort((a, b) => Math.abs(a.q!.x - (vp.l + vp.r) / 2) - Math.abs(b.q!.x - (vp.l + vp.r) / 2))[0]?.x
+          : undefined;
+        const to = inTime[0] ?? near;
+        if (to && !ids.some((x) => inView(x))) keepInView(to, 250, true);
+        if (ids.length) firstEscape = false;
+      }
       input.watchCamera(`${shownLambda} ${model.value.id}`);
       watchSettle(`${sky.cam.x0} ${sky.cam.kx} ${sky.cam.w} ${shownLambda} ${model.value.id}`);
       // окно неба — для проверок приёмки (tools/accept/layout.ts): видимая часть, годы и полосы по её краям
@@ -476,6 +504,27 @@ export function SkyView() {
       const right = col ? Math.max(0, box.right - col.getBoundingClientRect().left + 4) : 0;
       return { top: epochMode.peek() ? tiersBottom(sky, model.value) : FRAME_H, bottom: Math.min(bottom, box.height - FRAME_H - 80), left, right };
     };
+    /**
+     * «Всё небо» показа. На карте «набор» — с проверкой: если при пределе масштаба ни одно лицо набора не входит в окно по
+     * времени (Адам и Иисус Христос на концах времени, а небо узкое: телефон, 1024 px со вступлением; этап 21, решение
+     * 200), окно встаёт у самого раннего лица набора, остальных называют указатели у края. Проверка — по цели вписывания
+     * и только по времени: строки кадра «набор» при первом показе ещё прежние (переход), а годы уже верны.
+     */
+    const fitSet = (animate: boolean) => {
+      const f = sky.fitState();
+      const vp = sky.cam.vp;
+      const ids = sky.plan.mode === 'work' ? [...workSet.peek().keys()].filter((id) => sky.nodeX(id) !== null) : [];
+      const inTime = (id: string) => {
+        const sx = ((sky.nodeX(id) ?? 0) - f.x0) * f.kx;
+        return sx >= vp.l && sx <= vp.r;
+      };
+      if (ids.length && !ids.some(inTime)) {
+        const early = ids.sort((a, b) => (sky.nodeX(a) ?? 0) - (sky.nodeX(b) ?? 0))[0];
+        if (showAround(early, animate)) return;
+      }
+      if (animate) sky.cam.flyTo(f, request, reduced());
+      else sky.fitAll();
+    };
     /** Что было до смены видимой части: камера на «всём небе»? выбранное лицо видно? */
     const snapshot = () => {
       const id = selected.peek();
@@ -488,8 +537,7 @@ export function SkyView() {
         return;
       }
       if (before.wasFit) {
-        if (animate) sky.cam.flyTo(sky.fitState(), request, reduced());
-        else sky.fitAll();
+        fitSet(animate);
         request();
         return;
       }
@@ -629,6 +677,7 @@ export function SkyView() {
       // подписям и указателям у края — весь резерв; движению неба, «на виду» и месту карточки у знака — органы неба
       reserveRef.current = out;
       setReserve(organs);
+      escapeOrgans = true;
       applyInsets(animate);
       // из-под листа «Показ» — вбок (решение 147), из-под прочих органов — по вертикали: окно лет то же
       if (sel && selWas && !sky.cam.moving && !inView(sel)) keepInView(sel, 250, !!showSheet.peek());
@@ -802,7 +851,7 @@ export function SkyView() {
       if (reduced()) {
         shownLambda = to;
         sky.setModel(model.value, to);
-        holdAnchor(anchor);
+        holdAnchor(anchor, false, true);
         if (!anchor.id) sky.cam.clampNow();
         request();
         return;
@@ -962,6 +1011,8 @@ export function SkyView() {
     // свернули, и удержать на месте экрана лицо, от которого его раскрыли
     let shownExp = expanded.peek();
     let shownSet: ReadonlySet<string> = shownIds.peek();
+    /** последнее «К началу», которое небо уже вписало (restartTick) */
+    let restartSeen = restartTick.peek();
     const offWork = effect(() => {
       // небо «набор» показывает набор из ссылки, пока читатель его смотрит (IX-69), иначе свой набор; точки союзов —
       // место под них в строках неба (решение 70). В режиме «только линии» точек союзов нет (sky.ts, unionPlates) — нет и
@@ -1027,27 +1078,17 @@ export function SkyView() {
       // новый набор (начало «С Адама», «С Иисуса Христа», «Ключевые лица»…; решение 68): одно лицо — окно вокруг него
       // с запасом на поколение-два, несколько — весь набор
       // (и «Начать заново», когда ни одного лица набора не видно: небо не остаётся пустым)
-      const fresh = v.mode === 'work' && v.set.size > 0 && (![...v.set].some((id) => prevSet.has(id)) || (changed && ![...v.set].some((id) => inView(id))));
+      // «К началу» (restartMap) — тоже: карта снова «Адам и Иисус Христос» во весь кадр (рецензия этапа 21)
+      const restart = restartTick.peek() !== restartSeen;
+      restartSeen = restartTick.peek();
+      const fresh =
+        v.mode === 'work' && v.set.size > 0 && (restart || ![...v.set].some((id) => prevSet.has(id)) || (changed && ![...v.set].some((id) => inView(id))));
       const single = v.set.size === 1 ? [...v.set][0] : null;
       // первый показ в режиме «набор» (сеанс продолжается после перезагрузки) — сразу вписать набор
       if (shownMode === null) {
         shownMode = v.mode;
         if (changed && v.mode === 'work' && sky.model && last.w) {
-          if (!(single && showAround(single, false))) {
-            sky.fitAll();
-            // набор не вписался (телефон: Адам и Иисус Христос на концах времени, а предел масштаба не даёт показать всё
-            // время; этап 21, решение 200) — окно у самого раннего лица набора, остальное назовут указатели у края.
-            // Проверка — только по времени: строки кадра «набор» в этот миг ещё прежние (переход), а годы уже верны
-            const vp = sky.cam.vp;
-            const inTime = (id: string) => {
-              const q = screenOf(id);
-              return !!q && q.x >= vp.l && q.x <= vp.r;
-            };
-            if (![...v.set].some(inTime)) {
-              const early = [...v.set].sort((a, b) => (sky.nodeX(a) ?? 0) - (sky.nodeX(b) ?? 0))[0];
-              if (early) showAround(early, false);
-            }
-          }
+          if (!(single && showAround(single, false))) fitSet(false);
         }
         if (changed) request();
         return;
@@ -1073,7 +1114,7 @@ export function SkyView() {
       } else if (sky.model && last.w && fresh && !revealed) {
         stopFlight();
         updateZoomFloor();
-        if (!(single && showAround(single, true))) sky.cam.zoomTo(sky.fitState(), 500, request, reduced());
+        if (!(single && showAround(single, true))) fitSet(true);
       } else if (sky.model && last.w && !revealed) {
         sky.cam.clampNow();
         const id = selected.peek();
@@ -1109,6 +1150,13 @@ export function SkyView() {
         const id = keyTarget(shownTipStar());
         if (!id) return;
         e.preventDefault();
+        // сворачивать нечего — так и сказать, а не «свёрнуто» (рецензия этапа 21)
+        const c = mapCmds(id);
+        const nm = byId.get(id)?.name ?? id;
+        if (e.shiftKey ? !c.foldAnc : !c.foldDesc) {
+          say(`${nm}: ${e.shiftKey ? 'предков' : 'потомков'} на карте нет — сворачивать нечего`);
+          return;
+        }
         if (e.shiftKey) foldAncestorsOf(id);
         else foldDescendantsOf(id);
         flash = { id, at: performance.now() };

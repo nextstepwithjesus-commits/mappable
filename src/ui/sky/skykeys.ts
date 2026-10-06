@@ -85,6 +85,9 @@ export function skyKeys(e: KeyboardEvent, nav: boolean, onCanvas: boolean, onSky
   const sky = skyRef.current;
   if (!sky) return false;
   const id = selected.value;
+  // «[» и «]» — от звезды с кольцом клавиатуры, если она есть на небе, иначе от выбранного лица (рецензия этапа 21:
+  // «]» на звезде с кольцом, но без выбора, молчал)
+  const cur = (onSky ? focused.peek() : null) ?? id;
   /**
    * Переход по родству (решение 149; M5): лицо выбирается, и фокус клавиатуры — на нём же, если он был на небе: одно
    * текущее лицо, Enter открывает его карточку, диктор называет его (aria-activedescendant, SkyA11y).
@@ -149,22 +152,22 @@ export function skyKeys(e: KeyboardEvent, nav: boolean, onCanvas: boolean, onSky
       break;
     }
     case 'BracketLeft': {
-      if (!id) return false;
-      const par = byId.get(id)?.father ?? byId.get(id)?.mother;
+      if (!cur) return false;
+      const par = byId.get(cur)?.father ?? byId.get(cur)?.mother;
       // без цели — не тишина (M7): диктор слышит, что родителей в данных нет
       if (!par) {
         skySay('родителей в данных нет');
         break;
       }
-      climb = [...climb, id].slice(-200);
+      climb = [...climb, cur].slice(-200);
       // карта «набор» (этап 21, решение 197): родителя на карте нет — сначала шаг назад (родители, братья и сёстры)
-      if (onMap() && !workSet.peek().has(par)) stepBack(id);
+      if (onMap() && !workSet.peek().has(par)) stepBack(cur);
       go(par);
       break;
     }
     case 'BracketRight': {
-      if (!id) return false;
-      const r = childFor(id, climb);
+      if (!cur) return false;
+      const r = childFor(cur, climb);
       climb = r.path;
       if (!r.to) {
         skySay('детей в данных нет');
@@ -172,8 +175,8 @@ export function skyKeys(e: KeyboardEvent, nav: boolean, onCanvas: boolean, onSky
       }
       // карта «набор» (решение 197): ребёнка на карте нет — раскрывается союз, где он родился (мать и братья с ним)
       if (onMap() && !workSet.peek().has(r.to)) {
-        const u = originOf(r.to).find((q) => q.a === id || q.b === id) ?? originOf(r.to)[0];
-        if (u) expandUnion(u.id, id);
+        const u = originOf(r.to).find((q) => q.a === cur || q.b === cur) ?? originOf(r.to)[0];
+        if (u) expandUnion(u.id, cur);
       }
       go(r.to);
       break;

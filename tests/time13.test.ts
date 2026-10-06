@@ -149,7 +149,7 @@ describe('П22: эра на линейке в каждом окне (решен�
       expect(row.some((b) => b.text.startsWith('модель'))).toBe(false);
     }
   });
-  it('«По эпохам» (решение 196): эпохи — в линейке, имена одного вида, лет на линейке нет; «поколение ├──┤ ≈ N лет» справа', () => {
+  it('«По эпохам» (решение 196): эпохи — в линейке, имена одного вида, лет на линейке нет; справа — «масштаб ├──┤ ≈ N лет»', () => {
     for (const [w, h, span] of [
       [1440, -1000, 200],
       [390, -10, 90],
@@ -177,11 +177,14 @@ describe('П22: эра на линейке в каждом окне (решен�
       }
       const row = boxes.filter((b) => b.y >= frame.RULER_H - 1 && b.y + b.h <= frame.FRAME_H + 1);
       expect(row.filter((b) => eps.some((e) => e.name === b.text || e.short === b.text)), 'эпохи не повторяются в служебной строке').toEqual([]);
+      // справа — местная линейка лет «масштаб ├──┤ ≈ N лет» (линейку «поколение ≈ N лет» решения 196 сняла рецензия
+      // этапа 21: длина поколения выходила из оценок решателя, а не из чисел текста)
       const bar = frame.scaleBar(s);
-      if (bar?.gen) {
-        expect(row.some((b) => b.text === 'поколение'), `${w} ${h} ${span}`).toBe(true);
+      if (bar) {
+        expect(row.some((b) => b.text === 'масштаб'), `${w} ${h} ${span}`).toBe(true);
+        expect(row.some((b) => b.text === 'поколение')).toBe(false);
         expect(bar.px).toBeGreaterThanOrEqual(12);
-        expect(bar.px).toBeLessThanOrEqual(160);
+        expect(bar.px).toBeLessThanOrEqual(120);
       }
     }
   });

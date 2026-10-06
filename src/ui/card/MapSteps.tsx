@@ -7,11 +7,34 @@
  * В показе «набор» своего набора — все команды; в других показах и при наборе из ссылки — только «Только это лицо»:
  * оно и начинает свою карту. Команды без цели не показываются (одно слово — одно действие).
  */
+import { useRef } from 'preact/hooks';
 import { foldAncestorsOf, foldDescendantsOf, foldMapTo, mapCmds, stepBack, stepForward } from '../reveal.ts';
 import { linkSet, show, workSet } from '../work.ts';
 import { forwardLabel } from '../sky/text.ts';
 
+/**
+ * Фокус после команды (WCAG 2.4.3; рецензия этапа 21): команда, исчезнувшая после шага («Жена и дети», «Родители»,
+ * «Свернуть потомков»), не роняет фокус в body — он переходит на ту же команду, если она осталась (у «Жёны (4)» — она же
+ * «Все дети»), иначе на первую команду строки, иначе на заголовок карточки.
+ */
+export function keepFocus(group: HTMLElement | null, sel: string) {
+  const host = group?.closest<HTMLElement>('.folio, .dotcard, .sheet') ?? null;
+  requestAnimationFrame(() =>
+    setTimeout(() => {
+      if (document.activeElement && document.activeElement !== document.body && group?.contains(document.activeElement)) return;
+      const live = group?.isConnected ? group : null;
+      const btn = live?.querySelector<HTMLButtonElement>(sel) ?? live?.querySelector<HTMLButtonElement>('button');
+      if (btn) return btn.focus();
+      const title = host?.querySelector<HTMLElement>('[id^="title-"], h2, h1');
+      if (!title) return;
+      if (!title.hasAttribute('tabindex')) title.setAttribute('tabindex', '-1');
+      title.focus();
+    }),
+  );
+}
+
 export function MapSteps({ id, cls = 'map-cmds' }: { id: string; cls?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
   const own = show.value.kind === 'set' && !linkSet.value;
   // подписка на набор: команды перестраиваются после каждого шага
   void workSet.value;
@@ -36,9 +59,19 @@ export function MapSteps({ id, cls = 'map-cmds' }: { id: string; cls?: string })
     });
   if (!items.length) return null;
   return (
-    <div class={`actions ${cls}`} role="group" aria-label="Шаги карты">
+    <div class={`actions ${cls}`} role="group" aria-label="Шаги карты" ref={ref}>
       {items.map((q) => (
-        <button key={q.key} type="button" class={`cmd step-${q.key}`} title={q.title} onClick={q.run}>
+        <button
+          key={q.key}
+          type="button"
+          class={`cmd step-${q.key}`}
+          title={q.title}
+          onClick={() => {
+            const g = ref.current;
+            q.run();
+            keepFocus(g, `.step-${q.key}`);
+          }}
+        >
           {q.label}
         </button>
       ))}
