@@ -1033,7 +1033,15 @@ export function SkyView() {
       if (shownMode === null) {
         shownMode = v.mode;
         if (changed && v.mode === 'work' && sky.model && last.w) {
-          if (!(single && showAround(single, false))) sky.fitAll();
+          if (!(single && showAround(single, false))) {
+            sky.fitAll();
+            // набор не вписался (телефон: Адам и Иисус Христос на концах времени, а предел масштаба не даёт показать всё
+            // время; этап 21, решение 200) — окно у самого раннего лица набора, остальное назовут указатели у края
+            if (![...v.set].some((id) => inView(id))) {
+              const early = [...v.set].sort((a, b) => (sky.nodeX(a) ?? 0) - (sky.nodeX(b) ?? 0))[0];
+              if (early) showAround(early, false);
+            }
+          }
         }
         if (changed) request();
         return;
