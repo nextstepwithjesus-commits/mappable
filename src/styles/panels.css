@@ -93,6 +93,43 @@
 /* ---------- указатель (G7; VIS-33) ----------
    Три узких столбца (ТЗ § 3.7). Заглавное слово — Literata 16, одноимённые под ним — 14 вторым цветом, с годами;
    известные лица — полужирным. Отточие и координата стоят по базовой линии последней строки статьи. */
+/* часть Писания и книга (этап 21, решение 202): сегменты «Вся Библия | Ветхий Завет | Новый Завет» и список книг — строкой */
+.canon {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+  margin: 0 0 8px;
+}
+.canon .seg {
+  margin: 0;
+}
+.book-pick {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: var(--sans);
+  font-size: var(--t-ui);
+  line-height: var(--t-ui-lh);
+  color: var(--ink-2);
+}
+/* список книг — поле на листе, как поле ввода: черта снизу, без рамки и тени (§ 5.6) */
+.book-pick select {
+  font-family: var(--serif);
+  font-size: var(--t-body);
+  line-height: var(--t-body-lh);
+  color: var(--ink);
+  background: var(--sheet);
+  border: 0;
+  border-bottom: 1px solid var(--rule-strong);
+  border-radius: 0;
+  padding: 2px 2px 3px 0;
+}
+.book-pick select:focus-visible {
+  outline: none;
+  border-bottom-color: var(--ink);
+  box-shadow: 0 1px 0 var(--ink);
+}
 /* буквы — строкой, без «стены сегментов»: выбранная — выворотка */
 .letters .seg {
   padding: 0;
@@ -1694,5 +1731,49 @@ button.row:focus-visible {
     display: inline-flex;
     align-items: center;
     min-height: 44px;
+  }
+}
+
+/* ---------- каталог и «как раскрывать» во вступлении (этап 21, решения 197, 202) ----------
+   «Ветхий Завет», «Новый Завет» — командами строкой под поиском (открывают «Указатель» с частью Писания); ниже — три
+   строки с тем же знаком, что на небе: плюс в кольце справа и слева, Ctrl Z. Без рамок и фона: строки листа. */
+.cartouche .catalog {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 0 0 8px;
+}
+.cartouche .catalog .cmd {
+  flex: none;
+}
+.cartouche .how {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+  font-family: var(--serif);
+  font-size: var(--t-note);
+  line-height: var(--t-note-lh);
+  color: var(--ink-2);
+}
+.cartouche .how li {
+  margin: 0;
+}
+.cartouche .how .handle-mark {
+  vertical-align: -1px;
+  color: var(--ink);
+}
+.cartouche .how kbd {
+  font-family: var(--sans);
+  font-size: var(--t-ui-s);
+  color: var(--ink);
+}
+@media (pointer: coarse) {
+  .cartouche .catalog .cmd {
+    min-height: 44px;
+  }
+}
+@media (min-width: 721px) and (max-height: 800px) {
+  .cartouche .how {
+    margin-bottom: 4px;
   }
 }

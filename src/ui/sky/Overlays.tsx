@@ -17,6 +17,7 @@ import { start } from '../reveal.ts';
 import { StartList, openStarts } from './Controls.tsx';
 import { ShowBar } from './ShowBar.tsx';
 import { ShowSheet } from '../panels/Show.tsx';
+import { openIndex } from '../panels/Index.tsx';
 
 /** Уже этой ширины вступительный картуш слева внизу встал бы под блок органов справа: картуш переходит в левый верхний угол. */
 export const CARTOUCHE_BESIDE = 880;
@@ -350,6 +351,29 @@ export function Cartouche({ high, low = false }: { high: boolean; low?: boolean 
           Читать главу
         </button>
       </div>
+      {/* каталог (этап 21, решение 202): лица Ветхого и Нового Завета по алфавиту — «Указатель» с выбранной частью Писания */}
+      <div class="catalog" role="group" aria-label="Лица по Заветам">
+        <button type="button" class="cmd" title="Лица, названные в книгах Ветхого Завета, по алфавиту; там же — выбор книги" onClick={() => openIndex({ canon: 'ot', letter: null, filter: '' })}>
+          Ветхий Завет
+        </button>
+        <button type="button" class="cmd" title="Лица, названные в книгах Нового Завета, по алфавиту; там же — выбор книги" onClick={() => openIndex({ canon: 'nt', letter: null, filter: '' })}>
+          Новый Завет
+        </button>
+      </div>
+      {/* как раскрывать (решение 197) — тремя строками, знаком с неба: плюс в кольце */}
+      <ul class="how" aria-label="Как раскрывать родословие">
+        <li>
+          <HandleMark /> {typo('справа от имени — жёны и дети')}
+        </li>
+        <li>
+          <HandleMark /> {typo('слева от звезды — родители')}
+        </li>
+        <li>
+          <kbd>Ctrl</kbd>
+          {'\u00a0'}
+          <kbd>Z</kbd> {typo('— отменить шаг')}
+        </li>
+      </ul>
       {/* пять начал (решение 68) — при первом посещении; выбор сворачивает вступление. Быстрые входы — ниже, как прежде */}
       {pick && (
         <div class="pick" role="group" aria-labelledby="starts-title">
@@ -381,6 +405,16 @@ export function Cartouche({ high, low = false }: { high: boolean; low?: boolean 
       )}
       <ReadingGuide />
     </div>
+  );
+}
+
+/** Знак шага карты в тексте — тот же плюс в кольце, что на небе (src/render/labels.ts, drawHandle). */
+export function HandleMark() {
+  return (
+    <svg class="handle-mark" width="13" height="13" viewBox="0 0 13 13" aria-label="плюс в кольце" role="img">
+      <circle cx="6.5" cy="6.5" r="5.9" fill="none" stroke="currentColor" stroke-width="1.2" />
+      <path d="M3.5 6.5h6M6.5 3.5v6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
+    </svg>
   );
 }
 

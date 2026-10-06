@@ -4,7 +4,7 @@
  */
 import raw from '../generated/atlas.json';
 import type { Card, Chrono, Epoch, Group, Role, Sex, PersonKind, Cert } from './types.ts';
-import type { Book } from '../engine/books.ts';
+import { decodeBooks, type Book } from '../engine/books.ts';
 import type { ChronoModelId, DateClass, ModelInfo, Tension, WhenSpan, YearBasis, BasisKind } from '../engine/chronology.ts';
 import type { LifeDates } from '../engine/years.ts';
 import { applyEpochDelta } from '../engine/epochs.ts';
@@ -58,6 +58,8 @@ export interface IdxPerson {
    * по умолчанию — models[0].chrono (всегда в индексе). Годы — астрономические, как в ChronoRow.
    */
   modelDep: Partial<Record<ChronoModelId, LifeDates>>;
+  /** книги, где лицо названо (каталог «Указателя», этап 21, решение 202) — коды в каноническом порядке */
+  inBooks: readonly string[];
 }
 
 export interface ChronoRow {
@@ -283,6 +285,7 @@ export const persons: IdxPerson[] = R.persons.map((p) => ({
   active: p.active ?? null,
   silent: p.silent ?? [],
   modelDep: {},
+  inBooks: decodeBooks((p as { bk?: string }).bk),
 }));
 const rawDep = new Map<string, Record<string, RawDep>>();
 /** Модели после модели по умолчанию — порядок элементов md в индексе (tools/build-data.ts, encodeModelDep). */

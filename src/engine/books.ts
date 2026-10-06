@@ -151,3 +151,23 @@ export function compareRefs(a: string, b: string): number {
   if (ca !== cb) return ca - cb;
   return (pa.verses[0]?.verse ?? 0) - (pb.verses[0]?.verse ?? 0);
 }
+
+
+/**
+ * Книги лица в индексе неба одной строкой (этап 21, решение 202; NFR-2): по символу на книгу — её номер в BOOKS (канон),
+ * алфавит из 66 символов без кавычек и обратной черты.
+ */
+export const BOOK_CHARS = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!#$%';
+export function encodeBooks(codes: readonly string[]): string {
+  const idx = [...new Set(codes.map((c) => BOOKS.findIndex((b) => b.code === c)).filter((i) => i >= 0))].sort((a, b) => a - b);
+  return idx.map((i) => BOOK_CHARS[i]).join('');
+}
+export function decodeBooks(s: string | undefined): string[] {
+  if (!s) return [];
+  const out: string[] = [];
+  for (const ch of s) {
+    const i = BOOK_CHARS.indexOf(ch);
+    if (i >= 0 && BOOKS[i]) out.push(BOOKS[i].code);
+  }
+  return out;
+}

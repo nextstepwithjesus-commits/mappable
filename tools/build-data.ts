@@ -17,7 +17,7 @@ import { computeLayout, computeOutlines, packSpan, GHOST_SPAN, TRAIL_KINDS, type
 import type { HouseLayout } from '../src/engine/house.ts';
 import { buildTimeScale, eraGenerations, timeToX, xToTime, type EraSpan } from '../src/engine/timescale.ts';
 import { epochDelta } from '../src/engine/epochs.ts';
-import { parseRef, verseId, BOOKS } from '../src/engine/books.ts';
+import { encodeBooks, parseRef, verseId, BOOKS } from '../src/engine/books.ts';
 import { splitParentRefs } from '../src/engine/text.ts';
 import { typo } from '../src/ui/text/typo.ts';
 import { refsOf, countMentions } from './mentions.ts';
@@ -256,6 +256,14 @@ if (existsSync(gen)) rmSync(gen, { recursive: true });
 mkdirSync(join(gen, 'cards'), { recursive: true });
 mkdirSync(join(gen, 'verses'), { recursive: true });
 
+/** Книги лица для каталога (решение 202): где названо по имени (§ 23), иначе — книги стихов его родства и списка. */
+function booksOfPerson(p: Person): string[] {
+  const named = Object.keys(booksOf.get(p.id) ?? {});
+  if (named.length) return named;
+  const refs = [...(p.parentRefs ?? []), ...(p.otherParents ?? []).flatMap((o) => o.refs), ...(p.spouses ?? []).flatMap((x) => x.refs), ...(p.kin ?? []).flatMap((k) => k.refs)];
+  for (const e of g.childrenOf.get(p.id) ?? []) refs.push(...e.refs);
+  return [...new Set(refs.map((r) => parseRef(r)?.book).filter((b): b is string => !!b))];
+}
 const r1 = (x: number) => Math.round(x * 10) / 10;
 const def = results[0];
 const index = persons.map((p) => {
@@ -293,10 +301,13 @@ const index = persons.map((p) => {
     silent: c?.silent ?? [],
     // годы в других моделях, где они другие (решения 96, 102; src/data/atlas.ts, decodeModelDep)
     md: encodeModelDep(p.id, dependence.persons.get(p.id)),
+    // книги, где лицо названо (этап 21, решение 202: каталог «Ветхий Завет / Новый Завет» в «Указателе») — по символу на
+    // книгу (BOOK_CHARS, src/engine/books.ts); у лица без упоминаний по имени — книги стихов его родства
+    bk: encodeBooks(booksOfPerson(p)),
   };
 });
 // значения по умолчанию не пишутся в индекс (NFR-2: индекс неба ≤ 200 КБ gzip); atlas.ts восстанавливает их
-const DEFAULTS: Record<string, unknown> = { d: '', k: 'person', u: 0, r: [], f: null, m: null, fk: 'natural', fg: 0, pc: 'scripture', pRefs: [], op: [], sp: [], kin: [], ord: null, alt: [], books: {}, ep: null, mgap: 0, reign: [], active: null, silent: [], filled: [], md: undefined };
+const DEFAULTS: Record<string, unknown> = { bk: '', d: '', k: 'person', u: 0, r: [], f: null, m: null, fk: 'natural', fg: 0, pc: 'scripture', pRefs: [], op: [], sp: [], kin: [], ord: null, alt: [], books: {}, ep: null, mgap: 0, reign: [], active: null, silent: [], filled: [], md: undefined };
 const isDefault = (k: string, v: unknown) => k in DEFAULTS && JSON.stringify(DEFAULTS[k]) === JSON.stringify(v);
 const compactIndex = index.map((row) => {
   const o: Record<string, unknown> = {};

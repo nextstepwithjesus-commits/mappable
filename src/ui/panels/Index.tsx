@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from 'preact/hooks';
 import { signal } from '@preact/signals';
-import { byId, persons } from '../../data/atlas.ts';
+import { books, byId, persons } from '../../data/atlas.ts';
 import { model, panel } from '../../state.ts';
 import { goTo, plural, ROLE_NAMES } from '../common.tsx';
 import { lifeEpoch } from '../card/shared.tsx';
@@ -44,8 +44,8 @@ export function indexGroups(birth: (id: string) => number | null): [string, stri
  * Открыть «Указатель» на букве или с запросом (решение 120: пустой поиск ведёт в «Указатель»). Панель, открытая или
  * уже открытая, берёт просьбу и сбрасывает её.
  */
-export const indexAsk = signal<{ letter?: string | null; filter?: string } | null>(null);
-export function openIndex(ask: { letter?: string | null; filter?: string }) {
+export const indexAsk = signal<{ letter?: string | null; filter?: string; canon?: Canon; book?: string } | null>(null);
+export function openIndex(ask: { letter?: string | null; filter?: string; canon?: Canon; book?: string }) {
   indexAsk.value = ask;
   panel.value = 'index';
 }
@@ -67,13 +67,43 @@ export function indexTag(id: string, m = model.value): { text: string; title: st
   return e ? { text: e.short, title: `эпоха: ${e.name}` } : null;
 }
 
+// ---------- каталог по Заветам и книгам (этап 21, решение 202) ----------
+
+/** Часть Писания каталога: вся Библия, Ветхий или Новый Завет. */
+export type Canon = 'all' | 'ot' | 'nt';
+export const CANONS: readonly { value: Canon; label: string; title: string }[] = [
+  { value: 'all', label: 'Вся Библия', title: 'Все лица атласа' },
+  { value: 'ot', label: 'Ветхий Завет', title: 'Лица, впервые названные в Ветхом Завете' },
+  { value: 'nt', label: 'Новый Завет', title: 'Лица, впервые названные в Новом Завете' },
+];
+const testamentOf = new Map(books.map((b) => [b.code, b.t]));
+/**
+ * Лицо в каталоге (решение 202). Часть Писания — по книге, где лицо названо впервые (в каноническом порядке): Авраам,
+ * названный и в Мф 1, — лицо Ветхого Завета, Иосиф, муж Марии, — Нового. Книга — все лица, названные в ней (IdxPerson.inBooks).
+ */
+export function inCatalog(id: string, canon: Canon, book: string): boolean {
+  const bs = byId.get(id)?.inBooks ?? [];
+  if (book) return bs.includes(book);
+  if (canon === 'all') return true;
+  return !!bs[0] && testamentOf.get(bs[0]) === canon;
+}
+/** Заголовок указателя по части Писания и книге: «Лица Нового Завета — впервые названные в нём», «Лица, названные в книге Руфь». */
+export function catalogTitle(canon: Canon, book: string): string {
+  const b = book ? books.find((x) => x.code === book) : undefined;
+  if (b) return `Лица, названные в книге ${b.gen}`;
+  return canon === 'ot' ? 'Лица Ветхого Завета — впервые названные в нём' : canon === 'nt' ? 'Лица Нового Завета — впервые названные в нём' : 'Все лица атласа';
+}
+
 // ---------- указатель (G7; ТЗ § 3.7; CARD-45; VIS-33) ----------
 export function IndexPanel() {
   // буква и фильтр помнятся, пока открыт атлас: панель, открытая снова, стоит там же (D11)
   const [letter, setLetter] = useRemembered<string | null>('index:letter', null);
   const [filter, setFilter] = useRemembered('index:filter', '');
+  // часть Писания и книга (решение 202): «Ветхий Завет» — лица, названные в его книгах; книга — лица одной книги
+  const [canon, setCanon] = useRemembered<Canon>('index:canon', 'all');
+  const [book, setBook] = useRemembered('index:book', '');
   const m = model.value;
-  const groups = useMemo(
+  const all = useMemo(
     () =>
       indexGroups((id) => {
         const c = m.chrono.get(id);
@@ -81,6 +111,12 @@ export function IndexPanel() {
       }),
     [m],
   );
+  const groups = useMemo(
+    () => (canon === 'all' && !book ? all : all.map(([n, ids]) => [n, ids.filter((id) => inCatalog(id, canon, book))] as [string, string[]]).filter(([, ids]) => ids.length)),
+    [all, canon, book],
+  );
+  const total = groups.reduce((n, [, ids]) => n + ids.length, 0);
+  const bookList = books.filter((b) => canon === 'all' || b.t === canon);
   const letters = [...new Set(groups.map(([n]) => n[0]))];
   const f = norm(filter);
   const shown = groups.filter(([n]) => (letter ? n[0] === letter : true) && (!f || norm(n).includes(f)));
@@ -101,6 +137,8 @@ export function IndexPanel() {
     if (!ask) return;
     setLetter(ask.letter && letters.includes(ask.letter) ? ask.letter : null);
     setFilter(ask.filter ?? '');
+    if (ask.canon) setCanon(ask.canon);
+    if (ask.book !== undefined || ask.canon) setBook(ask.book ?? '');
     indexAsk.value = null;
   }, [ask]);
   const tag = (id: string) => {
@@ -141,8 +179,37 @@ export function IndexPanel() {
     <Sheet
       wide
       title="Указатель"
-      lead={`Все лица атласа (${num(persons.length)}) по алфавиту; у имени — роль или эпоха. Справа мелко — место на небе: число — столбец (сто лет от начала шкалы), буква — строка на левой кромке.`}
+      lead={`${catalogTitle(canon, book)} (${num(canon === 'all' && !book ? persons.length : total)}) по алфавиту; у имени — роль или эпоха. Справа мелко — место на небе: число — столбец (сто лет от начала шкалы), буква — строка на левой кромке.`}
     >
+      <div class="canon" role="group" aria-label="Часть Писания и книга">
+        <Segmented
+          label="Часть Писания"
+          options={CANONS.map((c) => ({ value: c.value, label: c.label }))}
+          value={canon}
+          onChange={(v) => {
+            setCanon(v as Canon);
+            setBook('');
+            setLetter(null);
+          }}
+        />
+        <label class="book-pick">
+          <span>Книга:</span>{' '}
+          <select
+            value={book}
+            onChange={(e) => {
+              setBook((e.target as HTMLSelectElement).value);
+              setLetter(null);
+            }}
+          >
+            <option value="">все книги</option>
+            {bookList.map((b) => (
+              <option key={b.code} value={b.code}>
+                {b.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
       <div class="letters">
         <Segmented label="Буква" options={[{ value: '', label: 'все' }, ...letters.map((l) => ({ value: l, label: l }))]} value={letter ?? ''} onChange={(v) => setLetter(v || null)} />
       </div>
