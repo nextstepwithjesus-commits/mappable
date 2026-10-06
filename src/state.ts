@@ -105,6 +105,12 @@ const savedLayers = (): Partial<Record<LayerKey, boolean>> => {
 export const layers = signal<Record<string, boolean>>({ ...ALL_ON, ...savedLayers() });
 /** Выключенные слои — по порядку LAYER_KEYS (признак «слой выключен» для строки показа; src/ui/modelinfo.ts, layersBar). */
 export const layersOff = computed<LayerKey[]>(() => LAYER_KEYS.filter((k) => layers.value[k] === false));
+/**
+ * Следы жизни на карте «набор» (этап 21, решение 201): своя настройка, по умолчанию выключена — пошаговая карта читается
+ * связями семьи, а след в 930 лет Адама через весь экран её загромождал. На всём небе и в других показах следы — слоем
+ * lifelines, как прежде. Флажок «следы жизни» листа «Вид» в показе «набор» меняет эту настройку (src/ui/sky/Controls.tsx).
+ */
+export const mapTrails = signal<boolean>(load('mapTrails', false, isBool));
 /** Включить все слои («вернуть» в строке показа). */
 export function restoreLayers() {
   layers.value = { ...ALL_ON };
@@ -230,5 +236,6 @@ effect(() => save('model', modelId.value));
 effect(() => save('lambda', lambda.value));
 effect(() => save('ruler', rulerScale.value));
 effect(() => save('layers', layers.value));
+effect(() => save('mapTrails', mapTrails.value));
 effect(() => save('intro', introDone.value));
 effect(() => save('luke', lineFlip.value ? 'joseph' : 'mary'));

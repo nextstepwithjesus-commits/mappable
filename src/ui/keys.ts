@@ -8,6 +8,7 @@
 import { effect, signal } from '@preact/signals';
 import { panel, selected, second, pickMode, pins, pinsQuery, skyGroup, clearPair } from '../state.ts';
 import { skyKeys, viewKeys } from './sky/skykeys.ts';
+import { historyKeys } from './history.ts';
 import { introOpen, openLegend, reduced } from './sky/view.ts';
 import { focusCardTitle, focusPanelAt, focusQuietly, foldIntro } from './focus.ts';
 import { canReturn, returnFromFamily } from './show.ts';
@@ -185,6 +186,11 @@ function onKey(e: KeyboardEvent) {
     else if (next === 'union') selectUnion(null);
     else if (next === 'selected') selected.value = null;
     else if (next === 'intro') foldIntro();
+    return;
+  }
+  // журнал шагов карты (этап 21, решение 199): Ctrl+Z — отменить, Ctrl+Shift+Z и Ctrl+Y — вернуть; в полях ввода — их отмена
+  if (!typing && !e.defaultPrevented && historyKeys(e)) {
+    e.preventDefault();
     return;
   }
   // масштаб по одной оси (J1: Shift и Alt с «+» и «−») и «Небо во весь экран» (J2: F) — src/ui/sky/skykeys.ts

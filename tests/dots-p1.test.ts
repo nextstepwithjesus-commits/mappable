@@ -59,7 +59,7 @@ const U = (id: string) => reveal.unions.byId.get(id)!;
 const M = () => atlas.models[0];
 
 /** Кадр неба: режим, набор, союзы, окно years лет вокруг лица at, выбранное лицо с выделением рода. */
-function frame(o: { mode?: 'work' | 'all'; ids?: string[]; plates?: readonly PlateIn[] | null; at?: string; years?: number; selected?: string; w?: number; h?: number }) {
+function frame(o: { mode?: 'work' | 'all'; ids?: string[]; plates?: readonly PlateIn[] | null; at?: string; years?: number; selected?: string; w?: number; h?: number; revealUp?: string[] }) {
   const rec = recording();
   const canvas = { getContext: () => rec.ctx, style: {}, width: 0, height: 0, dataset: {} as Record<string, string> } as unknown as HTMLCanvasElement;
   const s = new sky.Sky(canvas);
@@ -81,7 +81,7 @@ function frame(o: { mode?: 'work' | 'all'; ids?: string[]; plates?: readonly Pla
   const state = {
     model: m, lambda: 1, selected: o.selected ?? null, second: null, hovered: null, focus: null, highlight: hl?.hl ?? null, depth: hl?.depth ?? null,
     layers: LAYERS, onlyLines: false, meridian: null, tensionPersons: new Set(), flow: 0, reduced: true, intro: 1, lineFlip: false, pins: new Set(),
-    reserve: [], plates: o.plates ?? null, plateMarks: {}, reveal: null,
+    reserve: [], plates: o.plates ?? null, plateMarks: {}, reveal: null, revealUp: o.revealUp ? new Set(o.revealUp) : null,
   } as Parameters<Sky['draw']>[0];
   s.draw(state);
   rec.calls.length = 0;
@@ -119,26 +119,27 @@ describe('год и место точки союза (решение 76)', () =>
     expect(t).toBeGreaterThan(young);
     expect(t).toBeLessThanOrEqual(young + 15);
   });
-  it('союз родителей лица, которых нет на небе: у строки ребёнка со стороны родителей, левее его звезды', () => {
+  // этап 21, решение 197: нераскрытого ромба союза родителей у лица больше нет (прежде — полый ромб левее звезды на строке
+  // ребёнка, решение 78, Г2–Г4). Шаг назад — рукоятка «+» в кольце слева от звезды, на её строке или строкой выше или ниже
+  // (лента линий Мессии входит в звезду слева); раскрытый союз родителей — ромбом, как прежде
+  it('союз родителей лица, которых нет на небе: ромба нет, слева от звезды — рукоятка шага назад', () => {
     reveal.startWith('jesus');
-    const f = frame({ ids: ['iisus'], plates: reveal.plates.value, at: 'iisus', years: 160 });
-    const d = (f.data.dots ?? '').split(';').filter(Boolean);
-    expect(d.length).toBe(1);
-    const [, open, xy, hidden] = d[0].split(':').slice(-4);
-    expect(open).toBe('0');
-    // Иосиф и Мария ещё не на небе: «+2»
-    expect(hidden).toBe('2');
+    expect(reveal.plates.value.some((q) => q.dir === 'up')).toBe(false);
+    const f = frame({ ids: ['iisus'], plates: reveal.plates.value, at: 'iisus', years: 160, revealUp: ['iisus'] });
+    expect((f.data.dots ?? '').split(';').filter(Boolean)).toEqual([]);
+    const h = (f.data.handles ?? '').split(';').filter(Boolean);
+    expect(h.length).toBe(1);
+    const [id, dir, xy] = h[0].split(':');
+    expect(id).toBe('iisus');
+    expect(dir).toBe('back');
     const [x, y] = xy.split(',').map(Number);
     const i = f.s.indexOf('iisus')!;
     const jx = f.s.cam.sx(f.s.X0[i]);
-    const jy = f.s.cam.sy(f.s.nodes[i].lane);
-    expect(x).toBeLessThan(jx - plates.DOT_CLEAR + 1);
-    // этап 11 (решение 78, Г2–Г4): полый ромб союза родителей стоит на строке ребёнка левее его звезды, от ромба к нему —
-    // зубец; прежнее место «со стороны родителей», между строками, ушло вместе с косыми лучами
-    expect(Math.abs(jy - y)).toBeLessThanOrEqual(1);
-    // «+2» — слева от ромба: справа к Иисусу Христу идёт линия
-    expect(f.texts).toContain('+2');
-    // линия к Иисусу Христу — штрихом: Иосиф — отец по закону (Мф 1:16)
+    const jy = f.s.starY(i);
+    expect(x).toBeLessThan(jx);
+    expect(jx - x).toBeLessThan(40);
+    expect(Math.abs(jy - y)).toBeLessThanOrEqual(20);
+    // линия к Иисусу Христу от раскрытого союза — штрихом: Иосиф — отец по закону (Мф 1:16)
     expect(plates.kidDash(U('u:iosif-muzh-marii+mariya')).length).toBeGreaterThan(0);
   });
 });

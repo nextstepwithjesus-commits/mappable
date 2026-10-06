@@ -24,8 +24,11 @@ import { byId, graph, lineMembership, persons } from '../data/atlas.ts';
 import { buildUnions, membersOf, type Union } from '../engine/unions.ts';
 import { selected } from '../state.ts';
 import { num } from './text/typo.ts';
-import { parseStored, setShowState, show, showRestored, workSet, type Show, type WorkEntry } from './work.ts';
+import { linkSet, parseStored, setShowState, show, showRestored, workSet, type Show, type WorkEntry } from './work.ts';
 import { STORY_TITLE } from './story/state.ts';
+import {
+  backHidden, foldAncestors, foldDescendants, foldOnly, forwardHidden, hasShownAncestors, hasShownDescendants, planBack, planForward, type MapState, type StepKind,
+} from './fold.ts';
 
 // ---------- хранилище ----------
 
@@ -69,8 +72,12 @@ const personsWord = (n: number) => (n % 10 === 1 && n % 100 !== 11 ? 'лицо' 
  */
 export const LINES_TITLE = 'Родословие Иисуса Христа (Мф 1, Лк 3)';
 
-export type Start = 'adam' | 'jesus' | 'lines' | 'key' | 'all' | 'story';
+export type Start = 'both' | 'adam' | 'jesus' | 'lines' | 'key' | 'all' | 'story';
+/** Лица начала «Адам и Иисус Христос» (этап 21, решение 200): два конца родословия, между ними — свёрнутые линии Мессии. */
+export const BOTH_IDS: readonly string[] = ['adam', 'iisus'];
 export const STARTS: readonly { value: Start; label: string; hint: string }[] = [
+  // начало по умолчанию (этап 21, решение 200)
+  { value: 'both', label: 'Адам и Иисус Христос', hint: 'Начало и конец родословия; между ними — свёрнутые линии Мессии. «+» у звезды раскрывает семью: справа — жёны и дети, слева — родители.' },
   { value: 'adam', label: 'С Адама', hint: 'На небе только Адам и его карточка. «+N» у ромба союза раскрывает детей, и так дальше.' },
   { value: 'jesus', label: 'С Иисуса Христа', hint: 'На небе только Иисус Христос и его карточка. «Родители» раскрывают родословие вверх, до Адама.' },
   { value: 'lines', label: LINES_TITLE, hint: 'Обе линии — по Матфею и по Луке — от Адама до Иисуса Христа.' },
@@ -93,8 +100,15 @@ export const KEY_IDS: readonly string[] = [...new Set([...persons.filter((p) => 
 /** Лица обеих линий Мессии (Мф 1, Лк 3; data/lines). */
 export const LINE_IDS: readonly string[] = [...new Set([...lineMembership.joseph.keys(), ...lineMembership.mary.keys()])].filter((id) => byId.has(id));
 
+/** Набор — нетронутое начало «Адам и Иисус Христос» (решение 200): заменить его можно без вопроса. */
+export const untouchedStart = (): boolean => {
+  const set = workSet.peek();
+  return set.size === BOTH_IDS.length && BOTH_IDS.every((id) => set.get(id)?.via === 'self') && !Object.keys(expanded.peek()).length;
+};
+
 /** Лица, с которых начинается небо при начале s. */
 export function startIds(s: Start): readonly string[] {
+  if (s === 'both') return BOTH_IDS;
   if (s === 'adam') return ['adam'];
   if (s === 'jesus') return ['iisus'];
   if (s === 'lines') return LINE_IDS;
@@ -118,6 +132,7 @@ if (hasWindow) effect(() => write('reveal', { opened: opened.value, expanded: ex
 
 /** Показ начала s (решение 68; этап 11, § 5). */
 export function startShow(s: Start): Show {
+  if (s === 'both') return { kind: 'set' };
   if (s === 'lines') return { kind: 'lines' };
   if (s === 'story') return { kind: 'all' };
   if (s === 'key') return { kind: 'key' };
@@ -139,6 +154,16 @@ export function startWith(s: Start) {
   }
   batch(() => {
     start.value = s;
+    // «Адам и Иисус Христос» (решение 200): два закреплённых лица, ничего не раскрыто, ничего не выбрано
+    if (s === 'both') {
+      linkSet.value = null;
+      opened.value = [];
+      expanded.value = {};
+      workSet.value = new Map<string, WorkEntry>(BOTH_IDS.map((id) => [id, { via: 'self', of: id }]));
+      selected.value = null;
+      setShowState({ kind: 'set' });
+      return;
+    }
     if (s === 'adam' || s === 'jesus') {
       const id = s === 'adam' ? 'adam' : 'iisus';
       opened.value = [id];
@@ -291,10 +316,11 @@ export const plates = computed<Plate[]>(() => {
     const u = unions.byId.get(uid);
     if (u) add(u, from, u.kids.includes(from) ? 'up' : 'down');
   }
+  // союз родителей нераскрытым ромбом у лица больше не ставится (этап 21, решение 197): шаг назад — рукоятка «+» слева
+  // от звезды; раскрытый союз родителей — выше, из expanded
   for (const id of opened.value) {
     if (!set.has(id)) continue;
     for (const u of unionsOf(id)) add(u, id, 'down');
-    for (const u of originOf(id)) add(u, id, 'up');
   }
   return [...out.values()];
 });
@@ -319,3 +345,155 @@ if (hasWindow)
     void selected.value;
     selectedUnion.value = null;
   });
+
+// ---------- шаги и свёртки карты (этап 21, решения 197–199; правила — src/ui/fold.ts) ----------
+
+const FOLD_DATA = { graph, unions };
+/** Состояние карты «набор» сейчас. */
+export const mapState = (): MapState => ({ set: workSet.peek(), expanded: expanded.peek(), opened: opened.peek() });
+/** Записать состояние карты; опора перехода — лицо, у которого действовали (оно не сдвигается на экране). */
+function applyMap(s: MapState, anchor: string) {
+  batch(() => {
+    workSet.value = s.set;
+    expanded.value = s.expanded;
+    opened.value = [...s.opened];
+    if (selected.peek() && !s.set.has(selected.peek()!)) selected.value = anchor;
+    setShowState({ kind: 'set' }, { anchor, history: show.peek().kind === 'set' ? 'replace' : 'push' });
+  });
+}
+
+/** Что сделал шаг или свёртка — для диктора и строки показа (src/ui/sky/text.ts, mapSayText). */
+export interface MapNews {
+  kind: StepKind | 'fold-desc' | 'fold-anc' | 'only';
+  id: string;
+  /** кто появился на карте (шаг) */
+  added: string[];
+  /** сколько ушло с карты (свёртка) */
+  removed: number;
+}
+/** Последний шаг карты: читает небо (вслух) и строка показа. */
+export const mapNews = signal<(MapNews & { n: number }) | null>(null);
+const tell = (m: MapNews) => (mapNews.value = { ...m, n: (mapNews.peek()?.n ?? 0) + 1 });
+
+/** Карта «набор» своя (не набор из ссылки, решение 45): шаги и свёртки меняют только свой набор. */
+const ownMap = () => !linkSet.peek();
+
+/**
+ * Выбранное лицо — на карту (решение 200): найденное поиском, открытое в указателе, ссылкой или по имени в карточке лицо,
+ * которого на своей карте нет, встаёт на неё закреплённым — и сразу с рукоятками «+». Только при смене выбора: отмена
+ * шага (src/ui/history.ts) не возвращает на карту выбранного, если его нет в отменённом состоянии.
+ */
+if (hasWindow)
+  effect(() => {
+    const id = selected.value;
+    if (!id || !byId.has(id)) return;
+    if (show.peek().kind !== 'set' || linkSet.peek() || workSet.peek().has(id)) return;
+    addSelf(id);
+  });
+
+/**
+ * Шаг вперёд от лица id (решение 197): один союз — супруг и дети сразу; несколько — сначала супруги (и ромбы союзов
+ * с «+N»), следующий шаг — все дети. Лицо не на карте — сначала встаёт на неё (закреплённым). Возвращает, что сделано.
+ */
+export function stepForward(id: string): StepKind {
+  if (!byId.has(id) || !ownMap()) return 'none';
+  const before = new Set(workSet.peek().keys());
+  const plan = planForward(FOLD_DATA, { ...mapState(), set: before.has(id) ? workSet.peek() : new Map([...workSet.peek(), [id, { via: 'self', of: id }]]) }, id);
+  if (plan.kind === 'none') return 'none';
+  batch(() => {
+    if (!before.has(id)) addSelf(id);
+    if (plan.kind === 'spouses') {
+      const next = new Map(workSet.peek());
+      for (const z of plan.spouses) if (!next.has(z)) next.set(z, { via: 'family', of: id });
+      workSet.value = next;
+      if (!opened.peek().includes(id)) opened.value = [...opened.peek(), id];
+      setShowState({ kind: 'set' }, { anchor: id, history: show.peek().kind === 'set' ? 'replace' : 'push' });
+    } else for (const uid of plan.unions) expandUnion(uid, id);
+  });
+  tell({ kind: plan.kind, id, added: [...workSet.peek().keys()].filter((x) => !before.has(x) && x !== id), removed: 0 });
+  return plan.kind;
+}
+
+/** Шаг назад от лица id (решение 197): родители, братья и сёстры — на карту. */
+export function stepBack(id: string): StepKind {
+  if (!byId.has(id) || !ownMap()) return 'none';
+  const before = new Set(workSet.peek().keys());
+  const plan = planBack(FOLD_DATA, mapState(), id);
+  if (plan.kind === 'none') return 'none';
+  batch(() => {
+    if (!before.has(id)) addSelf(id);
+    for (const uid of plan.unions) expandUnion(uid, id);
+  });
+  tell({ kind: 'parents', id, added: [...workSet.peek().keys()].filter((x) => !before.has(x) && x !== id), removed: 0 });
+  return 'parents';
+}
+
+/** Лицо — на карту, закреплённым (шаг от лица, которого на карте нет). */
+function addSelf(id: string) {
+  const next = new Map(workSet.peek());
+  next.set(id, { via: 'self', of: id });
+  workSet.value = next;
+}
+
+/** Свернуть потомков лица на карте (решение 198). Возвращает, сколько лиц ушло. */
+export function foldDescendantsOf(id: string): number {
+  if (!byId.has(id) || !ownMap()) return 0;
+  const s = mapState();
+  const next = foldDescendants(FOLD_DATA, s, id);
+  const removed = s.set.size - next.set.size;
+  applyMap(next, id);
+  tell({ kind: 'fold-desc', id, added: [], removed });
+  return removed;
+}
+
+/** Свернуть предков лица на карте (решение 198). Возвращает, сколько лиц ушло. */
+export function foldAncestorsOf(id: string): number {
+  if (!byId.has(id) || !ownMap()) return 0;
+  const s = mapState();
+  const next = foldAncestors(FOLD_DATA, s, id);
+  const removed = s.set.size - next.set.size;
+  applyMap(next, id);
+  tell({ kind: 'fold-anc', id, added: [], removed });
+  return removed;
+}
+
+/**
+ * Свернуть всю карту в лицо id (решение 198): на карте — только оно, небо — «набор». С любого показа, и со всего неба:
+ * «Сиф — и только он», дальше раскрывается шагами.
+ */
+export function foldMapTo(id: string) {
+  if (!byId.has(id)) return;
+  const removed = Math.max(0, (show.peek().kind === 'set' ? workSet.peek().size : persons.length) - 1);
+  batch(() => {
+    // набор из ссылки (решение 45) — только просмотр: «только это лицо» начинает свою карту
+    linkSet.value = null;
+    applyMap(foldOnly(id), id);
+    selected.value = id;
+  });
+  tell({ kind: 'only', id, added: [], removed });
+}
+
+/** Что можно сделать с лицом на карте «набор»: для карточки, меню звезды и клавиш (решение 197). */
+export interface MapCmds {
+  /** шаг вперёд: что он откроет; null — впереди ничего не скрыто */
+  forward: { kind: 'union' | 'spouses' | 'kids'; spouses: number; kids: number } | null;
+  /** шаг назад: сколько лиц откроет; 0 — позади ничего не скрыто */
+  back: number;
+  /** есть ли что свернуть вперёд и назад */
+  foldDesc: boolean;
+  foldAnc: boolean;
+  /** на карте есть ещё кто-то, кроме лица */
+  others: boolean;
+}
+export function mapCmds(id: string): MapCmds {
+  const s: MapState = { set: workSet.value, expanded: expanded.value, opened: opened.value };
+  const f = forwardHidden(FOLD_DATA, s, id);
+  const plan = planForward(FOLD_DATA, s, id);
+  return {
+    forward: plan.kind === 'none' ? null : { kind: plan.kind as 'union' | 'spouses' | 'kids', spouses: f.spouses.length, kids: f.kids },
+    back: backHidden(FOLD_DATA, s, id),
+    foldDesc: hasShownDescendants(FOLD_DATA, s, id),
+    foldAnc: hasShownAncestors(FOLD_DATA, s, id),
+    others: [...s.set.keys()].some((x) => x !== id),
+  };
+}

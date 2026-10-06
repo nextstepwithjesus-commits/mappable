@@ -434,11 +434,19 @@ function firstShow(): Show {
   }
   if (modeSaved) return modeSaved === 'work' ? { kind: 'set' } : { kind: 'all' };
   const st = read<string | null>('local', 'start', null);
-  if ((st === 'adam' || st === 'jesus') && workSet.peek().size > 0) return { kind: 'set' };
+  if ((st === 'adam' || st === 'jesus' || st === 'both') && workSet.peek().size > 0) return { kind: 'set' };
   if (st === 'lines') return { kind: 'lines' };
   if (st === 'key') return { kind: 'key' };
+  // новый читатель (этап 21, решение 200): карта «Адам и Иисус Христос» — два конца родословия, между ними свёрнутые линии
+  // Мессии; дальше раскрывает сам, шагами «+». Набор, оставшийся от прежних посещений, не трогается
+  if (st === null && !workSet.peek().size) {
+    workSet.value = new Map(DEFAULT_MAP.map((id) => [id, { via: 'self', of: id }]));
+    return { kind: 'set' };
+  }
   return { kind: 'all' };
 }
+/** Карта нового читателя (решение 200; src/ui/reveal.ts, BOTH_IDS). */
+const DEFAULT_MAP = ['adam', 'iisus'];
 /** Показ неба. Пишут его setShow (src/ui/show.ts), начала (src/ui/reveal.ts, startWith) и адрес; читают все. */
 export const show = signal<Show>(firstShow());
 /** Новый сеанс продолжен по памяти браузера (решение 68): показ не из этого сеанса и не «всё небо». */

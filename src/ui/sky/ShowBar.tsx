@@ -35,6 +35,9 @@ import { Menu } from '../controls.tsx';
 import { typo } from '../text/typo.ts';
 import { lowerFirst } from '../text/ru.ts';
 import { openShowSheet, showSheet } from '../panels/Show.tsx';
+import { canRedo, canUndo, redo, undo } from '../history.ts';
+import { expanded, startWith, untouchedStart } from '../reveal.ts';
+import { linkSet, workSet } from '../work.ts';
 
 /**
  * «Показать на всём небе» (решение 111; X4 Д6 п. 3): лицо вне показа — показ «всё небо» с опорой на это лицо, и, когда
@@ -165,6 +168,45 @@ function FocusLine() {
       <button type="button" class="sb-cmd" data-cmd="focus" title={hint} aria-description={hint} aria-keyshortcuts="Escape" onClick={() => clearGroupFocus()}>
         Вернуть
       </button>
+    </span>
+  );
+}
+
+/**
+ * Шаги карты (этап 21, решение 199): «Отменить шаг» (Ctrl+Z), «Вернуть шаг» (Ctrl+Shift+Z) — когда есть что отменять
+ * и возвращать; «Начать заново» — на своей карте, если она уже не нетронутое начало «Адам и Иисус Христос».
+ */
+function StepsLine() {
+  const undoOn = canUndo.value;
+  const redoOn = canRedo.value;
+  void workSet.value;
+  void expanded.value;
+  const own = show.value.kind === 'set' && !linkSet.value;
+  const fresh = own && !untouchedStart();
+  if (!undoOn && !redoOn && !fresh) return null;
+  return (
+    <span class="sb-line sb-steps" data-line="steps" role="group" aria-label="Шаги карты">
+      {undoOn && (
+        <button type="button" class="sb-cmd" data-cmd="undo" aria-keyshortcuts="Control+Z" title="Отменить последний шаг карты (Ctrl+Z)" onClick={() => undo()}>
+          Отменить шаг
+        </button>
+      )}
+      {redoOn && (
+        <>
+          {undoOn && ' '}
+          <button type="button" class="sb-cmd" data-cmd="redo" aria-keyshortcuts="Control+Shift+Z" title="Вернуть отменённый шаг (Ctrl+Shift+Z)" onClick={() => redo()}>
+            Вернуть шаг
+          </button>
+        </>
+      )}
+      {fresh && (
+        <>
+          {(undoOn || redoOn) && ' '}
+          <button type="button" class="sb-cmd" data-cmd="restart" title="Снова начало: Адам и Иисус Христос, всё остальное свёрнуто (отменяется, Ctrl+Z)" onClick={() => startWith('both')}>
+            Начать заново
+          </button>
+        </>
+      )}
     </span>
   );
 }
@@ -389,6 +431,7 @@ export function ShowBar() {
           </button>
         </span>
       ))}
+      <StepsLine />
       <FocusLine />
       <StoryLine />
       <NearestView />

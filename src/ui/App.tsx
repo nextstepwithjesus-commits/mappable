@@ -7,6 +7,7 @@ import { Panels } from './Panels.tsx';
 import { TopBar } from './top/TopBar.tsx';
 import { bindAddress } from './address.ts';
 import { bindKeys } from './keys.ts';
+import { startHistory } from './history.ts';
 import { bindFocus } from './focus.ts';
 import { grid, panelKind, setWidth, skyFull, splitRange, unfoldCard, viewportHeight, viewportWidth, type Grid, type Widths } from './layout.ts';
 import { panel, type Panel } from '../state.ts';
@@ -17,6 +18,8 @@ export function App() {
   useEffect(() => {
     const offAddress = bindAddress();
     const offKeys = bindKeys();
+    // журнал шагов карты (этап 21, решение 199) — от карты, с которой открылся атлас
+    startHistory();
     const offFocus = bindFocus();
     const onResize = () => {
       viewportWidth.value = window.innerWidth;

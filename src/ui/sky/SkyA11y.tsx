@@ -18,12 +18,12 @@ import { focused, selected, model, pickMode } from '../../state.ts';
 import { goTo, plural, skyRef, viewTick } from '../common.tsx';
 import { formatSpan, toAstro, toHist } from '../../engine/years.ts';
 import { typo } from '../text/typo.ts';
-import { REVEAL_TEXT, lifeText, plateItemText } from './text.ts';
+import { lifeText, plateItemText, stepsSayText } from './text.ts';
 import { enterSky, plateFocus, pressPlate, rememberFocus, starName, starPoints } from './starnav.ts';
 import { focusCardTitle } from '../focus.ts';
 import { screenOf } from './view.ts';
-import { expanded, hasHidden, opened, unionById } from '../reveal.ts';
-import { show, skyMode } from '../work.ts';
+import { expanded, mapCmds, opened, unionById } from '../reveal.ts';
+import { linkSet, show, skyMode } from '../work.ts';
 import { dotsOn, openDot, openUnionCol } from './DotCard.tsx';
 import { focusKinFirst } from '../focus.ts';
 import { grid, unfoldCard } from '../layout.ts';
@@ -92,12 +92,12 @@ export function windowText(t0: number, t1: number, epochs: readonly Pick<Epoch, 
 }
 
 /**
- * Пункт списка: имя (видимый текст), для диктора — с уточнением и годами; в небе «набор» у лица с нераскрытыми союзами,
- * чьи точки союзов не показаны, — «есть нераскрытые союзы» (решение 70).
+ * Пункт списка: имя (видимый текст), для диктора — с уточнением и годами; в небе «набор» — какие шаги карты возможны
+ * (решения 70, 197): «можно раскрыть жену и детей; можно раскрыть родителей».
  */
 const itemLabel = (id: string, sel: string | null) =>
   typo(
-    [starName(id), lifeText(id), relText(id, sel), skyMode.peek() === 'work' && !opened.peek().includes(id) && hasHidden(id) ? REVEAL_TEXT : ''].filter(Boolean).join('; ') +
+    [starName(id), lifeText(id), relText(id, sel), skyMode.peek() === 'work' && !linkSet.peek() ? stepsSayText(id, mapCmds(id)) : ''].filter(Boolean).join('; ') +
       (sel === id ? '; выбрано' : ''),
   );
 

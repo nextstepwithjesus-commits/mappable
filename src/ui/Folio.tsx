@@ -25,7 +25,8 @@ import { WorkButton } from './panels/Work.tsx';
 import { cardTitle, focusCardTitle, focusQuietly } from './focus.ts';
 import { closeCard, dropReading, readingTab } from './card/reading.ts';
 import { selectedUnion, selectUnion, unionById } from './reveal.ts';
-import { DotSheet, KinCol, LineageMenu, LinkBody, NearestCmd, closeLink, personDotCmds, continueDot, foldDot, parentsDot } from './sky/DotCard.tsx';
+import { DotSheet, KinCol, LineageMenu, LinkBody, NearestCmd, closeLink } from './sky/DotCard.tsx';
+import { MapSteps } from './card/MapSteps.tsx';
 import { selectedLink } from './linkstate.ts';
 import { linkKeyString } from '../engine/linkkey.ts';
 import { linkSpeech } from './linkwords.ts';
@@ -760,29 +761,18 @@ function CardActions({ id, phone }: { id: string; phone: boolean }) {
     if (pickFrom) window.setTimeout(() => document.querySelector<HTMLElement>('.sky canvas')?.focus({ preventScroll: true }), 0);
   };
   usePickReturn();
-  // широкий экран (решение 194): команды карточки у звезды — здесь: «Ближайшая родня», «Предки и потомки ▾», в показе
-  // «набор» — раскрытие ветви и родителей; первая строка — небо, вторая — сравнение и набор
-  const set = !phone && show.value.kind === 'set' ? personDotCmds(id) : null;
+  // широкий экран (решение 194): команды карточки у звезды — здесь: «К звезде», «Ближайшая родня», «Предки и потомки ▾»;
+  // строкой ниже — шаги карты (этап 21, решения 197–198: «Жёны и дети», «Родители», свёртки, «Только это лицо»); третья
+  // строка — сравнение и набор
   const sky = phone ? null : (
-    <div class="actions sky-cmds">
-      <ToStar id={id} phone={phone} outside={outside} />
-      <NearestCmd id={id} />
-      <LineageMenu id={id} />
-      {set?.branch && (
-        <button
-          type="button"
-          onClick={() => (set.branch === 'more' ? continueDot(id) : foldDot(id))}
-          title={set.branch === 'more' ? 'Показать на небе ромбы союзов лица: его браки и союз родителей' : 'Убрать ромбы союзов лица и раскрытое от них'}
-        >
-          {set.branch === 'more' ? 'Продолжить ветвь' : 'Скрыть ветвь'}
-        </button>
-      )}
-      {set?.parents && (
-        <button type="button" onClick={() => parentsDot(id)} title={set.parents === 'show' ? 'Родители, братья и сёстры — на небо' : 'Убрать с неба союз родителей, показанный от лица'}>
-          {set.parents === 'show' ? 'Показать родителей' : 'Скрыть родителей'}
-        </button>
-      )}
-    </div>
+    <>
+      <div class="actions sky-cmds">
+        <ToStar id={id} phone={phone} outside={outside} />
+        <NearestCmd id={id} />
+        <LineageMenu id={id} />
+      </div>
+      <MapSteps id={id} />
+    </>
   );
   return (
     <>

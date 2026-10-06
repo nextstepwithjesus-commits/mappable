@@ -1032,7 +1032,8 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): Label
     }
     sigW = cache.siglaW[i];
   }
-  const foldW = o.fold ? FOLD_GAP + foldMarkWidth(ctx, v.coarse, '', o.fold).cw : 0;
+  // рукоятка шага вперёд «+» (этап 21, решение 197) — знак в кольце; «+N» свёрнутого — текстом
+  const foldW = o.fold ? FOLD_GAP + (o.fold === REVEAL ? handleSize(v.coarse) : foldMarkWidth(ctx, v.coarse, '', o.fold).cw) : 0;
   const textW = dagW + nameW + noteW;
   // кольца и истинные границы знака (решение 140): знак кадра с кольцами состояний (sky.ts, p.placer.addGlyph)
   const own = p.placer.glyphOf(q.id, x, y);
@@ -1416,7 +1417,10 @@ export function labelStar(v: SkyContext, p: Pass, i: number, o: StarOpts): Label
   let fold: Rect | undefined;
   if (o.fold) {
     ctx.globalAlpha = 1;
-    drawFoldMark(ctx, pal, v.coarse, end + FOLD_GAP, ty, '', o.fold);
+    if (o.fold === REVEAL) {
+      const d = handleSize(v.coarse);
+      drawHandle(ctx, pal, end + FOLD_GAP + d / 2, ty - 0.33 * size, v.coarse);
+    } else drawFoldMark(ctx, pal, v.coarse, end + FOLD_GAP, ty, '', o.fold);
     fold = { x: end + FOLD_GAP - 2, y: at.box.y, w: foldW - FOLD_GAP + 4, h: at.box.h };
   }
   ctx.globalAlpha = 1;
@@ -2339,6 +2343,39 @@ export function drawFoldMark(ctx: CanvasRenderingContext2D, pal: { ink2: string;
   ctx.fillStyle = pal.ink2;
   ctx.fillText(count, x + nw, baseline);
   ctx.fillRect(Math.round(x + nw), Math.round(baseline + 2), Math.round(cw), 1);
+}
+
+/** Текст знака шага карты в Pass.revealText (рисуется знаком в кольце, не текстом). */
+export const REVEAL = '+';
+/** Поперечник рукоятки шага карты, px: 13, на сенсорном экране 16 (поле касания шире — src/ui/sky/input.ts). */
+export const handleSize = (coarse: boolean) => (coarse ? 16 : 13);
+/**
+ * Рукоятка шага карты (этап 21, решение 197): плюс в тонком кольце — «здесь можно раскрыть». Справа от подписи — супруги
+ * и дети, слева от звезды — родители. Кольцо и плюс — цветом ссылок неба (--ink-2), с ореолом неба под ними: знак читается
+ * и на ленте, и на следе. Не пилюля и не значок набора: тот же штрих, что у знаков карты.
+ */
+export function drawHandle(ctx: CanvasRenderingContext2D, pal: { ink2: string; halo: string }, cx: number, cy: number, coarse: boolean) {
+  const r = handleSize(coarse) / 2 - 0.5;
+  const a = r * 0.5;
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = pal.halo;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.fillStyle = pal.halo;
+  ctx.fill();
+  ctx.strokeStyle = pal.ink2;
+  ctx.lineWidth = coarse ? 1.5 : 1.2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.moveTo(cx - a, cy);
+  ctx.lineTo(cx + a, cy);
+  ctx.moveTo(cx, cy - a);
+  ctx.lineTo(cx, cy + a);
+  ctx.stroke();
+  ctx.restore();
 }
 
 // ---------- скопления, меридианы событий, пояснения ----------

@@ -1,7 +1,7 @@
 import { describe, expect, it, beforeEach } from 'vitest';
 import { byId, graph } from '../src/data/atlas.ts';
 import { branchesOf, buildUnions, membersOf } from '../src/engine/unions.ts';
-import { collapseUnion, expandUnion, expanded, KEY_IDS, LINE_IDS, opened, openPerson, originOf, plates, startWith, unionsOf } from '../src/ui/reveal.ts';
+import { collapseUnion, expandUnion, expanded, KEY_IDS, LINE_IDS, mapCmds, opened, openPerson, originOf, plates, startWith, unionsOf } from '../src/ui/reveal.ts';
 import { show, skyMode, workSet } from '../src/ui/work.ts';
 
 const names = (ids: readonly string[]) => ids.map((id) => byId.get(id)?.name ?? id);
@@ -70,8 +70,12 @@ describe('раскрытие (решения 68, 70)', () => {
   it('вверх: у Иисуса Христа союз происхождения раскрывает Иосифа и Марию', () => {
     startWith('jesus');
     const o = originOf('iisus')[0];
-    expect(plates.value.some((p) => p.union.id === o.id && p.dir === 'up')).toBe(true);
+    // этап 21, решение 197: нераскрытого ромба союза родителей у лица нет — шаг назад делает рукоятка «+» слева от звезды
+    // (mapCmds().back — сколько лиц откроет); раскрытый союз родителей — ромбом, как прежде
+    expect(plates.value.some((p) => p.union.id === o.id && p.dir === 'up')).toBe(false);
+    expect(mapCmds('iisus').back).toBe(2);
     expandUnion(o.id, 'iisus');
+    expect(plates.value.some((p) => p.union.id === o.id && p.dir === 'up' && p.open)).toBe(true);
     expect(workSet.value.has('iosif-muzh-marii') && workSet.value.has('mariya')).toBe(true);
     expect(membersOf(o).every((m) => workSet.value.has(m))).toBe(true);
   });

@@ -4,7 +4,7 @@
  * и историю не пишется; закрывают его «Вид», Escape, «×» у колонки и нажатие мимо.
  */
 import { byId } from '../../data/atlas.ts';
-import { lambda, modelId, panel, epochMode, layers, onlyLines, LAYER_KEYS, LAYER_NAMES } from '../../state.ts';
+import { lambda, mapTrails, modelId, panel, epochMode, layers, onlyLines, LAYER_KEYS, LAYER_NAMES } from '../../state.ts';
 import { num, typo } from '../text/typo.ts';
 import { Check, Menu } from '../controls.tsx';
 import { DEFAULT_MODEL, factsOf, modelItems, modelsFoot } from '../modelinfo.ts';
@@ -12,13 +12,13 @@ import { EraSwitch, openChronology } from '../panels/Chronology.tsx';
 import '../../styles/chronology.css';
 import { Sheet } from '../panels/Sheet.tsx';
 import { LANES_STEP, TIME_STEP, resetProportions, showAll, stretchBy, zoomBy } from './view.ts';
-import { foldDesc, foldGroups, unfoldAll, workSet } from '../work.ts';
-import { KEY_IDS, STARTS, start, startWith, type Start } from '../reveal.ts';
+import { foldDesc, foldGroups, show, unfoldAll, workSet } from '../work.ts';
+import { KEY_IDS, STARTS, start, startWith, untouchedStart, type Start } from '../reveal.ts';
 import { lanesText } from './Overlays.tsx';
 import { plural, skyRef, viewTick } from '../common.tsx';
 import { canFill, grid, skyFull, toggleFull } from '../layout.ts';
 import type { Axis } from '../../render/camera.ts';
-import { signal } from '@preact/signals';
+import { batch, signal } from '@preact/signals';
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { isTextField } from '../keys.ts';
 
@@ -120,6 +120,7 @@ export const SKY_HINTS = {
 export function startNote(s: Start): string {
   const n = byId.size;
   return {
+    both: 'два конца родословия; «+» раскрывает семью',
     adam: 'только Адам; союзы и дети — по щелчку',
     jesus: 'от Иисуса Христа вверх, к предкам',
     lines: 'обе линии, по Матфею и по Луке',
@@ -130,11 +131,12 @@ export function startNote(s: Start): string {
 }
 
 /**
- * Нужно ли подтверждение (решение 68): начало заменяет набор, а в наборе больше одного лица. Набор заменяют только
- * «С Адама» и «С Иисуса Христа» (набор с одного лица); «Родословие Иисуса Христа», «Ключевые лица» и «Всё небо» —
+ * Нужно ли подтверждение (решение 68): начало заменяет набор, а в наборе больше одного лица и это не нетронутое начало
+ * «Адам и Иисус Христос» (untouched; этап 21, решение 200). Набор заменяют только «Адам и Иисус Христос», «С Адама» и
+ * «С Иисуса Христа»; «Родословие Иисуса Христа», «Ключевые лица» и «Всё небо» —
  * показы, набор читателя они не трогают (этап 11, § 5; src/ui/reveal.ts, startWith).
  */
-export const needsConfirm = (s: Start, n: number) => (s === 'adam' || s === 'jesus') && n > 1;
+export const needsConfirm = (s: Start, n: number, untouched = false) => (s === 'adam' || s === 'jesus' || s === 'both') && n > 1 && !untouched;
 /** Вопрос подтверждения: «Набор из 12 лиц будет заменён», «Набор из 21 лица будет заменён». */
 export const replaceText = (n: number) => `Набор из ${num(n)} ${plural(n, 'лица', 'лиц', 'лиц')} будет заменён`;
 
@@ -229,7 +231,7 @@ export function StartList({ notes = false, label = 'Начало', onDone, focus
             aria-label={o.label}
             aria-description={typo(o.hint)}
             title={typo(o.hint)}
-            onClick={() => (needsConfirm(o.value, n) ? setAsk(o.value) : go(o.value))}
+            onClick={() => (needsConfirm(o.value, n, untouchedStart()) ? setAsk(o.value) : go(o.value))}
           >
             <span class="nm">{o.label}</span>
             {notes && <span class="note">{typo(startNote(o.value))}</span>}
@@ -415,13 +417,24 @@ export function openModelChoice() {
  * подписи. Выбор запоминается; выключенный слой называет строка показа («Скрыто: связи — вернуть»; src/ui/modelinfo.ts).
  */
 function LayerList() {
+  // карта «набор» (решение 201): «следы жизни» — своя настройка карты, по умолчанию выключена; слой всего неба не меняется
+  const map = show.value.kind === 'set';
   return (
     <div class="checks layer-list" role="group" aria-label="Слои неба">
-      {LAYER_KEYS.map((k) => (
-        <Check key={k} checked={layers.value[k] !== false} onChange={(on) => (layers.value = { ...layers.value, [k]: on })}>
-          {LAYER_NAMES[k]}
-        </Check>
-      ))}
+      {LAYER_KEYS.map((k) =>
+        k === 'lifelines' && map ? (
+          <Check key={k} checked={mapTrails.value && layers.value[k] !== false} onChange={(on) => batch(() => {
+            mapTrails.value = on;
+            if (on && layers.value[k] === false) layers.value = { ...layers.value, [k]: true };
+          })}>
+            {LAYER_NAMES[k]}
+          </Check>
+        ) : (
+          <Check key={k} checked={layers.value[k] !== false} onChange={(on) => (layers.value = { ...layers.value, [k]: on })}>
+            {LAYER_NAMES[k]}
+          </Check>
+        ),
+      )}
     </div>
   );
 }

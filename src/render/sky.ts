@@ -30,7 +30,7 @@ import { alpha, hexToRgb } from './color.ts';
 import { alphaForContrast, CLOUD_DIMMED, dimLabelAlpha, separateRibbons, WORK_DIM } from './dim.ts';
 import { clearOfRibbons, drawBranchLabels, drawLineNotes, drawRibbonGaps, drawSkyRibbons, lineNoteFocus, ribbonBeads, ribbonCheck, ribbonGapHits, skySteps, stepLegal, stepWeak, type SkyStep } from './ribbons.ts';
 import { drawEventLines, drawFrame, drawGrid, drawTimeMarks, paintWayfinding, placeWayfinding, yearTicks, rateAt, BOTTOM_H, CANON_NOTE, FRAME_H, LETTER_W, LETTER_W_TOUCH, RULER_H, type EdgeHit } from './frame.ts';
-import { claim, clusterShort, clusterText, drawClusterLabel, familyOf, ownLink, FAMILY_KY, labelFontOf, spot, drawEventLabel, drawFoldMark, drawGroupNames, drawNote, GROUP_COVER_FROM, drawStarLabels, foldMarkWidth, groupName, labelAt, LabelCache, LabelLedger, LineHits, measureLabels, namesakesInView, Placer, textBox, zoomScaleFor, GROUP_AREA_MIN, type GroupNameSpot, type LabelStats } from './labels.ts';
+import { claim, clusterShort, clusterText, drawClusterLabel, drawHandle, handleSize, familyOf, ownLink, FAMILY_KY, labelFontOf, spot, drawEventLabel, drawFoldMark, drawGroupNames, drawNote, GROUP_COVER_FROM, drawStarLabels, foldMarkWidth, groupName, labelAt, LabelCache, LabelLedger, LineHits, measureLabels, namesakesInView, Placer, textBox, zoomScaleFor, GROUP_AREA_MIN, type GroupNameSpot, type LabelStats } from './labels.ts';
 import { bendsOf, FAMILY_TIER, familyTier, hasGlides, tierAlpha, trailPolyline, trailSegs, type Bend, type FamilyTier } from './trails.ts';
 import { glidesOf, laneAt, starLaneOf } from '../engine/stays.ts';
 export { FAMILY_TIER, familyTier, tierAlpha, type FamilyTier } from './trails.ts';
@@ -182,8 +182,10 @@ export interface SkyState {
    */
   plates?: readonly PlateIn[] | null;
   plateMarks?: PlateMarks | null;
-  /** лица с нераскрытыми союзами, чьи карточки союзов не показаны: «+» после подписи (решение 70) */
+  /** лица, у которых впереди скрыты супруги или дети: «+» после подписи — шаг вперёд (решения 70, 197) */
   reveal?: ReadonlySet<string> | null;
+  /** лица, у которых скрыты родители: «+» слева от звезды — шаг назад (этап 21, решение 197) */
+  revealUp?: ReadonlySet<string> | null;
   /**
    * Выбранная связь (этап 11, § 8; src/ui/linkstate.ts, selectedLink): жёлтым, кольца с ролями на концах, указатели у края;
    * остальное небо гаснет до 30 %, ленты — до 55 %. Выбор лица при этом не меняется.
@@ -212,7 +214,7 @@ export type SkyViewIn = SkyView & { plates?: readonly PlateIn[] | null };
  * Вид знака-ссылки неба: свёрнутое (J5), «развернуть всё», «+» союзов (решение 70) и скопление семьи на обзоре «+N»
  * (решение 142: щелчок — «Ближайшая родня» или приближение).
  */
-export type FoldHitKind = FoldMark['kind'] | 'all' | 'reveal' | 'pile';
+export type FoldHitKind = FoldMark['kind'] | 'all' | 'reveal' | 'reveal-up' | 'pile';
 export type { PlateHit, PlateIn, PlateMarks } from './plates.ts';
 
 /** sib — братья и сёстры выбранного (E4), group — лица группы панели «Главы» или «Синопсис» (skyGroup) — marks.ts. */
@@ -2779,10 +2781,12 @@ export class Sky implements SkyContext {
         if (w) p.namesakes.set(id, `, ${w}`);
       }
     p.foldText = new Map(this.plan.marks.filter((m) => m.kind === 'desc').map((m) => [m.id, `+${m.count}`]));
-    // небо «набор»: «+» у лица с нераскрытыми союзами, пока его карточки союзов не показаны (решение 70); в режиме
-    // «только линии» точек союзов нет (unionPlates), и «+» был бы мёртвой ссылкой (этап 11, B1)
+    // небо «набор»: «+» после подписи лица, у которого впереди скрыты супруги или дети, — шаг вперёд (решения 70, 197); в
+    // режиме «только линии» точек союзов нет (unionPlates), и «+» был бы мёртвой ссылкой (этап 11, B1)
     if (work && !lineOnly && s.reveal?.size) p.revealText = new Map([...s.reveal].map((id) => [id, '+']));
     p.foldHits = [];
+    // «+» слева от звезды — шаг назад, к родителям (решение 197): раньше подписей, рукоятка у самой звезды важнее чужих имён
+    if (work && !lineOnly && s.revealUp?.size && settle >= 0.999) this.drawBackHandles(p, s.revealUp);
     // имя и формула выбранного лица под ярусами эпох (их пишет tiers.ts поверх неба, после подписей) — в общей проверке
     // наложений, первыми (MOB-60): место берётся из прошлого кадра ярусов (canvas.dataset.tiers.formula.rect)
     if (under && s.selected && L.labels) {
@@ -2964,6 +2968,8 @@ export class Sky implements SkyContext {
       put('plates', this.plateHits.map((h) => `${h.uid}:${h.open ? 1 : 0}:${[h.x, h.y, h.w, h.h].map(Math.round).join(',')}`).join(';'));
       // «союз:раскрыт (1/0):x,y (центр ромба):скрыто лиц» и линии «союз=супруг», «союз>ребёнок:#цвет» (tools/accept/dots6.ts)
       put('dots', this.plateHits.map((h) => `${h.uid}:${h.open ? 1 : 0}:${Math.round(h.cx)},${Math.round(h.cy)}:${h.hidden}`).join(';'));
+      // рукоятки шагов карты (этап 21, решение 197): «лицо:fwd|back:x,y» — центр поля попадания (tools/accept/map21.ts)
+      put('handles', this.foldHits.filter((h) => h.kind === 'reveal' || h.kind === 'reveal-up').map((h) => `${h.id}:${h.kind === 'reveal' ? 'fwd' : 'back'}:${Math.round(h.x + h.w / 2)},${Math.round(h.y + h.h / 2)}`).join(';'));
       // журналы линий (около 5 мс на кадр) — только когда небо стоит: в перелёте и в движении масштаба не пишутся (С1);
       // кадр покоя после движения пишет их заново
       const still = !this.scaleMoving && !cam.moving;
@@ -3135,6 +3141,38 @@ export class Sky implements SkyContext {
       }
       drawFoldMark(ctx, pal, this.coarse, bx + lw, by, name, count);
       hitsOut.push({ ...got, kind: m.kind, id: m.id });
+    }
+  }
+
+  /**
+   * Рукоятка шага назад (этап 21, решение 197): «+» слева от звезды лица, у которого скрыты родители, — подчёркнутый, как
+   * «+» после подписи (ссылка неба). Щелчок — родители, братья и сёстры на карту (src/ui/sky/input.ts, foldHits
+   * 'reveal-up'). Место — у самой звезды, слева; занято — чуть выше или ниже; негде — рукоятки нет (шаг есть в карточке,
+   * в меню звезды и клавишей «[»).
+   */
+  private drawBackHandles(p: Pass, ids: ReadonlySet<string>) {
+    const { ctx, cam, pal } = this;
+    const size = mapSize(T_MAP_S, this.coarse);
+    const out = p.foldHits ?? [];
+    const cw = handleSize(this.coarse);
+    for (const id of ids) {
+      const i = this.nodeIndex.get(id);
+      if (i === undefined || !this.drawn(i) || !p.starShown(i)) continue;
+      const x0 = cam.sx(this.X0[i]);
+      const y = this.starY(i);
+      if (x0 < cam.vp.l + 16 || x0 > cam.w || y < this.openTop || y > cam.vp.b) continue;
+      // левый край знака — по его настоящим границам (лучи, кольца состояний: Placer.addGlyph), иначе по радиусу
+      const g = p.placer.glyphsIn({ x: x0 - 1, y: y - 1, w: 2, h: 2 }).find((q) => q.id === id);
+      const left = g ? g.e.l : starRadius(byId.get(id)?.magnitude ?? 6, p.zoomScale);
+      const x = x0 - left - 4 - cw;
+      const base = y + size * 0.35;
+      // у звезды; занято (лента линий Мессии входит в звезду слева) — над лентой и под ней, затем чуть левее
+      const cands: Rect[] = [];
+      for (const dx of [0, -6, -12]) for (const dy of [0, -size - 2, size + 2]) cands.push(textBox(x + dx, base + dy, cw, size));
+      const got = claim(this, p, cands, 'fold', '+', { id });
+      if (!got) continue;
+      drawHandle(ctx, pal, got.x + got.w / 2, got.y + got.h / 2, this.coarse);
+      out.push({ ...got, kind: 'reveal-up', id });
     }
   }
 

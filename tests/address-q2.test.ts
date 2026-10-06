@@ -153,6 +153,8 @@ describe('история: показ, лицо и связь — новые за
     const off = address.bindAddress();
     await settle();
     const start = entries.length;
+    // показ, с которого начали: у нового читателя — карта «Адам и Иисус Христос» (этап 21, решение 200; прежде — всё небо)
+    const first = work.show.value;
     showM.setShow({ kind: 'groups', groups: ['nahorites'], links: 'stubs' });
     await settle();
     expect(entries.length).toBe(start + 1);
@@ -178,7 +180,7 @@ describe('история: показ, лицо и связь — новые за
     expect(work.show.value).toEqual({ kind: 'groups', groups: ['nahorites'], links: 'stubs' });
     back();
     await settle();
-    expect(work.show.value).toEqual({ kind: 'all' });
+    expect(work.show.value).toEqual(first);
     // «вперёд» — снова созвездие, лицо и связь
     forward();
     forward();

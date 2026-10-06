@@ -25,8 +25,8 @@ import { addPath, foldDescOf, foldGroupOf, show, unfoldAll } from '../work.ts';
 import { nearestFamily, setShow, showGuest } from '../show.ts';
 import { MENU_FIRST, dismissedBy, skyMenu } from '../panels/Work.tsx';
 import { personGhosts } from '../../render/marks.ts';
-import { dotTipText, epochGoText, gapTipText, lineBetween, plateTipText } from './text.ts';
-import { openPerson, selectUnion, selectedUnion, unionById } from '../reveal.ts';
+import { dotTipText, epochGoText, forwardLabel, gapTipText, lineBetween, plateTipText } from './text.ts';
+import { mapCmds, selectUnion, selectedUnion, stepBack, stepForward, unionById } from '../reveal.ts';
 import { linkHover, plateHover, pressPlate, rememberLinkClick, toggleKids } from './starnav.ts';
 import type { CountHit, PlateHit } from '../../render/plates.ts';
 import type { LinkHit } from '../../render/links.ts';
@@ -688,6 +688,22 @@ export function chooseLink(sky: Pick<Sky, 'cam'>, key: LinkKey, x: number, y: nu
 /** Подсказка «+» у подписи лица с нераскрытыми союзами (решение 70). */
 export const REVEAL_TIP = 'У лица есть нераскрытые союзы — щёлкните, чтобы показать их на небе';
 
+/**
+ * Подсказка рукоятки шага карты (этап 21, решение 197): что откроет щелчок, словами и числом — «Иаков: жёны (4) —
+ * щёлкните, чтобы раскрыть; у каждой — ромб с детьми», «Иисус Христос: родители — щёлкните, чтобы раскрыть». Имя —
+ * в именительном падеже, двоеточием (не подставляется в падеж без склонения).
+ */
+export function handleTipText(id: string, dir: 'fwd' | 'back'): string {
+  const name = byId.get(id)?.name ?? id;
+  const c = mapCmds(id);
+  if (dir === 'back') return typo(`${name}: родители, братья и сёстры — щёлкните, чтобы раскрыть ([)`);
+  const f = c.forward;
+  if (!f) return typo(`${name}: всё уже на карте`);
+  const what = forwardLabel(id, f).toLowerCase();
+  const tail = f.kind === 'spouses' ? '; у каждого союза — ромб с числом детей' : '';
+  return typo(`${name}: ${what} — щёлкните, чтобы раскрыть (])${tail}`);
+}
+
 /** Название эпохи в служебной строке под указателем (UX-65): эпоха модели и прямоугольник надписи. */
 function serviceEpochAt(sky: Sky, x: number, y: number) {
   // низкое небо (решение 155; frame.ts, setLowFrame): служебной строки нет — её надписи стоят в линейке лет
@@ -900,13 +916,13 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
       showTip({ kind: 'note', key: `pile:${foldHit.id}`, text: pileText(sky, foldHit.id), x, y, box: { x: foldHit.x, y: foldHit.y, w: foldHit.w, h: foldHit.h } });
       return;
     }
-    // «+» у подписи лица с нераскрытыми союзами (решение 70)
-    if (foldHit?.kind === 'reveal') {
+    // рукоятки шагов карты (решения 70, 197): что откроет щелчок — «Адам: жена и дети — щёлкните», «Иисус Христос: родители»
+    if (foldHit?.kind === 'reveal' || foldHit?.kind === 'reveal-up') {
       setPlate(null);
       setLink(null);
       if (hovered.value) hovered.value = null;
       setHot(true);
-      showTip({ kind: 'note', key: `reveal:${foldHit.id}`, text: REVEAL_TIP, x, y, box: { x: foldHit.x, y: foldHit.y, w: foldHit.w, h: foldHit.h } });
+      showTip({ kind: 'note', key: `${foldHit.kind}:${foldHit.id}`, text: handleTipText(foldHit.id, foldHit.kind === 'reveal' ? 'fwd' : 'back'), x, y, box: { x: foldHit.x, y: foldHit.y, w: foldHit.w, h: foldHit.h } });
       return;
     }
     // название созвездия (этап 16, решение 185) — команда: «рука» и подсказка «Колено Иудино — 259 лиц: щёлкните, чтобы
@@ -1244,7 +1260,9 @@ export function attachPointer(sky: Sky, canvas: HTMLCanvasElement, request: () =
     if (fold) {
       if (fold.kind === 'desc') foldDescOf(fold.id, false);
       else if (fold.kind === 'all') unfoldAll();
-      else if (fold.kind === 'reveal') openPerson(fold.id);
+      // рукоятки шагов карты (решение 197): «+» после подписи — жёны и дети, «+» слева от звезды — родители
+      else if (fold.kind === 'reveal') stepForward(fold.id);
+      else if (fold.kind === 'reveal-up') stepBack(fold.id);
       // скопление семьи «+N» у подписи старшего (решение 142; S2): на уровне «Небо» и касанием — врезка «Семья
       // созвездием» (этап 16, решение 186), иначе — «Ближайшая родня» его лица (решение 145; S3)
       else if (fold.kind === 'pile') {

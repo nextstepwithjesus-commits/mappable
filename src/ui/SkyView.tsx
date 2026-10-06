@@ -8,13 +8,15 @@ import { comparePoints, lineNoteHits, ribbonHover } from '../render/ribbons.ts';
 import {
   selected, second, first, hovered, focused, lambda, model, modelId, layers, onlyLines, meridian, panel, pickMode, theme, introDone, epochMode, lineFlip, pins,
   kinPath, kinSteps, skyGroup, synopsisAt,
+  mapTrails,
 } from '../state.ts';
-import { skyRef, viewTick } from './common.tsx';
+import { plural, skyRef, viewTick } from './common.tsx';
 import { drawTiers, replanTiers, tiersBottom } from '../render/tiers.ts';
 import { typo } from './text/typo.ts';
-import { aliveAt, lifeText, meridianText, placeText } from './sky/text.ts';
+import { aliveAt, lifeText, mapSayText, meridianText, placeText } from './sky/text.ts';
+import { historyNews } from './history.ts';
 import {
-  allInView, anchorNow, fitReveal, flightTarget, flyToIds, flyToPerson, holdAnchor, holdFamily, inView, kinProbe, introOpen, keepInView, lanes, reduced, screenOf, setReserve, showAround,
+  allInView, anchorNow, fitReveal, followStep, flightTarget, flyToIds, flyToPerson, holdAnchor, holdFamily, inView, kinProbe, introOpen, keepInView, lanes, reduced, screenOf, setReserve, showAround,
   startLanes, stopFlight, unionFlip, updateZoomFloor, viewAround, linesAgain, fitLines, windowHold, holdSheetWindow, reserve, flightDone, type Anchor,
 } from './sky/view.ts';
 
@@ -23,7 +25,7 @@ import {
  * их видимый фокус — на небе: подпись у точки ленты в рамке и кольцо у точки (src/render/ribbons.ts, drawLineNotes).
  */
 export const noteFocus = signal<string | null>(null);
-import { expanded, hasHidden, opened, plates, selectedUnion, unionById, type Plate } from './reveal.ts';
+import { expanded, foldAncestorsOf, foldDescendantsOf, mapCmds, mapNews, plates, selectedUnion, unionById, type Plate } from './reveal.ts';
 import { linkClick, linkHover, plateFocus, plateHover, plateNews } from './sky/starnav.ts';
 import { linkAnchor, previewLinks, selectedLink } from './linkstate.ts';
 import { showKey as showKeyOf, skyShow, whereOf } from './show.ts';
@@ -89,12 +91,27 @@ const dotUnion = computed<string | null>(() => {
   const c = dotCard.value;
   return c?.kind === 'union' ? c.uid : null;
 });
-/** Лица набора с нераскрытыми союзами, чьи точки союзов не показаны: «+» после подписи (решение 70). */
+/** Слои неба: на карте «набор» следы жизни — своей настройкой (решение 201; src/state.ts, mapTrails). */
+function mapLayers(l: Record<string, boolean>): Record<string, boolean> {
+  if (show.value.kind !== 'set') return l;
+  const on = mapTrails.value && l.lifelines !== false;
+  return l.lifelines === on ? l : { ...l, lifelines: on };
+}
+
+/**
+ * Рукоятки шагов карты (решения 70, 197): «+» после подписи — у лица, у которого впереди скрыты супруги или дети; «+» слева
+ * от звезды — у лица, у которого скрыты родители. Только в своём наборе: набор из ссылки (IX-69) смотрят как есть.
+ */
 const revealIds = computed<ReadonlySet<string> | null>(() => {
   if (skyMode.value !== 'work' || linkSet.value) return null;
-  const open = new Set(opened.value);
   const out = new Set<string>();
-  for (const id of workSet.value.keys()) if (!open.has(id) && hasHidden(id)) out.add(id);
+  for (const id of workSet.value.keys()) if (mapCmds(id).forward) out.add(id);
+  return out;
+});
+const revealUpIds = computed<ReadonlySet<string> | null>(() => {
+  if (skyMode.value !== 'work' || linkSet.value) return null;
+  const out = new Set<string>();
+  for (const id of workSet.value.keys()) if (mapCmds(id).back > 0) out.add(id);
   return out;
 });
 
@@ -320,7 +337,7 @@ export function SkyView() {
         model: model.value, lambda: shownLambda, selected: selected.value, second: second.value, hovered: hovered.value, focus: keyboardInput.value ? focused.value : null,
         noteFocus: onlyLines.value ? noteFocus.value : null,
         // в показе «Линии Мессии» ленты — сам показ: слой лент выключен — в этом показе они всё равно рисуются (решение 192)
-        highlight, layers: onlyLines.value && layers.value.ribbons === false ? withRibbons(layers.value) : layers.value, onlyLines: onlyLines.value, meridian: meridian.value,
+        highlight, layers: mapLayers(onlyLines.value && layers.value.ribbons === false ? withRibbons(layers.value) : layers.value), onlyLines: onlyLines.value, meridian: meridian.value,
         tensionPersons, flow: flowing ? flowT : 0, reduced: reduced(), intro, lineFlip: lineFlip.value, pins: new Set(pins.value),
         reserve: reserveRef.current, meridianLabel, kinSteps: pair ? kinSteps.current : (preview?.steps ?? null), depth: hlf?.depth ?? null,
         modelNote: mid !== modelInfo[0]?.id ? (modelInfo.find((m) => m.id === mid)?.name ?? null) : null,
@@ -331,6 +348,7 @@ export function SkyView() {
         // точка союза с открытой карточкой у точки (решение 76) отмечена, как союз, открытый в листе карточки
         plateMarks: { hover: plateHover.value, focus: plateFocus.value, selected: dotUnion.value ?? selectedUnion.value },
         reveal: revealIds.value,
+        revealUp: revealUpIds.value,
         // выбранная связь, подсвеченные строкой «Родство» и связь под указателем (этап 11, § 8; src/ui/linkstate.ts)
         link: selectedLink.value,
         linkPreview: previewLinks.value,
@@ -880,6 +898,28 @@ export function SkyView() {
       const n = plateNews.value;
       if (n.text) say(n.text);
     });
+    // шаги и свёртки карты (решения 197–199) — вслух: «Адам: раскрыты жена и дети — Ева, Каин, Авель, Сиф; на карте 6 лиц»
+    const offMapNews = effect(() => {
+      const m = mapNews.value;
+      if (!m) return;
+      say(mapSayText(m, workSet.peek().size));
+      // небо следует за шагом (решение 197): раскрытое — в кадр, когда небо перестроится; свёртка камеру не двигает
+      if (m.kind === 'fold-desc' || m.kind === 'fold-anc') return;
+      const ids = [m.id, ...m.added];
+      const go = (n: number) => {
+        if ((sky.transitioning || sky.cam.moving) && n < 120) {
+          requestAnimationFrame(() => go(n + 1));
+          return;
+        }
+        followStep(ids);
+      };
+      requestAnimationFrame(() => requestAnimationFrame(() => go(0)));
+    });
+    // отмена и возврат шага (решение 199): «Шаг отменён; на карте 4 лица»
+    const offHistNews = effect(() => {
+      const h = historyNews.value;
+      if (h) say(`${h.text}; на карте ${workSet.peek().size} ${plural(workSet.peek().size, 'лицо', 'лица', 'лиц')}`);
+    });
     // выбранная связь — вслух (§ 8): «Связь: Иаков и Лия — родители; Иуда — сын; Бытие 29:35»
     let saidLink = '';
     const offLinkSay = effect(() => {
@@ -1050,6 +1090,18 @@ export function SkyView() {
       if (e.code !== 'KeyD' && e.code !== 'KeyC') return;
       const t = e.target instanceof HTMLElement ? e.target : null;
       if (t?.closest('[role="menu"], [role="listbox"], .workpick')) return;
+      // карта «набор» (этап 21, решение 198): «С» — свернуть потомков, Shift + «С» — предков; объявляет сама свёртка (mapNews)
+      if (e.code === 'KeyC' && show.peek().kind === 'set' && !linkSet.peek()) {
+        const id = keyTarget(shownTipStar());
+        if (!id) return;
+        e.preventDefault();
+        if (e.shiftKey) foldAncestorsOf(id);
+        else foldDescendantsOf(id);
+        flash = { id, at: performance.now() };
+        request();
+        return;
+      }
+      if (e.shiftKey) return;
       const r = workKey(e.code, keyTarget(shownTipStar()));
       if (!r) return;
       e.preventDefault();
@@ -1078,6 +1130,8 @@ export function SkyView() {
       offTiers();
       offWork();
       offNews();
+      offMapNews();
+      offHistNews();
       offLinkSay();
       offFull();
       offSheet();

@@ -376,3 +376,71 @@ export function kidsText(u: Union): string {
 export function dotTipText(u: Union): string {
   return typo(`${unionTitle(u)}${unionGen(u) ? ':' : ';'} ${kidsText(u)} — щёлкните`);
 }
+
+// ---------- шаги и свёртки карты (этап 21, решения 197–199) ----------
+
+/** Пол супругов лица: у мужчины — жёны, у женщины — мужья. */
+const spouseWords = (id: string) => (byId.get(id)?.sex === 'f' ? { one: 'Муж', many: 'Мужья', acc1: 'мужа', accN: 'мужей' } : { one: 'Жена', many: 'Жёны', acc1: 'жену', accN: 'жён' });
+
+/**
+ * Надпись команды шага вперёд (решение 197): «Жена и дети», «Жёны и дети», у женщины — «Муж и дети», «Мужья и дети»;
+ * супруг не назван — «Дети»; супруги уже на карте — «Все дети (13)».
+ */
+export function forwardLabel(id: string, f: { kind: 'union' | 'spouses' | 'kids'; spouses: number; kids: number }): string {
+  if (f.kind === 'kids') return `Все дети (${f.kids})`;
+  const w = spouseWords(id);
+  if (!f.spouses) return f.kids ? 'Дети' : w.one;
+  const sp = f.spouses > 1 ? w.many : w.one;
+  return f.kids ? `${sp} и дети` : sp;
+}
+/** Для диктора у звезды: «можно раскрыть жену и детей», «можно раскрыть родителей». */
+export function stepsSayText(id: string, c: { forward: { kind: 'union' | 'spouses' | 'kids'; spouses: number; kids: number } | null; back: number }): string {
+  const out: string[] = [];
+  if (c.forward) {
+    const w = spouseWords(id);
+    const f = c.forward;
+    const what = f.kind === 'kids' ? 'всех детей' : f.spouses ? `${f.spouses > 1 ? w.accN : w.acc1}${f.kids ? ' и детей' : ''}` : 'детей';
+    out.push(`можно раскрыть ${what}`);
+  }
+  if (c.back) out.push('можно раскрыть родителей');
+  return out.join('; ');
+}
+
+/** Имена списком: до шести, дальше — «и ещё N». */
+function namesList(ids: readonly string[]): string {
+  const names = ids.map((x) => byId.get(x)?.name ?? x);
+  return names.length <= 6 ? names.join(', ') : `${names.slice(0, 6).join(', ')} и ещё ${names.length - 6}`;
+}
+const personsN = (n: number) => `${n} ${plural(n, 'лицо', 'лица', 'лиц')}`;
+
+/**
+ * Что сделал шаг или свёртка карты — вслух и в строке показа (решения 197–199). Имя — в начале, в именительном падеже:
+ * «Адам: на карте жена и дети — Ева, Каин, Авель, Сиф», «Иаков: на карте жёны — Лия, Рахиль, Валла, Зелфа; у каждой — ромб
+ * с детьми», «Сиф: потомки свёрнуты, скрыто 12 лиц», «Сиф: на карте только это лицо».
+ */
+export function mapSayText(m: { kind: string; id: string; added: readonly string[]; removed: number }, size: number): string {
+  const name = byId.get(m.id)?.name ?? m.id;
+  const w = spouseWords(m.id);
+  const total = `на карте ${personsN(size)}`;
+  switch (m.kind) {
+    case 'union': {
+      const sp = m.added.filter((x) => (graph.spousesOf.get(m.id) ?? []).some((e) => e.a === x || e.b === x));
+      const what = sp.length ? `${w.one.toLowerCase()} и дети` : 'дети';
+      return typo(`${name}: раскрыты ${what} — ${namesList(m.added)}; ${total}`);
+    }
+    case 'spouses':
+      return typo(`${name}: раскрыты ${m.added.length > 1 ? w.many.toLowerCase() : w.one.toLowerCase()} — ${namesList(m.added)}; у каждого союза — ромб с числом детей; ${total}`);
+    case 'kids':
+      return typo(`${name}: раскрыты все дети — ${namesList(m.added)}; ${total}`);
+    case 'parents':
+      return typo(`${name}: раскрыты родители, братья и сёстры — ${namesList(m.added)}; ${total}`);
+    case 'fold-desc':
+      return typo(`${name}: потомки свёрнуты${m.removed ? `, скрыто ${personsN(m.removed)}` : ''}; ${total}`);
+    case 'fold-anc':
+      return typo(`${name}: предки свёрнуты${m.removed ? `, скрыто ${personsN(m.removed)}` : ''}; ${total}`);
+    case 'only':
+      return typo(`${name}: на карте только это лицо; дальше — шагами «+»`);
+    default:
+      return '';
+  }
+}

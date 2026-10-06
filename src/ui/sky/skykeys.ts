@@ -1,5 +1,6 @@
 /**
- * Клавиши неба: масштаб, сдвиг, переходы по родству «[ ] , .», «0» и Home — всё небо (D10; IX-38, 40);
+ * Клавиши неба: масштаб, сдвиг, переходы по родству «[ ] , .», «0» и Home — всё небо (D10; IX-38, 40); на карте
+ * «набор» «[» и «]» раскрывают родителя или ребёнка, которого на карте нет (этап 21, решение 197);
  * масштаб по одной оси (Shift и Alt с «+» и «−») и «Небо во весь экран» (F) — viewKeys (J1, J2).
  * По физическим клавишам (KeyboardEvent.code), поэтому работают и на русской раскладке; слушает их window
  * (src/ui/keys.ts), а не холст: небо отвечает и без фокуса на холсте.
@@ -16,6 +17,11 @@ import { KEY_STEP, KEY_MS, openStarMenu, stopZoom } from './input.ts';
 import { arrowDir, moveStarFocus, plateFocus, rememberFocus } from './starnav.ts';
 import { skySay } from './SkyA11y.tsx';
 import { focusCardTitle, focusKinFirst } from '../focus.ts';
+import { expandUnion, originOf, stepBack } from '../reveal.ts';
+import { linkSet, show, workSet } from '../work.ts';
+
+/** Небо — своя карта «набор»: переходы «[ ]» раскрывают нужное (этап 21, решение 197). */
+const onMap = () => show.peek().kind === 'set' && !linkSet.peek();
 
 // ---------- клавиши неба ----------
 
@@ -151,6 +157,8 @@ export function skyKeys(e: KeyboardEvent, nav: boolean, onCanvas: boolean, onSky
         break;
       }
       climb = [...climb, id].slice(-200);
+      // карта «набор» (этап 21, решение 197): родителя на карте нет — сначала шаг назад (родители, братья и сёстры)
+      if (onMap() && !workSet.peek().has(par)) stepBack(id);
       go(par);
       break;
     }
@@ -161,6 +169,11 @@ export function skyKeys(e: KeyboardEvent, nav: boolean, onCanvas: boolean, onSky
       if (!r.to) {
         skySay('детей в данных нет');
         break;
+      }
+      // карта «набор» (решение 197): ребёнка на карте нет — раскрывается союз, где он родился (мать и братья с ним)
+      if (onMap() && !workSet.peek().has(r.to)) {
+        const u = originOf(r.to).find((q) => q.a === id || q.b === id) ?? originOf(r.to)[0];
+        if (u) expandUnion(u.id, id);
       }
       go(r.to);
       break;

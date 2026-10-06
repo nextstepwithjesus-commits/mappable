@@ -27,6 +27,7 @@
  * Закрывают её «×», Escape (связь → карточка у звезды → звезда), щелчок по пустому небу, выбор другого лица не
  * командой карточки, выбор второго лица («Родство с…»). Роль — dialog (не модальный) с именем лица, союза или связи.
  */
+import { MapSteps } from '../card/MapSteps.tsx';
 import { computed, effect, signal } from '@preact/signals';
 import { Fragment, type ComponentChildren } from 'preact';
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
@@ -1605,7 +1606,6 @@ export function PersonBody({ id, compact = false, brief = false, legend = false,
   const p = byId.get(id)!;
   const dis = disLine(id);
   const phone = grid.value.phone;
-  const c = revealOn() ? personDotCmds(id) : { branch: null, parents: null };
   return (
     <>
       <div class="dc-top">
@@ -1642,23 +1642,8 @@ export function PersonBody({ id, compact = false, brief = false, legend = false,
           Родство с…
         </Cmd>
       </div>
-      {(c.branch || c.parents) && !brief && (
-        <div class="dc-cmds">
-          {c.branch && (
-            <Cmd
-              onRun={() => (c.branch === 'more' ? continueDot(id) : foldDot(id))}
-              title={c.branch === 'more' ? 'Показать на небе ромбы союзов лица: его браки и союз родителей' : 'Убрать ромбы союзов лица и раскрытое от них'}
-            >
-              {c.branch === 'more' ? 'Продолжить ветвь' : 'Скрыть ветвь'}
-            </Cmd>
-          )}
-          {c.parents && (
-            <Cmd onRun={() => parentsDot(id)} title={c.parents === 'show' ? 'Родители, братья и сёстры — на небо' : 'Убрать с неба союз родителей, показанный от лица'}>
-              {c.parents === 'show' ? 'Показать родителей' : 'Скрыть родителей'}
-            </Cmd>
-          )}
-        </div>
-      )}
+      {/* шаги карты (этап 21, решения 197–198) — те же команды, что в карточке справа */}
+      {!brief && <MapSteps id={id} cls="dc-cmds" />}
     </>
   );
 }
