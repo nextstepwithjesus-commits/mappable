@@ -119,13 +119,18 @@ QUOTES = []           # (цитата, адрес) — для отчёта
 
 
 def check_quote(q, ref):
-    text = ' ' + norm(verses_text(ref)) + ' '
-    pos = 0
-    for p in [norm(x) for x in re.split(r'…|\.\.\.', q) if norm(x)]:
-        i = text.find(' ' + p + ' ', pos)
-        if i < 0:
-            raise SystemExit(f'ЦИТАТА НЕ НАЙДЕНА: «{q}» ← {ref}')
-        pos = i + len(p)
+    raw = verses_text(ref)
+    nobr = re.sub(r'\[[^\]]*\]|\([^)]*\)', ' ', raw)
+    for label, src in (('', raw), (' (без слов в скобках)', nobr)):
+        if label and re.search(r'[\[\(]', q):
+            continue          # цитата сама показывает скобки
+        text = ' ' + norm(src) + ' '
+        pos = 0
+        for p in [norm(x) for x in re.split(r'…|\.\.\.', q) if norm(x)]:
+            i = text.find(' ' + p + ' ', pos)
+            if i < 0:
+                raise SystemExit(f'ЦИТАТА НЕ НАЙДЕНА{label}: «{q}» ← {ref}')
+            pos = i + len(p)
     QUOTES.append((q, ref))
 
 
@@ -133,8 +138,11 @@ def check_name(form, ref):
     """Имя (или каждое слово имени) стоит в стихе адреса — по основе слова."""
     words = norm(verses_text(ref)).split()
     for w in norm(form).split():
-        stem = w[:-1] if len(w) > 3 else w
-        if not any(x.startswith(stem) for x in words):
+        if len(w) <= 3:
+            ok = any(x.startswith(w[:-1]) and len(w) <= len(x) <= len(w) + 2 for x in words)
+        else:
+            ok = any(x.startswith(w[:-1]) for x in words)
+        if not ok:
             raise SystemExit(f'ИМЯ НЕ НАЙДЕНО В СТИХЕ: {form} ← {ref}')
 
 
@@ -182,7 +190,7 @@ def cert(kind):
 
 
 def fact(text_html, *rs, kind=None, cls=''):
-    r = refs(*rs) if rs else ''
+    r = ('<span class="sr">стихи:</span>' + refs(*rs)) if rs else ''
     c = cert(kind)
     return f'<li class="fact {cls}"><span class="ft">{text_html}</span> {c}{r}</li>'
 
@@ -261,7 +269,7 @@ EPOCHS = [
         ('p-david', 'Деян 13:22', 'поставил им царем Давида'),
         ('p-solomon', '3Цар 6:1', 'в четвертый год царствования Соломонова над Израилем')]),
     ('divided', 'Разделённое царство', 'crown2', [
-        ('p-iliya', '3Цар 16:29; 17:1', 'жив Господь Бог Израилев, пред Которым я стою')]),
+        ('p-iliya', '3Цар 17:1', 'И сказал Илия')]),
     ('judah-alone', 'Иудея одна', 'gate', [
         ('p-ezekiya', '4Цар 18:10', 'в шестой год Езекии, то есть в девятый год Осии, царя Израильского, взята Самария')]),
     ('exile', 'Вавилонский плен', 'river', [
@@ -313,10 +321,10 @@ def svg(body, size=48, cls='sign'):
 SIGN = {
     # маршруты
     'ark': '<path d="M6 30h36l-5 8H11z"/><rect x="11" y="17" width="26" height="13"/><path d="M11 23.5h26M8 17l16-7 16 7"/>',
-    'path': '<path d="M5 36l9-15 9 15z"/><path d="M14 21v15"/><path d="M27 30c5-1 7-6 12-9" stroke-dasharray="2 4"/><circle cx="41" cy="20" r="2.5"/>',
+    'path': '<path d="M3 42l13-24 13 24z"/><path d="M16 18v24"/><path d="M30 36c6-3 7-12 13-16" stroke-dasharray="3 4"/><circle cx="43" cy="17" r="3"/>',
     'twelve': ''.join(f'<rect x="{7 + 9.5 * (i % 4)}" y="{11 + 9.5 * (i // 4)}" width="6" height="6"/>' for i in range(12)),
-    'pillar': '<path d="M19 6h10c-3 4 3 6 0 10s3 6 0 10 3 6 0 10 3 6 0 6H19c3-3-3-4 0-6s-3-6 0-10 3-6 0-10-3-6 0-10z"/>',
-    'horn': '<path d="M7 38c13 0 24-8 30-28l5 2c-5 23-18 32-35 32z"/><path d="M40 6v3"/>',
+    'pillar': '<path d="M17 4h14c-4 5 4 7 0 12s4 7 0 12 4 7 0 12 2 4 0 6H17c-2-2 0-4 0-6s-4-7 0-12-4-7 0-12-4-7 0-12z"/><path d="M8 44h32"/>',
+    'horn': '<path d="M5 41c15 0 28-9 34-33l6 2c-5 26-21 37-40 37z"/><path d="M42 3c0 2-1 3-1 4"/><path d="M12 41c2-1 4-3 5-5"/>',
     'boat': '<path d="M5 28h38l-6 9H11z"/><path d="M24 7v21M24 9l11 16H24"/><path d="M8 42c3-2 5-2 8 0s5 2 8 0 5-2 8 0 5 2 8 0"/>',
     'scrolls': '<rect x="7" y="9" width="14" height="30" rx="2"/><rect x="27" y="9" width="14" height="30" rx="2"/><path d="M11 16h6M11 21h6M11 26h6M31 16h6M31 21h6M31 26h6M31 31h6"/>',
     'epochs': '<path d="M4 34h40"/><path d="M8 28v12M16 28v12M24 28v12M32 28v12M40 28v12"/><path d="M8 14l4 6M16 12v8M24 12l-3 8M32 14l3 6"/>',
@@ -348,7 +356,7 @@ def gen_href(pid):
     return DRAWN.get(pid, {}).get('gen')
 
 
-def node(pid=None, label=None, sex='m', sub='', r=None, selected=False, check=True, href=None):
+def node(pid=None, label=None, sex='m', sub='', r=None, selected=False, check=True, href=None, ref_below=False):
     lab = label or name(pid)
     if r and check:
         check_name(lab, r)
@@ -363,7 +371,7 @@ def node(pid=None, label=None, sex='m', sub='', r=None, selected=False, check=Tr
         body = f'<a class="{cls}" href="{h}">{inner}</a>'
     else:
         body = f'<span class="{cls}">{inner}</span>'
-    return body + (f' {ref(r)}' if r else '')
+    return f'<span class="nwrap">{body}{ref(r) if r else ""}</span>'
 
 
 def stub_href(label):
@@ -450,7 +458,7 @@ def home_ab():
         else:
             a = '<span class="t-adr">без адреса: название атласа</span>'
         tiles.append(f'''<li><a class="tile" href="{href}">
-  {svg(SIGN[sign], 44)}
+  {svg(SIGN[sign], 48)}
   <span class="t-title">{title}</span>
   <span class="t-tool">{tool}</span>
   {a}
@@ -534,8 +542,7 @@ def home_d():
     def gap(ids, n_text, adr, extra='', gid=''):
         names = ', '.join(pick(p) for p in ids)
         return f'''<li class="gap">
-  <button type="button" class="gapbtn" aria-expanded="false" aria-controls="{gid}">ещё {n_text}</button>
-  <span class="gap-adr">{ref(adr)}</span>{extra}
+  <div class="gaprow"><button type="button" class="gapbtn" aria-expanded="false" aria-controls="{gid}">ещё {n_text}</button> {ref(adr)}</div>{extra}
   <div class="gap-names" id="{gid}" hidden>{names}</div>
 </li>'''
 
@@ -546,7 +553,7 @@ def home_d():
     body = f'''
 <section aria-labelledby="h-line" class="dline">
   <h2 id="h-line">Родословие от Адама до Иисуса Христа</h2>
-  <p class="note">Касание имени — что можно открыть об этом человеке. «Ещё» раскрывает пропущенные здесь имена.</p>
+  <p class="note">Касание имени — что можно открыть об этом человеке. Кнопки с числом раскрывают пропущенные здесь имена.</p>
   <ol class="trunk">
     {anchor('p-adam')}
     {gap(S['adam-noy'], '8', 'Быт 5:3-29', gid='g1')}
@@ -557,7 +564,7 @@ def home_d():
     {anchor('p-david')}
   </ol>
   <div class="branches">
-    <section class="branch mt" aria-labelledby="h-bmt">
+    <section class="dbranch mt" aria-labelledby="h-bmt">
       <h3 id="h-bmt">Матфей пишет</h3>
       <p class="bsub">через Соломона {ref('Мф 1:6')}</p>
       <ol class="trunk">
@@ -566,7 +573,7 @@ def home_d():
       </ol>
       <p class="bq">{q('Иаков родил Иосифа, мужа Марии, от Которой родился Иисус, называемый Христос', 'Мф 1:16')}</p>
     </section>
-    <section class="branch lk" aria-labelledby="h-blk">
+    <section class="dbranch lk" aria-labelledby="h-blk">
       <h3 id="h-blk">Лука пишет</h3>
       <p class="bsub">через Нафана {ref('Лк 3:31')}</p>
       <ol class="trunk">
@@ -597,78 +604,67 @@ def gen_noy():
     assert sons == ['p-sim', 'p-kham', 'p-iafet'], sons
     grand = {'p-sim': ('5', 'Быт 10:22'), 'p-kham': ('4', 'Быт 10:6'), 'p-iafet': ('7', 'Быт 10:2')}
     kids = ''.join(
-        f'<li>{node(s, sex="m", r="Быт 6:10")}<span class="more">сыновей — {grand[s][0]} {ref(grand[s][1])}</span></li>'
+        f'<li>{node(s, sex="m", r="Быт 6:10", ref_below=True)}<span class="more">сыновей — {grand[s][0]} {ref(grand[s][1])}</span></li>'
         for s in sons)
     body = f'''
-<div class="fam">
-  <div class="fam-up">
-    <p class="lvl">Родители</p>
-    <div class="row">{node('p-lamekh', sex='m', r='Быт 5:28-29')}<span class="nomother"><span class="mk mk-x" aria-hidden="true"></span>мать текст не называет</span></div>
-  </div>
-  <div class="fam-self">
-    <div class="couple">{node('p-noy', sex='m', selected=True)}
-      <span class="uw">жена</span>
-      {node(None, 'жена Ноя', 'f', sub='имени текст не называет')} {ref('Быт 7:7')}
-    </div>
-    {sketch_note('Жены Ноя ещё нет в базе данных (03, § 10.1): здесь она нарисована по Быт 7:7.')}
-  </div>
-  <div class="fam-kids">
-    <p class="lvl">Сыновья — мать текст не называет</p>
-    <p class="kq">{q('Ной родил трех сынов: Сима, Хама и Иафета', 'Быт 6:10')}</p>
-    <ul class="kids">{kids}</ul>
-    <p class="kq">Жёны сыновей — три, по имени не названы {ref('Быт 7:13')}</p>
-    <p class="study hint">В Быт 5:32 слова «[трех сынов]» стоят в квадратных скобках Синодального издания, поэтому основание числа — Быт 6:10.</p>
-  </div>
-</div>'''
+<div class="tree">
+  <div class="tparent">{node('p-lamekh', sex='m', r='Быт 5:28-29')}<span class="nomother"><span class="mk mk-x" aria-hidden="true"></span>мать Ноя текст не называет</span></div>
+  <ul class="branch"><li>
+    <div class="couple">{node('p-noy', sex='m', selected=True)}<span class="uw" aria-label="и его жена">жена</span>{node(None, 'жена Ноя', 'f', sub='имени текст не называет')}{ref('Быт 7:7')}</div>
+    <p class="edge">сыновья; мать текст не называет<br>{q('Ной родил трех сынов: Сима, Хама и Иафета', 'Быт 6:10')}</p>
+    <ul class="branch">{kids}</ul>
+  </li></ul>
+</div>
+<p class="kq">Жёны сыновей — три, по имени не названы {ref('Быт 7:13')}</p>
+{sketch_note('Жены Ноя ещё нет в базе данных (03, § 10.1): здесь она нарисована по Быт 7:7.')}
+<p class="study hint">В Быт 5:32 слова «[трех сынов]» стоят в квадратных скобках Синодального издания, поэтому основание числа — Быт 6:10.</p>'''
     screen('gen-p-noy', 'Ной — Генеалогия', body, subject='p-noy', cont='Ной — Генеалогия', tool='gen',
            h1='Ной и его сыновья')
 
 
-# ── Генеалогия: Авраам
 def gen_avraam():
     kids = {o['child']: o for o in children('p-avraam')}
     assert set(kids) == {'p-izmail', 'p-isaak', 'p-zimran', 'p-iokshan', 'p-medan', 'p-madian', 'p-ishbak', 'p-shuakh'}
     ket = ['p-zimran', 'p-iokshan', 'p-medan', 'p-madian', 'p-ishbak', 'p-shuakh']
-    ketk = ''.join(f'<li>{node(k, sex="m", r="Быт 25:2")}</li>' for k in ket)
-    body = f'''
-<div class="fam">
-  <div class="fam-up">
-    <p class="lvl">Отец и братья</p>
-    <div class="row">{node('p-farra', sex='m', r='Быт 11:26-27')}<span class="nomother"><span class="mk mk-x" aria-hidden="true"></span>мать текст не называет</span></div>
-    <p class="kq">{q('Фарра родил Аврама, Нахора и Арана', 'Быт 11:27')}</p>
-    <ul class="kids sibs">
-      <li>{node('p-avraam', sex='m', selected=True, sub='прежде — Аврам')} {ref('Быт 17:5')}</li>
-      <li>{node('p-nakhor-syn-farry', 'Нахор', 'm')}</li>
-      <li>{node('p-aran', 'Аран', 'm')}</li>
-    </ul>
-  </div>
-  <div class="fam-unions">
-    <p class="lvl">Жёны и дети Авраама</p>
-    <ol class="unions">
-      <li class="union">
+    ketk = ''.join(f'<li>{node(k, sex="m")}</li>' for k in ket)
+    check_quote('Она родила ему Зимрана, Иокшана, Медана, Мадиана, Ишбака и Шуаха', 'Быт 25:2')
+    for k in ket:
+        check_name(name(k), 'Быт 25:2')
+    unions = f'''<ul class="branch unions">
+      <li><div class="union">
         <div class="uhead">{node('p-sarra', 'Сарра', 'f', r='Быт 23:19')}<span class="uw">жена</span></div>
         <p class="unote">По словам Авраама, она {qq('дочь отца моего, только не дочь матери моей', 'Быт 20:12')} {ref('Быт 20:12')}</p>
-        <ul class="kids">{''.join([f'<li>{node("p-isaak", sex="m", r="Быт 21:3")}</li>'])}</ul>
-      </li>
-      <li class="union">
+        <ul class="ukids"><li>{node("p-isaak", sex="m", r="Быт 21:3")}</li></ul>
+      </div></li>
+      <li><div class="union">
         <div class="uhead">{node('p-agar', 'Агарь', 'f', r='Быт 16:3')}<span class="uw">служанка, которую дали в жену</span></div>
-        <ul class="kids"><li>{node('p-izmail', sex='m', r='Быт 16:15')}</li></ul>
-      </li>
-      <li class="union">
+        <ul class="ukids"><li>{node('p-izmail', sex='m', r='Быт 16:15')}</li></ul>
+      </div></li>
+      <li><div class="union">
         <div class="uhead">{node('p-khettura', 'Хеттура', 'f', r='Быт 25:1')}<span class="uw">жена</span></div>
-        <p class="unote">В другом месте названа наложницей {ref('1Пар 1:32')}
-          <details class="explain"><summary>Что значит «наложница»?</summary><p>Жена, но не главная. {cert('reference')} Это пояснение атласа, а не слова Библии; ср. {ref('Быт 35:22')}</p></details></p>
-        <ul class="kids">{ketk}</ul>
-      </li>
-    </ol>
-    <p class="kq">Ещё наложницы — по имени не названы {ref('Быт 25:6')}</p>
-  </div>
-</div>'''
+        <p class="unote">В другом месте названа наложницей {ref('1Пар 1:32')}</p>
+        <details class="explain"><summary>Что значит «наложница»?</summary><p>Жена, но не главная. {cert('reference')} Пояснение атласа, а не слова Библии; ср. {ref('Быт 35:22')}</p></details>
+        <p class="unote">Сыновья {ref('Быт 25:2')}</p>
+        <ul class="ukids">{ketk}</ul>
+      </div></li>
+    </ul>'''
+    body = f'''
+<p class="kq">{q('Фарра родил Аврама, Нахора и Арана', 'Быт 11:27')}</p>
+<div class="tree">
+  <div class="tparent">{node('p-farra', sex='m', r='Быт 11:26-27')}<span class="nomother"><span class="mk mk-x" aria-hidden="true"></span>мать текст не называет</span></div>
+  <ul class="branch">
+    <li>{node('p-avraam', sex='m', selected=True, sub='прежде — Аврам')} {ref('Быт 17:5')}
+      {unions}
+    </li>
+    <li>{node('p-nakhor-syn-farry', 'Нахор', 'm')}</li>
+    <li>{node('p-aran', 'Аран', 'm')}</li>
+  </ul>
+</div>
+<p class="kq">Ещё наложницы Авраама — по имени не названы {ref('Быт 25:6')}</p>'''
     screen('gen-p-avraam', 'Авраам — Генеалогия', body, subject='p-avraam', cont='Авраам — Генеалогия',
            tool='gen', h1='Авраам: родители, жёны и дети')
 
 
-# ── Генеалогия: 12 колен
 def gen_tribes():
     groups = [
         ('p-liya', 'Лия', 'жена', 'Быт 29:21-25', 'Быт 35:23',
@@ -685,28 +681,29 @@ def gen_tribes():
         assert set(ks) <= kidset
         items = []
         for k in ks:
+            check_name(name(k), kref)
             extra = ''
             if k == 'p-leviy':
                 extra = f'<span class="more">левиты {qq("не были исчислены между ними", "Чис 1:47")} {ref("Чис 1:47")}</span>'
             if k == 'p-iosif':
-                extra = (f'<span class="more">Ефрем и Манассия — {qq("мои они", "Быт 48:5")}, сказал Иаков '
+                extra = (f'<span class="more">о Ефреме и Манассии Иаков сказал: {qq("мои они", "Быт 48:5")} '
                          f'{ref("Быт 48:5")}</span>')
-            items.append(f'<li>{node(k, name(k), "m", r=kref)}{extra}</li>')
+            items.append(f'<li>{node(k, name(k), "m")}{extra}</li>')
         if mid == 'p-liya':
-            items.append(f'<li>{node("p-dina", "Дина", "f", r="Быт 30:21", sub="дочь; колена нет")}</li>')
-        cols.append(f'''<li class="union">
+            items.append(f'<li>{node("p-dina", "Дина", "f", sub="дочь; колена нет")} {ref("Быт 30:21")}</li>')
+        cols.append(f'''<li><div class="union">
   <div class="uhead">{node(mid, mname, 'f', r=wref)}<span class="uw">{word}</span></div>
-  <ul class="kids">{''.join(items)}</ul></li>''')
+  <p class="unote">Сыновья {ref(kref)}</p>
+  <ul class="ukids">{''.join(items)}</ul></div></li>''')
     body = f'''
 <p class="lead">{q('Вот все двенадцать колен Израилевых', 'Быт 49:28')}</p>
-<p class="note">Сыновья Иакова по матерям — так их перечисляет {ref('Быт 35:23-26')}</p>
-<div class="fam">
-  <div class="fam-self"><div class="couple">{node('p-iakov', 'Иаков', 'm', selected=True, sub='он же Израиль')} {ref('Быт 35:22')}</div></div>
-  <div class="fam-unions">
-    <ol class="unions four">{''.join(cols)}</ol>
-  </div>
+<p class="note">Сыновья Иакова по матерям — в том порядке, как их перечисляет Быт 35:23–26.</p>
+<div class="tree">
+  <div class="tparent">{node('p-iakov', 'Иаков', 'm', selected=True, sub='он же Израиль')} {ref('Быт 35:22')}</div>
+  <ul class="branch unions four">{''.join(cols)}</ul>
 </div>
 <p class="study hint">Во втором слое — переключатель перечней колен: Быт 49; Чис 1; Чис 26; Втор 33; Откр 7 (в эскизе не нарисован).</p>'''
+    units('Быт 35:23-26')
     screen('gen-p-iakov', '12 колен Израиля — Генеалогия', body, subject='p-iakov',
            cont='12 колен Израиля — Генеалогия', tool='gen', h1='12 колен Израиля')
 
@@ -745,6 +742,13 @@ def gen_messiah():
         return f'<td>{numh}{pick(pid, n)}{mark}</td>'
 
     trs = []
+    k0 = rows.index(('p-avraam', 'p-avraam'))
+    pre = [b for a, b in rows[:k0]]
+    assert all(a is None for a, b in rows[:k0]) and pre[0] == 'p-adam' and pre[-1] == 'p-farra'
+    pre_html = ', '.join(pick(p) + ('<span class="tagx-in"> (только у Луки)</span>' if p == 'p-kainan-syn-arfaksada' else '') for p in pre)
+    trs.append(f'<tr class="pre"><td><span class="muted">Матфей начинает с Авраама</span> {ref("Мф 1:2")}</td>'
+               f'<td><span class="muted">{len(pre)} имён, от Адама:</span> {pre_html}</td></tr>')
+    rows = rows[k0:]
     for a, b in rows:
         cls = ' class="same"' if a and a == b else ''
         if a == 'p-iekhoniya' or (a is None and b == 'p-niriy'):
@@ -761,7 +765,7 @@ def gen_messiah():
   <p>{q('Иаков родил Иосифа, мужа Марии, от Которой родился Иисус, называемый Христос', 'Мф 1:16')}</p>
   <p>{q('Иисус, начиная Свое служение, был лет тридцати, и был, как думали, Сын Иосифов, Илиев', 'Лк 3:23')}</p>
 </div>
-<p class="note">Лука перечисляет от Иисуса вверх до Адама; здесь его имена стоят сверху вниз. Матфей начинает с Авраама {ref('Мф 1:2')}</p>
+<p class="note">Лука перечисляет от Иисуса вверх до Адама; здесь его имена стоят сверху вниз.</p>
 <p class="study hint">Номера: у Матфея — внутри своей четырнадцатки {ref('Мф 1:17')}; у Луки — от Иосифа (1) до Адама (75). Между Иорамом и Озией Матфей не называет Охозию, Иоаса и Амасию {ref('4Цар 8:24')} {ref('1Пар 3:11-12')}</p>
 <table class="lines">
   <caption class="sr">Родословие у Матфея и у Луки, строки выровнены по лицам</caption>
@@ -809,7 +813,7 @@ def time_screen():
             panels.append(f'''<section class="tpanel" data-panel="{pid}" hidden aria-label="{E(name(pid))}">
   <h2>{E(name(pid))}</h2>
   <p class="epoch-of">Эпоха «{ename}» {cert('inference')}</p>
-  <p>{q(qt, r)}</p>{extra}{yrs}
+  {'' if pid == 'p-avraam' else '<p>' + q(qt, r) + '</p>'}{extra}{yrs}
 </section>''')
     for eid, ename, sign, ps in EPOCHS:
         ed = EPOCHS_DATA[eid]
@@ -842,61 +846,64 @@ def time_screen():
 
 # ── География: Авраам
 GEO = [
-    # (номер, название, адрес, x, y, подпись-вид)
-    ('Ур Халдейский', 'Быт 11:31', 418, 312, 'вышел'),
-    ('Харран', 'Быт 11:31; 12:4', 360, 70, 'жил'),
-    ('Сихем, дубрава Море', 'Быт 12:6', 150, 160, 'прошёл'),
-    ('Гора между Вефилем и Гаем', 'Быт 12:8', 150, 205, 'шатёр, жертвенник'),
-    ('Египет', 'Быт 12:10', 40, 330, 'жил во время голода'),
-    ('Снова между Вефилем и Гаем', 'Быт 13:3-4', 150, 205, 'вернулся'),
-    ('Дубрава Мамре в Хевроне', 'Быт 13:18', 140, 260, 'поселился'),
-    ('Дан', 'Быт 14:14', 168, 100, 'преследовал царей'),
-    ('Герар', 'Быт 20:1', 92, 300, 'был на время'),
-    ('Вирсавия', 'Быт 21:33; 22:19', 128, 315, 'жил'),
-    ('Земля Мориа', 'Быт 22:2', 172, 228, 'гора жертвоприношения'),
-    ('Хеврон, пещера Махпела', 'Быт 23:19; 25:9', 140, 260, 'похоронил Сарру; погребён'),
+    # (название, адрес, место-точка, что было)
+    ('Ур Халдейский', 'Быт 11:31', 'ur', 'вышел оттуда с Фаррою'),
+    ('Харран', 'Быт 11:31; 12:4', 'harran', 'остановились; вышел семидесяти пяти лет'),
+    ('Сихем, дубрава Море', 'Быт 12:6', 'sikhem', 'прошёл до этого места'),
+    ('Гора между Вефилем и Гаем', 'Быт 12:8', 'vefil', 'шатёр и жертвенник'),
+    ('Египет', 'Быт 12:10', 'egypt', 'пожил там во время голода'),
+    ('Снова между Вефилем и Гаем', 'Быт 13:3-4', 'vefil', 'вернулся к жертвеннику'),
+    ('Дубрава Мамре, что в Хевроне', 'Быт 13:18', 'mamre', 'поселился, жертвенник'),
+    ('Дан', 'Быт 14:14', 'dan', 'преследовал неприятелей'),
+    ('Герар', 'Быт 20:1', 'gerar', 'был на время'),
+    ('Вирсавия', 'Быт 21:33; 22:19', 'virsaviya', 'насадил рощу; жил'),
+    ('Земля Мориа', 'Быт 22:2', 'moria', 'пошёл туда с Исааком'),
+    ('Пещера Махпела против Мамре', 'Быт 23:19; 25:9', 'mamre', 'похоронил Сарру; там погребён'),
 ]
 GEO_CHECK = ['Ура Халдейского', 'Харрана', 'Сихема', 'Вефиля', 'Египет', 'Вефилем', 'Мамре', 'Дана',
              'Гераре', 'Вирсавии', 'Мориа', 'Махпеле']
+# Условные точки схемы (не координаты): x, y, подпись, смещение подписи
+GEO_PTS = {
+    'harran': (560, 52, 'Харран', 'end', -14, -12),
+    'ur': (612, 372, 'Ур Халдейский', 'end', -14, -12),
+    'dan': (262, 62, 'Дан', 'start', 14, 5),
+    'sikhem': (236, 142, 'Сихем', 'start', 14, 5),
+    'vefil': (226, 194, 'Вефиль и Гай', 'start', 14, 5),
+    'moria': (236, 234, 'Мориа', 'start', 14, 5),
+    'mamre': (218, 276, 'Мамре, Хеврон', 'start', 14, 5),
+    'virsaviya': (200, 330, 'Вирсавия', 'start', 14, 5),
+    'gerar': (140, 312, 'Герар', 'end', -14, 5),
+    'egypt': (64, 386, 'Египет', 'start', 14, 5),
+}
 
 
 def geo_avraam():
-    pts = []
-    for (nm, r, x, y, what), chk in zip(GEO, GEO_CHECK):
+    for (nm, r, pt, what), chk in zip(GEO, GEO_CHECK):
         check_name(chk, r)
-        pts.append((x, y))
-    path = ' '.join(f'{x},{y}' for x, y in pts)
-    # точки: уникальные места, подписи с номерами
-    places = {}
-    for i, (nm, r, x, y, what) in enumerate(GEO, 1):
-        places.setdefault((x, y), []).append((i, nm))
+    path = ' '.join(f'{GEO_PTS[pt][0]},{GEO_PTS[pt][1]}' for _, _, pt, _ in GEO)
+    nums = {}
+    for i, (_, _, pt, _) in enumerate(GEO, 1):
+        nums.setdefault(pt, []).append(str(i))
     marks = []
-    for (x, y), lst in places.items():
-        nums = ', '.join(str(i) for i, _ in lst)
-        label = lst[0][1].split(',')[0].replace('Гора между Вефилем и Гаем', 'Вефиль и Гай')
-        label = label.replace('Дубрава Мамре в Хевроне', 'Мамре, Хеврон').replace('Земля Мориа', 'Мориа')
-        anchor = 'start'
-        dx = 10
-        if x > 300:
-            anchor, dx = 'end', -10
-        marks.append(f'<g class="pt"><circle cx="{x}" cy="{y}" r="7"/><text x="{x + dx}" y="{y - 10}" text-anchor="{anchor}">'
-                     f'<tspan class="pn">{nums}</tspan> {E(label)}</text></g>')
-    svgmap = f'''<svg class="geo" viewBox="0 0 460 360" role="img" aria-labelledby="geo-cap">
-  <title id="geo-cap">Схема: места Авраама по порядку текста. Расположение условное.</title>
-  <rect x="1" y="1" width="458" height="358" class="frame"/>
+    for pt, (x, y, label, anchor, dx, dy) in GEO_PTS.items():
+        marks.append(f'<g class="pt"><circle cx="{x}" cy="{y}" r="7"/><text x="{x + dx}" y="{y + dy}" text-anchor="{anchor}">'
+                     f'<tspan class="pn">{", ".join(nums[pt])}</tspan> {E(label)}</text></g>')
+    svgmap = f'''<svg class="geo" viewBox="0 0 660 420" role="img" aria-labelledby="geo-cap">
+  <title id="geo-cap">Схема: места Авраама по порядку текста. Расположение условное; список мест — рядом.</title>
+  <rect x="1" y="1" width="658" height="418" rx="4" class="frame"/>
   <polyline points="{path}" class="route"/>
   {''.join(marks)}
 </svg>'''
     items = ''.join(
-        f'<li><span class="gnum" aria-hidden="true">{i}</span><span class="gname">{E(nm)}</span>'
-        f'<span class="gwhat">{E(what)}</span>{ref(r)}</li>'
-        for i, (nm, r, x, y, what) in enumerate(GEO, 1))
+        f'<li><span class="gnum" aria-hidden="true">{i}</span><span class="gtxt"><span class="gname">{E(nm)}</span> '
+        f'<span class="gwhat">— {E(what)}</span></span>{ref(r)}</li>'
+        for i, (nm, r, pt, what) in enumerate(GEO, 1))
     body = f'''
-{sketch_note('Места расставлены вручную по стихам. Это схема, а не карта: положение точек условное. Где были эти места, скажет справочник мест (ещё не составлен).')}
 <p class="lead">{q('И пошел Аврам, как сказал ему Господь', 'Быт 12:4')}</p>
+{sketch_note('Места расставлены вручную по стихам. Это схема, а не карта: положение точек условное. Где были эти места, скажет справочник мест (ещё не составлен).')}
 <div class="geo-grid">
   <figure class="geo-fig">{svgmap}
-    <figcaption>Пунктир — порядок мест в тексте, а не дорога. Номер — место в списке.</figcaption>
+    <figcaption>Пунктир — порядок мест в тексте, а не дорога. Число у точки — номер места в списке.</figcaption>
   </figure>
   <section aria-labelledby="h-places" class="geo-list">
     <h2 id="h-places">Места по порядку текста</h2>
@@ -918,6 +925,42 @@ TITLES = {1: 'Имена', 2: 'Подлинник', 3: 'Кто это', 4: 'Ро
 LIMIT = 8
 
 
+DATA_UNQUOTED = []
+
+
+def quote_in(qt, r):
+    try:
+        text = ' ' + norm(verses_text(r)) + ' '
+    except Exception:
+        return False
+    pos = 0
+    for part in [norm(x) for x in re.split(r'…|\.\.\.', qt) if norm(x)]:
+        i = text.find(' ' + part + ' ', pos)
+        if i < 0:
+            return False
+        pos = i + len(part)
+    return True
+
+
+def data_text(t, rs):
+    """Текст записи данных: после каждой цитаты — адрес стиха, где она стоит.
+    Цитату, которой нет дословно ни в одном стихе записи, эскиз показывает без кавычек."""
+    out, pos = [], 0
+    for m in re.finditer(r'«([^«»]+)»', t):
+        out.append(E(t[pos:m.start()]))
+        qt = m.group(1)
+        hit = next((r for r in rs if quote_in(qt, r)), None)
+        if hit:
+            check_quote(qt, hit)
+            out.append(f'<q class="cit">«{E(qt)}»</q> {ref(hit)}')
+        else:
+            DATA_UNQUOTED.append((qt, rs))
+            out.append(E(qt))
+        pos = m.end()
+    out.append(E(t[pos:]))
+    return ''.join(out)
+
+
 def data_items(pid, old_sec):
     """Записи прежнего раздела в виде строк факта."""
     out = []
@@ -927,7 +970,7 @@ def data_items(pid, old_sec):
         if f['field'] in ('places',):
             out.append(fact(E(v['name']), *v['refs'], kind=kind))
         elif f['field'] == 'met':
-            out.append(fact(f'{E(name(v["id"]))} — {E(v["text"])}', *v['refs'], kind=kind))
+            out.append(fact(f'{E(name(v["id"]))} — {data_text(v["text"], v["refs"])}', *v['refs'], kind=kind))
         elif f['field'] == 'sayings':
             ctx = f'<span class="ctx">{E(v["context"])}</span>' if v.get('context') else ''
             check_quote(v['quote'], v['ref'])
@@ -936,12 +979,12 @@ def data_items(pid, old_sec):
             out.append(fact(E(v['title']), *v['refs'], kind=kind))
         elif f['field'] == 'death':
             for x in v.get('facts', []) + v.get('burial', []):
-                out.append(fact(E(x['text']), *x['refs'], kind=x.get('cert')))
+                out.append(fact(data_text(x['text'], x['refs']), *x['refs'], kind=x.get('cert')))
         elif f['field'] == 'birth':
             for x in v.get('facts', []):
-                out.append(fact(E(x['text']), *x['refs'], kind=x.get('cert')))
+                out.append(fact(data_text(x['text'], x['refs']), *x['refs'], kind=x.get('cert')))
         elif 'text' in v and 'refs' in v:
-            out.append(fact(E(v['text']), *v['refs'], kind=kind))
+            out.append(fact(data_text(v['text'], v['refs']), *v['refs'], kind=kind))
     return out
 
 
@@ -1003,11 +1046,10 @@ def card_avraam():
     s.append(section(1, [
         fact('Аврам — прежнее имя; новое дал Бог: ' + q('не будешь ты больше называться Аврамом, но будет тебе имя: Авраам, ибо Я сделаю тебя отцом множества народов', 'Быт 17:5')),
         fact('Аврам Еврей', 'Быт 14:13'),
-        fact('«друг Мой» — так называет его Бог', 'Ис 41:8'),
+        fact('Друг Божий: ' + q('семя Авраама, друга Моего', 'Ис 41:8') + '; ' + q('и он наречен другом Божиим', 'Иак 2:23')),
     ]))
-    check_quote('друга Моего', 'Ис 41:8')
     s.append(section(3, data_items(pid, 5)))
-    s.append(section(4, [fact('Отец — <a href="#/gen/p-farra" data-stub="Генеалогия — Фарра">Фарра</a>', 'Быт 11:26-27'),
+    s.append(section(4, [fact(f'Отец — <a href="{person_href("p-farra", "Фарра")}">Фарра</a>', 'Быт 11:26-27'),
                          fact('Мать текст не называет')]))
     s.append(section(5, data_items(pid, 7)))
     s.append(section(6, data_items(pid, 8)))
@@ -1123,15 +1165,14 @@ def card_ruf():
 </table>'''
     s = [
         section(3, [fact(qq('Руфь Моавитянка', 'Руф 1:22') + ', сноха Ноемини', 'Руф 1:22')]),
-        section(4, [fact('Отца и мать текст не называет; Вооз говорит: ' + qq('ты оставила отца твоего и мать твою', 'Руф 2:11'), 'Руф 2:11')]),
+        section(4, [fact('Отца и мать текст не называет; Вооз говорит: ' + qq('ты оставила твоего отца и твою мать и твою родину', 'Руф 2:11'), 'Руф 2:11')]),
         section(5, [fact('Моавитянка', 'Руф 1:4', 'Руф 1:22')]),
         section(7, [
             fact('Махлон — муж: ' + qq('Руфь Моавитянку, жену Махлонову', 'Руф 4:10') + '; детей от него текст не называет', 'Руф 4:10'),
             fact('Вооз — муж; сын Овид', 'Руф 4:13', 'Руф 4:17'),
             fact('Об Овиде: ' + qq('Он отец Иессея, отца Давидова', 'Руф 4:17'), 'Руф 4:17'),
         ]),
-        section(9, [fact('Ноеминь — ' + qq('сноха ее Руфь Моавитянка', 'Руф 1:22'), 'Руф 1:22'),
-                    fact('Орфа — ' + qq('Вот, невестка твоя возвратилась', 'Руф 1:15') + ', говорит Ноеминь', 'Руф 1:15')]),
+        section(9, [fact('Ноеминь — ' + qq('сноха ее Руфь Моавитянка', 'Руф 1:22'), 'Руф 1:22')]),
         section(10, [fact(q('В те дни, когда управляли судьи', 'Руф 1:1')),
                      fact('Эпоха «Судьи»', 'Руф 1:1', kind='inference')],
                 extra='<p><a class="btn" href="#/time/p-ruf">Время</a></p>'),
@@ -1208,7 +1249,7 @@ def stub():
 
 
 def search_tpl():
-    TEMPLATES['search'] = '''<div class="screen search" data-title="Поиск">
+    TEMPLATES['search'] = '''<div class="screen searchscr" data-title="Поиск">
 <h1 class="scr-h" tabindex="-1">Поиск</h1>
 <div data-results aria-live="polite"></div>
 </div>'''
@@ -1250,64 +1291,93 @@ def search_index():
             fr = ''
         persons.append([pid, forms, a.get('disambig') or '', KIND.get(a['kind'], ''),
                         a.get('prominence') or 0, disp(fr) if fr else ''])
-    areas = [[x['id'], x['name']] for x in AREAS if x['kind'] in ('tribe', 'nation', 'house')]
+    areas = [[x['id'], x['name'], x['kind']] for x in AREAS if x['kind'] in ('tribe', 'nation', 'house')]
     return persons, areas
 
 
 def verse_persons(keys):
-    """Кто назван в стихе: лицо ссылается на стих (имена, родство, браки, линии) и его имя стоит в стихе."""
-    cover = {}
-
-    def add(pid, rs):
-        for r in rs or []:
-            try:
-                for u in units(r):
+    """Кто назван в стихе. Сильные ссылки — имена, родство, браки, линии; слабые — ссылки записей
+    карточки. Лицо по слабой ссылке берётся, только если в стихе нет его тёзки по сильной.
+    И в любом случае имя лица должно стоять в стихе."""
+    def collect(pairs):
+        cover = {}
+        for pid, rs in pairs:
+            for r in rs or []:
+                try:
+                    us = units(r)
+                except Exception:
+                    continue
+                for u in us:
                     for k in u:
                         if k in keys:
                             cover.setdefault(k, set()).add(pid)
-            except Exception:
-                pass
+        return cover
+    strong_pairs = []
     for pid, a in A.items():
         for n in a.get('names', []):
-            add(pid, n.get('refs'))
+            strong_pairs.append((pid, n.get('refs')))
     for o in ORIG:
-        add(o['child'], o['refs'])
-        add(o['parent'], o['refs'])
+        strong_pairs += [(o['child'], o['refs']), (o['parent'], o['refs'])]
     for u in UNIONS:
         rr = [r for t in u['terms'] for r in t['refs']]
-        add(u.get('husband'), rr)
-        add(u.get('wife'), rr)
+        strong_pairs += [(u.get('husband'), rr), (u.get('wife'), rr)]
     for k in KIN:
-        add(k['from'], k['refs'])
-        add(k['to'], k['refs'])
+        strong_pairs += [(k['from'], k['refs']), (k['to'], k['refs'])]
     for ln in (LINE_J, LINE_L):
-        for p in ln['persons']:
-            add(p['id'], p['refs'])
+        strong_pairs += [(p['id'], p['refs']) for p in ln['persons']]
+    weak_pairs = []
+
+    def walk(pid, o):
+        if isinstance(o, dict):
+            for kk, vv in o.items():
+                if kk in ('refs', 'ref'):
+                    weak_pairs.append((pid, vv if isinstance(vv, list) else [vv]))
+                else:
+                    walk(pid, vv)
+        elif isinstance(o, list):
+            for vv in o:
+                walk(pid, vv)
+    for pid, a in A.items():
+        walk(pid, a.get('facts'))
+    strong = collect(strong_pairs)
+    weak = collect(weak_pairs)
     out = {}
-    for k, pids in cover.items():
+    for k in set(strong) | set(weak):
         words = norm(TEXT[k]).split()
-        found = []
-        for pid in pids:
-            if pid not in A:
-                continue
+
+        def pos_of(pid):
             pos = None
             for n in A[pid].get('names', []):
+                if not n['form'][:1].isupper() or n.get('type') not in ('main', 'variant', 'renamed', 'foreign'):
+                    continue
                 w0 = norm(n['form']).split()
                 if not w0:
                     continue
-                st = w0[0][:-1] if len(w0[0]) > 3 else w0[0]
+                f0 = w0[0]
+                st = f0[:-1] if len(f0) >= 3 else f0
+                lim = 4 if len(f0) > 3 else 1
                 for i, w in enumerate(words):
-                    if w.startswith(st) and (len(w) - len(st)) <= 4:
+                    if w.startswith(st) and (len(w) - len(f0)) <= lim and len(w) >= len(f0) - (1 if len(f0) > 3 else 0):
                         pos = i if pos is None else min(pos, i)
                         break
-            if pos is not None:
-                found.append((pos, pid))
+            return pos
+        found = {}
+        for pid in strong.get(k, ()):
+            if pid in A:
+                p = pos_of(pid)
+                if p is not None:
+                    found[pid] = p
+        strong_names = {name(p) for p in found}
+        for pid in weak.get(k, set()) - set(found):
+            if pid in A and name(pid) not in strong_names:
+                p = pos_of(pid)
+                if p is not None:
+                    found[pid] = p
         if found:
-            out[key(k)] = [p for _, p in sorted(found)]
+            out[key(k)] = [p for p, _ in sorted(found.items(), key=lambda kv: (kv[1], kv[0]))]
     return out
 
 
-# ───────────────────────── Сборка ─────────────────────────
 def typo_verse(t):
     # прямые кавычки текста → «»
     n = [0]
@@ -1371,6 +1441,8 @@ def main():
     OUT.write_text(out, encoding='utf-8')
     print(f'{OUT.relative_to(ROOT)}: {len(out.encode()) / 1024:.0f} КБ; экранов {len(TEMPLATES)}; '
           f'стихов {len(verses)}; лиц в поиске {len(persons)}; цитат сверено {len(QUOTES)}')
+    for qt, rs in DATA_UNQUOTED:
+        print(f'  цитата данных без дословного стиха — показана без кавычек: «{qt[:70]}» ← {"; ".join(rs)}')
 
 
 if __name__ == '__main__':
