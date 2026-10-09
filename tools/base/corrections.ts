@@ -13,6 +13,8 @@ export interface Step {
   id: string;
   /** Подстроки ключей записей, которые шаг вправе менять. */
   scope: string[];
+  /** Ключ должен ещё и называть одно из лиц, которые шаг объявил в `actors` (C4, C9, C10 — поле у названных лиц, а не у любого). */
+  byActors?: true;
   run: (ctx: Ctx) => Omit<Correction, 'id'>;
 }
 
@@ -29,10 +31,18 @@ const HELI = 'p-iliy-syn-matfata';
 const quarantine = (note: string) => ({ status: 'quarantine' as const, note });
 
 /** Два отца одного лица по разным местам основного текста (рецензия Д1, № 5): набор прочтений на ребёнка. */
-const DOUBLE_FATHERS = [
-  'p-naaman-syn-veniamina', 'p-ard', 'p-shoval-otets-kiriaf-iarima', 'p-korey', 'p-sadok-1par6-12', 'p-zefam',
-  'p-ioil-syn-laedana', 'p-asriil', 'p-kis', 'p-nir', 'p-maakha-doch-avessaloma',
+const DOUBLE_FATHERS: { id: string; children: string[] }[] = [
+  // одно место текста решает за нескольких детей — один набор на место (повторная проверка Д1, П9)
+  { id: 'ard-naaman', children: ['p-ard', 'p-naaman-syn-veniamina'] },
+  { id: 'zefam-ioil', children: ['p-zefam', 'p-ioil-syn-laedana'] },
+  { id: 'korey', children: ['p-korey'] },
+  { id: 'sadok-1par6-12', children: ['p-sadok-1par6-12'] },
+  { id: 'asriil', children: ['p-asriil'] },
+  { id: 'kis', children: ['p-kis'] },
+  { id: 'nir', children: ['p-nir'] },
+  { id: 'maakha-doch-avessaloma', children: ['p-maakha-doch-avessaloma'] },
 ];
+const SHOVAL = 'p-shoval-otets-kiriaf-iarima';
 
 export const STEPS: Step[] = [
   {
@@ -101,6 +111,7 @@ export const STEPS: Step[] = [
         base.origins = base.origins.filter((x) => x !== o);
         actor(id).facts.push({
           sec: 6, field: 'parentsNote',
+          prov: { by: 'исправление C2' },
           value: { text: 'Иаков говорит Иосифу о его сыновьях: «мои они; Ефрем и Манассия, как Рувим и Симеон, будут мои» — о наследстве и уделе: дети Иосифа, родившиеся после них, «под именем братьев своих будут именоваться в их уделе»', refs: ['Быт 48:5-6'] },
         });
       }
@@ -114,7 +125,7 @@ export const STEPS: Step[] = [
   },
   {
     id: 'C3',
-    scope: ['origin:p-iisus|', 'actor:p-iisus.facts.parentsNote', 'nodata:p-iisus|'],
+    scope: ['origin:p-iisus|p-iosif-muzh-marii|father|p', 'origin:p-iisus|p-mariya|mother|p', 'actor:p-iisus.facts.parentsNote', 'nodata:p-iisus|6|not-applicable'],
     run: ({ base, actor, origin }) => {
       const words = [
         { text: 'Иосифа, мужа Марии, от Которой родился Иисус', ref: 'Мф 1:16' },
@@ -142,8 +153,8 @@ export const STEPS: Step[] = [
       const i = j.facts.findIndex((f) => f.field === 'parentsNote' && JSON.stringify(f.value).includes('законный отец'));
       if (i < 0) throw new Error('нет утверждения «законный отец» у Иисуса Христа');
       j.facts.splice(i, 1,
-        { sec: 6, field: 'parentsNote', value: { text: 'Мать — Дева Мария. Иосифа текст называет так: Иисус «был, как думали, Сын Иосифов»; Мария говорит «отец Твой»; люди — «сын Иосифов», «не плотников ли Он сын?»', refs: ['Лк 3:23', 'Лк 2:48', 'Лк 4:22', 'Ин 1:45', 'Ин 6:42', 'Мф 13:55'] } },
-        { sec: 6, field: 'parentsNote', value: { text: 'Иосиф — законный отец Иисуса', refs: ['Мф 1:16', 'Мф 1:20', 'Мф 1:25'] }, cert: 'interpretation' },
+        { sec: 6, field: 'parentsNote', prov: { by: 'исправление C3' }, value: { text: 'Мать — Дева Мария. Иосифа текст называет так: Иисус «был, как думали, Сын Иосифов»; Мария говорит «отец Твой»; люди — «сын Иосифов», «не плотников ли Он сын?»', refs: ['Лк 3:23', 'Лк 2:48', 'Лк 4:22', 'Ин 1:45', 'Ин 6:42', 'Мф 13:55'] } },
+        { sec: 6, field: 'parentsNote', prov: { by: 'исправление C3' }, value: { text: 'Иосиф — законный отец Иисуса', refs: ['Мф 1:16', 'Мф 1:20', 'Мф 1:25'] }, cert: 'interpretation' },
       );
       return {
         what: 'Иисус Христос: ребро от Иосифа — законное, «толк.», со словами текста (Мф 1:16; Лк 2:41, 48; 3:23; слова людей Лк 4:22; Ин 1:45; 6:42; Мф 13:55) и примечанием Мф 1:20; мать — Мария, «Писание», свои стихи; запись «не применимо: отец по плоти»; в § 6 «законный отец» — толкование',
@@ -156,6 +167,7 @@ export const STEPS: Step[] = [
   {
     id: 'C4',
     scope: ['.facts.meaning'],
+    byActors: true,
     run: ({ base }) => {
       const touched: string[] = [];
       // значения, где Писание и справочное смешаны: делятся на два утверждения (рецензия Д1, № 11)
@@ -164,7 +176,7 @@ export const STEPS: Step[] = [
         'p-isaak': ['Писание связывает рождение Исаака со смехом: Авраам «рассмеялся» при обетовании, Сарра «внутренно рассмеялась», а родив, сказала: «смех сделал мне Бог»', ['Быт 17:17', 'Быт 18:12', 'Быт 21:6']],
         'p-isav': ['Само имя «Исав» Писание не объясняет: младенец вышел «красный, весь, как кожа, косматый». Прозвание Едом Писание выводит из его просьбы: «дай мне поесть красного, красного этого»', ['Быт 25:25', 'Быт 25:30']],
         'p-noemin': ['«не называйте меня Ноеминью, а называйте меня Марою, потому что Вседержитель послал мне великую горесть»', ['Руф 1:20']],
-        'p-kheftsiba': ['то же выражение в Ис 62:4 передано словами «Мое благоволение к нему» — новое имя Сиона', ['Ис 62:4']],
+        'p-kheftsiba': null,
         'p-kain': null,
         'p-iafet': null,
       };
@@ -173,7 +185,6 @@ export const STEPS: Step[] = [
         'p-isaak': '«он засмеётся»',
         'p-isav': 'имя обычно связывают со словом «косматый»',
         'p-noemin': '«приятная»; Мара — «горькая»',
-        'p-kheftsiba': '«моё благоволение к ней»',
       };
       for (const v of base.volumes) {
         for (const a of v.actors) {
@@ -184,7 +195,7 @@ export const STEPS: Step[] = [
           if (a.id in split) {
             const s = split[a.id];
             const out: Assertion[] = [];
-            if (s) out.push({ sec: 3, field: 'meaning', value: { text: s[0], refs: s[1] } });
+            if (s) out.push({ sec: 3, field: 'meaning', value: { text: s[0], refs: s[1] }, ...(a.id === 'p-isaak' && { cert: 'inference' as const }), prov: { by: 'исправление C4' } });
             out.push({
               sec: 3, field: 'meaning', value: { text: s ? refText[a.id] : val.text, ...(!s && val.refs && { refs: val.refs }) },
               cert: 'reference', prov: quarantine('значение имени — справочно; источник — этап Д1.5'),
@@ -199,7 +210,7 @@ export const STEPS: Step[] = [
         }
       }
       return {
-        what: `Значение имени (${touched.length}): без стиха и с «толк.» → «справочно», карантин; где в одном утверждении смешаны слова Писания и справочное (Адам, Исаак, Исав, Ноеминь, Хефциба) — два утверждения; Каин и Иафет — справочно целиком`,
+        what: `Значение имени (${touched.length}): без стиха и с «толк.» → «справочно», карантин; где в одном утверждении смешаны слова Писания и справочное (Адам, Исаак — «выв.», Исав, Ноеминь) — два утверждения; Каин, Иафет и Хефциба — справочно целиком`,
         why: 'Значение имени, которого не даёт само Писание, — справочное сведение и требует источника (02, § 3.1, § 7; рецензия Д1, № 11)',
         refs: [],
         actors: touched,
@@ -257,7 +268,7 @@ export const STEPS: Step[] = [
   },
   {
     id: 'C7',
-    scope: ['line:', 'actor:p-iosif-muzh-marii.facts.notes', `actor:${HELI}.facts.notes`],
+    scope: ['line:luke', 'line:mary', 'line:joseph', 'actor:p-iosif-muzh-marii.facts.notes', `actor:${HELI}.facts.notes`, 'actor:p-iisus.facts.notes'],
     run: ({ base, hints, actor }) => {
       const lk = base.lines.mary;
       const i = lk.persons.findIndex((s: any) => s.id === 'p-mariya');
@@ -275,12 +286,12 @@ export const STEPS: Step[] = [
       base.lines.joseph.readings = { 'r-lk3-23': 'mt', 'r-shealtiel': 'mt', 'r-zerubbabel': 'mt' };
       // карточки не должны говорить, что атлас выбрал толкование
       const SAY = 'Атлас не выбирает между пониманиями: линия по Луке идёт по букве текста до Иосифа, понимания показываются рядом';
-      for (const id of ['p-iosif-muzh-marii', HELI]) {
+      for (const id of ['p-iosif-muzh-marii', HELI, 'p-iisus']) {
         let n = 0;
         for (const f of actor(id).facts) {
           const v = f.value as { text?: string };
           if (f.field !== 'notes' || !v.text) continue;
-          const t = v.text.replace(/\s*(В атласе принято|Атлас показывает) первое понимание.*$/, ` ${SAY}`);
+          const t = v.text.replace(/\s*(В атласе принято|Атлас показывает) первое понимание.*$/, ` ${SAY}`).replace(/([^.])\s+Атлас не выбирает/, '$1. Атлас не выбирает');
           if (t !== v.text) {
             v.text = t;
             n++;
@@ -289,10 +300,10 @@ export const STEPS: Step[] = [
         if (n !== 1) throw new Error(`карточка ${id}: примечаний о выборе атласа ${n}`);
       }
       return {
-        what: 'Линия по Луке: номер mary → luke, кончается Иосифом (Лк 3:23), шаг «Мария» убран; основание без «Илий — отец Марии» как факта; у обеих линий записаны прочтения наборов; в примечаниях Иосифа и Илия — без «атлас принял первое понимание»',
+        what: 'Линия по Луке: номер mary → luke, кончается Иосифом (Лк 3:23), шаг «Мария» убран; основание без «Илий — отец Марии» как факта; у обеих линий записаны прочтения наборов; в примечаниях Иосифа, Илия и Иисуса Христа — без «атлас принял первое понимание»',
         why: 'Линия по букве текста; толкование — в наборе прочтений (02, § 3.4; рецензия библеиста Б1; рецензия Д1, № 6, 14)',
         refs: ['Лк 3:23'],
-        actors: ['iosif-muzh-marii', 'iliy-otets-marii'],
+        actors: ['iosif-muzh-marii', 'iliy-otets-marii', 'iisus'],
         other: ['line:mary', 'line:joseph'],
       };
     },
@@ -327,6 +338,7 @@ export const STEPS: Step[] = [
   {
     id: 'C9',
     scope: ['.facts.birth', '.facts.notes'],
+    byActors: true,
     run: ({ base }) => {
       const touched: string[] = [];
       for (const v of base.volumes) {
@@ -362,6 +374,7 @@ export const STEPS: Step[] = [
   {
     id: 'C10',
     scope: ['.facts.original'],
+    byActors: true,
     run: ({ base }) => {
       const touched: string[] = [];
       for (const v of base.volumes) {
@@ -384,35 +397,53 @@ export const STEPS: Step[] = [
   },
   {
     id: 'C11',
-    scope: [...DOUBLE_FATHERS.map((c) => `origin:${c}|`), 'reading:r-father-'],
+    scope: [...DOUBLE_FATHERS.flatMap((g) => g.children.map((c) => `origin:${c}|`)), 'reading:r-father-', `origin:${SHOVAL}|p-khur|`, `actor:${SHOVAL}.facts.notes`],
     run: ({ base, actor }) => {
       const sets: ReadingSet[] = [];
-      for (const child of DOUBLE_FATHERS) {
-        const os = base.origins.filter((o) => o.child === child);
-        const a = os.filter((o) => o.primary && o.role === 'father');
-        const b = os.filter((o) => !o.primary && o.kind === 'alternative');
-        if (!a.length || !b.length) throw new Error(`нет двух отцов у ${child}`);
-        const id = `r-father-${child.slice(2)}`;
-        const label = (xs: Origin[]) => xs.map((o) => `${actor(o.parent!).names[0].form} (${o.refs.join('; ')})`).join(', ');
+      const name = (id: string) => actor(id).names[0].form;
+      for (const g of DOUBLE_FATHERS) {
+        const id = `r-father-${g.id}`;
+        const a: Origin[] = [];
+        const b: Origin[] = [];
+        for (const child of g.children) {
+          const os = base.origins.filter((o) => o.child === child);
+          const ca = os.filter((o) => o.primary && o.role === 'father');
+          const cb = os.filter((o) => !o.primary && o.kind === 'alternative');
+          if (!ca.length || !cb.length) throw new Error(`нет двух отцов у ${child}`);
+          a.push(...ca);
+          b.push(...cb);
+        }
+        // Садок: «сын Мераиофа, сын Ахитува» (1Пар 9:11; Неем 11:11) сказано прямо — «Писание»
+        if (g.id === 'sadok-1par6-12') for (const o of b) o.cert = 'scripture';
+        const label = (xs: Origin[]) => [...new Set(xs.map((o) => `${name(o.parent!)} (${o.refs.join('; ')})`))].join(', ');
         const cert = b.some((o) => o.cert === 'interpretation') ? 'interpretation' : b.some((o) => o.cert === 'inference') ? 'inference' : 'scripture';
         sets.push({
-          id, title: `Отец: ${actor(child).names[0].form}`, refs: [...new Set([...a, ...b].flatMap((o) => o.refs))],
+          id, title: `Отец: ${g.children.map(name).join(', ')}`, refs: [...new Set([...a, ...b].flatMap((o) => o.refs))],
           readings: [
-            { id: 'a', label: label(a), cert: a[0].cert, refs: a[0].refs },
+            { id: 'a', label: label(a), cert: a[0].cert, refs: [...new Set(a.flatMap((o) => o.refs))] },
             { id: 'b', label: label(b), cert, refs: [...new Set(b.flatMap((o) => o.refs))] },
           ],
           default: 'a',
-          note: 'Разные места текста называют разных отцов. Прочтение по умолчанию — основное ребро прежних данных; объяснения согласования — толкования.',
+          note: 'Разные места основного текста называют разных отцов. Прочтение по умолчанию — основное ребро прежних данных; объяснения согласования — толкования.',
         });
         for (const o of a) o.reading = { set: id, in: ['a'] };
         for (const o of b) o.reading = { set: id, in: ['b'] };
       }
       base.readings.push(...sets);
+      // Шовал: «сын Хура» — по еврейскому тексту 1Пар 2:50, а в Синодальном он сын Халева; не место основного текста (П2)
+      const hur = base.origins.find((o) => o.child === SHOVAL && o.parent === 'p-khur');
+      if (!hur) throw new Error('нет ребра Хур → Шовал');
+      base.origins = base.origins.filter((o) => o !== hur);
+      actor(SHOVAL).facts.push({
+        sec: 24, field: 'notes', cert: 'reference',
+        prov: { by: 'исправление C11', status: 'quarantine', note: 'чтение еврейского текста — справочно; нужен источник' },
+        value: { kind: 'textual', text: 'По еврейскому тексту 1Пар 2:50 Шовала понимают как сына Хура; в Синодальном тексте: «Сыновья Халева: сын Хур…; Шовал»', refs: ['1Пар 2:50', '1Пар 4:1'] },
+      });
       return {
-        what: `Наборы прочтений для двух отцов одного лица по разным местам текста (${sets.length}): ${DOUBLE_FATHERS.map((c) => actor(c).names[0].form).join(', ')}`,
-        why: 'Иначе расчёт выводит ложное родство: Кис выходит и сыном, и братом Нира (1Пар 8:33; 1Цар 14:51) (02, § 3.4; рецензия Д1, № 5)',
-        refs: ['1Пар 8:33', '1Цар 14:51'],
-        actors: [],
+        what: `Наборы прочтений, когда разные места основного текста называют разных отцов (${sets.length}; один набор на место текста): ${DOUBLE_FATHERS.map((g) => g.children.map(name).join(' и ')).join(', ')}. Шовал: ребро «сын Хура» по еврейскому тексту убрано в справочное примечание`,
+        why: 'Иначе расчёт выводит ложное родство: Кис выходит и сыном, и братом Нира (1Пар 8:33; 1Цар 14:51) (02, § 3.4; рецензия Д1, № 5; повторная проверка П2, П9)',
+        refs: ['1Пар 8:33', '1Цар 14:51', '1Пар 2:50'],
+        actors: ['shoval-otets-kiriaf-iarima'],
       };
     },
   },

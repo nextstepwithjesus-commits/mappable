@@ -17,9 +17,11 @@ export const ADDITIONS: Step = {
   run: ({ base }) => applyAdditions(base),
 };
 
+const NEW = { by: 'дополнение Д1', status: 'draft' as const };
+
 function applyAdditions(base: Base) {
   const actors: Actor[] = [];
-  const add = (a: Actor) => actors.push(a);
+  const add = (a: Actor) => actors.push({ ...a, prov: NEW, facts: a.facts.map((f) => ({ ...f, prov: NEW })) });
   const union = (husband: string, wife: string) => base.unions.find((u) => u.husband === husband && u.wife === wife);
 
   // жена Каина (Быт 4:17) — названа в тексте, безымянна; мать Еноха
@@ -28,9 +30,9 @@ function applyAdditions(base: Base) {
     names: [{ form: 'Жена Каина', type: 'main', refs: ['Быт 4:17'] }], disambig: 'мать Еноха',
     facts: [{ sec: 5, field: 'status', value: { text: '«И познал Каин жену свою; и она зачала и родила Еноха»', refs: ['Быт 4:17'] } }],
   });
-  base.unions.push({ id: 'u-kain--zhena-kaina', husband: 'p-kain', wife: 'p-zhena-kaina', terms: [{ kind: 'marriage', word: 'жена', refs: ['Быт 4:17'] }] });
-  base.origins.push({ child: 'p-enokh-syn-kaina', parent: 'p-zhena-kaina', role: 'mother', kind: 'natural', refs: ['Быт 4:17'], cert: 'scripture', primary: true });
-  base.memberships.push({ actor: 'p-zhena-kaina', area: 'g-cainites', basis: 'legacy-layout', refs: [] });
+  base.unions.push({ id: 'u-kain--zhena-kaina', husband: 'p-kain', wife: 'p-zhena-kaina', terms: [{ kind: 'marriage', word: 'жена', refs: ['Быт 4:17'] }], prov: NEW });
+  base.origins.push({ child: 'p-enokh-syn-kaina', parent: 'p-zhena-kaina', role: 'mother', kind: 'natural', refs: ['Быт 4:17'], cert: 'scripture', primary: true, prov: NEW });
+  base.memberships.push({ actor: 'p-zhena-kaina', area: 'g-cainites', basis: 'legacy-layout', refs: [], prov: NEW });
 
   // Хеттура — «жена» (Быт 25:1) и «наложница» (1Пар 1:32)
   const k = union('p-avraam', 'p-khettura');
@@ -38,7 +40,7 @@ function applyAdditions(base: Base) {
   // по стиху — своё обозначение: Быт 25:1 — «жена», 1Пар 1:32 — «наложница» (рецензия Д1, № 10)
   for (const t of k.terms) t.refs = t.refs.filter((r) => r !== 'Быт 25:1');
   for (const t of k.terms) if (t.kind === 'concubine') t.note = '«Сыновья Хеттуры, наложницы Авраамовой» (1Пар 1:32)';
-  k.terms.push({ kind: 'marriage', word: 'жена', refs: ['Быт 25:1'] });
+  k.terms.push({ kind: 'marriage', word: 'жена', refs: ['Быт 25:1'], prov: NEW });
 
   // Михаил Архангел (Иуд 1:9) — тёзка людей с именем Михаил (1Пар 5:13, 14)
   add({
@@ -50,7 +52,7 @@ function applyAdditions(base: Base) {
     disambig: 'Архангел',
     facts: [
       { sec: 5, field: 'status', value: { text: '«Михаил Архангел»', refs: ['Иуд 1:9'] } },
-      { sec: 5, field: 'status', value: { text: '«один из первых князей»; «князь ваш»; «князь великий, стоящий за сынов народа твоего»', refs: ['Дан 10:13', 'Дан 10:21', 'Дан 12:1'] } },
+      { sec: 5, field: 'status', value: { text: '«Михаил, один из первых князей»; «Михаила, князя вашего»; «Михаил, князь великий, стоящий за сынов народа твоего»', refs: ['Дан 10:13', 'Дан 10:21', 'Дан 12:1'] } },
       { sec: 17, field: 'events', value: { text: 'Спорил с диаволом о Моисеевом теле и не смел произнести укоризненного суда, но сказал: «да запретит тебе Господь»', refs: ['Иуд 1:9'] } },
       { sec: 17, field: 'events', value: { text: '«Михаил и Ангелы его воевали против дракона»', refs: ['Откр 12:7'] } },
     ],
@@ -68,7 +70,7 @@ function applyAdditions(base: Base) {
     names: [{ form: 'Самарянин', type: 'main', refs: ['Лк 17:16'] }], disambig: 'один из десяти прокажённых',
     facts: [{ sec: 17, field: 'events', value: { text: 'Один из десяти, видя, что исцелён, возвратился, прославляя Бога, пал ниц к ногам Иисуса, благодаря Его; Иисус сказал: «вера твоя спасла тебя»', refs: ['Лк 17:15-19'] } }],
   });
-  base.memberships.push({ actor: 'p-samaryanin-iz-desyati-prokazhennykh', area: 'p-desyat-prokazhennykh', role: 'один из них', basis: 'named', refs: ['Лк 17:15'] });
+  base.memberships.push({ actor: 'p-samaryanin-iz-desyati-prokazhennykh', area: 'p-desyat-prokazhennykh', role: 'один из них', basis: 'named', refs: ['Лк 17:15'], prov: NEW });
 
   base.volumes.push({ vol: 'Д1', file: ADDED_VOL, title: 'Дополнения при переносе (контрольный набор)', scope: 'Быт 4:17; 25:1; Дан 10:13, 21; 12:1; Иуд 1:9; Откр 12:7; Лк 17:12–19', actors });
   return {

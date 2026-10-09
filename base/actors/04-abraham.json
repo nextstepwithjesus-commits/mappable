@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data/persons/04-abraham.json",
-   "commit": "3c6953b"
+   "commit": "1769cca"
   }
  },
  "items": [
@@ -3259,6 +3259,10 @@
        "Быт 18:12",
        "Быт 21:6"
       ]
+     },
+     "cert": "inference",
+     "prov": {
+      "by": "исправление C4"
      }
     },
     {

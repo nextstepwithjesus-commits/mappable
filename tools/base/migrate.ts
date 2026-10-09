@@ -250,7 +250,9 @@ export function toBase(vols: any[], groups: any[], epochs: any[], anchors: any, 
     if (u.terms.some((t) => t.kind !== 'not-stated')) continue;
     // безымянную мать (дочери Лота, мать Иеффая) имя не выдаёт: берутся стихи её ребра
     const named = m.refs.filter((r) => namesIn(mainText(r), names(m.parent!)));
-    const refs = named.length ? named : m.refs;
+    // и стихи, где назван отец: у Езекии и Хефцибы мать названа в 4Цар 21:1, отец — в других стихах (повторная проверка П11)
+    const fatherNamed = f.refs.filter((r) => namesIn(mainText(r), names(f.parent!)));
+    const refs = [...new Set([...(named.length ? named : m.refs), ...fatherNamed])];
     const t = u.terms.find((t) => t.kind === 'not-stated');
     if (t) t.refs = [...new Set([...t.refs, ...refs])];
     else u.terms.push({ kind: 'not-stated', refs, cert: 'inference', note: 'отец и мать названы у детей; сам союз текст не называет' });
@@ -368,7 +370,9 @@ export function stepChanges(base: Base, hints: Hints, step: Step) {
   base.corrections.push({ id: step.id, ...step.run(makeCtx(base, hints)) });
   const after = recordKeys(base);
   const changed = [...new Set([...before.keys(), ...after.keys()])].filter((k) => before.get(k) !== after.get(k));
-  const stray = changed.filter((k) => !step.scope.some((p) => k.includes(p)));
+  const c = base.corrections.at(-1)!;
+  const ids = step.byActors ? c.actors.map((x) => `p-${x}`) : [];
+  const stray = changed.filter((k) => !step.scope.some((p) => k.includes(p)) || (step.byActors && !ids.some((id) => k.startsWith(`actor:${id}.`))));
   return { changed, stray };
 }
 

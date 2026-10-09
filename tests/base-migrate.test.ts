@@ -5,7 +5,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { toBase, diff, stepChanges, type Base } from '../tools/base/migrate.ts';
+import { toBase, diff, stepChanges, CARD_FIELDS, type Base } from '../tools/base/migrate.ts';
 import { project, type Hints } from '../tools/base/project.ts';
 import { STEPS, type Step } from '../tools/base/corrections.ts';
 import { ADDITIONS } from '../tools/base/additions.ts';
@@ -31,6 +31,20 @@ describe('перенос в базу', () => {
     for (const s of [...STEPS, ADDITIONS]) expect([s.id, stepChanges(base, hints, s).stray]).toEqual([s.id, []]);
     expect(validate(base).filter((i) => i.level === 'error')).toEqual([]);
   }, 60_000);
+
+  it('инварианты точного переноса для полей, которых проекция не видит', () => {
+    const { base } = exact();
+    const facts = base.volumes.flatMap((v) => v.actors.flatMap((a) => a.facts));
+    expect(facts.filter((f) => CARD_FIELDS[f.field].sec !== f.sec)).toEqual([]);
+    expect(base.origins.filter((o) => o.primary && o.role === 'mother' && o.kind !== 'natural')).toEqual([]);
+    expect(base.origins.filter((o) => o.primary && o.role === 'father' && !['natural', 'legal'].includes(o.kind))).toEqual([]);
+    expect(base.origins.filter((o) => o.reading || o.gapPossible || o.words)).toEqual([]);
+    const byChild = new Map<string, string[][]>();
+    for (const o of base.origins) if (o.primary) byChild.set(o.child, [...(byChild.get(o.child) ?? []), o.refs]);
+    for (const [c, rs] of byChild) if (rs.length === 2) expect([c, rs[0]]).toEqual([c, rs[1]]);
+    expect(base.unions.filter((u) => u.terms.some((t) => t.kind === 'not-stated') && u.terms.some((t) => t.kind !== 'not-stated'))).toEqual([]);
+    expect(base.volumes.flatMap((v) => v.actors).filter((a) => !a.names[0].refs.length).map((a) => a.id)).toEqual([]);
+  });
 
   it('подложенные искажения ловятся', () => {
     const mutate = (f: (b: Base, h: Hints) => void) => {

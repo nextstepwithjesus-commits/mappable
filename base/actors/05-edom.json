@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data/persons/05-edom.json",
-   "commit": "3c6953b"
+   "commit": "1769cca"
   }
  },
  "items": [
@@ -64,6 +64,9 @@
        "Быт 25:25",
        "Быт 25:30"
       ]
+     },
+     "prov": {
+      "by": "исправление C4"
      }
     },
     {

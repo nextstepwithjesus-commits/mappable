@@ -111,7 +111,10 @@ export function validate(base: Base): Issue[] {
       // § 23 «Места Писания»: первое упоминание, ключевые места, все места
       if (typeof x.first === 'string') own.push(x.first);
       for (const k of ['key', 'all']) if (Array.isArray(x[k]) && x[k].every((r: unknown) => typeof r === 'string')) own.push(...x[k]);
-      for (const r of own) texts(where, r);
+      for (const r of own) {
+        texts(where, r);
+        if (/[–—]/.test(r)) err('написание', where, `ссылка «${r}» с тире: диапазон пишется дефисом («Быт 5:3-5»)`);
+      }
       refs.push(...own);
       if ('cert' in x && !CERTS.has(x.cert)) err('достоверность', where, `неизвестная степень «${x.cert}»`);
       if (x.cert === 'inference' && own.length && own.reduce((n, r) => n + verseCount(r), 0) < 2) {
@@ -251,11 +254,50 @@ export function validate(base: Base): Issue[] {
     const rs = [...new Set(actorRefs.get(a.id) ?? [])];
     const joined = norm(rs.flatMap((r) => mainTexts(a.id, r)).join(' '));
     if (a.kind === 'unnamed' || a.kind === 'group') {
-      if (a.descriptor && !nameMatcher(a.descriptor).test(joined)) warn('имя', a.id, `описательное слово «${a.descriptor}» не найдено в стихах лица`);
+      if (a.descriptor && !nameMatcher(a.descriptor).test(joined)) err('имя', a.id, `описательное слово «${a.descriptor}» не найдено в стихах лица`);
       continue;
     }
     const forms = a.names.map((n) => n.form);
-    if (!forms.some((f) => nameMatcher(f).test(joined))) warn('имя', a.id, `ни одна форма имени (${forms.join(', ')}) не найдена в стихах лица`);
+    if (!forms.some((f) => nameMatcher(f).test(joined))) err('имя', a.id, `ни одна форма имени (${forms.join(', ')}) не найдена в стихах лица`);
+  }
+
+  // ---------- дословность цитат: изречения (§ 18) — точно по основному тексту, без вставок в скобках ----------
+  const clean = (t: string) => norm(t).replace(/[«»"„“”'’`.,;:!?()\-–—…]/g, ' ').replace(/\s+/g, ' ').trim();
+  for (const a of actors.values()) {
+    for (const f of a.facts) {
+      if (f.field !== 'sayings' || f.prov?.status === 'quarantine') continue;
+      const v = f.value as { quote?: string; ref?: string };
+      if (!v.quote || !v.ref) {
+        err('цитата', `${a.id} § 18`, 'изречение без цитаты или стиха');
+        continue;
+      }
+      if (!clean(mainTexts(a.id, v.ref).join(' ')).includes(clean(v.quote))) err('цитата', `${a.id} § 18`, `цитата не совпадает с основным текстом ${v.ref}: «${v.quote.slice(0, 60)}»`);
+    }
+  }
+  // цитаты в кавычках внутри утверждений: каждый отрезок между многоточиями — в основном тексте стихов записи.
+  // Новая запись (с prov.by) — ошибка; перенесённая — замечание до проверки томов (02 § 7 [Д1-рец], этап Д3)
+  for (const a of actors.values()) {
+    for (const f of a.facts) {
+      if (f.field === 'notes' || f.field === 'sayings' || f.prov?.status === 'quarantine') continue;
+      const v = f.value as { text?: string; refs?: string[] };
+      if (!v.text || !v.refs?.length) continue;
+      const hay = clean(v.refs.flatMap((r) => mainTexts(a.id, r)).join(' '));
+      for (const m of v.text.matchAll(/«([^«»]+)»/g)) {
+        for (const part of m[1].split('…').map(clean).filter((x) => x.split(' ').length >= 2)) {
+          if (!hay.includes(part)) (f.prov?.by ? err : warn)('цитата', `${a.id} § ${f.sec} ${f.field}`, `«${part.slice(0, 50)}» нет в основном тексте ${v.refs.join('; ')}`);
+        }
+      }
+    }
+  }
+
+  // ---------- скобки — не основание: ребёнок назван в основном тексте стихов своего ребра ----------
+  for (const o of base.origins) {
+    const c = actors.get(o.child);
+    if (!c || c.kind === 'unnamed' || c.kind === 'group') continue;
+    const joined = norm(o.refs.flatMap((r) => mainTexts(o.child, r)).join(' '));
+    if (!c.names.some((n) => nameMatcher(n.form).test(joined))) {
+      (o.prov?.from ? warn : err)('скобки', `${o.child} ← ${o.parent}`, `ребёнок не назван в основном тексте стихов ребра (${o.refs.join('; ')})`);
+    }
   }
 
   // ---------- родство словами Писания: слово есть в стихе ----------
@@ -263,7 +305,7 @@ export function validate(base: Base): Issue[] {
     const word = norm(k.rel.replace(/\(.*?\)/g, '')).trim().split(/\s+/)[0] ?? '';
     const stem = word.length > 4 ? word.slice(0, word.length - 2) : word.slice(0, 3);
     const joined = norm(k.refs.flatMap((r) => mainTexts(`${k.from} — ${k.to}`, r)).join(' '));
-    if (stem && !joined.includes(stem)) warn('слово родства', `${k.from} — ${k.to}`, `слово «${k.rel}» не найдено в стихах ${k.refs.join('; ')}`);
+    if (stem && !joined.includes(stem)) err('слово родства', `${k.from} — ${k.to}`, `слово «${k.rel}» не найдено в стихах ${k.refs.join('; ')}`);
   }
 
   // ---------- циклы ----------

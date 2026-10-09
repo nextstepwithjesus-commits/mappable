@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data/persons/01-antediluvian.json",
-   "commit": "3c6953b"
+   "commit": "1769cca"
   }
  },
  "items": [
@@ -52,6 +52,9 @@
       "refs": [
        "Быт 5:2"
       ]
+     },
+     "prov": {
+      "by": "исправление C4"
      }
     },
     {

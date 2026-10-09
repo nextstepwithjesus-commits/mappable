@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data",
-   "commit": "3c6953b"
+   "commit": "1769cca"
   }
  },
  "items": [
@@ -29539,7 +29539,11 @@
    "actor": "p-zhena-kaina",
    "area": "g-cainites",
    "basis": "legacy-layout",
-   "refs": []
+   "refs": [],
+   "prov": {
+    "by": "дополнение Д1",
+    "status": "draft"
+   }
   },
   {
    "actor": "p-samaryanin-iz-desyati-prokazhennykh",
@@ -29548,7 +29552,11 @@
    "basis": "named",
    "refs": [
     "Лк 17:15"
-   ]
+   ],
+   "prov": {
+    "by": "дополнение Д1",
+    "status": "draft"
+   }
   }
  ]
 }

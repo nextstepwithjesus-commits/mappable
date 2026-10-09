@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data",
-   "commit": "3c6953b"
+   "commit": "1769cca"
   }
  },
  "items": [
@@ -6272,7 +6272,7 @@
     }
    },
    "reading": {
-    "set": "r-father-naaman-syn-veniamina",
+    "set": "r-father-ard-naaman",
     "in": [
      "a"
     ]
@@ -6296,7 +6296,7 @@
     }
    },
    "reading": {
-    "set": "r-father-naaman-syn-veniamina",
+    "set": "r-father-ard-naaman",
     "in": [
      "b"
     ]
@@ -6387,7 +6387,7 @@
     }
    },
    "reading": {
-    "set": "r-father-ard",
+    "set": "r-father-ard-naaman",
     "in": [
      "a"
     ]
@@ -6410,7 +6410,7 @@
     }
    },
    "reading": {
-    "set": "r-father-ard",
+    "set": "r-father-ard-naaman",
     "in": [
      "b"
     ]
@@ -8708,36 +8708,6 @@
     "from": {
      "vol": "07-judah.json"
     }
-   },
-   "reading": {
-    "set": "r-father-shoval-otets-kiriaf-iarima",
-    "in": [
-     "a"
-    ]
-   }
-  },
-  {
-   "child": "p-shoval-otets-kiriaf-iarima",
-   "parent": "p-khur",
-   "role": "father",
-   "kind": "alternative",
-   "refs": [
-    "1Пар 4:1",
-    "1Пар 2:50"
-   ],
-   "cert": "interpretation",
-   "primary": false,
-   "note": "по еврейскому тексту 1 Пар 2:50 и по ряду 1 Пар 4:1 — сын Хура",
-   "prov": {
-    "from": {
-     "vol": "07-judah.json"
-    }
-   },
-   "reading": {
-    "set": "r-father-shoval-otets-kiriaf-iarima",
-    "in": [
-     "b"
-    ]
    }
   },
   {
@@ -12106,7 +12076,7 @@
     "1Пар 9:11",
     "Неем 11:11"
    ],
-   "cert": "inference",
+   "cert": "scripture",
    "primary": false,
    "note": "«сын Садока, сын Мераиофа, сын Ахитува» — иное родословие; в 1 Пар 6:12 и Езд 7:2 отец Садока — Ахитув",
    "prov": {
@@ -13710,7 +13680,7 @@
     }
    },
    "reading": {
-    "set": "r-father-zefam",
+    "set": "r-father-zefam-ioil",
     "in": [
      "a"
     ]
@@ -13733,7 +13703,7 @@
     }
    },
    "reading": {
-    "set": "r-father-zefam",
+    "set": "r-father-zefam-ioil",
     "in": [
      "b"
     ]
@@ -13757,7 +13727,7 @@
     }
    },
    "reading": {
-    "set": "r-father-ioil-syn-laedana",
+    "set": "r-father-zefam-ioil",
     "in": [
      "a"
     ]
@@ -13780,7 +13750,7 @@
     }
    },
    "reading": {
-    "set": "r-father-ioil-syn-laedana",
+    "set": "r-father-zefam-ioil",
     "in": [
      "b"
     ]
@@ -37952,7 +37922,11 @@
     "Быт 4:17"
    ],
    "cert": "scripture",
-   "primary": true
+   "primary": true,
+   "prov": {
+    "by": "дополнение Д1",
+    "status": "draft"
+   }
   }
  ]
 }
