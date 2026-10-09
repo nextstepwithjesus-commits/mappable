@@ -6,7 +6,7 @@
 ПАПКА — файлы шрифтов из github.com/google/fonts (папка ofl/):
     GolosText[wght].ttf, Literata[opsz,wght].ttf, Literata-Italic[opsz,wght].ttf,
     NotoSerifHebrew[wdth,wght].ttf.
-Копий шрифтов в репозитории нет. Без --fonts части 4, 5б и 11 пишут «не проверено».
+Копии шрифтов лежат в inputs/fonts и берутся по умолчанию; без них части 4, 5б и 11 пишут «не проверено».
 
 Части:
   1 — токены цвета обеих тем и контраст по WCAG 2.x (текст — 4,5 : 1, графика — 3 : 1);
@@ -44,7 +44,7 @@ import re
 import sys
 
 ARGS = sys.argv[1:]
-FONTS = ARGS[ARGS.index('--fonts') + 1] if '--fonts' in ARGS else None
+FONTS = ARGS[ARGS.index('--fonts') + 1] if '--fonts' in ARGS else ('inputs/fonts' if os.path.isdir('inputs/fonts') else None)
 
 
 def head(t):

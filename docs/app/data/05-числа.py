@@ -20,7 +20,7 @@
 сверенных с подлинником по tools/bible/brackets.tsv (02, § 3.8; tools/base/brackets.ts).
 Файлы проекта скрипт не меняет.
 """
-import collections
+import os, collections
 import glob
 import json
 import math
@@ -28,6 +28,11 @@ import re
 import sys
 
 ARGS = sys.argv[1:]
+# входные файлы по умолчанию — из папки inputs/ репозитория (если не заданы ключами)
+for _k, _v in (('--openbible', 'inputs/openbible/ancient.jsonl'), ('--ne', 'inputs/natural-earth/ne_10m_land.geojson'),
+               ('--rivers', 'inputs/natural-earth/ne_10m_rivers_lake_centerlines.geojson')):
+    if _k not in ARGS and os.path.exists(_v):
+        ARGS += [_k, _v]
 
 
 def arg(name):
