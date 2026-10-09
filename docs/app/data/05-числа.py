@@ -293,7 +293,7 @@ print(f'слова о местах в скобках (проверено {len(IN
 
 # Слова перехода: отрезок пути — только если они есть среди слов-оснований стиха
 CUE = re.compile(r'отправ|двину|пошел|пошли|пришел|пришли|вышел|вышли|поднял|сошел|сошли|сошел|'
-                 r'прошел|прошли|пройдя|отплы|приплы|прибыл|возвратил|обратил|переход|вступили|'
+                 r'прошел|прошли|пройдя|проходи|удалил|отплы|приплы|прибыл|возвратил|обратил|переход|вступили|'
                  r'оттуда|отсюда|\bиз \w+\s+в \w+')
 PATH_CUES = [  # (стих, откуда, куда)
     ('Быт 11:31', 'Ур', 'Харран'), ('Быт 12:5', 'Харран', 'Ханаан'), ('Быт 12:6', '—', 'Сихем'),
@@ -555,6 +555,65 @@ for title, nm in SKETCH.items():
         out.append(f'{n}: {d} {s}, {bp[2] if bp else "—"}, {k}/{len(p)}/{votes}')
     print(f'[{title}] ' + '; '.join(out))
 print('  (у каждого места: степень, оценка, лучшее предложение, предложений всего / с оценкой > 0 / голосов у лучшего)')
+
+# Отрезки эскизов по правилу § 3.5 (географ, № 4): вид линии считается и сверяется с эскизом.
+# Конец отрезка: (запись сводки или None, вид: point / land / water / direction / anchored).
+SEGMENTS = [  # (эскиз, стих перехода или None, откуда, куда, линия в эскизе)
+    ('11.1', 'Быт 11:31', ('Ur 1', 'point'), ('Haran', 'point'), 'пунктир'),
+    ('11.1', 'Быт 12:5', ('Haran', 'point'), ('Shechem', 'point'), 'пунктир'),
+    ('11.1', 'Быт 12:8', ('Shechem', 'point'), ('Bethel 1', 'point'), 'пунктир'),
+    ('11.1', 'Быт 12:10', ('Bethel 1', 'point'), ('Egypt', 'land'), 'нет'),
+    ('11.1', 'Быт 13:3', (None, 'direction'), ('Bethel 1', 'point'), 'нет'),
+    ('11.1', 'Быт 13:18', ('Bethel 1', 'point'), ('Mamre', 'point'), 'пунктир'),
+    ('11.1', 'Быт 20:1', ('Mamre', 'point'), ('Gerar', 'point'), 'пунктир'),
+    ('11.1', None, ('Gerar', 'point'), ('Beersheba 1', 'point'), 'нет'),
+    ('11.1', 'Быт 22:3', ('Beersheba 1', 'point'), ('Moriah', 'land'), 'нет'),
+    ('11.1', 'Быт 22:19', ('Moriah', 'land'), ('Beersheba 1', 'point'), 'нет'),
+    ('11.1', None, ('Beersheba 1', 'point'), ('Hebron', 'point'), 'нет'),
+    ('11.2', 'Чис 33:5', ('Rameses', 'point'), ('Succoth 2', 'point'), 'нет'),
+    ('11.2', 'Чис 33:6', ('Succoth 2', 'point'), ('Etham', 'point'), 'нет'),
+    ('11.2', 'Чис 33:7', ('Etham', 'point'), ('Migdol 1', 'point'), 'нет'),
+    ('11.2', 'Чис 33:8', ('Migdol 1', 'point'), ('Marah', 'point'), 'нет'),
+    ('11.2', 'Чис 33:9', ('Marah', 'point'), ('Elim', 'point'), 'точечная'),
+    ('11.2', 'Чис 33:10', ('Elim', 'point'), ('Red Sea 3', 'water'), 'нет'),
+    ('11.2', 'Чис 33:11', ('Red Sea 3', 'water'), ('Sin', 'land'), 'нет'),
+    ('11.2', 'Чис 33:12', ('Sin', 'land'), ('Dophkah', 'point'), 'нет'),
+    ('11.2', 'Чис 33:13', ('Dophkah', 'point'), ('Alush', 'point'), 'точечная'),
+    ('11.2', 'Чис 33:14', ('Alush', 'point'), ('Rephidim', 'point'), 'точечная'),
+    ('11.2', 'Чис 33:15', ('Rephidim', 'point'), ('Mount Sinai', 'anchored'), 'точечная'),
+    ('11.5', 'Деян 13:4', ('Antioch 1', 'point'), ('Seleucia', 'point'), 'пунктир'),
+    ('11.5', 'Деян 13:4', ('Seleucia', 'point'), ('Salamis', 'point'), 'по морю'),
+    ('11.5', 'Деян 13:6', ('Salamis', 'point'), ('Paphos', 'point'), 'пунктир'),
+    ('11.5', 'Деян 13:13', ('Paphos', 'point'), ('Perga', 'point'), 'по морю'),
+    ('11.5', 'Деян 13:14', ('Perga', 'point'), ('Antioch 2', 'point'), 'пунктир'),
+    ('11.5', 'Деян 13:51', ('Antioch 2', 'point'), ('Iconium', 'point'), 'пунктир'),
+    ('11.5', 'Деян 14:6', ('Iconium', 'point'), ('Lystra', 'point'), 'пунктир'),
+    ('11.5', 'Деян 14:20', ('Lystra', 'point'), ('Derbe', 'point'), 'пунктир'),
+    ('11.5', 'Деян 14:21', ('Derbe', 'point'), ('Lystra', 'point'), 'пунктир'),
+    ('11.5', 'Деян 14:24', ('Antioch 2', 'point'), ('Perga', 'point'), 'пунктир'),
+    ('11.5', 'Деян 14:25', ('Perga', 'point'), ('Attalia', 'point'), 'пунктир'),
+    ('11.5', 'Деян 14:26', ('Attalia', 'point'), ('Antioch 1', 'point'), 'по морю'),
+]
+
+
+def rule_line(verse, a, b, declared):
+    if not verse or not CUE.search(basis_text(ref(verse)).lower()):
+        return 'нет'
+    kinds = (a[1], b[1])
+    if any(k in ('land', 'water', 'direction') for k in kinds):
+        return 'нет'
+    degs = [degree(byname[x[0]])[0] for x in (a, b)]
+    if 'не установлено' in degs:
+        return 'нет'
+    if declared == 'по морю' and re.search(r'отплы', basis_text(ref(verse)).lower()):
+        return 'по морю'
+    return 'точечная' if 'предположительно' in degs else 'пунктир'
+
+
+mism = [f'{sk} {a[0] or a[1]} → {b[0]}: в эскизе {d}, по правилу {rule_line(v, a, b, d)}'
+        for sk, v, a, b, d in SEGMENTS if rule_line(v, a, b, d) != d]
+print(f'отрезков эскизов 11.1, 11.2, 11.5: {len(SEGMENTS)}; расходятся с правилом § 3.5: {len(mism)}'
+      + ('' if not mism else ' — ' + '; '.join(mism)))
 
 # Совпадающие точки разных записей среди мест эскизов (интерфейс, № 11)
 pts = collections.defaultdict(list)
