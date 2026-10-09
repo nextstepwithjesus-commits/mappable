@@ -5,7 +5,7 @@
  * совета). Сам tools/bible/synodal.tsv не меняется.
  *
  * Основание факта — только слова вне скобок и слова мест `gloss` (пояснение самого текста) и `damage` (повреждение
- * электронного текста), проверенных вручную. Слова мест `lxx`, `slav`, `added`, мест «по признакам» и мест, которых нет
+ * электронного текста), сверенных с подлинником (ВЗ — WLC, НЗ — TR). Слова мест `lxx`, `slav`, `added`, мест «по признакам» и мест, которых нет
  * в таблице (`unknown`), вырезаются вместе со скобками — квадратными и круглыми. Правило применяется к каждому стиху
  * отдельно, до склейки стихов: отрезок через несколько стихов (Суд 20:27–28; Притч 29:6–27) описан в таблице целиком,
  * а каждый стих получает свою часть.
@@ -13,7 +13,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadBible } from '../bible.ts';
-import { parseRef } from '../../src/engine/books.ts';
+import { BOOKS, parseRef } from '../../src/engine/books.ts';
 
 const ROOT = join(import.meta.dirname, '..', '..');
 export const BRACKETS_TSV = join(ROOT, 'tools', 'bible', 'brackets.tsv');
@@ -32,18 +32,49 @@ export interface BracketRow {
   /** Текст внутри скобок; «¦» — граница стихов внутри отрезка. */
   text: string;
   kind: Exclude<BracketKind, 'unknown'>;
-  /** «совет: WLC», «совет: TR, SBLGNT, CSL», «R10: вручную», «по признакам». */
+  /**
+   * Чем проверено: «совет: WLC», «совет: WLC, LXX, CSL», «совет: TR, SBLGNT, CSL», «R10: TR» (НЗ), «R10: по KJV» (ВЗ: R10
+   * еврейского текста и LXX не читал — это не сверка с подлинником), «по признакам».
+   */
   checkedBy: string;
+  /**
+   * Откуда слова вставки, если это установлено сверкой: «LXX», «CSL» (в LXX нет, есть в славянском тексте), «TR»,
+   * «SBLGNT, CSL», «—» (нет ни в LXX, ни в CSL); пусто — не установлено. По нему строится подпись (02 § 3.8.2).
+   */
+  source: string;
   /** Для `damage` — исправленное чтение (по частям стихов через «¦»). */
   reading: string;
   basis: string;
   council: string;
 }
 
-/** Место проверено вручную (R10 или советом), а не размечено по признакам. */
-export const checked = (r: BracketRow) => r.checkedBy !== 'по признакам';
-/** Слова места — текст Писания и основание факта. */
-export const isText = (r: BracketRow) => (r.kind === 'gloss' || r.kind === 'damage') && checked(r);
+const NT = new Set(BOOKS.filter((b) => b.t === 'nt').map((b) => b.code));
+export const isNT = (book: string) => NT.has(book);
+/**
+ * Место сверено с подлинником: в Ветхом Завете — с еврейским текстом (WLC), в Новом — с греческим (TR). Пометка
+ * «R10: по KJV» сверкой с подлинником не считается (решение совета § 9 п. 7; рецензия второго ключа, № 6).
+ */
+export const checkedOriginal = (r: BracketRow) => (isNT(r.book) ? /\bTR\b/ : /\bWLC\b/).test(r.checkedBy);
+/** Слова места — текст Писания и основание факта: пояснение или повреждение, сверенные с подлинником. */
+export const isText = (r: BracketRow) => (r.kind === 'gloss' || r.kind === 'damage') && checkedOriginal(r);
+
+/** Нейтральная подпись (02 § 3.8.2). */
+export const NEUTRAL = 'в скобках Синодального издания';
+/**
+ * Подпись места в Карточке (02 § 3.8.2; 07 § 12): пустая — слова текста, подписи нет. «Дополнение по греческому
+ * переводу» — только у места, сверенного с LXX, где слова есть в LXX; «нет в греческом тексте, принятом переводчиками» —
+ * у места НЗ, сверенного с TR, где слова взяты из славянского текста; «слово добавлено переводчиками» — только если
+ * сверено, что слов нет ни в LXX, ни в CSL. Иначе — нейтральная.
+ */
+export function caption(r: BracketRow | null): string {
+  if (!r) return NEUTRAL;
+  if (isText(r)) return '';
+  const council = r.checkedBy.startsWith('совет:');
+  if (r.kind === 'lxx' && council && /\bLXX\b/.test(r.checkedBy) && r.source === 'LXX') return 'дополнение по греческому переводу';
+  if (r.kind === 'slav' && checkedOriginal(r) && r.source === 'CSL') return 'нет в греческом тексте, принятом переводчиками';
+  if (r.kind === 'added' && council && r.source === '—') return 'слово добавлено переводчиками';
+  return NEUTRAL;
+}
 
 let rowsCache: BracketRow[] | null = null;
 export function bracketRows(): BracketRow[] {
@@ -57,7 +88,7 @@ export function bracketRows(): BracketRow[] {
   };
   const c = {
     book: col('книга'), ch: col('глава'), from: col('стих'), to: col('по стих'), br: col('скобка'), text: col('текст'),
-    kind: col('вид'), by: col('чем проверено'), reading: col('чтение'), basis: col('основание R10'), council: col('поправка совета'),
+    kind: col('вид'), by: col('чем проверено'), src: col('источник вставки'), reading: col('чтение'), basis: col('основание R10'), council: col('поправка совета'),
   };
   rowsCache = lines.slice(1).map((l, i) => {
     const x = l.split('\t');
@@ -68,7 +99,7 @@ export function bracketRows(): BracketRow[] {
     if (kind === 'damage' && !x[c.reading]) throw new Error(`brackets.tsv, строка ${i + 2}: у повреждения нет исправленного чтения`);
     return {
       book: x[c.book], chapter: Number(x[c.ch]), from: Number(x[c.from]), to: Number(x[c.to]), bracket, text: x[c.text], kind,
-      checkedBy: x[c.by], reading: x[c.reading] ?? '', basis: x[c.basis] ?? '', council: x[c.council] ?? '',
+      checkedBy: x[c.by], source: x[c.src] ?? '', reading: x[c.reading] ?? '', basis: x[c.basis] ?? '', council: x[c.council] ?? '',
     };
   });
   return rowsCache;
@@ -185,7 +216,7 @@ function build(): Map<string, string> {
 }
 
 /**
- * Текст стиха, на который можно опираться: слова вне скобок и слова мест gloss и damage, проверенных вручную
+ * Текст стиха, на который можно опираться: слова вне скобок и слова мест gloss и damage, сверенных с подлинником
  * (для damage — исправленное чтение по таблице). Знаки скобок снимаются. Нет стиха — undefined.
  */
 export function scriptureText(book: string, chapter: number, verse: number): string | undefined {

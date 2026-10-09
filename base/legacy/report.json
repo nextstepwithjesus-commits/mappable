@@ -1,7 +1,7 @@
 {
  "schema": 1,
  "title": "Отчёт переноса: отличия обратной проекции от прежних данных и исправления, которые их объясняют",
- "commit": "536040b",
+ "commit": "7847cc8",
  "exact": "точный перенос совпал с прежними данными без отличий",
  "note": "steps — ключи записей, изменённые каждым шагом исправления (все в объявленной области шага); projection — отличия прежнего вида по лицам и полям",
  "steps": {
@@ -1128,6 +1128,9 @@
   ],
   "C18": [
    "actor:p-khalev-syn-esroma.facts.notes",
+   "actor:p-khalev.facts.notes",
+   "actor:p-akhsa.facts.scripture",
+   "actor:p-akhsa.facts.notes",
    "origin:p-akhsa|p-khalev|father|p"
   ],
   "C19": [
@@ -1139,7 +1142,7 @@
   "C21": [
    "actor:p-sedekiya.facts.notes",
    "actor:p-sedekiya-syn-ioakima.facts.notes",
-   "kin:p-sedekiya|p-iekhoniya|брат его"
+   "kin:p-sedekiya|p-iekhoniya|брат"
   ],
   "C22": [
    "actor:p-valtasar-tsar.facts.notes",
@@ -3711,7 +3714,8 @@
    "what": "лицо",
    "id": "khalev",
    "fields": [
-    "card.original"
+    "card.original",
+    "card.notes"
    ]
   },
   {
@@ -3725,7 +3729,9 @@
    "what": "лицо",
    "id": "akhsa",
    "fields": [
-    "parentRefs"
+    "parentRefs",
+    "card.scripture",
+    "card.notes"
    ]
   },
   {

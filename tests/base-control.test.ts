@@ -111,6 +111,13 @@ describe('правки Д2 (рецензии 03 и 07, решение совет
     expect(edge('p-syn-izrailtyanki-khulitel', 'p-mat-khulitelya')).toHaveLength(1);
     expect(edge('p-mat-khulitelya', 'p-davriin').map((o) => [o.role, o.cert, o.refs])).toEqual([['father', 'scripture', ['Лев 24:11']]]);
     expect(base.memberships.some((x) => x.actor === m.id && x.area === 'g-dan' && x.basis === 'named')).toBe(true);
+    // слова Лев 24:10 вне скобок остаются фактом; еврейский текст — только справочно, в карантине
+    const lin = m.facts.filter((f) => f.field === 'lineage').map((f) => (f.value as any).refs);
+    expect(lin).toEqual([['Лев 24:10'], ['Лев 24:11']]);
+    const heb = m.facts.filter((f) => JSON.stringify(f.value).includes('еврейском'));
+    expect(heb.map((f) => [f.cert, f.prov?.status])).toEqual([['reference', 'quarantine']]);
+    expect(A.get('p-davriin')!.disambig).toBe('отец Саломифи (Лев 24:11)');
+    expect(base.memberships.filter((x) => x.actor === 'p-davriin')).toEqual([]);
   });
   it('Финеес при ковчеге (Суд 20:27–28) — событие; у Иоанна Марка нет Антиохии по Деян 12:25', () => {
     expect(A.get('p-finees')!.facts.some((f) => f.field === 'events' && JSON.stringify(f.value).includes('Суд 20:27-28'))).toBe(true);
@@ -130,10 +137,14 @@ describe('правки Д2 (рецензии 03 и 07, решение совет
     expect(edge('p-akhsa', 'p-khalev')[0].refs).toEqual(['Нав 15:16', 'Суд 1:12']);
     expect(edge('p-akhsa', 'p-khalev-syn-esroma')).toEqual([]);
     expect(A.get('p-khalev-syn-esroma')!.facts.some((f) => (f.value as any)?.degree === 'possible')).toBe(true);
+    // ни примечание Халева, сына Иефонниина, ни § 23 Ахсы не приписывают 1Пар 2:49 Ахсе как факт
+    expect(JSON.stringify(A.get('p-khalev')!.facts)).not.toContain('названа и в перечне');
+    expect((A.get('p-akhsa')!.facts.find((f) => f.field === 'scripture')!.value as any).key).not.toContain('1Пар 2:49');
   });
-  it('«сын» шире прямого родства: Лаван — «из сыновей» Нахора (Быт 29:5); Валтасар — «отец его» (Дан 5:2) словом Писания', () => {
-    expect(edge('p-lavan', 'p-nakhor-syn-farry').map((o) => [o.kind, o.cert, o.primary])).toEqual([['ancestor', 'scripture', false]]);
-    expect(edge('p-valtasar-tsar', 'p-navukhodonosor').map((o) => [o.kind, o.cert, o.primary])).toEqual([['ancestor', 'scripture', false]]);
+  it('«из сыновей»: слова — Писание, уровень ребра — уровень вывода о степени (Лаван — выв., Валтасар — толк.)', () => {
+    expect(edge('p-lavan', 'p-nakhor-syn-farry').map((o) => [o.kind, o.cert, o.primary, o.words?.[0].ref])).toEqual([['ancestor', 'inference', false, 'Быт 29:5']]);
+    expect(edge('p-valtasar-tsar', 'p-navukhodonosor').map((o) => [o.kind, o.cert, o.primary, o.words?.[0].text])).toEqual([['ancestor', 'interpretation', false, 'Навуходоносор, отец его']]);
+    for (const [c, p] of [['p-oziya', 'p-ioram-syn-iosafata'], ['p-azariya-1par6-10', 'p-meraiof']]) expect(edge(c, p)[0].cert).toBe('inference');
   });
   it('Боган назван вне перечня сыновей Рувима', () => {
     expect(edge('p-bogan', 'p-ruvim')[0].outsideLists?.refs).toContain('Быт 46:9');
@@ -143,7 +154,7 @@ describe('правки Д2 (рецензии 03 и 07, решение совет
     expect(edge('p-azariya-1par6-10', 'p-meraiof')[0].skipped?.actors).toHaveLength(6);
   });
   it('Седекия: «брат его» (2Пар 36:10) рядом с «дядя» (4Цар 24:17); лица не слиты', () => {
-    expect(kin('p-sedekiya', 'p-iekhoniya').map((k) => k.rel).sort()).toEqual(['брат его', 'дядя']);
+    expect(kin('p-sedekiya', 'p-iekhoniya').map((k) => k.rel).sort()).toEqual(['брат', 'дядя']);
     expect(A.has('p-sedekiya-syn-ioakima')).toBe(true);
   });
   it('Онан и Фамарь — «как деверь»; Кис — «Нер» в подписи по 1Пар 8:33', () => {
@@ -152,7 +163,8 @@ describe('правки Д2 (рецензии 03 и 07, решение совет
   });
   it('Адам, Ева, Мелхиседек — «Писание говорит» о родителях; прежних видов stated-absent и not-applicable нет', () => {
     const says = (id: string) => base.nodata.filter((n) => n.actor === id && n.sec === 6 && n.kind === 'scripture-says').map((n) => n.refs);
-    expect([says('p-adam'), says('p-eva'), says('p-melkhisedek')]).toEqual([[['Быт 2:7']], [['Быт 2:22']], [['Евр 7:3']]]);
+    expect([says('p-adam'), says('p-eva'), says('p-melkhisedek')]).toEqual([[['Быт 2:7', 'Лк 3:38']], [['Быт 2:22']], [['Евр 7:3']]]);
+    expect(parentsOf('p-adam')).toEqual([]);
     expect(base.nodata.filter((n) => n.kind === 'stated-absent' || n.kind === 'not-applicable')).toEqual([]);
   });
 });

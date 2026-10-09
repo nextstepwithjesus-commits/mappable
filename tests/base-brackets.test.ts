@@ -6,7 +6,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { bracketRows, bracketSegments, matchBrackets, scriptureText, scriptureTexts, isText } from '../tools/base/brackets.ts';
+import { bracketRows, bracketSegments, matchBrackets, scriptureText, scriptureTexts, isText, isNT, caption, NEUTRAL } from '../tools/base/brackets.ts';
 
 const synodal = readFileSync(join(import.meta.dirname, '..', 'tools', 'bible', 'synodal.tsv'), 'utf8');
 const row = (book: string, chapter: number, verse: number, text: string) =>
@@ -29,6 +29,8 @@ describe('таблица скобок', () => {
     expect(count('gloss')).toBe(46);
     expect(count('damage')).toBe(11);
     expect(bracketRows().filter((r) => (r.kind === 'gloss' || r.kind === 'damage') && r.checkedBy === 'по признакам')).toEqual([]);
+    // § 8.4: «[Лаван]» в Быт 29:23 совет проверил
+    expect(row('Быт', 29, 23, 'Лаван')?.checkedBy).toBe('совет: WLC, LXX, CSL');
     // § 9 п. 3: Мф 16:20 «[Иисус]» и Евр 13:20 «[Христа]» — г-нз, а не «в»
     expect(row('Мф', 16, 20, 'Иисус')?.kind).toBe('slav');
     expect(row('Евр', 13, 20, 'Христа')?.kind).toBe('slav');
@@ -43,6 +45,46 @@ describe('таблица скобок', () => {
     expect(round).toHaveLength(49);
     expect(round.filter((r) => !isText(r))).toHaveLength(30);
     expect(row('Деян', 12, 25, 'в Антиохию')?.checkedBy).toBe('совет: TR, SBLGNT, CSL');
+  });
+});
+
+describe('сверка с подлинником (рецензия второго ключа, № 6–7)', () => {
+  it('«R10: вручную» нет: R10 сверял ВЗ по KJV, НЗ — по TR', () => {
+    const by = new Set(bracketRows().map((r) => r.checkedBy));
+    expect(by.has('R10: вручную')).toBe(false);
+    expect(bracketRows().filter((r) => r.checkedBy === 'R10: по KJV' && isNT(r.book))).toEqual([]);
+    expect(bracketRows().filter((r) => r.checkedBy === 'R10: TR' && !isNT(r.book))).toEqual([]);
+  });
+  it('в Ветхом Завете текстом считается только место, сверенное с WLC; в Новом — с TR', () => {
+    const text = bracketRows().filter(isText);
+    expect(text.filter((r) => !isNT(r.book) && !/\bWLC\b/.test(r.checkedBy))).toEqual([]);
+    expect(text.filter((r) => isNT(r.book) && !/\bTR\b/.test(r.checkedBy))).toEqual([]);
+  });
+  it('семь мест «повреждение» в псалмах, сверенных R10 только по KJV, — не основание; Пс 13:1 и 104:15 совет сверил по WLC', () => {
+    const seven: [number, number, string][] = [[9, 32, 'забыл Бог'], [12, 5, 'я одолел его'], [13, 7, 'Кто даст с Сиона'], [26, 8, 'ищите лица Моего'], [57, 12, 'подлинно есть плод'], [67, 23, 'от Васана возвращу'], [67, 24, 'чтобы ты погрузил'], [89, 4, 'возвратитесь, сыны человеческие']];
+    for (const [c, v, t] of seven) expect([c, v, scriptureText('Пс', c, v)!.includes(t)]).toEqual([c, v, false]);
+    expect(bracketRows().filter((r) => r.kind === 'damage' && !isText(r)).map((r) => `${r.chapter}:${r.from}`)).toEqual(['9:32', '12:5', '13:7', '26:8', '57:12', '67:23', '89:4']);
+    expect(scriptureText('Пс', 104, 15)).toContain('не прикасайтесь к помазанным Моим');
+  });
+  it('подпись «дополнение по греческому переводу» — только у мест, сверенных с LXX', () => {
+    for (const r of bracketRows()) if (caption(r) === 'дополнение по греческому переводу') expect([r.book, r.chapter, r.from, r.checkedBy, r.source]).toEqual([r.book, r.chapter, r.from, 'совет: WLC, LXX, CSL', 'LXX']);
+    expect(caption(row('Быт', 4, 18, 'Малелеила')!)).toBe('дополнение по греческому переводу');
+    // по славянскому: в LXX слов нет — подпись нейтральная
+    expect(row('Быт', 19, 9, 'ему')?.source).toBe('CSL');
+    expect(caption(row('Быт', 19, 9, 'ему')!)).toBe(NEUTRAL);
+    expect(caption(row('Быт', 5, 3, 'сына')!)).toBe(NEUTRAL);
+    // R10 по KJV и места по признакам — нейтральная
+    const kjv = bracketRows().find((r) => r.kind === 'lxx' && r.checkedBy === 'R10: по KJV')!;
+    expect(caption(kjv)).toBe(NEUTRAL);
+    expect(caption(row('Быт', 1, 6, 'И стало так.')!)).toBe(NEUTRAL);
+    expect(caption(null)).toBe(NEUTRAL);
+  });
+  it('подписи НЗ и слов переводчиков — по сверке места', () => {
+    expect(caption(row('Деян', 12, 25, 'в Антиохию')!)).toBe('нет в греческом тексте, принятом переводчиками');
+    expect(caption(row('Флм', 1, 2, 'сестре')!)).toBe(NEUTRAL);
+    expect(caption(row('Евр', 12, 20, 'или поражен стрелою')!)).toBe(NEUTRAL);
+    expect(caption(row('Мф', 8, 18, 'ученикам')!)).toBe('слово добавлено переводчиками');
+    expect(caption(row('Лев', 24, 11, 'имя же матери его Саломиф, дочь Давриина, из племени Данова')!)).toBe('');
   });
 });
 

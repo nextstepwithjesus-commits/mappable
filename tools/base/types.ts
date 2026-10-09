@@ -217,6 +217,7 @@ export interface ReadingSet {
   /** Прочтение по умолчанию — по букве текста. */
   default: string;
   note: string;
+  prov?: Partial<Prov>;
 }
 
 // ---------- области и членство ----------
