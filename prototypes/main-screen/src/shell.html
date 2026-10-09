@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ru" data-layer="simple">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Библия наглядно — главная</title>
+<style>/*CSS*/</style>
+</head>
+<body>
+<a class="skip" href="#q" data-skip>К поиску</a>
+<header class="top">
+  <div class="top-in">
+    <a class="homebtn" href="#/" data-home hidden><!--SIGN-HOME--><span>Главная</span></a>
+    <div class="brand-slot" data-brand-slot></div>
+    <form class="search" role="search" data-search>
+      <label for="q" class="sr">Найти человека, место или стих</label>
+      <input id="q" name="q" type="search" autocomplete="off" spellcheck="false" enterkeyhint="search"
+             placeholder="Найти: Ной, Руфь, Руф 4:17">
+      <button type="submit" class="sbtn"><!--SIGN-SEARCH--><span class="sbtn-t">Найти</span></button>
+    </form>
+    <div class="layer">
+      <label for="layer" class="sr">Вид</label>
+      <select id="layer" data-layer-select>
+        <option value="simple">Простой вид</option>
+        <option value="study">Для изучающих</option>
+      </select>
+    </div>
+    <a class="help" href="#/stub/%D0%A1%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B0" aria-label="Справка">?</a>
+  </div>
+  <p class="study search-hint">Можно искать по адресу стиха, по иной форме имени, по названию колена.</p>
+</header>
+<main id="main"></main>
+
+<aside class="host" data-host hidden aria-label="Панель ведущего">
+  <div class="host-h"><h2>Панель ведущего</h2><button type="button" data-h-hide>Скрыть</button></div>
+  <label class="hf">Участник (код, без имени)<input type="text" data-h-part placeholder="например, В-03"></label>
+  <fieldset class="hf"><legend>Вариант главного экрана</legend>
+    <label><input type="radio" name="hv" value="ab"> А+Б «С чего начнём»</label>
+    <label><input type="radio" name="hv" value="v"> В «Эпохи по порядку»</label>
+    <label><input type="radio" name="hv" value="d"> Д «Родословие Адам — Иисус Христос»</label>
+  </fieldset>
+  <label class="hf">Задача
+    <select data-h-task>
+      <option>Р1</option><option>Р2</option><option>Р3</option><option>Р4</option><option>Р5</option>
+      <option>Н1</option><option>Н2</option><option>Н3</option><option>Н4</option>
+      <option>У1</option><option>У2</option><option>С1</option><option>С2</option><option>С3</option>
+      <option>другое</option>
+    </select>
+  </label>
+  <div class="hrow">
+    <button type="button" data-h-mark="начало">Начать задачу</button>
+    <button type="button" data-h-mark="удача">Удача</button>
+    <button type="button" data-h-mark="подсказка">Подсказка</button>
+    <button type="button" data-h-mark="не удалось">Не удалось</button>
+  </div>
+  <button type="button" class="hwide" data-h-home>На исходный экран (главный, пустая история)</button>
+  <button type="button" class="hwide" data-h-reset>Новый участник: всё сбросить</button>
+  <label class="hf">Тема
+    <select data-h-theme>
+      <option value="">как в системе</option><option value="light">светлая</option><option value="dark">тёмная</option>
+    </select>
+  </label>
+  <p class="hf">Записей в журнале: <strong data-h-count>0</strong></p>
+  <div class="hrow">
+    <button type="button" data-h-dl>Скачать журнал</button>
+    <button type="button" data-h-clear>Очистить журнал</button>
+  </div>
+  <p class="hhint">Открыть панель снова: Ctrl+Alt+H или адрес с <code>?host=1</code>.</p>
+</aside>
+
+<!--TEMPLATES-->
+<script type="application/json" id="data">/*DATA*/</script>
+<script>/*JS*/</script>
+</body>
+</html>
