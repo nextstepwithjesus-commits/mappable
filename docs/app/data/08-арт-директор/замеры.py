@@ -10,7 +10,7 @@ import glob, json, math, re, sys
 from fontTools.ttLib import TTFont
 from fontTools.varLib import instancer
 from fontTools.pens.boundsPen import BoundsPen
-from fontTools.pens.recordingPen import RecordingPen
+from fontTools.pens.recordingPen import DecomposingRecordingPen
 
 A = sys.argv[1:]
 FD = A[A.index('--fonts') + 1]
@@ -75,14 +75,17 @@ for s in ('Магер-шелал-хаш-баз',):
 # ---------------------------------------------------------------- 2
 head('2. h1 в две строки: верх Й/Ё и низ у/р/Д/Щ (Literata 600, opsz 72), em')
 top = max(bbox('Literata', {'opsz': 72, 'wght': 600}, c)[0][3] for c in 'ЙЁЙ')
+topl = max(bbox('Literata', {'opsz': 72, 'wght': 600}, c)[0][3] for c in 'йёбд')
 topA = max(bbox('Literata', {'opsz': 72, 'wght': 600}, c)[0][3] for c in 'АБВНТ')
 bot = min(bbox('Literata', {'opsz': 72, 'wght': 600}, c)[0][1] for c in 'урДЩЦд')
 upm = bbox('Literata', {'opsz': 72, 'wght': 600}, 'А')[1]
 print(f'верх прописной {topA / upm:.3f}; верх Й/Ё {top / upm:.3f}; низ выносных {bot / upm:.3f}')
-print(f'высота знаков от низа выносных до верха Й/Ё: {(top - bot) / upm:.3f} em')
+print(f'верх строчных й/ё/б: {topl / upm:.3f}')
+print(f'высота знаков от низа выносных до верха Й/Ё: {(top - bot) / upm:.3f} em; до верха й/ё/б: {(topl - bot) / upm:.3f} em')
 for size, lh in ((56, 60), (44, 48), (34, 38), (40, 44), (32, 36), (28, 32)):
     gap = lh / size - (top - bot) / upm
-    print(f'  {size}/{lh} (интерлиньяж {lh / size:.3f}): зазор между «у» верхней строки и «Й» нижней — {gap * size:+.1f} px')
+    gl = lh / size - (topl - bot) / upm
+    print(f'  {size}/{lh} (интерлиньяж {lh / size:.3f}): зазор «у» над «Й» — {gap * size:+.1f} px; «у» над «й/б» — {gl * size:+.1f} px')
 
 # ---------------------------------------------------------------- 3
 head('3. Волосная линия Literata 600: «о» — верх кольца (толщина горизонтали)')
@@ -92,7 +95,7 @@ def thin(axes):
     f = inst('Literata', axes)
     gs = f.getGlyphSet()
     g = f.getBestCmap()[ord('о')]
-    rp = RecordingPen()
+    rp = DecomposingRecordingPen(gs)
     gs[g].draw(rp)
     # контуры: внешний и внутренний; горизонталь вверху = yMax внешнего − yMax внутреннего
     conts, cur = [], []
