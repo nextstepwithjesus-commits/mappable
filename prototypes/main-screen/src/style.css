@@ -91,9 +91,9 @@ main { max-width: 1216px; margin: 0 auto; padding: 16px 32px 64px; }
 .rowsec h2, .continue h2 { font-size: calc(var(--fs) + 1px); margin-bottom: 8px; }
 
 /* Адрес стиха — цель касания 44–48 px */
-.ref { display: inline-flex; align-items: center; min-height: var(--tap); padding: 0 4px; margin: 0 -4px; border: 0; background: none;
-  color: var(--ink2); font: 400 var(--fs-s) var(--ui); text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 4px;
-  cursor: pointer; white-space: nowrap; vertical-align: baseline; }
+.ref { display: inline-block; line-height: 20px; padding: calc((var(--tap) - 20px) / 2) 4px; margin: calc((20px - var(--tap)) / 2) -4px;
+  border: 0; background: none; color: var(--ink2); font: 400 var(--fs-s)/20px var(--ui); text-decoration: underline; text-decoration-style: dotted;
+  text-underline-offset: 4px; cursor: pointer; white-space: nowrap; vertical-align: baseline; }
 .ref:hover, .ref[aria-expanded="true"] { color: var(--ink); text-decoration-style: solid; }
 .refs .sep { color: var(--ink2); font: 400 var(--fs-s) var(--ui); padding: 0 2px; }
 .inset { margin: 6px 0 12px; padding: 10px 14px; background: var(--sub); border-left: 3px solid var(--line); font: 400 calc(var(--fs) - 1px)/1.5 var(--serif);
@@ -133,8 +133,8 @@ abbr.cert { text-decoration: none; border-bottom: 1px dotted var(--ink2); }
 .plist .pp { padding: 4px 0; }
 
 /* Выбор лица: «что открыть?» */
-.pick { min-height: var(--tap); padding: 0 2px; border: 0; background: none; font: 600 var(--fs) var(--serif); color: var(--ink); cursor: pointer;
-  text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+.pick { display: inline-block; line-height: 24px; padding: calc((var(--tap) - 24px) / 2) 2px; margin: calc((24px - var(--tap)) / 2) 0; border: 0; background: none;
+  font: 600 var(--fs) var(--serif); line-height: 24px; color: var(--ink); cursor: pointer; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
 .pick[aria-expanded="true"] { background: var(--sel); color: var(--selink); box-shadow: 0 0 0 2px var(--ink); text-decoration: none; padding: 0 6px; }
 .acts { margin: 6px 0 10px; padding: 10px 12px; background: var(--sub); border-left: 3px solid var(--ink); }
 .acts-h { font: 600 var(--fs-s) var(--ui); margin: 0 0 8px; }
@@ -153,7 +153,7 @@ abbr.cert { text-decoration: none; border-bottom: 1px dotted var(--ink2); }
 .gapbtn[aria-expanded="true"] { border-color: var(--ink); font-weight: 700; }
 .gap-x { font: 400 var(--fs-s) var(--ui); color: var(--ink2); text-align: center; }
 .gap-names { max-width: 640px; text-align: center; line-height: 1.6; padding: 4px 0 8px; }
-.gap-names .pick { font-size: var(--fs-s); font-family: var(--ui); font-weight: 500; }
+.gap-names .pick { font: 500 var(--fs-s)/24px var(--ui); }
 .branches { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 8px auto; max-width: 980px; }
 .dbranch { background: var(--sheet); border: 1px solid var(--line); border-radius: 4px; padding: 12px 16px; text-align: center; }
 .dbranch.mt { border-top: 4px solid var(--mt); }
@@ -246,7 +246,7 @@ table.lines { width: 100%; max-width: 860px; border-collapse: collapse; margin-t
 .lines th.mt { border-top: 4px solid var(--mt); }
 .lines th.lk { border-top: 4px solid var(--lk); }
 .lines th .ref { font-weight: 400; }
-.lines td { padding: 0 12px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+.lines td { padding: 10px 12px; border-bottom: 1px solid var(--grid); vertical-align: top; }
 .lines tr.same td { background: var(--sub); }
 .lines td.empty { background: transparent; }
 .lines .num { display: inline-block; min-width: 2.2em; font: 400 var(--fs-s) var(--ui); color: var(--ink2); font-variant-numeric: tabular-nums; }
@@ -418,7 +418,7 @@ svg.geo { max-height: 470px; }
   .passport td:last-child { grid-column: 2; padding-top: 0; }
 }
 .lines tr.pre td { padding-top: 6px; padding-bottom: 6px; line-height: 1.2; }
-.lines tr.pre .pick { font: 500 var(--fs-s) var(--ui); padding: 0 1px; }
+.lines tr.pre .pick { font: 500 var(--fs-s)/24px var(--ui); padding-left: 1px; padding-right: 1px; }
 .tagx-in { font: 400 14px var(--ui); color: var(--ink2); }
 @media (max-width: 599px) {
   svg.geo text { font-size: 25px; stroke-width: 6px; }
