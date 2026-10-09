@@ -172,3 +172,24 @@ L.sort()
 print('7. Записей-строк:', len(L), '; медиана слов', L[len(L) // 2], '; больше 12 слов:',
       sum(1 for x in L if x > 12), '(%.0f %%)' % (100 * sum(1 for x in L if x > 12) / len(L)),
       '; больше 20:', sum(1 for x in L if x > 20))
+
+# 8. Записи богатых карточек: объём работы для простых строк
+R = []
+for i, a in acts.items():
+    if sz[i] != 'богатая':
+        continue
+    for f in a.get('facts', []):
+        if f.get('prov', {}).get('status') == 'quarantine' or f.get('sec') in (2, 23, 24):
+            continue
+        t = []
+        texts(f['value'], t)
+        R += [len(x.split()) for x in t if len(x.split()) > 1]
+print('8. Записей-строк у богатых карточек:', len(R), '; больше 12 слов:', sum(1 for x in R if x > 12),
+      '(%.0f %%)' % (100 * sum(1 for x in R if x > 12) / len(R)))
+
+# 9. «почил» в Синодальном тексте: о смерти и не о смерти
+syn = [l.rstrip('\n').split('\t') for l in open('tools/bible/synodal.tsv', encoding='utf-8')]
+poch = [r for r in syn if len(r) > 3 and re.search(r'почил', r[3], re.I)]
+dead = [r for r in poch if re.search(r'почил\w*\s+(\S+\s+){0,2}с отцами', r[3], re.I)]
+print('9. Стихов с «почил…»:', len(poch), '; из них «почил … с отцами» (смерть):', len(dead),
+      '; другие:', ', '.join(f'{r[0]} {r[1]}:{r[2]}' for r in poch if r not in dead))
