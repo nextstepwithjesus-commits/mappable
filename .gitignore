@@ -11,3 +11,4 @@ dist-artifact/
 tools/_*.ts
 .ui-build/
 tests/_*.test.ts
+dist-data/

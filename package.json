@@ -25,7 +25,10 @@
     "coords": "tsx tools/coords.ts",
     "a11y": "tsx tools/a11y.ts",
     "collide": "tsx tools/collide.ts",
-    "build:artifact": "npm run data && vite build --mode artifact && tsx tools/artifact-page.ts"
+    "build:artifact": "npm run data && vite build --mode artifact && tsx tools/artifact-page.ts",
+    "base": "tsx tools/base/migrate.ts",
+    "base:validate": "tsx tools/base/validate.ts",
+    "base:bundle": "tsx tools/base/bundle.ts"
   },
   "license": "UNLICENSED",
   "dependencies": {
