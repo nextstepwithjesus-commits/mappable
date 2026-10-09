@@ -22,8 +22,9 @@ import { applyCorrections, makeCtx, STEPS, type Step } from './corrections.ts';
 import { ADDITIONS } from './additions.ts';
 import { project, canon, type Hints } from './project.ts';
 import { loadBible } from '../bible.ts';
-import { parseRef, verseId } from '../../src/engine/books.ts';
-import { namesIn, stripBrackets } from '../../src/engine/text.ts';
+import { parseRef } from '../../src/engine/books.ts';
+import { namesIn } from '../../src/engine/text.ts';
+import { scriptureText } from './brackets.ts';
 
 const ROOT = join(import.meta.dirname, '..', '..');
 const DATA = join(ROOT, 'data');
@@ -232,7 +233,7 @@ export function toBase(vols: any[], groups: any[], epochs: any[], anchors: any, 
   const names = (id: string) => actorById.get(id)!.names.map((n) => n.form);
   const mainText = (r: string) => {
     const p = parseRef(r, bible.chapterLength);
-    return p ? p.verses.map((v) => stripBrackets(bible.verses.get(verseId(v)) ?? '')).join(' ') : '';
+    return p ? p.verses.map((v) => scriptureText(v.book, v.chapter, v.verse) ?? '').join(' ') : '';
   };
   const byChild = new Map<string, Origin[]>();
   for (const o of base.origins) if (o.primary) byChild.set(o.child, [...(byChild.get(o.child) ?? []), o]);

@@ -8,6 +8,7 @@
 import type { Base } from './migrate.ts';
 import type { Hints } from './project.ts';
 import type { Actor, Assertion, Correction, Origin, ReadingSet } from './types.ts';
+import { STEPS_D2 } from './corrections-d2.ts';
 
 export interface Step {
   id: string;
@@ -497,6 +498,8 @@ export const STEPS: Step[] = [
       };
     },
   },
+  // этап Д2: правки по рецензиям документов 03 и 07 и по решению совета о скобках (corrections-d2.ts)
+  ...STEPS_D2,
 ];
 
 export function makeCtx(base: Base, hints: Hints): Ctx {

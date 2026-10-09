@@ -96,6 +96,63 @@ describe('контрольный набор', () => {
     const os = base.origins.filter((o) => o.child === 'p-iisus');
     expect(os.find((o) => o.role === 'mother')?.parent).toBe('p-mariya');
     expect(os.filter((o) => o.role === 'father').map((o) => [o.kind, o.cert])).toEqual([['legal', 'interpretation']]);
-    expect(base.nodata.filter((n) => n.actor === 'p-iisus' && n.kind === 'not-applicable').map((n) => n.what)).toEqual(['отец по плоти']);
+    // «не от союза» — нейтральный вид «Писание говорит» со словами стихов (07 § 8.2; шаг C31)
+    const nd = base.nodata.filter((n) => n.actor === 'p-iisus' && n.kind === 'scripture-says');
+    expect(nd.map((n) => n.what)).toEqual(['отец по плоти']);
+    expect(nd[0].words?.map((w) => w.ref)).toEqual(['Мф 1:18', 'Мф 1:20', 'Лк 1:34', 'Лк 1:35']);
+  });
+});
+
+describe('правки Д2 (рецензии 03 и 07, решение совета о скобках)', () => {
+  const edge = (child: string, parent: string) => base.origins.filter((o) => o.child === child && o.parent === parent);
+  it('Саломиф, дочь Давриина, из племени Данова — мать хулителя (Лев 24:11, пояснение самого текста)', () => {
+    const m = A.get('p-mat-khulitelya')!;
+    expect([m.kind, m.names[0].form]).toEqual(['human', 'Саломиф']);
+    expect(edge('p-syn-izrailtyanki-khulitel', 'p-mat-khulitelya')).toHaveLength(1);
+    expect(edge('p-mat-khulitelya', 'p-davriin').map((o) => [o.role, o.cert, o.refs])).toEqual([['father', 'scripture', ['Лев 24:11']]]);
+    expect(base.memberships.some((x) => x.actor === m.id && x.area === 'g-dan' && x.basis === 'named')).toBe(true);
+  });
+  it('Финеес при ковчеге (Суд 20:27–28) — событие; у Иоанна Марка нет Антиохии по Деян 12:25', () => {
+    expect(A.get('p-finees')!.facts.some((f) => f.field === 'events' && JSON.stringify(f.value).includes('Суд 20:27-28'))).toBe(true);
+    expect(A.get('p-ioann-mark')!.facts.filter((f) => f.field === 'places' && JSON.stringify(f.value).includes('Антиохия'))).toEqual([]);
+  });
+  it('неплодство Сарры — по Быт 11:30; цитата Евр 11:11 без «(будучи неплодна)»', () => {
+    const s = JSON.stringify(A.get('p-sarra')!.facts);
+    expect(s).not.toContain('будучи неплодна');
+    expect(s).toContain('Быт 11:30');
+  });
+  it('примечаний «скобки не основание» у мест «б» больше нет', () => {
+    for (const id of ['p-mat-khulitelya', 'p-finees', 'p-eldad', 'p-modad', 'p-gedeon', 'p-iarkha', 'p-ioann-mark']) {
+      expect([id, A.get(id)!.facts.filter((f) => (f.value as any)?.kind === 'bracket').length]).toEqual([id, 0]);
+    }
+  });
+  it('два Халева не слиты: ребро Ахсы без 1Пар 2:49; у Халева, сына Есрома, — метка', () => {
+    expect(edge('p-akhsa', 'p-khalev')[0].refs).toEqual(['Нав 15:16', 'Суд 1:12']);
+    expect(edge('p-akhsa', 'p-khalev-syn-esroma')).toEqual([]);
+    expect(A.get('p-khalev-syn-esroma')!.facts.some((f) => (f.value as any)?.degree === 'possible')).toBe(true);
+  });
+  it('«сын» шире прямого родства: Лаван — «из сыновей» Нахора (Быт 29:5); Валтасар — «отец его» (Дан 5:2) словом Писания', () => {
+    expect(edge('p-lavan', 'p-nakhor-syn-farry').map((o) => [o.kind, o.cert, o.primary])).toEqual([['ancestor', 'scripture', false]]);
+    expect(edge('p-valtasar-tsar', 'p-navukhodonosor').map((o) => [o.kind, o.cert, o.primary])).toEqual([['ancestor', 'scripture', false]]);
+  });
+  it('Боган назван вне перечня сыновей Рувима', () => {
+    expect(edge('p-bogan', 'p-ruvim')[0].outsideLists?.refs).toContain('Быт 46:9');
+  });
+  it('пропуски Мф 1:8 и Езд 7:3 — с перечнем пропущенных', () => {
+    expect(edge('p-oziya', 'p-ioram-syn-iosafata')[0].skipped?.actors).toEqual(['p-okhoziya-syn-iorama', 'p-ioas-syn-okhozii', 'p-amasiya']);
+    expect(edge('p-azariya-1par6-10', 'p-meraiof')[0].skipped?.actors).toHaveLength(6);
+  });
+  it('Седекия: «брат его» (2Пар 36:10) рядом с «дядя» (4Цар 24:17); лица не слиты', () => {
+    expect(kin('p-sedekiya', 'p-iekhoniya').map((k) => k.rel).sort()).toEqual(['брат его', 'дядя']);
+    expect(A.has('p-sedekiya-syn-ioakima')).toBe(true);
+  });
+  it('Онан и Фамарь — «как деверь»; Кис — «Нер» в подписи по 1Пар 8:33', () => {
+    expect(base.unions.find((u) => u.id === 'u-onan--famar')!.terms.map((t) => t.word)).toEqual(['как деверь']);
+    expect(base.readings.find((r) => r.id === 'r-father-kis-nir')!.readings[1].label).toMatch(/^Нер \(1Пар 8:33; 9:39\)/);
+  });
+  it('Адам, Ева, Мелхиседек — «Писание говорит» о родителях; прежних видов stated-absent и not-applicable нет', () => {
+    const says = (id: string) => base.nodata.filter((n) => n.actor === id && n.sec === 6 && n.kind === 'scripture-says').map((n) => n.refs);
+    expect([says('p-adam'), says('p-eva'), says('p-melkhisedek')]).toEqual([[['Быт 2:7']], [['Быт 2:22']], [['Евр 7:3']]]);
+    expect(base.nodata.filter((n) => n.kind === 'stated-absent' || n.kind === 'not-applicable')).toEqual([]);
   });
 });

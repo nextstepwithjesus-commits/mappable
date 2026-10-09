@@ -63,6 +63,19 @@ describe('перенос в базу', () => {
     const { base } = exact();
     base.epochs[0].keyPersons = ['adam'];
     expect(validate(base).some((i) => i.check === 'номер')).toBe(true);
+    // «Писание говорит» без слов стиха, слова не из стиха и прежний вид not-applicable ловит проверка базы (07 § 8.2)
+    const { base: b3 } = exact();
+    b3.nodata.push(
+      { actor: 'p-adam', sec: 6, kind: 'scripture-says', refs: ['Быт 2:7'] },
+      { actor: 'p-eva', sec: 6, kind: 'scripture-says', refs: ['Быт 2:22'], words: [{ text: 'создал Господь Бог из ребра Адама', ref: 'Быт 2:22' }] },
+      { actor: 'p-melkhisedek', sec: 6, kind: 'not-applicable', refs: ['Евр 7:3'] },
+    );
+    const bad = validate(b3).filter((i) => i.level === 'error' && i.where.startsWith('нет сведений'));
+    expect(bad.map((i) => [i.check, i.where])).toEqual([
+      ['нет сведений', 'нет сведений p-adam § 6'],
+      ['цитата', 'нет сведений p-eva § 6'],
+      ['нет сведений', 'нет сведений p-melkhisedek § 6'],
+    ]);
     // шаг, вышедший за свою область, ловит сверка шагов
     const { base: b2, hints: h2 } = exact();
     const sneaky: Step = {

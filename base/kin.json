@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data",
-   "commit": "9f02531"
+   "commit": "536040b"
   }
  },
  "items": [
@@ -1137,6 +1137,17 @@
     "1Пар 7:15"
    ],
    "cert": "interpretation"
+  },
+  {
+   "from": "p-sedekiya",
+   "to": "p-iekhoniya",
+   "rel": "брат его",
+   "refs": [
+    "2Пар 36:10"
+   ],
+   "prov": {
+    "by": "исправление C21"
+   }
   }
  ]
 }

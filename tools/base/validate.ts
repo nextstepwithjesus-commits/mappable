@@ -11,6 +11,7 @@ import { join } from 'node:path';
 import { loadBible } from '../bible.ts';
 import { parseRef, verseId } from '../../src/engine/books.ts';
 import { norm, nameMatcher } from '../../src/engine/text.ts';
+import { scriptureText } from './brackets.ts';
 import type { Base } from './migrate.ts';
 import type { Actor, Cert } from './types.ts';
 
@@ -71,32 +72,16 @@ export function validate(base: Base): Issue[] {
     verseCache.set(ref, out);
     return out;
   };
-  // основной текст стиха: вставки в скобках убираются с учётом скобок, которые тянутся через несколько стихов
-  // (Нав 24:34–36; Суд 20:27–28; Пс 67:23–24; Притч 4:28–29); незакрытая скобка закрывается в конце главы (Притч 29:6)
-  const main = new Map<string, string>();
-  {
-    let depth = 0;
-    let chapter = '';
-    for (const key of bible.order) {
-      const ch = key.slice(0, key.indexOf(':'));
-      if (ch !== chapter) {
-        chapter = ch;
-        depth = 0;
-      }
-      let out = '';
-      for (const c of bible.verses.get(key)!) {
-        if (c === '[') depth++;
-        else if (c === ']') depth = Math.max(0, depth - 1);
-        else if (!depth) out += c;
-      }
-      main.set(key, out);
-    }
-  }
+  // текст стиха, на который можно опираться (02 § 3.8; решение совета R10): слова вне скобок — квадратных и круглых —
+  // и слова проверенных вручную пояснений самого текста и повреждений (tools/bible/brackets.tsv); по каждому стиху
+  // отдельно, до склейки — отрезки через несколько стихов (Суд 20:27–28; Притч 29:6–27) делятся по стихам таблицей
   const mainTexts = (where: string, ref: string): string[] => {
     if (!texts(where, ref)) return [];
     const p = parseRef(ref, bible.chapterLength)!;
-    return p.verses.map((v) => main.get(verseId(v)) ?? '');
+    return p.verses.map((v) => scriptureText(v.book, v.chapter, v.verse) ?? '');
   };
+  /** Текст для сравнения цитат: без знаков препинания и кавычек, пробелы схлопнуты. */
+  const clean = (t: string) => norm(t).replace(/[«»"„“”'’`.,;:!?()\-–—…]/g, ' ').replace(/\s+/g, ' ').trim();
   const verseCount = (ref: string) => parseRef(ref, bible.chapterLength)?.verses.length ?? 0;
 
   /** Обход записи: каждая ссылка и каждая степень достоверности; «вывод» — не меньше двух стихов. */
@@ -154,7 +139,7 @@ export function validate(base: Base): Issue[] {
     if (!u.terms.length) err('союз', u.id, 'союз без обозначения');
     for (const t of u.terms) {
       if (!t.refs.length) err('стих', u.id, `обозначение «${t.word ?? t.kind}» без стиха`);
-      if (t.word && !({ marriage: ['жена', 'муж'], concubine: ['наложница'] } as Record<string, string[]>)[t.kind]?.includes(t.word)) err('союз', u.id, `слово «${t.word}» не подходит к виду «${t.kind}»`);
+      if (t.word && !({ marriage: ['жена', 'муж', 'как деверь'], concubine: ['наложница'] } as Record<string, string[]>)[t.kind]?.includes(t.word)) err('союз', u.id, `слово «${t.word}» не подходит к виду «${t.kind}»`);
       walk(u.id, t);
     }
     if (actors.get(u.husband)?.sex === 'f' || actors.get(u.wife)?.sex === 'm') err('пол', u.id, 'муж и жена перепутаны');
@@ -174,6 +159,8 @@ export function validate(base: Base): Issue[] {
     walk(w, o);
     const ps = o.parent ? actors.get(o.parent)?.sex : undefined;
     if (ps && ps !== (o.role === 'father' ? 'm' : 'f')) err('пол', w, `${o.role === 'father' ? 'отец' : 'мать'} другого пола`);
+    for (const id of o.skipped?.actors ?? []) has('целостность', `${w}, пропущенные`, id);
+    if (o.skipped && (!o.gap || !o.skipped.refs.length)) err('пропуск', w, 'перечень пропущенных — только у ребра со знаком пропуска и со стихами, где они названы');
     if (o.reading) {
       const set = readings.get(o.reading.set);
       if (!set) err('прочтения', w, `нет набора «${o.reading.set}»`);
@@ -201,7 +188,19 @@ export function validate(base: Base): Issue[] {
     for (const k of ['offset', 'notAfter', 'notBefore']) has('целостность', `время ${c.actor}`, ch.born?.[k]?.from);
     for (const r of ch.reign ?? []) for (const s of r.sync ?? []) has('целостность', `время ${c.actor}`, s.with);
   }
-  for (const n of base.nodata) has('целостность', `нет сведений ${n.actor}`, n.actor);
+  for (const n of base.nodata) {
+    const w = `нет сведений ${n.actor} § ${n.sec}`;
+    has('целостность', w, n.actor);
+    walk(w, n);
+    // прежние виды заменены нейтральным scripture-says (07 § 8.2; шаг C31)
+    if (n.kind === 'stated-absent' || n.kind === 'not-applicable') err('нет сведений', w, `вид «${n.kind}» заменён на «scripture-says» со словами стиха`);
+    if (n.kind === 'scripture-says') {
+      if (!n.refs.length || !n.words?.length) err('нет сведений', w, '«Писание говорит» — только со стихами и словами стиха');
+      for (const x of n.words ?? []) {
+        if (!clean(mainTexts(w, x.ref).join(' ')).includes(clean(x.text))) err('цитата', w, `слов «${x.text.slice(0, 50)}» нет в основном тексте ${x.ref}`);
+      }
+    }
+  }
   for (const e of base.epochs) {
     for (const r of [e.startRule, e.endRule]) has('целостность', `эпоха ${e.id}`, r?.person);
     walk(`эпоха ${e.id}`, e);
@@ -262,7 +261,6 @@ export function validate(base: Base): Issue[] {
   }
 
   // ---------- дословность цитат: изречения (§ 18) — точно по основному тексту, без вставок в скобках ----------
-  const clean = (t: string) => norm(t).replace(/[«»"„“”'’`.,;:!?()\-–—…]/g, ' ').replace(/\s+/g, ' ').trim();
   for (const a of actors.values()) {
     for (const f of a.facts) {
       if (f.field !== 'sayings' || f.prov?.status === 'quarantine') continue;
@@ -392,7 +390,7 @@ export function validate(base: Base): Issue[] {
 
   // ---------- союз родителей: у ребёнка с отцом и матерью есть союз; исключение — «не от союза» (02, § 3.5) ----------
   const unionPairs = new Set(base.unions.map((u) => `${u.husband}|${u.wife}`));
-  const notFromUnion = new Set(base.nodata.filter((n) => n.kind === 'not-applicable' && n.what === 'отец по плоти').map((n) => n.actor));
+  const notFromUnion = new Set(base.nodata.filter((n) => n.kind === 'scripture-says' && n.what === 'отец по плоти').map((n) => n.actor));
   const prim = new Map<string, { f?: string; m?: string; legal?: boolean }>();
   for (const o of base.origins) {
     if (!o.primary || !o.parent) continue;

@@ -45,6 +45,7 @@ export function buildIndex(base: Base) {
       c: short(o.child), ...(o.parent ? { p: short(o.parent) } : { u: o.unnamedParent?.words }), r: o.role === 'father' ? 'f' : 'm',
       k: o.kind, ...(o.primary && { pr: 1 }), ...(o.gap && { g: 1 }), ...(o.gapPossible && { gv: o.gapPossible.via.map(short) }),
       ...(o.reading && { rs: o.reading.set, ri: o.reading.in }), ...(o.cert !== 'scripture' && { ce: o.cert }), ...(o.order !== undefined && { or: o.order }),
+      ...(o.skipped && { sk: o.skipped.actors.map(short) }), ...(o.outsideLists && { ol: 1 }),
     })),
     unions: base.unions.map((u) => ({ h: short(u.husband), w: short(u.wife), k: [...new Set(u.terms.map((t) => t.kind))] })),
     kin: base.kin.filter((k) => ok(k.prov)).map((k) => ({ f: short(k.from), t: short(k.to), r: k.rel })),
@@ -97,7 +98,7 @@ function main() {
       });
       cite(facts);
       cite(a.names);
-      const nod = base.nodata.filter((n) => n.actor === a.id).map((n) => ({ s: n.sec, k: n.kind, ...(n.what && { w: n.what }), ...(n.refs.length && { r: n.refs }) }));
+      const nod = base.nodata.filter((n) => n.actor === a.id).map((n) => ({ s: n.sec, k: n.kind, ...(n.what && { w: n.what }), ...(n.refs.length && { r: n.refs }), ...(n.words && { q: n.words }) }));
       cards[a.id.slice(2)] = { f: facts.map((f) => ({ s: f.sec, f: f.field, v: f.value, ...(f.cert && { c: f.cert }) })), ...(nod.length && { nd: nod }) };
     }
     write(`cards/${v.file}`, cards);

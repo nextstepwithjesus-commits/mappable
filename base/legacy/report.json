@@ -1,7 +1,7 @@
 {
  "schema": 1,
  "title": "Отчёт переноса: отличия обратной проекции от прежних данных и исправления, которые их объясняют",
- "commit": "9f02531",
+ "commit": "536040b",
  "exact": "точный перенос совпал с прежними данными без отличий",
  "note": "steps — ключи записей, изменённые каждым шагом исправления (все в объявленной области шага); projection — отличия прежнего вида по лицам и полям",
  "steps": {
@@ -1084,6 +1084,98 @@
    "origin:p-fedaiya-syn-parosha|p-parosh|father|p",
    "origin:p-sadok-syn-immera|p-immer|father|p"
   ],
+  "C13": [
+   "volume:18-tribal-leaders.json",
+   "actor:p-mat-khulitelya.kind",
+   "actor:p-mat-khulitelya.names",
+   "actor:p-mat-khulitelya.disambig",
+   "actor:p-mat-khulitelya.facts.lineage",
+   "actor:p-mat-khulitelya.facts.notes",
+   "actor:p-davriin.id",
+   "actor:p-davriin.kind",
+   "actor:p-davriin.sex",
+   "actor:p-davriin.names",
+   "actor:p-davriin.disambig",
+   "actor:p-davriin.prov",
+   "actor:p-davriin.facts.childrenNote",
+   "actor:p-davriin.facts.scripture",
+   "origin:p-mat-khulitelya|p-davriin|father|p",
+   "membership:p-mat-khulitelya|g-dan"
+  ],
+  "C14": [
+   "actor:p-finees.facts.events",
+   "actor:p-finees.facts.notes"
+  ],
+  "C15": [
+   "actor:p-iarkha.facts.notes",
+   "actor:p-gedeon.facts.events",
+   "actor:p-gedeon.facts.notes",
+   "actor:p-samson.facts.events",
+   "actor:p-samson.facts.notes",
+   "actor:p-ioann-mark.facts.events",
+   "actor:p-ioann-mark.facts.notes",
+   "actor:p-eldad.facts.status",
+   "actor:p-eldad.facts.notes",
+   "actor:p-modad.facts.status",
+   "actor:p-modad.facts.notes"
+  ],
+  "C16": [
+   "actor:p-ioann-mark.facts.places"
+  ],
+  "C17": [
+   "actor:p-sarra.facts.withGod",
+   "actor:p-isaak.facts.birth"
+  ],
+  "C18": [
+   "actor:p-khalev-syn-esroma.facts.notes",
+   "origin:p-akhsa|p-khalev|father|p"
+  ],
+  "C19": [
+   "origin:p-lavan|p-nakhor-syn-farry|father|o"
+  ],
+  "C20": [
+   "origin:p-bogan|p-ruvim|father|p"
+  ],
+  "C21": [
+   "actor:p-sedekiya.facts.notes",
+   "actor:p-sedekiya-syn-ioakima.facts.notes",
+   "kin:p-sedekiya|p-iekhoniya|брат его"
+  ],
+  "C22": [
+   "actor:p-valtasar-tsar.facts.notes",
+   "origin:p-valtasar-tsar|p-navukhodonosor|father|p",
+   "origin:p-valtasar-tsar|p-navukhodonosor|father|o"
+  ],
+  "C23": [
+   "origin:p-oziya|p-ioram-syn-iosafata|father|o"
+  ],
+  "C24": [
+   "origin:p-azariya-1par6-10|p-meraiof|father|o"
+  ],
+  "C25": [
+   "union:u-onan--famar"
+  ],
+  "C26": [
+   "reading:r-father-kis-nir"
+  ],
+  "C27": [
+   "actor:p-simon-zilot.facts.events"
+  ],
+  "C28": [
+   "actor:p-kelaiya.facts.events"
+  ],
+  "C29": [
+   "actor:p-ila-syn-vaasy.facts.events"
+  ],
+  "C30": [
+   "nodata:p-adam|6|scripture-says",
+   "nodata:p-eva|6|scripture-says",
+   "nodata:p-melkhisedek|6|scripture-says"
+  ],
+  "C31": [
+   "nodata:p-iisus|6|not-applicable",
+   "nodata:p-iisus|6|scripture-says"
+  ],
   "A1": [
    "union:u-avraam--khettura",
    "volume:90-additions-d1.json",
@@ -2002,7 +2094,8 @@
    "id": "lavan",
    "fields": [
     "card.original",
-    "card.meaning"
+    "card.meaning",
+    "otherParents"
    ]
   },
   {
@@ -2053,7 +2146,8 @@
    "id": "sarra",
    "fields": [
     "card.original",
-    "card.meaning"
+    "card.meaning",
+    "card.withGod"
    ]
   },
   {
@@ -2159,7 +2253,8 @@
    "id": "isaak",
    "fields": [
     "card.original",
-    "card.meaning"
+    "card.meaning",
+    "card.birth"
    ]
   },
   {
@@ -3464,6 +3559,13 @@
   },
   {
    "what": "лицо",
+   "id": "khalev-syn-esroma",
+   "fields": [
+    "card.notes"
+   ]
+  },
+  {
+   "what": "лицо",
    "id": "iair-syn-seguva",
    "fields": [
     "fatherGap"
@@ -3577,6 +3679,13 @@
   },
   {
    "what": "лицо",
+   "id": "iarkha",
+   "fields": [
+    "card.notes"
+   ]
+  },
+  {
+   "what": "лицо",
    "id": "khur",
    "fields": [
     "card.original"
@@ -3610,6 +3719,13 @@
    "id": "gofoniil",
    "fields": [
     "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "akhsa",
+   "fields": [
+    "parentRefs"
    ]
   },
   {
@@ -3875,7 +3991,9 @@
    "what": "лицо",
    "id": "finees",
    "fields": [
-    "card.original"
+    "card.original",
+    "card.events",
+    "card.notes"
    ]
   },
   {
@@ -3890,6 +4008,13 @@
    "id": "akhimaas-syn-sadoka",
    "fields": [
     "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "azariya-1par6-10",
+   "fields": [
+    "otherParents"
    ]
   },
   {
@@ -4171,6 +4296,13 @@
    "id": "uriya-syn-gakkotsa",
    "fields": [
     "fatherGap"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "kelaiya",
+   "fields": [
+    "card.events"
    ]
   },
   {
@@ -4693,7 +4825,9 @@
    "id": "gedeon",
    "fields": [
     "card.original",
-    "card.meaning"
+    "card.meaning",
+    "card.events",
+    "card.notes"
    ]
   },
   {
@@ -4810,7 +4944,9 @@
    "id": "samson",
    "fields": [
     "card.original",
-    "card.meaning"
+    "card.meaning",
+    "card.events",
+    "card.notes"
    ]
   },
   {
@@ -5175,7 +5311,8 @@
    "what": "лицо",
    "id": "oziya",
    "fields": [
-    "card.original"
+    "card.original",
+    "otherParents"
    ]
   },
   {
@@ -5247,8 +5384,17 @@
    "what": "лицо",
    "id": "sedekiya",
    "fields": [
+    "kin",
     "card.original",
-    "card.meaning"
+    "card.meaning",
+    "card.notes"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "sedekiya-syn-ioakima",
+   "fields": [
+    "card.notes"
    ]
   },
   {
@@ -5325,7 +5471,8 @@
    "what": "лицо",
    "id": "ila-syn-vaasy",
    "fields": [
-    "card.original"
+    "card.original",
+    "card.events"
    ]
   },
   {
@@ -5759,8 +5906,13 @@
    "what": "лицо",
    "id": "valtasar-tsar",
    "fields": [
+    "father",
+    "parentRefs",
+    "parentCert",
     "fatherGap",
-    "card.original"
+    "card.original",
+    "card.notes",
+    "otherParents"
    ]
   },
   {
@@ -6149,7 +6301,8 @@
    "what": "лицо",
    "id": "simon-zilot",
    "fields": [
-    "card.original"
+    "card.original",
+    "card.events"
    ]
   },
   {
@@ -6353,7 +6506,10 @@
    "what": "лицо",
    "id": "ioann-mark",
    "fields": [
-    "card.original"
+    "card.original",
+    "card.places",
+    "card.events",
+    "card.notes"
    ]
   },
   {
@@ -6838,14 +6994,18 @@
    "what": "лицо",
    "id": "eldad",
    "fields": [
-    "card.original"
+    "card.original",
+    "card.status",
+    "card.notes"
    ]
   },
   {
    "what": "лицо",
    "id": "modad",
    "fields": [
-    "card.original"
+    "card.original",
+    "card.status",
+    "card.notes"
    ]
   },
   {
@@ -6892,6 +7052,19 @@
    "id": "bogan",
    "fields": [
     "fatherGap"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "mat-khulitelya",
+   "fields": [
+    "name",
+    "disambig",
+    "unnamed",
+    "card.lineage",
+    "card.notes",
+    "father",
+    "parentRefs"
    ]
   },
   {
@@ -7008,6 +7181,10 @@
   },
   {
    "what": "лицо (лишнее)",
+   "id": "davriin"
+  },
+  {
+   "what": "лицо (лишнее)",
    "id": "zhena-kaina"
   },
   {
@@ -7021,6 +7198,10 @@
   {
    "what": "лицо (лишнее)",
    "id": "samaryanin-iz-desyati-prokazhennykh"
+  },
+  {
+   "what": "том",
+   "id": "18"
   },
   {
    "what": "линия",

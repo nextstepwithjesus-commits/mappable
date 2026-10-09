@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data",
-   "commit": "9f02531"
+   "commit": "536040b"
   }
  },
  "items": [
@@ -8848,8 +8848,7 @@
    "kind": "natural",
    "refs": [
     "Нав 15:16",
-    "Суд 1:12",
-    "1Пар 2:49"
+    "Суд 1:12"
    ],
    "cert": "scripture",
    "primary": true,
@@ -11988,7 +11987,8 @@
    "role": "father",
    "kind": "ancestor",
    "refs": [
-    "Езд 7:3"
+    "Езд 7:3",
+    "1Пар 6:7-10"
    ],
    "cert": "inference",
    "primary": false,
@@ -11997,6 +11997,20 @@
     "from": {
      "vol": "08-levi.json"
     }
+   },
+   "gap": true,
+   "skipped": {
+    "actors": [
+     "p-amariya-1par6-7",
+     "p-akhitov-1par6-7",
+     "p-sadok",
+     "p-akhimaas-syn-sadoka",
+     "p-azariya-1par6-9",
+     "p-ioanan-syn-azarii"
+    ],
+    "refs": [
+     "1Пар 6:7-10"
+    ]
    }
   },
   {
@@ -29332,21 +29346,44 @@
    "child": "p-valtasar-tsar",
    "parent": "p-navukhodonosor",
    "role": "father",
-   "kind": "natural",
+   "kind": "ancestor",
    "refs": [
     "Дан 5:2",
     "Дан 5:11",
+    "Дан 5:13",
     "Дан 5:18",
     "Дан 5:22"
    ],
-   "cert": "interpretation",
-   "primary": true,
+   "cert": "scripture",
+   "primary": false,
    "prov": {
     "from": {
      "vol": "15-prophets-exile.json"
     }
    },
-   "gapSuspected": "составитель прежних данных предполагал пропуск поколений; ни одно место текста пропущенных не называет — толкование или хронологическое напряжение (документ 04)"
+   "words": [
+    {
+     "text": "Навуходоносор, отец его",
+     "ref": "Дан 5:2"
+    },
+    {
+     "text": "царь Навуходоносор, отец твой",
+     "ref": "Дан 5:11"
+    },
+    {
+     "text": "отец мой, царь",
+     "ref": "Дан 5:13"
+    },
+    {
+     "text": "отцу твоему Навуходоносору",
+     "ref": "Дан 5:18"
+    },
+    {
+     "text": "ты, сын его Валтасар",
+     "ref": "Дан 5:22"
+    }
+   ],
+   "note": "Слово «отец» — Писание; смысл слова (отец, предшественник на престоле, предок) — толкование, в Карточке"
   },
   {
    "child": "p-amoriya-praded-sofonii",
@@ -31986,7 +32023,25 @@
      "vol": "18-tribal-leaders.json"
     }
    },
-   "gapSuspected": "составитель прежних данных предполагал пропуск поколений; ни одно место текста пропущенных не называет — толкование или хронологическое напряжение (документ 04)"
+   "gapSuspected": "составитель прежних данных предполагал пропуск поколений; ни одно место текста пропущенных не называет — толкование или хронологическое напряжение (документ 04)",
+   "outsideLists": {
+    "refs": [
+     "Быт 46:9",
+     "Исх 6:14",
+     "Чис 26:5-6",
+     "1Пар 5:3"
+    ]
+   },
+   "words": [
+    {
+     "text": "камня Богана, сына Рувимова",
+     "ref": "Нав 15:6"
+    },
+    {
+     "text": "камню Богана, сына Рувимова",
+     "ref": "Нав 18:17"
+    }
+   ]
   },
   {
    "child": "p-syn-izrailtyanki-khulitel",
@@ -37917,6 +37972,80 @@
     "from": {
      "vol": "20-return-lists.json"
     }
+   }
+  },
+  {
+   "child": "p-mat-khulitelya",
+   "parent": "p-davriin",
+   "role": "father",
+   "kind": "natural",
+   "refs": [
+    "Лев 24:11"
+   ],
+   "cert": "scripture",
+   "primary": true,
+   "prov": {
+    "by": "исправление C13"
+   }
+  },
+  {
+   "child": "p-lavan",
+   "parent": "p-nakhor-syn-farry",
+   "role": "father",
+   "kind": "ancestor",
+   "refs": [
+    "Быт 29:5"
+   ],
+   "cert": "scripture",
+   "primary": false,
+   "words": [
+    {
+     "text": "Лавана, сына Нахорова",
+     "ref": "Быт 29:5"
+    }
+   ],
+   "note": "Слово «сын» — Писание (Быт 29:5); смысл «внук» — вывод: Лаван — сын Вафуила (Быт 28:5), Вафуил — сын Нахора (Быт 22:20–23; 24:15, 24)",
+   "prov": {
+    "by": "исправление C19"
+   }
+  },
+  {
+   "child": "p-oziya",
+   "parent": "p-ioram-syn-iosafata",
+   "role": "father",
+   "kind": "ancestor",
+   "primary": false,
+   "gap": true,
+   "cert": "inference",
+   "refs": [
+    "Мф 1:8",
+    "4Цар 8:24",
+    "4Цар 11:2",
+    "4Цар 14:1",
+    "1Пар 3:11-12"
+   ],
+   "words": [
+    {
+     "text": "Иорам родил Озию",
+     "ref": "Мф 1:8"
+    }
+   ],
+   "skipped": {
+    "actors": [
+     "p-okhoziya-syn-iorama",
+     "p-ioas-syn-okhozii",
+     "p-amasiya"
+    ],
+    "refs": [
+     "4Цар 8:24",
+     "4Цар 11:2",
+     "4Цар 14:1",
+     "1Пар 3:11-12"
+    ]
+   },
+   "note": "У Матфея опущены Охозия, Иоас и Амасия; их называют 4 Цар 8:24 – 14:1 и 1 Пар 3:11–12",
+   "prov": {
+    "by": "исправление C23"
    }
   },
   {

@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data",
-   "commit": "9f02531"
+   "commit": "536040b"
   }
  },
  "items": [
@@ -29533,6 +29533,17 @@
     "from": {
      "vol": "20-return-lists.json"
     }
+   }
+  },
+  {
+   "actor": "p-mat-khulitelya",
+   "area": "g-dan",
+   "basis": "named",
+   "refs": [
+    "Лев 24:11"
+   ],
+   "prov": {
+    "by": "исправление C13"
    }
   },
   {
