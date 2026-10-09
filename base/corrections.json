@@ -1,0 +1,204 @@
+{
+ "schema": 1,
+ "title": "Исправления при переносе",
+ "prov": {
+  "by": "перенос Д1 (координатор)",
+  "at": "2026-10-09",
+  "status": "draft",
+  "from": {
+   "vol": "data",
+   "commit": "deb7299"
+  }
+ },
+ "items": [
+  {
+   "id": "C1",
+   "what": "Лк 3:23: набор прочтений r-lk3-23; Илий переименован (iliy-otets-marii → iliy-syn-matfata) с нейтральным уточнением; Мария ← Илий — дополнительное происхождение по толкованию; убрана связь «зять», которой нет в стихе",
+   "why": "Прежние данные делали Илия одновременно отцом Иосифа (Лк 3:23) и отцом Марии (толкование) — Иосиф и Мария выходили братом и сестрой (рецензия библеиста, 02 Б1)",
+   "refs": [
+    "Лк 3:23",
+    "Мф 1:16"
+   ],
+   "actors": [
+    "iliy-otets-marii",
+    "mariya",
+    "iosif-muzh-marii"
+   ]
+  },
+  {
+   "id": "C2",
+   "what": "Ефрем и Манассия: ребро «приёмный отец Иаков» заменено утверждением со словами Быт 48:5–6",
+   "why": "Слова «мои они» — о наследстве и уделе (48:6); ребро делало Ефрема сыном Иакова и братом собственного отца (02, § 3.6)",
+   "refs": [
+    "Быт 48:5-6"
+   ],
+   "actors": [
+    "efrem",
+    "manassiya"
+   ]
+  },
+  {
+   "id": "C3",
+   "what": "Иисус Христос ← Иосиф: законное, «толк.», со словами текста (Мф 1:16; Лк 2:41, 48; 3:23) и примечанием Мф 1:20; мать — Мария, «Писание»",
+   "why": "Модель «Бог и человек» (02, § 3.5): отца по плоти нет; «отец по закону» — толкование",
+   "refs": [
+    "Мф 1:16",
+    "Мф 1:20",
+    "Лк 2:41",
+    "Лк 2:48",
+    "Лк 3:23"
+   ],
+   "actors": [
+    "iisus"
+   ]
+  },
+  {
+   "id": "C4",
+   "what": "Значение имени без стиха (107): «толк.» → «справочно», статус «карантин» до указания источника",
+   "why": "Значение имени, которого не даёт само Писание, — справочное сведение и требует источника (02, § 3.1, § 7)",
+   "refs": [],
+   "actors": [
+    "ada-zhena-lamekha",
+    "tsilla",
+    "noema",
+    "avel",
+    "enos",
+    "maleleil",
+    "iared",
+    "enokh",
+    "mafusal",
+    "sim",
+    "kham",
+    "ever",
+    "lot",
+    "moav",
+    "ben-ammi",
+    "milka",
+    "lavan",
+    "sarra",
+    "rakhil",
+    "emima",
+    "kassiya",
+    "kerengappukh",
+    "dina",
+    "veniamin",
+    "famar",
+    "raav",
+    "vooz",
+    "elimelekh",
+    "ovid",
+    "ioav",
+    "veseleil-syn-uriya",
+    "iisus-navin",
+    "aviil",
+    "avenir",
+    "saul",
+    "ionafan",
+    "ievosfey",
+    "agoliav",
+    "devora",
+    "varak",
+    "iail",
+    "gedeon",
+    "avimelekh-syn-gedeona",
+    "iofam-syn-gedeona",
+    "ieffay",
+    "manoy",
+    "samson",
+    "david",
+    "avigeya",
+    "uriya",
+    "virsaviya",
+    "avessalom",
+    "adoniya",
+    "nafan-syn-davida",
+    "famar-doch-davida",
+    "naama",
+    "nafan-prorok",
+    "rovoam",
+    "iosafat",
+    "ezekiya",
+    "iosiya",
+    "sedekiya",
+    "akhav",
+    "iiuy",
+    "menaim",
+    "azail",
+    "iliya",
+    "elisey",
+    "isaiya",
+    "osiya-prorok",
+    "iona",
+    "ioil-syn-vafuila",
+    "ieremiya",
+    "varukh",
+    "iezekiil",
+    "daniil",
+    "sofoniya-prorok",
+    "avdiy-prorok",
+    "naum-prorok",
+    "zakhariya-syn-varakhii",
+    "malakhiya",
+    "neemiya",
+    "salafiil",
+    "zorovavel",
+    "risay",
+    "iosif-muzh-marii",
+    "zakhariya-svyashchennik",
+    "elisaveta",
+    "ioann-krestitel",
+    "andrey",
+    "ioann-apostol",
+    "filipp-apostol",
+    "varfolomey",
+    "nafanail",
+    "matfey",
+    "iuda-iskariot",
+    "lazar",
+    "marfa",
+    "mariya-magdalina",
+    "nikodim",
+    "feliks",
+    "pavel",
+    "timofey",
+    "akila",
+    "vartimey",
+    "arba",
+    "pakhaf-moav"
+   ]
+  },
+  {
+   "id": "C5",
+   "what": "Арфаксад → Сала: возможный пропуск поколения (Лк 3:36); Каинан остаётся по Луке",
+   "why": "Каинан есть в основном тексте Лк 3:36, в Быт 11:12 — только в скобках: это пропуск, а не иное прочтение (02, § 3.4)",
+   "refs": [
+    "Лк 3:36",
+    "Быт 11:12"
+   ],
+   "actors": []
+  },
+  {
+   "id": "C6",
+   "what": "Наборы прочтений r-shealtiel и r-zerubbabel; рёбра отцов Салафиила и Зоровавеля помечены прочтениями",
+   "why": "Два отца одного лица по разным местам основного текста не складываются в схемах и расчёте (02, § 3.4)",
+   "refs": [
+    "Мф 1:12",
+    "Лк 3:27",
+    "1Пар 3:17-19"
+   ],
+   "actors": []
+  },
+  {
+   "id": "C7",
+   "what": "Линия по Луке кончается Иосифом (Лк 3:23), шаг «Мария» убран; подзаголовок и основание без «Илий — отец Марии» как факта",
+   "why": "Линия по букве текста; толкование — в наборе прочтений (02, § 3.4; рецензия библеиста Б1)",
+   "refs": [
+    "Лк 3:23"
+   ],
+   "actors": [],
+   "other": [
+    "line:mary"
+   ]
+  }
+ ]
+}

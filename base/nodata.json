@@ -1,0 +1,6789 @@
+{
+ "schema": 1,
+ "title": "Нет сведений",
+ "prov": {
+  "by": "перенос Д1 (координатор)",
+  "at": "2026-10-09",
+  "status": "draft",
+  "from": {
+   "vol": "data",
+   "commit": "deb7299"
+  }
+ },
+ "items": [
+  {
+   "actor": "p-adam",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-adam",
+   "sec": 7,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-adam",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-adam",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-eva",
+   "sec": 7,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-eva",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-eva",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-eva",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-eva",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-kain",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-kain",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-kain",
+   "sec": 13,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-kain",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-lamekh-kainit",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-lamekh-kainit",
+   "sec": 5,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-lamekh-kainit",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-lamekh-kainit",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-lamekh-kainit",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-lamekh-kainit",
+   "sec": 13,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-lamekh-kainit",
+   "sec": 15,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-lamekh-kainit",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-lamekh-kainit",
+   "sec": 19,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-lamekh-kainit",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-lamekh-kainit",
+   "sec": 22,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-avel",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-avel",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-avel",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-avel",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-avel",
+   "sec": 13,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-avel",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-sif",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-sif",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-sif",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-sif",
+   "sec": 15,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-sif",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-sif",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-sif",
+   "sec": 19,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-enos",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-enos",
+   "sec": 5,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-enos",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-enos",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-enos",
+   "sec": 15,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-enos",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-enos",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-enokh",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-enokh",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-enokh",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-enokh",
+   "sec": 15,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mafusal",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mafusal",
+   "sec": 5,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mafusal",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mafusal",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mafusal",
+   "sec": 15,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mafusal",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mafusal",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mafusal",
+   "sec": 19,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-lamekh",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-lamekh",
+   "sec": 5,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-lamekh",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-lamekh",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-lamekh",
+   "sec": 15,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-lamekh",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-lamekh",
+   "sec": 19,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-noy",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-noy",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-sim",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-sim",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-sim",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-sim",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-kham",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-kham",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-kham",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-kham",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-kham",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iafet",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iafet",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iafet",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iafet",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iafet",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khanaan",
+   "sec": 3,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khanaan",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khanaan",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khanaan",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khanaan",
+   "sec": 14,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khanaan",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khanaan",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khanaan",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-nimrod",
+   "sec": 3,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-nimrod",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-nimrod",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-nimrod",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-nimrod",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-nimrod",
+   "sec": 14,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-nimrod",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-nimrod",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ever",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ever",
+   "sec": 14,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ever",
+   "sec": 15,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ever",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ever",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ever",
+   "sec": 19,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-farra",
+   "sec": 14,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-farra",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-farra",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-nakhor-syn-farry",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-nakhor-syn-farry",
+   "sec": 14,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-nakhor-syn-farry",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-nakhor-syn-farry",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-nakhor-syn-farry",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-lot",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-lot",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zhena-lota",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zhena-lota",
+   "sec": 7,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zhena-lota",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zhena-lota",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zhena-lota",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zhena-lota",
+   "sec": 19,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-starshaya-doch-lota",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-starshaya-doch-lota",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-starshaya-doch-lota",
+   "sec": 19,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-starshaya-doch-lota",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mladshaya-doch-lota",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mladshaya-doch-lota",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mladshaya-doch-lota",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mladshaya-doch-lota",
+   "sec": 19,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mladshaya-doch-lota",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-moav",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-moav",
+   "sec": 14,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-moav",
+   "sec": 15,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-moav",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-moav",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-moav",
+   "sec": 19,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-moav",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ben-ammi",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ben-ammi",
+   "sec": 14,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ben-ammi",
+   "sec": 15,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ben-ammi",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ben-ammi",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ben-ammi",
+   "sec": 19,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ben-ammi",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-lavan",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-lavan",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-lavan",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-sarra",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-agar",
+   "sec": 3,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-agar",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-agar",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-agar",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-agar",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-agar",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-agar",
+   "sec": 21,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-izmail",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-izmail",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-izmail",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-izmail",
+   "sec": 21,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-isaak",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-revekka",
+   "sec": 3,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-revekka",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-revekka",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-revekka",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-liya",
+   "sec": 3,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-liya",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-liya",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-liya",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-rakhil",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-rakhil",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-rakhil",
+   "sec": 21,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-valla",
+   "sec": 3,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-valla",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-valla",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-valla",
+   "sec": 7,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-valla",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-valla",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-valla",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-valla",
+   "sec": 15,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-valla",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-valla",
+   "sec": 19,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-valla",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-valla",
+   "sec": 21,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zelfa",
+   "sec": 3,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zelfa",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zelfa",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zelfa",
+   "sec": 7,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zelfa",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zelfa",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zelfa",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zelfa",
+   "sec": 15,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zelfa",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zelfa",
+   "sec": 19,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zelfa",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zelfa",
+   "sec": 21,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zelfa",
+   "sec": 22,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khettura",
+   "sec": 3,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khettura",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khettura",
+   "sec": 5,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khettura",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khettura",
+   "sec": 7,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khettura",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khettura",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khettura",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khettura",
+   "sec": 15,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khettura",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khettura",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khettura",
+   "sec": 19,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khettura",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khettura",
+   "sec": 21,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-madian",
+   "sec": 3,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-madian",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-madian",
+   "sec": 7,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-madian",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-madian",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-madian",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-madian",
+   "sec": 19,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-madian",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-madian",
+   "sec": 21,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-melkhisedek",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-melkhisedek",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-melkhisedek",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-melkhisedek",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-melkhisedek",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-melkhisedek",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-isav",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-amalik",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-amalik",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-amalik",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-amalik",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-amalik",
+   "sec": 22,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iov",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iov",
+   "sec": 7,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iov",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-elifaz-femanityanin",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-elifaz-femanityanin",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-vildad",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-vildad",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-sofar",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-sofar",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-eliuy",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ruvim",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ruvim",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ruvim",
+   "sec": 21,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-simeon",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-simeon",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-simeon",
+   "sec": 21,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-leviy",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-leviy",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-leviy",
+   "sec": 21,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iuda",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-dan",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-dan",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-dan",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-dan",
+   "sec": 21,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-neffalim",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-neffalim",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-neffalim",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-neffalim",
+   "sec": 21,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-gad",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-gad",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-gad",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-gad",
+   "sec": 21,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-asir",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-asir",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-asir",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-asir",
+   "sec": 21,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-issakhar",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-issakhar",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-issakhar",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-issakhar",
+   "sec": 21,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zavulon",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zavulon",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zavulon",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zavulon",
+   "sec": 21,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-dina",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-dina",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-dina",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-dina",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-dina",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-dina",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-dina",
+   "sec": 19,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-dina",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-dina",
+   "sec": 21,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-dina",
+   "sec": 22,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iosif",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iosif",
+   "sec": 21,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-veniamin",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-veniamin",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-veniamin",
+   "sec": 21,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-famar",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-famar",
+   "sec": 7,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-famar",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-famar",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-famar",
+   "sec": 19,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-famar",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-fares",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-fares",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-fares",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-fares",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-fares",
+   "sec": 19,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-fares",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-esrom",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-esrom",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-esrom",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-esrom",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-esrom",
+   "sec": 19,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-asenefa",
+   "sec": 3,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-asenefa",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-asenefa",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-asenefa",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-asenefa",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-asenefa",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-asenefa",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-asenefa",
+   "sec": 19,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-asenefa",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-asenefa",
+   "sec": 21,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-asenefa",
+   "sec": 22,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-manassiya",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-manassiya",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-manassiya",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-manassiya",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-manassiya",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-manassiya",
+   "sec": 21,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-efrem",
+   "sec": 4,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-efrem",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-efrem",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-efrem",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-efrem",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-efrem",
+   "sec": 21,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-akhan",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-akhan",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-akhan",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iair-syn-seguva",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iair-syn-seguva",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iair-syn-seguva",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iair-syn-seguva",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iair-syn-seguva",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-naasson",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-naasson",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-naasson",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-raav",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-raav",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-vooz",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-vooz",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-vooz",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-elimelekh",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-elimelekh",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-elimelekh",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-noemin",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-noemin",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-noemin",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-noemin",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-noemin",
+   "sec": 22,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ruf",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ruf",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ruf",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ovid",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ovid",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ovid",
+   "sec": 17,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ovid",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iessey",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iessey",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iessey",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-eliav-syn-iesseya",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-eliav-syn-iesseya",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-eliav-syn-iesseya",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioav",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioav",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioav",
+   "sec": 19,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-avessa",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-avessa",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-avessa",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-avessa",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-asail",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-asail",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-amessay",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-amessay",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-amessay",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ionadav-syn-sammy",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ionadav-syn-sammy",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ionadav-syn-sammy",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ionadav-syn-sammy",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ionadav-syn-sammy",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khur",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khur",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khur",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khur",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-veseleil-syn-uriya",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-veseleil-syn-uriya",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-veseleil-syn-uriya",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-veseleil-syn-uriya",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khalev",
+   "sec": 3,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khalev",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khalev",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-gofoniil",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-gofoniil",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-akhsa",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-akhsa",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-akhsa",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-akhsa",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iavis-1par4-9",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iavis-1par4-9",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iavis-1par4-9",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iavis-1par4-9",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-girson",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-girson",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-girson",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-kaaf",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-kaaf",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-merari",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-merari",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-merari",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-amram",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iokhaveda",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-aaron",
+   "sec": 3,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mariam",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mariam",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-nadav",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-aviud-syn-aarona",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-eleazar",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ifamar",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ifamar",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iofor",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-sepfora",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-korey",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-korey",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-elkana",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-anna-mat-samuila",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-anna-mat-samuila",
+   "sec": 7,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-anna-mat-samuila",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-anna-mat-samuila",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-samuil",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iliy-svyashchennik",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iliy-svyashchennik",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iliy-svyashchennik",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-akhimelekh-syn-akhitova",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-aviafar",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-finees",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-finees",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-finees",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-sadok",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-sadok",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-sadok",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-akhimaas-syn-sadoka",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-akhimaas-syn-sadoka",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-akhimaas-syn-sadoka",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khelkiya-pervosvyashchennik",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khelkiya-pervosvyashchennik",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khelkiya-pervosvyashchennik",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-seraiya-pervosvyashchennik",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-seraiya-pervosvyashchennik",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iisus-syn-iosedeka",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iisus-syn-iosedeka",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iisus-syn-iosedeka",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ezdra",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ezdra",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ezdra",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iodai",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iodai",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zakhariya-syn-iodaya",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zakhariya-syn-iodaya",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zakhariya-syn-iodaya",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-asaf",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-asaf",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-eman",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-eman",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-idifun",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-idifun",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ionafan-syn-girsama",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ionafan-syn-girsama",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ionafan-syn-girsama",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-dafan",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-dafan",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-aviron-syn-eliava",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-aviron-syn-eliava",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zimri-syn-salu",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zimri-syn-salu",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zimri-syn-salu",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-makhir",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-makhir",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-salpaad",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-salpaad",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-salpaad",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iisus-navin",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iisus-navin",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iisus-navin",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iisus-navin",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iisus-navin",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-kis",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-kis",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-kis",
+   "sec": 19,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-avenir",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-avenir",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ritspa",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ritspa",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ritspa",
+   "sec": 19,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ritspa",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-saul",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ionafan",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ionafan",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ievosfey",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ievosfey",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-melkhola",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-melkhola",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-memfivosfey",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-memfivosfey",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-semey-syn-gery",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-semey-syn-gery",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-semey-syn-gery",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-savey",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-savey",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-savey",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-agoliav",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-agoliav",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-agoliav",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-agoliav",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-valaam",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-valaam",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-valaam",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-valaam",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-valak",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-valak",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-valak",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-valak",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-valak",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-aod",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-aod",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-aod",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-aod",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-aod",
+   "sec": 22,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-devora",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-devora",
+   "sec": 7,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-devora",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-devora",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-devora",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-devora",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-devora",
+   "sec": 22,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-varak",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-varak",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-varak",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-varak",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-varak",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iail",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iail",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iail",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-sisara",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-sisara",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-sisara",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-sisara",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-gedeon",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-gedeon",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-avimelekh-syn-gedeona",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-avimelekh-syn-gedeona",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iofam-syn-gedeona",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iofam-syn-gedeona",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iofam-syn-gedeona",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iofam-syn-gedeona",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ieffay",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ieffay",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-doch-ieffaya",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-doch-ieffaya",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-doch-ieffaya",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-manoy",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-manoy",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-manoy",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zhena-manoya",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zhena-manoya",
+   "sec": 7,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-samson",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-dalida",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-dalida",
+   "sec": 7,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-dalida",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-dalida",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-dalida",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mikha-s-gory-efremovoy",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mikha-s-gory-efremovoy",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mikha-s-gory-efremovoy",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-akhinoama",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-akhinoama",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-akhinoama",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-akhinoama",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-naval",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-naval",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-naval",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-avigeya",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-avigeya",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-avigeya",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-akhitofel",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-akhitofel",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-uriya",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-uriya",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-uriya",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-virsaviya",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-virsaviya",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-amnon",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-amnon",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-amnon",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-avessalom",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-adoniya",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-adoniya",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-famar-doch-davida",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-famar-doch-davida",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-famar-doch-davida",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-famar-doch-davida",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khiram-tsar",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khiram-tsar",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khiram-tsar",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khiram-tsar",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-nafan-prorok",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-nafan-prorok",
+   "sec": 7,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-nafan-prorok",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-nafan-prorok",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-nafan-prorok",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-nafan-prorok",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-gad-prozorlivets",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-gad-prozorlivets",
+   "sec": 7,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-gad-prozorlivets",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-gad-prozorlivets",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-gad-prozorlivets",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-gad-prozorlivets",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ankhus",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ankhus",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ankhus",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-maakha-doch-avessaloma",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-maakha-doch-avessaloma",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-aviya",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-asa",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iosafat",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iosafat",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioram-syn-iosafata",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioram-syn-iosafata",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-okhoziya-syn-iorama",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-okhoziya-syn-iorama",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iosavef",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iosavef",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioas-syn-okhozii",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-amasiya",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-oziya",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-oziya",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioafam",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioafam",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioafam",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-akhaz",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-manassiya-tsar",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-manassiya-tsar",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-amon-tsar",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-amon-tsar",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioakhaz-syn-iosii",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioakhaz-syn-iosii",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioakhaz-syn-iosii",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioakim-tsar",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioakim-tsar",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-sedekiya",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iekhoniya",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iekhoniya",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ader-idumeyanin",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ader-idumeyanin",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ader-idumeyanin",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ieroboam",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-navat-syn-ieroboama",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-navat-syn-ieroboama",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-navat-syn-ieroboama",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-navat-syn-ieroboama",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-vaasa",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-vaasa",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-vaasa",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zamvriy",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zamvriy",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zamvriy",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zamvriy",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zamvriy",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-amvriy",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-amvriy",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-amvriy",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-amvriy",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iezavel",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-akhav",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-okhoziya-syn-akhava",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-okhoziya-syn-akhava",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioram-syn-akhava",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioram-syn-akhava",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-gofoliya",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iiuy",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iiuy",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioakhaz-syn-iiuya",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioakhaz-syn-iiuya",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioakhaz-syn-iiuya",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioas-syn-ioakhaza",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioas-syn-ioakhaza",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ieroboam-vtoroy",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ieroboam-vtoroy",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ieroboam-vtoroy",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-menaim",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-menaim",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-menaim",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-fakey",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-fakey",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-fakey",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-osiya-syn-ily",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-osiya-syn-ily",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-osiya-syn-ily",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-osiya-syn-ily",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-venadad-pri-akhave",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-venadad-pri-akhave",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-venadad-pri-akhave",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mesa",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mesa",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mesa",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-azail",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-azail",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-azail",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-feglaffellasar",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-feglaffellasar",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-feglaffellasar",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-sinnakherim",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-sinnakherim",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-sinnakherim",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iliya",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iliya",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iliya",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iliya",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iliya",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iliya",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-elisey",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-elisey",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-elisey",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-elisey",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-elisey",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mikhey-syn-iemvlaya",
+   "sec": 7,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mikhey-syn-iemvlaya",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mikhey-syn-iemvlaya",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mikhey-syn-iemvlaya",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mikhey-syn-iemvlaya",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mikhey-syn-iemvlaya",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mikhey-syn-iemvlaya",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ionadav-syn-rekhava",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ionadav-syn-rekhava",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ionadav-syn-rekhava",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ionadav-syn-rekhava",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ionadav-syn-rekhava",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-isaiya",
+   "sec": 7,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-isaiya",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-isaiya",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-isaiya",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-isaiya",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mikhey-morasfitin",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mikhey-morasfitin",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mikhey-morasfitin",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mikhey-morasfitin",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mikhey-morasfitin",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mikhey-morasfitin",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mikhey-morasfitin",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-osiya-prorok",
+   "sec": 7,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-osiya-prorok",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-osiya-prorok",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-osiya-prorok",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-osiya-prorok",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-amos-prorok",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-amos-prorok",
+   "sec": 7,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-amos-prorok",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-amos-prorok",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-amos-prorok",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-amos-prorok",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-amos-prorok",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-amos-prorok",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iona",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iona",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iona",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iona",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iona",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioil-syn-vafuila",
+   "sec": 7,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioil-syn-vafuila",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioil-syn-vafuila",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioil-syn-vafuila",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioil-syn-vafuila",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioil-syn-vafuila",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioil-syn-vafuila",
+   "sec": 17,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioil-syn-vafuila",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-oldama",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-oldama",
+   "sec": 7,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-oldama",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-oldama",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-oldama",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-oldama",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-oldama",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ieremiya",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-varukh",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-varukh",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-varukh",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-varukh",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-varukh",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-shafan",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-shafan",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-shafan",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-akhikam",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-akhikam",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-akhikam",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-godoliya",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-godoliya",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-godoliya",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-godoliya",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ananiya-syn-azura",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ananiya-syn-azura",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ananiya-syn-azura",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ananiya-syn-azura",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ananiya-syn-azura",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ismail-syn-nafanii",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ismail-syn-nafanii",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ismail-syn-nafanii",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ismail-syn-nafanii",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ismail-syn-nafanii",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioanan-syn-kareya",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioanan-syn-kareya",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioanan-syn-kareya",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioanan-syn-kareya",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iezekiil",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iezekiil",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iezekiil",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iezekiil",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iezekiil",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-daniil",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-daniil",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-daniil",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-daniil",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-daniil",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-daniil",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ananiya-sedrakh",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ananiya-sedrakh",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ananiya-sedrakh",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ananiya-sedrakh",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ananiya-sedrakh",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ananiya-sedrakh",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ananiya-sedrakh",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-misail-misakh",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-misail-misakh",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-misail-misakh",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-misail-misakh",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-misail-misakh",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-misail-misakh",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-misail-misakh",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-azariya-avdenago",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-azariya-avdenago",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-azariya-avdenago",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-azariya-avdenago",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-azariya-avdenago",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-azariya-avdenago",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-azariya-avdenago",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-navukhodonosor",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-navukhodonosor",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-navukhodonosor",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-navukhodonosor",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-navukhodonosor",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-navukhodonosor",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-valtasar-tsar",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-valtasar-tsar",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-valtasar-tsar",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-valtasar-tsar",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-sofoniya-prorok",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-sofoniya-prorok",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-sofoniya-prorok",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-sofoniya-prorok",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-sofoniya-prorok",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-sofoniya-prorok",
+   "sec": 17,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-sofoniya-prorok",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-avdiy-prorok",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-avdiy-prorok",
+   "sec": 7,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-avdiy-prorok",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-avdiy-prorok",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-avdiy-prorok",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-avdiy-prorok",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-avdiy-prorok",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-avdiy-prorok",
+   "sec": 17,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-avdiy-prorok",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-naum-prorok",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-naum-prorok",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-naum-prorok",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-naum-prorok",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-naum-prorok",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-naum-prorok",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-naum-prorok",
+   "sec": 17,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-naum-prorok",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-avvakum",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-avvakum",
+   "sec": 7,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-avvakum",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-avvakum",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-avvakum",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-avvakum",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-avvakum",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-avvakum",
+   "sec": 17,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-avvakum",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-kir",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-kir",
+   "sec": 7,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-kir",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-kir",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-kir",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-kir",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-kir",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-kir",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-dariy-midyanin",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-dariy-midyanin",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-dariy-midyanin",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-dariy-midyanin",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-dariy-midyanin",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-dariy-persidskiy",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-dariy-persidskiy",
+   "sec": 7,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-dariy-persidskiy",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-dariy-persidskiy",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-dariy-persidskiy",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-dariy-persidskiy",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-dariy-persidskiy",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-artakserks",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-artakserks",
+   "sec": 7,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-artakserks",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-artakserks",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-artakserks",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-artakserks",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-artakserks",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-aggey",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-aggey",
+   "sec": 7,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-aggey",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-aggey",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-aggey",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-aggey",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-aggey",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-aggey",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zakhariya-syn-varakhii",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zakhariya-syn-varakhii",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zakhariya-syn-varakhii",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zakhariya-syn-varakhii",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zakhariya-syn-varakhii",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zakhariya-syn-varakhii",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-malakhiya",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-malakhiya",
+   "sec": 7,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-malakhiya",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-malakhiya",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-malakhiya",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-malakhiya",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-malakhiya",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-malakhiya",
+   "sec": 17,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-malakhiya",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-neemiya",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-neemiya",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-neemiya",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-neemiya",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-neemiya",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-sanavallat",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-sanavallat",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-sanavallat",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-sanavallat",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-sanavallat",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-toviya-ammonityanin",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-toviya-ammonityanin",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-toviya-ammonityanin",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mardokhey",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mardokhey",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mardokhey",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mardokhey",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-esfir",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-esfir",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-esfir",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-esfir",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-artakserks-muzh-esfiri",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-artakserks-muzh-esfiri",
+   "sec": 7,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-artakserks-muzh-esfiri",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-artakserks-muzh-esfiri",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-artakserks-muzh-esfiri",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-artakserks-muzh-esfiri",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-artakserks-muzh-esfiri",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-aman",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-aman",
+   "sec": 11,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-aman",
+   "sec": 12,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-salafiil",
+   "sec": 14,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-salafiil",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-salafiil",
+   "sec": 17,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-salafiil",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-salafiil",
+   "sec": 19,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-salafiil",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zorovavel",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zorovavel",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-zorovavel",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mariya",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mariya",
+   "sec": 16,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mariya",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iosif-muzh-marii",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iosif-muzh-marii",
+   "sec": 18,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iosif-muzh-marii",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iisus",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iisus",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioann-krestitel",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioann-krestitel",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iakov-brat-gospoden",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iakov-brat-gospoden",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-petr",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-petr",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-andrey",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-andrey",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-andrey",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-andrey",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iakov-zevedeev",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iakov-zevedeev",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iakov-zevedeev",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioann-apostol",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioann-apostol",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioann-apostol",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-filipp-apostol",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-filipp-apostol",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-filipp-apostol",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-filipp-apostol",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-filipp-apostol",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-nafanail",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-nafanail",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-nafanail",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-nafanail",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-nafanail",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-foma",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-foma",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-foma",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-foma",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-foma",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-matfey",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-matfey",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-matfey",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-matfey",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iuda-iskariot",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iuda-iskariot",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iuda-iskariot",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-lazar",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-lazar",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-lazar",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-lazar",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-marfa",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-marfa",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-marfa",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-marfa",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-marfa",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mariya-iz-vifanii",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mariya-iz-vifanii",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mariya-iz-vifanii",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mariya-iz-vifanii",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mariya-iz-vifanii",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iair-nachalnik-sinagogi",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iair-nachalnik-sinagogi",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iair-nachalnik-sinagogi",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mariya-magdalina",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mariya-magdalina",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mariya-magdalina",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mariya-magdalina",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-mariya-magdalina",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-nikodim",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-nikodim",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-nikodim",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-nikodim",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-nikodim",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iosif-arimafeyskiy",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iosif-arimafeyskiy",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iosif-arimafeyskiy",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iosif-arimafeyskiy",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-iosif-arimafeyskiy",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-irod-velikiy",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-irod-velikiy",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-irod-velikiy",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-irod-antipa",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-irod-antipa",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-irod-antipa",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-irod-antipa",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-irodiada",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-irodiada",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-irodiada",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-irod-agrippa",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-irod-agrippa",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-irod-agrippa",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-irod-agrippa",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-agrippa",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-agrippa",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-agrippa",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-agrippa",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-agrippa",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-feliks",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-feliks",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-feliks",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-feliks",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-pontiy-pilat",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-pontiy-pilat",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-pontiy-pilat",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-pontiy-pilat",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-anna-pervosvyashchennik",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-anna-pervosvyashchennik",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-anna-pervosvyashchennik",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-kaiafa",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-kaiafa",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-kaiafa",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-kaiafa",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-pavel",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-timofey",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-timofey",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-timofey",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-varnava",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-varnava",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-varnava",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-varnava",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-varnava",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioann-mark",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioann-mark",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioann-mark",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-ioann-mark",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-akila",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-akila",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-akila",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-akila",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-priskilla",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-priskilla",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-priskilla",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-priskilla",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-filipp-blagovestnik",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-filipp-blagovestnik",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-filipp-blagovestnik",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-filipp-blagovestnik",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-luka",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-luka",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-luka",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-luka",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-luka",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-vaneya-syn-iodaya",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-vaneya-syn-iodaya",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-vaneya-syn-iodaya",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khusiy-arkhityanin",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khusiy-arkhityanin",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khusiy-arkhityanin",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-khusiy-arkhityanin",
+   "sec": 20,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-goliaf",
+   "sec": 6,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-goliaf",
+   "sec": 8,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-goliaf",
+   "sec": 9,
+   "kind": "silent",
+   "refs": []
+  },
+  {
+   "actor": "p-goliaf",
+   "sec": 10,
+   "kind": "silent",
+   "refs": []
+  }
+ ]
+}

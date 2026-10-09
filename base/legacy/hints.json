@@ -1,0 +1,1289 @@
+{
+ "schema": 1,
+ "title": "Подсказки обратной проекции (только для проверки переноса)",
+ "volumes": {
+  "10": {
+   "file": "10-tribes-b.json"
+  },
+  "11": {
+   "file": "11-judges.json"
+  },
+  "12": {
+   "file": "12-house-of-david.json"
+  },
+  "13": {
+   "file": "13-kings-of-judah.json"
+  },
+  "14": {
+   "file": "14-kings-of-israel.json"
+  },
+  "15": {
+   "file": "15-prophets-exile.json"
+  },
+  "16": {
+   "file": "16-jesus-genealogy.json"
+  },
+  "17": {
+   "file": "17-new-testament.json"
+  },
+  "18": {
+   "file": "18-tribal-leaders.json"
+  },
+  "19": {
+   "file": "19-court-and-heroes.json"
+  },
+  "20": {
+   "file": "20-return-lists.json"
+  },
+  "01": {
+   "file": "01-antediluvian.json"
+  },
+  "02": {
+   "file": "02-nations.json"
+  },
+  "03": {
+   "file": "03-shem-to-terah.json"
+  },
+  "04": {
+   "file": "04-abraham.json"
+  },
+  "05": {
+   "file": "05-edom.json"
+  },
+  "06": {
+   "file": "06-jacob-sons.json"
+  },
+  "07": {
+   "file": "07-judah.json"
+  },
+  "08": {
+   "file": "08-levi.json"
+  },
+  "09": {
+   "file": "09-tribes-a.json"
+  }
+ },
+ "persons": {
+  "p-adam": {
+   "sp": [
+    [
+     "u-adam--eva",
+     0
+    ]
+   ]
+  },
+  "p-lamekh-kainit": {
+   "sp": [
+    [
+     "u-lamekh-kainit--ada-zhena-lamekha",
+     0
+    ],
+    [
+     "u-lamekh-kainit--tsilla",
+     0
+    ]
+   ]
+  },
+  "p-iuval": {
+   "pc": true
+  },
+  "p-noema": {
+   "pc": true
+  },
+  "p-sif": {
+   "mc": true
+  },
+  "p-nakhor-syn-farry": {
+   "sp": [
+    [
+     "u-nakhor-syn-farry--milka",
+     0
+    ],
+    [
+     "u-nakhor-syn-farry--reuma",
+     0
+    ]
+   ]
+  },
+  "p-lot": {
+   "sp": [
+    [
+     "u-lot--zhena-lota",
+     0
+    ]
+   ]
+  },
+  "p-starshaya-doch-lota": {
+   "mc": true
+  },
+  "p-mladshaya-doch-lota": {
+   "mc": true
+  },
+  "p-avraam": {
+   "empty": [
+    "silent"
+   ],
+   "sp": [
+    [
+     "u-avraam--sarra",
+     0
+    ],
+    [
+     "u-avraam--agar",
+     0
+    ],
+    [
+     "u-avraam--khettura",
+     0
+    ]
+   ]
+  },
+  "p-sarra": {
+   "pc": true
+  },
+  "p-isaak": {
+   "sp": [
+    [
+     "u-isaak--revekka",
+     0
+    ]
+   ]
+  },
+  "p-iakov": {
+   "sp": [
+    [
+     "u-iakov--liya",
+     0
+    ],
+    [
+     "u-iakov--rakhil",
+     0
+    ],
+    [
+     "u-iakov--valla",
+     0
+    ],
+    [
+     "u-iakov--zelfa",
+     0
+    ]
+   ]
+  },
+  "p-valla": {
+   "sp": [
+    [
+     "u-iakov--valla",
+     1
+    ]
+   ]
+  },
+  "p-zelfa": {
+   "sp": [
+    [
+     "u-iakov--zelfa",
+     1
+    ]
+   ]
+  },
+  "p-isav": {
+   "sp": [
+    [
+     "u-isav--iegudifa",
+     0
+    ],
+    [
+     "u-isav--ada-zhena-isava",
+     0
+    ],
+    [
+     "u-isav--makhalafa-doch-izmaila",
+     0
+    ],
+    [
+     "u-isav--olivema",
+     0
+    ]
+   ]
+  },
+  "p-famna-sestra-lotana": {
+   "pc": true
+  },
+  "p-dishon-syn-any": {
+   "pc": true
+  },
+  "p-khemdan": {
+   "pc": true
+  },
+  "p-eshban": {
+   "pc": true
+  },
+  "p-ifran-syn-dishona": {
+   "pc": true
+  },
+  "p-kheran": {
+   "pc": true
+  },
+  "p-elifaz-syn-isava": {
+   "sp": [
+    [
+     "u-elifaz-syn-isava--famna-nalozhnitsa-elifaza",
+     0
+    ]
+   ]
+  },
+  "p-matred": {
+   "pc": true
+  },
+  "p-gadar": {
+   "sp": [
+    [
+     "u-gadar--megetaveel",
+     0
+    ]
+   ]
+  },
+  "p-iuda": {
+   "sp": [
+    [
+     "u-iuda--doch-shui",
+     0
+    ]
+   ]
+  },
+  "p-iosif": {
+   "sp": [
+    [
+     "u-iosif--asenefa",
+     0
+    ]
+   ]
+  },
+  "p-famar": {
+   "sp": [
+    [
+     "u-ir-syn-iudy--famar",
+     0
+    ],
+    [
+     "u-onan--famar",
+     0
+    ]
+   ]
+  },
+  "p-potifar": {
+   "sp": [
+    [
+     "u-potifar--zhena-potifara",
+     0
+    ]
+   ]
+  },
+  "p-zhena-potifara": {
+   "sp": [
+    [
+     "u-potifar--zhena-potifara",
+     1
+    ]
+   ]
+  },
+  "p-manassiya": {
+   "sp": [
+    [
+     "u-manassiya--nalozhnitsa-manassii",
+     0
+    ]
+   ]
+  },
+  "p-khalev-syn-esroma": {
+   "sp": [
+    [
+     "u-khalev-syn-esroma--efa-nalozhnitsa-khaleva",
+     0
+    ],
+    [
+     "u-khalev-syn-esroma--maakha-nalozhnitsa-khaleva",
+     0
+    ]
+   ]
+  },
+  "p-doch-makhira": {
+   "sp": [
+    [
+     "u-esrom--doch-makhira",
+     0
+    ]
+   ]
+  },
+  "p-aviya-zhena-esroma": {
+   "sp": [
+    [
+     "u-esrom--aviya-zhena-esroma",
+     0
+    ]
+   ]
+  },
+  "p-salmon": {
+   "sp": [
+    [
+     "u-salmon--raav",
+     0
+    ]
+   ]
+  },
+  "p-noemin": {
+   "sp": [
+    [
+     "u-elimelekh--noemin",
+     0
+    ]
+   ]
+  },
+  "p-orfa": {
+   "sp": [
+    [
+     "u-khileon--orfa",
+     0
+    ]
+   ]
+  },
+  "p-ruf": {
+   "sp": [
+    [
+     "u-makhlon--ruf",
+     0
+    ],
+    [
+     "u-vooz--ruf",
+     0
+    ]
+   ]
+  },
+  "p-avigeya-sestra-davida": {
+   "sp": [
+    [
+     "u-iefer-izmailtyanin--avigeya-sestra-davida",
+     0
+    ]
+   ]
+  },
+  "p-afara": {
+   "sp": [
+    [
+     "u-ierakhmeil--afara",
+     0
+    ]
+   ]
+  },
+  "p-avikhail-zhena-avishura": {
+   "sp": [
+    [
+     "u-avishur--avikhail-zhena-avishura",
+     0
+    ]
+   ]
+  },
+  "p-doch-sheshana": {
+   "sp": [
+    [
+     "u-iarkha--doch-sheshana",
+     0
+    ]
+   ]
+  },
+  "p-azuva-zhena-khaleva": {
+   "sp": [
+    [
+     "u-khalev-syn-esroma--azuva-zhena-khaleva",
+     0
+    ]
+   ]
+  },
+  "p-ieriofa": {
+   "sp": [
+    [
+     "u-khalev-syn-esroma--ieriofa",
+     0
+    ]
+   ]
+  },
+  "p-efrafa-zhena-khaleva": {
+   "sp": [
+    [
+     "u-khalev-syn-esroma--efrafa-zhena-khaleva",
+     0
+    ]
+   ]
+  },
+  "p-maresha-otets-khevrona": {
+   "pc": true
+  },
+  "p-gofoniil": {
+   "sp": [
+    [
+     "u-gofoniil--akhsa",
+     0
+    ]
+   ]
+  },
+  "p-gatslelponi": {
+   "pc": true
+  },
+  "p-khela-zhena-ashkhura": {
+   "sp": [
+    [
+     "u-ashkhur--khela-zhena-ashkhura",
+     0
+    ]
+   ]
+  },
+  "p-naara-zhena-ashkhura": {
+   "sp": [
+    [
+     "u-ashkhur--naara-zhena-ashkhura",
+     0
+    ]
+   ]
+  },
+  "p-tseref": {
+   "pc": true,
+   "mc": true
+  },
+  "p-tsokhar-syn-ashkhura": {
+   "pc": true,
+   "mc": true
+  },
+  "p-efnan": {
+   "pc": true,
+   "mc": true
+  },
+  "p-garum": {
+   "pc": true
+  },
+  "p-iudiya": {
+   "sp": [
+    [
+     "u-mered--iudiya",
+     0
+    ]
+   ]
+  },
+  "p-iered-otets-gedora": {
+   "pc": true,
+   "mc": true
+  },
+  "p-khever-otets-sokho": {
+   "pc": true,
+   "mc": true
+  },
+  "p-iekufiil": {
+   "pc": true,
+   "mc": true
+  },
+  "p-bifya": {
+   "sp": [
+    [
+     "u-mered--bifya",
+     0
+    ]
+   ]
+  },
+  "p-godiya-sestra-nakhama": {
+   "sp": [
+    [
+     "u-mered--godiya-sestra-nakhama",
+     0
+    ]
+   ]
+  },
+  "p-garmi": {
+   "pc": true,
+   "mc": true
+  },
+  "p-eshfemoa-maakhatyanin": {
+   "pc": true,
+   "mc": true
+  },
+  "p-ashbeya": {
+   "pc": true
+  },
+  "p-amram": {
+   "sp": [
+    [
+     "u-amram--iokhaveda",
+     0
+    ]
+   ]
+  },
+  "p-aaron": {
+   "sp": [
+    [
+     "u-aaron--elisaveta-zhena-aarona",
+     0
+    ]
+   ]
+  },
+  "p-moisey": {
+   "sp": [
+    [
+     "u-moisey--sepfora",
+     0
+    ],
+    [
+     "u-moisey--efioplyanka-zhena-moiseya",
+     0
+    ]
+   ]
+  },
+  "p-eleazar": {
+   "sp": [
+    [
+     "u-eleazar--doch-futiila",
+     0
+    ]
+   ]
+  },
+  "p-sepfora": {
+   "pc": true
+  },
+  "p-efioplyanka-zhena-moiseya": {
+   "sp": [
+    [
+     "u-moisey--efioplyanka-zhena-moiseya",
+     1
+    ]
+   ]
+  },
+  "p-khovav": {
+   "pc": true
+  },
+  "p-akhimof": {
+   "pc": true
+  },
+  "p-elkana": {
+   "sp": [
+    [
+     "u-elkana--anna-mat-samuila",
+     0
+    ],
+    [
+     "u-elkana--fennana",
+     0
+    ]
+   ]
+  },
+  "p-anna-mat-samuila": {
+   "sp": [
+    [
+     "u-elkana--anna-mat-samuila",
+     1
+    ]
+   ]
+  },
+  "p-fennana": {
+   "sp": [
+    [
+     "u-elkana--fennana",
+     1
+    ]
+   ]
+  },
+  "p-zhena-fineesa-syn-iliya": {
+   "sp": [
+    [
+     "u-finees-syn-iliya--zhena-fineesa-syn-iliya",
+     0
+    ]
+   ]
+  },
+  "p-akhimelekh-syn-akhitova": {
+   "pc": true
+  },
+  "p-meraiof-1par9-11": {
+   "pc": true
+  },
+  "p-khelkiya-pervosvyashchennik": {
+   "pc": true
+  },
+  "p-ezdra": {
+   "pc": true
+  },
+  "p-iodai": {
+   "sp": [
+    [
+     "u-iodai--iosavef",
+     0
+    ]
+   ]
+  },
+  "p-idifun": {
+   "pc": true
+  },
+  "p-ionafan-syn-girsama": {
+   "pc": true
+  },
+  "p-meshelemiya": {
+   "pc": true
+  },
+  "p-meshillemif": {
+   "pc": true
+  },
+  "p-eden-syn-ioakha": {
+   "pc": true
+  },
+  "p-verzelliy-svyashchennik": {
+   "sp": [
+    [
+     "u-verzelliy-svyashchennik--zhena-verzelliya-svyashchennika",
+     0
+    ]
+   ]
+  },
+  "p-zhena-verzelliya-svyashchennika": {
+   "sp": [
+    [
+     "u-verzelliy-svyashchennik--zhena-verzelliya-svyashchennika",
+     1
+    ]
+   ]
+  },
+  "p-uriya-syn-gakkotsa": {
+   "pc": true
+  },
+  "p-shallum-syn-saula": {
+   "pc": true
+  },
+  "p-mikhail-syn-avikhaila": {
+   "pc": true
+  },
+  "p-meshullam-syn-avikhaila": {
+   "pc": true
+  },
+  "p-sheva-syn-avikhaila": {
+   "pc": true
+  },
+  "p-ioray": {
+   "pc": true
+  },
+  "p-iaakan": {
+   "pc": true
+  },
+  "p-ziya": {
+   "pc": true
+  },
+  "p-ever-syn-avikhaila": {
+   "pc": true
+  },
+  "p-nalozhnitsa-manassii": {
+   "sp": [
+    [
+     "u-manassiya--nalozhnitsa-manassii",
+     1
+    ]
+   ]
+  },
+  "p-makhir": {
+   "sp": [
+    [
+     "u-makhir--maakha-zhena-makhira",
+     0
+    ]
+   ]
+  },
+  "p-sheresh-syn-makhira": {
+   "pc": true
+  },
+  "p-ulam-syn-sheresha": {
+   "pc": true
+  },
+  "p-rekem-syn-sheresha": {
+   "pc": true
+  },
+  "p-molekhef": {
+   "pc": true
+  },
+  "p-ezer-syn-efrema": {
+   "pc": true
+  },
+  "p-elead-syn-efrema": {
+   "pc": true
+  },
+  "p-sheera": {
+   "pc": true
+  },
+  "p-refay": {
+   "pc": true
+  },
+  "p-reshef": {
+   "pc": true
+  },
+  "p-felakh": {
+   "pc": true
+  },
+  "p-shupim-syn-ira": {
+   "pc": true
+  },
+  "p-khupim-syn-ira": {
+   "pc": true
+  },
+  "p-uzza-syn-gery": {
+   "pc": true
+  },
+  "p-akhikhud-syn-gery": {
+   "pc": true
+  },
+  "p-shegaraim": {
+   "sp": [
+    [
+     "u-shegaraim--khushima",
+     0
+    ],
+    [
+     "u-shegaraim--baara",
+     0
+    ],
+    [
+     "u-shegaraim--khodesha",
+     0
+    ]
+   ]
+  },
+  "p-beriya-syn-elpaala": {
+   "pc": true
+  },
+  "p-shema-syn-elpaala": {
+   "pc": true
+  },
+  "p-ieil": {
+   "sp": [
+    [
+     "u-ieil--maakha-zhena-ieila",
+     0
+    ]
+   ]
+  },
+  "p-avdon-syn-ieila": {
+   "mc": true
+  },
+  "p-tsur-syn-ieila": {
+   "mc": true
+  },
+  "p-kis-syn-ieila": {
+   "mc": true
+  },
+  "p-vaal-syn-ieila": {
+   "mc": true
+  },
+  "p-nadav-syn-ieila": {
+   "mc": true
+  },
+  "p-gedor-syn-ieila": {
+   "mc": true
+  },
+  "p-akhio-syn-ieila": {
+   "mc": true
+  },
+  "p-zekher-syn-ieila": {
+   "mc": true
+  },
+  "p-miklof-syn-ieila": {
+   "mc": true
+  },
+  "p-saul": {
+   "sp": [
+    [
+     "u-saul--akhinoama-zhena-saula",
+     0
+    ],
+    [
+     "u-saul--ritspa",
+     0
+    ]
+   ]
+  },
+  "p-merova": {
+   "sp": [
+    [
+     "u-adriel--merova",
+     0
+    ]
+   ]
+  },
+  "p-melkhola": {
+   "sp": [
+    [
+     "u-faltiy-syn-laisha--melkhola",
+     0
+    ]
+   ]
+  },
+  "p-eshek": {
+   "pc": true
+  },
+  "p-birzaif": {
+   "pc": true
+  },
+  "p-gelem": {
+   "pc": true
+  },
+  "p-devora": {
+   "sp": [
+    [
+     "u-lappidof--devora",
+     0
+    ]
+   ]
+  },
+  "p-iail": {
+   "sp": [
+    [
+     "u-khever-keneyanin--iail",
+     0
+    ]
+   ]
+  },
+  "p-gedeon": {
+   "sp": [
+    [
+     "u-gedeon--nalozhnitsa-gedeona",
+     0
+    ]
+   ]
+  },
+  "p-zhena-manoya": {
+   "sp": [
+    [
+     "u-manoy--zhena-manoya",
+     0
+    ]
+   ]
+  },
+  "p-zhena-samsona": {
+   "sp": [
+    [
+     "u-samson--zhena-samsona",
+     0
+    ]
+   ]
+  },
+  "p-david": {
+   "sp": [
+    [
+     "u-david--melkhola",
+     0
+    ],
+    [
+     "u-david--akhinoama",
+     0
+    ],
+    [
+     "u-david--avigeya",
+     0
+    ],
+    [
+     "u-david--maakha-doch-falmaya",
+     0
+    ],
+    [
+     "u-david--aggifa",
+     0
+    ],
+    [
+     "u-david--avitala",
+     0
+    ],
+    [
+     "u-david--egla",
+     0
+    ],
+    [
+     "u-david--virsaviya",
+     0
+    ]
+   ]
+  },
+  "p-naval": {
+   "sp": [
+    [
+     "u-naval--avigeya",
+     0
+    ]
+   ]
+  },
+  "p-eliam": {
+   "pc": true
+  },
+  "p-uriya": {
+   "sp": [
+    [
+     "u-uriya--virsaviya",
+     0
+    ]
+   ]
+  },
+  "p-famar-doch-davida": {
+   "pc": true
+  },
+  "p-solomon": {
+   "sp": [
+    [
+     "u-solomon--doch-faraona-zhena-solomona",
+     0
+    ]
+   ]
+  },
+  "p-tafaf": {
+   "sp": [
+    [
+     "u-ben-aminadav--tafaf",
+     0
+    ]
+   ]
+  },
+  "p-vasemafa-doch-solomona": {
+   "sp": [
+    [
+     "u-akhimaas-zyat-solomona--vasemafa-doch-solomona",
+     0
+    ]
+   ]
+  },
+  "p-kimgam": {
+   "pc": true
+  },
+  "p-efan-ezrakhityanin": {
+   "pc": true
+  },
+  "p-eman-syn-makhola": {
+   "pc": true
+  },
+  "p-rovoam": {
+   "sp": [
+    [
+     "u-rovoam--makhalafa-doch-ieremofa",
+     0
+    ],
+    [
+     "u-rovoam--avikhail-doch-eliava",
+     0
+    ],
+    [
+     "u-rovoam--maakha-doch-avessaloma",
+     0
+    ]
+   ]
+  },
+  "p-ioram-syn-iosafata": {
+   "sp": [
+    [
+     "u-ioram-syn-iosafata--gofoliya",
+     0
+    ]
+   ]
+  },
+  "p-iosavef": {
+   "sp": [
+    [
+     "u-iodai--iosavef",
+     1
+    ]
+   ]
+  },
+  "p-refaiya-syn-isaii": {
+   "pc": true
+  },
+  "p-ader-idumeyanin": {
+   "sp": [
+    [
+     "u-ader-idumeyanin--sestra-takhpenesy",
+     0
+    ]
+   ]
+  },
+  "p-faraon-pri-adere": {
+   "sp": [
+    [
+     "u-faraon-pri-adere--takhpenesa",
+     0
+    ]
+   ]
+  },
+  "p-navat": {
+   "sp": [
+    [
+     "u-navat--tserua",
+     0
+    ]
+   ]
+  },
+  "p-ieroboam": {
+   "sp": [
+    [
+     "u-ieroboam--zhena-ieroboama",
+     0
+    ]
+   ]
+  },
+  "p-akhav": {
+   "sp": [
+    [
+     "u-akhav--iezavel",
+     0
+    ]
+   ]
+  },
+  "p-gofoliya": {
+   "pc": true,
+   "sp": [
+    [
+     "u-ioram-syn-iosafata--gofoliya",
+     1
+    ]
+   ]
+  },
+  "p-pervenets-mesy": {
+   "pc": true
+  },
+  "p-iiuy-syn-anani": {
+   "pc": true
+  },
+  "p-isaiya": {
+   "sp": [
+    [
+     "u-isaiya--prorochitsa-zhena-isaii",
+     0
+    ]
+   ]
+  },
+  "p-mager-shelal-khash-baz": {
+   "mc": true
+  },
+  "p-osiya-prorok": {
+   "sp": [
+    [
+     "u-osiya-prorok--gomer",
+     0
+    ]
+   ]
+  },
+  "p-lorukhama": {
+   "pc": true,
+   "mc": true
+  },
+  "p-loammi": {
+   "pc": true,
+   "mc": true
+  },
+  "p-oldama": {
+   "sp": [
+    [
+     "u-shallum-muzh-oldamy--oldama",
+     0
+    ]
+   ]
+  },
+  "p-seraiya-syn-nirii": {
+   "pc": true
+  },
+  "p-eleasa-syn-shafana": {
+   "pc": true
+  },
+  "p-gemariya-syn-shafana": {
+   "pc": true
+  },
+  "p-iezaniya-syn-shafana": {
+   "pc": true
+  },
+  "p-valtasar-tsar": {
+   "pc": true
+  },
+  "p-amoriya-praded-sofonii": {
+   "pc": true
+  },
+  "p-artakserks-muzh-esfiri": {
+   "sp": [
+    [
+     "u-artakserks-muzh-esfiri--astin",
+     0
+    ],
+    [
+     "u-artakserks-muzh-esfiri--esfir",
+     0
+    ]
+   ]
+  },
+  "p-aman": {
+   "sp": [
+    [
+     "u-aman--zeresh",
+     0
+    ]
+   ]
+  },
+  "p-mariya": {
+   "pc": true
+  },
+  "p-iosif-muzh-marii": {
+   "sp": [
+    [
+     "u-iosif-muzh-marii--mariya",
+     0
+    ]
+   ]
+  },
+  "p-zakhariya-svyashchennik": {
+   "sp": [
+    [
+     "u-zakhariya-svyashchennik--elisaveta",
+     0
+    ]
+   ]
+  },
+  "p-kleopa": {
+   "sp": [
+    [
+     "u-kleopa--mariya-kleopova",
+     0
+    ]
+   ]
+  },
+  "p-zevedey": {
+   "sp": [
+    [
+     "u-zevedey--mat-synovey-zevedeevykh",
+     0
+    ]
+   ]
+  },
+  "p-matfey": {
+   "pc": true
+  },
+  "p-ioanna-zhena-khuzy": {
+   "sp": [
+    [
+     "u-khuza--ioanna-zhena-khuzy",
+     0
+    ]
+   ]
+  },
+  "p-irodiada": {
+   "sp": [
+    [
+     "u-filipp-brat-iroda--irodiada",
+     0
+    ],
+    [
+     "u-irod-antipa--irodiada",
+     0
+    ]
+   ]
+  },
+  "p-feliks": {
+   "sp": [
+    [
+     "u-feliks--druzilla",
+     0
+    ]
+   ]
+  },
+  "p-pontiy-pilat": {
+   "sp": [
+    [
+     "u-pontiy-pilat--zhena-pilata",
+     0
+    ]
+   ]
+  },
+  "p-akila": {
+   "sp": [
+    [
+     "u-akila--priskilla",
+     0
+    ]
+   ]
+  },
+  "p-ananiya-muzh-sapfiry": {
+   "sp": [
+    [
+     "u-ananiya-muzh-sapfiry--sapfira",
+     0
+    ]
+   ]
+  },
+  "p-iodai-syn-vanei": {
+   "pc": true
+  },
+  "p-vaana-syn-akhiluda": {
+   "pc": true
+  },
+  "p-ben-aminadav": {
+   "sp": [
+    [
+     "u-ben-aminadav--tafaf",
+     1
+    ]
+   ]
+  },
+  "p-akhimaas-zyat-solomona": {
+   "sp": [
+    [
+     "u-akhimaas-zyat-solomona--vasemafa-doch-solomona",
+     1
+    ]
+   ]
+  },
+  "p-khanan-syn-maakhi": {
+   "pc": true
+  },
+  "p-iokha-fitsiyanin": {
+   "pc": true
+  },
+  "p-safatiya-syn-maakhi": {
+   "pc": true
+  },
+  "p-iaasiil-syn-avenira": {
+   "pc": true
+  },
+  "p-zakhariya-syn-shiloniya": {
+   "pc": true
+  },
+  "p-iedaiya-syn-ioiariva": {
+   "pc": true
+  },
+  "p-seraiya-syn-khelkii-neem11": {
+   "pc": true
+  },
+  "p-akhzay": {
+   "pc": true
+  },
+  "p-khashaviya-syn-matfanii": {
+   "pc": true
+  },
+  "p-iokhanan-syn-eliashiva": {
+   "pc": true
+  },
+  "p-malkhiya-iz-synovey-kharima": {
+   "pc": true
+  },
+  "p-doch-meshullama-zhena-iokhanana": {
+   "sp": [
+    [
+     "u-iokhanan-syn-tovii--doch-meshullama-zhena-iokhanana",
+     0
+    ]
+   ]
+  },
+  "p-sadok-syn-immera": {
+   "pc": true
+  },
+  "p-shemaiya-syn-matfanii": {
+   "pc": true
+  }
+ },
+ "idmap": {
+  "p-iliy-syn-matfata": "iliy-otets-marii"
+ },
+ "lineOrder": [
+  "joseph",
+  "mary"
+ ]
+}

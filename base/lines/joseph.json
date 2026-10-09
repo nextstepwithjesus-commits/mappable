@@ -1,0 +1,656 @@
+{
+ "schema": 1,
+ "prov": {
+  "by": "перенос Д1 (координатор)",
+  "at": "2026-10-09",
+  "status": "draft",
+  "from": {
+   "vol": "data/lines/joseph.json",
+   "commit": "deb7299"
+  }
+ },
+ "id": "joseph",
+ "name": "Линия Иосифа",
+ "subtitle": "законная, царская",
+ "basis": "Мф 1:1–16; до Авраама — Быт 5; 11; 1 Пар 1 (Матфей начинает с Авраама). Охозия, Иоас и Амасия, опущенные в Мф 1:8, включены по 4 Цар и 1 Пар 3:11–12. Счёт Мф 1:17: Авраам…Давид (14), Соломон…Иоаким (14), Иехония…Иисус (14).",
+ "refs": [
+  "Мф 1:1-17",
+  "Быт 5:1-32",
+  "Быт 11:10-26",
+  "1Пар 3:10-17"
+ ],
+ "persons": [
+  {
+   "id": "p-adam",
+   "lk": 75,
+   "refs": [
+    "Быт 5:1-3",
+    "1Пар 1:1",
+    "Лк 3:38"
+   ],
+   "flag": "before-matthew"
+  },
+  {
+   "id": "p-sif",
+   "lk": 74,
+   "refs": [
+    "Быт 5:3",
+    "1Пар 1:1",
+    "Лк 3:38"
+   ],
+   "flag": "before-matthew"
+  },
+  {
+   "id": "p-enos",
+   "lk": 73,
+   "refs": [
+    "Быт 5:6",
+    "1Пар 1:1",
+    "Лк 3:38"
+   ],
+   "flag": "before-matthew"
+  },
+  {
+   "id": "p-kainan",
+   "lk": 72,
+   "refs": [
+    "Быт 5:9",
+    "1Пар 1:2",
+    "Лк 3:37-38"
+   ],
+   "flag": "before-matthew"
+  },
+  {
+   "id": "p-maleleil",
+   "lk": 71,
+   "refs": [
+    "Быт 5:12",
+    "1Пар 1:2",
+    "Лк 3:37"
+   ],
+   "flag": "before-matthew"
+  },
+  {
+   "id": "p-iared",
+   "lk": 70,
+   "refs": [
+    "Быт 5:15",
+    "1Пар 1:2",
+    "Лк 3:37"
+   ],
+   "flag": "before-matthew"
+  },
+  {
+   "id": "p-enokh",
+   "lk": 69,
+   "refs": [
+    "Быт 5:18",
+    "1Пар 1:3",
+    "Лк 3:37"
+   ],
+   "flag": "before-matthew"
+  },
+  {
+   "id": "p-mafusal",
+   "lk": 68,
+   "refs": [
+    "Быт 5:21",
+    "1Пар 1:3",
+    "Лк 3:37"
+   ],
+   "flag": "before-matthew"
+  },
+  {
+   "id": "p-lamekh",
+   "lk": 67,
+   "refs": [
+    "Быт 5:25",
+    "1Пар 1:3",
+    "Лк 3:36-37"
+   ],
+   "flag": "before-matthew"
+  },
+  {
+   "id": "p-noy",
+   "lk": 66,
+   "refs": [
+    "Быт 5:28-29",
+    "1Пар 1:4",
+    "Лк 3:36"
+   ],
+   "flag": "before-matthew"
+  },
+  {
+   "id": "p-sim",
+   "lk": 65,
+   "refs": [
+    "Быт 5:32",
+    "1Пар 1:4",
+    "Лк 3:36"
+   ],
+   "flag": "before-matthew"
+  },
+  {
+   "id": "p-arfaksad",
+   "lk": 64,
+   "refs": [
+    "Быт 11:10",
+    "1Пар 1:17",
+    "Лк 3:36"
+   ],
+   "flag": "before-matthew"
+  },
+  {
+   "id": "p-sala",
+   "lk": 62,
+   "refs": [
+    "Быт 11:12",
+    "1Пар 1:18",
+    "Лк 3:35"
+   ],
+   "flag": "before-matthew"
+  },
+  {
+   "id": "p-ever",
+   "lk": 61,
+   "refs": [
+    "Быт 11:14",
+    "1Пар 1:18",
+    "Лк 3:35"
+   ],
+   "flag": "before-matthew"
+  },
+  {
+   "id": "p-falek",
+   "lk": 60,
+   "refs": [
+    "Быт 11:16",
+    "1Пар 1:19",
+    "Лк 3:35"
+   ],
+   "flag": "before-matthew"
+  },
+  {
+   "id": "p-ragav",
+   "lk": 59,
+   "refs": [
+    "Быт 11:18",
+    "1Пар 1:25",
+    "Лк 3:35"
+   ],
+   "flag": "before-matthew"
+  },
+  {
+   "id": "p-serukh",
+   "lk": 58,
+   "refs": [
+    "Быт 11:20",
+    "1Пар 1:26",
+    "Лк 3:35"
+   ],
+   "flag": "before-matthew"
+  },
+  {
+   "id": "p-nakhor",
+   "lk": 57,
+   "refs": [
+    "Быт 11:22",
+    "1Пар 1:26",
+    "Лк 3:34-35"
+   ],
+   "flag": "before-matthew"
+  },
+  {
+   "id": "p-farra",
+   "lk": 56,
+   "refs": [
+    "Быт 11:24",
+    "1Пар 1:26",
+    "Лк 3:34"
+   ],
+   "flag": "before-matthew"
+  },
+  {
+   "id": "p-avraam",
+   "mt": 1,
+   "lk": 55,
+   "refs": [
+    "Быт 11:26",
+    "1Пар 1:26-27",
+    "Мф 1:2",
+    "Лк 3:34"
+   ],
+   "flag": "in-text",
+   "mtGroup": 1
+  },
+  {
+   "id": "p-isaak",
+   "mt": 2,
+   "lk": 54,
+   "refs": [
+    "Мф 1:2",
+    "Лк 3:34"
+   ],
+   "flag": "in-text",
+   "mtGroup": 1
+  },
+  {
+   "id": "p-iakov",
+   "mt": 3,
+   "lk": 53,
+   "refs": [
+    "Мф 1:2",
+    "Лк 3:34"
+   ],
+   "flag": "in-text",
+   "mtGroup": 1
+  },
+  {
+   "id": "p-iuda",
+   "mt": 4,
+   "lk": 52,
+   "refs": [
+    "Мф 1:2",
+    "Лк 3:33-34"
+   ],
+   "flag": "in-text",
+   "mtGroup": 1
+  },
+  {
+   "id": "p-fares",
+   "mt": 5,
+   "lk": 51,
+   "refs": [
+    "Мф 1:3",
+    "Лк 3:33"
+   ],
+   "flag": "in-text",
+   "mtGroup": 1
+  },
+  {
+   "id": "p-esrom",
+   "mt": 6,
+   "lk": 50,
+   "refs": [
+    "Мф 1:3",
+    "Лк 3:33"
+   ],
+   "flag": "in-text",
+   "mtGroup": 1
+  },
+  {
+   "id": "p-aram",
+   "mt": 7,
+   "lk": 49,
+   "refs": [
+    "Мф 1:3",
+    "Лк 3:33"
+   ],
+   "flag": "in-text",
+   "mtGroup": 1
+  },
+  {
+   "id": "p-aminadav",
+   "mt": 8,
+   "lk": 48,
+   "refs": [
+    "Мф 1:4",
+    "Лк 3:33"
+   ],
+   "flag": "in-text",
+   "mtGroup": 1
+  },
+  {
+   "id": "p-naasson",
+   "mt": 9,
+   "lk": 47,
+   "refs": [
+    "Мф 1:4",
+    "Лк 3:32-33"
+   ],
+   "flag": "in-text",
+   "mtGroup": 1
+  },
+  {
+   "id": "p-salmon",
+   "mt": 10,
+   "lk": 46,
+   "refs": [
+    "Мф 1:4",
+    "Лк 3:32"
+   ],
+   "flag": "in-text",
+   "mtGroup": 1
+  },
+  {
+   "id": "p-vooz",
+   "mt": 11,
+   "lk": 45,
+   "refs": [
+    "Мф 1:5",
+    "Лк 3:32"
+   ],
+   "flag": "in-text",
+   "mtGroup": 1
+  },
+  {
+   "id": "p-ovid",
+   "mt": 12,
+   "lk": 44,
+   "refs": [
+    "Мф 1:5",
+    "Лк 3:32"
+   ],
+   "flag": "in-text",
+   "mtGroup": 1
+  },
+  {
+   "id": "p-iessey",
+   "mt": 13,
+   "lk": 43,
+   "refs": [
+    "Мф 1:5",
+    "Лк 3:32"
+   ],
+   "flag": "in-text",
+   "mtGroup": 1
+  },
+  {
+   "id": "p-david",
+   "mt": 14,
+   "lk": 42,
+   "refs": [
+    "Мф 1:6",
+    "Лк 3:31-32"
+   ],
+   "flag": "in-text",
+   "mtGroup": 1
+  },
+  {
+   "id": "p-solomon",
+   "mt": 15,
+   "refs": [
+    "Мф 1:6"
+   ],
+   "flag": "in-text",
+   "mtGroup": 2
+  },
+  {
+   "id": "p-rovoam",
+   "mt": 16,
+   "refs": [
+    "Мф 1:7"
+   ],
+   "flag": "in-text",
+   "mtGroup": 2
+  },
+  {
+   "id": "p-aviya",
+   "mt": 17,
+   "refs": [
+    "Мф 1:7"
+   ],
+   "flag": "in-text",
+   "mtGroup": 2
+  },
+  {
+   "id": "p-asa",
+   "mt": 18,
+   "refs": [
+    "Мф 1:7"
+   ],
+   "flag": "in-text",
+   "mtGroup": 2
+  },
+  {
+   "id": "p-iosafat",
+   "mt": 19,
+   "refs": [
+    "Мф 1:8"
+   ],
+   "flag": "in-text",
+   "mtGroup": 2
+  },
+  {
+   "id": "p-ioram-syn-iosafata",
+   "mt": 20,
+   "refs": [
+    "Мф 1:8"
+   ],
+   "flag": "in-text",
+   "mtGroup": 2
+  },
+  {
+   "id": "p-okhoziya-syn-iorama",
+   "refs": [
+    "4Цар 8:24",
+    "1Пар 3:11"
+   ],
+   "flag": "omitted-by-mt"
+  },
+  {
+   "id": "p-ioas-syn-okhozii",
+   "refs": [
+    "4Цар 11:2",
+    "1Пар 3:11"
+   ],
+   "flag": "omitted-by-mt"
+  },
+  {
+   "id": "p-amasiya",
+   "refs": [
+    "4Цар 14:1",
+    "1Пар 3:12"
+   ],
+   "flag": "omitted-by-mt"
+  },
+  {
+   "id": "p-oziya",
+   "mt": 21,
+   "refs": [
+    "4Цар 14:21",
+    "2Пар 26:1",
+    "1Пар 3:12",
+    "Мф 1:8"
+   ],
+   "flag": "in-text",
+   "mtGroup": 2
+  },
+  {
+   "id": "p-ioafam",
+   "mt": 22,
+   "refs": [
+    "Мф 1:9"
+   ],
+   "flag": "in-text",
+   "mtGroup": 2
+  },
+  {
+   "id": "p-akhaz",
+   "mt": 23,
+   "refs": [
+    "Мф 1:9"
+   ],
+   "flag": "in-text",
+   "mtGroup": 2
+  },
+  {
+   "id": "p-ezekiya",
+   "mt": 24,
+   "refs": [
+    "Мф 1:9"
+   ],
+   "flag": "in-text",
+   "mtGroup": 2
+  },
+  {
+   "id": "p-manassiya-tsar",
+   "mt": 25,
+   "refs": [
+    "Мф 1:10"
+   ],
+   "flag": "in-text",
+   "mtGroup": 2
+  },
+  {
+   "id": "p-amon-tsar",
+   "mt": 26,
+   "refs": [
+    "Мф 1:10"
+   ],
+   "flag": "in-text",
+   "mtGroup": 2
+  },
+  {
+   "id": "p-iosiya",
+   "mt": 27,
+   "refs": [
+    "Мф 1:10"
+   ],
+   "flag": "in-text",
+   "mtGroup": 2
+  },
+  {
+   "id": "p-ioakim-tsar",
+   "refs": [
+    "4Цар 23:34",
+    "1Пар 3:15-16",
+    "Мф 1:11"
+   ],
+   "flag": "in-text",
+   "mt": 28,
+   "mtGroup": 2
+  },
+  {
+   "id": "p-iekhoniya",
+   "mt": 29,
+   "refs": [
+    "Мф 1:11"
+   ],
+   "flag": "in-text",
+   "mtGroup": 3
+  },
+  {
+   "id": "p-salafiil",
+   "mt": 30,
+   "lk": 21,
+   "refs": [
+    "Мф 1:12",
+    "Лк 3:27"
+   ],
+   "flag": "in-text",
+   "mtGroup": 3
+  },
+  {
+   "id": "p-zorovavel",
+   "mt": 31,
+   "lk": 20,
+   "refs": [
+    "Мф 1:12",
+    "Лк 3:27"
+   ],
+   "flag": "in-text",
+   "mtGroup": 3
+  },
+  {
+   "id": "p-aviud-syn-zorovavelya",
+   "mt": 32,
+   "refs": [
+    "Мф 1:13"
+   ],
+   "flag": "in-text",
+   "mtGroup": 3
+  },
+  {
+   "id": "p-eliakim-syn-aviuda",
+   "mt": 33,
+   "refs": [
+    "Мф 1:13"
+   ],
+   "flag": "in-text",
+   "mtGroup": 3
+  },
+  {
+   "id": "p-azor",
+   "mt": 34,
+   "refs": [
+    "Мф 1:13"
+   ],
+   "flag": "in-text",
+   "mtGroup": 3
+  },
+  {
+   "id": "p-sadok-syn-azora",
+   "mt": 35,
+   "refs": [
+    "Мф 1:14"
+   ],
+   "flag": "in-text",
+   "mtGroup": 3
+  },
+  {
+   "id": "p-akhim",
+   "mt": 36,
+   "refs": [
+    "Мф 1:14"
+   ],
+   "flag": "in-text",
+   "mtGroup": 3
+  },
+  {
+   "id": "p-eliud",
+   "mt": 37,
+   "refs": [
+    "Мф 1:14"
+   ],
+   "flag": "in-text",
+   "mtGroup": 3
+  },
+  {
+   "id": "p-eleazar-syn-eliuda",
+   "mt": 38,
+   "refs": [
+    "Мф 1:15"
+   ],
+   "flag": "in-text",
+   "mtGroup": 3
+  },
+  {
+   "id": "p-matfan",
+   "mt": 39,
+   "refs": [
+    "Мф 1:15"
+   ],
+   "flag": "in-text",
+   "mtGroup": 3
+  },
+  {
+   "id": "p-iakov-otets-iosifa",
+   "mt": 40,
+   "refs": [
+    "Мф 1:15"
+   ],
+   "flag": "in-text",
+   "mtGroup": 3
+  },
+  {
+   "id": "p-iosif-muzh-marii",
+   "mt": 41,
+   "refs": [
+    "Мф 1:16"
+   ],
+   "flag": "in-text",
+   "mtGroup": 3
+  },
+  {
+   "id": "p-iisus",
+   "mt": 42,
+   "refs": [
+    "Мф 1:16",
+    "Лк 3:23"
+   ],
+   "flag": "legal",
+   "mtGroup": 3
+  }
+ ]
+}

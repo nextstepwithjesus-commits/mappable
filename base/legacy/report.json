@@ -1,0 +1,1144 @@
+{
+ "schema": 1,
+ "title": "Отчёт переноса: отличия обратной проекции от прежних данных и исправления, которые их объясняют",
+ "commit": "deb7299",
+ "exact": "точный перенос совпал с прежними данными без отличий",
+ "diffs": [
+  {
+   "what": "лицо",
+   "id": "ada-zhena-lamekha",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "tsilla",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "noema",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "avel",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "enos",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "maleleil",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iared",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "enokh",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "mafusal",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "sim",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "kham",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ever",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "lot",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "moav",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ben-ammi",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "milka",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "lavan",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "sarra",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "rakhil",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "emima",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "kassiya",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "kerengappukh",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "dina",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "veniamin",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "famar",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "manassiya",
+   "fields": [
+    "otherParents",
+    "card.parentsNote"
+   ],
+   "by": [
+    "C2"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "efrem",
+   "fields": [
+    "otherParents",
+    "card.parentsNote"
+   ],
+   "by": [
+    "C2"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "raav",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "vooz",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "elimelekh",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ovid",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ioav",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "veseleil-syn-uriya",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iisus-navin",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "aviil",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "avenir",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "saul",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ionafan",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ievosfey",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "agoliav",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "devora",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "varak",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iail",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "gedeon",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "avimelekh-syn-gedeona",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iofam-syn-gedeona",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ieffay",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "manoy",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "samson",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "david",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "avigeya",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "uriya",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "virsaviya",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "avessalom",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "adoniya",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "nafan-syn-davida",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "famar-doch-davida",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "naama",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "nafan-prorok",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "rovoam",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iosafat",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ezekiya",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iosiya",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "sedekiya",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "akhav",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iiuy",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "menaim",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "azail",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iliya",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "elisey",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "isaiya",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "osiya-prorok",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iona",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ioil-syn-vafuila",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ieremiya",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "varukh",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iezekiil",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "daniil",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "sofoniya-prorok",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "avdiy-prorok",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "naum-prorok",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "zakhariya-syn-varakhii",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "malakhiya",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "neemiya",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "salafiil",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "zorovavel",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "risay",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iliy-otets-marii",
+   "fields": [
+    "disambig"
+   ],
+   "by": [
+    "C1"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "mariya",
+   "fields": [
+    "father",
+    "parentRefs",
+    "parentCert",
+    "otherParents"
+   ],
+   "by": [
+    "C1"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iosif-muzh-marii",
+   "fields": [
+    "otherParents",
+    "kin",
+    "card.meaning"
+   ],
+   "by": [
+    "C1",
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iisus",
+   "fields": [
+    "parentCert",
+    "motherCert"
+   ],
+   "by": [
+    "C3"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "zakhariya-svyashchennik",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "elisaveta",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ioann-krestitel",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "andrey",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ioann-apostol",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "filipp-apostol",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "varfolomey",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "nafanail",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "matfey",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iuda-iskariot",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "lazar",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "marfa",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "mariya-magdalina",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "nikodim",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "feliks",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "pavel",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "timofey",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "akila",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "vartimey",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "arba",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "pakhaf-moav",
+   "fields": [
+    "card.meaning"
+   ],
+   "by": [
+    "C4"
+   ]
+  },
+  {
+   "what": "линия",
+   "id": "line:mary",
+   "by": [
+    "C7"
+   ]
+  }
+ ]
+}

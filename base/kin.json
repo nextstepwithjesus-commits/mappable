@@ -1,0 +1,761 @@
+{
+ "schema": 1,
+ "title": "Родство словами Писания",
+ "prov": {
+  "by": "перенос Д1 (координатор)",
+  "at": "2026-10-09",
+  "status": "draft",
+  "from": {
+   "vol": "data",
+   "commit": "deb7299"
+  }
+ },
+ "items": [
+  {
+   "from": "p-iuval",
+   "to": "p-iaval",
+   "rel": "брат",
+   "refs": [
+    "Быт 4:21"
+   ]
+  },
+  {
+   "from": "p-noema",
+   "to": "p-tuvalkain",
+   "rel": "сестра",
+   "refs": [
+    "Быт 4:22"
+   ]
+  },
+  {
+   "from": "p-sarra",
+   "to": "p-avraam",
+   "rel": "сестра",
+   "refs": [
+    "Быт 20:12"
+   ]
+  },
+  {
+   "from": "p-mamriy",
+   "to": "p-eshkol",
+   "rel": "брат",
+   "refs": [
+    "Быт 14:13"
+   ]
+  },
+  {
+   "from": "p-mamriy",
+   "to": "p-aner",
+   "rel": "брат",
+   "refs": [
+    "Быт 14:13"
+   ]
+  },
+  {
+   "from": "p-eshkol",
+   "to": "p-mamriy",
+   "rel": "брат",
+   "refs": [
+    "Быт 14:13"
+   ]
+  },
+  {
+   "from": "p-aner",
+   "to": "p-mamriy",
+   "rel": "брат",
+   "refs": [
+    "Быт 14:13"
+   ]
+  },
+  {
+   "from": "p-famna-sestra-lotana",
+   "to": "p-lotan",
+   "rel": "сестра",
+   "refs": [
+    "Быт 36:22",
+    "1Пар 1:39"
+   ]
+  },
+  {
+   "from": "p-famar",
+   "to": "p-iuda",
+   "rel": "невестка",
+   "refs": [
+    "Быт 38:11",
+    "Быт 38:24",
+    "1Пар 2:4"
+   ]
+  },
+  {
+   "from": "p-vooz",
+   "to": "p-elimelekh",
+   "rel": "родственник",
+   "refs": [
+    "Руф 2:1",
+    "Руф 2:3",
+    "Руф 4:3"
+   ]
+  },
+  {
+   "from": "p-vooz",
+   "to": "p-noemin",
+   "rel": "родственник",
+   "refs": [
+    "Руф 2:1",
+    "Руф 2:20",
+    "Руф 3:2"
+   ]
+  },
+  {
+   "from": "p-saruiya",
+   "to": "p-david",
+   "rel": "сестра",
+   "refs": [
+    "1Пар 2:16"
+   ]
+  },
+  {
+   "from": "p-saruiya",
+   "to": "p-avigeya-sestra-davida",
+   "rel": "сестра",
+   "refs": [
+    "2Цар 17:25"
+   ]
+  },
+  {
+   "from": "p-avigeya-sestra-davida",
+   "to": "p-david",
+   "rel": "сестра",
+   "refs": [
+    "1Пар 2:16"
+   ]
+  },
+  {
+   "from": "p-avigeya-sestra-davida",
+   "to": "p-saruiya",
+   "rel": "сестра",
+   "refs": [
+    "2Цар 17:25"
+   ]
+  },
+  {
+   "from": "p-amessay",
+   "to": "p-ioav",
+   "rel": "двоюродный брат",
+   "refs": [
+    "2Цар 17:25"
+   ],
+   "cert": "inference"
+  },
+  {
+   "from": "p-kenaz-otets-gofoniila",
+   "to": "p-khalev",
+   "rel": "младший брат",
+   "refs": [
+    "Суд 1:13",
+    "Нав 15:17"
+   ]
+  },
+  {
+   "from": "p-kheluv-brat-shukhi",
+   "to": "p-shukha",
+   "rel": "брат",
+   "refs": [
+    "1Пар 4:11"
+   ]
+  },
+  {
+   "from": "p-shukha",
+   "to": "p-kheluv-brat-shukhi",
+   "rel": "брат",
+   "refs": [
+    "1Пар 4:11"
+   ]
+  },
+  {
+   "from": "p-godiya-sestra-nakhama",
+   "to": "p-nakham-otets-keily",
+   "rel": "сестра",
+   "refs": [
+    "1Пар 4:19"
+   ]
+  },
+  {
+   "from": "p-nakham-otets-keily",
+   "to": "p-godiya-sestra-nakhama",
+   "rel": "брат",
+   "refs": [
+    "1Пар 4:19"
+   ]
+  },
+  {
+   "from": "p-iokhaveda",
+   "to": "p-amram",
+   "rel": "тётка",
+   "refs": [
+    "Исх 6:20"
+   ]
+  },
+  {
+   "from": "p-khovav",
+   "to": "p-moisey",
+   "rel": "родственник",
+   "refs": [
+    "Чис 10:29",
+    "Суд 4:11"
+   ]
+  },
+  {
+   "from": "p-simey-brat-khonanii",
+   "to": "p-khonaniya-levit",
+   "rel": "брат",
+   "refs": [
+    "2Пар 31:12"
+   ]
+  },
+  {
+   "from": "p-shemaiya-2par35",
+   "to": "p-khonaniya-2par35",
+   "rel": "брат",
+   "refs": [
+    "2Пар 35:9"
+   ]
+  },
+  {
+   "from": "p-nafanail-2par35",
+   "to": "p-khonaniya-2par35",
+   "rel": "брат",
+   "refs": [
+    "2Пар 35:9"
+   ]
+  },
+  {
+   "from": "p-nafanail-2par35",
+   "to": "p-shemaiya-2par35",
+   "rel": "брат",
+   "refs": [
+    "2Пар 35:9"
+   ]
+  },
+  {
+   "from": "p-ieiel-1par5-7",
+   "to": "p-beera-syn-vaala",
+   "rel": "брат",
+   "refs": [
+    "1Пар 5:6-7"
+   ]
+  },
+  {
+   "from": "p-zakhariya-1par5-7",
+   "to": "p-beera-syn-vaala",
+   "rel": "брат",
+   "refs": [
+    "1Пар 5:6-7"
+   ]
+  },
+  {
+   "from": "p-bela-syn-azaza",
+   "to": "p-beera-syn-vaala",
+   "rel": "брат",
+   "refs": [
+    "1Пар 5:6-8"
+   ]
+  },
+  {
+   "from": "p-sheresh-syn-makhira",
+   "to": "p-keresh-syn-makhira",
+   "rel": "брат",
+   "refs": [
+    "1Пар 7:16"
+   ]
+  },
+  {
+   "from": "p-molekhef",
+   "to": "p-galaad-syn-makhira",
+   "rel": "сестра",
+   "refs": [
+    "1Пар 7:17-18"
+   ],
+   "cert": "interpretation"
+  },
+  {
+   "from": "p-shupim-syn-ira",
+   "to": "p-maakha-zhena-makhira",
+   "rel": "брат",
+   "refs": [
+    "1Пар 7:15"
+   ],
+   "cert": "interpretation"
+  },
+  {
+   "from": "p-khupim-syn-ira",
+   "to": "p-maakha-zhena-makhira",
+   "rel": "брат",
+   "refs": [
+    "1Пар 7:15"
+   ],
+   "cert": "interpretation"
+  },
+  {
+   "from": "p-nir",
+   "to": "p-saul",
+   "rel": "дядя",
+   "refs": [
+    "1Цар 14:50"
+   ]
+  },
+  {
+   "from": "p-eshek",
+   "to": "p-atsel",
+   "rel": "брат",
+   "refs": [
+    "1Пар 8:39"
+   ]
+  },
+  {
+   "from": "p-gelem",
+   "to": "p-shomer-syn-khevera",
+   "rel": "брат",
+   "refs": [
+    "1Пар 7:35"
+   ]
+  },
+  {
+   "from": "p-famar-doch-davida",
+   "to": "p-avessalom",
+   "rel": "сестра",
+   "refs": [
+    "2Цар 13:1",
+    "2Цар 13:4",
+    "2Цар 13:20",
+    "2Цар 13:22",
+    "2Цар 13:32"
+   ]
+  },
+  {
+   "from": "p-maakha-doch-avessaloma",
+   "to": "p-asa",
+   "rel": "мать",
+   "refs": [
+    "3Цар 15:10",
+    "3Цар 15:13",
+    "2Пар 15:16"
+   ]
+  },
+  {
+   "from": "p-iosavef",
+   "to": "p-okhoziya-syn-iorama",
+   "rel": "сестра",
+   "refs": [
+    "4Цар 11:2",
+    "2Пар 22:11"
+   ]
+  },
+  {
+   "from": "p-maaseya-syn-akhaza",
+   "to": "p-akhaz",
+   "rel": "сын царя",
+   "refs": [
+    "2Пар 28:7"
+   ],
+   "cert": "interpretation"
+  },
+  {
+   "from": "p-sedekiya",
+   "to": "p-iekhoniya",
+   "rel": "дядя",
+   "refs": [
+    "4Цар 24:17"
+   ]
+  },
+  {
+   "from": "p-ierameil-syn-tsarya",
+   "to": "p-ioakim-tsar",
+   "rel": "сын царя",
+   "refs": [
+    "Иер 36:26"
+   ],
+   "cert": "interpretation"
+  },
+  {
+   "from": "p-malkhiya-syn-tsarya",
+   "to": "p-sedekiya",
+   "rel": "сын царя",
+   "refs": [
+    "Иер 38:6"
+   ],
+   "cert": "interpretation"
+  },
+  {
+   "from": "p-sestra-takhpenesy",
+   "to": "p-takhpenesa",
+   "rel": "сестра",
+   "refs": [
+    "3Цар 11:19-20"
+   ]
+  },
+  {
+   "from": "p-ioas-syn-tsarya",
+   "to": "p-akhav",
+   "rel": "сын царя",
+   "refs": [
+    "3Цар 22:26",
+    "2Пар 18:25"
+   ],
+   "cert": "interpretation"
+  },
+  {
+   "from": "p-sallum-dyadya-ieremii",
+   "to": "p-ieremiya",
+   "rel": "дядя",
+   "refs": [
+    "Иер 32:7"
+   ]
+  },
+  {
+   "from": "p-anameil",
+   "to": "p-ieremiya",
+   "rel": "сын дяди",
+   "refs": [
+    "Иер 32:8",
+    "Иер 32:9",
+    "Иер 32:12"
+   ]
+  },
+  {
+   "from": "p-seraiya-syn-nirii",
+   "to": "p-varukh",
+   "rel": "брат",
+   "refs": [
+    "Иер 32:12",
+    "Иер 51:59"
+   ],
+   "cert": "inference"
+  },
+  {
+   "from": "p-khanani-brat-neemii",
+   "to": "p-neemiya",
+   "rel": "брат",
+   "refs": [
+    "Неем 1:2",
+    "Неем 7:2"
+   ]
+  },
+  {
+   "from": "p-syn-ioiady-zyat-sanavallata",
+   "to": "p-sanavallat",
+   "rel": "зять",
+   "refs": [
+    "Неем 13:28"
+   ]
+  },
+  {
+   "from": "p-toviya-ammonityanin",
+   "to": "p-shekhaniya-syn-arakha",
+   "rel": "зять",
+   "refs": [
+    "Неем 6:18"
+   ]
+  },
+  {
+   "from": "p-toviya-ammonityanin",
+   "to": "p-eliashiv-pervosvyashchennik",
+   "rel": "близкий родственник",
+   "refs": [
+    "Неем 13:4"
+   ],
+   "cert": "interpretation"
+  },
+  {
+   "from": "p-abikhail-otets-esfiri",
+   "to": "p-mardokhey",
+   "rel": "дядя",
+   "refs": [
+    "Есф 2:7",
+    "Есф 2:15"
+   ]
+  },
+  {
+   "from": "p-esfir",
+   "to": "p-mardokhey",
+   "rel": "дочь дяди",
+   "refs": [
+    "Есф 2:7",
+    "Есф 2:15"
+   ]
+  },
+  {
+   "from": "p-elisaveta",
+   "to": "p-mariya",
+   "rel": "родственница",
+   "refs": [
+    "Лк 1:36"
+   ]
+  },
+  {
+   "from": "p-iakov-brat-gospoden",
+   "to": "p-iisus",
+   "rel": "брат",
+   "refs": [
+    "Мф 13:55",
+    "Мк 6:3",
+    "Гал 1:19"
+   ]
+  },
+  {
+   "from": "p-iosiy-brat-gospoden",
+   "to": "p-iisus",
+   "rel": "брат",
+   "refs": [
+    "Мф 13:55",
+    "Мк 6:3"
+   ]
+  },
+  {
+   "from": "p-simon-brat-gospoden",
+   "to": "p-iisus",
+   "rel": "брат",
+   "refs": [
+    "Мф 13:55",
+    "Мк 6:3"
+   ]
+  },
+  {
+   "from": "p-iuda-brat-gospoden",
+   "to": "p-iisus",
+   "rel": "брат",
+   "refs": [
+    "Мф 13:55",
+    "Мк 6:3"
+   ]
+  },
+  {
+   "from": "p-iuda-brat-gospoden",
+   "to": "p-iakov-brat-gospoden",
+   "rel": "брат",
+   "refs": [
+    "Иуд 1:1"
+   ],
+   "cert": "interpretation"
+  },
+  {
+   "from": "p-mariya-kleopova",
+   "to": "p-mariya",
+   "rel": "сестра",
+   "refs": [
+    "Ин 19:25"
+   ],
+   "cert": "interpretation"
+  },
+  {
+   "from": "p-teshcha-simona",
+   "to": "p-petr",
+   "rel": "тёща",
+   "refs": [
+    "Мф 8:14",
+    "Мк 1:30",
+    "Лк 4:38"
+   ]
+  },
+  {
+   "from": "p-andrey",
+   "to": "p-petr",
+   "rel": "брат",
+   "refs": [
+    "Мф 4:18",
+    "Мф 10:2",
+    "Мк 1:16",
+    "Лк 6:14",
+    "Ин 1:40"
+   ]
+  },
+  {
+   "from": "p-lazar",
+   "to": "p-marfa",
+   "rel": "брат",
+   "refs": [
+    "Ин 11:1",
+    "Ин 11:19",
+    "Ин 11:21",
+    "Ин 11:39"
+   ]
+  },
+  {
+   "from": "p-lazar",
+   "to": "p-mariya-iz-vifanii",
+   "rel": "брат",
+   "refs": [
+    "Ин 11:1-2",
+    "Ин 11:19",
+    "Ин 11:32"
+   ]
+  },
+  {
+   "from": "p-marfa",
+   "to": "p-mariya-iz-vifanii",
+   "rel": "сестра",
+   "refs": [
+    "Лк 10:39",
+    "Ин 11:1",
+    "Ин 11:5",
+    "Ин 11:28"
+   ]
+  },
+  {
+   "from": "p-filipp-brat-iroda",
+   "to": "p-irod-antipa",
+   "rel": "брат",
+   "refs": [
+    "Мф 14:3",
+    "Мк 6:17",
+    "Лк 3:1",
+    "Лк 3:19"
+   ]
+  },
+  {
+   "from": "p-anna-pervosvyashchennik",
+   "to": "p-kaiafa",
+   "rel": "тесть",
+   "refs": [
+    "Ин 18:13"
+   ]
+  },
+  {
+   "from": "p-ioann-deyan4-6",
+   "to": "p-anna-pervosvyashchennik",
+   "rel": "из рода первосвященнического",
+   "refs": [
+    "Деян 4:6"
+   ],
+   "cert": "interpretation"
+  },
+  {
+   "from": "p-aleksandr-deyan4-6",
+   "to": "p-anna-pervosvyashchennik",
+   "rel": "из рода первосвященнического",
+   "refs": [
+    "Деян 4:6"
+   ],
+   "cert": "interpretation"
+  },
+  {
+   "from": "p-loida",
+   "to": "p-timofey",
+   "rel": "бабка",
+   "refs": [
+    "2Тим 1:5"
+   ]
+  },
+  {
+   "from": "p-ioann-mark",
+   "to": "p-varnava",
+   "rel": "племянник",
+   "refs": [
+    "Кол 4:10"
+   ]
+  },
+  {
+   "from": "p-manail",
+   "to": "p-irod-antipa",
+   "rel": "совоспитанник",
+   "refs": [
+    "Деян 13:1"
+   ]
+  },
+  {
+   "from": "p-andronik",
+   "to": "p-pavel",
+   "rel": "сродник",
+   "refs": [
+    "Рим 16:7"
+   ],
+   "cert": "interpretation"
+  },
+  {
+   "from": "p-yuniya",
+   "to": "p-pavel",
+   "rel": "сродница",
+   "refs": [
+    "Рим 16:7"
+   ],
+   "cert": "interpretation"
+  },
+  {
+   "from": "p-irodion",
+   "to": "p-pavel",
+   "rel": "сродник",
+   "refs": [
+    "Рим 16:11"
+   ],
+   "cert": "interpretation"
+  },
+  {
+   "from": "p-luciy-srodnik",
+   "to": "p-pavel",
+   "rel": "сродник",
+   "refs": [
+    "Рим 16:21"
+   ],
+   "cert": "interpretation"
+  },
+  {
+   "from": "p-iason-srodnik",
+   "to": "p-pavel",
+   "rel": "сродник",
+   "refs": [
+    "Рим 16:21"
+   ],
+   "cert": "interpretation"
+  },
+  {
+   "from": "p-sosipatr-srodnik",
+   "to": "p-pavel",
+   "rel": "сродник",
+   "refs": [
+    "Рим 16:21"
+   ],
+   "cert": "interpretation"
+  },
+  {
+   "from": "p-sestra-nireya",
+   "to": "p-nirey",
+   "rel": "сестра",
+   "refs": [
+    "Рим 16:15"
+   ]
+  },
+  {
+   "from": "p-ionafan-dyadya-davida",
+   "to": "p-david",
+   "rel": "дядя",
+   "refs": [
+    "1Пар 27:32"
+   ]
+  },
+  {
+   "from": "p-ioil-brat-nafana",
+   "to": "p-nafan-otets-igala",
+   "rel": "брат",
+   "refs": [
+    "1Пар 11:38"
+   ],
+   "cert": "interpretation"
+  },
+  {
+   "from": "p-iokha-fitsiyanin",
+   "to": "p-iediael-syn-shimriya",
+   "rel": "брат",
+   "refs": [
+    "1Пар 11:45"
+   ]
+  },
+  {
+   "from": "p-lakhmiy",
+   "to": "p-goliaf",
+   "rel": "брат",
+   "refs": [
+    "1Пар 20:5"
+   ]
+  }
+ ]
+}

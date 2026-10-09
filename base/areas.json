@@ -1,0 +1,315 @@
+{
+ "schema": 1,
+ "title": "Области",
+ "prov": {
+  "by": "перенос Д1 (координатор)",
+  "at": "2026-10-09",
+  "status": "draft",
+  "from": {
+   "vol": "data/groups.json",
+   "commit": "deb7299"
+  }
+ },
+ "items": [
+  {
+   "id": "g-sethites",
+   "name": "Род Сифа",
+   "kind": "line",
+   "section": "origins"
+  },
+  {
+   "id": "g-cainites",
+   "name": "Род Каина",
+   "kind": "line",
+   "founder": "p-kain",
+   "section": "origins"
+  },
+  {
+   "id": "g-noahides",
+   "name": "Ной и сыновья",
+   "kind": "line",
+   "founder": "p-noy",
+   "section": "origins"
+  },
+  {
+   "id": "g-japhethites",
+   "name": "Сыны Иафета",
+   "kind": "nation",
+   "founder": "p-iafet",
+   "foreign": true,
+   "section": "origins"
+  },
+  {
+   "id": "g-hamites",
+   "name": "Сыны Хама",
+   "kind": "nation",
+   "founder": "p-kham",
+   "foreign": true,
+   "section": "origins"
+  },
+  {
+   "id": "g-shemites",
+   "name": "Сыны Сима",
+   "kind": "nation",
+   "founder": "p-sim",
+   "foreign": true,
+   "section": "origins"
+  },
+  {
+   "id": "g-eberites",
+   "name": "От Сима до Фарры",
+   "kind": "line",
+   "founder": "p-sim",
+   "section": "origins"
+  },
+  {
+   "id": "g-terahites",
+   "name": "Дом Фарры",
+   "kind": "house",
+   "founder": "p-farra",
+   "section": "origins"
+  },
+  {
+   "id": "g-nahorites",
+   "name": "Дом Нахора",
+   "kind": "house",
+   "founder": "p-nakhor-syn-farry",
+   "foreign": true,
+   "section": "origins"
+  },
+  {
+   "id": "g-moabites",
+   "name": "Моав",
+   "kind": "nation",
+   "founder": "p-moav",
+   "foreign": true,
+   "section": "patriarchs"
+  },
+  {
+   "id": "g-ammonites",
+   "name": "Аммон",
+   "kind": "nation",
+   "founder": "p-ben-ammi",
+   "foreign": true,
+   "section": "patriarchs"
+  },
+  {
+   "id": "g-ishmaelites",
+   "name": "Измаильтяне",
+   "kind": "nation",
+   "founder": "p-izmail",
+   "foreign": true,
+   "section": "patriarchs"
+  },
+  {
+   "id": "g-keturites",
+   "name": "Сыны Хеттуры",
+   "kind": "nation",
+   "founder": "p-avraam",
+   "foreign": true,
+   "section": "patriarchs"
+  },
+  {
+   "id": "g-edomites",
+   "name": "Едом",
+   "kind": "nation",
+   "founder": "p-isav",
+   "foreign": true,
+   "section": "patriarchs"
+  },
+  {
+   "id": "g-horites",
+   "name": "Хорреи Сеира",
+   "kind": "nation",
+   "founder": "p-seir-khorreyanin",
+   "foreign": true,
+   "section": "patriarchs"
+  },
+  {
+   "id": "g-patriarchs",
+   "name": "Патриархи",
+   "kind": "line",
+   "founder": "p-avraam",
+   "section": "patriarchs"
+  },
+  {
+   "id": "g-reuben",
+   "name": "Колено Рувимово",
+   "kind": "tribe",
+   "founder": "p-ruvim",
+   "section": "tribes"
+  },
+  {
+   "id": "g-simeon",
+   "name": "Колено Симеоново",
+   "kind": "tribe",
+   "founder": "p-simeon",
+   "section": "tribes"
+  },
+  {
+   "id": "g-levi",
+   "name": "Колено Левиино",
+   "kind": "tribe",
+   "founder": "p-leviy",
+   "section": "tribes"
+  },
+  {
+   "id": "g-aaronides",
+   "name": "Священники, сыны Аароновы",
+   "kind": "house",
+   "founder": "p-aaron",
+   "parent": "g-levi",
+   "section": "tribes"
+  },
+  {
+   "id": "g-judah",
+   "name": "Колено Иудино",
+   "kind": "tribe",
+   "founder": "p-iuda",
+   "section": "tribes"
+  },
+  {
+   "id": "g-davidic",
+   "name": "Дом Давидов",
+   "kind": "house",
+   "founder": "p-david",
+   "parent": "g-judah",
+   "section": "tribes"
+  },
+  {
+   "id": "g-dan",
+   "name": "Колено Даново",
+   "kind": "tribe",
+   "founder": "p-dan",
+   "section": "tribes"
+  },
+  {
+   "id": "g-naphtali",
+   "name": "Колено Неффалимово",
+   "kind": "tribe",
+   "founder": "p-neffalim",
+   "section": "tribes"
+  },
+  {
+   "id": "g-gad",
+   "name": "Колено Гадово",
+   "kind": "tribe",
+   "founder": "p-gad",
+   "section": "tribes"
+  },
+  {
+   "id": "g-asher",
+   "name": "Колено Асирово",
+   "kind": "tribe",
+   "founder": "p-asir",
+   "section": "tribes"
+  },
+  {
+   "id": "g-issachar",
+   "name": "Колено Иссахарово",
+   "kind": "tribe",
+   "founder": "p-issakhar",
+   "section": "tribes"
+  },
+  {
+   "id": "g-zebulun",
+   "name": "Колено Завулоново",
+   "kind": "tribe",
+   "founder": "p-zavulon",
+   "section": "tribes"
+  },
+  {
+   "id": "g-joseph",
+   "name": "Дом Иосифа",
+   "kind": "house",
+   "founder": "p-iosif",
+   "section": "tribes"
+  },
+  {
+   "id": "g-ephraim",
+   "name": "Колено Ефремово",
+   "kind": "tribe",
+   "founder": "p-efrem",
+   "parent": "g-joseph",
+   "section": "tribes"
+  },
+  {
+   "id": "g-manasseh",
+   "name": "Колено Манассиино",
+   "kind": "tribe",
+   "founder": "p-manassiya",
+   "parent": "g-joseph",
+   "section": "tribes"
+  },
+  {
+   "id": "g-benjamin",
+   "name": "Колено Вениаминово",
+   "kind": "tribe",
+   "founder": "p-veniamin",
+   "section": "tribes"
+  },
+  {
+   "id": "g-saulides",
+   "name": "Дом Саулов",
+   "kind": "house",
+   "parent": "g-benjamin",
+   "section": "tribes"
+  },
+  {
+   "id": "g-court",
+   "name": "Двор и войско царей",
+   "kind": "people",
+   "section": "kingdoms"
+  },
+  {
+   "id": "g-israel-kings",
+   "name": "Цари Израиля (северного)",
+   "kind": "house",
+   "section": "kingdoms"
+  },
+  {
+   "id": "g-nations",
+   "name": "Цари и вельможи народов",
+   "kind": "people",
+   "foreign": true,
+   "section": "kingdoms"
+  },
+  {
+   "id": "g-exiles",
+   "name": "Плен и возвращение",
+   "kind": "people",
+   "section": "kingdoms"
+  },
+  {
+   "id": "g-messiah",
+   "name": "Родословие и семья Иисуса Христа",
+   "kind": "line",
+   "section": "nt"
+  },
+  {
+   "id": "g-apostles",
+   "name": "Апостолы и их семьи",
+   "kind": "people",
+   "section": "nt"
+  },
+  {
+   "id": "g-herodians",
+   "name": "Дом Ирода",
+   "kind": "house",
+   "foreign": true,
+   "section": "nt"
+  },
+  {
+   "id": "g-church",
+   "name": "Церковь апостольского времени",
+   "kind": "people",
+   "section": "nt"
+  },
+  {
+   "id": "g-other",
+   "name": "Прочие лица",
+   "kind": "other",
+   "section": "other"
+  }
+ ]
+}
