@@ -9,7 +9,7 @@
  */
 import { readFileSync, existsSync } from 'node:fs';
 
-export interface Link { ch: number; a: string; b: string; type: number; ref: string; quote?: string; cert?: string }
+export interface Link { book?: string; ch: number; a: string; b: string; type: number; ref: string; quote?: string; cert?: string }
 
 export function readLinks(path: string): Link[] {
   return readFileSync(path, 'utf8').split('\n').filter((l) => l.trim()).map((l) => JSON.parse(l)).filter((x) => !x.summary);
@@ -34,7 +34,7 @@ export function compare(A: Link[], B: Link[], alias: Record<string, string> = {}
   const id = (x: string) => alias[x] ?? x;
   const key = (l: Link) => {
     const [p, q] = [id(l.a), id(l.b)].sort();
-    return `${l.ch}|${p}|${q}`;
+    return `${l.book ? `${l.book} ` : ''}${l.ch}|${p}|${q}`;
   };
   const labels = (xs: Link[]) => {
     const m = new Map<string, Set<number>>();
@@ -62,16 +62,17 @@ export function compare(A: Link[], B: Link[], alias: Record<string, string> = {}
       perType.set(t, x);
     }
   }
-  const perChapter = new Map<number, [string, string][]>();
+  const perChapter = new Map<string, [string, string][]>();
   units.forEach((u, i) => {
-    const ch = +u.split('|')[0];
+    const ch = u.split('|')[0];
     (perChapter.get(ch) ?? perChapter.set(ch, []).get(ch)!).push(byLabel[i]);
   });
   return {
     units: units.length, onlyA: units.filter((u) => !lb.has(u)), onlyB: units.filter((u) => !la.has(u)),
+    f1: (2 * both.length) / (la.size + lb.size),
     kappaLabel: kappa(byLabel), kappaPresence: kappa(presence), kappaTypeWhereBoth: kappa(typeAgree), bothCount: both.length,
     perType: [...perType].sort(([x], [y]) => x - y),
-    perChapter: [...perChapter].sort(([x], [y]) => x - y).map(([ch, ps]) => ({ ch, n: ps.length, agree: ps.filter(([x, y]) => x === y).length, kappa: kappa(ps) })),
+    perChapter: [...perChapter].sort(([x], [y]) => x.localeCompare(y, 'ru', { numeric: true })).map(([ch, ps]) => ({ ch, n: ps.length, agree: ps.filter(([x, y]) => x === y).length, kappa: kappa(ps) })),
     disagree: units.filter((u, i) => byLabel[i][0] !== byLabel[i][1] && la.has(u) && lb.has(u)).map((u) => ({ u, a: lab(la.get(u)), b: lab(lb.get(u)) })),
   };
 }
@@ -82,6 +83,7 @@ function main() {
   const r = compare(readLinks(pa), readLinks(pb), alias);
   const f = (x: number) => (Number.isNaN(x) ? '—' : x.toFixed(2));
   console.log(`единиц (пара в главе): ${r.units}; у обоих ${r.bothCount}; только у A ${r.onlyA.length}; только у B ${r.onlyB.length}`);
+  console.log(`совпадение состава пар (F1): ${f(r.f1)}`);
   console.log(`каппа: по метке (вид или «нет») ${f(r.kappaLabel)}; по наличию связи ${f(r.kappaPresence)}; по виду, где связь у обоих ${f(r.kappaTypeWhereBoth)}`);
   console.log('по видам (A / B / оба):', r.perType.map(([t, x]) => `${t}: ${x.a}/${x.b}/${x.both}`).join('; '));
   console.log('по главам (единиц, совпало, каппа):', r.perChapter.map((c) => `${c.ch}: ${c.n}, ${c.agree}, ${f(c.kappa)}`).join('; '));
