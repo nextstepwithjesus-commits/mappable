@@ -7,15 +7,18 @@
  * прежние номера переименованных лиц.
  */
 import type { Base } from './migrate.ts';
-import { CARD_FIELDS, mapChronoIds } from './migrate.ts';
+import { CARD_FIELDS, mapChronoIds, mapEpochIds } from './migrate.ts';
 import type { Origin } from './types.ts';
 
 export interface Hints {
   volumes: Record<string, { file: string }>;
-  persons: Record<string, { pc?: true; mc?: true; sp?: [string, number][]; empty?: string[] }>;
+  /** sp — только порядок записей о супругах у лица (номера союзов); вид и сторону проекция берёт из союза. */
+  persons: Record<string, { pc?: true; mc?: true; sp?: string[]; empty?: string[] }>;
   /** Новый номер → прежний, если он не равен «p-» + прежний. */
   idmap: Record<string, string>;
   lineOrder: string[];
+  /** Новое имя линии → прежнее. */
+  lineIdmap?: Record<string, string>;
 }
 
 /** Канонический вид для сравнения: ключи по алфавиту, порядок списков сохраняется. */
@@ -50,13 +53,13 @@ export function project(base: Base, hints: Hints) {
       if (a.subkind === 'founder') p.kind = 'founder';
       else if (a.kind === 'people' || a.kind === 'clan') p.kind = a.kind;
       else if (a.kind === 'unnamed') p.unnamed = true;
-      else if (a.kind !== 'human') throw new Error(`вид ${a.kind} не имеет прежнего вида: ${a.id}`);
+      else if (a.kind !== 'human') p.kind = a.kind; // нового вида в прежних данных не было: только для отчёта о дополнениях
 
       const os = originsBy.get(a.id) ?? [];
       const f = os.find((o) => o.primary && o.role === 'father');
       const m = os.find((o) => o.primary && o.role === 'mother');
-      if (f) p.father = old(f.parent);
-      if (m) p.mother = old(m.parent);
+      if (f) p.father = old(f.parent!);
+      if (m) p.mother = old(m.parent!);
       const refs = (f ?? m)?.refs;
       if (refs?.length) p.parentRefs = refs;
       const pc = (f ?? m)?.cert;
@@ -70,16 +73,24 @@ export function project(base: Base, hints: Hints) {
       const other = os.filter((o: Origin) => !o.primary);
       if (other.length) {
         p.otherParents = other.map((o) => ({
-          id: old(o.parent), role: o.role, kind: o.kind, refs: o.refs, cert: o.cert, ...(o.note !== undefined && { note: o.note }),
+          id: old(o.parent!), role: o.role, kind: o.kind, refs: o.refs, cert: o.cert, ...(o.note !== undefined && { note: o.note }),
         }));
       }
       if (h.sp) {
-        p.spouses = h.sp.flatMap(([uid, i]) => {
+        // обозначения своей стороны по порядку: сторона и вид — из союза, подсказка задаёт только порядок записей
+        const used = new Map<string, number>();
+        p.spouses = h.sp.flatMap((uid) => {
           const u = unionById.get(uid);
-          const t = u?.terms[i];
-          if (!u || !t) return [];
+          if (!u) return [];
+          const side = a.id === u.husband ? 'husband' : 'wife';
+          const mine = u.terms.filter((t) => t.side === side);
+          const i = used.get(uid) ?? 0;
+          used.set(uid, i + 1);
+          const t = mine[i];
+          if (!t) return [];
+          const kind = t.kind === 'concubine' ? 'concubine' : t.kind === 'marriage' ? (side === 'husband' ? 'wife' : 'husband') : t.kind;
           return [{
-            id: old(a.id === u.husband ? u.wife : u.husband), kind: t.term, refs: t.refs,
+            id: old(side === 'husband' ? u.wife : u.husband), kind, refs: t.refs,
             ...(t.cert !== undefined && { cert: t.cert }), ...(t.order !== undefined && { order: t.order }),
             ...(t.note !== undefined && { note: t.note }),
           }];
@@ -89,8 +100,8 @@ export function project(base: Base, hints: Hints) {
       if (kin?.length) p.kin = kin.map((k) => ({ id: old(k.to), rel: k.rel, refs: k.refs, ...(k.cert !== undefined && { cert: k.cert }) }));
       if (a.roles !== undefined) p.roles = a.roles;
       const g = memberBy.get(a.id);
-      if (g?.length !== 1) throw new Error(`у лица ${a.id} не одна область раскладки`);
-      p.group = oldG(g[0].area);
+      if ((g?.length ?? 0) > 1) throw new Error(`у лица ${a.id} несколько областей раскладки`);
+      if (g?.length) p.group = oldG(g[0].area);
       p.prominence = a.prominence;
       const ch = chronoBy.get(a.id);
       if (ch !== undefined) p.chrono = mapChronoIds(ch, old);
@@ -119,13 +130,9 @@ export function project(base: Base, hints: Hints) {
   for (const [k, l] of Object.entries<any>(base.lines)) {
     const c = structuredClone(l);
     for (const s of c.persons) s.id = old(s.id);
-    lines[k] = c;
+    lines[hints.lineIdmap?.[k] ?? k] = c;
   }
-  const epochs = base.epochs.map((e) => {
-    const c = structuredClone(e);
-    for (const r of [c.startRule, c.endRule]) if (r?.person) r.person = old(r.person);
-    return c;
-  });
+  const epochs = base.epochs.map((e) => mapEpochIds(e, old));
   const groups = base.areas.map((a) => ({
     id: oldG(a.id), name: a.name, kind: a.kind,
     ...(a.founder !== undefined && { founder: old(a.founder) }), ...(a.parent !== undefined && { parent: oldG(a.parent) }),

@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data",
-   "commit": "deb7299"
+   "commit": "3c6953b"
   }
  },
  "items": [
@@ -17,13 +17,19 @@
    "wife": "p-eva",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Быт 2:22-25",
       "Быт 3:20",
       "Быт 4:1"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "01-antediluvian.json"
+      }
+     }
     }
    ]
   },
@@ -33,13 +39,19 @@
    "wife": "p-ada-zhena-lamekha",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Быт 4:19",
       "Быт 4:23"
      ],
-     "order": 1
+     "order": 1,
+     "prov": {
+      "from": {
+       "vol": "01-antediluvian.json"
+      }
+     }
     }
    ]
   },
@@ -49,13 +61,19 @@
    "wife": "p-tsilla",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Быт 4:19",
       "Быт 4:23"
      ],
-     "order": 2
+     "order": 2,
+     "prov": {
+      "from": {
+       "vol": "01-antediluvian.json"
+      }
+     }
     }
    ]
   },
@@ -65,14 +83,20 @@
    "wife": "p-milka",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Быт 11:29",
       "Быт 22:20",
       "Быт 24:15"
      ],
-     "order": 1
+     "order": 1,
+     "prov": {
+      "from": {
+       "vol": "03-shem-to-terah.json"
+      }
+     }
     }
    ]
   },
@@ -82,12 +106,18 @@
    "wife": "p-reuma",
    "terms": [
     {
-     "term": "concubine",
+     "kind": "concubine",
+     "word": "наложница",
      "side": "husband",
      "refs": [
       "Быт 22:24"
      ],
-     "order": 2
+     "order": 2,
+     "prov": {
+      "from": {
+       "vol": "03-shem-to-terah.json"
+      }
+     }
     }
    ]
   },
@@ -97,12 +127,18 @@
    "wife": "p-zhena-lota",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Быт 19:15-16",
       "Быт 19:26"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "03-shem-to-terah.json"
+      }
+     }
     }
    ]
   },
@@ -112,14 +148,20 @@
    "wife": "p-sarra",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Быт 11:29",
       "Быт 12:5",
       "Быт 23:19"
      ],
-     "order": 1
+     "order": 1,
+     "prov": {
+      "from": {
+       "vol": "04-abraham.json"
+      }
+     }
     }
    ]
   },
@@ -129,7 +171,8 @@
    "wife": "p-agar",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Быт 16:3",
@@ -137,7 +180,12 @@
       "Быт 25:12"
      ],
      "note": "Сара дала её Авраму «в жену» (Быт 16:3); она же — служанка и рабыня (Быт 16:1; 21:10; Гал 4:22–24). Наложницей по имени Агарь не названа; Быт 25:6 говорит о наложницах Авраама без имён",
-     "order": 2
+     "order": 2,
+     "prov": {
+      "from": {
+       "vol": "04-abraham.json"
+      }
+     }
     }
    ]
   },
@@ -147,14 +195,26 @@
    "wife": "p-khettura",
    "terms": [
     {
-     "term": "concubine",
+     "kind": "concubine",
+     "word": "наложница",
      "side": "husband",
      "refs": [
-      "Быт 25:1",
       "1Пар 1:32"
      ],
-     "note": "«Взял Авраам еще жену» (Быт 25:1); в 1 Пар 1:32 — «Хеттуры, наложницы Авраамовой»",
-     "order": 3
+     "note": "«Сыновья Хеттуры, наложницы Авраамовой» (1Пар 1:32)",
+     "order": 3,
+     "prov": {
+      "from": {
+       "vol": "04-abraham.json"
+      }
+     }
+    },
+    {
+     "kind": "marriage",
+     "word": "жена",
+     "refs": [
+      "Быт 25:1"
+     ]
     }
    ]
   },
@@ -164,12 +224,18 @@
    "wife": "p-revekka",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Быт 24:67",
       "Быт 25:20"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "04-abraham.json"
+      }
+     }
     }
    ]
   },
@@ -179,13 +245,19 @@
    "wife": "p-liya",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Быт 29:23-25",
       "Быт 29:30"
      ],
-     "order": 1
+     "order": 1,
+     "prov": {
+      "from": {
+       "vol": "04-abraham.json"
+      }
+     }
     }
    ]
   },
@@ -195,13 +267,19 @@
    "wife": "p-rakhil",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Быт 29:28",
       "Быт 29:30"
      ],
-     "order": 2
+     "order": 2,
+     "prov": {
+      "from": {
+       "vol": "04-abraham.json"
+      }
+     }
     }
    ]
   },
@@ -211,7 +289,8 @@
    "wife": "p-valla",
    "terms": [
     {
-     "term": "concubine",
+     "kind": "concubine",
+     "word": "наложница",
      "side": "husband",
      "refs": [
       "Быт 30:4",
@@ -219,17 +298,28 @@
       "Быт 37:2"
      ],
      "note": "Рахиль дала её Иакову «в жену» (Быт 30:4); в Быт 35:22 названа «наложницею» Иакова, в Быт 37:2 — среди «жен отца своего»",
-     "order": 3
+     "order": 3,
+     "prov": {
+      "from": {
+       "vol": "04-abraham.json"
+      }
+     }
     },
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "Быт 30:4",
       "Быт 35:22",
       "Быт 37:2"
      ],
-     "note": "связь указана и в карточке Иакова (как наложница)"
+     "note": "связь указана и в карточке Иакова (как наложница)",
+     "prov": {
+      "from": {
+       "vol": "04-abraham.json"
+      }
+     }
     }
    ]
   },
@@ -239,23 +329,35 @@
    "wife": "p-zelfa",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Быт 30:9",
       "Быт 37:2"
      ],
      "note": "Лия дала её Иакову «в жену» (Быт 30:9); в Быт 37:2 Валла и Зелфа названы «жен отца своего». Наложницей, в отличие от Валлы (Быт 35:22), Зелфа не названа",
-     "order": 4
+     "order": 4,
+     "prov": {
+      "from": {
+       "vol": "04-abraham.json"
+      }
+     }
     },
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "Быт 30:9",
       "Быт 37:2"
      ],
-     "note": "связь указана и в карточке Иакова (как жена)"
+     "note": "связь указана и в карточке Иакова (как жена)",
+     "prov": {
+      "from": {
+       "vol": "04-abraham.json"
+      }
+     }
     }
    ]
   },
@@ -265,12 +367,18 @@
    "wife": "p-iegudifa",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Быт 26:34"
      ],
-     "order": 1
+     "order": 1,
+     "prov": {
+      "from": {
+       "vol": "05-edom.json"
+      }
+     }
     }
    ]
   },
@@ -280,7 +388,8 @@
    "wife": "p-ada-zhena-isava",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Быт 26:34",
@@ -288,7 +397,12 @@
       "Быт 36:10"
      ],
      "note": "В Быт 26:34 — «Васемафа, дочь Елона Хеттеянина», в Быт 36:2 — «Ада, дочь Елона Хеттеянина»; отождествление — толкование (см. § 24)",
-     "order": 2
+     "order": 2,
+     "prov": {
+      "from": {
+       "vol": "05-edom.json"
+      }
+     }
     }
    ]
   },
@@ -298,7 +412,8 @@
    "wife": "p-makhalafa-doch-izmaila",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Быт 28:9",
@@ -306,7 +421,12 @@
       "Быт 36:10"
      ],
      "note": "В Быт 28:9 — «Махалафа, дочь Измаила… сестра Наваиофова», в Быт 36:3 — «Васемафа, дочь Измаила, сестра Наваиофа»; отождествление — толкование (см. § 24)",
-     "order": 3
+     "order": 3,
+     "prov": {
+      "from": {
+       "vol": "05-edom.json"
+      }
+     }
     }
    ]
   },
@@ -316,13 +436,19 @@
    "wife": "p-olivema",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Быт 36:2",
       "Быт 36:14"
      ],
-     "order": 4
+     "order": 4,
+     "prov": {
+      "from": {
+       "vol": "05-edom.json"
+      }
+     }
     }
    ]
   },
@@ -332,11 +458,17 @@
    "wife": "p-famna-nalozhnitsa-elifaza",
    "terms": [
     {
-     "term": "concubine",
+     "kind": "concubine",
+     "word": "наложница",
      "side": "husband",
      "refs": [
       "Быт 36:12"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "05-edom.json"
+      }
+     }
     }
    ]
   },
@@ -346,12 +478,18 @@
    "wife": "p-megetaveel",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Быт 36:39",
       "1Пар 1:50"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "05-edom.json"
+      }
+     }
     }
    ]
   },
@@ -361,13 +499,19 @@
    "wife": "p-doch-shui",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Быт 38:2",
       "Быт 38:12",
       "1Пар 2:3"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "06-jacob-sons.json"
+      }
+     }
     }
    ]
   },
@@ -377,13 +521,19 @@
    "wife": "p-asenefa",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Быт 41:45",
       "Быт 41:50",
       "Быт 46:20"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "06-jacob-sons.json"
+      }
+     }
     }
    ]
   },
@@ -393,12 +543,18 @@
    "wife": "p-famar",
    "terms": [
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "Быт 38:6"
      ],
-     "order": 1
+     "order": 1,
+     "prov": {
+      "from": {
+       "vol": "06-jacob-sons.json"
+      }
+     }
     }
    ]
   },
@@ -408,14 +564,20 @@
    "wife": "p-famar",
    "terms": [
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "Быт 38:8-9"
      ],
      "cert": "inference",
      "note": "как деверь — по обычаю восстановления семени умершему брату",
-     "order": 2
+     "order": 2,
+     "prov": {
+      "from": {
+       "vol": "06-jacob-sons.json"
+      }
+     }
     }
    ]
   },
@@ -425,22 +587,34 @@
    "wife": "p-zhena-potifara",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Быт 39:1",
       "Быт 39:7",
       "Быт 39:19"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "06-jacob-sons.json"
+      }
+     }
     },
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "Быт 39:1",
       "Быт 39:7",
       "Быт 39:19"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "06-jacob-sons.json"
+      }
+     }
     }
    ]
   },
@@ -450,19 +624,31 @@
    "wife": "p-nalozhnitsa-manassii",
    "terms": [
     {
-     "term": "concubine",
+     "kind": "concubine",
+     "word": "наложница",
      "side": "husband",
      "refs": [
       "1Пар 7:14"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "06-jacob-sons.json"
+      }
+     }
     },
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "1Пар 7:14"
      ],
-     "note": "«наложница его Арамеянка»"
+     "note": "«наложница его Арамеянка»",
+     "prov": {
+      "from": {
+       "vol": "09-tribes-a.json"
+      }
+     }
     }
    ]
   },
@@ -472,11 +658,17 @@
    "wife": "p-efa-nalozhnitsa-khaleva",
    "terms": [
     {
-     "term": "concubine",
+     "kind": "concubine",
+     "word": "наложница",
      "side": "husband",
      "refs": [
       "1Пар 2:46"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "07-judah.json"
+      }
+     }
     }
    ]
   },
@@ -486,11 +678,17 @@
    "wife": "p-maakha-nalozhnitsa-khaleva",
    "terms": [
     {
-     "term": "concubine",
+     "kind": "concubine",
+     "word": "наложница",
      "side": "husband",
      "refs": [
       "1Пар 2:48"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "07-judah.json"
+      }
+     }
     }
    ]
   },
@@ -500,13 +698,19 @@
    "wife": "p-doch-makhira",
    "terms": [
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "1Пар 2:21"
      ],
      "note": "Есром взял её шестидесяти лет",
-     "order": 2
+     "order": 2,
+     "prov": {
+      "from": {
+       "vol": "07-judah.json"
+      }
+     }
     }
    ]
   },
@@ -516,11 +720,17 @@
    "wife": "p-aviya-zhena-esroma",
    "terms": [
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "1Пар 2:24"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "07-judah.json"
+      }
+     }
     }
    ]
   },
@@ -530,13 +740,19 @@
    "wife": "p-raav",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Мф 1:5"
      ],
      "cert": "inference",
-     "note": "«Салмон родил Вооза от Рахавы»"
+     "note": "«Салмон родил Вооза от Рахавы»",
+     "prov": {
+      "from": {
+       "vol": "07-judah.json"
+      }
+     }
     }
    ]
   },
@@ -546,12 +762,18 @@
    "wife": "p-noemin",
    "terms": [
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "Руф 1:2",
       "Руф 1:3"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "07-judah.json"
+      }
+     }
     }
    ]
   },
@@ -561,14 +783,20 @@
    "wife": "p-orfa",
    "terms": [
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "Руф 1:4",
       "Руф 4:9-10"
      ],
      "cert": "inference",
-     "note": "Руф 1:4 не говорит, кто на ком женился; Руфь — жена Махлона (Руф 4:10), следовательно Орфа — жена Хилеона"
+     "note": "Руф 1:4 не говорит, кто на ком женился; Руфь — жена Махлона (Руф 4:10), следовательно Орфа — жена Хилеона",
+     "prov": {
+      "from": {
+       "vol": "07-judah.json"
+      }
+     }
     }
    ]
   },
@@ -578,13 +806,19 @@
    "wife": "p-ruf",
    "terms": [
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "Руф 1:4",
       "Руф 4:10"
      ],
-     "order": 1
+     "order": 1,
+     "prov": {
+      "from": {
+       "vol": "07-judah.json"
+      }
+     }
     }
    ]
   },
@@ -594,14 +828,20 @@
    "wife": "p-ruf",
    "terms": [
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "Руф 4:10",
       "Руф 4:13",
       "Мф 1:5"
      ],
-     "order": 2
+     "order": 2,
+     "prov": {
+      "from": {
+       "vol": "07-judah.json"
+      }
+     }
     }
    ]
   },
@@ -611,14 +851,20 @@
    "wife": "p-avigeya-sestra-davida",
    "terms": [
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "1Пар 2:17",
       "2Цар 17:25"
      ],
      "cert": "inference",
-     "note": "мужем не назван: «отец же Амессы — Иефер» (1 Пар 2:17), «который вошел к Авигее» (2 Цар 17:25)"
+     "note": "мужем не назван: «отец же Амессы — Иефер» (1 Пар 2:17), «который вошел к Авигее» (2 Цар 17:25)",
+     "prov": {
+      "from": {
+       "vol": "07-judah.json"
+      }
+     }
     }
    ]
   },
@@ -628,12 +874,18 @@
    "wife": "p-afara",
    "terms": [
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "1Пар 2:26"
      ],
-     "order": 2
+     "order": 2,
+     "prov": {
+      "from": {
+       "vol": "07-judah.json"
+      }
+     }
     }
    ]
   },
@@ -643,11 +895,17 @@
    "wife": "p-avikhail-zhena-avishura",
    "terms": [
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "1Пар 2:29"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "07-judah.json"
+      }
+     }
     }
    ]
   },
@@ -657,11 +915,17 @@
    "wife": "p-doch-sheshana",
    "terms": [
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "1Пар 2:35"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "07-judah.json"
+      }
+     }
     }
    ]
   },
@@ -671,12 +935,18 @@
    "wife": "p-azuva-zhena-khaleva",
    "terms": [
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "1Пар 2:18"
      ],
-     "order": 1
+     "order": 1,
+     "prov": {
+      "from": {
+       "vol": "07-judah.json"
+      }
+     }
     }
    ]
   },
@@ -686,13 +956,19 @@
    "wife": "p-ieriofa",
    "terms": [
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "1Пар 2:18"
      ],
      "cert": "interpretation",
-     "note": "«Халев… родил от Азувы, жены своей, и от Иериофы»"
+     "note": "«Халев… родил от Азувы, жены своей, и от Иериофы»",
+     "prov": {
+      "from": {
+       "vol": "07-judah.json"
+      }
+     }
     }
    ]
   },
@@ -702,14 +978,20 @@
    "wife": "p-efrafa-zhena-khaleva",
    "terms": [
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "1Пар 2:19"
      ],
      "cert": "inference",
      "note": "«взял себе Халев [жену] Ефрафу, и она родила ему Хура»; слово «жену» — в скобках",
-     "order": 2
+     "order": 2,
+     "prov": {
+      "from": {
+       "vol": "07-judah.json"
+      }
+     }
     }
    ]
   },
@@ -719,12 +1001,18 @@
    "wife": "p-akhsa",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Нав 15:17",
       "Суд 1:13"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "07-judah.json"
+      }
+     }
     }
    ]
   },
@@ -734,12 +1022,18 @@
    "wife": "p-khela-zhena-ashkhura",
    "terms": [
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "1Пар 4:5"
      ],
-     "order": 1
+     "order": 1,
+     "prov": {
+      "from": {
+       "vol": "07-judah.json"
+      }
+     }
     }
    ]
   },
@@ -749,12 +1043,18 @@
    "wife": "p-naara-zhena-ashkhura",
    "terms": [
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "1Пар 4:5"
      ],
-     "order": 2
+     "order": 2,
+     "prov": {
+      "from": {
+       "vol": "07-judah.json"
+      }
+     }
     }
    ]
   },
@@ -764,14 +1064,20 @@
    "wife": "p-iudiya",
    "terms": [
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "1Пар 4:17",
       "1Пар 4:18"
      ],
      "cert": "interpretation",
-     "note": "«и жена его Иудия» — чья, не уточнено"
+     "note": "«и жена его Иудия» — чья, не уточнено",
+     "prov": {
+      "from": {
+       "vol": "07-judah.json"
+      }
+     }
     }
    ]
   },
@@ -781,11 +1087,17 @@
    "wife": "p-bifya",
    "terms": [
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "1Пар 4:18"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "07-judah.json"
+      }
+     }
     }
    ]
   },
@@ -795,14 +1107,20 @@
    "wife": "p-godiya-sestra-nakhama",
    "terms": [
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "1Пар 4:18",
       "1Пар 4:19"
      ],
      "cert": "interpretation",
-     "note": "«сыновья жены его Годии» — продолжение речи о Мереде"
+     "note": "«сыновья жены его Годии» — продолжение речи о Мереде",
+     "prov": {
+      "from": {
+       "vol": "07-judah.json"
+      }
+     }
     }
    ]
   },
@@ -812,12 +1130,18 @@
    "wife": "p-iokhaveda",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Исх 6:20",
       "Чис 26:59"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "08-levi.json"
+      }
+     }
     }
    ]
   },
@@ -827,11 +1151,17 @@
    "wife": "p-elisaveta-zhena-aarona",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Исх 6:23"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "08-levi.json"
+      }
+     }
     }
    ]
   },
@@ -841,13 +1171,19 @@
    "wife": "p-sepfora",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Исх 2:21",
       "Исх 18:2"
      ],
-     "order": 1
+     "order": 1,
+     "prov": {
+      "from": {
+       "vol": "08-levi.json"
+      }
+     }
     }
    ]
   },
@@ -857,20 +1193,32 @@
    "wife": "p-efioplyanka-zhena-moiseya",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Чис 12:1"
      ],
      "note": "«жена Ефиоплянка, которую он взял»; тождество с Сепфорой текстом не установлено",
-     "order": 2
+     "order": 2,
+     "prov": {
+      "from": {
+       "vol": "08-levi.json"
+      }
+     }
     },
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "Чис 12:1"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "08-levi.json"
+      }
+     }
     }
    ]
   },
@@ -880,11 +1228,17 @@
    "wife": "p-doch-futiila",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Исх 6:25"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "08-levi.json"
+      }
+     }
     }
    ]
   },
@@ -894,22 +1248,34 @@
    "wife": "p-anna-mat-samuila",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "1Цар 1:2",
       "1Цар 1:8",
       "1Цар 1:19"
      ],
-     "order": 1
+     "order": 1,
+     "prov": {
+      "from": {
+       "vol": "08-levi.json"
+      }
+     }
     },
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "1Цар 1:2",
       "1Цар 1:8"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "08-levi.json"
+      }
+     }
     }
    ]
   },
@@ -919,21 +1285,33 @@
    "wife": "p-fennana",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "1Цар 1:2",
       "1Цар 1:4"
      ],
-     "order": 2
+     "order": 2,
+     "prov": {
+      "from": {
+       "vol": "08-levi.json"
+      }
+     }
     },
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "1Цар 1:2",
       "1Цар 1:4"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "08-levi.json"
+      }
+     }
     }
    ]
   },
@@ -943,11 +1321,17 @@
    "wife": "p-zhena-fineesa-syn-iliya",
    "terms": [
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "1Цар 4:19"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "08-levi.json"
+      }
+     }
     }
    ]
   },
@@ -957,18 +1341,30 @@
    "wife": "p-iosavef",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "2Пар 22:11"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "08-levi.json"
+      }
+     }
     },
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "2Пар 22:11"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "13-kings-of-judah.json"
+      }
+     }
     }
    ]
   },
@@ -978,20 +1374,32 @@
    "wife": "p-zhena-verzelliya-svyashchennika",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Езд 2:61",
       "Неем 7:63"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "08-levi.json"
+      }
+     }
     },
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "Езд 2:61",
       "Неем 7:63"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "08-levi.json"
+      }
+     }
     }
    ]
   },
@@ -1001,12 +1409,18 @@
    "wife": "p-maakha-zhena-makhira",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "1Пар 7:15",
       "1Пар 7:16"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "09-tribes-a.json"
+      }
+     }
     }
    ]
   },
@@ -1016,13 +1430,19 @@
    "wife": "p-khushima",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "1Пар 8:8",
       "1Пар 8:11"
      ],
-     "order": 1
+     "order": 1,
+     "prov": {
+      "from": {
+       "vol": "10-tribes-b.json"
+      }
+     }
     }
    ]
   },
@@ -1032,12 +1452,18 @@
    "wife": "p-baara",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "1Пар 8:8"
      ],
-     "order": 2
+     "order": 2,
+     "prov": {
+      "from": {
+       "vol": "10-tribes-b.json"
+      }
+     }
     }
    ]
   },
@@ -1047,12 +1473,18 @@
    "wife": "p-khodesha",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "1Пар 8:9"
      ],
-     "order": 3
+     "order": 3,
+     "prov": {
+      "from": {
+       "vol": "10-tribes-b.json"
+      }
+     }
     }
    ]
   },
@@ -1062,12 +1494,18 @@
    "wife": "p-maakha-zhena-ieila",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "1Пар 8:29",
       "1Пар 9:35"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "10-tribes-b.json"
+      }
+     }
     }
    ]
   },
@@ -1077,12 +1515,18 @@
    "wife": "p-akhinoama-zhena-saula",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "1Цар 14:50"
      ],
-     "order": 1
+     "order": 1,
+     "prov": {
+      "from": {
+       "vol": "10-tribes-b.json"
+      }
+     }
     }
    ]
   },
@@ -1092,13 +1536,19 @@
    "wife": "p-ritspa",
    "terms": [
     {
-     "term": "concubine",
+     "kind": "concubine",
+     "word": "наложница",
      "side": "husband",
      "refs": [
       "2Цар 3:7",
       "2Цар 21:8",
       "2Цар 21:11"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "10-tribes-b.json"
+      }
+     }
     }
    ]
   },
@@ -1108,11 +1558,17 @@
    "wife": "p-merova",
    "terms": [
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "1Цар 18:19"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "10-tribes-b.json"
+      }
+     }
     }
    ]
   },
@@ -1122,14 +1578,20 @@
    "wife": "p-melkhola",
    "terms": [
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "1Цар 25:44",
       "2Цар 3:15-16"
      ],
      "note": "отдана Саулом при жизни Давида; взята от него Иевосфеем",
-     "order": 2
+     "order": 2,
+     "prov": {
+      "from": {
+       "vol": "10-tribes-b.json"
+      }
+     }
     }
    ]
   },
@@ -1139,11 +1601,17 @@
    "wife": "p-devora",
    "terms": [
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "Суд 4:4"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "11-judges.json"
+      }
+     }
     }
    ]
   },
@@ -1153,13 +1621,19 @@
    "wife": "p-iail",
    "terms": [
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "Суд 4:17",
       "Суд 4:21",
       "Суд 5:24"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "11-judges.json"
+      }
+     }
     }
    ]
   },
@@ -1169,12 +1643,18 @@
    "wife": "p-nalozhnitsa-gedeona",
    "terms": [
     {
-     "term": "concubine",
+     "kind": "concubine",
+     "word": "наложница",
      "side": "husband",
      "refs": [
       "Суд 8:31"
      ],
-     "note": "жила в Сихеме; мать Авимелеха"
+     "note": "жила в Сихеме; мать Авимелеха",
+     "prov": {
+      "from": {
+       "vol": "11-judges.json"
+      }
+     }
     }
    ]
   },
@@ -1184,13 +1664,19 @@
    "wife": "p-zhena-manoya",
    "terms": [
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "Суд 13:2",
       "Суд 13:9",
       "Суд 13:11"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "11-judges.json"
+      }
+     }
     }
    ]
   },
@@ -1200,13 +1686,19 @@
    "wife": "p-zhena-samsona",
    "terms": [
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "Суд 14:15-16",
       "Суд 14:20",
       "Суд 15:1"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "11-judges.json"
+      }
+     }
     }
    ]
   },
@@ -1216,7 +1708,8 @@
    "wife": "p-melkhola",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "1Цар 18:27",
@@ -1225,7 +1718,12 @@
       "2Цар 3:14"
      ],
      "note": "дочь Саула; отдана Фалтию и возвращена Давиду",
-     "order": 1
+     "order": 1,
+     "prov": {
+      "from": {
+       "vol": "12-house-of-david.json"
+      }
+     }
     }
    ]
   },
@@ -1235,14 +1733,20 @@
    "wife": "p-akhinoama",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "1Цар 25:43",
       "1Цар 27:3",
       "2Цар 2:2"
      ],
-     "order": 2
+     "order": 2,
+     "prov": {
+      "from": {
+       "vol": "12-house-of-david.json"
+      }
+     }
     }
    ]
   },
@@ -1252,7 +1756,8 @@
    "wife": "p-avigeya",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "1Цар 25:39-42",
@@ -1260,7 +1765,12 @@
       "2Цар 2:2"
      ],
      "note": "вдова Навала",
-     "order": 3
+     "order": 3,
+     "prov": {
+      "from": {
+       "vol": "12-house-of-david.json"
+      }
+     }
     }
    ]
   },
@@ -1270,7 +1780,8 @@
    "wife": "p-maakha-doch-falmaya",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "2Цар 3:3",
@@ -1279,7 +1790,12 @@
      ],
      "cert": "inference",
      "note": "мать Авессалома; прямо «женой» не названа, но сыновья её перечислены среди сыновей Давида — в отличие от «сыновей от наложниц» (1 Пар 3:9)",
-     "order": 4
+     "order": 4,
+     "prov": {
+      "from": {
+       "vol": "12-house-of-david.json"
+      }
+     }
     }
    ]
   },
@@ -1289,7 +1805,8 @@
    "wife": "p-aggifa",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "2Цар 3:4",
@@ -1298,7 +1815,12 @@
      ],
      "cert": "inference",
      "note": "мать Адонии; прямо «женой» не названа, но сыновья её перечислены среди сыновей Давида — в отличие от «сыновей от наложниц» (1 Пар 3:9)",
-     "order": 5
+     "order": 5,
+     "prov": {
+      "from": {
+       "vol": "12-house-of-david.json"
+      }
+     }
     }
    ]
   },
@@ -1308,7 +1830,8 @@
    "wife": "p-avitala",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "2Цар 3:4",
@@ -1317,7 +1840,12 @@
      ],
      "cert": "inference",
      "note": "мать Сафатии; прямо «женой» не названа, но сыновья её перечислены среди сыновей Давида — в отличие от «сыновей от наложниц» (1 Пар 3:9)",
-     "order": 6
+     "order": 6,
+     "prov": {
+      "from": {
+       "vol": "12-house-of-david.json"
+      }
+     }
     }
    ]
   },
@@ -1327,14 +1855,20 @@
    "wife": "p-egla",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "2Цар 3:5",
       "1Пар 3:3"
      ],
      "note": "«Эглы, жены Давидовой»",
-     "order": 7
+     "order": 7,
+     "prov": {
+      "from": {
+       "vol": "12-house-of-david.json"
+      }
+     }
     }
    ]
   },
@@ -1344,14 +1878,20 @@
    "wife": "p-virsaviya",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "2Цар 11:27",
       "2Цар 12:24"
      ],
      "note": "прежде — жена Урии Хеттеянина",
-     "order": 8
+     "order": 8,
+     "prov": {
+      "from": {
+       "vol": "12-house-of-david.json"
+      }
+     }
     }
    ]
   },
@@ -1361,12 +1901,18 @@
    "wife": "p-avigeya",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "1Цар 25:3",
       "1Цар 25:14"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "12-house-of-david.json"
+      }
+     }
     }
    ]
   },
@@ -1376,14 +1922,20 @@
    "wife": "p-virsaviya",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "2Цар 11:3",
       "2Цар 11:26",
       "2Цар 12:9-10"
      ],
-     "order": 1
+     "order": 1,
+     "prov": {
+      "from": {
+       "vol": "12-house-of-david.json"
+      }
+     }
     }
    ]
   },
@@ -1393,14 +1945,20 @@
    "wife": "p-doch-faraona-zhena-solomona",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "3Цар 3:1",
       "3Цар 9:16",
       "3Цар 11:1"
      ],
-     "note": "«дочери своей, жене Соломоновой»"
+     "note": "«дочери своей, жене Соломоновой»",
+     "prov": {
+      "from": {
+       "vol": "12-house-of-david.json"
+      }
+     }
     }
    ]
   },
@@ -1410,20 +1968,32 @@
    "wife": "p-tafaf",
    "terms": [
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "3Цар 4:11"
      ],
-     "note": "«Тафафь, дочь Соломона, была его женою»"
+     "note": "«Тафафь, дочь Соломона, была его женою»",
+     "prov": {
+      "from": {
+       "vol": "12-house-of-david.json"
+      }
+     }
     },
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "3Цар 4:11"
      ],
-     "note": "«Тафафь, дочь Соломона, была его женою»"
+     "note": "«Тафафь, дочь Соломона, была его женою»",
+     "prov": {
+      "from": {
+       "vol": "19-court-and-heroes.json"
+      }
+     }
     }
    ]
   },
@@ -1433,20 +2003,32 @@
    "wife": "p-vasemafa-doch-solomona",
    "terms": [
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "3Цар 4:15"
      ],
-     "note": "«он взял себе в жену Васемафу, дочь Соломона»"
+     "note": "«он взял себе в жену Васемафу, дочь Соломона»",
+     "prov": {
+      "from": {
+       "vol": "12-house-of-david.json"
+      }
+     }
     },
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "3Цар 4:15"
      ],
-     "note": "«он взял себе в жену Васемафу, дочь Соломона»"
+     "note": "«он взял себе в жену Васемафу, дочь Соломона»",
+     "prov": {
+      "from": {
+       "vol": "19-court-and-heroes.json"
+      }
+     }
     }
    ]
   },
@@ -1456,12 +2038,18 @@
    "wife": "p-makhalafa-doch-ieremofa",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "2Пар 11:18"
      ],
-     "order": 1
+     "order": 1,
+     "prov": {
+      "from": {
+       "vol": "13-kings-of-judah.json"
+      }
+     }
     }
    ]
   },
@@ -1471,12 +2059,18 @@
    "wife": "p-avikhail-doch-eliava",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "2Пар 11:18"
      ],
-     "order": 2
+     "order": 2,
+     "prov": {
+      "from": {
+       "vol": "13-kings-of-judah.json"
+      }
+     }
     }
    ]
   },
@@ -1486,13 +2080,19 @@
    "wife": "p-maakha-doch-avessaloma",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "2Пар 11:20",
       "2Пар 11:21"
      ],
-     "order": 3
+     "order": 3,
+     "prov": {
+      "from": {
+       "vol": "13-kings-of-judah.json"
+      }
+     }
     }
    ]
   },
@@ -1502,7 +2102,8 @@
    "wife": "p-gofoliya",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "4Цар 8:18",
@@ -1511,10 +2112,16 @@
       "2Пар 22:2"
      ],
      "cert": "inference",
-     "note": "«дочь Ахава была женою его» (4 Цар 8:18); мать его сына Охозии — Гофолия (4 Цар 8:26)"
+     "note": "«дочь Ахава была женою его» (4 Цар 8:18); мать его сына Охозии — Гофолия (4 Цар 8:26)",
+     "prov": {
+      "from": {
+       "vol": "13-kings-of-judah.json"
+      }
+     }
     },
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "4Цар 8:16-18",
@@ -1523,7 +2130,12 @@
       "2Пар 22:2"
      ],
      "cert": "inference",
-     "note": "«дочь Ахава была женою его» (4 Цар 8:18); мать его сына Охозии — Гофолия (4 Цар 8:26)"
+     "note": "«дочь Ахава была женою его» (4 Цар 8:18); мать его сына Охозии — Гофолия (4 Цар 8:26)",
+     "prov": {
+      "from": {
+       "vol": "14-kings-of-israel.json"
+      }
+     }
     }
    ]
   },
@@ -1533,11 +2145,17 @@
    "wife": "p-sestra-takhpenesy",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "3Цар 11:19"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "14-kings-of-israel.json"
+      }
+     }
     }
    ]
   },
@@ -1547,11 +2165,17 @@
    "wife": "p-takhpenesa",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "3Цар 11:19"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "14-kings-of-israel.json"
+      }
+     }
     }
    ]
   },
@@ -1561,13 +2185,19 @@
    "wife": "p-tserua",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "3Цар 11:26"
      ],
      "cert": "inference",
-     "note": "Церуа названа матерью Иеровоама, сына Наватова, и вдовой"
+     "note": "Церуа названа матерью Иеровоама, сына Наватова, и вдовой",
+     "prov": {
+      "from": {
+       "vol": "14-kings-of-israel.json"
+      }
+     }
     }
    ]
   },
@@ -1577,12 +2207,18 @@
    "wife": "p-zhena-ieroboama",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "3Цар 14:2",
       "3Цар 14:6"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "14-kings-of-israel.json"
+      }
+     }
     }
    ]
   },
@@ -1592,14 +2228,20 @@
    "wife": "p-iezavel",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "3Цар 16:31",
       "3Цар 21:5",
       "3Цар 21:7",
       "3Цар 21:25"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "14-kings-of-israel.json"
+      }
+     }
     }
    ]
   },
@@ -1609,13 +2251,19 @@
    "wife": "p-prorochitsa-zhena-isaii",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Ис 8:3"
      ],
      "cert": "interpretation",
-     "note": "Текст называет её «пророчицей»; женой Исаии она прямо не названа, но обычно так понимается"
+     "note": "Текст называет её «пророчицей»; женой Исаии она прямо не названа, но обычно так понимается",
+     "prov": {
+      "from": {
+       "vol": "15-prophets-exile.json"
+      }
+     }
     }
    ]
   },
@@ -1625,12 +2273,18 @@
    "wife": "p-gomer",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Ос 1:2-3"
      ],
-     "note": "«иди, возьми себе жену… И пошел он и взял Гомерь»"
+     "note": "«иди, возьми себе жену… И пошел он и взял Гомерь»",
+     "prov": {
+      "from": {
+       "vol": "15-prophets-exile.json"
+      }
+     }
     }
    ]
   },
@@ -1640,12 +2294,18 @@
    "wife": "p-oldama",
    "terms": [
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "4Цар 22:14",
       "2Пар 34:22"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "15-prophets-exile.json"
+      }
+     }
     }
    ]
   },
@@ -1655,7 +2315,8 @@
    "wife": "p-astin",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Есф 1:9",
@@ -1665,7 +2326,12 @@
      ],
      "cert": "inference",
      "note": "Текст называет её «царица Астинь», но нигде не называет «женой» царя; брак выводится из её положения царицы и из Есф 1:17–20, где её поступок рассматривается как поступок жены перед мужем",
-     "order": 1
+     "order": 1,
+     "prov": {
+      "from": {
+       "vol": "15-prophets-exile.json"
+      }
+     }
     }
    ]
   },
@@ -1675,7 +2341,8 @@
    "wife": "p-esfir",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Есф 2:4",
@@ -1683,7 +2350,12 @@
      ],
      "cert": "inference",
      "note": "Слово «жена» о ней не употреблено: она взята «к царю… в царский дом его» и сделана «царицею на место Астинь»; царь полюбил её «более всех жен»",
-     "order": 2
+     "order": 2,
+     "prov": {
+      "from": {
+       "vol": "15-prophets-exile.json"
+      }
+     }
     }
    ]
   },
@@ -1693,13 +2365,19 @@
    "wife": "p-zeresh",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Есф 5:10",
       "Есф 5:14",
       "Есф 6:13"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "15-prophets-exile.json"
+      }
+     }
     }
    ]
   },
@@ -1709,7 +2387,8 @@
    "wife": "p-mariya",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Мф 1:16",
@@ -1717,7 +2396,12 @@
       "Мф 1:24",
       "Лк 1:27",
       "Лк 2:5"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "16-jesus-genealogy.json"
+      }
+     }
     }
    ]
   },
@@ -1727,13 +2411,19 @@
    "wife": "p-elisaveta",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Лк 1:5",
       "Лк 1:13",
       "Лк 1:24"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "16-jesus-genealogy.json"
+      }
+     }
     }
    ]
   },
@@ -1743,13 +2433,19 @@
    "wife": "p-mariya-kleopova",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Ин 19:25"
      ],
      "cert": "interpretation",
-     "note": "«Мария Клеопова» — обычно понимается как жена Клеопы"
+     "note": "«Мария Клеопова» — обычно понимается как жена Клеопы",
+     "prov": {
+      "from": {
+       "vol": "16-jesus-genealogy.json"
+      }
+     }
     }
    ]
   },
@@ -1759,7 +2455,8 @@
    "wife": "p-mat-synovey-zevedeevykh",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Мф 4:21",
@@ -1767,7 +2464,12 @@
       "Мф 27:56"
      ],
      "cert": "inference",
-     "note": "названа «мать сыновей Зеведеевых»; женой Зеведея прямо не названа"
+     "note": "названа «мать сыновей Зеведеевых»; женой Зеведея прямо не названа",
+     "prov": {
+      "from": {
+       "vol": "17-new-testament.json"
+      }
+     }
     }
    ]
   },
@@ -1777,11 +2479,17 @@
    "wife": "p-ioanna-zhena-khuzy",
    "terms": [
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "Лк 8:3"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "17-new-testament.json"
+      }
+     }
     }
    ]
   },
@@ -1791,13 +2499,19 @@
    "wife": "p-irodiada",
    "terms": [
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "Мф 14:3",
       "Мк 6:17"
      ],
-     "order": 1
+     "order": 1,
+     "prov": {
+      "from": {
+       "vol": "17-new-testament.json"
+      }
+     }
     }
    ]
   },
@@ -1807,14 +2521,20 @@
    "wife": "p-irodiada",
    "terms": [
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "Мк 6:17-18",
       "Лк 3:19"
      ],
      "note": "«потому что женился на ней»",
-     "order": 2
+     "order": 2,
+     "prov": {
+      "from": {
+       "vol": "17-new-testament.json"
+      }
+     }
     }
    ]
   },
@@ -1824,11 +2544,17 @@
    "wife": "p-druzilla",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Деян 24:24"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "17-new-testament.json"
+      }
+     }
     }
    ]
   },
@@ -1838,11 +2564,17 @@
    "wife": "p-zhena-pilata",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Мф 27:19"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "17-new-testament.json"
+      }
+     }
     }
    ]
   },
@@ -1852,11 +2584,17 @@
    "wife": "p-priskilla",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Деян 18:2"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "17-new-testament.json"
+      }
+     }
     }
    ]
   },
@@ -1866,11 +2604,17 @@
    "wife": "p-sapfira",
    "terms": [
     {
-     "term": "wife",
+     "kind": "marriage",
+     "word": "жена",
      "side": "husband",
      "refs": [
       "Деян 5:1"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "17-new-testament.json"
+      }
+     }
     }
    ]
   },
@@ -1880,11 +2624,17 @@
    "wife": "p-doch-meshullama-zhena-iokhanana",
    "terms": [
     {
-     "term": "husband",
+     "kind": "marriage",
+     "word": "муж",
      "side": "wife",
      "refs": [
       "Неем 6:18"
-     ]
+     ],
+     "prov": {
+      "from": {
+       "vol": "20-return-lists.json"
+      }
+     }
     }
    ]
   },
@@ -1894,10 +2644,12 @@
    "wife": "p-starshaya-doch-lota",
    "terms": [
     {
-     "term": "parents",
+     "kind": "not-stated",
      "refs": [
       "Быт 19:36-37"
-     ]
+     ],
+     "cert": "inference",
+     "note": "отец и мать названы у детей; сам союз текст не называет"
     }
    ]
   },
@@ -1907,11 +2659,13 @@
    "wife": "p-mladshaya-doch-lota",
    "terms": [
     {
-     "term": "parents",
+     "kind": "not-stated",
      "refs": [
       "Быт 19:36",
       "Быт 19:38"
-     ]
+     ],
+     "cert": "inference",
+     "note": "отец и мать названы у детей; сам союз текст не называет"
     }
    ]
   },
@@ -1921,17 +2675,14 @@
    "wife": "p-famar",
    "terms": [
     {
-     "term": "parents",
+     "kind": "not-stated",
      "refs": [
-      "Быт 38:27-29",
-      "Быт 46:12",
       "Руф 4:12",
       "1Пар 2:4",
-      "1Пар 4:1",
-      "Мф 1:3",
-      "Лк 3:33",
-      "Быт 38:27-30"
-     ]
+      "Мф 1:3"
+     ],
+     "cert": "inference",
+     "note": "отец и мать названы у детей; сам союз текст не называет"
     }
    ]
   },
@@ -1941,10 +2692,12 @@
    "wife": "p-mat-ieffaya",
    "terms": [
     {
-     "term": "parents",
+     "kind": "not-stated",
      "refs": [
       "Суд 11:1-2"
-     ]
+     ],
+     "cert": "inference",
+     "note": "отец и мать названы у детей; сам союз текст не называет"
     }
    ]
   },
@@ -1954,15 +2707,13 @@
    "wife": "p-naama",
    "terms": [
     {
-     "term": "parents",
+     "kind": "not-stated",
      "refs": [
-      "3Цар 11:43",
       "3Цар 14:21",
-      "2Пар 9:31",
-      "2Пар 12:13",
-      "1Пар 3:10",
-      "Мф 1:7"
-     ]
+      "2Пар 12:13"
+     ],
+     "cert": "inference",
+     "note": "отец и мать названы у детей; сам союз текст не называет"
     }
    ]
   },
@@ -1972,15 +2723,13 @@
    "wife": "p-azuva-doch-salaila",
    "terms": [
     {
-     "term": "parents",
+     "kind": "not-stated",
      "refs": [
-      "3Цар 15:24",
       "3Цар 22:41-42",
-      "2Пар 17:1",
-      "2Пар 20:31",
-      "1Пар 3:10",
-      "Мф 1:8"
-     ]
+      "2Пар 20:31"
+     ],
+     "cert": "inference",
+     "note": "отец и мать названы у детей; сам союз текст не называет"
     }
    ]
   },
@@ -1990,14 +2739,13 @@
    "wife": "p-tsivya-iz-virsavii",
    "terms": [
     {
-     "term": "parents",
+     "kind": "not-stated",
      "refs": [
-      "4Цар 11:2",
-      "2Пар 22:11",
       "4Цар 12:1",
-      "2Пар 24:1",
-      "1Пар 3:11"
-     ]
+      "2Пар 24:1"
+     ],
+     "cert": "inference",
+     "note": "отец и мать названы у детей; сам союз текст не называет"
     }
    ]
   },
@@ -2007,14 +2755,13 @@
    "wife": "p-iegoaddan",
    "terms": [
     {
-     "term": "parents",
+     "kind": "not-stated",
      "refs": [
-      "4Цар 12:21",
       "4Цар 14:1-2",
-      "2Пар 24:27",
-      "2Пар 25:1",
-      "1Пар 3:12"
-     ]
+      "2Пар 25:1"
+     ],
+     "cert": "inference",
+     "note": "отец и мать названы у детей; сам союз текст не называет"
     }
    ]
   },
@@ -2024,14 +2771,13 @@
    "wife": "p-iekholiya",
    "terms": [
     {
-     "term": "parents",
+     "kind": "not-stated",
      "refs": [
-      "4Цар 14:21",
       "4Цар 15:1-3",
-      "2Пар 26:1",
-      "2Пар 26:3-4",
-      "1Пар 3:12"
-     ]
+      "2Пар 26:3-4"
+     ],
+     "cert": "inference",
+     "note": "отец и мать названы у детей; сам союз текст не называет"
     }
    ]
   },
@@ -2041,14 +2787,13 @@
    "wife": "p-ierusha-doch-sadoka",
    "terms": [
     {
-     "term": "parents",
+     "kind": "not-stated",
      "refs": [
-      "4Цар 15:7",
       "4Цар 15:32-33",
-      "2Пар 26:21",
-      "2Пар 27:1",
-      "1Пар 3:12"
-     ]
+      "2Пар 27:1"
+     ],
+     "cert": "inference",
+     "note": "отец и мать названы у детей; сам союз текст не называет"
     }
    ]
   },
@@ -2058,15 +2803,13 @@
    "wife": "p-avi-doch-zakharii",
    "terms": [
     {
-     "term": "parents",
+     "kind": "not-stated",
      "refs": [
-      "4Цар 16:20",
       "4Цар 18:1-2",
-      "2Пар 28:27",
-      "2Пар 29:1",
-      "1Пар 3:13",
-      "Мф 1:9"
-     ]
+      "2Пар 29:1"
+     ],
+     "cert": "inference",
+     "note": "отец и мать названы у детей; сам союз текст не называет"
     }
    ]
   },
@@ -2076,15 +2819,12 @@
    "wife": "p-kheftsiba",
    "terms": [
     {
-     "term": "parents",
+     "kind": "not-stated",
      "refs": [
-      "4Цар 20:21",
-      "4Цар 21:1",
-      "2Пар 32:33",
-      "1Пар 3:13",
-      "Иер 15:4",
-      "Мф 1:10"
-     ]
+      "4Цар 21:1"
+     ],
+     "cert": "inference",
+     "note": "отец и мать названы у детей; сам союз текст не называет"
     }
    ]
   },
@@ -2094,13 +2834,12 @@
    "wife": "p-meshullemef",
    "terms": [
     {
-     "term": "parents",
+     "kind": "not-stated",
      "refs": [
-      "4Цар 21:18-19",
-      "2Пар 33:20",
-      "1Пар 3:14",
-      "Мф 1:10"
-     ]
+      "4Цар 21:18-19"
+     ],
+     "cert": "inference",
+     "note": "отец и мать названы у детей; сам союз текст не называет"
     }
    ]
   },
@@ -2110,16 +2849,12 @@
    "wife": "p-iedida",
    "terms": [
     {
-     "term": "parents",
+     "kind": "not-stated",
      "refs": [
-      "4Цар 21:24",
-      "4Цар 21:26",
-      "4Цар 22:1",
-      "2Пар 33:25",
-      "1Пар 3:14",
-      "Иер 1:2",
-      "Мф 1:10"
-     ]
+      "4Цар 22:1"
+     ],
+     "cert": "inference",
+     "note": "отец и мать названы у детей; сам союз текст не называет"
     }
    ]
   },
@@ -2129,16 +2864,14 @@
    "wife": "p-khamutal",
    "terms": [
     {
-     "term": "parents",
+     "kind": "not-stated",
      "refs": [
       "4Цар 23:30-31",
-      "2Пар 36:1",
-      "1Пар 3:15",
-      "Иер 22:11",
       "4Цар 24:18",
-      "Иер 37:1",
       "Иер 52:1"
-     ]
+     ],
+     "cert": "inference",
+     "note": "отец и мать названы у детей; сам союз текст не называет"
     }
    ]
   },
@@ -2148,16 +2881,12 @@
    "wife": "p-zebudda",
    "terms": [
     {
-     "term": "parents",
+     "kind": "not-stated",
      "refs": [
-      "4Цар 23:34",
-      "4Цар 23:36",
-      "2Пар 36:4",
-      "1Пар 3:15",
-      "Иер 1:3",
-      "Иер 22:18",
-      "Мф 1:11"
-     ]
+      "4Цар 23:36"
+     ],
+     "cert": "inference",
+     "note": "отец и мать названы у детей; сам союз текст не называет"
     }
    ]
   },
@@ -2167,15 +2896,25 @@
    "wife": "p-nekhushta",
    "terms": [
     {
-     "term": "parents",
+     "kind": "not-stated",
      "refs": [
-      "4Цар 24:6",
-      "4Цар 24:8",
-      "2Пар 36:8",
-      "1Пар 3:16",
-      "Иер 22:24",
-      "Иер 22:26",
-      "Мф 1:11"
+      "4Цар 24:8"
+     ],
+     "cert": "inference",
+     "note": "отец и мать названы у детей; сам союз текст не называет"
+    }
+   ]
+  },
+  {
+   "id": "u-kain--zhena-kaina",
+   "husband": "p-kain",
+   "wife": "p-zhena-kaina",
+   "terms": [
+    {
+     "kind": "marriage",
+     "word": "жена",
+     "refs": [
+      "Быт 4:17"
      ]
     }
    ]

@@ -66,22 +66,13 @@
  "persons": {
   "p-adam": {
    "sp": [
-    [
-     "u-adam--eva",
-     0
-    ]
+    "u-adam--eva"
    ]
   },
   "p-lamekh-kainit": {
    "sp": [
-    [
-     "u-lamekh-kainit--ada-zhena-lamekha",
-     0
-    ],
-    [
-     "u-lamekh-kainit--tsilla",
-     0
-    ]
+    "u-lamekh-kainit--ada-zhena-lamekha",
+    "u-lamekh-kainit--tsilla"
    ]
   },
   "p-iuval": {
@@ -95,22 +86,13 @@
   },
   "p-nakhor-syn-farry": {
    "sp": [
-    [
-     "u-nakhor-syn-farry--milka",
-     0
-    ],
-    [
-     "u-nakhor-syn-farry--reuma",
-     0
-    ]
+    "u-nakhor-syn-farry--milka",
+    "u-nakhor-syn-farry--reuma"
    ]
   },
   "p-lot": {
    "sp": [
-    [
-     "u-lot--zhena-lota",
-     0
-    ]
+    "u-lot--zhena-lota"
    ]
   },
   "p-starshaya-doch-lota": {
@@ -124,18 +106,9 @@
     "silent"
    ],
    "sp": [
-    [
-     "u-avraam--sarra",
-     0
-    ],
-    [
-     "u-avraam--agar",
-     0
-    ],
-    [
-     "u-avraam--khettura",
-     0
-    ]
+    "u-avraam--sarra",
+    "u-avraam--agar",
+    "u-avraam--khettura"
    ]
   },
   "p-sarra": {
@@ -143,66 +116,33 @@
   },
   "p-isaak": {
    "sp": [
-    [
-     "u-isaak--revekka",
-     0
-    ]
+    "u-isaak--revekka"
    ]
   },
   "p-iakov": {
    "sp": [
-    [
-     "u-iakov--liya",
-     0
-    ],
-    [
-     "u-iakov--rakhil",
-     0
-    ],
-    [
-     "u-iakov--valla",
-     0
-    ],
-    [
-     "u-iakov--zelfa",
-     0
-    ]
+    "u-iakov--liya",
+    "u-iakov--rakhil",
+    "u-iakov--valla",
+    "u-iakov--zelfa"
    ]
   },
   "p-valla": {
    "sp": [
-    [
-     "u-iakov--valla",
-     1
-    ]
+    "u-iakov--valla"
    ]
   },
   "p-zelfa": {
    "sp": [
-    [
-     "u-iakov--zelfa",
-     1
-    ]
+    "u-iakov--zelfa"
    ]
   },
   "p-isav": {
    "sp": [
-    [
-     "u-isav--iegudifa",
-     0
-    ],
-    [
-     "u-isav--ada-zhena-isava",
-     0
-    ],
-    [
-     "u-isav--makhalafa-doch-izmaila",
-     0
-    ],
-    [
-     "u-isav--olivema",
-     0
-    ]
+    "u-isav--iegudifa",
+    "u-isav--ada-zhena-isava",
+    "u-isav--makhalafa-doch-izmaila",
+    "u-isav--olivema"
    ]
   },
   "p-famna-sestra-lotana": {
@@ -225,10 +165,7 @@
   },
   "p-elifaz-syn-isava": {
    "sp": [
-    [
-     "u-elifaz-syn-isava--famna-nalozhnitsa-elifaza",
-     0
-    ]
+    "u-elifaz-syn-isava--famna-nalozhnitsa-elifaza"
    ]
   },
   "p-matred": {
@@ -236,182 +173,110 @@
   },
   "p-gadar": {
    "sp": [
-    [
-     "u-gadar--megetaveel",
-     0
-    ]
+    "u-gadar--megetaveel"
    ]
   },
   "p-iuda": {
    "sp": [
-    [
-     "u-iuda--doch-shui",
-     0
-    ]
+    "u-iuda--doch-shui"
    ]
   },
   "p-iosif": {
    "sp": [
-    [
-     "u-iosif--asenefa",
-     0
-    ]
+    "u-iosif--asenefa"
    ]
   },
   "p-famar": {
    "sp": [
-    [
-     "u-ir-syn-iudy--famar",
-     0
-    ],
-    [
-     "u-onan--famar",
-     0
-    ]
+    "u-ir-syn-iudy--famar",
+    "u-onan--famar"
    ]
   },
   "p-potifar": {
    "sp": [
-    [
-     "u-potifar--zhena-potifara",
-     0
-    ]
+    "u-potifar--zhena-potifara"
    ]
   },
   "p-zhena-potifara": {
    "sp": [
-    [
-     "u-potifar--zhena-potifara",
-     1
-    ]
+    "u-potifar--zhena-potifara"
    ]
   },
   "p-manassiya": {
    "sp": [
-    [
-     "u-manassiya--nalozhnitsa-manassii",
-     0
-    ]
+    "u-manassiya--nalozhnitsa-manassii"
    ]
   },
   "p-khalev-syn-esroma": {
    "sp": [
-    [
-     "u-khalev-syn-esroma--efa-nalozhnitsa-khaleva",
-     0
-    ],
-    [
-     "u-khalev-syn-esroma--maakha-nalozhnitsa-khaleva",
-     0
-    ]
+    "u-khalev-syn-esroma--efa-nalozhnitsa-khaleva",
+    "u-khalev-syn-esroma--maakha-nalozhnitsa-khaleva"
    ]
   },
   "p-doch-makhira": {
    "sp": [
-    [
-     "u-esrom--doch-makhira",
-     0
-    ]
+    "u-esrom--doch-makhira"
    ]
   },
   "p-aviya-zhena-esroma": {
    "sp": [
-    [
-     "u-esrom--aviya-zhena-esroma",
-     0
-    ]
+    "u-esrom--aviya-zhena-esroma"
    ]
   },
   "p-salmon": {
    "sp": [
-    [
-     "u-salmon--raav",
-     0
-    ]
+    "u-salmon--raav"
    ]
   },
   "p-noemin": {
    "sp": [
-    [
-     "u-elimelekh--noemin",
-     0
-    ]
+    "u-elimelekh--noemin"
    ]
   },
   "p-orfa": {
    "sp": [
-    [
-     "u-khileon--orfa",
-     0
-    ]
+    "u-khileon--orfa"
    ]
   },
   "p-ruf": {
    "sp": [
-    [
-     "u-makhlon--ruf",
-     0
-    ],
-    [
-     "u-vooz--ruf",
-     0
-    ]
+    "u-makhlon--ruf",
+    "u-vooz--ruf"
    ]
   },
   "p-avigeya-sestra-davida": {
    "sp": [
-    [
-     "u-iefer-izmailtyanin--avigeya-sestra-davida",
-     0
-    ]
+    "u-iefer-izmailtyanin--avigeya-sestra-davida"
    ]
   },
   "p-afara": {
    "sp": [
-    [
-     "u-ierakhmeil--afara",
-     0
-    ]
+    "u-ierakhmeil--afara"
    ]
   },
   "p-avikhail-zhena-avishura": {
    "sp": [
-    [
-     "u-avishur--avikhail-zhena-avishura",
-     0
-    ]
+    "u-avishur--avikhail-zhena-avishura"
    ]
   },
   "p-doch-sheshana": {
    "sp": [
-    [
-     "u-iarkha--doch-sheshana",
-     0
-    ]
+    "u-iarkha--doch-sheshana"
    ]
   },
   "p-azuva-zhena-khaleva": {
    "sp": [
-    [
-     "u-khalev-syn-esroma--azuva-zhena-khaleva",
-     0
-    ]
+    "u-khalev-syn-esroma--azuva-zhena-khaleva"
    ]
   },
   "p-ieriofa": {
    "sp": [
-    [
-     "u-khalev-syn-esroma--ieriofa",
-     0
-    ]
+    "u-khalev-syn-esroma--ieriofa"
    ]
   },
   "p-efrafa-zhena-khaleva": {
    "sp": [
-    [
-     "u-khalev-syn-esroma--efrafa-zhena-khaleva",
-     0
-    ]
+    "u-khalev-syn-esroma--efrafa-zhena-khaleva"
    ]
   },
   "p-maresha-otets-khevrona": {
@@ -419,10 +284,7 @@
   },
   "p-gofoniil": {
    "sp": [
-    [
-     "u-gofoniil--akhsa",
-     0
-    ]
+    "u-gofoniil--akhsa"
    ]
   },
   "p-gatslelponi": {
@@ -430,18 +292,12 @@
   },
   "p-khela-zhena-ashkhura": {
    "sp": [
-    [
-     "u-ashkhur--khela-zhena-ashkhura",
-     0
-    ]
+    "u-ashkhur--khela-zhena-ashkhura"
    ]
   },
   "p-naara-zhena-ashkhura": {
    "sp": [
-    [
-     "u-ashkhur--naara-zhena-ashkhura",
-     0
-    ]
+    "u-ashkhur--naara-zhena-ashkhura"
    ]
   },
   "p-tseref": {
@@ -461,10 +317,7 @@
   },
   "p-iudiya": {
    "sp": [
-    [
-     "u-mered--iudiya",
-     0
-    ]
+    "u-mered--iudiya"
    ]
   },
   "p-iered-otets-gedora": {
@@ -481,18 +334,12 @@
   },
   "p-bifya": {
    "sp": [
-    [
-     "u-mered--bifya",
-     0
-    ]
+    "u-mered--bifya"
    ]
   },
   "p-godiya-sestra-nakhama": {
    "sp": [
-    [
-     "u-mered--godiya-sestra-nakhama",
-     0
-    ]
+    "u-mered--godiya-sestra-nakhama"
    ]
   },
   "p-garmi": {
@@ -508,38 +355,23 @@
   },
   "p-amram": {
    "sp": [
-    [
-     "u-amram--iokhaveda",
-     0
-    ]
+    "u-amram--iokhaveda"
    ]
   },
   "p-aaron": {
    "sp": [
-    [
-     "u-aaron--elisaveta-zhena-aarona",
-     0
-    ]
+    "u-aaron--elisaveta-zhena-aarona"
    ]
   },
   "p-moisey": {
    "sp": [
-    [
-     "u-moisey--sepfora",
-     0
-    ],
-    [
-     "u-moisey--efioplyanka-zhena-moiseya",
-     0
-    ]
+    "u-moisey--sepfora",
+    "u-moisey--efioplyanka-zhena-moiseya"
    ]
   },
   "p-eleazar": {
    "sp": [
-    [
-     "u-eleazar--doch-futiila",
-     0
-    ]
+    "u-eleazar--doch-futiila"
    ]
   },
   "p-sepfora": {
@@ -547,10 +379,7 @@
   },
   "p-efioplyanka-zhena-moiseya": {
    "sp": [
-    [
-     "u-moisey--efioplyanka-zhena-moiseya",
-     1
-    ]
+    "u-moisey--efioplyanka-zhena-moiseya"
    ]
   },
   "p-khovav": {
@@ -561,38 +390,23 @@
   },
   "p-elkana": {
    "sp": [
-    [
-     "u-elkana--anna-mat-samuila",
-     0
-    ],
-    [
-     "u-elkana--fennana",
-     0
-    ]
+    "u-elkana--anna-mat-samuila",
+    "u-elkana--fennana"
    ]
   },
   "p-anna-mat-samuila": {
    "sp": [
-    [
-     "u-elkana--anna-mat-samuila",
-     1
-    ]
+    "u-elkana--anna-mat-samuila"
    ]
   },
   "p-fennana": {
    "sp": [
-    [
-     "u-elkana--fennana",
-     1
-    ]
+    "u-elkana--fennana"
    ]
   },
   "p-zhena-fineesa-syn-iliya": {
    "sp": [
-    [
-     "u-finees-syn-iliya--zhena-fineesa-syn-iliya",
-     0
-    ]
+    "u-finees-syn-iliya--zhena-fineesa-syn-iliya"
    ]
   },
   "p-akhimelekh-syn-akhitova": {
@@ -609,10 +423,7 @@
   },
   "p-iodai": {
    "sp": [
-    [
-     "u-iodai--iosavef",
-     0
-    ]
+    "u-iodai--iosavef"
    ]
   },
   "p-idifun": {
@@ -632,18 +443,12 @@
   },
   "p-verzelliy-svyashchennik": {
    "sp": [
-    [
-     "u-verzelliy-svyashchennik--zhena-verzelliya-svyashchennika",
-     0
-    ]
+    "u-verzelliy-svyashchennik--zhena-verzelliya-svyashchennika"
    ]
   },
   "p-zhena-verzelliya-svyashchennika": {
    "sp": [
-    [
-     "u-verzelliy-svyashchennik--zhena-verzelliya-svyashchennika",
-     1
-    ]
+    "u-verzelliy-svyashchennik--zhena-verzelliya-svyashchennika"
    ]
   },
   "p-uriya-syn-gakkotsa": {
@@ -675,18 +480,12 @@
   },
   "p-nalozhnitsa-manassii": {
    "sp": [
-    [
-     "u-manassiya--nalozhnitsa-manassii",
-     1
-    ]
+    "u-manassiya--nalozhnitsa-manassii"
    ]
   },
   "p-makhir": {
    "sp": [
-    [
-     "u-makhir--maakha-zhena-makhira",
-     0
-    ]
+    "u-makhir--maakha-zhena-makhira"
    ]
   },
   "p-sheresh-syn-makhira": {
@@ -733,18 +532,9 @@
   },
   "p-shegaraim": {
    "sp": [
-    [
-     "u-shegaraim--khushima",
-     0
-    ],
-    [
-     "u-shegaraim--baara",
-     0
-    ],
-    [
-     "u-shegaraim--khodesha",
-     0
-    ]
+    "u-shegaraim--khushima",
+    "u-shegaraim--baara",
+    "u-shegaraim--khodesha"
    ]
   },
   "p-beriya-syn-elpaala": {
@@ -755,10 +545,7 @@
   },
   "p-ieil": {
    "sp": [
-    [
-     "u-ieil--maakha-zhena-ieila",
-     0
-    ]
+    "u-ieil--maakha-zhena-ieila"
    ]
   },
   "p-avdon-syn-ieila": {
@@ -790,30 +577,18 @@
   },
   "p-saul": {
    "sp": [
-    [
-     "u-saul--akhinoama-zhena-saula",
-     0
-    ],
-    [
-     "u-saul--ritspa",
-     0
-    ]
+    "u-saul--akhinoama-zhena-saula",
+    "u-saul--ritspa"
    ]
   },
   "p-merova": {
    "sp": [
-    [
-     "u-adriel--merova",
-     0
-    ]
+    "u-adriel--merova"
    ]
   },
   "p-melkhola": {
    "sp": [
-    [
-     "u-faltiy-syn-laisha--melkhola",
-     0
-    ]
+    "u-faltiy-syn-laisha--melkhola"
    ]
   },
   "p-eshek": {
@@ -827,86 +602,44 @@
   },
   "p-devora": {
    "sp": [
-    [
-     "u-lappidof--devora",
-     0
-    ]
+    "u-lappidof--devora"
    ]
   },
   "p-iail": {
    "sp": [
-    [
-     "u-khever-keneyanin--iail",
-     0
-    ]
+    "u-khever-keneyanin--iail"
    ]
   },
   "p-gedeon": {
    "sp": [
-    [
-     "u-gedeon--nalozhnitsa-gedeona",
-     0
-    ]
+    "u-gedeon--nalozhnitsa-gedeona"
    ]
   },
   "p-zhena-manoya": {
    "sp": [
-    [
-     "u-manoy--zhena-manoya",
-     0
-    ]
+    "u-manoy--zhena-manoya"
    ]
   },
   "p-zhena-samsona": {
    "sp": [
-    [
-     "u-samson--zhena-samsona",
-     0
-    ]
+    "u-samson--zhena-samsona"
    ]
   },
   "p-david": {
    "sp": [
-    [
-     "u-david--melkhola",
-     0
-    ],
-    [
-     "u-david--akhinoama",
-     0
-    ],
-    [
-     "u-david--avigeya",
-     0
-    ],
-    [
-     "u-david--maakha-doch-falmaya",
-     0
-    ],
-    [
-     "u-david--aggifa",
-     0
-    ],
-    [
-     "u-david--avitala",
-     0
-    ],
-    [
-     "u-david--egla",
-     0
-    ],
-    [
-     "u-david--virsaviya",
-     0
-    ]
+    "u-david--melkhola",
+    "u-david--akhinoama",
+    "u-david--avigeya",
+    "u-david--maakha-doch-falmaya",
+    "u-david--aggifa",
+    "u-david--avitala",
+    "u-david--egla",
+    "u-david--virsaviya"
    ]
   },
   "p-naval": {
    "sp": [
-    [
-     "u-naval--avigeya",
-     0
-    ]
+    "u-naval--avigeya"
    ]
   },
   "p-eliam": {
@@ -914,10 +647,7 @@
   },
   "p-uriya": {
    "sp": [
-    [
-     "u-uriya--virsaviya",
-     0
-    ]
+    "u-uriya--virsaviya"
    ]
   },
   "p-famar-doch-davida": {
@@ -925,26 +655,17 @@
   },
   "p-solomon": {
    "sp": [
-    [
-     "u-solomon--doch-faraona-zhena-solomona",
-     0
-    ]
+    "u-solomon--doch-faraona-zhena-solomona"
    ]
   },
   "p-tafaf": {
    "sp": [
-    [
-     "u-ben-aminadav--tafaf",
-     0
-    ]
+    "u-ben-aminadav--tafaf"
    ]
   },
   "p-vasemafa-doch-solomona": {
    "sp": [
-    [
-     "u-akhimaas-zyat-solomona--vasemafa-doch-solomona",
-     0
-    ]
+    "u-akhimaas-zyat-solomona--vasemafa-doch-solomona"
    ]
   },
   "p-kimgam": {
@@ -958,34 +679,19 @@
   },
   "p-rovoam": {
    "sp": [
-    [
-     "u-rovoam--makhalafa-doch-ieremofa",
-     0
-    ],
-    [
-     "u-rovoam--avikhail-doch-eliava",
-     0
-    ],
-    [
-     "u-rovoam--maakha-doch-avessaloma",
-     0
-    ]
+    "u-rovoam--makhalafa-doch-ieremofa",
+    "u-rovoam--avikhail-doch-eliava",
+    "u-rovoam--maakha-doch-avessaloma"
    ]
   },
   "p-ioram-syn-iosafata": {
    "sp": [
-    [
-     "u-ioram-syn-iosafata--gofoliya",
-     0
-    ]
+    "u-ioram-syn-iosafata--gofoliya"
    ]
   },
   "p-iosavef": {
    "sp": [
-    [
-     "u-iodai--iosavef",
-     1
-    ]
+    "u-iodai--iosavef"
    ]
   },
   "p-refaiya-syn-isaii": {
@@ -993,51 +699,33 @@
   },
   "p-ader-idumeyanin": {
    "sp": [
-    [
-     "u-ader-idumeyanin--sestra-takhpenesy",
-     0
-    ]
+    "u-ader-idumeyanin--sestra-takhpenesy"
    ]
   },
   "p-faraon-pri-adere": {
    "sp": [
-    [
-     "u-faraon-pri-adere--takhpenesa",
-     0
-    ]
+    "u-faraon-pri-adere--takhpenesa"
    ]
   },
   "p-navat": {
    "sp": [
-    [
-     "u-navat--tserua",
-     0
-    ]
+    "u-navat--tserua"
    ]
   },
   "p-ieroboam": {
    "sp": [
-    [
-     "u-ieroboam--zhena-ieroboama",
-     0
-    ]
+    "u-ieroboam--zhena-ieroboama"
    ]
   },
   "p-akhav": {
    "sp": [
-    [
-     "u-akhav--iezavel",
-     0
-    ]
+    "u-akhav--iezavel"
    ]
   },
   "p-gofoliya": {
    "pc": true,
    "sp": [
-    [
-     "u-ioram-syn-iosafata--gofoliya",
-     1
-    ]
+    "u-ioram-syn-iosafata--gofoliya"
    ]
   },
   "p-pervenets-mesy": {
@@ -1048,10 +736,7 @@
   },
   "p-isaiya": {
    "sp": [
-    [
-     "u-isaiya--prorochitsa-zhena-isaii",
-     0
-    ]
+    "u-isaiya--prorochitsa-zhena-isaii"
    ]
   },
   "p-mager-shelal-khash-baz": {
@@ -1059,10 +744,7 @@
   },
   "p-osiya-prorok": {
    "sp": [
-    [
-     "u-osiya-prorok--gomer",
-     0
-    ]
+    "u-osiya-prorok--gomer"
    ]
   },
   "p-lorukhama": {
@@ -1075,10 +757,7 @@
   },
   "p-oldama": {
    "sp": [
-    [
-     "u-shallum-muzh-oldamy--oldama",
-     0
-    ]
+    "u-shallum-muzh-oldamy--oldama"
    ]
   },
   "p-seraiya-syn-nirii": {
@@ -1101,22 +780,13 @@
   },
   "p-artakserks-muzh-esfiri": {
    "sp": [
-    [
-     "u-artakserks-muzh-esfiri--astin",
-     0
-    ],
-    [
-     "u-artakserks-muzh-esfiri--esfir",
-     0
-    ]
+    "u-artakserks-muzh-esfiri--astin",
+    "u-artakserks-muzh-esfiri--esfir"
    ]
   },
   "p-aman": {
    "sp": [
-    [
-     "u-aman--zeresh",
-     0
-    ]
+    "u-aman--zeresh"
    ]
   },
   "p-mariya": {
@@ -1124,34 +794,22 @@
   },
   "p-iosif-muzh-marii": {
    "sp": [
-    [
-     "u-iosif-muzh-marii--mariya",
-     0
-    ]
+    "u-iosif-muzh-marii--mariya"
    ]
   },
   "p-zakhariya-svyashchennik": {
    "sp": [
-    [
-     "u-zakhariya-svyashchennik--elisaveta",
-     0
-    ]
+    "u-zakhariya-svyashchennik--elisaveta"
    ]
   },
   "p-kleopa": {
    "sp": [
-    [
-     "u-kleopa--mariya-kleopova",
-     0
-    ]
+    "u-kleopa--mariya-kleopova"
    ]
   },
   "p-zevedey": {
    "sp": [
-    [
-     "u-zevedey--mat-synovey-zevedeevykh",
-     0
-    ]
+    "u-zevedey--mat-synovey-zevedeevykh"
    ]
   },
   "p-matfey": {
@@ -1159,54 +817,33 @@
   },
   "p-ioanna-zhena-khuzy": {
    "sp": [
-    [
-     "u-khuza--ioanna-zhena-khuzy",
-     0
-    ]
+    "u-khuza--ioanna-zhena-khuzy"
    ]
   },
   "p-irodiada": {
    "sp": [
-    [
-     "u-filipp-brat-iroda--irodiada",
-     0
-    ],
-    [
-     "u-irod-antipa--irodiada",
-     0
-    ]
+    "u-filipp-brat-iroda--irodiada",
+    "u-irod-antipa--irodiada"
    ]
   },
   "p-feliks": {
    "sp": [
-    [
-     "u-feliks--druzilla",
-     0
-    ]
+    "u-feliks--druzilla"
    ]
   },
   "p-pontiy-pilat": {
    "sp": [
-    [
-     "u-pontiy-pilat--zhena-pilata",
-     0
-    ]
+    "u-pontiy-pilat--zhena-pilata"
    ]
   },
   "p-akila": {
    "sp": [
-    [
-     "u-akila--priskilla",
-     0
-    ]
+    "u-akila--priskilla"
    ]
   },
   "p-ananiya-muzh-sapfiry": {
    "sp": [
-    [
-     "u-ananiya-muzh-sapfiry--sapfira",
-     0
-    ]
+    "u-ananiya-muzh-sapfiry--sapfira"
    ]
   },
   "p-iodai-syn-vanei": {
@@ -1217,18 +854,12 @@
   },
   "p-ben-aminadav": {
    "sp": [
-    [
-     "u-ben-aminadav--tafaf",
-     1
-    ]
+    "u-ben-aminadav--tafaf"
    ]
   },
   "p-akhimaas-zyat-solomona": {
    "sp": [
-    [
-     "u-akhimaas-zyat-solomona--vasemafa-doch-solomona",
-     1
-    ]
+    "u-akhimaas-zyat-solomona--vasemafa-doch-solomona"
    ]
   },
   "p-khanan-syn-maakhi": {
@@ -1266,10 +897,7 @@
   },
   "p-doch-meshullama-zhena-iokhanana": {
    "sp": [
-    [
-     "u-iokhanan-syn-tovii--doch-meshullama-zhena-iokhanana",
-     0
-    ]
+    "u-iokhanan-syn-tovii--doch-meshullama-zhena-iokhanana"
    ]
   },
   "p-sadok-syn-immera": {
@@ -1285,5 +913,8 @@
  "lineOrder": [
   "joseph",
   "mary"
- ]
+ ],
+ "lineIdmap": {
+  "luke": "mary"
+ }
 }

@@ -1,13 +1,15 @@
 /**
- * Перенос прежних данных в базу «Библии наглядно» (docs/app/02-ДАННЫЕ.md, § 4): точный перенос обратимо совпадает
- * с прежними данными, а после исправлений отличаются только лица и записи из списка исправлений.
+ * Перенос прежних данных в базу «Библии наглядно» (docs/app/02-ДАННЫЕ.md, § 4; рецензия Д1): точный перенос обратимо
+ * совпадает с прежними данными; каждый шаг исправления меняет только объявленные записи; подложенные искажения ловятся.
  */
 import { describe, expect, it } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { toBase, diff } from '../tools/base/migrate.ts';
-import { project } from '../tools/base/project.ts';
-import { applyCorrections } from '../tools/base/corrections.ts';
+import { toBase, diff, stepChanges, type Base } from '../tools/base/migrate.ts';
+import { project, type Hints } from '../tools/base/project.ts';
+import { STEPS, type Step } from '../tools/base/corrections.ts';
+import { ADDITIONS } from '../tools/base/additions.ts';
+import { validate } from '../tools/base/validate.ts';
 
 const DATA = join(import.meta.dirname, '..', 'data');
 const read = (f: string) => JSON.parse(readFileSync(join(DATA, f), 'utf8'));
@@ -16,26 +18,47 @@ const old = {
   groups: read('groups.json'), epochs: read('epochs.json'), anchors: read('anchors.json'),
   lines: { joseph: read('lines/joseph.json'), mary: read('lines/mary.json') } as Record<string, any>,
 };
+const exact = () => toBase(old.vols, old.groups, old.epochs, old.anchors, old.lines);
 
 describe('перенос в базу', () => {
-  const { base, hints } = toBase(old.vols, old.groups, old.epochs, old.anchors, old.lines);
   it('точный перенос: обратная проекция без отличий', () => {
+    const { base, hints } = exact();
     expect(diff(old, project(base, hints))).toEqual([]);
   });
-  it('после исправлений все отличия объяснены', () => {
-    applyCorrections(base, hints);
-    const allowed = new Set(base.corrections.flatMap((c) => [...c.actors, ...(c.other ?? [])]));
-    const d = diff(old, project(base, hints));
-    expect(d.filter((x) => !allowed.has(x.id))).toEqual([]);
-    // Илий не отец Марии и Иосифа одновременно: прочтения одного набора
-    const heli = base.origins.filter((o) => o.parent === 'p-iliy-syn-matfata' && o.reading);
-    expect(heli.map((o) => `${o.child}:${o.reading!.reading}`).sort()).toEqual(['p-iosif-muzh-marii:letter', 'p-mariya:mary']);
-    expect(base.origins.some((o) => o.child === 'p-mariya' && o.primary && o.role === 'father')).toBe(false);
-    // «мои они» — не ребро происхождения
-    expect(base.origins.some((o) => o.parent === 'p-iakov' && ['p-efrem', 'p-manassiya'].includes(o.child))).toBe(false);
-    // у Иисуса Христа нет кровного отца
-    expect(base.origins.filter((o) => o.child === 'p-iisus' && o.role === 'father').map((o) => o.kind)).toEqual(['legal']);
-    // линия Луки кончается Иосифом
-    expect(base.lines.mary.persons.slice(-2).map((s: any) => s.id)).toEqual(['p-iosif-muzh-marii', 'p-iisus']);
-  });
+
+  it('каждый шаг исправления меняет только записи своей области', () => {
+    const { base, hints } = exact();
+    for (const s of [...STEPS, ADDITIONS]) expect([s.id, stepChanges(base, hints, s).stray]).toEqual([s.id, []]);
+    expect(validate(base).filter((i) => i.level === 'error')).toEqual([]);
+  }, 60_000);
+
+  it('подложенные искажения ловятся', () => {
+    const mutate = (f: (b: Base, h: Hints) => void) => {
+      const { base, hints } = exact();
+      f(base, hints);
+      return diff(old, project(base, hints)).length;
+    };
+    // сторона обозначения союза перевёрнута — проекция читает сторону из союза, а не из подсказки
+    expect(mutate((b) => {
+      const t = b.unions.find((u) => u.id === 'u-avraam--sarra')!.terms[0];
+      t.side = t.side === 'husband' ? 'wife' : 'husband';
+    })).toBeGreaterThan(0);
+    // вид брака заменён наложницей
+    expect(mutate((b) => { b.unions.find((u) => u.id === 'u-avraam--sarra')!.terms[0].kind = 'concubine'; })).toBeGreaterThan(0);
+    // прежний номер в эпохах ловит проверка базы
+    const { base } = exact();
+    base.epochs[0].keyPersons = ['adam'];
+    expect(validate(base).some((i) => i.check === 'номер')).toBe(true);
+    // шаг, вышедший за свою область, ловит сверка шагов
+    const { base: b2, hints: h2 } = exact();
+    const sneaky: Step = {
+      id: 'X', scope: ['origin:p-sala|'],
+      run: ({ base: b }) => {
+        b.origins.find((o) => o.child === 'p-sala')!.gapPossible = { refs: ['Лк 3:36'], via: [] };
+        b.unions[0].terms[0].note = 'подложено';
+        return { what: '', why: '', refs: [], actors: [] };
+      },
+    };
+    expect(stepChanges(b2, h2, sneaky).stray).toEqual([`union:${b2.unions[0].id}`]);
+  }, 60_000);
 });

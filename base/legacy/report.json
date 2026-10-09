@@ -1,257 +1,3247 @@
 {
  "schema": 1,
  "title": "Отчёт переноса: отличия обратной проекции от прежних данных и исправления, которые их объясняют",
- "commit": "deb7299",
+ "commit": "3c6953b",
  "exact": "точный перенос совпал с прежними данными без отличий",
- "diffs": [
+ "note": "steps — ключи записей, изменённые каждым шагом исправления (все в объявленной области шага); projection — отличия прежнего вида по лицам и полям",
+ "steps": {
+  "C1": [
+   "volume:16-jesus-genealogy.json",
+   "actor:p-iliy-otets-marii.id",
+   "actor:p-iliy-otets-marii.kind",
+   "actor:p-iliy-otets-marii.sex",
+   "actor:p-iliy-otets-marii.names",
+   "actor:p-iliy-otets-marii.disambig",
+   "actor:p-iliy-otets-marii.prominence",
+   "actor:p-iliy-otets-marii.facts.original",
+   "actor:p-iliy-otets-marii.facts.lineage",
+   "actor:p-iliy-otets-marii.facts.childrenNote",
+   "actor:p-iliy-otets-marii.facts.kinNote",
+   "actor:p-iliy-otets-marii.facts.messiahNote",
+   "actor:p-iliy-otets-marii.facts.scripture",
+   "actor:p-iliy-otets-marii.facts.notes",
+   "origin:p-iliy-otets-marii|p-matfat-lk3-24|father|p",
+   "origin:p-mariya|p-iliy-otets-marii|father|p",
+   "origin:p-iosif-muzh-marii|p-iakov-otets-iosifa|father|p",
+   "origin:p-iosif-muzh-marii|p-iliy-otets-marii|father|o",
+   "kin:p-iosif-muzh-marii|p-iliy-otets-marii|зять (по толкованию Лк 3:23)",
+   "membership:p-iliy-otets-marii|g-messiah",
+   "chrono:p-iliy-otets-marii",
+   "line:mary",
+   "actor:p-iliy-syn-matfata.id",
+   "actor:p-iliy-syn-matfata.kind",
+   "actor:p-iliy-syn-matfata.sex",
+   "actor:p-iliy-syn-matfata.names",
+   "actor:p-iliy-syn-matfata.disambig",
+   "actor:p-iliy-syn-matfata.prominence",
+   "actor:p-iliy-syn-matfata.facts.original",
+   "actor:p-iliy-syn-matfata.facts.lineage",
+   "actor:p-iliy-syn-matfata.facts.childrenNote",
+   "actor:p-iliy-syn-matfata.facts.kinNote",
+   "actor:p-iliy-syn-matfata.facts.messiahNote",
+   "actor:p-iliy-syn-matfata.facts.scripture",
+   "actor:p-iliy-syn-matfata.facts.notes",
+   "origin:p-iliy-syn-matfata|p-matfat-lk3-24|father|p",
+   "origin:p-mariya|p-iliy-syn-matfata|father|o",
+   "origin:p-iosif-muzh-marii|p-iliy-syn-matfata|father|o",
+   "membership:p-iliy-syn-matfata|g-messiah",
+   "chrono:p-iliy-syn-matfata",
+   "reading:r-lk3-23",
+   "redirect:p-iliy-otets-marii"
+  ],
+  "C2": [
+   "origin:p-manassiya|p-iakov|father|o",
+   "origin:p-efrem|p-iakov|father|o",
+   "actor:p-manassiya.facts.parentsNote",
+   "actor:p-efrem.facts.parentsNote"
+  ],
+  "C3": [
+   "actor:p-iisus.facts.parentsNote",
+   "origin:p-iisus|p-iosif-muzh-marii|father|p",
+   "origin:p-iisus|p-mariya|mother|p",
+   "nodata:p-iisus|6|not-applicable"
+  ],
+  "C4": [
+   "actor:p-adam.facts.meaning",
+   "actor:p-kain.facts.meaning",
+   "actor:p-ada-zhena-lamekha.facts.meaning",
+   "actor:p-tsilla.facts.meaning",
+   "actor:p-noema.facts.meaning",
+   "actor:p-avel.facts.meaning",
+   "actor:p-enos.facts.meaning",
+   "actor:p-maleleil.facts.meaning",
+   "actor:p-iared.facts.meaning",
+   "actor:p-enokh.facts.meaning",
+   "actor:p-mafusal.facts.meaning",
+   "actor:p-sim.facts.meaning",
+   "actor:p-kham.facts.meaning",
+   "actor:p-iafet.facts.meaning",
+   "actor:p-ever.facts.meaning",
+   "actor:p-lot.facts.meaning",
+   "actor:p-moav.facts.meaning",
+   "actor:p-ben-ammi.facts.meaning",
+   "actor:p-milka.facts.meaning",
+   "actor:p-lavan.facts.meaning",
+   "actor:p-sarra.facts.meaning",
+   "actor:p-isaak.facts.meaning",
+   "actor:p-rakhil.facts.meaning",
+   "actor:p-isav.facts.meaning",
+   "actor:p-emima.facts.meaning",
+   "actor:p-kassiya.facts.meaning",
+   "actor:p-kerengappukh.facts.meaning",
+   "actor:p-dina.facts.meaning",
+   "actor:p-veniamin.facts.meaning",
+   "actor:p-famar.facts.meaning",
+   "actor:p-raav.facts.meaning",
+   "actor:p-vooz.facts.meaning",
+   "actor:p-elimelekh.facts.meaning",
+   "actor:p-noemin.facts.meaning",
+   "actor:p-ovid.facts.meaning",
+   "actor:p-ioav.facts.meaning",
+   "actor:p-veseleil-syn-uriya.facts.meaning",
+   "actor:p-iisus-navin.facts.meaning",
+   "actor:p-aviil.facts.meaning",
+   "actor:p-avenir.facts.meaning",
+   "actor:p-saul.facts.meaning",
+   "actor:p-ionafan.facts.meaning",
+   "actor:p-ievosfey.facts.meaning",
+   "actor:p-agoliav.facts.meaning",
+   "actor:p-devora.facts.meaning",
+   "actor:p-varak.facts.meaning",
+   "actor:p-iail.facts.meaning",
+   "actor:p-gedeon.facts.meaning",
+   "actor:p-avimelekh-syn-gedeona.facts.meaning",
+   "actor:p-iofam-syn-gedeona.facts.meaning",
+   "actor:p-ieffay.facts.meaning",
+   "actor:p-manoy.facts.meaning",
+   "actor:p-samson.facts.meaning",
+   "actor:p-david.facts.meaning",
+   "actor:p-avigeya.facts.meaning",
+   "actor:p-uriya.facts.meaning",
+   "actor:p-virsaviya.facts.meaning",
+   "actor:p-avessalom.facts.meaning",
+   "actor:p-adoniya.facts.meaning",
+   "actor:p-nafan-syn-davida.facts.meaning",
+   "actor:p-famar-doch-davida.facts.meaning",
+   "actor:p-naama.facts.meaning",
+   "actor:p-nafan-prorok.facts.meaning",
+   "actor:p-rovoam.facts.meaning",
+   "actor:p-iosafat.facts.meaning",
+   "actor:p-ezekiya.facts.meaning",
+   "actor:p-kheftsiba.facts.meaning",
+   "actor:p-iosiya.facts.meaning",
+   "actor:p-sedekiya.facts.meaning",
+   "actor:p-akhav.facts.meaning",
+   "actor:p-iiuy.facts.meaning",
+   "actor:p-menaim.facts.meaning",
+   "actor:p-azail.facts.meaning",
+   "actor:p-iliya.facts.meaning",
+   "actor:p-elisey.facts.meaning",
+   "actor:p-isaiya.facts.meaning",
+   "actor:p-osiya-prorok.facts.meaning",
+   "actor:p-iona.facts.meaning",
+   "actor:p-ioil-syn-vafuila.facts.meaning",
+   "actor:p-ieremiya.facts.meaning",
+   "actor:p-varukh.facts.meaning",
+   "actor:p-iezekiil.facts.meaning",
+   "actor:p-daniil.facts.meaning",
+   "actor:p-sofoniya-prorok.facts.meaning",
+   "actor:p-avdiy-prorok.facts.meaning",
+   "actor:p-naum-prorok.facts.meaning",
+   "actor:p-zakhariya-syn-varakhii.facts.meaning",
+   "actor:p-malakhiya.facts.meaning",
+   "actor:p-neemiya.facts.meaning",
+   "actor:p-salafiil.facts.meaning",
+   "actor:p-zorovavel.facts.meaning",
+   "actor:p-risay.facts.meaning",
+   "actor:p-iosif-muzh-marii.facts.meaning",
+   "actor:p-zakhariya-svyashchennik.facts.meaning",
+   "actor:p-elisaveta.facts.meaning",
+   "actor:p-ioann-krestitel.facts.meaning",
+   "actor:p-andrey.facts.meaning",
+   "actor:p-ioann-apostol.facts.meaning",
+   "actor:p-filipp-apostol.facts.meaning",
+   "actor:p-varfolomey.facts.meaning",
+   "actor:p-nafanail.facts.meaning",
+   "actor:p-matfey.facts.meaning",
+   "actor:p-iuda-iskariot.facts.meaning",
+   "actor:p-lazar.facts.meaning",
+   "actor:p-marfa.facts.meaning",
+   "actor:p-mariya-magdalina.facts.meaning",
+   "actor:p-nikodim.facts.meaning",
+   "actor:p-feliks.facts.meaning",
+   "actor:p-pavel.facts.meaning",
+   "actor:p-timofey.facts.meaning",
+   "actor:p-akila.facts.meaning",
+   "actor:p-vartimey.facts.meaning",
+   "actor:p-arba.facts.meaning",
+   "actor:p-pakhaf-moav.facts.meaning"
+  ],
+  "C5": [
+   "origin:p-sala|p-arfaksad|father|p"
+  ],
+  "C6": [
+   "origin:p-salafiil|p-iekhoniya|father|p",
+   "origin:p-salafiil|p-niriy|father|o",
+   "origin:p-zorovavel|p-salafiil|father|p",
+   "origin:p-zorovavel|p-fedaiya-syn-iekhonii|father|o",
+   "reading:r-shealtiel",
+   "reading:r-zerubbabel"
+  ],
+  "C7": [
+   "actor:p-iliy-syn-matfata.facts.notes",
+   "actor:p-iosif-muzh-marii.facts.notes",
+   "line:joseph",
+   "line:mary",
+   "line:luke"
+  ],
+  "C8": [
+   "kin:p-amessay|p-ioav|двоюродный брат",
+   "kin:p-nakham-otets-keily|p-godiya-sestra-nakhama|брат",
+   "kin:p-shupim-syn-ira|p-maakha-zhena-makhira|брат",
+   "kin:p-khupim-syn-ira|p-maakha-zhena-makhira|брат",
+   "kin:p-seraiya-syn-nirii|p-varukh|брат",
+   "kin:p-godiya-sestra-nakhama|p-nakham-otets-keily|сестра#2",
+   "kin:p-maakha-zhena-makhira|p-shupim-syn-ira|сестра",
+   "kin:p-maakha-zhena-makhira|p-khupim-syn-ira|сестра"
+  ],
+  "C9": [
+   "actor:p-adam.facts.notes",
+   "actor:p-kittim.facts.notes",
+   "actor:p-dodanim.facts.notes",
+   "actor:p-ludim.facts.notes",
+   "actor:p-anamim.facts.notes",
+   "actor:p-legavim.facts.notes",
+   "actor:p-naftukhim.facts.notes",
+   "actor:p-patrusim.facts.notes",
+   "actor:p-kaslukhim.facts.notes",
+   "actor:p-filistimlyane.facts.notes",
+   "actor:p-kaftorim.facts.notes",
+   "actor:p-ievusey.facts.notes",
+   "actor:p-amorrey.facts.notes",
+   "actor:p-gergesey.facts.notes",
+   "actor:p-evey.facts.notes",
+   "actor:p-arkey.facts.notes",
+   "actor:p-siney.facts.notes",
+   "actor:p-arvadey.facts.notes",
+   "actor:p-tsemarey.facts.notes",
+   "actor:p-khifamey.facts.notes",
+   "actor:p-daluia.facts.birth",
+   "actor:p-avessalom.facts.birth",
+   "actor:p-adoniya.facts.birth",
+   "actor:p-safatiya-syn-davida.facts.birth",
+   "actor:p-ieferaam.facts.birth",
+   "actor:p-samus-syn-davida.facts.birth",
+   "actor:p-sovav-syn-davida.facts.birth",
+   "actor:p-nafan-syn-davida.facts.birth",
+   "actor:p-evear-syn-davida.facts.birth",
+   "actor:p-elisua-syn-davida.facts.birth",
+   "actor:p-elifelet-syn-davida.facts.birth",
+   "actor:p-nogag-syn-davida.facts.birth",
+   "actor:p-nafek-syn-davida.facts.birth",
+   "actor:p-iafia-syn-davida.facts.birth",
+   "actor:p-elisama-syn-davida.facts.birth",
+   "actor:p-eliada-syn-davida.facts.birth",
+   "actor:p-elifalef-syn-davida.facts.birth"
+  ],
+  "C10": [
+   "actor:p-adam.facts.original",
+   "actor:p-eva.facts.original",
+   "actor:p-kain.facts.original",
+   "actor:p-enokh-syn-kaina.facts.original",
+   "actor:p-irad.facts.original",
+   "actor:p-mekhiael.facts.original",
+   "actor:p-mafusal-syn-mekhiaelya.facts.original",
+   "actor:p-lamekh-kainit.facts.original",
+   "actor:p-ada-zhena-lamekha.facts.original",
+   "actor:p-tsilla.facts.original",
+   "actor:p-iaval.facts.original",
+   "actor:p-iuval.facts.original",
+   "actor:p-tuvalkain.facts.original",
+   "actor:p-noema.facts.original",
+   "actor:p-avel.facts.original",
+   "actor:p-sif.facts.original",
+   "actor:p-enos.facts.original",
+   "actor:p-kainan.facts.original",
+   "actor:p-maleleil.facts.original",
+   "actor:p-iared.facts.original",
+   "actor:p-enokh.facts.original",
+   "actor:p-mafusal.facts.original",
+   "actor:p-lamekh.facts.original",
+   "actor:p-noy.facts.original",
+   "actor:p-sim.facts.original",
+   "actor:p-kham.facts.original",
+   "actor:p-iafet.facts.original",
+   "actor:p-khanaan.facts.original",
+   "actor:p-ioktan.facts.original",
+   "actor:p-gomer-syn-iafeta.facts.original",
+   "actor:p-magog.facts.original",
+   "actor:p-maday.facts.original",
+   "actor:p-iavan.facts.original",
+   "actor:p-fuval.facts.original",
+   "actor:p-meshekh-syn-iafeta.facts.original",
+   "actor:p-firas.facts.original",
+   "actor:p-askenaz.facts.original",
+   "actor:p-rifat.facts.original",
+   "actor:p-fogarma.facts.original",
+   "actor:p-elisa.facts.original",
+   "actor:p-farsis-syn-iavana.facts.original",
+   "actor:p-kittim.facts.original",
+   "actor:p-dodanim.facts.original",
+   "actor:p-khush-syn-khama.facts.original",
+   "actor:p-mitsraim.facts.original",
+   "actor:p-fut.facts.original",
+   "actor:p-seva.facts.original",
+   "actor:p-khavila-syn-khusha.facts.original",
+   "actor:p-savta.facts.original",
+   "actor:p-raama.facts.original",
+   "actor:p-savtekha.facts.original",
+   "actor:p-nimrod.facts.original",
+   "actor:p-sheva-syn-raamy.facts.original",
+   "actor:p-dedan-syn-raamy.facts.original",
+   "actor:p-ludim.facts.original",
+   "actor:p-anamim.facts.original",
+   "actor:p-legavim.facts.original",
+   "actor:p-naftukhim.facts.original",
+   "actor:p-patrusim.facts.original",
+   "actor:p-kaslukhim.facts.original",
+   "actor:p-filistimlyane.facts.original",
+   "actor:p-kaftorim.facts.original",
+   "actor:p-sidon.facts.original",
+   "actor:p-khet.facts.original",
+   "actor:p-ievusey.facts.original",
+   "actor:p-amorrey.facts.original",
+   "actor:p-gergesey.facts.original",
+   "actor:p-evey.facts.original",
+   "actor:p-arkey.facts.original",
+   "actor:p-siney.facts.original",
+   "actor:p-arvadey.facts.original",
+   "actor:p-tsemarey.facts.original",
+   "actor:p-khifamey.facts.original",
+   "actor:p-elam-syn-sima.facts.original",
+   "actor:p-assur-syn-sima.facts.original",
+   "actor:p-lud.facts.original",
+   "actor:p-aram-syn-sima.facts.original",
+   "actor:p-uts-syn-arama.facts.original",
+   "actor:p-khul.facts.original",
+   "actor:p-gefer.facts.original",
+   "actor:p-mash.facts.original",
+   "actor:p-almodad.facts.original",
+   "actor:p-shalef.facts.original",
+   "actor:p-khatsarmavef.facts.original",
+   "actor:p-ierakh.facts.original",
+   "actor:p-gadoram.facts.original",
+   "actor:p-uzal.facts.original",
+   "actor:p-dikla.facts.original",
+   "actor:p-oval.facts.original",
+   "actor:p-avimail.facts.original",
+   "actor:p-sheva-syn-ioktana.facts.original",
+   "actor:p-ofir-syn-ioktana.facts.original",
+   "actor:p-khavila-syn-ioktana.facts.original",
+   "actor:p-iovav-syn-ioktana.facts.original",
+   "actor:p-arfaksad.facts.original",
+   "actor:p-kainan-syn-arfaksada.facts.original",
+   "actor:p-sala.facts.original",
+   "actor:p-ever.facts.original",
+   "actor:p-falek.facts.original",
+   "actor:p-ragav.facts.original",
+   "actor:p-serukh.facts.original",
+   "actor:p-nakhor.facts.original",
+   "actor:p-farra.facts.original",
+   "actor:p-nakhor-syn-farry.facts.original",
+   "actor:p-aran.facts.original",
+   "actor:p-lot.facts.original",
+   "actor:p-moav.facts.original",
+   "actor:p-ben-ammi.facts.original",
+   "actor:p-milka.facts.original",
+   "actor:p-iska.facts.original",
+   "actor:p-uts-syn-nakhora.facts.original",
+   "actor:p-vuz.facts.original",
+   "actor:p-kemuil-syn-nakhora.facts.original",
+   "actor:p-aram-syn-kemuila.facts.original",
+   "actor:p-kesed.facts.original",
+   "actor:p-khazo.facts.original",
+   "actor:p-pildash.facts.original",
+   "actor:p-idlaf.facts.original",
+   "actor:p-vafuil.facts.original",
+   "actor:p-lavan.facts.original",
+   "actor:p-reuma.facts.original",
+   "actor:p-tevakh.facts.original",
+   "actor:p-gakham.facts.original",
+   "actor:p-takhash.facts.original",
+   "actor:p-maakha-syn-nakhora.facts.original",
+   "actor:p-avraam.facts.original",
+   "actor:p-sarra.facts.original",
+   "actor:p-agar.facts.original",
+   "actor:p-izmail.facts.original",
+   "actor:p-navayof.facts.original",
+   "actor:p-kedar.facts.original",
+   "actor:p-adbeel.facts.original",
+   "actor:p-mivsam-syn-izmaila.facts.original",
+   "actor:p-mishma-syn-izmaila.facts.original",
+   "actor:p-duma.facts.original",
+   "actor:p-massa.facts.original",
+   "actor:p-khadad-syn-izmaila.facts.original",
+   "actor:p-fema.facts.original",
+   "actor:p-ietur.facts.original",
+   "actor:p-nafish.facts.original",
+   "actor:p-kedma.facts.original",
+   "actor:p-isaak.facts.original",
+   "actor:p-revekka.facts.original",
+   "actor:p-iakov.facts.original",
+   "actor:p-liya.facts.original",
+   "actor:p-rakhil.facts.original",
+   "actor:p-valla.facts.original",
+   "actor:p-zelfa.facts.original",
+   "actor:p-khettura.facts.original",
+   "actor:p-zimran.facts.original",
+   "actor:p-iokshan.facts.original",
+   "actor:p-medan.facts.original",
+   "actor:p-madian.facts.original",
+   "actor:p-ishbak.facts.original",
+   "actor:p-shuakh.facts.original",
+   "actor:p-sheva-syn-iokshana.facts.original",
+   "actor:p-dedan-syn-iokshana.facts.original",
+   "actor:p-ashurim.facts.original",
+   "actor:p-letushim.facts.original",
+   "actor:p-leyumim.facts.original",
+   "actor:p-efa-syn-madiana.facts.original",
+   "actor:p-efer-syn-madiana.facts.original",
+   "actor:p-khanokh-syn-madiana.facts.original",
+   "actor:p-avida.facts.original",
+   "actor:p-eldaga.facts.original",
+   "actor:p-melkhisedek.facts.original",
+   "actor:p-mamriy.facts.original",
+   "actor:p-eshkol.facts.original",
+   "actor:p-aner.facts.original",
+   "actor:p-eliezer-iz-damaska.facts.original",
+   "actor:p-tsokhar-otets-efrona.facts.original",
+   "actor:p-efron.facts.original",
+   "actor:p-devora-kormilitsa.facts.original",
+   "actor:p-emmor.facts.original",
+   "actor:p-sikhem-syn-emmora.facts.original",
+   "actor:p-isav.facts.original",
+   "actor:p-beer-khetteyanin.facts.original",
+   "actor:p-iegudifa.facts.original",
+   "actor:p-elon-khetteyanin.facts.original",
+   "actor:p-ada-zhena-isava.facts.original",
+   "actor:p-makhalafa-doch-izmaila.facts.original",
+   "actor:p-seir-khorreyanin.facts.original",
+   "actor:p-lotan.facts.original",
+   "actor:p-shoval-syn-seira.facts.original",
+   "actor:p-tsiveon.facts.original",
+   "actor:p-ana-syn-seira.facts.original",
+   "actor:p-dishon-syn-seira.facts.original",
+   "actor:p-etser-syn-seira.facts.original",
+   "actor:p-dishan.facts.original",
+   "actor:p-khori-syn-lotana.facts.original",
+   "actor:p-geman-syn-lotana.facts.original",
+   "actor:p-famna-sestra-lotana.facts.original",
+   "actor:p-alvan.facts.original",
+   "actor:p-manakhaf.facts.original",
+   "actor:p-eval-syn-shovala.facts.original",
+   "actor:p-shefo.facts.original",
+   "actor:p-onam-syn-shovala.facts.original",
+   "actor:p-aia.facts.original",
+   "actor:p-ana-syn-tsiveona.facts.original",
+   "actor:p-dishon-syn-any.facts.original",
+   "actor:p-olivema.facts.original",
+   "actor:p-khemdan.facts.original",
+   "actor:p-eshban.facts.original",
+   "actor:p-ifran-syn-dishona.facts.original",
+   "actor:p-kheran.facts.original",
+   "actor:p-bilgan-syn-etsera.facts.original",
+   "actor:p-zaavan.facts.original",
+   "actor:p-akan.facts.original",
+   "actor:p-uts-syn-dishana.facts.original",
+   "actor:p-aran-syn-dishana.facts.original",
+   "actor:p-elifaz-syn-isava.facts.original",
+   "actor:p-raguil-syn-isava.facts.original",
+   "actor:p-ieus-syn-isava.facts.original",
+   "actor:p-ieglom.facts.original",
+   "actor:p-korey-syn-isava.facts.original",
+   "actor:p-feman-syn-elifaza.facts.original",
+   "actor:p-omar.facts.original",
+   "actor:p-tsefo.facts.original",
+   "actor:p-gafam.facts.original",
+   "actor:p-kenaz-syn-elifaza.facts.original",
+   "actor:p-famna-nalozhnitsa-elifaza.facts.original",
+   "actor:p-amalik.facts.original",
+   "actor:p-nakhaf-syn-raguila.facts.original",
+   "actor:p-zerakh-syn-raguila.facts.original",
+   "actor:p-shamma-syn-raguila.facts.original",
+   "actor:p-miza.facts.original",
+   "actor:p-veor-otets-bely.facts.original",
+   "actor:p-bela-syn-veora.facts.original",
+   "actor:p-zerakh-otets-iovava.facts.original",
+   "actor:p-iovav-syn-zerakha.facts.original",
+   "actor:p-khusham.facts.original",
+   "actor:p-bedad.facts.original",
+   "actor:p-gadad-syn-bedada.facts.original",
+   "actor:p-samla.facts.original",
+   "actor:p-saul-iz-rekhovofa.facts.original",
+   "actor:p-akhbor-otets-baal-khanana.facts.original",
+   "actor:p-baal-khanan-syn-akhbora.facts.original",
+   "actor:p-mezagav.facts.original",
+   "actor:p-matred.facts.original",
+   "actor:p-megetaveel.facts.original",
+   "actor:p-gadar.facts.original",
+   "actor:p-iov.facts.original",
+   "actor:p-emima.facts.original",
+   "actor:p-kassiya.facts.original",
+   "actor:p-kerengappukh.facts.original",
+   "actor:p-elifaz-femanityanin.facts.original",
+   "actor:p-vildad.facts.original",
+   "actor:p-sofar.facts.original",
+   "actor:p-varakhiil.facts.original",
+   "actor:p-eliuy.facts.original",
+   "actor:p-ruvim.facts.original",
+   "actor:p-simeon.facts.original",
+   "actor:p-leviy.facts.original",
+   "actor:p-iuda.facts.original",
+   "actor:p-dan.facts.original",
+   "actor:p-neffalim.facts.original",
+   "actor:p-gad.facts.original",
+   "actor:p-asir.facts.original",
+   "actor:p-issakhar.facts.original",
+   "actor:p-zavulon.facts.original",
+   "actor:p-dina.facts.original",
+   "actor:p-iosif.facts.original",
+   "actor:p-veniamin.facts.original",
+   "actor:p-khanokh-syn-ruvima.facts.original",
+   "actor:p-fallu.facts.original",
+   "actor:p-khetsron-syn-ruvima.facts.original",
+   "actor:p-kharmi-syn-ruvima.facts.original",
+   "actor:p-iemuil.facts.original",
+   "actor:p-iamin-syn-simeona.facts.original",
+   "actor:p-ogad.facts.original",
+   "actor:p-iakhin-syn-simeona.facts.original",
+   "actor:p-tsokhar-syn-simeona.facts.original",
+   "actor:p-saul-syn-simeona.facts.original",
+   "actor:p-shua-khananeyanin.facts.original",
+   "actor:p-ir-syn-iudy.facts.original",
+   "actor:p-onan.facts.original",
+   "actor:p-shela-syn-iudy.facts.original",
+   "actor:p-famar.facts.original",
+   "actor:p-fares.facts.original",
+   "actor:p-zara.facts.original",
+   "actor:p-esrom.facts.original",
+   "actor:p-khamul.facts.original",
+   "actor:p-fola-syn-issakhara.facts.original",
+   "actor:p-fuva.facts.original",
+   "actor:p-iov-syn-issakhara.facts.original",
+   "actor:p-shimron.facts.original",
+   "actor:p-sered.facts.original",
+   "actor:p-elon-syn-zavulona.facts.original",
+   "actor:p-iakhleil.facts.original",
+   "actor:p-tsifion.facts.original",
+   "actor:p-khaggi.facts.original",
+   "actor:p-shuni.facts.original",
+   "actor:p-etsbon.facts.original",
+   "actor:p-eri.facts.original",
+   "actor:p-arodi.facts.original",
+   "actor:p-areli.facts.original",
+   "actor:p-imna-syn-asira.facts.original",
+   "actor:p-ishva.facts.original",
+   "actor:p-ishvi.facts.original",
+   "actor:p-bria-syn-asira.facts.original",
+   "actor:p-serakh.facts.original",
+   "actor:p-khever-syn-brii.facts.original",
+   "actor:p-malkhiil.facts.original",
+   "actor:p-potifar.facts.original",
+   "actor:p-potifer-zhrets.facts.original",
+   "actor:p-asenefa.facts.original",
+   "actor:p-manassiya.facts.original",
+   "actor:p-efrem.facts.original",
+   "actor:p-bela-syn-veniamina.facts.original",
+   "actor:p-bekher-syn-veniamina.facts.original",
+   "actor:p-ashbel.facts.original",
+   "actor:p-gera-syn-veniamina.facts.original",
+   "actor:p-naaman-syn-veniamina.facts.original",
+   "actor:p-ekhi.facts.original",
+   "actor:p-rosh.facts.original",
+   "actor:p-muppim.facts.original",
+   "actor:p-khuppim.facts.original",
+   "actor:p-ard.facts.original",
+   "actor:p-iediail-syn-veniamina.facts.original",
+   "actor:p-khushim-syn-dana.facts.original",
+   "actor:p-iakhtseil.facts.original",
+   "actor:p-guni-syn-neffalima.facts.original",
+   "actor:p-ietser.facts.original",
+   "actor:p-shillem.facts.original",
+   "actor:p-akhan.facts.original",
+   "actor:p-aram.facts.original",
+   "actor:p-aminadav.facts.original",
+   "actor:p-naasson.facts.original",
+   "actor:p-raav.facts.original",
+   "actor:p-vooz.facts.original",
+   "actor:p-elimelekh.facts.original",
+   "actor:p-noemin.facts.original",
+   "actor:p-ruf.facts.original",
+   "actor:p-ovid.facts.original",
+   "actor:p-iessey.facts.original",
+   "actor:p-aminadav-syn-iesseya.facts.original",
+   "actor:p-samma-syn-iesseya.facts.original",
+   "actor:p-ioav.facts.original",
+   "actor:p-avessa.facts.original",
+   "actor:p-khur.facts.original",
+   "actor:p-veseleil-syn-uriya.facts.original",
+   "actor:p-khalev.facts.original",
+   "actor:p-gofoniil.facts.original",
+   "actor:p-akhum.facts.original",
+   "actor:p-lagad.facts.original",
+   "actor:p-iudiya.facts.original",
+   "actor:p-girson.facts.original",
+   "actor:p-kaaf.facts.original",
+   "actor:p-merari.facts.original",
+   "actor:p-amram.facts.original",
+   "actor:p-iokhaveda.facts.original",
+   "actor:p-aaron.facts.original",
+   "actor:p-moisey.facts.original",
+   "actor:p-mariam.facts.original",
+   "actor:p-elisaveta-zhena-aarona.facts.original",
+   "actor:p-nadav.facts.original",
+   "actor:p-aviud-syn-aarona.facts.original",
+   "actor:p-eleazar.facts.original",
+   "actor:p-ifamar.facts.original",
+   "actor:p-iofor.facts.original",
+   "actor:p-sepfora.facts.original",
+   "actor:p-khovav.facts.original",
+   "actor:p-girsam.facts.original",
+   "actor:p-eliezer-syn-moiseya.facts.original",
+   "actor:p-korey.facts.original",
+   "actor:p-elkana.facts.original",
+   "actor:p-anna-mat-samuila.facts.original",
+   "actor:p-fennana.facts.original",
+   "actor:p-samuil.facts.original",
+   "actor:p-iliy-svyashchennik.facts.original",
+   "actor:p-ikhavod.facts.original",
+   "actor:p-akhimelekh-syn-akhitova.facts.original",
+   "actor:p-aviafar.facts.original",
+   "actor:p-finees.facts.original",
+   "actor:p-sadok.facts.original",
+   "actor:p-akhimaas-syn-sadoka.facts.original",
+   "actor:p-khelkiya-pervosvyashchennik.facts.original",
+   "actor:p-seraiya-pervosvyashchennik.facts.original",
+   "actor:p-iisus-syn-iosedeka.facts.original",
+   "actor:p-ezdra.facts.original",
+   "actor:p-iodai.facts.original",
+   "actor:p-zakhariya-syn-iodaya.facts.original",
+   "actor:p-asaf.facts.original",
+   "actor:p-eman.facts.original",
+   "actor:p-idifun.facts.original",
+   "actor:p-eliav-syn-fallu.facts.original",
+   "actor:p-dafan.facts.original",
+   "actor:p-aviron-syn-eliava.facts.original",
+   "actor:p-falef.facts.original",
+   "actor:p-avnan.facts.original",
+   "actor:p-ioshivi.facts.original",
+   "actor:p-iakova.facts.original",
+   "actor:p-salu.facts.original",
+   "actor:p-zimri-syn-salu.facts.original",
+   "actor:p-makhir.facts.original",
+   "actor:p-galaad-syn-makhira.facts.original",
+   "actor:p-keresh-syn-makhira.facts.original",
+   "actor:p-molekhef.facts.original",
+   "actor:p-aviezer-syn-galaada.facts.original",
+   "actor:p-salpaad.facts.original",
+   "actor:p-makhla-doch-salpaada.facts.original",
+   "actor:p-noa-doch-salpaada.facts.original",
+   "actor:p-khogla-doch-salpaada.facts.original",
+   "actor:p-milka-doch-salpaada.facts.original",
+   "actor:p-firtsa-doch-salpaada.facts.original",
+   "actor:p-shutela-syn-efrema.facts.original",
+   "actor:p-beriya-syn-efrema.facts.original",
+   "actor:p-sheera.facts.original",
+   "actor:p-elishama-syn-ammiuda.facts.original",
+   "actor:p-non.facts.original",
+   "actor:p-iisus-navin.facts.original",
+   "actor:p-afiy.facts.original",
+   "actor:p-bekhoraf.facts.original",
+   "actor:p-tseron.facts.original",
+   "actor:p-aviil.facts.original",
+   "actor:p-kis.facts.original",
+   "actor:p-nir.facts.original",
+   "actor:p-avenir.facts.original",
+   "actor:p-ieil.facts.original",
+   "actor:p-ritspa.facts.original",
+   "actor:p-saul.facts.original",
+   "actor:p-ionafan.facts.original",
+   "actor:p-iessui.facts.original",
+   "actor:p-melkhisua.facts.original",
+   "actor:p-aminadav-syn-saula.facts.original",
+   "actor:p-ievosfey.facts.original",
+   "actor:p-merova.facts.original",
+   "actor:p-melkhola.facts.original",
+   "actor:p-armon.facts.original",
+   "actor:p-faltiy-syn-laisha.facts.original",
+   "actor:p-adriel.facts.original",
+   "actor:p-memfivosfey.facts.original",
+   "actor:p-siva.facts.original",
+   "actor:p-semey-syn-gery.facts.original",
+   "actor:p-savey.facts.original",
+   "actor:p-agoliav.facts.original",
+   "actor:p-veor-otets-valaama.facts.original",
+   "actor:p-valaam.facts.original",
+   "actor:p-sepfor.facts.original",
+   "actor:p-valak.facts.original",
+   "actor:p-tsur-madianityanin.facts.original",
+   "actor:p-khazva.facts.original",
+   "actor:p-aod.facts.original",
+   "actor:p-anaf.facts.original",
+   "actor:p-samegar.facts.original",
+   "actor:p-lappidof.facts.original",
+   "actor:p-devora.facts.original",
+   "actor:p-avinoam.facts.original",
+   "actor:p-varak.facts.original",
+   "actor:p-khever-keneyanin.facts.original",
+   "actor:p-iail.facts.original",
+   "actor:p-sisara.facts.original",
+   "actor:p-ioas-otets-gedeona.facts.original",
+   "actor:p-gedeon.facts.original",
+   "actor:p-iefer-syn-gedeona.facts.original",
+   "actor:p-avimelekh-syn-gedeona.facts.original",
+   "actor:p-iofam-syn-gedeona.facts.original",
+   "actor:p-eved-otets-gaala.facts.original",
+   "actor:p-gaal-syn-eveda.facts.original",
+   "actor:p-dodo-ded-foly.facts.original",
+   "actor:p-fua-syn-dodo.facts.original",
+   "actor:p-fola-syn-fui.facts.original",
+   "actor:p-iair-galaadityanin.facts.original",
+   "actor:p-ieffay.facts.original",
+   "actor:p-esevon-iz-vifleema.facts.original",
+   "actor:p-elon-zavulonyanin.facts.original",
+   "actor:p-gillel.facts.original",
+   "actor:p-avdon-syn-gillela.facts.original",
+   "actor:p-manoy.facts.original",
+   "actor:p-samson.facts.original",
+   "actor:p-dalida.facts.original",
+   "actor:p-mikha-s-gory-efremovoy.facts.original",
+   "actor:p-david.facts.original",
+   "actor:p-akhinoama.facts.original",
+   "actor:p-naval.facts.original",
+   "actor:p-avigeya.facts.original",
+   "actor:p-falmay.facts.original",
+   "actor:p-maakha-doch-falmaya.facts.original",
+   "actor:p-aggifa.facts.original",
+   "actor:p-avitala.facts.original",
+   "actor:p-egla.facts.original",
+   "actor:p-akhitofel.facts.original",
+   "actor:p-eliam.facts.original",
+   "actor:p-uriya.facts.original",
+   "actor:p-virsaviya.facts.original",
+   "actor:p-amnon.facts.original",
+   "actor:p-avessalom.facts.original",
+   "actor:p-adoniya.facts.original",
+   "actor:p-nafan-syn-davida.facts.original",
+   "actor:p-famar-doch-davida.facts.original",
+   "actor:p-solomon.facts.original",
+   "actor:p-naama.facts.original",
+   "actor:p-khiram-tsar.facts.original",
+   "actor:p-nafan-prorok.facts.original",
+   "actor:p-gad-prozorlivets.facts.original",
+   "actor:p-aminadav-iz-kiriaf-iarima.facts.original",
+   "actor:p-rovoam.facts.original",
+   "actor:p-maakha-doch-avessaloma.facts.original",
+   "actor:p-aviya.facts.original",
+   "actor:p-asa.facts.original",
+   "actor:p-iosafat.facts.original",
+   "actor:p-ioram-syn-iosafata.facts.original",
+   "actor:p-okhoziya-syn-iorama.facts.original",
+   "actor:p-ioas-syn-okhozii.facts.original",
+   "actor:p-amasiya.facts.original",
+   "actor:p-oziya.facts.original",
+   "actor:p-ioafam.facts.original",
+   "actor:p-akhaz.facts.original",
+   "actor:p-ezekiya.facts.original",
+   "actor:p-manassiya-tsar.facts.original",
+   "actor:p-amon-tsar.facts.original",
+   "actor:p-iosiya.facts.original",
+   "actor:p-ioakhaz-syn-iosii.facts.original",
+   "actor:p-ioakim-tsar.facts.original",
+   "actor:p-sedekiya.facts.original",
+   "actor:p-iekhoniya.facts.original",
+   "actor:p-ader-idumeyanin.facts.original",
+   "actor:p-takhpenesa.facts.original",
+   "actor:p-genuvat.facts.original",
+   "actor:p-razon.facts.original",
+   "actor:p-navat.facts.original",
+   "actor:p-tserua.facts.original",
+   "actor:p-ieroboam.facts.original",
+   "actor:p-navat-syn-ieroboama.facts.original",
+   "actor:p-vaasa.facts.original",
+   "actor:p-ila-syn-vaasy.facts.original",
+   "actor:p-zamvriy.facts.original",
+   "actor:p-gonaf.facts.original",
+   "actor:p-famniy.facts.original",
+   "actor:p-khezion.facts.original",
+   "actor:p-tavrimon.facts.original",
+   "actor:p-venadad-syn-tavrimona.facts.original",
+   "actor:p-amvriy.facts.original",
+   "actor:p-efvaal.facts.original",
+   "actor:p-iezavel.facts.original",
+   "actor:p-akhav.facts.original",
+   "actor:p-okhoziya-syn-akhava.facts.original",
+   "actor:p-ioram-syn-akhava.facts.original",
+   "actor:p-gofoliya.facts.original",
+   "actor:p-akhiil-vefilyanin.facts.original",
+   "actor:p-namessiy.facts.original",
+   "actor:p-iiuy.facts.original",
+   "actor:p-ioakhaz-syn-iiuya.facts.original",
+   "actor:p-ioas-syn-ioakhaza.facts.original",
+   "actor:p-ieroboam-vtoroy.facts.original",
+   "actor:p-zakhariya-syn-ieroboama.facts.original",
+   "actor:p-sellum-syn-iavisa.facts.original",
+   "actor:p-menaim.facts.original",
+   "actor:p-fakiya.facts.original",
+   "actor:p-remaliya.facts.original",
+   "actor:p-fakey.facts.original",
+   "actor:p-osiya-syn-ily.facts.original",
+   "actor:p-venadad-pri-akhave.facts.original",
+   "actor:p-mesa.facts.original",
+   "actor:p-azail.facts.original",
+   "actor:p-venadad-syn-azaila.facts.original",
+   "actor:p-ful.facts.original",
+   "actor:p-feglaffellasar.facts.original",
+   "actor:p-salmanassar.facts.original",
+   "actor:p-sinnakherim.facts.original",
+   "actor:p-asardan.facts.original",
+   "actor:p-iliya.facts.original",
+   "actor:p-elisey.facts.original",
+   "actor:p-mikhey-syn-iemvlaya.facts.original",
+   "actor:p-ionadav-syn-rekhava.facts.original",
+   "actor:p-amos-otets-isaii.facts.original",
+   "actor:p-isaiya.facts.original",
+   "actor:p-mikhey-morasfitin.facts.original",
+   "actor:p-osiya-prorok.facts.original",
+   "actor:p-amos-prorok.facts.original",
+   "actor:p-iona.facts.original",
+   "actor:p-ioil-syn-vafuila.facts.original",
+   "actor:p-oldama.facts.original",
+   "actor:p-ieremiya.facts.original",
+   "actor:p-varukh.facts.original",
+   "actor:p-shafan.facts.original",
+   "actor:p-akhikam.facts.original",
+   "actor:p-godoliya.facts.original",
+   "actor:p-iezekiil.facts.original",
+   "actor:p-daniil.facts.original",
+   "actor:p-ananiya-sedrakh.facts.original",
+   "actor:p-misail-misakh.facts.original",
+   "actor:p-azariya-avdenago.facts.original",
+   "actor:p-navukhodonosor.facts.original",
+   "actor:p-valtasar-tsar.facts.original",
+   "actor:p-sofoniya-prorok.facts.original",
+   "actor:p-avdiy-prorok.facts.original",
+   "actor:p-naum-prorok.facts.original",
+   "actor:p-avvakum.facts.original",
+   "actor:p-kir.facts.original",
+   "actor:p-aggey.facts.original",
+   "actor:p-zakhariya-syn-varakhii.facts.original",
+   "actor:p-malakhiya.facts.original",
+   "actor:p-neemiya.facts.original",
+   "actor:p-mardokhey.facts.original",
+   "actor:p-esfir.facts.original",
+   "actor:p-artakserks-muzh-esfiri.facts.original",
+   "actor:p-aman.facts.original",
+   "actor:p-agur.facts.original",
+   "actor:p-lemuil.facts.original",
+   "actor:p-salafiil.facts.original",
+   "actor:p-zorovavel.facts.original",
+   "actor:p-iliy-syn-matfata.facts.original",
+   "actor:p-mariya.facts.original",
+   "actor:p-iosif-muzh-marii.facts.original",
+   "actor:p-iisus.facts.original",
+   "actor:p-zakhariya-svyashchennik.facts.original",
+   "actor:p-elisaveta.facts.original",
+   "actor:p-ioann-krestitel.facts.original",
+   "actor:p-fanuil.facts.original",
+   "actor:p-anna-prorochitsa.facts.original",
+   "actor:p-iakov-brat-gospoden.facts.original",
+   "actor:p-kleopa.facts.original",
+   "actor:p-petr.facts.original",
+   "actor:p-andrey.facts.original",
+   "actor:p-zevedey.facts.original",
+   "actor:p-iakov-zevedeev.facts.original",
+   "actor:p-ioann-apostol.facts.original",
+   "actor:p-filipp-apostol.facts.original",
+   "actor:p-varfolomey.facts.original",
+   "actor:p-nafanail.facts.original",
+   "actor:p-foma.facts.original",
+   "actor:p-matfey.facts.original",
+   "actor:p-iakov-alfeev.facts.original",
+   "actor:p-iuda-iakovlev.facts.original",
+   "actor:p-simon-zilot.facts.original",
+   "actor:p-iuda-iskariot.facts.original",
+   "actor:p-matfiy.facts.original",
+   "actor:p-lazar.facts.original",
+   "actor:p-marfa.facts.original",
+   "actor:p-mariya-iz-vifanii.facts.original",
+   "actor:p-iair-nachalnik-sinagogi.facts.original",
+   "actor:p-mariya-magdalina.facts.original",
+   "actor:p-nikodim.facts.original",
+   "actor:p-iosif-arimafeyskiy.facts.original",
+   "actor:p-irod-velikiy.facts.original",
+   "actor:p-arkhelay.facts.original",
+   "actor:p-irod-antipa.facts.original",
+   "actor:p-filipp-brat-iroda.facts.original",
+   "actor:p-irodiada.facts.original",
+   "actor:p-irod-agrippa.facts.original",
+   "actor:p-agrippa.facts.original",
+   "actor:p-verenika.facts.original",
+   "actor:p-feliks.facts.original",
+   "actor:p-druzilla.facts.original",
+   "actor:p-pontiy-pilat.facts.original",
+   "actor:p-anna-pervosvyashchennik.facts.original",
+   "actor:p-kaiafa.facts.original",
+   "actor:p-pavel.facts.original",
+   "actor:p-evnika.facts.original",
+   "actor:p-loida.facts.original",
+   "actor:p-timofey.facts.original",
+   "actor:p-varnava.facts.original",
+   "actor:p-ioann-mark.facts.original",
+   "actor:p-akila.facts.original",
+   "actor:p-priskilla.facts.original",
+   "actor:p-filipp-blagovestnik.facts.original",
+   "actor:p-sila.facts.original",
+   "actor:p-luka.facts.original",
+   "actor:p-tit.facts.original",
+   "actor:p-filimon.facts.original",
+   "actor:p-onisim.facts.original",
+   "actor:p-sosipatr-pirrov.facts.original",
+   "actor:p-vartimey.facts.original",
+   "actor:p-shedeur.facts.original",
+   "actor:p-elitsur.facts.original",
+   "actor:p-tsurishadday.facts.original",
+   "actor:p-shelumiil.facts.original",
+   "actor:p-tsuar.facts.original",
+   "actor:p-nafanail-syn-tsuara.facts.original",
+   "actor:p-khelon.facts.original",
+   "actor:p-eliav-syn-khelona.facts.original",
+   "actor:p-pedatsur.facts.original",
+   "actor:p-gamaliil-syn-pedatsura.facts.original",
+   "actor:p-gideoniy.facts.original",
+   "actor:p-avidan.facts.original",
+   "actor:p-ammishadday.facts.original",
+   "actor:p-akhiezer-syn-ammishaddaya.facts.original",
+   "actor:p-okhran.facts.original",
+   "actor:p-pagiil.facts.original",
+   "actor:p-reguil-otets-eliasafa.facts.original",
+   "actor:p-eliasaf-syn-reguila.facts.original",
+   "actor:p-enan.facts.original",
+   "actor:p-akhira.facts.original",
+   "actor:p-zakkhur-otets-sammua.facts.original",
+   "actor:p-sammua-syn-zakkhura.facts.original",
+   "actor:p-khoriy-otets-safata.facts.original",
+   "actor:p-safat-syn-khoriya.facts.original",
+   "actor:p-iosif-otets-igala.facts.original",
+   "actor:p-igal-syn-iosifa.facts.original",
+   "actor:p-rafu.facts.original",
+   "actor:p-faltiy-syn-rafu.facts.original",
+   "actor:p-sodiy.facts.original",
+   "actor:p-gaddiil.facts.original",
+   "actor:p-susiy.facts.original",
+   "actor:p-gaddiy.facts.original",
+   "actor:p-gemalliy.facts.original",
+   "actor:p-ammiil-syn-gemalliya.facts.original",
+   "actor:p-mikhail-otets-sefura.facts.original",
+   "actor:p-sefur.facts.original",
+   "actor:p-vofsiy.facts.original",
+   "actor:p-nakhbiy.facts.original",
+   "actor:p-makhiy.facts.original",
+   "actor:p-geuil.facts.original",
+   "actor:p-ammiud-otets-samuila.facts.original",
+   "actor:p-samuil-syn-ammiuda.facts.original",
+   "actor:p-kislon.facts.original",
+   "actor:p-elidad.facts.original",
+   "actor:p-iogliya.facts.original",
+   "actor:p-bukkiy-syn-ioglii.facts.original",
+   "actor:p-efod-otets-khanniila.facts.original",
+   "actor:p-khanniil-syn-efoda.facts.original",
+   "actor:p-shiftan.facts.original",
+   "actor:p-kemuil-syn-shiftana.facts.original",
+   "actor:p-farnak.facts.original",
+   "actor:p-elitsafan-syn-farnaka.facts.original",
+   "actor:p-azzan.facts.original",
+   "actor:p-faltiil.facts.original",
+   "actor:p-shelomiy.facts.original",
+   "actor:p-akhiud.facts.original",
+   "actor:p-ammiud-otets-pedaila.facts.original",
+   "actor:p-pedail.facts.original",
+   "actor:p-eldad.facts.original",
+   "actor:p-modad.facts.original",
+   "actor:p-arba.facts.original",
+   "actor:p-enak.facts.original",
+   "actor:p-sheshay.facts.original",
+   "actor:p-akhiman-syn-enaka.facts.original",
+   "actor:p-falmay-syn-enaka.facts.original",
+   "actor:p-iodai-otets-vanei.facts.original",
+   "actor:p-vaneya-syn-iodaya.facts.original",
+   "actor:p-khusiy-arkhityanin.facts.original",
+   "actor:p-goliaf.facts.original"
+  ],
+  "C11": [
+   "origin:p-naaman-syn-veniamina|p-veniamin|father|p",
+   "origin:p-naaman-syn-veniamina|p-bela-syn-veniamina|father|o",
+   "origin:p-ard|p-veniamin|father|p",
+   "origin:p-ard|p-bela-syn-veniamina|father|o",
+   "origin:p-shoval-otets-kiriaf-iarima|p-khalev-syn-esroma|father|p",
+   "origin:p-shoval-otets-kiriaf-iarima|p-khur|father|o",
+   "origin:p-korey|p-itsgar|father|p",
+   "origin:p-korey|p-aminadav-syn-kaafa|father|o",
+   "origin:p-sadok-1par6-12|p-akhitov-1par6-11|father|p",
+   "origin:p-sadok-1par6-12|p-meraiof-1par9-11|father|o",
+   "origin:p-zefam|p-laedan|father|p",
+   "origin:p-zefam|p-iekhiil-syn-laedana|father|o",
+   "origin:p-ioil-syn-laedana|p-laedan|father|p",
+   "origin:p-ioil-syn-laedana|p-iekhiil-syn-laedana|father|o",
+   "origin:p-asriil|p-galaad-syn-makhira|father|p",
+   "origin:p-asriil|p-manassiya|father|o",
+   "origin:p-asriil|p-nalozhnitsa-manassii|mother|o",
+   "origin:p-kis|p-aviil|father|p",
+   "origin:p-kis|p-nir|father|o",
+   "origin:p-nir|p-aviil|father|p",
+   "origin:p-nir|p-ieil|father|o",
+   "origin:p-maakha-doch-avessaloma|p-avessalom|father|p",
+   "origin:p-maakha-doch-avessaloma|p-uriil-iz-givy|father|o",
+   "reading:r-father-naaman-syn-veniamina",
+   "reading:r-father-ard",
+   "reading:r-father-shoval-otets-kiriaf-iarima",
+   "reading:r-father-korey",
+   "reading:r-father-sadok-1par6-12",
+   "reading:r-father-zefam",
+   "reading:r-father-ioil-syn-laedana",
+   "reading:r-father-asriil",
+   "reading:r-father-kis",
+   "reading:r-father-nir",
+   "reading:r-father-maakha-doch-avessaloma"
+  ],
+  "A1": [
+   "union:u-avraam--khettura",
+   "volume:90-additions-d1.json",
+   "actor:p-zhena-kaina.id",
+   "actor:p-zhena-kaina.kind",
+   "actor:p-zhena-kaina.sex",
+   "actor:p-zhena-kaina.descriptor",
+   "actor:p-zhena-kaina.names",
+   "actor:p-zhena-kaina.disambig",
+   "actor:p-zhena-kaina.facts.status",
+   "actor:p-mikhail-arkhangel.id",
+   "actor:p-mikhail-arkhangel.kind",
+   "actor:p-mikhail-arkhangel.names",
+   "actor:p-mikhail-arkhangel.disambig",
+   "actor:p-mikhail-arkhangel.facts.status",
+   "actor:p-mikhail-arkhangel.facts.events",
+   "actor:p-desyat-prokazhennykh.id",
+   "actor:p-desyat-prokazhennykh.kind",
+   "actor:p-desyat-prokazhennykh.names",
+   "actor:p-desyat-prokazhennykh.count",
+   "actor:p-desyat-prokazhennykh.facts.events",
+   "actor:p-samaryanin-iz-desyati-prokazhennykh.id",
+   "actor:p-samaryanin-iz-desyati-prokazhennykh.kind",
+   "actor:p-samaryanin-iz-desyati-prokazhennykh.sex",
+   "actor:p-samaryanin-iz-desyati-prokazhennykh.descriptor",
+   "actor:p-samaryanin-iz-desyati-prokazhennykh.names",
+   "actor:p-samaryanin-iz-desyati-prokazhennykh.disambig",
+   "actor:p-samaryanin-iz-desyati-prokazhennykh.facts.events",
+   "origin:p-enokh-syn-kaina|p-zhena-kaina|mother|p",
+   "union:u-kain--zhena-kaina",
+   "membership:p-zhena-kaina|g-cainites",
+   "membership:p-samaryanin-iz-desyati-prokazhennykh|p-desyat-prokazhennykh"
+  ]
+ },
+ "projection": [
+  {
+   "what": "лицо",
+   "id": "adam",
+   "fields": [
+    "card.original",
+    "card.meaning",
+    "card.notes"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "eva",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "kain",
+   "fields": [
+    "card.original",
+    "card.meaning"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "enokh-syn-kaina",
+   "fields": [
+    "card.original",
+    "mother"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "irad",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "mekhiael",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "mafusal-syn-mekhiaelya",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "lamekh-kainit",
+   "fields": [
+    "card.original"
+   ]
+  },
   {
    "what": "лицо",
    "id": "ada-zhena-lamekha",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
    ]
   },
   {
    "what": "лицо",
    "id": "tsilla",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iaval",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iuval",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "tuvalkain",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "noema",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
    ]
   },
   {
    "what": "лицо",
    "id": "avel",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "sif",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "enos",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "kainan",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "maleleil",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
    ]
   },
   {
    "what": "лицо",
    "id": "iared",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
    ]
   },
   {
    "what": "лицо",
    "id": "enokh",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
    ]
   },
   {
    "what": "лицо",
    "id": "mafusal",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "lamekh",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "noy",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "sim",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
    ]
   },
   {
    "what": "лицо",
    "id": "kham",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iafet",
+   "fields": [
+    "card.original",
+    "card.meaning"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khanaan",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ioktan",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "gomer-syn-iafeta",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "magog",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "maday",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iavan",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "fuval",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "meshekh-syn-iafeta",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "firas",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "askenaz",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "rifat",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "fogarma",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "elisa",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "farsis-syn-iavana",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "kittim",
+   "fields": [
+    "card.original",
+    "card.notes"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "dodanim",
+   "fields": [
+    "card.original",
+    "card.notes"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khush-syn-khama",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "mitsraim",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "fut",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "seva",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khavila-syn-khusha",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "savta",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "raama",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "savtekha",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "nimrod",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "sheva-syn-raamy",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "dedan-syn-raamy",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ludim",
+   "fields": [
+    "card.original",
+    "card.notes"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "anamim",
+   "fields": [
+    "card.original",
+    "card.notes"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "legavim",
+   "fields": [
+    "card.original",
+    "card.notes"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "naftukhim",
+   "fields": [
+    "card.original",
+    "card.notes"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "patrusim",
+   "fields": [
+    "card.original",
+    "card.notes"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "kaslukhim",
+   "fields": [
+    "card.original",
+    "card.notes"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "filistimlyane",
+   "fields": [
+    "card.original",
+    "card.notes"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "kaftorim",
+   "fields": [
+    "card.original",
+    "card.notes"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "sidon",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khet",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ievusey",
+   "fields": [
+    "card.original",
+    "card.notes"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "amorrey",
+   "fields": [
+    "card.original",
+    "card.notes"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "gergesey",
+   "fields": [
+    "card.original",
+    "card.notes"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "evey",
+   "fields": [
+    "card.original",
+    "card.notes"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "arkey",
+   "fields": [
+    "card.original",
+    "card.notes"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "siney",
+   "fields": [
+    "card.original",
+    "card.notes"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "arvadey",
+   "fields": [
+    "card.original",
+    "card.notes"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "tsemarey",
+   "fields": [
+    "card.original",
+    "card.notes"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khifamey",
+   "fields": [
+    "card.original",
+    "card.notes"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "elam-syn-sima",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "assur-syn-sima",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "lud",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "aram-syn-sima",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "uts-syn-arama",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khul",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "gefer",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "mash",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "almodad",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "shalef",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khatsarmavef",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ierakh",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "gadoram",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "uzal",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "dikla",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "oval",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "avimail",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "sheva-syn-ioktana",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ofir-syn-ioktana",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khavila-syn-ioktana",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iovav-syn-ioktana",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "arfaksad",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "kainan-syn-arfaksada",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "sala",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "ever",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "falek",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ragav",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "serukh",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "nakhor",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "farra",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "nakhor-syn-farry",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "aran",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "lot",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
    ]
   },
   {
    "what": "лицо",
    "id": "moav",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
    ]
   },
   {
    "what": "лицо",
    "id": "ben-ammi",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
    ]
   },
   {
    "what": "лицо",
    "id": "milka",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iska",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "uts-syn-nakhora",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "vuz",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "kemuil-syn-nakhora",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "aram-syn-kemuila",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "kesed",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khazo",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "pildash",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "idlaf",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "vafuil",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "lavan",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "reuma",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "tevakh",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "gakham",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "takhash",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "maakha-syn-nakhora",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "avraam",
+   "fields": [
+    "spouses",
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "sarra",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "agar",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "izmail",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "navayof",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "kedar",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "adbeel",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "mivsam-syn-izmaila",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "mishma-syn-izmaila",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "duma",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "massa",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khadad-syn-izmaila",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "fema",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ietur",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "nafish",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "kedma",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "isaak",
+   "fields": [
+    "card.original",
+    "card.meaning"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "revekka",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iakov",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "liya",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "rakhil",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "valla",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "zelfa",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khettura",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "zimran",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iokshan",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "medan",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "madian",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ishbak",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "shuakh",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "sheva-syn-iokshana",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "dedan-syn-iokshana",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ashurim",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "letushim",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "leyumim",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "efa-syn-madiana",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "efer-syn-madiana",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khanokh-syn-madiana",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "avida",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "eldaga",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "melkhisedek",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "mamriy",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "eshkol",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "aner",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "eliezer-iz-damaska",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "tsokhar-otets-efrona",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "efron",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "devora-kormilitsa",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "emmor",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "sikhem-syn-emmora",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "isav",
+   "fields": [
+    "card.original",
+    "card.meaning"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "beer-khetteyanin",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iegudifa",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "elon-khetteyanin",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ada-zhena-isava",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "makhalafa-doch-izmaila",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "seir-khorreyanin",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "lotan",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "shoval-syn-seira",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "tsiveon",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ana-syn-seira",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "dishon-syn-seira",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "etser-syn-seira",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "dishan",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khori-syn-lotana",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "geman-syn-lotana",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "famna-sestra-lotana",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "alvan",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "manakhaf",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "eval-syn-shovala",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "shefo",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "onam-syn-shovala",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "aia",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ana-syn-tsiveona",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "dishon-syn-any",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "olivema",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khemdan",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "eshban",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ifran-syn-dishona",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "kheran",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "bilgan-syn-etsera",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "zaavan",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "akan",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "uts-syn-dishana",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "aran-syn-dishana",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "elifaz-syn-isava",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "raguil-syn-isava",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ieus-syn-isava",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ieglom",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "korey-syn-isava",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "feman-syn-elifaza",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "omar",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "tsefo",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "gafam",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "kenaz-syn-elifaza",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "famna-nalozhnitsa-elifaza",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "amalik",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "nakhaf-syn-raguila",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "zerakh-syn-raguila",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "shamma-syn-raguila",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "miza",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "veor-otets-bely",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "bela-syn-veora",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "zerakh-otets-iovava",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iovav-syn-zerakha",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khusham",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "bedad",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "gadad-syn-bedada",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "samla",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "saul-iz-rekhovofa",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "akhbor-otets-baal-khanana",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "baal-khanan-syn-akhbora",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "mezagav",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "matred",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "megetaveel",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "gadar",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iov",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "emima",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
    ]
   },
   {
    "what": "лицо",
    "id": "kassiya",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
    ]
   },
   {
    "what": "лицо",
    "id": "kerengappukh",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "elifaz-femanityanin",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "vildad",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "sofar",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "varakhiil",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "eliuy",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ruvim",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "simeon",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "leviy",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iuda",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "dan",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "neffalim",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "gad",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "asir",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "issakhar",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "zavulon",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "dina",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iosif",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "veniamin",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khanokh-syn-ruvima",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "fallu",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khetsron-syn-ruvima",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "kharmi-syn-ruvima",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iemuil",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iamin-syn-simeona",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ogad",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iakhin-syn-simeona",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "tsokhar-syn-simeona",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "saul-syn-simeona",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "shua-khananeyanin",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ir-syn-iudy",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "onan",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "shela-syn-iudy",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "famar",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "fares",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "zara",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "esrom",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khamul",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "fola-syn-issakhara",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "fuva",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iov-syn-issakhara",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "shimron",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "sered",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "elon-syn-zavulona",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iakhleil",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "tsifion",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khaggi",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "shuni",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "etsbon",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "eri",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "arodi",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "areli",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "imna-syn-asira",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ishva",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ishvi",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "bria-syn-asira",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "serakh",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khever-syn-brii",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "malkhiil",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "potifar",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "potifer-zhrets",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "asenefa",
+   "fields": [
+    "card.original"
    ]
   },
   {
@@ -259,10 +3249,8 @@
    "id": "manassiya",
    "fields": [
     "otherParents",
+    "card.original",
     "card.parentsNote"
-   ],
-   "by": [
-    "C2"
    ]
   },
   {
@@ -270,600 +3258,2283 @@
    "id": "efrem",
    "fields": [
     "otherParents",
+    "card.original",
     "card.parentsNote"
-   ],
-   "by": [
-    "C2"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "bela-syn-veniamina",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "bekher-syn-veniamina",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ashbel",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "gera-syn-veniamina",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "naaman-syn-veniamina",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ekhi",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "rosh",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "muppim",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khuppim",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ard",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iediail-syn-veniamina",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khushim-syn-dana",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iakhtseil",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "guni-syn-neffalima",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ietser",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "shillem",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "akhan",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "aram",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "aminadav",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "naasson",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "raav",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
    ]
   },
   {
    "what": "лицо",
    "id": "vooz",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
    ]
   },
   {
    "what": "лицо",
    "id": "elimelekh",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "noemin",
+   "fields": [
+    "card.original",
+    "card.meaning"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ruf",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "ovid",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iessey",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "aminadav-syn-iesseya",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "samma-syn-iesseya",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "ioav",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "avessa",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "amessay",
+   "fields": [
+    "kin"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khur",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "veseleil-syn-uriya",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khalev",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "gofoniil",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "akhum",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "lagad",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iudiya",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "godiya-sestra-nakhama",
+   "fields": [
+    "kin"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "nakham-otets-keily",
+   "fields": [
+    "kin"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "girson",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "kaaf",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "merari",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "amram",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iokhaveda",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "aaron",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "moisey",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "mariam",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "elisaveta-zhena-aarona",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "nadav",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "aviud-syn-aarona",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "eleazar",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ifamar",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iofor",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "sepfora",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khovav",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "girsam",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "eliezer-syn-moiseya",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "korey",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "elkana",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "anna-mat-samuila",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "fennana",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "samuil",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iliy-svyashchennik",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ikhavod",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "akhimelekh-syn-akhitova",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "aviafar",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "finees",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "sadok",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "akhimaas-syn-sadoka",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khelkiya-pervosvyashchennik",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "seraiya-pervosvyashchennik",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iisus-syn-iosedeka",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ezdra",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iodai",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "zakhariya-syn-iodaya",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "asaf",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "eman",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "idifun",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "eliav-syn-fallu",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "dafan",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "aviron-syn-eliava",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "falef",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "avnan",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ioshivi",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iakova",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "salu",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "zimri-syn-salu",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "makhir",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "maakha-zhena-makhira",
+   "fields": [
+    "kin"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "galaad-syn-makhira",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "keresh-syn-makhira",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "molekhef",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "aviezer-syn-galaada",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "salpaad",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "makhla-doch-salpaada",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "noa-doch-salpaada",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khogla-doch-salpaada",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "milka-doch-salpaada",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "firtsa-doch-salpaada",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "shutela-syn-efrema",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "beriya-syn-efrema",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "sheera",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "elishama-syn-ammiuda",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "non",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "iisus-navin",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "shupim-syn-ira",
+   "fields": [
+    "kin"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khupim-syn-ira",
+   "fields": [
+    "kin"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "afiy",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "bekhoraf",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "tseron",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "aviil",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "kis",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "nir",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "avenir",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ieil",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ritspa",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "saul",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
    ]
   },
   {
    "what": "лицо",
    "id": "ionafan",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iessui",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "melkhisua",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "aminadav-syn-saula",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "ievosfey",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "merova",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "melkhola",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "armon",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "faltiy-syn-laisha",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "adriel",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "memfivosfey",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "siva",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "semey-syn-gery",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "savey",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "agoliav",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "veor-otets-valaama",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "valaam",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "sepfor",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "valak",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "tsur-madianityanin",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khazva",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "aod",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "anaf",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "samegar",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "lappidof",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "devora",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "avinoam",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "varak",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khever-keneyanin",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "iail",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "sisara",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ioas-otets-gedeona",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "gedeon",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iefer-syn-gedeona",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "avimelekh-syn-gedeona",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
    ]
   },
   {
    "what": "лицо",
    "id": "iofam-syn-gedeona",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "eved-otets-gaala",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "gaal-syn-eveda",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "dodo-ded-foly",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "fua-syn-dodo",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "fola-syn-fui",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iair-galaadityanin",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "ieffay",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "esevon-iz-vifleema",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "elon-zavulonyanin",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "gillel",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "avdon-syn-gillela",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "manoy",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
    ]
   },
   {
    "what": "лицо",
    "id": "samson",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "dalida",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "mikha-s-gory-efremovoy",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "david",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "akhinoama",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "naval",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "avigeya",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "falmay",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "maakha-doch-falmaya",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "aggifa",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "avitala",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "egla",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "akhitofel",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "eliam",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "uriya",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
    ]
   },
   {
    "what": "лицо",
    "id": "virsaviya",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "amnon",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "daluia",
+   "fields": [
+    "card.birth"
    ]
   },
   {
    "what": "лицо",
    "id": "avessalom",
    "fields": [
-    "card.meaning"
-   ],
-   "by": [
-    "C4"
+    "card.original",
+    "card.meaning",
+    "card.birth"
    ]
   },
   {
    "what": "лицо",
    "id": "adoniya",
    "fields": [
-    "card.meaning"
-   ],
-   "by": [
-    "C4"
+    "card.original",
+    "card.meaning",
+    "card.birth"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "safatiya-syn-davida",
+   "fields": [
+    "card.birth"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ieferaam",
+   "fields": [
+    "card.birth"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "samus-syn-davida",
+   "fields": [
+    "card.birth"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "sovav-syn-davida",
+   "fields": [
+    "card.birth"
    ]
   },
   {
    "what": "лицо",
    "id": "nafan-syn-davida",
    "fields": [
-    "card.meaning"
-   ],
-   "by": [
-    "C4"
+    "card.original",
+    "card.meaning",
+    "card.birth"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "evear-syn-davida",
+   "fields": [
+    "card.birth"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "elisua-syn-davida",
+   "fields": [
+    "card.birth"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "elifelet-syn-davida",
+   "fields": [
+    "card.birth"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "nogag-syn-davida",
+   "fields": [
+    "card.birth"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "nafek-syn-davida",
+   "fields": [
+    "card.birth"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iafia-syn-davida",
+   "fields": [
+    "card.birth"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "elisama-syn-davida",
+   "fields": [
+    "card.birth"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "eliada-syn-davida",
+   "fields": [
+    "card.birth"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "elifalef-syn-davida",
+   "fields": [
+    "card.birth"
    ]
   },
   {
    "what": "лицо",
    "id": "famar-doch-davida",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "solomon",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "naama",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khiram-tsar",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "nafan-prorok",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "gad-prozorlivets",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "aminadav-iz-kiriaf-iarima",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "rovoam",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "maakha-doch-avessaloma",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "aviya",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "asa",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "iosafat",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ioram-syn-iosafata",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "okhoziya-syn-iorama",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ioas-syn-okhozii",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "amasiya",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "oziya",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ioafam",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "akhaz",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "ezekiya",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "kheftsiba",
+   "fields": [
+    "card.meaning"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "manassiya-tsar",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "amon-tsar",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "iosiya",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ioakhaz-syn-iosii",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ioakim-tsar",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "sedekiya",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iekhoniya",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ader-idumeyanin",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "takhpenesa",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "genuvat",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "razon",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "navat",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "tserua",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ieroboam",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "navat-syn-ieroboama",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "vaasa",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ila-syn-vaasy",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "zamvriy",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "gonaf",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "famniy",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khezion",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "tavrimon",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "venadad-syn-tavrimona",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "amvriy",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "efvaal",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iezavel",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "akhav",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "okhoziya-syn-akhava",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ioram-syn-akhava",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "gofoliya",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "akhiil-vefilyanin",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "namessiy",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "iiuy",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ioakhaz-syn-iiuya",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ioas-syn-ioakhaza",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ieroboam-vtoroy",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "zakhariya-syn-ieroboama",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "sellum-syn-iavisa",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "menaim",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "fakiya",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "remaliya",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "fakey",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "osiya-syn-ily",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "venadad-pri-akhave",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "mesa",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "azail",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "venadad-syn-azaila",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ful",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "feglaffellasar",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "salmanassar",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "sinnakherim",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "asardan",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "iliya",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
    ]
   },
   {
    "what": "лицо",
    "id": "elisey",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "mikhey-syn-iemvlaya",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ionadav-syn-rekhava",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "amos-otets-isaii",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "isaiya",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "mikhey-morasfitin",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "osiya-prorok",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "amos-prorok",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "iona",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
    ]
   },
   {
    "what": "лицо",
    "id": "ioil-syn-vafuila",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "oldama",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "ieremiya",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
    ]
   },
   {
    "what": "лицо",
    "id": "varukh",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "seraiya-syn-nirii",
+   "fields": [
+    "kin"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "shafan",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "akhikam",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "godoliya",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "iezekiil",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
    ]
   },
   {
    "what": "лицо",
    "id": "daniil",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ananiya-sedrakh",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "misail-misakh",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "azariya-avdenago",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "navukhodonosor",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "valtasar-tsar",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "sofoniya-prorok",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
    ]
   },
   {
    "what": "лицо",
    "id": "avdiy-prorok",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
    ]
   },
   {
    "what": "лицо",
    "id": "naum-prorok",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "avvakum",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "kir",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "aggey",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "zakhariya-syn-varakhii",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
    ]
   },
   {
    "what": "лицо",
    "id": "malakhiya",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
    ]
   },
   {
    "what": "лицо",
    "id": "neemiya",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "mardokhey",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "esfir",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "artakserks-muzh-esfiri",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "aman",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "agur",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "lemuil",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "salafiil",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
    ]
   },
   {
    "what": "лицо",
    "id": "zorovavel",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
    ]
   },
   {
@@ -871,19 +5542,15 @@
    "id": "risay",
    "fields": [
     "card.meaning"
-   ],
-   "by": [
-    "C4"
    ]
   },
   {
    "what": "лицо",
    "id": "iliy-otets-marii",
    "fields": [
-    "disambig"
-   ],
-   "by": [
-    "C1"
+    "disambig",
+    "card.original",
+    "card.notes"
    ]
   },
   {
@@ -893,10 +5560,8 @@
     "father",
     "parentRefs",
     "parentCert",
+    "card.original",
     "otherParents"
-   ],
-   "by": [
-    "C1"
    ]
   },
   {
@@ -905,222 +5570,929 @@
    "fields": [
     "otherParents",
     "kin",
-    "card.meaning"
-   ],
-   "by": [
-    "C1",
-    "C4"
+    "card.original",
+    "card.meaning",
+    "card.notes"
    ]
   },
   {
    "what": "лицо",
    "id": "iisus",
    "fields": [
+    "parentRefs",
+    "card.original",
+    "card.parentsNote",
     "parentCert",
     "motherCert"
-   ],
-   "by": [
-    "C3"
    ]
   },
   {
    "what": "лицо",
    "id": "zakhariya-svyashchennik",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
    ]
   },
   {
    "what": "лицо",
    "id": "elisaveta",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
    ]
   },
   {
    "what": "лицо",
    "id": "ioann-krestitel",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "fanuil",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "anna-prorochitsa",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iakov-brat-gospoden",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "kleopa",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "petr",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "andrey",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "zevedey",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iakov-zevedeev",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "ioann-apostol",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
    ]
   },
   {
    "what": "лицо",
    "id": "filipp-apostol",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
    ]
   },
   {
    "what": "лицо",
    "id": "varfolomey",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
    ]
   },
   {
    "what": "лицо",
    "id": "nafanail",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "foma",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "matfey",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iakov-alfeev",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iuda-iakovlev",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "simon-zilot",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "iuda-iskariot",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "matfiy",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "lazar",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
    ]
   },
   {
    "what": "лицо",
    "id": "marfa",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "mariya-iz-vifanii",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iair-nachalnik-sinagogi",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "mariya-magdalina",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
    ]
   },
   {
    "what": "лицо",
    "id": "nikodim",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iosif-arimafeyskiy",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "irod-velikiy",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "arkhelay",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "irod-antipa",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "filipp-brat-iroda",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "irodiada",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "irod-agrippa",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "agrippa",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "verenika",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "feliks",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "druzilla",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "pontiy-pilat",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "anna-pervosvyashchennik",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "kaiafa",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "pavel",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "evnika",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "loida",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "timofey",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "varnava",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ioann-mark",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "akila",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "priskilla",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "filipp-blagovestnik",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "sila",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "luka",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "tit",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "filimon",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "onisim",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "sosipatr-pirrov",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "vartimey",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "shedeur",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "elitsur",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "tsurishadday",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "shelumiil",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "tsuar",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "nafanail-syn-tsuara",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khelon",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "eliav-syn-khelona",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "pedatsur",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "gamaliil-syn-pedatsura",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "gideoniy",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "avidan",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ammishadday",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "akhiezer-syn-ammishaddaya",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "okhran",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "pagiil",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "reguil-otets-eliasafa",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "eliasaf-syn-reguila",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "enan",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "akhira",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "zakkhur-otets-sammua",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "sammua-syn-zakkhura",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khoriy-otets-safata",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "safat-syn-khoriya",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iosif-otets-igala",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "igal-syn-iosifa",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "rafu",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "faltiy-syn-rafu",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "sodiy",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "gaddiil",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "susiy",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "gaddiy",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "gemalliy",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ammiil-syn-gemalliya",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "mikhail-otets-sefura",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "sefur",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "vofsiy",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "nakhbiy",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "makhiy",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "geuil",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ammiud-otets-samuila",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "samuil-syn-ammiuda",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "kislon",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "elidad",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iogliya",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "bukkiy-syn-ioglii",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "efod-otets-khanniila",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khanniil-syn-efoda",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "shiftan",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "kemuil-syn-shiftana",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "farnak",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "elitsafan-syn-farnaka",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "azzan",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "faltiil",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "shelomiy",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "akhiud",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ammiud-otets-pedaila",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "pedail",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "eldad",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "modad",
+   "fields": [
+    "card.original"
    ]
   },
   {
    "what": "лицо",
    "id": "arba",
    "fields": [
+    "card.original",
     "card.meaning"
-   ],
-   "by": [
-    "C4"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "enak",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "sheshay",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "akhiman-syn-enaka",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "falmay-syn-enaka",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iodai-otets-vanei",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "vaneya-syn-iodaya",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khusiy-arkhityanin",
+   "fields": [
+    "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "goliaf",
+   "fields": [
+    "card.original"
    ]
   },
   {
@@ -1128,17 +6500,31 @@
    "id": "pakhaf-moav",
    "fields": [
     "card.meaning"
-   ],
-   "by": [
-    "C4"
    ]
   },
   {
+   "what": "лицо (лишнее)",
+   "id": "zhena-kaina"
+  },
+  {
+   "what": "лицо (лишнее)",
+   "id": "mikhail-arkhangel"
+  },
+  {
+   "what": "лицо (лишнее)",
+   "id": "desyat-prokazhennykh"
+  },
+  {
+   "what": "лицо (лишнее)",
+   "id": "samaryanin-iz-desyati-prokazhennykh"
+  },
+  {
    "what": "линия",
-   "id": "line:mary",
-   "by": [
-    "C7"
-   ]
+   "id": "line:joseph"
+  },
+  {
+   "what": "линия",
+   "id": "line:mary"
   }
  ]
 }

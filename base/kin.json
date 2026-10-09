@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data",
-   "commit": "deb7299"
+   "commit": "3c6953b"
   }
  },
  "items": [
@@ -17,7 +17,12 @@
    "rel": "брат",
    "refs": [
     "Быт 4:21"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "01-antediluvian.json"
+    }
+   }
   },
   {
    "from": "p-noema",
@@ -25,7 +30,12 @@
    "rel": "сестра",
    "refs": [
     "Быт 4:22"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "01-antediluvian.json"
+    }
+   }
   },
   {
    "from": "p-sarra",
@@ -33,7 +43,12 @@
    "rel": "сестра",
    "refs": [
     "Быт 20:12"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "04-abraham.json"
+    }
+   }
   },
   {
    "from": "p-mamriy",
@@ -41,7 +56,12 @@
    "rel": "брат",
    "refs": [
     "Быт 14:13"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "04-abraham.json"
+    }
+   }
   },
   {
    "from": "p-mamriy",
@@ -49,7 +69,12 @@
    "rel": "брат",
    "refs": [
     "Быт 14:13"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "04-abraham.json"
+    }
+   }
   },
   {
    "from": "p-eshkol",
@@ -57,7 +82,12 @@
    "rel": "брат",
    "refs": [
     "Быт 14:13"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "04-abraham.json"
+    }
+   }
   },
   {
    "from": "p-aner",
@@ -65,7 +95,12 @@
    "rel": "брат",
    "refs": [
     "Быт 14:13"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "04-abraham.json"
+    }
+   }
   },
   {
    "from": "p-famna-sestra-lotana",
@@ -74,7 +109,12 @@
    "refs": [
     "Быт 36:22",
     "1Пар 1:39"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "05-edom.json"
+    }
+   }
   },
   {
    "from": "p-famar",
@@ -84,7 +124,12 @@
     "Быт 38:11",
     "Быт 38:24",
     "1Пар 2:4"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "06-jacob-sons.json"
+    }
+   }
   },
   {
    "from": "p-vooz",
@@ -94,7 +139,12 @@
     "Руф 2:1",
     "Руф 2:3",
     "Руф 4:3"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "07-judah.json"
+    }
+   }
   },
   {
    "from": "p-vooz",
@@ -104,7 +154,12 @@
     "Руф 2:1",
     "Руф 2:20",
     "Руф 3:2"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "07-judah.json"
+    }
+   }
   },
   {
    "from": "p-saruiya",
@@ -112,7 +167,12 @@
    "rel": "сестра",
    "refs": [
     "1Пар 2:16"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "07-judah.json"
+    }
+   }
   },
   {
    "from": "p-saruiya",
@@ -120,7 +180,12 @@
    "rel": "сестра",
    "refs": [
     "2Цар 17:25"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "07-judah.json"
+    }
+   }
   },
   {
    "from": "p-avigeya-sestra-davida",
@@ -128,7 +193,12 @@
    "rel": "сестра",
    "refs": [
     "1Пар 2:16"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "07-judah.json"
+    }
+   }
   },
   {
    "from": "p-avigeya-sestra-davida",
@@ -136,16 +206,12 @@
    "rel": "сестра",
    "refs": [
     "2Цар 17:25"
-   ]
-  },
-  {
-   "from": "p-amessay",
-   "to": "p-ioav",
-   "rel": "двоюродный брат",
-   "refs": [
-    "2Цар 17:25"
    ],
-   "cert": "inference"
+   "prov": {
+    "from": {
+     "vol": "07-judah.json"
+    }
+   }
   },
   {
    "from": "p-kenaz-otets-gofoniila",
@@ -154,7 +220,12 @@
    "refs": [
     "Суд 1:13",
     "Нав 15:17"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "07-judah.json"
+    }
+   }
   },
   {
    "from": "p-kheluv-brat-shukhi",
@@ -162,7 +233,12 @@
    "rel": "брат",
    "refs": [
     "1Пар 4:11"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "07-judah.json"
+    }
+   }
   },
   {
    "from": "p-shukha",
@@ -170,7 +246,12 @@
    "rel": "брат",
    "refs": [
     "1Пар 4:11"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "07-judah.json"
+    }
+   }
   },
   {
    "from": "p-godiya-sestra-nakhama",
@@ -178,15 +259,12 @@
    "rel": "сестра",
    "refs": [
     "1Пар 4:19"
-   ]
-  },
-  {
-   "from": "p-nakham-otets-keily",
-   "to": "p-godiya-sestra-nakhama",
-   "rel": "брат",
-   "refs": [
-    "1Пар 4:19"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "07-judah.json"
+    }
+   }
   },
   {
    "from": "p-iokhaveda",
@@ -194,7 +272,12 @@
    "rel": "тётка",
    "refs": [
     "Исх 6:20"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "08-levi.json"
+    }
+   }
   },
   {
    "from": "p-khovav",
@@ -203,7 +286,12 @@
    "refs": [
     "Чис 10:29",
     "Суд 4:11"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "08-levi.json"
+    }
+   }
   },
   {
    "from": "p-simey-brat-khonanii",
@@ -211,7 +299,12 @@
    "rel": "брат",
    "refs": [
     "2Пар 31:12"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "08-levi.json"
+    }
+   }
   },
   {
    "from": "p-shemaiya-2par35",
@@ -219,7 +312,12 @@
    "rel": "брат",
    "refs": [
     "2Пар 35:9"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "08-levi.json"
+    }
+   }
   },
   {
    "from": "p-nafanail-2par35",
@@ -227,7 +325,12 @@
    "rel": "брат",
    "refs": [
     "2Пар 35:9"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "08-levi.json"
+    }
+   }
   },
   {
    "from": "p-nafanail-2par35",
@@ -235,7 +338,12 @@
    "rel": "брат",
    "refs": [
     "2Пар 35:9"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "08-levi.json"
+    }
+   }
   },
   {
    "from": "p-ieiel-1par5-7",
@@ -243,7 +351,12 @@
    "rel": "брат",
    "refs": [
     "1Пар 5:6-7"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "09-tribes-a.json"
+    }
+   }
   },
   {
    "from": "p-zakhariya-1par5-7",
@@ -251,7 +364,12 @@
    "rel": "брат",
    "refs": [
     "1Пар 5:6-7"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "09-tribes-a.json"
+    }
+   }
   },
   {
    "from": "p-bela-syn-azaza",
@@ -259,7 +377,12 @@
    "rel": "брат",
    "refs": [
     "1Пар 5:6-8"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "09-tribes-a.json"
+    }
+   }
   },
   {
    "from": "p-sheresh-syn-makhira",
@@ -267,7 +390,12 @@
    "rel": "брат",
    "refs": [
     "1Пар 7:16"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "09-tribes-a.json"
+    }
+   }
   },
   {
    "from": "p-molekhef",
@@ -276,25 +404,12 @@
    "refs": [
     "1Пар 7:17-18"
    ],
-   "cert": "interpretation"
-  },
-  {
-   "from": "p-shupim-syn-ira",
-   "to": "p-maakha-zhena-makhira",
-   "rel": "брат",
-   "refs": [
-    "1Пар 7:15"
-   ],
-   "cert": "interpretation"
-  },
-  {
-   "from": "p-khupim-syn-ira",
-   "to": "p-maakha-zhena-makhira",
-   "rel": "брат",
-   "refs": [
-    "1Пар 7:15"
-   ],
-   "cert": "interpretation"
+   "cert": "interpretation",
+   "prov": {
+    "from": {
+     "vol": "09-tribes-a.json"
+    }
+   }
   },
   {
    "from": "p-nir",
@@ -302,7 +417,12 @@
    "rel": "дядя",
    "refs": [
     "1Цар 14:50"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "10-tribes-b.json"
+    }
+   }
   },
   {
    "from": "p-eshek",
@@ -310,7 +430,12 @@
    "rel": "брат",
    "refs": [
     "1Пар 8:39"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "10-tribes-b.json"
+    }
+   }
   },
   {
    "from": "p-gelem",
@@ -318,7 +443,12 @@
    "rel": "брат",
    "refs": [
     "1Пар 7:35"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "10-tribes-b.json"
+    }
+   }
   },
   {
    "from": "p-famar-doch-davida",
@@ -330,7 +460,12 @@
     "2Цар 13:20",
     "2Цар 13:22",
     "2Цар 13:32"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "12-house-of-david.json"
+    }
+   }
   },
   {
    "from": "p-maakha-doch-avessaloma",
@@ -340,7 +475,12 @@
     "3Цар 15:10",
     "3Цар 15:13",
     "2Пар 15:16"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "13-kings-of-judah.json"
+    }
+   }
   },
   {
    "from": "p-iosavef",
@@ -349,7 +489,12 @@
    "refs": [
     "4Цар 11:2",
     "2Пар 22:11"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "13-kings-of-judah.json"
+    }
+   }
   },
   {
    "from": "p-maaseya-syn-akhaza",
@@ -358,7 +503,12 @@
    "refs": [
     "2Пар 28:7"
    ],
-   "cert": "interpretation"
+   "cert": "interpretation",
+   "prov": {
+    "from": {
+     "vol": "13-kings-of-judah.json"
+    }
+   }
   },
   {
    "from": "p-sedekiya",
@@ -366,7 +516,12 @@
    "rel": "дядя",
    "refs": [
     "4Цар 24:17"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "13-kings-of-judah.json"
+    }
+   }
   },
   {
    "from": "p-ierameil-syn-tsarya",
@@ -375,7 +530,12 @@
    "refs": [
     "Иер 36:26"
    ],
-   "cert": "interpretation"
+   "cert": "interpretation",
+   "prov": {
+    "from": {
+     "vol": "13-kings-of-judah.json"
+    }
+   }
   },
   {
    "from": "p-malkhiya-syn-tsarya",
@@ -384,7 +544,12 @@
    "refs": [
     "Иер 38:6"
    ],
-   "cert": "interpretation"
+   "cert": "interpretation",
+   "prov": {
+    "from": {
+     "vol": "13-kings-of-judah.json"
+    }
+   }
   },
   {
    "from": "p-sestra-takhpenesy",
@@ -392,7 +557,12 @@
    "rel": "сестра",
    "refs": [
     "3Цар 11:19-20"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "14-kings-of-israel.json"
+    }
+   }
   },
   {
    "from": "p-ioas-syn-tsarya",
@@ -402,7 +572,12 @@
     "3Цар 22:26",
     "2Пар 18:25"
    ],
-   "cert": "interpretation"
+   "cert": "interpretation",
+   "prov": {
+    "from": {
+     "vol": "14-kings-of-israel.json"
+    }
+   }
   },
   {
    "from": "p-sallum-dyadya-ieremii",
@@ -410,7 +585,12 @@
    "rel": "дядя",
    "refs": [
     "Иер 32:7"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "15-prophets-exile.json"
+    }
+   }
   },
   {
    "from": "p-anameil",
@@ -420,17 +600,12 @@
     "Иер 32:8",
     "Иер 32:9",
     "Иер 32:12"
-   ]
-  },
-  {
-   "from": "p-seraiya-syn-nirii",
-   "to": "p-varukh",
-   "rel": "брат",
-   "refs": [
-    "Иер 32:12",
-    "Иер 51:59"
    ],
-   "cert": "inference"
+   "prov": {
+    "from": {
+     "vol": "15-prophets-exile.json"
+    }
+   }
   },
   {
    "from": "p-khanani-brat-neemii",
@@ -439,7 +614,12 @@
    "refs": [
     "Неем 1:2",
     "Неем 7:2"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "15-prophets-exile.json"
+    }
+   }
   },
   {
    "from": "p-syn-ioiady-zyat-sanavallata",
@@ -447,7 +627,12 @@
    "rel": "зять",
    "refs": [
     "Неем 13:28"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "15-prophets-exile.json"
+    }
+   }
   },
   {
    "from": "p-toviya-ammonityanin",
@@ -455,7 +640,12 @@
    "rel": "зять",
    "refs": [
     "Неем 6:18"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "15-prophets-exile.json"
+    }
+   }
   },
   {
    "from": "p-toviya-ammonityanin",
@@ -464,7 +654,12 @@
    "refs": [
     "Неем 13:4"
    ],
-   "cert": "interpretation"
+   "cert": "interpretation",
+   "prov": {
+    "from": {
+     "vol": "15-prophets-exile.json"
+    }
+   }
   },
   {
    "from": "p-abikhail-otets-esfiri",
@@ -473,7 +668,12 @@
    "refs": [
     "Есф 2:7",
     "Есф 2:15"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "15-prophets-exile.json"
+    }
+   }
   },
   {
    "from": "p-esfir",
@@ -482,7 +682,12 @@
    "refs": [
     "Есф 2:7",
     "Есф 2:15"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "15-prophets-exile.json"
+    }
+   }
   },
   {
    "from": "p-elisaveta",
@@ -490,7 +695,12 @@
    "rel": "родственница",
    "refs": [
     "Лк 1:36"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "16-jesus-genealogy.json"
+    }
+   }
   },
   {
    "from": "p-iakov-brat-gospoden",
@@ -500,7 +710,12 @@
     "Мф 13:55",
     "Мк 6:3",
     "Гал 1:19"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "16-jesus-genealogy.json"
+    }
+   }
   },
   {
    "from": "p-iosiy-brat-gospoden",
@@ -509,7 +724,12 @@
    "refs": [
     "Мф 13:55",
     "Мк 6:3"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "16-jesus-genealogy.json"
+    }
+   }
   },
   {
    "from": "p-simon-brat-gospoden",
@@ -518,7 +738,12 @@
    "refs": [
     "Мф 13:55",
     "Мк 6:3"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "16-jesus-genealogy.json"
+    }
+   }
   },
   {
    "from": "p-iuda-brat-gospoden",
@@ -527,7 +752,12 @@
    "refs": [
     "Мф 13:55",
     "Мк 6:3"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "16-jesus-genealogy.json"
+    }
+   }
   },
   {
    "from": "p-iuda-brat-gospoden",
@@ -536,7 +766,12 @@
    "refs": [
     "Иуд 1:1"
    ],
-   "cert": "interpretation"
+   "cert": "interpretation",
+   "prov": {
+    "from": {
+     "vol": "16-jesus-genealogy.json"
+    }
+   }
   },
   {
    "from": "p-mariya-kleopova",
@@ -545,7 +780,12 @@
    "refs": [
     "Ин 19:25"
    ],
-   "cert": "interpretation"
+   "cert": "interpretation",
+   "prov": {
+    "from": {
+     "vol": "16-jesus-genealogy.json"
+    }
+   }
   },
   {
    "from": "p-teshcha-simona",
@@ -555,7 +795,12 @@
     "Мф 8:14",
     "Мк 1:30",
     "Лк 4:38"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "17-new-testament.json"
+    }
+   }
   },
   {
    "from": "p-andrey",
@@ -567,7 +812,12 @@
     "Мк 1:16",
     "Лк 6:14",
     "Ин 1:40"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "17-new-testament.json"
+    }
+   }
   },
   {
    "from": "p-lazar",
@@ -578,7 +828,12 @@
     "Ин 11:19",
     "Ин 11:21",
     "Ин 11:39"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "17-new-testament.json"
+    }
+   }
   },
   {
    "from": "p-lazar",
@@ -588,7 +843,12 @@
     "Ин 11:1-2",
     "Ин 11:19",
     "Ин 11:32"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "17-new-testament.json"
+    }
+   }
   },
   {
    "from": "p-marfa",
@@ -599,7 +859,12 @@
     "Ин 11:1",
     "Ин 11:5",
     "Ин 11:28"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "17-new-testament.json"
+    }
+   }
   },
   {
    "from": "p-filipp-brat-iroda",
@@ -610,7 +875,12 @@
     "Мк 6:17",
     "Лк 3:1",
     "Лк 3:19"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "17-new-testament.json"
+    }
+   }
   },
   {
    "from": "p-anna-pervosvyashchennik",
@@ -618,7 +888,12 @@
    "rel": "тесть",
    "refs": [
     "Ин 18:13"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "17-new-testament.json"
+    }
+   }
   },
   {
    "from": "p-ioann-deyan4-6",
@@ -627,7 +902,12 @@
    "refs": [
     "Деян 4:6"
    ],
-   "cert": "interpretation"
+   "cert": "interpretation",
+   "prov": {
+    "from": {
+     "vol": "17-new-testament.json"
+    }
+   }
   },
   {
    "from": "p-aleksandr-deyan4-6",
@@ -636,7 +916,12 @@
    "refs": [
     "Деян 4:6"
    ],
-   "cert": "interpretation"
+   "cert": "interpretation",
+   "prov": {
+    "from": {
+     "vol": "17-new-testament.json"
+    }
+   }
   },
   {
    "from": "p-loida",
@@ -644,7 +929,12 @@
    "rel": "бабка",
    "refs": [
     "2Тим 1:5"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "17-new-testament.json"
+    }
+   }
   },
   {
    "from": "p-ioann-mark",
@@ -652,7 +942,12 @@
    "rel": "племянник",
    "refs": [
     "Кол 4:10"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "17-new-testament.json"
+    }
+   }
   },
   {
    "from": "p-manail",
@@ -660,7 +955,12 @@
    "rel": "совоспитанник",
    "refs": [
     "Деян 13:1"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "17-new-testament.json"
+    }
+   }
   },
   {
    "from": "p-andronik",
@@ -669,7 +969,12 @@
    "refs": [
     "Рим 16:7"
    ],
-   "cert": "interpretation"
+   "cert": "interpretation",
+   "prov": {
+    "from": {
+     "vol": "17-new-testament.json"
+    }
+   }
   },
   {
    "from": "p-yuniya",
@@ -678,7 +983,12 @@
    "refs": [
     "Рим 16:7"
    ],
-   "cert": "interpretation"
+   "cert": "interpretation",
+   "prov": {
+    "from": {
+     "vol": "17-new-testament.json"
+    }
+   }
   },
   {
    "from": "p-irodion",
@@ -687,7 +997,12 @@
    "refs": [
     "Рим 16:11"
    ],
-   "cert": "interpretation"
+   "cert": "interpretation",
+   "prov": {
+    "from": {
+     "vol": "17-new-testament.json"
+    }
+   }
   },
   {
    "from": "p-luciy-srodnik",
@@ -696,7 +1011,12 @@
    "refs": [
     "Рим 16:21"
    ],
-   "cert": "interpretation"
+   "cert": "interpretation",
+   "prov": {
+    "from": {
+     "vol": "17-new-testament.json"
+    }
+   }
   },
   {
    "from": "p-iason-srodnik",
@@ -705,7 +1025,12 @@
    "refs": [
     "Рим 16:21"
    ],
-   "cert": "interpretation"
+   "cert": "interpretation",
+   "prov": {
+    "from": {
+     "vol": "17-new-testament.json"
+    }
+   }
   },
   {
    "from": "p-sosipatr-srodnik",
@@ -714,7 +1039,12 @@
    "refs": [
     "Рим 16:21"
    ],
-   "cert": "interpretation"
+   "cert": "interpretation",
+   "prov": {
+    "from": {
+     "vol": "17-new-testament.json"
+    }
+   }
   },
   {
    "from": "p-sestra-nireya",
@@ -722,7 +1052,12 @@
    "rel": "сестра",
    "refs": [
     "Рим 16:15"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "17-new-testament.json"
+    }
+   }
   },
   {
    "from": "p-ionafan-dyadya-davida",
@@ -730,7 +1065,12 @@
    "rel": "дядя",
    "refs": [
     "1Пар 27:32"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "19-court-and-heroes.json"
+    }
+   }
   },
   {
    "from": "p-ioil-brat-nafana",
@@ -739,7 +1079,12 @@
    "refs": [
     "1Пар 11:38"
    ],
-   "cert": "interpretation"
+   "cert": "interpretation",
+   "prov": {
+    "from": {
+     "vol": "19-court-and-heroes.json"
+    }
+   }
   },
   {
    "from": "p-iokha-fitsiyanin",
@@ -747,7 +1092,12 @@
    "rel": "брат",
    "refs": [
     "1Пар 11:45"
-   ]
+   ],
+   "prov": {
+    "from": {
+     "vol": "19-court-and-heroes.json"
+    }
+   }
   },
   {
    "from": "p-lakhmiy",
@@ -755,7 +1105,38 @@
    "rel": "брат",
    "refs": [
     "1Пар 20:5"
+   ],
+   "prov": {
+    "from": {
+     "vol": "19-court-and-heroes.json"
+    }
+   }
+  },
+  {
+   "from": "p-godiya-sestra-nakhama",
+   "to": "p-nakham-otets-keily",
+   "rel": "сестра",
+   "refs": [
+    "1Пар 4:19"
    ]
+  },
+  {
+   "from": "p-maakha-zhena-makhira",
+   "to": "p-shupim-syn-ira",
+   "rel": "сестра",
+   "refs": [
+    "1Пар 7:15"
+   ],
+   "cert": "interpretation"
+  },
+  {
+   "from": "p-maakha-zhena-makhira",
+   "to": "p-khupim-syn-ira",
+   "rel": "сестра",
+   "refs": [
+    "1Пар 7:15"
+   ],
+   "cert": "interpretation"
   }
  ]
 }

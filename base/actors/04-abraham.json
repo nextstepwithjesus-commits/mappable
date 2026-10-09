@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data/persons/04-abraham.json",
-   "commit": "deb7299"
+   "commit": "3c6953b"
   }
  },
  "items": [
@@ -19,7 +19,9 @@
     {
      "form": "Авраам",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 11:26"
+     ]
     },
     {
      "form": "Аврам",
@@ -66,6 +68,7 @@
       "translit": "Avraham",
       "note": "до переименования — אַבְרָם (Аврам)"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -1324,7 +1327,9 @@
     {
      "form": "Сарра",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 11:29"
+     ]
     },
     {
      "form": "Сара",
@@ -1350,6 +1355,7 @@
       "translit": "Sarah",
       "note": "до переименования — שָׂרַי (Сара)"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -1857,7 +1863,9 @@
     {
      "form": "Агарь",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 16:1"
+     ]
     },
     {
      "form": "Египтянка",
@@ -1881,6 +1889,7 @@
       "script": "הָגָר",
       "translit": "Hagar"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -2178,7 +2187,9 @@
     {
      "form": "Измаил",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 16:11"
+     ]
     }
    ],
    "disambig": "сын Авраама",
@@ -2195,6 +2206,7 @@
       "script": "יִשְׁמָעֵאל",
       "translit": "Yishma'el"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -2582,7 +2594,9 @@
     {
      "form": "Наваиоф",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 25:13"
+     ]
     },
     {
      "form": "Неваиоф",
@@ -2604,6 +2618,7 @@
       "script": "נְבָיֹת",
       "translit": "Nevayot"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -2665,7 +2680,9 @@
     {
      "form": "Кедар",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 25:13"
+     ]
     },
     {
      "form": "Кидар",
@@ -2688,6 +2705,7 @@
       "script": "קֵדָר",
       "translit": "Qedar"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -2742,7 +2760,9 @@
     {
      "form": "Адбеел",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 25:13"
+     ]
     }
    ],
    "prominence": 1,
@@ -2755,6 +2775,7 @@
       "script": "אַדְבְּאֵל",
       "translit": "Adbe'el"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -2777,7 +2798,9 @@
     {
      "form": "Мивсам",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 25:13"
+     ]
     }
    ],
    "disambig": "сын Измаила",
@@ -2791,6 +2814,7 @@
       "script": "מִבְשָׂם",
       "translit": "Mivsam"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -2824,7 +2848,9 @@
     {
      "form": "Мишма",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 25:14"
+     ]
     }
    ],
    "disambig": "сын Измаила",
@@ -2838,6 +2864,7 @@
       "script": "מִשְׁמָע",
       "translit": "Mishma"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -2871,7 +2898,9 @@
     {
      "form": "Дума",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 25:14"
+     ]
     }
    ],
    "disambig": "сын Измаила",
@@ -2885,6 +2914,7 @@
       "script": "דּוּמָה",
       "translit": "Dumah"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -2918,7 +2948,9 @@
     {
      "form": "Масса",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 25:14"
+     ]
     }
    ],
    "disambig": "сын Измаила",
@@ -2932,6 +2964,7 @@
       "script": "מַשָּׂא",
       "translit": "Massa"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -2954,7 +2987,9 @@
     {
      "form": "Хадад",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 25:15"
+     ]
     }
    ],
    "disambig": "сын Измаила",
@@ -2968,6 +3003,7 @@
       "script": "חֲדַד",
       "translit": "Ḥadad"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -3001,7 +3037,9 @@
     {
      "form": "Фема",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 25:15"
+     ]
     }
    ],
    "disambig": "сын Измаила",
@@ -3015,6 +3053,7 @@
       "script": "תֵימָא",
       "translit": "Tema"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -3050,7 +3089,9 @@
     {
      "form": "Иетур",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 25:15"
+     ]
     }
    ],
    "prominence": 1,
@@ -3063,6 +3104,7 @@
       "script": "יְטוּר",
       "translit": "Yetur"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -3096,7 +3138,9 @@
     {
      "form": "Нафиш",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 25:15"
+     ]
     }
    ],
    "prominence": 1,
@@ -3109,6 +3153,7 @@
       "script": "נָפִישׁ",
       "translit": "Nafish"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -3142,7 +3187,9 @@
     {
      "form": "Кедма",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 25:15"
+     ]
     }
    ],
    "prominence": 1,
@@ -3155,6 +3202,7 @@
       "script": "קֵדְמָה",
       "translit": "Qedmah"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -3177,7 +3225,9 @@
     {
      "form": "Исаак",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 17:19"
+     ]
     }
    ],
    "roles": [
@@ -3193,6 +3243,7 @@
       "script": "יִצְחָק",
       "translit": "Yitsḥaq"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -3202,15 +3253,25 @@
      "sec": 3,
      "field": "meaning",
      "value": {
-      "text": "Он засмеётся (справочно); Писание связывает рождение Исаака со смехом: Авраам «рассмеялся» при обетовании, Сарра «внутренно рассмеялась», а родив, сказала: «смех сделал мне Бог»",
+      "text": "Писание связывает рождение Исаака со смехом: Авраам «рассмеялся» при обетовании, Сарра «внутренно рассмеялась», а родив, сказала: «смех сделал мне Бог»",
       "refs": [
        "Быт 17:17",
-       "Быт 17:19",
        "Быт 18:12",
        "Быт 21:6"
       ]
+     }
+    },
+    {
+     "sec": 3,
+     "field": "meaning",
+     "value": {
+      "text": "«он засмеётся»"
      },
-     "cert": "interpretation"
+     "cert": "reference",
+     "prov": {
+      "status": "quarantine",
+      "note": "значение имени — справочно; источник — этап Д1.5"
+     }
     },
     {
      "sec": 5,
@@ -3892,7 +3953,9 @@
     {
      "form": "Ревекка",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 22:23"
+     ]
     }
    ],
    "roles": [
@@ -3908,6 +3971,7 @@
       "script": "רִבְקָה",
       "translit": "Rivqah"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -4276,7 +4340,9 @@
     {
      "form": "Иаков",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 25:26"
+     ]
     },
     {
      "form": "Израиль",
@@ -4304,6 +4370,7 @@
       "script": "יַעֲקֹב",
       "translit": "Ya'aqov"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -5394,7 +5461,9 @@
     {
      "form": "Лия",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 29:16"
+     ]
     }
    ],
    "roles": [
@@ -5410,6 +5479,7 @@
       "script": "לֵאָה",
       "translit": "Le'ah"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -5711,7 +5781,9 @@
     {
      "form": "Рахиль",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 29:6"
+     ]
     }
    ],
    "roles": [
@@ -5727,6 +5799,7 @@
       "script": "רָחֵל",
       "translit": "Raḥel"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -6036,7 +6109,9 @@
     {
      "form": "Валла",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 29:29"
+     ]
     }
    ],
    "prominence": 3,
@@ -6049,6 +6124,7 @@
       "script": "בִּלְהָה",
       "translit": "Bilhah"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -6177,7 +6253,9 @@
     {
      "form": "Зелфа",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 29:24"
+     ]
     }
    ],
    "prominence": 3,
@@ -6190,6 +6268,7 @@
       "script": "זִלְפָּה",
       "translit": "Zilpah"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -6297,7 +6376,9 @@
     {
      "form": "Хеттура",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 25:1"
+     ]
     }
    ],
    "prominence": 3,
@@ -6310,6 +6391,7 @@
       "script": "קְטוּרָה",
       "translit": "Qeturah"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -6392,7 +6474,9 @@
     {
      "form": "Зимран",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 25:2"
+     ]
     }
    ],
    "prominence": 1,
@@ -6405,6 +6489,7 @@
       "script": "זִמְרָן",
       "translit": "Zimran"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -6427,7 +6512,9 @@
     {
      "form": "Иокшан",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 25:2"
+     ]
     }
    ],
    "prominence": 1,
@@ -6440,6 +6527,7 @@
       "script": "יָקְשָׁן",
       "translit": "Yoqshan"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -6478,7 +6566,9 @@
     {
      "form": "Медан",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 25:2"
+     ]
     }
    ],
    "prominence": 1,
@@ -6491,6 +6581,7 @@
       "script": "מְדָן",
       "translit": "Medan"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -6513,7 +6604,9 @@
     {
      "form": "Мадиан",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 25:2"
+     ]
     }
    ],
    "disambig": "сын Авраама и Хеттуры",
@@ -6530,6 +6623,7 @@
       "script": "מִדְיָן",
       "translit": "Midyan"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -6677,7 +6771,9 @@
     {
      "form": "Ишбак",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 25:2"
+     ]
     }
    ],
    "prominence": 1,
@@ -6690,6 +6786,7 @@
       "script": "יִשְׁבָּק",
       "translit": "Yishbaq"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -6712,7 +6809,9 @@
     {
      "form": "Шуах",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 25:2"
+     ]
     }
    ],
    "prominence": 1,
@@ -6725,6 +6824,7 @@
       "script": "שׁוּחַ",
       "translit": "Shuaḥ"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -6758,7 +6858,9 @@
     {
      "form": "Шева",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 25:3"
+     ]
     }
    ],
    "disambig": "сын Иокшана",
@@ -6772,6 +6874,7 @@
       "script": "שְׁבָא",
       "translit": "Sheva"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -6807,7 +6910,9 @@
     {
      "form": "Дедан",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 25:3"
+     ]
     }
    ],
    "disambig": "сын Иокшана",
@@ -6821,6 +6926,7 @@
       "script": "דְּדָן",
       "translit": "Dedan"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -6893,7 +6999,9 @@
     {
      "form": "Ашурим",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 25:3"
+     ]
     }
    ],
    "prominence": 1,
@@ -6906,6 +7014,7 @@
       "script": "אַשּׁוּרִם",
       "translit": "Ashurim"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -6928,7 +7037,9 @@
     {
      "form": "Летушим",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 25:3"
+     ]
     }
    ],
    "prominence": 1,
@@ -6941,6 +7052,7 @@
       "script": "לְטוּשִׁם",
       "translit": "Letushim"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -6963,7 +7075,9 @@
     {
      "form": "Леюмим",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 25:3"
+     ]
     }
    ],
    "prominence": 1,
@@ -6976,6 +7090,7 @@
       "script": "לְאֻמִּים",
       "translit": "Le'ummim"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -6998,7 +7113,9 @@
     {
      "form": "Ефа",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 25:4"
+     ]
     }
    ],
    "disambig": "сын Мадиана",
@@ -7012,6 +7129,7 @@
       "script": "עֵיפָה",
       "translit": "Efah"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -7056,7 +7174,9 @@
     {
      "form": "Ефер",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 25:4"
+     ]
     }
    ],
    "disambig": "сын Мадиана",
@@ -7070,6 +7190,7 @@
       "script": "עֵפֶר",
       "translit": "Efer"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -7092,7 +7213,9 @@
     {
      "form": "Ханох",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 25:4"
+     ]
     }
    ],
    "disambig": "сын Мадиана",
@@ -7106,6 +7229,7 @@
       "script": "חֲנֹךְ",
       "translit": "Ḥanokh"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -7139,7 +7263,9 @@
     {
      "form": "Авида",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 25:4"
+     ]
     }
    ],
    "prominence": 1,
@@ -7152,6 +7278,7 @@
       "script": "אֲבִידָע",
       "translit": "Avida'"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -7174,7 +7301,9 @@
     {
      "form": "Елдага",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 25:4"
+     ]
     }
    ],
    "prominence": 1,
@@ -7187,6 +7316,7 @@
       "script": "אֶלְדָּעָה",
       "translit": "Elda'ah"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -7209,7 +7339,9 @@
     {
      "form": "Мелхиседек",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 14:18"
+     ]
     }
    ],
    "disambig": "царь Салимский, священник Бога Всевышнего",
@@ -7227,6 +7359,7 @@
       "script": "מַלְכִּי־צֶדֶק",
       "translit": "Malki-tsedeq"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -7489,7 +7622,9 @@
     {
      "form": "Мамрий",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 14:13"
+     ]
     },
     {
      "form": "Мамре",
@@ -7511,6 +7646,7 @@
       "script": "מַמְרֵא",
       "translit": "Mamre"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -7596,7 +7732,9 @@
     {
      "form": "Эшкол",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 14:13"
+     ]
     }
    ],
    "disambig": "брат Мамрия",
@@ -7610,6 +7748,7 @@
       "script": "אֶשְׁכֹּל",
       "translit": "Eshkol"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -7644,7 +7783,9 @@
     {
      "form": "Анер",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 14:13"
+     ]
     }
    ],
    "disambig": "брат Мамрия",
@@ -7658,6 +7799,7 @@
       "script": "עָנֵר",
       "translit": "Aner"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -7692,7 +7834,9 @@
     {
      "form": "Елиезер",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 15:2"
+     ]
     }
    ],
    "disambig": "из Дамаска, распорядитель в доме Аврама",
@@ -7706,6 +7850,7 @@
       "script": "אֱלִיעֶזֶר",
       "translit": "Eli'ezer"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -7781,7 +7926,9 @@
     {
      "form": "Цохар",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 23:8"
+     ]
     }
    ],
    "disambig": "отец Ефрона Хеттеянина",
@@ -7795,6 +7942,7 @@
       "script": "צֹחַר",
       "translit": "Tsoḥar"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -7832,7 +7980,9 @@
     {
      "form": "Ефрон",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 23:8"
+     ]
     }
    ],
    "disambig": "Хеттеянин",
@@ -7846,6 +7996,7 @@
       "script": "עֶפְרוֹן",
       "translit": "Efron"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -7937,7 +8088,9 @@
     {
      "form": "Девора",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 35:8"
+     ]
     }
    ],
    "disambig": "кормилица Ревекки",
@@ -7951,6 +8104,7 @@
       "script": "דְּבוֹרָה",
       "translit": "Devorah"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -8055,7 +8209,9 @@
     {
      "form": "Еммор",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 33:19"
+     ]
     }
    ],
    "disambig": "Евеянин, отец Сихема",
@@ -8069,6 +8225,7 @@
       "script": "חֲמוֹר",
       "translit": "Ḥamor"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"
@@ -8205,7 +8362,9 @@
     {
      "form": "Сихем",
      "type": "main",
-     "refs": []
+     "refs": [
+      "Быт 33:19"
+     ]
     }
    ],
    "disambig": "сын Еммора",
@@ -8219,6 +8378,7 @@
       "script": "שְׁכֶם",
       "translit": "Shekhem"
      },
+     "cert": "reference",
      "prov": {
       "status": "quarantine",
       "note": "написание в подлиннике без источника; источник — этап Д1.5 (02, § 5)"

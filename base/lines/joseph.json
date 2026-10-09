@@ -6,7 +6,7 @@
   "status": "draft",
   "from": {
    "vol": "data/lines/joseph.json",
-   "commit": "deb7299"
+   "commit": "3c6953b"
   }
  },
  "id": "joseph",
@@ -652,5 +652,10 @@
    "flag": "legal",
    "mtGroup": 3
   }
- ]
+ ],
+ "readings": {
+  "r-lk3-23": "mt",
+  "r-shealtiel": "mt",
+  "r-zerubbabel": "mt"
+ }
 }
