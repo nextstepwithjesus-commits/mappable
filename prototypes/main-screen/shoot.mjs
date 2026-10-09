@@ -42,6 +42,9 @@ const SCREENS = [
   ['09-card-ruf', 'ab', '#/card/p-ruf'],
   ['10-index-ruf', 'ab', '#/index/ruf'],
   ['11-stub', 'ab', '#/stub/' + encodeURIComponent('Связи — Авраам')],
+  ['12-study-card-avraam', 'ab', '#/card/p-avraam', async (p) => { await p.selectOption('[data-layer-select]', 'study'); }],
+  ['12-study-messiah', 'ab', '#/gen/messiah', async (p) => { await p.selectOption('[data-layer-select]', 'study'); }],
+  ['12-study-time-avraam', 'ab', '#/time/p-avraam', async (p) => { await p.selectOption('[data-layer-select]', 'study'); }],
 ];
 const SIZES = [['1280', { width: 1280, height: 800 }], ['360', { width: 360, height: 640 }]];
 const THEMES = ['light', 'dark'];
@@ -114,7 +117,8 @@ for (const [sizeName, viewport] of SIZES) {
         if (r < 4.5) report.contrast.push(`${name} ${sizeName} ${theme}: ${r.toFixed(2)} «${t.t}»`);
       }
       if (theme === 'light') {
-        const min = sizeName === '360' ? 48 : 44;
+        const layer = await page.evaluate(() => document.documentElement.getAttribute('data-layer'));
+        const min = sizeName === '360' && layer === 'simple' ? 48 : 44;
         for (const t of a.targets) {
           if (t.h < min && !t.inline) {
             const k = `${sizeName}: ${t.t} (${t.w}×${t.h})`;

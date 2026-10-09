@@ -371,8 +371,8 @@ svg.geo { max-height: 470px; }
     grid-template-areas: "home brand layer help" "search search search search"; }
   :root:not(.is-home) .brand-slot { display: none; }
   :root:not(.is-home) .top-in { grid-template-areas: "home layer layer help" "search search search search"; }
-  :root:not(.is-home) .layer { justify-self: end; }
-  :root:not(.is-home) .layer select { width: auto; font-size: 15px; padding: 0 8px; }
+  :root:not(.is-home) .layer { justify-self: end; width: 100%; max-width: 170px; min-width: 0; }
+  :root:not(.is-home) .layer select { width: 100%; font-size: 14px; padding: 0 4px; }
   .erow.sel-p { background: var(--selarea); }
   .brand { font-size: 16px; }
   .help { min-width: 44px; width: 44px; }
@@ -420,3 +420,9 @@ svg.geo { max-height: 470px; }
 .lines tr.pre td { padding-top: 6px; padding-bottom: 6px; line-height: 1.2; }
 .lines tr.pre .pick { font: 500 var(--fs-s) var(--ui); padding: 0 1px; }
 .tagx-in { font: 400 14px var(--ui); color: var(--ink2); }
+@media (max-width: 599px) {
+  svg.geo text { font-size: 25px; stroke-width: 6px; }
+  svg.geo .pt circle { r: 10; stroke-width: 3.5; }
+  svg.geo .route { stroke-width: 3; }
+  .toolbar .subj .lbl { display: none; }
+}
