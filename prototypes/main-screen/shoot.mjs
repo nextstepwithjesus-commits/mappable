@@ -94,7 +94,7 @@ async function audit(page) {
   });
 }
 
-const report = { contrast: [], small: {}, overflow: [], keyboard: [], errors: [] };
+const report = { contrast: [], small: {}, overflow: [], keyboard: [], errors: [], minContrast: {} };
 for (const [sizeName, viewport] of SIZES) {
   for (const theme of THEMES) {
     const ctx = await browser.newContext({ viewport, colorScheme: theme, deviceScaleFactor: 1, reducedMotion: 'reduce' });
@@ -115,6 +115,8 @@ for (const [sizeName, viewport] of SIZES) {
       for (const t of a.texts) {
         const r = ratio(t.fg, t.bg);
         if (r < 4.5) report.contrast.push(`${name} ${sizeName} ${theme}: ${r.toFixed(2)} «${t.t}»`);
+        const mk = theme;
+        if (!report.minContrast[mk] || r < report.minContrast[mk][0]) report.minContrast[mk] = [+r.toFixed(2), t.t, name];
       }
       if (theme === 'light') {
         const layer = await page.evaluate(() => document.documentElement.getAttribute('data-layer'));
@@ -151,4 +153,5 @@ console.log('ошибки страницы:', report.errors.length ? report.erro
 console.log('прокрутка вбок:', report.overflow.length ? report.overflow : 'нет');
 console.log('контраст < 4.5:', report.contrast.length ? report.contrast.slice(0, 40) : 'нет');
 console.log('цели меньше нормы:', Object.keys(report.small).length ? Object.entries(report.small).slice(0, 60) : 'нет');
+console.log('наименьший контраст текста:', JSON.stringify(report.minContrast));
 console.log('клавиатура:', report.keyboard.join('\n  '));

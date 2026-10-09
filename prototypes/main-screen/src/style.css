@@ -135,7 +135,7 @@ abbr.cert { text-decoration: none; border-bottom: 1px dotted var(--ink2); }
 /* Выбор лица: «что открыть?» */
 .pick { display: inline-block; line-height: 24px; padding: calc((var(--tap) - 24px) / 2) 2px; margin: calc((24px - var(--tap)) / 2) 0; border: 0; background: none;
   font: 600 var(--fs) var(--serif); line-height: 24px; color: var(--ink); cursor: pointer; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
-.pick[aria-expanded="true"] { background: var(--sel); color: var(--selink); box-shadow: 0 0 0 2px var(--ink); text-decoration: none; padding: 0 6px; }
+.pick[aria-expanded="true"] { background: var(--sel); color: var(--selink); box-shadow: 0 0 0 2px var(--ink); text-decoration: none; padding-left: 6px; padding-right: 6px; }
 .acts { margin: 6px 0 10px; padding: 10px 12px; background: var(--sub); border-left: 3px solid var(--ink); }
 .acts-h { font: 600 var(--fs-s) var(--ui); margin: 0 0 8px; }
 .acts .btn { min-height: var(--tap); }
@@ -426,3 +426,4 @@ svg.geo { max-height: 470px; }
   svg.geo .route { stroke-width: 3; }
   .toolbar .subj .lbl { display: none; }
 }
+.gaprow .ref { margin: 0; }
