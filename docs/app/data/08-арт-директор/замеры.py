@@ -137,3 +137,59 @@ cw = width('Literata', {'opsz': 20, 'wght': 400}, 20, S) / len(S)
 for vw in (600, 768, 900, 1023):
     print(f'  окно {vw}: колонка {vw - 64} px — {(vw - 64) / cw:.0f} знаков')
 print(f'  граница 75 знаков = {75 * cw:.0f} px; 66 знаков = {66 * cw:.0f} px')
+
+# ---------------------------------------------------------------- 6
+head('6. Цвет: заметность «украшений» и серых ступеней (ΔE2000; 2 — едва заметно, 5 — ясно, 10 — сильно)')
+sys.path.insert(0, 'docs/app/data')
+import importlib.util
+def _lin(c):
+    return c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
+def rgb(h):
+    h = h.lstrip('#'); return [int(h[i:i + 2], 16) / 255 for i in (0, 2, 4)]
+def lab(h):
+    r, g, b = [_lin(c) for c in rgb(h)]
+    x = 0.4124564 * r + 0.3575761 * g + 0.1804375 * b
+    y = 0.2126729 * r + 0.7151522 * g + 0.0721750 * b
+    z = 0.0193339 * r + 0.1191920 * g + 0.9503041 * b
+    f = lambda t: t ** (1 / 3) if t > 216 / 24389 else (24389 / 27 * t + 16) / 116
+    fx, fy, fz = f(x / 0.95047), f(y), f(z / 1.08883)
+    return 116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)
+def de(a, b):
+    L1, a1, b1 = lab(a); L2, a2, b2 = lab(b)
+    C1, C2 = math.hypot(a1, b1), math.hypot(a2, b2); Cb = (C1 + C2) / 2
+    G = 0.5 * (1 - math.sqrt(Cb ** 7 / (Cb ** 7 + 25 ** 7)))
+    a1p, a2p = (1 + G) * a1, (1 + G) * a2
+    C1p, C2p = math.hypot(a1p, b1), math.hypot(a2p, b2)
+    h1 = math.degrees(math.atan2(b1, a1p)) % 360; h2 = math.degrees(math.atan2(b2, a2p)) % 360
+    dL, dC = L2 - L1, C2p - C1p
+    dh = 0 if C1p * C2p == 0 else (h2 - h1 if abs(h2 - h1) <= 180 else (h2 - h1 - 360 if h2 - h1 > 180 else h2 - h1 + 360))
+    dH = 2 * math.sqrt(C1p * C2p) * math.sin(math.radians(dh / 2))
+    Lb, Cbp = (L1 + L2) / 2, (C1p + C2p) / 2
+    hb = h1 + h2 if C1p * C2p == 0 else ((h1 + h2) / 2 if abs(h1 - h2) <= 180 else ((h1 + h2 + 360) / 2 if h1 + h2 < 360 else (h1 + h2 - 360) / 2))
+    T = 1 - 0.17 * math.cos(math.radians(hb - 30)) + 0.24 * math.cos(math.radians(2 * hb)) + 0.32 * math.cos(math.radians(3 * hb + 6)) - 0.2 * math.cos(math.radians(4 * hb - 63))
+    dth = 30 * math.exp(-((hb - 275) / 25) ** 2); Rc = 2 * math.sqrt(Cbp ** 7 / (Cbp ** 7 + 25 ** 7))
+    Sl = 1 + 0.015 * (Lb - 50) ** 2 / math.sqrt(20 + (Lb - 50) ** 2); Sc = 1 + 0.045 * Cbp; Sh = 1 + 0.015 * Cbp * T
+    Rt = -math.sin(math.radians(2 * dth)) * Rc
+    return math.sqrt((dL / Sl) ** 2 + (dC / Sc) ** 2 + (dH / Sh) ** 2 + Rt * (dC / Sc) * (dH / Sh))
+def cr(a, b):
+    la = sum(w * _lin(c) for w, c in zip((0.2126, 0.7152, 0.0722), rgb(a)))
+    lb = sum(w * _lin(c) for w, c in zip((0.2126, 0.7152, 0.0722), rgb(b)))
+    return (max(la, lb) + 0.05) / (min(la, lb) + 0.05)
+PAIRS = [('тон-ВЗ / лист, светлая', '#EDF0E4', '#FFFFFF'), ('тон-НЗ / лист, светлая', '#E2EFEE', '#FFFFFF'),
+         ('тон-ВЗ / тон-НЗ, светлая', '#EDF0E4', '#E2EFEE'),
+         ('тон-ВЗ / лист, тёмная', '#262C1E', '#1E2733'), ('тон-НЗ / лист, тёмная', '#17302F', '#1E2733'),
+         ('тон-ВЗ / тон-НЗ, тёмная', '#262C1E', '#17302F'),
+         ('фон / лист, светлая', '#F4F6F9', '#FFFFFF'), ('фон / лист, тёмная', '#161D27', '#1E2733'),
+         ('чернила-2 / чернила-3, светлая', '#4A5463', '#5B6574'), ('чернила-2 / чернила-3, тёмная', '#A9B3C1', '#97A2B2'),
+         ('чернила / чернила-2, светлая', '#18202C', '#4A5463'),
+         ('линия / линия-2, светлая', '#6E7888', '#5E6878')]
+for n, a, b in PAIRS:
+    print(f'  {n:34} ΔE {de(a, b):5.1f}   контраст {cr(a, b):.2f}')
+
+# ---------------------------------------------------------------- 7
+head('7. ВП-19: голубая и розовая «как просил владелец» — лента с кантом (WCAG 1.4.11: контраст даёт кант)')
+for nm, core, case in (('Мф голубая', '#7FB8E6', '#17599A'), ('Лк розовая', '#EE9CC4', '#B0306F')):
+    for bgn, bg in (('лист', '#FFFFFF'), ('фон', '#F4F6F9'), ('подложка', '#E8ECF1')):
+        print(f'  {nm} {core}: заливка к {bgn} {cr(core, bg):.2f}; кант {case} к {bgn} {cr(case, bg):.2f}; кант к заливке {cr(case, core):.2f}')
+print(f'  голубая и розовая заливки между собой: ΔE {de("#7FB8E6", "#EE9CC4"):.1f}')
+print(f'  голубая и вода карты #D6E2EC: ΔE {de("#7FB8E6", "#D6E2EC"):.1f}; синяя А #17599A и вода: ΔE {de("#17599A", "#D6E2EC"):.1f}')
