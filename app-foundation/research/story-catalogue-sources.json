@@ -1,0 +1,421 @@
+{
+  "schemaVersion": "1.0",
+  "date": "2026-10-09",
+  "status": "bounded research proposal; not accepted canonical dataset or independent self-review",
+  "report": "story-catalogue-data-model.md",
+  "scope": {
+    "allowedOutputs": [
+      "docs/app-foundation/research/story-catalogue-data-model.md",
+      "docs/app-foundation/research/story-catalogue-sources.json"
+    ],
+    "notPerformed": [
+      "complete story inventory",
+      "exhaustive cross-reference search",
+      "data import",
+      "application or UI implementation",
+      "corpus edits",
+      "independent review of this report"
+    ]
+  },
+  "localContextRead": {
+    "instructions": "AGENTS.md",
+    "activeState": "memory/STATE.md: active E141/E140 entries; historical tail not relied upon",
+    "contracts": [
+      "docs/app-foundation/03-data-contract.md",
+      "docs/app-foundation/13-canonical-coverage.md",
+      "docs/app-foundation/15-events-workspace.md"
+    ],
+    "readingLimit": "03 and13 text read;15 targeted conceptual/event/roles/filters/control sections, not a fresh independent review of the entire specification"
+  },
+  "corpus": {
+    "path": "tools/bible/synodal.tsv",
+    "sha256": "12d8917144f5ece5e8b058ec6c491be43017d280092080c24286a73e39570149",
+    "edition": "project immutable Synodal TSV, canon66",
+    "squareBrackets": "printed for source fidelity, never used as basis of factual claims",
+    "fullVerseCount": 286,
+    "uniqueVerseCount": 286,
+    "ranges": [
+      {
+        "book": "Быт",
+        "chapter": 37,
+        "startVerse": 23,
+        "endVerse": 36,
+        "reference": "Быт 37:23–36",
+        "fullVerseCount": 14,
+        "readMode": "complete verse text emitted and personally read; no excerpts substituted",
+        "sha256TsvLinesWithTrailingLf": "52aff861751912d25a970e639981aa4e73cad695a61c2cee6ebced9cf03f3d0c"
+      },
+      {
+        "book": "Быт",
+        "chapter": 39,
+        "startVerse": 1,
+        "endVerse": 6,
+        "reference": "Быт 39:1–6",
+        "fullVerseCount": 6,
+        "readMode": "complete verse text emitted and personally read; no excerpts substituted",
+        "sha256TsvLinesWithTrailingLf": "e5ea19f68c02919c40a02c3839afdb486935f371798e8528e28eb7f6a45f3b35"
+      },
+      {
+        "book": "Быт",
+        "chapter": 39,
+        "startVerse": 17,
+        "endVerse": 23,
+        "reference": "Быт 39:17–23",
+        "fullVerseCount": 7,
+        "readMode": "complete verse text emitted and personally read; no excerpts substituted",
+        "sha256TsvLinesWithTrailingLf": "905660dc905a213a9303e52fa93e15ffe336286ccedbd89c5950e261f7b90d34"
+      },
+      {
+        "book": "Быт",
+        "chapter": 41,
+        "startVerse": 37,
+        "endVerse": 46,
+        "reference": "Быт 41:37–46",
+        "fullVerseCount": 10,
+        "readMode": "complete verse text emitted and personally read; no excerpts substituted",
+        "sha256TsvLinesWithTrailingLf": "42ca8f44256131d2e99d0b6d8bb5d259e533efed4f8019522a16e899b3eb47d1"
+      },
+      {
+        "book": "Быт",
+        "chapter": 45,
+        "startVerse": 1,
+        "endVerse": 11,
+        "reference": "Быт 45:1–11",
+        "fullVerseCount": 11,
+        "readMode": "complete verse text emitted and personally read; no excerpts substituted",
+        "sha256TsvLinesWithTrailingLf": "0174d825a5db21944da5ce7ddddfd19c50eb18432e1e2a2a08a0f28eddd9f3e6"
+      },
+      {
+        "book": "Быт",
+        "chapter": 50,
+        "startVerse": 15,
+        "endVerse": 26,
+        "reference": "Быт 50:15–26",
+        "fullVerseCount": 12,
+        "readMode": "complete verse text emitted and personally read; no excerpts substituted",
+        "sha256TsvLinesWithTrailingLf": "78b0a29fab4d87a387522c2cc8fb0f8743e753eb7bdf8a90b1d29dbc75fddf15"
+      },
+      {
+        "book": "1Цар",
+        "chapter": 17,
+        "startVerse": 1,
+        "endVerse": 58,
+        "reference": "1Цар 17:1–58",
+        "fullVerseCount": 58,
+        "readMode": "complete verse text emitted and personally read; no excerpts substituted",
+        "sha256TsvLinesWithTrailingLf": "1a1d6638aea65583b485f4ec2bdcee361041326c0728e179748a0e1126d51cdf"
+      },
+      {
+        "book": "2Цар",
+        "chapter": 21,
+        "startVerse": 15,
+        "endVerse": 22,
+        "reference": "2Цар 21:15–22",
+        "fullVerseCount": 8,
+        "readMode": "complete verse text emitted and personally read; no excerpts substituted",
+        "sha256TsvLinesWithTrailingLf": "85a45b9d10f6c4eee1196e2c7ef3adaaaf7ad5628a68f56828d7442ba573fb9b"
+      },
+      {
+        "book": "1Пар",
+        "chapter": 20,
+        "startVerse": 4,
+        "endVerse": 8,
+        "reference": "1Пар 20:4–8",
+        "fullVerseCount": 5,
+        "readMode": "complete verse text emitted and personally read; no excerpts substituted",
+        "sha256TsvLinesWithTrailingLf": "43f79581a2727fa034fc5915fc580a71e55cb98362c8c87ea472aef26bd61ed1"
+      },
+      {
+        "book": "Пс",
+        "chapter": 104,
+        "startVerse": 16,
+        "endVerse": 23,
+        "reference": "Пс 104:16–23",
+        "fullVerseCount": 8,
+        "readMode": "complete verse text emitted and personally read; no excerpts substituted",
+        "sha256TsvLinesWithTrailingLf": "f5107ce55a935b241b5029652bfa7b9a5c6719703f94d71c5e730ba6d2e052cb"
+      },
+      {
+        "book": "Лк",
+        "chapter": 15,
+        "startVerse": 1,
+        "endVerse": 3,
+        "reference": "Лк 15:1–3",
+        "fullVerseCount": 3,
+        "readMode": "complete verse text emitted and personally read; no excerpts substituted",
+        "sha256TsvLinesWithTrailingLf": "9590fa10ab6052fa06d50fe492ec3a4f8ef4fa0e26ff76999ed7fb3aa74b9cd6"
+      },
+      {
+        "book": "Лк",
+        "chapter": 15,
+        "startVerse": 11,
+        "endVerse": 32,
+        "reference": "Лк 15:11–32",
+        "fullVerseCount": 22,
+        "readMode": "complete verse text emitted and personally read; no excerpts substituted",
+        "sha256TsvLinesWithTrailingLf": "32875692f46f754dae99b1659e3e29d8853e0a781a0052f08f26c9b2ec72ac8f"
+      },
+      {
+        "book": "Деян",
+        "chapter": 6,
+        "startVerse": 8,
+        "endVerse": 15,
+        "reference": "Деян 6:8–15",
+        "fullVerseCount": 8,
+        "readMode": "complete verse text emitted and personally read; no excerpts substituted",
+        "sha256TsvLinesWithTrailingLf": "ffda5bbc516495ffa01d56e975e9d4d19b8b21b4b515de90e450ced22a429d98"
+      },
+      {
+        "book": "Деян",
+        "chapter": 7,
+        "startVerse": 1,
+        "endVerse": 16,
+        "reference": "Деян 7:1–16",
+        "fullVerseCount": 16,
+        "readMode": "complete verse text emitted and personally read; no excerpts substituted",
+        "sha256TsvLinesWithTrailingLf": "eb703e17db8c340f134138160f914f1e29ba83a102402636ae5817d5f7039750"
+      },
+      {
+        "book": "Деян",
+        "chapter": 9,
+        "startVerse": 1,
+        "endVerse": 22,
+        "reference": "Деян 9:1–22",
+        "fullVerseCount": 22,
+        "readMode": "complete verse text emitted and personally read; no excerpts substituted",
+        "sha256TsvLinesWithTrailingLf": "009177ecc1045ad96a0fe2801df7de05fa8ad555c8f9edd86b36fd6715d967e3"
+      },
+      {
+        "book": "Деян",
+        "chapter": 13,
+        "startVerse": 8,
+        "endVerse": 12,
+        "reference": "Деян 13:8–12",
+        "fullVerseCount": 5,
+        "readMode": "complete verse text emitted and personally read; no excerpts substituted",
+        "sha256TsvLinesWithTrailingLf": "fd0fa820e6fdf2f51e1c570ebe0dbdeaa20402183578ac1fe8969a335ef9457d"
+      },
+      {
+        "book": "Деян",
+        "chapter": 21,
+        "startVerse": 37,
+        "endVerse": 40,
+        "reference": "Деян 21:37–40",
+        "fullVerseCount": 4,
+        "readMode": "complete verse text emitted and personally read; no excerpts substituted",
+        "sha256TsvLinesWithTrailingLf": "205e3bf32ca330b2c622321b9bad3faa445e6efa49a99baf6121458011a24d4b"
+      },
+      {
+        "book": "Деян",
+        "chapter": 22,
+        "startVerse": 1,
+        "endVerse": 21,
+        "reference": "Деян 22:1–21",
+        "fullVerseCount": 21,
+        "readMode": "complete verse text emitted and personally read; no excerpts substituted",
+        "sha256TsvLinesWithTrailingLf": "470a2723a43a44bd98c8e3ad801a9a0066535b71488605ccca1f8b1796c5cb16"
+      },
+      {
+        "book": "Деян",
+        "chapter": 26,
+        "startVerse": 1,
+        "endVerse": 23,
+        "reference": "Деян 26:1–23",
+        "fullVerseCount": 23,
+        "readMode": "complete verse text emitted and personally read; no excerpts substituted",
+        "sha256TsvLinesWithTrailingLf": "000a5f1a43a0f89294726d410a02d72a20b12555f229ec374e1d597dae2a7b51"
+      },
+      {
+        "book": "1Кор",
+        "chapter": 10,
+        "startVerse": 1,
+        "endVerse": 11,
+        "reference": "1Кор 10:1–11",
+        "fullVerseCount": 11,
+        "readMode": "complete verse text emitted and personally read; no excerpts substituted",
+        "sha256TsvLinesWithTrailingLf": "6fa3544edbe28069e89752f3b2b16f33e2c1409a59b64ebb293ff9c4adcb06bd"
+      },
+      {
+        "book": "Откр",
+        "chapter": 1,
+        "startVerse": 9,
+        "endVerse": 20,
+        "reference": "Откр 1:9–20",
+        "fullVerseCount": 12,
+        "readMode": "complete verse text emitted and personally read; no excerpts substituted",
+        "sha256TsvLinesWithTrailingLf": "f766ec109e359aa79bc6218bcacf6a05460b83af005132aefb000a44e65d9615"
+      }
+    ],
+    "limits": [
+      "Быт37;39–50 is a proposed story scope, not a claim that all these chapters were read",
+      "Only listed verses were personally read; all-mentions and canonwide completeness are not established",
+      "Displayed source statements remain attributable to narrative, speech, parable or vision context",
+      "No new identity merge, numerical chronology or harmonization accepted"
+    ]
+  },
+  "externalSources": [
+    {
+      "id": "SC-S01",
+      "classification": "normative standard",
+      "title": "Web Annotation Data Model",
+      "publisher": "W3C",
+      "publicationDate": "2017-02-23",
+      "url": "https://www.w3.org/TR/2017/REC-annotation-model-20170223/",
+      "readScope": [
+        "1.3 normative/non-normative distinction",
+        "3.1 annotation identity and target model",
+        "4.2.4 Text Quote Selector",
+        "4.2.5 Text Position Selector, including source-change warning"
+      ],
+      "access": "primary HTML retrieved through web browse; targeted sections personally read",
+      "supportedObservation": "Annotations and source targets are distinct; quote and position selectors address text segments. Positions are sensitive to resource changes.",
+      "projectInference": "Pin edition/revision, address, fragment and checksum; verify that quoted content still resolves.",
+      "notEstablished": [
+        "truth of biblical assertion",
+        "conformance of unimplemented application",
+        "complete reading of specification"
+      ]
+    },
+    {
+      "id": "SC-S02",
+      "classification": "normative standard",
+      "title": "PROV-DM: The PROV Data Model",
+      "publisher": "W3C",
+      "publicationDate": "2013-04-30",
+      "url": "https://www.w3.org/TR/2013/REC-prov-dm-20130430/",
+      "readScope": [
+        "5.2.1 Derivation",
+        "5.2.2 Revision",
+        "5.2.3 Quotation",
+        "5.2.4 Primary Source"
+      ],
+      "access": "primary HTML retrieved through web browse; complete targeted subsections personally read",
+      "supportedObservation": "The model distinguishes derivation and specialized relations for revision, quotation and primary source.",
+      "projectInference": "Store a summary’s source revisions and dependency history; changed meaning invalidates inherited review.",
+      "notEstablished": [
+        "canon rules",
+        "independent-review requirement",
+        "biblical event identity",
+        "complete reading of specification"
+      ]
+    },
+    {
+      "id": "SC-S03",
+      "classification": "encoding standard and guidelines",
+      "title": "TEI P5: Guidelines for Electronic Text Encoding and Interchange, chapter16",
+      "publisher": "TEI Consortium",
+      "publicationDate": "2021-04-09",
+      "version": "4.2.2, revision609a109b1",
+      "url": "https://www.tei-c.org/Vault/P5/4.2.2/doc/tei-p5-doc/en/html/SA.html",
+      "readScope": [
+        "16.3 passages on seg/anchor and segmentation-method declaration",
+        "16.7 opening aggregation model, link/join descriptions and discontinuous-segment example",
+        "16.8 opening exclusive/inclusive alternation definitions and examples",
+        "16.9.1 Introduction, read-only sources and incompatible hierarchies"
+      ],
+      "access": "fixed archived primary HTML retrieved through web browse; selected passages read, not all examples/chapter",
+      "supportedObservation": "Text segments may be linked into discontinuous aggregates; alternatives and external markup can preserve multiple analyses of a source.",
+      "projectInference": "Keep story segmentation outside immutable corpus and represent discontinuous account spans explicitly.",
+      "notEstablished": [
+        "latest TEI version",
+        "mandatory XML stack",
+        "definition of a biblical story",
+        "complete reading of guidelines"
+      ]
+    },
+    {
+      "id": "SC-S04",
+      "classification": "empirical research with corpus annotation conventions",
+      "title": "Using a sledgehammer to crack a nut? Lexical diversity and event coreference resolution",
+      "authors": [
+        "Agata Cybulska",
+        "Piek Vossen"
+      ],
+      "publisher": "European Language Resources Association",
+      "venue": "LREC 2014",
+      "publicationDate": "2014-05",
+      "pages": "4545–4552",
+      "url": "https://aclanthology.org/L14-1646/",
+      "fullTextUrl": "https://aclanthology.org/L14-1646.pdf",
+      "readScope": [
+        "abstract and publication metadata",
+        "4.1 opening rationale for different instances of the same event type",
+        "4.2 selected tagset/coreference definitions, especially page4549",
+        "4.3 Event Centric Annotation, complete",
+        "4.4 setup opening and selected re-annotation passages",
+        "4.5 Inter-annotator Agreement including page4551 continuation",
+        "5 Conclusion"
+      ],
+      "access": "first PDF open returned internal error; subsequent open succeeded with8-page PDF text; targeted text personally read, not all article or tables visually inspected",
+      "supportedObservation": "Action participants are separated from other mentions; similarity of event type does not identify an occurrence. Annotation agreement was studied on a limited news subset and mention boundaries caused difficulties.",
+      "projectInference": "Review participation, event identity and span boundaries independently; do not infer project accuracy from another corpus.",
+      "notEstablished": [
+        "biblical accuracy percentage",
+        "validated automatic event merging",
+        "child usability",
+        "full newspaper corpus or full annotation guide read"
+      ]
+    }
+  ],
+  "controlCases": [
+    {
+      "id": "SC-B01",
+      "case": "Joseph across narrative, psalm and speech",
+      "references": [
+        "Быт37:23–36",
+        "Быт39:1–6,17–23",
+        "Быт41:37–46",
+        "Быт45:1–11",
+        "Быт50:15–26",
+        "Пс104:16–23",
+        "Деян6:8–7:16"
+      ],
+      "proposal": "Story can include different account scopes; cross-account mappings must be action-specific. Speech participants are separate from people in its retelling.",
+      "remaining": "Genesis37;39–50 full segmentation, intermediary identities and canonwide mentions not completed"
+    },
+    {
+      "id": "SC-B02",
+      "case": "David/Goliath and disputed comparisons",
+      "references": [
+        "1Цар17:1–58",
+        "2Цар21:15–22",
+        "1Пар20:4–8"
+      ],
+      "proposal": "Keep1Цар17 duel distinct from unresolved comparison of2Цар21:19 and1Пар20:5. Preserve actual source names and identities.",
+      "remaining": "No harmonization or identity adjudication; proposed disputed_comparison requires independent review"
+    },
+    {
+      "id": "SC-B03",
+      "case": "Paul conversion accounts",
+      "references": [
+        "Деян9:1–22",
+        "Деян13:8–12",
+        "Деян21:37–22:21",
+        "Деян26:1–23"
+      ],
+      "proposal": "One candidate story, separate accounts, scoped event mappings and distinct later speech events; maintain differences in9:7,22:9,26:14.",
+      "remaining": "Identity and account harmonization not independently accepted"
+    },
+    {
+      "id": "SC-B04",
+      "case": "Non-narrative books and representation contexts",
+      "references": [
+        "Пс104:16–23",
+        "1Кор10:1–11",
+        "Лк15:1–3,11–32",
+        "Откр1:9–20"
+      ],
+      "proposal": "Process all genres; preserve retelling, parable and vision context independently from entity type.",
+      "remaining": "No source-passage alignment for1Кор10; no comprehensive genre or story manifest"
+    }
+  ],
+  "releaseMeaning": {
+    "zeroKnownErrors": "No known unresolved errors in the declared release; unknown-error absence is not mathematically guaranteed.",
+    "ambiguity": "Explicitly represented textual ambiguity is distinct from a known data error.",
+    "completeness": "Requires canonwide segmentation, independent coverage review and cross-book relation checks; record counts or valid JSON alone cannot establish it."
+  },
+  "independentReview": {
+    "status": "not performed by author",
+    "owner": "lead to arrange separate reviewer"
+  }
+}

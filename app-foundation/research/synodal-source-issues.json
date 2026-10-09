@@ -1,0 +1,600 @@
+{
+  "schemaVersion": "o3a-source-investigation-1",
+  "status": "research_candidates_not_accepted",
+  "readDate": "2026-10-09",
+  "authorRole": "bounded source researcher; independent acceptance pending",
+  "writesAppliedToCorpus": false,
+  "quarantineLifted": false,
+  "scope": {
+    "issues": [
+      "Ps.114.8-9 boundary",
+      "Prov.29.6 unclosed square bracket through book end"
+    ],
+    "localFullReading": [
+      "Пс 114:1–9",
+      "Пс 115:1–10",
+      "Притч 29:1–27",
+      "Притч 30:1–33",
+      "Притч 31:1–31"
+    ],
+    "localAddressCount": 110,
+    "localNonemptyVerseTexts": 109,
+    "readSliceSerialization": "Original TSV rows in file order, UTF-8, each row LF-terminated; no normalization",
+    "localReadSliceSha256": "a06116f0cab08aa4595b8978bc1dcaf459fb9ca540bdc6dc4cdaf358450e7c42",
+    "eBibleFullReading": [
+      "Ps.114.1-9",
+      "Ps.115.1-10",
+      "Prov.29.1-27",
+      "Prov.30.1-33",
+      "Prov.31.1-31"
+    ],
+    "crossWireFullVerseRecordsRead": 34,
+    "crossWireEmptyRecordsAmongRead": 1,
+    "crossWireReadingBasis": "Raw UTF-8 OSIS records, chapter headers and adjacent records checked; no GUI rendering or full-module semantic review",
+    "extraIncidentalCrossWireContextNotCounted": [
+      "Ps.55.12-14 vicinity",
+      "Ps.85.11-15 vicinity",
+      "Isa.38.15-19 vicinity"
+    ],
+    "notRead": [
+      "Complete printed RBO edition",
+      "Full canon text comparison",
+      "eBible source USFM archive (HTTP 403)",
+      "CrossWire upstream source before packaging"
+    ]
+  },
+  "protectedInputs": [
+    {
+      "path": "tools/bible/synodal.tsv",
+      "sha256": "12d8917144f5ece5e8b058ec6c491be43017d280092080c24286a73e39570149"
+    },
+    {
+      "path": "knowledge/registry/corpus-manifest.json",
+      "sha256": "c7fb2ebbf0fca847c25d22e602009c111c3b0584a51acea2cb8dfa54e80c5ffe"
+    },
+    {
+      "path": "tools/bible/README.md",
+      "sha256": "591c97492eb3c4e5217f3bc032e853f05384d5a03dfb1564b78f9f0b32e99b45"
+    },
+    {
+      "path": "docs/app-foundation/02-sources-and-evidence.md",
+      "sha256": "0f398db1c7e7f15d0fd698336df0e414e3994bfc85ef5fdba6489e17ff88bfb4"
+    }
+  ],
+  "localWitnesses": [
+    {
+      "address": "Пс 114:8",
+      "text": "Ты избавил душу мою от смерти, очи мои от слез и ноги мои от преткновения. Буду ходить пред лицем Господним на земле живых.",
+      "utf8Sha256": "9d74314bbc72f6f5abcf5ac6a35f1fc56dab3dae0e20cb703d9c6d2f2382c01e",
+      "codePoints": 123
+    },
+    {
+      "address": "Пс 114:9",
+      "text": "",
+      "utf8Sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "codePoints": 0
+    },
+    {
+      "address": "Притч 29:6",
+      "text": "В грехе злого человека - сеть для [него, а праведник веселится и радуется.",
+      "utf8Sha256": "3ab254d65db94e6753315b4f600b57dd5cfa1e78fa9c514dfba014831a87bcf7",
+      "codePoints": 74
+    },
+    {
+      "address": "Притч 30:31",
+      "text": "конь и козел, [предводитель стада,] и царь среди народа своего.",
+      "utf8Sha256": "e78782b24b3323e58f286426bc93ed6d61898731296fc3d03e18d1d3f3125e9d",
+      "codePoints": 63
+    }
+  ],
+  "sources": [
+    {
+      "id": "RBO-1998-METADATA",
+      "publisher": "Российское Библейское Общество",
+      "url": "https://biblia.ru/catalog/BibleNonDC/1036/",
+      "edition": "Каноническая Библия, Синодальный перевод, редакция 1998",
+      "isbn": "978-5-85524-070-2",
+      "readScope": "Product description / publisher / edition / bracket and italic explanation; no target-verse pages or complete book",
+      "publicChristianProvenance": "Official page identifies RBO as a religious organization distributing Scripture",
+      "rights": "Official product page has rights-reserved notice; no digital full-text redistribution permission established",
+      "rawArtifactSha256": null,
+      "accessLimit": "Initial metadata read succeeded; repeated retrieval later in this investigation timed out. Full edition unavailable. Not a textual benchmark for either issue.",
+      "inference": "Edition changes can affect brackets; an edition-specific witness is needed, not a generic translation title."
+    },
+    {
+      "id": "EBIBLE-RUSSYN-HTML",
+      "publisher": "eBible.org",
+      "edition": "Синодальный перевод; ID RUSSYN/russyn; no verified printed-edition collation in consulted metadata",
+      "metadataUrl": "https://ebible.org/find/details.php?id=russyn",
+      "rightsUrl": "https://ebible.org/russyn/copyright.htm",
+      "provenanceUrl": "https://ebible.org/about.php",
+      "publicChristianProvenance": "Official About: Christian Scripture distribution mission and explicit Father, Son, Holy Spirit / Apostles Creed statement",
+      "metadataLastUpdated": "2022-11-25",
+      "htmlGenerated": "2026-10-08",
+      "sourceFilesDated": "2025-12-12",
+      "dateSemantics": "Three dates describe distinct metadata/build/source layers; none establishes the date of every textual correction.",
+      "rights": "Distributor labels this translation Public Domain; no legal certification of all edition layers implied.",
+      "versification": "Observed Psalm 114 has 9 numbered verses; Psalm 115 has 10; no complete versification mapping accepted.",
+      "readUrls": [
+        "https://ebible.org/russyn/PSA114.htm",
+        "https://ebible.org/russyn/PSA115.htm",
+        "https://ebible.org/russyn/PRO29.htm",
+        "https://ebible.org/russyn/PRO30.htm",
+        "https://ebible.org/russyn/PRO31.htm"
+      ],
+      "rawArtifactSha256": null,
+      "hashLimit": "Browser-readable text was read; raw HTML bytes were not captured. Hashes of manually transcribed target readings below are not page or archive hashes.",
+      "archiveAttempt": {
+        "url": "https://ebible.org/Scriptures/russyn_usfm.zip",
+        "result": "web tool unsupported ZIP; normal urllib public download returned HTTP 403; no access-control bypass attempted"
+      },
+      "dependency": "HTML, PDF, USFM and eBible-hosted russyn1876eb Sword module are formats of this distributor, not independent textual witnesses. Exact common ancestry with local/CrossWire not established."
+    },
+    {
+      "id": "CROSSWIRE-RUSSYNODAL-1.9.1",
+      "publisher": "CrossWire Bible Society / SWORD Project",
+      "metadataUrl": "https://www.crosswire.org/sword/modules/ModInfo.jsp?modName=RusSynodal",
+      "provenanceUrl": "https://www.crosswire.org/sword/about/index.jsp",
+      "publicChristianProvenance": "Official project purpose explicitly concerns study of God and His Word and Christian collaborative ministry.",
+      "archiveUrl": "https://www.crosswire.org/ftpmirror/pub/sword/packages/rawzip/RusSynodal.zip",
+      "archiveByteLength": 2119515,
+      "archiveSha256": "b802570e1783c326552b9e810786efe3df4efcd615f28ccf3a86bae27dbc5022",
+      "metadataMember": "mods.d/russynodal.conf",
+      "metadataMemberSha256": "a51ec4c6b64396beb753dc541d4e56f985bba22b5858343f182470cb18d89671",
+      "metadataText": "## Sword module configuration file\n\n## Required elements\n# Module Unique Identifier.\n[RusSynodal]\n\n# Short well known abbreviation for the module (e.g., [KJV]).\nAbbreviation=Synodal\n\n# Short description of the module.\nDescription=Синодального Перевода Библии\nDescription_en=1876 Russian Synodal Bible.\n\n# Path to the module data files relative to the SWORD module library root directory.\nDataPath=./modules/texts/ztext/russynodal/\n\n# Driver used for reading the module.\nModDrv=zText\n\n## Required elements with defaults\n# Markup used in the module.\nSourceType=OSIS\n\n# How the text in the conf and in the module are encoded.\nEncoding=UTF-8\n\n# Compression algorithm.\nCompressType=ZIP\n\n# How much of the work is compressed into a block.\nBlockType=BOOK\n\n# Versification employed by a Bible module.\nVersification=Synodal\n\n## Elements required for proper rendering\n# Filters.\nGlobalOptionFilter=OSISHeadings\n\n## General informatic and installer elements\n# A lengthier description.\nAbout=Синодальный перевод. История русской Библии восходит к 1816 году, когда по повелению императора Александра I Российское Библейское Общество приступило к переводу Нового Завета на русский язык.\nAbout_en=1876 Синодальный перевод, Synodal Translation of the Holy Bible in Russian. Translation by: Orthodox theological academies of Moscow, Saint Petersburg, Kazan, and Kiev.\n\n# Indicates the date that the module was changed.\nSwordVersionDate=2020-12-21\n\n# Module's revision.\nVersion=1.9.1\n\n# Indicates what has changed between different versions.\nHistory_1.0=Regenerated from cleaner source, including deuterocanonicals\nHistory_1.5=Changed to bibles.org.uk's source\nHistory_1.8=Updated to reflect new versification (2010-11-06)\nHistory_1.8.1=Corrected MinimumVersion (2011-08-17)\nHistory_1.9=(2020-12-30) New source. Fix tracker issues: MOD-275, MOD-203, MOD-160\nHistory_1.9.1=(2022-08-06) Fix typo in conf file\n\n# The minimum version of the SWORD library required for this module.\nMinimumVersion=1.6.2\n\n# Library of Congress Subject Heading.\nLCSH=Bible.Russian\n\n# Language code of the module.\nLang=ru\n\n# OSIS schema version employed in the OSIS source document.\nOSISVersion=2.1.1\n\n## Copyright and Licensing related elements\nDistributionLicense=Public Domain\nTextSource=http://www.rbo.ru/reading/articles/show/?4&start=0 or http://www.patriarchia.ru/bible/mf\n\n# Total byte size of the module on disk.\nInstallSize=2394988\n",
+      "declaredEdition": "1876 Russian Synodal Bible",
+      "moduleVersion": "1.9.1",
+      "declaredVersification": "Synodal",
+      "declaredRights": "DistributionLicense=Public Domain",
+      "dateCaution": "Web/SwordVersionDate 2020-12-21; History_1.9 is dated 2020-12-30; History_1.9.1 is dated 2022-08-06. Do not resolve these contradictory revision labels by assumption; ZIP hash is the fixed inspected object.",
+      "upstreamCaution": "Conf lists historical bibles.org.uk source and later New source, with TextSource alternatives rbo.ru historical article or patriarchia.ru Matthew URL. These do not identify a precise captured upstream edition or its complete chain.",
+      "dependency": "Both local defects reappear byte-for-text after OSIS tags/trailing spaces are removed. Shared digital ancestry or copied errors is plausible but direction and exact upstream revision are not proven. Not an independent vote for correctness.",
+      "processing": {
+        "scope": "OT blocks inflated in memory only; no module installed and no files outside this report changed",
+        "blockIndex": "ot.bzs records: little-endian uint32 compressedOffset, compressedLength, uncompressedLength (12 bytes)",
+        "verseIndex": "ot.bzv records: little-endian uint32 block, uint32 byteOffset, uint16 byteLength (10 bytes)",
+        "addressCheck": "OSIS chapter start/end markers plus ordered records, checked against local/eBible context",
+        "rawMembersSha256": {
+          "ot.bzs": "c115c8b2d9a1e2bd870730407231f93155f5f2468a581b7a959b53101d26616a",
+          "ot.bzv": "1354e0253f17fbb7189f0366afcddf072bf29bc6367d55b509077583d15b0d89",
+          "ot.bzz": "a4974c794f8dc71aef34efd961072c21fd444a320bb053713a96f109386fdc6e"
+        },
+        "readRecordSnapshots": [
+          {
+            "address": "Ps.114.1",
+            "zeroBasedOtIndex": 17611,
+            "block": 22,
+            "byteOffset": 295312,
+            "byteLength": 98,
+            "rawOsis": "Я радуюсь, что Господь услышал голос мой, моление мое; ",
+            "rawUtf8Sha256": "51aaac3fa8a93d79ef64177902ef4b9adf3ac304d4b90aeb4618e38d8a83d3d6"
+          },
+          {
+            "address": "Ps.114.2",
+            "zeroBasedOtIndex": 17612,
+            "block": 22,
+            "byteOffset": 295410,
+            "byteLength": 166,
+            "rawOsis": "приклонил ко мне ухо Свое, и потому буду призывать Его во <transChange type=\"added\">все</transChange> дни мои. ",
+            "rawUtf8Sha256": "3326f7b5824483ece3bb17ba43232611c812b406a67652e861fd08c44b707168"
+          },
+          {
+            "address": "Ps.114.3",
+            "zeroBasedOtIndex": 17613,
+            "block": 22,
+            "byteOffset": 295576,
+            "byteLength": 156,
+            "rawOsis": "Объяли меня болезни смертные, муки адские постигли меня; я встретил тесноту и скорбь. ",
+            "rawUtf8Sha256": "912c1a32916f0d635ab281628324ce7c5c6985224033a198d8d0124199706f7a"
+          },
+          {
+            "address": "Ps.114.4",
+            "zeroBasedOtIndex": 17614,
+            "block": 22,
+            "byteOffset": 295732,
+            "byteLength": 100,
+            "rawOsis": "Тогда призвал я имя Господне: Господи! избавь душу мою. ",
+            "rawUtf8Sha256": "a9d54eb22b4df9b610b0903fc25ec38002d6bb2a59046940ae28dff11fe83966"
+          },
+          {
+            "address": "Ps.114.5",
+            "zeroBasedOtIndex": 17615,
+            "block": 22,
+            "byteOffset": 295832,
+            "byteLength": 88,
+            "rawOsis": "Милостив Господь и праведен, и милосерд Бог наш. ",
+            "rawUtf8Sha256": "262930757c1ef773cfe6b49125262203c2a35f041906f5eefa1efd0f1bf6c7d6"
+          },
+          {
+            "address": "Ps.114.6",
+            "zeroBasedOtIndex": 17616,
+            "block": 22,
+            "byteOffset": 295920,
+            "byteLength": 100,
+            "rawOsis": "Хранит Господь простодушных: я изнемог, и Он помог мне. ",
+            "rawUtf8Sha256": "513baa23b450d607670d5abc640f649d075053f1c0adc14e15a092641fa277f4"
+          },
+          {
+            "address": "Ps.114.7",
+            "zeroBasedOtIndex": 17617,
+            "block": 22,
+            "byteOffset": 296020,
+            "byteLength": 134,
+            "rawOsis": "Возвратись, душа моя, в покой твой, ибо Господь облагодетельствовал тебя. ",
+            "rawUtf8Sha256": "203a486e45ce7965fd5361c40d300452ef28ffce24326b58feb932221e1c475b"
+          },
+          {
+            "address": "Ps.114.8",
+            "zeroBasedOtIndex": 17618,
+            "block": 22,
+            "byteOffset": 296154,
+            "byteLength": 246,
+            "rawOsis": "Ты избавил душу мою от смерти, очи мои от слез и ноги мои от преткновения. Буду ходить пред лицем Господним на земле живых.  <chapter eID=\"Ps.114\"/>",
+            "rawUtf8Sha256": "224ec798c8076f200bd230aee6e18ac303337a3c9949c5c7a73cb08baa48da46"
+          },
+          {
+            "address": "Ps.114.9",
+            "zeroBasedOtIndex": 17619,
+            "block": 0,
+            "byteOffset": 0,
+            "byteLength": 0,
+            "rawOsis": "",
+            "rawUtf8Sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "address": "Ps.115.1",
+            "zeroBasedOtIndex": 17621,
+            "block": 22,
+            "byteOffset": 296573,
+            "byteLength": 85,
+            "rawOsis": "Я веровал, и потому говорил: я сильно сокрушен. ",
+            "rawUtf8Sha256": "55b716dceb39ebe8825d82bfd38b96f93f579ee1a387a6f093a92d5283320c11"
+          },
+          {
+            "address": "Ps.115.2",
+            "zeroBasedOtIndex": 17622,
+            "block": 22,
+            "byteOffset": 296658,
+            "byteLength": 96,
+            "rawOsis": "Я сказал в опрометчивости моей: всякий человек ложь. ",
+            "rawUtf8Sha256": "5281aad6a5e3a53c271f08103e43664fe44350f5dd8cc0b10c56da2cbf44ed73"
+          },
+          {
+            "address": "Ps.115.3",
+            "zeroBasedOtIndex": 17623,
+            "block": 22,
+            "byteOffset": 296754,
+            "byteLength": 90,
+            "rawOsis": "Что воздам Господу за все благодеяния Его ко мне? ",
+            "rawUtf8Sha256": "87497ba0a22dd60353a9ef6dac733a587efe7b0da79668c5575360f29e88ce8d"
+          },
+          {
+            "address": "Ps.115.4",
+            "zeroBasedOtIndex": 17624,
+            "block": 22,
+            "byteOffset": 296844,
+            "byteLength": 82,
+            "rawOsis": "Чашу спасения прииму и имя Господне призову. ",
+            "rawUtf8Sha256": "89d3c0e4a9fa755f4d3bd5e0e8ff485de1560b29a6aabce19fdeffbda730a806"
+          },
+          {
+            "address": "Ps.115.5",
+            "zeroBasedOtIndex": 17625,
+            "block": 22,
+            "byteOffset": 296926,
+            "byteLength": 87,
+            "rawOsis": "Обеты мои воздам Господу пред всем народом Его. ",
+            "rawUtf8Sha256": "6b140038a066a205136c558519db223ef8fa317ef86104d669c71a2572f9e7dc"
+          },
+          {
+            "address": "Ps.115.6",
+            "zeroBasedOtIndex": 17626,
+            "block": 22,
+            "byteOffset": 297013,
+            "byteLength": 78,
+            "rawOsis": "Дорога в очах Господних смерть святых Его! ",
+            "rawUtf8Sha256": "1b3319d2d171a88e8e4bce9bd4b46742a517ed390e205ccfe968235777ed55d0"
+          },
+          {
+            "address": "Ps.115.7",
+            "zeroBasedOtIndex": 17627,
+            "block": 22,
+            "byteOffset": 297091,
+            "byteLength": 127,
+            "rawOsis": "О, Господи! я раб Твой, я раб Твой и сын рабы Твоей; Ты разрешил узы мои. ",
+            "rawUtf8Sha256": "6a9ca7efefd0333d3c61a49979b3a8904fd819e23940041f5331ffccf57d68c6"
+          },
+          {
+            "address": "Ps.115.8",
+            "zeroBasedOtIndex": 17628,
+            "block": 22,
+            "byteOffset": 297218,
+            "byteLength": 92,
+            "rawOsis": "Тебе принесу жертву хвалы, и имя Господне призову. ",
+            "rawUtf8Sha256": "301f3868441a8b12bc2f61ee296e22cfdef4fe23ccbef4d01b98e96450a262d5"
+          },
+          {
+            "address": "Ps.115.9",
+            "zeroBasedOtIndex": 17629,
+            "block": 22,
+            "byteOffset": 297310,
+            "byteLength": 87,
+            "rawOsis": "Обеты мои воздам Господу пред всем народом Его, ",
+            "rawUtf8Sha256": "9c1043935d121236c00288e630b5104fa3efeb163f1ae02b0db983f11f737d7e"
+          },
+          {
+            "address": "Ps.115.10",
+            "zeroBasedOtIndex": 17630,
+            "block": 22,
+            "byteOffset": 297397,
+            "byteLength": 132,
+            "rawOsis": "во дворах дома Господня, посреди тебя, Иерусалим! Аллилуия.  <chapter eID=\"Ps.115\"/>",
+            "rawUtf8Sha256": "dca31be28a05a47227f09a911d1145ec9ce84533ae5ac129993872f3c073cc02"
+          },
+          {
+            "address": "Prov.29.1",
+            "zeroBasedOtIndex": 19066,
+            "block": 23,
+            "byteOffset": 120557,
+            "byteLength": 226,
+            "rawOsis": "Человек, который, будучи обличаем, ожесточает выю свою, внезапно сокрушится, и не будет <transChange type=\"added\">ему</transChange> исцеления. ",
+            "rawUtf8Sha256": "800d12c12a6a09bc6bba8ab6f987fbf248201701812cd9bf8dba7a67f305e311"
+          },
+          {
+            "address": "Prov.29.2",
+            "zeroBasedOtIndex": 19067,
+            "block": 23,
+            "byteOffset": 120783,
+            "byteLength": 173,
+            "rawOsis": "Когда умножаются праведники, веселится народ, а когда господствует нечестивый, народ стенает. ",
+            "rawUtf8Sha256": "9473bf8311ae2435b3c9fa342e1e85ec12bce40159ab77d6ca66a06e36cec2d3"
+          },
+          {
+            "address": "Prov.29.3",
+            "zeroBasedOtIndex": 19068,
+            "block": 23,
+            "byteOffset": 120956,
+            "byteLength": 175,
+            "rawOsis": "Человек, любящий мудрость, радует отца своего; а кто знается с блудницами, тот расточает имение. ",
+            "rawUtf8Sha256": "7af98b51ae63eddac189c0c9507e3e4bf00d884b17a421ff853256b1a8569279"
+          },
+          {
+            "address": "Prov.29.4",
+            "zeroBasedOtIndex": 19069,
+            "block": 23,
+            "byteOffset": 121131,
+            "byteLength": 121,
+            "rawOsis": "Царь правосудием утверждает землю, а любящий подарки разоряет ее. ",
+            "rawUtf8Sha256": "4628431dad05ffcceaf9528d50815b154bab77471e56828b5bfa9ac00a10ddb2"
+          },
+          {
+            "address": "Prov.29.5",
+            "zeroBasedOtIndex": 19070,
+            "block": 23,
+            "byteOffset": 121252,
+            "byteLength": 107,
+            "rawOsis": "Человек, льстящий другу своему, расстилает сеть ногам его. ",
+            "rawUtf8Sha256": "0a0a2b1bb6a13b4da6dacdf17eb2a1ca1f9c2e3b23bcd4f8a8edb1715f2e59ec"
+          },
+          {
+            "address": "Prov.29.6",
+            "zeroBasedOtIndex": 19071,
+            "block": 23,
+            "byteOffset": 121359,
+            "byteLength": 173,
+            "rawOsis": "В грехе злого человека - сеть <transChange type=\"added\">для [него,</transChange> а праведник веселится и радуется. ",
+            "rawUtf8Sha256": "a852144c254ddd9e6f6329aa4be25d42e124f03c31c3de173e6e63fecc225958"
+          },
+          {
+            "address": "Prov.29.7",
+            "zeroBasedOtIndex": 19072,
+            "block": 23,
+            "byteOffset": 121532,
+            "byteLength": 139,
+            "rawOsis": "Праведник тщательно вникает в тяжбу бедных, а нечестивый не разбирает дела. ",
+            "rawUtf8Sha256": "a45f32c045c20ae909c02e3a54a4dd29314e57be96924f62438c1e6919bab039"
+          },
+          {
+            "address": "Prov.30.29",
+            "zeroBasedOtIndex": 19122,
+            "block": 23,
+            "byteOffset": 128868,
+            "byteLength": 113,
+            "rawOsis": "Вот трое имеют стройную походку, и четверо стройно выступают: ",
+            "rawUtf8Sha256": "3b87f3707bf5025e954bb6f4df8348b78d6351a9f12ecaf833c1ac83828f476d"
+          },
+          {
+            "address": "Prov.30.30",
+            "zeroBasedOtIndex": 19123,
+            "block": 23,
+            "byteOffset": 128981,
+            "byteLength": 100,
+            "rawOsis": "лев, силач между зверями, не посторонится ни перед кем; ",
+            "rawUtf8Sha256": "3563831cde6163b56ed5cff38396923590690996dffbd303756a56d631c93fd4"
+          },
+          {
+            "address": "Prov.30.31",
+            "zeroBasedOtIndex": 19124,
+            "block": 23,
+            "byteOffset": 129081,
+            "byteLength": 113,
+            "rawOsis": "конь и козел, [предводитель стада,] и царь среди народа своего. ",
+            "rawUtf8Sha256": "c756c2730e2f531e10ace602c97780f763bdfb060208e2e7330f28e2f7043961"
+          },
+          {
+            "address": "Prov.30.32",
+            "zeroBasedOtIndex": 19125,
+            "block": 23,
+            "byteOffset": 129194,
+            "byteLength": 195,
+            "rawOsis": "Если ты в заносчивости своей сделал глупость и помыслил злое, то <transChange type=\"added\">положи</transChange> руку на уста; ",
+            "rawUtf8Sha256": "951de469f5dc9cded7f65c8636c292b7cca8204c39c160143eb26f4d46e925ef"
+          },
+          {
+            "address": "Prov.30.33",
+            "zeroBasedOtIndex": 19126,
+            "block": 23,
+            "byteOffset": 129389,
+            "byteLength": 279,
+            "rawOsis": "потому что, как сбивание молока производит масло, толчок в нос производит кровь, так и возбуждение гнева производит ссору.  <chapter eID=\"Prov.30\"/><div eID=\"gen750\" type=\"x-p\"/>",
+            "rawUtf8Sha256": "ea4064356b3a5abfe3e505b97c7c185353d7195fa952c23ba1438d170596ea70"
+          },
+          {
+            "address": "Prov.31.29",
+            "zeroBasedOtIndex": 19156,
+            "block": 23,
+            "byteOffset": 132985,
+            "byteLength": 103,
+            "rawOsis": "\"много было жен добродетельных, но ты превзошла всех их\". ",
+            "rawUtf8Sha256": "f8b40a64cb4d4d9f590fc9a5f570f871785e475291c51d1ca2a91e15908054ba"
+          },
+          {
+            "address": "Prov.31.30",
+            "zeroBasedOtIndex": 19157,
+            "block": 23,
+            "byteOffset": 133088,
+            "byteLength": 153,
+            "rawOsis": "Миловидность обманчива и красота суетна; но жена, боящаяся Господа, достойна хвалы. ",
+            "rawUtf8Sha256": "dbefdbd15a77d227989b0a4d1caea9f5bbee282ba290ac2b92507db416124244"
+          },
+          {
+            "address": "Prov.31.31",
+            "zeroBasedOtIndex": 19158,
+            "block": 23,
+            "byteOffset": 133241,
+            "byteLength": 224,
+            "rawOsis": "Дайте ей от плода рук ее, и да прославят ее у ворот дела ее!  <chapter eID=\"Prov.31\"/><div eID=\"gen751\" type=\"x-p\"/> <div canonical=\"true\" eID=\"gen720\" osisID=\"Prov\" type=\"book\"/>",
+            "rawUtf8Sha256": "8a1846aeb5f08c8aea5d658c7687fb63537626f7bcc387f8e321c616ebf60285"
+          }
+        ]
+      },
+      "rawArchiveRetained": false,
+      "reproductionLimit": "Archive was hashed/downloaded twice consistently and read in memory. Only metadata and bounded record snapshots are retained here; future URL content must be rehashed before reuse."
+    }
+  ],
+  "eBibleManuallyTranscribedReadings": [
+    {
+      "address": "Ps.114.8",
+      "text": "Ты избавил душу мою от смерти, очи мои от слез и ноги мои от преткновения.",
+      "utf8TextSha256": "3fcf18625de14e92e5f53559f8f9a56ed28070b51323da8538d28a4a4e53a080",
+      "captureType": "Manual transcription of web-readable verse text; not raw HTML; typography/italic semantics not established"
+    },
+    {
+      "address": "Ps.114.9",
+      "text": "Буду ходить пред лицем Господним на земле живых.",
+      "utf8TextSha256": "ab010df4292e22e455d97b6102d7a3c8f1b4153a044185e017c22fd340a88340",
+      "captureType": "Manual transcription of web-readable verse text; not raw HTML; typography/italic semantics not established"
+    },
+    {
+      "address": "Prov.29.6",
+      "text": "В грехе злого человека - сеть для него, а праведник веселится и радуется.",
+      "utf8TextSha256": "5da0bb46117202b122daa6bd975cf08fb370c81afb30eb46422cfb43bdae2572",
+      "captureType": "Manual transcription of web-readable verse text; not raw HTML; typography/italic semantics not established"
+    },
+    {
+      "address": "Prov.30.31",
+      "text": "конь и козел, предводитель стада, и царь среди народа своего.",
+      "utf8TextSha256": "390d5d9cf16c4f3ddce0feef7baf5b13f2313c1f99a9ba6972c67be719408d86",
+      "captureType": "Manual transcription of web-readable verse text; not raw HTML; typography/italic semantics not established"
+    }
+  ],
+  "issues": [
+    {
+      "id": "O3a-PS114",
+      "finding": "Local verse 8 contains both sentences, verse 9 empty. CrossWire repeats this; eBible separates the sentences into verses 8 and 9.",
+      "recommendation": "Retain current quarantine; submit exact boundary-only overlay candidate for root and independent editorial review. No general edition acceptance.",
+      "candidate": {
+        "id": "PS-BOUNDARY-01",
+        "status": "proposed_not_applied",
+        "operation": "split_existing_text_across_existing_addresses",
+        "baseCorpusSha256": "12d8917144f5ece5e8b058ec6c491be43017d280092080c24286a73e39570149",
+        "changes": [
+          {
+            "address": "Ps.114.8",
+            "oldText": "Ты избавил душу мою от смерти, очи мои от слез и ноги мои от преткновения. Буду ходить пред лицем Господним на земле живых.",
+            "oldTextUtf8Sha256": "9d74314bbc72f6f5abcf5ac6a35f1fc56dab3dae0e20cb703d9c6d2f2382c01e",
+            "newText": "Ты избавил душу мою от смерти, очи мои от слез и ноги мои от преткновения.",
+            "newTextUtf8Sha256": "3fcf18625de14e92e5f53559f8f9a56ed28070b51323da8538d28a4a4e53a080"
+          },
+          {
+            "address": "Ps.114.9",
+            "oldText": "",
+            "oldTextUtf8Sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "newText": "Буду ходить пред лицем Господним на земле живых.",
+            "newTextUtf8Sha256": "ab010df4292e22e455d97b6102d7a3c8f1b4153a044185e017c22fd340a88340"
+          }
+        ],
+        "unicodeCodePointMapping": [
+          {
+            "source": "Ps.114.8",
+            "sourceRangeHalfOpen": [
+              0,
+              74
+            ],
+            "target": "Ps.114.8",
+            "targetRangeHalfOpen": [
+              0,
+              74
+            ]
+          },
+          {
+            "source": "Ps.114.8",
+            "sourceRangeHalfOpen": [
+              75,
+              123
+            ],
+            "target": "Ps.114.9",
+            "targetRangeHalfOpen": [
+              0,
+              48
+            ]
+          }
+        ],
+        "separator": "One U+0020 between sentences becomes the address boundary; concatenating new verse8 + space + new verse9 must recover old verse8 exactly.",
+        "acceptancePrerequisites": [
+          "Reviewer re-reads both full verses and Psalm114/115 context independently",
+          "Root selects and records whether eBible is sufficient for this explicitly bounded revision or requires a named print-page witness",
+          "Bind captured witness/edition/rights and a new revision ID; preserve original corpus and address mapping",
+          "Verify exact two-address delta, no new characters, unchanged verse-count/canon and no change to Proverbs quarantine"
+        ]
+      }
+    },
+    {
+      "id": "O3a-PROV29",
+      "finding": "Unclosed [ at code-point 34 in Prov29:6; literal [ ] pair in Prov30:31 does not close the still-open outer bracket. CrossWire repeats the unclosed bracket inside transChange type=added. eBible readable text has neither this bracket nor the local balanced brackets in Prov30:31.",
+      "quarantine": {
+        "from": "Prov.29.6",
+        "through": "Prov.31.31",
+        "addressCount": 86,
+        "status": "retain_requires_source_review"
+      },
+      "candidateAlternatives": [
+        {
+          "id": "PROV-BRACKET-DELETE",
+          "operation": "Remove the single [ at code-point 34 in Prov29:6",
+          "status": "unaccepted",
+          "support": "eBible readable verse has no square bracket; CrossWire added-word markup encloses the stray bracket",
+          "limitation": "Same eBible rendering omits the local balanced brackets in Prov30:31; absence does not establish original-edition bracket semantics."
+        },
+        {
+          "id": "PROV-BRACKET-CLOSE",
+          "operation": "Insert ] after него (possibly after comma: separate unverified punctuation boundary)",
+          "status": "unaccepted",
+          "support": "Would mechanically balance local bracket near opening",
+          "limitation": "No consulted authoritative edition page attests a bracketed него; mechanical balance is not textual evidence."
+        }
+      ],
+      "decisionNeeded": "Keep both alternatives as candidates. No bracket-content facts or broader suffix release until a bracket-preserving, edition-identified witness is personally inspected and independently checked.",
+      "minimumNextWitness": "Readable scan or authorized full text of the selected Synodal edition: title/edition and bracket legend, Prov29:5-7 and Prov30:29-33, plus verification of bracket extents through31:31. Record page/line capture hash and distinguish italics/additions from square brackets.",
+      "whyNotAutomaticReplacement": "eBible also differs at Prov30:26 (домы/дома),31:6 (душею/душою),31:31 (final punctuation). Substituting its entire suffix would silently choose another textual/typographic revision."
+    }
+  ],
+  "nonDecisions": [
+    "No accepted official Synodal digital edition established",
+    "No full-canon mapping, semantic review or distribution-rights certification",
+    "No corpus/manifest/reference/data changes",
+    "No O3a closure and no quarantine release",
+    "No text critical judgment on Hebrew/Greek original"
+  ],
+  "reviewHandoff": "Root editorial decision and another independent reader are required before any separate text revision/overlay is materialized or admitted."
+}

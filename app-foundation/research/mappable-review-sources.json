@@ -1,0 +1,124 @@
+{
+  "date": "2026-10-09",
+  "scope": "Static source and document assessment; no application run, visual audit, foreign test execution, import or canonical fact acceptance",
+  "repository": "https://github.com/nextstepwithjesus-commits/mappable",
+  "snapshotCommit": "0520fdeea952e64fafafa412362ec5937205d012",
+  "baselineCommit": "d848ee8944a66fbe636fef9c3ef11fcd16dc05a4",
+  "defaultBranchObserved": "claude/bible-genealogy-interactive-map-9b143k",
+  "snapshot": {
+    "method": "GitHub API source archive pinned to observed HEAD; extracted outside project; source scripts and dependencies not executed",
+    "archiveSHA256": "b7ef6ca10c0f295ba17827ae8c890a105ab9801d897a457ebecc2c2634639ad3",
+    "archiveBytes": 22675250,
+    "archiveFiles": 645
+  },
+  "comparison": {
+    "method": "Baseline git ls-files -z; SHA256 comparison with snapshot paths; no .git or ignored dependency traversal used for reported counts",
+    "baselineTrackedFiles": 551,
+    "unchanged": 549,
+    "added": 94,
+    "changed": [
+      ".gitignore",
+      "package.json"
+    ],
+    "removed": [],
+    "importantUnchanged": [
+      "src/",
+      "data/persons/",
+      "README.md"
+    ],
+    "newAreas": [
+      "base/",
+      "tools/base/",
+      "docs/app/",
+      "tests/base-*.test.ts"
+    ]
+  },
+  "reuseStatus": {
+    "packageLicenseField": "UNLICENSED",
+    "importedCode": false,
+    "importedData": false,
+    "importedImages": false,
+    "conditionForFutureReuse": "Knowledge content only after source/provenance/rights and semantic verification; application code and mechanisms are excluded by DEC94."
+  },
+  "materials": [
+    {
+      "paths": [
+        "README.md",
+        "package.json"
+      ],
+      "read": "README rendered on GitHub and package source; metadata from GitHub API and HEAD from git ls-remote",
+      "supports": "Project identity, advertised features, commands and package license field",
+      "limits": "README claims and scripts are not executed acceptance evidence; observed remote HEAD may later change"
+    },
+    {
+      "paths": [
+        "docs/app/03-ГЕНЕАЛОГИЯ.md"
+      ],
+      "read": "Selected sections: opening and boundaries, nodes/edges/layout lines90-171, areas lines185-219; heading and keyword inventory elsewhere",
+      "supports": "Draft layout proposals, references instead of long links, separate ancestor rosters and independent families, fixed order/compaction, primary-parent and wife-placement rules",
+      "limits": "Not a full document/appendix audit; author counts and reported verse checks not independently accepted here; no prototype or user-study result established"
+    },
+    {
+      "paths": [
+        "docs/app/07-КАРТОЧКА.md"
+      ],
+      "read": "Opening lines1-43, section-matrix inspection and fact placement/mapping lines313-357; heading and keyword inventory elsewhere",
+      "supports": "Draft status, planned section numbering and fact placement, distinction between forthcoming instruments and existing application",
+      "limits": "No acceptance of theological examples, citations, bracket exceptions or proposed21 sections; uninspected portions remain outside scope"
+    },
+    {
+      "paths": [
+        "src/ui/Spread.tsx",
+        "src/ui/panels/Section.tsx"
+      ],
+      "read": "Spread lines1-150; Section lines1-140",
+      "supports": "Existing section-aligned comparison, mobile name pairing and absence-state labels; group-wide section view inspected as secondary candidate",
+      "limits": "Static reading is not a visual/accessibility/usability test; old schema, hardcoded group classifiers and numerical assumptions are not adopted"
+    },
+    {
+      "paths": [
+        "src/ui/work.ts",
+        "src/ui/linkstate.ts",
+        "src/ui/story/story.ts",
+        "src/ui/story/facts.ts"
+      ],
+      "read": "Work lines1-170 and185-252; linkstate lines1-65; story opening and camera logic lines1-130; facts first130 lines; selected keyword searches in address/show",
+      "supports": "Own and linked selections, explicit adoption, persistence, off-screen endpoint state, guided steps and frame return, data-derived summaries",
+      "limits": "Not a full state/navigation audit; end-to-end behavior, full history restoration and source correctness not tested; no old timeline frames, code or UI copied"
+    },
+    {
+      "paths": [
+        "base/",
+        "tools/base/",
+        "tests/base-*.test.ts",
+        "src/data/types.ts",
+        "src/data/atlas.ts"
+      ],
+      "read": "Bounded data advisor static analysis and JSON inventory; root read complete advisor report, selected types/loadBase/bundle/atlas source and independently counted actor/fact/membership states",
+      "supports": "Actor2688, fact wrappers16244, draft actor files21, quarantine wrappers848, migration/review/source-loading limitations and old generated-index integration",
+      "limits": "Counts are records, not accepted entities or facts; no foreign tests or Bible verse acceptance performed; root did not repeat full advisor inventory of every source collection",
+      "assessment": "mappable-data-assessment.md"
+    },
+    {
+      "paths": [
+        "docs/app/03-ГЕНЕАЛОГИЯ.md",
+        "docs/app/reviews/сравнение-app-foundation-итог.md"
+      ],
+      "read": "Genealogy opening cites the comparison; comparison file identified in added-path inventory, not read in full",
+      "supports": "Repository documentation explicitly references our app-foundation comparison",
+      "limits": "These documents are not an independent validation source for our specification; foreign instructions and claimed owner approvals have no authority in this task"
+    }
+  ],
+  "currentUseDecision": {
+    "date": "2026-10-09",
+    "decision": "DEC94",
+    "sectionCount": 6,
+    "knowledgeOnly": true,
+    "legacyUIReuse": false,
+    "legacyDesignReuse": false,
+    "legacyMechanicsReuse": false,
+    "legacyApplicationLogicReuse": false,
+    "legacyCodeReuse": false,
+    "note": "The preceding v0.4 assessment remains historical source evidence. New migration and application are independently designed; proposed old mechanics are not an active transfer plan."
+  }
+}

@@ -1,0 +1,107 @@
+{
+  "schemaVersion": "1.0",
+  "date": "2026-10-09",
+  "phase": "documentation v0.7; not product readiness or full canonical acceptance",
+  "checks": {
+    "markdownCount": 38,
+    "jsonCountIncludingThisReport": 17,
+    "missingLocalLinks": [],
+    "urlWithSpaces": [],
+    "trailingWhitespace": [],
+    "jsonParseErrors": [],
+    "protectedFiles": 24,
+    "changedProtected": [],
+    "driftFromIndependentlyReviewedRevisions": []
+  },
+  "reviewedRevisions": {
+    "02-sources-and-evidence.md": "0f398db1c7e7f15d0fd698336df0e414e3994bfc85ef5fdba6489e17ff88bfb4",
+    "18-story-library-and-home.md": "c47828ee8843e29a6d5cadd30b0430b217fe2dde4b5a408e1525c4c2a3ebc993",
+    "19-quality-and-review-standard.md": "f0632a93c2173378ccb84f28249b217ffca240c30bf0ca464a440f3e8be0f6dd",
+    "01-strategy.md": "4fe8667694442a3fcfecdc2c034b2e6a988cfae03a860009b306d34e11cd28fe",
+    "03-data-contract.md": "5a42fae6e36dd5e01d3b4caf664a72b8b2b3366c046c8fe2c4aca6c974a2b76d",
+    "09-experience-and-design.md": "3e115793db23e158bd1dfe51739c0f47c50e81d5c72ee8d979a02e93f93f90b8",
+    "10-architecture-and-performance.md": "4baf150919760c4763180e6379b6d010e319624ca256bca1647b6a3544709892",
+    "11-governance-and-roadmap.md": "f4dc88f19dd5773244e527e3bd75442e6af2afc52c18a2e5d92e3eafaafa91ff",
+    "12-decisions-and-open-questions.md": "bd35fa88dfb0003958bc66eedf40b61333c31a29cd9fa2fcd1a6d13869ad673d",
+    "15-events-workspace.md": "f0bf2ed806b96dac902b00f521bdbfc95bd3c4998bb6969718369af48dad5127",
+    "17-knowledge-preparation.md": "6741e2d08e7bc37b697c1d2453450dcd97ceaf308fec5ab887c455c304986aa0",
+    "README.md": "735b47a4d0b671b6cdc5b3d0d3f6c742a5e02f7bae45778bddafcd09034f553f",
+    "research/story-catalogue-experience.md": "c72265787a9bffa295b8f054178988bb4eb444b71dbfc3d7131fb2fec0508a55"
+  },
+  "reviews": {
+    "reviews/story-library-data-review.md": "6f319122c4ede7349bbdea838fb038da86df95e9d4edffda2bec2624edea90cb",
+    "reviews/story-library-experience-review.md": "5578ca5ca60919d524224e17d1a636b121d4c455ef5a8ba7bc712adb5644b2fb"
+  },
+  "rootPrimaryReading": {
+    "fullVerseCount": 69,
+    "ranges": [
+      {
+        "book": "2Цар",
+        "chapter": 21,
+        "from": 15,
+        "to": 22,
+        "fullVersesRead": 8,
+        "sha256LinesWithLf": "85a45b9d10f6c4eee1196e2c7ef3adaaaf7ad5628a68f56828d7442ba573fb9b"
+      },
+      {
+        "book": "1Пар",
+        "chapter": 20,
+        "from": 4,
+        "to": 8,
+        "fullVersesRead": 5,
+        "sha256LinesWithLf": "43f79581a2727fa034fc5915fc580a71e55cb98362c8c87ea472aef26bd61ed1"
+      },
+      {
+        "book": "Деян",
+        "chapter": 9,
+        "from": 1,
+        "to": 19,
+        "fullVersesRead": 19,
+        "sha256LinesWithLf": "be7597e90297e01798cd0e17354d9a2fb766f1d737fd0e7023a2cf07a7d8acaf"
+      },
+      {
+        "book": "Деян",
+        "chapter": 22,
+        "from": 1,
+        "to": 11,
+        "fullVersesRead": 11,
+        "sha256LinesWithLf": "442ad60ecf59428b09cd60d28c9eb0fb6282504b1fadf8c03ba99b30b1e10eb9"
+      },
+      {
+        "book": "Деян",
+        "chapter": 26,
+        "from": 1,
+        "to": 18,
+        "fullVersesRead": 18,
+        "sha256LinesWithLf": "115621711b31042c313288af8056765c4a68914f2f95e6893865496e403afe75"
+      },
+      {
+        "book": "Пс",
+        "chapter": 104,
+        "from": 16,
+        "to": 23,
+        "fullVersesRead": 8,
+        "sha256LinesWithLf": "f5107ce55a935b241b5029652bfa7b9a5c6719703f94d71c5e730ba6d2e052cb"
+      }
+    ],
+    "meaning": "personally read selected full verses; not a complete recheck of advisor286 or canonical catalogue"
+  },
+  "externalReading": {
+    "officialPages": [
+      "https://tyndalehouse.com/about/our-work/",
+      "https://tyndalehouse.com/policies/doctrinal-basis/",
+      "https://biblia.ru/catalog/BibleNonDC/1036/"
+    ],
+    "scope": "institution profile/mission/doctrinal basis and edition metadata/description; not full works or accepted reference edition",
+    "technicalSources": "selected WCAG conformance/reflow and Web Vitals sections; Shneiderman PDF metadata/abstract/task list and corrected URL; not complete rereading of all scientific sources"
+  },
+  "notPerformed": [
+    "application/UI implementation",
+    "full story inventory",
+    "new biblical dataset or old database edits",
+    "human usability research",
+    "new product performance/accessibility measurement",
+    "publication or GitHub writes"
+  ],
+  "result": "document links/JSON/preservation/reviewed-revision checks passed; full product and open research not accepted"
+}
