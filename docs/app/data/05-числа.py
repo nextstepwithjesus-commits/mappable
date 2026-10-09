@@ -668,7 +668,9 @@ ties_after = {r['friendly_id'] for r in rows if rival(r)}
 merged = [n for n in ties_before if n not in ties_after]
 print(f'порядок правил знака (Н-1): близких соперников без слияния {len(ties_before)}; после слияния '
       f'кандидатов ближе {NEAR_KM} км — {len(ties_after)}; стали одним знаком {len(merged)}: '
-      + ', '.join(f'{n} — {degree(byname[n])[0]} {degree(byname[n])[1]}' for n in merged))
+      + ', '.join(f'{n} — {degree(byname[n])[0]} {degree(byname[n])[1]}, '
+                  f'до второго кандидата {hav(id_point(positive(byname[n])[0]), id_point(positive(byname[n])[1])):.1f} км'
+                  for n in merged))
 for title, nm in SKETCH.items():
     no = [f'{n} ({sign(n)[1]})' for n in nm if n in byname and sign(n)[0] is None]
     print(f'  [{title}] без знака: ' + (', '.join(no) or '—'))
@@ -855,7 +857,7 @@ VIEWS = {
     '11.2 Исход Чис 33:5–15': ['Rameses', 'Baal-zephon', 'Marah', 'Elim', 'Red Sea 3', 'Sin',
                                'Dophkah', 'Alush', 'Rephidim', 'Mount Sinai'],
     '11.3 земля Рувима': ['Aroer 1', 'Medeba', 'Heshbon', 'Dibon 1', 'Baal-meon', 'Kiriathaim 1', 'Sibmah',
-                          'Beth-jeshimoth', 'Bezer'],
+                          'Beth-jeshimoth', 'Bezer', 'Bamoth-baal', 'Jahaz', 'Mephaath', 'Zereth-shahar'],
     '11.4 Вефиль и Гай': ['Bethel 1', 'Ai 1'],
     '11.5 Павел, Деян 13–14': ['Antioch 1', 'Seleucia', 'Salamis', 'Paphos', 'Perga', 'Antioch 2', 'Iconium',
                                'Lystra', 'Derbe', 'Attalia'],
@@ -1072,7 +1074,7 @@ PORT_KM = 5
 ports = []
 for n in ('Antioch 1', 'Seleucia', 'Salamis', 'Paphos', 'Perga', 'Attalia', 'Sidon', 'Myra', 'Patara', 'Tyre'):
     d = to_water(*P(n))
-    ports.append(f'{n} {d:.0f} км — ' + ('порт: к водному пути линией «по морю»' if d <= PORT_KM
+    ports.append(f'{n} {d:.0f} км — ' + ('порт: к водному пути той же линией, что путь по морю' if d <= PORT_KM
                                         else 'не у моря: пунктир по суше до воды'))
 print(f'до воды (без запаса), порт — не дальше {PORT_KM} км: ' + '; '.join(ports))
 

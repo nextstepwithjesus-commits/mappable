@@ -75,3 +75,36 @@ inc = [i for i in humans if i not in has_parent and i not in nd_parents]
 print('Людей:', len(humans), '; неполных (раздел 4 не составлен):', len(inc),
       dict(collections.Counter(sz[i] for i in inc)))
 print('Записей «silent» без стихов:', sum(1 for n in nod if n['kind'] == 'silent' and not n.get('refs')))
+
+# --- Редакция 4 ---
+# § 2: строка вида у человека — роль есть или нет (арт-директор, № 15).
+role = collections.Counter(bool(acts[i].get('roles')) for i in humans)
+print('Людей с ролью:', role[True], '; без роли:', role[False])
+# § 5.1: заголовки простого слоя согласуются по полю пола; без пола — заголовок второго слоя.
+sex = collections.Counter(acts[i].get('sex') or 'нет' for i in humans)
+print('Пол у людей:', dict(sex))
+
+
+# § 6.3.9: контраст WCAG 2.x по токенам R8 § 4.2 (светлая / тёмная).
+def lum(h):
+    c = [int(h[k:k + 2], 16) / 255 for k in (1, 3, 5)]
+    c = [x / 12.92 if x <= 0.03928 else ((x + 0.055) / 1.055) ** 2.4 for x in c]
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]
+
+
+def ratio(a, b):
+    la, lb = sorted((lum(a), lum(b)), reverse=True)
+    return (la + 0.05) / (lb + 0.05)
+
+
+T = {
+    'лист': ('#FFFFFF', '#1E2733'), 'подложка': ('#E8ECF1', '#2A3442'),
+    'чернила': ('#18202C', '#E8ECF1'), 'чернила-2': ('#4A5463', '#A9B3C1'),
+    'сетка': ('#C9D0DA', '#3A4555'), 'выбор': ('#FFD43B', '#F0D04A'),
+    'текст на выборе': ('#18202C', '#161D27'),
+    'Мф 1': ('#17599A', '#9AD1F7'), 'Лк 3': ('#CC5596', '#E4579C'),
+}
+for a, b in (('чернила', 'лист'), ('чернила-2', 'лист'), ('чернила', 'подложка'),
+             ('чернила-2', 'подложка'), ('текст на выборе', 'выбор'),
+             ('Мф 1', 'лист'), ('Лк 3', 'лист'), ('сетка', 'лист')):
+    print(f'контраст {a} — {b}: светлая {ratio(T[a][0], T[b][0]):.2f}; тёмная {ratio(T[a][1], T[b][1]):.2f}')
