@@ -9,7 +9,6 @@
 """
 import html
 import re
-import runpy
 import sys
 from pathlib import Path
 
@@ -20,8 +19,8 @@ tpl = ' '.join(re.findall(r'<template id="t-[^"]+">(.*?)</template>', src, re.S)
 tpl = re.sub(r'<svg.*?</svg>', ' ', tpl, flags=re.S)
 text = html.unescape(re.sub(r'<[^>]+>', ' ', tpl))
 text = text.replace(' ', ' ')
-tmp = HERE / 'shots' / '_screens.txt'
-tmp.parent.mkdir(exist_ok=True)
+import tempfile
+tmp = Path(tempfile.mkdtemp()) / 'screens.txt'
 tmp.write_text(text, encoding='utf-8')
 
 # слова атласа и интерфейса в «» — не цитаты Писания
@@ -30,7 +29,6 @@ EXTRA_ATLAS = {
     'наложница', '[трех сынов]', 'жена', 'Дома и народы', 'Чтение главы', 'Синопсис родословий',
 }
 sys.argv = ['07-цитаты.py', str(tmp)]
-g = runpy.run_path(str(ROOT / 'docs/app/data/07-цитаты.py'), init_globals={}, run_name='not_main') if False else None
 code = (ROOT / 'docs/app/data/07-цитаты.py').read_text(encoding='utf-8')
 code = code.replace("ATLAS = {", "ATLAS = EXTRA_ATLAS | {", 1)
 import os

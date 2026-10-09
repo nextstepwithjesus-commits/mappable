@@ -308,7 +308,7 @@ svg.geo .pt circle { fill: var(--sheet); stroke: var(--ink); stroke-width: 2.5; 
 svg.geo text { font: 400 15px var(--ui); fill: var(--ink); paint-order: stroke; stroke: var(--sub); stroke-width: 4px; stroke-linejoin: round; }
 svg.geo .pn { font-weight: 700; }
 .geo-fig figcaption { font: 400 var(--fs-s)/1.45 var(--ui); color: var(--ink2); margin-top: 6px; }
-.places li { display: grid; grid-template-columns: 1.8em minmax(0, 1fr) auto; column-gap: 8px; align-items: center; padding: 2px 0; border-bottom: 1px solid var(--grid); }
+.places li { display: grid; max-width: 640px; grid-template-columns: 1.8em minmax(0, 1fr) auto; column-gap: 8px; align-items: center; padding: 2px 0; border-bottom: 1px solid var(--grid); }
 .gnum { font: 700 var(--fs-s) var(--ui); font-variant-numeric: tabular-nums; }
 .gtxt { line-height: 1.35; padding: 6px 0; }
 .gname { font-weight: 700; font-size: calc(var(--fs) - 2px); }
@@ -321,12 +321,13 @@ svg.geo { max-height: 470px; }
 .tabs a[aria-current="page"] { border-bottom-color: var(--ink); font-weight: 700; }
 .books { columns: 4 11em; column-gap: 24px; margin: 8px 0 20px; }
 .books li a { display: inline-flex; align-items: center; min-height: var(--tap); }
+.ilist { max-width: 760px; }
 .ilist li { display: flex; flex-wrap: wrap; align-items: center; gap: 0 12px; padding: 2px 0; border-bottom: 1px solid var(--grid); }
 .iname { font-weight: 700; display: inline-flex; align-items: center; min-height: var(--tap); }
 .isub { font: 400 var(--fs-s) var(--ui); color: var(--ink2); }
 
 /* Поиск */
-.res { padding: 8px 0; border-bottom: 1px solid var(--grid); }
+.res { padding: 8px 0; border-bottom: 1px solid var(--grid); max-width: 760px; }
 .rname { font-weight: 700; display: inline-flex; align-items: center; min-height: var(--tap); font-size: calc(var(--fs) + 2px); }
 .rsub { font: 400 var(--fs-s) var(--ui); color: var(--ink2); margin-left: 8px; }
 .rkind { display: block; font: 400 var(--fs-s) var(--ui); color: var(--ink2); }

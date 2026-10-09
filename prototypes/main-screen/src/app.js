@@ -499,6 +499,15 @@
     hostEl.hidden = show === undefined ? !hostEl.hidden : !show;
   }
   if (params.get('host') === '1') toggleHost(true);
+  // на телефоне без клавиатуры: пять быстрых касаний по названию «Библия наглядно»
+  var brandTaps = [];
+  document.querySelector('.top').addEventListener('click', function (e) {
+    if (!e.target.closest('.brand')) return;
+    var now = Date.now();
+    brandTaps = brandTaps.filter(function (t) { return now - t < 2500; });
+    brandTaps.push(now);
+    if (brandTaps.length >= 5) { brandTaps = []; toggleHost(true); }
+  });
   if (countEl) countEl.textContent = String(log.length);
   var partEl = hostEl.querySelector('[data-h-part]');
   partEl.value = LS.get('bn-part', '');
