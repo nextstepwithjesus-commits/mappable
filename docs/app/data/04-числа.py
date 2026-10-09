@@ -404,7 +404,7 @@ for r, w in RED:
 books = sorted({r.split()[0] for r, _ in RED}, key=lambda b: [x for x, _ in RED].index(next(x for x, _ in RED if x.startswith(b + ' '))))
 print(f'стихов {len(RED)}, других книг {len(books)}: {", ".join(books)} (R7 называл 7; полный пересчёт по правилу — скриптом каталога)')
 
-print('\n== 11. Тиверий, Ирод, три Пасхи (рецензия библеиста № 8) ==')
+print('\n== 11. Тиверий, Ирод, Пасхи Иоанна (рецензия библеиста № 8, Р2-7) ==')
 t15 = n('Лк 3:1', 'пятнадцатый')
 herod = anch['herod-death']['value']
 for name, ty in (('от единоличного правления', 28), ('от соправления', 26)):
