@@ -2,8 +2,9 @@
 
   npm run -s find -- "Каинан"            везде: решения, документы, исследования, рецензии, журнал, база лиц, код
   npm run -s find -- "Каинан" --only docs  только docs/app (также: base, code, all)
+  npm run -s find -- "ОБЯЗАТЕЛЬНО" --all    все строки, без сокращения «… ещё N»; запрос прописными — с учётом регистра
   npm run -s find -- --dec В-17          текст решения владельца В-17
-  npm run -s find -- --sec 07 8.3        раздел 8.3 документа 07 целиком
+  npm run -s find -- --sec 07 8.3        раздел 8.3 документа 07 целиком («§ 8.3» тоже); --sec R12 3 — раздел исследования
   npm run -s find -- --person Давид      лица базы: id, уточнение, том
 
 Без учёта регистра; «ё» и «е» не различаются. Показывает файл:строку.
@@ -23,9 +24,9 @@ def read(p):
 
 
 GROUPS = [
-    ('Решения владельца', [f'{APP}/00-РЕГЛАМЕНТ.md']),
+    ('Решения и вопросы владельца', [f'{APP}/00-РЕГЛАМЕНТ.md', f'{APP}/ВОПРОСЫ.md']),
     ('Журнал и карта', [f'{APP}/ЖУРНАЛ.md', f'{APP}/КАРТА.md']),
-    ('Документы', sorted(glob.glob(f'{APP}/[0-9][0-9]-*.md'))),
+    ('Документы', sorted(x for x in glob.glob(f'{APP}/[0-9][0-9]-*.md') if not os.path.basename(x).startswith('00-'))),
     ('Исследования', sorted(glob.glob(f'{APP}/research/*.md'))),
     ('Рецензии и очереди', sorted(glob.glob(f'{APP}/reviews/*.md'))),
     ('Данные: описания и пробы', sorted(glob.glob(f'{APP}/data/**/*.md', recursive=True))),
@@ -35,8 +36,14 @@ CODE = [('Код базы и инструменты', sorted(glob.glob('tools/ba
         ('Прототипы', sorted(glob.glob('prototypes/*/*.md') + glob.glob('prototypes/*/*.py') + glob.glob('prototypes/*/src/*')))]
 
 
+SHOW = 3
+
+
 def search(q, only):
-    nq = norm(q)
+    # запрос прописными (ОБЯЗАТЕЛЬНО, ВП) ищется с учётом регистра
+    exact = len(q) > 1 and q.isupper()
+    nq = q.replace('ё', 'е') if exact else norm(q)
+    match = (lambda l: nq in l.replace('ё', 'е')) if exact else (lambda l: nq in norm(l))
     groups = []
     if only in ('all', 'docs'):
         groups += GROUPS
@@ -49,7 +56,7 @@ def search(q, only):
             if not os.path.exists(p) or p.endswith('УКАЗАТЕЛЬ.md'):
                 continue
             ls = read(p).split('\n')
-            found = [(i, l) for i, l in enumerate(ls, 1) if nq in norm(l)]
+            found = [(i, l) for i, l in enumerate(ls, 1) if match(l)]
             if found:
                 hits.append((p, found))
         if not hits:
@@ -59,13 +66,13 @@ def search(q, only):
         print(f'\n=== {name}: {n} ===')
         for p, found in hits:
             print(f'  {p}  ({len(found)})')
-            for i, l in found[:3]:
+            for i, l in found[:SHOW]:
                 s = l.strip()
-                k = norm(s).find(nq)
+                k = (s.replace('ё', 'е') if exact else norm(s)).find(nq)
                 a = max(0, k - 70)
                 print(f'    {i}: {"…" if a else ""}{s[a:a + 170]}{"…" if len(s) > a + 170 else ""}')
-            if len(found) > 3:
-                print(f'    … ещё {len(found) - 3}')
+            if len(found) > SHOW:
+                print(f'    … ещё {len(found) - SHOW} (флаг --all покажет всё)')
     if only in ('all', 'base'):
         total += person(q, quiet_header=False)
     if not total:
@@ -78,7 +85,8 @@ def person(q, quiet_header=True):
     for p in sorted(glob.glob('base/actors/*.json')):
         for a in json.load(open(p, encoding='utf-8'))['items']:
             forms = [n.get('form', '') for n in a.get('names', [])]
-            if any(norm(f).startswith(nq) for f in forms) or nq in norm(a['id']):
+            stem = nq[:-2] if len(nq) > 5 else (nq[:-1] if len(nq) > 3 else nq)
+            if any(norm(f).startswith(nq) or (norm(f).startswith(stem) and len(norm(f)) <= len(nq) + 1) for f in forms) or nq in norm(a['id']):
                 out.append(f'  {a["id"]} — {", ".join(forms)}; {a.get("disambig") or "—"}; вид {a.get("kind")}; значимость {a.get("prominence", "—")}; {os.path.basename(p)}')
     if out:
         print(f'\n=== База лиц: {len(out)} ===')
@@ -92,7 +100,11 @@ def person(q, quiet_header=True):
 
 def decision(code):
     t = read(f'{APP}/00-РЕГЛАМЕНТ.md').split('\n')
-    code = code.replace('B', 'В')
+    code = code.strip().upper().replace('B', 'В')
+    if code.isdigit():
+        code = 'В-' + code
+    if not code.startswith('В-'):
+        code = 'В-' + code.lstrip('В')
     for i, l in enumerate(t):
         if re.match(rf'^\*\*{re.escape(code)}[\s(.]', l) or re.match(rf'^\|\s*{re.escape(code)}\s*\|', l):
             j = i + 1
@@ -105,12 +117,13 @@ def decision(code):
 
 
 def section(doc, sec):
-    files = glob.glob(f'{APP}/{doc}-*.md')
+    sec = sec.replace('§', '').strip()
+    files = glob.glob(f'{APP}/{doc}-*.md') or glob.glob(f'{APP}/research/{doc}-*.md') or glob.glob(f'{APP}/research/{doc.upper()}-*.md')
     if not files:
         print(f'Документ {doc} не найден.'); return
     p = files[0]
     t = read(p).split('\n')
-    pat = re.compile(rf'^(#+)\s+(§\s*)?{re.escape(sec)}[.\s]')
+    pat = re.compile(rf'^(#+)\s+(§\s*)?\(?{re.escape(sec)}[.)\s]')
     for i, l in enumerate(t):
         m = pat.match(l)
         if m:
@@ -128,10 +141,13 @@ if __name__ == '__main__':
     a = sys.argv[1:]
     if not a or a[0] in ('-h', '--help'):
         print(__doc__); sys.exit(0)
+    if '--all' in a:
+        SHOW = 10 ** 9
+        a = [x for x in a if x != '--all']
     if a[0] == '--dec' and len(a) > 1:
         decision(a[1])
     elif a[0] == '--sec' and len(a) > 2:
-        section(a[1], a[2])
+        section(a[1], ' '.join(a[2:]))
     elif a[0] == '--person' and len(a) > 1:
         person(' '.join(a[1:]))
     else:

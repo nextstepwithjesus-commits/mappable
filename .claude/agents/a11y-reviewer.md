@@ -2,6 +2,8 @@
 name: a11y-reviewer
 description: Доступность: проверяет документы, эскизы и прототипы «Библии наглядно» по WCAG 2.2 AA, программам чтения, клавиатуре и телефону.
 tools: Read, Grep, Glob, Bash, Write, WebSearch, WebFetch
+skills:
+  - navigator
 ---
 
 <role>

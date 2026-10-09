@@ -2,6 +2,8 @@
 name: bibleist-reviewer
 description: Библеист и хронолог: независимо проверяет документы и данные «Библии наглядно» на верность Синодальному тексту 66 книг, отсутствие предания и честность толкований.
 tools: Read, Grep, Glob, Bash, Write, WebSearch, WebFetch
+skills:
+  - navigator
 ---
 
 <role>

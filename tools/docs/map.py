@@ -43,15 +43,45 @@ def cell(s):
     return s.replace('|', '\\|')
 
 
+ROLE_FILE = [('архитектур', 'архитектура'), ('арт-директор', 'арт-директор'), ('доступност', 'доступность'),
+             ('педагог', 'педагог'), ('географ', 'географ'), ('библеист', 'библеист'), ('интерфейс', 'интерфейс'), ('данные', 'данные')]
+
+
+def panel():
+    """Панель рецензентов по таблице регламента § 7: номер документа → роли (суффиксы файлов рецензий)."""
+    reg = read(f'{APP}/00-РЕГЛАМЕНТ.md')
+    out = {}
+    for m in re.finditer(r'^\|\s*(\d\d)\s[^|]*\|\s*координатор\s*\|\s*([^|]+)\|', reg, re.M):
+        roles = []
+        for part in m.group(2).split(';'):
+            for key, suf in ROLE_FILE:
+                if key in part.lower():
+                    roles.append(suf)
+                    break
+        out[m.group(1)] = roles
+    return out
+
+
 def docs_table():
     rows = []
+    pan = panel()
     for p in sorted(glob.glob(f'{APP}/[0-9][0-9]-*.md')):
         t = read(p)
         num = os.path.basename(p)[:2]
         revs = sorted(glob.glob(f'{APP}/reviews/{num}-*.md'))
         rv = ', '.join(f'[{os.path.basename(r)[3:-3]}](reviews/{os.path.basename(r)})' for r in revs) or '—'
-        rows.append(f'| [{num}]({os.path.basename(p)}) | {cell(title(t, p))} | {cell(status(t))} | {lines(t)} | {rv} |')
-    return ['| № | Документ | Статус (первая фраза) | Строк | Рецензии |', '|---|---|---|---|---|'] + rows
+        need = pan.get(num, [])
+        have = [r for r in need if os.path.exists(f'{APP}/reviews/{num}-рецензия-{r}.md')]
+        legacy = os.path.exists(f'{APP}/reviews/{num}-рецензии.md')
+        if not need or num == '00':
+            pn = '—'
+        elif legacy and not have:
+            pn = 'прежний порядок (2 рецензента)'
+        else:
+            miss = [r for r in need if r not in have]
+            pn = f'{len(have)} из {len(need)}' + (f'; нет: {", ".join(miss)}' if miss else '')
+        rows.append(f'| [{num}]({os.path.basename(p)}) | {cell(title(t, p))} | {cell(status(t))} | {lines(t)} | {pn} | {rv} |')
+    return ['| № | Документ | Статус (первая фраза) | Строк | Панель (регламент § 7) | Рецензии |', '|---|---|---|---|---|---|'] + rows
 
 
 def research_table():
@@ -73,13 +103,29 @@ def reviews_list():
     return out
 
 
+def mentions(code):
+    pat = re.compile(re.escape(code) + r'(?!\d)')
+    found = []
+    for p in sorted(glob.glob(f'{APP}/[0-9][0-9]-*.md')) + sorted(glob.glob(f'{APP}/research/*.md')):
+        if os.path.basename(p).startswith('00-'):
+            continue
+        if pat.search(read(p)):
+            b = os.path.basename(p)
+            found.append(b[:2] if b[:2].isdigit() else b.split('-')[0])
+    return ', '.join(found) or '—'
+
+
 def decisions():
     t = read(f'{APP}/00-РЕГЛАМЕНТ.md')
-    out = ['| № | Дата | Решение | Строка |', '|---|---|---|---|']
-    for i, line in enumerate(t.split('\n'), 1):
+    ls = t.split('\n')
+    out = ['| № | Дата | Решение | Состояние | Где упоминается | Строка |', '|---|---|---|---|---|---|']
+    for i, line in enumerate(ls, 1):
         m = re.match(r'^\*\*(В-\d+)(?:\s*\(([^)]*)\))?\.\s*(.+?)\*\*', line)
         if m:
-            out.append(f'| {m.group(1)} | {m.group(2) or "—"} | {cell(m.group(3).rstrip("."))} | `00-РЕГЛАМЕНТ.md:{i}` |')
+            st = 'действует'
+            if i < len(ls) and ls[i].startswith('**Состояние:**'):
+                st = ls[i][len('**Состояние:**'):].strip()
+            out.append(f'| {m.group(1)} | {m.group(2) or "—"} | {cell(m.group(3).rstrip("."))} | {cell(st)} | {mentions(m.group(1))} | `00-РЕГЛАМЕНТ.md:{i}` |')
     if len(out) == 2:
         out.append('| — | — | решения записаны не в формате «**В-N (дата). …**» | — |')
     return out
@@ -91,7 +137,7 @@ def queue():
         return ['- очереди нет']
     t = read(p)
     out = []
-    sec, total, done = None, 0, 0
+    sec, total, done = 'Общие задачи (до первого раздела)', 0, 0
     def flush():
         if sec and total:
             out.append(f'- {sec}: задач {total}, сделано {done}, осталось {total - done}')
@@ -105,6 +151,35 @@ def queue():
                 done += 1
     flush()
     return out or ['- задач нет']
+
+
+def open_questions():
+    p = f'{APP}/ВОПРОСЫ.md'
+    if not os.path.exists(p):
+        return ['- реестра вопросов нет']
+    out = []
+    for line in read(p).split('\n'):
+        m = re.match(r'^\|\s*(ВП-\d+)\s*\|([^|]*)\|([^|]*)\|([^|]*)\|([^|]*)\|([^|]*)\|', line)
+        if m and (m.group(5).strip().startswith('открыт') or m.group(5).strip().startswith('отложен')):
+            out.append(f'- **{m.group(1)}** ({m.group(5).strip()}) {m.group(2).strip()} — рекомендация: {m.group(6).strip()}')
+    return out or ['- открытых вопросов нет']
+
+
+def debts():
+    out = []
+    try:
+        nod = json.load(open('base/nodata.json', encoding='utf-8'))['items']
+        out.append(f'- «нет сведений» без стихов: {sum(1 for n in nod if n.get("kind") == "silent" and not n.get("refs"))} записей')
+        ch = json.load(open('base/chrono.json', encoding='utf-8'))['items']
+        ep = [x for x in ch if 'epoch' in x['chrono']]
+        only = [x for x in ep if set(x['chrono']) == {'epoch'}]
+        out.append(f'- лиц с эпохой без стиха: {len(ep)}; из них только эпоха, без других сведений о времени: {len(only)}')
+    except Exception as e:
+        out.append(f'- база не прочитана: {e}')
+    if os.path.exists('tools/bible/brackets.tsv'):
+        rows = read('tools/bible/brackets.tsv').split('\n')[1:]
+        out.append(f'- мест в скобках, вид которых определён только по признакам: {sum(1 for r in rows if "по признакам" in r)} из {sum(1 for r in rows if r.strip())}')
+    return out
 
 
 def data_counts():
@@ -171,8 +246,12 @@ def legacy():
 
 
 def build_map():
+    if os.path.exists(MAP) and AUTO not in read(MAP):
+        sys.exit(f'В {MAP} нет маркера автоматической части — верните строку маркера, иначе карта задвоится')
     manual = read(MAP).split(AUTO)[0].rstrip() + '\n\n' if os.path.exists(MAP) else '# Карта проекта\n\n'
     parts = [AUTO, '',
+             '## Ждёт владельца (из `ВОПРОСЫ.md`)', '', *open_questions(), '',
+             '## Открытые долги (считает скрипт)', '', *debts(), '',
              '## Документы приложения', '', *docs_table(), '',
              '## Решения владельца (реестр — `00-РЕГЛАМЕНТ.md`)', '', *decisions(), '',
              '## Исследования', '', *research_table(), '',

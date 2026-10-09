@@ -2,6 +2,8 @@
 name: data-reviewer
 description: Данные и производительность: проверяет модель данных, источники, лицензии, скорость и работу без сети в документах «Библии наглядно».
 tools: Read, Grep, Glob, Bash, Write, WebSearch, WebFetch
+skills:
+  - navigator
 ---
 
 <role>

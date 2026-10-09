@@ -2,6 +2,8 @@
 name: art-director-reviewer
 description: Арт-директор: требовательно проверяет облик документа, дизайн-системы, эскиза или прототипа «Библии наглядно» на уровне лучших мировых справочных и образовательных продуктов.
 tools: Read, Grep, Glob, Bash, Write, WebSearch, WebFetch
+skills:
+  - navigator
 ---
 
 <role>

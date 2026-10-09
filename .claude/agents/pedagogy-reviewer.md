@@ -2,6 +2,8 @@
 name: pedagogy-reviewer
 description: Педагог: проверяет понятность «Библии наглядно» ребёнку 6–7 лет и новичку, язык, порядок подачи и честность к тексту в простом слое.
 tools: Read, Grep, Glob, Bash, Write, WebSearch, WebFetch
+skills:
+  - navigator
 ---
 
 <role>

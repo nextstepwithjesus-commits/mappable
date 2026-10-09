@@ -2,6 +2,8 @@
 name: ui-reviewer
 description: Интерфейс и типографика справочных страниц: проверяет механику, состояния, слои, телефон и согласованность правил с эскизами в документах «Библии наглядно».
 tools: Read, Grep, Glob, Bash, Write, WebSearch, WebFetch
+skills:
+  - navigator
 ---
 
 <role>

@@ -2,6 +2,8 @@
 name: ia-reviewer
 description: Архитектура информации и исследование пользователей: проверяет пути читателя, каталоги, поиск, переходы и планы проверок с людьми в документах «Библии наглядно».
 tools: Read, Grep, Glob, Bash, Write, WebSearch, WebFetch
+skills:
+  - navigator
 ---
 
 <role>

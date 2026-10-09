@@ -2,6 +2,8 @@
 name: geography-reviewer
 description: Историк-географ: проверяет места, отождествления, карты, области и пути в документах и данных «Библии наглядно».
 tools: Read, Grep, Glob, Bash, Write, WebSearch, WebFetch
+skills:
+  - navigator
 ---
 
 <role>
