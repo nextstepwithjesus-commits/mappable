@@ -1,0 +1,141 @@
+"""Поиск по проекту «Библия наглядно» для людей и агентов.
+
+  npm run -s find -- "Каинан"            везде: решения, документы, исследования, рецензии, журнал, база лиц, код
+  npm run -s find -- "Каинан" --only docs  только docs/app (также: base, code, all)
+  npm run -s find -- --dec В-17          текст решения владельца В-17
+  npm run -s find -- --sec 07 8.3        раздел 8.3 документа 07 целиком
+  npm run -s find -- --person Давид      лица базы: id, уточнение, том
+
+Без учёта регистра; «ё» и «е» не различаются. Показывает файл:строку.
+"""
+import glob, json, os, re, sys
+
+APP = 'docs/app'
+
+
+def norm(s):
+    return s.lower().replace('ё', 'е')
+
+
+def read(p):
+    with open(p, encoding='utf-8', errors='replace') as f:
+        return f.read()
+
+
+GROUPS = [
+    ('Решения владельца', [f'{APP}/00-РЕГЛАМЕНТ.md']),
+    ('Журнал и карта', [f'{APP}/ЖУРНАЛ.md', f'{APP}/КАРТА.md']),
+    ('Документы', sorted(glob.glob(f'{APP}/[0-9][0-9]-*.md'))),
+    ('Исследования', sorted(glob.glob(f'{APP}/research/*.md'))),
+    ('Рецензии и очереди', sorted(glob.glob(f'{APP}/reviews/*.md'))),
+    ('Данные: описания и пробы', sorted(glob.glob(f'{APP}/data/**/*.md', recursive=True))),
+    ('Правила проекта', ['CLAUDE.md'] + sorted(glob.glob('.claude/**/*.md', recursive=True))),
+]
+CODE = [('Код базы и инструменты', sorted(glob.glob('tools/base/*.ts') + glob.glob('tools/docs/*.py') + glob.glob(f'{APP}/data/*.py'))),
+        ('Прототипы', sorted(glob.glob('prototypes/*/*.md') + glob.glob('prototypes/*/*.py') + glob.glob('prototypes/*/src/*')))]
+
+
+def search(q, only):
+    nq = norm(q)
+    groups = []
+    if only in ('all', 'docs'):
+        groups += GROUPS
+    if only in ('all', 'code'):
+        groups += CODE
+    total = 0
+    for name, files in groups:
+        hits = []
+        for p in files:
+            if not os.path.exists(p) or p.endswith('УКАЗАТЕЛЬ.md'):
+                continue
+            ls = read(p).split('\n')
+            found = [(i, l) for i, l in enumerate(ls, 1) if nq in norm(l)]
+            if found:
+                hits.append((p, found))
+        if not hits:
+            continue
+        n = sum(len(f) for _, f in hits)
+        total += n
+        print(f'\n=== {name}: {n} ===')
+        for p, found in hits:
+            print(f'  {p}  ({len(found)})')
+            for i, l in found[:3]:
+                s = l.strip()
+                k = norm(s).find(nq)
+                a = max(0, k - 70)
+                print(f'    {i}: {"…" if a else ""}{s[a:a + 170]}{"…" if len(s) > a + 170 else ""}')
+            if len(found) > 3:
+                print(f'    … ещё {len(found) - 3}')
+    if only in ('all', 'base'):
+        total += person(q, quiet_header=False)
+    if not total:
+        print('Ничего не найдено.')
+
+
+def person(q, quiet_header=True):
+    nq = norm(q)
+    out = []
+    for p in sorted(glob.glob('base/actors/*.json')):
+        for a in json.load(open(p, encoding='utf-8'))['items']:
+            forms = [n.get('form', '') for n in a.get('names', [])]
+            if any(norm(f).startswith(nq) for f in forms) or nq in norm(a['id']):
+                out.append(f'  {a["id"]} — {", ".join(forms)}; {a.get("disambig") or "—"}; вид {a.get("kind")}; значимость {a.get("prominence", "—")}; {os.path.basename(p)}')
+    if out:
+        print(f'\n=== База лиц: {len(out)} ===')
+        print('\n'.join(out[:40]))
+        if len(out) > 40:
+            print(f'  … ещё {len(out) - 40}')
+    elif quiet_header:
+        print('Лиц не найдено.')
+    return len(out)
+
+
+def decision(code):
+    t = read(f'{APP}/00-РЕГЛАМЕНТ.md').split('\n')
+    code = code.replace('B', 'В')
+    for i, l in enumerate(t):
+        if re.match(rf'^\*\*{re.escape(code)}[\s(.]', l) or re.match(rf'^\|\s*{re.escape(code)}\s*\|', l):
+            j = i + 1
+            while j < len(t) and not re.match(r'^\*\*В-\d+|^## |^\|\s*В-\d+', t[j]):
+                j += 1
+            print(f'{APP}/00-РЕГЛАМЕНТ.md:{i + 1}')
+            print('\n'.join(t[i:j]).rstrip())
+            return
+    print(f'Решение {code} не найдено.')
+
+
+def section(doc, sec):
+    files = glob.glob(f'{APP}/{doc}-*.md')
+    if not files:
+        print(f'Документ {doc} не найден.'); return
+    p = files[0]
+    t = read(p).split('\n')
+    pat = re.compile(rf'^(#+)\s+(§\s*)?{re.escape(sec)}[.\s]')
+    for i, l in enumerate(t):
+        m = pat.match(l)
+        if m:
+            lvl = len(m.group(1))
+            j = i + 1
+            while j < len(t) and not (re.match(r'^(#+)\s', t[j]) and len(re.match(r'^(#+)', t[j]).group(1)) <= lvl):
+                j += 1
+            print(f'{p}:{i + 1}')
+            print('\n'.join(t[i:j]).rstrip())
+            return
+    print(f'Раздел {sec} в {p} не найден.')
+
+
+if __name__ == '__main__':
+    a = sys.argv[1:]
+    if not a or a[0] in ('-h', '--help'):
+        print(__doc__); sys.exit(0)
+    if a[0] == '--dec' and len(a) > 1:
+        decision(a[1])
+    elif a[0] == '--sec' and len(a) > 2:
+        section(a[1], a[2])
+    elif a[0] == '--person' and len(a) > 1:
+        person(' '.join(a[1:]))
+    else:
+        only = 'all'
+        if '--only' in a:
+            k = a.index('--only'); only = a[k + 1]; a = a[:k] + a[k + 2:]
+        search(' '.join(a), only)
