@@ -186,7 +186,7 @@ def cr(a,b):
   return round((max(la,lb)+0.05)/(min(la,lb)+0.05),2)
 def mix(f,b,a): return [a*x+(1-a)*y for x,y in zip(rgb(f),rgb(b))]
 PAIRS=[('чернила','лист'),('чернила','фон'),('чернила2','лист'),('чернила2','фон'),('линия','лист'),('линия','фон'),('линия','подложка'),
-       ('мф','лист'),('мф','фон'),('лк','лист'),('лк','фон'),('чернила','выбор'),('лист','выбор'),('чернила','мф'),('лист','мф'),('чернила','лк'),('лист','лк'),
+       ('мф','лист'),('мф','фон'),('лк','лист'),('лк','фон'),('чернила','выбор'),('лист','выбор'),('фон','выбор'),('чернила','мф'),('лист','мф'),('чернила','лк'),('лист','лк'),
        ('линия','область'),('лк','область'),('сетка','фон'),('мф','линия'),('лк','линия')]
 for th,t in T.items():
   print('contrast',th,' '.join(f'{a}/{b}={cr(t[a],t[b])}' for a,b in PAIRS))
@@ -212,3 +212,7 @@ if len(sys.argv)>1:
   print('area label КОЛЕНО РУВИМОВО Golos 500 13px tracking 0.12',round(g5('КОЛЕНО РУВИМОВО',13,0.12)))
   for p,cs in big: print('row of children Literata 14 + 24px gap',nm(p),len(cs),round(sum(l5(nm(c),14) for c in cs)+24*(len(cs)-1)))
   print('glyphs missing: Golos',''.join(s for s in '◇⇄↗⋯⊕═■●□○◆' if ord(s) not in gcm),'Literata',''.join(s for s in '◇⇄↗⋯⊕═■●□○◆' if ord(s) not in lcm))
+# 8. рёбра после Д2 (шаги C19–C24)
+print('ancestor edges',sum(1 for o in O if o.get('parent') and o['kind']=='ancestor'),'ancestor-only persons',len(anc_only),'their ancestors',len({lpa[c][0] for c in anc_only}))
+print('gapSuspected edges',sum(1 for o in O if o.get('gapSuspected')),'gap edges with skipped list',[(nm(o['parent']),nm(o['child']),len(o['skipped']['actors'])) for o in O if o.get('skipped')])
+print('outside lists',[(nm(o['parent']),nm(o['child'])) for o in O if o.get('outsideLists')])
