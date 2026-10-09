@@ -77,7 +77,7 @@ describe('контрольный набор', () => {
   });
   it('Кис — сын Авиила или Нира по разным местам, не оба сразу; Каинан не брат Салы', () => {
     const k = base.origins.filter((o) => o.child === 'p-kis' && o.role === 'father');
-    expect(k.map((o) => [o.parent, o.reading?.in])).toEqual([['p-aviil', ['a']], ['p-nir', ['b']]]);
+    expect(k.map((o) => [o.parent, o.reading?.set, o.reading?.in])).toEqual([['p-aviil', 'r-father-kis-nir', ['a']], ['p-nir', 'r-father-kis-nir', ['b']]]);
     expect(base.origins.find((o) => o.child === 'p-sala' && o.parent === 'p-arfaksad')!.gapPossible).toEqual({ refs: ['Лк 3:36'], via: ['p-kainan-syn-arfaksada'] });
   });
   it('«мои они» (Быт 48:5) — утверждение, а не ребро происхождения', () => {

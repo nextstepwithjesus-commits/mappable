@@ -38,8 +38,8 @@ const DOUBLE_FATHERS: { id: string; children: string[] }[] = [
   { id: 'korey', children: ['p-korey'] },
   { id: 'sadok-1par6-12', children: ['p-sadok-1par6-12'] },
   { id: 'asriil', children: ['p-asriil'] },
-  { id: 'kis', children: ['p-kis'] },
-  { id: 'nir', children: ['p-nir'] },
+  // Кис и Нир — одна семья по 1Пар 8:33; 9:36–39 и по 1Цар 9:1; 14:51: переключать порознь нельзя (рецензия 03, № 29)
+  { id: 'kis-nir', children: ['p-kis', 'p-nir'] },
   { id: 'maakha-doch-avessaloma', children: ['p-maakha-doch-avessaloma'] },
 ];
 const SHOVAL = 'p-shoval-otets-kiriaf-iarima';
