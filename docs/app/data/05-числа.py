@@ -1,15 +1,17 @@
-"""Числа документа 05 «География» (редакция 2).
+"""Числа документа 05 «География» (редакция 2.1).
 
 Запуск из корня репозитория:
     python3 -I docs/app/data/05-числа.py
     python3 -I docs/app/data/05-числа.py --openbible ПУТЬ/data/ancient.jsonl [--ne ПУТЬ/ne_10m_land.geojson]
+        [--rivers ПУТЬ/ne_10m_rivers_lake_centerlines.geojson]
 
 Части:
   А — только репозиторий: base/, tools/bible/synodal.tsv, tools/bible/brackets.tsv;
   Б — копия OpenBible Bible Geocoding Data (github.com/openbibleinfo/Bible-Geocoding-Data,
       коммит 7eb18a5; файлы data/ancient.jsonl и data/modern.jsonl рядом);
-  В — геометрия эскизов: окна, масштаб, соседи, рельеф, направления; морские отрезки —
-      если задан файл суши Natural Earth (ne_10m_land.geojson);
+  В — геометрия эскизов: окна, масштаб, соседи, рельеф, направления; морские отрезки,
+      порты и пункты прохода по морю — если задан файл суши Natural Earth (ne_10m_land.geojson);
+      потоки основы — если задан файл рек Natural Earth (ne_10m_rivers_lake_centerlines.geojson);
   Г — цвет карты: ступени высот, отмывка, контраст подписей, знаков и линий (WCAG 2.x);
       считается всегда, внешних файлов не нужно.
 Копий OpenBible и Natural Earth в репозитории нет (02, § 5); без пути части Б и В не считаются.
@@ -270,6 +272,24 @@ FORMS = [
     ('Лк 3:1', 'Трахонитской области'), ('Лк 3:1', 'Авилинее'), ('Нав 1:4', 'до великого моря'),
     ('Деян 13:13', 'возвратился в Иерусалим'), ('Быт 14:13', 'дубравы Мамре'), ('Исх 12:37', 'Раамсеса'),
     ('Быт 14:18', 'царь Салимский'), ('Быт 35:15', 'Вефиль'),
+    # редакция 2.1: Хорив (Г-05-7), Нав 13:16–20, Дивон, Есевон, Вефиль, пункты прохода по морю
+    ('Втор 4:15', 'Хориве'), ('3Цар 8:9', 'на Хориве'), ('Мал 4:4', 'на Хориве'),
+    ('Нав 13:16', 'город, который среди потока'), ('Нав 13:16', 'равнина при Медеве'),
+    ('Нав 13:17', 'Вамоф-Ваал'), ('Нав 13:18', 'Иааца'), ('Нав 13:18', 'Кедемоф'), ('Нав 13:18', 'Мефааф'),
+    ('Нав 13:19', 'Цереф-Шахар на горе Емек'), ('Нав 13:20', 'Беф-Фегор'),
+    ('Нав 13:20', 'места при подошве Фасги'), ('Нав 20:8', 'Бецер в пустыне'),
+    ('Чис 21:30', 'до Дивона'), ('Нав 13:9', 'до Дивона'), ('Иер 48:34', 'Есевона'), ('Иер 48:45', 'Есевона'),
+    ('Быт 20:1', 'поднялся оттуда к югу'), ('Быт 35:16', 'отправились из Вефиля'),
+    ('Нав 8:12', 'между Вефилем и Гаем'), ('1Цар 7:16', 'Вефиль'), ('3Цар 12:32', 'в Вефиле'),
+    ('3Цар 13:1', 'в Вефиль'), ('4Цар 2:2', 'пошли они в Вефиль'), ('4Цар 2:23', 'пошел он оттуда в Вефиль'),
+    ('4Цар 17:28', 'жил в Вефиле'), ('2Пар 13:19', 'Вефиль'), ('Ам 7:10', 'священник Вефильский'),
+    ('Ам 7:13', 'в Вефиле больше не пророчествуй'),
+    ('Деян 20:15', 'остановились против Хиоса'), ('Деян 20:15', 'Трогиллии'), ('Деян 20:15', 'Милит'),
+    ('Деян 21:1', 'Родос'), ('Деян 21:1', 'Патару'), ('Деян 21:3', 'Быв в виду Кипра и оставив его слева'),
+    ('Деян 21:3', 'Тире'), ('Деян 27:3', 'Сидону'), ('Деян 27:4', 'приплыли в Кипр'),
+    ('Деян 27:5', 'переплыв море против Киликии и Памфилии'), ('Деян 27:5', 'Миры Ликийские'),
+    ('Деян 27:7', 'поровнявшись с Книдом'), ('Деян 27:7', 'подплыли к Криту при Салмоне'),
+    ('Деян 27:8', 'Пробравшись же с трудом мимо него'), ('Деян 27:16', 'Клавдой'),
 ]
 bad = [(r, f) for r, f in FORMS if norm(f) not in norm(basis_text(ref(r)))]
 print(f'форм названий эскизов и таблицы трудных случаев: {len(FORMS)}; '
@@ -310,6 +330,43 @@ PATH_CUES = [  # (стих, откуда, куда)
 no_cue = [f'{r} ({a} → {b})' for r, a, b in PATH_CUES if not CUE.search(basis_text(ref(r)).lower())]
 print(f'переходов эскизов и § 4: {len(PATH_CUES)}; без слов перехода среди слов-оснований: {len(no_cue)} — '
       + ', '.join(no_cue))
+
+# Вефиль, эскиз 11.4 (географ, Н-6): каждый стих со словом «Вефиль» среди слов-оснований разобран
+# ровно в одну строку — «Истории здесь» (место действия) или «Ещё в Библии».
+
+
+def expand(refs):
+    """«Быт 28:11-19; 35:1-7, 15» -> ключи стихов."""
+    out, book, ch = [], None, None
+    for part in re.split(r';\s*', refs):
+        m = re.fullmatch(r'(\d?)\s?([А-Яа-я]+)\s+(\d+):(.+)', part.strip())
+        if m:
+            book, ch, rest = m.group(1) + m.group(2), int(m.group(3)), m.group(4)
+        else:
+            m2 = re.fullmatch(r'(\d+):(.+)', part.strip())
+            ch, rest = int(m2.group(1)), m2.group(2)
+        for piece in rest.split(','):
+            a, _, b = piece.strip().partition('-')
+            out += [(book, ch, v) for v in range(int(a), int(b or a) + 1)]
+    return out
+
+
+BETHEL_HERE = [   # история с местом действия в Вефиле (роль где, откуда, куда, через)
+    'Быт 12:8; 13:3', 'Быт 28:11-19', 'Быт 35:1-7, 15', 'Быт 35:8', 'Быт 35:16', 'Нав 8:9, 12, 17',
+    'Суд 1:22-25', '1Цар 7:16', '3Цар 12:29-33', '3Цар 13:1-32', '4Цар 2:2-3', '4Цар 2:23-24',
+    '4Цар 17:28', '4Цар 23:4, 15-20', '2Пар 13:19', 'Ам 7:10-13']
+BETHEL_MORE = [   # речь, перечни, пределы, ориентиры, пророчества
+    'Быт 31:13', 'Нав 7:2', 'Нав 12:9, 16', 'Нав 16:1-2; 18:13', 'Нав 18:22', 'Суд 4:5; 20:31; 21:19',
+    '1Цар 10:3', '1Цар 13:2', '1Цар 30:27', '3Цар 16:34', '4Цар 10:29', '1Пар 7:28',
+    'Езд 2:28; Неем 7:32; 11:31', 'Иер 48:13; Ос 10:15; 12:4; Ам 3:14; 4:4; 5:5-6', 'Зах 7:2']
+vef_set = set(vef)
+cover = collections.Counter(k for row in BETHEL_HERE + BETHEL_MORE for k in expand(row) if k in vef_set)
+miss = sorted((k for k in vef_set if cover[k] == 0), key=lambda k: list(TEXT).index(k))
+twice = [k for k, n in cover.items() if n > 1]
+print(f'Вефиль, эскиз 11.4: «Истории здесь» — {len(BETHEL_HERE)} строк, «Ещё в Библии» — {len(BETHEL_MORE)}; '
+      f'стихов со словом «Вефиль» (основание) {len(vef_set)}; разобрано {len(cover)}; '
+      f'не разобрано {len(miss)}' + (f' — {miss}' if miss else '') + f'; в двух строках {len(twice)}; '
+      f'строк без такого стиха {sum(1 for row in BETHEL_HERE + BETHEL_MORE if not set(expand(row)) & vef_set)}')
 
 # ================================================================ часть Г (цвет) — считается всегда
 
@@ -532,13 +589,16 @@ SKETCH = {
                    'Pisgah', 'Zalmonah', 'Punon', 'Dibon 1', 'Almon-diblathaim', 'Abarim', 'Mount Nebo',
                    'Beth-jeshimoth', 'Shittim'],
     '11.3 Рувим': ['Aroer 1', 'Medeba', 'Heshbon', 'Dibon 1', 'Baal-meon', 'Kiriathaim 1',
-                   'Sibmah', 'Beth-jeshimoth', 'Bezer', 'Aroer 2', 'Aroer 3', 'Salt Sea'],
+                   'Sibmah', 'Beth-jeshimoth', 'Bezer', 'Aroer 2', 'Aroer 3', 'Salt Sea',
+                   'Bamoth-baal', 'Jahaz', 'Kedemoth', 'Mephaath', 'Zereth-shahar', 'Beth-peor', 'Pisgah'],
     '11.4 Вефиль': ['Bethel 1', 'Luz 1', 'Luz 2', 'Ai 1', 'Beth-aven 1', 'Beth-aven 2'],
     '11.5 Павел': ['Antioch 1', 'Seleucia', 'Cyprus', 'Salamis', 'Paphos', 'Perga', 'Pamphylia', 'Antioch 2',
                    'Pisidia', 'Iconium', 'Lystra', 'Derbe', 'Attalia'],
     '§ 4': ['Ophir', 'Cana', 'Kanah 1', 'Kanah 2', 'Emmaus', 'Golgotha', 'Tarshish 1', 'Eden 1',
             'Ararat', 'Red Sea 2', 'Mount Horeb', 'Tigris', 'Moriah', 'Mount Moriah', 'Gadara', 'Gerasa',
             'Gergesa', 'Bethsaida 1', 'Bethsaida 2', 'Phoenix', 'Malta', 'Mount Tabor', 'Ezion-geber', 'Elath'],
+    'Деян 20–27, море': ['Chios', 'Samos', 'Trogyllium', 'Miletus', 'Cos', 'Rhodes 1', 'Patara', 'Tyre', 'Sidon',
+                         'Cilicia', 'Myra', 'Cnidus', 'Crete', 'Salmone', 'Fair Havens', 'Cauda'],
 }
 for title, nm in SKETCH.items():
     out = []
@@ -555,6 +615,63 @@ for title, nm in SKETCH.items():
         out.append(f'{n}: {d} {s}, {bp[2] if bp else "—"}, {k}/{len(p)}/{votes}')
     print(f'[{title}] ' + '; '.join(out))
 print('  (у каждого места: степень, оценка, лучшее предложение, предложений всего / с оценкой > 0 / голосов у лучшего)')
+
+# Порядок правил знака (географ, Н-1; § 3.3): 1) вода и земля знака не получают никогда;
+# 2) не установлено — знака нет; 3) кандидаты ближе 3 км к лучшему сливаются с ним ДО проверки
+# на соперников (оценки не складываются: степень — по лучшему); 4) близкие соперники — знака нет;
+# 5) совпадение точек ищется только между записями, у которых знак есть.
+KIND = {n: 'water' for n in ('Red Sea 1', 'Red Sea 2', 'Red Sea 3', 'Salt Sea', 'Tigris', 'Arnon', 'Zered')}
+KIND.update({n: 'land' for n in ('Canaan', 'Egypt', 'Shur', 'Moriah', 'Sin', 'Zin 1', 'Wilderness of Sinai',
+                                 'Cyprus', 'Pamphylia', 'Pisidia', 'Ararat', 'Ophir', 'Eden 1', 'Abarim',
+                                 'Cilicia', 'Crete', 'Pisgah')})
+NEAR_KM = 3
+
+
+def id_point(i):
+    for res in i.get('resolutions') or []:
+        if res.get('lonlat'):
+            return tuple(map(float, res['lonlat'].split(',')))
+    return None
+
+
+def rival(r, merge=True):
+    """Близкий соперник лучшего предложения; при merge — кандидаты ближе 3 км к лучшему не соперники."""
+    p = positive(r)
+    if degree(r)[0] not in ('вероятно', 'предположительно') or len(p) < 2:
+        return None
+    best, bp = p[0], id_point(p[0])
+    for other in p[1:]:
+        if merge and bp and id_point(other) and hav(bp, id_point(other)) < NEAR_KM:
+            continue
+        if other['score']['time_total'] >= 0.75 * best['score']['time_total'] and other.get('id_source') != 'special':
+            return other
+        return None
+    return None
+
+
+def sign(n):
+    """(степень знака или None, причина)."""
+    r = byname[n]
+    k = KIND.get(n, 'point')
+    if k != 'point':
+        return None, {'water': 'вода', 'land': 'земля'}[k]
+    d = degree(r)[0]
+    if d == 'не установлено':
+        return None, 'не установлено'
+    if rival(r):
+        return None, 'соперники'
+    return d, 'знак'
+
+
+ties_before = [r['friendly_id'] for r in rows if rival(r, merge=False)]
+ties_after = {r['friendly_id'] for r in rows if rival(r)}
+merged = [n for n in ties_before if n not in ties_after]
+print(f'порядок правил знака (Н-1): близких соперников без слияния {len(ties_before)}; после слияния '
+      f'кандидатов ближе {NEAR_KM} км — {len(ties_after)}; стали одним знаком {len(merged)}: '
+      + ', '.join(f'{n} — {degree(byname[n])[0]} {degree(byname[n])[1]}' for n in merged))
+for title, nm in SKETCH.items():
+    no = [f'{n} ({sign(n)[1]})' for n in nm if n in byname and sign(n)[0] is None]
+    print(f'  [{title}] без знака: ' + (', '.join(no) or '—'))
 
 # Отрезки эскизов по правилу § 3.5 (географ, № 4): вид линии считается и сверяется с эскизом.
 # Конец отрезка: (запись сводки или None, вид: point / land / water / direction / anchored).
@@ -603,7 +720,7 @@ def rule_line(verse, a, b, declared):
     if any(k in ('land', 'water', 'direction') for k in kinds):
         return 'нет'
     degs = [degree(byname[x[0]])[0] for x in (a, b)]
-    if 'не установлено' in degs:
+    if 'не установлено' in degs or any(x[1] == 'point' and sign(x[0])[0] is None for x in (a, b)):
         return 'нет'
     if declared == 'по морю' and re.search(r'отплы', basis_text(ref(verse)).lower()):
         return 'по морю'
@@ -615,17 +732,49 @@ mism = [f'{sk} {a[0] or a[1]} → {b[0]}: в эскизе {d}, по правил
 print(f'отрезков эскизов 11.1, 11.2, 11.5: {len(SEGMENTS)}; расходятся с правилом § 3.5: {len(mism)}'
       + ('' if not mism else ' — ' + '; '.join(mism)))
 
+# Простой слой (географ, Н-3): видны стоянки с ролью в истории каталога; через пропущенные стоянки
+# линия идёт, только если у всех пропущенных есть знак (тогда — через их точки малым знаком без номера);
+# иначе линии нет. В 11.1 и 11.5 простой слой показывает все стоянки — их отрезки уже проверены выше.
+CHAIN_11_2 = [s for s in SEGMENTS if s[0] == '11.2' and s[1] >= 'Чис 33:9']   # от Мерры (4) до 11
+
+
+def simple_line(chain, shown):
+    """chain — отрезки по порядку; shown — номера видимых стоянок (0 — начало первого отрезка)."""
+    out = []
+    for i, j in zip(shown, shown[1:]):
+        part = chain[i:j]
+        skipped = [seg[2] for seg in part[1:]]          # концы-«откуда» внутри пропуска
+        kinds = [rule_line(*seg[1:4], seg[4]) for seg in part]
+        if any(x[1] != 'point' or sign(x[0])[0] is None for x in skipped):
+            line = 'нет'
+        elif 'нет' in kinds:
+            line = 'нет'
+        else:
+            line = 'точечная' if 'точечная' in kinds else 'пунктир'
+        out.append((part[0][2][0], part[-1][3][0], len(skipped), line))
+    return out
+
+
+# стоянки цепочки: 0 Мерра (4), 1 Елим (5), 2 у моря (6), 3 пустыня Син (7), 4 Дофка (8), 5 Алуш (9),
+# 6 Рефидим (10), 7 пустыня Синайская у горы (11); простой слой — 4, 5, 7, 10, 11
+SIMPLE_11_2 = [('Marah', 'Elim', 'точечная'), ('Elim', 'Sin', 'нет'), ('Sin', 'Rephidim', 'нет'),
+               ('Rephidim', 'Mount Sinai', 'точечная')]
+got = simple_line(CHAIN_11_2, [0, 1, 3, 6, 7])
+bad_s = [f'{a} → {b}: в эскизе {d}, по правилу {g[3]}' for (a, b, d), g in zip(SIMPLE_11_2, got) if g[3] != d]
+print(f'простой слой 11.2: отрезков {len(got)} — ' + '; '.join(f'{a} → {b} (пропущено {k}): {ln}' for a, b, k, ln in got)
+      + f'; расходятся с эскизом: {len(bad_s)}' + (' — ' + '; '.join(bad_s) if bad_s else ''))
+
 # Совпадающие точки разных записей среди мест эскизов (интерфейс, № 11)
 pts = collections.defaultdict(list)
 for nm in SKETCH.values():
     for n in nm:
         r = byname.get(n)
-        bp = r and degree(r)[0] != 'не установлено' and best_point(r)
+        bp = r and sign(n)[0] and best_point(r)
         if bp:
             pts[(round(bp[0], 3), round(bp[1], 3))].append(n)
 same = [sorted(set(v)) for v in pts.values() if len(set(v)) > 1]
-print(f'одна точка у разных записей (места эскизов): {len(same)} — '
-      + '; '.join(' = '.join(v) for v in same))
+print(f'одна точка у разных записей со знаком (места эскизов): {len(same)} — '
+      + '; '.join(' = '.join(f'{x} ({degree(byname[x])[0]} {degree(byname[x])[1]})' for x in v) for v in same))
 
 # Места Деяний 13–28 по сводке (географ, № 22)
 acts = set()
@@ -697,10 +846,12 @@ D90_Z = math.log2(156543.03 * math.cos(math.radians(32)) / 90)
 print(f'родной уровень рельефа на 32° с. ш.: ETOPO 15″ (≈ 463 м) — z{ETOPO_Z:.1f}; '
       f'отмывка 90 м — z{D90_Z:.1f}')
 VIEWS = {
+    # цели касания: знаки мест и номера у подписи земли или воды (Египет 5, стан у моря 6, пустыня Син 7;
+    # точка подписи — пока точка сводки). Переход моря (соперники) и земля Мориа (Н-4) на карте не стоят
     '11.1 Авраам, весь путь': ['Ur 1', 'Haran', 'Shechem', 'Bethel 1', 'Ai 1', 'Egypt', 'Mamre', 'Hebron',
-                              'Gerar', 'Beersheba 1', 'Moriah', 'Dan'],
-    '11.1 врезка «Ханаан»': ['Shechem', 'Bethel 1', 'Ai 1', 'Mamre', 'Hebron', 'Gerar', 'Beersheba 1', 'Moriah', 'Dan'],
-    '11.2 Исход Чис 33:5–15': ['Rameses', 'Baal-zephon', 'Red Sea 1', 'Marah', 'Elim', 'Red Sea 3', 'Sin',
+                              'Gerar', 'Beersheba 1', 'Dan'],
+    '11.1 врезка «Ханаан»': ['Shechem', 'Bethel 1', 'Ai 1', 'Mamre', 'Hebron', 'Gerar', 'Beersheba 1', 'Dan'],
+    '11.2 Исход Чис 33:5–15': ['Rameses', 'Baal-zephon', 'Marah', 'Elim', 'Red Sea 3', 'Sin',
                                'Dophkah', 'Alush', 'Rephidim', 'Mount Sinai'],
     '11.3 земля Рувима': ['Aroer 1', 'Medeba', 'Heshbon', 'Dibon 1', 'Baal-meon', 'Kiriathaim 1', 'Sibmah',
                           'Beth-jeshimoth', 'Bezer'],
