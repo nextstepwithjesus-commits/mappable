@@ -162,6 +162,7 @@ for g, l, h in groups:
     lo += l; hi += h
     print(f'  {g}: {l:.0f}–{h:.0f}')
 print(f'ИТОГО историй: {lo:.0f}–{hi:.0f}; частей (×{TP/TS:.2f}): {lo*TP/TS:.0f}–{hi*TP/TS:.0f}')
+print(f'ступень 1 у 5–10 % каталога (цель R7) — историй: {lo*0.05:.0f}–{hi*0.10:.0f}')
 print(f'глав всего: {len(NV)}; глав группы А и А′: {sum(len(c) for c in A.values()) + sum(len(c) for c in APAR.values())}')
 
 # ---------------------------------------------------------------- 4. Ной и потоп
