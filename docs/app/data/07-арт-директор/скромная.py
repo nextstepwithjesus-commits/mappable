@@ -157,3 +157,16 @@ print('\nскромных с тёзками (уточнение в шапке):'
 dl = sorted(len(acts[i].get('disambig') or '') for i in tz)
 print('длина поля disambig у них, знаков: медиана', st.median(dl), '; 90-й', dl[int(len(dl) * .9)], '; максимум', dl[-1])
 print('примеры:', [(main[i], acts[i].get('disambig')) for i in tz[:5]])
+
+# соседи по стиху: сколько других лиц базы названо в стихах шапки скромной карточки
+byverse = collections.defaultdict(set)
+for i in acts:
+    for v in refs[i]:
+        byverse[v].add(i)
+nb = sorted(len(set().union(*(byverse[v] for v in refs[i])) - {i}) if refs[i] else 0 for i in mod)
+print('\nсоседей по стихам шапки у скромной: медиана', st.median(nb), '; без соседей',
+      sum(1 for x in nb if x == 0), '; 90-й', nb[int(len(nb) * .9)])
+
+# скобки в стихах шапки скромной карточки
+br = sum(1 for i in mod if any(('[' in text.get(v, '') or '(' in text.get(v, '')) for v in refs[i]))
+print('скромных, у которых в стихах шапки есть скобки:', br, f'({br / len(mod):.0%})')
