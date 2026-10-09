@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data",
-   "commit": "7847cc8"
+   "commit": "11ad76f"
   }
  },
  "items": [
@@ -22575,17 +22575,6 @@
   {
    "actor": "p-bogan",
    "area": "g-reuben",
-   "basis": "legacy-layout",
-   "refs": [],
-   "prov": {
-    "from": {
-     "vol": "18-tribal-leaders.json"
-    }
-   }
-  },
-  {
-   "actor": "p-mat-khulitelya",
-   "area": "g-other",
    "basis": "legacy-layout",
    "refs": [],
    "prov": {

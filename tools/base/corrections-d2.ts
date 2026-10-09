@@ -45,7 +45,7 @@ export const STEPS_D2: Step[] = [
   // ---------- скобки: решение совета (Д2-С-3…С-5) ----------
   {
     id: 'C13',
-    scope: [`actor:${KHULITEL_MOTHER}.`, `actor:${DAVRIIN}.`, `origin:${KHULITEL_MOTHER}|${DAVRIIN}|`, `membership:${KHULITEL_MOTHER}|g-dan`, `volume:${VOL18}`],
+    scope: [`actor:${KHULITEL_MOTHER}.`, `actor:${DAVRIIN}.`, `origin:${KHULITEL_MOTHER}|${DAVRIIN}|`, `membership:${KHULITEL_MOTHER}|g-dan`, `membership:${KHULITEL_MOTHER}|g-other`, `volume:${VOL18}`],
     run: ({ base, actor }) => {
       const m = actor(KHULITEL_MOTHER);
       if (m.kind !== 'unnamed') throw new Error('мать хулителя уже названа');
@@ -62,7 +62,7 @@ export const STEPS_D2: Step[] = [
       const tx = one(m, 'notes', 'Имя её отца текст не называет');
       tx.value = {
         kind: 'textual',
-        text: 'По Синодальному тексту она — Израильтянка, «родившаяся от Египтянина» (Лев 24:10), а её отец назван: «Саломиф, дочь Давриина, из племени Данова» (Лев 24:11). Был ли Давриин тем Египтянином, текст не говорит',
+        text: 'По Синодальному тексту хулитель — «сын одной Израильтянки, родившейся от Египтянина» (Лев 24:10), а о его матери сказано: «Саломиф, дочь Давриина, из племени Данова» (Лев 24:11). Был ли Давриин тем Египтянином, текст не говорит',
         refs: ['Лев 24:10', 'Лев 24:11'],
       };
       tx.prov = P;
@@ -84,6 +84,11 @@ export const STEPS_D2: Step[] = [
       };
       vol.actors.splice(vol.actors.indexOf(m) + 1, 0, d);
       base.origins.push({ child: KHULITEL_MOTHER, parent: DAVRIIN, role: 'father', kind: 'natural', refs: ['Лев 24:11'], cert: 'scripture', primary: true, prov: P });
+      // Прежнее членство раскладки «прочие» снимается: колено названо в стихе (рецензия Д2, № 18).
+      for (let i = base.memberships.length - 1; i >= 0; i--) {
+        const x = base.memberships[i];
+        if (x.actor === KHULITEL_MOTHER && x.area === 'g-other') base.memberships.splice(i, 1);
+      }
       base.memberships.push({ actor: KHULITEL_MOTHER, area: 'g-dan', basis: 'named', refs: ['Лев 24:11'], prov: P });
       return {
         what: 'Мать хулителя названа по Лев 24:11: Саломиф, дочь Давриина, из племени Данова; добавлен Давриин и ребро Давриин → Саломиф; членство в колене Дановом; примечание «скобки не основание» снято; слова Лев 24:10 «родившейся от Египтянина» остаются фактом, рядом — напряжение текста со ст. 11; чтение еврейского текста — отдельное справочное примечание в карантине',
