@@ -903,6 +903,24 @@ for t, legs in LEGS.items():
     print(f'[{t}] ' + '; '.join(f'{a} → {b}: около {rnd(hav(P(a), P(b)))} км на {RUMB[int((bearing(P(a), P(b)) + 22.5) // 45) % 8]}'
                                 for a, b in legs))
 
+# Потоки основы (географ, Н-8): какие реки ядра есть в Natural Earth 10m
+rv = arg('--rivers')
+if rv:
+    rj = json.load(open(rv, encoding='utf-8'))
+    found = collections.Counter()
+    for f in rj['features']:
+        g = f['geometry']
+        if not g:
+            continue
+        lines = [g['coordinates']] if g['type'] == 'LineString' else g['coordinates']
+        if any(29 <= y <= 34.5 and 33.5 <= x <= 37.5 for ln in lines for x, y in ln):
+            found[f'{f["properties"].get("name")} ({f["properties"].get("featurecla")})'] += 1
+    cla = sorted({f['properties'].get('featurecla') for f in rj['features']})
+    want = ('Arnon', 'Mujib', 'Zered', 'Hasa', 'Jabbok', 'Zarqa', 'Kidron', 'Yarmouk', 'Kishon')
+    hit = [w for w in want if any(w.lower() in k.lower() for k in found)]
+    print(f'реки Natural Earth 10m в ядре (29–34,5° с. ш., 33,5–37,5° в. д.): {dict(found)}; '
+          f'виды объектов во всём файле: {cla}; Арнон, Заред, Иавок, Кедрон и др. — найдено: {hit or "нет"}')
+
 # Морские отрезки (арт-директор, № 10): прямая по суше и путь по воде в обход суши
 ne = arg('--ne')
 if not ne:
@@ -982,14 +1000,21 @@ def nearest_sea(lon, lat):
 import heapq
 
 
+ROUTE = []   # клетки последнего найденного пути по воде
+
+
 def sea_route(a, b):
     da, ra, ca = nearest_sea(*a)
     db, rb, cb = nearest_sea(*b)
     dist_ = {(ra, ca): 0.0}
+    prev = {}
     pq = [(0.0, ra, ca)]
     while pq:
         d, r, c = heapq.heappop(pq)
         if (r, c) == (rb, cb):
+            ROUTE[:] = [(r, c)]
+            while ROUTE[-1] in prev:
+                ROUTE.append(prev[ROUTE[-1]])
             return d, da, db
         if d > dist_.get((r, c), 1e18):
             continue
@@ -1000,6 +1025,7 @@ def sea_route(a, b):
                     nd = d + km_cells(r, c, rr, cc)
                     if nd < dist_.get((rr, cc), 1e18):
                         dist_[(rr, cc)] = nd
+                        prev[(rr, cc)] = (r, c)
                         heapq.heappush(pq, (nd, rr, cc))
     return None, da, db
 
@@ -1025,3 +1051,55 @@ for a, b, verse in (('Seleucia', 'Salamis', 'Деян 13:4'), ('Paphos', 'Perga'
     print(f'[{verse}] {a} → {b}: прямая {total:.0f} км, по суше {sum((e - s) * total for s, e in runs):.0f} км '
           f'(самый длинный участок {longest:.0f} км); путь по воде с запасом ≈ 5 км от берега — '
           f'{route:.0f} км; от {a} до воды {da:.0f} км, от воды до {b} {db:.0f} км')
+
+
+# Порты (географ, Н-14): место у моря, если до воды (без запаса) не больше 5 км по суше Natural Earth
+def to_water(lon, lat):
+    r0, c0 = cell(lon, lat)
+    best = None
+    for rad in range(0, 100):
+        for r in range(r0 - rad, r0 + rad + 1):
+            for c in (c0 - rad, c0 + rad) if abs(r - r0) != rad else range(c0 - rad, c0 + rad + 1):
+                if 0 <= r < NY and 0 <= c < NX and not LAND[r][c]:
+                    d = km_cells(r0, c0, r, c)
+                    best = d if best is None or d < best else best
+        if best is not None:
+            return best
+
+
+PORT_KM = 5
+ports = []
+for n in ('Antioch 1', 'Seleucia', 'Salamis', 'Paphos', 'Perga', 'Attalia', 'Sidon', 'Myra', 'Patara', 'Tyre'):
+    d = to_water(*P(n))
+    ports.append(f'{n} {d:.0f} км — ' + ('порт: к водному пути линией «по морю»' if d <= PORT_KM
+                                        else 'не у моря: пунктир по суше до воды'))
+print(f'до воды (без запаса), порт — не дальше {PORT_KM} км: ' + '; '.join(ports))
+
+
+# Пункты прохода по морю (географ, Н-2): с какой стороны Кипра идёт кратчайший путь по воде
+# и сколько стоит путь, который проходит с той стороны, которую называет текст.
+def side_of_cyprus():
+    c = int((33.0 - BOX[0]) / STEP)
+    lats = [BOX[1] + (r + .5) * STEP for r, cc in ROUTE if cc == c]
+    if not lats:
+        return 'не пересекает 33° в. д.'
+    return 'к югу от Кипра' if max(lats) < 34.6 else 'к северу от Кипра' if min(lats) > 35.3 else 'через Кипр?'
+
+
+def via(a, w, b):
+    d1, da, _ = sea_route(a, w)
+    r1 = ROUTE[:]
+    d2, _, db = sea_route(w, b)
+    ROUTE[:] = r1 + ROUTE
+    return d1 + d2, da, db
+
+
+for a, b, verse, words, wp in (('Patara', 'Tyre', 'Деян 21:3', '«оставив его слева» — к югу от Кипра', (33.0, 34.30)),
+                               ('Sidon', 'Myra', 'Деян 27:4–5', '«против Киликии и Памфилии» — к северу от Кипра',
+                                (33.0, 35.80))):
+    d0, _, _ = sea_route(P(a), P(b))
+    s0 = side_of_cyprus()
+    d1, _, _ = via(P(a), wp, P(b))
+    s1 = side_of_cyprus()
+    print(f'[{verse}] {a} → {b}: кратчайший путь по воде {d0:.0f} км, {s0}; по словам текста {words}: '
+          f'путь через пункт прохода {d1:.0f} км, {s1}')
