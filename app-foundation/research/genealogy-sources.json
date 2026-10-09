@@ -1,0 +1,205 @@
+{
+  "schema": "research-source-register-draft-v1",
+  "status": "draft-pending-independent-review",
+  "checkedAt": "2026-10-09",
+  "scope": "Genealogy-only conceptual model and evidence boundaries; no product implementation or data import",
+  "report": "genealogy-and-evidence.md",
+  "sourceCount": 8,
+  "rules": {
+    "factPriority": "Read main text of the 66-book Synodal corpus; square-bracket insertions are not evidence for facts.",
+    "primaryMeaning": "Papers are primary research about visualization. Repository documentation is primary evidence about that repository, not primary evidence that its biblical claims are correct.",
+    "sourceIndependence": "Theographic cites TIPNR for people; agreement between them is not independent corroboration.",
+    "openAccessMeaning": "Readable without payment does not mean permission to import, redistribute, or adapt all contents.",
+    "institutionMeaning": "Institutional or Christian affiliation does not establish correctness of an individual claim.",
+    "identityMapping": "External names and IDs remain versioned crosswalk candidates until adjudicated; names, persons, groups, places, source mentions and logical placeholders are distinct.",
+    "noCompletenessClaim": "No source record count or existing project inventory is represented here as an independently verified count of people."
+  },
+  "sources": [
+    {
+      "id": "synodal66-local",
+      "title": "Синодальный перевод: локальный корпус 66 книг",
+      "institution": "Source edition and digital provenance are maintained by the project; no additional institution inferred here",
+      "url": null,
+      "localPath": "tools/bible/synodal.tsv",
+      "openAccess": "Available in the authorized local workspace; public distribution rights not newly determined",
+      "license": {
+        "status": "not-reassessed",
+        "statement": "No new redistribution permission asserted for this exact digital file."
+      },
+      "sha256": "12d8917144f5ece5e8b058ec6c491be43017d280092080c24286a73e39570149",
+      "whatActuallyRead": {
+        "method": "Read-only tools/verse.ts executed with absolute bundled Node 24; all commands exited 0. Full returned verses read; bracketed spans excluded from factual foundations.",
+        "ranges": [
+          "Быт 4:17", "Быт 4:25-26", "Быт 11:27-29", "Быт 16:1-4", "Быт 16:15-16",
+          "Быт 17:5", "Быт 17:15", "Быт 20:11-13", "Быт 21:1-3", "Быт 25:1-6",
+          "Быт 38:6-9", "Быт 38:15-18", "Быт 38:24-30", "1Пар 1:32",
+          "Мф 1:1-6", "Мф 1:15-25", "Мк 6:17-18", "Лк 1:30-35", "Лк 3:23-38",
+          "Ин 11:1-2", "Ин 11:19"
+        ]
+      },
+      "supports": [
+        "Abraham's three distinct maternal branches and Sarah's overlapping roles",
+        "Keturah's distinct textual designations without inventing two people",
+        "Tamar's multiple relation contexts without inferring a marriage from conception",
+        "Herodias and two brothers as a cross-marriage counterexample",
+        "Unnamed Cain's wife versus missing maternal information in Genesis 4:26",
+        "Direct sibling assertions without invented parents",
+        "Separate gospel genealogy assertions and the qualification in Luke 3:23"
+      ],
+      "limits": [
+        "This is an addressed reading for conceptual counterexamples, not acceptance of the full corpus or all genealogy links.",
+        "Not naming a mother in a read verse is not a claim of a completed corpus-wide negative search.",
+        "Matthew 1:7-14 was not read in this task; full verification of both gospel chains remains outstanding."
+      ]
+    },
+    {
+      "id": "geneaquilts-2010",
+      "title": "GeneaQuilts: A System for Exploring Large Genealogies",
+      "authors": ["Anastasia Bezerianos", "Pierre Dragicevic", "Jean-Daniel Fekete", "Juhee Bae", "Ben Watson"],
+      "institution": "INRIA / École Centrale Paris / North Carolina State University; IEEE TVCG publication",
+      "url": "https://aviz.fr/old/geneaquilts/geneaquilt.pdf",
+      "doi": "10.1109/TVCG.2010.159",
+      "year": 2010,
+      "openAccess": "Author-hosted PDF already retained locally by preceding research",
+      "license": {"status": "reuse-not-established", "statement": "Author access to PDF does not establish permission to redistribute paper or figures; no open content license verified."},
+      "localPath": "review/map/scientific-layout/temporal/sources/geneaquilts-2010.pdf",
+      "sha256FromPriorManifest": "24961accf32531be8965f7e66808d37e1b3163aa78a7355b4e63b6a52c849275",
+      "whatActuallyRead": {
+        "currentTask": "Re-read local plain-text abstract, introduction, sections 2.1-2.3, including graph types, task taxonomy and intermarriage discussion.",
+        "priorEvidence": "review/map/scientific-layout/temporal/source-evidence.json records earlier section reading and figure inspection; those earlier acts are not claimed as fresh acts here."
+      },
+      "supports": ["Bipartite person/family model", "Non-successive generation edges", "Separate kinship tasks and attribute tasks"],
+      "limits": [
+        "Adopting the graph model does not validate its matrix interface for this application.",
+        "The paper's interpretation of Mary's genealogy is not accepted as a biblical source.",
+        "No new application usability or performance evidence was produced."
+      ]
+    },
+    {
+      "id": "dual-trees-2005",
+      "title": "Interactive Visualization of Genealogical Graphs",
+      "authors": ["Michael J. McGuffin", "Ravin Balakrishnan"],
+      "institution": "University of Toronto; IEEE InfoVis publication",
+      "url": "https://www.dgp.toronto.edu/~ravin/papers/infovis2005_geneology.pdf",
+      "doi": "10.1109/INFVIS.2005.1532124",
+      "year": 2005,
+      "openAccess": "University-hosted PDF already retained locally",
+      "license": {"status": "reuse-not-established", "statement": "No open content license verified for paper or figures."},
+      "localPath": "review/map/scientific-layout/temporal/sources/dual-trees-2005.pdf",
+      "sha256FromPriorManifest": "08f41efefe5b442bf645d057b6abab3500f6838bc9a1075b8f1befb7bcd67032",
+      "whatActuallyRead": {
+        "currentTask": "Re-read local plain text: related-work discussion, section 3 introduction, 3.1, 3.2 and opening of 3.3.",
+        "priorEvidence": "Earlier interaction analysis is documented in temporal/report.md and temporal/source-evidence.json."
+      },
+      "supports": ["Consanguine and conjugal intermarriage differ", "Pedigree collapse need not be a directed ancestry cycle", "Subgraph navigation can address crowding"],
+      "limits": ["An undirected cycle is not grounds to delete a valid relationship.", "Dual-tree UI constraints are not adopted wholesale.", "Paper uses marriage loosely for a parent relationship; our model must distinguish these meanings."]
+    },
+    {
+      "id": "lineage-2019",
+      "title": "Lineage: Visualizing Multivariate Clinical Data in Genealogy Graphs",
+      "authors": ["Carolina Nobre", "Nils Gehlenborg", "Hilary Coon", "Alexander Lex"],
+      "institution": "University of Utah / Harvard Medical School; IEEE TVCG publication",
+      "url": "https://sci.utah.edu/~vdl/papers/2018_tvcg_lineage.pdf",
+      "doi": "10.1109/TVCG.2018.2811488",
+      "year": 2019,
+      "openAccess": "Author-hosted PDF already retained locally; online publication 2018",
+      "license": {"status": "reuse-not-established", "statement": "No open content license verified for paper or figures."},
+      "localPath": "review/map/scientific-layout/temporal/sources/lineage-2019.pdf",
+      "sha256FromPriorManifest": "0c49e4d5abb5f0ca98d74143da1857113344ce725716fdfeb74850706340ea9d",
+      "whatActuallyRead": {"currentTask": "Re-read section 5.1 de-cycling paragraph and section 6.1.1 aggregation paragraphs in local plain text (lines 571-602 and 921-944).", "priorEvidence": "Prior wider reading recorded in temporal/source-evidence.json."},
+      "supports": ["Explicitly identifies duplication and loss of child-parent association in some aggregations"],
+      "limits": ["Clinical analysis objectives differ from accurate biblical kinship exploration.", "Aggregation losing parent-child association is excluded from the proposed genealogy model."]
+    },
+    {
+      "id": "timenets-2010",
+      "title": "Tracing Genealogical Data with TimeNets",
+      "authors": ["Nam Wook Kim", "Stuart K. Card", "Jeffrey Heer"],
+      "institution": "Stanford University; ACM AVI publication; author-hosted copy at University of Washington",
+      "url": "https://idl.cs.washington.edu/files/2010-TimeNets-AVI.pdf",
+      "doi": "10.1145/1842993.1843035",
+      "year": 2010,
+      "openAccess": "Author-hosted PDF already retained locally",
+      "license": {"status": "reuse-not-established", "statement": "No open content license verified for paper or figures."},
+      "localPath": "review/map/scientific-layout/temporal/sources/timenets-2010.pdf",
+      "sha256FromPriorManifest": "c491b706e73e643c9ca092afbe8ca1fbc2dd349be054c901f0978de949a94ba2",
+      "whatActuallyRead": {"currentTask": "Re-read Layout / local block segmentation and the opening of local layout in local plain text (lines 407-429).", "priorEvidence": "Prior broader reading of temporal encoding documented in temporal/report.md and source-evidence.json."},
+      "supports": ["Temporal genealogy is a separate design problem", "Its local block method has a cross-generational kinship limitation"],
+      "limits": ["Life-interval layout is outside the new genealogy-only scope.", "Algorithm is not adopted as a general solution to Tamar-like relation structures."]
+    },
+    {
+      "id": "gedcom-7",
+      "title": "The FamilySearch GEDCOM Specification 7.0.18",
+      "institution": "Family History Department, The Church of Jesus Christ of Latter-day Saints; copyright Intellectual Reserve, Inc.",
+      "url": "https://gedcom.io/specifications/FamilySearchGEDCOMv7.html",
+      "version": "7.0.18, dated 2026-02-17 on the read page",
+      "openAccess": "Public official specification",
+      "license": {"status": "readable-not-import-license", "statement": "Read page states Copyright 1984-2026 Intellectual Reserve, Inc., all rights reserved; no redistribution license newly established here."},
+      "whatActuallyRead": {"method": "Fresh official-page reads and targeted finds", "sections": ["Version and copyright", "FAMILY_RECORD", "FAM", "FAMC", "SOURCE_CITATION", "QUAY", "FAMC-STAT", "enumset-FAMC-STAT", "enumset-PEDI"]},
+      "supports": ["Separate individuals, family contexts and source citations", "Relationship type and assessment are distinct", "Imported BIRTH must not automatically mean genetic parentage"],
+      "limits": ["A genealogy interchange specification does not establish biblical facts.", "Our missing-information slots and interpretation boundaries are design proposals, not claimed GEDCOM requirements."]
+    },
+    {
+      "id": "stepbible-tipnr",
+      "title": "STEPBible Data: Translators Individualised Proper Names with all References (TIPNR)",
+      "institution": "STEPBible; based on work at Tyndale House Cambridge",
+      "url": "https://github.com/STEPBible/STEPBible-Data",
+      "version": "cb62e43c189b992a7ee5469f0c255de7f7fa3a0d",
+      "versionTimestamp": "2026-10-08T13:30:32Z",
+      "dataUrl": "https://raw.githubusercontent.com/STEPBible/STEPBible-Data/cb62e43c189b992a7ee5469f0c255de7f7fa3a0d/Proper%20Nouns/TIPNR%20-%20Translators%20Individualised%20Proper%20Names%20with%20all%20References%20-%20STEPBible.org%20CC%20BY.txt",
+      "sha256": "1dc5f15fe27b46740101515372ec1c9460e5ddd59e75b82655e3b024f3016b70",
+      "openAccess": "Official public repository and raw data read without login",
+      "license": {
+        "declared": "CC BY 4.0 in current README and file header",
+        "requirementsToRecord": ["Attribution", "License reference", "Indication of changes"],
+        "caveat": "File header requests linking upstream instead of redistribution; README allows mirrors with update/source conditions. Preserve both declarations for import review; no data imported here."
+      },
+      "whatActuallyRead": {"method": "Fresh README; GitHub commit and directory APIs; raw file loaded transiently to inspect header and hash", "scope": "Header lines 1-110, including field definitions, categories, ambiguity policy, Mentioned, English versification, AI-description provenance. Full dataset was not fact-checked."},
+      "supports": ["Candidate name disambiguation and verse discovery", "Need to distinguish textual anonymous persons from logical connecting placeholders"],
+      "limits": [
+        "Uses ESV/KJV/NIV name conventions and Standard English versification; not a Synodal correspondence table.",
+        "Mentioned can include logical connecting individuals; parent fields also distinguish ancestor/group meanings.",
+        "Brief/Short/Article descriptions are adapted from Claude 3 Opus output.",
+        "Editorial ambiguity rules cannot silently become accepted person identities or kinship facts."
+      ]
+    },
+    {
+      "id": "theographic",
+      "title": "Theographic Bible Metadata",
+      "institution": "Robert Rouse / Theographic / Viz.Bible community project",
+      "url": "https://github.com/robertrouse/theographic-bible-metadata",
+      "version": "cfb1c485d4da6fb63a69cb3b7f5b0752792f46bc",
+      "versionTimestamp": "2026-04-21T16:36:07Z",
+      "dataUrl": "https://raw.githubusercontent.com/robertrouse/theographic-bible-metadata/cfb1c485d4da6fb63a69cb3b7f5b0752792f46bc/json/people.json",
+      "sha256": "76041eba0b6f36c36514802fcfa69a068cbf06ef7b57aaec82909f509e3b6fb4",
+      "openAccess": "Official public repository, documentation, license and data read without login",
+      "license": {
+        "declared": "CC BY-SA 4.0",
+        "licenseUrl": "https://github.com/robertrouse/theographic-bible-metadata/blob/cfb1c485d4da6fb63a69cb3b7f5b0752792f46bc/LICENSE",
+        "licenseSha256": "7abe19ec9bb73b36141b999b861d24ad855e808bafe0f81e84cce28556f6c297",
+        "requirementsToRecord": ["Attribution", "License reference", "Changes", "Applicable ShareAlike and database conditions for redistributed adaptations"],
+        "caveat": "Bibliography still cites an older TIPNR under CC BY-NC; historical provenance requires reconciliation before importing a derivative. This note does not declare infringement or resolve licensing of the entire future application."
+      },
+      "whatActuallyRead": {
+        "method": "Fresh README; official APIs; raw documentation/license and JSON loaded transiently",
+        "scope": ["Bibliography in full", "JSON documentation overview, People fields/relationships and selected examples", "LICENSE opening, conditions in section 3 and database provisions in section 4", "people.json top-level schema and partial first record only"],
+        "bibliographyUrl": "https://github.com/robertrouse/theographic-bible-metadata/blob/cfb1c485d4da6fb63a69cb3b7f5b0752792f46bc/docs/data-source-bibliography.md",
+        "bibliographySha256": "e905dd5db08e67e265742a2f10f0f6f140809d8f8f7549a33e881f8341b77e1d",
+        "schemaUrl": "https://github.com/robertrouse/theographic-bible-metadata/blob/cfb1c485d4da6fb63a69cb3b7f5b0752792f46bc/docs/json-fields-documentation.md",
+        "schemaSha256": "ee456cca82777827d9f3f3ed69f6fdb1b1635d4be7e61028b2c919e915d4f714"
+      },
+      "supports": ["Candidate inventory for completeness comparison", "Example shared people/place/event/verse identifiers"],
+      "limits": [
+        "Cites TIPNR and other genealogies for people; not independent from STEP.",
+        "Uses KJV; versification and entity identity require explicit Synodal mapping.",
+        "Its Validated field labels are upstream statuses, not our independent fact acceptance.",
+        "No full dataset audit, imported factual claims, or completeness certification performed."
+      ]
+    }
+  ],
+  "handoffLimitations": [
+    "Only the two assigned research documents were created by this agent.",
+    "No source, application data, corpus, reference, tests, server, browser or shared memory edited.",
+    "No application test suite or build needed for documentation-only changes.",
+    "Independent review and a complete strategy/specification of all five tools remain outside this bounded report."
+  ]
+}
