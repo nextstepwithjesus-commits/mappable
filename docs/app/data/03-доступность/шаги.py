@@ -77,3 +77,7 @@ union1 = 1 + 1 + 2        # h3 «Союз с Лией», супруг, вид с
 judah = 4                 # Рувим, Симеон, Левий, Иуда
 print(f'7. Семейная страница Иакова: до «Иуда» смахиваний около {head + where + parents + union1 + judah}'
       f' (из них «Где я» — {where}); если «Где я» свёрнута в одну кнопку — около {head + 1 + parents + union1 + judah}')
+mt = {p['id'] for p in J if 'mt' in p}; lk = {p['id'] for p in L if 'lk' in p}
+print(f'6а. С номером текста: у Мф {len(mt)}, у Лк {len(lk)}, общих {len(mt & lk)};'
+      f' до Авраама (только Лк, «before-matthew»): {sum(1 for p in J if p.get("flag") == "before-matthew")};'
+      f' опущенных Мф 1:8: {sum(1 for p in J if p.get("flag") == "omitted-by-mt")}')
