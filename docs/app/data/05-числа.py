@@ -623,7 +623,7 @@ print('  (у каждого места: степень, оценка, лучше
 KIND = {n: 'water' for n in ('Red Sea 1', 'Red Sea 2', 'Red Sea 3', 'Salt Sea', 'Tigris', 'Arnon', 'Zered')}
 KIND.update({n: 'land' for n in ('Canaan', 'Egypt', 'Shur', 'Moriah', 'Sin', 'Zin 1', 'Wilderness of Sinai',
                                  'Cyprus', 'Pamphylia', 'Pisidia', 'Ararat', 'Ophir', 'Eden 1', 'Abarim',
-                                 'Cilicia', 'Crete', 'Pisgah')})
+                                 'Cilicia', 'Crete')})
 NEAR_KM = 3
 
 
@@ -735,7 +735,8 @@ print(f'отрезков эскизов 11.1, 11.2, 11.5: {len(SEGMENTS)}; ра�
 # Простой слой (географ, Н-3): видны стоянки с ролью в истории каталога; через пропущенные стоянки
 # линия идёт, только если у всех пропущенных есть знак (тогда — через их точки малым знаком без номера);
 # иначе линии нет. В 11.1 и 11.5 простой слой показывает все стоянки — их отрезки уже проверены выше.
-CHAIN_11_2 = [s for s in SEGMENTS if s[0] == '11.2' and s[1] >= 'Чис 33:9']   # от Мерры (4) до 11
+_s2 = [seg for seg in SEGMENTS if seg[0] == '11.2']
+CHAIN_11_2 = _s2[[seg[2][0] for seg in _s2].index('Marah'):]   # от Мерры (4) до 11
 
 
 def simple_line(chain, shown):
