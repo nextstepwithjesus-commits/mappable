@@ -219,13 +219,24 @@ export const STEPS: Step[] = [
   },
   {
     id: 'C5',
-    scope: ['origin:p-sala|p-arfaksad|'],
-    run: ({ origin }) => {
-      origin('p-sala', 'p-arfaksad', true).gapPossible = { refs: ['Лк 3:36'], via: ['p-kainan-syn-arfaksada'] };
+    scope: ['origin:p-sala|', 'origin:p-kainan-syn-arfaksada|', 'reading:r-father-sala'],
+    run: ({ base, origin }) => {
+      base.readings.push({
+        id: 'r-father-sala', title: 'Отец Салы', refs: ['Быт 10:24', 'Быт 11:12', '1Пар 1:18', '1Пар 1:24', 'Лк 3:35-36'],
+        readings: [
+          { id: 'gen', label: 'Арфаксад (Быт 10:24; 11:12; 1Пар 1:18, 24)', cert: 'scripture', refs: ['Быт 10:24', 'Быт 11:12', '1Пар 1:18', '1Пар 1:24'] },
+          { id: 'lk', label: 'Каинан, сын Арфаксада (Лк 3:35–36)', cert: 'scripture', refs: ['Лк 3:35-36'] },
+        ],
+        default: 'gen',
+        note: 'Каинан есть в основном тексте Лк 3:36; в Быт 11:12–13 он только в квадратных скобках Синодального текста — это не основание. Оба места — Писание, и одно не ставится ниже другого: при прочтении по Бытию Арфаксад — отец Салы, при прочтении по Луке — Арфаксад → Каинан → Сала. Объяснения — толкования (research/R9, § 6).',
+      });
+      origin('p-sala', 'p-arfaksad', true).reading = { set: 'r-father-sala', in: ['gen'] };
+      origin('p-sala', 'p-kainan-syn-arfaksada', false).reading = { set: 'r-father-sala', in: ['lk'] };
+      origin('p-kainan-syn-arfaksada', 'p-arfaksad').reading = { set: 'r-father-sala', in: ['lk'] };
       return {
-        what: 'Арфаксад → Сала: возможный пропуск поколения через Каинана (Лк 3:36); при расчёте через Каинана ребро считается предком, а не отцом',
-        why: 'Каинан есть в основном тексте Лк 3:36, в Быт 11:12 — только в скобках: это пропуск, а не иное прочтение (02, § 3.4); Каинан не должен выходить братом Салы (рецензия Д1, № 5)',
-        refs: ['Лк 3:36', 'Быт 11:12'],
+        what: 'Отец Салы: набор прочтений r-father-sala — Арфаксад (Быт 11:12) или Каинан (Лк 3:36); ребро Арфаксад → Каинан действует только при прочтении по Луке',
+        why: 'Постоянное понижение ребра Бытия до «предка» было постоянно включённым прочтением Луки, а безусловное ребро к Каинану ставило его братом Салы (рецензия 03, библеист, № 2)',
+        refs: ['Быт 11:12', 'Лк 3:36'],
         actors: [],
       };
     },
@@ -279,11 +290,11 @@ export const STEPS: Step[] = [
       lk.basis =
         'Лк 3:23–38: Иисус «был, как думали, Сын Иосифов, Илиев» — и так до Адама. По букве текста линия кончается Иосифом. ' +
         'По распространённому толкованию это родословие Марии (Илий — Её отец); Давидово происхождение Иисуса по плоти: Лк 1:32; Рим 1:3; Деян 2:30; 2Тим 2:8.';
-      lk.readings = { 'r-lk3-23': 'lk', 'r-shealtiel': 'lk', 'r-zerubbabel': 'mt' };
+      lk.readings = { 'r-lk3-23': 'lk', 'r-shealtiel': 'lk', 'r-zerubbabel': 'mt', 'r-father-sala': 'lk' };
       delete base.lines.mary;
       base.lines.luke = lk;
       hints.lineIdmap = { luke: 'mary' };
-      base.lines.joseph.readings = { 'r-lk3-23': 'mt', 'r-shealtiel': 'mt', 'r-zerubbabel': 'mt' };
+      base.lines.joseph.readings = { 'r-lk3-23': 'mt', 'r-shealtiel': 'mt', 'r-zerubbabel': 'mt', 'r-father-sala': 'gen' };
       // карточки не должны говорить, что атлас выбрал толкование
       const SAY = 'Атлас не выбирает между пониманиями: линия по Луке идёт по букве текста до Иосифа, понимания показываются рядом';
       for (const id of ['p-iosif-muzh-marii', HELI, 'p-iisus']) {
@@ -444,6 +455,45 @@ export const STEPS: Step[] = [
         why: 'Иначе расчёт выводит ложное родство: Кис выходит и сыном, и братом Нира (1Пар 8:33; 1Цар 14:51) (02, § 3.4; рецензия Д1, № 5; повторная проверка П2, П9)',
         refs: ['1Пар 8:33', '1Цар 14:51', '1Пар 2:50'],
         actors: ['shoval-otets-kiriaf-iarima'],
+      };
+    },
+  },
+  {
+    id: 'C12',
+    scope: ['origin:'],
+    run: ({ base }) => {
+      // пропуск подтверждён, только если пропущенных называет другое место: есть цепь названных лиц от родителя к ребёнку
+      const par = new Map<string, string[]>();
+      for (const o of base.origins) if (o.parent && o.kind === 'natural' && !o.gap) par.set(o.child, [...(par.get(o.child) ?? []), o.parent]);
+      const reaches = (from: string, to: string) => {
+        const seen = new Set<string>();
+        const stack = [...(par.get(from) ?? [])];
+        while (stack.length) {
+          const x = stack.pop()!;
+          if (x === to) return true;
+          if (seen.has(x)) continue;
+          seen.add(x);
+          stack.push(...(par.get(x) ?? []));
+        }
+        return false;
+      };
+      const touched: string[] = [];
+      for (const o of base.origins) {
+        if (!o.gap || !o.parent || reaches(o.child, o.parent)) continue;
+        delete o.gap;
+        o.gapSuspected = 'составитель прежних данных предполагал пропуск поколений; ни одно место текста пропущенных не называет — толкование или хронологическое напряжение (документ 04)';
+        touched.push(o.child.slice(2));
+      }
+      // Рахава: мать Вооза названа только в Мф 1:5
+      const rahab = base.origins.find((o) => o.child === 'p-vooz' && o.role === 'mother');
+      if (!rahab) throw new Error('нет ребра матери Вооза');
+      rahab.refs = ['Мф 1:5'];
+      delete rahab.refsShared;
+      return {
+        what: `Пропуск поколений (${touched.length} рёбер): пометка снята, потому что ни одно место не называет пропущенных; на ребре — слово текста, подозрение о пропуске сохранено как толкование (gapSuspected). Ребро Рахава → Вооз — только Мф 1:5`,
+        why: 'Знак пропуска и слово «потомок» — только когда другое место называет пропущенных (рецензия 03, библеист, № 1); «Салмон родил Вооза от Рахавы» (Мф 1:5)',
+        refs: ['Мф 1:5', 'Мф 1:8', 'Руф 4:21'],
+        actors: [...new Set([...touched, 'vooz'])],
       };
     },
   },

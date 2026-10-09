@@ -6,7 +6,7 @@
   "status": "draft",
   "from": {
    "vol": "data/lines/luke.json",
-   "commit": "7a3d429"
+   "commit": "9f02531"
   }
  },
  "id": "luke",
@@ -672,6 +672,7 @@
  "readings": {
   "r-lk3-23": "lk",
   "r-shealtiel": "lk",
-  "r-zerubbabel": "mt"
+  "r-zerubbabel": "mt",
+  "r-father-sala": "lk"
  }
 }

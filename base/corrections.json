@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data",
-   "commit": "7a3d429"
+   "commit": "9f02531"
   }
  },
  "items": [
@@ -177,11 +177,11 @@
   },
   {
    "id": "C5",
-   "what": "Арфаксад → Сала: возможный пропуск поколения через Каинана (Лк 3:36); при расчёте через Каинана ребро считается предком, а не отцом",
-   "why": "Каинан есть в основном тексте Лк 3:36, в Быт 11:12 — только в скобках: это пропуск, а не иное прочтение (02, § 3.4); Каинан не должен выходить братом Салы (рецензия Д1, № 5)",
+   "what": "Отец Салы: набор прочтений r-father-sala — Арфаксад (Быт 11:12) или Каинан (Лк 3:36); ребро Арфаксад → Каинан действует только при прочтении по Луке",
+   "why": "Постоянное понижение ребра Бытия до «предка» было постоянно включённым прочтением Луки, а безусловное ребро к Каинану ставило его братом Салы (рецензия 03, библеист, № 2)",
    "refs": [
-    "Лк 3:36",
-    "Быт 11:12"
+    "Быт 11:12",
+    "Лк 3:36"
    ],
    "actors": []
   },
@@ -1038,6 +1038,84 @@
    ],
    "actors": [
     "shoval-otets-kiriaf-iarima"
+   ]
+  },
+  {
+   "id": "C12",
+   "what": "Пропуск поколений (67 рёбер): пометка снята, потому что ни одно место не называет пропущенных; на ребре — слово текста, подозрение о пропуске сохранено как толкование (gapSuspected). Ребро Рахава → Вооз — только Мф 1:5",
+   "why": "Знак пропуска и слово «потомок» — только когда другое место называет пропущенных (рецензия 03, библеист, № 1); «Салмон родил Вооза от Рахавы» (Мф 1:5)",
+   "refs": [
+    "Мф 1:5",
+    "Мф 1:8",
+    "Руф 4:21"
+   ],
+   "actors": [
+    "filistimlyane",
+    "iair-syn-seguva",
+    "vooz",
+    "ashbeya",
+    "iokim-syn-siloma",
+    "ioash-syn-siloma",
+    "saraf",
+    "iashuvilekhem",
+    "ezdra",
+    "iekhiil-syn-laedana",
+    "zefam",
+    "ioil-syn-laedana",
+    "iakhaf-syn-shimeya",
+    "ziza",
+    "ieush-syn-shimeya",
+    "beriya-syn-shimeya",
+    "shevuil-syn-girsama",
+    "iediya",
+    "ishshiya-syn-rekhavii",
+    "shelomif-syn-itsgara",
+    "iakhav-syn-shelomofa",
+    "ieriya",
+    "amariya-syn-khevrona",
+    "iakhaziil-syn-khevrona",
+    "iekamam",
+    "mikha-syn-uziila",
+    "ishshiya-syn-uziila",
+    "shamir",
+    "zakhariya-syn-ishshii",
+    "eleazar-syn-makhli",
+    "kis-syn-makhli",
+    "eder-syn-mushi",
+    "ieremof-syn-mushi",
+    "kore-syn-eviasafa",
+    "shallum-syn-kore",
+    "meshillemif",
+    "zikhriy-syn-asafa",
+    "galal-syn-idifuna",
+    "uriya-syn-gakkotsa",
+    "eliav-syn-fallu",
+    "khefer-syn-galaada",
+    "valtasar-tsar",
+    "aviud-syn-zorovavelya",
+    "eliakim-syn-aviuda",
+    "azor",
+    "sadok-syn-azora",
+    "akhim",
+    "eliud",
+    "eleazar-syn-eliuda",
+    "matfan",
+    "iakov-otets-iosifa",
+    "sheshay",
+    "akhiman-syn-enaka",
+    "falmay-syn-enaka",
+    "bogan",
+    "isbosef",
+    "zakhariya-syn-shiloniya",
+    "iedaiya-syn-ioiariva",
+    "seraiya-syn-khelkii-neem11",
+    "zakhariya-syn-bevaya",
+    "malkhiya-iz-synovey-kharima",
+    "khashshuv-syn-pakhaf-moava",
+    "bavvay-syn-khenadada",
+    "binnuy-syn-khenadada",
+    "fedaiya-syn-parosha",
+    "sadok-syn-immera"
    ]
   },
   {

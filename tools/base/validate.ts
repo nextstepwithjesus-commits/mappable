@@ -359,7 +359,7 @@ export function validate(base: Base): Issue[] {
     for (const cs of kids.values()) {
       for (const [x, vx] of cs) for (const [y, vy] of cs) if (x !== y && !vx.includes(y) && !vy.includes(x)) sib.add(`${x}|${y}`);
     }
-    // Каинан не выходит братом Салы: ребро с возможным пропуском через него — предок (C5)
+    // Каинан не выходит братом Салы ни при одном прочтении (C5)
     if (sib.has('p-sala|p-kainan-syn-arfaksada')) err('прочтения', 'p-sala', `Сала и Каинан выходят братьями при прочтениях [${name}]`);
     for (const pair of married) if (sib.has(pair) && !kinPairs.has(pair)) err('прочтения', pair, `супруги выходят братом и сестрой при прочтениях [${name}]`);
   }

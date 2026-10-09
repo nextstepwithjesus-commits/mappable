@@ -6,7 +6,7 @@
   "status": "draft",
   "from": {
    "vol": "data/lines/joseph.json",
-   "commit": "7a3d429"
+   "commit": "9f02531"
   }
  },
  "id": "joseph",
@@ -656,6 +656,7 @@
  "readings": {
   "r-lk3-23": "mt",
   "r-shealtiel": "mt",
-  "r-zerubbabel": "mt"
+  "r-zerubbabel": "mt",
+  "r-father-sala": "gen"
  }
 }
