@@ -2,8 +2,19 @@
 
 Запуск из корня: python3 -I docs/app/data/07-цитаты.py [путь к документу]
 Цитата проверяется, если сразу за ней (не дальше 60 знаков, до следующей «)
-стоит адрес стиха. Сравнение без регистра, ё, знаков препинания и квадратных
-скобок; многоточие делит цитату на части, каждая часть ищется отдельно.
+стоит адрес стиха. Несколько цитат подряд перед одним адресом (между ними не
+больше 25 знаков без адреса) проверяются вместе.
+
+Правила сравнения:
+- без регистра, ё, знаков препинания и квадратных скобок; по целым словам;
+- многоточие делит цитату на части; части ищутся по порядку;
+- адрес делится на единицы: отдельный стих или непрерывный диапазон;
+- одна цитата должна найтись в КАЖДОЙ единице своего адреса;
+- в цепочке цитат каждая цитата должна найтись хотя бы в одной единице,
+  и в каждой единице — хотя бы одна цитата.
+
+Не проверяются: цитаты с адресом перед ними, адрес без названия книги,
+адрес дальше 60 знаков; форма имени в строке без кавычек.
 """
 import re, sys
 
@@ -25,8 +36,8 @@ def norm(s):
     return ' '.join(s.split())
 
 
-def parse_refs(s):
-    """Адреса подряд, начиная с первого; книга наследуется."""
+def parse_units(s):
+    """Адреса подряд, начиная с первого; книга наследуется. Список единиц."""
     out, book = [], None
     pos = 0
     for m in REF_RE.finditer(s):
@@ -40,8 +51,7 @@ def parse_refs(s):
         ch = int(m.group(2))
         for part in re.split(r',\s*', m.group(3)):
             a, _, z = part.replace('–', '-').partition('-')
-            for v in range(int(a), int(z or a) + 1):
-                out.append((book, ch, v))
+            out.append([(book, ch, v) for v in range(int(a), int(z or a) + 1)])
         pos = m.end()
     return out
 
@@ -58,34 +68,61 @@ ATLAS = {
     'Был с апостолами в горнице (Деян 1:13).', 'С её ведома муж утаил часть цены (Деян 5:2).',
     'После вознесения пребывал с Апостолами в горнице', 'после вознесения',
     'приложил печать к завету', 'Деян 1:9–13',
+    'Пребывал в горнице с Петром, Иаковом, Иоанном и другими (Деян 1:13).',
+    'притча', 'Писание', 'Кратко', 'пророчество', 'Luke', 'толк.', 'Кто Он', 'Род',
+    'Смерть, воскресение, вознесение', 'Откуда',
+    'Богородица', 'Иоанн Богослов', 'Иосиф Обручник', 'Предтеча',
 }
 
 src = open(DOC, encoding='utf-8').read()
 flat = re.sub(r'\s+', ' ', src)
+
+
+def found(q, unit):
+    text = ' ' + norm(' '.join(TEXT.get(x, '') for x in unit)) + ' '
+    pos = 0
+    for p in [norm(x) for x in re.split(r'…|\.\.\.', q) if norm(x)]:
+        i = text.find(' ' + p + ' ', pos)
+        if i < 0:
+            return False
+        pos = i + len(p)
+    return True
+
+
+quotes = [(m.start(), m.end(), m.group(1)) for m in re.finditer(r'«([^«»]{3,}?)»', flat)]
 checked = failed = 0
-for m in re.finditer(r'«([^«»]{8,}?)»', flat):
-    q = m.group(1)
-    if q in ATLAS:
-        continue
-    tail = flat[m.end():m.end() + 160]
-    nxt = tail.find('«')
-    if nxt != -1:
-        tail = tail[:nxt]
+chain = []
+for k, (a, z, q) in enumerate(quotes):
+    nxt = quotes[k + 1][0] if k + 1 < len(quotes) else len(flat)
+    tail = flat[z:min(nxt, z + 160)]
     r = REF_RE.search(tail)
+    if q not in ATLAS:
+        chain.append(q)
     if not r or r.start() > 60 or not r.group(1):
+        if nxt - z <= 25 and not r:
+            continue                      # цепочка: следующая цитата даст адрес
+        chain = []
         continue
-    refs = parse_refs(tail[r.start():])
-    if not refs:
+    units = parse_units(tail[r.start():])
+    qs, chain = chain, []
+    if not units or not qs:
         continue
-    missing = [x for x in refs if x not in TEXT]
-    body = norm(' '.join(TEXT.get(x, '') for x in refs))
-    parts = [norm(p) for p in re.split(r'…|\.\.\.', q) if len(norm(p).split()) >= 2]
-    if not parts:
-        continue
-    checked += 1
-    bad = [p for p in parts if p not in body]
-    if missing or bad:
+    missing = [x for u in units for x in u if x not in TEXT]
+    where = '; '.join(', '.join(f'{b} {c}:{v}' for b, c, v in u) for u in units[:6])
+    checked += len(qs)
+    if missing:
         failed += 1
-        where = ', '.join(f'{b} {c}:{v}' for b, c, v in refs[:6])
-        print(f'НЕ НАЙДЕНО  «{q[:90]}»  ← {where}' + (f'  (нет стиха: {missing})' if missing else ''))
+        print(f'НЕТ СТИХА  {missing}  ← «{qs[0][:60]}»')
+        continue
+    if len(qs) == 1:
+        bad = [u for u in units if not found(qs[0], u)]
+        if bad:
+            failed += 1
+            print(f'НЕ НАЙДЕНО  «{qs[0][:90]}»  ← {where}' + ('' if len(bad) == len(units) else '  (не во всех стихах)'))
+    else:
+        bad_q = [x for x in qs if not any(found(x, u) for u in units)]
+        bad_u = [u for u in units if not any(found(x, u) for x in qs)]
+        if bad_q or bad_u:
+            failed += 1
+            print(f'ЦЕПОЧКА НЕ СХОДИТСЯ  {["«"+x[:40]+"»" for x in bad_q]}  ← {where}')
 print(f'Проверено цитат: {checked}; не найдено: {failed}')
