@@ -3,8 +3,12 @@ A={a['id']:a for f in glob.glob('base/actors/*.json') for a in json.load(open(f)
 O=json.load(open('base/origins.json'))['items']; U=json.load(open('base/unions.json'))['items']; K=json.load(open('base/kin.json'))['items']
 R={r['id']:r['default'] for r in json.load(open('base/readings.json'))['items']}
 act=lambda o: (not o.get('reading')) or R[o['reading']['set']] in o['reading']['in']
+# ред. 5 (решение координатора по 02 § 3.3, после Д3-11): ребро с тождеством «предположительно» в лесу не рисуется и в отчётах не считается;
+# лица Генеалогии считаются по всем рёбрам (O_ALL), раскладка и отчёты — по рисуемым (O)
+O_ALL=O; O=[o for o in O_ALL if (o.get('identity') or {}).get('degree')!='possible']
+print('edges all',sum(1 for o in O_ALL if o.get('parent')),'with identity',dict(collections.Counter((o['identity']['of'],o['identity']['degree']) for o in O_ALL if o.get('identity'))),'drawn',sum(1 for o in O if o.get('parent')))
 inG=set()
-for o in O:
+for o in O_ALL:
   if o.get('parent'): inG|={o['child'],o['parent']}
 for u in U: inG|={u['husband'],u['wife']}
 kinonly={k['from'] for k in K}|{k['to'] for k in K}
@@ -73,7 +77,7 @@ contour=lambda g: g in AR and AR[g]['kind'] in('tribe','house','nation') and AR[
 print('areas with contour',sum(1 for g in AR if contour(g)),'houses without founder',[AR[g]['name'] for g in AR if AR[g]['kind']=='house' and not AR[g].get('founder')])
 cl=collections.Counter(); cp=collections.Counter()
 for c in comps[1:]:
-  top=collections.Counter(mem[x] for x in c if x in mem).most_common(1)
+  top=sorted(collections.Counter(mem[x] for x in c if x in mem).items(),key=lambda kv:(-kv[1],kv[0]))[:1]  # ред. 5: ничья — по номеру области, без случайности
   k='contour' if top and contour(top[0][0]) else 'no-contour'
   cl[k]+=1; cp[k]+=len(c)
 print('islands by area of most members',dict(cl),'persons',dict(cp))
@@ -145,7 +149,7 @@ for p,cs in kidsof.items():
     for c in cs:
       if c not in mo and A[c]['kind'] in('human','unnamed') and kids[c].get('father',{}).get('parent')==p: fw[p].append(c)
 print('fathers with a named wife and children without named mother',len(fw),'children',sum(map(len,fw.values())),'of them with one union',sum(1 for p in fw if len(wv[p])==1))
-print('special edges',[(o['kind'],nm(o['parent']),nm(o['child'])) for o in O if o.get('parent') and o['kind'] in('adoptive','legal')])
+print('special edges',[(o['kind'],nm(o['parent']),nm(o['child'])) for o in O if o.get('parent') and o['kind'] in('adoptive','legal','parents-word')])
 big=sorted(kidsof.items(),key=lambda kv:-len(kv[1]))[:7]
 print('largest families (natural, primary)',[(nm(p),len(cs)) for p,cs in big],'most unions',[(nm(h),len(v)) for h,v in sorted(wv.items(),key=lambda kv:-len(kv[1]))[:2]])
 # 3. линии Мессии
@@ -368,3 +372,102 @@ print('ahnentafel rows David',len(R19)-1,'unique',len(cD)-1,'repeated persons',[
 RJ=ahnen('p-iosif-muzh-marii'); cJ=_C(x for m,g,x in RJ)
 print('ahnentafel rows Joseph (Mt)',len(RJ)-1,'unique',len(cJ)-1,'repeated',len([x for x,c in cJ.items() if c>1]))
 print('prominence 5 in G',sum(1 for i in G if A[i].get('prominence')==5),'prominence >=4',sum(1 for i in G if (A[i].get('prominence') or 0)>=4))
+# --- редакция 5 (панель на ред. 4) ---
+print('== редакция 5')
+# 21. союзы по видам (число союзов, не слов)
+print('unions by kind',dict(collections.Counter(sorted({t['kind'] for t in u['terms']}).__str__() for u in U)))
+only_conc=[(nm(u['husband']),nm(u['wife'])) for u in U if {t['kind'] for t in u['terms']}=={'concubine'}]
+print('unions with only «наложница»',len(only_conc),only_conc)
+# 22. обзор: честный счётчик каждой области (потомки основателя до границы другой области; Сыны Хеттуры — от союза) и размах рядов
+founders={}
+for g in AR:
+  if contour(g):
+    f=AR[g]['founder']; founders[g]=f if isinstance(f,str) else (f[0] if f else None)
+stopset={f for f in founders.values() if f}
+def desc_stop(roots,own):
+  s=set(); st=list(roots)
+  while st:
+    x=st.pop()
+    for c in ch.get(x,[]) if isinstance(ch,dict) else []:
+      pass
+  return s
+chs=collections.defaultdict(set)
+for o in E:
+  if act(o) and o['kind'] in('natural','ancestor') and o['cert'] in('scripture','inference'): chs[o['parent']].add(o['child'])
+def dstop(roots,own):
+  s=set(); st=list(roots)
+  while st:
+    x=st.pop()
+    for c in chs[x]:
+      if c in s: continue
+      if c in stopset and c!=own: continue
+      s.add(c); st.append(c)
+  return s
+nested={g:[h for h in AR if AR[h].get('parent')==g] for g in AR}
+rows_area={}
+for g in sorted(founders,key=lambda g:AR[g]['name']):
+  f=founders[g]
+  if AR[g]['name']=='Сыны Хеттуры':
+    roots=[c for c in kidsof['p-avraam'] if kids.get(c,{}).get('mother',{}).get('parent')=='p-khettura']; base_=set(roots)|dstop(roots,None)
+  else:
+    base_=dstop([f],f) if f else set()
+  # вложенные области с контуром считаются внутри
+  for h in nested[g]:
+    if h in founders and founders[h]: base_|={founders[h]}|dstop([founders[h]],founders[h])
+  mem_rows=[row(x)[0] for x in base_ if row(x)[1]=='p-adam']  # размах рядов — по потомкам основателя
+  frow=row(f)[0] if f and row(f)[1]=='p-adam' else None
+  print('area r5',AR[g]['name'],'| founder',nm(f) if f else '-','| kin count',len(base_),'| members',own[g]+sum(own[h] for h in nested[g]),'| founder row',frow,'| rows',(min(mem_rows),max(mem_rows)) if mem_rows else None)
+# 23. отбор «только отобранные»: доля изолированных (нет другого отобранного в той же семье-острове по рёбрам родитель — ребёнок обоих родителей, «из сыновей» и союзам)
+adj=collections.defaultdict(set)
+for o in E:
+  if act(o) and o['kind'] in('natural','ancestor','adoptive') and o['cert'] in('scripture','inference'): adj[o['parent']].add(o['child']); adj[o['child']].add(o['parent'])
+for u in U: adj[u['husband']].add(u['wife']); adj[u['wife']].add(u['husband'])
+compid={}
+for n in G:
+  if n in compid: continue
+  st=[n]; cid=n
+  while st:
+    x=st.pop()
+    if x in compid: continue
+    compid[x]=cid; st+=list(adj[x])
+groups={'названные женщины':[i for i in G if A[i].get('sex')=='f' and A[i]['kind']=='human'],
+        'цари':[i for i in G if 'king' in (A[i].get('roles') or [])],
+        'пророки':[i for i in G if 'prophet' in (A[i].get('roles') or [])],
+        'священники':[i for i in G if 'priest' in (A[i].get('roles') or [])]}
+for k,v in groups.items():
+  cc=collections.Counter(compid[i] for i in v); iso=sum(1 for i in v if cc[compid[i]]==1)
+  print('induced tree',k,'selected',len(v),'isolated',iso,'share %',round(iso/len(v)*100))
+# 24. песочные часы по поколениям (вниз — все кровные дети; вверх — оба родителя)
+def gens_down(p,m):
+  fr={p}; out=[]
+  for _ in range(m): fr={c for x in fr for c in chs[x]}; out.append(len(fr))
+  return out
+for p in ['p-david','p-avraam','p-iakov']: print('hourglass per generation down',nm(p),gens_down(p,3))
+# 25. Аненталь без пути «по словам» (ребро Фарра → Сарра снято)
+par_ns={k:dict(v) for k,v in par4.items()}
+par_ns.get('p-sarra',{}).pop('father',None)
+def ahnen2(p,P):
+  rows=[(1,0,p)]; q=[(1,0,p)]
+  while q:
+    n,g,x=q.pop(0)
+    for r,pp in sorted(P.get(x,{}).items(),key=lambda kv: kv[0]!='father'):
+      m=2*n+(0 if r=='father' else 1); rows.append((m,g+1,pp)); q.append((m,g+1,pp))
+  return rows
+r2=ahnen2('p-david',par_ns); print('ahnentafel David without saidBy path: rows',len(r2)-1,'unique',len({x for m,g,x in r2})-1)
+gap_on_path=lambda p:[ (nm(o['parent']),nm(o['child'])) for o in E if o.get('gapSuspected') and o['child'] in ({x for m,g,x in ahnen('p-ezdra')}|{'p-ezdra'}) and o['parent'] in {x for m,g,x in ahnen(p)} ]
+print('gapSuspected on ancestor path: Ezra',len(gap_on_path('p-ezdra')),'David',len([1 for o in E if o.get('gapSuspected') and o['child'] in {x for m,g,x in ahnen('p-david')} and o['parent'] in {x for m,g,x in ahnen('p-david')}]))
+print('max ahnentafel generation David / Joseph / Ezra',max(g for m,g,x in ahnen('p-david')),max(g for m,g,x in ahnen('p-iosif-muzh-marii')),max(g for m,g,x in ahnen('p-ezdra')))
+# 26. GEDCOM по правилу ред. 5: FAM на союз + FAM на каждого ребёнка без названной матери + FAM только с матерью
+kids_nomother=[c for c,x in kids.items() if 'father' in x and 'mother' not in x and x['father']['kind']=='natural']
+print('GEDCOM r5: FAM unions',len(U),'children without named mother (one FAM each)',len(kids_nomother),'mother-only FAM',fam_mother_only,'total',len(U)+len(kids_nomother)+fam_mother_only)
+long_ids=sum(1 for i in G if len(i)>20); print('person ids longer than 20 in Genealogy',long_ids,'max',max(len(i) for i in G))
+# 27. обзор-диаграмма: полосы областей по оси «ряд» (ред. 5); подпись строчными + число, Golos 450 12 px
+if len(sys.argv)>1:
+  labs=[]
+  for g in founders:
+    nmg=AR[g]['name']; labs.append(nmg[0]+nmg[1:])
+  wl=max(round(g45(l+' · 442',12)) for l in labs)
+  for w,h in [(1280,800),(1280,720),(1024,768)]:
+    other=160; bar=w-48-wl-16-other; per=bar/71
+    H=h-64-48-64; need=48+28*20
+    print('overview bars',w,'x',h,': label column',wl,'px, bar area',round(bar),'px,',round(per,1),'px per row; height need',need,'of',H)
