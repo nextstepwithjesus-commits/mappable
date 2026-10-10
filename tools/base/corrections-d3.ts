@@ -13,6 +13,7 @@ import { loadBible } from '../bible.ts';
 import { compareRefs, parseRef, verseId } from '../../src/engine/books.ts';
 import { nameMatcher, norm } from '../../src/engine/text.ts';
 import { namedVerses, ownRefs } from './own-verses.ts';
+import { STEPS_D3_11 } from './corrections-d3-11.ts';
 
 const by = (id: string) => ({ by: `исправление ${id}` });
 
@@ -467,8 +468,8 @@ export const STEPS_D3: Step[] = [
         const rs = cache.get(a.id)!;
         const was = n.read ?? [];
         const extra = was.filter((r) => !rs.includes(r));
-        if (rs.some((r) => !was.includes(r))) throw new Error(`${n.actor} § ${n.sec}: строгий список шире прежнего`);
-        if (!extra.length && !!rs.length === !n.needsReading) continue;
+        const added = rs.filter((r) => !was.includes(r));
+        if (!extra.length && !added.length && !!rs.length === !n.needsReading) continue;
         dropped += extra.length;
         changed++;
         if (rs.length) {
@@ -490,3 +491,6 @@ export const STEPS_D3: Step[] = [
     },
   },
 ];
+
+// очередь Д3-11 (рёбра «толкование», C45–C47) — до C41: списки «прочитано» собираются по готовым рёбрам
+STEPS_D3.splice(STEPS_D3.findIndex((s) => s.id === 'C41'), 0, ...STEPS_D3_11);

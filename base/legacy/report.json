@@ -1,7 +1,7 @@
 {
  "schema": 1,
  "title": "Отчёт переноса: отличия обратной проекции от прежних данных и исправления, которые их объясняют",
- "commit": "38ef90d",
+ "commit": "4cb54b6",
  "exact": "точный перенос совпал с прежними данными без отличий",
  "note": "steps — ключи записей, изменённые каждым шагом исправления (все в объявленной области шага); projection — отличия прежнего вида по лицам и полям",
  "steps": {
@@ -2438,6 +2438,98 @@
    "origin:p-sarra|p-farra|father|p",
    "kin:p-sarra|p-farra|невестка"
   ],
+  "C45": [
+   "origin:p-dishon-syn-any|p-ana-syn-tsiveona|father|p",
+   "origin:p-khemdan|p-dishon-syn-seira|father|p",
+   "origin:p-eshban|p-dishon-syn-seira|father|p",
+   "origin:p-ifran-syn-dishona|p-dishon-syn-seira|father|p",
+   "origin:p-kheran|p-dishon-syn-seira|father|p",
+   "origin:p-iered-otets-gedora|p-mered|father|p",
+   "origin:p-khever-otets-sokho|p-mered|father|p",
+   "origin:p-iekufiil|p-mered|father|p",
+   "origin:p-garmi|p-mered|father|p",
+   "origin:p-eshfemoa-maakhatyanin|p-mered|father|p",
+   "origin:p-ashbeya|p-shela-syn-iudy|father|p",
+   "origin:p-khovav|p-iofor|father|p",
+   "origin:p-idifun|p-kishiy|father|p",
+   "origin:p-meshillemif|p-immer|father|p",
+   "origin:p-uriya-syn-gakkotsa|p-gakkots|father|p",
+   "origin:p-elioenay-ezd10-22|p-pashkhur-syn-malkhii|father|o",
+   "origin:p-maaseya-ezd10-22|p-pashkhur-syn-malkhii|father|o",
+   "origin:p-ismail-ezd10-22|p-pashkhur-syn-malkhii|father|o",
+   "origin:p-nafanail-ezd10-22|p-pashkhur-syn-malkhii|father|o",
+   "origin:p-iozavad-ezd10-22|p-pashkhur-syn-malkhii|father|o",
+   "origin:p-elasa-ezd10-22|p-pashkhur-syn-malkhii|father|o",
+   "origin:p-adna-neem12|p-rekhum-neem12|father|o",
+   "origin:p-shallum-syn-saula|p-saul-syn-simeona|father|p",
+   "origin:p-ulam-syn-sheresha|p-sheresh-syn-makhira|father|p",
+   "origin:p-rekem-syn-sheresha|p-sheresh-syn-makhira|father|p",
+   "origin:p-sheera|p-efrem|father|p",
+   "origin:p-refay|p-beriya-syn-efrema|father|p",
+   "origin:p-reshef|p-beriya-syn-efrema|father|p",
+   "origin:p-felakh|p-reshef|father|p",
+   "origin:p-shupim-syn-ira|p-iri-syn-bely|father|p",
+   "origin:p-khupim-syn-ira|p-iri-syn-bely|father|p",
+   "origin:p-uzza-syn-gery|p-gera-syn-eguda|father|p",
+   "origin:p-akhikhud-syn-gery|p-gera-syn-eguda|father|p",
+   "origin:p-birzaif|p-malkhiil|father|p",
+   "origin:p-aod|p-gera-syn-veniamina|father|o",
+   "origin:p-naval|p-khalev|father|o",
+   "origin:p-eliam|p-akhitofel|father|p",
+   "origin:p-refaiya-syn-isaii|p-isaiya-syn-khananii|father|p",
+   "origin:p-iezaniya-syn-shafana|p-shafan|father|p",
+   "origin:p-paskhor-syn-emmera|p-immer|father|o",
+   "origin:p-valtasar-tsar|p-navukhodonosor|father|o",
+   "origin:p-amoriya-praded-sofonii|p-ezekiya|father|p",
+   "origin:p-iodai-syn-vanei|p-vaneya-syn-iodaya|father|p",
+   "origin:p-vaana-syn-akhiluda|p-akhilud|father|p",
+   "origin:p-sovokhay|p-zara|father|o",
+   "origin:p-magaray|p-zara|father|o",
+   "origin:p-iaasiil-syn-avenira|p-avenir|father|p",
+   "origin:p-iedaiya-syn-ioiariva|p-iegoiariv|father|p",
+   "origin:p-iokhanan-syn-eliashiva|p-eliashiv-pervosvyashchennik|father|p",
+   "origin:p-sadok-syn-immera|p-immer|father|p",
+   "origin:p-ashbeya|p-shela-syn-iudy|father|o"
+  ],
+  "C46": [
+   "actor:p-maresha-otets-khevrona.facts.notes",
+   "actor:p-garum.facts.notes",
+   "actor:p-shimey-1par23-9.facts.notes",
+   "actor:p-ionafan-syn-girsama.facts.notes",
+   "actor:p-molekhef.facts.notes",
+   "actor:p-kimgam.facts.notes",
+   "actor:p-efan-ezrakhityanin.facts.notes",
+   "actor:p-eman-syn-makhola.facts.notes",
+   "actor:p-lorukhama.facts.notes",
+   "actor:p-loammi.facts.notes",
+   "actor:p-iisus-rod-pakhaf-moava.facts.notes",
+   "actor:p-ioav-rod.facts.notes",
+   "actor:p-shilon.facts.notes",
+   "actor:p-khabayya.facts.notes",
+   "origin:p-starshaya-doch-lota|p-zhena-lota|mother|p",
+   "origin:p-mladshaya-doch-lota|p-zhena-lota|mother|p",
+   "origin:p-maresha-otets-khevrona|p-khalev-syn-esroma|father|p",
+   "origin:p-garum|p-kots-otets-anuva|father|p",
+   "origin:p-shimey-1par23-9|p-laedan|father|o",
+   "origin:p-ionafan-syn-girsama|p-girsam|father|p",
+   "origin:p-molekhef|p-makhir|father|p",
+   "origin:p-kimgam|p-verzelliy-galaadityanin|father|p",
+   "origin:p-efan-ezrakhityanin|p-makhol|father|p",
+   "origin:p-eman-syn-makhola|p-makhol|father|p",
+   "origin:p-lorukhama|p-osiya-prorok|father|p",
+   "origin:p-loammi|p-osiya-prorok|father|p",
+   "origin:p-iisus-rod-pakhaf-moava|p-pakhaf-moav|father|o",
+   "origin:p-ioav-rod|p-pakhaf-moav|father|o",
+   "origin:p-shilon|p-shela-syn-iudy|father|o",
+   "origin:p-khabayya|p-aaron|father|o",
+   "kin:p-molekhef|p-galaad-syn-makhira|сестра",
+   "actor:p-starshaya-doch-lota.facts.notes",
+   "actor:p-mladshaya-doch-lota.facts.notes"
+  ],
+  "C47": [
+   "origin:p-iisus|p-iosif-muzh-marii|father|p",
+   "reading:r-iosif-iisus"
+  ],
   "C41": [
    "nodata:p-adam|4|silent",
    "nodata:p-adam|7|silent",
@@ -3956,6 +4048,24 @@
   },
   {
    "what": "лицо",
+   "id": "starshaya-doch-lota",
+   "fields": [
+    "mother",
+    "motherCert",
+    "card.notes"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "mladshaya-doch-lota",
+   "fields": [
+    "mother",
+    "motherCert",
+    "card.notes"
+   ]
+  },
+  {
+   "what": "лицо",
    "id": "moav",
    "fields": [
     "card.original",
@@ -4625,6 +4735,7 @@
    "what": "лицо",
    "id": "dishon-syn-any",
    "fields": [
+    "parentCert",
     "card.original"
    ]
   },
@@ -4639,6 +4750,7 @@
    "what": "лицо",
    "id": "khemdan",
    "fields": [
+    "parentCert",
     "card.original"
    ]
   },
@@ -4646,6 +4758,7 @@
    "what": "лицо",
    "id": "eshban",
    "fields": [
+    "parentCert",
     "card.original"
    ]
   },
@@ -4653,6 +4766,7 @@
    "what": "лицо",
    "id": "ifran-syn-dishona",
    "fields": [
+    "parentCert",
     "card.original"
    ]
   },
@@ -4660,6 +4774,7 @@
    "what": "лицо",
    "id": "kheran",
    "fields": [
+    "parentCert",
     "card.original"
    ]
   },
@@ -5685,6 +5800,16 @@
   },
   {
    "what": "лицо",
+   "id": "maresha-otets-khevrona",
+   "fields": [
+    "father",
+    "parentRefs",
+    "parentCert",
+    "card.notes"
+   ]
+  },
+  {
+   "what": "лицо",
    "id": "shoval-otets-kiriaf-iarima",
    "fields": [
     "otherParents",
@@ -5731,9 +5856,40 @@
   },
   {
    "what": "лицо",
+   "id": "garum",
+   "fields": [
+    "father",
+    "parentRefs",
+    "parentCert",
+    "card.notes"
+   ]
+  },
+  {
+   "what": "лицо",
    "id": "iudiya",
    "fields": [
     "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iered-otets-gedora",
+   "fields": [
+    "parentCert"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khever-otets-sokho",
+   "fields": [
+    "parentCert"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iekufiil",
+   "fields": [
+    "parentCert"
    ]
   },
   {
@@ -5752,9 +5908,27 @@
   },
   {
    "what": "лицо",
+   "id": "garmi",
+   "fields": [
+    "parentCert"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "eshfemoa-maakhatyanin",
+   "fields": [
+    "parentCert"
+   ]
+  },
+  {
+   "what": "лицо",
    "id": "ashbeya",
    "fields": [
-    "fatherGap"
+    "father",
+    "parentRefs",
+    "parentCert",
+    "fatherGap",
+    "otherParents"
    ]
   },
   {
@@ -5894,6 +6068,7 @@
    "what": "лицо",
    "id": "khovav",
    "fields": [
+    "parentCert",
     "card.original"
    ]
   },
@@ -6072,6 +6247,7 @@
    "what": "лицо",
    "id": "idifun",
    "fields": [
+    "parentCert",
     "card.original"
    ]
   },
@@ -6094,6 +6270,14 @@
    "id": "ioil-syn-laedana",
    "fields": [
     "fatherGap"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "shimey-1par23-9",
+   "fields": [
+    "otherParents",
+    "card.notes"
    ]
   },
   {
@@ -6245,6 +6429,16 @@
   },
   {
    "what": "лицо",
+   "id": "ionafan-syn-girsama",
+   "fields": [
+    "father",
+    "parentRefs",
+    "parentCert",
+    "card.notes"
+   ]
+  },
+  {
+   "what": "лицо",
    "id": "kore-syn-eviasafa",
    "fields": [
     "fatherGap"
@@ -6261,6 +6455,7 @@
    "what": "лицо",
    "id": "meshillemif",
    "fields": [
+    "parentCert",
     "fatherGap"
    ]
   },
@@ -6282,7 +6477,50 @@
    "what": "лицо",
    "id": "uriya-syn-gakkotsa",
    "fields": [
+    "parentCert",
     "fatherGap"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "elioenay-ezd10-22",
+   "fields": [
+    "otherParents"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "maaseya-ezd10-22",
+   "fields": [
+    "otherParents"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ismail-ezd10-22",
+   "fields": [
+    "otherParents"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "nafanail-ezd10-22",
+   "fields": [
+    "otherParents"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iozavad-ezd10-22",
+   "fields": [
+    "otherParents"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "elasa-ezd10-22",
+   "fields": [
+    "otherParents"
    ]
   },
   {
@@ -6290,6 +6528,13 @@
    "id": "kelaiya",
    "fields": [
     "card.events"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "adna-neem12",
+   "fields": [
+    "otherParents"
    ]
   },
   {
@@ -6326,6 +6571,13 @@
    "id": "avnan",
    "fields": [
     "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "shallum-syn-saula",
+   "fields": [
+    "parentCert"
    ]
   },
   {
@@ -6393,9 +6645,28 @@
   },
   {
    "what": "лицо",
+   "id": "ulam-syn-sheresha",
+   "fields": [
+    "parentCert"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "rekem-syn-sheresha",
+   "fields": [
+    "parentCert"
+   ]
+  },
+  {
+   "what": "лицо",
    "id": "molekhef",
    "fields": [
-    "card.original"
+    "father",
+    "parentRefs",
+    "parentCert",
+    "kin",
+    "card.original",
+    "card.notes"
    ]
   },
   {
@@ -6472,7 +6743,29 @@
    "what": "лицо",
    "id": "sheera",
    "fields": [
+    "parentCert",
     "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "refay",
+   "fields": [
+    "parentCert"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "reshef",
+   "fields": [
+    "parentCert"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "felakh",
+   "fields": [
+    "parentCert"
    ]
   },
   {
@@ -6501,6 +6794,7 @@
    "what": "лицо",
    "id": "shupim-syn-ira",
    "fields": [
+    "parentCert",
     "kin"
    ]
   },
@@ -6508,7 +6802,22 @@
    "what": "лицо",
    "id": "khupim-syn-ira",
    "fields": [
+    "parentCert",
     "kin"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "uzza-syn-gery",
+   "fields": [
+    "parentCert"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "akhikhud-syn-gery",
+   "fields": [
+    "parentCert"
    ]
   },
   {
@@ -6694,6 +7003,13 @@
   },
   {
    "what": "лицо",
+   "id": "birzaif",
+   "fields": [
+    "parentCert"
+   ]
+  },
+  {
+   "what": "лицо",
    "id": "veor-otets-valaama",
    "fields": [
     "card.original"
@@ -6738,6 +7054,7 @@
    "what": "лицо",
    "id": "aod",
    "fields": [
+    "otherParents",
     "card.original"
    ]
   },
@@ -6977,6 +7294,7 @@
    "what": "лицо",
    "id": "naval",
    "fields": [
+    "otherParents",
     "card.original"
    ]
   },
@@ -7034,6 +7352,7 @@
    "what": "лицо",
    "id": "eliam",
    "fields": [
+    "parentCert",
     "card.original"
    ]
   },
@@ -7232,9 +7551,39 @@
   },
   {
    "what": "лицо",
+   "id": "kimgam",
+   "fields": [
+    "father",
+    "parentRefs",
+    "parentCert",
+    "card.notes"
+   ]
+  },
+  {
+   "what": "лицо",
    "id": "aminadav-iz-kiriaf-iarima",
    "fields": [
     "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "efan-ezrakhityanin",
+   "fields": [
+    "father",
+    "parentRefs",
+    "parentCert",
+    "card.notes"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "eman-syn-makhola",
+   "fields": [
+    "father",
+    "parentRefs",
+    "parentCert",
+    "card.notes"
    ]
   },
   {
@@ -7397,6 +7746,13 @@
    "id": "iekhoniya",
    "fields": [
     "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "refaiya-syn-isaii",
+   "fields": [
+    "parentCert"
    ]
   },
   {
@@ -7783,6 +8139,28 @@
   },
   {
    "what": "лицо",
+   "id": "lorukhama",
+   "fields": [
+    "father",
+    "parentCert",
+    "motherCert",
+    "order",
+    "card.notes"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "loammi",
+   "fields": [
+    "father",
+    "parentCert",
+    "motherCert",
+    "order",
+    "card.notes"
+   ]
+  },
+  {
+   "what": "лицо",
    "id": "amos-prorok",
    "fields": [
     "card.original"
@@ -7850,9 +8228,23 @@
   },
   {
    "what": "лицо",
+   "id": "iezaniya-syn-shafana",
+   "fields": [
+    "parentCert"
+   ]
+  },
+  {
+   "what": "лицо",
    "id": "godoliya",
    "fields": [
     "card.original"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "paskhor-syn-emmera",
+   "fields": [
+    "otherParents"
    ]
   },
   {
@@ -7910,6 +8302,13 @@
     "card.original",
     "card.notes",
     "otherParents"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "amoriya-praded-sofonii",
+   "fields": [
+    "parentCert"
    ]
   },
   {
@@ -8143,12 +8542,11 @@
    "what": "лицо",
    "id": "iisus",
    "fields": [
+    "fatherKind",
     "parentRefs",
     "card.original",
     "card.parentsNote",
-    "card.notes",
-    "parentCert",
-    "motherCert"
+    "card.notes"
    ]
   },
   {
@@ -9082,6 +9480,20 @@
   },
   {
    "what": "лицо",
+   "id": "iodai-syn-vanei",
+   "fields": [
+    "parentCert"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "vaana-syn-akhiluda",
+   "fields": [
+    "parentCert"
+   ]
+  },
+  {
+   "what": "лицо",
    "id": "khusiy-arkhityanin",
    "fields": [
     "card.original"
@@ -9096,6 +9508,20 @@
   },
   {
    "what": "лицо",
+   "id": "sovokhay",
+   "fields": [
+    "otherParents"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "magaray",
+   "fields": [
+    "otherParents"
+   ]
+  },
+  {
+   "what": "лицо",
    "id": "goliaf",
    "fields": [
     "card.original"
@@ -9103,9 +9529,48 @@
   },
   {
    "what": "лицо",
+   "id": "iaasiil-syn-avenira",
+   "fields": [
+    "parentCert"
+   ]
+  },
+  {
+   "what": "лицо",
    "id": "pakhaf-moav",
    "fields": [
     "card.meaning"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iisus-rod-pakhaf-moava",
+   "fields": [
+    "otherParents",
+    "card.notes"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ioav-rod",
+   "fields": [
+    "otherParents",
+    "card.notes"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "shilon",
+   "fields": [
+    "otherParents",
+    "card.notes"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khabayya",
+   "fields": [
+    "otherParents",
+    "card.notes"
    ]
   },
   {
@@ -9119,6 +9584,7 @@
    "what": "лицо",
    "id": "iedaiya-syn-ioiariva",
    "fields": [
+    "parentCert",
     "fatherGap"
    ]
   },
@@ -9134,6 +9600,13 @@
    "id": "zakhariya-syn-bevaya",
    "fields": [
     "fatherGap"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iokhanan-syn-eliashiva",
+   "fields": [
+    "parentCert"
    ]
   },
   {
@@ -9175,6 +9648,7 @@
    "what": "лицо",
    "id": "sadok-syn-immera",
    "fields": [
+    "parentCert",
     "fatherGap"
    ]
   },

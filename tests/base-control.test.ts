@@ -118,7 +118,11 @@ describe('контрольный набор', () => {
   it('Иисус Христос — мать Мария; отца по плоти нет', () => {
     const os = base.origins.filter((o) => o.child === 'p-iisus');
     expect(os.find((o) => o.role === 'mother')?.parent).toBe('p-mariya');
-    expect(os.filter((o) => o.role === 'father').map((o) => [o.kind, o.cert])).toEqual([['legal', 'interpretation']]);
+    // Иосиф — «родители Его» (Лк 2:41): особое слово текста, «Писание»; «отец по закону» — толкование с авторами (Р4-1; C47)
+    expect(os.filter((o) => o.role === 'father').map((o) => [o.kind, o.cert])).toEqual([['parents-word', 'scripture']]);
+    expect(os.find((o) => o.role === 'father')!.words![0]).toEqual({ text: 'родители Его', ref: 'Лк 2:41' });
+    const r = base.readings.find((x) => x.id === 'r-iosif-iisus')!;
+    expect(r.readings.map((x) => [x.id, x.cert, (x.authors ?? []).length > 0])).toEqual([['words', 'scripture', false], ['legal', 'interpretation', true]]);
     // «не от союза» — нейтральный вид «Писание говорит» со словами стихов (07 § 8.2; шаг C31)
     const nd = base.nodata.filter((n) => n.actor === 'p-iisus' && n.kind === 'scripture-says');
     expect(nd.map((n) => n.what)).toEqual(['отец по плоти']);
@@ -164,9 +168,9 @@ describe('правки Д2 (рецензии 03 и 07, решение совет
     expect(JSON.stringify(A.get('p-khalev')!.facts)).not.toContain('названа и в перечне');
     expect((A.get('p-akhsa')!.facts.find((f) => f.field === 'scripture')!.value as any).key).not.toContain('1Пар 2:49');
   });
-  it('«из сыновей»: слова — Писание, уровень ребра — уровень вывода о степени (Лаван — выв., Валтасар — толк.)', () => {
+  it('«из сыновей»: слова — Писание; Лаван — вывод о степени; Валтасар — «отец» сказано, вид «предок», степень не утверждается (Р4-8; C45)', () => {
     expect(edge('p-lavan', 'p-nakhor-syn-farry').map((o) => [o.kind, o.cert, o.primary, o.words?.[0].ref])).toEqual([['ancestor', 'inference', false, 'Быт 29:5']]);
-    expect(edge('p-valtasar-tsar', 'p-navukhodonosor').map((o) => [o.kind, o.cert, o.primary, o.words?.[0].text])).toEqual([['ancestor', 'interpretation', false, 'Навуходоносор, отец его']]);
+    expect(edge('p-valtasar-tsar', 'p-navukhodonosor').map((o) => [o.kind, o.cert, o.primary, o.words?.[0].text])).toEqual([['ancestor', 'scripture', false, 'Навуходоносор, отец его']]);
     for (const [c, p] of [['p-oziya', 'p-ioram-syn-iosafata'], ['p-azariya-1par6-10', 'p-meraiof']]) expect(edge(c, p)[0].cert).toBe('inference');
   });
   it('Боган назван вне перечня сыновей Рувима', () => {
@@ -274,6 +278,40 @@ describe('правки Д3 (сверка контрольного набора �
       ['нет сведений', 'нет сведений p-marfa § 6'],
       ['нет сведений', 'нет сведений p-marfa § 8'],
       ['нет сведений', `нет сведений p-zakhariya-syn-iodaya § ${b.nodata.find((n) => n.actor === 'p-zakhariya-syn-iodaya' && n.kind === 'silent')!.sec}`],
+    ]));
+  }, 60_000);
+});
+
+describe('очередь Д3-11: рёбра уровня «толкование» (рецензия 03 ред. 4, Р4-1, Р4-8)', () => {
+  const edge = (child: string, parent: string) => base.origins.filter((o) => o.child === child && o.parent === parent);
+  it('ребра «толкование» вне набора прочтений нет', () => {
+    expect(base.origins.filter((o) => o.cert === 'interpretation' && !o.reading).map((o) => `${o.child} ← ${o.parent}`)).toEqual([]);
+  });
+  it('(а) родство сказано, тождество родителя — отдельно: сыновья Дишона, Иоханан, Иодай, Елиам', () => {
+    for (const c of ['p-khemdan', 'p-eshban', 'p-ifran-syn-dishona', 'p-kheran']) {
+      expect(edge(c, 'p-dishon-syn-seira').map((o) => [o.cert, o.identity?.of, o.identity?.degree])).toEqual([['scripture', 'parent', 'possible']]);
+    }
+    expect(edge('p-iokhanan-syn-eliashiva', 'p-eliashiv-pervosvyashchennik')[0].identity?.refs).toContain('Езд 10:6');
+    expect(edge('p-iodai-syn-vanei', 'p-vaneya-syn-iodaya')[0].cert).toBe('scripture');
+    expect(edge('p-eliam', 'p-akhitofel')[0].identity?.of).toBe('child');
+    expect(edge('p-khovav', 'p-iofor')[0].identity?.degree).toBe('weighty');
+  });
+  it('(б) основание только в толковании — ребра нет, понимание в примечании; Молехеф — «сестра» Галаада', () => {
+    for (const [c, p] of [['p-starshaya-doch-lota', 'p-zhena-lota'], ['p-lorukhama', 'p-osiya-prorok'], ['p-ionafan-syn-girsama', 'p-girsam'], ['p-efan-ezrakhityanin', 'p-makhol'], ['p-kimgam', 'p-verzelliy-galaadityanin']]) {
+      expect([c, edge(c, p)]).toEqual([c, []]);
+      expect(A.get(c)!.facts.some((f) => f.field === 'notes' && f.cert === 'interpretation' && JSON.stringify(f.value).includes('совет источников'))).toBe(true);
+    }
+    expect(edge('p-starshaya-doch-lota', 'p-lot')).toHaveLength(1);
+    expect(kin('p-molekhef', 'p-galaad-syn-makhira').map((k) => [k.rel, k.cert])).toEqual([['сестра', 'inference']]);
+  });
+  it('подложенное ребро «толкование» и тождество без стихов ловит проверка базы', () => {
+    const b: Base = structuredClone(base);
+    b.origins.find((o) => o.child === 'p-khemdan')!.cert = 'interpretation';
+    b.origins.find((o) => o.child === 'p-kheran')!.identity!.refs = [];
+    const errs = validate(b).filter((i) => i.level === 'error').map((i) => [i.check, i.where]);
+    expect(errs).toEqual(expect.arrayContaining([
+      ['толкование', 'p-khemdan ← p-dishon-syn-seira'],
+      ['тождество', 'p-kheran ← p-dishon-syn-seira'],
     ]));
   }, 60_000);
 });

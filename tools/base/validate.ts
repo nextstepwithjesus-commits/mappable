@@ -217,6 +217,15 @@ export function validate(base: Base): Issue[] {
     if (ps && ps !== (o.role === 'father' ? 'm' : 'f')) err('пол', w, `${o.role === 'father' ? 'отец' : 'мать'} другого пола`);
     for (const id of o.skipped?.actors ?? []) has('целостность', `${w}, пропущенные`, id);
     if (o.skipped && (!o.gap || !o.skipped.refs.length)) err('пропуск', w, 'перечень пропущенных — только у ребра со знаком пропуска и со стихами, где они названы');
+    // толкование не становится ребром (CLAUDE.md; R9 Г-5; очередь Д3-11): ребро «толкование» — только внутри набора прочтений
+    if (o.cert === 'interpretation' && !o.reading) err('толкование', w, 'ребро уровня «толкование» вне набора прочтений: толкование не становится ребром');
+    if (o.identity) {
+      const id = o.identity;
+      if (!['parent', 'child'].includes(id.of) || !['weighty', 'possible'].includes(id.degree)) err('тождество', w, `тождество: of «${id.of}», degree «${id.degree}»`);
+      if (!id.note?.trim() || !id.refs?.length) err('тождество', w, 'тождество конца ребра — с примечанием и стихами');
+      if (o.cert === 'interpretation') err('тождество', w, 'поле тождества — у ребра, сказанного словами («Писание» или «вывод»)');
+    }
+    if (o.kind === 'parents-word' && (o.cert !== 'scripture' || !o.words?.length)) err('происхождение', w, 'вид «слово текста» (parents-word) — уровень «Писание» и слова стиха');
     if (o.reading) {
       const set = readings.get(o.reading.set);
       if (!set) err('прочтения', w, `нет набора «${o.reading.set}»`);
@@ -490,7 +499,8 @@ export function validate(base: Base): Issue[] {
     const x = prim.get(o.child) ?? prim.set(o.child, {}).get(o.child)!;
     if (o.role === 'father') {
       x.f = o.parent;
-      if (o.kind === 'legal') x.legal = true;
+      // не кровное ребро со словом текста (Иосиф — «родители Его», C47) — как «по закону»: не от союза (02 § 3.5)
+      if (o.kind === 'legal' || o.kind === 'parents-word') x.legal = true;
     } else x.m = o.parent;
   }
   for (const [c, x] of prim) {
