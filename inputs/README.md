@@ -4,7 +4,7 @@
 
 | Папка | Что | Откуда | Лицензия |
 |---|---|---|---|
-| `fonts/` | Literata, Golos Text, Noto Serif Hebrew (переменные TTF) | google/fonts | SIL Open Font License 1.1 |
+| `fonts/` | Literata, Golos Text, Noto Serif Hebrew (переменные TTF); для шага 0 (08 § 2.1, направления Б и В) — Piazzolla, Ysabeau Office, Source Serif 4, Onest, скачаны 10 октября 2026 с согласия владельца | google/fonts, ветка `main` | SIL Open Font License 1.1 (тексты лицензий — `fonts/licenses/`) |
 | `openbible/` | `ancient.jsonl`, `modern.jsonl` — сводка отождествлений мест | openbibleinfo/Bible-Geocoding-Data, коммит `7eb18a5` | CC BY 4.0 (`openbible/LICENSE.txt`), с указанием авторства OpenBible.info |
 | `natural-earth/` | суша и реки, масштаб 1 : 10 млн | Natural Earth | общественное достояние |
 
