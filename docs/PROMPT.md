@@ -1,5 +1,7 @@
 # Промпт реализации атласа «Толедот»
 
+> **Прежний проект «Толедот» (закрыт 9 октября 2026). Это не задание и не правило для нового приложения «Библия наглядно».** Актуальное — `docs/app/КАРТА.md` и `CLAUDE.md`; из прежнего проекта берутся только данные (регламент § 4).
+
 Этот промпт управляет работой Claude Code (Opus 5.5) над проектом. Он составлен по рекомендациям Anthropic: [Prompting best practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices), [Prompting Claude Opus 5.5](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5-5), [Best practices for Claude Code](https://code.claude.com/docs/en/best-practices) и навыку [frontend-design](https://github.com/anthropics/claude-code/blob/main/plugins/frontend-design/skills/frontend-design/SKILL.md). В нём есть роль, контекст с объяснением причин, чёткие разделы в XML-тегах, названные поимённо шаблоны, которых нужно избегать, проверяемые критерии готовности и способ вести состояние между окнами контекста.
 
 Как пользоваться: начните новую сессию Claude Code в корне репозитория и вставьте текст ниже целиком. Для продолжения работы после перерыва достаточно блока `<resume>`.
