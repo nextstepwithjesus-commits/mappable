@@ -253,3 +253,157 @@ PH = 56 + 16 + 28 + 20 + 8 + 44 + 8 + 16 + 72 + 16 + 16
 print('Телефон 360 x 560: шапка карточки', PH, 'px; заголовков блоков на первом экране:', (560 - PH) // 44)
 LH = 64 + 16 + 36 + 20 + 8 + 36 + 16 + 20 + 3 * 24 + 16 + 16
 print('Ноутбук 1280 x 720 без стихов шапки:', LH, 'px; заголовков блоков слева до края:', (720 - LH) // 44)
+
+# --- Редакция 6 ---
+print('--- редакция 6 ---')
+import math
+TEXT = {}
+for line in open('tools/bible/synodal.tsv', encoding='utf-8'):
+    b, c, v, t = line.rstrip('\n').split('\t', 3)
+    TEXT[(b, int(c), int(v))] = t
+
+# § 21.1: что на самом деле лежит в утверждениях (НИ-1…НИ-3).
+shown = [f for f in facts if f.get('prov', {}).get('status') != 'quarantine']
+NOTE = {'notes', 'childrenNote', 'spousesNote', 'chronoNote', 'messiahNote', 'siblingsNote', 'parentsNote', 'kinNote'}
+print('Показываемых записей:', len(shown), '; из них примечаний (notes, …Note):',
+      sum(1 for f in shown if f['field'] in NOTE))
+print('Записей с собственным номером:', sum(1 for f in shown if f.get('id')))
+
+
+def nrefs(o, acc):
+    if isinstance(o, dict):
+        for k, v in o.items():
+            if k in ('refs', 'key') and isinstance(v, list):
+                acc.extend(v)
+            elif k in ('ref', 'first') and isinstance(v, str):
+                acc.append(v)
+            else:
+                nrefs(v, acc)
+    elif isinstance(o, list):
+        for v in o:
+            nrefs(v, acc)
+
+
+multi = [f for f in shown if (lambda a: (nrefs(f['value'], a), len(a))[1])([]) > 1]
+mixed = [f for f in multi if isinstance(f['value'], dict) and isinstance(f['value'].get('text'), str)
+         and (';' in f['value']['text'] or '—' in f['value']['text'])]
+print('Записей с несколькими стихами:', len(multi), '; из них с „;“ или „—“ в тексте:', len(mixed))
+
+
+def has_year(o):
+    if isinstance(o, dict):
+        return any(k in ('year', 'from', 'to') and isinstance(v, (int, float)) or has_year(v) for k, v in o.items())
+    if isinstance(o, list):
+        return any(has_year(v) for v in o)
+    return False
+
+
+yr = [f for f in shown if has_year(f['value'])]
+print('Записей с годом:', len(yr), '; уровня «сказано»:', sum(1 for f in yr if 'cert' not in f),
+      '; с моделью хронологии:', sum(1 for f in yr if 'model' in json.dumps(f, ensure_ascii=False)))
+print('Союзов:', len(uni), '; по набору видов обозначений:',
+      dict(collections.Counter('+'.join(sorted({t['kind'] for t in u['terms']})) for u in uni)))
+print('Лиц с тёзками без уточнения:', sorted(i for k, v in g.items() for i in v if not acts[i].get('disambig')))
+other = collections.Counter(f['field'] for i, a in acts.items() if i != 'p-david'
+                            for f in a['facts'] if '"p-david"' in json.dumps(f, ensure_ascii=False))
+print('Записи других лиц, где назван Давид, по полю:', dict(other))
+print('Тёзки: Ила', len(main['Ила']), '; Енох', len(main['Енох']), '; Ламех', len(main['Ламех']))
+
+
+# § 4.1, § 6.3.3, § 13.3: первый экран по составу шапки (И5-2). Знаков в строке: проза 16 px —
+# 662 / 8,54 = 77 на ноутбуке, 328 / 8,54 = 38 на телефоне (средний знак — арт-директор ред. 5);
+# Писание 18 px — 69 и 35 (08 § 3.3.2). Главный стих Давида — 1 Цар 16:13; «Кратко» — эскиз § 15.1.
+def lines(n, per):
+    return math.ceil(n / per)
+
+
+VERSE = len(TEXT[('1Цар', 16, 13)])
+KRATKO = len('Младший сын Иессея. Пас овец. Был царём над Иудой и над всем Израилем. '
+             'Иисус Христос родился из его потомков.')
+
+
+def first(device, probe, verse=True):
+    if device == 'ноутбук':
+        H, app, nazad, h1, prose, scr, strip, block = 720, 64, 36, 36, 77, 69, 36, 44
+    else:
+        H, app, nazad, h1, prose, scr, strip, block = 560, 56, 44, 28, 38, 35, 44, 44
+    h = app + (32 if probe else 0) + nazad + 16 + h1 + 8 + 24 + 8 + 16 + 8   # имя, описание, отметка о проверке
+    h += 20 + lines(KRATKO, prose) * 24 + 16 + 16                              # «Кратко» и «по стихам»
+    if verse:
+        h += lines(VERSE, scr) * 28 + 16
+    if device == 'телефон':
+        h += 2 * block                                                         # паспорт и „Узнать больше“ свёрнуты
+    h += strip                                                                 # „Раскрыть все“ · „Статья / Таблица“
+    return h, max(0, (H - h) // block)
+
+
+print('Главный стих 1 Цар 16:13 —', VERSE, 'знаков; «Кратко» —', KRATKO)
+for d in ('ноутбук', 'телефон'):
+    for p in (False, True):
+        h, n = first(d, p)
+        print(f'Первый экран {d}{" с плашкой пробы" if p else ""}: шапка до блоков {h} px; заголовков блоков целиком: {n}')
+print('Оглавление в панели 1280 x 720: пунктов по 28 px под заголовком 44:', (656 - 44) // 28)
+
+
+# § 6.1, § 13.4: высота по составу (И5-3). Раздел 7 — по союзам (2 строки на союз); раздел 14 —
+# 31 история в 5 периодах (по эскизу § 15.1: строка 36 + роль 28, период 32, до 8 строк и
+# „Показать ещё“); раздел 20 — подсчёт, первое упоминание, полоса 40 и строка на книгу 36.
+def books(pid):
+    return len({re.match(r'^(\D*\d?\D+)', r).group(1) for r in refs[pid]})
+
+
+def height6(pid, open_limit, stories=31, periods=5):
+    sec = recs(pid)
+    if any(pid in (u['husband'], u['wife']) for u in uni):
+        sec[7] = [80] * sum(1 for u in uni if pid in (u['husband'], u['wife']))
+    h = 0
+    for n, lens in sorted(sec.items()):
+        h += 44
+        cnt = stories if n == 14 else (len(refs[pid]) if n == 20 else len(lens))
+        if open_limit is not None and (cnt > open_limit or (n == 3 and cnt > 2)):
+            continue
+        if n == 14:
+            shown_rows = sum(min(8, math.ceil(stories / periods)) for _ in range(periods))
+            h += periods * 32 + shown_rows * 64
+            continue
+        if n == 20:
+            h += 3 * 24 + 40 + books(pid) * 36
+            continue
+        if len(lens) > 10:
+            lens = lens[:8] + [10]
+        for L in lens:
+            h += (-(-L // 69) * 28 + 20) if n in QUOTE else (-(-(L + 12) // 77) * 24)
+            h += 12
+    return h
+
+
+print('Давид: книг в разделе 20:', books('p-david'), '; союзов:', sum(1 for u in uni if 'p-david' in (u['husband'], u['wife'])))
+hd = first('ноутбук', False)[0] - 64
+for pid, st, pr in (('p-david', 31, 5), ('p-avraam', 20, 4), ('p-ila-syn-vaasy', 1, 1), ('p-irad', 1, 1)):
+    print(f'Высота-6 {pid}: простой по умолчанию {(hd + height6(pid, 3, st, pr)) / 656:.1f} экрана;',
+          f'второй {(hd + height6(pid, 8, st, pr)) / 656:.1f}; всё раскрыто {(hd + height6(pid, None, st, pr)) / 656:.1f}')
+
+
+# § 13.4: печать A4 — колонка 136 мм, Golos 10,5/14 pt (69 знаков, около 50 строк на листе);
+# раздел 20 — абзацем адресов по книгам (около 7 знаков на адрес).
+def pages(pid, with_text, stories=31):
+    sec = recs(pid)
+    ln = 0
+    for n, lens in sec.items():
+        ln += 2
+        if n == 14:
+            ln += stories * 2
+            continue
+        if n == 20:
+            ln += math.ceil(len(refs[pid]) * 7 / 69) + 3
+            continue
+        for L in lens:
+            ln += math.ceil((L + 12) / 69)
+            if with_text:
+                ln += 3
+    ln += 17  # шапка 8 строк, паспорт 5, колофон 4
+    return math.ceil(ln / 50)
+
+
+for pid in ('p-david', 'p-irad'):
+    print(f'Печать {pid}: «Только адреса» {pages(pid, False)} стр.; «С текстами стихов» {pages(pid, True)} стр.')
