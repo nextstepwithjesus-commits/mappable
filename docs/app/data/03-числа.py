@@ -469,5 +469,9 @@ if len(sys.argv)>1:
   wl=max(round(g45(l+' · 442',12)) for l in labs)
   for w,h in [(1280,800),(1280,720),(1024,768)]:
     other=160; bar=w-48-wl-16-other; per=bar/71
-    H=h-64-48-64; need=48+28*20
-    print('overview bars',w,'x',h,': label column',wl,'px, bar area',round(bar),'px,',round(per,1),'px per row; height need',need,'of',H)
+    H=h-64-48-64; need=48+28*24  # ред. 5.1: строка-кнопка не ниже 24 px (мышь, 08 § 3.5); касание — 44
+    print('overview bars',w,'x',h,': label column',wl,'px, bar area',round(bar),'px,',round(per,1),'px per row; height need (24 px rows)',need,'of',H,'rows visible without scroll',(H-48)//24,'touch rows 44 px need',48+28*44)
+# 28. ред. 5.1: «предки и потомки» — шаг имён 24 px (мышь) и 44 (касание): высота столбца поколения
+for p_,lab in [('p-david','Давид'),('p-avraam','Авраам'),('p-iakov','Иаков')]:
+  g=gens_down(p_,3); print('hourglass column height 24px',lab,[n*24 for n in g],'44px',[n*44 for n in g],'window 1280x800 rows',(800-64-48-64)//24)
+print('person ids longer than 20: in Genealogy',sum(1 for i in G if len(i)>20),'in whole base',sum(1 for i in A if len(i)>20),'of',len(A))
