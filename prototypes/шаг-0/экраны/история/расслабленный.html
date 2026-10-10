@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ru" data-dir="a" data-layer="1" data-экран="расслабленный">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Расслабленного спускают через кровлю — Истории — Библия наглядно</title>
+<script>
+  // Режим из адреса до первой отрисовки: ?dir=a|b&theme=light|dark&layer=1|2
+  // и пробы: &буквица=1, &шапка=паспорт, &множитель=1, &открыть=1, &рассказ=Мф|Мк|Лк
+  (function () {
+    var q = new URLSearchParams(location.search), r = document.documentElement;
+    if (q.get('dir') === 'b') r.dataset.dir = 'b';
+    if (q.get('theme') === 'light' || q.get('theme') === 'dark') r.dataset.theme = q.get('theme');
+    if (q.get('layer') === '2') r.dataset.layer = '2';
+  })();
+</script>
+<link rel="stylesheet" href="../../лист/токены.css">
+<link rel="stylesheet" href="../../лист/основа.css">
+<link rel="stylesheet" href="../../лист/компоненты.css">
+<link rel="stylesheet" href="история.css">
+</head>
+<body>
+<a class="к-содержимому" href="#страница">Перейти к истории</a>
+<header class="шапка сайт" id="шапка"></header>
+<main id="страница" class="страница" tabindex="-1"></main>
+<footer class="о-прототипе" id="о-прототипе"></footer>
+<p class="скрыто" role="status" id="объявление"></p>
+<script src="данные.js"></script>
+<script src="../../лист/знаки.js"></script>
+<script src="знаки-истории.js"></script>
+<script src="история.js"></script>
+</body>
+</html>
