@@ -3,11 +3,11 @@
  "title": "Союзы",
  "prov": {
   "by": "перенос Д1 (координатор)",
-  "at": "2026-10-09",
+  "at": "2026-10-10",
   "status": "draft",
   "from": {
    "vol": "data",
-   "commit": "11ad76f"
+   "commit": "086f9c3"
   }
  },
  "items": [
@@ -171,20 +171,31 @@
    "wife": "p-agar",
    "terms": [
     {
-     "kind": "marriage",
-     "word": "жена",
+     "kind": "maid-as-wife",
+     "word": "в жену",
      "side": "husband",
      "refs": [
-      "Быт 16:3",
-      "Быт 16:15",
-      "Быт 25:12"
+      "Быт 16:3"
      ],
-     "note": "Сара дала её Авраму «в жену» (Быт 16:3); она же — служанка и рабыня (Быт 16:1; 21:10; Гал 4:22–24). Наложницей по имени Агарь не названа; Быт 25:6 говорит о наложницах Авраама без имён",
+     "note": "Сара «дала ее Авраму, мужу своему, в жену» (Быт 16:3). Наложницей по имени Агарь не названа; Быт 25:6 говорит о наложницах Авраама без имён",
      "order": 2,
      "prov": {
       "from": {
        "vol": "04-abraham.json"
-      }
+      },
+      "by": "исправление C32"
+     }
+    },
+    {
+     "kind": "maid-as-wife",
+     "word": "служанка",
+     "refs": [
+      "Быт 16:1",
+      "Быт 25:12"
+     ],
+     "note": "«служанка Египтянка, именем Агарь» (Быт 16:1); «Агарь Египтянка, служанка Саррина» (Быт 25:12)",
+     "prov": {
+      "by": "исправление C32"
      }
     }
    ]
@@ -250,7 +261,6 @@
    "terms": [
     {
      "kind": "marriage",
-     "word": "жена",
      "side": "husband",
      "refs": [
       "Быт 29:23-25",
@@ -260,7 +270,8 @@
      "prov": {
       "from": {
        "vol": "04-abraham.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -311,7 +322,7 @@
     },
     {
      "kind": "marriage",
-     "word": "муж",
+     "word": "жена",
      "side": "wife",
      "refs": [
       "Быт 30:4",
@@ -322,7 +333,8 @@
      "prov": {
       "from": {
        "vol": "04-abraham.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -350,7 +362,7 @@
     },
     {
      "kind": "marriage",
-     "word": "муж",
+     "word": "жена",
      "side": "wife",
      "refs": [
       "Быт 30:9",
@@ -360,7 +372,8 @@
      "prov": {
       "from": {
        "vol": "04-abraham.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -548,7 +561,7 @@
    "terms": [
     {
      "kind": "marriage",
-     "word": "муж",
+     "word": "жена",
      "side": "wife",
      "refs": [
       "Быт 38:6"
@@ -557,7 +570,8 @@
      "prov": {
       "from": {
        "vol": "06-jacob-sons.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -608,7 +622,7 @@
     },
     {
      "kind": "marriage",
-     "word": "муж",
+     "word": "жена",
      "side": "wife",
      "refs": [
       "Быт 39:1",
@@ -618,7 +632,8 @@
      "prov": {
       "from": {
        "vol": "06-jacob-sons.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -642,8 +657,8 @@
      }
     },
     {
-     "kind": "marriage",
-     "word": "муж",
+     "kind": "concubine",
+     "word": "наложница",
      "side": "wife",
      "refs": [
       "1Пар 7:14"
@@ -652,7 +667,8 @@
      "prov": {
       "from": {
        "vol": "09-tribes-a.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -704,7 +720,7 @@
    "terms": [
     {
      "kind": "marriage",
-     "word": "муж",
+     "word": "взял",
      "side": "wife",
      "refs": [
       "1Пар 2:21"
@@ -714,7 +730,8 @@
      "prov": {
       "from": {
        "vol": "07-judah.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -726,7 +743,7 @@
    "terms": [
     {
      "kind": "marriage",
-     "word": "муж",
+     "word": "жена",
      "side": "wife",
      "refs": [
       "1Пар 2:24"
@@ -734,7 +751,8 @@
      "prov": {
       "from": {
        "vol": "07-judah.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -746,7 +764,6 @@
    "terms": [
     {
      "kind": "marriage",
-     "word": "жена",
      "side": "husband",
      "refs": [
       "Мф 1:5"
@@ -756,7 +773,8 @@
      "prov": {
       "from": {
        "vol": "07-judah.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -789,7 +807,7 @@
    "terms": [
     {
      "kind": "marriage",
-     "word": "муж",
+     "word": "жена",
      "side": "wife",
      "refs": [
       "Руф 1:4",
@@ -800,7 +818,8 @@
      "prov": {
       "from": {
        "vol": "07-judah.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -812,7 +831,7 @@
    "terms": [
     {
      "kind": "marriage",
-     "word": "муж",
+     "word": "жена",
      "side": "wife",
      "refs": [
       "Руф 1:4",
@@ -822,7 +841,8 @@
      "prov": {
       "from": {
        "vol": "07-judah.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -834,7 +854,7 @@
    "terms": [
     {
      "kind": "marriage",
-     "word": "муж",
+     "word": "жена",
      "side": "wife",
      "refs": [
       "Руф 4:10",
@@ -845,7 +865,8 @@
      "prov": {
       "from": {
        "vol": "07-judah.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -857,7 +878,6 @@
    "terms": [
     {
      "kind": "marriage",
-     "word": "муж",
      "side": "wife",
      "refs": [
       "1Пар 2:17",
@@ -868,7 +888,8 @@
      "prov": {
       "from": {
        "vol": "07-judah.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -880,7 +901,7 @@
    "terms": [
     {
      "kind": "marriage",
-     "word": "муж",
+     "word": "жена",
      "side": "wife",
      "refs": [
       "1Пар 2:26"
@@ -889,7 +910,8 @@
      "prov": {
       "from": {
        "vol": "07-judah.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -901,7 +923,7 @@
    "terms": [
     {
      "kind": "marriage",
-     "word": "муж",
+     "word": "жена",
      "side": "wife",
      "refs": [
       "1Пар 2:29"
@@ -909,7 +931,8 @@
      "prov": {
       "from": {
        "vol": "07-judah.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -921,7 +944,7 @@
    "terms": [
     {
      "kind": "marriage",
-     "word": "муж",
+     "word": "жена",
      "side": "wife",
      "refs": [
       "1Пар 2:35"
@@ -929,7 +952,8 @@
      "prov": {
       "from": {
        "vol": "07-judah.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -941,7 +965,7 @@
    "terms": [
     {
      "kind": "marriage",
-     "word": "муж",
+     "word": "жена",
      "side": "wife",
      "refs": [
       "1Пар 2:18"
@@ -950,7 +974,8 @@
      "prov": {
       "from": {
        "vol": "07-judah.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -962,7 +987,6 @@
    "terms": [
     {
      "kind": "marriage",
-     "word": "муж",
      "side": "wife",
      "refs": [
       "1Пар 2:18"
@@ -972,7 +996,8 @@
      "prov": {
       "from": {
        "vol": "07-judah.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -984,7 +1009,7 @@
    "terms": [
     {
      "kind": "marriage",
-     "word": "муж",
+     "word": "взял",
      "side": "wife",
      "refs": [
       "1Пар 2:19"
@@ -995,7 +1020,8 @@
      "prov": {
       "from": {
        "vol": "07-judah.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -1028,7 +1054,7 @@
    "terms": [
     {
      "kind": "marriage",
-     "word": "муж",
+     "word": "жена",
      "side": "wife",
      "refs": [
       "1Пар 4:5"
@@ -1037,7 +1063,8 @@
      "prov": {
       "from": {
        "vol": "07-judah.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -1049,7 +1076,7 @@
    "terms": [
     {
      "kind": "marriage",
-     "word": "муж",
+     "word": "жена",
      "side": "wife",
      "refs": [
       "1Пар 4:5"
@@ -1058,7 +1085,8 @@
      "prov": {
       "from": {
        "vol": "07-judah.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -1070,7 +1098,7 @@
    "terms": [
     {
      "kind": "marriage",
-     "word": "муж",
+     "word": "жена",
      "side": "wife",
      "refs": [
       "1Пар 4:17",
@@ -1081,7 +1109,8 @@
      "prov": {
       "from": {
        "vol": "07-judah.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -1093,7 +1122,7 @@
    "terms": [
     {
      "kind": "marriage",
-     "word": "муж",
+     "word": "взял",
      "side": "wife",
      "refs": [
       "1Пар 4:18"
@@ -1101,7 +1130,8 @@
      "prov": {
       "from": {
        "vol": "07-judah.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -1113,7 +1143,7 @@
    "terms": [
     {
      "kind": "marriage",
-     "word": "муж",
+     "word": "жена",
      "side": "wife",
      "refs": [
       "1Пар 4:18",
@@ -1124,7 +1154,8 @@
      "prov": {
       "from": {
        "vol": "07-judah.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -1214,7 +1245,7 @@
     },
     {
      "kind": "marriage",
-     "word": "муж",
+     "word": "жена",
      "side": "wife",
      "refs": [
       "Чис 12:1"
@@ -1222,7 +1253,8 @@
      "prov": {
       "from": {
        "vol": "08-levi.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -1306,7 +1338,7 @@
     },
     {
      "kind": "marriage",
-     "word": "муж",
+     "word": "жена",
      "side": "wife",
      "refs": [
       "1Цар 1:2",
@@ -1315,7 +1347,8 @@
      "prov": {
       "from": {
        "vol": "08-levi.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -1360,7 +1393,7 @@
     },
     {
      "kind": "marriage",
-     "word": "муж",
+     "word": "жена",
      "side": "wife",
      "refs": [
       "2Пар 22:11"
@@ -1368,7 +1401,8 @@
      "prov": {
       "from": {
        "vol": "13-kings-of-judah.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -1394,7 +1428,7 @@
     },
     {
      "kind": "marriage",
-     "word": "муж",
+     "word": "жена",
      "side": "wife",
      "refs": [
       "Езд 2:61",
@@ -1403,7 +1437,8 @@
      "prov": {
       "from": {
        "vol": "08-levi.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -1564,7 +1599,7 @@
    "terms": [
     {
      "kind": "marriage",
-     "word": "муж",
+     "word": "в замужество",
      "side": "wife",
      "refs": [
       "1Цар 18:19"
@@ -1572,7 +1607,8 @@
      "prov": {
       "from": {
        "vol": "10-tribes-b.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -1607,7 +1643,7 @@
    "terms": [
     {
      "kind": "marriage",
-     "word": "муж",
+     "word": "жена",
      "side": "wife",
      "refs": [
       "Суд 4:4"
@@ -1615,7 +1651,8 @@
      "prov": {
       "from": {
        "vol": "11-judges.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -1627,7 +1664,7 @@
    "terms": [
     {
      "kind": "marriage",
-     "word": "муж",
+     "word": "жена",
      "side": "wife",
      "refs": [
       "Суд 4:17",
@@ -1637,7 +1674,8 @@
      "prov": {
       "from": {
        "vol": "11-judges.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -1811,7 +1849,6 @@
    "terms": [
     {
      "kind": "marriage",
-     "word": "жена",
      "side": "husband",
      "refs": [
       "2Цар 3:4",
@@ -1824,7 +1861,8 @@
      "prov": {
       "from": {
        "vol": "12-house-of-david.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -1974,7 +2012,7 @@
    "terms": [
     {
      "kind": "marriage",
-     "word": "муж",
+     "word": "жена",
      "side": "wife",
      "refs": [
       "3Цар 4:11"
@@ -1983,7 +2021,8 @@
      "prov": {
       "from": {
        "vol": "12-house-of-david.json"
-      }
+      },
+      "by": "исправление C35"
      }
     },
     {
@@ -2009,7 +2048,7 @@
    "terms": [
     {
      "kind": "marriage",
-     "word": "муж",
+     "word": "жена",
      "side": "wife",
      "refs": [
       "3Цар 4:15"
@@ -2018,7 +2057,8 @@
      "prov": {
       "from": {
        "vol": "12-house-of-david.json"
-      }
+      },
+      "by": "исправление C35"
      }
     },
     {
@@ -2126,7 +2166,7 @@
     },
     {
      "kind": "marriage",
-     "word": "муж",
+     "word": "жена",
      "side": "wife",
      "refs": [
       "4Цар 8:16-18",
@@ -2139,7 +2179,8 @@
      "prov": {
       "from": {
        "vol": "14-kings-of-israel.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -2191,7 +2232,6 @@
    "terms": [
     {
      "kind": "marriage",
-     "word": "жена",
      "side": "husband",
      "refs": [
       "3Цар 11:26"
@@ -2201,7 +2241,8 @@
      "prov": {
       "from": {
        "vol": "14-kings-of-israel.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -2257,7 +2298,6 @@
    "terms": [
     {
      "kind": "marriage",
-     "word": "жена",
      "side": "husband",
      "refs": [
       "Ис 8:3"
@@ -2267,7 +2307,8 @@
      "prov": {
       "from": {
        "vol": "15-prophets-exile.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -2300,7 +2341,7 @@
    "terms": [
     {
      "kind": "marriage",
-     "word": "муж",
+     "word": "жена",
      "side": "wife",
      "refs": [
       "4Цар 22:14",
@@ -2309,7 +2350,8 @@
      "prov": {
       "from": {
        "vol": "15-prophets-exile.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -2439,7 +2481,6 @@
    "terms": [
     {
      "kind": "marriage",
-     "word": "жена",
      "side": "husband",
      "refs": [
       "Ин 19:25"
@@ -2449,7 +2490,8 @@
      "prov": {
       "from": {
        "vol": "16-jesus-genealogy.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -2461,7 +2503,6 @@
    "terms": [
     {
      "kind": "marriage",
-     "word": "жена",
      "side": "husband",
      "refs": [
       "Мф 4:21",
@@ -2473,7 +2514,8 @@
      "prov": {
       "from": {
        "vol": "17-new-testament.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -2485,7 +2527,7 @@
    "terms": [
     {
      "kind": "marriage",
-     "word": "муж",
+     "word": "жена",
      "side": "wife",
      "refs": [
       "Лк 8:3"
@@ -2493,7 +2535,8 @@
      "prov": {
       "from": {
        "vol": "17-new-testament.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -2505,7 +2548,7 @@
    "terms": [
     {
      "kind": "marriage",
-     "word": "муж",
+     "word": "жена",
      "side": "wife",
      "refs": [
       "Мф 14:3",
@@ -2515,7 +2558,8 @@
      "prov": {
       "from": {
        "vol": "17-new-testament.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -2527,7 +2571,7 @@
    "terms": [
     {
      "kind": "marriage",
-     "word": "муж",
+     "word": "женился",
      "side": "wife",
      "refs": [
       "Мк 6:17-18",
@@ -2538,7 +2582,8 @@
      "prov": {
       "from": {
        "vol": "17-new-testament.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -2630,7 +2675,7 @@
    "terms": [
     {
      "kind": "marriage",
-     "word": "муж",
+     "word": "взял",
      "side": "wife",
      "refs": [
       "Неем 6:18"
@@ -2638,7 +2683,8 @@
      "prov": {
       "from": {
        "vol": "20-return-lists.json"
-      }
+      },
+      "by": "исправление C35"
      }
     }
    ]
@@ -2680,17 +2726,19 @@
    "wife": "p-famar",
    "terms": [
     {
-     "kind": "not-stated",
+     "kind": "non-marital",
+     "word": "вошел к ней",
      "refs": [
+      "Быт 38:18",
       "Руф 4:12",
       "1Пар 2:4",
-      "Мф 1:3",
-      "Быт 46:12",
-      "1Пар 4:1",
-      "Лк 3:33"
+      "Мф 1:3"
      ],
      "cert": "inference",
-     "note": "отец и мать названы у детей; сам союз текст не называет"
+     "note": "Союз описан в Быт 38:15–18: «вошел к ней; и она зачала от него» (Быт 38:18); браком текст его не называет",
+     "prov": {
+      "by": "исправление C34"
+     }
     }
    ]
   },

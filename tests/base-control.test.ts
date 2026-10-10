@@ -28,19 +28,33 @@ describe('контрольный набор', () => {
     expect(married('p-avraam').map((u) => u.wife).sort()).toEqual(['p-agar', 'p-khettura', 'p-sarra']);
     expect(children('p-avraam')).toHaveLength(8);
   });
+  it('Агарь — «в жену» (Быт 16:3) и «служанка» (Быт 16:1; 25:12); Быт 16:15 союза не называет', () => {
+    const u = unionsOf('p-agar').find((x) => x.husband === 'p-avraam')!;
+    expect(u.terms.map((t) => [t.kind, t.word, t.refs])).toEqual([['maid-as-wife', 'в жену', ['Быт 16:3']], ['maid-as-wife', 'служанка', ['Быт 16:1', 'Быт 25:12']]]);
+  });
   it('Сарра — «сестра» словами Авраама (Быт 20:12)', () => {
     expect(kin('p-sarra', 'p-avraam').map((k) => [k.rel, k.refs])).toEqual([['сестра', ['Быт 20:12']]]);
+    // пометка «по словам Авраама» — и у родства, и у ребра к Фарре (02 § 3.6; шаг C33)
+    const said = { actor: 'p-avraam', ref: 'Быт 20:11', label: 'по словам Авраама' };
+    expect(kin('p-sarra', 'p-avraam')[0].saidBy).toEqual(said);
+    expect(base.origins.filter((o) => o.child === 'p-sarra' && o.parent === 'p-farra').map((o) => o.saidBy)).toEqual([said]);
   });
   it('Хеттура — и «жена» (Быт 25:1), и «наложница» (1Пар 1:32)', () => {
     const u = married('p-khettura')[0];
     expect(u.terms.map((t) => [t.kind, t.refs]).sort()).toEqual([['concubine', ['1Пар 1:32']], ['marriage', ['Быт 25:1']]]);
   });
-  it('Иуда и Фамарь — союз без брака, только по детям', () => {
+  it('Иуда и Фамарь — союз без брака: описан в Быт 38:18, браком не назван', () => {
     const u = unionsOf('p-iuda').find((x) => x.wife === 'p-famar')!;
-    expect(u.terms.map((t) => [t.kind, t.cert])).toEqual([['not-stated', 'inference']]);
+    // вид «союз без брака» (02 § 3.2; решение координатора по сверке Д3, № 3); стихи — где названа Фамарь, и стих союза
+    expect(u.terms.map((t) => [t.kind, t.cert, t.word, t.refs])).toEqual([['non-marital', 'inference', 'вошел к ней', ['Быт 38:18', 'Руф 4:12', '1Пар 2:4', 'Мф 1:3']]]);
+    expect(u.terms[0].note).toContain('Быт 38:18');
+    expect(u.terms[0].note).not.toContain('сам союз текст не называет');
   });
   it('Иродиада — жена Филиппа и Ирода (Мк 6:17)', () => {
     expect(married('p-irodiada').map((u) => u.husband).sort()).toEqual(['p-filipp-brat-iroda', 'p-irod-antipa']);
+    // слово — из стиха: «жену Филиппа», «женился на ней» (Мк 6:17); «муж» в стихах нет (шаг C35)
+    const w = (h: string) => unionsOf('p-irodiada').find((u) => u.husband === h)!.terms.map((t) => t.word);
+    expect([w('p-filipp-brat-iroda'), w('p-irod-antipa')]).toEqual([['жена'], ['женился']]);
   });
   it('Марфа, Мария и Лазарь — братья и сёстры без названных родителей', () => {
     for (const id of ['p-marfa', 'p-mariya-iz-vifanii', 'p-lazar']) expect(parentsOf(id)).toEqual([]);
@@ -52,6 +66,8 @@ describe('контрольный набор', () => {
     expect(w.kind).toBe('unnamed');
     expect(parentsOf('p-enokh-syn-kaina')).toContain('p-zhena-kaina');
     expect(base.origins.filter((o) => o.child === 'p-enos').map((o) => o.role)).toEqual(['father']);
+    // утверждение не повторяет союз и ребро (02 § 3.1; шаг C37)
+    expect(w.facts.filter((f) => JSON.stringify(f.value).includes('познал Каин'))).toEqual([]);
   });
   it('десять прокажённых — группа из 10; Самарянин — один из них и числа не увеличивает', () => {
     const g = A.get('p-desyat-prokazhennykh')!;
@@ -74,6 +90,13 @@ describe('контрольный набор', () => {
     expect(fathers('lk', 'p-iosif-muzh-marii')).toEqual(['p-iliy-syn-matfata']);
     for (const x of r.readings) expect(fathers(x.id, 'p-iosif-muzh-marii').includes('p-iliy-syn-matfata') && fathers(x.id, 'p-mariya').includes('p-iliy-syn-matfata')).toBe(false);
     expect(base.lines.luke.readings['r-lk3-23']).toBe('lk');
+    // левират и усыновление — разные толкования; у каждого толкования — авторы (02 § 3.4 [R9]; шаг C36)
+    expect(r.readings.map((x) => [x.id, x.cert])).toEqual([['mt', 'scripture'], ['lk', 'scripture'], ['mary', 'interpretation'], ['levirate', 'interpretation'], ['adoption', 'interpretation']]);
+    for (const x of r.readings.filter((y) => y.cert === 'interpretation')) expect([x.id, (x.authors ?? []).length > 0]).toEqual([x.id, true]);
+    expect(r.readings.find((x) => x.id === 'adoption')!.authors!.join()).toContain('Августин');
+    // толкование «Илий — отец Марии» — не ребро: у Марии нет отца в базе
+    expect(base.origins.filter((o) => o.child === 'p-mariya' && o.role === 'father')).toEqual([]);
+    for (const x of ['levirate', 'adoption']) expect(fathers(x, 'p-iosif-muzh-marii').sort()).toEqual(['p-iakov-otets-iosifa', 'p-iliy-syn-matfata']);
   });
   it('Кис — сын Авиила или Нира по разным местам, не оба сразу; Каинан не брат Салы', () => {
     const k = base.origins.filter((o) => o.child === 'p-kis' && o.role === 'father');
@@ -167,4 +190,44 @@ describe('правки Д2 (рецензии 03 и 07, решение совет
     expect(parentsOf('p-adam')).toEqual([]);
     expect(base.nodata.filter((n) => n.kind === 'stated-absent' || n.kind === 'not-applicable')).toEqual([]);
   });
+});
+
+describe('правки Д3 (сверка контрольного набора вторым ключом)', () => {
+  it('«Писание молчит» — со списком стихов, где лицо названо, или с пометкой «нужно чтение»', () => {
+    const silent = base.nodata.filter((n) => n.kind === 'silent');
+    expect(silent.length).toBeGreaterThan(1000);
+    expect(silent.filter((n) => !!n.read?.length === !!n.needsReading)).toEqual([]);
+    const marfa = base.nodata.find((n) => n.actor === 'p-marfa' && n.sec === 6 && n.kind === 'silent')!;
+    expect(marfa.read).toContain('Лк 10:38');
+    expect(marfa.read).toContain('Ин 11:1');
+  });
+  it('слово каждого обозначения союза стоит хотя бы в одном его стихе', () => {
+    expect(validate(base).filter((i) => i.level === 'error' && i.check === 'слово союза')).toEqual([]);
+    expect(base.unions.flatMap((u) => u.terms).filter((t) => t.word === 'муж').length).toBeLessThan(10);
+  });
+  it('подложенные искажения новых полей ловит проверка базы', () => {
+    const b: Base = structuredClone(base);
+    const u = (id: string) => b.unions.find((x) => x.id === id)!;
+    u('u-filipp-brat-iroda--irodiada').terms[0].word = 'муж'; // слова нет в стихах
+    u('u-iuda--famar').terms[0].word = 'жена'; // не подходит к виду «союз без брака»
+    b.readings.find((r) => r.id === 'r-lk3-23')!.readings.find((x) => x.id === 'adoption')!.authors = [];
+    const sk = b.kin.find((k) => k.from === 'p-sarra' && k.to === 'p-avraam')!;
+    sk.saidBy = { actor: 'p-isaak', ref: 'Быт 20:11', label: 'по словам Исаака' }; // Исаак в Быт 20:11 не назван
+    const so = b.origins.find((o) => o.child === 'p-sarra' && o.parent === 'p-farra')!;
+    so.saidBy = { actor: 'p-avraam', ref: 'Быт 17:17', label: 'по словам Авраама' }; // не из главы стихов записи
+    const m6 = b.nodata.find((n) => n.actor === 'p-marfa' && n.sec === 6 && n.kind === 'silent')!;
+    delete m6.read;
+    const m8 = b.nodata.find((n) => n.actor === 'p-marfa' && n.sec === 8 && n.kind === 'silent')!;
+    m8.read = ['Быт 1:1'];
+    const errs = validate(b).filter((i) => i.level === 'error').map((i) => [i.check, i.where]);
+    expect(errs).toEqual(expect.arrayContaining([
+      ['слово союза', 'u-filipp-brat-iroda--irodiada'],
+      ['союз', 'u-iuda--famar'],
+      ['прочтения', 'r-lk3-23'],
+      ['по словам', 'p-sarra — p-avraam'],
+      ['по словам', 'p-sarra ← p-farra'],
+      ['нет сведений', 'нет сведений p-marfa § 6'],
+      ['нет сведений', 'нет сведений p-marfa § 8'],
+    ]));
+  }, 60_000);
 });

@@ -3,11 +3,11 @@
  "title": "Цари Израиля и их дома",
  "prov": {
   "by": "перенос Д1 (координатор)",
-  "at": "2026-10-09",
+  "at": "2026-10-10",
   "status": "draft",
   "from": {
    "vol": "data/persons/14-kings-of-israel.json",
-   "commit": "11ad76f"
+   "commit": "086f9c3"
   }
  },
  "items": [

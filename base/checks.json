@@ -1351,42 +1351,6 @@
    }
   },
   {
-   "key": "origin:p-iosif-muzh-marii|p-iakov-otets-iosifa|father|p",
-   "by": "сверщик-агент",
-   "kind": "agent",
-   "at": "2026-10-10",
-   "hash": "f54f150224d30524f3e49146f438db8ee514d1f05d3da5c91a737732f82265c6",
-   "inputs": {
-    "verses": [
-     "Мф 1:16"
-    ],
-    "text": "97c1bafd9ead0b4d69bb1389468e7cfe77aab6074b0d7902ffb901fbd4ea433e",
-    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "origin:p-iosif-muzh-marii|p-iliy-syn-matfata|father|o",
-   "by": "сверщик-агент",
-   "kind": "agent",
-   "at": "2026-10-10",
-   "hash": "fbbb4fc5221fe171c8b24fd72b0e08460a39d935aacf184ff0e06c2e649541b9",
-   "inputs": {
-    "verses": [
-     "Лк 3:23"
-    ],
-    "text": "386c8dd3d29671fb9bc5dd88361aa29ca2591757e2c4efc17986ab01a4a39ae5",
-    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
    "key": "origin:p-isaak|p-avraam|father|p",
    "by": "сверщик-агент",
    "kind": "agent",

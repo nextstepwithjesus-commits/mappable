@@ -134,7 +134,7 @@ export function fileEnv(): TextEnv {
   return envCache;
 }
 
-/** Стихи, на которые ссылается запись (refs, ref, first, key, all, verse; глава целиком — все её стихи), по порядку. */
+/** Стихи, на которые ссылается запись (refs, ref, first, key, all, read, verse; глава целиком — все её стихи), по порядку. */
 export function recordVerses(rec: unknown): { id: string; book: string; chapter: number; verse: number }[] {
   const bible = loadBible();
   const refs = new Set<string>();
@@ -143,7 +143,7 @@ export function recordVerses(rec: unknown): { id: string; book: string; chapter:
     if (!x || typeof x !== 'object') return;
     for (const [k, v] of Object.entries(x)) {
       if ((k === 'ref' || k === 'first' || k === 'verse') && typeof v === 'string') refs.add(v);
-      else if ((k === 'refs' || k === 'key' || k === 'all') && Array.isArray(v)) for (const r of v) if (typeof r === 'string') refs.add(r);
+      else if ((k === 'refs' || k === 'key' || k === 'all' || k === 'read') && Array.isArray(v)) for (const r of v) if (typeof r === 'string') refs.add(r);
       go(v);
     }
   };

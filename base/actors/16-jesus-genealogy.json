@@ -3,11 +3,11 @@
  "title": "Родословие Иисуса Христа",
  "prov": {
   "by": "перенос Д1 (координатор)",
-  "at": "2026-10-09",
+  "at": "2026-10-10",
   "status": "draft",
   "from": {
    "vol": "data/persons/16-jesus-genealogy.json",
-   "commit": "11ad76f"
+   "commit": "086f9c3"
   }
  },
  "items": [

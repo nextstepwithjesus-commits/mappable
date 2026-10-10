@@ -3,11 +3,11 @@
  "title": "Происхождение",
  "prov": {
   "by": "перенос Д1 (координатор)",
-  "at": "2026-10-09",
+  "at": "2026-10-10",
   "status": "draft",
   "from": {
    "vol": "data",
-   "commit": "11ad76f"
+   "commit": "086f9c3"
   }
  },
  "items": [
@@ -2706,7 +2706,13 @@
    "prov": {
     "from": {
      "vol": "04-abraham.json"
-    }
+    },
+    "by": "исправление C33"
+   },
+   "saidBy": {
+    "actor": "p-avraam",
+    "ref": "Быт 20:11",
+    "label": "по словам Авраама"
    }
   },
   {
@@ -30790,29 +30796,6 @@
    }
   },
   {
-   "child": "p-mariya",
-   "parent": "p-iliy-syn-matfata",
-   "role": "father",
-   "kind": "by-luke",
-   "refs": [
-    "Лк 3:23"
-   ],
-   "cert": "interpretation",
-   "primary": false,
-   "prov": {
-    "from": {
-     "vol": "16-jesus-genealogy.json"
-    }
-   },
-   "reading": {
-    "set": "r-lk3-23",
-    "in": [
-     "mary"
-    ]
-   },
-   "note": "по толкованию Лк 3:23 как родословия Марии; Писание прямо не называет родителей Марии"
-  },
-  {
    "child": "p-iosif-muzh-marii",
    "parent": "p-iakov-otets-iosifa",
    "role": "father",
@@ -30832,7 +30815,8 @@
     "in": [
      "mt",
      "mary",
-     "legal"
+     "levirate",
+     "adoption"
     ]
    }
   },
@@ -30856,7 +30840,8 @@
     "set": "r-lk3-23",
     "in": [
      "lk",
-     "legal"
+     "levirate",
+     "adoption"
     ]
    }
   },

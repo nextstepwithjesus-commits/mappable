@@ -8,7 +8,8 @@
  *   1. Точный перенос: каждое прежнее поле — на своё место в новой модели (таблица полей — docs/app/data/таблица-полей.md).
  *   2. Обратная проекция точного переноса должна совпасть с прежними данными без единого отличия.
  *   3. Записанные исправления (corrections.ts): Лк 3:23, «мои они», Иосиф и Иисус Христос, справочные сведения, Каинан,
- *      наборы прочтений, линия Луки.
+ *      наборы прочтений, линия Луки; затем дополнения (additions.ts) и правки Д3 по сверке контрольного набора
+ *      (corrections-d3.ts) — они идут после дополнений.
  *   4. Обратная проекция после исправлений: каждое отличие должно относиться к лицу из списка исправлений.
  */
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, rmSync } from 'node:fs';
@@ -21,6 +22,7 @@ import type {
 } from './types.ts';
 import { applyCorrections, makeCtx, STEPS, type Step } from './corrections.ts';
 import { ADDITIONS } from './additions.ts';
+import { STEPS_D3 } from './corrections-d3.ts';
 import { project, canon, type Hints } from './project.ts';
 import { loadBible } from '../bible.ts';
 import { parseRef } from '../../src/engine/books.ts';
@@ -331,7 +333,7 @@ export function buildBase() {
   const old = loadOld();
   const { base, hints } = toBase(old.vols, old.groups, old.epochs, old.anchors, old.lines);
   applyCorrections(base, hints);
-  applyAll(base, hints, [ADDITIONS]);
+  applyAll(base, hints, [ADDITIONS, ...STEPS_D3]);
   return base;
 }
 
@@ -404,7 +406,7 @@ function main() {
   // 2. исправления по одному: всё, что изменилось, — в объявленной области шага (и поля, которых не было в прежних данных)
   const steps: Record<string, string[]> = {};
   let bad = 0;
-  for (const step of [...STEPS, ADDITIONS]) {
+  for (const step of [...STEPS, ADDITIONS, ...STEPS_D3]) {
     const { changed, stray } = stepChanges(base, hints, step);
     steps[step.id] = changed;
     console.log(`   ${step.id}: изменено записей ${changed.length}${stray.length ? `, ВНЕ ОБЛАСТИ ${stray.length}: ${stray.slice(0, 8).join('; ')}` : ''}`);

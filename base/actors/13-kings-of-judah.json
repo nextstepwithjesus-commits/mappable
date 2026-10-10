@@ -3,11 +3,11 @@
  "title": "Цари Иудеи и их дома",
  "prov": {
   "by": "перенос Д1 (координатор)",
-  "at": "2026-10-09",
+  "at": "2026-10-10",
   "status": "draft",
   "from": {
    "vol": "data/persons/13-kings-of-judah.json",
-   "commit": "11ad76f"
+   "commit": "086f9c3"
   }
  },
  "items": [

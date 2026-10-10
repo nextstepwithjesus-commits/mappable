@@ -3,11 +3,11 @@
  "title": "Двенадцать сыновей Иакова",
  "prov": {
   "by": "перенос Д1 (координатор)",
-  "at": "2026-10-09",
+  "at": "2026-10-10",
   "status": "draft",
   "from": {
    "vol": "data/persons/06-jacob-sons.json",
-   "commit": "11ad76f"
+   "commit": "086f9c3"
   }
  },
  "items": [

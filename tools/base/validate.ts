@@ -20,6 +20,29 @@ import { checkSourceIssues, issuesAt, KIND_WORD } from './source-issues.ts';
 
 export interface Issue { level: 'error' | 'warn'; check: string; where: string; msg: string }
 
+/** Слова обозначений союза по видам (02 § 3.2): слово текста должно подходить к виду и стоять в стихе (шаги C32–C35). */
+export const UNION_WORDS: Record<string, string[]> = {
+  marriage: ['жена', 'муж', 'женился', 'взял', 'в замужество', 'как деверь'],
+  concubine: ['наложница'],
+  'maid-as-wife': ['в жену', 'служанка'],
+  redemption: [],
+  'non-marital': ['вошел к ней'],
+  'not-stated': [],
+};
+
+/**
+ * Слово обозначения стоит в тексте стиха: несколько слов — подряд, одно слово — по основе с начала слова
+ * («жена» — «женою», «жен»; «наложница» — «наложницею»). Текст — основной (без скобок, `scriptureText`).
+ */
+export function unionWordIn(word: string, text: string): boolean {
+  const c = (t: string) => ` ${norm(t).replace(/[«»"„“”'’`.,;:!?()\-–—…]/g, ' ').replace(/\s+/g, ' ').trim()} `;
+  const w = c(word).trim();
+  const t = c(text);
+  if (w.includes(' ')) return t.includes(` ${w} `);
+  const stem = w.length > 4 ? w.slice(0, w.length - 2) : w.length === 4 ? w.slice(0, 3) : w;
+  return t.includes(` ${stem}`);
+}
+
 const ROOT = join(import.meta.dirname, '..', '..');
 const CERTS = new Set<Cert>(['scripture', 'inference', 'interpretation', 'calc', 'reference']);
 
@@ -158,8 +181,15 @@ export function validate(base: Base): Issue[] {
     if (!u.terms.length) err('союз', u.id, 'союз без обозначения');
     for (const t of u.terms) {
       if (!t.refs.length) err('стих', u.id, `обозначение «${t.word ?? t.kind}» без стиха`);
-      if (t.word && !({ marriage: ['жена', 'муж', 'как деверь'], concubine: ['наложница'] } as Record<string, string[]>)[t.kind]?.includes(t.word)) err('союз', u.id, `слово «${t.word}» не подходит к виду «${t.kind}»`);
+      if (!(t.kind in UNION_WORDS)) err('союз', u.id, `неизвестный вид союза «${t.kind}»`);
+      else if (t.word && !UNION_WORDS[t.kind].includes(t.word)) err('союз', u.id, `слово «${t.word}» не подходит к виду «${t.kind}»`);
       walk(u.id, t);
+      // слово текста — из стиха (02 § 3.2; сверка Д3, № 4): хотя бы в одном стихе обозначения; стих без слова — замечание
+      if (t.word) {
+        const miss = t.refs.filter((r) => !unionWordIn(t.word!, mainTexts(u.id, r).join(' ')));
+        if (miss.length === t.refs.length) err('слово союза', u.id, `слова «${t.word}» нет ни в одном стихе обозначения (${t.refs.join('; ')})`);
+        else if (miss.length) warn('слово союза', u.id, `слова «${t.word}» нет в стихах ${miss.join('; ')}: у каждого стиха — своё обозначение (02 § 3.2)`);
+      } else if (t.kind !== 'not-stated') warn('слово союза', u.id, `вид «${t.kind}» без слова текста: в стихах обозначения слова о союзе нет`);
     }
     if (actors.get(u.husband)?.sex === 'f' || actors.get(u.wife)?.sex === 'm') err('пол', u.id, 'муж и жена перепутаны');
   }
@@ -167,6 +197,8 @@ export function validate(base: Base): Issue[] {
   for (const r of base.readings) {
     if (!/^r-/.test(r.id)) err('номер', r.id, 'номер набора прочтений — «r-»');
     if (!r.readings.some((x) => x.id === r.default)) err('прочтения', r.id, `прочтение по умолчанию «${r.default}» не из набора`);
+    // у каждого толкования — авторы по совету источников (02 § 3.4 [R9]; R9 Г-4)
+    for (const x of r.readings) if (x.cert === 'interpretation' && !x.authors?.filter((a) => a.trim()).length) err('прочтения', r.id, `у толкования «${x.id}» нет авторов (02 § 3.4, R9)`);
     walk(r.id, r);
   }
   for (const o of base.origins) {
@@ -213,6 +245,19 @@ export function validate(base: Base): Issue[] {
     walk(w, n);
     // прежние виды заменены нейтральным scripture-says (07 § 8.2; шаг C31)
     if (n.kind === 'stated-absent' || n.kind === 'not-applicable') err('нет сведений', w, `вид «${n.kind}» заменён на «scripture-says» со словами стиха`);
+    // «Писание молчит» — со стихами, на которых держится вывод, или с пометкой «нужно чтение» (02 § 3.2; шаг C38)
+    if (n.kind === 'silent') {
+      if (!!n.read?.length === !!n.needsReading) err('нет сведений', w, '«Писание молчит» — либо со списком стихов (read), либо с пометкой «нужно чтение» (needsReading)');
+      const a = actors.get(n.actor);
+      if (a) {
+        const forms = (a.kind === 'unnamed' || a.kind === 'group') && a.descriptor ? [a.descriptor] : a.names.map((x) => x.form);
+        for (const r of n.read ?? []) {
+          if (!texts(w, r)) continue;
+          const joined = norm(mainTexts(w, r).join(' '));
+          if (!forms.some((f) => nameMatcher(f).test(joined))) err('нет сведений', w, `в стихе ${r} из списка «прочитано» лицо не названо`);
+        }
+      }
+    } else if (n.read || n.needsReading) err('нет сведений', w, 'список «прочитано» и пометка «нужно чтение» — только у «Писание молчит»');
     if (n.kind === 'scripture-says') {
       if (!n.refs.length || !n.words?.length) err('нет сведений', w, '«Писание говорит» — только со стихами и словами стиха');
       for (const x of n.words ?? []) {
@@ -242,6 +287,26 @@ export function validate(base: Base): Issue[] {
       const nx = redirectFrom.get(cur)!.to;
       cur = nx.length === 1 ? nx[0] : undefined;
     }
+  }
+
+  // ---------- «по словам …»: говорящий есть и назван в своём стихе той же главы (02 § 3.6; шаг C33) ----------
+  const saidBys: [string, { saidBy?: { actor: string; ref: string; label: string }; refs: string[] }][] = [
+    ...base.kin.map((k) => [`${k.from} — ${k.to}`, k] as [string, typeof k]),
+    ...base.origins.map((o) => [`${o.child} ← ${o.parent ?? '?'}`, o] as [string, typeof o]),
+  ];
+  for (const [w, x] of saidBys) {
+    const sb = x.saidBy;
+    if (!sb) continue;
+    const who = actors.get(sb.actor);
+    if (!who) {
+      err('по словам', w, `нет лица «${sb.actor}»`);
+      continue;
+    }
+    if (!/^по словам /.test(sb.label ?? '')) err('по словам', w, `пометка «${sb.label}» — не «по словам …»`);
+    const joined = norm(mainTexts(w, sb.ref).join(' '));
+    if (!who.names.some((n) => nameMatcher(n.form).test(joined))) err('по словам', w, `говорящий ${sb.actor} не назван в ${sb.ref}`);
+    const ch = (r: string) => r.replace(/:.*$/, '');
+    if (!x.refs.some((r) => ch(r) === ch(sb.ref))) err('по словам', w, `стих говорящего ${sb.ref} не из главы стихов записи (${x.refs.join('; ')})`);
   }
 
   // ---------- лица: имена, утверждения, карантин ----------

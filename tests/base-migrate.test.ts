@@ -7,8 +7,9 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { toBase, diff, stepChanges, CARD_FIELDS, type Base } from '../tools/base/migrate.ts';
 import { project, type Hints } from '../tools/base/project.ts';
-import { STEPS, type Step } from '../tools/base/corrections.ts';
+import { STEPS, makeCtx, type Step } from '../tools/base/corrections.ts';
 import { ADDITIONS } from '../tools/base/additions.ts';
+import { STEPS_D3 } from '../tools/base/corrections-d3.ts';
 import { validate } from '../tools/base/validate.ts';
 
 const DATA = join(import.meta.dirname, '..', 'data');
@@ -28,7 +29,7 @@ describe('перенос в базу', () => {
 
   it('каждый шаг исправления меняет только записи своей области', () => {
     const { base, hints } = exact();
-    for (const s of [...STEPS, ADDITIONS]) expect([s.id, stepChanges(base, hints, s).stray]).toEqual([s.id, []]);
+    for (const s of [...STEPS, ADDITIONS, ...STEPS_D3]) expect([s.id, stepChanges(base, hints, s).stray]).toEqual([s.id, []]);
     expect(validate(base).filter((i) => i.level === 'error')).toEqual([]);
   }, 60_000);
 
@@ -64,7 +65,9 @@ describe('перенос в базу', () => {
     base.epochs[0].keyPersons = ['adam'];
     expect(validate(base).some((i) => i.check === 'номер')).toBe(true);
     // «Писание говорит» без слов стиха, слова не из стиха и прежний вид not-applicable ловит проверка базы (07 § 8.2)
-    const { base: b3 } = exact();
+    // «Писание молчит» без списка стихов — тоже ошибка (C38); здесь список собран шагом, чтобы ловились только подложенные
+    const { base: b3, hints: h3 } = exact();
+    STEPS_D3.find((s) => s.id === 'C38')!.run(makeCtx(b3, h3));
     b3.nodata.push(
       { actor: 'p-adam', sec: 6, kind: 'scripture-says', refs: ['Быт 2:7'] },
       { actor: 'p-eva', sec: 6, kind: 'scripture-says', refs: ['Быт 2:22'], words: [{ text: 'создал Господь Бог из ребра Адама', ref: 'Быт 2:22' }] },
