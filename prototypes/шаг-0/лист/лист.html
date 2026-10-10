@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="ru" data-dir="a" data-layer="1">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лист-образец шага 0 — Библия наглядно</title>
+<script>
+  // Режим листа из адреса: ?dir=a|b&theme=light|dark&grid=1 — до первой отрисовки.
+  (function () {
+    var q = new URLSearchParams(location.search), r = document.documentElement;
+    if (q.get('dir') === 'b') r.dataset.dir = 'b';
+    if (q.get('theme') === 'light' || q.get('theme') === 'dark') r.dataset.theme = q.get('theme');
+    if (q.get('grid') === '1') r.dataset.grid = '1';
+  })();
+</script>
+<link rel="stylesheet" href="токены.css">
+<link rel="stylesheet" href="основа.css">
+<link rel="stylesheet" href="компоненты.css">
+<link rel="stylesheet" href="лист.css">
+</head>
+<body>
+<a class="к-содержимому" href="#лист">Перейти к листу</a>
+
+<!-- Шапка § 7.1 — живой образец компонента (ноутбук; на телефоне — знак, «Поиск» на главном экране полем, «Меню») -->
+<header class="шапка" id="шапка">
+  <a class="шапка__знак" href="#лист" aria-label="Библия наглядно, на главную">Библия наглядно</a>
+  <form class="поиск шапка__поиск" role="search" onsubmit="return false">
+    <label class="скрыто" for="поиск-шапка">Поиск</label>
+    <div class="поиск__ряд">
+      <div class="поиск__поле"><span data-значок="поиск"></span><input id="поиск-шапка" type="search" placeholder="История, человек, место или стих" autocomplete="off"></div>
+    </div>
+  </form>
+  <nav class="шапка__ссылки" aria-label="Разделы">
+    <a href="#лист">Все истории по алфавиту</a>
+    <div class="сегменты" role="group" aria-label="Вид" data-слой>
+      <button type="button" aria-pressed="true" data-слой-кнопка="1">Простой вид</button><button type="button" aria-pressed="false" data-слой-кнопка="2">Для изучающих</button>
+    </div>
+    <a href="#лист"><span data-значок="справка"></span>Справка</a>
+    <a href="#лист"><span data-значок="настройки"></span>Настройки</a>
+  </nav>
+  <button class="кнопка шапка__меню" type="button" aria-expanded="false"><span data-значок="меню"></span>Меню</button>
+</header>
+
+<main class="лист" id="лист" tabindex="-1">
+
+  <section class="вводная" aria-labelledby="заголовок-листа">
+    <p class="вводная__надпись к-адрес">Лист-образец шага 0 (08 § 2.2, § 10.1). Прототип для решения владельца, не продукт</p>
+    <h1 id="заголовок-листа" class="к-название-истории">
+      <span data-только="a">Направление А «Иллюстри&shy;рованный атлас»</span>
+      <span data-только="b">Направление Б «Книга с рубриками»</span>
+    </h1>
+    <p class="вводная__шрифты к-проза">
+      <span data-только="a">Literata — текст Библии и заголовки; Golos Text — интерфейс. Цвет — 08 § 3.2.</span>
+      <span data-только="b">Piazzolla — текст Библии и заголовки; Ysabeau Office — интерфейс. Цвет — 08 § 3.2 и киноварь в тексте Библии.</span>
+    </p>
+    <div class="проба-шрифта" aria-label="Проба загрузки шрифта">
+      <span class="проба-шрифта__текст">Й Ё ё й</span>
+      <span class="проба-шрифта__интерфейс">Й Ё ё й</span>
+      <span class="проба-шрифта__рубрика"><span class="к-повествование номер-истории номер-истории--вз">10</span> <span class="к-повествование">Ной и потоп</span></span>
+      <span class="голос-мы проба-шрифта__подпись" id="проба-итог">Проверяем, загрузились ли шрифты</span>
+    </div>
+    <div class="пульт">
+      <div class="пульт__ряд">
+        <span class="пульт__подпись" id="п-напр">Направление</span>
+        <div class="сегменты" role="group" aria-labelledby="п-напр">
+          <button type="button" data-напр="a">А</button><button type="button" data-напр="b">Б</button>
+        </div>
+      </div>
+      <div class="пульт__ряд">
+        <span class="пульт__подпись" id="п-тема">Тема</span>
+        <div class="сегменты" role="group" aria-labelledby="п-тема">
+          <button type="button" data-тема="">Как в системе</button><button type="button" data-тема="light">Светлая</button><button type="button" data-тема="dark">Тёмная</button>
+        </div>
+      </div>
+      <div class="пульт__ряд">
+        <span class="пульт__подпись" id="п-сетка">Сетка</span>
+        <div class="сегменты" role="group" aria-labelledby="п-сетка">
+          <button type="button" data-сетка="0">Скрыть</button><button type="button" data-сетка="1">Наложить</button>
+        </div>
+      </div>
+    </div>
+    <p class="голос-мы вводная__честно">Знаки на листе — временные: их нарисовал составитель листа, а не художник. Рисунков нет: проба художника ждёт решения владельца. Данные историй — предварительные, без второго ключа.</p>
+    <nav class="оглавление" aria-label="Разделы листа">
+      <ol>
+        <li><a href="#цвет">1. Цвет и контраст</a></li>
+        <li><a href="#кегли">2. Шкала кеглей на настоящем тексте</a></li>
+        <li><a href="#сетка">3. Сетка по классам окна</a></li>
+        <li><a href="#знаки">4. Знаки и значки</a></li>
+        <li><a href="#компоненты">5. Компоненты главного экрана и страницы истории</a></li>
+        <li><a href="#состояния">6. Пять состояний</a></li>
+        <li><a href="#голоса">7. Голоса и скобки</a></li>
+        <li><a href="#обложки">8. Обложки трёх ступеней: Мк 1–3</a></li>
+        <li><a href="#приёмы">9. Подписные приёмы</a></li>
+        <li><a href="#знак-приложения">10. Знак приложения: три варианта</a></li>
+      </ol>
+    </nav>
+  </section>
+
+  <section class="раздел" id="цвет" aria-labelledby="з-цвет">
+    <div class="раздел__шапка"><h2 id="з-цвет" class="к-книга-в-каталоге">1. Цвет и контраст</h2><p class="к-адрес">08 § 10.1 п. 1; § 3.2. Числа считает скрипт <code>контраст.mjs</code> по файлу токенов</p></div>
+    <p class="раздел__вводная" id="цвет-режим"></p>
+    <div id="цвет-таблица"></div>
+  </section>
+
+  <section class="раздел" id="кегли" aria-labelledby="з-кегли">
+    <div class="раздел__шапка"><h2 id="з-кегли" class="к-книга-в-каталоге">2. Шкала кеглей на настоящем тексте</h2><p class="к-адрес">08 § 10.1 п. 2; § 3.3</p></div>
+    <div id="кегли-проба"></div>
+    <div id="кегли-таблица"></div>
+    <div id="кегли-текст"></div>
+  </section>
+
+  <section class="раздел" id="сетка" aria-labelledby="з-сетка">
+    <div class="раздел__шапка"><h2 id="з-сетка" class="к-книга-в-каталоге">3. Сетка по классам окна</h2><p class="к-адрес">08 § 10.1 п. 3; § 3.4</p></div>
+    <div id="сетка-образец"></div>
+  </section>
+
+  <section class="раздел" id="знаки" aria-labelledby="з-знаки">
+    <div class="раздел__шапка"><h2 id="з-знаки" class="к-книга-в-каталоге">4. Знаки и значки</h2><p class="к-адрес">08 § 10.1 п. 7; § 5.5–5.8</p></div>
+    <div id="знаки-образец"></div>
+  </section>
+
+  <section class="раздел" id="компоненты" aria-labelledby="з-компоненты">
+    <div class="раздел__шапка"><h2 id="з-компоненты" class="к-книга-в-каталоге">5. Компоненты главного экрана и страницы истории</h2><p class="к-адрес">08 § 10.1 п. 9 — только эти два экрана; § 7</p></div>
+    <div id="компоненты-образец"></div>
+  </section>
+
+  <section class="раздел" id="состояния" aria-labelledby="з-состояния">
+    <div class="раздел__шапка"><h2 id="з-состояния" class="к-книга-в-каталоге">6. Пять состояний</h2><p class="к-адрес">Решение координатора по идее Ф-12; 08 § 5.4, § 7.11</p></div>
+    <div id="состояния-образец"></div>
+  </section>
+
+  <section class="раздел" id="голоса" aria-labelledby="з-голоса">
+    <div class="раздел__шапка"><h2 id="з-голоса" class="к-книга-в-каталоге">7. Голоса и скобки</h2><p class="к-адрес">08 § 10.1 п. 10; § 4.1, § 4.2</p></div>
+    <div id="голоса-образец"></div>
+  </section>
+
+  <section class="раздел" id="обложки" aria-labelledby="з-обложки">
+    <div class="раздел__шапка"><h2 id="з-обложки" class="к-книга-в-каталоге">8. Обложки трёх ступеней: Мк 1–3</h2><p class="к-адрес">08 § 10.1 п. 11; § 7.3</p></div>
+    <div id="обложки-образец"></div>
+  </section>
+
+  <section class="раздел" id="приёмы" aria-labelledby="з-приёмы">
+    <div class="раздел__шапка"><h2 id="з-приёмы" class="к-книга-в-каталоге">9. Подписные приёмы</h2><p class="к-адрес">08 § 2.5 — на истории без рисунка</p></div>
+    <div id="приёмы-образец"></div>
+  </section>
+
+  <section class="раздел" id="знак-приложения" aria-labelledby="з-знак">
+    <div class="раздел__шапка"><h2 id="з-знак" class="к-книга-в-каталоге">10. Знак приложения: три варианта</h2><p class="к-адрес">08 § 10.1 п. 15; ВП-49</p></div>
+    <div id="знак-образец"></div>
+  </section>
+
+  <footer class="подвал голос-мы" id="подвал"></footer>
+</main>
+
+<div class="наложение-сетки" aria-hidden="true"><div class="наложение-сетки__ряд"></div></div>
+
+<script src="лист-данные.js"></script>
+<script src="знаки.js"></script>
+<script src="лист.js"></script>
+</body>
+</html>

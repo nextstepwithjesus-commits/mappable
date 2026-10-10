@@ -1,0 +1,192 @@
+/* Компоненты главного экрана и страницы истории (08 § 7) — облик для шага 0.
+   Только переменные из токены.css; сырые значения ловит собрать.mjs.
+   Следующий этап (экраны) берёт этот файл вместе с токены.css и основа.css. ПРОТОТИП. */
+
+/* ---------- Знаки (§ 5.5–5.8): линия «чернила» темы и одна плоская заливка ---------- */
+.знак { overflow: visible; }
+.знак .л { fill: none; stroke: var(--znak-liniya); stroke-width: var(--znak-tolshchina); stroke-linecap: square; stroke-linejoin: miter; vector-effect: non-scaling-stroke; }
+.знак .т { fill: var(--znak-liniya); stroke: none; }
+.знак .з-охра { fill: var(--znak-zalivka-okhra); }
+.знак .з-олива { fill: var(--znak-zalivka-oliva); }
+.знак .з-бирюза { fill: var(--znak-zalivka-biryuza); }
+.знак .з-индиго { fill: var(--znak-zalivka-indigo); }
+.знак--крупно .л { stroke-width: var(--znak-tolshchina-krupno); }
+.знак--вид .л { stroke: currentColor; }
+.знак--вид .т { fill: currentColor; }
+.значок { width: var(--mera-24); height: var(--mera-24); flex: none; }
+.значок .л { fill: none; stroke: currentColor; stroke-width: var(--tolshchina-silnaya); stroke-linecap: square; stroke-linejoin: miter; vector-effect: non-scaling-stroke; }
+.значок .т { fill: currentColor; }
+
+/* ---------- Кнопки и ссылки § 7.8 ---------- */
+.кнопка {
+  display: inline-flex; align-items: center; gap: var(--otstup-8);
+  min-height: var(--tsel-prostoy); padding: 0 var(--otstup-16);
+  border: 0; border-radius: var(--knopka-radius); background: none; cursor: pointer;
+  font-family: var(--shrift-interfeys); font-size: var(--kegl-proza-size); line-height: var(--kegl-proza-lh); font-weight: var(--kegl-zagolovok-apparata-weight);
+  color: var(--tsvet-chernila); text-align: start;
+}
+[data-layer="2"] .кнопка { min-height: var(--tsel-vtoroy); }
+.кнопка:active { background: var(--knopka-kasanie); }
+.кнопка--текст { padding-inline: 0; }
+.кнопка--плотная { background: var(--knopka-plotnaya-fon); color: var(--knopka-plotnaya-tekst); }
+.кнопка--инструмента { background: var(--knopka-instrumenta-fon); padding-block: var(--otstup-8); flex-direction: row; align-items: center; }
+.кнопка--инструмента .вопрос { display: block; font-family: var(--kegl-detskaya-family); font-size: var(--kegl-detskaya-size); line-height: var(--kegl-detskaya-lh); font-weight: var(--kegl-detskaya-weight); }
+.кнопка--инструмента .инструмент { display: block; font-size: var(--kegl-adres-size); line-height: var(--kegl-adres-lh); font-weight: var(--kegl-adres-weight); color: var(--tsvet-chernila-2); }
+.кнопка--значок { width: var(--tsel-prostoy); padding: 0; justify-content: center; }
+.кнопка[aria-expanded="true"] .значок-раскрыть { transform: rotate(180deg); }
+
+/* ---------- Шапка § 7.1 ---------- */
+.шапка {
+  display: flex; align-items: center; gap: var(--otstup-16);
+  min-height: var(--shapka-vysota); padding: 0 var(--polya-bolshoe);
+  background: var(--shapka-fon); border-bottom: var(--tolshchina-volosyanaya) solid var(--shapka-kromka);
+}
+.шапка__знак { text-decoration: none; flex: none; font-family: var(--shrift-tekst); font-size: var(--kegl-zagolovok-bloka-size); line-height: var(--kegl-zagolovok-bloka-lh); font-weight: var(--kegl-zagolovok-bloka-weight); }
+.шапка__поиск { flex: 1 1 auto; min-width: 0; max-width: var(--kolonka-pasport); }
+.шапка__ссылки { display: flex; align-items: center; gap: var(--otstup-8); margin-inline-start: auto; }
+.шапка__ссылки a, .шапка .сегменты button { white-space: nowrap; }
+.шапка__ссылки a { display: inline-flex; align-items: center; gap: var(--otstup-8); min-height: var(--tsel-prostoy); padding: 0 var(--otstup-8); }
+.шапка--телефон { min-height: var(--shapka-vysota-telefon); padding: 0 var(--polya-uzkoe); gap: var(--otstup-8); }
+.шапка--телефон .шапка__знак { font-size: var(--kegl-povestvovanie-size); line-height: var(--kegl-povestvovanie-lh); }
+
+/* ---------- Поиск § 7.2 ---------- */
+.поиск { display: flex; flex-direction: column; gap: var(--otstup-4); position: relative; }
+.поиск__подпись { font-weight: var(--kegl-zagolovok-apparata-weight); }
+.поиск__ряд { display: flex; gap: var(--otstup-8); }
+.поиск__поле { position: relative; flex: 1; }
+.поиск__поле .значок { position: absolute; inset-inline-start: var(--otstup-12); inset-block-start: 50%; transform: translateY(-50%); color: var(--tsvet-chernila-2); pointer-events: none; }
+.поиск input {
+  width: 100%; min-height: var(--poisk-vysota-prostoy); padding: 0 var(--otstup-12) 0 var(--otstup-48);
+  border: var(--tolshchina-volosyanaya) solid var(--poisk-ramka); border-radius: var(--knopka-radius); background: var(--tsvet-list);
+}
+[data-layer="2"] .поиск input { min-height: var(--poisk-vysota-vtoroy); }
+.поиск input::placeholder { color: var(--poisk-zapolnitel); opacity: 1; }
+.поиск__кнопка { border: var(--tolshchina-volosyanaya) solid var(--tsvet-chernila); }
+.поиск__подсказки { background: var(--tsvet-list); box-shadow: var(--ten-sloy); padding: var(--otstup-8) 0; }
+:root[data-theme="dark"] .поиск__подсказки { box-shadow: none; border: var(--tolshchina-volosyanaya) solid var(--tsvet-liniya); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .поиск__подсказки { box-shadow: none; border: var(--tolshchina-volosyanaya) solid var(--tsvet-liniya); } }
+.поиск__группа { padding: var(--otstup-4) var(--otstup-16); color: var(--tsvet-chernila-2); font-size: var(--kegl-adres-size); line-height: var(--kegl-adres-lh); }
+.поиск__строка { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 var(--otstup-12); min-height: var(--tsel-vtoroy); padding: var(--otstup-8) var(--otstup-16); }
+.поиск__строка[aria-selected="true"] { background: var(--tsvet-podlozhka); }
+.поиск__строка b { font-family: var(--shrift-tekst); font-weight: var(--kegl-nazvanie-istorii-weight); font-size: var(--kegl-tsitata-v-apparate-size); line-height: var(--kegl-tsitata-v-apparate-lh); }
+.поиск__строка .голос-библии { font-family: var(--shrift-tekst); flex-basis: 100%; }
+
+/* ---------- Обложка § 7.3 ---------- */
+.обложка { position: relative; display: flex; flex-direction: column; gap: var(--otstup-8); }
+.обложка__поле {
+  position: relative; aspect-ratio: 4 / 3; overflow: hidden;
+  background: var(--oblozhka-pole);
+  border: var(--oblozhka-kromka-tolshchina) solid var(--oblozhka-kromka-nz);
+}
+.обложка--вз .обложка__поле { border-color: var(--oblozhka-kromka-vz); }
+.обложка__поле::before {
+  content: ""; position: absolute; inset-block-start: 0; inset-inline-start: 0;
+  width: var(--oblozhka-ugolok); height: var(--oblozhka-ugolok);
+  background: var(--oblozhka-ugolok-nz); clip-path: polygon(0 0, 100% 0, 0 100%);
+}
+.обложка--вз .обложка__поле::before { background: var(--oblozhka-ugolok-vz); }
+.обложка--ступень-1 .обложка__поле { border-color: var(--oblozhka-kromka-risunka); }
+.обложка__горизонт { position: absolute; inset-inline: 0; inset-block-start: 78%; border-top: var(--tolshchina-volosyanaya) solid var(--tsvet-setka); }
+.обложка__знак { position: absolute; height: 68%; width: 82%; inset-block-end: 12%; inset-inline-start: 9%; }
+.обложка--зеркально .обложка__знак { inset-inline-start: auto; inset-inline-end: 9%; }
+.обложка__сетка { position: absolute; inset: 0; width: 100%; height: 100%; }
+.обложка__сетка line { stroke: var(--tsvet-setka); stroke-width: var(--tolshchina-volosyanaya); vector-effect: non-scaling-stroke; }
+.обложка__знак-вида { position: absolute; inset-inline-start: 9%; inset-block-end: 14%; width: 36%; height: auto; color: var(--oblozhka-kromka-nz); }
+.обложка--вз .обложка__знак-вида { color: var(--oblozhka-kromka-vz); }
+.обложка__узор { position: absolute; inset: 0; width: 100%; height: 100%; }
+.обложка__стих { position: absolute; inset-inline: 9%; inset-block-start: 16%; }
+.обложка__стих .знак { width: 34%; height: auto; margin-top: var(--otstup-12); }
+.обложка--загрузка .обложка__поле { background: var(--oblozhka-zagruzka); }
+.обложка--загрузка .обложка__поле::before { display: none; }
+.обложка__подпись { display: flex; flex-direction: column; gap: var(--otstup-2); }
+.обложка__название { overflow-wrap: anywhere; font-family: var(--kegl-detskaya-tekst-family); font-size: var(--kegl-detskaya-tekst-size); line-height: var(--kegl-detskaya-tekst-lh); font-weight: var(--kegl-detskaya-tekst-weight); text-decoration: none; }
+.обложка__название::after { content: ""; position: absolute; inset: 0; }
+.обложка__название:hover, .обложка--наведение .обложка__название { text-decoration: underline; text-decoration-thickness: var(--ssylka-podchyorkivanie-navedenie); text-underline-offset: var(--ssylka-smeshchenie); }
+.обложка__название:focus-visible { outline: none; box-shadow: none; }
+.обложка:focus-within, .обложка.показ-фокуса {
+  outline: var(--fokus-tolshchina) solid var(--fokus-ramka); outline-offset: var(--fokus-zazor);
+  box-shadow: 0 0 0 calc(var(--fokus-zazor) + var(--fokus-tolshchina) + var(--fokus-zazor)) var(--fokus-kayma);
+}
+.обложка__примечание { font-family: var(--kegl-adres-family); font-size: var(--kegl-adres-size); line-height: var(--kegl-adres-lh); color: var(--tsvet-chernila-3); }
+
+/* Строка между обложками (известие или сводка в 1–2 стиха) */
+.строка-истории { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 var(--otstup-12); padding: var(--otstup-12) 0; border-top: var(--tolshchina-volosyanaya) solid var(--tsvet-liniya); border-bottom: var(--tolshchina-volosyanaya) solid var(--tsvet-liniya); }
+.строка-истории a { font-family: var(--shrift-tekst); font-weight: var(--kegl-povestvovanie-weight); font-size: var(--kegl-tsitata-v-apparate-size); }
+
+/* ---------- Малая карточка лица § 7.4 ---------- */
+.лица { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--otstup-24); }
+.лицо { display: grid; grid-template-columns: var(--mera-24) minmax(0, 1fr); gap: var(--otstup-4) var(--otstup-12); align-content: start; }
+.лицо > .знак, .лицо > .знак-лица { grid-row: 1; width: var(--mera-24); height: var(--mera-24); margin-top: var(--otstup-4); }
+.лицо__тело { display: flex; flex-direction: column; gap: var(--otstup-4); }
+.лицо__имя { font-family: var(--kegl-detskaya-tekst-family); font-size: var(--kegl-detskaya-tekst-size); line-height: var(--kegl-detskaya-tekst-lh); font-weight: var(--kegl-detskaya-tekst-weight); }
+[data-layer="2"] .лицо__имя { font-size: var(--kegl-povestvovanie-size); line-height: var(--kegl-povestvovanie-lh); }
+.лицо__роль { font-family: var(--kegl-tsitata-v-apparate-family); font-size: var(--kegl-tsitata-v-apparate-size); line-height: var(--kegl-tsitata-v-apparate-lh); }
+.лицо__нет { color: var(--tsvet-chernila-2); }
+.знак-лица .л { fill: none; stroke: var(--tsvet-chernila); stroke-width: var(--tolshchina-osnovnaya); vector-effect: non-scaling-stroke; }
+@media (max-width: 37.4375em) { .лица { grid-template-columns: minmax(0, 1fr); gap: var(--otstup-16); } }
+
+/* ---------- Адрес-кнопка и вклейка стиха § 7.6 ---------- */
+.адрес-кнопка {
+  display: inline-flex; align-items: center; gap: var(--otstup-8); min-height: var(--tsel-prostoy);
+  padding: 0; border: 0; background: none; cursor: pointer;
+  font-family: var(--kegl-adres-family); font-size: var(--kegl-adres-size); line-height: var(--kegl-adres-lh); font-variant-numeric: tabular-nums lining-nums; color: var(--tsvet-chernila-2);
+}
+[data-layer="2"] .адрес-кнопка { min-height: var(--tsel-vtoroy); }
+.адрес-кнопка .значок { width: var(--mera-12); height: var(--mera-12); }
+.адрес-кнопка[aria-expanded="true"] { color: var(--tsvet-chernila); }
+.адрес-кнопка[aria-expanded="true"] .значок { transform: rotate(180deg); }
+.вклейка { display: flex; flex-direction: column; gap: var(--otstup-8); padding-block: var(--otstup-4) var(--otstup-8); }
+.вклейка__стихи { font-family: var(--kegl-tsitata-v-apparate-family); font-size: var(--kegl-tsitata-v-apparate-size); line-height: var(--kegl-tsitata-v-apparate-lh); }
+.вклейка__стихи .свой { font-weight: var(--kegl-nazvanie-istorii-weight); }
+.вклейка[hidden] { display: none; }
+
+/* ---------- Пометки § 7.7, тихая строка § 7.24 ---------- */
+.пометка { font-family: var(--kegl-adres-family); font-size: var(--kegl-adres-size); line-height: var(--kegl-adres-lh); color: var(--tsvet-chernila-2); }
+.кнопка.пометка { font-weight: var(--kegl-adres-weight); color: var(--tsvet-chernila-2); }
+.кнопка.к-детская { font-size: var(--kegl-detskaya-size); line-height: var(--kegl-detskaya-lh); }
+[data-layer="2"] .пометка { font-size: var(--kegl-nomer-stikha-size); line-height: var(--kegl-nomer-stikha-lh); }
+.тихая-строка { font-family: var(--kegl-adres-family); font-size: var(--kegl-adres-size); line-height: var(--kegl-adres-lh); color: var(--tsvet-chernila-2); }
+
+/* ---------- Переключатель слоя § 7.9 (и сегменты листа) ---------- */
+.сегменты { display: inline-flex; border: var(--pereklyuchatel-sloya-ramka-tolshchina) solid var(--pereklyuchatel-sloya-ramka); border-radius: var(--radius-net); }
+.сегменты button {
+  min-height: var(--pereklyuchatel-sloya-vysota); min-width: var(--tsel-prostoy); padding: 0 var(--otstup-16);
+  border: 0; border-radius: var(--radius-net); background: var(--tsvet-list); cursor: pointer;
+  font-family: var(--shrift-interfeys); font-size: var(--kegl-proza-size); font-weight: var(--kegl-proza-weight);
+}
+.сегменты button { white-space: nowrap; }
+.сегменты button + button { border-inline-start: var(--pereklyuchatel-sloya-ramka-tolshchina) solid var(--pereklyuchatel-sloya-ramka); }
+.сегменты button[aria-pressed="true"] { background: var(--pereklyuchatel-sloya-nazhato-fon); color: var(--pereklyuchatel-sloya-nazhato-tekst); font-weight: var(--kegl-zagolovok-apparata-weight); }
+
+/* ---------- Полоса 66 книг § 7.12 ---------- */
+.полоса-66 { display: flex; flex-direction: column; gap: var(--otstup-8); }
+.полоса-66__ряды { display: flex; gap: var(--polosa-66-razryv); }
+.полоса-66__завет { display: flex; gap: var(--polosa-66-razryv); flex: 39 1 0; }
+.полоса-66__завет--нз { flex: 27 1 0; }
+.полоса-66__раздел { display: flex; gap: var(--tolshchina-volosyanaya); }
+.полоса-66__клетка { flex: 1 1 0; height: var(--polosa-66-vysota); background: var(--polosa-66-pusto); position: relative; }
+.полоса-66__клетка--рассказано { background: var(--polosa-66-rasskazano); }
+.полоса-66__клетка--упомянуто::after { content: ""; position: absolute; inset-inline: 0; inset-block-end: 0; height: 50%; background: var(--polosa-66-rasskazano); }
+@media (max-width: 37.4375em) { .полоса-66__ряды { flex-direction: column; } }
+
+/* ---------- Состояния § 5.4, § 7.11 ---------- */
+.состояние { display: grid; grid-template-columns: var(--mera-24) minmax(0, 1fr); gap: var(--otstup-12); align-items: start; align-content: start; }
+.состояние__знак { color: var(--tsvet-chernila-2); margin-top: var(--otstup-2); }
+.состояние__слова { display: flex; flex-direction: column; gap: var(--otstup-4); }
+.состояние__вид { font-weight: var(--kegl-zagolovok-apparata-weight); }
+.состояние--мы .состояние__текст { color: var(--tsvet-chernila-3); }
+.состояние--библия .состояние__текст { color: var(--tsvet-chernila-2); }
+.рамка-загрузки { background: var(--tsvet-podlozhka); }
+
+/* ---------- Текст Писания § 3.3.4, § 4.2 ---------- */
+.писание { max-width: var(--kolonka-tekst-predel); }
+.писание p + p { margin-top: var(--otstup-12); }
+.начало-части { font-weight: var(--kegl-nazvanie-istorii-weight); }
+.буквица { float: inline-start; font-family: var(--shrift-tekst); font-weight: var(--kegl-nazvanie-istorii-weight); font-size: calc(var(--kegl-tekst-pisaniya-size) * var(--kegl-tekst-pisaniya-lh) * 2); line-height: 1; margin-inline-end: var(--otstup-8); color: var(--tsvet-bukvitsa-vz); }
+.писание--нз .буквица { color: var(--tsvet-bukvitsa-nz); }
+.номер-стиха { vertical-align: super; font-size: var(--kegl-nomer-stikha-size); line-height: 0; font-family: var(--kegl-nomer-stikha-family); font-variant-numeric: tabular-nums lining-nums; color: var(--tsvet-nomer-stikha); user-select: none; margin-inline-end: var(--otstup-2); }
+/* Скобки § 4.2: тем же цветом; скрытые метки — через content с альтернативным текстом, не копируются */
+.скобка::before { content: "" / "в скобках:"; }
+.скобка::after { content: "" / "конец скобок"; }
+.номер-истории { color: var(--tsvet-nomer-istorii-nz); }
+.номер-истории--вз { color: var(--tsvet-nomer-istorii-vz); }

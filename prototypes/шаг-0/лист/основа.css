@@ -1,0 +1,69 @@
+/* Основа листа-образца и экранов шага 0: шрифты (локально, из inputs/fonts), сброс, набор по ролям.
+   Значения — только переменные из токены.css. ПРОТОТИП: в продукт не переносится. */
+
+@font-face { font-family: "Literata"; src: url("../../../inputs/fonts/Literata%5Bopsz,wght%5D.ttf") format("truetype"); font-weight: 200 900; font-style: normal; font-display: swap; }
+@font-face { font-family: "Literata"; src: url("../../../inputs/fonts/Literata-Italic%5Bopsz,wght%5D.ttf") format("truetype"); font-weight: 200 900; font-style: italic; font-display: swap; }
+@font-face { font-family: "Golos Text"; src: url("../../../inputs/fonts/GolosText%5Bwght%5D.ttf") format("truetype"); font-weight: 400 900; font-style: normal; font-display: swap; }
+@font-face { font-family: "Piazzolla"; src: url("../../../inputs/fonts/Piazzolla%5Bopsz,wght%5D.ttf") format("truetype"); font-weight: 100 900; font-style: normal; font-display: swap; }
+@font-face { font-family: "Piazzolla"; src: url("../../../inputs/fonts/Piazzolla-Italic%5Bopsz,wght%5D.ttf") format("truetype"); font-weight: 100 900; font-style: italic; font-display: swap; }
+@font-face { font-family: "Ysabeau Office"; src: url("../../../inputs/fonts/YsabeauOffice%5Bwght%5D.ttf") format("truetype"); font-weight: 1 1000; font-style: normal; font-display: swap; }
+@font-face { font-family: "Ysabeau Office"; src: url("../../../inputs/fonts/YsabeauOffice-Italic%5Bwght%5D.ttf") format("truetype"); font-weight: 1 1000; font-style: italic; font-display: swap; }
+
+*, *::before, *::after { box-sizing: border-box; }
+html { color-scheme: light dark; -webkit-text-size-adjust: 100%; }
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
+body {
+  margin: 0;
+  background: var(--tsvet-fon);
+  color: var(--tsvet-chernila);
+  font-family: var(--kegl-proza-family);
+  font-size: var(--kegl-proza-size);
+  line-height: var(--kegl-proza-lh);
+  font-weight: var(--kegl-proza-weight);
+  font-variant-numeric: lining-nums;
+  font-synthesis: none;
+  font-optical-sizing: auto;
+  text-rendering: optimizeLegibility;
+}
+h1, h2, h3, h4, p, figure, blockquote, ul, ol, dl, dd { margin: 0; }
+ul, ol { padding: 0; list-style: none; }
+img, svg { display: block; }
+button, input { font: inherit; color: inherit; }
+
+/* Набор по ступеням шкалы § 3.3.2: класс = ступень. */
+.к-название-истории { font-family: var(--kegl-nazvanie-istorii-family); font-size: var(--kegl-nazvanie-istorii-size); line-height: var(--kegl-nazvanie-istorii-lh); font-weight: var(--kegl-nazvanie-istorii-weight); }
+.к-имя-в-карточке { font-family: var(--kegl-imya-v-kartochke-family); font-size: var(--kegl-imya-v-kartochke-size); line-height: var(--kegl-imya-v-kartochke-lh); font-weight: var(--kegl-imya-v-kartochke-weight); }
+.к-номер-истории { font-family: var(--kegl-nomer-istorii-family); font-size: var(--kegl-nomer-istorii-size); line-height: var(--kegl-nomer-istorii-lh); font-weight: var(--kegl-nomer-istorii-weight); font-variant-numeric: lining-nums; }
+.к-завет-в-каталоге { font-family: var(--kegl-zavet-v-kataloge-family); font-size: var(--kegl-zavet-v-kataloge-size); line-height: var(--kegl-zavet-v-kataloge-lh); font-weight: var(--kegl-zavet-v-kataloge-weight); }
+.к-книга-в-каталоге { font-family: var(--kegl-kniga-v-kataloge-family); font-size: var(--kegl-kniga-v-kataloge-size); line-height: var(--kegl-kniga-v-kataloge-lh); font-weight: var(--kegl-kniga-v-kataloge-weight); }
+.к-заголовок-блока { font-family: var(--kegl-zagolovok-bloka-family); font-size: var(--kegl-zagolovok-bloka-size); line-height: var(--kegl-zagolovok-bloka-lh); font-weight: var(--kegl-zagolovok-bloka-weight); }
+.к-повествование { font-family: var(--kegl-povestvovanie-family); font-size: var(--kegl-povestvovanie-size); line-height: var(--kegl-povestvovanie-lh); font-weight: var(--kegl-povestvovanie-weight); }
+.к-заголовок-аппарата { font-family: var(--kegl-zagolovok-apparata-family); font-size: var(--kegl-zagolovok-apparata-size); line-height: var(--kegl-zagolovok-apparata-lh); font-weight: var(--kegl-zagolovok-apparata-weight); }
+.к-детская { font-family: var(--kegl-detskaya-family); font-size: var(--kegl-detskaya-size); line-height: var(--kegl-detskaya-lh); font-weight: var(--kegl-detskaya-weight); hyphens: manual; }
+.к-детская-текст { font-family: var(--kegl-detskaya-tekst-family); font-size: var(--kegl-detskaya-tekst-size); line-height: var(--kegl-detskaya-tekst-lh); font-weight: var(--kegl-detskaya-tekst-weight); hyphens: manual; }
+.к-стих-шапки { font-family: var(--kegl-stikh-shapki-family); font-size: var(--kegl-stikh-shapki-size); line-height: var(--kegl-stikh-shapki-lh); font-weight: var(--kegl-stikh-shapki-weight); }
+.к-текст-писания { font-family: var(--kegl-tekst-pisaniya-family); font-size: var(--kegl-tekst-pisaniya-size); line-height: var(--kegl-tekst-pisaniya-lh); font-weight: var(--kegl-tekst-pisaniya-weight); font-variant-numeric: oldstyle-nums; }
+.к-цитата-в-аппарате { font-family: var(--kegl-tsitata-v-apparate-family); font-size: var(--kegl-tsitata-v-apparate-size); line-height: var(--kegl-tsitata-v-apparate-lh); font-weight: var(--kegl-tsitata-v-apparate-weight); }
+.к-коротко { font-family: var(--kegl-korotko-family); font-size: var(--kegl-korotko-size); line-height: var(--kegl-korotko-lh); font-weight: var(--kegl-korotko-weight); }
+.к-проза { font-family: var(--kegl-proza-family); font-size: var(--kegl-proza-size); line-height: var(--kegl-proza-lh); font-weight: var(--kegl-proza-weight); font-variant-numeric: lining-nums; }
+.к-адрес { font-family: var(--kegl-adres-family); font-size: var(--kegl-adres-size); line-height: var(--kegl-adres-lh); font-weight: var(--kegl-adres-weight); font-variant-numeric: tabular-nums lining-nums; color: var(--tsvet-chernila-2); }
+.к-номер-стиха { font-family: var(--kegl-nomer-stikha-family); font-size: var(--kegl-nomer-stikha-size); line-height: var(--kegl-nomer-stikha-lh); font-weight: var(--kegl-nomer-stikha-weight); font-variant-numeric: tabular-nums lining-nums; color: var(--tsvet-nomer-stikha); }
+
+/* Голоса § 4.1 */
+.голос-мы { font-family: var(--kegl-adres-family); font-size: var(--kegl-adres-size); line-height: var(--kegl-adres-lh); font-weight: var(--kegl-adres-weight); color: var(--tsvet-chernila-3); }
+.голос-библии { border-inline-start: var(--golos-biblii-lineyka-tolshchina) solid var(--golos-biblii-lineyka); padding-inline-start: var(--otstup-16); }
+
+.скрыто { position: absolute !important; width: var(--tolshchina-volosyanaya); height: var(--tolshchina-volosyanaya); overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+a { color: var(--tsvet-chernila); text-decoration-line: underline; text-decoration-thickness: var(--ssylka-podchyorkivanie); text-underline-offset: var(--ssylka-smeshchenie); }
+a:hover { text-decoration-thickness: var(--ssylka-podchyorkivanie-navedenie); }
+
+/* Фокус § 5.2: рамка 3 px «чернила» с зазором 2 px и каймой 2 px «лист» снаружи */
+:focus-visible, .показ-фокуса {
+  outline: var(--fokus-tolshchina) solid var(--fokus-ramka);
+  outline-offset: var(--fokus-zazor);
+  box-shadow: 0 0 0 calc(var(--fokus-zazor) + var(--fokus-tolshchina) + var(--fokus-zazor)) var(--fokus-kayma);
+}
+
+@media (prefers-reduced-motion: reduce) { * { transition-duration: 0s !important; scroll-behavior: auto !important; } }
