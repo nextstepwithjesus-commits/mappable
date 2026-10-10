@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data",
-   "commit": "086f9c3"
+   "commit": "84ef30e"
   }
  },
  "items": [
@@ -264,14 +264,22 @@
      "side": "husband",
      "refs": [
       "Быт 29:23-25",
-      "Быт 29:30"
+      "Быт 29:30",
+      "Быт 29:32",
+      "Быт 30:20"
      ],
      "order": 1,
      "prov": {
       "from": {
        "vol": "04-abraham.json"
       },
-      "by": "исправление C35"
+      "by": "исправление C40"
+     },
+     "word": "муж",
+     "saidBy": {
+      "actor": "p-liya",
+      "ref": "Быт 29:32",
+      "label": "по словам Лии"
      }
     }
    ]
@@ -763,7 +771,7 @@
    "wife": "p-raav",
    "terms": [
     {
-     "kind": "marriage",
+     "kind": "not-stated",
      "side": "husband",
      "refs": [
       "Мф 1:5"
@@ -774,7 +782,7 @@
       "from": {
        "vol": "07-judah.json"
       },
-      "by": "исправление C35"
+      "by": "исправление C39"
      }
     }
    ]
@@ -877,7 +885,7 @@
    "wife": "p-avigeya-sestra-davida",
    "terms": [
     {
-     "kind": "marriage",
+     "kind": "not-stated",
      "side": "wife",
      "refs": [
       "1Пар 2:17",
@@ -889,7 +897,7 @@
       "from": {
        "vol": "07-judah.json"
       },
-      "by": "исправление C35"
+      "by": "исправление C39"
      }
     }
    ]
@@ -986,7 +994,7 @@
    "wife": "p-ieriofa",
    "terms": [
     {
-     "kind": "marriage",
+     "kind": "not-stated",
      "side": "wife",
      "refs": [
       "1Пар 2:18"
@@ -997,7 +1005,7 @@
       "from": {
        "vol": "07-judah.json"
       },
-      "by": "исправление C35"
+      "by": "исправление C39"
      }
     }
    ]
@@ -1848,7 +1856,7 @@
    "wife": "p-aggifa",
    "terms": [
     {
-     "kind": "marriage",
+     "kind": "not-stated",
      "side": "husband",
      "refs": [
       "2Цар 3:4",
@@ -1862,7 +1870,7 @@
       "from": {
        "vol": "12-house-of-david.json"
       },
-      "by": "исправление C35"
+      "by": "исправление C39"
      }
     }
    ]
@@ -2231,7 +2239,7 @@
    "wife": "p-tserua",
    "terms": [
     {
-     "kind": "marriage",
+     "kind": "not-stated",
      "side": "husband",
      "refs": [
       "3Цар 11:26"
@@ -2242,7 +2250,7 @@
       "from": {
        "vol": "14-kings-of-israel.json"
       },
-      "by": "исправление C35"
+      "by": "исправление C39"
      }
     }
    ]
@@ -2297,7 +2305,7 @@
    "wife": "p-prorochitsa-zhena-isaii",
    "terms": [
     {
-     "kind": "marriage",
+     "kind": "not-stated",
      "side": "husband",
      "refs": [
       "Ис 8:3"
@@ -2308,7 +2316,7 @@
       "from": {
        "vol": "15-prophets-exile.json"
       },
-      "by": "исправление C35"
+      "by": "исправление C39"
      }
     }
    ]
@@ -2480,7 +2488,7 @@
    "wife": "p-mariya-kleopova",
    "terms": [
     {
-     "kind": "marriage",
+     "kind": "not-stated",
      "side": "husband",
      "refs": [
       "Ин 19:25"
@@ -2491,7 +2499,7 @@
       "from": {
        "vol": "16-jesus-genealogy.json"
       },
-      "by": "исправление C35"
+      "by": "исправление C39"
      }
     }
    ]
@@ -2502,7 +2510,7 @@
    "wife": "p-mat-synovey-zevedeevykh",
    "terms": [
     {
-     "kind": "marriage",
+     "kind": "not-stated",
      "side": "husband",
      "refs": [
       "Мф 4:21",
@@ -2515,7 +2523,7 @@
       "from": {
        "vol": "17-new-testament.json"
       },
-      "by": "исправление C35"
+      "by": "исправление C39"
      }
     }
    ]

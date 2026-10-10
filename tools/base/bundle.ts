@@ -57,6 +57,7 @@ export function buildIndex(base: Base, level: Level | Admission) {
     }),
   );
   const short = (id?: string) => id?.slice(2);
+  const saidBy = (s: { actor: string; ref: string; label: string }) => ({ a: short(s.actor), r: s.ref, l: s.label });
   return {
     schema: 1,
     ...mark(A),
@@ -66,11 +67,16 @@ export function buildIndex(base: Base, level: Level | Admission) {
       k: o.kind, ...(o.primary && { pr: 1 }), ...(o.gap && { g: 1 }), ...(o.gapPossible && { gv: o.gapPossible.via.map(short) }),
       ...(o.reading && { rs: o.reading.set, ri: o.reading.in }), ...(o.cert !== 'scripture' && { ce: o.cert }), ...(o.order !== undefined && { or: o.order }),
       ...(o.skipped && { sk: o.skipped.actors.map(short) }), ...(o.outsideLists && { ol: 1 }),
+      ...(o.saidBy && { sb: saidBy(o.saidBy) }),
     })),
     unions: base.unions.filter(ok).map((u) => ({ u, terms: u.terms.filter((t) => A.part(t)) })).filter((x) => x.terms.length)
       .map(({ u, terms }) => ({ h: short(u.husband), w: short(u.wife), k: [...new Set(terms.map((t) => t.kind))] })),
-    kin: base.kin.filter(ok).map((k) => ({ f: short(k.from), t: short(k.to), r: k.rel })),
-    readings: base.readings.filter(ok).map((r) => ({ id: r.id, t: r.title, d: r.default, r: r.readings.map((x) => ({ id: x.id, l: x.label, ce: x.cert })) })),
+    // пометка «по словам …» (02 § 3.6) и авторы толкований (02 § 3.4 [R9]) идут в выпуск вместе с записью
+    kin: base.kin.filter(ok).map((k) => ({ f: short(k.from), t: short(k.to), r: k.rel, ...(k.saidBy && { sb: saidBy(k.saidBy) }) })),
+    readings: base.readings.filter(ok).map((r) => ({
+      id: r.id, t: r.title, d: r.default,
+      r: r.readings.map((x) => ({ id: x.id, l: x.label, ce: x.cert, ...(x.authors?.length && { au: x.authors }) })),
+    })),
     areas: base.areas.filter(ok).map((a) => ({ id: a.id.slice(2), n: a.name, k: a.kind, ...(a.founder && { f: short(a.founder) }), ...(a.parent && { pa: a.parent.slice(2) }) })),
     members: base.memberships.filter(ok).map((m) => [short(m.actor), m.area.slice(2), ...(m.role ? [m.role] : [])]),
     lines: Object.fromEntries(Object.entries<any>(base.lines).filter(([, l]) => ok(l)).map(([k, l]) => [k, { n: l.name, st: l.subtitle, rd: l.readings, ids: l.persons.map((s: any) => short(s.id)) }])),

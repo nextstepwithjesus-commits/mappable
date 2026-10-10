@@ -79,6 +79,9 @@ const WORDS: { id: string; i: number; word: string | null; kind?: UnionTerm['kin
   { id: 'u-zevedey--mat-synovey-zevedeevykh', i: 0, word: null, why: '«мать сыновей Зеведеевых» (Мф 20:20; 27:56): союз не назван' },
 ];
 
+/** Союзы, у которых C35 снял слово: ни в одном стихе обозначения слова о союзе нет (C39). */
+const NOT_STATED = WORDS.filter((w) => w.word === null).map((w) => w.id);
+
 export const STEPS_D3: Step[] = [
   {
     // решение координатора 1: два обозначения по тексту; Быт 16:15 союза не называет
@@ -237,6 +240,54 @@ export const STEPS_D3: Step[] = [
         why: 'Утверждение не дублирует союз и происхождение (02 § 3.1; сверка Д3, № 6)',
         refs: ['Быт 4:17'],
         actors: ['zhena-kaina'],
+      };
+    },
+  },
+  {
+    // решение координатора по отчёту C32–C38: вид «брак» без единого слова о союзе в стихах — «не назван», не «союз без брака»
+    id: 'C39',
+    scope: NOT_STATED.map((id) => `union:${id}`),
+    run: ({ base }) => {
+      const P = by('C39');
+      for (const id of NOT_STATED) {
+        const u = union(base, id);
+        const ts = u.terms.filter((t) => t.kind === 'marriage' && !t.word);
+        if (ts.length !== 1 || u.terms.length !== 1) throw new Error(`${id}: ожидалось одно обозначение «брак» без слова`);
+        const t = ts[0];
+        t.kind = 'not-stated';
+        // «толк.» остаётся толкованием (Клеопа, Исаия, Иериофа); остальное — «выв.» (02 § 3.2)
+        if (t.cert !== 'interpretation') t.cert = 'inference';
+        t.note ??= 'отец и мать названы у детей; слова о союзе в стихах обозначения нет';
+        t.prov = { ...t.prov, ...P };
+      }
+      return {
+        what: `Вид «не назван» (not-stated) у ${NOT_STATED.length} союзов, где в стихах обозначения нет ни одного слова о союзе (слово снято шагом C35): ${NOT_STATED.join(', ')}; уровень «выв.», толкование осталось «толк.»`,
+        why: 'Решение координатора по отчёту Д3-исправления-набора: вид «брак» без слова текста не держится стихами; «не назван», а не «союз без брака» (02 § 3.2)',
+        refs: [],
+        actors: [...new Set(NOT_STATED.flatMap((id) => { const u = union(base, id); return [u.husband.slice(2), u.wife.slice(2)]; }))],
+      };
+    },
+  },
+  {
+    // решение координатора по Иакову и Лии: «муж мой» — слова Лии вне скобок (Быт 29:32; 30:20); вид «брак» со словом «муж»
+    id: 'C40',
+    scope: ['union:u-iakov--liya'],
+    run: ({ base }) => {
+      const u = union(base, 'u-iakov--liya');
+      if (u.terms.length !== 1 || u.terms[0].kind !== 'not-stated') throw new Error('u-iakov--liya: ожидалось одно обозначение «не назван» (C39)');
+      const t = u.terms[0];
+      t.kind = 'marriage';
+      t.word = 'муж';
+      t.refs = [...t.refs, 'Быт 29:32', 'Быт 30:20'];
+      delete t.cert;
+      delete t.note;
+      t.saidBy = { actor: 'p-liya', ref: 'Быт 29:32', label: 'по словам Лии' };
+      t.prov = { ...t.prov, ...by('C40') };
+      return {
+        what: 'Иаков и Лия: вид «брак», слово «муж», пометка «по словам Лии»; к стихам союза добавлены Быт 29:32 и Быт 30:20 («муж мой» вне скобок)',
+        why: 'Лия называет Иакова мужем: «теперь будет любить меня муж мой» (Быт 29:32), «теперь будет жить у меня муж мой» (Быт 30:20); решение координатора по отчёту Д3-исправления-набора',
+        refs: ['Быт 29:32', 'Быт 30:20'],
+        actors: ['iakov', 'liya'],
       };
     },
   },

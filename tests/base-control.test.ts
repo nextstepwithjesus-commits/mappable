@@ -205,6 +205,20 @@ describe('правки Д3 (сверка контрольного набора �
     expect(validate(base).filter((i) => i.level === 'error' && i.check === 'слово союза')).toEqual([]);
     expect(base.unions.flatMap((u) => u.terms).filter((t) => t.word === 'муж').length).toBeLessThan(10);
   });
+  it('союзы без единого слова о союзе в стихах — вид «не назван» (C39), а не «брак»', () => {
+    const ids = ['u-salmon--raav', 'u-iefer-izmailtyanin--avigeya-sestra-davida', 'u-khalev-syn-esroma--ieriofa', 'u-david--aggifa',
+      'u-navat--tserua', 'u-isaiya--prorochitsa-zhena-isaii', 'u-kleopa--mariya-kleopova', 'u-zevedey--mat-synovey-zevedeevykh'];
+    for (const id of ids) {
+      const ts = base.unions.find((u) => u.id === id)!.terms;
+      expect([id, ts.map((t) => t.kind), ts.every((t) => t.cert === 'inference' || t.cert === 'interpretation')]).toEqual([id, ['not-stated'], true]);
+    }
+    expect(base.unions.flatMap((u) => u.terms.map((t) => [u.id, t] as const)).filter(([, t]) => t.kind === 'marriage' && !t.word).map(([id]) => id)).toEqual([]);
+  });
+  it('Иаков и Лия — «брак», слово «муж» по словам Лии (Быт 29:32; 30:20; C40)', () => {
+    const ts = base.unions.find((u) => u.id === 'u-iakov--liya')!.terms;
+    expect(ts.map((t) => [t.kind, t.word, t.cert, t.saidBy])).toEqual([['marriage', 'муж', undefined, { actor: 'p-liya', ref: 'Быт 29:32', label: 'по словам Лии' }]]);
+    expect(ts[0].refs).toEqual(expect.arrayContaining(['Быт 29:32', 'Быт 30:20']));
+  });
   it('подложенные искажения новых полей ловит проверка базы', () => {
     const b: Base = structuredClone(base);
     const u = (id: string) => b.unions.find((x) => x.id === id)!;
@@ -215,6 +229,7 @@ describe('правки Д3 (сверка контрольного набора �
     sk.saidBy = { actor: 'p-isaak', ref: 'Быт 20:11', label: 'по словам Исаака' }; // Исаак в Быт 20:11 не назван
     const so = b.origins.find((o) => o.child === 'p-sarra' && o.parent === 'p-farra')!;
     so.saidBy = { actor: 'p-avraam', ref: 'Быт 17:17', label: 'по словам Авраама' }; // не из главы стихов записи
+    u('u-iakov--liya').terms[0].saidBy = { actor: 'p-iakov', ref: 'Быт 29:32', label: 'по словам Иакова' }; // Иаков в Быт 29:32 не назван
     const m6 = b.nodata.find((n) => n.actor === 'p-marfa' && n.sec === 6 && n.kind === 'silent')!;
     delete m6.read;
     const m8 = b.nodata.find((n) => n.actor === 'p-marfa' && n.sec === 8 && n.kind === 'silent')!;
@@ -226,6 +241,7 @@ describe('правки Д3 (сверка контрольного набора �
       ['прочтения', 'r-lk3-23'],
       ['по словам', 'p-sarra — p-avraam'],
       ['по словам', 'p-sarra ← p-farra'],
+      ['по словам', 'u-iakov--liya'],
       ['нет сведений', 'нет сведений p-marfa § 6'],
       ['нет сведений', 'нет сведений p-marfa § 8'],
     ]));

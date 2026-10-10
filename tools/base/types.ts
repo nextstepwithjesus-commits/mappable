@@ -161,6 +161,8 @@ export interface UnionTerm {
   note?: string;
   /** Порядок брака у этой стороны (прежнее поле order у записи супруга). */
   order?: number;
+  /** Слово сказано лицом в тексте: «муж мой» — слова Лии (Быт 29:32; 30:20; шаг C40). */
+  saidBy?: SaidBy;
   /** Окончание союза: «отдал… Мелхолу… Фалтию» (1Цар 25:44). */
   ended?: { refs: Ref[]; note?: string };
   prov?: Partial<Prov>;

@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data",
-   "commit": "086f9c3"
+   "commit": "84ef30e"
   }
  },
  "items": [
@@ -1552,6 +1552,45 @@
    ],
    "actors": [
     "zhena-kaina"
+   ]
+  },
+  {
+   "id": "C39",
+   "what": "Вид «не назван» (not-stated) у 9 союзов, где в стихах обозначения нет ни одного слова о союзе (слово снято шагом C35): u-iefer-izmailtyanin--avigeya-sestra-davida, u-khalev-syn-esroma--ieriofa, u-iakov--liya, u-salmon--raav, u-david--aggifa, u-navat--tserua, u-isaiya--prorochitsa-zhena-isaii, u-kleopa--mariya-kleopova, u-zevedey--mat-synovey-zevedeevykh; уровень «выв.», толкование осталось «толк.»",
+   "why": "Решение координатора по отчёту Д3-исправления-набора: вид «брак» без слова текста не держится стихами; «не назван», а не «союз без брака» (02 § 3.2)",
+   "refs": [],
+   "actors": [
+    "iefer-izmailtyanin",
+    "avigeya-sestra-davida",
+    "khalev-syn-esroma",
+    "ieriofa",
+    "iakov",
+    "liya",
+    "salmon",
+    "raav",
+    "david",
+    "aggifa",
+    "navat",
+    "tserua",
+    "isaiya",
+    "prorochitsa-zhena-isaii",
+    "kleopa",
+    "mariya-kleopova",
+    "zevedey",
+    "mat-synovey-zevedeevykh"
+   ]
+  },
+  {
+   "id": "C40",
+   "what": "Иаков и Лия: вид «брак», слово «муж», пометка «по словам Лии»; к стихам союза добавлены Быт 29:32 и Быт 30:20 («муж мой» вне скобок)",
+   "why": "Лия называет Иакова мужем: «теперь будет любить меня муж мой» (Быт 29:32), «теперь будет жить у меня муж мой» (Быт 30:20); решение координатора по отчёту Д3-исправления-набора",
+   "refs": [
+    "Быт 29:32",
+    "Быт 30:20"
+   ],
+   "actors": [
+    "iakov",
+    "liya"
    ]
   },
   {

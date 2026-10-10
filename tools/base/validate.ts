@@ -293,6 +293,7 @@ export function validate(base: Base): Issue[] {
   const saidBys: [string, { saidBy?: { actor: string; ref: string; label: string }; refs: string[] }][] = [
     ...base.kin.map((k) => [`${k.from} — ${k.to}`, k] as [string, typeof k]),
     ...base.origins.map((o) => [`${o.child} ← ${o.parent ?? '?'}`, o] as [string, typeof o]),
+    ...base.unions.flatMap((u) => u.terms.map((t) => [u.id, t] as [string, typeof t])),
   ];
   for (const [w, x] of saidBys) {
     const sb = x.saidBy;
