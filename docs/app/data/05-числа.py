@@ -519,11 +519,45 @@ def deutan(h):
 
 
 dE = lambda a, b: math.dist(lab(a), lab(b))
+
+
+def dE2000(c1, c2):
+    """CIEDE2000 (Sharma, Wu, Dalal 2005)."""
+    L1, a1, b1 = lab(c1)
+    L2, a2, b2 = lab(c2)
+    C1, C2 = math.hypot(a1, b1), math.hypot(a2, b2)
+    Cm = (C1 + C2) / 2
+    G = 0.5 * (1 - math.sqrt(Cm ** 7 / (Cm ** 7 + 25 ** 7)))
+    a1p, a2p = (1 + G) * a1, (1 + G) * a2
+    C1p, C2p = math.hypot(a1p, b1), math.hypot(a2p, b2)
+    h1p = math.degrees(math.atan2(b1, a1p)) % 360
+    h2p = math.degrees(math.atan2(b2, a2p)) % 360
+    dLp, dCp = L2 - L1, C2p - C1p
+    dh = h2p - h1p
+    if C1p * C2p == 0:
+        dh = 0
+    elif dh > 180:
+        dh -= 360
+    elif dh < -180:
+        dh += 360
+    dHp = 2 * math.sqrt(C1p * C2p) * math.sin(math.radians(dh / 2))
+    Lm, Cmp = (L1 + L2) / 2, (C1p + C2p) / 2
+    hm = (h1p + h2p) / 2 if abs(h1p - h2p) <= 180 else (h1p + h2p + 360) / 2
+    if C1p * C2p == 0:
+        hm = h1p + h2p
+    T = (1 - 0.17 * math.cos(math.radians(hm - 30)) + 0.24 * math.cos(math.radians(2 * hm))
+         + 0.32 * math.cos(math.radians(3 * hm + 6)) - 0.20 * math.cos(math.radians(4 * hm - 63)))
+    dth = 30 * math.exp(-((hm - 275) / 25) ** 2)
+    RC = 2 * math.sqrt(Cmp ** 7 / (Cmp ** 7 + 25 ** 7))
+    SL = 1 + 0.015 * (Lm - 50) ** 2 / math.sqrt(20 + (Lm - 50) ** 2)
+    SC, SH = 1 + 0.045 * Cmp, 1 + 0.015 * Cmp * T
+    RT = -math.sin(math.radians(2 * dth)) * RC
+    return math.sqrt((dLp / SL) ** 2 + (dCp / SC) ** 2 + (dHp / SH) ** 2 + RT * (dCp / SC) * (dHp / SH))
 STEPS4 = STEPS
 STEPS4_DARK = [(n, L, C, H) for (n, _, C, H), L in zip(STEPS_DARK, (18, 20.5, 23, 25.5, 28, 30.5, 33))]
 SH4 = {'светлая': ((0.88, 0.78), 0.06), 'тёмная': ((0.80, 0.75), 0.04)}   # тень: низины → нагорья (воздушная перспектива); свет склона
 WATER4 = {'светлая': (lch(76, 9, 235), lch(72, 10, 235)), 'тёмная': (lch(7, 6, 240), lch(10, 7, 240))}  # заливка, полоса у берега
-HALO4 = {'светлая': ('#ECE1CF', 0.8), 'тёмная': ('#2E2C25', 0.8)}
+HALO4 = {'светлая': ('#ECE1CF', 0.8), 'тёмная': ('#403C35', 0.8)}   # ред. 4.1: в тёмной — средний тон (арт-директор, повторная проверка (б))
 PATH4 = {'светлая': '#7A2E20', 'тёмная': '#F2B5A2'}  # проба «путь» для листа-образца (арт-директор № 9)
 LINE4 = {'подпись воды': ('#213F5A', '#9DBAD3'), 'река': ('#24496A', '#8DB4D4'), 'берег': ('#3F5F7A', '#7F93AB')}
 print('\n=== Часть Г4. Токены карты редакции 4 ===')
@@ -540,6 +574,10 @@ for theme, steps, ti in (('светлая', STEPS4, 0), ('тёмная', STEPS4_
     halo_on = blend(halo_c, worst_bg, halo_a)
     print(f'[{theme}] ступени: ' + '; '.join(f'{n} {h} (L*{lab(h)[0]:.0f})' for n, h in tints))
     print(f'[{theme}] шаг соседних ступеней ΔE76: ' + ', '.join(f'{dE(a[1], b[1]):.1f}' for a, b in zip(tints, tints[1:])))
+    print(f'[{theme}] шаг соседних ступеней ΔE2000: ' + ', '.join(f'{dE2000(a[1], b[1]):.1f}' for a, b in zip(tints, tints[1:]))
+          + f'; ореол {halo_c} к ступеням ΔE2000: ' + ', '.join(f'{dE2000(halo_c, h):.1f}' for _, h in tints))
+    print(f'[{theme}] жёлтый выбор к самому светлому пикселю суши (без кольца): {T["выбор"][ti]} / {lightest} = {cr(T["выбор"][ti], lightest):.2f} : 1; '
+          f'серый при печати: самая тёмная тень склона {grey(darkest)}, вода {grey(water)}')
     print(f'[{theme}] вода {water} (L*{lab(water)[0]:.1f}), полоса у берега {band}; суша с отмывкой: самый тёмный {darkest} '
           f'(L*{lab(darkest)[0]:.1f}), самый светлый {lightest} (L*{lab(lightest)[0]:.1f})')
     dl = min(abs(lab(water)[0] - lab(h)[0]) for _, h in tints)
@@ -1252,6 +1290,26 @@ def kind4(r):
     return 'point'
 
 
+SCRIPTURE_INFERRED = {'Mount Horeb': 'Втор 4:15; 3 Цар 8:9; Мал 4:4 (§ 4, строка 4; Г-05-7)'}
+
+
+def link_kind(r, b):
+    """Вид связи с другой записью по словам сводки (географ Р4-1, Р4-3)."""
+    n = r['friendly_id']
+    d = clean(b['description'])
+    if d.startswith('another name for'):
+        if n in SCRIPTURE_SAME:
+            return 'другое имя — Писание'
+        if n in SCRIPTURE_INFERRED:
+            return 'другое имя — выв.'
+        return 'другое имя — справочно или толк.'
+    if re.match(r'(in|on) ', d):
+        return 'часть места или в пределах'
+    if re.match(r'(within|about) ', d) or d.startswith(('near ', 'along ', 'region around')):
+        return 'около'
+    return 'около (вид связи сводкой не назван)'
+
+
 def status4(r):
     n = r['friendly_id']
     b = best_id(r)
@@ -1259,7 +1317,7 @@ def status4(r):
         return 'не имя'
     k = kind4(r)
     if k == 'point' and b and b.get('id_source') == 'ancient' and degree(r)[1] >= 300:
-        return 'другое имя: Писание' if n in SCRIPTURE_SAME else 'другое имя: справочно или толк.'
+        return 'связь: ' + link_kind(r, b)
     d = degree(r)[0]
     if k in ('water', 'land'):
         if d == 'не установлено':
@@ -1276,7 +1334,7 @@ def status4(r):
 
 st4 = {r['friendly_id']: status4(r) for r in rows}
 c4 = collections.Counter(st4.values())
-print('Е1 записи сводки по правилам ред. 4: ' + '; '.join(f'{k} {v}' for k, v in sorted(c4.items())))
+print('Е1 записи сводки по правилам ред. 4.1: ' + '; '.join(f'{k} {v}' for k, v in sorted(c4.items())))
 was = {r['friendly_id'] for r in signed}
 lost = sorted(n for n in was if not st4[n].startswith('знак'))
 lost_c = collections.Counter(st4[n] for n in lost)
@@ -1359,7 +1417,7 @@ for a2, b2, verse in (('Mount Sinai', 'Kadesh-barnea', 'Втор 1:2'), ('Beersh
 
 # Е7. Список общей карты — длинный указатель (доступность № 1): места (без «не имя» и «другое имя»),
 # группы по книге первого упоминания; книги больше 200 мест — по главам
-places4 = [r for r in rows if not st4[r['friendly_id']].startswith(('не имя', 'другое имя'))]
+places4 = [r for r in rows if not st4[r['friendly_id']].startswith(('не имя', 'связь: другое имя'))]
 OSIS_ORDER = ['Gen', 'Exod', 'Lev', 'Num', 'Deut', 'Josh', 'Judg', 'Ruth', '1Sam', '2Sam', '1Kgs', '2Kgs', '1Chr', '2Chr',
               'Ezra', 'Neh', 'Esth', 'Job', 'Ps', 'Prov', 'Eccl', 'Song', 'Isa', 'Jer', 'Lam', 'Ezek', 'Dan', 'Hos', 'Joel',
               'Amos', 'Obad', 'Jonah', 'Mic', 'Nah', 'Hab', 'Zeph', 'Hag', 'Zech', 'Mal', 'Matt', 'Mark', 'Luke', 'John',
@@ -1385,7 +1443,7 @@ for r in places4:
     fb[OSIS_ORDER[k[0]]] += 1
     fc[(OSIS_ORDER[k[0]], k[1])] += 1
 big = [(b, n) for b, n in fb.most_common() if n > 200]
-print(f'Е7 список общей карты: мест {len(places4)} (без «не имя» и «другое имя»); групп по книге первого упоминания {len(fb)}; '
+print(f'Е7 список общей карты: мест {len(places4)} (без не-имён и записей «другое имя»); групп по книге первого упоминания {len(fb)}; '
       f'без стихов в сводке {nofirst}; самые большие: ' + ', '.join(f'{RU.get(b, b)} {n}' for b, n in fb.most_common(5))
       + f'; больше 200 — {", ".join(f"{RU.get(b, b)} {n}" for b, n in big) or "нет"}')
 for b, _ in big:
@@ -1403,9 +1461,9 @@ for n in ('Jerusalem', 'Capernaum', 'Rome', 'Ephesus'):
 
 # Е8. Фильтр «Нав 15» по правилам ред. 4; пример «Измерить» вне пути лица; дни текста и допущение точки
 ids15 = bychap[('Josh', 15)]
-c15 = collections.Counter(st4[n].split(':')[0] if not st4[n].startswith('знак') else 'знак: ' + degree(byname[n])[0] for n in ids15)
-pl15 = [n for n in ids15 if not st4[n].startswith(('не имя', 'другое имя'))]
-print(f'Е8 фильтр «Нав 15» (ред. 4): записей {len(ids15)}; мест {len(pl15)}; ' + '; '.join(f'{k} {v}' for k, v in sorted(c15.items())))
+c15 = collections.Counter(st4[n] if st4[n].startswith(('знак', 'связь')) else st4[n].split(':')[0] for n in ids15)
+pl15 = [n for n in ids15 if not st4[n].startswith(('не имя', 'связь: другое имя'))]
+print(f'Е8 фильтр «Нав 15» (ред. 4.1): записей {len(ids15)}; мест {len(pl15)}; ' + '; '.join(f'{k} {v}' for k, v in sorted(c15.items())))
 km = hav(P('Jerusalem'), P('Jericho 1'))
 print(f'Е8 «Измерить» Иерусалим — Иерихон: по прямой {km:.1f} км (точки: Jerusalem, Jericho 1); модель 20 / 25 / 30 км в день — '
       f'{km / 20:.1f} / {km / 25:.1f} / {km / 30:.1f} дня (расч., допущение)')
