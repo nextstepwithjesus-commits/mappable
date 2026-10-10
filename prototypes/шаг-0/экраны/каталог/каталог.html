@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ru" data-dir="a" data-layer="1">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Бытие — истории книги. Библия наглядно (прототип шага 0)</title>
+<script>
+  // Режим из адреса до первой отрисовки: ?book=gen|mk&dir=a|b|v&theme=light|dark&layer=2&search=текст
+  (function () {
+    var q = new URLSearchParams(location.search), r = document.documentElement;
+    if (q.get('dir') === 'b' || q.get('dir') === 'v') r.dataset.dir = q.get('dir');
+    if (q.get('theme') === 'light' || q.get('theme') === 'dark') r.dataset.theme = q.get('theme');
+    if (q.get('layer') === '2') r.dataset.layer = '2';
+  })();
+</script>
+<link rel="stylesheet" href="../../лист/токены.css">
+<link rel="stylesheet" href="../../лист/основа.css">
+<link rel="stylesheet" href="../../лист/компоненты.css">
+<link rel="stylesheet" href="каталог.css">
+</head>
+<body>
+<a class="к-содержимому" href="#содержимое">Перейти к историям</a>
+
+<!-- Шапка § 7.1: один порядок — знак, поиск, указатель, слой, справка, настройки. На телефоне — знак, «Поиск», «Меню». -->
+<header class="шапка" id="шапка">
+  <a class="шапка__знак" href="#верх" aria-label="Библия наглядно, на главную"><span>Библия</span> <span>наглядно</span></a>
+  <form class="поиск шапка__поиск" role="search" id="поиск-форма">
+    <label class="поиск__подпись" for="поиск-поле">Поиск</label>
+    <div class="поиск__ряд">
+      <div class="поиск__поле"><span data-значок="поиск"></span><input id="поиск-поле" type="search" placeholder="История, человек, место или стих" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="подсказки" aria-autocomplete="list"></div>
+    </div>
+    <div class="поиск__подсказки каталог-подсказки" id="подсказки" role="listbox" aria-label="Подсказки" hidden></div>
+    <p class="скрыто" role="status" id="поиск-число"></p>
+  </form>
+  <nav class="шапка__ссылки" aria-label="Разделы">
+    <a href="#верх">Все истории по алфавиту</a>
+    <div class="сегменты" role="group" aria-label="Вид">
+      <button type="button" aria-pressed="true" data-слой-кнопка="1">Простой вид</button><button type="button" aria-pressed="false" data-слой-кнопка="2">Для изучающих</button>
+    </div>
+    <a href="#верх"><span data-значок="справка"></span>Справка</a>
+    <a href="#верх"><span data-значок="настройки"></span>Настройки</a>
+  </nav>
+  <div class="шапка__телефон">
+    <button class="кнопка шапка__кнопка" type="button" id="поиск-открыть" aria-haspopup="dialog"><span data-значок="поиск"></span>Поиск</button>
+    <button class="кнопка шапка__кнопка" type="button" id="меню-кнопка" aria-expanded="false" aria-controls="меню"><span data-значок="меню"></span>Меню</button>
+  </div>
+  <nav class="меню" id="меню" aria-label="Меню" hidden>
+    <a href="#верх">Все истории по алфавиту</a>
+    <div class="сегменты" role="group" aria-label="Вид">
+      <button type="button" aria-pressed="true" data-слой-кнопка="1">Простой вид</button><button type="button" aria-pressed="false" data-слой-кнопка="2">Для изучающих</button>
+    </div>
+    <a href="#верх"><span data-значок="справка"></span>Справка</a>
+    <a href="#верх"><span data-значок="настройки"></span>Настройки</a>
+  </nav>
+</header>
+
+<!-- Экран поиска на телефоне (уровень 1, § 7.2): поверх страницы, поле над клавиатурой -->
+<div class="поиск-экран" id="поиск-экран" role="dialog" aria-modal="true" aria-labelledby="поиск-экран-подпись" hidden>
+  <div class="поиск-экран__ряд">
+    <label class="поиск__подпись" id="поиск-экран-подпись" for="поиск-экран-поле">Поиск</label>
+    <button class="кнопка шапка__кнопка" type="button" id="поиск-закрыть"><span data-значок="закрыть"></span>Закрыть</button>
+  </div>
+  <div class="поиск__поле"><span data-значок="поиск"></span><input id="поиск-экран-поле" type="search" placeholder="История, человек, место или стих" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="подсказки-экран" aria-autocomplete="list"></div>
+  <div class="каталог-подсказки каталог-подсказки--экран" id="подсказки-экран" role="listbox" aria-label="Подсказки" hidden></div>
+  <p class="скрыто" role="status" id="поиск-экран-число"></p>
+</div>
+
+<main class="страница" id="содержимое" tabindex="-1">
+  <span id="верх"></span>
+  <div id="книга"></div>
+</main>
+
+<footer class="подвал" id="подвал"></footer>
+
+<script src="../../лист/лист-данные.js"></script>
+<script src="../../лист/знаки.js"></script>
+<script src="каталог.js"></script>
+</body>
+</html>

@@ -8,6 +8,9 @@
 @font-face { font-family: "Piazzolla"; src: url("../../../inputs/fonts/Piazzolla-Italic%5Bopsz,wght%5D.ttf") format("truetype"); font-weight: 100 900; font-style: italic; font-display: swap; }
 @font-face { font-family: "Ysabeau Office"; src: url("../../../inputs/fonts/YsabeauOffice%5Bwght%5D.ttf") format("truetype"); font-weight: 1 1000; font-style: normal; font-display: swap; }
 @font-face { font-family: "Ysabeau Office"; src: url("../../../inputs/fonts/YsabeauOffice-Italic%5Bwght%5D.ttf") format("truetype"); font-weight: 1 1000; font-style: italic; font-display: swap; }
+@font-face { font-family: "Source Serif 4"; src: url("../../../inputs/fonts/SourceSerif4%5Bopsz,wght%5D.ttf") format("truetype"); font-weight: 200 900; font-style: normal; font-display: swap; }
+@font-face { font-family: "Source Serif 4"; src: url("../../../inputs/fonts/SourceSerif4-Italic%5Bopsz,wght%5D.ttf") format("truetype"); font-weight: 200 900; font-style: italic; font-display: swap; }
+@font-face { font-family: "Onest"; src: url("../../../inputs/fonts/Onest%5Bwght%5D.ttf") format("truetype"); font-weight: 100 900; font-style: normal; font-display: swap; }
 
 *, *::before, *::after { box-sizing: border-box; }
 html { color-scheme: light dark; -webkit-text-size-adjust: 100%; }
@@ -42,6 +45,8 @@ button, input { font: inherit; color: inherit; }
 .к-заголовок-аппарата { font-family: var(--kegl-zagolovok-apparata-family); font-size: var(--kegl-zagolovok-apparata-size); line-height: var(--kegl-zagolovok-apparata-lh); font-weight: var(--kegl-zagolovok-apparata-weight); }
 .к-детская { font-family: var(--kegl-detskaya-family); font-size: var(--kegl-detskaya-size); line-height: var(--kegl-detskaya-lh); font-weight: var(--kegl-detskaya-weight); hyphens: manual; }
 .к-детская-текст { font-family: var(--kegl-detskaya-tekst-family); font-size: var(--kegl-detskaya-tekst-size); line-height: var(--kegl-detskaya-tekst-lh); font-weight: var(--kegl-detskaya-tekst-weight); hyphens: manual; }
+.к-заглавие-книги { font-family: var(--kegl-zaglavie-knigi-family); font-size: var(--kegl-zaglavie-knigi-size); line-height: var(--kegl-zaglavie-knigi-lh); font-weight: var(--kegl-zaglavie-knigi-weight); }
+.к-эпиграф { font-family: var(--kegl-epigraf-family); font-size: var(--kegl-epigraf-size); line-height: var(--kegl-epigraf-lh); font-weight: var(--kegl-epigraf-weight); }
 .к-стих-шапки { font-family: var(--kegl-stikh-shapki-family); font-size: var(--kegl-stikh-shapki-size); line-height: var(--kegl-stikh-shapki-lh); font-weight: var(--kegl-stikh-shapki-weight); }
 .к-текст-писания { font-family: var(--kegl-tekst-pisaniya-family); font-size: var(--kegl-tekst-pisaniya-size); line-height: var(--kegl-tekst-pisaniya-lh); font-weight: var(--kegl-tekst-pisaniya-weight); font-variant-numeric: oldstyle-nums; }
 .к-цитата-в-аппарате { font-family: var(--kegl-tsitata-v-apparate-family); font-size: var(--kegl-tsitata-v-apparate-size); line-height: var(--kegl-tsitata-v-apparate-lh); font-weight: var(--kegl-tsitata-v-apparate-weight); }

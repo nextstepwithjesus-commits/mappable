@@ -37,12 +37,18 @@
 
 /* ---------- Шапка § 7.1 ---------- */
 .шапка {
-  display: flex; align-items: center; gap: var(--otstup-16);
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--otstup-16);
   min-height: var(--shapka-vysota); padding: 0 var(--polya-bolshoe);
   background: var(--shapka-fon); border-bottom: var(--tolshchina-volosyanaya) solid var(--shapka-kromka);
 }
 .шапка__знак { text-decoration: none; flex: none; font-family: var(--shrift-tekst); font-size: var(--kegl-zagolovok-bloka-size); line-height: var(--kegl-zagolovok-bloka-lh); font-weight: var(--kegl-zagolovok-bloka-weight); }
-.шапка__поиск { flex: 1 1 auto; min-width: 0; max-width: var(--kolonka-pasport); }
+/* Поле поиска не сжимается ниже ширины паспорта (368 px, видна вся подсказка-заполнитель): если ссылкам
+   не хватает места в строке, они переходят во вторую строку шапки, порядок DOM и Tab не меняется
+   (решение координатора по листу: на 1280 поле сжималось до «Ист»). */
+.шапка__поиск { flex: 1 1 var(--kolonka-pasport); min-width: min(var(--kolonka-pasport), 100%); max-width: var(--kolonka-tekst-predel); }
+.шапка .поиск { flex-direction: row; align-items: center; gap: var(--otstup-12); }
+.шапка .поиск__ряд { flex: 1; }
+.шапка__ссылки { min-height: var(--shapka-vysota); }
 .шапка__ссылки { display: flex; align-items: center; gap: var(--otstup-8); margin-inline-start: auto; }
 .шапка__ссылки a, .шапка .сегменты button { white-space: nowrap; }
 .шапка__ссылки a { display: inline-flex; align-items: center; gap: var(--otstup-8); min-height: var(--tsel-prostoy); padding: 0 var(--otstup-8); }
@@ -190,3 +196,18 @@
 .скобка::after { content: "" / "конец скобок"; }
 .номер-истории { color: var(--tsvet-nomer-istorii-nz); }
 .номер-истории--вз { color: var(--tsvet-nomer-istorii-vz); }
+
+/* ---------- Знак: линия-лента (рельсы лестницы, змей, прутья) — экран 1 ---------- */
+.знак .ш { fill: none; stroke: var(--znak-liniya); stroke-linecap: butt; stroke-linejoin: round; }
+.знак .ш-охра, .знак .ш-олива, .знак .ш-бирюза, .знак .ш-индиго { fill: none; stroke-linecap: butt; stroke-linejoin: round; }
+.знак .ш-охра { stroke: var(--znak-zalivka-okhra); }
+.знак .ш-олива { stroke: var(--znak-zalivka-oliva); }
+.знак .ш-бирюза { stroke: var(--znak-zalivka-biryuza); }
+.знак .ш-индиго { stroke: var(--znak-zalivka-indigo); }
+
+/* ---------- «Нет сведений» — пять видов, у каждого знак и слово (решение координатора по Ф-12) ---------- */
+.нет-сведений { display: grid; grid-template-columns: var(--mera-24) minmax(0, 1fr); gap: var(--otstup-4) var(--otstup-12); align-items: start; max-width: var(--kolonka-tekst-predel); }
+.нет-сведений > .значок { color: var(--tsvet-chernila-2); margin-top: var(--otstup-2); }
+.нет-сведений__слово { font-family: var(--kegl-adres-family); font-size: var(--kegl-adres-size); line-height: var(--kegl-adres-lh); font-weight: var(--kegl-zagolovok-apparata-weight); color: var(--tsvet-chernila-2); }
+.нет-сведений__текст { font-family: var(--kegl-adres-family); font-size: var(--kegl-adres-size); line-height: var(--kegl-adres-lh); color: var(--tsvet-chernila-2); }
+.нет-сведений--мы .нет-сведений__текст, .нет-сведений--мы .нет-сведений__слово, .нет-сведений--мы > .значок { color: var(--tsvet-chernila-3); }

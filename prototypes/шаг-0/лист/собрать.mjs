@@ -2,7 +2,7 @@
 // проверка «сырых значений» в CSS компонентов; контраст (падает, если пара ниже нормы).
 // Запуск из корня проекта: node prototypes/шаг-0/лист/собрать.mjs
 // ПРОТОТИП шага 0: в продукт не переносится.
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { ПАПКА, загрузить, плоско, разрешить, hex, имяПеременной, латиница } from './токены.mjs';
@@ -50,32 +50,42 @@ const базовые = переменные('А-светлая');
 const тёмная = разница(базовые, переменные('А-тёмная'));
 const бСвет = разница(базовые, переменные('Б-светлая'));
 const бТём = разница(переменные('Б-светлая'), переменные('Б-тёмная'));
+const вСвет = разница(базовые, переменные('В-светлая'));
+const вТём = разница(переменные('В-светлая'), переменные('В-тёмная'));
 const типо = (p, т) => т.$type === 'typography';
 const второй = переменные('А-светлая', типо, 'второй');
 const телефон = переменные('А-светлая', типо, 'телефон');
 const второйБ = переменные('Б-светлая', типо, 'второй');
 const телефонБ = переменные('Б-светлая', типо, 'телефон');
+const второйВ = переменные('В-светлая', типо, 'второй');
+const телефонВ = переменные('В-светлая', типо, 'телефон');
 const блок = (sel, arr, отступ = '') => `${отступ}${sel} {\n${arr.map((x) => `${отступ}  ${x}`).join('\n')}\n${отступ}}\n`;
 
 let css = `/* СОБРАНО из токены.json скриптом собрать.mjs — не править руками. */\n`;
-css += `/* Режимы: data-dir="a|b" (направление), data-theme="light|dark" (тема), data-layer="1|2" (слой). */\n\n`;
+css += `/* Режимы: data-dir="a|b|v" (направление), data-theme="light|dark" (тема), data-layer="1|2" (слой). */\n\n`;
 css += блок(':root', базовые);
 css += блок(':root[data-theme="dark"]', тёмная);
 css += `@media (prefers-color-scheme: dark) {\n${блок(':root:not([data-theme="light"])', тёмная, '  ')}}\n`;
 css += блок(':root[data-dir="b"]', бСвет);
 css += блок(':root[data-dir="b"][data-theme="dark"]', бТём);
 css += `@media (prefers-color-scheme: dark) {\n${блок(':root[data-dir="b"]:not([data-theme="light"])', бТём, '  ')}}\n`;
+css += блок(':root[data-dir="v"]', вСвет);
+css += блок(':root[data-dir="v"][data-theme="dark"]', вТём);
+css += `@media (prefers-color-scheme: dark) {\n${блок(':root[data-dir="v"]:not([data-theme="light"])', вТём, '  ')}}\n`;
 css += `/* Телефон: узкое окно (меньше 37,5 em), 08 § 3.4 */\n`;
-css += `@media (max-width: 37.4375em) {\n${блок(':root', телефон, '  ')}${блок(':root[data-dir="b"]', телефонБ, '  ')}}\n`;
+css += `@media (max-width: 37.4375em) {\n${блок(':root', телефон, '  ')}${блок(':root[data-dir="b"]', телефонБ, '  ')}${блок(':root[data-dir="v"]', телефонВ, '  ')}}\n`;
 css += `/* Второй слой: на листе — у всего документа или у отдельного примера */\n`;
 css += блок('[data-layer="2"]', второй);
 css += блок('[data-dir="b"] [data-layer="2"], [data-dir="b"][data-layer="2"]', второйБ);
+css += блок('[data-dir="v"] [data-layer="2"], [data-dir="v"][data-layer="2"]', второйВ);
 writeFileSync(join(ПАПКА, 'токены.css'), css);
 
 // ---------- 2. Проверка сырых значений в CSS компонентов ----------
 const СЫРОЕ = /#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bhsla?\(|(?<![\w-])\d*\.?\d+(px|rem|em|ms|s|vh|vw)\b/;
 let ошибок = 0;
-for (const f of ['основа.css', 'компоненты.css', 'лист.css']) {
+// CSS экранов шага 0 проверяется той же проверкой, если файл уже есть
+for (const f of ['основа.css', 'компоненты.css', 'лист.css', '../экраны/каталог/каталог.css', '../экраны/история/история.css']) {
+  if (!existsSync(join(ПАПКА, f))) continue;
   const строки = readFileSync(join(ПАПКА, f), 'utf8').split('\n');
   let вFontFace = false;
   строки.forEach((s, i) => {
@@ -106,7 +116,7 @@ for (const l of readFileSync(join(КОРЕНЬ, 'tools/bible/synodal.tsv'), 'utf
 книги.forEach((k, i) => { k.завет = i < 39 ? 'ВЗ' : 'НЗ'; });
 
 const токеныДляЛиста = {};
-for (const р of ['А-светлая', 'А-тёмная', 'Б-светлая', 'Б-тёмная']) {
+for (const р of ['А-светлая', 'А-тёмная', 'Б-светлая', 'Б-тёмная', 'В-светлая', 'В-тёмная']) {
   токеныДляЛиста[р] = {};
   for (const p of пути.filter((x) => x.startsWith('роль.цвет.'))) токеныДляЛиста[р][p.slice(10)] = hex(разрешить(все, p, р));
 }
@@ -129,6 +139,7 @@ const ЛИСТ = {
     'Мк 2:1-12': стихи('Мк 2:1-12'),
   },
   марк: данные('марк-1-3.json'),
+  бытие: данные('бытие.json'),
   ной: данные('ной-и-потоп.json'),
   расслабленный: данные('расслабленный.json'),
 };

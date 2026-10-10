@@ -1,0 +1,210 @@
+/* Экран 1 шага 0: каталог книги. Только переменные из лист/токены.css; сырые значения ловит лист/собрать.mjs.
+   Классы окна — 08 § 3.4 (границы в em). ПРОТОТИП: в продукт не переносится. */
+
+.к-содержимому { position: absolute; inset-inline-start: var(--otstup-16); inset-block-start: calc(-1 * var(--otstup-96)); z-index: 20; padding: var(--otstup-8) var(--otstup-16); background: var(--tsvet-list); }
+.к-содержимому:focus { inset-block-start: var(--otstup-8); }
+
+/* ---------- Шапка ---------- */
+.шапка { position: sticky; top: 0; z-index: 10; }
+@media (max-height: 30em) { .шапка { position: static; } }
+.шапка__знак span { white-space: nowrap; }
+.шапка__телефон, .меню { display: none; }
+.шапка__кнопка { padding-inline: var(--otstup-8); gap: var(--otstup-4); }
+
+/* ---------- Страница и поля ---------- */
+.страница, .подвал__внутри {
+  max-width: calc(var(--kolonka-soderzhimoe-predel) + 2 * var(--polya-bolshoe));
+  margin: 0 auto; padding-inline: var(--polya-bolshoe);
+}
+.страница { padding-bottom: var(--otstup-96); outline: none; }
+@media (max-width: 79.9375em) { .страница, .подвал__внутри, .шапка { padding-inline: var(--polya-shirokoe); } }
+@media (max-width: 52.4375em) { .страница, .подвал__внутри, .шапка { padding-inline: var(--polya-srednee); } }
+@media (max-width: 37.4375em) { .страница, .подвал__внутри, .шапка { padding-inline: var(--polya-uzkoe); } }
+
+/* ---------- Путь ---------- */
+.путь ol { display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--otstup-4); padding-block: var(--otstup-8) var(--otstup-4); font-size: var(--kegl-adres-size); line-height: var(--kegl-adres-lh); }
+.путь li { display: inline-flex; align-items: center; gap: var(--otstup-4); }
+.путь a { color: var(--tsvet-chernila-2); display: inline-flex; align-items: center; min-height: var(--tsel-vtoroy); }
+.путь .значок { width: var(--mera-12); height: var(--mera-12); color: var(--tsvet-chernila-3); }
+
+/* ---------- Шапка книги: заглавие крупно, эпиграф каталога (08 § 2.5) ---------- */
+.книга {
+  display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: var(--otstup-16) var(--promezhutok-shirokoe);
+  align-items: end; padding-block: var(--otstup-8) var(--otstup-32);
+  border-bottom: var(--tolshchina-silnaya) solid var(--tsvet-chernila);
+}
+.книга__имя { grid-column: 1 / span 6; display: flex; flex-direction: column; gap: var(--otstup-8); }
+.книга--mk .книга__имя { grid-column: 1 / -1; }
+.книга--mk { row-gap: var(--otstup-8); padding-top: 0; padding-bottom: var(--otstup-8); }
+.рассказано--сразу .повествование:first-of-type .повествование__шапка { margin-bottom: var(--otstup-24); }
+.книга--mk > .книга__число { grid-column: 1 / span 6; align-self: start; }
+.книга__справа { grid-column: 7 / -1; align-self: start; display: flex; flex-direction: column; gap: var(--otstup-12); padding-bottom: var(--otstup-8); }
+.книга__справа .книга__порядок { padding-inline-start: calc(var(--mera-24) + var(--otstup-12)); }
+.книга__заглавие { letter-spacing: 0; hyphens: manual; }
+.книга__число { font-family: var(--kegl-zagolovok-bloka-family); font-size: var(--kegl-zagolovok-bloka-size); line-height: var(--kegl-zagolovok-bloka-lh); font-weight: var(--kegl-proza-weight); }
+.книга__порядок { font-size: var(--kegl-adres-size); line-height: var(--kegl-adres-lh); max-width: var(--kolonka-pasport); }
+.книга__порядок a { color: var(--tsvet-chernila-2); }
+.книга__неполно { margin-top: var(--otstup-8); }
+.первый-ряд__пометки .книга__порядок { margin-bottom: var(--otstup-8); padding-inline-start: calc(var(--mera-24) + var(--otstup-12)); }
+.эпиграф { grid-column: 8 / -1; display: flex; flex-direction: column; gap: var(--otstup-8); padding-bottom: var(--otstup-8); }
+.эпиграф__стих { margin: 0; border-inline-start: var(--golos-biblii-lineyka-tolshchina) solid var(--golos-biblii-lineyka); padding-inline-start: var(--otstup-24); text-wrap: balance; }
+.эпиграф__стих p::before { content: "«"; }
+.эпиграф__стих p::after { content: "»"; }
+.эпиграф figcaption { padding-inline-start: calc(var(--otstup-24) + var(--golos-biblii-lineyka-tolshchina)); }
+
+/* ---------- Сетка обложек (§ 3.4: 4 в ряд на ноутбуке, 2 на телефоне; порядок DOM = порядок текста) ---------- */
+.обложки { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--otstup-40) var(--promezhutok-shirokoe); }
+.обложки[hidden] { display: none; }
+@media (max-width: 52.4375em) { .обложки { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 37.4375em) { .обложки { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--otstup-32) var(--promezhutok-uzkoe); } }
+
+/* В-25: обложка — номер истории крупно и малый точный знак тонкой линией «чернила», без плоской заливки.
+   Название — в подписи под обложкой (08 § 7.3), сдержанным кеглем, не детской ступенью. */
+.обложка__поле-номер {
+  position: absolute; inset-block-start: var(--otstup-12); inset-inline-start: var(--otstup-24);
+  font-family: var(--kegl-nomer-istorii-family); font-size: var(--kegl-nomer-istorii-size); line-height: var(--kegl-nomer-istorii-lh);
+  font-weight: var(--kegl-nomer-istorii-weight); font-variant-numeric: lining-nums;
+}
+.обложки .обложка__знак { height: 44%; width: 44%; inset-block-end: 22%; inset-inline-start: auto; inset-inline-end: 9%; }
+.обложки .обложка--зеркально .обложка__знак { inset-inline-start: auto; inset-inline-end: 47%; }
+.обложки .знак .л { stroke-width: var(--tolshchina-osnovnaya); }
+.обложки .знак .з-охра, .обложки .знак .з-олива, .обложки .знак .з-бирюза, .обложки .знак .з-индиго { fill: var(--oblozhka-pole); }
+.обложки .знак .ш-охра, .обложки .знак .ш-олива, .обложки .знак .ш-бирюза, .обложки .знак .ш-индиго { stroke: var(--oblozhka-pole); }
+.обложки .обложка__знак-вида { inset-inline-start: auto; inset-inline-end: 9%; inset-block-end: 22%; width: 16%; }
+.обложки .обложка__знак-вида .л { stroke-width: var(--tolshchina-osnovnaya); }
+.обложка__подпись { gap: var(--otstup-4); }
+.обложки .обложка__название {
+  font-family: var(--shrift-tekst); font-size: var(--kegl-zagolovok-apparata-size); line-height: var(--kegl-zagolovok-apparata-lh);
+  font-weight: var(--kegl-zagolovok-apparata-weight);
+}
+/* Перенос по слогам на узкой ширине (решение координатора № 2); на ноутбуке слово не рвётся */
+.обложка__название { overflow-wrap: normal; hyphens: manual; }
+.обложка__примечание { margin-top: var(--otstup-4); }
+.только-второй { display: none; }
+[data-layer="2"] .только-второй { display: block; }
+
+/* Строка между обложками — известие или сводка в 1–2 стиха: во всю ширину ряда */
+.строка-каталога {
+  grid-column: 1 / -1; display: grid; grid-template-columns: var(--mera-56) minmax(0, 1fr); gap: var(--otstup-16);
+  align-items: baseline; padding-block: var(--otstup-16); border-block: var(--tolshchina-volosyanaya) solid var(--tsvet-setka);
+}
+.строка-каталога__номер { font-family: var(--kegl-zagolovok-bloka-family); font-size: var(--kegl-zagolovok-bloka-size); line-height: var(--kegl-zagolovok-bloka-lh); font-weight: var(--kegl-zagolovok-bloka-weight); font-variant-numeric: lining-nums tabular-nums; }
+.строка-каталога__тело { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--otstup-2) var(--otstup-16); }
+.строка-каталога__название { font-family: var(--kegl-povestvovanie-family); font-size: var(--kegl-povestvovanie-size); line-height: var(--kegl-povestvovanie-lh); font-weight: var(--kegl-povestvovanie-weight); text-decoration-thickness: var(--ssylka-podchyorkivanie); }
+.строка-каталога__тело .тихая-строка { flex-basis: 100%; }
+
+/* ---------- Первый ряд (В-22) ---------- */
+.первый-ряд { padding-top: var(--otstup-24); }
+.первый-ряд__заголовок { font-family: var(--kegl-zagolovok-apparata-family); font-size: var(--kegl-zagolovok-apparata-size); line-height: var(--kegl-zagolovok-apparata-lh); font-weight: var(--kegl-zagolovok-apparata-weight); margin-bottom: var(--otstup-16); }
+.первый-ряд__низ { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: var(--otstup-16) var(--promezhutok-shirokoe); align-items: start; margin-top: var(--otstup-40); padding-top: var(--otstup-16); border-top: var(--tolshchina-volosyanaya) solid var(--tsvet-setka); }
+.все-ссылка {
+  grid-column: 1 / span 5; display: inline-flex; align-items: center; gap: var(--otstup-12); justify-self: start; min-height: var(--tsel-prostoy);
+  font-family: var(--kegl-kniga-v-kataloge-family); font-size: var(--kegl-kniga-v-kataloge-size); line-height: var(--kegl-kniga-v-kataloge-lh); font-weight: var(--kegl-kniga-v-kataloge-weight);
+  text-decoration-thickness: var(--ssylka-podchyorkivanie-navedenie);
+}
+.все-ссылка .значок { width: var(--mera-24); height: var(--mera-24); }
+.первый-ряд__пометки { grid-column: 7 / -1; display: flex; flex-direction: column; gap: var(--otstup-8); }
+.первый-ряд__пометки .голос-мы { padding-inline-start: calc(var(--mera-24) + var(--otstup-12)); }
+
+/* ---------- Рассказано здесь; повествования ---------- */
+.рассказано { padding-top: var(--otstup-96); }
+.рассказано--сразу { padding-top: var(--otstup-24); }
+.рассказано--сразу .рассказано__заголовок { font-family: var(--kegl-zagolovok-apparata-family); font-size: var(--kegl-zagolovok-apparata-size); line-height: var(--kegl-zagolovok-apparata-lh); font-weight: var(--kegl-zagolovok-apparata-weight); padding-bottom: 0; border-bottom: 0; }
+.рассказано--сразу .повествование:first-of-type { padding-top: var(--otstup-16); }
+.рассказано__заголовок { outline-offset: var(--otstup-4); padding-bottom: var(--otstup-16); border-bottom: var(--tolshchina-silnaya) solid var(--tsvet-chernila); }
+.рассказано__вводная { margin-top: var(--otstup-12); }
+.повествование { padding-top: var(--otstup-64); }
+.повествование + .повествование { margin-top: var(--otstup-24); }
+.повествование__шапка {
+  display: grid; grid-template-columns: var(--mera-64) minmax(0, 1fr); gap: var(--otstup-24); align-items: start;
+  padding-top: var(--otstup-16); margin-bottom: var(--otstup-32); border-top: var(--tolshchina-volosyanaya) solid var(--tsvet-liniya);
+}
+.повествование:first-of-type .повествование__шапка { border-top: 0; padding-top: 0; }
+.повествование__номер { font-variant-numeric: lining-nums tabular-nums; text-align: end; }
+.повествование__имя { display: flex; flex-direction: column; gap: var(--otstup-4); padding-top: var(--otstup-8); }
+.повествование__кнопка {
+  display: inline-flex; align-items: center; gap: var(--otstup-12); min-height: var(--tsel-prostoy); padding: 0; border: 0; background: none; cursor: pointer;
+  font: inherit; color: inherit; text-align: start;
+}
+.повествование__кнопка .значок { width: var(--mera-24); height: var(--mera-24); color: var(--tsvet-chernila-2); flex: none; }
+.повествование__кнопка[aria-expanded="false"] .значок { transform: rotate(-90deg); }
+.повествование__охват { display: flex; flex-wrap: wrap; gap: 0 var(--otstup-16); font-size: var(--kegl-adres-size); line-height: var(--kegl-adres-lh); color: var(--tsvet-chernila-2); font-variant-numeric: tabular-nums lining-nums; }
+.повествование__охват a { color: var(--tsvet-chernila-2); }
+
+/* ---------- Упоминается здесь ---------- */
+.упоминается { padding-top: var(--otstup-96); display: flex; flex-direction: column; gap: var(--otstup-16); }
+.упоминается h2 { padding-bottom: var(--otstup-16); border-bottom: var(--tolshchina-silnaya) solid var(--tsvet-chernila); }
+
+/* ---------- Подвал: служебное мелко ---------- */
+.подвал { border-top: var(--tolshchina-volosyanaya) solid var(--tsvet-setka); background: var(--tsvet-list); }
+.подвал__внутри { display: flex; flex-direction: column; gap: var(--otstup-8); padding-block: var(--otstup-24) var(--otstup-48); font-size: var(--kegl-adres-size); line-height: var(--kegl-adres-lh); color: var(--tsvet-chernila-3); }
+.подвал__ссылки { display: flex; flex-wrap: wrap; gap: 0 var(--otstup-24); }
+.подвал__ссылки a { display: inline-flex; align-items: center; min-height: var(--tsel-vtoroy); color: var(--tsvet-chernila-2); }
+.подвал__ссылки a[aria-current] { font-weight: var(--kegl-zagolovok-apparata-weight); color: var(--tsvet-chernila); }
+
+/* ---------- Подсказки поиска ---------- */
+.шапка__поиск { position: relative; }
+.каталог-подсказки { position: absolute; inset-inline: 0; inset-block-start: 100%; z-index: 15; }
+.каталог-подсказки[hidden] { display: none; }
+.каталог-подсказки .поиск__строка { cursor: pointer; }
+.каталог-подсказки--экран { position: static; background: var(--tsvet-list); padding-block: var(--otstup-8); }
+
+/* ---------- Экран поиска (телефон) ---------- */
+.поиск-экран { position: fixed; inset: 0; z-index: 30; display: flex; flex-direction: column; gap: var(--otstup-8); padding: var(--otstup-8) var(--polya-uzkoe); background: var(--tsvet-list); overflow-y: auto; }
+.поиск-экран[hidden] { display: none; }
+.поиск-экран__ряд { display: flex; align-items: center; justify-content: space-between; }
+.поиск-экран .поиск__подпись { font-family: var(--kegl-zagolovok-apparata-family); font-size: var(--kegl-zagolovok-apparata-size); font-weight: var(--kegl-zagolovok-apparata-weight); }
+.поиск-экран .поиск__поле { position: relative; }
+.поиск-экран .поиск__поле .значок { position: absolute; inset-inline-start: var(--otstup-12); inset-block-start: 50%; transform: translateY(-50%); color: var(--tsvet-chernila-2); pointer-events: none; }
+.поиск-экран input { width: 100%; min-height: var(--poisk-vysota-prostoy); padding: 0 var(--otstup-12) 0 var(--otstup-48); border: var(--tolshchina-volosyanaya) solid var(--poisk-ramka); border-radius: var(--knopka-radius); background: var(--tsvet-list); }
+.поиск-экран input::placeholder { color: var(--poisk-zapolnitel); opacity: 1; }
+body.поиск-открыт { overflow: hidden; }
+
+/* ---------- Планшет и телефон: «Меню»; поле поиска — экраном поверх ---------- */
+@media (max-width: 52.4375em) {
+  .шапка { flex-wrap: wrap; min-height: var(--shapka-vysota-telefon); }
+  .шапка__поиск, .шапка__ссылки { display: none; }
+  .шапка__телефон { display: flex; gap: var(--otstup-4); margin-inline-start: auto; }
+  .меню:not([hidden]) { display: flex; flex-direction: column; align-items: flex-start; gap: var(--otstup-8); flex-basis: 100%; padding-block: var(--otstup-8) var(--otstup-16); }
+  .меню a { display: inline-flex; align-items: center; gap: var(--otstup-8); min-height: var(--tsel-prostoy); }
+  .книга__имя, .эпиграф, .книга--mk .книга__имя, .книга__справа { grid-column: 1 / -1; }
+  .первый-ряд__низ > * { grid-column: 1 / -1; }
+}
+@media (max-width: 37.4375em) {
+  .шапка__знак { display: flex; flex-direction: column; font-size: var(--kegl-povestvovanie-size); line-height: var(--kegl-povestvovanie-lh); }
+  .путь ol { padding-block: var(--otstup-8) var(--otstup-4); }
+  .путь li:first-child { position: absolute; width: var(--tolshchina-volosyanaya); height: var(--tolshchina-volosyanaya); overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .путь li:nth-child(2) .значок { display: none; }
+  .книга { padding-block: var(--otstup-4) var(--otstup-16); gap: var(--otstup-12); }
+  .книга__имя { gap: var(--otstup-4); }
+  .эпиграф { padding-bottom: 0; }
+  .эпиграф__стих { padding-inline-start: var(--otstup-16); }
+  .эпиграф figcaption { padding-inline-start: calc(var(--otstup-16) + var(--golos-biblii-lineyka-tolshchina)); }
+  .первый-ряд { padding-top: var(--otstup-16); }
+  .первый-ряд__заголовок { margin-bottom: var(--otstup-12); }
+  .рассказано { padding-top: var(--otstup-64); }
+  .повествование { padding-top: var(--otstup-40); }
+  .повествование__шапка { grid-template-columns: auto minmax(0, 1fr); gap: var(--otstup-12); margin-bottom: var(--otstup-16); }
+  .повествование__имя { padding-top: 0; }
+  .книга--mk .книга__заглавие { font-size: var(--kegl-zavet-v-kataloge-size); line-height: var(--kegl-zavet-v-kataloge-lh); }
+  .рассказано--сразу { padding-top: var(--otstup-16); }
+  .книга--mk { padding-bottom: var(--otstup-8); }
+  .рассказано--сразу .повествование:first-of-type .повествование__шапка { margin-bottom: var(--otstup-16); }
+  .рассказано--сразу .повествование:first-of-type { padding-top: var(--otstup-12); }
+  .книга--mk > .книга__число { grid-column: 1 / -1; }
+  .книга__справа { gap: var(--otstup-8); padding-bottom: 0; }
+  .строка-каталога { grid-template-columns: var(--mera-56) minmax(0, 1fr); gap: var(--otstup-8); }
+  .обложка__поле-номер { inset-block-start: var(--otstup-8); inset-inline-start: var(--otstup-12); }
+  .обложка__название { hyphens: auto; -webkit-hyphens: auto; hyphenate-limit-chars: 7 3 3; }
+}
+/* Телефон лёжа (640 × 360, Ф-14): низкое окно — шапка не закреплена, обложки по 3 */
+@media (max-height: 30em) and (min-width: 37.5em) {
+  .обложки { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .книга { padding-bottom: var(--otstup-16); }
+  .книга__имя { grid-column: 1 / span 5; }
+  .эпиграф { grid-column: 6 / -1; }
+  .книга__заглавие { font-size: var(--kegl-nazvanie-istorii-size); line-height: var(--kegl-nazvanie-istorii-lh); }
+  .эпиграф__стих { font-size: var(--kegl-stikh-shapki-size); line-height: var(--kegl-stikh-shapki-lh); }
+  .первый-ряд { padding-top: var(--otstup-12); }
+}
+html { scroll-padding-top: calc(var(--shapka-vysota) * 2); }
