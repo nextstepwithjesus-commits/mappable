@@ -12,6 +12,7 @@
  *   4. Обратная проекция после исправлений: каждое отличие должно относиться к лицу из списка исправлений.
  */
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, rmSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 import { execSync } from 'node:child_process';
 import { join } from 'node:path';
 import type {
@@ -445,4 +446,4 @@ function main() {
   console.log(`записано в base/ (коммит прежних данных ${commit})`);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) main();
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();

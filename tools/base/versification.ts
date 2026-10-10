@@ -14,6 +14,7 @@
  * Таблица хранит только отличия: стих, которого нет в таблице, имеет тот же номер в KJV.
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 import { join } from 'node:path';
 import { loadBible } from '../bible.ts';
 import { BOOKS } from '../../src/engine/books.ts';
@@ -176,4 +177,4 @@ function main() {
   }, null, 1) + '\n');
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) main();
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();

@@ -11,6 +11,7 @@
  * Записи в карантине в сборку не попадают. Перед сборкой база проверяется (validate.ts): с ошибками сборка не идёт.
  */
 import { createHash } from 'node:crypto';
+import { pathToFileURL } from 'node:url';
 import { gzipSync } from 'node:zlib';
 import { mkdirSync, readFileSync, rmSync, writeFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
@@ -157,4 +158,4 @@ function main() {
   if (!manifest.budget.ok) process.exit(1);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) main();
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();

@@ -8,6 +8,7 @@
  * aliases.json: { "new:слово": "общий-номер" } — сведение сторон `new:`, которые разметчики назвали по-разному.
  */
 import { readFileSync, existsSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 
 export interface Link { book?: string; ch: number; a: string; b: string; type: number; ref: string; quote?: string; cert?: string }
 
@@ -94,4 +95,4 @@ function main() {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) main();
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();

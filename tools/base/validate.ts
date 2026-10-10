@@ -7,6 +7,7 @@
  * Ошибки останавливают сборку. Замечания — список работы для составителей и сверщиков (этапы Д2–Д3).
  */
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 import { join } from 'node:path';
 import { loadBible } from '../bible.ts';
 import { parseRef, verseId } from '../../src/engine/books.ts';
@@ -506,4 +507,4 @@ async function main() {
   if (errors.length) process.exit(1);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) main();
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();
