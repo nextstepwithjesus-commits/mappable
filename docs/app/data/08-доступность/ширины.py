@@ -44,7 +44,7 @@ def width(text, path, loc, px):
     return sum(hm[cmap[ord(ch)]][0] for ch in text if ord(ch) in cmap) * px / upm
 
 
-ROOT = '/home/user/mappable/'
+ROOT = __import__('os').path.abspath(__import__('os').path.join(__import__('os').path.dirname(__file__), '..', '..', '..', '..')) + '/'
 names = set()
 for f in glob.glob(ROOT + 'base/actors/*.json'):
     for it in json.load(open(f, encoding='utf-8'))['items']:

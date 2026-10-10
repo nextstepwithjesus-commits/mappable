@@ -16,7 +16,7 @@ AA = ['1.2.4', '1.2.5', '1.3.4', '1.3.5', '1.4.3', '1.4.4', '1.4.5', '1.4.10', '
 ALL = A + AA
 print(f'WCAG 2.2: уровень A — {len(A)}, AA — {len(AA)}, всего {len(ALL)}')
 
-ROOT = '/home/user/mappable/docs/app/'
+ROOT = __import__('os').path.abspath(__import__('os').path.join(__import__('os').path.dirname(__file__), '..', '..', '..', '..')) + '/docs/app/'
 
 
 def section(path, start, stop):

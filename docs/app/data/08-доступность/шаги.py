@@ -9,7 +9,7 @@
 Части *Ной и потоп* — как в 11 (Быт 6:9–22; 7:1–16; 7:17–24; 8:1–14; 8:15–22; 9:1–17).
 Файлы проекта скрипт не меняет.
 """
-ROOT = '/home/user/mappable/'
+ROOT = __import__('os').path.abspath(__import__('os').path.join(__import__('os').path.dirname(__file__), '..', '..', '..', '..')) + '/'
 rows = [l.rstrip('\n').split('\t') for l in open(ROOT + 'tools/bible/brackets.tsv', encoding='utf-8')][1:]
 parts = [((6, 9), (6, 22)), ((7, 1), (7, 16)), ((7, 17), (7, 24)), ((8, 1), (8, 14)), ((8, 15), (8, 22)), ((9, 1), (9, 17))]
 verses = [l.split('\t') for l in open(ROOT + 'tools/bible/synodal.tsv', encoding='utf-8')]
