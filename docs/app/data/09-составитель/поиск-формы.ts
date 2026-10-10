@@ -105,3 +105,12 @@ for (const [n, fs] of [['Ной', ['ной', 'ноя', 'ною', 'ноем']], [
   const our = [...(formsOf.get(fs[0]) ?? [])].sort().join(', ');
   console.log(`  ${n}: ${dist} / ${sum}; словарь форм сборки: ${our}`);
 }
+
+// Редакция 2.1 (повторная проверка данных, П-2): «пята» и «пять» дают одну основу «пят».
+// Точные формы слова «пята» показываются первыми; эталон — стихи с формами «пята».
+{
+  const pyata = ['пята', 'пяту', 'пяты', 'пятою', 'пяте'];
+  const exact = words_.map((v, i) => (pyata.some((f) => v.has(f)) ? i : -1)).filter((i) => i >= 0);
+  const byStem = stems.filter((v) => v.has(stem('пята'))).length;
+  console.log(`\nпята: точные формы — ${exact.length} стихов (${exact.map((i) => rows[i].slice(0, 3).join(' ')).join('; ')}); по основе «${stem('пята')}» — ${byStem} (вместе с «пять»)`);
+}
