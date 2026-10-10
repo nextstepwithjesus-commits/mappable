@@ -6,9 +6,12 @@
   "status": "draft",
   "from": {
    "vol": "data/lines/luke.json",
-   "commit": "84ef30e"
+   "commit": "8624054"
   }
  },
+ "sources": [
+  "src-synodal"
+ ],
  "id": "luke",
  "name": "Линия по Луке",
  "subtitle": "Лк 3:23–38; по распространённому толкованию — родословие Марии",

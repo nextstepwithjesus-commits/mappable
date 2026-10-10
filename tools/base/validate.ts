@@ -17,6 +17,7 @@ import type { Base } from './migrate.ts';
 import type { Actor, Cert, Prov } from './types.ts';
 import { admission, loadChecks, validateChecks } from './admit.ts';
 import { checkSourceIssues, issuesAt, KIND_WORD } from './source-issues.ts';
+import { validateRegistry } from './sources.ts';
 
 export interface Issue { level: 'error' | 'warn'; check: string; where: string; msg: string }
 
@@ -49,9 +50,12 @@ const CERTS = new Set<Cert>(['scripture', 'inference', 'interpretation', 'calc',
 export function loadBase(dir = join(ROOT, 'base')): Base {
   // происхождение каждого файла хранится: статус записи без своего prov берётся у файла (02 § 3.1; Д-база, Б-1, п. 3)
   const files: Record<string, Prov> = {};
+  // источники записей файла по умолчанию (09 § 5.5; Д3-3): как prov — у файла значение, у записи уточнение
+  const fileSources: Record<string, string[]> = {};
   const read = (rel: string) => {
     const j = JSON.parse(readFileSync(join(dir, rel), 'utf8'));
     if (j.prov) files[rel] = j.prov;
+    if (j.sources !== undefined) fileSources[rel] = j.sources;
     return j;
   };
   const items = (f: string) => read(f).items;
@@ -61,7 +65,7 @@ export function loadBase(dir = join(ROOT, 'base')): Base {
   });
   const lines: Record<string, any> = {};
   for (const f of readdirSync(join(dir, 'lines')).filter((f) => f.endsWith('.json')).sort()) {
-    const { schema: _s, prov: _p, ...l } = read(`lines/${f}`);
+    const { schema: _s, prov: _p, sources: _src, ...l } = read(`lines/${f}`);
     lines[f.replace(/\.json$/, '')] = l;
   }
   const { schema: _s, title: _t, prov: _p, ...anchors } = read('anchors.json');
@@ -70,7 +74,7 @@ export function loadBase(dir = join(ROOT, 'base')): Base {
     unions: items('unions.json'), origins: items('origins.json'), kin: items('kin.json'), readings: items('readings.json'),
     areas: items('areas.json'), memberships: items('memberships.json'), chrono: items('chrono.json'), nodata: items('nodata.json'),
     redirects: items('redirects.json'), corrections: items('corrections.json'), epochs: items('epochs.json'),
-    files,
+    files, fileSources,
     sources: existsSync(join(dir, 'sources.json')) ? items('sources.json') : [],
     checks: loadChecks(dir),
   };
@@ -517,6 +521,8 @@ export function validate(base: Base): Issue[] {
 
   // ---------- подписи проверки: отпечаток записи и входов совпадает (02 § 3.1; Д3-2) ----------
   for (const x of validateChecks(base)) err('проверка', x.where, x.msg);
+  // реестр источников и ссылки записей на него (Д3-3, Д3-5; 09 § 5.5)
+  for (const x of validateRegistry(base)) (x.level === 'error' ? err : warn)('источник', x.where, x.msg);
 
   // ---------- стоп-список предания: утверждения, а не имена (02, § 7) ----------
   stopList(base, actors, err);
@@ -598,7 +604,7 @@ async function main() {
   const n = base.volumes.reduce((s, v) => s + v.actors.length, 0);
   console.log(`лиц ${n}; ошибок ${errors.length} (${by(errors)}); замечаний ${warns.length} (${by(warns)})`);
   const c = admission(base, 'release').counts.all;
-  console.log(`записей: проверено ${c.checked}, черновик ${c.draft}, карантин ${c.quarantine}; подпись устарела ${c.stale}; допущено в выпуск ${c.admitted}`);
+  console.log(`записей: проверено ${c.checked}, черновик ${c.draft}, карантин ${c.quarantine}; подпись устарела ${c.stale}; не выпускаются по правам источника ${c.rights}; допущено в выпуск ${c.admitted}`);
   if (errors.length) process.exit(1);
 }
 

@@ -82,9 +82,14 @@ export interface Base {
   files?: Record<string, Prov>;
   /** Реестр источников base/sources.json. */
   sources?: Source[];
+  /** Источники записей файла по умолчанию (поле `sources` файла): путь от base/ → номера реестра. Нет — `src-synodal`. */
+  fileSources?: Record<string, string[]>;
   /** Журнал подписей проверки base/checks.json (Д3-2). */
   checks?: CheckEntry[];
 }
+
+/** Источник записей по умолчанию: текст Писания (09 § 5.5). */
+export const TEXT_SOURCES = ['src-synodal'] as const;
 
 export const pid = (old: string) => `p-${old}`;
 const gid = (old: string) => `g-${old}`;
@@ -423,7 +428,8 @@ function main() {
   const commit = execSync('git rev-parse --short HEAD', { cwd: ROOT }).toString().trim();
   const at = new Date().toISOString().slice(0, 10);
   const prov = (vol: string): Prov => ({ by: 'перенос Д1 (координатор)', at, status: 'draft', from: { vol, commit } });
-  const file = <T>(title: string, items: T[], vol = 'data'): BaseFile<T> => ({ schema: 1, title, prov: prov(vol), items });
+  // источник записей по умолчанию — текст Писания (09 § 5.5; Д3-3); запись уточняет своим полем sources
+  const file = <T>(title: string, items: T[], vol = 'data'): BaseFile<T> => ({ schema: 1, title, prov: prov(vol), sources: [...TEXT_SOURCES], items });
   const write = (rel: string, v: unknown) => {
     const path = join(OUT, rel);
     mkdirSync(join(path, '..'), { recursive: true });
@@ -445,7 +451,7 @@ function main() {
   write('corrections.json', file('Исправления при переносе', base.corrections));
   write('epochs.json', file('Эпохи', base.epochs, 'data/epochs.json'));
   write('anchors.json', { schema: 1, title: 'Внебиблейские опоры', prov: prov('data/anchors.json'), ...base.anchors });
-  for (const [k, l] of Object.entries(base.lines)) write(`lines/${k}.json`, { schema: 1, prov: prov(`data/lines/${k}.json`), ...l });
+  for (const [k, l] of Object.entries(base.lines)) write(`lines/${k}.json`, { schema: 1, prov: prov(`data/lines/${k}.json`), sources: [...TEXT_SOURCES], ...l });
   write('legacy/report.json', {
     schema: 1, title: 'Отчёт переноса: отличия обратной проекции от прежних данных и исправления, которые их объясняют', commit,
     exact: 'точный перенос совпал с прежними данными без отличий',

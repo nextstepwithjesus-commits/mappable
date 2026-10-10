@@ -73,6 +73,11 @@ export interface BaseFile<T> {
   schema: number;
   title: string;
   prov: Prov;
+  /**
+   * Источники записей файла по умолчанию — номера реестра base/sources.json (09 § 5.5; Д3-3). Как с prov: у файла —
+   * значение по умолчанию, у записи — уточнение (поле `sources` записи добавляет свои). У текста Писания — `src-synodal`.
+   */
+  sources: string[];
   items: T[];
 }
 
@@ -360,18 +365,41 @@ export interface Correction {
   other?: string[];
 }
 
+/**
+ * Источник в реестре base/sources.json (02 § 5; 09 § 5.5; этап Д3-3, Д3-5). Права — машинно: `spdx`, `attributionRequired`,
+ * `shareAlike`, `redistribute`; по ним собирается NOTICE и решается, может ли запись источника попасть в сборку.
+ */
 export interface Source {
   id: string;
   title: string;
   org: string;
   author?: string;
+  /** Версия файла, по которому работали (коммит, выпуск). Входит в отпечаток проверки записей этого источника. */
   version: string;
   date: string;
-  /** Лицензия конкретного файла — дословно. */
+  /** Лицензия конкретного файла — словами, как прочитана. */
   license: string;
+  /**
+   * Лицензия идентификатором SPDX (выражение: «CC-BY-4.0», «ODbL-1.0», «LicenseRef-PublicDomain AND MIT»). Свои имена —
+   * через «LicenseRef-…»; лицензия не подтверждена — «NOASSERTION» (тогда `redistribute: false`).
+   */
+  spdx: string;
+  /** Где лицензия прочитана (ссылка) и когда. */
+  licenseSource: string;
+  /** Лицензия требует надписи: `attribution` обязательна и идёт в NOTICE. */
+  attributionRequired: boolean;
   attribution?: string;
-  use: 'basis' | 'reference' | 'check-only';
+  /** Копилефт: производное — под той же лицензией (ODbL, CC BY-SA, LGPL). */
+  shareAlike: boolean;
+  /**
+   * Может ли материал источника попасть в сборку приложения: лицензия разрешает И источник предназначен для приложения.
+   * `false` — запись с этим источником в сборку не попадает (только сверка, просьба не распространять, права не подтверждены).
+   */
+  redistribute: boolean;
+  /** basis — основа данных; reference — справочный слой; check-only — только сверка, в приложение не входит; component — часть приложения (шрифт). */
+  use: 'basis' | 'reference' | 'check-only' | 'component';
   read: string;
+  /** Источники, из которых этот выведен: независимые подтверждения — разные корни графа (Д-база, Б-3). */
   dependsOn?: string[];
   limits: string;
   notProves: string;

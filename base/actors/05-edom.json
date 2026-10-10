@@ -7,9 +7,12 @@
   "status": "draft",
   "from": {
    "vol": "data/persons/05-edom.json",
-   "commit": "84ef30e"
+   "commit": "8624054"
   }
  },
+ "sources": [
+  "src-synodal"
+ ],
  "items": [
   {
    "id": "p-isav",

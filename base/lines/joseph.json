@@ -6,9 +6,12 @@
   "status": "draft",
   "from": {
    "vol": "data/lines/joseph.json",
-   "commit": "84ef30e"
+   "commit": "8624054"
   }
  },
+ "sources": [
+  "src-synodal"
+ ],
  "id": "joseph",
  "name": "Линия Иосифа",
  "subtitle": "законная, царская",

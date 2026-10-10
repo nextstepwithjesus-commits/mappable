@@ -7,7 +7,8 @@
  *     JSON записи без служебного prov + отпечатки текста ЕЁ стихов (synodal.tsv), строк brackets.tsv и source-issues.tsv
  *     об этих стихах + версии её источников из base/sources.json. Правка записи или её входа снимает «проверено»,
  *     правка чужого стиха или чужой строки таблицы — нет (02 § 3.1; рецензия данных на 09, № 1);
- *   - уровень «выпуск» (release) — только «проверено»; уровень «проба» (probe) — и черновики, только для прототипов;
+ *   - уровень «выпуск» (release) — только «проверено» и только если каждый источник записи разрешает распространение
+ *     (`redistribute: true` в реестре; 09 § 5.5, Д3-5); уровень «проба» (probe) — и черновики, только для прототипов;
  *     карантин — никогда;
  *   - зависимости: утверждение, «нет сведений», время — только при допущенном лице; ребро и родство — оба конца; союз —
  *     оба супруга; членство — лицо и область; линия — каждое лицо и наборы прочтений; переадресация — каждая цель.
@@ -160,7 +161,11 @@ export function recordVerses(rec: unknown): { id: string; book: string; chapter:
   return [...out.values()].sort((x, y) => (x.id < y.id ? -1 : x.id > y.id ? 1 : 0));
 }
 
-/** Запись без служебного prov (на любой глубине: prov обозначений союза тоже служебный); у лица — без утверждений. */
+/**
+ * Запись без служебного prov (на любой глубине: prov обозначений союза тоже служебный); у лица — без утверждений.
+ * Без поля `sources` записи: её источники входят в отпечаток через входы (`inputs.sources`: номер → версия), поэтому
+ * запись того же источника, указанного у файла или у записи, даёт тот же отпечаток, а смена источника подпись снимает.
+ */
 export function content(r: Pick<Rec, 'coll' | 'rec'>): unknown {
   const strip = (x: any): any => {
     if (Array.isArray(x)) return x.map(strip);
@@ -169,28 +174,40 @@ export function content(r: Pick<Rec, 'coll' | 'rec'>): unknown {
   };
   const c = strip(r.rec);
   if (r.coll === 'actor') delete c.facts;
+  if (c && typeof c === 'object') delete c.sources;
   return c;
 }
 
-/** Источники, на которые ссылается запись (поля source и sources с номером из реестра), и всегда src-synodal. */
-export function recordSources(rec: unknown, base: Base): string[] {
+/**
+ * Источники записи (09 § 5.5; Д3-3): источники файла по умолчанию (`sources` файла; нет — src-synodal), содержащей записи
+ * и самой записи (поля source и sources с номером из реестра или вида «src-…»), и всегда src-synodal: стихи записи — из него.
+ */
+export function recordSources(r: Pick<Rec, 'rec'> & Partial<Pick<Rec, 'file' | 'parent'>>, base: Base): string[] {
   const reg = new Set((base.sources ?? []).map((s) => s.id));
-  const ids = new Set<string>(['src-synodal']);
+  const ids = new Set<string>(['src-synodal', ...((r.file && base.fileSources?.[r.file]) || [])]);
+  for (const s of [r.parent?.sources].flat()) if (typeof s === 'string') ids.add(s);
   const go = (x: any) => {
     if (Array.isArray(x)) return x.forEach(go);
     if (!x || typeof x !== 'object') return;
     for (const [k, v] of Object.entries(x)) {
+      if (k === 'facts' && x === r.rec) continue; // утверждения лица — свои записи со своими источниками
       if ((k === 'source' || k === 'sources') && (typeof v === 'string' || Array.isArray(v))) {
         for (const s of [v].flat()) if (typeof s === 'string' && (reg.has(s) || s.startsWith('src-'))) ids.add(s);
       }
       go(v);
     }
   };
-  go(rec);
+  go(r.rec);
   return [...ids].sort();
 }
 
-export function inputsOf(r: Pick<Rec, 'coll' | 'rec'>, base: Base, env: TextEnv = fileEnv()): CheckInputs {
+/** Источники записи, которые не разрешают попасть в сборку (`redistribute` не true или источника нет в реестре). */
+export function blockedSources(r: Pick<Rec, 'rec'> & Partial<Pick<Rec, 'file' | 'parent'>>, base: Base): string[] {
+  const reg = new Map((base.sources ?? []).map((s) => [s.id, s]));
+  return recordSources(r, base).filter((id) => reg.get(id)?.redistribute !== true);
+}
+
+export function inputsOf(r: Pick<Rec, 'coll' | 'rec'> & Partial<Pick<Rec, 'file' | 'parent'>>, base: Base, env: TextEnv = fileEnv()): CheckInputs {
   const ver = new Map((base.sources ?? []).map((s) => [s.id, s.version]));
   const vs = recordVerses(content(r));
   const uniq = (xs: string[]) => [...new Set(xs)];
@@ -199,7 +216,7 @@ export function inputsOf(r: Pick<Rec, 'coll' | 'rec'>, base: Base, env: TextEnv 
     text: sha(vs.map((v) => `${v.id}\t${env.verse(v.id) ?? '<нет стиха>'}`).join('\n')),
     brackets: sha(uniq(vs.flatMap((v) => env.brackets(v.book, v.chapter, v.verse))).join('\n')),
     issues: sha(uniq(vs.flatMap((v) => env.issues(v.book, v.chapter, v.verse))).join('\n')),
-    sources: Object.fromEntries(recordSources(r.rec, base).map((s) => [s, ver.get(s) ?? '?'])),
+    sources: Object.fromEntries(recordSources(r, base).map((s) => [s, ver.get(s) ?? '?'])),
   };
 }
 
@@ -249,8 +266,9 @@ export function statusOf(r: Rec, base: Base, led = ledger(base), env: TextEnv = 
   return { status: 'checked' };
 }
 
-export interface Counts { checked: number; draft: number; quarantine: number; stale: number; admitted: number }
-const zero = (): Counts => ({ checked: 0, draft: 0, quarantine: 0, stale: 0, admitted: 0 });
+/** Числа по статусам; `rights` — записи, которые источник не разрешает выпускать (redistribute: false; 09 § 5.5). */
+export interface Counts { checked: number; draft: number; quarantine: number; stale: number; rights: number; admitted: number }
+const zero = (): Counts => ({ checked: 0, draft: 0, quarantine: 0, stale: 0, rights: 0, admitted: 0 });
 
 export interface Admission {
   level: Level;
@@ -260,6 +278,8 @@ export interface Admission {
   /** Часть записи (обозначение союза, имя лица) идёт с записью, кроме явного карантина. */
   part(p: { prov?: Partial<Prov> } | undefined): boolean;
   status: Map<string, RecStatus>;
+  /** Записи, не допущенные из-за прав источника (уровень «выпуск»): ключ → номера источников. */
+  rights: Map<string, string[]>;
   counts: Record<Coll, Counts> & { all: Counts };
 }
 
@@ -269,14 +289,21 @@ export function admission(base: Base, level: Level, env: TextEnv = fileEnv()): A
   const led = ledger(base);
   const byKey = new Map(recs.map((r) => [r.key, r]));
   const status = new Map(recs.map((r) => [r.key, statusOf(r, base, led, env)]));
-  const own = (s: RecStatus) => (level === 'release' ? s.status === 'checked' : s.status !== 'quarantine');
+  // права (09 § 5.5; Д3-5): в выпуск не попадает запись, чей источник не разрешает распространение. Проба — только для
+  // прототипов на компьютерах команды; там запрет считается, но не применяется
+  const rights = new Map<string, string[]>();
+  for (const r of recs) {
+    const b = blockedSources(r, base);
+    if (b.length) rights.set(r.key, b);
+  }
+  const own = (s: RecStatus, key: string) => (level === 'release' ? s.status === 'checked' && !rights.has(key) : s.status !== 'quarantine');
   const memo = new Map<string, boolean>();
   const okKey = (key: string, path = new Set<string>()): boolean => {
     if (memo.has(key)) return memo.get(key)!;
     const r = byKey.get(key);
     if (!r || path.has(key)) return false;
     path.add(key);
-    const v = own(status.get(key)!) && r.deps.every((k) => okKey(k, path));
+    const v = own(status.get(key)!, key) && r.deps.every((k) => okKey(k, path));
     path.delete(key);
     memo.set(key, v);
     return v;
@@ -290,6 +317,7 @@ export function admission(base: Base, level: Level, env: TextEnv = fileEnv()): A
     for (const c of [counts[r.coll], counts.all]) {
       c[s.status]++;
       if (s.stale) c.stale++;
+      if (rights.has(r.key)) c.rights++;
       if (a) c.admitted++;
     }
   }
@@ -299,6 +327,7 @@ export function admission(base: Base, level: Level, env: TextEnv = fileEnv()): A
     okKey: (k) => okKey(k),
     part: (p) => p?.prov?.status !== 'quarantine',
     status,
+    rights,
     counts,
   };
 }

@@ -7,9 +7,12 @@
   "status": "draft",
   "from": {
    "vol": "data/persons/20-return-lists.json",
-   "commit": "84ef30e"
+   "commit": "8624054"
   }
  },
+ "sources": [
+  "src-synodal"
+ ],
  "items": [
   {
    "id": "p-parosh",

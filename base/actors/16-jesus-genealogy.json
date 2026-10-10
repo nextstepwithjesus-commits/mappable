@@ -7,9 +7,12 @@
   "status": "draft",
   "from": {
    "vol": "data/persons/16-jesus-genealogy.json",
-   "commit": "84ef30e"
+   "commit": "8624054"
   }
  },
+ "sources": [
+  "src-synodal"
+ ],
  "items": [
   {
    "id": "p-mattafa",

@@ -8,6 +8,7 @@
  *   index.json        — номера, имена, виды, основные связи, наборы прочтений, области: не больше 200 КБ в gzip;
  *   cards/<том>.json  — утверждения карточек и «нет сведений», частями по томам;
  *   verses/<книга>.json — тексты только тех стихов, на которые есть ссылки, частями по книгам;
+ *   NOTICE.txt        — источники и права: собирается из реестра base/sources.json (09 § 5.5; Д3-5);
  *   manifest.json     — опись выпуска: уровень допуска и числа по статусам, отпечатки текста, таблиц, реестра, базы; размеры.
  * Что попадает в сборку, решает одна функция допуска (admit.ts): своих фильтров здесь нет. Карантин не попадает никогда.
  * Каждый файл сборки несёт уровень допуска (`admit`); у пробы — плашку, которую нельзя убрать, и своя папка: проба в
@@ -24,6 +25,7 @@ import { loadBible } from '../bible.ts';
 import { parseRef, verseId, BOOKS } from '../../src/engine/books.ts';
 import { admission, LEVEL_WORD, PROBE_BANNER, type Admission, type Level } from './admit.ts';
 import type { Base } from './migrate.ts';
+import { noticeEntries, noticeText } from './sources.ts';
 
 const ROOT = join(import.meta.dirname, '..', '..');
 /** Папки сборки по уровням: выпуск и проба никогда не пишутся в одну папку. */
@@ -176,6 +178,11 @@ function main() {
   const m = mark(A);
   for (const [book, verses] of byBook) write(`verses/${bookNo.get(book)}.json`, { ...m, book, verses });
 
+  // источники и права (09 § 5.5; Д3-5): из реестра; у выпуска источник без права распространения — ошибка сборки
+  const notice = noticeEntries(base, A);
+  const noticeTxt = noticeText(notice, level);
+  writeFileSync(join(OUT, 'NOTICE.txt'), noticeTxt);
+
   // опись выпуска
   const fileSha = (rel: string) => (existsSync(join(ROOT, rel)) ? sha(readFileSync(join(ROOT, rel))) : null);
   const idx = sizes['index.json'];
@@ -197,6 +204,7 @@ function main() {
       chronology: { anchors: fileSha('base/anchors.json'), epochs: fileSha('base/epochs.json'), note: 'модели хронологии — этап Д6' },
       places: null,
     },
+    notice: { file: 'NOTICE.txt', sha256: sha(noticeTxt), sources: notice.map((e) => ({ id: e.id, version: e.version, spdx: e.spdx })) },
     statuses: A.counts,
     counts: {
       actors: A.counts.actor.admitted, origins: A.counts.origin.admitted, unions: A.counts.union.admitted,

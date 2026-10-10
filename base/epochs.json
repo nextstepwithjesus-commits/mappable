@@ -7,9 +7,12 @@
   "status": "draft",
   "from": {
    "vol": "data/epochs.json",
-   "commit": "84ef30e"
+   "commit": "8624054"
   }
  },
+ "sources": [
+  "src-synodal"
+ ],
  "items": [
   {
    "id": "antediluvian",

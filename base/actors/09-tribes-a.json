@@ -7,9 +7,12 @@
   "status": "draft",
   "from": {
    "vol": "data/persons/09-tribes-a.json",
-   "commit": "84ef30e"
+   "commit": "8624054"
   }
  },
+ "sources": [
+  "src-synodal"
+ ],
  "items": [
   {
    "id": "p-eliav-syn-fallu",
