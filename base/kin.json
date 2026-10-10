@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data",
-   "commit": "8624054"
+   "commit": "38ef90d"
   }
  },
  "sources": [
@@ -57,6 +57,17 @@
     "actor": "p-avraam",
     "ref": "Быт 20:11",
     "label": "по словам Авраама"
+   }
+  },
+  {
+   "from": "p-sarra",
+   "to": "p-farra",
+   "rel": "невестка",
+   "refs": [
+    "Быт 11:31"
+   ],
+   "prov": {
+    "by": "исправление C44"
    }
   },
   {

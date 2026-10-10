@@ -1689,27 +1689,6 @@
    }
   },
   {
-   "key": "origin:p-sarra|p-farra|father|p",
-   "by": "сверщик-агент",
-   "kind": "agent",
-   "at": "2026-10-10",
-   "hash": "dbcbdb63b87b6c89335f6ba9fc9d647f372c1c41d9a5c26f5a90de04ac5f4864",
-   "inputs": {
-    "verses": [
-     "Быт 11:27",
-     "Быт 20:11",
-     "Быт 20:12",
-     "Быт 20:2"
-    ],
-    "text": "355564b01c5aa3aa7bf91e76e8d0edc72ee32a4819e9d3953f0b137110a1ed57",
-    "brackets": "0f1294473aa1edb6745188ef51ffb88bd19b535dab314176738a0f50c6e2f59b",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
    "key": "origin:p-shuakh|p-avraam|father|p",
    "by": "сверщик-агент",
    "kind": "agent",

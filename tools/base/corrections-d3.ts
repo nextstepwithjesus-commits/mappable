@@ -12,6 +12,7 @@ import { scriptureText } from './brackets.ts';
 import { loadBible } from '../bible.ts';
 import { compareRefs, parseRef, verseId } from '../../src/engine/books.ts';
 import { nameMatcher, norm } from '../../src/engine/text.ts';
+import { namedVerses, ownRefs } from './own-verses.ts';
 
 const by = (id: string) => ({ by: `исправление ${id}` });
 
@@ -369,6 +370,122 @@ export const STEPS_D3: Step[] = [
         why: '02 § 3.2: «Писание молчит» — с проверкой, какие стихи прочитаны; без списка запись нельзя ни проверить, ни подписать (сверка Д3, № 9). Список — основание для сверщика, а не свидетельство, что прежний составитель их читал',
         refs: [],
         actors: [...new Set(base.nodata.filter((n) => n.kind === 'silent').map((n) => n.actor.slice(2)))],
+      };
+    },
+  },
+  // ---------- очередь Д3-9: рецензия библеиста на 07 ред. 5, № 84, 86–88 ----------
+  {
+    // № 88: одни слова стиха — один вид; у каждого стиха своё обозначение (как у Агари, C32)
+    id: 'C42',
+    scope: ['union:u-iakov--valla', 'union:u-iakov--zelfa'],
+    run: ({ base }) => {
+      const P = by('C42');
+      const v = union(base, 'u-iakov--valla');
+      if (v.terms.length !== 2) throw new Error('u-iakov--valla: ожидалось два обозначения');
+      const [vh, vw] = v.terms;
+      v.terms = [
+        { kind: 'maid-as-wife', word: 'в жену', side: vh.side, refs: ['Быт 30:4'], note: 'Рахиль «дала… Валлу, служанку свою, в жену ему» (Быт 30:4)', order: vh.order, prov: { ...vh.prov, ...P } },
+        { kind: 'concubine', word: 'наложница', side: vw.side, refs: ['Быт 35:22'], note: '«с Валлою, наложницею отца своего» (Быт 35:22)', prov: { ...vw.prov, ...P } },
+        { kind: 'marriage', word: 'жена', refs: ['Быт 37:2'], note: '«с сыновьями Валлы и с сыновьями Зелфы, жен отца своего» (Быт 37:2)', prov: P },
+      ];
+      const z = union(base, 'u-iakov--zelfa');
+      if (z.terms.length !== 2) throw new Error('u-iakov--zelfa: ожидалось два обозначения');
+      const [zh, zw] = z.terms;
+      z.terms = [
+        { kind: 'maid-as-wife', word: 'в жену', side: zh.side, refs: ['Быт 30:9'], note: 'Лия «взяла служанку свою Зелфу, и дала ее Иакову в жену» (Быт 30:9)', order: zh.order, prov: { ...zh.prov, ...P } },
+        { kind: 'marriage', word: 'жена', side: zw.side, refs: ['Быт 37:2'], note: '«с сыновьями Валлы и с сыновьями Зелфы, жен отца своего» (Быт 37:2)', prov: { ...zw.prov, ...P } },
+      ];
+      return {
+        what: 'Валла и Зелфа: «в жену» (Быт 30:4; 30:9) — вид «служанка в жену», как у Агари (Быт 16:3); у каждого стиха своё обозначение: Валла — «в жену» (Быт 30:4), «наложница» (Быт 35:22), «жена» (Быт 37:2); Зелфа — «в жену» (Быт 30:9), «жена» (Быт 37:2)',
+        why: 'Рецензия библеиста на 07 ред. 5, № 88: одинаковые слова стиха давали три разных вида (Агарь — служанка в жену, Валла — наложница и брак, Зелфа — брак); 02 § 3.2 — у каждого стиха своё обозначение',
+        refs: ['Быт 16:3', 'Быт 30:4', 'Быт 30:9', 'Быт 35:22', 'Быт 37:2'],
+        actors: ['iakov', 'valla', 'zelfa'],
+      };
+    },
+  },
+  {
+    // № 86: «по словам Лии» — только на слове «муж»; повествователь называет «двух жен своих» (Быт 32:22; 33:1–2)
+    id: 'C43',
+    scope: ['union:u-iakov--liya'],
+    run: ({ base }) => {
+      const u = union(base, 'u-iakov--liya');
+      if (u.terms.length !== 1 || u.terms[0].word !== 'муж') throw new Error('u-iakov--liya: ожидалось одно обозначение «муж» (C40)');
+      const t = u.terms[0];
+      const P = by('C43');
+      u.terms = [
+        {
+          kind: 'marriage', word: 'жена', side: t.side, refs: ['Быт 29:23-25', 'Быт 29:30', 'Быт 32:22', 'Быт 33:1-2'], cert: 'inference', order: t.order,
+          note: 'Повествователь: Иаков взял «двух жен своих и двух рабынь своих» (Быт 32:22); жёны — Лия и Рахиль (Быт 33:1–2)',
+          prov: { ...t.prov, ...P },
+        },
+        { kind: 'marriage', word: 'муж', refs: ['Быт 29:32', 'Быт 30:20'], saidBy: t.saidBy, prov: P },
+      ];
+      return {
+        what: 'Иаков и Лия: два обозначения — слова повествователя «двух жен своих» (Быт 32:22; жёны названы в Быт 33:1–2; вывод, с Быт 29:23–25, 30) и «муж» по словам Лии (Быт 29:32; 30:20); пометка «по словам Лии» — только на втором',
+        why: 'Рецензия библеиста на 07 ред. 5, № 86: пометка у всего союза говорила, что брак держится только на словах Лии, а повествователь его называет (очередь Д3-9)',
+        refs: ['Быт 29:32', 'Быт 30:20', 'Быт 32:22', 'Быт 33:1-2'],
+        actors: ['iakov', 'liya'],
+      };
+    },
+  },
+  {
+    // № 87: голос повествователя рядом со словами Авраама: «Сару, невестку свою» (Быт 11:31)
+    id: 'C44',
+    scope: ['kin:p-sarra|p-farra|невестка', 'origin:p-sarra|p-farra|father|p'],
+    run: ({ base, origin }) => {
+      if (base.kin.some((k) => k.from === 'p-sarra' && k.to === 'p-farra')) throw new Error('родство Сарры к Фарре уже есть');
+      const P = by('C44');
+      const i = base.kin.findIndex((k) => k.from === 'p-sarra' && k.to === 'p-avraam' && k.rel === 'сестра');
+      base.kin.splice(i + 1, 0, { from: 'p-sarra', to: 'p-farra', rel: 'невестка', refs: ['Быт 11:31'], prov: P });
+      const o = origin('p-sarra', 'p-farra', true);
+      o.note = 'Отцом её называет только Авраам: «она дочь отца моего, только не дочь матери моей» (Быт 20:12). Повествователь называет её невесткой Фарры: «Сару, невестку свою, жену Аврама, сына своего» (Быт 11:31); в Быт 11:29 отец Милки назван, отец Сары — нет';
+      o.prov = { ...o.prov, ...P };
+      return {
+        what: 'Сарра: родство словами повествователя «невестка» Фарры (Быт 11:31) рядом с «сестрой» по словам Авраама (Быт 20:12); у ребра Сарра ← Фарра — примечание с обоими голосами и Быт 11:29',
+        why: 'Рецензия библеиста на 07 ред. 5, № 87: стих повествователя с другим словом не был показан; для пометки «по словам» читатель должен видеть оба голоса (очередь Д3-9)',
+        refs: ['Быт 11:29', 'Быт 11:31', 'Быт 20:12'],
+        actors: ['sarra', 'farra', 'avraam'],
+      };
+    },
+  },
+  {
+    // № 84 (последним: по готовым записям лица, после C42–C44): в «прочитано» — только стихи, где названо это лицо, и только из его записей уровня «Писание» и «вывод»
+    id: 'C41',
+    scope: ['|silent'],
+    run: ({ base }) => {
+      const actors = new Map<string, Actor>(base.volumes.flatMap((v) => v.actors.map((a) => [a.id, a] as const)));
+      const own = ownRefs(base);
+      const cache = new Map<string, string[]>();
+      let changed = 0;
+      let dropped = 0;
+      let need = 0;
+      for (const n of base.nodata) {
+        if (n.kind !== 'silent') continue;
+        const a = actors.get(n.actor);
+        if (!a) throw new Error(`«нет сведений» у несуществующего лица ${n.actor}`);
+        if (!cache.has(a.id)) cache.set(a.id, namedVerses(a, own.get(a.id) ?? []));
+        const rs = cache.get(a.id)!;
+        const was = n.read ?? [];
+        const extra = was.filter((r) => !rs.includes(r));
+        if (rs.some((r) => !was.includes(r))) throw new Error(`${n.actor} § ${n.sec}: строгий список шире прежнего`);
+        if (!extra.length && !!rs.length === !n.needsReading) continue;
+        dropped += extra.length;
+        changed++;
+        if (rs.length) {
+          n.read = rs;
+          delete n.needsReading;
+        } else {
+          delete n.read;
+          n.needsReading = true;
+          need++;
+        }
+        n.prov = { ...n.prov, ...by('C41') };
+      }
+      return {
+        what: `«Писание молчит»: списки read очищены — только стихи, где названо это лицо, из его записей уровня «Писание» и «вывод». Изменено записей ${changed}, убрано ссылок на стихи ${dropped}; без списка (пометка «нужно чтение») — ${need}. Примечания («не смешивать с …», отождествления), указатель § 23 и толкования стиха лицу не дают (tools/base/own-verses.ts)`,
+        why: 'Рецензия библеиста на 07 ред. 5, № 84: у Захарии, сына Иодая, в read стояли Зах 1:1 и Лк 1:5 — стихи о пророке Захарии и об отце Иоанна; проверялось имя, а не лицо (очередь Д3-9)',
+        refs: ['2Пар 24:20', 'Зах 1:1', 'Лк 1:5'],
+        actors: [...new Set(base.nodata.filter((n) => n.prov?.by === 'исправление C41').map((n) => n.actor.slice(2)))],
       };
     },
   },

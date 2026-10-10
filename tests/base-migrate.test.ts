@@ -67,7 +67,7 @@ describe('перенос в базу', () => {
     // «Писание говорит» без слов стиха, слова не из стиха и прежний вид not-applicable ловит проверка базы (07 § 8.2)
     // «Писание молчит» без списка стихов — тоже ошибка (C38); здесь список собран шагом, чтобы ловились только подложенные
     const { base: b3, hints: h3 } = exact();
-    STEPS_D3.find((s) => s.id === 'C38')!.run(makeCtx(b3, h3));
+    for (const id of ['C38', 'C41']) STEPS_D3.find((s) => s.id === id)!.run(makeCtx(b3, h3));
     b3.nodata.push(
       { actor: 'p-adam', sec: 6, kind: 'scripture-says', refs: ['Быт 2:7'] },
       { actor: 'p-eva', sec: 6, kind: 'scripture-says', refs: ['Быт 2:22'], words: [{ text: 'создал Господь Бог из ребра Адама', ref: 'Быт 2:22' }] },

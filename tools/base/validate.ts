@@ -17,6 +17,7 @@ import type { Base } from './migrate.ts';
 import type { Actor, Cert, Prov } from './types.ts';
 import { admission, loadChecks, validateChecks } from './admit.ts';
 import { checkSourceIssues, issuesAt, KIND_WORD } from './source-issues.ts';
+import { namedVerses, ownRefs } from './own-verses.ts';
 import { validateRegistry } from './sources.ts';
 
 export interface Issue { level: 'error' | 'warn'; check: string; where: string; msg: string }
@@ -243,6 +244,8 @@ export function validate(base: Base): Issue[] {
     for (const k of ['offset', 'notAfter', 'notBefore']) has('целостность', `время ${c.actor}`, ch.born?.[k]?.from);
     for (const r of ch.reign ?? []) for (const s of r.sync ?? []) has('целостность', `время ${c.actor}`, s.with);
   }
+  const own = ownRefs(base);
+  const ownVerses = new Map<string, Set<string>>();
   for (const n of base.nodata) {
     const w = `нет сведений ${n.actor} § ${n.sec}`;
     has('целостность', w, n.actor);
@@ -252,13 +255,14 @@ export function validate(base: Base): Issue[] {
     // «Писание молчит» — со стихами, на которых держится вывод, или с пометкой «нужно чтение» (02 § 3.2; шаг C38)
     if (n.kind === 'silent') {
       if (!!n.read?.length === !!n.needsReading) err('нет сведений', w, '«Писание молчит» — либо со списком стихов (read), либо с пометкой «нужно чтение» (needsReading)');
+      // стих списка — из записей самого лица уровня «Писание» или «вывод», и лицо в нём названо (рецензия 07, № 84; C41)
       const a = actors.get(n.actor);
       if (a) {
-        const forms = (a.kind === 'unnamed' || a.kind === 'group') && a.descriptor ? [a.descriptor] : a.names.map((x) => x.form);
+        if (!ownVerses.has(a.id)) ownVerses.set(a.id, new Set(namedVerses(a, own.get(a.id) ?? [])));
+        const ok = ownVerses.get(a.id)!;
         for (const r of n.read ?? []) {
           if (!texts(w, r)) continue;
-          const joined = norm(mainTexts(w, r).join(' '));
-          if (!forms.some((f) => nameMatcher(f).test(joined))) err('нет сведений', w, `в стихе ${r} из списка «прочитано» лицо не названо`);
+          if (!ok.has(r)) err('нет сведений', w, `стих ${r} из списка «прочитано» — не стих этого лица: лицо в нём не названо или стих пришёл не из его записей уровня «Писание» и «вывод»`);
         }
       }
     } else if (n.read || n.needsReading) err('нет сведений', w, 'список «прочитано» и пометка «нужно чтение» — только у «Писание молчит»');

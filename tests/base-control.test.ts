@@ -214,10 +214,37 @@ describe('правки Д3 (сверка контрольного набора �
     }
     expect(base.unions.flatMap((u) => u.terms.map((t) => [u.id, t] as const)).filter(([, t]) => t.kind === 'marriage' && !t.word).map(([id]) => id)).toEqual([]);
   });
-  it('Иаков и Лия — «брак», слово «муж» по словам Лии (Быт 29:32; 30:20; C40)', () => {
+  it('Иаков и Лия — «жены» повествователя (Быт 32:22) и «муж» по словам Лии (Быт 29:32; 30:20); пометка — только на «муж» (C40, C43)', () => {
     const ts = base.unions.find((u) => u.id === 'u-iakov--liya')!.terms;
-    expect(ts.map((t) => [t.kind, t.word, t.cert, t.saidBy])).toEqual([['marriage', 'муж', undefined, { actor: 'p-liya', ref: 'Быт 29:32', label: 'по словам Лии' }]]);
-    expect(ts[0].refs).toEqual(expect.arrayContaining(['Быт 29:32', 'Быт 30:20']));
+    expect(ts.map((t) => [t.kind, t.word, t.cert, t.saidBy])).toEqual([
+      ['marriage', 'жена', 'inference', undefined],
+      ['marriage', 'муж', undefined, { actor: 'p-liya', ref: 'Быт 29:32', label: 'по словам Лии' }],
+    ]);
+    expect(ts[0].refs).toEqual(expect.arrayContaining(['Быт 32:22', 'Быт 33:1-2']));
+    expect(ts[1].refs).toEqual(['Быт 29:32', 'Быт 30:20']);
+  });
+  it('«в жену» у Агари, Валлы и Зелфы — один вид «служанка в жену»; у Валлы «наложница» — своим стихом (C42)', () => {
+    const terms = (id: string) => base.unions.find((u) => u.id === id)!.terms.map((t) => [t.kind, t.word, t.refs]);
+    const inWife = ['u-avraam--agar', 'u-iakov--valla', 'u-iakov--zelfa'].flatMap((id) => base.unions.find((u) => u.id === id)!.terms.filter((t) => t.word === 'в жену'));
+    expect(inWife.map((t) => t.kind)).toEqual(['maid-as-wife', 'maid-as-wife', 'maid-as-wife']);
+    expect(terms('u-iakov--valla')).toEqual([['maid-as-wife', 'в жену', ['Быт 30:4']], ['concubine', 'наложница', ['Быт 35:22']], ['marriage', 'жена', ['Быт 37:2']]]);
+    expect(terms('u-iakov--zelfa')).toEqual([['maid-as-wife', 'в жену', ['Быт 30:9']], ['marriage', 'жена', ['Быт 37:2']]]);
+    // во всей базе одно слово стиха — один вид
+    const kinds = new Map<string, Set<string>>();
+    for (const t of base.unions.flatMap((u) => u.terms)) if (t.word) kinds.set(t.word, (kinds.get(t.word) ?? new Set()).add(t.kind));
+    expect([...kinds].filter(([, k]) => k.size > 1).map(([w]) => w)).toEqual([]);
+  });
+  it('Сарра — «невестка» Фарры словами повествователя (Быт 11:31) рядом с «сестрой» по словам Авраама (C44)', () => {
+    expect(kin('p-sarra', 'p-farra').map((k) => [k.rel, k.refs, k.saidBy])).toEqual([['невестка', ['Быт 11:31'], undefined]]);
+    const i = base.kin.findIndex((k) => k.from === 'p-sarra' && k.rel === 'сестра');
+    expect(base.kin[i + 1].rel).toBe('невестка');
+    expect(base.origins.find((o) => o.child === 'p-sarra' && o.parent === 'p-farra')!.note).toContain('Быт 11:31');
+  });
+  it('«прочитано» — только стихи этого лица: у сына Иодая нет Зах 1:1, Лк 1:5, Мф 23:35 (C41)', () => {
+    const read = (id: string) => [...new Set(base.nodata.filter((n) => n.actor === id && n.kind === 'silent').flatMap((n) => n.read ?? []))];
+    const z = read('p-zakhariya-syn-iodaya');
+    expect(z).toContain('2Пар 24:20');
+    for (const r of ['Зах 1:1', 'Лк 1:5', 'Мф 23:35', 'Лк 11:51']) expect(z).not.toContain(r);
   });
   it('подложенные искажения новых полей ловит проверка базы', () => {
     const b: Base = structuredClone(base);
@@ -229,11 +256,13 @@ describe('правки Д3 (сверка контрольного набора �
     sk.saidBy = { actor: 'p-isaak', ref: 'Быт 20:11', label: 'по словам Исаака' }; // Исаак в Быт 20:11 не назван
     const so = b.origins.find((o) => o.child === 'p-sarra' && o.parent === 'p-farra')!;
     so.saidBy = { actor: 'p-avraam', ref: 'Быт 17:17', label: 'по словам Авраама' }; // не из главы стихов записи
-    u('u-iakov--liya').terms[0].saidBy = { actor: 'p-iakov', ref: 'Быт 29:32', label: 'по словам Иакова' }; // Иаков в Быт 29:32 не назван
+    u('u-iakov--liya').terms[1].saidBy = { actor: 'p-iakov', ref: 'Быт 29:32', label: 'по словам Иакова' }; // Иаков в Быт 29:32 не назван
     const m6 = b.nodata.find((n) => n.actor === 'p-marfa' && n.sec === 6 && n.kind === 'silent')!;
     delete m6.read;
     const m8 = b.nodata.find((n) => n.actor === 'p-marfa' && n.sec === 8 && n.kind === 'silent')!;
     m8.read = ['Быт 1:1'];
+    // стих тёзки из примечания «не смешивать» — не стих этого лица (C41)
+    b.nodata.find((n) => n.actor === 'p-zakhariya-syn-iodaya' && n.kind === 'silent')!.read!.push('Лк 1:5');
     const errs = validate(b).filter((i) => i.level === 'error').map((i) => [i.check, i.where]);
     expect(errs).toEqual(expect.arrayContaining([
       ['слово союза', 'u-filipp-brat-iroda--irodiada'],
@@ -244,6 +273,7 @@ describe('правки Д3 (сверка контрольного набора �
       ['по словам', 'u-iakov--liya'],
       ['нет сведений', 'нет сведений p-marfa § 6'],
       ['нет сведений', 'нет сведений p-marfa § 8'],
+      ['нет сведений', `нет сведений p-zakhariya-syn-iodaya § ${b.nodata.find((n) => n.actor === 'p-zakhariya-syn-iodaya' && n.kind === 'silent')!.sec}`],
     ]));
   }, 60_000);
 });
