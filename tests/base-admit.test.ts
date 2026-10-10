@@ -34,7 +34,10 @@ describe('загрузчик: происхождение файлов и рее�
     expect(base.files?.['lines/luke.json']?.status).toBe('draft');
     expect(Object.keys(base.files ?? {}).filter((f) => f.startsWith('actors/'))).toHaveLength(base.volumes.length);
     expect(base.sources?.some((s) => s.id === 'src-synodal')).toBe(true);
-    expect(base.checks).toEqual([]);
+    // журнал подписей живой: в нём бывают настоящие подписи второго ключа;
+    // проверяем, что он загружен и ни одна подпись не устарела
+    expect(Array.isArray(base.checks)).toBe(true);
+    expect(validateChecks(base)).toEqual([]);
   });
 
   it('загрузчик работает из папки с пробелами и русскими буквами', () => {
