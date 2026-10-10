@@ -1,4 +1,4 @@
-// Замер 09 § 6.4: поиск по тексту Писания простым проходом по 31 170 стихам. Запуск: node docs/app/data/09-составитель/поиск-проход.mjs tools/bible/synodal.tsv
+// Редакция 1 (устарело): подстрока, а не основы — рецензия данных на 09, № 3. Действующий замер — поиск-формы.ts.
 import { readFileSync } from 'node:fs';
 const t = readFileSync(process.argv[2], 'utf8').split('\n').map(l => l.split('\t')).filter(r => r.length > 1);
 const norm = s => s.toLowerCase().replace(/ё/g, 'е');
