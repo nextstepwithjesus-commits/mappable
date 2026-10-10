@@ -70,6 +70,8 @@ export function buildIndex(base: Base, level: Level | Admission) {
       ...(o.reading && { rs: o.reading.set, ri: o.reading.in }), ...(o.cert !== 'scripture' && { ce: o.cert }), ...(o.order !== undefined && { or: o.order }),
       ...(o.skipped && { sk: o.skipped.actors.map(short) }), ...(o.outsideLists && { ol: 1 }),
       ...(o.saidBy && { sb: saidBy(o.saidBy) }),
+      // тождество конца ребра (Р4-8, Р5-2): «предположительно» схема не рисует, у ребёнка — строка с примечанием и стихами
+      ...(o.identity && { id: { o: o.identity.of, d: o.identity.degree, n: o.identity.note, r: o.identity.refs } }),
     })),
     unions: base.unions.filter(ok).map((u) => ({ u, terms: u.terms.filter((t) => A.part(t)) })).filter((x) => x.terms.length)
       .map(({ u, terms }) => ({ h: short(u.husband), w: short(u.wife), k: [...new Set(terms.map((t) => t.kind))] })),
@@ -95,7 +97,8 @@ export function buildCards(base: Base, level: Level | Admission) {
     const cards: Record<string, unknown> = {};
     for (const a of v.actors) {
       if (!A.ok(a)) continue;
-      const facts = a.facts.filter((f) => A.ok(f) || (excludedFacts++, false));
+      // толкование без авторов (needsSources) читателю не показывается (R9 Г-2, Г-4; Р5-1)
+      const facts = a.facts.filter((f) => (A.ok(f) && !f.needsSources) || (excludedFacts++, false));
       const nod = base.nodata.filter((n) => n.actor === a.id && A.ok(n)).map((n) => ({ s: n.sec, k: n.kind, ...(n.what && { w: n.what }), ...(n.refs.length && { r: n.refs }), ...(n.words && { q: n.words }) }));
       cards[a.id.slice(2)] = { f: facts.map((f) => ({ s: f.sec, f: f.field, v: f.value, ...(f.cert && { c: f.cert }) })), ...(nod.length && { nd: nod }) };
     }

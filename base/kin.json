@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data",
-   "commit": "4cb54b6"
+   "commit": "57d4584"
   }
  },
  "sources": [
@@ -51,11 +51,11 @@
     "from": {
      "vol": "04-abraham.json"
     },
-    "by": "исправление C33"
+    "by": "исправление C49"
    },
    "saidBy": {
     "actor": "p-avraam",
-    "ref": "Быт 20:11",
+    "ref": "Быт 20:12",
     "label": "по словам Авраама"
    }
   },

@@ -35,7 +35,7 @@ describe('контрольный набор', () => {
   it('Сарра — «сестра» словами Авраама (Быт 20:12)', () => {
     expect(kin('p-sarra', 'p-avraam').map((k) => [k.rel, k.refs])).toEqual([['сестра', ['Быт 20:12']]]);
     // пометка «по словам Авраама» — и у родства, и у ребра к Фарре (02 § 3.6; шаг C33)
-    const said = { actor: 'p-avraam', ref: 'Быт 20:11', label: 'по словам Авраама' };
+    const said = { actor: 'p-avraam', ref: 'Быт 20:12', label: 'по словам Авраама' }; // C49: стих самих слов (Р4-11)
     expect(kin('p-sarra', 'p-avraam')[0].saidBy).toEqual(said);
     expect(base.origins.filter((o) => o.child === 'p-sarra' && o.parent === 'p-farra').map((o) => o.saidBy)).toEqual([said]);
   });
@@ -46,7 +46,9 @@ describe('контрольный набор', () => {
   it('Иуда и Фамарь — союз без брака: описан в Быт 38:18, браком не назван', () => {
     const u = unionsOf('p-iuda').find((x) => x.wife === 'p-famar')!;
     // вид «союз без брака» (02 § 3.2; решение координатора по сверке Д3, № 3); стихи — где названа Фамарь, и стих союза
-    expect(u.terms.map((t) => [t.kind, t.cert, t.word, t.refs])).toEqual([['non-marital', 'inference', 'вошел к ней', ['Быт 38:18', 'Руф 4:12', '1Пар 2:4', 'Мф 1:3']]]);
+    // союз сказан — «Писание»; «без брака» — вывод по своим стихам (03 ред. 5, Р4-2; C48)
+    expect(u.terms.map((t) => [t.kind, t.cert, t.word, t.refs])).toEqual([['non-marital', 'scripture', 'вошел к ней', ['Быт 38:18', 'Руф 4:12', '1Пар 2:4', 'Мф 1:3']]]);
+    expect(u.terms[0].notMarriage).toMatchObject({ cert: 'inference', refs: ['Быт 38:15', 'Быт 38:16', 'Быт 38:26'] });
     expect(u.terms[0].note).toContain('Быт 38:18');
     expect(u.terms[0].note).not.toContain('сам союз текст не называет');
   });
@@ -299,7 +301,8 @@ describe('очередь Д3-11: рёбра уровня «толкование�
   it('(б) основание только в толковании — ребра нет, понимание в примечании; Молехеф — «сестра» Галаада', () => {
     for (const [c, p] of [['p-starshaya-doch-lota', 'p-zhena-lota'], ['p-lorukhama', 'p-osiya-prorok'], ['p-ionafan-syn-girsama', 'p-girsam'], ['p-efan-ezrakhityanin', 'p-makhol'], ['p-kimgam', 'p-verzelliy-galaadityanin']]) {
       expect([c, edge(c, p)]).toEqual([c, []]);
-      expect(A.get(c)!.facts.some((f) => f.field === 'notes' && f.cert === 'interpretation' && JSON.stringify(f.value).includes('совет источников'))).toBe(true);
+      // понимание без авторов — для совета источников, читателю не показывается (Р5-1; C50)
+      expect(A.get(c)!.facts.some((f) => f.field === 'notes' && f.cert === 'interpretation' && f.needsSources)).toBe(true);
     }
     expect(edge('p-starshaya-doch-lota', 'p-lot')).toHaveLength(1);
     expect(kin('p-molekhef', 'p-galaad-syn-makhira').map((k) => [k.rel, k.cert])).toEqual([['сестра', 'inference']]);

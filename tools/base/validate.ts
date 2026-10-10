@@ -28,7 +28,7 @@ export const UNION_WORDS: Record<string, string[]> = {
   concubine: ['наложница'],
   'maid-as-wife': ['в жену', 'служанка'],
   redemption: [],
-  'non-marital': ['вошел к ней'],
+  'non-marital': ['вошел к ней', 'спала'],
   'not-stated': [],
 };
 
@@ -189,6 +189,12 @@ export function validate(base: Base): Issue[] {
       if (!(t.kind in UNION_WORDS)) err('союз', u.id, `неизвестный вид союза «${t.kind}»`);
       else if (t.word && !UNION_WORDS[t.kind].includes(t.word)) err('союз', u.id, `слово «${t.word}» не подходит к виду «${t.kind}»`);
       walk(u.id, t);
+      // «союз без брака»: союз — уровень обозначения, «без брака» — вывод по своим стихам (03 ред. 5, § 3.2; C48)
+      if (t.kind === 'non-marital') {
+        if (!t.notMarriage?.refs.length || t.notMarriage.cert !== 'inference') err('союз', u.id, '«союз без брака» — с полем «без брака» (notMarriage): вывод по своим стихам');
+        if (t.cert === 'interpretation') err('союз', u.id, '«союз без брака» уровня «толкование»');
+      } else if (t.notMarriage) err('союз', u.id, 'поле «без брака» — только у вида «союз без брака»');
+      if (/сам союз текст не называет/.test(t.note ?? '') && t.kind !== 'not-stated') err('союз', u.id, 'примечание «сам союз текст не называет» у союза, который текст описывает');
       // слово текста — из стиха (02 § 3.2; сверка Д3, № 4): хотя бы в одном стихе обозначения; стих без слова — замечание
       if (t.word) {
         const miss = t.refs.filter((r) => !unionWordIn(t.word!, mainTexts(u.id, r).join(' ')));
@@ -321,8 +327,11 @@ export function validate(base: Base): Issue[] {
       continue;
     }
     if (!/^по словам /.test(sb.label ?? '')) err('по словам', w, `пометка «${sb.label}» — не «по словам …»`);
-    const joined = norm(mainTexts(w, sb.ref).join(' '));
-    if (!who.names.some((n) => nameMatcher(n.form).test(joined))) err('по словам', w, `говорящий ${sb.actor} не назван в ${sb.ref}`);
+    // стих пометки — стих самих слов; говорящий назван в нём или не дальше двух стихов выше (Быт 20:11–12; Р4-11)
+    const pr = parseRef(sb.ref, bible.chapterLength);
+    const v0 = pr?.verses[0];
+    const around = v0 ? [0, 1, 2].map((d) => v0.verse - d).filter((n) => n > 0).map((n) => scriptureText(v0.book, v0.chapter, n) ?? '') : [];
+    if (!who.names.some((n) => nameMatcher(n.form).test(norm(around.join(' '))))) err('по словам', w, `говорящий ${sb.actor} не назван в ${sb.ref} и двух стихах выше`);
     const ch = (r: string) => r.replace(/:.*$/, '');
     if (!x.refs.some((r) => ch(r) === ch(sb.ref))) err('по словам', w, `стих говорящего ${sb.ref} не из главы стихов записи (${x.refs.join('; ')})`);
   }
@@ -340,6 +349,7 @@ export function validate(base: Base): Issue[] {
       const q = f.prov?.status === 'quarantine';
       if (!rs.length && !q) err('стих', w, 'утверждение без стиха и не в карантине');
       if (f.cert === 'reference' && !q && !(f.value as any)?.source) err('справочно', w, 'справочное без источника и не в карантине');
+      if (f.needsSources && f.cert !== 'interpretation') err('толкование', w, 'пометка «нужен совет источников» — только у толкования');
       if (f.field === 'met') has('целостность', w, (f.value as any).id);
       if (!q) addRefs(a.id, rs);
     }
