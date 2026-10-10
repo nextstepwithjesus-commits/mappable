@@ -6,7 +6,7 @@ import { buildBase } from '../tools/base/migrate.ts';
 
 describe('сборка для приложения', () => {
   it('индекс — не больше 200 КБ в gzip', () => {
-    const s = JSON.stringify(buildIndex(buildBase()));
+    const s = JSON.stringify(buildIndex(buildBase(), 'probe'));
     expect(gzipSync(s, { level: 9 }).length).toBeLessThanOrEqual(BUDGET_INDEX_GZ);
   }, 60_000);
 });

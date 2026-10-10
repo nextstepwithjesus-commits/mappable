@@ -14,7 +14,9 @@ import { parseRef, verseId } from '../../src/engine/books.ts';
 import { norm, nameMatcher } from '../../src/engine/text.ts';
 import { scriptureText } from './brackets.ts';
 import type { Base } from './migrate.ts';
-import type { Actor, Cert } from './types.ts';
+import type { Actor, Cert, Prov } from './types.ts';
+import { admission, loadChecks, validateChecks } from './admit.ts';
+import { checkSourceIssues, issuesAt, KIND_WORD } from './source-issues.ts';
 
 export interface Issue { level: 'error' | 'warn'; check: string; where: string; msg: string }
 
@@ -22,22 +24,32 @@ const ROOT = join(import.meta.dirname, '..', '..');
 const CERTS = new Set<Cert>(['scripture', 'inference', 'interpretation', 'calc', 'reference']);
 
 export function loadBase(dir = join(ROOT, 'base')): Base {
-  const items = (f: string) => JSON.parse(readFileSync(join(dir, f), 'utf8')).items;
+  // происхождение каждого файла хранится: статус записи без своего prov берётся у файла (02 § 3.1; Д-база, Б-1, п. 3)
+  const files: Record<string, Prov> = {};
+  const read = (rel: string) => {
+    const j = JSON.parse(readFileSync(join(dir, rel), 'utf8'));
+    if (j.prov) files[rel] = j.prov;
+    return j;
+  };
+  const items = (f: string) => read(f).items;
   const volumes = readdirSync(join(dir, 'actors')).filter((f) => f.endsWith('.json')).sort().map((f) => {
-    const v = JSON.parse(readFileSync(join(dir, 'actors', f), 'utf8'));
+    const v = read(`actors/${f}`);
     return { vol: v.vol, file: f, title: v.title, scope: v.scope, actors: v.items };
   });
   const lines: Record<string, any> = {};
   for (const f of readdirSync(join(dir, 'lines')).filter((f) => f.endsWith('.json')).sort()) {
-    const { schema: _s, prov: _p, ...l } = JSON.parse(readFileSync(join(dir, 'lines', f), 'utf8'));
+    const { schema: _s, prov: _p, ...l } = read(`lines/${f}`);
     lines[f.replace(/\.json$/, '')] = l;
   }
-  const { schema: _s, title: _t, prov: _p, ...anchors } = JSON.parse(readFileSync(join(dir, 'anchors.json'), 'utf8'));
+  const { schema: _s, title: _t, prov: _p, ...anchors } = read('anchors.json');
   return {
     volumes, lines, anchors,
     unions: items('unions.json'), origins: items('origins.json'), kin: items('kin.json'), readings: items('readings.json'),
     areas: items('areas.json'), memberships: items('memberships.json'), chrono: items('chrono.json'), nodata: items('nodata.json'),
     redirects: items('redirects.json'), corrections: items('corrections.json'), epochs: items('epochs.json'),
+    files,
+    sources: existsSync(join(dir, 'sources.json')) ? items('sources.json') : [],
+    checks: loadChecks(dir),
   };
 }
 
@@ -66,6 +78,12 @@ export function validate(base: Base): Issue[] {
           err('стих', where, `нет стиха ${verseId(v)} (из «${ref}»)`);
           out = null;
           break;
+        }
+        // пустой стих электронного текста (Пс 114:9): ссылка на него — ошибка с причиной из таблицы дефектов (Д3-4)
+        if (!t.trim()) {
+          const why = issuesAt(v.book, v.chapter, v.verse).filter((r) => r.kind === 'empty' || r.kind === 'merge');
+          err('дефект текста', where, `стих ${verseId(v)} (из «${ref}») пуст в электронном тексте` +
+            (why.length ? `: ${why.map((r) => `${KIND_WORD[r.kind]} — ${r.what}`).join('; ')}` : ' и не записан в tools/bible/source-issues.tsv'));
         }
         out.push(t);
       }
@@ -428,6 +446,12 @@ export function validate(base: Base): Issue[] {
   scan('области', base.areas);
   for (const a of actors.values()) scan(a.id, a.facts.filter((f) => f.field === 'met'));
 
+  // ---------- дефекты электронного текста: каждый пустой стих записан в таблице (страж против замены файла; Д3-4) ----------
+  for (const m of checkSourceIssues()) err('дефект текста', 'tools/bible/source-issues.tsv', m);
+
+  // ---------- подписи проверки: отпечаток записи и входов совпадает (02 § 3.1; Д3-2) ----------
+  for (const x of validateChecks(base)) err('проверка', x.where, x.msg);
+
   // ---------- стоп-список предания: утверждения, а не имена (02, § 7) ----------
   stopList(base, actors, err);
   return issues;
@@ -490,6 +514,9 @@ async function main() {
   if (fresh || !existsSync(join(ROOT, 'base', 'origins.json'))) {
     const { buildBase } = await import('./migrate.ts');
     base = buildBase();
+    // реестр и подписи живут на диске отдельно от переноса
+    if (existsSync(join(ROOT, 'base', 'sources.json'))) base.sources = JSON.parse(readFileSync(join(ROOT, 'base', 'sources.json'), 'utf8')).items;
+    base.checks = loadChecks();
   } else base = loadBase();
   const issues = validate(base);
   const errors = issues.filter((i) => i.level === 'error');
@@ -504,6 +531,8 @@ async function main() {
   if (process.argv.includes('--warn')) for (const x of warns.slice(0, show)) console.log(`замечание [${x.check}] ${x.where}: ${x.msg}`);
   const n = base.volumes.reduce((s, v) => s + v.actors.length, 0);
   console.log(`лиц ${n}; ошибок ${errors.length} (${by(errors)}); замечаний ${warns.length} (${by(warns)})`);
+  const c = admission(base, 'release').counts.all;
+  console.log(`записей: проверено ${c.checked}, черновик ${c.draft}, карантин ${c.quarantine}; подпись устарела ${c.stale}; допущено в выпуск ${c.admitted}`);
   if (errors.length) process.exit(1);
 }
 

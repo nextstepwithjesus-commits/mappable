@@ -16,8 +16,8 @@ import { pathToFileURL } from 'node:url';
 import { execSync } from 'node:child_process';
 import { join } from 'node:path';
 import type {
-  Actor, ActorKind, Assertion, Area, BaseFile, ChronoRecord, Correction, KinTerm, Membership, Name, NoData, Origin,
-  Prov, ReadingSet, Redirect, Union, UnionTerm,
+  Actor, ActorKind, Assertion, Area, BaseFile, CheckEntry, ChronoRecord, Correction, KinTerm, Membership, Name, NoData, Origin,
+  Prov, ReadingSet, Redirect, Source, Union, UnionTerm,
 } from './types.ts';
 import { applyCorrections, makeCtx, STEPS, type Step } from './corrections.ts';
 import { ADDITIONS } from './additions.ts';
@@ -73,6 +73,15 @@ export interface Base {
   lines: Record<string, any>;
   epochs: any[];
   anchors: any;
+  /**
+   * Происхождение файлов base/ по умолчанию (02 § 3.1: у файла — значение по умолчанию, у записи — уточнение): путь от
+   * base/ («actors/04-abraham.json», «origins.json», «lines/luke.json») → prov файла. Нет — как у переноса: черновик.
+   */
+  files?: Record<string, Prov>;
+  /** Реестр источников base/sources.json. */
+  sources?: Source[];
+  /** Журнал подписей проверки base/checks.json (Д3-2). */
+  checks?: CheckEntry[];
 }
 
 export const pid = (old: string) => `p-${old}`;

@@ -29,6 +29,7 @@
     "base": "tsx tools/base/migrate.ts",
     "base:validate": "tsx tools/base/validate.ts",
     "base:bundle": "tsx tools/base/bundle.ts",
+    "base:mark": "tsx tools/base/checks.ts",
     "map": "python3 -I tools/docs/map.py",
     "find": "python3 -I tools/docs/find.py",
     "docs:check": "python3 -I tools/docs/check.py"

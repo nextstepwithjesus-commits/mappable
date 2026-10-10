@@ -15,6 +15,12 @@
 
 Не проверяются: цитаты с адресом перед ними, адрес без названия книги,
 адрес дальше 60 знаков; форма имени в строке без кавычек.
+
+Дефекты электронного текста (tools/bible/source-issues.tsv, этап Д3-4): если
+в адресе цитаты есть стих из таблицы (пустой Пс 114:9, склейка Пс 114:8,
+скобка через несколько стихов — Нав 24:34–36 и др.), под цитатой печатается
+«ПОМЕТКА» с причиной; ненайденная цитата из пустого стиха получает причину.
+Пометка — не ошибка: число ненайденных от неё не меняется.
 """
 import re, sys
 
@@ -23,6 +29,29 @@ TEXT = {}
 for line in open('tools/bible/synodal.tsv', encoding='utf-8'):
     b, c, v, t = line.rstrip('\n').split('\t', 3)
     TEXT[(b, int(c), int(v))] = t
+KIND_WORD = {'empty': 'стих пуст', 'merge': 'вероятная склейка стихов', 'open-bracket': 'скобка не закрыта',
+             'span-bracket': 'скобка через несколько стихов', 'bracket-shape': 'форма скобки под вопросом'}
+ISSUES = []
+for k, line in enumerate(open('tools/bible/source-issues.tsv', encoding='utf-8')):
+    if k == 0 or not line.strip():
+        continue
+    b, c, v1, v2, kind, what, todo, _by, state = line.rstrip('\n').split('\t')
+    ISSUES.append((b, int(c), int(v1), int(v2), kind, what, state))
+
+
+def issues_in(units):
+    """Дефекты, которые касаются стихов адреса: список строк без повторов."""
+    out = []
+    for u in units:
+        for (b, c, v) in u:
+            for (ib, ic, i1, i2, kind, what, state) in ISSUES:
+                if ib == b and ic == c and i1 <= v <= i2:
+                    r = f'{KIND_WORD[kind]} ({ib} {ic}:{i1}' + (f'–{i2}' if i2 != i1 else '') + f'): {what} [{state}]'
+                    if r not in out:
+                        out.append(r)
+    return out
+
+
 BOOKS = sorted({k[0] for k in TEXT}, key=len, reverse=True)
 BOOK_RE = '|'.join(re.escape(b[0] + ' ' + b[1:]) if b[0].isdigit() else re.escape(b) for b in BOOKS)
 BOOK_RE += '|' + '|'.join(re.escape(b) for b in BOOKS if b[0].isdigit())
@@ -90,7 +119,7 @@ def found(q, unit):
 
 
 quotes = [(m.start(), m.end(), m.group(1)) for m in re.finditer(r'«([^«»]{3,}?)»', flat)]
-checked = failed = 0
+checked = failed = noted = 0
 chain = []
 for k, (a, z, q) in enumerate(quotes):
     nxt = quotes[k + 1][0] if k + 1 < len(quotes) else len(flat)
@@ -114,15 +143,23 @@ for k, (a, z, q) in enumerate(quotes):
         failed += 1
         print(f'НЕТ СТИХА  {missing}  ← «{qs[0][:60]}»')
         continue
+    notes = issues_in(units)
     if len(qs) == 1:
         bad = [u for u in units if not found(qs[0], u)]
         if bad:
             failed += 1
             print(f'НЕ НАЙДЕНО  «{qs[0][:90]}»  ← {where}' + ('' if len(bad) == len(units) else '  (не во всех стихах)'))
+        elif notes:
+            print(f'ПОМЕТКА  «{qs[0][:90]}»  ← {where}')
     else:
         bad_q = [x for x in qs if not any(found(x, u) for u in units)]
         bad_u = [u for u in units if not any(found(x, u) for x in qs)]
         if bad_q or bad_u:
             failed += 1
             print(f'ЦЕПОЧКА НЕ СХОДИТСЯ  {["«"+x[:40]+"»" for x in bad_q]}  ← {where}')
-print(f'Проверено цитат: {checked}; не найдено: {failed}')
+        elif notes:
+            print(f'ПОМЕТКА  {["«"+x[:40]+"»" for x in qs]}  ← {where}')
+    for n in notes:
+        noted += 1
+        print(f'    ! {n}')
+print(f'Проверено цитат: {checked}; не найдено: {failed}' + (f'; пометок дефектов текста: {noted}' if noted else ''))
