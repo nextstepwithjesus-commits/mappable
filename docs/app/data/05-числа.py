@@ -1,4 +1,4 @@
-"""Числа документа 05 «География» (редакция 2.1).
+"""Числа документа 05 «География» (редакция 3).
 
 Запуск из корня репозитория:
     python3 -I docs/app/data/05-числа.py
@@ -14,7 +14,11 @@
       потоки основы — если задан файл рек Natural Earth (ne_10m_rivers_lake_centerlines.geojson);
   Г — цвет карты: ступени высот, отмывка, контраст подписей, знаков и линий (WCAG 2.x);
       считается всегда, внешних файлов не нужно.
-Копий OpenBible и Natural Earth в репозитории нет (02, § 5); без пути части Б и В не считаются.
+  Д — редакция 3 (по копии OpenBible): группы знаков при целях 24 px (мышь) и 44 px (касание),
+      общая карта всех мест, фильтры по книгам и главам, геометрия OpenStreetMap и внешние номера,
+      расстояния и дни пути из текста, первый экран по компонентам 08.
+Копий OpenBible и Natural Earth в репозитории нет (02, § 5); по умолчанию они берутся из папки inputs/,
+если она есть; без файлов части Б, В и Д не считаются.
 
 Скобки: основание факта — слова вне скобок и слова мест вида «б» (gloss) и «г» (damage),
 сверенных с подлинником по tools/bible/brackets.tsv (02, § 3.8; tools/base/brackets.ts).
@@ -157,15 +161,18 @@ place_ids = sum(1 for f in glob.glob('base/*.json')
                 for _ in re.finditer(r'"l-[a-z0-9-]+"', open(f, encoding='utf-8').read()))
 print(f'номеров мест «l-…» в base/*.json: {place_ids}')
 src = json.load(open('base/sources.json', encoding='utf-8'))['items']
-geo_src = [s['id'] for s in src if s['id'] in
-           ('src-openbible-geo', 'src-awmc', 'src-natural-earth', 'src-pleiades')]
-print(f'источники мест и карт в реестре: {geo_src}')
+geo_src = [s for s in src if s['id'] in
+           ('src-openbible-geo', 'src-awmc', 'src-natural-earth', 'src-pleiades', 'src-osm', 'src-etopo',
+            'src-copernicus')]
+print('источники мест и карт в реестре (SPDX; надпись обязательна; делиться на тех же условиях): '
+      + '; '.join(f"{s['id']} {s.get('spdx', '—')}, {'да' if s.get('attributionRequired') else 'нет'}, "
+                  f"{'да' if s.get('shareAlike') else 'нет'}" for s in geo_src))
 for want in ('etopo', 'copernicus', 'openstreetmap'):
     hit = [s['id'] for s in src if want in json.dumps(s, ensure_ascii=False).lower()]
     print(f'  упоминание "{want}" в реестре: {hit or "нет"}')
 ple = [s for s in src if s['id'] == 'src-pleiades']
 if ple:
-    print(f'  Pleiades в реестре: лицензия {ple[0].get("license", "—")}')
+    print(f'  Pleiades в реестре: SPDX {ple[0].get("spdx", "—")}; где прочитана лицензия: {ple[0].get("licenseSource", "—")}')
 
 camps = [(v, basis_text(('Чис', 33, v))) for v in range(5, 50)]
 n_vs = sum(1 for _, t in camps if 'станом' in t)
@@ -295,6 +302,15 @@ FORMS = [
     ('Деян 27:5', 'переплыв море против Киликии и Памфилии'), ('Деян 27:5', 'Миры Ликийские'),
     ('Деян 27:7', 'поровнявшись с Книдом'), ('Деян 27:7', 'подплыли к Криту при Салмоне'),
     ('Деян 27:8', 'Пробравшись же с трудом мимо него'), ('Деян 27:16', 'Клавдой'),
+    # редакция 3: эскиз 11.9 (Нав 15), имена со временем (§ 16), дни пути (§ 17)
+    ('Нав 15:3', 'Кадес-Варне'), ('Нав 15:3', 'Аддар'), ('Нав 15:7', 'Ен-Шемеш'), ('Нав 15:7', 'Ен-Рогел'),
+    ('Нав 15:27', 'Хацар-Гадда'), ('Нав 15:39', 'Лахис'), ('Нав 15:49', 'иначе Давир'), ('Нав 15:7', 'Давиру'),
+    ('Нав 15:63', 'Иерусалима'), ('Нав 15:13', 'иначе Хеврон'), ('Суд 18:29', 'Лаис'),
+    ('Нав 19:47', 'назвали Ласем Даном'), ('Суд 19:10', 'Иевусу, что ныне Иерусалим'),
+    ('Нав 15:8', 'Иевуса, который есть Иерусалим'), ('Быт 35:19', 'Ефрафу, то есть Вифлеем'),
+    ('Быт 28:19', 'прежнее имя того города было: Луз'), ('Суд 1:26', 'нарек имя ему Луз'),
+    ('Втор 1:2', 'от Хорива'), ('Втор 1:2', 'Кадес-Варни'), ('Езд 7:9', 'из Вавилона'), ('Езд 7:9', 'в Иерусалим'),
+    ('Деян 20:6', 'из Филипп'), ('Деян 20:6', 'в Троаду'), ('Чис 33:8', 'пустынею Ефам'),
 ]
 bad = [(r, f) for r, f in FORMS if norm(f) not in norm(basis_text(ref(r)))]
 print(f'форм названий эскизов и таблицы трудных случаев: {len(FORMS)}; '
@@ -683,13 +699,13 @@ for title, nm in SKETCH.items():
 # Отрезки эскизов по правилу § 3.5 (географ, № 4): вид линии считается и сверяется с эскизом.
 # Конец отрезка: (запись сводки или None, вид: point / land / water / direction / anchored).
 SEGMENTS = [  # (эскиз, стих перехода или None, откуда, куда, линия в эскизе)
-    ('11.1', 'Быт 11:31', ('Ur 1', 'point'), ('Haran', 'point'), 'пунктир'),
-    ('11.1', 'Быт 12:5', ('Haran', 'point'), ('Shechem', 'point'), 'пунктир'),
-    ('11.1', 'Быт 12:8', ('Shechem', 'point'), ('Bethel 1', 'point'), 'пунктир'),
+    ('11.1', 'Быт 11:31', ('Ur 1', 'point'), ('Haran', 'point'), 'сплошная'),
+    ('11.1', 'Быт 12:5', ('Haran', 'point'), ('Shechem', 'point'), 'сплошная'),
+    ('11.1', 'Быт 12:8', ('Shechem', 'point'), ('Bethel 1', 'point'), 'сплошная'),
     ('11.1', 'Быт 12:10', ('Bethel 1', 'point'), ('Egypt', 'land'), 'нет'),
     ('11.1', 'Быт 13:3', (None, 'direction'), ('Bethel 1', 'point'), 'нет'),
-    ('11.1', 'Быт 13:18', ('Bethel 1', 'point'), ('Mamre', 'point'), 'пунктир'),
-    ('11.1', 'Быт 20:1', ('Mamre', 'point'), ('Gerar', 'point'), 'пунктир'),
+    ('11.1', 'Быт 13:18', ('Bethel 1', 'point'), ('Mamre', 'point'), 'сплошная'),
+    ('11.1', 'Быт 20:1', ('Mamre', 'point'), ('Gerar', 'point'), 'сплошная'),
     ('11.1', None, ('Gerar', 'point'), ('Beersheba 1', 'point'), 'нет'),
     ('11.1', 'Быт 22:3', ('Beersheba 1', 'point'), ('Moriah', 'land'), 'нет'),
     ('11.1', 'Быт 22:19', ('Moriah', 'land'), ('Beersheba 1', 'point'), 'нет'),
@@ -698,24 +714,24 @@ SEGMENTS = [  # (эскиз, стих перехода или None, откуда
     ('11.2', 'Чис 33:6', ('Succoth 2', 'point'), ('Etham', 'point'), 'нет'),
     ('11.2', 'Чис 33:7', ('Etham', 'point'), ('Migdol 1', 'point'), 'нет'),
     ('11.2', 'Чис 33:8', ('Migdol 1', 'point'), ('Marah', 'point'), 'нет'),
-    ('11.2', 'Чис 33:9', ('Marah', 'point'), ('Elim', 'point'), 'точечная'),
+    ('11.2', 'Чис 33:9', ('Marah', 'point'), ('Elim', 'point'), 'сплошная'),
     ('11.2', 'Чис 33:10', ('Elim', 'point'), ('Red Sea 3', 'water'), 'нет'),
     ('11.2', 'Чис 33:11', ('Red Sea 3', 'water'), ('Sin', 'land'), 'нет'),
     ('11.2', 'Чис 33:12', ('Sin', 'land'), ('Dophkah', 'point'), 'нет'),
-    ('11.2', 'Чис 33:13', ('Dophkah', 'point'), ('Alush', 'point'), 'точечная'),
-    ('11.2', 'Чис 33:14', ('Alush', 'point'), ('Rephidim', 'point'), 'точечная'),
-    ('11.2', 'Чис 33:15', ('Rephidim', 'point'), ('Mount Sinai', 'anchored'), 'точечная'),
-    ('11.5', 'Деян 13:4', ('Antioch 1', 'point'), ('Seleucia', 'point'), 'пунктир'),
+    ('11.2', 'Чис 33:13', ('Dophkah', 'point'), ('Alush', 'point'), 'сплошная'),
+    ('11.2', 'Чис 33:14', ('Alush', 'point'), ('Rephidim', 'point'), 'сплошная'),
+    ('11.2', 'Чис 33:15', ('Rephidim', 'point'), ('Mount Sinai', 'anchored'), 'сплошная'),
+    ('11.5', 'Деян 13:4', ('Antioch 1', 'point'), ('Seleucia', 'point'), 'сплошная'),
     ('11.5', 'Деян 13:4', ('Seleucia', 'point'), ('Salamis', 'point'), 'по морю'),
-    ('11.5', 'Деян 13:6', ('Salamis', 'point'), ('Paphos', 'point'), 'пунктир'),
+    ('11.5', 'Деян 13:6', ('Salamis', 'point'), ('Paphos', 'point'), 'сплошная'),
     ('11.5', 'Деян 13:13', ('Paphos', 'point'), ('Perga', 'point'), 'по морю'),
-    ('11.5', 'Деян 13:14', ('Perga', 'point'), ('Antioch 2', 'point'), 'пунктир'),
-    ('11.5', 'Деян 13:51', ('Antioch 2', 'point'), ('Iconium', 'point'), 'пунктир'),
-    ('11.5', 'Деян 14:6', ('Iconium', 'point'), ('Lystra', 'point'), 'пунктир'),
-    ('11.5', 'Деян 14:20', ('Lystra', 'point'), ('Derbe', 'point'), 'пунктир'),
-    ('11.5', 'Деян 14:21', ('Derbe', 'point'), ('Lystra', 'point'), 'пунктир'),
-    ('11.5', 'Деян 14:24', ('Antioch 2', 'point'), ('Perga', 'point'), 'пунктир'),
-    ('11.5', 'Деян 14:25', ('Perga', 'point'), ('Attalia', 'point'), 'пунктир'),
+    ('11.5', 'Деян 13:14', ('Perga', 'point'), ('Antioch 2', 'point'), 'сплошная'),
+    ('11.5', 'Деян 13:51', ('Antioch 2', 'point'), ('Iconium', 'point'), 'сплошная'),
+    ('11.5', 'Деян 14:6', ('Iconium', 'point'), ('Lystra', 'point'), 'сплошная'),
+    ('11.5', 'Деян 14:20', ('Lystra', 'point'), ('Derbe', 'point'), 'сплошная'),
+    ('11.5', 'Деян 14:21', ('Derbe', 'point'), ('Lystra', 'point'), 'сплошная'),
+    ('11.5', 'Деян 14:24', ('Antioch 2', 'point'), ('Perga', 'point'), 'сплошная'),
+    ('11.5', 'Деян 14:25', ('Perga', 'point'), ('Attalia', 'point'), 'сплошная'),
     ('11.5', 'Деян 14:26', ('Attalia', 'point'), ('Antioch 1', 'point'), 'по морю'),
 ]
 
@@ -731,7 +747,7 @@ def rule_line(verse, a, b, declared):
         return 'нет'
     if declared == 'по морю' and re.search(r'отплы', basis_text(ref(verse)).lower()):
         return 'по морю'
-    return 'точечная' if 'предположительно' in degs else 'пунктир'
+    return 'сплошная'   # 08 ред. 3.2 § 3.6: путь — прямые сплошные отрезки; неуверенность несёт знак места
 
 
 mism = [f'{sk} {a[0] or a[1]} → {b[0]}: в эскизе {d}, по правилу {rule_line(v, a, b, d)}'
@@ -758,15 +774,15 @@ def simple_line(chain, shown):
         elif 'нет' in kinds:
             line = 'нет'
         else:
-            line = 'точечная' if 'точечная' in kinds else 'пунктир'
+            line = 'сплошная'
         out.append((part[0][2][0], part[-1][3][0], len(skipped), line))
     return out
 
 
 # стоянки цепочки: 0 Мерра (4), 1 Елим (5), 2 у моря (6), 3 пустыня Син (7), 4 Дофка (8), 5 Алуш (9),
 # 6 Рефидим (10), 7 пустыня Синайская у горы (11); простой слой — 4, 5, 7, 10, 11
-SIMPLE_11_2 = [('Marah', 'Elim', 'точечная'), ('Elim', 'Sin', 'нет'), ('Sin', 'Rephidim', 'нет'),
-               ('Rephidim', 'Mount Sinai', 'точечная')]
+SIMPLE_11_2 = [('Marah', 'Elim', 'сплошная'), ('Elim', 'Sin', 'нет'), ('Sin', 'Rephidim', 'нет'),
+               ('Rephidim', 'Mount Sinai', 'сплошная')]
 got = simple_line(CHAIN_11_2, [0, 1, 3, 6, 7])
 bad_s = [f'{a} → {b}: в эскизе {d}, по правилу {g[3]}' for (a, b, d), g in zip(SIMPLE_11_2, got) if g[3] != d]
 print(f'простой слой 11.2: отрезков {len(got)} — ' + '; '.join(f'{a} → {b} (пропущено {k}): {ln}' for a, b, k, ln in got)
@@ -929,6 +945,181 @@ if rv:
     print(f'реки Natural Earth 10m в ядре (29–34,5° с. ш., 33,5–37,5° в. д.): {dict(found)}; '
           f'виды объектов во всём файле: {cla}; Арнон, Заред, Иавок, Кедрон и др. — найдено: {hit or "нет"}')
 
+# ================================================================ часть Д. Редакция 3 (В-25, В-26)
+print('\n=== Часть Д. Редакция 3: цели по способу ввода, общая карта, фильтры, выгрузка, расстояния ===')
+# Д1. Порог группы — цель способа ввода (08 ред. 3.2 § 3.5): мышь 24 px, касание 44 px
+for title, nm in VIEWS.items():
+    for wn, (W, H) in WINDOWS.items():
+        s, z = fit(nm, W, H)
+        g24 = groups(nm, s, 24)
+        g44 = groups(nm, s, 44)
+        b24 = [sorted(x) for x in g24 if len(x) > 1]
+        b44 = [sorted(x) for x in g44 if len(x) > 1]
+        print(f'[Д1 {title} | {wn}] z{z:.1f}; групп при 24 px (мышь): {len(g24)}'
+              + (f' — слиты: {b24}' if b24 else '') + f'; при 44 px (касание): {len(g44)}'
+              + (f' — слиты: {b44}' if b44 else ''))
+for a, b in (('Bethel 1', 'Ai 1'), ('Mamre', 'Hebron'), ('Gerar', 'Beersheba 1'), ('Shechem', 'Bethel 1'),
+             ('Perga', 'Attalia')):
+    d = math.hypot(merc(*P(a))[0] - merc(*P(b))[0], merc(*P(a))[1] - merc(*P(b))[1])
+    print(f'  Д1 {a} — {b}: 24 px с уровня z{math.log2(24 / d * 2 * math.pi / 256):.1f}; '
+          f'44 px — с z{math.log2(44 / d * 2 * math.pi / 256):.1f}')
+
+# Д2. Общая карта всех мест: вид записи по полю types сводки, знак по порядку правил § 3.3
+WATER_T = {'river', 'body of water', 'wadi', 'canal'}
+LAND_T = {'region', 'natural area', 'mountain range', 'people group', 'valley'}
+
+
+def kind_all(r):
+    t = set(r.get('types') or [])
+    if t & {'special'} and not (t - {'special'}):
+        return 'special'
+    if t & WATER_T:
+        return 'water'
+    if t & LAND_T and not (t & {'settlement', 'mountain', 'hill', 'spring', 'well'}):
+        return 'land'
+    return 'point'
+
+
+allk = collections.Counter()
+signed = []
+for r in rows:
+    k = kind_all(r)
+    d = degree(r)[0]
+    if k != 'point':
+        allk[k] += 1
+    elif d == 'не установлено':
+        allk['точка: не установлено'] += 1
+    elif rival(r):
+        allk['точка: соперники'] += 1
+    else:
+        allk['знак: ' + d] += 1
+        signed.append(r)
+print('Д2 общая карта, все записи сводки по виду и знаку (вид — по полю types): '
+      + '; '.join(f'{k} {v}' for k, v in sorted(allk.items())))
+print(f'Д2 знаков на общей карте: {len(signed)} из {len(rows)}; без знака (в списке): {len(rows) - len(signed)}')
+BBOX = (29.0, 24.0, 48.5, 38.5)   # от Нила до Ура и Ниневии
+inb = [r for r in signed if best_point(r) and BBOX[0] <= best_point(r)[0] <= BBOX[2] and BBOX[1] <= best_point(r)[1] <= BBOX[3]]
+pts_all = {r['friendly_id']: best_point(r)[:2] for r in inb}
+
+
+def fit_pts(ps, W, H):
+    xs = [merc(*p)[0] for p in ps]
+    ys = [merc(*p)[1] for p in ps]
+    s = min((W - 2 * PAD) / (max(xs) - min(xs)), (H - 2 * PAD) / (max(ys) - min(ys)))
+    return s, math.log2(s * 2 * math.pi / 256)
+
+
+def nverses(r):
+    ex = json.loads(r['extra']) if isinstance(r.get('extra'), str) else (r.get('extra') or {})
+    return len(ex.get('osises', []))
+
+
+def greedy_groups(items, s, gap):
+    """Группы, как у supercluster (MapLibre): знаки по убыванию числа стихов; каждый свободный знак
+    забирает свободные знаки ближе gap px. Возвращает (знаков и групп, одиночных, самая большая группа)."""
+    xy = {n: (merc(*p)[0] * s, -merc(*p)[1] * s) for n, p, _ in items}
+    order = [n for n, _, _ in sorted(items, key=lambda t: -t[2])]
+    cellmap = collections.defaultdict(list)
+    for n in order:
+        cellmap[(int(xy[n][0] // gap), int(xy[n][1] // gap))].append(n)
+    taken, sizes = set(), []
+    for n in order:
+        if n in taken:
+            continue
+        taken.add(n)
+        size = 1
+        cx, cy = int(xy[n][0] // gap), int(xy[n][1] // gap)
+        for dx in (-1, 0, 1):
+            for dy in (-1, 0, 1):
+                for m in cellmap.get((cx + dx, cy + dy), []):
+                    if m not in taken and math.hypot(xy[n][0] - xy[m][0], xy[n][1] - xy[m][1]) < gap:
+                        taken.add(m)
+                        size += 1
+        sizes.append(size)
+    return len(sizes), sum(1 for x in sizes if x == 1), max(sizes)
+
+
+items = [(r['friendly_id'], best_point(r)[:2], nverses(r)) for r in inb]
+ps = [p for _, p, _ in items]
+for wn, (W, H) in (('ноутбук, карта 912×612', (912, 612)), ('телефон 360×384', (360, 384))):
+    s, z = fit_pts([(BBOX[0], BBOX[1]), (BBOX[2], BBOX[3])], W, H)
+    for gap in (24, 44):
+        n, single, mx = greedy_groups(items, s, gap)
+        print(f'Д2 общая карта, окно Нил — Месопотамия | {wn}: z{z:.1f}; знаков в окне {len(ps)}; '
+              f'при {gap} px — {n} знаков и групп (одиночных {single}, самая большая группа {mx})')
+    # в окне ядра (Ханаан и Заиорданье)
+core = [t for t in items if 34.0 <= t[1][0] <= 36.6 and 30.5 <= t[1][1] <= 33.4]
+for wn, (W, H) in (('ноутбук, карта 912×612', (912, 612)),):
+    s, z = fit_pts([(34.0, 30.5), (36.6, 33.4)], W, H)
+    for gap in (24, 44):
+        n, single, mx = greedy_groups(core, s, gap)
+        print(f'Д2 окно ядра (Ханаан и Заиорданье) | {wn}: z{z:.1f}; знаков {len(core)}; при {gap} px — '
+              f'{n} знаков и групп (одиночных {single}, самая большая {mx})')
+
+# Д3. Фильтр «книга, глава» (как OpenBible: «Genesis 10 — 22 places»), нумерация ESV — справочно
+NT_OSIS = {'Matt', 'Mark', 'Luke', 'John', 'Acts', 'Rom', '1Cor', '2Cor', 'Gal', 'Eph', 'Phil', 'Col', '1Thess',
+           '2Thess', '1Tim', '2Tim', 'Titus', 'Phlm', 'Heb', 'Jas', '1Pet', '2Pet', '1John', '2John', '3John',
+           'Jude', 'Rev'}
+RU = {'Gen': 'Быт', 'Exod': 'Исх', 'Num': 'Чис', 'Deut': 'Втор', 'Josh': 'Нав', 'Judg': 'Суд', '1Sam': '1 Цар',
+      '2Sam': '2 Цар', '1Kgs': '3 Цар', '2Kgs': '4 Цар', '1Chr': '1 Пар', '2Chr': '2 Пар', 'Isa': 'Ис',
+      'Jer': 'Иер', 'Ezek': 'Иез', 'Matt': 'Мф', 'Mark': 'Мк', 'Luke': 'Лк', 'John': 'Ин', 'Acts': 'Деян',
+      'Neh': 'Неем', 'Ezra': 'Езд'}
+bybook, bychap = collections.defaultdict(set), collections.defaultdict(set)
+testament = collections.Counter()
+for r in rows:
+    ex = json.loads(r['extra']) if isinstance(r.get('extra'), str) else (r.get('extra') or {})
+    bs = set()
+    for o in ex.get('osises', []):
+        b, c = o.split('.')[:2]
+        bybook[b].add(r['friendly_id'])
+        bychap[(b, int(c))].add(r['friendly_id'])
+        bs.add('НЗ' if b in NT_OSIS else 'ВЗ')
+    testament['+'.join(sorted(bs)) or 'без стихов'] += 1
+print('Д3 мест по Заветам (стихи сводки): ' + '; '.join(f'{k} {v}' for k, v in sorted(testament.items())))
+print('Д3 мест по книгам: ' + '; '.join(f'{RU.get(b, b)} {len(bybook[b])}' for b in
+                                         ('Gen', 'Exod', 'Num', 'Josh', '1Sam', '2Kgs', 'Isa', 'Jer', 'Matt', 'Luke', 'John', 'Acts')))
+top = sorted(bychap.items(), key=lambda kv: -len(kv[1]))[:6]
+print('Д3 главы с наибольшим числом мест (нумерация ESV): ' + '; '.join(f'{RU.get(b, b)} {c} — {len(v)}' for (b, c), v in top))
+signed_ids = {r['friendly_id'] for r in signed}
+for b, c in (('Josh', 15), ('Gen', 12), ('Acts', 27)):
+    ids = bychap[(b, c)]
+    cnt = collections.Counter(degree(byname[n])[0] if n in signed_ids else 'без знака' for n in ids)
+    print(f'Д3 фильтр «{RU[b]} {c}»: мест {len(ids)}; со знаком {len(ids) - cnt["без знака"]} — '
+          + ', '.join(f'{d} {cnt[d]}' for d in DEG[:3]) + f'; без знака {cnt["без знака"]}')
+print('Д3 по виду места (поле types, первая метка): ' + '; '.join(
+    f'{k} {v}' for k, v in collections.Counter((r.get("types") or ["?"])[0] for r in rows).most_common(8)))
+
+# Д4. Выгрузка: чья геометрия у точки и внешние номера
+osm = sum(1 for r in rows if r.get('geometry_credit') == 'osm')
+osm_s = sum(1 for r in signed if r.get('geometry_credit') == 'osm')
+wd = sum(1 for r in rows if any(re.fullmatch(r'Q\d+', str(v.get('id', ''))) for v in (r.get('linked_data') or {}).values()))
+ple = sum(1 for r in rows if 'pleiades' in json.dumps(r.get('linked_data') or {}).lower()
+          or 'pleiades' in json.dumps(r.get('identifications') or []).lower())
+print(f'Д4 записей с геометрией OpenStreetMap (geometry_credit = osm): {osm} из {len(rows)}; среди мест со знаком — '
+      f'{osm_s} из {len(signed)}; с номером Wikidata: {wd}; со ссылкой на Pleiades: {ple}')
+
+# Д5. Расстояния (расч., по прямой) и дни пути, названные текстом, — проверка модели времени пути
+for a, b, verse, said in (('Mount Sinai', 'Kadesh-barnea', 'Втор 1:2', 11),
+                          ('Babylon 1', 'Jerusalem', 'Езд 7:9', None),
+                          ('Philippi', 'Troas', 'Деян 20:6', 5)):
+    km = hav(P(a), P(b))
+    tail = f'; текст: {said} дней — по прямой {km / said:.0f} км в день' if said else '; текст: четыре месяца (с первого дня первого месяца до первого дня пятого)'
+    print(f'Д5 [{verse}] {a} ({degree(byname[a])[0]} {degree(byname[a])[1]}) → {b} ({degree(byname[b])[0]} '
+          f'{degree(byname[b])[1]}): по прямой {km:.0f} км' + tail)
+km = hav(P('Haran'), P('Shechem'))
+print(f'Д5 модель «пешком, по прямой»: Харран → Сихем {km:.0f} км — при 20 / 25 / 30 км в день '
+      f'{km / 20:.0f} / {km / 25:.0f} / {km / 30:.0f} дней (расч., допущение)')
+
+# Д6. Первый экран ноутбука 1280×720 по компонентам 08 ред. 3.2
+H, head, tool = 720, 64, 48
+area = H - head - tool
+print(f'Д6 1280×720: шапка {head} + строка инструмента {tool} = {head + tool} px ({100 * (head + tool) / H:.0f} % окна; '
+      f'норма 08 § 3.4 — не больше 25 %); карта {1280 - 368}×{area} px; лист 368 px; '
+      f'строк списка мест в листе (шапка листа 104, строка 36): {(area - 104) // 36}')
+print(f'Д6 360×560: шапка 56, строка инструмента 56, шапка нижнего листа 112 — карта 360×{560 - 56 - 56 - 112} px; '
+      f'служебные полосы {100 * (56 + 56) / 560:.0f} % окна')
+
+
 # Морские отрезки (арт-директор, № 10): прямая по суше и путь по воде в обход суши
 ne = arg('--ne')
 if not ne:
@@ -1080,7 +1271,7 @@ ports = []
 for n in ('Antioch 1', 'Seleucia', 'Salamis', 'Paphos', 'Perga', 'Attalia', 'Sidon', 'Myra', 'Patara', 'Tyre'):
     d = to_water(*P(n))
     ports.append(f'{n} {d:.0f} км — ' + ('порт: к водному пути той же линией, что путь по морю' if d <= PORT_KM
-                                        else 'не у моря: пунктир по суше до воды'))
+                                        else 'не у моря: линия пути по суше до воды'))
 print(f'до воды (без запаса), порт — не дальше {PORT_KM} км: ' + '; '.join(ports))
 
 
