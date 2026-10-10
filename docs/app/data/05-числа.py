@@ -1,4 +1,4 @@
-"""Числа документа 05 «География» (редакция 3).
+"""Числа документа 05 «География» (редакция 4).
 
 Запуск из корня репозитория:
     python3 -I docs/app/data/05-числа.py
@@ -17,6 +17,9 @@
   Д — редакция 3 (по копии OpenBible): группы знаков при целях 24 px (мышь) и 44 px (касание),
       общая карта всех мест, фильтры по книгам и главам, геометрия OpenStreetMap и внешние номера,
       расстояния и дни пути из текста, первый экран по компонентам 08.
+  Е — редакция 4: правило 0 («другое имя» — без знака), не-имена, вид записи «сначала точка»,
+      подписи земель и воды, места вместо записей, окна документа, первое окно общей карты,
+      источник и точность координат, дни пути текста.
 Копий OpenBible и Natural Earth в репозитории нет (02, § 5); по умолчанию они берутся из папки inputs/,
 если она есть; без файлов части Б, В и Д не считаются.
 
@@ -474,6 +477,98 @@ for theme, steps, sh, ti in (('светлая', STEPS, SHADE_LIGHT, 0), ('тём
         c = cr(a, b)
         mark = '' if need <= 1 else (' ✓' if c >= need else f' — НИЖЕ {need}')
         print(f'  [{theme}] {name}: {a} / {b} = {c:.2f} : 1{mark}')
+
+# ---------------------------------------------------------------- Г4. Токены карты редакции 4 (арт-директор, ред. 3: № 1–4, 9; доступность № 9)
+def lab(h):
+    h = h.lstrip('#')
+    rgb = [int(h[i:i + 2], 16) / 255 for i in (0, 2, 4)]
+    lin = [c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4 for c in rgb]
+    X = (0.4124 * lin[0] + 0.3576 * lin[1] + 0.1805 * lin[2]) / 0.95047
+    Y = 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2]
+    Z = (0.0193 * lin[0] + 0.1192 * lin[1] + 0.9505 * lin[2]) / 1.08883
+    f = lambda t: t ** (1 / 3) if t > 0.008856 else 7.787 * t + 16 / 116
+    return 116 * f(Y) - 16, 500 * (f(X) - f(Y)), 200 * (f(Y) - f(Z))
+
+
+def grey(h):
+    h = h.lstrip('#')
+    r, g, b = (int(h[i:i + 2], 16) for i in (0, 2, 4))
+    return round(0.299 * r + 0.587 * g + 0.114 * b)
+
+
+def lighten(h, k):
+    h = h.lstrip('#')
+    return '#' + ''.join('%02X' % round(int(h[i:i + 2], 16) + (255 - int(h[i:i + 2], 16)) * k) for i in (0, 2, 4))
+
+
+def blend(top, bottom, a):
+    t, b = top.lstrip('#'), bottom.lstrip('#')
+    return '#' + ''.join('%02X' % round(int(t[i:i + 2], 16) * a + int(b[i:i + 2], 16) * (1 - a)) for i in (0, 2, 4))
+
+
+def deutan(h):
+    """Имитация дейтеранопии (Viénot, Brettel, Mollon 1999) в линейном sRGB."""
+    h = h.lstrip('#')
+    lin = [((int(h[i:i + 2], 16) / 255 + 0.055) / 1.055) ** 2.4 if int(h[i:i + 2], 16) / 255 > 0.04045
+           else int(h[i:i + 2], 16) / 255 / 12.92 for i in (0, 2, 4)]
+    r = 0.29275 * lin[0] + 0.70725 * lin[1]
+    g = 0.29275 * lin[0] + 0.70725 * lin[1]
+    b = -0.02234 * lin[0] + 0.02234 * lin[1] + lin[2]
+    enc = lambda c: 12.92 * c if c <= 0.0031308 else 1.055 * max(c, 0) ** (1 / 2.4) - 0.055
+    return '#' + ''.join('%02X' % round(max(0, min(1, enc(c))) * 255) for c in (r, g, b))
+
+
+dE = lambda a, b: math.dist(lab(a), lab(b))
+STEPS4 = STEPS
+STEPS4_DARK = [(n, L, C, H) for (n, _, C, H), L in zip(STEPS_DARK, (18, 20.5, 23, 25.5, 28, 30.5, 33))]
+SH4 = {'светлая': ((0.88, 0.78), 0.06), 'тёмная': ((0.80, 0.75), 0.04)}   # тень: низины → нагорья (воздушная перспектива); свет склона
+WATER4 = {'светлая': (lch(76, 9, 235), lch(72, 10, 235)), 'тёмная': (lch(7, 6, 240), lch(10, 7, 240))}  # заливка, полоса у берега
+HALO4 = {'светлая': ('#ECE1CF', 0.8), 'тёмная': ('#2E2C25', 0.8)}
+PATH4 = {'светлая': '#7A2E20', 'тёмная': '#F2B5A2'}  # проба «путь» для листа-образца (арт-директор № 9)
+LINE4 = {'подпись воды': ('#213F5A', '#9DBAD3'), 'река': ('#24496A', '#8DB4D4'), 'берег': ('#3F5F7A', '#7F93AB')}
+print('\n=== Часть Г4. Токены карты редакции 4 ===')
+for theme, steps, ti in (('светлая', STEPS4, 0), ('тёмная', STEPS4_DARK, 1)):
+    tints = [(n, lch(L, C, H)) for n, L, C, H in steps]
+    (k_lo, k_hi), k_li = SH4[theme]
+    ks = [k_lo + (k_hi - k_lo) * i / (len(tints) - 1) for i in range(len(tints))]
+    darkest = min((shade(h, k) for (_, h), k in zip(tints, ks)), key=lum)
+    lightest = max((lighten(h, k_li) for _, h in tints), key=lum)
+    water, band = WATER4[theme]
+    halo_c, halo_a = HALO4[theme]
+    ink, ink2 = T['чернила'][ti], T['чернила-2'][ti]
+    worst_bg = darkest if ti == 0 else lightest       # худший фон для тёмных букв — тёмный пиксель; для светлых — светлый
+    halo_on = blend(halo_c, worst_bg, halo_a)
+    print(f'[{theme}] ступени: ' + '; '.join(f'{n} {h} (L*{lab(h)[0]:.0f})' for n, h in tints))
+    print(f'[{theme}] шаг соседних ступеней ΔE76: ' + ', '.join(f'{dE(a[1], b[1]):.1f}' for a, b in zip(tints, tints[1:])))
+    print(f'[{theme}] вода {water} (L*{lab(water)[0]:.1f}), полоса у берега {band}; суша с отмывкой: самый тёмный {darkest} '
+          f'(L*{lab(darkest)[0]:.1f}), самый светлый {lightest} (L*{lab(lightest)[0]:.1f})')
+    dl = min(abs(lab(water)[0] - lab(h)[0]) for _, h in tints)
+    print(f'[{theme}] ΔL* воды к ближайшей ступени суши: {dl:.1f} (норма ≥ 5); '
+          f'ΔL* самого тёмного пикселя суши к воде: {lab(darkest)[0] - lab(water)[0]:.1f}'
+          + (' (норма ≥ 6)' if ti == 1 else ''))
+    gw = grey(water)
+    print(f'[{theme}] серый при печати: вода {gw}, ступени ' + ', '.join(str(grey(h)) for _, h in tints)
+          + f'; наименьшая разница воды и суши {min(abs(gw - grey(h)) for _, h in tints)} (норма ≥ 12)')
+    checks = [('чернила на ореоле (ореол цвета суши, 0,8, над худшим пикселем)', ink, halo_on, 4.5),
+              ('чернила-2 на ореоле', ink2, halo_on, 4.5),
+              ('чернила без ореола, худший пиксель суши', ink, worst_bg, 4.5),
+              ('чернила-2 без ореола, худший пиксель суши', ink2, worst_bg, 4.5),
+              ('подпись воды на воде', LINE4['подпись воды'][ti], water, 4.5),
+              ('подпись воды на полосе у берега', LINE4['подпись воды'][ti], band, 4.5),
+              ('знак (чернила), худший пиксель суши', ink, worst_bg, 3),
+              ('река, худший пиксель суши', LINE4['река'][ti], worst_bg, 3),
+              ('река, самый светлый пиксель суши', LINE4['река'][ti], lightest, 3),
+              ('берег (линия) на полосе у берега', LINE4['берег'][ti], band, 3),
+              ('путь «чернила», худший пиксель суши', ink, worst_bg, 3),
+              (f'проба «путь» {PATH4[theme]}, худший пиксель суши', PATH4[theme], worst_bg, 3),
+              (f'проба «путь» {PATH4[theme]}, самый светлый пиксель суши', PATH4[theme], lightest, 3),
+              ('кольцо выбора (чернила темы) к худшему пикселю суши', ink, worst_bg, 3)]
+    for name, a, b, need in checks:
+        c = cr(a, b)
+        print(f'  [{theme}] {name}: {a} / {b} = {c:.2f} : 1' + (' ✓' if c >= need else f' — НИЖЕ {need}'))
+    print(f'  [{theme}] проба «путь» при дейтеранопии: к жёлтому выбору ΔE {dE(deutan(PATH4[theme]), deutan(T["выбор"][ti])):.1f}, '
+          f'к воде ΔE {dE(deutan(PATH4[theme]), deutan(water)):.1f}, к чернилам ΔE {dE(deutan(PATH4[theme]), deutan(ink)):.1f}')
+
 
 # ================================================================ часть Б
 ob_path = arg('--openbible')
@@ -1060,7 +1155,7 @@ for wn, (W, H) in (('ноутбук, карта 912×612', (912, 612)),):
 NT_OSIS = {'Matt', 'Mark', 'Luke', 'John', 'Acts', 'Rom', '1Cor', '2Cor', 'Gal', 'Eph', 'Phil', 'Col', '1Thess',
            '2Thess', '1Tim', '2Tim', 'Titus', 'Phlm', 'Heb', 'Jas', '1Pet', '2Pet', '1John', '2John', '3John',
            'Jude', 'Rev'}
-RU = {'Gen': 'Быт', 'Exod': 'Исх', 'Num': 'Чис', 'Deut': 'Втор', 'Josh': 'Нав', 'Judg': 'Суд', '1Sam': '1 Цар',
+RU = {'Rev': 'Откр', 'Ezek': 'Иез', 'Gen': 'Быт', 'Exod': 'Исх', 'Num': 'Чис', 'Deut': 'Втор', 'Josh': 'Нав', 'Judg': 'Суд', '1Sam': '1 Цар',
       '2Sam': '2 Цар', '1Kgs': '3 Цар', '2Kgs': '4 Цар', '1Chr': '1 Пар', '2Chr': '2 Пар', 'Isa': 'Ис',
       'Jer': 'Иер', 'Ezek': 'Иез', 'Matt': 'Мф', 'Mark': 'Мк', 'Luke': 'Лк', 'John': 'Ин', 'Acts': 'Деян',
       'Neh': 'Неем', 'Ezra': 'Езд'}
@@ -1118,6 +1213,209 @@ print(f'Д6 1280×720: шапка {head} + строка инструмента {
       f'строк списка мест в листе (шапка листа 104, строка 36): {(area - 104) // 36}')
 print(f'Д6 360×560: шапка 56, строка инструмента 56, шапка нижнего листа 112 — карта 360×{560 - 56 - 56 - 112} px; '
       f'служебные полосы {100 * (56 + 56) / 560:.0f} % окна')
+
+
+# ================================================================ часть Е. Редакция 4 (панель на ред. 3)
+print('\n=== Часть Е. Редакция 4: правило 0, места вместо записей, подписи земель, окна документа, координаты ===')
+# Е1. Правило 0 (географ Р3-1; решение координатора 1): если лучшее предложение — «другое имя другой записи»
+# (id_source = ancient), у записи своего знака нет; строка «то же, что …». Тождество — Писание, только
+# если стих говорит «то есть», «иначе», «который есть», «прежде», «ныне» (слова вне скобок).
+SCRIPTURE_SAME = {  # запись сводки: (стих, слова тождества среди слов-оснований)
+    'Luz 1': ('Быт 28:19', 'прежнее имя того города было: Луз'),
+    'Ephrath': ('Быт 35:19', 'Ефрафу, то есть Вифлеем'),
+    'Jebus': ('Нав 18:28', 'Иевус, иначе Иерусалим'),
+    'Hazazon-tamar 2': ('2Пар 20:2', 'Хацацон-Фамаре, то есть в Енгедди'),
+    'Baalah 2': ('Нав 15:60', 'Кириаф-Ваал, иначе Кириаф-Иарим'),
+}
+for n, (v, w) in SCRIPTURE_SAME.items():
+    assert norm(w) in norm(basis_text(ref(v))), (n, v, w)
+NOT_NAME = {'Leb-kamai', 'Merathaim', 'Azazel'}   # в Синодальном тексте — не имя (Иер 51:1; 50:21; Лев 16:8)
+POINT_T = {'settlement', 'campsite', 'spring', 'well', 'mountain', 'hill', 'structure', 'gate', 'tree', 'altar',
+           'pool', 'district in settlement', 'fortification', 'rock', 'stone heap', 'cliff', 'promontory', 'island',
+           'hall', 'room', 'garden', 'field', 'mine', 'ford', 'mountain pass', 'road', 'mountain ridge'}
+
+
+def best_id(r):
+    ids = ids_of(r)
+    return ids[0] if ids else None
+
+
+def kind4(r):
+    """Вид записи (Р3-4): сначала признаки точки, потом вода, потом земля."""
+    t = set(r.get('types') or []) - {'special'}
+    if t & POINT_T:
+        return 'point'
+    if t & WATER_T:
+        return 'water'
+    if t & LAND_T:
+        return 'land'
+    return 'point'
+
+
+def status4(r):
+    n = r['friendly_id']
+    b = best_id(r)
+    if n in NOT_NAME or (b and b.get('id_source') == 'special' and clean(b['description']).startswith('not a')):
+        return 'не имя'
+    k = kind4(r)
+    if k == 'point' and b and b.get('id_source') == 'ancient' and degree(r)[1] >= 300:
+        return 'другое имя: Писание' if n in SCRIPTURE_SAME else 'другое имя: справочно или толк.'
+    d = degree(r)[0]
+    if k in ('water', 'land'):
+        if d == 'не установлено':
+            return f'{"вода" if k == "water" else "земля"}: не установлено — без подписи'
+        m = mod.get(b['id']) if b and b.get('id_source') == 'modern' else None   # точка другой записи — не подпись земли
+        own = m and m.get('type') not in ('settlement', 'archaeological site') and m.get('land_or_water') == ('water' if k == 'water' else 'land')
+        return f'{"вода" if k == "water" else "земля"}: ' + ('подпись' if own else 'точка подписи — от составителя')
+    if d == 'не установлено':
+        return 'точка: не установлено'
+    if rival(r):
+        return 'точка: соперники'
+    return 'знак: ' + d
+
+
+st4 = {r['friendly_id']: status4(r) for r in rows}
+c4 = collections.Counter(st4.values())
+print('Е1 записи сводки по правилам ред. 4: ' + '; '.join(f'{k} {v}' for k, v in sorted(c4.items())))
+was = {r['friendly_id'] for r in signed}
+lost = sorted(n for n in was if not st4[n].startswith('знак'))
+lost_c = collections.Counter(st4[n] for n in lost)
+print(f'Е1 знак снят у {len(lost)} записей из {len(was)} (ред. 3): ' + '; '.join(f'{k} {v}' for k, v in lost_c.items()))
+for n in ('Babylon 2', 'Babylon 3', 'Sheshach', 'Bochim', 'Beth-aven 2', 'Luz 1', 'Mount Horeb', 'Jebus', 'Moriah',
+          'Marah', 'Armageddon', 'Pishon', 'Gihon 1', 'Nod', 'Azazel', 'Egypt', 'Judea 1', 'Wilderness of Sinai'):
+    if n in byname:
+        b = best_id(byname[n])
+        tgt = byname.get(next((r['friendly_id'] for r in rows if r['id'] == (b or {}).get('id')), ''), {}).get('friendly_id', '')
+        print(f'  Е1 {n}: {st4[n]}' + (f' → {tgt}' if tgt else ''))
+# Е2. Места, а не записи (Р3-5): записи со знаком в одной точке — одно место на карте
+sign4 = [r for r in rows if st4[r['friendly_id']].startswith('знак')]
+pt = collections.defaultdict(list)
+for r in sign4:
+    bp = best_point(r)
+    pt[(round(bp[0], 4), round(bp[1], 4))].append(r['friendly_id'])
+multi = sorted(pt.values(), key=len, reverse=True)
+print(f'Е2 записей со знаком {len(sign4)}; разных точек (мест на карте) {len(pt)}; точек с двумя записями и больше '
+      f'{sum(1 for v in pt.values() if len(v) > 1)}; больше всего в одной точке: {len(multi[0])} — {", ".join(sorted(multi[0])[:8])}')
+deg4 = collections.Counter(degree(r)[0] for r in sign4)
+print('Е2 степени знаков ред. 4: ' + ', '.join(f'{d} {deg4[d]}' for d in DEG[:3]))
+# переход степени § 3.3 × статус ред. 4 (Р3-16)
+tr = collections.Counter((degree(r)[0], st4[r['friendly_id']].split(':')[0]) for r in rows)
+print('Е2 степень § 3.3 × статус ред. 4: ' + '; '.join(f'{d} → {s} {v}' for (d, s), v in sorted(tr.items())))
+# Е3. Окна документа (интерфейс № 1): ноутбук, рядом, телефон при трёх положениях листа, лёжа, врезка
+WIN4 = {'ноутбук 912×608': (912, 608), 'рядом 552×436': (552, 436), 'телефон, шапка листа 360×336': (360, 336),
+        'телефон, лист «половина» 360×168': (360, 168), 'телефон лёжа 272×208': (272, 208)}
+for title, nm in VIEWS.items():
+    if title.startswith('11.4'):
+        continue
+    for wn, (W, H) in WIN4.items():
+        s, z = fit(nm, W, H)
+        g24 = [sorted(x) for x in groups(nm, s, 24) if len(x) > 1]
+        g44 = [sorted(x) for x in groups(nm, s, 44) if len(x) > 1]
+        print(f'[Е3 {title} | {wn}] z{z:.1f}; рельеф ETOPO растянут на {max(0, z - min(ETOPO_Z, 8.0)):.1f} ур.; '
+              f'мышь 24 px: знаков и групп {len(groups(nm, s, 24))}' + (f', группы {g24}' if g24 else '')
+              + f'; касание 44 px: {len(groups(nm, s, 44))}' + (f', группы {g44}' if g44 else ''))
+s, z = fit(VIEWS['11.1 врезка «Ханаан»'], 400, 430)
+print(f'[Е3 врезка «Ханаан» 400×430] z{z:.1f}; 24 px: {[sorted(x) for x in groups(VIEWS["11.1 врезка «Ханаан»"], s, 24) if len(x) > 1]}; '
+      f'44 px: {[sorted(x) for x in groups(VIEWS["11.1 врезка «Ханаан»"], s, 44) if len(x) > 1]}')
+# Е4. Первое окно «Земель Библии» — ядро Ханаана и Заиорданья, по правилам ред. 4
+items4 = [(r['friendly_id'], best_point(r)[:2], nverses(r)) for r in sign4]
+core4 = [t for t in items4 if 34.0 <= t[1][0] <= 36.6 and 30.5 <= t[1][1] <= 33.4]
+for wn, (W, H) in (('ноутбук 912×608', (912, 608)), ('телефон 360×336', (360, 336))):
+    s, z = fit_pts([(34.0, 30.5), (36.6, 33.4)], W, H)
+    for gap in (24, 44):
+        n, single, mx = greedy_groups(core4, s, gap)
+        print(f'Е4 первое окно «Земель Библии» (ядро) | {wn}: z{z:.1f}; знаков {len(core4)}; при {gap} px — {n} знаков и групп '
+              f'(одиночных {single}, самая большая {mx})')
+# Е5. Координаты: источник и точность (НИ-1, НИ-2) у лучших точек мест со знаком
+cs = collections.Counter()
+pr = collections.Counter()
+for r in sign4:
+    ma = r['modern_associations']
+    m = mod[max(ma, key=lambda k: ma[k]['score'])]
+    cs[(m.get('coordinates_source') or {}).get('type') or 'не указан'] += 1
+    p = m.get('precision') or {}
+    pr[f"{p.get('description', '—')}" + (f" ({p['meters']} м)" if p.get('meters') else '')] += 1
+print('Е5 источник координат у мест со знаком: ' + '; '.join(f'{k} {v}' for k, v in cs.most_common()))
+print('Е5 точность у мест со знаком (первые 8): ' + '; '.join(f'{k} {v}' for k, v in pr.most_common(8)))
+allcs = collections.Counter((m.get('coordinates_source') or {}).get('type') or 'не указан' for m in mod.values())
+print(f'Е5 источник координат у всех {len(mod)} современных точек сводки: ' + '; '.join(f'{k} {v}' for k, v in allcs.most_common(10)))
+b = byname['Bethel 1']
+m = mod[max(b['modern_associations'], key=lambda k: b['modern_associations'][k]['score'])]
+lon, lat = map(float, m['lonlat'].split(','))
+print(f"Е5 пример копии: Вефиль — {m['friendly_id']}, широта {lat:.4f}, долгота {lon:.4f}; источник координат "
+      f"{m['coordinates_source']['type']} {m['coordinates_source']['id']}; точность: {m['precision']['description']}, "
+      f"{m['precision'].get('meters')} м")
+# Е6. Дни пути и меры текста (Р3-13): поиск по образцам среди слов-оснований
+PAT = re.compile(r'дн(?:я|ей|ь) пути|дневн\w* пут|на другой день|в следующий день|стади|субботнего пути|дн\w+ ходьбы')
+hits = [(k, t) for k, t in TEXT.items() if PAT.search(basis_text(k).lower())]
+print(f'Е6 стихов с днями пути и мерами пути (образцы: дня пути, на другой день, стадий, субботнего пути): {len(hits)}')
+for a2, b2, verse in (('Mount Sinai', 'Kadesh-barnea', 'Втор 1:2'), ('Beersheba 1', 'Mount Sinai', '3 Цар 19:8')):
+    for cand in [i for i in positive(byname[a2 if a2 == 'Mount Sinai' else b2])][:2]:
+        cp = id_point(cand)
+        other = P(b2 if a2 == 'Mount Sinai' else a2)
+        print(f'Е6 [{verse}] Хорив в точке {clean(cand["description"])} ({cand["score"]["time_total"]}) — '
+              f'{"Кадес-Варни" if a2 == "Mount Sinai" else "Вирсавия"}: по прямой {hav(cp, other):.0f} км')
+
+
+# Е7. Список общей карты — длинный указатель (доступность № 1): места (без «не имя» и «другое имя»),
+# группы по книге первого упоминания; книги больше 200 мест — по главам
+places4 = [r for r in rows if not st4[r['friendly_id']].startswith(('не имя', 'другое имя'))]
+OSIS_ORDER = ['Gen', 'Exod', 'Lev', 'Num', 'Deut', 'Josh', 'Judg', 'Ruth', '1Sam', '2Sam', '1Kgs', '2Kgs', '1Chr', '2Chr',
+              'Ezra', 'Neh', 'Esth', 'Job', 'Ps', 'Prov', 'Eccl', 'Song', 'Isa', 'Jer', 'Lam', 'Ezek', 'Dan', 'Hos', 'Joel',
+              'Amos', 'Obad', 'Jonah', 'Mic', 'Nah', 'Hab', 'Zeph', 'Hag', 'Zech', 'Mal', 'Matt', 'Mark', 'Luke', 'John',
+              'Acts', 'Rom', '1Cor', '2Cor', 'Gal', 'Eph', 'Phil', 'Col', '1Thess', '2Thess', '1Tim', '2Tim', 'Titus',
+              'Phlm', 'Heb', 'Jas', '1Pet', '2Pet', '1John', '2John', '3John', 'Jude', 'Rev']
+
+
+def first_ref(r):
+    ex = json.loads(r['extra']) if isinstance(r.get('extra'), str) else (r.get('extra') or {})
+    keys = [(OSIS_ORDER.index(o.split('.')[0]), int(o.split('.')[1]), int(o.split('.')[2])) for o in ex.get('osises', [])
+            if o.split('.')[0] in OSIS_ORDER]
+    return min(keys) if keys else None
+
+
+fb = collections.Counter()
+fc = collections.Counter()
+nofirst = 0
+for r in places4:
+    k = first_ref(r)
+    if not k:
+        nofirst += 1
+        continue
+    fb[OSIS_ORDER[k[0]]] += 1
+    fc[(OSIS_ORDER[k[0]], k[1])] += 1
+big = [(b, n) for b, n in fb.most_common() if n > 200]
+print(f'Е7 список общей карты: мест {len(places4)} (без «не имя» и «другое имя»); групп по книге первого упоминания {len(fb)}; '
+      f'без стихов в сводке {nofirst}; самые большие: ' + ', '.join(f'{RU.get(b, b)} {n}' for b, n in fb.most_common(5))
+      + f'; больше 200 — {", ".join(f"{RU.get(b, b)} {n}" for b, n in big) or "нет"}')
+for b, _ in big:
+    ch = sorted(((c, n) for (bb, c), n in fc.items() if bb == b), key=lambda x: -x[1])
+    print(f'Е7 {RU.get(b, b)} по главам первого упоминания: самая большая глава {ch[0][0]} — {ch[0][1]} мест; глав {len(ch)}')
+pos = [i for i, r in enumerate(sorted(places4, key=lambda r: first_ref(r) or (99, 0, 0)))]
+order = sorted(places4, key=lambda r: first_ref(r) or (99, 0, 0))
+for n in ('Jerusalem', 'Capernaum', 'Rome', 'Ephesus'):
+    i = next(i for i, r in enumerate(order) if r['friendly_id'] == n)
+    k = first_ref(order[i])
+    g = OSIS_ORDER[k[0]]
+    gi = [r for r in order if first_ref(r) and OSIS_ORDER[first_ref(r)[0]] == g]
+    print(f'Е7 {n}: строка {i + 1} общего порядка; в своей группе «{RU.get(g, g)}» — строка {gi.index(order[i]) + 1} из {len(gi)}')
+
+
+# Е8. Фильтр «Нав 15» по правилам ред. 4; пример «Измерить» вне пути лица; дни текста и допущение точки
+ids15 = bychap[('Josh', 15)]
+c15 = collections.Counter(st4[n].split(':')[0] if not st4[n].startswith('знак') else 'знак: ' + degree(byname[n])[0] for n in ids15)
+pl15 = [n for n in ids15 if not st4[n].startswith(('не имя', 'другое имя'))]
+print(f'Е8 фильтр «Нав 15» (ред. 4): записей {len(ids15)}; мест {len(pl15)}; ' + '; '.join(f'{k} {v}' for k, v in sorted(c15.items())))
+km = hav(P('Jerusalem'), P('Jericho 1'))
+print(f'Е8 «Измерить» Иерусалим — Иерихон: по прямой {km:.1f} км (точки: Jerusalem, Jericho 1); модель 20 / 25 / 30 км в день — '
+      f'{km / 20:.1f} / {km / 25:.1f} / {km / 30:.1f} дня (расч., допущение)')
+for verse, days, pairs in (('Втор 1:2', 11, (('Jebel Musa', 238), ('Har Karkom', 51))),):
+    pass
+for a2, other, verse, days in (('Mount Sinai', 'Kadesh-barnea', 'Втор 1:2', 11), ('Mount Sinai', 'Beersheba 1', '3 Цар 19:8', 40)):
+    for cand in positive(byname[a2])[:2]:
+        d = hav(id_point(cand), P(other))
+        print(f'Е8 [{verse}] при Хориве в точке {clean(cand["description"])} ({cand["score"]["time_total"]}): по прямой {d:.0f} км; '
+              f'{days} дней текста — {d / days:.1f} км в день по прямой (так зависит от допущения точки; не мерило скорости)')
 
 
 # Морские отрезки (арт-директор, № 10): прямая по суше и путь по воде в обход суши
