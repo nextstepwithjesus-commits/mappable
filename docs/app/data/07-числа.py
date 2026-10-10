@@ -407,3 +407,36 @@ def pages(pid, with_text, stories=31):
 
 for pid in ('p-david', 'p-irad'):
     print(f'Печать {pid}: «Только адреса» {pages(pid, False)} стр.; «С текстами стихов» {pages(pid, True)} стр.')
+
+# --- Редакция 6.1 ---
+# И6-1: первый экран ноутбука — блоки по порядку, открытые по умолчанию (простой слой: раздел 3 —
+# до 2 записей, остальные — до 3) занимают место своим содержимым; считаются заголовки, видимые целиком.
+print('--- редакция 6.1 ---')
+
+
+def first_blocks(pid, probe, limit=3):
+    h = first('ноутбук', probe)[0]
+    sec = recs(pid)
+    if any(pid in (u['husband'], u['wife']) for u in uni):
+        sec[7] = [80] * sum(1 for u in uni if pid in (u['husband'], u['wife']))
+    seen = 0
+    for n, lens in sorted(sec.items()):
+        if h + 44 > 720:
+            break
+        h += 44
+        seen += 1
+        cnt = len(refs[pid]) if n == 20 else len(lens)
+        if cnt > (2 if n == 3 else limit):
+            continue
+        for L in lens:
+            h += ((-(-L // 69) * 28 + 20) if n in QUOTE else (-(-(L + 12) // 77) * 24)) + 12
+    return seen
+
+
+for p in (False, True):
+    print(f'Первый экран ноутбук{" с плашкой пробы" if p else ""}, Давид, простой слой: заголовков блоков целиком —',
+          first_blocks('p-david', p))
+print('Записей с несколькими стихами (6 062) считаются по всем ссылкам значения записи вне карантина:',
+      'refs, ref, а у поля scripture — first и key (указатель раздела 20); диапазон — одна ссылка')
+print('Без указателя раздела 20 (поле scripture):',
+      sum(1 for f in shown if f['field'] != 'scripture' and (lambda a: (nrefs({k: v for k, v in f['value'].items() if k not in ('first', 'key')} if isinstance(f['value'], dict) else f['value'], a), len(a))[1])([]) > 1))
