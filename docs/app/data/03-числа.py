@@ -216,3 +216,155 @@ if len(sys.argv)>1:
 print('ancestor edges',sum(1 for o in O if o.get('parent') and o['kind']=='ancestor'),'ancestor-only persons',len(anc_only),'their ancestors',len({lpa[c][0] for c in anc_only}))
 print('gapSuspected edges',sum(1 for o in O if o.get('gapSuspected')),'gap edges with skipped list',[(nm(o['parent']),nm(o['child']),len(o['skipped']['actors'])) for o in O if o.get('skipped')])
 print('outside lists',[(nm(o['parent']),nm(o['child'])) for o in O if o.get('outsideLists')])
+# --- редакция 4 (В-25, В-26: отчёты, песочные часы, обзор, фильтр, источник ребра, выгрузка) ---
+print('== редакция 4')
+# 9. союзы «не назван» и «союз без брака» по видам
+kindsU=collections.Counter(t['kind'] for u in U for t in u['terms'])
+print('union term kinds',dict(kindsU))
+ns4=[u for u in U if any(t['kind']=='not-stated' for t in u['terms'])]
+nm4=[u for u in U if any(t['kind']=='non-marital' for t in u['terms'])]
+KINGS_MOTHERS={u['id'] for u in ns4 if 'king' in (A[u['husband']].get('roles') or [])}
+print('not-stated',len(ns4),'non-marital',len(nm4),[ (nm(u['husband']),nm(u['wife'])) for u in nm4])
+print('not-stated: husband is king',len(KINGS_MOTHERS),'others',[(nm(u['husband']),nm(u['wife']),u['terms'][0].get('cert')) for u in ns4 if u['id'] not in KINGS_MOTHERS])
+print('not-stated by cert',dict(collections.Counter(t.get('cert') for u in ns4 for t in u['terms'] if t['kind']=='not-stated')))
+# 10. источник у каждого ребра; уровни; «по словам»
+E=[o for o in O if o.get('parent')]
+print('edges',len(E),'with refs',sum(1 for o in E if o['refs']),'refs per edge',dict(sorted(collections.Counter(len(o['refs']) for o in E).items())),'refsShared',sum(1 for o in E if o.get('refsShared')))
+print('edge cert',dict(collections.Counter(o['cert'] for o in E)),'edge kinds',dict(collections.Counter(o['kind'] for o in E)))
+print('saidBy edges',[(nm(o['parent']),nm(o['child']),o['saidBy']['label'],o['saidBy']['ref']) for o in E if o.get('saidBy')],'saidBy union terms',[(nm(u['husband']),nm(u['wife']),t['saidBy']['label'],t['saidBy']['ref']) for u in U for t in u['terms'] if t.get('saidBy')])
+ie=[o for o in E if o['cert']=='interpretation']
+print('interpretation edges',len(ie),'kinds',dict(collections.Counter(o['kind'] for o in ie)),'children whose only parent edge is interpretation',len({o['child'] for o in ie}-{o['child'] for o in E if o['cert']!='interpretation'}))
+RS4={r['id']:r for r in RS}
+print('Lk 3:23 readings',[(r['id'],r['cert'],len(r.get('authors',[]))) for r in RS4['r-lk3-23']['readings']],'edge Илий->Мария exists',any(o['parent']=='p-iliy-syn-matfata' and o['child']=='p-mariya' for o in E))
+# 11. отчёты предков и потомков (прочтения по умолчанию; кровные «сказано» и «вывод», без «из сыновей» для предков)
+par4=collections.defaultdict(dict)
+for o in E:
+  if act(o) and o['primary'] and o['kind']=='natural' and o['cert'] in('scripture','inference'): par4[o['child']][o['role']]=o['parent']
+def ancestors(p):
+  gen={p:0}; st=[p]; out=collections.Counter()
+  while st:
+    x=st.pop()
+    for r,q in par4[x].items():
+      if q not in gen: gen[q]=gen[x]+1; st.append(q); out[gen[q]]+=1
+  return len(gen)-1,max(gen.values()),out
+for p in ['p-david','p-iosif-muzh-marii','p-iisus','p-mariya','p-ezdra','p-saul']:
+  n,g,out=ancestors(p); print('ancestors',nm(p),'persons',n,'generations',g)
+# предки Давида: сколько матерей названо
+def anc_set(p):
+  s=set(); st=[p]
+  while st:
+    x=st.pop()
+    for r,q in par4[x].items():
+      if q not in s: s.add(q); st.append(q)
+  return s
+sd=anc_set('p-david'); print('David ancestors women',sum(1 for x in sd if A[x].get('sex')=='f'),[nm(x) for x in sd if A[x].get('sex')=='f'])
+chd=collections.defaultdict(set)
+for o in E:
+  if act(o) and o['kind'] in('natural','ancestor') and o['cert'] in('scripture','inference'): chd[o['parent']].add(o['child'])
+def descendants(p):
+  gen={p:0}; st=[p]
+  while st:
+    x=st.pop()
+    for c in chd[x]:
+      if c not in gen or gen[c]>gen[x]+1: gen[c]=gen[x]+1; st.append(c)
+  return len(gen)-1,max(gen.values())
+for p in ['p-adam','p-noy','p-avraam','p-iakov','p-iuda','p-david','p-aaron']:
+  print('descendants',nm(p),descendants(p))
+# 12. песочные часы: Давид, 4 поколения вверх и 3 вниз
+def hour(p,up,down):
+  a={p}; fr={p}
+  for _ in range(up): fr={q for x in fr for q in par4[x].values()}; a|=fr
+  d=set(); fr={p}
+  for _ in range(down): fr={c for x in fr for c in chd[x]}; d|=fr
+  return len(a)-1,len(d)
+for p in ['p-david','p-avraam','p-iakov']: print('hourglass 4 up / 3 down',nm(p),hour(p,4,3))
+# 13. фильтр лиц
+print('filter: women in G',sum(1 for i in G if A[i].get('sex')=='f'),'named women (human)',sum(1 for i in G if A[i].get('sex')=='f' and A[i]['kind']=='human'),'unnamed',sum(1 for i in G if A[i]['kind']=='unnamed'),'peoples/clans/groups',sum(1 for i in G if A[i]['kind'] in('people','clan','group')))
+rc=collections.Counter(r for i in G for r in (A[i].get('roles') or []))
+print('filter: roles in G',dict(rc.most_common(12)))
+def refs_of(i):
+  s=[r for n in A[i]['names'] for r in n.get('refs',[])]
+  s+=[r for o in E if i in(o['child'],o['parent']) for r in o['refs']]
+  return s
+import re
+def chron19(r):
+  m=re.match(r'1Пар (\d+)',r); return bool(m and 1<=int(m.group(1))<=9)
+only19=[i for i in G if refs_of(i) and all(chron19(r) for r in refs_of(i))]
+print('filter: persons named only in 1 Chr 1-9',len(only19),'with any ref in 1 Chr 1-9',sum(1 for i in G if any(chron19(r) for r in refs_of(i))))
+print('filter: persons whose all parent edges are scripture',sum(1 for i in G if [o for o in E if o['child']==i] and all(o['cert']=='scripture' for o in E if o['child']==i)))
+print('prominence in G',dict(sorted(collections.Counter(A[i].get('prominence') for i in G).items(),key=lambda kv:str(kv[0]))))
+# 14. обзор всего леса: области с контуром — число лиц по родству и поколений
+for g in sorted(AR,key=lambda g:AR[g]['name']):
+  if contour(g):
+    f=AR[g]['founder']; f=f if isinstance(f,str) else (f[0] if f else None)
+    if f in A: n,d=descendants(f); print('overview area',AR[g]['name'],'founder',nm(f),'descendants by kinship',n,'generations',d,'members',own[g])
+# 15. GEDCOM: записи
+fam_father_only=len({kids[c]['father']['parent'] for c,x in kids.items() if 'father' in x and 'mother' not in x and x['father']['kind']=='natural'})
+fam_mother_only=len({x['mother']['parent'] for c,x in kids.items() if 'mother' in x and 'father' not in x})
+print('GEDCOM: INDI',len(G),'FAM from unions',len(U),'father-only families',fam_father_only,'mother-only families',fam_mother_only,'kin-only persons (ASSO)',len(kinonly-inG),'non-parent edges as NOTE/ASSO (ancestor, alternative, by-luke, legal, adoptive)',sum(1 for o in E if o['kind']!='natural'))
+# 16. ширины подписей редакции 4 (шкала 08 ред. 3.2: имя 14, подписи 12)
+if len(sys.argv)>1:
+  for s4 in ['В этих стихах мать не названа','мать не названа','браком не назван','союз без брака','по словам Авраама','Лука: «Илиев»','Показать ещё 6 детей','Ещё 6','у Матфея не названы','из потомков Каина']:
+    print('label r4 Golos 450 12px',round(g45(s4,12)),'| 14px',round(g45(s4,14)),'|',s4)
+  print('area label r4 КОЛЕНО РУВИМОВО Golos 500 12px tracking 0.12',round(g5('КОЛЕНО РУВИМОВО',12,0.12)))
+# 17. входы: число лиц на первом экране (из данных)
+def kids_all(p): return [c for c in kidsof[p]]
+adam=['p-adam','p-eva']+kids_all('p-adam')
+x='p-sif'
+while x!='p-noy':
+  nx=[c for c in kidsof[x] if c in lpa and lpa[c][0]==x]; x=[c for c in nx if row(c)[0]<=row('p-noy')[0] and 'p-noy' in (lambda s:s)(set([c]))|desc(c)][0]; adam.append(x)
+y='p-kain'; cain=[]
+for u in U:
+  if u['husband']=='p-kain': cain.append(u['wife'])
+while nm(y)!='Ламех':
+  y=kidsof[y][0]; cain.append(y)
+lam=y; cain+=[u['wife'] for u in U if u['husband']==lam]
+print('route Адам—Ной persons',len(set(adam+cain)),'Cain line',[nm(c) for c in cain],'Cain line end children',[nm(c) for c in kidsof[lam]])
+cain+=kidsof[lam]; print('route Адам—Ной with Lamech children',len(set(adam+cain)))
+noah=['p-noy']+[lpa['p-noy'][0]]+kidsof['p-noy']+[c for s in kidsof['p-noy'] for c in kidsof[s]]
+print('route Ной persons',len(set(noah)))
+tribes=['p-iakov']+[u['wife'] for u in U if u['husband']=='p-iakov']+kidsof['p-iakov']+kidsof.get('p-iosif',[])
+print('route 12 колен persons',len(set(tribes)),[nm(c) for c in kidsof.get('p-iosif',[])])
+ab=['p-farra']+kidsof['p-farra']+[u['wife'] for u in U if u['husband']=='p-avraam']+kidsof['p-avraam']+['p-revekka']+kidsof['p-isaak']+[u['wife'] for u in U if u['husband']=='p-iakov']+kidsof['p-iakov']
+print('route Авраам—Иаков persons',len(set(ab)))
+LJ=json.load(open('base/lines/joseph.json'))['persons']; LL=json.load(open('base/lines/luke.json'))['persons']
+ids=set(p['id'] for p in LJ)|set(p['id'] for p in LL)
+print('braid persons in both lines files',len(ids),'Mary in lines',('p-mariya' in ids),'Jesus in lines',('p-iisus' in ids),'omitted',sum(1 for p in LJ if p.get('flag')=='omitted-by-mt'))
+# 18. плотность первого экрана схемы (08 § 3.4, строка 77 § 15): шапка 64, строка инструмента 48 (мышь), описание перед схемой 64; поля 24; лист выбранного 368; шаг рядов 72; имя — медиана 52 px + промежуток 24
+for w,h in [(1280,800),(1280,720),(1024,768)]:
+  H=h-64-48-64; W=w-48
+  print('first screen',w,'x',h,': rows',H//72,'names per row',W//(52+24),'with side sheet',(W-368)//(52+24))
+# 19. образцы отчётов для эскизов § 10 (прочтения по умолчанию)
+def ahnen(p,maxn=12):
+  rows=[(1,0,p)]; q=[(1,0,p)]
+  while q:
+    n,g,x=q.pop(0)
+    for r,par_ in sorted(par4[x].items(),key=lambda kv: kv[0]!='father'):
+      m=2*n+(0 if r=='father' else 1); rows.append((m,g+1,par_)); q.append((m,g+1,par_))
+  rows.sort(key=lambda t:(t[1],t[0]))
+  return rows
+R19=ahnen('p-david')
+refs_of_edge=lambda c,p_: next((o['refs'] for o in E if o['child']==c and o['parent']==p_ and act(o)),[])
+child_of={}
+for m,g,x in R19:
+  pass
+print('ancestors report David first rows',[(m,g,nm(x)) for m,g,x in R19[:14]])
+def daboville(p,depth=2):
+  out=[('1',0,p)]
+  def rec(x,lab,d):
+    if d==depth: return
+    i=0
+    for o in sorted([o for o in E if o['parent']==x and act(o) and o['primary'] and o['kind']=='natural'],key=lambda o:o.get('order',99)):
+      i+=1; l=lab+'.'+str(i); out.append((l,d+1,o['child'])); rec(o['child'],l,d+1)
+  rec(p,'1',0); return out
+print('descendants report Aaron',[(l,nm(x)) for l,g,x in daboville('p-aaron',2)])
+print('Aaron unions',[(nm(u['wife']),[(t['kind'],t.get('word'),t['refs']) for t in u['terms']]) for u in U if u['husband']=='p-aaron'])
+print('Aaron children refs',[(nm(o['child']),o['refs'],o['cert']) for o in E if o['parent']=='p-aaron' and o['kind']=='natural'])
+print('David parents',[(r,nm(q),refs_of_edge('p-david',q)) for r,q in par4['p-david'].items()],'Jesse',[(r,nm(q),refs_of_edge('p-iessey',q)) for r,q in par4.get('p-iessey',{}).items()])
+# 20. потеря предков (одно лицо под двумя номерами Аненталь) и высота отчётов
+from collections import Counter as _C
+cD=_C(x for m,g,x in R19)
+print('ahnentafel rows David',len(R19)-1,'unique',len(cD)-1,'repeated persons',[(nm(x),c) for x,c in cD.items() if c>1][:10])
+RJ=ahnen('p-iosif-muzh-marii'); cJ=_C(x for m,g,x in RJ)
+print('ahnentafel rows Joseph (Mt)',len(RJ)-1,'unique',len(cJ)-1,'repeated',len([x for x,c in cJ.items() if c>1]))
+print('prominence 5 in G',sum(1 for i in G if A[i].get('prominence')==5),'prominence >=4',sum(1 for i in G if (A[i].get('prominence') or 0)>=4))
