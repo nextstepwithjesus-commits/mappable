@@ -18,6 +18,8 @@ export interface EntryState {
   step: number;
   /** Запись уровня 2 создана в приложении поверх записи этого экрана (08 § 6.5, ред. 3.3: `надЭкраном`). */
   over?: boolean;
+  /** Запись экрана под записью выбора сама уже несла выбор (экран открыт по ссылке с выбором): после back() его надо снять. */
+  overSel?: boolean;
   prev?: { name: string; key: string };
 }
 
@@ -63,6 +65,7 @@ export class Router {
   route!: Route;
   entry!: EntryState;
   private journal: Step[] = [];
+  private послеНазад: Route | null = null;
   private redoStack: Step[] = [];
   private listeners: ((c: Change) => void)[] = [];
   private base: string;
@@ -115,7 +118,8 @@ export class Router {
     } else if (lvl === 2) {
       this.route = next;
       if (this.entry.lvl === 1) {
-        this.entry = { ...this.entry, lvl: 2, over: true };
+        const былВыбор = Object.keys(from.params).some((k) => keyLevel(from.screen, k) === 2);
+        this.entry = { ...this.entry, lvl: 2, over: true, ...(былВыбор && { overSel: true }) };
         this.h.push(this.entry, this.url(next));
       } else this.h.replace(this.entry, this.url(next));
     } else {
@@ -134,6 +138,8 @@ export class Router {
   clearLevel2(next: Route): Change | null {
     const from = this.route;
     if (this.entry.lvl === 2 && this.entry.over) {
+      // под записью выбора — запись экрана; если и она несла выбор, после back() снимаем его заменой (08 § 6.5: второе Esc)
+      if (this.entry.overSel) this.послеНазад = next;
       this.h.go(-1);
       return null; // придёт popstate
     }
@@ -164,6 +170,14 @@ export class Router {
       this.route = r;
       this.h.replace(this.entry, this.url(r));
       return this.emit({ cause: 'pop-other', route: r, from });
+    }
+    if (this.послеНазад && st.key === this.entry.key && sameScreen(r, from)) {
+      const next = this.послеНазад;
+      this.послеНазад = null;
+      this.entry = { ...st, lvl: 1, over: undefined, overSel: undefined };
+      this.route = next;
+      this.h.replace(this.entry, this.url(next));
+      return this.emit({ cause: 'clear', route: next, from });
     }
     if (st.key === this.entry.key && sameScreen(r, from)) {
       // внутри экрана применяются только уровни 1–2; вид остаётся как есть, адрес сразу заменяется текущим видом

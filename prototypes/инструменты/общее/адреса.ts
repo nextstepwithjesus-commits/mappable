@@ -59,7 +59,7 @@ export const адресПолно = (ref: string | string[]) => {
   const xs = (Array.isArray(ref) ? ref : [ref]).flatMap(отрезки);
   if (!xs.length) return String(ref);
   // имя книги — полное (Евангелие от Марка); порядок частей — как в ядре
-  return xs.map((s) => spokenRefs([s]).replace(/^[^,]+/, полноеИмя(s.book))).join('; ');
+  return xs.map((s) => spokenRefs([s]).replace(/^[^,]+/, полноеИмя(s.book)).replace(/стихи (\d+) — (\d+)/, 'стихи $1–$2')).join('; ');
 };
 /** Адрес «по стихам» простого слоя: глава у каждого отрезка, чтобы «22–23» не прочли как главы (11 § 4.2, пед. П3-9). */
 export function адресПоСтихам(refs: string[]): string {

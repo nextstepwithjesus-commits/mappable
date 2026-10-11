@@ -29,7 +29,8 @@ export const SPA = 'prototypes/инструменты/dist';
 export const PAGES: { dir: string; page: string; q: string; stand?: boolean; spa?: boolean }[] = [
   ...['лист', 'главная', 'каталог', 'история', 'карточка', 'настройки'].map((s) => ({ dir: 'prototypes/лист-образец', page: `${s}.html`, q: 'panel=0' })),
   { dir: 'prototypes/стенд-токенов', page: 'index.html', q: '', stand: true },
-  ...['', 'kniga/byt', 'kniga/mk', 'kniga/iak', 'istoriya/e-noy-i-potop', 'istoriya/e-pyat-khlebov-i-dve-ryby?view=sinopsis', 'istoriya/e-savl-na-puti-v-damask', 'kartochka/p-noy', 'kniga/byt/7', 'paralleli/teksty', 'vremya?view=lives', 'vremya?view=events&sel=e-noy-i-potop', 'vremya?view=rulers'].map((page) => {
+  // адреса с выбором (уровень 2) и со вторым слоем — по рецензии доступности пакета 1 (№ 3, П-5)
+  ...['', 'kniga/byt', 'kniga/mk', 'kniga/iak', 'istoriya/e-noy-i-potop', 'istoriya/e-noy-i-potop?layer=2', 'istoriya/e-pyat-khlebov-i-dve-ryby?view=sinopsis', 'istoriya/e-savl-na-puti-v-damask', 'istoriya/e-david-i-goliaf', 'kartochka/p-noy', 'kniga/byt/7', 'paralleli/teksty', 'vremya?view=lives', 'vremya?view=lives&sel=p-noy', 'vremya?view=lives&sel=p-noy&layer=2', 'vremya?view=events&sel=e-noy-i-potop', 'vremya?view=rulers', 'vremya?view=rulers&sel=p-menaim&layer=2'].map((page) => {
     const [path, q = ''] = page.split('?');
     return { dir: SPA, page: path, q: [q, 'age=null'].filter(Boolean).join('&'), spa: true };
   }),
@@ -49,6 +50,9 @@ export const VARIANTS: Variant[] = [
   V('320-светлая', 320, 568, { colorScheme: 'light' }),
   V('1280-самый-крупный', 1280, 720, { colorScheme: 'light' }, 'text=самый'),
   V('360-самый-крупный', 360, 560, { colorScheme: 'light' }, 'text=самый'),
+  // 320 и 1280 при 200 % — вместе с «Самым крупным» (рецензия доступности пакета 1, № 6; WCAG 1.4.10)
+  V('320-самый-крупный', 320, 568, { colorScheme: 'light' }, 'text=самый'),
+  V('200-процентов-самый-крупный', 640, 400, { colorScheme: 'light', deviceScaleFactor: 2 }, 'text=самый'),
   V('200-процентов', 640, 360, { colorScheme: 'light', deviceScaleFactor: 2 }),
   V('forced-colors', 1280, 720, { colorScheme: 'light', forcedColors: 'active' }),
   V('без-движения', 1280, 720, { colorScheme: 'light', reducedMotion: 'reduce' }),
@@ -143,8 +147,12 @@ async function main() {
       for (const e of errors) fails.push({ where, what: `ошибка JS: ${e.slice(0, 200)}` });
       for (const u of net) fails.push({ where, what: `запрос в сеть: ${u}` });
       // в forced-colors цвета задаёт система: правило контраста axe считает по авторским цветам и даёт ложные нарушения
+      // 08 § 6.3: правило 2.5.3 (видимая подпись — в начале имени) включено явно — в наборе тегов WCAG его нет
       const ab = new AxeBuilder({ page: p }).withTags(AXE_TAGS);
       const axe = await (v.ctx.forcedColors === 'active' ? ab.disableRules(['color-contrast']) : ab).analyze();
+      // отдельный проход: `options({rules})` вместе с тегами включил бы и правила best-practice
+      const имя = await new AxeBuilder({ page: p }).withRules(['label-content-name-mismatch']).analyze();
+      axe.violations.push(...имя.violations);
       for (const x of axe.violations) fails.push({ where, what: `axe ${x.id}: ${x.nodes.length} узл., например ${x.nodes[0]?.target.join(' ')}` });
       const focus = await tabWalk(p);
       if (focus) fails.push({ where, what: focus });
@@ -156,7 +164,13 @@ async function main() {
         const b = await size();
         if (Math.abs(a - 18) > 0.01 || Math.abs(b - 20.25) > 0.01) fails.push({ where, what: `„Крупнее“: кегль Писания ${a} → ${b} px, нужно 18 → 20,25 (кегли в rem)` });
       }
-      log.push({ where, axe: axe.violations.length, incomplete: axe.incomplete.length, scroll, errors: errors.length, net: net.length, focus: focus ?? 'ок' });
+      // ответы axe «нужна проверка» по контрасту — разбор по причинам (08 § 6.3): какие узлы и почему не посчитаны
+      const причины: Record<string, number> = {};
+      for (const x of axe.incomplete.filter((y) => y.id === 'color-contrast')) for (const n of x.nodes) for (const c of n.any) {
+        const k = String((c.data as { messageKey?: string } | null)?.messageKey ?? c.id);
+        причины[k] = (причины[k] ?? 0) + 1;
+      }
+      log.push({ where, axe: axe.violations.length, incomplete: axe.incomplete.length, контрастНужнаПроверка: причины, scroll, errors: errors.length, net: net.length, focus: focus ?? 'ок' });
       await ctx.close();
     }
   }

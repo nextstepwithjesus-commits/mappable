@@ -56,8 +56,9 @@ export interface Epoch {
   id: string;
   name: string;
   short: string;
-  start: number;
-  end: number;
+  /** Год (эпохи 6–16) или событие с правилом (эпохи 1–5 после Д6): год считает модель — `годЭпохи`. */
+  start: number | { event?: string; refs?: string[]; rule?: Record<string, unknown> };
+  end: number | { event?: string; refs?: string[]; rule?: Record<string, unknown> };
   basis?: string;
   refs: string[];
   summary?: string;
@@ -69,9 +70,29 @@ export interface Epoch {
 }
 export interface Anchor { id: string; event: string; value: number; verse: string; source: string; alternatives: string[]; layer?: string }
 export interface Reign { over: string; start: number; end: number; years?: number; ageAtStart?: number; refs: string[]; sync?: { with: string; year: number; refs: string[]; note?: string }[]; note?: string; coregency?: unknown }
+/** Вход хронологии Д6 (02 § 3.15): число текста словами и стихом, вывод с частями, расчёт по модели или схеме. */
+export interface Вход {
+  kind: 'age-at-birth' | 'age-at-death' | 'end-of-life' | 'not-before' | 'not-after' | 'age-at-event' | 'age-at-accession' | 'reign' | 'synchronism' | 'succeeded' | 'under-king' | 'years-after' | string;
+  of?: string;
+  other?: string;
+  number?: number;
+  words?: string;
+  unit?: 'month' | string;
+  kingdom?: string;
+  numberBracket?: number;
+  parts?: { number: number; words: string; ref: string }[];
+  event?: { text: string; refs: string[] };
+  atYear?: { number: number; words?: string };
+  reading?: { set: string; in: string };
+  note?: string;
+  refs: string[];
+  cert?: Cert;
+  calc?: { event?: string; model?: string; scheme?: string };
+}
 export interface Chrono {
   actor: string;
   chrono: {
+    inputs?: Вход[];
     born?: { fatherAge?: number; fatherAgeBracket?: number; motherAge?: number; offset?: { from: string; years: number }; year?: number; refs: string[]; cert?: Cert; note?: string };
     died?: { age?: number; ageBracket?: number; year?: number; refs: string[]; cert?: Cert; note?: string };
     reign?: Reign[];
@@ -82,6 +103,18 @@ export interface Chrono {
 export interface TextParallel { id: string; refs: string[][]; basis: { ref: string; text: string }[]; cert?: Cert }
 export interface VClass { book: string; ch: number; from: number; to: number; class: string; why?: string }
 
+export interface Model {
+  id: string;
+  type: 'model' | 'scheme';
+  name: string;
+  default?: boolean;
+  label?: string;
+  choices?: { what: string; refs: string[]; cert?: string; number?: number }[];
+  scheme?: string;
+  table?: { king: string; kingdom: string; soleStart?: number; start?: number; end: number; source?: string }[];
+  works?: { work: string; page: string }[];
+  params?: { what: string; refs: string[] }[];
+}
 export interface ProtoPack {
   schema: 1;
   admit: 'probe';
@@ -97,6 +130,7 @@ export interface ProtoPack {
   textParallels: TextParallel[];
   vclasses: VClass[];
   relations: { id: string; a: string; b: string; kind: string; refs: string[]; cert?: Cert; note?: string }[];
+  models: Model[];
   keys: Record<string, string>;
   counts: { stories: number; signed: number; keys: number };
 }

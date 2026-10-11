@@ -15,18 +15,18 @@ import { КнНазад, Хлебные, ПереключательСлоя, А�
 import { лица, имяЛица } from './модель.ts';
 import type { CardFact } from '../../../core/types.ts';
 import { ОбразЭпох } from '../время/образ.tsx';
-import { жизнь } from '../время/модель.ts';
+import { жизнь, годЭпохи } from '../время/модель.ts';
 
 /** Малый образ Времени в Карточке (Л-д3; 04 § 7.5): эпохи, в которые лицо жило по расчёту; ссылка — «Жизни». */
 function ОбразВремени({ id }: { id: string }) {
   const ж = жизнь(id);
-  if (ж.от === undefined || ж.до === undefined) return <p class="голос-мы">Время: {ж.нет ?? 'когда он жил, мы ещё не посчитали'}.</p>;
-  const эп = Д.epochs.filter((e) => e.end >= ж.от! && e.start <= ж.до!);
+  if (!ж.bc) return <p class="голос-мы">Время: {ж.нет ?? 'годы жизни мы ещё не посчитали'}.</p>;
+  const [от, до] = ж.bc;
+  const эп = Д.epochs.filter((e) => (годЭпохи(e, 'end') ?? -99999) >= от && (годЭпохи(e, 'start') ?? 99999) <= до);
   return (
     <a class="малый-образ образ-карточки" href={href({ screen: 'vremya', params: { view: 'lives', p: id } })} id="образ-время-карточки" data-key={`chrono:${id}`}>
-      <span class="малый-образ__подпись">Время: {эп.map((e) => e.short).join(' — ')}</span>
-      {!слой2() && <span class="малый-образ__вопрос">Когда он жил?</span>}
-      <span class="малый-образ__рисунок образ-без-рамки">
+      <span class="малый-образ__подпись">{!слой2() && 'Когда он жил? '}Время: {имя(id)}; эпохи — {эп.map((e) => e.short).join(', ')}</span>
+      <span class="малый-образ__рисунок образ-без-рамки" aria-hidden="true">
         <ОбразЭпох залитые={эп.map((e) => e.id)} />
       </span>
     </a>
@@ -80,6 +80,7 @@ export function Карточка({ id }: { id: string }) {
         <h1 class="т-h1" id="h1" tabIndex={-1}>
           {n}
         </h1>
+        {card && <Вводная n={n} f={card.f} />}
         <p class="коротко т-проза">
           {отец && (
             <>
@@ -136,8 +137,8 @@ export function Карточка({ id }: { id: string }) {
             if (!xs.length) return null;
             if (xs.length <= 3)
               return (
-                <section class="блок блок--поле">
-                  <h2 class="блок__заголовок т-повествование">{имяР}</h2>
+                <section class="блок блок--раздел">
+                  <h2 class="блок__заголовок т-h2">{имяР}</h2>
                   <ul class="факты">
                     {xs.map((f) => (
                       <Факт f={f} />
@@ -168,6 +169,18 @@ export function Карточка({ id }: { id: string }) {
       )}
       <p class="т-адрес эскиз-подпись">{Д.proto.banner}: записи карточки — черновик базы без второго ключа. Полная Карточка (07) — пакет 3 прототипов; здесь — сцена перехода из истории.</p>
     </div>
+  );
+}
+
+/** Вводная фраза Карточки (07; 08 § 3.3.2, ступень 4): имя и первое утверждение раздела «Кто он» со стихами. */
+function Вводная({ n, f }: { n: string; f: CardFact[] }) {
+  const кто = f.find((x) => x.s === 5);
+  const v = кто?.v as V | undefined;
+  if (!v?.text) return null;
+  return (
+    <p class="т-проза вводная">
+      {n} — {сЦитатами(v.text[0].toLowerCase() + v.text.slice(1))}. {(v.refs ?? []).map((r) => <АдресКн ссылка={r} />)}
+    </p>
   );
 }
 

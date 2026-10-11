@@ -58,7 +58,7 @@ async function main() {
         p.on('pageerror', (e) => ошибки.push(String(e)));
         p.on('console', (m) => m.type() === 'error' && ошибки.push(m.text()));
         const sep = sc.адрес.includes('?') ? '&' : '?';
-        await p.goto(`${origin}${base}${sc.адрес}${sep}theme=${t}&age=null`);
+        await p.goto(`${origin}${base}${sc.адрес}${sep}theme=${t}&age=null${sc.адрес.includes('layer=') ? '' : '&layer=1'}`);
         await готово(p);
         const прокрутка = await p.evaluate(() => document.documentElement.scrollWidth - innerWidth);
         const верх = sc.адрес.startsWith('istoriya') ? await верхСтиха(p) : undefined;

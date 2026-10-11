@@ -6,6 +6,7 @@ import { signal } from '@preact/signals';
 import { Router, type Change, type EntryState, type HistoryPort, type Snapshot } from './маршрутизатор.ts';
 import { formatUrl, parseUrl, type Route } from './маршруты.ts';
 import { снимки, закрытьВерхнее, объявить, фокус } from './службы.ts';
+import { Д } from './данные.ts';
 
 export const BASE = import.meta.env.BASE_URL;
 export const маршрут = signal<Route>({ screen: 'glavnaya', params: {} });
@@ -17,8 +18,11 @@ export const кнопкаНазад = signal<{ label: string; name: string } | n
 export const шагОтмены = signal<{ undo: string | null; redo: string | null }>({ undo: null, redo: null });
 
 let nameOf: (r: Route) => string = () => '';
-export function задатьИмена(f: (r: Route) => string) {
+let titleOf: (r: Route) => string = (r) => nameOf(r);
+/** Имя экрана для «Назад: …» и объявления; заголовок окна — «Предмет — Инструмент — Библия наглядно» (08 § 6.1 п. 19). */
+export function задатьИмена(f: (r: Route) => string, t?: (r: Route) => string) {
   nameOf = f;
+  if (t) titleOf = t;
 }
 
 const port: HistoryPort = {
@@ -47,7 +51,7 @@ function sync(c: Change) {
   else if (c.cause === 'go' && c.level === 1) снимок.value = undefined;
   if (c.cause === 'start' || c.cause === 'pop-other' || (c.cause === 'go' && c.level === 1)) показ.value++;
   маршрут.value = c.route;
-  document.title = `${nameOf(c.route)} — Библия наглядно`;
+  document.title = `${titleOf(c.route)} — Библия наглядно`;
   if (c.cause === 'go' && c.level === 1) {
     scrollTo(0, 0);
     объявить(nameOf(c.route));
@@ -62,7 +66,9 @@ function sync(c: Change) {
       }),
     );
   } else if (c.cause === 'pop-same' || c.cause === 'clear') {
-    объявить('Выбор снят, лист закрыт');
+    // объявление — по состоянию после перехода (доступность № 2)
+    const sel = c.route.params.sel;
+    объявить(sel ? `Выбрано: ${sel.startsWith('e-') ? (Д?.stories.get(sel)?.title.short ?? sel) : (Д?.names.get(sel) ?? sel)}` : 'Выбор снят, лист закрыт');
   }
 }
 router.onChange(sync);

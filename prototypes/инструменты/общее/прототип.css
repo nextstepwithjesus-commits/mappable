@@ -235,7 +235,6 @@ button.стих__номер[data-current] { color: var(--tsvet-chernila); font-w
 .каталог .заголовок-книги .неполно { grid-column: 2; grid-row: 1; align-self: center; margin: 0; }
 .каталог .заголовок-книги__слой { grid-column: 3; }
 @media (max-width: 37.4375em) { .каталог .заголовок-книги .неполно { grid-column: 1 / -1; grid-row: 3; } }
-.строка__ссылка { display: inline-block; min-height: var(--tsel-naimenshaya); line-height: var(--tsel-naimenshaya); }
 .полоса-книг--главная { pointer-events: none; }
 .только-телефон { display: none; }
 @media (max-width: 37.4375em) {
@@ -245,3 +244,121 @@ button.стих__номер[data-current] { color: var(--tsvet-chernila); font-w
   .строка-инструмента .слой > span:first-child { display: none; }
   .строка-инструмента .слой__группа button { padding: 0 var(--otstup-8); }
 }
+
+/* ===== правка по панели (решения координатора П-1…П-7, § 2) ===== */
+/* справка — без своей прокрутки, обрезающей текст (арт С3) */
+.экран-istoriya .панель { position: static; max-height: none; overflow: visible; }
+/* строка лица — один образец: имя — слова стиха — адрес (арт С2) */
+.лица-подпись { margin-bottom: var(--otstup-4); }
+.строка-лица--одна { display: block; padding: var(--otstup-4) 0; }
+.строка-лица--одна .строка-лица__имя { display: inline; font-family: var(--tekst-nazvanie-stroki-font-family); font-weight: 500; }
+.строка-лица--одна .строка-лица__роль { display: inline; }
+.строка-лица--одна .строка-лица__второй { display: block; }
+.голос-библия-в-строке { font-family: var(--shrift-knizhnyy); }
+.см-также ul { margin: var(--otstup-4) 0 0 var(--otstup-16); display: grid; gap: var(--otstup-4); }
+/* «черновик» с пояснением на месте; строка шапки — по базовой линии, без «·» (арт С5) */
+.шапка-истории__вид { align-items: baseline; column-gap: var(--otstup-16); }
+.шапка-истории__вид .вид { display: inline-flex; align-items: baseline; gap: var(--otstup-4); }
+.шапка-истории__вид .знак-вида { align-self: center; }
+.черновик::before { content: none; }
+.черновик__кн { min-height: 0; padding: 0; font: inherit; color: var(--tsvet-chernila-2); text-decoration: underline dotted; text-underline-offset: 0.2em; position: relative; }
+.черновик__кн::after { content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, var(--tsel-naimenshaya)); height: var(--tsel-naimenshaya); transform: translate(-50%, -50%); }
+.черновик__пояснение { margin-left: var(--otstup-8); color: var(--tsvet-chernila); }
+/* телефон: номер стиха не отрывается, переносов не больше двух подряд (арт С7) */
+.писание { hyphenate-limit-chars: 6 3 3; -webkit-hyphenate-limit-lines: 2; hyphenate-limit-lines: 2; }
+.стих__номер-обёртка { white-space: nowrap; }
+/* Время: язык выбора 08 § 5.2 — контур и полоса выбора, а не заливка «чернилами» (арт С9; доступность № 3) */
+.указатель-эпох__клетка--тек { background: var(--tsvet-list); outline: var(--liniya-silnaya) solid var(--tsvet-chernila); outline-offset: calc(-1 * var(--liniya-silnaya)); box-shadow: inset 0 calc(-1 * var(--otstup-8)) 0 var(--tsvet-vybor); }
+.указатель-эпох__клетка--тек .указатель-эпох__имя { background: var(--tsvet-vybor); color: var(--tsvet-na-vybore); padding: 0 var(--otstup-4); }
+.нить__бусина--выбрана > .нить__кнопка .нить__знак { background: var(--tsvet-vybor); border-color: var(--tsvet-chernila); }
+.нить__бусина--выбрана > .нить__кнопка .нить__имя { background: var(--tsvet-vybor); color: var(--tsvet-na-vybore); }
+.жизни__ряд--выбран { background: none; }
+.жизни__ряд--выбран .жизни__имя-текст { background: var(--tsvet-vybor); color: var(--tsvet-na-vybore); padding: 0 var(--otstup-4); font-weight: 600; box-shadow: 0 0 0 var(--liniya-silnaya) var(--tsvet-chernila); }
+.жизни__ряд--выбран .жизни__полоса { background: var(--tsvet-chernila); }
+.жизни__ряд:focus-visible { outline-color: var(--tsvet-chernila); outline-offset: calc(-1 * var(--liniya-fokus)); }
+/* знаки «Жизней» 04 § 3.10 (П-3) */
+.жизни__полоса { overflow: visible; }
+.жизни__полоса--расчёт { background: var(--tsvet-chernila-2); }
+.жизни__засечка { position: absolute; right: 0; top: 50%; width: var(--liniya-silnaya); height: var(--otstup-16); transform: translateY(-50%); background: var(--tsvet-chernila); }
+.жизни__засечка-пример { display: inline-block; width: var(--liniya-silnaya); height: 0.9em; background: var(--tsvet-chernila); vertical-align: middle; }
+.жизни__полоса--срез-справа { border-right: 0; mask-image: linear-gradient(90deg, #000 calc(100% - 0.75rem), transparent calc(100% - 0.75rem), transparent calc(100% - 0.5rem), #000 calc(100% - 0.5rem), #000 calc(100% - 0.25rem), transparent calc(100% - 0.25rem)); }
+.жизни__полоса--срез-слева { mask-image: linear-gradient(90deg, transparent 0.25rem, #000 0.25rem, #000 0.5rem, transparent 0.5rem, transparent 0.75rem, #000 0.75rem); }
+.жизни__подпись { position: absolute; top: 50%; transform: translateY(-50%); white-space: nowrap; }
+.жизни__потоп { position: absolute; top: 0; bottom: 0; width: 0; border-left: var(--liniya-volosyanaya) solid var(--tsvet-liniya); }
+.жизни__полоса-место { overflow: hidden; }
+.ось-лет { height: 2.75rem; }
+.ось-лет__подпись { position: absolute; left: 0; bottom: 0; }
+.без-полосы, .двойник { margin-top: var(--otstup-16); }
+.двойник__верх { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: var(--otstup-8); }
+@media (forced-colors: active) {
+  .жизни__полоса, .жизни__засечка, .жизни__засечка-пример { forced-color-adjust: none; background: CanvasText; }
+  .жизни__полоса--расчёт { background: Canvas; border: 2px solid CanvasText; }
+  .вкладка[aria-selected="true"] { border-bottom: 3px solid CanvasText; }
+  .указатель-эпох__клетка--тек { outline: 3px solid CanvasText; }
+}
+/* Правители по стихам (П-1; арт С11) */
+.правители { table-layout: fixed; }
+.правители th, .правители td { border-left: var(--liniya-volosyanaya) solid var(--tsvet-setka); }
+.правители td:first-child, .правители th:first-child { border-left: 0; }
+.правители td { border-left-width: var(--liniya-volosyanaya); }
+.правитель { display: flex; flex-wrap: wrap; gap: 0 var(--otstup-8); align-items: baseline; width: 100%; min-height: var(--tsel-naimenshaya); padding: var(--otstup-4); border: 0; background: none; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+.правитель:hover { background: var(--tsvet-podlozhka); }
+.правитель .правитель__имя { display: inline; }
+.правитель--выбран .правитель__имя { background: var(--tsvet-vybor); color: var(--tsvet-na-vybore); text-decoration: none; padding: 0 var(--otstup-4); }
+.правители__промежуток td { color: var(--tsvet-chernila-2); padding: var(--otstup-4) var(--otstup-8); }
+.правители__что p + p { margin-top: var(--otstup-4); }
+.правители__проверка--напр strong { color: var(--tsvet-chernila); }
+.правители-обёртка { max-height: none; overflow: visible; }
+.правители__прочее { margin-top: var(--otstup-16); }
+.правители__прочее ul { display: grid; gap: var(--otstup-4); margin: var(--otstup-4) 0; }
+@media (pointer: coarse) { .правитель { min-height: var(--tsel-knopka); } }
+/* телефон «Времени»: одна строка управления (арт С8) */
+@media (max-width: 37.4375em) {
+  .время .строка-инструмента { flex-wrap: nowrap; overflow: hidden; gap: var(--otstup-4); }
+  .слой-времени { display: none; }
+  .время .эпохи-кнопка { display: inline-block; margin: 0; }
+}
+/* каталог: сетка глав по ширине колонки (доступность № 5) */
+.главы-сетка { grid-template-columns: repeat(auto-fill, minmax(2.75rem, 1fr)); }
+.строка__метка { font-weight: 450; }
+.кто-ещё .кн--тихо { display: inline-flex; align-items: center; gap: var(--otstup-4); }
+/* синопсис (П-6; арт Б4, С6): отметка — плашкой «подложка», не подчёркиванием ссылки; заголовок сцены крупнее кнопки */
+.совпадение { text-decoration: none; background: var(--tsvet-podlozhka); box-shadow: 0 0 0 1px var(--tsvet-setka); border-radius: 2px; }
+.синопсис-обёртка input[type="checkbox"] { accent-color: var(--tsvet-chernila); }
+.синопсис th.сцена { font-family: var(--tekst-interfeys-font-family); font-size: var(--tekst-interfeys-font-size); line-height: var(--tekst-interfeys-line-height); font-weight: 600; color: var(--tsvet-chernila); }
+.синопсис td.сцена-действие { text-align: right; border-left: 0; vertical-align: bottom; }
+.синопсис td.сцена-действие .кн { font-size: var(--tekst-adres-font-size); }
+.синопсис__общие th { white-space: nowrap; font-weight: 600; vertical-align: top; }
+.стих--продолжение { display: block; margin-top: var(--otstup-4); }
+.синопсис-основание { margin-top: var(--otstup-16); max-width: var(--komponent-proza-naibolshaya); }
+.синопсис-основание summary { min-height: var(--tsel-naimenshaya); cursor: pointer; font-weight: 600; }
+@media (max-width: 37.4375em) { .синопсис-колонки { display: grid; gap: 0; } .синопсис-колонки legend { float: none; } }
+/* параллели и сравнение — на «листе», абзац 40 em, поле адреса 20 em (арт С12) */
+.экран-paralleli, .экран-sravnenie { background: var(--tsvet-list); }
+body:has(.экран-paralleli), body:has(.экран-sravnenie) { background: var(--tsvet-list); }
+.параллели .т-проза, .параллель > .т-интерфейс { max-width: 40em; }
+.сравнение-форма input { width: 20em; max-width: 100%; }
+.сравнение-форма .кн { border: var(--liniya-volosyanaya) solid var(--tsvet-liniya); }
+.кн--найти { border-color: var(--tsvet-liniya); color: var(--tsvet-chernila); }
+/* главная: одно поле поиска (арт М4; педагог № 18) */
+body:has(.экран-glavnaya) .шапка__поиск { display: none; }
+/* каталог: подзаголовок «Пока здесь…» — строкой под h1 во всю ширину (арт С14) */
+.каталог .заголовок-книги .неполно { grid-column: 1 / -1; grid-row: 2; }
+@media (min-width: 37.5em) { .строка__зона { align-items: baseline; } }
+.главы-подпись { margin-bottom: var(--otstup-4); }
+/* Карточка: мера строки и единые разделы (арт С4) */
+.карточка-шапка, .карточка-блоки { max-width: 40em; }
+.карточка-блоки .блок--раздел { padding: var(--otstup-8) 0; }
+.карточка-блоки .блок--раздел .блок__заголовок { margin-bottom: var(--otstup-4); }
+.вводная { margin-top: var(--otstup-8); }
+@media (max-width: 37.4375em) { .каталог .заголовок-книги .неполно { display: none; } }
+@media (max-width: 37.4375em) { .заголовок-книги__число .без-пометки { display: none; } }
+.жизни__подпись--слева { transform: translate(-100%, -50%); }
+.жизни__подпись--внутри { background: var(--tsvet-fon); padding-inline: var(--otstup-4); }
+.ось-лет__ряд { margin-left: 0.5rem; }
+.двойник .таблица-обёртка { overflow-x: auto; } .правители-обёртка { overflow: visible; }
+.двойник .таблица th[scope="col"], .правители th[scope="col"] { position: static; }
+/* цель ссылки строки — не ниже 24 px (WCAG 2.5.8 при 200 %) без роста строки */
+.строка__ссылка { padding-block: 1px; }
+.указатель-эпох__клетка--разрыв .указатель-эпох__имя, .указатель-эпох__клетка:nth-last-child(2) .указатель-эпох__имя { left: auto; right: 0; transform: none; }
+.указатель-эпох__клетка:first-child .указатель-эпох__имя { left: 0; transform: none; }

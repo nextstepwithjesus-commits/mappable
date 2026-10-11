@@ -65,6 +65,19 @@ describe('маршрутизатор (08 § 6.5)', () => {
     r.back();
     expect(r.route.screen).toBe('istoriya');
   });
+  it('вход с выбором → три выбора → Esc → Esc: выбор снят, экран тот же (доступность № 2)', () => {
+    const { r, стек } = история();
+    r.start('/istoriya/e-noy-i-potop');
+    r.go(parseUrl('/vremya?view=events&sel=e-noy-i-potop')!);
+    for (const id of ['e-kain-i-avel', 'e-sif-i-enos', 'e-noy-i-potop']) r.go({ ...r.route, params: { ...r.route.params, sel: id } });
+    r.clearLevel2(parseUrl('/vremya?view=events')!);
+    expect(r.route.screen).toBe('vremya');
+    expect(r.route.params.sel).toBeUndefined();
+    expect(стек().length).toBe(3);
+    r.clearLevel2(parseUrl('/vremya?view=events')!);
+    expect(r.route.screen).toBe('vremya');
+    expect(r.backTarget()?.label).toBe('Назад: e-noy-i-potop');
+  });
   it('экран открыт уже с выбором: снятие выбора — замена записи, а не уход', () => {
     const { r, стек } = история();
     r.start('/istoriya/e-noy-i-potop');

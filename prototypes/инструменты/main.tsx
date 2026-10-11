@@ -106,7 +106,7 @@ async function запуск() {
     корень.innerHTML = `<main class="оболочка"><h1 class="т-h1">Не получилось открыть данные</h1><p class="т-проза">${String((e as Error).message)}</p><p><button class="кн" onclick="location.reload()">Повторить</button></p></main>`;
     return;
   }
-  задатьИмена(имяЭкрана);
+  задатьИмена(имяЭкрана, (r) => (r.screen === 'istoriya' ? `${имяЭкрана(r)} — История` : r.screen === 'kartochka' ? `${имяЭкрана(r)} — Карточка` : r.screen === 'kniga' || r.screen === 'glava' ? `${имяЭкрана(r)} — Книги` : имяЭкрана(r)));
   начатьМаршруты();
   render(<Приложение />, корень);
   document.documentElement.dataset.готово = '1';

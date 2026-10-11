@@ -59,9 +59,13 @@ const LINE = ['p-adam', 'p-sif', 'p-enos', 'p-kainan', 'p-maleleil', 'p-iared', 
 const exodus = epochs.find((e) => e.id === 'era-exodus') as { keyPersons?: string[] } | undefined;
 const chronoAll = base.chrono as unknown as ({ actor: string; chrono: Rec } & Rec)[];
 const want = new Set([...LINE, ...(exodus?.keyPersons ?? []), ...epochs.flatMap((e) => (e as { keyPersons?: string[] }).keyPersons ?? [])]);
-const chrono = chronoAll.filter((c) => (want.has(c.actor) || 'reign' in c.chrono) && take(`chrono:${c.actor}`));
+const правит = (c: { chrono: Rec }) => 'reign' in c.chrono || ((c.chrono.inputs as { kind: string }[] | undefined) ?? []).some((i) => i.kind === 'reign');
+const chrono = chronoAll.filter((c) => (want.has(c.actor) || правит(c)) && take(`chrono:${c.actor}`));
 for (const c of chrono) take(`actor:${c.actor}`);
 for (const p of want) take(`actor:${p}`);
+
+// ---------- модели хронологии и схемы царей (02 § 3.15.2–3.15.3; 04 § 16.1): файл базы, статус — у файла ----------
+const models = (JSON.parse(readFileSync(join(ROOT, 'base', 'models.json'), 'utf8')) as { items: Rec[] }).items;
 
 // ---------- параллельные тексты, классы стихов, отношения ----------
 const textParallels = (base.textParallels as unknown as ({ id: string } & Rec)[]).filter((t) => take(`textparallel:${t.id}`));
@@ -107,6 +111,7 @@ const proto = {
   textParallels,
   vclasses,
   relations,
+  models,
   keys,
   counts: { stories: stories.length, signed: Object.values(keys).filter((s) => s === 'checked').length, keys: Object.keys(keys).length },
 };

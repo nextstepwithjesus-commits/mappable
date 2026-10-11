@@ -72,8 +72,8 @@ describe('модель возврата (08 § 6.5)', () => {
     await p.click('#бусина-e-kain-i-avel');
     await p.click('#бусина-e-sif-i-enos');
     await p.click('#бусина-e-noy-i-potop');
-    await p.getByRole('button', { name: 'Крупнее' }).click();
-    await p.getByRole('button', { name: 'Мельче' }).click();
+    await p.getByRole('button', { name: 'Приблизить' }).click();
+    await p.getByRole('button', { name: 'Отдалить' }).click();
     expect(await p.evaluate(() => history.length)).toBeLessThanOrEqual(длина0 + 2);
     await p.click('#кн-назад');
     await p.waitForSelector('#h1:text("Ной и потоп")');
@@ -206,4 +206,24 @@ describe('каталог: первый экран (11 § 16 п. 4)', () => {
       expect(видно).toBeGreaterThanOrEqual(n);
       await ctx.close();
     });
+});
+
+describe('простой слой «Времени» без годов расчёта (04 § 2.1; П-1, П-2)', () => {
+  for (const адрес of ['vremya?view=lives&sel=p-moisey&layer=1', 'vremya?view=lives&sel=p-avraam&layer=1', 'vremya?view=rulers&sel=p-menaim&layer=1', 'vremya?view=events&layer=1'])
+    it(адрес, async () => {
+      const p = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+      await открыть(p, адрес);
+      const текст = await p.evaluate(() => document.querySelector('main')?.textContent ?? '');
+      expect(текст).not.toMatch(/\d\s*г\.\s*до\s*Р\.\s*Х\./);
+      expect(текст).not.toMatch(/расч\./);
+      await p.close();
+    });
+  it('второй слой: год до Р. Х. — с названием модели', async () => {
+    const p = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+    await открыть(p, 'vremya?view=lives&sel=p-moisey&layer=2');
+    const текст = await p.evaluate(() => document.querySelector('main')?.textContent ?? '');
+    expect(текст).toMatch(/г\. до Р\. Х\./);
+    expect(текст).toMatch(/Долгое пребывание/);
+    await p.close();
+  });
 });
