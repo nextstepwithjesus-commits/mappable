@@ -20,8 +20,12 @@ import { STEPS_D15 } from '../tools/base/corrections-d15.ts';
 import { STEPS_D15B } from '../tools/base/corrections-d15b.ts';
 import { STEPS_D15C } from '../tools/base/corrections-d15c.ts';
 import { STEPS_P13 } from '../tools/base/corrections-p13.ts';
+import { STEPS_D6 } from '../tools/base/corrections-d6.ts';
+import { STEPS_D6B } from '../tools/base/corrections-d6b.ts';
+import { STEPS_D6C } from '../tools/base/corrections-d6c.ts';
+import { STEPS_V33 } from '../tools/base/corrections-v33.ts';
 import { validate } from '../tools/base/validate.ts';
-import { finishIds, loadIds, startIds } from '../tools/base/ids.ts';
+import { finishIds, freezeIds, loadIds, startIds } from '../tools/base/ids.ts';
 
 const DATA = join(import.meta.dirname, '..', 'data');
 const read = (f: string) => JSON.parse(readFileSync(join(DATA, f), 'utf8'));
@@ -42,7 +46,13 @@ describe('перенос в базу', () => {
     const { base, hints } = exact();
     // номера — как в сборке: заготовки до шагов, выдача после (К-1); таблица — с диска, чтобы номера совпали с base/
     startIds(base, loadIds(join(import.meta.dirname, '..', 'base')), '2026-10-11');
-    for (const s of [...STEPS, ADDITIONS, ...STEPS_D3, ...STEPS_K, ...STEPS_D, ...STEPS_D_2, ...STEPS_D_3, ...STEPS_D4, ...STEPS_D_R11, ...STEPS_D15, ...STEPS_D15B, ...STEPS_D15C, ...STEPS_P13]) expect([s.id, stepChanges(base, hints, s).stray]).toEqual([s.id, []]);
+    // номера закрепляются в тех же местах, что и в сборке (migrate.ts, main): перед партиями Д, Д-15 и 02 ред. 4.6; без этого
+    // опоры шагов Д6 не находятся по номеру an- (номер выдаётся при закреплении)
+    const freeze = new Set([STEPS_D[0], STEPS_D_2[0], STEPS_D_3[0], STEPS_D4[0], STEPS_D15[0], STEPS_D15B[0], STEPS_D15C[0], STEPS_V33[0]]);
+    for (const s of [...STEPS, ADDITIONS, ...STEPS_D3, ...STEPS_K, ...STEPS_D, ...STEPS_D_2, ...STEPS_D_3, ...STEPS_D4, ...STEPS_D_R11, ...STEPS_D15, ...STEPS_D15B, ...STEPS_D15C, ...STEPS_D6, ...STEPS_D6B, ...STEPS_D6C, ...STEPS_P13, ...STEPS_V33]) {
+      if (freeze.has(s)) freezeIds(base);
+      expect([s.id, stepChanges(base, hints, s).stray]).toEqual([s.id, []]);
+    }
     expect(finishIds(base)!.errors).toEqual([]);
     expect(validate(base).filter((i) => i.level === 'error')).toEqual([]);
   }, 60_000);

@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data/persons/11-judges.json",
-   "commit": "18c46f0"
+   "commit": "6363b8c"
   }
  },
  "sources": [
@@ -3069,7 +3069,17 @@
       ]
      }
     }
-   ]
+   ],
+   "descriptor": {
+    "text": "мать Сисары",
+    "refs": [
+     "Суд 5:28"
+    ],
+    "cert": "scripture"
+   },
+   "prov": {
+    "by": "исправление D16-1"
+   }
   },
   {
    "id": "p-sisara",
@@ -4446,7 +4456,23 @@
       ]
      }
     }
-   ]
+   ],
+   "descriptor": {
+    "text": "наложница Гедеона",
+    "refs": [
+     "Суд 8:31"
+    ],
+    "cert": "inference",
+    "nameFrom": [
+     {
+      "actor": "p-gedeon",
+      "ref": "Суд 8:30"
+     }
+    ]
+   },
+   "prov": {
+    "by": "исправление D16-1"
+   }
   },
   {
    "id": "p-avimelekh-syn-gedeona",
@@ -5724,14 +5750,14 @@
    "sex": "f",
    "names": [
     {
-     "form": "Мать Иеффая",
+     "form": "Блудница",
      "type": "main",
      "refs": [
       "Суд 11:1"
      ]
     }
    ],
-   "disambig": "блудница",
+   "disambig": "её сын — Иеффай (Суд 11:1)",
    "prominence": 1,
    "facts": [
     {
@@ -5753,7 +5779,20 @@
       "first": "Суд 11:1"
      }
     }
-   ]
+   ],
+   "descriptor": {
+    "text": "блудница",
+    "refs": [
+     "Суд 11:1"
+    ],
+    "cert": "scripture",
+    "alt": [
+     "мать Иеффая"
+    ]
+   },
+   "prov": {
+    "by": "исправление D16-1"
+   }
   },
   {
    "id": "p-ieffay",
@@ -6374,7 +6413,17 @@
       ]
      }
     }
-   ]
+   ],
+   "descriptor": {
+    "text": "дочь Иеффая",
+    "refs": [
+     "Суд 11:34"
+    ],
+    "cert": "scripture"
+   },
+   "prov": {
+    "by": "исправление D16-1"
+   }
   },
   {
    "id": "p-esevon-iz-vifleema",
@@ -7199,7 +7248,17 @@
       ]
      }
     }
-   ]
+   ],
+   "descriptor": {
+    "text": "жена Маноя",
+    "refs": [
+     "Суд 13:2"
+    ],
+    "cert": "scripture"
+   },
+   "prov": {
+    "by": "исправление D16-1"
+   }
   },
   {
    "id": "p-samson",
@@ -8049,7 +8108,18 @@
       ]
      }
     }
-   ]
+   ],
+   "descriptor": {
+    "text": "жена Самсона",
+    "refs": [
+     "Суд 14:1",
+     "Суд 14:2"
+    ],
+    "cert": "scripture"
+   },
+   "prov": {
+    "by": "исправление D16-1"
+   }
   },
   {
    "id": "p-dalida",
@@ -8271,7 +8341,23 @@
       ]
      }
     }
-   ]
+   ],
+   "descriptor": {
+    "text": "мать Михи",
+    "refs": [
+     "Суд 17:2"
+    ],
+    "cert": "inference",
+    "nameFrom": [
+     {
+      "actor": "p-mikha-s-gory-efremovoy",
+      "ref": "Суд 17:1"
+     }
+    ]
+   },
+   "prov": {
+    "by": "исправление D16-1"
+   }
   },
   {
    "id": "p-mikha-s-gory-efremovoy",

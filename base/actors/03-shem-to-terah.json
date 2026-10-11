@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data/persons/03-shem-to-terah.json",
-   "commit": "18c46f0"
+   "commit": "6363b8c"
   }
  },
  "sources": [
@@ -2633,10 +2633,10 @@
    "sex": "f",
    "names": [
     {
-     "form": "Жена Лота",
+     "form": "Жена Лотова",
      "type": "main",
      "refs": [
-      "Быт 19:15"
+      "Быт 19:26"
      ]
     }
    ],
@@ -2754,7 +2754,17 @@
       ]
      }
     }
-   ]
+   ],
+   "descriptor": {
+    "text": "жена Лотова",
+    "refs": [
+     "Быт 19:26"
+    ],
+    "cert": "scripture"
+   },
+   "prov": {
+    "by": "исправление D16-1"
+   }
   },
   {
    "id": "p-starshaya-doch-lota",
@@ -2944,7 +2954,18 @@
      },
      "needsSources": true
     }
-   ]
+   ],
+   "descriptor": {
+    "text": "старшая дочь Лота",
+    "refs": [
+     "Быт 19:30",
+     "Быт 19:31"
+    ],
+    "cert": "scripture"
+   },
+   "prov": {
+    "by": "исправление D16-1"
+   }
   },
   {
    "id": "p-mladshaya-doch-lota",
@@ -3125,7 +3146,18 @@
      },
      "needsSources": true
     }
-   ]
+   ],
+   "descriptor": {
+    "text": "младшая дочь Лота",
+    "refs": [
+     "Быт 19:30",
+     "Быт 19:31"
+    ],
+    "cert": "scripture"
+   },
+   "prov": {
+    "by": "исправление D16-1"
+   }
   },
   {
    "id": "p-moav",

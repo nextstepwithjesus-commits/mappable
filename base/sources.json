@@ -1005,6 +1005,78 @@
    "notProves": "Реконструкция учёных, а не слова Библии: год схемы не становится фактом (R9, Г-5); толкование не становится годом"
   },
   {
+   "id": "w-finegan-1998",
+   "title": "Handbook of Biblical Chronology: Principles of Time Reckoning in the Ancient World and Problems of Chronology in the Bible",
+   "org": "Hendrickson",
+   "author": "Jack Finegan",
+   "version": "",
+   "date": "1998",
+   "license": "авторское право; только пересказ",
+   "spdx": "NOASSERTION",
+   "licenseSource": "docs/app/02-ДАННЫЕ.md § 3.15.4 (лицензия не проверялась: труд только называется)",
+   "attributionRequired": false,
+   "shareAlike": false,
+   "redistribute": false,
+   "use": "citation",
+   "year": "1998",
+   "edition": "перераб. изд.",
+   "publisher": "Hendrickson",
+   "tradition": [
+    "historical-critical"
+   ],
+   "read": "2026-10-12 (Д-20): библиографические данные; сам труд в этой задаче не читался, страницы не сверены",
+   "limits": "Справочник по хронологии опор: годы правителей Вавилона, Персии и Рима, счёт лет Тиверия, смерть Ирода, хронология Деяний. Традиция отнесена условно (протестантский учёный, справочник без вероучительной позиции). Страницы не сверены — опоры с этим трудом в выпуск не идут, пока нет страницы (04 § 9 п. 19)",
+   "notProves": "Реконструкция учёных, а не слова Библии: год опоры не становится фактом (R9, Г-5); толкование не становится годом"
+  },
+  {
+   "id": "w-yamauchi-1980",
+   "title": "The Reverse Order of Ezra/Nehemiah Reconsidered",
+   "org": "Themelios",
+   "author": "Edwin M. Yamauchi",
+   "version": "",
+   "date": "1980",
+   "license": "авторское право; только пересказ",
+   "spdx": "NOASSERTION",
+   "licenseSource": "docs/app/02-ДАННЫЕ.md § 3.15.4 (лицензия не проверялась: труд только называется)",
+   "attributionRequired": false,
+   "shareAlike": false,
+   "redistribute": false,
+   "use": "citation",
+   "year": "1980",
+   "edition": "Themelios 5/3 (1980), с. 7–13",
+   "publisher": "Universities and Colleges Christian Fellowship",
+   "tradition": [
+    "evangelical"
+   ],
+   "read": "2026-10-12 (Д-20): библиографические данные; сам труд в этой задаче не читался, страницы не сверены",
+   "limits": "Разбор мнения, что Ездра пришёл при Артаксерксе II (398), и доводов против него; страница внутри статьи не сверена",
+   "notProves": "Реконструкция учёных, а не слова Библии: год опоры не становится фактом (R9, Г-5); толкование не становится годом"
+  },
+  {
+   "id": "w-young-jerusalem-2004",
+   "title": "When Did Jerusalem Fall?",
+   "org": "Journal of the Evangelical Theological Society",
+   "author": "Rodger C. Young",
+   "version": "",
+   "date": "2004",
+   "license": "авторское право; только пересказ",
+   "spdx": "NOASSERTION",
+   "licenseSource": "docs/app/02-ДАННЫЕ.md § 3.15.4 (лицензия не проверялась: труд только называется)",
+   "attributionRequired": false,
+   "shareAlike": false,
+   "redistribute": false,
+   "use": "citation",
+   "year": "2004",
+   "edition": "JETS 47/1 (2004), с. 21–38",
+   "publisher": "Evangelical Theological Society",
+   "tradition": [
+    "evangelical"
+   ],
+   "read": "2026-10-12 (Д-20): библиографические данные; сам труд в этой задаче не читался, страницы не сверены",
+   "limits": "Опора падения Иерусалима 587 по схеме s-mcfall-young (an-jerusalem-fall); страница внутри статьи не сверена",
+   "notProves": "Реконструкция учёных, а не слова Библии: год опоры не становится фактом (R9, Г-5); толкование не становится годом"
+  },
+  {
    "id": "w-thiele-1983",
    "title": "The Mysterious Numbers of the Hebrew Kings",
    "org": "Zondervan",

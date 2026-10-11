@@ -23,7 +23,8 @@ import { loadIds, PREFIX, type IdKind } from './ids.ts';
 import { releaseOk } from './release.ts';
 import { validateStories } from './stories.ts';
 import { validateNameForms } from './name-forms.ts';
-import { checkTime, MODELS, SCHEMES } from './time-check.ts';
+import { checkDescriptors, descriptorText } from './descriptor.ts';
+import { calcAnchorIssues, checkTime, MODELS, SCHEMES } from './time-check.ts';
 
 export interface Issue { level: 'error' | 'warn'; check: string; where: string; msg: string }
 
@@ -373,6 +374,7 @@ export function validate(base: Base): Issue[] {
   // данные времени окончательного вида (Д6; 02 § 3.15): входы, эпохи, модели и схемы, опоры с трудами
   checkTime(base, {
     err, warn, mainTexts, clean, actorIds: new Set(actors.keys()),
+    namedIn: (id, text) => !!actors.get(id)?.names.some((n) => nameMatcher(n.form).test(norm(text))),
     verseKeys: (ref) => parseRef(ref, bible.chapterLength)?.verses.map(verseId) ?? [],
   });
   const own = ownRefs(base);
@@ -504,6 +506,7 @@ export function validate(base: Base): Issue[] {
   }
 
   // ---------- лица: имена, утверждения, карантин ----------
+  const anchorMap = new Map<string, { kind?: string }>((base.anchors?.anchors ?? []).map((a: any) => [a.id, a]));
   const actorRefs = new Map<string, string[]>();
   const addRefs = (id: string, rs: string[]) => actorRefs.set(id, [...(actorRefs.get(id) ?? []), ...rs]);
   for (const a of actors.values()) {
@@ -537,7 +540,8 @@ export function validate(base: Base): Issue[] {
         if (c.model && !MODELS.includes(c.model)) err('расчёт', w, `модель «${c.model}» не из 04 § 16.1`);
         if (c.scheme && !SCHEMES.includes(c.scheme)) err('расчёт', w, `схема «${c.scheme}» не из 04 § 16.1`);
         if (c.model && c.scheme) err('расчёт', w, 'у ссылки на расчёт — модель или схема, не обе');
-        if (!c.model && !c.scheme) warn('расчёт', w, 'ссылка на расчёт без модели и схемы: для этого времени модели ещё нет (Д-7)');
+        for (const m of calcAnchorIssues(c, anchorMap, (w2, refs) => clean(refs.flatMap((r) => mainTexts(w, r)).join(' ')).includes(clean(w2)))) err('расчёт', w, m);
+        if (!c.model && !c.scheme && !c.anchor) warn('расчёт', w, 'ссылка на расчёт без модели, схемы и опоры: для этого времени модели ещё нет (Д-7, Д-17)');
         if (yearIn(f.value)) err('расчёт', w, 'у записи со ссылкой на расчёт год в записи остался');
       }
       if (yearIn(f.value) && f.cert !== 'calc') {
@@ -558,7 +562,9 @@ export function validate(base: Base): Issue[] {
     const rs = [...new Set(actorRefs.get(a.id) ?? [])];
     const joined = norm(rs.flatMap((r) => mainTexts(a.id, r)).join(' '));
     if (a.kind === 'unnamed' || a.kind === 'group') {
-      if (a.descriptor && !nameMatcher(a.descriptor).test(joined)) err('имя', a.id, `описательное слово «${a.descriptor}» не найдено в стихах лица`);
+      // подпись безымянного (02 § 3.2; К-20) проверяет checkDescriptors; у группы — описательное слово в стихах лица
+      const dt = descriptorText(a);
+      if (a.kind === 'group' && dt && !nameMatcher(dt).test(joined)) err('имя', a.id, `описательное слово «${dt}» не найдено в стихах лица`);
       continue;
     }
     const forms = a.names.map((n) => n.form);
@@ -750,6 +756,7 @@ export function validate(base: Base): Issue[] {
 
   // ---------- форма имени лица: уровень тождества, тождество по форме, основание переадресации (02 § 3.3.5; К-18) ----------
   validateNameForms(base, err, warn);
+  checkDescriptors(base, err);
 
   // ---------- стоп-список предания: утверждения, а не имена (02, § 7) ----------
   stopList(base, actors, err);

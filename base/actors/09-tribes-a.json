@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data/persons/09-tribes-a.json",
-   "commit": "18c46f0"
+   "commit": "6363b8c"
   }
  },
  "sources": [
@@ -4017,7 +4017,17 @@
       "first": "1Пар 7:14"
      }
     }
-   ]
+   ],
+   "descriptor": {
+    "text": "наложница Манассии",
+    "refs": [
+     "1Пар 7:14"
+    ],
+    "cert": "scripture"
+   },
+   "prov": {
+    "by": "исправление D16-1"
+   }
   },
   {
    "id": "p-makhir",

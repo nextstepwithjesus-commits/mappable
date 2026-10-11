@@ -340,7 +340,8 @@ export const STEPS_D3: Step[] = [
         if (cache.has(id)) return cache.get(id)!;
         const a = actors.get(id);
         if (!a) throw new Error(`«нет сведений» у несуществующего лица ${id}`);
-        const forms = (a.kind === 'unnamed' || a.kind === 'group') && a.descriptor ? [a.descriptor] : a.names.map((n) => n.form);
+        // подпись на этом шаге — ещё строка прежнего вида (подпись записью — шаг D16-1, позже)
+        const forms = (a.kind === 'unnamed' || a.kind === 'group') && a.descriptor ? [a.descriptor as string] : a.names.map((n) => n.form);
         const named = new Set<string>();
         for (const r of new Set(own.get(id) ?? [])) {
           for (const v of parseRef(r, chapterLength)?.verses ?? []) {

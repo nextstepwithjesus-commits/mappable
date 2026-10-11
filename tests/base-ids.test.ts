@@ -82,7 +82,9 @@ describe('таблица выданных номеров base/ids.json (К-1)', 
     // (места Писания, заметки и сведения новых карточек; заметка о Иез 1:2 у Иехонии), отношений «возможно, то же лицо» +26
     // правка по второму ключу партии 2: рёбер +2 (Шавтай — Левий, Иоханан из Неем 12 — Елиашив), утверждений +25 (заметки и места
     // Писания тёзок; −2 выбывших у Иехонии), отношений +14 (13 у тёзок и Раамии, 2 у Иоханана, −1 ar-34)
-    expect([n('origin'), n('fact'), n('kin'), n('epoch'), n('anchor'), n('relation')]).toEqual([2156, 16374, 82, 16, 22, 48]);
+    // 02 ред. 4.6 (В-33): рёбер ±0 (21 ребро «из дома X» и ребро Маттафии — к новым карточкам, номер по концам сменился),
+    // утверждений +44 (места Писания и заметки 21 главы дома из Неем 12:12–21 и Селлума Кореянина), отношений +24
+    expect([n('origin'), n('fact'), n('kin'), n('epoch'), n('anchor'), n('relation')]).toEqual([2156, 16418, 82, 16, 22, 72]);
     // каждый действующий номер — у записи; выбывший — со строкой переадресации
     expect(base.ids!.filter((e) => e.state === 'active').length).toBe(all.length);
     const red = new Set(base.redirects.map((r) => r.from));
@@ -98,7 +100,15 @@ describe('таблица выданных номеров base/ids.json (К-1)', 
         // правка по второму ключу партии 2: Иез 1:2 у Иехонии (a-9572, a-9590), связь Иоханан — Ионафан (ar-34), рёбра тёзок
         ['a-9572', true], ['a-9590', true], ['ar-34', true], ['o-aaron--immer', true], ['o-elitsafan--ieiel-elitsafanit', true],
         ['o-elitsafan--shemaiya-elisafanit', true], ['o-elitsafan--shimri-elitsafanit', true], ['o-kore-syn-eviasafa--meshelemiya', true],
-        ['o-shevuil-syn-girsama--iediya', true], ['o-uziil--aminadav-uzziilit', true]].sort(),
+        ['o-shevuil-syn-girsama--iediya', true], ['o-uziil--aminadav-uzziilit', true],
+        // 02 ред. 4.6 (В-33): рёбра «из дома X» (Неем 12:12–21) — к карточкам глав домов (Д15-2), ребро Маттафии — к Селлуму
+        // Кореянину (Д-18): номер по концам сменился, прежний с переадресацией
+        ...['o-amariya-neem12--iokhanan-neem12', 'o-amok--ever-neem12', 'o-aviya-neem12--zikhriy-neem12', 'o-ezdra-neem12--meshullam-neem12-13',
+          'o-ginnefoy--meshullam-neem12-16', 'o-iddo-neem12--zakhariya-neem12', 'o-iedaiya-neem12-6--uzziy-neem12', 'o-iedaiya-neem12-7--nafanail-neem12',
+          'o-ieremiya-neem12--khananiya-neem12', 'o-ioiariv-neem12--mafnay', 'o-khelkiya-neem12--khashaviya-neem12', 'o-maadiya--piltay',
+          'o-mallukh-neem12--ionafan-neem12-14', 'o-meremof-neem12--khelkiya-neem12-15', 'o-rekhum-neem12--adna-neem12', 'o-sallu-neem12--kallay',
+          'o-seraiya-neem12--meraiya', 'o-shallum-syn-kore--mattafiya-syn-selluma', 'o-shekhaniya-neem12--iosif-neem12',
+          'o-shemaiya-neem12--ionafan-neem12-18', 'o-vilga-neem12--shammuy-neem12'].map((id) => [id, true])].sort(),
     );
   });
 
@@ -337,7 +347,7 @@ describe('перенос подписей base:mark --rekey (К-2)', () => {
     expect(admission({ ...b, checks: r.entries }, 'release').okKey('origin:o-avraam--isaak')).toBe(false);
   });
 
-  it('до и после переноса в выпуск допущены одни и те же записи — без исключений (81)', () => {
+  it('до и после переноса в выпуск допущены одни и те же записи — без исключений (75)', () => {
     const before = beforeIds(base);
     const admittedLegacy = (b: Base) => {
       const A = admission(b, 'release');
@@ -347,8 +357,10 @@ describe('перенос подписей base:mark --rekey (К-2)', () => {
     const now = admittedLegacy(withoutD1(base));
     expect(now).toEqual(was);
     // было 101; Д-р11: подписи контрольного набора actor:p-avraam, actor:p-sarra, actor:p-irod-antipa сняты — у форм имён исправлены ссылки (−20 записей)
-    expect(now).toHaveLength(81);
-    expect(admission(withoutD1(base), 'release').counts.all.admitted).toBe(81);
+    // 02 ред. 4.6 (Д-16): подписи actor:p-zhena-kaina и actor:p-samaryanin-iz-desyati-prokazhennykh сняты — подпись безымянного
+    // стала записью descriptor со стихами (−6 записей: лица и их утверждения)
+    expect(now).toHaveLength(75);
+    expect(admission(withoutD1(base), 'release').counts.all.admitted).toBe(75);
     // база до номеров читается прежними ключами (records без id)
     expect(records(before).every((r) => r.key === r.legacy)).toBe(true);
   });

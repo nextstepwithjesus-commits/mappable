@@ -99,8 +99,9 @@ describe('расчёт по моделям — таблица 04 § 3.8', () => 
 
   it('опора Самарии по схеме по умолчанию — 723, 722 — альтернатива по Тиле (04 § 9 п. 6)', () => {
     const a = base.anchors.anchors.find((x: any) => x.id === 'an-samaria');
-    expect(a.value).toBe(-723);
-    expect(a.alternatives.map((x: any) => x.value)).toEqual([-722]);
+    // Д-20: год опоры — промежуток {earliest, latest, words}; альтернатива — запись с трудом (02 § 3.15.4 [4.6])
+    expect([a.kind, a.year.earliest, a.year.latest]).toEqual(['calc', -723, -723]);
+    expect(a.alternatives.map((x: any) => [x.year.earliest, x.works[0].work])).toEqual([[-722, 'w-thiele-1983']]);
   });
 });
 

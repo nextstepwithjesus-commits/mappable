@@ -175,7 +175,7 @@ describe('Д-2: степень у вида «предок»', () => {
 });
 
 describe('подписи второго ключа (Д-партия-1-второй-ключ.md)', () => {
-  it('подписаны Д-5 (23), Д-2 (368), Д-7 (323); отношения ar- и новые карточки — нет; допущено в выпуск 94', () => {
+  it('подписаны Д-5 (23), Д-2 (368), Д-7 (323); отношения ar- и новые карточки — нет; допущено в выпуск 88', () => {
     const d1 = (base.checks ?? []).filter((c) => /Д-партия-1/.test(c.by));
     const n = (re: RegExp) => d1.filter((c) => re.test(c.key)).length;
     // было 323 и 714; Д-15 (D15-1): a-12965 («пребывал с Апостолами в горнице», Деян 1:13) получил idCert — подпись снята до второго ключа
@@ -184,11 +184,15 @@ describe('подписи второго ключа (Д-партия-1-второ
     // «выв.») и a-12974 (Симон Зилот — idCert)
     // правка по второму ключу партии 2: сняты подписи ещё пяти рёбер, ушедших к карточкам тёзок (o-aaron--immer,
     // o-elitsafan--shemaiya-elisafanit, o-elitsafan--shimri-elitsafanit, o-elitsafan--ieiel-elitsafanit, o-uziil--aminadav-uzziilit)
-    expect([n(/^(kin|union|redirect):/), n(/^origin:/), n(/^fact:/), d1.length]).toEqual([23, 358, 321, 702]);
+    // 02 ред. 4.6 (В-33; corrections-v33.ts): сняты подписи 18 рёбер «из дома X» (Неем 12:12–21 — к карточкам глав домов, Д15-2;
+    // ключи сменились), ребра o-leviy--akkuv (тождество по форме «Аккуб», Д-18) и a-9344 (idCert, Д-18) — до второго ключа
+    expect([n(/^(kin|union|redirect):/), n(/^origin:/), n(/^fact:/), d1.length]).toEqual([23, 340, 320, 683]);
     expect(d1.filter((c) => /^relation:|^actor:/.test(c.key))).toEqual([]);
     expect(d1.every((c) => c.kind === 'agent')).toBe(true);
     // снимок на время подписи: контрольный набор (103) + Д-партия 1; подписи следующих партий не считаются
     // было 118; Д-р11: подписи контрольного набора actor:p-avraam, actor:p-sarra, actor:p-irod-antipa сняты — у форм имён исправлены ссылки (−24 записи: лица и их утверждения)
-    expect(admission(snapshot(base, CONTROL, D1), 'release').counts.all.admitted).toBe(94);
+    // 02 ред. 4.6 (Д-16): подписи контрольного набора actor:p-zhena-kaina и actor:p-samaryanin-iz-desyati-prokazhennykh сняты —
+    // подпись безымянного стала записью descriptor со стихами (−6 записей: лица и их утверждения)
+    expect(admission(snapshot(base, CONTROL, D1), 'release').counts.all.admitted).toBe(88);
   });
 });

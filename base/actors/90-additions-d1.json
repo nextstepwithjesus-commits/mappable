@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data/persons/90-additions-d1.json",
-   "commit": "18c46f0"
+   "commit": "6363b8c"
   }
  },
  "sources": [
@@ -18,7 +18,13 @@
    "id": "p-zhena-kaina",
    "kind": "unnamed",
    "sex": "f",
-   "descriptor": "жена",
+   "descriptor": {
+    "text": "жена Каина",
+    "refs": [
+     "Быт 4:17"
+    ],
+    "cert": "scripture"
+   },
    "names": [
     {
      "form": "Жена Каина",
@@ -31,7 +37,7 @@
    "disambig": "мать Еноха",
    "facts": [],
    "prov": {
-    "by": "дополнение Д1",
+    "by": "исправление D16-1",
     "status": "draft"
    }
   },
@@ -173,7 +179,13 @@
    "id": "p-samaryanin-iz-desyati-prokazhennykh",
    "kind": "unnamed",
    "sex": "m",
-   "descriptor": "Самарянин",
+   "descriptor": {
+    "text": "Самарянин",
+    "refs": [
+     "Лк 17:16"
+    ],
+    "cert": "scripture"
+   },
    "names": [
     {
      "form": "Самарянин",
@@ -202,7 +214,7 @@
     }
    ],
    "prov": {
-    "by": "дополнение Д1",
+    "by": "исправление D16-1",
     "status": "draft"
    }
   }

@@ -71,10 +71,33 @@ export function restsOnFormLoose(a: Actor, refs: Ref[]): Name | undefined {
 }
 
 /**
- * Записи, которым тождество по форме не нужно: заметки о тождестве (`kind: identification`) — слова о самом тождестве или о
- * тёзках («Не смешивать с…»), а не сведения о лице по стиху формы.
+ * Прежнее правило освобождения (шаги D15-1…D15-18 в коммите; поведение не меняется): заметки о тождестве (`kind: identification`).
+ * По 02 ред. 4.6 § 3.3.5 вид заметки сам по себе не освобождает: валидатор требует явное поле `idCertExempt` (К-22; см. ниже).
  */
 export const formCertExempt = (f: { value?: unknown }) => (f.value as { kind?: string } | undefined)?.kind === 'identification';
+
+/** Значения поля освобождения заметки (02 § 3.3.5 [4.5; 4.6]; К-22). */
+export const ID_CERT_EXEMPT = ['not-same', 'says-inferred', 'other-verses'] as const;
+
+/**
+ * Проверка явного освобождения (К-22): «not-same» — в тексте заметки слова «Не смешивать»; «says-inferred» — «так выходит, если
+ * сравнить»; «other-verses» — ни одного стиха формы «выв.» карточки среди стихов записи. Возвращает ошибку или undefined.
+ */
+export function exemptIssue(a: Actor, f: { value?: unknown; idCert?: IdCert; idCertExempt?: string }, refs: Ref[]): string | undefined {
+  const x = f.idCertExempt;
+  if (x === undefined) return undefined;
+  if (!(ID_CERT_EXEMPT as readonly string[]).includes(x)) return `idCertExempt «${x}» — not-same, says-inferred или other-verses`;
+  if (f.idCert) return 'и idCert, и idCertExempt: запись либо держится на форме, либо освобождена';
+  const t = String((f.value as { text?: string } | undefined)?.text ?? '');
+  if (x === 'not-same' && !/не смешивать/i.test(t)) return 'idCertExempt: not-same, а слов «Не смешивать» в заметке нет';
+  if (x === 'says-inferred' && !/так выходит, если сравнить/i.test(t)) return 'idCertExempt: says-inferred, а слов «так выходит, если сравнить» в заметке нет';
+  if (x === 'other-verses') {
+    const fv = new Set(inferredForms(a).flatMap(formVerses));
+    const hit = verseIds(refs).filter((v) => fv.has(v));
+    if (hit.length) return `idCertExempt: other-verses, а стихи формы «выв.» среди стихов записи есть (${hit.join(', ')})`;
+  }
+  return undefined;
+}
 
 export function validateNameForms(base: Base, err: Err, warn: Err) {
   const actors = new Map<string, Actor>();
@@ -119,13 +142,24 @@ export function validateNameForms(base: Base, err: Err, warn: Err) {
     if (inferredForms(a).length && /он же|иначе/i.test(a.disambig ?? '')) err('форма имени', a.id, `уточнение «${a.disambig}» — со словами «он же», «иначе»: это слова тождества «сказано», а форма — «выв.» (02 § 3.3.5)`);
     // форма без общего стиха с основным и без вида (cert или possibly-same) — после Д-15 ошибка (02 § 3.3.5 [4.4 по Р-5]; партия 2
     // разобрала все 208 таких форм — reviews/Д-15-партия-2-отчёт.md)
+    // «Писание» у другой формы — только когда текст сам связывает имена: стих называет лицо обоими именами или форма сказана вместе
+    // с другой (with); другое написание само по себе уровня не даёт (02 § 3.3.4 [4.6]; К-22)
+    if (a.kind !== 'unnamed' && a.kind !== 'group' && mains[0]) {
+      for (const n of a.names) {
+        if (n === mains[0] || n.cert !== 'scripture' || n.with) continue;
+        const others = a.names.filter((m) => m !== n && m.cert !== 'inference');
+        const vs = [...new Set(verseIds([...(n.refs ?? []), ...others.flatMap((m) => m.refs ?? [])]))];
+        const both = vs.some((v) => nameMatcher(n.form).test(textOf(v)) && others.some((m) => nameMatcher(m.form).test(textOf(v))));
+        if (n.refs?.length && !both) err('форма «Писание»', `${a.id} «${n.form}»`, 'форма «Писание» без стиха, где лицо названо и этой, и другой формой «Писание»: другое написание само по себе уровня не даёт — вид (б) или (в) по 02 § 3.3.4 [4.6]');
+      }
+    }
     if (a.kind !== 'unnamed' && a.kind !== 'group' && mains[0]) {
       for (const n of a.names) {
         if (n === mains[0] || n.cert !== undefined || n.type === 'patronymic' || n.type === 'title' || n.type === 'epithet') continue;
         if (possibly.has(a.id)) continue;
         const vs = verseIds(n.refs ?? []);
         if (!vs.length) continue;
-        if (!vs.some((v) => nameMatcher(mains[0].form).test(textOf(v)))) err('форма без вида', `${a.id} «${n.form}»`, `нет общего стиха с основным именем «${mains[0].form}» и нет вида (cert или possibly-same): вид по 02 § 3.3.4 — (а) или то же имя другим написанием (cert: scripture), (б) (cert: inference), (в) — своя карточка и possibly-same`);
+        if (!vs.some((v) => nameMatcher(mains[0].form).test(textOf(v)))) err('форма без вида', `${a.id} «${n.form}»`, `нет общего стиха с основным именем «${mains[0].form}» и нет вида (cert или possibly-same): вид по 02 § 3.3.4 [4.6] — (а) (cert: scripture: стих называет лицо обоими именами), (б) (cert: inference), (в) — своя карточка и possibly-same`);
       }
     }
   }
@@ -155,7 +189,6 @@ export function validateNameForms(base: Base, err: Err, warn: Err) {
     for (const f of a.facts) {
       const w = `${a.id} § ${f.sec} ${f.field}${f.id ? ` (${f.id})` : ''}`;
       idCertOk(w, a.id, f.idCert);
-      if (!hasInf || f.idCert || f.prov?.status === 'quarantine' || formCertExempt(f)) continue;
       const refs: Ref[] = [];
       const go = (x: unknown) => {
         if (Array.isArray(x)) return x.forEach(go);
@@ -166,8 +199,11 @@ export function validateNameForms(base: Base, err: Err, warn: Err) {
         for (const [k, y] of Object.entries(o)) if (k !== 'refs') go(y);
       };
       go(f.value);
+      const ex = exemptIssue(a, f, refs);
+      if (ex) err('тождество по форме', w, ex);
+      if (!hasInf || f.idCert || f.idCertExempt || f.prov?.status === 'quarantine') continue;
       const form = restsOnFormLoose(a, refs);
-      if (form) err('тождество по форме', w, `запись держится на форме «выв.» «${form.form}» (в стихах записи лицо названо только этой формой или не названо вовсе): нужен idCert (02 § 3.3.5)`);
+      if (form) err('тождество по форме', w, `запись держится на форме «выв.» «${form.form}» (в стихах записи лицо названо только этой формой или не названо вовсе): нужен idCert или явное освобождение idCertExempt по словам заметки (02 § 3.3.5 [4.6])`);
     }
   }
   for (const m of base.memberships) {

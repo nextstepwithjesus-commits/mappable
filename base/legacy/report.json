@@ -1,7 +1,7 @@
 {
  "schema": 1,
  "title": "Отчёт переноса: отличия обратной проекции от прежних данных и исправления, которые их объясняют",
- "commit": "18c46f0",
+ "commit": "6363b8c",
  "exact": "точный перенос совпал с прежними данными без отличий",
  "note": "steps — ключи записей, изменённые каждым шагом исправления (все в объявленной области шага); projection — отличия прежнего вида по лицам и полям",
  "steps": {
@@ -5632,6 +5632,684 @@
    "epoch:era-christ",
    "epoch:era-apostolic",
    "epoch:era-church"
+  ],
+  "D18-1": [
+   "actor:p-khatsarmavef.names",
+   "actor:p-khatsarmavef.prov",
+   "actor:p-oval.names",
+   "actor:p-oval.prov",
+   "actor:p-mamriy.names",
+   "actor:p-mamriy.prov",
+   "actor:p-etser-syn-seira.names",
+   "actor:p-etser-syn-seira.prov",
+   "actor:p-famna-sestra-lotana.names",
+   "actor:p-famna-sestra-lotana.prov",
+   "actor:p-eval-syn-shovala.names",
+   "actor:p-eval-syn-shovala.prov",
+   "actor:p-eshban.names",
+   "actor:p-eshban.prov",
+   "actor:p-fallu.names",
+   "actor:p-fallu.prov",
+   "actor:p-iamin-syn-simeona.names",
+   "actor:p-iamin-syn-simeona.prov",
+   "actor:p-iakhin-syn-simeona.names",
+   "actor:p-iakhin-syn-simeona.prov",
+   "actor:p-fuva.names",
+   "actor:p-fuva.prov",
+   "actor:p-tsifion.names",
+   "actor:p-tsifion.prov",
+   "actor:p-shuni.names",
+   "actor:p-shuni.prov",
+   "actor:p-bria-syn-asira.names",
+   "actor:p-bria-syn-asira.prov",
+   "actor:p-guni-syn-neffalima.names",
+   "actor:p-guni-syn-neffalima.prov",
+   "actor:p-iessey.names",
+   "actor:p-iessey.prov",
+   "actor:p-amessay.names",
+   "actor:p-amessay.prov",
+   "actor:p-veseleil-syn-uriya.names",
+   "actor:p-veseleil-syn-uriya.prov",
+   "actor:p-girson.names",
+   "actor:p-girson.prov",
+   "actor:p-uziil.names",
+   "actor:p-uziil.prov",
+   "actor:p-mushi.names",
+   "actor:p-mushi.prov",
+   "actor:p-aviasaf.names",
+   "actor:p-aviasaf.prov",
+   "actor:p-tsuf.names",
+   "actor:p-tsuf.prov",
+   "actor:p-toakh.names",
+   "actor:p-toakh.prov",
+   "actor:p-ikhavod.names",
+   "actor:p-ikhavod.prov",
+   "actor:p-oziya-syn-bukkiya.names",
+   "actor:p-oziya-syn-bukkiya.prov",
+   "actor:p-meraiof.names",
+   "actor:p-meraiof.prov",
+   "actor:p-sellum-syn-sadoka.names",
+   "actor:p-sellum-syn-sadoka.prov",
+   "actor:p-berekhiya-otets-asafa.names",
+   "actor:p-berekhiya-otets-asafa.prov",
+   "actor:p-shevuil-syn-emana.names",
+   "actor:p-shevuil-syn-emana.prov",
+   "actor:p-kishiy.names",
+   "actor:p-kishiy.prov",
+   "actor:p-tseri.names",
+   "actor:p-tseri.prov",
+   "actor:p-semey-syn-idifuna.names",
+   "actor:p-semey-syn-idifuna.prov",
+   "actor:p-iekhiil-syn-laedana.names",
+   "actor:p-iekhiil-syn-laedana.prov",
+   "actor:p-shelomif-syn-itsgara.names",
+   "actor:p-shelomif-syn-itsgara.prov",
+   "actor:p-ieremof-syn-mushi.names",
+   "actor:p-ieremof-syn-mushi.prov",
+   "actor:p-meshillemif.names",
+   "actor:p-meshillemif.prov",
+   "actor:p-khashuv.names",
+   "actor:p-khashuv.prov",
+   "actor:p-mikha-syn-zikhriya.names",
+   "actor:p-mikha-syn-zikhriya.prov",
+   "actor:p-akkuv.names",
+   "actor:p-akkuv.prov",
+   "actor:p-ionafan.names",
+   "actor:p-ionafan.prov",
+   "actor:p-melkhisua.names",
+   "actor:p-melkhisua.prov",
+   "actor:p-faareya.names",
+   "actor:p-faareya.prov",
+   "actor:p-shomer-syn-khevera.names",
+   "actor:p-shomer-syn-khevera.prov",
+   "actor:p-egla.names",
+   "actor:p-egla.prov",
+   "actor:p-ieferaam.names",
+   "actor:p-ieferaam.prov",
+   "actor:p-sovav-syn-davida.names",
+   "actor:p-sovav-syn-davida.prov",
+   "actor:p-elifelet-syn-davida.names",
+   "actor:p-elifelet-syn-davida.prov",
+   "actor:p-elisama-syn-davida.names",
+   "actor:p-elisama-syn-davida.prov",
+   "actor:p-eliada-syn-davida.names",
+   "actor:p-eliada-syn-davida.prov",
+   "actor:p-elifalef-syn-davida.names",
+   "actor:p-elifalef-syn-davida.prov",
+   "actor:p-maokh.names",
+   "actor:p-maokh.prov",
+   "actor:p-ammiil-otets-makhira.names",
+   "actor:p-ammiil-otets-makhira.prov",
+   "actor:p-akhio-syn-aminadava.names",
+   "actor:p-akhio-syn-aminadava.prov",
+   "actor:p-shimeata.names",
+   "actor:p-shimeata.prov",
+   "actor:p-ioafam.names",
+   "actor:p-ioafam.prov",
+   "actor:p-amon-tsar.names",
+   "actor:p-amon-tsar.prov",
+   "actor:p-sellum-syn-iosii.names",
+   "actor:p-sellum-syn-iosii.prov",
+   "actor:p-feglaffellasar.names",
+   "actor:p-feglaffellasar.prov",
+   "actor:p-iiuy-syn-anani.names",
+   "actor:p-iiuy-syn-anani.prov",
+   "actor:p-rekhav-otets-ionadava.names",
+   "actor:p-rekhav-otets-ionadava.prov",
+   "actor:p-valadan.names",
+   "actor:p-valadan.prov",
+   "actor:p-shafan.names",
+   "actor:p-shafan.prov",
+   "actor:p-malkhiya-otets-paskhora.names",
+   "actor:p-malkhiya-otets-paskhora.prov",
+   "actor:p-elishama-ded-ismaila.names",
+   "actor:p-elishama-ded-ismaila.prov",
+   "actor:p-nafaniya-otets-ismaila.names",
+   "actor:p-nafaniya-otets-ismaila.prov",
+   "actor:p-iezaniya-syn-makhafy.names",
+   "actor:p-iezaniya-syn-makhafy.prov",
+   "actor:p-evilmerodakh.names",
+   "actor:p-evilmerodakh.prov",
+   "actor:p-sheshay.names",
+   "actor:p-sheshay.prov",
+   "actor:p-ikesh.names",
+   "actor:p-ikesh.prov",
+   "actor:p-baana-otets-kheleva.names",
+   "actor:p-baana-otets-kheleva.prov",
+   "actor:p-azmavet.names",
+   "actor:p-azmavet.prov",
+   "actor:p-khetsray.names",
+   "actor:p-khetsray.prov",
+   "actor:p-zaffu.names",
+   "actor:p-zaffu.prov",
+   "actor:p-bevay.names",
+   "actor:p-bevay.prov",
+   "actor:p-khabayya.names",
+   "actor:p-khabayya.prov",
+   "actor:p-berekhiya-syn-meshizabela.names",
+   "actor:p-berekhiya-syn-meshizabela.prov"
+  ],
+  "D18-2": [
+   "volume:08-levi.json",
+   "actor:p-shallum-syn-kore.names",
+   "actor:p-shallum-syn-kore.prov",
+   "actor:p-shallum-syn-kore.facts.childrenNote",
+   "actor:p-shallum-syn-kore.facts.scripture",
+   "origin:p-mattafiya-syn-selluma|p-shallum-syn-kore|father|p",
+   "actor:p-sellum-koreyanin.id",
+   "actor:p-sellum-koreyanin.kind",
+   "actor:p-sellum-koreyanin.sex",
+   "actor:p-sellum-koreyanin.names",
+   "actor:p-sellum-koreyanin.disambig",
+   "actor:p-sellum-koreyanin.prominence",
+   "actor:p-sellum-koreyanin.prov",
+   "actor:p-sellum-koreyanin.facts.childrenNote",
+   "actor:p-sellum-koreyanin.facts.scripture",
+   "actor:p-sellum-koreyanin.facts.notes",
+   "origin:p-mattafiya-syn-selluma|p-sellum-koreyanin|father|p",
+   "relation:p-sellum-koreyanin|p-shallum-syn-kore|possibly-same"
+  ],
+  "D15-19": [
+   "volume:08-levi.json",
+   "actor:p-seraiya-neem12.facts.scripture",
+   "actor:p-ieremiya-neem12.facts.scripture",
+   "actor:p-ezdra-neem12.facts.scripture",
+   "actor:p-amariya-neem12.facts.scripture",
+   "actor:p-mallukh-neem12.names",
+   "actor:p-mallukh-neem12.prov",
+   "actor:p-mallukh-neem12.facts.scripture",
+   "actor:p-shekhaniya-neem12.names",
+   "actor:p-shekhaniya-neem12.prov",
+   "actor:p-shekhaniya-neem12.facts.scripture",
+   "actor:p-rekhum-neem12.names",
+   "actor:p-rekhum-neem12.prov",
+   "actor:p-rekhum-neem12.facts.scripture",
+   "actor:p-rekhum-neem12.facts.notes",
+   "actor:p-meremof-neem12.names",
+   "actor:p-meremof-neem12.prov",
+   "actor:p-meremof-neem12.facts.scripture",
+   "actor:p-iddo-neem12.facts.scripture",
+   "actor:p-ginnefoy.names",
+   "actor:p-ginnefoy.facts.scripture",
+   "actor:p-aviya-neem12.facts.scripture",
+   "actor:p-miyamin-neem12.names",
+   "actor:p-miyamin-neem12.prov",
+   "actor:p-miyamin-neem12.facts.scripture",
+   "actor:p-maadiya.names",
+   "actor:p-maadiya.prov",
+   "actor:p-maadiya.facts.scripture",
+   "actor:p-vilga-neem12.facts.scripture",
+   "actor:p-shemaiya-neem12.facts.scripture",
+   "actor:p-ioiariv-neem12.facts.scripture",
+   "actor:p-iedaiya-neem12-6.facts.scripture",
+   "actor:p-iedaiya-neem12-6.facts.notes",
+   "actor:p-sallu-neem12.names",
+   "actor:p-sallu-neem12.prov",
+   "actor:p-sallu-neem12.facts.scripture",
+   "actor:p-amok.facts.scripture",
+   "actor:p-khelkiya-neem12.facts.scripture",
+   "actor:p-iedaiya-neem12-7.facts.scripture",
+   "actor:p-iedaiya-neem12-7.facts.notes",
+   "origin:p-meraiya|p-seraiya-neem12|father|o",
+   "origin:p-khananiya-neem12|p-ieremiya-neem12|father|o",
+   "origin:p-meshullam-neem12-13|p-ezdra-neem12|father|o",
+   "origin:p-iokhanan-neem12|p-amariya-neem12|father|o",
+   "origin:p-ionafan-neem12-14|p-mallukh-neem12|father|o",
+   "origin:p-iosif-neem12|p-shekhaniya-neem12|father|o",
+   "origin:p-adna-neem12|p-rekhum-neem12|father|o",
+   "origin:p-khelkiya-neem12-15|p-meremof-neem12|father|o",
+   "origin:p-zakhariya-neem12|p-iddo-neem12|father|o",
+   "origin:p-meshullam-neem12-16|p-ginnefoy|father|o",
+   "origin:p-zikhriy-neem12|p-aviya-neem12|father|o",
+   "origin:p-piltay|p-maadiya|father|o",
+   "origin:p-shammuy-neem12|p-vilga-neem12|father|o",
+   "origin:p-ionafan-neem12-18|p-shemaiya-neem12|father|o",
+   "origin:p-mafnay|p-ioiariv-neem12|father|o",
+   "origin:p-uzziy-neem12|p-iedaiya-neem12-6|father|o",
+   "origin:p-kallay|p-sallu-neem12|father|o",
+   "origin:p-ever-neem12|p-amok|father|o",
+   "origin:p-khashaviya-neem12|p-khelkiya-neem12|father|o",
+   "origin:p-nafanail-neem12|p-iedaiya-neem12-7|father|o",
+   "actor:p-seraiya-neem12.prov",
+   "actor:p-seraiya-neem12-12.id",
+   "actor:p-seraiya-neem12-12.kind",
+   "actor:p-seraiya-neem12-12.sex",
+   "actor:p-seraiya-neem12-12.names",
+   "actor:p-seraiya-neem12-12.disambig",
+   "actor:p-seraiya-neem12-12.prominence",
+   "actor:p-seraiya-neem12-12.prov",
+   "actor:p-seraiya-neem12-12.facts.scripture",
+   "actor:p-seraiya-neem12-12.facts.notes",
+   "actor:p-ieremiya-neem12.prov",
+   "actor:p-ieremiya-neem12-12.id",
+   "actor:p-ieremiya-neem12-12.kind",
+   "actor:p-ieremiya-neem12-12.sex",
+   "actor:p-ieremiya-neem12-12.names",
+   "actor:p-ieremiya-neem12-12.disambig",
+   "actor:p-ieremiya-neem12-12.prominence",
+   "actor:p-ieremiya-neem12-12.prov",
+   "actor:p-ieremiya-neem12-12.facts.scripture",
+   "actor:p-ieremiya-neem12-12.facts.notes",
+   "actor:p-ezdra-neem12.prov",
+   "actor:p-ezdra-neem12-13.id",
+   "actor:p-ezdra-neem12-13.kind",
+   "actor:p-ezdra-neem12-13.sex",
+   "actor:p-ezdra-neem12-13.names",
+   "actor:p-ezdra-neem12-13.disambig",
+   "actor:p-ezdra-neem12-13.prominence",
+   "actor:p-ezdra-neem12-13.prov",
+   "actor:p-ezdra-neem12-13.facts.scripture",
+   "actor:p-ezdra-neem12-13.facts.notes",
+   "actor:p-amariya-neem12.prov",
+   "actor:p-amariya-neem12-13.id",
+   "actor:p-amariya-neem12-13.kind",
+   "actor:p-amariya-neem12-13.sex",
+   "actor:p-amariya-neem12-13.names",
+   "actor:p-amariya-neem12-13.disambig",
+   "actor:p-amariya-neem12-13.prominence",
+   "actor:p-amariya-neem12-13.prov",
+   "actor:p-amariya-neem12-13.facts.scripture",
+   "actor:p-amariya-neem12-13.facts.notes",
+   "actor:p-melikhu-neem12-14.id",
+   "actor:p-melikhu-neem12-14.kind",
+   "actor:p-melikhu-neem12-14.sex",
+   "actor:p-melikhu-neem12-14.names",
+   "actor:p-melikhu-neem12-14.disambig",
+   "actor:p-melikhu-neem12-14.prominence",
+   "actor:p-melikhu-neem12-14.prov",
+   "actor:p-melikhu-neem12-14.facts.scripture",
+   "actor:p-melikhu-neem12-14.facts.notes",
+   "actor:p-shevaniya-neem12-14.id",
+   "actor:p-shevaniya-neem12-14.kind",
+   "actor:p-shevaniya-neem12-14.sex",
+   "actor:p-shevaniya-neem12-14.names",
+   "actor:p-shevaniya-neem12-14.disambig",
+   "actor:p-shevaniya-neem12-14.prominence",
+   "actor:p-shevaniya-neem12-14.prov",
+   "actor:p-shevaniya-neem12-14.facts.scripture",
+   "actor:p-shevaniya-neem12-14.facts.notes",
+   "actor:p-kharim-neem12-15.id",
+   "actor:p-kharim-neem12-15.kind",
+   "actor:p-kharim-neem12-15.sex",
+   "actor:p-kharim-neem12-15.names",
+   "actor:p-kharim-neem12-15.disambig",
+   "actor:p-kharim-neem12-15.prominence",
+   "actor:p-kharim-neem12-15.prov",
+   "actor:p-kharim-neem12-15.facts.scripture",
+   "actor:p-kharim-neem12-15.facts.notes",
+   "actor:p-meraiof-neem12-15.id",
+   "actor:p-meraiof-neem12-15.kind",
+   "actor:p-meraiof-neem12-15.sex",
+   "actor:p-meraiof-neem12-15.names",
+   "actor:p-meraiof-neem12-15.disambig",
+   "actor:p-meraiof-neem12-15.prominence",
+   "actor:p-meraiof-neem12-15.prov",
+   "actor:p-meraiof-neem12-15.facts.scripture",
+   "actor:p-meraiof-neem12-15.facts.notes",
+   "actor:p-iddo-neem12.prov",
+   "actor:p-iddo-neem12-16.id",
+   "actor:p-iddo-neem12-16.kind",
+   "actor:p-iddo-neem12-16.sex",
+   "actor:p-iddo-neem12-16.names",
+   "actor:p-iddo-neem12-16.disambig",
+   "actor:p-iddo-neem12-16.prominence",
+   "actor:p-iddo-neem12-16.prov",
+   "actor:p-iddo-neem12-16.facts.scripture",
+   "actor:p-iddo-neem12-16.facts.notes",
+   "actor:p-ginnefoy.prov",
+   "actor:p-ginnefon-neem12-16.id",
+   "actor:p-ginnefon-neem12-16.kind",
+   "actor:p-ginnefon-neem12-16.sex",
+   "actor:p-ginnefon-neem12-16.names",
+   "actor:p-ginnefon-neem12-16.disambig",
+   "actor:p-ginnefon-neem12-16.prominence",
+   "actor:p-ginnefon-neem12-16.prov",
+   "actor:p-ginnefon-neem12-16.facts.scripture",
+   "actor:p-ginnefon-neem12-16.facts.notes",
+   "actor:p-aviya-neem12.prov",
+   "actor:p-aviya-neem12-17.id",
+   "actor:p-aviya-neem12-17.kind",
+   "actor:p-aviya-neem12-17.sex",
+   "actor:p-aviya-neem12-17.names",
+   "actor:p-aviya-neem12-17.disambig",
+   "actor:p-aviya-neem12-17.prominence",
+   "actor:p-aviya-neem12-17.prov",
+   "actor:p-aviya-neem12-17.facts.scripture",
+   "actor:p-aviya-neem12-17.facts.notes",
+   "actor:p-miniamin-neem12-17.id",
+   "actor:p-miniamin-neem12-17.kind",
+   "actor:p-miniamin-neem12-17.sex",
+   "actor:p-miniamin-neem12-17.names",
+   "actor:p-miniamin-neem12-17.disambig",
+   "actor:p-miniamin-neem12-17.prominence",
+   "actor:p-miniamin-neem12-17.prov",
+   "actor:p-miniamin-neem12-17.facts.scripture",
+   "actor:p-miniamin-neem12-17.facts.notes",
+   "actor:p-moadiya-neem12-17.id",
+   "actor:p-moadiya-neem12-17.kind",
+   "actor:p-moadiya-neem12-17.sex",
+   "actor:p-moadiya-neem12-17.names",
+   "actor:p-moadiya-neem12-17.disambig",
+   "actor:p-moadiya-neem12-17.prominence",
+   "actor:p-moadiya-neem12-17.prov",
+   "actor:p-moadiya-neem12-17.facts.scripture",
+   "actor:p-moadiya-neem12-17.facts.notes",
+   "actor:p-vilga-neem12.prov",
+   "actor:p-vilga-neem12-18.id",
+   "actor:p-vilga-neem12-18.kind",
+   "actor:p-vilga-neem12-18.sex",
+   "actor:p-vilga-neem12-18.names",
+   "actor:p-vilga-neem12-18.disambig",
+   "actor:p-vilga-neem12-18.prominence",
+   "actor:p-vilga-neem12-18.prov",
+   "actor:p-vilga-neem12-18.facts.scripture",
+   "actor:p-vilga-neem12-18.facts.notes",
+   "actor:p-shemaiya-neem12.prov",
+   "actor:p-shemaiya-neem12-18.id",
+   "actor:p-shemaiya-neem12-18.kind",
+   "actor:p-shemaiya-neem12-18.sex",
+   "actor:p-shemaiya-neem12-18.names",
+   "actor:p-shemaiya-neem12-18.disambig",
+   "actor:p-shemaiya-neem12-18.prominence",
+   "actor:p-shemaiya-neem12-18.prov",
+   "actor:p-shemaiya-neem12-18.facts.scripture",
+   "actor:p-shemaiya-neem12-18.facts.notes",
+   "actor:p-ioiariv-neem12.prov",
+   "actor:p-ioiariv-neem12-19.id",
+   "actor:p-ioiariv-neem12-19.kind",
+   "actor:p-ioiariv-neem12-19.sex",
+   "actor:p-ioiariv-neem12-19.names",
+   "actor:p-ioiariv-neem12-19.disambig",
+   "actor:p-ioiariv-neem12-19.prominence",
+   "actor:p-ioiariv-neem12-19.prov",
+   "actor:p-ioiariv-neem12-19.facts.scripture",
+   "actor:p-ioiariv-neem12-19.facts.notes",
+   "actor:p-iedaiya-neem12-6.prov",
+   "actor:p-iedaiya-neem12-19.id",
+   "actor:p-iedaiya-neem12-19.kind",
+   "actor:p-iedaiya-neem12-19.sex",
+   "actor:p-iedaiya-neem12-19.names",
+   "actor:p-iedaiya-neem12-19.disambig",
+   "actor:p-iedaiya-neem12-19.prominence",
+   "actor:p-iedaiya-neem12-19.prov",
+   "actor:p-iedaiya-neem12-19.facts.scripture",
+   "actor:p-iedaiya-neem12-19.facts.notes",
+   "actor:p-sallay-neem12-20.id",
+   "actor:p-sallay-neem12-20.kind",
+   "actor:p-sallay-neem12-20.sex",
+   "actor:p-sallay-neem12-20.names",
+   "actor:p-sallay-neem12-20.disambig",
+   "actor:p-sallay-neem12-20.prominence",
+   "actor:p-sallay-neem12-20.prov",
+   "actor:p-sallay-neem12-20.facts.scripture",
+   "actor:p-sallay-neem12-20.facts.notes",
+   "actor:p-amok.prov",
+   "actor:p-amok-neem12-20.id",
+   "actor:p-amok-neem12-20.kind",
+   "actor:p-amok-neem12-20.sex",
+   "actor:p-amok-neem12-20.names",
+   "actor:p-amok-neem12-20.disambig",
+   "actor:p-amok-neem12-20.prominence",
+   "actor:p-amok-neem12-20.prov",
+   "actor:p-amok-neem12-20.facts.scripture",
+   "actor:p-amok-neem12-20.facts.notes",
+   "actor:p-khelkiya-neem12.prov",
+   "actor:p-khelkiya-neem12-21.id",
+   "actor:p-khelkiya-neem12-21.kind",
+   "actor:p-khelkiya-neem12-21.sex",
+   "actor:p-khelkiya-neem12-21.names",
+   "actor:p-khelkiya-neem12-21.disambig",
+   "actor:p-khelkiya-neem12-21.prominence",
+   "actor:p-khelkiya-neem12-21.prov",
+   "actor:p-khelkiya-neem12-21.facts.scripture",
+   "actor:p-khelkiya-neem12-21.facts.notes",
+   "actor:p-iedaiya-neem12-7.prov",
+   "actor:p-iedaiya-neem12-21.id",
+   "actor:p-iedaiya-neem12-21.kind",
+   "actor:p-iedaiya-neem12-21.sex",
+   "actor:p-iedaiya-neem12-21.names",
+   "actor:p-iedaiya-neem12-21.disambig",
+   "actor:p-iedaiya-neem12-21.prominence",
+   "actor:p-iedaiya-neem12-21.prov",
+   "actor:p-iedaiya-neem12-21.facts.scripture",
+   "actor:p-iedaiya-neem12-21.facts.notes",
+   "origin:p-meraiya|p-seraiya-neem12-12|father|o",
+   "origin:p-khananiya-neem12|p-ieremiya-neem12-12|father|o",
+   "origin:p-meshullam-neem12-13|p-ezdra-neem12-13|father|o",
+   "origin:p-iokhanan-neem12|p-amariya-neem12-13|father|o",
+   "origin:p-ionafan-neem12-14|p-melikhu-neem12-14|father|o",
+   "origin:p-iosif-neem12|p-shevaniya-neem12-14|father|o",
+   "origin:p-adna-neem12|p-kharim-neem12-15|father|o",
+   "origin:p-khelkiya-neem12-15|p-meraiof-neem12-15|father|o",
+   "origin:p-zakhariya-neem12|p-iddo-neem12-16|father|o",
+   "origin:p-meshullam-neem12-16|p-ginnefon-neem12-16|father|o",
+   "origin:p-zikhriy-neem12|p-aviya-neem12-17|father|o",
+   "origin:p-piltay|p-moadiya-neem12-17|father|o",
+   "origin:p-shammuy-neem12|p-vilga-neem12-18|father|o",
+   "origin:p-ionafan-neem12-18|p-shemaiya-neem12-18|father|o",
+   "origin:p-mafnay|p-ioiariv-neem12-19|father|o",
+   "origin:p-uzziy-neem12|p-iedaiya-neem12-19|father|o",
+   "origin:p-kallay|p-sallay-neem12-20|father|o",
+   "origin:p-ever-neem12|p-amok-neem12-20|father|o",
+   "origin:p-khashaviya-neem12|p-khelkiya-neem12-21|father|o",
+   "origin:p-nafanail-neem12|p-iedaiya-neem12-21|father|o",
+   "relation:p-seraiya-neem12-12|p-seraiya-neem12|possibly-same",
+   "relation:p-ieremiya-neem12-12|p-ieremiya-neem12|possibly-same",
+   "relation:p-ezdra-neem12-13|p-ezdra-neem12|possibly-same",
+   "relation:p-amariya-neem12-13|p-amariya-neem12|possibly-same",
+   "relation:p-melikhu-neem12-14|p-mallukh-neem12|possibly-same",
+   "relation:p-shevaniya-neem12-14|p-shekhaniya-neem12|possibly-same",
+   "relation:p-kharim-neem12-15|p-rekhum-neem12|possibly-same",
+   "relation:p-meraiof-neem12-15|p-meremof-neem12|possibly-same",
+   "relation:p-iddo-neem12-16|p-iddo-neem12|possibly-same",
+   "relation:p-ginnefon-neem12-16|p-ginnefoy|possibly-same",
+   "relation:p-aviya-neem12-17|p-aviya-neem12|possibly-same",
+   "relation:p-miniamin-neem12-17|p-miyamin-neem12|possibly-same",
+   "relation:p-moadiya-neem12-17|p-maadiya|possibly-same",
+   "relation:p-vilga-neem12-18|p-vilga-neem12|possibly-same",
+   "relation:p-shemaiya-neem12-18|p-shemaiya-neem12|possibly-same",
+   "relation:p-ioiariv-neem12-19|p-ioiariv-neem12|possibly-same",
+   "relation:p-iedaiya-neem12-19|p-iedaiya-neem12-6|possibly-same",
+   "relation:p-iedaiya-neem12-19|p-iedaiya-neem12-7|possibly-same",
+   "relation:p-sallay-neem12-20|p-sallu-neem12|possibly-same",
+   "relation:p-amok-neem12-20|p-amok|possibly-same",
+   "relation:p-khelkiya-neem12-21|p-khelkiya-neem12|possibly-same",
+   "relation:p-iedaiya-neem12-21|p-iedaiya-neem12-7|possibly-same",
+   "relation:p-iedaiya-neem12-21|p-iedaiya-neem12-6|possibly-same"
+  ],
+  "D19-1": [
+   "actor:p-mash.facts.notes",
+   "actor:p-oval.facts.notes",
+   "actor:p-famna-sestra-lotana.facts.notes",
+   "actor:p-eval-syn-shovala.facts.notes",
+   "actor:p-fallu.facts.childrenNote",
+   "actor:p-iemuil.facts.notes",
+   "actor:p-iamin-syn-simeona.facts.lineage",
+   "actor:p-iakhin-syn-simeona.facts.lineage",
+   "actor:p-fuva.facts.notes",
+   "actor:p-iov-syn-issakhara.facts.notes",
+   "actor:p-tsifion.facts.lineage",
+   "actor:p-shuni.facts.lineage",
+   "actor:p-bria-syn-asira.facts.childrenNote",
+   "actor:p-bria-syn-asira.facts.notes",
+   "actor:p-khuppim.facts.notes",
+   "actor:p-khushim-syn-dana.facts.notes",
+   "actor:p-guni-syn-neffalima.facts.lineage",
+   "actor:p-guni-syn-neffalima.facts.notes",
+   "actor:p-amessay.facts.lineage",
+   "actor:p-khur.facts.notes",
+   "actor:p-uziil.facts.childrenNote",
+   "actor:p-mushi.facts.childrenNote",
+   "actor:p-ikhavod.facts.siblingsNote",
+   "actor:p-shevuil-syn-emana.facts.status",
+   "actor:p-tseri.facts.status",
+   "actor:p-semey-syn-idifuna.facts.status",
+   "actor:p-iekhiil-syn-laedana.facts.offices",
+   "actor:p-aminadav-syn-saula.facts.notes",
+   "actor:p-shomer-syn-khevera.facts.childrenNote",
+   "actor:p-eliam.facts.notes",
+   "actor:p-samus-syn-davida.facts.notes",
+   "actor:p-eliada-syn-davida.facts.notes",
+   "actor:p-ammiil-otets-makhira.facts.notes",
+   "actor:p-shimeata.facts.lineage",
+   "actor:p-oziya.facts.notes",
+   "actor:p-amon-tsar.facts.places",
+   "actor:p-amon-tsar.facts.offices",
+   "actor:p-amon-tsar.facts.events",
+   "actor:p-amon-tsar.facts.death",
+   "actor:p-sellum-syn-iosii.facts.status",
+   "actor:p-sellum-syn-iosii.facts.withGod",
+   "actor:p-sellum-syn-iosii.facts.laterMentions",
+   "actor:p-feglaffellasar.facts.events",
+   "actor:p-feglaffellasar.facts.withGod",
+   "actor:p-feglaffellasar.facts.notes",
+   "actor:p-iiuy-syn-anani.facts.events",
+   "actor:p-iiuy-syn-anani.facts.sayings",
+   "actor:p-iiuy-syn-anani.facts.met",
+   "actor:p-iiuy-syn-anani.facts.notes",
+   "actor:p-shafan.facts.childrenNote",
+   "actor:p-malkhiya-otets-paskhora.facts.notes",
+   "actor:p-elishama-ded-ismaila.facts.notes",
+   "actor:p-faddey.facts.notes",
+   "actor:p-sheshay.facts.events",
+   "actor:p-azmavet.facts.notes",
+   "actor:p-zaffu.facts.notes",
+   "actor:p-bevay.facts.notes",
+   "origin:p-makhli-syn-mushi|p-mushi|father|p",
+   "origin:p-zefam|p-iekhiil-syn-laedana|father|o",
+   "origin:p-ioil-syn-laedana|p-iekhiil-syn-laedana|father|o",
+   "origin:p-iakhav-syn-shelomofa|p-shelomif-syn-itsgara|father|p",
+   "origin:p-mikha-syn-uziila|p-uziil|father|p",
+   "origin:p-ishshiya-syn-uziila|p-uziil|father|p",
+   "origin:p-eder-syn-mushi|p-mushi|father|p",
+   "origin:p-ieremof-syn-mushi|p-mushi|father|p",
+   "origin:p-kore-syn-eviasafa|p-aviasaf|father|p",
+   "origin:p-akkuv|p-leviy|father|o",
+   "origin:p-eliav-syn-fallu|p-fallu|father|p",
+   "origin:p-akhi-syn-shemera|p-shomer-syn-khevera|father|p",
+   "origin:p-rokhga|p-shomer-syn-khevera|father|p",
+   "origin:p-ikhubba|p-shomer-syn-khevera|father|p",
+   "origin:p-aram-syn-shemera|p-shomer-syn-khevera|father|p",
+   "origin:p-eleasa-syn-shafana|p-shafan|father|p",
+   "origin:p-gemariya-syn-shafana|p-shafan|father|p",
+   "origin:p-iezaniya-syn-shafana|p-shafan|father|p",
+   "origin:p-iezaniya-syn-makhafy|p-makhafa|father|p",
+   "origin:p-akhzay|p-meshillemif|father|p"
+  ],
+  "D16-1": [
+   "actor:p-zhena-lota.names",
+   "actor:p-mat-ieffaya.names",
+   "actor:p-mat-ieffaya.disambig",
+   "actor:p-tsar-2par28-7.descriptor",
+   "actor:p-tsar-2par28-7.prov",
+   "actor:p-tsar-ier38-6.descriptor",
+   "actor:p-tsar-ier38-6.prov",
+   "actor:p-tsaritsa-dan5.descriptor",
+   "actor:p-tsaritsa-dan5.prov",
+   "actor:p-zhena-kaina.descriptor",
+   "actor:p-zhena-kaina.prov",
+   "actor:p-samaryanin-iz-desyati-prokazhennykh.descriptor",
+   "actor:p-samaryanin-iz-desyati-prokazhennykh.prov",
+   "actor:p-zhena-lota.descriptor",
+   "actor:p-zhena-lota.prov",
+   "actor:p-starshaya-doch-lota.descriptor",
+   "actor:p-starshaya-doch-lota.prov",
+   "actor:p-mladshaya-doch-lota.descriptor",
+   "actor:p-mladshaya-doch-lota.prov",
+   "actor:p-doch-shui.descriptor",
+   "actor:p-doch-shui.prov",
+   "actor:p-zhena-potifara.descriptor",
+   "actor:p-zhena-potifara.prov",
+   "actor:p-doch-makhira.descriptor",
+   "actor:p-doch-makhira.prov",
+   "actor:p-doch-sheshana.descriptor",
+   "actor:p-doch-sheshana.prov",
+   "actor:p-doch-faraona-mat-moiseya.descriptor",
+   "actor:p-doch-faraona-mat-moiseya.prov",
+   "actor:p-doch-futiila.descriptor",
+   "actor:p-doch-futiila.prov",
+   "actor:p-efioplyanka-zhena-moiseya.descriptor",
+   "actor:p-efioplyanka-zhena-moiseya.prov",
+   "actor:p-zhena-fineesa-syn-iliya.descriptor",
+   "actor:p-zhena-fineesa-syn-iliya.prov",
+   "actor:p-zhena-verzelliya-svyashchennika.descriptor",
+   "actor:p-zhena-verzelliya-svyashchennika.prov",
+   "actor:p-nalozhnitsa-manassii.descriptor",
+   "actor:p-nalozhnitsa-manassii.prov",
+   "actor:p-mat-sisary.descriptor",
+   "actor:p-mat-sisary.prov",
+   "actor:p-nalozhnitsa-gedeona.descriptor",
+   "actor:p-nalozhnitsa-gedeona.prov",
+   "actor:p-mat-ieffaya.descriptor",
+   "actor:p-mat-ieffaya.prov",
+   "actor:p-doch-ieffaya.descriptor",
+   "actor:p-doch-ieffaya.prov",
+   "actor:p-zhena-manoya.descriptor",
+   "actor:p-zhena-manoya.prov",
+   "actor:p-zhena-samsona.descriptor",
+   "actor:p-zhena-samsona.prov",
+   "actor:p-mat-mikhi.descriptor",
+   "actor:p-mat-mikhi.prov",
+   "actor:p-mladenets-syn-virsavii.descriptor",
+   "actor:p-mladenets-syn-virsavii.prov",
+   "actor:p-faraon-test-solomona.descriptor",
+   "actor:p-faraon-test-solomona.prov",
+   "actor:p-doch-faraona-zhena-solomona.descriptor",
+   "actor:p-doch-faraona-zhena-solomona.prov",
+   "actor:p-faraon-pri-adere.descriptor",
+   "actor:p-faraon-pri-adere.prov",
+   "actor:p-sestra-takhpenesy.descriptor",
+   "actor:p-sestra-takhpenesy.prov",
+   "actor:p-zhena-ieroboama.descriptor",
+   "actor:p-zhena-ieroboama.prov",
+   "actor:p-otets-venadada.descriptor",
+   "actor:p-otets-venadada.prov",
+   "actor:p-pervenets-mesy.descriptor",
+   "actor:p-pervenets-mesy.prov",
+   "actor:p-prorochitsa-zhena-isaii.descriptor",
+   "actor:p-prorochitsa-zhena-isaii.prov",
+   "actor:p-syn-ioiady-zyat-sanavallata.descriptor",
+   "actor:p-syn-ioiady-zyat-sanavallata.prov",
+   "actor:p-mat-lemuila.descriptor",
+   "actor:p-mat-lemuila.prov",
+   "actor:p-teshcha-simona.descriptor",
+   "actor:p-teshcha-simona.prov",
+   "actor:p-mat-synovey-zevedeevykh.descriptor",
+   "actor:p-mat-synovey-zevedeevykh.prov",
+   "actor:p-doch-iaira.descriptor",
+   "actor:p-doch-iaira.prov",
+   "actor:p-mat-rufa.descriptor",
+   "actor:p-mat-rufa.prov",
+   "actor:p-doch-irodiady.descriptor",
+   "actor:p-doch-irodiady.prov",
+   "actor:p-zhena-pilata.descriptor",
+   "actor:p-zhena-pilata.prov",
+   "actor:p-docheri-filippa.descriptor",
+   "actor:p-docheri-filippa.prov",
+   "actor:p-synovya-skevy.descriptor",
+   "actor:p-synovya-skevy.prov",
+   "actor:p-sestra-nireya.descriptor",
+   "actor:p-sestra-nireya.prov",
+   "actor:p-otets-publiya.descriptor",
+   "actor:p-otets-publiya.prov",
+   "actor:p-syn-izrailtyanki-khulitel.descriptor",
+   "actor:p-syn-izrailtyanki-khulitel.prov",
+   "actor:p-doch-meshullama-zhena-iokhanana.descriptor",
+   "actor:p-doch-meshullama-zhena-iokhanana.prov"
+  ],
+  "D20-1": [
+   "anchors"
+  ],
+  "K21-1": [
+   "chrono:p-aaron"
+  ],
+  "P14-1": [
+   "epoch:era-divided",
+   "epoch:era-judah-alone",
+   "epoch:era-exile",
+   "epoch:era-christ",
+   "epoch:era-apostolic",
+   "epoch:era-church"
   ]
  },
  "projection": [
@@ -6282,8 +6960,7 @@
    "what": "лицо",
    "id": "khatsarmavef",
    "fields": [
-    "card.original",
-    "card.altNames"
+    "card.original"
    ]
   },
   {
@@ -6318,8 +6995,7 @@
    "what": "лицо",
    "id": "oval",
    "fields": [
-    "card.original",
-    "card.altNames"
+    "card.original"
    ]
   },
   {
@@ -6449,6 +7125,13 @@
    "fields": [
     "card.original",
     "card.meaning"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "zhena-lota",
+   "fields": [
+    "name"
    ]
   },
   {
@@ -6914,6 +7597,7 @@
    "what": "лицо",
    "id": "mamriy",
    "fields": [
+    "name",
     "card.original",
     "card.altNames"
    ]
@@ -7080,8 +7764,7 @@
    "what": "лицо",
    "id": "etser-syn-seira",
    "fields": [
-    "card.original",
-    "card.altNames"
+    "card.original"
    ]
   },
   {
@@ -7109,8 +7792,7 @@
    "what": "лицо",
    "id": "famna-sestra-lotana",
    "fields": [
-    "card.original",
-    "card.altNames"
+    "card.original"
    ]
   },
   {
@@ -7131,8 +7813,7 @@
    "what": "лицо",
    "id": "eval-syn-shovala",
    "fields": [
-    "card.original",
-    "card.altNames"
+    "card.original"
    ]
   },
   {
@@ -7191,8 +7872,7 @@
    "id": "eshban",
    "fields": [
     "parentCert",
-    "card.original",
-    "card.altNames"
+    "card.original"
    ]
   },
   {
@@ -7664,8 +8344,7 @@
    "what": "лицо",
    "id": "iamin-syn-simeona",
    "fields": [
-    "card.original",
-    "card.altNames"
+    "card.original"
    ]
   },
   {
@@ -7679,8 +8358,7 @@
    "what": "лицо",
    "id": "iakhin-syn-simeona",
    "fields": [
-    "card.original",
-    "card.altNames"
+    "card.original"
    ]
   },
   {
@@ -7772,8 +8450,7 @@
    "what": "лицо",
    "id": "fuva",
    "fields": [
-    "card.original",
-    "card.altNames"
+    "card.original"
    ]
   },
   {
@@ -7817,8 +8494,7 @@
    "what": "лицо",
    "id": "tsifion",
    "fields": [
-    "card.original",
-    "card.altNames"
+    "card.original"
    ]
   },
   {
@@ -7889,6 +8565,7 @@
    "what": "лицо",
    "id": "bria-syn-asira",
    "fields": [
+    "name",
     "card.original",
     "card.altNames"
    ]
@@ -8215,8 +8892,7 @@
    "what": "лицо",
    "id": "iessey",
    "fields": [
-    "card.original",
-    "card.altNames"
+    "card.original"
    ]
   },
   {
@@ -8265,8 +8941,7 @@
    "what": "лицо",
    "id": "amessay",
    "fields": [
-    "kin",
-    "card.altNames"
+    "kin"
    ]
   },
   {
@@ -8312,7 +8987,6 @@
    "fields": [
     "card.original",
     "card.meaning",
-    "card.altNames",
     "card.offices"
    ]
   },
@@ -8675,27 +9349,6 @@
   },
   {
    "what": "лицо",
-   "id": "aviasaf",
-   "fields": [
-    "card.altNames"
-   ]
-  },
-  {
-   "what": "лицо",
-   "id": "tsuf",
-   "fields": [
-    "card.altNames"
-   ]
-  },
-  {
-   "what": "лицо",
-   "id": "toakh",
-   "fields": [
-    "card.altNames"
-   ]
-  },
-  {
-   "what": "лицо",
    "id": "eliil-syn-toakha",
    "fields": [
     "name",
@@ -8775,20 +9428,6 @@
   },
   {
    "what": "лицо",
-   "id": "oziya-syn-bukkiya",
-   "fields": [
-    "card.altNames"
-   ]
-  },
-  {
-   "what": "лицо",
-   "id": "meraiof",
-   "fields": [
-    "card.altNames"
-   ]
-  },
-  {
-   "what": "лицо",
    "id": "sadok",
    "fields": [
     "card.original",
@@ -8815,13 +9454,6 @@
    "id": "sadok-1par6-12",
    "fields": [
     "otherParents"
-   ]
-  },
-  {
-   "what": "лицо",
-   "id": "sellum-syn-sadoka",
-   "fields": [
-    "card.altNames"
    ]
   },
   {
@@ -8943,13 +9575,6 @@
   },
   {
    "what": "лицо",
-   "id": "shevuil-syn-emana",
-   "fields": [
-    "card.altNames"
-   ]
-  },
-  {
-   "what": "лицо",
    "id": "kishiy",
    "fields": [
     "card.altNames"
@@ -8975,24 +9600,9 @@
   },
   {
    "what": "лицо",
-   "id": "tseri",
-   "fields": [
-    "card.altNames"
-   ]
-  },
-  {
-   "what": "лицо",
-   "id": "semey-syn-idifuna",
-   "fields": [
-    "card.altNames"
-   ]
-  },
-  {
-   "what": "лицо",
    "id": "iekhiil-syn-laedana",
    "fields": [
-    "fatherGap",
-    "card.altNames"
+    "fatherGap"
    ]
   },
   {
@@ -9074,8 +9684,7 @@
    "what": "лицо",
    "id": "shelomif-syn-itsgara",
    "fields": [
-    "fatherGap",
-    "card.altNames"
+    "fatherGap"
    ]
   },
   {
@@ -9167,8 +9776,7 @@
    "what": "лицо",
    "id": "ieremof-syn-mushi",
    "fields": [
-    "fatherGap",
-    "card.altNames"
+    "fatherGap"
    ]
   },
   {
@@ -9230,7 +9838,16 @@
    "id": "shallum-syn-kore",
    "fields": [
     "fatherGap",
-    "card.altNames"
+    "card.altNames",
+    "card.childrenNote",
+    "card.scripture"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "mattafiya-syn-selluma",
+   "fields": [
+    "father"
    ]
   },
   {
@@ -9282,13 +9899,6 @@
    "id": "galal-syn-idifuna",
    "fields": [
     "fatherGap"
-   ]
-  },
-  {
-   "what": "лицо",
-   "id": "akkuv",
-   "fields": [
-    "card.altNames"
    ]
   },
   {
@@ -9399,28 +10009,298 @@
   },
   {
    "what": "лицо",
+   "id": "seraiya-neem12",
+   "fields": [
+    "card.scripture"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ieremiya-neem12",
+   "fields": [
+    "card.scripture"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ezdra-neem12",
+   "fields": [
+    "card.scripture"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "amariya-neem12",
+   "fields": [
+    "card.scripture"
+   ]
+  },
+  {
+   "what": "лицо",
    "id": "mallukh-neem12",
    "fields": [
-    "card.altNames"
+    "card.altNames",
+    "card.scripture"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "shekhaniya-neem12",
+   "fields": [
+    "card.altNames",
+    "card.scripture"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "rekhum-neem12",
+   "fields": [
+    "card.altNames",
+    "card.scripture",
+    "card.notes"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "meremof-neem12",
+   "fields": [
+    "card.altNames",
+    "card.scripture"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iddo-neem12",
+   "fields": [
+    "card.scripture"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ginnefoy",
+   "fields": [
+    "card.altNames",
+    "card.scripture"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "aviya-neem12",
+   "fields": [
+    "card.scripture"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "miyamin-neem12",
+   "fields": [
+    "card.altNames",
+    "card.scripture"
    ]
   },
   {
    "what": "лицо",
    "id": "maadiya",
    "fields": [
-    "card.altNames"
+    "card.altNames",
+    "card.scripture"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "vilga-neem12",
+   "fields": [
+    "card.scripture"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "shemaiya-neem12",
+   "fields": [
+    "card.scripture"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ioiariv-neem12",
+   "fields": [
+    "card.scripture"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iedaiya-neem12-6",
+   "fields": [
+    "card.scripture",
+    "card.notes"
    ]
   },
   {
    "what": "лицо",
    "id": "sallu-neem12",
    "fields": [
-    "card.altNames"
+    "card.altNames",
+    "card.scripture"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "amok",
+   "fields": [
+    "card.scripture"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khelkiya-neem12",
+   "fields": [
+    "card.scripture"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iedaiya-neem12-7",
+   "fields": [
+    "card.scripture",
+    "card.notes"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "meraiya",
+   "fields": [
+    "otherParents"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khananiya-neem12",
+   "fields": [
+    "otherParents"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "meshullam-neem12-13",
+   "fields": [
+    "otherParents"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iokhanan-neem12",
+   "fields": [
+    "otherParents"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ionafan-neem12-14",
+   "fields": [
+    "otherParents"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "iosif-neem12",
+   "fields": [
+    "otherParents"
    ]
   },
   {
    "what": "лицо",
    "id": "adna-neem12",
+   "fields": [
+    "otherParents"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khelkiya-neem12-15",
+   "fields": [
+    "otherParents"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "zakhariya-neem12",
+   "fields": [
+    "otherParents"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "meshullam-neem12-16",
+   "fields": [
+    "otherParents"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "zikhriy-neem12",
+   "fields": [
+    "otherParents"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "piltay",
+   "fields": [
+    "otherParents"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "shammuy-neem12",
+   "fields": [
+    "otherParents"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ionafan-neem12-18",
+   "fields": [
+    "otherParents"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "mafnay",
+   "fields": [
+    "otherParents"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "uzziy-neem12",
+   "fields": [
+    "otherParents"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "kallay",
+   "fields": [
+    "otherParents"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "ever-neem12",
+   "fields": [
+    "otherParents"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "khashaviya-neem12",
+   "fields": [
+    "otherParents"
+   ]
+  },
+  {
+   "what": "лицо",
+   "id": "nafanail-neem12",
    "fields": [
     "otherParents"
    ]
@@ -9820,8 +10700,7 @@
    "id": "ionafan",
    "fields": [
     "card.original",
-    "card.meaning",
-    "card.altNames"
+    "card.meaning"
    ]
   },
   {
@@ -9835,8 +10714,7 @@
    "what": "лицо",
    "id": "melkhisua",
    "fields": [
-    "card.original",
-    "card.altNames"
+    "card.original"
    ]
   },
   {
@@ -9912,13 +10790,6 @@
   },
   {
    "what": "лицо",
-   "id": "faareya",
-   "fields": [
-    "card.altNames"
-   ]
-  },
-  {
-   "what": "лицо",
    "id": "semey-syn-gery",
    "fields": [
     "card.original"
@@ -9945,13 +10816,6 @@
    "id": "birzaif",
    "fields": [
     "parentCert"
-   ]
-  },
-  {
-   "what": "лицо",
-   "id": "shomer-syn-khevera",
-   "fields": [
-    "card.altNames"
    ]
   },
   {
@@ -10161,6 +11025,14 @@
   },
   {
    "what": "лицо",
+   "id": "mat-ieffaya",
+   "fields": [
+    "name",
+    "disambig"
+   ]
+  },
+  {
+   "what": "лицо",
    "id": "ieffay",
    "fields": [
     "card.original",
@@ -10300,8 +11172,7 @@
    "what": "лицо",
    "id": "egla",
    "fields": [
-    "card.original",
-    "card.altNames"
+    "card.original"
    ]
   },
   {
@@ -10385,7 +11256,6 @@
    "what": "лицо",
    "id": "ieferaam",
    "fields": [
-    "card.altNames",
     "card.birth"
    ]
   },
@@ -10401,7 +11271,6 @@
    "what": "лицо",
    "id": "sovav-syn-davida",
    "fields": [
-    "card.altNames",
     "card.birth"
    ]
   },
@@ -10432,7 +11301,6 @@
    "what": "лицо",
    "id": "elifelet-syn-davida",
    "fields": [
-    "card.altNames",
     "card.birth"
    ]
   },
@@ -10461,7 +11329,6 @@
    "what": "лицо",
    "id": "elisama-syn-davida",
    "fields": [
-    "card.altNames",
     "card.birth"
    ]
   },
@@ -10469,7 +11336,6 @@
    "what": "лицо",
    "id": "eliada-syn-davida",
    "fields": [
-    "card.altNames",
     "card.birth"
    ]
   },
@@ -10477,7 +11343,6 @@
    "what": "лицо",
    "id": "elifalef-syn-davida",
    "fields": [
-    "card.altNames",
     "card.birth"
    ]
   },
@@ -10546,6 +11411,7 @@
    "what": "лицо",
    "id": "ammiil-otets-makhira",
    "fields": [
+    "name",
     "card.altNames"
    ]
   },
@@ -10565,13 +11431,6 @@
    "id": "aminadav-iz-kiriaf-iarima",
    "fields": [
     "card.original"
-   ]
-  },
-  {
-   "what": "лицо",
-   "id": "akhio-syn-aminadava",
-   "fields": [
-    "card.altNames"
    ]
   },
   {
@@ -10725,7 +11584,6 @@
    "fields": [
     "chrono",
     "card.original",
-    "card.altNames",
     "card.offices"
    ]
   },
@@ -11271,8 +12129,7 @@
    "id": "feglaffellasar",
    "fields": [
     "chrono",
-    "card.original",
-    "card.altNames"
+    "card.original"
    ]
   },
   {
@@ -11309,6 +12166,7 @@
    "what": "лицо",
    "id": "iiuy-syn-anani",
    "fields": [
+    "name",
     "card.altNames"
    ]
   },
@@ -11335,13 +12193,6 @@
    "id": "mikhey-syn-iemvlaya",
    "fields": [
     "card.original"
-   ]
-  },
-  {
-   "what": "лицо",
-   "id": "rekhav-otets-ionadava",
-   "fields": [
-    "card.altNames"
    ]
   },
   {
@@ -11381,6 +12232,7 @@
    "what": "лицо",
    "id": "valadan",
    "fields": [
+    "name",
     "card.altNames"
    ]
   },
@@ -11494,7 +12346,6 @@
    "id": "shafan",
    "fields": [
     "card.original",
-    "card.altNames",
     "card.offices",
     "card.events"
    ]
@@ -11540,6 +12391,7 @@
    "what": "лицо",
    "id": "malkhiya-otets-paskhora",
    "fields": [
+    "name",
     "card.altNames"
    ]
   },
@@ -11555,27 +12407,6 @@
    "id": "uriya-syn-shemaii",
    "fields": [
     "chrono"
-   ]
-  },
-  {
-   "what": "лицо",
-   "id": "elishama-ded-ismaila",
-   "fields": [
-    "card.altNames"
-   ]
-  },
-  {
-   "what": "лицо",
-   "id": "nafaniya-otets-ismaila",
-   "fields": [
-    "card.altNames"
-   ]
-  },
-  {
-   "what": "лицо",
-   "id": "iezaniya-syn-makhafy",
-   "fields": [
-    "card.altNames"
    ]
   },
   {
@@ -11638,7 +12469,6 @@
    "what": "лицо",
    "id": "evilmerodakh",
    "fields": [
-    "card.altNames",
     "card.events"
    ]
   },
@@ -13209,13 +14039,6 @@
   },
   {
    "what": "лицо",
-   "id": "ikesh",
-   "fields": [
-    "card.altNames"
-   ]
-  },
-  {
-   "what": "лицо",
    "id": "eviezer",
    "fields": [
     "disambig",
@@ -13247,13 +14070,6 @@
   },
   {
    "what": "лицо",
-   "id": "baana-otets-kheleva",
-   "fields": [
-    "card.altNames"
-   ]
-  },
-  {
-   "what": "лицо",
    "id": "khelev",
    "fields": [
     "disambig",
@@ -13267,23 +14083,9 @@
   },
   {
    "what": "лицо",
-   "id": "azmavet",
-   "fields": [
-    "card.altNames"
-   ]
-  },
-  {
-   "what": "лицо",
    "id": "ionafan-syn-shage",
    "fields": [
     "card.notes"
-   ]
-  },
-  {
-   "what": "лицо",
-   "id": "khetsray",
-   "fields": [
-    "card.altNames"
    ]
   },
   {
@@ -13334,20 +14136,6 @@
   },
   {
    "what": "лицо",
-   "id": "zaffu",
-   "fields": [
-    "card.altNames"
-   ]
-  },
-  {
-   "what": "лицо",
-   "id": "bevay",
-   "fields": [
-    "card.altNames"
-   ]
-  },
-  {
-   "what": "лицо",
    "id": "shilon",
    "fields": [
     "otherParents",
@@ -13360,7 +14148,6 @@
    "id": "khabayya",
    "fields": [
     "otherParents",
-    "card.altNames",
     "card.notes",
     "card.parentsNote"
    ]
@@ -13431,13 +14218,6 @@
    "id": "malkhiya-iz-synovey-kharima",
    "fields": [
     "fatherGap"
-   ]
-  },
-  {
-   "what": "лицо",
-   "id": "berekhiya-syn-meshizabela",
-   "fields": [
-    "card.altNames"
    ]
   },
   {
@@ -13559,6 +14339,94 @@
   {
    "what": "лицо (лишнее)",
    "id": "korey-otets-meshelemii"
+  },
+  {
+   "what": "лицо (лишнее)",
+   "id": "sellum-koreyanin"
+  },
+  {
+   "what": "лицо (лишнее)",
+   "id": "seraiya-neem12-12"
+  },
+  {
+   "what": "лицо (лишнее)",
+   "id": "ieremiya-neem12-12"
+  },
+  {
+   "what": "лицо (лишнее)",
+   "id": "ezdra-neem12-13"
+  },
+  {
+   "what": "лицо (лишнее)",
+   "id": "amariya-neem12-13"
+  },
+  {
+   "what": "лицо (лишнее)",
+   "id": "melikhu-neem12-14"
+  },
+  {
+   "what": "лицо (лишнее)",
+   "id": "shevaniya-neem12-14"
+  },
+  {
+   "what": "лицо (лишнее)",
+   "id": "kharim-neem12-15"
+  },
+  {
+   "what": "лицо (лишнее)",
+   "id": "meraiof-neem12-15"
+  },
+  {
+   "what": "лицо (лишнее)",
+   "id": "iddo-neem12-16"
+  },
+  {
+   "what": "лицо (лишнее)",
+   "id": "ginnefon-neem12-16"
+  },
+  {
+   "what": "лицо (лишнее)",
+   "id": "aviya-neem12-17"
+  },
+  {
+   "what": "лицо (лишнее)",
+   "id": "miniamin-neem12-17"
+  },
+  {
+   "what": "лицо (лишнее)",
+   "id": "moadiya-neem12-17"
+  },
+  {
+   "what": "лицо (лишнее)",
+   "id": "vilga-neem12-18"
+  },
+  {
+   "what": "лицо (лишнее)",
+   "id": "shemaiya-neem12-18"
+  },
+  {
+   "what": "лицо (лишнее)",
+   "id": "ioiariv-neem12-19"
+  },
+  {
+   "what": "лицо (лишнее)",
+   "id": "iedaiya-neem12-19"
+  },
+  {
+   "what": "лицо (лишнее)",
+   "id": "sallay-neem12-20"
+  },
+  {
+   "what": "лицо (лишнее)",
+   "id": "amok-neem12-20"
+  },
+  {
+   "what": "лицо (лишнее)",
+   "id": "khelkiya-neem12-21"
+  },
+  {
+   "what": "лицо (лишнее)",
+   "id": "iedaiya-neem12-21"
   },
   {
    "what": "лицо (лишнее)",

@@ -178,7 +178,8 @@ describe('Д-15: начало — данные', () => {
     expect(ids.has('p-raguil')).toBe(true);
     expect(ids.has('p-iuda-iakovlev')).toBe(false);
     // правка по второму ключу партии 2 (D15-13, D15-15): +10 тёзок и Раамия, +1 Иоханан из Неем 12:22–23
-    expect(ids.size).toBe(2699 + 22 + 11);
+    // 02 ред. 4.6 (В-33): +21 глава дома из Неем 12:12–21 (Д15-2, D15-19), +1 Селлум Кореянин (вид (в), D18-2)
+    expect(ids.size).toBe(2699 + 22 + 11 + 22);
   });
 });
 
@@ -244,16 +245,18 @@ describe('Д-15, партия 2 — данные (tools/base/corrections-d15b.ts
     expect([iov.cert, iov.compare?.form.refs, iov.compare?.count?.ref]).toEqual(['inference', ['Быт 46:13'], '1Пар 7:1']);
   });
 
-  it('другое написание того же имени — форма «Писание»; имя народа — не форма лица; Иез 1:2 — не форма Иехонии', () => {
-    expect(names('p-iessey')).toContain('Иесей=');
-    expect(names('p-amon-tsar')).toContain('Аммон=');
+  it('другое написание — по общим проверкам (02 ред. 4.6, Д-18): форма «выв.»; имя народа — не форма лица; Иез 1:2 — не форма Иехонии', () => {
+    // 4.6: другое написание само по себе уровня не даёт; «Писание» — только когда стих называет лицо обоими именами (D18-1)
+    expect(names('p-iessey')).toContain('Иесей~');
+    expect(names('p-amon-tsar')).toContain('Аммон~');
     expect(names('p-iavan')).toEqual(['Иаван*']);
     expect(names('p-kedar')).toEqual(['Кедар*']);
     expect(card(base, 'p-iekhoniya').names.flatMap((n) => n.refs)).not.toContain('Иез 1:2');
+    // «предали Его Понтию Пилату» (Мф 27:2): стих называет лицо обоими именами — «Писание» остаётся
     expect(names('p-pontiy-pilat')).toContain('Пилат=');
   });
 
-  it('Д-р14: у Маахи один отец; две матери Авии — набор прочтений; Гофониил — «из потомков» у Хелдая; «из дома Харима» — степень не названа', () => {
+  it('Д-р14: у Маахи один отец; две матери Авии — набор прочтений; Гофониил — «из потомков» у Хелдая; «из дома Харима» — степень не названа, без тождества (Д15-2)', () => {
     expect(base.origins.filter((o) => o.child === 'p-maakha-doch-avessaloma' && o.role === 'father').map((o) => [o.parent, o.reading])).toEqual([['p-avessalom', undefined]]);
     expect(base.readings.find((r) => r.id === 'r-father-maakha-doch-avessaloma')).toBeUndefined();
     expect(base.origins.filter((o) => o.child === 'p-aviya' && o.role === 'mother').map((o) => [o.parent, o.reading?.set, o.primary])).toEqual(
@@ -262,7 +265,9 @@ describe('Д-15, партия 2 — данные (tools/base/corrections-d15b.ts
     const g = base.origins.filter((o) => o.parent === 'p-gofoniil' && o.refs.includes('1Пар 27:15'));
     expect(g.map((o) => [o.child, o.kind, o.degree, o.words?.[0].text])).toEqual([['p-kheldai-netofafyanin', 'ancestor', 'unstated', 'из потомков Гофониила']]);
     const ad = base.origins.find((o) => o.child === 'p-adna-neem12')!;
-    expect([ad.kind, ad.degree, ad.identity?.degree, ad.identity?.form]).toEqual(['ancestor', 'unstated', 'inferred', 'p-rekhum-neem12#n2']);
+    // Д15-2 (D15-19): «из дома Харима» — к карточке главы дома, без тождества с Рехумом (Неем 12:3); с ним — «возможно, то же лицо»
+    expect([ad.parent, ad.kind, ad.degree, ad.identity]).toEqual(['p-kharim-neem12-15', 'ancestor', 'unstated', undefined]);
+    expect(base.relations.filter((r) => r.a === 'p-kharim-neem12-15').map((r) => [r.b, r.kind, r.cert])).toEqual([['p-rekhum-neem12', 'possibly-same', 'inference']]);
   });
 
   it('вид (в) — своя карточка, ребро к ней по стиху и «возможно, то же лицо»: Рахава, Силуан, Ешбаал, Михаия, Елиам, сын Ахитофела', () => {

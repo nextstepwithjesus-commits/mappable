@@ -48,10 +48,11 @@ beforeAll(() => {
 });
 
 describe('труды w- и ссылки works (К-3)', () => {
-  it('в реестре 20 трудов: use citation, традиция из словаря, издание — в записи труда, не в ссылке', () => {
+  it('в реестре 23 труда: use citation, традиция из словаря, издание — в записи труда, не в ссылке', () => {
     const works = base.sources!.filter((s) => s.id.startsWith('w-'));
-    // 10 трудов К-3 и 10 трудов хронологии Д6 (схемы царей и издания надписей для опор)
-    expect(works).toHaveLength(20);
+    // 10 трудов К-3 и 10 трудов хронологии Д6 (схемы царей и издания надписей для опор); Д-20: +3 труда альтернатив опор
+    // (Finegan 1998, Yamauchi 1980 — Ездра при Артаксерксе II, Young 2004 — падение Иерусалима)
+    expect(works).toHaveLength(23);
     for (const w of works) {
       expect([w.id, w.use, w.redistribute]).toEqual([w.id, 'citation', false]);
       expect(w.tradition!.length).toBeGreaterThan(0);
@@ -107,11 +108,13 @@ describe('труды w- и ссылки works (К-3)', () => {
     expect(A.rights.get(key)).toEqual(['w-henry-exposition']);
   });
 
-  it('r-lk3-23, рёбра его прочтений и линия Луки остаются в выпуске; те же 81 запись; права не закрывают ни одной', () => {
+  it('r-lk3-23, рёбра его прочтений и линия Луки остаются в выпуске; те же 75 записей; права не закрывают ни одной', () => {
     const A = admission(withoutD1(base), 'release');
     expect(A.okKey('reading:r-lk3-23')).toBe(true);
     // было 101; Д-р11: подписи контрольного набора actor:p-avraam, actor:p-sarra, actor:p-irod-antipa сняты — у форм имён исправлены ссылки (−20 записей)
-    expect(A.counts.all.admitted).toBe(81);
+    // 02 ред. 4.6 (Д-16): подписи контрольного набора actor:p-zhena-kaina и actor:p-samaryanin-iz-desyati-prokazhennykh сняты —
+    // подпись безымянного стала записью descriptor со стихами (−6 записей: лица и их утверждения)
+    expect(A.counts.all.admitted).toBe(75);
     const lk = records(base).filter((r) => r.key === 'reading:r-lk3-23' || r.key === 'line:luke' || r.rec.reading?.set === 'r-lk3-23');
     expect(lk.length).toBeGreaterThan(2);
     expect(lk.filter((r) => A.rights.has(r.key))).toEqual([]);
@@ -156,7 +159,7 @@ describe('труды w- и ссылки works (К-3)', () => {
     const after = { ...b, checks: r.entries };
     expect(admission(after, 'release').okKey('reading:r-lk3-23')).toBe(true);
     expect(admission(after, 'release').okKey('reading:r-lk3-23#works')).toBe(false);
-    expect(admission(after, 'release').counts.all.admitted).toBe(81);
+    expect(admission(after, 'release').counts.all.admitted).toBe(75);
     // без сборки «до шага» подпись не переносится
     expect(rekey(b).moved).toEqual([]);
     // набор изменился не только заменой авторов — подпись не переносится

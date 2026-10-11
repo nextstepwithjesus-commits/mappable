@@ -10,6 +10,7 @@
 import type { Base } from './migrate.ts';
 import type { Actor, Cert } from './types.ts';
 import { scriptureText } from './brackets.ts';
+import { descriptorText } from './descriptor.ts';
 import { loadBible } from '../bible.ts';
 import { compareRefs, parseRef, verseId } from '../../src/engine/books.ts';
 import { nameMatcher, norm } from '../../src/engine/text.ts';
@@ -63,7 +64,7 @@ export function ownRefs(base: Pick<Base, 'volumes' | 'origins' | 'unions' | 'kin
 }
 
 /** Формы, по которым лицо ищется в стихе: у безымянного и группы — описательное слово. */
-export const formsOf = (a: Actor) => ((a.kind === 'unnamed' || a.kind === 'group') && a.descriptor ? [a.descriptor] : a.names.map((n) => n.form));
+export const formsOf = (a: Actor) => ((a.kind === 'unnamed' || a.kind === 'group') && descriptorText(a) ? [descriptorText(a)!] : a.names.map((n) => n.form));
 
 /** Стихи из ссылок, где лицо названо вне скобок: по одному стиху, канонический порядок, без повторов. */
 export function namedVerses(a: Actor, refs: Iterable<string>): string[] {

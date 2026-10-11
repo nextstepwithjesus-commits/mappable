@@ -3,7 +3,7 @@
  * и схемы, опоры с трудами. Вызывается из validate.ts; функции текста и ссылок передаются оттуда.
  */
 import type { Base } from './migrate.ts';
-import type { ChronoD6, ChronoModel, KingScheme, Source } from './types.ts';
+import type { Anchor, Calc, ChronoD6, ChronoModel, KingScheme, Source } from './types.ts';
 import { TIME_KINDS } from './types.ts';
 import { numberSpans } from './numwords.ts';
 import { citeIssues } from './sources.ts';
@@ -21,6 +21,8 @@ export interface TimeCtx {
   verseKeys: (ref: string) => string[];
   clean: (t: string) => string;
   actorIds: Set<string>;
+  /** Лицо названо в тексте стиха (любой формой имени, по основе). */
+  namedIn: (actor: string, text: string) => boolean;
 }
 
 const OTHER_REQUIRED = new Set(['age-at-birth', 'synchronism', 'succeeded', 'under-king']);
@@ -33,6 +35,30 @@ const YEAR_KEYS = ['year', 'from', 'to', 'start', 'end', 'range', 'sole'];
 
 const isD6 = (c: unknown): c is ChronoD6 => !!c && typeof c === 'object' && Array.isArray((c as any).inputs);
 
+/**
+ * Опора и срок у ссылки на расчёт (02 § 3.10.2 [4.5; 4.6]; К-21): опора — только вида `external`; при опоре нет модели и схемы;
+ * срок — только от опоры, с числом, словами стиха и видом счёта. `wordsIn` — слова стоят в стихах вне скобок.
+ */
+export function calcAnchorIssues(c: Calc, anchors: Map<string, { kind?: string }>, wordsIn: (words: string, refs: string[]) => boolean): string[] {
+  const out: string[] = [];
+  if (c.anchor !== undefined) {
+    const a = anchors.get(c.anchor);
+    if (!a) out.push(`нет опоры «${c.anchor}»`);
+    else if (a.kind !== 'external') out.push(`опора «${c.anchor}» вида «${a.kind ?? '—'}»: год записям даёт только опора вида external (расчёт и предание года не дают)`);
+    if (c.model || c.scheme) out.push('у ссылки на расчёт с опорой нет модели и схемы');
+  }
+  if (c.offset !== undefined) {
+    const o = c.offset;
+    if (c.anchor === undefined) out.push('срок (offset) — только от опоры: срок от события без опоры года не даёт');
+    if (typeof o.number !== 'number') out.push('срок без числа');
+    if (o.count !== 'ordinal' && o.count !== 'elapsed') out.push('у срока нет вида счёта (count: ordinal — порядковый год, elapsed — прошедший срок)');
+    if (!o.refs?.length) out.push('срок без стиха');
+    else if (!o.words || !wordsIn(o.words, o.refs)) out.push(`слов срока «${o.words ?? ''}» нет в ${o.refs.join('; ')} вне скобок`);
+    else if (numberSpans(o.words)[0]?.value !== o.number) out.push(`слова срока «${o.words}» — не число ${o.number}`);
+  }
+  return out;
+}
+
 export function checkTime(base: Base, x: TimeCtx) {
   const { err, warn } = x;
   const epochIds = new Set(base.epochs.map((e) => e.id));
@@ -41,6 +67,7 @@ export function checkTime(base: Base, x: TimeCtx) {
   // база из переноса в памяти (buildBase) реестра не несёт: ссылки на труды проверяются у базы с диска (как validateRegistry)
   const cites = (works: unknown, where: string) => (base.sources === undefined ? [] : citeIssues(works, reg, where));
   const anchorIds = new Set<string>((base.anchors?.anchors ?? []).map((a: any) => a.id));
+  const anchorMap = new Map<string, Anchor>((base.anchors?.anchors ?? []).map((a: any) => [a.id, a]));
   /** Слова стоят в стихах ссылки вне скобок. */
   const wordsIn = (where: string, words: string, refs: string[]) => x.clean(refs.flatMap((r) => x.mainTexts(where, r)).join(' ')).includes(x.clean(words));
   const yearsLeft = (v: unknown, path = ''): string[] => {
@@ -72,7 +99,11 @@ export function checkTime(base: Base, x: TimeCtx) {
         const raw = t.refs.flatMap((r) => x.verseKeys(r)).map((k) => loadBible().verses.get(k) ?? '').join(' ');
         const bracketed = (raw.match(/\[[^\]]*\]/g) ?? []).join(' ');
         if (t.endOfLife === 'bracket' && !DEATH_WORDS.test(bracketed.toLowerCase())) err('время', wi, 'endOfLife: bracket, а в скобках стихов входа смерти нет');
-        else if (t.endOfLife === 'not-died' && !/не видел смерти|взял его|не стало его/.test(x.clean(raw))) err('время', wi, 'endOfLife: not-died, а в стихах входа нет слов о том, что смерти не было');
+        else if (t.endOfLife === 'not-died') {
+          // слова — в стихах самого лица (где оно названо вне скобок): «не видел смерти» или «не стало его… Бог взял его» целиком (К-21)
+          const own = t.refs.flatMap((r) => x.mainTexts(wi, r)).map((v) => x.clean(v)).filter((v) => x.namedIn(c.actor, v));
+          if (!own.some((v) => /не видел смерти/.test(v) || (/не стало его/.test(v) && /бог взял его/.test(v)))) err('время', wi, 'endOfLife: not-died, а в стихах, где названо само лицо, нет слов «не видел смерти» или «не стало его… Бог взял его»');
+        }
         else if (t.endOfLife === undefined) err('время', wi, '«конец земной жизни» без причины (endOfLife: not-died — смерти не было; bracket — смерть только в скобках)');
         if (t.refs?.length && DEATH_WORDS.test(x.clean(t.refs.flatMap((r) => x.mainTexts(wi, r)).join(' ')))) err('время', wi, 'в стихах входа вне скобок названа смерть: вид — «возраст при смерти» (age-at-death)');
       }
@@ -102,7 +133,10 @@ export function checkTime(base: Base, x: TimeCtx) {
           else if (numberSpans(p.words)[0]?.value !== p.number) err('число', wi, `слова «${p.words}» — не число ${p.number}`);
         }
       }
+      if (t.count !== undefined && t.kind !== 'years-after') err('время', wi, 'вид счёта (count) — только у входа «N-й год после события» (years-after)');
+      if (t.kind === 'years-after' && t.count !== 'ordinal' && t.count !== 'elapsed') err('время', wi, '«N-й год после события» без вида счёта: count — ordinal («в сороковой год») или elapsed («спустя …»; 02 § 3.15.5)');
       if (t.calc) {
+        for (const m of calcAnchorIssues(t.calc, anchorMap, (w2, rs) => wordsIn(wi, w2, rs))) err('расчёт', wi, m);
         if (!t.calc.event?.trim()) err('расчёт', wi, 'ссылка на расчёт без события');
         else {
           const own = new Set(t.refs.flatMap(x.verseKeys));
@@ -111,7 +145,7 @@ export function checkTime(base: Base, x: TimeCtx) {
         if (t.calc.model && !MODELS.includes(t.calc.model)) err('расчёт', wi, `модель «${t.calc.model}» не из 04 § 16.1`);
         if (t.calc.scheme && !SCHEMES.includes(t.calc.scheme)) err('расчёт', wi, `схема «${t.calc.scheme}» не из 04 § 16.1`);
         if (t.calc.model && t.calc.scheme) err('расчёт', wi, 'у ссылки на расчёт — модель или схема, не обе');
-        if (!t.calc.model && !t.calc.scheme) warn('расчёт', wi, 'ссылка на расчёт без модели и схемы: для этого времени модели в 04 нет (Д-р2)');
+        if (!t.calc.model && !t.calc.scheme && !t.calc.anchor) warn('расчёт', wi, 'ссылка на расчёт без модели, схемы и опоры: для этого времени модели в 04 нет (Д-р2, Д-17)');
       }
     });
   }
@@ -169,8 +203,26 @@ export function checkTime(base: Base, x: TimeCtx) {
     }
   }
 
-  // ---------- опоры с трудами (02 § 3.15.4) ----------
+  // ---------- опоры с трудами (02 § 3.15.4 [4.6]; К-21) ----------
   for (const a of base.anchors?.anchors ?? []) {
+    const w = `опора ${a.id}`;
+    if (!['external', 'calc', 'tradition'].includes(a.kind)) err('опора', w, `вид опоры «${a.kind ?? '—'}» — external, calc или tradition (02 § 3.15.4)`);
+    const y = a.year;
+    if (!y || typeof y.earliest !== 'number' || typeof y.latest !== 'number' || !y.words?.trim()) err('опора', w, 'год опоры — промежуток {earliest, latest, words} (02 § 3.15)');
+    else if (y.earliest > y.latest) err('опора', w, `год опоры: earliest ${y.earliest} позже latest ${y.latest}`);
+    if ('value' in a) err('опора', w, 'одно число value вместо промежутка year (Д-20)');
+    if ('derived' in a) err('опора', w, 'готовые производные годы (derived) в опоре: годы событий считает расчёт (Д-20)');
+    if (!Array.isArray(a.log) || !a.log.length) err('опора', w, 'нет журнала изменений log (02 § 3.15.4)');
+    for (const [i, alt] of (a.alternatives ?? []).entries()) {
+      const wa = `${w}, альтернатива ${i + 1}`;
+      if (!alt || typeof alt !== 'object') {
+        err('опора', wa, `альтернатива строкой «${String(alt)}»: нужна запись {year, words, works} (Д-20)`);
+        continue;
+      }
+      if (typeof alt.year?.earliest !== 'number' || typeof alt.year?.latest !== 'number' || alt.year.earliest > alt.year.latest) err('опора', wa, 'год альтернативы — промежуток {earliest, latest}');
+      if (!alt.words?.trim()) err('опора', wa, 'альтернатива без слов');
+      if (!alt.works?.length) err('опора', wa, 'альтернатива без труда (works; 02 § 3.15.4)');
+    }
     if (a.works) for (const i of cites(a.works, `опора ${a.id}`)) (i.level === 'error' ? err : warn)('труды', i.where, i.msg);
     for (const alt of a.alternatives ?? []) if (alt && typeof alt === 'object' && alt.works) for (const i of cites(alt.works, `опора ${a.id}, альтернатива`)) (i.level === 'error' ? err : warn)('труды', i.where, i.msg);
     if (!a.works?.length) warn('опора', `опора ${a.id}`, 'нет издания и страницы: опора в выпуск не идёт (04 § 9 п. 19)');

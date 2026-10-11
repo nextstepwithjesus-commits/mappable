@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data",
-   "commit": "18c46f0"
+   "commit": "6363b8c"
   }
  },
  "sources": [
@@ -5920,7 +5920,8 @@
       "calc": {
        "event": "Чис 33:38",
        "model": "m-dolgoe"
-      }
+      },
+      "count": "ordinal"
      }
     ],
     "epochs": [
@@ -5938,7 +5939,7 @@
     "from": {
      "vol": "08-levi.json"
     },
-    "by": "исправление D6"
+    "by": "исправление K21-1"
    }
   },
   {

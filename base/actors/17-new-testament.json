@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data/persons/17-new-testament.json",
-   "commit": "18c46f0"
+   "commit": "6363b8c"
   }
  },
  "sources": [
@@ -1347,7 +1347,18 @@
       ]
      }
     }
-   ]
+   ],
+   "descriptor": {
+    "text": "тёща Симона",
+    "refs": [
+     "Мк 1:30",
+     "Лк 4:38"
+    ],
+    "cert": "scripture"
+   },
+   "prov": {
+    "by": "исправление D16-1"
+   }
   },
   {
    "id": "p-andrey",
@@ -1947,7 +1958,17 @@
       ]
      }
     }
-   ]
+   ],
+   "descriptor": {
+    "text": "мать сыновей Зеведеевых",
+    "refs": [
+     "Мф 20:20"
+    ],
+    "cert": "scripture"
+   },
+   "prov": {
+    "by": "исправление D16-1"
+   }
   },
   {
    "id": "p-iakov-zevedeev",
@@ -4989,15 +5010,10 @@
        "Лк 6:16"
       ]
      },
-     "idCert": {
-      "form": "p-faddey#n3",
-      "refs": [
-       "Лк 6:16"
-      ]
-     },
      "prov": {
-      "by": "исправление D15-1"
-     }
+      "by": "исправление D19-1"
+     },
+     "idCertExempt": "not-same"
     }
    ],
    "prov": {
@@ -6852,7 +6868,23 @@
       ]
      }
     }
-   ]
+   ],
+   "descriptor": {
+    "text": "дочь Иаира",
+    "refs": [
+     "Мк 5:23"
+    ],
+    "cert": "inference",
+    "nameFrom": [
+     {
+      "actor": "p-iair-nachalnik-sinagogi",
+      "ref": "Мк 5:22"
+     }
+    ]
+   },
+   "prov": {
+    "by": "исправление D16-1"
+   }
   },
   {
    "id": "p-simon-kirineyanin",
@@ -7099,7 +7131,17 @@
       ]
      }
     }
-   ]
+   ],
+   "descriptor": {
+    "text": "мать Руфа",
+    "refs": [
+     "Рим 16:13"
+    ],
+    "cert": "scripture"
+   },
+   "prov": {
+    "by": "исправление D16-1"
+   }
   },
   {
    "id": "p-ruf-rim16",
@@ -9223,7 +9265,17 @@
       ]
      }
     }
-   ]
+   ],
+   "descriptor": {
+    "text": "дочь Иродиады",
+    "refs": [
+     "Мф 14:6"
+    ],
+    "cert": "scripture"
+   },
+   "prov": {
+    "by": "исправление D16-1"
+   }
   },
   {
    "id": "p-irod-agrippa",
@@ -10538,7 +10590,23 @@
       ]
      }
     }
-   ]
+   ],
+   "descriptor": {
+    "text": "жена Пилата",
+    "refs": [
+     "Мф 27:19"
+    ],
+    "cert": "inference",
+    "nameFrom": [
+     {
+      "actor": "p-pontiy-pilat",
+      "ref": "Мф 27:17"
+     }
+    ]
+   },
+   "prov": {
+    "by": "исправление D16-1"
+   }
   },
   {
    "id": "p-anna-pervosvyashchennik",
@@ -14714,7 +14782,23 @@
       ]
      }
     }
-   ]
+   ],
+   "descriptor": {
+    "text": "четыре дочери Филиппа",
+    "refs": [
+     "Деян 21:9"
+    ],
+    "cert": "inference",
+    "nameFrom": [
+     {
+      "actor": "p-filipp-blagovestnik",
+      "ref": "Деян 21:8"
+     }
+    ]
+   },
+   "prov": {
+    "by": "исправление D16-1"
+   }
   },
   {
    "id": "p-sila",
@@ -15838,7 +15922,17 @@
       ]
      }
     }
-   ]
+   ],
+   "descriptor": {
+    "text": "семь сынов Скевы",
+    "refs": [
+     "Деян 19:14"
+    ],
+    "cert": "scripture"
+   },
+   "prov": {
+    "by": "исправление D16-1"
+   }
   },
   {
    "id": "p-andronik",
@@ -16365,7 +16459,17 @@
       ]
      }
     }
-   ]
+   ],
+   "descriptor": {
+    "text": "сестра Нирея",
+    "refs": [
+     "Рим 16:15"
+    ],
+    "cert": "scripture"
+   },
+   "prov": {
+    "by": "исправление D16-1"
+   }
   },
   {
    "id": "p-otets-publiya",
@@ -16426,7 +16530,17 @@
       "first": "Деян 28:8"
      }
     }
-   ]
+   ],
+   "descriptor": {
+    "text": "отец Публия",
+    "refs": [
+     "Деян 28:8"
+    ],
+    "cert": "scripture"
+   },
+   "prov": {
+    "by": "исправление D16-1"
+   }
   },
   {
    "id": "p-publiy",
