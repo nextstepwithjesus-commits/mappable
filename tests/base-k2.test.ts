@@ -21,6 +21,8 @@ import type { CheckEntry, Cite, Place, Source } from '../tools/base/types.ts';
 const BASE_DIR = join(import.meta.dirname, '..', 'base');
 const who = { by: 'тест второго ключа', kind: 'agent' as const, at: '2026-10-11' };
 let base: Base;
+/** Журнал подписей без подписей Д-партии 1 (второй ключ, Д-партия-1-второй-ключ.md): переходы К-2 и К-3 сверяются на прежних 103. */
+const withoutD1 = (b: Base): Base => ({ ...b, checks: (b.checks ?? []).filter((c) => !/Д-партия-1/.test(c.by)) });
 const copy = () => structuredClone(base);
 const errs = (b: Base, check?: string) => validate(b).filter((i) => i.level === 'error' && (!check || i.check === check));
 const reg = () => new Map((base.sources ?? []).map((s) => [s.id, s]));
@@ -89,7 +91,7 @@ describe('труды w- и ссылки works (К-3)', () => {
   });
 
   it('r-lk3-23, рёбра его прочтений и линия Луки остаются в выпуске; те же 101 запись; права не закрывают ни одной', () => {
-    const A = admission(base, 'release');
+    const A = admission(withoutD1(base), 'release');
     expect(A.okKey('reading:r-lk3-23')).toBe(true);
     expect(A.counts.all.admitted).toBe(101);
     const lk = records(base).filter((r) => r.key === 'reading:r-lk3-23' || r.key === 'line:luke' || r.rec.reading?.set === 'r-lk3-23');
@@ -125,7 +127,7 @@ describe('труды w- и ссылки works (К-3)', () => {
     expect(entry.history!.at(-1)!.note).toMatch(/авторы строками → works/);
     // журнал до переноса: подпись набора — прежняя (из истории)
     const { note: _n, ...was } = entry.history!.at(-1)!;
-    const oldChecks: CheckEntry[] = base.checks!.map((c) => (c.key === entry.key ? { ...was, key: c.key, ...(entry.history!.length > 1 && { history: entry.history!.slice(0, -1) }) } : c));
+    const oldChecks: CheckEntry[] = withoutD1(base).checks!.map((c) => (c.key === entry.key ? { ...was, key: c.key, ...(entry.history!.length > 1 && { history: entry.history!.slice(0, -1) }) } : c));
     const before = Object.assign(buildBase({ skip: ['K3'] }), { sources: base.sources, fileSources: base.fileSources, files: base.files });
     expect(before.readings.find((r) => r.id === 'r-lk3-23')!.readings.some((x: any) => x.authors)).toBe(true);
     const b = { ...copy(), checks: oldChecks };

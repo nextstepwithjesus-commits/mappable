@@ -25,6 +25,8 @@ import type { CheckEntry, Redirect } from '../tools/base/types.ts';
 const BASE_DIR = join(import.meta.dirname, '..', 'base');
 const who = { by: 'тест второго ключа', kind: 'agent' as const, at: '2026-10-11' };
 let base: Base;
+/** Журнал подписей без подписей Д-партии 1 (второй ключ, Д-партия-1-второй-ключ.md): переходы К-2 и К-3 сверяются на прежних 103. */
+const withoutD1 = (b: Base): Base => ({ ...b, checks: (b.checks ?? []).filter((c) => !/Д-партия-1/.test(c.by)) });
 const fresh = () => {
   const b = structuredClone(base);
   b.checks = [];
@@ -55,9 +57,9 @@ describe('таблица выданных номеров base/ids.json (К-1)', 
     expect(new Set(all.map(([, id]) => id)).size).toBe(all.length);
     // числа 02 § 3.3.1: рёбер 2 147, утверждений 16 274, родства 85, эпох 16, опор 22 (К-10); Д-партия 1: +6 утверждений
     // (4 примечания Д-5, 2 записи царицы Дан 5:10), родства −3 (сняты по Д-5 с переадресацией); вторая очередь Д-5:
-    // +6 утверждений карточек тёзок, 6 отношений «возможно, то же лицо» (ar-)
+    // +6 утверждений карточек тёзок, 6 отношений «возможно, то же лицо» (ar-); третья очередь: +2 (§ 23 у карточек царей)
     const n = (k: string) => all.filter(([kind]) => kind === k).length;
-    expect([n('origin'), n('fact'), n('kin'), n('epoch'), n('anchor'), n('relation')]).toEqual([2147, 16286, 82, 16, 22, 6]);
+    expect([n('origin'), n('fact'), n('kin'), n('epoch'), n('anchor'), n('relation')]).toEqual([2147, 16288, 82, 16, 22, 6]);
     // каждый действующий номер — у записи; выбывший — со строкой переадресации
     expect(base.ids!.filter((e) => e.state === 'active').length).toBe(all.length);
     const red = new Set(base.redirects.map((r) => r.from));
@@ -305,11 +307,11 @@ describe('перенос подписей base:mark --rekey (К-2)', () => {
       const A = admission(b, 'release');
       return records(b).filter((r) => A.okKey(r.key)).map((r) => r.legacy).sort();
     };
-    const was = admittedLegacy(before);
-    const now = admittedLegacy(base);
+    const was = admittedLegacy(withoutD1(before));
+    const now = admittedLegacy(withoutD1(base));
     expect(now).toEqual(was);
     expect(now).toHaveLength(101);
-    expect(admission(base, 'release').counts.all.admitted).toBe(101);
+    expect(admission(withoutD1(base), 'release').counts.all.admitted).toBe(101);
     // база до номеров читается прежними ключами (records без id)
     expect(records(before).every((r) => r.key === r.legacy)).toBe(true);
   });

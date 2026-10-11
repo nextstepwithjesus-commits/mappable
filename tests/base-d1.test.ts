@@ -7,6 +7,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import type { Base } from '../tools/base/migrate.ts';
 import { loadBase, validate, yearIn } from '../tools/base/validate.ts';
 import { buildIndex } from '../tools/base/bundle.ts';
+import { admission } from '../tools/base/admit.ts';
 
 let base: Base;
 const copy = () => structuredClone(base);
@@ -84,11 +85,15 @@ describe('Д-7: год в записи → ссылка на расчёт', () =
     const n = (p: (x: NonNullable<(typeof c)[number]['f']['calc']>) => boolean) => c.filter(({ f }) => p(f.calc!)).length;
     // Садок при Давиде — модель, как у Авиафара (второй ключ; решение координатора, п. 6)
     expect([n((x) => x.model === 'm-dolgoe'), n((x) => x.scheme === 's-mcfall-young'), n((x) => !x.model && !x.scheme)]).toEqual([98, 92, 133]);
-    // событие — первый стих записи; где прежде был только конец службы и стих конца есть в записи, — «конец — стих»
-    const ends = c.filter(({ f }) => /^конец — /.test(f.calc!.event));
-    expect(ends.map(({ a }) => a.id).sort()).toEqual(['p-feliks', 'p-irod-velikiy']);
-    for (const { f } of ends) expect((f.value as any).refs).toContain(f.calc!.event.replace(/^конец — /, ''));
-    for (const { f } of c.filter((x) => !ends.includes(x))) expect(f.calc!.event).toBe((f.value as any).refs[0]);
+    // событие — ссылка на стих записи: первый стих; где прежде был только конец службы — стих конца (повторная проверка,
+    // Д-7 № 2): смерть Ирода — Мф 2:19, конец службы Феликса — Деян 24:27; что это конец, сказано в примечании
+    const END: Record<string, string> = { 'p-irod-velikiy': 'Мф 2:19', 'p-feliks': 'Деян 24:27' };
+    for (const { a, f } of c) {
+      const v = f.value as any;
+      expect(v.refs).toContain(f.calc!.event);
+      if (a.id in END && f.field === 'offices' && v.refs.includes(END[a.id])) expect([f.calc!.event, v.note]).toEqual([END[a.id], expect.stringMatching(/^конец /)]);
+      else expect(f.calc!.event).toBe(v.refs[0]);
+    }
   });
   it('подложенные ошибки ссылки на расчёт ловятся', () => {
     const b = copy();
@@ -115,8 +120,21 @@ describe('Д-2: степень у вида «предок»', () => {
     const e = (c: string) => inf.find((o) => o.child === c)!;
     expect([e('p-ierokham-syn-pashkhura').gap, e('p-ierokham-syn-pashkhura').skipped?.actors]).toEqual([true, ['p-zakhariya-syn-pashkhura', 'p-amtsiy-syn-zakharii', 'p-felaliya']]);
     expect(e('p-iiuy').skipped?.actors).toEqual(['p-iosafat-syn-namessii']);
+    expect(e('p-lavan').skipped?.actors).toEqual(['p-vafuil']);
+    expect(e('p-zakhariya-syn-varakhii').skipped?.actors).toEqual(['p-varakhiya-otets-zakharii']);
     expect(e('p-gofoliya').note).not.toMatch(/по 4Цар 8:18 она/);
     // примечания рёбер без «понимания» и «по деду»
     expect(anc.filter((o) => /пониман|по деду|в значении/.test(o.note ?? '')).map((o) => o.child)).toEqual([]);
+  });
+});
+
+describe('подписи второго ключа (Д-партия-1-второй-ключ.md)', () => {
+  it('подписаны Д-5 (23), Д-2 (368), Д-7 (323); отношения ar- и новые карточки — нет; допущено в выпуск 118', () => {
+    const d1 = (base.checks ?? []).filter((c) => /Д-партия-1/.test(c.by));
+    const n = (re: RegExp) => d1.filter((c) => re.test(c.key)).length;
+    expect([n(/^(kin|union|redirect):/), n(/^origin:/), n(/^fact:/), d1.length]).toEqual([23, 368, 323, 714]);
+    expect(d1.filter((c) => /^relation:|^actor:/.test(c.key))).toEqual([]);
+    expect(d1.every((c) => c.kind === 'agent')).toBe(true);
+    expect(admission(base, 'release').counts.all.admitted).toBe(118);
   });
 });

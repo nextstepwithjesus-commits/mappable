@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data/persons/13-kings-of-judah.json",
-   "commit": "2bdf557"
+   "commit": "3d67ab4"
   }
  },
  "sources": [
@@ -8074,7 +8074,19 @@
     }
    ],
    "disambig": "названный в словах «Маасею, сына царя» (2Пар 28:7)",
-   "facts": [],
+   "facts": [
+    {
+     "id": "a-16287",
+     "sec": 23,
+     "field": "scripture",
+     "value": {
+      "first": "2Пар 28:7"
+     },
+     "prov": {
+      "by": "исправление D5-3"
+     }
+    }
+   ],
    "prov": {
     "by": "исправление D5-2",
     "status": "draft"
@@ -14080,7 +14092,19 @@
     }
    ],
    "disambig": "названный в словах «Малхии, сына царя» (Иер 38:6)",
-   "facts": [],
+   "facts": [
+    {
+     "id": "a-16288",
+     "sec": 23,
+     "field": "scripture",
+     "value": {
+      "first": "Иер 38:6"
+     },
+     "prov": {
+      "by": "исправление D5-3"
+     }
+    }
+   ],
    "prov": {
     "by": "исправление D5-2",
     "status": "draft"

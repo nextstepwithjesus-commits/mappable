@@ -18564,6 +18564,8 @@
   {"id":"ar-3","kind":"relation","key":"relation:p-eliashiv-neem13-4|p-eliashiv-pervosvyashchennik|possibly-same","at":"2026-10-11","state":"active"},
   {"id":"ar-4","kind":"relation","key":"relation:p-nafan-1par11-38|p-nafan-otets-igala|possibly-same","at":"2026-10-11","state":"active"},
   {"id":"ar-5","kind":"relation","key":"relation:p-shupim-1par7-15|p-shupim-syn-ira|possibly-same","at":"2026-10-11","state":"active"},
-  {"id":"ar-6","kind":"relation","key":"relation:p-khupim-1par7-15|p-khupim-syn-ira|possibly-same","at":"2026-10-11","state":"active"}
+  {"id":"ar-6","kind":"relation","key":"relation:p-khupim-1par7-15|p-khupim-syn-ira|possibly-same","at":"2026-10-11","state":"active"},
+  {"id":"a-16287","kind":"fact","key":"fact:p-tsar-2par28-7|scripture|2c0333e3b804d619|D5-3","at":"2026-10-11","state":"active"},
+  {"id":"a-16288","kind":"fact","key":"fact:p-tsar-ier38-6|scripture|a3b5af2d9dd43afd|D5-3","at":"2026-10-11","state":"active"}
  ]
 }

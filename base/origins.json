@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data",
-   "commit": "2bdf557"
+   "commit": "3d67ab4"
   }
  },
  "sources": [
@@ -31766,9 +31766,19 @@
     "from": {
      "vol": "15-prophets-exile.json"
     },
-    "by": "исправление D2"
+    "by": "исправление D2-3"
    },
-   "degree": "inferred"
+   "degree": "inferred",
+   "gap": true,
+   "skipped": {
+    "actors": [
+     "p-varakhiya-otets-zakharii"
+    ],
+    "refs": [
+     "Зах 1:1",
+     "Зах 1:7"
+    ]
+   }
   },
   {
    "id": "o-sofoniya-otets-iosii--iosiya-syn-sofonii",
@@ -41133,9 +41143,19 @@
    ],
    "note": "Слово «сын» — Писание (Быт 29:5); степень «внук» — вывод: Лаван — сын Вафуила (Быт 28:5), Вафуил — сын Нахора (Быт 24:24; 22:20–23)",
    "prov": {
-    "by": "исправление D2"
+    "by": "исправление D2-3"
    },
-   "degree": "inferred"
+   "degree": "inferred",
+   "gap": true,
+   "skipped": {
+    "actors": [
+     "p-vafuil"
+    ],
+    "refs": [
+     "Быт 28:5",
+     "Быт 24:24"
+    ]
+   }
   },
   {
    "id": "o-ioram-syn-iosafata--oziya",
