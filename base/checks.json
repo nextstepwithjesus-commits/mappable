@@ -1612,26 +1612,6 @@
    }
   },
   {
-   "key": "chrono:p-arfaksad",
-   "by": "bibleist-reviewer (второй ключ, Д-15 партия 2)",
-   "kind": "agent",
-   "at": "2026-10-11",
-   "hash": "9f6a6dc3cfbfa58f2d819a352e255b5c7d35148c5a430b49e4f8c8d4b16cbff3",
-   "inputs": {
-    "verses": [
-     "Быт 11:10",
-     "Быт 11:12",
-     "Быт 11:13"
-    ],
-    "text": "fdd0cb532f5b931a223f1e15f0f468af0364940e18d4c5054248f0010388f4bc",
-    "brackets": "a61902507e806010009b7fcad95fcbba941521ffbf12e32058738eb4c986eac5",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
    "key": "chrono:p-asaf",
    "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
    "kind": "agent",
@@ -1734,27 +1714,6 @@
    }
   },
   {
-   "key": "chrono:p-enokh",
-   "by": "bibleist-reviewer (второй ключ, Д-15 партия 2)",
-   "kind": "agent",
-   "at": "2026-10-11",
-   "hash": "1449985f04f0410acf893d62ff24769fd0b0dc5dc5a63f8536602d1a54ab42ba",
-   "inputs": {
-    "verses": [
-     "Быт 5:18",
-     "Быт 5:23",
-     "Быт 5:24",
-     "Евр 11:5"
-    ],
-    "text": "f2cdb7801bbeefa7737507b80a6301afafaeb66646f5a34a97b48b8979266106",
-    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
    "key": "chrono:p-enos",
    "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
    "kind": "agent",
@@ -1767,26 +1726,6 @@
     ],
     "text": "858d77ea01df5e8a7bfba7790c96ac7297922f8e45297729156c2588cd2cc6cd",
     "brackets": "732a60db3555eb251ddeb7ef72a84f73f8372bc13083f952d9d3e1104bbb0a34",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "chrono:p-ever",
-   "by": "bibleist-reviewer (второй ключ, Д-15 партия 2)",
-   "kind": "agent",
-   "at": "2026-10-11",
-   "hash": "f80c2938ded4d46ba2fdcb5f4b925d3cb08f8a2edd7395597e0a9d881d452329",
-   "inputs": {
-    "verses": [
-     "Быт 11:14",
-     "Быт 11:16",
-     "Быт 11:17"
-    ],
-    "text": "15b10ed93cedf04af0ceb5b86d50768521edf0b2407832cde60fb1ac12fb22f6",
-    "brackets": "dab9447105258522c597152e9c6129d83b0f1ed15103ed50161fcdf3ff36f348",
     "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "sources": {
      "src-synodal": "tools/bible/synodal.tsv"
@@ -1875,26 +1814,6 @@
     ],
     "text": "40af780efd1893d209f7ec465639c1e688c8403c285b91455318a8a08e06f5b3",
     "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "chrono:p-falek",
-   "by": "bibleist-reviewer (второй ключ, Д-15 партия 2)",
-   "kind": "agent",
-   "at": "2026-10-11",
-   "hash": "e940887f100d4cd0025fb2a54d4eb63c9b3129ef9cc6288c2c9691ebbd74d01b",
-   "inputs": {
-    "verses": [
-     "Быт 11:16",
-     "Быт 11:18",
-     "Быт 11:19"
-    ],
-    "text": "43c1942b326ee70a7f0daf7196c815990e56357477f0cea84e4cafd91eba7bcb",
-    "brackets": "34eaa6b24fc3106ed44799cf02e27150221891695a7240946fd5259ed463199d",
     "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "sources": {
      "src-synodal": "tools/bible/synodal.tsv"
@@ -2496,26 +2415,6 @@
    }
   },
   {
-   "key": "chrono:p-nakhor",
-   "by": "bibleist-reviewer (второй ключ, Д-15 партия 2)",
-   "kind": "agent",
-   "at": "2026-10-11",
-   "hash": "9b3e256c9fb38e92430c63b0367cfa5070fc3ffd0be99290f29a39f252c44cf4",
-   "inputs": {
-    "verses": [
-     "Быт 11:22",
-     "Быт 11:24",
-     "Быт 11:25"
-    ],
-    "text": "c0433199c7e7815d43cd8b3dbd5e8ddaef44d36c5794207b7e64ee46d6efd0b8",
-    "brackets": "846dbae3aea1409c4c53fc5d5df7ffc0f13183209fa989e1a57e314a68ddd60c",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
    "key": "chrono:p-noy",
    "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
    "kind": "agent",
@@ -2594,26 +2493,6 @@
    }
   },
   {
-   "key": "chrono:p-ragav",
-   "by": "bibleist-reviewer (второй ключ, Д-15 партия 2)",
-   "kind": "agent",
-   "at": "2026-10-11",
-   "hash": "7ff5d6b235f53d1f92f215059305ff922f85cfebb7a58ca7be0e60cc74db7088",
-   "inputs": {
-    "verses": [
-     "Быт 11:18",
-     "Быт 11:20",
-     "Быт 11:21"
-    ],
-    "text": "5630cf08ad701012390cab24f5efdbcd134a7462ab063097f02842b52f798eaa",
-    "brackets": "aed12700dffca5cb3d7168236feeab3687de726dea2bb1ef601d5c542a6fba34",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
    "key": "chrono:p-razon",
    "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
    "kind": "agent",
@@ -2625,26 +2504,6 @@
     ],
     "text": "e610555e5d896fcd23884fee9557252662b0b021123dab3b5a15da014a629e83",
     "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "chrono:p-sala",
-   "by": "bibleist-reviewer (второй ключ, Д-15 партия 2)",
-   "kind": "agent",
-   "at": "2026-10-11",
-   "hash": "9375df95d509aaac7ae8a1440d1689e9f96527a838f7db06696204b028e1a364",
-   "inputs": {
-    "verses": [
-     "Быт 11:12",
-     "Быт 11:14",
-     "Быт 11:15"
-    ],
-    "text": "ef2015a0f18361c702f6870f156eed08118d9c2797b986625769ce3445fafbc7",
-    "brackets": "74106757d75eeddd5c7b168b164155d7e724c3756608c394ddeed270fa6939a6",
     "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "sources": {
      "src-synodal": "tools/bible/synodal.tsv"
@@ -2690,26 +2549,6 @@
    }
   },
   {
-   "key": "chrono:p-serukh",
-   "by": "bibleist-reviewer (второй ключ, Д-15 партия 2)",
-   "kind": "agent",
-   "at": "2026-10-11",
-   "hash": "1517034127d2678f9e611c7725bd59ccba6a6ec14148611123de7f48bde0d47f",
-   "inputs": {
-    "verses": [
-     "Быт 11:20",
-     "Быт 11:22",
-     "Быт 11:23"
-    ],
-    "text": "bbed0bb5e409611ff1e4141883848fc0a94967116796ed5dba2d1457cdbfe7c8",
-    "brackets": "82e039430d8d7698d7add2c7afeae6622deec130c79a93b97accf4a50936dc0a",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
    "key": "chrono:p-sif",
    "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
    "kind": "agent",
@@ -2722,27 +2561,6 @@
     ],
     "text": "0a3b593ff686fda0e37c7c5a9a8a0ef09f79154f3cfcba4931ec8f50cae7a5b5",
     "brackets": "91b43d7d6552ba62c11a6a8996ecaf666cd4f3d25064b8f30a6d9aa325511f34",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "chrono:p-sim",
-   "by": "bibleist-reviewer (второй ключ, Д-15 партия 2)",
-   "kind": "agent",
-   "at": "2026-10-11",
-   "hash": "e8c57671ee598947fec72e528360ee7cf300dbed9a5e3b63f1214d8ba4866d57",
-   "inputs": {
-    "verses": [
-     "Быт 11:10",
-     "Быт 11:11",
-     "Быт 5:32",
-     "Быт 7:6"
-    ],
-    "text": "942b8b7624f43d0988e0e178f566731a81af7ffe61ae47d615c007fb41deb88e",
-    "brackets": "8961307b27f4fd9397ab3f878c5c4851e6b89456eae17606fb84444c1f093a9f",
     "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "sources": {
      "src-synodal": "tools/bible/synodal.tsv"
@@ -9217,27 +9035,6 @@
    }
   },
   {
-   "key": "fact:a-16349",
-   "by": "bibleist-reviewer (второй ключ, Д-15 партия 2)",
-   "kind": "agent",
-   "at": "2026-10-11",
-   "hash": "2804abb779b969fde9fdaf126c32c5ddbb2b142f56929b494dac453d01fde97a",
-   "inputs": {
-    "verses": [
-     "1Пар 11:27",
-     "1Пар 11:36",
-     "1Пар 27:10",
-     "1Пар 2:39"
-    ],
-    "text": "e7e00d0f3aca7408333978ff35af209ad01d02c59e9dcf211638d58e594e9a07",
-    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
    "key": "fact:a-16350",
    "by": "bibleist-reviewer (второй ключ, Д-15 партия 2)",
    "kind": "agent",
@@ -10103,27 +9900,6 @@
     ],
     "text": "d7965ca26636a640911d5d1c88b1886d99e3178cd5e86f27e54e245296077252",
     "brackets": "0a85361e5957ddced5da83246f30b0c53dcf1812974338b8c7baf9d38a31ae5a",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "fact:a-4372",
-   "by": "bibleist-reviewer (второй ключ, В-32, повторная проверка)",
-   "kind": "agent",
-   "at": "2026-10-11",
-   "hash": "1290e6a42dcc8d02c521f75dba60a491a6d6d565153166299d51cb55a65e5137",
-   "inputs": {
-    "verses": [
-     "Исх 18:2",
-     "Исх 2:18",
-     "Исх 2:21",
-     "Исх 3:1"
-    ],
-    "text": "88a80d20a6e4ff8c2a4e47c3677b676c1fed843ca09521cbbc943d6ddf8a64ee",
-    "brackets": "2dd2195ca7cc4dc83a2f560d3457d48d5bfee328128a2ca51ede8f405506a6e2",
     "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "sources": {
      "src-synodal": "tools/bible/synodal.tsv"
@@ -13534,24 +13310,6 @@
    }
   },
   {
-   "key": "origin:o-aaron--immer",
-   "by": "bibleist-reviewer (второй ключ, Д-партия-1-второй-ключ.md)",
-   "kind": "agent",
-   "at": "2026-10-11",
-   "hash": "18c2293053606feeb4fea97cd646ba677c7898f01bab000416db53abda61bd64",
-   "inputs": {
-    "verses": [
-     "1Пар 24:19"
-    ],
-    "text": "e29e3fe9a087fc1e9e70b2ca346077049253b5ac08118a33ff2a6ee3c3d356c2",
-    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
    "key": "origin:o-aaron--ioiariv-neem12",
    "by": "bibleist-reviewer (второй ключ, Д-партия-1-второй-ключ.md)",
    "kind": "agent",
@@ -15584,60 +15342,6 @@
      "Езд 10:26"
     ],
     "text": "1152ffa4b637fd2513f0fe134b4c60615f6a86561e76118c65c824a06765d274",
-    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "origin:o-elitsafan--ieiel-elitsafanit",
-   "by": "bibleist-reviewer (второй ключ, Д-партия-1-второй-ключ.md)",
-   "kind": "agent",
-   "at": "2026-10-11",
-   "hash": "d0af4a41f0b1e983037da1cd194fbcc1ca5ff61d7df3c35f866007abaaac15a7",
-   "inputs": {
-    "verses": [
-     "2Пар 29:13"
-    ],
-    "text": "935426d262f6b27e8689bdb4f55967ae6fad3acfad2a42eee2967588f495e3c5",
-    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "origin:o-elitsafan--shemaiya-elisafanit",
-   "by": "bibleist-reviewer (второй ключ, Д-партия-1-второй-ключ.md)",
-   "kind": "agent",
-   "at": "2026-10-11",
-   "hash": "d8dea84f48c62bb6a0e3c4d8033c916c6f1fe850873411290f61c3f0b778474b",
-   "inputs": {
-    "verses": [
-     "1Пар 15:8"
-    ],
-    "text": "d45a80d434325c8bc10f410ac3e0641c9dad991ec7e12646214acda8ae564724",
-    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "origin:o-elitsafan--shimri-elitsafanit",
-   "by": "bibleist-reviewer (второй ключ, Д-партия-1-второй-ключ.md)",
-   "kind": "agent",
-   "at": "2026-10-11",
-   "hash": "9d25f5308e0e0950a9de6045777d6b92db400ee8ee8e525ae935e01008a046b6",
-   "inputs": {
-    "verses": [
-     "2Пар 29:13"
-    ],
-    "text": "935426d262f6b27e8689bdb4f55967ae6fad3acfad2a42eee2967588f495e3c5",
     "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "sources": {
@@ -20423,24 +20127,6 @@
    }
   },
   {
-   "key": "origin:o-uziil--aminadav-uzziilit",
-   "by": "bibleist-reviewer (второй ключ, Д-партия-1-второй-ключ.md)",
-   "kind": "agent",
-   "at": "2026-10-11",
-   "hash": "3f07f4d93db2a53d82bf5122fbaa1be1c2fe1cbe15961264ed718f0ef02c0698",
-   "inputs": {
-    "verses": [
-     "1Пар 15:10"
-    ],
-    "text": "0a10841b0331b642d7781eb4de68f159f6b4dfe04f5d92bf4a256ec5b94debed",
-    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
    "key": "origin:o-vaal-syn-reaii--beera-syn-vaala",
    "by": "сверщик-агент",
    "kind": "agent",
@@ -22888,35 +22574,6 @@
      "Мф 4:17"
     ],
     "text": "29ee9e28a2e3557fc6792e174cb5e1759a8a2678d5697a61d1028bf79a2fabb3",
-    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "story:e-iisus-stavit-dvenadtsat",
-   "by": "bibleist-reviewer (второй ключ, Д-15 партия 2)",
-   "kind": "agent",
-   "at": "2026-10-11",
-   "hash": "823c428503be71f6b6e6962bff38478405fd6f53daab81881ccbcbacf310ffe4",
-   "inputs": {
-    "verses": [
-     "Лк 6:12",
-     "Лк 6:13",
-     "Лк 6:14",
-     "Лк 6:15",
-     "Лк 6:16",
-     "Мк 3:13",
-     "Мк 3:14",
-     "Мк 3:15",
-     "Мк 3:16",
-     "Мк 3:17",
-     "Мк 3:18",
-     "Мк 3:19"
-    ],
-    "text": "efe488bb68ab5879457737a6d185d14bebcb3f6eb5f289fd1410997770f57dd4",
     "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "sources": {

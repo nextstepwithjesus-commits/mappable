@@ -428,6 +428,8 @@ export function validateStories(base: Base, err: Err, warn: Err) {
           if (ownHits.length && ownHits.every((n) => n.cert === 'inference') && !a.idCert) err('история: другое имя', aw, `в его стихах стоит только форма «выв.» «${ownHits[0].form}»: у строки — idCert (02 § 3.3.5; 11 § 11.3 п. 5б)`);
         }
         if (a.idCert) {
+          // строка на форме «выв.» — уровня «вывод» (второй ключ Д-15 партии 2, № 16; решение координатора 6)
+          if (a.cert !== 'inference') err('история: другое имя', aw, `строка с idCert — уровень «вывод» (cert: inference), а не «${a.cert}»`);
           const f = card?.names.find((n) => n.id === a.idCert!.form);
           if (!f) err('история: другое имя', aw, `idCert: у карточки нет формы ${a.idCert.form}`);
           else if (f.cert !== 'inference') err('история: другое имя', aw, `idCert: форма ${a.idCert.form} — не «выв.»`);

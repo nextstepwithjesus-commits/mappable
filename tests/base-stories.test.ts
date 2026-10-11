@@ -200,7 +200,7 @@ describe('истории: испорченные записи ловятся', (
     expect(src.stories.flatMap((s) => s.actors).filter((a) => (a.actor === 'p-matfey' && /Леви/.test(a.label ?? '')) || a.actor === 'p-iuda-iakovlev')).toEqual([]);
     // Фаддей и Иуда Иаковлев — вид (б) (Д-15): строка у Луки — карточка Фаддея с именем стиха и idCert формы «выв.»
     const twelve = by.get('e-iisus-stavit-dvenadtsat')!.actors.filter((a) => a.actor === 'p-faddey');
-    expect(twelve.map((a) => [a.label, a.refs, a.cert, a.idCert])).toEqual([[undefined, ['Мк 3:18'], 'scripture', undefined], ['Иуда Иаковлев', ['Лк 6:16'], 'scripture', { form: 'p-faddey#n3', refs: ['Лк 6:16'] }]]);
+    expect(twelve.map((a) => [a.label, a.refs, a.cert, a.idCert])).toEqual([[undefined, ['Мк 3:18'], 'scripture', undefined], ['Иуда Иаковлев', ['Лк 6:16'], 'inference', { form: 'p-faddey#n3', refs: ['Лк 6:16'] }]]);
     const war = by.get('e-snova-voyna-s-filistimlyanami')!.actors.filter((a) => a.account === 1 && a.actor.startsWith('p-') && a.label);
     expect(war.every((a) => a.cert === 'inference' || a.actor === 'p-ionafan-syn-sammy')).toBe(true);
     // у Луки о посте спрашивают «Они» — книжники и фарисеи, не ученики Иоанновы (11 § 13.2)

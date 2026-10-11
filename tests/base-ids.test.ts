@@ -80,7 +80,9 @@ describe('таблица выданных номеров base/ids.json (К-1)', 
     // связь ar-8 снята, связь Рагуил — Иофор добавлена; D15-4: у Сепфоры запись a-4378 сведена в событие a-4386 (−1)
     // Д-15, партия 2: рёбер +7 (копии рёбер для своих карточек вида (в) и рёбра Ахирама и Шефуфама к Вениамину), утверждений +54
     // (места Писания, заметки и сведения новых карточек; заметка о Иез 1:2 у Иехонии), отношений «возможно, то же лицо» +26
-    expect([n('origin'), n('fact'), n('kin'), n('epoch'), n('anchor'), n('relation')]).toEqual([2154, 16349, 82, 16, 22, 34]);
+    // правка по второму ключу партии 2: рёбер +2 (Шавтай — Левий, Иоханан из Неем 12 — Елиашив), утверждений +25 (заметки и места
+    // Писания тёзок; −2 выбывших у Иехонии), отношений +14 (13 у тёзок и Раамии, 2 у Иоханана, −1 ar-34)
+    expect([n('origin'), n('fact'), n('kin'), n('epoch'), n('anchor'), n('relation')]).toEqual([2156, 16374, 82, 16, 22, 48]);
     // каждый действующий номер — у записи; выбывший — со строкой переадресации
     expect(base.ids!.filter((e) => e.state === 'active').length).toBe(all.length);
     const red = new Set(base.redirects.map((r) => r.from));
@@ -92,7 +94,11 @@ describe('таблица выданных номеров base/ids.json (К-1)', 
         ['o-iofor--khovav', true], ['o-iofor--sepfora', true], ['o-iri-syn-bely--khupim-syn-ira', true], ['o-iri-syn-bely--shupim-syn-ira', true],
         ['o-kishiy--idifun', true], ['o-maaseya-otets-tsefanii--tsefaniya-syn-maasei', true], ['o-makhalafa-doch-izmaila--raguil-syn-isava', true],
         ['o-raav--vooz', true], ['o-samma-syn-iesseya--ionadav-syn-sammy', true], ['o-samma-syn-iesseya--ionafan-syn-sammy', true],
-        ['o-uriil-iz-givy--maakha-doch-avessaloma', true], ['o-zimri-syn-zary--kharmiy-syn-zimri', true]],
+        ['o-uriil-iz-givy--maakha-doch-avessaloma', true], ['o-zimri-syn-zary--kharmiy-syn-zimri', true],
+        // правка по второму ключу партии 2: Иез 1:2 у Иехонии (a-9572, a-9590), связь Иоханан — Ионафан (ar-34), рёбра тёзок
+        ['a-9572', true], ['a-9590', true], ['ar-34', true], ['o-aaron--immer', true], ['o-elitsafan--ieiel-elitsafanit', true],
+        ['o-elitsafan--shemaiya-elisafanit', true], ['o-elitsafan--shimri-elitsafanit', true], ['o-kore-syn-eviasafa--meshelemiya', true],
+        ['o-shevuil-syn-girsama--iediya', true], ['o-uziil--aminadav-uzziilit', true]].sort(),
     );
   });
 

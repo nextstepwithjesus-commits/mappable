@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data/persons/15-prophets-exile.json",
-   "commit": "6fea95a"
+   "commit": "e80fccb"
   }
  },
  "sources": [
@@ -11833,6 +11833,15 @@
       "refs": [
        "Иер 38:1-4"
       ]
+     },
+     "idCert": {
+      "form": "p-iegukhal#n2",
+      "refs": [
+       "Иер 38:1-4"
+      ]
+     },
+     "prov": {
+      "by": "исправление D15-18"
      }
     },
     {

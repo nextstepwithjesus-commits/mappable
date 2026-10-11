@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data",
-   "commit": "6fea95a"
+   "commit": "e80fccb"
   }
  },
  "sources": [
@@ -443,7 +443,8 @@
       "calc": {
        "event": "Быт 5:23",
        "model": "m-dolgoe"
-      }
+      },
+      "endOfLife": "not-died"
      }
     ]
    },
@@ -451,7 +452,7 @@
     "from": {
      "vol": "01-antediluvian.json"
     },
-    "by": "исправление D6-5"
+    "by": "исправление D6-8"
    }
   },
   {
@@ -637,7 +638,8 @@
       "calc": {
        "event": "Быт 11:10-11",
        "model": "m-dolgoe"
-      }
+      },
+      "endOfLife": "bracket"
      }
     ]
    },
@@ -645,7 +647,7 @@
     "from": {
      "vol": "02-nations.json"
     },
-    "by": "исправление D6-6"
+    "by": "исправление D6-8"
    }
   },
   {
@@ -1776,7 +1778,8 @@
       "calc": {
        "event": "Быт 11:12-13",
        "model": "m-dolgoe"
-      }
+      },
+      "endOfLife": "bracket"
      }
     ]
    },
@@ -1784,7 +1787,7 @@
     "from": {
      "vol": "03-shem-to-terah.json"
     },
-    "by": "исправление D6-6"
+    "by": "исправление D6-8"
    }
   },
   {
@@ -1859,7 +1862,8 @@
       "calc": {
        "event": "Быт 11:14-15",
        "model": "m-dolgoe"
-      }
+      },
+      "endOfLife": "bracket"
      }
     ]
    },
@@ -1867,7 +1871,7 @@
     "from": {
      "vol": "03-shem-to-terah.json"
     },
-    "by": "исправление D6-6"
+    "by": "исправление D6-8"
    }
   },
   {
@@ -1913,7 +1917,8 @@
       "calc": {
        "event": "Быт 11:16-17",
        "model": "m-dolgoe"
-      }
+      },
+      "endOfLife": "bracket"
      }
     ]
    },
@@ -1921,7 +1926,7 @@
     "from": {
      "vol": "03-shem-to-terah.json"
     },
-    "by": "исправление D6-6"
+    "by": "исправление D6-8"
    }
   },
   {
@@ -1967,7 +1972,8 @@
       "calc": {
        "event": "Быт 11:18-19",
        "model": "m-dolgoe"
-      }
+      },
+      "endOfLife": "bracket"
      }
     ]
    },
@@ -1975,7 +1981,7 @@
     "from": {
      "vol": "03-shem-to-terah.json"
     },
-    "by": "исправление D6-6"
+    "by": "исправление D6-8"
    }
   },
   {
@@ -2021,7 +2027,8 @@
       "calc": {
        "event": "Быт 11:20-21",
        "model": "m-dolgoe"
-      }
+      },
+      "endOfLife": "bracket"
      }
     ]
    },
@@ -2029,7 +2036,7 @@
     "from": {
      "vol": "03-shem-to-terah.json"
     },
-    "by": "исправление D6-6"
+    "by": "исправление D6-8"
    }
   },
   {
@@ -2075,7 +2082,8 @@
       "calc": {
        "event": "Быт 11:22-23",
        "model": "m-dolgoe"
-      }
+      },
+      "endOfLife": "bracket"
      }
     ]
    },
@@ -2083,7 +2091,7 @@
     "from": {
      "vol": "03-shem-to-terah.json"
     },
-    "by": "исправление D6-6"
+    "by": "исправление D6-8"
    }
   },
   {
@@ -2129,7 +2137,8 @@
       "calc": {
        "event": "Быт 11:24-25",
        "model": "m-dolgoe"
-      }
+      },
+      "endOfLife": "bracket"
      }
     ]
    },
@@ -2137,7 +2146,7 @@
     "from": {
      "vol": "03-shem-to-terah.json"
     },
-    "by": "исправление D6-6"
+    "by": "исправление D6-8"
    }
   },
   {

@@ -160,7 +160,8 @@ describe('Д-2: степень у вида «предок»', () => {
     const inf = anc.filter((o) => o.degree === 'inferred');
     expect(inf.map((o) => o.child).sort()).toEqual(['p-azariya-1par6-10', 'p-gofoliya', 'p-iiuy', 'p-ierokham-syn-pashkhura', 'p-lavan', 'p-oziya', 'p-zakhariya-syn-varakhii'].sort());
     for (const o of inf) expect([o.child, o.cert, o.refs.length >= 2]).toEqual([o.child, 'inference', true]);
-    expect(anc.filter((o) => o.degree === 'unstated')).toHaveLength(360);
+    // +1 — Шавтай, левит (Неем 8:7), своя карточка после второго ключа Д-15 партии 2
+    expect(anc.filter((o) => o.degree === 'unstated')).toHaveLength(361);
     // пропущенных, которых называет другое место, — перечнем (02 § 3.4): Иерохам (Неем 11:12), Ииуй (4Цар 9:2, 14)
     const e = (c: string) => inf.find((o) => o.child === c)!;
     expect([e('p-ierokham-syn-pashkhura').gap, e('p-ierokham-syn-pashkhura').skipped?.actors]).toEqual([true, ['p-zakhariya-syn-pashkhura', 'p-amtsiy-syn-zakharii', 'p-felaliya']]);
@@ -181,7 +182,9 @@ describe('подписи второго ключа (Д-партия-1-второ
     // Д-15, партия 2: сняты подписи пяти рёбер (o-gofoniil--khelev — к своей карточке Хелдая; o-shela-syn-iudy--ashbeya,
     // o-shekhaniya-neem12--iosif-neem12, o-rekhum-neem12--adna-neem12, o-meremof-neem12--khelkiya-neem12-15 — тождество по форме
     // «выв.») и a-12974 (Симон Зилот — idCert)
-    expect([n(/^(kin|union|redirect):/), n(/^origin:/), n(/^fact:/), d1.length]).toEqual([23, 363, 321, 707]);
+    // правка по второму ключу партии 2: сняты подписи ещё пяти рёбер, ушедших к карточкам тёзок (o-aaron--immer,
+    // o-elitsafan--shemaiya-elisafanit, o-elitsafan--shimri-elitsafanit, o-elitsafan--ieiel-elitsafanit, o-uziil--aminadav-uzziilit)
+    expect([n(/^(kin|union|redirect):/), n(/^origin:/), n(/^fact:/), d1.length]).toEqual([23, 358, 321, 702]);
     expect(d1.filter((c) => /^relation:|^actor:/.test(c.key))).toEqual([]);
     expect(d1.every((c) => c.kind === 'agent')).toBe(true);
     // снимок на время подписи: контрольный набор (103) + Д-партия 1; подписи следующих партий не считаются

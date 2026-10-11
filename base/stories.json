@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data/stories",
-   "commit": "6fea95a"
+   "commit": "e80fccb"
   }
  },
  "sources": [
@@ -8727,7 +8727,7 @@
        "Лк 6:16"
       ]
      },
-     "cert": "scripture"
+     "cert": "inference"
     },
     {
      "actor": "p-simon-zilot",
@@ -8761,7 +8761,7 @@
        "Лк 6:15"
       ]
      },
-     "cert": "scripture"
+     "cert": "inference"
     },
     {
      "actor": "p-iuda-iskariot",

@@ -32,66 +32,66 @@ import { inferredForms, restsOnForm } from './name-forms.ts';
 import { issuerOf } from './ids.ts';
 import type { Actor, Assertion, Name, NameWhyCode, Origin, Ref } from './types.ts';
 
-const by = (id: string) => ({ by: `исправление ${id}` });
-const touch = <T extends { prov?: object }>(x: T, step: string) => {
+export const by = (id: string) => ({ by: `исправление ${id}` });
+export const touch = <T extends { prov?: object }>(x: T, step: string) => {
   x.prov = { ...x.prov, ...by(step) };
   return x;
 };
 
 // ---------------------------------------------------------------- стихи и имена
 
-const verseIds = (refs: Ref[]): string[] => {
+export const verseIds = (refs: Ref[]): string[] => {
   const bible = loadBible();
   return [...new Set(refs.flatMap((r) => {
     const p = parseRef(r, bible.chapterLength);
     return p && !p.chapterOnly ? p.verses.map(verseId) : [];
   }))];
 };
-const textOf = (id: string) => {
+export const textOf = (id: string) => {
   const m = /^(.+) (\d+):(\d+)$/.exec(id);
   return m ? norm(scriptureText(m[1], +m[2], +m[3]) ?? '') : '';
 };
-const stands = (form: string, v: string) => nameMatcher(form).test(textOf(v));
+export const stands = (form: string, v: string) => nameMatcher(form).test(textOf(v));
 /** Стихи ссылок, где форма стоит вне скобок (как ссылки «Книга гл:ст»). */
-const whereStands = (form: string, refs: Ref[]) => verseIds(refs).filter((v) => stands(form, v));
+export const whereStands = (form: string, refs: Ref[]) => verseIds(refs).filter((v) => stands(form, v));
 
-const P: NameWhyCode = 'parallel';
-const N: NameWhyCode = 'same-node';
-const S: NameWhyCode = 'same-position';
-const C: NameWhyCode = 'named-number';
-const O: NameWhyCode = 'one-candidate';
-const X: NameWhyCode = 'no-contradiction';
+export const P: NameWhyCode = 'parallel';
+export const N: NameWhyCode = 'same-node';
+export const S: NameWhyCode = 'same-position';
+export const C: NameWhyCode = 'named-number';
+export const O: NameWhyCode = 'one-candidate';
+export const X: NameWhyCode = 'no-contradiction';
 
 /** Записи всех карточек по номеру. */
-const actorsOf = (base: Base) => {
+export const actorsOf = (base: Base) => {
   const m = new Map<string, Actor>();
   for (const v of base.volumes) for (const a of v.actors) m.set(a.id, a);
   return m;
 };
-const volOf = (base: Base, id: string) => base.volumes.find((v) => v.actors.some((a) => a.id === id))!;
+export const volOf = (base: Base, id: string) => base.volumes.find((v) => v.actors.some((a) => a.id === id))!;
 
 /** Номера форм карточки: у кого нет — по порядку, со следующего свободного (02 § 3.3.5: номер не меняется). */
-function numberForms(a: Actor) {
+export function numberForms(a: Actor) {
   let next = Math.max(0, ...a.names.map((n) => Number(/#n(\d+)$/.exec(n.id ?? '')?.[1] ?? 0))) + 1;
   for (const n of a.names) if (!n.id) n.id = `${a.id}#n${next++}`;
 }
-const formOf = (a: Actor, form: string, step: string): Name => {
+export const formOf = (a: Actor, form: string, step: string): Name => {
   const n = a.names.filter((x) => x.form === form);
   if (n.length !== 1) throw new Error(`${step}: у ${a.id} ожидалась одна форма «${form}», найдено ${n.length}`);
   return n[0];
 };
-const mainOf = (a: Actor) => a.names.find((n) => n.type === 'main')!;
+export const mainOf = (a: Actor) => a.names.find((n) => n.type === 'main')!;
 /**
  * Номер утверждения: закреплённый — как есть; заготовка (`?ключ`, до закрепления номеров — так в проверке областей шагов) —
  * по таблице выданных номеров.
  */
-const fid = (base: Base, f: { id?: string }) => (f.id?.startsWith('?') ? issuerOf(base)?.entry(f.id.slice(1))?.id : f.id);
+export const fid = (base: Base, f: { id?: string }) => (f.id?.startsWith('?') ? issuerOf(base)?.entry(f.id.slice(1))?.id : f.id);
 
 /**
  * Форма «выв.» (вид (б)): стихи сравнения — сторона формы (где она стоит) и сторона основной; при `swap` форма становится
  * основной, а прежняя основная — формой «выв.» (основное имя — по числу стихов текста, 02 § 3.3.5).
  */
-function makeInferred(a: Actor, row: FormB, step: string) {
+export function makeInferred(a: Actor, row: FormB, step: string) {
   numberForms(a);
   let f = formOf(a, row.f, step);
   let m = mainOf(a);
@@ -119,12 +119,12 @@ function makeInferred(a: Actor, row: FormB, step: string) {
 
 interface FormSpell { c: string; f: string; k: 'spell' | 'a'; note: string; refs?: Ref[] }
 interface FormNation { c: string; f: string; k: 'nation'; note: string }
-interface FormB { c: string; f: string; k: 'b'; main: Ref[]; count?: Ref; codes: NameWhyCode[]; note: string; swap?: true; formRefs?: Ref[] }
+export interface FormB { c: string; f: string; k: 'b'; main: Ref[]; count?: Ref; codes: NameWhyCode[]; note: string; swap?: true; formRefs?: Ref[] }
 type FormRow = FormSpell | FormNation | FormB;
 
 const sp = (c: string, f: string, note: string): FormSpell => ({ c, f, k: 'spell', note });
 const nat = (c: string, f: string, note: string): FormNation => ({ c, f, k: 'nation', note });
-const b = (c: string, f: string, main: Ref[], codes: NameWhyCode[], note: string, x: Partial<FormB> = {}): FormB => ({ c, f, k: 'b', main, codes, note, ...x });
+export const b = (c: string, f: string, main: Ref[], codes: NameWhyCode[], note: string, x: Partial<FormB> = {}): FormB => ({ c, f, k: 'b', main, codes, note, ...x });
 
 /** Другое написание того же имени на том же месте: в каком перечне или при ком. */
 const W = {
@@ -328,9 +328,9 @@ export const FORMS: FormRow[] = [
 // ---------------------------------------------------------------- вид (в): своя карточка (D15-6, D15-9)
 
 /** Новая запись «возможно, то же лицо» уровня «вывод» (02 § 3.11). */
-interface Rel { b: string; refs: Ref[]; note: string }
+export interface Rel { b: string; refs: Ref[]; note: string }
 
-interface Split {
+export interface Split {
   /** Карточка, с которой уходят формы. */
   from: string;
   /** Новая карточка; при `into` — существующая карточка, куда переходит форма. */
@@ -362,7 +362,7 @@ interface Split {
 }
 
 /** Стихи записи — все ключи `refs` и `ref` на любой глубине. */
-function refsDeep(x: unknown): Ref[] {
+export function refsDeep(x: unknown): Ref[] {
   const out: Ref[] = [];
   const go = (y: unknown) => {
     if (Array.isArray(y)) return y.forEach(go);
@@ -377,11 +377,11 @@ function refsDeep(x: unknown): Ref[] {
   go(x);
   return out;
 }
-const inSet = (refs: Ref[], vs: Set<string>) => verseIds(refs).every((v) => vs.has(v));
-const touches = (refs: Ref[], vs: Set<string>) => verseIds(refs).some((v) => vs.has(v));
+export const inSet = (refs: Ref[], vs: Set<string>) => verseIds(refs).every((v) => vs.has(v));
+export const touches = (refs: Ref[], vs: Set<string>) => verseIds(refs).some((v) => vs.has(v));
 /** Ссылки, целиком лежащие вне множества стихов. */
-const outside = (refs: Ref[], vs: Set<string>) => refs.filter((r) => !verseIds([r]).some((v) => vs.has(v)));
-const earliest = (refs: Ref[]) => {
+export const outside = (refs: Ref[], vs: Set<string>) => refs.filter((r) => !verseIds([r]).some((v) => vs.has(v)));
+export const earliest = (refs: Ref[]) => {
   const order = loadBible().order;
   const idx = new Map(order.map((k, i) => [k, i]));
   return [...refs].sort((a, b) => (idx.get(verseIds([a])[0]) ?? 1e9) - (idx.get(verseIds([b])[0]) ?? 1e9))[0];
@@ -390,7 +390,7 @@ const earliest = (refs: Ref[]) => {
 interface SplitLog { step: string; id: string; moved: string[]; mixed: string[]; origins: string[] }
 export const SPLIT_LOG: SplitLog[] = [];
 
-function applySplit(base: Base, sp: Split, step: string, at: string) {
+export function applySplit(base: Base, sp: Split, step: string, at: string) {
   const A = actorsOf(base);
   const src = A.get(sp.from);
   if (!src) throw new Error(`${step}: нет карточки ${sp.from}`);
@@ -556,11 +556,11 @@ function applySplit(base: Base, sp: Split, step: string, at: string) {
 }
 
 /** Строка «возможно, тот же человек» для утверждения-заметки (02 § 3.3.6, вид (в)). */
-const maybe = (who: string, a: Ref, b2: Ref, note: string, refs: Ref[]) => ({
+export const maybe = (who: string, a: Ref, b2: Ref, note: string, refs: Ref[]) => ({
   value: { kind: 'identification', text: `Возможно, это тот же человек, что ${who}: так выходит, если сравнить ${a} и ${b2}. ${note}`, refs },
 });
-const ident = (text: string, refs: Ref[]): Assertion => ({ sec: 24, field: 'notes', value: { kind: 'identification', text, refs } } as Assertion);
-const status = (text: string, refs: Ref[], sec = 5): Assertion => ({ sec, field: 'status', value: { text, refs } } as Assertion);
+export const ident = (text: string, refs: Ref[]): Assertion => ({ sec: 24, field: 'notes', value: { kind: 'identification', text, refs } } as Assertion);
+export const status = (text: string, refs: Ref[], sec = 5): Assertion => ({ sec, field: 'status', value: { text, refs } } as Assertion);
 
 // ---- Д-р10 № 13, 14 и раздел 3: Сафай (с формой «Шима») и Самай (D15-6)
 const SAMMA = 'p-samma-syn-iesseya';
@@ -602,7 +602,7 @@ export const SPLITS_SAMMA: Split[] = [
 ];
 
 // ---- остальные формы вида (в) (D15-9)
-const R = {
+export const R = {
   vasElon: { b: 'p-ada-zhena-isava', refs: ['Быт 26:34', 'Быт 36:2', 'Быт 36:3'], note: 'Совпадает только отец: «Васемафу, дочь Елона Хеттеянина» (Быт 26:34) — «Аду, дочь Елона Хеттеянина» (Быт 36:2). Тем же именем «Васемафа» названа дочь Измаила (Быт 36:3), а у Елона могли быть две дочери. Что это одна женщина, текст не говорит' },
   vasVas: { b: 'p-vasemafa-doch-izmaila', refs: ['Быт 26:34', 'Быт 36:3'], note: 'Одно имя у двух жён Исава с разными отцами: «Васемафу, дочь Елона Хеттеянина» (Быт 26:34) — «Васемафу, дочь Измаила, сестру Наваиофа» (Быт 36:3). Одно ли это лицо, текст не говорит' },
   vasMakh: { b: 'p-makhalafa-doch-izmaila', refs: ['Быт 28:9', 'Быт 36:3'], note: 'Совпадают отец и брат: «Махалафу, дочь Измаила, сына Авраамова, сестру Наваиофову» (Быт 28:9) — «Васемафу, дочь Измаила, сестру Наваиофа» (Быт 36:3). Но тем же именем «Васемафа» названа дочь Елона (Быт 26:34): решения соперничают, и что это одна женщина, текст не говорит' },
@@ -628,7 +628,7 @@ const R = {
   iokhanan: { b: 'p-ionafan-syn-ioiady', refs: ['Неем 12:11', 'Неем 12:22', 'Неем 12:23'], note: 'В цепи первосвященников — «Иоиада родил Ионафана, Ионафан родил Иаддуя» (Неем 12:11); в перечне дней — «во дни Елиашива, Иоиады, Иоханана и Иаддуя» (Неем 12:22), а Иоханан назван так: «Иоханана, сына Елиашивова» (Неем 12:23). Место в перечне то же, но отцы названы разные: что это один человек, текст не говорит' },
   sellum: { b: 'p-ioakhaz-syn-iosii', refs: ['Иер 22:11', '4Цар 23:30', '1Пар 3:15'], note: 'Слово «о Саллуме, сыне Иосии, царе Иудейском, который царствовал после отца своего, Иосии, и который вышел из сего места» (Иер 22:11) по описанию подходит к Иоахазу (4Цар 23:30–34). Но в 1Пар 3:15 Селлум назван отдельно: «первенец Иоахаз… четвертый Селлум». Описание — не слова тождества: что это один человек, текст не говорит' },
 } satisfies Record<string, Rel>;
-const note = (r: Rel, who: string, a: Ref, b2: Ref) => maybe(who, a, b2, r.note, r.refs);
+export const note = (r: Rel, who: string, a: Ref, b2: Ref) => maybe(who, a, b2, r.note, r.refs);
 
 export const SPLITS: Split[] = [
   {
@@ -1074,7 +1074,7 @@ export const STEPS_D15B: Step[] = [
 ];
 
 /** Тождество по форме у записей, которые держатся только на форме «выв.» (02 § 3.3.5): idCert и identity … inferred. */
-function autoIdCert(base: Base, step: string) {
+export function autoIdCert(base: Base, step: string) {
   const A = actorsOf(base);
   const withInf = [...A.values()].filter((a) => inferredForms(a).length);
   const n = { facts: 0, memberships: 0, nodata: 0, origins: 0 };

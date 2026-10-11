@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data",
-   "commit": "6fea95a"
+   "commit": "e80fccb"
   }
  },
  "sources": [
@@ -3927,6 +3927,184 @@
    ]
   },
   {
+   "id": "D15-13",
+   "what": "Д-15, второй ключ партии 2: «то же имя другим написанием» без общего родственника — тёзки: свои карточки и «возможно, то же лицо» уровня «вывод» (10: Имер, Корей, Уззиил, Елисафан, Елицафан, Шуваил, Шавтай, Авиезер, Сивхай; Раамия — кандидатов двое)",
+   "why": "02 § 3.3.4 («один возможный тёзка»); второй ключ Д-15 партии 2, № 2, 8; решение координатора 1",
+   "refs": [
+    "1Пар 24:14",
+    "1Пар 26:1",
+    "1Пар 15:10",
+    "1Пар 15:8",
+    "2Пар 29:13",
+    "1Пар 24:20",
+    "Неем 8:7",
+    "1Пар 27:12",
+    "1Пар 11:29",
+    "Неем 7:7"
+   ],
+   "actors": [
+    "immer",
+    "imer-1par24-14",
+    "kore-syn-eviasafa",
+    "korey-otets-meshelemii",
+    "uziil",
+    "uzziil-1par15-10",
+    "elitsafan",
+    "elisafan-1par15-8",
+    "elitsafan-2par29-13",
+    "shevuil-syn-girsama",
+    "shuvail-1par24-20",
+    "shavfay-levit",
+    "shavtay-levit",
+    "eviezer",
+    "aviezer-1par27-12",
+    "sovokhay",
+    "sivkhay-khushatyanin",
+    "reelay",
+    "raamiya"
+   ],
+   "other": [
+    "relations",
+    "origins"
+   ]
+  },
+  {
+   "id": "D15-14",
+   "what": "Д-15, второй ключ партии 2: «Нер» — не другое написание «Писание», а форма «выв.» с напряжением: по 1Пар 8:33; 9:39 Нер — отец Киса, по 1Цар 14:51 Нир — брат Киса; основание без ссылки на еврейский текст",
+   "why": "02 § 3.3.4 (проверка 4); второй ключ Д-15 партии 2, № 3; решение координатора 1",
+   "refs": [
+    "1Пар 8:33",
+    "1Пар 9:36",
+    "1Цар 14:51"
+   ],
+   "actors": [
+    "nir"
+   ]
+  },
+  {
+   "id": "D15-15",
+   "what": "Д-15, второй ключ партии 2: Иоханан из Неем 12:22–23 — своя карточка p-iokhanan-neem12-22 (не форма Иоханана из Езд 10:6): что отец — тот же Елияшив, держится на «предположительно»; «возможно, то же лицо» — с Иохананом (Езд 10:6) и с Ионафаном, сыном Иоиады; записи a-16352, a-16353 — к ней",
+   "why": "02 § 3.3.4 («один возможный тёзка»); второй ключ Д-15 партии 2, № 5",
+   "refs": [
+    "Неем 12:22",
+    "Неем 12:23",
+    "Езд 10:6",
+    "Неем 12:11"
+   ],
+   "actors": [
+    "iokhanan-syn-eliashiva",
+    "iokhanan-neem12-22",
+    "ionafan-syn-ioiady"
+   ],
+   "other": [
+    "relations",
+    "origins",
+    "redirects"
+   ]
+  },
+  {
+   "id": "D15-16",
+   "what": "Д-15, второй ключ партии 2: Иехония — a-9572 и a-9590 выбыли (Иез 1:2 — упоминание с кандидатами), a-9594 без Иез 1:2; имена земель сняты из мест Писания, «землю Немврода» — понимание; родословие Ефана — на его карточке, у Идифуна уточнение и подлинник без Ефана; у Иевосфея — без «Ешбаал»; Мааха — без толкования слова «мать»; уточнение Симона — «Кананит»; цитаты a-3377, Хелец и Ахирам — по стихам",
+   "why": "второй ключ Д-15 партии 2, № 4, 6, 9, 11, 12, 13; решения координатора 4, 6",
+   "refs": [
+    "Иез 1:2",
+    "Мих 5:6",
+    "1Пар 6:44",
+    "3Цар 15:10",
+    "Мф 10:4",
+    "2Цар 23:26",
+    "1Пар 8:2"
+   ],
+   "actors": [
+    "iekhoniya",
+    "idifun",
+    "efan-syn-kishiya",
+    "ievosfey",
+    "maakha-doch-avessaloma",
+    "simon-zilot",
+    "samma-syn-iesseya",
+    "kherets",
+    "khelets-pelonityanin",
+    "ekhi",
+    "akhiram-syn-veniamina",
+    "iavan",
+    "fuval",
+    "meshekh-syn-iafeta",
+    "khush-syn-khama",
+    "raama",
+    "nimrod",
+    "navayof",
+    "kedar"
+   ],
+   "other": [
+    "redirects",
+    "relations"
+   ]
+  },
+  {
+   "id": "D15-17",
+   "what": "Д-15, второй ключ партии 2: тексты соседних карточек, где разведённая пара ещё названа одним лицом (23 карточек): p-salmon, p-vooz, p-iokhanan-syn-eliashiva, p-ionafan-syn-sammy, p-ionadav-syn-sammy, p-kharmiy-syn-zimri, p-maaseya-otets-tsefanii, p-ionafan-dyadya-davida, p-samus-syn-davida, p-ionafan-syn-shage, p-famar-doch-avessaloma, p-ioakhaz-syn-iosii, p-isav, p-elon-khetteyanin, p-izmail, p-navayof, p-uriil-iz-givy, p-aviya, p-iosiya, p-iedaiya-syn-ioiariva, p-shupim-syn-ira, p-khupim-syn-ira, p-saul",
+   "why": "второй ключ Д-15 партии 2, № 5, 6; решение координатора 4",
+   "refs": [
+    "Мф 1:5",
+    "Неем 12:23",
+    "2Цар 21:21",
+    "2Пар 13:2",
+    "Иер 22:11"
+   ],
+   "actors": [
+    "salmon",
+    "vooz",
+    "iokhanan-syn-eliashiva",
+    "ionafan-syn-sammy",
+    "ionadav-syn-sammy",
+    "kharmiy-syn-zimri",
+    "maaseya-otets-tsefanii",
+    "ionafan-dyadya-davida",
+    "samus-syn-davida",
+    "ionafan-syn-shage",
+    "famar-doch-avessaloma",
+    "ioakhaz-syn-iosii",
+    "isav",
+    "elon-khetteyanin",
+    "izmail",
+    "navayof",
+    "uriil-iz-givy",
+    "aviya",
+    "iosiya",
+    "iedaiya-syn-ioiariva",
+    "shupim-syn-ira",
+    "khupim-syn-ira",
+    "saul"
+   ]
+  },
+  {
+   "id": "D15-18",
+   "what": "Д-15, второй ключ партии 2: тождество по форме по букве 02 § 3.3.5 («или не названо вовсе»): утверждений 9, членств 0, «нет сведений» 0 — idCert; рёбер 14 — identity … inferred",
+   "why": "02 § 3.3.5; второй ключ Д-15 партии 2, № 7; решение координатора 3",
+   "refs": [
+    "1Пар 7:27",
+    "1Пар 4:5"
+   ],
+   "actors": [
+    "shela-syn-iudy",
+    "akhan",
+    "khur",
+    "girsam",
+    "iekhoniya",
+    "iegukhal",
+    "faddey",
+    "ashkhur",
+    "non",
+    "nir"
+   ],
+   "other": [
+    "origins",
+    "memberships",
+    "nodata"
+   ]
+  },
+  {
    "id": "D6-1",
    "what": "Д6: модели m-dolgoe, m-kratkoe, m-farra70, m-skobki и схемы s-mcfall-young (по умолчанию, таблицы авторов нет), s-thiele (справка: 39 строк — годы прежних данных, без страницы), s-galil (вторая очередь) — base/models.json",
    "why": "02 § 3.15.2–3.15.3; 04 § 3.8, § 9 п. 17, 20, 21, § 16.1; 10 § 4.2.2 — годы Тиле с пометкой «справка», пока таблиц McFall — Young нет",
@@ -4136,6 +4314,35 @@
     "fakey",
     "ioafam"
    ]
+  },
+  {
+   "id": "D6-8",
+   "what": "Д6-3, второй ключ Д-15 партии 2: у входа «конец земной жизни» — причина: Енох — «не видел смерти» (not-died, Евр 11:5); Сим и семь потомков — «и умер» только в скобках (bracket, Быт 11:11–25)",
+   "why": "второй ключ Д-15 партии 2, № 14; решение координатора 5",
+   "refs": [
+    "Евр 11:5",
+    "Быт 11:11"
+   ],
+   "actors": [
+    "enokh",
+    "sim",
+    "arfaksad",
+    "sala",
+    "ever",
+    "falek",
+    "ragav",
+    "serukh",
+    "nakhor"
+   ]
+  },
+  {
+   "id": "D6-9",
+   "what": "Д-15, второй ключ партии 2: входы времени на форме «выв.» по букве 02 § 3.3.5 — idCert: нет",
+   "why": "02 § 3.3.5; второй ключ Д-15 партии 2, № 7; решение координатора 3",
+   "refs": [
+    "4Цар 15:1"
+   ],
+   "actors": []
   }
  ]
 }

@@ -175,3 +175,16 @@ describe('Д6-3: конец земной жизни и мелкое по вто�
     expect(validate(b).filter((i) => i.level === 'error' && i.check === 'тождество по форме').map((i) => i.msg).join('\n')).toMatch(/вход держится на форме «выв.» «Азария» \(p-oziya\)/);
   });
 });
+
+describe('«Конец земной жизни» — два случая (второй ключ Д-15 партии 2, № 14)', () => {
+  it('Енох — not-died; Сим и потомки — bracket; без причины или с неверной — ошибка', () => {
+    expect(inp(base, 'p-enokh', 'end-of-life')[0].endOfLife).toBe('not-died');
+    for (const id of ['p-sim', 'p-nakhor']) expect(inp(base, id, 'end-of-life')[0].endOfLife).toBe('bracket');
+    const b = structuredClone(base);
+    delete inp(b, 'p-sim', 'end-of-life')[0].endOfLife;
+    inp(b, 'p-enokh', 'end-of-life')[0].endOfLife = 'bracket';
+    const e = errs(b, /^время$/);
+    expect(e).toMatch(/p-sim .*без причины/);
+    expect(e).toMatch(/p-enokh .*bracket, а в скобках стихов входа смерти нет/);
+  });
+});

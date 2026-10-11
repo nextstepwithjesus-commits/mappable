@@ -37,8 +37,8 @@ export const inferredForms = (a: Pick<Actor, 'names'>): Name[] => a.names.filter
 export const formVerses = (n: Name): string[] => [...new Set(verseIds([...(n.refs ?? []), ...(n.compare?.form.refs ?? [])]))];
 
 /**
- * Запись держится на форме «выв.» (02 § 3.3.5): все её стихи — стихи этой формы, и ни одна форма «Писание» карточки в них не
- * стоит. Возвращает форму или undefined.
+ * Запись держится на форме «выв.» — узкое правило шагов D15-1…D15-11 (в коммите; поведение не меняется): все её стихи — стихи
+ * этой формы, и ни одна форма «Писание» карточки в них не стоит. Возвращает форму или undefined.
  */
 export function restsOnForm(a: Actor, refs: Ref[]): Name | undefined {
   const vs = [...new Set(verseIds(refs))];
@@ -52,6 +52,29 @@ export function restsOnForm(a: Actor, refs: Ref[]): Name | undefined {
   }
   return undefined;
 }
+
+/**
+ * Запись держится на форме «выв.» — по букве 02 § 3.3.5 (второй ключ Д-15 партии 2, № 7; решение координатора 3): в каждом её
+ * стихе лицо названо только этой формой или не названо вовсе, и хотя бы в одном стихе форма стоит (её ссылка, стих сравнения
+ * стороны формы или стих, где форма стоит вне скобок). Ни одна форма «Писание» карточки в стихах записи не стоит.
+ */
+export function restsOnFormLoose(a: Actor, refs: Ref[]): Name | undefined {
+  const vs = [...new Set(verseIds(refs))];
+  if (!vs.length) return undefined;
+  const scripture = a.names.filter((n) => n.cert !== 'inference');
+  if (vs.some((v) => scripture.some((n) => nameMatcher(n.form).test(textOf(v))))) return undefined;
+  for (const f of inferredForms(a)) {
+    const fv = new Set(formVerses(f));
+    if (vs.some((v) => fv.has(v) || nameMatcher(f.form).test(textOf(v)))) return f;
+  }
+  return undefined;
+}
+
+/**
+ * Записи, которым тождество по форме не нужно: заметки о тождестве (`kind: identification`) — слова о самом тождестве или о
+ * тёзках («Не смешивать с…»), а не сведения о лице по стиху формы.
+ */
+export const formCertExempt = (f: { value?: unknown }) => (f.value as { kind?: string } | undefined)?.kind === 'identification';
 
 export function validateNameForms(base: Base, err: Err, warn: Err) {
   const actors = new Map<string, Actor>();
@@ -132,7 +155,7 @@ export function validateNameForms(base: Base, err: Err, warn: Err) {
     for (const f of a.facts) {
       const w = `${a.id} § ${f.sec} ${f.field}${f.id ? ` (${f.id})` : ''}`;
       idCertOk(w, a.id, f.idCert);
-      if (!hasInf || f.idCert || f.prov?.status === 'quarantine') continue;
+      if (!hasInf || f.idCert || f.prov?.status === 'quarantine' || formCertExempt(f)) continue;
       const refs: Ref[] = [];
       const go = (x: unknown) => {
         if (Array.isArray(x)) return x.forEach(go);
@@ -143,21 +166,21 @@ export function validateNameForms(base: Base, err: Err, warn: Err) {
         for (const [k, y] of Object.entries(o)) if (k !== 'refs') go(y);
       };
       go(f.value);
-      const form = restsOnForm(a, refs);
-      if (form) err('тождество по форме', w, `запись держится на форме «выв.» «${form.form}» (все стихи — стихи формы): нужен idCert (02 § 3.3.5)`);
+      const form = restsOnFormLoose(a, refs);
+      if (form) err('тождество по форме', w, `запись держится на форме «выв.» «${form.form}» (в стихах записи лицо названо только этой формой или не названо вовсе): нужен idCert (02 § 3.3.5)`);
     }
   }
   for (const m of base.memberships) {
     const w = `членство ${m.actor} → ${m.area}`;
     idCertOk(w, m.actor, m.idCert);
     const a = actors.get(m.actor);
-    if (a && !m.idCert && m.refs.length && restsOnForm(a, m.refs)) err('тождество по форме', w, 'членство держится на форме «выв.»: нужен idCert (02 § 3.3.5)');
+    if (a && !m.idCert && m.refs.length && restsOnFormLoose(a, m.refs)) err('тождество по форме', w, 'членство держится на форме «выв.»: нужен idCert (02 § 3.3.5)');
   }
   for (const n of base.nodata) {
     const w = `нет сведений ${n.actor} § ${n.sec}`;
     idCertOk(w, n.actor, n.idCert);
     const a = actors.get(n.actor);
-    if (a && !n.idCert && n.refs.length && restsOnForm(a, n.refs)) err('тождество по форме', w, '«нет сведений» держится на форме «выв.»: нужен idCert (02 § 3.3.5)');
+    if (a && !n.idCert && n.refs.length && restsOnFormLoose(a, n.refs)) err('тождество по форме', w, '«нет сведений» держится на форме «выв.»: нужен idCert (02 § 3.3.5)');
   }
   for (const s of base.stories ?? []) for (const x of s.actors ?? []) if (x.idCert && x.actor.startsWith('p-')) idCertOk(`${s.id} участник ${x.actor}`, x.actor, x.idCert);
   for (const o of base.origins) {
@@ -168,7 +191,7 @@ export function validateNameForms(base: Base, err: Err, warn: Err) {
     for (const [end, of] of [[o.parent, 'parent'], [o.child, 'child']] as const) {
       const a = end ? actors.get(end) : undefined;
       if (!a || !inferredForms(a).length) continue;
-      const f = restsOnForm(a, o.refs);
+      const f = restsOnFormLoose(a, o.refs);
       if (f) err('тождество по форме', w, `ребро держится на форме «выв.» «${f.form}» (${of === 'parent' ? 'родителя' : 'ребёнка'}): нужно identity … inferred с form (02 § 3.3.5)`);
     }
   }
@@ -194,7 +217,7 @@ export function validateNameForms(base: Base, err: Err, warn: Err) {
       for (const id of [c.actor, t.other]) {
         const a = id ? actors.get(id) : undefined;
         if (!a || !inferredForms(a).length || !t.refs?.length) continue;
-        const f = restsOnForm(a, t.refs);
+        const f = restsOnFormLoose(a, t.refs);
         if (f) err('тождество по форме', w, `вход держится на форме «выв.» «${f.form}» (${a.id}): нужен idCert (02 § 3.3.5)`);
       }
     });

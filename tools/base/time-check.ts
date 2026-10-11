@@ -7,6 +7,7 @@ import type { ChronoD6, ChronoModel, KingScheme, Source } from './types.ts';
 import { TIME_KINDS } from './types.ts';
 import { numberSpans } from './numwords.ts';
 import { citeIssues } from './sources.ts';
+import { loadBible } from '../bible.ts';
 
 export const MODELS = ['m-dolgoe', 'm-kratkoe', 'm-farra70', 'm-skobki'];
 export const SCHEMES = ['s-mcfall-young', 's-thiele', 's-galil'];
@@ -65,8 +66,14 @@ export function checkTime(base: Base, x: TimeCtx) {
     if (kinds.has('end-of-life') && kinds.has('age-at-death')) err('время', w, 'у лица и «возраст при смерти», и «конец земной жизни»: вход один — по тому, называет ли текст смерть');
     ch.inputs.forEach((t, i) => {
       const wi = `${w} вход ${i + 1} (${t.kind})`;
+      if (t.endOfLife !== undefined && t.kind !== 'end-of-life') err('время', wi, 'поле endOfLife — только у входа «конец земной жизни»');
       if (t.kind === 'end-of-life') {
         if (t.of) err('время', wi, '«конец земной жизни» без поля of: это вся длина жизни, а не ограничение события');
+        const raw = t.refs.flatMap((r) => x.verseKeys(r)).map((k) => loadBible().verses.get(k) ?? '').join(' ');
+        const bracketed = (raw.match(/\[[^\]]*\]/g) ?? []).join(' ');
+        if (t.endOfLife === 'bracket' && !DEATH_WORDS.test(bracketed.toLowerCase())) err('время', wi, 'endOfLife: bracket, а в скобках стихов входа смерти нет');
+        else if (t.endOfLife === 'not-died' && !/не видел смерти|взял его|не стало его/.test(x.clean(raw))) err('время', wi, 'endOfLife: not-died, а в стихах входа нет слов о том, что смерти не было');
+        else if (t.endOfLife === undefined) err('время', wi, '«конец земной жизни» без причины (endOfLife: not-died — смерти не было; bracket — смерть только в скобках)');
         if (t.refs?.length && DEATH_WORDS.test(x.clean(t.refs.flatMap((r) => x.mainTexts(wi, r)).join(' ')))) err('время', wi, 'в стихах входа вне скобок названа смерть: вид — «возраст при смерти» (age-at-death)');
       }
       if (!TIME_KINDS.includes(t.kind)) err('время', wi, `вид входа «${t.kind}» не из 02 § 3.15.5`);

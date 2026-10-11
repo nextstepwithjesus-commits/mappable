@@ -66,10 +66,13 @@ describe('К-18: форма имени — уровень, стихи сравн
   it('запись, которая держится на форме «выв.», без idCert — ошибка; idCert на форму «Писание» — ошибка', () => {
     const b = structuredClone(base);
     const f = card(b, 'p-faddey');
+    // заметка о тождестве («Не смешивать с Иудой Искариотом», a-12970) idCert не требует (второй ключ партии 2, № 7); событие — да
+    delete f.facts.find((x) => x.id === 'a-12965')!.idCert;
     delete f.facts.find((x) => x.id === 'a-12970')!.idCert;
     f.facts.find((x) => x.id === 'a-12964')!.idCert = { form: 'p-faddey#n2', refs: ['Ин 14:22'] };
     const e = errs(b, 'тождество по форме');
-    expect(e).toMatch(/a-12970.*держится на форме «выв.» «Иуда Иаковлев»/);
+    expect(e).toMatch(/a-12965.*держится на форме «выв.»/);
+    expect(e).not.toMatch(/a-12970/);
     expect(e).toMatch(/idCert: форма p-faddey#n2 — не «выв.»/);
   });
 
@@ -174,7 +177,8 @@ describe('Д-15: начало — данные', () => {
     const ids = new Set(base.volumes.flatMap((v) => v.actors.map((a: Actor) => a.id)));
     expect(ids.has('p-raguil')).toBe(true);
     expect(ids.has('p-iuda-iakovlev')).toBe(false);
-    expect(ids.size).toBe(2699 + 22);
+    // правка по второму ключу партии 2 (D15-13, D15-15): +10 тёзок и Раамия, +1 Иоханан из Неем 12:22–23
+    expect(ids.size).toBe(2699 + 22 + 11);
   });
 });
 
@@ -228,7 +232,8 @@ describe('Д-15, партия 2 — данные (tools/base/corrections-d15b.ts
     const z = card(base, 'p-simon-zilot').names.find((n) => n.form === 'Симон Зилот')!;
     expect([z.cert, z.compare?.count?.ref]).toEqual(['inference', 'Лк 6:13']);
     const s = base.stories!.find((x: any) => x.id === 'e-iisus-stavit-dvenadtsat')!;
-    expect(s.actors.filter((x: any) => x.actor === 'p-simon-zilot').map((x: any) => [x.refs[0], x.cert, x.idCert?.form])).toEqual([['Мк 3:18', 'scripture', undefined], ['Лк 6:15', 'scripture', 'p-simon-zilot#n3']]);
+    // строка с idCert — уровня «вывод» (второй ключ партии 2, № 16; решение координатора 6)
+    expect(s.actors.filter((x: any) => x.actor === 'p-simon-zilot').map((x: any) => [x.refs[0], x.cert, x.idCert?.form])).toEqual([['Мк 3:18', 'scripture', undefined], ['Лк 6:15', 'inference', 'p-simon-zilot#n3']]);
   });
 
   it('основное имя — по числу стихов: Иашув, Шухам, Илий, Гирсон, Навин, Авинадав, Беродах Баладан', () => {
@@ -270,5 +275,56 @@ describe('Д-15, партия 2 — данные (tools/base/corrections-d15b.ts
     expect(base.origins.filter((o) => o.child === 'p-vooz' && o.role === 'mother').map((o) => o.parent)).toEqual(['p-rakhava']);
     expect(base.origins.filter((o) => o.child === 'p-eshbaal-syn-saula').map((o) => [o.parent, o.refs])).toEqual([['p-saul', ['1Пар 8:33', '1Пар 9:39']]]);
     expect(card(base, 'p-sila').disambig).not.toMatch(/он же/);
+  });
+});
+
+describe('Д-15, партия 2 — правка по второму ключу (tools/base/corrections-d15c.ts)', () => {
+  const rel = (a: string) => base.relations.filter((r) => r.a === a && r.kind === 'possibly-same').map((r) => r.b).sort();
+  it('тёзки — свои карточки и «возможно, то же лицо»: Имер, Корей, Уззиил, Елисафан, Елицафан, Шуваил, Шавтай, Авиезер, Сивхай; Раамия', () => {
+    for (const [id, b] of [['p-imer-1par24-14', ['p-immer']], ['p-korey-otets-meshelemii', ['p-kore-syn-eviasafa', 'p-korey']], ['p-uzziil-1par15-10', ['p-uziil']],
+      ['p-elisafan-1par15-8', ['p-elitsafan']], ['p-elitsafan-2par29-13', ['p-elitsafan']], ['p-shuvail-1par24-20', ['p-shevuil-syn-girsama']], ['p-shavtay-levit', ['p-shavfay-levit']],
+      ['p-aviezer-1par27-12', ['p-eviezer']], ['p-sivkhay-khushatyanin', ['p-mebunnay', 'p-sovokhay']], ['p-raamiya', ['p-nakhmaniy', 'p-reelay']]] as const) {
+      expect([id, rel(id)]).toEqual([id, [...b].sort()]);
+    }
+    expect(base.origins.filter((o) => o.child === 'p-meshelemiya' && o.role === 'father').map((o) => o.parent)).toEqual(['p-korey-otets-meshelemii']);
+    expect(card(base, 'p-reelay').names.map((n) => n.form)).toEqual(['Реелай']);
+  });
+
+  it('«Нер» — форма «выв.» с напряжением; рёбра Киса на ней — с тождеством по форме', () => {
+    const ner = card(base, 'p-nir').names.find((n) => n.form === 'Нер')!;
+    expect([ner.cert, ner.why?.codes.includes('no-contradiction'), /Напряжение/.test(ner.why?.note ?? '')]).toEqual(['inference', false, true]);
+    expect(base.origins.find((o) => o.child === 'p-kis' && o.parent === 'p-nir')?.identity?.form).toBe(ner.id);
+  });
+
+  it('Иоханан из Неем 12:22–23 — своя карточка; связи с Иохананом (Езд 10:6) и Ионафаном', () => {
+    expect(card(base, 'p-iokhanan-syn-eliashiva').names[0].refs).toEqual(['Езд 10:6']);
+    expect(rel('p-iokhanan-neem12-22')).toEqual(['p-iokhanan-syn-eliashiva', 'p-ionafan-syn-ioiady']);
+    expect(base.relations.filter((r) => r.a === 'p-iokhanan-syn-eliashiva')).toEqual([]);
+  });
+
+  it('тождество по форме «или не названо вовсе»: рёбра Нона, Ахшура, Силома; записи Гирсама, Юхала', () => {
+    expect(base.origins.find((o) => o.child === 'p-non' && o.parent === 'p-elishama-syn-ammiuda')?.identity?.form).toBe('p-non#n1');
+    expect(base.origins.filter((o) => o.parent === 'p-ashkhur').every((o) => o.identity?.degree === 'inferred')).toBe(true);
+    expect(base.origins.filter((o) => o.parent === 'p-shela-syn-iudy' && o.refs.some((r) => r.startsWith('1Пар 4:'))).every((o) => o.identity?.degree === 'inferred')).toBe(true);
+    for (const [c, id] of [['p-girsam', 'a-4405'], ['p-girsam', 'a-4408'], ['p-iegukhal', 'a-11264']]) expect([id, !!card(base, c).facts.find((f) => f.id === id)?.idCert]).toEqual([id, true]);
+    // проверка ловит ребро без тождества
+    const b = structuredClone(base);
+    delete b.origins.find((o) => o.child === 'p-non' && o.parent === 'p-elishama-syn-ammiuda')!.identity;
+    expect(errs(b, 'тождество по форме')).toMatch(/p-non ← p-elishama-syn-ammiuda: ребро держится на форме «выв.» «Нон»/);
+  });
+
+  it('строка истории с idCert — уровень «вывод»; другой уровень — ошибка', () => {
+    for (const s of base.stories ?? []) for (const a of (s as any).actors ?? []) if (a.idCert) expect([s.id, a.actor, a.cert]).toEqual([s.id, a.actor, 'inference']);
+    const b = structuredClone(base);
+    const row = (b.stories!.find((x: any) => x.id === 'e-iisus-stavit-dvenadtsat') as any).actors.find((a: any) => a.idCert);
+    row.cert = 'scripture';
+    expect(validate(b).filter((i) => i.level === 'error').map((i) => i.msg).join('\n')).toMatch(/строка с idCert — уровень «вывод»/);
+  });
+
+  it('Иез 1:2 Иехонии не отдан: a-9572 и a-9590 выбыли с переадресацией; соседние тексты без «одного лица»', () => {
+    expect(card(base, 'p-iekhoniya').facts.flatMap((f) => JSON.stringify(f.value).match(/Иез 1:2/g) ?? []).length).toBe(2); // заметка: текст и ссылка
+    expect(base.redirects.filter((r) => ['a-9572', 'a-9590'].includes(r.from)).map((r) => r.to[0])).toEqual(['p-iekhoniya', 'p-iekhoniya']);
+    expect(card(base, 'p-ionafan-syn-sammy').disambig).toBe('сын Сафая, брата Давидова (2Цар 21:21)');
+    expect(JSON.stringify(card(base, 'p-salmon').facts.map((f) => f.value))).not.toMatch(/весомо одно лицо/);
   });
 });
