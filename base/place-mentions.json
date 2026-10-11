@@ -170,7 +170,7 @@
    "form": "Вефиля",
    "place": "l-vefil",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -357,8 +357,8 @@
    "id": "lm-35",
    "ref": "Быт 13:18",
    "n": 1,
-   "form": "Мамре",
-   "place": "l-khevron",
+   "form": "дубравы Мамре",
+   "place": "l-dubrava-mamre",
    "cert": "reference",
    "role": "where",
    "status": "linked"
@@ -724,6 +724,16 @@
    "status": "linked"
   },
   {
+   "id": "lm-672",
+   "ref": "Быт 14:13",
+   "n": 1,
+   "form": "дубравы Мамре",
+   "place": "l-dubrava-mamre",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
    "id": "lm-72",
    "ref": "Быт 14:14",
    "n": 1,
@@ -927,8 +937,8 @@
    "id": "lm-92",
    "ref": "Быт 18:1",
    "n": 1,
-   "form": "Мамре",
-   "place": "l-khevron",
+   "form": "дубравы Мамре",
+   "place": "l-dubrava-mamre",
    "cert": "reference",
    "role": "where",
    "status": "linked"
@@ -1127,8 +1137,8 @@
    "id": "lm-113",
    "ref": "Быт 21:14",
    "n": 1,
-   "form": "Вирсавии",
-   "place": "l-virsaviya",
+   "form": "пустыне Вирсавии",
+   "place": "l-pustynya-virsavii",
    "cert": "reference",
    "role": "where",
    "status": "linked"
@@ -1190,7 +1200,7 @@
    "form": "землю Мориа",
    "place": "l-zemlya-moria",
    "cert": "reference",
-   "role": "to",
+   "role": "mentioned",
    "status": "linked"
   },
   {
@@ -1431,6 +1441,16 @@
    "place": "l-mesopotamiya-25",
    "cert": "reference",
    "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-673",
+   "ref": "Быт 35:27",
+   "n": 1,
+   "form": "Мамре",
+   "place": "l-khevron",
+   "cert": "reference",
+   "role": "to",
    "status": "linked"
   },
   {
@@ -3250,7 +3270,7 @@
    "ref": "Чис 33:36",
    "n": 1,
    "form": "пустыне Син",
-   "place": "l-kades",
+   "place": "l-pustynya-sin-kades",
    "cert": "reference",
    "role": "where",
    "status": "linked"
@@ -3260,7 +3280,7 @@
    "ref": "Чис 33:36",
    "n": 1,
    "form": "Кадес",
-   "place": "l-kades",
+   "place": "l-pustynya-sin-kades",
    "cert": "reference",
    "role": "where",
    "status": "linked"
@@ -3622,7 +3642,7 @@
    "form": "Иордан",
    "place": "l-iordan",
    "cert": "reference",
-   "role": "via",
+   "role": "mentioned",
    "status": "linked"
   },
   {
@@ -3632,7 +3652,7 @@
    "form": "землю Ханаанскую",
    "place": "l-zemlya-khanaanskaya",
    "cert": "reference",
-   "role": "to",
+   "role": "mentioned",
    "status": "linked"
   },
   {
@@ -4530,7 +4550,7 @@
    "ref": "Нав 15:1",
    "n": 1,
    "form": "пустыня Син",
-   "place": "l-kades",
+   "place": "l-pustynya-sin-kades",
    "cert": "reference",
    "role": "mentioned",
    "status": "linked"
@@ -4570,7 +4590,7 @@
    "ref": "Нав 15:3",
    "n": 1,
    "form": "Кадес-Варне",
-   "place": "l-kades",
+   "place": "l-kades-varni",
    "cert": "reference",
    "role": "mentioned",
    "status": "linked"

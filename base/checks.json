@@ -32183,33 +32183,6 @@
    }
   },
   {
-   "key": "place:l-khevron",
-   "by": "geography-reviewer (второй ключ, места пакета 2, повторно)",
-   "kind": "agent",
-   "at": "2026-10-11",
-   "hash": "6330069298870103ee6c14cb84a6b6d10d3894249f7cbe06e90015ff8b404f5c",
-   "inputs": {
-    "verses": [
-     "Быт 13:18",
-     "Быт 18:1",
-     "Быт 23:17",
-     "Быт 23:19",
-     "Быт 23:2",
-     "Быт 25:9",
-     "Нав 15:13",
-     "Нав 15:54"
-    ],
-    "text": "c5d7be443d51058f17edcf5d82937fc75e2b6c65b00d2da2e67af6140dd58672",
-    "brackets": "9f3d036ea8269974fa9731db0dfadef7275200761c3385077cba3ffcd6360ddc",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-openbible-geo": "github.com/openbibleinfo/Bible-Geocoding-Data, коммит 7eb18a5",
-     "src-synodal": "tools/bible/synodal.tsv",
-     "src-wikidata": "точки — по номерам Q из сводки OpenBible 7eb18a5; своей выгрузки нет"
-    }
-   }
-  },
-  {
    "key": "place:l-kholon",
    "by": "geography-reviewer (второй ключ, места пакета 2, повторно)",
    "kind": "agent",
@@ -34277,24 +34250,6 @@
    }
   },
   {
-   "key": "placemention:lm-113",
-   "by": "geography-reviewer (второй ключ, места пакета 2, повторно)",
-   "kind": "agent",
-   "at": "2026-10-11",
-   "hash": "fa6f6e250ea126327470636ded8718ce4b78b6a964a29f548c074f183abb8837",
-   "inputs": {
-    "verses": [
-     "Быт 21:14"
-    ],
-    "text": "754b40b9d7a365784a13b40b48e91dd853edb3aaa0e8e51d191c3b9226788c67",
-    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
    "key": "placemention:lm-114",
    "by": "geography-reviewer (второй ключ, места пакета 2, повторно)",
    "kind": "agent",
@@ -34955,24 +34910,6 @@
     ],
     "text": "d29258a1ae0891250736b09ea84518dfae1e1b7f26e43ea240e1f27d4b3d000c",
     "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "placemention:lm-16",
-   "by": "geography-reviewer (второй ключ, места пакета 2, повторно)",
-   "kind": "agent",
-   "at": "2026-10-11",
-   "hash": "a47508d793ee4685c5a922b3922aed9d28de56ca9f398d5afd7af1e4cfbf0954",
-   "inputs": {
-    "verses": [
-     "Быт 12:8"
-    ],
-    "text": "e7ee5b2bd6c98775ce80841d093ff4533546982d2f166d10f6c254f99d3d9827",
-    "brackets": "346f6d73ed2f72ab11b4b7f4ec9bb6960a5a19aa3c275bf533f81f02240e31c8",
     "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "sources": {
      "src-synodal": "tools/bible/synodal.tsv"
@@ -36277,24 +36214,6 @@
    }
   },
   {
-   "key": "placemention:lm-325",
-   "by": "geography-reviewer (второй ключ, места пакета 2, повторно)",
-   "kind": "agent",
-   "at": "2026-10-11",
-   "hash": "de2fc251eb33970dfa323b56a74a9ed2ea69e5e2f6954798d981629291c2457a",
-   "inputs": {
-    "verses": [
-     "Чис 33:36"
-    ],
-    "text": "a5385b42fb07e630337588b57e2cae3e1b6182aa89a343cfeeabfcc15f9b963f",
-    "brackets": "2f7677629c850fe1fda4cc85f50c1cb8dd6ca20a446429da21c57d3cca72b16d",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
    "key": "placemention:lm-329",
    "by": "geography-reviewer (второй ключ, места пакета 2, повторно)",
    "kind": "agent",
@@ -36522,24 +36441,6 @@
      "Чис 33:47"
     ],
     "text": "35835b4fd583d3100864f76388aa321b1a20c4aea7b1c47ea402d69cb598798c",
-    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "placemention:lm-35",
-   "by": "geography-reviewer (второй ключ, места пакета 2, повторно)",
-   "kind": "agent",
-   "at": "2026-10-11",
-   "hash": "09aa382ec137997c8074215f1e172bddf92034a81812f286f0e8c192f774000c",
-   "inputs": {
-    "verses": [
-     "Быт 13:18"
-    ],
-    "text": "c881011ab57f01ce6b96ed9e8253701f9c9d66478241d17acb92ec1d45fb22b9",
     "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "sources": {
@@ -38902,24 +38803,6 @@
     ],
     "text": "09db5d5710b4f81a659ac214a40b73d1cfbc3209a648f1ff9d79b31c96217853",
     "brackets": "3ed6e0e39e5300aeb40ce46ec51c3be856149df246d31ad59b3eb61b519dcda3",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "placemention:lm-92",
-   "by": "geography-reviewer (второй ключ, места пакета 2, повторно)",
-   "kind": "agent",
-   "at": "2026-10-11",
-   "hash": "f1842222f0e18a793a0be3e35d66f439f4ffd34d99e805db703277e554a0e3df",
-   "inputs": {
-    "verses": [
-     "Быт 18:1"
-    ],
-    "text": "292ea2533f2840f2c2a66fc4ed5704a414d215a1d7b26ae81bdd8340c0fa609f",
-    "brackets": "b9964424933b3b7b3d8ea9272136d436cf30e565e9a16c1f0058a4e8c252de17",
     "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "sources": {
      "src-synodal": "tools/bible/synodal.tsv"

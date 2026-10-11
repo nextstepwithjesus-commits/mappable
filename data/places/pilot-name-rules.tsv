@@ -26,7 +26,6 @@ Heshbon	Есевонск\w+	Есевонский	main
 Iye-abarim	Ийм-Аварим\w*	Ийм-Аварим	main
 Iye-abarim	Ийм\w*	Ийм	main
 Kadesh-barnea	Мишпат	Мишпат	that-is
-Kadesh-barnea	Кадес-Варн\w+	Кадес-Варни	main
 Kiriath-jearim	Кириаф-Ваал\w*	Кириаф-Ваал	that-is
 Maacah	Маахск\w+	Маахская	main
 Moab 1	Моавитск\w+	Моавитский	main
@@ -44,6 +43,7 @@ Jebus	Иевус\w*	Иевус	that-is
 Baalah 2	Ваал\w*	Ваал	that-is
 Chesalon	Кесалон	Кесалон	that-is
 King’s Valley	долина царская	долина царская	now	Быт 14:17=narrator-now
-Mamre	Мамре	Мамре	former
+Mamre	Мамре	Мамре	that-is
 Gederothaim	Гедерофаим\w*	Гедерофаим	that-is
-Zin 1	пустын\w+ Син	пустыня Син	that-is
+Zin 1	Кадес	Кадес	that-is
++пустыня Вирсавии	пустыне Вирсавии	пустыня Вирсавии	main	Быт 21:14=narrator-now

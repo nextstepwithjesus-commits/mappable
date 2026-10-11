@@ -842,6 +842,11 @@ export interface Place {
   /** Степень отождествления — только вычисление по порогам выпуска (05 § 3.3). */
   degree?: 'certain' | 'probable' | 'possible' | 'unknown';
   links?: PlaceLink[];
+  /**
+   * Положение словами текста (02 § 3.13.6): утверждение места со стихом, а не точка. Уровень — «Писание»: слова стоят в
+   * стихе. «в Кадесе, в пустыне Син» (Втор 32:51) — Кадес `in-land` пустыня Син.
+   */
+  textPositions?: { id: string; relation: 'east-of' | 'west-of' | 'north-of' | 'south-of' | 'near' | 'between' | 'opposite' | 'on-bank' | 'in-land' | 'outside-gate' | 'distance-words' | 'flows-by'; others: string[]; words: string; ref: Ref; conflict?: string }[];
   labelPoint?: { lat: number; lon: number; by: string; source: string };
   match?: { modernId: string; method: 'auto' | 'manual'; by: string; checkedBy?: string; at: string; otherNameOf?: string; source?: string };
   vision?: true;
@@ -901,6 +906,8 @@ export interface RouteSegment {
   /** Слова перехода среди слов-оснований стиха (05 § 3.5). */
   words: string;
   ref: Ref;
+  /** Путники отрезка, если не все путники пути: Фарра — только Ур → Харран (Быт 11:31–32). */
+  travellers?: string[];
   /** Другие стихи отрезка: повеление и его исполнение (Исх 14:2 и 14:4). */
   also?: { ref: Ref; words: string }[];
   road?: string;

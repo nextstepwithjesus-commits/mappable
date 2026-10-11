@@ -382,7 +382,26 @@ describe('места: тип, допуск, проверки до первой �
     expect(base.places!.find((p) => p.id === 'l-sodom')!.names.flatMap((n) => n.refs.map((x) => x.ref))).not.toContain('Быт 19:4');
     expect(base.placeMentions!.find((m) => m.id === 'lm-266')).toMatchObject({ ref: 'Чис 33:8', place: 'l-pustynya-efam', role: 'via' });
     expect(base.places!.find((p) => p.id === 'l-virsaviya')!.links).toContainEqual(expect.objectContaining({ kind: 'inferred-same', to: 'l-virsaviya-nav', cert: 'inference' }));
-    for (const gone of ['l-mamre', 'l-gederofaim', 'l-pustynya-sin-kades']) expect(base.places!.some((p) => p.id === gone)).toBe(false);
+    for (const gone of ['l-mamre', 'l-gederofaim']) expect(base.places!.some((p) => p.id === gone)).toBe(false);
+    // второй ключ географа и библеиста (решения координатора): пустыня Син — своё место, Кадес «в» ней словами текста;
+    // дубрава Мамре — своё место «в Хевроне»; у мест с близкими соперниками точки подписи нет (05 § 3.3, правило 4)
+    const P = new Map(base.places!.map((p) => [p.id, p]));
+    expect(P.get('l-kades')!.textPositions!.map((t) => [t.relation, t.others[0], t.ref])).toEqual([
+      ['in-land', 'l-pustynya-sin-kades', 'Чис 20:1'], ['in-land', 'l-pustynya-sin-kades', 'Втор 32:51']]);
+    expect(base.placeMentions!.find((m) => m.ref === 'Нав 15:1' && m.form === 'пустыня Син')!.place).toBe('l-pustynya-sin-kades');
+    expect(P.get('l-pustynya-sin-kades')!.names.map((n) => [n.form, n.type])).toContainEqual(['Кадес', 'that-is']);
+    expect(P.get('l-kades')!.names.some((n) => /Варн|пустыня/.test(n.form))).toBe(false);
+    expect(P.get('l-kades-varni')!.links).toContainEqual(expect.objectContaining({ kind: 'inferred-same', to: 'l-kades', cert: 'inference' }));
+    expect(P.get('l-dubrava-mamre')!.textPositions![0]).toMatchObject({ relation: 'in-land', others: ['l-khevron'], ref: 'Быт 13:18' });
+    expect(P.get('l-khevron')!.names.find((n) => n.form === 'Мамре')!.type).toBe('that-is');
+    for (const id of ['l-chermnoe-more', 'l-pustynya-sin']) expect([id, P.get(id)!.labelPoint]).toEqual([id, undefined]);
+    expect(P.get('l-chermnoe-more-stan')!.labelPoint).toBeDefined();
+    expect(P.get('l-pustynya-virsavii')!.names[0].refs).toEqual([{ ref: 'Быт 21:14', timeBasis: 'narrator-now' }]);
+    expect(P.get('l-virsaviya')!.links![0].refs).toContain('Быт 26:25');
+    for (const p of base.places!) expect([p.id, p.degree !== undefined]).toEqual([p.id, true]);
+    const ab = base.routes!.find((r) => r.id === 'rt-put-avrama')!;
+    expect(ab.travellers).toEqual(['p-avraam']);
+    expect(ab.variants[0].segments.find((g) => g.from === 1)!.travellers).toContain('p-farra');
     // подписей нет: записи — черновик до второго ключа
     expect(base.places!.every((p) => p.prov?.status === 'draft')).toBe(true);
   });
@@ -465,13 +484,14 @@ describe('места: тип, допуск, проверки до первой �
       { id: 'l-vefil#link2', kind: 'inferred-same', to: 'l-vefil', cert: 'scripture', refs: ['Быт 28:19'] },
     ];
     p.labelPoint = { lat: 1, lon: 1, by: 'x', source: 'src-osm' };
+    p.textPositions = [{ id: 'l-vefil#tp1', relation: 'inside' as any, others: ['l-nowhere3'], words: 'нет таких слов', ref: 'Быт 28:19' }];
     p.match = { modernId: 'x', method: 'manual', by: 'x', at: '2026-10-11', otherNameOf: 'l-nowhere' };
     b.places = [p, { ...place(), id: 'L-bad', names: [] } as Place];
     const e = errs(b, 'место').map((i) => `${i.where}: ${i.msg}`).join('\n');
     for (const m of [
       /вид «part» не из словаря/, /имя l-vefil#n1 уровня «interpretation»/, /номер части «l-vefil#n1» повторяется/, /координаты вне WGS 84/,
       /вид связи «other-name» не из словаря/, /нет места «l-luz»/, /«то же, что» — уровень «вывод»/, /точка подписи — только у земли и воды/,
-      /ручное сопоставление со сводкой — со вторым ключом/, /нет места «l-nowhere»/, /L-bad: номер места — вида «l-…»/, /L-bad: нет ни одного имени со стихом/,
+      /ручное сопоставление со сводкой — со вторым ключом/, /отношение «inside» не из словаря/, /нет места «l-nowhere3»/, /слов «нет таких слов» нет среди слов-оснований Быт 28:19/, /нет места «l-nowhere»/, /L-bad: номер места — вида «l-…»/, /L-bad: нет ни одного имени со стихом/,
     ]) expect(e).toMatch(m);
   });
 });

@@ -53,7 +53,7 @@ Bealoth 1	l-valof	Валоф	settlement	Валоф\w*
 Beer 1	l-beer	Беэр	campsite	Беэр
 Beer-lahai-roi	l-beer-lakhay-roi	Беэр-лахай-рои	well	Беэр-лахай-рои
 Beersheba 1	l-virsaviya-nav	Вирсавия	settlement	Вирсави\w+
-Beersheba 2	l-virsaviya	Вирсавия	settlement	Вирсави\w+	выв:l-virsaviya-nav:Быт 21:31,Быт 26:23,Быт 26:33,Нав 15:28,3Цар 19:3
+Beersheba 2	l-virsaviya	Вирсавия	settlement	(?<!пустыне )Вирсави\w+	выв:l-virsaviya-nav:Быт 21:31,Быт 26:23,Быт 26:25,Быт 26:33,Нав 15:28,3Цар 19:3
 Bene-jaakan	l-bene-yaakan	Бене-Яакан	campsite	Бене-Яакан\w*
 Bered	l-bared	Баред	settlement	Баред\w*
 Beth-anoth	l-bef-anof	Беф-Аноф	settlement	Беф-Аноф\w*
@@ -189,7 +189,7 @@ Jordan Valley	l-okrestnost-iordanskaya	окрестность Иорданска
 Jotbathah	l-iotvafa	Иотвафа	campsite	Иотваф\w+
 Juttah	l-yuta	Юта	settlement	Ют[аыеу]
 Kabzeel	l-kavtseil	Кавцеил	settlement	Кавцеил\w*
-Kadesh-barnea	l-kades	Кадес	settlement	Кадес-Варн\w+|Кадес\w*|Мишпат
+Kadesh-barnea	l-kades	Кадес	settlement	Кадес\w*|Мишпат	без:Чис 33:36; положение:in-land:l-pustynya-sin-kades:Чис 20:1=остановился народ в Кадесе; положение:in-land:l-pustynya-sin-kades:Втор 32:51=в Кадесе, в пустыне Син
 Kain	l-kain	Каин	settlement	Каин
 Karka	l-karkaya	Каркая	settlement	Каркае|Каркая|Каркаи
 Kedemoth	l-kedemof	Кедемоф	settlement	Кедемоф\w*
@@ -220,7 +220,7 @@ Madmannah	l-madmana	Мадмана	settlement	Мадман[аыеу]
 Mahanaim	l-makhanaim	Маханаим	settlement	Маханаим\w*
 Makheloth	l-makelof	Макелоф	campsite	Макелоф\w*
 Makkedah	l-maked	Макед	settlement	Макед\w*
-Mamre	l-mamre	Мамре	settlement	Мамре	слить:Hebron:former; доп:Быт 13:18=дубравы Мамре; доп:Быт 18:1=у дубравы Мамре
+Mamre	l-mamre	Мамре	settlement	(?<!дубравы )Мамре	слить:Hebron:that-is; точки; доп:Быт 35:27=в Мамре
 Maon	l-maon	Маон	settlement	Маон\w*
 Marah	l-merra	Мерра	campsite	Мерр[аыеу]
 Mareshah	l-maresha	Мареша	settlement	Мареш[аыеу]
@@ -336,7 +336,7 @@ Zeboiim	l-sevoim	Севоимский	settlement	Севоимск\w+
 Zenan	l-tsenan	Ценан	settlement	Ценан\w*
 Zereth-shahar	l-tsere-shakhar	Цереф-Шахар	settlement	Цереф-Шахар\w*
 Ziklag	l-tsiklag	Циклаг	settlement	Циклаг\w*
-Zin 1	l-pustynya-sin-kades	пустыня Син	desert	пустын\w+ Син	слить:Kadesh-barnea:that-is
+Zin 1	l-pustynya-sin-kades	пустыня Син	desert	пустын\w+ Син|Кадес
 Zin 2	l-tsin	Цин	settlement	Цин
 Zior	l-tsigor	Цигор	settlement	Цигор\w*
 Ziph 1	l-zif-gory	Зиф	settlement	Зиф\w*
@@ -353,3 +353,6 @@ Mount Moriah	l-gora-moria	гора Мориа	mountain	гор\w* Мориа	це
 Mount Sinai	l-gora-sinay	гора Синай	mountain	гор\w* Синай	цель:Исх 19:11
 # свои места составителя: в сводке записи нет (рецензия географа, Г-6)
 +пустыня Ефам	l-pustynya-efam	пустыня Ефам	desert	пустын\w+ Ефам	своё:Чис 33:8
++дубрава Мамре	l-dubrava-mamre	дубрава Мамре	tree	дубравы Мамре	своё:Быт 13:18; своё:Быт 14:13; своё:Быт 18:1; положение:in-land:l-khevron:Быт 13:18=у дубравы Мамре, что в Хевроне
++пустыня Вирсавии	l-pustynya-virsavii	пустыня Вирсавии	desert	пустыне Вирсавии	своё:Быт 21:14
++Кадес-Варни	l-kades-varni	Кадес-Варни	settlement	Кадес-Варн\w+	своё:Нав 15:3; выв:l-kades:Чис 13:27,Чис 32:8

@@ -309,7 +309,7 @@ export function validate(base: Base): Issue[] {
     }
   }
   // ---------- места (02 § 3.13; 05 § 10; К-11, К-14) ----------
-  validatePlaces(base, err, warn, (w, ref) => texts(w, ref));
+  validatePlaces(base, err, warn, (w, ref) => texts(w, ref), (w, ref) => mainTexts(w, ref).join(' ').replace(/\s+/g, ' '));
   validatePlaceMentions(base, err, (w, ref) => mainTexts(w, ref));
   validateRoutes(base, err, (w, ref) => mainTexts(w, ref));
   validateStories(base, err, warn);
@@ -779,12 +779,13 @@ const NAME_TYPES = new Set(['main', 'former', 'now', 'that-is', 'other-book', 'i
 const TIME_BASES = new Set(['story', 'narrator-now', 'former-by-verse', 'inferred']);
 const PRECISION = new Set(['visible', 'tel', 'settlement', 'distance', 'water', 'terrain', 'path', 'region']);
 const LINK_KINDS = new Set(['inferred-same', 'part-of', 'near']);
+const TEXT_RELATIONS = new Set(['east-of', 'west-of', 'north-of', 'south-of', 'near', 'between', 'opposite', 'on-bank', 'in-land', 'outside-gate', 'distance-words', 'flows-by']);
 
 /**
  * Проверки мест (02 § 3.13; 05 § 10). Коллекция регистрируется до первой записи (02 § 3.17; К-11): правила работают и на
  * пустой коллекции — тест подкладывает испорченную запись на каждое правило.
  */
-export function validatePlaces(base: Base, err: Err, warn: Err, texts: (where: string, ref: string) => unknown) {
+export function validatePlaces(base: Base, err: Err, warn: Err, texts: (where: string, ref: string) => unknown, textOf?: (where: string, ref: string) => string) {
   const places = base.places ?? [];
   const reg = new Map((base.sources ?? []).map((s) => [s.id, s]));
   const ids = new Set<string>();
@@ -832,6 +833,13 @@ export function validatePlaces(base: Base, err: Err, warn: Err, texts: (where: s
       for (const r of l.refs ?? []) texts(`${w} ${l.id}`, r);
     }
     if (p.labelPoint && !PLACE_AREAL.has(p.kind)) err('место', w, 'точка подписи — только у земли и воды');
+    for (const t of p.textPositions ?? []) {
+      part(t.id, 'tp');
+      if (!TEXT_RELATIONS.has(t.relation)) err('место', w, `положение ${t.id}: отношение «${t.relation}» не из словаря (02 § 3.13.6)`);
+      for (const o of t.others ?? []) if (!ids.has(o)) err('место', w, `положение ${t.id}: нет места «${o}»`);
+      if (!t.words?.trim()) err('место', w, `положение ${t.id} без слов стиха`);
+      else if (textOf && !textOf(w, t.ref).includes(t.words)) err('место', w, `положение ${t.id}: слов «${t.words}» нет среди слов-оснований ${t.ref}`);
+    }
     if (p.match) {
       if (p.match.method === 'manual' && !p.match.checkedBy) err('место', w, 'ручное сопоставление со сводкой — со вторым ключом (checkedBy)');
       if (p.match.otherNameOf && !ids.has(p.match.otherNameOf)) err('место', w, `«другое имя» по сводке: нет места «${p.match.otherNameOf}»`);
@@ -955,6 +963,7 @@ export function validateRoutes(base: Base, err: Err, mainTexts: (where: string, 
         if (!has(w, g.ref, g.words ?? '')) err('путь', w, `слов «${g.words}» нет среди слов-оснований ${g.ref}`);
         else if (!TRANSITION.test(placeText(g.words))) err('путь', w, `отрезок ${g.from} → ${g.to} (${g.ref}): нет слов перехода (05 § 3.5)`);
         for (const a of g.also ?? []) if (!has(w, a.ref, a.words)) err('путь', w, `слов «${a.words}» нет среди слов-оснований ${a.ref}`);
+        for (const t of g.travellers ?? []) if (!t.startsWith('p-')) err('путь', w, `путник отрезка «${t}» — не номер лица`);
       }
       for (const d of v.days ?? []) if (!has(w, d.ref, d.words)) err('путь', w, `слов о днях пути «${d.words}» нет в ${d.ref}`);
     }

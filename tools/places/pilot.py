@@ -214,13 +214,17 @@ NOSHIFT = {'Egypt'}
 # слово о людях («Содомляне», «Египтяне», «Киринеянин») — не имя места (рецензия географа, Г-1)
 PEOPLE = re.compile(r'ян(е|ин|ина|ину|ам|ами|ах)?$', re.I)
 people = []
+no_label = []   # земли и воды без точки подписи: близкие соперники
 found = collections.defaultdict(list)     # запись → [(ключ, начало, форма, стих сводки)]
 unmatched, shifted = [], []
 for r in rows:
     name = r['friendly_id']
     d = DICT[name]
     seen = set()
+    skip = {rkey(x.strip()[4:]) for x in d['flags'].split(';') if x.strip().startswith('без:')}
     for (b, c, v) in r['_hits']:
+        if (b, c, v) in skip:
+            continue
         hit = None
         for dv in ((0,) if name in NOSHIFT else (0, 1, -1)):
             key = (b, c, v + dv)
@@ -307,13 +311,38 @@ for r in rows:
 
 # положения, степень, связи — от записи-хозяина места
 links_missing = []
-for r in rows:
-    d = DICT[r['friendly_id']]
-    if d['notname'] or d['merge']:
-        continue
-    p = places[d['id']]
-    if r.get('_own'):
-        continue
+AREAL = {'river', 'stream', 'sea', 'lake', 'land', 'region', 'desert', 'valley', 'field', 'mountain-range', 'road'}
+
+
+def id_point(i):
+    for res in i.get('resolutions') or []:
+        if res.get('lonlat'):
+            return tuple(map(float, res['lonlat'].split(',')))
+    return None
+
+
+def hav(a, b):
+    la1, lo1, la2, lo2 = map(math.radians, (a[1], a[0], b[1], b[0]))
+    return 2 * 6371 * math.asin(math.sqrt(math.sin((la2 - la1) / 2) ** 2 + math.cos(la1) * math.cos(la2) * math.sin((lo2 - lo1) / 2) ** 2))
+
+
+def rival(r):
+    """05 § 3.3, правила 3–4: близкий соперник — второе предложение с оценкой ≥ 0,75 лучшего дальше 3 км от него."""
+    pz = [i for i in ids_of(r) if i['score'].get('time_total', 0) > 0]
+    if degree(r)[0] not in ('вероятно', 'предположительно') or len(pz) < 2:
+        return None
+    best, bp = pz[0], id_point(pz[0])
+    for other in pz[1:]:
+        if bp and id_point(other) and hav(bp, id_point(other)) < 3:
+            continue
+        if other['score']['time_total'] >= 0.75 * best['score']['time_total'] and other.get('id_source') != 'special':
+            return other
+        return None
+    return None
+
+
+def positions_of(r, pid, start=0, prefix=''):
+    """Положения кандидатов записи сводки: точка — только у источника координат из реестра с правом распространять."""
     ma = r.get('modern_associations') or {}
     idents = r.get('identifications') or []
     pos = []
@@ -325,7 +354,7 @@ for r in rows:
         i, _ = a['identification_ids'][0]
         ident = idents[i]
         label = clean(ident['description']) if ident.get('id_source') == 'modern' else a['name']
-        x = {'id': f'{p["id"]}#pos{len(pos) + 1}', 'label': label, 'modernId': mid, 'lat': round(lat, 6), 'lon': round(lon, 6),
+        x = {'id': '', 'label': prefix + label, 'modernId': mid, 'lat': round(lat, 6), 'lon': round(lon, 6),
              'score': a['score'], 'votes': ident['score'].get('vote_count', 0)}
         if a['score'] <= 0:
             x['rejected'] = True
@@ -335,15 +364,61 @@ for r in rows:
             x['precision'] = pr
         x['source'] = 'src-openbible-geo'
         all_pos[x['coordSource']['source']] += 1
-        if not best_all.get('_' + p['id']):
-            best_all['_' + p['id']] = 1
+        if not prefix and not best_all.get('_' + pid):
+            best_all['_' + pid] = 1
             if a['score'] > 0:
                 best_all[x['coordSource']['source']] += 1
         if x['coordSource']['source'] not in REG:
             held[x['coordSource']['source']] += 1
             continue
-        x['id'] = f'{p["id"]}#pos{len(pos) + 1}'
+        x['id'] = f'{pid}#pos{start + len(pos) + 1}'
         pos.append(x)
+    return pos
+
+
+def text_links(p, d):
+    """Связь «выв.» и положения словами текста из пометок таблицы составителя."""
+    for fl in d['flags'].split(';'):
+        fl = fl.strip()
+        if fl.startswith('выв:'):
+            to, refs = fl[4:].split(':', 1)
+            p.get('match', {}).pop('otherNameOf', None)
+            p.setdefault('links', []).append({'id': f'{p["id"]}#link{len(p.get("links", [])) + 1}', 'kind': 'inferred-same', 'to': to,
+                                              'cert': 'inference', 'refs': refs.split(','), 'note': ARGUE.get(p['id'], '')})
+        if fl.startswith('положение:'):
+            rel, other, rest = fl[len('положение:'):].split(':', 2)
+            ref, words = rest.split('=', 1)
+            assert words in basis(rkey(ref)), (p['id'], ref, words)
+            p.setdefault('textPositions', []).append({'id': f'{p["id"]}#tp{len(p.get("textPositions", [])) + 1}', 'relation': rel,
+                                                      'others': [other], 'words': words, 'ref': ref})
+
+
+# доводы связей «выв.» — словами текста (рецензия библеиста, п. 1–2; решения координатора по второму ключу)
+ARGUE = {
+    'l-virsaviya': ('Та же форма «Вирсавия» в Быт 21:31 и Нав 15:28. Место, где жили Авраам и Исаак, к дням рассказчика — город: '
+                    'Исаак «перешел он в Вирсавию» (Быт 26:23), «устроил там жертвенник» (Быт 26:25), «имя городу тому Беэршива» '
+                    'и «до сего дня» (Быт 26:33). Поздний город — «в Вирсавию, которая в Иудее» (3Цар 19:3), как в перечне Иуды '
+                    '(Нав 15:28). Слово «Вирсавия» в Быт 26:33 стоит в скобке и не основание.'),
+    'l-kades-varni': ('Один рассказ о соглядатаях: «пришли… в пустыню Фаран, в Кадес» (Чис 13:27) и «посылал их из Кадес-Варни» '
+                      '(Чис 32:8). Слов тождества в тексте нет.'),
+}
+PROV_NOTE = {
+    'l-virsaviya': 'связь «выв.» с l-virsaviya-nav — решение координатора М2-1; второй ключ библеиста (места-библеист.md)',
+    'l-kades-varni': 'отдельное место по общему правилу тождества (вид «выв.»): решение координатора после второго ключа библеиста, п. 8',
+    'l-dubrava-mamre': 'роща названа по лицу: «у дубравы Мамре, Аморреянина» (Быт 14:13); в сводке своей записи нет — решение координатора после второго ключа библеиста, п. 5',
+    'l-pustynya-virsavii': 'пустыня, а не город: «заблудилась в пустыне Вирсавии» (Быт 21:14); имя по словам рассказчика — место названо позже (Быт 21:31)',
+}
+
+for r in rows:
+    d = DICT[r['friendly_id']]
+    if d['notname'] or d['merge']:
+        continue
+    p = places[d['id']]
+    if r.get('_own'):
+        p['degree'] = 'unknown'   # записи сводки нет: степень — «не установлено» (рецензия географа, П-5)
+        text_links(p, d)
+        continue
+    pos = positions_of(r, p['id'])
     if pos:
         p['positions'] = pos
     dg, sc = degree(r)
@@ -373,20 +448,14 @@ for r in rows:
                 links_missing.append((r['friendly_id'], kind, tname))
                 notes[p['id']].append(f'по сводке лучшее предложение — «{desc}»; записи {tname} в справочнике нет')
     p['match'] = match
-    # тождество по сравнению стихов (02 § 3.13.4, «выв.»): решение координатора М2-1 — Вирсавия Быт 21 и Нав 15:28
-    for fl in d['flags'].split(';'):
-        fl = fl.strip()
-        if fl.startswith('выв:'):
-            to, refs = fl[4:].split(':', 1)
-            match.pop('otherNameOf', None)
-            p.setdefault('links', []).append({'id': f'{p["id"]}#link{len(p.get("links", [])) + 1}', 'kind': 'inferred-same', 'to': to,
-                                              'cert': 'inference', 'refs': refs.split(','),
-                                              'note': 'то же, что — так выходит, если сравнить места Библии; решение координатора М2-1, нужен второй ключ библеиста'})
-    # точка подписи у земли и воды — только своя точка сводки, не город и не чужая запись (05 § 3.3, правило 1а)
-    AREAL = {'river', 'stream', 'sea', 'lake', 'land', 'region', 'desert', 'valley', 'field', 'mountain-range', 'road'}
+    text_links(p, d)
+    # точка подписи у земли и воды — только своя точка сводки, не город и не чужая запись (05 § 3.3, правило 1а),
+    # и не у места с близкими соперниками (правило 4 раньше точки подписи; рецензия географа, П-2)
     if p['kind'] in AREAL and best and best.get('id_source') == 'modern' and dg != 'не установлено':
         m = MOD.get(best['id'])
-        if m and m.get('lonlat') and m.get('type') not in ('settlement', 'archaeological site'):
+        if rival(r):
+            no_label.append(p['id'])
+        elif m and m.get('lonlat') and m.get('type') not in ('settlement', 'archaeological site'):
             want = 'water' if p['kind'] in ('river', 'stream', 'sea', 'lake') else 'land'
             if m.get('land_or_water') == want:
                 lon, lat = map(float, m['lonlat'].split(','))
@@ -394,6 +463,20 @@ for r in rows:
                     p['labelPoint'] = {'lat': round(lat, 6), 'lon': round(lon, 6), 'by': BY, 'source': coord_source(m)['source']}
                 else:
                     held['точка подписи: ' + coord_source(m)['source']] += 1
+
+# точки слитой записи — положениями места-хозяина с пометкой (рецензия географа, П-4: Мамре у Хеврона)
+for r in rows:
+    d = DICT[r['friendly_id']]
+    if d['merge'] and any(x.strip() == 'точки' for x in d['flags'].split(';')):
+        p = places[target_of[r['id']]]
+        extra = positions_of(r, p['id'], len(p.get('positions', [])), f'по сводке — {d["lemma"]}: ')
+        if extra:
+            p.setdefault('positions', []).extend(extra)
+        notes[p['id']].append(f'положения с пометкой «по сводке — {d["lemma"]}» — кандидаты записи сводки {r["friendly_id"]} ({r["id"]})')
+
+for pid, txt in PROV_NOTE.items():
+    if pid in places:
+        notes[pid].append(txt)
 
 OWN = {DICT[r['friendly_id']]['id'] for r in rows if r.get('_own')}
 out_places = []
@@ -404,7 +487,7 @@ for pid in sorted(places):
         refs = sorted(nm['refs'].items(), key=lambda kv: order(rkey(kv[0])))
         names.append({'id': f'{pid}#n{i + 1}', 'form': nm['form'], 'refs': [{'ref': a, 'timeBasis': b} for a, b in refs], 'type': nm['type'], 'cert': 'scripture'})
     rec = {'id': pid, 'kind': p['kind'], 'names': names}
-    for k in ('positions', 'degree', 'links', 'labelPoint', 'match'):
+    for k in ('positions', 'degree', 'links', 'textPositions', 'labelPoint', 'match'):
         if k in p:
             rec[k] = p[k]
     rec['sources'] = ['src-synodal'] + ([] if pid in OWN else ['src-openbible-geo'])
@@ -523,6 +606,7 @@ print(f'otherNameOf: {sum(1 for p in out_places if p.get("match", {}).get("other
 print(f'цель связи вне справочника ({len(links_missing)}): ' + '; '.join(f'{a} — {b} {c}' for a, b, c in links_missing))
 print(f'формы не найдены в стихе сводки ({len(unmatched)}): ' + '; '.join(f'{a} {b}' for a, b in unmatched))
 print(f'форма в соседнем стихе ({len(shifted)}): ' + '; '.join(f'{a} {b}→{c}' for a, b, c in shifted))
+print(f'без точки подписи — близкие соперники ({len(no_label)}): ' + ', '.join(no_label))
 print(f'слово о людях — не упоминание ({len(people)}): ' + '; '.join(f'{a} {b} «{c}»' for a, b, c in people))
 print('роли: ' + ', '.join(f'{k} {v}' for k, v in collections.Counter(m['role'] for m in out_mentions).most_common()))
 print(f'путей: {len(routes["items"])}; стоянок: {sum(len(v["stops"]) for rt in routes["items"] for v in rt["variants"])}')

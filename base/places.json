@@ -3898,12 +3898,6 @@
     }
    ],
    "degree": "possible",
-   "labelPoint": {
-    "lat": 28.75,
-    "lon": 33.0,
-    "by": "составитель мест (пакет 2)",
-    "source": "src-wikidata"
-   },
    "match": {
     "modernId": "a3d18b2",
     "method": "auto",
@@ -5387,6 +5381,53 @@
     "at": "2026-10-12",
     "status": "draft",
     "note": "по сводке лучшее предложение — «another name for the Zered»; записи Zered в справочнике нет: своего знака у места нет (05 § 3.3, правило 0)"
+   }
+  },
+  {
+   "id": "l-dubrava-mamre",
+   "kind": "tree",
+   "names": [
+    {
+     "id": "l-dubrava-mamre#n1",
+     "form": "дубрава Мамре",
+     "refs": [
+      {
+       "ref": "Быт 13:18",
+       "timeBasis": "story"
+      },
+      {
+       "ref": "Быт 14:13",
+       "timeBasis": "story"
+      },
+      {
+       "ref": "Быт 18:1",
+       "timeBasis": "story"
+      }
+     ],
+     "type": "main",
+     "cert": "scripture"
+    }
+   ],
+   "degree": "unknown",
+   "textPositions": [
+    {
+     "id": "l-dubrava-mamre#tp1",
+     "relation": "in-land",
+     "others": [
+      "l-khevron"
+     ],
+     "words": "у дубравы Мамре, что в Хевроне",
+     "ref": "Быт 13:18"
+    }
+   ],
+   "sources": [
+    "src-synodal"
+   ],
+   "prov": {
+    "by": "составитель мест (пакет 2)",
+    "at": "2026-10-12",
+    "status": "draft",
+    "note": "роща названа по лицу: «у дубравы Мамре, Аморреянина» (Быт 14:13); в сводке своей записи нет — решение координатора после второго ключа библеиста, п. 5"
    }
   },
   {
@@ -12760,10 +12801,6 @@
        "timeBasis": "story"
       },
       {
-       "ref": "Чис 33:36",
-       "timeBasis": "story"
-      },
-      {
        "ref": "Чис 33:37",
        "timeBasis": "story"
       }
@@ -12773,38 +12810,10 @@
     },
     {
      "id": "l-kades#n2",
-     "form": "Кадес-Варни",
-     "refs": [
-      {
-       "ref": "Нав 15:3",
-       "timeBasis": "story"
-      }
-     ],
-     "type": "main",
-     "cert": "scripture"
-    },
-    {
-     "id": "l-kades#n3",
      "form": "Мишпат",
      "refs": [
       {
        "ref": "Быт 14:7",
-       "timeBasis": "story"
-      }
-     ],
-     "type": "that-is",
-     "cert": "scripture"
-    },
-    {
-     "id": "l-kades#n4",
-     "form": "пустыня Син",
-     "refs": [
-      {
-       "ref": "Чис 33:36",
-       "timeBasis": "story"
-      },
-      {
-       "ref": "Нав 15:1",
        "timeBasis": "story"
       }
      ],
@@ -12852,6 +12861,26 @@
     }
    ],
    "degree": "certain",
+   "textPositions": [
+    {
+     "id": "l-kades#tp1",
+     "relation": "in-land",
+     "others": [
+      "l-pustynya-sin-kades"
+     ],
+     "words": "остановился народ в Кадесе",
+     "ref": "Чис 20:1"
+    },
+    {
+     "id": "l-kades#tp2",
+     "relation": "in-land",
+     "others": [
+      "l-pustynya-sin-kades"
+     ],
+     "words": "в Кадесе, в пустыне Син",
+     "ref": "Втор 32:51"
+    }
+   ],
    "match": {
     "modernId": "ac2cef0",
     "method": "auto",
@@ -12866,8 +12895,48 @@
    "prov": {
     "by": "составитель мест (пакет 2)",
     "at": "2026-10-12",
+    "status": "draft"
+   }
+  },
+  {
+   "id": "l-kades-varni",
+   "kind": "settlement",
+   "names": [
+    {
+     "id": "l-kades-varni#n1",
+     "form": "Кадес-Варни",
+     "refs": [
+      {
+       "ref": "Нав 15:3",
+       "timeBasis": "story"
+      }
+     ],
+     "type": "main",
+     "cert": "scripture"
+    }
+   ],
+   "degree": "unknown",
+   "links": [
+    {
+     "id": "l-kades-varni#link1",
+     "kind": "inferred-same",
+     "to": "l-kades",
+     "cert": "inference",
+     "refs": [
+      "Чис 13:27",
+      "Чис 32:8"
+     ],
+     "note": "Один рассказ о соглядатаях: «пришли… в пустыню Фаран, в Кадес» (Чис 13:27) и «посылал их из Кадес-Варни» (Чис 32:8). Слов тождества в тексте нет."
+    }
+   ],
+   "sources": [
+    "src-synodal"
+   ],
+   "prov": {
+    "by": "составитель мест (пакет 2)",
+    "at": "2026-10-12",
     "status": "draft",
-    "note": "слита запись сводки Zin 1 (a0b5c50): тождество словами стиха — имя вида «that-is»"
+    "note": "отдельное место по общему правилу тождества (вид «выв.»): решение координатора после второго ключа библеиста, п. 8"
    }
   },
   {
@@ -15186,34 +15255,6 @@
     },
     {
      "id": "l-khevron#n2",
-     "form": "Мамре",
-     "refs": [
-      {
-       "ref": "Быт 13:18",
-       "timeBasis": "story"
-      },
-      {
-       "ref": "Быт 18:1",
-       "timeBasis": "story"
-      },
-      {
-       "ref": "Быт 23:17",
-       "timeBasis": "story"
-      },
-      {
-       "ref": "Быт 23:19",
-       "timeBasis": "story"
-      },
-      {
-       "ref": "Быт 25:9",
-       "timeBasis": "story"
-      }
-     ],
-     "type": "former",
-     "cert": "scripture"
-    },
-    {
-     "id": "l-khevron#n3",
      "form": "Кириаф-Арба",
      "refs": [
       {
@@ -15230,6 +15271,30 @@
       }
      ],
      "type": "former",
+     "cert": "scripture"
+    },
+    {
+     "id": "l-khevron#n3",
+     "form": "Мамре",
+     "refs": [
+      {
+       "ref": "Быт 23:17",
+       "timeBasis": "story"
+      },
+      {
+       "ref": "Быт 23:19",
+       "timeBasis": "story"
+      },
+      {
+       "ref": "Быт 25:9",
+       "timeBasis": "story"
+      },
+      {
+       "ref": "Быт 35:27",
+       "timeBasis": "story"
+      }
+     ],
+     "type": "that-is",
      "cert": "scripture"
     }
    ],
@@ -15251,6 +15316,42 @@
       "radiusM": 50
      },
      "source": "src-openbible-geo"
+    },
+    {
+     "id": "l-khevron#pos2",
+     "label": "по сводке — Мамре: Ramat el Khalil",
+     "modernId": "m94f792",
+     "lat": 31.556536,
+     "lon": 35.105336,
+     "score": 667,
+     "votes": 26,
+     "coordSource": {
+      "source": "src-wikidata",
+      "id": "Q2143048"
+     },
+     "precision": {
+      "kind": "visible",
+      "radiusM": 5
+     },
+     "source": "src-openbible-geo"
+    },
+    {
+     "id": "l-khevron#pos3",
+     "label": "по сводке — Мамре: Ain Sebta",
+     "modernId": "m0021a3",
+     "lat": 31.536,
+     "lon": 35.0856,
+     "score": 34,
+     "votes": 1,
+     "coordSource": {
+      "source": "src-wikidata",
+      "id": "Q2473173"
+     },
+     "precision": {
+      "kind": "settlement",
+      "radiusM": 250
+     },
+     "source": "src-openbible-geo"
     }
    ],
    "degree": "certain",
@@ -15269,7 +15370,7 @@
     "by": "составитель мест (пакет 2)",
     "at": "2026-10-12",
     "status": "draft",
-    "note": "слита запись сводки Mamre (aeb9e97): тождество словами стиха — имя вида «former»"
+    "note": "слита запись сводки Mamre (aeb9e97): тождество словами стиха — имя вида «that-is»; положения с пометкой «по сводке — Мамре» — кандидаты записи сводки Mamre (aeb9e97)"
    }
   },
   {
@@ -20879,6 +20980,7 @@
      "cert": "scripture"
     }
    ],
+   "degree": "unknown",
    "sources": [
     "src-synodal"
    ],
@@ -21023,14 +21125,84 @@
     }
    ],
    "degree": "possible",
+   "match": {
+    "modernId": "a0f54e4",
+    "method": "auto",
+    "by": "составитель мест (пакет 2)",
+    "at": "2026-10-12",
+    "source": "src-openbible-geo"
+   },
+   "sources": [
+    "src-synodal",
+    "src-openbible-geo"
+   ],
+   "prov": {
+    "by": "составитель мест (пакет 2)",
+    "at": "2026-10-12",
+    "status": "draft"
+   }
+  },
+  {
+   "id": "l-pustynya-sin-kades",
+   "kind": "desert",
+   "names": [
+    {
+     "id": "l-pustynya-sin-kades#n1",
+     "form": "пустыня Син",
+     "refs": [
+      {
+       "ref": "Чис 33:36",
+       "timeBasis": "story"
+      },
+      {
+       "ref": "Нав 15:1",
+       "timeBasis": "story"
+      }
+     ],
+     "type": "main",
+     "cert": "scripture"
+    },
+    {
+     "id": "l-pustynya-sin-kades#n2",
+     "form": "Кадес",
+     "refs": [
+      {
+       "ref": "Чис 33:36",
+       "timeBasis": "story"
+      }
+     ],
+     "type": "that-is",
+     "cert": "scripture"
+    }
+   ],
+   "positions": [
+    {
+     "id": "l-pustynya-sin-kades#pos1",
+     "label": "Zin Desert",
+     "modernId": "m3ba5c8",
+     "lat": 30.971,
+     "lon": 35.325,
+     "score": 1000,
+     "votes": 1,
+     "coordSource": {
+      "source": "src-wikidata",
+      "id": "Q204199"
+     },
+     "precision": {
+      "kind": "region"
+     },
+     "source": "src-openbible-geo"
+    }
+   ],
+   "degree": "certain",
    "labelPoint": {
-    "lat": 29.147778,
-    "lon": 33.536667,
+    "lat": 30.971,
+    "lon": 35.325,
     "by": "составитель мест (пакет 2)",
     "source": "src-wikidata"
    },
    "match": {
-    "modernId": "a0f54e4",
+    "modernId": "a0b5c50",
     "method": "auto",
     "by": "составитель мест (пакет 2)",
     "at": "2026-10-12",
@@ -21467,6 +21639,34 @@
     "by": "составитель мест (пакет 2)",
     "at": "2026-10-12",
     "status": "draft"
+   }
+  },
+  {
+   "id": "l-pustynya-virsavii",
+   "kind": "desert",
+   "names": [
+    {
+     "id": "l-pustynya-virsavii#n1",
+     "form": "пустыня Вирсавии",
+     "refs": [
+      {
+       "ref": "Быт 21:14",
+       "timeBasis": "narrator-now"
+      }
+     ],
+     "type": "main",
+     "cert": "scripture"
+    }
+   ],
+   "degree": "unknown",
+   "sources": [
+    "src-synodal"
+   ],
+   "prov": {
+    "by": "составитель мест (пакет 2)",
+    "at": "2026-10-12",
+    "status": "draft",
+    "note": "пустыня, а не город: «заблудилась в пустыне Вирсавии» (Быт 21:14); имя по словам рассказчика — место названо позже (Быт 21:31)"
    }
   },
   {
@@ -25967,7 +26167,7 @@
     "by": "составитель мест (пакет 2)",
     "at": "2026-10-12",
     "source": "src-openbible-geo",
-    "otherNameOf": "l-kades"
+    "otherNameOf": "l-pustynya-sin-kades"
    },
    "sources": [
     "src-synodal",
@@ -27722,10 +27922,6 @@
      "form": "Вирсавия",
      "refs": [
       {
-       "ref": "Быт 21:14",
-       "timeBasis": "story"
-      },
-      {
        "ref": "Быт 21:31",
        "timeBasis": "story"
       },
@@ -27794,11 +27990,12 @@
      "refs": [
       "Быт 21:31",
       "Быт 26:23",
+      "Быт 26:25",
       "Быт 26:33",
       "Нав 15:28",
       "3Цар 19:3"
      ],
-     "note": "то же, что — так выходит, если сравнить места Библии; решение координатора М2-1, нужен второй ключ библеиста"
+     "note": "Та же форма «Вирсавия» в Быт 21:31 и Нав 15:28. Место, где жили Авраам и Исаак, к дням рассказчика — город: Исаак «перешел он в Вирсавию» (Быт 26:23), «устроил там жертвенник» (Быт 26:25), «имя городу тому Беэршива» и «до сего дня» (Быт 26:33). Поздний город — «в Вирсавию, которая в Иудее» (3Цар 19:3), как в перечне Иуды (Нав 15:28). Слово «Вирсавия» в Быт 26:33 стоит в скобке и не основание."
     }
    ],
    "match": {
@@ -27815,7 +28012,8 @@
    "prov": {
     "by": "составитель мест (пакет 2)",
     "at": "2026-10-12",
-    "status": "draft"
+    "status": "draft",
+    "note": "связь «выв.» с l-virsaviya-nav — решение координатора М2-1; второй ключ библеиста (места-библеист.md)"
    }
   },
   {
