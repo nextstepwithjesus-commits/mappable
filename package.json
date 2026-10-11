@@ -32,7 +32,13 @@
     "base:mark": "tsx tools/base/checks.ts",
     "map": "python3 -I tools/docs/map.py",
     "find": "python3 -I tools/docs/find.py",
-    "docs:check": "python3 -I tools/docs/check.py"
+    "docs:check": "python3 -I tools/docs/check.py",
+    "pack": "tsx tools/pack/build.ts",
+    "pack:synth": "tsx tools/pack/synth.ts",
+    "tokens": "tsx tools/tokens/build.ts",
+    "typecheck:app": "tsc --noEmit -p core && tsc --noEmit -p tsconfig.base-app.json",
+    "test:app": "vitest run tests/core-*.test.ts tests/pack-*.test.ts tests/tokens.test.ts tests/prototypes-*.test.ts",
+    "ci:prototypes": "tsx tools/ci/prototypes.ts"
   },
   "license": "UNLICENSED",
   "dependencies": {
@@ -40,14 +46,19 @@
     "@fontsource-variable/literata": "^5.3.0",
     "@fontsource/noto-serif-hebrew": "^5.3.0",
     "@preact/signals": "^2.11.2",
+    "minisearch": "7.2.0",
     "preact": "^10.29.8"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
     "@preact/preset-vite": "^2.10.6",
+    "@terrazzo/cli": "2.7.1",
+    "@terrazzo/plugin-css": "2.7.1",
     "@types/node": "^26.6.2",
     "axe-core": "^4.13.0",
     "playwright": "^1.63.0",
     "preact-render-to-string": "^6.7.0",
+    "snowball-stemmers": "0.6.0",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
     "vite": "^8.3.1",

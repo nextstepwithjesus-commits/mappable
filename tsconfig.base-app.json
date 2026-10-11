@@ -1,0 +1,26 @@
+{
+  "//": "Типы основы нового приложения (09 § 8.1): сборка пакетов tools/pack/, токены tools/tokens/, задания CI tools/ci/ (код внутри страниц Playwright — с DOM) и тесты. Ядро core/ проверяется ещё и своим tsconfig без DOM и Node. Прежний атлас (src/, старые тесты) сюда не входит.",
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": [
+      "node"
+    ],
+    "lib": [
+      "ES2023",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "noImplicitOverride": true
+  },
+  "include": [
+    "core",
+    "tools/pack",
+    "tools/tokens",
+    "tools/ci",
+    "tests/core-*.ts",
+    "tests/pack-*.ts",
+    "tests/tokens*.ts",
+    "tests/prototypes-*.ts",
+    "tests/helpers/core-data.ts"
+  ]
+}

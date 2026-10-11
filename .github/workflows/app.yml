@@ -1,0 +1,83 @@
+# CI нового приложения «Библия наглядно» (09 § 8.3; этап 0 плана 10, п. 4). Прежний атлас «Толедот» проверяет ci.yml.
+# Задания: данные, ядро, прототипы, документы. «Приложение» (сборка app/, бюджет кода, лицензии) и «скорость» (Lighthouse CI)
+# вводятся с первым кодом app/ — сейчас его нет (регламент § 1). Слияние — только при зелёных заданиях.
+name: Основа приложения
+
+on:
+  push:
+    branches: [main, 'claude/**']
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  data:
+    name: данные
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Проверка базы — 0 ошибок
+        run: npm run -s base:validate
+      - name: Тесты базы и допуска
+        run: npx vitest run tests/base-*.test.ts --testTimeout=60000
+      - name: Пакеты «выпуск» с бюджетами
+        run: npm run -s pack
+      - name: Пакеты «проба» и TSK с бюджетами
+        run: npm run -s pack -- --probe --tsk
+      - name: Бюджеты на синтетике полного размера
+        run: npm run -s pack:synth
+      - name: Тесты сборки пакетов (бюджеты, детерминизм, NFC, опись, синтетика)
+        run: npx vitest run tests/pack-*.test.ts --testTimeout=60000
+
+  core:
+    name: ядро
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Токены (Terrazzo) и их проверки
+        run: npm run -s tokens
+      - name: Типы — ядро без DOM и Node, сборка, тесты
+        run: npm run -s typecheck:app
+      - name: Единичные, поиск, границы импорта, токены
+        run: npx vitest run tests/core-*.test.ts tests/tokens.test.ts --testTimeout=60000
+
+  prototypes:
+    name: прототипы
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Браузер для Playwright
+        run: npx playwright install --with-deps chromium
+      - name: Опись сцен показа — только «выпуск» (10 § 3.3)
+        run: npx vitest run tests/prototypes-*.test.ts --testTimeout=60000
+      - name: Playwright и axe по прототипам — 360 и 1 280 px, обе темы, без сети
+        run: npm run -s ci:prototypes -- --out dist-ci/прототипы
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prototypes-screens
+          path: dist-ci/прототипы
+
+  docs:
+    name: документы
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Проверка документации (статусы, номера, карта, вехи)
+        run: python3 -I tools/docs/check.py

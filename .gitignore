@@ -22,3 +22,11 @@ prototypes/шаг-0/**/снимки/*-весь.png
 prototypes/R14-снимки/
 # лист-образец ред. 3: снимки «весь лист» — большие, собираются заново (снимки.mjs)
 prototypes/лист-образец/снимки/*-весь.png
+
+# основа нового приложения: сборки пакетов и токенов собираются заново (tools/pack/, tools/tokens/)
+dist-pack/
+dist-pack-probe/
+dist-pack-synth/
+tokens/build/
+tokens/dist/
+dist-ci/
