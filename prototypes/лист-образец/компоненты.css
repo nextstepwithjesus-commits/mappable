@@ -340,3 +340,9 @@ dialog.диалог::backdrop { background: color-mix(in srgb, var(--tsvet-chern
 @media (forced-colors: active) { .строка__зона:has(.строка__ссылка:focus-visible) { outline-color: Highlight; } }
 .строка-лица__имя a { display: inline-flex; align-items: center; min-height: var(--tsel-naimenshaya); min-width: var(--tsel-naimenshaya); }
 .поиск .кн { flex: none; }
+/* ред. 3.2: слово словаря в тексте Писания — текстом, кнопка поверх (копия во всех браузерах) */
+.слово-обёртка { position: relative; display: inline; }
+.слово-словаря-текст { text-decoration: underline dotted var(--tsvet-chernila-2); text-decoration-thickness: var(--liniya-volosyanaya); text-underline-offset: 0.2em; user-select: text; -webkit-user-select: text; }
+.слово-словаря-кн { position: absolute; inset: calc(-1 * var(--otstup-4)) 0; padding: 0; border: 0; background: none; cursor: pointer; }
+.слово-словаря-кн[aria-expanded="true"] + *, .слово-обёртка:has(.слово-словаря-кн[aria-expanded="true"]) .слово-словаря-текст { text-decoration-style: solid; }
+.слово-словаря { user-select: text; -webkit-user-select: text; }

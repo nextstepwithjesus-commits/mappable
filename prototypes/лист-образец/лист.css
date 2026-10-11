@@ -370,7 +370,7 @@ main { display: block; padding-bottom: var(--otstup-64); }
 .полоса-подпись { display: grid; grid-template-columns: 39fr 27fr; }
 .полоса-подпись span { grid-row: auto; grid-column: auto !important; justify-self: start !important; padding: 0 !important; }
 .книги-с-историями { display: flex; flex-wrap: wrap; gap: 0 var(--otstup-24); margin-top: var(--otstup-4); }
-@media (min-width: 37.5em) { .список-начать .строка__зона { grid-template-columns: 5ch minmax(0, 1fr) var(--komponent-stroka-vid-shirina) max-content; } }
+@media (min-width: 37.5em) { .список-начать .строка__зона { grid-template-columns: 5ch minmax(0, 1fr) var(--komponent-stroka-vid-shirina) var(--komponent-stroka-adres-shirina); } }
 .главная__право .строка-инструмента-гл { grid-template-columns: minmax(0, 1fr); }
 .без-поиска .шапка__кн-поиск { display: none; }
 @media (max-width: 37.4375em) { .полоса-подпись { display: none; } }
@@ -471,3 +471,4 @@ q { quotes: none; }
 .фон-выбор .слой__группа { border-color: var(--tsvet-na-vybore); }
 .фон-выбор .слой__группа button:not([aria-pressed="true"]) { background: var(--tsvet-vybor); }
 .фон-выбор .слой__группа button[aria-pressed="true"] { color: var(--tsvet-chernila); }
+
