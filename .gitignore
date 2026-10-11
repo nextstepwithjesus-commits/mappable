@@ -31,3 +31,12 @@ tokens/build/
 tokens/dist/
 dist-ci/
 dist-pack-synth-10000/
+
+# П7 вариант А (В-32): внешние наборы только для сверки, в продукт не идут; большие — вне git (inputs/README.md)
+inputs/theographic/
+inputs/oshb/
+inputs/eusebius/adamb924/*
+!inputs/eusebius/adamb924/README.md
+!inputs/eusebius/adamb924/data/
+inputs/eusebius/adamb924/data/*
+!inputs/eusebius/adamb924/data/*-sections-aligned.txt

@@ -1,0 +1,2305 @@
+{
+ "examples": 282,
+ "lottery": [
+  {
+   "kind": "рассказ Ветхого Завета",
+   "chapters": [
+    "Суд 10",
+    "Суд 11",
+    "Суд 12"
+   ],
+   "options": 121,
+   "ourStarts": 0
+  },
+  {
+   "kind": "шаги-круги",
+   "chapters": [
+    "Чис 13",
+    "Чис 14"
+   ],
+   "options": 26,
+   "ourStarts": 0
+  },
+  {
+   "kind": "видения",
+   "chapters": [
+    "Иез 34",
+    "Иез 35"
+   ],
+   "options": 61,
+   "ourStarts": 0
+  },
+  {
+   "kind": "родословие",
+   "chapters": [
+    "1Пар 8"
+   ],
+   "options": 6,
+   "ourStarts": 0
+  },
+  {
+   "kind": "рассказ мудреца",
+   "chapters": [
+    "Притч 20"
+   ],
+   "options": 38,
+   "ourStarts": 0
+  },
+  {
+   "kind": "Евангелие",
+   "chapters": [
+    "Мф 21",
+    "Мф 22"
+   ],
+   "options": 22,
+   "ourStarts": 4
+  },
+  {
+   "kind": "Деяния",
+   "chapters": [
+    "Деян 10",
+    "Деян 11"
+   ],
+   "options": 14,
+   "ourStarts": 0
+  }
+ ],
+ "bounds_all": {
+  "Евсевий": {
+   "n": 128,
+   "hit": 115,
+   "exact": 100,
+   "share": 0.898
+  },
+  "פ/ס": {
+   "n": 35,
+   "hit": 28,
+   "exact": 24,
+   "share": 0.8
+  },
+  "none": 10,
+  "misses": [
+   "Быт 3:1 e-zmey-i-plod-dereva (פ/ס)",
+   "Быт 4:17 e-kain-i-gorod-enokh (פ/ס)",
+   "Быт 4:25 e-sif-i-enos (פ/ס)",
+   "Быт 10:8 e-nimrod-silnyy-zverolov (פ/ס)",
+   "Быт 11:31 e-farra-i-avram-v-kharrane (פ/ס)",
+   "Мф 8:16 e-bolnye-u-dverey-vecherom (Евсевий)",
+   "Мк 1:32 e-bolnye-u-dverey-vecherom (Евсевий)",
+   "Мф 9:14 e-pochemu-ucheniki-ne-postyatsya (Евсевий)",
+   "Лк 5:33 e-pochemu-ucheniki-ne-postyatsya (Евсевий)",
+   "Мк 3:1 e-issokhshaya-ruka-v-subbotu (Евсевий)",
+   "Мф 9:20 e-zhenshchina-s-krovotecheniem (Евсевий)",
+   "Мк 5:25 e-zhenshchina-s-krovotecheniem (Евсевий)",
+   "Лк 8:43 e-zhenshchina-s-krovotecheniem (Евсевий)",
+   "Мф 9:32 e-nemoy-stal-govorit (Евсевий)",
+   "Мф 15:32 e-sem-khlebov-i-chetyre-tysyachi (Евсевий)",
+   "Ин 2:1 e-brak-v-kane-galileyskoy (Евсевий)",
+   "Ин 2:23 e-mnogie-uverovali-na-prazdnike-paskhi (Евсевий)",
+   "Ин 6:60 e-mnogie-ucheniki-otkhodyat (Евсевий)",
+   "3Цар 18:19 e-iliya-i-proroki-vaala-na-karmile (פ/ס)",
+   "3Цар 18:41 e-oblako-velichinoyu-v-ladon (פ/ס)"
+  ]
+ },
+ "bounds_out": {
+  "Евсевий": {
+   "n": 23,
+   "hit": 21,
+   "exact": 18,
+   "share": 0.913
+  },
+  "פ/ס": {
+   "n": 7,
+   "hit": 7,
+   "exact": 7,
+   "share": 1.0
+  },
+  "none": 2,
+  "misses": [
+   "Лк 8:43 e-zhenshchina-s-krovotecheniem (Евсевий)",
+   "Мф 15:32 e-sem-khlebov-i-chetyre-tysyachi (Евсевий)"
+  ]
+ },
+ "persons_all": {
+  "episodes": 69,
+  "tp": 121,
+  "fp": 120,
+  "fn": 32,
+  "precision": 0.502,
+  "recall": 0.791,
+  "f1": 0.614,
+  "rows": [
+   [
+    "e-bog-tvorit-nebo-i-zemlyu",
+    [],
+    [
+     "holy_spirit_7400",
+     "jesus_905"
+    ]
+   ],
+   [
+    "e-adam-i-zhena-v-rayu",
+    [],
+    []
+   ],
+   [
+    "e-zmey-i-plod-dereva",
+    [
+     "new:kheruvim-byt3"
+    ],
+    []
+   ],
+   [
+    "e-kain-i-avel",
+    [
+     "adam_78",
+     "eve_1231",
+     "god_1324"
+    ],
+    []
+   ],
+   [
+    "e-sif-i-enos",
+    [],
+    []
+   ],
+   [
+    "e-rodoslovie-adama",
+    [
+     "adam_78",
+     "cainan_534",
+     "enoch_1192",
+     "ham_1359",
+     "japheth_726",
+     "jared_730",
+     "lamech_1809",
+     "mahalaleel_1885",
+     "methuselah_2042",
+     "noah_2210",
+     "shem_2613"
+    ],
+    []
+   ],
+   [
+    "e-bog-vzyal-enokha",
+    [
+     "god_1324"
+    ],
+    [
+     "lamech_1809",
+     "methuselah_2042"
+    ]
+   ],
+   [
+    "e-syny-bozhii-i-docheri-chelovecheskie",
+    [],
+    [
+     "shem_2613"
+    ]
+   ],
+   [
+    "e-noy-i-potop",
+    [
+     "ham_1359",
+     "japheth_726",
+     "new:zhena-noya",
+     "shem_2613"
+    ],
+    []
+   ],
+   [
+    "e-rodoslovie-synov-noevykh",
+    [
+     "eber_1030",
+     "ham_1359",
+     "japheth_726",
+     "nimrod_2206",
+     "peleg_2308",
+     "shem_2613"
+    ],
+    [
+     "noah_2210"
+    ]
+   ],
+   [
+    "e-nimrod-silnyy-zverolov",
+    [
+     "asshur_349"
+    ],
+    []
+   ],
+   [
+    "e-bashnya-do-nebes",
+    [
+     "god_1324"
+    ],
+    []
+   ],
+   [
+    "e-rodoslovie-sima",
+    [
+     "abraham_58",
+     "eber_1030",
+     "haran_1407",
+     "nahor_2142",
+     "nahor_2143",
+     "peleg_2308",
+     "reu_2428",
+     "salah_2455",
+     "serug_2503",
+     "terah_2841"
+    ],
+    []
+   ],
+   [
+    "e-rodoslovie-farry",
+    [
+     "haran_1407",
+     "iscah_618",
+     "lot_1830",
+     "milcah_2082",
+     "nahor_2143",
+     "sarah_2473"
+    ],
+    []
+   ],
+   [
+    "e-farra-i-avram-v-kharrane",
+    [],
+    []
+   ],
+   [
+    "e-ioann-krestit-v-pustyne",
+    [
+     "isaiah_617"
+    ],
+    []
+   ],
+   [
+    "e-iisus-krestitsya-ot-ioanna",
+    [
+     "god_1324",
+     "holy_spirit_7400"
+    ],
+    []
+   ],
+   [
+    "e-iisusa-iskushaet-satana",
+    [
+     "new:angely-v-pustyne"
+    ],
+    [
+     "adam_78",
+     "eve_1231",
+     "seth_2504"
+    ]
+   ],
+   [
+    "e-iisus-propoveduet-v-galilee",
+    [
+     "john_1676"
+    ],
+    []
+   ],
+   [
+    "e-lovtsy-chelovekov",
+    [
+     "john_1677"
+    ],
+    []
+   ],
+   [
+    "e-nechistyy-dukh-v-sinagoge",
+    [
+     "new:dukh-nechistyy-mk1",
+     "new:oderzhimyy-v-kapernaume"
+    ],
+    []
+   ],
+   [
+    "e-tyoshcha-simona",
+    [
+     "andrew_264",
+     "james_717",
+     "john_1677",
+     "peter_2745"
+    ],
+    []
+   ],
+   [
+    "e-utrom-v-pustynnom-meste",
+    [],
+    []
+   ],
+   [
+    "e-iisus-i-prokazhennyy",
+    [
+     "new:prokazhennyy-mk1"
+    ],
+    []
+   ],
+   [
+    "e-rasslablennogo-spuskayut-cherez-krovlyu",
+    [
+     "new:rasslablennyy"
+    ],
+    []
+   ],
+   [
+    "e-mytar-u-sbora-poshlin",
+    [
+     "alphaeus_193"
+    ],
+    []
+   ],
+   [
+    "e-iisus-est-s-mytaryami-i-greshnikami",
+    [],
+    []
+   ],
+   [
+    "e-pochemu-ucheniki-ne-postyatsya",
+    [],
+    []
+   ],
+   [
+    "e-ucheniki-sryvayut-kolosya-v-subbotu",
+    [
+     "abiathar_20",
+     "david_994"
+    ],
+    []
+   ],
+   [
+    "e-issokhshaya-ruka-v-subbotu",
+    [
+     "new:chelovek-s-sukhoy-rukoy"
+    ],
+    []
+   ],
+   [
+    "e-mnozhestvo-naroda-u-morya",
+    [
+     "new:dukhi-nechistye-mk3"
+    ],
+    []
+   ],
+   [
+    "e-iisus-stavit-dvenadtsat",
+    [
+     "jesus_905"
+    ],
+    []
+   ],
+   [
+    "e-tsarstvo-razdelivsheesya-v-sebe",
+    [
+     "new:besnovatyy-slepoy-i-nemoy",
+     "new:nemoy-lk11"
+    ],
+    []
+   ],
+   [
+    "e-kto-mater-moya-i-bratya-moi",
+    [
+     "mary_1938"
+    ],
+    []
+   ],
+   [
+    "e-doch-iaira",
+    [
+     "jairus_711",
+     "james_717",
+     "john_1677",
+     "new:doch-iaira",
+     "peter_2745"
+    ],
+    []
+   ],
+   [
+    "e-zhatvy-mnogo",
+    [],
+    []
+   ],
+   [
+    "e-irod-i-molva-ob-iisuse",
+    [
+     "elijah_1131",
+     "jesus_905"
+    ],
+    []
+   ],
+   [
+    "e-irod-irodiada-i-ioann-krestitel",
+    [
+     "herodias_1507",
+     "new:doch-irodiady",
+     "new:oruzhenosets-iroda",
+     "philip_2345"
+    ],
+    []
+   ],
+   [
+    "e-pyat-khlebov-i-dve-ryby",
+    [
+     "new:malchik-s-khlebami"
+    ],
+    []
+   ],
+   [
+    "e-sem-khlebov-i-chetyre-tysyachi",
+    [],
+    []
+   ],
+   [
+    "e-iisus-idet-po-moryu",
+    [],
+    []
+   ],
+   [
+    "e-v-zemle-gennisaretskoy",
+    [],
+    []
+   ],
+   [
+    "e-iisus-v-otechestve-svoyom",
+    [
+     "mary_1938"
+    ],
+    []
+   ],
+   [
+    "e-iisus-posylaet-dvenadtsat",
+    [],
+    [
+     "andrew_264",
+     "bartholomew_405",
+     "james_717",
+     "james_718",
+     "john_1677",
+     "judas_1760",
+     "lebbaeus_1815",
+     "matthew_1971",
+     "peter_2745",
+     "philip_2344",
+     "simon_2746",
+     "thomas_2851"
+    ]
+   ],
+   [
+    "e-za-kogo-menya-pochitayut-lyudi",
+    [
+     "elijah_1131",
+     "john_1676"
+    ],
+    []
+   ],
+   [
+    "e-iisus-preobrazhaetsya-na-gore",
+    [
+     "god_1324"
+    ],
+    []
+   ],
+   [
+    "e-ucheniki-ne-mogli-izgnat-besa",
+    [
+     "new:otets-otroka",
+     "new:otrok-besnovatyy"
+    ],
+    []
+   ],
+   [
+    "e-syn-chelovecheskiy-predan-budet",
+    [],
+    []
+   ],
+   [
+    "e-ditya-posredi-uchenikov",
+    [
+     "new:ditya"
+    ],
+    []
+   ],
+   [
+    "e-iakov-i-ioann-v-selenii-samaryanskom",
+    [
+     "elijah_1131",
+     "james_717",
+     "john_1677"
+    ],
+    []
+   ],
+   [
+    "e-lisitsy-imeyut-nory",
+    [
+     "new:drugoy-uchenik",
+     "new:zhelayushchiy-idti"
+    ],
+    []
+   ],
+   [
+    "e-iisus-na-molodom-osle",
+    [],
+    []
+   ],
+   [
+    "e-smokovnitsa-bez-ploda",
+    [
+     "peter_2745"
+    ],
+    []
+   ],
+   [
+    "e-prodayushchie-i-pokupayushchie-v-khrame",
+    [],
+    []
+   ],
+   [
+    "e-kakoyu-vlastyu-ty-eto-delaesh",
+    [
+     "john_1676"
+    ],
+    []
+   ],
+   [
+    "e-brak-v-kane-galileyskoy",
+    [
+     "mary_1938",
+     "new:rasporyaditel-pira",
+     "new:zhenikh-v-kane"
+    ],
+    []
+   ],
+   [
+    "e-v-kapernaume-nemnogo-dney",
+    [
+     "mary_1938"
+    ],
+    []
+   ],
+   [
+    "e-bich-iz-verevok-v-khrame",
+    [],
+    []
+   ],
+   [
+    "e-iisus-govorit-o-khlebe-s-nebes",
+    [
+     "moses_2108"
+    ],
+    [
+     "peter_2745"
+    ]
+   ],
+   [
+    "e-savl-na-puti-v-damask",
+    [
+     "jesus_905",
+     "new:pervosvyashchennik-deyan9"
+    ],
+    [
+     "holy_spirit_7400"
+    ]
+   ],
+   [
+    "e-savla-spuskayut-po-stene",
+    [],
+    [
+     "barnabas_1722",
+     "holy_spirit_7400"
+    ]
+   ],
+   [
+    "e-tserkvi-v-pokoe",
+    [],
+    [
+     "aeneas_106",
+     "dorcas_2810",
+     "peter_2745",
+     "simon_2753"
+    ]
+   ],
+   [
+    "e-petr-i-eney",
+    [],
+    [
+     "dorcas_2810",
+     "simon_2753"
+    ]
+   ],
+   [
+    "e-pavel-govorit-k-narodu-s-lestnitsy",
+    [
+     "ananias_259",
+     "gamaliel_1277",
+     "jesus_905",
+     "new:tysyachenachalnik-deyan21",
+     "stephen_2802"
+    ],
+    []
+   ],
+   [
+    "e-pavel-pered-sinedrionom",
+    [
+     "new:tysyachenachalnik-deyan21"
+    ],
+    []
+   ],
+   [
+    "e-pavel-pered-agrippoy",
+    [
+     "felix_1257",
+     "jesus_905"
+    ],
+    [
+     "augustus_366"
+    ]
+   ],
+   [
+    "e-david-i-goliaf",
+    [
+     "abinadab_44",
+     "abner_57",
+     "eliab_1075",
+     "jesse_903",
+     "new:oruzhenosets-goliafa",
+     "saul_2478",
+     "shammah_2700"
+    ],
+    []
+   ],
+   [
+    "e-vorony-kormyat-iliyu",
+    [
+     "ahab_113",
+     "god_1324"
+    ],
+    []
+   ],
+   [
+    "e-iov-i-satana",
+    [
+     "god_1324",
+     "new:zhena-iova",
+     "satan_2476"
+    ],
+    []
+   ]
+  ]
+ },
+ "persons_out": {
+  "episodes": 19,
+  "tp": 29,
+  "fp": 31,
+  "fn": 4,
+  "precision": 0.483,
+  "recall": 0.879,
+  "f1": 0.624,
+  "rows": [
+   [
+    "e-iisusa-iskushaet-satana",
+    [
+     "new:angely-v-pustyne"
+    ],
+    [
+     "adam_78",
+     "eve_1231",
+     "seth_2504"
+    ]
+   ],
+   [
+    "e-iisus-propoveduet-v-galilee",
+    [
+     "john_1676"
+    ],
+    []
+   ],
+   [
+    "e-lovtsy-chelovekov",
+    [
+     "john_1677"
+    ],
+    []
+   ],
+   [
+    "e-nechistyy-dukh-v-sinagoge",
+    [
+     "new:dukh-nechistyy-mk1",
+     "new:oderzhimyy-v-kapernaume"
+    ],
+    []
+   ],
+   [
+    "e-tyoshcha-simona",
+    [
+     "andrew_264",
+     "james_717",
+     "john_1677",
+     "peter_2745"
+    ],
+    []
+   ],
+   [
+    "e-utrom-v-pustynnom-meste",
+    [],
+    []
+   ],
+   [
+    "e-kto-mater-moya-i-bratya-moi",
+    [
+     "mary_1938"
+    ],
+    []
+   ],
+   [
+    "e-doch-iaira",
+    [
+     "jairus_711",
+     "james_717",
+     "john_1677",
+     "new:doch-iaira",
+     "peter_2745"
+    ],
+    []
+   ],
+   [
+    "e-sem-khlebov-i-chetyre-tysyachi",
+    [],
+    []
+   ],
+   [
+    "e-iisus-v-otechestve-svoyom",
+    [
+     "mary_1938"
+    ],
+    []
+   ],
+   [
+    "e-ditya-posredi-uchenikov",
+    [
+     "new:ditya"
+    ],
+    []
+   ],
+   [
+    "e-iisus-na-molodom-osle",
+    [],
+    []
+   ],
+   [
+    "e-smokovnitsa-bez-ploda",
+    [
+     "peter_2745"
+    ],
+    []
+   ],
+   [
+    "e-prodayushchie-i-pokupayushchie-v-khrame",
+    [],
+    []
+   ],
+   [
+    "e-kakoyu-vlastyu-ty-eto-delaesh",
+    [
+     "john_1676"
+    ],
+    []
+   ],
+   [
+    "e-pavel-govorit-k-narodu-s-lestnitsy",
+    [
+     "ananias_259",
+     "gamaliel_1277",
+     "jesus_905",
+     "new:tysyachenachalnik-deyan21",
+     "stephen_2802"
+    ],
+    []
+   ],
+   [
+    "e-pavel-pered-agrippoy",
+    [
+     "felix_1257",
+     "jesus_905"
+    ],
+    [
+     "augustus_366"
+    ]
+   ],
+   [
+    "e-vorony-kormyat-iliyu",
+    [
+     "ahab_113",
+     "god_1324"
+    ],
+    []
+   ],
+   [
+    "e-iov-i-satana",
+    [
+     "god_1324",
+     "new:zhena-iova",
+     "satan_2476"
+    ],
+    []
+   ]
+  ]
+ },
+ "persons_out_nomention": {
+  "episodes": 19,
+  "tp": 27,
+  "fp": 21,
+  "fn": 6,
+  "precision": 0.562,
+  "recall": 0.818,
+  "f1": 0.667,
+  "rows": [
+   [
+    "e-iisusa-iskushaet-satana",
+    [
+     "new:angely-v-pustyne"
+    ],
+    [
+     "adam_78",
+     "eve_1231",
+     "seth_2504"
+    ]
+   ],
+   [
+    "e-iisus-propoveduet-v-galilee",
+    [],
+    []
+   ],
+   [
+    "e-lovtsy-chelovekov",
+    [
+     "john_1677"
+    ],
+    [
+     "zebedee_2998"
+    ]
+   ],
+   [
+    "e-nechistyy-dukh-v-sinagoge",
+    [
+     "new:dukh-nechistyy-mk1",
+     "new:oderzhimyy-v-kapernaume"
+    ],
+    []
+   ],
+   [
+    "e-tyoshcha-simona",
+    [
+     "andrew_264",
+     "james_717",
+     "john_1677"
+    ],
+    []
+   ],
+   [
+    "e-utrom-v-pustynnom-meste",
+    [],
+    []
+   ],
+   [
+    "e-kto-mater-moya-i-bratya-moi",
+    [
+     "mary_1938"
+    ],
+    []
+   ],
+   [
+    "e-doch-iaira",
+    [
+     "jairus_711",
+     "james_717",
+     "john_1677",
+     "new:doch-iaira",
+     "peter_2745"
+    ],
+    []
+   ],
+   [
+    "e-sem-khlebov-i-chetyre-tysyachi",
+    [],
+    []
+   ],
+   [
+    "e-iisus-v-otechestve-svoyom",
+    [],
+    []
+   ],
+   [
+    "e-ditya-posredi-uchenikov",
+    [
+     "new:ditya"
+    ],
+    []
+   ],
+   [
+    "e-iisus-na-molodom-osle",
+    [],
+    []
+   ],
+   [
+    "e-smokovnitsa-bez-ploda",
+    [
+     "peter_2745"
+    ],
+    []
+   ],
+   [
+    "e-prodayushchie-i-pokupayushchie-v-khrame",
+    [],
+    []
+   ],
+   [
+    "e-kakoyu-vlastyu-ty-eto-delaesh",
+    [],
+    []
+   ],
+   [
+    "e-pavel-govorit-k-narodu-s-lestnitsy",
+    [
+     "new:tysyachenachalnik-deyan21"
+    ],
+    []
+   ],
+   [
+    "e-pavel-pered-agrippoy",
+    [],
+    [
+     "augustus_366",
+     "bernice_482"
+    ]
+   ],
+   [
+    "e-vorony-kormyat-iliyu",
+    [
+     "ahab_113",
+     "god_1324"
+    ],
+    []
+   ],
+   [
+    "e-iov-i-satana",
+    [
+     "god_1324",
+     "new:zhena-iova",
+     "satan_2476"
+    ],
+    []
+   ]
+  ]
+ },
+ "episodes": [
+  {
+   "story": "e-bog-tvorit-nebo-i-zemlyu",
+   "events": [
+    "1 Creation of all things"
+   ],
+   "ours": {
+    "god": "Бог"
+   },
+   "theirs": [
+    "god_1324",
+    "holy_spirit_7400",
+    "jesus_905"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-adam-i-zhena-v-rayu",
+   "events": [
+    "2 Creation of Adam and Eve"
+   ],
+   "ours": {
+    "god": "Господь Бог",
+    "p-adam": "Адам",
+    "p-eva": "жена"
+   },
+   "theirs": [
+    "adam_78",
+    "eve_1231",
+    "god_1324"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-zmey-i-plod-dereva",
+   "events": [
+    "3 The Fall"
+   ],
+   "ours": {
+    "god": "Господь Бог",
+    "p-eva": "жена",
+    "p-adam": "Адам",
+    "new:kheruvim-byt3": "Херувима"
+   },
+   "theirs": [
+    "adam_78",
+    "eve_1231",
+    "god_1324"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-kain-i-avel",
+   "events": [
+    "5 Cain kills Abel"
+   ],
+   "ours": {
+    "god": "Господь",
+    "p-kain": "Каин",
+    "p-avel": "Авель",
+    "p-adam": "Адам",
+    "p-eva": "Ева"
+   },
+   "theirs": [
+    "abel_13",
+    "cain_533"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-sif-i-enos",
+   "events": [
+    "7 Birth of Seth",
+    "9 Birth of Enos"
+   ],
+   "ours": {
+    "p-adam": "Адам",
+    "p-eva": "жену",
+    "p-sif": "Сиф",
+    "p-enos": "Енос"
+   },
+   "theirs": [
+    "adam_78",
+    "enos_1193",
+    "eve_1231",
+    "seth_2504"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": [
+    "p-enos",
+    "p-sif"
+   ]
+  },
+  {
+   "story": "e-rodoslovie-adama",
+   "events": [
+    "9 Birth of Enos"
+   ],
+   "ours": {
+    "p-adam": "Адам",
+    "p-sif": "Сиф",
+    "p-enos": "Енос",
+    "p-kainan": "Каинан",
+    "p-maleleil": "Малелеил",
+    "p-iared": "Иаред",
+    "p-enokh": "Енох",
+    "p-mafusal": "Мафусал",
+    "p-lamekh": "Ламех",
+    "p-noy": "Ной",
+    "p-sim": "Сим",
+    "p-kham": "Хам",
+    "p-iafet": "Иафет"
+   },
+   "theirs": [
+    "enos_1193",
+    "seth_2504"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": [
+    "p-iafet",
+    "p-kham",
+    "p-sim"
+   ]
+  },
+  {
+   "story": "e-bog-vzyal-enokha",
+   "events": [
+    "20 Lifetime of Methuselah",
+    "21 Birth of Lamech",
+    "24 Enoch taken up"
+   ],
+   "ours": {
+    "p-enokh": "Енох",
+    "god": "Бог"
+   },
+   "theirs": [
+    "enoch_1192",
+    "lamech_1809",
+    "methuselah_2042"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-syny-bozhii-i-docheri-chelovecheskie",
+   "events": [
+    "27 Lifetime of Noah",
+    "32 God decides to destroy every living thing",
+    "33 Birth of Shem"
+   ],
+   "ours": {
+    "god": "Господь",
+    "p-noy": "Ной"
+   },
+   "theirs": [
+    "god_1324",
+    "noah_2210",
+    "shem_2613"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-noy-i-potop",
+   "events": [
+    "35 God instructs Noah to build the ark"
+   ],
+   "ours": {
+    "god": "Бог",
+    "p-noy": "Ной",
+    "new:zhena-noya": "жена Ноя",
+    "p-sim": "Сим",
+    "p-kham": "Хам",
+    "p-iafet": "Иафет"
+   },
+   "theirs": [
+    "god_1324",
+    "noah_2210"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-rodoslovie-synov-noevykh",
+   "events": [
+    "64 Death of Noah"
+   ],
+   "ours": {
+    "p-sim": "Сим",
+    "p-kham": "Хам",
+    "p-iafet": "Иафет",
+    "p-nimrod": "Нимрод",
+    "p-ever": "Евер",
+    "p-falek": "Фалек"
+   },
+   "theirs": [
+    "noah_2210"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": [
+    "p-ever",
+    "p-falek",
+    "p-nimrod"
+   ]
+  },
+  {
+   "story": "e-nimrod-silnyy-zverolov",
+   "events": [
+    "87 Nimrod's kingdom begins"
+   ],
+   "ours": {
+    "p-nimrod": "Нимрод",
+    "new:assur-byt10": "Ассур"
+   },
+   "theirs": [
+    "nimrod_2206"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-bashnya-do-nebes",
+   "events": [
+    "53 Tower of Babel"
+   ],
+   "ours": {
+    "god": "Господь"
+   },
+   "theirs": [],
+   "examplesOnly": true,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-rodoslovie-sima",
+   "events": [
+    "34 Lifetime of Shem",
+    "45 Birth of Arphaxad",
+    "84 Death of Shem"
+   ],
+   "ours": {
+    "p-sim": "Сим",
+    "p-arfaksad": "Арфаксад",
+    "p-sala": "Сала",
+    "p-ever": "Евер",
+    "p-falek": "Фалек",
+    "p-ragav": "Рагав",
+    "p-serukh": "Серух",
+    "p-nakhor": "Нахор",
+    "p-farra": "Фарра",
+    "p-avraam": "Аврам",
+    "p-nakhor-syn-farry": "Нахор",
+    "p-aran": "Аран"
+   },
+   "theirs": [
+    "arphaxad_312",
+    "shem_2613"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": [
+    "p-aran",
+    "p-avraam",
+    "p-nakhor-syn-farry"
+   ]
+  },
+  {
+   "story": "e-rodoslovie-farry",
+   "events": [
+    "61 Lifetime of Terah",
+    "65 Birth of Abraham"
+   ],
+   "ours": {
+    "p-farra": "Фарра",
+    "p-avraam": "Аврам",
+    "p-nakhor-syn-farry": "Нахор",
+    "p-aran": "Аран",
+    "p-lot": "Лот",
+    "p-sarra": "Сара",
+    "p-milka": "Милка",
+    "p-iska": "Иска"
+   },
+   "theirs": [
+    "abraham_58",
+    "terah_2841"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": [
+    "p-iska",
+    "p-lot",
+    "p-milka",
+    "p-sarra"
+   ]
+  },
+  {
+   "story": "e-farra-i-avram-v-kharrane",
+   "events": [
+    "70 Death of Terah",
+    "71 Abraham enters Canaan"
+   ],
+   "ours": {
+    "p-farra": "Фарра",
+    "p-avraam": "Аврам",
+    "p-lot": "Лот",
+    "p-sarra": "Сара"
+   },
+   "theirs": [
+    "abraham_58",
+    "lot_1830",
+    "sarah_2473",
+    "terah_2841"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-ioann-krestit-v-pustyne",
+   "events": [
+    "266 John the Baptist Begins Ministry"
+   ],
+   "ours": {
+    "p-ioann-krestitel": "Иоанн Креститель",
+    "p-isaiya": "Исаия"
+   },
+   "theirs": [
+    "john_1676"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": [
+    "p-isaiya"
+   ]
+  },
+  {
+   "story": "e-iisus-krestitsya-ot-ioanna",
+   "events": [
+    "267 John Baptizes Jesus"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос",
+    "p-ioann-krestitel": "Иоанн Креститель",
+    "god": "глас с небес",
+    "new:dukh-kak-golub": "Духа"
+   },
+   "theirs": [
+    "jesus_905",
+    "john_1676"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-iisusa-iskushaet-satana",
+   "events": [
+    "7 Birth of Seth",
+    "268 Temptations of Jesus"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос",
+    "new:diavol": "сатаною",
+    "new:angely-v-pustyne": "Ангелы"
+   },
+   "theirs": [
+    "adam_78",
+    "eve_1231",
+    "jesus_905",
+    "satan_2476",
+    "seth_2504"
+   ],
+   "examplesOnly": false,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-iisus-propoveduet-v-galilee",
+   "events": [
+    "277 Jesus Leaves Judea toward Galilee",
+    "279 Jesus visits Galilee",
+    "281 Jesus in Capernaum"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос",
+    "p-ioann-krestitel": "Иоанн Креститель"
+   },
+   "theirs": [
+    "jesus_905"
+   ],
+   "examplesOnly": false,
+   "mentionedOnly": [
+    "p-ioann-krestitel"
+   ]
+  },
+  {
+   "story": "e-lovtsy-chelovekov",
+   "events": [
+    "282 Fishers of Men"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос",
+    "p-petr": "Симон",
+    "p-andrey": "Андрей",
+    "p-iakov-zevedeev": "Иаков",
+    "p-ioann-apostol": "Иоанн",
+    "p-zevedey": "Зеведей"
+   },
+   "theirs": [
+    "andrew_264",
+    "james_717",
+    "jesus_905",
+    "peter_2745",
+    "zebedee_2998"
+   ],
+   "examplesOnly": false,
+   "mentionedOnly": [
+    "p-zevedey"
+   ]
+  },
+  {
+   "story": "e-nechistyy-dukh-v-sinagoge",
+   "events": [
+    "281 Jesus in Capernaum",
+    "283 The Demoniac"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос",
+    "new:oderzhimyy-v-kapernaume": "человек, одержимый духом нечистым",
+    "new:dukh-nechistyy-mk1": "дух нечистый"
+   },
+   "theirs": [
+    "jesus_905"
+   ],
+   "examplesOnly": false,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-tyoshcha-simona",
+   "events": [
+    "284 Peter's Mother-in-law and Others Healed"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос",
+    "new:tyoshcha-simona": "теща",
+    "p-petr": "Симон",
+    "p-andrey": "Андрей",
+    "p-iakov-zevedeev": "Иаков",
+    "p-ioann-apostol": "Иоанн"
+   },
+   "theirs": [
+    "jesus_905",
+    "mother_of_the_wife_of_simon_2111"
+   ],
+   "examplesOnly": false,
+   "mentionedOnly": [
+    "p-petr"
+   ]
+  },
+  {
+   "story": "e-utrom-v-pustynnom-meste",
+   "events": [
+    "285 Jesus' 1st Tour of Galilee"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос",
+    "p-petr": "Симон"
+   },
+   "theirs": [
+    "jesus_905",
+    "peter_2745"
+   ],
+   "examplesOnly": false,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-iisus-i-prokazhennyy",
+   "events": [
+    "286 Healing the Leper"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос",
+    "new:prokazhennyy-mk1": "человек весь в проказе"
+   },
+   "theirs": [
+    "jesus_905"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-rasslablennogo-spuskayut-cherez-krovlyu",
+   "events": [
+    "287 Healing the Man with Palsy"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос",
+    "new:rasslablennyy": "расслабленного"
+   },
+   "theirs": [
+    "jesus_905"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-mytar-u-sbora-poshlin",
+   "events": [
+    "288 Jesus Calls Matthew"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос",
+    "p-matfey": "Матфей",
+    "p-leviy-alfeev": "Левий",
+    "p-alfey-otets-leviya": "Алфей"
+   },
+   "theirs": [
+    "jesus_905",
+    "matthew_1971"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": [
+    "p-alfey-otets-leviya"
+   ]
+  },
+  {
+   "story": "e-iisus-est-s-mytaryami-i-greshnikami",
+   "events": [
+    "288 Jesus Calls Matthew"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос",
+    "p-leviy-alfeev": "Левий"
+   },
+   "theirs": [
+    "jesus_905",
+    "matthew_1971"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-pochemu-ucheniki-ne-postyatsya",
+   "events": [
+    "289 Fasting Question"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос"
+   },
+   "theirs": [
+    "jesus_905"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-ucheniki-sryvayut-kolosya-v-subbotu",
+   "events": [
+    "292 Corn on the Sabbath"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос",
+    "p-david": "Давид",
+    "p-aviafar": "Авиафар"
+   },
+   "theirs": [
+    "jesus_905"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": [
+    "p-aviafar",
+    "p-david"
+   ]
+  },
+  {
+   "story": "e-issokhshaya-ruka-v-subbotu",
+   "events": [
+    "293 Healing a Withered Hand"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос",
+    "new:chelovek-s-sukhoy-rukoy": "человек"
+   },
+   "theirs": [
+    "jesus_905"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-mnozhestvo-naroda-u-morya",
+   "events": [
+    "294 Healing Multitudes"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос",
+    "new:dukhi-nechistye-mk3": "духи нечистые"
+   },
+   "theirs": [
+    "jesus_905"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-iisus-stavit-dvenadtsat",
+   "events": [
+    "295 Apostles Chosen"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос",
+    "p-petr": "Симон",
+    "p-andrey": "Андрей",
+    "p-iakov-zevedeev": "Иаков",
+    "p-ioann-apostol": "Иоанн",
+    "p-filipp-apostol": "Филипп",
+    "p-varfolomey": "Варфоломей",
+    "p-matfey": "Матфей",
+    "p-foma": "Фома",
+    "p-iakov-alfeev": "Иаков",
+    "p-faddey": "Фаддей",
+    "p-iuda-iakovlev": "Иуда Иаковлев",
+    "p-simon-zilot": "Симон, прозываемый Зилотом",
+    "p-iuda-iskariot": "Иуда"
+   },
+   "theirs": [
+    "andrew_264",
+    "bartholomew_405",
+    "james_717",
+    "james_718",
+    "john_1677",
+    "judas_1760",
+    "lebbaeus_1815",
+    "matthew_1971",
+    "peter_2745",
+    "philip_2344",
+    "simon_2746",
+    "thomas_2851"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-tsarstvo-razdelivsheesya-v-sebe",
+   "events": [
+    "303 Blind and Dumb Demoniac and Following Discourse"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос",
+    "new:besnovatyy-slepoy-i-nemoy": "бесноватого слепого и немого",
+    "new:nemoy-lk11": "немой"
+   },
+   "theirs": [
+    "jesus_905"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-kto-mater-moya-i-bratya-moi",
+   "events": [
+    "303 Blind and Dumb Demoniac and Following Discourse"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос",
+    "p-mariya": "Матерь"
+   },
+   "theirs": [
+    "jesus_905"
+   ],
+   "examplesOnly": false,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-doch-iaira",
+   "events": [
+    "388 Capernaum Miracles"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос",
+    "p-iair-nachalnik-sinagogi": "Иаир",
+    "new:doch-iaira": "дочь",
+    "p-petr": "Пётр",
+    "p-iakov-zevedeev": "Иаков",
+    "p-ioann-apostol": "Иоанн"
+   },
+   "theirs": [
+    "jesus_905"
+   ],
+   "examplesOnly": false,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-zhatvy-mnogo",
+   "events": [
+    "390 3rd Tour of Galilee"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос"
+   },
+   "theirs": [
+    "jesus_905"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-irod-i-molva-ob-iisuse",
+   "events": [
+    "276 John the Baptist Imprisoned",
+    "391 John Beheaded"
+   ],
+   "ours": {
+    "p-irod-antipa": "Ирод",
+    "p-ioann-krestitel": "Иоанн Креститель",
+    "p-iliya": "Илия",
+    "p-iisus": "Иисус Христос"
+   },
+   "theirs": [
+    "herod_1505",
+    "john_1676"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": [
+    "p-iisus",
+    "p-iliya",
+    "p-ioann-krestitel"
+   ]
+  },
+  {
+   "story": "e-irod-irodiada-i-ioann-krestitel",
+   "events": [
+    "276 John the Baptist Imprisoned"
+   ],
+   "ours": {
+    "p-irod-antipa": "Ирод",
+    "p-irodiada": "Иродиада",
+    "p-ioann-krestitel": "Иоанн Креститель",
+    "new:doch-irodiady": "дочь Иродиады",
+    "p-filipp-brat-iroda": "Филипп",
+    "new:oruzhenosets-iroda": "оруженосца"
+   },
+   "theirs": [
+    "herod_1505",
+    "john_1676"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": [
+    "p-filipp-brat-iroda"
+   ]
+  },
+  {
+   "story": "e-pyat-khlebov-i-dve-ryby",
+   "events": [
+    "393 Feeding of Five Thousand"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос",
+    "p-filipp-apostol": "Филипп",
+    "p-andrey": "Андрей",
+    "new:malchik-s-khlebami": "мальчика"
+   },
+   "theirs": [
+    "andrew_264",
+    "jesus_905",
+    "philip_2344"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": [
+    "new:malchik-s-khlebami"
+   ]
+  },
+  {
+   "story": "e-sem-khlebov-i-chetyre-tysyachi",
+   "events": [
+    "401 Feeding of Four Thousand"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос"
+   },
+   "theirs": [
+    "jesus_905"
+   ],
+   "examplesOnly": false,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-iisus-idet-po-moryu",
+   "events": [
+    "394 Jesus Walks on Water"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос",
+    "p-petr": "Пётр"
+   },
+   "theirs": [
+    "jesus_905",
+    "peter_2745"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-v-zemle-gennisaretskoy",
+   "events": [
+    "396 Healing in Gennesaret"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос"
+   },
+   "theirs": [
+    "jesus_905"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-iisus-v-otechestve-svoyom",
+   "events": [
+    "280 Jesus Rejected at Nazareth",
+    "389 2nd Rejection at Nazareth"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос",
+    "p-mariya": "Мария"
+   },
+   "theirs": [
+    "jesus_905"
+   ],
+   "examplesOnly": false,
+   "mentionedOnly": [
+    "p-mariya"
+   ]
+  },
+  {
+   "story": "e-iisus-posylaet-dvenadtsat",
+   "events": [
+    "295 Apostles Chosen",
+    "390 3rd Tour of Galilee"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос"
+   },
+   "theirs": [
+    "andrew_264",
+    "bartholomew_405",
+    "james_717",
+    "james_718",
+    "jesus_905",
+    "john_1677",
+    "judas_1760",
+    "lebbaeus_1815",
+    "matthew_1971",
+    "peter_2745",
+    "philip_2344",
+    "simon_2746",
+    "thomas_2851"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-za-kogo-menya-pochitayut-lyudi",
+   "events": [
+    "404 Peter's Confession \"Upon this Rock\""
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос",
+    "p-petr": "Пётр",
+    "p-ioann-krestitel": "Иоанн Креститель",
+    "p-iliya": "Илия"
+   },
+   "theirs": [
+    "jesus_905",
+    "peter_2745"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": [
+    "p-iliya",
+    "p-ioann-krestitel"
+   ]
+  },
+  {
+   "story": "e-iisus-preobrazhaetsya-na-gore",
+   "events": [
+    "406 The Transfiguation"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос",
+    "p-petr": "Пётр",
+    "p-iakov-zevedeev": "Иаков",
+    "p-ioann-apostol": "Иоанн",
+    "p-moisey": "Моисей",
+    "p-iliya": "Илия",
+    "god": "глас"
+   },
+   "theirs": [
+    "elijah_1131",
+    "james_717",
+    "jesus_905",
+    "john_1677",
+    "moses_2108",
+    "peter_2745"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-ucheniki-ne-mogli-izgnat-besa",
+   "events": [
+    "407 Healing a Boy with a Demon"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос",
+    "new:otets-otroka": "некто из народа",
+    "new:otrok-besnovatyy": "отрок"
+   },
+   "theirs": [
+    "jesus_905"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-syn-chelovecheskiy-predan-budet",
+   "events": [
+    "408 Second Foretelling of Death and Resurrection"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос"
+   },
+   "theirs": [
+    "jesus_905"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-ditya-posredi-uchenikov",
+   "events": [
+    "410 Teachings on Humility/Temptation/Reconciliation"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос",
+    "new:ditya": "дитя"
+   },
+   "theirs": [
+    "jesus_905"
+   ],
+   "examplesOnly": false,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-iakov-i-ioann-v-selenii-samaryanskom",
+   "events": [
+    "421 Samaritans Reject Jesus"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос",
+    "p-iakov-zevedeev": "Иаков",
+    "p-ioann-apostol": "Иоанн",
+    "p-iliya": "Илия"
+   },
+   "theirs": [
+    "jesus_905"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": [
+    "p-iliya"
+   ]
+  },
+  {
+   "story": "e-lisitsy-imeyut-nory",
+   "events": [
+    "386 Seaside Parables and Miracle"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос",
+    "new:zhelayushchiy-idti": "некто",
+    "new:drugoy-uchenik": "Другой"
+   },
+   "theirs": [
+    "jesus_905"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-iisus-na-molodom-osle",
+   "events": [
+    "443 Holy Week",
+    "444 Triumphal Entry"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос"
+   },
+   "theirs": [
+    "jesus_905"
+   ],
+   "examplesOnly": false,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-smokovnitsa-bez-ploda",
+   "events": [
+    "446 Fig Tree Cursed"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос",
+    "p-petr": "Пётр"
+   },
+   "theirs": [
+    "jesus_905"
+   ],
+   "examplesOnly": false,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-prodayushchie-i-pokupayushchie-v-khrame",
+   "events": [
+    "445 Temple Cleansed"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос"
+   },
+   "theirs": [
+    "jesus_905"
+   ],
+   "examplesOnly": false,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-kakoyu-vlastyu-ty-eto-delaesh",
+   "events": [
+    "448 Debates in the Temple"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос",
+    "p-ioann-krestitel": "Иоанн Креститель"
+   },
+   "theirs": [
+    "jesus_905"
+   ],
+   "examplesOnly": false,
+   "mentionedOnly": [
+    "p-ioann-krestitel"
+   ]
+  },
+  {
+   "story": "e-brak-v-kane-galileyskoy",
+   "events": [
+    "271 Water to Wine"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос",
+    "p-mariya": "Матерь Иисуса",
+    "new:rasporyaditel-pira": "распорядителю пира",
+    "new:zhenikh-v-kane": "жениха"
+   },
+   "theirs": [
+    "jesus_905"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-v-kapernaume-nemnogo-dney",
+   "events": [
+    "272 Visiting Capernaum",
+    "273 First Passover and Temple Cleansing"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос",
+    "p-mariya": "Матерь"
+   },
+   "theirs": [
+    "jesus_905"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-bich-iz-verevok-v-khrame",
+   "events": [
+    "272 Visiting Capernaum",
+    "273 First Passover and Temple Cleansing"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос"
+   },
+   "theirs": [
+    "jesus_905"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-iisus-govorit-o-khlebe-s-nebes",
+   "events": [
+    "397 Bread of Life Sermon"
+   ],
+   "ours": {
+    "p-iisus": "Иисус Христос",
+    "p-moisey": "Моисей"
+   },
+   "theirs": [
+    "jesus_905",
+    "peter_2745"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": [
+    "p-moisey"
+   ]
+  },
+  {
+   "story": "e-savl-na-puti-v-damask",
+   "events": [
+    "326 Saul is converted"
+   ],
+   "ours": {
+    "p-pavel": "Савл",
+    "p-iisus": "Иисус Христос",
+    "new:pervosvyashchennik-deyan9": "первосвященнику",
+    "new:ananiya-damask": "Анания"
+   },
+   "theirs": [
+    "ananias_259",
+    "holy_spirit_7400",
+    "paul_2479"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-savla-spuskayut-po-stene",
+   "events": [
+    "327 Saul proclaims Jesus"
+   ],
+   "ours": {
+    "p-pavel": "Савл"
+   },
+   "theirs": [
+    "barnabas_1722",
+    "holy_spirit_7400",
+    "paul_2479"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-tserkvi-v-pokoe",
+   "events": [
+    "328 Peter heals Aeneas and Dorcas"
+   ],
+   "ours": {},
+   "theirs": [
+    "aeneas_106",
+    "dorcas_2810",
+    "peter_2745",
+    "simon_2753"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-petr-i-eney",
+   "events": [
+    "328 Peter heals Aeneas and Dorcas"
+   ],
+   "ours": {
+    "p-petr": "Пётр",
+    "new:eney": "Энея"
+   },
+   "theirs": [
+    "aeneas_106",
+    "dorcas_2810",
+    "peter_2745",
+    "simon_2753"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-pavel-govorit-k-narodu-s-lestnitsy",
+   "events": [
+    "373 Paul gives his testimony"
+   ],
+   "ours": {
+    "p-pavel": "Павел",
+    "new:tysyachenachalnik-deyan21": "тысяченачальнику",
+    "p-iisus": "Иисус Христос",
+    "new:ananiya-damask": "Анания",
+    "new:gamaliil-uchitel": "Гамалиила",
+    "new:stefan": "Стефана"
+   },
+   "theirs": [
+    "paul_2479"
+   ],
+   "examplesOnly": false,
+   "mentionedOnly": [
+    "new:ananiya-damask",
+    "new:gamaliil-uchitel",
+    "new:stefan",
+    "p-iisus"
+   ]
+  },
+  {
+   "story": "e-pavel-pered-sinedrionom",
+   "events": [
+    "374 Paul goes before the Council"
+   ],
+   "ours": {
+    "p-pavel": "Павел",
+    "new:tysyachenachalnik-deyan21": "тысяченачальник",
+    "new:ananiya-pervosvyashchennik": "Анания"
+   },
+   "theirs": [
+    "ananias_260",
+    "paul_2479"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-pavel-pered-agrippoy",
+   "events": [
+    "378 Agrippa and Bernice meet Festus"
+   ],
+   "ours": {
+    "p-pavel": "Павел",
+    "p-agrippa": "Агриппа",
+    "p-verenika": "Вереника",
+    "new:fest": "Фест",
+    "p-feliks": "Феликс",
+    "p-iisus": "Иисус Христос"
+   },
+   "theirs": [
+    "agrippa_111",
+    "augustus_366",
+    "bernice_482",
+    "paul_2479",
+    "portius_2367"
+   ],
+   "examplesOnly": false,
+   "mentionedOnly": [
+    "p-feliks",
+    "p-iisus",
+    "p-verenika"
+   ]
+  },
+  {
+   "story": "e-david-i-goliaf",
+   "events": [
+    "157 David Kills Goliath"
+   ],
+   "ours": {
+    "p-david": "Давид",
+    "p-goliaf": "Голиаф",
+    "p-saul": "Саул",
+    "p-iessey": "Иессей",
+    "p-eliav-syn-iesseya": "Елиав",
+    "p-aminadav-syn-iesseya": "Аминадав",
+    "p-samma-syn-iesseya": "Самма",
+    "p-avenir": "Авенир",
+    "new:oruzhenosets-goliafa": "оруженосец"
+   },
+   "theirs": [
+    "david_994",
+    "goliath_1327"
+   ],
+   "examplesOnly": true,
+   "mentionedOnly": [
+    "new:oruzhenosets-goliafa",
+    "p-aminadav-syn-iesseya",
+    "p-samma-syn-iesseya"
+   ]
+  },
+  {
+   "story": "e-vorony-kormyat-iliyu",
+   "events": [
+    "182 Prophecies of Elijah"
+   ],
+   "ours": {
+    "p-iliya": "Илия",
+    "p-akhav": "Ахав",
+    "god": "Господь"
+   },
+   "theirs": [
+    "elijah_1131"
+   ],
+   "examplesOnly": false,
+   "mentionedOnly": []
+  },
+  {
+   "story": "e-iov-i-satana",
+   "events": [
+    "117 Job's Trial"
+   ],
+   "ours": {
+    "p-iov": "Иов",
+    "god": "Господь",
+    "new:satana-iov": "сатана",
+    "new:zhena-iova": "жена его"
+   },
+   "theirs": [
+    "job_1639"
+   ],
+   "examplesOnly": false,
+   "mentionedOnly": []
+  }
+ ]
+}
