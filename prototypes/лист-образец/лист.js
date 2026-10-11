@@ -39,7 +39,8 @@
       <rect x="192" y="122" width="16" height="16" fill="var(--tsvet-list)" stroke="currentColor" stroke-width="1.5"/></svg>
       <span class="мессия__метка" style="left:57%;top:12%">${esc(Л.iessey.n)}</span><span class="мессия__метка сильно" style="left:57%;top:47%">${esc(Л.david.n)}</span>
       <span class="мессия__метка" style="left:27%;top:87%">${esc(Л.solomon.n)}</span><span class="мессия__метка" style="left:52%;top:87%">${esc(Л['nafan-syn-davida'].n)}</span>
-      <span class="мессия__линия т-адрес" style="left:6%;top:58%">Матфей</span><span class="мессия__линия т-адрес" style="left:74%;top:58%">Лука</span></div>
+      <span class="мессия__линия т-адрес" style="left:6%;top:58%">Матфей</span><span class="мессия__линия т-адрес" style="left:74%;top:58%">Лука</span>
+      <span class="мессия__линия т-адрес" style="left:28%;top:29%">Матфей</span><span class="мессия__линия т-адрес" style="left:57%;top:29%">Лука</span></div>
       <p class="т-адрес">По стихам: «${esc(Д.стихи['Мф 1:6'].split(';')[1].trim())}» (${адрес('Мф 1:6')}); «${esc(Д.стихи['Лк 3:31'].replace(/,$/, ''))}» (${адрес('Лк 3:31')}). Подпись „Матфей“ и „Лука“ — на каждом отрезке; данные — сборка пробы.</p>`;
   }
   function сравнение() {
@@ -58,7 +59,7 @@
   const СТУПЕНИ = [
     ['т-h1', '1. Заголовок страницы', 'Ной и потоп'],
     ['т-номер-истории ч-вз', '1. Номер истории', '10'],
-    ['т-h2', '2. Заголовок блока; Завет строчными', 'ветхий завет'],
+    ['т-h2', '2. Заголовок блока; Завет', 'Ветхий Завет'],
     ['т-номер-главы ч-вз', '2. Номер главы', '6'],
     ['т-писание', '3. Текст Писания', null],
     ['т-книга', '3. Книга в каталоге, h2 телефона', 'Бытие'],
@@ -71,15 +72,14 @@
   ];
   function шкала() {
     const писание = стихиДиапазона('Быт 6:9-22');
-    const текст = (класс) => `<div class="писание ${класс}" lang="ru">${писание.map((s, i) => `<span class="стих">${i === 0 ? '<span class="глава-номер т-номер-главы" aria-hidden="true">6</span>' : ''}<span class="стих__номер">${s.с}</span>${i === 0 ? `<span class="начало-части">Вот житие Ноя: Ной был</span>${htmlСтиха(s.адрес, s.текст).slice('Вот житие Ноя: Ной был'.length)}` : htmlСтиха(s.адрес, s.текст)}</span>`).join(' ')}</div>`;
+    const текст = (класс) => `<div class="писание ${класс}" lang="ru">${писание.map((s, i) => `<span class="стих">${i === 0 ? '<span class="глава-номер т-номер-главы не-копировать" aria-hidden="true">6</span>' : ''}<span class="стих__номер не-копировать">${s.с}\u00A0</span>${i === 0 ? `<span class="начало-части">Вот житие Ноя:</span>${htmlСтиха(s.адрес, s.текст).slice('Вот житие Ноя:'.length)}` : htmlСтиха(s.адрес, s.текст)}</span>`).join(' ')}</div>`;
     return `<div class="проба-шрифта"><span class="т-h1">Й Ё ё й</span><span class="т-проза">Й Ё ё й</span><span class="т-адрес" id="проба-шрифтов">проверка загрузки шрифтов…</span></div>
       <div class="шкала">${СТУПЕНИ.map(([к, имя, пример]) => `<div class="шкала-строка"><span class="т-адрес">${имя}<br><span data-замер="${к.split(' ')[0]}"></span></span><span class="${к}">${пример === null ? `«${esc(Д.стихи['Быт 6:9'])}»` : esc(пример)}</span></div>`).join('')}</div>
       <p class="т-адрес">Размеры справа под именем ступени — замер <code>getComputedStyle</code> на этой странице (при „Обычном“ размере текста: 30/36, 22/28, 18/28, 16/24, 14/20, 12/16; на телефоне h1 — 22/28).</p>
       <h3 class="т-книга">Двустрочный заголовок с «Й» и «Ё»</h3>
       <div class="рядом"><div class="образец"><p class="т-h1 узкий-h1">Ной выпускает ворона и голубя</p></div><div class="образец"><p class="т-h1 узкий-h1">Йй Ёё уу<br>уу Йй Ёё</p><span class="т-адрес">проба интерлиньяжа 30/36: «Й» и «Ё» над «у» не касаются</span></div></div>
-      <h3 class="т-книга" style="margin-top:var(--otstup-24)">Быт 6:9–22: номера стихов на поле (ноутбук) и в строке (телефон)</h3>
-      <div class="рядом"><div class="образец" style="padding-left:calc(var(--otstup-64) + var(--otstup-24))"><span class="образец__подпись т-адрес">На поле; номер главы — на поле, «чернила-ВЗ»</span>${текст('')}</div>
-      <div class="образец номера-в-строке"><span class="образец__подпись т-адрес">В строке, как на телефоне; переносы включены</span>${текст('')}</div></div>
+      <h3 class="т-книга" style="margin-top:var(--otstup-24)">Быт 6:9–22: номер стиха в строке, на поле — номер главы (Л-1)</h3>
+      <div class="образец" style="padding-left:calc(var(--otstup-64))"><span class="образец__подпись т-адрес">Колонка 36 em кегля Писания (648 px при 18 px); Literata 400; номер стиха — Golos 12 «чернила-2» и неразрывный пробел</span>${текст('')}</div>
       <h3 class="т-книга" style="margin-top:var(--otstup-24)">Аппарат и подписи схемы</h3>
       <div class="рядом"><div class="образец"><p class="подпись-голоса">Коротко, нашими словами</p><p class="т-проза">Бог велел Ною построить ковчег.</p><p class="т-адрес">по стихам ${адрес('Быт 6:14')}</p><p class="т-цитата голос-библия" style="margin-top:var(--otstup-8)">«И сделал Ной всё» <span class="т-адрес">${адрес('Быт 6:22')}</span></p></div>
       <div class="образец"><span class="образец__подпись т-адрес">Подписи схемы 12 px — HTML поверх линий</span>${window.ОБРАЗЫ.генеалогия({ верх: 'Ламех', середина: 'Ной', низ: ['Сим', 'Хам', 'Иафет'] }).replace(/образ-метка/g, 'образ-метка подпись-схемы')}</div></div>
@@ -94,22 +94,22 @@
   }
   function миниКаталог(вид, подпись) {
     const и = Д.каталоги.Быт.истории.slice(9, 12);
-    if (вид === 'ред3') return `<div class="образец ред3 мини-каталог" data-счёт><span class="образец__подпись т-адрес">${подпись}</span><p class="завет ч-вз">ветхий завет</p><p class="книга">Бытие</p><p class="повеств">Ной</p>${и.map((x) => `<p><span class="инт цифры ч2">${x.номер}</span> <span class="назв">${esc(x.название)}</span> <span class="адр">${адрес(x.адрес)}</span></p>`).join('')}<p class="т-адрес" data-размеров></p></div>`;
-    return `<div class="образец мини-каталог" data-счёт><span class="образец__подпись т-адрес">${подпись}</span><p class="т-h2 ч-вз">ветхий завет</p><p class="т-книга">Бытие</p><p class="т-повествование">Ной <span class="группа-число">2 истории</span></p>${и.map((x) => `<p><span class="т-интерфейс цифры ч2">${x.номер}</span> <span class="т-название">${esc(x.название)}</span> <span class="т-адрес">${адрес(x.адрес)}</span></p>`).join('')}<p class="т-адрес" data-размеров></p></div>`;
+    if (вид === 'ред3') return `<div class="образец ред3 мини-каталог" data-счёт><span class="образец__подпись т-адрес">${подпись}</span><p class="завет ч-вз">Ветхий Завет</p><p class="книга">Бытие</p><p class="повеств">Ной</p>${и.map((x) => `<p><span class="инт цифры ч2">${x.номер}</span> <span class="назв">${esc(x.название)}</span> <span class="адр">${адрес(x.адрес)}</span></p>`).join('')}<p class="т-адрес" data-размеров></p></div>`;
+    return `<div class="образец мини-каталог" data-счёт><span class="образец__подпись т-адрес">${подпись}</span><p class="т-h2 ч-вз">Ветхий Завет</p><p class="т-книга">Бытие</p><p class="т-повествование">Ной <span class="группа-число">2 истории</span></p>${и.map((x) => `<p><span class="т-интерфейс цифры ч2">${x.номер}</span> <span class="т-название">${esc(x.название)}</span> <span class="т-адрес">${адрес(x.адрес)}</span></p>`).join('')}<p class="т-адрес" data-размеров></p></div>`;
   }
 
   // ---------- 2а. Цвет действия, тёмный текст Писания, словесный знак ----------
   function действие() {
-    const вар = [['нет', 'Без цвета действия'], ['киноварь', 'Киноварь #A33A1F / #F0957B'], ['бирюза', 'Бирюза #1E5D5A / #8FD3CC']];
-    const мини = `<div class="мини-шапка"><span class="знак-приложения__надпись">Библия наглядно</span></div><div class="мини-тело"><p class="т-h1" style="margin:var(--otstup-8) 0 0">Бытие</p><p class="вкладки" role="presentation"><span class="вкладка-вид вкладка-вид--выбр">Список</span><span class="вкладка-вид">Таблица</span></p><p><a href="#" class="ссылка-наведение">Ной и потоп</a> <span class="т-адрес">ссылка при наведении</span></p><p class="ряд-кнопок"><span class="кн кн--найти">Найти</span><span class="кн кн--плотная кн--нажата-демо">Начать с 1</span></p></div>`;
+    const вар = [['нет', 'Без цвета действия'], ['киноварь', 'Киноварь #A33A1F / #F0957B — выбрана (решение координатора)']];
+    const мини = `<div class="мини-шапка"><span class="знак-приложения__надпись">Библия наглядно</span></div><div class="мини-тело"><p class="т-h1" style="margin:var(--otstup-8) 0 0">Бытие</p><p class="ряд-кнопок"><span class="кн" style="background:var(--tsvet-podlozhka);box-shadow:inset 0 calc(-1 * var(--liniya-silnaya)) 0 var(--tsvet-deystvie);font-weight:600">Список</span><span class="кн">Таблица</span></p><p><a href="#" class="ссылка-наведение">Ной и потоп</a> <span class="т-адрес">ссылка при наведении</span></p><p class="ряд-кнопок"><span class="кн кн--найти">Найти</span><span class="кн кн--плотная кн--нажата-демо">Начать с 1</span></p></div>`;
     const писание = (вес, цв) => `<div class="образец" data-theme="dark"><span class="образец__подпись т-адрес">Literata ${вес}, ${цв}</span><p class="т-писание" style="font-weight:${вес};color:${цв === '#E8ECF1' ? 'var(--tsvet-chernila)' : 'var(--tsvet-chernila-pisaniya-tyomnaya-proba)'}">${esc(Д.стихи['Быт 6:9'])}</p></div>`;
     return `<div class="рядом-3">${вар.map(([v, п]) => `<div class="образец вариант-действия" data-action="${v}"><span class="образец__подпись т-адрес">${п}</span>${мини}</div>`).join('')}</div>
-      <p class="т-адрес">То же в тёмной теме — переключатель «Тёмная» вверху. Полные экраны в трёх вариантах — снимки <code>снимки/действие-*.png</code>.</p>
+      <p class="т-адрес">Цвет действия — у выбранного и нажимаемого: черта под выбранным сегментом и вкладкой, текущий пункт шапки, ссылка при наведении, «Найти». Номер главы — тоном Завета. Бирюза снята: она совпадает с «чернила-НЗ».</p>
       <h3 class="т-книга" style="margin-top:var(--otstup-24)">Текст Писания в тёмной теме (08 § 8.4)</h3>
       <div class="рядом">${писание(400, '#E8ECF1')}${писание(370, '#E8ECF1')}${писание(400, '#D3D9E1')}${писание(370, '#D3D9E1')}</div>
       <h3 class="т-книга" style="margin-top:var(--otstup-24)">Словесный знак</h3>
       <div class="волос">${О.знакПриложения()}<span class="знак-2x">${О.знакПриложения()}</span></div>
-      <p class="т-адрес">Один рисунок: Literata 600, opsz 26, разрядка 0,012 em; выбирают арт-директор и составитель до пакета 1.</p>`;
+      <p class="т-адрес">Знак — надпись (решение координатора по ВП-49; показывается владельцу вместе с листом): Literata 600, ступень 2 — 22 px на ноутбуке, 18 px на телефоне.</p>`;
   }
 
   // ---------- 3. Сетка ----------
@@ -132,9 +132,9 @@
       <figure class="образец"><iframe class="кадр" style="height:560px" title="Каталог Мк 1–3, 360 × 560, касание" src="каталог.html?panel=0&книга=Мк&input=касание" width="360" height="560"></iframe><figcaption class="т-адрес">Мк 1–3, касание: строка 48</figcaption></figure></div>
       <p class="т-интерфейс">Число строк на первом экране рядом с порогом § 3.4 — в <code>README.md</code> (замер скриптом <code>снимки.mjs</code>).</p>
       <h3 class="т-книга" style="margin-top:var(--otstup-24)">Режим «выбор»: список без ссылок в строке (APG Listbox)</h3>
-      <div class="рядом"><div class="образец"><span class="образец__подпись т-адрес" id="выбор-подпись">Семья Ноя — выбор стрелками, Enter, буква; Esc снимает выбор</span>
+      <div class="рядом"><div class="образец"><span class="образец__подпись т-адрес"><span id="выбор-подпись">Семья Ноя</span>. Клавиши списка: стрелки, Enter, буква; Esc снимает выбор</span>
         <ul class="выбор-список" role="listbox" tabindex="0" aria-labelledby="выбор-подпись" id="выбор-лиц">${сыновья.map((л, i) => `<li role="option" id="оп-${л.id}" aria-selected="${i === 1}" class="${i === 2 ? 'подсвечено' : ''}"><span class="плашка-имени">${esc(л.n)}</span><span class="т-адрес">${esc(л.d ?? 'сын Ламеха')}</span>${i === 2 ? '<span class="т-адрес">подсвечен из другого инструмента — уголки</span>' : ''}</li>`).join('')}</ul></div>
-        <div class="образец"><span class="образец__подпись т-адрес">Лист выбранного: действия — здесь, а не в строке</span><p class="т-книга" id="выбранный">Сим</p><p class="ряд-кнопок"><a class="кн" href="карточка.html">Открыть карточку: <span id="выбранный-имя">Сим</span></a><span class="кн">Действия</span></p>
+        <div class="образец"><span class="образец__подпись т-адрес">Лист выбранного: действия — здесь, а не в строке</span><p class="т-книга" id="выбранный">Сим</p><p class="ряд-кнопок"><a class="кн" href="карточка.html">Открыть карточку: <span id="выбранный-имя">Сим</span></a><button class="кн" type="button">Действия</button></p>
         <ul class="список" style="margin-top:var(--otstup-12)"><li class="строка строка--текущая мини"><span class="строка__номер">10</span><span class="строка__название"><a class="строка__ссылка" href="история.html">Ной и потоп</a> <span class="т-адрес" aria-hidden="true">(вы здесь)</span></span><span></span><span></span><span></span></li></ul><span class="т-адрес">«текущий» — полоса слева и слово, без рамки</span></div></div>
       <h3 class="т-книга" style="margin-top:var(--otstup-24)">Указатель лиц по буквам (длинный список, одна цель в строке)</h3>
       <nav class="ряд-букв" aria-label="Буквы">${буквы.map((б) => (б === 'Н' || б === 'С' ? `<a href="#буква-${б}">${б}</a>` : `<span class="ч3">${б}</span>`)).join('')}</nav>
@@ -185,22 +185,23 @@
   // ---------- 7. 16 состояний ----------
   function состояния() {
     const ПОДЛОЖКИ = [['лист', 'фон-лист'], ['фон', 'фон-фон'], ['подложка', 'фон-подложка'], ['тон ВЗ', 'фон-тон-вз'], ['тон НЗ', 'фон-тон-нз'], ['выбранная область', 'фон-выбор-область'], ['жёлтая плашка', 'фон-выбор']];
+    // настоящие кнопки; «фокус» — класс .как-фокус, который в основа.css стоит в одном правиле с :focus-visible
     const эл = (вид, сост) => {
-      const выбр = сост === 'выбран' || сост === 'выбран и фокус';
-      const фок = сост === 'фокус' || сост === 'выбран и фокус';
-      if (вид === 'залитый') return `<span class="${фок ? 'эл-фокус' : ''}" style="display:inline-grid;border-radius:50%"><span class="эл-знак эл-знак--залит${выбр ? ' выбран' : ''}"></span></span>`;
-      if (вид === 'полый') return `<span class="${фок ? 'эл-фокус' : ''}" style="display:inline-grid;border-radius:50%"><span class="эл-знак эл-знак--полый${выбр ? ' выбран' : ''}"></span></span>`;
-      if (вид === 'плотная') return `<span class="эл-кн эл-кн--плотная${выбр ? ' выбран' : ''}${фок ? ' эл-фокус-кн' : ''}" style="display:inline-flex;align-items:center">Начать</span>`;
-      return `<span class="эл-кн эл-кн--нажата${выбр ? ' выбран' : ''}${фок ? ' эл-фокус-кн' : ''}" style="display:inline-flex;align-items:center">Нажато</span>`;
+      const выбр = сост.includes('выбран');
+      const фок = сост.includes('фокус');
+      const кл = `${выбр ? ' выбран' : ''}${фок ? ' как-фокус' : ''}`;
+      if (вид === 'залитый' || вид === 'полый') return `<button type="button" tabindex="-1" class="эл-цель${кл}" aria-label="Знак: ${вид}, ${сост}"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><circle cx="12" cy="12" r="7" ${вид === 'залитый' ? 'fill="currentColor"' : 'fill="none" stroke="currentColor" stroke-width="2"'}/>${выбр ? '<circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>' : ''}</svg></button>`;
+      if (вид === 'плотная') return `<button type="button" tabindex="-1" class="эл-кн эл-кн--плотная${кл}">Начать</button>`;
+      return `<button type="button" tabindex="-1" class="эл-кн эл-кн--нажата${кл}" aria-pressed="true">Нажато</button>`;
     };
     const СОСТ = ['нет', 'выбран', 'фокус', 'выбран и фокус'];
-    const ВИДЫ = ['залитый', 'полый', 'плотная', 'нажатая'];
-    const сетка = (тема) => `<div class="образец" data-theme="${тема}"><span class="образец__подпись т-адрес">${тема === 'dark' ? 'Тёмная' : 'Светлая'} тема. Столбцы: нет, выбран, фокус, выбран и фокус</span>${ВИДЫ.map((в) => `<p class="т-адрес" style="margin-top:var(--otstup-8)">${в === 'залитый' ? 'залитый знак' : в === 'полый' ? 'полый знак' : в === 'плотная' ? 'плотная кнопка' : 'нажатая кнопка'}</p>${ПОДЛОЖКИ.map(([имя, к]) => `<div class="подложка-ряд ${к}"><span class="т-адрес">${имя}</span>${СОСТ.map((с) => `<span class="состояние-элемент">${эл(в, с)}</span>`).join('')}</div>`).join('')}`).join('')}</div>`;
-    return `<p class="т-проза">4 вида элемента × 4 состояния на 7 подложках. Фокус — прямоугольная рамка 3 px с зазором и каймой «лист»; выбор — кольцо 2 px по форме знака. На жёлтом кольца и рамка — «на-выборе».</p>
+    const ВИДЫ = [['залитый', 'залитый знак'], ['полый', 'полый знак'], ['плотная', 'плотная кнопка'], ['нажатая', 'нажатая кнопка']];
+    const сетка = (тема) => `<div class="образец" data-theme="${тема}"><span class="образец__подпись т-адрес">${тема === 'dark' ? 'Тёмная' : 'Светлая'} тема. Столбцы: нет, выбран, фокус, выбран и фокус</span>${ВИДЫ.map(([в, имя]) => `<p class="т-адрес" style="margin-top:var(--otstup-8)">${имя}</p>${ПОДЛОЖКИ.map(([п, к]) => `<div class="подложка-ряд ${к}"><span class="т-адрес">${п}</span>${СОСТ.map((с) => `<span class="состояние-элемент">${эл(в, с)}</span>`).join('')}</div>`).join('')}`).join('')}</div>`;
+    return `<p class="т-проза">4 вида элемента × 4 состояния на 7 подложках, на настоящих кнопках. Фокус — то же правило CSS, что у <code>:focus-visible</code>: прямоугольная рамка 3 px по краю цели, зазор и кайма «лист». Выбор — кольцо 2 px по форме знака (у знака) или черта цветом действия и рамка внутрь (у кнопки): рамка фокуса им не занята.</p>
       <div class="рядом">${сетка('light')}${сетка('dark')}</div>
-      <h3 class="т-книга" style="margin-top:var(--otstup-24)">При 400 %</h3>
-      <div class="таблица-обёртка" tabindex="0" role="region" aria-label="Состояния при 400 %"><div class="увеличено-400" style="width:max-content"><div class="подложка-ряд фон-лист" style="grid-template-columns:repeat(4,3rem)">${СОСТ.map((с) => `<span class="состояние-элемент">${эл('залитый', с)}</span>`).join('')}</div></div></div>
-      <p class="т-адрес">Снимок всего раздела в оттенках серого с размытием — <code>снимки/состояния-серый-*.png</code>; в режиме высокой контрастности — <code>снимки/состояния-forced-*.png</code>.</p>`;
+      <h3 class="т-книга" style="margin-top:var(--otstup-24)">Все 16 при 400 %</h3>
+      <div class="таблица-обёртка увеличение-обёртка" tabindex="0" role="region" aria-label="16 состояний при 400 %"><div class="увеличено-400">${ВИДЫ.map(([в]) => `<div class="подложка-ряд фон-лист" style="grid-template-columns:repeat(4,max-content);column-gap:var(--otstup-12)">${СОСТ.map((с) => `<span class="состояние-элемент">${эл(в, с)}</span>`).join('')}</div>`).join('')}</div></div>
+      <p class="т-адрес">Снимки раздела в оттенках серого с размытием — <code>снимки/состояния-серый-*.png</code>; в режиме высокой контрастности (эмуляция Chromium) — <code>снимки/состояния-forced-*.png</code>.</p>`;
   }
 
   // ---------- 8. Знаки и значки ----------
@@ -249,7 +250,7 @@
   function матрица() {
     const ячейка = (html) => `<td>${html}</td>`;
     const строка = (имя, покой, фокус, нажато) => `<tr><th scope="row">${имя}</th>${ячейка(покой)}${ячейка(фокус)}${ячейка(нажато)}</tr>`;
-    const таблица = (тема) => `<div class="образец" data-theme="${тема}"><div class="таблица-обёртка"><table class="таблица матрица"><caption>${тема === 'dark' ? 'Тёмная' : 'Светлая'} тема: компонент × состояние</caption><thead><tr><th scope="col">Компонент</th><th scope="col">покой</th><th scope="col">фокус</th><th scope="col">нажато / выбрано</th></tr></thead><tbody>
+    const таблица = (тема) => `<div class="образец" data-theme="${тема}"><div class="таблица-обёртка"><table class="таблица матрица"><caption>${тема === 'dark' ? 'Тёмная' : 'Светлая'} тема: компонент × состояние</caption><thead><tr><th scope="col">Компонент</th><th scope="col">покой</th><th scope="col">фокус</th><th scope="col">нажато, выбрано, наведение</th></tr></thead><tbody>
       ${строка('текстовая кнопка', '<span class="кн кн--текст">Показать ещё 6</span>', '<span class="кн кн--текст эл-фокус-кн">Показать ещё 6</span>', '<span class="кн кн--текст" style="background:var(--tsvet-podlozhka);border-color:var(--tsvet-chernila)">Показать ещё 6</span>')}
       ${строка('плотная кнопка', '<span class="кн кн--плотная">Начать с 1</span>', '<span class="кн кн--плотная эл-фокус-кн">Начать с 1</span>', '<span class="кн кн--плотная" style="box-shadow:inset 0 0 0 var(--liniya-silnaya) var(--tsvet-deystvie)">Начать с 1</span>')}
       ${строка('кнопка инструмента', `<span class="кн-инструмента">${значок('генеалогия')}<span class="кн-инструмента__имя">Генеалогия: 3 поколения</span><span class="кн-инструмента__вопрос">Чья это семья?</span></span>`, `<span class="кн-инструмента эл-фокус-кн">${значок('генеалогия')}<span class="кн-инструмента__имя">Генеалогия</span></span>`, '—')}
@@ -258,19 +259,43 @@
       ${строка('адрес-кнопка', `<span class="адрес-кн">${адрес('Быт 6:22')}${значок('раскрыть')}</span>`, `<span class="адрес-кн эл-фокус-кн">${адрес('Быт 6:22')}${значок('раскрыть')}</span>`, `<span class="адрес-кн адрес-кн--откр">${адрес('Быт 6:22')}${значок('раскрыть')}</span>`)}
       ${строка('слово словаря', '<span class="слово-словаря">ковчег</span>', '<span class="слово-словаря эл-фокус-кн">ковчег</span>', '<span class="слово-словаря">ковчег</span> <span class="т-адрес">раскрыто</span>')}
       ${строка('радио', '<span class="радио"><label><input type="radio" tabindex="-1" name="м-' + тема + '"> Обычный</label></span>', '<span class="радио"><label><input type="radio" tabindex="-1" class="эл-фокус-кн" name="м2-' + тема + '"> Крупнее</label></span>', '<span class="радио"><label><input type="radio" tabindex="-1" checked name="м3-' + тема + '"> Самый крупный</label></span>')}
+      ${строка('переключатель: нажато и фокус', '<span class="слой__группа"><button type="button" tabindex="-1" aria-pressed="true">Для начинающих</button></span>', '<span class="слой__группа"><button type="button" tabindex="-1" aria-pressed="true" class="как-фокус">Для начинающих</button></span>', '<span class="т-адрес">цель: 32 на мыши, 44 на касании</span>')}
+      ${строка('строка списка', '<span class="т-название">Ной и потоп</span>', '<span class="т-название как-фокус" style="outline-offset:calc(-1 * var(--liniya-fokus));box-shadow:none;padding:var(--otstup-4)">Ной и потоп</span>', '<span class="т-название" style="border-left:var(--otstup-4) solid var(--tsvet-chernila);padding-left:var(--otstup-8)">Ной и потоп</span> <span class="т-адрес">(вы здесь)</span>')}
+      ${строка('блок с числом', '<span class="т-повествование">Стихи (23) ⌄</span>', '<span class="т-повествование как-фокус">Стихи (23)</span>', '<span class="т-повествование">Стихи (23) — раскрыт</span>')}
+      ${строка('наведение', '<span class="кн">Таблица</span>', '—', '<span class="кн" style="color:var(--tsvet-deystvie)">Таблица</span> <span class="т-адрес">наведение</span>')}
       ${строка('ссылка', '<a href="#" tabindex="-1">Ной и потоп</a>', '<a href="#" tabindex="-1" class="эл-фокус-кн">Ной и потоп</a>', '<a href="#" tabindex="-1" style="text-decoration-thickness:var(--liniya-silnaya);color:var(--tsvet-deystvie)">наведение</a>')}
       </tbody></table></div></div>`;
     const р = Д.расслабленный;
-    const сцены = р.сцены.filter((с) => ['Мф', 'Мк', 'Лк'].every((к) => /^\d+:\d+(–\d+)?$/.test(с[к]))).slice(0, 3);
-    const текст = (к, a) => { const [г, ст] = a.split(':'); const [с1, с2] = ст.split('–'); return стихиДиапазона(`${к} ${г}:${с1}${с2 ? `-${с2}` : ''}`).map((s) => s.текст).join(' '); };
-    const слова = (t) => new Set(t.toLowerCase().replace(/[^а-яё\s]/g, ' ').split(/\s+/).filter((w) => w.length >= 4));
-    const синопсис = `<div class="таблица-обёртка" tabindex="0" role="region" aria-labelledby="синопсис-з"><table class="синопсис"><caption class="т-интерфейс" id="синопсис-з" style="text-align:left">Расслабленного спускают через кровлю: три рассказа по сценам (разметка сцен — эскиз шага 0). Подчёркнуты слова, которые есть во всех трёх рассказах сцены.</caption><thead><tr>${р.рассказы.map((x) => `<th scope="col">${esc(x.строка)} <span class="т-адрес">${адрес(x.стихи)}</span></th>`).join('')}</tr></thead><tbody>
-      ${сцены.map((с) => { const т = ['Мф', 'Мк', 'Лк'].map((к) => текст(к, с[к])); const общие = [...слова(т[0])].filter((w) => слова(т[1]).has(w) && слова(т[2]).has(w)); return `<tr><td colspan="3" class="сцена">Сцена: ${esc(с.сцена)}</td></tr><tr>${т.map((x, i) => `<td><span class="т-адрес">${адрес(`${['Мф', 'Мк', 'Лк'][i]} ${с[['Мф', 'Мк', 'Лк'][i]].replace('–', '-')}`)}</span><br>${esc(О.показ(x)).replace(/[А-Яа-яЁё]+/g, (w) => (общие.includes(w.toLowerCase()) ? `<span class="совпадает">${w}</span>` : w))}</td>`).join('')}</tr>`; }).join('')}</tbody></table></div>`;
+    const К3 = ['Мф', 'Мк', 'Лк'];
+    const сцены = р.сцены.filter((с) => К3.every((к) => /^\d+:\d+(–\d+)?$/.test(с[к]))).slice(0, 3);
+    const текст = (к, a) => { const [г, ст] = a.split(':'); const [с1, с2] = ст.split('–'); return стихиДиапазона(`${к} ${г}:${с1}${с2 ? `-${с2}` : ''}`).map((x) => О.показ(x.текст)).join(' '); };
+    // сравнение по всем словам в нормализованной форме (строчные, ё → е, без знаков); выравнивание — наибольшая общая
+    // подпоследовательность с каждым другим рассказом; отмечено то, чего нет хотя бы в одном другом рассказе — различия (Л-5)
+    const норм = (w) => w.toLowerCase().replace(/ё/g, 'е').replace(/[^а-я0-9]/g, '');
+    const слова = (t) => t.split(/(\s+)/);
+    function общие(a, b) {
+      const A = a.map(норм), B = b.map(норм); const n = A.length, m = B.length;
+      const d = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
+      for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) d[i][j] = A[i] && A[i] === B[j] ? d[i + 1][j + 1] + 1 : Math.max(d[i + 1][j], d[i][j + 1]);
+      const out = new Set(); let i = 0, j = 0;
+      while (i < n && j < m) { if (A[i] && A[i] === B[j]) { out.add(i); i++; j++; } else if (d[i + 1][j] >= d[i][j + 1]) i++; else j++; }
+      return out;
+    }
+    const ячейкаС = (сц, к) => {
+      const свои = слова(текст(к, сц[к])).filter((x) => !/^\s+$/.test(x));
+      const другие = К3.filter((x) => x !== к).map((x) => слова(текст(x, сц[x])).filter((y) => !/^\s+$/.test(y)));
+      const с = другие.map((д) => общие(свои, д));
+      return свои.map((w, i) => (норм(w) && !с.every((set) => set.has(i)) ? `<mark class="различие">${esc(w)}</mark>` : esc(w))).join(' ');
+    };
+    const синопсис = `<div class="синопсис-обёртка"><p class="т-интерфейс">Расслабленного спускают через кровлю: три рассказа по сценам (разметка сцен — эскиз шага 0). <span class="ч2">Подложкой отмечены слова, которых нет хотя бы в одном другом рассказе сцены (второй слой).</span></p>
+      <div class="вкладки синопсис-вкладки" role="tablist" aria-label="Рассказы">${К3.map((к, i) => `<button role="tab" type="button" id="вк-${к}" data-вкладка="${к}" aria-selected="${i === 1}" tabindex="${i === 1 ? 0 : -1}">${esc(р.рассказы[i].строка.replace('Евангелие от ', ''))}</button>`).join('')}</div>
+      <table class="синопсис"><caption class="скрыто">Три рассказа по сценам</caption><thead><tr>${р.рассказы.map((x, i) => `<th scope="col" class="кол-${К3[i]}">${esc(x.строка)} <span class="т-адрес">${адрес(x.стихи)}</span></th>`).join('')}</tr></thead><tbody>
+      ${сцены.map((сц) => `<tr><th colspan="3" scope="colgroup" class="сцена">Сцена: ${esc(сц.сцена)}</th></tr><tr>${К3.map((к) => `<td class="кол-${к}"><span class="т-адрес">${адрес(`${к} ${сц[к].replace('–', '-')}`)}</span><br>${ячейкаС(сц, к)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
     return `<p class="т-проза">Матрица — ключевые компоненты в обеих темах. Остальные оси (ширина, способ ввода, плотность, слой) — переключатели вверху и снимки; полный каталог компонентов по 08 § 10.1 делается в коде продукта.</p>
       <div class="стопка">${таблица("light")}${таблица("dark")}</div>
       <h3 class="т-книга" style="margin-top:var(--otstup-24)">Меню, диалог, подсказка</h3>
       <div class="рядом-3"><div class="образец"><span class="меню-обёртка"><button class="кн" type="button" aria-haspopup="menu" aria-expanded="false" data-menu="меню-пример">${значок('действия')}Действия: Иаков</button><span class="меню" role="menu" id="меню-пример" hidden aria-label="Действия: Иаков"><button role="menuitem" type="button">${значок('ссылка')}Ссылка на это место</button><button role="menuitem" type="button">${значок('сослаться')}Как сослаться</button><button role="menuitem" type="button">${значок('заметка')}Заметка</button></span></span></div>
-        <div class="образец"><button class="кн кн--текст" type="button" data-диалог>Открыть диалог: Кого заменить?</button><dialog class="диалог" id="диалог-пример" aria-labelledby="диалог-з"><h2 class="т-книга" id="диалог-з" tabindex="-1">Кого заменить?</h2><p class="т-проза">В сравнении уже четыре человека. Кого убрать, чтобы добавить Евера?</p><p class="ряд-кнопок" style="margin-top:var(--otstup-16)"><button class="кн кн--плотная" type="button" data-закрыть>Убрать Арфаксада</button><button class="кн кн--текст" type="button" data-закрыть>Отменить</button></p></dialog></div>
+        <div class="образец"><button class="кн кн--текст" type="button" data-диалог>Открыть диалог: Кого заменить?</button><dialog class="диалог" id="диалог-пример" aria-labelledby="диалог-з"><button class="кн кн--значок диалог__закрыть" type="button" data-закрыть aria-label="Закрыть">${значок('закрыть')}</button><h2 class="т-книга" id="диалог-з" tabindex="-1">Кого заменить?</h2><p class="т-проза">В сравнении уже четыре человека. Кого убрать, чтобы добавить Евера?</p><p class="ряд-кнопок" style="margin-top:var(--otstup-16)"><button class="кн кн--плотная" type="button" data-закрыть>Убрать Арфаксада</button><button class="кн кн--текст" type="button" data-закрыть>Отменить</button></p></dialog></div>
         <div class="образец"><div class="подсказка т-интерфейс">Сим, сын Ноя. ${адрес('Быт 5:32')}</div><span class="т-адрес">подсказка: без тени и без стрелки</span></div></div>
       <h3 class="т-книга" style="margin-top:var(--otstup-24)">Синопсис § 7.29</h3>${синопсис}`;
   }
@@ -291,7 +316,7 @@
       <h3 class="т-книга" style="margin-top:var(--otstup-24)">Скобки: Быт 6:16 и 8:7</h3>
       ${стих('Быт 6:16')}${стих('Быт 8:7')}
       <p class="т-интерфейс">Знаки скобок видны; цвет тот же. Метки «в скобках:» и «конец скобок» — сгенерированным содержимым с альтернативным текстом, их не видно и они не копируются. Вид по <code>brackets.tsv</code>: ${['Быт 6:16', 'Быт 8:7'].map((a) => `${адрес(a)} — ${(Д.скобки[a] ?? []).map((s) => s.вид).join(', ')}`).join('; ')}.</p>
-      <p class="ряд-кнопок"><button class="кн" type="button" data-проверка-копии>Проверить копию выделения</button> <span class="т-интерфейс" id="итог-копии" role="status"></span></p>
+      <p class="ряд-кнопок"><button class="кн" type="button" data-проверка-копии>Проверить копию выделения</button> <span class="т-интерфейс" id="итог-копии"></span></p>
       <p class="голос-мы">Остановки VoiceOver на iPhone на листе не проверены: нужен телефон и человек. Это ручной набор § 6.4.</p>`;
   }
 
@@ -341,9 +366,9 @@
       <p class="ряд-кнопок"><button class="кн" type="button" data-слушать>${значок('слушать')}Слушать</button><span class="т-адрес">голос устройства без сети; если голоса нет — кнопка в продукте не показывается</span></p>`;
   }
   function образцы() {
-    const пары = [['Страница истории', 'netbible-1440.png', 'NET Bible'], ['Каталог', 'theographic-browse-1440.png', 'Theographic'], ['Карточка', 'theographic-person-1440.png', 'Theographic'], ['Главная, поиск', 'stepbible-search-1440.png', 'STEPBible'], ['Блок с числом', 'perseus-1440.png', 'Perseus']];
+    const пары = [['Страница истории', 'netbible-1440.png', 'NET Bible'], ['Каталог', 'theographic-browse-1440.png', 'Theographic'], ['Карточка', 'wikipedia-ru-noy-1440.png', 'Википедия, «Ной»'], ['Главная, поиск', 'stepbible-search-1440.png', 'STEPBible'], ['Блок с числом', 'perseus-1440.png', 'Perseus']];
     return `<p class="т-проза">Рядом с каждым экраном — библейский образец R14 того же вида (снимки лежат локально в <code>prototypes/R14-снимки/</code> и в git не входят). Образцов отделки (Stripe Docs, Linear, Our World in Data) на диске нет — их снимает арт-директор.</p>
-      <div class="образец-r14">${пары.map(([э, f, имя]) => `<figure><img src="../R14-снимки/${f}" alt="Образец: ${имя}, ${э.toLowerCase()}" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('p'),{className:'голос-мы',textContent:'Снимка ${имя} нет на этом компьютере'}))"><figcaption class="т-адрес">${э}: ${имя} — устройство. Образец отделки — нет снимка</figcaption></figure>`).join('')}</div>`;
+      <div class="образец-r14">${пары.map(([э, f, имя]) => `<figure><img src="../R14-снимки/${f}" alt="Образец: ${имя}, ${э.toLowerCase()}" onerror="this.replaceWith(Object.assign(document.createElement('p'),{className:'голос-мы',textContent:'Снимка ${имя} нет на этом компьютере'}))"><figcaption class="т-адрес">${э}: ${имя} — устройство. Образец отделки — нет снимка</figcaption></figure>`).join('')}</div>`;
   }
   function знакПриложения() {
     const в = [['надпись', 'Надпись'], ['полоса', 'Надпись и полоса 66 книг'], ['полка', 'Надпись и «полка» из 66 корешков: высота — число глав']];
@@ -429,6 +454,7 @@
       sel.removeAllRanges();
     }
     document.getElementById('итог-копии').textContent = итог.join('; ');
+    О.объявить(итог.join('; '));
     window.__итогКопии = итог;
   }
   function скачать(тело, имя, тип, что) {
@@ -451,7 +477,21 @@
     document.title = 'Лист-образец ред. 3 — Библия наглядно';
     отрисовать();
     const выбор = document.getElementById('выбор-лиц');
+    if (выбор) выбор.addEventListener('keydown', (e) => { if (e.key === 'Escape') { document.getElementById('выбранный').textContent = 'Ничего не выбрано'; document.getElementById('выбранный-имя').textContent = '—'; } });
     if (выбор) О.списокВыбор(выбор, (o) => { const имя = o.querySelector('.плашка-имени').textContent; document.getElementById('выбранный').textContent = имя; document.getElementById('выбранный-имя').textContent = имя; О.объявить(`Выбрано: ${имя}`); });
+  });
+  // вкладки синопсиса (APG Tabs, активация стрелками)
+  function выбратьВкладку(b) {
+    const об = b.closest('.синопсис-обёртка');
+    об.querySelectorAll('[role="tab"]').forEach((x) => { const да = x === b; x.setAttribute('aria-selected', String(да)); x.tabIndex = да ? 0 : -1; });
+    об.dataset.вкладка = b.dataset.вкладка; b.focus();
+  }
+  document.addEventListener('click', (e) => { const b = e.target.closest('.синопсис-вкладки [role="tab"]'); if (b) выбратьВкладку(b); });
+  document.addEventListener('keydown', (e) => {
+    const b = e.target.closest?.('.синопсис-вкладки [role="tab"]'); if (!b) return;
+    const все = [...b.parentElement.children]; const i = все.indexOf(b);
+    if (e.key === 'ArrowRight') { e.preventDefault(); выбратьВкладку(все[(i + 1) % все.length]); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); выбратьВкладку(все[(i - 1 + все.length) % все.length]); }
   });
   document.addEventListener('слой', отрисовать);
   addEventListener('resize', () => { const кл = document.getElementById('класс-окна'); if (кл) кл.textContent = `${innerWidth} px`; });

@@ -48,13 +48,13 @@ a:hover { text-decoration-thickness: var(--liniya-silnaya); color: var(--tsvet-d
 
 /* ---------- Фокус клавиатуры (08 § 5.2): рамка 3 px «чернила», зазор 2 px, кайма 2 px «лист» ---------- */
 :focus { outline: none; }
-:focus-visible {
+:focus-visible, .как-фокус {
   outline: var(--liniya-fokus) solid var(--tsvet-chernila);
   outline-offset: var(--liniya-zazor);
   box-shadow: 0 0 0 calc(var(--liniya-zazor) * 2 + var(--liniya-fokus)) var(--tsvet-list);
 }
 @media (forced-colors: active) {
-  :focus-visible { outline-color: Highlight; box-shadow: none; }
+  :focus-visible, .как-фокус { outline-color: Highlight; box-shadow: none; }
 }
 
 /* ---------- Голоса (08 § 4.1) ---------- */

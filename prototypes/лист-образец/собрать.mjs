@@ -70,7 +70,7 @@ css += `/* Режимы: data-theme="light|dark", data-action="киноварь|
 css += блок(':root, [data-theme="light"]', B);
 css += блок(ТЁМН, D);
 css += `@media (prefers-color-scheme: dark) {\n${блок(':root:not([data-theme="light"])', D, '  ')}}\n`;
-for (const [вар, атр] of [['бирюза', 'бирюза'], ['нет', 'нет']]) {
+for (const [вар, атр] of [['нет', 'нет']]) {
   css += блок(`[data-action="${атр}"]`, действие(вар, false));
   css += блок(`[data-theme="dark"][data-action="${атр}"], [data-theme="dark"] [data-action="${атр}"], [data-action="${атр}"] [data-theme="dark"]`, действие(вар, true));
   css += `@media (prefers-color-scheme: dark) {\n${блок(`:root:not([data-theme="light"]) [data-action="${атр}"], :root:not([data-theme="light"])[data-action="${атр}"]`, действие(вар, true), '  ')}}\n`;
@@ -82,6 +82,8 @@ css += `/* Плотность (08 § 3.4; 09 § 9.7): кегли не меняю
 css += `/* Способ ввода (08 § 3.5): касание — 44–48; на листе можно включить вручную */\n`;
 css += `@media (pointer: coarse) {\n${блок(':root:not([data-input="мышь"])', К, '  ')}${блок(':root:not([data-input="мышь"])[data-density="плотная"]', КП, '  ')}}\n`;
 css += блок('[data-input="касание"]', К) + блок('[data-input="касание"][data-density="плотная"], [data-input="касание"] [data-density="плотная"]', КП);
+const СЕН = разница(B, переменные(['сенсорный']));
+css += `/* Сенсорный ноутбук (08 § 3.5): строки 36, главные кнопки и строка инструмента — 44 */\n@media (pointer: fine) and (any-pointer: coarse) {\n${блок(':root:not([data-input])', СЕН, '  ')}}\n`;
 css += `/* Размер текста (08 § 3.3.2, § 7.23): размер корня; все кегли в rem */\n`;
 css += `:root[data-text="крупнее"] { font-size: 112.5%; }\n:root[data-text="самый"] { font-size: 125%; }\n`;
 writeFileSync(join(ПАПКА, 'токены.css'), css);

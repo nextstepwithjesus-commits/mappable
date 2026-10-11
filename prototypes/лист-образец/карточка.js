@@ -4,8 +4,9 @@
   const О = window.ОБЩЕЕ; const { Д, esc, значок, адрес, полныйАдрес, htmlСтиха, стихиДиапазона } = О;
   const К = Д.карточкаНоя;
   let n = 0; const uid = (p) => `${p}-${++n}`;
+  // порядок: семья — первой (арт С-2), затем имя и остальное
   const РАЗДЕЛЫ = [
-    [3, 'Имя'], [5, 'Кто он'], [7, 'Род'], [8, 'Рождение'], [9, 'Жена'], [10, 'Дети'], [11, 'Братья и сёстры'], [13, 'Когда жил'],
+    [8, 'Рождение'], [9, 'Жена'], [10, 'Дети'], [11, 'Братья и сёстры'], [3, 'Имя'], [5, 'Кто он'], [7, 'Род'], [13, 'Когда жил'],
     [14, 'Кого знал'], [15, 'Где бывал'], [16, 'Что ему поручено'], [17, 'Что было с ним'], [18, 'Что он говорил'], [19, 'Что сказал о нём Бог'],
     [20, 'Смерть'], [21, 'В родословии Иисуса Христа'], [22, 'Что о нём в других книгах Библии'],
   ];
@@ -14,7 +15,7 @@
   function адресКн(a) {
     const id = uid('вкл');
     const стихи = стихиДиапазона(a);
-    return `<button class="адрес-кн" type="button" aria-expanded="false" aria-controls="${id}">${адрес(a)}<span class="скрыто">, ${esc(полныйАдрес(a))}</span>${значок('раскрыть')}</button><span class="вклейка" id="${id}" hidden><span class="голос-библия т-цитата" style="display:block">${стихи.map((s) => `<span class="т-адрес">${s.с}</span> ${htmlСтиха(s.адрес, s.текст)}`).join(' ') || '<span class="голос-мы">Мы ещё не загрузили этот стих</span>'}</span>
+    return `<button class="адрес-кн" type="button" aria-expanded="false" aria-controls="${id}" aria-label="${esc(О.имяАдреса(a))}">${адрес(a)}${значок('раскрыть')}</button><span class="вклейка" id="${id}" hidden><q class="голос-библия т-цитата" style="display:block">${стихи.map((s) => `<span class="т-адрес не-копировать">${s.с}\u00A0</span>${htmlСтиха(s.адрес, s.текст)}`).join(' ') || '<span class="голос-мы">Мы ещё не загрузили этот стих</span>'}</q>
       <span class="ряд-действий"><button class="кн" type="button" data-копия="${esc(a)}">${значок('копировать')}Копировать стих с адресом</button><button class="кн" type="button" data-копия-адрес="${esc(a)}">${значок('ссылка')}Копировать адрес</button></span></span>`;
   }
   function пометка(c) {
@@ -31,12 +32,14 @@
     if (f.f === 'met') текст = `<a href="карточка.html?p=${esc(v.id.slice(2))}">${esc(Д.лица[v.id.slice(2)]?.n ?? v.id)}</a> — ${esc(v.text)}`;
     else if (f.f === 'places') текст = `${esc(v.name)}${v.note ? ` — ${esc(v.note)}` : ''}`;
     else if (f.f === 'offices') текст = esc(v.title);
-    else if (f.f === 'sayings') текст = `<span class="т-цитата голос-библия">${О.слой2() ? '' : '<span class="подпись-голоса">Библия: </span>'}«${esc(v.quote)}»</span>${v.context ? ` <span class="т-адрес">${esc(v.context)}</span>` : ''}`;
+    else if (f.f === 'sayings') текст = `<span class="${О.слой2() ? 'скрыто' : 'подпись-голоса'} не-копировать">Библия: </span><q class="т-цитата голос-библия">«${esc(v.quote)}»</q>${v.context ? ` <span class="т-адрес">${esc(v.context)}</span>` : ''}`;
     else текст = esc(v.text);
     return `<li class="строка-лица"><span class="т-проза">${текст}${пометка(f.c)}</span><span>${refs.map(адресКн).join(' ')}</span></li>`;
   }
   function блок(имя, записи, открыт) {
     const id = uid('б');
+    // блок до 3 строк — открыт строками, без раскрытия (решение координатора § 2)
+    if (записи.length <= 3) return `<section class="блок блок--открыт"><h2 class="блок__заголовок т-повествование">${esc(имя)}</h2><ul>${записи.map(запись).join('')}</ul></section>`;
     return `<section class="блок"><h2 class="блок__заголовок"><button class="блок__кнопка" type="button" aria-expanded="${открыт}" aria-controls="${id}">${esc(имя)} (${записи.length})${значок('раскрыть')}</button></h2><div class="блок__тело" id="${id}" ${открыт ? '' : 'hidden'}><ul>${записи.map(запись).join('')}</ul></div></section>`;
   }
   function отрисовать() {
@@ -45,17 +48,17 @@
       return xs.length ? блок(имя, xs, i === 0) : '';
     });
     // «Библия молчит» (вид 1, § 5.4): строка без кнопки; во втором слое — по скольким стихам проверено
-    const молчит = Д.молчание.map((м) => `<section class="блок"><h2 class="блок__заголовок"><span class="блок__молчание"><span class="т-повествование">${МОЛЧАНИЕ[м.раздел]}:</span> <span class="т-интерфейс">в Библии не сказано${О.слой2() ? `. Проверено по ${м.прочитано.length} стихам, где он назван` : ''}</span></span></h2></section>`).join('');
+    const молчит = Д.молчание.map((м) => `<section class="блок"><h2 class="блок__заголовок"><span class="блок__молчание"><span class="т-повествование">${МОЛЧАНИЕ[м.раздел]}:</span> <span class="т-интерфейс">в Библии не сказано${О.слой2() ? `. Проверено: ${О.число(м.прочитано.length, ['стих', 'стиха', 'стихов'])}, где он назван` : ''}</span></span></h2></section>`).join('');
     const заметкиВторого = О.слой2() ? блок('Для изучающих: заметки составителя', К.f.filter((f) => f.s === 24).map((f) => ({ ...f, v: { text: `${f.v.kind === 'interpretation' ? 'толк. — ' : f.v.kind === 'chronology' ? 'расч. — ' : 'скобки — '}${f.v.text}`, refs: f.v.refs ?? [] } })), false) : '';
     const стих = Д.стихиКарточки['Быт 6:8'];
     document.getElementById('главное').innerHTML = `<nav class="хлебные т-адрес" aria-label="Путь"><a href="главная.html">Главная</a>${значок('вправо')}<span aria-current="page">Ной</span></nav>
       <div class="карточка-шапка"><div>
         <h1 class="т-h1" id="h1" tabindex="-1">Ной</h1>
-        <div class="ряд-действий" role="group" aria-label="Работа с материалом"><button class="кн" type="button" aria-expanded="false" aria-controls="кс">${значок('сослаться')}Как сослаться</button><button class="кн" type="button" data-ссылка>${значок('ссылка')}Ссылка на это место</button><button class="кн" type="button" onclick="print()">${значок('печать')}Печать</button></div>
-        <div style="margin-top:var(--otstup-8)">${О.переключательСлоя()}</div>
+        <div class="ряд-действий" role="group" aria-label="Работа с материалом"><button class="кн" type="button" aria-expanded="false" aria-controls="кс">${значок('сослаться')}Как сослаться</button><button class="кн" type="button" data-ссылка>${значок('ссылка')}Ссылка на это место</button><button class="кн" type="button" onclick="print()">${значок('печать')}Печать</button><span class="меню-обёртка"><button class="кн" type="button" aria-haspopup="menu" aria-expanded="false" data-menu="меню-карточки" aria-label="Ещё действия: Ной">${значок('действия')}Ещё действия</button><span class="меню" role="menu" id="меню-карточки" hidden aria-label="Ещё действия: Ной"><button role="menuitem" type="button">${значок('заметка')}Заметка</button><button role="menuitem" type="button">${значок('закладка')}Закладка</button>${О.слой2() ? `<button role="menuitem" type="button" data-текст="p-noy">${значок('копировать')}Копировать номер записи</button>` : ''}</span></span></div>
+        <div style="margin-top:var(--otstup-8)"><span class="слой-в-ряду">${О.переключательСлоя()}</span>${О.показТелефон()}</div>
         <div class="как-сослаться" id="кс" hidden><p><code>Ной // Библия наглядно : сайт. Выпуск данных проба ${esc(Д.проба.коммит)}. URL: https://…/kartochka/p-noy (дата обращения: 11.10.2026).</code></p></div>
         <div class="коротко"><p class="подпись-голоса">Коротко, нашими словами</p><p class="т-проза">Сын Ламеха. Его сыновья — Сим, Хам и Иафет.</p><p class="т-адрес">по стихам ${адрес('Быт 5:28-29')}; 5:32</p></div>
-        <blockquote class="писание писание--линейка" style="margin-top:var(--otstup-16)">${О.слой2() ? '' : '<span class="подпись-голоса">Библия: </span>'}«${htmlСтиха('Быт 6:8', стих)}» <span class="т-адрес">${адрес('Быт 6:8')}</span></blockquote>
+        <blockquote class="писание писание--линейка" style="margin-top:var(--otstup-16)"><span class="${О.слой2() ? 'скрыто' : 'подпись-голоса'} не-копировать">Библия: </span>«${htmlСтиха('Быт 6:8', стих)}» <span class="т-адрес">${адрес('Быт 6:8')}</span></blockquote>
         ${О.слой2() ? `<p class="т-адрес" style="margin-top:var(--otstup-8)">Номер записи: p-noy <button class="кн кн--текст" type="button" data-текст="p-noy">Копировать номер</button></p>` : ''}
       </div>
       <figure class="портрет"><div class="заглушка"><figcaption>Временная картинка — рисунок художника будет позже</figcaption></div></figure></div>

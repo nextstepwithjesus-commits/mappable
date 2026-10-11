@@ -45,7 +45,8 @@
 .кн--плотная:active { box-shadow: inset 0 0 0 var(--liniya-silnaya) var(--tsvet-deystvie); background: var(--tsvet-chernila); }
 .кн--найти { background: var(--tsvet-list); border-color: var(--tsvet-deystvie); color: var(--tsvet-deystvie); font-weight: 600; }
 .кн--найти:hover { background: var(--tsvet-podlozhka); }
-.кн[aria-pressed="true"] { background: var(--tsvet-podlozhka); border-color: var(--tsvet-chernila); }
+.кн[aria-pressed="true"] { background: var(--tsvet-podlozhka); border-color: transparent; box-shadow: inset 0 calc(-1 * var(--liniya-silnaya)) 0 var(--tsvet-deystvie); font-weight: 600; }
+.шапка__нав .кн[aria-current="page"] { box-shadow: inset 0 calc(-1 * var(--liniya-silnaya)) 0 var(--tsvet-deystvie); }
 @media (forced-colors: active) { .кн[aria-pressed="true"] { border: var(--liniya-silnaya) solid ButtonText; } }
 .кн--значок { padding: 0; min-width: var(--tsel-knopka); }
 .ряд-кнопок { display: flex; flex-wrap: wrap; align-items: center; gap: var(--otstup-8); }
@@ -78,7 +79,7 @@
 .слой { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--otstup-8); }
 .слой__группа { display: inline-flex; border: var(--liniya-volosyanaya) solid var(--tsvet-liniya); }
 .слой__группа button { white-space: nowrap; min-height: var(--tsel-sloy); padding: 0 var(--otstup-12); border: var(--liniya-volosyanaya) solid transparent; margin: calc(-1 * var(--liniya-volosyanaya)); background: none; font-size: var(--tekst-interfeys-size); line-height: var(--tekst-interfeys-lh); }
-.слой__группа button[aria-pressed="true"] { background: var(--tsvet-podlozhka); border-color: var(--tsvet-chernila); font-weight: 600; position: relative; }
+.слой__группа button[aria-pressed="true"] { background: var(--tsvet-podlozhka); font-weight: 600; position: relative; box-shadow: inset 0 calc(-1 * var(--liniya-silnaya)) 0 var(--tsvet-deystvie); }
 @media (forced-colors: active) {
   .слой__группа, .слой__группа button { border-color: ButtonText; }
   .слой__группа button[aria-pressed="true"] { forced-color-adjust: none; background: Highlight; color: HighlightText; }
@@ -108,7 +109,7 @@
 .строка__подробнее .значок { width: var(--otstup-16); height: var(--otstup-16); transition: transform var(--dvizhenie-raskrytie) var(--dvizhenie-vkhod); }
 .строка__подробнее[aria-expanded="true"] .значок { transform: rotate(180deg); }
 .строка__подробнее .видимо-телефон { display: none; }
-.строка[aria-current="page"], .строка--текущая { box-shadow: inset var(--otstup-4) 0 0 var(--tsvet-chernila); padding-left: var(--otstup-8); }
+.строка[aria-current="page"], .строка--текущая { border-left: var(--otstup-4) solid var(--tsvet-chernila); padding-left: var(--otstup-8); }
 .строка__раскрытие { grid-column: 2 / -1; padding: var(--otstup-8) 0 var(--otstup-12); }
 .строка__раскрытие .т-проза { max-width: var(--komponent-proza-naibolshaya); }
 .строка__раскрытие dl { display: grid; grid-template-columns: max-content 1fr; gap: var(--otstup-4) var(--otstup-12); margin-top: var(--otstup-8); }
@@ -146,16 +147,15 @@
 .выбор-список:focus-visible [data-active="true"] { outline: var(--liniya-fokus) solid var(--tsvet-chernila); outline-offset: calc(-1 * var(--liniya-fokus)); }
 .выбор-список [data-active="true"] { position: relative; }
 .подсвечено { position: relative; }
-.подсвечено .плашка-имени { background-image:
-  linear-gradient(var(--tsvet-chernila), var(--tsvet-chernila)), linear-gradient(var(--tsvet-chernila), var(--tsvet-chernila)),
-  linear-gradient(var(--tsvet-chernila), var(--tsvet-chernila)), linear-gradient(var(--tsvet-chernila), var(--tsvet-chernila)),
-  linear-gradient(var(--tsvet-chernila), var(--tsvet-chernila)), linear-gradient(var(--tsvet-chernila), var(--tsvet-chernila)),
-  linear-gradient(var(--tsvet-chernila), var(--tsvet-chernila)), linear-gradient(var(--tsvet-chernila), var(--tsvet-chernila));
-  background-repeat: no-repeat;
-  background-size: var(--otstup-8) var(--liniya-silnaya), var(--liniya-silnaya) var(--otstup-8), var(--otstup-8) var(--liniya-silnaya), var(--liniya-silnaya) var(--otstup-8), var(--otstup-8) var(--liniya-silnaya), var(--liniya-silnaya) var(--otstup-8), var(--otstup-8) var(--liniya-silnaya), var(--liniya-silnaya) var(--otstup-8);
-  background-position: left top, left top, right top, right top, left bottom, left bottom, right bottom, right bottom; }
+.подсвечено .плашка-имени { position: relative; }
+.подсвечено .плашка-имени::before, .подсвечено .плашка-имени::after { content: ""; position: absolute; inset: calc(-1 * var(--otstup-4)); pointer-events: none;
+  border: var(--liniya-silnaya) solid var(--tsvet-chernila);
+  clip-path: polygon(0 0, var(--otstup-8) 0, var(--otstup-8) var(--liniya-silnaya), var(--liniya-silnaya) var(--liniya-silnaya), var(--liniya-silnaya) var(--otstup-8), 0 var(--otstup-8), 0 calc(100% - var(--otstup-8)), var(--liniya-silnaya) calc(100% - var(--otstup-8)), var(--liniya-silnaya) calc(100% - var(--liniya-silnaya)), var(--otstup-8) calc(100% - var(--liniya-silnaya)), var(--otstup-8) 100%, 0 100%); }
+.подсвечено .плашка-имени::after { transform: scaleX(-1); }
+@media (forced-colors: active) { .подсвечено .плашка-имени::before, .подсвечено .плашка-имени::after { border-color: Highlight; } }
 @media (forced-colors: active) {
   .выбор-список [aria-selected="true"] .плашка-имени { outline-color: Highlight; }
+  .выбор-список:focus-visible [data-active="true"], .строка__зона:has(.строка__ссылка:focus-visible) { outline-color: Highlight; }
 }
 
 /* ---------- Таблица (08 § 7.13, § 7.27) ---------- */
@@ -292,3 +292,41 @@ dialog.диалог::backdrop { background: color-mix(in srgb, var(--tsvet-chern
 .хлебные .значок { width: var(--otstup-12); height: var(--otstup-12); color: var(--tsvet-chernila-2); }
 .хлебные a { color: var(--tsvet-chernila-2); }
 @media (max-width: 20em) { .шапка__ряд { flex-wrap: wrap; } .шапка__меню { margin-left: 0; } }
+
+/* ---------- Ред. 3.1: строка списка — растянутая ссылка только на верхней зоне (Л-9) ---------- */
+.строка.строка { display: block; padding: 0; min-height: 0; border-bottom: 0; box-shadow: inset 0 calc(-1 * var(--liniya-volosyanaya)) 0 var(--tsvet-setka); }
+.строка:hover { background: none; }
+.строка__верх { display: grid; grid-template-columns: minmax(0, 1fr) max-content; align-items: stretch; min-height: var(--tsel-stroka); }
+.строка__верх:hover { background: var(--tsvet-podlozhka); }
+.строка__зона { position: relative; display: grid; grid-template-columns: calc(3ch + 0.36em) minmax(0, 1fr) var(--komponent-stroka-vid-shirina) var(--komponent-stroka-adres-shirina); column-gap: var(--otstup-12); align-items: center; }
+.строка--второй .строка__зона { grid-template-columns: calc(3ch + 0.36em) minmax(0, 1fr) var(--komponent-stroka-vid-shirina) var(--komponent-stroka-adres-shirina) var(--komponent-stroka-chislo-shirina) var(--komponent-stroka-chislo-shirina); }
+.строка__ссылка::after { inset: 0; right: 0; }
+.строка__зона:has(.строка__ссылка:focus-visible) { outline: var(--liniya-fokus) solid var(--tsvet-chernila); outline-offset: calc(-1 * var(--liniya-fokus)); }
+.строка__название { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: var(--otstup-12); padding-block: calc((var(--tsel-stroka) - var(--tekst-nazvanie-stroki-lh) - var(--liniya-volosyanaya)) / 2); }
+.строка__название .строка__метка, .строка__название .строка__трудное { display: inline; margin: 0; }
+.строка__подробнее { min-height: calc(var(--tsel-stroka) - var(--liniya-volosyanaya)); color: var(--tsvet-chernila-3); padding: 0 var(--otstup-8); }
+.строка__раскрытие { padding: var(--otstup-8) 0 var(--otstup-12) calc(3ch + 0.36em + var(--otstup-12)); }
+.строка__число { position: relative; }
+@media (max-width: 37.4375em) {
+  .строка__зона, .строка--второй .строка__зона { grid-template-columns: calc(3ch + 0.36em) minmax(0, 1fr); grid-template-rows: auto auto; column-gap: var(--otstup-8); }
+  .строка__верх { min-height: var(--tsel-stroka); }
+  .строка__номер { grid-row: span 2; align-self: start; padding-top: calc((var(--tsel-stroka) - var(--tekst-nazvanie-stroki-lh) - var(--tekst-adres-lh) - var(--liniya-volosyanaya)) / 2); }
+  .строка__название { grid-column: 2; padding-block: calc((var(--tsel-stroka) - var(--tekst-nazvanie-stroki-lh) - var(--tekst-adres-lh) - var(--liniya-volosyanaya)) / 2) 0; }
+  .строка__название .строка__метка, .строка__название .строка__трудное { display: none; }
+  .строка__вид { grid-column: 2; grid-row: 2; display: flex; flex-wrap: wrap; gap: 0 var(--otstup-8); min-width: 0; white-space: normal; padding-bottom: calc((var(--tsel-stroka) - var(--tekst-nazvanie-stroki-lh) - var(--tekst-adres-lh) - var(--liniya-volosyanaya)) / 2); }
+  .строка__вид .строка__метка, .строка__вид .строка__трудное { display: inline; margin: 0; }
+  .строка__адрес, .строка__число { display: none; }
+  .строка__подробнее { min-width: var(--tsel-stroka); padding: 0 var(--otstup-4); }
+  .строка__раскрытие { padding-left: calc(3ch + 0.36em + var(--otstup-8)); }
+}
+.не-копировать { user-select: none; -webkit-user-select: none; }
+/* ряды ссылок вне предложений — цель способа ввода (08 § 3.5; В1) */
+.хлебные a, .поиск__примеры a, .ссылки-внизу a, .указатель-книг__книга a, .в-книге a, .колофон a, .ссылка-ряд { display: inline-flex; align-items: center; min-height: var(--tsel-naimenshaya); min-width: var(--tsel-naimenshaya); }
+.скрыто-пропуск { min-height: var(--tsel-knopka); display: inline-flex; align-items: center; }
+/* шапка телефона при крупном тексте: «Поиск» уходит в «Меню», «Меню» не обрезается (Л-6) */
+.пункт-поиск { display: none !important; }
+@media (max-width: 37.4375em) {
+  :root[data-text] .шапка__кн-поиск { display: none; }
+  :root[data-text] .пункт-поиск { display: flex !important; }
+}
+@media (min-width: 37.5em) { .меню .пункт-поиск { display: none !important; } }

@@ -28,7 +28,6 @@
   --tsvet-kat-4: #56B4E9;
   --tsvet-kromka-risunka: #6E7888;
   --tsvet-deystvie-kinovar: #A33A1F;
-  --tsvet-deystvie-biryuza: #1E5D5A;
   --tsvet-deystvie: #A33A1F;
   --tsvet-chernila-pisaniya-tyomnaya-proba: #D3D9E1;
   --shrift-knizhnyy: Literata, Georgia, serif;
@@ -117,10 +116,12 @@
   --komponent-soderzhimoe-naibolshee: 72rem;
   --komponent-panel-shirina: 29.125rem;
   --komponent-ukazatel-knig-shirina: 16.5rem;
-  --komponent-znak-prilozheniya-kegl: 1.25rem;
-  --komponent-stroka-vid-shirina: 8rem;
-  --komponent-stroka-adres-shirina: 7rem;
+  --komponent-znak-prilozheniya-kegl: 1.375rem;
+  --komponent-stroka-vid-shirina: 7rem;
+  --komponent-stroka-adres-shirina: 6.5rem;
   --komponent-stroka-knopka-shirina: 6.5rem;
+  --komponent-risunok-naibolshaya-vysota: 18.75rem;
+  --komponent-skobka-fokusa-snaruzhi: 0.4375rem;
   --komponent-stroka-chislo-shirina: 2.5rem;
   --komponent-pole-nomera-stikha: 2.5rem;
   --komponent-znak-vida: 1rem;
@@ -157,7 +158,6 @@
   --tsvet-kant-lk: #F08BBF;
   --tsvet-kromka-risunka: #7A8596;
   --tsvet-deystvie-kinovar: #F0957B;
-  --tsvet-deystvie-biryuza: #8FD3CC;
   --tsvet-deystvie: #F0957B;
 }
 @media (prefers-color-scheme: dark) {
@@ -184,19 +184,7 @@
     --tsvet-kant-lk: #F08BBF;
     --tsvet-kromka-risunka: #7A8596;
     --tsvet-deystvie-kinovar: #F0957B;
-    --tsvet-deystvie-biryuza: #8FD3CC;
     --tsvet-deystvie: #F0957B;
-  }
-}
-[data-action="бирюза"] {
-  --tsvet-deystvie: #1E5D5A;
-}
-[data-theme="dark"][data-action="бирюза"], [data-theme="dark"] [data-action="бирюза"], [data-action="бирюза"] [data-theme="dark"] {
-  --tsvet-deystvie: #8FD3CC;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) [data-action="бирюза"], :root:not([data-theme="light"])[data-action="бирюза"] {
-    --tsvet-deystvie: #8FD3CC;
   }
 }
 [data-action="нет"] {
@@ -310,6 +298,13 @@
   --tsel-sloy: 2.75rem;
   --tsel-naimenshaya: 2.75rem;
   --komponent-stroka-instrumenta-vysota: 3.5rem;
+}
+/* Сенсорный ноутбук (08 § 3.5): строки 36, главные кнопки и строка инструмента — 44 */
+@media (pointer: fine) and (any-pointer: coarse) {
+  :root:not([data-input]) {
+    --tsel-glavnaya: 2.75rem;
+    --komponent-stroka-instrumenta-vysota: 3.5rem;
+  }
 }
 /* Размер текста (08 § 3.3.2, § 7.23): размер корня; все кегли в rem */
 :root[data-text="крупнее"] { font-size: 112.5%; }

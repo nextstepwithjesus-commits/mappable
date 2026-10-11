@@ -284,3 +284,123 @@ main { display: block; padding-bottom: var(--otstup-64); }
 .матрица thead th { position: static; }
 .адрес-кн--откр { color: var(--tsvet-chernila); } .адрес-кн--откр .значок { transform: rotate(180deg); }
 @media (max-width: 21em) { .заголовок-книги__слой .слой { flex-wrap: wrap; } }
+
+#верх { display: contents; }
+/* ред. 3.1: каталог */
+.каталог__список { grid-column: 2; grid-row: 1; min-width: 0; }
+.каталог > .указатель-книг { grid-column: 1; grid-row: 1; }
+.указатель-книг__завет { text-transform: none; }
+.тр-кратко { display: none; }
+.показ-телефон { display: none; }
+.пропуски { height: 0; }
+.строка__трудное { color: var(--tsvet-chernila-2); }
+.таблица--каталог tbody th a { text-decoration: none; }
+.таблица--каталог tbody th a:hover { text-decoration: underline; }
+@media (max-width: 52.4375em) {
+  .каталог > .указатель-книг { display: block; grid-column: 1; grid-row: 2; position: static; max-height: none; overflow: visible; margin-top: var(--otstup-32); }
+  .каталог__список { grid-column: 1; }
+}
+@media (max-width: 37.4375em) {
+  .тр-полно { display: none; }
+  .тр-кратко { display: inline; }
+  .заголовок-книги__слой { display: none; }
+  .показ-телефон { display: inline-block; }
+  .заголовок-книги { grid-template-rows: auto; }
+  .фильтры-вкл { width: 100%; }
+}
+@media (min-width: 37.5em) { .каталог .таблица-обёртка { overflow: visible; } }
+@media (max-width: 37.4375em) {
+  .заголовок-книги__число { display: block; grid-column: 1; grid-row: 2; }
+  .другая-книга { grid-row: 1 / span 2; }
+  .строка-действий__число { display: none; }
+  .строка-действий { column-gap: var(--otstup-4); }
+}
+/* ред. 3.1: страница истории */
+.полоса-шапки { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 var(--otstup-16); padding-top: var(--otstup-8); }
+.полоса-шапки .хлебные { padding-top: 0; }
+.полоса-шапки .ряд-действий { margin-top: 0; }
+.слой-в-ряду { margin-left: var(--otstup-8); }
+.шапка-истории { padding-top: var(--otstup-8); }
+.шапка-истории__вид { display: flex; flex-wrap: wrap; gap: 0 var(--otstup-16); align-items: baseline; margin-top: var(--otstup-4); }
+.шапка-истории__вид .тихая-строка { margin: 0; }
+.коротко { margin-top: var(--otstup-8); }
+.чтение { padding-top: var(--otstup-16); }
+.чтение__текст { padding-left: 0; }
+.часть { max-width: none; margin-top: var(--otstup-8); }
+.строка-над-текстом { margin-top: 0; padding-top: var(--otstup-8); font-weight: 450; }
+.писание { max-width: var(--komponent-kolonka-pisaniya); font-weight: var(--tekst-pisanie-weight); }
+.стих__номер, .номера-в-строке .стих__номер { position: static; display: inline; width: auto; margin: 0; font-family: var(--tekst-adres-family); font-size: var(--tekst-adres-size); line-height: 1; color: var(--tsvet-chernila-2); font-variant-numeric: tabular-nums lining-nums; font-weight: 450; }
+.глава-номер { left: calc(-1 * var(--komponent-pole-nomera-stikha)); width: calc(var(--komponent-pole-nomera-stikha) - var(--otstup-8)); }
+.часть__заголовок { margin: 0; }
+.часть__кнопка { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 var(--otstup-8); width: 100%; min-height: var(--tsel-knopka); padding: var(--otstup-4) 0; border: 0; background: none; text-align: left; font-family: var(--tekst-kniga-family); font-size: var(--tekst-kniga-size); line-height: var(--tekst-kniga-lh); font-weight: 600; color: var(--tsvet-chernila); }
+.часть__кнопка .значок { width: var(--otstup-16); height: var(--otstup-16); align-self: center; transform: rotate(-90deg); transition: transform var(--dvizhenie-raskrytie) var(--dvizhenie-vkhod); }
+.часть__кнопка[aria-expanded="true"] .значок { transform: none; }
+.часть__кнопка .т-адрес { font-weight: 450; }
+.рисунок-ноутбук { aspect-ratio: 16 / 9; width: 100%; max-height: var(--komponent-risunok-naibolshaya-vysota); }
+.рисунок-телефон { display: none; aspect-ratio: 16 / 9; margin-top: var(--otstup-16); }
+.на-телефоне { display: none !important; }
+.образ-без-рамки { border: 0; background: none; }
+.образ-без-рамки .образ-метка { background: var(--tsvet-list); }
+.панель { padding-inline: var(--komponent-skobka-fokusa-snaruzhi); }
+@media (max-width: 63.9375em) { .рисунок-ноутбук { display: none; } .рисунок-телефон { display: grid; } }
+@media (max-width: 37.4375em) {
+  .на-ноутбуке { display: none !important; }
+  .на-телефоне { display: flex !important; }
+  .глава-номер { position: static; display: block; text-align: left; width: auto; }
+  .слой-в-ряду { margin-left: 0; }
+}
+.часть__кнопка { display: grid; grid-template-columns: var(--otstup-16) minmax(0, 1fr); column-gap: var(--otstup-8); }
+.часть__кнопка > .т-адрес { grid-column: 2; }
+@media (max-width: 37.4375em) {
+  .слой-в-ряду { display: none; }
+  .показ-телефон { display: inline-block; }
+  .глава-номер { display: inline; margin-right: var(--otstup-4); }
+}
+.карточка-шапка { grid-template-columns: minmax(0, 48rem) 11rem; justify-content: start; }
+.блок--открыт { padding-bottom: var(--otstup-8); }
+.блок--открыт .блок__заголовок { display: flex; align-items: center; min-height: var(--tsel-knopka); }
+@media (max-width: 37.4375em) { .карточка-шапка { grid-template-columns: minmax(0, 1fr); } .портрет { max-width: 11rem; } }
+/* ред. 3.1: главная в две колонки от 1024 (Л-3) */
+.главная { max-width: none; display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); column-gap: var(--otstup-48); align-items: start; }
+.главная__право { padding-top: var(--otstup-24); }
+.главная__право section:first-child { margin-top: 0; }
+@media (max-width: 63.9375em) { .главная { grid-template-columns: minmax(0, 1fr); } }
+.возраст-строка { display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--otstup-8); margin-top: var(--otstup-24); padding-top: var(--otstup-8); border-top: var(--liniya-volosyanaya) solid var(--tsvet-setka); }
+.возраст-строка form { display: flex; flex-wrap: wrap; align-items: center; gap: var(--otstup-8); width: 100%; }
+.полоса-подпись { display: grid; grid-template-columns: 39fr 27fr; }
+.полоса-подпись span { grid-row: auto; grid-column: auto !important; justify-self: start !important; padding: 0 !important; }
+.книги-с-историями { display: flex; flex-wrap: wrap; gap: 0 var(--otstup-24); margin-top: var(--otstup-4); }
+@media (min-width: 37.5em) { .список-начать .строка__зона { grid-template-columns: 5ch minmax(0, 1fr) var(--komponent-stroka-vid-shirina) max-content; } }
+.главная__право .строка-инструмента-гл { grid-template-columns: minmax(0, 1fr); }
+.без-поиска .шапка__кн-поиск { display: none; }
+@media (max-width: 37.4375em) { .полоса-подпись { display: none; } }
+.строка-инструмента-гл .малый-образ__рисунок { border: 0; background: none; }
+/* ред. 3.1: синопсис — вкладки в контейнере уже 37,5 rem (Л-5) */
+.синопсис-обёртка { container-type: inline-size; }
+.синопсис-вкладки { display: none; }
+mark.различие { background: var(--tsvet-podlozhka); color: inherit; padding: 0 1px; }
+.синопсис th.сцена { font-weight: 450; text-align: left; }
+.синопсис-обёртка[data-вкладка="Мф"] .кол-Мк, .синопсис-обёртка[data-вкладка="Мф"] .кол-Лк { }
+@container (max-width: 37.5rem) {
+  .синопсис-вкладки { display: flex; }
+  .синопсис thead { display: none; }
+  .синопсис { table-layout: auto; }
+  .синопсис td { display: none; }
+  .синопсис-обёртка:not([data-вкладка]) td.кол-Мк, .синопсис-обёртка[data-вкладка="Мк"] td.кол-Мк, .синопсис-обёртка[data-вкладка="Мф"] td.кол-Мф, .синопсис-обёртка[data-вкладка="Лк"] td.кол-Лк { display: table-cell; }
+}
+/* ред. 3.1: 16 состояний на настоящих кнопках */
+.эл-цель { display: inline-grid; place-items: center; min-width: var(--tsel-naimenshaya); min-height: var(--tsel-naimenshaya); padding: 0; border: 0; border-radius: 0; background: none; color: var(--tsvet-chernila); }
+.эл-цель svg { width: 1.5rem; height: 1.5rem; }
+.фон-выбор .эл-цель { color: var(--tsvet-na-vybore); }
+.эл-кн.выбран, .эл-кн.выбран.как-фокус { outline-color: var(--tsvet-chernila); }
+.эл-кн.выбран { box-shadow: inset 0 calc(-1 * var(--liniya-silnaya) - var(--liniya-volosyanaya)) 0 var(--tsvet-deystvie), inset 0 0 0 var(--liniya-volosyanaya) var(--tsvet-chernila); outline: none; }
+.эл-кн.выбран.как-фокус { outline: var(--liniya-fokus) solid var(--tsvet-chernila); outline-offset: var(--liniya-zazor); box-shadow: inset 0 calc(-1 * var(--liniya-silnaya) - var(--liniya-volosyanaya)) 0 var(--tsvet-deystvie), inset 0 0 0 var(--liniya-volosyanaya) var(--tsvet-chernila), 0 0 0 calc(var(--liniya-zazor) * 2 + var(--liniya-fokus)) var(--tsvet-list); }
+.фон-выбор .как-фокус, .фон-выбор .эл-кн.выбран.как-фокус { outline-color: var(--tsvet-na-vybore); }
+@media (forced-colors: active) { .как-фокус, .эл-кн.выбран.как-фокус { outline-color: Highlight; } .эл-кн.выбран { border: var(--liniya-silnaya) solid ButtonText; } }
+.увеличение-обёртка { padding: var(--otstup-8); }
+.знак-2x { display: inline-block; max-width: 50%; margin-bottom: var(--otstup-8); }
+.варианты-знака .образец { overflow: hidden; }
+.диалог__закрыть { float: right; margin: calc(-1 * var(--otstup-8)) calc(-1 * var(--otstup-8)) 0 0; }
+
+.строка-инструмента-гл h3 a, .ссылка-ряд { display: inline-flex; align-items: center; min-height: var(--tsel-naimenshaya); }
+.пометка-кн { min-width: var(--tsel-naimenshaya); min-height: var(--tsel-naimenshaya); }

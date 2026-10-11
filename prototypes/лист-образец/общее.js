@@ -71,7 +71,25 @@
     return s;
   }
   // адрес в тексте: видимое сокращение и скрытое полное (08 § 6.1 п. 16)
-  const адресТекст = (a, класс = 'т-адрес') => `<span class="${класс}"><span aria-hidden="true">${адрес(a)}</span><span class="скрыто">${esc(полныйАдрес(a))}</span></span>`;
+  const адресТекст = (a, класс = 'т-адрес') => `<span class="${класс} адрес-текст"><span aria-hidden="true">${адресСписка(a)}</span><span class="скрыто не-копировать">${esc(String(a).split(/;\s*/).map(полныйАдрес).join('; '))}</span></span>`;
+  // список адресов по грамматике § 6.1 п. 16: книга не повторяется, та же глава — через запятую, диапазон через главу без пробелов
+  function адресСписка(s) {
+    const части = String(s).split(/;\s*/).map((x) => разобрать(x)).filter(Boolean);
+    if (!части.length) return esc(s);
+    let прежняя = null; const out = [];
+    for (const p of части) {
+      let t;
+      const тело = p.г2 !== p.г ? `${p.г}:${p.с}–${p.г2}:${p.с2}` : p.с2 !== p.с ? `${p.г}:${p.с}–${p.с2}` : `${p.г}:${p.с}`;
+      if (!прежняя || прежняя.код !== p.код) t = `${кодВид(p.код)}${NB}${тело}`;
+      else if (прежняя.г2 === p.г && p.г2 === p.г) t = p.с2 !== p.с ? `${p.с}–${p.с2}` : `${p.с}`;
+      else t = тело;
+      out.push({ t, разд: !прежняя ? '' : прежняя.код === p.код && прежняя.г2 === p.г && p.г2 === p.г ? ', ' : '; ' });
+      прежняя = p;
+    }
+    return out.map((x) => `${x.разд}<span class="нс">${x.t}</span>`).join('');
+  }
+  // имя адрес-кнопки: начинается с видимого адреса (2.5.3), без скрытого текста внутри (не попадает в копию)
+  const имяАдреса = (a) => `${адрес(a).replace(/\u00A0/g, ' ')}, ${полныйАдрес(a)}`;
   function стихиДиапазона(a) {
     const p = разобрать(a); const out = [];
     if (!p) return out;
@@ -165,26 +183,26 @@
     if (две) return `<div class="полоса-книг полоса-книг--две" aria-hidden="true"><div class="полоса-книг__ряд">${к.slice(0, 39).map(клетка).join('')}</div><div class="полоса-книг__ряд">${к.slice(39).map((b, i) => клетка(b, i + 39)).join('')}</div></div>`;
     return `<div class="полоса-книг" aria-hidden="true">${к.map(клетка).join('')}</div>`;
   }
-  function шапка(активный = '') {
+  function шапка(активный = '', безПоиска = false) {
     const пункт = (имя, зн, адр, класс = '') => `<a class="кн ${класс}" href="${адр}"${активный === имя ? ' aria-current="page"' : ''}>${зн ? значок(зн) : ''}<span>${имя}</span></a>`;
-    return `<a class="скрыто-пропуск" href="#главное">Перейти к содержимому</a>
-<header class="шапка"><div class="оболочка шапка__ряд">
+    return `<header class="шапка"><div class="оболочка шапка__ряд">
   <a class="знак-ссылка" href="главная.html" aria-label="Библия наглядно, на главную">${знакПриложения()}</a>
-  <search class="шапка__поиск"><form class="поиск" role="search" action="главная.html" onsubmit="event.preventDefault(); ОБЩЕЕ.объявить('Поиск в прототипе не работает: это лист-образец')">
-    <label class="поиск__подпись" for="поиск-шапка">Поиск</label>
-    <span class="поиск__поле">${значок('поиск')}<input id="поиск-шапка" type="search" placeholder="Стих, слово, человек, место или история" autocomplete="off"></span>
-  </form></search>
+  ${безПоиска ? '<span class="шапка__поиск"></span>' : `<search class="шапка__поиск"><form class="поиск" action="главная.html" onsubmit="event.preventDefault(); ОБЩЕЕ.объявить('Поиск в прототипе не работает: это лист-образец')">`}
+    ${безПоиска ? '' : '<label class="поиск__подпись" for="поиск-шапка">Поиск</label>'}
+    ${безПоиска ? '' : `<span class="поиск__поле">${значок('поиск')}<input id="поиск-шапка" type="search" placeholder="Стих, слово, человек, место или история" autocomplete="off"></span>
+  </form></search>`}
   <nav class="шапка__нав" aria-label="Разделы">
-    ${пункт(слой2() ? 'Указатель' : 'Все истории по алфавиту', '', 'каталог.html', 'в-меню-1024')}
+    ${пункт('Все истории по алфавиту', '', 'каталог.html', 'в-меню-1024')}
     ${пункт('Заметки', 'заметка', 'настройки.html#заметки', 'в-меню-1024')}
     ${пункт('Справка', 'справка', 'лист.html#справка')}
     ${пункт('Настройки', 'настройки', 'настройки.html')}
   </nav>
   <div class="шапка__меню">
-    <a class="кн" href="главная.html#поиск">${значок('поиск')}<span>Поиск</span></a>
+    <a class="кн шапка__кн-поиск" href="главная.html#поиск">${значок('поиск')}<span>Поиск</span></a>
     <div class="меню-обёртка"><button class="кн" type="button" aria-haspopup="menu" aria-expanded="false" data-menu="меню-шапки">${значок('меню')}<span>Меню</span></button>
       <div class="меню" role="menu" id="меню-шапки" hidden aria-label="Меню">
-        <a role="menuitem" href="каталог.html">${слой2() ? 'Указатель' : 'Все истории по алфавиту'}</a>
+        <a role="menuitem" href="главная.html#поиск" class="пункт-поиск">${значок('поиск')}Поиск</a>
+        <a role="menuitem" href="каталог.html">Все истории по алфавиту</a>
         <a role="menuitem" href="настройки.html#заметки">${значок('заметка')}Заметки</a>
         <a role="menuitem" href="лист.html#справка">${значок('справка')}Справка</a>
         <a role="menuitem" href="настройки.html">${значок('настройки')}Настройки</a>
@@ -201,6 +219,18 @@
       <button type="button" data-layer-set="1" aria-pressed="${!слой2()}">Для начинающих</button><button type="button" data-layer-set="2" aria-pressed="${слой2()}">Для изучающих</button></span></div>`;
   }
 
+  // переключатель слоя на телефоне — кнопкой «Показ» в строке действий (решение координатора § 2): радиогруппа § 7.18
+  function показТелефон() {
+    return `<span class="меню-обёртка показ-телефон"><button class="кн" type="button" aria-expanded="false" aria-controls="лист-показ" data-toggletip>${значок('слой')}<span>Показ</span></button>
+      <span class="меню фасеты" id="лист-показ" hidden><fieldset class="радио"><legend>Показать</legend>${[['1', 'Для начинающих'], ['2', 'Для изучающих']].map(([v, п]) => `<label><input type="radio" name="показ" value="${v}" data-показ ${настройки.слой === v ? 'checked' : ''}> ${п}</label>`).join('')}</fieldset></span></span>`;
+  }
+  document.addEventListener('change', (e) => {
+    const t = e.target; if (!t.matches?.('[data-показ]')) return;
+    const v = t.value; document.querySelector(`[data-layer-set="${v}"]`)?.click();
+    document.querySelector('[aria-controls="лист-показ"]')?.setAttribute('aria-expanded', 'true');
+    const л = document.getElementById('лист-показ'); if (л) л.hidden = false;
+    document.querySelector(`[data-показ][value="${v}"]`)?.focus();
+  });
   // ---------- поведение (делегирование) ----------
   const открытые = []; // стек «поверх» для Esc (08 § 6.5)
   document.addEventListener('click', (e) => {
@@ -209,8 +239,11 @@
     if (t.dataset.layerSet) {
       настройки.слой = t.dataset.layerSet; записать(настройки); применить();
       document.querySelectorAll('[data-layer-set]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.layerSet === настройки.слой)));
+      const был = document.activeElement === t || t.contains(document.activeElement);
       document.dispatchEvent(new CustomEvent('слой'));
-      объявить(слой2() ? 'Показаны годы, пометки и столбцы для изучающих' : 'Показано для начинающих');
+      if (был || document.activeElement === document.body) document.querySelector(`[data-layer-set="${настройки.слой}"]`)?.focus();
+      объявить((window.ОБЪЯВЛЕНИЕ_СЛОЯ?.(слой2())) ?? (слой2() ? 'Показано для изучающих' : 'Показано для начинающих'));
+      обновитьОтступ();
       return;
     }
     if (t.dataset.menu) { переключитьМеню(t); return; }
@@ -221,9 +254,10 @@
       t.setAttribute('aria-expanded', String(откр));
       цель.hidden = !откр;
       if (откр && t.dataset.toggletip !== undefined) открытые.push({ кнопка: t, цель });
+      if (t.dataset.onChange) window[t.dataset.onChange]?.(t, откр);
       return;
     }
-    if (t.getAttribute('role') !== 'menuitem') закрытьМеню();
+    if (!(t.getAttribute('role') || '').startsWith('menuitem')) закрытьМеню();
   });
   function переключитьМеню(кн) {
     const м = document.getElementById(кн.dataset.menu);
@@ -232,7 +266,8 @@
     if (!откр) return;
     кн.setAttribute('aria-expanded', 'true'); м.hidden = false;
     открытые.push({ кнопка: кн, цель: м, меню: true });
-    м.querySelector('[role="menuitem"]')?.focus();
+    м.querySelectorAll('[role^="menuitem"]').forEach((x) => { x.tabIndex = -1; });
+    м.querySelector('[role^="menuitem"]')?.focus();
   }
   function закрытьМеню(вернуть = false) {
     for (let i = открытые.length - 1; i >= 0; i--) {
@@ -246,7 +281,7 @@
   document.addEventListener('keydown', (e) => {
     const м = e.target.closest?.('[role="menu"]');
     if (м) {
-      const пункты = [...м.querySelectorAll('[role="menuitem"]')];
+      const пункты = [...м.querySelectorAll('[role^="menuitem"]')];
       const i = пункты.indexOf(e.target);
       if (e.key === 'ArrowDown') { e.preventDefault(); пункты[(i + 1) % пункты.length].focus(); }
       if (e.key === 'ArrowUp') { e.preventDefault(); пункты[(i - 1 + пункты.length) % пункты.length].focus(); }
@@ -256,6 +291,7 @@
       if (e.key.length === 1 && /\S/.test(e.key)) { const n = пункты.find((p, j) => j > i && p.textContent.trim().toLowerCase().startsWith(e.key.toLowerCase())) ?? пункты.find((p) => p.textContent.trim().toLowerCase().startsWith(e.key.toLowerCase())); n?.focus(); }
     }
     if (e.key === 'Escape') {
+      for (let i = открытые.length - 1; i >= 0; i--) if (!открытые[i].цель.isConnected || открытые[i].цель.hidden) открытые.splice(i, 1);
       const o = открытые.pop();
       if (o) { e.preventDefault(); o.цель.hidden = true; o.кнопка.setAttribute('aria-expanded', 'false'); o.кнопка.focus(); }
     }
@@ -298,7 +334,7 @@
     return `<aside class="панель-листа" aria-label="Управление листом-образцом (не часть продукта)"><div class="оболочка панель-листа__ряд">
       <span class="панель-листа__имя">Лист-образец ред. 3 — управление (не часть продукта)</span>
       <span class="ряд-кнопок" role="group" aria-label="Тема">${кн('тема', 'light', 'Светлая')}${кн('тема', 'dark', 'Тёмная')}</span>
-      <span class="ряд-кнопок" role="group" aria-label="Цвет действия">${кн('действие', 'нет', 'Без цвета')}${кн('действие', 'киноварь', 'Киноварь')}${кн('действие', 'бирюза', 'Бирюза')}</span>
+      <span class="ряд-кнопок" role="group" aria-label="Цвет действия">${кн('действие', 'нет', 'Без цвета')}${кн('действие', 'киноварь', 'Киноварь')}</span>
       <span class="ряд-кнопок" role="group" aria-label="Способ ввода">${кн('ввод', 'мышь', 'Мышь')}${кн('ввод', 'касание', 'Касание')}</span>
       <span class="ряд-кнопок" role="group" aria-label="Плотность">${кн('плотность', 'обычная', 'Обычная')}${кн('плотность', 'плотная', 'Плотная')}</span>
       <span class="ряд-кнопок" role="group" aria-label="Размер текста">${кн('текст', 'обычный', 'Аа')}${кн('текст', 'крупнее', 'Аа+')}${кн('текст', 'самый', 'Аа++')}</span>
@@ -313,10 +349,32 @@
     document.dispatchEvent(new CustomEvent('настройки'));
   });
 
-  function оболочка({ активный = '', панель = true, проба = true } = {}) {
+  function оболочка({ активный = '', панель = true, проба = true, безПоиска = false } = {}) {
     const верх = document.getElementById('верх');
-    верх.innerHTML = (панель ? панельЛиста() : '') + шапка(активный) + (проба ? плашкаПробы() : '');
+    верх.innerHTML = `<a class="скрыто-пропуск" href="#главное">Перейти к содержимому</a>` + (панель ? панельЛиста() : '') + шапка(активный, безПоиска) + (проба ? плашкаПробы() : '');
     статус = document.getElementById('объявления');
+    document.body.classList.toggle('без-поиска', безПоиска);
+    requestAnimationFrame(обновитьОтступ);
+  }
+  // scroll-padding-top = шапка + прилипший заголовок книги (08 § 3.4; 2.4.11): по настоящим высотам
+  function обновитьОтступ() {
+    let h = 0;
+    for (const el of document.querySelectorAll('.шапка, .заголовок-книги')) {
+      const cs = getComputedStyle(el);
+      if (cs.position === 'sticky') h += el.getBoundingClientRect().height;
+    }
+    const th = document.querySelector('.таблица--каталог thead th');
+    if (th && getComputedStyle(th).position === 'sticky') h += th.getBoundingClientRect().height;
+    document.documentElement.style.scrollPaddingTop = `${Math.ceil(h) + 8}px`;
+  }
+  addEventListener('resize', () => обновитьОтступ());
+  document.addEventListener('настройки', () => requestAnimationFrame(обновитьОтступ));
+  // «Слушать»: только голос устройства без сети; рядом «Пауза» и «Стоп»; без голоса — кнопки нет (08 § 6.2, § 7.21)
+  const голоса = () => (window.speechSynthesis?.getVoices?.() ?? []).filter((v) => v.lang.startsWith('ru') && v.localService);
+  function слушать(текст, место) {
+    const г = голоса(); if (!г.length) return;
+    const u = new SpeechSynthesisUtterance(текст); u.voice = г[0]; u.lang = 'ru-RU'; speechSynthesis.cancel(); speechSynthesis.speak(u);
+    if (место) место.innerHTML = `<button class="кн" type="button" onclick="speechSynthesis.pause()">${значок('пауза')}Пауза</button><button class="кн" type="button" onclick="speechSynthesis.cancel(); this.parentElement.innerHTML=''">${значок('стоп')}Стоп</button>`;
   }
 
   // число с согласованным словом (08 § 4.3 п. 10)
@@ -329,5 +387,5 @@
   }
   const число = (n, формы) => `${n.toLocaleString('ru-RU').replace(/\s/g, NB)}${NB}${форма(n, формы)}`;
 
-  window.ОБЩЕЕ = { Д, NB, esc, значок, знакВида, настройки, записать, применить, слой2, детскиеПодсказки, объявить, КНИГИ, кодВид, разобрать, адрес, полныйАдрес, адресТекст, стихиДиапазона, показ, htmlСтиха, строкаКопии, вБуфер, шапка, плашкаПробы, переключательСлоя, полосаКниг, полка, знакПриложения, списокВыбор, оболочка, форма, число, открытые };
+  window.ОБЩЕЕ = { показТелефон, адресСписка, имяАдреса, обновитьОтступ, голоса, слушать, Д, NB, esc, значок, знакВида, настройки, записать, применить, слой2, детскиеПодсказки, объявить, КНИГИ, кодВид, разобрать, адрес, полныйАдрес, адресТекст, стихиДиапазона, показ, htmlСтиха, строкаКопии, вБуфер, шапка, плашкаПробы, переключательСлоя, полосаКниг, полка, знакПриложения, списокВыбор, оболочка, форма, число, открытые };
 })();
