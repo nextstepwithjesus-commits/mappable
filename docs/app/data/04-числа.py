@@ -168,10 +168,14 @@ print(f'Ахаз: {ahaz_age} при воцарении + {ahaz_reign} лет ц�
 sam_hez = n('4Цар 18:10', 'шестой')
 sam_hosh = n('4Цар 18:10', 'девятый')
 sen_hez = n('4Цар 18:13', 'четырнадцатый')
-samaria, senn = anch['samaria']['value'], anch['sennacherib']['value']
+# Д6: опора Самарии по схеме по умолчанию — 723, альтернатива 722 (Тиле) — объектом {value, words, works}; прежде наоборот
+_alt = lambda a: [x['value'] if isinstance(x, dict) else int(str(x).split()[0]) for x in a['alternatives']]
+_thiele = lambda a: next((x['value'] for x in a['alternatives'] if isinstance(x, dict) and 'Тиле' in x.get('words', '')), a['value'])
+_my = lambda a: a['value'] if any(isinstance(x, dict) and 'Тиле' in x.get('words', '') for x in a['alternatives']) else _alt(a)[0]
+samaria, senn = _thiele(anch['samaria']), anch['sennacherib']['value']
 y1_from_sam = samaria - (sam_hez - 1)
 y1_from_sen = senn - (sen_hez - 1)
-samaria_alt = int(anch['samaria']['alternatives'][0])
+samaria_alt = _my(anch['samaria'])
 print(f'Езекия (опора данных, по Тиле): {sam_hez}-й год = падение Самарии ({-samaria}) → 1-й год = {-y1_from_sam}; {sen_hez}-й год = Сеннахирим ({-senn}) → 1-й год = {-y1_from_sen}; расхождение {abs(y1_from_sam - y1_from_sen)} лет')
 y1_alt = samaria_alt - (sam_hez - 1)
 print(f'Езекия (опора схемы по умолчанию, McFall — Young): {sam_hez}-й год = падение Самарии ({-samaria_alt}) → 1-й год = {-y1_alt}; от Сеннахирима — {-y1_from_sen}; расхождение {abs(y1_alt - y1_from_sen)} лет (схема объясняет его двумя началами счёта Езекии — раздел 18)')
@@ -195,8 +199,31 @@ acts450 = n('Деян 13:20', 'четырехсот пятидесяти')
 frame = (temple_ord - 1) - wild - saul - david - (sol_year - 1)
 print(f'книга Судей: {len(JUD)} чисел, сумма {jud_sum} лет; Деян 13:20 — около {acts450}')
 print(f'рамка 3 Цар 6:1 без годов Саула: {temple_ord - 1} − пустыня {wild} − Давид {david} − Соломон до 4-го года {sol_year - 1} = {frame + saul} − x лет на Иисуса Навина, судей, Илия, Самуила и Саула (x — годы Саула: текст их не называет, 1 Цар 13:1; „лет сорок“ Деян 13:21 — слова Павла, к чему относятся — толк.; раздел 8)')
-EP = {old(e['id']): {**e, 'id': old(e['id'])} for e in json.load(open('base/epochs.json', encoding='utf-8'))['items']}
-CH = {x['actor']: ({**x['chrono'], 'epoch': old(x['chrono']['epoch'])} if 'epoch' in x['chrono'] else x['chrono'])
+def _pids(v, key=None):
+    if isinstance(v, dict):
+        return {k: _pids(x, k) for k, x in v.items()}
+    if isinstance(v, list):
+        return [_pids(x, key) for x in v]
+    if key in ('from', 'with', 'person', 'keyPersons') and isinstance(v, str) and not v.startswith('p-'):
+        return 'p-' + v
+    return v
+
+
+# Д6 (сцены пакета 1): у части эпох и хронологических записей годов больше нет — годы считает модель или схема (02 § 3.15).
+# Числа этого приложения посчитаны по годам прежних данных; для записей окончательного вида скрипт берёт прежний вид из
+# data/ (02 § 3.15.5: «готовые годы … остаются только для сверки») — так числа приложения А не меняются. Сколько записей
+# уже окончательного вида — отдельной строкой в разделе 4.
+OLD_EP = {e['id']: _pids(e) for e in json.load(open('data/epochs.json', encoding='utf-8'))}
+D6_EP = {old(e['id']) for e in json.load(open('base/epochs.json', encoding='utf-8'))['items'] if isinstance(e.get('start'), dict)}
+EP = {old(e['id']): ({**OLD_EP[old(e['id'])], 'id': old(e['id'])} if old(e['id']) in D6_EP else {**e, 'id': old(e['id'])})
+      for e in json.load(open('base/epochs.json', encoding='utf-8'))['items']}
+
+
+OLD_CH = {'p-' + p['id']: _pids(p['chrono']) for f in sorted(glob.glob('data/persons/*.json'))
+          for p in json.load(open(f, encoding='utf-8'))['persons'] if p.get('chrono')}
+D6_CH = {x['actor'] for x in json.load(open('base/chrono.json', encoding='utf-8'))['items'] if 'inputs' in x['chrono']}
+CH = {x['actor']: (OLD_CH[x['actor']] if x['actor'] in D6_CH else
+                   ({**x['chrono'], 'epoch': old(x['chrono']['epoch'])} if 'epoch' in x['chrono'] else x['chrono']))
       for x in json.load(open('base/chrono.json', encoding='utf-8'))['items']}
 conq = EP['conquest']['start']
 david_b = CH['p-david']['born']['year']
@@ -212,6 +239,7 @@ for f in sorted(glob.glob('base/actors/*.json')):
         acts[a['id']] = a
 print('действующих лиц в базе:', len(acts), dict(collections.Counter(a['kind'] for a in acts.values())))
 print('записей chrono:', len(CH), '; лиц без записи chrono:', len(set(acts) - set(CH)))
+print(f'  Д6: записей окончательного вида {len(D6_CH)}, эпох окончательного вида {len(D6_EP)} — здесь посчитаны по прежнему виду из data/ (сверка)')
 keys = collections.Counter(k for c in CH.values() for k in c)
 print('ключи:', dict(keys))
 TEXTNUM = lambda c: (any(k in c.get('born', {}) for k in ('fatherAge', 'motherAge', 'offset'))
@@ -429,7 +457,7 @@ for r, w in (('Ин 2:13', 'Пасха'), ('Ин 6:4', 'Пасха'), ('Ин 11:
     has(r, w)
 
 print('\n== 12. Эпохи: границы, ширины, указатель (рецензии интерфейса № 2, 18 и арт-директора № 4, 15) ==')
-EPL = [{**e, 'id': old(e['id'])} for e in json.load(open('base/epochs.json', encoding='utf-8'))['items']]
+EPL = [EP[old(e['id'])] for e in json.load(open('base/epochs.json', encoding='utf-8'))['items']]   # Д6: эпохи нового вида — годы из data/ (сверка)
 est_after = {e['id'] for e in EPL if e.get('startEst') or e.get('endEst')} | {'united'}   # редакция 2: начало эпохи 8 — граница примерная
 print('эпох с оценочной границей после редакции 2 (начало «Единого царства» — примерная):', len(est_after))
 GRID, GUT = 1152, 24
@@ -947,5 +975,8 @@ for a in anch.values():
     src = a.get('source', '')
     has_page = bool(re.search(r'\bс\.\s*\d|\bp\.\s*\d|\bpp\.\s*\d', src))
     print(f'  {old(a["id"])}: {-a["value"] if a["value"] < 0 else a["value"]}{" до Р. Х." if a["value"] < 0 else " по Р. Х."} — {"страница есть" if has_page else "нет издания и страницы"}')
+    if a.get('works'):   # Д6: труды с изданием и местом (02 § 3.15.4); weight approx — место по вторичной ссылке, не по изданию
+        print('    труды: ' + '; '.join(f'{c["work"]} — {c["page"]} ({c["weight"]})' for c in a['works']))
+print(f'  Д6: опор с трудами (works): {sum(1 for a in anch.values() if a.get("works"))}; из них с местом не «не сверена»: {sum(1 for a in anch.values() if any("не сверен" not in c["page"] for c in a.get("works", [])))}')
 print(f'  опор: {len(anch)}; со страницей источника: {sum(1 for a in anch.values() if re.search(r"с\\.\\s*\\d|p\\.\\s*\\d", a.get("source", "")))}')
 print(f'  опора 967 в данных подписана: «{anch["solomon-4"]["source"][:60]}…» — схема по умолчанию теперь McFall — Young; источник со страницей — задача данных')

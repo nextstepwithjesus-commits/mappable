@@ -23,6 +23,7 @@ import { loadIds, PREFIX, type IdKind } from './ids.ts';
 import { releaseOk } from './release.ts';
 import { validateStories } from './stories.ts';
 import { validateNameForms } from './name-forms.ts';
+import { checkTime, MODELS, SCHEMES } from './time-check.ts';
 
 export interface Issue { level: 'error' | 'warn'; check: string; where: string; msg: string }
 
@@ -52,8 +53,7 @@ export function unionWordIn(word: string, text: string): boolean {
 const ROOT = join(import.meta.dirname, '..', '..');
 const CERTS = new Set<Cert>(['scripture', 'inference', 'interpretation', 'calc', 'reference']);
 /** Постоянные номера моделей и схем (04 § 16.1; 02 § 3.15.2–3.15.3): ссылка `calc` называет только их. */
-export const MODELS = ['m-dolgoe', 'm-kratkoe', 'm-farra70', 'm-skobki'];
-export const SCHEMES = ['s-mcfall-young', 's-thiele', 's-galil'];
+export { MODELS, SCHEMES } from './time-check.ts';
 
 export function loadBase(dir = join(ROOT, 'base')): Base {
   // происхождение каждого файла хранится: статус записи без своего prov берётся у файла (02 § 3.1; Д-база, Б-1, п. 3)
@@ -82,6 +82,7 @@ export function loadBase(dir = join(ROOT, 'base')): Base {
     unions: items('unions.json'), origins: items('origins.json'), kin: items('kin.json'), readings: items('readings.json'),
     areas: items('areas.json'), memberships: items('memberships.json'), chrono: items('chrono.json'), nodata: items('nodata.json'),
     redirects: items('redirects.json'), corrections: items('corrections.json'), epochs: items('epochs.json'),
+    models: existsSync(join(dir, 'models.json')) ? items('models.json') : [],
     files, fileSources,
     sources: existsSync(join(dir, 'sources.json')) ? items('sources.json') : [],
     places: existsSync(join(dir, 'places.json')) ? items('places.json') : [],
@@ -367,6 +368,11 @@ export function validate(base: Base): Issue[] {
     for (const k of ['offset', 'notAfter', 'notBefore']) has('целостность', `время ${c.actor}`, ch.born?.[k]?.from);
     for (const r of ch.reign ?? []) for (const s of r.sync ?? []) has('целостность', `время ${c.actor}`, s.with);
   }
+  // данные времени окончательного вида (Д6; 02 § 3.15): входы, эпохи, модели и схемы, опоры с трудами
+  checkTime(base, {
+    err, warn, mainTexts, clean, actorIds: new Set(actors.keys()),
+    verseKeys: (ref) => parseRef(ref, bible.chapterLength)?.verses.map(verseId) ?? [],
+  });
   const own = ownRefs(base);
   const ownVerses = new Map<string, Set<string>>();
   for (const n of base.nodata) {

@@ -461,8 +461,110 @@ export interface Membership {
  */
 export interface ChronoRecord {
   actor: string;
+  /** Прежний вид — объект `born`/`died`/`reign`/`active`/`epoch`; окончательный (Д6) — `ChronoD6` (есть поле `inputs`). */
   chrono: unknown;
   prov?: Partial<Prov>;
+}
+
+/**
+ * Вид хронологического входа (02 § 3.15.5). Два вида добавлены Д6 для сцен пакета 1 и предложены в поправку 02:
+ * `age-at-event` — возраст при событии текста («Моисей был восьмидесяти… когда стали говорить они к фараону», Исх 7:7);
+ * `years-after` — «в N-й год по…» от события без лица («в сороковой год по исшествии», Чис 33:38).
+ */
+export type TimeKind =
+  | 'age-at-birth' | 'age-at-death' | 'reign' | 'age-at-accession' | 'synchronism' | 'under-king' | 'met'
+  | 'not-before' | 'not-after' | 'succeeded' | 'age-at-event' | 'years-after';
+export const TIME_KINDS: readonly TimeKind[] = [
+  'age-at-birth', 'age-at-death', 'reign', 'age-at-accession', 'synchronism', 'under-king', 'met',
+  'not-before', 'not-after', 'succeeded', 'age-at-event', 'years-after',
+];
+/** Поле царства (02 § 3.15.5; 04 § 9 п. 18). */
+export type Kingdom = 'israel-united' | 'israel-north' | 'judah' | 'judah-hebron';
+
+/**
+ * Хронологический вход окончательного вида (02 § 3.15.5; Д6). Только число текста и отношение со стихом; года в записи
+ * нет — год события считает сеть по модели `m-…` или схеме `s-…` (ссылка `calc`). Номер `t-…` — задача кода (как К-1).
+ */
+export interface TimeInput {
+  kind: TimeKind;
+  /** Какое событие лица ограничено (`not-before`, `not-after`, `under-king`, `years-after`): рождение, смерть, жизнь. */
+  of?: 'birth' | 'death' | 'life';
+  /** Число цифрой: число текста (`cert: scripture`) или вывода из чисел текста (`inference`, слагаемые — `parts`). */
+  number?: number;
+  /** Число словами стиха — так, как оно стоит вне скобок (проверка: слова есть в стихе). */
+  words?: string;
+  /** Единица числа; нет поля — годы. */
+  unit?: 'month';
+  /** «…и шесть месяцев» к числу лет (2Цар 5:5). */
+  plusMonths?: number;
+  /** Год самого лица при синхронизме, если это не год воцарения: «В четвертый год царя Езекии, то есть в седьмой год Осии» (4Цар 18:9). */
+  atYear?: { number: number; words: string };
+  /** Число в скобках того же места — отдельно, не основание (02 § 3.8.3 п. 5). */
+  numberBracket?: number;
+  /** Слагаемые вывода: каждое число текста — в своём стихе вне скобок (04 § 17.2). */
+  parts?: { number: number; words: string; ref: Ref }[];
+  /** Второй участник: родитель (`age-at-birth`), царь (`synchronism`, `under-king`), предшественник (`succeeded`), от кого счёт. */
+  other?: string;
+  /** Событие текста без лица — для `age-at-event` и `years-after`: словами и со стихом (истории `e-…` ещё нет). */
+  event?: { text: string; refs: Ref[] };
+  kingdom?: Kingdom;
+  refs: Ref[];
+  cert: Cert;
+  saidBy?: SaidBy;
+  reading?: { set: string; in: string };
+  /** Год события считает сеть: по модели (до царей разделённого царства) или по схеме царей. Ни того ни другого — модели в 04 нет. */
+  calc?: { event: string; model?: string; scheme?: string };
+  note?: string;
+}
+
+/** Эпоха лица со стихом или выводом из двух стихов (04 § 3.2; 02 § 3.15.1). */
+export interface PersonEpoch { era: string; refs: Ref[]; cert: Cert; note?: string }
+
+/**
+ * Хронологическая запись лица окончательного вида (Д6). `epoch` — прежняя строка эпохи без стиха (долг 04 § 3.2: «Мы ещё
+ * не проверили, когда он жил»); `epochs` — эпохи со стихом. Готовых годов нет.
+ */
+export interface ChronoD6 { inputs: TimeInput[]; epochs?: PersonEpoch[]; epoch?: string }
+
+/** Модель хронологии (02 § 3.15.2; 04 § 3.8, § 16.1). */
+export interface ChronoModel {
+  id: string;
+  type: 'model';
+  name: string;
+  readings: { set: string; in: string }[];
+  /** Выборы модели, которых текст не делает (02 § 3.15.2 [4.1]). */
+  choices: { what: string; refs: Ref[]; cert: 'calc'; number?: number }[];
+  scheme?: string;
+  anchors: string[];
+  basis: 'text' | 'interpretation' | 'not-basis';
+  /** Подпись модели словами 04 § 3.8. */
+  label: string;
+  default?: true;
+  works?: Cite[];
+  /** Труды, которые нужны, но в реестре пока без страницы (у модели на толковании). */
+  needsSources?: true;
+  log: { release: string; what: string }[];
+}
+
+/** Схема царей (02 § 3.15.3; 04 § 3.8, § 16.1). */
+export interface KingScheme {
+  id: string;
+  type: 'scheme';
+  name: string;
+  /** По умолчанию (В-23) или справка (Тиле). */
+  role: 'default' | 'reference' | 'second-turn';
+  works: Cite[];
+  /**
+   * Годы каждого царя из таблицы автора со страницей. Строка без `page` — не таблица автора: `source` говорит, откуда
+   * годы (у `s-thiele` — годы прежних данных атласа, близкие к Тиле, 04 § 3.8: «не таблица Тиле»), в выпуск не идёт.
+   */
+  table: { king: string; kingdom: Kingdom; coregencyStart?: number; soleStart: number; end: number; page?: string; source?: string }[];
+  params: { what: string; refs: Ref[]; page?: string; works?: Cite[] }[];
+  rejects: { ref: Ref; page?: string }[];
+  /** Опоры схемы. */
+  anchors: string[];
+  note: string;
+  log: { release: string; what: string }[];
 }
 
 // ---------- «нет сведений» ----------

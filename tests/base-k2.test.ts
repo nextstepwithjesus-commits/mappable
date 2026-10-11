@@ -48,9 +48,10 @@ beforeAll(() => {
 });
 
 describe('труды w- и ссылки works (К-3)', () => {
-  it('в реестре 10 трудов: use citation, традиция из словаря, издание — в записи труда, не в ссылке', () => {
+  it('в реестре 20 трудов: use citation, традиция из словаря, издание — в записи труда, не в ссылке', () => {
     const works = base.sources!.filter((s) => s.id.startsWith('w-'));
-    expect(works).toHaveLength(10);
+    // 10 трудов К-3 и 10 трудов хронологии Д6 (схемы царей и издания надписей для опор)
+    expect(works).toHaveLength(20);
     for (const w of works) {
       expect([w.id, w.use, w.redistribute]).toEqual([w.id, 'citation', false]);
       expect(w.tradition!.length).toBeGreaterThan(0);

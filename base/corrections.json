@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data",
-   "commit": "62b31fe"
+   "commit": "03ddcf8"
   }
  },
  "sources": [
@@ -3520,6 +3520,151 @@
    ],
    "other": [
     "redirects"
+   ]
+  },
+  {
+   "id": "D6-1",
+   "what": "Д6: модели m-dolgoe, m-kratkoe, m-farra70, m-skobki и схемы s-mcfall-young (по умолчанию, таблицы авторов нет), s-thiele (справка: 39 строк — годы прежних данных, без страницы), s-galil (вторая очередь) — base/models.json",
+   "why": "02 § 3.15.2–3.15.3; 04 § 3.8, § 9 п. 17, 20, 21, § 16.1; 10 § 4.2.2 — годы Тиле с пометкой «справка», пока таблиц McFall — Young нет",
+   "refs": [
+    "3Цар 6:1",
+    "Исх 12:40",
+    "Быт 11:26",
+    "Гал 3:17"
+   ],
+   "actors": [],
+   "other": [
+    "models"
+   ]
+  },
+  {
+   "id": "D6-2",
+   "what": "Д6: опоры сцен пакета 1 (an-solomon-4, an-qarqar, an-jehu-tribute, an-samaria, an-sennacherib) — труды с изданием и местом, альтернативы с трудом; Самария по схеме по умолчанию — 723, 722 — альтернатива по Тиле; у опоры 967 — цепочка «как получено», подпись «Тиле — Янга» снята",
+   "why": "02 § 3.15.4; 04 § 3.8, § 9 п. 6, 19 (научные инструменты № 1; решение координатора 3)",
+   "refs": [
+    "3Цар 6:1",
+    "4Цар 17:6",
+    "4Цар 18:13"
+   ],
+   "actors": [],
+   "other": [
+    "anchors"
+   ]
+  },
+  {
+   "id": "D6-3",
+   "what": "Д6 (Д-11 для эпох 1–5): эпохи по образцу PeriodO — определение, начало и конец событием со стихом и словами, правило границы для расчёта, вид границы; готовые годы сняты (у событий эпохи — тоже); граница 2–3 — выход Аврама из Харрана (Быт 12:4); основание эпохи «В Египте» больше не выводит «Краткое пребывание» из слов в скобках",
+   "why": "02 § 3.15.1; 04 § 3.2, § 9 п. 3, 23",
+   "refs": [
+    "Быт 12:4",
+    "Быт 7:6",
+    "Быт 47:9",
+    "Исх 12:40-41",
+    "3Цар 6:1",
+    "Нав 3:17"
+   ],
+   "actors": [
+    "avraam",
+    "noy",
+    "iakov",
+    "adam"
+   ],
+   "other": [
+    "epoch:era-antediluvian",
+    "epoch:era-postdiluvian",
+    "epoch:era-patriarchs",
+    "epoch:era-egypt",
+    "epoch:era-exodus"
+   ]
+  },
+  {
+   "id": "D6-4",
+   "what": "Д6: хронологические записи 75 лиц сцен 1.14–1.16 — окончательного вида: входов 129 (ссылка calc: модель m-dolgoe 54, схема s-mcfall-young 51); эпоха со стихом — у 21 лиц, прежней строкой без стиха — у 11; готовые годы, промежутки, «заведомо жив в годы…», оценки атласа и примечания о реконструкции сняты; добавлены «воцарился вместо него» у 10 царей (4 Цар 14–16) и синхронизмы 4 Цар 18:9–10",
+   "why": "02 § 3.15.5 (в записи — только числа текста и отношения со стихами; ни один год не хранится); 04 § 3.2, § 9 п. 1, 2, 6, 15, 18; Д-р1 (Давид — по модели)",
+   "refs": [
+    "Быт 5:3",
+    "Быт 11:10",
+    "Исх 7:7",
+    "Чис 33:38-39",
+    "4Цар 15:5",
+    "4Цар 18:9-10"
+   ],
+   "actors": [
+    "adam",
+    "sif",
+    "enos",
+    "kainan",
+    "maleleil",
+    "iared",
+    "enokh",
+    "mafusal",
+    "lamekh",
+    "noy",
+    "sim",
+    "kham",
+    "iafet",
+    "arfaksad",
+    "sala",
+    "ever",
+    "falek",
+    "ragav",
+    "serukh",
+    "nakhor",
+    "farra",
+    "avraam",
+    "khanaan",
+    "filistimlyane",
+    "iosif",
+    "iair-syn-seguva",
+    "kaaf",
+    "amram",
+    "iokhaveda",
+    "aaron",
+    "moisey",
+    "mariam",
+    "maday",
+    "asaf",
+    "beera-syn-vaala",
+    "iofam-syn-gedeona",
+    "david",
+    "amasiya",
+    "iekholiya",
+    "oziya",
+    "ierusha-doch-sadoka",
+    "ioafam",
+    "akhaz",
+    "maaseya-syn-akhaza",
+    "ezekiya-syn-shalluma",
+    "avi-doch-zakharii",
+    "eliakim-syn-khelkii",
+    "ioakh-syn-asafa",
+    "ezekiya",
+    "razon",
+    "navat",
+    "ieroboam",
+    "ila-syn-vaasy",
+    "iiuy",
+    "ieroboam-vtoroy",
+    "zakhariya-syn-ieroboama",
+    "iavis-otets-selluma",
+    "sellum-syn-iavisa",
+    "gadiy",
+    "menaim",
+    "fakiya",
+    "remaliya",
+    "fakey",
+    "ila-otets-osii",
+    "osiya-syn-ily",
+    "ful",
+    "feglaffellasar",
+    "salmanassar",
+    "sinnakherim",
+    "adramelekh",
+    "zakhariya-syn-varakhii-is8",
+    "osiya-prorok",
+    "uriya-syn-shemaii",
+    "kir",
+    "eliakim-syn-aviuda"
    ]
   }
  ]

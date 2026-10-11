@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data",
-   "commit": "62b31fe"
+   "commit": "03ddcf8"
   }
  },
  "sources": [
@@ -17,17 +17,27 @@
   {
    "actor": "p-adam",
    "chrono": {
-    "died": {
-     "age": 930,
-     "refs": [
-      "Быт 5:5"
-     ]
-    }
+    "inputs": [
+     {
+      "kind": "age-at-death",
+      "number": 930,
+      "words": "девятьсот тридцать",
+      "refs": [
+       "Быт 5:5"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "Быт 5:5",
+       "model": "m-dolgoe"
+      }
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "01-antediluvian.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
@@ -199,284 +209,554 @@
   {
    "actor": "p-sif",
    "chrono": {
-    "born": {
-     "fatherAge": 130,
-     "fatherAgeBracket": 230,
-     "refs": [
-      "Быт 5:3"
-     ]
-    },
-    "died": {
-     "age": 912,
-     "refs": [
-      "Быт 5:8"
-     ]
-    }
+    "inputs": [
+     {
+      "kind": "age-at-birth",
+      "other": "p-adam",
+      "number": 130,
+      "words": "сто тридцать",
+      "numberBracket": 230,
+      "refs": [
+       "Быт 5:3"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "Быт 5:3",
+       "model": "m-dolgoe"
+      }
+     },
+     {
+      "kind": "age-at-death",
+      "number": 912,
+      "words": "девятьсот двенадцать",
+      "refs": [
+       "Быт 5:8"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "Быт 5:8",
+       "model": "m-dolgoe"
+      }
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "01-antediluvian.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-enos",
    "chrono": {
-    "born": {
-     "fatherAge": 105,
-     "fatherAgeBracket": 205,
-     "refs": [
-      "Быт 5:6"
-     ]
-    },
-    "died": {
-     "age": 905,
-     "refs": [
-      "Быт 5:11"
-     ]
-    }
+    "inputs": [
+     {
+      "kind": "age-at-birth",
+      "other": "p-sif",
+      "number": 105,
+      "words": "сто пять",
+      "numberBracket": 205,
+      "refs": [
+       "Быт 5:6"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "Быт 5:6",
+       "model": "m-dolgoe"
+      }
+     },
+     {
+      "kind": "age-at-death",
+      "number": 905,
+      "words": "девятьсот пять",
+      "refs": [
+       "Быт 5:11"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "Быт 5:11",
+       "model": "m-dolgoe"
+      }
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "01-antediluvian.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-kainan",
    "chrono": {
-    "born": {
-     "fatherAge": 90,
-     "fatherAgeBracket": 190,
-     "refs": [
-      "Быт 5:9"
-     ]
-    },
-    "died": {
-     "age": 910,
-     "refs": [
-      "Быт 5:14"
-     ]
-    }
+    "inputs": [
+     {
+      "kind": "age-at-birth",
+      "other": "p-enos",
+      "number": 90,
+      "words": "девяносто",
+      "numberBracket": 190,
+      "refs": [
+       "Быт 5:9"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "Быт 5:9",
+       "model": "m-dolgoe"
+      }
+     },
+     {
+      "kind": "age-at-death",
+      "number": 910,
+      "words": "девятьсот десять",
+      "refs": [
+       "Быт 5:14"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "Быт 5:14",
+       "model": "m-dolgoe"
+      }
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "01-antediluvian.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-maleleil",
    "chrono": {
-    "born": {
-     "fatherAge": 70,
-     "fatherAgeBracket": 170,
-     "refs": [
-      "Быт 5:12"
-     ]
-    },
-    "died": {
-     "age": 895,
-     "refs": [
-      "Быт 5:17"
-     ]
-    }
+    "inputs": [
+     {
+      "kind": "age-at-birth",
+      "other": "p-kainan",
+      "number": 70,
+      "words": "семьдесят",
+      "numberBracket": 170,
+      "refs": [
+       "Быт 5:12"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "Быт 5:12",
+       "model": "m-dolgoe"
+      }
+     },
+     {
+      "kind": "age-at-death",
+      "number": 895,
+      "words": "восемьсот девяносто пять",
+      "refs": [
+       "Быт 5:17"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "Быт 5:17",
+       "model": "m-dolgoe"
+      }
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "01-antediluvian.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-iared",
    "chrono": {
-    "born": {
-     "fatherAge": 65,
-     "fatherAgeBracket": 165,
-     "refs": [
-      "Быт 5:15"
-     ]
-    },
-    "died": {
-     "age": 962,
-     "refs": [
-      "Быт 5:20"
-     ]
-    }
+    "inputs": [
+     {
+      "kind": "age-at-birth",
+      "other": "p-maleleil",
+      "number": 65,
+      "words": "шестьдесят пять",
+      "numberBracket": 165,
+      "refs": [
+       "Быт 5:15"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "Быт 5:15",
+       "model": "m-dolgoe"
+      }
+     },
+     {
+      "kind": "age-at-death",
+      "number": 962,
+      "words": "девятьсот шестьдесят два",
+      "refs": [
+       "Быт 5:20"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "Быт 5:20",
+       "model": "m-dolgoe"
+      }
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "01-antediluvian.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-enokh",
    "chrono": {
-    "born": {
-     "fatherAge": 162,
-     "refs": [
-      "Быт 5:18"
-     ]
-    },
-    "died": {
-     "age": 365,
-     "refs": [
-      "Быт 5:23"
-     ],
-     "note": "не умер, но взят Богом"
-    }
+    "inputs": [
+     {
+      "kind": "age-at-birth",
+      "other": "p-iared",
+      "number": 162,
+      "words": "сто шестьдесят два",
+      "refs": [
+       "Быт 5:18"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "Быт 5:18",
+       "model": "m-dolgoe"
+      }
+     },
+     {
+      "kind": "age-at-death",
+      "number": 365,
+      "words": "триста шестьдесят пять",
+      "note": "Писание не говорит «умер»: «и не стало его, потому что Бог взял его» (Быт 5:24); число — всех дней Еноха (Быт 5:23)",
+      "refs": [
+       "Быт 5:23",
+       "Быт 5:24"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "Быт 5:23",
+       "model": "m-dolgoe"
+      }
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "01-antediluvian.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-mafusal",
    "chrono": {
-    "born": {
-     "fatherAge": 65,
-     "fatherAgeBracket": 165,
-     "refs": [
-      "Быт 5:21"
-     ]
-    },
-    "died": {
-     "age": 969,
-     "refs": [
-      "Быт 5:27"
-     ]
-    }
+    "inputs": [
+     {
+      "kind": "age-at-birth",
+      "other": "p-enokh",
+      "number": 65,
+      "words": "шестьдесят пять",
+      "numberBracket": 165,
+      "refs": [
+       "Быт 5:21"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "Быт 5:21",
+       "model": "m-dolgoe"
+      }
+     },
+     {
+      "kind": "age-at-death",
+      "number": 969,
+      "words": "девятьсот шестьдесят девять",
+      "refs": [
+       "Быт 5:27"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "Быт 5:27",
+       "model": "m-dolgoe"
+      }
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "01-antediluvian.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-lamekh",
    "chrono": {
-    "born": {
-     "fatherAge": 187,
-     "refs": [
-      "Быт 5:25"
-     ]
-    },
-    "died": {
-     "age": 777,
-     "ageBracket": 753,
-     "refs": [
-      "Быт 5:31"
-     ]
-    }
+    "inputs": [
+     {
+      "kind": "age-at-birth",
+      "other": "p-mafusal",
+      "number": 187,
+      "words": "сто восемьдесят семь",
+      "refs": [
+       "Быт 5:25"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "Быт 5:25",
+       "model": "m-dolgoe"
+      }
+     },
+     {
+      "kind": "age-at-death",
+      "number": 777,
+      "words": "семьсот семьдесят семь",
+      "numberBracket": 753,
+      "refs": [
+       "Быт 5:31"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "Быт 5:31",
+       "model": "m-dolgoe"
+      }
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "01-antediluvian.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-noy",
    "chrono": {
-    "born": {
-     "fatherAge": 182,
-     "fatherAgeBracket": 188,
-     "refs": [
-      "Быт 5:28-29"
-     ]
-    },
-    "died": {
-     "age": 950,
-     "refs": [
-      "Быт 9:29"
-     ]
-    }
+    "inputs": [
+     {
+      "kind": "age-at-birth",
+      "other": "p-lamekh",
+      "number": 182,
+      "words": "сто восемьдесят два",
+      "numberBracket": 188,
+      "refs": [
+       "Быт 5:28-29"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "Быт 5:28-29",
+       "model": "m-dolgoe"
+      }
+     },
+     {
+      "kind": "age-at-death",
+      "number": 950,
+      "words": "девятьсот пятьдесят",
+      "refs": [
+       "Быт 9:29"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "Быт 9:29",
+       "model": "m-dolgoe"
+      }
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "01-antediluvian.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-sim",
    "chrono": {
-    "born": {
-     "fatherAge": 502,
-     "refs": [
-      "Быт 5:32",
-      "Быт 7:6",
-      "Быт 11:10"
-     ],
-     "cert": "inference",
-     "note": "Симу было сто лет «чрез два года после потопа» (Быт 11:10), а потоп пришёл, когда Ною было шестьсот лет (Быт 7:6); значит, Ною при рождении Сима было около 502 лет. Слова «Ною было пятьсот лет и родил Ной… Сима, Хама и Иафета» (Быт 5:32) понимаются как возраст, когда Ной начал рождать сыновей"
-    },
-    "died": {
-     "age": 600,
-     "refs": [
-      "Быт 11:10-11"
-     ],
-     "cert": "inference",
-     "note": "Сумма чисел текста: сто лет до рождения Арфаксада и пятьсот после; слова «и умер» в Быт 11:11 стоят в скобках"
-    }
+    "inputs": [
+     {
+      "kind": "age-at-birth",
+      "other": "p-noy",
+      "number": 502,
+      "parts": [
+       {
+        "number": 600,
+        "words": "шестисот",
+        "ref": "Быт 7:6"
+       },
+       {
+        "number": 2,
+        "words": "два",
+        "ref": "Быт 11:10"
+       },
+       {
+        "number": 100,
+        "words": "ста",
+        "ref": "Быт 11:10"
+       }
+      ],
+      "note": "Сим был ста лет «чрез два года после потопа» (Быт 11:10), потоп — когда Ною было шестьсот лет (Быт 7:6): 600 + 2 − 100. Слова «Ною было пятьсот лет и родил…» (Быт 5:32) — начало рождения сыновей (04 § 3.8, Н8)",
+      "refs": [
+       "Быт 5:32",
+       "Быт 7:6",
+       "Быт 11:10"
+      ],
+      "cert": "inference",
+      "calc": {
+       "event": "Быт 5:32",
+       "model": "m-dolgoe"
+      }
+     },
+     {
+      "kind": "age-at-death",
+      "number": 600,
+      "parts": [
+       {
+        "number": 100,
+        "words": "ста",
+        "ref": "Быт 11:10"
+       },
+       {
+        "number": 500,
+        "words": "пятьсот",
+        "ref": "Быт 11:11"
+       }
+      ],
+      "note": "сумма чисел текста: сто лет до рождения Арфаксада и пятьсот после; слов «и умер» вне скобок в Быт 11:11 нет",
+      "refs": [
+       "Быт 11:10-11"
+      ],
+      "cert": "inference",
+      "calc": {
+       "event": "Быт 11:10-11",
+       "model": "m-dolgoe"
+      }
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "02-nations.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-kham",
    "chrono": {
-    "epoch": "era-antediluvian"
+    "inputs": [],
+    "epochs": [
+     {
+      "era": "era-antediluvian",
+      "refs": [
+       "Быт 5:32",
+       "Быт 7:6"
+      ],
+      "cert": "inference",
+      "note": "родился у Ноя после пятисот его лет (Быт 5:32), до потопа в шестисотый год (Быт 7:6)"
+     },
+     {
+      "era": "era-postdiluvian",
+      "refs": [
+       "Быт 9:18"
+      ],
+      "cert": "scripture",
+      "note": "«Сыновья Ноя, вышедшие из ковчега»"
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "02-nations.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-iafet",
    "chrono": {
-    "epoch": "era-antediluvian"
+    "inputs": [],
+    "epochs": [
+     {
+      "era": "era-antediluvian",
+      "refs": [
+       "Быт 5:32",
+       "Быт 7:6"
+      ],
+      "cert": "inference",
+      "note": "родился у Ноя после пятисот его лет (Быт 5:32), до потопа в шестисотый год (Быт 7:6)"
+     },
+     {
+      "era": "era-postdiluvian",
+      "refs": [
+       "Быт 9:18"
+      ],
+      "cert": "scripture",
+      "note": "«Сыновья Ноя, вышедшие из ковчега»"
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "02-nations.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-khanaan",
    "chrono": {
-    "born": {
-     "notBefore": {
-      "from": "p-noy",
-      "years": 601
-     },
-     "refs": [
-      "Быт 7:6",
-      "Быт 7:11",
-      "Быт 8:13-14",
-      "Быт 10:1",
-      "1Пет 3:20"
-     ],
-     "cert": "inference",
-     "note": "Родился после потопа: «после потопа родились у них дети», а в ковчеге спаслись только восемь душ. Потоп пришёл, когда Ною было шестьсот лет, земля высохла в 601-м году его жизни"
-    },
-    "epoch": "era-postdiluvian"
+    "inputs": [
+     {
+      "kind": "not-before",
+      "of": "birth",
+      "other": "p-noy",
+      "number": 601,
+      "parts": [
+       {
+        "number": 600,
+        "words": "шестисот",
+        "ref": "Быт 7:6"
+       },
+       {
+        "number": 601,
+        "words": "Шестьсот первого",
+        "ref": "Быт 8:13"
+       }
+      ],
+      "note": "родился после потопа: «после потопа родились у них дети» (Быт 10:1), а в ковчеге спаслись восемь душ (1 Пет 3:20); земля высохла в шестьсот первом году жизни Ноя (Быт 8:13–14)",
+      "refs": [
+       "Быт 7:6",
+       "Быт 8:13-14",
+       "Быт 10:1",
+       "1Пет 3:20"
+      ],
+      "cert": "inference"
+     }
+    ],
+    "epochs": [
+     {
+      "era": "era-postdiluvian",
+      "refs": [
+       "Быт 10:1",
+       "Быт 10:6"
+      ],
+      "cert": "inference",
+      "note": "сын Хама (Быт 10:6); «после потопа родились у них дети» (Быт 10:1)"
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "02-nations.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
@@ -545,27 +825,51 @@
   {
    "actor": "p-maday",
    "chrono": {
-    "born": {
-     "notBefore": {
-      "from": "p-noy",
-      "years": 601
-     },
-     "refs": [
-      "Быт 7:6",
-      "Быт 7:11",
-      "Быт 8:13-14",
-      "Быт 10:1",
-      "1Пет 3:20"
-     ],
-     "cert": "inference",
-     "note": "Родился после потопа: «после потопа родились у них дети», а в ковчеге спаслись только восемь душ. Потоп пришёл, когда Ною было шестьсот лет, земля высохла в 601-м году его жизни"
-    },
-    "epoch": "era-postdiluvian"
+    "inputs": [
+     {
+      "kind": "not-before",
+      "of": "birth",
+      "other": "p-noy",
+      "number": 601,
+      "parts": [
+       {
+        "number": 600,
+        "words": "шестисот",
+        "ref": "Быт 7:6"
+       },
+       {
+        "number": 601,
+        "words": "Шестьсот первого",
+        "ref": "Быт 8:13"
+       }
+      ],
+      "note": "родился после потопа: «после потопа родились у них дети» (Быт 10:1), а в ковчеге спаслись восемь душ (1 Пет 3:20); земля высохла в шестьсот первом году жизни Ноя (Быт 8:13–14)",
+      "refs": [
+       "Быт 7:6",
+       "Быт 8:13-14",
+       "Быт 10:1",
+       "1Пет 3:20"
+      ],
+      "cert": "inference"
+     }
+    ],
+    "epochs": [
+     {
+      "era": "era-postdiluvian",
+      "refs": [
+       "Быт 10:1",
+       "Быт 10:2"
+      ],
+      "cert": "inference",
+      "note": "сын Иафета (Быт 10:2); «после потопа родились у них дети» (Быт 10:1)"
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "02-nations.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
@@ -984,12 +1288,24 @@
   {
    "actor": "p-filistimlyane",
    "chrono": {
-    "epoch": "era-postdiluvian"
+    "inputs": [],
+    "epochs": [
+     {
+      "era": "era-postdiluvian",
+      "refs": [
+       "Быт 10:1",
+       "Быт 10:14"
+      ],
+      "cert": "inference",
+      "note": "«откуда вышли Филистимляне» — в родословии сынов Ноевых (Быт 10:14), а дети у них родились после потопа (Быт 10:1)"
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "02-nations.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
@@ -1418,27 +1734,54 @@
   {
    "actor": "p-arfaksad",
    "chrono": {
-    "born": {
-     "fatherAge": 100,
-     "refs": [
-      "Быт 11:10"
-     ],
-     "note": "«Сим был ста лет и родил Арфаксада, чрез два года после потопа»"
-    },
-    "died": {
-     "age": 438,
-     "ageBracket": 465,
-     "refs": [
-      "Быт 11:12-13"
-     ],
-     "cert": "inference",
-     "note": "Сумма чисел основного текста: 35 лет до рождения Салы и 403 года после. По числам в скобках — [135] лет до рождения Каинана и [330] после"
-    }
+    "inputs": [
+     {
+      "kind": "age-at-birth",
+      "other": "p-sim",
+      "number": 100,
+      "words": "ста",
+      "refs": [
+       "Быт 11:10"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "Быт 11:10",
+       "model": "m-dolgoe"
+      }
+     },
+     {
+      "kind": "age-at-death",
+      "number": 438,
+      "parts": [
+       {
+        "number": 35,
+        "words": "тридцать пять",
+        "ref": "Быт 11:12"
+       },
+       {
+        "number": 403,
+        "words": "четыреста три",
+        "ref": "Быт 11:13"
+       }
+      ],
+      "numberBracket": 465,
+      "note": "сумма чисел текста: лет до рождения сына и лет после; слов «и умер» вне скобок нет",
+      "refs": [
+       "Быт 11:12-13"
+      ],
+      "cert": "inference",
+      "calc": {
+       "event": "Быт 11:12-13",
+       "model": "m-dolgoe"
+      }
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "03-shem-to-terah.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
@@ -1468,182 +1811,371 @@
   {
    "actor": "p-sala",
    "chrono": {
-    "born": {
-     "fatherAge": 35,
-     "fatherAgeBracket": 265,
-     "refs": [
-      "Быт 11:12"
-     ],
-     "note": "Основной текст: Арфаксаду было 35 лет. В скобках между Арфаксадом и Салой стоит Каинан: Арфаксад [135] лет при рождении Каинана, Каинан [130] лет при рождении Салы, всего 265 лет от рождения Арфаксада"
-    },
-    "died": {
-     "age": 433,
-     "ageBracket": 460,
-     "refs": [
-      "Быт 11:14-15"
-     ],
-     "cert": "inference",
-     "note": "Сумма чисел основного текста: 30 лет до рождения Евера и 403 года после; по скобкам — [130] и [330]"
-    }
+    "inputs": [
+     {
+      "kind": "age-at-birth",
+      "other": "p-arfaksad",
+      "number": 35,
+      "words": "тридцать пять",
+      "numberBracket": 265,
+      "reading": {
+       "set": "r-father-sala",
+       "in": "gen"
+      },
+      "note": "в скобках Быт 11:12–13 между Арфаксадом и Салой стоит Каинан: [135] лет Арфаксада при рождении Каинана и [130] лет Каинана при рождении Салы; число в скобках здесь — их сумма, для модели m-skobki (не основание)",
+      "refs": [
+       "Быт 11:12"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "Быт 11:12",
+       "model": "m-dolgoe"
+      }
+     },
+     {
+      "kind": "age-at-death",
+      "number": 433,
+      "parts": [
+       {
+        "number": 30,
+        "words": "тридцать",
+        "ref": "Быт 11:14"
+       },
+       {
+        "number": 403,
+        "words": "четыреста три",
+        "ref": "Быт 11:15"
+       }
+      ],
+      "numberBracket": 460,
+      "note": "сумма чисел текста: лет до рождения сына и лет после; слов «и умер» вне скобок нет",
+      "refs": [
+       "Быт 11:14-15"
+      ],
+      "cert": "inference",
+      "calc": {
+       "event": "Быт 11:14-15",
+       "model": "m-dolgoe"
+      }
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "03-shem-to-terah.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-ever",
    "chrono": {
-    "born": {
-     "fatherAge": 30,
-     "fatherAgeBracket": 130,
-     "refs": [
-      "Быт 11:14"
-     ]
-    },
-    "died": {
-     "age": 464,
-     "ageBracket": 504,
-     "refs": [
-      "Быт 11:16-17"
-     ],
-     "cert": "inference",
-     "note": "Сумма чисел основного текста: 34 года до рождения Фалека и 430 лет после; по скобкам — [134] и [370]"
-    }
+    "inputs": [
+     {
+      "kind": "age-at-birth",
+      "other": "p-sala",
+      "number": 30,
+      "words": "тридцать",
+      "numberBracket": 130,
+      "refs": [
+       "Быт 11:14"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "Быт 11:14",
+       "model": "m-dolgoe"
+      }
+     },
+     {
+      "kind": "age-at-death",
+      "number": 464,
+      "parts": [
+       {
+        "number": 34,
+        "words": "тридцать четыре",
+        "ref": "Быт 11:16"
+       },
+       {
+        "number": 430,
+        "words": "четыреста тридцать",
+        "ref": "Быт 11:17"
+       }
+      ],
+      "numberBracket": 504,
+      "note": "сумма чисел текста: лет до рождения сына и лет после; слов «и умер» вне скобок нет",
+      "refs": [
+       "Быт 11:16-17"
+      ],
+      "cert": "inference",
+      "calc": {
+       "event": "Быт 11:16-17",
+       "model": "m-dolgoe"
+      }
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "03-shem-to-terah.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-falek",
    "chrono": {
-    "born": {
-     "fatherAge": 34,
-     "fatherAgeBracket": 134,
-     "refs": [
-      "Быт 11:16"
-     ]
-    },
-    "died": {
-     "age": 239,
-     "ageBracket": 339,
-     "refs": [
-      "Быт 11:18-19"
-     ],
-     "cert": "inference",
-     "note": "Сумма чисел основного текста: 30 лет до рождения Рагава и 209 лет после; по скобкам — [130] и 209"
-    }
+    "inputs": [
+     {
+      "kind": "age-at-birth",
+      "other": "p-ever",
+      "number": 34,
+      "words": "тридцать четыре",
+      "numberBracket": 134,
+      "refs": [
+       "Быт 11:16"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "Быт 11:16",
+       "model": "m-dolgoe"
+      }
+     },
+     {
+      "kind": "age-at-death",
+      "number": 239,
+      "parts": [
+       {
+        "number": 30,
+        "words": "тридцать",
+        "ref": "Быт 11:18"
+       },
+       {
+        "number": 209,
+        "words": "двести девять",
+        "ref": "Быт 11:19"
+       }
+      ],
+      "numberBracket": 339,
+      "note": "сумма чисел текста: лет до рождения сына и лет после; слов «и умер» вне скобок нет",
+      "refs": [
+       "Быт 11:18-19"
+      ],
+      "cert": "inference",
+      "calc": {
+       "event": "Быт 11:18-19",
+       "model": "m-dolgoe"
+      }
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "03-shem-to-terah.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-ragav",
    "chrono": {
-    "born": {
-     "fatherAge": 30,
-     "fatherAgeBracket": 130,
-     "refs": [
-      "Быт 11:18"
-     ]
-    },
-    "died": {
-     "age": 239,
-     "ageBracket": 339,
-     "refs": [
-      "Быт 11:20-21"
-     ],
-     "cert": "inference",
-     "note": "Сумма чисел основного текста: 32 года до рождения Серуха и 207 лет после; по скобкам — [132] и 207"
-    }
+    "inputs": [
+     {
+      "kind": "age-at-birth",
+      "other": "p-falek",
+      "number": 30,
+      "words": "тридцать",
+      "numberBracket": 130,
+      "refs": [
+       "Быт 11:18"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "Быт 11:18",
+       "model": "m-dolgoe"
+      }
+     },
+     {
+      "kind": "age-at-death",
+      "number": 239,
+      "parts": [
+       {
+        "number": 32,
+        "words": "тридцать два",
+        "ref": "Быт 11:20"
+       },
+       {
+        "number": 207,
+        "words": "двести семь",
+        "ref": "Быт 11:21"
+       }
+      ],
+      "numberBracket": 339,
+      "note": "сумма чисел текста: лет до рождения сына и лет после; слов «и умер» вне скобок нет",
+      "refs": [
+       "Быт 11:20-21"
+      ],
+      "cert": "inference",
+      "calc": {
+       "event": "Быт 11:20-21",
+       "model": "m-dolgoe"
+      }
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "03-shem-to-terah.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-serukh",
    "chrono": {
-    "born": {
-     "fatherAge": 32,
-     "fatherAgeBracket": 132,
-     "refs": [
-      "Быт 11:20"
-     ]
-    },
-    "died": {
-     "age": 230,
-     "ageBracket": 330,
-     "refs": [
-      "Быт 11:22-23"
-     ],
-     "cert": "inference",
-     "note": "Сумма чисел основного текста: 30 лет до рождения Нахора и 200 лет после; по скобкам — [130] и 200"
-    }
+    "inputs": [
+     {
+      "kind": "age-at-birth",
+      "other": "p-ragav",
+      "number": 32,
+      "words": "тридцать два",
+      "numberBracket": 132,
+      "refs": [
+       "Быт 11:20"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "Быт 11:20",
+       "model": "m-dolgoe"
+      }
+     },
+     {
+      "kind": "age-at-death",
+      "number": 230,
+      "parts": [
+       {
+        "number": 30,
+        "words": "тридцать",
+        "ref": "Быт 11:22"
+       },
+       {
+        "number": 200,
+        "words": "двести",
+        "ref": "Быт 11:23"
+       }
+      ],
+      "numberBracket": 330,
+      "note": "сумма чисел текста: лет до рождения сына и лет после; слов «и умер» вне скобок нет",
+      "refs": [
+       "Быт 11:22-23"
+      ],
+      "cert": "inference",
+      "calc": {
+       "event": "Быт 11:22-23",
+       "model": "m-dolgoe"
+      }
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "03-shem-to-terah.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-nakhor",
    "chrono": {
-    "born": {
-     "fatherAge": 30,
-     "fatherAgeBracket": 130,
-     "refs": [
-      "Быт 11:22"
-     ]
-    },
-    "died": {
-     "age": 148,
-     "ageBracket": 208,
-     "refs": [
-      "Быт 11:24-25"
-     ],
-     "cert": "inference",
-     "note": "Сумма чисел основного текста: 29 лет до рождения Фарры и 119 лет после; по скобкам — [79] и [129]"
-    }
+    "inputs": [
+     {
+      "kind": "age-at-birth",
+      "other": "p-serukh",
+      "number": 30,
+      "words": "тридцать",
+      "numberBracket": 130,
+      "refs": [
+       "Быт 11:22"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "Быт 11:22",
+       "model": "m-dolgoe"
+      }
+     },
+     {
+      "kind": "age-at-death",
+      "number": 148,
+      "parts": [
+       {
+        "number": 29,
+        "words": "двадцать девять",
+        "ref": "Быт 11:24"
+       },
+       {
+        "number": 119,
+        "words": "сто девятнадцать",
+        "ref": "Быт 11:25"
+       }
+      ],
+      "numberBracket": 208,
+      "note": "сумма чисел текста: лет до рождения сына и лет после; слов «и умер» вне скобок нет",
+      "refs": [
+       "Быт 11:24-25"
+      ],
+      "cert": "inference",
+      "calc": {
+       "event": "Быт 11:24-25",
+       "model": "m-dolgoe"
+      }
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "03-shem-to-terah.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-farra",
    "chrono": {
-    "born": {
-     "fatherAge": 29,
-     "fatherAgeBracket": 79,
-     "refs": [
-      "Быт 11:24"
-     ]
-    },
-    "died": {
-     "age": 205,
-     "refs": [
-      "Быт 11:32"
-     ],
-     "note": "«И было дней жизни Фарры [в Харранской земле] двести пять лет, и умер Фарра в Харране»"
-    }
+    "inputs": [
+     {
+      "kind": "age-at-birth",
+      "other": "p-nakhor",
+      "number": 29,
+      "words": "двадцать девять",
+      "numberBracket": 79,
+      "refs": [
+       "Быт 11:24"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "Быт 11:24",
+       "model": "m-dolgoe"
+      }
+     },
+     {
+      "kind": "age-at-death",
+      "number": 205,
+      "words": "двести пять",
+      "refs": [
+       "Быт 11:32"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "Быт 11:32",
+       "model": "m-dolgoe"
+      }
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "03-shem-to-terah.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
@@ -1771,28 +2303,64 @@
   {
    "actor": "p-avraam",
    "chrono": {
-    "born": {
-     "fatherAge": 130,
-     "refs": [
-      "Быт 11:26",
-      "Быт 11:32",
-      "Быт 12:4",
-      "Деян 7:4"
-     ],
-     "cert": "inference",
-     "note": "Фарра умер в Харране 205 лет (Быт 11:32); Аврам вышел из Харрана 75 лет (Быт 12:4) — «по смерти отца его» (Деян 7:4); 205 − 75 = 130. Подробнее — § 24"
-    },
-    "died": {
-     "age": 175,
-     "refs": [
-      "Быт 25:7"
-     ]
-    }
+    "inputs": [
+     {
+      "kind": "not-before",
+      "of": "birth",
+      "other": "p-farra",
+      "number": 70,
+      "words": "семьдесят",
+      "note": "«Фарра жил семьдесят лет и родил Аврама, Нахора и Арана»: кто из троих родился в семьдесят лет, стих не говорит (04 § 3.8)",
+      "refs": [
+       "Быт 11:26"
+      ],
+      "cert": "scripture"
+     },
+     {
+      "kind": "not-before",
+      "of": "birth",
+      "other": "p-farra",
+      "number": 130,
+      "parts": [
+       {
+        "number": 205,
+        "words": "двести пять",
+        "ref": "Быт 11:32"
+       },
+       {
+        "number": 75,
+        "words": "семидесяти пяти",
+        "ref": "Быт 12:4"
+       }
+      ],
+      "note": "Фарра умер двухсот пяти лет (Быт 11:32), Аврам вышел из Харрана семидесяти пяти лет (Быт 12:4) «по смерти отца его» (Деян 7:4 — слова Стефана, Деян 7:2): Фарре при рождении Аврама не меньше 130 лет — вывод при прямом понимании Деян 7:4; «ровно 130» — выбор модели m-dolgoe (04 § 3.8)",
+      "refs": [
+       "Быт 11:32",
+       "Быт 12:4",
+       "Деян 7:4"
+      ],
+      "cert": "inference"
+     },
+     {
+      "kind": "age-at-death",
+      "number": 175,
+      "words": "сто семьдесят пять",
+      "refs": [
+       "Быт 25:7"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "Быт 25:7",
+       "model": "m-dolgoe"
+      }
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "04-abraham.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
@@ -3022,29 +3590,67 @@
   {
    "actor": "p-iosif",
    "chrono": {
-    "born": {
-     "fatherAge": 91,
-     "refs": [
-      "Быт 41:46",
-      "Быт 41:53-54",
-      "Быт 45:6",
-      "Быт 47:9"
-     ],
-     "cert": "inference",
-     "note": "Иосифу было 30 лет, когда он предстал пред фараоном; прошли семь лет изобилия и два года голода, и в 39 лет он принял отца, которому было 130 лет: 130 − 39 = 91"
-    },
-    "died": {
-     "age": 110,
-     "refs": [
-      "Быт 50:22",
-      "Быт 50:26"
-     ]
-    }
+    "inputs": [
+     {
+      "kind": "age-at-birth",
+      "other": "p-iakov",
+      "number": 91,
+      "parts": [
+       {
+        "number": 30,
+        "words": "тридцать",
+        "ref": "Быт 41:46"
+       },
+       {
+        "number": 7,
+        "words": "семь",
+        "ref": "Быт 41:53"
+       },
+       {
+        "number": 2,
+        "words": "два",
+        "ref": "Быт 45:6"
+       },
+       {
+        "number": 130,
+        "words": "сто тридцать",
+        "ref": "Быт 47:9"
+       }
+      ],
+      "note": "Иосифу было тридцать лет, когда он предстал пред фараоном (Быт 41:46); прошли семь лет изобилия и два года голода (Быт 41:53–54; 45:6), когда пришёл Иаков, которому было сто тридцать лет (Быт 47:9): 130 − (30 + 7 + 2)",
+      "refs": [
+       "Быт 41:46",
+       "Быт 41:53-54",
+       "Быт 45:6",
+       "Быт 47:9"
+      ],
+      "cert": "inference",
+      "calc": {
+       "event": "Быт 41:46",
+       "model": "m-dolgoe"
+      }
+     },
+     {
+      "kind": "age-at-death",
+      "number": 110,
+      "words": "ста десяти",
+      "refs": [
+       "Быт 50:26",
+       "Быт 50:22"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "Быт 50:26",
+       "model": "m-dolgoe"
+      }
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "06-jacob-sons.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
@@ -4538,22 +5144,49 @@
   {
    "actor": "p-iair-syn-seguva",
    "chrono": {
-    "active": {
-     "from": -1407,
-     "to": -1407,
-     "refs": [
-      "Чис 32:41",
-      "Чис 33:38",
-      "Втор 1:3",
-      "Втор 3:14"
-     ],
-     "note": "взял селения в Галааде в сороковой год странствия: после смерти Аарона (Чис 33:38) и прежде речи Моисея в сороковой год (Втор 1:3), где это событие названо прошедшим (Втор 3:14)"
-    }
+    "inputs": [
+     {
+      "kind": "years-after",
+      "of": "life",
+      "event": {
+       "text": "исшествие сынов Израилевых из земли Египетской",
+       "refs": [
+        "Исх 12:41"
+       ]
+      },
+      "number": 40,
+      "words": "сороковой",
+      "note": "взял селения в Галааде в сороковой год странствия: после смерти Аарона (Чис 33:38) и прежде речи Моисея в сороковой год (Втор 1:3), где это названо прошедшим (Втор 3:14)",
+      "refs": [
+       "Чис 32:41",
+       "Чис 33:38",
+       "Втор 1:3",
+       "Втор 3:14"
+      ],
+      "cert": "inference",
+      "calc": {
+       "event": "Чис 32:41",
+       "model": "m-dolgoe"
+      }
+     }
+    ],
+    "epochs": [
+     {
+      "era": "era-exodus",
+      "refs": [
+       "Чис 32:41",
+       "Втор 3:14"
+      ],
+      "cert": "inference",
+      "note": "взял селения при Моисее, до перехода через Иордан"
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "07-judah.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
@@ -4988,30 +5621,51 @@
   {
    "actor": "p-kaaf",
    "chrono": {
-    "born": {
-     "notAfter": {
-      "from": "p-iakov",
-      "years": 130
+    "inputs": [
+     {
+      "kind": "not-after",
+      "of": "birth",
+      "other": "p-iakov",
+      "number": 130,
+      "words": "сто тридцать",
+      "note": "пришёл в Египет с Иаковом (Быт 46:8, 11), которому тогда было сто тридцать лет (Быт 47:9)",
+      "refs": [
+       "Быт 46:11",
+       "Быт 47:9"
+      ],
+      "cert": "inference"
      },
-     "refs": [
-      "Быт 46:8",
-      "Быт 46:11",
-      "Быт 47:9"
-     ],
-     "note": "пришёл в Египет с Иаковом, которому тогда было 130 лет"
-    },
-    "died": {
-     "age": 133,
-     "refs": [
-      "Исх 6:18"
-     ]
-    },
-    "epoch": "era-egypt"
+     {
+      "kind": "age-at-death",
+      "number": 133,
+      "words": "сто тридцать три",
+      "refs": [
+       "Исх 6:18"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "Исх 6:18",
+       "model": "m-dolgoe"
+      }
+     }
+    ],
+    "epochs": [
+     {
+      "era": "era-egypt",
+      "refs": [
+       "Быт 46:8",
+       "Быт 46:11"
+      ],
+      "cert": "inference",
+      "note": "в числе «пришедших в Египет» (Быт 46:8, 11)"
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
@@ -5062,18 +5716,38 @@
   {
    "actor": "p-amram",
    "chrono": {
-    "died": {
-     "age": 137,
-     "refs": [
-      "Исх 6:20"
-     ]
-    },
-    "epoch": "era-egypt"
+    "inputs": [
+     {
+      "kind": "age-at-death",
+      "number": 137,
+      "words": "сто тридцать семь",
+      "refs": [
+       "Исх 6:20"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "Исх 6:20",
+       "model": "m-dolgoe"
+      }
+     }
+    ],
+    "epochs": [
+     {
+      "era": "era-egypt",
+      "refs": [
+       "Чис 26:59",
+       "Исх 6:20"
+      ],
+      "cert": "inference",
+      "note": "жена его родилась в Египте и родила ему Аарона, Моисея и Мариам (Чис 26:59)"
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
@@ -5134,23 +5808,38 @@
   {
    "actor": "p-iokhaveda",
    "chrono": {
-    "born": {
-     "notBefore": {
-      "from": "p-iakov",
-      "years": 130
-     },
-     "refs": [
-      "Чис 26:59",
-      "Быт 47:9"
-     ],
-     "note": "«которую родила жена Левиина в Египте» — после прихода Иакова в Египет"
-    },
-    "epoch": "era-egypt"
+    "inputs": [
+     {
+      "kind": "not-before",
+      "of": "birth",
+      "other": "p-iakov",
+      "number": 130,
+      "words": "сто тридцать",
+      "note": "«которую родила жена Левиина в Египте» — после прихода Иакова в Египет (Быт 47:9)",
+      "refs": [
+       "Чис 26:59",
+       "Быт 47:9"
+      ],
+      "cert": "inference"
+     }
+    ],
+    "epochs": [
+     {
+      "era": "era-egypt",
+      "refs": [
+       "Чис 26:59",
+       "Быт 47:9"
+      ],
+      "cert": "inference",
+      "note": "«которую родила жена Левиина в Египте» (Чис 26:59)"
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
@@ -5167,104 +5856,203 @@
   {
    "actor": "p-aaron",
    "chrono": {
-    "born": {
-     "year": -1530,
-     "cert": "inference",
-     "refs": [
-      "Исх 7:7",
-      "Чис 33:38-39",
-      "3Цар 6:1"
-     ],
-     "note": "123 года при смерти в сороковой год по исшествии — 1407 г. до Р. Х. (Чис 33:38–39); отсюда рождение в 1530 г. до Р. Х. Восемьдесят три года «когда стали говорить они к фараону» (Исх 7:7) ему тогда было в 1447 г. до Р. Х. — речь к фараону предшествовала Исходу"
-    },
-    "died": {
-     "age": 123,
-     "year": -1407,
-     "cert": "inference",
-     "refs": [
-      "Чис 33:38-39"
-     ],
-     "note": "умер на горе Ор в сороковой год по исшествии из Египта, в пятый месяц, в первый день месяца"
-    }
+    "inputs": [
+     {
+      "kind": "age-at-event",
+      "event": {
+       "text": "Моисей и Аарон стали говорить к фараону",
+       "refs": [
+        "Исх 7:7"
+       ]
+      },
+      "number": 83,
+      "words": "восьмидесяти трех",
+      "refs": [
+       "Исх 7:7"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "Исх 7:7",
+       "model": "m-dolgoe"
+      }
+     },
+     {
+      "kind": "age-at-death",
+      "number": 123,
+      "words": "ста двадцати трех",
+      "refs": [
+       "Чис 33:39"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "Чис 33:39",
+       "model": "m-dolgoe"
+      }
+     },
+     {
+      "kind": "years-after",
+      "of": "death",
+      "event": {
+       "text": "исшествие сынов Израилевых из земли Египетской",
+       "refs": [
+        "Исх 12:41"
+       ]
+      },
+      "number": 40,
+      "words": "сороковой",
+      "note": "«в пятый месяц, в первый день месяца»",
+      "refs": [
+       "Чис 33:38"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "Чис 33:38",
+       "model": "m-dolgoe"
+      }
+     }
+    ],
+    "epochs": [
+     {
+      "era": "era-exodus",
+      "refs": [
+       "Исх 7:7",
+       "Чис 33:38"
+      ],
+      "cert": "inference"
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-moisey",
    "chrono": {
-    "born": {
-     "year": -1526,
-     "cert": "inference",
-     "refs": [
-      "Исх 7:7",
-      "3Цар 6:1"
-     ],
-     "note": "восьмидесяти лет, когда говорил к фараону в год Исхода (1446 г. до Р. Х.); год Исхода — от 480-го года до закладки храма (3 Цар 6:1)"
-    },
-    "died": {
-     "age": 120,
-     "refs": [
-      "Втор 34:7",
-      "Втор 31:2"
-     ]
-    }
+    "inputs": [
+     {
+      "kind": "age-at-event",
+      "event": {
+       "text": "Моисей и Аарон стали говорить к фараону",
+       "refs": [
+        "Исх 7:7"
+       ]
+      },
+      "number": 80,
+      "words": "восьмидесяти",
+      "refs": [
+       "Исх 7:7"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "Исх 7:7",
+       "model": "m-dolgoe"
+      }
+     },
+     {
+      "kind": "age-at-death",
+      "number": 120,
+      "words": "сто двадцать",
+      "refs": [
+       "Втор 34:7",
+       "Втор 31:2"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "Втор 34:7",
+       "model": "m-dolgoe"
+      }
+     }
+    ],
+    "epochs": [
+     {
+      "era": "era-exodus",
+      "refs": [
+       "Исх 12:41",
+       "Исх 12:50-51"
+      ],
+      "cert": "inference",
+      "note": "вывел народ из Египта"
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-mariam",
    "chrono": {
-    "born": {
-     "notAfter": {
-      "from": "p-moisey",
-      "years": -7
+    "inputs": [
+     {
+      "kind": "not-after",
+      "of": "birth",
+      "other": "p-moisey",
+      "note": "старше Моисея: сестра младенца сама стерегла его у реки и говорила с дочерью фараоновой (Исх 2:4, 7–8), а Мариам — единственная названная сестра Аарона и Моисея (Чис 26:59; 1 Пар 6:3). На сколько старше, текст не говорит",
+      "refs": [
+       "Исх 2:4",
+       "Исх 2:7-8",
+       "Чис 26:59",
+       "1Пар 6:3"
+      ],
+      "cert": "inference"
      },
-     "cert": "inference",
-     "refs": [
-      "Исх 2:4",
-      "Исх 2:7-8",
-      "Чис 26:59",
-      "1Пар 6:3"
-     ],
-     "note": "старше Моисея: сестра младенца сама стерегла его у реки и говорила с дочерью фараоновой (Исх 2:4, 7–8), а Мариам — единственная названная сестра Аарона и Моисея (Чис 26:59; 1 Пар 6:3). Семь лет — наименьший возраст для такого поручения, оценка атласа; точной разницы текст не называет"
-    },
-    "died": {
-     "range": [
-      -1408,
-      -1407
-     ],
-     "cert": "inference",
-     "refs": [
-      "Чис 20:1",
-      "Чис 20:22-28",
-      "Чис 33:36-39"
-     ],
-     "note": "умерла в Кадесе в первый месяц того года, в пятый месяц которого — сороковой по исшествии — умер Аарон"
-    },
-    "active": {
-     "from": -1446,
-     "to": -1407,
-     "refs": [
-      "Исх 15:20-21",
-      "Чис 12:1-15",
-      "Чис 20:1"
-     ],
-     "note": "от перехода через Чермное море до смерти в Кадесе в сороковой год странствия"
-    },
-    "epoch": "era-egypt"
+     {
+      "kind": "years-after",
+      "of": "death",
+      "event": {
+       "text": "исшествие сынов Израилевых из земли Египетской",
+       "refs": [
+        "Исх 12:41"
+       ]
+      },
+      "number": 40,
+      "words": "сороковой",
+      "note": "умерла в Кадесе в первый месяц (Чис 20:1) того года, в пятый месяц которого — сороковой по исшествии — умер Аарон (Чис 20:22–28; 33:38)",
+      "refs": [
+       "Чис 20:1",
+       "Чис 20:22-28",
+       "Чис 33:38"
+      ],
+      "cert": "inference",
+      "calc": {
+       "event": "Чис 20:1",
+       "model": "m-dolgoe"
+      }
+     }
+    ],
+    "epochs": [
+     {
+      "era": "era-egypt",
+      "refs": [
+       "Исх 2:4",
+       "Чис 26:59"
+      ],
+      "cert": "inference",
+      "note": "сестра младенца Моисея в Египте"
+     },
+     {
+      "era": "era-exodus",
+      "refs": [
+       "Исх 15:20",
+       "Чис 20:1"
+      ],
+      "cert": "inference",
+      "note": "от песни у Чермного моря до смерти в Кадесе"
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
@@ -6962,21 +7750,34 @@
   {
    "actor": "p-asaf",
    "chrono": {
-    "epoch": "era-united",
-    "active": {
-     "from": -971,
-     "to": -971,
-     "refs": [
-      "1Пар 23:1-2",
-      "1Пар 25:1-2"
-     ],
-     "note": "распределение певцов в конце царствования Давида"
-    }
+    "inputs": [
+     {
+      "kind": "under-king",
+      "of": "life",
+      "other": "p-david",
+      "note": "«под руководством Асафа, игравшего по наставлению царя» — отделил Давид (1 Пар 25:1–2)",
+      "refs": [
+       "1Пар 25:1-2"
+      ],
+      "cert": "scripture"
+     }
+    ],
+    "epochs": [
+     {
+      "era": "era-united",
+      "refs": [
+       "1Пар 25:1-2"
+      ],
+      "cert": "inference",
+      "note": "при Давиде"
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
@@ -12056,20 +12857,35 @@
   {
    "actor": "p-beera-syn-vaala",
    "chrono": {
-    "active": {
-     "from": -732,
-     "to": -732,
-     "refs": [
-      "1Пар 5:6",
-      "4Цар 15:29"
-     ],
-     "note": "уведён в плен Феглафелласаром; Галаад взят «во дни Факея, царя Израильского» (752–732 гг. до Р. Х.)"
-    }
+    "inputs": [
+     {
+      "kind": "under-king",
+      "of": "life",
+      "other": "p-fakey",
+      "note": "уведён в плен Феглафелласаром (1 Пар 5:6); Галаад взят Феглаффелласаром «во дни Факея, царя Израильского» (4 Цар 15:29)",
+      "refs": [
+       "1Пар 5:6",
+       "4Цар 15:29"
+      ],
+      "cert": "inference"
+     }
+    ],
+    "epochs": [
+     {
+      "era": "era-divided",
+      "refs": [
+       "1Пар 5:6",
+       "4Цар 15:29"
+      ],
+      "cert": "inference"
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "09-tribes-a.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
@@ -14318,19 +15134,24 @@
   {
    "actor": "p-iofam-syn-gedeona",
    "chrono": {
-    "active": {
-     "from": -1122,
-     "to": -1122,
-     "refs": [
-      "Суд 9:5-7"
-     ],
-     "note": "спасся при избиении братьев в начале царствования Авимелеха; год приблизителен"
-    }
+    "inputs": [],
+    "epochs": [
+     {
+      "era": "era-judges",
+      "refs": [
+       "Суд 8:32",
+       "Суд 9:5"
+      ],
+      "cert": "inference",
+      "note": "спасся, когда после смерти Гедеона (Суд 8:32) Авимелех убил братьев (Суд 9:5)"
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "11-judges.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
@@ -14621,55 +15442,100 @@
   {
    "actor": "p-david",
    "chrono": {
-    "born": {
-     "year": -1040,
-     "cert": "inference",
-     "refs": [
-      "2Цар 5:4"
-     ],
-     "note": "30 лет при воцарении в Хевроне; воцарение — 1010 г. до Р. Х. по хронологии, принятой в атласе (расч.)"
-    },
-    "died": {
-     "year": -970,
-     "age": 70,
-     "cert": "inference",
-     "refs": [
-      "2Цар 5:4",
-      "3Цар 2:10-11",
-      "1Пар 29:27-28"
-     ],
-     "note": "30 лет при воцарении + 40 лет царствования"
-    },
-    "reign": [
+    "inputs": [
      {
-      "over": "Иудея (в Хевроне)",
-      "start": -1010,
-      "end": -1003,
-      "years": 7,
-      "ageAtStart": 30,
+      "kind": "age-at-accession",
+      "number": 30,
+      "words": "Тридцать",
       "refs": [
-       "2Цар 5:4-5",
-       "2Цар 2:11"
+       "2Цар 5:4"
       ],
-      "note": "по тексту — семь лет и шесть месяцев"
+      "cert": "scripture",
+      "calc": {
+       "event": "2Цар 5:4",
+       "model": "m-dolgoe"
+      }
      },
      {
-      "over": "весь Израиль",
-      "start": -1003,
-      "end": -970,
-      "years": 33,
+      "kind": "reign",
+      "number": 40,
+      "words": "сорок",
+      "refs": [
+       "2Цар 5:4",
+       "3Цар 2:11",
+       "1Пар 29:27"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "2Цар 5:4",
+       "model": "m-dolgoe"
+      }
+     },
+     {
+      "kind": "reign",
+      "number": 7,
+      "words": "семь лет и шесть месяцев",
+      "plusMonths": 6,
+      "kingdom": "judah-hebron",
+      "refs": [
+       "2Цар 5:5",
+       "2Цар 2:11"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "2Цар 5:5",
+       "model": "m-dolgoe"
+      }
+     },
+     {
+      "kind": "reign",
+      "number": 33,
+      "words": "тридцать три",
+      "kingdom": "israel-united",
       "refs": [
        "2Цар 5:5",
        "3Цар 2:11",
        "1Пар 29:27"
-      ]
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "2Цар 5:5",
+       "model": "m-dolgoe"
+      }
+     },
+     {
+      "kind": "age-at-death",
+      "number": 70,
+      "parts": [
+       {
+        "number": 30,
+        "words": "Тридцать",
+        "ref": "2Цар 5:4"
+       },
+       {
+        "number": 40,
+        "words": "сорок",
+        "ref": "2Цар 5:4"
+       }
+      ],
+      "note": "почил по окончании сорока лет царствования (3 Цар 2:10–11), воцарившись тридцати лет (2 Цар 5:4)",
+      "refs": [
+       "2Цар 5:4",
+       "3Цар 2:10-11"
+      ],
+      "cert": "inference",
+      "calc": {
+       "event": "2Цар 5:4",
+       "model": "m-dolgoe"
+      }
      }
     ]
    },
    "prov": {
     "from": {
      "vol": "12-house-of-david.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
@@ -16676,218 +17542,334 @@
   {
    "actor": "p-amasiya",
    "chrono": {
-    "reign": [
+    "inputs": [
      {
-      "over": "Иудея",
-      "start": -796,
-      "end": -767,
-      "years": 29,
-      "ageAtStart": 25,
+      "kind": "age-at-accession",
+      "number": 25,
+      "words": "двадцати пяти",
       "refs": [
        "4Цар 14:2",
        "2Пар 25:1"
       ],
-      "sync": [
-       {
-        "with": "p-ioas-syn-ioakhaza",
-        "year": 2,
-        "refs": [
-         "4Цар 14:1"
-        ]
-       }
-      ]
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 14:2",
+       "scheme": "s-mcfall-young"
+      }
+     },
+     {
+      "kind": "reign",
+      "number": 29,
+      "words": "двадцать девять",
+      "kingdom": "judah",
+      "refs": [
+       "4Цар 14:2",
+       "2Пар 25:1"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 14:2",
+       "scheme": "s-mcfall-young"
+      }
+     },
+     {
+      "kind": "synchronism",
+      "other": "p-ioas-syn-ioakhaza",
+      "number": 2,
+      "words": "второй",
+      "refs": [
+       "4Цар 14:1"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 14:1",
+       "scheme": "s-mcfall-young"
+      }
      }
-    ],
-    "died": {
-     "year": -767,
-     "refs": [
-      "4Цар 14:19",
-      "2Пар 25:27"
-     ],
-     "cert": "inference",
-     "note": "убит заговорщиками в Лахисе; год — расчёт"
-    }
+    ]
    },
    "prov": {
     "from": {
      "vol": "13-kings-of-judah.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-iekholiya",
    "chrono": {
+    "inputs": [],
     "epoch": "era-divided"
    },
    "prov": {
     "from": {
      "vol": "13-kings-of-judah.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-oziya",
    "chrono": {
-    "reign": [
+    "inputs": [
      {
-      "over": "Иудея",
-      "start": -792,
-      "end": -740,
-      "sole": -767,
-      "years": 52,
-      "ageAtStart": 16,
+      "kind": "age-at-accession",
+      "number": 16,
+      "words": "шестнадцати",
       "refs": [
        "4Цар 15:2",
        "2Пар 26:3"
       ],
-      "sync": [
-       {
-        "with": "p-ieroboam-vtoroy",
-        "year": 27,
-        "refs": [
-         "4Цар 15:1"
-        ],
-        "note": "двадцать седьмой год Иеровоама II (счёт от 793 г.) — 767 г. до Р. Х., год смерти Амасии; начало Азарии в атласе — 792 г. По принятой реконструкции Азария царствовал вместе с отцом с 792 г., пятьдесят два года (4 Цар 15:2) считаются от этого года, а синхронизм отмечает единоличное царствование"
-       }
-      ]
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 15:2",
+       "scheme": "s-mcfall-young"
+      }
+     },
+     {
+      "kind": "reign",
+      "number": 52,
+      "words": "пятьдесят два",
+      "kingdom": "judah",
+      "refs": [
+       "4Цар 15:2",
+       "2Пар 26:3"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 15:2",
+       "scheme": "s-mcfall-young"
+      }
+     },
+     {
+      "kind": "synchronism",
+      "other": "p-ieroboam-vtoroy",
+      "number": 27,
+      "words": "двадцать седьмой",
+      "refs": [
+       "4Цар 15:1"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 15:1",
+       "scheme": "s-mcfall-young"
+      }
+     },
+     {
+      "kind": "succeeded",
+      "other": "p-amasiya",
+      "words": "воцарили его вместо отца его Амасии",
+      "refs": [
+       "4Цар 14:21"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 14:21",
+       "scheme": "s-mcfall-young"
+      }
      }
-    ],
-    "died": {
-     "year": -740,
-     "refs": [
-      "4Цар 15:7",
-      "2Пар 26:23",
-      "Ис 6:1"
-     ],
-     "cert": "inference",
-     "note": "умер в конце царствования; год — расчёт по принятой реконструкции"
-    }
+    ]
    },
    "prov": {
     "from": {
      "vol": "13-kings-of-judah.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-ierusha-doch-sadoka",
    "chrono": {
+    "inputs": [],
     "epoch": "era-divided"
    },
    "prov": {
     "from": {
      "vol": "13-kings-of-judah.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-ioafam",
    "chrono": {
-    "reign": [
+    "inputs": [
      {
-      "over": "Иудея",
-      "start": -750,
-      "end": -735,
-      "sole": -740,
-      "years": 16,
-      "ageAtStart": 25,
+      "kind": "age-at-accession",
+      "number": 25,
+      "words": "Двадцати пяти",
       "refs": [
        "4Цар 15:33",
-       "2Пар 27:1",
-       "2Пар 27:8"
+       "2Пар 27:1"
       ],
-      "sync": [
-       {
-        "with": "p-fakey",
-        "year": 2,
-        "refs": [
-         "4Цар 15:32"
-        ]
-       }
-      ]
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 15:33",
+       "scheme": "s-mcfall-young"
+      }
+     },
+     {
+      "kind": "reign",
+      "number": 16,
+      "words": "шестнадцать",
+      "kingdom": "judah",
+      "refs": [
+       "4Цар 15:33",
+       "2Пар 27:1"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 15:33",
+       "scheme": "s-mcfall-young"
+      }
+     },
+     {
+      "kind": "synchronism",
+      "other": "p-fakey",
+      "number": 2,
+      "words": "второй",
+      "refs": [
+       "4Цар 15:32"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 15:32",
+       "scheme": "s-mcfall-young"
+      }
+     },
+     {
+      "kind": "succeeded",
+      "other": "p-oziya",
+      "words": "И воцарился Иофам, сын его, вместо него",
+      "refs": [
+       "4Цар 15:7",
+       "2Пар 26:23"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 15:7",
+       "scheme": "s-mcfall-young"
+      }
+     },
+     {
+      "kind": "under-king",
+      "of": "life",
+      "other": "p-oziya",
+      "words": "Иофам, сын царя, начальствовал над дворцом и управлял народом земли",
+      "note": "слова стиха — запись «Писание»; слово «соправление» — понятие схемы, а не текста (02 § 3.15.3)",
+      "refs": [
+       "4Цар 15:5"
+      ],
+      "cert": "scripture"
      }
-    ],
-    "died": {
-     "range": [
-      -735,
-      -731
-     ],
-     "refs": [
-      "4Цар 15:30",
-      "4Цар 15:38"
-     ],
-     "cert": "interpretation",
-     "note": "царствование по реконструкции до 735 г. до Р. Х.; 4 Цар 15:30 упоминает «двадцатый год Иоафама»"
-    }
+    ]
    },
    "prov": {
     "from": {
      "vol": "13-kings-of-judah.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-akhaz",
    "chrono": {
-    "reign": [
+    "inputs": [
      {
-      "over": "Иудея",
-      "start": -735,
-      "end": -715,
-      "years": 16,
-      "ageAtStart": 20,
+      "kind": "age-at-accession",
+      "number": 20,
+      "words": "Двадцати",
       "refs": [
        "4Цар 16:2",
        "2Пар 28:1"
       ],
-      "sync": [
-       {
-        "with": "p-fakey",
-        "year": 17,
-        "refs": [
-         "4Цар 16:1"
-        ]
-       }
-      ]
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 16:2",
+       "scheme": "s-mcfall-young"
+      }
+     },
+     {
+      "kind": "reign",
+      "number": 16,
+      "words": "шестнадцать",
+      "kingdom": "judah",
+      "refs": [
+       "4Цар 16:2",
+       "2Пар 28:1"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 16:2",
+       "scheme": "s-mcfall-young"
+      }
+     },
+     {
+      "kind": "synchronism",
+      "other": "p-fakey",
+      "number": 17,
+      "words": "семнадцатый",
+      "refs": [
+       "4Цар 16:1"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 16:1",
+       "scheme": "s-mcfall-young"
+      }
+     },
+     {
+      "kind": "succeeded",
+      "other": "p-ioafam",
+      "words": "И воцарился Ахаз, сын его, вместо него",
+      "refs": [
+       "4Цар 15:38"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 15:38",
+       "scheme": "s-mcfall-young"
+      }
      }
-    ],
-    "died": {
-     "year": -715,
-     "refs": [
-      "4Цар 16:20",
-      "2Пар 28:27",
-      "Ис 14:28"
-     ],
-     "cert": "inference",
-     "note": "умер в конце царствования; год — расчёт по принятой реконструкции"
-    }
+    ]
    },
    "prov": {
     "from": {
      "vol": "13-kings-of-judah.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-maaseya-syn-akhaza",
    "chrono": {
-    "died": {
-     "range": [
-      -735,
-      -732
-     ],
-     "refs": [
-      "2Пар 28:6-7"
-     ],
-     "cert": "inference",
-     "note": "убит в войне Факея с Ахазом; годы — расчёт по реконструкции"
-    },
-    "epoch": "era-divided"
+    "inputs": [
+     {
+      "kind": "under-king",
+      "of": "death",
+      "other": "p-fakey",
+      "note": "убит Зихрием, когда «избил Факей, сын Ремалиин, Иудеев» (2 Пар 28:6–7)",
+      "refs": [
+       "2Пар 28:6-7"
+      ],
+      "cert": "inference"
+     }
+    ],
+    "epochs": [
+     {
+      "era": "era-divided",
+      "refs": [
+       "2Пар 28:6-7"
+      ],
+      "cert": "inference"
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "13-kings-of-judah.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
@@ -16931,20 +17913,35 @@
   {
    "actor": "p-ezekiya-syn-shalluma",
    "chrono": {
-    "active": {
-     "from": -735,
-     "to": -732,
-     "refs": [
-      "2Пар 28:5-12"
-     ],
-     "note": "в годы войны Факея с Ахазом; годы — расчёт по реконструкции"
-    },
-    "epoch": "era-divided"
+    "inputs": [
+     {
+      "kind": "under-king",
+      "of": "life",
+      "other": "p-akhaz",
+      "note": "среди начальников Ефремовых, встретивших войско с пленными Иудеями, при Ахазе (2 Пар 28:1, 5–12)",
+      "refs": [
+       "2Пар 28:1",
+       "2Пар 28:5-12"
+      ],
+      "cert": "inference"
+     }
+    ],
+    "epochs": [
+     {
+      "era": "era-divided",
+      "refs": [
+       "2Пар 28:1",
+       "2Пар 28:5-12"
+      ],
+      "cert": "inference"
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "13-kings-of-judah.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
@@ -16969,94 +17966,202 @@
   {
    "actor": "p-avi-doch-zakharii",
    "chrono": {
+    "inputs": [],
     "epoch": "era-divided"
    },
    "prov": {
     "from": {
      "vol": "13-kings-of-judah.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-eliakim-syn-khelkii",
    "chrono": {
-    "active": {
-     "from": -702,
-     "to": -702,
-     "refs": [
-      "4Цар 18:13",
-      "4Цар 18:18"
-     ],
-     "note": "четырнадцатый год Езекии, нашествие Сеннахирима; год — расчёт по реконструкции"
-    },
-    "epoch": "era-judah-alone"
+    "inputs": [
+     {
+      "kind": "under-king",
+      "of": "life",
+      "other": "p-ezekiya",
+      "number": 14,
+      "words": "четырнадцатый",
+      "note": "вышел к послам Сеннахирима в четырнадцатый год Езекии (4 Цар 18:13, 18)",
+      "refs": [
+       "4Цар 18:13",
+       "4Цар 18:18"
+      ],
+      "cert": "inference",
+      "calc": {
+       "event": "4Цар 18:13",
+       "scheme": "s-mcfall-young"
+      }
+     }
+    ],
+    "epochs": [
+     {
+      "era": "era-judah-alone",
+      "refs": [
+       "4Цар 18:13",
+       "4Цар 18:18"
+      ],
+      "cert": "inference"
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "13-kings-of-judah.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-ioakh-syn-asafa",
    "chrono": {
-    "active": {
-     "from": -702,
-     "to": -702,
-     "refs": [
-      "4Цар 18:13",
-      "4Цар 18:18"
-     ],
-     "note": "четырнадцатый год Езекии, нашествие Сеннахирима; год — расчёт по реконструкции"
-    },
-    "epoch": "era-judah-alone"
+    "inputs": [
+     {
+      "kind": "under-king",
+      "of": "life",
+      "other": "p-ezekiya",
+      "number": 14,
+      "words": "четырнадцатый",
+      "note": "вышел к послам Сеннахирима в четырнадцатый год Езекии (4 Цар 18:13, 18)",
+      "refs": [
+       "4Цар 18:13",
+       "4Цар 18:18"
+      ],
+      "cert": "inference",
+      "calc": {
+       "event": "4Цар 18:13",
+       "scheme": "s-mcfall-young"
+      }
+     }
+    ],
+    "epochs": [
+     {
+      "era": "era-judah-alone",
+      "refs": [
+       "4Цар 18:13",
+       "4Цар 18:18"
+      ],
+      "cert": "inference"
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "13-kings-of-judah.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-ezekiya",
    "chrono": {
-    "reign": [
+    "inputs": [
      {
-      "over": "Иудея",
-      "start": -715,
-      "end": -686,
-      "years": 29,
-      "ageAtStart": 25,
+      "kind": "age-at-accession",
+      "number": 25,
+      "words": "Двадцати пяти",
       "refs": [
        "4Цар 18:2",
        "2Пар 29:1"
       ],
-      "sync": [
-       {
-        "with": "p-osiya-syn-ily",
-        "year": 3,
-        "refs": [
-         "4Цар 18:1"
-        ],
-        "note": "третий год Осии — около 730 г. до Р. Х., а атлас начинает Езекию с 715 г.: четырнадцатый год Езекии — нашествие Сеннахирима (4 Цар 18:13), по анналам Сеннахирима 701 г. Синхронизмы 4 Цар 18:1, 9–10 и 4 Цар 18:13 в одной линейной хронологии не сходятся; реконструкции объясняют это соправлением Езекии с Ахазом или иным счётом лет. Вопрос спорный"
-       }
-      ]
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 18:2",
+       "scheme": "s-mcfall-young"
+      }
+     },
+     {
+      "kind": "reign",
+      "number": 29,
+      "words": "двадцать девять",
+      "kingdom": "judah",
+      "refs": [
+       "4Цар 18:2",
+       "2Пар 29:1"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 18:2",
+       "scheme": "s-mcfall-young"
+      }
+     },
+     {
+      "kind": "synchronism",
+      "other": "p-osiya-syn-ily",
+      "number": 3,
+      "words": "третий",
+      "refs": [
+       "4Цар 18:1"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 18:1",
+       "scheme": "s-mcfall-young"
+      }
+     },
+     {
+      "kind": "synchronism",
+      "other": "p-osiya-syn-ily",
+      "number": 7,
+      "words": "седьмой",
+      "atYear": {
+       "number": 4,
+       "words": "четвертый"
+      },
+      "note": "Салманассар пошёл на Самарию",
+      "refs": [
+       "4Цар 18:9"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 18:9",
+       "scheme": "s-mcfall-young"
+      }
+     },
+     {
+      "kind": "synchronism",
+      "other": "p-osiya-syn-ily",
+      "number": 9,
+      "words": "девятый",
+      "atYear": {
+       "number": 6,
+       "words": "шестой"
+      },
+      "note": "взята Самария",
+      "refs": [
+       "4Цар 18:10"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 18:10",
+       "scheme": "s-mcfall-young"
+      }
+     },
+     {
+      "kind": "succeeded",
+      "other": "p-akhaz",
+      "words": "И воцарился Езекия, сын его, вместо него",
+      "refs": [
+       "4Цар 16:20",
+       "2Пар 28:27"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 16:20",
+       "scheme": "s-mcfall-young"
+      }
      }
-    ],
-    "died": {
-     "year": -686,
-     "refs": [
-      "4Цар 20:21",
-      "2Пар 32:33"
-     ],
-     "cert": "inference",
-     "note": "умер в конце царствования; год — расчёт по принятой реконструкции"
-    }
+    ]
    },
    "prov": {
     "from": {
      "vol": "13-kings-of-judah.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
@@ -17763,30 +18868,37 @@
   {
    "actor": "p-razon",
    "chrono": {
-    "active": {
-     "from": -970,
-     "to": -931,
-     "refs": [
-      "3Цар 11:25"
-     ],
-     "note": "противник Израиля «во все дни Соломона»; годы — расчёт по реконструкции"
-    }
+    "inputs": [
+     {
+      "kind": "under-king",
+      "of": "life",
+      "other": "p-solomon",
+      "words": "во все дни Соломона",
+      "refs": [
+       "3Цар 11:25"
+      ],
+      "cert": "scripture"
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "14-kings-of-israel.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-navat",
    "chrono": {
+    "inputs": [],
     "epoch": "era-united"
    },
    "prov": {
     "from": {
      "vol": "14-kings-of-israel.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
@@ -17803,41 +18915,28 @@
   {
    "actor": "p-ieroboam",
    "chrono": {
-    "died": {
-     "year": -910,
-     "refs": [
-      "3Цар 14:20",
-      "2Пар 13:20"
-     ],
-     "cert": "inference",
-     "note": "умер в конце царствования; год — расчёт по реконструкции"
-    },
-    "reign": [
+    "inputs": [
      {
-      "over": "Израиль",
-      "start": -931,
-      "end": -910,
-      "years": 22,
+      "kind": "reign",
+      "number": 22,
+      "words": "двадцать два",
+      "kingdom": "israel-north",
       "refs": [
-       "3Цар 12:20",
        "3Цар 14:20"
-      ]
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "3Цар 14:20",
+       "scheme": "s-mcfall-young"
+      }
      }
-    ],
-    "active": {
-     "from": -931,
-     "to": -910,
-     "refs": [
-      "3Цар 12:20",
-      "3Цар 14:20"
-     ],
-     "note": "заведомо жив в годы своего царствования; годы — расчёт по реконструкции"
-    }
+    ]
    },
    "prov": {
     "from": {
      "vol": "14-kings-of-israel.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
@@ -17969,47 +19068,58 @@
   {
    "actor": "p-ila-syn-vaasy",
    "chrono": {
-    "died": {
-     "year": -885,
-     "refs": [
-      "3Цар 16:9-10"
-     ],
-     "cert": "inference",
-     "note": "убит Замврием в двадцать седьмой год Асы; год — расчёт по реконструкции"
-    },
-    "reign": [
+    "inputs": [
      {
-      "over": "Израиль",
-      "start": -886,
-      "end": -885,
-      "years": 2,
+      "kind": "reign",
+      "number": 2,
+      "words": "два",
+      "kingdom": "israel-north",
       "refs": [
        "3Цар 16:8"
       ],
-      "sync": [
-       {
-        "with": "p-asa",
-        "year": 26,
-        "refs": [
-         "3Цар 16:8"
-        ]
-       }
-      ]
+      "cert": "scripture",
+      "calc": {
+       "event": "3Цар 16:8",
+       "scheme": "s-mcfall-young"
+      }
+     },
+     {
+      "kind": "synchronism",
+      "other": "p-asa",
+      "number": 26,
+      "words": "двадцать шестой",
+      "refs": [
+       "3Цар 16:8"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "3Цар 16:8",
+       "scheme": "s-mcfall-young"
+      }
+     },
+     {
+      "kind": "synchronism",
+      "of": "death",
+      "other": "p-asa",
+      "number": 27,
+      "words": "двадцать седьмой",
+      "note": "Замврий поразил его и умертвил",
+      "refs": [
+       "3Цар 16:10"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "3Цар 16:10",
+       "scheme": "s-mcfall-young"
+      }
      }
-    ],
-    "active": {
-     "from": -886,
-     "to": -885,
-     "refs": [
-      "3Цар 16:8"
-     ],
-     "note": "заведомо жив в годы своего царствования; годы — расчёт по реконструкции"
-    }
+    ]
    },
    "prov": {
     "from": {
      "vol": "14-kings-of-israel.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
@@ -18477,38 +19587,28 @@
   {
    "actor": "p-iiuy",
    "chrono": {
-    "died": {
-     "year": -814,
-     "refs": [
-      "4Цар 10:35"
-     ],
-     "cert": "inference",
-     "note": "умер в конце царствования; год — расчёт по реконструкции"
-    },
-    "reign": [
+    "inputs": [
      {
-      "over": "Израиль",
-      "start": -841,
-      "end": -814,
-      "years": 28,
+      "kind": "reign",
+      "number": 28,
+      "words": "двадцать восемь",
+      "kingdom": "israel-north",
       "refs": [
        "4Цар 10:36"
-      ]
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 10:36",
+       "scheme": "s-mcfall-young"
+      }
      }
-    ],
-    "active": {
-     "from": -841,
-     "to": -814,
-     "refs": [
-      "4Цар 10:36"
-     ],
-     "note": "заведомо жив в годы своего царствования; годы — расчёт по реконструкции"
-    }
+    ]
    },
    "prov": {
     "from": {
      "vol": "14-kings-of-israel.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
@@ -18607,375 +19707,435 @@
   {
    "actor": "p-ieroboam-vtoroy",
    "chrono": {
-    "died": {
-     "year": -753,
-     "refs": [
-      "4Цар 14:29"
-     ],
-     "cert": "inference",
-     "note": "умер в конце царствования; год — расчёт по реконструкции"
-    },
-    "reign": [
+    "inputs": [
      {
-      "over": "Израиль",
-      "start": -793,
-      "end": -753,
-      "sole": -782,
-      "years": 41,
+      "kind": "reign",
+      "number": 41,
+      "words": "сорок один",
+      "kingdom": "israel-north",
       "refs": [
        "4Цар 14:23"
       ],
-      "sync": [
-       {
-        "with": "p-amasiya",
-        "year": 15,
-        "refs": [
-         "4Цар 14:23"
-        ],
-        "note": "пятнадцатый год Амасии — 782 г. до Р. Х., год смерти Иоаса Израильского (ср. 4 Цар 14:17), а атлас начинает Иеровоама II с 793 г.: по принятой реконструкции он царствовал вместе с отцом с 793 г., сорок один год (4 Цар 14:23) считаются от этого года, а синхронизм отмечает единоличное царствование"
-       }
-      ]
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 14:23",
+       "scheme": "s-mcfall-young"
+      }
+     },
+     {
+      "kind": "synchronism",
+      "other": "p-amasiya",
+      "number": 15,
+      "words": "пятнадцатый",
+      "refs": [
+       "4Цар 14:23"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 14:23",
+       "scheme": "s-mcfall-young"
+      }
      }
-    ],
-    "active": {
-     "from": -793,
-     "to": -753,
-     "refs": [
-      "4Цар 14:23"
-     ],
-     "note": "заведомо жив в годы своего царствования; годы — расчёт по реконструкции"
-    }
+    ]
    },
    "prov": {
     "from": {
      "vol": "14-kings-of-israel.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-zakhariya-syn-ieroboama",
    "chrono": {
-    "died": {
-     "year": -753,
-     "refs": [
-      "4Цар 15:10"
-     ],
-     "cert": "inference",
-     "note": "убит Селлумом; год — расчёт по реконструкции"
-    },
-    "reign": [
+    "inputs": [
      {
-      "over": "Израиль",
-      "start": -753,
-      "end": -753,
+      "kind": "reign",
+      "number": 6,
+      "words": "шесть",
+      "unit": "month",
+      "kingdom": "israel-north",
       "refs": [
        "4Цар 15:8"
       ],
-      "note": "шесть месяцев",
-      "sync": [
-       {
-        "with": "p-oziya",
-        "year": 38,
-        "refs": [
-         "4Цар 15:8"
-        ],
-        "note": "годы Азарии (Озии) отсчитаны от начала его соправления с отцом (792 г.); тридцать восьмой год при простом счёте — 755 г. до Р. Х., а в атласе Захария воцарился в 753 г. Два года разницы — от способа счёта в реконструкции (год воцарения и начало года в Иудее и Израиле считались по-разному)"
-       }
-      ]
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 15:8",
+       "scheme": "s-mcfall-young"
+      }
+     },
+     {
+      "kind": "synchronism",
+      "other": "p-oziya",
+      "number": 38,
+      "words": "тридцать восьмой",
+      "refs": [
+       "4Цар 15:8"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 15:8",
+       "scheme": "s-mcfall-young"
+      }
+     },
+     {
+      "kind": "succeeded",
+      "other": "p-ieroboam-vtoroy",
+      "words": "И воцарился Захария, сын его, вместо него",
+      "refs": [
+       "4Цар 14:29"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 14:29",
+       "scheme": "s-mcfall-young"
+      }
      }
-    ],
-    "active": {
-     "from": -753,
-     "to": -753,
-     "refs": [
-      "4Цар 15:8"
-     ],
-     "note": "заведомо жив в годы своего царствования; годы — расчёт по реконструкции"
-    }
+    ]
    },
    "prov": {
     "from": {
      "vol": "14-kings-of-israel.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-iavis-otets-selluma",
    "chrono": {
+    "inputs": [],
     "epoch": "era-divided"
    },
    "prov": {
     "from": {
      "vol": "14-kings-of-israel.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-sellum-syn-iavisa",
    "chrono": {
-    "died": {
-     "year": -752,
-     "refs": [
-      "4Цар 15:14"
-     ],
-     "cert": "inference",
-     "note": "убит Менаимом; год — расчёт по реконструкции"
-    },
-    "reign": [
+    "inputs": [
      {
-      "over": "Израиль",
-      "start": -752,
-      "end": -752,
+      "kind": "reign",
+      "number": 1,
+      "words": "один",
+      "unit": "month",
+      "kingdom": "israel-north",
       "refs": [
        "4Цар 15:13"
       ],
-      "note": "один месяц",
-      "sync": [
-       {
-        "with": "p-oziya",
-        "year": 39,
-        "refs": [
-         "4Цар 15:13"
-        ],
-        "note": "годы Азарии (Озии) отсчитаны от начала его соправления с отцом (792 г.); тридцать девятый год при простом счёте — 754 г. до Р. Х., а в атласе Селлум воцарился в 752 г. Два года разницы — от способа счёта в реконструкции (год воцарения и начало года в Иудее и Израиле считались по-разному)"
-       }
-      ]
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 15:13",
+       "scheme": "s-mcfall-young"
+      }
+     },
+     {
+      "kind": "synchronism",
+      "other": "p-oziya",
+      "number": 39,
+      "words": "тридцать девятый",
+      "refs": [
+       "4Цар 15:13"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 15:13",
+       "scheme": "s-mcfall-young"
+      }
+     },
+     {
+      "kind": "succeeded",
+      "other": "p-zakhariya-syn-ieroboama",
+      "words": "и воцарился вместо него",
+      "refs": [
+       "4Цар 15:10"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 15:10",
+       "scheme": "s-mcfall-young"
+      }
      }
-    ],
-    "active": {
-     "from": -752,
-     "to": -752,
-     "refs": [
-      "4Цар 15:13"
-     ],
-     "note": "заведомо жив в годы своего царствования; годы — расчёт по реконструкции"
-    }
+    ]
    },
    "prov": {
     "from": {
      "vol": "14-kings-of-israel.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-gadiy",
    "chrono": {
+    "inputs": [],
     "epoch": "era-divided"
    },
    "prov": {
     "from": {
      "vol": "14-kings-of-israel.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-menaim",
    "chrono": {
-    "died": {
-     "year": -742,
-     "refs": [
-      "4Цар 15:22"
-     ],
-     "cert": "inference",
-     "note": "умер в конце царствования; год — расчёт по реконструкции"
-    },
-    "reign": [
+    "inputs": [
      {
-      "over": "Израиль",
-      "start": -752,
-      "end": -742,
-      "years": 10,
+      "kind": "reign",
+      "number": 10,
+      "words": "десять",
+      "kingdom": "israel-north",
       "refs": [
        "4Цар 15:17"
       ],
-      "sync": [
-       {
-        "with": "p-oziya",
-        "year": 39,
-        "refs": [
-         "4Цар 15:17"
-        ],
-        "note": "годы Азарии (Озии) отсчитаны от начала его соправления с отцом (792 г.); тридцать девятый год при простом счёте — 754 г. до Р. Х., а в атласе Менаим воцарился в 752 г. Два года разницы — от способа счёта в реконструкции (год воцарения и начало года в Иудее и Израиле считались по-разному)"
-       }
-      ]
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 15:17",
+       "scheme": "s-mcfall-young"
+      }
+     },
+     {
+      "kind": "synchronism",
+      "other": "p-oziya",
+      "number": 39,
+      "words": "тридцать девятом",
+      "refs": [
+       "4Цар 15:17"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 15:17",
+       "scheme": "s-mcfall-young"
+      }
+     },
+     {
+      "kind": "succeeded",
+      "other": "p-sellum-syn-iavisa",
+      "words": "и воцарился вместо него",
+      "refs": [
+       "4Цар 15:14"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 15:14",
+       "scheme": "s-mcfall-young"
+      }
      }
-    ],
-    "active": {
-     "from": -752,
-     "to": -742,
-     "refs": [
-      "4Цар 15:17"
-     ],
-     "note": "заведомо жив в годы своего царствования; годы — расчёт по реконструкции"
-    }
+    ]
    },
    "prov": {
     "from": {
      "vol": "14-kings-of-israel.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-fakiya",
    "chrono": {
-    "died": {
-     "year": -740,
-     "refs": [
-      "4Цар 15:25"
-     ],
-     "cert": "inference",
-     "note": "убит Факеем; год — расчёт по реконструкции"
-    },
-    "reign": [
+    "inputs": [
      {
-      "over": "Израиль",
-      "start": -742,
-      "end": -740,
-      "years": 2,
+      "kind": "reign",
+      "number": 2,
+      "words": "два",
+      "kingdom": "israel-north",
       "refs": [
        "4Цар 15:23"
       ],
-      "sync": [
-       {
-        "with": "p-oziya",
-        "year": 50,
-        "refs": [
-         "4Цар 15:23"
-        ]
-       }
-      ]
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 15:23",
+       "scheme": "s-mcfall-young"
+      }
+     },
+     {
+      "kind": "synchronism",
+      "other": "p-oziya",
+      "number": 50,
+      "words": "пятидесятый",
+      "refs": [
+       "4Цар 15:23"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 15:23",
+       "scheme": "s-mcfall-young"
+      }
+     },
+     {
+      "kind": "succeeded",
+      "other": "p-menaim",
+      "words": "И воцарился Факия, сын его, вместо него",
+      "refs": [
+       "4Цар 15:22"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 15:22",
+       "scheme": "s-mcfall-young"
+      }
      }
-    ],
-    "active": {
-     "from": -742,
-     "to": -740,
-     "refs": [
-      "4Цар 15:23"
-     ],
-     "note": "заведомо жив в годы своего царствования; годы — расчёт по реконструкции"
-    }
+    ]
    },
    "prov": {
     "from": {
      "vol": "14-kings-of-israel.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-remaliya",
    "chrono": {
+    "inputs": [],
     "epoch": "era-divided"
    },
    "prov": {
     "from": {
      "vol": "14-kings-of-israel.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-fakey",
    "chrono": {
-    "died": {
-     "year": -732,
-     "refs": [
-      "4Цар 15:30"
-     ],
-     "cert": "inference",
-     "note": "убит Осией; год — расчёт по реконструкции"
-    },
-    "reign": [
+    "inputs": [
      {
-      "over": "Израиль",
-      "start": -752,
-      "end": -732,
-      "sole": -740,
-      "years": 20,
+      "kind": "reign",
+      "number": 20,
+      "words": "двадцать",
+      "kingdom": "israel-north",
       "refs": [
        "4Цар 15:27"
       ],
-      "sync": [
-       {
-        "with": "p-oziya",
-        "year": 52,
-        "refs": [
-         "4Цар 15:27"
-        ],
-        "note": "пятьдесят второй год Азарии — 741 г. до Р. Х., а атлас начинает Факея с 752 г.: двадцать лет его царствования (4 Цар 15:27) не умещаются между Факией и Осией (740–732 гг.). По принятой реконструкции они считаются с 752 г., когда Факей, возможно, правил частью страны одновременно с Менаимом и Факией; в Самарии он воцарился, убив Факию (4 Цар 15:25), — в пятьдесят второй год Азарии"
-       }
-      ]
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 15:27",
+       "scheme": "s-mcfall-young"
+      }
+     },
+     {
+      "kind": "synchronism",
+      "other": "p-oziya",
+      "number": 52,
+      "words": "пятьдесят второй",
+      "refs": [
+       "4Цар 15:27"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 15:27",
+       "scheme": "s-mcfall-young"
+      }
+     },
+     {
+      "kind": "succeeded",
+      "other": "p-fakiya",
+      "words": "и воцарился вместо него",
+      "refs": [
+       "4Цар 15:25"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 15:25",
+       "scheme": "s-mcfall-young"
+      }
      }
-    ],
-    "active": {
-     "from": -752,
-     "to": -732,
-     "refs": [
-      "4Цар 15:27"
-     ],
-     "note": "заведомо жив в годы своего царствования; годы — расчёт по реконструкции"
-    }
+    ]
    },
    "prov": {
     "from": {
      "vol": "14-kings-of-israel.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-ila-otets-osii",
    "chrono": {
+    "inputs": [],
     "epoch": "era-divided"
    },
    "prov": {
     "from": {
      "vol": "14-kings-of-israel.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-osiya-syn-ily",
    "chrono": {
-    "reign": [
+    "inputs": [
      {
-      "over": "Израиль",
-      "start": -732,
-      "end": -722,
-      "years": 9,
+      "kind": "reign",
+      "number": 9,
+      "words": "девять",
+      "kingdom": "israel-north",
       "refs": [
        "4Цар 17:1"
       ],
-      "sync": [
-       {
-        "with": "p-akhaz",
-        "year": 12,
-        "refs": [
-         "4Цар 17:1"
-        ],
-        "note": "двенадцатый год Ахаза при счёте от 735 г. — 724 г. до Р. Х., на восемь лет позже начала Осии в атласе (732 г.); тот же переворот 4 Цар 15:30 относит к «двадцатому году Иоафама». По принятой реконструкции годы Ахаза здесь отсчитаны от его соправления с Иоафамом (около 744 г.)"
-       },
-       {
-        "with": "p-ioafam",
-        "year": 20,
-        "refs": [
-         "4Цар 15:30"
-        ],
-        "note": "по 4 Цар 15:33 Иоафам царствовал шестнадцать лет; двадцатый год назван в самом тексте"
-       }
-      ]
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 17:1",
+       "scheme": "s-mcfall-young"
+      }
+     },
+     {
+      "kind": "synchronism",
+      "other": "p-akhaz",
+      "number": 12,
+      "words": "двенадцатый",
+      "refs": [
+       "4Цар 17:1"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 17:1",
+       "scheme": "s-mcfall-young"
+      }
+     },
+     {
+      "kind": "synchronism",
+      "other": "p-ioafam",
+      "number": 20,
+      "words": "двадцатый",
+      "note": "по 4 Цар 15:33 Иоафам царствовал шестнадцать лет; двадцатый год назван в самом тексте (04 § 3.8, Н11)",
+      "refs": [
+       "4Цар 15:30"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 15:30",
+       "scheme": "s-mcfall-young"
+      }
+     },
+     {
+      "kind": "succeeded",
+      "other": "p-fakey",
+      "words": "и воцарился вместо него",
+      "refs": [
+       "4Цар 15:30"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 15:30",
+       "scheme": "s-mcfall-young"
+      }
      }
-    ],
-    "active": {
-     "from": -732,
-     "to": -722,
-     "refs": [
-      "4Цар 17:1"
-     ],
-     "note": "заведомо жив в годы своего царствования; годы — расчёт по реконструкции"
-    }
+    ]
    },
    "prov": {
     "from": {
      "vol": "14-kings-of-israel.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
@@ -19091,86 +20251,133 @@
   {
    "actor": "p-ful",
    "chrono": {
-    "active": {
-     "from": -752,
-     "to": -742,
-     "refs": [
-      "4Цар 15:19"
-     ],
-     "note": "при Менаиме, царе Израильском; годы — расчёт по реконструкции"
-    }
+    "inputs": [
+     {
+      "kind": "under-king",
+      "of": "life",
+      "other": "p-menaim",
+      "refs": [
+       "4Цар 15:19"
+      ],
+      "cert": "scripture"
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "14-kings-of-israel.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-feglaffellasar",
    "chrono": {
-    "active": {
-     "from": -735,
-     "to": -732,
-     "refs": [
-      "4Цар 15:29",
-      "4Цар 16:7-9"
-     ],
-     "note": "во дни Факея и Ахаза; годы — расчёт по реконструкции"
-    }
+    "inputs": [
+     {
+      "kind": "under-king",
+      "of": "life",
+      "other": "p-fakey",
+      "words": "Во дни Факея, царя Израильского",
+      "refs": [
+       "4Цар 15:29"
+      ],
+      "cert": "scripture"
+     },
+     {
+      "kind": "under-king",
+      "of": "life",
+      "other": "p-akhaz",
+      "refs": [
+       "4Цар 16:7-9"
+      ],
+      "cert": "scripture"
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "14-kings-of-israel.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-salmanassar",
    "chrono": {
-    "active": {
-     "from": -732,
-     "to": -722,
-     "refs": [
-      "4Цар 17:3",
-      "4Цар 18:9"
-     ],
-     "note": "современник Осии, царя Израильского; годы — расчёт по реконструкции"
-    }
+    "inputs": [
+     {
+      "kind": "under-king",
+      "of": "life",
+      "other": "p-osiya-syn-ily",
+      "refs": [
+       "4Цар 17:3"
+      ],
+      "cert": "scripture"
+     },
+     {
+      "kind": "under-king",
+      "of": "life",
+      "other": "p-ezekiya",
+      "number": 4,
+      "words": "четвертый",
+      "refs": [
+       "4Цар 18:9"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 18:9",
+       "scheme": "s-mcfall-young"
+      }
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "14-kings-of-israel.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-sinnakherim",
    "chrono": {
-    "active": {
-     "from": -702,
-     "to": -702,
-     "refs": [
-      "4Цар 18:13"
-     ],
-     "note": "четырнадцатый год Езекии, нашествие на Иудею; год — расчёт по реконструкции"
-    }
+    "inputs": [
+     {
+      "kind": "under-king",
+      "of": "life",
+      "other": "p-ezekiya",
+      "number": 14,
+      "words": "четырнадцатый",
+      "refs": [
+       "4Цар 18:13"
+      ],
+      "cert": "scripture",
+      "calc": {
+       "event": "4Цар 18:13",
+       "scheme": "s-mcfall-young"
+      }
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "14-kings-of-israel.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
    "actor": "p-adramelekh",
    "chrono": {
+    "inputs": [],
     "epoch": "era-judah-alone"
    },
    "prov": {
     "from": {
      "vol": "14-kings-of-israel.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
@@ -19552,12 +20759,14 @@
   {
    "actor": "p-zakhariya-syn-varakhii-is8",
    "chrono": {
+    "inputs": [],
     "epoch": "era-divided"
    },
    "prov": {
     "from": {
      "vol": "15-prophets-exile.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
@@ -19623,19 +20832,59 @@
   {
    "actor": "p-osiya-prorok",
    "chrono": {
-    "active": {
-     "from": -753,
-     "to": -715,
-     "refs": [
-      "Ос 1:1"
-     ],
-     "note": "«во дни Озии, Иоафама, Ахаза, Езекии… и во дни Иеровоама, сына Иоасова»: заведомо жив от конца царствования Иеровоама II до начала царствования Езекии; годы — по хронологии, принятой в атласе"
-    }
+    "inputs": [
+     {
+      "kind": "under-king",
+      "of": "life",
+      "other": "p-oziya",
+      "refs": [
+       "Ос 1:1"
+      ],
+      "cert": "scripture"
+     },
+     {
+      "kind": "under-king",
+      "of": "life",
+      "other": "p-ioafam",
+      "refs": [
+       "Ос 1:1"
+      ],
+      "cert": "scripture"
+     },
+     {
+      "kind": "under-king",
+      "of": "life",
+      "other": "p-akhaz",
+      "refs": [
+       "Ос 1:1"
+      ],
+      "cert": "scripture"
+     },
+     {
+      "kind": "under-king",
+      "of": "life",
+      "other": "p-ezekiya",
+      "refs": [
+       "Ос 1:1"
+      ],
+      "cert": "scripture"
+     },
+     {
+      "kind": "under-king",
+      "of": "life",
+      "other": "p-ieroboam-vtoroy",
+      "refs": [
+       "Ос 1:1"
+      ],
+      "cert": "scripture"
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "15-prophets-exile.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
@@ -20405,31 +21654,44 @@
   {
    "actor": "p-uriya-syn-shemaii",
    "chrono": {
-    "active": {
-     "from": -609,
-     "to": -609,
-     "refs": [
-      "Иер 26:20-23"
-     ],
-     "note": "пророчествовал при царе Иоакиме и был им умерщвлён, значит, жил при его воцарении; год — по хронологии, принятой в атласе"
-    },
-    "died": {
-     "range": [
-      -609,
-      -598
-     ],
-     "cert": "inference",
-     "refs": [
-      "Иер 26:21-23"
-     ],
-     "note": "умерщвлён царём Иоакимом"
-    },
-    "epoch": "era-judah-alone"
+    "inputs": [
+     {
+      "kind": "under-king",
+      "of": "life",
+      "other": "p-ioakim-tsar",
+      "refs": [
+       "Иер 26:20-21"
+      ],
+      "cert": "scripture"
+     },
+     {
+      "kind": "under-king",
+      "of": "death",
+      "other": "p-ioakim-tsar",
+      "words": "он умертвил его мечом",
+      "refs": [
+       "Иер 26:23"
+      ],
+      "cert": "scripture"
+     }
+    ],
+    "epochs": [
+     {
+      "era": "era-judah-alone",
+      "refs": [
+       "Иер 26:21",
+       "Иер 26:23"
+      ],
+      "cert": "inference",
+      "note": "при царе Иоакиме"
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "15-prophets-exile.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
@@ -21340,21 +22602,24 @@
   {
    "actor": "p-kir",
    "chrono": {
-    "active": {
-     "from": -539,
-     "to": -536,
-     "refs": [
-      "2Пар 36:22",
-      "Езд 1:1",
-      "Дан 10:1"
-     ],
-     "note": "от падения Вавилона и первого года Кира (указ о возвращении) до третьего года Кира; годы — по хронологии, принятой в атласе"
-    }
+    "inputs": [],
+    "epochs": [
+     {
+      "era": "era-return",
+      "refs": [
+       "2Пар 36:22",
+       "Езд 1:1"
+      ],
+      "cert": "inference",
+      "note": "«в первый год Кира, царя Персидского» — повеление, с которого начинается эпоха (04 § 3.2); год — опора an-cyrus-decree, модели для этого времени в 04 нет (Д-р2)"
+     }
+    ]
    },
    "prov": {
     "from": {
      "vol": "15-prophets-exile.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {
@@ -22241,12 +23506,14 @@
   {
    "actor": "p-eliakim-syn-aviuda",
    "chrono": {
+    "inputs": [],
     "epoch": "era-return"
    },
    "prov": {
     "from": {
      "vol": "16-jesus-genealogy.json"
-    }
+    },
+    "by": "исправление D6"
    }
   },
   {

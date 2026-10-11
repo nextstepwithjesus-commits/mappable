@@ -37,8 +37,8 @@ export const PROBE_BANNER = 'Данные не проверены: проба';
 
 export type Coll =
   | 'actor' | 'fact' | 'origin' | 'union' | 'kin' | 'reading' | 'cite' | 'area' | 'membership' | 'nodata' | 'chrono' | 'redirect'
-  | 'line' | 'epoch' | 'anchor' | 'place' | 'relation' | 'story' | 'vclass' | 'textparallel';
-export const COLLS: Coll[] = ['actor', 'fact', 'origin', 'union', 'kin', 'reading', 'cite', 'area', 'membership', 'nodata', 'chrono', 'redirect', 'line', 'epoch', 'anchor', 'place', 'relation', 'story', 'vclass', 'textparallel'];
+  | 'line' | 'epoch' | 'anchor' | 'model' | 'place' | 'relation' | 'story' | 'vclass' | 'textparallel';
+export const COLLS: Coll[] = ['actor', 'fact', 'origin', 'union', 'kin', 'reading', 'cite', 'area', 'membership', 'nodata', 'chrono', 'redirect', 'line', 'epoch', 'anchor', 'model', 'place', 'relation', 'story', 'vclass', 'textparallel'];
 
 /**
  * Файлы base/ по коллекциям допуска (02 § 3.17 [4.1]; К-10): каждый файл базы принадлежит коллекции допуска или списку
@@ -47,7 +47,7 @@ export const COLLS: Coll[] = ['actor', 'fact', 'origin', 'union', 'kin', 'readin
 export const COLL_FILES: Record<Coll, RegExp> = {
   actor: /^actors\/[^/]+\.json$/, fact: /^actors\/[^/]+\.json$/, origin: /^origins\.json$/, union: /^unions\.json$/, kin: /^kin\.json$/,
   reading: /^readings\.json$/, cite: /^readings\.json$/, area: /^areas\.json$/, membership: /^memberships\.json$/, nodata: /^nodata\.json$/,
-  chrono: /^chrono\.json$/, redirect: /^redirects\.json$/, line: /^lines\/[^/]+\.json$/, epoch: /^epochs\.json$/, anchor: /^anchors\.json$/,
+  chrono: /^chrono\.json$/, redirect: /^redirects\.json$/, line: /^lines\/[^/]+\.json$/, epoch: /^epochs\.json$/, anchor: /^anchors\.json$/, model: /^models\.json$/,
   place: /^places\.json$/, relation: /^relations\.json$/,
   story: /^stories\.json$/, vclass: /^verse-classes\.json$/, textparallel: /^text-parallels\.json$/,
 };
@@ -116,6 +116,7 @@ export function records(base: Base): Rec[] {
   for (const a of base.areas) target.set(a.id, `area:${a.id}`);
   for (const e of base.epochs) target.set(e.id, `epoch:${e.id}`);
   for (const a of base.anchors?.anchors ?? []) target.set(a.id, `anchor:${a.id}`);
+  for (const m of base.models ?? []) target.set(m.id, `model:${m.id}`);
   for (const p of base.places ?? []) target.set(p.id, `place:${p.id}`);
   for (const o of base.origins) if (o.id) target.set(o.id, `origin:${o.id}`);
   for (const k of base.kin) if (k.id) target.set(k.id, `kin:${k.id}`);
@@ -173,9 +174,12 @@ export function records(base: Base): Rec[] {
   for (const [k, l] of Object.entries<any>(base.lines)) {
     add('line', `line:${k}`, l, `lines/${k}.json`, [...(l.persons ?? []).map((s: any) => A(s.id)), ...Object.keys(l.readings ?? {}).map((s) => `reading:${s}`)]);
   }
-  for (const e of base.epochs) add('epoch', `epoch:${e.id}`, e, 'epochs.json', [A(e.startRule?.person), A(e.endRule?.person)]);
+  // эпоха: прежний вид — startRule/endRule; окончательный (Д6) — правило границы внутри start/end
+  for (const e of base.epochs) add('epoch', `epoch:${e.id}`, e, 'epochs.json', [A(e.startRule?.person ?? e.start?.rule?.person), A(e.endRule?.person ?? e.end?.rule?.person)]);
   // опоры (02 § 3.15; К-10): в допуске, как эпохи
   for (const a of base.anchors?.anchors ?? []) add('anchor', `anchor:${a.id}`, a, 'anchors.json', []);
+  // модели и схемы (02 § 3.15.2–3.15.3; Д6): опоры — ссылки, а не зависимости, как у эпох
+  for (const m of base.models ?? []) add('model', `model:${m.id}`, m, 'models.json', []);
   // места (02 § 3.13; К-11): связи с другими местами — ссылки, а не зависимости (§ 3.17)
   for (const p of base.places ?? []) add('place', `place:${p.id}`, p, 'places.json', []);
   // истории (02 § 3.12): зависимости — лица-участники и тот, кто пересказывает; связанные истории, повествование и

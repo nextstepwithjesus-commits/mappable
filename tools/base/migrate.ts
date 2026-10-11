@@ -18,7 +18,7 @@ import { execSync } from 'node:child_process';
 import { join } from 'node:path';
 import type {
   ActorRelation,
-  Actor, ActorKind, Assertion, Area, BaseFile, CheckEntry, ChronoRecord, Correction, KinTerm, Membership, Name, NoData, Origin,
+  Actor, ActorKind, Assertion, Area, BaseFile, CheckEntry, ChronoModel, ChronoRecord, Correction, KingScheme, KinTerm, Membership, Name, NoData, Origin,
   Place, Prov, ReadingSet, Redirect, Source, Story, TextParallel, Union, UnionTerm, VerseClass,
 } from './types.ts';
 import { attachStories } from './stories.ts';
@@ -32,6 +32,7 @@ import { STEPS_D_3 } from './corrections-d-r3.ts';
 import { STEPS_D4 } from './corrections-d4.ts';
 import { STEPS_D_R11 } from './corrections-d-r11.ts';
 import { STEPS_D15 } from './corrections-d15.ts';
+import { STEPS_D6 } from './corrections-d6.ts';
 import { project, canon, type Hints } from './project.ts';
 import { loadBible } from '../bible.ts';
 import { parseRef } from '../../src/engine/books.ts';
@@ -85,6 +86,8 @@ export interface Base {
   lines: Record<string, any>;
   epochs: any[];
   anchors: any;
+  /** Модели хронологии `m-…` и схемы царей `s-…` (02 § 3.15.2–3.15.3; Д6): base/models.json, пишет шаг D6-1. */
+  models: (ChronoModel | KingScheme)[];
   /**
    * Места (02 § 3.13; К-11). Исходный файл новой коллекции base/places.json лежит вне области, которую пишет перенос:
    * пересборка его не трогает и берёт с диска.
@@ -158,7 +161,7 @@ export function toBase(vols: any[], groups: any[], epochs: any[], anchors: any, 
   const hints: Hints = { volumes: {}, persons: {}, idmap: {}, lineOrder: Object.keys(lines) };
   const base: Base = {
     volumes: [], unions: [], origins: [], kin: [], readings: [], areas: [], memberships: [], chrono: [], nodata: [], relations: [],
-    redirects: [], corrections: [], lines: {}, epochs: [], anchors: structuredClone(anchors),
+    redirects: [], corrections: [], lines: {}, epochs: [], models: [], anchors: structuredClone(anchors),
   };
   const sexOf = new Map<string, string>();
   for (const v of vols) for (const p of v.persons) sexOf.set(p.id, p.sex);
@@ -404,7 +407,9 @@ export function buildBase(opts: BuildOptions = {}) {
   applyAll(base, hints, [...STEPS_D4, ...STEPS_D_R11].filter((s) => !skip.has(s.id)));
   // Д-15 (02 ред. 4.4; В-32): формы вида (б) и (в) — так же, после закрепления номеров партии 2
   freezeIds(base);
-  applyAll(base, hints, [...STEPS_D15, ...(opts.extraSteps ?? [])].filter((s) => !skip.has(s.id)));
+  applyAll(base, hints, STEPS_D15.filter((s) => !skip.has(s.id)));
+  // Д6 для сцен пакета 1 (10 § 4.2.2; 04 § 9): модели и схемы, опоры, эпохи 1–5, хронологические входы окончательного вида
+  applyAll(base, hints, [...STEPS_D6, ...(opts.extraSteps ?? [])].filter((s) => !skip.has(s.id)));
   const iss = finishIds(base)!;
   if (iss.errors.length) throw new Error(`номера: ${iss.errors.slice(0, 5).join('; ')}`);
   base.redirects = mergeRedirects(opts.redirects ?? readItems('redirects.json'), base.redirects);
@@ -453,6 +458,7 @@ export function recordKeys(base: Base): Map<string, string> {
   for (const x of base.redirects) put(`redirect:${x.from}`, x);
   for (const x of base.areas) put(`area:${x.id}`, x);
   for (const x of base.epochs) put(`epoch:${x.id}`, x);
+  for (const x of base.models ?? []) put(`model:${x.id}`, x);
   for (const [k, l] of Object.entries(base.lines)) put(`line:${k}`, l);
   put('anchors', base.anchors);
   return m;
@@ -491,7 +497,7 @@ function main() {
   // 2. исправления по одному: всё, что изменилось, — в объявленной области шага (и поля, которых не было в прежних данных)
   const steps: Record<string, string[]> = {};
   let bad = 0;
-  for (const step of [...STEPS, ADDITIONS, ...STEPS_D3, ...STEPS_K, ...STEPS_D, ...STEPS_D_2, ...STEPS_D_3, ...STEPS_D4, ...STEPS_D_R11, ...STEPS_D15]) {
+  for (const step of [...STEPS, ADDITIONS, ...STEPS_D3, ...STEPS_K, ...STEPS_D, ...STEPS_D_2, ...STEPS_D_3, ...STEPS_D4, ...STEPS_D_R11, ...STEPS_D15, ...STEPS_D6]) {
     if (step === STEPS_D[0] || step === STEPS_D_2[0] || step === STEPS_D_3[0] || step === STEPS_D4[0] || step === STEPS_D15[0]) freezeIds(base);
     const { changed, stray } = stepChanges(base, hints, step);
     steps[step.id] = changed;
@@ -558,6 +564,7 @@ function main() {
   write('corrections.json', file('Исправления при переносе', base.corrections));
   write('epochs.json', file('Эпохи', base.epochs, 'data/epochs.json'));
   write('anchors.json', { schema: 1, title: 'Внебиблейские опоры', prov: prov('data/anchors.json'), ...base.anchors });
+  write('models.json', file('Модели хронологии и схемы царей (02 § 3.15.2–3.15.3; 04 § 16.1)', base.models, 'tools/base/corrections-d6.ts'));
   for (const [k, l] of Object.entries(base.lines)) write(`lines/${k}.json`, { schema: 1, prov: prov(`data/lines/${k}.json`), sources: [...TEXT_SOURCES], ...l });
   write('legacy/report.json', {
     schema: 1, title: 'Отчёт переноса: отличия обратной проекции от прежних данных и исправления, которые их объясняют', commit,
