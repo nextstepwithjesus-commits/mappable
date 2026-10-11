@@ -1,0 +1,316 @@
+/* СОБРАНО из токены.json скриптом собрать.mjs — не править руками. ПРОТОТИП листа-образца ред. 3. */
+/* Режимы: data-theme="light|dark", data-action="киноварь|бирюза|нет", data-density="плотная", data-input="мышь|касание", data-text="крупнее|самый". */
+
+:root, [data-theme="light"] {
+  --tsvet-fon: #F4F6F9;
+  --tsvet-list: #FFFFFF;
+  --tsvet-podlozhka: #E8ECF1;
+  --tsvet-chernila: #18202C;
+  --tsvet-chernila-2: #4A5463;
+  --tsvet-chernila-3: #5B6574;
+  --tsvet-liniya: #6E7888;
+  --tsvet-liniya-2: #5E6878;
+  --tsvet-setka: #C9D0DA;
+  --tsvet-vybor: #FFD43B;
+  --tsvet-na-vybore: #18202C;
+  --tsvet-vybor-oblast: #FFF1BF;
+  --tsvet-ton-vz: #EDF0E4;
+  --tsvet-ton-nz: #E2EFEE;
+  --tsvet-chernila-vz: #4B5A26;
+  --tsvet-chernila-nz: #1E5D5A;
+  --tsvet-liniya-mf: #7FB8E6;
+  --tsvet-kant-mf: #17599A;
+  --tsvet-liniya-lk: #EE9CC4;
+  --tsvet-kant-lk: #B0306F;
+  --tsvet-kat-1: #D55E00;
+  --tsvet-kat-2: #009E73;
+  --tsvet-kat-3: #E69F00;
+  --tsvet-kat-4: #56B4E9;
+  --tsvet-kromka-risunka: #6E7888;
+  --tsvet-deystvie-kinovar: #A33A1F;
+  --tsvet-deystvie-biryuza: #1E5D5A;
+  --tsvet-deystvie: #A33A1F;
+  --tsvet-chernila-pisaniya-tyomnaya-proba: #D3D9E1;
+  --shrift-knizhnyy: Literata, Georgia, serif;
+  --shrift-interfeys: "Golos Text", system-ui, sans-serif;
+  --tekst-zagolovok-stranitsy-family: Literata, Georgia, serif;
+  --tekst-zagolovok-stranitsy-size: 1.875rem;
+  --tekst-zagolovok-stranitsy-lh: 2.25rem;
+  --tekst-zagolovok-stranitsy-weight: 600;
+  --tekst-nomer-istorii-family: Literata, Georgia, serif;
+  --tekst-nomer-istorii-size: 1.875rem;
+  --tekst-nomer-istorii-lh: 2.25rem;
+  --tekst-nomer-istorii-weight: 400;
+  --tekst-zagolovok-bloka-family: Literata, Georgia, serif;
+  --tekst-zagolovok-bloka-size: 1.375rem;
+  --tekst-zagolovok-bloka-lh: 1.75rem;
+  --tekst-zagolovok-bloka-weight: 600;
+  --tekst-nomer-glavy-family: Literata, Georgia, serif;
+  --tekst-nomer-glavy-size: 1.375rem;
+  --tekst-nomer-glavy-lh: 1.75rem;
+  --tekst-nomer-glavy-weight: 400;
+  --tekst-pisanie-family: Literata, Georgia, serif;
+  --tekst-pisanie-size: 1.125rem;
+  --tekst-pisanie-lh: 1.75rem;
+  --tekst-pisanie-weight: 400;
+  --tekst-kniga-family: Literata, Georgia, serif;
+  --tekst-kniga-size: 1.125rem;
+  --tekst-kniga-lh: 1.5rem;
+  --tekst-kniga-weight: 600;
+  --tekst-proza-family: "Golos Text", system-ui, sans-serif;
+  --tekst-proza-size: 1rem;
+  --tekst-proza-lh: 1.5rem;
+  --tekst-proza-weight: 450;
+  --tekst-tsitata-apparat-family: Literata, Georgia, serif;
+  --tekst-tsitata-apparat-size: 1rem;
+  --tekst-tsitata-apparat-lh: 1.5rem;
+  --tekst-tsitata-apparat-weight: 400;
+  --tekst-nazvanie-stroki-family: Literata, Georgia, serif;
+  --tekst-nazvanie-stroki-size: 1rem;
+  --tekst-nazvanie-stroki-lh: 1.375rem;
+  --tekst-nazvanie-stroki-weight: 500;
+  --tekst-interfeys-family: "Golos Text", system-ui, sans-serif;
+  --tekst-interfeys-size: 0.875rem;
+  --tekst-interfeys-lh: 1.25rem;
+  --tekst-interfeys-weight: 450;
+  --tekst-povestvovanie-family: "Golos Text", system-ui, sans-serif;
+  --tekst-povestvovanie-size: 0.875rem;
+  --tekst-povestvovanie-lh: 1.25rem;
+  --tekst-povestvovanie-weight: 600;
+  --tekst-adres-family: "Golos Text", system-ui, sans-serif;
+  --tekst-adres-size: 0.75rem;
+  --tekst-adres-lh: 1rem;
+  --tekst-adres-weight: 450;
+  --otstup-4: 0.25rem;
+  --otstup-8: 0.5rem;
+  --otstup-12: 0.75rem;
+  --otstup-16: 1rem;
+  --otstup-24: 1.5rem;
+  --otstup-32: 2rem;
+  --otstup-48: 3rem;
+  --otstup-64: 4rem;
+  --tsel-stroka: 2.25rem;
+  --tsel-knopka: 2.25rem;
+  --tsel-glavnaya: 2.5rem;
+  --tsel-sloy: 2rem;
+  --tsel-naimenshaya: 1.5rem;
+  --liniya-volosyanaya: 1px;
+  --liniya-osnovnaya: 1.5px;
+  --liniya-silnaya: 2px;
+  --liniya-glavnaya: 2.5px;
+  --liniya-fokus: 3px;
+  --liniya-zazor: 2px;
+  --radius-net: 0;
+  --radius-knopka: 0.125rem;
+  --dvizhenie-zatukhanie: 150ms;
+  --dvizhenie-raskrytie: 200ms;
+  --dvizhenie-shag-skhemy: 250ms;
+  --dvizhenie-obshchiy-element: 280ms;
+  --dvizhenie-vkhod: cubic-bezier(0.2, 0, 0, 1);
+  --dvizhenie-vykhod: cubic-bezier(0.4, 0, 1, 1);
+  --ten-sloy: 0px 8px 24px 0px rgb(24 32 44 / 0.16);
+  --komponent-shapka-vysota: 4rem;
+  --komponent-stroka-instrumenta-vysota: 3rem;
+  --komponent-plashka-proby-vysota: 2rem;
+  --komponent-polosa-pod-shapkoy: 0.125rem;
+  --komponent-kolonka-pisaniya: 36em;
+  --komponent-soderzhimoe-naibolshee: 72rem;
+  --komponent-panel-shirina: 29.125rem;
+  --komponent-ukazatel-knig-shirina: 16.5rem;
+  --komponent-znak-prilozheniya-kegl: 1.25rem;
+  --komponent-stroka-vid-shirina: 8rem;
+  --komponent-stroka-adres-shirina: 7rem;
+  --komponent-stroka-knopka-shirina: 6.5rem;
+  --komponent-stroka-chislo-shirina: 2.5rem;
+  --komponent-pole-nomera-stikha: 2.5rem;
+  --komponent-znak-vida: 1rem;
+  --komponent-znachok: 1.25rem;
+  --komponent-kletka-epokhi-vysota: 1.5rem;
+  --komponent-poisk-naibolshaya: 30rem;
+  --komponent-menyu-naimenshaya: 12.5rem;
+  --komponent-podskazka-naibolshaya: 22rem;
+  --komponent-dialog-shirina: 30rem;
+  --komponent-pole-chisla: 6rem;
+  --komponent-pole-zametki-vysota: 4.5rem;
+  --komponent-proza-naibolshaya: 40rem;
+}
+:root[data-theme="dark"], [data-theme="dark"] {
+  --tsvet-fon: #161D27;
+  --tsvet-list: #1E2733;
+  --tsvet-podlozhka: #2A3442;
+  --tsvet-chernila: #E8ECF1;
+  --tsvet-chernila-2: #A9B3C1;
+  --tsvet-chernila-3: #97A2B2;
+  --tsvet-liniya: #7A8596;
+  --tsvet-liniya-2: #8792A3;
+  --tsvet-setka: #3A4555;
+  --tsvet-vybor: #F0D04A;
+  --tsvet-na-vybore: #161D27;
+  --tsvet-vybor-oblast: #3A3725;
+  --tsvet-ton-vz: #262C1E;
+  --tsvet-ton-nz: #17302F;
+  --tsvet-chernila-vz: #C3D08F;
+  --tsvet-chernila-nz: #8FD3CC;
+  --tsvet-liniya-mf: #9AD1F7;
+  --tsvet-kant-mf: #9AD1F7;
+  --tsvet-liniya-lk: #F08BBF;
+  --tsvet-kant-lk: #F08BBF;
+  --tsvet-kromka-risunka: #7A8596;
+  --tsvet-deystvie-kinovar: #F0957B;
+  --tsvet-deystvie-biryuza: #8FD3CC;
+  --tsvet-deystvie: #F0957B;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --tsvet-fon: #161D27;
+    --tsvet-list: #1E2733;
+    --tsvet-podlozhka: #2A3442;
+    --tsvet-chernila: #E8ECF1;
+    --tsvet-chernila-2: #A9B3C1;
+    --tsvet-chernila-3: #97A2B2;
+    --tsvet-liniya: #7A8596;
+    --tsvet-liniya-2: #8792A3;
+    --tsvet-setka: #3A4555;
+    --tsvet-vybor: #F0D04A;
+    --tsvet-na-vybore: #161D27;
+    --tsvet-vybor-oblast: #3A3725;
+    --tsvet-ton-vz: #262C1E;
+    --tsvet-ton-nz: #17302F;
+    --tsvet-chernila-vz: #C3D08F;
+    --tsvet-chernila-nz: #8FD3CC;
+    --tsvet-liniya-mf: #9AD1F7;
+    --tsvet-kant-mf: #9AD1F7;
+    --tsvet-liniya-lk: #F08BBF;
+    --tsvet-kant-lk: #F08BBF;
+    --tsvet-kromka-risunka: #7A8596;
+    --tsvet-deystvie-kinovar: #F0957B;
+    --tsvet-deystvie-biryuza: #8FD3CC;
+    --tsvet-deystvie: #F0957B;
+  }
+}
+[data-action="бирюза"] {
+  --tsvet-deystvie: #1E5D5A;
+}
+[data-theme="dark"][data-action="бирюза"], [data-theme="dark"] [data-action="бирюза"], [data-action="бирюза"] [data-theme="dark"] {
+  --tsvet-deystvie: #8FD3CC;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) [data-action="бирюза"], :root:not([data-theme="light"])[data-action="бирюза"] {
+    --tsvet-deystvie: #8FD3CC;
+  }
+}
+[data-action="нет"] {
+  --tsvet-deystvie: #18202C;
+}
+[data-theme="dark"][data-action="нет"], [data-theme="dark"] [data-action="нет"], [data-action="нет"] [data-theme="dark"] {
+  --tsvet-deystvie: #E8ECF1;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) [data-action="нет"], :root:not([data-theme="light"])[data-action="нет"] {
+    --tsvet-deystvie: #E8ECF1;
+  }
+}
+[data-action="киноварь"] {
+  --tsvet-deystvie: #A33A1F;
+}
+[data-theme="dark"][data-action="киноварь"], [data-theme="dark"] [data-action="киноварь"], [data-action="киноварь"] [data-theme="dark"] {
+  --tsvet-deystvie: #F0957B;
+}
+/* Телефон: узкое окно, меньше 37,5 em (08 § 3.4) */
+@media (max-width: 37.4375em) {
+  :root {
+    --tekst-zagolovok-stranitsy-family: Literata, Georgia, serif;
+    --tekst-zagolovok-stranitsy-size: 1.375rem;
+    --tekst-zagolovok-stranitsy-lh: 1.75rem;
+    --tekst-zagolovok-stranitsy-weight: 600;
+    --tekst-nomer-istorii-family: Literata, Georgia, serif;
+    --tekst-nomer-istorii-size: 1.375rem;
+    --tekst-nomer-istorii-lh: 1.75rem;
+    --tekst-nomer-istorii-weight: 400;
+    --tekst-zagolovok-bloka-family: Literata, Georgia, serif;
+    --tekst-zagolovok-bloka-size: 1.125rem;
+    --tekst-zagolovok-bloka-lh: 1.5rem;
+    --tekst-zagolovok-bloka-weight: 600;
+    --tekst-nomer-glavy-family: Literata, Georgia, serif;
+    --tekst-nomer-glavy-size: 1.125rem;
+    --tekst-nomer-glavy-lh: 1.75rem;
+    --tekst-nomer-glavy-weight: 400;
+    --tekst-pisanie-family: Literata, Georgia, serif;
+    --tekst-pisanie-size: 1.125rem;
+    --tekst-pisanie-lh: 1.75rem;
+    --tekst-pisanie-weight: 400;
+    --tekst-kniga-family: Literata, Georgia, serif;
+    --tekst-kniga-size: 1.125rem;
+    --tekst-kniga-lh: 1.5rem;
+    --tekst-kniga-weight: 600;
+    --tekst-proza-family: "Golos Text", system-ui, sans-serif;
+    --tekst-proza-size: 1rem;
+    --tekst-proza-lh: 1.5rem;
+    --tekst-proza-weight: 450;
+    --tekst-tsitata-apparat-family: Literata, Georgia, serif;
+    --tekst-tsitata-apparat-size: 1rem;
+    --tekst-tsitata-apparat-lh: 1.5rem;
+    --tekst-tsitata-apparat-weight: 400;
+    --tekst-nazvanie-stroki-family: Literata, Georgia, serif;
+    --tekst-nazvanie-stroki-size: 1rem;
+    --tekst-nazvanie-stroki-lh: 1.25rem;
+    --tekst-nazvanie-stroki-weight: 500;
+    --tekst-interfeys-family: "Golos Text", system-ui, sans-serif;
+    --tekst-interfeys-size: 0.875rem;
+    --tekst-interfeys-lh: 1.25rem;
+    --tekst-interfeys-weight: 450;
+    --tekst-povestvovanie-family: "Golos Text", system-ui, sans-serif;
+    --tekst-povestvovanie-size: 0.875rem;
+    --tekst-povestvovanie-lh: 1.25rem;
+    --tekst-povestvovanie-weight: 600;
+    --tekst-adres-family: "Golos Text", system-ui, sans-serif;
+    --tekst-adres-size: 0.75rem;
+    --tekst-adres-lh: 1rem;
+    --tekst-adres-weight: 450;
+    --komponent-shapka-vysota: 3.5rem;
+    --komponent-znak-prilozheniya-kegl: 1.125rem;
+  }
+}
+/* Плотность (08 § 3.4; 09 § 9.7): кегли не меняются */
+[data-density="плотная"] {
+  --tsel-stroka: 1.75rem;
+  --tsel-knopka: 2rem;
+}
+/* Способ ввода (08 § 3.5): касание — 44–48; на листе можно включить вручную */
+@media (pointer: coarse) {
+  :root:not([data-input="мышь"]) {
+    --tsel-stroka: 3rem;
+    --tsel-knopka: 2.75rem;
+    --tsel-glavnaya: 3rem;
+    --tsel-sloy: 2.75rem;
+    --tsel-naimenshaya: 2.75rem;
+    --komponent-stroka-instrumenta-vysota: 3.5rem;
+  }
+  :root:not([data-input="мышь"])[data-density="плотная"] {
+    --tsel-stroka: 2.75rem;
+    --tsel-knopka: 2.75rem;
+    --tsel-glavnaya: 3rem;
+    --tsel-sloy: 2.75rem;
+    --tsel-naimenshaya: 2.75rem;
+    --komponent-stroka-instrumenta-vysota: 3.5rem;
+  }
+}
+[data-input="касание"] {
+  --tsel-stroka: 3rem;
+  --tsel-knopka: 2.75rem;
+  --tsel-glavnaya: 3rem;
+  --tsel-sloy: 2.75rem;
+  --tsel-naimenshaya: 2.75rem;
+  --komponent-stroka-instrumenta-vysota: 3.5rem;
+}
+[data-input="касание"][data-density="плотная"], [data-input="касание"] [data-density="плотная"] {
+  --tsel-stroka: 2.75rem;
+  --tsel-knopka: 2.75rem;
+  --tsel-glavnaya: 3rem;
+  --tsel-sloy: 2.75rem;
+  --tsel-naimenshaya: 2.75rem;
+  --komponent-stroka-instrumenta-vysota: 3.5rem;
+}
+/* Размер текста (08 § 3.3.2, § 7.23): размер корня; все кегли в rem */
+:root[data-text="крупнее"] { font-size: 112.5%; }
+:root[data-text="самый"] { font-size: 125%; }

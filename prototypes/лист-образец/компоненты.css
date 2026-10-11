@@ -1,0 +1,294 @@
+/* Компоненты листа-образца ред. 3 (08 ред. 3.2, § 7, § 16). Только переменные токенов. ПРОТОТИП. */
+
+/* ---------- Сетка и поля (08 § 3.4) ---------- */
+.оболочка { max-width: calc(var(--komponent-soderzhimoe-naibolshee) + 2 * var(--otstup-64)); margin: 0 auto; padding-inline: var(--otstup-16); }
+@media (min-width: 37.5em) { .оболочка { padding-inline: var(--otstup-24); } }
+@media (min-width: 48em) { .оболочка { padding-inline: var(--otstup-32); } }
+@media (min-width: 64em) { .оболочка { padding-inline: calc(var(--otstup-32) + var(--otstup-8)); } }
+@media (min-width: 80em) { .оболочка { padding-inline: var(--otstup-64); } }
+
+/* ---------- Шапка (08 § 7.1) ---------- */
+.шапка { position: sticky; top: 0; z-index: 20; background: var(--tsvet-list); border-bottom: var(--komponent-polosa-pod-shapkoy) solid var(--tsvet-deystvie); }
+@media (max-height: 30em) { .шапка { position: static; } }
+.шапка__ряд { display: flex; align-items: center; gap: var(--otstup-16); min-height: var(--komponent-shapka-vysota); }
+.знак-приложения { display: inline-flex; flex-direction: column; gap: var(--otstup-4); text-decoration: none; color: var(--tsvet-chernila); }
+.знак-приложения__надпись { font-family: var(--shrift-knizhnyy); font-weight: 600; font-size: var(--komponent-znak-prilozheniya-kegl); line-height: 1.2; letter-spacing: 0.012em; font-variation-settings: "opsz" 26; white-space: nowrap; }
+.знак-приложения:hover { color: var(--tsvet-chernila); }
+.знак-приложения:hover .знак-приложения__надпись { text-decoration: none; }
+.шапка__поиск { flex: 1 1 auto; max-width: var(--komponent-poisk-naibolshaya); }
+.шапка__нав { display: flex; align-items: center; gap: var(--otstup-4); margin-left: auto; }
+.шапка__меню { display: none; margin-left: auto; gap: var(--otstup-4); }
+@media (max-width: 64em) { .шапка__нав .в-меню-1024 { display: none; } }
+@media (max-width: 52.4375em) { .шапка__нав { display: none; } .шапка__меню { display: flex; } .шапка__поиск { display: none; } }
+@media (max-width: 37.4375em) {
+  .шапка__ряд { gap: var(--otstup-8); }
+  .шапка__меню { gap: 0; }
+  .шапка__меню .кн { gap: var(--otstup-4); padding: 0 var(--otstup-4); }
+  .слой .слой__группа button { padding: 0 var(--otstup-8); }
+  .слой.слой { gap: var(--otstup-4); }
+}
+
+/* ---------- Плашка пробы (09 § 4.6) ---------- */
+.плашка-пробы { display: flex; flex-wrap: wrap; align-items: center; gap: var(--otstup-4) var(--otstup-12); min-height: var(--komponent-plashka-proby-vysota); background: var(--tsvet-podlozhka); color: var(--tsvet-chernila); }
+.плашка-пробы strong { font-weight: 600; }
+.плашка-пробы .т-адрес { color: var(--tsvet-chernila-2); }
+
+/* ---------- Кнопки (08 § 7.8) ---------- */
+.кн { display: inline-flex; align-items: center; justify-content: center; gap: var(--otstup-8); min-height: var(--tsel-knopka); min-width: var(--tsel-naimenshaya); padding: 0 var(--otstup-8); border: var(--liniya-volosyanaya) solid transparent; border-radius: var(--radius-knopka); background: none; color: var(--tsvet-chernila); font-family: var(--tekst-interfeys-family); font-size: var(--tekst-interfeys-size); line-height: var(--tekst-interfeys-lh); font-weight: 450; text-decoration: none; white-space: nowrap; }
+.кн:hover { color: var(--tsvet-deystvie); }
+.кн:active { background: var(--tsvet-podlozhka); }
+.кн .значок { width: var(--komponent-znachok); height: var(--komponent-znachok); flex: none; }
+.кн--текст { font-weight: 600; padding: 0 var(--otstup-4); white-space: normal; text-align: left; justify-content: flex-start; }
+.кн--тихо { color: var(--tsvet-chernila-2); }
+.кн--плотная { background: var(--tsvet-chernila); color: var(--tsvet-list); font-weight: 600; padding: 0 var(--otstup-16); min-height: var(--tsel-glavnaya); }
+.кн--плотная:hover { color: var(--tsvet-list); outline: var(--liniya-silnaya) solid var(--tsvet-deystvie); outline-offset: calc(-1 * var(--liniya-silnaya)); }
+.кн--плотная:active { box-shadow: inset 0 0 0 var(--liniya-silnaya) var(--tsvet-deystvie); background: var(--tsvet-chernila); }
+.кн--найти { background: var(--tsvet-list); border-color: var(--tsvet-deystvie); color: var(--tsvet-deystvie); font-weight: 600; }
+.кн--найти:hover { background: var(--tsvet-podlozhka); }
+.кн[aria-pressed="true"] { background: var(--tsvet-podlozhka); border-color: var(--tsvet-chernila); }
+@media (forced-colors: active) { .кн[aria-pressed="true"] { border: var(--liniya-silnaya) solid ButtonText; } }
+.кн--значок { padding: 0; min-width: var(--tsel-knopka); }
+.ряд-кнопок { display: flex; flex-wrap: wrap; align-items: center; gap: var(--otstup-8); }
+.ряд-действий { display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--otstup-16); }
+.ряд-действий .кн { color: var(--tsvet-chernila-2); padding: 0; }
+.ряд-действий .кн:hover { color: var(--tsvet-deystvie); }
+.скопировано { color: var(--tsvet-chernila-2); }
+
+/* кнопка инструмента: плашка «подложка» без рамки */
+.кн-инструмента { display: grid; grid-template-columns: auto 1fr; column-gap: var(--otstup-8); align-items: center; min-height: var(--tsel-glavnaya); padding: var(--otstup-8) var(--otstup-12); background: var(--tsvet-podlozhka); color: var(--tsvet-chernila); border: 0; border-radius: var(--radius-knopka); text-align: left; text-decoration: none; }
+.кн-инструмента:hover { color: var(--tsvet-chernila); box-shadow: inset 0 calc(-1 * var(--liniya-silnaya)) 0 var(--tsvet-deystvie); }
+.кн-инструмента .значок { width: var(--komponent-znachok); height: var(--komponent-znachok); grid-row: span 2; }
+.кн-инструмента__имя { font-weight: 600; }
+.кн-инструмента__вопрос { grid-column: 2; font-size: var(--tekst-adres-size); line-height: var(--tekst-adres-lh); color: var(--tsvet-chernila-2); }
+
+/* ---------- Поле поиска (08 § 7.2) ---------- */
+.поиск { display: flex; align-items: center; gap: var(--otstup-8); }
+.поиск__подпись { font-weight: 600; }
+.поиск__поле { position: relative; flex: 1 1 auto; display: flex; }
+.поиск__поле .значок { position: absolute; left: var(--otstup-8); top: 50%; transform: translateY(-50%); width: var(--komponent-znachok); height: var(--komponent-znachok); color: var(--tsvet-chernila-2); pointer-events: none; }
+.поиск input { width: 100%; min-height: var(--tsel-knopka); padding: 0 var(--otstup-8) 0 calc(var(--komponent-znachok) + var(--otstup-16)); border: var(--liniya-volosyanaya) solid var(--tsvet-liniya); border-radius: var(--radius-knopka); background: var(--tsvet-list); font-size: var(--tekst-interfeys-size); }
+.поиск input::placeholder { color: var(--tsvet-chernila-2); opacity: 1; }
+.поиск__примеры { display: flex; flex-wrap: wrap; gap: var(--otstup-4) var(--otstup-16); margin-top: var(--otstup-8); }
+.подсказки { margin-top: var(--otstup-4); background: var(--tsvet-list); border: var(--liniya-volosyanaya) solid var(--tsvet-liniya); }
+.подсказки__группа { padding: var(--otstup-4) var(--otstup-12) 0; }
+.подсказки [role="option"] { display: flex; justify-content: space-between; gap: var(--otstup-12); min-height: var(--tsel-knopka); align-items: center; padding: 0 var(--otstup-12); }
+.подсказки [aria-selected="true"] { background: var(--tsvet-podlozhka); outline: var(--liniya-fokus) solid var(--tsvet-chernila); outline-offset: calc(-1 * var(--liniya-fokus)); }
+
+/* ---------- Переключатель слоя (08 § 7.9) ---------- */
+.слой { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--otstup-8); }
+.слой__группа { display: inline-flex; border: var(--liniya-volosyanaya) solid var(--tsvet-liniya); }
+.слой__группа button { white-space: nowrap; min-height: var(--tsel-sloy); padding: 0 var(--otstup-12); border: var(--liniya-volosyanaya) solid transparent; margin: calc(-1 * var(--liniya-volosyanaya)); background: none; font-size: var(--tekst-interfeys-size); line-height: var(--tekst-interfeys-lh); }
+.слой__группа button[aria-pressed="true"] { background: var(--tsvet-podlozhka); border-color: var(--tsvet-chernila); font-weight: 600; position: relative; }
+@media (forced-colors: active) {
+  .слой__группа, .слой__группа button { border-color: ButtonText; }
+  .слой__группа button[aria-pressed="true"] { forced-color-adjust: none; background: Highlight; color: HighlightText; }
+}
+
+/* ---------- Номер и вид ---------- */
+.знак-вида { width: var(--komponent-znak-vida); height: var(--komponent-znak-vida); flex: none; color: var(--tsvet-chernila-2); }
+.вид { display: inline-flex; align-items: center; gap: var(--otstup-4); }
+
+/* ---------- Строка списка (08 § 7.27): режим «переход» ---------- */
+.список { border-top: var(--liniya-volosyanaya) solid var(--tsvet-setka); }
+.строка { position: relative; display: grid; grid-template-columns: calc(3ch + 0.36em) minmax(0, 1fr) var(--komponent-stroka-vid-shirina) var(--komponent-stroka-adres-shirina) var(--komponent-stroka-knopka-shirina); column-gap: var(--otstup-12); align-items: center; min-height: var(--tsel-stroka); padding: 0; border-bottom: var(--liniya-volosyanaya) solid var(--tsvet-setka); }
+.строка__название { padding-block: calc((var(--tsel-stroka) - var(--tekst-nazvanie-stroki-lh) - var(--liniya-volosyanaya)) / 2); }
+.строка:hover { background: var(--tsvet-podlozhka); }
+.строка__номер { font-family: var(--tekst-interfeys-family); font-size: var(--tekst-interfeys-size); color: var(--tsvet-chernila-2); font-variant-numeric: tabular-nums lining-nums; text-align: right; }
+.строка__название { min-width: 0; }
+.строка__ярус { display: contents; }
+.строка__ссылка { font-family: var(--tekst-nazvanie-stroki-family); font-size: var(--tekst-nazvanie-stroki-size); line-height: var(--tekst-nazvanie-stroki-lh); font-weight: var(--tekst-nazvanie-stroki-weight); color: var(--tsvet-chernila); text-decoration: none; }
+.строка__ссылка:hover { text-decoration: underline; text-decoration-thickness: var(--liniya-volosyanaya); }
+.строка__ссылка::after { content: ""; position: absolute; inset: 0; right: calc(var(--tsel-knopka) + var(--otstup-8)); z-index: 0; }
+.строка__ссылка:focus-visible { outline: none; box-shadow: none; }
+.строка:focus-within:has(.строка__ссылка:focus-visible) { outline: var(--liniya-fokus) solid var(--tsvet-chernila); outline-offset: calc(-1 * var(--liniya-fokus)); }
+.строка__вид, .строка__адрес { font-size: var(--tekst-adres-size); line-height: var(--tekst-adres-lh); color: var(--tsvet-chernila-2); font-variant-numeric: tabular-nums lining-nums; white-space: nowrap; }
+.строка__метка { font-size: var(--tekst-adres-size); line-height: var(--tekst-adres-lh); font-weight: 600; color: var(--tsvet-chernila-2); margin-left: var(--otstup-8); white-space: nowrap; }
+.строка__трудное { display: block; font-size: var(--tekst-adres-size); line-height: var(--tekst-adres-lh); color: var(--tsvet-chernila-2); }
+.строка__подробнее { position: relative; z-index: 1; justify-self: end; align-self: stretch; min-width: var(--tsel-knopka); min-height: calc(var(--tsel-stroka) - var(--liniya-volosyanaya)); padding: 0 var(--otstup-4); border: 0; background: none; color: var(--tsvet-chernila-2); display: inline-flex; align-items: center; gap: var(--otstup-4); font-size: var(--tekst-adres-size); }
+.строка__подробнее .значок { width: var(--otstup-16); height: var(--otstup-16); transition: transform var(--dvizhenie-raskrytie) var(--dvizhenie-vkhod); }
+.строка__подробнее[aria-expanded="true"] .значок { transform: rotate(180deg); }
+.строка__подробнее .видимо-телефон { display: none; }
+.строка[aria-current="page"], .строка--текущая { box-shadow: inset var(--otstup-4) 0 0 var(--tsvet-chernila); padding-left: var(--otstup-8); }
+.строка__раскрытие { grid-column: 2 / -1; padding: var(--otstup-8) 0 var(--otstup-12); }
+.строка__раскрытие .т-проза { max-width: var(--komponent-proza-naibolshaya); }
+.строка__раскрытие dl { display: grid; grid-template-columns: max-content 1fr; gap: var(--otstup-4) var(--otstup-12); margin-top: var(--otstup-8); }
+.строка__раскрытие dt { color: var(--tsvet-chernila-2); }
+.строка__вид .строка__метка, .строка__вид .строка__трудное { display: none; }
+@media (max-width: 37.4375em) {
+  .строка { grid-template-columns: calc(3ch + 0.36em) minmax(0, 1fr) var(--tsel-stroka); grid-template-rows: auto auto; padding: 0; row-gap: 0; }
+  .строка__название { padding-top: calc((var(--tsel-stroka) - var(--tekst-nazvanie-stroki-lh) - var(--tekst-adres-lh) - var(--liniya-volosyanaya)) / 2); }
+  .строка__вид { padding-bottom: calc((var(--tsel-stroka) - var(--tekst-nazvanie-stroki-lh) - var(--tekst-adres-lh) - var(--liniya-volosyanaya)) / 2); }
+  .строка__вид .вид { line-height: var(--tekst-adres-lh); }
+  .строка__номер { grid-row: span 2; align-self: start; padding-top: calc((var(--tsel-stroka) - var(--tekst-nazvanie-stroki-lh) - var(--tekst-adres-lh) - var(--liniya-volosyanaya)) / 2); line-height: var(--tekst-nazvanie-stroki-lh); }
+  .строка__название { grid-column: 2; padding-block: 0; }
+  .строка__название .строка__метка, .строка__название .строка__трудное { display: none; }
+  .строка__вид { grid-column: 2; grid-row: 2; display: flex; flex-wrap: wrap; gap: 0 var(--otstup-8); min-width: 0; white-space: normal; }
+  .строка__вид .строка__метка, .строка__вид .строка__трудное { display: inline; margin: 0; }
+  .строка__адрес { display: none; }
+  .строка__вид .адрес-в-ярусе { display: inline; }
+  .строка__подробнее { grid-column: 3; grid-row: 1 / span 2; align-self: stretch; min-height: var(--tsel-stroka); }
+  .строка__подробнее .видимо-ноутбук { display: none; }
+  .строка__подробнее .видимо-телефон { display: inline; }
+  .строка__ссылка::after { right: var(--tsel-stroka); }
+  .строка__раскрытие { grid-column: 2 / -1; }
+}
+.адрес-в-ярусе { display: none; }
+.группа-заголовок { display: flex; align-items: baseline; gap: var(--otstup-8); padding-top: var(--otstup-12); min-height: var(--otstup-32); }
+.книга-заголовок { margin-top: var(--otstup-48); }
+
+/* ---------- Строка списка: режим «выбор» (APG Listbox) ---------- */
+.выбор-список { border-top: var(--liniya-volosyanaya) solid var(--tsvet-setka); }
+.выбор-список [role="option"] { display: flex; align-items: center; gap: var(--otstup-12); min-height: var(--tsel-stroka); padding: 0 var(--otstup-8); border-bottom: var(--liniya-volosyanaya) solid var(--tsvet-setka); cursor: pointer; }
+.выбор-список [role="option"]:hover { background: var(--tsvet-podlozhka); }
+.плашка-имени { display: inline-block; padding: 0 var(--otstup-4); font-family: var(--tekst-nazvanie-stroki-family); font-size: var(--tekst-nazvanie-stroki-size); line-height: var(--tekst-nazvanie-stroki-lh); font-weight: 500; }
+.выбор-список [aria-selected="true"] .плашка-имени, .выбрано .плашка-имени { background: var(--tsvet-vybor); color: var(--tsvet-na-vybore); font-weight: 600; outline: var(--liniya-silnaya) solid var(--tsvet-chernila); outline-offset: var(--liniya-zazor); box-shadow: 0 0 0 var(--liniya-zazor) var(--tsvet-list); }
+.выбор-список:focus-visible { outline: none; box-shadow: none; }
+.выбор-список:focus-visible [data-active="true"] { outline: var(--liniya-fokus) solid var(--tsvet-chernila); outline-offset: calc(-1 * var(--liniya-fokus)); }
+.выбор-список [data-active="true"] { position: relative; }
+.подсвечено { position: relative; }
+.подсвечено .плашка-имени { background-image:
+  linear-gradient(var(--tsvet-chernila), var(--tsvet-chernila)), linear-gradient(var(--tsvet-chernila), var(--tsvet-chernila)),
+  linear-gradient(var(--tsvet-chernila), var(--tsvet-chernila)), linear-gradient(var(--tsvet-chernila), var(--tsvet-chernila)),
+  linear-gradient(var(--tsvet-chernila), var(--tsvet-chernila)), linear-gradient(var(--tsvet-chernila), var(--tsvet-chernila)),
+  linear-gradient(var(--tsvet-chernila), var(--tsvet-chernila)), linear-gradient(var(--tsvet-chernila), var(--tsvet-chernila));
+  background-repeat: no-repeat;
+  background-size: var(--otstup-8) var(--liniya-silnaya), var(--liniya-silnaya) var(--otstup-8), var(--otstup-8) var(--liniya-silnaya), var(--liniya-silnaya) var(--otstup-8), var(--otstup-8) var(--liniya-silnaya), var(--liniya-silnaya) var(--otstup-8), var(--otstup-8) var(--liniya-silnaya), var(--liniya-silnaya) var(--otstup-8);
+  background-position: left top, left top, right top, right top, left bottom, left bottom, right bottom, right bottom; }
+@media (forced-colors: active) {
+  .выбор-список [aria-selected="true"] .плашка-имени { outline-color: Highlight; }
+}
+
+/* ---------- Таблица (08 § 7.13, § 7.27) ---------- */
+.таблица-обёртка { overflow-x: auto; }
+.таблица { width: 100%; font-size: var(--tekst-interfeys-size); line-height: var(--tekst-interfeys-lh); }
+.таблица caption { text-align: left; caption-side: top; padding-bottom: var(--otstup-8); font-family: var(--tekst-proza-family); font-size: var(--tekst-proza-size); line-height: var(--tekst-proza-lh); }
+.таблица th, .таблица td { padding: var(--otstup-8) var(--otstup-12) var(--otstup-8) 0; text-align: left; vertical-align: baseline; border-bottom: var(--liniya-volosyanaya) solid var(--tsvet-setka); }
+.таблица thead th { position: sticky; top: calc(var(--komponent-shapka-vysota) + var(--komponent-polosa-pod-shapkoy)); background: var(--tsvet-podlozhka); font-weight: 600; padding-left: var(--otstup-8); z-index: 2; }
+@media (max-height: 30em) { .таблица thead th { position: static; } }
+.таблица tbody th { font-family: var(--tekst-nazvanie-stroki-family); font-weight: 500; font-size: var(--tekst-nazvanie-stroki-size); padding-left: var(--otstup-8); }
+.таблица td { font-variant-numeric: tabular-nums lining-nums; }
+.таблица--полосы tbody tr:nth-child(even) { background: var(--tsvet-podlozhka); }
+.таблица tbody tr:hover { background: var(--tsvet-podlozhka); }
+.таблица th button { display: inline-flex; align-items: center; gap: var(--otstup-4); border: 0; background: none; font-weight: 600; padding: 0; min-height: var(--tsel-naimenshaya); }
+.таблица th button .значок { width: var(--otstup-16); height: var(--otstup-16); }
+.таблица .число { text-align: right; }
+
+/* ---------- Блок справки с числом (08 § 7.28) ---------- */
+.блок { border-top: var(--liniya-volosyanaya) solid var(--tsvet-setka); }
+.блок__заголовок { margin: 0; font: inherit; }
+.блок__кнопка { display: flex; width: 100%; align-items: center; justify-content: space-between; min-height: var(--tsel-knopka); padding: 0; border: 0; background: none; font-family: var(--tekst-povestvovanie-family); font-size: var(--tekst-interfeys-size); line-height: var(--tekst-interfeys-lh); font-weight: 600; text-align: left; }
+.блок__кнопка .значок { width: var(--otstup-16); height: var(--otstup-16); transition: transform var(--dvizhenie-raskrytie) var(--dvizhenie-vkhod); }
+.блок__кнопка[aria-expanded="true"] .значок { transform: rotate(180deg); }
+.блок__тело { padding-bottom: var(--otstup-16); }
+.блок__молчание { display: flex; gap: var(--otstup-8); min-height: var(--tsel-knopka); align-items: center; }
+.блоки-управление { display: flex; gap: var(--otstup-16); justify-content: flex-end; }
+
+/* ---------- Строка лица (08 § 7.4) ---------- */
+.строка-лица { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--otstup-4); padding: var(--otstup-8) 0; border-bottom: var(--liniya-volosyanaya) solid var(--tsvet-setka); }
+.строка-лица__имя { font-family: var(--tekst-nazvanie-stroki-family); font-size: var(--tekst-nazvanie-stroki-size); line-height: var(--tekst-nazvanie-stroki-lh); font-weight: 500; }
+.строка-лица__роль { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 var(--otstup-8); }
+
+/* ---------- Адрес-кнопка и вклейка (08 § 7.6) ---------- */
+.адрес-кн { display: inline-flex; align-items: center; gap: var(--otstup-4); min-height: var(--tsel-naimenshaya); min-width: var(--tsel-naimenshaya); padding: 0 var(--otstup-4); margin: 0 calc(-1 * var(--otstup-4)); border: 0; background: none; font-family: var(--tekst-adres-family); font-size: var(--tekst-adres-size); line-height: var(--tekst-adres-lh); color: var(--tsvet-chernila-2); font-variant-numeric: tabular-nums lining-nums; white-space: nowrap; }
+.адрес-кн .значок { width: var(--otstup-12); height: var(--otstup-12); transition: transform var(--dvizhenie-raskrytie) var(--dvizhenie-vkhod); }
+.адрес-кн[aria-expanded="true"] { color: var(--tsvet-chernila); }
+.адрес-кн[aria-expanded="true"] .значок { transform: rotate(180deg); }
+.вклейка { margin: var(--otstup-8) 0 var(--otstup-12); }
+.вклейка .голос-библия p + p { margin-top: var(--otstup-4); }
+.вклейка__свой { font-weight: 600; }
+.вклейка .ряд-действий { margin-top: var(--otstup-8); }
+
+/* ---------- Пометки достоверности (08 § 7.7) ---------- */
+.пометка { font-family: var(--tekst-adres-family); font-size: var(--tekst-adres-size); line-height: var(--tekst-adres-lh); color: var(--tsvet-chernila-2); }
+.пометка-кн { border: 0; background: none; padding: 0 var(--otstup-4); min-height: var(--tsel-naimenshaya); font: inherit; color: var(--tsvet-chernila-2); text-decoration: underline dotted; text-underline-offset: 0.2em; }
+
+/* ---------- Тихая строка трудного (08 § 7.24) ---------- */
+.тихая-строка { font-family: var(--tekst-adres-family); font-size: var(--tekst-adres-size); line-height: var(--tekst-adres-lh); color: var(--tsvet-chernila-2); }
+
+/* ---------- Вкладки (08 § 7.15) ---------- */
+.вкладки { display: flex; flex-wrap: wrap; border-bottom: var(--liniya-volosyanaya) solid var(--tsvet-setka); }
+.вкладки [role="tab"] { min-height: var(--tsel-knopka); padding: 0 var(--otstup-12); border: 0; background: none; font-weight: 600; box-shadow: inset 0 0 0 transparent; }
+.вкладки [role="tab"][aria-selected="true"] { box-shadow: inset 0 calc(-1 * var(--liniya-fokus)) 0 var(--tsvet-deystvie); }
+
+/* ---------- Меню, подсказка, диалог (08 § 7.16, § 7.26, § 7.17) ---------- */
+.меню-обёртка { position: relative; display: inline-block; }
+.меню { position: absolute; z-index: 30; top: 100%; left: 0; min-width: var(--komponent-menyu-naimenshaya); padding: var(--otstup-4) 0; background: var(--tsvet-list); border: var(--liniya-volosyanaya) solid var(--tsvet-liniya); box-shadow: var(--ten-sloy); }
+[data-theme="dark"] .меню { box-shadow: none; }
+.меню [role="menuitem"] { display: flex; width: 100%; align-items: center; gap: var(--otstup-8); min-height: var(--tsel-knopka); padding: 0 var(--otstup-12); border: 0; background: none; text-align: left; white-space: nowrap; }
+.меню [role="menuitem"]:hover, .меню [role="menuitem"]:focus-visible { background: var(--tsvet-podlozhka); }
+.меню [role="menuitem"]:focus-visible { outline-offset: calc(-1 * var(--liniya-fokus)); box-shadow: none; }
+.меню .значок { width: var(--komponent-znachok); height: var(--komponent-znachok); color: var(--tsvet-chernila-2); }
+.подсказка { padding: var(--otstup-8) var(--otstup-12); background: var(--tsvet-list); border: var(--liniya-volosyanaya) solid var(--tsvet-liniya); max-width: var(--komponent-podskazka-naibolshaya); }
+.раскрытие-на-месте { display: block; margin: var(--otstup-4) 0 var(--otstup-8); padding: var(--otstup-8) var(--otstup-12); background: var(--tsvet-podlozhka); font-family: var(--tekst-interfeys-family); font-size: var(--tekst-interfeys-size); line-height: var(--tekst-interfeys-lh); }
+dialog.диалог { width: min(var(--komponent-dialog-shirina), calc(100vw - 2 * var(--otstup-16))); padding: var(--otstup-24); border: var(--liniya-volosyanaya) solid var(--tsvet-liniya); background: var(--tsvet-list); color: var(--tsvet-chernila); box-shadow: var(--ten-sloy); }
+dialog.диалог::backdrop { background: color-mix(in srgb, var(--tsvet-chernila) 32%, transparent); }
+
+/* ---------- Радиогруппа (08 § 7.18) ---------- */
+.радио { border: 0; padding: 0; margin: 0; }
+.радио legend { font-weight: 600; padding: 0; margin-bottom: var(--otstup-4); }
+.радио label { display: flex; align-items: center; gap: var(--otstup-8); min-height: var(--tsel-knopka); cursor: pointer; }
+.радио input[type="radio"] { appearance: none; width: var(--otstup-16); height: var(--otstup-16); margin: 0; border: var(--liniya-osnovnaya) solid var(--tsvet-chernila); border-radius: 50%; display: grid; place-content: center; background: var(--tsvet-list); }
+.радио input[type="radio"]:checked::before { content: ""; width: var(--otstup-8); height: var(--otstup-8); border-radius: 50%; background: var(--tsvet-chernila); }
+@media (forced-colors: active) { .радио input[type="radio"]:checked::before { background: CanvasText; } }
+.поле-числа { width: var(--komponent-pole-chisla); min-height: var(--tsel-knopka); padding: 0 var(--otstup-8); border: var(--liniya-volosyanaya) solid var(--tsvet-liniya); border-radius: var(--radius-knopka); background: var(--tsvet-list); }
+
+/* ---------- Ход загрузки (08 § 7.19) ---------- */
+.ход progress { appearance: none; width: 100%; height: var(--otstup-8); border: var(--liniya-volosyanaya) solid var(--tsvet-chernila); background: var(--tsvet-list); }
+.ход progress::-webkit-progress-bar { background: var(--tsvet-list); }
+.ход progress::-webkit-progress-value { background: var(--tsvet-chernila); }
+.ход progress::-moz-progress-bar { background: var(--tsvet-chernila); }
+
+/* ---------- Полоса 66 книг (08 § 7.12) ---------- */
+.полоса-книг { display: flex; align-items: flex-end; gap: 0; height: var(--otstup-24); }
+.полоса-книг__клетка { flex: 1 1 0; height: 100%; display: flex; align-items: flex-end; border-left: var(--liniya-volosyanaya) solid var(--tsvet-list); background: var(--tsvet-setka); }
+.полоса-книг__клетка--разрыв { margin-left: calc(var(--otstup-4) + var(--liniya-zazor)); }
+.полоса-книг__отметка { width: 100%; background: var(--tsvet-chernila); }
+.полоса-книг__отметка--полная { height: 100%; }
+.полоса-книг__отметка--упом { height: 50%; }
+.полоса-книг--две { flex-direction: column; height: auto; gap: var(--otstup-4); align-items: stretch; }
+.полоса-книг--две .полоса-книг__ряд { display: flex; height: var(--otstup-16); }
+
+/* ---------- Малые образы (08 § 7.5) ---------- */
+.малый-образ { display: block; text-decoration: none; color: var(--tsvet-chernila); }
+.малый-образ__подпись { font-weight: 600; }
+.малый-образ__вопрос { display: block; font-size: var(--tekst-adres-size); line-height: var(--tekst-adres-lh); color: var(--tsvet-chernila-2); font-weight: 450; }
+.малый-образ__рисунок { display: block; margin-top: var(--otstup-4); border: var(--liniya-volosyanaya) solid var(--tsvet-liniya); background: var(--tsvet-ton-vz); }
+.малый-образ:hover .малый-образ__подпись { text-decoration: underline; }
+
+/* ---------- Состояния (08 § 7.11) ---------- */
+.загрузка-место { background: var(--tsvet-podlozhka); }
+.ошибка-заголовок { font-family: var(--tekst-kniga-family); font-size: var(--tekst-kniga-size); line-height: var(--tekst-kniga-lh); font-weight: 600; }
+
+/* ---------- Заметка читателя (08 § 4.1, § 16.7) ---------- */
+.заметка { background: var(--tsvet-podlozhka); padding: var(--otstup-8) var(--otstup-12); }
+.заметка__метка { display: block; font-size: var(--tekst-adres-size); line-height: var(--tekst-adres-lh); color: var(--tsvet-chernila-2); }
+.заметка textarea { width: 100%; min-height: var(--komponent-pole-zametki-vysota); padding: var(--otstup-8); border: var(--liniya-volosyanaya) solid var(--tsvet-liniya); background: var(--tsvet-list); border-radius: var(--radius-knopka); }
+
+/* ---------- Заглушка рисунка и временный портрет (08 § 17.3; В-27) ---------- */
+.заглушка { display: grid; place-items: end start; aspect-ratio: 4 / 3; padding: var(--otstup-8); background: var(--tsvet-podlozhka); border: var(--liniya-volosyanaya) solid var(--tsvet-kromka-risunka); }
+.заглушка figcaption { font-family: var(--tekst-adres-family); font-size: var(--tekst-adres-size); line-height: var(--tekst-adres-lh); color: var(--tsvet-chernila-2); background: var(--tsvet-list); padding: var(--otstup-4) var(--otstup-8); }
+
+/* ---------- Синопсис (08 § 7.29) ---------- */
+.синопсис { width: 100%; table-layout: fixed; }
+.синопсис th, .синопсис td { vertical-align: top; padding: var(--otstup-8) var(--otstup-12) var(--otstup-12) 0; border-bottom: var(--liniya-volosyanaya) solid var(--tsvet-setka); }
+.синопсис thead th { font-weight: 600; text-align: left; }
+.синопсис td { font-family: var(--tekst-tsitata-apparat-family); font-size: var(--tekst-tsitata-apparat-size); line-height: var(--tekst-tsitata-apparat-lh); }
+.синопсис .сцена { font-family: var(--tekst-interfeys-family); font-size: var(--tekst-adres-size); line-height: var(--tekst-adres-lh); color: var(--tsvet-chernila-2); }
+.совпадает { text-decoration: underline solid var(--tsvet-liniya); text-decoration-thickness: var(--liniya-silnaya); text-underline-offset: 0.18em; }
+
+/* ---------- Плотность и касание: высоты — наименьшие (08 § 3.3.3) ---------- */
+[data-density="плотная"] .строка { padding: 0; }
+
+/* ---------- Малые образы: Генеалогия и Время (08 § 7.5) ---------- */
+.образ-генеалогия { position: relative; display: block; width: 100%; color: var(--tsvet-chernila); }
+.образ-линии { position: absolute; inset: 0; width: 100%; height: 100%; color: var(--tsvet-liniya); }
+.образ-метка { position: absolute; transform: translate(-50%, -50%); padding: 0 var(--otstup-4); background: var(--tsvet-ton-vz); font-family: var(--shrift-knizhnyy); font-size: var(--tekst-interfeys-size); line-height: var(--tekst-interfeys-lh); white-space: nowrap; }
+.образ-время { display: block; padding: var(--otstup-8); color: var(--tsvet-chernila); }
+.образ-время svg { width: 100%; height: auto; }
+.образ-время .клетка-пустая { color: var(--tsvet-liniya); }
+.образ-время__имя { display: block; color: var(--tsvet-chernila); }
+.образ-время__масштаб { display: block; }
+.хлебные { display: flex; flex-wrap: wrap; align-items: center; gap: var(--otstup-4); padding-top: var(--otstup-16); }
+.хлебные .значок { width: var(--otstup-12); height: var(--otstup-12); color: var(--tsvet-chernila-2); }
+.хлебные a { color: var(--tsvet-chernila-2); }
+@media (max-width: 20em) { .шапка__ряд { flex-wrap: wrap; } .шапка__меню { margin-left: 0; } }
