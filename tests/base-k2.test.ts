@@ -21,8 +21,24 @@ import type { CheckEntry, Cite, Place, Source } from '../tools/base/types.ts';
 const BASE_DIR = join(import.meta.dirname, '..', 'base');
 const who = { by: 'тест второго ключа', kind: 'agent' as const, at: '2026-10-11' };
 let base: Base;
-/** Журнал подписей без подписей Д-партии 1 (второй ключ, Д-партия-1-второй-ключ.md): переходы К-2 и К-3 сверяются на прежних 103. */
-const withoutD1 = (b: Base): Base => ({ ...b, checks: (b.checks ?? []).filter((c) => !/Д-партия-1/.test(c.by)) });
+/**
+ * Снимок журнала подписей на время партии: только подписи названных партий (по полю `by`, у контрольного набора — и по
+ * дате). Если запись позже переподписала другая партия, берётся последняя подпись своей партии из `history`. Так проверка
+ * не зависит от будущих подписей (истории пакета 1 и дальше).
+ */
+const CONTROL = (c: { by: string; at: string }) => c.by === 'сверщик-агент' && c.at <= '2026-10-10';
+const D1 = (c: { by: string }) => /Д-партия-1-второй-ключ/.test(c.by);
+const snapshot = (b: Base, ...parties: ((c: { by: string; at: string }) => boolean)[]): Base => ({
+  ...b,
+  checks: (b.checks ?? []).flatMap((c) => {
+    const ok = (x: { by: string; at: string }) => parties.some((p) => p(x));
+    if (ok(c)) return [c];
+    const h = [...(c.history ?? [])].reverse().find(ok);
+    return h ? [{ ...h, key: c.key } as CheckEntry] : [];
+  }),
+});
+/** Переходы К-2 и К-3 сверяются на прежних 103 подписях контрольного набора (без Д-партии 1 и последующих). */
+const withoutD1 = (b: Base): Base => snapshot(b, CONTROL);
 const copy = () => structuredClone(base);
 const errs = (b: Base, check?: string) => validate(b).filter((i) => i.level === 'error' && (!check || i.check === check));
 const reg = () => new Map((base.sources ?? []).map((s) => [s.id, s]));

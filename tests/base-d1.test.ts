@@ -8,8 +8,25 @@ import type { Base } from '../tools/base/migrate.ts';
 import { loadBase, validate, yearIn } from '../tools/base/validate.ts';
 import { buildIndex } from '../tools/base/bundle.ts';
 import { admission } from '../tools/base/admit.ts';
+import type { CheckEntry } from '../tools/base/types.ts';
 
 let base: Base;
+/**
+ * Снимок журнала подписей на время партии: только подписи названных партий (по полю `by`, у контрольного набора — и по
+ * дате). Если запись позже переподписала другая партия, берётся последняя подпись своей партии из `history`. Так проверка
+ * не зависит от будущих подписей (истории пакета 1 и дальше).
+ */
+const CONTROL = (c: { by: string; at: string }) => c.by === 'сверщик-агент' && c.at <= '2026-10-10';
+const D1 = (c: { by: string }) => /Д-партия-1-второй-ключ/.test(c.by);
+const snapshot = (b: Base, ...parties: ((c: { by: string; at: string }) => boolean)[]): Base => ({
+  ...b,
+  checks: (b.checks ?? []).flatMap((c) => {
+    const ok = (x: { by: string; at: string }) => parties.some((p) => p(x));
+    if (ok(c)) return [c];
+    const h = [...(c.history ?? [])].reverse().find(ok);
+    return h ? [{ ...h, key: c.key } as CheckEntry] : [];
+  }),
+});
 const copy = () => structuredClone(base);
 const errs = (b: Base, check?: string) => validate(b).filter((i) => i.level === 'error' && (!check || i.check === check));
 const facts = (b: Base) => b.volumes.flatMap((v) => v.actors.flatMap((a) => a.facts.map((f) => ({ a, f }))));
@@ -163,6 +180,7 @@ describe('подписи второго ключа (Д-партия-1-второ
     expect([n(/^(kin|union|redirect):/), n(/^origin:/), n(/^fact:/), d1.length]).toEqual([23, 368, 323, 714]);
     expect(d1.filter((c) => /^relation:|^actor:/.test(c.key))).toEqual([]);
     expect(d1.every((c) => c.kind === 'agent')).toBe(true);
-    expect(admission(base, 'release').counts.all.admitted).toBe(118);
+    // снимок на время подписи: контрольный набор (103) + Д-партия 1; подписи следующих партий не считаются
+    expect(admission(snapshot(base, CONTROL, D1), 'release').counts.all.admitted).toBe(118);
   });
 });

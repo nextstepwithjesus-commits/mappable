@@ -94,8 +94,14 @@ egypt_age = n('Быт 47:9', 'сто тридцать')
 sojourn = n('Исх 12:40', 'четыреста тридцать')
 temple_ord = n('3Цар 6:1', 'четыреста восьмидесятом')
 sol_year = n('3Цар 6:1', 'четвертый')
-ANCHOR = -967                                  # base/anchors.json, solomon-4
-anch = {a['id']: a for a in json.load(open('base/anchors.json', encoding='utf-8'))['anchors']}
+ANCHOR = -967                                  # base/anchors.json, an-solomon-4 (прежде solomon-4)
+# Опоры и эпохи получили префиксы an- и era- (К-1, К-10; переадресация — base/redirects.json). Скрипт читает их
+# прежними номерами (solomon-4, conquest), чтобы числа и ключи вывода остались теми же, что в приложении А.
+OLD = {r['to'][0]: r['from'] for r in json.load(open('base/redirects.json', encoding='utf-8'))['items']
+       if len(r['to']) == 1 and re.match(r'(an|era)-', r['to'][0]) and r['to'][0].endswith(r['from'])}
+old = lambda i: OLD.get(i, i)
+anch = {old(a['id']): a for a in json.load(open('base/anchors.json', encoding='utf-8'))['anchors']}
+assert anch['solomon-4']['id'] == 'an-solomon-4'
 assert anch['solomon-4']['value'] == ANCHOR
 print(f'Фарра: умер {terah_death}, Аврам вышел {abram_exit} → Фарре при рождении Аврама не меньше {terah_min} (выв.); понимание „Аврам — первый из трёх“ (Быт 11:26, толк.) — {terah_lit}')
 print(f'Исход → 4-й год Соломона: {temple_ord}-й год → прошло {temple_ord - 1} лет')
@@ -189,8 +195,9 @@ acts450 = n('Деян 13:20', 'четырехсот пятидесяти')
 frame = (temple_ord - 1) - wild - saul - david - (sol_year - 1)
 print(f'книга Судей: {len(JUD)} чисел, сумма {jud_sum} лет; Деян 13:20 — около {acts450}')
 print(f'рамка 3 Цар 6:1 без годов Саула: {temple_ord - 1} − пустыня {wild} − Давид {david} − Соломон до 4-го года {sol_year - 1} = {frame + saul} − x лет на Иисуса Навина, судей, Илия, Самуила и Саула (x — годы Саула: текст их не называет, 1 Цар 13:1; „лет сорок“ Деян 13:21 — слова Павла, к чему относятся — толк.; раздел 8)')
-EP = {e['id']: e for e in json.load(open('base/epochs.json', encoding='utf-8'))['items']}
-CH = {x['actor']: x['chrono'] for x in json.load(open('base/chrono.json', encoding='utf-8'))['items']}
+EP = {old(e['id']): {**e, 'id': old(e['id'])} for e in json.load(open('base/epochs.json', encoding='utf-8'))['items']}
+CH = {x['actor']: ({**x['chrono'], 'epoch': old(x['chrono']['epoch'])} if 'epoch' in x['chrono'] else x['chrono'])
+      for x in json.load(open('base/chrono.json', encoding='utf-8'))['items']}
 conq = EP['conquest']['start']
 david_b = CH['p-david']['born']['year']
 span = david_b - conq
@@ -236,7 +243,8 @@ RS = json.load(open('base/readings.json', encoding='utf-8'))['items']
 print('наборов прочтений:', len(RS))
 
 print('\n== 6. Сырьё событий (историй): записи прежнего § 17 ==')
-ev = [(a['id'], f['value']) for a in acts.values() for f in a.get('facts', []) if f['sec'] == 17]
+# Д-7 (Д-партия 1): год снят из записи в ссылку на расчёт calc у утверждения; «с годом» — год в записи или calc
+ev = [(a['id'], {**f['value'], **({'year': f['calc']} if 'calc' in f else {})}) for a in acts.values() for f in a.get('facts', []) if f['sec'] == 17]
 print('записей:', len(ev), '; у лиц:', len({x for x, _ in ev}), '; с годом:', sum('year' in v for _, v in ev),
       '; с возрастом:', sum('age' in v for _, v in ev), '; с периодом:', sum('period' in v for _, v in ev))
 for p in ['p-david', 'p-saul', 'p-gedeon', 'p-samson', 'p-avraam', 'p-moisey']:
@@ -421,7 +429,7 @@ for r, w in (('Ин 2:13', 'Пасха'), ('Ин 6:4', 'Пасха'), ('Ин 11:
     has(r, w)
 
 print('\n== 12. Эпохи: границы, ширины, указатель (рецензии интерфейса № 2, 18 и арт-директора № 4, 15) ==')
-EPL = json.load(open('base/epochs.json', encoding='utf-8'))['items']
+EPL = [{**e, 'id': old(e['id'])} for e in json.load(open('base/epochs.json', encoding='utf-8'))['items']]
 est_after = {e['id'] for e in EPL if e.get('startEst') or e.get('endEst')} | {'united'}   # редакция 2: начало эпохи 8 — граница примерная
 print('эпох с оценочной границей после редакции 2 (начало «Единого царства» — примерная):', len(est_after))
 GRID, GUT = 1152, 24
@@ -938,6 +946,6 @@ print('\n== 35. Опоры: источник с изданием и страни
 for a in anch.values():
     src = a.get('source', '')
     has_page = bool(re.search(r'\bс\.\s*\d|\bp\.\s*\d|\bpp\.\s*\d', src))
-    print(f'  {a["id"]}: {-a["value"] if a["value"] < 0 else a["value"]}{" до Р. Х." if a["value"] < 0 else " по Р. Х."} — {"страница есть" if has_page else "нет издания и страницы"}')
+    print(f'  {old(a["id"])}: {-a["value"] if a["value"] < 0 else a["value"]}{" до Р. Х." if a["value"] < 0 else " по Р. Х."} — {"страница есть" if has_page else "нет издания и страницы"}')
 print(f'  опор: {len(anch)}; со страницей источника: {sum(1 for a in anch.values() if re.search(r"с\\.\\s*\\d|p\\.\\s*\\d", a.get("source", "")))}')
 print(f'  опора 967 в данных подписана: «{anch["solomon-4"]["source"][:60]}…» — схема по умолчанию теперь McFall — Young; источник со страницей — задача данных')
