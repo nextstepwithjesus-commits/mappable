@@ -43,6 +43,7 @@
     "proto:build": "npm run -s proto:data && vite build --config prototypes/инструменты/vite.config.ts",
     "proto:dev": "vite --config prototypes/инструменты/vite.config.ts",
     "proto:test": "vitest run --config prototypes/инструменты/vite.config.ts",
+    "proto:show": "npm run -s proto:build && vite preview --config prototypes/инструменты/vite.config.ts --open",
     "proto:shots": "tsx prototypes/инструменты/тесты/снимки.ts",
     "lint:app": "biome lint"
   },
