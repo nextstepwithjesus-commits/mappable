@@ -134,25 +134,72 @@
    "actors": [
     {
      "actor": "p-david",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      },
+      {
+       "part": 4,
+       "role": "agent"
+      },
+      {
+       "part": 5,
+       "role": "agent"
+      },
+      {
+       "part": 6,
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
-      "text": "Так одолел Давид Филистимлянина пращею и камнем",
+      "text": "раб твой пойдет и сразится с этим Филистимлянином",
       "refs": [
-       "1Цар 17:50"
+       "1Цар 17:32"
       ]
      },
      "refs": [
       "1Цар 17:12",
       "1Цар 17:32",
       "1Цар 17:49",
-      "1Цар 17:50"
+      "1Цар 17:50",
+      "1Цар 17:58"
      ],
      "cert": "scripture"
     },
     {
      "actor": "p-goliaf",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      },
+      {
+       "part": 4,
+       "role": "mentioned"
+      },
+      {
+       "part": 5,
+       "role": "undergoer"
+      },
+      {
+       "part": 6,
+       "role": "mentioned"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "дайте мне человека, и мы сразимся вдвоем",
@@ -168,7 +215,28 @@
     },
     {
      "actor": "p-saul",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 2,
+       "role": "mentioned"
+      },
+      {
+       "part": 3,
+       "role": "mentioned"
+      },
+      {
+       "part": 4,
+       "role": "agent"
+      },
+      {
+       "part": 6,
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "иди, и да будет Господь с тобою",
       "refs": [
@@ -179,13 +247,27 @@
       "1Цар 17:2",
       "1Цар 17:33",
       "1Цар 17:37",
-      "1Цар 17:55"
+      "1Цар 17:55",
+      "1Цар 17:13"
      ],
      "cert": "scripture"
     },
     {
      "actor": "p-iessey",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "mentioned"
+      },
+      {
+       "part": 6,
+       "role": "mentioned"
+      }
+     ],
      "roleText": {
       "text": "И сказал Иессей Давиду, сыну своему",
       "refs": [
@@ -194,13 +276,24 @@
      },
      "refs": [
       "1Цар 17:12",
-      "1Цар 17:17"
+      "1Цар 17:17",
+      "1Цар 17:20",
+      "1Цар 17:58"
      ],
      "cert": "scripture"
     },
     {
      "actor": "p-eliav-syn-iesseya",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "зачем ты сюда пришел?",
       "refs": [
@@ -215,7 +308,16 @@
     },
     {
      "actor": "p-aminadav-syn-iesseya",
-     "role": "mentioned",
+     "roles": [
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "addressed"
+      }
+     ],
      "refs": [
       "1Цар 17:13"
      ],
@@ -223,7 +325,16 @@
     },
     {
      "actor": "p-samma-syn-iesseya",
-     "role": "mentioned",
+     "roles": [
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "addressed"
+      }
+     ],
      "refs": [
       "1Цар 17:13"
      ],
@@ -231,7 +342,12 @@
     },
     {
      "actor": "p-avenir",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 6,
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "да живет душа твоя, царь; я не знаю",
       "refs": [
@@ -248,16 +364,36 @@
      "actor": "new:filistimlyane-1tsar17",
      "label": "Филистимляне",
      "kind": "people",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 2,
+       "role": "mentioned"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      },
+      {
+       "part": 5,
+       "role": "undergoer"
+      }
+     ],
      "roleText": {
-      "text": "Филистимляне, увидев, что силач их умер, побежали",
+      "text": "Филистимляне собрали войска свои для войны",
       "refs": [
-       "1Цар 17:51"
+       "1Цар 17:1"
       ]
      },
      "refs": [
       "1Цар 17:1",
-      "1Цар 17:51"
+      "1Цар 17:51",
+      "1Цар 17:19",
+      "1Цар 17:21",
+      "1Цар 17:52"
      ],
      "cert": "scripture"
     },
@@ -265,7 +401,24 @@
      "actor": "new:izrailtyane-1tsar17",
      "label": "Израильтяне",
      "kind": "people",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 2,
+       "role": "mentioned"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      },
+      {
+       "part": 5,
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "и очень испугались и ужаснулись",
       "refs": [
@@ -275,7 +428,10 @@
      "refs": [
       "1Цар 17:2",
       "1Цар 17:11",
-      "1Цар 17:24"
+      "1Цар 17:24",
+      "1Цар 17:19",
+      "1Цар 17:21",
+      "1Цар 17:52"
      ],
      "cert": "scripture"
     },
@@ -283,7 +439,16 @@
      "actor": "new:oruzhenosets-goliafa",
      "label": "оруженосец",
      "kind": "unnamed",
-     "role": "mentioned",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 5,
+       "role": "agent"
+      }
+     ],
      "refs": [
       "1Цар 17:7",
       "1Цар 17:41"
@@ -294,7 +459,12 @@
      "actor": "new:lev-1tsar17",
      "label": "лев",
      "kind": "animal",
-     "role": "mentioned",
+     "roles": [
+      {
+       "part": 4,
+       "role": "mentioned"
+      }
+     ],
      "mode": "in-speech",
      "refs": [
       "1Цар 17:34"
@@ -305,7 +475,12 @@
      "actor": "new:medved-1tsar17",
      "label": "медведь",
      "kind": "animal",
-     "role": "mentioned",
+     "roles": [
+      {
+       "part": 4,
+       "role": "mentioned"
+      }
+     ],
      "mode": "in-speech",
      "refs": [
       "1Цар 17:34"
@@ -439,14 +614,6 @@
      "cert": "scripture"
     }
    ],
-   "boundary": [
-    {
-     "start": "1Цар 17:10",
-     "end": "1Цар 17:51",
-     "rule": 2,
-     "human": "завязка — «дайте мне человека, и мы сразимся вдвоем» (17:10); развязка — «Филистимляне, увидев, что силач их умер, побежали» (17:51); 17:55–58 начата внутри дела (правило 2); после — новые дела «заключил с Давидом союз» (18:3) и «подозрительно смотрел Саул на Давида» (18:9) (правило 5)"
-    }
-   ],
    "hard": [
     {
      "topic": "убийство",
@@ -469,6 +636,16 @@
      ],
      "story": "e-snova-voyna-s-filistimlyanami"
     }
+   ],
+   "boundary": {
+    "startRule": 2,
+    "human": "завязка — «дайте мне человека, и мы сразимся вдвоем» (17:10); развязка — «Филистимляне, увидев, что силач их умер, побежали» (17:51); 17:55–58 начата внутри дела (правило 2); после — новые дела «заключил с Давидом союз» (18:3) и «подозрительно смотрел Саул на Давида» (18:9) (правило 5)"
+   },
+   "plot": [
+    {
+     "setup": "1Цар 17:10",
+     "resolution": "1Цар 17:51"
+    }
    ]
   },
   {
@@ -490,7 +667,11 @@
    "actors": [
     {
      "actor": "p-samuil",
-     "role": "suffers",
+     "roles": [
+      {
+       "role": "undergoer"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "И умер Самуил",
@@ -507,7 +688,11 @@
      "actor": "new:izrailtyane-1tsar25",
      "label": "Израильтяне",
      "kind": "people",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "и плакали по нем, и погребли его в доме его, в Раме",
       "refs": [
@@ -521,7 +706,11 @@
     },
     {
      "actor": "p-david",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "Давид встал и сошел к пустыне Фаран",
       "refs": [
@@ -555,17 +744,19 @@
     }
    ],
    "links": [],
-   "boundary": [
-    {
-     "start": "1Цар 25:1",
-     "end": "1Цар 25:1",
-     "rule": 5,
-     "human": "известие: сцены нет; «Давид встал и сошел к пустыне Фаран» — переход в том же стихе, история о Навале начинается со стиха 25:2 (11 § 2.3, образец протокола И0). Мирная кончина одного — не трудное (11 § 8.3 п. 3)"
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "известие: сцены нет; «Давид встал и сошел к пустыне Фаран» — переход в том же стихе, история о Навале начинается со стиха 25:2 (11 § 2.3, образец протокола И0). Мирная кончина одного — не трудное (11 § 8.3 п. 3)"
+   },
+   "plot": [
+    {
+     "setup": "1Цар 25:1",
+     "resolution": "1Цар 25:1"
+    }
+   ]
   },
   {
    "id": "e-naval-i-avigeya",
@@ -653,7 +844,28 @@
    "actors": [
     {
      "actor": "p-naval",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 2,
+       "role": "mentioned"
+      },
+      {
+       "part": 3,
+       "role": "mentioned"
+      },
+      {
+       "part": 4,
+       "role": "undergoer"
+      },
+      {
+       "part": 5,
+       "role": "mentioned"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "кто такой Давид, и кто такой сын Иессеев?",
@@ -664,13 +876,37 @@
      "refs": [
       "1Цар 25:3",
       "1Цар 25:10",
-      "1Цар 25:38"
+      "1Цар 25:38",
+      "1Цар 25:14",
+      "1Цар 25:25",
+      "1Цар 25:39"
      ],
      "cert": "scripture"
     },
     {
      "actor": "p-avigeya",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 1,
+       "role": "mentioned"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      },
+      {
+       "part": 4,
+       "role": "agent"
+      },
+      {
+       "part": 5,
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "Тогда Авигея поспешно взяла двести хлебов",
@@ -681,13 +917,32 @@
      "refs": [
       "1Цар 25:3",
       "1Цар 25:18",
-      "1Цар 25:23"
+      "1Цар 25:23",
+      "1Цар 25:36",
+      "1Цар 25:40"
      ],
      "cert": "scripture"
     },
     {
      "actor": "p-david",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 2,
+       "role": "mentioned"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      },
+      {
+       "part": 5,
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "благословен Господь Бог Израилев, Который послал тебя ныне навстречу мне",
@@ -698,18 +953,30 @@
      "refs": [
       "1Цар 25:4",
       "1Цар 25:13",
-      "1Цар 25:32"
+      "1Цар 25:32",
+      "1Цар 25:14",
+      "1Цар 25:39"
      ],
      "cert": "scripture"
     },
     {
      "actor": "new:otroki-davida",
-     "label": "отроков",
+     "label": "отроки",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 2,
+       "role": "mentioned"
+      }
+     ],
      "refs": [
       "1Цар 25:5",
-      "1Цар 25:9"
+      "1Цар 25:9",
+      "1Цар 25:14"
      ],
      "cert": "scripture"
     },
@@ -717,7 +984,12 @@
      "actor": "new:sluga-navala",
      "label": "один из слуг",
      "kind": "unnamed",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 2,
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "итак подумай и посмотри, что делать",
       "refs": [
@@ -732,7 +1004,12 @@
     {
      "actor": "god",
      "label": "Господь",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 4,
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "Дней через десять поразил Господь Навала, и он умер",
       "refs": [
@@ -767,17 +1044,19 @@
     }
    ],
    "links": [],
-   "boundary": [
-    {
-     "start": "1Цар 25:5",
-     "end": "1Цар 25:42",
-     "rule": 5,
-     "human": "смерть Навала — известие о смерти одного, без сцены умирания: не трудное (11 § 8.3 п. 3)"
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "смерть Навала — известие о смерти одного, без сцены умирания: не трудное (11 § 8.3 п. 3)"
+   },
+   "plot": [
+    {
+     "setup": "1Цар 25:5",
+     "resolution": "1Цар 25:42"
+    }
+   ]
   },
   {
    "id": "e-zhyony-davida",
@@ -798,7 +1077,11 @@
    "actors": [
     {
      "actor": "p-david",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "И Ахиноаму из Изрееля взял Давид, и обе они были его женами",
@@ -813,7 +1096,11 @@
     },
     {
      "actor": "p-akhinoama",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "refs": [
       "1Цар 25:43"
      ],
@@ -821,7 +1108,11 @@
     },
     {
      "actor": "p-saul",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "Саул же отдал дочь свою Мелхолу, жену Давидову, Фалтию",
       "refs": [
@@ -835,7 +1126,11 @@
     },
     {
      "actor": "p-melkhola",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "refs": [
       "1Цар 25:44"
      ],
@@ -843,7 +1138,11 @@
     },
     {
      "actor": "p-faltiy-syn-laisha",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "refs": [
       "1Цар 25:44"
      ],
@@ -851,7 +1150,11 @@
     },
     {
      "actor": "p-laish-otets-faltiya",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "refs": [
       "1Цар 25:44"
      ],
@@ -879,17 +1182,19 @@
     }
    ],
    "links": [],
-   "boundary": [
-    {
-     "start": "1Цар 25:43",
-     "end": "1Цар 25:44",
-     "rule": 5,
-     "human": "известие без сцены; со следствием истории о Навале словами не связано (правило 6 не действует)"
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "известие без сцены; со следствием истории о Навале словами не связано (правило 6 не действует)"
+   },
+   "plot": [
+    {
+     "setup": "1Цар 25:43",
+     "resolution": "1Цар 25:44"
+    }
+   ]
   },
   {
    "id": "e-golod-tri-goda-i-gavaonityane",
@@ -910,7 +1215,11 @@
    "actors": [
     {
      "actor": "p-david",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "И вопросил Давид Господа",
@@ -928,7 +1237,11 @@
     {
      "actor": "god",
      "label": "Господь",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "это ради Саула и кровожадного дома его",
       "refs": [
@@ -942,13 +1255,17 @@
     },
     {
      "actor": "new:gavaonityane",
-     "label": "Гаваонитян",
+     "label": "Гаваонитяне",
      "kind": "people",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
-      "text": "из его потомков выдай нам семь человек",
+      "text": "не нужно нам ни серебра, ни золота от Саула",
       "refs": [
-       "2Цар 21:6"
+       "2Цар 21:4"
       ]
      },
      "refs": [
@@ -960,7 +1277,11 @@
     },
     {
      "actor": "p-saul",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "refs": [
       "2Цар 21:1",
       "2Цар 21:2",
@@ -970,7 +1291,11 @@
     },
     {
      "actor": "p-memfivosfey",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "roleText": {
       "text": "Но пощадил царь Мемфивосфея, сына Ионафана",
       "refs": [
@@ -984,7 +1309,11 @@
     },
     {
      "actor": "p-ritspa",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "и не допускала касаться их птицам небесным днем и зверям полевым ночью",
@@ -1001,7 +1330,11 @@
     },
     {
      "actor": "p-armon",
-     "role": "suffers",
+     "roles": [
+      {
+       "role": "undergoer"
+      }
+     ],
      "refs": [
       "2Цар 21:8"
      ],
@@ -1009,7 +1342,11 @@
     },
     {
      "actor": "p-memfivosfey-syn-saula",
-     "role": "suffers",
+     "roles": [
+      {
+       "role": "undergoer"
+      }
+     ],
      "refs": [
       "2Цар 21:8"
      ],
@@ -1017,7 +1354,11 @@
     },
     {
      "actor": "p-melkhola",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "refs": [
       "2Цар 21:8"
      ],
@@ -1025,7 +1366,11 @@
     },
     {
      "actor": "p-adriel",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "refs": [
       "2Цар 21:8"
      ],
@@ -1033,7 +1378,11 @@
     },
     {
      "actor": "p-ionafan",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "refs": [
       "2Цар 21:7",
       "2Цар 21:12"
@@ -1080,14 +1429,6 @@
     }
    ],
    "links": [],
-   "boundary": [
-    {
-     "start": "2Цар 21:1",
-     "end": "2Цар 21:14",
-     "rule": 5,
-     "human": "завязка — «Был голод на земле… три года» (21:1); развязка — «и умилостивился Бог над страною после того» (21:14)"
-    }
-   ],
    "hard": [
     {
      "topic": "казнь",
@@ -1099,7 +1440,17 @@
    ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "завязка — «Был голод на земле… три года» (21:1); развязка — «и умилостивился Бог над страною после того» (21:14)"
+   },
+   "plot": [
+    {
+     "setup": "2Цар 21:1",
+     "resolution": "2Цар 21:14"
+    }
+   ]
   },
   {
    "id": "e-snova-voyna-s-filistimlyanami",
@@ -1120,7 +1471,7 @@
      "refs": [
       "1Пар 20:4-8"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -1241,7 +1592,11 @@
    "actors": [
     {
      "actor": "p-david",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "и Давид утомился",
@@ -1259,7 +1614,11 @@
     },
     {
      "actor": "p-avessa",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "account": 0,
      "roleText": {
       "text": "Но ему помог Авесса, сын Саруин",
@@ -1274,7 +1633,11 @@
     },
     {
      "actor": "p-iesviy",
-     "role": "suffers",
+     "roles": [
+      {
+       "role": "undergoer"
+      }
+     ],
      "account": 0,
      "refs": [
       "2Цар 21:16"
@@ -1283,7 +1646,11 @@
     },
     {
      "actor": "p-sovokhay",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "тогда Совохай Хушатянин убил Сафута",
       "refs": [
@@ -1299,7 +1666,11 @@
     {
      "actor": "p-safut",
      "label": "Сафут",
-     "role": "suffers",
+     "roles": [
+      {
+       "role": "undergoer"
+      }
+     ],
      "account": 0,
      "refs": [
       "2Цар 21:18"
@@ -1309,7 +1680,11 @@
     {
      "actor": "p-safut",
      "label": "Саф",
-     "role": "suffers",
+     "roles": [
+      {
+       "role": "undergoer"
+      }
+     ],
      "account": 1,
      "refs": [
       "1Пар 20:4"
@@ -1319,7 +1694,11 @@
     {
      "actor": "p-elkhanan-syn-yagare-orgima",
      "label": "Елханан, сын Ягаре-Оргима",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "account": 0,
      "roleText": {
       "text": "тогда убил Елханан, сын Ягаре-Оргима Вифлеемского, Голиафа Гефянина",
@@ -1335,7 +1714,11 @@
     {
      "actor": "p-elkhanan-syn-yagare-orgima",
      "label": "Елханам, сын Иаира",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "account": 1,
      "refs": [
       "1Пар 20:5"
@@ -1344,7 +1727,11 @@
     },
     {
      "actor": "p-yagare-orgim",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "account": 0,
      "refs": [
       "2Цар 21:19"
@@ -1354,7 +1741,11 @@
     {
      "actor": "p-goliaf",
      "label": "Голиаф Гефянин",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "account": 0,
      "refs": [
       "2Цар 21:19"
@@ -1363,8 +1754,12 @@
     },
     {
      "actor": "p-goliaf",
-     "label": "Голиафова",
-     "role": "mentioned",
+     "label": "Голиаф",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "account": 1,
      "refs": [
       "1Пар 20:5"
@@ -1373,7 +1768,11 @@
     },
     {
      "actor": "p-lakhmiy",
-     "role": "suffers",
+     "roles": [
+      {
+       "role": "undergoer"
+      }
+     ],
      "account": 1,
      "refs": [
       "1Пар 20:5"
@@ -1384,7 +1783,11 @@
      "actor": "new:roslyy-v-gefe",
      "label": "человек рослый",
      "kind": "unnamed",
-     "role": "suffers",
+     "roles": [
+      {
+       "role": "undergoer"
+      }
+     ],
      "roleText": {
       "text": "и он поносил Израильтян",
       "refs": [
@@ -1399,7 +1802,11 @@
     },
     {
      "actor": "p-ionafan-syn-sammy",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "2Цар 21:21",
       "1Пар 20:7"
@@ -1409,7 +1816,11 @@
     {
      "actor": "p-samma-syn-iesseya",
      "label": "Сафай",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "account": 0,
      "refs": [
       "2Цар 21:21"
@@ -1419,7 +1830,11 @@
     {
      "actor": "p-samma-syn-iesseya",
      "label": "Шима",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "account": 1,
      "refs": [
       "1Пар 20:7"
@@ -1465,6 +1880,8 @@
    "discrepancies": [
     {
      "label": "кого убил Елханан",
+     "kind": "who",
+     "scene": "e-snova-voyna-s-filistimlyanami#s3",
      "quotes": [
       {
        "ref": "2Цар 21:19",
@@ -1478,6 +1895,8 @@
     },
     {
      "label": "где была война",
+     "kind": "where",
+     "scene": "e-snova-voyna-s-filistimlyanami#s2",
      "quotes": [
       {
        "ref": "2Цар 21:18",
@@ -1491,6 +1910,8 @@
     },
     {
      "label": "имя убитого Совохаем",
+     "kind": "name",
+     "scene": "e-snova-voyna-s-filistimlyanami#s2",
      "quotes": [
       {
        "ref": "2Цар 21:18",
@@ -1504,6 +1925,8 @@
     },
     {
      "label": "чей сын Ионафан",
+     "kind": "name",
+     "scene": "e-snova-voyna-s-filistimlyanami#s4",
      "quotes": [
       {
        "ref": "2Цар 21:21",
@@ -1516,17 +1939,26 @@
      ]
     }
    ],
-   "boundary": [
-    {
-     "start": "2Цар 21:15",
-     "end": "2Цар 21:22",
-     "rule": 5,
-     "human": "одна история, два рассказа (11 § 13.6): второй истории о Голиафе каталог не заводит; строка — на странице «Давид и Голиаф»"
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "одна история, два рассказа (11 § 13.6): второй истории о Голиафе каталог не заводит; строка — на странице «Давид и Голиаф»"
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "2Цар 21:15",
+     "resolution": "2Цар 21:22"
+    },
+    {
+     "account": 1,
+     "setup": "1Пар 20:4",
+     "resolution": "1Пар 20:8",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    }
+   ]
   },
   {
    "id": "e-ni-rosy-ni-dozhdya",
@@ -1540,16 +1972,12 @@
    "actors": [],
    "places": [],
    "links": [],
-   "boundary": [
-    {
-     "start": "3Цар 17:1",
-     "end": "3Цар 18:45",
-     "rule": 3,
-     "human": "повествование: засуха объявлена «в сии годы не будет ни росы, ни дождя» (17:1), дождь — «и пошел большой дождь» (18:45); между ними — истории со своими делами, которые засуху не двигают (правило 3). Что Кармил (18:19–40) — шаг дела о дожде, словами повествователя не сказано: три истории главы 18 — решение составителя для протокола И0"
-    }
-   ],
    "source": {
     "method": "reading"
+   },
+   "boundary": {
+    "startRule": 3,
+    "human": "повествование: засуха объявлена «в сии годы не будет ни росы, ни дождя» (17:1), дождь — «и пошел большой дождь» (18:45); между ними — истории со своими делами, которые засуху не двигают (правило 3). Что Кармил (18:19–40) — шаг дела о дожде, словами повествователя не сказано: три истории главы 18 — решение составителя для протокола И0; завязка — 3Цар 17:1, развязка — 3Цар 18:45 (в стихах пересказа: рассказа повествователя у истории нет)"
    }
   },
   {
@@ -1572,7 +2000,11 @@
    "actors": [
     {
      "actor": "p-iliya",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "в сии годы не будет ни росы, ни дождя, разве только по моему слову",
@@ -1587,7 +2019,11 @@
     },
     {
      "actor": "p-akhav",
-     "role": "addressed",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
      "refs": [
       "3Цар 17:1"
      ],
@@ -1596,7 +2032,11 @@
     {
      "actor": "god",
      "label": "Господь",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "воронам Я повелел кормить тебя там",
       "refs": [
@@ -1613,7 +2053,11 @@
      "actor": "new:vorony-iliyi",
      "label": "вороны",
      "kind": "animal",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "И вороны приносили ему хлеб и мясо поутру",
       "refs": [
@@ -1676,17 +2120,19 @@
      "cert": "scripture"
     }
    ],
-   "boundary": [
-    {
-     "start": "3Цар 17:1",
-     "end": "3Цар 17:7",
-     "rule": 5,
-     "human": "завязка — засуха объявлена (17:1); развязка этой истории — «этот поток высох, ибо не было дождя на землю» (17:7); дождь (18:45) — далеко, через другие дела: ссылка, а не одна история (11 § 2.2, предел расстояния)"
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "завязка — засуха объявлена (17:1); развязка этой истории — «этот поток высох, ибо не было дождя на землю» (17:7); дождь (18:45) — далеко, через другие дела: ссылка, а не одна история (11 § 2.2, предел расстояния)"
+   },
+   "plot": [
+    {
+     "setup": "3Цар 17:1",
+     "resolution": "3Цар 17:7"
+    }
+   ]
   },
   {
    "id": "e-iliya-i-vdova-v-sarepte",
@@ -1708,7 +2154,11 @@
    "actors": [
     {
      "actor": "p-iliya",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "мука в кадке не истощится, и масло в кувшине не убудет",
@@ -1724,9 +2174,13 @@
     },
     {
      "actor": "new:vdova-sareptskaya",
-     "label": "женщине вдове",
+     "label": "женщина вдова",
      "kind": "unnamed",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "у меня ничего нет печеного, а только есть горсть муки в кадке",
@@ -1744,7 +2198,11 @@
     {
      "actor": "god",
      "label": "Господь",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "3Цар 17:8",
       "3Цар 17:14"
@@ -1779,16 +2237,18 @@
      "cert": "scripture"
     }
    ],
-   "boundary": [
-    {
-     "start": "3Цар 17:9",
-     "end": "3Цар 17:16",
-     "rule": 3
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 3
+   },
+   "plot": [
+    {
+     "setup": "3Цар 17:9",
+     "resolution": "3Цар 17:16"
+    }
+   ]
   },
   {
    "id": "e-iliya-i-syn-vdovy",
@@ -1810,7 +2270,11 @@
    "actors": [
     {
      "actor": "p-iliya",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "смотри, сын твой жив",
@@ -1829,7 +2293,11 @@
      "actor": "new:vdova-sareptskaya",
      "label": "женщины",
      "kind": "unnamed",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "теперь-то я узнала, что ты человек Божий",
       "refs": [
@@ -1846,7 +2314,11 @@
      "actor": "new:syn-vdovy-sareptskoy",
      "label": "сын",
      "kind": "unnamed",
-     "role": "suffers",
+     "roles": [
+      {
+       "role": "undergoer"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "и возвратилась душа отрока сего в него, и он ожил",
@@ -1864,7 +2336,11 @@
     {
      "actor": "god",
      "label": "Господь",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "И услышал Господь голос Илии",
       "refs": [
@@ -1889,13 +2365,6 @@
     }
    ],
    "links": [],
-   "boundary": [
-    {
-     "start": "3Цар 17:17",
-     "end": "3Цар 17:24",
-     "rule": 5
-    }
-   ],
    "hard": [
     {
      "topic": "смерть на глазах",
@@ -1906,7 +2375,16 @@
    ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5
+   },
+   "plot": [
+    {
+     "setup": "3Цар 17:17",
+     "resolution": "3Цар 17:24"
+    }
+   ]
   },
   {
    "id": "e-iliya-i-avdiy",
@@ -1928,7 +2406,11 @@
    "actors": [
     {
      "actor": "p-iliya",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "сегодня я покажусь ему",
@@ -1947,7 +2429,11 @@
      "actor": "new:avdiy-nad-dvortsom",
      "label": "Авдия",
      "kind": "human",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "Авдий взял сто пророков, и скрывал их",
@@ -1964,7 +2450,11 @@
     },
     {
      "actor": "p-akhav",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "ты ли это, смущающий Израиля?",
       "refs": [
@@ -1980,7 +2470,11 @@
     },
     {
      "actor": "p-iezavel",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "refs": [
       "3Цар 18:4",
       "3Цар 18:13"
@@ -1990,7 +2484,11 @@
     {
      "actor": "god",
      "label": "Господь",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "пойди и покажись Ахаву, и Я дам дождь на землю",
       "refs": [
@@ -2015,17 +2513,19 @@
     }
    ],
    "links": [],
-   "boundary": [
-    {
-     "start": "3Цар 18:1",
-     "end": "3Цар 18:17",
-     "rule": 5,
-     "human": "дело — «пойди и покажись Ахаву» (18:1), развязка — «Когда Ахав увидел Илию» (18:17); обещание дождя (18:1) исполняется в 18:45 через новое дело на Кармиле: решает человек, протокол И0"
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "дело — «пойди и покажись Ахаву» (18:1), развязка — «Когда Ахав увидел Илию» (18:17); обещание дождя (18:1) исполняется в 18:45 через новое дело на Кармиле: решает человек, протокол И0"
+   },
+   "plot": [
+    {
+     "setup": "3Цар 18:1",
+     "resolution": "3Цар 18:17"
+    }
+   ]
   },
   {
    "id": "e-iliya-i-proroki-vaala-na-karmile",
@@ -2086,7 +2586,20 @@
    "actors": [
     {
      "actor": "p-iliya",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "если Господь есть Бог, то последуйте Ему",
@@ -2103,7 +2616,12 @@
     },
     {
      "actor": "p-akhav",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "И послал Ахав ко всем сынам Израилевым",
       "refs": [
@@ -2117,9 +2635,22 @@
     },
     {
      "actor": "new:proroki-vaala",
-     "label": "пророков Вааловых",
+     "label": "пророки Вааловы",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 1,
+       "role": "addressed"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "undergoer"
+      }
+     ],
      "roleText": {
       "text": "Ваале, услышь нас!",
       "refs": [
@@ -2129,15 +2660,25 @@
      "refs": [
       "3Цар 18:19",
       "3Цар 18:25",
-      "3Цар 18:40"
+      "3Цар 18:40",
+      "3Цар 18:20"
      ],
      "cert": "scripture"
     },
     {
      "actor": "new:narod-na-karmile",
-     "label": "народу",
+     "label": "народ",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "Господь есть Бог, Господь есть Бог!",
       "refs": [
@@ -2154,7 +2695,12 @@
     {
      "actor": "god",
      "label": "Господь",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 3,
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "И ниспал огонь Господень и пожрал всесожжение",
       "refs": [
@@ -2189,14 +2735,6 @@
     }
    ],
    "links": [],
-   "boundary": [
-    {
-     "start": "3Цар 18:19",
-     "end": "3Цар 18:39",
-     "rule": 5,
-     "human": "новое дело — «Тот Бог, Который даст ответ посредством огня, есть Бог» (18:24); развязка — «Господь есть Бог» (18:39); 18:40 — следствие (правило 6)"
-    }
-   ],
    "hard": [
     {
      "topic": "казнь",
@@ -2207,7 +2745,17 @@
    ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "новое дело — «Тот Бог, Который даст ответ посредством огня, есть Бог» (18:24); развязка — «Господь есть Бог» (18:39); 18:40 — следствие (правило 6)"
+   },
+   "plot": [
+    {
+     "setup": "3Цар 18:19",
+     "resolution": "3Цар 18:39"
+    }
+   ]
   },
   {
    "id": "e-oblako-velichinoyu-v-ladon",
@@ -2229,7 +2777,11 @@
    "actors": [
     {
      "actor": "p-iliya",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "пойди, ешь и пей, ибо слышен шум дождя",
@@ -2246,7 +2798,11 @@
     },
     {
      "actor": "p-akhav",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "Ахав же сел в колесницу",
       "refs": [
@@ -2262,9 +2818,13 @@
     },
     {
      "actor": "new:otrok-iliyi",
-     "label": "отроку",
+     "label": "отрок",
      "kind": "unnamed",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "вот, небольшое облако поднимается от моря, величиною в ладонь человеческую",
       "refs": [
@@ -2313,17 +2873,19 @@
      "cert": "scripture"
     }
    ],
-   "boundary": [
-    {
-     "start": "3Цар 18:41",
-     "end": "3Цар 18:45",
-     "rule": 5,
-     "human": "развязка повествования — «и пошел большой дождь» (18:45)"
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "развязка повествования — «и пошел большой дождь» (18:45)"
+   },
+   "plot": [
+    {
+     "setup": "3Цар 18:41",
+     "resolution": "3Цар 18:45"
+    }
+   ]
   }
  ],
  "classes": [],

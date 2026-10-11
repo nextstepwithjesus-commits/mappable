@@ -1,7 +1,7 @@
 {
  "schema": 1,
  "title": "Отчёт переноса: отличия обратной проекции от прежних данных и исправления, которые их объясняют",
- "commit": "ac38562",
+ "commit": "1e4043e",
  "exact": "точный перенос совпал с прежними данными без отличий",
  "note": "steps — ключи записей, изменённые каждым шагом исправления (все в объявленной области шага); projection — отличия прежнего вида по лицам и полям",
  "steps": {
@@ -4185,6 +4185,81 @@
    "actor:p-adoniram.names",
    "actor:p-zaffu.names",
    "actor:p-bevay.names"
+  ],
+  "D15-1": [
+   "volume:17-new-testament.json",
+   "actor:p-iuda-iakovlev.id",
+   "actor:p-iuda-iakovlev.kind",
+   "actor:p-iuda-iakovlev.sex",
+   "actor:p-iuda-iakovlev.names",
+   "actor:p-iuda-iakovlev.disambig",
+   "actor:p-iuda-iakovlev.roles",
+   "actor:p-iuda-iakovlev.prominence",
+   "actor:p-iuda-iakovlev.facts.original",
+   "actor:p-iuda-iakovlev.facts.status",
+   "actor:p-iuda-iakovlev.facts.kinNote",
+   "actor:p-iuda-iakovlev.facts.events",
+   "actor:p-iuda-iakovlev.facts.sayings",
+   "actor:p-iuda-iakovlev.facts.scripture",
+   "actor:p-iuda-iakovlev.facts.notes",
+   "actor:p-faddey.names",
+   "actor:p-faddey.prov",
+   "actor:p-faddey.facts.status",
+   "actor:p-faddey.facts.events",
+   "actor:p-faddey.facts.scripture",
+   "membership:p-iuda-iakovlev|g-apostles",
+   "membership:p-faddey|g-apostles",
+   "relation:p-faddey|p-iuda-iakovlev|possibly-same",
+   "chrono:p-iuda-iakovlev",
+   "actor:p-faddey.facts.original",
+   "actor:p-faddey.facts.kinNote",
+   "actor:p-faddey.facts.sayings",
+   "actor:p-faddey.facts.notes",
+   "chrono:p-faddey",
+   "redirect:a-12961",
+   "redirect:a-12963",
+   "redirect:a-12967",
+   "redirect:ar-8",
+   "redirect:p-iuda-iakovlev"
+  ],
+  "D15-2": [
+   "volume:08-levi.json",
+   "actor:p-iofor.names",
+   "actor:p-iofor.facts.status",
+   "actor:p-iofor.facts.lineage",
+   "actor:p-iofor.facts.childrenNote",
+   "actor:p-iofor.facts.met",
+   "actor:p-iofor.facts.places",
+   "actor:p-iofor.facts.events",
+   "actor:p-iofor.facts.scripture",
+   "actor:p-iofor.facts.notes",
+   "actor:p-sepfora.disambig",
+   "actor:p-khovav.facts.notes",
+   "origin:p-sepfora|p-iofor|father|p",
+   "origin:p-khovav|p-iofor|father|p",
+   "nodata:p-iofor|20|silent",
+   "actor:p-iofor.prov",
+   "actor:p-raguil.id",
+   "actor:p-raguil.kind",
+   "actor:p-raguil.sex",
+   "actor:p-raguil.names",
+   "actor:p-raguil.disambig",
+   "actor:p-raguil.roles",
+   "actor:p-raguil.prominence",
+   "actor:p-raguil.prov",
+   "actor:p-raguil.facts.status",
+   "actor:p-raguil.facts.childrenNote",
+   "actor:p-raguil.facts.met",
+   "actor:p-raguil.facts.places",
+   "actor:p-raguil.facts.events",
+   "actor:p-raguil.facts.scripture",
+   "origin:p-sepfora|p-raguil|father|p",
+   "origin:p-khovav|p-raguil|father|p",
+   "relation:p-raguil|p-iofor|possibly-same"
+  ],
+  "D15-3": [
+   "actor:p-abikhail-otets-esfiri.names",
+   "actor:p-esfir.disambig"
   ]
  },
  "projection": [
@@ -6995,13 +7070,26 @@
    "what": "лицо",
    "id": "iofor",
    "fields": [
-    "card.original"
+    "card.original",
+    "card.altNames",
+    "card.status",
+    "card.lineage",
+    "card.childrenNote",
+    "card.met",
+    "card.places",
+    "card.events",
+    "card.scripture",
+    "card.notes"
    ]
   },
   {
    "what": "лицо",
    "id": "sepfora",
    "fields": [
+    "disambig",
+    "father",
+    "parentRefs",
+    "parentCert",
     "card.original"
    ]
   },
@@ -7009,8 +7097,10 @@
    "what": "лицо",
    "id": "khovav",
    "fields": [
+    "father",
     "parentCert",
-    "card.original"
+    "card.original",
+    "card.notes"
    ]
   },
   {
@@ -9602,8 +9692,17 @@
   },
   {
    "what": "лицо",
+   "id": "abikhail-otets-esfiri",
+   "fields": [
+    "name",
+    "card.altNames"
+   ]
+  },
+  {
+   "what": "лицо",
    "id": "esfir",
    "fields": [
+    "disambig",
     "card.original"
    ]
   },
@@ -9989,11 +10088,20 @@
    "what": "лицо",
    "id": "iuda-iakovlev",
    "fields": [
+    "id",
+    "name",
     "disambig",
+    "sex",
+    "roles",
+    "group",
+    "prominence",
+    "chrono",
     "card.original",
     "card.altNames",
     "card.status",
+    "card.kinNote",
     "card.events",
+    "card.sayings",
     "card.scripture",
     "card.notes"
    ]
@@ -11128,6 +11236,10 @@
     "parentCert",
     "fatherGap"
    ]
+  },
+  {
+   "what": "лицо (лишнее)",
+   "id": "raguil"
   },
   {
    "what": "лицо (лишнее)",

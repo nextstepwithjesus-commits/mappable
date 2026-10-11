@@ -17,8 +17,12 @@ describe('сборка для приложения', () => {
     for (const o of possible) expect([o.c, !!o.idt.n, o.idt.r.length > 0]).toEqual([o.c, true, true]);
     // неуверенный родитель не называется; при неуверенном ребёнке родитель сказан текстом и назван
     for (const o of possible) expect([o.c, o.idt.o === 'parent' ? o.p : !!o.p]).toEqual([o.c, o.idt.o === 'parent' ? undefined : true]);
-    // «весомо» — у ребра, полем idt
-    expect(ix.origins.some((o: any) => o.idt?.d === 'weighty')).toBe(true);
+    // «весомо» — у ребра, полем idt; после Д-15 степень weighty не используется (02 § 3.3.4 [4.4]): Ховав — к Рагуилу без idt
+    expect(ix.origins.filter((o: any) => o.idt?.d === 'weighty')).toEqual([]);
+    expect(ix.origins.find((o: any) => o.c === 'khovav')).toMatchObject({ p: 'raguil' });
+    expect(ix.origins.find((o: any) => o.c === 'khovav').idt).toBeUndefined();
+    // «весомо по имени» (inferred) — с номером формы: у ребра в индексе поле idt.f
+    for (const o of ix.origins.filter((x: any) => x.idt?.d === 'inferred')) expect(o.idt.f).toMatch(/#n\d+$/);
     const card = (id: string) => Object.values(cards).map((v: any) => v.cards[id]).find(Boolean) as any;
     // дети, у которых рёбра к родителю сняты (C46) и в выпуске родителя нет, — строка «… текст не уточняет» со стихом
     const children = new Set(ix.origins.map((o: any) => o.c));

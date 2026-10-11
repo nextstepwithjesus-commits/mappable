@@ -109,13 +109,13 @@ describe('истории: испорченные записи ловятся', (
   it('п. 5: группа на словах в скобках (Быт 6:19) — ошибка', () => {
     const s = mk({
       id: 'e-g', title: { short: 'Ной и потоп', by: 'atlas' }, accounts: [{ refs: ['Быт 6:9-9:17'], cert: 'scripture' }],
-      actors: [{ actor: 'new:skot', label: 'скота', kind: 'group', role: 'acts', refs: ['Быт 6:19'], cert: 'scripture' }],
+      actors: [{ actor: 'new:skot', label: 'скота', kind: 'group', roles: [{ role: 'agent' }], refs: ['Быт 6:19'], cert: 'scripture' }],
     });
     expect(errorsOf([s]).join('\n')).toMatch(/слово «скота» не стоит в его стихах вне скобок/);
   });
 
   it('п. 5: имя лица не стоит в его стихах; лица нет в базе', () => {
-    const s = mk({ id: 'e-a', actors: [{ actor: 'p-noy', role: 'acts', refs: ['Быт 4:8'], cert: 'scripture' }, { actor: 'p-netu', role: 'acts', refs: ['Быт 4:8'], cert: 'scripture' }] });
+    const s = mk({ id: 'e-a', actors: [{ actor: 'p-noy', roles: [{ role: 'agent' }], refs: ['Быт 4:8'], cert: 'scripture' }, { actor: 'p-netu', roles: [{ role: 'agent' }], refs: ['Быт 4:8'], cert: 'scripture' }] });
     const e = errorsOf([s]).join('\n');
     expect(e).toMatch(/p-noy: ни одна форма имени/);
     expect(e).toMatch(/p-netu: лица нет в базе/);
@@ -197,8 +197,10 @@ describe('истории: испорченные записи ловятся', (
     // Левий (Мк 2:14; Лк 5:27, 29) — своя карточка; с Матфеем — отношение «возможно, то же лицо» в базе (tests/base-d4.test.ts)
     const levi = by.get('e-mytar-u-sbora-poshlin')!.actors.filter((a) => a.actor === 'p-matfey' || a.actor === 'p-leviy-alfeev');
     expect(levi.map((a) => [a.actor, a.refs[0], a.cert])).toEqual([['p-matfey', 'Мф 9:9', 'scripture'], ['p-leviy-alfeev', 'Мк 2:14', 'scripture'], ['p-leviy-alfeev', 'Лк 5:27', 'scripture']]);
-    expect(src.stories.flatMap((s) => s.actors).filter((a) => (a.actor === 'p-matfey' && /Леви/.test(a.label ?? '')) || (a.actor === 'p-iuda-iakovlev' && /Фадде|Леввей/.test(a.label ?? '')))).toEqual([]);
-    expect(by.get('e-iisus-stavit-dvenadtsat')!.actors.find((a) => a.actor === 'p-faddey')).toMatchObject({ refs: ['Мк 3:18'], cert: 'scripture' });
+    expect(src.stories.flatMap((s) => s.actors).filter((a) => (a.actor === 'p-matfey' && /Леви/.test(a.label ?? '')) || a.actor === 'p-iuda-iakovlev')).toEqual([]);
+    // Фаддей и Иуда Иаковлев — вид (б) (Д-15): строка у Луки — карточка Фаддея с именем стиха и idCert формы «выв.»
+    const twelve = by.get('e-iisus-stavit-dvenadtsat')!.actors.filter((a) => a.actor === 'p-faddey');
+    expect(twelve.map((a) => [a.label, a.refs, a.cert, a.idCert])).toEqual([[undefined, ['Мк 3:18'], 'scripture', undefined], ['Иуда Иаковлев', ['Лк 6:16'], 'scripture', { form: 'p-faddey#n3', refs: ['Лк 6:16'] }]]);
     const war = by.get('e-snova-voyna-s-filistimlyanami')!.actors.filter((a) => a.account === 1 && a.actor.startsWith('p-') && a.label);
     expect(war.every((a) => a.cert === 'inference' || a.actor === 'p-ionafan-syn-sammy')).toBe(true);
     // у Луки о посте спрашивают «Они» — книжники и фарисеи, не ученики Иоанновы (11 § 13.2)
@@ -263,3 +265,130 @@ describe('проба П7: служебная программа замера (to
     expect(r['Быт 1–11 (книга прототипа)'].coverageA).toBe(1);
   });
 });
+
+describe('истории: ред. 4.3 (задача 23; 11 § 11.3 п. 5б–5д, 20, 22, 24–27)', () => {
+  const by = new Map(src.stories.map((x) => [x.id, x]));
+
+  it('данные: роли из закрытого списка и по частям; Голиаф — «действует» в частях 1 и 3, «с ним происходит» в части 5', () => {
+    const all = src.stories.flatMap((x) => x.actors);
+    expect(all.filter((a) => (a as any).role !== undefined)).toEqual([]);
+    expect(new Set(all.flatMap((a) => a.roles.map((r) => r.role)))).toEqual(new Set(['agent', 'undergoer', 'addressed', 'mentioned']));
+    const g = by.get('e-david-i-goliaf')!.actors.find((a) => a.actor === 'p-goliaf')!;
+    expect(g.roles.filter((r) => [1, 3, 5].includes(r.part!))).toEqual([{ part: 1, role: 'agent' }, { part: 3, role: 'agent' }, { part: 5, role: 'undergoer' }]);
+    // у истории с частями — роль с номером части, без частей — без номера
+    for (const x of src.stories) for (const a of x.actors) for (const r of a.roles) expect([x.id, a.actor, r.part === undefined]).toEqual([x.id, a.actor, !x.parts?.length]);
+  });
+
+  it('данные: Ной и потоп — 7 частей, Быт 9:1 — часть по порогу слов; сыновья Ноя — одной строкой; подписи в именительном падеже', () => {
+    const n = by.get('e-noy-i-potop')!;
+    expect(n.parts!.map((p) => p.refs[0])).toEqual(['Быт 6:9-22', 'Быт 7:1-16', 'Быт 7:17-24', 'Быт 8:1-5', 'Быт 8:6-14', 'Быт 8:15-22', 'Быт 9:1-17']);
+    expect(n.parts![6]).toMatchObject({ change: [], byWords: true });
+    expect(n.actors.filter((a) => ['p-sim', 'p-kham', 'p-iafet'].includes(a.actor))).toEqual([]);
+    expect(n.actors.find((a) => a.actor === 'new:synovya-noya')!.label).toBe('сыновья Ноя');
+    expect(n.actors.find((a) => a.actor === 'new:voron-noya')!.label).toBe('ворон');
+    expect(n.actors.find((a) => a.actor === 'new:golub-noya')!.label).toBe('голубь');
+    expect(n.actors.filter((a) => a.actor !== 'god')).toHaveLength(8);
+  });
+
+  it('данные: Лк 5:1–11 — своя история; Преображение без «отступления», с тремя совпадениями и различием «когда» с Мк 9:2; Мф 10 — деление у середины речи', () => {
+    expect(by.get('e-lovtsy-chelovekov')!.accounts.map((a) => a.refs[0])).toEqual(['Мф 4:18-22', 'Мк 1:16-20']);
+    expect(by.get('e-velikoe-mnozhestvo-ryby')!.accounts[0].refs).toEqual(['Лк 5:1-11']);
+    const t = by.get('e-iisus-preobrazhaetsya-na-gore')!;
+    expect(JSON.stringify(t)).not.toMatch(/ОТСТУПЛЕНИЕ|отступлени|примерн/);
+    for (const a of t.accounts.slice(1)) expect([a.cert, !!a.basis?.place?.length, !!a.basis?.actors?.length, !!a.basis?.course?.length]).toEqual(['inference', true, true, true]);
+    expect(t.discrepancies!.find((d) => d.kind === 'when')!.quotes.map((q) => q.ref)).toEqual(['Мф 17:1', 'Мк 9:2', 'Лк 9:28']);
+    expect(by.get('e-iisus-posylaet-dvenadtsat')!.parts![1].refs).toEqual(['Мф 10:24-42']);
+    // склейки «весомо» — inference; «сказано» — scripture
+    for (const x of src.stories) x.accounts.forEach((a, i) => i && expect([x.id, a.cert]).toEqual([x.id, a.basis?.kind === 'said' ? 'scripture' : 'inference']));
+  });
+
+  it('п. 5в: прежний код роли и поле role — ошибка; роль без части у истории с частями — ошибка', () => {
+    const old = mk({ id: 'e-a', actors: [{ actor: 'p-kain', role: 'participant', refs: ['Быт 4:8'], cert: 'scripture' } as any] });
+    expect(errorsOf([old]).join('\n')).toMatch(/поле role «participant» — прежний вид/);
+    const bad = mk({ id: 'e-b', actors: [{ actor: 'p-kain', roles: [{ role: 'acts' as any }], refs: ['Быт 4:8'], cert: 'scripture' }] });
+    expect(errorsOf([bad]).join('\n')).toMatch(/роль «acts» — прежний код/);
+    const parts = mk({
+      id: 'e-c', title: { short: 'Ной и потоп', by: 'atlas' }, accounts: [{ refs: ['Быт 6:9-9:17'], cert: 'scripture' }],
+      parts: [{ n: 1, title: { short: 'а', by: 'atlas' }, refs: ['Быт 6:9-8:22'], change: [] }, { n: 2, title: { short: 'б', by: 'atlas' }, refs: ['Быт 9:1-17'], change: [], byWords: true }],
+      actors: [{ actor: 'p-noy', roles: [{ role: 'agent' }], refs: ['Быт 6:9'], cert: 'scripture' }],
+    });
+    expect(errorsOf([parts]).join('\n')).toMatch(/у истории с частями роль — с номером части/);
+  });
+
+  it('п. 5б: строка p-matfey на Мк 2:14 — ошибка (там имя карточки Левия, «возможно, тот же человек»)', () => {
+    const s = mk({ id: 'e-m', title: { short: 'Мытарь у сбора пошлин', by: 'atlas' }, accounts: [{ refs: ['Мк 2:13-14'], cert: 'scripture' }], actors: [{ actor: 'p-matfey', roles: [{ role: 'agent' }], refs: ['Мк 2:14'], cert: 'scripture' }] });
+    expect(errorsOf([s]).join('\n')).toMatch(/стоит «Левий» — имя карточки p-leviy-alfeev/);
+  });
+
+  it('п. 5б: строка на форме «выв.» без idCert — ошибка (Иуда Иаковлев у Фаддея, Лк 6:16)', () => {
+    const s = mk({ id: 'e-f', title: { short: 'Иисус ставит двенадцать', by: 'atlas', manual: ['Иисус', 'ставит', 'двенадцать'] }, accounts: [{ refs: ['Лк 6:12-16'], cert: 'scripture' }], actors: [{ actor: 'p-faddey', label: 'Иуда Иаковлев', roles: [{ role: 'addressed' }], refs: ['Лк 6:16'], cert: 'scripture' }] });
+    expect(errorsOf([s]).join('\n')).toMatch(/только форма «выв.» «Иуда Иаковлев»: у строки — idCert/);
+  });
+
+  it('п. 5г: строка Бога — «Бог», «Господь», «Господь Бог»; «глас» — ошибка', () => {
+    const s = mk({ id: 'e-g', title: { short: 'Иисус крестится', by: 'atlas' }, accounts: [{ refs: ['Мф 3:13-17'], cert: 'scripture' }], actors: [{ actor: 'god', label: 'глас', roles: [{ role: 'agent' }], refs: ['Мф 3:17'], cert: 'scripture' }] });
+    expect(errorsOf([s]).join('\n')).toMatch(/подпись «глас» — не из списка протокола И0/);
+  });
+
+  it('п. 5д: «ворона» в «Ной и потоп» — ошибка, «ворон» — нет', () => {
+    const row = (label: string) => mk({ id: 'e-v', title: { short: 'Ной и потоп', by: 'atlas' }, accounts: [{ refs: ['Быт 8:6-14'], cert: 'scripture' }], actors: [{ actor: 'new:voron', label, kind: 'animal', roles: [{ role: 'agent' }], refs: ['Быт 8:7'], cert: 'scripture' }] });
+    expect(errorsOf([row('ворона')]).join('\n')).toMatch(/подпись «ворона» не в именительном падеже/);
+    expect(errorsOf([row('ворон')]).join('\n')).not.toMatch(/падеж/);
+    expect(errorsOf([row('народу')]).join('\n')).toMatch(/не в именительном падеже/);
+  });
+
+  it('п. 20: различие без вида и со словом «около» — ошибка; «молчит» рассказ, которого нет', () => {
+    const s = mk({
+      id: 'e-d', accounts: [{ refs: ['Мф 17:1-13'], cert: 'scripture' }, { refs: ['Лк 9:28-36'], cert: 'inference', basis: { kind: 'other-books', refs: ['Мф 17:5', 'Лк 9:35'], time: [] } }],
+      scenes: [{ id: 'e-d#s1', title: { short: 'всё', by: 'atlas' }, refs: [{ account: 0, refs: ['Мф 17:1-13'] }, { account: 1, refs: ['Лк 9:28-36'] }] }],
+      plot: [{ account: 0, setup: 'Мф 17:1', resolution: 'Мф 17:8' }, { account: 1, setup: 'Лк 9:28', resolution: 'Лк 9:36' }],
+      discrepancies: [{ label: 'около скольких дней', silent: [5], quotes: [{ ref: 'Мф 17:1', text: 'По прошествии дней шести' }, { ref: 'Лк 9:28', text: 'После сих слов, дней через восемь' }] }],
+    });
+    const e = errorsOf([s]).join('\n');
+    expect(e).toMatch(/нет вида различия/);
+    expect(e).toMatch(/со словами «примерно», «около»/);
+    expect(e).toMatch(/silent — рассказа 5 нет/);
+  });
+
+  it('п. 22: у истории с двумя рассказами завязка и развязка — в каждом рассказе', () => {
+    const s = mk({
+      id: 'e-p', accounts: [{ refs: ['Мф 8:14-15'], cert: 'scripture' }, { refs: ['Мк 1:29-31'], cert: 'inference', basis: { kind: 'other-books', refs: ['Мф 8:14', 'Мк 1:30'], time: [] } }],
+      scenes: [{ id: 'e-p#s1', title: { short: 'всё', by: 'atlas' }, refs: [{ account: 0, refs: ['Мф 8:14-15'] }, { account: 1, refs: ['Мк 1:29-31'] }] }],
+      plot: [{ account: 0, setup: 'Мф 8:14', resolution: 'Мк 1:31' }],
+    });
+    const e = errorsOf([s]).join('\n');
+    expect(e).toMatch(/развязка Мк 1:31 — не в стихах рассказа 0/);
+    expect(e).toMatch(/у рассказа 1 \(Мк 1:29-31\) нет завязки и развязки/);
+  });
+
+  it('п. 24: byWords, а вместе с прошлой частью не больше 500 слов (со скобками) — ошибка; Быт 8:15 – 9:17 — 505 слов', () => {
+    const mkParts = (second: string) => mk({
+      id: 'e-w', title: { short: 'Ной и потоп', by: 'atlas' }, accounts: [{ refs: ['Быт 8:1-9:17'], cert: 'scripture' }],
+      parts: [{ n: 1, title: { short: 'а', by: 'atlas' }, refs: [second === 'Быт 9:1-17' ? 'Быт 8:1-22' : 'Быт 8:1-9:7'], change: [] }, { n: 2, title: { short: 'б', by: 'atlas' }, refs: [second], change: [], byWords: true }],
+    });
+    expect(errorsOf([mkParts('Быт 9:8-17')]).join('\n')).not.toMatch(/byWords, а вместе/);
+    const short = mk({
+      id: 'e-x', title: { short: 'Каин и Авель', by: 'atlas' }, accounts: [{ refs: ['Быт 4:1-16'], cert: 'scripture' }],
+      parts: [{ n: 1, title: { short: 'а', by: 'atlas' }, refs: ['Быт 4:1-8'], change: [] }, { n: 2, title: { short: 'б', by: 'atlas' }, refs: ['Быт 4:9-16'], change: [], byWords: true }],
+    });
+    expect(errorsOf([short]).join('\n')).toMatch(/byWords, а вместе с частью 1 — \d+ слов/);
+  });
+
+  it('п. 25: цитата роли на стихе трудного — ошибка (Авель — не стих убийства)', () => {
+    const s = mk({ id: 'e-h', hard: [{ topic: 'убийство', refs: ['Быт 4:8'] }], actors: [{ actor: 'p-avel', roles: [{ role: 'undergoer' }], refs: ['Быт 4:8'], cert: 'scripture', roleText: { text: 'восстал Каин на Авеля', refs: ['Быт 4:8'] } }] });
+    expect(errorsOf([s]).join('\n')).toMatch(/цитата роли стоит на стихе трудного/);
+  });
+
+  it('п. 27: слова времени расходятся (различие «когда») — без места, лиц и хода склейка — ошибка; «весомо» не inference — ошибка', () => {
+    const s = mk({
+      id: 'e-t', accounts: [{ refs: ['Мф 17:1-13'], cert: 'scripture' }, { refs: ['Лк 9:28-36'], cert: 'scripture', basis: { kind: 'other-books', refs: ['Мф 17:5', 'Лк 9:35'], time: ['Мф 17:1', 'Лк 9:28'] } }],
+      scenes: [{ id: 'e-t#s1', title: { short: 'всё', by: 'atlas' }, refs: [{ account: 0, refs: ['Мф 17:1-13'] }, { account: 1, refs: ['Лк 9:28-36'] }] }],
+      plot: [{ account: 0, setup: 'Мф 17:1', resolution: 'Мф 17:8' }, { account: 1, setup: 'Лк 9:28', resolution: 'Лк 9:36' }],
+      discrepancies: [{ label: 'через сколько дней', kind: 'when', quotes: [{ ref: 'Мф 17:1', text: 'По прошествии дней шести' }, { ref: 'Лк 9:28', text: 'После сих слов, дней через восемь' }] }],
+    });
+    const e = errorsOf([s]).join('\n');
+    expect(e).toMatch(/нужны стихи совпадения «place»/);
+    expect(e).toMatch(/склейка other-books — уровень inference, а не scripture/);
+  });
+});
+

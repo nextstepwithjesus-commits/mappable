@@ -11,7 +11,8 @@
  *   - доля границ историй, совпавших точно и с допуском ±1 стих (вместо boundary similarity — см. отчёт);
  *   - вид — каппа на историях, которые обе разметки начинают в одном стихе;
  *   - завязка и развязка — доля историй, где оба указали один стих (±1); нужно поле у обеих разметок;
- *   - участники — F1 по парам «история — лицо — роль»; связи — F1 по парам «история — стих — вид ссылки»;
+ *   - участники — F1 по парам «история — лицо — роль» (роли 11 § 4.3: agent, undergoer, addressed, mentioned); связи — F1
+ *     по парам «история — стих — вид ссылки»; согласие ролей на общих лицах — каппа и матрица расхождений (`roleAgreement`);
  *   - покрытие — доля стихов отрывка с классом.
  * Каппа считается функцией tools/base/kappa.ts.
  */
@@ -21,8 +22,8 @@ import { pathToFileURL } from 'node:url';
 import { kappa } from './kappa.ts';
 import { loadBible } from '../bible.ts';
 import { parseRef, verseId } from '../../src/engine/books.ts';
-import { loadStorySources } from './stories.ts';
-import type { Story, VerseClass } from './types.ts';
+import { loadStorySources, rolesOf } from './stories.ts';
+import type { Story, StoryRole, VerseClass } from './types.ts';
 
 const ROOT = join(import.meta.dirname, '..', '..');
 
@@ -143,14 +144,16 @@ export function fromStories(stories: Story[], classes: VerseClass[], name = 'dat
   const units: Unit[] = [];
   for (const s of stories) {
     if (s.level !== 'story') continue;
-    for (const a of s.accounts) {
+    s.accounts.forEach((a, i) => {
+      // завязка и развязка — по рассказам (11 § 2.2, ред. 4.3; поле plot)
+      const pl = (s.plot ?? []).find((p) => (p.account ?? 0) === i);
       units.push({
         key: `${s.id}@${a.refs[0]}`, title: s.title.short,
         segs: a.refs.map(verses),
         parts: (s.parts ?? []).filter((p) => p.n > 1).map((p) => p.refs.map(verses).flat()[0]).filter(Boolean),
-        kind: s.kind, setup: s.boundary?.[0]?.start, resolution: s.boundary?.[0]?.end,
+        kind: s.kind, setup: pl?.setup, resolution: pl?.resolution,
       });
-    }
+    });
   }
   for (const c of classes) units.push({ key: `class:${c.book} ${c.ch}:${c.from}`, segs: [verses(`${c.book} ${c.ch}:${c.from}-${c.to}`)], parts: [], isClass: true });
   return { name, units };
@@ -177,9 +180,8 @@ export function fromStep0(file: string): Markup {
 /** Участники и связи одной истории у шага 0 (страница «Ной и потоп») — для F1 по парам. */
 export function step0NoahPairs() {
   const d = JSON.parse(readFileSync(join(ROOT, 'prototypes/шаг-0/данные/ной-и-потоп.json'), 'utf8'));
-  const role: Record<string, string> = { 'действует': 'acts', 'говорит': 'speaks', 'к нему обращаются': 'addressed', 'претерпевает': 'suffers', 'упомянут': 'mentioned' };
-  const actors = new Set<string>(['god|participant']);
-  for (const c of d['кто_в_истории']['карточки']) actors.add(`${NOAH_ALIAS[c.id ?? c['имя']] ?? c.id ?? c['имя']}|${ROLE(role[c['роль']] ?? c['роль'])}`);
+  const actors = new Set<string>(['god|agent']);
+  for (const c of d['кто_в_истории']['карточки']) actors.add(`${NOAH_ALIAS[c.id ?? c['имя']] ?? c.id ?? c['имя']}|${STEP0_ROLE[c['роль']] ?? c['роль']}`);
   const kind: Record<string, string> = { 'пересказ': 'retelling', 'упоминания': 'mention', 'намёк': 'allusion', 'спорное_только_второй_слой': 'possibly-same', 'в_той_же_книге_второй_слой': 'mention' };
   const links = new Set<string>();
   for (const [k, v] of Object.entries<any>(d['где_об_этом'])) {
@@ -189,21 +191,44 @@ export function step0NoahPairs() {
   return { actors, links };
 }
 
-/** Роли «действует» и «говорит» сведены в «участник» (решение координатора по второму ключу, п. 8). */
-const ROLE = (r: string) => (r === 'acts' || r === 'speaks' ? 'participant' : r);
+/**
+ * Роли шага 0 → закрытый список 11 § 4.3 (ред. 4.3): «действует» и «говорит» — одна роль `agent` (слово — тоже действие),
+ * «претерпевает» — `undergoer`.
+ */
+export const STEP0_ROLE: Record<string, StoryRole> = { 'действует': 'agent', 'говорит': 'agent', 'к нему обращаются': 'addressed', 'претерпевает': 'undergoer', 'упомянут': 'mentioned' };
 
 /** Сведение лиц: у шага 0 сыновья и звери — по одной строке, у нас — Сим, Хам, Иафет и группа. */
 const NOAH_ALIAS: Record<string, string> = {
-  'p-sim': 'сыновья', 'p-kham': 'сыновья', 'p-iafet': 'сыновья', 'сыновья Ноя: Сим, Хам, Иафет': 'сыновья',
+  'p-sim': 'сыновья', 'p-kham': 'сыновья', 'p-iafet': 'сыновья', 'new:synovya-noya': 'сыновья', 'сыновья Ноя: Сим, Хам, Иафет': 'сыновья',
   'new:zhena-noya': 'жена', 'жена Ноя': 'жена', 'new:zheny-synovey-noya': 'жёны', 'жёны сыновей Ноя': 'жёны',
   'new:zveri-v-kovchege': 'звери', 'звери, скот, гады и птицы': 'звери', 'new:voron-noya': 'ворон', 'ворон': 'ворон', 'new:golub-noya': 'голубь', 'голубь': 'голубь',
 };
 
 export function oursNoahPairs(stories: Story[]) {
   const s = stories.find((x) => x.id === 'e-noy-i-potop')!;
-  const actors = new Set(s.actors.map((a) => `${NOAH_ALIAS[a.actor] ?? a.actor}|${ROLE(a.role)}`));
+  // роль по частям: у шага 0 роль одна на историю — пара на каждую роль лица
+  const actors = new Set(s.actors.flatMap((a) => [...new Set(rolesOf(a))].map((r) => `${NOAH_ALIAS[a.actor] ?? a.actor}|${r}`)));
   const links = new Set(s.links.map((l) => `${l.refs[0]}|${l.kind}`));
   return { actors, links };
+}
+
+/**
+ * Согласие ролей двух разметок на общих лицах (11 § 12.2; задача 25): каппа Коэна по парам ролей и матрица расхождений
+ * «роль A → роль B → сколько». Ключ лица — «история|лицо|часть».
+ */
+export function roleAgreement(a: Map<string, string>, b: Map<string, string>) {
+  const both = [...a.keys()].filter((k) => b.has(k));
+  const pairs = both.map((k) => [a.get(k)!, b.get(k)!] as [string, string]);
+  const matrix: Record<string, Record<string, number>> = {};
+  for (const [x, y] of pairs) (matrix[x] ??= {})[y] = (matrix[x]?.[y] ?? 0) + 1;
+  return { common: both.length, onlyA: a.size - both.length, onlyB: b.size - both.length, kappa: pairs.length ? kappa(pairs) : NaN, matrix };
+}
+
+/** Роли лиц разметки историй по ключу «история|лицо|часть» (для `roleAgreement`). */
+export function rolesByPart(stories: Story[]): Map<string, string> {
+  const m = new Map<string, string>();
+  for (const s of stories) for (const a of s.actors) for (const r of a.roles ?? []) m.set(`${s.id}|${a.actor}|${r.part ?? 1}`, r.role);
+  return m;
 }
 
 export function report() {

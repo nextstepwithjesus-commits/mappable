@@ -103,12 +103,46 @@ export type ActorKind =
 
 export type NameType = 'main' | 'variant' | 'renamed' | 'title' | 'epithet' | 'foreign' | 'patronymic';
 
+/**
+ * Коды проверок вида (б) у формы имени (02 § 3.3.4–3.3.5 [4.4]; К-18): параллель; тот же узел (отец, мать, сын, дочь); то же
+ * место в ряду при тех же соседях; перечень с названным числом; кандидат один; нет противоречия.
+ */
+export type NameWhyCode = 'parallel' | 'same-node' | 'same-position' | 'named-number' | 'one-candidate' | 'no-contradiction';
+export const NAME_WHY_CODES: readonly NameWhyCode[] = ['parallel', 'same-node', 'same-position', 'named-number', 'one-candidate', 'no-contradiction'];
+
 export interface Name {
+  /**
+   * Номер формы `p-…#n<число>` (02 § 3.3.5 [4.4]; К-18): на неё ссылаются переадресация, `with`, `idCert.form`, `identity.form`;
+   * второй раз не выдаётся. Пока номер ставит шаг правки (таблицы выданных номеров форм ещё нет).
+   */
+  id?: string;
   form: string;
   type: NameType;
   refs: Ref[];
   note?: string;
+  /**
+   * Уровень тождества формы (02 § 3.3.5; К-18): нет поля — «Писание» (лицо названо этой формой само или тождество сказано,
+   * вид (а)); `inference` — вид (б): другое имя в параллельном перечне, одна карточка. Основной формой «выв.» не бывает.
+   */
+  cert?: 'scripture' | 'inference';
+  /**
+   * Стихи сравнения по сторонам (02 § 3.3.5 [4.4 по Р-4]): где стоит эта форма (`form`); где на том же месте — основная
+   * (`main`); стих с названным числом (`count`). Ключи `refs` и `ref` — их видят отпечаток подписи, проверка стихов и пакеты книг.
+   */
+  compare?: { form: { refs: Ref[] }; main: { refs: Ref[] }; count?: { ref: Ref } };
+  /** Какие проверки вида (б) совпали — кодами закрытого списка; `note` — пояснение словами. */
+  why?: { codes: NameWhyCode[]; note?: string };
+  /** Форма сказана вместе с другой формой той же карточки (вид (а) внутри карточки): номер той формы. */
+  with?: string;
+  /** Напряжение (числа, хронология) между стихами формы и основной: номер `tn-…` (02 § 3.15.6). */
+  tension?: string;
 }
+
+/**
+ * Тождество по форме у записи без концов (02 § 3.3.5 [4.4 по Р-3]; К-18): запись держится на форме «выв.» этой карточки —
+ * в каждом её стихе лицо названо только этой формой или не названо вовсе, а ближайшее имя перед ним — эта форма.
+ */
+export interface IdCert { form: string; refs: Ref[] }
 
 /** Утверждение карточки: всё, что не родство, не брак и не связь (02, § 3.2). */
 export interface Assertion {
@@ -133,6 +167,8 @@ export interface Assertion {
    * `event` — строка, пока нет историй `e-…`. Ни модели, ни схемы нет — для этого времени модель ещё не составлена.
    */
   calc?: { event: string; model?: string; scheme?: string };
+  /** Запись держится на форме «выв.» (02 § 3.3.5; К-18). */
+  idCert?: IdCert;
   prov?: Partial<Prov>;
 }
 
@@ -140,7 +176,14 @@ export interface Assertion {
  * Тождество конца записи родства или союза (по образцу `Origin.identity`, шаг C45; Д-5): слово сказано вне скобок, а то ли
  * это лицо, что в данных, — текст прямо не говорит («Иоиль, брат Нафана», 1Пар 11:38 — тот ли Нафан, что в 2Цар 23:36).
  */
-export interface EndIdentity { of: 'from' | 'to' | 'husband' | 'wife'; degree: 'weighty' | 'possible'; note: string; refs: Ref[] }
+export interface EndIdentity {
+  of: 'from' | 'to' | 'husband' | 'wife';
+  /** [4.4] `inferred` — запись держится только на форме вида (б) (02 § 3.3.5); `form` обязателен при `inferred` и запрещён иначе. */
+  degree: 'weighty' | 'possible' | 'inferred';
+  note: string;
+  refs: Ref[];
+  form?: string;
+}
 
 /**
  * Отношение лиц (02 § 3.11.1; § 3.3.4 [4.2]): «не то же лицо» или «возможно, то же лицо». Карточки не сливаются, связь,
@@ -300,7 +343,7 @@ export interface Origin {
    * это лицо — родитель («Сии сыновья Дишона» — какой Дишон) или ребёнок (Ефан, сын Кишия, — он ли Идифун), — текст
    * прямо не говорит. Уровень ребра — по словам о родстве; тождество — отдельно: «весомо» или «предположительно».
    */
-  identity?: { of: 'parent' | 'child'; degree: 'weighty' | 'possible'; note: string; refs: Ref[] };
+  identity?: { of: 'parent' | 'child'; degree: 'weighty' | 'possible' | 'inferred'; note: string; refs: Ref[]; form?: string };
   /** Набор взаимоисключающих прочтений и прочтения, при которых ребро действует. */
   reading?: { set: string; in: string[] };
   /** Стихи общие с ребром другого родителя (прежнее parentRefs); снимается, когда стихи разделены. */
@@ -405,6 +448,8 @@ export interface Membership {
   role?: string;
   basis: 'descent' | 'named' | 'legacy-layout';
   refs: Ref[];
+  /** Членство держится на форме «выв.» (02 § 3.3.5; К-18). */
+  idCert?: IdCert;
   prov?: Partial<Prov>;
 }
 
@@ -447,6 +492,8 @@ export interface NoData {
   read?: Ref[];
   /** У `silent`, если список стихов не восстановлен: «нужно чтение» — вывод ещё не на чем проверить. */
   needsReading?: true;
+  /** Запись держится на форме «выв.» (02 § 3.3.5; К-18). */
+  idCert?: IdCert;
   prov?: Partial<Prov>;
 }
 
@@ -460,6 +507,11 @@ export interface Redirect {
   at: string;
   /** Номер выпуска, с которого действует (02 § 3.3.1; К-12 — пока не выдаётся). */
   release?: string;
+  /**
+   * Основание слияния лиц (02 § 3.3.5; К-18): `said` — тождество сказано, обе формы в одном стихе вне скобок; `parallel` —
+   * вид (б), у карточки-цели есть форма «выв.» со стихами уходящей карточки.
+   */
+  basis?: 'said' | 'parallel';
 }
 
 /** Сознательное отличие базы от прежних данных: обратная проекция объясняет разницу этим списком. */
@@ -628,6 +680,13 @@ export interface Account {
     refs: Ref[];
     /** Для other-books — слова времени у рассказов, проверенные на расхождение (пусто, если их нет). */
     time?: Ref[];
+    /**
+     * Склейка по трём совпадениям (11 § 2.6, ред. 4.3; § 11.3 п. 27): у `other-books`, где слова времени рассказов расходятся, —
+     * стихи того же места, тех же лиц и того же хода события.
+     */
+    place?: Ref[];
+    actors?: Ref[];
+    course?: Ref[];
     note?: string;
   };
 }
@@ -665,16 +724,30 @@ export interface Scene {
  * `new:<слово>` — лица ещё нет в базе (жена Ноя, расслабленный): строка ведёт на «Эту карточку мы ещё не составили»
  * (07 § 8.5), а лицо заводит Д4. У `god` и `new:` — `label`: слова стиха, по которым лицо названо.
  */
+/** Правило границы истории (11 § 2.2). */
+export type BoundaryRule = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+/** Вид различия рассказов (11 § 11.2, ред. 4.3; § 4.5 п. 7). */
+export type DiscrepancyKind = 'number' | 'name' | 'who' | 'where' | 'when' | 'order' | 'presence';
+export const DISCREPANCY_KINDS: readonly DiscrepancyKind[] = ['number', 'name', 'who', 'where', 'when', 'order', 'presence'];
+
+/** Роль лица в части истории (11 § 4.3, ред. 4.3). */
+export type StoryRole = 'agent' | 'undergoer' | 'addressed' | 'mentioned';
+export const STORY_ROLES: readonly StoryRole[] = ['undergoer', 'agent', 'addressed', 'mentioned'];
+
 export interface StoryActor {
   actor: string;
   label?: string;
   /** Вид лица для `new:` (для строки: «группа», «птица»). */
   kind?: ActorKind;
   /**
-   * Роль. `participant` — участник без различения «действует / говорит»: до определений ролей в протоколе И0 эти две роли
-   * не различаются (решение координатора по второму ключу; эталон П7: F1 по ролям 0,60).
+   * Роль в каждой части (11 § 4.3, ред. 4.3; § 11.2 `roles`): закрытый список, проверяется сверху вниз — `undergoer`
+   * «с ним происходит» (исцеление, изгнание беса, воскрешение, смерть, казнь, телесное наказание), `agent` «действует»
+   * (действует или говорит — так говорит повествователь), `addressed` «к нему обращаются», `mentioned` «назван». `part` —
+   * номер части (`StoryPart.n`); у истории без частей часть одна, и `part` нет.
    */
-  role: 'participant' | 'acts' | 'speaks' | 'addressed' | 'suffers' | 'mentioned';
+  roles: { part?: number; role: StoryRole }[];
+  /** Строка держится на форме «выв.» карточки (02 § 3.3.5; К-18). */
+  idCert?: IdCert;
   main?: boolean;
   /** В каком рассказе (номер с нуля), если не во всех. */
   account?: number;
@@ -764,12 +837,31 @@ export interface Story {
   time?: { epoch?: string; after?: { story: string; refs: Ref[]; cert: Cert }[]; said?: { text: string; refs: Ref[] } };
   links: StoryLink[];
   relations?: StoryRelation[];
-  /** Различия — только цитатами стихов не меньше двух рассказов; label — короткая подпись атласа. */
-  discrepancies?: { label: string; quotes: { ref: Ref; text: string }[] }[];
+  /**
+   * Различия — только цитатами стихов не меньше двух рассказов; label — короткая подпись атласа. С ред. 4.3 (§ 11.3 п. 20):
+   * `kind` — вид различия; `scene` — сцена синопсиса; `silent` — рассказы этой истории, которые о подробности молчат.
+   */
+  discrepancies?: {
+    label: string;
+    quotes: { ref: Ref; text: string }[];
+    /** Сцена синопсиса, под которой строка различия (`e-…#s<n>`). */
+    scene?: string;
+    /** Вид различия (11 § 4.5 п. 7). */
+    kind?: DiscrepancyKind;
+    /** Рассказы этой истории (номера с нуля), проверенные на молчание: «рассказ молчит». */
+    silent?: number[];
+    /** Понимания с авторами, которые объясняют различие (второй слой). */
+    understandings?: string[];
+  }[];
   /** Вставка, рассказ внутри речи, разрыв. */
   nested?: { story: string; at: Ref; kind: 'insert' | 'told' | 'gap' }[];
-  /** Завязка, развязка и правило 11 § 2.2; human — почему решал человек (протокол И0). */
-  boundary?: { start: Ref; end?: Ref; rule: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8; human?: string }[];
+  /**
+   * Границы истории (11 § 2.2; § 11.2, ред. 4.3): правило начала и конца (стихи — в `accounts.refs`); human — почему решал
+   * человек (протокол И0). Завязка и развязка — отдельное поле `plot`.
+   */
+  boundary?: { startRule: BoundaryRule; endRule?: BoundaryRule; human?: string };
+  /** Завязка и развязка в каждом рассказе (11 § 2.2, ред. 4.3; § 11.3 п. 22): `account` — номер рассказа с нуля. */
+  plot?: { account?: number; setup: Ref; resolution: Ref; human?: string }[];
   hard?: { topic: HardTopic; refs: Ref[] }[];
   /**
    * Строка «назван ещё» в блоке «Где об этом в Библии» (11 § 4.5 п. 8): стих, где назван участник, но это не ссылка на

@@ -17,7 +17,8 @@ import { parseRef, verseId, BOOK_INDEX } from '../../src/engine/books.ts';
 import { norm, nameMatcher } from '../../src/engine/text.ts';
 import { scriptureText } from './brackets.ts';
 import type { Base } from './migrate.ts';
-import type { Story, StoryKind, TextParallel, VerseClass, HardTopic, LinkKind } from './types.ts';
+import { DISCREPANCY_KINDS, STORY_ROLES } from './types.ts';
+import type { Story, StoryActor, StoryKind, StoryRole, TextParallel, VerseClass, HardTopic, LinkKind } from './types.ts';
 
 const ROOT = join(import.meta.dirname, '..', '..');
 export const STORY_DIR = join(ROOT, 'data', 'stories');
@@ -75,6 +76,9 @@ export function storyVerses(s: Story): string[] {
   return versesOf(s.accounts.flatMap((a) => a.refs));
 }
 
+/** Текст стиха со всеми словами, вместе со словами в скобках: для порога длины части (11 § 2.2, правило 9; ред. 4.3). */
+const fullText = (id: string) => bible().verses.get(id) ?? '';
+
 /** Текст стиха вне скобок (02 § 3.8; brackets.tsv). */
 const mainText = (id: string) => {
   const m = /^(.+) (\d+):(\d+)$/.exec(id)!;
@@ -85,6 +89,13 @@ const wordsOf = (t: string) => clean(t).trim().split(' ').filter(Boolean);
 
 /** Служебные слова: в названии их не ищут. */
 export const STOP = new Set(['и', 'в', 'во', 'на', 'с', 'со', 'у', 'к', 'ко', 'о', 'об', 'из', 'от', 'по', 'за', 'до', 'для', 'без', 'через', 'при', 'над', 'под', 'не', 'ни', 'а', 'но', 'его', 'ее', 'их', 'он', 'она', 'они', 'это', 'как', 'что', 'кто', 'же', 'ли']);
+
+/** Числительные: формы, которые подпись в именительном падеже ищет в стихе («двое учеников» — «послал двух учеников»). */
+const NUMERALS: string[][] = [
+  ['два', 'две', 'двое', 'двух', 'двум', 'двумя', 'двоих'],
+  ['три', 'трое', 'трех', 'трем', 'тремя', 'троих'],
+  ['четыре', 'четверо', 'четырех', 'четырем', 'четырьмя'],
+];
 
 /** Основа слова: у длинных — без двух последних букв, у четырёхбуквенных — без одной. */
 export function stem(w: string): string {
@@ -101,6 +112,11 @@ export function wordIn(word: string, text: string): boolean {
   if (/^[А-ЯЁ]/.test(word.trim())) {
     if (nameMatcher(word).test(t)) return true;
   }
+  const num = NUMERALS.find((xs) => xs.includes(w));
+  if (num) return num.some((x) => t.includes(` ${x} `));
+  // беглая гласная: «оруженосец» — «оруженосца», «отрок» — «отрока» уже по основе; «осёл» — «осла»
+  const fleeting = /^(.{2,})[ео]([бвгджзклмнпрстфхцчшщ])$/.exec(w);
+  if (fleeting && t.includes(` ${fleeting[1]}${fleeting[2]}`)) return true;
   if (w.length <= 3) {
     if (t.includes(` ${w} `)) return true;
     // короткое слово с окончанием: «раю» — «рай», «рая» (основа из двух букв и окончание)
@@ -116,7 +132,44 @@ type Err = (check: string, where: string, msg: string) => void;
 
 const LEVELS = new Set(['cycle', 'story']);
 const KINDS = new Set<StoryKind>(['event', 'speech', 'parable', 'jesus-story', 'told-story', 'vision', 'dream', 'sign-act', 'song', 'prayer', 'genealogy', 'summary', 'notice']);
-const ROLES = new Set(['participant', 'acts', 'speaks', 'addressed', 'suffers', 'mentioned']);
+const ROLES = new Set<string>(STORY_ROLES);
+/** Прежние коды ролей (до задачи 23, 11 § 11.3 п. 5в): после неё — ошибка. */
+const OLD_ROLES = new Set(['participant', 'acts', 'speaks', 'suffers']);
+/** Имя Бога в строке Бога (11 § 4.3; § 11.3 п. 5г): из списка протокола И0. */
+export const GOD_LABELS = new Set(['Бог', 'Господь', 'Господь Бог']);
+const VAGUE = /примерн|около/i;
+
+/** Роли лица во всех частях. */
+export const rolesOf = (a: Pick<StoryActor, 'roles'>): StoryRole[] => (Array.isArray(a.roles) ? a.roles.map((r) => r.role) : []);
+
+/**
+ * Подпись лица в косвенном падеже (11 § 4.3, ред. 4.3; § 11.3 п. 5д). Словарь форм базы — формы имён лица (`forms`):
+ * подпись, которая совпадает с формой имени, — именительный падеж. Иначе — по окончанию главного слова: у существительных
+ * и прилагательных косвенные окончания множественного числа, дательного и творительного падежа; у одушевлённых
+ * существительных мужского рода — винительный «-а», «-я» (словарь `MASC_ANIMATE`: «ворона» при «ворон»).
+ */
+const MASC_ANIMATE = new Set(['ворон', 'голубь', 'жених', 'мальчик', 'человек', 'эней', 'стефан', 'гамалиил', 'херувим', 'симон', 'оруженосец', 'осел', 'тысяченачальник', 'первосвященник', 'отрок', 'сотник', 'сын', 'дух', 'змей', 'лев', 'медведь', 'вестник', 'расслабленный', 'бесноватый', 'начальник', 'фарисей', 'книжник', 'ученик', 'слуга', 'народ', 'юноша', 'старец', 'муж', 'царь', 'пророк', 'ангел', 'голиаф', 'савл', 'павел', 'петр', 'анания']);
+export function obliqueLabel(label: string, forms: string[] = []): string | null {
+  const head = label.split(/[\s,]+/).find((x) => x && !STOP.has(norm(x)));
+  if (!head) return null;
+  const h = norm(head).replace(/[^а-я-]/g, '');
+  if (forms.some((f) => norm(f).split(/[\s,]+/)[0] === h) || MASC_ANIMATE.has(h)) return null;
+  if (h.length > 4 && /(ами|ями|ам|ям|ах|ях)$/.test(h)) return `«${head}» — дательный, творительный или предложный падеж множественного числа`;
+  if (h.length > 3 && /[^аеиоуыэюя](ов|ев)$/.test(h) && head === head.toLowerCase()) return `«${head}» — родительный падеж множественного числа`;
+  if (h.length > 4 && /[^аеиоуыэюя]ей$/.test(h) && head === head.toLowerCase()) return `«${head}» — родительный падеж множественного числа`;
+  if (/(ых|их)$/.test(h) && h.length > 4) return `«${head}» — косвенный падеж прилагательного`;
+  if (/(ого|его|ому|ему)$/.test(h) && h.length > 4) return `«${head}» — косвенный падеж прилагательного`;
+  if (/(ою|ею)$/.test(h) && h.length > 4) return `«${head}» — творительный падеж`;
+  if (h.length > 3 && /[^аеиоуыэюя][ую]$/.test(h)) return `«${head}» — дательный или винительный падеж`;
+  if (/^[А-ЯЁ]/.test(head) && /(ова|ева|ина)$/.test(h)) return `«${head}» — притяжательное слово, а не имя`;
+  if (/[ая]$/.test(h)) {
+    const base = h.slice(0, -1);
+    const cands = h.endsWith('я') ? [`${base}ь`, `${base}й`] : [base, base.replace(/([бвгджзклмнпрстфхцчшщ])([бвгджзклмнпрстфхцчшщ])$/, '$1е$2'), base.replace(/([бвгджзклмнпрстфхцчшщ])([бвгджзклмнпрстфхцчшщ])$/, '$1о$2')];
+    const hit = cands.find((c) => MASC_ANIMATE.has(c) || forms.some((f) => norm(f).split(/[\s,]+/)[0] === c));
+    if (hit) return `«${head}» — винительный или родительный падеж («${hit}»)`;
+  }
+  return null;
+}
 const PLACE_ROLES = new Set(['where', 'from', 'to', 'via', 'mentioned']);
 const CERTS = new Set(['scripture', 'inference', 'interpretation', 'calc', 'reference']);
 const LINK_KINDS = new Set<LinkKind>(['retelling', 'mention', 'allusion', 'possibly-same', 'type']);
@@ -149,7 +202,17 @@ export function validateStories(base: Base, err: Err, warn: Err) {
   const stories = base.stories ?? [];
   const byId = new Map<string, Story>();
   const actorIds = new Map<string, string[]>();
-  for (const v of base.volumes) for (const a of v.actors) actorIds.set(a.id, a.names.map((n) => n.form));
+  const actorCards = new Map<string, { names: { form: string; id?: string; cert?: string }[] }>();
+  for (const v of base.volumes) for (const a of v.actors) {
+    actorIds.set(a.id, a.names.map((n) => n.form));
+    actorCards.set(a.id, a);
+  }
+  // «возможно, тот же человек» (вид (в); 02 § 3.3.4): для проверки 5б
+  const possiblySame = new Map<string, string[]>();
+  for (const r of base.relations ?? []) if (r.kind === 'possibly-same') {
+    possiblySame.set(r.a, [...(possiblySame.get(r.a) ?? []), r.b]);
+    possiblySame.set(r.b, [...(possiblySame.get(r.b) ?? []), r.a]);
+  }
   const checkRef = (where: string, r: unknown): string[] => {
     if (typeof r !== 'string') {
       err('история: стих', where, `ссылка не строка: ${JSON.stringify(r)}`);
@@ -218,6 +281,25 @@ export function validateStories(base: Base, err: Err, warn: Err) {
         if (a.basis.kind === 'other-books' && !Array.isArray(a.basis.time)) err('история: тождество', w, `рассказ ${i}: у склейки other-books нет поля time (слова времени или пусто)`);
         for (const r of a.basis.time ?? []) checkRef(`${w} время ${i}`, r);
       }
+      // уровень склейки (11 § 11.2, ред. 4.3): «сказано» — scripture, «весомо» — inference
+      if (a.basis) {
+        const want = a.basis.kind === 'said' ? 'scripture' : 'inference';
+        if (a.cert !== want) err('история: тождество', w, `рассказ ${i}: склейка ${a.basis.kind} — уровень ${want}, а не ${a.cert} (11 § 11.2; § 11.3 п. 27)`);
+        // «примерный счёт» — слово атласа, которое сглаживает различие (решение координатора по ред. 4.3); «около» в основании —
+        // обычно слова самого стиха («около пяти тысяч», Мф 14:21), поэтому здесь проверяется только «примерн…»
+        if (a.basis.note && /примерн/i.test(a.basis.note)) err('история: тождество', w, `рассказ ${i}: в основании склейки слово «примерный» (11 § 11.3 п. 20)`);
+        // п. 27: слова времени рассказов расходятся (различие вида «когда» с цитатой этого рассказа на стихе его слов времени) —
+        // склейка по трём совпадениям: место, лица, ход
+        const myVerses = new Set(accVerses[i] ?? (a.refs ?? []).flatMap((r) => refVerses(r) ?? []));
+        const timeV = new Set(versesOf((a.basis.time ?? []).filter((r) => (refVerses(r) ?? []).some((v) => myVerses.has(v)))));
+        const diverge = (s.discrepancies ?? []).some((d) => d.kind === 'when' && d.quotes.some((q) => (refVerses(q.ref) ?? []).some((v) => timeV.has(v))));
+        if (a.basis.kind === 'other-books' && diverge) {
+          for (const k of ['place', 'actors', 'course'] as const) {
+            if (!a.basis[k]?.length) err('история: тождество', w, `рассказ ${i}: слова времени рассказов расходятся — нужны стихи совпадения «${k}» (11 § 2.6; § 11.3 п. 27)`);
+            for (const r of a.basis[k] ?? []) checkRef(`${w} основание ${i}`, r);
+          }
+        }
+      }
       const sameBook = s.accounts.some((x, j) => j !== i && bookOf(x.refs[0]) === bi);
       if (sameBook && a.basis?.kind !== 'said') err('история: тождество', w, `два рассказа одной книги (${bi}) склеены без «сказано»: двойные рассказы одной книги — две истории (11 § 2.6)`);
       if (a.basis?.kind === 'other-books' && bi === b0) err('история: тождество', w, `склейка other-books внутри одной книги (${bi})`);
@@ -250,8 +332,20 @@ export function validateStories(base: Base, err: Err, warn: Err) {
         // слова — по каждому рассказу отдельно: часть истории с несколькими рассказами читается по одному рассказу
         const byBook = new Map<string, string[]>();
         for (const v of pv) { const b = v.replace(/ \d+:\d+$/, ''); byBook.set(b, [...(byBook.get(b) ?? []), v]); }
-        const words = Math.max(0, ...[...byBook.values()].map((xs) => wordsOf(textOf(xs)).length));
+        // слова — все показанные, вместе со словами в скобках (11 § 2.2, правило 9; ред. 4.3)
+        const words = Math.max(0, ...[...byBook.values()].map((xs) => wordsOf(xs.map(fullText).join(' ')).length));
         if (words > PART_WORDS) warn('история: часть', w, `часть ${p.n} — ${words} слов, больше ${PART_WORDS}: делит ближайшая смена признака (правило 9)`);
+        // п. 24: byWords — только если без деления сцена (эта часть вместе с прошлой) длиннее порога; change тогда пусто
+        if (p.byWords) {
+          if (i === 0) err('история: часть', w, `часть ${p.n}: byWords у первой части`);
+          if (p.change?.length) err('история: часть', w, `часть ${p.n}: byWords, а change не пуст (11 § 11.2)`);
+          const prev = s.parts![i - 1];
+          const both = [...(prev?.refs ?? []), ...p.refs].flatMap((r) => refVerses(r) ?? []);
+          const bb = new Map<string, string[]>();
+          for (const v of both) { const b = v.replace(/ \d+:\d+$/, ''); bb.set(b, [...(bb.get(b) ?? []), v]); }
+          const n = Math.max(0, ...[...bb.values()].map((xs) => wordsOf(xs.map(fullText).join(' ')).length));
+          if (i > 0 && n <= PART_WORDS) err('история: часть', w, `часть ${p.n}: byWords, а вместе с частью ${prev.n} — ${n} слов, не больше ${PART_WORDS} (11 § 11.3 п. 24)`);
+        }
       });
       for (const v of vset) if (covered.get(v) !== 1) err('история: часть', w, `стих ${v} — в ${covered.get(v) ?? 0} частях (нужно ровно в одной)`);
     } else if (s.kind !== 'genealogy' && s.accounts.some((a) => { const vs = a.refs.flatMap((r) => refVerses(r) ?? []); return vs.length > 20 || wordsOf(textOf(vs)).length > PART_WORDS; })) err('история: часть', w, 'рассказ длиннее 20 стихов или 500 слов без частей (правило 9)');
@@ -268,16 +362,37 @@ export function validateStories(base: Base, err: Err, warn: Err) {
       titles.set(k, s.id);
     }
 
-    // участники (п. 5)
+    // участники (п. 5; 5б–5д; 25)
+    const partNos = new Set((s.parts ?? []).map((p) => p.n));
+    const hardVerses = new Set((s.hard ?? []).flatMap((h) => versesOf(h.refs ?? [])));
     for (const a of s.actors ?? []) {
       const aw = `${w} участник ${a.actor}`;
-      if (!ROLES.has(a.role)) err('история: участник', aw, `роль «${a.role}»`);
+      const legacy = (a as unknown as { role?: string }).role;
+      if (legacy !== undefined) err('история: участник', aw, `поле role «${legacy}» — прежний вид: роль по частям — поле roles (11 § 11.2, ред. 4.3; задача 23)`);
+      if (!Array.isArray(a.roles) || !a.roles.length) err('история: участник', aw, 'нет ролей (roles): в каждой части, где лицо есть, — одна роль (11 § 4.3)');
+      else {
+        const seen = new Set<string>();
+        for (const r of a.roles) {
+          if (OLD_ROLES.has(r.role)) err('история: участник', aw, `роль «${r.role}» — прежний код (11 § 11.3 п. 5в): agent, undergoer, addressed, mentioned`);
+          else if (!ROLES.has(r.role)) err('история: участник', aw, `роль «${r.role}» не из закрытого списка 11 § 4.3`);
+          const k = String(r.part ?? '');
+          if (seen.has(k)) err('история: участник', aw, `две роли в одной части${r.part ? ` (${r.part})` : ''}: в части — одна роль`);
+          seen.add(k);
+          if (s.parts?.length) {
+            if (r.part === undefined) err('история: участник', aw, 'у истории с частями роль — с номером части (part)');
+            else if (!partNos.has(r.part)) err('история: участник', aw, `части ${r.part} нет`);
+          } else if (r.part !== undefined) err('история: участник', aw, `у истории без частей роль без номера части (part ${r.part})`);
+        }
+      }
       if (!CERTS.has(a.cert)) err('история: участник', aw, `уровень «${a.cert}»`);
       if (!a.refs?.length) err('история: участник', aw, 'нет стихов');
       const av = (a.refs ?? []).flatMap((r) => checkRef(aw, r));
       // имя только местоимением в стихах истории — проверка по стиху `antecedent`, где имя названо раньше
       const txt = textOf(a.antecedent ? [...av, ...checkRef(aw, a.antecedent)] : av);
-      const named = a.role === 'mentioned' || a.mode === 'in-speech';
+      const rs = rolesOf(a);
+      const named = (rs.length > 0 && rs.every((r) => r === 'mentioned')) || a.mode === 'in-speech';
+      // `undergoer` — только у лица, которое есть в части (п. 5в): у лица из чужой речи этой роли нет
+      if (rs.includes('undergoer') && a.mode === 'in-speech') err('история: участник', aw, 'роль undergoer у лица из чужой речи: оно не в сцене (11 § 11.3 п. 5в)');
       if (a.actor.startsWith('p-')) {
         const names = actorIds.get(a.actor);
         if (!names) err('история: участник', aw, 'лица нет в базе');
@@ -286,19 +401,63 @@ export function validateStories(base: Base, err: Err, warn: Err) {
           const head = a.label.split(/\s+/).find((x) => !STOP.has(norm(x)))!;
           if (!named && !wordIn(head, txt)) err('история: участник', aw, `слово «${head}» не стоит в его стихах вне скобок`);
         } else if (!named && !names.some((n) => wordIn(n, txt) || nameMatcher(n).test(clean(txt)))) err('история: участник', aw, `ни одна форма имени (${names.slice(0, 3).join(', ')}) не стоит в его стихах вне скобок`);
+        // 5б: другое имя — форма этой карточки, а не карточки «возможно, тот же человек»; форма «выв.» — с idCert
+        const card = actorCards.get(a.actor);
+        if (card && !named) {
+          const t = clean(txt);
+          const has = (form: string) => nameMatcher(form).test(t);
+          const ownHits = card.names.filter((n) => has(n.form));
+          if (!ownHits.length && !a.label) {
+            for (const other of possiblySame.get(a.actor) ?? []) {
+              const o = actorCards.get(other);
+              const hit = o?.names.find((n) => has(n.form));
+              if (hit) err('история: другое имя', aw, `в его стихах стоит «${hit.form}» — имя карточки ${other} («возможно, тот же человек», вид (в)), а не форма этой карточки: строка ведёт на карточку имени стиха (11 § 4.3; § 11.3 п. 5б)`);
+            }
+          }
+          if (ownHits.length && ownHits.every((n) => n.cert === 'inference') && !a.idCert) err('история: другое имя', aw, `в его стихах стоит только форма «выв.» «${ownHits[0].form}»: у строки — idCert (02 § 3.3.5; 11 § 11.3 п. 5б)`);
+        }
+        if (a.idCert) {
+          const f = card?.names.find((n) => n.id === a.idCert!.form);
+          if (!f) err('история: другое имя', aw, `idCert: у карточки нет формы ${a.idCert.form}`);
+          else if (f.cert !== 'inference') err('история: другое имя', aw, `idCert: форма ${a.idCert.form} — не «выв.»`);
+        }
+        // 5д: именительный падеж
+        if (a.label) {
+          const why = obliqueLabel(a.label, names ?? []);
+          if (why) err('история: падеж', aw, `подпись «${a.label}» не в именительном падеже: ${why} (11 § 4.3; § 11.3 п. 5д)`);
+        }
       } else if (a.actor === 'god' || a.actor.startsWith('new:')) {
         if (!a.label) err('история: участник', aw, 'у лица вне базы нет label — слов стиха');
         else {
           const head = a.label.split(/\s+/).find((x) => !STOP.has(norm(x)))!;
           if (!named && !wordIn(head, txt)) err('история: участник', aw, `слово «${head}» не стоит в его стихах вне скобок (02 § 3.8)`);
+          if (a.actor === 'god') {
+            if (!GOD_LABELS.has(a.label)) err('история: строка Бога', aw, `подпись «${a.label}» — не из списка протокола И0 (${[...GOD_LABELS].join(', ')}); «глас» и обрывки слова — в roleText (11 § 11.3 п. 5г)`);
+          } else {
+            const why = obliqueLabel(a.label);
+            if (why) err('история: падеж', aw, `подпись «${a.label}» не в именительном падеже: ${why} (11 § 4.3; § 11.3 п. 5д)`);
+          }
         }
         if (a.actor.startsWith('new:') && !a.kind) warn('история: участник', aw, 'у лица вне базы не указан вид (human, unnamed, group, animal…)');
+        if (a.idCert) err('история: другое имя', aw, 'idCert — только у лица базы');
       } else err('история: участник', aw, 'участник — p-…, god или new:<слово>');
       if (a.account !== undefined && !s.accounts[a.account]) err('история: участник', aw, `рассказа ${a.account} нет`);
       for (const v of av) if (!vset.has(v) && !s.links.some((l) => versesOf(l.refs).includes(v))) warn('история: участник', aw, `стих ${v} вне рассказов и ссылок истории`);
       if (a.roleText) {
-        const rt = textOf(a.roleText.refs.flatMap((r) => checkRef(aw, r)));
+        const rv = a.roleText.refs.flatMap((r) => checkRef(aw, r));
+        const rt = textOf(rv);
         if (!clean(rt).includes(clean(a.roleText.text))) err('история: участник', aw, `цитата роли «${a.roleText.text}» не стоит в стихе вне скобок`);
+        // п. 25: цитата роли простого слоя — не на стихе трудного (11 § 8.3 п. 5)
+        const onHard = rv.filter((v) => hardVerses.has(v));
+        if (onHard.length) err('история: трудное', aw, `цитата роли стоит на стихе трудного (${onHard.join(', ')}): строка лица видна и при закрытой трудной части (11 § 11.3 п. 25)`);
+      }
+    }
+    // п. 26: главные лица — названные в простом названии (кроме групп вне названия); пока замечание
+    if (s.level === 'story' && s.title?.short) {
+      for (const a of s.actors ?? []) {
+        if (a.main || !a.actor.startsWith('p-') || a.label) continue;
+        const forms = actorIds.get(a.actor) ?? [];
+        if (forms.some((f) => nameMatcher(f).test(clean(s.title.short)))) warn('история: главные лица', `${w} участник ${a.actor}`, `назван в названии «${s.title.short}», а не main (11 § 11.3 п. 26)`);
       }
     }
     for (const p of s.places ?? []) {
@@ -351,11 +510,31 @@ export function validateStories(base: Base, err: Err, warn: Err) {
       if (!byId.has(n.story)) err('история: вложенность', w, `вложенной истории ${n.story} нет`);
       checkRef(`${w} вложение`, n.at);
     }
-    for (const b of s.boundary ?? []) {
-      if (![1, 2, 3, 4, 5, 6, 7, 8].includes(b.rule)) err('история: граница', w, `правило ${b.rule} — из 11 § 2.2 (1–8)`);
-      inStory(`${w} граница`, b.start);
-      if (b.end) inStory(`${w} граница`, b.end);
+    // границы — правило начала и конца (11 § 11.2, ред. 4.3); прежний вид — массив с завязкой и развязкой
+    if (s.boundary !== undefined) {
+      const b = s.boundary as unknown;
+      if (Array.isArray(b)) err('история: граница', w, 'boundary — прежний вид (массив с start и end): правила границ — объект { startRule, endRule, human }, завязка и развязка — поле plot (задача 23)');
+      else {
+        const bb = s.boundary;
+        if (![1, 2, 3, 4, 5, 6, 7, 8].includes(bb.startRule)) err('история: граница', w, `правило начала ${bb.startRule} — из 11 § 2.2 (1–8)`);
+        if (bb.endRule !== undefined && ![1, 2, 3, 4, 5, 6, 7, 8].includes(bb.endRule)) err('история: граница', w, `правило конца ${bb.endRule} — из 11 § 2.2 (1–8)`);
+      }
     }
+    // п. 22: завязка и развязка в каждом рассказе (11 § 2.2; ред. 4.3)
+    const plotAcc = new Set<number>();
+    for (const p of s.plot ?? []) {
+      const i = p.account ?? 0;
+      if (p.account === undefined && s.accounts.length > 1) err('история: завязка', w, 'у истории с несколькими рассказами у завязки и развязки — номер рассказа (account)');
+      if (!s.accounts[i]) { err('история: завязка', w, `рассказа ${i} нет`); continue; }
+      if (plotAcc.has(i)) err('история: завязка', w, `у рассказа ${i} две пары завязки и развязки`);
+      plotAcc.add(i);
+      const av = new Set(accVerses[i]);
+      for (const [k, r] of [['завязка', p.setup], ['развязка', p.resolution]] as const) {
+        const vs = checkRef(`${w} ${k}`, r);
+        if (vs.some((v) => !av.has(v))) err('история: завязка', w, `${k} ${r} — не в стихах рассказа ${i}`);
+      }
+    }
+    if (s.accounts.length > 1) for (let i = 0; i < s.accounts.length; i++) if (!plotAcc.has(i)) err('история: завязка', w, `у рассказа ${i} (${s.accounts[i].refs[0]}) нет завязки и развязки (plot; 11 § 11.3 п. 22)`);
     for (const h of s.hard ?? []) {
       if (!HARD_TOPICS.has(h.topic)) err('история: трудное', w, `тема «${h.topic}» не из 11 § 8.3 п. 2`);
       if (!h.refs?.length) err('история: трудное', w, 'тема без стиха');
@@ -392,6 +571,15 @@ export function validateStories(base: Base, err: Err, warn: Err) {
         src.add(acc >= 0 ? `a${acc}` : lnk >= 0 ? `l${lnk}` : `?${q.ref}`);
       }
       if (src.size < 2 && (d.quotes?.length ?? 0) >= 2) err('история: различия', w, `«${d.label}»: цитаты из одного рассказа`);
+      // с ред. 4.3: вид, сцена, «рассказ молчит»; без слов «примерно», «около»
+      if (!d.kind) err('история: различия', w, `«${d.label}»: нет вида различия (kind; 11 § 11.3 п. 20)`);
+      else if (!DISCREPANCY_KINDS.includes(d.kind)) err('история: различия', w, `«${d.label}»: вид «${d.kind}» не из 11 § 11.2`);
+      if (VAGUE.test(d.label)) err('история: различия', w, `подпись «${d.label}» — со словами «примерно», «около»`);
+      if (d.scene && !s.scenes?.some((sc) => sc.id === d.scene)) err('история: различия', w, `«${d.label}»: сцены ${d.scene} нет`);
+      for (const i of d.silent ?? []) {
+        if (!s.accounts[i]) err('история: различия', w, `«${d.label}»: silent — рассказа ${i} нет`);
+        else if (src.has(`a${i}`)) err('история: различия', w, `«${d.label}»: рассказ ${i} и цитирован, и «молчит»`);
+      }
     }
 
     // синопсис (п. 15)

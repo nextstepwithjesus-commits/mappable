@@ -22,6 +22,7 @@ import { validateRegistry } from './sources.ts';
 import { loadIds, PREFIX, type IdKind } from './ids.ts';
 import { releaseOk } from './release.ts';
 import { validateStories } from './stories.ts';
+import { validateNameForms } from './name-forms.ts';
 
 export interface Issue { level: 'error' | 'warn'; check: string; where: string; msg: string }
 
@@ -289,7 +290,8 @@ export function validate(base: Base): Issue[] {
     if (o.cert === 'interpretation' && !o.reading) err('толкование', w, 'ребро уровня «толкование» вне набора прочтений: толкование не становится ребром');
     if (o.identity) {
       const id = o.identity;
-      if (!['parent', 'child'].includes(id.of) || !['weighty', 'possible'].includes(id.degree)) err('тождество', w, `тождество: of «${id.of}», degree «${id.degree}»`);
+      // [4.4] inferred — ребро держится на форме вида (б); номер формы проверяет validateNameForms (02 § 3.3.5; К-18)
+      if (!['parent', 'child'].includes(id.of) || !['weighty', 'possible', 'inferred'].includes(id.degree)) err('тождество', w, `тождество: of «${id.of}», degree «${id.degree}»`);
       if (!id.note?.trim() || !id.refs?.length) err('тождество', w, 'тождество конца ребра — с примечанием и стихами');
       if (o.cert === 'interpretation') err('тождество', w, 'поле тождества — у ребра, сказанного словами («Писание» или «вывод»)');
     }
@@ -326,7 +328,7 @@ export function validate(base: Base): Issue[] {
   // тождество конца у родства и союза (Д-5) — как у ребра (C45): у слова, сказанного вне скобок, со стихами и примечанием
   const endIdentity = (w: string, id: { of: string; degree: string; note: string; refs: string[] } | undefined, ends: string[], cert: Cert | undefined) => {
     if (!id) return;
-    if (!ends.includes(id.of) || !['weighty', 'possible'].includes(id.degree)) err('тождество', w, `тождество: of «${id.of}», degree «${id.degree}»`);
+    if (!ends.includes(id.of) || !['weighty', 'possible', 'inferred'].includes(id.degree)) err('тождество', w, `тождество: of «${id.of}», degree «${id.degree}»`);
     if (!id.note?.trim() || !id.refs?.length) err('тождество', w, 'тождество конца — с примечанием и стихами');
     walk(w, { refs: id.refs ?? [] });
     if (cert === 'interpretation') err('тождество', w, 'поле тождества — у слова, сказанного текстом («Писание» или «вывод»)');
@@ -738,6 +740,9 @@ export function validate(base: Base): Issue[] {
   // реестр источников и ссылки записей на него (Д3-3, Д3-5; 09 § 5.5)
   for (const x of validateRegistry(base)) (x.level === 'error' ? err : warn)('источник', x.where, x.msg);
 
+  // ---------- форма имени лица: уровень тождества, тождество по форме, основание переадресации (02 § 3.3.5; К-18) ----------
+  validateNameForms(base, err, warn);
+
   // ---------- стоп-список предания: утверждения, а не имена (02, § 7) ----------
   stopList(base, actors, err);
   return issues;
@@ -839,7 +844,10 @@ function stopList(base: Base, actors: Map<string, Actor>, err: Err) {
   }
   // другое имя без тождества «сказано» — своя карточка, не форма (02 § 3.3.4; Р-1, Д-4): Левий, Фаддей и Леввей
   if (named('p-matfey', 'Левий', 'Левий Алфеев')) err(S, 'p-matfey', 'Левий (Мк 2:14; Лк 5:27) — своя карточка: тождество с Матфеем не сказано');
-  if (named('p-iuda-iakovlev', 'Фаддей', 'Леввей')) err(S, 'p-iuda-iakovlev', 'Фаддей (Мф 10:3; Мк 3:18) — своя карточка: тождество с Иудой Иаковлевым не сказано');
+  // Фаддей и Иуда Иаковлев — вид (б) (02 ред. 4.4; Д-15): формы «Иуда…» у Фаддея — только уровня «выв.», не «Писание»
+  for (const n of actors.get('p-faddey')?.names ?? []) if (/^Иуда/.test(n.form) && n.cert !== 'inference') err(S, 'p-faddey', `форма «${n.form}» у Фаддея — уровня «выв.»: тождество с Иудой Иаковлевым не сказано, а выведено по перечню двенадцати (02 § 3.3.4)`);
+  // Рагуил и Иофор — вид (в) (02 ред. 4.4; Д-15): своя карточка Рагуила, у Иофора формы «Рагуил» нет
+  if (named('p-iofor', 'Рагуил')) err(S, 'p-iofor', 'Рагуил (Исх 2:18; Чис 10:29) — своя карточка: тождество с Иофором не сказано (02 § 3.3.4)');
   // дети Иосифа и Марии — только Иисус Христос; «братья Его» — родство словами Писания, не ребро
   for (const o of base.origins) {
     if ((o.parent === 'p-iosif-muzh-marii' || o.parent === 'p-mariya') && o.child !== 'p-iisus') err(S, o.child, '«братья Его» не выводятся от Иосифа или Марии ребром происхождения');

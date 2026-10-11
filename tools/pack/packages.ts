@@ -5,7 +5,7 @@
  * процитированные (пакет «стихи» снят, 09 § 5.3).
  */
 import { createRequire } from 'node:module';
-import { buildIndex } from '../base/bundle.ts';
+import { buildIndex, nameForms } from '../base/bundle.ts';
 import type { Admission } from '../base/admit.ts';
 import { yearIn } from '../base/validate.ts';
 import type { Prov } from '../base/types.ts';
@@ -20,7 +20,7 @@ import { buildForms } from '../../core/search/forms.ts';
 import { buildStemTable, EXCEPTIONS } from '../../core/search/stems.ts';
 import {
   BRACKET_KINDS, PACK_SCHEMA, PROBE_BANNER,
-  type ActorRow, type BookTextPack, type BracketKind, type CardsVolume, type CoreIndex, type GenealogyPack, type PersonName, type PlaceName,
+  type ActorRow, type BookTextPack, type BracketKind, type CardNameForm, type CardsVolume, type CoreIndex, type GenealogyPack, type PersonName, type PlaceName,
   type PlacePoint, type Stamp, type StemsPack, type ToolsIndex, type TskPack,
 } from '../../core/types.ts';
 
@@ -127,7 +127,7 @@ export function buildStems(A: Pick<Admission, 'level'>, words = textWords().word
 // ---------- индекс: ядро и указатель инструментов ----------
 
 interface IndexActor {
-  id: string; k: string; sk?: string; s?: string; n: string; o?: string[]; d?: string; r?: string[]; p?: number; c?: number; v: string;
+  id: string; k: string; sk?: string; s?: string; n: string; o?: string[]; oi?: number[]; d?: string; r?: string[]; p?: number; c?: number; v: string;
 }
 
 /** Места: имя — в ядро, точка и степень — в указатель (09 § 3.5 п. 3). Степень по 05 § 3.3; нет степени — «не установлено». */
@@ -142,13 +142,17 @@ const DEGREE: Record<string, string> = { certain: 'точно', probable: 'ве�
  */
 const OTHER_TYPES = new Set(['variant', 'renamed', 'foreign', 'patronymic']);
 const FORM_TYPES = new Set(['main', 'variant', 'renamed', 'foreign']);
-export function personNames(names: { form: string; type: string }[]): { n: string; o: string[]; forms: string[] } {
+export function personNames(names: { form: string; type: string; cert?: string }[]): { n: string; o: string[]; oi: number[]; forms: string[] } {
   const main = names.find((x) => x.type === 'main') ?? names[0];
   const mainWord = norm(main.form.split(/[\s,]+/)[0]);
   const withMain = (x: { form: string }) => x.form.split(/[\s,]+/).some((w) => norm(w) === mainWord);
-  const o = names.filter((x) => x !== main && (OTHER_TYPES.has(x.type) || (x.type === 'epithet' && withMain(x)))).map((x) => x.form);
+  const others = names.filter((x) => x !== main && (OTHER_TYPES.has(x.type) || (x.type === 'epithet' && withMain(x))));
+  const o = [...new Set(others.map((x) => x.form))];
+  // формы «выв.» (вид (б), К-19): номера в `o` — поиск ставит их ниже форм «Писание»
+  const inferred = new Set(others.filter((x) => x.cert === 'inference').map((x) => x.form));
+  const oi = o.flatMap((f, i) => (inferred.has(f) ? [i] : []));
   const forms = names.filter((x) => FORM_TYPES.has(x.type) || (x.type === 'epithet' && withMain(x))).map((x) => x.form);
-  return { n: main.form, o: [...new Set(o)], forms: [...new Set(forms)] };
+  return { n: main.form, o, oi, forms: [...new Set(forms)] };
 }
 
 /** Стихи записи: все строки вида «Книга глава:стих…» в полях `refs` и `ref` (число стихов лица — порядок тёзок, № 3). */
@@ -166,23 +170,30 @@ export interface Indexes { core: CoreIndex; tools: ToolsIndex; genealogy: Geneal
 
 export function buildIndexes(base: Base, A: Admission, forms = textWords()): Indexes {
   const idx = buildIndex(base, A) as ReturnType<typeof buildIndex> & { actors: IndexActor[] };
-  const byId = new Map<string, { names: { form: string; type: string }[]; refs: number }>();
+  const byId = new Map<string, { names: { form: string; type: string; cert?: string }[]; refs: number }>();
   for (const v of base.volumes) for (const a of v.actors) {
     if (!A.ok(a)) continue;
-    const names = a.names.filter((x) => A.part(x as { prov?: Partial<Prov> })).map((x) => ({ form: x.form, type: x.type }));
+    const names = a.names.filter((x) => A.part(x as { prov?: Partial<Prov> })).map((x) => ({ form: x.form, type: x.type, ...(x.cert && { cert: x.cert }) }));
     const refs = new Set<string>();
     refsIn(a.names.filter((x) => A.part(x as { prov?: Partial<Prov> })), refs);
     refsIn(a.facts.filter((f) => A.ok(f)), refs);
     byId.set(shortId(a.id, 'p-'), { names: names.length ? names : [{ form: a.names[0].form, type: 'main' }], refs: refs.size });
   }
   const formSources: { id: string; names: string[] }[] = [];
+  // «возможно, тот же человек» (вид (в)): допущенные отношения — для поиска обеих карточек (02 § 3.3.6; К-19)
+  const ps = new Map<string, string[]>();
+  for (const r of base.relations ?? []) if (r.kind === 'possibly-same' && A.ok(r)) {
+    const [x, y] = [shortId(r.a, 'p-'), shortId(r.b, 'p-')];
+    ps.set(x, [...(ps.get(x) ?? []), y]);
+    ps.set(y, [...(ps.get(y) ?? []), x]);
+  }
   const persons: PersonName[] = idx.actors.map((a) => {
     const b = byId.get(a.id);
-    const nm = b ? personNames(b.names) : { n: a.n, o: a.o ?? [], forms: [a.n] };
+    const nm = b ? personNames(b.names) : { n: a.n, o: a.o ?? [], oi: a.oi ?? [], forms: [a.n] };
     formSources.push({ id: a.id, names: nm.forms });
     // уточнение `d` — только в указателе инструментов: правило 02 § 8.1 (К-9) на перерасход ядра (решение координатора по
     // рецензии данных на ядро, № 2); указатель грузится фоном сразу после ядра
-    return { id: a.id, n: nm.n, ...(nm.o.length && { o: nm.o }), p: a.p ?? 1, k: a.k, ...(b?.refs && { c: b.refs }) };
+    return { id: a.id, n: nm.n, ...(nm.o.length && { o: nm.o }), ...(nm.oi.length && { oi: nm.oi }), ...(ps.get(a.id) && { ps: ps.get(a.id) }), p: a.p ?? 1, k: a.k, ...(b?.refs && { c: b.refs }) };
   });
   const actors: ActorRow[] = idx.actors.map((a) => ({
     id: a.id, k: a.k, ...(a.sk && { sk: a.sk }), ...(a.s && { s: a.s }), ...(a.d && { d: a.d }), ...(a.r && { r: a.r }), ...(a.p && { p: a.p }), ...(a.c && { c: a.c }), v: a.v,
@@ -239,8 +250,9 @@ export function buildCardVolumes(base: Base, A: Admission, fits: (v: CardsVolume
       const facts = a.facts.filter((f) => A.ok(f) && !f.needsSources && (f.cert === 'calc' || !yearIn(f.value)));
       const nod = base.nodata.filter((n) => n.actor === a.id && A.ok(n)).map((n) => ({ s: n.sec, k: n.kind, ...(n.what && { w: n.what }), ...(n.refs.length && { r: n.refs }), ...(n.words && { q: n.words }) }));
       cards[shortId(a.id, 'p-')] = {
-        f: facts.map((f) => ({ n: claimNo(f.id ?? ''), s: f.sec, f: f.field, v: f.value, ...(f.cert && { c: f.cert }) })),
+        f: facts.map((f) => ({ n: claimNo(f.id ?? ''), s: f.sec, f: f.field, v: f.value, ...(f.cert && { c: f.cert }), ...(f.idCert && { ic: f.idCert }) })),
         ...(nod.length && { nd: nod }),
+        ...(nameForms(a.names.filter((n) => A.part(n as { prov?: Partial<Prov> }))) as { nm?: CardNameForm[] }),
       };
     }
     const whole: CardsVolume = { ...stamp(A), volume: name, cards };

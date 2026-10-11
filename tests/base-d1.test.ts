@@ -177,7 +177,8 @@ describe('подписи второго ключа (Д-партия-1-второ
   it('подписаны Д-5 (23), Д-2 (368), Д-7 (323); отношения ar- и новые карточки — нет; допущено в выпуск 94', () => {
     const d1 = (base.checks ?? []).filter((c) => /Д-партия-1/.test(c.by));
     const n = (re: RegExp) => d1.filter((c) => re.test(c.key)).length;
-    expect([n(/^(kin|union|redirect):/), n(/^origin:/), n(/^fact:/), d1.length]).toEqual([23, 368, 323, 714]);
+    // было 323 и 714; Д-15 (D15-1): a-12965 («пребывал с Апостолами в горнице», Деян 1:13) получил idCert — подпись снята до второго ключа
+    expect([n(/^(kin|union|redirect):/), n(/^origin:/), n(/^fact:/), d1.length]).toEqual([23, 368, 322, 713]);
     expect(d1.filter((c) => /^relation:|^actor:/.test(c.key))).toEqual([]);
     expect(d1.every((c) => c.kind === 'agent')).toBe(true);
     // снимок на время подписи: контрольный набор (103) + Д-партия 1; подписи следующих партий не считаются

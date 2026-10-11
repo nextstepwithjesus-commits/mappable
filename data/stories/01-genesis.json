@@ -132,48 +132,91 @@
     {
      "actor": "god",
      "label": "Бог",
-     "role": "participant",
-     "refs": [
-      "Быт 1:1"
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      },
+      {
+       "part": 4,
+       "role": "agent"
+      },
+      {
+       "part": 5,
+       "role": "agent"
+      },
+      {
+       "part": 6,
+       "role": "agent"
+      },
+      {
+       "part": 7,
+       "role": "agent"
+      }
      ],
-     "cert": "scripture",
      "roleText": {
       "text": "В начале сотворил Бог небо и землю",
       "refs": [
        "Быт 1:1"
       ]
-     }
+     },
+     "refs": [
+      "Быт 1:1",
+      "Быт 1:3",
+      "Быт 1:6",
+      "Быт 1:9",
+      "Быт 1:14",
+      "Быт 1:20",
+      "Быт 1:24",
+      "Быт 2:2"
+     ],
+     "cert": "scripture"
     },
     {
      "actor": "new:chelovek-byt1",
-     "label": "человека",
+     "label": "человек",
      "kind": "group",
-     "role": "addressed",
-     "refs": [
-      "Быт 1:27",
-      "Быт 1:28"
+     "roles": [
+      {
+       "part": 6,
+       "role": "addressed"
+      }
      ],
-     "cert": "scripture",
      "roleText": {
       "text": "мужчину и женщину сотворил их",
       "refs": [
        "Быт 1:27"
       ]
-     }
+     },
+     "refs": [
+      "Быт 1:27",
+      "Быт 1:28"
+     ],
+     "cert": "scripture"
     }
    ],
    "places": [],
    "links": [],
-   "boundary": [
-    {
-     "start": "Быт 1:1",
-     "end": "Быт 2:3",
-     "rule": 1
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 1
+   },
+   "plot": [
+    {
+     "setup": "Быт 1:1",
+     "resolution": "Быт 2:3"
+    }
+   ]
   },
   {
    "id": "e-adam-i-zhena-v-rayu",
@@ -234,7 +277,20 @@
     {
      "actor": "god",
      "label": "Господь Бог",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Быт 2:7"
      ],
@@ -242,24 +298,43 @@
     },
     {
      "actor": "p-adam",
-     "role": "participant",
-     "main": true,
-     "refs": [
-      "Быт 2:7",
-      "Быт 2:20"
+     "label": "человек",
+     "roles": [
+      {
+       "part": 1,
+       "role": "addressed"
+      },
+      {
+       "part": 2,
+       "role": "addressed"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      }
      ],
-     "cert": "scripture",
+     "main": true,
      "roleText": {
       "text": "И нарек человек имена всем скотам",
       "refs": [
        "Быт 2:20"
       ]
      },
-     "label": "человек"
+     "refs": [
+      "Быт 2:7",
+      "Быт 2:20"
+     ],
+     "cert": "scripture"
     },
     {
      "actor": "p-adam",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 3,
+       "role": "agent"
+      }
+     ],
+     "main": true,
      "refs": [
       "Быт 2:25"
      ],
@@ -267,25 +342,35 @@
     },
     {
      "actor": "p-eva",
-     "role": "participant",
-     "refs": [
-      "Быт 2:22",
-      "Быт 2:25"
+     "label": "жена",
+     "roles": [
+      {
+       "part": 3,
+       "role": "agent"
+      }
      ],
-     "cert": "scripture",
      "roleText": {
       "text": "она будет называться женою, ибо взята от мужа",
       "refs": [
        "Быт 2:23"
       ]
      },
-     "label": "жена"
+     "refs": [
+      "Быт 2:22",
+      "Быт 2:25"
+     ],
+     "cert": "scripture"
     },
     {
      "actor": "new:zhivotnye-byt2",
-     "label": "животных полевых и всех птиц небесных",
+     "label": "животные полевые и птицы небесные",
      "kind": "group",
-     "role": "mentioned",
+     "roles": [
+      {
+       "part": 3,
+       "role": "addressed"
+      }
+     ],
      "refs": [
       "Быт 2:19"
      ],
@@ -304,16 +389,18 @@
     }
    ],
    "links": [],
-   "boundary": [
-    {
-     "start": "Быт 2:4",
-     "end": "Быт 2:25",
-     "rule": 1
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 1
+   },
+   "plot": [
+    {
+     "setup": "Быт 2:4",
+     "resolution": "Быт 2:25"
+    }
+   ]
   },
   {
    "id": "e-zmey-i-plod-dereva",
@@ -379,7 +466,20 @@
     {
      "actor": "god",
      "label": "Господь Бог",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 1,
+       "role": "mentioned"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Быт 3:8",
       "Быт 3:13"
@@ -390,60 +490,96 @@
      "actor": "new:zmey",
      "label": "змей",
      "kind": "animal",
-     "role": "participant",
-     "refs": [
-      "Быт 3:1",
-      "Быт 3:4",
-      "Быт 3:14"
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 2,
+       "role": "addressed"
+      }
      ],
-     "cert": "scripture",
      "roleText": {
       "text": "Змей был хитрее всех зверей полевых",
       "refs": [
        "Быт 3:1"
       ]
-     }
+     },
+     "refs": [
+      "Быт 3:1",
+      "Быт 3:4",
+      "Быт 3:14"
+     ],
+     "cert": "scripture"
     },
     {
      "actor": "p-eva",
-     "role": "participant",
-     "main": true,
-     "refs": [
-      "Быт 3:1",
-      "Быт 3:6",
-      "Быт 3:20"
+     "label": "жена",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      }
      ],
-     "cert": "scripture",
+     "main": true,
      "roleText": {
       "text": "и взяла плодов его и ела",
       "refs": [
        "Быт 3:6"
       ]
      },
-     "label": "жена"
+     "refs": [
+      "Быт 3:1",
+      "Быт 3:6",
+      "Быт 3:20"
+     ],
+     "cert": "scripture"
     },
     {
      "actor": "p-adam",
-     "role": "participant",
-     "main": true,
-     "refs": [
-      "Быт 3:8",
-      "Быт 3:12",
-      "Быт 3:17"
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "addressed"
+      }
      ],
-     "cert": "scripture",
+     "main": true,
      "roleText": {
       "text": "и скрылся Адам и жена его от лица Господа Бога",
       "refs": [
        "Быт 3:8"
       ]
-     }
+     },
+     "refs": [
+      "Быт 3:8",
+      "Быт 3:12",
+      "Быт 3:17"
+     ],
+     "cert": "scripture"
     },
     {
      "actor": "new:kheruvim-byt3",
-     "label": "Херувима",
+     "label": "Херувим",
      "kind": "angel",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 3,
+       "role": "addressed"
+      }
+     ],
      "refs": [
       "Быт 3:24"
      ],
@@ -462,16 +598,18 @@
     }
    ],
    "links": [],
-   "boundary": [
-    {
-     "start": "Быт 3:1",
-     "end": "Быт 3:24",
-     "rule": 5
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5
+   },
+   "plot": [
+    {
+     "setup": "Быт 3:1",
+     "resolution": "Быт 3:24"
+    }
+   ]
   },
   {
    "id": "e-kain-i-avel",
@@ -493,7 +631,11 @@
     {
      "actor": "god",
      "label": "Господь",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Быт 4:4",
       "Быт 4:9"
@@ -502,41 +644,53 @@
     },
     {
      "actor": "p-kain",
-     "role": "participant",
-     "main": true,
-     "refs": [
-      "Быт 4:1",
-      "Быт 4:8",
-      "Быт 4:16"
+     "roles": [
+      {
+       "role": "agent"
+      }
      ],
-     "cert": "scripture",
+     "main": true,
      "roleText": {
       "text": "Каин принес от плодов земли дар Господу",
       "refs": [
        "Быт 4:3"
       ]
-     }
+     },
+     "refs": [
+      "Быт 4:1",
+      "Быт 4:8",
+      "Быт 4:16"
+     ],
+     "cert": "scripture"
     },
     {
      "actor": "p-avel",
-     "role": "suffers",
-     "main": true,
-     "refs": [
-      "Быт 4:2",
-      "Быт 4:4",
-      "Быт 4:8"
+     "roles": [
+      {
+       "role": "undergoer"
+      }
      ],
-     "cert": "scripture",
+     "main": true,
      "roleText": {
       "text": "И был Авель пастырь овец",
       "refs": [
        "Быт 4:2"
       ]
-     }
+     },
+     "refs": [
+      "Быт 4:2",
+      "Быт 4:4",
+      "Быт 4:8"
+     ],
+     "cert": "scripture"
     },
     {
      "actor": "p-adam",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Быт 4:1"
      ],
@@ -544,7 +698,11 @@
     },
     {
      "actor": "p-eva",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Быт 4:1"
      ],
@@ -571,16 +729,18 @@
      ]
     }
    ],
-   "boundary": [
-    {
-     "start": "Быт 4:3",
-     "end": "Быт 4:16",
-     "rule": 5
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5
+   },
+   "plot": [
+    {
+     "setup": "Быт 4:3",
+     "resolution": "Быт 4:16"
+    }
+   ]
   },
   {
    "id": "e-kain-i-gorod-enokh",
@@ -601,31 +761,44 @@
    "actors": [
     {
      "actor": "p-kain",
-     "role": "participant",
-     "main": true,
-     "refs": [
-      "Быт 4:17"
+     "roles": [
+      {
+       "role": "agent"
+      }
      ],
-     "cert": "scripture",
+     "main": true,
      "roleText": {
       "text": "И построил он город",
       "refs": [
        "Быт 4:17"
       ]
-     }
-    },
-    {
-     "actor": "p-zhena-kaina",
-     "role": "participant",
+     },
      "refs": [
       "Быт 4:17"
      ],
-     "cert": "scripture",
-     "label": "жену"
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-zhena-kaina",
+     "label": "жена",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "refs": [
+      "Быт 4:17"
+     ],
+     "cert": "scripture"
     },
     {
      "actor": "p-enokh-syn-kaina",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
+     "main": true,
      "refs": [
       "Быт 4:17",
       "Быт 4:18"
@@ -634,7 +807,11 @@
     },
     {
      "actor": "p-irad",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "refs": [
       "Быт 4:18"
      ],
@@ -642,7 +819,11 @@
     },
     {
      "actor": "p-mekhiael",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "refs": [
       "Быт 4:18"
      ],
@@ -650,7 +831,11 @@
     },
     {
      "actor": "p-mafusal-syn-mekhiaelya",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "refs": [
       "Быт 4:18"
      ],
@@ -658,24 +843,32 @@
     },
     {
      "actor": "p-lamekh-kainit",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
+     "roleText": {
+      "text": "И взял себе Ламех две жены",
+      "refs": [
+       "Быт 4:19"
+      ]
+     },
      "refs": [
       "Быт 4:18",
       "Быт 4:19",
       "Быт 4:23"
      ],
-     "cert": "scripture",
-     "roleText": {
-      "text": "Ада и Цилла! послушайте голоса моего",
-      "refs": [
-       "Быт 4:23"
-      ]
-     }
+     "cert": "scripture"
     },
     {
      "actor": "p-ada-zhena-lamekha",
-     "role": "addressed",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
      "refs": [
       "Быт 4:19",
       "Быт 4:23"
@@ -684,7 +877,11 @@
     },
     {
      "actor": "p-tsilla",
-     "role": "addressed",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
      "refs": [
       "Быт 4:19",
       "Быт 4:23"
@@ -693,49 +890,65 @@
     },
     {
      "actor": "p-iaval",
-     "role": "mentioned",
-     "refs": [
-      "Быт 4:20"
+     "roles": [
+      {
+       "role": "mentioned"
+      }
      ],
-     "cert": "scripture",
      "roleText": {
       "text": "он был отец живущих в шатрах со стадами",
       "refs": [
        "Быт 4:20"
       ]
-     }
+     },
+     "refs": [
+      "Быт 4:20"
+     ],
+     "cert": "scripture"
     },
     {
      "actor": "p-iuval",
-     "role": "mentioned",
-     "refs": [
-      "Быт 4:21"
+     "roles": [
+      {
+       "role": "mentioned"
+      }
      ],
-     "cert": "scripture",
      "roleText": {
       "text": "он был отец всех играющих на гуслях и свирели",
       "refs": [
        "Быт 4:21"
       ]
-     }
+     },
+     "refs": [
+      "Быт 4:21"
+     ],
+     "cert": "scripture"
     },
     {
      "actor": "p-tuvalkain",
-     "role": "mentioned",
-     "refs": [
-      "Быт 4:22"
+     "roles": [
+      {
+       "role": "mentioned"
+      }
      ],
-     "cert": "scripture",
      "roleText": {
       "text": "который был ковачом всех орудий из меди и железа",
       "refs": [
        "Быт 4:22"
       ]
-     }
+     },
+     "refs": [
+      "Быт 4:22"
+     ],
+     "cert": "scripture"
     },
     {
      "actor": "p-noema",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "refs": [
       "Быт 4:22"
      ],
@@ -762,16 +975,18 @@
      ]
     }
    ],
-   "boundary": [
-    {
-     "start": "Быт 4:17",
-     "end": "Быт 4:24",
-     "rule": 5
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5
+   },
+   "plot": [
+    {
+     "setup": "Быт 4:17",
+     "resolution": "Быт 4:24"
+    }
+   ]
   },
   {
    "id": "e-sif-i-enos",
@@ -792,7 +1007,11 @@
    "actors": [
     {
      "actor": "p-adam",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Быт 4:25"
      ],
@@ -800,22 +1019,30 @@
     },
     {
      "actor": "p-eva",
-     "role": "participant",
-     "refs": [
-      "Быт 4:25"
+     "label": "жена",
+     "roles": [
+      {
+       "role": "agent"
+      }
      ],
-     "cert": "scripture",
      "roleText": {
       "text": "Бог положил мне другое семя, вместо Авеля",
       "refs": [
        "Быт 4:25"
       ]
      },
-     "label": "жену"
+     "refs": [
+      "Быт 4:25"
+     ],
+     "cert": "scripture"
     },
     {
      "actor": "p-sif",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "main": true,
      "refs": [
       "Быт 4:25",
@@ -825,7 +1052,12 @@
     },
     {
      "actor": "p-enos",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
+     "main": true,
      "refs": [
       "Быт 4:26"
      ],
@@ -834,16 +1066,18 @@
    ],
    "places": [],
    "links": [],
-   "boundary": [
-    {
-     "start": "Быт 4:25",
-     "end": "Быт 4:26",
-     "rule": 5
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5
+   },
+   "plot": [
+    {
+     "setup": "Быт 4:25",
+     "resolution": "Быт 4:26"
+    }
+   ]
   },
   {
    "id": "e-rodoslovie-adama",
@@ -864,7 +1098,11 @@
    "actors": [
     {
      "actor": "p-adam",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "refs": [
       "Быт 5:1",
@@ -874,7 +1112,11 @@
     },
     {
      "actor": "p-sif",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Быт 5:3",
       "Быт 5:6"
@@ -883,7 +1125,11 @@
     },
     {
      "actor": "p-enos",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Быт 5:6",
       "Быт 5:9"
@@ -892,7 +1138,11 @@
     },
     {
      "actor": "p-kainan",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Быт 5:9",
       "Быт 5:12"
@@ -901,7 +1151,11 @@
     },
     {
      "actor": "p-maleleil",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Быт 5:12",
       "Быт 5:15"
@@ -910,7 +1164,11 @@
     },
     {
      "actor": "p-iared",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Быт 5:15",
       "Быт 5:18"
@@ -919,7 +1177,11 @@
     },
     {
      "actor": "p-enokh",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Быт 5:18",
       "Быт 5:21",
@@ -929,7 +1191,11 @@
     },
     {
      "actor": "p-mafusal",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Быт 5:21",
       "Быт 5:25"
@@ -938,7 +1204,11 @@
     },
     {
      "actor": "p-lamekh",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Быт 5:25",
       "Быт 5:28"
@@ -947,7 +1217,11 @@
     },
     {
      "actor": "p-noy",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Быт 5:29",
       "Быт 5:32"
@@ -956,7 +1230,11 @@
     },
     {
      "actor": "p-sim",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "refs": [
       "Быт 5:32"
      ],
@@ -964,7 +1242,11 @@
     },
     {
      "actor": "p-kham",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "refs": [
       "Быт 5:32"
      ],
@@ -972,7 +1254,11 @@
     },
     {
      "actor": "p-iafet",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "refs": [
       "Быт 5:32"
      ],
@@ -988,16 +1274,18 @@
      "kind": "insert"
     }
    ],
-   "boundary": [
-    {
-     "start": "Быт 5:1",
-     "end": "Быт 5:32",
-     "rule": 1
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 1
+   },
+   "plot": [
+    {
+     "setup": "Быт 5:1",
+     "resolution": "Быт 5:32"
+    }
+   ]
   },
   {
    "id": "e-bog-vzyal-enokha",
@@ -1018,23 +1306,31 @@
    "actors": [
     {
      "actor": "p-enokh",
-     "role": "suffers",
-     "main": true,
-     "refs": [
-      "Быт 5:24"
+     "roles": [
+      {
+       "role": "agent"
+      }
      ],
-     "cert": "scripture",
+     "main": true,
      "roleText": {
       "text": "И ходил Енох пред Богом",
       "refs": [
        "Быт 5:24"
       ]
-     }
+     },
+     "refs": [
+      "Быт 5:24"
+     ],
+     "cert": "scripture"
     },
     {
      "actor": "god",
      "label": "Бог",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Быт 5:24"
      ],
@@ -1043,15 +1339,12 @@
    ],
    "places": [],
    "links": [],
-   "boundary": [
-    {
-     "start": "Быт 5:24",
-     "rule": 7,
-     "human": "известие внутри родословия: у действия есть исход — «не стало его, потому что Бог взял его» (11 § 2.3, образец Быт 5:24)"
-    }
-   ],
    "source": {
     "method": "reading"
+   },
+   "boundary": {
+    "startRule": 7,
+    "human": "известие внутри родословия: у действия есть исход — «не стало его, потому что Бог взял его» (11 § 2.3, образец Быт 5:24)"
    }
   },
   {
@@ -1077,24 +1370,32 @@
     {
      "actor": "god",
      "label": "Господь",
-     "role": "participant",
-     "refs": [
-      "Быт 6:6",
-      "Быт 6:7"
+     "roles": [
+      {
+       "role": "agent"
+      }
      ],
-     "cert": "scripture",
      "roleText": {
       "text": "истреблю с лица земли человеков, которых Я сотворил",
       "refs": [
        "Быт 6:7"
       ]
-     }
+     },
+     "refs": [
+      "Быт 6:6",
+      "Быт 6:7"
+     ],
+     "cert": "scripture"
     },
     {
      "actor": "new:syny-bozhii-byt6",
      "label": "сыны Божии",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Быт 6:2",
       "Быт 6:4"
@@ -1103,9 +1404,13 @@
     },
     {
      "actor": "new:docheri-chelovecheskie",
-     "label": "дочерей человеческих",
+     "label": "дочери человеческие",
      "kind": "group",
-     "role": "suffers",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
      "refs": [
       "Быт 6:2",
       "Быт 6:4"
@@ -1116,7 +1421,11 @@
      "actor": "new:ispoliny-byt6",
      "label": "исполины",
      "kind": "group",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "refs": [
       "Быт 6:4"
      ],
@@ -1124,32 +1433,38 @@
     },
     {
      "actor": "p-noy",
-     "role": "participant",
-     "refs": [
-      "Быт 6:8"
+     "roles": [
+      {
+       "role": "agent"
+      }
      ],
-     "cert": "scripture",
      "roleText": {
       "text": "Ной же обрел благодать пред очами Господа",
       "refs": [
        "Быт 6:8"
       ]
-     }
+     },
+     "refs": [
+      "Быт 6:8"
+     ],
+     "cert": "scripture"
     }
    ],
    "places": [],
    "links": [],
-   "boundary": [
-    {
-     "start": "Быт 6:5",
-     "end": "Быт 6:8",
-     "rule": 5,
-     "human": "6:1–4 — обстановка той же истории: заглавие «Вот житие Ноя» (6:9) ставит границу после 6:8 (правило 1)"
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "6:1–4 — обстановка той же истории: заглавие «Вот житие Ноя» (6:9) ставит границу после 6:8 (правило 1)"
+   },
+   "plot": [
+    {
+     "setup": "Быт 6:5",
+     "resolution": "Быт 6:8"
+    }
+   ]
   },
   {
    "id": "e-zhitie-noya",
@@ -1163,15 +1478,12 @@
    "actors": [],
    "places": [],
    "links": [],
-   "boundary": [
-    {
-     "start": "Быт 6:9",
-     "rule": 1,
-     "human": "повествование по заглавию «Вот житие Ноя» (6:9) до заглавия «Вот родословие сынов Ноевых» (10:1)"
-    }
-   ],
    "source": {
     "method": "reading"
+   },
+   "boundary": {
+    "startRule": 1,
+    "human": "повествование по заглавию «Вот житие Ноя» (6:9) до заглавия «Вот родословие сынов Ноевых» (10:1)"
    }
   },
   {
@@ -1320,138 +1632,260 @@
     {
      "actor": "god",
      "label": "Бог",
-     "role": "participant",
-     "refs": [
-      "Быт 6:13"
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 4,
+       "role": "agent"
+      },
+      {
+       "part": 6,
+       "role": "agent"
+      },
+      {
+       "part": 7,
+       "role": "agent"
+      }
      ],
-     "cert": "scripture",
      "roleText": {
       "text": "И сказал… Бог Ною",
       "refs": [
        "Быт 6:13"
       ]
-     }
+     },
+     "refs": [
+      "Быт 6:13",
+      "Быт 7:1",
+      "Быт 8:1",
+      "Быт 8:15",
+      "Быт 9:1"
+     ],
+     "cert": "scripture"
     },
     {
      "actor": "p-noy",
-     "role": "participant",
-     "main": true,
-     "refs": [
-      "Быт 6:9",
-      "Быт 6:22",
-      "Быт 7:7",
-      "Быт 8:18",
-      "Быт 8:20"
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      },
+      {
+       "part": 4,
+       "role": "addressed"
+      },
+      {
+       "part": 5,
+       "role": "agent"
+      },
+      {
+       "part": 6,
+       "role": "agent"
+      },
+      {
+       "part": 7,
+       "role": "addressed"
+      }
      ],
-     "cert": "scripture",
+     "main": true,
      "roleText": {
       "text": "И сделал Ной всё",
       "refs": [
        "Быт 6:22"
       ]
-     }
+     },
+     "refs": [
+      "Быт 6:9",
+      "Быт 6:22",
+      "Быт 7:7",
+      "Быт 8:18",
+      "Быт 8:20",
+      "Быт 7:23",
+      "Быт 8:1",
+      "Быт 8:6",
+      "Быт 9:1"
+     ],
+     "cert": "scripture"
     },
     {
      "actor": "new:zhena-noya",
      "label": "жена Ноя",
      "kind": "unnamed",
-     "role": "participant",
-     "refs": [
-      "Быт 7:7",
-      "Быт 7:13",
-      "Быт 8:18"
+     "roles": [
+      {
+       "part": 1,
+       "role": "mentioned"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 6,
+       "role": "agent"
+      }
      ],
-     "cert": "scripture",
      "roleText": {
       "text": "и жена Ноева",
       "refs": [
        "Быт 7:13"
       ]
-     }
-    },
-    {
-     "actor": "p-sim",
-     "role": "participant",
+     },
      "refs": [
-      "Быт 6:10",
-      "Быт 7:13"
+      "Быт 7:7",
+      "Быт 7:13",
+      "Быт 8:18",
+      "Быт 6:18"
      ],
      "cert": "scripture"
     },
     {
-     "actor": "p-kham",
-     "role": "participant",
-     "refs": [
-      "Быт 6:10",
-      "Быт 7:13"
+     "actor": "new:synovya-noya",
+     "label": "сыновья Ноя",
+     "kind": "group",
+     "roles": [
+      {
+       "part": 1,
+       "role": "mentioned"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 6,
+       "role": "agent"
+      },
+      {
+       "part": 7,
+       "role": "addressed"
+      }
      ],
-     "cert": "scripture"
-    },
-    {
-     "actor": "p-iafet",
-     "role": "participant",
+     "roleText": {
+      "text": "Сима, Хама и Иафета",
+      "refs": [
+       "Быт 6:10"
+      ]
+     },
      "refs": [
       "Быт 6:10",
-      "Быт 7:13"
+      "Быт 7:7",
+      "Быт 7:13",
+      "Быт 8:18",
+      "Быт 9:1"
      ],
      "cert": "scripture"
     },
     {
      "actor": "new:zheny-synovey-noya",
-     "label": "жены сынов его",
+     "label": "жёны сыновей",
      "kind": "group",
-     "role": "participant",
-     "refs": [
-      "Быт 7:7",
-      "Быт 7:13",
-      "Быт 8:18"
+     "roles": [
+      {
+       "part": 1,
+       "role": "mentioned"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 6,
+       "role": "agent"
+      }
      ],
-     "cert": "scripture",
      "roleText": {
       "text": "и три жены сынов его с ними",
       "refs": [
        "Быт 7:13"
       ]
-     }
+     },
+     "refs": [
+      "Быт 7:7",
+      "Быт 7:13",
+      "Быт 8:18",
+      "Быт 6:18"
+     ],
+     "cert": "scripture"
     },
     {
      "actor": "new:zveri-v-kovchege",
      "label": "звери",
      "kind": "group",
-     "role": "participant",
-     "refs": [
-      "Быт 7:14",
-      "Быт 7:15"
+     "roles": [
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 6,
+       "role": "agent"
+      }
      ],
-     "cert": "scripture",
      "roleText": {
       "text": "и вошли к Ною в ковчег по паре",
       "refs": [
        "Быт 7:15"
       ]
-     }
+     },
+     "refs": [
+      "Быт 7:14",
+      "Быт 7:15",
+      "Быт 8:19"
+     ],
+     "cert": "scripture"
     },
     {
      "actor": "new:voron-noya",
-     "label": "ворона",
+     "label": "ворон",
      "kind": "animal",
-     "role": "participant",
-     "refs": [
-      "Быт 8:7"
+     "roles": [
+      {
+       "part": 5,
+       "role": "agent"
+      }
      ],
-     "cert": "scripture",
      "roleText": {
       "text": "и выпустил ворона",
       "refs": [
        "Быт 8:7"
       ]
-     }
+     },
+     "refs": [
+      "Быт 8:7"
+     ],
+     "cert": "scripture"
     },
     {
      "actor": "new:golub-noya",
-     "label": "голубя",
+     "label": "голубь",
      "kind": "animal",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 5,
+       "role": "agent"
+      }
+     ],
+     "roleText": {
+      "text": "Потом выпустил от себя голубя",
+      "refs": [
+       "Быт 8:8"
+      ]
+     },
      "refs": [
       "Быт 8:8",
       "Быт 8:9",
@@ -1459,19 +1893,18 @@
       "Быт 8:11",
       "Быт 8:12"
      ],
-     "cert": "scripture",
-     "roleText": {
-      "text": "Потом выпустил от себя голубя",
-      "refs": [
-       "Быт 8:8"
-      ]
-     }
+     "cert": "scripture"
     },
     {
      "actor": "new:vse-lyudi-v-potop",
      "label": "все люди",
      "kind": "group",
-     "role": "suffers",
+     "roles": [
+      {
+       "part": 3,
+       "role": "undergoer"
+      }
+     ],
      "refs": [
       "Быт 7:21"
      ],
@@ -1635,21 +2068,23 @@
      ]
     }
    ],
-   "boundary": [
-    {
-     "start": "Быт 6:13",
-     "end": "Быт 9:11",
-     "rule": 1,
-     "human": "граница в 6:9 — заглавие «Вот житие Ноя» (правило 1); завязка — «Я истреблю их с земли» и «с тобою Я поставлю завет Мой» (6:13, 18); развязка — «поставляю завет Мой с вами» (9:11); после — новое дело «насадил виноградник» (9:20, правило 5)"
-    }
-   ],
    "source": {
     "method": "reading",
     "candidates": [
      "names",
      "action-words"
     ]
-   }
+   },
+   "boundary": {
+    "startRule": 1,
+    "human": "граница в 6:9 — заглавие «Вот житие Ноя» (правило 1); завязка — «Я истреблю их с земли» и «с тобою Я поставлю завет Мой» (6:13, 18); развязка — «поставляю завет Мой с вами» (9:11); после — новое дело «насадил виноградник» (9:20, правило 5)"
+   },
+   "plot": [
+    {
+     "setup": "Быт 6:13",
+     "resolution": "Быт 9:11"
+    }
+   ]
   },
   {
    "id": "e-noy-sazhaet-vinogradnik",
@@ -1674,54 +2109,64 @@
    "actors": [
     {
      "actor": "p-noy",
-     "role": "participant",
-     "main": true,
-     "refs": [
-      "Быт 9:20",
-      "Быт 9:24",
-      "Быт 9:28"
+     "roles": [
+      {
+       "role": "agent"
+      }
      ],
-     "cert": "scripture",
+     "main": true,
      "roleText": {
       "text": "Ной начал возделывать землю и насадил виноградник",
       "refs": [
        "Быт 9:20"
       ]
-     }
+     },
+     "refs": [
+      "Быт 9:20",
+      "Быт 9:24",
+      "Быт 9:28"
+     ],
+     "cert": "scripture"
     },
     {
      "actor": "p-kham",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "roleText": {
+      "text": "Хам же был отец Ханаана",
+      "refs": [
+       "Быт 9:18"
+      ]
+     },
      "refs": [
       "Быт 9:18",
       "Быт 9:22"
      ],
-     "cert": "scripture",
-     "roleText": {
-      "text": "И увидел Хам, отец Ханаана, наготу отца своего",
-      "refs": [
-       "Быт 9:22"
-      ]
-     }
+     "cert": "scripture"
     },
     {
      "actor": "p-sim",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Быт 9:18",
       "Быт 9:23"
      ],
-     "cert": "scripture",
-     "roleText": {
-      "text": "Сим же и Иафет взяли одежду",
-      "refs": [
-       "Быт 9:23"
-      ]
-     }
+     "cert": "scripture"
     },
     {
      "actor": "p-iafet",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Быт 9:18",
       "Быт 9:23"
@@ -1730,18 +2175,22 @@
     },
     {
      "actor": "p-khanaan",
-     "role": "mentioned",
-     "refs": [
-      "Быт 9:18",
-      "Быт 9:25"
+     "roles": [
+      {
+       "role": "mentioned"
+      }
      ],
-     "cert": "scripture",
      "roleText": {
       "text": "проклят Ханаан",
       "refs": [
        "Быт 9:25"
       ]
-     }
+     },
+     "refs": [
+      "Быт 9:18",
+      "Быт 9:25"
+     ],
+     "cert": "scripture"
     }
    ],
    "places": [],
@@ -1756,17 +2205,19 @@
      ]
     }
    ],
-   "boundary": [
-    {
-     "start": "Быт 9:20",
-     "end": "Быт 9:27",
-     "rule": 5,
-     "human": "9:18–19 — переход к новому делу; 9:28–29 — годы Ноя, конец жития (до заглавия 10:1)"
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "9:18–19 — переход к новому делу; 9:28–29 — годы Ноя, конец жития (до заглавия 10:1)"
+   },
+   "plot": [
+    {
+     "setup": "Быт 9:20",
+     "resolution": "Быт 9:27"
+    }
+   ]
   },
   {
    "id": "e-rodoslovie-synov-noevykh",
@@ -1829,7 +2280,16 @@
    "actors": [
     {
      "actor": "p-sim",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 1,
+       "role": "mentioned"
+      },
+      {
+       "part": 3,
+       "role": "mentioned"
+      }
+     ],
      "main": true,
      "refs": [
       "Быт 10:1",
@@ -1839,7 +2299,16 @@
     },
     {
      "actor": "p-kham",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 1,
+       "role": "mentioned"
+      },
+      {
+       "part": 2,
+       "role": "mentioned"
+      }
+     ],
      "main": true,
      "refs": [
       "Быт 10:1",
@@ -1849,7 +2318,12 @@
     },
     {
      "actor": "p-iafet",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 1,
+       "role": "mentioned"
+      }
+     ],
      "main": true,
      "refs": [
       "Быт 10:1",
@@ -1859,7 +2333,12 @@
     },
     {
      "actor": "p-nimrod",
-     "role": "mentioned",
+     "roles": [
+      {
+       "part": 2,
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Быт 10:8"
      ],
@@ -1867,7 +2346,12 @@
     },
     {
      "actor": "p-ever",
-     "role": "mentioned",
+     "roles": [
+      {
+       "part": 3,
+       "role": "mentioned"
+      }
+     ],
      "refs": [
       "Быт 10:21",
       "Быт 10:24",
@@ -1877,17 +2361,22 @@
     },
     {
      "actor": "p-falek",
-     "role": "mentioned",
-     "refs": [
-      "Быт 10:25"
+     "roles": [
+      {
+       "part": 3,
+       "role": "mentioned"
+      }
      ],
-     "cert": "scripture",
      "roleText": {
       "text": "во дни его земля разделена",
       "refs": [
        "Быт 10:25"
       ]
-     }
+     },
+     "refs": [
+      "Быт 10:25"
+     ],
+     "cert": "scripture"
     }
    ],
    "places": [],
@@ -1899,17 +2388,19 @@
      "kind": "insert"
     }
    ],
-   "boundary": [
-    {
-     "start": "Быт 10:1",
-     "end": "Быт 10:32",
-     "rule": 1,
-     "human": "заглавие «Вот родословие сынов Ноевых» (10:1) — история; «Сыны Иафета» (10:2), «Сыны Хама» (10:6), «Были дети и у Сима» (10:21) — части (11 § 2.2, правило 1, образец)"
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 1,
+    "human": "заглавие «Вот родословие сынов Ноевых» (10:1) — история; «Сыны Иафета» (10:2), «Сыны Хама» (10:6), «Были дети и у Сима» (10:21) — части (11 § 2.2, правило 1, образец)"
+   },
+   "plot": [
+    {
+     "setup": "Быт 10:1",
+     "resolution": "Быт 10:32"
+    }
+   ]
   },
   {
    "id": "e-nimrod-silnyy-zverolov",
@@ -1930,25 +2421,33 @@
    "actors": [
     {
      "actor": "p-nimrod",
-     "role": "participant",
-     "main": true,
-     "refs": [
-      "Быт 10:8",
-      "Быт 10:9"
+     "roles": [
+      {
+       "role": "agent"
+      }
      ],
-     "cert": "scripture",
+     "main": true,
      "roleText": {
       "text": "он был сильный зверолов пред Господом",
       "refs": [
        "Быт 10:9"
       ]
-     }
+     },
+     "refs": [
+      "Быт 10:8",
+      "Быт 10:9"
+     ],
+     "cert": "scripture"
     },
     {
      "actor": "new:assur-byt10",
      "label": "Ассур",
      "kind": "human",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "Из сей земли вышел Ассур и построил Ниневию",
       "refs": [
@@ -1991,17 +2490,19 @@
     }
    ],
    "links": [],
-   "boundary": [
-    {
-     "start": "Быт 10:8",
-     "end": "Быт 10:12",
-     "rule": 1,
-     "human": "рассказ внутри родословия: дела лица, а не только рождение (11 § 2.3); «Из сей земли вышел Ассур и построил Ниневию» (Быт 10:11) — Ассур записан участником по словам стиха"
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 1,
+    "human": "рассказ внутри родословия: дела лица, а не только рождение (11 § 2.3); «Из сей земли вышел Ассур и построил Ниневию» (Быт 10:11) — Ассур записан участником по словам стиха"
+   },
+   "plot": [
+    {
+     "setup": "Быт 10:8",
+     "resolution": "Быт 10:12"
+    }
+   ]
   },
   {
    "id": "e-bashnya-do-nebes",
@@ -2028,36 +2529,44 @@
      "actor": "new:stroiteli-bashni",
      "label": "сыны человеческие",
      "kind": "group",
-     "role": "participant",
-     "main": true,
-     "refs": [
-      "Быт 11:3",
-      "Быт 11:4",
-      "Быт 11:5"
+     "roles": [
+      {
+       "role": "agent"
+      }
      ],
-     "cert": "scripture",
+     "main": true,
      "roleText": {
       "text": "построим себе город и башню, высотою до небес",
       "refs": [
        "Быт 11:4"
       ]
-     }
+     },
+     "refs": [
+      "Быт 11:3",
+      "Быт 11:4",
+      "Быт 11:5"
+     ],
+     "cert": "scripture"
     },
     {
      "actor": "god",
      "label": "Господь",
-     "role": "participant",
-     "refs": [
-      "Быт 11:5",
-      "Быт 11:8"
+     "roles": [
+      {
+       "role": "agent"
+      }
      ],
-     "cert": "scripture",
      "roleText": {
       "text": "И рассеял их Господь оттуда по всей земле",
       "refs": [
        "Быт 11:8"
       ]
-     }
+     },
+     "refs": [
+      "Быт 11:5",
+      "Быт 11:8"
+     ],
+     "cert": "scripture"
     }
    ],
    "places": [
@@ -2081,16 +2590,18 @@
     }
    ],
    "links": [],
-   "boundary": [
-    {
-     "start": "Быт 11:1",
-     "end": "Быт 11:9",
-     "rule": 5
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5
+   },
+   "plot": [
+    {
+     "setup": "Быт 11:1",
+     "resolution": "Быт 11:9"
+    }
+   ]
   },
   {
    "id": "e-rodoslovie-sima",
@@ -2111,7 +2622,11 @@
    "actors": [
     {
      "actor": "p-sim",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "refs": [
       "Быт 11:10"
@@ -2120,7 +2635,11 @@
     },
     {
      "actor": "p-arfaksad",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Быт 11:10",
       "Быт 11:12"
@@ -2129,7 +2648,11 @@
     },
     {
      "actor": "p-sala",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Быт 11:12",
       "Быт 11:14"
@@ -2138,7 +2661,11 @@
     },
     {
      "actor": "p-ever",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Быт 11:14",
       "Быт 11:16"
@@ -2147,7 +2674,11 @@
     },
     {
      "actor": "p-falek",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Быт 11:16",
       "Быт 11:18"
@@ -2156,7 +2687,11 @@
     },
     {
      "actor": "p-ragav",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Быт 11:18",
       "Быт 11:20"
@@ -2165,7 +2700,11 @@
     },
     {
      "actor": "p-serukh",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Быт 11:20",
       "Быт 11:22"
@@ -2174,7 +2713,11 @@
     },
     {
      "actor": "p-nakhor",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Быт 11:22",
       "Быт 11:24"
@@ -2183,7 +2726,11 @@
     },
     {
      "actor": "p-farra",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Быт 11:24",
       "Быт 11:26"
@@ -2192,16 +2739,24 @@
     },
     {
      "actor": "p-avraam",
-     "role": "mentioned",
+     "label": "Аврам",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "refs": [
       "Быт 11:26"
      ],
-     "cert": "scripture",
-     "label": "Аврам"
+     "cert": "scripture"
     },
     {
      "actor": "p-nakhor-syn-farry",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "refs": [
       "Быт 11:26"
      ],
@@ -2209,7 +2764,11 @@
     },
     {
      "actor": "p-aran",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "refs": [
       "Быт 11:26"
      ],
@@ -2218,16 +2777,18 @@
    ],
    "places": [],
    "links": [],
-   "boundary": [
-    {
-     "start": "Быт 11:10",
-     "end": "Быт 11:26",
-     "rule": 1
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 1
+   },
+   "plot": [
+    {
+     "setup": "Быт 11:10",
+     "resolution": "Быт 11:26"
+    }
+   ]
   },
   {
    "id": "e-rodoslovie-farry",
@@ -2248,7 +2809,11 @@
    "actors": [
     {
      "actor": "p-farra",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "refs": [
       "Быт 11:27",
@@ -2258,17 +2823,25 @@
     },
     {
      "actor": "p-avraam",
-     "role": "participant",
+     "label": "Аврам",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Быт 11:27",
       "Быт 11:29"
      ],
-     "cert": "scripture",
-     "label": "Аврам"
+     "cert": "scripture"
     },
     {
      "actor": "p-nakhor-syn-farry",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Быт 11:27",
       "Быт 11:29"
@@ -2277,22 +2850,30 @@
     },
     {
      "actor": "p-aran",
-     "role": "participant",
-     "refs": [
-      "Быт 11:27",
-      "Быт 11:28"
+     "roles": [
+      {
+       "role": "agent"
+      }
      ],
-     "cert": "scripture",
      "roleText": {
       "text": "И умер Аран при Фарре, отце своем",
       "refs": [
        "Быт 11:28"
       ]
-     }
+     },
+     "refs": [
+      "Быт 11:27",
+      "Быт 11:28"
+     ],
+     "cert": "scripture"
     },
     {
      "actor": "p-lot",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "refs": [
       "Быт 11:27"
      ],
@@ -2300,23 +2881,31 @@
     },
     {
      "actor": "p-sarra",
-     "role": "mentioned",
-     "refs": [
-      "Быт 11:29",
-      "Быт 11:30"
+     "label": "Сара",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
      ],
-     "cert": "scripture",
      "roleText": {
       "text": "И Сара была неплодна и бездетна",
       "refs": [
        "Быт 11:30"
       ]
      },
-     "label": "Сара"
+     "refs": [
+      "Быт 11:29",
+      "Быт 11:30"
+     ],
+     "cert": "scripture"
     },
     {
      "actor": "p-milka",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "refs": [
       "Быт 11:29"
      ],
@@ -2324,7 +2913,11 @@
     },
     {
      "actor": "p-iska",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "refs": [
       "Быт 11:29"
      ],
@@ -2343,16 +2936,18 @@
     }
    ],
    "links": [],
-   "boundary": [
-    {
-     "start": "Быт 11:27",
-     "end": "Быт 11:30",
-     "rule": 1
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 1
+   },
+   "plot": [
+    {
+     "setup": "Быт 11:27",
+     "resolution": "Быт 11:30"
+    }
+   ]
   },
   {
    "id": "e-farra-i-avram-v-kharrane",
@@ -2373,32 +2968,44 @@
    "actors": [
     {
      "actor": "p-farra",
-     "role": "participant",
-     "main": true,
-     "refs": [
-      "Быт 11:31",
-      "Быт 11:32"
+     "roles": [
+      {
+       "role": "agent"
+      }
      ],
-     "cert": "scripture",
+     "main": true,
      "roleText": {
       "text": "И взял Фарра Аврама, сына своего, и Лота, сына Аранова",
       "refs": [
        "Быт 11:31"
       ]
-     }
+     },
+     "refs": [
+      "Быт 11:31",
+      "Быт 11:32"
+     ],
+     "cert": "scripture"
     },
     {
      "actor": "p-avraam",
-     "role": "participant",
+     "label": "Аврам",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Быт 11:31"
      ],
-     "cert": "scripture",
-     "label": "Аврам"
+     "cert": "scripture"
     },
     {
      "actor": "p-lot",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Быт 11:31"
      ],
@@ -2406,12 +3013,16 @@
     },
     {
      "actor": "p-sarra",
-     "role": "participant",
+     "label": "Сара",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Быт 11:31"
      ],
-     "cert": "scripture",
-     "label": "Сара"
+     "cert": "scripture"
     }
    ],
    "places": [
@@ -2445,17 +3056,19 @@
     }
    ],
    "links": [],
-   "boundary": [
-    {
-     "start": "Быт 11:31",
-     "end": "Быт 11:32",
-     "rule": 5,
-     "human": "известие: сцены нет (нет речи, одна смена места — переход); после родословия Фарры — новое дело «чтобы идти в землю Ханаанскую» (11:31)"
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "известие: сцены нет (нет речи, одна смена места — переход); после родословия Фарры — новое дело «чтобы идти в землю Ханаанскую» (11:31)"
+   },
+   "plot": [
+    {
+     "setup": "Быт 11:31",
+     "resolution": "Быт 11:32"
+    }
+   ]
   },
   {
    "id": "e-gospod-zaklyuchaet-zavet-s-avramom",
@@ -2506,40 +3119,64 @@
     {
      "actor": "god",
      "label": "Господь",
-     "role": "participant",
-     "refs": [
-      "Быт 15:1",
-      "Быт 15:18"
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      }
      ],
-     "cert": "scripture",
      "roleText": {
       "text": "не бойся, Аврам; Я твой щит",
       "refs": [
        "Быт 15:1"
       ]
-     }
+     },
+     "refs": [
+      "Быт 15:1",
+      "Быт 15:18"
+     ],
+     "cert": "scripture"
     },
     {
      "actor": "p-avraam",
-     "role": "participant",
-     "main": true,
-     "refs": [
-      "Быт 15:1",
-      "Быт 15:6",
-      "Быт 15:18"
+     "label": "Аврам",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 2,
+       "role": "addressed"
+      }
      ],
-     "cert": "scripture",
+     "main": true,
      "roleText": {
       "text": "Аврам поверил Господу, и Он вменил ему это в праведность",
       "refs": [
        "Быт 15:6"
       ]
      },
-     "label": "Аврам"
+     "refs": [
+      "Быт 15:1",
+      "Быт 15:6",
+      "Быт 15:18",
+      "Быт 15:12"
+     ],
+     "cert": "scripture"
     },
     {
      "actor": "p-eliezer-iz-damaska",
-     "role": "mentioned",
+     "roles": [
+      {
+       "part": 1,
+       "role": "mentioned"
+      }
+     ],
      "refs": [
       "Быт 15:2"
      ],
@@ -2562,17 +3199,19 @@
      "note": "цитата: «исполнилось слово Писания: веровал Авраам Богу…»"
     }
    ],
-   "boundary": [
-    {
-     "start": "Быт 15:1",
-     "end": "Быт 15:18",
-     "rule": 4,
-     "human": "видение начинается словами «было слово Господа к Авраму в видении» (15:1); новых слов показа и новой даты до конца главы нет — одно видение (правило 4). Напряжение для протокола И0: звёзды ночью — «посмотри на небо и сосчитай звезды» (Быт 15:5) — и потом «При захождении солнца» (Быт 15:12)"
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 4,
+    "human": "видение начинается словами «было слово Господа к Авраму в видении» (15:1); новых слов показа и новой даты до конца главы нет — одно видение (правило 4). Напряжение для протокола И0: звёзды ночью — «посмотри на небо и сосчитай звезды» (Быт 15:5) — и потом «При захождении солнца» (Быт 15:12)"
+   },
+   "plot": [
+    {
+     "setup": "Быт 15:1",
+     "resolution": "Быт 15:18"
+    }
+   ]
   },
   {
    "id": "e-avraam-i-isaak-na-gore",
@@ -2597,77 +3236,97 @@
     {
      "actor": "god",
      "label": "Бог",
-     "role": "participant",
-     "refs": [
-      "Быт 22:1",
-      "Быт 22:2"
+     "roles": [
+      {
+       "role": "agent"
+      }
      ],
-     "cert": "scripture",
      "roleText": {
       "text": "Бог искушал Авраама",
       "refs": [
        "Быт 22:1"
       ]
-     }
+     },
+     "refs": [
+      "Быт 22:1",
+      "Быт 22:2"
+     ],
+     "cert": "scripture"
     },
     {
      "actor": "p-avraam",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
+     "roleText": {
+      "text": "Авраам встал рано утром, оседлал осла своего",
+      "refs": [
+       "Быт 22:3"
+      ]
+     },
      "refs": [
       "Быт 22:1",
       "Быт 22:3",
       "Быт 22:10",
       "Быт 22:13"
      ],
-     "cert": "scripture",
-     "roleText": {
-      "text": "и устроил там Авраам жертвенник",
-      "refs": [
-       "Быт 22:9"
-      ]
-     }
+     "cert": "scripture"
     },
     {
      "actor": "p-isaak",
-     "role": "suffers",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
+     "roleText": {
+      "text": "вот огонь и дрова, где же агнец для всесожжения?",
+      "refs": [
+       "Быт 22:7"
+      ]
+     },
      "refs": [
       "Быт 22:2",
       "Быт 22:6",
       "Быт 22:7",
       "Быт 22:9"
      ],
-     "cert": "scripture",
-     "roleText": {
-      "text": "вот огонь и дрова, где же агнец для всесожжения?",
-      "refs": [
-       "Быт 22:7"
-      ]
-     }
+     "cert": "scripture"
     },
     {
      "actor": "new:angel-gospoden-byt22",
      "label": "Ангел Господень",
      "kind": "angel-of-the-lord",
-     "role": "participant",
-     "refs": [
-      "Быт 22:11",
-      "Быт 22:15"
+     "roles": [
+      {
+       "role": "agent"
+      }
      ],
-     "cert": "scripture",
      "roleText": {
       "text": "не поднимай руки твоей на отрока",
       "refs": [
        "Быт 22:12"
       ]
-     }
+     },
+     "refs": [
+      "Быт 22:11",
+      "Быт 22:15"
+     ],
+     "cert": "scripture"
     },
     {
      "actor": "new:otroki-avraama",
-     "label": "отроков",
+     "label": "отроки",
      "kind": "group",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "refs": [
       "Быт 22:3",
       "Быт 22:5",
@@ -2741,17 +3400,19 @@
      ]
     }
    ],
-   "boundary": [
-    {
-     "start": "Быт 22:1",
-     "end": "Быт 22:13",
-     "rule": 5,
-     "human": "завязка — «Бог искушал Авраама» (22:1); развязка — «принес его во всесожжение вместо… сына своего» (22:13); второй зов Ангела (22:15–18) и возвращение (22:19) — следствие, связанное словами «так как ты сделал сие дело» (правило 6); родословие Нахора (22:20–24) — новая история"
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "завязка — «Бог искушал Авраама» (22:1); развязка — «принес его во всесожжение вместо… сына своего» (22:13); второй зов Ангела (22:15–18) и возвращение (22:19) — следствие, связанное словами «так как ты сделал сие дело» (правило 6); родословие Нахора (22:20–24) — новая история"
+   },
+   "plot": [
+    {
+     "setup": "Быт 22:1",
+     "resolution": "Быт 22:13"
+    }
+   ]
   }
  ],
  "classes": [],

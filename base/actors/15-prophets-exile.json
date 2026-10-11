@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data/persons/15-prophets-exile.json",
-   "commit": "ac38562"
+   "commit": "1e4043e"
   }
  },
  "sources": [
@@ -19975,19 +19975,42 @@
    "sex": "m",
    "names": [
     {
-     "form": "Абихаил",
+     "id": "p-abikhail-otets-esfiri#n2",
+     "form": "Аминадав",
      "type": "main",
      "refs": [
-      "Есф 9:29"
+      "Есф 2:15"
      ]
     },
     {
-     "form": "Аминадав",
+     "id": "p-abikhail-otets-esfiri#n1",
+     "form": "Абихаил",
      "type": "variant",
      "refs": [
-      "Есф 2:15"
+      "Есф 9:29"
      ],
-     "note": "так в Синодальном тексте Есф 2:15"
+     "cert": "inference",
+     "compare": {
+      "form": {
+       "refs": [
+        "Есф 9:29"
+       ]
+      },
+      "main": {
+       "refs": [
+        "Есф 2:15"
+       ]
+      }
+     },
+     "why": {
+      "codes": [
+       "parallel",
+       "same-node",
+       "one-candidate",
+       "no-contradiction"
+      ],
+      "note": "оба имени стоят на одном месте одного лица: отец Есфири — «Есфири, дочери Аминадава» (Есф 2:15) и «царица Есфирь, дочь Абихаила» (Есф 9:29); двух отцов у неё текст не даёт"
+     }
     }
    ],
    "disambig": "отец Есфири, дядя Мардохея",
@@ -20057,7 +20080,7 @@
      "note": "«Гадассы, — она же Есфирь»"
     }
    ],
-   "disambig": "царица, дочь Абихаила",
+   "disambig": "царица, дочь Аминадава",
    "roles": [
     "queen"
    ],

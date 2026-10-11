@@ -70,7 +70,16 @@
    "actors": [
     {
      "actor": "p-raav",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "Но женщина взяла двух человек тех и скрыла их",
@@ -80,13 +89,23 @@
      },
      "refs": [
       "Нав 2:1",
-      "Нав 2:3"
+      "Нав 2:3",
+      "Нав 2:8"
      ],
      "cert": "scripture"
     },
     {
      "actor": "p-iisus-navin",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "addressed"
+      }
+     ],
      "roleText": {
       "text": "И послал Иисус, сын Навин, из Ситтима двух соглядатаев тайно",
       "refs": [
@@ -101,9 +120,22 @@
     },
     {
      "actor": "new:soglyadatai-nav2",
-     "label": "соглядатаев",
+     "label": "соглядатаи",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "Господь предал всю землю сию в руки наши",
@@ -120,9 +152,14 @@
     },
     {
      "actor": "new:tsar-ierikhonskiy",
-     "label": "царю Иерихонскому",
+     "label": "царь Иерихонский",
      "kind": "unnamed",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "выдай людей, пришедших к тебе",
       "refs": [
@@ -193,17 +230,19 @@
      "cert": "scripture"
     }
    ],
-   "boundary": [
-    {
-     "start": "Нав 2:1",
-     "end": "Нав 2:24",
-     "rule": 5,
-     "human": "завязка — «пойдите, осмотрите землю и Иерихон» (2:1); развязка — соглядатаи «пришли к Иисусу, сыну Навину, и пересказали ему все» (2:23)"
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "завязка — «пойдите, осмотрите землю и Иерихон» (2:1); развязка — соглядатаи «пришли к Иисусу, сыну Навину, и пересказали ему все» (2:23)"
+   },
+   "plot": [
+    {
+     "setup": "Нав 2:1",
+     "resolution": "Нав 2:24"
+    }
+   ]
   },
   {
    "id": "e-iov-i-satana",
@@ -292,7 +331,28 @@
    "actors": [
     {
      "actor": "p-iov",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 2,
+       "role": "mentioned"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      },
+      {
+       "part": 4,
+       "role": "mentioned"
+      },
+      {
+       "part": 5,
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "Господь дал, Господь и взял",
@@ -303,14 +363,38 @@
      "refs": [
       "Иов 1:1",
       "Иов 1:20",
-      "Иов 2:10"
+      "Иов 2:10",
+      "Иов 1:8",
+      "Иов 2:3",
+      "Иов 2:7"
      ],
      "cert": "scripture"
     },
     {
      "actor": "god",
      "label": "Господь",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 1,
+       "role": "mentioned"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "mentioned"
+      },
+      {
+       "part": 4,
+       "role": "agent"
+      },
+      {
+       "part": 5,
+       "role": "mentioned"
+      }
+     ],
      "roleText": {
       "text": "обратил ли ты внимание твое на раба Моего Иова?",
       "refs": [
@@ -319,7 +403,10 @@
      },
      "refs": [
       "Иов 1:7",
-      "Иов 2:3"
+      "Иов 2:3",
+      "Иов 1:1",
+      "Иов 1:21",
+      "Иов 2:10"
      ],
      "cert": "scripture"
     },
@@ -327,7 +414,20 @@
      "actor": "new:satana-iov",
      "label": "сатана",
      "kind": "spirit",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 4,
+       "role": "agent"
+      },
+      {
+       "part": 5,
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "разве даром богобоязнен Иов?",
       "refs": [
@@ -345,10 +445,20 @@
      "actor": "new:deti-iova",
      "label": "сыновья его и дочери",
      "kind": "group",
-     "role": "suffers",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "undergoer"
+      }
+     ],
      "refs": [
       "Иов 1:13",
-      "Иов 1:18"
+      "Иов 1:18",
+      "Иов 1:4"
      ],
      "cert": "scripture"
     },
@@ -356,11 +466,16 @@
      "actor": "new:vestniki-iova",
      "label": "вестник",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 3,
+       "role": "agent"
+      }
+     ],
      "roleText": {
-      "text": "и спасся только я один, чтобы возвестить тебе",
+      "text": "приходит вестник к Иову и говорит",
       "refs": [
-       "Иов 1:15"
+       "Иов 1:14"
       ]
      },
      "refs": [
@@ -373,7 +488,12 @@
      "actor": "new:zhena-iova",
      "label": "жена его",
      "kind": "unnamed",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 5,
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "похули Бога и умри",
       "refs": [
@@ -389,7 +509,16 @@
      "actor": "new:syny-bozhii-iov",
      "label": "сыны Божии",
      "kind": "group",
-     "role": "mentioned",
+     "roles": [
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 4,
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Иов 1:6",
       "Иов 2:1"
@@ -421,14 +550,6 @@
      "cert": "scripture"
     }
    ],
-   "boundary": [
-    {
-     "start": "Иов 1:9",
-     "end": "Иов 2:10",
-     "rule": 2,
-     "human": "дело — «благословит ли он Тебя?» (1:11; 2:5); развязка — «Во всем этом не согрешил Иов устами своими» (2:10); второй круг (2:1–10) двигает то же дело (правило 2). Приход друзей (2:11–13) — начало бесед: книга Иова целиком не размечена"
-    }
-   ],
    "hard": [
     {
      "topic": "смерть на глазах",
@@ -448,7 +569,17 @@
    ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 2,
+    "human": "дело — «благословит ли он Тебя?» (1:11; 2:5); развязка — «Во всем этом не согрешил Иов устами своими» (2:10); второй круг (2:1–10) двигает то же дело (правило 2). Приход друзей (2:11–13) — начало бесед: книга Иова целиком не размечена"
+   },
+   "plot": [
+    {
+     "setup": "Иов 1:9",
+     "resolution": "Иов 2:10"
+    }
+   ]
   },
   {
    "id": "e-gospod-vozvrashchaet-iovu-vdvoe",
@@ -473,7 +604,11 @@
     {
      "actor": "god",
      "label": "Господь",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "и дал Господь Иову вдвое больше того, что он имел прежде",
       "refs": [
@@ -488,7 +623,11 @@
     },
     {
      "actor": "p-iov",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "когда он помолился за друзей своих",
@@ -505,7 +644,11 @@
     },
     {
      "actor": "p-elifaz-femanityanin",
-     "role": "addressed",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
      "refs": [
       "Иов 42:7",
       "Иов 42:9"
@@ -514,7 +657,11 @@
     },
     {
      "actor": "p-vildad",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Иов 42:9"
      ],
@@ -522,7 +669,11 @@
     },
     {
      "actor": "p-sofar",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Иов 42:9"
      ],
@@ -532,7 +683,11 @@
      "actor": "new:rodnye-iova",
      "label": "братья его и все сестры его",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "и утешали его за все зло, которое Господь навел на него",
       "refs": [
@@ -560,17 +715,19 @@
      "cert": "inference"
     }
    ],
-   "boundary": [
-    {
-     "start": "Иов 42:7",
-     "end": "Иов 42:17",
-     "rule": 5,
-     "human": "новое дело — «горит гнев Мой на тебя и на двух друзей твоих» (42:7); восстановление Иова — следствие, связанное словами «когда он помолился за друзей своих» (42:10; правило 6). Беседы (Иов 3:1 – 42:6) не размечены"
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "новое дело — «горит гнев Мой на тебя и на двух друзей твоих» (42:7); восстановление Иова — следствие, связанное словами «когда он помолился за друзей своих» (42:10; правило 6). Беседы (Иов 3:1 – 42:6) не размечены"
+   },
+   "plot": [
+    {
+     "setup": "Иов 42:7",
+     "resolution": "Иов 42:17"
+    }
+   ]
   }
  ],
  "classes": [

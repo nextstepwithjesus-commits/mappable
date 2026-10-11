@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data",
-   "commit": "ac38562"
+   "commit": "1e4043e"
   }
  },
  "sources": [
@@ -23147,7 +23147,7 @@
    }
   },
   {
-   "actor": "p-iuda-iakovlev",
+   "actor": "p-faddey",
    "chrono": {
     "active": {
      "from": 26,
@@ -23163,7 +23163,8 @@
    "prov": {
     "from": {
      "vol": "17-new-testament.json"
-    }
+    },
+    "by": "исправление D15-1"
    }
   },
   {

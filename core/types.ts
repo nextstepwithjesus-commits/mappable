@@ -83,6 +83,10 @@ export interface PersonName {
   id: string;
   n: string;
   o?: string[];
+  /** Номера в `o` форм «выв.» (вид (б), 02 § 3.3.5; К-19): совпадение с ними стоит в выдаче ниже совпадения с формой «Писание». */
+  oi?: number[];
+  /** «Возможно, тот же человек» (вид (в), 02 § 3.3.6): поиск по имени находит и эти карточки. */
+  ps?: string[];
   d?: string;
   /** Значимость 1–5. */
   p: number;
@@ -219,6 +223,18 @@ export interface CardFact {
   f: string;
   v: unknown;
   c?: string;
+  /** Тождество по форме «выв.» (02 § 3.3.5; К-18): номер формы и стихи. */
+  ic?: { form: string; refs: string[] };
+}
+
+/** Форма имени «выв.» в пакете карточки (02 § 3.3.6; К-19): строка «здесь назван», второй слой, выгрузка «Тождества лиц». */
+export interface CardNameForm {
+  id?: string;
+  n: string;
+  c: 'inference';
+  cmp?: { form: { refs: string[] }; main: { refs: string[] }; count?: { ref: string } };
+  w?: { codes: string[]; note?: string };
+  tn?: string;
 }
 
 /** «Нет сведений» (02 § 3.2): раздел, вид, о чём, стихи, слова стиха. */
@@ -232,7 +248,7 @@ export interface NoDataRow {
 
 export interface CardsVolume extends Stamp {
   volume: string;
-  cards: Record<string, { f: CardFact[]; nd?: NoDataRow[] }>;
+  cards: Record<string, { f: CardFact[]; nd?: NoDataRow[]; nm?: CardNameForm[] }>;
 }
 
 /** Вид отрезка в скобках (02 § 3.8; `tools/bible/brackets.tsv`): пояснение, повреждение — текст; прочие — нет. */

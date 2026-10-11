@@ -324,7 +324,8 @@ describe('бюджеты всех пакетов (К-9)', () => {
     expect(r.packages.find((p) => p.file === 'index.json')!.required).toBe(true);
     expect(budgetCheck({ 'tiles/x.bin': { raw: 1, gz: 1 } }).over[0]).toMatchObject({ file: 'tiles/x.bin', budget: null });
     expect(budgetCheck({ 'cards/08-levi.json': { raw: 1, gz: 65 * 1024 } }).over).toHaveLength(1);
-    expect(BUDGETS.map((x) => x.max / 1024)).toEqual([200, 64, 96, 96, 64]);
+    // выгрузка «Тождества лиц» (К-19) — свой бюджет 32 КБ
+    expect(BUDGETS.map((x) => x.max / 1024)).toEqual([200, 64, 96, 96, 64, 32]);
   }, 120_000);
 });
 

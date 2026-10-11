@@ -21,6 +21,10 @@ export interface Person {
   id: string;
   n: string;
   o?: string[];
+  /** Номера в `o` форм «выв.» (К-19). */
+  oi?: number[];
+  /** «Возможно, тот же человек» (вид (в)): находится вместе с этой карточкой. */
+  ps?: string[];
   d?: string;
   p: number;
   k: string;
@@ -164,13 +168,26 @@ export class Searcher {
   personsOf(form: string, query = form, exactFirst = true): Person[] {
     const q = key(query);
     const first = (n: string) => key(n).split(' ')[0];
-    // 0 — запрос = основное имя или его первое слово; 1 — другое имя лица («Осия» у Иисуса Навина); 2 — иначе
-    const rank = (p: Person) => (!exactFirst ? 0 : key(p.n) === q || first(p.n) === q ? 0 : (p.o ?? []).some((o) => key(o) === q || first(o) === q) ? 1 : 2);
-    return this.names
+    // 0 — запрос = основное имя или его первое слово; 1 — другое имя лица уровня «Писание» («Осия» у Иисуса Навина);
+    // 2 — другое имя уровня «выв.» (вид (б): «Иов» у Иашува — ниже, К-19); 3 — иначе; 4 — «возможно, тот же человек» (вид (в))
+    const hit = (o: string) => key(o) === q || first(o) === q;
+    const rank = (p: Person) => {
+      if (!exactFirst) return 0;
+      if (key(p.n) === q || first(p.n) === q) return 0;
+      const os = p.o ?? [];
+      if (os.some((o, i) => hit(o) && !p.oi?.includes(i))) return 1;
+      if (os.some((o, i) => hit(o) && p.oi?.includes(i))) return 2;
+      return 3;
+    };
+    const direct = this.names
       .ids(form)
       .map((id) => this.persons.get(id))
       .filter((p): p is Person => !!p)
       .sort((a, b) => rank(a) - rank(b) || b.p - a.p || (b.c ?? 0) - (a.c ?? 0) || (a.id < b.id ? -1 : 1));
+    // вид (в): по любому имени находятся обе карточки (02 § 3.3.6) — карточки «возможно, тот же человек» идут после прямых
+    const seen = new Set(direct.map((p) => p.id));
+    const also = direct.flatMap((p) => p.ps ?? []).filter((id) => !seen.has(id) && (seen.add(id), true)).map((id) => this.persons.get(id)).filter((p): p is Person => !!p);
+    return [...direct, ...also];
   }
 
   /** Места, чьё имя даёт эту форму (номера места в словаре форм — с приставкой `l-`). */

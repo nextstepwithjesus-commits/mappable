@@ -31,23 +31,38 @@ describe('Д-4: форма другого имени — своя карточк
     expect(refsOf(l).has('Мф 9:9')).toBe(false);
   });
 
-  it('Фаддей и Леввей — одна карточка (тождество сказано: «Леввей, прозванный Фаддеем», Мф 10:3); Иуда Иаковлев — без них; «Иуда» не на Мф 10:3', () => {
-    const j = actors.get('p-iuda-iakovlev')!;
+  it('Фаддей и Иуда Иаковлев — одна карточка вида (б) (Д-15, 02 ред. 4.4): «Иуда Иаковлев», «Иуда, брат Иакова» — формы «выв.»; Леввей — with «Фаддей»', () => {
     const f = actors.get('p-faddey')!;
-    expect(f.names.map((n) => n.form)).toEqual(['Фаддей', 'Леввей']);
-    expect(j.names.map((n) => n.form)).toEqual(['Иуда', 'Иуда Иаковлев', 'Иуда, брат Иакова']);
-    expect(j.names[0].refs).toEqual(['Лк 6:16']);
-    // стихи Фаддея — только в примечании о тождестве, не в именах и не в утверждениях
-    const own = JSON.stringify([j.names, j.facts.filter((x) => x.field !== 'notes').map((x) => x.value)]);
-    expect(['Мф 10:3', 'Мк 3:18'].filter((r) => own.includes(r))).toEqual([]);
-    expect(base.memberships.find((m) => m.actor === 'p-faddey')).toMatchObject({ area: 'g-apostles', basis: 'named', refs: ['Мф 10:2-3'] });
+    expect(actors.has('p-iuda-iakovlev')).toBe(false);
+    expect(f.names.map((n) => [n.id, n.form, n.cert ?? 'scripture'])).toEqual([
+      ['p-faddey#n1', 'Фаддей', 'scripture'], ['p-faddey#n2', 'Леввей', 'scripture'], ['p-faddey#n3', 'Иуда Иаковлев', 'inference'], ['p-faddey#n4', 'Иуда, брат Иакова', 'inference'],
+    ]);
+    expect(f.names[1].with).toBe('p-faddey#n1');
+    // стихи сравнения по сторонам и число «двенадцать» (Лк 6:13)
+    expect(f.names[2].compare).toEqual({ form: { refs: ['Лк 6:16'] }, main: { refs: ['Мф 10:3', 'Мк 3:18'] }, count: { ref: 'Лк 6:13' } });
+    expect(f.names[2].why?.codes).toEqual(['parallel', 'named-number', 'one-candidate', 'no-contradiction']);
+    // «Иуда» не стоит на Мф 10:3 (там «Леввей, прозванный Фаддеем»)
+    for (const n of f.names.filter((x) => x.form.startsWith('Иуда'))) expect(n.refs).not.toContain('Мф 10:3');
+    // записи по Ин 14:22 и Деян 1:13 — через idCert, не строкой «Фаддей спросил» (02 § 3.3.5: цепочка двух выводов)
+    const byId = new Map(f.facts.map((x) => [x.id, x]));
+    for (const id of ['a-12964', 'a-12966']) expect(byId.get(id)?.idCert).toEqual({ form: 'p-faddey#n3', refs: ['Ин 14:22'] });
+    expect(byId.get('a-12965')?.idCert?.form).toBe('p-faddey#n4');
+    // одна запись «Один из двенадцати» со стихами обоих перечней — не тринадцать «из двенадцати»
+    expect(f.facts.filter((x) => x.field === 'status').map((x) => (x.value as any).refs)).toEqual([['Мф 10:2-3', 'Мк 3:18', 'Лк 6:13-16', 'Деян 1:13']]);
+    expect(base.memberships.filter((m) => m.actor === 'p-iuda-iakovlev')).toEqual([]);
+    expect(base.memberships.find((m) => m.actor === 'p-faddey')).toMatchObject({ area: 'g-apostles', basis: 'named', refs: ['Мф 10:2-3', 'Лк 6:13-16'] });
+    // переадресация — с основанием parallel; выбывшие записи ведут на карточку Фаддея
+    expect(base.redirects.find((r) => r.from === 'p-iuda-iakovlev')).toMatchObject({ to: ['p-faddey'], basis: 'parallel' });
+    for (const id of ['a-12961', 'a-12963', 'a-12967', 'ar-8']) expect([id, !!base.redirects.find((r) => r.from === id)]).toEqual([id, true]);
   });
 
   it('«возможно, то же лицо» уровня «вывод» со стихами обеих сторон; карточки не сливаются', () => {
     const rel = (a: string, b: string) => base.relations.find((r) => r.a === a && r.b === b && r.kind === 'possibly-same');
     expect(rel('p-leviy-alfeev', 'p-matfey')).toMatchObject({ cert: 'inference', refs: ['Мк 2:14', 'Лк 5:27', 'Мф 9:9'] });
-    expect(rel('p-faddey', 'p-iuda-iakovlev')).toMatchObject({ cert: 'inference', refs: ['Мф 10:3', 'Мк 3:18', 'Лк 6:16', 'Деян 1:13'] });
-    for (const r of [rel('p-leviy-alfeev', 'p-matfey')!, rel('p-faddey', 'p-iuda-iakovlev')!]) {
+    // Фаддей — Иуда Иаковлев: связи больше нет (вид (б), Д-15); Рагуил — Иофор: вид (в)
+    expect(rel('p-faddey', 'p-iuda-iakovlev')).toBeUndefined();
+    expect(rel('p-raguil', 'p-iofor')).toMatchObject({ cert: 'inference', refs: ['Исх 2:18', 'Исх 2:21', 'Исх 3:1', 'Исх 18:2'] });
+    for (const r of [rel('p-leviy-alfeev', 'p-matfey')!, rel('p-raguil', 'p-iofor')!]) {
       expect(r.needsSources).toBeUndefined();
       expect(base.redirects.some((x) => (x.from === r.a && x.to.includes(r.b)) || (x.from === r.b && x.to.includes(r.a)))).toBe(false);
     }
@@ -56,12 +71,33 @@ describe('Д-4: форма другого имени — своя карточк
     expect(base.redirects.find((r) => r.to.includes(e.id!))?.from).toBeTruthy();
   });
 
-  it('подложенная ошибка ловится: форма «Левий» снова у Матфея, «Фаддей» у Иуды Иаковлева', () => {
+  it('подложенная ошибка ловится: форма «Левий» снова у Матфея; «Иуда Иаковлев» у Фаддея без уровня «выв.»; «Рагуил» снова у Иофора', () => {
     const b = structuredClone(base);
     const a = (id: string) => b.volumes.flatMap((v) => v.actors).find((x) => x.id === id)!;
     a('p-matfey').names.push({ form: 'Левий', type: 'variant', refs: ['Лк 5:27'] });
-    a('p-iuda-iakovlev').names.push({ form: 'Фаддей', type: 'epithet', refs: ['Мк 3:18'] });
+    delete a('p-faddey').names[2].cert;
+    a('p-iofor').names.push({ form: 'Рагуил', type: 'variant', refs: ['Исх 2:18'] });
     const e = validate(b).filter((i) => i.level === 'error' && i.check === 'стоп-список').map((i) => i.where);
-    expect(e).toEqual(expect.arrayContaining(['p-matfey', 'p-iuda-iakovlev']));
+    expect(e).toEqual(expect.arrayContaining(['p-matfey', 'p-faddey', 'p-iofor']));
+  });
+
+  it('Рагуил — своя карточка (вид (в), Д-15): рёбра Сепфоры и Ховава — к нему, «Писание»; у Иофора нет ни формы, ни стихов Исх 2:16–21', () => {
+    const r = actors.get('p-raguil')!;
+    const io = actors.get('p-iofor')!;
+    expect(r.names.map((n) => [n.form, n.refs])).toEqual([['Рагуил', ['Исх 2:18', 'Чис 10:29']]]);
+    expect(io.names.map((n) => n.form)).toEqual(['Иофор']);
+    expect(base.origins.filter((o) => o.parent === 'p-raguil').map((o) => [o.child, o.cert, o.refs, o.identity])).toEqual([
+      ['p-sepfora', 'scripture', ['Исх 2:18', 'Исх 2:21'], undefined], ['p-khovav', 'scripture', ['Чис 10:29'], undefined],
+    ]);
+    expect(base.origins.filter((o) => o.parent === 'p-iofor')).toEqual([]);
+    // у Иофора — только стихи Иофора: Исх 2:16–21 и Чис 10:29 остались лишь в примечании о тождестве
+    const own = JSON.stringify(io.facts.filter((x) => x.field !== 'notes').map((x) => x.value));
+    expect(['Исх 2:16', 'Исх 2:18', 'Исх 2:20', 'Исх 2:21', 'Чис 10:29'].filter((x) => own.includes(x))).toEqual([]);
+  });
+
+  it('отец Есфири — вид (б) (Д-15): основное имя «Аминадав» (Есф 2:15), «Абихаил» (Есф 9:29) — форма «выв.»', () => {
+    const a = actors.get('p-abikhail-otets-esfiri')!;
+    expect(a.names.map((n) => [n.form, n.type, n.cert ?? 'scripture'])).toEqual([['Аминадав', 'main', 'scripture'], ['Абихаил', 'variant', 'inference']]);
+    expect(a.names[1].compare).toEqual({ form: { refs: ['Есф 9:29'] }, main: { refs: ['Есф 2:15'] } });
   });
 });

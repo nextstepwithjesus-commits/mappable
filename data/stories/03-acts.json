@@ -251,7 +251,12 @@
    "actors": [
     {
      "actor": "p-pavel",
-     "role": "participant",
+     "label": "Савл",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "Господи! что повелишь мне делать?",
@@ -264,12 +269,15 @@
       "Деян 9:4",
       "Деян 9:8"
      ],
-     "cert": "scripture",
-     "label": "Савл"
+     "cert": "scripture"
     },
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "Я Иисус, Которого ты гонишь",
       "refs": [
@@ -284,9 +292,13 @@
     },
     {
      "actor": "new:pervosvyashchennik-deyan9",
-     "label": "первосвященнику",
+     "label": "первосвященник",
      "kind": "unnamed",
-     "role": "addressed",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
      "roleText": {
       "text": "и выпросил у него письма в Дамаск к синагогам",
       "refs": [
@@ -303,7 +315,11 @@
      "actor": "new:sputniki-savla",
      "label": "Люди же, шедшие с ним",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "стояли в оцепенении, слыша голос, а никого не видя",
       "refs": [
@@ -319,7 +335,11 @@
      "actor": "new:ananiya-damask",
      "label": "Анания",
      "kind": "human",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "брат Савл! Господь Иисус, явившийся тебе на пути, которым ты шел, послал меня",
       "refs": [
@@ -460,6 +480,7 @@
    "discrepancies": [
     {
      "label": "когда",
+     "kind": "when",
      "quotes": [
       {
        "ref": "Деян 22:6",
@@ -469,10 +490,15 @@
        "ref": "Деян 26:13",
        "text": "среди дня"
       }
+     ],
+     "silent": [
+      0
      ]
     },
     {
      "label": "спутники стояли или упали",
+     "kind": "presence",
+     "scene": "e-savl-na-puti-v-damask#s4",
      "quotes": [
       {
        "ref": "Деян 9:7",
@@ -486,6 +512,8 @@
     },
     {
      "label": "видели ли спутники",
+     "kind": "presence",
+     "scene": "e-savl-na-puti-v-damask#s4",
      "quotes": [
       {
        "ref": "Деян 9:7",
@@ -499,6 +527,8 @@
     },
     {
      "label": "слышали ли спутники",
+     "kind": "presence",
+     "scene": "e-savl-na-puti-v-damask#s4",
      "quotes": [
       {
        "ref": "Деян 9:7",
@@ -512,6 +542,8 @@
     },
     {
      "label": "поручение",
+     "kind": "presence",
+     "scene": "e-savl-na-puti-v-damask#s7",
      "quotes": [
       {
        "ref": "Деян 9:15",
@@ -528,17 +560,19 @@
      ]
     }
    ],
-   "boundary": [
-    {
-     "start": "Деян 9:1",
-     "end": "Деян 9:18",
-     "rule": 5,
-     "human": "рассказ один (повествователь); пересказы Павла — ссылки, их стихи — в историях речей (11 § 13.6; идея Н-2)"
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "рассказ один (повествователь); пересказы Павла — ссылки, их стихи — в историях речей (11 § 13.6; идея Н-2)"
+   },
+   "plot": [
+    {
+     "setup": "Деян 9:1",
+     "resolution": "Деян 9:18"
+    }
+   ]
   },
   {
    "id": "e-savla-spuskayut-po-stene",
@@ -562,7 +596,12 @@
    "actors": [
     {
      "actor": "p-pavel",
-     "role": "participant",
+     "label": "Савл",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "стал проповедывать в синагогах об Иисусе, что Он есть Сын Божий",
@@ -574,14 +613,17 @@
       "Деян 9:22",
       "Деян 9:24"
      ],
-     "cert": "scripture",
-     "label": "Савл"
+     "cert": "scripture"
     },
     {
      "actor": "new:iudei-v-damaske",
      "label": "Иудеи",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "Иудеи согласились убить его",
       "refs": [
@@ -598,7 +640,11 @@
      "actor": "new:ucheniki-v-damaske",
      "label": "Ученики",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "Ученики же ночью, взяв его, спустили по стене в корзине",
       "refs": [
@@ -623,17 +669,19 @@
     }
    ],
    "links": [],
-   "boundary": [
-    {
-     "start": "Деян 9:20",
-     "end": "Деян 9:25",
-     "rule": 5,
-     "human": "Деян 9:19 («И был Савл несколько дней с учениками в Дамаске») — в прошлой истории: стих не делится"
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "Деян 9:19 («И был Савл несколько дней с учениками в Дамаске») — в прошлой истории: стих не делится"
+   },
+   "plot": [
+    {
+     "setup": "Деян 9:20",
+     "resolution": "Деян 9:25"
+    }
+   ]
   },
   {
    "id": "e-varnava-i-savl-v-ierusalime",
@@ -654,7 +702,12 @@
    "actors": [
     {
      "actor": "p-pavel",
-     "role": "participant",
+     "label": "Савл",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "и смело проповедывал во имя Господа Иисуса",
@@ -665,12 +718,15 @@
      "refs": [
       "Деян 9:26"
      ],
-     "cert": "scripture",
-     "label": "Савл"
+     "cert": "scripture"
     },
     {
      "actor": "p-varnava",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "Варнава же, взяв его, пришел к Апостолам",
@@ -685,9 +741,13 @@
     },
     {
      "actor": "new:apostoly",
-     "label": "Апостолам",
+     "label": "Апостолы",
      "kind": "group",
-     "role": "addressed",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
      "refs": [
       "Деян 9:27"
      ],
@@ -695,9 +755,13 @@
     },
     {
      "actor": "new:ellinisty",
-     "label": "Еллинистами",
+     "label": "Еллинисты",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "а они покушались убить его",
       "refs": [
@@ -713,7 +777,11 @@
      "actor": "new:bratiya-v-ierusalime",
      "label": "Братия",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "отправили его в Кесарию и препроводили в Тарс",
       "refs": [
@@ -757,16 +825,18 @@
     }
    ],
    "links": [],
-   "boundary": [
-    {
-     "start": "Деян 9:26",
-     "end": "Деян 9:30",
-     "rule": 5
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5
+   },
+   "plot": [
+    {
+     "setup": "Деян 9:26",
+     "resolution": "Деян 9:30"
+    }
+   ]
   },
   {
    "id": "e-tserkvi-v-pokoe",
@@ -789,7 +859,11 @@
      "actor": "new:tserkvi",
      "label": "Церкви",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "refs": [
       "Деян 9:31"
@@ -827,16 +901,18 @@
     }
    ],
    "links": [],
-   "boundary": [
-    {
-     "start": "Деян 9:31",
-     "end": "Деян 9:31",
-     "rule": 5
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5
+   },
+   "plot": [
+    {
+     "setup": "Деян 9:31",
+     "resolution": "Деян 9:31"
+    }
+   ]
   },
   {
    "id": "e-petr-i-eney",
@@ -857,7 +933,11 @@
    "actors": [
     {
      "actor": "p-petr",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "Эней! исцеляет тебя Иисус Христос; встань с постели твоей",
@@ -873,9 +953,13 @@
     },
     {
      "actor": "new:eney",
-     "label": "Энея",
+     "label": "Эней",
      "kind": "human",
-     "role": "suffers",
+     "roles": [
+      {
+       "role": "undergoer"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "И он тотчас встал",
@@ -912,16 +996,18 @@
     }
    ],
    "links": [],
-   "boundary": [
-    {
-     "start": "Деян 9:32",
-     "end": "Деян 9:35",
-     "rule": 5
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5
+   },
+   "plot": [
+    {
+     "setup": "Деян 9:32",
+     "resolution": "Деян 9:35"
+    }
+   ]
   },
   {
    "id": "e-petr-i-tavifa",
@@ -942,7 +1028,11 @@
    "actors": [
     {
      "actor": "p-petr",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "Тавифа! встань",
@@ -960,7 +1050,11 @@
      "actor": "new:tavifa",
      "label": "Тавифа",
      "kind": "human",
-     "role": "suffers",
+     "roles": [
+      {
+       "role": "undergoer"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "И она открыла глаза свои и, увидев Петра, села",
@@ -978,7 +1072,11 @@
      "actor": "new:ucheniki-v-ioppii",
      "label": "ученики",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Деян 9:38"
      ],
@@ -988,7 +1086,11 @@
      "actor": "new:vdovitsy-v-ioppii",
      "label": "вдовицы",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Деян 9:39",
       "Деян 9:41"
@@ -997,9 +1099,13 @@
     },
     {
      "actor": "new:simon-kozhevnik",
-     "label": "Симона кожевника",
+     "label": "Симон кожевник",
      "kind": "human",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "refs": [
       "Деян 9:43"
      ],
@@ -1029,17 +1135,19 @@
     }
    ],
    "links": [],
-   "boundary": [
-    {
-     "start": "Деян 9:36",
-     "end": "Деян 9:42",
-     "rule": 5,
-     "human": "Деян 9:43 — следствие, связанное словами «пробыл он в Иоппии» (правило 6)"
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "Деян 9:43 — следствие, связанное словами «пробыл он в Иоппии» (правило 6)"
+   },
+   "plot": [
+    {
+     "setup": "Деян 9:36",
+     "resolution": "Деян 9:42"
+    }
+   ]
   },
   {
    "id": "e-pavel-govorit-k-narodu-s-lestnitsy",
@@ -1099,7 +1207,20 @@
    "actors": [
     {
      "actor": "p-pavel",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "addressed"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "выслушайте теперь мое оправдание перед вами",
@@ -1110,15 +1231,21 @@
      "refs": [
       "Деян 21:37",
       "Деян 21:39",
-      "Деян 21:40"
+      "Деян 21:40",
+      "Деян 22:22"
      ],
      "cert": "scripture"
     },
     {
      "actor": "new:tysyachenachalnik-deyan21",
-     "label": "тысяченачальнику",
+     "label": "тысяченачальник",
      "kind": "unnamed",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "ты знаешь по-гречески?",
       "refs": [
@@ -1132,9 +1259,22 @@
     },
     {
      "actor": "new:narod-v-ierusalime",
-     "label": "народу",
+     "label": "народ",
      "kind": "group",
-     "role": "addressed",
+     "roles": [
+      {
+       "part": 1,
+       "role": "addressed"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "истреби от земли такого! ибо ему не должно жить",
       "refs": [
@@ -1150,7 +1290,12 @@
     },
     {
      "actor": "p-iisus",
-     "role": "mentioned",
+     "roles": [
+      {
+       "part": 2,
+       "role": "mentioned"
+      }
+     ],
      "mode": "in-speech",
      "refs": [
       "Деян 22:8"
@@ -1161,7 +1306,12 @@
      "actor": "new:ananiya-damask",
      "label": "Анания",
      "kind": "human",
-     "role": "mentioned",
+     "roles": [
+      {
+       "part": 2,
+       "role": "mentioned"
+      }
+     ],
      "mode": "in-speech",
      "refs": [
       "Деян 22:12"
@@ -1170,9 +1320,14 @@
     },
     {
      "actor": "new:gamaliil-uchitel",
-     "label": "Гамалиила",
+     "label": "Гамалиил",
      "kind": "human",
-     "role": "mentioned",
+     "roles": [
+      {
+       "part": 2,
+       "role": "mentioned"
+      }
+     ],
      "mode": "in-speech",
      "refs": [
       "Деян 22:3"
@@ -1181,9 +1336,14 @@
     },
     {
      "actor": "new:stefan",
-     "label": "Стефана",
+     "label": "Стефан",
      "kind": "human",
-     "role": "mentioned",
+     "roles": [
+      {
+       "part": 2,
+       "role": "mentioned"
+      }
+     ],
      "mode": "in-speech",
      "refs": [
       "Деян 22:20"
@@ -1212,17 +1372,19 @@
     }
    ],
    "links": [],
-   "boundary": [
-    {
-     "start": "Деян 21:37",
-     "end": "Деян 22:22",
-     "rule": 5,
-     "human": "речь с рассказанной обстановкой: просьба говорить (21:37–40) и исход — крик народа (22:22–23); взятие Павла в храме (Деян 21:27–36) — прошлая история, Деян 21 целиком не размечена"
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "речь с рассказанной обстановкой: просьба говорить (21:37–40) и исход — крик народа (22:22–23); взятие Павла в храме (Деян 21:27–36) — прошлая история, Деян 21 целиком не размечена"
+   },
+   "plot": [
+    {
+     "setup": "Деян 21:37",
+     "resolution": "Деян 22:22"
+    }
+   ]
   },
   {
    "id": "e-ya-poshlyu-tebya-k-yazychnikam",
@@ -1236,7 +1398,11 @@
    "actors": [
     {
      "actor": "p-pavel",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "mode": "in-speech",
      "roleText": {
@@ -1253,7 +1419,11 @@
     },
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "mode": "in-speech",
      "roleText": {
       "text": "иди; Я пошлю тебя далеко к язычникам",
@@ -1305,16 +1475,12 @@
      "cert": "scripture"
     }
    ],
-   "boundary": [
-    {
-     "start": "Деян 22:17",
-     "end": "Деян 22:21",
-     "rule": 4,
-     "human": "видение: «пришел я в исступление, и увидел Его» (Деян 22:17–18); стихи принадлежат истории речи"
-    }
-   ],
    "source": {
     "method": "reading"
+   },
+   "boundary": {
+    "startRule": 4,
+    "human": "видение: «пришел я в исступление, и увидел Его» (Деян 22:17–18); стихи принадлежат истории речи; завязка — Деян 22:17, развязка — Деян 22:21 (в стихах пересказа: рассказа повествователя у истории нет)"
    }
   },
   {
@@ -1336,7 +1502,11 @@
    "actors": [
     {
      "actor": "p-pavel",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "разве вам позволено бичевать Римского гражданина, да и без суда?",
@@ -1354,7 +1524,11 @@
      "actor": "new:tysyachenachalnik-deyan21",
      "label": "тысяченачальник",
      "kind": "unnamed",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "я за большие деньги приобрел это гражданство",
       "refs": [
@@ -1369,9 +1543,13 @@
     },
     {
      "actor": "new:sotnik-deyan22",
-     "label": "сотнику",
+     "label": "сотник",
      "kind": "unnamed",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Деян 22:25",
       "Деян 22:26"
@@ -1391,16 +1569,18 @@
     }
    ],
    "links": [],
-   "boundary": [
-    {
-     "start": "Деян 22:24",
-     "end": "Деян 22:29",
-     "rule": 5
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5
+   },
+   "plot": [
+    {
+     "setup": "Деян 22:24",
+     "resolution": "Деян 22:29"
+    }
+   ]
   },
   {
    "id": "e-pavel-pered-sinedrionom",
@@ -1421,7 +1601,11 @@
    "actors": [
     {
      "actor": "p-pavel",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "я фарисей, сын фарисея; за чаяние воскресения мертвых меня судят",
@@ -1440,7 +1624,11 @@
      "actor": "new:tysyachenachalnik-deyan21",
      "label": "тысяченачальник",
      "kind": "unnamed",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "повелел воинам сойти взять его из среды их и отвести в крепость",
       "refs": [
@@ -1456,7 +1644,11 @@
      "actor": "new:ananiya-pervosvyashchennik",
      "label": "Анания",
      "kind": "human",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "приказал бить его по устам",
       "refs": [
@@ -1470,9 +1662,13 @@
     },
     {
      "actor": "new:farisei-v-sinedrione",
-     "label": "фарисеев",
+     "label": "фарисеи",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Деян 23:6",
       "Деян 23:7"
@@ -1481,9 +1677,13 @@
     },
     {
      "actor": "new:saddukei",
-     "label": "саддукеев",
+     "label": "саддукеи",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Деян 23:6",
       "Деян 23:7"
@@ -1504,17 +1704,19 @@
     }
    ],
    "links": [],
-   "boundary": [
-    {
-     "start": "Деян 22:30",
-     "end": "Деян 23:10",
-     "rule": 5,
-     "human": "Деян 23:11 (явление Господа ночью) — не размечено: Деян 23 целиком не входит в пакет"
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "Деян 23:11 (явление Господа ночью) — не размечено: Деян 23 целиком не входит в пакет"
+   },
+   "plot": [
+    {
+     "setup": "Деян 22:30",
+     "resolution": "Деян 23:10"
+    }
+   ]
   },
   {
    "id": "e-pavel-pered-agrippoy",
@@ -1601,7 +1803,28 @@
    "actors": [
     {
      "actor": "p-pavel",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 1,
+       "role": "mentioned"
+      },
+      {
+       "part": 2,
+       "role": "addressed"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      },
+      {
+       "part": 4,
+       "role": "agent"
+      },
+      {
+       "part": 5,
+       "role": "mentioned"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "я не воспротивился небесному видению",
@@ -1612,13 +1835,36 @@
      "refs": [
       "Деян 25:19",
       "Деян 26:1",
-      "Деян 26:24"
+      "Деян 26:24",
+      "Деян 25:23",
+      "Деян 26:31"
      ],
      "cert": "scripture"
     },
     {
      "actor": "p-agrippa",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      },
+      {
+       "part": 4,
+       "role": "agent"
+      },
+      {
+       "part": 5,
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "ты немного не убеждаешь меня сделаться Христианином",
@@ -1630,13 +1876,28 @@
       "Деян 25:13",
       "Деян 25:22",
       "Деян 26:1",
-      "Деян 26:28"
+      "Деян 26:28",
+      "Деян 25:23",
+      "Деян 26:30"
      ],
      "cert": "scripture"
     },
     {
      "actor": "p-verenika",
-     "role": "mentioned",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 5,
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Деян 25:13",
       "Деян 25:23",
@@ -1648,7 +1909,24 @@
      "actor": "new:fest",
      "label": "Фест",
      "kind": "human",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 4,
+       "role": "agent"
+      },
+      {
+       "part": 5,
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "безумствуешь ты, Павел!",
       "refs": [
@@ -1658,13 +1936,19 @@
      "refs": [
       "Деян 25:14",
       "Деян 25:24",
-      "Деян 26:24"
+      "Деян 26:24",
+      "Деян 26:32"
      ],
      "cert": "scripture"
     },
     {
      "actor": "p-feliks",
-     "role": "mentioned",
+     "roles": [
+      {
+       "part": 1,
+       "role": "mentioned"
+      }
+     ],
      "mode": "in-speech",
      "refs": [
       "Деян 25:14"
@@ -1673,7 +1957,12 @@
     },
     {
      "actor": "p-iisus",
-     "role": "mentioned",
+     "roles": [
+      {
+       "part": 3,
+       "role": "mentioned"
+      }
+     ],
      "mode": "in-speech",
      "refs": [
       "Деян 26:15"
@@ -1702,17 +1991,19 @@
     }
    ],
    "links": [],
-   "boundary": [
-    {
-     "start": "Деян 25:22",
-     "end": "Деян 26:31",
-     "rule": 5,
-     "human": "завязка — «хотел бы и я послушать этого человека» (25:22); развязка — «этот человек ничего, достойного смерти или уз, не делает» (26:31)"
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "завязка — «хотел бы и я послушать этого человека» (25:22); развязка — «этот человек ничего, достойного смерти или уз, не делает» (26:31)"
+   },
+   "plot": [
+    {
+     "setup": "Деян 25:22",
+     "resolution": "Деян 26:31"
+    }
+   ]
   }
  ],
  "classes": [],

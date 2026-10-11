@@ -11,6 +11,7 @@
  *   index.json        — номера, имена, виды, основные связи, наборы прочтений, области: не больше 200 КБ в gzip;
  *   cards/<том>.json  — утверждения карточек и «нет сведений», частями по томам;
  *   verses/<книга>.json — тексты только тех стихов, на которые есть ссылки, частями по книгам;
+ *   identities.csv    — выгрузка «Тождества лиц» (02 § 3.3.6; К-19): формы «выв.» и пары «возможно, то же лицо», CSV по 08 § 16.5;
  *   NOTICE.txt        — источники и права: собирается из реестра base/sources.json (09 § 5.5; Д3-5);
  *   manifest.json     — опись выпуска: уровень допуска и числа по статусам, отпечатки текста, таблиц, реестра, базы; размеры.
  * Что попадает в сборку, решает одна функция допуска (admit.ts): своих фильтров здесь нет. Карантин не попадает никогда.
@@ -32,6 +33,7 @@ import type { Cite, Origin } from './types.ts';
 import { prefixOf, redirectRow, shortId } from './prefixes.ts';
 import { buildChanges, digests, releaseOk, stampRelease, whyNotAdmitted, type Changes, type Digests } from './release.ts';
 import { noticeEntries, noticeText } from './sources.ts';
+import { identityCsv, identityRows } from './name-forms.ts';
 
 const ROOT = join(import.meta.dirname, '..', '..');
 /** Папки сборки по уровням: выпуск и проба никогда не пишутся в одну папку. */
@@ -48,6 +50,7 @@ export const BUDGETS: { pattern: RegExp; name: string; max: number; required: bo
   { pattern: /^verses\/[^/]+\.json$/, name: 'текст книги', max: 96 * 1024, required: false },
   { pattern: /^tsk\/[^/]+\.json$/, name: 'параллельные места, часть', max: 96 * 1024, required: false },
   { pattern: /^changes\.json$/, name: 'журнал изменений выпуска', max: 64 * 1024, required: false },
+  { pattern: /^identities\.csv$/, name: 'выгрузка «Тождества лиц»', max: 32 * 1024, required: false },
 ];
 
 /** Проверка бюджетов: каждый файл сборки — с бюджетом и в нём (служебные NOTICE и опись — вне пакетов). */
@@ -78,9 +81,11 @@ export function buildIndex(base: Base, level: Level | Admission) {
   const actors = base.volumes.flatMap((v) =>
     v.actors.filter(ok).map((a) => {
       const names = a.names.filter((n: any) => A.part(n));
+      // номера форм «выв.» среди других имён `o` (К-19): поиск ставит совпадение с формой «Писание» выше
+      const oi = names.slice(1).flatMap((n, i) => (n.cert === 'inference' ? [i] : []));
       return {
         id: P(a.id), k: a.kind, ...(a.subkind && { sk: a.subkind }), ...(a.sex && { s: a.sex }),
-        n: names[0]?.form ?? a.names[0].form, ...(names.length > 1 && { o: names.slice(1).map((n) => n.form) }),
+        n: names[0]?.form ?? a.names[0].form, ...(names.length > 1 && { o: names.slice(1).map((n) => n.form) }), ...(oi.length && { oi }),
         ...(a.disambig && { d: a.disambig }), ...(a.roles?.length && { r: a.roles }), ...(a.prominence && { p: a.prominence }),
         ...(a.count && { c: a.count.n }), v: v.vol,
       };
@@ -104,7 +109,7 @@ export function buildIndex(base: Base, level: Level | Admission) {
       ...(o.skipped && { sk: o.skipped.actors.map(short) }), ...(o.outsideLists && { ol: 1 }),
       ...(o.saidBy && { sb: saidBy(o.saidBy) }),
       // тождество конца ребра «весомо» (Р4-8): поле `idt`, а не `id` — номер записи и тождество не путаются (К-6)
-      ...(o.identity && { idt: { o: o.identity.of, d: o.identity.degree, n: o.identity.note, r: o.identity.refs } }),
+      ...(o.identity && { idt: { o: o.identity.of, d: o.identity.degree, n: o.identity.note, r: o.identity.refs, ...(o.identity.form && { f: o.identity.form }) } }),
     })),
     cand: admittedOrigins.filter(isCand).map((o) => ({
       c: short(o.child), r: o.role === 'father' ? 'f' : 'm', ...(o.cert !== 'scripture' && { ce: o.cert }), rf: o.refs,
@@ -175,11 +180,20 @@ export function buildCards(base: Base, level: Level | Admission) {
       // до замены ссылкой calc (02 § 3.10; 07 § 21.1; К-8, Д-7)
       const facts = a.facts.filter((f) => (A.ok(f) && !f.needsSources && (f.cert === 'calc' || !yearIn(f.value))) || (excludedFacts++, false));
       const nod = base.nodata.filter((n) => n.actor === a.id && A.ok(n)).map((n) => ({ s: n.sec, k: n.kind, ...(n.what && { w: n.what }), ...(n.refs.length && { r: n.refs }), ...(n.words && { q: n.words }) }));
-      cards[shortId(a.id, 'p-')] = { f: facts.map((f) => ({ s: f.sec, f: f.field, v: f.value, ...(f.cert && { c: f.cert }) })), ...(nod.length && { nd: nod }) };
+      cards[shortId(a.id, 'p-')] = { f: facts.map((f) => ({ s: f.sec, f: f.field, v: f.value, ...(f.cert && { c: f.cert }), ...(f.idCert && { ic: f.idCert }) })), ...(nod.length && { nd: nod }), ...nameForms(a.names.filter((n: any) => A.part(n))) };
     }
     out[v.file] = { schema: 1, ...mark(A), cards };
   }
   return { cards: out, excludedFacts };
+}
+
+/**
+ * Формы «выв.» в пакете карточки (К-19): номер, форма, уровень, стихи сравнения по сторонам, коды проверок, напряжение —
+ * для строки «здесь назван», второго слоя и выгрузки «Тождества лиц» (02 § 3.3.6).
+ */
+export function nameForms(names: import('./types.ts').Name[]) {
+  const nm = names.filter((n) => n.cert === 'inference').map((n) => ({ id: n.id, n: n.form, c: 'inference' as const, cmp: n.compare, w: n.why, ...(n.tension && { tn: n.tension }) }));
+  return nm.length ? { nm } : {};
 }
 
 /** Все ссылки допущенных записей. */
@@ -265,6 +279,13 @@ function main() {
   const bookNo = new Map(BOOKS.map((b, i) => [b.code, String(i + 1).padStart(2, '0')]));
   const m = mark(A);
   for (const [book, verses] of byBook) write(`verses/${bookNo.get(book)}.json`, { ...m, book, verses });
+
+  // выгрузка «Тождества лиц» (02 § 3.3.6; К-19): CSV по 08 § 16.5
+  {
+    const csv = identityCsv(identityRows(base, (x) => A.ok(x), (x) => A.part(x)));
+    writeFileSync(join(OUT, 'identities.csv'), csv);
+    sizes['identities.csv'] = { raw: Buffer.byteLength(csv), gz: gzipSync(csv, { level: 9 }).length };
+  }
 
   // источники и права (09 § 5.5; Д3-5): из реестра; у выпуска источник без права распространения — ошибка сборки
   const notice = noticeEntries(base, A);

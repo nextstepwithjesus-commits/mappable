@@ -33,7 +33,7 @@
      "refs": [
       "Мк 1:2-8"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -50,7 +50,7 @@
      "refs": [
       "Лк 3:1-18"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -233,7 +233,11 @@
    "actors": [
     {
      "actor": "p-ioann-krestitel",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "приходит Иоанн Креститель и проповедует в пустыне Иудейской",
@@ -252,7 +256,11 @@
      "actor": "new:narod-u-iordana",
      "label": "народ",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "account": 2,
      "refs": [
       "Лк 3:7",
@@ -262,9 +270,13 @@
     },
     {
      "actor": "new:farisei-i-saddukei",
-     "label": "фарисеев и саддукеев",
+     "label": "фарисеи и саддукеи",
      "kind": "group",
-     "role": "addressed",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
      "account": 0,
      "refs": [
       "Мф 3:7"
@@ -275,7 +287,11 @@
      "actor": "new:mytari-u-ioanna",
      "label": "мытари",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "account": 2,
      "refs": [
       "Лк 3:12"
@@ -286,7 +302,11 @@
      "actor": "new:voiny-u-ioanna",
      "label": "воины",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "account": 2,
      "refs": [
       "Лк 3:14"
@@ -295,7 +315,11 @@
     },
     {
      "actor": "p-isaiya",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "refs": [
       "Мф 3:3",
       "Лк 3:4"
@@ -329,6 +353,8 @@
    "discrepancies": [
     {
      "label": "к кому обращены слова «порождения ехиднины»",
+     "kind": "who",
+     "scene": "e-ioann-krestit-v-pustyne#s4",
      "quotes": [
       {
        "ref": "Мф 3:7",
@@ -338,10 +364,15 @@
        "ref": "Лк 3:7",
        "text": "Иоанн приходившему креститься от него народу говорил: порождения ехиднины!"
       }
+     ],
+     "silent": [
+      1
      ]
     },
     {
      "label": "слова об обуви",
+     "kind": "presence",
+     "scene": "e-ioann-krestit-v-pustyne#s6",
      "quotes": [
       {
        "ref": "Мф 3:11",
@@ -351,20 +382,38 @@
        "ref": "Мк 1:7",
        "text": "я недостоин, наклонившись, развязать ремень обуви Его"
       }
+     ],
+     "silent": [
+      2
      ]
-    }
-   ],
-   "boundary": [
-    {
-     "start": "Мф 3:1",
-     "end": "Мф 3:12",
-     "rule": 5,
-     "human": "у Марка история начинается после заглавия «Начало Евангелия» (Мк 1:1 — класс «вступление»)"
     }
    ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "у Марка история начинается после заглавия «Начало Евангелия» (Мк 1:1 — класс «вступление»)"
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 3:1",
+     "resolution": "Мф 3:12"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 1:4",
+     "resolution": "Мк 1:8",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    },
+    {
+     "account": 2,
+     "setup": "Лк 3:1",
+     "resolution": "Лк 3:17",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    }
+   ]
   },
   {
    "id": "e-iisus-krestitsya-ot-ioanna",
@@ -385,7 +434,7 @@
      "refs": [
       "Мк 1:9-11"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -401,7 +450,7 @@
      "refs": [
       "Лк 3:21-22"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -496,7 +545,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "И, крестившись, Иисус тотчас вышел из воды",
@@ -513,7 +566,12 @@
     },
     {
      "actor": "p-ioann-krestitel",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "main": true,
      "roleText": {
       "text": "Иоанн же удерживал Его",
       "refs": [
@@ -529,8 +587,12 @@
     },
     {
      "actor": "god",
-     "label": "глас с небес",
-     "role": "participant",
+     "label": "Бог",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "Сей есть Сын Мой возлюбленный",
       "refs": [
@@ -540,15 +602,20 @@
      "refs": [
       "Мф 3:17",
       "Мк 1:11",
-      "Лк 3:22"
+      "Лк 3:22",
+      "2Пет 1:17"
      ],
-     "cert": "scripture"
+     "cert": "inference"
     },
     {
      "actor": "new:dukh-kak-golub",
-     "label": "Духа",
+     "label": "Дух",
      "kind": "spirit",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "как голубь",
       "refs": [
@@ -589,6 +656,8 @@
    "discrepancies": [
     {
      "label": "кому сказаны слова гласа",
+     "kind": "who",
+     "scene": "e-iisus-krestitsya-ot-ioanna#s3",
      "quotes": [
       {
        "ref": "Мф 3:17",
@@ -598,19 +667,37 @@
        "ref": "Мк 1:11",
        "text": "Ты Сын Мой возлюбленный"
       }
+     ],
+     "silent": [
+      2
      ]
-    }
-   ],
-   "boundary": [
-    {
-     "start": "Мф 3:13",
-     "end": "Мф 3:17",
-     "rule": 5
     }
    ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 3:13",
+     "resolution": "Мф 3:17"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 1:9",
+     "resolution": "Мк 1:11",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    },
+    {
+     "account": 2,
+     "setup": "Лк 3:21",
+     "resolution": "Лк 3:22",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    }
+   ]
   },
   {
    "id": "e-iisusa-iskushaet-satana",
@@ -631,7 +718,7 @@
      "refs": [
       "Мк 1:12-13"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -648,7 +735,7 @@
      "refs": [
       "Лк 4:1-13"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -787,7 +874,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "Тогда Иисус возведен был Духом в пустыню",
@@ -805,7 +896,11 @@
      "actor": "new:diavol",
      "label": "диавол",
      "kind": "spirit",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "все это дам Тебе, если, пав, поклонишься мне",
       "refs": [
@@ -820,9 +915,13 @@
     },
     {
      "actor": "new:diavol",
-     "label": "сатаною",
+     "label": "сатана",
      "kind": "spirit",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "account": 1,
      "refs": [
       "Мк 1:13"
@@ -833,7 +932,11 @@
      "actor": "new:angely-v-pustyne",
      "label": "Ангелы",
      "kind": "angel",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "и Ангелы служили Ему",
       "refs": [
@@ -894,6 +997,8 @@
    "discrepancies": [
     {
      "label": "что было вторым",
+     "kind": "order",
+     "scene": "e-iisusa-iskushaet-satana#s3",
      "quotes": [
       {
        "ref": "Мф 4:5",
@@ -903,19 +1008,37 @@
        "ref": "Лк 4:5",
        "text": "И, возведя Его на высокую гору, диавол показал Ему все царства вселенной"
       }
+     ],
+     "silent": [
+      1
      ]
-    }
-   ],
-   "boundary": [
-    {
-     "start": "Мф 4:1",
-     "end": "Мф 4:11",
-     "rule": 5
     }
    ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 4:1",
+     "resolution": "Мф 4:11"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 1:12",
+     "resolution": "Мк 1:13",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    },
+    {
+     "account": 2,
+     "setup": "Лк 4:1",
+     "resolution": "Лк 4:13",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    }
+   ]
   },
   {
    "id": "e-iisus-propoveduet-v-galilee",
@@ -936,7 +1059,7 @@
      "refs": [
       "Мк 1:14-15"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -955,7 +1078,7 @@
      "refs": [
       "Лк 4:14-15"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -1029,7 +1152,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "покайтесь, ибо приблизилось Царство Небесное",
@@ -1046,7 +1173,11 @@
     },
     {
      "actor": "p-ioann-krestitel",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "refs": [
       "Мф 4:12",
       "Мк 1:14"
@@ -1088,16 +1219,31 @@
     }
    ],
    "links": [],
-   "boundary": [
-    {
-     "start": "Мф 4:12",
-     "end": "Мф 4:17",
-     "rule": 5
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 4:12",
+     "resolution": "Мф 4:17"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 1:14",
+     "resolution": "Мк 1:15",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    },
+    {
+     "account": 2,
+     "setup": "Лк 4:14",
+     "resolution": "Лк 4:15",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    }
+   ]
   },
   {
    "id": "e-lovtsy-chelovekov",
@@ -1118,7 +1264,7 @@
      "refs": [
       "Мк 1:16-20"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -1126,26 +1272,6 @@
        "Мк 1:16-17"
       ],
       "time": []
-     }
-    },
-    {
-     "refs": [
-      "Лк 5:1-11"
-     ],
-     "cert": "scripture",
-     "basis": {
-      "kind": "other-books",
-      "refs": [
-       "Мф 4:19",
-       "Мк 1:17",
-       "Лк 5:10",
-       "Мф 4:20",
-       "Лк 5:11"
-      ],
-      "time": [
-       "Лк 5:1"
-      ],
-      "note": "ход сцены другой. общие слова — «ловцами человеков» и «будешь ловить человеков», «оставив… последовали» и «оставили все и последовали»; ход: у моря рыболовы и сети — слово Иисуса — оставили и последовали; «Однажды» (Лк 5:1) в разное время не ставит. Решение составителя по 11 § 2.6 (б); у Луки — великий лов рыбы, у Матфея и Марка его нет: строка протокола И0"
      }
     }
    ],
@@ -1168,33 +1294,11 @@
        "refs": [
         "Мк 1:16"
        ]
-      },
-      {
-       "account": 2,
-       "refs": [
-        "Лк 5:1-3"
-       ]
       }
      ]
     },
     {
      "id": "e-lovtsy-chelovekov#s2",
-     "title": {
-      "short": "Великий лов рыбы",
-      "by": "atlas"
-     },
-     "refs": [
-      {
-       "account": 2,
-       "refs": [
-        "Лк 5:4-9"
-       ]
-      }
-     ],
-     "note": "ход сцены другой: у Луки — своё ядро сцены; склейка «да, с условием» (второй ключ, решение координатора, п. 6)"
-    },
-    {
-     "id": "e-lovtsy-chelovekov#s3",
      "title": {
       "short": "Ловцы человеков",
       "by": "atlas"
@@ -1211,17 +1315,11 @@
        "refs": [
         "Мк 1:17"
        ]
-      },
-      {
-       "account": 2,
-       "refs": [
-        "Лк 5:10"
-       ]
       }
      ]
     },
     {
-     "id": "e-lovtsy-chelovekov#s4",
+     "id": "e-lovtsy-chelovekov#s3",
      "title": {
       "short": "Оставили всё и последовали",
       "by": "atlas"
@@ -1238,17 +1336,11 @@
        "refs": [
         "Мк 1:18"
        ]
-      },
-      {
-       "account": 2,
-       "refs": [
-        "Лк 5:11"
-       ]
       }
      ]
     },
     {
-     "id": "e-lovtsy-chelovekov#s5",
+     "id": "e-lovtsy-chelovekov#s4",
      "title": {
       "short": "Иаков и Иоанн в лодке",
       "by": "atlas"
@@ -1272,7 +1364,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "идите за Мною, и Я сделаю, что вы будете ловцами человеков",
@@ -1281,34 +1377,38 @@
       ]
      },
      "refs": [
-      "Мк 1:17",
-      "Лк 5:8",
-      "Лк 5:10"
+      "Мк 1:17"
      ],
      "cert": "scripture"
     },
     {
      "actor": "p-petr",
-     "role": "participant",
+     "label": "Симон",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
-      "text": "выйди от меня, Господи! потому что я человек грешный",
+      "text": "и они тотчас, оставив сети, последовали за Ним",
       "refs": [
-       "Лк 5:8"
+       "Мф 4:20"
       ]
      },
      "refs": [
       "Мф 4:18",
-      "Мк 1:16",
-      "Лк 5:3",
-      "Лк 5:8"
+      "Мк 1:16"
      ],
-     "cert": "scripture",
-     "label": "Симон"
+     "cert": "scripture"
     },
     {
      "actor": "p-andrey",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Мф 4:18",
       "Мк 1:16"
@@ -1317,27 +1417,37 @@
     },
     {
      "actor": "p-iakov-zevedeev",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Мф 4:21",
-      "Мк 1:19",
-      "Лк 5:10"
+      "Мк 1:19"
      ],
      "cert": "scripture"
     },
     {
      "actor": "p-ioann-apostol",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Мф 4:21",
-      "Мк 1:19",
-      "Лк 5:10"
+      "Мк 1:19"
      ],
      "cert": "scripture"
     },
     {
      "actor": "p-zevedey",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "refs": [
       "Мф 4:21",
       "Мк 1:20"
@@ -1346,24 +1456,16 @@
     },
     {
      "actor": "new:rabotniki-zevedeya",
-     "label": "работниками",
+     "label": "работники",
      "kind": "group",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "account": 1,
      "refs": [
       "Мк 1:20"
-     ],
-     "cert": "scripture"
-    },
-    {
-     "actor": "new:narod-u-ozera",
-     "label": "народ",
-     "kind": "group",
-     "role": "addressed",
-     "account": 2,
-     "refs": [
-      "Лк 5:1",
-      "Лк 5:3"
      ],
      "cert": "scripture"
     }
@@ -1378,12 +1480,167 @@
       "Мк 1:16"
      ],
      "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "source": {
+    "method": "reading"
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "Лк 5:1–11 — своя история «Великое множество рыбы» (11 ред. 4.3, задача 23)"
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 4:18",
+     "resolution": "Мф 4:22"
     },
     {
+     "account": 1,
+     "setup": "Мк 1:16",
+     "resolution": "Мк 1:20",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    }
+   ]
+  },
+  {
+   "id": "e-velikoe-mnozhestvo-ryby",
+   "level": "story",
+   "kind": "event",
+   "title": {
+    "short": "Великое множество рыбы",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Лк 5:1-11"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-iisus",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "roleText": {
+      "text": "не бойся; отныне будешь ловить человеков",
+      "refs": [
+       "Лк 5:10"
+      ]
+     },
+     "refs": [
+      "Лк 5:8",
+      "Лк 5:10"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-petr",
+     "label": "Симон",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "roleText": {
+      "text": "выйди от меня, Господи! потому что я человек грешный",
+      "refs": [
+       "Лк 5:8"
+      ]
+     },
+     "refs": [
+      "Лк 5:3",
+      "Лк 5:4",
+      "Лк 5:5",
+      "Лк 5:8"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-iakov-zevedeev",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "refs": [
+      "Лк 5:10"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-ioann-apostol",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "refs": [
+      "Лк 5:10"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-zevedey",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
+     "refs": [
+      "Лк 5:10"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:narod-u-ozera",
+     "label": "народ",
+     "kind": "group",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
+     "refs": [
+      "Лк 5:1",
+      "Лк 5:3"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:tovarishchi-na-drugoy-lodke",
+     "label": "товарищи",
+     "kind": "group",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "roleText": {
+      "text": "и пришли, и наполнили обе лодки",
+      "refs": [
+       "Лк 5:7"
+      ]
+     },
+     "refs": [
+      "Лк 5:7"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
      "place": "new:ozero-gennisaretskoe",
-     "label": "озера Геннисаретского",
+     "label": "озеро Геннисаретское",
      "role": "where",
-     "account": 2,
      "refs": [
       "Лк 5:1"
      ],
@@ -1391,40 +1648,15 @@
     }
    ],
    "links": [],
-   "discrepancies": [
+   "boundary": {
+    "startRule": 1,
+    "endRule": 5,
+    "human": "своя история, не третий рассказ «Ловцы человеков» (11 ред. 4.3, задача 23): у Луки — свой ход сцены (лов рыбы по слову Иисуса, Лк 5:4–9), а у Матфея и Марка его нет; совпадают только слова о ловле человеков и «оставили всё и последовали»"
+   },
+   "plot": [
     {
-     "label": "что делали рыболовы",
-     "quotes": [
-      {
-       "ref": "Мк 1:16",
-       "text": "закидывающих сети в море"
-      },
-      {
-       "ref": "Лк 5:2",
-       "text": "рыболовы, выйдя из них, вымывали сети"
-      }
-     ]
-    },
-    {
-     "label": "кому сказаны слова о ловле человеков",
-     "quotes": [
-      {
-       "ref": "Мк 1:17",
-       "text": "И сказал им Иисус: идите за Мною"
-      },
-      {
-       "ref": "Лк 5:10",
-       "text": "И сказал Симону Иисус: не бойся; отныне будешь ловить человеков"
-      }
-     ]
-    }
-   ],
-   "boundary": [
-    {
-     "start": "Мф 4:18",
-     "end": "Мф 4:22",
-     "rule": 5,
-     "human": "склейка с Лк 5:1–11 — решение составителя (11 § 2.6 б), образец протокола И0"
+     "setup": "Лк 5:4",
+     "resolution": "Лк 5:11"
     }
    ],
    "source": {
@@ -1450,7 +1682,7 @@
      "refs": [
       "Лк 4:31-37"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -1554,7 +1786,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "замолчи и выйди из него",
@@ -1574,7 +1810,11 @@
      "actor": "new:oderzhimyy-v-kapernaume",
      "label": "человек, одержимый духом нечистым",
      "kind": "unnamed",
-     "role": "suffers",
+     "roles": [
+      {
+       "role": "undergoer"
+      }
+     ],
      "refs": [
       "Мк 1:23",
       "Лк 4:33"
@@ -1585,7 +1825,11 @@
      "actor": "new:dukh-nechistyy-mk1",
      "label": "дух нечистый",
      "kind": "spirit",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Мк 1:26"
      ],
@@ -1595,7 +1839,11 @@
      "actor": "new:vse-v-sinagoge",
      "label": "все",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "И все ужаснулись",
       "refs": [
@@ -1633,6 +1881,8 @@
    "discrepancies": [
     {
      "label": "как вышел дух",
+     "kind": "presence",
+     "scene": "e-nechistyy-dukh-v-sinagoge#s3",
      "quotes": [
       {
        "ref": "Мк 1:26",
@@ -1645,16 +1895,25 @@
      ]
     }
    ],
-   "boundary": [
-    {
-     "start": "Мк 1:21",
-     "end": "Мк 1:28",
-     "rule": 5
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мк 1:21",
+     "resolution": "Мк 1:28"
+    },
+    {
+     "account": 1,
+     "setup": "Лк 4:31",
+     "resolution": "Лк 4:37",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    }
+   ]
   },
   {
    "id": "e-tyoshcha-simona",
@@ -1675,7 +1934,7 @@
      "refs": [
       "Мк 1:29-31"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -1691,7 +1950,7 @@
      "refs": [
       "Лк 4:38-39"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -1765,7 +2024,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "refs": [
       "Мф 8:14"
@@ -1776,7 +2039,11 @@
      "actor": "new:tyoshcha-simona",
      "label": "теща",
      "kind": "unnamed",
-     "role": "suffers",
+     "roles": [
+      {
+       "role": "undergoer"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "она встала и служила им",
@@ -1794,7 +2061,11 @@
     {
      "actor": "p-petr",
      "label": "Петр",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "account": 0,
      "refs": [
       "Мф 8:14"
@@ -1804,7 +2075,11 @@
     {
      "actor": "p-petr",
      "label": "Симон",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "refs": [
       "Мк 1:29",
       "Лк 4:38"
@@ -1813,7 +2088,11 @@
     },
     {
      "actor": "p-andrey",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "account": 1,
      "refs": [
       "Мк 1:29"
@@ -1822,7 +2101,11 @@
     },
     {
      "actor": "p-iakov-zevedeev",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "account": 1,
      "refs": [
       "Мк 1:29"
@@ -1831,7 +2114,11 @@
     },
     {
      "actor": "p-ioann-apostol",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "account": 1,
      "refs": [
       "Мк 1:29"
@@ -1855,6 +2142,8 @@
    "discrepancies": [
     {
      "label": "как исцелил",
+     "kind": "presence",
+     "scene": "e-tyoshcha-simona#s2",
      "quotes": [
       {
        "ref": "Мф 8:15",
@@ -1864,19 +2153,37 @@
        "ref": "Лк 4:39",
        "text": "Он запретил горячке"
       }
+     ],
+     "silent": [
+      1
      ]
-    }
-   ],
-   "boundary": [
-    {
-     "start": "Мф 8:14",
-     "end": "Мф 8:15",
-     "rule": 5
     }
    ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 8:14",
+     "resolution": "Мф 8:15"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 1:29",
+     "resolution": "Мк 1:31",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    },
+    {
+     "account": 2,
+     "setup": "Лк 4:38",
+     "resolution": "Лк 4:39",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    }
+   ]
   },
   {
    "id": "e-bolnye-u-dverey-vecherom",
@@ -1897,7 +2204,7 @@
      "refs": [
       "Мк 1:32-34"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -1914,7 +2221,7 @@
      "refs": [
       "Лк 4:40-41"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -1962,7 +2269,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "И Он исцелил многих, страдавших различными болезнями",
@@ -1973,14 +2284,18 @@
      "refs": [
       "Мф 8:16"
      ],
-     "cert": "scripture",
-     "antecedent": "Мф 8:14"
+     "antecedent": "Мф 8:14",
+     "cert": "scripture"
     },
     {
      "actor": "new:bolnye-vecherom",
-     "label": "больных",
+     "label": "больные",
      "kind": "group",
-     "role": "suffers",
+     "roles": [
+      {
+       "role": "undergoer"
+      }
+     ],
      "refs": [
       "Мк 1:32",
       "Лк 4:40"
@@ -1989,9 +2304,13 @@
     },
     {
      "actor": "new:besy-mk1",
-     "label": "бесов",
+     "label": "бесы",
      "kind": "spirit",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Мк 1:34",
       "Лк 4:41"
@@ -2001,16 +2320,31 @@
    ],
    "places": [],
    "links": [],
-   "boundary": [
-    {
-     "start": "Мф 8:16",
-     "end": "Мф 8:17",
-     "rule": 5
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 8:16",
+     "resolution": "Мф 8:17"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 1:32",
+     "resolution": "Мк 1:34",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    },
+    {
+     "account": 2,
+     "setup": "Лк 4:40",
+     "resolution": "Лк 4:41",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    }
+   ]
   },
   {
    "id": "e-utrom-v-pustynnom-meste",
@@ -2031,7 +2365,7 @@
      "refs": [
       "Лк 4:42-44"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -2116,7 +2450,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "и там молился",
@@ -2133,7 +2471,12 @@
     },
     {
      "actor": "p-petr",
-     "role": "participant",
+     "label": "Симон",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "account": 0,
      "roleText": {
       "text": "Симон и бывшие с ним пошли за Ним",
@@ -2144,14 +2487,17 @@
      "refs": [
       "Мк 1:36"
      ],
-     "cert": "scripture",
-     "label": "Симон"
+     "cert": "scripture"
     },
     {
      "actor": "new:narod-ishchet",
      "label": "народ",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "account": 1,
      "refs": [
       "Лк 4:42"
@@ -2185,6 +2531,8 @@
    "discrepancies": [
     {
      "label": "кто искал Иисуса",
+     "kind": "who",
+     "scene": "e-utrom-v-pustynnom-meste#s1",
      "quotes": [
       {
        "ref": "Мк 1:36",
@@ -2197,16 +2545,25 @@
      ]
     }
    ],
-   "boundary": [
-    {
-     "start": "Мк 1:35",
-     "end": "Мк 1:39",
-     "rule": 5
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мк 1:35",
+     "resolution": "Мк 1:39"
+    },
+    {
+     "account": 1,
+     "setup": "Лк 4:42",
+     "resolution": "Лк 4:44",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    }
+   ]
   },
   {
    "id": "e-iisus-i-prokazhennyy",
@@ -2227,7 +2584,7 @@
      "refs": [
       "Мк 1:40-45"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -2243,7 +2600,7 @@
      "refs": [
       "Лк 5:12-16"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -2364,7 +2721,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "хочу, очистись",
@@ -2383,7 +2744,11 @@
      "actor": "new:prokazhennyy-mk1",
      "label": "прокаженный",
      "kind": "unnamed",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "если хочешь, можешь меня очистить",
@@ -2401,7 +2766,11 @@
      "actor": "new:prokazhennyy-mk1",
      "label": "человек весь в проказе",
      "kind": "unnamed",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "account": 2,
      "refs": [
       "Лк 5:12"
@@ -2425,6 +2794,8 @@
    "discrepancies": [
     {
      "label": "от кого пошла молва",
+     "kind": "who",
+     "scene": "e-iisus-i-prokazhennyy#s4",
      "quotes": [
       {
        "ref": "Мк 1:45",
@@ -2434,19 +2805,37 @@
        "ref": "Лк 5:15",
        "text": "Но тем более распространялась молва о Нем"
       }
+     ],
+     "silent": [
+      0
      ]
-    }
-   ],
-   "boundary": [
-    {
-     "start": "Мф 8:2",
-     "end": "Мф 8:4",
-     "rule": 5
     }
    ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 8:2",
+     "resolution": "Мф 8:4"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 1:40",
+     "resolution": "Мк 1:44",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    },
+    {
+     "account": 2,
+     "setup": "Лк 5:12",
+     "resolution": "Лк 5:14",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    }
+   ]
   },
   {
    "id": "e-rasslablennogo-spuskayut-cherez-krovlyu",
@@ -2496,7 +2885,7 @@
      "refs": [
       "Мк 2:1-12"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -2513,7 +2902,7 @@
      "refs": [
       "Лк 5:17-26"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -2735,7 +3124,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "дерзай, чадо! прощаются тебе грехи твои",
@@ -2752,9 +3145,13 @@
     },
     {
      "actor": "new:rasslablennyy",
-     "label": "расслабленного",
+     "label": "расслабленный",
      "kind": "unnamed",
-     "role": "suffers",
+     "roles": [
+      {
+       "role": "undergoer"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "И он встал, взял постель свою и пошел в дом свой",
@@ -2774,7 +3171,11 @@
      "actor": "new:chetvero-nesushchikh",
      "label": "четверо",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "account": 1,
      "roleText": {
       "text": "которого несли четверо",
@@ -2789,9 +3190,13 @@
     },
     {
      "actor": "new:knizhniki-mf9",
-     "label": "книжников",
+     "label": "книжники",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "Он богохульствует",
       "refs": [
@@ -2809,7 +3214,11 @@
      "actor": "new:farisei-i-zakonouchiteli",
      "label": "фарисеи и законоучители",
      "kind": "group",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "account": 2,
      "refs": [
       "Лк 5:17"
@@ -2820,7 +3229,11 @@
      "actor": "new:narod-mf9",
      "label": "Народ",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "удивился и прославил Бога",
       "refs": [
@@ -2859,6 +3272,8 @@
    "discrepancies": [
     {
      "label": "как принесли расслабленного",
+     "kind": "presence",
+     "scene": "e-rasslablennogo-spuskayut-cherez-krovlyu#s2",
      "quotes": [
       {
        "ref": "Мф 9:2",
@@ -2876,6 +3291,8 @@
     },
     {
      "label": "кто помышлял",
+     "kind": "who",
+     "scene": "e-rasslablennogo-spuskayut-cherez-krovlyu#s4",
      "quotes": [
       {
        "ref": "Мф 9:3",
@@ -2885,20 +3302,38 @@
        "ref": "Лк 5:21",
        "text": "Книжники и фарисеи начали рассуждать"
       }
+     ],
+     "silent": [
+      1
      ]
-    }
-   ],
-   "boundary": [
-    {
-     "start": "Мф 9:2",
-     "end": "Мф 9:8",
-     "rule": 5,
-     "human": "номер записи — по основному рассказу (первому по канону, Мф 9:1), не по Мк 2:1 (11 § 11.1)"
     }
    ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "номер записи — по основному рассказу (первому по канону, Мф 9:1), не по Мк 2:1 (11 § 11.1)"
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 9:2",
+     "resolution": "Мф 9:8"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 2:3",
+     "resolution": "Мк 2:12",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    },
+    {
+     "account": 2,
+     "setup": "Лк 5:18",
+     "resolution": "Лк 5:26",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    }
+   ]
   },
   {
    "id": "e-mytar-u-sbora-poshlin",
@@ -2919,7 +3354,7 @@
      "refs": [
       "Мк 2:13-14"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -2935,7 +3370,7 @@
      "refs": [
       "Лк 5:27-28"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -2997,7 +3432,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "следуй за Мною",
@@ -3015,7 +3454,11 @@
     {
      "actor": "p-matfey",
      "label": "Матфей",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "account": 0,
      "roleText": {
@@ -3031,7 +3474,11 @@
     },
     {
      "actor": "p-leviy-alfeev",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "account": 1,
      "refs": [
@@ -3041,7 +3488,11 @@
     },
     {
      "actor": "p-leviy-alfeev",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "account": 2,
      "refs": [
@@ -3051,7 +3502,11 @@
     },
     {
      "actor": "p-alfey-otets-leviya",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "account": 1,
      "refs": [
       "Мк 2:14"
@@ -3075,6 +3530,8 @@
    "discrepancies": [
     {
      "label": "имя мытаря",
+     "kind": "name",
+     "scene": "e-mytar-u-sbora-poshlin#s2",
      "quotes": [
       {
        "ref": "Мф 9:9",
@@ -3091,16 +3548,31 @@
      ]
     }
    ],
-   "boundary": [
-    {
-     "start": "Мф 9:9",
-     "end": "Мф 9:9",
-     "rule": 5
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 9:9",
+     "resolution": "Мф 9:9"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 2:14",
+     "resolution": "Мк 2:14",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    },
+    {
+     "account": 2,
+     "setup": "Лк 5:27",
+     "resolution": "Лк 5:28",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    }
+   ]
   },
   {
    "id": "e-iisus-est-s-mytaryami-i-greshnikami",
@@ -3121,7 +3593,7 @@
      "refs": [
       "Мк 2:15-17"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -3135,7 +3607,7 @@
      "refs": [
       "Лк 5:29-32"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -3235,7 +3707,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "Я пришел призвать не праведников, но грешников к покаянию",
@@ -3254,7 +3730,11 @@
      "actor": "new:mytari-i-greshniki",
      "label": "мытари и грешники",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Мф 9:10",
       "Мк 2:15"
@@ -3265,7 +3745,11 @@
      "actor": "new:farisei",
      "label": "фарисеи",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "для чего Учитель ваш ест и пьет с мытарями и грешниками?",
       "refs": [
@@ -3283,7 +3767,11 @@
      "actor": "new:ucheniki",
      "label": "ученики",
      "kind": "group",
-     "role": "addressed",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
      "refs": [
       "Мф 9:10",
       "Мф 9:11"
@@ -3292,7 +3780,11 @@
     },
     {
      "actor": "p-leviy-alfeev",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "account": 2,
      "roleText": {
       "text": "И сделал для Него Левий в доме своем большое угощение",
@@ -3311,6 +3803,8 @@
    "discrepancies": [
     {
      "label": "кто роптал",
+     "kind": "who",
+     "scene": "e-iisus-est-s-mytaryami-i-greshnikami#s2",
      "quotes": [
       {
        "ref": "Мф 9:11",
@@ -3320,19 +3814,37 @@
        "ref": "Мк 2:16",
        "text": "Книжники и фарисеи, увидев, что Он ест с мытарями и грешниками, говорили ученикам Его"
       }
+     ],
+     "silent": [
+      2
      ]
-    }
-   ],
-   "boundary": [
-    {
-     "start": "Мф 9:11",
-     "end": "Мф 9:13",
-     "rule": 5
     }
    ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 9:11",
+     "resolution": "Мф 9:13"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 2:16",
+     "resolution": "Мк 2:17",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    },
+    {
+     "account": 2,
+     "setup": "Лк 5:30",
+     "resolution": "Лк 5:32",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    }
+   ]
   },
   {
    "id": "e-pochemu-ucheniki-ne-postyatsya",
@@ -3356,7 +3868,7 @@
      "refs": [
       "Мк 2:18-22"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -3372,7 +3884,7 @@
      "refs": [
       "Лк 5:33-39"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -3474,7 +3986,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "придут дни, когда отнимется у них жених, и тогда будут поститься",
@@ -3492,7 +4008,11 @@
      "actor": "new:ucheniki-ioannovy",
      "label": "ученики Иоанновы",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "account": 0,
      "roleText": {
       "text": "почему мы и фарисеи постимся много, а Твои ученики не постятся?",
@@ -3509,7 +4029,11 @@
      "actor": "new:knizhniki-i-farisei-lk5",
      "label": "Книжники и фарисеи",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "account": 2,
      "roleText": {
       "text": "Они же сказали Ему",
@@ -3529,6 +4053,8 @@
    "discrepancies": [
     {
      "label": "печалиться или поститься",
+     "kind": "presence",
+     "scene": "e-pochemu-ucheniki-ne-postyatsya#s2",
      "quotes": [
       {
        "ref": "Мф 9:15",
@@ -3538,10 +4064,15 @@
        "ref": "Мк 2:19",
        "text": "могут ли поститься сыны чертога брачного"
       }
+     ],
+     "silent": [
+      2
      ]
     },
     {
      "label": "кто спрашивал",
+     "kind": "who",
+     "scene": "e-pochemu-ucheniki-ne-postyatsya#s1",
      "quotes": [
       {
        "ref": "Мф 9:14",
@@ -3558,16 +4089,31 @@
      ]
     }
    ],
-   "boundary": [
-    {
-     "start": "Мф 9:14",
-     "end": "Мф 9:17",
-     "rule": 5
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 9:14",
+     "resolution": "Мф 9:17"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 2:18",
+     "resolution": "Мк 2:22",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    },
+    {
+     "account": 2,
+     "setup": "Лк 5:33",
+     "resolution": "Лк 5:39",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    }
+   ]
   },
   {
    "id": "e-ucheniki-sryvayut-kolosya-v-subbotu",
@@ -3588,7 +4134,7 @@
      "refs": [
       "Мк 2:23-28"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -3606,7 +4152,7 @@
      "refs": [
       "Лк 6:1-5"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -3751,7 +4297,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "Сын Человеческий есть господин и субботы",
@@ -3769,7 +4319,11 @@
      "actor": "new:ucheniki",
      "label": "ученики",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "начали срывать колосья и есть",
       "refs": [
@@ -3787,7 +4341,11 @@
      "actor": "new:farisei",
      "label": "Фарисеи",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Мф 12:2",
       "Мк 2:24",
@@ -3797,7 +4355,11 @@
     },
     {
      "actor": "p-david",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "mode": "in-speech",
      "refs": [
       "Мф 12:3",
@@ -3808,7 +4370,11 @@
     },
     {
      "actor": "p-aviafar",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "account": 1,
      "mode": "in-speech",
      "refs": [
@@ -3834,6 +4400,8 @@
    "discrepancies": [
     {
      "label": "кому сказали фарисеи",
+     "kind": "who",
+     "scene": "e-ucheniki-sryvayut-kolosya-v-subbotu#s2",
      "quotes": [
       {
        "ref": "Мф 12:2",
@@ -3843,19 +4411,37 @@
        "ref": "Лк 6:2",
        "text": "Некоторые же из фарисеев сказали им"
       }
+     ],
+     "silent": [
+      1
      ]
-    }
-   ],
-   "boundary": [
-    {
-     "start": "Мф 12:1",
-     "end": "Мф 12:8",
-     "rule": 5
     }
    ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 12:1",
+     "resolution": "Мф 12:8"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 2:23",
+     "resolution": "Мк 2:28",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    },
+    {
+     "account": 2,
+     "setup": "Лк 6:1",
+     "resolution": "Лк 6:5",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    }
+   ]
   },
   {
    "id": "e-issokhshaya-ruka-v-subbotu",
@@ -3876,7 +4462,7 @@
      "refs": [
       "Мк 3:1-6"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -3892,7 +4478,7 @@
      "refs": [
       "Лк 6:6-11"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -4020,7 +4606,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "протяни руку твою",
@@ -4038,7 +4628,11 @@
      "actor": "new:chelovek-s-sukhoy-rukoy",
      "label": "человек",
      "kind": "unnamed",
-     "role": "suffers",
+     "roles": [
+      {
+       "role": "undergoer"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "И он протянул, и стала она здорова, как другая",
@@ -4057,7 +4651,11 @@
      "actor": "new:farisei",
      "label": "Фарисеи",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "имели совещание против Него, как бы погубить Его",
       "refs": [
@@ -4073,9 +4671,13 @@
     },
     {
      "actor": "new:irodiane",
-     "label": "иродианами",
+     "label": "иродиане",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "account": 1,
      "refs": [
       "Мк 3:6"
@@ -4100,6 +4702,8 @@
    "discrepancies": [
     {
      "label": "кто задаёт вопрос о субботе",
+     "kind": "who",
+     "scene": "e-issokhshaya-ruka-v-subbotu#s1",
      "quotes": [
       {
        "ref": "Мф 12:10",
@@ -4109,19 +4713,37 @@
        "ref": "Мк 3:4",
        "text": "А им говорит: должно ли в субботу добро делать, или зло делать?"
       }
+     ],
+     "silent": [
+      2
      ]
-    }
-   ],
-   "boundary": [
-    {
-     "start": "Мф 12:10",
-     "end": "Мф 12:14",
-     "rule": 5
     }
    ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 12:10",
+     "resolution": "Мф 12:14"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 3:2",
+     "resolution": "Мк 3:6",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    },
+    {
+     "account": 2,
+     "setup": "Лк 6:7",
+     "resolution": "Лк 6:11",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    }
+   ]
   },
   {
    "id": "e-mnozhestvo-naroda-u-morya",
@@ -4142,7 +4764,7 @@
      "refs": [
       "Мк 3:7-12"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -4159,7 +4781,7 @@
      "refs": [
       "Лк 6:17-19"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -4265,7 +4887,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "и Он исцелил их всех",
@@ -4282,7 +4908,11 @@
      "actor": "new:mnozhestvo-naroda",
      "label": "множество народа",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Мф 12:15",
       "Мк 3:7",
@@ -4294,7 +4924,11 @@
      "actor": "new:dukhi-nechistye-mk3",
      "label": "духи нечистые",
      "kind": "spirit",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "account": 1,
      "roleText": {
       "text": "Ты Сын Божий",
@@ -4331,16 +4965,31 @@
     }
    ],
    "links": [],
-   "boundary": [
-    {
-     "start": "Мф 12:15",
-     "end": "Мф 12:21",
-     "rule": 5
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 12:15",
+     "resolution": "Мф 12:21"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 3:7",
+     "resolution": "Мк 3:12",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    },
+    {
+     "account": 2,
+     "setup": "Лк 6:17",
+     "resolution": "Лк 6:19",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    }
+   ]
   },
   {
    "id": "e-iisus-stavit-dvenadtsat",
@@ -4368,7 +5017,7 @@
      "refs": [
       "Лк 6:12-16"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -4452,7 +5101,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "И поставил из них двенадцать, чтобы с Ним были",
@@ -4469,7 +5122,12 @@
     },
     {
      "actor": "p-petr",
-     "role": "participant",
+     "label": "Симон",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
      "roleText": {
       "text": "поставил Симона, нарекши ему имя Петр",
       "refs": [
@@ -4480,12 +5138,15 @@
       "Мк 3:16",
       "Лк 6:14"
      ],
-     "cert": "scripture",
-     "label": "Симон"
+     "cert": "scripture"
     },
     {
      "actor": "p-andrey",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
      "refs": [
       "Мк 3:18",
       "Лк 6:14"
@@ -4494,7 +5155,11 @@
     },
     {
      "actor": "p-iakov-zevedeev",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
      "refs": [
       "Мк 3:17",
       "Лк 6:14"
@@ -4503,7 +5168,11 @@
     },
     {
      "actor": "p-ioann-apostol",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
      "refs": [
       "Мк 3:17",
       "Лк 6:14"
@@ -4512,7 +5181,11 @@
     },
     {
      "actor": "p-filipp-apostol",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
      "refs": [
       "Мк 3:18",
       "Лк 6:14"
@@ -4521,7 +5194,11 @@
     },
     {
      "actor": "p-varfolomey",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
      "refs": [
       "Мк 3:18",
       "Лк 6:14"
@@ -4530,7 +5207,11 @@
     },
     {
      "actor": "p-matfey",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
      "refs": [
       "Мк 3:18",
       "Лк 6:15"
@@ -4539,7 +5220,11 @@
     },
     {
      "actor": "p-foma",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
      "refs": [
       "Мк 3:18",
       "Лк 6:15"
@@ -4548,7 +5233,11 @@
     },
     {
      "actor": "p-iakov-alfeev",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
      "refs": [
       "Мк 3:18",
       "Лк 6:15"
@@ -4557,7 +5246,11 @@
     },
     {
      "actor": "p-faddey",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
      "account": 0,
      "refs": [
       "Мк 3:18"
@@ -4565,19 +5258,33 @@
      "cert": "scripture"
     },
     {
-     "actor": "p-iuda-iakovlev",
+     "actor": "p-faddey",
      "label": "Иуда Иаковлев",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
      "account": 1,
      "refs": [
       "Лк 6:16"
      ],
+     "idCert": {
+      "form": "p-faddey#n3",
+      "refs": [
+       "Лк 6:16"
+      ]
+     },
      "cert": "scripture"
     },
     {
      "actor": "p-simon-zilot",
      "label": "Симон Кананит",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
      "account": 0,
      "refs": [
       "Мк 3:18"
@@ -4587,7 +5294,11 @@
     {
      "actor": "p-simon-zilot",
      "label": "Симон, прозываемый Зилотом",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
      "account": 1,
      "refs": [
       "Лк 6:15"
@@ -4596,7 +5307,11 @@
     },
     {
      "actor": "p-iuda-iskariot",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
      "refs": [
       "Мк 3:19",
       "Лк 6:16"
@@ -4620,6 +5335,8 @@
    "discrepancies": [
     {
      "label": "имена в перечнях",
+     "kind": "name",
+     "scene": "e-iisus-stavit-dvenadtsat#s3",
      "quotes": [
       {
        "ref": "Мк 3:18",
@@ -4632,16 +5349,25 @@
      ]
     }
    ],
-   "boundary": [
-    {
-     "start": "Мк 3:13",
-     "end": "Мк 3:19",
-     "rule": 5
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мк 3:13",
+     "resolution": "Мк 3:19"
+    },
+    {
+     "account": 1,
+     "setup": "Лк 6:12",
+     "resolution": "Лк 6:16",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    }
+   ]
   },
   {
    "id": "e-tsarstvo-razdelivsheesya-v-sebe",
@@ -4662,7 +5388,7 @@
      "refs": [
       "Мк 3:20-30"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -4678,7 +5404,7 @@
      "refs": [
       "Лк 11:14-26"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -4867,7 +5593,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "всякое царство, разделившееся само в себе, опустеет",
@@ -4883,9 +5613,13 @@
     },
     {
      "actor": "new:besnovatyy-slepoy-i-nemoy",
-     "label": "бесноватого слепого и немого",
+     "label": "бесноватый слепой и немой",
      "kind": "unnamed",
-     "role": "suffers",
+     "roles": [
+      {
+       "role": "undergoer"
+      }
+     ],
      "account": 0,
      "refs": [
       "Мф 12:22"
@@ -4896,7 +5630,11 @@
      "actor": "new:nemoy-lk11",
      "label": "немой",
      "kind": "unnamed",
-     "role": "suffers",
+     "roles": [
+      {
+       "role": "undergoer"
+      }
+     ],
      "account": 2,
      "refs": [
       "Лк 11:14"
@@ -4907,7 +5645,11 @@
      "actor": "new:farisei",
      "label": "Фарисеи",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "account": 0,
      "refs": [
       "Мф 12:24"
@@ -4918,7 +5660,11 @@
      "actor": "new:knizhniki-iz-ierusalima",
      "label": "книжники",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "account": 1,
      "roleText": {
       "text": "Он имеет в Себе веельзевула",
@@ -4935,7 +5681,11 @@
      "actor": "new:blizhnie-iisusa",
      "label": "ближние Его",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "account": 1,
      "roleText": {
       "text": "пошли взять Его, ибо говорили, что Он вышел из себя",
@@ -4965,6 +5715,8 @@
    "discrepancies": [
     {
      "label": "кто говорил о веельзевуле",
+     "kind": "who",
+     "scene": "e-tsarstvo-razdelivsheesya-v-sebe#s3",
      "quotes": [
       {
        "ref": "Мф 12:24",
@@ -4982,6 +5734,8 @@
     },
     {
      "label": "кто исцелён",
+     "kind": "who",
+     "scene": "e-tsarstvo-razdelivsheesya-v-sebe#s2",
      "quotes": [
       {
        "ref": "Мф 12:22",
@@ -4991,20 +5745,38 @@
        "ref": "Лк 11:14",
        "text": "изгнал Он беса, который был нем"
       }
+     ],
+     "silent": [
+      1
      ]
-    }
-   ],
-   "boundary": [
-    {
-     "start": "Мф 12:24",
-     "end": "Мф 12:37",
-     "rule": 5,
-     "human": "Мк 3:20–21 (ближние) — обстановка этой истории, а не начало истории с разрывом до Мк 3:31: что «ближние» (3:21) — это «Матерь и братья» (3:31), повествователь не говорит (11 § 2.2, «служит — только словами повествователя»); решает человек — протокол И0"
     }
    ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "Мк 3:20–21 (ближние) — обстановка этой истории, а не начало истории с разрывом до Мк 3:31: что «ближние» (3:21) — это «Матерь и братья» (3:31), повествователь не говорит (11 § 2.2, «служит — только словами повествователя»); решает человек — протокол И0"
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 12:24",
+     "resolution": "Мф 12:37"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 3:22",
+     "resolution": "Мк 3:30",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    },
+    {
+     "account": 2,
+     "setup": "Лк 11:15",
+     "resolution": "Лк 11:26",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    }
+   ]
   },
   {
    "id": "e-kto-mater-moya-i-bratya-moi",
@@ -5025,7 +5797,7 @@
      "refs": [
       "Мк 3:31-35"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -5043,7 +5815,7 @@
      "refs": [
       "Лк 8:19-21"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -5116,7 +5888,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "вот матерь Моя и братья Мои",
@@ -5133,7 +5909,11 @@
     {
      "actor": "p-mariya",
      "label": "Матерь",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Мф 12:46",
       "Мк 3:31",
@@ -5145,7 +5925,11 @@
      "actor": "new:bratya-iisusa",
      "label": "братья Его",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Мф 12:46",
       "Мк 3:31",
@@ -5159,6 +5943,8 @@
    "discrepancies": [
     {
      "label": "кто Ему мать и братья",
+     "kind": "presence",
+     "scene": "e-kto-mater-moya-i-bratya-moi#s2",
      "quotes": [
       {
        "ref": "Мф 12:50",
@@ -5168,19 +5954,37 @@
        "ref": "Лк 8:21",
        "text": "слушающие слово Божие и исполняющие его"
       }
+     ],
+     "silent": [
+      1
      ]
-    }
-   ],
-   "boundary": [
-    {
-     "start": "Мф 12:46",
-     "end": "Мф 12:50",
-     "rule": 5
     }
    ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 12:46",
+     "resolution": "Мф 12:50"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 3:31",
+     "resolution": "Мк 3:35",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    },
+    {
+     "account": 2,
+     "setup": "Лк 8:19",
+     "resolution": "Лк 8:21",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    }
+   ]
   },
   {
    "id": "e-doch-iaira",
@@ -5203,7 +6007,7 @@
       "Мк 5:21-24",
       "Мк 5:35-43"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -5215,6 +6019,21 @@
       "time": [
        "Мф 9:18",
        "Мк 5:21"
+      ],
+      "place": [
+       "Мф 9:23",
+       "Мк 5:38"
+      ],
+      "actors": [
+       "Мф 9:18",
+       "Мк 5:22",
+       "Мк 5:23"
+      ],
+      "course": [
+       "Мф 9:24",
+       "Мф 9:25",
+       "Мк 5:39",
+       "Мк 5:41"
       ]
      }
     },
@@ -5223,7 +6042,7 @@
       "Лк 8:40-42",
       "Лк 8:49-56"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -5348,7 +6167,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "не умерла девица, но спит",
@@ -5366,7 +6189,11 @@
     {
      "actor": "p-iair-nachalnik-sinagogi",
      "label": "начальник",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "account": 0,
      "refs": [
@@ -5376,7 +6203,11 @@
     },
     {
      "actor": "p-iair-nachalnik-sinagogi",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "account": 1,
      "roleText": {
@@ -5393,7 +6224,11 @@
     },
     {
      "actor": "p-iair-nachalnik-sinagogi",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "account": 2,
      "refs": [
@@ -5405,7 +6240,11 @@
      "actor": "new:doch-iaira",
      "label": "дочь",
      "kind": "unnamed",
-     "role": "suffers",
+     "roles": [
+      {
+       "role": "undergoer"
+      }
+     ],
      "roleText": {
       "text": "и девица встала",
       "refs": [
@@ -5422,7 +6261,11 @@
     },
     {
      "actor": "p-petr",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Мк 5:37",
       "Лк 8:51"
@@ -5431,7 +6274,11 @@
     },
     {
      "actor": "p-iakov-zevedeev",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Мк 5:37",
       "Лк 8:51"
@@ -5440,7 +6287,11 @@
     },
     {
      "actor": "p-ioann-apostol",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Мк 5:37",
       "Лк 8:51"
@@ -5464,6 +6315,8 @@
    "discrepancies": [
     {
      "label": "что сказал отец",
+     "kind": "presence",
+     "scene": "e-doch-iaira#s1",
      "quotes": [
       {
        "ref": "Мф 9:18",
@@ -5473,10 +6326,15 @@
        "ref": "Мк 5:23",
        "text": "дочь моя при смерти"
       }
+     ],
+     "silent": [
+      2
      ]
     },
     {
      "label": "когда пришёл начальник",
+     "kind": "when",
+     "scene": "e-doch-iaira#s1",
      "quotes": [
       {
        "ref": "Мф 9:18",
@@ -5486,6 +6344,9 @@
        "ref": "Мк 5:21",
        "text": "Когда Иисус опять переправился в лодке на другой берег"
       }
+     ],
+     "silent": [
+      2
      ]
     }
    ],
@@ -5506,17 +6367,32 @@
      "kind": "insert"
     }
    ],
-   "boundary": [
-    {
-     "start": "Мф 9:18",
-     "end": "Мф 9:25",
-     "rule": 7,
-     "human": "вставка — история с другими главными лицами, которая главному делу не служит (правило 7; образец 11 § 13.5)"
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 7,
+    "human": "вставка — история с другими главными лицами, которая главному делу не служит (правило 7; образец 11 § 13.5)"
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 9:18",
+     "resolution": "Мф 9:25"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 5:21",
+     "resolution": "Мк 5:41",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    },
+    {
+     "account": 2,
+     "setup": "Лк 8:40",
+     "resolution": "Лк 8:54",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    }
+   ]
   },
   {
    "id": "e-zhenshchina-s-krovotecheniem",
@@ -5537,7 +6413,7 @@
      "refs": [
       "Мк 5:25-34"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -5553,7 +6429,7 @@
      "refs": [
       "Лк 8:43-48"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -5647,7 +6523,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "дерзай, дщерь! вера твоя спасла тебя",
@@ -5666,7 +6546,11 @@
      "actor": "new:zhenshchina-s-krovotecheniem",
      "label": "женщина",
      "kind": "unnamed",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "если только прикоснусь к одежде Его, выздоровею",
@@ -5683,7 +6567,11 @@
     },
     {
      "actor": "p-petr",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "account": 2,
      "refs": [
       "Лк 8:45"
@@ -5694,7 +6582,11 @@
      "actor": "new:ucheniki",
      "label": "Ученики",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "account": 1,
      "refs": [
       "Мк 5:31"
@@ -5707,6 +6599,8 @@
    "discrepancies": [
     {
      "label": "когда она исцелилась",
+     "kind": "when",
+     "scene": "e-zhenshchina-s-krovotecheniem#s3",
      "quotes": [
       {
        "ref": "Мф 9:22",
@@ -5716,19 +6610,37 @@
        "ref": "Мк 5:29",
        "text": "И тотчас иссяк у ней источник крови"
       }
+     ],
+     "silent": [
+      2
      ]
-    }
-   ],
-   "boundary": [
-    {
-     "start": "Мф 9:20",
-     "end": "Мф 9:22",
-     "rule": 7
     }
    ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 7
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 9:20",
+     "resolution": "Мф 9:22"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 5:25",
+     "resolution": "Мк 5:34",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    },
+    {
+     "account": 2,
+     "setup": "Лк 8:43",
+     "resolution": "Лк 8:48",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    }
+   ]
   },
   {
    "id": "e-dvoe-slepykh-v-dome",
@@ -5749,7 +6661,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "по вере вашей да будет вам",
@@ -5767,7 +6683,11 @@
      "actor": "new:dvoe-slepykh-mf9",
      "label": "двое слепых",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "помилуй нас, Иисус, сын Давидов!",
@@ -5794,16 +6714,18 @@
     }
    ],
    "links": [],
-   "boundary": [
-    {
-     "start": "Мф 9:27",
-     "end": "Мф 9:31",
-     "rule": 5
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5
+   },
+   "plot": [
+    {
+     "setup": "Мф 9:27",
+     "resolution": "Мф 9:31"
+    }
+   ]
   },
   {
    "id": "e-nemoy-stal-govorit",
@@ -5824,7 +6746,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "refs": [
       "Мф 9:32"
@@ -5834,9 +6760,13 @@
     },
     {
      "actor": "new:nemoy-besnovatyy-mf9",
-     "label": "человека немого бесноватого",
+     "label": "человек немой бесноватый",
      "kind": "unnamed",
-     "role": "suffers",
+     "roles": [
+      {
+       "role": "undergoer"
+      }
+     ],
      "main": true,
      "refs": [
       "Мф 9:32",
@@ -5848,7 +6778,11 @@
      "actor": "new:narod-mf9-33",
      "label": "народ",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "никогда не бывало такого явления в Израиле",
       "refs": [
@@ -5864,7 +6798,11 @@
      "actor": "new:farisei",
      "label": "фарисеи",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "Он изгоняет бесов силою князя бесовского",
       "refs": [
@@ -5879,17 +6817,19 @@
    ],
    "places": [],
    "links": [],
-   "boundary": [
-    {
-     "start": "Мф 9:32",
-     "end": "Мф 9:34",
-     "rule": 5,
-     "human": "похожий рассказ в той же книге — Мф 12:22–24; двойные рассказы одной книги — две истории (11 § 2.6); кандидат «возможно, та же» — в отчёте, без связи"
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "похожий рассказ в той же книге — Мф 12:22–24; двойные рассказы одной книги — две истории (11 § 2.6); кандидат «возможно, та же» — в отчёте, без связи"
+   },
+   "plot": [
+    {
+     "setup": "Мф 9:32",
+     "resolution": "Мф 9:34"
+    }
+   ]
   },
   {
    "id": "e-zhatvy-mnogo",
@@ -5910,7 +6850,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "жатвы много, а делателей мало",
@@ -5925,9 +6869,13 @@
     },
     {
      "actor": "new:ucheniki",
-     "label": "ученикам",
+     "label": "ученики",
      "kind": "group",
-     "role": "addressed",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
      "refs": [
       "Мф 9:37"
      ],
@@ -5937,7 +6885,11 @@
      "actor": "new:tolpy-naroda",
      "label": "толпы народа",
      "kind": "group",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "refs": [
       "Мф 9:36"
      ],
@@ -5946,16 +6898,18 @@
    ],
    "places": [],
    "links": [],
-   "boundary": [
-    {
-     "start": "Мф 9:35",
-     "end": "Мф 9:38",
-     "rule": 5
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5
+   },
+   "plot": [
+    {
+     "setup": "Мф 9:35",
+     "resolution": "Мф 9:38"
+    }
+   ]
   },
   {
    "id": "e-irod-i-molva-ob-iisuse",
@@ -5976,7 +6930,7 @@
      "refs": [
       "Мк 6:14-16"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -5992,7 +6946,7 @@
      "refs": [
       "Лк 9:7-9"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -6086,7 +7040,11 @@
    "actors": [
     {
      "actor": "p-irod-antipa",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "это Иоанн Креститель; он воскрес из мертвых",
@@ -6103,7 +7061,11 @@
     },
     {
      "actor": "p-ioann-krestitel",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "mode": "in-speech",
      "refs": [
       "Мф 14:2",
@@ -6114,7 +7076,11 @@
     },
     {
      "actor": "p-iliya",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "mode": "in-speech",
      "refs": [
       "Мк 6:15",
@@ -6124,7 +7090,12 @@
     },
     {
      "actor": "p-iisus",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
+     "main": true,
      "refs": [
       "Мф 14:1",
       "Мк 6:14",
@@ -6138,6 +7109,8 @@
    "discrepancies": [
     {
      "label": "что сказал Ирод",
+     "kind": "presence",
+     "scene": "e-irod-i-molva-ob-iisuse#s3",
      "quotes": [
       {
        "ref": "Мф 14:2",
@@ -6147,19 +7120,37 @@
        "ref": "Лк 9:9",
        "text": "Иоанна я обезглавил; кто же Этот, о Котором я слышу такое?"
       }
+     ],
+     "silent": [
+      1
      ]
-    }
-   ],
-   "boundary": [
-    {
-     "start": "Мф 14:1",
-     "end": "Мф 14:2",
-     "rule": 5
     }
    ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 14:1",
+     "resolution": "Мф 14:2"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 6:14",
+     "resolution": "Мк 6:16",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    },
+    {
+     "account": 2,
+     "setup": "Лк 9:7",
+     "resolution": "Лк 9:9",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    }
+   ]
   },
   {
    "id": "e-irod-irodiada-i-ioann-krestitel",
@@ -6183,7 +7174,7 @@
      "refs": [
       "Мк 6:17-29"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -6197,7 +7188,7 @@
      "refs": [
       "Лк 3:19-20"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "single-event",
       "refs": [
@@ -6304,7 +7295,11 @@
    "actors": [
     {
      "actor": "p-irod-antipa",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "И опечалился царь, но, ради клятвы и возлежащих с ним, повелел дать ей",
@@ -6321,7 +7316,12 @@
     },
     {
      "actor": "p-irodiada",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "main": true,
      "roleText": {
       "text": "Иродиада же, злобясь на него, желала убить его",
       "refs": [
@@ -6338,7 +7338,11 @@
     },
     {
      "actor": "p-ioann-krestitel",
-     "role": "suffers",
+     "roles": [
+      {
+       "role": "undergoer"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "не должно тебе иметь ее",
@@ -6358,7 +7362,11 @@
      "actor": "new:doch-irodiady",
      "label": "дочь Иродиады",
      "kind": "unnamed",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "дай мне здесь на блюде голову Иоанна Крестителя",
       "refs": [
@@ -6373,7 +7381,11 @@
     },
     {
      "actor": "p-filipp-brat-iroda",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "refs": [
       "Мф 14:3",
       "Мк 6:17"
@@ -6382,9 +7394,13 @@
     },
     {
      "actor": "new:oruzhenosets-iroda",
-     "label": "оруженосца",
+     "label": "оруженосец",
      "kind": "unnamed",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "account": 1,
      "refs": [
       "Мк 6:27"
@@ -6395,7 +7411,11 @@
      "actor": "new:ucheniki-ioanna",
      "label": "Ученики",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "взяли тело его и погребли его",
       "refs": [
@@ -6425,6 +7445,8 @@
    "discrepancies": [
     {
      "label": "кто хотел убить Иоанна",
+     "kind": "who",
+     "scene": "e-irod-irodiada-i-ioann-krestitel#s1",
      "quotes": [
       {
        "ref": "Мф 14:5",
@@ -6434,15 +7456,10 @@
        "ref": "Мк 6:19",
        "text": "Иродиада же, злобясь на него, желала убить его; но не могла"
       }
+     ],
+     "silent": [
+      2
      ]
-    }
-   ],
-   "boundary": [
-    {
-     "start": "Мф 14:3",
-     "end": "Мф 14:12",
-     "rule": 5,
-     "human": "рассказ о прошлом, начатый словами «Ибо Ирод, взяв Иоанна» (Мф 14:3; «Ибо сей Ирод», Мк 6:17): своя история после истории о молве (правило 5)"
     }
    ],
    "hard": [
@@ -6458,7 +7475,30 @@
    ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "рассказ о прошлом, начатый словами «Ибо Ирод, взяв Иоанна» (Мф 14:3; «Ибо сей Ирод», Мк 6:17): своя история после истории о молве (правило 5)"
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 14:3",
+     "resolution": "Мф 14:12"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 6:17",
+     "resolution": "Мк 6:29",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    },
+    {
+     "account": 2,
+     "setup": "Лк 3:19",
+     "resolution": "Лк 3:20",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    }
+   ]
   },
   {
    "id": "e-pyat-khlebov-i-dve-ryby",
@@ -6510,7 +7550,7 @@
      "refs": [
       "Мк 6:30-44"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -6530,7 +7570,7 @@
      "refs": [
       "Лк 9:10-17"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -6550,7 +7590,7 @@
      "refs": [
       "Ин 6:1-15"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -6856,7 +7896,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "вы дайте им есть",
@@ -6877,7 +7921,11 @@
      "actor": "new:ucheniki",
      "label": "ученики",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "у нас здесь только пять хлебов и две рыбы",
       "refs": [
@@ -6893,7 +7941,11 @@
     },
     {
      "actor": "p-filipp-apostol",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "account": 3,
      "roleText": {
       "text": "им на двести динариев не довольно будет хлеба",
@@ -6909,7 +7961,11 @@
     },
     {
      "actor": "p-andrey",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "account": 3,
      "refs": [
       "Ин 6:8"
@@ -6918,9 +7974,13 @@
     },
     {
      "actor": "new:malchik-s-khlebami",
-     "label": "мальчика",
+     "label": "мальчик",
      "kind": "unnamed",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "account": 3,
      "mode": "in-speech",
      "refs": [
@@ -6932,7 +7992,11 @@
      "actor": "new:narod-pyat-tysyach",
      "label": "народ",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "а евших было около пяти тысяч человек, кроме женщин и детей",
       "refs": [
@@ -7082,6 +8146,8 @@
    "discrepancies": [
     {
      "label": "что набрали",
+     "kind": "presence",
+     "scene": "e-pyat-khlebov-i-dve-ryby#s7",
      "quotes": [
       {
        "ref": "Мк 6:43",
@@ -7091,10 +8157,16 @@
        "ref": "Ин 6:13",
        "text": "наполнили двенадцать коробов кусками от пяти ячменных хлебов"
       }
+     ],
+     "silent": [
+      0,
+      2
      ]
     },
     {
      "label": "где это было",
+     "kind": "where",
+     "scene": "e-pyat-khlebov-i-dve-ryby#s1",
      "quotes": [
       {
        "ref": "Лк 9:10",
@@ -7104,20 +8176,45 @@
        "ref": "Ин 6:1",
        "text": "пошел Иисус на ту сторону моря Галилейского, в окрестности Тивериады"
       }
+     ],
+     "silent": [
+      0,
+      1
      ]
-    }
-   ],
-   "boundary": [
-    {
-     "start": "Мф 14:15",
-     "end": "Мф 14:20",
-     "rule": 5,
-     "human": "основной рассказ — Мф 14:13–21 (первый по канону); Мф 14:12 в истории не стоит (11 § 14.3)"
     }
    ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "основной рассказ — Мф 14:13–21 (первый по канону); Мф 14:12 в истории не стоит (11 § 14.3)"
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 14:15",
+     "resolution": "Мф 14:20"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 6:35",
+     "resolution": "Мк 6:43",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    },
+    {
+     "account": 2,
+     "setup": "Лк 9:12",
+     "resolution": "Лк 9:17",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    },
+    {
+     "account": 3,
+     "setup": "Ин 6:5",
+     "resolution": "Ин 6:13",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    }
+   ]
   },
   {
    "id": "e-sem-khlebov-i-chetyre-tysyachi",
@@ -7141,7 +8238,7 @@
      "refs": [
       "Мк 8:1-10"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -7267,7 +8364,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "жаль Мне народа, что уже три дня находятся при Мне",
@@ -7285,7 +8386,11 @@
      "actor": "new:ucheniki",
      "label": "ученики",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Мф 15:33",
       "Мк 8:4"
@@ -7294,9 +8399,13 @@
     },
     {
      "actor": "new:narod-chetyre-tysyachi",
-     "label": "народу",
+     "label": "народ",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "а евших было четыре тысячи человек, кроме женщин и детей",
       "refs": [
@@ -7348,6 +8457,8 @@
    "discrepancies": [
     {
      "label": "куда прибыл",
+     "kind": "where",
+     "scene": "e-sem-khlebov-i-chetyre-tysyachi#s5",
      "quotes": [
       {
        "ref": "Мф 15:39",
@@ -7360,17 +8471,26 @@
      ]
     }
    ],
-   "boundary": [
-    {
-     "start": "Мф 15:32",
-     "end": "Мф 15:38",
-     "rule": 5,
-     "human": "другая история, чем «Пять хлебов и две рыбы»: так сказано — «А когда семь для четырех тысяч» (Мк 8:20)"
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "другая история, чем «Пять хлебов и две рыбы»: так сказано — «А когда семь для четырех тысяч» (Мк 8:20)"
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 15:32",
+     "resolution": "Мф 15:38"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 8:1",
+     "resolution": "Мк 8:9",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    }
+   ]
   },
   {
    "id": "e-iisus-idet-po-moryu",
@@ -7394,7 +8514,7 @@
      "refs": [
       "Мк 6:45-52"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -7411,7 +8531,7 @@
      "refs": [
       "Ин 6:16-21"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -7555,7 +8675,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "ободритесь; это Я, не бойтесь",
@@ -7574,7 +8698,11 @@
      "actor": "new:ucheniki",
      "label": "ученики",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "это призрак; и от страха вскричали",
       "refs": [
@@ -7590,7 +8718,11 @@
     },
     {
      "actor": "p-petr",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "account": 0,
      "roleText": {
       "text": "Господи! спаси меня",
@@ -7641,6 +8773,8 @@
    "discrepancies": [
     {
      "label": "что было, когда Он вошёл в лодку",
+     "kind": "presence",
+     "scene": "e-iisus-idet-po-moryu#s5",
      "quotes": [
       {
        "ref": "Мф 14:32",
@@ -7650,10 +8784,15 @@
        "ref": "Ин 6:21",
        "text": "Они хотели принять Его в лодку; и тотчас лодка пристала к берегу"
       }
+     ],
+     "silent": [
+      1
      ]
     },
     {
      "label": "что было с учениками после",
+     "kind": "presence",
+     "scene": "e-iisus-idet-po-moryu#s5",
      "quotes": [
       {
        "ref": "Мф 14:33",
@@ -7663,19 +8802,37 @@
        "ref": "Мк 6:52",
        "text": "ибо не вразумились чудом над хлебами, потому что сердце их было окаменено"
       }
+     ],
+     "silent": [
+      2
      ]
-    }
-   ],
-   "boundary": [
-    {
-     "start": "Мф 14:24",
-     "end": "Мф 14:32",
-     "rule": 5
     }
    ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 14:24",
+     "resolution": "Мф 14:32"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 6:47",
+     "resolution": "Мк 6:51",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    },
+    {
+     "account": 2,
+     "setup": "Ин 6:18",
+     "resolution": "Ин 6:21",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    }
+   ]
   },
   {
    "id": "e-v-zemle-gennisaretskoy",
@@ -7696,7 +8853,7 @@
      "refs": [
       "Мк 6:53-56"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -7757,7 +8914,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "refs": [
       "Мф 14:35"
@@ -7767,9 +8928,13 @@
     },
     {
      "actor": "new:bolnye-gennisaret",
-     "label": "больных",
+     "label": "больные",
      "kind": "group",
-     "role": "suffers",
+     "roles": [
+      {
+       "role": "undergoer"
+      }
+     ],
      "roleText": {
       "text": "и которые прикасались, исцелялись",
       "refs": [
@@ -7796,16 +8961,25 @@
     }
    ],
    "links": [],
-   "boundary": [
-    {
-     "start": "Мф 14:34",
-     "end": "Мф 14:36",
-     "rule": 5
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 14:34",
+     "resolution": "Мф 14:36"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 6:53",
+     "resolution": "Мк 6:56",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    }
+   ]
   },
   {
    "id": "e-iisus-v-otechestve-svoyom",
@@ -7826,7 +9000,7 @@
      "refs": [
       "Мк 6:1-6"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -7844,7 +9018,7 @@
      "refs": [
       "Лк 4:16-30"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -7986,7 +9160,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "не бывает пророк без чести, разве только в отечестве своем",
@@ -8005,7 +9183,11 @@
      "actor": "new:slyshavshie-v-otechestve",
      "label": "слышавшие",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "account": 1,
      "roleText": {
       "text": "откуда у Него это?",
@@ -8022,7 +9204,11 @@
      "actor": "new:slyshavshie-v-otechestve",
      "label": "все в синагоге",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "account": 2,
      "refs": [
       "Лк 4:28"
@@ -8031,7 +9217,11 @@
     },
     {
      "actor": "p-mariya",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "mode": "in-speech",
      "refs": [
       "Мф 13:55",
@@ -8067,6 +9257,8 @@
    "discrepancies": [
     {
      "label": "чей Он сын — слова земляков",
+     "kind": "presence",
+     "scene": "e-iisus-v-otechestve-svoyom#s2",
      "quotes": [
       {
        "ref": "Мк 6:3",
@@ -8084,6 +9276,8 @@
     },
     {
      "label": "чудеса",
+     "kind": "presence",
+     "scene": "e-iisus-v-otechestve-svoyom#s4",
      "quotes": [
       {
        "ref": "Мк 6:5",
@@ -8093,20 +9287,38 @@
        "ref": "Мф 13:58",
        "text": "И не совершил там многих чудес по неверию их"
       }
+     ],
+     "silent": [
+      2
      ]
-    }
-   ],
-   "boundary": [
-    {
-     "start": "Мф 13:54",
-     "end": "Мф 13:58",
-     "rule": 5,
-     "human": "склейка с Лк 4:16–30 — решение составителя (11 § 2.6 б), образец протокола И0"
     }
    ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "склейка с Лк 4:16–30 — решение составителя (11 § 2.6 б), образец протокола И0"
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 13:54",
+     "resolution": "Мф 13:58"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 6:2",
+     "resolution": "Мк 6:6",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    },
+    {
+     "account": 2,
+     "setup": "Лк 4:21",
+     "resolution": "Лк 4:30",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    }
+   ]
   },
   {
    "id": "e-iisus-posylaet-dvenadtsat",
@@ -8128,7 +9340,7 @@
      "refs": [
       "Мк 6:7-13"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -8144,7 +9356,7 @@
      "refs": [
       "Лк 9:1-6"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -8292,13 +9504,28 @@
       {
        "account": 0,
        "refs": [
-        "Мф 10:16-42"
+        "Мф 10:16-23"
        ]
       }
      ]
     },
     {
      "id": "e-iisus-posylaet-dvenadtsat#s7",
+     "title": {
+      "short": "Ученик не выше учителя",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "Мф 10:24-42"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "e-iisus-posylaet-dvenadtsat#s8",
      "title": {
       "short": "Учить и проповедовать",
       "by": "atlas"
@@ -8328,7 +9555,20 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "Сих двенадцать послал Иисус",
@@ -8346,7 +9586,20 @@
      "actor": "new:dvenadtsat",
      "label": "двенадцать",
      "kind": "group",
-     "role": "addressed",
+     "roles": [
+      {
+       "part": 1,
+       "role": "addressed"
+      },
+      {
+       "part": 2,
+       "role": "addressed"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "Они пошли и проповедывали покаяние",
@@ -8367,6 +9620,8 @@
    "discrepancies": [
     {
      "label": "посох",
+     "kind": "presence",
+     "scene": "e-iisus-posylaet-dvenadtsat#s3",
      "quotes": [
       {
        "ref": "Мф 10:10",
@@ -8384,6 +9639,8 @@
     },
     {
      "label": "кто пошёл после наставлений",
+     "kind": "who",
+     "scene": "e-iisus-posylaet-dvenadtsat#s8",
      "quotes": [
       {
        "ref": "Мф 11:1",
@@ -8393,15 +9650,10 @@
        "ref": "Мк 6:12",
        "text": "Они пошли и проповедывали покаяние"
       }
+     ],
+     "silent": [
+      2
      ]
-    }
-   ],
-   "boundary": [
-    {
-     "start": "Мф 10:1",
-     "end": "Мф 11:1",
-     "rule": 5,
-     "human": "речь внутри события — часть истории (11 § 2.3); Мф 10:16–42 — продолжение наставления, своей обстановки нет"
     }
    ],
    "source": {
@@ -8415,7 +9667,7 @@
       "by": "atlas"
      },
      "refs": [
-      "Мф 10:1-15",
+      "Мф 10:1-23",
       "Мк 6:7-11",
       "Лк 9:1-5"
      ],
@@ -8424,11 +9676,11 @@
     {
      "n": 2,
      "title": {
-      "short": "Как овец среди волков",
+      "short": "Ученик не выше учителя",
       "by": "atlas"
      },
      "refs": [
-      "Мф 10:16-42"
+      "Мф 10:24-42"
      ],
      "change": [],
      "byWords": true
@@ -8448,6 +9700,29 @@
       "place",
       "time"
      ]
+    }
+   ],
+   "boundary": {
+    "startRule": 5,
+    "human": "речь внутри события — часть истории (11 § 2.3). Речь Мф 10:5–42 — 608 слов со скобками, новой речи внутри нет: часть 2 по порогу слов (правило 9) — с предложения, ближайшего к середине речи: «Ученик не выше учителя» (Мф 10:24; до него 301 слово из 608). Раздел Евсевия — после задачи 19"
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 10:1",
+     "resolution": "Мф 11:1"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 6:7",
+     "resolution": "Мк 6:13",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    },
+    {
+     "account": 2,
+     "setup": "Лк 9:1",
+     "resolution": "Лк 9:6",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
     }
    ]
   },
@@ -8470,7 +9745,7 @@
      "refs": [
       "Мк 8:27-9:1"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -8489,7 +9764,7 @@
      "refs": [
       "Лк 9:18-27"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -8656,7 +9931,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "а вы за кого почитаете Меня?",
@@ -8672,7 +9951,11 @@
     },
     {
      "actor": "p-petr",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "Ты — Христос, Сын Бога Живаго",
@@ -8689,9 +9972,13 @@
     },
     {
      "actor": "new:ucheniki",
-     "label": "учеников",
+     "label": "ученики",
      "kind": "group",
-     "role": "addressed",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
      "refs": [
       "Мф 16:13",
       "Мк 8:27",
@@ -8701,7 +9988,11 @@
     },
     {
      "actor": "p-ioann-krestitel",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "mode": "in-speech",
      "refs": [
       "Мф 16:14",
@@ -8712,7 +10003,11 @@
     },
     {
      "actor": "p-iliya",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "mode": "in-speech",
      "refs": [
       "Мф 16:14",
@@ -8738,6 +10033,8 @@
    "discrepancies": [
     {
      "label": "ответ Петра",
+     "kind": "presence",
+     "scene": "e-za-kogo-menya-pochitayut-lyudi#s2",
      "quotes": [
       {
        "ref": "Мф 16:16",
@@ -8754,17 +10051,32 @@
      ]
     }
    ],
-   "boundary": [
-    {
-     "start": "Мф 16:13",
-     "end": "Мф 16:28",
-     "rule": 5,
-     "human": "слова «ко всем» о кресте (Лк 9:23–27; Мк 8:34–9:1) — речь без своего исхода, часть этой истории (11 § 2.2, речь и обстановка)"
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "слова «ко всем» о кресте (Лк 9:23–27; Мк 8:34–9:1) — речь без своего исхода, часть этой истории (11 § 2.2, речь и обстановка)"
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 16:13",
+     "resolution": "Мф 16:28"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 8:27",
+     "resolution": "Мк 9:1",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    },
+    {
+     "account": 2,
+     "setup": "Лк 9:18",
+     "resolution": "Лк 9:27",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    }
+   ]
   },
   {
    "id": "e-iisus-preobrazhaetsya-na-gore",
@@ -8791,7 +10103,7 @@
      "refs": [
       "Мк 9:2-13"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -8804,14 +10116,28 @@
        "Мф 17:1",
        "Мк 9:2"
       ],
-      "note": "ОТСТУПЛЕНИЕ от 11 § 2.6 (б) по решению координатора (второй ключ, п. 4): слова времени разные — «По прошествии дней шести» (Мф 17:1; Мк 9:2) и «дней через восемь» (Лк 9:28) — после той же истории; примерный счёт дней не делает рассказы разными, если совпадают место, лица и ход: гора, Петр, Иаков и Иоанн, Моисей и Илия, три кущи, глас из облака. Поправка 11 — в очереди"
+      "note": "Слова времени разные: «По прошествии дней шести» (Мф 17:1; Мк 9:2) и «После сих слов, дней через восемь» (Лк 9:28). Совпадают место, лица и ход сцен: гора, Петр, Иаков и Иоанн, Моисей и Илия, глас из облака (11 § 2.6). Разный счёт дней — различие рассказов «когда»",
+      "place": [
+       "Мф 17:1",
+       "Мк 9:2"
+      ],
+      "actors": [
+       "Мф 17:1",
+       "Мф 17:3",
+       "Мк 9:2",
+       "Мк 9:4"
+      ],
+      "course": [
+       "Мф 17:5",
+       "Мк 9:7"
+      ]
      }
     },
     {
      "refs": [
       "Лк 9:28-36"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -8825,7 +10151,21 @@
        "Мк 9:2",
        "Лк 9:28"
       ],
-      "note": "ОТСТУПЛЕНИЕ от 11 § 2.6 (б) по решению координатора (второй ключ, п. 4): слова времени разные — «По прошествии дней шести» (Мф 17:1; Мк 9:2) и «дней через восемь» (Лк 9:28) — после той же истории; примерный счёт дней не делает рассказы разными, если совпадают место, лица и ход: гора, Петр, Иаков и Иоанн, Моисей и Илия, три кущи, глас из облака. Поправка 11 — в очереди"
+      "note": "Слова времени разные: «По прошествии дней шести» (Мф 17:1; Мк 9:2) и «После сих слов, дней через восемь» (Лк 9:28). Совпадают место, лица и ход сцен: гора, Петр, Иаков и Иоанн, Моисей и Илия, глас из облака (11 § 2.6). Разный счёт дней — различие рассказов «когда»",
+      "place": [
+       "Мф 17:1",
+       "Лк 9:28"
+      ],
+      "actors": [
+       "Мф 17:1",
+       "Мф 17:3",
+       "Лк 9:28",
+       "Лк 9:30"
+      ],
+      "course": [
+       "Мф 17:5",
+       "Лк 9:35"
+      ]
      }
     }
    ],
@@ -8990,7 +10330,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "и просияло лице Его, как солнце",
@@ -9007,7 +10351,11 @@
     },
     {
      "actor": "p-petr",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "Господи! хорошо нам здесь быть",
       "refs": [
@@ -9024,7 +10372,11 @@
     },
     {
      "actor": "p-iakov-zevedeev",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Мф 17:1",
       "Мк 9:2",
@@ -9034,7 +10386,11 @@
     },
     {
      "actor": "p-ioann-apostol",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Мф 17:1",
       "Мк 9:2",
@@ -9044,7 +10400,11 @@
     },
     {
      "actor": "p-moisey",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "mode": "vision",
      "refs": [
       "Мф 17:3",
@@ -9055,7 +10415,11 @@
     },
     {
      "actor": "p-iliya",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "mode": "vision",
      "refs": [
       "Мф 17:3",
@@ -9066,8 +10430,12 @@
     },
     {
      "actor": "god",
-     "label": "глас",
-     "role": "participant",
+     "label": "Бог",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "Сей есть Сын Мой Возлюбленный",
       "refs": [
@@ -9077,7 +10445,8 @@
      "refs": [
       "Мф 17:5",
       "Мк 9:7",
-      "Лк 9:35"
+      "Лк 9:35",
+      "2Пет 1:17"
      ],
      "cert": "scripture"
     }
@@ -9098,9 +10467,15 @@
    "discrepancies": [
     {
      "label": "через сколько дней",
+     "kind": "when",
+     "scene": "e-iisus-preobrazhaetsya-na-gore#s1",
      "quotes": [
       {
        "ref": "Мф 17:1",
+       "text": "По прошествии дней шести"
+      },
+      {
+       "ref": "Мк 9:2",
        "text": "По прошествии дней шести"
       },
       {
@@ -9111,6 +10486,8 @@
     },
     {
      "label": "лицо",
+     "kind": "presence",
+     "scene": "e-iisus-preobrazhaetsya-na-gore#s2",
      "quotes": [
       {
        "ref": "Мф 17:2",
@@ -9120,20 +10497,38 @@
        "ref": "Лк 9:29",
        "text": "вид лица Его изменился"
       }
+     ],
+     "silent": [
+      1
      ]
-    }
-   ],
-   "boundary": [
-    {
-     "start": "Мф 17:1",
-     "end": "Мф 17:8",
-     "rule": 6,
-     "human": "отступление от 11 § 2.6 (б) — решение координатора по второму ключу; разговор при сходе с горы (Мф 17:9–13; Мк 9:9–13) — следствие, связанное словами «о сем видении» (правило 6)"
     }
    ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 6,
+    "human": "разговор при сходе с горы (Мф 17:9–13; Мк 9:9–13) — следствие, связанное словами «о сем видении» (правило 6); склейка трёх рассказов — по трём совпадениям: место, лица, ход (11 § 2.6)"
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 17:1",
+     "resolution": "Мф 17:8"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 9:2",
+     "resolution": "Мк 9:8",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    },
+    {
+     "account": 2,
+     "setup": "Лк 9:28",
+     "resolution": "Лк 9:36",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    }
+   ]
   },
   {
    "id": "e-ucheniki-ne-mogli-izgnat-besa",
@@ -9154,7 +10549,7 @@
      "refs": [
       "Мк 9:14-29"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -9170,7 +10565,7 @@
      "refs": [
       "Лк 9:37-42"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -9323,7 +10718,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "приведите его ко Мне сюда",
@@ -9342,7 +10741,11 @@
      "actor": "new:otets-otroka",
      "label": "человек",
      "kind": "unnamed",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "account": 0,
      "roleText": {
       "text": "Господи! помилуй сына моего",
@@ -9359,7 +10762,11 @@
      "actor": "new:otets-otroka",
      "label": "Один из народа",
      "kind": "unnamed",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "account": 1,
      "refs": [
       "Мк 9:17"
@@ -9370,7 +10777,11 @@
      "actor": "new:otets-otroka",
      "label": "некто из народа",
      "kind": "unnamed",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "account": 2,
      "refs": [
       "Лк 9:38"
@@ -9381,7 +10792,11 @@
      "actor": "new:otrok-besnovatyy",
      "label": "отрок",
      "kind": "unnamed",
-     "role": "suffers",
+     "roles": [
+      {
+       "role": "undergoer"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "и отрок исцелился в тот час",
@@ -9400,7 +10815,11 @@
      "actor": "new:ucheniki",
      "label": "ученики",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "почему мы не могли изгнать его?",
       "refs": [
@@ -9416,9 +10835,13 @@
     },
     {
      "actor": "new:knizhniki-mk9",
-     "label": "книжников",
+     "label": "книжники",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "account": 1,
      "refs": [
       "Мк 9:14",
@@ -9432,6 +10855,8 @@
    "discrepancies": [
     {
      "label": "как назван недуг",
+     "kind": "name",
+     "scene": "e-ucheniki-ne-mogli-izgnat-besa#s2",
      "quotes": [
       {
        "ref": "Мф 17:15",
@@ -9441,20 +10866,38 @@
        "ref": "Мк 9:17",
        "text": "одержимого духом немым"
       }
+     ],
+     "silent": [
+      2
      ]
-    }
-   ],
-   "boundary": [
-    {
-     "start": "Мф 17:14",
-     "end": "Мф 17:21",
-     "rule": 5,
-     "human": "Лк 9:43 — в следующей истории: его вторые слова начинают речь «Он сказал ученикам Своим» (решает человек; протокол И0)"
     }
    ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "Лк 9:43 — в следующей истории: его вторые слова начинают речь «Он сказал ученикам Своим» (решает человек; протокол И0)"
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 17:14",
+     "resolution": "Мф 17:21"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 9:17",
+     "resolution": "Мк 9:29",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    },
+    {
+     "account": 2,
+     "setup": "Лк 9:37",
+     "resolution": "Лк 9:42",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    }
+   ]
   },
   {
    "id": "e-syn-chelovecheskiy-predan-budet",
@@ -9475,7 +10918,7 @@
      "refs": [
       "Мк 9:30-32"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -9491,7 +10934,7 @@
      "refs": [
       "Лк 9:43-45"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -9538,7 +10981,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "Сын Человеческий предан будет в руки человеческие",
@@ -9554,9 +11001,13 @@
     },
     {
      "actor": "new:ucheniki",
-     "label": "учеников",
+     "label": "ученики",
      "kind": "group",
-     "role": "addressed",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
      "refs": [
       "Мк 9:31",
       "Лк 9:43"
@@ -9580,6 +11031,8 @@
    "discrepancies": [
     {
      "label": "что было с учениками",
+     "kind": "presence",
+     "scene": "e-syn-chelovecheskiy-predan-budet#s1",
      "quotes": [
       {
        "ref": "Мф 17:23",
@@ -9589,19 +11042,37 @@
        "ref": "Мк 9:32",
        "text": "Но они не разумели сих слов, а спросить Его боялись"
       }
+     ],
+     "silent": [
+      2
      ]
-    }
-   ],
-   "boundary": [
-    {
-     "start": "Мф 17:22",
-     "end": "Мф 17:23",
-     "rule": 5
     }
    ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 17:22",
+     "resolution": "Мф 17:23"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 9:30",
+     "resolution": "Мк 9:32",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    },
+    {
+     "account": 2,
+     "setup": "Лк 9:43",
+     "resolution": "Лк 9:45",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    }
+   ]
   },
   {
    "id": "e-ditya-posredi-uchenikov",
@@ -9622,7 +11093,7 @@
      "refs": [
       "Мк 9:33-37"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -9639,7 +11110,7 @@
      "refs": [
       "Лк 9:46-48"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -9769,7 +11240,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "если не обратитесь и не будете как дети, не войдете в Царство Небесное",
@@ -9788,7 +11263,11 @@
      "actor": "new:ucheniki",
      "label": "ученики",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "account": 0,
      "roleText": {
       "text": "кто больше в Царстве Небесном?",
@@ -9805,7 +11284,11 @@
      "actor": "new:dvenadtsat",
      "label": "двенадцать",
      "kind": "group",
-     "role": "addressed",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
      "account": 1,
      "refs": [
       "Мк 9:35"
@@ -9816,7 +11299,11 @@
      "actor": "new:ditya",
      "label": "дитя",
      "kind": "unnamed",
-     "role": "suffers",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
      "refs": [
       "Мф 18:2",
       "Мк 9:36",
@@ -9841,6 +11328,8 @@
    "discrepancies": [
     {
      "label": "кто начал разговор",
+     "kind": "who",
+     "scene": "e-ditya-posredi-uchenikov#s1",
      "quotes": [
       {
        "ref": "Мф 18:1",
@@ -9850,15 +11339,10 @@
        "ref": "Мк 9:34",
        "text": "Они молчали; потому что дорогою рассуждали между собою, кто больше"
       }
+     ],
+     "silent": [
+      2
      ]
-    }
-   ],
-   "boundary": [
-    {
-     "start": "Мф 18:1",
-     "end": "Мф 18:20",
-     "rule": 5,
-     "human": "рассказ Иисуса о ста овцах (Мф 18:12–14) — своя запись по 11 § 13.4: вложение «Сто овец в горах» (nested)"
     }
    ],
    "source": {
@@ -9869,6 +11353,29 @@
      "story": "e-sto-ovets-v-gorakh",
      "at": "Мф 18:12",
      "kind": "told"
+    }
+   ],
+   "boundary": {
+    "startRule": 5,
+    "human": "рассказ Иисуса о ста овцах (Мф 18:12–14) — своя запись по 11 § 13.4: вложение «Сто овец в горах» (nested)"
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 18:1",
+     "resolution": "Мф 18:20"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 9:33",
+     "resolution": "Мк 9:37",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    },
+    {
+     "account": 2,
+     "setup": "Лк 9:46",
+     "resolution": "Лк 9:48",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
     }
    ]
   },
@@ -9891,7 +11398,7 @@
      "refs": [
       "Лк 9:49-50"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -9970,7 +11477,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "не запрещайте ему",
@@ -9986,7 +11497,11 @@
     },
     {
      "actor": "p-ioann-apostol",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "мы видели человека, который именем Твоим изгоняет бесов",
       "refs": [
@@ -10001,9 +11516,13 @@
     },
     {
      "actor": "new:chuzhoy-izgonyayushchiy",
-     "label": "человека",
+     "label": "человек",
      "kind": "unnamed",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "mode": "in-speech",
      "refs": [
       "Мк 9:38",
@@ -10014,16 +11533,25 @@
    ],
    "places": [],
    "links": [],
-   "boundary": [
-    {
-     "start": "Мк 9:38",
-     "end": "Мк 9:50",
-     "rule": 5
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мк 9:38",
+     "resolution": "Мк 9:50"
+    },
+    {
+     "account": 1,
+     "setup": "Лк 9:49",
+     "resolution": "Лк 9:50",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    }
+   ]
   },
   {
    "id": "e-iakov-i-ioann-v-selenii-samaryanskom",
@@ -10044,7 +11572,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "не знаете, какого вы духа",
@@ -10061,7 +11593,12 @@
     },
     {
      "actor": "p-iakov-zevedeev",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "main": true,
      "roleText": {
       "text": "Господи! хочешь ли, мы скажем, чтобы огонь сошел с неба и истребил их",
       "refs": [
@@ -10075,7 +11612,12 @@
     },
     {
      "actor": "p-ioann-apostol",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "main": true,
      "refs": [
       "Лк 9:54"
      ],
@@ -10083,9 +11625,13 @@
     },
     {
      "actor": "new:vestniki-lk9",
-     "label": "вестников",
+     "label": "вестники",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Лк 9:52"
      ],
@@ -10093,7 +11639,11 @@
     },
     {
      "actor": "p-iliya",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "mode": "in-speech",
      "refs": [
       "Лк 9:54"
@@ -10113,17 +11663,19 @@
     }
    ],
    "links": [],
-   "boundary": [
-    {
-     "start": "Лк 9:51",
-     "end": "Лк 9:56",
-     "rule": 5,
-     "human": "Лк 9:51 начинает путь в Иерусалим («Он восхотел идти в Иерусалим») — возможное повествование Луки; решается при разметке Лк 9–19"
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "Лк 9:51 начинает путь в Иерусалим («Он восхотел идти в Иерусалим») — возможное повествование Луки; решается при разметке Лк 9–19"
+   },
+   "plot": [
+    {
+     "setup": "Лк 9:51",
+     "resolution": "Лк 9:56"
+    }
+   ]
   },
   {
    "id": "e-lisitsy-imeyut-nory",
@@ -10144,7 +11696,7 @@
      "refs": [
       "Лк 9:57-62"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -10220,7 +11772,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "а Сын Человеческий не имеет, где приклонить голову",
@@ -10238,7 +11794,11 @@
      "actor": "new:zhelayushchiy-idti",
      "label": "один книжник",
      "kind": "unnamed",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "account": 0,
      "refs": [
       "Мф 8:19"
@@ -10249,7 +11809,11 @@
      "actor": "new:zhelayushchiy-idti",
      "label": "некто",
      "kind": "unnamed",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "account": 1,
      "roleText": {
       "text": "я пойду за Тобою, куда бы Ты ни пошел",
@@ -10266,7 +11830,11 @@
      "actor": "new:drugoy-uchenik",
      "label": "Другой",
      "kind": "unnamed",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "позволь мне прежде пойти и похоронить отца моего",
       "refs": [
@@ -10285,6 +11853,8 @@
    "discrepancies": [
     {
      "label": "кто подошёл",
+     "kind": "who",
+     "scene": "e-lisitsy-imeyut-nory#s1",
      "quotes": [
       {
        "ref": "Мф 8:19",
@@ -10297,16 +11867,25 @@
      ]
     }
    ],
-   "boundary": [
-    {
-     "start": "Мф 8:19",
-     "end": "Мф 8:22",
-     "rule": 5
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 8:19",
+     "resolution": "Мф 8:22"
+    },
+    {
+     "account": 1,
+     "setup": "Лк 9:57",
+     "resolution": "Лк 9:60",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    }
+   ]
   },
   {
    "id": "e-iisus-na-molodom-osle",
@@ -10330,7 +11909,7 @@
      "refs": [
       "Мк 11:1-11"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -10344,7 +11923,7 @@
      "refs": [
       "Лк 19:28-40"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -10358,7 +11937,7 @@
      "refs": [
       "Ин 12:12-19"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -10537,7 +12116,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "Иисус сел на него",
@@ -10555,9 +12138,13 @@
     },
     {
      "actor": "new:dvoe-uchenikov",
-     "label": "двух учеников",
+     "label": "двое учеников",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "Ученики пошли и поступили так, как повелел им Иисус",
       "refs": [
@@ -10573,9 +12160,13 @@
     },
     {
      "actor": "new:molodoy-osel",
-     "label": "молодого осла",
+     "label": "молодой осёл",
      "kind": "animal",
-     "role": "suffers",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
      "refs": [
       "Мф 21:2",
       "Мк 11:2",
@@ -10586,9 +12177,13 @@
     },
     {
      "actor": "new:narod-osanna",
-     "label": "народа",
+     "label": "народ",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "осанна Сыну Давидову! благословен Грядущий во имя Господне!",
       "refs": [
@@ -10606,7 +12201,11 @@
      "actor": "new:farisei",
      "label": "фарисеи",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Лк 19:39",
       "Ин 12:19"
@@ -10660,6 +12259,8 @@
    "discrepancies": [
     {
      "label": "кого нашли ученики",
+     "kind": "number",
+     "scene": "e-iisus-na-molodom-osle#s1",
      "quotes": [
       {
        "ref": "Мф 21:2",
@@ -10669,10 +12270,16 @@
        "ref": "Мк 11:2",
        "text": "найдете привязанного молодого осла"
       }
+     ],
+     "silent": [
+      2,
+      3
      ]
     },
     {
      "label": "что восклицали",
+     "kind": "presence",
+     "scene": "e-iisus-na-molodom-osle#s4",
      "quotes": [
       {
        "ref": "Мф 21:9",
@@ -10682,19 +12289,44 @@
        "ref": "Лк 19:38",
        "text": "благословен Царь, грядущий во имя Господне!"
       }
+     ],
+     "silent": [
+      1,
+      3
      ]
-    }
-   ],
-   "boundary": [
-    {
-     "start": "Мф 21:1",
-     "end": "Мф 21:11",
-     "rule": 5
     }
    ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 21:1",
+     "resolution": "Мф 21:11"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 11:1",
+     "resolution": "Мк 11:11",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    },
+    {
+     "account": 2,
+     "setup": "Лк 19:28",
+     "resolution": "Лк 19:40",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    },
+    {
+     "account": 3,
+     "setup": "Ин 12:12",
+     "resolution": "Ин 12:19",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    }
+   ]
   },
   {
    "id": "e-smokovnitsa-bez-ploda",
@@ -10716,7 +12348,7 @@
       "Мк 11:12-14",
       "Мк 11:20-26"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -10730,7 +12362,21 @@
        "Мк 11:12",
        "Мк 11:20"
       ],
-      "note": "одни слова: смоковница «кроме листьев», «плода вовек», «горе сей… ввергнись в море» (Мф 21:19–21; Мк 11:13–23); «Поутру же, возвращаясь в город» (Мф 21:18) и «На другой день» (Мк 11:12) — оба утро после входа в Иерусалим (Мф 21:17; Мк 11:11)"
+      "note": "одни слова: смоковница «кроме листьев», «плода вовек», «горе сей… ввергнись в море» (Мф 21:19–21; Мк 11:13–23); «Поутру же, возвращаясь в город» (Мф 21:18) и «На другой день» (Мк 11:12) — оба утро после входа в Иерусалим (Мф 21:17; Мк 11:11)",
+      "place": [
+       "Мф 21:19",
+       "Мк 11:13"
+      ],
+      "actors": [
+       "Мф 21:20",
+       "Мк 11:14"
+      ],
+      "course": [
+       "Мф 21:19",
+       "Мф 21:21",
+       "Мк 11:14",
+       "Мк 11:23"
+      ]
      }
     }
    ],
@@ -10802,7 +12448,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "да не будет же впредь от тебя плода вовек",
@@ -10818,7 +12468,11 @@
     },
     {
      "actor": "p-petr",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "account": 1,
      "roleText": {
       "text": "Равви! посмотри, смоковница, которую Ты проклял, засохла",
@@ -10835,7 +12489,11 @@
      "actor": "new:ucheniki",
      "label": "ученики",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Мф 21:20",
       "Мк 11:14"
@@ -10859,6 +12517,8 @@
    "discrepancies": [
     {
      "label": "когда засохла смоковница",
+     "kind": "when",
+     "scene": "e-smokovnitsa-bez-ploda#s1",
      "quotes": [
       {
        "ref": "Мф 21:19",
@@ -10878,17 +12538,25 @@
      "kind": "insert"
     }
    ],
-   "boundary": [
-    {
-     "start": "Мк 11:13",
-     "end": "Мк 11:21",
-     "rule": 7,
-     "human": "у Марка — история с разрывом: Мк 11:12–14; 11:20–26; в разрыве — «Продающие и покупающие в храме» (11:15–19); связь словами повествователя — «увидели, что смоковница засохла» (Мк 11:20)"
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 7,
+    "human": "у Марка — история с разрывом: Мк 11:12–14; 11:20–26; в разрыве — «Продающие и покупающие в храме» (11:15–19); связь словами повествователя — «увидели, что смоковница засохла» (Мк 11:20)"
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 21:19",
+     "resolution": "Мф 21:20"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 11:13",
+     "resolution": "Мк 11:21"
+    }
+   ]
   },
   {
    "id": "e-prodayushchie-i-pokupayushchie-v-khrame",
@@ -10912,7 +12580,7 @@
      "refs": [
       "Мк 11:15-19"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -10927,7 +12595,7 @@
      "refs": [
       "Лк 19:45-48"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -11055,7 +12723,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "а вы сделали его вертепом разбойников",
@@ -11071,9 +12743,13 @@
     },
     {
      "actor": "new:prodayushchie-v-khrame",
-     "label": "продающих",
+     "label": "продающие",
      "kind": "group",
-     "role": "suffers",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
      "refs": [
       "Мф 21:12",
       "Мк 11:15",
@@ -11085,7 +12761,11 @@
      "actor": "new:pervosvyashchenniki-i-knizhniki",
      "label": "первосвященники и книжники",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "и искали, как бы погубить Его",
       "refs": [
@@ -11103,7 +12783,11 @@
      "actor": "new:slepye-i-khromye",
      "label": "слепые и хромые",
      "kind": "group",
-     "role": "suffers",
+     "roles": [
+      {
+       "role": "undergoer"
+      }
+     ],
      "account": 0,
      "refs": [
       "Мф 21:14"
@@ -11112,9 +12796,13 @@
     },
     {
      "actor": "new:deti-v-khrame",
-     "label": "детей",
+     "label": "дети",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "account": 0,
      "roleText": {
       "text": "осанна Сыну Давидову!",
@@ -11152,17 +12840,32 @@
     }
    ],
    "links": [],
-   "boundary": [
-    {
-     "start": "Мф 21:12",
-     "end": "Мф 21:17",
-     "rule": 7,
-     "human": "у Марка — вставка внутри истории о смоковнице (правило 7). Ин 2:13–22 — своя история: правило 11 § 2.6 б не проходит по словам времени (11 § 13.2); связь «возможно, та же» — только с авторами по Г-3, в данных её нет (кандидат в отчёте)"
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 7,
+    "human": "у Марка — вставка внутри истории о смоковнице (правило 7). Ин 2:13–22 — своя история: правило 11 § 2.6 б не проходит по словам времени (11 § 13.2); связь «возможно, та же» — только с авторами по Г-3, в данных её нет (кандидат в отчёте)"
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 21:12",
+     "resolution": "Мф 21:17"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 11:15",
+     "resolution": "Мк 11:19",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    },
+    {
+     "account": 2,
+     "setup": "Лк 19:45",
+     "resolution": "Лк 19:48",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    }
+   ]
   },
   {
    "id": "e-kakoyu-vlastyu-ty-eto-delaesh",
@@ -11183,7 +12886,7 @@
      "refs": [
       "Мк 11:27-33"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -11201,7 +12904,7 @@
      "refs": [
       "Лк 20:1-8"
      ],
-     "cert": "scripture",
+     "cert": "inference",
      "basis": {
       "kind": "other-books",
       "refs": [
@@ -11339,7 +13042,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "и Я вам не скажу, какою властью это делаю",
@@ -11358,7 +13065,11 @@
      "actor": "new:pervosvyashchenniki-i-starejshiny",
      "label": "первосвященники",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "какой властью Ты это делаешь?",
       "refs": [
@@ -11374,7 +13085,11 @@
     },
     {
      "actor": "p-ioann-krestitel",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "mode": "in-speech",
      "refs": [
       "Мф 21:25",
@@ -11401,6 +13116,8 @@
    "discrepancies": [
     {
      "label": "чего боялись",
+     "kind": "presence",
+     "scene": "e-kakoyu-vlastyu-ty-eto-delaesh#s3",
      "quotes": [
       {
        "ref": "Мф 21:26",
@@ -11410,19 +13127,37 @@
        "ref": "Лк 20:6",
        "text": "то весь народ побьет нас камнями"
       }
+     ],
+     "silent": [
+      1
      ]
-    }
-   ],
-   "boundary": [
-    {
-     "start": "Мф 21:23",
-     "end": "Мф 21:27",
-     "rule": 5
     }
    ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 21:23",
+     "resolution": "Мф 21:27"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 11:27",
+     "resolution": "Мк 11:33",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    },
+    {
+     "account": 2,
+     "setup": "Лк 20:1",
+     "resolution": "Лк 20:8",
+     "human": "по сцене синопсиса, где у основного рассказа завязка и развязка (задача 23; на сверку вторым ключом)"
+    }
+   ]
   },
   {
    "id": "e-brak-v-kane-galileyskoy",
@@ -11446,7 +13181,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "наполните сосуды водою",
@@ -11464,7 +13203,11 @@
     {
      "actor": "p-mariya",
      "label": "Матерь Иисуса",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "что скажет Он вам, то сделайте",
       "refs": [
@@ -11482,7 +13225,11 @@
      "actor": "new:ucheniki",
      "label": "ученики",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "и уверовали в Него ученики Его",
       "refs": [
@@ -11497,9 +13244,13 @@
     },
     {
      "actor": "new:sluzhiteli-v-kane",
-     "label": "служителям",
+     "label": "служители",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Ин 2:5",
       "Ин 2:9"
@@ -11508,9 +13259,13 @@
     },
     {
      "actor": "new:rasporyaditel-pira",
-     "label": "распорядителю пира",
+     "label": "распорядитель пира",
      "kind": "unnamed",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "а ты хорошее вино сберег доселе",
       "refs": [
@@ -11525,9 +13280,13 @@
     },
     {
      "actor": "new:zhenikh-v-kane",
-     "label": "жениха",
+     "label": "жених",
      "kind": "unnamed",
-     "role": "addressed",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
      "refs": [
       "Ин 2:9"
      ],
@@ -11547,16 +13306,18 @@
     }
    ],
    "links": [],
-   "boundary": [
-    {
-     "start": "Ин 2:3",
-     "end": "Ин 2:11",
-     "rule": 5
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5
+   },
+   "plot": [
+    {
+     "setup": "Ин 2:3",
+     "resolution": "Ин 2:11"
+    }
+   ]
   },
   {
    "id": "e-v-kapernaume-nemnogo-dney",
@@ -11577,7 +13338,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "refs": [
       "Ин 2:12"
@@ -11588,7 +13353,11 @@
     {
      "actor": "p-mariya",
      "label": "Матерь",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Ин 2:12"
      ],
@@ -11598,7 +13367,11 @@
      "actor": "new:bratya-iisusa",
      "label": "братья Его",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Ин 2:12"
      ],
@@ -11608,7 +13381,11 @@
      "actor": "new:ucheniki",
      "label": "ученики",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Ин 2:12"
      ],
@@ -11627,17 +13404,19 @@
     }
    ],
    "links": [],
-   "boundary": [
-    {
-     "start": "Ин 2:12",
-     "end": "Ин 2:12",
-     "rule": 5,
-     "human": "известие-переход: сцены нет; к следующей истории (Иерусалим) не относится"
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "известие-переход: сцены нет; к следующей истории (Иерусалим) не относится"
+   },
+   "plot": [
+    {
+     "setup": "Ин 2:12",
+     "resolution": "Ин 2:12"
+    }
+   ]
   },
   {
    "id": "e-bich-iz-verevok-v-khrame",
@@ -11658,7 +13437,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "дома Отца Моего не делайте домом торговли",
@@ -11674,9 +13457,13 @@
     },
     {
      "actor": "new:prodayushchie-in2",
-     "label": "продающим голубей",
+     "label": "продающие голубей",
      "kind": "group",
-     "role": "suffers",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
      "refs": [
       "Ин 2:14",
       "Ин 2:16"
@@ -11687,7 +13474,11 @@
      "actor": "new:menovshchiki-in2",
      "label": "меновщики",
      "kind": "group",
-     "role": "suffers",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
      "refs": [
       "Ин 2:14",
       "Ин 2:15"
@@ -11698,7 +13489,11 @@
      "actor": "new:iudei-in2",
      "label": "Иудеи",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "каким знамением докажешь Ты нам, что имеешь власть так поступать?",
       "refs": [
@@ -11715,7 +13510,11 @@
      "actor": "new:ucheniki",
      "label": "ученики",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "refs": [
       "Ин 2:17",
       "Ин 2:22"
@@ -11752,17 +13551,19 @@
     }
    },
    "links": [],
-   "boundary": [
-    {
-     "start": "Ин 2:13",
-     "end": "Ин 2:22",
-     "rule": 5,
-     "human": "своя история, не рассказ «Продающие и покупающие в храме»: слова времени ставят рассказы в разное время (11 § 2.6; § 13.2). Спорное сравнение — только при авторах по Г-3 (В-30); трудов в реестре нет — связи нет, кандидат в отчёте"
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "своя история, не рассказ «Продающие и покупающие в храме»: слова времени ставят рассказы в разное время (11 § 2.6; § 13.2). Спорное сравнение — только при авторах по Г-3 (В-30); трудов в реестре нет — связи нет, кандидат в отчёте"
+   },
+   "plot": [
+    {
+     "setup": "Ин 2:13",
+     "resolution": "Ин 2:22"
+    }
+   ]
   },
   {
    "id": "e-mnogie-uverovali-na-prazdnike-paskhi",
@@ -11783,7 +13584,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "Но Сам Иисус не вверял Себя им, потому что знал всех",
@@ -11800,7 +13605,11 @@
      "actor": "new:mnogie-v-ierusalime",
      "label": "многие",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "многие, видя чудеса, которые Он творил, уверовали во имя Его",
       "refs": [
@@ -11825,16 +13634,18 @@
     }
    ],
    "links": [],
-   "boundary": [
-    {
-     "start": "Ин 2:23",
-     "end": "Ин 2:25",
-     "rule": 5
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5
+   },
+   "plot": [
+    {
+     "setup": "Ин 2:23",
+     "resolution": "Ин 2:25"
+    }
+   ]
   },
   {
    "id": "e-iisus-govorit-o-khlebe-s-nebes",
@@ -11894,7 +13705,20 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 1,
+       "role": "mentioned"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "Я есмь хлеб жизни",
@@ -11913,7 +13737,16 @@
      "actor": "new:narod-v-kapernaume",
      "label": "народ",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "Равви! когда Ты сюда пришел?",
       "refs": [
@@ -11930,7 +13763,12 @@
      "actor": "new:iudei-in6",
      "label": "Иудеи",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "part": 3,
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "как Он может дать нам есть Плоть Свою?",
       "refs": [
@@ -11945,7 +13783,12 @@
     },
     {
      "actor": "p-moisey",
-     "role": "mentioned",
+     "roles": [
+      {
+       "part": 2,
+       "role": "mentioned"
+      }
+     ],
      "mode": "in-speech",
      "refs": [
       "Ин 6:32"
@@ -11975,17 +13818,19 @@
     }
    ],
    "links": [],
-   "boundary": [
-    {
-     "start": "Ин 6:25",
-     "end": "Ин 6:59",
-     "rule": 5,
-     "human": "речь с рассказанной обстановкой: народ ищет и находит Иисуса (6:22–25), спрашивает (6:28, 30, 34), спор Иудеев (6:41, 52); конец — «Сие говорил Он в синагоге, уча в Капернауме» (6:59)"
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "речь с рассказанной обстановкой: народ ищет и находит Иисуса (6:22–25), спрашивает (6:28, 30, 34), спор Иудеев (6:41, 52); конец — «Сие говорил Он в синагоге, уча в Капернауме» (6:59)"
+   },
+   "plot": [
+    {
+     "setup": "Ин 6:25",
+     "resolution": "Ин 6:59"
+    }
+   ]
   },
   {
    "id": "e-mnogie-ucheniki-otkhodyat",
@@ -12009,7 +13854,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "не хотите ли и вы отойти?",
@@ -12028,7 +13877,11 @@
      "actor": "new:mnogie-ucheniki",
      "label": "Многие из учеников",
      "kind": "group",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "roleText": {
       "text": "многие из учеников Его отошли от Него",
       "refs": [
@@ -12043,7 +13896,11 @@
     },
     {
      "actor": "p-petr",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "main": true,
      "roleText": {
       "text": "Господи! к кому нам идти? Ты имеешь глаголы вечной жизни",
@@ -12058,9 +13915,13 @@
     },
     {
      "actor": "new:dvenadtsat",
-     "label": "двенадцати",
+     "label": "двенадцать",
      "kind": "group",
-     "role": "addressed",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
      "refs": [
       "Ин 6:67",
       "Ин 6:70"
@@ -12069,7 +13930,11 @@
     },
     {
      "actor": "p-iuda-iskariot",
-     "role": "mentioned",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
      "refs": [
       "Ин 6:71"
      ],
@@ -12078,17 +13943,19 @@
    ],
    "places": [],
    "links": [],
-   "boundary": [
-    {
-     "start": "Ин 6:60",
-     "end": "Ин 6:69",
-     "rule": 5,
-     "human": "новое дело — «какие странные слова! кто может это слушать?» (6:60) — или следствие речи (правило 6): решает человек, протокол И0"
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "новое дело — «какие странные слова! кто может это слушать?» (6:60) — или следствие речи (правило 6): решает человек, протокол И0"
+   },
+   "plot": [
+    {
+     "setup": "Ин 6:60",
+     "resolution": "Ин 6:69"
+    }
+   ]
   },
   {
    "id": "e-sto-ovets-v-gorakh",
@@ -12109,7 +13976,11 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "participant",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
      "mode": "in-speech",
      "roleText": {
       "text": "Как вам кажется?",
@@ -12126,17 +13997,19 @@
    ],
    "places": [],
    "links": [],
-   "boundary": [
-    {
-     "start": "Мф 18:12",
-     "end": "Мф 18:14",
-     "rule": 7,
-     "human": "рассказ внутри речи — своя запись (11 § 13.4); слова «притча» в Мф 18:12 нет — вид «рассказ Иисуса». Параллель Лк 15:3–7 — при разметке Лк 15"
-    }
-   ],
    "source": {
     "method": "reading"
-   }
+   },
+   "boundary": {
+    "startRule": 7,
+    "human": "рассказ внутри речи — своя запись (11 § 13.4); слова «притча» в Мф 18:12 нет — вид «рассказ Иисуса». Параллель Лк 15:3–7 — при разметке Лк 15"
+   },
+   "plot": [
+    {
+     "setup": "Мф 18:12",
+     "resolution": "Мф 18:14"
+    }
+   ]
   }
  ],
  "classes": [

@@ -311,7 +311,9 @@ describe('очередь Д3-11: рёбра уровня «толкование�
     expect(edge('p-iokhanan-syn-eliashiva', 'p-eliashiv-pervosvyashchennik')[0].identity?.refs).toContain('Езд 10:6');
     expect(edge('p-iodai-syn-vanei', 'p-vaneya-syn-iodaya')[0].cert).toBe('scripture');
     expect(edge('p-eliam', 'p-akhitofel')[0].identity?.of).toBe('child');
-    expect(edge('p-khovav', 'p-iofor')[0].identity?.degree).toBe('weighty');
+    // Д-15 (D15-2): Ховав — «сыну Рагуилову» (Чис 10:29): ребро к своей карточке Рагуила, «Писание», без тождества «весомо»
+    expect(edge('p-khovav', 'p-iofor')).toEqual([]);
+    expect(edge('p-khovav', 'p-raguil').map((o) => [o.cert, o.refs, o.identity])).toEqual([['scripture', ['Чис 10:29'], undefined]]);
   });
   it('(б) основание только в толковании — ребра нет, понимание в примечании; Молехеф — «сестра» Галаада', () => {
     for (const [c, p] of [['p-starshaya-doch-lota', 'p-zhena-lota'], ['p-lorukhama', 'p-osiya-prorok'], ['p-ionafan-syn-girsama', 'p-girsam'], ['p-efan-ezrakhityanin', 'p-makhol'], ['p-kimgam', 'p-verzelliy-galaadityanin']]) {

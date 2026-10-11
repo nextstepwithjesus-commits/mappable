@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data",
-   "commit": "ac38562"
+   "commit": "1e4043e"
   }
  },
  "sources": [
@@ -21047,17 +21047,6 @@
    }
   },
   {
-   "actor": "p-iuda-iakovlev",
-   "area": "g-apostles",
-   "basis": "legacy-layout",
-   "refs": [],
-   "prov": {
-    "from": {
-     "vol": "17-new-testament.json"
-    }
-   }
-  },
-  {
    "actor": "p-simon-zilot",
    "area": "g-apostles",
    "basis": "legacy-layout",
@@ -29566,10 +29555,11 @@
    "area": "g-apostles",
    "basis": "named",
    "refs": [
-    "Мф 10:2-3"
+    "Мф 10:2-3",
+    "Лк 6:13-16"
    ],
    "prov": {
-    "by": "исправление D4-2",
+    "by": "исправление D15-1",
     "status": "draft"
    }
   }

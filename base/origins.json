@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data",
-   "commit": "ac38562"
+   "commit": "1e4043e"
   }
  },
  "sources": [
@@ -11491,28 +11491,28 @@
    }
   },
   {
-   "id": "o-iofor--sepfora",
+   "id": "o-raguil--sepfora",
    "child": "p-sepfora",
-   "parent": "p-iofor",
+   "parent": "p-raguil",
    "role": "father",
    "kind": "natural",
    "refs": [
-    "Исх 2:21",
-    "Исх 18:2",
-    "Исх 18:6"
+    "Исх 2:18",
+    "Исх 2:21"
    ],
-   "cert": "inference",
+   "cert": "scripture",
    "primary": true,
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
+    },
+    "by": "исправление D15-2"
    }
   },
   {
-   "id": "o-iofor--khovav",
+   "id": "o-raguil--khovav",
    "child": "p-khovav",
-   "parent": "p-iofor",
+   "parent": "p-raguil",
    "role": "father",
    "kind": "natural",
    "refs": [
@@ -11524,17 +11524,7 @@
     "from": {
      "vol": "08-levi.json"
     },
-    "by": "исправление C45"
-   },
-   "identity": {
-    "of": "parent",
-    "degree": "weighty",
-    "note": "«Ховаву, сыну Рагуилову» (Чис 10:29); Рагуил и Иофор в данных — одно лицо: оба — отец жены Моисея и священник Мадиамский (Исх 2:16, 18; 3:1)",
-    "refs": [
-     "Исх 2:16",
-     "Исх 2:18",
-     "Исх 3:1"
-    ]
+    "by": "исправление D15-2"
    }
   },
   {
