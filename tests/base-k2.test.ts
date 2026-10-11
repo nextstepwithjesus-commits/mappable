@@ -360,7 +360,8 @@ describe('места: тип, допуск, проверки до первой �
     ],
     positions: [
       { id: 'l-vefil#pos1', label: 'Beitin', lat: 31.93, lon: 35.24, coordSource: { source: 'src-openbible-geo' }, source: 'src-openbible-geo' },
-      { id: 'l-vefil#pos2', label: 'Beitin', lat: 31.93, lon: 35.24, coordSource: { source: 'src-wikidata', id: 'Q0' }, source: 'src-openbible-geo' },
+      // закрытый источник: в реестре с redistribute: false (MEGA-Jordan, М2-1); прежде — источник вне реестра
+      { id: 'l-vefil#pos2', label: 'Beitin', lat: 31.93, lon: 35.24, coordSource: { source: 'src-mega-jordan', id: '0' }, source: 'src-openbible-geo' },
     ],
   });
 
@@ -370,9 +371,18 @@ describe('места: тип, допуск, проверки до первой �
     expect(base.placeMentions!.length).toBeGreaterThan(600);
     expect(base.routes!.map((r) => r.id).sort()).toEqual(['rt-iskhod-do-chermnogo-morya', 'rt-put-avrama']);
     for (const c of ['место', 'упоминание места', 'путь']) expect(errs(base, c)).toEqual([]);
-    // у каждого внесённого положения источник координат — в реестре (Р-10; Д-10): остальные точки ждут записи реестра
+    // у каждого внесённого положения источник координат — в реестре и разрешает распространение (Р-10; Д-10; М2-1):
+    // точки MEGA-Jordan, IAA, DAAHL (redistribute: false) в базу не вносятся
     const r = reg();
-    for (const p of base.places!) for (const x of p.positions ?? []) expect([p.id, r.has(x.coordSource.source)]).toEqual([p.id, true]);
+    for (const p of base.places!) for (const x of p.positions ?? []) expect([p.id, r.get(x.coordSource.source)?.redistribute]).toEqual([p.id, true]);
+    for (const id of ['src-mega-jordan', 'src-iaa', 'src-daahl']) expect(r.get(id)?.redistribute).toBe(false);
+    for (const id of ['src-wikidata', 'src-geonames', 'src-palopenmaps']) expect(r.get(id)?.redistribute).toBe(true);
+    // правка по рецензии географа (М2-1): «Содомляне» — не имя Содома; пустыня Ефам — своё место; Вирсавия — «выв.»
+    expect(base.placeMentions!.some((m) => m.ref === 'Быт 19:4')).toBe(false);
+    expect(base.places!.find((p) => p.id === 'l-sodom')!.names.flatMap((n) => n.refs.map((x) => x.ref))).not.toContain('Быт 19:4');
+    expect(base.placeMentions!.find((m) => m.id === 'lm-266')).toMatchObject({ ref: 'Чис 33:8', place: 'l-pustynya-efam', role: 'via' });
+    expect(base.places!.find((p) => p.id === 'l-virsaviya')!.links).toContainEqual(expect.objectContaining({ kind: 'inferred-same', to: 'l-virsaviya-nav', cert: 'inference' }));
+    for (const gone of ['l-mamre', 'l-gederofaim', 'l-pustynya-sin-kades']) expect(base.places!.some((p) => p.id === gone)).toBe(false);
     // подписей нет: записи — черновик до второго ключа
     expect(base.places!.every((p) => p.prov?.status === 'draft')).toBe(true);
   });
@@ -391,6 +401,10 @@ describe('места: тип, допуск, проверки до первой �
       { ...m0, id: 'lm-900005', ref: 'Быт 12:6', form: 'Сихема', n: 1, place: undefined, candidates: [] },
     ];
     const e = errs(b, 'упоминание места').map((i) => `${i.where}: ${i.msg}`).join('\n');
+    // слово о людях — не форма места (рецензия географа, Г-1)
+    const g = copy();
+    g.placeMentions = [{ ...m0, id: 'lm-900007', ref: 'Быт 19:4', form: 'Содомляне', n: 1, place: 'l-sodom' }];
+    expect(errs(g, 'упоминание места').map((i) => i.msg).join('\n')).toMatch(/«Содомляне» — слово о людях, а не имя места/);
     for (const x of [
       /lm-x1: номер упоминания — вида «lm-<число>»/, /номер упоминания повторяется/, /формы «Харрана» нет среди слов-оснований стиха Быт 11:31 \(вхождение 2\)/,
       /формы «Ханаан» нет среди слов-оснований/, /нет места «l-nowhere»/, /уровень связи «interpretation»/, /связь «вывод» — со стихами вывода/,
@@ -410,12 +424,16 @@ describe('места: тип, допуск, проверки до первой �
     v.stops.push({ n: 3, place: 'l-sikhem', ref: 'Быт 12:6', words: 'Сихема', kind: 'camp' as any });
     v.segments.push({ from: 3, to: 99, mode: 'land', words: 'прошел', ref: 'Быт 12:6' });
     v.segments.push({ from: 4, to: 5, mode: 'land', words: 'был голод в той земле', ref: 'Быт 12:10' });
+    // повеление — не стоянка (05 § 3.5, правило 4; Г-5): без стиха исполнения — ошибка
+    v.stops.push({ n: 16, land: 'l-zemlya-moria', ref: 'Быт 22:2', words: 'пойди в землю Мориа', kind: 'stop' });
+    v.stops.push({ n: 17, between: ['l-vefil', 'l-nowhere2'], ref: 'Быт 13:3', words: 'между Вефилем и между Гаем', kind: 'return' });
     d.routes = [rt, { ...rt, id: 'RT-bad' }];
     const f = errs(d, 'путь').map((i) => `${i.where}: ${i.msg}`).join('\n');
     for (const x of [
       /нет места «l-nowhere»/, /«l-kharran» — не земля и не вода/, /слов «жили Хананеи» нет среди слов-оснований Быт 12:6/,
       /номер стоянки 3 повторяется/, /вид стоянки «camp» не из словаря/, /отрезок 3 → 99: нет такой стоянки/,
       /отрезок 4 → 5 \(Быт 12:10\): нет слов перехода/, /RT-bad: номер пути — вида «rt-…»/,
+      /стоянка Быт 22:2: слова повеления, а не рассказа — нужен стих исполнения/, /стоянка Быт 13:3: нет места «l-nowhere2»/,
     ]) expect(f).toMatch(x);
   });
 
@@ -430,7 +448,7 @@ describe('места: тип, допуск, проверки до первой �
     expect(seen.positions!.map((p) => p.id)).toEqual(['l-vefil#pos1']);
     const notice = noticeEntries(b, A).map((e) => e.id);
     expect(notice).toContain('src-openbible-geo');
-    expect(notice).not.toContain('src-wikidata');
+    expect(notice).not.toContain('src-mega-jordan');
     // в пробе точка не снимается
     expect(admission(b, 'probe').view(b.places[0]).positions).toHaveLength(2);
   });

@@ -53,7 +53,7 @@ Bealoth 1	l-valof	Валоф	settlement	Валоф\w*
 Beer 1	l-beer	Беэр	campsite	Беэр
 Beer-lahai-roi	l-beer-lakhay-roi	Беэр-лахай-рои	well	Беэр-лахай-рои
 Beersheba 1	l-virsaviya-nav	Вирсавия	settlement	Вирсави\w+
-Beersheba 2	l-virsaviya	Вирсавия	settlement	Вирсави\w+
+Beersheba 2	l-virsaviya	Вирсавия	settlement	Вирсави\w+	выв:l-virsaviya-nav:Быт 21:31,Быт 26:23,Быт 26:33,Нав 15:28,3Цар 19:3
 Bene-jaakan	l-bene-yaakan	Бене-Яакан	campsite	Бене-Яакан\w*
 Bered	l-bared	Баред	settlement	Баред\w*
 Beth-anoth	l-bef-anof	Беф-Аноф	settlement	Беф-Аноф\w*
@@ -116,7 +116,7 @@ En-shemesh	l-en-shemesh	Ен-Шемеш	spring	Ен-Шемеш\w*
 Eshan	l-eshan	Ешан	settlement	Ешан\w*
 Eshtaol	l-eshtaol	Ештаол	settlement	Ештаол\w*
 Eshtemoa	l-eshtemo	Ештемо	settlement	Ештемо
-Etham	l-efam	Ефам	campsite	Ефам\w*
+Etham	l-efam	Ефам	campsite	(?<!пустынею )Ефам\w*
 Ether 1	l-efer	Ефер	settlement	Ефер\w*
 Euphrates	l-evfrat	Евфрат	river	Евфрат\w*
 Ezem	l-atsem	Ацем	settlement	Ацем\w*
@@ -127,7 +127,7 @@ Gaza	l-gaza	Газа	settlement	Газ[аыеу]|Газск\w+
 Gebal 1	l-gevl	Гевл	land	земл\w+ Гевла|Гевл\w*
 Gederah 1	l-gedera	Гедера	settlement	Гедер[аыеу]
 Gederoth	l-gederof	Гедероф	settlement	Гедероф
-Gederothaim	l-gederofaim	Гедерофаим	settlement	Гедерофаим\w*
+Gederothaim	l-gederofaim	Гедерофаим	settlement	Гедерофаим\w*	слить:Gederah 1:that-is
 Gedor 1	l-gedor	Гедор	settlement	Гедор\w*
 Gerar	l-gerar	Герар	settlement	Герар\w*
 Geshur	l-gessur	Гессур	land	Гессур\w*
@@ -138,7 +138,7 @@ Giloh	l-gilo	Гило	settlement	Гило
 Goiim 1	l-goim	Гоимский	land	Гоимск\w+	не имя: лучшее предложение сводки «not a place (group of nations)», 346 (05 § 3.3, правило 0а); в синодальном — «царь Гоимский» (Быт 14:1, 9)
 Gomorrah	l-gomorra	Гоморра	settlement	Гоморр\w+
 Goshen 3	l-goshen	Гошен	settlement	Гошен\w*
-Great Sea	l-velikoe-more	великое море	sea	велик\w+ мор\w+	доп:Нав 15:4=есть море
+Great Sea	l-velikoe-more	великое море	sea	велик\w+ мор\w+	доп:Нав 15:4=есть море=inference:Нав 15:11
 Gulloth-mayim	l-istochniki-vod	источники вод	spring	источники вод	не имя: «источники вод», «источники верхние и источники нижние» — слова по смыслу (05 § 3.3, правило 0а)
 Hadashah	l-khadasha	Хадаша	settlement	Хадаш[аыеу]
 Halhul	l-khalkhul	Халхул	settlement	Халхул\w*
@@ -220,7 +220,7 @@ Madmannah	l-madmana	Мадмана	settlement	Мадман[аыеу]
 Mahanaim	l-makhanaim	Маханаим	settlement	Маханаим\w*
 Makheloth	l-makelof	Макелоф	campsite	Макелоф\w*
 Makkedah	l-maked	Макед	settlement	Макед\w*
-Mamre	l-mamre	Мамре	settlement	Мамре	доп:Быт 13:18=дубравы Мамре; доп:Быт 18:1=у дубравы Мамре
+Mamre	l-mamre	Мамре	settlement	Мамре	слить:Hebron:former; доп:Быт 13:18=дубравы Мамре; доп:Быт 18:1=у дубравы Мамре
 Maon	l-maon	Маон	settlement	Маон\w*
 Marah	l-merra	Мерра	campsite	Мерр[аыеу]
 Mareshah	l-maresha	Мареша	settlement	Мареш[аыеу]
@@ -274,7 +274,7 @@ Rabbah 1	l-ravva	Равва	settlement	Равв\w+
 Rabbah 2	l-aravva	Аравва	settlement	Аравв[аыеу]
 Ramath-mizpeh	l-ramaf-mitsfa	Рамаф-Мицфа	settlement	Рамаф-Мицф\w+
 Rameses	l-raamses	Раамсес	settlement	Раамсес\w*
-Red Sea 1	l-chermnoe-more	Чермное море	sea	Чермн\w+ мор\w+	переход моря (Исх 14–15); доп:Чис 33:8=среди моря; доп:Исх 14:22=среди моря=inference:Исх 15:4
+Red Sea 1	l-chermnoe-more	Чермное море	sea	Чермн\w+ мор\w+	переход моря (Исх 14–15); доп:Чис 33:8=среди моря=inference:Исх 15:4; доп:Исх 14:22=среди моря=inference:Исх 15:4
 Red Sea 3	l-chermnoe-more-stan	Чермное море	sea	Чермн\w+ мор\w+	стан у Чермного моря (Чис 33:10–11)
 Rephidim	l-refidim	Рефидим	campsite	Рефидим\w*
 Rimmon 2	l-rimmon	Риммон	settlement	Риммон\w*
@@ -336,7 +336,7 @@ Zeboiim	l-sevoim	Севоимский	settlement	Севоимск\w+
 Zenan	l-tsenan	Ценан	settlement	Ценан\w*
 Zereth-shahar	l-tsere-shakhar	Цереф-Шахар	settlement	Цереф-Шахар\w*
 Ziklag	l-tsiklag	Циклаг	settlement	Циклаг\w*
-Zin 1	l-pustynya-sin-kades	пустыня Син	desert	пустын\w+ Син
+Zin 1	l-pustynya-sin-kades	пустыня Син	desert	пустын\w+ Син	слить:Kadesh-barnea:that-is
 Zin 2	l-tsin	Цин	settlement	Цин
 Zior	l-tsigor	Цигор	settlement	Цигор\w*
 Ziph 1	l-zif-gory	Зиф	settlement	Зиф\w*
@@ -351,3 +351,5 @@ Tamar 2	l-tamara	Тамара	settlement	Тамар[аыеу]	цель:Иез 47
 Beth-biri	l-bef-birei	Беф-Биреи	settlement	Беф-Биреи	цель:1Пар 4:31
 Mount Moriah	l-gora-moria	гора Мориа	mountain	гор\w* Мориа	цель:2Пар 3:1
 Mount Sinai	l-gora-sinay	гора Синай	mountain	гор\w* Синай	цель:Исх 19:11
+# свои места составителя: в сводке записи нет (рецензия географа, Г-6)
++пустыня Ефам	l-pustynya-efam	пустыня Ефам	desert	пустын\w+ Ефам	своё:Чис 33:8

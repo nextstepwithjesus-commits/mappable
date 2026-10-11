@@ -877,6 +877,11 @@ export function validatePlaceMentions(base: Base, err: Err, mainTexts: (where: s
     if (!(m.n >= 1)) err('упоминание места', w, 'номер вхождения формы — с единицы');
     else if (formCount(t, m.form ?? '') < m.n) err('упоминание места', w, `формы «${m.form}» нет среди слов-оснований стиха ${m.ref}${m.n > 1 ? ` (вхождение ${m.n})` : ''}`);
   }
+  // слово о людях («Содомляне», «Египтяне», «Киринеянин») — не форма места (рецензия географа, Г-1)
+  for (const m of base.placeMentions ?? []) {
+    const last = placeText(m.form ?? '').split(' ').pop() ?? '';
+    if (/ян(е|ин|ина|ину|ам|ами|ах)?$/u.test(last)) err('упоминание места', m.id, `«${m.form}» — слово о людях, а не имя места`);
+  }
   // имя места со стихом — в этом стихе есть упоминание этого места (у мест, чьи упоминания уже записаны)
   const at = new Set((base.placeMentions ?? []).map((m) => `${m.place}|${m.ref}`));
   const withMentions = new Set((base.placeMentions ?? []).map((m) => m.place));
@@ -888,6 +893,17 @@ export function validatePlaceMentions(base: Base, err: Err, mainTexts: (where: s
 
 /** Слова перехода (05 § 3.5): глаголы и обороты; отрезок пути есть только при них. */
 const TRANSITION = /(^|[^\p{L}])(отправил\p{L}*|отправившись|двинул\p{L}*|пош[её]л|пошли|пришл?и|пришел|вышел|вышли|поднял\p{L}*|сош[её]л|сошли|прош[её]л|прошли|проходили|удалились|отплыли|приплыли|прибыли|возвратил\p{L}*|обратились|повел|оттуда|отсюда)(?![\p{L}])|(^|[^\p{L}])из [\p{L}-]+ в /u;
+/** Слова повеления в предложении стоянки: «скажи…, чтобы они… расположились» (Исх 14:2), «пойди» (Быт 22:2). */
+const COMMAND = /(^|[^\p{L}])(скажи|скажите|пойди|пойдите|иди|идите|повели|чтобы)(?![\p{L}])/u;
+/** Предложение стиха до слов стоянки включительно: от последней точки, точки с запятой или двоеточия перед ними. */
+function clauseBefore(text: string, words: string): string {
+  const t = placeText(text);
+  const i = t.indexOf(placeText(words));
+  if (i < 0) return placeText(words);
+  const head = t.slice(0, i);
+  const cut = Math.max(head.lastIndexOf('.'), head.lastIndexOf(';'), head.lastIndexOf(':'));
+  return t.slice(cut + 1, i + placeText(words).length);
+}
 const STOP_KINDS = new Set(['start', 'stop', 'return', 'pass', 'direction', 'sortie', 'intent']);
 
 /**
@@ -917,8 +933,15 @@ export function validateRoutes(base: Base, err: Err, mainTexts: (where: string, 
         }
         const pl = s.place ?? s.land;
         if (pl && !places.has(pl)) err('путь', w, `стоянка ${s.ref}: нет места «${pl}»`);
+        for (const x of s.between ?? []) if (!places.has(x)) err('путь', w, `стоянка ${s.ref}: нет места «${x}»`);
+        if (s.between && s.between.length < 2) err('путь', w, `стоянка ${s.ref}: «между» — два места`);
+        // повеление — не стоянка (05 § 3.5, правило 4): у стоянки со словами повеления — стих исполнения
+        if ((s.kind === 'stop' || s.kind === 'return' || s.kind === 'start') && COMMAND.test(clauseBefore(mainTexts(w, s.ref).join(' '), s.words ?? ''))) {
+          if (!s.fulfilled) err('путь', w, `стоянка ${s.ref}: слова повеления, а не рассказа — нужен стих исполнения (fulfilled)`);
+          else if (!has(w, s.fulfilled.ref, s.fulfilled.words)) err('путь', w, `слов исполнения «${s.fulfilled.words}» нет в ${s.fulfilled.ref}`);
+        }
         if (s.land && places.has(s.land) && !PLACE_AREAL.has(places.get(s.land)!.kind)) err('путь', w, `стоянка ${s.ref}: «${s.land}» — не земля и не вода`);
-        if (!pl && s.kind !== 'direction' && s.kind !== 'intent') err('путь', w, `стоянка ${s.ref} без места`);
+        if (!pl && !s.between?.length && s.kind !== 'direction' && s.kind !== 'intent') err('путь', w, `стоянка ${s.ref} без места`);
         if (!has(w, s.ref, s.words ?? '')) err('путь', w, `слов «${s.words}» нет среди слов-оснований ${s.ref}`);
         if (s.anchor) {
           if (!places.has(s.anchor.place)) err('путь', w, `привязка: нет места «${s.anchor.place}»`);
@@ -931,6 +954,7 @@ export function validateRoutes(base: Base, err: Err, mainTexts: (where: string, 
         if (g.mode !== 'land' && g.mode !== 'sea') err('путь', w, `вид отрезка «${g.mode}» не из словаря`);
         if (!has(w, g.ref, g.words ?? '')) err('путь', w, `слов «${g.words}» нет среди слов-оснований ${g.ref}`);
         else if (!TRANSITION.test(placeText(g.words))) err('путь', w, `отрезок ${g.from} → ${g.to} (${g.ref}): нет слов перехода (05 § 3.5)`);
+        for (const a of g.also ?? []) if (!has(w, a.ref, a.words)) err('путь', w, `слов «${a.words}» нет среди слов-оснований ${a.ref}`);
       }
       for (const d of v.days ?? []) if (!has(w, d.ref, d.words)) err('путь', w, `слов о днях пути «${d.words}» нет в ${d.ref}`);
     }

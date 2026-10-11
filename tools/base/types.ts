@@ -881,9 +881,13 @@ export interface RouteStop {
   n?: number;
   place?: string;
   land?: string;
+  /** Стоянка между местами словами текста: «между Вефилем и между Гаем» (Быт 13:3; 02 § 3.13.6, `between`). */
+  between?: string[];
   ref: Ref;
   words: string;
   kind: 'start' | 'stop' | 'return' | 'pass' | 'direction' | 'sortie' | 'intent';
+  /** Стих стоянки — повеление («пойди в землю Мориа», Быт 22:2): исполнение рассказом (Быт 22:3; 05 § 3.5, правило 4). */
+  fulfilled?: { ref: Ref; words: string };
   /** Привязка стоянки-земли к месту словами стиха: «расположился там Израиль станом против горы» (Исх 19:2). */
   anchor?: { place: string; ref: Ref; cert: Cert; refs?: Ref[]; words?: string };
   note?: string;
@@ -897,7 +901,10 @@ export interface RouteSegment {
   /** Слова перехода среди слов-оснований стиха (05 § 3.5). */
   words: string;
   ref: Ref;
+  /** Другие стихи отрезка: повеление и его исполнение (Исх 14:2 и 14:4). */
+  also?: { ref: Ref; words: string }[];
   road?: string;
+  note?: string;
 }
 
 export interface Route {

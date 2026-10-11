@@ -20,7 +20,7 @@
    "form": "Сеннаар",
    "place": "l-sennaar",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -30,7 +30,7 @@
    "form": "Вавилон",
    "place": "l-vavilon",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -50,7 +50,7 @@
    "form": "Халдейском",
    "place": "l-khaldeya",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -60,7 +60,7 @@
    "form": "Ура Халдейского",
    "place": "l-ur-khaldeyskiy",
    "cert": "reference",
-   "role": "where",
+   "role": "from",
    "status": "linked"
   },
   {
@@ -70,7 +70,7 @@
    "form": "Халдейского",
    "place": "l-khaldeya",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "from",
    "status": "linked"
   },
   {
@@ -80,7 +80,7 @@
    "form": "землю Ханаанскую",
    "place": "l-zemlya-khanaanskaya",
    "cert": "reference",
-   "role": "to",
+   "role": "mentioned",
    "status": "linked"
   },
   {
@@ -90,7 +90,7 @@
    "form": "Харрана",
    "place": "l-kharran",
    "cert": "reference",
-   "role": "where",
+   "role": "to",
    "status": "linked"
   },
   {
@@ -120,7 +120,7 @@
    "form": "Харране",
    "place": "l-kharran",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -130,7 +130,7 @@
    "form": "землю Ханаанскую",
    "place": "l-zemlya-khanaanskaya",
    "cert": "reference",
-   "role": "via",
+   "role": "mentioned",
    "status": "linked"
   },
   {
@@ -140,7 +140,7 @@
    "form": "землю Ханаанскую",
    "place": "l-zemlya-khanaanskaya",
    "cert": "reference",
-   "role": "via",
+   "role": "to",
    "status": "linked"
   },
   {
@@ -150,7 +150,7 @@
    "form": "Сихема",
    "place": "l-sikhem",
    "cert": "reference",
-   "role": "where",
+   "role": "to",
    "status": "linked"
   },
   {
@@ -170,7 +170,7 @@
    "form": "Вефиля",
    "place": "l-vefil",
    "cert": "reference",
-   "role": "where",
+   "role": "mentioned",
    "status": "linked"
   },
   {
@@ -190,7 +190,7 @@
    "form": "Гай",
    "place": "l-gay",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -200,7 +200,7 @@
    "form": "Египет",
    "place": "l-egipet",
    "cert": "reference",
-   "role": "where",
+   "role": "to",
    "status": "linked"
   },
   {
@@ -210,7 +210,7 @@
    "form": "Египту",
    "place": "l-egipet",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "to",
    "status": "linked"
   },
   {
@@ -240,7 +240,7 @@
    "form": "Вефиля",
    "place": "l-vefil",
    "cert": "reference",
-   "role": "where",
+   "role": "to",
    "status": "linked"
   },
   {
@@ -260,7 +260,7 @@
    "form": "Гаем",
    "place": "l-gay",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -330,7 +330,7 @@
    "form": "земле Ханаанской",
    "place": "l-zemlya-khanaanskaya",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -340,7 +340,7 @@
    "form": "Содома",
    "place": "l-sodom",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -358,7 +358,7 @@
    "ref": "Быт 13:18",
    "n": 1,
    "form": "Мамре",
-   "place": "l-mamre",
+   "place": "l-khevron",
    "cert": "reference",
    "role": "where",
    "status": "linked"
@@ -470,7 +470,7 @@
    "form": "долине Сиддим",
    "place": "l-dolina-siddim",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -490,7 +490,7 @@
    "form": "Аштероф—Карнаиме",
    "place": "l-ashterof-karnaim",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -500,7 +500,7 @@
    "form": "Гаме",
    "place": "l-gam",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -510,7 +510,7 @@
    "form": "Шаве—Кириафаиме",
    "place": "l-shave-kiriafaim",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -520,7 +520,7 @@
    "form": "горе их Сеире",
    "place": "l-gora-seir",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -530,7 +530,7 @@
    "form": "Эл—Фарана",
    "place": "l-el-faran",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "to",
    "status": "linked"
   },
   {
@@ -540,7 +540,7 @@
    "form": "Мишпат",
    "place": "l-kades",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "to",
    "status": "linked"
   },
   {
@@ -550,7 +550,7 @@
    "form": "Кадес",
    "place": "l-kades",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "to",
    "status": "linked"
   },
   {
@@ -630,7 +630,7 @@
    "form": "долине Сиддим",
    "place": "l-dolina-siddim",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -720,7 +720,7 @@
    "form": "Содоме",
    "place": "l-sodom",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -840,7 +840,7 @@
    "form": "Халдейского",
    "place": "l-khaldeya",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "from",
    "status": "linked"
   },
   {
@@ -870,7 +870,7 @@
    "form": "земле Ханаанской",
    "place": "l-zemlya-khanaanskaya",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -890,7 +890,7 @@
    "form": "Беэр—лахай—рои",
    "place": "l-beer-lakhay-roi",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -928,9 +928,9 @@
    "ref": "Быт 18:1",
    "n": 1,
    "form": "Мамре",
-   "place": "l-mamre",
+   "place": "l-khevron",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -970,7 +970,7 @@
    "form": "Содом",
    "place": "l-sodom",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "to",
    "status": "linked"
   },
   {
@@ -990,7 +990,7 @@
    "form": "Содом",
    "place": "l-sodom",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "to",
    "status": "linked"
   },
   {
@@ -1000,17 +1000,7 @@
    "form": "Содома",
    "place": "l-sodom",
    "cert": "reference",
-   "role": "mentioned",
-   "status": "linked"
-  },
-  {
-   "id": "lm-100",
-   "ref": "Быт 19:4",
-   "n": 1,
-   "form": "Содомляне",
-   "place": "l-sodom",
-   "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -1040,7 +1030,7 @@
    "form": "Содом",
    "place": "l-sodom",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -1050,7 +1040,7 @@
    "form": "Гоморру",
    "place": "l-gomorra",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -1090,7 +1080,7 @@
    "form": "Сигоре",
    "place": "l-sigor",
    "cert": "reference",
-   "role": "where",
+   "role": "mentioned",
    "status": "linked"
   },
   {
@@ -1100,7 +1090,7 @@
    "form": "Кадесом",
    "place": "l-kades",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -1110,7 +1100,7 @@
    "form": "Суром",
    "place": "l-pustynya-sur",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -1140,7 +1130,7 @@
    "form": "Вирсавии",
    "place": "l-virsaviya",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -1160,7 +1150,7 @@
    "form": "земли Египетской",
    "place": "l-egipet",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "from",
    "status": "linked"
   },
   {
@@ -1180,7 +1170,7 @@
    "form": "Вирсавии",
    "place": "l-virsaviya",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -1190,7 +1180,7 @@
    "form": "Вирсавии",
    "place": "l-virsaviya",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -1200,7 +1190,7 @@
    "form": "землю Мориа",
    "place": "l-zemlya-moria",
    "cert": "reference",
-   "role": "where",
+   "role": "to",
    "status": "linked"
   },
   {
@@ -1210,7 +1200,7 @@
    "form": "Иегова—ире",
    "place": "l-iegova-ire",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -1220,7 +1210,7 @@
    "form": "Вирсавию",
    "place": "l-virsaviya",
    "cert": "reference",
-   "role": "where",
+   "role": "to",
    "status": "linked"
   },
   {
@@ -1288,7 +1278,7 @@
    "ref": "Быт 23:17",
    "n": 1,
    "form": "Мамре",
-   "place": "l-mamre",
+   "place": "l-khevron",
    "cert": "reference",
    "role": "mentioned",
    "status": "linked"
@@ -1308,7 +1298,7 @@
    "ref": "Быт 23:19",
    "n": 1,
    "form": "Мамре",
-   "place": "l-mamre",
+   "place": "l-khevron",
    "cert": "reference",
    "role": "mentioned",
    "status": "linked"
@@ -1370,7 +1360,7 @@
    "form": "Махпеле",
    "place": "l-makhpela",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -1378,7 +1368,7 @@
    "ref": "Быт 25:9",
    "n": 1,
    "form": "Мамре",
-   "place": "l-mamre",
+   "place": "l-khevron",
    "cert": "reference",
    "role": "mentioned",
    "status": "linked"
@@ -1400,7 +1390,7 @@
    "form": "Хавилы",
    "place": "l-khavila",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -1410,7 +1400,7 @@
    "form": "Сура",
    "place": "l-pustynya-sur",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -1450,7 +1440,7 @@
    "form": "земле Египетской",
    "place": "l-egipet",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -1460,7 +1450,7 @@
    "form": "земле Египетской",
    "place": "l-egipet",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -1470,7 +1460,7 @@
    "form": "земле Египетской",
    "place": "l-egipet",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -1490,7 +1480,7 @@
    "form": "землю Египетскую",
    "place": "l-egipet",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -1510,7 +1500,7 @@
    "form": "Египет",
    "place": "l-egipet",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -1520,7 +1510,7 @@
    "form": "Египте",
    "place": "l-egipet",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -1530,7 +1520,7 @@
    "form": "земле Египетской",
    "place": "l-egipet",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -1570,7 +1560,7 @@
    "form": "Сокхоф",
    "place": "l-sokkhof",
    "cert": "reference",
-   "role": "where",
+   "role": "to",
    "status": "linked"
   },
   {
@@ -1580,7 +1570,7 @@
    "form": "Египта",
    "place": "l-egipet",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "from",
    "status": "linked"
   },
   {
@@ -1590,7 +1580,7 @@
    "form": "Египта",
    "place": "l-egipet",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "from",
    "status": "linked"
   },
   {
@@ -1610,7 +1600,7 @@
    "form": "земли Египетской",
    "place": "l-egipet",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "from",
    "status": "linked"
   },
   {
@@ -1620,7 +1610,7 @@
    "form": "земли Египетской",
    "place": "l-egipet",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "from",
    "status": "linked"
   },
   {
@@ -1700,7 +1690,7 @@
    "form": "Египет",
    "place": "l-egipet",
    "cert": "reference",
-   "role": "to",
+   "role": "mentioned",
    "status": "linked"
   },
   {
@@ -1750,7 +1740,7 @@
    "form": "Пи-Гахирофом",
    "place": "l-pi-gakhirof",
    "cert": "reference",
-   "role": "where",
+   "role": "mentioned",
    "status": "linked"
   },
   {
@@ -1810,7 +1800,7 @@
    "form": "Пи-Гахирофе",
    "place": "l-pi-gakhirof",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -1840,7 +1830,7 @@
    "form": "Египта",
    "place": "l-egipet",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "from",
    "status": "linked"
   },
   {
@@ -1884,7 +1874,7 @@
    "form": "Чермном море",
    "place": "l-chermnoe-more",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -1944,7 +1934,7 @@
    "form": "пустыню Сур",
    "place": "l-pustynya-sur",
    "cert": "reference",
-   "role": "via",
+   "role": "to",
    "status": "linked"
   },
   {
@@ -1954,7 +1944,7 @@
    "form": "Мерру",
    "place": "l-merra",
    "cert": "reference",
-   "role": "where",
+   "role": "to",
    "status": "linked"
   },
   {
@@ -1974,7 +1964,7 @@
    "form": "Мерра",
    "place": "l-merra",
    "cert": "reference",
-   "role": "where",
+   "role": "mentioned",
    "status": "linked"
   },
   {
@@ -1994,7 +1984,7 @@
    "form": "Елим",
    "place": "l-elim",
    "cert": "reference",
-   "role": "where",
+   "role": "to",
    "status": "linked"
   },
   {
@@ -2004,7 +1994,7 @@
    "form": "гору Синай",
    "place": "l-gora-sinay",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -2024,7 +2014,7 @@
    "form": "Афарима",
    "place": "l-afarim",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "via",
    "status": "linked"
   },
   {
@@ -2034,7 +2024,7 @@
    "form": "Хорма",
    "place": "l-khorma",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -2054,7 +2044,7 @@
    "form": "путем Чермного моря",
    "place": "l-put-chermnogo-morya",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "via",
    "status": "linked"
   },
   {
@@ -2134,7 +2124,7 @@
    "form": "Арнона",
    "place": "l-arnon",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -2227,7 +2217,7 @@
    "form": "Беэр",
    "place": "l-beer",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "to",
    "status": "linked"
   },
   {
@@ -2237,7 +2227,7 @@
    "form": "Матанну",
    "place": "l-matanna",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "to",
    "status": "linked"
   },
   {
@@ -2247,7 +2237,7 @@
    "form": "Матанны",
    "place": "l-matanna",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "from",
    "status": "linked"
   },
   {
@@ -2257,7 +2247,7 @@
    "form": "Нагалиил",
    "place": "l-nagaliil",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "to",
    "status": "linked"
   },
   {
@@ -2267,7 +2257,7 @@
    "form": "Нагалиила",
    "place": "l-nagaliil",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "from",
    "status": "linked"
   },
   {
@@ -2277,7 +2267,7 @@
    "form": "Вамоф",
    "place": "l-vamof",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "to",
    "status": "linked"
   },
   {
@@ -2287,7 +2277,7 @@
    "form": "Вамофа",
    "place": "l-vamof",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "from",
    "status": "linked"
   },
   {
@@ -2498,7 +2488,7 @@
    "form": "Иазер",
    "place": "l-iazer",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "to",
    "status": "linked"
   },
   {
@@ -2528,7 +2518,7 @@
    "form": "Едреи",
    "place": "l-edrei",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "to",
    "status": "linked"
   },
   {
@@ -2667,18 +2657,22 @@
    "n": 1,
    "form": "моря",
    "place": "l-chermnoe-more",
-   "cert": "reference",
+   "cert": "inference",
    "role": "via",
-   "status": "linked"
+   "status": "linked",
+   "refs": [
+    "Исх 15:4"
+   ],
+   "note": "место названо в Исх 15:4; связь по соседнему стиху (05 § 3.2, уровень «выв.»)"
   },
   {
    "id": "lm-266",
    "ref": "Чис 33:8",
    "n": 1,
-   "form": "Ефам",
-   "place": "l-efam",
+   "form": "пустынею Ефам",
+   "place": "l-pustynya-efam",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "via",
    "status": "linked"
   },
   {
@@ -2708,7 +2702,7 @@
    "form": "Елим",
    "place": "l-elim",
    "cert": "reference",
-   "role": "where",
+   "role": "to",
    "status": "linked"
   },
   {
@@ -2918,7 +2912,7 @@
    "form": "Римнон— Фареце",
    "place": "l-rimnon-farets",
    "cert": "reference",
-   "role": "to",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -3178,7 +3172,7 @@
    "form": "Хор— Агидгаде",
    "place": "l-khor-agidgad",
    "cert": "reference",
-   "role": "to",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -3238,7 +3232,7 @@
    "form": "Ецион— Гавере",
    "place": "l-etsion-gaver",
    "cert": "reference",
-   "role": "to",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -3256,7 +3250,7 @@
    "ref": "Чис 33:36",
    "n": 1,
    "form": "пустыне Син",
-   "place": "l-pustynya-sin-kades",
+   "place": "l-kades",
    "cert": "reference",
    "role": "where",
    "status": "linked"
@@ -3268,7 +3262,7 @@
    "form": "Кадес",
    "place": "l-kades",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -3308,7 +3302,7 @@
    "form": "гору Ор",
    "place": "l-gora-or",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "to",
    "status": "linked"
   },
   {
@@ -3318,7 +3312,7 @@
    "form": "земли Египетской",
    "place": "l-egipet",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "from",
    "status": "linked"
   },
   {
@@ -3348,7 +3342,7 @@
    "form": "земли Ханаанской",
    "place": "l-zemlya-khanaanskaya",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -3478,7 +3472,7 @@
    "form": "Алмон— Дивлафаиме",
    "place": "l-almon-divlafaim",
    "cert": "reference",
-   "role": "to",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -3498,7 +3492,7 @@
    "form": "горах Аваримских",
    "place": "l-gory-avarimskie",
    "cert": "reference",
-   "role": "to",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -3528,7 +3522,7 @@
    "form": "равнинах Моавитских",
    "place": "l-ravniny-moavitskie",
    "cert": "reference",
-   "role": "to",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -3568,7 +3562,7 @@
    "form": "Беф-Иешимофа",
    "place": "l-bef-ieshimof",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -3578,7 +3572,7 @@
    "form": "Аве— Ситтима",
    "place": "l-ave-sittim",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -3588,7 +3582,7 @@
    "form": "равнинах Моавитских",
    "place": "l-ravniny-moavitskie",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -3598,7 +3592,7 @@
    "form": "равнинах Моавитских",
    "place": "l-ravniny-moavitskie",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -3608,7 +3602,7 @@
    "form": "Иордана",
    "place": "l-iordan",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -3628,7 +3622,7 @@
    "form": "Иордан",
    "place": "l-iordan",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "via",
    "status": "linked"
   },
   {
@@ -3638,7 +3632,7 @@
    "form": "землю Ханаанскую",
    "place": "l-zemlya-khanaanskaya",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "to",
    "status": "linked"
   },
   {
@@ -4058,7 +4052,7 @@
    "form": "Медеве",
    "place": "l-medeva",
    "cert": "reference",
-   "role": "where",
+   "role": "mentioned",
    "status": "linked"
   },
   {
@@ -4448,7 +4442,7 @@
    "form": "Васане",
    "place": "l-vasan",
    "cert": "reference",
-   "role": "where",
+   "role": "mentioned",
    "status": "linked"
   },
   {
@@ -4536,7 +4530,7 @@
    "ref": "Нав 15:1",
    "n": 1,
    "form": "пустыня Син",
-   "place": "l-pustynya-sin-kades",
+   "place": "l-kades",
    "cert": "reference",
    "role": "mentioned",
    "status": "linked"
@@ -4637,9 +4631,13 @@
    "n": 1,
    "form": "море",
    "place": "l-velikoe-more",
-   "cert": "reference",
+   "cert": "inference",
    "role": "mentioned",
-   "status": "linked"
+   "status": "linked",
+   "refs": [
+    "Нав 15:11"
+   ],
+   "note": "место названо в Нав 15:11; связь по соседнему стиху (05 § 3.2, уровень «выв.»)"
   },
   {
    "id": "lm-463",
@@ -4978,7 +4976,7 @@
    "form": "Давира",
    "place": "l-davir",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "to",
    "status": "linked"
   },
   {
@@ -5536,7 +5534,7 @@
    "ref": "Нав 15:36",
    "n": 1,
    "form": "Гедерофаим",
-   "place": "l-gederofaim",
+   "place": "l-gedera",
    "cert": "reference",
    "role": "mentioned",
    "status": "linked"
@@ -6348,7 +6346,7 @@
    "form": "Иерусалиме",
    "place": "l-ierusalim",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -6358,7 +6356,7 @@
    "form": "Вавилона",
    "place": "l-vavilon-gorod",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "from",
    "status": "linked"
   },
   {
@@ -6368,7 +6366,7 @@
    "form": "Беф-Биреи",
    "place": "l-bef-birei",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -6428,7 +6426,7 @@
    "form": "Саламине",
    "place": "l-salamin",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -6468,7 +6466,7 @@
    "form": "Памфилии",
    "place": "l-pamfiliya",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "to",
    "status": "linked"
   },
   {
@@ -6518,7 +6516,7 @@
    "form": "земле Египетской",
    "place": "l-egipet",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -6528,7 +6526,7 @@
    "form": "земле Ханаанской",
    "place": "l-zemlya-khanaanskaya",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -6578,7 +6576,7 @@
    "form": "Иконии",
    "place": "l-ikoniya",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -6588,7 +6586,7 @@
    "form": "Ликаонские города",
    "place": "l-likaoniya",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "to",
    "status": "linked"
   },
   {
@@ -6598,7 +6596,7 @@
    "form": "Листру",
    "place": "l-listra",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "to",
    "status": "linked"
   },
   {
@@ -6608,7 +6606,7 @@
    "form": "Дервию",
    "place": "l-derviya",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "to",
    "status": "linked"
   },
   {
@@ -6618,7 +6616,7 @@
    "form": "Листре",
    "place": "l-listra",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {
@@ -6638,7 +6636,7 @@
    "form": "Иконии",
    "place": "l-ikoniya",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "from",
    "status": "linked"
   },
   {
@@ -6658,7 +6656,7 @@
    "form": "Листру",
    "place": "l-listra",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "via",
    "status": "linked"
   },
   {
@@ -6668,7 +6666,7 @@
    "form": "Иконию",
    "place": "l-ikoniya",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "via",
    "status": "linked"
   },
   {
@@ -6678,7 +6676,7 @@
    "form": "Антиохию",
    "place": "l-antiokhiya-pisidiyskaya",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "via",
    "status": "linked"
   },
   {
@@ -6708,7 +6706,7 @@
    "form": "Пергии",
    "place": "l-pergiya",
    "cert": "reference",
-   "role": "mentioned",
+   "role": "where",
    "status": "linked"
   },
   {

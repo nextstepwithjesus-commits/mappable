@@ -143,6 +143,13 @@ for name, d in DICT.items():
         r = next(x for x in BYID.values() if x['friendly_id'] == name)
         r['_hits'] = [rkey(x) for x in d['target']]
         rows.append(r)
+# свои места составителя (строка «+имя» с пометкой «своё:стих»): места, которых нет в сводке (рецензия географа, Г-6)
+for name, d in DICT.items():
+    own = [x.strip()[5:] for x in d['flags'].split(';') if x.strip().startswith('своё:')]
+    if name.startswith('+'):
+        r = {'id': 'own:' + name[1:], 'friendly_id': name, 'identifications': [], 'modern_associations': {}, '_hits': [rkey(x) for x in own], '_own': True}
+        BYID[r['id']] = r
+        rows.append(r)
 missing = [r['friendly_id'] for r in rows if r['friendly_id'] not in DICT]
 assert not missing, missing
 
@@ -169,7 +176,8 @@ def degree(r):
     return d, s
 
 
-REG = {x['id'] for x in json.load(open(f'{ROOT}/base/sources.json', encoding='utf-8'))['items']}
+# точки — только у источников координат, которые в реестре и разрешают распространение (рецензия географа, § 5; М2-1)
+REG = {x['id'] for x in json.load(open(f'{ROOT}/base/sources.json', encoding='utf-8'))['items'] if x.get('redistribute') is True}
 held = collections.Counter()      # точки, не внесённые в base: источник координат не в реестре
 best_all = collections.Counter()  # источник координат лучшей точки места — до допуска по реестру
 all_pos = collections.Counter()
@@ -203,6 +211,9 @@ def precision(m):
 
 # ---------------------------------------------------------------- упоминания по стихам
 NOSHIFT = {'Egypt'}
+# слово о людях («Содомляне», «Египтяне», «Киринеянин») — не имя места (рецензия географа, Г-1)
+PEOPLE = re.compile(r'ян(е|ин|ина|ину|ам|ами|ах)?$', re.I)
+people = []
 found = collections.defaultdict(list)     # запись → [(ключ, начало, форма, стих сводки)]
 unmatched, shifted = [], []
 for r in rows:
@@ -228,6 +239,9 @@ for r in rows:
         if dv:
             shifted.append((name, rstr((b, c, v)), rstr(key)))
         for m in ms:
+            if PEOPLE.search(m.group(0)):
+                people.append((name, rstr(key), m.group(0)))
+                continue
             found[name].append((key, m.start(), m.group(0), rstr((b, c, v)), None))
     for ex in d['extra']:
         ref, phrase, *how = ex.split('=')
@@ -298,6 +312,8 @@ for r in rows:
     if d['notname'] or d['merge']:
         continue
     p = places[d['id']]
+    if r.get('_own'):
+        continue
     ma = r.get('modern_associations') or {}
     idents = r.get('identifications') or []
     pos = []
@@ -357,6 +373,15 @@ for r in rows:
                 links_missing.append((r['friendly_id'], kind, tname))
                 notes[p['id']].append(f'по сводке лучшее предложение — «{desc}»; записи {tname} в справочнике нет')
     p['match'] = match
+    # тождество по сравнению стихов (02 § 3.13.4, «выв.»): решение координатора М2-1 — Вирсавия Быт 21 и Нав 15:28
+    for fl in d['flags'].split(';'):
+        fl = fl.strip()
+        if fl.startswith('выв:'):
+            to, refs = fl[4:].split(':', 1)
+            match.pop('otherNameOf', None)
+            p.setdefault('links', []).append({'id': f'{p["id"]}#link{len(p.get("links", [])) + 1}', 'kind': 'inferred-same', 'to': to,
+                                              'cert': 'inference', 'refs': refs.split(','),
+                                              'note': 'то же, что — так выходит, если сравнить места Библии; решение координатора М2-1, нужен второй ключ библеиста'})
     # точка подписи у земли и воды — только своя точка сводки, не город и не чужая запись (05 § 3.3, правило 1а)
     AREAL = {'river', 'stream', 'sea', 'lake', 'land', 'region', 'desert', 'valley', 'field', 'mountain-range', 'road'}
     if p['kind'] in AREAL and best and best.get('id_source') == 'modern' and dg != 'не установлено':
@@ -370,6 +395,7 @@ for r in rows:
                 else:
                     held['точка подписи: ' + coord_source(m)['source']] += 1
 
+OWN = {DICT[r['friendly_id']]['id'] for r in rows if r.get('_own')}
 out_places = []
 for pid in sorted(places):
     p = places[pid]
@@ -381,7 +407,7 @@ for pid in sorted(places):
     for k in ('positions', 'degree', 'links', 'labelPoint', 'match'):
         if k in p:
             rec[k] = p[k]
-    rec['sources'] = ['src-synodal', 'src-openbible-geo']
+    rec['sources'] = ['src-synodal'] + ([] if pid in OWN else ['src-openbible-geo'])
     rec['prov'] = {'by': BY, 'at': AT, 'status': 'draft'}
     if notes.get(pid):
         rec['prov']['note'] = '; '.join(notes[pid])
@@ -392,13 +418,36 @@ _seen = set()
 mentions_raw = [m for m in mentions_raw if not ((m['place'], m['key'], m['start']) in _seen or _seen.add((m['place'], m['key'], m['start'])))]
 mentions_raw.sort(key=lambda m: (order(m['key']), m['start']))
 out_mentions = []
-cnt = collections.Counter()
+# номер упоминания устойчив (подпись второго ключа держится за номер): прежний номер — по стиху, форме и вхождению;
+# новое упоминание получает следующий свободный номер; снятые номера не возвращаются
+try:
+    OLD = {(x['ref'], x['form'], x['n']): x['id'] for x in json.load(open(f'{ROOT}/base/place-mentions.json', encoding='utf-8'))['items']}
+except FileNotFoundError:
+    OLD = {}
+next_id = max([int(v[3:]) for v in OLD.values()] + [0])
+USED = set()
+# роли — таблица составителя, пересмотр по смыслу стиха (М2-1; Г-9); правило по предлогу больше не ставит роль
+ROLES = {}
+for line in open(f'{ROOT}/data/places/pilot-roles.tsv', encoding='utf-8'):
+    if line.startswith('#') or not line.strip():
+        continue
+    f = line.rstrip('\n').split('\t')
+    ROLES[(f[0], f[1], int(f[2]))] = f[3]
 for i, m in enumerate(mentions_raw):
     t = basis(m['key'])
-    k = (m['key'], m['form'])
-    cnt[k] += 1
-    x = {'id': f'lm-{i + 1}', 'ref': rstr(m['key']), 'n': cnt[k], 'form': m['form'], 'place': m['place'],
-         'cert': 'reference', 'role': role(t, m['start'], m['form']), 'status': 'linked'}
+    n = len(re.findall(r'(?<![\w—-])' + re.escape(m['form']) + r'(?![\w—-])', t[:m['start'] + len(m['form'])]))
+    lid = OLD.get((rstr(m['key']), m['form'], n))
+    if not lid:   # форма уточнена («Ефам» → «пустынею Ефам», Г-6): номер сохраняется по последнему слову формы
+        cand = OLD.get((rstr(m['key']), m['form'].split(' ')[-1], n))
+        if cand and cand not in USED:
+            lid = cand
+    USED.add(lid)
+    if not lid:
+        next_id += 1
+        lid = f'lm-{next_id}'
+    x = {'id': lid, 'ref': rstr(m['key']), 'n': n, 'form': m['form'], 'place': m['place'],
+         'cert': 'reference', 'role': ROLES.get((rstr(m['key']), m['form'], n), '?'), 'status': 'linked'}
+    assert x['role'] != '?', ('нет роли в data/places/pilot-roles.tsv', x)
     if m['how']:
         cert, refs = m['how'].split(':', 1)
         x['cert'] = cert
@@ -419,13 +468,13 @@ for rt in routes['items']:
                     assert s[k] in pids, (rt['id'], s)
             t = basis(rkey(s['ref']))
             assert s['words'] in t, (rt['id'], s['ref'], s['words'])
-            pl = s.get('place') or s.get('land')
-            if pl:
+            for x in s.get('between', []):
+                assert x in pids, (rt['id'], s)
+            for pl in [s.get('place') or s.get('land')] + s.get('between', []):
+                if not pl:
+                    continue
                 ms = [m for m in out_mentions if m['place'] == pl and m['ref'] == s['ref']]
                 assert ms, ('у стоянки нет упоминания места в её стихе', rt['id'], s)
-                role_by_stop = {'start': 'from', 'stop': 'where', 'return': 'where', 'pass': 'via', 'sortie': 'to'}
-                for m in ms:
-                    m['role'] = role_by_stop[s['kind']]
         for g in var['segments']:
             t = basis(rkey(g['ref']))
             assert g['words'] in t, (rt['id'], g['ref'], g['words'])
@@ -467,13 +516,14 @@ print(f'мест: {len(out_places)}; имён: {sum(len(p["names"]) for p in out
 print('степени: ' + ', '.join(f'{k} {deg[k]}' for k in ('certain', 'probable', 'possible', 'unknown')))
 print(f'кандидатов с точкой у сводки: {sum(all_pos.values())}; по источнику координат: ' + ', '.join(f'{k} {v}' for k, v in all_pos.most_common()))
 print(f'положений внесено в base: {sum(srcs.values())}; по источнику координат: ' + ', '.join(f'{k} {v}' for k, v in srcs.most_common()))
-print(f'точек не внесено — источника координат нет в реестре ({sum(v for k, v in held.items() if not k.startswith("точка"))}): ' + ', '.join(f'{k} {v}' for k, v in held.most_common()))
+print(f'точек не внесено — источник координат не в реестре или без права распространять ({sum(v for k, v in held.items() if not k.startswith("точка"))}): ' + ', '.join(f'{k} {v}' for k, v in held.most_common()))
 print('источник координат лучшей точки места (оценка > 0), до допуска: ' + ', '.join(f'{k} {v}' for k, v in best_src.most_common()))
-print(f'otherNameOf: {sum(1 for p in out_places if p["match"].get("otherNameOf"))}; связей part-of/near: {sum(len(p.get("links", [])) for p in out_places)}; '
+print(f'otherNameOf: {sum(1 for p in out_places if p.get("match", {}).get("otherNameOf"))}; связей part-of/near: {sum(len(p.get("links", [])) for p in out_places)}; '
       f'точек подписи: {sum(1 for p in out_places if p.get("labelPoint"))}')
 print(f'цель связи вне справочника ({len(links_missing)}): ' + '; '.join(f'{a} — {b} {c}' for a, b, c in links_missing))
 print(f'формы не найдены в стихе сводки ({len(unmatched)}): ' + '; '.join(f'{a} {b}' for a, b in unmatched))
 print(f'форма в соседнем стихе ({len(shifted)}): ' + '; '.join(f'{a} {b}→{c}' for a, b, c in shifted))
+print(f'слово о людях — не упоминание ({len(people)}): ' + '; '.join(f'{a} {b} «{c}»' for a, b, c in people))
 print('роли: ' + ', '.join(f'{k} {v}' for k, v in collections.Counter(m['role'] for m in out_mentions).most_common()))
 print(f'путей: {len(routes["items"])}; стоянок: {sum(len(v["stops"]) for rt in routes["items"] for v in rt["variants"])}')
 if CHECK and stale:
@@ -492,11 +542,11 @@ if '--sample' in sys.argv:
     for m in out_mentions:
         M[m['place']].append(m)
     L = ['# Места пакета 2: выборка ко второму ключу', '',
-         '**Статус:** выборка составителя мест к проверке вторым ключом (географ или библеист), 12 октября 2026. Собрана скриптом `python3 -I tools/places/pilot.py --sample`; зерно случайной выборки 20261012. Подписей нет. Отчёт — [места-пакет-2-отчёт.md](места-пакет-2-отчёт.md).', '',
+         '**Статус:** выборка составителя мест к проверке вторым ключом (географ или библеист), 12 октября 2026. Собрана скриптом `python3 -I tools/places/pilot.py --sample`; зерно случайной выборки 20261012. Пересобрана после правки по рецензии (М2-1); подписи второго ключа — в `base/checks.json`. Отчёт — [места-пакет-2-отчёт.md](места-пакет-2-отчёт.md).', '',
          'Что проверять (02 § 3.17 [4.1]; 05 § 3.3, § 13 п. 2–3, 16):',
          '- **часть 1 — каждая запись** мест сцен показа: имя и форма в стихе среди слов-оснований, вид имени, вид места, слияние по словам стиха, не-имя;',
-         '- **часть 2 — подпись партии** для `positions`, `degree`, автоматического `match`: 150 мест из 339 (не меньше 5 % и 150), по степеням поровну, где хватает; ошибок не больше 2 % (3 из 150) — иначе срез проверяется целиком;',
-         '- **часть 3 — упоминания:** 150 из всех, по книгам; роль размечена правилом по предлогу и глаголу — черновик.', '']
+         f'- **часть 2 — подпись партии** для `positions`, `degree`, автоматического `match`: 150 мест из {len(out_places)} (не меньше 5 % и 150), по степеням поровну, где хватает; ошибок не больше 2 % (3 из 150) — иначе срез проверяется целиком;',
+         '- **часть 3 — упоминания:** 150 из всех; роль пересмотрена по смыслу стиха (таблица `data/places/pilot-roles.tsv`).', '']
     for title, (bk, lo, hi) in scene.items():
         ids = sorted({target_of[r['id']] for r in rows[:PILOT] if r['id'] in target_of and in_range(r, bk, lo, hi)})
         nn = sorted(r['friendly_id'] for r in rows[:PILOT] if in_range(r, bk, lo, hi) and r['id'] not in target_of)
