@@ -289,3 +289,70 @@ for a in actors.values():
         if x.get('type') in ('variant', 'renamed', 'foreign') and not (refset(x.get('refs')) & ms):
             nos += 1
 print('других имён (variant, renamed, foreign) без общего стиха с основным:', nos)
+
+# ---------------------------------------------------------------- 15 (ред. 4.4, сверка)
+part('15. Основное имя по тексту: формы вида (б) — число стихов вне скобок среди стихов карточки')
+TEXT15 = {}
+ORDER15 = {}
+for line in open('tools/bible/synodal.tsv', encoding='utf-8'):
+    b_, c_, v_, t_ = line.rstrip('\n').split('\t', 3)
+    TEXT15[(b_, int(c_), int(v_))] = re.sub(r'\[[^\]]*\]', ' ', t_)
+    ORDER15.setdefault(b_, len(ORDER15))
+pos15 = lambda v: (ORDER15.get(v[0], 99), v[1], v[2])
+
+
+def stem15(form):
+    w = form.split()[0].split(',')[0]
+    return w[:-1] if len(w) > 3 and w[-1] in 'аяйьеиоуы' else w
+
+
+def card_verses(a):
+    vs = set()
+
+    def go(x):
+        if isinstance(x, dict):
+            for k_, v_ in x.items():
+                if k_ in ('refs', 'key', 'all', 'read') and isinstance(v_, list):
+                    vs.update(refset([r for r in v_ if isinstance(r, str)]))
+                elif k_ in ('ref', 'first', 'verse') and isinstance(v_, str):
+                    vs.update(verses(v_))
+                else:
+                    go(v_)
+        elif isinstance(x, list):
+            for y in x:
+                go(y)
+    go(a.get('names'))
+    # «не смешивать с …» (notes, kind: identification) — стихи другого лица, не считаются
+    go([f for f in a.get('facts', []) if not (isinstance(f.get('value'), dict) and f['value'].get('kind') == 'identification')])
+    for coll in (origins, kin, members):
+        for r in coll:
+            if a['id'] in (r.get('child'), r.get('parent'), r.get('from'), r.get('to'), r.get('actor')):
+                go(r)
+    for u in unions:
+        if a['id'] in (u.get('husband'), u.get('wife')):
+            go(u)
+    return vs
+
+
+def count15(form, vs):
+    rx = re.compile(r'(?<![А-Яа-яЁё])' + re.escape(stem15(form)) + r'[а-яё]{0,3}(?![А-Яа-яЁё])')
+    return sorted((v for v in vs if rx.search(TEXT15.get(v, ''))), key=pos15)
+
+
+changed = []
+for n, card, name_, refs_, k in rows:
+    if k != 'б' or n == 0:
+        continue
+    a = actors.get(card)
+    if not a:
+        continue
+    vs = card_verses(a)
+    main = [x for x in a['names'] if x.get('type') == 'main'][0]['form']
+    cm, cf = count15(main, vs), count15(name_, vs)
+    if len(cf) > len(cm) or (len(cf) == len(cm) and cf and cm and pos15(cf[0]) < pos15(cm[0])):
+        changed.append((n, main, len(cm), name_, len(cf)))
+    if n in (7, 31, 42, 46, 12):
+        print(f'№ {n}: {main} — {len(cm)} стих.; {name_} — {len(cf)} стих.')
+print('пар вида (б), у которых по тексту основным стало бы другое имя:', len(changed))
+for x in changed:
+    print('  № %s: %s %s — %s %s' % x)
