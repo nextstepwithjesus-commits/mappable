@@ -26,22 +26,21 @@
      ]
     },
     {
-     "text": "Его осиял свет с неба, и он упал на землю.",
+     "text": "С неба осиял его свет, и голос сказал: Я Иисус.",
      "refs": [
       "Деян 9:3",
-      "Деян 9:4"
-     ]
-    },
-    {
-     "text": "Голос сказал: Я Иисус, Которого ты гонишь.",
-     "refs": [
       "Деян 9:5"
      ]
     },
     {
-     "text": "Через три дня Анания возложил на него руки, и он прозрел.",
+     "text": "Три дня он не видел.",
      "refs": [
-      "Деян 9:9",
+      "Деян 9:9"
+     ]
+    },
+    {
+     "text": "Анания возложил на него руки, и он прозрел.",
+     "refs": [
       "Деян 9:17",
       "Деян 9:18"
      ]
@@ -252,7 +251,7 @@
    "actors": [
     {
      "actor": "p-pavel",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "Господи! что повелишь мне делать?",
@@ -265,11 +264,12 @@
       "Деян 9:4",
       "Деян 9:8"
      ],
-     "cert": "scripture"
+     "cert": "scripture",
+     "label": "Савл"
     },
     {
      "actor": "p-iisus",
-     "role": "speaks",
+     "role": "participant",
      "roleText": {
       "text": "Я Иисус, Которого ты гонишь",
       "refs": [
@@ -303,7 +303,7 @@
      "actor": "new:sputniki-savla",
      "label": "Люди же, шедшие с ним",
      "kind": "group",
-     "role": "acts",
+     "role": "participant",
      "roleText": {
       "text": "стояли в оцепенении, слыша голос, а никого не видя",
       "refs": [
@@ -319,7 +319,7 @@
      "actor": "new:ananiya-damask",
      "label": "Анания",
      "kind": "human",
-     "role": "acts",
+     "role": "participant",
      "roleText": {
       "text": "брат Савл! Господь Иисус, явившийся тебе на пути, которым ты шел, послал меня",
       "refs": [
@@ -455,17 +455,6 @@
      "action": true,
      "note": "слова Павла; что он говорит об этой встрече — вывод (11 § 14.4)",
      "cert": "inference"
-    },
-    {
-     "refs": [
-      "1Тим 1:13"
-     ],
-     "kind": "mention",
-     "words": [
-      "гонитель"
-     ],
-     "note": "слова Павла; что он говорит об этом времени — вывод (11 § 14.4)",
-     "cert": "inference"
     }
    ],
    "discrepancies": [
@@ -573,7 +562,7 @@
    "actors": [
     {
      "actor": "p-pavel",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "стал проповедывать в синагогах об Иисусе, что Он есть Сын Божий",
@@ -585,13 +574,14 @@
       "Деян 9:22",
       "Деян 9:24"
      ],
-     "cert": "scripture"
+     "cert": "scripture",
+     "label": "Савл"
     },
     {
      "actor": "new:iudei-v-damaske",
      "label": "Иудеи",
      "kind": "group",
-     "role": "acts",
+     "role": "participant",
      "roleText": {
       "text": "Иудеи согласились убить его",
       "refs": [
@@ -608,7 +598,7 @@
      "actor": "new:ucheniki-v-damaske",
      "label": "Ученики",
      "kind": "group",
-     "role": "acts",
+     "role": "participant",
      "roleText": {
       "text": "Ученики же ночью, взяв его, спустили по стене в корзине",
       "refs": [
@@ -664,7 +654,7 @@
    "actors": [
     {
      "actor": "p-pavel",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "и смело проповедывал во имя Господа Иисуса",
@@ -675,11 +665,12 @@
      "refs": [
       "Деян 9:26"
      ],
-     "cert": "scripture"
+     "cert": "scripture",
+     "label": "Савл"
     },
     {
      "actor": "p-varnava",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "Варнава же, взяв его, пришел к Апостолам",
@@ -706,7 +697,7 @@
      "actor": "new:ellinisty",
      "label": "Еллинистами",
      "kind": "group",
-     "role": "acts",
+     "role": "participant",
      "roleText": {
       "text": "а они покушались убить его",
       "refs": [
@@ -722,7 +713,7 @@
      "actor": "new:bratiya-v-ierusalime",
      "label": "Братия",
      "kind": "group",
-     "role": "acts",
+     "role": "participant",
      "roleText": {
       "text": "отправили его в Кесарию и препроводили в Тарс",
       "refs": [
@@ -798,7 +789,7 @@
      "actor": "new:tserkvi",
      "label": "Церкви",
      "kind": "group",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "refs": [
       "Деян 9:31"
@@ -866,7 +857,7 @@
    "actors": [
     {
      "actor": "p-petr",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "Эней! исцеляет тебя Иисус Христос; встань с постели твоей",
@@ -951,7 +942,7 @@
    "actors": [
     {
      "actor": "p-petr",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "Тавифа! встань",
@@ -987,7 +978,7 @@
      "actor": "new:ucheniki-v-ioppii",
      "label": "ученики",
      "kind": "group",
-     "role": "acts",
+     "role": "participant",
      "refs": [
       "Деян 9:38"
      ],
@@ -997,7 +988,7 @@
      "actor": "new:vdovitsy-v-ioppii",
      "label": "вдовицы",
      "kind": "group",
-     "role": "acts",
+     "role": "participant",
      "refs": [
       "Деян 9:39",
       "Деян 9:41"
@@ -1108,7 +1099,7 @@
    "actors": [
     {
      "actor": "p-pavel",
-     "role": "speaks",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "выслушайте теперь мое оправдание перед вами",
@@ -1127,7 +1118,7 @@
      "actor": "new:tysyachenachalnik-deyan21",
      "label": "тысяченачальнику",
      "kind": "unnamed",
-     "role": "speaks",
+     "role": "participant",
      "roleText": {
       "text": "ты знаешь по-гречески?",
       "refs": [
@@ -1245,7 +1236,7 @@
    "actors": [
     {
      "actor": "p-pavel",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "mode": "in-speech",
      "roleText": {
@@ -1262,7 +1253,7 @@
     },
     {
      "actor": "p-iisus",
-     "role": "speaks",
+     "role": "participant",
      "mode": "in-speech",
      "roleText": {
       "text": "иди; Я пошлю тебя далеко к язычникам",
@@ -1345,7 +1336,7 @@
    "actors": [
     {
      "actor": "p-pavel",
-     "role": "speaks",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "разве вам позволено бичевать Римского гражданина, да и без суда?",
@@ -1363,7 +1354,7 @@
      "actor": "new:tysyachenachalnik-deyan21",
      "label": "тысяченачальник",
      "kind": "unnamed",
-     "role": "speaks",
+     "role": "participant",
      "roleText": {
       "text": "я за большие деньги приобрел это гражданство",
       "refs": [
@@ -1380,7 +1371,7 @@
      "actor": "new:sotnik-deyan22",
      "label": "сотнику",
      "kind": "unnamed",
-     "role": "speaks",
+     "role": "participant",
      "refs": [
       "Деян 22:25",
       "Деян 22:26"
@@ -1430,7 +1421,7 @@
    "actors": [
     {
      "actor": "p-pavel",
-     "role": "speaks",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "я фарисей, сын фарисея; за чаяние воскресения мертвых меня судят",
@@ -1449,7 +1440,7 @@
      "actor": "new:tysyachenachalnik-deyan21",
      "label": "тысяченачальник",
      "kind": "unnamed",
-     "role": "acts",
+     "role": "participant",
      "roleText": {
       "text": "повелел воинам сойти взять его из среды их и отвести в крепость",
       "refs": [
@@ -1465,7 +1456,7 @@
      "actor": "new:ananiya-pervosvyashchennik",
      "label": "Анания",
      "kind": "human",
-     "role": "acts",
+     "role": "participant",
      "roleText": {
       "text": "приказал бить его по устам",
       "refs": [
@@ -1481,7 +1472,7 @@
      "actor": "new:farisei-v-sinedrione",
      "label": "фарисеев",
      "kind": "group",
-     "role": "acts",
+     "role": "participant",
      "refs": [
       "Деян 23:6",
       "Деян 23:7"
@@ -1492,7 +1483,7 @@
      "actor": "new:saddukei",
      "label": "саддукеев",
      "kind": "group",
-     "role": "acts",
+     "role": "participant",
      "refs": [
       "Деян 23:6",
       "Деян 23:7"
@@ -1610,7 +1601,7 @@
    "actors": [
     {
      "actor": "p-pavel",
-     "role": "speaks",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "я не воспротивился небесному видению",
@@ -1627,7 +1618,7 @@
     },
     {
      "actor": "p-agrippa",
-     "role": "speaks",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "ты немного не убеждаешь меня сделаться Христианином",
@@ -1657,7 +1648,7 @@
      "actor": "new:fest",
      "label": "Фест",
      "kind": "human",
-     "role": "speaks",
+     "role": "participant",
      "roleText": {
       "text": "безумствуешь ты, Павел!",
       "refs": [

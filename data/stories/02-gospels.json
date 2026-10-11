@@ -233,7 +233,7 @@
    "actors": [
     {
      "actor": "p-ioann-krestitel",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "приходит Иоанн Креститель и проповедует в пустыне Иудейской",
@@ -252,7 +252,7 @@
      "actor": "new:narod-u-iordana",
      "label": "народ",
      "kind": "group",
-     "role": "acts",
+     "role": "participant",
      "account": 2,
      "refs": [
       "Лк 3:7",
@@ -275,7 +275,7 @@
      "actor": "new:mytari-u-ioanna",
      "label": "мытари",
      "kind": "group",
-     "role": "speaks",
+     "role": "participant",
      "account": 2,
      "refs": [
       "Лк 3:12"
@@ -286,7 +286,7 @@
      "actor": "new:voiny-u-ioanna",
      "label": "воины",
      "kind": "group",
-     "role": "speaks",
+     "role": "participant",
      "account": 2,
      "refs": [
       "Лк 3:14"
@@ -496,7 +496,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "И, крестившись, Иисус тотчас вышел из воды",
@@ -513,7 +513,7 @@
     },
     {
      "actor": "p-ioann-krestitel",
-     "role": "acts",
+     "role": "participant",
      "roleText": {
       "text": "Иоанн же удерживал Его",
       "refs": [
@@ -530,7 +530,7 @@
     {
      "actor": "god",
      "label": "глас с небес",
-     "role": "speaks",
+     "role": "participant",
      "roleText": {
       "text": "Сей есть Сын Мой возлюбленный",
       "refs": [
@@ -548,7 +548,7 @@
      "actor": "new:dukh-kak-golub",
      "label": "Духа",
      "kind": "spirit",
-     "role": "acts",
+     "role": "participant",
      "roleText": {
       "text": "как голубь",
       "refs": [
@@ -787,7 +787,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "Тогда Иисус возведен был Духом в пустыню",
@@ -805,7 +805,7 @@
      "actor": "new:diavol",
      "label": "диавол",
      "kind": "spirit",
-     "role": "speaks",
+     "role": "participant",
      "roleText": {
       "text": "все это дам Тебе, если, пав, поклонишься мне",
       "refs": [
@@ -814,8 +814,18 @@
      },
      "refs": [
       "Мф 4:5",
-      "Мк 1:13",
       "Лк 4:3"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:diavol",
+     "label": "сатаною",
+     "kind": "spirit",
+     "role": "participant",
+     "account": 1,
+     "refs": [
+      "Мк 1:13"
      ],
      "cert": "scripture"
     },
@@ -823,7 +833,7 @@
      "actor": "new:angely-v-pustyne",
      "label": "Ангелы",
      "kind": "angel",
-     "role": "acts",
+     "role": "participant",
      "roleText": {
       "text": "и Ангелы служили Ему",
       "refs": [
@@ -1019,7 +1029,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "покайтесь, ибо приблизилось Царство Небесное",
@@ -1135,7 +1145,7 @@
       "time": [
        "Лк 5:1"
       ],
-      "note": "общие слова — «ловцами человеков» и «будешь ловить человеков», «оставив… последовали» и «оставили все и последовали»; ход: у моря рыболовы и сети — слово Иисуса — оставили и последовали; «Однажды» (Лк 5:1) в разное время не ставит. Решение составителя по 11 § 2.6 (б); у Луки — великий лов рыбы, у Матфея и Марка его нет: строка протокола И0"
+      "note": "ход сцены другой. общие слова — «ловцами человеков» и «будешь ловить человеков», «оставив… последовали» и «оставили все и последовали»; ход: у моря рыболовы и сети — слово Иисуса — оставили и последовали; «Однажды» (Лк 5:1) в разное время не ставит. Решение составителя по 11 § 2.6 (б); у Луки — великий лов рыбы, у Матфея и Марка его нет: строка протокола И0"
      }
     }
    ],
@@ -1180,7 +1190,8 @@
         "Лк 5:4-9"
        ]
       }
-     ]
+     ],
+     "note": "ход сцены другой: у Луки — своё ядро сцены; склейка «да, с условием» (второй ключ, решение координатора, п. 6)"
     },
     {
      "id": "e-lovtsy-chelovekov#s3",
@@ -1261,7 +1272,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "идите за Мною, и Я сделаю, что вы будете ловцами человеков",
@@ -1278,7 +1289,7 @@
     },
     {
      "actor": "p-petr",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "выйди от меня, Господи! потому что я человек грешный",
@@ -1292,11 +1303,12 @@
       "Лк 5:3",
       "Лк 5:8"
      ],
-     "cert": "scripture"
+     "cert": "scripture",
+     "label": "Симон"
     },
     {
      "actor": "p-andrey",
-     "role": "acts",
+     "role": "participant",
      "refs": [
       "Мф 4:18",
       "Мк 1:16"
@@ -1305,7 +1317,7 @@
     },
     {
      "actor": "p-iakov-zevedeev",
-     "role": "acts",
+     "role": "participant",
      "refs": [
       "Мф 4:21",
       "Мк 1:19",
@@ -1315,7 +1327,7 @@
     },
     {
      "actor": "p-ioann-apostol",
-     "role": "acts",
+     "role": "participant",
      "refs": [
       "Мф 4:21",
       "Мк 1:19",
@@ -1542,7 +1554,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "замолчи и выйди из него",
@@ -1573,7 +1585,7 @@
      "actor": "new:dukh-nechistyy-mk1",
      "label": "дух нечистый",
      "kind": "spirit",
-     "role": "speaks",
+     "role": "participant",
      "refs": [
       "Мк 1:26"
      ],
@@ -1583,7 +1595,7 @@
      "actor": "new:vse-v-sinagoge",
      "label": "все",
      "kind": "group",
-     "role": "acts",
+     "role": "participant",
      "roleText": {
       "text": "И все ужаснулись",
       "refs": [
@@ -1753,7 +1765,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "refs": [
       "Мф 8:14"
@@ -1781,9 +1793,19 @@
     },
     {
      "actor": "p-petr",
+     "label": "Петр",
+     "role": "mentioned",
+     "account": 0,
+     "refs": [
+      "Мф 8:14"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-petr",
+     "label": "Симон",
      "role": "mentioned",
      "refs": [
-      "Мф 8:14",
       "Мк 1:29",
       "Лк 4:38"
      ],
@@ -1791,7 +1813,7 @@
     },
     {
      "actor": "p-andrey",
-     "role": "acts",
+     "role": "participant",
      "account": 1,
      "refs": [
       "Мк 1:29"
@@ -1800,7 +1822,7 @@
     },
     {
      "actor": "p-iakov-zevedeev",
-     "role": "acts",
+     "role": "participant",
      "account": 1,
      "refs": [
       "Мк 1:29"
@@ -1809,7 +1831,7 @@
     },
     {
      "actor": "p-ioann-apostol",
-     "role": "acts",
+     "role": "participant",
      "account": 1,
      "refs": [
       "Мк 1:29"
@@ -1940,8 +1962,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "label": "Христос",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "И Он исцелил многих, страдавших различными болезнями",
@@ -1950,10 +1971,10 @@
       ]
      },
      "refs": [
-      "Мк 1:34",
-      "Лк 4:41"
+      "Мф 8:16"
      ],
-     "cert": "scripture"
+     "cert": "scripture",
+     "antecedent": "Мф 8:14"
     },
     {
      "actor": "new:bolnye-vecherom",
@@ -1970,7 +1991,7 @@
      "actor": "new:besy-mk1",
      "label": "бесов",
      "kind": "spirit",
-     "role": "speaks",
+     "role": "participant",
      "refs": [
       "Мк 1:34",
       "Лк 4:41"
@@ -2095,7 +2116,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "и там молился",
@@ -2112,7 +2133,7 @@
     },
     {
      "actor": "p-petr",
-     "role": "acts",
+     "role": "participant",
      "account": 0,
      "roleText": {
       "text": "Симон и бывшие с ним пошли за Ним",
@@ -2123,13 +2144,14 @@
      "refs": [
       "Мк 1:36"
      ],
-     "cert": "scripture"
+     "cert": "scripture",
+     "label": "Симон"
     },
     {
      "actor": "new:narod-ishchet",
      "label": "народ",
      "kind": "group",
-     "role": "acts",
+     "role": "participant",
      "account": 1,
      "refs": [
       "Лк 4:42"
@@ -2342,7 +2364,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "хочу, очистись",
@@ -2361,7 +2383,7 @@
      "actor": "new:prokazhennyy-mk1",
      "label": "прокаженный",
      "kind": "unnamed",
-     "role": "speaks",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "если хочешь, можешь меня очистить",
@@ -2371,7 +2393,17 @@
      },
      "refs": [
       "Мф 8:2",
-      "Мк 1:40",
+      "Мк 1:40"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:prokazhennyy-mk1",
+     "label": "человек весь в проказе",
+     "kind": "unnamed",
+     "role": "participant",
+     "account": 2,
+     "refs": [
       "Лк 5:12"
      ],
      "cert": "scripture"
@@ -2703,7 +2735,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "дерзай, чадо! прощаются тебе грехи твои",
@@ -2742,7 +2774,7 @@
      "actor": "new:chetvero-nesushchikh",
      "label": "четверо",
      "kind": "group",
-     "role": "acts",
+     "role": "participant",
      "account": 1,
      "roleText": {
       "text": "которого несли четверо",
@@ -2759,7 +2791,7 @@
      "actor": "new:knizhniki-mf9",
      "label": "книжников",
      "kind": "group",
-     "role": "speaks",
+     "role": "participant",
      "roleText": {
       "text": "Он богохульствует",
       "refs": [
@@ -2788,7 +2820,7 @@
      "actor": "new:narod-mf9",
      "label": "Народ",
      "kind": "group",
-     "role": "acts",
+     "role": "participant",
      "roleText": {
       "text": "удивился и прославил Бога",
       "refs": [
@@ -2914,7 +2946,7 @@
        "Мф 9:9",
        "Лк 5:27"
       ],
-      "note": "одни слова: «сидящего у сбора пошлин», «следуй за Мною» (Мф 9:9; Мк 2:14; Лк 5:27); у всех — сразу после истории о расслабленном. Имя мытаря разное (различия); что Матфей и Левий — одно лицо, решает база лиц, а не эта склейка"
+      "note": "одни слова: «сидящего у сбора пошлин», «следуй за Мною» (Мф 9:9; Мк 2:14; Лк 5:27); у всех — сразу после истории о расслабленном. Имя мытаря разное (различия); лица — по рассказу с формой стиха: у Марка и Луки «Левий», связь с лицом базы — «вывод»"
      }
     }
    ],
@@ -2965,7 +2997,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "следуй за Мною",
@@ -2982,8 +3014,10 @@
     },
     {
      "actor": "p-matfey",
-     "role": "acts",
+     "label": "Матфей",
+     "role": "participant",
      "main": true,
+     "account": 0,
      "roleText": {
       "text": "И он встал и последовал за Ним",
       "refs": [
@@ -2991,11 +3025,31 @@
       ]
      },
      "refs": [
-      "Мф 9:9",
-      "Мк 2:14",
-      "Лк 5:27"
+      "Мф 9:9"
      ],
      "cert": "scripture"
+    },
+    {
+     "actor": "p-matfey",
+     "label": "Левий Алфеев",
+     "role": "participant",
+     "main": true,
+     "account": 1,
+     "refs": [
+      "Мк 2:14"
+     ],
+     "cert": "inference"
+    },
+    {
+     "actor": "p-matfey",
+     "label": "Левий",
+     "role": "participant",
+     "main": true,
+     "account": 2,
+     "refs": [
+      "Лк 5:27"
+     ],
+     "cert": "inference"
     },
     {
      "actor": "p-alfey-otets-leviya",
@@ -3183,7 +3237,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "Я пришел призвать не праведников, но грешников к покаянию",
@@ -3202,7 +3256,7 @@
      "actor": "new:mytari-i-greshniki",
      "label": "мытари и грешники",
      "kind": "group",
-     "role": "acts",
+     "role": "participant",
      "refs": [
       "Мф 9:10",
       "Мк 2:15"
@@ -3213,7 +3267,7 @@
      "actor": "new:farisei",
      "label": "фарисеи",
      "kind": "group",
-     "role": "speaks",
+     "role": "participant",
      "roleText": {
       "text": "для чего Учитель ваш ест и пьет с мытарями и грешниками?",
       "refs": [
@@ -3240,7 +3294,7 @@
     },
     {
      "actor": "p-matfey",
-     "role": "acts",
+     "role": "participant",
      "account": 2,
      "roleText": {
       "text": "И сделал для Него Левий в доме своем большое угощение",
@@ -3251,7 +3305,8 @@
      "refs": [
       "Лк 5:29"
      ],
-     "cert": "scripture"
+     "cert": "inference",
+     "label": "Левий"
     }
    ],
    "places": [],
@@ -3422,7 +3477,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "придут дни, когда отнимется у них жених, и тогда будут поститься",
@@ -3440,12 +3495,35 @@
      "actor": "new:ucheniki-ioannovy",
      "label": "ученики Иоанновы",
      "kind": "group",
-     "role": "speaks",
+     "role": "participant",
+     "account": 0,
+     "roleText": {
+      "text": "почему мы и фарисеи постимся много, а Твои ученики не постятся?",
+      "refs": [
+       "Мф 9:14"
+      ]
+     },
      "refs": [
-      "Мф 9:14",
-      "Мк 2:18",
+      "Мф 9:14"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:knizhniki-i-farisei-lk5",
+     "label": "Книжники и фарисеи",
+     "kind": "group",
+     "role": "participant",
+     "account": 2,
+     "roleText": {
+      "text": "Они же сказали Ему",
+      "refs": [
+       "Лк 5:33"
+      ]
+     },
+     "refs": [
       "Лк 5:33"
      ],
+     "antecedent": "Лк 5:30",
      "cert": "scripture"
     }
    ],
@@ -3462,6 +3540,23 @@
       {
        "ref": "Мк 2:19",
        "text": "могут ли поститься сыны чертога брачного"
+      }
+     ]
+    },
+    {
+     "label": "кто спрашивал",
+     "quotes": [
+      {
+       "ref": "Мф 9:14",
+       "text": "приходят к Нему ученики Иоанновы и говорят"
+      },
+      {
+       "ref": "Мк 2:18",
+       "text": "Приходят к Нему и говорят"
+      },
+      {
+       "ref": "Лк 5:33",
+       "text": "Они же сказали Ему"
       }
      ]
     }
@@ -3659,7 +3754,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "Сын Человеческий есть господин и субботы",
@@ -3677,7 +3772,7 @@
      "actor": "new:ucheniki",
      "label": "ученики",
      "kind": "group",
-     "role": "acts",
+     "role": "participant",
      "roleText": {
       "text": "начали срывать колосья и есть",
       "refs": [
@@ -3695,7 +3790,7 @@
      "actor": "new:farisei",
      "label": "Фарисеи",
      "kind": "group",
-     "role": "speaks",
+     "role": "participant",
      "refs": [
       "Мф 12:2",
       "Мк 2:24",
@@ -3928,7 +4023,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "протяни руку твою",
@@ -3965,7 +4060,7 @@
      "actor": "new:farisei",
      "label": "Фарисеи",
      "kind": "group",
-     "role": "acts",
+     "role": "participant",
      "roleText": {
       "text": "имели совещание против Него, как бы погубить Его",
       "refs": [
@@ -3983,7 +4078,7 @@
      "actor": "new:irodiane",
      "label": "иродианами",
      "kind": "group",
-     "role": "mentioned",
+     "role": "participant",
      "account": 1,
      "refs": [
       "Мк 3:6"
@@ -4173,7 +4268,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "и Он исцелил их всех",
@@ -4190,7 +4285,7 @@
      "actor": "new:mnozhestvo-naroda",
      "label": "множество народа",
      "kind": "group",
-     "role": "acts",
+     "role": "participant",
      "refs": [
       "Мф 12:15",
       "Мк 3:7",
@@ -4202,7 +4297,7 @@
      "actor": "new:dukhi-nechistye-mk3",
      "label": "духи нечистые",
      "kind": "spirit",
-     "role": "speaks",
+     "role": "participant",
      "account": 1,
      "roleText": {
       "text": "Ты Сын Божий",
@@ -4360,7 +4455,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "И поставил из них двенадцать, чтобы с Ним были",
@@ -4377,7 +4472,7 @@
     },
     {
      "actor": "p-petr",
-     "role": "suffers",
+     "role": "participant",
      "roleText": {
       "text": "поставил Симона, нарекши ему имя Петр",
       "refs": [
@@ -4388,11 +4483,12 @@
       "Мк 3:16",
       "Лк 6:14"
      ],
-     "cert": "scripture"
+     "cert": "scripture",
+     "label": "Симон"
     },
     {
      "actor": "p-andrey",
-     "role": "suffers",
+     "role": "participant",
      "refs": [
       "Мк 3:18",
       "Лк 6:14"
@@ -4401,7 +4497,7 @@
     },
     {
      "actor": "p-iakov-zevedeev",
-     "role": "suffers",
+     "role": "participant",
      "refs": [
       "Мк 3:17",
       "Лк 6:14"
@@ -4410,7 +4506,7 @@
     },
     {
      "actor": "p-ioann-apostol",
-     "role": "suffers",
+     "role": "participant",
      "refs": [
       "Мк 3:17",
       "Лк 6:14"
@@ -4419,7 +4515,7 @@
     },
     {
      "actor": "p-filipp-apostol",
-     "role": "suffers",
+     "role": "participant",
      "refs": [
       "Мк 3:18",
       "Лк 6:14"
@@ -4428,7 +4524,7 @@
     },
     {
      "actor": "p-varfolomey",
-     "role": "suffers",
+     "role": "participant",
      "refs": [
       "Мк 3:18",
       "Лк 6:14"
@@ -4437,7 +4533,7 @@
     },
     {
      "actor": "p-matfey",
-     "role": "suffers",
+     "role": "participant",
      "refs": [
       "Мк 3:18",
       "Лк 6:15"
@@ -4446,7 +4542,7 @@
     },
     {
      "actor": "p-foma",
-     "role": "suffers",
+     "role": "participant",
      "refs": [
       "Мк 3:18",
       "Лк 6:15"
@@ -4455,7 +4551,7 @@
     },
     {
      "actor": "p-iakov-alfeev",
-     "role": "suffers",
+     "role": "participant",
      "refs": [
       "Мк 3:18",
       "Лк 6:15"
@@ -4464,25 +4560,47 @@
     },
     {
      "actor": "p-iuda-iakovlev",
-     "role": "suffers",
+     "label": "Фаддей",
+     "role": "participant",
+     "account": 0,
      "refs": [
-      "Мк 3:18",
+      "Мк 3:18"
+     ],
+     "cert": "inference"
+    },
+    {
+     "actor": "p-iuda-iakovlev",
+     "label": "Иуда Иаковлев",
+     "role": "participant",
+     "account": 1,
+     "refs": [
       "Лк 6:16"
      ],
      "cert": "scripture"
     },
     {
      "actor": "p-simon-zilot",
-     "role": "suffers",
+     "label": "Симон Кананит",
+     "role": "participant",
+     "account": 0,
      "refs": [
-      "Мк 3:18",
+      "Мк 3:18"
+     ],
+     "cert": "inference"
+    },
+    {
+     "actor": "p-simon-zilot",
+     "label": "Симон, прозываемый Зилотом",
+     "role": "participant",
+     "account": 1,
+     "refs": [
       "Лк 6:15"
      ],
      "cert": "scripture"
     },
     {
      "actor": "p-iuda-iskariot",
-     "role": "suffers",
+     "role": "participant",
      "refs": [
       "Мк 3:19",
       "Лк 6:16"
@@ -4753,7 +4871,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "всякое царство, разделившееся само в себе, опустеет",
@@ -4793,7 +4911,7 @@
      "actor": "new:farisei",
      "label": "Фарисеи",
      "kind": "group",
-     "role": "speaks",
+     "role": "participant",
      "account": 0,
      "refs": [
       "Мф 12:24"
@@ -4804,7 +4922,7 @@
      "actor": "new:knizhniki-iz-ierusalima",
      "label": "книжники",
      "kind": "group",
-     "role": "speaks",
+     "role": "participant",
      "account": 1,
      "roleText": {
       "text": "Он имеет в Себе веельзевула",
@@ -4821,7 +4939,7 @@
      "actor": "new:blizhnie-iisusa",
      "label": "ближние Его",
      "kind": "group",
-     "role": "acts",
+     "role": "participant",
      "account": 1,
      "roleText": {
       "text": "пошли взять Его, ибо говорили, что Он вышел из себя",
@@ -5002,7 +5120,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "вот матерь Моя и братья Мои",
@@ -5019,7 +5137,7 @@
     {
      "actor": "p-mariya",
      "label": "Матерь",
-     "role": "acts",
+     "role": "participant",
      "refs": [
       "Мф 12:46",
       "Мк 3:31",
@@ -5031,7 +5149,7 @@
      "actor": "new:bratya-iisusa",
      "label": "братья Его",
      "kind": "group",
-     "role": "acts",
+     "role": "participant",
      "refs": [
       "Мф 12:46",
       "Мк 3:31",
@@ -5234,7 +5352,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "не умерла девица, но спит",
@@ -5251,17 +5369,38 @@
     },
     {
      "actor": "p-iair-nachalnik-sinagogi",
-     "role": "speaks",
+     "label": "начальник",
+     "role": "participant",
      "main": true,
+     "account": 0,
+     "refs": [
+      "Мф 9:18"
+     ],
+     "cert": "inference"
+    },
+    {
+     "actor": "p-iair-nachalnik-sinagogi",
+     "role": "participant",
+     "main": true,
+     "account": 1,
      "roleText": {
-      "text": "дочь моя теперь умирает; но приди, возложи на нее руку Твою, и она будет жива",
+      "text": "дочь моя при смерти",
       "refs": [
-       "Мф 9:18"
+       "Мк 5:23"
       ]
      },
      "refs": [
-      "Мф 9:18",
       "Мк 5:22",
+      "Мк 5:23"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-iair-nachalnik-sinagogi",
+     "role": "participant",
+     "main": true,
+     "account": 2,
+     "refs": [
       "Лк 8:41"
      ],
      "cert": "scripture"
@@ -5287,7 +5426,7 @@
     },
     {
      "actor": "p-petr",
-     "role": "acts",
+     "role": "participant",
      "refs": [
       "Мк 5:37",
       "Лк 8:51"
@@ -5296,7 +5435,7 @@
     },
     {
      "actor": "p-iakov-zevedeev",
-     "role": "acts",
+     "role": "participant",
      "refs": [
       "Мк 5:37",
       "Лк 8:51"
@@ -5305,7 +5444,7 @@
     },
     {
      "actor": "p-ioann-apostol",
-     "role": "acts",
+     "role": "participant",
      "refs": [
       "Мк 5:37",
       "Лк 8:51"
@@ -5337,6 +5476,19 @@
       {
        "ref": "Мк 5:23",
        "text": "дочь моя при смерти"
+      }
+     ]
+    },
+    {
+     "label": "когда пришёл начальник",
+     "quotes": [
+      {
+       "ref": "Мф 9:18",
+       "text": "Когда Он говорил им сие"
+      },
+      {
+       "ref": "Мк 5:21",
+       "text": "Когда Иисус опять переправился в лодке на другой берег"
       }
      ]
     }
@@ -5499,7 +5651,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "дерзай, дщерь! вера твоя спасла тебя",
@@ -5518,7 +5670,7 @@
      "actor": "new:zhenshchina-s-krovotecheniem",
      "label": "женщина",
      "kind": "unnamed",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "если только прикоснусь к одежде Его, выздоровею",
@@ -5535,7 +5687,7 @@
     },
     {
      "actor": "p-petr",
-     "role": "speaks",
+     "role": "participant",
      "account": 2,
      "refs": [
       "Лк 8:45"
@@ -5546,7 +5698,7 @@
      "actor": "new:ucheniki",
      "label": "Ученики",
      "kind": "group",
-     "role": "speaks",
+     "role": "participant",
      "account": 1,
      "refs": [
       "Мк 5:31"
@@ -5601,7 +5753,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "по вере вашей да будет вам",
@@ -5619,7 +5771,7 @@
      "actor": "new:dvoe-slepykh-mf9",
      "label": "двое слепых",
      "kind": "group",
-     "role": "speaks",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "помилуй нас, Иисус, сын Давидов!",
@@ -5676,7 +5828,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "refs": [
       "Мф 9:32"
@@ -5700,7 +5852,7 @@
      "actor": "new:narod-mf9-33",
      "label": "народ",
      "kind": "group",
-     "role": "speaks",
+     "role": "participant",
      "roleText": {
       "text": "никогда не бывало такого явления в Израиле",
       "refs": [
@@ -5716,7 +5868,7 @@
      "actor": "new:farisei",
      "label": "фарисеи",
      "kind": "group",
-     "role": "speaks",
+     "role": "participant",
      "roleText": {
       "text": "Он изгоняет бесов силою князя бесовского",
       "refs": [
@@ -5762,7 +5914,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "жатвы много, а делателей мало",
@@ -5938,7 +6090,7 @@
    "actors": [
     {
      "actor": "p-irod-antipa",
-     "role": "speaks",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "это Иоанн Креститель; он воскрес из мертвых",
@@ -6156,7 +6308,7 @@
    "actors": [
     {
      "actor": "p-irod-antipa",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "И опечалился царь, но, ради клятвы и возлежащих с ним, повелел дать ей",
@@ -6173,7 +6325,7 @@
     },
     {
      "actor": "p-irodiada",
-     "role": "acts",
+     "role": "participant",
      "roleText": {
       "text": "Иродиада же, злобясь на него, желала убить его",
       "refs": [
@@ -6210,7 +6362,7 @@
      "actor": "new:doch-irodiady",
      "label": "дочь Иродиады",
      "kind": "unnamed",
-     "role": "speaks",
+     "role": "participant",
      "roleText": {
       "text": "дай мне здесь на блюде голову Иоанна Крестителя",
       "refs": [
@@ -6236,7 +6388,7 @@
      "actor": "new:oruzhenosets-iroda",
      "label": "оруженосца",
      "kind": "unnamed",
-     "role": "acts",
+     "role": "participant",
      "account": 1,
      "refs": [
       "Мк 6:27"
@@ -6247,7 +6399,7 @@
      "actor": "new:ucheniki-ioanna",
      "label": "Ученики",
      "kind": "group",
-     "role": "acts",
+     "role": "participant",
      "roleText": {
       "text": "взяли тело его и погребли его",
       "refs": [
@@ -6708,7 +6860,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "вы дайте им есть",
@@ -6729,7 +6881,7 @@
      "actor": "new:ucheniki",
      "label": "ученики",
      "kind": "group",
-     "role": "speaks",
+     "role": "participant",
      "roleText": {
       "text": "у нас здесь только пять хлебов и две рыбы",
       "refs": [
@@ -6745,7 +6897,7 @@
     },
     {
      "actor": "p-filipp-apostol",
-     "role": "speaks",
+     "role": "participant",
      "account": 3,
      "roleText": {
       "text": "им на двести динариев не довольно будет хлеба",
@@ -6761,7 +6913,7 @@
     },
     {
      "actor": "p-andrey",
-     "role": "speaks",
+     "role": "participant",
      "account": 3,
      "refs": [
       "Ин 6:8"
@@ -6784,7 +6936,7 @@
      "actor": "new:narod-pyat-tysyach",
      "label": "народ",
      "kind": "group",
-     "role": "acts",
+     "role": "participant",
      "roleText": {
       "text": "а евших было около пяти тысяч человек, кроме женщин и детей",
       "refs": [
@@ -7119,7 +7271,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "жаль Мне народа, что уже три дня находятся при Мне",
@@ -7137,7 +7289,7 @@
      "actor": "new:ucheniki",
      "label": "ученики",
      "kind": "group",
-     "role": "speaks",
+     "role": "participant",
      "refs": [
       "Мф 15:33",
       "Мк 8:4"
@@ -7148,7 +7300,7 @@
      "actor": "new:narod-chetyre-tysyachi",
      "label": "народу",
      "kind": "group",
-     "role": "acts",
+     "role": "participant",
      "roleText": {
       "text": "а евших было четыре тысячи человек, кроме женщин и детей",
       "refs": [
@@ -7407,7 +7559,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "ободритесь; это Я, не бойтесь",
@@ -7426,7 +7578,7 @@
      "actor": "new:ucheniki",
      "label": "ученики",
      "kind": "group",
-     "role": "acts",
+     "role": "participant",
      "roleText": {
       "text": "это призрак; и от страха вскричали",
       "refs": [
@@ -7442,7 +7594,7 @@
     },
     {
      "actor": "p-petr",
-     "role": "acts",
+     "role": "participant",
      "account": 0,
      "roleText": {
       "text": "Господи! спаси меня",
@@ -7609,7 +7761,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "refs": [
       "Мф 14:35"
@@ -7710,7 +7862,7 @@
        "Мк 6:2",
        "Лк 4:16"
       ],
-      "note": "общий ход: в отечестве, в синагоге в субботу — изумление — «не плотник ли / не Иосифов ли это сын?» — слово о пророке в отечестве (Мф 13:54–57; Мк 6:1–4; Лк 4:16–24); «Когда наступила суббота» (Мк 6:2) и «в день субботний» (Лк 4:16) не расходятся. У Луки — чтение Исаии и попытка свергнуть с горы; порядок книги тождества не решает (11 § 2.6). Решение составителя — образец протокола И0"
+      "note": "ход сцены другой. общий ход: в отечестве, в синагоге в субботу — изумление — «не плотник ли / не Иосифов ли это сын?» — слово о пророке в отечестве (Мф 13:54–57; Мк 6:1–4; Лк 4:16–24); «Когда наступила суббота» (Мк 6:2) и «в день субботний» (Лк 4:16) не расходятся. У Луки — чтение Исаии и попытка свергнуть с горы; порядок книги тождества не решает (11 § 2.6). Решение составителя — образец протокола И0"
      }
     }
    ],
@@ -7740,7 +7892,8 @@
         "Лк 4:16-21"
        ]
       }
-     ]
+     ],
+     "note": "ход сцены другой: у Луки — своё ядро сцены; склейка «да, с условием» (второй ключ, решение координатора, п. 6)"
     },
     {
      "id": "e-iisus-v-otechestve-svoyom#s2",
@@ -7830,13 +7983,14 @@
         "Лк 4:28-30"
        ]
       }
-     ]
+     ],
+     "note": "ход сцены другой: у Луки — своё ядро сцены; склейка «да, с условием» (второй ключ, решение координатора, п. 6)"
     }
    ],
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "не бывает пророк без чести, разве только в отечестве своем",
@@ -7855,7 +8009,8 @@
      "actor": "new:slyshavshie-v-otechestve",
      "label": "слышавшие",
      "kind": "group",
-     "role": "speaks",
+     "role": "participant",
+     "account": 1,
      "roleText": {
       "text": "откуда у Него это?",
       "refs": [
@@ -7863,7 +8018,17 @@
       ]
      },
      "refs": [
-      "Мк 6:2",
+      "Мк 6:2"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:slyshavshie-v-otechestve",
+     "label": "все в синагоге",
+     "kind": "group",
+     "role": "participant",
+     "account": 2,
+     "refs": [
       "Лк 4:28"
      ],
      "cert": "scripture"
@@ -8167,7 +8332,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "Сих двенадцать послал Иисус",
@@ -8245,7 +8410,50 @@
    ],
    "source": {
     "method": "reading"
-   }
+   },
+   "parts": [
+    {
+     "n": 1,
+     "title": {
+      "short": "Призвал двенадцать и наставил их",
+      "by": "atlas"
+     },
+     "refs": [
+      "Мф 10:1-15",
+      "Мк 6:7-11",
+      "Лк 9:1-5"
+     ],
+     "change": []
+    },
+    {
+     "n": 2,
+     "title": {
+      "short": "Как овец среди волков",
+      "by": "atlas"
+     },
+     "refs": [
+      "Мф 10:16-42"
+     ],
+     "change": [],
+     "byWords": true
+    },
+    {
+     "n": 3,
+     "title": {
+      "short": "Пошли и проповедовали",
+      "by": "atlas"
+     },
+     "refs": [
+      "Мф 11:1",
+      "Мк 6:12-13",
+      "Лк 9:6"
+     ],
+     "change": [
+      "place",
+      "time"
+     ]
+    }
+   ]
   },
   {
    "id": "e-za-kogo-menya-pochitayut-lyudi",
@@ -8452,7 +8660,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "а вы за кого почитаете Меня?",
@@ -8468,7 +8676,7 @@
     },
     {
      "actor": "p-petr",
-     "role": "speaks",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "Ты — Христос, Сын Бога Живаго",
@@ -8599,7 +8807,8 @@
       "time": [
        "Мф 17:1",
        "Мк 9:2"
-      ]
+      ],
+      "note": "ОТСТУПЛЕНИЕ от 11 § 2.6 (б) по решению координатора (второй ключ, п. 4): слова времени разные — «По прошествии дней шести» (Мф 17:1; Мк 9:2) и «дней через восемь» (Лк 9:28) — после той же истории; примерный счёт дней не делает рассказы разными, если совпадают место, лица и ход: гора, Петр, Иаков и Иоанн, Моисей и Илия, три кущи, глас из облака. Поправка 11 — в очереди"
      }
     },
     {
@@ -8620,7 +8829,7 @@
        "Мк 9:2",
        "Лк 9:28"
       ],
-      "note": "одни слова: Петр, Иаков, Иоанн, гора, Моисей и Илия, три кущи, «Сей есть Сын Мой Возлюбленный… Его слушайте»; слова времени: «По прошествии дней шести» (Мф 17:1; Мк 9:2) и «дней через восемь» (Лк 9:28) — после той же истории о Петре; склейка — решение составителя для протокола И0 (11 § 2.6 б: разное время у самих рассказов отменяет «весомо»)"
+      "note": "ОТСТУПЛЕНИЕ от 11 § 2.6 (б) по решению координатора (второй ключ, п. 4): слова времени разные — «По прошествии дней шести» (Мф 17:1; Мк 9:2) и «дней через восемь» (Лк 9:28) — после той же истории; примерный счёт дней не делает рассказы разными, если совпадают место, лица и ход: гора, Петр, Иаков и Иоанн, Моисей и Илия, три кущи, глас из облака. Поправка 11 — в очереди"
      }
     }
    ],
@@ -8785,7 +8994,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "и просияло лице Его, как солнце",
@@ -8802,7 +9011,7 @@
     },
     {
      "actor": "p-petr",
-     "role": "speaks",
+     "role": "participant",
      "roleText": {
       "text": "Господи! хорошо нам здесь быть",
       "refs": [
@@ -8819,7 +9028,7 @@
     },
     {
      "actor": "p-iakov-zevedeev",
-     "role": "acts",
+     "role": "participant",
      "refs": [
       "Мф 17:1",
       "Мк 9:2",
@@ -8829,7 +9038,7 @@
     },
     {
      "actor": "p-ioann-apostol",
-     "role": "acts",
+     "role": "participant",
      "refs": [
       "Мф 17:1",
       "Мк 9:2",
@@ -8839,7 +9048,7 @@
     },
     {
      "actor": "p-moisey",
-     "role": "speaks",
+     "role": "participant",
      "mode": "vision",
      "refs": [
       "Мф 17:3",
@@ -8850,7 +9059,7 @@
     },
     {
      "actor": "p-iliya",
-     "role": "speaks",
+     "role": "participant",
      "mode": "vision",
      "refs": [
       "Мф 17:3",
@@ -8862,7 +9071,7 @@
     {
      "actor": "god",
      "label": "глас",
-     "role": "speaks",
+     "role": "participant",
      "roleText": {
       "text": "Сей есть Сын Мой Возлюбленный",
       "refs": [
@@ -8923,7 +9132,7 @@
      "start": "Мф 17:1",
      "end": "Мф 17:8",
      "rule": 6,
-     "human": "разговор при сходе с горы (Мф 17:9–13; Мк 9:9–13) — следствие, связанное словами «о сем видении» (правило 6)"
+     "human": "отступление от 11 § 2.6 (б) — решение координатора по второму ключу; разговор при сходе с горы (Мф 17:9–13; Мк 9:9–13) — следствие, связанное словами «о сем видении» (правило 6)"
     }
    ],
    "source": {
@@ -9118,7 +9327,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "приведите его ко Мне сюда",
@@ -9137,7 +9346,8 @@
      "actor": "new:otets-otroka",
      "label": "человек",
      "kind": "unnamed",
-     "role": "speaks",
+     "role": "participant",
+     "account": 0,
      "roleText": {
       "text": "Господи! помилуй сына моего",
       "refs": [
@@ -9145,8 +9355,28 @@
       ]
      },
      "refs": [
-      "Мф 17:14",
-      "Мк 9:17",
+      "Мф 17:14"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:otets-otroka",
+     "label": "Один из народа",
+     "kind": "unnamed",
+     "role": "participant",
+     "account": 1,
+     "refs": [
+      "Мк 9:17"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:otets-otroka",
+     "label": "некто из народа",
+     "kind": "unnamed",
+     "role": "participant",
+     "account": 2,
+     "refs": [
       "Лк 9:38"
      ],
      "cert": "scripture"
@@ -9174,7 +9404,7 @@
      "actor": "new:ucheniki",
      "label": "ученики",
      "kind": "group",
-     "role": "speaks",
+     "role": "participant",
      "roleText": {
       "text": "почему мы не могли изгнать его?",
       "refs": [
@@ -9192,7 +9422,7 @@
      "actor": "new:knizhniki-mk9",
      "label": "книжников",
      "kind": "group",
-     "role": "acts",
+     "role": "participant",
      "account": 1,
      "refs": [
       "Мк 9:14",
@@ -9312,7 +9542,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "Сын Человеческий предан будет в руки человеческие",
@@ -9543,7 +9773,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "если не обратитесь и не будете как дети, не войдете в Царство Небесное",
@@ -9562,7 +9792,8 @@
      "actor": "new:ucheniki",
      "label": "ученики",
      "kind": "group",
-     "role": "speaks",
+     "role": "participant",
+     "account": 0,
      "roleText": {
       "text": "кто больше в Царстве Небесном?",
       "refs": [
@@ -9570,7 +9801,17 @@
       ]
      },
      "refs": [
-      "Мф 18:1",
+      "Мф 18:1"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:dvenadtsat",
+     "label": "двенадцать",
+     "kind": "group",
+     "role": "addressed",
+     "account": 1,
+     "refs": [
       "Мк 9:35"
      ],
      "cert": "scripture"
@@ -9626,7 +9867,14 @@
    ],
    "source": {
     "method": "reading"
-   }
+   },
+   "nested": [
+    {
+     "story": "e-sto-ovets-v-gorakh",
+     "at": "Мф 18:12",
+     "kind": "told"
+    }
+   ]
   },
   {
    "id": "e-kto-ne-protiv-vas-tot-za-vas",
@@ -9726,7 +9974,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "не запрещайте ему",
@@ -9742,7 +9990,7 @@
     },
     {
      "actor": "p-ioann-apostol",
-     "role": "speaks",
+     "role": "participant",
      "roleText": {
       "text": "мы видели человека, который именем Твоим изгоняет бесов",
       "refs": [
@@ -9800,7 +10048,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "не знаете, какого вы духа",
@@ -9817,7 +10065,7 @@
     },
     {
      "actor": "p-iakov-zevedeev",
-     "role": "speaks",
+     "role": "participant",
      "roleText": {
       "text": "Господи! хочешь ли, мы скажем, чтобы огонь сошел с неба и истребил их",
       "refs": [
@@ -9831,7 +10079,7 @@
     },
     {
      "actor": "p-ioann-apostol",
-     "role": "speaks",
+     "role": "participant",
      "refs": [
       "Лк 9:54"
      ],
@@ -9841,7 +10089,7 @@
      "actor": "new:vestniki-lk9",
      "label": "вестников",
      "kind": "group",
-     "role": "acts",
+     "role": "participant",
      "refs": [
       "Лк 9:52"
      ],
@@ -9976,7 +10224,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "а Сын Человеческий не имеет, где приклонить голову",
@@ -9992,9 +10240,21 @@
     },
     {
      "actor": "new:zhelayushchiy-idti",
+     "label": "один книжник",
+     "kind": "unnamed",
+     "role": "participant",
+     "account": 0,
+     "refs": [
+      "Мф 8:19"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:zhelayushchiy-idti",
      "label": "некто",
      "kind": "unnamed",
-     "role": "speaks",
+     "role": "participant",
+     "account": 1,
      "roleText": {
       "text": "я пойду за Тобою, куда бы Ты ни пошел",
       "refs": [
@@ -10002,7 +10262,6 @@
       ]
      },
      "refs": [
-      "Мф 8:19",
       "Лк 9:57"
      ],
      "cert": "scripture"
@@ -10011,7 +10270,7 @@
      "actor": "new:drugoy-uchenik",
      "label": "Другой",
      "kind": "unnamed",
-     "role": "speaks",
+     "role": "participant",
      "roleText": {
       "text": "позволь мне прежде пойти и похоронить отца моего",
       "refs": [
@@ -10282,7 +10541,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "Иисус сел на него",
@@ -10302,7 +10561,7 @@
      "actor": "new:dvoe-uchenikov",
      "label": "двух учеников",
      "kind": "group",
-     "role": "acts",
+     "role": "participant",
      "roleText": {
       "text": "Ученики пошли и поступили так, как повелел им Иисус",
       "refs": [
@@ -10333,7 +10592,7 @@
      "actor": "new:narod-osanna",
      "label": "народа",
      "kind": "group",
-     "role": "speaks",
+     "role": "participant",
      "roleText": {
       "text": "осанна Сыну Давидову! благословен Грядущий во имя Господне!",
       "refs": [
@@ -10351,7 +10610,7 @@
      "actor": "new:farisei",
      "label": "фарисеи",
      "kind": "group",
-     "role": "speaks",
+     "role": "participant",
      "refs": [
       "Лк 19:39",
       "Ин 12:19"
@@ -10547,7 +10806,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "да не будет же впредь от тебя плода вовек",
@@ -10563,7 +10822,7 @@
     },
     {
      "actor": "p-petr",
-     "role": "speaks",
+     "role": "participant",
      "account": 1,
      "roleText": {
       "text": "Равви! посмотри, смоковница, которую Ты проклял, засохла",
@@ -10580,7 +10839,7 @@
      "actor": "new:ucheniki",
      "label": "ученики",
      "kind": "group",
-     "role": "acts",
+     "role": "participant",
      "refs": [
       "Мф 21:20",
       "Мк 11:14"
@@ -10800,7 +11059,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "а вы сделали его вертепом разбойников",
@@ -10830,7 +11089,7 @@
      "actor": "new:pervosvyashchenniki-i-knizhniki",
      "label": "первосвященники и книжники",
      "kind": "group",
-     "role": "acts",
+     "role": "participant",
      "roleText": {
       "text": "и искали, как бы погубить Его",
       "refs": [
@@ -10859,7 +11118,7 @@
      "actor": "new:deti-v-khrame",
      "label": "детей",
      "kind": "group",
-     "role": "speaks",
+     "role": "participant",
      "account": 0,
      "roleText": {
       "text": "осанна Сыну Давидову!",
@@ -11084,7 +11343,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "и Я вам не скажу, какою властью это делаю",
@@ -11103,7 +11362,7 @@
      "actor": "new:pervosvyashchenniki-i-starejshiny",
      "label": "первосвященники",
      "kind": "group",
-     "role": "speaks",
+     "role": "participant",
      "roleText": {
       "text": "какой властью Ты это делаешь?",
       "refs": [
@@ -11191,7 +11450,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "наполните сосуды водою",
@@ -11209,7 +11468,7 @@
     {
      "actor": "p-mariya",
      "label": "Матерь Иисуса",
-     "role": "speaks",
+     "role": "participant",
      "roleText": {
       "text": "что скажет Он вам, то сделайте",
       "refs": [
@@ -11227,7 +11486,7 @@
      "actor": "new:ucheniki",
      "label": "ученики",
      "kind": "group",
-     "role": "acts",
+     "role": "participant",
      "roleText": {
       "text": "и уверовали в Него ученики Его",
       "refs": [
@@ -11244,7 +11503,7 @@
      "actor": "new:sluzhiteli-v-kane",
      "label": "служителям",
      "kind": "group",
-     "role": "acts",
+     "role": "participant",
      "refs": [
       "Ин 2:5",
       "Ин 2:9"
@@ -11255,7 +11514,7 @@
      "actor": "new:rasporyaditel-pira",
      "label": "распорядителю пира",
      "kind": "unnamed",
-     "role": "speaks",
+     "role": "participant",
      "roleText": {
       "text": "а ты хорошее вино сберег доселе",
       "refs": [
@@ -11322,7 +11581,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "refs": [
       "Ин 2:12"
@@ -11333,7 +11592,7 @@
     {
      "actor": "p-mariya",
      "label": "Матерь",
-     "role": "acts",
+     "role": "participant",
      "refs": [
       "Ин 2:12"
      ],
@@ -11343,7 +11602,7 @@
      "actor": "new:bratya-iisusa",
      "label": "братья Его",
      "kind": "group",
-     "role": "acts",
+     "role": "participant",
      "refs": [
       "Ин 2:12"
      ],
@@ -11353,7 +11612,7 @@
      "actor": "new:ucheniki",
      "label": "ученики",
      "kind": "group",
-     "role": "acts",
+     "role": "participant",
      "refs": [
       "Ин 2:12"
      ],
@@ -11403,7 +11662,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "дома Отца Моего не делайте домом торговли",
@@ -11443,7 +11702,7 @@
      "actor": "new:iudei-in2",
      "label": "Иудеи",
      "kind": "group",
-     "role": "speaks",
+     "role": "participant",
      "roleText": {
       "text": "каким знамением докажешь Ты нам, что имеешь власть так поступать?",
       "refs": [
@@ -11460,7 +11719,7 @@
      "actor": "new:ucheniki",
      "label": "ученики",
      "kind": "group",
-     "role": "acts",
+     "role": "participant",
      "refs": [
       "Ин 2:17",
       "Ин 2:22"
@@ -11528,7 +11787,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "Но Сам Иисус не вверял Себя им, потому что знал всех",
@@ -11545,7 +11804,7 @@
      "actor": "new:mnogie-v-ierusalime",
      "label": "многие",
      "kind": "group",
-     "role": "acts",
+     "role": "participant",
      "roleText": {
       "text": "многие, видя чудеса, которые Он творил, уверовали во имя Его",
       "refs": [
@@ -11639,7 +11898,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "Я есмь хлеб жизни",
@@ -11658,7 +11917,7 @@
      "actor": "new:narod-v-kapernaume",
      "label": "народ",
      "kind": "group",
-     "role": "speaks",
+     "role": "participant",
      "roleText": {
       "text": "Равви! когда Ты сюда пришел?",
       "refs": [
@@ -11675,7 +11934,7 @@
      "actor": "new:iudei-in6",
      "label": "Иудеи",
      "kind": "group",
-     "role": "speaks",
+     "role": "participant",
      "roleText": {
       "text": "как Он может дать нам есть Плоть Свою?",
       "refs": [
@@ -11754,7 +12013,7 @@
    "actors": [
     {
      "actor": "p-iisus",
-     "role": "acts",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "не хотите ли и вы отойти?",
@@ -11773,7 +12032,7 @@
      "actor": "new:mnogie-ucheniki",
      "label": "Многие из учеников",
      "kind": "group",
-     "role": "acts",
+     "role": "participant",
      "roleText": {
       "text": "многие из учеников Его отошли от Него",
       "refs": [
@@ -11788,7 +12047,7 @@
     },
     {
      "actor": "p-petr",
-     "role": "speaks",
+     "role": "participant",
      "main": true,
      "roleText": {
       "text": "Господи! к кому нам идти? Ты имеешь глаголы вечной жизни",
@@ -11829,6 +12088,54 @@
      "end": "Ин 6:69",
      "rule": 5,
      "human": "новое дело — «какие странные слова! кто может это слушать?» (6:60) — или следствие речи (правило 6): решает человек, протокол И0"
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-sto-ovets-v-gorakh",
+   "level": "story",
+   "kind": "jesus-story",
+   "title": {
+    "short": "Сто овец в горах",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Мф 18:12-14"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-iisus",
+     "role": "participant",
+     "mode": "in-speech",
+     "roleText": {
+      "text": "Как вам кажется?",
+      "refs": [
+       "Мф 18:12"
+      ]
+     },
+     "refs": [
+      "Мф 18:12"
+     ],
+     "antecedent": "Мф 18:1",
+     "cert": "scripture"
+    }
+   ],
+   "places": [],
+   "links": [],
+   "boundary": [
+    {
+     "start": "Мф 18:12",
+     "end": "Мф 18:14",
+     "rule": 7,
+     "human": "рассказ внутри речи — своя запись (11 § 13.4); слова «притча» в Мф 18:12 нет — вид «рассказ Иисуса». Параллель Лк 15:3–7 — при разметке Лк 15"
     }
    ],
    "source": {

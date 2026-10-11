@@ -178,8 +178,8 @@ export function fromStep0(file: string): Markup {
 export function step0NoahPairs() {
   const d = JSON.parse(readFileSync(join(ROOT, 'prototypes/шаг-0/данные/ной-и-потоп.json'), 'utf8'));
   const role: Record<string, string> = { 'действует': 'acts', 'говорит': 'speaks', 'к нему обращаются': 'addressed', 'претерпевает': 'suffers', 'упомянут': 'mentioned' };
-  const actors = new Set<string>(['god|speaks']);
-  for (const c of d['кто_в_истории']['карточки']) actors.add(`${NOAH_ALIAS[c.id ?? c['имя']] ?? c.id ?? c['имя']}|${role[c['роль']] ?? c['роль']}`);
+  const actors = new Set<string>(['god|participant']);
+  for (const c of d['кто_в_истории']['карточки']) actors.add(`${NOAH_ALIAS[c.id ?? c['имя']] ?? c.id ?? c['имя']}|${ROLE(role[c['роль']] ?? c['роль'])}`);
   const kind: Record<string, string> = { 'пересказ': 'retelling', 'упоминания': 'mention', 'намёк': 'allusion', 'спорное_только_второй_слой': 'possibly-same', 'в_той_же_книге_второй_слой': 'mention' };
   const links = new Set<string>();
   for (const [k, v] of Object.entries<any>(d['где_об_этом'])) {
@@ -188,6 +188,9 @@ export function step0NoahPairs() {
   }
   return { actors, links };
 }
+
+/** Роли «действует» и «говорит» сведены в «участник» (решение координатора по второму ключу, п. 8). */
+const ROLE = (r: string) => (r === 'acts' || r === 'speaks' ? 'participant' : r);
 
 /** Сведение лиц: у шага 0 сыновья и звери — по одной строке, у нас — Сим, Хам, Иафет и группа. */
 const NOAH_ALIAS: Record<string, string> = {
@@ -198,7 +201,7 @@ const NOAH_ALIAS: Record<string, string> = {
 
 export function oursNoahPairs(stories: Story[]) {
   const s = stories.find((x) => x.id === 'e-noy-i-potop')!;
-  const actors = new Set(s.actors.map((a) => `${NOAH_ALIAS[a.actor] ?? a.actor}|${a.role}`));
+  const actors = new Set(s.actors.map((a) => `${NOAH_ALIAS[a.actor] ?? a.actor}|${ROLE(a.role)}`));
   const links = new Set(s.links.map((l) => `${l.refs[0]}|${l.kind}`));
   return { actors, links };
 }

@@ -46,7 +46,7 @@ describe('истории: настоящие данные пакета 1', () =>
   it('образцы 11: Ной и потоп, Давид и Голиаф, Умер Самуил, Расслабленный, Пять хлебов, Савл', () => {
     const by = new Map(src.stories.map((s) => [s.id, s]));
     expect(by.get('e-noy-i-potop')!.accounts[0].refs).toEqual(['Быт 6:9-9:17']);
-    expect(by.get('e-noy-i-potop')!.parts).toHaveLength(6);
+    expect(by.get('e-noy-i-potop')!.parts).toHaveLength(7); // Быт 8:6 — новая часть по правилу 9 (второй ключ)
     expect(by.get('e-david-i-goliaf')!.accounts[0].refs).toEqual(['1Цар 17:1-58']);
     expect(by.get('e-david-i-goliaf')!.seeAlso![0].refs).toContain('2Цар 21:19');
     expect(by.get('e-umer-samuil')!.kind).toBe('notice');
@@ -181,6 +181,27 @@ describe('истории: испорченные записи ловятся', (
     const e = errorsOf([s]).join('\n');
     expect(e).toMatch(/часть 2: не названо, какой признак сцены сменился/);
     expect(e).toMatch(/стих Быт 8:1 — в 0 частях/);
+  });
+
+  it('правило 9: рассказ длиннее 20 стихов без частей — ошибка; часть по порогу слов — без признака смены', () => {
+    expect(errorsOf([mk({ id: 'e-n', title: { short: 'Ной и потоп', by: 'atlas' }, accounts: [{ refs: ['Быт 6:9-9:17'], cert: 'scripture' }] })]).join('\n')).toMatch(/без частей/);
+    const s = mk({
+      id: 'e-n', title: { short: 'Ной и потоп', by: 'atlas' }, accounts: [{ refs: ['Быт 6:9-9:17'], cert: 'scripture' }],
+      parts: [{ n: 1, title: { short: 'а', by: 'atlas' }, refs: ['Быт 6:9-8:22'], change: [] }, { n: 2, title: { short: 'б', by: 'atlas' }, refs: ['Быт 9:1-17'], change: [], byWords: true }],
+    });
+    expect(errorsOf([s]).join('\n')).not.toMatch(/часть/);
+  });
+
+  it('лицо, названное в стихе другим именем: на стихе — форма стиха, связь с лицом базы — «вывод» (решение координатора)', () => {
+    const by = new Map(src.stories.map((s) => [s.id, s]));
+    const levi = by.get('e-mytar-u-sbora-poshlin')!.actors.filter((a) => a.actor === 'p-matfey');
+    expect(levi.map((a) => [a.label, a.cert])).toEqual([['Матфей', 'scripture'], ['Левий Алфеев', 'inference'], ['Левий', 'inference']]);
+    const war = by.get('e-snova-voyna-s-filistimlyanami')!.actors.filter((a) => a.account === 1 && a.actor.startsWith('p-') && a.label);
+    expect(war.every((a) => a.cert === 'inference' || a.actor === 'p-ionafan-syn-sammy')).toBe(true);
+    // у Луки о посте спрашивают «Они» — книжники и фарисеи, не ученики Иоанновы (11 § 13.2)
+    expect(by.get('e-pochemu-ucheniki-ne-postyatsya')!.actors.find((a) => a.actor === 'new:ucheniki-ioannovy')!.account).toBe(0);
+    // подписи Бога — форма имени, а не обрывок
+    expect(src.stories.flatMap((s) => s.actors).filter((a) => a.actor === 'god' && /Господ(не|ень)$/.test(a.label ?? ''))).toEqual([]);
   });
 
   it('п. 19: «Коротко» — предложение длиннее 12 слов и с «;»', () => {

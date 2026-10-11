@@ -116,7 +116,7 @@ type Err = (check: string, where: string, msg: string) => void;
 
 const LEVELS = new Set(['cycle', 'story']);
 const KINDS = new Set<StoryKind>(['event', 'speech', 'parable', 'jesus-story', 'told-story', 'vision', 'dream', 'sign-act', 'song', 'prayer', 'genealogy', 'summary', 'notice']);
-const ROLES = new Set(['acts', 'speaks', 'addressed', 'suffers', 'mentioned']);
+const ROLES = new Set(['participant', 'acts', 'speaks', 'addressed', 'suffers', 'mentioned']);
 const PLACE_ROLES = new Set(['where', 'from', 'to', 'via', 'mentioned']);
 const CERTS = new Set(['scripture', 'inference', 'interpretation', 'calc', 'reference']);
 const LINK_KINDS = new Set<LinkKind>(['retelling', 'mention', 'allusion', 'possibly-same', 'type']);
@@ -241,17 +241,20 @@ export function validateStories(base: Base, err: Err, warn: Err) {
         if (p.n !== i + 1) err('история: часть', w, `часть ${i + 1}: номер ${p.n}`);
         if (p.title?.by !== 'atlas' || !p.title.short) err('история: часть', w, `часть ${p.n}: нет названия атласа`);
         if (p.title?.short && p.title.short.length > 40) warn('история: часть', w, `название части ${p.n} длиннее 40 знаков`);
-        if (i > 0 && !p.change?.length) err('история: часть', w, `часть ${p.n}: не названо, какой признак сцены сменился (место, лица, время)`);
+        if (i > 0 && !p.change?.length && !p.byWords) err('история: часть', w, `часть ${p.n}: не названо, какой признак сцены сменился (место, лица, время) или что часть отделена по порогу слов`);
         const pv = p.refs.flatMap((r) => checkRef(`${w} часть ${p.n}`, r));
         for (const v of pv) {
           if (!vset.has(v)) err('история: часть', w, `часть ${p.n}: стих ${v} вне рассказов`);
           covered.set(v, (covered.get(v) ?? 0) + 1);
         }
-        const words = wordsOf(textOf(pv)).length;
+        // слова — по каждому рассказу отдельно: часть истории с несколькими рассказами читается по одному рассказу
+        const byBook = new Map<string, string[]>();
+        for (const v of pv) { const b = v.replace(/ \d+:\d+$/, ''); byBook.set(b, [...(byBook.get(b) ?? []), v]); }
+        const words = Math.max(0, ...[...byBook.values()].map((xs) => wordsOf(textOf(xs)).length));
         if (words > PART_WORDS) warn('история: часть', w, `часть ${p.n} — ${words} слов, больше ${PART_WORDS}: делит ближайшая смена признака (правило 9)`);
       });
       for (const v of vset) if (covered.get(v) !== 1) err('история: часть', w, `стих ${v} — в ${covered.get(v) ?? 0} частях (нужно ровно в одной)`);
-    } else if (vset.size > 20 && s.accounts.length === 1 && s.kind !== 'genealogy') warn('история: часть', w, `история из ${vset.size} стихов без частей (правило 9)`);
+    } else if (s.kind !== 'genealogy' && s.accounts.some((a) => { const vs = a.refs.flatMap((r) => refVerses(r) ?? []); return vs.length > 20 || wordsOf(textOf(vs)).length > PART_WORDS; })) err('история: часть', w, 'рассказ длиннее 20 стихов или 500 слов без частей (правило 9)');
 
     // название (п. 9)
     const t = s.title;
