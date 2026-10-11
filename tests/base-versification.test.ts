@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadBible } from '../tools/bible.ts';
-import { toKjv } from '../tools/base/versification.ts';
+import { patchMap, toKjv } from '../tools/base/versification.ts';
 
 const table = JSON.parse(readFileSync(join(import.meta.dirname, '..', 'base', 'versification', 'synodal-kjv.json'), 'utf8'));
 const map: Record<string, string[]> = table.map;
@@ -31,7 +31,16 @@ describe('нумерация Синодальная → KJV', () => {
       ['Притч 13:14', []], ['Притч 13:15', ['Prov.13.14']], ['Притч 18:25', ['Prov.18.24']], ['Нав 24:35', []],
       ['Песн 1:1', ['Song.1.2']], ['Рим 14:24', ['Rom.16.25']], ['2Кор 13:13', ['2Cor.13.14']], ['3Ин 1:15', ['3John.1.14!b']],
       ['Быт 1:1', ['Gen.1.1']], ['Мф 1:16', ['Matt.1.16']], ['Иак 1:1', ['Jas.1.1']],
+      // два стиха KJV в одном синодальном (АФ-3, раскладка индекса TSK)
+      ['Лев 14:54', ['Lev.14.54']], ['Лев 14:55', ['Lev.14.55', 'Lev.14.56']], ['Лев 14:56', ['Lev.14.57']],
+      ['Деян 19:40', ['Acts.19.40', 'Acts.19.41']], ['2Кор 11:32', ['2Cor.11.32', '2Cor.11.33']],
+      ['2Кор 13:12', ['2Cor.13.12', '2Cor.13.13']],
     ];
     for (const [syn, kjv] of cases) expect([syn, toKjv(map, syn)]).toEqual([syn, kjv]);
+  });
+  it('поправки FIXES уже наложены: повторное наложение без JSword таблицу не меняет', () => {
+    const { map: again, problems } = patchMap(map);
+    expect(problems).toEqual([]);
+    expect(again).toEqual(map);
   });
 });

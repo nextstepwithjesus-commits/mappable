@@ -12,6 +12,8 @@
  *     главу сплошной (3:31–33 → 4:1–3). Верно: Дан 3:91–97 → Dan 3:24–30; 3:98–100 → Dan 4:1–3;
  *   — Пс 12:6: в JSword опечатка «Ps.13.5-Ps.12.6»; верно Ps 13:5–6.
  * Таблица хранит только отличия: стих, которого нет в таблице, имеет тот же номер в KJV.
+ *
+ *   npx tsx tools/base/versification.ts --patch    наложить строки add из FIXES на готовую таблицу (без файлов JSword)
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
@@ -100,7 +102,48 @@ export const FIXES: { what: string; remove: string[]; add: string[] }[] = [
     ],
   },
   { what: '3Ин 1:14–15 — в KJV один стих 1:14', remove: [], add: ['3John.1.14=3John.1.14!a', '3John.1.15=3John.1.14!b'] },
+  {
+    what: 'Два стиха KJV в одном синодальном (АФ-3: найдено раскладкой индекса TSK; проверено по тексту): Лев 14:55 = KJV 14:55–56, ' +
+      'Лев 14:56 = KJV 14:57; Деян 19:40 = KJV 19:40–41; 2Кор 11:32 = KJV 11:32–33; 2Кор 13:12 = KJV 13:12–13',
+    remove: [],
+    add: [
+      'Lev.14.55=Lev.14.55-Lev.14.56', 'Lev.14.56=Lev.14.57', 'Acts.19.40=Acts.19.40-Acts.19.41',
+      '2Cor.11.32=2Cor.11.32-2Cor.11.33', '2Cor.13.12=2Cor.13.12-2Cor.13.13',
+    ],
+  },
 ];
+
+/**
+ * Поправки без исходных файлов JSword (они вне репозитория): строки `add` из FIXES накладываются на готовую таблицу.
+ * Повторное наложение ничего не меняет: те же строки дают те же значения. Строки `remove` уже учтены в таблице; диапазон
+ * в правой части — только внутри одной главы (иначе нужно число стихов KJV из SystemKJV.java — тогда полная пересборка).
+ */
+export function patchMap(map: Record<string, string[]>): { map: Record<string, string[]>; problems: string[] } {
+  const bible = loadBible();
+  const out = { ...map };
+  const problems: string[] = [];
+  const synLen = (book: string, ch: number) => bible.chapterLength(OSIS_TO_SYN[book], ch);
+  const noLen = (book: string, ch: number): number => { throw new Error(`диапазон через главы ${book} ${ch} — нужна полная пересборка`); };
+  for (const f of FIXES) {
+    for (const l of f.add) {
+      const [left, right] = l.split('=');
+      if (right.startsWith('?')) continue;
+      const L = expand(left, synLen);
+      if (right === 'NONE') { for (const x of L) out[synKey(x)] = []; continue; }
+      const R = expand(right, noLen);
+      for (const x of L) if (!bible.verses.has(synKey(x))) problems.push(`нет стиха ${synKey(x)} в нашем тексте (${l})`);
+      if (L.length === R.length) L.forEach((x, i) => (out[synKey(x)] = [osisKey(R[i])]));
+      else if (L.length === 1) out[synKey(L[0])] = R.map(osisKey);
+      else if (R.length === 1) L.forEach((x) => (out[synKey(x)] = [osisKey(R[0])]));
+      else problems.push(`неравные диапазоны ${l}`);
+    }
+  }
+  for (const [k, v] of Object.entries(out)) {
+    const m = /^(\S+) (\d+):(\d+)$/.exec(k)!;
+    if (v.length === 1 && v[0] === `${SYN_TO_OSIS[m[1]]}.${m[2]}.${m[3]}`) delete out[k]; // совпадает с KJV
+  }
+  return { map: out, problems };
+}
 
 /** Отличия Синодальной нумерации от KJV: «Пс 3:1» → ["Ps.3.0"]. */
 export function buildMap(props: string, kjv: Map<string, number[]>) {
@@ -157,7 +200,21 @@ export function toKjv(table: Record<string, string[]>, synVerse: string): string
   return [`${SYN_TO_OSIS[m[1]]}.${m[2]}.${m[3]}`];
 }
 
+function patchMain() {
+  const file = join(import.meta.dirname, '..', '..', 'base', 'versification', 'synodal-kjv.json');
+  const table = JSON.parse(readFileSync(file, 'utf8'));
+  const { map, problems } = patchMap(table.map);
+  if (problems.length) throw new Error(problems.join('; '));
+  const changed = [...new Set([...Object.keys(table.map), ...Object.keys(map)])]
+    .filter((k) => JSON.stringify(table.map[k]) !== JSON.stringify(map[k]));
+  // порядок ключей прежний, новые — в конце (меньше правок в файле)
+  const order = [...Object.keys(table.map).filter((k) => k in map), ...Object.keys(map).filter((k) => !(k in table.map))];
+  writeFileSync(file, JSON.stringify({ ...table, fixes: FIXES, map: Object.fromEntries(order.map((k) => [k, map[k]])) }, null, 1) + '\n');
+  console.log(`наложены поправки FIXES без JSword: изменено строк ${changed.length}${changed.length ? ` (${changed.join('; ')})` : ''}; отличий от KJV: ${order.length}`);
+}
+
 function main() {
+  if (process.argv.includes('--patch')) return patchMain();
   const [propsPath, javaPath] = process.argv.slice(2);
   if (!propsPath || !javaPath) throw new Error('нужно: <SynodalProt.properties> <SystemKJV.java>');
   const { map, problems, unmatched } = buildMap(readFileSync(propsPath, 'utf8'), kjvCounts(readFileSync(javaPath, 'utf8')));

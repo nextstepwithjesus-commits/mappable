@@ -7,6 +7,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { inflateRawSync, inflateSync } from 'node:zlib';
 import { join } from 'node:path';
 import { loadBible } from '../tools/bible.ts';
 
@@ -91,6 +92,21 @@ describe('TSK: файл и источник', () => {
   });
 });
 
+describe('TSK: слово группы (классы А и Б рецензии библеиста)', () => {
+  it('в слове нет примечаний составителей: не длиннее 60 знаков, без кавычек, «says», Jerome, Targum', () => {
+    const bad = rows.filter((r) => r.word.length > 60 || /["“”{}]|\bsays\b|Jerome|Targum|Josephus/i.test(r.word));
+    expect(bad.map((r) => `${r.home} гр. ${r.group}: ${r.word}`)).toEqual([]);
+  });
+  it('места подписаны своим словом, а не вариантом соседнего («or, …»)', () => {
+    const words = (kjv: string) => rows.filter((r) => r.kjv === kjv).map((r) => r.word);
+    expect(words('1Sam.18.6')).toContain('the women');
+    expect(words('1Sam.18.6')).not.toContain('Philistine');
+    expect(words('Exod.14.13')).toContain('ye shall see');
+    expect(words('Jer.49.4')).not.toContain('thy flowing valley');
+    for (const r of rows) expect(r.word, `${r.home} гр. ${r.group}`).not.toMatch(/^(or|Heb)[.,]/);
+  });
+});
+
 describe('TSK: перевод нумерации KJV → синодальная', () => {
   it('контрольные пары: стих записи TSK (KJV) → синодальный стих', () => {
     const homeOf = (kjv: string) => [...new Set(rows.filter((r) => r.kjv === kjv).map((r) => r.home))];
@@ -102,7 +118,10 @@ describe('TSK: перевод нумерации KJV → синодальная'
       ['Prov.13.14', 'Притч 13:15'], ['Prov.18.24', 'Притч 18:25'],
       ['Mal.3.18', 'Мал 3:18'], ['Mal.4.1', 'Мал 4:1'], ['Mal.4.5', 'Мал 4:5'], ['Mal.4.6', 'Мал 4:6'], ['Joel.2.28', 'Иоил 2:28'],
       ['Acts.19.40', 'Деян 19:40'], ['Rom.16.25', 'Рим 14:24'], ['Rom.16.26', 'Рим 14:25'], ['Rom.16.24', 'Рим 16:24'],
-      ['2Cor.13.14', '2Кор 13:13'], ['3John.1.13', '3Ин 1:13'], ['Jas.1.1', 'Иак 1:1'], ['Rev.22.20', 'Откр 22:20'],
+      ['2Cor.13.14', '2Кор 13:13'],
+      // поправка таблицы (АФ-3): два стиха KJV в одном синодальном
+      ['Lev.14.55', 'Лев 14:55'], ['Lev.14.56', 'Лев 14:55'], ['Lev.14.57', 'Лев 14:56'], ['Acts.19.41', 'Деян 19:40'],
+      ['2Cor.11.32', '2Кор 11:32'], ['2Cor.11.33', '2Кор 11:32'], ['2Cor.13.12', '2Кор 13:12'], ['2Cor.13.13', '2Кор 13:12'], ['3John.1.13', '3Ин 1:13'], ['Jas.1.1', 'Иак 1:1'], ['Rev.22.20', 'Откр 22:20'],
     ];
     for (const [kjv, syn] of cases) expect([kjv, homeOf(kjv)]).toEqual([kjv, [syn]]);
   });
@@ -135,8 +154,6 @@ describe('TSK: карантин', () => {
       ['1Kgs.18.33', /несколько синодальных: 3Цар 18:33, 3Цар 18:34/],
       ['Rom.16.27', /часть синодального Рим 14:26/],
       ['Song.1.1', /нет синодальной пары/],
-      ['2Cor.11.32', /нет синодальной пары/],
-      ['Lev.14.57', /таблица неполна/], ['Lev.14.56', /таблица неполна/], ['Acts.19.41', /таблица неполна/],
       ['Ps.116.9', /Пс 114:9 пуст/],
       ['Ps.51.1', /надписание псалма.*50:1, Пс 50:2/], // 11 § 4.12: Пс 50:1–2 — надписание Пс 51 KJV
       ['Ps.3.1', /надписание псалма/],
@@ -145,6 +162,13 @@ describe('TSK: карантин', () => {
       expect(homes.has(kjv), kjv).toBe(false);
       expect(q(kjv).length, kjv).toBeGreaterThan(0);
       for (const r of q(kjv)) expect(r.why, kjv).toMatch(why);
+    }
+  });
+
+  it('слово группы вне синодального стиха (класс В): «Praise ye the Lord» у начала псалмов — в карантине', () => {
+    for (const kjv of ['Ps.106.1', 'Ps.112.1', 'Ps.113.1', 'Ps.135.1', 'Ps.146.1', 'Ps.148.1', 'Ps.149.1', 'Ps.150.1']) {
+      expect(rows.some((r) => r.kjv === kjv && /^praise ye the lord/i.test(r.word)), kjv).toBe(false);
+      expect(qrows.some((r) => r.kjv === kjv && /слово группы вне синодального стиха/.test(r.why)), kjv).toBe(true);
     }
   });
 
@@ -184,3 +208,127 @@ describe('TSK: карантин', () => {
     }
   });
 });
+
+// ---------- обратный перевод на самом TSK (без модуля KJV): своя читалка ZIP и SWORD, свой простой разбор адресов ----------
+const ZIP = join(ROOT, 'inputs/crosswire/TSK.zip');
+
+/** Файлы ZIP по центральному каталогу (без сторонних пакетов). */
+function unzip(path: string): Map<string, Buffer> {
+  const z = readFileSync(path);
+  let e = z.length - 22;
+  while (e >= 0 && z.readUInt32LE(e) !== 0x06054b50) e--;
+  const n = z.readUInt16LE(e + 10);
+  let p = z.readUInt32LE(e + 16);
+  const out = new Map<string, Buffer>();
+  for (let i = 0; i < n; i++) {
+    const method = z.readUInt16LE(p + 10), size = z.readUInt32LE(p + 20);
+    const nl = z.readUInt16LE(p + 28), xl = z.readUInt16LE(p + 30), cl = z.readUInt16LE(p + 32), lh = z.readUInt32LE(p + 42);
+    const name = z.toString('utf8', p + 46, p + 46 + nl);
+    const start = lh + 30 + z.readUInt16LE(lh + 26) + z.readUInt16LE(lh + 28);
+    const raw = z.subarray(start, start + size);
+    out.set(name, method === 8 ? inflateRawSync(raw) : Buffer.from(raw));
+    p += 46 + nl + xl + cl;
+  }
+  return out;
+}
+
+const TSK_BOOK: Record<string, string> = {
+  Ge: 'Gen', Ex: 'Exod', Le: 'Lev', Nu: 'Num', De: 'Deut', Jos: 'Josh', Jud: 'Judg', Ru: 'Ruth', '1Sa': '1Sam', '2Sa': '2Sam',
+  '1Ki': '1Kgs', '2Ki': '2Kgs', '1Ch': '1Chr', '2Ch': '2Chr', Ezr: 'Ezra', Ne: 'Neh', Es: 'Esth', Job: 'Job', Ps: 'Ps', Pr: 'Prov',
+  Ec: 'Eccl', So: 'Song', Isa: 'Isa', Jer: 'Jer', La: 'Lam', Eze: 'Ezek', Da: 'Dan', Ho: 'Hos', Joe: 'Joel', Am: 'Amos', Ob: 'Obad',
+  Jon: 'Jonah', Mic: 'Mic', Na: 'Nah', Hab: 'Hab', Zep: 'Zeph', Hag: 'Hag', Zec: 'Zech', Mal: 'Mal', Mt: 'Matt', Mr: 'Mark',
+  Lu: 'Luke', Joh: 'John', Ac: 'Acts', Ro: 'Rom', '1Co': '1Cor', '2Co': '2Cor', Ga: 'Gal', Eph: 'Eph', Php: 'Phil', Col: 'Col',
+  '1Th': '1Thess', '2Th': '2Thess', '1Ti': '1Tim', '2Ti': '2Tim', Tit: 'Titus', Phm: 'Phlm', Heb: 'Heb', Jas: 'Jas', '1Pe': '1Pet',
+  '2Pe': '2Pet', '1Jo': '1John', '2Jo': '2John', '3Jo': '3John', Jude: 'Jude', Re: 'Rev',
+};
+const KJV_ORDER = ('Gen Exod Lev Num Deut Josh Judg Ruth 1Sam 2Sam 1Kgs 2Kgs 1Chr 2Chr Ezra Neh Esth Job Ps Prov Eccl Song Isa Jer Lam ' +
+  'Ezek Dan Hos Joel Amos Obad Jonah Mic Nah Hab Zeph Hag Zech Mal Matt Mark Luke John Acts Rom 1Cor 2Cor Gal Eph Phil Col 1Thess ' +
+  '2Thess 1Tim 2Tim Titus Phlm Heb Jas 1Pet 2Pet 1John 2John 3John Jude Rev').split(' ');
+const ONE_CHAPTER = new Set(['Obad', 'Phlm', '2John', '3John', 'Jude']);
+
+/** Адреса KJV в сырой записи: каждый scripRef разбирается от книги и главы записи («17,23» в Дан 4 — Dan 4:17, 4:23). */
+function rawAddresses(text: string, book: string, chapter: number): Set<string> {
+  const out = new Set<string>();
+  for (const m of text.matchAll(/<scripRef([^>]*)>([\s\S]*?)<\/scripRef>/g)) {
+    if (m[1].includes('passage=')) continue;
+    let b = book, c: number | null = chapter;
+    for (let tok of m[2].split(/[;,]/)) {
+      tok = tok.trim();
+      const bm = /^([1-3]?[A-Z][a-z]*)\s*(.*)$/.exec(tok);
+      if (bm) { b = TSK_BOOK[bm[1]] ?? '?'; c = null; tok = bm[2].replace(/\s/g, ''); }
+      const im = /^(?:(\d+):)?(\d+)(?:-(?:(\d+):)?(\d+))?$/.exec(tok);
+      if (!im) continue;
+      const c1 = im[1] ? +im[1] : c ?? (ONE_CHAPTER.has(b) ? 1 : null);
+      if (c1 === null) continue;
+      const c2 = im[3] ? +im[3] : c1;
+      c = c2;
+      out.add(im[4] ? `${b}.${c1}.${im[2]}-${b}.${c2}.${im[4]}` : `${b}.${c1}.${im[2]}`);
+    }
+  }
+  return out;
+}
+
+describe('TSK: обратный перевод всех мест (на самом TSK)', () => {
+  it.skipIf(!existsSync(ZIP))('каждое место строки, переведённое обратно в KJV, стоит в сырой записи своего стиха', () => {
+    const files = unzip(ZIP);
+    const table: Record<string, string[]> = JSON.parse(readFileSync(join(ROOT, 'base/versification/synodal-kjv.json'), 'utf8')).map;
+    // число стихов KJV по главам — из обращённой таблицы; раскладка индекса TSK его проверяет
+    const counts = new Map<string, number>();
+    for (const [k, srcs] of inv) {
+      if (!srcs.length) continue;
+      const [b, c, v] = k.split('.');
+      counts.set(`${b}.${c}`, Math.max(counts.get(`${b}.${c}`) ?? 0, +v));
+    }
+    const raw = new Map<string, Set<string>>();
+    for (const [t, books] of [['ot', KJV_ORDER.slice(0, 39)], ['nt', KJV_ORDER.slice(39)]] as const) {
+      const dir = 'modules/comments/zcom/tsk/';
+      const bzs = files.get(`${dir}${t}.bzs`)!, bzv = files.get(`${dir}${t}.bzv`)!, bzz = files.get(`${dir}${t}.bzz`)!;
+      const blocks: Buffer[] = [];
+      for (let i = 0; i < bzs.length; i += 12) blocks.push(inflateSync(bzz.subarray(bzs.readUInt32LE(i), bzs.readUInt32LE(i) + bzs.readUInt32LE(i + 4))));
+      let i = 2;
+      for (const b of books) {
+        i++;
+        for (let c = 1; counts.has(`${b}.${c}`); c++) {
+          i++;
+          for (let v = 1; v <= counts.get(`${b}.${c}`)!; v++, i++) {
+            const blk = bzv.readUInt32LE(i * 10), off = bzv.readUInt32LE(i * 10 + 4), size = bzv.readUInt16LE(i * 10 + 8);
+            if (size) raw.set(`${b}.${c}.${v}`, rawAddresses(blocks[blk].toString('utf8', off, off + size), b, c));
+          }
+        }
+      }
+      expect(i, `${t}: раскладка KJV сходится с индексом TSK`).toBe(bzv.length / 10);
+    }
+    const kjvOf = (syn: string) => toKjvLocal(table, syn).map((x) => x.split('!')[0]);
+    const bad: string[] = [];
+    let n = 0;
+    for (const r of rows) {
+      const have = raw.get(r.kjv)!;
+      for (const p of r.places) {
+        if (p.startsWith('*')) continue;
+        n++;
+        const [a, b] = parsePlace(p);
+        const A = kjvOf(a), B = kjvOf(b);
+        const ok = a === b
+          ? A.some((x) => have.has(x)) || A.some((x) => B.some((y) => have.has(`${x}-${y}`)))
+          : A.some((x) => B.some((y) => have.has(`${x}-${y}`)));
+        if (!ok) bad.push(`${r.home} (${r.kjv}) гр. ${r.group}: ${p}`);
+      }
+    }
+    expect(n).toBeGreaterThan(380000);
+    expect(bad).toEqual([]);
+  }, 120000);
+
+  it('ошибка разбора из рецензии библеиста (класс Г) не возвращается: у Дан 4:10 нет «Дан 7:23», есть Дан 4:20', () => {
+    const places = rows.filter((r) => r.home === 'Дан 4:10').flatMap((r) => r.places);
+    expect(places).not.toContain('Дан 7:23');
+    expect(places).toContain('Дан 4:20');
+  });
+});
+
+function toKjvLocal(table: Record<string, string[]>, syn: string): string[] {
+  if (table[syn]) return table[syn];
+  const m = /^(\S+) (\d+):(\d+)$/.exec(syn)!;
+  const SYN = 'Быт Исх Лев Чис Втор Нав Суд Руф 1Цар 2Цар 3Цар 4Цар 1Пар 2Пар Езд Неем Есф Иов Пс Притч Еккл Песн Ис Иер Плач Иез Дан Ос Иоил Ам Авд Ион Мих Наум Авв Соф Агг Зах Мал Мф Мк Лк Ин Деян Иак 1Пет 2Пет 1Ин 2Ин 3Ин Иуд Рим 1Кор 2Кор Гал Еф Флп Кол 1Фес 2Фес 1Тим 2Тим Тит Флм Евр Откр'.split(' ');
+  const OS = 'Gen Exod Lev Num Deut Josh Judg Ruth 1Sam 2Sam 1Kgs 2Kgs 1Chr 2Chr Ezra Neh Esth Job Ps Prov Eccl Song Isa Jer Lam Ezek Dan Hos Joel Amos Obad Jonah Mic Nah Hab Zeph Hag Zech Mal Matt Mark Luke John Acts Jas 1Pet 2Pet 1John 2John 3John Jude Rom 1Cor 2Cor Gal Eph Phil Col 1Thess 2Thess 1Tim 2Tim Titus Phlm Heb Rev'.split(' ');
+  return [`${OS[SYN.indexOf(m[1])]}.${m[2]}.${m[3]}`];
+}

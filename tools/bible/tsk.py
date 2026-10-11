@@ -53,16 +53,14 @@ TSK_BOOKS = {
 }
 SINGLE_CHAPTER = {'Obad', 'Phlm', '2John', '3John', 'Jude'}
 
-# Неполнота таблицы synodal-kjv.json, найденная сверкой с раскладкой индекса TSK (АФ-3). В нашем тексте в этих главах
-# на стих меньше, чем в KJV: два стиха KJV слиты в один синодальный, а таблица этого не знает. До поправки таблицы
-# такие стихи KJV — в карантине. Число стихов KJV в главе — для раскладки индекса.
-KJV_VERSES_FIX = {('Lev', 14): 57, ('Acts', 19): 41}
-TABLE_GAPS = {
-    'Lev.14.55': 'таблица неполна: Лев 14:55 = KJV 14:55–56, Лев 14:56 = KJV 14:57 (по тексту); строки в таблице нет',
-    'Lev.14.56': 'таблица неполна: KJV 14:56 — вторая часть Лев 14:55, а таблица ведёт его в Лев 14:56',
-    'Lev.14.57': 'таблица неполна: KJV 14:57 = Лев 14:56; строки в таблице нет',
-    'Acts.19.41': 'таблица неполна: KJV 19:41 — конец Деян 19:40; строки в таблице нет',
-}
+# Неполнота таблицы synodal-kjv.json (Лев 14, Деян 19, 2Кор 11:32, 13:12), найденная раскладкой индекса TSK, исправлена
+# в самой таблице (FIXES в tools/base/versification.ts, режим --patch). Сюда записываются только новые находки такого
+# рода: число стихов KJV в главе для раскладки и стихи KJV, которые до поправки таблицы держатся в карантине.
+KJV_VERSES_FIX = {}
+TABLE_GAPS = {}
+# Слово группы, которого нет в синодальном стихе: в KJV «Praise ye the LORD» — начало стиха 1 этих псалмов, в нашем
+# тексте в стихе 1 его нет (рецензия библеиста на выборку TSK, класс В).
+WORD_NOT_IN_VERSE = re.compile(r'^praise ye the lord\b', re.I)
 
 
 # ---------- SWORD zCom ----------
@@ -81,6 +79,7 @@ def read_testament(z, base, t):
 
 # ---------- Синодальный текст и таблица нумерации ----------
 EMPTY = set()  # пустые стихи нашего текста (tools/bible/source-issues.tsv, вид empty): ссылка на них — ошибка базы
+TEXT = {}  # синодальный стих → текст
 
 
 def load_synodal():
@@ -88,6 +87,7 @@ def load_synodal():
     for line in open(os.path.join(ROOT, 'tools', 'bible', 'synodal.tsv'), encoding='utf-8'):
         p = line.rstrip('\n').split('\t')
         order.append((p[0], int(p[1]), int(p[2])))
+        TEXT[order[-1]] = p[3] if len(p) > 3 else ''
         if len(p) < 4 or not p[3].strip():
             EMPTY.add(order[-1])
     return order
@@ -151,13 +151,33 @@ def kjv_map_one(inv, counts, key, allow_empty=False):
 
 
 # ---------- разбор записей TSK ----------
+VARIANT = re.compile(r'^(or|Heb|Gr|Chal|Syr|Sam|Arab|Lat|Vulg|i\.\s?e|that is|marg|Or)\b[.,:]?', re.I)
+NOTE_WORDS = re.compile(r'["“”{}\[\]]|\bsays\b|Jerome|Targum|Josephus|Vulgate|Septuagint|LXX|^See (a |also |the )?(similar|note|on\b)|\bch\.\s*\d|\bver\.\s*\d', re.I)
+
+
 def strip_label(s):
-    """Слово стиха из подписи группы TSK (английское, как в источнике); примечания составителей отбрасываются."""
-    s = re.sub(r'<[^>]+>', '', s).replace('\n', ' ')
+    """Слово стиха из подписи группы TSK (английское, как в источнике); примечания составителей не берутся.
+
+    Подпись в источнике: «слово.  or, вариант.  Heb. буквально.  другое слово.» — куски через точку и два пробела;
+    примечание составителей начинается сразу за точкой без пробела («music.The original…», «finger."My weakness…»).
+    Места относятся к последнему слову строки, а не к варианту (класс А рецензии). Похожее на примечание — пустое слово.
+    """
+    s = re.sub(r'<[^>]+>', '', s)
+    m = re.search(r'\.[ \t]*\n', s)  # примечание с новой строки после подписи
+    if m:
+        s = s[:m.start() + 1]
+    s = s.replace('\n', ' ')
     s = re.sub(r'^(\s*(A\.M\.|B\.C\.|An\. Ex\. Is\.|A\.D\.)\s*[\d.,\- ]*)+', '', s).strip()
-    m = re.match(r'^(.*?)\.(\s|$|[A-Z{(])', s)
-    word = (m[1] if m else s).strip()
-    return re.sub(r'\s+', ' ', word)[:80]
+    s = re.sub(r'^\(Title\.\)\s*', '', s)
+    m = re.search(r'\.(?=["“({\[A-Z])', s)
+    if m:
+        s = s[:m.start() + 1]
+    pieces = [p.strip(' .') for p in re.split(r'\.\s{2,}|\.\s*$|\.\s+(?=(?:or|Heb|Gr|Chal|Syr)[.,])', s) if p.strip(' .')]
+    words = [p for p in pieces if not VARIANT.match(p)]
+    word = re.sub(r'\s+', ' ', words[-1]) if words else ''
+    if len(word) > 60 or len(word.split()) > 10 or NOTE_WORDS.search(word):
+        return ''
+    return word
 
 
 ITEM = re.compile(r'^(?:(\d+):)?(\d+)(?:-(?:(\d+):)?(\d+))?$')
@@ -169,90 +189,96 @@ def parse_entry(text, book, chapter):
     cur = None
     prev_ref_ctx = None  # (book, chapter) последней ссылки предыдущего scripRef той же группы
     stats = Counter()
-    for seg in re.split(r'<br\s*/>', text):
-        seg = seg.strip()
-        if not seg:
+    tokens = []  # ('text', подпись) | ('ref', тело scripRef) — по строкам источника
+    for li, line in enumerate(re.split(r'<br\s*/>', text)):
+        refs = re.findall(r'<scripRef([^>]*)>(.*?)</scripRef>', line, re.S)
+        if any('passage=' in attrs for attrs, _ in refs):
+            stats['outline'] += len(refs)  # план главы (passage=…) — не перекрёстные ссылки; вся строка — план
             continue
-        refs = re.findall(r'<scripRef([^>]*)>(.*?)</scripRef>', seg, re.S)
-        plain_refs = [body for attrs, body in refs if 'passage=' not in attrs]
-        if refs and not plain_refs:
-            stats['outline'] += len(refs)  # план главы (passage=…) — не перекрёстные ссылки
-            continue
-        rest = re.sub(r'<scripRef[^>]*>.*?</scripRef>', '', seg, flags=re.S).strip()
-        if not plain_refs:
-            cur = {'word': strip_label(seg), 'refs': []}
+        for part in re.split(r'(<scripRef[^>]*>.*?</scripRef>)', line, flags=re.S):
+            m = re.fullmatch(r'<scripRef[^>]*>(.*?)</scripRef>', part, re.S)
+            if m:
+                tokens.append(('ref', m[1]))
+            elif part.strip():
+                # запись обычно начинается с <br />; текст до него — примечание без подписи (Лев 26:29)
+                tokens.append(('text', part if li else ''))  # текст после ссылки в той же строке — новая подпись (класс Г)
+    for kind, body in tokens:
+        if kind == 'text':
+            cur = {'word': strip_label(body) if body else '', 'refs': []}
             groups.append(cur)
             prev_ref_ctx = None
             continue
-        if rest:
-            stats['mixed'] += 1
         if cur is None:
             cur = {'word': '', 'refs': []}
             groups.append(cur)
-        for body in plain_refs:
-            continuation = prev_ref_ctx is not None
-            bk, ch = (prev_ref_ctx if continuation else (book, chapter))
-            ctx_ok_book = (not continuation) or prev_ref_ctx[0] == book
-            ctx_ok_chap = (not continuation) or prev_ref_ctx == (book, chapter)
-            book_unclear = continuation and not ctx_ok_book  # перенос строки: книга предыдущей строки не та, что у записи
-            for pi, part in enumerate([p.strip() for p in body.split(';')]):
-                if not part:
-                    continue
-                if part.startswith('*'):
-                    cur['refs'].append(('mark', part))
-                    continue
-                if re.search(r'-\s*[1-3]?[A-Z]', part):
-                    cur['refs'].append(('amb', (part, 'диапазон через несколько книг')))
-                    continue
-                explicit = False
-                for ii, item in enumerate([x.strip() for x in part.split(',')]):
-                    if not item:
-                        continue  # лишняя запятая источника
-                    m = re.match(r'^([1-3]?[A-Z][a-z]*)\s*(.*)$', item)
-                    if m:  # название книги — в начале части или после запятой вместо «;»
-                        if m[1] not in TSK_BOOKS:
-                            cur['refs'].append(('amb', (item, f'неизвестное сокращение книги «{m[1]}»')))
-                            bk, ch, explicit, book_unclear = None, None, True, False
-                            continue
-                        bk, ch, explicit, book_unclear = TSK_BOOKS[m[1]], None, True, False
-                        item = m[2]
-                    item = item.replace(' ', '')
-                    if bk is None:
-                        cur['refs'].append(('amb', (item, 'книга не разобрана')))
+        continuation = prev_ref_ctx is not None
+        bk, ch = (prev_ref_ctx if continuation else (book, chapter))
+        ctx_ok_book = (not continuation) or prev_ref_ctx[0] == book
+        ctx_ok_chap = (not continuation) or prev_ref_ctx == (book, chapter)
+        book_unclear = continuation and not ctx_ok_book  # перенос строки: книга предыдущей строки не та, что у записи
+        for pi, part in enumerate([p.strip() for p in body.split(';')]):
+            if not part:
+                continue
+            if part.startswith('*'):
+                cur['refs'].append(('mark', part))
+                continue
+            if re.search(r'-\s*[1-3]?[A-Z]', part):
+                cur['refs'].append(('amb', (part, 'диапазон через несколько книг')))
+                continue
+            explicit = False
+            chap_unclear = False  # номер этой части ушёл в карантин из-за главы — следующие голые номера тоже
+            for ii, item in enumerate([x.strip() for x in part.split(',')]):
+                if not item:
+                    continue  # лишняя запятая источника
+                m = re.match(r'^([1-3]?[A-Z][a-z]*)\s*(.*)$', item)
+                if m:  # название книги — в начале части или после запятой вместо «;»
+                    if m[1] not in TSK_BOOKS:
+                        cur['refs'].append(('amb', (item, f'неизвестное сокращение книги «{m[1]}»')))
+                        bk, ch, explicit, book_unclear, chap_unclear = None, None, True, False, False
                         continue
-                    if book_unclear:
-                        cur['refs'].append(('amb', (item, 'перенос строки в источнике: книга неясна')))
+                    bk, ch, explicit, book_unclear, chap_unclear = TSK_BOOKS[m[1]], None, True, False, False
+                    item = m[2]
+                item = item.replace(' ', '')
+                if bk is None:
+                    cur['refs'].append(('amb', (item, 'книга не разобрана')))
+                    continue
+                if book_unclear:
+                    cur['refs'].append(('amb', (item, 'перенос строки в источнике: книга неясна')))
+                    continue
+                im = ITEM.match(item)
+                if not im:
+                    cur['refs'].append(('amb', (item, 'адрес не разобран')))
+                    continue
+                c1, v1, c2, v2 = im[1], int(im[2]), im[3], im[4]
+                if c1 is None:
+                    # голый номер стиха
+                    why = None
+                    if chap_unclear:
+                        why = 'голый номер после номера с неясной главой'
+                    elif ch is None and bk not in SINGLE_CHAPTER:
+                        why = 'номер без главы после названия книги'
+                    elif ii == 0 and pi > 0 and not explicit:
+                        why = 'голый номер после «;»: глава неясна'
+                    elif ii == 0 and pi == 0 and continuation and not ctx_ok_chap:
+                        why = 'перенос строки в источнике: глава неясна'
+                    if why:
+                        cur['refs'].append(('amb', (item, why)))
+                        chap_unclear = True
                         continue
-                    im = ITEM.match(item)
-                    if not im:
-                        cur['refs'].append(('amb', (item, 'адрес не разобран')))
-                        continue
-                    c1, v1, c2, v2 = im[1], int(im[2]), im[3], im[4]
-                    if c1 is None:
-                        # голый номер стиха
-                        if ch is None:
-                            if bk in SINGLE_CHAPTER:
-                                ch = 1
-                            else:
-                                cur['refs'].append(('amb', (item, 'номер без главы после названия книги')))
-                                continue
-                        if ii == 0 and pi > 0 and not explicit:
-                            cur['refs'].append(('amb', (item, 'голый номер после «;»: глава неясна')))
-                            continue
-                        if ii == 0 and pi == 0 and continuation and not ctx_ok_chap:
-                            cur['refs'].append(('amb', (item, 'перенос строки в источнике: глава неясна')))
-                            continue
-                        c1 = ch
-                    else:
-                        c1 = int(c1)
-                    if v2 is None:
-                        c2, v2 = c1, v1
-                    else:
-                        c2 = int(c2) if c2 else c1
-                        v2 = int(v2)
-                    ch = c2
-                    cur['refs'].append(('ref', (bk, c1, v1, c2, v2)))
-            prev_ref_ctx = None if bk is None else (bk, ch if ch is not None else chapter)
+                    if ch is None:
+                        ch = 1  # книга из одной главы
+                    c1 = ch
+                else:
+                    c1 = int(c1)
+                    chap_unclear = False
+                if v2 is None:
+                    c2, v2 = c1, v1
+                else:
+                    c2 = int(c2) if c2 else c1
+                    v2 = int(v2)
+                ch = c2
+                cur['refs'].append(('ref', (bk, c1, v1, c2, v2)))
+        prev_ref_ctx = None if bk is None else (bk, ch if ch is not None else chapter)
     return groups, stats
 
 
@@ -315,6 +341,9 @@ def build():
                                             f'а в синодальном тексте это разные стихи (надписание — {where}; стих 1 — {addr(home)})')
             for gi, g in enumerate(groups, 1):
                 kept = []
+                why_group = None
+                if home and b == 'Ps' and v == 1 and WORD_NOT_IN_VERSE.match(g['word']) and 'аллилуия' not in TEXT[home].lower():
+                    why_group = f'слово группы вне синодального стиха: «{g["word"]}» (Аллилуия) в {addr(home)} нет'
                 for ri, (kind, x) in enumerate(g['refs'], 1):
                     if kind == 'mark':
                         kept.append(x)
@@ -328,6 +357,8 @@ def build():
                         why = None
                         if home is None:
                             why = f'исходный стих: {why_home}'
+                        elif why_group:
+                            why = why_group
                         else:
                             a, why = kjv_map_one(inv, counts, f'{rb}.{c1}.{v1}')
                             if why is None and (c1, v1) != (c2, v2):
@@ -382,7 +413,7 @@ def build():
 def main():
     tsv, qtsv, n, stats, reasons = build()
     print('TSK: ' + '; '.join(f'{k} {v}' for k, v in n.items()))
-    print('  план главы (passage=…) — пропущено ссылок: %d; смешанных строк: %d' % (stats['outline'], stats['mixed']))
+    print('  план главы (passage=…) — пропущено ссылок: %d' % stats['outline'])
     print('  карантин по причинам: ' + '; '.join(f'{k} — {v}' for k, v in reasons.most_common()))
     if '--check' in sys.argv:
         ok = open(OUT, encoding='utf-8').read() == tsv and open(OUTQ, encoding='utf-8').read() == qtsv
