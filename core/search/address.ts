@@ -51,6 +51,15 @@ export function kjvToSyn(code: string, c: number, v: number): { c: number; v: nu
   return { c, v, moved: false };
 }
 
+/** Западный адрес одним английским названием книги: «Psalms 3:1», «Romans 16:25–27», «Psalms 23» (сверка, № 25). */
+function enLabel(b: Book, s: Span): string {
+  const name = b.en[0].replace(/(^|\s)\S/g, (x) => x.toUpperCase());
+  if (s.v1 === undefined) return s.c1 === s.c2 ? `${name}${NB}${s.c1}` : `${name}${NB}${s.c1}–${s.c2}`;
+  const tail = s.v2 !== undefined && (s.v2 !== s.v1 || s.c2 !== s.c1) ? `–${s.c2 !== s.c1 ? `${s.c2}:` : ''}${s.v2}` : '';
+  return `${name}${NB}${s.c1}:${s.v1}${tail}`;
+}
+const NB = '\u00A0';
+
 function bookName(b: Book): string {
   return b.name.replace(/^(\d)-[яе] /, '$1 ');
 }
@@ -149,12 +158,13 @@ export function parseAddress(input: string, vers?: Versification, has?: (book: s
           const b = kjvToSyn(span.book, span.c2, span.v2 ?? span.v1);
           span = { book: span.book, c1: a.c, v1: a.v, c2: b.c, v2: b.v };
           if (a.moved || b.moved)
-            out.notes.push(`Западная нумерация: ${pt.book.en[0][0].toUpperCase()}${pt.book.en[0].slice(1)} ${asked.c1}:${asked.v1}${asked.v2 !== asked.v1 || asked.c2 !== asked.c1 ? `–${asked.c2 !== asked.c1 ? `${asked.c2}:` : ''}${asked.v2}` : ''}. В Синодальном переводе: ${formatRefs([span])}`);
+            out.notes.push(`Западная нумерация: ${enLabel(pt.book, asked)}. В Синодальном переводе: ${formatRefs([span])}`);
         } else if (span.book === 'Пс') {
           const syn1 = psKjvToSyn(span.c1);
           const syn2 = psKjvToSyn(span.c2);
           span = { ...span, c1: syn1[0], c2: syn2[syn2.length - 1] };
-          if (syn1[0] !== asked.c1 || syn1.length > 1) out.notes.push(`Западная нумерация: Psalm ${asked.c1}. В Синодальном переводе: Пс ${syn1.join(' и ')}`);
+          if (syn1[0] !== asked.c1 || syn1.length > 1)
+            out.notes.push(`Западная нумерация: ${enLabel(pt.book, asked)}. В Синодальном переводе: ${syn1.map((c) => formatRefs([{ book: 'Пс', c1: c, c2: c }])).join(' и ')}`);
         }
       } else if (span.book === 'Пс' && span.v1 === undefined && span.c1 === span.c2) {
         const syn = psKjvToSyn(span.c1);
@@ -165,8 +175,14 @@ export function parseAddress(input: string, vers?: Versification, has?: (book: s
         if (ch) {
           if (span.c1 < 1 || span.c2 > ch.length || span.c2 < span.c1) out.errors.push(`В книге «${pt.book.name}» глав: ${ch.length}`);
           else if (span.v1 !== undefined) {
-            if (span.v1 < 1 || span.v1 > ch[span.c1 - 1] || (span.v2 ?? 0) > ch[span.c2 - 1] || (span.c1 === span.c2 && (span.v2 ?? 0) < span.v1))
+            if (span.v1 < 1 || span.v1 > ch[span.c1 - 1] || (span.v2 ?? 0) > ch[span.c2 - 1] || (span.c1 === span.c2 && (span.v2 ?? 0) < span.v1)) {
               out.errors.push(`Нет такого стиха: ${formatRefs([span])}`);
+              // синодального стиха нет, а по западной нумерации он есть (Рим 16:25 = Рим 14:24): строка с соответствием (сверка, № 25)
+              if (pt.system !== 'en') {
+                const k = kjvToSyn(span.book, span.c1, span.v1);
+                if (k.moved) out.notes.push(`Если это адрес западной нумерации (${enLabel(pt.book, span)}), в Синодальном переводе это ${formatRefs([{ book: span.book, c1: k.c, v1: k.v, c2: k.c, v2: k.v }])}`);
+              }
+            }
             else if (has && (!has(span.book, span.c1, span.v1) || !has(span.book, span.c2, span.v2 ?? span.v1)))
               out.errors.push(`Нет такого стиха в Синодальном тексте: ${formatRefs([span])}`);
           }

@@ -313,3 +313,38 @@ describe('рецензии переноса ядра: скобки, находк
     expect(e.kind === 'пусто' && e.message).toMatch(/Вифлеем/);
   });
 });
+
+describe('сверка интерфейса: № 24–27', () => {
+  it('каждое лицо базы находится по своему показываемому имени (№ 24)', () => {
+    expect(L.core.persons.length).toBeGreaterThanOrEqual(2697);
+    const miss: string[] = [];
+    for (const p of L.core.persons) {
+      const r = L.searcher.search(p.n);
+      const found = r.groups.some((g) => (g.kind === 'лица' && g.persons.some((x) => x.id === p.id)) || (g.kind === 'пара' && [...g.a, ...g.b].some((x) => x.id === p.id)));
+      if (!found) miss.push(`${p.n} (${p.id})`);
+    }
+    expect(miss).toEqual([]);
+    for (const [q, id] of [['Дина', 'dina'], ['Нон', 'non'], ['Иродиада', 'irodiada'], ['Наум', 'naum-prorok'], ['Малахия', 'malakhiya']]) {
+      const g = L.searcher.search(q).groups.find((x) => x.kind === 'лица');
+      expect(g?.kind === 'лица' && g.persons.map((p) => p.id), q).toContain(id);
+    }
+    // правило прописной осталось для порождённых форм: «аде» — не имя
+    expect(L.text.plan('аде', 'формы').how).not.toBe('имя');
+  });
+  it('строки о нумерации: одно английское название, адрес через форматер; несуществующий синодальный стих — с соответствием (№ 25)', () => {
+    const notes = (q: string) => { const g = L.searcher.search(q).groups[0]; return g.kind === 'адрес' ? g.address.notes.join(' / ') : ''; };
+    expect(notes('Psalm 23')).toBe('Западная нумерация: Psalms\u00A023. В Синодальном переводе: Пс\u00A022');
+    expect(notes('Ps 3:1')).toBe('Западная нумерация: Psalms\u00A03:1. В Синодальном переводе: Пс\u00A03:2');
+    expect(notes('Рим 16:25')).toBe('Если это адрес западной нумерации (Romans\u00A016:25), в Синодальном переводе это Рим\u00A014:24');
+  });
+  it('начальные слова псалма — не меньше четырёх (№ 26)', () => {
+    expect(L.searcher.search('Пс 113').groups[0].kind === 'адрес' && (L.searcher.search('Пс 113').groups[0] as { address: { notes: string[] } }).address.notes[0]).toMatch(/«Хвалите, рабы Господни, хвалите/);
+  });
+  it('«Эммануил» находит «Еммануил» (Ис 7:14) (№ 27)', () => {
+    const r = L.searcher.search('Эммануил');
+    expect(r.used).toBe('Еммануил');
+    const t = r.groups.find((g) => g.kind === 'текст');
+    expect(t?.kind === 'текст' && t.result.hits.map((h) => `${h.book} ${h.c}:${h.v}`)).toContain('Ис 7:14');
+  });
+});
+

@@ -71,10 +71,14 @@ export function buildForms(sources: NameSource[], textWords: Set<string>, capita
         if (!/^[А-ЯЁ]/.test(w)) continue;
         const key = norm(w);
         if (i > 0 && [...(firstOwner.get(key) ?? [])].some((id) => id !== s.id)) continue;
-        if (NOT_NAME_WORDS.has(key)) continue;
+        // слово из списка не становится формой, если оно — часть имени; имя целиком из одного слова («Царь», 2 Пар 28:7) —
+        // имя лица в базе, оно входит (сверка, № 24)
+        if (NOT_NAME_WORDS.has(key) && ws.length > 1) continue;
         let e = perName.get(key);
         if (!e) {
-          e = { forms: [...new Set(caseForms(w))].filter((f) => textWords.has(f) && capitalized.has(f)), ids: new Set() };
+          // само имя из базы входит всегда (решение координатора по сверке, № 24: «Нон» стоит только в начале стиха, 1 Пар 7:27);
+          // правило прописной — только для порождённых падежных форм, которых в базе нет («аде» — от «ад», а не от «Ада»)
+          e = { forms: [...new Set([key, ...caseForms(w).filter((f) => f !== key && textWords.has(f) && capitalized.has(f))])], ids: new Set() };
           perName.set(key, e);
         }
         e.ids.add(s.id);

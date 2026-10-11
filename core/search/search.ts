@@ -195,10 +195,17 @@ export class Searcher {
       const groups = this.core(t, opts.mode ?? 'формы', opts.limit ?? 50, opts);
       done.push({ used: t, groups, score: this.score(groups) });
     }
+    // «Э» в начале слова: в Синодальном тексте «Еммануил» (Ис 7:14) — вариант с «Е», только если набранное не нашло ни лица,
+    // ни книги, ни адреса («Эла» — своё лицо; сверка, № 27)
+    if (/(^|[^а-яё])[эЭ]/.test(query) && Math.max(...done.map((d) => d.score)) < 1000) {
+      const t = query.replace(/(^|[^а-яёА-ЯЁ])э/g, '$1е').replace(/(^|[^а-яёА-ЯЁ])Э/g, '$1Е');
+      const groups = this.core(t, opts.mode ?? 'формы', opts.limit ?? 50, opts);
+      done.push({ used: t, groups, score: this.score(groups) });
+    }
     const sorted = [...done].sort((a, b) => b.score - a.score);
     const best = sorted[0];
     res.used = best.used;
-    res.layout = best.used !== query;
+    res.layout = best.used !== query && hasLatin(query) !== hasLatin(best.used);
     res.groups = best.groups;
     const second = sorted[1];
     if (second && second.score > 0 && second.groups.some((g) => g.kind !== 'возможно')) res.alt = { used: second.used, text: `Искали «${second.used}»?` };
@@ -240,7 +247,15 @@ export class Searcher {
         v = 2;
       }
     }
-    const w = showText(t.split(/[;:,.!?]/)[0].trim().split(/\s+/).slice(0, 6).join(' '));
+    // не меньше 4 слов после надписания и «Аллилуия» («Хвалите» одно не узнать — сверка, № 26); до знака конца, не больше 6
+    t = t.replace(/^\s*аллилуия[.!,]?\s*/i, '');
+    const ws = t.trim().split(/\s+/);
+    const take: string[] = [];
+    for (const x of ws) {
+      take.push(x);
+      if (take.length >= 6 || (take.length >= 4 && /[;:,.!?]$/.test(x))) break;
+    }
+    const w = showText(take.join(' ').replace(/[;:,.!?]+$/, ''));
     return `Если вы ищете псалом со словами «${w}» (Пс\u00A0${syn}:${v}), в Синодальном переводе это ${label}`;
   }
 
@@ -283,7 +298,7 @@ export class Searcher {
     }
     const places = this.byPlace.get(k) ?? (content.length === 1 ? this.placesOf(content[0]) : []);
     const areas = this.byArea.get(k) ?? [];
-    if (!handled && !abbrOnly) {
+    if (!handled) {
       // в паре слово стоит в падеже и может совпасть с именем другого лица («Иакова и Исава»): там порядок — значимость, стихи
       const named = content.map((t) => ({ t, ps: this.personsOf(t, content.length === 1 ? q : t, content.length === 1) }));
       if (content.length === 2 && named.every((x) => x.ps.length > 0)) {
