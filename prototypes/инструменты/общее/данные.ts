@@ -138,3 +138,11 @@ export function том(volume: string): CardsVolume | undefined {
   });
   return undefined;
 }
+
+// ---------- Генеалогия (шаг 2.0): пакет Генеалогии через загрузчик и добавочный пакет номеров и стихов рёбер ----------
+export async function загрузитьГенеалогию(): Promise<{ gen: import('../../../core/types.ts').GenealogyPack; доп: unknown }> {
+  const [g, d] = await Promise.all([loader.get('genealogy'), fetch(`${BASE}data/genealogy-proto.json`).then((r) => (r.ok ? r.json() : Promise.reject(new Error(`${r.status}`))))]);
+  if (g.s !== 'готово') throw new Error('пакет Генеалогии не прочитан');
+  if ((d as { admit?: string }).admit !== 'probe') throw new Error('добавочный пакет Генеалогии: не «проба»');
+  return { gen: g.data, доп: d };
+}

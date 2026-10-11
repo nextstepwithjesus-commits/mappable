@@ -1,0 +1,84 @@
+/* Генеалогия — серый макет шага 2.0 (08 § 10.3 п. 6: облик не проверяется). Только токены (tokens/dist/tokens.css). ПРОТОТИП. */
+
+.генеалогия { display: flex; flex-direction: column; gap: var(--otstup-8); }
+.генеалогия h1 { font-family: var(--shrift-knizhnyy); font-size: 1.5rem; line-height: 1.25; margin: var(--otstup-8) 0 0; }
+.генеалогия h2 { font-size: 1.125rem; margin: var(--otstup-16) 0 var(--otstup-4); }
+.генеалогия h3 { font-size: 1rem; margin: var(--otstup-12) 0 var(--otstup-4); }
+.генеалогия h4 { font-size: 0.875rem; margin: var(--otstup-8) 0 var(--otstup-4); }
+.генеалогия .серый-макет { margin: 0; color: var(--tsvet-chernila-2); font-size: var(--tekst-interfeys-font-size); }
+.генеалогия .серый-макет strong { font-weight: 600; color: var(--tsvet-chernila); }
+.генеалогия .мерки { position: absolute; visibility: hidden; height: 0; overflow: hidden; }
+
+.генеалогия .строка-инструмента, .генеалогия .команды-лица, .генеалогия .ряд-действий { display: flex; flex-wrap: wrap; gap: var(--otstup-4) var(--otstup-8); align-items: center; }
+.генеалогия .строка-инструмента__группа { display: flex; flex-wrap: wrap; gap: var(--otstup-4); }
+.генеалогия .строка-инструмента .кн, .генеалогия .команды-лица .кн, .генеалогия .схема__кнопки .кн, .генеалогия .ряд-действий .кн { border-color: var(--tsvet-setka); }
+.генеалогия .кн:disabled { color: var(--tsvet-chernila-3); cursor: default; }
+.генеалогия .справка-клавиш { flex-basis: 100%; max-width: 70ch; font-size: var(--tekst-interfeys-font-size); }
+.генеалогия .поиск-генеалогии { display: flex; flex-wrap: wrap; gap: var(--otstup-8); align-items: center; }
+.генеалогия .поиск-генеалогии input { min-height: var(--tsel-knopka); padding: 0 var(--otstup-8); border: var(--liniya-volosyanaya) solid var(--tsvet-liniya); border-radius: var(--radius-knopka); background: var(--tsvet-list); color: var(--tsvet-chernila); font: inherit; min-width: 0; }
+.генеалогия .описание-схемы { margin: 0; font-size: var(--tekst-interfeys-font-size); max-width: 80ch; }
+.генеалогия .входы a { display: inline-flex; align-items: center; min-height: var(--tsel-stroka); }
+
+/* ---------- окно схемы: родная прокрутка, слой «мир» с transform: scale (П-Т1; 09 § 3.2.2) ---------- */
+.генеалогия .схема { position: relative; }
+.генеалогия .схема__кнопки { position: absolute; right: var(--otstup-8); top: var(--otstup-8); z-index: 2; display: flex; gap: var(--otstup-4); background: var(--tsvet-list); }
+.генеалогия .схема__окно { position: relative; height: min(70vh, 40rem); min-height: 16rem; overflow: auto; overscroll-behavior: contain; border: var(--liniya-volosyanaya) solid var(--tsvet-setka); background: var(--tsvet-list); touch-action: pan-x pan-y; }
+.генеалогия .схема__содержимое { position: relative; }
+.генеалогия .схема__мир { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.генеалогия .схема__рисунок { position: absolute; overflow: visible; pointer-events: none; max-width: none; max-height: none; }
+.генеалогия .схема__рисунок path { fill: none; stroke-linecap: butt; vector-effect: non-scaling-stroke; }
+.генеалогия .л-кровь { stroke: var(--tsvet-liniya); stroke-width: 1.5; }
+.генеалогия .л-союз { stroke: var(--tsvet-chernila-2); stroke-width: 1.5; }
+.генеалогия .л-ярлык { stroke: var(--tsvet-chernila-2); stroke-width: 1.5; }
+.генеалогия .схема__список, .генеалогия .схема__список ul { list-style: none; margin: 0; padding: 0; }
+.генеалогия .схема__список li { margin: 0; padding: 0; }
+.генеалогия .схема__ряды span { position: absolute; left: -5rem; font-size: var(--tekst-adres-font-size); color: var(--tsvet-chernila-2); white-space: nowrap; }
+
+/* предметы схемы — HTML-кнопки поверх рисунка (03 § 7.3) */
+.генеалогия .пр { position: absolute; box-sizing: border-box; display: flex; align-items: center; gap: 6px; margin: 0; padding: 0 8px 0 0; border: 0; background: transparent; color: var(--tsvet-chernila); text-align: left; white-space: nowrap; cursor: pointer; font-family: var(--shrift-interfeys); font-size: 0.75rem; line-height: 1.25; }
+.генеалогия .пр:hover { color: var(--tsvet-deystvie); }
+.генеалогия .пр--лицо { padding-left: 0; }
+.генеалогия .узел__имя { font-family: var(--shrift-knizhnyy); font-weight: 500; font-size: 0.875rem; line-height: 1.25rem; }
+.генеалогия .узел__уточн { font-family: var(--shrift-interfeys); font-size: 0.75rem; color: var(--tsvet-chernila-2); }
+.генеалогия .знак { flex: none; width: 10px; height: 10px; box-sizing: border-box; border: 1.5px solid var(--tsvet-chernila); background: var(--tsvet-list); }
+.генеалогия .знак--f { border-radius: 50%; }
+.генеалогия .знак--u { transform: rotate(45deg) scale(0.85); }
+.генеалогия .пр--выбрано { background: var(--tsvet-vybor-oblast); }
+.генеалогия .пр--выбрано .узел__имя { font-weight: 600; }
+.генеалогия .пр--союз { justify-content: center; padding: 0; }
+.генеалогия .пр--союз::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--tsvet-chernila-2); }
+.генеалогия .пр--отсыл, .генеалогия .пр--отсыл-жены, .генеалогия .пр--группа, .генеалогия .пр--ещё, .генеалогия .пр--родители, .генеалогия .пр--ярлык, .генеалогия .пр--мать-не-названа { padding: 0 8px; border: var(--liniya-volosyanaya) solid var(--tsvet-setka); border-radius: var(--radius-knopka); background: var(--tsvet-list); color: var(--tsvet-chernila-2); font-size: 0.75rem; }
+.генеалогия .пр--ещё, .генеалогия .пр--родители { border-style: dashed; }
+.генеалогия .пр--мать-не-названа { border-color: transparent; font-style: italic; }
+.генеалогия .издали .пр > :not(.знак) { color: transparent; }
+@media (forced-colors: active) {
+  .генеалогия .л-кровь, .генеалогия .л-союз, .генеалогия .л-ярлык { stroke: CanvasText; }
+  .генеалогия .знак { border-color: CanvasText; }
+  .генеалогия .пр--выбрано { outline: 2px solid Highlight; }
+}
+
+/* ---------- лист, двойник, отчёты ---------- */
+.генеалогия .лист-ребра { border: var(--liniya-volosyanaya) solid var(--tsvet-setka); padding: var(--otstup-8) var(--otstup-12); background: var(--tsvet-list); }
+.генеалогия .лист-ребра h2 { margin-top: 0; }
+.генеалогия .ребро-список, .генеалогия .семейная ul, .генеалогия .отчёт ul { padding-left: var(--otstup-16); }
+.генеалогия .ребро-строка { margin: var(--otstup-4) 0; }
+.генеалогия .семейная, .генеалогия .отчёт { max-width: 90ch; }
+.генеалогия .семейная a, .генеалогия .отчёт a, .генеалогия .лист-ребра a { color: var(--tsvet-chernila); }
+.генеалогия .таблица { border-collapse: collapse; font-size: var(--tekst-interfeys-font-size); }
+.генеалогия .таблица caption { text-align: left; padding: var(--otstup-4) 0; }
+.генеалогия .таблица th, .генеалогия .таблица td { text-align: left; padding: var(--otstup-4) var(--otstup-8); border-bottom: var(--liniya-volosyanaya) solid var(--tsvet-setka); vertical-align: top; }
+.генеалогия .прочтения { border: var(--liniya-volosyanaya) solid var(--tsvet-setka); margin: var(--otstup-8) 0; padding: var(--otstup-8); min-width: 0; }
+.генеалогия .отчёт li, .генеалогия .семейная li, .генеалогия .лист-ребра li { overflow-wrap: anywhere; }
+.генеалогия .прочтения__пункт { display: flex; gap: var(--otstup-8); align-items: flex-start; min-height: var(--tsel-naimenshaya); margin: var(--otstup-4) 0; }
+.генеалогия .прочтения__пункт input { min-width: 1.25rem; min-height: 1.25rem; margin: 0; }
+.генеалогия .где-я ol { display: flex; flex-wrap: wrap; gap: var(--otstup-4) var(--otstup-8); padding: 0; list-style: none; }
+.генеалогия .где-я a, .генеалогия .где-я [aria-current] { display: inline-flex; align-items: center; justify-content: center; min-height: var(--tsel-naimenshaya); min-width: var(--tsel-naimenshaya); }
+.генеалогия .где-я li + li::before { content: "› "; color: var(--tsvet-chernila-2); }
+.генеалогия .поле-поколений select { min-height: var(--tsel-knopka); font: inherit; }
+@media (max-width: 37.4375em) {
+  .генеалогия .схема__окно { height: 60vh; }
+  /* 03 § 6.5: на узком экране — три столбца: Имя — Мать — Стих */
+  .генеалогия .кол-доп { display: none; }
+  .генеалогия .таблица th, .генеалогия .таблица td { overflow-wrap: anywhere; }
+  .генеалогия .схема__кнопки { position: static; justify-content: flex-end; margin-bottom: var(--otstup-4); }
+}

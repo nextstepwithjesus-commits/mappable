@@ -1,0 +1,734 @@
+0 HEAD
+1 SOUR BIBLIYA_NAGLYADNO
+2 VERS 0.2
+2 NAME Библия наглядно (серый макет)
+2 DATA Библия наглядно, проба данных
+3 DATE 11 OCT 2026
+3 COPR Текст: Синодальный перевод (1876), общественное достояние; электронный текст scrollmapper/bible_databases, MIT. Данные: проба, записи не проверены вторым ключом.
+1 DATE 11 OCT 2026
+1 SUBM @U1@
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+1 LANG Russian
+1 NOTE потомки-аарона. Прочтение: по умолчанию. Отпечаток базы: 1e3f588f28db. Не выгружено как родство: другие прочтения, толкования, тождество «предположительно», ребро Иосифа у Иисуса Христа (связь ASSO).
+0 @U1@ SUBM
+1 NAME Библия наглядно
+0 @S1@ SOUR
+1 TITL Синодальный перевод Библии (1876)
+1 ABBR Синодальный перевод
+1 NOTE Общественное достояние. Электронный текст: scrollmapper/bible_databases, Copyright (c) 2024 Scrollmapper, MIT License.
+0 @I1@ INDI
+1 NAME Аарон
+1 SEX M
+1 REFN p-aaron
+1 NOTE брат Моисея, первосвященник
+1 FAMS @F1@
+1 FAMS @F2@
+1 FAMS @F3@
+1 FAMS @F4@
+0 @I2@ INDI
+1 NAME Надав
+1 SEX M
+1 REFN p-nadav
+1 NOTE сын Аарона
+1 BIRT
+2 FAMC @F1@
+2 SOUR @S1@
+3 PAGE Исх 6:23; Исх 28:1; Чис 3:2; Чис 26:60; 1Пар 6:3; 1Пар 24:1
+3 QUAY 3
+3 NOTE отец; запись o-aaron--nadav
+2 NOTE мать названа, но в эту выгрузку не входит
+1 FAMC @F1@
+2 PEDI birth
+0 @I3@ INDI
+1 NAME Авиуд
+1 SEX M
+1 REFN p-aviud-syn-aarona
+1 NOTE сын Аарона
+1 BIRT
+2 FAMC @F2@
+2 SOUR @S1@
+3 PAGE Исх 6:23; Исх 28:1; Чис 3:2; Чис 26:60; 1Пар 6:3; 1Пар 24:1
+3 QUAY 3
+3 NOTE отец; запись o-aaron--aviud-syn-aarona
+2 NOTE мать названа, но в эту выгрузку не входит
+1 FAMC @F2@
+2 PEDI birth
+0 @I4@ INDI
+1 NAME Елеазар
+1 SEX M
+1 REFN p-eleazar
+1 NOTE сын Аарона, первосвященник
+1 BIRT
+2 FAMC @F3@
+2 SOUR @S1@
+3 PAGE Исх 6:23; Исх 6:25; Исх 28:1; Чис 3:2; Чис 26:60; 1Пар 6:3; 1Пар 24:1
+3 QUAY 3
+3 NOTE отец; запись o-aaron--eleazar
+2 NOTE мать названа, но в эту выгрузку не входит
+1 FAMC @F3@
+2 PEDI birth
+1 FAMS @F5@
+0 @I5@ INDI
+1 NAME Ифамар
+1 SEX M
+1 REFN p-ifamar
+1 NOTE сын Аарона
+1 BIRT
+2 FAMC @F4@
+2 SOUR @S1@
+3 PAGE Исх 6:23; Исх 28:1; Чис 3:2; Чис 26:60; 1Пар 6:3; 1Пар 24:1
+3 QUAY 3
+3 NOTE отец; запись o-aaron--ifamar
+2 NOTE мать названа, но в эту выгрузку не входит
+1 FAMC @F4@
+2 PEDI birth
+0 @I6@ INDI
+1 NAME Финеес
+1 SEX M
+1 REFN p-finees
+1 NOTE сын Елеазара, внук Аарона
+1 BIRT
+2 FAMC @F5@
+2 SOUR @S1@
+3 PAGE Исх 6:25; Чис 25:7; 1Пар 6:4; 1Пар 6:50; Езд 7:5
+3 QUAY 3
+3 NOTE отец; запись o-eleazar--finees
+2 NOTE мать названа, но в эту выгрузку не входит
+1 FAMC @F5@
+2 PEDI birth
+1 FAMS @F6@
+0 @I7@ INDI
+1 NAME Авишуй
+1 NAME Авиуд
+2 TYPE aka
+1 SEX M
+1 REFN p-avishuy
+1 NOTE сын Финееса
+1 BIRT
+2 FAMC @F6@
+2 SOUR @S1@
+3 PAGE 1Пар 6:4; Езд 7:5
+3 QUAY 3
+3 NOTE отец; запись o-finees--avishuy
+2 NOTE мать не названа
+1 FAMC @F6@
+2 PEDI birth
+1 FAMS @F7@
+0 @I8@ INDI
+1 NAME Буккий
+1 SEX M
+1 REFN p-bukkiy
+1 NOTE сын Авишуя
+1 BIRT
+2 FAMC @F7@
+2 SOUR @S1@
+3 PAGE 1Пар 6:5; 1Пар 6:51; Езд 7:4
+3 QUAY 3
+3 NOTE отец; запись o-avishuy--bukkiy
+2 NOTE мать не названа
+1 FAMC @F7@
+2 PEDI birth
+1 FAMS @F8@
+0 @I9@ INDI
+1 NAME Озия
+1 NAME Уззий
+2 TYPE aka
+1 SEX M
+1 REFN p-oziya-syn-bukkiya
+1 NOTE сын Буккия
+1 BIRT
+2 FAMC @F8@
+2 SOUR @S1@
+3 PAGE 1Пар 6:5-6
+3 QUAY 3
+3 NOTE отец; запись o-bukkiy--oziya-syn-bukkiya
+2 NOTE мать не названа
+1 FAMC @F8@
+2 PEDI birth
+1 FAMS @F9@
+0 @I10@ INDI
+1 NAME Зерахия
+1 NAME Захария
+2 TYPE aka
+1 SEX M
+1 REFN p-zerakhiya
+1 NOTE сын Озии, предок Садока
+1 BIRT
+2 FAMC @F9@
+2 SOUR @S1@
+3 PAGE 1Пар 6:6; 1Пар 6:51
+3 QUAY 3
+3 NOTE отец; запись o-oziya-syn-bukkiya--zerakhiya
+2 NOTE мать не названа
+1 FAMC @F9@
+2 PEDI birth
+1 FAMS @F10@
+0 @I11@ INDI
+1 NAME Мераиоф
+1 NAME Марайоф
+2 TYPE aka
+1 SEX M
+1 REFN p-meraiof
+1 NOTE сын Зерахии
+1 BIRT
+2 FAMC @F10@
+2 SOUR @S1@
+3 PAGE 1Пар 6:6-7; 1Пар 6:52; Езд 7:3
+3 QUAY 3
+3 NOTE отец; запись o-zerakhiya--meraiof
+2 NOTE мать не названа
+1 FAMC @F10@
+2 PEDI birth
+1 FAMS @F11@
+0 @I12@ INDI
+1 NAME Амария
+1 SEX M
+1 REFN p-amariya-1par6-7
+1 NOTE сын Мераиофа (1 Пар 6:7)
+1 BIRT
+2 FAMC @F11@
+2 SOUR @S1@
+3 PAGE 1Пар 6:7; 1Пар 6:52
+3 QUAY 3
+3 NOTE отец; запись o-meraiof--amariya-1par6-7
+2 NOTE мать не названа
+1 FAMC @F11@
+2 PEDI birth
+1 FAMS @F12@
+0 @I13@ INDI
+1 NAME Ахитув
+1 SEX M
+1 REFN p-akhitov-1par6-7
+1 NOTE сын Амарии, отец Садока (1 Пар 6:7–8)
+1 BIRT
+2 FAMC @F12@
+2 SOUR @S1@
+3 PAGE 1Пар 6:7-8; 1Пар 6:52
+3 QUAY 3
+3 NOTE отец; запись o-amariya-1par6-7--akhitov-1par6-7
+2 NOTE мать не названа
+1 FAMC @F12@
+2 PEDI birth
+1 FAMS @F13@
+0 @I14@ INDI
+1 NAME Садок
+1 SEX M
+1 REFN p-sadok
+1 NOTE священник при Давиде и Соломоне
+1 BIRT
+2 FAMC @F13@
+2 SOUR @S1@
+3 PAGE 1Пар 6:8; 1Пар 6:53; 2Цар 8:17; 1Пар 18:16
+3 QUAY 3
+3 NOTE отец; запись o-akhitov-1par6-7--sadok
+2 NOTE мать не названа
+1 FAMC @F13@
+2 PEDI birth
+1 FAMS @F14@
+1 FAMS @F15@
+0 @I15@ INDI
+1 NAME Ахимаас
+1 SEX M
+1 NOTE номер записи: p-akhimaas-syn-sadoka
+1 NOTE сын Садока
+1 BIRT
+2 FAMC @F14@
+2 SOUR @S1@
+3 PAGE 2Цар 15:27; 2Цар 15:36; 2Цар 18:19; 1Пар 6:8
+3 QUAY 3
+3 NOTE отец; запись o-sadok--akhimaas-syn-sadoka
+2 NOTE мать не названа
+1 FAMC @F14@
+2 PEDI birth
+1 FAMS @F16@
+0 @I16@ INDI
+1 NAME Азария
+1 SEX M
+1 REFN p-azariya-syn-sadoka
+1 NOTE сын Садока, начальник при Соломоне (3 Цар 4:2)
+1 BIRT
+2 FAMC @F15@
+2 SOUR @S1@
+3 PAGE 3Цар 4:2
+3 QUAY 3
+3 NOTE отец; запись o-sadok--azariya-syn-sadoka
+2 NOTE мать не названа
+1 FAMC @F15@
+2 PEDI birth
+0 @I17@ INDI
+1 NAME Азария
+1 SEX M
+1 REFN p-azariya-1par6-9
+1 NOTE сын Ахимааса (1 Пар 6:9)
+1 BIRT
+2 FAMC @F16@
+2 SOUR @S1@
+3 PAGE 1Пар 6:9
+3 QUAY 3
+3 NOTE отец; запись o-akhimaas-syn-sadoka--azariya-1par6-9
+2 NOTE мать не названа
+1 FAMC @F16@
+2 PEDI birth
+1 FAMS @F17@
+0 @I18@ INDI
+1 NAME Иоанан
+1 SEX M
+1 REFN p-ioanan-syn-azarii
+1 NOTE сын Азарии (1 Пар 6:9–10)
+1 BIRT
+2 FAMC @F17@
+2 SOUR @S1@
+3 PAGE 1Пар 6:9-10
+3 QUAY 3
+3 NOTE отец; запись o-azariya-1par6-9--ioanan-syn-azarii
+2 NOTE мать не названа
+1 FAMC @F17@
+2 PEDI birth
+1 FAMS @F18@
+0 @I19@ INDI
+1 NAME Азария
+1 SEX M
+1 REFN p-azariya-1par6-10
+1 NOTE сын Иоанана, священник в храме Соломона (1 Пар 6:10)
+1 BIRT
+2 FAMC @F18@
+2 SOUR @S1@
+3 PAGE 1Пар 6:10
+3 QUAY 3
+3 NOTE отец; запись o-ioanan-syn-azarii--azariya-1par6-10
+2 NOTE мать не названа
+1 FAMC @F18@
+2 PEDI birth
+1 FAMS @F19@
+1 ASSO @I11@
+2 RELA из сыновей
+2 SOUR @S1@
+3 PAGE Езд 7:3; 1Пар 6:7-10
+3 QUAY 2
+3 NOTE запись o-meraiof--azariya-1par6-10
+0 @I20@ INDI
+1 NAME Амария
+1 SEX M
+1 REFN p-amariya-1par6-11
+1 NOTE сын Азарии (1 Пар 6:11)
+1 BIRT
+2 FAMC @F19@
+2 SOUR @S1@
+3 PAGE 1Пар 6:11; Езд 7:3
+3 QUAY 3
+3 NOTE отец; запись o-azariya-1par6-10--amariya-1par6-11
+2 NOTE мать не названа
+1 FAMC @F19@
+2 PEDI birth
+1 FAMS @F20@
+0 @I21@ INDI
+1 NAME Ахитув
+1 SEX M
+1 REFN p-akhitov-1par6-11
+1 NOTE сын Амарии (1 Пар 6:11–12)
+1 BIRT
+2 FAMC @F20@
+2 SOUR @S1@
+3 PAGE 1Пар 6:11-12; Езд 7:2-3
+3 QUAY 3
+3 NOTE отец; запись o-amariya-1par6-11--akhitov-1par6-11
+2 NOTE мать не названа
+1 FAMC @F20@
+2 PEDI birth
+1 FAMS @F21@
+1 FAMS @F22@
+0 @I22@ INDI
+1 NAME Мераиоф
+1 SEX M
+1 REFN p-meraiof-1par9-11
+1 NOTE сын Ахитува, отец Садока (1 Пар 9:11)
+1 BIRT
+2 FAMC @F21@
+2 SOUR @S1@
+3 PAGE 1Пар 9:11; Неем 11:11
+3 QUAY 2
+3 NOTE отец; уровень: вывод — так выходит, если сравнить места Библии; запись o-akhitov-1par6-11--meraiof-1par9-11
+2 NOTE мать не названа
+1 FAMC @F21@
+2 PEDI birth
+0 @I23@ INDI
+1 NAME Садок
+1 SEX M
+1 REFN p-sadok-1par6-12
+1 NOTE сын Ахитува (1 Пар 6:12)
+1 BIRT
+2 FAMC @F22@
+2 SOUR @S1@
+3 PAGE 1Пар 6:12; Езд 7:2
+3 QUAY 3
+3 NOTE отец; запись o-akhitov-1par6-11--sadok-1par6-12
+2 NOTE мать не названа
+1 FAMC @F22@
+2 PEDI birth
+1 FAMS @F23@
+1 NOTE другое прочтение или другое место текста: отец — Мераиоф (1Пар 9:11; Неем 11:11); в этой выгрузке не родительство
+0 @I24@ INDI
+1 NAME Селлум
+1 NAME Шаллум
+2 TYPE aka
+1 NAME Мешуллам
+2 TYPE aka
+1 SEX M
+1 REFN p-sellum-syn-sadoka
+1 NOTE сын Садока, отец Хелкии
+1 BIRT
+2 FAMC @F23@
+2 SOUR @S1@
+3 PAGE 1Пар 6:12-13; Езд 7:2
+3 QUAY 3
+3 NOTE отец; запись o-sadok-1par6-12--sellum-syn-sadoka
+2 NOTE мать не названа
+1 FAMC @F23@
+2 PEDI birth
+1 FAMS @F24@
+0 @I25@ INDI
+1 NAME Хелкия
+1 SEX M
+1 NOTE номер записи: p-khelkiya-pervosvyashchennik
+1 NOTE первосвященник при Иосии
+1 BIRT
+2 FAMC @F24@
+2 SOUR @S1@
+3 PAGE 1Пар 6:13; Езд 7:1; 1Пар 9:11; Неем 11:11
+3 QUAY 2
+3 NOTE отец; уровень: вывод — так выходит, если сравнить места Библии; запись o-sellum-syn-sadoka--khelkiya-pervosvyashchennik
+2 NOTE мать не названа
+1 FAMC @F24@
+2 PEDI birth
+1 FAMS @F25@
+1 FAMS @F36@
+0 @I26@ INDI
+1 NAME Азария
+1 SEX M
+1 REFN p-azariya-1par6-13
+1 NOTE сын Хелкии, отец Сераии (1 Пар 6:13–14)
+1 BIRT
+2 FAMC @F25@
+2 SOUR @S1@
+3 PAGE 1Пар 6:13-14; Езд 7:1
+3 QUAY 3
+3 NOTE отец; запись o-khelkiya-pervosvyashchennik--azariya-1par6-13
+2 NOTE мать не названа
+1 FAMC @F25@
+2 PEDI birth
+1 FAMS @F26@
+0 @I27@ INDI
+1 NAME Сераия
+1 SEX M
+1 NOTE номер записи: p-seraiya-pervosvyashchennik
+1 NOTE первосвященник при разрушении Иерусалима
+1 BIRT
+2 FAMC @F26@
+2 SOUR @S1@
+3 PAGE 1Пар 6:14; Езд 7:1
+3 QUAY 3
+3 NOTE отец; запись o-azariya-1par6-13--seraiya-pervosvyashchennik
+2 NOTE мать не названа
+1 FAMC @F26@
+2 PEDI birth
+1 FAMS @F27@
+1 FAMS @F34@
+0 @I28@ INDI
+1 NAME Иоседек
+1 SEX M
+1 REFN p-iosedek
+1 NOTE сын Сераии
+1 BIRT
+2 FAMC @F27@
+2 SOUR @S1@
+3 PAGE 1Пар 6:14-15
+3 QUAY 3
+3 NOTE отец; запись o-seraiya-pervosvyashchennik--iosedek
+2 NOTE мать не названа
+1 FAMC @F27@
+2 PEDI birth
+1 FAMS @F28@
+0 @I29@ INDI
+1 NAME Иисус
+1 SEX M
+1 REFN p-iisus-syn-iosedeka
+1 NOTE сын Иоседека, великий иерей
+1 BIRT
+2 FAMC @F28@
+2 SOUR @S1@
+3 PAGE Езд 3:2; Езд 3:8; Агг 1:1; Неем 12:26
+3 QUAY 3
+3 NOTE отец; запись o-iosedek--iisus-syn-iosedeka
+2 NOTE мать не названа
+1 FAMC @F28@
+2 PEDI birth
+1 FAMS @F29@
+0 @I30@ INDI
+1 NAME Иоаким
+1 SEX M
+1 REFN p-ioakim-syn-iisusa
+1 NOTE сын Иисуса, первосвященник
+1 BIRT
+2 FAMC @F29@
+2 SOUR @S1@
+3 PAGE Неем 12:10; Неем 12:26
+3 QUAY 3
+3 NOTE отец; запись o-iisus-syn-iosedeka--ioakim-syn-iisusa
+2 NOTE мать не названа
+1 FAMC @F29@
+2 PEDI birth
+1 FAMS @F30@
+0 @I31@ INDI
+1 NAME Елияшив
+1 NAME Елиашив
+2 TYPE aka
+1 SEX M
+1 NOTE номер записи: p-eliashiv-pervosvyashchennik
+1 NOTE первосвященник (Неем 12:10)
+1 BIRT
+2 FAMC @F30@
+2 SOUR @S1@
+3 PAGE Неем 12:10
+3 QUAY 3
+3 NOTE отец; запись o-ioakim-syn-iisusa--eliashiv-pervosvyashchennik
+2 NOTE мать не названа
+1 FAMC @F30@
+2 PEDI birth
+1 FAMS @F31@
+0 @I32@ INDI
+1 NAME Иоиада
+1 SEX M
+1 NOTE номер записи: p-ioiada-syn-eliashiva
+1 NOTE сын Елияшива (Неем 12:10)
+1 BIRT
+2 FAMC @F31@
+2 SOUR @S1@
+3 PAGE Неем 12:10; Неем 13:28
+3 QUAY 3
+3 NOTE отец; запись o-eliashiv-pervosvyashchennik--ioiada-syn-eliashiva
+2 NOTE мать не названа
+1 FAMC @F31@
+2 PEDI birth
+1 FAMS @F32@
+1 FAMS @F35@
+0 @I33@ INDI
+1 NAME Ионафан
+1 SEX M
+1 REFN p-ionafan-syn-ioiady
+1 NOTE сын Иоиады (Неем 12:11)
+1 BIRT
+2 FAMC @F32@
+2 SOUR @S1@
+3 PAGE Неем 12:11
+3 QUAY 3
+3 NOTE отец; запись o-ioiada-syn-eliashiva--ionafan-syn-ioiady
+2 NOTE мать не названа
+1 FAMC @F32@
+2 PEDI birth
+1 FAMS @F33@
+0 @I34@ INDI
+1 NAME Иаддуй
+1 SEX M
+1 REFN p-iaddua
+1 NOTE сын Ионафана (Неем 12:11)
+1 BIRT
+2 FAMC @F33@
+2 SOUR @S1@
+3 PAGE Неем 12:11
+3 QUAY 3
+3 NOTE отец; запись o-ionafan-syn-ioiady--iaddua
+2 NOTE мать не названа
+1 FAMC @F33@
+2 PEDI birth
+0 @I35@ INDI
+1 NAME Ездра
+1 SEX M
+1 REFN p-ezdra
+1 NOTE священник и книжник
+1 BIRT
+2 FAMC @F34@
+2 SOUR @S1@
+3 PAGE Езд 7:1
+3 QUAY 2
+3 NOTE отец; уровень: вывод — так выходит, если сравнить места Библии; запись o-seraiya-pervosvyashchennik--ezdra
+2 NOTE мать не названа
+1 FAMC @F34@
+2 PEDI birth
+0 @I36@ INDI
+1 NAME Сын Иоиады
+2 TYPE описание
+2 NOTE имя в Библии не названо
+1 SEX M
+1 NOTE номер записи: p-syn-ioiady-zyat-sanavallata
+1 NOTE зять Санаваллата Хоронита (Неем 13:28)
+1 BIRT
+2 FAMC @F35@
+2 SOUR @S1@
+3 PAGE Неем 13:28
+3 QUAY 3
+3 NOTE отец; запись o-ioiada-syn-eliashiva--syn-ioiady-zyat-sanavallata
+2 NOTE мать не названа
+1 FAMC @F35@
+2 PEDI birth
+0 @I37@ INDI
+1 NAME Сераия
+1 SEX M
+1 NOTE номер записи: p-seraiya-syn-khelkii-neem11
+1 NOTE сын Хелкии, начальствующий в доме Божием (Неем 11:11)
+1 BIRT
+2 FAMC @F36@
+2 SOUR @S1@
+3 PAGE Неем 11:11
+3 QUAY 2
+3 NOTE отец; уровень: вывод — так выходит, если сравнить места Библии; запись o-khelkiya-pervosvyashchennik--seraiya-syn-khelkii-neem11
+2 NOTE мать не названа
+1 FAMC @F36@
+2 PEDI birth
+0 @F1@ FAM
+1 HUSB @I1@
+1 CHIL @I2@
+1 NOTE мать в эту выгрузку не входит
+0 @F2@ FAM
+1 HUSB @I1@
+1 CHIL @I3@
+1 NOTE мать в эту выгрузку не входит
+0 @F3@ FAM
+1 HUSB @I1@
+1 CHIL @I4@
+1 NOTE мать в эту выгрузку не входит
+0 @F4@ FAM
+1 HUSB @I1@
+1 CHIL @I5@
+1 NOTE мать в эту выгрузку не входит
+0 @F5@ FAM
+1 HUSB @I4@
+1 CHIL @I6@
+1 NOTE мать в эту выгрузку не входит
+0 @F6@ FAM
+1 HUSB @I6@
+1 CHIL @I7@
+1 NOTE мать не названа
+0 @F7@ FAM
+1 HUSB @I7@
+1 CHIL @I8@
+1 NOTE мать не названа
+0 @F8@ FAM
+1 HUSB @I8@
+1 CHIL @I9@
+1 NOTE мать не названа
+0 @F9@ FAM
+1 HUSB @I9@
+1 CHIL @I10@
+1 NOTE мать не названа
+0 @F10@ FAM
+1 HUSB @I10@
+1 CHIL @I11@
+1 NOTE мать не названа
+0 @F11@ FAM
+1 HUSB @I11@
+1 CHIL @I12@
+1 NOTE мать не названа
+0 @F12@ FAM
+1 HUSB @I12@
+1 CHIL @I13@
+1 NOTE мать не названа
+0 @F13@ FAM
+1 HUSB @I13@
+1 CHIL @I14@
+1 NOTE мать не названа
+0 @F14@ FAM
+1 HUSB @I14@
+1 CHIL @I15@
+1 NOTE мать не названа
+0 @F15@ FAM
+1 HUSB @I14@
+1 CHIL @I16@
+1 NOTE мать не названа
+0 @F16@ FAM
+1 HUSB @I15@
+1 CHIL @I17@
+1 NOTE мать не названа
+0 @F17@ FAM
+1 HUSB @I17@
+1 CHIL @I18@
+1 NOTE мать не названа
+0 @F18@ FAM
+1 HUSB @I18@
+1 CHIL @I19@
+1 NOTE мать не названа
+0 @F19@ FAM
+1 HUSB @I19@
+1 CHIL @I20@
+1 NOTE мать не названа
+0 @F20@ FAM
+1 HUSB @I20@
+1 CHIL @I21@
+1 NOTE мать не названа
+0 @F21@ FAM
+1 HUSB @I21@
+1 CHIL @I22@
+1 NOTE мать не названа
+0 @F22@ FAM
+1 HUSB @I21@
+1 CHIL @I23@
+1 NOTE мать не названа
+0 @F23@ FAM
+1 HUSB @I23@
+1 CHIL @I24@
+1 NOTE мать не названа
+0 @F24@ FAM
+1 HUSB @I24@
+1 CHIL @I25@
+1 NOTE мать не названа
+0 @F25@ FAM
+1 HUSB @I25@
+1 CHIL @I26@
+1 NOTE мать не названа
+0 @F26@ FAM
+1 HUSB @I26@
+1 CHIL @I27@
+1 NOTE мать не названа
+0 @F27@ FAM
+1 HUSB @I27@
+1 CHIL @I28@
+1 NOTE мать не названа
+0 @F28@ FAM
+1 HUSB @I28@
+1 CHIL @I29@
+1 NOTE мать не названа
+0 @F29@ FAM
+1 HUSB @I29@
+1 CHIL @I30@
+1 NOTE мать не названа
+0 @F30@ FAM
+1 HUSB @I30@
+1 CHIL @I31@
+1 NOTE мать не названа
+0 @F31@ FAM
+1 HUSB @I31@
+1 CHIL @I32@
+1 NOTE мать не названа
+0 @F32@ FAM
+1 HUSB @I32@
+1 CHIL @I33@
+1 NOTE мать не названа
+0 @F33@ FAM
+1 HUSB @I33@
+1 CHIL @I34@
+1 NOTE мать не названа
+0 @F34@ FAM
+1 HUSB @I27@
+1 CHIL @I35@
+1 NOTE мать не названа
+0 @F35@ FAM
+1 HUSB @I32@
+1 CHIL @I36@
+1 NOTE мать не названа
+0 @F36@ FAM
+1 HUSB @I25@
+1 CHIL @I37@
+1 NOTE мать не названа
+0 TRLR

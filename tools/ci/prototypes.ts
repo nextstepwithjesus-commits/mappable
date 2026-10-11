@@ -30,7 +30,9 @@ export const PAGES: { dir: string; page: string; q: string; stand?: boolean; spa
   ...['лист', 'главная', 'каталог', 'история', 'карточка', 'настройки'].map((s) => ({ dir: 'prototypes/лист-образец', page: `${s}.html`, q: 'panel=0' })),
   { dir: 'prototypes/стенд-токенов', page: 'index.html', q: '', stand: true },
   // адреса с выбором (уровень 2) и со вторым слоем — по рецензии доступности пакета 1 (№ 3, П-5)
-  ...['', 'kniga/byt', 'kniga/mk', 'kniga/iak', 'istoriya/e-noy-i-potop', 'istoriya/e-noy-i-potop?layer=2', 'istoriya/e-pyat-khlebov-i-dve-ryby?view=sinopsis', 'istoriya/e-savl-na-puti-v-damask', 'istoriya/e-david-i-goliaf', 'kartochka/p-noy', 'kniga/byt/7', 'paralleli/teksty', 'vremya?view=lives', 'vremya?view=lives&sel=p-noy', 'vremya?view=lives&sel=p-noy&layer=2', 'vremya?view=events&sel=e-noy-i-potop', 'vremya?view=rulers', 'vremya?view=rulers&sel=p-menaim&layer=2'].map((page) => {
+  ...['', 'kniga/byt', 'kniga/mk', 'kniga/iak', 'istoriya/e-noy-i-potop', 'istoriya/e-noy-i-potop?layer=2', 'istoriya/e-pyat-khlebov-i-dve-ryby?view=sinopsis', 'istoriya/e-savl-na-puti-v-damask', 'istoriya/e-david-i-goliaf', 'kartochka/p-noy', 'kniga/byt/7', 'paralleli/teksty', 'vremya?view=lives', 'vremya?view=lives&sel=p-noy', 'vremya?view=lives&sel=p-noy&layer=2', 'vremya?view=events&sel=e-noy-i-potop', 'vremya?view=rulers', 'vremya?view=rulers&sel=p-menaim&layer=2',
+    // Генеалогия — серый макет шага 2.0 (10 § 4.2.1): входы, «Семья» со схемой и двойником, лист рёбер, отчёт
+    'genealogiya', 'genealogiya?p=iakov', 'genealogiya?p=iakov&edge=up:iakov', 'genealogiya?p=david&show=predki'].map((page) => {
     const [path, q = ''] = page.split('?');
     return { dir: SPA, page: path, q: [q, 'age=null'].filter(Boolean).join('&'), spa: true };
   }),

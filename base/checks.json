@@ -30525,6 +30525,28 @@
    ]
   },
   {
+   "key": "place:l-chermnoe-more",
+   "by": "geography-reviewer (второй ключ, места пакета 2, сверка правок)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "8f67531d951bfa97001732b671c1012d07f9bff3324cede8fbe379a0e941bae0",
+   "inputs": {
+    "verses": [
+     "Исх 13:18",
+     "Исх 15:22",
+     "Исх 15:4"
+    ],
+    "text": "26f86650ac94fb6b55c25aa2ba2f058bfd2dd6fbe0b57ae0b4442bf3414a43b6",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-openbible-geo": "github.com/openbibleinfo/Bible-Geocoding-Data, коммит 7eb18a5",
+     "src-synodal": "tools/bible/synodal.tsv",
+     "src-wikidata": "точки — по номерам Q из сводки OpenBible 7eb18a5; своей выгрузки нет"
+    }
+   }
+  },
+  {
    "key": "place:l-chermnoe-more-stan",
    "by": "geography-reviewer (второй ключ, места пакета 2, повторно)",
    "kind": "agent",
@@ -30841,6 +30863,26 @@
      }
     }
    ]
+  },
+  {
+   "key": "place:l-dubrava-mamre",
+   "by": "geography-reviewer (второй ключ, места пакета 2, сверка правок)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "ac0e8bf0a6894020360746d14cddc0f6491cc7eecc6be5caad0fb59c8934e452",
+   "inputs": {
+    "verses": [
+     "Быт 13:18",
+     "Быт 14:13",
+     "Быт 18:1"
+    ],
+    "text": "733402d9cafe52fd478185f715e6d000b38435eb3dee8ae681c827bac340f325",
+    "brackets": "b9964424933b3b7b3d8ea9272136d436cf30e565e9a16c1f0058a4e8c252de17",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
   },
   {
    "key": "place:l-dubrava-more",
@@ -31431,7 +31473,7 @@
   },
   {
    "key": "place:l-gedera",
-   "by": "geography-reviewer (второй ключ, места пакета 2, повторно)",
+   "by": "bibleist-reviewer (второй ключ, места)",
    "kind": "agent",
    "at": "2026-10-11",
    "hash": "4e5ff76d18bef6d6aa937083b99fd3d6e6e474b42307b7d72e5afa2035fe3099",
@@ -31448,7 +31490,29 @@
      "src-synodal": "tools/bible/synodal.tsv",
      "src-wikidata": "точки — по номерам Q из сводки OpenBible 7eb18a5; своей выгрузки нет"
     }
-   }
+   },
+   "history": [
+    {
+     "by": "geography-reviewer (второй ключ, места пакета 2, повторно)",
+     "kind": "agent",
+     "at": "2026-10-11",
+     "hash": "4e5ff76d18bef6d6aa937083b99fd3d6e6e474b42307b7d72e5afa2035fe3099",
+     "inputs": {
+      "verses": [
+       "Нав 15:36"
+      ],
+      "text": "356719a53d73668d442e95f1fbbe4558d306ffca2c1f74b8dddc489613c85413",
+      "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-geonames": "точки — по номерам из сводки OpenBible 7eb18a5; своей выгрузки нет",
+       "src-openbible-geo": "github.com/openbibleinfo/Bible-Geocoding-Data, коммит 7eb18a5",
+       "src-synodal": "tools/bible/synodal.tsv",
+       "src-wikidata": "точки — по номерам Q из сводки OpenBible 7eb18a5; своей выгрузки нет"
+      }
+     }
+    }
+   ]
   },
   {
    "key": "place:l-gederof",
@@ -31894,6 +31958,51 @@
    }
   },
   {
+   "key": "place:l-kades",
+   "by": "geography-reviewer (второй ключ, места пакета 2, сверка правок)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "d9f8eb8cfbe206490c3c9652a5e6a506675b7571ba5701ebd2a77a78a783ad58",
+   "inputs": {
+    "verses": [
+     "Быт 14:7",
+     "Быт 16:14",
+     "Быт 20:1",
+     "Втор 32:51",
+     "Чис 20:1",
+     "Чис 33:37"
+    ],
+    "text": "d09214c144793d03b3f8ff4d82cf31f28c0f8924f3a4796695fab3b48eb2b7f6",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-openbible-geo": "github.com/openbibleinfo/Bible-Geocoding-Data, коммит 7eb18a5",
+     "src-synodal": "tools/bible/synodal.tsv",
+     "src-wikidata": "точки — по номерам Q из сводки OpenBible 7eb18a5; своей выгрузки нет"
+    }
+   }
+  },
+  {
+   "key": "place:l-kades-varni",
+   "by": "geography-reviewer (второй ключ, места пакета 2, сверка правок)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "a0386648a3e41c3a8f277903876cbbcd82a84a5533216efe6bdd40902994bc99",
+   "inputs": {
+    "verses": [
+     "Нав 15:3",
+     "Чис 13:27",
+     "Чис 32:8"
+    ],
+    "text": "27f3c5ecd79a52e131d12a67aa1e74d6247020bbebe81a41c00b660da6f9927a",
+    "brackets": "5215b961684fd881cc7ea6f6dc5049a875c87088038a9ecb412c7cb4ac6afcf2",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
    "key": "place:l-karmil",
    "by": "geography-reviewer (второй ключ, места пакета 2, повторно)",
    "kind": "agent",
@@ -32174,6 +32283,33 @@
     ],
     "text": "a81991a97dc9841ca8932b687f033eb8dec99f9b3f21e03a8cc0222c1ce77ceb",
     "brackets": "5215b961684fd881cc7ea6f6dc5049a875c87088038a9ecb412c7cb4ac6afcf2",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-openbible-geo": "github.com/openbibleinfo/Bible-Geocoding-Data, коммит 7eb18a5",
+     "src-synodal": "tools/bible/synodal.tsv",
+     "src-wikidata": "точки — по номерам Q из сводки OpenBible 7eb18a5; своей выгрузки нет"
+    }
+   }
+  },
+  {
+   "key": "place:l-khevron",
+   "by": "geography-reviewer (второй ключ, места пакета 2, сверка правок)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "890136a011f7dbbf0b6aaeeb46bb7c539c6d8af6de2927caebb3a6bf583e6f8d",
+   "inputs": {
+    "verses": [
+     "Быт 13:18",
+     "Быт 23:17",
+     "Быт 23:19",
+     "Быт 23:2",
+     "Быт 25:9",
+     "Быт 35:27",
+     "Нав 15:13",
+     "Нав 15:54"
+    ],
+    "text": "00d8102b383dd567fee9bdc0e1b11558cd20a3e9e092de9460aefbf5fd850598",
+    "brackets": "b00920363accdcd5e15013354df1fa71161317e56d5072b010ed2aeae5278ba5",
     "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "sources": {
      "src-openbible-geo": "github.com/openbibleinfo/Bible-Geocoding-Data, коммит 7eb18a5",
@@ -33007,6 +33143,24 @@
    }
   },
   {
+   "key": "place:l-pustynya-efam",
+   "by": "geography-reviewer (второй ключ, места пакета 2, сверка правок)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "36b1d0509d817e4b6747309a9b7da87d6a5e9a26c9a371596c609cf03d0116d1",
+   "inputs": {
+    "verses": [
+     "Чис 33:8"
+    ],
+    "text": "b4395b6cbcac23bcd5cd43cf66191ad93b593237cda39c58846c7a2e3be52b9c",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
    "key": "place:l-pustynya-faran",
    "by": "geography-reviewer (второй ключ, места пакета 2, повторно)",
    "kind": "agent",
@@ -33018,6 +33172,27 @@
     ],
     "text": "2c51706e30cc97683abd2544af8f3554f2f7510201534e9b8637f612978ec0df",
     "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-openbible-geo": "github.com/openbibleinfo/Bible-Geocoding-Data, коммит 7eb18a5",
+     "src-synodal": "tools/bible/synodal.tsv",
+     "src-wikidata": "точки — по номерам Q из сводки OpenBible 7eb18a5; своей выгрузки нет"
+    }
+   }
+  },
+  {
+   "key": "place:l-pustynya-sin-kades",
+   "by": "geography-reviewer (второй ключ, места пакета 2, сверка правок)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "831050bb3c139edf732f902104de13c419717fb2fff36c1d002e4a810b7d7689",
+   "inputs": {
+    "verses": [
+     "Нав 15:1",
+     "Чис 33:36"
+    ],
+    "text": "d0dbbcf2df5a235b5847b81a0580b243b29d3ec480ad67c7dbe818e812c3b62b",
+    "brackets": "2f7677629c850fe1fda4cc85f50c1cb8dd6ca20a446429da21c57d3cca72b16d",
     "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "sources": {
      "src-openbible-geo": "github.com/openbibleinfo/Bible-Geocoding-Data, коммит 7eb18a5",
@@ -33046,6 +33221,24 @@
      "src-openbible-geo": "github.com/openbibleinfo/Bible-Geocoding-Data, коммит 7eb18a5",
      "src-synodal": "tools/bible/synodal.tsv",
      "src-wikidata": "точки — по номерам Q из сводки OpenBible 7eb18a5; своей выгрузки нет"
+    }
+   }
+  },
+  {
+   "key": "place:l-pustynya-virsavii",
+   "by": "geography-reviewer (второй ключ, места пакета 2, сверка правок)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "4317026ecd2f89751000593ab0c17d39ae20c2c713e6e9b6c715e1b90582474b",
+   "inputs": {
+    "verses": [
+     "Быт 21:14"
+    ],
+    "text": "754b40b9d7a365784a13b40b48e91dd853edb3aaa0e8e51d191c3b9226788c67",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
     }
    }
   },
@@ -33916,6 +34109,34 @@
    }
   },
   {
+   "key": "place:l-virsaviya",
+   "by": "bibleist-reviewer (второй ключ, места)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "c26b2f1206f7f1765a17acf7873acbf572eed2d86512fd65ae80ae02d1e76f72",
+   "inputs": {
+    "verses": [
+     "3Цар 19:3",
+     "Быт 21:31",
+     "Быт 21:32",
+     "Быт 21:33",
+     "Быт 22:19",
+     "Быт 26:23",
+     "Быт 26:25",
+     "Быт 26:33",
+     "Нав 15:28"
+    ],
+    "text": "353c9265a8013cd1cdd023d8c99f478743cecf3f53c0753de5fbebf75d13428c",
+    "brackets": "faa611f242698dad37e8f21f4141f0e4e8b0f948adec01fb337f7727d32db26a",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-openbible-geo": "github.com/openbibleinfo/Bible-Geocoding-Data, коммит 7eb18a5",
+     "src-synodal": "tools/bible/synodal.tsv",
+     "src-wikidata": "точки — по номерам Q из сводки OpenBible 7eb18a5; своей выгрузки нет"
+    }
+   }
+  },
+  {
    "key": "place:l-yuta",
    "by": "geography-reviewer (второй ключ, места пакета 2, повторно)",
    "kind": "agent",
@@ -34242,6 +34463,24 @@
      "Быт 20:1"
     ],
     "text": "b0fe0032d5fc5937b7e71f724a60ab939339f3e6f9fd1a9a962b97975b820626",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "placemention:lm-113",
+   "by": "geography-reviewer (второй ключ, места пакета 2, сверка правок)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "9b7ecb6b7b66353c87f98153155e3492db3f6c6866dec919999a0e420909402b",
+   "inputs": {
+    "verses": [
+     "Быт 21:14"
+    ],
+    "text": "754b40b9d7a365784a13b40b48e91dd853edb3aaa0e8e51d191c3b9226788c67",
     "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "sources": {
@@ -34910,6 +35149,24 @@
     ],
     "text": "d29258a1ae0891250736b09ea84518dfae1e1b7f26e43ea240e1f27d4b3d000c",
     "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "placemention:lm-16",
+   "by": "geography-reviewer (второй ключ, места пакета 2, сверка правок)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "469dd212da700e815dc6f60aba43ecc74d695ed546fb87d50f543a93d56d25df",
+   "inputs": {
+    "verses": [
+     "Быт 12:8"
+    ],
+    "text": "e7ee5b2bd6c98775ce80841d093ff4533546982d2f166d10f6c254f99d3d9827",
+    "brackets": "346f6d73ed2f72ab11b4b7f4ec9bb6960a5a19aa3c275bf533f81f02240e31c8",
     "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "sources": {
      "src-synodal": "tools/bible/synodal.tsv"
@@ -36214,6 +36471,24 @@
    }
   },
   {
+   "key": "placemention:lm-325",
+   "by": "geography-reviewer (второй ключ, места пакета 2, сверка правок)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "f57a912483a7a386fd260ae3076fefd056a79e7727ad7f82e4f928d3b97f2d63",
+   "inputs": {
+    "verses": [
+     "Чис 33:36"
+    ],
+    "text": "a5385b42fb07e630337588b57e2cae3e1b6182aa89a343cfeeabfcc15f9b963f",
+    "brackets": "2f7677629c850fe1fda4cc85f50c1cb8dd6ca20a446429da21c57d3cca72b16d",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
    "key": "placemention:lm-329",
    "by": "geography-reviewer (второй ключ, места пакета 2, повторно)",
    "kind": "agent",
@@ -36441,6 +36716,24 @@
      "Чис 33:47"
     ],
     "text": "35835b4fd583d3100864f76388aa321b1a20c4aea7b1c47ea402d69cb598798c",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "placemention:lm-35",
+   "by": "geography-reviewer (второй ключ, места пакета 2, сверка правок)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "06c0ac4f9eaa2402cf8500f9abd3f3981edef50f447fc6388f7d6d74a7750a41",
+   "inputs": {
+    "verses": [
+     "Быт 13:18"
+    ],
+    "text": "c881011ab57f01ce6b96ed9e8253701f9c9d66478241d17acb92ec1d45fb22b9",
     "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "sources": {
@@ -37017,6 +37310,24 @@
      "Нав 13:32"
     ],
     "text": "227349fcb00fc4fbcd7aa4a651fa9830645c13fb6e76e19cd188fea1a3626667",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "placemention:lm-452",
+   "by": "geography-reviewer (второй ключ, места пакета 2, сверка правок)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "5277f532cea01f787e26d4b4708eebdbef4b06b9729d2aad71306b6d197fba50",
+   "inputs": {
+    "verses": [
+     "Нав 15:1"
+    ],
+    "text": "f5b7f11cd0fff730bd6fe2716577ba98afbe2e4c505108f3d8be4d265d29c639",
     "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "sources": {
@@ -38558,6 +38869,42 @@
    }
   },
   {
+   "key": "placemention:lm-672",
+   "by": "geography-reviewer (второй ключ, места пакета 2, сверка правок)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "985e49ecd97b65e16ef9c724ea2af2b6b8065bb5f0e471c90641d6e1f2df6c4b",
+   "inputs": {
+    "verses": [
+     "Быт 14:13"
+    ],
+    "text": "baa8f18d3aef7d895eb64cb8319bab4a96779f1086f39adaf898ecf10bbad1ad",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "placemention:lm-673",
+   "by": "geography-reviewer (второй ключ, места пакета 2, сверка правок)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "2eca050f573b55f95b5d4502cffaef1d02d0c83faee5e60b4a34f01c40bdd2f1",
+   "inputs": {
+    "verses": [
+     "Быт 35:27"
+    ],
+    "text": "1f225b4b9a6897385a9b1335a064a067db17c0631b70b7bd0fb78d6e695b426c",
+    "brackets": "4c6f935fbd611ffb843166227717a8660fa0a4633bc329fa508773e83e4895eb",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
    "key": "placemention:lm-7",
    "by": "geography-reviewer (второй ключ, места пакета 2, повторно)",
    "kind": "agent",
@@ -38803,6 +39150,24 @@
     ],
     "text": "09db5d5710b4f81a659ac214a40b73d1cfbc3209a648f1ff9d79b31c96217853",
     "brackets": "3ed6e0e39e5300aeb40ce46ec51c3be856149df246d31ad59b3eb61b519dcda3",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "placemention:lm-92",
+   "by": "geography-reviewer (второй ключ, места пакета 2, сверка правок)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "4ef62526d6067402b0873ab9999cfdbcc94ddfba5eed73477739b28e49c83b1c",
+   "inputs": {
+    "verses": [
+     "Быт 18:1"
+    ],
+    "text": "292ea2533f2840f2c2a66fc4ed5704a414d215a1d7b26ae81bdd8340c0fa609f",
+    "brackets": "b9964424933b3b7b3d8ea9272136d436cf30e565e9a16c1f0058a4e8c252de17",
     "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "sources": {
      "src-synodal": "tools/bible/synodal.tsv"
@@ -39137,6 +39502,56 @@
     ],
     "text": "62c7eb5935b59b1d432d91e0a428dd94a09d0b84b911a650086f4b9cf19c6f7b",
     "brackets": "84f421202443fc1c974c754bbe4ac88c86c90951f3531249366bea2ddcddedb3",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "route:rt-put-avrama",
+   "by": "geography-reviewer (второй ключ, места пакета 2, сверка правок)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "189236d1017c2f072268761fd3bfdbcf7f9f0c28ad17a9abc776a026c77977f1",
+   "inputs": {
+    "verses": [
+     "Быт 11:31",
+     "Быт 12:10",
+     "Быт 12:5",
+     "Быт 12:6",
+     "Быт 12:7",
+     "Быт 12:8",
+     "Быт 12:9",
+     "Быт 13:1",
+     "Быт 13:10",
+     "Быт 13:11",
+     "Быт 13:12",
+     "Быт 13:13",
+     "Быт 13:14",
+     "Быт 13:15",
+     "Быт 13:16",
+     "Быт 13:17",
+     "Быт 13:18",
+     "Быт 13:2",
+     "Быт 13:3",
+     "Быт 13:4",
+     "Быт 13:5",
+     "Быт 13:6",
+     "Быт 13:7",
+     "Быт 13:8",
+     "Быт 13:9",
+     "Быт 14:14",
+     "Быт 14:15",
+     "Быт 20:1",
+     "Быт 21:31",
+     "Быт 22:19",
+     "Быт 22:2",
+     "Быт 22:3",
+     "Быт 23:2"
+    ],
+    "text": "fb1e77ff9ce2e20768ea04ee0af6836ae15019329f1130b487c105d2e4dd7330",
+    "brackets": "ab32c92475ba259e41882bfad8db82e6b26e33446e5af466e9c9f4f446c5938f",
     "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "sources": {
      "src-synodal": "tools/bible/synodal.tsv"

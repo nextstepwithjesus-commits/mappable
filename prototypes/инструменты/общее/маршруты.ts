@@ -8,7 +8,7 @@ import { BOOKS } from '../../../core/books.ts';
 
 export type ScreenId =
   | 'glavnaya' | 'kniga' | 'glava' | 'istoriya' | 'kartochka' | 'vremya'
-  | 'istorii' | 'paralleli' | 'sravnenie' | 'poisk' | 'nastroyki';
+  | 'istorii' | 'paralleli' | 'sravnenie' | 'poisk' | 'nastroyki' | 'genealogiya';
 
 /** Уровни 08 § 6.5: 1 экран, 2 выбор и лист, 3 вид (4 поверх и 5 настройка в адрес не пишутся). */
 export type Level = 1 | 2 | 3;
@@ -49,6 +49,20 @@ export const PARAMS: Partial<Record<ScreenId, Spec[]>> = {
     { key: 'kniga', level: 3 },
   ],
   istorii: [{ key: 'f', level: 3 }],
+  // 03 § 22.2 и шаг 2.0: `p` — лицо, `vhod` — вход § 2.3 (экран); `show` — вид, `read` — прочтения, `open` / `zakr` —
+  // раскрытое сверх входа и свёрнутое из входа, `up` / `down` — поколения (вид); `sel` — выбор, `edge` — лист ребра (уровень 2)
+  genealogiya: [
+    { key: 'p', level: 1 },
+    { key: 'vhod', level: 1 },
+    { key: 'show', level: 3 },
+    { key: 'read', level: 3 },
+    { key: 'open', level: 3 },
+    { key: 'zakr', level: 3 },
+    { key: 'up', level: 3 },
+    { key: 'down', level: 3 },
+    { key: 'sel', level: 2 },
+    { key: 'edge', level: 2 },
+  ],
   sravnenie: [{ key: 'a', level: 1 }, { key: 'b', level: 1 }],
   poisk: [{ key: 'q', level: 1 }],
 };
@@ -89,7 +103,7 @@ export function parseUrl(url: string, base = '/'): Route | null {
     return null;
   }
   if ((a === 'istoriya' || a === 'kartochka' || a === 'paralleli') && x && ID_RE.test(x) && seg.length === 2) return r(a, { id: x });
-  for (const s of ['vremya', 'istorii', 'sravnenie', 'poisk', 'nastroyki'] as ScreenId[]) if (a === s && seg.length === 1) return r(s);
+  for (const s of ['vremya', 'istorii', 'sravnenie', 'poisk', 'nastroyki', 'genealogiya'] as ScreenId[]) if (a === s && seg.length === 1) return r(s);
   return null;
 }
 

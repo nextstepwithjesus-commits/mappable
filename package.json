@@ -39,7 +39,7 @@
     "typecheck:app": "tsc --noEmit -p core && tsc --noEmit -p tsconfig.base-app.json && tsc --noEmit -p prototypes/инструменты",
     "test:app": "vitest run tests/core-*.test.ts tests/pack-*.test.ts tests/tokens.test.ts tests/prototypes-*.test.ts",
     "ci:prototypes": "tsx tools/ci/prototypes.ts",
-    "proto:data": "tsx tools/pack/build.ts --probe && tsx prototypes/инструменты/данные/собрать.ts",
+    "proto:data": "tsx tools/pack/build.ts --probe && tsx prototypes/инструменты/данные/собрать.ts && tsx prototypes/инструменты/данные/генеалогия.ts",
     "proto:build": "npm run -s proto:data && vite build --config prototypes/инструменты/vite.config.ts",
     "proto:dev": "vite --config prototypes/инструменты/vite.config.ts",
     "proto:test": "vitest run --config prototypes/инструменты/vite.config.ts",

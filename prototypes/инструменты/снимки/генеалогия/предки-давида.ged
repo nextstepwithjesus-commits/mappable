@@ -1,0 +1,880 @@
+0 HEAD
+1 SOUR BIBLIYA_NAGLYADNO
+2 VERS 0.2
+2 NAME Библия наглядно (серый макет)
+2 DATA Библия наглядно, проба данных
+3 DATE 11 OCT 2026
+3 COPR Текст: Синодальный перевод (1876), общественное достояние; электронный текст scrollmapper/bible_databases, MIT. Данные: проба, записи не проверены вторым ключом.
+1 DATE 11 OCT 2026
+1 SUBM @U1@
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+1 LANG Russian
+1 NOTE предки-давида. Прочтение: по умолчанию. Отпечаток базы: 1e3f588f28db. Не выгружено как родство: другие прочтения, толкования, тождество «предположительно», ребро Иосифа у Иисуса Христа (связь ASSO).
+0 @U1@ SUBM
+1 NAME Библия наглядно
+0 @S1@ SOUR
+1 TITL Синодальный перевод Библии (1876)
+1 ABBR Синодальный перевод
+1 NOTE Общественное достояние. Электронный текст: scrollmapper/bible_databases, Copyright (c) 2024 Scrollmapper, MIT License.
+0 @I1@ INDI
+1 NAME Адам
+1 SEX M
+1 REFN p-adam
+1 FAMS @F1@
+0 @I2@ INDI
+1 NAME Ева
+1 SEX F
+1 REFN p-eva
+1 FAMS @F1@
+0 @I3@ INDI
+1 NAME Сиф
+1 SEX M
+1 REFN p-sif
+1 BIRT
+2 FAMC @F1@
+2 SOUR @S1@
+3 PAGE Быт 4:25; Быт 5:3; 1Пар 1:1; Лк 3:38
+3 QUAY 3
+3 NOTE отец и мать; запись o-adam--sif
+1 FAMC @F1@
+2 PEDI birth
+1 FAMS @F2@
+0 @I4@ INDI
+1 NAME Енос
+1 SEX M
+1 REFN p-enos
+1 BIRT
+2 FAMC @F2@
+2 SOUR @S1@
+3 PAGE Быт 4:26; Быт 5:6; 1Пар 1:1; Лк 3:38
+3 QUAY 3
+3 NOTE отец; запись o-sif--enos
+2 NOTE мать не названа
+1 FAMC @F2@
+2 PEDI birth
+1 FAMS @F3@
+0 @I5@ INDI
+1 NAME Каинан
+1 SEX M
+1 REFN p-kainan
+1 NOTE сын Еноса
+1 BIRT
+2 FAMC @F3@
+2 SOUR @S1@
+3 PAGE Быт 5:9; 1Пар 1:2; Лк 3:37-38
+3 QUAY 3
+3 NOTE отец; запись o-enos--kainan
+2 NOTE мать не названа
+1 FAMC @F3@
+2 PEDI birth
+1 FAMS @F4@
+0 @I6@ INDI
+1 NAME Малелеил
+1 SEX M
+1 REFN p-maleleil
+1 BIRT
+2 FAMC @F4@
+2 SOUR @S1@
+3 PAGE Быт 5:12; 1Пар 1:2; Лк 3:37
+3 QUAY 3
+3 NOTE отец; запись o-kainan--maleleil
+2 NOTE мать не названа
+1 FAMC @F4@
+2 PEDI birth
+1 FAMS @F5@
+0 @I7@ INDI
+1 NAME Иаред
+1 SEX M
+1 REFN p-iared
+1 BIRT
+2 FAMC @F5@
+2 SOUR @S1@
+3 PAGE Быт 5:15; 1Пар 1:2; Лк 3:37
+3 QUAY 3
+3 NOTE отец; запись o-maleleil--iared
+2 NOTE мать не названа
+1 FAMC @F5@
+2 PEDI birth
+1 FAMS @F6@
+0 @I8@ INDI
+1 NAME Енох
+1 SEX M
+1 REFN p-enokh
+1 NOTE сын Иареда
+1 BIRT
+2 FAMC @F6@
+2 SOUR @S1@
+3 PAGE Быт 5:18; 1Пар 1:3; Лк 3:37
+3 QUAY 3
+3 NOTE отец; запись o-iared--enokh
+2 NOTE мать не названа
+1 FAMC @F6@
+2 PEDI birth
+1 FAMS @F7@
+0 @I9@ INDI
+1 NAME Мафусал
+1 SEX M
+1 REFN p-mafusal
+1 NOTE сын Еноха
+1 BIRT
+2 FAMC @F7@
+2 SOUR @S1@
+3 PAGE Быт 5:21; 1Пар 1:3; Лк 3:37
+3 QUAY 3
+3 NOTE отец; запись o-enokh--mafusal
+2 NOTE мать не названа
+1 FAMC @F7@
+2 PEDI birth
+1 FAMS @F8@
+0 @I10@ INDI
+1 NAME Ламех
+1 SEX M
+1 REFN p-lamekh
+1 NOTE сын Мафусала, отец Ноя
+1 BIRT
+2 FAMC @F8@
+2 SOUR @S1@
+3 PAGE Быт 5:25; 1Пар 1:3; Лк 3:36-37
+3 QUAY 3
+3 NOTE отец; запись o-mafusal--lamekh
+2 NOTE мать не названа
+1 FAMC @F8@
+2 PEDI birth
+1 FAMS @F9@
+0 @I11@ INDI
+1 NAME Ной
+1 SEX M
+1 REFN p-noy
+1 BIRT
+2 FAMC @F9@
+2 SOUR @S1@
+3 PAGE Быт 5:28-29; 1Пар 1:3-4; Лк 3:36
+3 QUAY 3
+3 NOTE отец; запись o-lamekh--noy
+2 NOTE мать не названа
+1 FAMC @F9@
+2 PEDI birth
+1 FAMS @F10@
+0 @I12@ INDI
+1 NAME Сим
+1 SEX M
+1 REFN p-sim
+1 NOTE сын Ноя
+1 BIRT
+2 FAMC @F10@
+2 SOUR @S1@
+3 PAGE Быт 5:32; Быт 6:10; Быт 9:18; 1Пар 1:4; Лк 3:36
+3 QUAY 3
+3 NOTE отец; запись o-noy--sim
+2 NOTE мать не названа
+1 FAMC @F10@
+2 PEDI birth
+1 FAMS @F11@
+0 @I13@ INDI
+1 NAME Арфаксад
+1 SEX M
+1 REFN p-arfaksad
+1 NOTE сын Сима
+1 BIRT
+2 FAMC @F11@
+2 SOUR @S1@
+3 PAGE Быт 10:22; Быт 11:10; 1Пар 1:17; 1Пар 1:24; Лк 3:36
+3 QUAY 3
+3 NOTE отец; запись o-sim--arfaksad
+2 NOTE мать не названа
+1 FAMC @F11@
+2 PEDI birth
+1 FAMS @F12@
+0 @I14@ INDI
+1 NAME Сала
+1 SEX M
+1 REFN p-sala
+1 NOTE сын Арфаксада
+1 BIRT
+2 FAMC @F12@
+2 SOUR @S1@
+3 PAGE Быт 10:24; Быт 11:12; 1Пар 1:18,24
+3 QUAY 3
+3 NOTE отец; запись o-arfaksad--sala
+2 NOTE мать не названа
+1 FAMC @F12@
+2 PEDI birth
+1 FAMS @F13@
+1 NOTE другое прочтение или другое место текста: отец — Каинан (Лк 3:35-36); в этой выгрузке не родительство
+0 @I15@ INDI
+1 NAME Евер
+1 SEX M
+1 REFN p-ever
+1 NOTE сын Салы
+1 BIRT
+2 FAMC @F13@
+2 SOUR @S1@
+3 PAGE Быт 10:24; Быт 11:14; 1Пар 1:18; 1Пар 1:25; Лк 3:35
+3 QUAY 3
+3 NOTE отец; запись o-sala--ever
+2 NOTE мать не названа
+1 FAMC @F13@
+2 PEDI birth
+1 FAMS @F14@
+0 @I16@ INDI
+1 NAME Фалек
+1 SEX M
+1 REFN p-falek
+1 NOTE сын Евера
+1 BIRT
+2 FAMC @F14@
+2 SOUR @S1@
+3 PAGE Быт 10:25; Быт 11:16; 1Пар 1:19; 1Пар 1:25; Лк 3:35
+3 QUAY 3
+3 NOTE отец; запись o-ever--falek
+2 NOTE мать не названа
+1 FAMC @F14@
+2 PEDI birth
+1 FAMS @F15@
+0 @I17@ INDI
+1 NAME Рагав
+1 SEX M
+1 REFN p-ragav
+1 NOTE сын Фалека
+1 BIRT
+2 FAMC @F15@
+2 SOUR @S1@
+3 PAGE Быт 11:18; 1Пар 1:25; Лк 3:35
+3 QUAY 3
+3 NOTE отец; запись o-falek--ragav
+2 NOTE мать не названа
+1 FAMC @F15@
+2 PEDI birth
+1 FAMS @F16@
+0 @I18@ INDI
+1 NAME Серух
+1 SEX M
+1 REFN p-serukh
+1 NOTE сын Рагава
+1 BIRT
+2 FAMC @F16@
+2 SOUR @S1@
+3 PAGE Быт 11:20; 1Пар 1:26; Лк 3:35
+3 QUAY 3
+3 NOTE отец; запись o-ragav--serukh
+2 NOTE мать не названа
+1 FAMC @F16@
+2 PEDI birth
+1 FAMS @F17@
+0 @I19@ INDI
+1 NAME Нахор
+1 SEX M
+1 REFN p-nakhor
+1 NOTE сын Серуха
+1 BIRT
+2 FAMC @F17@
+2 SOUR @S1@
+3 PAGE Быт 11:22; 1Пар 1:26; Лк 3:34-35
+3 QUAY 3
+3 NOTE отец; запись o-serukh--nakhor
+2 NOTE мать не названа
+1 FAMC @F17@
+2 PEDI birth
+1 FAMS @F18@
+0 @I20@ INDI
+1 NAME Фарра
+1 SEX M
+1 REFN p-farra
+1 NOTE отец Авраама
+1 BIRT
+2 FAMC @F18@
+2 SOUR @S1@
+3 PAGE Быт 11:24; 1Пар 1:26; Лк 3:34
+3 QUAY 3
+3 NOTE отец; запись o-nakhor--farra
+2 NOTE мать не названа
+1 FAMC @F18@
+2 PEDI birth
+1 FAMS @F19@
+1 FAMS @F20@
+1 FAMS @F24@
+1 FAMS @F25@
+0 @I21@ INDI
+1 NAME Нахор
+1 SEX M
+1 REFN p-nakhor-syn-farry
+1 NOTE сын Фарры, брат Авраама
+1 BIRT
+2 FAMC @F19@
+2 SOUR @S1@
+3 PAGE Быт 11:26-27; Нав 24:2
+3 QUAY 3
+3 NOTE отец; запись o-farra--nakhor-syn-farry
+2 NOTE мать не названа
+1 FAMC @F19@
+2 PEDI birth
+1 FAMS @F22@
+0 @I22@ INDI
+1 NAME Аран
+1 SEX M
+1 REFN p-aran
+1 NOTE сын Фарры
+1 BIRT
+2 FAMC @F20@
+2 SOUR @S1@
+3 PAGE Быт 11:26-28
+3 QUAY 3
+3 NOTE отец; запись o-farra--aran
+2 NOTE мать не названа
+1 FAMC @F20@
+2 PEDI birth
+1 FAMS @F21@
+0 @I23@ INDI
+1 NAME Милка
+1 SEX F
+1 REFN p-milka
+1 NOTE дочь Арана, жена Нахора
+1 BIRT
+2 FAMC @F21@
+2 SOUR @S1@
+3 PAGE Быт 11:29
+3 QUAY 3
+3 NOTE отец; запись o-aran--milka
+2 NOTE мать не названа
+1 FAMC @F21@
+2 PEDI birth
+1 FAMS @F22@
+0 @I24@ INDI
+1 NAME Вафуил
+1 NAME Вафуил Арамеянин
+2 TYPE aka
+1 SEX M
+1 REFN p-vafuil
+1 NOTE сын Нахора, отец Ревекки
+1 BIRT
+2 FAMC @F22@
+2 SOUR @S1@
+3 PAGE Быт 22:20-23; Быт 24:15; Быт 24:24; Быт 24:47
+3 QUAY 3
+3 NOTE отец и мать; запись o-nakhor-syn-farry--vafuil
+1 FAMC @F22@
+2 PEDI birth
+1 FAMS @F23@
+1 FAMS @F27@
+0 @I25@ INDI
+1 NAME Лаван
+1 NAME Лаван Арамеянин
+2 TYPE aka
+1 SEX M
+1 REFN p-lavan
+1 NOTE сын Вафуила, брат Ревекки
+1 BIRT
+2 FAMC @F23@
+2 SOUR @S1@
+3 PAGE Быт 24:29; Быт 28:2; Быт 28:5
+3 QUAY 3
+3 NOTE отец; запись o-vafuil--lavan
+2 NOTE мать не названа
+1 FAMC @F23@
+2 PEDI birth
+1 FAMS @F29@
+1 ASSO @I21@
+2 RELA из сыновей
+2 SOUR @S1@
+3 PAGE Быт 29:5; Быт 28:5; Быт 24:24
+3 QUAY 2
+3 NOTE запись o-nakhor-syn-farry--lavan
+0 @I26@ INDI
+1 NAME Авраам
+1 NAME Аврам
+2 TYPE aka
+1 SEX M
+1 REFN p-avraam
+1 BIRT
+2 FAMC @F24@
+2 SOUR @S1@
+3 PAGE Быт 11:26-27; 1Пар 1:26-27; Нав 24:2; Лк 3:34
+3 QUAY 3
+3 NOTE отец; запись o-farra--avraam
+2 NOTE мать не названа
+1 FAMC @F24@
+2 PEDI birth
+1 FAMS @F26@
+0 @I27@ INDI
+1 NAME Сарра
+1 NAME Сара
+2 TYPE aka
+1 SEX F
+1 REFN p-sarra
+1 BIRT
+2 FAMC @F25@
+2 SOUR @S1@
+3 PAGE Быт 20:2,12; Быт 11:27
+3 QUAY 2
+3 NOTE отец; уровень: вывод — так выходит, если сравнить места Библии; по словам Авраама (Быт 20:12); запись o-farra--sarra
+2 NOTE мать не названа
+1 FAMC @F25@
+2 PEDI birth
+1 FAMS @F26@
+1 ASSO @I26@
+2 RELA сестра
+2 SOUR @S1@
+3 PAGE Быт 20:12
+3 QUAY 3
+3 NOTE по словам Авраама (Быт 20:12)
+1 ASSO @I20@
+2 RELA невестка
+2 SOUR @S1@
+3 PAGE Быт 11:31
+3 QUAY 3
+1 NOTE «она дочь отца моего, только не дочь матери моей» — по словам Авраама (Быт 20:12)
+0 @I28@ INDI
+1 NAME Исаак
+1 SEX M
+1 REFN p-isaak
+1 BIRT
+2 FAMC @F26@
+2 SOUR @S1@
+3 PAGE Быт 21:2-3; Быт 25:19; 1Пар 1:28; 1Пар 1:34; Мф 1:2; Лк 3:34
+3 QUAY 3
+3 NOTE отец и мать; запись o-avraam--isaak
+1 FAMC @F26@
+2 PEDI birth
+1 FAMS @F28@
+0 @I29@ INDI
+1 NAME Ревекка
+1 SEX F
+1 REFN p-revekka
+1 BIRT
+2 FAMC @F27@
+2 SOUR @S1@
+3 PAGE Быт 22:23; Быт 24:15; Быт 24:24; Быт 24:47; Быт 25:20
+3 QUAY 3
+3 NOTE отец; запись o-vafuil--revekka
+2 NOTE мать не названа
+1 FAMC @F27@
+2 PEDI birth
+1 FAMS @F28@
+0 @I30@ INDI
+1 NAME Иаков
+1 NAME Израиль
+2 TYPE aka
+1 SEX M
+1 REFN p-iakov
+1 NOTE сын Исаака, Израиль
+1 BIRT
+2 FAMC @F28@
+2 SOUR @S1@
+3 PAGE Быт 25:21-26; 1Пар 1:34; Мф 1:2; Лк 3:34
+3 QUAY 3
+3 NOTE отец и мать; запись o-isaak--iakov
+1 FAMC @F28@
+2 PEDI birth
+1 FAMS @F30@
+0 @I31@ INDI
+1 NAME Лия
+1 SEX F
+1 REFN p-liya
+1 BIRT
+2 FAMC @F29@
+2 SOUR @S1@
+3 PAGE Быт 29:16; Быт 29:23
+3 QUAY 3
+3 NOTE отец; запись o-lavan--liya
+2 NOTE мать не названа
+1 FAMC @F29@
+2 PEDI birth
+1 FAMS @F30@
+0 @I32@ INDI
+1 NAME Иуда
+1 SEX M
+1 REFN p-iuda
+1 NOTE сын Иакова
+1 BIRT
+2 FAMC @F30@
+2 SOUR @S1@
+3 PAGE Быт 29:35; Быт 35:23; Мф 1:2; Лк 3:33; 1Пар 2:1
+3 QUAY 3
+3 NOTE отец и мать; запись o-iakov--iuda
+1 FAMC @F30@
+2 PEDI birth
+1 FAMS @F31@
+0 @I33@ INDI
+1 NAME Фамарь
+1 SEX F
+1 REFN p-famar
+1 NOTE невестка Иуды
+1 FAMS @F31@
+1 ASSO @I32@
+2 RELA невестка
+2 SOUR @S1@
+3 PAGE Быт 38:11; Быт 38:24; 1Пар 2:4
+3 QUAY 3
+0 @I34@ INDI
+1 NAME Фарес
+1 SEX M
+1 REFN p-fares
+1 BIRT
+2 FAMC @F31@
+2 SOUR @S1@
+3 PAGE Быт 38:27-29; Быт 46:12; Руф 4:12; 1Пар 2:4; 1Пар 4:1; Мф 1:3; Лк 3:33
+3 QUAY 3
+3 NOTE отец и мать; запись o-iuda--fares
+1 FAMC @F31@
+2 PEDI birth
+1 FAMS @F32@
+0 @I35@ INDI
+1 NAME Есром
+1 SEX M
+1 REFN p-esrom
+1 NOTE сын Фареса
+1 BIRT
+2 FAMC @F32@
+2 SOUR @S1@
+3 PAGE Быт 46:12; Руф 4:18; 1Пар 2:5; Мф 1:3; Лк 3:33
+3 QUAY 3
+3 NOTE отец; запись o-fares--esrom
+2 NOTE мать не названа
+1 FAMC @F32@
+2 PEDI birth
+1 FAMS @F33@
+0 @I36@ INDI
+1 NAME Арам
+1 SEX M
+1 REFN p-aram
+1 NOTE сын Есрома
+1 BIRT
+2 FAMC @F33@
+2 SOUR @S1@
+3 PAGE Руф 4:19; 1Пар 2:9; Мф 1:3; Лк 3:33
+3 QUAY 3
+3 NOTE отец; запись o-esrom--aram
+2 NOTE мать не названа
+1 FAMC @F33@
+2 PEDI birth
+1 FAMS @F34@
+0 @I37@ INDI
+1 NAME Аминадав
+1 SEX M
+1 REFN p-aminadav
+1 NOTE сын Арама
+1 BIRT
+2 FAMC @F34@
+2 SOUR @S1@
+3 PAGE Руф 4:19; 1Пар 2:10; Мф 1:4; Лк 3:33
+3 QUAY 3
+3 NOTE отец; запись o-aram--aminadav
+2 NOTE мать не названа
+1 FAMC @F34@
+2 PEDI birth
+1 FAMS @F35@
+0 @I38@ INDI
+1 NAME Наассон
+1 SEX M
+1 REFN p-naasson
+1 NOTE сын Аминадава, князь сынов Иудиных
+1 BIRT
+2 FAMC @F35@
+2 SOUR @S1@
+3 PAGE Руф 4:20; 1Пар 2:10; Исх 6:23; Чис 1:7; Мф 1:4; Лк 3:32-33
+3 QUAY 3
+3 NOTE отец; запись o-aminadav--naasson
+2 NOTE мать не названа
+1 FAMC @F35@
+2 PEDI birth
+1 FAMS @F36@
+0 @I39@ INDI
+1 NAME Салмон
+1 SEX M
+1 REFN p-salmon
+1 NOTE сын Наассона
+1 BIRT
+2 FAMC @F36@
+2 SOUR @S1@
+3 PAGE Руф 4:20; 1Пар 2:11; Мф 1:4; Лк 3:32
+3 QUAY 3
+3 NOTE отец; запись o-naasson--salmon
+2 NOTE мать не названа
+1 FAMC @F36@
+2 PEDI birth
+1 FAMS @F37@
+0 @I40@ INDI
+1 NAME Рахава
+1 SEX F
+1 REFN p-rakhava
+1 NOTE мать Вооза (Мф 1:5)
+1 FAMS @F37@
+0 @I41@ INDI
+1 NAME Вооз
+1 SEX M
+1 REFN p-vooz
+1 NOTE сын Салмона, муж Руфи
+1 BIRT
+2 FAMC @F37@
+2 SOUR @S1@
+3 PAGE Руф 4:21; 1Пар 2:11; Мф 1:5; Лк 3:32
+3 QUAY 3
+3 NOTE отец; запись o-salmon--vooz
+2 SOUR @S1@
+3 PAGE Мф 1:5
+3 QUAY 3
+3 NOTE мать; запись o-rakhava--vooz
+1 FAMC @F37@
+2 PEDI birth
+1 FAMS @F38@
+0 @I42@ INDI
+1 NAME Руфь
+1 SEX F
+1 REFN p-ruf
+1 NOTE Моавитянка, жена Вооза
+1 FAMS @F38@
+0 @I43@ INDI
+1 NAME Овид
+1 SEX M
+1 REFN p-ovid
+1 NOTE сын Вооза и Руфи
+1 BIRT
+2 FAMC @F38@
+2 SOUR @S1@
+3 PAGE Руф 4:13; Руф 4:17; Руф 4:21; 1Пар 2:12; Мф 1:5; Лк 3:32
+3 QUAY 3
+3 NOTE отец и мать; запись o-vooz--ovid
+1 FAMC @F38@
+2 PEDI birth
+1 FAMS @F39@
+0 @I44@ INDI
+1 NAME Иессей
+1 NAME Иесей
+2 TYPE aka
+1 SEX M
+1 REFN p-iessey
+1 NOTE сын Овида, отец Давида
+1 BIRT
+2 FAMC @F39@
+2 SOUR @S1@
+3 PAGE Руф 4:17; Руф 4:22; 1Пар 2:12; Мф 1:5; Лк 3:32
+3 QUAY 3
+3 NOTE отец; запись o-ovid--iessey
+2 NOTE мать не названа
+1 FAMC @F39@
+2 PEDI birth
+1 FAMS @F40@
+0 @I45@ INDI
+1 NAME Давид
+1 NAME Сын Иессеев
+2 TYPE aka
+1 SEX M
+1 REFN p-david
+1 NOTE царь Израиля, сын Иессея
+1 BIRT
+2 FAMC @F40@
+2 SOUR @S1@
+3 PAGE 1Цар 16:18-19; 1Цар 17:12; 1Цар 17:58; Руф 4:17; Руф 4:22; 1Пар 2:13-15; Мф 1:6; Лк 3:31-32
+3 QUAY 3
+3 NOTE отец; запись o-iessey--david
+2 NOTE мать не названа
+1 FAMC @F40@
+2 PEDI birth
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 CHIL @I3@
+1 MARR
+2 TYPE жена
+2 SOUR @S1@
+3 PAGE Быт 2:22-25; Быт 3:20; Быт 4:1
+3 QUAY 3
+3 NOTE союз u-adam--eva
+0 @F2@ FAM
+1 HUSB @I3@
+1 CHIL @I4@
+1 NOTE мать не названа
+0 @F3@ FAM
+1 HUSB @I4@
+1 CHIL @I5@
+1 NOTE мать не названа
+0 @F4@ FAM
+1 HUSB @I5@
+1 CHIL @I6@
+1 NOTE мать не названа
+0 @F5@ FAM
+1 HUSB @I6@
+1 CHIL @I7@
+1 NOTE мать не названа
+0 @F6@ FAM
+1 HUSB @I7@
+1 CHIL @I8@
+1 NOTE мать не названа
+0 @F7@ FAM
+1 HUSB @I8@
+1 CHIL @I9@
+1 NOTE мать не названа
+0 @F8@ FAM
+1 HUSB @I9@
+1 CHIL @I10@
+1 NOTE мать не названа
+0 @F9@ FAM
+1 HUSB @I10@
+1 CHIL @I11@
+1 NOTE мать не названа
+0 @F10@ FAM
+1 HUSB @I11@
+1 CHIL @I12@
+1 NOTE мать не названа
+0 @F11@ FAM
+1 HUSB @I12@
+1 CHIL @I13@
+1 NOTE мать не названа
+0 @F12@ FAM
+1 HUSB @I13@
+1 CHIL @I14@
+1 NOTE мать не названа
+0 @F13@ FAM
+1 HUSB @I14@
+1 CHIL @I15@
+1 NOTE мать не названа
+0 @F14@ FAM
+1 HUSB @I15@
+1 CHIL @I16@
+1 NOTE мать не названа
+0 @F15@ FAM
+1 HUSB @I16@
+1 CHIL @I17@
+1 NOTE мать не названа
+0 @F16@ FAM
+1 HUSB @I17@
+1 CHIL @I18@
+1 NOTE мать не названа
+0 @F17@ FAM
+1 HUSB @I18@
+1 CHIL @I19@
+1 NOTE мать не названа
+0 @F18@ FAM
+1 HUSB @I19@
+1 CHIL @I20@
+1 NOTE мать не названа
+0 @F19@ FAM
+1 HUSB @I20@
+1 CHIL @I21@
+1 NOTE мать не названа
+0 @F20@ FAM
+1 HUSB @I20@
+1 CHIL @I22@
+1 NOTE мать не названа
+0 @F21@ FAM
+1 HUSB @I22@
+1 CHIL @I23@
+1 NOTE мать не названа
+0 @F22@ FAM
+1 HUSB @I21@
+1 WIFE @I23@
+1 CHIL @I24@
+1 MARR
+2 TYPE жена
+2 SOUR @S1@
+3 PAGE Быт 11:29; Быт 22:20; Быт 24:15
+3 QUAY 3
+3 NOTE союз u-nakhor-syn-farry--milka
+0 @F23@ FAM
+1 HUSB @I24@
+1 CHIL @I25@
+1 NOTE мать не названа
+0 @F24@ FAM
+1 HUSB @I20@
+1 CHIL @I26@
+1 NOTE мать не названа
+0 @F25@ FAM
+1 HUSB @I20@
+1 CHIL @I27@
+1 NOTE мать не названа
+0 @F26@ FAM
+1 HUSB @I26@
+1 WIFE @I27@
+1 CHIL @I28@
+1 MARR
+2 TYPE жена
+2 SOUR @S1@
+3 PAGE Быт 11:29; Быт 12:5; Быт 23:19
+3 QUAY 3
+3 NOTE союз u-avraam--sarra
+0 @F27@ FAM
+1 HUSB @I24@
+1 CHIL @I29@
+1 NOTE мать не названа
+0 @F28@ FAM
+1 HUSB @I28@
+1 WIFE @I29@
+1 CHIL @I30@
+1 MARR
+2 TYPE жена
+2 SOUR @S1@
+3 PAGE Быт 24:67; Быт 25:20
+3 QUAY 3
+3 NOTE союз u-isaak--revekka
+0 @F29@ FAM
+1 HUSB @I25@
+1 CHIL @I31@
+1 NOTE мать не названа
+0 @F30@ FAM
+1 HUSB @I30@
+1 WIFE @I31@
+1 CHIL @I32@
+1 MARR
+2 TYPE жена
+2 SOUR @S1@
+3 PAGE Быт 29:23-25; Быт 29:30; Быт 32:22; Быт 33:1-2
+3 QUAY 2
+3 NOTE союз u-iakov--liya
+1 MARR
+2 TYPE муж
+2 SOUR @S1@
+3 PAGE Быт 29:32; Быт 30:20
+3 QUAY 3
+3 NOTE союз u-iakov--liya
+0 @F31@ FAM
+1 HUSB @I32@
+1 WIFE @I33@
+1 CHIL @I34@
+1 NOTE союз без брака — вывод (Быт 38:15; Быт 38:16; Быт 38:26); союз — Быт 38:18; Руф 4:12; 1Пар 2:4; Мф 1:3; запись u-iuda--famar
+0 @F32@ FAM
+1 HUSB @I34@
+1 CHIL @I35@
+1 NOTE мать не названа
+0 @F33@ FAM
+1 HUSB @I35@
+1 CHIL @I36@
+1 NOTE мать не названа
+0 @F34@ FAM
+1 HUSB @I36@
+1 CHIL @I37@
+1 NOTE мать не названа
+0 @F35@ FAM
+1 HUSB @I37@
+1 CHIL @I38@
+1 NOTE мать не названа
+0 @F36@ FAM
+1 HUSB @I38@
+1 CHIL @I39@
+1 NOTE мать не названа
+0 @F37@ FAM
+1 HUSB @I39@
+1 WIFE @I40@
+1 CHIL @I41@
+1 NOTE браком не назван — вывод (Мф 1:5); запись u-salmon--rakhava
+0 @F38@ FAM
+1 HUSB @I41@
+1 WIFE @I42@
+1 CHIL @I43@
+1 MARR
+2 TYPE жена
+2 SOUR @S1@
+3 PAGE Руф 4:10; Руф 4:13; Мф 1:5
+3 QUAY 3
+3 NOTE союз u-vooz--ruf
+0 @F39@ FAM
+1 HUSB @I43@
+1 CHIL @I44@
+1 NOTE мать не названа
+0 @F40@ FAM
+1 HUSB @I44@
+1 CHIL @I45@
+1 NOTE мать не названа
+0 TRLR

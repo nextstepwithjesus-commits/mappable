@@ -20,6 +20,8 @@ import { Глава } from './истории/глава.tsx';
 import { Карточка } from './истории/карточка.tsx';
 import { Главная, ВсеИстории, Параллели, Сравнение, Поиск, Настройки } from './истории/экраны.tsx';
 import { Время } from './время/время.tsx';
+import { Генеалогия } from './генеалогия/генеалогия.tsx';
+import { Г } from './генеалогия/данные.ts';
 import { BOOK_BY_CODE } from '../../core/books.ts';
 
 function имяЭкрана(r: Route): string {
@@ -49,6 +51,11 @@ function имяЭкрана(r: Route): string {
       return 'Результаты поиска';
     case 'nastroyki':
       return 'Настройки';
+    case 'genealogiya': {
+      const p = r.params.p;
+      const i = p && Г ? Г.ид(p) : -1;
+      return i >= 0 ? `${Г.полное(i)} — Генеалогия` : 'Генеалогия';
+    }
   }
 }
 
@@ -79,6 +86,8 @@ function Экран() {
       return <Поиск />;
     case 'nastroyki':
       return <Настройки />;
+    case 'genealogiya':
+      return <Генеалогия />;
   }
 }
 
@@ -106,7 +115,7 @@ async function запуск() {
     корень.innerHTML = `<main class="оболочка"><h1 class="т-h1">Не получилось открыть данные</h1><p class="т-проза">${String((e as Error).message)}</p><p><button class="кн" onclick="location.reload()">Повторить</button></p></main>`;
     return;
   }
-  задатьИмена(имяЭкрана, (r) => (r.screen === 'istoriya' ? `${имяЭкрана(r)} — История` : r.screen === 'kartochka' ? `${имяЭкрана(r)} — Карточка` : r.screen === 'kniga' || r.screen === 'glava' ? `${имяЭкрана(r)} — Книги` : имяЭкрана(r)));
+  задатьИмена(имяЭкрана, (r) => (r.screen === 'genealogiya' ? имяЭкрана(r) : r.screen === 'istoriya' ? `${имяЭкрана(r)} — История` : r.screen === 'kartochka' ? `${имяЭкрана(r)} — Карточка` : r.screen === 'kniga' || r.screen === 'glava' ? `${имяЭкрана(r)} — Книги` : имяЭкрана(r)));
   начатьМаршруты();
   render(<Приложение />, корень);
   document.documentElement.dataset.готово = '1';

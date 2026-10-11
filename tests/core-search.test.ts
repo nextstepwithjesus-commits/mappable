@@ -297,9 +297,11 @@ describe('рецензии переноса ядра: скобки, находк
     const g2 = L.searcher.search('Пс 50:3').groups[0];
     expect(g2.kind === 'адрес' && g2.address.notes.length).toBe(0);
   });
-  it('второй вариант раскладки виден строкой (№ 18); пустой ответ без совета о местах, пока мест нет (№ 9)', () => {
+  it('второй вариант раскладки виден строкой (№ 18); пустой ответ советует только место, которое находится (№ 9)', () => {
     const g = L.searcher.search('щщщщ').groups[0];
-    expect(g.kind === 'пусто' && g.message).not.toMatch(/Вифлеем/);
+    const msg = g.kind === 'пусто' ? g.message : '';
+    const m = msg.match(/место \(«([^»]+)»\)/);
+    if (m) expect(L.searcher.search(m[1]).groups.some((x) => x.kind === 'место')).toBe(true);
     expect(L.searcher.search('Lfdbl').alt === undefined || typeof L.searcher.search('Lfdbl').alt?.text === 'string').toBe(true);
   });
   it('места ищутся, когда они есть в индексе (вид «место»)', async () => {

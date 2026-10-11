@@ -8,6 +8,7 @@ import { createRequire } from 'node:module';
 import { buildIndex, nameForms } from '../base/bundle.ts';
 import type { Admission } from '../base/admit.ts';
 import { yearIn } from '../base/validate.ts';
+import { anchorYear } from '../base/chrono-calc.ts';
 import type { Prov } from '../base/types.ts';
 import type { Base } from '../base/migrate.ts';
 import { loadBible } from '../bible.ts';
@@ -250,7 +251,11 @@ export function buildCardVolumes(base: Base, A: Admission, fits: (v: CardsVolume
       const facts = a.facts.filter((f) => A.ok(f) && !f.needsSources && (f.cert === 'calc' || !yearIn(f.value)));
       const nod = base.nodata.filter((n) => n.actor === a.id && A.ok(n)).map((n) => ({ s: n.sec, k: n.kind, ...(n.what && { w: n.what }), ...(n.refs.length && { r: n.refs }), ...(n.words && { q: n.words }) }));
       cards[shortId(a.id, 'p-')] = {
-        f: facts.map((f) => ({ n: claimNo(f.id ?? ''), s: f.sec, f: f.field, v: f.value, ...(f.cert && { c: f.cert }), ...(f.idCert && { ic: f.idCert }) })),
+        f: facts.map((f) => {
+          // год от опоры — только от опоры external с трудом со страницей (К-21; 04 § 9 п. 19)
+          const y = anchorYear(base, f.calc);
+          return { n: claimNo(f.id ?? ''), s: f.sec, f: f.field, v: f.value, ...(f.cert && { c: f.cert }), ...(f.idCert && { ic: f.idCert }), ...(y && { y: [y.earliest, y.latest] as [number, number], ya: y.anchor }) };
+        }),
         ...(nod.length && { nd: nod }),
         ...(nameForms(a.names.filter((n) => A.part(n as { prov?: Partial<Prov> }))) as { nm?: CardNameForm[] }),
       };

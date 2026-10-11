@@ -107,7 +107,8 @@ export class Searcher {
   private ms: MiniSearch<Doc>;
   private storySpans: { story: Story; main: Span[]; roles: [string, Span[]][] }[] = [];
   private storyByTitle = new Map<string, { story: Story; notFromText: boolean }>();
-  private hasPlaces: boolean;
+  /** Пример места для совета в пустом ответе — только место, которое есть в индексе (№ 9). */
+  private samplePlace: string | undefined;
 
   constructor(
     idx: SearchIndexData,
@@ -126,7 +127,7 @@ export class Searcher {
       for (const n of [pl.n, ...(pl.o ?? [])]) (this.byPlace.get(key(n)) ?? this.byPlace.set(key(n), []).get(key(n))!).push(pl);
     }
     for (const a of idx.areas ?? []) (this.byArea.get(key(a.n)) ?? this.byArea.set(key(a.n), []).get(key(a.n))!).push(a);
-    this.hasPlaces = this.places.size > 0;
+    this.samplePlace = this.byPlace.has(key('Вифлеем')) ? 'Вифлеем' : this.byPlace.has(key('Хеврон')) ? 'Хеврон' : [...this.places.values()][0]?.n;
     this.ms = new MiniSearch<Doc>({
       fields: ['title', 'alt'],
       storeFields: ['kind', 'title', 'p'],
@@ -226,7 +227,7 @@ export class Searcher {
     res.groups = best.groups;
     const second = sorted[1];
     if (second && second.score > 0 && second.groups.some((g) => g.kind !== 'возможно')) res.alt = { used: second.used, text: `Искали «${second.used}»?` };
-    if (res.groups.length === 0) res.groups.push({ kind: 'пусто', message: emptyMessage(query, this.hasPlaces) });
+    if (res.groups.length === 0) res.groups.push({ kind: 'пусто', message: emptyMessage(query, this.samplePlace) });
     res.ms = now() - t0;
     return res;
   }
@@ -424,9 +425,9 @@ function contains(outer: Span, inner: Span): boolean {
 }
 const isPoint = (s: Span) => s.v1 !== undefined && s.c1 === s.c2 && s.v1 === s.v2;
 
-/** Пустой результат (11 § 3.6 (з)): советует только то, что поиск умеет (рецензия интерфейса, № 9) — место, если места есть. */
-export function emptyMessage(q: string, places = false): string {
-  return `Ничего не нашлось по запросу «${q}». Проверьте буквы и раскладку. Попробуйте имя («Давид»)${places ? ', место («Вифлеем»)' : ''} или адрес («Мк\u00A06:35»)`;
+/** Пустой результат (11 § 3.6 (з)): советует только то, что поиск умеет (рецензия интерфейса, № 9) — место, которое есть в индексе. */
+export function emptyMessage(q: string, place?: string): string {
+  return `Ничего не нашлось по запросу «${q}». Проверьте буквы и раскладку. Попробуйте имя («Давид»)${place ? `, место («${place}»)` : ''} или адрес («Мк\u00A06:35»)`;
 }
 
 /** Ключ первого результата для набора 50 запросов: «адрес:Мк 6:35», «лица:noy», «история:s-noy» … */
