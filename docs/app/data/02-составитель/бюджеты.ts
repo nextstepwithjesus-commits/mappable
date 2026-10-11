@@ -79,3 +79,24 @@ const cat = Array.from({ length: N }, (_, i) => {
   return [`e-${i + 1}`, r[3].replace(/\[[^\]]*\]/g, '').slice(0, 40), `${r[0]} ${r[1]}:${r[2]}`, 1 + (i % 3)];
 });
 console.log(`каталог историй (синтетика ${N}: номер, имя до 40 знаков, первый стих, ступень): ${kb(gz(cat))}`);
+// 4.2: номера историй смысловой длины — транслит имени до 24 знаков
+const TR: Record<string, string> = { а:'a',б:'b',в:'v',г:'g',д:'d',е:'e',ё:'e',ж:'zh',з:'z',и:'i',й:'y',к:'k',л:'l',м:'m',н:'n',о:'o',п:'p',р:'r',с:'s',т:'t',у:'u',ф:'f',х:'kh',ц:'ts',ч:'ch',ш:'sh',щ:'shch',ъ:'',ы:'y',ь:'',э:'e',ю:'yu',я:'ya' };
+const tr = (t: string) => t.toLowerCase().split('').map((c) => TR[c] ?? (/[a-z0-9]/.test(c) ? c : '-')).join('').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 24);
+const cat2 = cat.map((r) => [`e-${tr(String(r[1]))}`, ...r.slice(1)]);
+console.log(`каталог историй со смысловыми номерами (транслит до 24 знаков): ${kb(gz(cat2))}`);
+// 4.2: TSK без английских слов, цели — порядковыми номерами стихов
+const ord = new Map<string, number>(); text.forEach((r, i) => ord.set(`${r[0]}|${r[1]}|${r[2]}`, i));
+const expand = (ref: string): number[] => {
+  const m = ref.match(/^(\S+) (\d+):(\d+)(?:-(\d+))?$/);
+  if (!m) return [];
+  const a = ord.get(`${m[1]}|${m[2]}|${m[3]}`);
+  if (a === undefined) return [];
+  const b = m[4] ? ord.get(`${m[1]}|${m[2]}|${m[4]}`) ?? a : a;
+  return b > a ? [a, b - a] : [a];
+};
+let tsk2 = 0, tsk2Max = ['', 0] as [string, number], over2 = 0;
+for (const [book, rs] of byBook) {
+  const s2 = gz(rs.map((r) => [Number(r[2]) + 1000 * Number(r[1]), Number(r[4]), r[6].split('; ').map(expand)]));
+  tsk2 += s2; if (s2 > tsk2Max[1]) tsk2Max = [book, s2]; if (s2 > 96 * 1024) over2++;
+}
+console.log(`TSK без английских слов, цели номерами стихов: всего ${kb(tsk2)}; наибольшая ${tsk2Max[0]} ${kb(tsk2Max[1])}; книг > 96 КБ: ${over2}`);
