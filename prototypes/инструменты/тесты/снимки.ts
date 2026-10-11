@@ -60,7 +60,8 @@ async function main() {
         const sep = sc.адрес.includes('?') ? '&' : '?';
         await p.goto(`${origin}${base}${sc.адрес}${sep}theme=${t}&age=null${sc.адрес.includes('layer=') ? '' : '&layer=1'}`);
         await готово(p);
-        const прокрутка = await p.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+        // ширина — из окна снимка, не innerWidth: при isMobile окно раскладки растягивается по содержимому (сверка доступности, № 6)
+        const прокрутка = await p.evaluate((w) => document.documentElement.scrollWidth - w, o.w);
         const верх = sc.адрес.startsWith('istoriya') ? await верхСтиха(p) : undefined;
         await p.screenshot({ path: join(OUT, `${sc.n}-${o.имя}-${t === 'light' ? 'светлая' : 'тёмная'}.png`) });
         if (o.имя === '1280' && t === 'light') await p.screenshot({ path: join(OUT, `${sc.n}-${o.имя}-весь.png`), fullPage: true });

@@ -13,7 +13,17 @@ import { число } from '../общее/службы.ts';
 import { addYears } from '../../../core/years.ts';
 import type { Chrono, Model, Вход } from '../общее/типы.ts';
 
-export interface Звено { text: string; refs: string[]; cert?: string; цитата?: string; модель?: string }
+export interface Звено { text: string; refs: string[]; cert?: string; цитата?: string; модель?: string; /** Фраза простого слоя (без имени модели, 04 § 2.1). */ простое?: string }
+
+/**
+ * Чего в данных нет и что прототип держит сам (задача данных в README): фраза вывода для простого слоя и число стиха, от
+ * которого вывод отступает (у Сима вход несёт 502 — вывод, а число Быт 5:32 «пятьсот» отдельным полем не записано).
+ */
+const ПРОСТОЙ_ВЫВОД: Record<string, string> = {
+  'p-avraam': 'Фарра умер двухсот пяти лет (Быт 11:32). Аврам был семидесяти пяти лет, когда вышел из Харрана (Быт 12:4), а вышел он «по смерти отца его» (Деян 7:4). Значит, Фарре при рождении Аврама было не меньше 130 лет.',
+  'p-sim': 'Сим был ста лет «чрез два года после потопа» (Быт 11:10), а потоп пришёл, когда Ною было шестьсот лет (Быт 7:6). Значит, Ною при рождении Сима было 502 года.',
+};
+const ЧИСЛО_СТИХА: Record<string, { n: number; стих: string }> = { 'p-sim': { n: 500, стих: 'Быт 5:32' } };
 export interface Жизнь {
   id: string;
   имя: string;
@@ -22,6 +32,8 @@ export interface Жизнь {
   /** Годы до Р. Х. по модели (второй слой). */
   bc?: [number, number];
   лет?: { n: number; refs: string[]; cert?: string; смерть: boolean; конец?: string; words?: string };
+  /** Возраст отца при рождении для таблицы-двойника: число текста со стихом, затем вывод («500 (Быт 5:32); по выводу — 502»). */
+  возрастОтца?: string;
   /** Звенья: свои числа текста, выводы, выборы модели. */
   звенья: Звено[];
   /** Положение держится на выборе модели (её название — в звене). */
@@ -45,6 +57,9 @@ export function адам(): number | null {
   if (адамBC !== undefined) return адамBC;
   if (считается) return null;
   считается = true;
+  // считаем на чистом кэше: иначе лица, которые сейчас в середине расчёта (Ламех, когда Адам вызван из цепочки Ноя), попали бы
+  // в цепочку Иакова без своих чисел, и год Адама вышел бы пустым
+  кэш.clear();
   const м = модель();
   const опора = Д.proto.anchors.find((a) => a.id === 'an-solomon-4');
   const н479 = м?.choices?.find((c) => c.number === 479)?.number;
@@ -120,8 +135,13 @@ export function жизнь(id: string): Жизнь {
     if (рожд.cert === 'inference' && рожд.parts?.length) {
       // число стиха (Быт 5:32 — «пятьсот лет») — первым, вывод — с частями и подписью
       out.звенья.push({ text: 'Сказано', refs: [рожд.refs[0]], cert: 'scripture', цитата: рожд.refs[0] });
-      out.звенья.push({ text: `Вывод: при рождении возраст отца (${отец.имя}) — ${число(рожд.number ?? 0, ['год', 'года', 'лет'])}; ${рожд.parts.map((p) => `${p.number} — ${p.ref}`).join('; ')}`, refs: рожд.parts.map((p) => p.ref), cert: 'inference' });
-    } else
+      out.звенья.push({ text: `Вывод: при рождении возраст отца (${отец.имя}) — ${число(рожд.number ?? 0, ['год', 'года', 'лет'])}; ${рожд.parts.map((p) => `${p.number} — ${p.ref}`).join('; ')}`, refs: рожд.parts.map((p) => p.ref), cert: 'inference', простое: ПРОСТОЙ_ВЫВОД[id] });
+      const ст = ЧИСЛО_СТИХА[id];
+      out.возрастОтца = `${ст ? `${ст.n} (${ст.стих}); ` : ''}по выводу — ${рожд.number}`;
+    } else {
+      out.возрастОтца = `${рожд.number} (${рожд.refs[0]})`;
+    }
+    if (!(рожд.cert === 'inference' && рожд.parts?.length))
       out.звенья.push({ text: `Возраст отца (${отец.имя}) при рождении — ${число(рожд.number ?? 0, ['год', 'года', 'лет'])}`, refs: рожд.refs, cert: рожд.cert, ...(рожд.reading && { модель: рожд.reading.set }) });
     if (отец.am && рожд.number !== undefined) am = отец.am[0] + рожд.number;
   }
@@ -130,13 +150,14 @@ export function жизнь(id: string): Жизнь {
     const отец = жизнь(неРаньше[0].other!);
     for (const x of неРаньше) {
       if (x.cert === 'scripture') out.звенья.push({ text: 'Сказано', refs: [x.refs[0]], cert: 'scripture', цитата: x.refs[0] });
-      else out.звенья.push({ text: `Вывод: возраст отца (${отец.имя}) при рождении — не меньше ${x.number}; ${(x.parts ?? []).map((p) => `${p.number} — ${p.ref}`).join('; ')}`, refs: x.refs, cert: 'inference' });
+      else out.звенья.push({ text: `Вывод: возраст отца (${отец.имя}) при рождении — не меньше ${x.number}; ${(x.parts ?? []).map((p) => `${p.number} — ${p.ref}`).join('; ')}`, refs: x.refs, cert: 'inference', простое: ПРОСТОЙ_ВЫВОД[id] });
     }
+    out.возрастОтца = неРаньше.map((x) => (x.cert === 'scripture' ? `${x.number} (${x.refs[0]})` : `по выводу — не меньше ${x.number}`)).join('; ');
     const выбор = м?.choices?.find((c) => c.number !== undefined && неРаньше.some((x) => x.number === c.number && x.refs.some((r) => c.refs.includes(r))));
     if (выбор && отец.am) {
       am = отец.am[0] + выбор.number!;
       out.выборМодели = true;
-      out.звенья.push({ text: `Выбор модели «${м!.name}»: ${выбор.what}`, refs: выбор.refs, cert: 'model', модель: м!.id });
+      out.звенья.push({ text: `Выбор модели «${м!.name}»: ${выбор.what}`, refs: выбор.refs, cert: 'model', модель: м!.id, простое: `Мы поставили полосу по ${выбор.number}.` });
     }
   }
   // ---- длина жизни ----

@@ -63,6 +63,8 @@ describe('модель возврата (08 § 6.5)', () => {
     await p.waitForSelector('#h1:text("Ной и потоп — Время")');
     expect(await p.locator('#кн-назад').innerText()).toContain('Назад: Ной и потоп');
     // лист выбранной истории открыт (уровень 2 из адреса); Esc закрывает лист и не уводит с экрана
+    await p.waitForSelector('aside.лист-времени');
+    await p.waitForTimeout(150);
     await p.keyboard.press('Escape');
     await p.waitForTimeout(300);
     expect(await p.locator('#h1').innerText()).toBe('Время');
@@ -216,6 +218,7 @@ describe('простой слой «Времени» без годов расч�
       const текст = await p.evaluate(() => document.querySelector('main')?.textContent ?? '');
       expect(текст).not.toMatch(/\d\s*г\.\s*до\s*Р\.\s*Х\./);
       expect(текст).not.toMatch(/расч\./);
+      expect(текст, 'имя модели — только во втором слое (сверка педагога, С-2)').not.toMatch(/Долгое пребывание/);
       await p.close();
     });
   it('второй слой: год до Р. Х. — с названием модели', async () => {
@@ -224,6 +227,21 @@ describe('простой слой «Времени» без годов расч�
     const текст = await p.evaluate(() => document.querySelector('main')?.textContent ?? '');
     expect(текст).toMatch(/г\. до Р\. Х\./);
     expect(текст).toMatch(/Долгое пребывание/);
+    await p.close();
+  });
+});
+
+describe('таблица-двойник «Жизней»: возраст отца — числа текста (сверка педагога, С-3)', () => {
+  it('у Сима — 500 (Быт 5:32), у Авраама — 70 (Быт 11:26); в столбце нет ячейки без числа', async () => {
+    const p = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+    await открыть(p, 'vremya?view=lives&layer=1');
+    const ряды = await p.evaluate(() =>
+      [...document.querySelectorAll('.двойник tbody tr')].map((tr) => [tr.querySelector('th')?.textContent?.trim() ?? '', tr.querySelectorAll('td')[2]?.textContent?.trim() ?? '']),
+    );
+    const к = new Map(ряды as [string, string][]);
+    expect(к.get('Сим')).toMatch(/^500 \(Быт 5:32\); по выводу — 502$/);
+    expect(к.get('Авраам')).toMatch(/^70 \(Быт 11:26\); по выводу — не меньше 130$/);
+    for (const [имя, ячейка] of ряды) expect(ячейка === '—' || /\d/.test(ячейка), имя).toBe(true);
     await p.close();
   });
 });

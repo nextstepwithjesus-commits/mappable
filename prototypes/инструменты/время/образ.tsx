@@ -43,15 +43,23 @@ export function ОбразЭпох({ залитые, ширина = 352 }: { з�
         {ep.slice(1, n - 1).map((_, i) => (
           <path d={`M${((i + 1) * кл).toFixed(1)} 0V${h}`} stroke="currentColor" stroke-width={1} class="клетка-пустая" />
         ))}
-        {ep.map((e, i) => (залитые.includes(e.id) ? <rect x={x(i)} y={0} width={кл} height={h} fill="currentColor" /> : null))}
+        {/* выбранная эпоха — языком выбора 08 § 5.2: контур и жёлтая полоса по нижнему краю, без чёрной заливки */}
+        {ep.map((e, i) =>
+          залитые.includes(e.id) ? (
+            <g class="образ-время__выбор">
+              <rect x={x(i) + 1} y={h - 5} width={кл - 2} height={4} style={{ fill: 'var(--tsvet-vybor)' }} />
+              <rect x={x(i) + 1} y={1} width={кл - 2} height={h - 2} fill="none" stroke="currentColor" stroke-width={2} />
+            </g>
+          ) : null,
+        )}
         <path d={`M${(n - 1) * кл + 1} ${h - 2}l3 -${h - 4}M${(n - 1) * кл + 5} ${h - 2}l3 -${h - 4}`} stroke="currentColor" stroke-width={1.5} class="клетка-пустая" />
       </svg>
       <span class="образ-время__края т-адрес">
         <span>{ep[0].short}</span>
-        <span class="образ-время__имя">{имя.join(' — ')}</span>
+        <span class="образ-время__имя">{имя.join(', ')}</span>
         <span>{ep[n - 1].short}</span>
       </span>
-      <span class="т-адрес образ-время__масштаб">не в масштабе</span>
+      <span class="т-адрес образ-время__масштаб">клетки равные, эпохи разной длины</span>
     </span>
   );
 }

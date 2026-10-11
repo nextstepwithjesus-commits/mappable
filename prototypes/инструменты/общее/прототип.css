@@ -314,7 +314,10 @@ button.стих__номер[data-current] { color: var(--tsvet-chernila); font-w
 @media (pointer: coarse) { .правитель { min-height: var(--tsel-knopka); } }
 /* телефон «Времени»: одна строка управления (арт С8) */
 @media (max-width: 37.4375em) {
-  .время .строка-инструмента { flex-wrap: nowrap; overflow: hidden; gap: var(--otstup-4); }
+  .время .строка-инструмента { flex-wrap: wrap; gap: var(--otstup-4); }
+  /* сверка арт-директора: вкладки — одним рядом; «Ещё» — вне ряда, при нехватке места переносится целиком */
+  .время .вкладки { flex-wrap: nowrap; flex: 0 1 auto; min-width: 0; }
+  .время .вкладка { padding: 0 var(--otstup-8); white-space: nowrap; }
   .слой-времени { display: none; }
   .время .эпохи-кнопка { display: inline-block; margin: 0; }
 }
@@ -323,7 +326,8 @@ button.стих__номер[data-current] { color: var(--tsvet-chernila); font-w
 .строка__метка { font-weight: 450; }
 .кто-ещё .кн--тихо { display: inline-flex; align-items: center; gap: var(--otstup-4); }
 /* синопсис (П-6; арт Б4, С6): отметка — плашкой «подложка», не подчёркиванием ссылки; заголовок сцены крупнее кнопки */
-.совпадение { text-decoration: none; background: var(--tsvet-podlozhka); box-shadow: 0 0 0 1px var(--tsvet-setka); border-radius: 2px; }
+.совпадение { text-decoration: none; background: var(--tsvet-podlozhka); border-radius: 2px; }
+@media (forced-colors: active) { .совпадение { outline: 1px solid CanvasText; } }
 .синопсис-обёртка input[type="checkbox"] { accent-color: var(--tsvet-chernila); }
 .синопсис th.сцена { font-family: var(--tekst-interfeys-font-family); font-size: var(--tekst-interfeys-font-size); line-height: var(--tekst-interfeys-line-height); font-weight: 600; color: var(--tsvet-chernila); }
 .синопсис td.сцена-действие { text-align: right; border-left: 0; vertical-align: bottom; }
@@ -362,3 +366,25 @@ body:has(.экран-glavnaya) .шапка__поиск { display: none; }
 .строка__ссылка { padding-block: 1px; }
 .указатель-эпох__клетка--разрыв .указатель-эпох__имя, .указатель-эпох__клетка:nth-last-child(2) .указатель-эпох__имя { left: auto; right: 0; transform: none; }
 .указатель-эпох__клетка:first-child .указатель-эпох__имя { left: 0; transform: none; }
+
+/* сверка арт-директора: ряд «Общие слова» — голос аппарата (Golos 14) одной строкой на всю ширину; плашка совпадения — без рамки */
+.синопсис tr.синопсис__общие td { display: table-cell; font-family: var(--tekst-interfeys-font-family); font-size: var(--tekst-interfeys-font-size); line-height: var(--tekst-interfeys-line-height); border-left: 0; }
+.стих__пометка { font-style: normal; }
+/* сверка арт-директора С7: Chromium не держит предел строк с переносом — на телефоне без автопереносов, рваный край */
+@media (max-width: 37.4375em) { .писание, .писание * { hyphens: manual; -webkit-hyphens: manual; text-align: start; } }
+/* подпись лет прерывает линию потопа (08 § 3.2.2 п. 6) */
+.жизни__подпись { background: var(--tsvet-fon); padding-inline: 2px; }
+/* каталог на телефоне: две колонки, заголовок сжимается (доступность № 6: «Главы» не выходит за край на 320 и при «Самом крупном») */
+@media (max-width: 37.4375em) {
+  .каталог .заголовок-книги { grid-template-columns: minmax(0, 1fr) auto; column-gap: var(--otstup-8); }
+  .каталог .заголовок-книги > h1 { min-width: 0; overflow-wrap: break-word; }
+  .каталог .заголовок-книги__слой { grid-column: 1 / -1; }
+}
+/* строка адреса части переносится (доступность № 6, «Самый крупный») */
+@media (max-width: 37.4375em) { .часть__кнопка .т-адрес { white-space: normal; } }
+/* узкий экран и «Самый крупный»: подписи и рисунок не выходят за край (доступность № 6); значения — в ячейке и в таблице */
+.жизни__полоса-место { overflow: hidden; }
+@media (max-width: 37.4375em) {
+  .правители td, .правители th { padding-inline: var(--otstup-4); overflow-wrap: anywhere; }
+  .правители .правитель { white-space: normal; text-align: start; }
+}

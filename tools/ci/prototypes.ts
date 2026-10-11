@@ -142,7 +142,10 @@ async function main() {
       await p.waitForTimeout(150);
       const name = `${pg.spa ? 'инструменты' : pg.dir.split('/').pop()}-${(pg.page || 'главная').replace(/\.html$/, '').replace(/[/?&=]/g, '_')}${pg.spa && pg.q !== 'age=null' ? `_${pg.q.replace(/[&=]/g, '_')}` : ''}-${v.name}`;
       await p.screenshot({ path: join(OUT, `${name}.png`) });
-      const scroll = await p.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+      // ширина окна — из настроек варианта, не `innerWidth`: при эмуляции телефона (`isMobile`) окно раскладки растягивается
+      // по содержимому, и `scrollWidth − innerWidth` даёт 0 при выходе за край (сверка доступности пакета 1, № 6)
+      const ширина = v.ctx.viewport?.width ?? 1280;
+      const scroll = await p.evaluate((w) => Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - w, ширина);
       if (scroll > 0) fails.push({ where, what: `горизонтальная прокрутка ${scroll} px` });
       for (const e of errors) fails.push({ where, what: `ошибка JS: ${e.slice(0, 200)}` });
       for (const u of net) fails.push({ where, what: `запрос в сеть: ${u}` });
