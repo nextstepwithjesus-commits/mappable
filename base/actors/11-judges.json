@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data/persons/11-judges.json",
-   "commit": "03ddcf8"
+   "commit": "6fea95a"
   }
  },
  "sources": [
@@ -24,7 +24,8 @@
      "type": "main",
      "refs": [
       "Чис 22:5"
-     ]
+     ],
+     "id": "p-veor-otets-valaama#n1"
     },
     {
      "form": "Восор",
@@ -32,7 +33,30 @@
      "refs": [
       "2Пет 2:15"
      ],
-     "note": "форма греческого текста: «Валаама, сына Восорова»"
+     "note": "форма греческого текста: «Валаама, сына Восорова»",
+     "id": "p-veor-otets-valaama#n2",
+     "cert": "inference",
+     "compare": {
+      "form": {
+       "refs": [
+        "2Пет 2:15"
+       ]
+      },
+      "main": {
+       "refs": [
+        "Чис 22:5"
+       ]
+      }
+     },
+     "why": {
+      "codes": [
+       "parallel",
+       "same-node",
+       "one-candidate",
+       "no-contradiction"
+      ],
+      "note": "оба имени — на месте отца Валаама: «Валааму, сыну Веорову» (Чис 22:5) — «Валаама, сына Восорова» (2Пет 2:15)"
+     }
     }
    ],
    "disambig": "отец Валаама",
@@ -90,7 +114,10 @@
       ]
      }
     }
-   ]
+   ],
+   "prov": {
+    "by": "исправление D15-8"
+   }
   },
   {
    "id": "p-valaam",

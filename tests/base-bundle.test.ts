@@ -13,7 +13,10 @@ describe('сборка для приложения', () => {
     expect(ix.origins.filter((o: any) => o.idt?.d === 'possible' || 'id' in o)).toEqual([]);
     const possible: any[] = ix.cand.filter((o: any) => o.idt?.d === 'possible');
     expect(possible.length).toBe(base.origins.filter((o) => o.identity?.degree === 'possible').length);
-    expect(possible.length).toBeGreaterThanOrEqual(48);
+    // было 48; Д-15, партия 2: семь рёбер больше не «предположительно» — пять перешли к своим карточкам вида (в) с родителем или
+    // ребёнком из стиха (Ефан, сын Кишия; Елиам, сын Ахитофела; Ир — отец Шупима и Хупима; Иоиарив — отец Иедаии), два держатся на
+    // форме «выв.» и несут identity … inferred (Харим — Адна, Неем 12:15; Силом — Ашбея, 1Пар 4:21)
+    expect(possible.length).toBeGreaterThanOrEqual(41);
     for (const o of possible) expect([o.c, !!o.idt.n, o.idt.r.length > 0]).toEqual([o.c, true, true]);
     // неуверенный родитель не называется; при неуверенном ребёнке родитель сказан текстом и назван
     for (const o of possible) expect([o.c, o.idt.o === 'parent' ? o.p : !!o.p]).toEqual([o.c, o.idt.o === 'parent' ? undefined : true]);

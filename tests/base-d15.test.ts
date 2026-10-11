@@ -104,12 +104,17 @@ describe('К-18: форма имени — уровень, стихи сравн
     expect(errs(b, 'форма имени')).toMatch(/со словами «он же», «иначе»/);
   });
 
-  it('форма без общего стиха с основным и без вида — замечание (до конца Д-15)', () => {
-    const w = validate(base).filter((i) => i.check === 'форма без вида');
-    expect(w.every((i) => i.level === 'warn')).toBe(true);
-    expect(w.length).toBeGreaterThan(100);
-    // формы, которым Д-15 уже дал вид, в замечаниях не стоят
-    expect(w.filter((i) => /p-abikhail-otets-esfiri|p-faddey|p-iofor/.test(i.where))).toEqual([]);
+  it('форма без общего стиха с основным и без вида — ошибка (после Д-15, партия 2 — 02 § 3.3.5 [4.4 по Р-5])', () => {
+    // настоящая база: все 208 форм получили вид (Д-15, партия 2)
+    expect(validate(base).filter((i) => i.check === 'форма без вида')).toEqual([]);
+    // форма без вида — ошибка; та же форма с видом — нет
+    const b = structuredClone(base);
+    card(b, 'p-iessey').names.push({ form: 'Ишай', type: 'variant', refs: ['Быт 1:1'] });
+    expect(errs(b, 'форма без вида')).toMatch(/p-iessey «Ишай»: нет общего стиха с основным именем «Иессей»/);
+    const c = structuredClone(base);
+    const n = card(c, 'p-iessey').names.find((x) => x.form === 'Иесей')!;
+    delete n.cert;
+    expect(errs(c, 'форма без вида')).toMatch(/p-iessey «Иесей»/);
   });
 });
 
@@ -165,11 +170,11 @@ describe('К-19: сборка, поиск и выгрузка «Тождеств
 });
 
 describe('Д-15: начало — данные', () => {
-  it('лиц столько же: +1 Рагуил, −1 Иуда Иаковлев; переадресация Иуды — на Фаддея', () => {
+  it('лиц: +1 Рагуил, −1 Иуда Иаковлев (начало); +22 карточки вида (в) (партия 2); переадресация Иуды — на Фаддея', () => {
     const ids = new Set(base.volumes.flatMap((v) => v.actors.map((a: Actor) => a.id)));
     expect(ids.has('p-raguil')).toBe(true);
     expect(ids.has('p-iuda-iakovlev')).toBe(false);
-    expect(ids.size).toBe(2699);
+    expect(ids.size).toBe(2699 + 22);
   });
 });
 
@@ -193,3 +198,77 @@ describe('Д-15: правка по второму ключу В-32 (D15-4)', () 
   });
 });
 
+
+describe('Д-15, партия 2 — данные (tools/base/corrections-d15b.ts)', () => {
+  const names = (id: string) => card(base, id).names.map((n) => `${n.form}${n.type === 'main' ? '*' : ''}${n.cert === 'inference' ? '~' : n.cert === 'scripture' ? '=' : ''}`);
+  it('Озия и Азария — вид (б): «Азария» — форма «выв.» со стихами сравнения, уточнение без «он же»; запись по 4Цар 15:1 — с idCert', () => {
+    const a = card(base, 'p-oziya');
+    expect(names('p-oziya')).toEqual(['Озия*', 'Азария~']);
+    expect(a.disambig).toBe('царь Иудейский');
+    const az = a.names[1];
+    expect([az.id, az.compare?.main.refs, az.why?.codes]).toEqual(['p-oziya#n2', ['2Пар 26:1', '4Цар 15:32'], ['parallel', 'same-node', 'one-candidate', 'no-contradiction']]);
+    expect(a.facts.find((f) => f.id === 'a-9071')?.idCert?.form).toBe('p-oziya#n2');
+  });
+
+  it('Сафай (с формой «Шима») и Самай — вид (в): свои карточки, «возможно, то же лицо» с Саммой; строки истории — на карточке Сафая', () => {
+    expect(names('p-samma-syn-iesseya')).toEqual(['Самма*']);
+    expect(names('p-safay-brat-davida')).toEqual(['Сафай*', 'Шима~']);
+    expect(names('p-samay-brat-davida')).toEqual(['Самай*']);
+    const rel = (a: string) => base.relations.filter((r) => r.a === a && r.kind === 'possibly-same').map((r) => [r.b, r.cert]);
+    expect(rel('p-safay-brat-davida')).toEqual([['p-samma-syn-iesseya', 'inference']]);
+    expect(rel('p-samay-brat-davida')).toEqual([['p-samma-syn-iesseya', 'inference']]);
+    expect(base.origins.filter((o) => o.parent === 'p-safay-brat-davida').map((o) => o.child)).toEqual(['p-ionafan-syn-sammy']);
+    expect(base.origins.filter((o) => o.parent === 'p-samay-brat-davida').map((o) => o.child)).toEqual(['p-ionadav-syn-sammy']);
+    const s = base.stories!.find((x: any) => x.id === 'e-snova-voyna-s-filistimlyanami')!;
+    const rows = s.actors.filter((x: any) => x.actor === 'p-safay-brat-davida').map((x: any) => [x.label, x.cert, x.idCert?.form]);
+    expect(rows).toEqual([['Сафай', 'scripture', undefined], ['Шима', 'inference', 'p-safay-brat-davida#n2']]);
+  });
+
+  it('Симон Зилот — форма «выв.» по перечню с названным числом; строка Лк 6:15 — с idCert, Мк 3:18 — «Писание»', () => {
+    const z = card(base, 'p-simon-zilot').names.find((n) => n.form === 'Симон Зилот')!;
+    expect([z.cert, z.compare?.count?.ref]).toEqual(['inference', 'Лк 6:13']);
+    const s = base.stories!.find((x: any) => x.id === 'e-iisus-stavit-dvenadtsat')!;
+    expect(s.actors.filter((x: any) => x.actor === 'p-simon-zilot').map((x: any) => [x.refs[0], x.cert, x.idCert?.form])).toEqual([['Мк 3:18', 'scripture', undefined], ['Лк 6:15', 'scripture', 'p-simon-zilot#n3']]);
+  });
+
+  it('основное имя — по числу стихов: Иашув, Шухам, Илий, Гирсон, Навин, Авинадав, Беродах Баладан', () => {
+    for (const [id, main] of [['p-iov-syn-issakhara', 'Иашув'], ['p-khushim-syn-dana', 'Шухам'], ['p-eliil-syn-toakha', 'Илий'], ['p-girsam', 'Гирсон'], ['p-non', 'Навин'], ['p-aminadav-syn-saula', 'Авинадав'], ['p-merodakh-valadan', 'Беродах Баладан']]) {
+      expect([id, card(base, id).names[0].form, card(base, id).names[0].type]).toEqual([id, main, 'main']);
+    }
+    const iov = card(base, 'p-iov-syn-issakhara').names.find((n) => n.form === 'Иов')!;
+    expect([iov.cert, iov.compare?.form.refs, iov.compare?.count?.ref]).toEqual(['inference', ['Быт 46:13'], '1Пар 7:1']);
+  });
+
+  it('другое написание того же имени — форма «Писание»; имя народа — не форма лица; Иез 1:2 — не форма Иехонии', () => {
+    expect(names('p-iessey')).toContain('Иесей=');
+    expect(names('p-amon-tsar')).toContain('Аммон=');
+    expect(names('p-iavan')).toEqual(['Иаван*']);
+    expect(names('p-kedar')).toEqual(['Кедар*']);
+    expect(card(base, 'p-iekhoniya').names.flatMap((n) => n.refs)).not.toContain('Иез 1:2');
+    expect(names('p-pontiy-pilat')).toContain('Пилат=');
+  });
+
+  it('Д-р14: у Маахи один отец; две матери Авии — набор прочтений; Гофониил — «из потомков» у Хелдая; «из дома Харима» — степень не названа', () => {
+    expect(base.origins.filter((o) => o.child === 'p-maakha-doch-avessaloma' && o.role === 'father').map((o) => [o.parent, o.reading])).toEqual([['p-avessalom', undefined]]);
+    expect(base.readings.find((r) => r.id === 'r-father-maakha-doch-avessaloma')).toBeUndefined();
+    expect(base.origins.filter((o) => o.child === 'p-aviya' && o.role === 'mother').map((o) => [o.parent, o.reading?.set, o.primary])).toEqual(
+      [['p-maakha-doch-avessaloma', 'r-mother-aviya', true], ['p-mikhaiya-doch-uriila', 'r-mother-aviya', false]],
+    );
+    const g = base.origins.filter((o) => o.parent === 'p-gofoniil' && o.refs.includes('1Пар 27:15'));
+    expect(g.map((o) => [o.child, o.kind, o.degree, o.words?.[0].text])).toEqual([['p-kheldai-netofafyanin', 'ancestor', 'unstated', 'из потомков Гофониила']]);
+    const ad = base.origins.find((o) => o.child === 'p-adna-neem12')!;
+    expect([ad.kind, ad.degree, ad.identity?.degree, ad.identity?.form]).toEqual(['ancestor', 'unstated', 'inferred', 'p-rekhum-neem12#n2']);
+  });
+
+  it('вид (в) — своя карточка, ребро к ней по стиху и «возможно, то же лицо»: Рахава, Силуан, Ешбаал, Михаия, Елиам, сын Ахитофела', () => {
+    const rel = (a: string) => base.relations.filter((r) => r.a === a && r.kind === 'possibly-same').map((r) => r.b).sort();
+    expect(rel('p-rakhava')).toEqual(['p-raav']);
+    expect(rel('p-siluan')).toEqual(['p-sila']);
+    expect(rel('p-eshbaal-syn-saula')).toEqual(['p-iessui', 'p-ievosfey']);
+    expect(rel('p-mikhaiya-doch-uriila')).toEqual(['p-maakha-doch-avessaloma']);
+    expect(rel('p-eliam-syn-akhitofela')).toEqual(['p-eliam']);
+    expect(base.origins.filter((o) => o.child === 'p-vooz' && o.role === 'mother').map((o) => o.parent)).toEqual(['p-rakhava']);
+    expect(base.origins.filter((o) => o.child === 'p-eshbaal-syn-saula').map((o) => [o.parent, o.refs])).toEqual([['p-saul', ['1Пар 8:33', '1Пар 9:39']]]);
+    expect(card(base, 'p-sila').disambig).not.toMatch(/он же/);
+  });
+});

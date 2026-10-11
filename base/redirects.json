@@ -510,6 +510,123 @@
     "Исх 18:2"
    ],
    "at": "2026-10-11"
+  },
+  {
+   "from": "o-makhalafa-doch-izmaila--raguil-syn-isava",
+   "to": [
+    "o-vasemafa-doch-izmaila--raguil-syn-isava"
+   ],
+   "reason": "у ребра сменился конец или номер лица — новая запись (02 § 3.3.1 [4.2]; К-12)",
+   "refs": [],
+   "at": "2026-10-11"
+  },
+  {
+   "from": "o-zimri-syn-zary--kharmiy-syn-zimri",
+   "to": [
+    "o-zavdiy-syn-zary--kharmiy-syn-zimri"
+   ],
+   "reason": "у ребра сменился конец или номер лица — новая запись (02 § 3.3.1 [4.2]; К-12)",
+   "refs": [],
+   "at": "2026-10-11"
+  },
+  {
+   "from": "o-raav--vooz",
+   "to": [
+    "o-rakhava--vooz"
+   ],
+   "reason": "у ребра сменился конец или номер лица — новая запись (02 § 3.3.1 [4.2]; К-12)",
+   "refs": [],
+   "at": "2026-10-11"
+  },
+  {
+   "from": "o-samma-syn-iesseya--ionadav-syn-sammy",
+   "to": [
+    "o-samay-brat-davida--ionadav-syn-sammy"
+   ],
+   "reason": "у ребра сменился конец или номер лица — новая запись (02 § 3.3.1 [4.2]; К-12)",
+   "refs": [],
+   "at": "2026-10-11"
+  },
+  {
+   "from": "o-samma-syn-iesseya--ionafan-syn-sammy",
+   "to": [
+    "o-safay-brat-davida--ionafan-syn-sammy"
+   ],
+   "reason": "у ребра сменился конец или номер лица — новая запись (02 § 3.3.1 [4.2]; К-12)",
+   "refs": [],
+   "at": "2026-10-11"
+  },
+  {
+   "from": "o-maaseya-otets-tsefanii--tsefaniya-syn-maasei",
+   "to": [
+    "o-maaseya-otets-tsefanii--sofoniya-syn-maasei"
+   ],
+   "reason": "у ребра сменился конец или номер лица — новая запись (02 § 3.3.1 [4.2]; К-12)",
+   "refs": [],
+   "at": "2026-10-11"
+  },
+  {
+   "from": "o-kishiy--idifun",
+   "to": [
+    "o-kishiy--efan-syn-kishiya"
+   ],
+   "reason": "у ребра сменился конец или номер лица — новая запись (02 § 3.3.1 [4.2]; К-12)",
+   "refs": [],
+   "at": "2026-10-11"
+  },
+  {
+   "from": "o-iri-syn-bely--shupim-syn-ira",
+   "to": [
+    "o-ir-otets-shupima--shupim-syn-ira"
+   ],
+   "reason": "у ребра сменился конец или номер лица — новая запись (02 § 3.3.1 [4.2]; К-12)",
+   "refs": [],
+   "at": "2026-10-11"
+  },
+  {
+   "from": "o-iri-syn-bely--khupim-syn-ira",
+   "to": [
+    "o-ir-otets-shupima--khupim-syn-ira"
+   ],
+   "reason": "у ребра сменился конец или номер лица — новая запись (02 § 3.3.1 [4.2]; К-12)",
+   "refs": [],
+   "at": "2026-10-11"
+  },
+  {
+   "from": "o-akhitofel--eliam",
+   "to": [
+    "o-akhitofel--eliam-syn-akhitofela"
+   ],
+   "reason": "у ребра сменился конец или номер лица — новая запись (02 § 3.3.1 [4.2]; К-12)",
+   "refs": [],
+   "at": "2026-10-11"
+  },
+  {
+   "from": "o-uriil-iz-givy--maakha-doch-avessaloma",
+   "to": [
+    "o-uriil-iz-givy--mikhaiya-doch-uriila"
+   ],
+   "reason": "у ребра сменился конец или номер лица — новая запись (02 § 3.3.1 [4.2]; К-12)",
+   "refs": [],
+   "at": "2026-10-11"
+  },
+  {
+   "from": "o-gofoniil--khelev",
+   "to": [
+    "o-gofoniil--kheldai-netofafyanin"
+   ],
+   "reason": "у ребра сменился конец или номер лица — новая запись (02 § 3.3.1 [4.2]; К-12)",
+   "refs": [],
+   "at": "2026-10-11"
+  },
+  {
+   "from": "o-iegoiariv--iedaiya-syn-ioiariva",
+   "to": [
+    "o-ioiariv-1par9-10--iedaiya-syn-ioiariva"
+   ],
+   "reason": "у ребра сменился конец или номер лица — новая запись (02 § 3.3.1 [4.2]; К-12)",
+   "refs": [],
+   "at": "2026-10-11"
   }
  ]
 }

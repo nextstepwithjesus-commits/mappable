@@ -178,7 +178,10 @@ describe('подписи второго ключа (Д-партия-1-второ
     const d1 = (base.checks ?? []).filter((c) => /Д-партия-1/.test(c.by));
     const n = (re: RegExp) => d1.filter((c) => re.test(c.key)).length;
     // было 323 и 714; Д-15 (D15-1): a-12965 («пребывал с Апостолами в горнице», Деян 1:13) получил idCert — подпись снята до второго ключа
-    expect([n(/^(kin|union|redirect):/), n(/^origin:/), n(/^fact:/), d1.length]).toEqual([23, 368, 322, 713]);
+    // Д-15, партия 2: сняты подписи пяти рёбер (o-gofoniil--khelev — к своей карточке Хелдая; o-shela-syn-iudy--ashbeya,
+    // o-shekhaniya-neem12--iosif-neem12, o-rekhum-neem12--adna-neem12, o-meremof-neem12--khelkiya-neem12-15 — тождество по форме
+    // «выв.») и a-12974 (Симон Зилот — idCert)
+    expect([n(/^(kin|union|redirect):/), n(/^origin:/), n(/^fact:/), d1.length]).toEqual([23, 363, 321, 707]);
     expect(d1.filter((c) => /^relation:|^actor:/.test(c.key))).toEqual([]);
     expect(d1.every((c) => c.kind === 'agent')).toBe(true);
     // снимок на время подписи: контрольный набор (103) + Д-партия 1; подписи следующих партий не считаются

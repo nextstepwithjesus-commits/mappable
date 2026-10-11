@@ -472,10 +472,16 @@ export interface ChronoRecord {
  * `years-after` — «в N-й год по…» от события без лица («в сороковой год по исшествии», Чис 33:38).
  */
 export type TimeKind =
-  | 'age-at-birth' | 'age-at-death' | 'reign' | 'age-at-accession' | 'synchronism' | 'under-king' | 'met'
+  | 'age-at-birth' | 'age-at-death' | 'end-of-life' | 'reign' | 'age-at-accession' | 'synchronism' | 'under-king' | 'met'
   | 'not-before' | 'not-after' | 'succeeded' | 'age-at-event' | 'years-after';
+/**
+ * `end-of-life` — «конец земной жизни» (Д6-3; предложен в поправку 02 § 3.15.5): число — все годы земной жизни, а смерти текст
+ * вне скобок не называет. Енох: «Всех же дней Еноха было триста шестьдесят пять лет» (Быт 5:23) — «и не стало его, потому
+ * что Бог взял его» (Быт 5:24), «не видел смерти» (Евр 11:5); Сим и потомки в Быт 11: «и умер» — только в скобках. Подпись —
+ * «прожил всего N лет», не «умер в N лет»; для расчёта модели — та же сумма лет, что у `age-at-death`.
+ */
 export const TIME_KINDS: readonly TimeKind[] = [
-  'age-at-birth', 'age-at-death', 'reign', 'age-at-accession', 'synchronism', 'under-king', 'met',
+  'age-at-birth', 'age-at-death', 'end-of-life', 'reign', 'age-at-accession', 'synchronism', 'under-king', 'met',
   'not-before', 'not-after', 'succeeded', 'age-at-event', 'years-after',
 ];
 /** Поле царства (02 § 3.15.5; 04 § 9 п. 18). */
@@ -514,6 +520,11 @@ export interface TimeInput {
   reading?: { set: string; in: string };
   /** Год события считает сеть: по модели (до царей разделённого царства) или по схеме царей. Ни того ни другого — модели в 04 нет. */
   calc?: { event: string; model?: string; scheme?: string };
+  /**
+   * Вход держится на форме «выв.» карточки лица или второго участника (02 § 3.3.5; Д-15): «В тридцать девятом году Азарии»
+   * (4Цар 15:17) — Азария — форма «выв.» карточки Озии. Предложено в поправку 02 вместе с видами входов Д6.
+   */
+  idCert?: IdCert;
   note?: string;
 }
 

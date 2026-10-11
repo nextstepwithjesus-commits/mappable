@@ -16,8 +16,12 @@ import type { ChronoModel, KingScheme, TimeInput } from './types.ts';
 export type Year = number;
 export interface ModelYears {
   model: string;
-  /** Рождение и смерть лица (годы исторические). */
-  person: Map<string, { born?: Year; died?: Year }>;
+  /**
+   * Рождение и конец земной жизни лица (годы исторические). `died` — год конца земной жизни по сумме лет; `end` — как он назван:
+   * нет поля — «возраст при смерти»; `end-of-life` («конец земной жизни»: Енох, Быт 5:24; Сим и потомки в Быт 11 — «и умер» в
+   * скобках). Подпись у `end-of-life` — «прожил всего N лет», не «умер» (Д6-3).
+   */
+  person: Map<string, { born?: Year; died?: Year; end?: 'death' | 'end-of-life' }>;
   /** События границ: сотворение Адама, потоп, выход из Харрана, приход в Египет, Исход. */
   events: Record<'creation' | 'flood' | 'exit' | 'egypt' | 'exodus', Year>;
 }
@@ -40,13 +44,14 @@ function birthLinks(base: Base): Map<string, { father: string; n: number; br?: n
   }
   return out;
 }
-function deathAges(base: Base): Map<string, number> {
-  const out = new Map<string, number>();
+function deathAges(base: Base): Map<string, { n: number; end: 'death' | 'end-of-life' }> {
+  const out = new Map<string, { n: number; end: 'death' | 'end-of-life' }>();
   for (const c of base.chrono) {
     const ch: any = c.chrono;
-    const t = Array.isArray(ch?.inputs) ? (ch.inputs as TimeInput[]).find((x) => x.kind === 'age-at-death') : undefined;
+    // «конец земной жизни» — та же сумма лет, что «возраст при смерти» (Д6-3)
+    const t = Array.isArray(ch?.inputs) ? (ch.inputs as TimeInput[]).find((x) => x.kind === 'age-at-death' || x.kind === 'end-of-life') : undefined;
     const n = t?.number ?? ch?.died?.age;
-    if (typeof n === 'number') out.set(c.actor, n);
+    if (typeof n === 'number') out.set(c.actor, { n, end: t?.kind === 'end-of-life' ? 'end-of-life' : 'death' });
   }
   return out;
 }
@@ -89,12 +94,12 @@ export function modelYears(base: Base, id: string): ModelYears {
   const creationBC = exodusBC - sojourn - (fromExit ? exit : egypt);
   const Y = (amYear: number): Year => creationBC + amYear; // исторический год: < 0 — до Р. Х. (до первого года по Р. Х. не доходит)
   const deaths = deathAges(base);
-  const person = new Map<string, { born?: Year; died?: Year }>();
+  const person = new Map<string, { born?: Year; died?: Year; end?: 'death' | 'end-of-life' }>();
   for (const p of new Set([...links.keys(), 'p-adam'])) {
     const b = at(p);
     if (b === undefined) continue;
     const d = deaths.get(p);
-    person.set(p, { born: Y(b), ...(d !== undefined && { died: Y(b + d) }) });
+    person.set(p, { born: Y(b), ...(d !== undefined && { died: Y(b + d.n) }), ...(d?.end === 'end-of-life' && { end: d.end }) });
   }
   return { model: id, person, events: { creation: Y(0), flood: Y(flood), exit: Y(exit), egypt: Y(egypt), exodus: exodusBC } };
 }

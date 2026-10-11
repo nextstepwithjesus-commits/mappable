@@ -186,7 +186,9 @@ export function validate(base: Base): Issue[] {
       }
       refs.push(...own);
       if ('cert' in x && !CERTS.has(x.cert)) err('достоверность', where, `неизвестная степень «${x.cert}»`);
-      if (x.cert === 'inference' && own.length && own.reduce((n, r) => n + verseCount(r), 0) < 2) {
+      // форма имени «выв.» опирается и на стихи сравнения обеих сторон (02 § 3.3.5 [4.4 по Р-4]: стихи сравнения — стихи записи)
+      const cmp: string[] = x.compare ? [...(x.compare.form?.refs ?? []), ...(x.compare.main?.refs ?? []), ...(x.compare.count?.ref ? [x.compare.count.ref] : [])] : [];
+      if (x.cert === 'inference' && own.length && [...new Set([...own, ...cmp])].reduce((n, r) => n + verseCount(r), 0) < 2) {
         warn('вывод', where, `«вывод» опирается на один стих: ${own.join('; ')} (02, § 7: не меньше двух)`);
       }
       for (const [k, y] of Object.entries(x)) if (k !== 'refs') go(y);

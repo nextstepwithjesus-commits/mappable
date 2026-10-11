@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data",
-   "commit": "03ddcf8"
+   "commit": "6fea95a"
   }
  },
  "sources": [
@@ -3764,15 +3764,15 @@
    "role": "father",
    "kind": "natural",
    "refs": [
-    "Быт 36:2",
-    "Быт 26:34"
+    "Быт 36:2"
    ],
    "cert": "scripture",
    "primary": true,
    "prov": {
     "from": {
      "vol": "05-edom.json"
-    }
+    },
+    "by": "исправление D15-9"
    }
   },
   {
@@ -3782,15 +3782,15 @@
    "role": "father",
    "kind": "natural",
    "refs": [
-    "Быт 28:9",
-    "Быт 36:3"
+    "Быт 28:9"
    ],
    "cert": "scripture",
    "primary": true,
    "prov": {
     "from": {
      "vol": "05-edom.json"
-    }
+    },
+    "by": "исправление D15-9"
    }
   },
   {
@@ -4448,9 +4448,9 @@
    }
   },
   {
-   "id": "o-makhalafa-doch-izmaila--raguil-syn-isava",
+   "id": "o-vasemafa-doch-izmaila--raguil-syn-isava",
    "child": "p-raguil-syn-isava",
-   "parent": "p-makhalafa-doch-izmaila",
+   "parent": "p-vasemafa-doch-izmaila",
    "role": "mother",
    "kind": "natural",
    "refs": [
@@ -4465,7 +4465,8 @@
    "prov": {
     "from": {
      "vol": "05-edom.json"
-    }
+    },
+    "by": "исправление D15-9"
    }
   },
   {
@@ -6825,7 +6826,19 @@
    "prov": {
     "from": {
      "vol": "06-jacob-sons.json"
-    }
+    },
+    "by": "исправление D15-11"
+   },
+   "identity": {
+    "of": "child",
+    "degree": "inferred",
+    "form": "p-khushim-syn-dana#n1",
+    "refs": [
+     "Быт 46:23",
+     "Чис 26:42",
+     "Чис 26:43"
+    ],
+    "note": "в стихах ребра ребёнок назван формой «Хушим» — формой «выв.» карточки Шухам: так выходит, если сравнить Быт 46:23 и Чис 26:42"
    }
   },
   {
@@ -6915,9 +6928,7 @@
    "role": "father",
    "kind": "natural",
    "refs": [
-    "1Пар 2:6",
-    "Нав 7:1",
-    "Нав 7:18"
+    "1Пар 2:6"
    ],
    "cert": "scripture",
    "primary": true,
@@ -6925,7 +6936,8 @@
    "prov": {
     "from": {
      "vol": "07-judah.json"
-    }
+    },
+    "by": "исправление D15-9"
    }
   },
   {
@@ -7001,9 +7013,9 @@
    }
   },
   {
-   "id": "o-zimri-syn-zary--kharmiy-syn-zimri",
+   "id": "o-zavdiy-syn-zary--kharmiy-syn-zimri",
    "child": "p-kharmiy-syn-zimri",
-   "parent": "p-zimri-syn-zary",
+   "parent": "p-zavdiy-syn-zary",
    "role": "father",
    "kind": "natural",
    "refs": [
@@ -7015,7 +7027,8 @@
    "prov": {
     "from": {
      "vol": "07-judah.json"
-    }
+    },
+    "by": "исправление D15-9"
    }
   },
   {
@@ -7307,9 +7320,9 @@
    "gapSuspected": "составитель прежних данных предполагал пропуск поколений; ни одно место текста пропущенных не называет — толкование или хронологическое напряжение (документ 04)"
   },
   {
-   "id": "o-raav--vooz",
+   "id": "o-rakhava--vooz",
    "child": "p-vooz",
-   "parent": "p-raav",
+   "parent": "p-rakhava",
    "role": "mother",
    "kind": "natural",
    "refs": [
@@ -7320,7 +7333,8 @@
    "prov": {
     "from": {
      "vol": "07-judah.json"
-    }
+    },
+    "by": "исправление D15-9"
    },
    "gapSuspected": "составитель прежних данных предполагал пропуск поколений; ни одно место текста пропущенных не называет — толкование или хронологическое напряжение (документ 04)"
   },
@@ -7714,9 +7728,9 @@
    }
   },
   {
-   "id": "o-samma-syn-iesseya--ionadav-syn-sammy",
+   "id": "o-samay-brat-davida--ionadav-syn-sammy",
    "child": "p-ionadav-syn-sammy",
-   "parent": "p-samma-syn-iesseya",
+   "parent": "p-samay-brat-davida",
    "role": "father",
    "kind": "natural",
    "refs": [
@@ -7728,13 +7742,14 @@
    "prov": {
     "from": {
      "vol": "07-judah.json"
-    }
+    },
+    "by": "исправление D15-6"
    }
   },
   {
-   "id": "o-samma-syn-iesseya--ionafan-syn-sammy",
+   "id": "o-safay-brat-davida--ionafan-syn-sammy",
    "child": "p-ionafan-syn-sammy",
-   "parent": "p-samma-syn-iesseya",
+   "parent": "p-safay-brat-davida",
    "role": "father",
    "kind": "natural",
    "refs": [
@@ -7746,7 +7761,8 @@
    "prov": {
     "from": {
      "vol": "07-judah.json"
-    }
+    },
+    "by": "исправление D15-6"
    }
   },
   {
@@ -10639,7 +10655,19 @@
    "prov": {
     "from": {
      "vol": "07-judah.json"
-    }
+    },
+    "by": "исправление D15-11"
+   },
+   "identity": {
+    "of": "parent",
+    "degree": "inferred",
+    "form": "p-shela-syn-iudy#n2",
+    "refs": [
+     "1Пар 4:21",
+     "Быт 38:5",
+     "Быт 46:12"
+    ],
+    "note": "в стихах ребра родитель назван формой «Силом» — формой «выв.» карточки Шела: так выходит, если сравнить 1Пар 2:3 и Быт 38:5"
    }
   },
   {
@@ -10657,7 +10685,19 @@
    "prov": {
     "from": {
      "vol": "07-judah.json"
-    }
+    },
+    "by": "исправление D15-11"
+   },
+   "identity": {
+    "of": "parent",
+    "degree": "inferred",
+    "form": "p-shela-syn-iudy#n2",
+    "refs": [
+     "1Пар 4:21",
+     "Быт 38:5",
+     "Быт 46:12"
+    ],
+    "note": "в стихах ребра родитель назван формой «Силом» — формой «выв.» карточки Шела: так выходит, если сравнить 1Пар 2:3 и Быт 38:5"
    }
   },
   {
@@ -10675,16 +10715,19 @@
     "from": {
      "vol": "07-judah.json"
     },
-    "by": "исправление D2"
+    "by": "исправление D15-11"
    },
    "gapSuspected": "составитель прежних данных предполагал пропуск поколений; ни одно место текста пропущенных не называет — толкование или хронологическое напряжение (документ 04)",
    "identity": {
     "of": "parent",
-    "degree": "possible",
-    "note": "«Сыновья Силома, сына Иудина: … семейства выделывавших виссон, из дома Ашбеи» (1Пар 4:21) — дом Ашбеи назван среди потомков Силома; степень родства Ашбеи и Силома текст не говорит",
+    "degree": "inferred",
+    "form": "p-shela-syn-iudy#n2",
     "refs": [
-     "1Пар 4:21"
-    ]
+     "1Пар 4:21",
+     "Быт 38:5",
+     "Быт 46:12"
+    ],
+    "note": "в стихах ребра родитель назван формой «Силом» — формой «выв.» карточки Шела: так выходит, если сравнить 1Пар 2:3 и Быт 38:5"
    },
    "degree": "unstated"
   },
@@ -13106,8 +13149,8 @@
    "degree": "unstated"
   },
   {
-   "id": "o-maaseya-otets-tsefanii--tsefaniya-syn-maasei",
-   "child": "p-tsefaniya-syn-maasei",
+   "id": "o-maaseya-otets-tsefanii--sofoniya-syn-maasei",
+   "child": "p-sofoniya-syn-maasei",
    "parent": "p-maaseya-otets-tsefanii",
    "role": "father",
    "kind": "natural",
@@ -13120,7 +13163,8 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
+    },
+    "by": "исправление D15-9"
    }
   },
   {
@@ -14065,8 +14109,8 @@
    }
   },
   {
-   "id": "o-kishiy--idifun",
-   "child": "p-idifun",
+   "id": "o-kishiy--efan-syn-kishiya",
+   "child": "p-efan-syn-kishiya",
    "parent": "p-kishiy",
    "role": "father",
    "kind": "natural",
@@ -14080,16 +14124,7 @@
     "from": {
      "vol": "08-levi.json"
     },
-    "by": "исправление C45"
-   },
-   "identity": {
-    "of": "child",
-    "degree": "possible",
-    "note": "«Ефан, сын Кишия» (1Пар 6:44), «Ефана, сына Кушаии» (1Пар 15:17) — сказано о Ефане; что Ефан и Идифун — одно лицо, текст прямо не говорит",
-    "refs": [
-     "1Пар 6:44",
-     "1Пар 15:17"
-    ]
+    "by": "исправление D15-9"
    }
   },
   {
@@ -18730,9 +18765,19 @@
     "from": {
      "vol": "08-levi.json"
     },
-    "by": "исправление D2"
+    "by": "исправление D15-11"
    },
-   "degree": "unstated"
+   "degree": "unstated",
+   "identity": {
+    "of": "parent",
+    "degree": "inferred",
+    "form": "p-shekhaniya-neem12#n2",
+    "refs": [
+     "Неем 12:14",
+     "Неем 12:3"
+    ],
+    "note": "в стихах ребра родитель назван формой «Шевания» — формой «выв.» карточки Шехания: так выходит, если сравнить Неем 12:14 и Неем 12:3"
+   }
   },
   {
    "id": "o-rekhum-neem12--adna-neem12",
@@ -18743,25 +18788,32 @@
    "refs": [
     "Неем 12:15"
    ],
-   "cert": "scripture",
+   "cert": "inference",
    "primary": false,
-   "note": "«из дома Харима»: в перечне Неем 12:1–7 Харима нет, на его месте стоит Рехум (Неем 12:3); соответствие — по месту в перечне",
+   "note": "«из дома Харима» — дом назван по главе священников, пришедшему с Зоровавелем (Неем 12:3); степень родства текст не называет",
    "prov": {
     "from": {
      "vol": "08-levi.json"
     },
-    "by": "исправление D2"
+    "by": "исправление D15-11"
    },
+   "degree": "unstated",
+   "words": [
+    {
+     "text": "из дома Харима Адна",
+     "ref": "Неем 12:15"
+    }
+   ],
    "identity": {
     "of": "parent",
-    "degree": "possible",
-    "note": "«из дома Харима Адна» (Неем 12:15) — сказано; в перечне Неем 12:1–7 Харима нет, на его месте Рехум (Неем 12:3): что это одно лицо, текст прямо не говорит",
+    "degree": "inferred",
+    "form": "p-rekhum-neem12#n2",
     "refs": [
-     "Неем 12:3",
-     "Неем 12:15"
-    ]
-   },
-   "degree": "unstated"
+     "Неем 12:15",
+     "Неем 12:3"
+    ],
+    "note": "в стихах ребра родитель назван формой «Харим» — формой «выв.» карточки Рехум: так выходит, если сравнить Неем 12:15 и Неем 12:3"
+   }
   },
   {
    "id": "o-meremof-neem12--khelkiya-neem12-15",
@@ -18779,9 +18831,19 @@
     "from": {
      "vol": "08-levi.json"
     },
-    "by": "исправление D2"
+    "by": "исправление D15-11"
    },
-   "degree": "unstated"
+   "degree": "unstated",
+   "identity": {
+    "of": "parent",
+    "degree": "inferred",
+    "form": "p-meremof-neem12#n2",
+    "refs": [
+     "Неем 12:15",
+     "Неем 12:3"
+    ],
+    "note": "в стихах ребра родитель назван формой «Мераиоф» — формой «выв.» карточки Меремоф: так выходит, если сравнить Неем 12:15 и Неем 12:3"
+   }
   },
   {
    "id": "o-iddo-neem12--zakhariya-neem12",
@@ -20298,7 +20360,18 @@
    "prov": {
     "from": {
      "vol": "09-tribes-a.json"
-    }
+    },
+    "by": "исправление D15-11"
+   },
+   "identity": {
+    "of": "child",
+    "degree": "inferred",
+    "form": "p-aviezer-syn-galaada#n2",
+    "refs": [
+     "Чис 26:30",
+     "Нав 17:2"
+    ],
+    "note": "в стихах ребра ребёнок назван формой «Иезер» — формой «выв.» карточки Авиезер: так выходит, если сравнить Чис 26:30 и Нав 17:2"
    }
   },
   {
@@ -21756,9 +21829,9 @@
    }
   },
   {
-   "id": "o-iri-syn-bely--shupim-syn-ira",
+   "id": "o-ir-otets-shupima--shupim-syn-ira",
    "child": "p-shupim-syn-ira",
-   "parent": "p-iri-syn-bely",
+   "parent": "p-ir-otets-shupima",
    "role": "father",
    "kind": "natural",
    "refs": [
@@ -21771,22 +21844,13 @@
     "from": {
      "vol": "10-tribes-b.json"
     },
-    "by": "исправление C45"
-   },
-   "identity": {
-    "of": "parent",
-    "degree": "possible",
-    "note": "«Шупим и Хупим, сыновья Ира» (1Пар 7:12) — что Ир — это Ири, сын Белы (1Пар 7:7), текст прямо не говорит",
-    "refs": [
-     "1Пар 7:7",
-     "1Пар 7:12"
-    ]
+    "by": "исправление D15-9"
    }
   },
   {
-   "id": "o-iri-syn-bely--khupim-syn-ira",
+   "id": "o-ir-otets-shupima--khupim-syn-ira",
    "child": "p-khupim-syn-ira",
-   "parent": "p-iri-syn-bely",
+   "parent": "p-ir-otets-shupima",
    "role": "father",
    "kind": "natural",
    "refs": [
@@ -21799,16 +21863,7 @@
     "from": {
      "vol": "10-tribes-b.json"
     },
-    "by": "исправление C45"
-   },
-   "identity": {
-    "of": "parent",
-    "degree": "possible",
-    "note": "«Шупим и Хупим, сыновья Ира» (1Пар 7:12) — что Ир — это Ири, сын Белы (1Пар 7:7), текст прямо не говорит",
-    "refs": [
-     "1Пар 7:7",
-     "1Пар 7:12"
-    ]
+    "by": "исправление D15-9"
    }
   },
   {
@@ -24027,9 +24082,7 @@
    "refs": [
     "2Цар 2:8",
     "2Цар 2:10",
-    "2Цар 4:8",
-    "1Пар 8:33",
-    "1Пар 9:39"
+    "2Цар 4:8"
    ],
    "cert": "scripture",
    "primary": true,
@@ -24037,7 +24090,8 @@
    "prov": {
     "from": {
      "vol": "10-tribes-b.json"
-    }
+    },
+    "by": "исправление D15-9"
    }
   },
   {
@@ -26038,8 +26092,8 @@
    }
   },
   {
-   "id": "o-akhitofel--eliam",
-   "child": "p-eliam",
+   "id": "o-akhitofel--eliam-syn-akhitofela",
+   "child": "p-eliam-syn-akhitofela",
    "parent": "p-akhitofel",
    "role": "father",
    "kind": "natural",
@@ -26052,16 +26106,7 @@
     "from": {
      "vol": "12-house-of-david.json"
     },
-    "by": "исправление C45"
-   },
-   "identity": {
-    "of": "child",
-    "degree": "possible",
-    "note": "«Елиам, сын Ахитофела» (2Цар 23:34) — сказано; что это Елиам, отец Вирсавии (2Цар 11:3), текст прямо не говорит",
-    "refs": [
-     "2Цар 23:34",
-     "2Цар 11:3"
-    ]
+    "by": "исправление D15-9"
    }
   },
   {
@@ -27106,37 +27151,26 @@
    "prov": {
     "from": {
      "vol": "13-kings-of-judah.json"
-    }
-   },
-   "reading": {
-    "set": "r-father-maakha-doch-avessaloma",
-    "in": [
-     "a"
-    ]
+    },
+    "by": "исправление D15-10"
    }
   },
   {
-   "id": "o-uriil-iz-givy--maakha-doch-avessaloma",
-   "child": "p-maakha-doch-avessaloma",
+   "id": "o-uriil-iz-givy--mikhaiya-doch-uriila",
+   "child": "p-mikhaiya-doch-uriila",
    "parent": "p-uriil-iz-givy",
    "role": "father",
-   "kind": "alternative",
+   "kind": "natural",
    "refs": [
     "2Пар 13:2"
    ],
    "cert": "scripture",
-   "primary": false,
-   "note": "2 Пар 13:2: «Михаия, дочь Уриилова, из Гивы»",
+   "primary": true,
    "prov": {
     "from": {
      "vol": "13-kings-of-judah.json"
-    }
-   },
-   "reading": {
-    "set": "r-father-maakha-doch-avessaloma",
-    "in": [
-     "b"
-    ]
+    },
+    "by": "исправление D15-10"
    }
   },
   {
@@ -27229,7 +27263,6 @@
     "3Цар 15:2",
     "2Пар 11:20",
     "2Пар 11:22",
-    "2Пар 13:2",
     "1Пар 3:10",
     "Мф 1:7"
    ],
@@ -27239,7 +27272,14 @@
    "prov": {
     "from": {
      "vol": "13-kings-of-judah.json"
-    }
+    },
+    "by": "исправление D15-10"
+   },
+   "reading": {
+    "set": "r-mother-aviya",
+    "in": [
+     "a"
+    ]
    }
   },
   {
@@ -28384,8 +28424,7 @@
    "refs": [
     "4Цар 23:30-31",
     "2Пар 36:1",
-    "1Пар 3:15",
-    "Иер 22:11"
+    "1Пар 3:15"
    ],
    "cert": "scripture",
    "primary": true,
@@ -28394,7 +28433,8 @@
    "prov": {
     "from": {
      "vol": "13-kings-of-judah.json"
-    }
+    },
+    "by": "исправление D15-9"
    }
   },
   {
@@ -28406,8 +28446,7 @@
    "refs": [
     "4Цар 23:30-31",
     "2Пар 36:1",
-    "1Пар 3:15",
-    "Иер 22:11"
+    "1Пар 3:15"
    ],
    "cert": "scripture",
    "primary": true,
@@ -28415,7 +28454,8 @@
    "prov": {
     "from": {
      "vol": "13-kings-of-judah.json"
-    }
+    },
+    "by": "исправление D15-9"
    }
   },
   {
@@ -28425,7 +28465,8 @@
    "role": "father",
    "kind": "natural",
    "refs": [
-    "1Пар 3:15"
+    "1Пар 3:15",
+    "Иер 22:11"
    ],
    "cert": "scripture",
    "primary": true,
@@ -28433,7 +28474,8 @@
    "prov": {
     "from": {
      "vol": "13-kings-of-judah.json"
-    }
+    },
+    "by": "исправление D15-9"
    }
   },
   {
@@ -34755,9 +34797,20 @@
    "prov": {
     "from": {
      "vol": "19-court-and-heroes.json"
-    }
+    },
+    "by": "исправление D15-11"
    },
-   "gapSuspected": "составитель прежних данных предполагал пропуск поколений; ни одно место текста пропущенных не называет — толкование или хронологическое напряжение (документ 04)"
+   "gapSuspected": "составитель прежних данных предполагал пропуск поколений; ни одно место текста пропущенных не называет — толкование или хронологическое напряжение (документ 04)",
+   "identity": {
+    "of": "child",
+    "degree": "inferred",
+    "form": "p-isbosef#n2",
+    "refs": [
+     "1Пар 11:11",
+     "2Цар 23:8"
+    ],
+    "note": "в стихах ребра ребёнок назван формой «Иесваал» — формой «выв.» карточки Исбосеф: так выходит, если сравнить 1Пар 11:11 и 2Цар 23:8"
+   }
   },
   {
    "id": "o-akhokhi--dodo-otets-eleazara",
@@ -34925,8 +34978,8 @@
    }
   },
   {
-   "id": "o-gofoniil--khelev",
-   "child": "p-khelev",
+   "id": "o-gofoniil--kheldai-netofafyanin",
+   "child": "p-kheldai-netofafyanin",
    "parent": "p-gofoniil",
    "role": "father",
    "kind": "ancestor",
@@ -34940,9 +34993,15 @@
     "from": {
      "vol": "19-court-and-heroes.json"
     },
-    "by": "исправление D2"
+    "by": "исправление D15-10"
    },
-   "degree": "unstated"
+   "degree": "unstated",
+   "words": [
+    {
+     "text": "из потомков Гофониила",
+     "ref": "1Пар 27:15"
+    }
+   ]
   },
   {
    "id": "o-ribay--ittay-syn-ribaya",
@@ -35083,7 +35142,18 @@
    "prov": {
     "from": {
      "vol": "19-court-and-heroes.json"
-    }
+    },
+    "by": "исправление D15-11"
+   },
+   "identity": {
+    "of": "child",
+    "degree": "inferred",
+    "form": "p-paaray#n2",
+    "refs": [
+     "1Пар 11:37",
+     "2Цар 23:35"
+    ],
+    "note": "в стихах ребра ребёнок назван формой «Наарай» — формой «выв.» карточки Паарай: так выходит, если сравнить 1Пар 11:37 и 2Цар 23:35"
    }
   },
   {
@@ -36628,9 +36698,9 @@
    }
   },
   {
-   "id": "o-iegoiariv--iedaiya-syn-ioiariva",
+   "id": "o-ioiariv-1par9-10--iedaiya-syn-ioiariva",
    "child": "p-iedaiya-syn-ioiariva",
-   "parent": "p-iegoiariv",
+   "parent": "p-ioiariv-1par9-10",
    "role": "father",
    "kind": "natural",
    "refs": [
@@ -36642,17 +36712,7 @@
     "from": {
      "vol": "20-return-lists.json"
     },
-    "by": "исправление C45"
-   },
-   "gapSuspected": "составитель прежних данных предполагал пропуск поколений; ни одно место текста пропущенных не называет — толкование или хронологическое напряжение (документ 04)",
-   "identity": {
-    "of": "parent",
-    "degree": "possible",
-    "note": "«Иедаия, сын Иоиарива» (Неем 11:10) — что это Иегоиарив, глава первой череды (1Пар 24:7), текст прямо не говорит",
-    "refs": [
-     "Неем 11:10",
-     "1Пар 24:7"
-    ]
+    "by": "исправление D15-10"
    }
   },
   {
@@ -37393,7 +37453,8 @@
    "role": "father",
    "kind": "natural",
    "refs": [
-    "Езд 10:6"
+    "Езд 10:6",
+    "Неем 12:23"
    ],
    "cert": "scripture",
    "primary": true,
@@ -37401,7 +37462,7 @@
     "from": {
      "vol": "20-return-lists.json"
     },
-    "by": "исправление C45"
+    "by": "исправление D15-10"
    },
    "identity": {
     "of": "parent",
@@ -41216,6 +41277,135 @@
    "primary": true,
    "prov": {
     "by": "исправление C51"
+   }
+  },
+  {
+   "id": "o-elon-khetteyanin--vasemafa-doch-elona",
+   "child": "p-vasemafa-doch-elona",
+   "parent": "p-elon-khetteyanin",
+   "role": "father",
+   "kind": "natural",
+   "refs": [
+    "Быт 26:34"
+   ],
+   "cert": "scripture",
+   "primary": true,
+   "prov": {
+    "from": {
+     "vol": "05-edom.json"
+    },
+    "by": "исправление D15-9"
+   }
+  },
+  {
+   "id": "o-izmail--vasemafa-doch-izmaila",
+   "child": "p-vasemafa-doch-izmaila",
+   "parent": "p-izmail",
+   "role": "father",
+   "kind": "natural",
+   "refs": [
+    "Быт 36:3"
+   ],
+   "cert": "scripture",
+   "primary": true,
+   "prov": {
+    "from": {
+     "vol": "05-edom.json"
+    },
+    "by": "исправление D15-9"
+   }
+  },
+  {
+   "id": "o-veniamin--akhiram-syn-veniamina",
+   "child": "p-akhiram-syn-veniamina",
+   "parent": "p-veniamin",
+   "role": "father",
+   "kind": "natural",
+   "refs": [
+    "Чис 26:38"
+   ],
+   "cert": "scripture",
+   "primary": true,
+   "prov": {
+    "by": "исправление D15-9"
+   }
+  },
+  {
+   "id": "o-veniamin--shefufam",
+   "child": "p-shefufam",
+   "parent": "p-veniamin",
+   "role": "father",
+   "kind": "natural",
+   "refs": [
+    "Чис 26:38-39"
+   ],
+   "cert": "scripture",
+   "primary": true,
+   "prov": {
+    "by": "исправление D15-9"
+   }
+  },
+  {
+   "id": "o-zara--zavdiy-syn-zary",
+   "child": "p-zavdiy-syn-zary",
+   "parent": "p-zara",
+   "role": "father",
+   "kind": "natural",
+   "refs": [
+    "Нав 7:1",
+    "Нав 7:18"
+   ],
+   "cert": "scripture",
+   "primary": true,
+   "prov": {
+    "from": {
+     "vol": "07-judah.json"
+    },
+    "by": "исправление D15-9"
+   }
+  },
+  {
+   "id": "o-saul--eshbaal-syn-saula",
+   "child": "p-eshbaal-syn-saula",
+   "parent": "p-saul",
+   "role": "father",
+   "kind": "natural",
+   "refs": [
+    "1Пар 8:33",
+    "1Пар 9:39"
+   ],
+   "cert": "scripture",
+   "primary": true,
+   "prov": {
+    "from": {
+     "vol": "10-tribes-b.json"
+    },
+    "by": "исправление D15-9"
+   }
+  },
+  {
+   "id": "o-mikhaiya-doch-uriila--aviya",
+   "child": "p-aviya",
+   "parent": "p-mikhaiya-doch-uriila",
+   "role": "mother",
+   "kind": "alternative",
+   "refs": [
+    "2Пар 13:2"
+   ],
+   "cert": "scripture",
+   "primary": false,
+   "refsShared": true,
+   "prov": {
+    "from": {
+     "vol": "13-kings-of-judah.json"
+    },
+    "by": "исправление D15-10"
+   },
+   "reading": {
+    "set": "r-mother-aviya",
+    "in": [
+     "b"
+    ]
    }
   }
  ]

@@ -24,7 +24,9 @@ export interface TimeCtx {
 
 const OTHER_REQUIRED = new Set(['age-at-birth', 'synchronism', 'succeeded', 'under-king']);
 const EVENT_REQUIRED = new Set(['age-at-event', 'years-after']);
-const NUMBER_REQUIRED = new Set(['age-at-birth', 'age-at-death', 'reign', 'age-at-accession', 'synchronism', 'age-at-event', 'years-after']);
+const NUMBER_REQUIRED = new Set(['age-at-birth', 'age-at-death', 'end-of-life', 'reign', 'age-at-accession', 'synchronism', 'age-at-event', 'years-after']);
+/** Слова о смерти вне скобок: «умер», «умерла», «скончался», «почил» (не «не видел смерти», Евр 11:5). */
+const DEATH_WORDS = /(^|[^а-яё])(умер|умерл|скончал|почил)/;
 /** Поля готовых лет прежнего вида. */
 const YEAR_KEYS = ['year', 'from', 'to', 'start', 'end', 'range', 'sole'];
 
@@ -58,8 +60,15 @@ export function checkTime(base: Base, x: TimeCtx) {
       if (!epochIds.has(e.era)) err('целостность', w, `нет эпохи «${e.era}»`);
       if (!e.refs.length) err('стих', w, `эпоха «${e.era}» без стиха: такая эпоха — прежней строкой epoch (04 § 3.2)`);
     }
+    // «конец земной жизни» (end-of-life): смерти текст не называет — у лица нет входа «возраст при смерти» (Д6-3)
+    const kinds = new Set(ch.inputs.map((t) => t.kind));
+    if (kinds.has('end-of-life') && kinds.has('age-at-death')) err('время', w, 'у лица и «возраст при смерти», и «конец земной жизни»: вход один — по тому, называет ли текст смерть');
     ch.inputs.forEach((t, i) => {
       const wi = `${w} вход ${i + 1} (${t.kind})`;
+      if (t.kind === 'end-of-life') {
+        if (t.of) err('время', wi, '«конец земной жизни» без поля of: это вся длина жизни, а не ограничение события');
+        if (t.refs?.length && DEATH_WORDS.test(x.clean(t.refs.flatMap((r) => x.mainTexts(wi, r)).join(' ')))) err('время', wi, 'в стихах входа вне скобок названа смерть: вид — «возраст при смерти» (age-at-death)');
+      }
       if (!TIME_KINDS.includes(t.kind)) err('время', wi, `вид входа «${t.kind}» не из 02 § 3.15.5`);
       if (!t.refs?.length) err('стих', wi, 'вход без стиха');
       if (OTHER_REQUIRED.has(t.kind) && !t.other) err('время', wi, 'нет второго участника (other)');
@@ -101,6 +110,8 @@ export function checkTime(base: Base, x: TimeCtx) {
   }
 
   // ---------- эпохи окончательного вида (02 § 3.15.1) ----------
+  const endOf = new Map<string, string>();
+  for (const c of base.chrono) if (isD6(c.chrono)) for (const t of c.chrono.inputs) if (t.kind === 'age-at-death' || t.kind === 'end-of-life') endOf.set(c.actor, t.kind);
   for (const e of base.epochs) {
     if (typeof e.start !== 'object' || e.start === null) continue;
     const w = `эпоха ${e.id}`;
@@ -115,6 +126,14 @@ export function checkTime(base: Base, x: TimeCtx) {
       if (b?.rule?.anchor && !anchorIds.has(b.rule.anchor)) err('целостность', w, `нет опоры «${b.rule.anchor}»`);
     }
     if (!['exact', 'estimated', 'conventional'].includes(e.boundary)) err('эпоха', w, `вид границы «${e.boundary}» — exact, estimated или conventional`);
+    // правило события по лицу: «смерть» — только у лица, чья смерть названа; «конец земной жизни» — только у лица с таким входом
+    for (const r of [e.start?.rule, e.end?.rule, ...(e.events ?? []).map((v: any) => v.rule)]) {
+      if (!r?.person || !r.of) continue;
+      const end = endOf.get(r.person);
+      if (r.of === 'death' && end === 'end-of-life') err('эпоха', w, `правило «смерть» у ${r.person}: Писание смерти не называет — правило of: end-of-life (Д6-3)`);
+      if (r.of === 'end-of-life' && end !== 'end-of-life') err('эпоха', w, `правило «конец земной жизни» у ${r.person}, а такого входа у лица нет`);
+      if (!['death', 'end-of-life', 'birth'].includes(r.of)) err('эпоха', w, `правило события of: «${r.of}» — birth, death или end-of-life`);
+    }
     if (!e.definition) err('эпоха', w, 'нет определения (PeriodO)');
     for (const p of yearsLeft({ ...e, start: undefined, end: undefined })) err('эпоха', w, `готовый год в эпохе (${p})`);
     for (const p of yearsLeft([e.start, e.end])) err('эпоха', w, `готовый год в границе (${p})`);

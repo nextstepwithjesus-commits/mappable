@@ -17,6 +17,7 @@ import { STEPS_D_3 } from '../tools/base/corrections-d-r3.ts';
 import { STEPS_D4 } from '../tools/base/corrections-d4.ts';
 import { STEPS_D_R11 } from '../tools/base/corrections-d-r11.ts';
 import { STEPS_D15 } from '../tools/base/corrections-d15.ts';
+import { STEPS_D15B } from '../tools/base/corrections-d15b.ts';
 import { validate } from '../tools/base/validate.ts';
 import { finishIds, loadIds, startIds } from '../tools/base/ids.ts';
 
@@ -39,7 +40,7 @@ describe('перенос в базу', () => {
     const { base, hints } = exact();
     // номера — как в сборке: заготовки до шагов, выдача после (К-1); таблица — с диска, чтобы номера совпали с base/
     startIds(base, loadIds(join(import.meta.dirname, '..', 'base')), '2026-10-11');
-    for (const s of [...STEPS, ADDITIONS, ...STEPS_D3, ...STEPS_K, ...STEPS_D, ...STEPS_D_2, ...STEPS_D_3, ...STEPS_D4, ...STEPS_D_R11, ...STEPS_D15]) expect([s.id, stepChanges(base, hints, s).stray]).toEqual([s.id, []]);
+    for (const s of [...STEPS, ADDITIONS, ...STEPS_D3, ...STEPS_K, ...STEPS_D, ...STEPS_D_2, ...STEPS_D_3, ...STEPS_D4, ...STEPS_D_R11, ...STEPS_D15, ...STEPS_D15B]) expect([s.id, stepChanges(base, hints, s).stray]).toEqual([s.id, []]);
     expect(finishIds(base)!.errors).toEqual([]);
     expect(validate(base).filter((i) => i.level === 'error')).toEqual([]);
   }, 60_000);

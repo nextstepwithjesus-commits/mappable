@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data",
-   "commit": "03ddcf8"
+   "commit": "6fea95a"
   }
  },
  "sources": [
@@ -440,11 +440,9 @@
      "word": "жена",
      "side": "husband",
      "refs": [
-      "Быт 26:34",
       "Быт 36:2",
       "Быт 36:10"
      ],
-     "note": "В Быт 26:34 — «Васемафа, дочь Елона Хеттеянина», в Быт 36:2 — «Ада, дочь Елона Хеттеянина»; отождествление — толкование (см. § 24)",
      "order": 2,
      "prov": {
       "from": {
@@ -452,7 +450,10 @@
       }
      }
     }
-   ]
+   ],
+   "prov": {
+    "by": "исправление D15-9"
+   }
   },
   {
    "id": "u-isav--makhalafa-doch-izmaila",
@@ -464,11 +465,8 @@
      "word": "жена",
      "side": "husband",
      "refs": [
-      "Быт 28:9",
-      "Быт 36:3",
-      "Быт 36:10"
+      "Быт 28:9"
      ],
-     "note": "В Быт 28:9 — «Махалафа, дочь Измаила… сестра Наваиофова», в Быт 36:3 — «Васемафа, дочь Измаила, сестра Наваиофа»; отождествление — толкование (см. § 24)",
      "order": 3,
      "prov": {
       "from": {
@@ -476,7 +474,10 @@
       }
      }
     }
-   ]
+   ],
+   "prov": {
+    "by": "исправление D15-9"
+   }
   },
   {
    "id": "u-isav--olivema",
@@ -784,28 +785,6 @@
        "vol": "07-judah.json"
       },
       "by": "исправление C35"
-     }
-    }
-   ]
-  },
-  {
-   "id": "u-salmon--raav",
-   "husband": "p-salmon",
-   "wife": "p-raav",
-   "terms": [
-    {
-     "kind": "not-stated",
-     "side": "husband",
-     "refs": [
-      "Мф 1:5"
-     ],
-     "cert": "inference",
-     "note": "«Салмон родил Вооза от Рахавы»",
-     "prov": {
-      "from": {
-       "vol": "07-judah.json"
-      },
-      "by": "исправление C39"
      }
     }
    ]
@@ -3096,6 +3075,80 @@
    "prov": {
     "by": "дополнение Д1",
     "status": "draft"
+   }
+  },
+  {
+   "id": "u-isav--vasemafa-doch-elona",
+   "husband": "p-isav",
+   "wife": "p-vasemafa-doch-elona",
+   "terms": [
+    {
+     "kind": "marriage",
+     "word": "жена",
+     "side": "husband",
+     "refs": [
+      "Быт 26:34"
+     ],
+     "order": 2,
+     "prov": {
+      "from": {
+       "vol": "05-edom.json"
+      }
+     }
+    }
+   ],
+   "prov": {
+    "by": "исправление D15-9"
+   }
+  },
+  {
+   "id": "u-isav--vasemafa-doch-izmaila",
+   "husband": "p-isav",
+   "wife": "p-vasemafa-doch-izmaila",
+   "terms": [
+    {
+     "kind": "marriage",
+     "word": "жена",
+     "side": "husband",
+     "refs": [
+      "Быт 36:3",
+      "Быт 36:10"
+     ],
+     "order": 3,
+     "prov": {
+      "from": {
+       "vol": "05-edom.json"
+      }
+     }
+    }
+   ],
+   "prov": {
+    "by": "исправление D15-9"
+   }
+  },
+  {
+   "id": "u-salmon--rakhava",
+   "husband": "p-salmon",
+   "wife": "p-rakhava",
+   "terms": [
+    {
+     "kind": "not-stated",
+     "side": "husband",
+     "refs": [
+      "Мф 1:5"
+     ],
+     "cert": "inference",
+     "note": "«Салмон родил Вооза от Рахавы»",
+     "prov": {
+      "from": {
+       "vol": "07-judah.json"
+      },
+      "by": "исправление C39"
+     }
+    }
+   ],
+   "prov": {
+    "by": "исправление D15-9"
    }
   }
  ]

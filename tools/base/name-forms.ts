@@ -11,7 +11,7 @@ import { parseRef, verseId } from '../../src/engine/books.ts';
 import { norm, nameMatcher } from '../../src/engine/text.ts';
 import { scriptureText } from './brackets.ts';
 import type { Base } from './migrate.ts';
-import { NAME_WHY_CODES, type Actor, type IdCert, type Name, type Ref } from './types.ts';
+import { NAME_WHY_CODES, type Actor, type IdCert, type Name, type Ref, type TimeInput } from './types.ts';
 
 type Err = (check: string, where: string, msg: string) => void;
 
@@ -94,14 +94,15 @@ export function validateNameForms(base: Base, err: Err, warn: Err) {
     for (const n of a.names) if (n.with !== undefined && !a.names.some((x) => x.id === n.with)) err('форма имени', `${a.id} «${n.form}»`, `with: у карточки нет формы ${n.with}`);
     // уточнение карточки с формой «выв.»: без слов вида (а)
     if (inferredForms(a).length && /он же|иначе/i.test(a.disambig ?? '')) err('форма имени', a.id, `уточнение «${a.disambig}» — со словами «он же», «иначе»: это слова тождества «сказано», а форма — «выв.» (02 § 3.3.5)`);
-    // форма без общего стиха с основным и без вида (cert или possibly-same) — замечание до конца Д-15 (02 § 3.3.5 [4.4 по Р-5])
+    // форма без общего стиха с основным и без вида (cert или possibly-same) — после Д-15 ошибка (02 § 3.3.5 [4.4 по Р-5]; партия 2
+    // разобрала все 208 таких форм — reviews/Д-15-партия-2-отчёт.md)
     if (a.kind !== 'unnamed' && a.kind !== 'group' && mains[0]) {
       for (const n of a.names) {
         if (n === mains[0] || n.cert !== undefined || n.type === 'patronymic' || n.type === 'title' || n.type === 'epithet') continue;
         if (possibly.has(a.id)) continue;
         const vs = verseIds(n.refs ?? []);
         if (!vs.length) continue;
-        if (!vs.some((v) => nameMatcher(mains[0].form).test(textOf(v)))) warn('форма без вида', `${a.id} «${n.form}»`, `нет общего стиха с основным именем «${mains[0].form}» и нет вида (cert или possibly-same): разобрать по 02 § 3.3.4 (Д-15)`);
+        if (!vs.some((v) => nameMatcher(mains[0].form).test(textOf(v)))) err('форма без вида', `${a.id} «${n.form}»`, `нет общего стиха с основным именем «${mains[0].form}» и нет вида (cert или possibly-same): вид по 02 § 3.3.4 — (а) или то же имя другим написанием (cert: scripture), (б) (cert: inference), (в) — своя карточка и possibly-same`);
       }
     }
   }
@@ -173,6 +174,31 @@ export function validateNameForms(base: Base, err: Err, warn: Err) {
   }
   for (const k of base.kin) identityOk(`${k.from} — ${k.to}`, k.identity, k.identity ? (k.identity.of === 'from' ? k.from : k.to) : undefined);
   for (const u of base.unions) for (const t of u.terms) identityOk(u.id, t.identity, t.identity ? (t.identity.of === 'husband' ? u.husband : u.wife) : undefined);
+
+  // входы времени (Д6): вход, который держится на форме «выв.» лица или второго участника, — с idCert (02 § 3.3.5; Д-15)
+  for (const c of base.chrono) {
+    const inputs = (c.chrono as { inputs?: TimeInput[] } | undefined)?.inputs;
+    if (!Array.isArray(inputs)) continue;
+    inputs.forEach((t, i) => {
+      const w = `время ${c.actor} вход ${i + 1} (${t.kind})`;
+      if (t.idCert) {
+        const f = formOf.get(t.idCert.form);
+        if (!f) err('тождество по форме', w, `idCert: формы ${t.idCert.form} нет`);
+        else {
+          if (f.actor.id !== c.actor && f.actor.id !== t.other) err('тождество по форме', w, `idCert: форма ${t.idCert.form} — не лица и не второго участника`);
+          if (f.name.cert !== 'inference') err('тождество по форме', w, `idCert: форма ${t.idCert.form} — не «выв.»`);
+        }
+        if (!t.idCert.refs?.length) err('тождество по форме', w, 'idCert без стихов');
+        return;
+      }
+      for (const id of [c.actor, t.other]) {
+        const a = id ? actors.get(id) : undefined;
+        if (!a || !inferredForms(a).length || !t.refs?.length) continue;
+        const f = restsOnForm(a, t.refs);
+        if (f) err('тождество по форме', w, `вход держится на форме «выв.» «${f.form}» (${a.id}): нужен idCert (02 § 3.3.5)`);
+      }
+    });
+  }
 
   // переадресация лица — с основанием said или parallel (02 § 3.3.5)
   for (const r of base.redirects) {

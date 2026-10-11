@@ -5318,7 +5318,7 @@
      "refs": [
       "Мк 3:18"
      ],
-     "cert": "inference"
+     "cert": "scripture"
     },
     {
      "actor": "p-simon-zilot",
@@ -5332,6 +5332,12 @@
      "refs": [
       "Лк 6:15"
      ],
+     "idCert": {
+      "form": "p-simon-zilot#n3",
+      "refs": [
+       "Лк 6:15"
+      ]
+     },
      "cert": "scripture"
     },
     {

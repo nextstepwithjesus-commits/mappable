@@ -221,7 +221,8 @@ describe('правки Д3 (сверка контрольного набора �
     expect(base.unions.flatMap((u) => u.terms).filter((t) => t.word === 'муж').length).toBeLessThan(10);
   });
   it('союзы без единого слова о союзе в стихах — вид «не назван» (C39), а не «брак»', () => {
-    const ids = ['u-salmon--raav', 'u-iefer-izmailtyanin--avigeya-sestra-davida', 'u-khalev-syn-esroma--ieriofa', 'u-david--aggifa',
+    // Д-15, партия 2: Рахава (Мф 1:5) — своя карточка вида (в), союз — u-salmon--rakhava
+    const ids = ['u-salmon--rakhava', 'u-iefer-izmailtyanin--avigeya-sestra-davida', 'u-khalev-syn-esroma--ieriofa', 'u-david--aggifa',
       'u-navat--tserua', 'u-zevedey--mat-synovey-zevedeevykh'];
     for (const id of ids) {
       const ts = base.unions.find((u) => u.id === id)!.terms;
@@ -310,7 +311,10 @@ describe('очередь Д3-11: рёбра уровня «толкование�
     }
     expect(edge('p-iokhanan-syn-eliashiva', 'p-eliashiv-pervosvyashchennik')[0].identity?.refs).toContain('Езд 10:6');
     expect(edge('p-iodai-syn-vanei', 'p-vaneya-syn-iodaya')[0].cert).toBe('scripture');
-    expect(edge('p-eliam', 'p-akhitofel')[0].identity?.of).toBe('child');
+    // Д-р14 (Д-15, партия 2): «Елиам, сын Ахитофела» (2Цар 23:34) — своя карточка, ребро «Писание» без тождества; с отцом
+    // Вирсавии — «возможно, то же лицо»
+    expect(edge('p-eliam', 'p-akhitofel')).toEqual([]);
+    expect(edge('p-eliam-syn-akhitofela', 'p-akhitofel').map((o) => [o.cert, o.refs, o.identity])).toEqual([['scripture', ['2Цар 23:34'], undefined]]);
     // Д-15 (D15-2): Ховав — «сыну Рагуилову» (Чис 10:29): ребро к своей карточке Рагуила, «Писание», без тождества «весомо»
     expect(edge('p-khovav', 'p-iofor')).toEqual([]);
     expect(edge('p-khovav', 'p-raguil').map((o) => [o.cert, o.refs, o.identity])).toEqual([['scripture', ['Чис 10:29'], undefined]]);

@@ -130,3 +130,48 @@ describe('проверка ловит испорченные записи', () =
     expect(e).toMatch(/p-adam.*поле прежнего вида «died»/);
   });
 });
+
+describe('Д6-3: конец земной жизни и мелкое по второму ключу Д6 (tools/base/corrections-d6b.ts)', () => {
+  it('Енох — «конец земной жизни» 365 лет со стихами Быт 5:23–24 и Евр 11:5; событие эпохи 1 — того же вида', () => {
+    expect(inp(base, 'p-enokh', 'age-at-death')).toEqual([]);
+    expect(inp(base, 'p-enokh', 'end-of-life').map((t) => [t.number, t.refs])).toEqual([[365, ['Быт 5:23', 'Быт 5:24', 'Евр 11:5']]]);
+    const ev = (base.epochs.find((e) => e.id === 'era-antediluvian')!.events as any[]).find((x) => x.rule?.person === 'p-enokh');
+    expect(ev.rule).toEqual({ person: 'p-enokh', of: 'end-of-life' });
+    // для расчёта — та же сумма лет; вид конца жизни назван
+    expect(modelYears(base, 'm-dolgoe').person.get('p-enokh')?.end).toBe('end-of-life');
+    expect(modelYears(base, 'm-dolgoe').person.get('p-avraam')?.end).toBeUndefined();
+  });
+
+  it('Сим и потомки в Быт 11 — «конец земной жизни» («и умер» — в скобках); Фарра — «возраст при смерти» (Быт 11:32)', () => {
+    for (const id of ['p-sim', 'p-arfaksad', 'p-sala', 'p-ever', 'p-falek', 'p-ragav', 'p-serukh', 'p-nakhor']) {
+      expect([id, inp(base, id, 'age-at-death').length, inp(base, id, 'end-of-life').length]).toEqual([id, 0, 1]);
+    }
+    expect(inp(base, 'p-farra', 'age-at-death').map((t) => t.number)).toEqual([205]);
+  });
+
+  it('Мариам и Иаир — «не позже сорокового года»; Ханаан и Мадай — Быт 7:11; эпоха 5 — Нав 4:19, 5:6 и многоточие Нав 3:17', () => {
+    for (const id of ['p-mariam', 'p-iair-syn-seguva']) expect([id, inp(base, id, 'years-after').length, inp(base, id, 'not-after').filter((t) => t.number === 40).length]).toEqual([id, 0, 1]);
+    for (const id of ['p-khanaan', 'p-maday']) expect(inp(base, id, 'not-before')[0].refs).toContain('Быт 7:11');
+    const e = base.epochs.find((x) => x.id === 'era-exodus')!;
+    expect(e.end.rule.refs).toEqual(expect.arrayContaining(['Нав 4:19', 'Нав 5:6']));
+    expect(e.end.words.startsWith('Все… Израилевы')).toBe(true);
+  });
+
+  it('проверка: «смерть» у Еноха, оба вида конца жизни у одного лица, смерть в стихах «конца земной жизни» — ошибки', () => {
+    const b = structuredClone(base);
+    (b.epochs.find((e) => e.id === 'era-antediluvian')!.events as any[]).find((x) => x.rule?.person === 'p-enokh').rule.of = 'death';
+    rec(b, 'p-noy').inputs.push({ kind: 'end-of-life', number: 950, words: 'девятьсот пятьдесят', refs: ['Быт 9:29'], cert: 'scripture' });
+    const e = errs(b, /^(время|эпоха)$/);
+    expect(e).toMatch(/правило «смерть» у p-enokh: Писание смерти не называет/);
+    expect(e).toMatch(/p-noy: у лица и «возраст при смерти», и «конец земной жизни»/);
+    expect(e).toMatch(/p-noy вход \d \(end-of-life\): в стихах входа вне скобок названа смерть/);
+  });
+
+  it('входы времени на форме «выв.» «Азария» — с idCert (второй ключ Д6, № 2); без него — ошибка', () => {
+    const certs = base.chrono.flatMap((c) => ((c.chrono as ChronoD6).inputs ?? []).filter((t) => t.idCert?.form === 'p-oziya#n2').map(() => c.actor));
+    expect([...new Set(certs)].sort()).toEqual(['p-fakey', 'p-fakiya', 'p-ioafam', 'p-menaim', 'p-oziya', 'p-sellum-syn-iavisa', 'p-zakhariya-syn-ieroboama']);
+    const b = structuredClone(base);
+    delete inp(b, 'p-menaim', 'synchronism')[0].idCert;
+    expect(validate(b).filter((i) => i.level === 'error' && i.check === 'тождество по форме').map((i) => i.msg).join('\n')).toMatch(/вход держится на форме «выв.» «Азария» \(p-oziya\)/);
+  });
+});

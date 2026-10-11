@@ -1693,6 +1693,12 @@
      "refs": [
       "1Пар 20:4"
      ],
+     "idCert": {
+      "form": "p-safut#n2",
+      "refs": [
+       "1Пар 20:4"
+      ]
+     },
      "cert": "inference"
     },
     {
@@ -1727,6 +1733,12 @@
      "refs": [
       "1Пар 20:5"
      ],
+     "idCert": {
+      "form": "p-elkhanan-syn-yagare-orgima#n2",
+      "refs": [
+       "1Пар 20:5"
+      ]
+     },
      "cert": "inference"
     },
     {
@@ -1818,7 +1830,7 @@
      "cert": "scripture"
     },
     {
-     "actor": "p-samma-syn-iesseya",
+     "actor": "p-safay-brat-davida",
      "label": "Сафай",
      "roles": [
       {
@@ -1829,10 +1841,10 @@
      "refs": [
       "2Цар 21:21"
      ],
-     "cert": "inference"
+     "cert": "scripture"
     },
     {
-     "actor": "p-samma-syn-iesseya",
+     "actor": "p-safay-brat-davida",
      "label": "Шима",
      "roles": [
       {
@@ -1843,6 +1855,12 @@
      "refs": [
       "1Пар 20:7"
      ],
+     "idCert": {
+      "form": "p-safay-brat-davida#n2",
+      "refs": [
+       "1Пар 20:7"
+      ]
+     },
      "cert": "inference"
     }
    ],
