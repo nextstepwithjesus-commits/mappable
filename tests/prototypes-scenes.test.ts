@@ -12,7 +12,7 @@ import { admission, type Admission } from '../tools/base/admit.ts';
 const DIR = join(import.meta.dirname, '..', 'prototypes', 'инструменты');
 
 /** Опись: адрес → ключи записей. Ответ — ключи, не допущенные уровнем «выпуск». */
-export function notReleased(scenes: Record<string, string[]>, A: Admission): string[] {
+function notReleased(scenes: Record<string, string[]>, A: Admission): string[] {
   return Object.entries(scenes).flatMap(([addr, keys]) => keys.filter((k) => !A.okKey(k)).map((k) => `${addr}: ${k}`));
 }
 

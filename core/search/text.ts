@@ -2,17 +2,28 @@
  * Поиск по тексту Писания (09 § 3.5 п. 5): проход по стихам без обратного индекса. В продукте живёт в рабочем потоке.
  * Имена — по словарю форм, без стеммера; обычные слова — по основам из таблицы; точные формы — первыми.
  *
- * Перенесено копией из пробы П-Т3 (`prototypes/П-Т3/core/`, 11 октября 2026) по 10 § 3.1 п. 4: тесты — `tests/core-search.test.ts`;
- * рецензия переноса по правилам продукта (данные и интерфейс) ещё не проведена — до неё код не меняет поведения пробы.
+ * Скобки — только по разметке пакета текста (`br`: отрезки `brackets.tsv` с видом и признаком «текст»), а не по знакам
+ * (рецензия данных, № 1): находка в отрезке, не признанном текстом, помечается видом отрезка (09 § 3.5 п. 6; 02 § 3.8); отрезок
+ * вида «б» и «г» — текст. У находки — положения совпавших слов (`ranges`), вид отрезка и пометки дефектов (`iss`). Второй слой
+ * (11 § 3.6 (б), (г); рецензия интерфейса, № 12): режим «С опечатками», фраза, «Где искать» (отрезки), порядок по числу совпадений.
+ *
+ * Перенесено из пробы П-Т3 (10 § 3.1 п. 4) и исправлено по рецензиям переноса.
  */
 import { MIN_STEM } from './stems.ts';
 import { now } from '../clock.ts';
-import type { Versification } from './address.ts';
+import { osa, allowedErrors } from './norm.ts';
+import { inSpan, type Versification } from './address.ts';
+import type { Span } from '../refs.ts';
+import { BRACKET_KINDS, type BracketKind } from '../types.ts';
 
 export interface BookText {
   book: string;
   /** ch[c - 1][v - 1] — текст стиха (пустая строка — пустой стих; null — стиха нет в синодальном тексте). */
   ch: (string | null)[][];
+  /** Отрезки скобок пакета: [глава, стих, начало, конец, вид (номер в BRACKET_KINDS), текст ли]. */
+  br?: [number, number, number, number, number, 0 | 1][];
+  /** Пометки дефектов электронного текста: [глава, стих, вид]. */
+  iss?: [number, number, string][];
 }
 
 export interface TextData {
@@ -27,7 +38,17 @@ export interface TextData {
   stem?: (w: string) => string;
 }
 
-export type Mode = 'формы' | 'точно';
+/** «С формами слова» (по умолчанию), «Точно», «С опечатками» (11 § 3.6 (б)). */
+export type Mode = 'формы' | 'точно' | 'опечатки';
+
+export interface SearchOptions {
+  /** Слова идут подряд и по порядку (фраза в кавычках). */
+  phrase?: boolean;
+  /** «Где искать»: только стихи внутри этих отрезков (книга, глава, «Быт 1–11»). */
+  within?: Span[];
+  /** Порядок: по книгам (по умолчанию, точные формы первыми) или по числу совпадений. */
+  order?: 'книги' | 'совпадения';
+}
 
 export interface TextHit {
   book: string;
@@ -36,13 +57,21 @@ export interface TextHit {
   text: string;
   /** Все слова запроса найдены точной формой. */
   exact: boolean;
-  /** Найдено только в словах внутри скобок (09 § 3.5 п. 6; 02 § 3.8). */
+  /** Хоть одно слово найдено только внутри скобок, не признанных текстом (09 § 3.5 п. 6; 02 § 3.8). */
   inBrackets: boolean;
+  /** Виды отрезков скобок, в которых стоят совпавшие слова, и признак «текст» (вид «б», «г»). */
+  brackets: { kind: BracketKind; isText: boolean }[];
+  /** Пометки дефектов электронного текста этого стиха (`source-issues.tsv`). */
+  issues: string[];
+  /** Положения совпавших слов в тексте стиха: [начало, конец) — для выделения 600 (11 § 3.6 (г)). */
+  ranges: [number, number][];
+  /** Сколько слов стиха совпало. */
+  count: number;
 }
 
 export interface WordPlan {
   word: string;
-  how: 'имя' | 'исключение' | 'основа' | 'целиком';
+  how: 'имя' | 'исключение' | 'основа' | 'целиком' | 'опечатки';
   stem?: string;
   forms: string[];
 }
@@ -72,7 +101,11 @@ export class TextIndex {
   private vText: string[] = [];
   private tokStart: Uint32Array;
   private tok: Int32Array;
+  /** 0 — вне скобок; иначе (номер вида + 1) | 0x80, если отрезок признан текстом. */
   private tokBr: Uint8Array;
+  private tokPos: Uint32Array;
+  private tokLen: Uint8Array;
+  private vIssues = new Map<number, string[]>();
   private stemClass = new Map<string, number[]>();
   private stemClassAll = new Map<string, number[]>();
   private exceptOf = new Map<string, number>();
@@ -90,6 +123,8 @@ export class TextIndex {
     let cap = 1 << 20;
     let tok = new Int32Array(cap);
     let br = new Uint8Array(cap);
+    let pos = new Uint32Array(cap);
+    let len = new Uint8Array(cap);
     let nt = 0;
     let i = 0;
     // буква русского алфавита в любом регистре; lo() — её код в нижнем регистре, «ё» = «е» (без toLowerCase на стих)
@@ -99,6 +134,16 @@ export class TextIndex {
     const table = new Int32Array(mask + 1).fill(-1);
     d.books.forEach((b, bi) => {
       this.vers.set(b.book, b.ch.map((c) => c.length));
+      const segs = new Map<number, [number, number, number][]>();
+      for (const x of b.br ?? []) {
+        const k = x[0] * 1000 + x[1];
+        (segs.get(k) ?? segs.set(k, []).get(k)!).push([x[2], x[3], (x[4] + 1) | (x[5] ? 0x80 : 0)]);
+      }
+      const iss = new Map<number, string[]>();
+      for (const x of b.iss ?? []) {
+        const k = x[0] * 1000 + x[1];
+        (iss.get(k) ?? iss.set(k, []).get(k)!).push(x[2]);
+      }
       b.ch.forEach((verses, ci) =>
         verses.forEach((text, vi) => {
           if (text === null) return;
@@ -107,9 +152,11 @@ export class TextIndex {
           this.vV[i] = vi + 1;
           this.vText.push(text);
           this.tokStart[i] = nt;
+          const vs = segs.get((ci + 1) * 1000 + vi + 1);
+          const vi2 = iss.get((ci + 1) * 1000 + vi + 1);
+          if (vi2) this.vIssues.set(i, vi2);
           const low = text;
           const n = low.length;
-          let depth = 0;
           let p = 0;
           while (p < n) {
             const c = low.charCodeAt(p);
@@ -162,13 +209,21 @@ export class TextIndex {
                 const b2 = new Uint8Array(cap);
                 b2.set(br);
                 br = b2;
+                const p2 = new Uint32Array(cap);
+                p2.set(pos);
+                pos = p2;
+                const l2 = new Uint8Array(cap);
+                l2.set(len);
+                len = l2;
               }
               tok[nt] = id;
-              br[nt++] = depth > 0 ? 1 : 0;
+              let mark = 0;
+              if (vs) for (const sg of vs) if (p >= sg[0] && p < sg[1]) mark = sg[2];
+              br[nt] = mark;
+              pos[nt] = p;
+              len[nt++] = Math.min(255, q - p);
               p = q;
             } else {
-              if (c === 0x5b || c === 0x28) depth++;
-              else if ((c === 0x5d || c === 0x29) && depth > 0) depth--;
               p++;
             }
           }
@@ -179,6 +234,8 @@ export class TextIndex {
     this.tokStart[nv] = nt;
     this.tok = tok.subarray(0, nt);
     this.tokBr = br.subarray(0, nt);
+    this.tokPos = pos.subarray(0, nt);
+    this.tokLen = len.subarray(0, nt);
     d.exceptions.forEach((g, gi) => g.forEach((f) => this.exceptOf.set(f, gi)));
     for (let id = 0; id < this.forms.length; id++) {
       const f = this.forms[id];
@@ -211,6 +268,11 @@ export class TextIndex {
   plan(word: string, mode: Mode): WordPlan {
     const ids = (fs: string[]) => fs.filter((f) => this.formId.has(f));
     if (mode === 'точно') return { word, how: 'целиком', forms: ids([word]) };
+    if (mode === 'опечатки') {
+      const k = allowedErrors(word);
+      const fs = this.forms.filter((f) => Math.abs(f.length - word.length) <= k && osa(word, f) <= k);
+      return { word, how: 'опечатки', forms: fs };
+    }
     const nf = this.d.names.forms(word);
     if (nf) return { word, how: 'имя', forms: ids(nf) };
     const e = this.exceptOf.get(word);
@@ -222,10 +284,10 @@ export class TextIndex {
     return { word, how: 'основа', stem: s, forms: cls };
   }
 
-  search(words: string[], mode: Mode = 'формы', limit = 50): TextResult {
+  search(words: string[], mode: Mode = 'формы', limit = 50, opts: SearchOptions = {}): TextResult {
     const t0 = now();
     const plan = words.map((w) => this.plan(w, mode));
-    const res = this.scan(plan, words, limit);
+    const res = this.scan(plan, words, limit, opts);
     if (plan.length === 1 && plan[0].how === 'исключение') {
       const s = this.stemOf(words[0]);
       const all = (this.stemClassAll.get(s) ?? []).map((id) => this.forms[id]);
@@ -235,7 +297,7 @@ export class TextIndex {
     return res;
   }
 
-  private scan(plan: WordPlan[], words: string[], limit: number): TextResult {
+  private scan(plan: WordPlan[], words: string[], limit: number, opts: SearchOptions = {}): TextResult {
     const n = plan.length;
     const perBook = new Array<number>(this.books.length).fill(0);
     const empty: TextResult = { total: 0, exactTotal: 0, hits: [], perBook, plan, alsoForms: [], ms: 0 };
@@ -264,19 +326,35 @@ export class TextIndex {
     const tok = this.tok;
     const ts = this.tokStart;
     const nv = this.vText.length;
+    const within = opts.within;
+    const count = new Map<number, number>();
     for (let v = 0; v < nv; v++) {
+      if (within && !within.some((sp) => inSpan(sp, this.books[this.vBook[v]], this.vC[v], this.vV[v]))) continue;
       let got = 0;
       let exact = 0;
       let outside = 0;
+      let n = 0;
       for (let t = ts[v], e = ts[v + 1]; t < e; t++) {
         const b = m[tok[t]];
         if (b) {
           got |= b & 15;
           exact |= (b >> 4) & 15;
-          if (!this.tokBr[t]) outside |= b & 15;
+          n++;
+          const br = this.tokBr[t];
+          if (br === 0 || br & 0x80) outside |= b & 15;
         }
       }
+      if (got === full && opts.phrase && plan.length > 1) {
+        // фраза: слова подряд и по порядку
+        let ok = false;
+        for (let t = ts[v], e = ts[v + 1] - plan.length + 1; t < e && !ok; t++) {
+          ok = true;
+          for (let k = 0; k < plan.length; k++) if (!(m[tok[t + k]] & (1 << k))) { ok = false; break; }
+        }
+        if (!ok) continue;
+      }
       if (got === full) {
+        count.set(v, n);
         perBook[this.vBook[v]]++;
         if (exact === full) exactHits.push(v);
         else otherHits.push(v);
@@ -285,16 +363,35 @@ export class TextIndex {
           for (let t = ts[v], e = ts[v + 1]; t < e; t++) if (m[tok[t]] & 15) seenForms.add(tok[t]);
       }
     }
+    let order = [...exactHits, ...otherHits];
+    const exactSet = new Set(exactHits);
+    if (opts.order === 'совпадения') order = [...order].sort((a, b) => (count.get(b) ?? 0) - (count.get(a) ?? 0));
+    const hits: TextHit[] = order.slice(0, limit).map((v) => {
+      const ranges: [number, number][] = [];
+      const kinds = new Map<string, { kind: BracketKind; isText: boolean }>();
+      for (let t = ts[v], e = ts[v + 1]; t < e; t++) {
+        if (!(m[tok[t]] & 15)) continue;
+        ranges.push([this.tokPos[t], this.tokPos[t] + this.tokLen[t]]);
+        const br = this.tokBr[t];
+        if (br) {
+          const kind = BRACKET_KINDS[(br & 0x7f) - 1];
+          kinds.set(`${kind}${br & 0x80}`, { kind, isText: (br & 0x80) !== 0 });
+        }
+      }
+      return {
+        book: this.books[this.vBook[v]],
+        c: this.vC[v],
+        v: this.vV[v],
+        text: this.vText[v],
+        exact: exactSet.has(v),
+        inBrackets: brFlag.has(v),
+        brackets: [...kinds.values()],
+        issues: this.vIssues.get(v) ?? [],
+        ranges,
+        count: count.get(v) ?? 0,
+      };
+    });
     for (const id of touched) m[id] = 0;
-    const order = [...exactHits, ...otherHits];
-    const hits: TextHit[] = order.slice(0, limit).map((v, i) => ({
-      book: this.books[this.vBook[v]],
-      c: this.vC[v],
-      v: this.vV[v],
-      text: this.vText[v],
-      exact: i < exactHits.length,
-      inBrackets: brFlag.has(v),
-    }));
     const typed = new Set(words);
     const alsoForms = [...seenForms].map((id) => this.forms[id]).filter((f) => !typed.has(f)).sort();
     return { total: order.length, exactTotal: exactHits.length, hits, perBook, plan, alsoForms, ms: 0 };

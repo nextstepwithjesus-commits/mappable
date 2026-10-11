@@ -5,9 +5,13 @@
  *
  * Правила:
  *  - опись с неизвестной схемой не читается — ядро остаётся на прежнем выпуске (09 § 6.2 п. 3);
+ *  - в описи ровно одно ядро индекса и один указатель инструментов, оба обязательные; у выпуска есть номер; сжатие — из
+ *    словаря (рецензия данных на ядро, № 4);
  *  - загрузчик уровня «выпуск» не принимает описи и пакеты уровня «проба» (09 § 5.2 п. 7) и синтетику (10 § 4.0.1 п. 6);
- *  - пакет сверяется по sha256 описи; несовпадение — ошибка, а не тихие чужие данные;
- *  - уровень пакета равен уровню описи;
+ *  - пакет сверяется по sha256 описи; несовпадение — ошибка, а не тихие чужие данные; уровень пакета равен уровню описи;
+ *  - вид из многих пакетов (текст, карточки, TSK, Связи) читается только с выбором книги или тома (данные № 13);
+ *  - одновременные запросы одного файла читают и сверяют его один раз; тексты книг держатся в памяти не больше
+ *    `textLimit` штук, давно не открытые вытесняются (данные № 11);
  *  - переход на новый выпуск — только когда все обязательные пакеты на месте и сверены (09 § 6.2 п. 2).
  */
 import {
@@ -48,21 +52,36 @@ export interface LoaderOptions {
   level: Admit;
   /** Только для замера бюджетов. */
   allowSynthetic?: boolean;
+  /** Сколько текстов книг держать в памяти (по умолчанию 12). */
+  textLimit?: number;
 }
+
+/** Виды из многих пакетов: без выбора книги или тома их не прочитать. */
+export const MULTI: ReadonlySet<PackKind> = new Set<PackKind>(['text', 'cards', 'tsk', 'relations']);
+const COMPRESSIONS = new Set(['br', 'gzip']);
 
 const isObj = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && x !== null && !Array.isArray(x);
 
-/** Проверка описи: схема, уровень, синтетика, состав строк. Ошибка — строкой. */
-export function checkManifest(x: unknown, opts: LoaderOptions): string | null {
-  if (!isObj(x)) return 'опись — не объект';
-  if (x.schema !== MANIFEST_SCHEMA) return `неизвестная схема описи: ${String(x.schema)} (ядро читает ${MANIFEST_SCHEMA})`;
-  if (x.admit !== 'release' && x.admit !== 'probe') return 'в описи нет уровня допуска';
-  if (opts.level === 'release' && x.admit !== 'release') return 'опись уровня «проба» — приложение выпуска её не читает';
-  if (x.synthetic && !opts.allowSynthetic) return 'опись синтетики — не для приложения';
-  if (!Array.isArray(x.packages)) return 'в описи нет списка пакетов';
+/** Проверка описи: схема, уровень, синтетика, обязательные пакеты, номер выпуска, состав строк. Ошибка — код и подробность. */
+export function checkManifest(x: unknown, opts: LoaderOptions): { code: Parameters<typeof failed>[0]; detail: string } | null {
+  const bad = (code: Parameters<typeof failed>[0], detail: string) => ({ code, detail });
+  if (!isObj(x)) return bad('опись-неполна', 'опись — не объект');
+  if (x.schema !== MANIFEST_SCHEMA) return bad('опись-неизвестная-схема', `схема ${String(x.schema)}, ядро читает ${MANIFEST_SCHEMA}`);
+  if (x.admit !== 'release' && x.admit !== 'probe') return bad('опись-неполна', 'нет уровня допуска');
+  if (opts.level === 'release' && x.admit !== 'release') return bad('опись-проба', 'опись уровня «проба»');
+  if (x.synthetic && !opts.allowSynthetic) return bad('опись-синтетика', 'опись синтетики');
+  if (x.admit === 'release' && (typeof x.release !== 'string' || !x.release)) return bad('опись-неполна', 'у выпуска нет номера');
+  if (typeof x.compression !== 'string' || !COMPRESSIONS.has(x.compression)) return bad('опись-неполна', `неизвестное сжатие ${String(x.compression)}`);
+  if (!Array.isArray(x.packages)) return bad('опись-неполна', 'нет списка пакетов');
   for (const p of x.packages) {
     if (!isObj(p) || typeof p.file !== 'string' || typeof p.sha256 !== 'string' || typeof p.kind !== 'string' || typeof p.required !== 'boolean')
-      return 'строка пакета в описи неполна';
+      return bad('опись-неполна', 'строка пакета неполна');
+  }
+  const ps = x.packages as PackageEntry[];
+  for (const k of ['core-index', 'tools-index'] as const) {
+    const xs = ps.filter((p) => p.kind === k);
+    if (xs.length !== 1) return bad('опись-неполна', `пакетов ${k}: ${xs.length}, нужен один`);
+    if (!xs[0].required) return bad('опись-неполна', `${k} не обязательный (02 § 8.1 [4.2])`);
   }
   return null;
 }
@@ -70,6 +89,8 @@ export function checkManifest(x: unknown, opts: LoaderOptions): string | null {
 export class Loader {
   private man: Manifest | null = null;
   private cache = new Map<string, unknown>();
+  private pending = new Map<string, Promise<State<unknown>>>();
+  private texts: string[] = [];
 
   constructor(private src: Source, private opts: LoaderOptions) {}
 
@@ -78,10 +99,10 @@ export class Loader {
     try {
       x = JSON.parse(await this.src.read(file));
     } catch (e) {
-      return failed(`опись не прочитана: ${(e as Error).message}`);
+      return failed('опись-не-прочитана', (e as Error).message);
     }
     const bad = checkManifest(x, this.opts);
-    if (bad) return failed(bad);
+    if (bad) return failed(bad.code, bad.detail);
     this.man = x as Manifest;
     return ready(this.man);
   }
@@ -95,30 +116,61 @@ export class Loader {
 
   /** Пакет: из памяти или с источника, сверенный по описи. */
   async get<K extends PackKind>(kind: K, sel: Select = {}): Promise<State<PackOf[K]>> {
-    if (!this.man) return failed('опись не загружена');
+    if (!this.man) return failed('опись-не-прочитана', 'опись не загружена');
+    if (MULTI.has(kind) && sel.book === undefined && sel.volume === undefined) return failed('нужен-выбор', `для ${kind} нужна книга или том`);
     const e = this.entry(kind, sel);
-    if (!e) return failed(`в описи нет пакета ${kind}${sel.book ? ` ${sel.book}` : ''}${sel.part ? ` ч. ${sel.part}` : ''}${sel.volume ? ` ${sel.volume}` : ''}`);
+    if (!e) return failed('нет-пакета', `${kind}${sel.book ? ` ${sel.book}` : ''}${sel.part ? ` ч. ${sel.part}` : ''}${sel.volume ? ` ${sel.volume}` : ''}`);
     const hit = this.cache.get(e.file);
-    if (hit) return ready(hit as PackOf[K]);
+    if (hit) {
+      if (kind === 'text') this.touch(e.file);
+      return ready(hit as PackOf[K]);
+    }
+    let p = this.pending.get(e.file);
+    if (!p) {
+      p = this.readPack(e, kind);
+      this.pending.set(e.file, p);
+      void p.finally(() => this.pending.delete(e.file));
+    }
+    return (await p) as State<PackOf[K]>;
+  }
+
+  private async readPack(e: PackageEntry, kind: PackKind): Promise<State<unknown>> {
+    const man = this.man as Manifest;
     let text: string;
     try {
       text = await this.src.read(e.file);
     } catch (err) {
-      return failed(`пакет ${e.file} не прочитан: ${(err as Error).message}`);
+      return failed('пакет-не-прочитан', `${e.file}: ${(err as Error).message}`);
     }
-    if ((await this.src.sha256(text)) !== e.sha256) return failed(`пакет ${e.file} не совпал с описью по sha256`);
+    if ((await this.src.sha256(text)) !== e.sha256) return failed('пакет-sha256', e.file);
     let x: unknown;
     try {
       x = JSON.parse(text);
     } catch {
-      return failed(`пакет ${e.file} — не JSON`);
+      return failed('пакет-не-json', e.file);
     }
-    if (!isObj(x) || x.schema !== PACK_SCHEMA) return failed(`пакет ${e.file}: неизвестная схема`);
-    if (x.admit !== this.man.admit) return failed(`пакет ${e.file}: уровень «${String(x.admit)}» не равен уровню описи «${this.man.admit}»`);
-    if (x.admit === 'probe' && this.opts.level === 'release') return failed(`пакет ${e.file} уровня «проба» — приложение выпуска его не читает`);
-    if (x.synthetic && !this.opts.allowSynthetic) return failed(`пакет ${e.file} — синтетика`);
+    if (!isObj(x) || x.schema !== PACK_SCHEMA) return failed('пакет-схема', e.file);
+    if (x.admit !== man.admit) return failed('пакет-уровень', `${e.file}: уровень «${String(x.admit)}» не равен уровню описи «${man.admit}»`);
+    if (x.admit === 'probe' && this.opts.level === 'release') return failed('пакет-уровень', `${e.file}: проба`);
+    if (x.synthetic && !this.opts.allowSynthetic) return failed('пакет-синтетика', e.file);
     this.cache.set(e.file, x);
-    return ready(x as unknown as PackOf[K]);
+    if (kind === 'text') this.touch(e.file);
+    return ready(x);
+  }
+
+  /** Учёт текстов книг: давно не открытые сверх предела вытесняются из памяти. */
+  private touch(file: string): void {
+    this.texts = [...this.texts.filter((f) => f !== file), file];
+    const limit = this.opts.textLimit ?? 12;
+    while (this.texts.length > limit) {
+      const old = this.texts.shift();
+      if (old) this.cache.delete(old);
+    }
+  }
+
+  /** Сколько текстов книг сейчас в памяти. */
+  get textsInMemory(): number {
+    return this.texts.length;
   }
 
   /** Обязательные пакеты описи (кладутся при установке). */
@@ -132,11 +184,15 @@ export class Loader {
  */
 export function readiness(man: Manifest, cached: Map<string, string>): { have: number; of: number; requiredOk: boolean; missing: string[] } {
   const ok = (p: PackageEntry) => cached.get(p.file) === p.sha256;
+  const req = man.packages.filter((p) => p.required);
   const missing = man.packages.filter((p) => !ok(p)).map((p) => p.file);
-  return { have: man.packages.length - missing.length, of: man.packages.length, requiredOk: man.packages.filter((p) => p.required).every(ok), missing };
+  return { have: man.packages.length - missing.length, of: man.packages.length, requiredOk: req.length > 0 && req.every(ok), missing };
 }
 
-/** Можно ли перейти на новый выпуск (09 § 6.2 п. 2–3): схема известна и все обязательные пакеты сверены. */
+/**
+ * Можно ли перейти на новый выпуск (09 § 6.2 п. 2–3): опись проходит проверку (схема, оба обязательных пакета) и все
+ * обязательные пакеты сверены. Опись без обязательных пакетов — переход запрещён.
+ */
 export function canSwitch(next: unknown, cached: Map<string, string>, opts: LoaderOptions): boolean {
   if (checkManifest(next, opts)) return false;
   return readiness(next as Manifest, cached).requiredOk;

@@ -19,18 +19,18 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version-file: .nvmrc
           cache: npm
       - run: npm ci
       - name: Проверка базы — 0 ошибок
         run: npm run -s base:validate
       - name: Тесты базы и допуска
         run: npx vitest run tests/base-*.test.ts --testTimeout=60000
-      - name: Пакеты «выпуск» с бюджетами
-        run: npm run -s pack
+      - name: Пакеты «выпуск» с бюджетами (brotli 5 и gzip 9) и номером выпуска
+        run: npm run -s pack -- --release "$(date -u +%Y).$(date -u +%-m).${{ github.run_number }}"
       - name: Пакеты «проба» и TSK с бюджетами
         run: npm run -s pack -- --probe --tsk
-      - name: Бюджеты на синтетике полного размера
+      - name: Бюджеты на синтетике ожидаемого размера (4 000 лиц) и замер нагрузки (10 000 лиц)
         run: npm run -s pack:synth
       - name: Тесты сборки пакетов (бюджеты, детерминизм, NFC, опись, синтетика)
         run: npx vitest run tests/pack-*.test.ts --testTimeout=60000
@@ -42,13 +42,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version-file: .nvmrc
           cache: npm
       - run: npm ci
       - name: Токены (Terrazzo) и их проверки
         run: npm run -s tokens
       - name: Типы — ядро без DOM и Node, сборка, тесты
         run: npm run -s typecheck:app
+      - name: Линтер (Biome; без any, без лишнего)
+        run: npm run -s lint:app
       - name: Единичные, поиск, границы импорта, токены
         run: npx vitest run tests/core-*.test.ts tests/tokens.test.ts --testTimeout=60000
 
@@ -59,14 +61,16 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version-file: .nvmrc
           cache: npm
       - run: npm ci
       - name: Браузер для Playwright
         run: npx playwright install --with-deps chromium
+      - name: Токены для стенда токенов
+        run: npm run -s tokens
       - name: Опись сцен показа — только «выпуск» (10 § 3.3)
         run: npx vitest run tests/prototypes-*.test.ts --testTimeout=60000
-      - name: Playwright и axe по прототипам — 360 и 1 280 px, обе темы, без сети
+      - name: Playwright и axe — свой сервер на localhost; опорные окна 08, 1 024, 768, 320, 200 %, „Самый крупный“, forced-colors, без движения; без сети
         run: npm run -s ci:prototypes -- --out dist-ci/прототипы
       - if: always()
         uses: actions/upload-artifact@v4
@@ -79,5 +83,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
       - name: Проверка документации (статусы, номера, карта, вехи)
         run: python3 -I tools/docs/check.py
+      - name: Цитаты документов 02–11 есть в своих стихах (09 § 8.2)
+        run: for f in docs/app/0[2-9]-*.md docs/app/1[01]-*.md; do python3 -I docs/app/data/07-цитаты.py "$f" || exit 1; done
+      - name: Числа документов воспроизводятся (09 § 8.2)
+        run: for f in docs/app/data/[01][0-9]-числа.py; do python3 -I "$f" > /dev/null || { echo "!! $f"; exit 1; }; done

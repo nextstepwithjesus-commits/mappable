@@ -40,10 +40,17 @@ export function nonNfc(x: unknown, limit = 20, path = '$', out: string[] = []): 
 
 export const sha256 = (s: string | Buffer): string => createHash('sha256').update(s).digest('hex');
 
-/** Размер тем сжатием, которым считается бюджет: brotli 11 (как статическое хранилище), gzip 9 — верхняя граница. */
-export function compressed(s: string, how: Compression): number {
+/**
+ * Размер сжатого пакета. Пока хранилище не выбрано (п. 5 этапа 0), бюджет мерится худшим правдоподобным сжатием: brotli 5
+ * (сжатие на лету у CDN) и gzip 9 — пакет должен войти по обоим (рецензия данных, № 2; решение координатора). `br11` — только
+ * справочно: так сжимают заранее собранные файлы `.br`.
+ */
+export function compressed(s: string, how: Compression | 'br11'): number {
   const b = Buffer.from(s);
-  return how === 'br'
-    ? brotliCompressSync(b, { params: { [constants.BROTLI_PARAM_QUALITY]: 11, [constants.BROTLI_PARAM_SIZE_HINT]: b.length } }).length
-    : gzipSync(b, { level: 9 }).length;
+  if (how === 'gzip') return gzipSync(b, { level: 9 }).length;
+  const q = how === 'br11' ? 11 : 5;
+  return brotliCompressSync(b, { params: { [constants.BROTLI_PARAM_QUALITY]: q, [constants.BROTLI_PARAM_SIZE_HINT]: b.length } }).length;
 }
+
+/** Пакет входит в бюджет: и brotli 5, и gzip 9 (одно правило для всех пакетов — рецензия данных, № 18). */
+export const fitsBudget = (s: string, max: number): boolean => compressed(s, 'gzip') <= max && compressed(s, 'br') <= max;

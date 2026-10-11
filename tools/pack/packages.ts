@@ -5,8 +5,10 @@
  * процитированные (пакет «стихи» снят, 09 § 5.3).
  */
 import { createRequire } from 'node:module';
-import { buildCards, buildIndex } from '../base/bundle.ts';
+import { buildIndex } from '../base/bundle.ts';
 import type { Admission } from '../base/admit.ts';
+import { yearIn } from '../base/validate.ts';
+import type { Prov } from '../base/types.ts';
 import type { Base } from '../base/migrate.ts';
 import { loadBible } from '../bible.ts';
 import { isText, matchBrackets } from '../base/brackets.ts';
@@ -100,7 +102,7 @@ export function textWords(): { words: Set<string>; capitalized: Set<string> } {
           words.add(f);
           if (/^[А-ЯЁ]/.test(w)) {
             const before = v.slice(0, m.index).trimEnd();
-            if (before !== '' && !/[.!?:]$/.test(before) && !/[«"(\[]$/.test(before)) capitalized.add(f);
+            if (before !== '' && !/[.!?:]$/.test(before) && !/[«"([]$/.test(before)) capitalized.add(f);
           }
         }
       }
@@ -131,9 +133,57 @@ interface IndexActor {
 /** Места: имя — в ядро, точка и степень — в указатель (09 § 3.5 п. 3). Степень по 05 § 3.3; нет степени — «не установлено». */
 const DEGREE: Record<string, string> = { certain: 'точно', probable: 'вероятно', possible: 'предположительно', unknown: 'не установлено' };
 
-export function buildIndexes(base: Base, A: Admission, forms = textWords()): { core: CoreIndex; tools: ToolsIndex; genealogy: GenealogyPack } {
+/**
+ * Имена лица для поиска (рецензия интерфейса, № 2–3): показываемое — основное; другие имена — те, что текст даёт лицу как имя
+ * (`variant`, `renamed`, `foreign`, `patronymic`), и описания, в которых стоит основное имя («Мария Магдалина»). Титулы
+ * (`title`: «Господь», «Слово», «Мессия») и прочие описания (`epithet`: «Агнец Божий») в поиск имён не идут — по ним ищется текст.
+ * Формы — из основного имени, `variant`, `renamed`, `foreign` и описаний с основным именем; `patronymic` форм не даёт
+ * («Сын Иессеев» не делает «Сын» и «Иессеев» именами Давида).
+ */
+const OTHER_TYPES = new Set(['variant', 'renamed', 'foreign', 'patronymic']);
+const FORM_TYPES = new Set(['main', 'variant', 'renamed', 'foreign']);
+export function personNames(names: { form: string; type: string }[]): { n: string; o: string[]; forms: string[] } {
+  const main = names.find((x) => x.type === 'main') ?? names[0];
+  const mainWord = norm(main.form.split(/[\s,]+/)[0]);
+  const withMain = (x: { form: string }) => x.form.split(/[\s,]+/).some((w) => norm(w) === mainWord);
+  const o = names.filter((x) => x !== main && (OTHER_TYPES.has(x.type) || (x.type === 'epithet' && withMain(x)))).map((x) => x.form);
+  const forms = names.filter((x) => FORM_TYPES.has(x.type) || (x.type === 'epithet' && withMain(x))).map((x) => x.form);
+  return { n: main.form, o: [...new Set(o)], forms: [...new Set(forms)] };
+}
+
+/** Стихи записи: все строки вида «Книга глава:стих…» в полях `refs` и `ref` (число стихов лица — порядок тёзок, № 3). */
+function refsIn(x: unknown, out: Set<string>): void {
+  if (Array.isArray(x)) x.forEach((y) => refsIn(y, out));
+  else if (x && typeof x === 'object') {
+    for (const [k, v] of Object.entries(x)) {
+      if ((k === 'refs' || k === 'ref' || k === 'read') && (typeof v === 'string' || Array.isArray(v))) for (const r of [v].flat()) if (typeof r === 'string') out.add(r);
+      else refsIn(v, out);
+    }
+  }
+}
+
+export interface Indexes { core: CoreIndex; tools: ToolsIndex; genealogy: GenealogyPack; formSources: { id: string; names: string[] }[] }
+
+export function buildIndexes(base: Base, A: Admission, forms = textWords()): Indexes {
   const idx = buildIndex(base, A) as ReturnType<typeof buildIndex> & { actors: IndexActor[] };
-  const persons: PersonName[] = idx.actors.map((a) => ({ id: a.id, n: a.n, ...(a.o && { o: a.o }), ...(a.d && { d: a.d }), p: a.p ?? 1, k: a.k }));
+  const byId = new Map<string, { names: { form: string; type: string }[]; refs: number }>();
+  for (const v of base.volumes) for (const a of v.actors) {
+    if (!A.ok(a)) continue;
+    const names = a.names.filter((x) => A.part(x as { prov?: Partial<Prov> })).map((x) => ({ form: x.form, type: x.type }));
+    const refs = new Set<string>();
+    refsIn(a.names.filter((x) => A.part(x as { prov?: Partial<Prov> })), refs);
+    refsIn(a.facts.filter((f) => A.ok(f)), refs);
+    byId.set(shortId(a.id, 'p-'), { names: names.length ? names : [{ form: a.names[0].form, type: 'main' }], refs: refs.size });
+  }
+  const formSources: { id: string; names: string[] }[] = [];
+  const persons: PersonName[] = idx.actors.map((a) => {
+    const b = byId.get(a.id);
+    const nm = b ? personNames(b.names) : { n: a.n, o: a.o ?? [], forms: [a.n] };
+    formSources.push({ id: a.id, names: nm.forms });
+    // уточнение `d` — только в указателе инструментов: правило 02 § 8.1 (К-9) на перерасход ядра (решение координатора по
+    // рецензии данных на ядро, № 2); указатель грузится фоном сразу после ядра
+    return { id: a.id, n: nm.n, ...(nm.o.length && { o: nm.o }), p: a.p ?? 1, k: a.k, ...(b?.refs && { c: b.refs }) };
+  });
   const actors: ActorRow[] = idx.actors.map((a) => ({
     id: a.id, k: a.k, ...(a.sk && { sk: a.sk }), ...(a.s && { s: a.s }), ...(a.d && { d: a.d }), ...(a.r && { r: a.r }), ...(a.p && { p: a.p }), ...(a.c && { c: a.c }), v: a.v,
   }));
@@ -146,12 +196,14 @@ export function buildIndexes(base: Base, A: Admission, forms = textWords()): { c
     if (!names.length) continue;
     const id = shortId(pl.id, 'l-');
     places.push({ id, n: names[0].form, ...(names.length > 1 && { o: names.slice(1).map((n) => n.form) }) });
+    formSources.push({ id: `l-${id}`, names: names.map((n) => n.form) });
     const pos = pl.labelPoint ?? pl.positions?.find((p) => !p.rejected);
     if (pos) points.push({ id, lon: pos.lon, lat: pos.lat, deg: DEGREE[pl.degree ?? 'unknown'] });
   }
-  const names = buildForms(idx.actors.map((a) => ({ id: a.id, names: [a.n, ...(a.o ?? [])] })), forms.words, forms.capitalized).names;
+  const areas = (idx.areas as ToolsIndex['areas']).map((a) => ({ id: a.id, n: a.n }));
+  const names = buildForms(formSources, forms.words, forms.capitalized).names;
   const s = stamp(A);
-  const core: CoreIndex = { ...s, persons, places, stories: [], names, exceptions: EXCEPTIONS.map((e) => e.forms), glossary: [] };
+  const core: CoreIndex = { ...s, persons, places, areas, stories: [], names, exceptions: EXCEPTIONS.map((e) => e.forms), glossary: [] };
   const tools: ToolsIndex = {
     ...s,
     actors,
@@ -167,17 +219,52 @@ export function buildIndexes(base: Base, A: Admission, forms = textWords()): { c
     places: points,
   };
   const genealogy: GenealogyPack = { ...s, members: idx.members as GenealogyPack['members'] };
-  return { core, tools, genealogy };
+  return { core, tools, genealogy, formSources };
 }
 
-export function buildCardVolumes(base: Base, A: Admission): Map<string, CardsVolume> {
-  const out = new Map<string, CardsVolume>();
-  const { cards } = buildCards(base, A);
-  for (const [file, c] of Object.entries(cards)) {
-    const volume = file.replace(/\.json$/, '');
-    out.set(volume, { ...stamp(A), volume, cards: c.cards as CardsVolume['cards'] });
+/**
+ * Карточки по томам (02 § 8.1): допущенные лица, их допущенные утверждения с порядковым номером утверждения `n` (полный номер
+ * `a-<n>` собирает ядро — Р-11, К-6) и «нет сведений». Правило выноса — как `tools/base/bundle.ts`: толкование без авторов и год
+ * без модели в сборку не идут. Том больше бюджета делится на части `08-levi.1`, `08-levi.2` (02 § 8.1: «том больше — делится»);
+ * у лица в указателе — номер своей части (`ActorRow.v`).
+ */
+export function buildCardVolumes(base: Base, A: Admission, fits: (v: CardsVolume) => boolean = () => true): { volumes: Map<string, CardsVolume>; volumeOf: Map<string, string> } {
+  const volumes = new Map<string, CardsVolume>();
+  const volumeOf = new Map<string, string>();
+  for (const v of base.volumes) {
+    const name = v.file.replace(/\.json$/, '');
+    const cards: CardsVolume['cards'] = {};
+    for (const a of v.actors) {
+      if (!A.ok(a)) continue;
+      const facts = a.facts.filter((f) => A.ok(f) && !f.needsSources && (f.cert === 'calc' || !yearIn(f.value)));
+      const nod = base.nodata.filter((n) => n.actor === a.id && A.ok(n)).map((n) => ({ s: n.sec, k: n.kind, ...(n.what && { w: n.what }), ...(n.refs.length && { r: n.refs }), ...(n.words && { q: n.words }) }));
+      cards[shortId(a.id, 'p-')] = {
+        f: facts.map((f) => ({ n: claimNo(f.id ?? ''), s: f.sec, f: f.field, v: f.value, ...(f.cert && { c: f.cert }) })),
+        ...(nod.length && { nd: nod }),
+      };
+    }
+    const whole: CardsVolume = { ...stamp(A), volume: name, cards };
+    const ids = Object.keys(cards);
+    let parts = 1;
+    const cut = (k: number) => {
+      const per = Math.ceil(ids.length / k);
+      return Array.from({ length: k }, (_, i) => ids.slice(i * per, (i + 1) * per)).filter((x) => x.length);
+    };
+    while (!cut(parts).every((p, i) => fits({ ...whole, volume: parts > 1 ? `${name}.${i + 1}` : name, cards: Object.fromEntries(p.map((id) => [id, cards[id]])) })) && parts < 16) parts++;
+    cut(parts).forEach((p, i) => {
+      const vol = parts > 1 ? `${name}.${i + 1}` : name;
+      volumes.set(vol, { ...whole, volume: vol, cards: Object.fromEntries(p.map((id) => [id, cards[id]])) });
+      for (const id of p) volumeOf.set(id, vol);
+    });
   }
-  return out;
+  return { volumes, volumeOf };
+}
+
+/** Порядковый номер утверждения: `a-12299` → 12299 (обратно — `claimId` ядра; тест обратного восстановления). */
+export function claimNo(id: string): number {
+  const m = /^a-(\d+)$/.exec(id);
+  if (!m) throw new Error(`номер утверждения «${id}» — не вида a-<число>`);
+  return Number(m[1]);
 }
 
 // ---------- параллельные места (TSK) ----------

@@ -1,7 +1,7 @@
 /**
  * Бюджеты пакетов (09 § 5.3; 02 § 8.1; Р-11; К-9): у каждого пакета есть бюджет, пакет без бюджета — ошибка сборки.
- * Бюджет проверяется тем же сжатием, что отдаёт хранилище (по умолчанию brotli, `--compression gzip` — строже); gzip
- * пишется в опись как верхняя граница (09 § 5.3, рецензия данных № 17).
+ * Пока хранилище не выбрано, пакет должен войти и по brotli 5, и по gzip 9 — одно правило для всех пакетов (рецензия данных
+ * на ядро, № 2, № 18; решение координатора). После выбора хранилища — его сжатием (задание «скорость»).
  */
 import type { PackKind } from '../../core/types.ts';
 
@@ -39,10 +39,7 @@ export interface Sized {
   gzip: number;
 }
 
-/** Пакеты сверх бюджета (по сжатию хранилища) и сверх бюджета по gzip (замечание: верхняя граница). */
-export function overBudget(list: Sized[]): { over: Sized[]; gzipOver: Sized[] } {
-  return {
-    over: list.filter((p) => p.size > BUDGETS[p.kind].max),
-    gzipOver: list.filter((p) => p.gzip > BUDGETS[p.kind].max),
-  };
+/** Пакеты сверх бюджета: по brotli 5 или по gzip 9 (пока хранилище не выбрано, пакет должен войти по обоим). */
+export function overBudget(list: Sized[]): { over: Sized[] } {
+  return { over: list.filter((p) => p.size > BUDGETS[p.kind].max || p.gzip > BUDGETS[p.kind].max) };
 }

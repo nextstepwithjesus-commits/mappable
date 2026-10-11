@@ -45,3 +45,12 @@ export function scriptureWords(view: VerseView): string {
   out += view.text.slice(at);
   return out.replace(/\s+/g, ' ').replace(/\s+([,.;:!?])/g, '$1').trim();
 }
+
+/**
+ * Текст стиха для показа и копии (08 § 16.2, строка 81; рецензия интерфейса, № 21): дефис с пробелами по обе стороны
+ * («человека - сеть», Притч 29:6) — тире «—». Длина строки не меняется, поэтому положения находок поиска остаются верными.
+ * `synodal.tsv` не правится; буква «ё» не восстанавливается.
+ */
+export function showText(s: string): string {
+  return s.replace(/ - /g, ' — ');
+}

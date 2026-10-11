@@ -6,11 +6,19 @@
 
 export type State<T> =
   | { s: 'загрузка' }
-  | { s: 'ошибка'; why: string; retry: true }
+  | { s: 'ошибка'; code: ErrorCode; detail?: string; retry: true }
   | { s: 'пусто'; why: Empty }
   | { s: 'неполно'; data: T; cover: Cover }
   | { s: 'не скачано'; what: string }
   | { s: 'готово'; data: T };
+
+/**
+ * Код причины ошибки (рецензия интерфейса, № 20): слова для читателя берутся из файла токенов слов по коду (08 § 3.1, § 4.4);
+ * `detail` — для журнала и разработчика, читателю не показывается.
+ */
+export type ErrorCode =
+  | 'опись-не-прочитана' | 'опись-неизвестная-схема' | 'опись-неполна' | 'опись-проба' | 'опись-синтетика'
+  | 'нет-пакета' | 'нужен-выбор' | 'пакет-не-прочитан' | 'пакет-sha256' | 'пакет-не-json' | 'пакет-схема' | 'пакет-уровень' | 'пакет-синтетика';
 
 /** Охват: «размечено книг 14 из 66». */
 export interface Cover {
@@ -29,5 +37,5 @@ export type Empty =
   | { kind: 'нет записи'; id: string; reason?: string };
 
 export const ready = <T>(data: T): State<T> => ({ s: 'готово', data });
-export const failed = <T>(why: string): State<T> => ({ s: 'ошибка', why, retry: true });
+export const failed = <T>(code: ErrorCode, detail?: string): State<T> => ({ s: 'ошибка', code, ...(detail && { detail }), retry: true });
 export const empty = <T>(why: Empty): State<T> => ({ s: 'пусто', why });

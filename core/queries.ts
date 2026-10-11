@@ -75,14 +75,27 @@ export class Data {
     }
   }
 
-  /** Номер → живая запись, переход, выбор или «снята» (09 § 4.4.1, переадресация трёх видов). */
+  /**
+   * Номер → живая запись, переход, выбор или «снята» (09 § 4.4.1, переадресация трёх видов). Переадресация идёт по цепочке
+   * (a → b → c) с защитой от петли (рецензия данных, № 19).
+   */
   resolve(id: string): Resolved {
-    if (id.startsWith(P) && this.names.has(id.slice(P.length))) return { kind: 'есть', id };
-    const to = this.redirects.get(id);
-    if (!to) return { kind: 'нет', id };
-    if (to.length === 0) return { kind: 'снята', from: id };
-    if (to.length === 1) return { kind: 'переход', id: to[0], from: id };
-    return { kind: 'выбор', to, from: id };
+    const seen = new Set<string>();
+    let cur = id;
+    for (;;) {
+      if (cur.startsWith(P) && this.names.has(cur.slice(P.length))) return cur === id ? { kind: 'есть', id } : { kind: 'переход', id: cur, from: id };
+      const to = this.redirects.get(cur);
+      if (!to || seen.has(cur)) return cur === id ? { kind: 'нет', id } : { kind: 'нет', id: cur };
+      seen.add(cur);
+      if (to.length === 0) return { kind: 'снята', from: id };
+      if (to.length > 1) return { kind: 'выбор', to, from: id };
+      cur = to[0];
+    }
+  }
+
+  /** Том карточек лица (часть тома, если том делится) — для `Loader.get('cards', { volume })`. */
+  volumeOf(id: string): string | undefined {
+    return this.actors.get(shortPerson(id))?.v;
   }
 
   person(id: string): Person | undefined {
@@ -137,6 +150,9 @@ export class Data {
     return empty({ kind: 'не размечено', tool });
   }
 }
+
+/** Полный номер утверждения по порядковому номеру пакета карточек: 12299 → `a-12299` (02 § 8.1, Р-11). */
+export const claimId = (n: number): string => `a-${n}`;
 
 /** Запись «нет сведений» лица для инструмента из тома карточек; «Писание говорит» — раньше «молчит». */
 export function noDataFor(tool: Tool, id: string, cards?: CardsVolume): NoDataRow | undefined {

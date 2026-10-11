@@ -11,6 +11,9 @@ import { build, assertDir, PACK_DIR } from '../tools/pack/build.ts';
 import { BUDGETS, overBudget } from '../tools/pack/budgets.ts';
 import { compressed, nonNfc } from '../tools/pack/json.ts';
 import { buildTsk } from '../tools/pack/packages.ts';
+import { noticeFor } from '../tools/pack/build.ts';
+import { loadBase } from '../tools/base/validate.ts';
+import { admission } from '../tools/base/admit.ts';
 import { Loader } from '../core/loader.ts';
 import { createHash } from 'node:crypto';
 import type { Manifest, PackKind } from '../core/types.ts';
@@ -39,39 +42,39 @@ beforeAll(() => {
   const rel = tmp('r');
   A = { dir: a, r: build({ level: 'probe', dir: a, tsk: true }) };
   B = { dir: b, r: build({ level: 'probe', dir: b, tsk: true }) };
-  R = { dir: rel, r: build({ level: 'release', dir: rel }) };
+  R = { dir: rel, r: build({ level: 'release', dir: rel, release: '2026.10.1' }) };
 }, 240_000);
 
 const m = () => A.r.manifest;
 const kinds = (man: Manifest, k: PackKind) => man.packages.filter((p) => p.kind === k);
 
-describe('бюджеты (09 § 5.3) — тем же сжатием, что хранилище', () => {
-  it('каждый пакет в бюджете своего вида; сжатие бюджета записано в опись', () => {
+describe('бюджеты (09 § 5.3): brotli 5 и gzip 9, пока хранилище не выбрано', () => {
+  it('каждый пакет в бюджете своего вида и по brotli 5, и по gzip 9', () => {
     expect(m().compression).toBe('br');
     expect(A.r.over).toEqual([]);
     for (const p of m().packages) {
       expect(p.size, p.file).toBeLessThanOrEqual(BUDGETS[p.kind].max);
+      expect(p.gzip, p.file).toBeLessThanOrEqual(BUDGETS[p.kind].max);
       expect(p.budget).toBe(BUDGETS[p.kind].max);
     }
   });
   it('размер в описи — настоящее сжатие файла', () => {
     const p = kinds(m(), 'core-index')[0];
     const body = readFileSync(join(A.dir, p.file), 'utf8');
-    expect(compressed(body, 'br')).toBe(p.size);
+    expect(compressed(body, 'br')).toBe(p.size); // brotli 5
     expect(compressed(body, 'gzip')).toBe(p.gzip);
   });
   it('бюджет есть у каждого вида пакета; обязательные — ядро индекса и указатель инструментов (В-30)', () => {
     for (const k of Object.keys(BUDGETS) as PackKind[]) expect(BUDGETS[k].max).toBeGreaterThan(0);
     expect(m().packages.filter((p) => p.required).map((p) => p.kind).sort()).toEqual(['core-index', 'tools-index']);
   });
-  it('пакет сверх бюджета ловится: по сжатию хранилища — ошибка, по gzip — замечание', () => {
+  it('пакет сверх бюджета ловится и по brotli 5, и по gzip 9 — одно правило для всех', () => {
     const r = overBudget([
       { kind: 'core-index', file: 'a', size: 201 * 1024, gzip: 260 * 1024 },
       { kind: 'text', file: 'b', size: 90 * 1024, gzip: 97 * 1024 },
       { kind: 'cards', file: 'c', size: 10, gzip: 10 },
     ]);
-    expect(r.over.map((x) => x.file)).toEqual(['a']);
-    expect(r.gzipOver.map((x) => x.file)).toEqual(['a', 'b']);
+    expect(r.over.map((x) => x.file)).toEqual(['a', 'b']);
   });
 });
 
@@ -173,3 +176,44 @@ describe('папки сборки (09 § 5.2 п. 7)', () => {
     expect(() => assertDir('probe', PACK_DIR.probe)).not.toThrow();
   });
 });
+
+describe('рецензия данных на ядро: права, номер выпуска, карточки', () => {
+  it('у сборки «выпуск» номер выпуска обязателен (№ 14)', () => {
+    expect(() => build({ level: 'release', dir: tmp('x') })).toThrow(/номер выпуска/);
+    expect(R.r.manifest.release).toBe('2026.10.1');
+  });
+  it('NOTICE: src-synodal всегда, полные тексты MIT и OFL 1.1 (№ 8)', () => {
+    for (const d of [A.dir, R.dir]) {
+      const t = readFileSync(join(d, 'NOTICE.txt'), 'utf8');
+      expect(t).toMatch(/\[src-synodal\]/);
+      expect(t).toMatch(/Permission is hereby granted, free of charge/);
+      expect(t).toMatch(/SIL OPEN FONT LICENSE Version 1\.1/);
+    }
+    expect(R.r.manifest.sources.map((x) => x.id)).toContain('src-synodal');
+  });
+  it('выпуск без единой допущенной записи всё равно несёт src-synodal (текст идёт в каждую сборку)', () => {
+    const base = loadBase();
+    const real = admission(base, 'release');
+    const none = { ...real, ok: () => false, okKey: () => false };
+    const n = noticeFor(base, none);
+    expect(n.entries.map((e) => e.id)).toContain('src-synodal');
+  });
+  it('таблица нумерации JSword (LGPL) не входит ни в один пакет (09 § 5.5)', () => {
+    for (const p of [...m().packages, ...R.r.manifest.packages]) {
+      const body = readFileSync(join(existsSync(join(A.dir, p.file)) ? A.dir : R.dir, p.file), 'utf8');
+      expect(/"Ps\.\d+\.\d+"|"Num\.\d+\.\d+"/.test(body), p.file).toBe(false);
+    }
+  });
+  it('карточки: номер утверждения у каждого факта; том больше бюджета делится на части, у лица — номер части (№ 5)', () => {
+    const cards = kinds(m(), 'cards');
+    const tools = JSON.parse(readFileSync(join(A.dir, kinds(m(), 'tools-index')[0].file), 'utf8'));
+    const vols = new Set(cards.map((p) => p.volume));
+    for (const a of tools.actors) expect(vols.has(a.v), `${a.id} → ${a.v}`).toBe(true);
+    const one = JSON.parse(readFileSync(join(A.dir, cards[0].file), 'utf8'));
+    const f = Object.values(one.cards as Record<string, { f: { n: number }[] }>).flatMap((c) => c.f);
+    expect(f.length).toBeGreaterThan(0);
+    for (const x of f) expect(Number.isInteger(x.n)).toBe(true);
+    expect(cards.some((p) => /\.\d+$/.test(p.volume ?? ''))).toBe(true);
+  });
+});
+

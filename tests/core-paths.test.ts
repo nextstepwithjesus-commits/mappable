@@ -26,6 +26,7 @@ describe('адреса экранов', () => {
     expect(parsePath('/kniga/nebyt')).toBeNull();
     expect(parsePath('/neizvestno')).toBeNull();
     expect(parsePath('/kniga/byt/x')).toBeNull();
+    expect(parsePath('/kartochka/%E0%A4%A')).toBeNull(); // битая %-последовательность (рецензия данных, № 12)
   });
   it('книга по коду адреса', () => {
     expect(p('/kniga/byt/6').book).toBe('Быт');

@@ -25,14 +25,16 @@ function make() {
   const { core, tools, genealogy } = buildIndexes(base, A, words);
   const texts = buildTexts(A);
   const stems = buildStems(A, words.words);
-  const cards = buildCardVolumes(base, A);
+  const { volumes: cards, volumeOf } = buildCardVolumes(base, A);
+  for (const a of tools.actors) a.v = volumeOf.get(a.id) ?? a.v;
   const stories = (JSON.parse(readFileSync(join(import.meta.dirname, 'core-истории-эскиз.json'), 'utf8')) as { stories: StoryRow[] }).stories;
   const ru = russianStemmer();
   const t0 = now();
   const names = new NameForms(core.names);
   const text = new TextIndex({ books: BOOKS.map((b) => texts.get(b.code)!), stemLen: parseStemTable(stems.table), names, exceptions: stems.exceptions, stem: (w) => ru.stem(w) });
   const coldMs = now() - t0;
-  const searcher = new Searcher({ names: core.names, exceptions: core.exceptions, persons: core.persons, stories }, names, text);
+  const searcher = new Searcher({ names: core.names, exceptions: core.exceptions, persons: core.persons, stories, places: core.places, areas: core.areas }, names, text);
+  searcher.setDisambig(tools.actors);
   const data = new Data(core, tools);
   return { base, A, core, tools, genealogy, texts, stems, cards, text, searcher, data, coldMs, stem: (w: string) => ru.stem(w) };
 }

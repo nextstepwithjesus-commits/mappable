@@ -1,0 +1,41 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "files": {
+    "includes": [
+      "core/**/*.ts",
+      "tools/pack/**/*.ts",
+      "tools/tokens/**/*.ts",
+      "tools/ci/**/*.ts",
+      "tests/core-*.ts",
+      "tests/pack-*.ts",
+      "tests/tokens*.ts",
+      "tests/prototypes-*.ts",
+      "tests/helpers/core-data.ts",
+      "!core/search/versification-table.ts"
+    ]
+  },
+  "formatter": {
+    "enabled": false
+  },
+  "assist": {
+    "enabled": false
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "suspicious": {
+        "noExplicitAny": "error",
+        "noAssignInExpressions": "off",
+        "useIterableCallbackReturn": "off"
+      },
+      "style": {
+        "noNonNullAssertion": "off",
+        "useTemplate": "off"
+      },
+      "complexity": {
+        "useLiteralKeys": "off"
+      }
+    }
+  }
+}

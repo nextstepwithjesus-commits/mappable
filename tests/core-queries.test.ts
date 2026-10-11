@@ -1,7 +1,10 @@
 /** Ядро: запросы к пакетам и «нет данных для инструмента» (01 § 2.3; 09 § 4.3). Данные — пакеты пробы в памяти. */
 import { describe, it, expect, beforeAll } from 'vitest';
 import { coreData } from './helpers/core-data.ts';
-import { verseOf, bracketAt, scriptureWords } from '../core/verses.ts';
+import { verseOf, bracketAt, scriptureWords, showText } from '../core/verses.ts';
+import { Data, claimId } from '../core/queries.ts';
+import { PACK_SCHEMA, ORIGIN_KEYS, CAND_KEYS, KIN_KEYS, READING_KEYS, READING_ITEM_KEYS, CITE_KEYS, WORK_KEYS } from '../core/types.ts';
+import { loadBase } from '../tools/base/validate.ts';
 
 let L: ReturnType<typeof coreData>;
 beforeAll(() => {
@@ -22,7 +25,7 @@ describe('запросы ядра', () => {
     expect(r.kind).toBe('переход');
   });
   it('«нет данных для инструмента»: Мелхиседек — «Писание говорит» со стихом Евр 7:3, кнопка не прячется', () => {
-    const vol = L.cards.get(L.data.person('p-melkhisedek')?.volume ? [...L.cards.keys()].find((k) => k.startsWith(L.data.person('p-melkhisedek')!.volume!))! : '')!;
+    const vol = L.cards.get(L.data.volumeOf('p-melkhisedek')!)!;
     const r = L.data.forTool('genealogiya', 'p-melkhisedek', vol);
     expect(r.s).toBe('пусто');
     if (r.s !== 'пусто' || r.why.kind !== 'нет сведений') throw new Error('нет ответа «нет сведений»');
@@ -60,3 +63,48 @@ describe('стих из пакета текста', () => {
     expect(scriptureWords(v)).not.toMatch(/стало так/);
   });
 });
+
+describe('рецензии переноса: номер утверждения, тома, переадресация по цепочке, закрытые типы, тире', () => {
+  it('номер утверждения в пакете карточек — порядковым числом; полный номер собирает ядро (02 § 8.1, Р-11)', () => {
+    const ids = new Set<string>();
+    for (const v of loadBase().volumes) for (const a of v.actors) for (const f of a.facts) ids.add(f.id ?? '');
+    let n = 0;
+    for (const vol of L.cards.values())
+      for (const c of Object.values(vol.cards))
+        for (const f of c.f) {
+          expect(ids.has(claimId(f.n)), claimId(f.n)).toBe(true);
+          n++;
+        }
+    expect(n).toBeGreaterThan(10_000);
+  });
+  it('лицо знает свой том (часть тома), том его содержит', () => {
+    const v = L.data.volumeOf('p-adam')!;
+    expect(L.cards.get(v)?.cards.adam).toBeDefined();
+  });
+  it('переадресация идёт по цепочке и не зацикливается', () => {
+    const core = { schema: PACK_SCHEMA as typeof PACK_SCHEMA, admit: 'probe' as const, persons: [{ id: 'c', n: 'Ц', p: 1, k: 'human' }], places: [], areas: [], stories: [], names: [], exceptions: [], glossary: [] };
+    const tools = { ...core, actors: [], origins: [], cand: [], unions: [], kin: [], readings: [], works: [], lines: {}, places: [], redirects: [['a', ['b']], ['b', ['c']], ['x', ['y']], ['y', ['x']]] as [string, string[]][] };
+    const d = new Data(core, tools);
+    expect(d.resolve('p-a')).toEqual({ kind: 'переход', id: 'p-c', from: 'p-a' });
+    expect(d.resolve('p-x').kind).toBe('нет');
+  });
+  it('каждый ключ строк указателя описан закрытым типом ядра (рецензия данных, № 9)', () => {
+    const check = (rows: object[], keys: readonly string[], what: string) => {
+      for (const r of rows) for (const k of Object.keys(r)) expect(keys.includes(k), `${what}.${k}`).toBe(true);
+    };
+    check(L.tools.origins, ORIGIN_KEYS, 'origin');
+    check(L.tools.cand, CAND_KEYS, 'cand');
+    check(L.tools.kin, KIN_KEYS, 'kin');
+    check(L.tools.readings, READING_KEYS, 'reading');
+    check(L.tools.readings.flatMap((r) => r.r), READING_ITEM_KEYS, 'reading.r');
+    check(L.tools.readings.flatMap((r) => r.r.flatMap((x) => x.w ?? [])), CITE_KEYS, 'cite');
+    check(L.tools.works, WORK_KEYS, 'work');
+    expect(L.tools.origins.length).toBeGreaterThan(1000);
+  });
+  it('дефис с пробелами показывается тире той же длины (08, строка 81)', () => {
+    const t = 'человека - сеть';
+    expect(showText(t)).toBe('человека — сеть');
+    expect(showText(t).length).toBe(t.length);
+  });
+});
+

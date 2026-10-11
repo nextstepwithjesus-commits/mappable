@@ -1,32 +1,33 @@
 /**
  * Разбор адреса во всех формах 11 § 3.6 (в): «Мк 6:35», «Мк 6 35», «Мк6:35», «Мк. 6,35», «Марка 6:35»,
- * «Евангелие от Марка 6:35», «Mark 6:35», «Mk 6:35», «Mark.6.35», диапазоны, списки через «;», глава без стиха,
- * протестантские названия, западная нумерация Псалмов. Раскладку переводит вызывающий (search.ts).
+ * «Евангелие от Марка 6:35», «Послание к Римлянам 8:28», «Mark 6:35», «Mk 6:35», «Mark.6.35», диапазоны, списки, глава без стиха,
+ * протестантские названия, западная нумерация. Понимает и адрес в форме самого приложения (08 § 6.1 п. 16): «Быт 6:9, 22; 7:1»,
+ * «из Быт 6:9» — всё, что выводит `formatRefs`, разбирается обратно (рецензия интерфейса, № 5). Раскладку переводит search.ts.
  *
- * Перенесено копией из пробы П-Т3 (`prototypes/П-Т3/core/`, 11 октября 2026) по 10 § 3.1 п. 4: тесты — `tests/core-search.test.ts`;
- * рецензия переноса по правилам продукта (данные и интерфейс) ещё не проведена — до неё код не меняет поведения пробы.
+ * Английский адрес — в западной нумерации: стих переводится в синодальный по своей таблице приложения
+ * (`versification-table.ts`, сверена тестом со всеми расхождениями `base/versification/synodal-kjv.json`; рецензии: интерфейс № 4,
+ * данные № 7). «Psalm 3:1» → Пс 3:2, «Num 13:33» → Чис 13:34, «Romans 16:25» → Рим 14:24.
+ *
+ * Перенесено из пробы П-Т3 (10 § 3.1 п. 4) и исправлено по рецензиям переноса (`docs/app/reviews/этап-0-ядро-рецензия-*.md`).
  */
-import { findBook, BOOK_BY_CODE, type Book, type BookSystem } from '../books.ts';
+import { findBook, BOOK_BY_CODE, BOOKS, type Book, type BookSystem } from '../books.ts';
+import { formatRefs, type Span } from '../refs.ts';
 import { psKjvToSyn } from './psalms.ts';
+import { KJV_RUNS } from './versification-table.ts';
 
-/** Отрезок: от c1:v1 до c2:v2 включительно; без стиха — главы целиком. */
-export interface Span {
-  book: string;
-  c1: number;
-  v1?: number;
-  c2: number;
-  v2?: number;
-}
+export type { Span } from '../refs.ts';
 
 export interface Address {
   spans: Span[];
-  /** Метка в синодальных сокращениях: «Мк 6:35», «Быт 6–9; Ин 3:16». */
+  /** Метка по грамматике 08 (U+00A0, «–», свёртка): «Мк 6:35», «Быт 6–9; Ин 3:16». */
   label: string;
-  /** Строки под результатом: «В Синодальном переводе: 1 Царств 17», подсказка о нумерации Псалмов. */
+  /** Строки под результатом: «В Синодальном переводе: 1 Царств 17», пересчёт западной нумерации, подсказка о Псалмах. */
   notes: string[];
   /** Чья нумерация была на входе. */
   system: BookSystem;
-  /** Подсказка для Псалмов в синодальной записи: западный номер → синодальный (11 § 3.6 (в), «Пс 23»). */
+  /** Часть стиха: «из Быт 6:9». */
+  part?: boolean;
+  /** Подсказка для Псалмов в синодальной записи без стиха: западный номер → синодальный (11 § 3.6 (в), «Пс 23»). */
   psalmHint?: { asked: number; synodal: number[] };
   errors: string[];
 }
@@ -36,26 +37,37 @@ export type Versification = Map<string, number[]>;
 
 const SINGLE = new Set(['Авд', 'Флм', '2Ин', '3Ин', 'Иуд']);
 const DASH = /[–—−‐-]/g;
+const OSIS_TO_CODE = new Map(BOOKS.map((b) => [b.osis, b.code]));
+
+/** Западный стих → синодальный по своей таблице; вне таблицы — тот же номер. */
+export function kjvToSyn(code: string, c: number, v: number): { c: number; v: number; moved: boolean } {
+  const osis = BOOK_BY_CODE.get(code)?.osis;
+  for (const r of KJV_RUNS) {
+    if (r[0] === osis && r[1] === c && v >= r[2] && v < r[2] + r[3] && OSIS_TO_CODE.get(r[0]) === r[4]) {
+      const sv = r[6] + (v - r[2]);
+      return { c: r[5], v: sv, moved: r[5] !== c || sv !== v };
+    }
+  }
+  return { c, v, moved: false };
+}
 
 function bookName(b: Book): string {
   return b.name.replace(/^(\d)-[яе] /, '$1 ');
 }
 
+/** Метка одного отрезка по грамматике 08. */
 export function spanLabel(s: Span): string {
-  const b = BOOK_BY_CODE.get(s.book)!.short;
-  if (s.v1 === undefined) return s.c1 === s.c2 ? `${b} ${s.c1}` : `${b} ${s.c1}–${s.c2}`;
-  if (s.c1 === s.c2) return s.v1 === s.v2 ? `${b} ${s.c1}:${s.v1}` : `${b} ${s.c1}:${s.v1}–${s.v2}`;
-  return `${b} ${s.c1}:${s.v1}–${s.c2}:${s.v2}`;
+  return formatRefs([s]);
 }
 
 const OSIS = /^([1-3]?[A-Za-z]+)\.(\d+)(?:\.(\d+))?(?:-(?:([1-3]?[A-Za-z]+)\.)?(\d+)(?:\.(\d+))?)?$/;
-// книга (возможно с номером впереди), затем глава и остаток
-const MAIN = /^\s*((?:[1-3]|iii|ii|i)?\s*(?:-?\s*(?:я|е|й|го|ая|ое)\s+)?[a-zа-яё][a-zа-яё .]*?)\s*\.?\s*(\d+)(.*?)\s*$/i;
+// книга (возможно с номером впереди и словом «послание»), затем глава и остаток
+const MAIN = /^\s*((?:[1-4]|iii|ii|i)?\s*(?:-?\s*(?:я|е|й|го|ая|ое)\s+)?[a-zа-яё][a-zа-яё .]*?)\s*\.?\s*(\d+)(.*?)\s*$/i;
 
 interface Part {
   book: Book;
   system: BookSystem;
-  span: Span;
+  spans: Span[];
 }
 
 function parsePart(raw: string): Part | null {
@@ -63,7 +75,7 @@ function parsePart(raw: string): Part | null {
   let m = OSIS.exec(s);
   if (m) {
     const hit = findBook(m[1]);
-    if (!hit || hit.system !== 'en') return null;
+    if (hit?.system !== 'en') return null;
     const c1 = +m[2];
     const v1 = m[3] ? +m[3] : undefined;
     let c2 = c1;
@@ -75,28 +87,37 @@ function parsePart(raw: string): Part | null {
       } else if (v1 !== undefined) v2 = +m[5];
       else c2 = +m[5];
     }
-    return { book: hit.book, system: 'en', span: { book: hit.book.code, c1, v1, c2, v2 } };
+    return { book: hit.book, system: 'en', spans: [{ book: hit.book.code, c1, v1, c2, v2 }] };
   }
   m = MAIN.exec(s);
   if (!m) return null;
   const hit = findBook(m[1]);
   if (!hit) return null;
+  const code = hit.book.code;
   const c1 = +m[2];
   const rest = m[3];
-  let span: Span;
+  let spans: Span[];
   let r: RegExpExecArray | null;
-  if (rest.trim() === '') span = { book: hit.book.code, c1, c2: c1 };
-  else if ((r = /^\s*-\s*(\d+)$/.exec(rest))) span = { book: hit.book.code, c1, c2: +r[1] };
-  else if ((r = /^(?:\s*[:,.]\s*|\s+)(\d+)(?:\s*-\s*(\d+)(?:\s*[:,.]\s*(\d+))?)?$/.exec(rest))) {
+  if (rest.trim() === '') spans = [{ book: code, c1, c2: c1 }];
+  else if ((r = /^\s*-\s*(\d+)$/.exec(rest))) spans = [{ book: code, c1, c2: +r[1] }];
+  else if ((r = /^\s*:\s*(\d+(?:\s*-\s*\d+(?:\s*:\s*\d+)?)?(?:\s*,\s*\d+(?:\s*-\s*\d+)?)*)$/.exec(rest))) {
+    // «6:9», «6:9-22», «6:9-7:24», «6:9, 22», «6:9-12, 22-24» — после двоеточия запятая разделяет стихи главы
+    spans = [];
+    for (const piece of r[1].split(',')) {
+      const x = /^\s*(\d+)(?:\s*-\s*(\d+)(?:\s*:\s*(\d+))?)?\s*$/.exec(piece);
+      if (!x) return null;
+      if (x[3]) spans.push({ book: code, c1, v1: +x[1], c2: +x[2], v2: +x[3] });
+      else spans.push({ book: code, c1, v1: +x[1], c2: c1, v2: x[2] ? +x[2] : +x[1] });
+    }
+  } else if ((r = /^(?:\s*[,.]\s*|\s+)(\d+)(?:\s*-\s*(\d+)(?:\s*[:,.]\s*(\d+))?)?$/.exec(rest))) {
+    // «Мк 6 35», «Мк. 6,35», «Mark 6.35» — без двоеточия запятая и точка — граница главы и стиха
     const v1 = +r[1];
-    if (r[3]) span = { book: hit.book.code, c1, v1, c2: +r[2], v2: +r[3] };
-    else span = { book: hit.book.code, c1, v1, c2: c1, v2: r[2] ? +r[2] : v1 };
+    if (r[3]) spans = [{ book: code, c1, v1, c2: +r[2], v2: +r[3] }];
+    else spans = [{ book: code, c1, v1, c2: c1, v2: r[2] ? +r[2] : v1 }];
   } else return null;
-  // одноглавные книги: «Иуд 3» — стих 3
-  if (SINGLE.has(hit.book.code) && span.v1 === undefined && (span.c1 > 1 || span.c2 > 1)) {
-    span = { book: span.book, c1: 1, v1: span.c1, c2: 1, v2: span.c2 };
-  }
-  return { book: hit.book, system: hit.system, span };
+  // одноглавные книги: «Иуд 3» — стих 3 (форма вывода — вопрос 08, рецензия интерфейса № 23)
+  if (SINGLE.has(code)) spans = spans.map((sp) => (sp.v1 === undefined && (sp.c1 > 1 || sp.c2 > 1) ? { book: sp.book, c1: 1, v1: sp.c1, c2: 1, v2: sp.c2 } : sp));
+  return { book: hit.book, system: hit.system, spans };
 }
 
 /** Похоже ли на адрес: есть буквы и число. Иначе разбор не пробуется (быстрый путь для слов). */
@@ -104,52 +125,57 @@ export const looksLikeAddress = (q: string) => /\d/.test(q) && /[a-zа-яё]/i.t
 
 export function parseAddress(input: string, vers?: Versification, has?: (book: string, c: number, v: number) => boolean): Address | null {
   if (!looksLikeAddress(input)) return null;
-  const parts = input.split(';').map((p) => p.trim()).filter(Boolean);
-  const out: Address = { spans: [], label: '', notes: [], system: 'syn', errors: [] };
+  let text = input.normalize('NFC').replace(/ /g, ' ').trim();
+  const part = /^из\s+/i.test(text);
+  if (part) text = text.replace(/^из\s+/i, '');
+  const parts = text.split(';').map((p) => p.trim()).filter(Boolean);
+  const out: Address = { spans: [], label: '', notes: [], system: 'syn', errors: [], ...(part && { part }) };
   let prevBook: Book | null = null;
+  let prevSystem: BookSystem = 'syn';
   for (const p of parts) {
-    // «Ин 3:16; 17» — продолжение той же книги
-    let part = parsePart(p);
-    if (!part && prevBook && /^\d/.test(p)) part = parsePart(`${prevBook.short} ${p}`);
-    if (!part) return null;
-    prevBook = part.book;
-    let { span } = part;
-    if (part.system !== 'syn') out.system = part.system;
-    if (part.system === 'prot') out.notes.push(`В Синодальном переводе: ${bookName(part.book)} ${spanLabel(span).slice(part.book.short.length + 1)}`);
-    if (span.book === 'Пс') {
-      if (part.system === 'en') {
-        const syn1 = psKjvToSyn(span.c1);
-        const syn2 = psKjvToSyn(span.c2);
-        const was = span;
-        span = { ...span, c1: syn1[0], c2: syn2[syn2.length - 1] };
-        if (span.v1 !== undefined && (syn1.length > 1 || syn1[0] !== was.c1)) {
-          // стихи внутри разделённых псалмов не пересчитываются по главе: показываем главу целиком
-          span = { book: 'Пс', c1: span.c1, c2: span.c2 };
+    // «Ин 3:16; 17», «Быт 6:9, 22; 7:1» — продолжение той же книги
+    let pt = parsePart(p);
+    if (!pt && prevBook && /^\d/.test(p)) pt = parsePart(`${prevSystem === 'en' ? prevBook.en[0] : prevBook.code} ${p}`);
+    if (!pt) return null;
+    prevBook = pt.book;
+    prevSystem = pt.system;
+    if (pt.system !== 'syn') out.system = pt.system;
+    for (let span of pt.spans) {
+      const asked = span;
+      if (pt.system === 'prot') out.notes.push(`В Синодальном переводе: ${bookName(pt.book)} ${formatRefs([span]).slice(pt.book.short.length + 1)}`);
+      if (pt.system === 'en') {
+        if (span.v1 !== undefined) {
+          const a = kjvToSyn(span.book, span.c1, span.v1);
+          const b = kjvToSyn(span.book, span.c2, span.v2 ?? span.v1);
+          span = { book: span.book, c1: a.c, v1: a.v, c2: b.c, v2: b.v };
+          if (a.moved || b.moved)
+            out.notes.push(`Западная нумерация: ${pt.book.en[0][0].toUpperCase()}${pt.book.en[0].slice(1)} ${asked.c1}:${asked.v1}${asked.v2 !== asked.v1 || asked.c2 !== asked.c1 ? `–${asked.c2 !== asked.c1 ? `${asked.c2}:` : ''}${asked.v2}` : ''}. В Синодальном переводе: ${formatRefs([span])}`);
+        } else if (span.book === 'Пс') {
+          const syn1 = psKjvToSyn(span.c1);
+          const syn2 = psKjvToSyn(span.c2);
+          span = { ...span, c1: syn1[0], c2: syn2[syn2.length - 1] };
+          if (syn1[0] !== asked.c1 || syn1.length > 1) out.notes.push(`Западная нумерация: Psalm ${asked.c1}. В Синодальном переводе: Пс ${syn1.join(' и ')}`);
         }
-        if (syn1[0] !== was.c1 || syn1.length > 1) out.notes.push(`Западная нумерация: Псалом ${was.c1}. В Синодальном переводе: Пс ${syn1.join(' и ')}`);
-      } else {
+      } else if (span.book === 'Пс' && span.v1 === undefined && span.c1 === span.c2) {
         const syn = psKjvToSyn(span.c1);
-        if (syn.length !== 1 || syn[0] !== span.c1) {
-          out.psalmHint = { asked: span.c1, synodal: syn };
-          out.notes.push(`Если вы ищете Псалом ${span.c1} по западной нумерации, в Синодальном переводе это Пс ${syn.join(' и ')}`);
+        if (syn.length !== 1 || syn[0] !== span.c1) out.psalmHint = { asked: span.c1, synodal: syn };
+      }
+      if (vers) {
+        const ch = vers.get(span.book);
+        if (ch) {
+          if (span.c1 < 1 || span.c2 > ch.length || span.c2 < span.c1) out.errors.push(`В книге «${pt.book.name}» глав: ${ch.length}`);
+          else if (span.v1 !== undefined) {
+            if (span.v1 < 1 || span.v1 > ch[span.c1 - 1] || (span.v2 ?? 0) > ch[span.c2 - 1] || (span.c1 === span.c2 && (span.v2 ?? 0) < span.v1))
+              out.errors.push(`Нет такого стиха: ${formatRefs([span])}`);
+            else if (has && (!has(span.book, span.c1, span.v1) || !has(span.book, span.c2, span.v2 ?? span.v1)))
+              out.errors.push(`Нет такого стиха в Синодальном тексте: ${formatRefs([span])}`);
+          }
         }
       }
+      out.spans.push(span);
     }
-    if (vers) {
-      const ch = vers.get(span.book);
-      if (ch) {
-        if (span.c1 < 1 || span.c2 > ch.length || span.c2 < span.c1) out.errors.push(`В книге «${part.book.name}» глав: ${ch.length}`);
-        else if (span.v1 !== undefined) {
-          if (span.v1 < 1 || span.v1 > ch[span.c1 - 1] || (span.v2 ?? 0) > ch[span.c2 - 1] || (span.c1 === span.c2 && (span.v2 ?? 0) < span.v1))
-            out.errors.push(`Нет такого стиха: ${spanLabel(span)}`);
-          else if (has && (!has(span.book, span.c1, span.v1) || !has(span.book, span.c2, span.v2 ?? span.v1)))
-            out.errors.push(`Нет такого стиха в Синодальном тексте: ${spanLabel(span)}`);
-        }
-      }
-    }
-    out.spans.push(span);
   }
-  out.label = out.spans.map(spanLabel).join('; ');
+  out.label = formatRefs(out.spans, { part });
   return out;
 }
 

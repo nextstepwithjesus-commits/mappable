@@ -15,7 +15,7 @@ export interface Book {
   short: string;
   name: string;
   osis: string;
-  /** Код в адресе страницы (09 § 4.4.1): транслит сокращения. */
+  /** Код в адресе страницы (09 § 4.4.1): транслит синодального сокращения без пробела — `translit('1Пар')` = `1par` (тест). */
   slug: string;
   /** Другие русские названия и формы (родительный падеж, «Евангелие от …»). */
   ru: string[];
@@ -23,7 +23,10 @@ export interface Book {
   prot?: string[];
   /** Английские названия и сокращения (западная нумерация). */
   en: string[];
-  /** В родительном падеже — для «Книга …» (из `src/engine/books.ts`). */
+  /**
+   * Название в родительном падеже после родового слова (из `src/engine/books.ts`): «книга Бытия», «Евангелие от Матфея»,
+   * «Послание к римлянам». Родовое слово («книга», «Евангелие», «Послание») выбирает показ; «Книга от Матфея» — неверно.
+   */
   gen: string;
   /** Завет. */
   t: 'ot' | 'nt';
@@ -51,7 +54,7 @@ const RAW: [string, string, string, string, string, string, string, string][] = 
   ['Иов', 'Иов', 'Иов', 'Job', 'iov', 'иов|иова|книга иова', '', 'job|jb'],
   ['Пс', 'Пс', 'Псалтирь', 'Ps', 'ps', 'псалтирь|псалтыри|псалтири|псалом|псалмы|пслт', '', 'psalms|psalm|ps|psa|pss'],
   ['Притч', 'Притч', 'Притчи', 'Prov', 'pritch', 'притчи|притчей|притч|книга притчей', '', 'proverbs|prov|pr|prv'],
-  ['Еккл', 'Еккл', 'Екклесиаст', 'Eccl', 'yekkl', 'екклесиаст|екклесиаста|екк', 'экклезиаст|экклезиаста', 'ecclesiastes|eccl|ecc|qoh'],
+  ['Еккл', 'Еккл', 'Екклесиаст', 'Eccl', 'ekkl', 'екклесиаст|екклесиаста|екк', 'экклезиаст|экклезиаста', 'ecclesiastes|eccl|ecc|qoh'],
   ['Песн', 'Песн', 'Песнь песней', 'Song', 'pesn', 'песнь песней|песни песней|песнь песней соломона', '', 'song of solomon|song of songs|song|sng|sos'],
   ['Ис', 'Ис', 'Исаия', 'Isa', 'is', 'исаия|исаии|книга исаии|пророка исаии', '', 'isaiah|isa|is'],
   ['Иер', 'Иер', 'Иеремия', 'Jer', 'ier', 'иеремия|иеремии|книга иеремии', '', 'jeremiah|jer|je'],
@@ -86,7 +89,7 @@ const RAW: [string, string, string, string, string, string, string, string][] = 
   ['1Кор', '1 Кор', '1-е к коринфянам', '1Cor', '1kor', '1 коринфянам|1 к коринфянам', '', '1 corinthians|1cor|1co|1 cor'],
   ['2Кор', '2 Кор', '2-е к коринфянам', '2Cor', '2kor', '2 коринфянам|2 к коринфянам', '', '2 corinthians|2cor|2co|2 cor'],
   ['Гал', 'Гал', 'К галатам', 'Gal', 'gal', 'галатам|к галатам', '', 'galatians|gal|ga'],
-  ['Еф', 'Еф', 'К ефесянам', 'Eph', 'yef', 'ефесянам|к ефесянам', 'эфесянам|к эфесянам', 'ephesians|eph'],
+  ['Еф', 'Еф', 'К ефесянам', 'Eph', 'ef', 'ефесянам|к ефесянам', 'эфесянам|к эфесянам', 'ephesians|eph'],
   ['Флп', 'Флп', 'К филиппийцам', 'Phil', 'flp', 'филиппийцам|к филиппийцам|фил', '', 'philippians|phil|php'],
   ['Кол', 'Кол', 'К колоссянам', 'Col', 'kol', 'колоссянам|к колоссянам', '', 'colossians|col'],
   ['1Фес', '1 Фес', '1-е к фессалоникийцам', '1Thess', '1fes', '1 фессалоникийцам|1 к фессалоникийцам', '', '1 thessalonians|1thess|1th|1 thess'],
@@ -95,7 +98,7 @@ const RAW: [string, string, string, string, string, string, string, string][] = 
   ['2Тим', '2 Тим', '2-е к Тимофею', '2Tim', '2tim', '2 тимофею|2 к тимофею', '', '2 timothy|2tim|2ti|2 tim'],
   ['Тит', 'Тит', 'К Титу', 'Titus', 'tit', 'титу|к титу', '', 'titus|tit'],
   ['Флм', 'Флм', 'К Филимону', 'Phlm', 'flm', 'филимону|к филимону', '', 'philemon|phlm|phm'],
-  ['Евр', 'Евр', 'К евреям', 'Heb', 'yevr', 'евреям|к евреям', '', 'hebrews|heb'],
+  ['Евр', 'Евр', 'К евреям', 'Heb', 'evr', 'евреям|к евреям', '', 'hebrews|heb'],
   ['Откр', 'Откр', 'Откровение', 'Rev', 'otkr', 'откровение|откровение иоанна|апокалипсис|откр', '', 'revelation|rev|rv|apocalypse'],
 ];
 
@@ -135,7 +138,9 @@ export function bookKey(s: string): string {
     .replace(/ё/g, 'е')
     .replace(/\./g, ' ')
     .replace(/^\s*(iii|ii|i)\s+/i, (m) => String(m.trim().length) + ' ')
-    .replace(/^(\d)\s*-?\s*(я|е|й|го|ое|ая)\b/, '$1')
+    .replace(/^(первое|первая|первой|второе|вторая|второй|третье|третья|третьей|1-?е|2-?е|3-?е)\s+послание\s+/, (m) => `${/^(перв|1)/.test(m) ? 1 : /^(втор|2)/.test(m) ? 2 : 3} `)
+    .replace(/^(послание|евангелие|книга)\s+(?=\S)/, '')
+    .replace(/^(\d)\s*-?\s*(я|е|й|го|ое|ая)(?=\s|$)/, '$1')
     .replace(/^(\d)\s*/, '$1 ')
     .replace(/\s+/g, ' ')
     .trim();
@@ -242,18 +247,23 @@ export function verseId(v: VerseKey): string {
   return `${v.book} ${v.chapter}:${v.verse}`;
 }
 
-/** Сравнение ссылок для сортировки в каноническом порядке. */
+/** Начало ссылки — книга, глава, стих — без развёртывания диапазона. Неверная ссылка — null. */
+function refStart(r: string): [number, number, number] | null {
+  const m = /^\s*([1-4]?[А-Яа-яЁё]+)\s+(\d+)(?::(\d+))?/.exec(r);
+  if (!m) return null;
+  const b = BOOK_ORDER.get(m[1]);
+  return b === undefined ? null : [b, Number(m[2]), m[3] ? Number(m[3]) : 0];
+}
+
+/**
+ * Сравнение ссылок в каноническом порядке: книга, глава, первый стих (глава без стиха — перед своими стихами). Диапазон не
+ * разворачивается, поэтому сравнение транзитивно (рецензия интерфейса, № 8); неверные ссылки — после верных, по строке.
+ */
 export function compareRefs(a: string, b: string): number {
-  const pa = parseRef(a);
-  const pb = parseRef(b);
-  if (!pa || !pb) return a.localeCompare(b);
-  const ba = BOOK_ORDER.get(pa.book) ?? 0;
-  const bb = BOOK_ORDER.get(pb.book) ?? 0;
-  if (ba !== bb) return ba - bb;
-  const ca = pa.verses[0]?.chapter ?? pa.chapterOnly ?? 0;
-  const cb = pb.verses[0]?.chapter ?? pb.chapterOnly ?? 0;
-  if (ca !== cb) return ca - cb;
-  return (pa.verses[0]?.verse ?? 0) - (pb.verses[0]?.verse ?? 0);
+  const pa = refStart(a);
+  const pb = refStart(b);
+  if (!pa || !pb) return pa ? -1 : pb ? 1 : a < b ? -1 : a > b ? 1 : 0;
+  return pa[0] - pb[0] || pa[1] - pb[1] || pa[2] - pb[2] || (a < b ? -1 : a > b ? 1 : 0);
 }
 
 /** Порядковый номер книги с 1 (как в именах пакетов текста: `01-byt`). */

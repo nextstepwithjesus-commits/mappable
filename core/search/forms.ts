@@ -24,7 +24,7 @@ export function caseForms(name: string): string[] {
 export interface NameSource {
   /** Номер лица (или другого предмета с именем). */
   id: string;
-  /** Имена: основное и другие; берётся первое слово каждого, если оно с прописной. */
+  /** Имена, которые текст даёт лицу как имя (не титулы и не описания — их отбирает сборка); берётся каждое слово с прописной. */
   names: string[];
 }
 
@@ -38,22 +38,50 @@ export interface FormsDict {
  * написаны с прописной не в начале предложения: форма, которая встречается только строчной («аде» — от «ад»,
  * а не от «Ада»), в словарь имён не входит и ищется как обычное слово по основе.
  */
+/**
+ * Слова, которые не становятся формой имени лица, даже если стоят в имени (рецензия интерфейса, № 2): именования Бога —
+ * титулы, а не имена; по ним идёт поиск по тексту. Иначе «Господь» давал бы лицо Иисуса Христа — толкование, поданное как
+ * тождество (R9, Г-1–Г-7).
+ */
+export const NOT_NAME_WORDS = new Set([
+  'господь', 'господень', 'бог', 'божий', 'всевышний', 'вседержитель', 'саваоф', 'сущий', 'иегова',
+  // описательные имена безымянных лиц начинаются нарицательным словом («Сын Давида и Вирсавии», «Дочь фараона»): это не имя
+  'сын', 'сыновья', 'сыны', 'дочь', 'дочери', 'жена', 'жены', 'муж', 'мать', 'отец', 'царь', 'царица', 'младенец', 'брат', 'братья',
+  'сестра', 'человек', 'отрок', 'раб', 'рабыня', 'старшая', 'младшая', 'старший', 'младший',
+]);
+
 export function buildForms(sources: NameSource[], textWords: Set<string>, capitalized: Set<string>): FormsDict {
   const perName = new Map<string, { forms: string[]; ids: Set<string> }>();
+  // падежные формы первых слов имён: слово-продолжение, которое есть форма имени другого лица («Жена-Ефиоплянка Моисея»),
+  // формой этого лица не становится
+  const firstOwner = new Map<string, Set<string>>();
+  for (const s of sources) for (const full of s.names.slice(0, 1)) {
+    const w = full.trim().split(/[\s,]+/)[0];
+    for (const f of caseForms(w)) (firstOwner.get(f) ?? firstOwner.set(f, new Set()).get(f)!).add(s.id);
+  }
   for (const s of sources) {
     for (const full of s.names) {
-      const first = full.trim().split(/\s+/)[0];
-      if (!/^[А-ЯЁ]/.test(first)) continue;
-      const key = norm(first);
-      let e = perName.get(key);
-      if (!e) {
-        e = { forms: [...new Set(caseForms(first))].filter((f) => textWords.has(f) && capitalized.has(f)), ids: new Set() };
-        perName.set(key, e);
+      // каждое слово имени с прописной: «Иисус Навин» — и «Иисус», и «Навин»; «Иисус Христос» — и «Христос» (Мф 1:16:
+      // «Иисус, называемый Христос»). В описательном имени со строчными словами («Ефиоплянка, жена Моисея») — только первое слово:
+      // «Моисея» там — имя другого лица
+      const ws = full.trim().split(/[\s,]+/);
+      const proper = ws.every((w) => /^[А-ЯЁ]/.test(w));
+      if (!proper && s.names.indexOf(full) === 0 && NOT_NAME_WORDS.has(norm(ws[0]))) continue;
+      for (const [i, w] of (proper ? ws : ws.slice(0, 1)).entries()) {
+        if (!/^[А-ЯЁ]/.test(w)) continue;
+        const key = norm(w);
+        if (i > 0 && [...(firstOwner.get(key) ?? [])].some((id) => id !== s.id)) continue;
+        if (NOT_NAME_WORDS.has(key)) continue;
+        let e = perName.get(key);
+        if (!e) {
+          e = { forms: [...new Set(caseForms(w))].filter((f) => textWords.has(f) && capitalized.has(f)), ids: new Set() };
+          perName.set(key, e);
+        }
+        e.ids.add(s.id);
       }
-      e.ids.add(s.id);
     }
   }
-  const names = [...perName.values()].filter((e) => e.forms.length > 0).map((e) => ({ forms: e.forms, ids: [...e.ids] }));
+  const names = [...perName.values()].filter((e) => e.forms.length > 0).map((e) => ({ forms: e.forms, ids: [...e.ids].sort() }));
   names.sort((a, b) => a.forms[0].localeCompare(b.forms[0], 'ru'));
   return { names };
 }

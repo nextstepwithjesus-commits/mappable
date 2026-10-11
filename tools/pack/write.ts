@@ -34,7 +34,6 @@ export interface WriteOptions {
 export interface WriteResult {
   manifest: Manifest;
   over: PackageEntry[];
-  gzipOver: PackageEntry[];
   nfc: string[];
 }
 
@@ -52,7 +51,7 @@ export function writePacks(packs: PackOut[], o: WriteOptions): WriteResult {
     writeFileSync(join(o.dir, file), body);
     const b = BUDGETS[p.kind];
     entries.push({
-      kind: p.kind, file, sha256: hash, raw: Buffer.byteLength(body), size: compressed(body, o.compression), gzip: compressed(body, 'gzip'),
+      kind: p.kind, file, sha256: hash, raw: Buffer.byteLength(body), size: compressed(body, 'br'), gzip: compressed(body, 'gzip'),
       budget: b.max, required: b.required,
       ...(p.book && { book: p.book }), ...(p.part && { part: p.part }), ...(p.volume && { volume: p.volume }),
     });
@@ -74,14 +73,14 @@ export function writePacks(packs: PackOut[], o: WriteOptions): WriteResult {
     changes,
   };
   writeFileSync(join(o.dir, 'manifest.json'), JSON.stringify(JSON.parse(canonical(manifest)), null, 1) + '\n');
-  const { over, gzipOver } = overBudget(entries);
-  return { manifest, over: over as PackageEntry[], gzipOver: gzipOver as PackageEntry[], nfc };
+  const { over } = overBudget(entries);
+  return { manifest, over: over as PackageEntry[], nfc };
 }
 
 /** Таблица размеров для отчёта: по видам — число пакетов, наибольший, всего; в КБ. */
 export function sizeTable(m: Manifest): string {
   const kb = (n: number) => (n / 1024).toFixed(1);
-  const rows: string[] = [`| пакет | число | бюджет, КБ | наибольший (${m.compression}), КБ | наибольший gzip, КБ | всего (${m.compression}), КБ | всего gzip, КБ | обязательный |`, '|---|---|---|---|---|---|---|---|'];
+  const rows: string[] = [`| пакет | число | бюджет, КБ | наибольший (brotli 5), КБ | наибольший gzip 9, КБ | всего (brotli 5), КБ | всего gzip 9, КБ | обязательный |`, '|---|---|---|---|---|---|---|---|'];
   const kinds = [...new Set(m.packages.map((p) => p.kind))];
   for (const k of kinds) {
     const ps = m.packages.filter((p) => p.kind === k);

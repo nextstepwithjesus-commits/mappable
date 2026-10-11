@@ -36,6 +36,15 @@ const SLUG_TO_BOOK = new Map(BOOKS.map((b) => [b.slug, b.code]));
 
 /** Разбор пути вида `/kniga/byt/6?x=1#st9`. Неизвестный путь — null. */
 export function parsePath(url: string): Route | null {
+  try {
+    return parse(url);
+  } catch {
+    // битая %-последовательность в глубокой ссылке — не адрес приложения (рецензия данных, № 12)
+    return null;
+  }
+}
+
+function parse(url: string): Route | null {
   const m = /^([^?#]*)(?:\?([^#]*))?(?:#(.*))?$/.exec(url);
   if (!m) return null;
   const parts = m[1].split('/').filter(Boolean).map(decodeURIComponent);

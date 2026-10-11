@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Стенд токенов</title>
+<!-- Технический стенд (не прототип и не облик продукта): показывает собранные tokens/dist/tokens.css, чтобы задание CI
+     «прототипы» видело продуктовые токены — кегли в rem, „Крупнее“, тему, плотность (рецензия интерфейса на ядро, № 1). -->
+<link rel="stylesheet" href="../../tokens/dist/tokens.css">
+<style>
+  body { margin: 0; background: var(--tsvet-fon); color: var(--tsvet-chernila); font: var(--tekst-proza); }
+  main { max-width: var(--komponent-proza-naibolshaya); margin: 0 auto; padding: var(--otstup-24) var(--otstup-16); }
+  h1 { font: var(--tekst-zagolovok-stranitsy); margin: 0 0 var(--otstup-16); }
+  h2 { font: var(--tekst-zagolovok-bloka); margin: var(--otstup-24) 0 var(--otstup-8); }
+  .pisanie { font: var(--tekst-pisanie); font-feature-settings: var(--tekst-pisanie-font-feature-settings); max-width: var(--komponent-kolonka-pisaniya); }
+  .adres { font: var(--tekst-adres); color: var(--tsvet-chernila-3); font-feature-settings: var(--tekst-adres-font-feature-settings); }
+  .interfeys { font: var(--tekst-interfeys); }
+  .list { background: var(--tsvet-list); padding: var(--otstup-16); border: var(--liniya-volosyanaya) solid var(--tsvet-setka); }
+  a { color: var(--tsvet-chernila); }
+  a:hover { color: var(--tsvet-deystvie); }
+  a:focus-visible, button:focus-visible { outline: var(--liniya-fokus) solid var(--tsvet-chernila); outline-offset: var(--liniya-zazor); }
+  button { font: var(--tekst-interfeys); min-height: var(--tsel-knopka); padding: 0 var(--otstup-12); background: var(--tsvet-list); color: var(--tsvet-chernila); border: var(--liniya-osnovnaya) solid var(--tsvet-liniya); border-radius: var(--radius-knopka); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Стенд токенов</h1>
+  <p class="interfeys">Шесть ступеней шкалы 08 § 3.3.2 из собранных токенов. Все кегли — в rem.</p>
+  <section class="list" aria-labelledby="t-pis">
+    <h2 id="t-pis">Текст Писания</h2>
+    <p class="pisanie" id="pisanie">В начале сотворил Бог небо и землю.</p>
+    <p class="adres">Быт&nbsp;1:1</p>
+  </section>
+  <p><a href="#pisanie">К тексту Писания</a> <button type="button">Кнопка</button></p>
+</main>
+<script>
+  // параметры стенда: ?theme=dark&text=крупнее&density=плотная&input=касание — как у листа-образца
+  const q = new URLSearchParams(location.search);
+  for (const [k, a] of [['theme', 'data-theme'], ['text', 'data-text'], ['density', 'data-density'], ['input', 'data-input']]) if (q.get(k)) document.documentElement.setAttribute(a, q.get(k));
+</script>
+</body>
+</html>

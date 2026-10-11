@@ -87,6 +87,8 @@ export interface PersonName {
   /** Значимость 1–5. */
   p: number;
   k: string;
+  /** Число стихов записей лица — порядок тёзок равной значимости (рецензия интерфейса, № 3). */
+  c?: number;
 }
 
 /** Имя места в поиске: точка и степень — в указателе инструментов (09 § 3.5 п. 3). */
@@ -114,6 +116,8 @@ export interface StoryRow {
 export interface CoreIndex extends Stamp {
   persons: PersonName[];
   places: PlaceName[];
+  /** Имена областей (колено, род, народ) — для поиска с первого экрана (09 § 3.5 п. 3). */
+  areas: { id: string; n: string }[];
   stories: StoryRow[];
   /** Словарь форм имён: формы, которые есть в тексте, и номера лиц (09 § 3.5 п. 1). */
   names: { forms: string[]; ids: string[] }[];
@@ -135,19 +139,29 @@ export interface ActorRow {
   r?: string[];
   p?: number;
   c?: number;
-  /** Том карточки. */
+  /** Том карточек, где лежит лицо (часть тома, если том делится): `08-levi`, `08-levi.2`. */
   v: string;
 }
 
-/** Ребро происхождения: ребёнок, родитель (или слова о безымянном), роль f/m, вид. */
+/** «По словам …» (02 § 3.6): кто сказал, стих, подпись. */
+export interface SaidBy { a?: string; r: string; l: string }
+/** Тождество конца ребра или родства «весомо» / «предположительно» (Р4-8): чей конец, степень, пояснение, стихи. */
+export interface Identity { o: string; d: string; n?: string; r?: string[] }
+
+/**
+ * Ребро происхождения (поля — как `tools/base/bundle.ts`): ребёнок `c`, родитель `p` или слова о безымянном `u`, роль f/m, вид `k`;
+ * `dg` степень, `pr` основное, `g` пропуск поколений, `gv` возможный пропуск через лиц, `rs`/`ri` набор и прочтение, `ce` уровень,
+ * `or` порядок, `sk` пропущенные лица, `ol` вне списков, `sb` «по словам», `idt` тождество конца (рецензия данных, № 9).
+ */
 export interface OriginRow {
-  c: string;
-  p?: string;
-  u?: string;
-  r: 'f' | 'm';
-  k: string;
-  [field: string]: unknown;
+  c: string; p?: string; u?: string; r: 'f' | 'm'; k: string;
+  dg?: string; pr?: 1; g?: 1; gv?: string[]; rs?: string; ri?: string; ce?: string; or?: number; sk?: string[]; ol?: 1; sb?: SaidBy; idt?: Identity;
 }
+export const ORIGIN_KEYS = ['c', 'p', 'u', 'r', 'k', 'dg', 'pr', 'g', 'gv', 'rs', 'ri', 'ce', 'or', 'sk', 'ol', 'sb', 'idt'] as const;
+
+/** Кандидаты в родители (02 § 3.3.4): ребёнок, роль, уровень, стихи `rf`, кандидаты `k`, известный конец `p`, тождество. */
+export interface CandRow { c: string; r: 'f' | 'm'; ce?: string; rf: string[]; k?: string[]; p?: string; idt?: Identity }
+export const CAND_KEYS = ['c', 'r', 'ce', 'rf', 'k', 'p', 'idt'] as const;
 
 export interface UnionRow {
   h?: string;
@@ -155,12 +169,20 @@ export interface UnionRow {
   k: string[];
 }
 
-export interface KinRow {
-  f: string;
-  t: string;
-  r: string;
-  [field: string]: unknown;
-}
+/** Родство словами: от, к, слово родства, уровень, «по словам», тождество. */
+export interface KinRow { f: string; t: string; r: string; ce?: string; sb?: SaidBy; idt?: Identity }
+export const KIN_KEYS = ['f', 't', 'r', 'ce', 'sb', 'idt'] as const;
+
+/** Ссылка на труд: труд, том, страница, место, знак ✔ / ≈, кто сверил. */
+export interface CiteRow { w: string; v?: string; p: string | number; l?: string; g: '✔' | '≈'; cb?: string }
+export const CITE_KEYS = ['w', 'v', 'p', 'l', 'g', 'cb'] as const;
+/** Набор прочтений: номер, название, прочтение по умолчанию, прочтения со ссылками на труды. */
+export interface ReadingRow { id: string; t: string; d: string; r: { id: string; l: string; ce?: string; w?: CiteRow[] }[] }
+export const READING_KEYS = ['id', 't', 'd', 'r'] as const;
+export const READING_ITEM_KEYS = ['id', 'l', 'ce', 'w'] as const;
+/** Труд реестра: номер, название, автор, год, издание, издательство, традиции. */
+export interface WorkRow { id: string; t?: string; a?: string; y?: number | string; e?: string; pb?: string; tr: string[] }
+export const WORK_KEYS = ['id', 't', 'a', 'y', 'e', 'pb', 'tr'] as const;
 
 /** Строка переадресации: лица — короткими номерами; если есть не лицо — третий элемент 0 и номера полные. */
 export type RedirectRow = [string, string[]] | [string, string[], 0];
@@ -177,11 +199,11 @@ export interface PlacePoint {
 export interface ToolsIndex extends Stamp {
   actors: ActorRow[];
   origins: OriginRow[];
-  cand: Record<string, unknown>[];
+  cand: CandRow[];
   unions: UnionRow[];
   kin: KinRow[];
-  readings: Record<string, unknown>[];
-  works: Record<string, unknown>[];
+  readings: ReadingRow[];
+  works: WorkRow[];
   areas: { id: string; n: string; k: string; f?: string; pa?: string }[];
   lines: Record<string, { n: string; st?: string; rd?: Record<string, string>; ids: string[] }>;
   redirects: RedirectRow[];
@@ -191,6 +213,8 @@ export interface ToolsIndex extends Stamp {
 // ---------- карточки, текст, основы, Генеалогия, TSK ----------
 
 export interface CardFact {
+  /** Порядковый номер утверждения: полный номер `a-<n>` собирает ядро (02 § 8.1, Р-11). */
+  n: number;
   s: number;
   f: string;
   v: unknown;

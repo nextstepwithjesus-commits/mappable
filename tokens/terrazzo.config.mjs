@@ -8,7 +8,7 @@ const changed = JSON.parse(readFileSync(new URL('./build/режимы.json', imp
 const TR = { а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'yo', ж: 'zh', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'kh', ц: 'ts', ч: 'ch', ш: 'sh', щ: 'shch', ъ: '', ы: 'y', ь: '', э: 'e', ю: 'yu', я: 'ya' };
 // та же латинская запись, что tools/tokens/tokens.ts (cssVar): одна на приложение (08 § 3.1)
 const cssVar = (id) => '--' + id.replace(/\./g, '-').toLowerCase().split('').map((ch) => (ch in TR ? TR[ch] : ch)).join('').replace(/[^a-z0-9-]/g, '-');
-const base = { тема: 'светлая', экран: 'широкий', ввод: 'мышь' };
+const base = { тема: 'светлая', экран: 'широкий', плотность: 'обычная', ввод: 'мышь' };
 const block = (sel, c, pad = '') => `${pad}${sel} {\n${c.split('\n').map((l) => pad + '  ' + l.trim()).join('\n')}\n${pad}}\n`;
 const media = (q, sel, c) => `${q} {\n${block(sel, c, '  ')}}\n`;
 const perm = (mod, ctx, prepare) => ({ input: { ...base, [mod]: ctx }, include: changed[mod][ctx], prepare });
@@ -26,11 +26,12 @@ export default defineConfig({
       permutations: [
         { input: base, prepare: (c) => block(':root, [data-theme="light"]', c) },
         perm('тема', 'тёмная', (c) => block(':root[data-theme="dark"], [data-theme="dark"]', c) + media('@media (prefers-color-scheme: dark)', ':root:not([data-theme="light"])', c)),
-        perm('экран', 'телефон', (c) => `/* Телефон: окно уже 37,5 em (08 § 3.4) */\n` + media('@media (max-width: 37.4375em)', ':root', c)),
-        perm('ввод', 'мышь-плотная', (c) => `/* Плотность (08 § 3.4; 09 § 9.7): кегли не меняются */\n` + block('[data-density="плотная"]', c)),
-        perm('ввод', 'касание', (c) => `/* Способ ввода (08 § 3.5): касание — 44–48 */\n` + media('@media (pointer: coarse)', ':root:not([data-input="мышь"])', c) + block('[data-input="касание"]', c)),
-        perm('ввод', 'касание-плотная', (c) => media('@media (pointer: coarse)', ':root:not([data-input="мышь"])[data-density="плотная"]', c) + block('[data-input="касание"][data-density="плотная"], [data-input="касание"] [data-density="плотная"]', c)),
-        perm('ввод', 'сенсорный', (c) => `/* Сенсорный ноутбук (08 § 3.5) */\n` + media('@media (pointer: fine) and (any-pointer: coarse)', ':root:not([data-input])', c)),
+        // телефон — медиазапросом по окну и атрибутом области: в режиме «рядом» половина экрана берёт классы по своей ширине
+        perm('экран', 'телефон', (c) => `/* Телефон: окно уже 37,5 em (08 § 3.4); [data-okno="узкое"] — узкая область в режиме «рядом» */\n` + media('@media (max-width: 37.4375em)', ':root', c) + block('[data-okno="узкое"]', c)),
+        perm('плотность', 'плотная', (c) => `/* Плотность (08 § 3.4; 09 § 9.7): кегли не меняются */\n` + block('[data-density="плотная"]', c)),
+        // ввод — после плотности: касание сильнее (цель не меньше 44, 08 § 3.4)
+        perm('ввод', 'касание', (c) => `/* Способ ввода (08 § 3.5): касание — 44–48 */\n` + media('@media (pointer: coarse)', ':root:not([data-input="мышь"]), :root:not([data-input="мышь"]) [data-density="плотная"]', c) + block('[data-input="касание"], [data-input="касание"] [data-density="плотная"], [data-input="касание"][data-density="плотная"]', c)),
+        perm('ввод', 'сенсорный', (c) => `/* Сенсорный ноутбук (08 § 3.5) */\n` + media('@media (pointer: fine) and (any-pointer: coarse)', ':root:not([data-input]), :root:not([data-input]) [data-density="плотная"]', c)),
       ],
     }),
   ],

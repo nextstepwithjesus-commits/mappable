@@ -20,7 +20,7 @@ function files(dir: string): string[] {
 }
 
 /** Код без комментариев, строк и шаблонов (их содержимое заменено пробелами) — чтобы искать слова кода. */
-export function codeOnly(src: string): string {
+function codeOnly(src: string): string {
   let out = '';
   let i = 0;
   while (i < src.length) {
@@ -47,7 +47,7 @@ export function codeOnly(src: string): string {
 }
 
 /** Все спецификаторы импорта файла (статические, `export … from`, динамические `import()`). */
-export function imports(src: string): string[] {
+function imports(src: string): string[] {
   const out: string[] = [];
   for (const m of src.matchAll(/(?:^|\n)\s*(?:import|export)\s[^;]*?\sfrom\s+['"]([^'"]+)['"]/g)) out.push(m[1]);
   for (const m of src.matchAll(/(?:^|\n)\s*import\s+['"]([^'"]+)['"]/g)) out.push(m[1]);
