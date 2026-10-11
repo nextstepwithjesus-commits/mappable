@@ -192,3 +192,100 @@ part('13. Бюджеты пакетов (Р-11): docs/app/data/02-состави
 import subprocess, sys
 out = subprocess.run(['npx', 'tsx', 'docs/app/data/02-составитель/бюджеты.ts'], capture_output=True, text=True)
 print(out.stdout.rstrip() if out.returncode == 0 else out.stderr)
+
+# ---------------------------------------------------------------- 14 (ред. 4.4)
+part('14. Ред. 4.4: формы другого имени (разбор Д-р10) и формы без общего стиха')
+
+
+def verses(ref):
+    """«Быт 46:13», «4Цар 15:6-7», «Нав 7:1, 17, 18» → множество (книга, глава, стих)."""
+    out = set()
+    m = re.match(r'^(\S+)\s+(\d+):(.+)$', ref.strip())
+    if not m:
+        return out
+    b, c = m.group(1), int(m.group(2))
+    for part_ in re.split(r',\s*', m.group(3)):
+        mm = re.match(r'^(\d+)(?:[-–](\d+))?$', part_.strip())
+        if mm:
+            a, z = int(mm.group(1)), int(mm.group(2) or mm.group(1))
+            out |= {(b, c, v) for v in range(a, z + 1)}
+    return out
+
+
+def refset(refs):
+    s_ = set()
+    for r in refs or []:
+        s_ |= verses(r)
+    return s_
+
+
+# таблица 54 форм из reviews/Д-р10-разбор.md; Рагуил (№ 15) — вид (в) по решению Р-2 ред. 4.4
+rows = []
+for line in open('docs/app/reviews/Д-р10-разбор.md', encoding='utf-8'):
+    c = [x.strip() for x in line.split('|')]
+    if len(c) > 7 and c[1].isdigit():
+        n, card, form, kind = int(c[1]), 'p-' + c[2], c[4], c[6]
+        fm = re.match(r'^(.+?)\s*\((.+)\)$', form)
+        if not fm:
+            continue
+        name_, refstr = fm.group(1), fm.group(2)
+        book = None
+        refs_ = []
+        for piece in refstr.split(';'):
+            piece = piece.strip()
+            mm = re.match(r'^(\D+?)\s*(\d+:.+)$', piece)
+            if mm and not mm.group(1)[0].isdigit() or (mm and mm.group(1)[0].isdigit() and mm.group(1)[1:2].isalpha()):
+                book = mm.group(1).strip()
+                refs_.append(f'{book} {mm.group(2)}')
+            elif book:
+                refs_.append(f'{book} {piece}')
+        k = 'в' if n == 15 else ('б' if kind.startswith('б') else 'в')
+        if n == 54:
+            refs_b = [r for r in refs_ if r.startswith('Иер')]
+            rows.append((n, card, name_, refs_b, 'б'))
+            rows.append((n, card, name_, [r for r in refs_ if not r.startswith('Иер')], 'в'))
+            continue
+        rows.append((n, card, name_, refs_, k))
+# Фаддей и Иуда Иаковлев (основное имя по Р-7 — Фаддей: 2 стиха против 2, первым по порядку книг Мф 10:3)
+rows.append((0, 'p-iuda-iakovlev', 'Иуда (Иаковлев)', ['Лк 6:16', 'Деян 1:13'], 'б'))
+kinds = C(r[4] for r in rows)
+print('форм по видам (с Рагуилом в (в), Иуда Иаковлев — (б), № 54 — двумя частями):', dict(kinds))
+fa = C()
+oa = C()
+missing = []
+for n, card, name_, refs_, k in rows:
+    a = actors.get(card)
+    # стихи формы — из самой базы (имя карточки с этой формой); если формы в базе нет — из таблицы разбора
+    nm = [x for x in (a or {}).get('names', []) if x.get('form') == name_ and x.get('type') != 'main']
+    fs = refset(nm[0]['refs']) if nm else refset(refs_)
+    if n == 54:
+        fs = {v for v in fs if v[0] == ('Иер' if k == 'б' else 'Иез')}
+    if n == 0:
+        fs = refset([r for x in (a or {}).get('names', []) for r in x.get('refs', [])])
+    if not nm and n != 0:
+        missing.append((n, name_))
+    if not a or not fs:
+        continue
+    for f in a.get('facts', []):
+        v_ = f.get('value') if isinstance(f.get('value'), dict) else {}
+        rl = list(f.get('refs') or []) + list(v_.get('refs') or []) + list(v_.get('key') or []) + list(v_.get('all') or []) + \
+            [x for x in (f.get('ref'), v_.get('ref'), v_.get('first'), v_.get('verse')) if isinstance(x, str)]
+        rs = refset(rl)
+        if rs and rs <= fs:
+            fa[k] += 1
+    for o in origins:
+        if card in (o.get('child'), o.get('parent')):
+            rs = refset(o.get('refs'))
+            if rs and rs <= fs:
+                oa[k] += 1
+print('форм, которых нет в базе под этим именем:', missing)
+print('утверждений, у которых все стихи — стихи формы: (б)', fa['б'], '; (в)', fa['в'])
+print('рёбер, у которых все стихи — стихи формы: (б)', oa['б'], '; (в)', oa['в'])
+nos = 0
+for a in actors.values():
+    main = [x for x in a.get('names', []) if x.get('type') == 'main']
+    ms = refset(main[0]['refs']) if main else set()
+    for x in a.get('names', []):
+        if x.get('type') in ('variant', 'renamed', 'foreign') and not (refset(x.get('refs')) & ms):
+            nos += 1
+print('других имён (variant, renamed, foreign) без общего стиха с основным:', nos)
