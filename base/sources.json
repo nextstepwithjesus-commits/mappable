@@ -563,6 +563,25 @@
    "notProves": "Не даёт фактов"
   },
   {
+   "id": "src-tsk",
+   "title": "Treasury of Scripture Knowledge (модуль CrossWire SWORD «TSK»)",
+   "org": "CrossWire Bible Society, SWORD Project",
+   "author": "Canne, Browne, Blayney, Scott и др. (около 1880, по полю About в .conf модуля)",
+   "version": "TSK 1.4 (SwordVersionDate 2001-12-15); inputs/crosswire/TSK.zip, SHA-256 6784c7099465995a8e66f02ead82b0bca66603c1bdeaf8332949774b7bfd4293",
+   "date": "2001-12-15",
+   "license": "общественное достояние: в mods.d/tsk.conf модуля «DistributionLicense=Public Domain», других условий нет; труд XIX века",
+   "spdx": "LicenseRef-PublicDomain",
+   "licenseSource": "mods.d/tsk.conf из inputs/crosswire/TSK.zip (прочитан 2026-10-11: Version=1.4, SwordVersionDate=2001-12-15, DistributionLicense=Public Domain; поля TextSource нет); crosswire.org/sword/modules/ModInfo.jsp?modName=TSK (2026-10-11)",
+   "attributionRequired": false,
+   "attribution": "Treasury of Scripture Knowledge (XIX век), модуль CrossWire SWORD «TSK» 1.4; общественное достояние. Нумерация переведена в синодальную",
+   "shareAlike": false,
+   "redistribute": true,
+   "use": "reference",
+   "read": "2026-10-11",
+   "limits": "Нумерация английская (KJV, у модуля нет поля Versification). Перевод в синодальную — tools/bible/tsk.py по обращённой таблице base/versification/synodal-kjv.json (src-jsword — только сверка, в приложение не входит); пары без однозначного синодального стиха — в карантине tools/bible/tsk-quarantine.tsv, ближайшим стихом не подменяются. Берутся только адреса и группы по словам стиха (английские слова KJV); примечания составителей, хронология (A.M., B.C.) и планы глав не берутся. Места — выбор составителей; блок «Параллельные места (справочно)», только второй слой (11 § 4.12). Пары, которые держатся на словах в скобках, — выборкой библеиста",
+   "notProves": "Не даёт фактов, рёбер, тождеств и связей; параллель — не доказательство связи и не ссылка истории (11 § 4.12)"
+  },
+  {
    "id": "src-etopo",
    "title": "ETOPO 2022 15 Arc-Second Global Relief Model",
    "org": "NOAA National Centers for Environmental Information",
