@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data/stories",
-   "commit": "1138749"
+   "commit": "8167af0"
   }
  },
  "sources": [
@@ -5685,7 +5685,7 @@
        "Мф 9:9",
        "Лк 5:27"
       ],
-      "note": "одни слова: «сидящего у сбора пошлин», «следуй за Мною» (Мф 9:9; Мк 2:14; Лк 5:27); у всех — сразу после истории о расслабленном. Имя мытаря разное (различия); лица — по рассказу с формой стиха: у Марка и Луки «Левий», связь с лицом базы — «вывод»"
+      "note": "одни слова: «сидящего у сбора пошлин», «следуй за Мною» (Мф 9:9; Мк 2:14; Лк 5:27); у всех — сразу после истории о расслабленном. Имя мытаря разное (различия); лица — по рассказу с формой стиха: у Марка и Луки — Левий (своя карточка), с Матфеем — «возможно, то же лицо» (отношение базы, Мк 2:14; Мф 9:9)"
      }
     }
    ],
@@ -5769,26 +5769,24 @@
      "cert": "scripture"
     },
     {
-     "actor": "p-matfey",
-     "label": "Левий Алфеев",
+     "actor": "p-leviy-alfeev",
      "role": "participant",
      "main": true,
      "account": 1,
      "refs": [
       "Мк 2:14"
      ],
-     "cert": "inference"
+     "cert": "scripture"
     },
     {
-     "actor": "p-matfey",
-     "label": "Левий",
+     "actor": "p-leviy-alfeev",
      "role": "participant",
      "main": true,
      "account": 2,
      "refs": [
       "Лк 5:27"
      ],
-     "cert": "inference"
+     "cert": "scripture"
     },
     {
      "actor": "p-alfey-otets-leviya",
@@ -6032,7 +6030,7 @@
      "cert": "scripture"
     },
     {
-     "actor": "p-matfey",
+     "actor": "p-leviy-alfeev",
      "role": "participant",
      "account": 2,
      "roleText": {
@@ -6044,8 +6042,7 @@
      "refs": [
       "Лк 5:29"
      ],
-     "cert": "inference",
-     "label": "Левий"
+     "cert": "scripture"
     }
    ],
    "places": [],
@@ -7298,14 +7295,13 @@
      "cert": "scripture"
     },
     {
-     "actor": "p-iuda-iakovlev",
-     "label": "Фаддей",
+     "actor": "p-faddey",
      "role": "participant",
      "account": 0,
      "refs": [
       "Мк 3:18"
      ],
-     "cert": "inference"
+     "cert": "scripture"
     },
     {
      "actor": "p-iuda-iakovlev",
@@ -11043,7 +11039,7 @@
     {
      "id": "e-iisus-posylaet-dvenadtsat#s7",
      "title": {
-      "short": "Пошли и проповедовали",
+      "short": "Учить и проповедовать",
       "by": "atlas"
      },
      "refs": [
@@ -11179,7 +11175,7 @@
     {
      "n": 3,
      "title": {
-      "short": "Пошли и проповедовали",
+      "short": "Учить и проповедовать",
       "by": "atlas"
      },
      "refs": [
@@ -12601,7 +12597,7 @@
      "start": "Мф 18:1",
      "end": "Мф 18:20",
      "rule": 5,
-     "human": "рассказ Иисуса о ста овцах (Мф 18:12–14) — своя запись по 11 § 13.4; не заведена до разметки Мф 18"
+     "human": "рассказ Иисуса о ста овцах (Мф 18:12–14) — своя запись по 11 § 13.4: вложение «Сто овец в горах» (nested)"
     }
    ],
    "source": {

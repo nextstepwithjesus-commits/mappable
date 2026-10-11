@@ -192,10 +192,13 @@ describe('истории: испорченные записи ловятся', (
     expect(errorsOf([s]).join('\n')).not.toMatch(/часть/);
   });
 
-  it('лицо, названное в стихе другим именем: на стихе — форма стиха, связь с лицом базы — «вывод» (решение координатора)', () => {
+  it('лицо, названное в стихе другим именем: строка ведёт на карточку имени из стиха, «Писание» (Р-1, 02 § 3.3.4)', () => {
     const by = new Map(src.stories.map((s) => [s.id, s]));
-    const levi = by.get('e-mytar-u-sbora-poshlin')!.actors.filter((a) => a.actor === 'p-matfey');
-    expect(levi.map((a) => [a.label, a.cert])).toEqual([['Матфей', 'scripture'], ['Левий Алфеев', 'inference'], ['Левий', 'inference']]);
+    // Левий (Мк 2:14; Лк 5:27, 29) — своя карточка; с Матфеем — отношение «возможно, то же лицо» в базе (tests/base-d4.test.ts)
+    const levi = by.get('e-mytar-u-sbora-poshlin')!.actors.filter((a) => a.actor === 'p-matfey' || a.actor === 'p-leviy-alfeev');
+    expect(levi.map((a) => [a.actor, a.refs[0], a.cert])).toEqual([['p-matfey', 'Мф 9:9', 'scripture'], ['p-leviy-alfeev', 'Мк 2:14', 'scripture'], ['p-leviy-alfeev', 'Лк 5:27', 'scripture']]);
+    expect(src.stories.flatMap((s) => s.actors).filter((a) => (a.actor === 'p-matfey' && /Леви/.test(a.label ?? '')) || (a.actor === 'p-iuda-iakovlev' && /Фадде|Леввей/.test(a.label ?? '')))).toEqual([]);
+    expect(by.get('e-iisus-stavit-dvenadtsat')!.actors.find((a) => a.actor === 'p-faddey')).toMatchObject({ refs: ['Мк 3:18'], cert: 'scripture' });
     const war = by.get('e-snova-voyna-s-filistimlyanami')!.actors.filter((a) => a.account === 1 && a.actor.startsWith('p-') && a.label);
     expect(war.every((a) => a.cert === 'inference' || a.actor === 'p-ionafan-syn-sammy')).toBe(true);
     // у Луки о посте спрашивают «Они» — книжники и фарисеи, не ученики Иоанновы (11 § 13.2)

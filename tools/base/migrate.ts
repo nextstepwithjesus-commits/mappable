@@ -29,6 +29,7 @@ import { STEPS_K } from './corrections-k.ts';
 import { STEPS_D } from './corrections-d.ts';
 import { STEPS_D_2 } from './corrections-d-2.ts';
 import { STEPS_D_3 } from './corrections-d-r3.ts';
+import { STEPS_D4 } from './corrections-d4.ts';
 import { project, canon, type Hints } from './project.ts';
 import { loadBible } from '../bible.ts';
 import { parseRef } from '../../src/engine/books.ts';
@@ -394,7 +395,10 @@ export function buildBase(opts: BuildOptions = {}) {
   applyAll(base, hints, STEPS_D_2.filter((s) => !skip.has(s.id)));
   // третья очередь — так же, после закрепления номеров второй
   freezeIds(base);
-  applyAll(base, hints, [...STEPS_D_3, ...(opts.extraSteps ?? [])].filter((s) => !skip.has(s.id)));
+  applyAll(base, hints, STEPS_D_3.filter((s) => !skip.has(s.id)));
+  // партия 2 (Д-4: формы другого имени — свои карточки) — так же, после закрепления номеров третьей очереди
+  freezeIds(base);
+  applyAll(base, hints, [...STEPS_D4, ...(opts.extraSteps ?? [])].filter((s) => !skip.has(s.id)));
   const iss = finishIds(base)!;
   if (iss.errors.length) throw new Error(`номера: ${iss.errors.slice(0, 5).join('; ')}`);
   base.redirects = mergeRedirects(opts.redirects ?? readItems('redirects.json'), base.redirects);
@@ -481,8 +485,8 @@ function main() {
   // 2. исправления по одному: всё, что изменилось, — в объявленной области шага (и поля, которых не было в прежних данных)
   const steps: Record<string, string[]> = {};
   let bad = 0;
-  for (const step of [...STEPS, ADDITIONS, ...STEPS_D3, ...STEPS_K, ...STEPS_D, ...STEPS_D_2, ...STEPS_D_3]) {
-    if (step === STEPS_D[0] || step === STEPS_D_2[0] || step === STEPS_D_3[0]) freezeIds(base);
+  for (const step of [...STEPS, ADDITIONS, ...STEPS_D3, ...STEPS_K, ...STEPS_D, ...STEPS_D_2, ...STEPS_D_3, ...STEPS_D4]) {
+    if (step === STEPS_D[0] || step === STEPS_D_2[0] || step === STEPS_D_3[0] || step === STEPS_D4[0]) freezeIds(base);
     const { changed, stray } = stepChanges(base, hints, step);
     steps[step.id] = changed;
     console.log(`   ${step.id}: изменено записей ${changed.length}${stray.length ? `, ВНЕ ОБЛАСТИ ${stray.length}: ${stray.slice(0, 8).join('; ')}` : ''}`);

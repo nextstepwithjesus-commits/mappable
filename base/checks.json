@@ -17332,51 +17332,6 @@
    }
   },
   {
-   "key": "story:e-ditya-posredi-uchenikov",
-   "by": "bibleist-reviewer (второй ключ, истории-пакет-1-второй-ключ.md)",
-   "kind": "agent",
-   "at": "2026-10-11",
-   "hash": "46661faff14d3ffd3fa4451a17d1f60ea9ddaf6742514069f42c40caa34c0901",
-   "inputs": {
-    "verses": [
-     "Лк 9:46",
-     "Лк 9:47",
-     "Лк 9:48",
-     "Мк 9:33",
-     "Мк 9:34",
-     "Мк 9:35",
-     "Мк 9:36",
-     "Мк 9:37",
-     "Мф 18:1",
-     "Мф 18:10",
-     "Мф 18:11",
-     "Мф 18:12",
-     "Мф 18:13",
-     "Мф 18:14",
-     "Мф 18:15",
-     "Мф 18:16",
-     "Мф 18:17",
-     "Мф 18:18",
-     "Мф 18:19",
-     "Мф 18:2",
-     "Мф 18:20",
-     "Мф 18:3",
-     "Мф 18:4",
-     "Мф 18:5",
-     "Мф 18:6",
-     "Мф 18:7",
-     "Мф 18:8",
-     "Мф 18:9"
-    ],
-    "text": "96878b2a8d9c71c9be999acd1c64d3d1b66e6833ab85f8516915ad1ef9faabcf",
-    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
    "key": "story:e-doch-iaira",
    "by": "bibleist-reviewer (второй ключ, истории-пакет-1-второй-ключ.md)",
    "kind": "agent",
@@ -17579,34 +17534,6 @@
      "Лк 9:56"
     ],
     "text": "ea83898abff0f1bbe2cbbf2bf7188f1d76d0446d1b8a25c159b5a1ca3197f3ca",
-    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "story:e-iisus-est-s-mytaryami-i-greshnikami",
-   "by": "bibleist-reviewer (второй ключ, истории-пакет-1-второй-ключ.md)",
-   "kind": "agent",
-   "at": "2026-10-11",
-   "hash": "9593cb838eb0bf27634dcf7b79bdd1608b23f044844dab2f1842d286bce25355",
-   "inputs": {
-    "verses": [
-     "Лк 5:29",
-     "Лк 5:30",
-     "Лк 5:31",
-     "Лк 5:32",
-     "Мк 2:15",
-     "Мк 2:16",
-     "Мк 2:17",
-     "Мф 9:10",
-     "Мф 9:11",
-     "Мф 9:12",
-     "Мф 9:13"
-    ],
-    "text": "fe2dfb44f3e86ea6ab244a02d4dfa298a9a26f2375c535094298dca2983befa4",
     "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "sources": {
@@ -17832,79 +17759,6 @@
    }
   },
   {
-   "key": "story:e-iisus-posylaet-dvenadtsat",
-   "by": "bibleist-reviewer (второй ключ, истории-пакет-1-второй-ключ.md)",
-   "kind": "agent",
-   "at": "2026-10-11",
-   "hash": "f40ea8ed3a4c1ef91da01d0e8a6711fbaee5c18f19b2a96f97b0e644e76182ac",
-   "inputs": {
-    "verses": [
-     "Лк 9:1",
-     "Лк 9:2",
-     "Лк 9:3",
-     "Лк 9:4",
-     "Лк 9:5",
-     "Лк 9:6",
-     "Мк 6:10",
-     "Мк 6:11",
-     "Мк 6:12",
-     "Мк 6:13",
-     "Мк 6:7",
-     "Мк 6:8",
-     "Мк 6:9",
-     "Мф 10:1",
-     "Мф 10:10",
-     "Мф 10:11",
-     "Мф 10:12",
-     "Мф 10:13",
-     "Мф 10:14",
-     "Мф 10:15",
-     "Мф 10:16",
-     "Мф 10:17",
-     "Мф 10:18",
-     "Мф 10:19",
-     "Мф 10:2",
-     "Мф 10:20",
-     "Мф 10:21",
-     "Мф 10:22",
-     "Мф 10:23",
-     "Мф 10:24",
-     "Мф 10:25",
-     "Мф 10:26",
-     "Мф 10:27",
-     "Мф 10:28",
-     "Мф 10:29",
-     "Мф 10:3",
-     "Мф 10:30",
-     "Мф 10:31",
-     "Мф 10:32",
-     "Мф 10:33",
-     "Мф 10:34",
-     "Мф 10:35",
-     "Мф 10:36",
-     "Мф 10:37",
-     "Мф 10:38",
-     "Мф 10:39",
-     "Мф 10:4",
-     "Мф 10:40",
-     "Мф 10:41",
-     "Мф 10:42",
-     "Мф 10:5",
-     "Мф 10:6",
-     "Мф 10:7",
-     "Мф 10:8",
-     "Мф 10:9",
-     "Мф 11:1"
-    ],
-    "text": "8eee5bf8c46fa912b549a9f0c5c1b095295127ef600203645fbba3c0cdf7dae5",
-    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
    "key": "story:e-iisus-preobrazhaetsya-na-gore",
    "by": "bibleist-reviewer (второй ключ, истории-пакет-1-второй-ключ.md)",
    "kind": "agent",
@@ -17975,35 +17829,6 @@
      "Мф 4:17"
     ],
     "text": "29ee9e28a2e3557fc6792e174cb5e1759a8a2678d5697a61d1028bf79a2fabb3",
-    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "story:e-iisus-stavit-dvenadtsat",
-   "by": "bibleist-reviewer (второй ключ, истории-пакет-1-второй-ключ.md)",
-   "kind": "agent",
-   "at": "2026-10-11",
-   "hash": "758dd7fa117760f5b2d256dc07a85e6f11b5e73625be58c76ce683f19c2afed3",
-   "inputs": {
-    "verses": [
-     "Лк 6:12",
-     "Лк 6:13",
-     "Лк 6:14",
-     "Лк 6:15",
-     "Лк 6:16",
-     "Мк 3:13",
-     "Мк 3:14",
-     "Мк 3:15",
-     "Мк 3:16",
-     "Мк 3:17",
-     "Мк 3:18",
-     "Мк 3:19"
-    ],
-    "text": "efe488bb68ab5879457737a6d185d14bebcb3f6eb5f289fd1410997770f57dd4",
     "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "sources": {
@@ -18727,28 +18552,6 @@
      "Мф 12:21"
     ],
     "text": "ccd7ee201150250d585af074ac5be44320f96d0658822e6db8b77e357b0b2161",
-    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "story:e-mytar-u-sbora-poshlin",
-   "by": "bibleist-reviewer (второй ключ, истории-пакет-1-второй-ключ.md)",
-   "kind": "agent",
-   "at": "2026-10-11",
-   "hash": "ad06be1e5c74d2a8133dcc4e478e0d4caa054f5d19408be3e54d3a1b366f6de5",
-   "inputs": {
-    "verses": [
-     "Лк 5:27",
-     "Лк 5:28",
-     "Мк 2:13",
-     "Мк 2:14",
-     "Мф 9:9"
-    ],
-    "text": "345015617ba3bd4f513ecd160f9b2f850f2ba4cc4c1b14dfcb7e314cfbbcef45",
     "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "sources": {

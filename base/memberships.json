@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data",
-   "commit": "c2b7534"
+   "commit": "8167af0"
   }
  },
  "sources": [
@@ -29558,6 +29558,18 @@
    ],
    "prov": {
     "by": "дополнение Д1",
+    "status": "draft"
+   }
+  },
+  {
+   "actor": "p-faddey",
+   "area": "g-apostles",
+   "basis": "named",
+   "refs": [
+    "Мф 10:2-3"
+   ],
+   "prov": {
+    "by": "исправление D4-2",
     "status": "draft"
    }
   }

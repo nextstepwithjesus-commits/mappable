@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data",
-   "commit": "c2b7534"
+   "commit": "8167af0"
   }
  },
  "sources": [
@@ -33529,22 +33529,21 @@
    }
   },
   {
-   "id": "o-alfey-otets-leviya--matfey",
-   "child": "p-matfey",
+   "id": "o-alfey-otets-leviya--leviy-alfeev",
+   "child": "p-leviy-alfeev",
    "parent": "p-alfey-otets-leviya",
    "role": "father",
    "kind": "natural",
    "refs": [
-    "Мк 2:14",
-    "Мф 9:9",
-    "Лк 5:27"
+    "Мк 2:14"
    ],
-   "cert": "inference",
+   "cert": "scripture",
    "primary": true,
    "prov": {
     "from": {
      "vol": "17-new-testament.json"
-    }
+    },
+    "by": "исправление D4-1"
    }
   },
   {

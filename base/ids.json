@@ -18105,7 +18105,7 @@
   {"id":"o-mat-synovey-zevedeevykh--iakov-zevedeev","kind":"origin","key":"origin:p-iakov-zevedeev|p-mat-synovey-zevedeevykh|mother|p","at":"2026-10-11","state":"active"},
   {"id":"o-zevedey--ioann-apostol","kind":"origin","key":"origin:p-ioann-apostol|p-zevedey|father|p","at":"2026-10-11","state":"active"},
   {"id":"o-mat-synovey-zevedeevykh--ioann-apostol","kind":"origin","key":"origin:p-ioann-apostol|p-mat-synovey-zevedeevykh|mother|p","at":"2026-10-11","state":"active"},
-  {"id":"o-alfey-otets-leviya--matfey","kind":"origin","key":"origin:p-matfey|p-alfey-otets-leviya|father|p","at":"2026-10-11","state":"active"},
+  {"id":"o-alfey-otets-leviya--matfey","kind":"origin","key":"origin:p-matfey|p-alfey-otets-leviya|father|p","at":"2026-10-11","state":"retired"},
   {"id":"o-alfey-otets-iakova--iakov-alfeev","kind":"origin","key":"origin:p-iakov-alfeev|p-alfey-otets-iakova|father|p","at":"2026-10-11","state":"active"},
   {"id":"o-simon-otets-iudy--iuda-iskariot","kind":"origin","key":"origin:p-iuda-iskariot|p-simon-otets-iudy|father|p","at":"2026-10-11","state":"active"},
   {"id":"o-iair-nachalnik-sinagogi--doch-iaira","kind":"origin","key":"origin:p-doch-iaira|p-iair-nachalnik-sinagogi|father|p","at":"2026-10-11","state":"active"},
@@ -18566,6 +18566,16 @@
   {"id":"ar-5","kind":"relation","key":"relation:p-shupim-1par7-15|p-shupim-syn-ira|possibly-same","at":"2026-10-11","state":"active"},
   {"id":"ar-6","kind":"relation","key":"relation:p-khupim-1par7-15|p-khupim-syn-ira|possibly-same","at":"2026-10-11","state":"active"},
   {"id":"a-16287","kind":"fact","key":"fact:p-tsar-2par28-7|scripture|2c0333e3b804d619|D5-3","at":"2026-10-11","state":"active"},
-  {"id":"a-16288","kind":"fact","key":"fact:p-tsar-ier38-6|scripture|a3b5af2d9dd43afd|D5-3","at":"2026-10-11","state":"active"}
+  {"id":"a-16288","kind":"fact","key":"fact:p-tsar-ier38-6|scripture|a3b5af2d9dd43afd|D5-3","at":"2026-10-11","state":"active"},
+  {"id":"a-16289","kind":"fact","key":"fact:p-leviy-alfeev|met|ac5f0dd6b5b1b43c|D4-1","at":"2026-10-11","state":"active"},
+  {"id":"a-16290","kind":"fact","key":"fact:p-leviy-alfeev|offices|e465871142248043|D4-1","at":"2026-10-11","state":"active"},
+  {"id":"a-16291","kind":"fact","key":"fact:p-leviy-alfeev|events|51c00d4996fd0513|D4-1","at":"2026-10-11","state":"active"},
+  {"id":"a-16292","kind":"fact","key":"fact:p-leviy-alfeev|scripture|01cdc25ed9b5d161|D4-1","at":"2026-10-11","state":"active"},
+  {"id":"a-16293","kind":"fact","key":"fact:p-faddey|status|a2ee56b048b8bc16|D4-2","at":"2026-10-11","state":"active"},
+  {"id":"a-16294","kind":"fact","key":"fact:p-faddey|events|fddb56136cec5322|D4-2","at":"2026-10-11","state":"active"},
+  {"id":"a-16295","kind":"fact","key":"fact:p-faddey|scripture|61865db20684b30c|D4-2","at":"2026-10-11","state":"active"},
+  {"id":"ar-7","kind":"relation","key":"relation:p-leviy-alfeev|p-matfey|possibly-same","at":"2026-10-11","state":"active"},
+  {"id":"ar-8","kind":"relation","key":"relation:p-faddey|p-iuda-iakovlev|possibly-same","at":"2026-10-11","state":"active"},
+  {"id":"o-alfey-otets-leviya--leviy-alfeev","kind":"origin","key":"origin:p-leviy-alfeev|p-alfey-otets-leviya|father|p","at":"2026-10-11","state":"active"}
  ]
 }
