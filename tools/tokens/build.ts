@@ -6,9 +6,10 @@
  *   npm run -s tokens            сборка и проверки → tokens/dist/tokens.css, tokens/dist/tokens.ts
  *   npm run -s tokens -- --check только проверки
  *
- * Режимы файла (`app.режимы`) ложатся на модификаторы resolver'а: тема (светлая, тёмная), экран (широкий, телефон), ввод
- * (мышь, мышь-плотная, касание, касание-плотная, сенсорный). Плотность и способ ввода — одна ось resolver'а, потому что у
- * целей есть составное значение «касание·плотная» (08 § 3.5), которое не получается наложением двух независимых осей.
+ * Режимы файла (`app.режимы`) ложатся на модификаторы resolver'а — три оси 08 § 3.1 и 09 § 3.6 и экран: тема (светлая, тёмная),
+ * экран (широкий, телефон), плотность (обычная, плотная), ввод (мышь, касание, сенсорный). Порядок наложения — тема, экран,
+ * плотность, ввод: касание сильнее плотности, цель не меньше 44 (08 § 3.4; рецензия интерфейса, № 13). Кегли — в rem
+ * (08 § 3.3.2; рецензия интерфейса, № 1): настройка „Размер текста“ меняет размер корня.
  */
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -25,16 +26,30 @@ const BUILD = join(ROOT, 'tokens', 'build');
 export const CONTEXTS: Record<string, Record<string, string[]>> = {
   тема: { светлая: [], тёмная: ['тёмная'] },
   экран: { широкий: [], телефон: ['телефон'] },
-  ввод: { мышь: [], 'мышь-плотная': ['плотная'], касание: ['касание'], 'касание-плотная': ['касание', 'плотная'], сенсорный: ['сенсорный'] },
+  плотность: { обычная: [], плотная: ['плотная'] },
+  ввод: { мышь: [], касание: ['касание'], сенсорный: ['сенсорный'] },
 };
 
-const px = (v: unknown): number | undefined => (v && typeof v === 'object' && (v as { unit?: string }).unit === 'px' ? (v as { value: number }).value : undefined);
+/** Кегль в px при корне 16 px: из `rem` (как в файле) или `px`. */
+const px = (v: unknown): number | undefined => {
+  if (!v || typeof v !== 'object') return undefined;
+  const d = v as { unit?: string; value: number };
+  return d.unit === 'rem' ? Math.round(d.value * 16 * 1000) / 1000 : d.unit === 'px' ? d.value : undefined;
+};
 
 /** Проверки файла токенов: пустой список — всё верно. */
 export function check(doc: Doc): string[] {
   const errs: string[] = [];
   const all = flat(doc);
   const allModes = Object.values(CONTEXTS).flatMap((c) => Object.values(c)).concat([['тёмная', 'телефон', 'касание', 'плотная']]);
+  // кегли — только в rem (08 § 3.3.2)
+  for (const [p, t] of Object.entries(all)) {
+    if (t.$type !== 'typography') continue;
+    for (const m of [[], ['телефон']]) {
+      const fs = (rawIn(t, m) as { fontSize?: { unit?: string } }).fontSize;
+      if (fs?.unit !== 'rem') errs.push(`${p}: кегль не в rem (08 § 3.3.2)`);
+    }
+  }
   for (const p of Object.keys(all)) for (const m of allModes) {
     try {
       resolve(all, p, m);
@@ -49,7 +64,7 @@ export function check(doc: Doc): string[] {
     if (t.$type !== 'typography') continue;
     for (const m of [[], ['телефон']]) {
       const s = px((resolve(all, p, m) as { fontSize?: unknown }).fontSize);
-      if (s === undefined) errs.push(`${p}: кегль не в px`);
+      if (s === undefined) errs.push(`${p}: кегль не в rem и не в px`);
       else {
         sizes.add(s);
         if (s < 12) errs.push(`${p}: кегль ${s} px мельче 12 px`);
@@ -114,8 +129,7 @@ export function resolver(doc: Doc): { resolver: Record<string, unknown>; changed
     const contexts: Record<string, unknown[]> = {};
     changed[mod] = {};
     for (const [name, modes] of Object.entries(ctx)) {
-      const keys = new Set(modes.flatMap((m) => [m]).concat(modes.length > 1 ? [modes.join('·')] : []));
-      const touched = Object.entries(all).filter(([, t]) => Object.keys(t.$extensions?.['app.режимы'] ?? {}).some((k) => keys.has(k) || (k.includes('·') && k.split('·').every((x) => modes.includes(x)))));
+      const touched = Object.entries(all).filter(([, t]) => Object.keys(t.$extensions?.['app.режимы'] ?? {}).some((k) => modes.includes(k)));
       changed[mod][name] = touched.map(([p]) => p);
       contexts[name] = touched.length ? [tree(touched.map(([p, t]) => [p, t, dtcg(t, rawIn(t, modes))]))] : [];
     }
@@ -137,7 +151,7 @@ export function resolver(doc: Doc): { resolver: Record<string, unknown>; changed
 export function tsModule(doc: Doc): string {
   const all = flat(doc);
   const rows: string[] = [];
-  const modeSets: [string, string[]][] = [['светлая', []], ['тёмная', ['тёмная']], ['телефон', ['телефон']], ['плотная', ['плотная']], ['касание', ['касание']], ['касание·плотная', ['касание', 'плотная']], ['сенсорный', ['сенсорный']]];
+  const modeSets: [string, string[]][] = [['светлая', []], ['тёмная', ['тёмная']], ['телефон', ['телефон']], ['плотная', ['плотная']], ['касание', ['касание']], ['сенсорный', ['сенсорный']]];
   const norm = (v: unknown): unknown => (v && typeof v === 'object' && 'hex' in (v as object) ? (v as { hex: string }).hex : v);
   for (const [p, t] of Object.entries(all)) {
     const base = JSON.stringify(norm(resolve(all, p, [])));
@@ -150,22 +164,32 @@ export function tsModule(doc: Doc): string {
   }
   return [
     '/* СОБРАНО из tokens/токены.json командой `npm run -s tokens` (tools/tokens/build.ts) — не править руками. */',
-    "export type TokenMode = 'тёмная' | 'телефон' | 'плотная' | 'касание' | 'касание·плотная' | 'сенсорный';",
+    "export type TokenMode = 'тёмная' | 'телефон' | 'плотная' | 'касание' | 'сенсорный';",
+    '/** Порядок наложения режимов: тема, экран, плотность, ввод — касание сильнее плотности (08 § 3.4). */',
+    "const ORDER: readonly TokenMode[] = ['тёмная', 'телефон', 'плотная', 'касание', 'сенсорный'];",
     'export interface TokenEntry { type: string; css: string; value: unknown; modes?: Partial<Record<TokenMode, unknown>> }',
     'export const TOKENS = {',
     ...rows,
     '} as const satisfies Record<string, TokenEntry>;',
     'export type TokenPath = keyof typeof TOKENS;',
-    '/** Значение токена в режимах: составной режим «касание·плотная» сильнее одиночных; последний одиночный сильнее прежних. */',
+    '/** Значение токена в режимах (кегли — в rem; холсту нужен px: rem × размер корня). */',
     'export function token(path: TokenPath, modes: readonly TokenMode[] = []): unknown {',
     '  const t: TokenEntry = TOKENS[path];',
     '  let v = t.value;',
-    "  for (const m of modes) if (!m.includes('·') && t.modes?.[m] !== undefined) v = t.modes[m];",
-    "  if (modes.includes('касание') && modes.includes('плотная') && t.modes?.['касание·плотная'] !== undefined) v = t.modes['касание·плотная'];",
+    '  for (const m of ORDER) if (modes.includes(m) && t.modes?.[m] !== undefined) v = t.modes[m];',
     '  return v;',
     '}',
     '',
   ].join('\n');
+}
+
+/** Признаки шрифта у ступеней типографики (08 § 3.3.2: `onum` у Писания, `tnum` у адреса, `lnum` у прозы). */
+function featuresCss(doc: Doc): string {
+  const all = flat(doc);
+  const rows = Object.entries(all)
+    .filter(([, t]) => t.$type === 'typography' && typeof t.$extensions?.['app.признаки'] === 'string')
+    .map(([p, t]) => `  ${cssVar(p)}-font-feature-settings: ${String(t.$extensions?.['app.признаки'])};`);
+  return rows.length ? `\n/* Признаки шрифта (08 § 3.3.2). Добавлено tools/tokens/build.ts. */\n:root {\n${rows.join('\n')}\n}\n` : '';
 }
 
 /** Размер текста (08 § 3.3.2, § 7.23) — не ось токенов, а размер корня: все кегли в rem. */
@@ -186,7 +210,7 @@ export function buildTokens(): { css: string; ts: string } {
   writeFileSync(join(BUILD, 'режимы.json'), JSON.stringify(changed, null, 1) + '\n');
   execFileSync(join(ROOT, 'node_modules', '.bin', 'tz'), ['build', '-c', join(ROOT, 'tokens', 'terrazzo.config.mjs')], { cwd: join(ROOT, 'tokens'), stdio: 'pipe' });
   const cssFile = join(OUT, 'tokens.css');
-  const css = readFileSync(cssFile, 'utf8') + TEXT_SIZE;
+  const css = readFileSync(cssFile, 'utf8') + featuresCss(doc) + TEXT_SIZE;
   writeFileSync(cssFile, css);
   const ts = tsModule(doc);
   writeFileSync(join(OUT, 'tokens.ts'), ts);

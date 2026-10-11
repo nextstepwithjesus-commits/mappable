@@ -31,20 +31,20 @@ export function flat(doc: Record<string, unknown>, path: string[] = [], out: Rec
 }
 
 /** Режимы файла и как они ложатся на модификаторы resolver'а (09 § 3.6: тема × ввод × плотность; экран — телефон). */
-export const MODES = ['тёмная', 'телефон', 'плотная', 'касание', 'касание·плотная', 'сенсорный'] as const;
+/** Порядок наложения: тема, экран, плотность, ввод — касание сильнее плотности (цель не меньше 44, 08 § 3.4). */
+export const MODES = ['тёмная', 'телефон', 'плотная', 'касание', 'сенсорный'] as const;
 export type Mode = (typeof MODES)[number];
 
 const isRef = (v: unknown): v is string => typeof v === 'string' && /^\{.+\}$/.test(v);
 
-/** Значение токена в режимах (одиночные по порядку, затем составные «a·b» — они сильнее); частичное значение типографики сливается с основным. */
+/** Значение токена в режимах — по порядку MODES (три оси 08 § 3.1 независимы); частичное значение типографики сливается с основным. */
 export function rawIn(t: Token, modes: readonly string[]): unknown {
   const m = t.$extensions?.['app.режимы'] ?? {};
   let v: unknown = t.$value;
   const put = (x: unknown) => {
     v = x && typeof x === 'object' && !Array.isArray(x) && v && typeof v === 'object' && !Array.isArray(v) && t.$type === 'typography' ? { ...(v as object), ...(x as object) } : x;
   };
-  for (const r of modes) if (m[r] !== undefined && !r.includes('·')) put(m[r]);
-  for (const k of Object.keys(m)) if (k.includes('·') && k.split('·').every((x) => modes.includes(x))) put(m[k]);
+  for (const r of MODES) if (modes.includes(r) && m[r] !== undefined) put(m[r]);
   return v;
 }
 
