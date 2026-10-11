@@ -1,0 +1,6691 @@
+{
+ "about": "Главы жребия П7 (очередь П7-1; 11 § 12.2, вариант А): Суд 10–12, Чис 13–14, Иез 34–35, 1Пар 8, Притч 20, Мф 21–22, Деян 10–11 — размечены целиком по протоколу И0 v1 (11 ред. 4.3, приложение Е), только по тексту и правилам 11, без внешних наборов. Мф 21:1–27 — истории пакета 1 (data/stories/02-gospels.json), здесь не повторяются. Разметчик П7; черновик до второго ключа, подписей нет.",
+ "chapters": [
+  "Чис 13",
+  "Чис 14",
+  "Суд 10",
+  "Суд 11",
+  "Суд 12",
+  "1Пар 8",
+  "Притч 20",
+  "Иез 34",
+  "Иез 35",
+  "Мф 21",
+  "Мф 22",
+  "Деян 10",
+  "Деян 11"
+ ],
+ "stories": [
+  {
+   "id": "e-moisey-posylaet-vysmotret-zemlyu",
+   "level": "story",
+   "kind": "event",
+   "title": {
+    "short": "Моисей посылает высмотреть землю",
+    "by": "atlas",
+    "common": [
+     "Двенадцать соглядатаев"
+    ]
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Чис 13:1-30"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "parts": [
+    {
+     "n": 1,
+     "title": {
+      "short": "Пошли людей высмотреть землю",
+      "by": "atlas"
+     },
+     "refs": [
+      "Чис 13:1-21"
+     ],
+     "change": []
+    },
+    {
+     "n": 2,
+     "title": {
+      "short": "Виноградная кисть из долины Есхол",
+      "by": "atlas"
+     },
+     "refs": [
+      "Чис 13:22-25"
+     ],
+     "change": [
+      "place"
+     ]
+    },
+    {
+     "n": 3,
+     "title": {
+      "short": "Возвратились через сорок дней",
+      "by": "atlas"
+     },
+     "refs": [
+      "Чис 13:26-30"
+     ],
+     "change": [
+      "time",
+      "place",
+      "actors"
+     ]
+    }
+   ],
+   "actors": [
+    {
+     "actor": "god",
+     "label": "Господь",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      }
+     ],
+     "roleText": {
+      "text": "пошли от себя людей, чтобы они высмотрели землю Ханаанскую",
+      "refs": [
+       "Чис 13:3"
+      ]
+     },
+     "refs": [
+      "Чис 13:2",
+      "Чис 13:4"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-moisey",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "addressed"
+      }
+     ],
+     "main": true,
+     "roleText": {
+      "text": "пойдите в эту южную страну, и взойдите на гору",
+      "refs": [
+       "Чис 13:18"
+      ]
+     },
+     "refs": [
+      "Чис 13:4",
+      "Чис 13:17",
+      "Чис 13:18",
+      "Чис 13:27"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-iisus-navin",
+     "label": "Осия",
+     "roles": [
+      {
+       "part": 1,
+       "role": "addressed"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      }
+     ],
+     "roleText": {
+      "text": "И назвал Моисей Осию, сына Навина, Иисусом",
+      "refs": [
+       "Чис 13:17"
+      ]
+     },
+     "refs": [
+      "Чис 13:9",
+      "Чис 13:17"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-sammua-syn-zakkhura",
+     "roles": [
+      {
+       "part": 1,
+       "role": "addressed"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      }
+     ],
+     "refs": [
+      "Чис 13:5"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-safat-syn-khoriya",
+     "roles": [
+      {
+       "part": 1,
+       "role": "addressed"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      }
+     ],
+     "refs": [
+      "Чис 13:6"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-khalev",
+     "roles": [
+      {
+       "part": 1,
+       "role": "addressed"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      }
+     ],
+     "refs": [
+      "Чис 13:7"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-igal-syn-iosifa",
+     "roles": [
+      {
+       "part": 1,
+       "role": "addressed"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      }
+     ],
+     "refs": [
+      "Чис 13:8"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-faltiy-syn-rafu",
+     "roles": [
+      {
+       "part": 1,
+       "role": "addressed"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      }
+     ],
+     "refs": [
+      "Чис 13:10"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-gaddiil",
+     "roles": [
+      {
+       "part": 1,
+       "role": "addressed"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      }
+     ],
+     "refs": [
+      "Чис 13:11"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-gaddiy",
+     "roles": [
+      {
+       "part": 1,
+       "role": "addressed"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      }
+     ],
+     "refs": [
+      "Чис 13:12"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-ammiil-syn-gemalliya",
+     "roles": [
+      {
+       "part": 1,
+       "role": "addressed"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      }
+     ],
+     "refs": [
+      "Чис 13:13"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-sefur",
+     "roles": [
+      {
+       "part": 1,
+       "role": "addressed"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      }
+     ],
+     "refs": [
+      "Чис 13:14"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-nakhbiy",
+     "roles": [
+      {
+       "part": 1,
+       "role": "addressed"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      }
+     ],
+     "refs": [
+      "Чис 13:15"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-geuil",
+     "roles": [
+      {
+       "part": 1,
+       "role": "addressed"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      }
+     ],
+     "refs": [
+      "Чис 13:16"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-aaron",
+     "roles": [
+      {
+       "part": 3,
+       "role": "addressed"
+      }
+     ],
+     "refs": [
+      "Чис 13:27"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:obshchestvo-chis13",
+     "label": "общество сынов Израилевых",
+     "kind": "people",
+     "roles": [
+      {
+       "part": 3,
+       "role": "addressed"
+      }
+     ],
+     "refs": [
+      "Чис 13:27"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-akhiman-syn-enaka",
+     "roles": [
+      {
+       "part": 2,
+       "role": "mentioned"
+      }
+     ],
+     "refs": [
+      "Чис 13:23"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-sheshay",
+     "roles": [
+      {
+       "part": 2,
+       "role": "mentioned"
+      }
+     ],
+     "refs": [
+      "Чис 13:23"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-falmay-syn-enaka",
+     "roles": [
+      {
+       "part": 2,
+       "role": "mentioned"
+      }
+     ],
+     "refs": [
+      "Чис 13:23"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-amalik",
+     "roles": [
+      {
+       "part": 3,
+       "role": "mentioned"
+      }
+     ],
+     "mode": "in-speech",
+     "refs": [
+      "Чис 13:30"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:pustynya-faran",
+     "label": "пустыня Фаран",
+     "role": "where",
+     "refs": [
+      "Чис 13:1",
+      "Чис 13:4",
+      "Чис 13:27"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:asirof",
+     "label": "Асироф",
+     "role": "from",
+     "refs": [
+      "Чис 13:1"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:zemlya-khanaanskaya",
+     "label": "земля Ханаанская",
+     "role": "to",
+     "refs": [
+      "Чис 13:3"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:pustynya-sin",
+     "label": "пустыня Син",
+     "role": "via",
+     "refs": [
+      "Чис 13:22"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:rekhov",
+     "label": "Рехов",
+     "role": "via",
+     "refs": [
+      "Чис 13:22"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:khevron",
+     "label": "Хеврон",
+     "role": "via",
+     "refs": [
+      "Чис 13:23"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:dolina-eskhol",
+     "label": "долина Есхол",
+     "role": "via",
+     "refs": [
+      "Чис 13:24",
+      "Чис 13:25"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:kades",
+     "label": "Кадес",
+     "role": "where",
+     "refs": [
+      "Чис 13:27"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "source": {
+    "method": "reading"
+   },
+   "boundary": {
+    "startRule": 5,
+    "endRule": 5,
+    "human": "начало — переход «двинулся из Асирофа, и остановился в пустыне Фаран» (13:1): ставит народ в место следующей сцены, как Мк 2:13 (приложение Е.2); стих 12:16 в синодальной нумерации — 13:1. Конец — решает человек: после развязки (13:28) новое дело — спор, идти ли: «пойдем и завладеем ею» (13:31) и «не можем мы идти против народа сего» (13:32) (правило 5). Второе прочтение — 13:1 – 14:39 одной историей. Двенадцать посланных — строки по одному лицу (13:5–16); отцы, названные в перечне, — не строки"
+   },
+   "plot": [
+    {
+     "setup": "Чис 13:3",
+     "resolution": "Чис 13:28",
+     "human": "развязка вопроса «осмотрите землю, какова она» (13:19) — первый стих ответа: «мы ходили в землю, в которую ты посылал нас» (13:28)"
+    }
+   ]
+  },
+  {
+   "id": "e-sorok-let-za-sorok-dney",
+   "level": "story",
+   "kind": "event",
+   "title": {
+    "short": "Сорок лет за сорок дней",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Чис 13:31-14:39"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "parts": [
+    {
+     "n": 1,
+     "title": {
+      "short": "Халев успокаивает народ",
+      "by": "atlas"
+     },
+     "refs": [
+      "Чис 13:31-34"
+     ],
+     "change": []
+    },
+    {
+     "n": 2,
+     "title": {
+      "short": "Народ плачет ночью",
+      "by": "atlas"
+     },
+     "refs": [
+      "Чис 14:1-10"
+     ],
+     "change": [
+      "time",
+      "actors"
+     ]
+    },
+    {
+     "n": 3,
+     "title": {
+      "short": "Моисей просит простить народ",
+      "by": "atlas"
+     },
+     "refs": [
+      "Чис 14:11-25"
+     ],
+     "change": [
+      "actors"
+     ]
+    },
+    {
+     "n": 4,
+     "title": {
+      "short": "Господь говорит Моисею и Аарону",
+      "by": "atlas"
+     },
+     "refs": [
+      "Чис 14:26-35"
+     ],
+     "change": [
+      "actors"
+     ]
+    },
+    {
+     "n": 5,
+     "title": {
+      "short": "Умерли распустившие худую молву",
+      "by": "atlas"
+     },
+     "refs": [
+      "Чис 14:36-39"
+     ],
+     "change": [
+      "actors"
+     ]
+    }
+   ],
+   "actors": [
+    {
+     "actor": "god",
+     "label": "Господь",
+     "roles": [
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      },
+      {
+       "part": 4,
+       "role": "agent"
+      },
+      {
+       "part": 5,
+       "role": "mentioned"
+      }
+     ],
+     "roleText": {
+      "text": "прощаю по слову твоему",
+      "refs": [
+       "Чис 14:20"
+      ]
+     },
+     "refs": [
+      "Чис 14:10",
+      "Чис 14:11",
+      "Чис 14:20",
+      "Чис 14:26",
+      "Чис 14:37"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-khalev",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "mentioned"
+      },
+      {
+       "part": 4,
+       "role": "mentioned"
+      },
+      {
+       "part": 5,
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "roleText": {
+      "text": "пойдем и завладеем ею, потому что мы можем одолеть ее",
+      "refs": [
+       "Чис 13:31"
+      ]
+     },
+     "refs": [
+      "Чис 13:31",
+      "Чис 14:6",
+      "Чис 14:24",
+      "Чис 14:30",
+      "Чис 14:38"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-iisus-navin",
+     "roles": [
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 4,
+       "role": "mentioned"
+      },
+      {
+       "part": 5,
+       "role": "agent"
+      }
+     ],
+     "roleText": {
+      "text": "земля, которую мы проходили для осмотра, очень, очень хороша",
+      "refs": [
+       "Чис 14:7"
+      ]
+     },
+     "refs": [
+      "Чис 14:6",
+      "Чис 14:30",
+      "Чис 14:38"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-moisey",
+     "roles": [
+      {
+       "part": 1,
+       "role": "mentioned"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      },
+      {
+       "part": 4,
+       "role": "addressed"
+      },
+      {
+       "part": 5,
+       "role": "agent"
+      }
+     ],
+     "roleText": {
+      "text": "Прости грех народу сему по великой милости Твоей",
+      "refs": [
+       "Чис 14:19"
+      ]
+     },
+     "refs": [
+      "Чис 13:31",
+      "Чис 14:5",
+      "Чис 14:13",
+      "Чис 14:39"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-aaron",
+     "roles": [
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 4,
+       "role": "addressed"
+      }
+     ],
+     "refs": [
+      "Чис 14:2",
+      "Чис 14:5",
+      "Чис 14:26"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:obshchestvo-chis14",
+     "label": "общество",
+     "kind": "people",
+     "roles": [
+      {
+       "part": 1,
+       "role": "addressed"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "mentioned"
+      },
+      {
+       "part": 4,
+       "role": "mentioned"
+      },
+      {
+       "part": 5,
+       "role": "agent"
+      }
+     ],
+     "roleText": {
+      "text": "не лучше ли нам возвратиться в Египет?",
+      "refs": [
+       "Чис 14:3"
+      ]
+     },
+     "refs": [
+      "Чис 14:1",
+      "Чис 14:2",
+      "Чис 14:10",
+      "Чис 14:39"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:rasprustivshie-khuduyu-molvu",
+     "label": "распустившие худую молву",
+     "kind": "group",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 5,
+       "role": "undergoer"
+      }
+     ],
+     "roleText": {
+      "text": "не можем мы идти против народа сего, ибо он сильнее нас",
+      "refs": [
+       "Чис 13:32"
+      ]
+     },
+     "refs": [
+      "Чис 13:32",
+      "Чис 13:33",
+      "Чис 14:36",
+      "Чис 14:37"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:skiniya-sobraniya",
+     "label": "скиния собрания",
+     "role": "where",
+     "refs": [
+      "Чис 14:10"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:egipet",
+     "label": "Египет",
+     "role": "mentioned",
+     "refs": [
+      "Чис 14:3",
+      "Чис 14:4"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "hard": [
+    {
+     "topic": "смерть на глазах",
+     "refs": [
+      "Чис 14:37"
+     ]
+    }
+   ],
+   "source": {
+    "method": "reading"
+   },
+   "boundary": {
+    "startRule": 5,
+    "endRule": 6,
+    "human": "начало — новое дело после развязки 13:28 (правило 5; см. «Моисей посылает высмотреть землю»). 14:36–39 — следствие (правило 6): исполнение сказанного «в пустыне сей все они погибнут» (14:35), связь словами «распуская худую молву о земле» (14:36; ср. 13:33); «народ сильно опечалился» (14:39). 14:40 — новое дело: «вот, мы пойдем на то место» (правило 5). Часть 4 отделена сменой лиц: «И сказал Господь Моисею и Аарону» (14:26); без деления части 3–4 — 512 слов"
+   },
+   "plot": [
+    {
+     "setup": "Чис 13:31",
+     "resolution": "Чис 14:20",
+     "human": "дело — идти ли в землю: «пойдем и завладеем ею» (13:31) и «не можем мы идти» (13:32); исход — ответ Господа на просьбу Моисея: «прощаю по слову твоему» (14:20), а за ним «не увидят земли» (14:23). Решает человек: второе прочтение — развязка 14:23 или 14:29–30"
+    }
+   ]
+  },
+  {
+   "id": "e-derznuli-podnyatsya-na-vershinu-gory",
+   "level": "story",
+   "kind": "event",
+   "title": {
+    "short": "Дерзнули подняться на вершину горы",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Чис 14:40-45"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "new:narod-chis14-40",
+     "label": "народ",
+     "kind": "people",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "roleText": {
+      "text": "вот, мы пойдем на то место, о котором сказал Господь, ибо мы согрешили",
+      "refs": [
+       "Чис 14:40"
+      ]
+     },
+     "refs": [
+      "Чис 14:40",
+      "Чис 14:44"
+     ],
+     "antecedent": "Чис 14:39",
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-moisey",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "roleText": {
+      "text": "не ходите, ибо нет среди вас Господа",
+      "refs": [
+       "Чис 14:42"
+      ]
+     },
+     "refs": [
+      "Чис 14:41",
+      "Чис 14:44"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:amalikityane-i-khananei-chis14",
+     "label": "Амаликитяне и Хананеи",
+     "kind": "people",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "roleText": {
+      "text": "И сошли Амаликитяне и Хананеи, живущие на горе той, и разбили их",
+      "refs": [
+       "Чис 14:45"
+      ]
+     },
+     "refs": [
+      "Чис 14:43",
+      "Чис 14:45"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "god",
+     "label": "Господь",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
+     "mode": "in-speech",
+     "refs": [
+      "Чис 14:40",
+      "Чис 14:42"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:vershina-gory-chis14",
+     "label": "вершина горы",
+     "role": "to",
+     "refs": [
+      "Чис 14:40",
+      "Чис 14:44"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:khorma",
+     "label": "Хорма",
+     "role": "to",
+     "refs": [
+      "Чис 14:45"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:stan-chis14",
+     "label": "стан",
+     "role": "mentioned",
+     "refs": [
+      "Чис 14:44"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "source": {
+    "method": "reading"
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "новое дело после следствия 14:36–39: «вот, мы пойдем на то место» (14:40) — замысел вопреки слову «завтра обратитесь и идите в пустыню» (14:25); исход — «разбили их, и гнали их до Хормы» (14:45). Народ назван в 14:39 (antecedent)"
+   },
+   "plot": [
+    {
+     "setup": "Чис 14:40",
+     "resolution": "Чис 14:45"
+    }
+   ]
+  },
+  {
+   "id": "e-fola-sudya-izrailya",
+   "level": "story",
+   "kind": "notice",
+   "title": {
+    "short": "Фола — судья Израиля",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Суд 10:1-2"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-fola-syn-fui",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "roleText": {
+      "text": "восстал для спасения Израиля Фола",
+      "refs": [
+       "Суд 10:1"
+      ]
+     },
+     "refs": [
+      "Суд 10:1"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-fua-syn-dodo",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
+     "refs": [
+      "Суд 10:1"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-avimelekh-syn-gedeona",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
+     "refs": [
+      "Суд 10:1"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:shamir",
+     "label": "Шамир",
+     "role": "where",
+     "refs": [
+      "Суд 10:1",
+      "Суд 10:2"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:gora-efremova",
+     "label": "гора Ефремова",
+     "role": "where",
+     "refs": [
+      "Суд 10:1"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "source": {
+    "method": "reading"
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "известие: сцены нет — годы суда, смерть и погребение; «восстал для спасения Израиля» (10:1) — действие с исходом, поэтому запись, а не только факт лица (11 § 2.3). Новый судья — «После него» (10:3) — новая запись. Смерть одного без сцены — не трудное (§ 8.3 п. 3)"
+   },
+   "plot": [
+    {
+     "setup": "Суд 10:1",
+     "resolution": "Суд 10:2"
+    }
+   ]
+  },
+  {
+   "id": "e-iair-sudya-izrailya",
+   "level": "story",
+   "kind": "notice",
+   "title": {
+    "short": "Иаир — судья Израиля",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Суд 10:3-5"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-iair-galaadityanin",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "roleText": {
+      "text": "был судьею Израиля двадцать два года",
+      "refs": [
+       "Суд 10:3"
+      ]
+     },
+     "refs": [
+      "Суд 10:3",
+      "Суд 10:5"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:galaad",
+     "label": "Галаад",
+     "role": "from",
+     "refs": [
+      "Суд 10:3"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:seleniya-iaira",
+     "label": "селения Иаира",
+     "role": "mentioned",
+     "refs": [
+      "Суд 10:4"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:kamon",
+     "label": "Камон",
+     "role": "where",
+     "refs": [
+      "Суд 10:5"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "source": {
+    "method": "reading"
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "известие без сцены: «После него восстал Иаир» (10:3); сыновья, ослы и города (10:4) — факты лица, не строки. Число «[два]» в 10:4 — в скобках и основанием не служит"
+   },
+   "plot": [
+    {
+     "setup": "Суд 10:3",
+     "resolution": "Суд 10:5"
+    }
+   ]
+  },
+  {
+   "id": "e-ieffay-i-ammonityane",
+   "level": "story",
+   "kind": "event",
+   "title": {
+    "short": "Иеффай и Аммонитяне",
+    "by": "atlas",
+    "common": [
+     "Обет Иеффая"
+    ]
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Суд 10:6-11:40"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "parts": [
+    {
+     "n": 1,
+     "title": {
+      "short": "Сыны Израилевы взывают к Господу",
+      "by": "atlas"
+     },
+     "refs": [
+      "Суд 10:6-16"
+     ],
+     "change": []
+    },
+    {
+     "n": 2,
+     "title": {
+      "short": "Кто начнет войну против Аммонитян",
+      "by": "atlas"
+     },
+     "refs": [
+      "Суд 10:17-11:3"
+     ],
+     "change": [
+      "place",
+      "actors"
+     ]
+    },
+    {
+     "n": 3,
+     "title": {
+      "short": "Старейшины зовут Иеффая",
+      "by": "atlas"
+     },
+     "refs": [
+      "Суд 11:4-11"
+     ],
+     "change": [
+      "time",
+      "place"
+     ]
+    },
+    {
+     "n": 4,
+     "title": {
+      "short": "Послы к царю Аммонитскому",
+      "by": "atlas"
+     },
+     "refs": [
+      "Суд 11:12-28"
+     ],
+     "change": [
+      "actors"
+     ]
+    },
+    {
+     "n": 5,
+     "title": {
+      "short": "Обет Иеффая и битва",
+      "by": "atlas"
+     },
+     "refs": [
+      "Суд 11:29-33"
+     ],
+     "change": [
+      "place",
+      "actors"
+     ]
+    },
+    {
+     "n": 6,
+     "title": {
+      "short": "Дочь Иеффая",
+      "by": "atlas"
+     },
+     "refs": [
+      "Суд 11:34-40"
+     ],
+     "change": [
+      "place",
+      "actors"
+     ]
+    }
+   ],
+   "actors": [
+    {
+     "actor": "god",
+     "label": "Господь",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "mentioned"
+      },
+      {
+       "part": 4,
+       "role": "mentioned"
+      },
+      {
+       "part": 5,
+       "role": "agent"
+      },
+      {
+       "part": 6,
+       "role": "mentioned"
+      }
+     ],
+     "roleText": {
+      "text": "пойдите, взывайте к богам, которых вы избрали",
+      "refs": [
+       "Суд 10:14"
+      ]
+     },
+     "refs": [
+      "Суд 10:7",
+      "Суд 10:11",
+      "Суд 11:32"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-ieffay",
+     "roles": [
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      },
+      {
+       "part": 4,
+       "role": "agent"
+      },
+      {
+       "part": 5,
+       "role": "agent"
+      },
+      {
+       "part": 6,
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "roleText": {
+      "text": "что тебе до меня, что ты пришел ко мне воевать на земле моей?",
+      "refs": [
+       "Суд 11:12"
+      ]
+     },
+     "refs": [
+      "Суд 11:1",
+      "Суд 11:3",
+      "Суд 11:11",
+      "Суд 11:32",
+      "Суд 11:34"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:ammonityane-sud10",
+     "label": "Аммонитяне",
+     "kind": "people",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      },
+      {
+       "part": 4,
+       "role": "mentioned"
+      },
+      {
+       "part": 5,
+       "role": "undergoer"
+      },
+      {
+       "part": 6,
+       "role": "mentioned"
+      }
+     ],
+     "main": true,
+     "roleText": {
+      "text": "Наконец Аммонитяне перешли Иордан, чтобы вести войну",
+      "refs": [
+       "Суд 10:9"
+      ]
+     },
+     "refs": [
+      "Суд 10:9",
+      "Суд 10:17",
+      "Суд 11:4",
+      "Суд 11:33"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:syny-izrailevy-sud10",
+     "label": "сыны Израилевы",
+     "kind": "people",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 5,
+       "role": "mentioned"
+      }
+     ],
+     "roleText": {
+      "text": "согрешили мы; делай с нами все, что Тебе угодно, только избавь нас ныне",
+      "refs": [
+       "Суд 10:15"
+      ]
+     },
+     "refs": [
+      "Суд 10:6",
+      "Суд 10:10",
+      "Суд 10:15",
+      "Суд 10:17",
+      "Суд 11:33"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-doch-ieffaya",
+     "label": "дочь",
+     "roles": [
+      {
+       "part": 6,
+       "role": "agent"
+      }
+     ],
+     "roleText": {
+      "text": "отпусти меня на два месяца",
+      "refs": [
+       "Суд 11:37"
+      ]
+     },
+     "refs": [
+      "Суд 11:34",
+      "Суд 11:37",
+      "Суд 11:40"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:starejshiny-galaadskie",
+     "label": "старейшины Галаадские",
+     "kind": "group",
+     "roles": [
+      {
+       "part": 3,
+       "role": "agent"
+      }
+     ],
+     "roleText": {
+      "text": "приди, будь у нас вождем, и сразимся с Аммонитянами",
+      "refs": [
+       "Суд 11:6"
+      ]
+     },
+     "refs": [
+      "Суд 11:5",
+      "Суд 11:8",
+      "Суд 11:10",
+      "Суд 11:11"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:tsar-ammonitskiy-sud11",
+     "label": "царь Аммонитский",
+     "kind": "unnamed",
+     "roles": [
+      {
+       "part": 4,
+       "role": "agent"
+      }
+     ],
+     "roleText": {
+      "text": "возврати мне ее с миром",
+      "refs": [
+       "Суд 11:13"
+      ]
+     },
+     "refs": [
+      "Суд 11:12",
+      "Суд 11:13",
+      "Суд 11:28"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:posly-ieffaya",
+     "label": "послы",
+     "kind": "group",
+     "roles": [
+      {
+       "part": 4,
+       "role": "addressed"
+      }
+     ],
+     "roleText": {
+      "text": "Царь Аммонитский сказал послам Иеффая",
+      "refs": [
+       "Суд 11:13"
+      ]
+     },
+     "refs": [
+      "Суд 11:12",
+      "Суд 11:13",
+      "Суд 11:14"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:narod-galaadskiy",
+     "label": "народ",
+     "kind": "people",
+     "roles": [
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      }
+     ],
+     "roleText": {
+      "text": "и народ поставил его над собою начальником и вождем",
+      "refs": [
+       "Суд 11:11"
+      ]
+     },
+     "refs": [
+      "Суд 10:18",
+      "Суд 11:11"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:knyazya-galaadskie",
+     "label": "князья Галаадские",
+     "kind": "group",
+     "roles": [
+      {
+       "part": 2,
+       "role": "agent"
+      }
+     ],
+     "roleText": {
+      "text": "кто начнет войну против Аммонитян, тот будет начальником всех жителей Галаадских",
+      "refs": [
+       "Суд 10:18"
+      ]
+     },
+     "refs": [
+      "Суд 10:18"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:synovya-zheny-galaada",
+     "label": "сыновья",
+     "kind": "group",
+     "roles": [
+      {
+       "part": 2,
+       "role": "agent"
+      }
+     ],
+     "roleText": {
+      "text": "ты не наследник в доме отца нашего",
+      "refs": [
+       "Суд 11:2"
+      ]
+     },
+     "refs": [
+      "Суд 11:2"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:prazdnye-lyudi-sud11",
+     "label": "праздные люди",
+     "kind": "group",
+     "roles": [
+      {
+       "part": 2,
+       "role": "agent"
+      }
+     ],
+     "roleText": {
+      "text": "и собрались к Иеффаю праздные люди и выходили с ним",
+      "refs": [
+       "Суд 11:3"
+      ]
+     },
+     "refs": [
+      "Суд 11:3"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-galaad-otets-ieffaya",
+     "roles": [
+      {
+       "part": 2,
+       "role": "mentioned"
+      }
+     ],
+     "refs": [
+      "Суд 11:1",
+      "Суд 11:2"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-mat-ieffaya",
+     "label": "блудница",
+     "roles": [
+      {
+       "part": 2,
+       "role": "mentioned"
+      }
+     ],
+     "refs": [
+      "Суд 11:1"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:filistimlyane-sud10",
+     "label": "Филистимляне",
+     "kind": "people",
+     "roles": [
+      {
+       "part": 1,
+       "role": "mentioned"
+      }
+     ],
+     "refs": [
+      "Суд 10:7"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:podrugi-docheri-ieffaya",
+     "label": "подруги",
+     "kind": "group",
+     "roles": [
+      {
+       "part": 6,
+       "role": "mentioned"
+      }
+     ],
+     "refs": [
+      "Суд 11:37",
+      "Суд 11:38"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:docheri-izrailevy-sud11",
+     "label": "дочери Израилевы",
+     "kind": "group",
+     "roles": [
+      {
+       "part": 6,
+       "role": "agent"
+      }
+     ],
+     "roleText": {
+      "text": "ежегодно дочери Израилевы ходили оплакивать дочь Иеффая Галаадитянина",
+      "refs": [
+       "Суд 11:40"
+      ]
+     },
+     "refs": [
+      "Суд 11:40"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:sigon",
+     "label": "Сигон",
+     "kind": "human",
+     "roles": [
+      {
+       "part": 4,
+       "role": "mentioned"
+      }
+     ],
+     "mode": "in-speech",
+     "refs": [
+      "Суд 11:19",
+      "Суд 11:20"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-valak",
+     "roles": [
+      {
+       "part": 4,
+       "role": "mentioned"
+      }
+     ],
+     "mode": "in-speech",
+     "refs": [
+      "Суд 11:25"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:khamos",
+     "label": "Хамос",
+     "kind": "deity",
+     "roles": [
+      {
+       "part": 4,
+       "role": "mentioned"
+      }
+     ],
+     "mode": "in-speech",
+     "refs": [
+      "Суд 11:24"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:galaad",
+     "label": "Галаад",
+     "role": "where",
+     "refs": [
+      "Суд 10:17",
+      "Суд 11:29"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:massifa",
+     "label": "Массифа",
+     "role": "where",
+     "refs": [
+      "Суд 10:17",
+      "Суд 11:11",
+      "Суд 11:29",
+      "Суд 11:34"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:zemlya-tov",
+     "label": "земля Тов",
+     "role": "where",
+     "refs": [
+      "Суд 11:3",
+      "Суд 11:5"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:aroer-minif",
+     "label": "от Ароера до Минифа",
+     "role": "where",
+     "refs": [
+      "Суд 11:33"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:avel-keramim",
+     "label": "Авель-Керамим",
+     "role": "where",
+     "refs": [
+      "Суд 11:33"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:gory-sud11",
+     "label": "горы",
+     "role": "where",
+     "refs": [
+      "Суд 11:37",
+      "Суд 11:38"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "hard": [
+    {
+     "topic": "угроза жизни ребёнка",
+     "refs": [
+      "Суд 11:31",
+      "Суд 11:35",
+      "Суд 11:36",
+      "Суд 11:39"
+     ]
+    }
+   ],
+   "source": {
+    "method": "reading"
+   },
+   "boundary": {
+    "startRule": 5,
+    "endRule": 6,
+    "human": "решает человек в трёх местах. (1) 10:6–16 — шаг дела, а не своя история: вопль к Господу и покаяние двигают дело об Аммонитянах, и 10:17 продолжает его словами «Аммонитяне собрались»; второе прочтение — 10:6–16 своя история. (2) Посольство 11:12–28 — шаг дела (правило 2): после отказа «не послушал слов Иеффая» (11:28) Иеффай идёт войной (11:29). (3) 11:34–40 — следствие (правило 6): возвращение «И пришел Иеффай в Массифу в дом свой» (11:34) и исполнение сказанного «что выйдет из ворот дома моего… будет Господу» (11:31). Что сделано с дочерью, текст говорит словами «совершил над нею обет свой, который дал, и она не познала мужа» (11:39) — без пересказа. 12:1 — новое дело (правило 5)"
+   },
+   "plot": [
+    {
+     "setup": "Суд 10:7",
+     "resolution": "Суд 11:33",
+     "human": "нужда — «предал их в руки Филистимлян и в руки Аммонитян» (10:7), «весьма тесно было сынам Израиля» (10:9); исход — «смирились Аммонитяне пред сынами Израилевыми» (11:33). Решает человек: завязка 10:7 или 10:9"
+    }
+   ]
+  },
+  {
+   "id": "e-shibbolet-u-perepravy",
+   "level": "story",
+   "kind": "event",
+   "title": {
+    "short": "Шибболет у переправы",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Суд 12:1-6"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-ieffay",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "roleText": {
+      "text": "я звал вас, но вы не спасли меня от руки их",
+      "refs": [
+       "Суд 12:2"
+      ]
+     },
+     "refs": [
+      "Суд 12:1",
+      "Суд 12:2",
+      "Суд 12:4"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:efremlyane-sud12",
+     "label": "Ефремляне",
+     "kind": "people",
+     "roles": [
+      {
+       "role": "undergoer"
+      }
+     ],
+     "roleText": {
+      "text": "для чего ты ходил воевать с Аммонитянами, а нас не позвал с собою?",
+      "refs": [
+       "Суд 12:1"
+      ]
+     },
+     "refs": [
+      "Суд 12:1",
+      "Суд 12:4",
+      "Суд 12:5",
+      "Суд 12:6"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:zhiteli-galaadskie-sud12",
+     "label": "жители Галаадские",
+     "kind": "people",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "roleText": {
+      "text": "не Ефремлянин ли ты?",
+      "refs": [
+       "Суд 12:5"
+      ]
+     },
+     "refs": [
+      "Суд 12:4",
+      "Суд 12:5"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "god",
+     "label": "Господь",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
+     "mode": "in-speech",
+     "refs": [
+      "Суд 12:3"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:sevina",
+     "label": "Севина",
+     "role": "to",
+     "refs": [
+      "Суд 12:1"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:pereprava-cherez-iordan",
+     "label": "переправа чрез Иордан",
+     "role": "where",
+     "refs": [
+      "Суд 12:5",
+      "Суд 12:6"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "hard": [
+    {
+     "topic": "убийство",
+     "refs": [
+      "Суд 12:6"
+     ]
+    }
+   ],
+   "source": {
+    "method": "reading"
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "новое дело после развязки 11:33: угроза Ефремлян (12:1), правило 5, хотя текст связывает его словами «для чего ты ходил воевать с Аммонитянами»"
+   },
+   "plot": [
+    {
+     "setup": "Суд 12:1",
+     "resolution": "Суд 12:4",
+     "human": "угроза — «мы сожжем дом твой огнем и с тобою вместе» (12:1); исход — «побили жители Галаадские Ефремлян» (12:4); 12:5–6 — продолжение той же битвы у переправы"
+    }
+   ]
+  },
+  {
+   "id": "e-umer-ieffay",
+   "level": "story",
+   "kind": "notice",
+   "title": {
+    "short": "Умер Иеффай",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Суд 12:7"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-ieffay",
+     "roles": [
+      {
+       "role": "undergoer"
+      }
+     ],
+     "main": true,
+     "roleText": {
+      "text": "Иеффай был судьею Израиля шесть лет",
+      "refs": [
+       "Суд 12:7"
+      ]
+     },
+     "refs": [
+      "Суд 12:7"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:goroda-galaadskie",
+     "label": "города Галаадские",
+     "role": "where",
+     "refs": [
+      "Суд 12:7"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "source": {
+    "method": "reading"
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "известие без сцены; со стихами 12:1–6 словами не связано (правило 6 не действует); мирная кончина — не трудное (§ 8.3 п. 3)"
+   },
+   "plot": [
+    {
+     "setup": "Суд 12:7",
+     "resolution": "Суд 12:7"
+    }
+   ]
+  },
+  {
+   "id": "e-esevon-sudya-izrailya",
+   "level": "story",
+   "kind": "notice",
+   "title": {
+    "short": "Есевон — судья Израиля",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Суд 12:8-10"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-esevon-iz-vifleema",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "roleText": {
+      "text": "и был судьею Израиля семь лет",
+      "refs": [
+       "Суд 12:9"
+      ]
+     },
+     "refs": [
+      "Суд 12:8",
+      "Суд 12:10"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:vifleem-sud12",
+     "label": "Вифлеем",
+     "role": "where",
+     "refs": [
+      "Суд 12:8",
+      "Суд 12:10"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "source": {
+    "method": "reading"
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "известие без сцены: «После него был судьею Израиля Есевон из Вифлеема» (12:8); слова «[в замужество]» (12:9) — в скобках"
+   },
+   "plot": [
+    {
+     "setup": "Суд 12:8",
+     "resolution": "Суд 12:10"
+    }
+   ]
+  },
+  {
+   "id": "e-elon-sudya-izrailya",
+   "level": "story",
+   "kind": "notice",
+   "title": {
+    "short": "Елон — судья Израиля",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Суд 12:11-12"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-elon-zavulonyanin",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "roleText": {
+      "text": "и судил Израиля десять лет",
+      "refs": [
+       "Суд 12:11"
+      ]
+     },
+     "refs": [
+      "Суд 12:11",
+      "Суд 12:12"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:aialon-zavulonov",
+     "label": "Аиалон",
+     "role": "where",
+     "refs": [
+      "Суд 12:12"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "source": {
+    "method": "reading"
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "известие без сцены: «После него был судьею Израиля Елон Завулонянин» (12:11)"
+   },
+   "plot": [
+    {
+     "setup": "Суд 12:11",
+     "resolution": "Суд 12:12"
+    }
+   ]
+  },
+  {
+   "id": "e-avdon-sudya-izrailya",
+   "level": "story",
+   "kind": "notice",
+   "title": {
+    "short": "Авдон — судья Израиля",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Суд 12:13-15"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-avdon-syn-gillela",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "roleText": {
+      "text": "он судил Израиля восемь лет",
+      "refs": [
+       "Суд 12:14"
+      ]
+     },
+     "refs": [
+      "Суд 12:13",
+      "Суд 12:15"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-gillel",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
+     "refs": [
+      "Суд 12:13",
+      "Суд 12:15"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:pirafon",
+     "label": "Пирафон",
+     "role": "where",
+     "refs": [
+      "Суд 12:15"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "source": {
+    "method": "reading"
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "известие без сцены: «После него был судьею Израиля Авдон, сын Гиллела» (12:13); 13:1 — новое дело"
+   },
+   "plot": [
+    {
+     "setup": "Суд 12:13",
+     "resolution": "Суд 12:15"
+    }
+   ]
+  },
+  {
+   "id": "e-veniamin-rodil-belu",
+   "level": "story",
+   "kind": "genealogy",
+   "title": {
+    "short": "Вениамин родил Белу",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "1Пар 8:1-40"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "parts": [
+    {
+     "n": 1,
+     "title": {
+      "short": "Вениамин и сыновья Белы",
+      "by": "atlas"
+     },
+     "refs": [
+      "1Пар 8:1-5"
+     ],
+     "change": []
+    },
+    {
+     "n": 2,
+     "title": {
+      "short": "Сыновья Егуда",
+      "by": "atlas"
+     },
+     "refs": [
+      "1Пар 8:6-28"
+     ],
+     "change": [
+      "actors"
+     ]
+    },
+    {
+     "n": 3,
+     "title": {
+      "short": "В Гаваоне жили",
+      "by": "atlas"
+     },
+     "refs": [
+      "1Пар 8:29-40"
+     ],
+     "change": [
+      "actors",
+      "place"
+     ]
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-veniamin",
+     "roles": [
+      {
+       "part": 1,
+       "role": "mentioned"
+      },
+      {
+       "part": 3,
+       "role": "mentioned"
+      }
+     ],
+     "main": true,
+     "refs": [
+      "1Пар 8:1",
+      "1Пар 8:40"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-bela-syn-veniamina",
+     "roles": [
+      {
+       "part": 1,
+       "role": "mentioned"
+      }
+     ],
+     "main": true,
+     "refs": [
+      "1Пар 8:1",
+      "1Пар 8:3"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-egud-1par8-6",
+     "roles": [
+      {
+       "part": 2,
+       "role": "mentioned"
+      }
+     ],
+     "refs": [
+      "1Пар 8:6"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-gera-syn-eguda",
+     "roles": [
+      {
+       "part": 2,
+       "role": "agent"
+      }
+     ],
+     "roleText": {
+      "text": "Гера, который переселил их",
+      "refs": [
+       "1Пар 8:7"
+      ]
+     },
+     "refs": [
+      "1Пар 8:7"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-shegaraim",
+     "roles": [
+      {
+       "part": 2,
+       "role": "mentioned"
+      }
+     ],
+     "refs": [
+      "1Пар 8:8"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-elpaal",
+     "roles": [
+      {
+       "part": 2,
+       "role": "mentioned"
+      }
+     ],
+     "refs": [
+      "1Пар 8:11",
+      "1Пар 8:12",
+      "1Пар 8:18"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-shemer-syn-elpaala",
+     "roles": [
+      {
+       "part": 2,
+       "role": "agent"
+      }
+     ],
+     "roleText": {
+      "text": "Шемер, который построил Оно и Лод",
+      "refs": [
+       "1Пар 8:12"
+      ]
+     },
+     "refs": [
+      "1Пар 8:12"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-beriya-syn-elpaala",
+     "roles": [
+      {
+       "part": 2,
+       "role": "agent"
+      }
+     ],
+     "roleText": {
+      "text": "Они выгнали жителей Гефа",
+      "refs": [
+       "1Пар 8:13"
+      ]
+     },
+     "refs": [
+      "1Пар 8:13",
+      "1Пар 8:16"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-shema-syn-elpaala",
+     "roles": [
+      {
+       "part": 2,
+       "role": "agent"
+      }
+     ],
+     "refs": [
+      "1Пар 8:13"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-maakha-zhena-ieila",
+     "roles": [
+      {
+       "part": 3,
+       "role": "mentioned"
+      }
+     ],
+     "refs": [
+      "1Пар 8:29"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-nir",
+     "roles": [
+      {
+       "part": 3,
+       "role": "mentioned"
+      }
+     ],
+     "refs": [
+      "1Пар 8:33"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-kis",
+     "roles": [
+      {
+       "part": 3,
+       "role": "mentioned"
+      }
+     ],
+     "refs": [
+      "1Пар 8:33"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-saul",
+     "roles": [
+      {
+       "part": 3,
+       "role": "mentioned"
+      }
+     ],
+     "refs": [
+      "1Пар 8:33"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-ionafan",
+     "roles": [
+      {
+       "part": 3,
+       "role": "mentioned"
+      }
+     ],
+     "refs": [
+      "1Пар 8:33",
+      "1Пар 8:34"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-memfivosfey",
+     "roles": [
+      {
+       "part": 3,
+       "role": "mentioned"
+      }
+     ],
+     "refs": [
+      "1Пар 8:34"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-ulam-syn-esheka",
+     "roles": [
+      {
+       "part": 3,
+       "role": "mentioned"
+      }
+     ],
+     "roleText": {
+      "text": "Сыновья Улама были люди воинственные, стрелявшие из лука",
+      "refs": [
+       "1Пар 8:40"
+      ]
+     },
+     "refs": [
+      "1Пар 8:39",
+      "1Пар 8:40"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:ierusalim",
+     "label": "Иерусалим",
+     "role": "where",
+     "refs": [
+      "1Пар 8:28",
+      "1Пар 8:32"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:gavaon",
+     "label": "Гаваон",
+     "role": "where",
+     "refs": [
+      "1Пар 8:29"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "nested": [
+    {
+     "story": "e-gera-pereselyaet-v-manakhaf",
+     "at": "1Пар 8:6",
+     "kind": "insert"
+    },
+    {
+     "story": "e-shemer-stroit-ono-i-lod",
+     "at": "1Пар 8:12",
+     "kind": "insert"
+    },
+    {
+     "story": "e-beriya-i-shema-vygonyayut-zhiteley-gefa",
+     "at": "1Пар 8:13",
+     "kind": "insert"
+    }
+   ],
+   "source": {
+    "method": "reading"
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "родословие без заглавия со словом «родословие»: 8:1 начинает список нового колена — «Вениамин родил Белу» (8:1) после итога сынов Асира (1Пар 7:40); конец — итог «Все они от сынов Вениамина» (8:40); 9:1 — итог всех списков, новый отрывок. Название — слова первого стиха (11 § 2.7 п. 12). Части — у начала списков без слова «родословие» (правило 9): «И вот сыновья Егуда» (8:6), «В Гаваоне жили» (8:29). Решает человек: «отпустил от себя Хушиму и Баару, жен своих» (8:8) — факт лица (союз), а не известие. Лица родословия — строки только у названных в частях с действием и у главных колен и домов (Вениамин, Бела, Егуд, Елпаал, дом Саула); остальные имена — Генеалогия. «[Иеил]» (8:29) и «[Нер]» (8:30) — в скобках, строк по ним нет"
+   },
+   "plot": [
+    {
+     "setup": "1Пар 8:1",
+     "resolution": "1Пар 8:40"
+    }
+   ]
+  },
+  {
+   "id": "e-gera-pereselyaet-v-manakhaf",
+   "level": "story",
+   "kind": "notice",
+   "title": {
+    "short": "Гера переселяет в Манахаф",
+    "by": "atlas",
+    "manual": [
+     "переселяет"
+    ]
+   },
+   "accounts": [
+    {
+     "refs": [
+      "1Пар 8:6-7"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-gera-syn-eguda",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "roleText": {
+      "text": "Гера, который переселил их",
+      "refs": [
+       "1Пар 8:7"
+      ]
+     },
+     "refs": [
+      "1Пар 8:7"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-naaman-syn-eguda",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
+     "refs": [
+      "1Пар 8:7"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-akhiya-syn-eguda",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
+     "refs": [
+      "1Пар 8:7"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-egud-1par8-6",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
+     "refs": [
+      "1Пар 8:6"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:geva",
+     "label": "Гева",
+     "role": "from",
+     "refs": [
+      "1Пар 8:6"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:manakhaf",
+     "label": "Манахаф",
+     "role": "to",
+     "refs": [
+      "1Пар 8:6"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "source": {
+    "method": "reading"
+   },
+   "boundary": {
+    "startRule": 7,
+    "human": "известие внутри родословия: у действия есть исход — «переселенных в Манахаф» (8:6), «Гера, который переселил их» (8:7) (11 § 2.3, образец Быт 36:24). Нааман и Ахия — к ним обращено действие (переселены)"
+   },
+   "plot": [
+    {
+     "setup": "1Пар 8:6",
+     "resolution": "1Пар 8:7"
+    }
+   ]
+  },
+  {
+   "id": "e-shemer-stroit-ono-i-lod",
+   "level": "story",
+   "kind": "notice",
+   "title": {
+    "short": "Шемер строит Оно и Лод",
+    "by": "atlas",
+    "manual": [
+     "строит"
+    ]
+   },
+   "accounts": [
+    {
+     "refs": [
+      "1Пар 8:12"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-shemer-syn-elpaala",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "roleText": {
+      "text": "Шемер, который построил Оно и Лод",
+      "refs": [
+       "1Пар 8:12"
+      ]
+     },
+     "refs": [
+      "1Пар 8:12"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:ono",
+     "label": "Оно",
+     "role": "where",
+     "refs": [
+      "1Пар 8:12"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:lod",
+     "label": "Лод",
+     "role": "where",
+     "refs": [
+      "1Пар 8:12"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "source": {
+    "method": "reading"
+   },
+   "boundary": {
+    "startRule": 7,
+    "human": "известие внутри родословия: дело лица с исходом — «построил Оно и Лод и зависящие от него города» (8:12), как «вышел Ассур и построил Ниневию» (Быт 10:11)"
+   },
+   "plot": [
+    {
+     "setup": "1Пар 8:12",
+     "resolution": "1Пар 8:12"
+    }
+   ]
+  },
+  {
+   "id": "e-beriya-i-shema-vygonyayut-zhiteley-gefa",
+   "level": "story",
+   "kind": "notice",
+   "title": {
+    "short": "Берия и Шема выгоняют жителей Гефа",
+    "by": "atlas",
+    "manual": [
+     "выгоняют"
+    ]
+   },
+   "accounts": [
+    {
+     "refs": [
+      "1Пар 8:13"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-beriya-syn-elpaala",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "roleText": {
+      "text": "Они выгнали жителей Гефа",
+      "refs": [
+       "1Пар 8:13"
+      ]
+     },
+     "refs": [
+      "1Пар 8:13"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-shema-syn-elpaala",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "refs": [
+      "1Пар 8:13"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:zhiteli-gefa-1par8",
+     "label": "жители Гефа",
+     "kind": "people",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
+     "refs": [
+      "1Пар 8:13"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:aialon",
+     "label": "Аиалон",
+     "role": "where",
+     "refs": [
+      "1Пар 8:13"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:gef",
+     "label": "Геф",
+     "role": "mentioned",
+     "refs": [
+      "1Пар 8:13"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "source": {
+    "method": "reading"
+   },
+   "boundary": {
+    "startRule": 7,
+    "human": "известие внутри родословия: «Они выгнали жителей Гефа» (8:13) — действие с исходом (11 § 2.3, образец 1Пар 7:21)"
+   },
+   "plot": [
+    {
+     "setup": "1Пар 8:13",
+     "resolution": "1Пар 8:13"
+    }
+   ]
+  },
+  {
+   "id": "e-pritchi-pervosvyashchennikam-i-fariseyam",
+   "level": "story",
+   "kind": "speech",
+   "title": {
+    "short": "Притчи первосвященникам и фарисеям",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Мф 21:28-22:14"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "refs": [
+      "Мк 12:1-12"
+     ],
+     "cert": "inference",
+     "basis": {
+      "kind": "other-books",
+      "refs": [
+       "Мф 21:33",
+       "Мк 12:1",
+       "Мф 21:42",
+       "Мк 12:10",
+       "Мф 21:46",
+       "Мк 12:12"
+      ],
+      "time": [],
+      "note": "общие редкие слова и ход: виноградник, отданный виноградарям, слуги и сын, «камень, который отвергли строители», «старались схватить Его, но побоялись народа» (Мф 21:33–46; Мк 12:1–12); слов времени у рассказов нет, у обоих речь идёт сразу после «Какою властью»"
+     }
+    },
+    {
+     "refs": [
+      "Лк 20:9-19"
+     ],
+     "cert": "inference",
+     "basis": {
+      "kind": "other-books",
+      "refs": [
+       "Мф 21:33",
+       "Лк 20:9",
+       "Мф 21:42",
+       "Лк 20:17",
+       "Мф 21:45",
+       "Лк 20:19"
+      ],
+      "time": [],
+      "note": "общие редкие слова и ход: виноградник, слуги и сын, «камень, который отвергли строители», «поняли, что о них» (Мф 21:45; Лк 20:19); слов времени у рассказов нет"
+     }
+    }
+   ],
+   "parts": [
+    {
+     "n": 1,
+     "title": {
+      "short": "Два сына и виноградари",
+      "by": "atlas"
+     },
+     "refs": [
+      "Мф 21:28-46",
+      "Мк 12:1-12",
+      "Лк 20:9-19"
+     ],
+     "change": []
+    },
+    {
+     "n": 2,
+     "title": {
+      "short": "Брачный пир",
+      "by": "atlas"
+     },
+     "refs": [
+      "Мф 22:1-14"
+     ],
+     "change": [],
+     "byWords": true
+    }
+   ],
+   "scenes": [
+    {
+     "id": "e-pritchi-pervosvyashchennikam-i-fariseyam#s1",
+     "title": {
+      "short": "Два сына",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "Мф 21:28-32"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "e-pritchi-pervosvyashchennikam-i-fariseyam#s2",
+     "title": {
+      "short": "Виноградник отдан виноградарям",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "Мф 21:33"
+       ]
+      },
+      {
+       "account": 1,
+       "refs": [
+        "Мк 12:1"
+       ]
+      },
+      {
+       "account": 2,
+       "refs": [
+        "Лк 20:9"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "e-pritchi-pervosvyashchennikam-i-fariseyam#s3",
+     "title": {
+      "short": "Слуги посланы за плодами",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "Мф 21:34-36"
+       ]
+      },
+      {
+       "account": 1,
+       "refs": [
+        "Мк 12:2-5"
+       ]
+      },
+      {
+       "account": 2,
+       "refs": [
+        "Лк 20:10-12"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "e-pritchi-pervosvyashchennikam-i-fariseyam#s4",
+     "title": {
+      "short": "Хозяин посылает сына",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "Мф 21:37-39"
+       ]
+      },
+      {
+       "account": 1,
+       "refs": [
+        "Мк 12:6-8"
+       ]
+      },
+      {
+       "account": 2,
+       "refs": [
+        "Лк 20:13-15"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "e-pritchi-pervosvyashchennikam-i-fariseyam#s5",
+     "title": {
+      "short": "Что сделает хозяин",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "Мф 21:40-41"
+       ]
+      },
+      {
+       "account": 1,
+       "refs": [
+        "Мк 12:9"
+       ]
+      },
+      {
+       "account": 2,
+       "refs": [
+        "Лк 20:16"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "e-pritchi-pervosvyashchennikam-i-fariseyam#s6",
+     "title": {
+      "short": "Камень, который отвергли строители",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "Мф 21:42-44"
+       ]
+      },
+      {
+       "account": 1,
+       "refs": [
+        "Мк 12:10-11"
+       ]
+      },
+      {
+       "account": 2,
+       "refs": [
+        "Лк 20:17-18"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "e-pritchi-pervosvyashchennikam-i-fariseyam#s7",
+     "title": {
+      "short": "Старались схватить Его",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "Мф 21:45-46"
+       ]
+      },
+      {
+       "account": 1,
+       "refs": [
+        "Мк 12:12"
+       ]
+      },
+      {
+       "account": 2,
+       "refs": [
+        "Лк 20:19"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "e-pritchi-pervosvyashchennikam-i-fariseyam#s8",
+     "title": {
+      "short": "Брачный пир",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "Мф 22:1-14"
+       ]
+      }
+     ]
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-iisus",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "roleText": {
+      "text": "отнимется от вас Царство Божие и дано будет народу, приносящему плоды его",
+      "refs": [
+       "Мф 21:43"
+      ]
+     },
+     "refs": [
+      "Мф 21:31",
+      "Мф 21:42",
+      "Мф 22:1"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:pervosvyashchenniki-i-farisei-mf21",
+     "label": "первосвященники и фарисеи",
+     "kind": "group",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 2,
+       "role": "addressed"
+      }
+     ],
+     "account": 0,
+     "roleText": {
+      "text": "и старались схватить Его, но побоялись народа",
+      "refs": [
+       "Мф 21:46"
+      ]
+     },
+     "refs": [
+      "Мф 21:45"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:narod-mf21-46",
+     "label": "народ",
+     "kind": "people",
+     "roles": [
+      {
+       "part": 1,
+       "role": "mentioned"
+      }
+     ],
+     "account": 0,
+     "refs": [
+      "Мф 21:46"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-ioann-krestitel",
+     "roles": [
+      {
+       "part": 1,
+       "role": "mentioned"
+      }
+     ],
+     "account": 0,
+     "mode": "in-speech",
+     "refs": [
+      "Мф 21:32"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:pervosvyashchenniki-mk12",
+     "label": "первосвященники, и книжники, и старейшины",
+     "kind": "group",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      }
+     ],
+     "account": 1,
+     "roleText": {
+      "text": "И старались схватить Его, но побоялись народа",
+      "refs": [
+       "Мк 12:12"
+      ]
+     },
+     "refs": [
+      "Мк 12:12"
+     ],
+     "antecedent": "Мк 11:27",
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:pervosvyashchenniki-i-knizhniki-lk20",
+     "label": "первосвященники и книжники",
+     "kind": "group",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      }
+     ],
+     "account": 2,
+     "roleText": {
+      "text": "искали в это время первосвященники и книжники, чтобы наложить на Него руки",
+      "refs": [
+       "Лк 20:19"
+      ]
+     },
+     "refs": [
+      "Лк 20:19"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:narod-lk20-9",
+     "label": "народ",
+     "kind": "people",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      }
+     ],
+     "account": 2,
+     "roleText": {
+      "text": "да не будет!",
+      "refs": [
+       "Лк 20:16"
+      ]
+     },
+     "refs": [
+      "Лк 20:9",
+      "Лк 20:16"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [],
+   "links": [],
+   "discrepancies": [
+    {
+     "label": "кому сказана притча",
+     "kind": "who",
+     "scene": "e-pritchi-pervosvyashchennikam-i-fariseyam#s2",
+     "quotes": [
+      {
+       "ref": "Лк 20:9",
+       "text": "И начал Он говорить к народу притчу сию"
+      },
+      {
+       "ref": "Мф 21:45",
+       "text": "первосвященники и фарисеи поняли, что Он о них говорит"
+      }
+     ]
+    }
+   ],
+   "nested": [
+    {
+     "story": "e-dva-syna-v-vinogradnike",
+     "at": "Мф 21:28",
+     "kind": "told"
+    },
+    {
+     "story": "e-khozyain-vinogradnika-i-vinogradari",
+     "at": "Мф 21:33",
+     "kind": "told"
+    },
+    {
+     "story": "e-khozyain-vinogradnika-i-vinogradari",
+     "at": "Мк 12:1",
+     "kind": "told"
+    },
+    {
+     "story": "e-khozyain-vinogradnika-i-vinogradari",
+     "at": "Лк 20:9",
+     "kind": "told"
+    },
+    {
+     "story": "e-brachnyy-pir-dlya-syna-tsarya",
+     "at": "Мф 22:2",
+     "kind": "told"
+    }
+   ],
+   "source": {
+    "method": "reading"
+   },
+   "boundary": {
+    "startRule": 5,
+    "endRule": 6,
+    "human": "после развязки «Какою властью» (Мф 21:23–27, данные пакета 1) — новое дело: вопрос «А как вам кажется?» (21:28), правило 5. Речь — история: исход вне речи (21:45–46). Решает человек: Мф 22:1–14 — та же речь, «продолжая говорить им притчами» (22:1), без нового дела, поэтому часть этой истории (правило 6), а не своя история; часть 2 — по порогу слов (515 слов вместе), с начала новой речи 22:1. Рассказы Иисуса — свои записи, вложенные в эту (11 § 13.4). Мф 22:15 — новое дело: «совещались, как бы уловить Его» (правило 5)"
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 21:28",
+     "resolution": "Мф 21:45",
+     "human": "дело — вопрос Иисуса «А как вам кажется?» (21:28) и две притчи против слушателей; исход вне речи — «поняли, что Он о них говорит» (21:45) и «старались схватить Его» (21:46)"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 12:1",
+     "resolution": "Мк 12:12"
+    },
+    {
+     "account": 2,
+     "setup": "Лк 20:9",
+     "resolution": "Лк 20:19"
+    }
+   ]
+  },
+  {
+   "id": "e-dva-syna-v-vinogradnike",
+   "level": "story",
+   "kind": "jesus-story",
+   "title": {
+    "short": "Два сына в винограднике",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Мф 21:28-30"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-iisus",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "mode": "in-speech",
+     "roleText": {
+      "text": "А как вам кажется?",
+      "refs": [
+       "Мф 21:28"
+      ]
+     },
+     "refs": [
+      "Мф 21:28"
+     ],
+     "antecedent": "Мф 21:24",
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:chelovek-dva-syna",
+     "label": "человек",
+     "kind": "parable",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "mode": "parable",
+     "roleText": {
+      "text": "сын! пойди сегодня работай в винограднике моем",
+      "refs": [
+       "Мф 21:28"
+      ]
+     },
+     "refs": [
+      "Мф 21:28",
+      "Мф 21:30"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:pervyy-syn-mf21",
+     "label": "первый сын",
+     "kind": "parable",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "mode": "parable",
+     "roleText": {
+      "text": "не хочу; а после, раскаявшись, пошел",
+      "refs": [
+       "Мф 21:29"
+      ]
+     },
+     "refs": [
+      "Мф 21:28",
+      "Мф 21:29"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:drugoy-syn-mf21",
+     "label": "другой сын",
+     "kind": "parable",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "mode": "parable",
+     "roleText": {
+      "text": "иду, государь, и не пошел",
+      "refs": [
+       "Мф 21:30"
+      ]
+     },
+     "refs": [
+      "Мф 21:30"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [],
+   "links": [],
+   "source": {
+    "method": "reading"
+   },
+   "boundary": {
+    "startRule": 7,
+    "human": "рассказ внутри речи — своя запись (11 § 13.4). Слова «притча» перед ним нет; следующий рассказ вводится словами «Выслушайте другую притчу» (21:33) — вид «рассказ Иисуса» по образцу Лк 15:8 (§ 13.4), во втором слое — «в Мф 21:33 сказано: другую притчу». Решает человек: стихи рассказа — 21:28–30, вопрос и ответ 21:31–32 — в истории речи"
+   },
+   "plot": [
+    {
+     "setup": "Мф 21:28",
+     "resolution": "Мф 21:30",
+     "human": "поручение «пойди сегодня работай» (21:28); исход у двух сыновей — 21:29 и 21:30; вопрос «Который из двух исполнил волю отца?» (21:31) — в истории речи"
+    }
+   ]
+  },
+  {
+   "id": "e-khozyain-vinogradnika-i-vinogradari",
+   "level": "story",
+   "kind": "parable",
+   "title": {
+    "short": "Хозяин виноградника и виноградари",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Мф 21:33-41"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "refs": [
+      "Мк 12:1-9"
+     ],
+     "cert": "inference",
+     "basis": {
+      "kind": "other-books",
+      "refs": [
+       "Мф 21:33",
+       "Мк 12:1",
+       "Мф 21:38",
+       "Мк 12:7"
+      ],
+      "time": []
+     }
+    },
+    {
+     "refs": [
+      "Лк 20:9-16"
+     ],
+     "cert": "inference",
+     "basis": {
+      "kind": "other-books",
+      "refs": [
+       "Мф 21:33",
+       "Лк 20:9",
+       "Мф 21:38",
+       "Лк 20:14"
+      ],
+      "time": [],
+      "note": "одни слова и ход: насадил виноградник, отдал виноградарям, послал слуг, потом сына; «это наследник; пойдем, убьем его» (Мф 21:38; Мк 12:7; Лк 20:14); рассказ — часть одной речи (история «Притчи первосвященникам и фарисеям»)"
+     }
+    }
+   ],
+   "scenes": [
+    {
+     "id": "e-khozyain-vinogradnika-i-vinogradari#s1",
+     "title": {
+      "short": "Виноградник отдан виноградарям",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "Мф 21:33"
+       ]
+      },
+      {
+       "account": 1,
+       "refs": [
+        "Мк 12:1"
+       ]
+      },
+      {
+       "account": 2,
+       "refs": [
+        "Лк 20:9"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "e-khozyain-vinogradnika-i-vinogradari#s2",
+     "title": {
+      "short": "Слуги посланы за плодами",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "Мф 21:34-36"
+       ]
+      },
+      {
+       "account": 1,
+       "refs": [
+        "Мк 12:2-5"
+       ]
+      },
+      {
+       "account": 2,
+       "refs": [
+        "Лк 20:10-12"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "e-khozyain-vinogradnika-i-vinogradari#s3",
+     "title": {
+      "short": "Хозяин посылает сына",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "Мф 21:37-39"
+       ]
+      },
+      {
+       "account": 1,
+       "refs": [
+        "Мк 12:6-8"
+       ]
+      },
+      {
+       "account": 2,
+       "refs": [
+        "Лк 20:13-15"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "e-khozyain-vinogradnika-i-vinogradari#s4",
+     "title": {
+      "short": "Что сделает хозяин",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "Мф 21:40-41"
+       ]
+      },
+      {
+       "account": 1,
+       "refs": [
+        "Мк 12:9"
+       ]
+      },
+      {
+       "account": 2,
+       "refs": [
+        "Лк 20:16"
+       ]
+      }
+     ]
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-iisus",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "mode": "in-speech",
+     "roleText": {
+      "text": "Выслушайте другую притчу",
+      "refs": [
+       "Мф 21:33"
+      ]
+     },
+     "refs": [
+      "Мф 21:33"
+     ],
+     "antecedent": "Мф 21:31",
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:khozyain-doma-mf21",
+     "label": "хозяин дома",
+     "kind": "parable",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "account": 0,
+     "mode": "parable",
+     "roleText": {
+      "text": "постыдятся сына моего",
+      "refs": [
+       "Мф 21:37"
+      ]
+     },
+     "refs": [
+      "Мф 21:33",
+      "Мф 21:40"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:chelovek-mk12",
+     "label": "человек",
+     "kind": "parable",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "account": 1,
+     "mode": "parable",
+     "roleText": {
+      "text": "постыдятся сына моего",
+      "refs": [
+       "Мк 12:6"
+      ]
+     },
+     "refs": [
+      "Мк 12:1"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:chelovek-lk20",
+     "label": "человек",
+     "kind": "parable",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "account": 2,
+     "mode": "parable",
+     "roleText": {
+      "text": "что мне делать? Пошлю сына моего возлюбленного",
+      "refs": [
+       "Лк 20:13"
+      ]
+     },
+     "refs": [
+      "Лк 20:9",
+      "Лк 20:13"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:vinogradari",
+     "label": "виноградари",
+     "kind": "parable",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "mode": "parable",
+     "roleText": {
+      "text": "это наследник; пойдем, убьем его и завладеем наследством его",
+      "refs": [
+       "Мф 21:38"
+      ]
+     },
+     "refs": [
+      "Мф 21:33",
+      "Мк 12:1",
+      "Лк 20:9"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:slugi-mf21",
+     "label": "слуги",
+     "kind": "parable",
+     "roles": [
+      {
+       "role": "undergoer"
+      }
+     ],
+     "account": 0,
+     "mode": "parable",
+     "refs": [
+      "Мф 21:34",
+      "Мф 21:35"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:slugi-mk12",
+     "label": "слуги",
+     "kind": "parable",
+     "roles": [
+      {
+       "role": "undergoer"
+      }
+     ],
+     "account": 1,
+     "mode": "parable",
+     "refs": [
+      "Мк 12:2",
+      "Мк 12:4",
+      "Мк 12:5"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:raby-lk20",
+     "label": "рабы",
+     "kind": "parable",
+     "roles": [
+      {
+       "role": "undergoer"
+      }
+     ],
+     "account": 2,
+     "mode": "parable",
+     "refs": [
+      "Лк 20:10",
+      "Лк 20:11"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:syn-khozyaina-vinogradnika",
+     "label": "наследник",
+     "kind": "parable",
+     "roles": [
+      {
+       "role": "undergoer"
+      }
+     ],
+     "mode": "parable",
+     "refs": [
+      "Мф 21:37",
+      "Мф 21:38",
+      "Мк 12:6",
+      "Мк 12:7",
+      "Лк 20:13",
+      "Лк 20:14"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [],
+   "links": [],
+   "discrepancies": [
+    {
+     "label": "кто говорит, что сделает хозяин",
+     "kind": "who",
+     "scene": "e-khozyain-vinogradnika-i-vinogradari#s4",
+     "quotes": [
+      {
+       "ref": "Мф 21:41",
+       "text": "Говорят Ему: злодеев сих предаст злой смерти"
+      },
+      {
+       "ref": "Мк 12:9",
+       "text": "Придет и предаст смерти виноградарей"
+      },
+      {
+       "ref": "Лк 20:16",
+       "text": "Придет и погубит виноградарей тех"
+      }
+     ]
+    }
+   ],
+   "hard": [
+    {
+     "topic": "убийство",
+     "refs": [
+      "Мф 21:35",
+      "Мф 21:39",
+      "Мк 12:5",
+      "Мк 12:8",
+      "Лк 20:15"
+     ]
+    }
+   ],
+   "source": {
+    "method": "reading"
+   },
+   "boundary": {
+    "startRule": 7,
+    "human": "рассказ внутри речи — своя запись (11 § 13.4); слово «притча» стоит у всех трёх: «другую притчу» (Мф 21:33), «притчами» (Мк 12:1), «притчу сию» (Лк 20:9). Слова о камне (Мф 21:42–44 и параллели) — в истории речи"
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 21:34",
+     "resolution": "Мф 21:41",
+     "human": "поручение — «послал своих слуг к виноградарям взять свои плоды» (21:34); развязка вопроса «что сделает он с этими виноградарями?» (21:40) — первый стих ответа (21:41)"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 12:2",
+     "resolution": "Мк 12:9"
+    },
+    {
+     "account": 2,
+     "setup": "Лк 20:10",
+     "resolution": "Лк 20:16"
+    }
+   ]
+  },
+  {
+   "id": "e-brachnyy-pir-dlya-syna-tsarya",
+   "level": "story",
+   "kind": "parable",
+   "title": {
+    "short": "Брачный пир для сына царя",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Мф 22:2-14"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-iisus",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "mode": "in-speech",
+     "refs": [
+      "Мф 22:2"
+     ],
+     "antecedent": "Мф 22:1",
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:tsar-mf22",
+     "label": "царь",
+     "kind": "parable",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "mode": "parable",
+     "roleText": {
+      "text": "брачный пир готов, а званые не были достойны",
+      "refs": [
+       "Мф 22:8"
+      ]
+     },
+     "refs": [
+      "Мф 22:2",
+      "Мф 22:7",
+      "Мф 22:11"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:raby-tsarya-mf22",
+     "label": "рабы",
+     "kind": "parable",
+     "roles": [
+      {
+       "role": "undergoer"
+      }
+     ],
+     "mode": "parable",
+     "roleText": {
+      "text": "И рабы те, выйдя на дороги, собрали всех, кого только нашли",
+      "refs": [
+       "Мф 22:10"
+      ]
+     },
+     "refs": [
+      "Мф 22:3",
+      "Мф 22:6",
+      "Мф 22:10"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:zvannye-mf22",
+     "label": "званые",
+     "kind": "parable",
+     "roles": [
+      {
+       "role": "undergoer"
+      }
+     ],
+     "main": true,
+     "mode": "parable",
+     "roleText": {
+      "text": "и не хотели придти",
+      "refs": [
+       "Мф 22:3"
+      ]
+     },
+     "refs": [
+      "Мф 22:3",
+      "Мф 22:4",
+      "Мф 22:8"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:chelovek-ne-v-brachnoy-odezhde",
+     "label": "человек, одетый не в брачную одежду",
+     "kind": "parable",
+     "roles": [
+      {
+       "role": "undergoer"
+      }
+     ],
+     "mode": "parable",
+     "roleText": {
+      "text": "Он же молчал",
+      "refs": [
+       "Мф 22:12"
+      ]
+     },
+     "refs": [
+      "Мф 22:11",
+      "Мф 22:12"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:slugi-tsarya-mf22",
+     "label": "слуги",
+     "kind": "parable",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
+     "mode": "parable",
+     "refs": [
+      "Мф 22:13"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:syn-tsarya-mf22",
+     "label": "сын",
+     "kind": "parable",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
+     "mode": "parable",
+     "refs": [
+      "Мф 22:2"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [],
+   "links": [],
+   "hard": [
+    {
+     "topic": "убийство",
+     "refs": [
+      "Мф 22:6",
+      "Мф 22:7"
+     ]
+    }
+   ],
+   "source": {
+    "method": "reading"
+   },
+   "boundary": {
+    "startRule": 7,
+    "human": "рассказ внутри речи — своя запись (11 § 13.4): «продолжая говорить им притчами» (22:1) — вид «притча»; стих 22:1 — в истории речи. Иисус назван в 22:1 — стих рамки речи (antecedent)"
+   },
+   "plot": [
+    {
+     "setup": "Мф 22:3",
+     "resolution": "Мф 22:10",
+     "human": "поручение — «звать званых на брачный пир; и не хотели придти» (22:3); исход — «брачный пир наполнился возлежащими» (22:10); второе дело — человек не в брачной одежде (22:11–13)"
+    }
+   ]
+  },
+  {
+   "id": "e-podat-kesaryu",
+   "level": "story",
+   "kind": "speech",
+   "title": {
+    "short": "Подать кесарю",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Мф 22:15-22"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "refs": [
+      "Мк 12:13-17"
+     ],
+     "cert": "inference",
+     "basis": {
+      "kind": "other-books",
+      "refs": [
+       "Мф 22:17",
+       "Мк 12:14",
+       "Мф 22:21",
+       "Мк 12:17"
+      ],
+      "time": [
+       "Мф 22:15"
+      ]
+     }
+    },
+    {
+     "refs": [
+      "Лк 20:20-26"
+     ],
+     "cert": "inference",
+     "basis": {
+      "kind": "other-books",
+      "refs": [
+       "Мф 22:17",
+       "Лк 20:22",
+       "Мф 22:21",
+       "Лк 20:25"
+      ],
+      "time": [
+       "Мф 22:15"
+      ],
+      "note": "одни слова: «позволительно ли давать подать кесарю», динарий, «чье это изображение и надпись», «отдавайте кесарево кесарю, а Божие Богу» (Мф 22:17–21; Мк 12:14–17; Лк 20:22–25); «Тогда» (Мф 22:15) не расходится с рассказами Марка и Луки, где слов времени нет"
+     }
+    }
+   ],
+   "scenes": [
+    {
+     "id": "e-podat-kesaryu#s1",
+     "title": {
+      "short": "Чтобы уловить Его в слове",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "Мф 22:15-16"
+       ]
+      },
+      {
+       "account": 1,
+       "refs": [
+        "Мк 12:13"
+       ]
+      },
+      {
+       "account": 2,
+       "refs": [
+        "Лк 20:20"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "e-podat-kesaryu#s2",
+     "title": {
+      "short": "Позволительно ли давать подать?",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "Мф 22:17"
+       ]
+      },
+      {
+       "account": 1,
+       "refs": [
+        "Мк 12:14"
+       ]
+      },
+      {
+       "account": 2,
+       "refs": [
+        "Лк 20:21-22"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "e-podat-kesaryu#s3",
+     "title": {
+      "short": "Что искушаете Меня?",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "Мф 22:18-19"
+       ]
+      },
+      {
+       "account": 1,
+       "refs": [
+        "Мк 12:15"
+       ]
+      },
+      {
+       "account": 2,
+       "refs": [
+        "Лк 20:23"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "e-podat-kesaryu#s4",
+     "title": {
+      "short": "Кесарево кесарю",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "Мф 22:20-21"
+       ]
+      },
+      {
+       "account": 1,
+       "refs": [
+        "Мк 12:16-17"
+       ]
+      },
+      {
+       "account": 2,
+       "refs": [
+        "Лк 20:24-25"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "e-podat-kesaryu#s5",
+     "title": {
+      "short": "Удивились",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "Мф 22:22"
+       ]
+      },
+      {
+       "account": 2,
+       "refs": [
+        "Лк 20:26"
+       ]
+      }
+     ]
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-iisus",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "roleText": {
+      "text": "итак отдавайте кесарево кесарю, а Божие Богу",
+      "refs": [
+       "Мф 22:21"
+      ]
+     },
+     "refs": [
+      "Мф 22:18",
+      "Мк 12:17"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:farisei-mf22-15",
+     "label": "фарисеи",
+     "kind": "group",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "account": 0,
+     "roleText": {
+      "text": "Тогда фарисеи пошли и совещались, как бы уловить Его в словах",
+      "refs": [
+       "Мф 22:15"
+      ]
+     },
+     "refs": [
+      "Мф 22:15"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:ucheniki-fariseev-mf22",
+     "label": "ученики фарисеев",
+     "kind": "group",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "account": 0,
+     "roleText": {
+      "text": "позволительно ли давать подать кесарю, или нет?",
+      "refs": [
+       "Мф 22:17"
+      ]
+     },
+     "refs": [
+      "Мф 22:16"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:irodiane-mf22",
+     "label": "иродиане",
+     "kind": "group",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "account": 0,
+     "refs": [
+      "Мф 22:16"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:farisei-i-irodiane-mk12",
+     "label": "фарисеи и иродиане",
+     "kind": "group",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "account": 1,
+     "roleText": {
+      "text": "Позволительно ли давать подать кесарю или нет?",
+      "refs": [
+       "Мк 12:14"
+      ]
+     },
+     "refs": [
+      "Мк 12:13"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:pervosvyashchenniki-i-knizhniki-lk20-20",
+     "label": "первосвященники и книжники",
+     "kind": "group",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "account": 2,
+     "roleText": {
+      "text": "И, наблюдая за Ним, подослали лукавых людей",
+      "refs": [
+       "Лк 20:20"
+      ]
+     },
+     "refs": [
+      "Лк 20:20"
+     ],
+     "antecedent": "Лк 20:19",
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:lukavye-lyudi-lk20",
+     "label": "лукавые люди",
+     "kind": "group",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "account": 2,
+     "roleText": {
+      "text": "позволительно ли нам давать подать кесарю, или нет?",
+      "refs": [
+       "Лк 20:22"
+      ]
+     },
+     "refs": [
+      "Лк 20:20",
+      "Лк 20:21"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:kesar",
+     "label": "кесарь",
+     "kind": "human",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
+     "mode": "in-speech",
+     "refs": [
+      "Мф 22:17",
+      "Мк 12:14",
+      "Лк 20:22"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [],
+   "links": [],
+   "discrepancies": [
+    {
+     "label": "кого послали",
+     "kind": "who",
+     "scene": "e-podat-kesaryu#s1",
+     "quotes": [
+      {
+       "ref": "Мф 22:16",
+       "text": "И посылают к Нему учеников своих с иродианами"
+      },
+      {
+       "ref": "Мк 12:13",
+       "text": "И посылают к Нему некоторых из фарисеев и иродиан"
+      },
+      {
+       "ref": "Лк 20:20",
+       "text": "подослали лукавых людей"
+      }
+     ]
+    }
+   ],
+   "source": {
+    "method": "reading"
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "новое дело — замысел «уловить Его в словах» (Мф 22:15; Мк 12:13; Лк 20:20), правило 5"
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 22:15",
+     "resolution": "Мф 22:18",
+     "human": "замысел — «как бы уловить Его в словах» (22:15); развязка вопроса — первый стих ответа «что искушаете Меня, лицемеры?» (22:18); продолжение — «отдавайте кесарево кесарю» (22:21)"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 12:13",
+     "resolution": "Мк 12:15"
+    },
+    {
+     "account": 2,
+     "setup": "Лк 20:20",
+     "resolution": "Лк 20:23"
+    }
+   ]
+  },
+  {
+   "id": "e-saddukei-o-voskresenii",
+   "level": "story",
+   "kind": "speech",
+   "title": {
+    "short": "Саддукеи о воскресении",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Мф 22:23-33"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "refs": [
+      "Мк 12:18-27"
+     ],
+     "cert": "inference",
+     "basis": {
+      "kind": "other-books",
+      "refs": [
+       "Мф 22:23",
+       "Мк 12:18",
+       "Мф 22:25",
+       "Мк 12:20",
+       "Мф 22:32",
+       "Мк 12:26"
+      ],
+      "time": [
+       "Мф 22:23"
+      ]
+     }
+    },
+    {
+     "refs": [
+      "Лк 20:27-40"
+     ],
+     "cert": "inference",
+     "basis": {
+      "kind": "other-books",
+      "refs": [
+       "Мф 22:23",
+       "Лк 20:27",
+       "Мф 22:25",
+       "Лк 20:29",
+       "Мф 22:32",
+       "Лк 20:37"
+      ],
+      "time": [
+       "Мф 22:23"
+      ],
+      "note": "одни слова: саддукеи, «которые говорят, что нет воскресения», семь братьев и одна жена, «Бог Авраама, и Бог Исаака, и Бог Иакова» (Мф 22:23–32; Мк 12:18–26; Лк 20:27–37); «В тот день» (Мф 22:23) не расходится с «Потом» (Мк 12:18) и «Тогда» (Лк 20:27)"
+     }
+    }
+   ],
+   "scenes": [
+    {
+     "id": "e-saddukei-o-voskresenii#s1",
+     "title": {
+      "short": "Саддукеи приступили",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "Мф 22:23"
+       ]
+      },
+      {
+       "account": 1,
+       "refs": [
+        "Мк 12:18"
+       ]
+      },
+      {
+       "account": 2,
+       "refs": [
+        "Лк 20:27"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "e-saddukei-o-voskresenii#s2",
+     "title": {
+      "short": "Семь братьев",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "Мф 22:24-28"
+       ]
+      },
+      {
+       "account": 1,
+       "refs": [
+        "Мк 12:19-23"
+       ]
+      },
+      {
+       "account": 2,
+       "refs": [
+        "Лк 20:28-33"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "e-saddukei-o-voskresenii#s3",
+     "title": {
+      "short": "Как Ангелы на небесах",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "Мф 22:29-30"
+       ]
+      },
+      {
+       "account": 1,
+       "refs": [
+        "Мк 12:24-25"
+       ]
+      },
+      {
+       "account": 2,
+       "refs": [
+        "Лк 20:34-36"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "e-saddukei-o-voskresenii#s4",
+     "title": {
+      "short": "Бог Авраама, Исаака и Иакова",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "Мф 22:31-32"
+       ]
+      },
+      {
+       "account": 1,
+       "refs": [
+        "Мк 12:26-27"
+       ]
+      },
+      {
+       "account": 2,
+       "refs": [
+        "Лк 20:37-38"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "e-saddukei-o-voskresenii#s5",
+     "title": {
+      "short": "Слушавшие отвечают",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "Мф 22:33"
+       ]
+      },
+      {
+       "account": 2,
+       "refs": [
+        "Лк 20:39-40"
+       ]
+      }
+     ]
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-iisus",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "roleText": {
+      "text": "Бог не есть Бог мертвых, но живых",
+      "refs": [
+       "Мф 22:32"
+      ]
+     },
+     "refs": [
+      "Мф 22:29",
+      "Мк 12:24",
+      "Лк 20:34"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:saddukei",
+     "label": "саддукеи",
+     "kind": "group",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "roleText": {
+      "text": "итак, в воскресении, которого из семи будет она женою?",
+      "refs": [
+       "Мф 22:28"
+      ]
+     },
+     "refs": [
+      "Мф 22:23",
+      "Мк 12:18",
+      "Лк 20:27"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-moisey",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
+     "mode": "in-speech",
+     "refs": [
+      "Мф 22:24",
+      "Мк 12:19",
+      "Мк 12:26",
+      "Лк 20:28",
+      "Лк 20:37"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:sem-bratev",
+     "label": "семь братьев",
+     "kind": "group",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
+     "mode": "in-speech",
+     "refs": [
+      "Мф 22:25",
+      "Мк 12:20",
+      "Лк 20:29"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-avraam",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
+     "mode": "in-speech",
+     "refs": [
+      "Мф 22:32",
+      "Мк 12:26",
+      "Лк 20:37"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-isaak",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
+     "mode": "in-speech",
+     "refs": [
+      "Мф 22:32",
+      "Мк 12:26",
+      "Лк 20:37"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-iakov",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
+     "mode": "in-speech",
+     "refs": [
+      "Мф 22:32",
+      "Мк 12:26",
+      "Лк 20:37"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:narod-mf22-33",
+     "label": "народ",
+     "kind": "people",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "account": 0,
+     "roleText": {
+      "text": "И, слыша, народ дивился учению Его",
+      "refs": [
+       "Мф 22:33"
+      ]
+     },
+     "refs": [
+      "Мф 22:33"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:knizhniki-lk20-39",
+     "label": "книжники",
+     "kind": "group",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "account": 2,
+     "roleText": {
+      "text": "Учитель! Ты хорошо сказал",
+      "refs": [
+       "Лк 20:39"
+      ]
+     },
+     "refs": [
+      "Лк 20:39"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [],
+   "links": [],
+   "discrepancies": [
+    {
+     "label": "кто отозвался на ответ",
+     "kind": "who",
+     "scene": "e-saddukei-o-voskresenii#s5",
+     "quotes": [
+      {
+       "ref": "Мф 22:33",
+       "text": "народ дивился учению Его"
+      },
+      {
+       "ref": "Лк 20:39",
+       "text": "некоторые из книжников сказали: Учитель! Ты хорошо сказал"
+      }
+     ],
+     "silent": [
+      1
+     ]
+    }
+   ],
+   "source": {
+    "method": "reading"
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "новое дело — вопрос саддукеев (правило 5). Лк 20:40 — в этом рассказе: «И уже не смели спрашивать Его ни о чем»; слова «Он же сказал им» в том же стихе — начало следующей речи, стих не делится (рассказ «Чей Сын Христос?» у Луки начинается с 20:41)"
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 22:23",
+     "resolution": "Мф 22:29",
+     "human": "вопрос — «спросили Его» (22:23); развязка вопроса — первый стих ответа (22:29)"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 12:18",
+     "resolution": "Мк 12:24"
+    },
+    {
+     "account": 2,
+     "setup": "Лк 20:27",
+     "resolution": "Лк 20:34"
+    }
+   ]
+  },
+  {
+   "id": "e-naibolshaya-zapoved-v-zakone",
+   "level": "story",
+   "kind": "speech",
+   "title": {
+    "short": "Наибольшая заповедь в законе",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Мф 22:34-40"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "refs": [
+      "Мк 12:28-34"
+     ],
+     "cert": "inference",
+     "basis": {
+      "kind": "other-books",
+      "refs": [
+       "Мф 22:36",
+       "Мк 12:28",
+       "Мф 22:37",
+       "Мк 12:30",
+       "Мф 22:39",
+       "Мк 12:31"
+      ],
+      "time": [
+       "Мф 22:34",
+       "Мк 12:28"
+      ],
+      "note": "одни слова и ход: вопрос о первой (наибольшей) заповеди, «возлюби Господа Бога твоего всем сердцем твоим», «вторая… подобная ей: возлюби ближнего твоего, как самого себя» (Мф 22:36–39; Мк 12:28–31); оба рассказа ставят вопрос сразу после спора с саддукеями — «услышав, что Он привел саддукеев в молчание» (Мф 22:34), «слыша их прения» (Мк 12:28). Лк 10:25–28 — другой вопрос и ход («что мне делать, чтобы наследовать жизнь вечную?»), не склеивается"
+     }
+    }
+   ],
+   "scenes": [
+    {
+     "id": "e-naibolshaya-zapoved-v-zakone#s1",
+     "title": {
+      "short": "Какая наибольшая заповедь?",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "Мф 22:34-36"
+       ]
+      },
+      {
+       "account": 1,
+       "refs": [
+        "Мк 12:28"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "e-naibolshaya-zapoved-v-zakone#s2",
+     "title": {
+      "short": "Возлюби Господа Бога твоего",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "Мф 22:37-38"
+       ]
+      },
+      {
+       "account": 1,
+       "refs": [
+        "Мк 12:29-30"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "e-naibolshaya-zapoved-v-zakone#s3",
+     "title": {
+      "short": "Возлюби ближнего твоего",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "Мф 22:39-40"
+       ]
+      },
+      {
+       "account": 1,
+       "refs": [
+        "Мк 12:31"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "e-naibolshaya-zapoved-v-zakone#s4",
+     "title": {
+      "short": "Недалеко ты от Царствия Божия",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 1,
+       "refs": [
+        "Мк 12:32-34"
+       ]
+      }
+     ]
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-iisus",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "roleText": {
+      "text": "возлюби ближнего твоего, как самого себя",
+      "refs": [
+       "Мф 22:39"
+      ]
+     },
+     "refs": [
+      "Мф 22:37",
+      "Мк 12:29"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:zakonnik-mf22",
+     "label": "законник",
+     "kind": "unnamed",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "account": 0,
+     "roleText": {
+      "text": "Учитель! какая наибольшая заповедь в законе?",
+      "refs": [
+       "Мф 22:36"
+      ]
+     },
+     "refs": [
+      "Мф 22:35"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:farisei-mf22-34",
+     "label": "фарисеи",
+     "kind": "group",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "account": 0,
+     "roleText": {
+      "text": "А фарисеи, услышав, что Он привел саддукеев в молчание, собрались вместе",
+      "refs": [
+       "Мф 22:34"
+      ]
+     },
+     "refs": [
+      "Мф 22:34"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:knizhnik-mk12",
+     "label": "книжник",
+     "kind": "unnamed",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "account": 1,
+     "roleText": {
+      "text": "хорошо, Учитель! истину сказал Ты",
+      "refs": [
+       "Мк 12:32"
+      ]
+     },
+     "refs": [
+      "Мк 12:28",
+      "Мк 12:32"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [],
+   "links": [],
+   "discrepancies": [
+    {
+     "label": "кто спросил",
+     "kind": "who",
+     "scene": "e-naibolshaya-zapoved-v-zakone#s1",
+     "quotes": [
+      {
+       "ref": "Мф 22:35",
+       "text": "И один из них, законник, искушая Его, спросил"
+      },
+      {
+       "ref": "Мк 12:28",
+       "text": "Один из книжников"
+      }
+     ]
+    }
+   ],
+   "source": {
+    "method": "reading"
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "новое дело — новый вопрос (правило 5). Склейка — «весомо» (11 § 2.6 б): разные книги, общие редкие слова и ход; различие «кто спросил» — цитатами. Строка «никто уже не смел спрашивать Его» стоит в разных историях: Мк 12:34 — здесь, Мф 22:46 — «Чей Сын Христос?», Лк 20:40 — «Саддукеи о воскресении»"
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 22:35",
+     "resolution": "Мф 22:37",
+     "human": "вопрос (22:35–36); развязка — первый стих ответа (22:37)"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 12:28",
+     "resolution": "Мк 12:29"
+    }
+   ]
+  },
+  {
+   "id": "e-chey-syn-khristos",
+   "level": "story",
+   "kind": "speech",
+   "title": {
+    "short": "Чей Сын Христос?",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Мф 22:41-46"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "refs": [
+      "Мк 12:35-37"
+     ],
+     "cert": "inference",
+     "basis": {
+      "kind": "other-books",
+      "refs": [
+       "Мф 22:42",
+       "Мк 12:35",
+       "Мф 22:44",
+       "Мк 12:36",
+       "Мф 22:45",
+       "Мк 12:37"
+      ],
+      "time": []
+     }
+    },
+    {
+     "refs": [
+      "Лк 20:41-44"
+     ],
+     "cert": "inference",
+     "basis": {
+      "kind": "other-books",
+      "refs": [
+       "Мф 22:42",
+       "Лк 20:41",
+       "Мф 22:44",
+       "Лк 20:42",
+       "Мф 22:45",
+       "Лк 20:44"
+      ],
+      "time": [],
+      "note": "одни слова: Христос — Сын Давидов, «сказал Господь Господу моему: седи одесную Меня», «как же Он сын ему?» (Мф 22:42–45; Мк 12:35–37; Лк 20:41–44); слов времени нет, у всех трёх — после вопросов в храме"
+     }
+    }
+   ],
+   "scenes": [
+    {
+     "id": "e-chey-syn-khristos#s1",
+     "title": {
+      "short": "Чей Он Сын?",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "Мф 22:41-42"
+       ]
+      },
+      {
+       "account": 1,
+       "refs": [
+        "Мк 12:35"
+       ]
+      },
+      {
+       "account": 2,
+       "refs": [
+        "Лк 20:41"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "e-chey-syn-khristos#s2",
+     "title": {
+      "short": "Сказал Господь Господу моему",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "Мф 22:43-44"
+       ]
+      },
+      {
+       "account": 1,
+       "refs": [
+        "Мк 12:36"
+       ]
+      },
+      {
+       "account": 2,
+       "refs": [
+        "Лк 20:42-43"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "e-chey-syn-khristos#s3",
+     "title": {
+      "short": "Как же Он сын ему?",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "Мф 22:45"
+       ]
+      },
+      {
+       "account": 1,
+       "refs": [
+        "Мк 12:37"
+       ]
+      },
+      {
+       "account": 2,
+       "refs": [
+        "Лк 20:44"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "e-chey-syn-khristos#s4",
+     "title": {
+      "short": "Никто не мог отвечать",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "Мф 22:46"
+       ]
+      }
+     ]
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-iisus",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "roleText": {
+      "text": "что вы думаете о Христе? чей Он Сын?",
+      "refs": [
+       "Мф 22:42"
+      ]
+     },
+     "refs": [
+      "Мф 22:41",
+      "Мк 12:35"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:farisei-mf22-41",
+     "label": "фарисеи",
+     "kind": "group",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "account": 0,
+     "roleText": {
+      "text": "Говорят Ему: Давидов",
+      "refs": [
+       "Мф 22:42"
+      ]
+     },
+     "refs": [
+      "Мф 22:41"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-david",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
+     "mode": "in-speech",
+     "refs": [
+      "Мф 22:43",
+      "Мф 22:45",
+      "Мк 12:36",
+      "Мк 12:37",
+      "Лк 20:42",
+      "Лк 20:44"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:knizhniki-mk12-35",
+     "label": "книжники",
+     "kind": "group",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
+     "account": 1,
+     "mode": "in-speech",
+     "refs": [
+      "Мк 12:35"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:narod-mk12-37",
+     "label": "множество народа",
+     "kind": "people",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "account": 1,
+     "roleText": {
+      "text": "И множество народа слушало Его с услаждением",
+      "refs": [
+       "Мк 12:37"
+      ]
+     },
+     "refs": [
+      "Мк 12:37"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [],
+   "links": [],
+   "source": {
+    "method": "reading"
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "новое дело — вопрос Иисуса (правило 5). Мк 12:38 и Лк 20:45 — следующие истории (вне глав жребия). У Марка и Луки рассказ — вопрос без ответа; что это история-речь, а не только поучение, решает исход у Матфея и Марка (Мф 22:46; Мк 12:37)"
+   },
+   "plot": [
+    {
+     "account": 0,
+     "setup": "Мф 22:41",
+     "resolution": "Мф 22:46",
+     "human": "вопрос Иисуса «чей Он Сын?» (22:41–42) и второй — «как же Он сын ему?» (22:45); исход — «никто не мог отвечать Ему ни слова» (22:46). Решает человек: второе прочтение — развязка 22:42 (ответ «Давидов»)"
+    },
+    {
+     "account": 1,
+     "setup": "Мк 12:35",
+     "resolution": "Мк 12:37",
+     "human": "ответа нет; исход в стихе 12:37 — «множество народа слушало Его с услаждением»"
+    },
+    {
+     "account": 2,
+     "setup": "Лк 20:41",
+     "resolution": "Лк 20:44",
+     "human": "ответа и исхода вне речи нет; развязка — последний стих вопроса (20:44)"
+    }
+   ]
+  },
+  {
+   "id": "e-petr-v-dome-korniliya",
+   "level": "story",
+   "kind": "event",
+   "title": {
+    "short": "Петр в доме Корнилия",
+    "by": "atlas",
+    "common": [
+     "Обращение Корнилия"
+    ]
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Деян 10:1-48"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "parts": [
+    {
+     "n": 1,
+     "title": {
+      "short": "Корнилий и Ангел",
+      "by": "atlas"
+     },
+     "refs": [
+      "Деян 10:1-8"
+     ],
+     "change": []
+    },
+    {
+     "n": 2,
+     "title": {
+      "short": "Видение Петра на верху дома",
+      "by": "atlas"
+     },
+     "refs": [
+      "Деян 10:9-16"
+     ],
+     "change": [
+      "time",
+      "place",
+      "actors"
+     ]
+    },
+    {
+     "n": 3,
+     "title": {
+      "short": "Посланные у ворот",
+      "by": "atlas"
+     },
+     "refs": [
+      "Деян 10:17-23"
+     ],
+     "change": [
+      "actors"
+     ]
+    },
+    {
+     "n": 4,
+     "title": {
+      "short": "Петр в Кесарии",
+      "by": "atlas"
+     },
+     "refs": [
+      "Деян 10:24-48"
+     ],
+     "change": [
+      "time",
+      "place"
+     ]
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-petr",
+     "roles": [
+      {
+       "part": 1,
+       "role": "mentioned"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      },
+      {
+       "part": 4,
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "roleText": {
+      "text": "истинно познаю, что Бог нелицеприятен",
+      "refs": [
+       "Деян 10:34"
+      ]
+     },
+     "refs": [
+      "Деян 10:5",
+      "Деян 10:9",
+      "Деян 10:13",
+      "Деян 10:17",
+      "Деян 10:21",
+      "Деян 10:25",
+      "Деян 10:34",
+      "Деян 10:44"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:korniliy",
+     "label": "Корнилий",
+     "kind": "human",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "mentioned"
+      },
+      {
+       "part": 4,
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "roleText": {
+      "text": "Теперь все мы предстоим пред Богом, чтобы выслушать все, что повелено тебе от Бога",
+      "refs": [
+       "Деян 10:33"
+      ]
+     },
+     "refs": [
+      "Деян 10:1",
+      "Деян 10:3",
+      "Деян 10:17",
+      "Деян 10:22",
+      "Деян 10:24",
+      "Деян 10:25",
+      "Деян 10:30"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "god",
+     "label": "Бог",
+     "roles": [
+      {
+       "part": 1,
+       "role": "mentioned"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 4,
+       "role": "mentioned"
+      }
+     ],
+     "roleText": {
+      "text": "что Бог очистил, того ты не почитай нечистым",
+      "refs": [
+       "Деян 10:15"
+      ]
+     },
+     "refs": [
+      "Деян 10:15",
+      "Деян 10:28"
+     ],
+     "cert": "inference"
+    },
+    {
+     "actor": "new:angel-bozhiy-deyan10",
+     "label": "Ангел Божий",
+     "kind": "angel",
+     "roles": [
+      {
+       "part": 1,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "mentioned"
+      },
+      {
+       "part": 4,
+       "role": "mentioned"
+      }
+     ],
+     "mode": "vision",
+     "roleText": {
+      "text": "молитвы твои и милостыни твои пришли на память пред Богом",
+      "refs": [
+       "Деян 10:4"
+      ]
+     },
+     "refs": [
+      "Деян 10:3",
+      "Деян 10:7",
+      "Деян 10:22"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:dukh-deyan10",
+     "label": "Дух",
+     "kind": "spirit",
+     "roles": [
+      {
+       "part": 3,
+       "role": "agent"
+      },
+      {
+       "part": 4,
+       "role": "agent"
+      }
+     ],
+     "roleText": {
+      "text": "встань, сойди и иди с ними, нимало не сомневаясь; ибо Я послал их",
+      "refs": [
+       "Деян 10:20"
+      ]
+     },
+     "refs": [
+      "Деян 10:19",
+      "Деян 10:44"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:poslannye-korniliem",
+     "label": "мужи, посланные Корнилием",
+     "kind": "group",
+     "roles": [
+      {
+       "part": 1,
+       "role": "addressed"
+      },
+      {
+       "part": 2,
+       "role": "agent"
+      },
+      {
+       "part": 3,
+       "role": "agent"
+      },
+      {
+       "part": 4,
+       "role": "agent"
+      }
+     ],
+     "roleText": {
+      "text": "здесь ли Симон, называемый Петром?",
+      "refs": [
+       "Деян 10:18"
+      ]
+     },
+     "refs": [
+      "Деян 10:7",
+      "Деян 10:17",
+      "Деян 10:21",
+      "Деян 10:22"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:simon-kozhevnik",
+     "label": "Симон кожевник",
+     "kind": "human",
+     "roles": [
+      {
+       "part": 1,
+       "role": "mentioned"
+      },
+      {
+       "part": 3,
+       "role": "mentioned"
+      },
+      {
+       "part": 4,
+       "role": "mentioned"
+      }
+     ],
+     "refs": [
+      "Деян 10:6",
+      "Деян 10:17",
+      "Деян 10:32"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:bratiya-ioppiyskie",
+     "label": "братия Иоппийские",
+     "kind": "group",
+     "roles": [
+      {
+       "part": 3,
+       "role": "agent"
+      },
+      {
+       "part": 4,
+       "role": "agent"
+      }
+     ],
+     "roleText": {
+      "text": "изумились, что дар Святаго Духа излился и на язычников",
+      "refs": [
+       "Деян 10:45"
+      ]
+     },
+     "refs": [
+      "Деян 10:23",
+      "Деян 10:45"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:rodstvenniki-i-druzya-korniliya",
+     "label": "родственники и близкие друзья",
+     "kind": "group",
+     "roles": [
+      {
+       "part": 4,
+       "role": "agent"
+      }
+     ],
+     "roleText": {
+      "text": "слышали их говорящих языками и величающих Бога",
+      "refs": [
+       "Деян 10:46"
+      ]
+     },
+     "refs": [
+      "Деян 10:24",
+      "Деян 10:27",
+      "Деян 10:44",
+      "Деян 10:46"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-iisus",
+     "roles": [
+      {
+       "part": 4,
+       "role": "mentioned"
+      }
+     ],
+     "mode": "in-speech",
+     "refs": [
+      "Деян 10:36",
+      "Деян 10:38"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-ioann-krestitel",
+     "roles": [
+      {
+       "part": 4,
+       "role": "mentioned"
+      }
+     ],
+     "mode": "in-speech",
+     "refs": [
+      "Деян 10:37"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:kesariya",
+     "label": "Кесария",
+     "role": "where",
+     "refs": [
+      "Деян 10:1",
+      "Деян 10:24"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:ioppiya",
+     "label": "Иоппия",
+     "role": "where",
+     "refs": [
+      "Деян 10:5",
+      "Деян 10:8",
+      "Деян 10:32"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:dom-simona-kozhevnika",
+     "label": "дом Симона кожевника при море",
+     "role": "where",
+     "refs": [
+      "Деян 10:6",
+      "Деян 10:17",
+      "Деян 10:32"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:verkh-doma-ioppiya",
+     "label": "верх дома",
+     "role": "where",
+     "refs": [
+      "Деян 10:9"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [
+    {
+     "refs": [
+      "Деян 11:5-17"
+     ],
+     "kind": "retelling",
+     "words": [
+      "сосуд",
+      "встань, Петр, заколи и ешь",
+      "Иоппии"
+     ],
+     "teller": "p-petr",
+     "inStory": "e-obrezannye-uprekayut-petra",
+     "sameBook": true,
+     "action": true,
+     "note": "пересказ Петра в Иерусалиме: «Петр же начал пересказывать им по порядку» (Деян 11:4)",
+     "cert": "scripture"
+    },
+    {
+     "refs": [
+      "Деян 15:7-8"
+     ],
+     "kind": "retelling",
+     "words": [
+      "язычники",
+      "Духа Святаго"
+     ],
+     "teller": "p-petr",
+     "sameBook": true,
+     "action": true,
+     "note": "слова Петра на собрании в Иерусалиме: «Бог от дней первых избрал из нас меня, чтобы из уст моих язычники услышали слово» (Деян 15:7); что он говорит об этой истории — вывод: имени Корнилия нет. История речи Деян 15 ещё не размечена",
+     "cert": "inference"
+    },
+    {
+     "refs": [
+      "Деян 15:14"
+     ],
+     "kind": "mention",
+     "words": [
+      "Симон",
+      "язычников"
+     ],
+     "sameBook": true,
+     "action": true,
+     "note": "слова Иакова: «Симон изъяснил, как Бог первоначально призрел на язычников» (Деян 15:14) — о речи Петра 15:7–11; к этой истории — вывод",
+     "cert": "inference"
+    }
+   ],
+   "source": {
+    "method": "reading"
+   },
+   "boundary": {
+    "startRule": 5,
+    "endRule": 6,
+    "human": "новое лицо и новое дело: «В Кесарии был некоторый муж, именем Корнилий» (10:1). Видение Петра (10:9–16) — шаг дела, а не своя история: связь словами в той же цепи сцен — «Дух сказал ему… Я послал их» (10:19–20). Рассказ Корнилия 10:30–32 — внутри этой истории, не ссылка. 10:45–48 — следствие (правило 6): «И велел им креститься» (10:48). 11:1 — новое дело: «обрезанные упрекали его» (11:2). Строка Бога в части 2 — «выв.»: в стихе — «глас» (10:13, 15); что это Бог — по словам Петра «мне Бог открыл» (10:28)"
+   },
+   "plot": [
+    {
+     "setup": "Деян 10:5",
+     "resolution": "Деян 10:44",
+     "human": "поручение — «пошли людей в Иоппию и призови Симона» (10:5), с обещанием «он скажет тебе слова, которыми спасешься ты» (10:6); исход — «Дух Святый сошел на всех, слушавших слово» (10:44). Решает человек: второе прочтение — развязка 10:47–48 (крещение)"
+    }
+   ]
+  },
+  {
+   "id": "e-obrezannye-uprekayut-petra",
+   "level": "story",
+   "kind": "speech",
+   "title": {
+    "short": "Обрезанные упрекают Петра",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Деян 11:1-18"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-petr",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "roleText": {
+      "text": "кто же я, чтобы мог воспрепятствовать Богу?",
+      "refs": [
+       "Деян 11:17"
+      ]
+     },
+     "refs": [
+      "Деян 11:2",
+      "Деян 11:4",
+      "Деян 11:7"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:obrezannye-deyan11",
+     "label": "обрезанные",
+     "kind": "group",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "roleText": {
+      "text": "ты ходил к людям необрезанным и ел с ними",
+      "refs": [
+       "Деян 11:3"
+      ]
+     },
+     "refs": [
+      "Деян 11:2",
+      "Деян 11:18"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:apostoly-i-bratiya-v-iudee",
+     "label": "Апостолы и братия",
+     "kind": "group",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "roleText": {
+      "text": "Услышали Апостолы и братия, бывшие в Иудее, что и язычники приняли слово Божие",
+      "refs": [
+       "Деян 11:1"
+      ]
+     },
+     "refs": [
+      "Деян 11:1"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "god",
+     "label": "Бог",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
+     "refs": [
+      "Деян 11:17",
+      "Деян 11:18"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:shest-bratev-deyan11",
+     "label": "шесть братьев",
+     "kind": "group",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
+     "mode": "in-speech",
+     "refs": [
+      "Деян 11:12"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-iisus",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
+     "mode": "in-speech",
+     "refs": [
+      "Деян 11:17"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-ioann-krestitel",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
+     "mode": "in-speech",
+     "refs": [
+      "Деян 11:16"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:ierusalim",
+     "label": "Иерусалим",
+     "role": "where",
+     "refs": [
+      "Деян 11:2"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:iudeya",
+     "label": "Иудея",
+     "role": "where",
+     "refs": [
+      "Деян 11:1"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "source": {
+    "method": "reading"
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "новое дело после развязки истории о Корнилии: «обрезанные упрекали его» (11:2), правило 5. Пересказ Петра (11:5–17) — ссылка-пересказ к «Петр в доме Корнилия»; его стихи принадлежат этой истории (11 § 13.6)"
+   },
+   "plot": [
+    {
+     "setup": "Деян 11:2",
+     "resolution": "Деян 11:18",
+     "human": "упрёк — «ты ходил к людям необрезанным и ел с ними» (11:3); исход — «они успокоились и прославили Бога» (11:18). Упрёк — не вопрос, поэтому развязка — исход, а не первый стих ответа (11:4)"
+    }
+   ]
+  },
+  {
+   "id": "e-ellinam-blagovestvuyut-v-antiokhii",
+   "level": "story",
+   "kind": "summary",
+   "title": {
+    "short": "Еллинам благовествуют в Антиохии",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Деян 11:19-21"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "new:rasseyavshiesya-deyan11",
+     "label": "рассеявшиеся",
+     "kind": "group",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "roleText": {
+      "text": "прошли до Финикии и Кипра и Антиохии, никому не проповедуя слово, кроме Иудеев",
+      "refs": [
+       "Деян 11:19"
+      ]
+     },
+     "refs": [
+      "Деян 11:19"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:kipryane-i-kirineytsy",
+     "label": "Кипряне и Киринейцы",
+     "kind": "group",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "roleText": {
+      "text": "говорили Еллинам, благовествуя Господа Иисуса",
+      "refs": [
+       "Деян 11:20"
+      ]
+     },
+     "refs": [
+      "Деян 11:20"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:elliny-antiokhiya",
+     "label": "Еллины",
+     "kind": "people",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "roleText": {
+      "text": "и великое число, уверовав, обратилось к Господу",
+      "refs": [
+       "Деян 11:21"
+      ]
+     },
+     "refs": [
+      "Деян 11:20",
+      "Деян 11:21"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "god",
+     "label": "Господь",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "roleText": {
+      "text": "И была рука Господня с ними",
+      "refs": [
+       "Деян 11:21"
+      ]
+     },
+     "refs": [
+      "Деян 11:21"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-iisus",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
+     "refs": [
+      "Деян 11:20"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:stefan",
+     "label": "Стефан",
+     "kind": "human",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
+     "refs": [
+      "Деян 11:19"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:finikiya",
+     "label": "Финикия",
+     "role": "via",
+     "refs": [
+      "Деян 11:19"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:kipr",
+     "label": "Кипр",
+     "role": "via",
+     "refs": [
+      "Деян 11:19"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:antiokhiya",
+     "label": "Антиохия",
+     "role": "where",
+     "refs": [
+      "Деян 11:19",
+      "Деян 11:20"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "source": {
+    "method": "reading"
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "сводка: много мест и людей без одной сцены — «прошли до Финикии и Кипра и Антиохии» (11:19); начало связано словами с гонением «после Стефана» (11:19), но начинается новое дело. Решает человек: 11:22 — новое дело, поручение Варнаве (правило 5); второе прочтение — одна история 11:19–26"
+   },
+   "plot": [
+    {
+     "setup": "Деян 11:20",
+     "resolution": "Деян 11:21"
+    }
+   ]
+  },
+  {
+   "id": "e-varnava-i-savl-v-antiokhii",
+   "level": "story",
+   "kind": "event",
+   "title": {
+    "short": "Варнава и Савл в Антиохии",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Деян 11:22-26"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-varnava",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "roleText": {
+      "text": "убеждал всех держаться Господа искренним сердцем",
+      "refs": [
+       "Деян 11:23"
+      ]
+     },
+     "refs": [
+      "Деян 11:22",
+      "Деян 11:25"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-pavel",
+     "label": "Савл",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "roleText": {
+      "text": "Целый год собирались они в церкви и учили немалое число людей",
+      "refs": [
+       "Деян 11:26"
+      ]
+     },
+     "refs": [
+      "Деян 11:25"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:tserkov-ierusalimskaya",
+     "label": "Иерусалимская церковь",
+     "kind": "group",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "roleText": {
+      "text": "поручили Варнаве идти в Антиохию",
+      "refs": [
+       "Деян 11:22"
+      ]
+     },
+     "refs": [
+      "Деян 11:22"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:ucheniki-v-antiokhii",
+     "label": "ученики",
+     "kind": "group",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "roleText": {
+      "text": "и ученики в Антиохии в первый раз стали называться Христианами",
+      "refs": [
+       "Деян 11:26"
+      ]
+     },
+     "refs": [
+      "Деян 11:24",
+      "Деян 11:26"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:antiokhiya",
+     "label": "Антиохия",
+     "role": "where",
+     "refs": [
+      "Деян 11:22",
+      "Деян 11:25",
+      "Деян 11:26"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:tars",
+     "label": "Тарс",
+     "role": "via",
+     "refs": [
+      "Деян 11:25"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "source": {
+    "method": "reading"
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "новое дело — поручение церкви Иерусалимской (11:22), правило 5; 11:27 — новые лица и новое дело («будет великий голод», 11:28)"
+   },
+   "plot": [
+    {
+     "setup": "Деян 11:22",
+     "resolution": "Деян 11:26",
+     "human": "поручение — «поручили Варнаве идти в Антиохию» (11:22); исход — «Целый год собирались они в церкви и учили» (11:26). Решает человек: второе прочтение — развязка 11:23–24, а 11:25–26 — следствие"
+    }
+   ]
+  },
+  {
+   "id": "e-agav-i-velikiy-golod",
+   "level": "story",
+   "kind": "event",
+   "title": {
+    "short": "Агав и великий голод",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Деян 11:27-30"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "new:agav",
+     "label": "Агав",
+     "kind": "human",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "main": true,
+     "roleText": {
+      "text": "встав, предвозвестил Духом, что по всей вселенной будет великий голод",
+      "refs": [
+       "Деян 11:28"
+      ]
+     },
+     "refs": [
+      "Деян 11:28"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:proroki-iz-ierusalima",
+     "label": "пророки",
+     "kind": "group",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "roleText": {
+      "text": "В те дни пришли из Иерусалима в Антиохию пророки",
+      "refs": [
+       "Деян 11:27"
+      ]
+     },
+     "refs": [
+      "Деян 11:27"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:ucheniki-antiokhiya-deyan11-29",
+     "label": "ученики",
+     "kind": "group",
+     "roles": [
+      {
+       "role": "agent"
+      }
+     ],
+     "roleText": {
+      "text": "положили, каждый по достатку своему, послать пособие братьям, живущим в Иудее",
+      "refs": [
+       "Деян 11:29"
+      ]
+     },
+     "refs": [
+      "Деян 11:29"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-varnava",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
+     "refs": [
+      "Деян 11:30"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-pavel",
+     "label": "Савл",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
+     "refs": [
+      "Деян 11:30"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:presvitery-deyan11",
+     "label": "пресвитеры",
+     "kind": "group",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
+     "refs": [
+      "Деян 11:30"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:bratya-v-iudee",
+     "label": "братья, живущие в Иудее",
+     "kind": "group",
+     "roles": [
+      {
+       "role": "addressed"
+      }
+     ],
+     "refs": [
+      "Деян 11:29"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:klavdiy",
+     "label": "Клавдий",
+     "kind": "human",
+     "roles": [
+      {
+       "role": "mentioned"
+      }
+     ],
+     "refs": [
+      "Деян 11:28"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:ierusalim",
+     "label": "Иерусалим",
+     "role": "from",
+     "refs": [
+      "Деян 11:27"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:antiokhiya",
+     "label": "Антиохия",
+     "role": "where",
+     "refs": [
+      "Деян 11:27"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:iudeya",
+     "label": "Иудея",
+     "role": "to",
+     "refs": [
+      "Деян 11:29"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [
+    {
+     "refs": [
+      "Деян 12:25"
+     ],
+     "kind": "mention",
+     "words": [
+      "Варнава и Савл",
+      "поручения",
+      "Иерусалима"
+     ],
+     "sameBook": true,
+     "action": true,
+     "note": "«Варнава и Савл, по исполнении поручения, возвратились из Иерусалима» (Деян 12:25); какое это поручение, стих не называет — вывод по словам 11:30",
+     "cert": "inference"
+    }
+   ],
+   "source": {
+    "method": "reading"
+   },
+   "boundary": {
+    "startRule": 5,
+    "human": "новое дело — «будет великий голод» (11:28); исход — «что и сделали, послав собранное к пресвитерам» (11:30). Возвращение «по исполнении поручения» (12:25) стоит после новых дел Деян 12 — ссылка, а не часть (предел расстояния, 11 § 2.2)"
+   },
+   "plot": [
+    {
+     "setup": "Деян 11:28",
+     "resolution": "Деян 11:30"
+    }
+   ]
+  }
+ ],
+ "classes": [
+  {
+   "book": "Иез",
+   "ch": 34,
+   "from": 1,
+   "to": 31,
+   "class": "prophecy",
+   "why": "пророческая речь без рассказа: только рамка «И было ко мне слово Господне» (Иез 34:1) и поручение «изреки пророчество на пастырей Израилевых» (34:2); обстановки и исхода вне речи нет (11 § 2.2, речь, закон и пророчество)"
+  },
+  {
+   "book": "Иез",
+   "ch": 35,
+   "from": 1,
+   "to": 15,
+   "class": "prophecy",
+   "why": "пророческая речь без рассказа: рамка «И было ко мне слово Господне» (Иез 35:1) и «обрати лице твое к горе Сеир и изреки на нее пророчество» (35:2); исхода вне речи нет"
+  },
+  {
+   "book": "Притч",
+   "ch": 20,
+   "from": 1,
+   "to": 30,
+   "class": "wisdom",
+   "why": "изречения: «Вино — глумливо, сикера — буйна» (Притч 20:1); сцены и рассказа мудреца нет — слова «„Дурно, дурно“, говорит покупатель» (20:14) — изречение, не рассказ"
+  }
+ ],
+ "parallels": []
+}
