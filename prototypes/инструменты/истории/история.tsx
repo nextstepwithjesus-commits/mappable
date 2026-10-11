@@ -12,11 +12,11 @@ import { Д, стихи, стих, загружено, готовы, показ,
 import { адрес, адресПолно, адресПоСтихам, книгаСсылки, имяКниги, завет, отрезки, вСсылке, полноеИмя } from '../общее/адреса.ts';
 import { слой2, детям, изменить } from '../общее/настройки.ts';
 import { объявить, вБуфер, открыто, число, NB } from '../общее/службы.ts';
-import { маршрут, href, сВидом } from '../общее/приложение.ts';
+import { маршрут, href, сВидом, router } from '../общее/приложение.ts';
 import { bookSlug } from '../общее/маршруты.ts';
 import { Значок, ЗнакВида } from '../общее/знаки.tsx';
 import { КнНазад, Хлебные, ПереключательСлоя, АдресКн, Блок, Меню, Библия, Вывод, Эскиз, ТекстСтиха, useРаскрыто, строкаКопии } from '../общее/компоненты.tsx';
-import { видСловом, знакВида, строкаТрудного, трудноеКратко, стихиТрудного, номерВКниге, вКниге, книгаИм, лица, рольСловами, имяЛица, места, книгиРассказов } from './модель.ts';
+import { ЧЛЕНЫ, различияИстории, видСловом, знакВида, строкаТрудного, трудноеКратко, стихиТрудного, номерВКниге, вКниге, книгаИм, лица, рольСловами, имяЛица, места, книгиРассказов } from './модель.ts';
 import { Синопсис, Различие, type Колонка, type Сцена } from './синопсис.tsx';
 import { ОбразЭпох, эпохиСсылки } from '../время/образ.tsx';
 import type { Story, StoryActor, Link } from '../общее/типы.ts';
@@ -55,7 +55,9 @@ function НетСтраницы() {
 function Страница({ s }: { s: Story }) {
   const r = маршрут.value;
   const книги = книгиРассказов(s);
-  const книга = книги.find((b) => bookSlug(b) === r.params.rasskaz) ?? книги[0];
+  // вход из «Упоминается здесь» (`ot=mk8.19`) в книге, которая сама рассказывает историю, — на её рассказ (архитектура № 7)
+  const книгаОт = r.params.ot ? книги.find((b) => r.params.ot!.startsWith(bookSlug(b)) && /^\d/.test(r.params.ot!.slice(bookSlug(b).length))) : undefined;
+  const книга = книги.find((b) => bookSlug(b) === r.params.rasskaz) ?? книгаОт ?? книги[0];
   const рассказ = Math.max(0, s.accounts.findIndex((a) => книгаСсылки(a.refs[0] ?? '') === книга));
   const основной = s.accounts[рассказ];
   const главный = s.accounts.map((a) => a.refs.join('; ')).join('; ');
@@ -83,13 +85,25 @@ function Страница({ s }: { s: Story }) {
     const lh = parseFloat(getComputedStyle(b).lineHeight) || 28;
     if (b.getBoundingClientRect().height > lh * 1.6) h2.classList.add('так-написано--скрыто');
   });
+  // якорь стиха (11 § 10; рецензия архитектуры № 3): открыть часть со стихом, прокрутить к нему, рамка и фокус
+  const готово = готовы(все);
   useEffect(() => {
-    if (r.hash?.startsWith('st')) {
-      const [c, v] = r.hash.slice(2).split('.').map(Number);
-      рамка.value = new Set([`${книга} ${c}:${v}`]);
-    }
-  }, [r.hash]);
-  if (!готовы(все)) return <p class="голос-мы оболочка-страницы" aria-busy="true">Загружаем историю…</p>;
+    if (!готово || !r.hash?.startsWith('st')) return;
+    const [c, v] = r.hash.slice(2).split('.').map(Number);
+    const id = `${книга} ${c}:${v}`;
+    рамка.value = new Set([id]);
+    document.dispatchEvent(new CustomEvent('открыть-стих', { detail: id }));
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        const el = document.getElementById(`st${c}.${v}`);
+        if (!el) return;
+        el.scrollIntoView({ block: 'center' });
+        if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '-1');
+        el.focus({ preventScroll: true });
+      }),
+    );
+  }, [r.hash, готово]);
+  if (!готово) return <p class="голос-мы оболочка-страницы" aria-busy="true">Загружаем историю…</p>;
   const номер = номерВКниге(s.id, книга);
   const назв = слой2() ? (s.title.full ?? s.title.short) : s.title.short;
   const путь = [
@@ -474,7 +488,7 @@ function НомерСтиха({ x, глава }: { x: Стих; глава: bool
                 отрывок.value = x.id;
                 объявить(`Отрывок: с ${адрес(x.id)}. Выберите в меню другого стиха «Копировать стихи»`);
               })}
-          {пункт('Вся глава', 'списком', () => location.assign(href({ screen: 'glava', book: x.book, ch: x.c, params: {}, hash: `st${x.c}.${x.v}` })))}
+          {пункт('Вся глава', 'списком', () => router.go({ screen: 'glava', book: x.book, ch: x.c, params: {}, hash: `st${x.c}.${x.v}` }))}
         </span>
       )}
     </span>
@@ -707,7 +721,7 @@ function СинопсисИстории({ s }: { s: Story }) {
       клетки: клетки.map((c) => c || null),
       split: sc.split,
       moved: sc.moved?.map((m) => ({ col: m.account, after: m.after })),
-      различия: (s.discrepancies ?? []).filter((d) => d.scene === sc.id),
+      различия: различияИстории(s).filter((d) => d.scene === sc.id),
     };
   });
   // пустая клетка: «рассказ молчит» — только если проверено (`silent`); если подробность стоит в другой сцене — ссылка на неё (научные № 9 б)
@@ -759,7 +773,7 @@ function СинопсисИстории({ s }: { s: Story }) {
       ) : (
         <p class="т-проза">{слой2() ? 'Рассказ и пересказы участника в речах; правдивость слов лица атлас не утверждает.' : 'Рядом — рассказ и то, как об этом потом рассказывал сам участник.'}</p>
       )}
-      {(s.discrepancies ?? []).filter((d) => !d.scene).map((d) => (
+      {различияИстории(s).filter((d) => !d.scene).map((d) => (
         <Различие d={d} />
       ))}
     </div>
@@ -813,8 +827,11 @@ function прочитатьЗаметки(): { story: string; ref: string; text:
 }
 
 function Инструменты({ s }: { s: Story }) {
-  const эпохи = эпохиСсылки(s.accounts[0]?.refs[0] ?? '');
-  const href_ = href({ screen: 'vremya', params: { view: 'events', e: эпохи[0]?.id ?? '', sel: s.id } });
+  // рассказ, на котором открыта страница, — книга порядка «Событий» (рецензия архитектуры № 6)
+  const рк = маршрут.value.params.rasskaz;
+  const акк = s.accounts.find((a) => bookSlug(книгаСсылки(a.refs[0] ?? '')) === рк) ?? s.accounts[0];
+  const эпохи = эпохиСсылки(акк?.refs[0] ?? '');
+  const href_ = href({ screen: 'vremya', params: { view: 'events', e: эпохи[0]?.id ?? '', sel: s.id, kniga: bookSlug(книгаСсылки(акк?.refs[0] ?? '')) } });
   const имяЭпох = эпохи.map((e) => e.short).join(', ');
   // в блоке — только то, что есть (арт С1): образ «Время»; имя ссылки — вопрос, инструмент, предмет и эпохи (доступность № 9)
   return эпохи.length > 0 ? (
@@ -883,10 +900,13 @@ function СтрокаЛица({ a, ref_ }: { a: StoryActor; ref_?: { current: HT
       <span class="строка-лица__имя">
         {бог ? (
           'Бог'
-        ) : (
-          <a href={ссылка} id={`лицо-${a.actor.replace(/[^a-z0-9-]/gi, '-')}`} data-key={есть ? `actor:${a.actor}` : undefined}>
+        ) : есть ? (
+          <a href={ссылка} id={`лицо-${a.actor.replace(/[^a-z0-9-]/gi, '-')}`} data-key={`actor:${a.actor}`}>
             {имяЛ}
           </a>
+        ) : (
+          // участник без Карточки — текст, а не ссылка в тупик (архитектура № 8)
+          <span class="строка-лица__без-карточки">{имяЛ}</span>
         )}
         {a.kind && a.kind !== 'person' && a.kind !== 'human' && !бог && <span class="скрыто">, {a.kind === 'group' || a.kind === 'people' ? 'группа' : a.kind === 'animal' ? 'животное' : a.kind === 'unnamed' ? 'имя не названо' : ''}</span>}
       </span>{' '}
@@ -900,10 +920,23 @@ function СтрокаЛица({ a, ref_ }: { a: StoryActor; ref_?: { current: HT
         )}
         <АдресКн ссылка={a.roleText?.refs[0] ?? a.refs[0]} />
         {a.cert === 'inference' && <Вывод cert="inference" />}
+        {ЧЛЕНЫ[a.actor] && (
+          <span class="т-интерфейс строка-лица__члены">
+            {' '}
+            Названы:{' '}
+            {ЧЛЕНЫ[a.actor].ids.map((id, i) => (
+              <>
+                {i > 0 ? ', ' : ''}
+                {естьЛицо(id) ? <a href={href({ screen: 'kartochka', id, params: {} })} id={`лицо-${id}`}>{имя(id)}</a> : имя(id)}
+              </>
+            ))}{' '}
+            <АдресКн ссылка={ЧЛЕНЫ[a.actor].ref} />
+          </span>
+        )}
       </span>
       {слой2() && !бог && (
         <span class="т-адрес строка-лица__второй">
-          {рольСловами(a)}; стихов: {a.refs.length}; {есть ? a.actor : 'карточки ещё нет'}
+          {рольСловами(a)}; мест в записи: {a.refs.length}; {есть ? a.actor : 'карточки ещё нет'}
         </span>
       )}
     </li>
@@ -977,10 +1010,10 @@ function МестаБлок({ s }: { s: Story }) {
           Показать ещё {число(ups.length - видно.length, ['место', 'места', 'мест'])}
         </button>
       )}
-      {(s.discrepancies?.length ?? 0) > 0 && (
+      {различияИстории(s).length > 0 && (
         <div class="различия-блок">
           {слой2() || различия ? (
-            s.discrepancies!.map((d) => <Различие d={d} />)
+            различияИстории(s).map((d) => <Различие d={d} />)
           ) : (
             <p class="т-интерфейс">
               В рассказах есть различия.{' '}
@@ -1015,11 +1048,11 @@ function МестаБлок({ s }: { s: Story }) {
  * имя лица этой истории, которое стоит в первом стихе (задача данных: `seeAlso.name`, README). Текст `text` с «назван ещё»
  * на экран не выходит.
  */
+/** Форма имени для строки «Имя … стоит ещё» — по 11 § 4.5 п. 8, пока в данных нет поля `seeAlso.name` (задача данных). */
+const ИМЯ_СМ: Record<string, string> = { 'e-david-i-goliaf': 'Голиаф Гефянин' };
 function ТожеИмя({ x, s }: { x: { text: string; refs: string[]; story?: string; name?: string }; s: Story }) {
   const [первый, ...другие] = x.refs;
-  const ст1 = стихи(первый)[0];
-  const имяЛицаВСтихе = s.actors.map((a) => имя(a.actor)).find((n) => n && ст1?.view.text.includes(n));
-  const форма = x.name ?? имяЛицаВСтихе;
+  const форма = x.name ?? ИМЯ_СМ[s.id];
   const Цитата = ({ r }: { r: string }) => {
     const ст = стихи(r)[0];
     return ст ? (
@@ -1029,21 +1062,25 @@ function ТожеИмя({ x, s }: { x: { text: string; refs: string[]; story?: s
       </>
     ) : null;
   };
+  const другая = x.story ? Д.stories.get(x.story) : undefined;
+  // простой слой — только строка для взрослого; цитаты и рассказ — во втором слое (библеист № 25; 11 § 4.5 п. 8)
   return (
     <li class="строка-лица см-также">
       <p class="т-интерфейс">
-        {форма ? `Имя «${форма}» стоит ещё в ${адрес(первый)}:` : `То же имя стоит ещё в ${адрес(первый)}:`} <Цитата r={первый} />
+        {форма ? `Имя «${форма}» стоит ещё в ${адрес(первый)}` : `То же имя стоит ещё в ${адрес(первый)}`}
+        {слой2() ? ': ' : '. '}
+        {слой2() && <Цитата r={первый} />}
         <АдресКн ссылка={первый} />
       </p>
       {другие.map((r) => (
         <p class="т-интерфейс">
-          Сравните: <Цитата r={r} />
+          Сравните: {слой2() && <Цитата r={r} />}
           <АдресКн ссылка={r} />
         </p>
       ))}
-      {слой2() && x.story && (
+      {слой2() && другая && (
         <span class="т-адрес">
-          Рассказ — <a href={href({ screen: 'istoriya', id: x.story, params: {} })}>{Д.stories.get(x.story)?.title.short}</a>. Одно ли это лицо, Библия прямо не говорит.
+          История: <a href={href({ screen: 'istoriya', id: другая.id, params: {} })}>{другая.title.short}</a> ({адрес(другая.accounts.flatMap((a) => a.refs))}). Одно ли это лицо, Библия прямо не говорит.
         </span>
       )}
     </li>

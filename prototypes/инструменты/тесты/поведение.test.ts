@@ -245,3 +245,77 @@ describe('таблица-двойник «Жизней»: возраст отц�
     await p.close();
   });
 });
+
+describe('пути и поиск (рецензия архитектуры пакета 1, № 1–7, 11)', () => {
+  const стр = async (адрес: string) => {
+    const p = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+    await открыть(p, адрес);
+    return p;
+  };
+  for (const q of ['Быт 6:9', 'Давид', 'Ной', 'пять хлебов'])
+    it(`пример главной «${q}» — первый результат не пустой`, async () => {
+      const p = await стр(`poisk?q=${encodeURIComponent(q)}`);
+      expect(await p.locator('main a[href*="istoriya/"]').count(), q).toBeGreaterThan(0);
+      await p.close();
+    });
+  it('«Давид и Саул» — внятный ответ, а не пустой экран', async () => {
+    const p = await стр(`poisk?q=${encodeURIComponent('Давид и Саул')}`);
+    expect(await p.locator('main').innerText()).toMatch(/названы оба/);
+    await p.close();
+  });
+  it('задача 1: «Мк 2:3» → история на рассказе Марка, стих в окне (не больше 2 действий)', async () => {
+    const p = await стр(`poisk?q=${encodeURIComponent('Мк 2:3')}`);
+    await p.locator('main a[href*="e-rasslablennogo"]').first().click();
+    await p.waitForSelector('#h1');
+    await p.waitForTimeout(400);
+    expect(p.url()).toContain('rasskaz=mk');
+    const вОкне = await p.evaluate(() => {
+      const el = document.getElementById('st2.3');
+      const r = el?.getBoundingClientRect();
+      return !!r && r.top >= 0 && r.bottom <= innerHeight;
+    });
+    expect(вОкне).toBe(true);
+    await p.close();
+  });
+  it('якорь стиха открывает закрытую часть и прокручивает к стиху', async () => {
+    const p = await стр('istoriya/e-noy-i-potop#st8.8');
+    await p.waitForTimeout(400);
+    const r = await p.evaluate(() => {
+      const el = document.getElementById('st8.8');
+      const b = el?.getBoundingClientRect();
+      return { есть: !!el, вОкне: !!b && b.top >= 0 && b.bottom <= innerHeight, фокус: document.activeElement?.id };
+    });
+    expect(r).toEqual({ есть: true, вОкне: true, фокус: 'st8.8' });
+    await p.close();
+  });
+  it('стих → «Вся глава» без перезагрузки → «Назад: Ной и потоп»', async () => {
+    const p = await стр('istoriya/e-noy-i-potop');
+    await p.evaluate(() => ((window as unknown as { метка: number }).метка = 1));
+    await p.locator('#st6\\.9 .стих__номер').first().click();
+    await p.getByRole('menuitem', { name: /Вся глава/ }).click();
+    await p.waitForSelector('#кн-назад');
+    expect(await p.locator('#кн-назад').innerText()).toContain('Назад: Ной и потоп');
+    expect(await p.evaluate(() => (window as unknown as { метка?: number }).метка)).toBe(1);
+    await p.close();
+  });
+  it('из каталога Марка «на ленте времени» — эпоха Евангелий, порядок Евангелия от Марка', async () => {
+    const p = await стр('kniga/mk');
+    await p.getByRole('link', { name: 'на ленте времени' }).click();
+    await p.waitForSelector('.нить__подпись');
+    expect(await p.locator('.нить__подпись').innerText()).toContain('Порядок рассказа в Евангелии от Марка');
+    expect(await p.locator('.нить .т-адрес').first().innerText()).toMatch(/^Мк/);
+    await p.close();
+  });
+  it('Мк 8:19 — не в «Упоминается здесь» каталога Марка (Марк сам рассказывает историю)', async () => {
+    const p = await стр('kniga/mk');
+    expect(await p.locator('#упоминается ~ ul [data-key="story:e-pyat-khlebov-i-dve-ryby"]').count()).toBe(0);
+    await p.close();
+  });
+  it('задача 4: в «Ной и потоп» Сим, Хам, Иафет названы ссылками на Карточки (Быт 7:13)', async () => {
+    const p = await стр('istoriya/e-noy-i-potop');
+    await p.locator('#лицо-p-sim').click();
+    await p.waitForSelector('#h1:text("Сим")');
+    expect(await p.locator('main').innerText()).toContain('Ной и потоп');
+    await p.close();
+  });
+});

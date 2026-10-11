@@ -8,6 +8,7 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
 import { стихи, загружено, готовы, показ, type Стих } from '../общее/данные.ts';
+import { ГОВОРИТ } from './модель.ts';
 import { адрес, адресПолно, книгаСсылки } from '../общее/адреса.ts';
 import { слой2 } from '../общее/настройки.ts';
 import { объявить, вБуфер } from '../общее/службы.ts';
@@ -279,7 +280,7 @@ export function Синопсис({ колонки, сцены, подпись, �
                             <span aria-hidden="true">{адрес(x.s.клетки[v.i]!)}</span>
                             <span class="скрыто">{адресПолно(x.s.клетки[v.i]!)}</span>
                           </span>
-                          {x.s.moved?.filter((m) => m.col === v.i).map((m) => (
+                          {x.s.moved?.filter((m) => m.col === v.i && местоИное(m.after, x.клетки[k]![0])).map((m) => (
                             <span class="т-адрес синопсис__место"> в {BOOK_BY_CODE.get(книгаСсылки(m.after))?.short ?? ''} {m.after.split(' ')[1]?.split(':')[0]} этот стих стоит после стиха {m.after.split(':')[1]}</span>
                           ))}
                           <Клетка xs={x.клетки[k]!} отмечено={x.отмечено} свои={x.свои} режим={режим} уже={ужеПоСценам[разборы.indexOf(x)]} />
@@ -327,6 +328,11 @@ export function Синопсис({ колонки, сцены, подпись, �
   );
 }
 
+/** Пометка «стоит после стиха N» — только если стих не идёт сразу за N и это не сам N (библеист № 11: «после стиха 10» у стиха 10). */
+function местоИное(after: string, первый: Стих): boolean {
+  const [c, v] = (after.split(' ')[1] ?? '').split(':').map(Number);
+  return !(первый.c === c && (первый.v === v || первый.v === v + 1));
+}
 /** Различие рассказов — только цитатами стихов каждого рассказа и подписью-вопросом (11 § 4.5 п. 7). */
 export function Различие({ d }: { d: { label: string; quotes: { ref: string; text: string }[] } }) {
   return (
@@ -335,6 +341,7 @@ export function Различие({ d }: { d: { label: string; quotes: { ref: str
       {d.quotes.map((q, i) => (
         <>
           {i > 0 ? '; ' : ''}
+          {ГОВОРИТ[q.ref] && <span class="т-адрес">{ГОВОРИТ[q.ref]}: </span>}
           <span class="скрыто не-копировать">Библия: </span>
           <q class="голос-библия-в-строке">«{q.text}»</q> ({адрес(q.ref)})
         </>

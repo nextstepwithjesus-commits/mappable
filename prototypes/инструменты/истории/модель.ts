@@ -129,12 +129,15 @@ export function рольСловами(a: StoryActor): string {
 // ---------- места Писания по видам ссылки (11 § 4.5) ----------
 export interface МестаПоВидам { рассказано: string[]; пересказ: Link[]; упоминания: Link[]; намёки: Link[]; внутри: Link[] }
 export function места(s: Story): МестаПоВидам {
+  // место в книге, которая сама рассказывает историю (Мк 8:19 при Мк 6:30–44), — «ссылка внутри книги» (библеист № 3)
+  const своиКниги = new Set(s.accounts.map((a) => книгаСсылки(a.refs[0] ?? '')));
+  const внутри = (l: Link) => !!l.sameBook || своиКниги.has(книгаСсылки(l.refs[0] ?? ''));
   return {
     рассказано: s.accounts.map((a) => a.refs.join('; ')),
-    пересказ: s.links.filter((l) => l.kind === 'retelling' && !l.sameBook),
-    упоминания: s.links.filter((l) => l.kind === 'mention' && !l.sameBook),
-    намёки: s.links.filter((l) => l.kind === 'allusion' && !l.sameBook),
-    внутри: s.links.filter((l) => l.sameBook),
+    пересказ: s.links.filter((l) => l.kind === 'retelling' && !внутри(l)),
+    упоминания: s.links.filter((l) => l.kind === 'mention' && !внутри(l)),
+    намёки: s.links.filter((l) => l.kind === 'allusion' && !внутри(l)),
+    внутри: s.links.filter(внутри),
   };
 }
 /** Имя книги для строки «Рассказано: в книге Бытие». Склонять программой нельзя (08 § 4.3 п. 10): берём родительный падеж из таблицы книг с родовым словом. */
@@ -166,3 +169,25 @@ export function номерВКниге(id: string, code: string): { n: number; �
 export function книгиРассказов(s: Story): string[] {
   return [...new Set(s.accounts.map((a) => книгаСсылки(a.refs[0] ?? '')))];
 }
+
+/**
+ * Члены группы, названные по имени в стихе (архитектура № 8): «вошел в ковчег Ной, и Сим, Хам и Иафет, сыновья Ноевы»
+ * (Быт 7:13). В данных поля нет — задача данных (README); прототип держит таблицу сам.
+ */
+export const ЧЛЕНЫ: Record<string, { ids: string[]; ref: string }> = {
+  'new:synovya-noya': { ids: ['p-sim', 'p-kham', 'p-iafet'], ref: 'Быт 7:13' },
+};
+/** Лицо названо в истории: участником или членом названной группы. */
+export const названВИстории = (s: Story, id: string) => s.actors.some((a) => a.actor === id || ЧЛЕНЫ[a.actor]?.ids.includes(id));
+
+/**
+ * Различия рассказов на экране (библеист № 5, 6): ложное различие снято до правки данных; говорящий — перед цитатой, где
+ * различие именно в том, кто говорит. Обе правки — задачи данных (README).
+ */
+const СНЯТЬ: Record<string, string[]> = { 'e-savl-na-puti-v-damask': ['когда'] };
+export const ГОВОРИТ: Record<string, string> = {
+  'Деян 9:15': 'Господь — Анании',
+  'Деян 22:14': 'Анания — Савлу, в рассказе Павла',
+  'Деян 26:16': 'Господь — Савлу, в рассказе Павла',
+};
+export const различияИстории = (s: Story) => (s.discrepancies ?? []).filter((d) => !СНЯТЬ[s.id]?.includes(d.label));

@@ -19,6 +19,8 @@ import { ОбразЭпох } from '../время/образ.tsx';
 import { BOOKS, BOOK_BY_CODE } from '../../../core/books.ts';
 import { NameForms } from '../../../core/search/forms.ts';
 import { Searcher, type Group } from '../../../core/search/search.ts';
+import { строкиПоиска, историиПоСловам, историиЛица, рассказВКниге } from './поиск.ts';
+import type { Story } from '../общее/типы.ts';
 
 const ИСТОРИИ: [string, string, string] = ['история', 'истории', 'историй'];
 
@@ -386,7 +388,7 @@ export function Сравнение() {
       <p class="тихая-строка">Сравнение по выбору читателя. В каталоге это разные истории; мы не утверждаем, что это одно событие.</p>
       {спорная && слой2() && (
         <p class="т-интерфейс">
-          Очищение храма у Иоанна (Ин 2:13–22) и у Марка (Мк 11:15–18) — в каталоге две истории: слова времени ставят рассказы в разное время. Спорное сравнение показывается только с именами учёных, которые его предлагают; таких трудов в нашем списке пока нет — поэтому связи нет.
+          Очищение храма у Иоанна (Ин 2:13–22) и у Марка (Мк 11:15–18) — в каталоге две истории: у Иоанна это в начале книги, у Марка — в последние дни перед Пасхой. Слова времени (Ин 2:13; Мк 11:12) друг другу не противоречат; одно ли это событие, Библия прямо не говорит. Понимания с именами учёных — когда их труды будут в нашем списке; пока связи нет.
         </p>
       )}
       <form
@@ -412,7 +414,8 @@ let искатель: Searcher | null = null;
 function поиск(): Searcher {
   if (искатель) return искатель;
   const c = Д.core;
-  const stories = [...Д.stories.values()].filter((s) => s.level === 'story').map((s) => ({ id: s.id, t: s.title.short, main: s.accounts[0]?.refs.join('; ') ?? '', common: s.title.common }));
+  // все рассказы истории и места других видов с ролью (рецензия архитектуры, № 1)
+  const stories = строкиПоиска(Д.stories.values());
   искатель = new Searcher({ names: c.names, exceptions: c.exceptions, persons: c.persons, stories, places: c.places, areas: c.areas }, new NameForms(c.names));
   искатель.setDisambig(Д.tools.actors);
   return искатель;
@@ -434,19 +437,47 @@ export function Поиск() {
       {res && (
         <>
           {res.layout && <p class="т-интерфейс">Искали «{res.used}» — запрос был набран на другой раскладке.</p>}
-          {res.groups.map((g) => (
-            <ГруппаПоиска g={g} />
-          ))}
+          {res.groups
+            .filter((g) => !(g.kind === 'пусто' && историиПоСловам(Д.stories.values(), q).length))
+            .map((g) => (
+              <ГруппаПоиска g={g} />
+            ))}
+          <ПоСловам q={q} groups={res.groups} />
           <Эскиз простое="поиск по словам в тексте Библии появится позже">поиск по тексту стихов («В тексте Библии») в прототипе выключен: текстовый индекс 66 книг — пакет поиска ядра, проверен пробой П-Т3.</Эскиз>
         </>
       )}
     </div>
   );
 }
+/** Ссылка на историю: на рассказ книги найденного адреса и на стих (рецензия архитектуры, № 1, 3). */
+function ссылкаИстории(id: string, книга?: string, c?: number, v?: number) {
+  const s = Д.stories.get(id);
+  const свой = s && книга && рассказВКниге(s, книга) && книгаСсылки(s.accounts[0].refs[0]) !== книга;
+  return href({ screen: 'istoriya', id, params: свой ? { rasskaz: bookSlug(книга!) } : {}, hash: книга && c && v && s && рассказВКниге(s, книга) ? `st${c}.${v}` : undefined });
+}
+const адресРассказа = (s: Story | undefined, книга?: string) => (s ? (s.accounts.find((a) => книга && книгаСсылки(a.refs[0] ?? '') === книга) ?? s.accounts[0])?.refs.join('; ') ?? '' : '');
+/** Истории по словам названия (рецензия архитектуры, № 2): если ядро не нашло историю по названию целиком. */
+function ПоСловам({ q, groups }: { q: string; groups: Group[] }) {
+  if (groups.some((g) => g.kind === 'адрес' || g.kind === 'история')) return null;
+  const xs = историиПоСловам(Д.stories.values(), q);
+  if (!xs.length) return null;
+  return (
+    <section>
+      <h2 class="т-h2">Истории со словами «{q.trim()}» в названии — {xs.length}</h2>
+      <ul>
+        {xs.map((x) => (
+          <li class="строка-лица">
+            <a href={href({ screen: 'istoriya', id: x.id, params: {} })}>{x.title.short}</a> <span class="т-адрес">{адрес(x.accounts.map((a) => a.refs.join('; ')).join('; '))}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
 function ГруппаПоиска({ g }: { g: Group }) {
-  const ист = (id: string, t: string, main: string) => (
+  const ист = (id: string, t: string, main: string, книга?: string, c?: number, v?: number) => (
     <li class="строка-лица">
-      <a href={href({ screen: 'istoriya', id, params: {} })}>{t}</a> <span class="т-адрес">{адрес(main)}</span>
+      <a href={ссылкаИстории(id, книга, c, v)}>{t}</a> <span class="т-адрес">{адрес(книга ? адресРассказа(Д.stories.get(id), книга) || main : main)}</span>
     </li>
   );
   switch (g.kind) {
@@ -462,7 +493,8 @@ function ГруппаПоиска({ g }: { g: Group }) {
               <a href={href({ screen: 'glava', book: g.address.spans[0].book, ch: g.address.spans[0].c1, params: {}, hash: g.address.spans[0].v1 ? `st${g.address.spans[0].c1}.${g.address.spans[0].v1}` : undefined })}>Открыть главу</a>
             </p>
           )}
-          {g.stories.length > 0 && <ul>{g.stories.map((x) => ист(x.story.id, `${x.story.t} — ${x.role}`, x.story.main))}</ul>}
+          {g.stories.length > 0 && <ul>{g.stories.map((x) => ист(x.story.id, `${x.story.t} — ${x.role}`, x.story.main, g.address.spans[0]?.book, g.address.spans[0]?.c1, g.address.spans[0]?.v1))}</ul>}
+          {g.stories.length === 0 && g.address.errors.length === 0 && <p class="т-интерфейс">В каталоге пакета нет истории, где стоит это место. Откройте главу.</p>}
         </section>
       );
     case 'история':
@@ -473,7 +505,8 @@ function ГруппаПоиска({ g }: { g: Group }) {
           {g.notFromText && <p class="т-адрес">это название не из текста Библии</p>}
         </section>
       );
-    case 'лица':
+    case 'лица': {
+      const истории = g.persons.slice(0, 3).map((p) => ({ p, xs: историиЛица(Д.stories.values(), `p-${p.id}`) })).filter((x) => x.xs.length);
       return (
         <section>
           <h2 class="т-h2">Лица — {g.persons.length}</h2>
@@ -484,8 +517,38 @@ function ГруппаПоиска({ g }: { g: Group }) {
               </li>
             ))}
           </ul>
+          {истории.map(({ p, xs }) => (
+            <>
+              <h3 class="т-повествование">Истории, где назван {p.n}{p.d ? ` (${p.d})` : ''} — {xs.length}</h3>
+              <ul>{xs.map((x) => ист(x.id, x.title.short, x.accounts[0]?.refs.join('; ') ?? ''))}</ul>
+            </>
+          ))}
         </section>
       );
+    }
+    case 'пара': {
+      const все = (ps: { id: string }[]) => new Set(ps.flatMap((p) => историиЛица(Д.stories.values(), `p-${p.id}`).map((x) => x.id)));
+      const a = все(g.a);
+      const оба = [...все(g.b)].filter((id) => a.has(id)).map((id) => Д.stories.get(id)!);
+      const имяА = g.a[0]?.n ?? '';
+      const имяБ = g.b[0]?.n ?? '';
+      return (
+        <section>
+          <h2 class="т-h2">
+            {имяА} и {имяБ}
+          </h2>
+          {оба.length ? (
+            <>
+              <p class="т-интерфейс">Истории, где названы оба — {оба.length}:</p>
+              <ul>{оба.map((x) => ист(x.id, x.title.short, x.accounts[0]?.refs.join('; ') ?? ''))}</ul>
+            </>
+          ) : (
+            <p class="т-интерфейс" role="status">Историй, где названы оба, в пакете прототипа нет.</p>
+          )}
+          <p class="т-адрес">Как они связаны, покажет инструмент «Связи» — он в следующих пакетах.</p>
+        </section>
+      );
+    }
     case 'книга':
       return (
         <section>
@@ -496,7 +559,7 @@ function ГруппаПоиска({ g }: { g: Group }) {
         </section>
       );
     case 'возможно':
-      return <p class="т-интерфейс">Возможно, вы искали: {g.text}</p>;
+      return <p class="т-интерфейс">{g.text}</p>;
     case 'пусто':
       return (
         <p class="т-проза" role="status">

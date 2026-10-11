@@ -12,7 +12,7 @@ import { вБуфер, число } from '../общее/службы.ts';
 import { href } from '../общее/приложение.ts';
 import { Значок } from '../общее/знаки.tsx';
 import { КнНазад, Хлебные, ПереключательСлоя, АдресКн, Блок, Вывод, Меню } from '../общее/компоненты.tsx';
-import { лица, имяЛица } from './модель.ts';
+import { лица, имяЛица, названВИстории } from './модель.ts';
 import type { CardFact } from '../../../core/types.ts';
 import { ОбразЭпох } from '../время/образ.tsx';
 import { жизнь, годЭпохи } from '../время/модель.ts';
@@ -58,7 +58,8 @@ export function Карточка({ id }: { id: string }) {
   const отец = Д.tools.origins.find((o) => `p-${o.c}` === id && o.r === 'f' && o.p);
   const мать = Д.tools.origins.find((o) => `p-${o.c}` === id && o.r === 'm' && o.p);
   const дети = Д.tools.origins.filter((o) => o.p && `p-${o.p}` === id && o.pr);
-  const истории = [...Д.stories.values()].filter((s) => s.level === 'story' && s.actors.some((a) => a.actor === id));
+  // истории, где лицо названо участником или членом названной группы (Сим — Быт 7:13; архитектура № 8)
+  const истории = [...Д.stories.values()].filter((s) => s.level === 'story' && названВИстории(s, id));
   return (
     <div class="карточка" data-key={`actor:${id}`} data-status={статус(`actor:${id}`)}>
       <div class="полоса-шапки">

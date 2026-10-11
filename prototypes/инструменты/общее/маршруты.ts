@@ -45,6 +45,8 @@ export const PARAMS: Partial<Record<ScreenId, Spec[]>> = {
     { key: 'c', level: 3 },
     { key: 'w', level: 3 },
     { key: 'model', level: 3 },
+    // книга порядка «Событий» (рецензия архитектуры № 5–6): из каталога книги и со страницы истории на рассказе этой книги
+    { key: 'kniga', level: 3 },
   ],
   istorii: [{ key: 'f', level: 3 }],
   sravnenie: [{ key: 'a', level: 1 }, { key: 'b', level: 1 }],
