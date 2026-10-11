@@ -51,8 +51,10 @@ a:hover { text-decoration-thickness: var(--liniya-silnaya); color: var(--tsvet-d
 :focus-visible, .как-фокус {
   outline: var(--liniya-fokus) solid var(--tsvet-chernila);
   outline-offset: var(--liniya-zazor);
-  box-shadow: 0 0 0 calc(var(--liniya-zazor) * 2 + var(--liniya-fokus)) var(--tsvet-list);
+  box-shadow: var(--черта, 0 0 0 0 transparent), 0 0 0 calc(var(--liniya-zazor) * 2 + var(--liniya-fokus)) var(--tsvet-list);
 }
+/* цитаты: кавычки уже в тексте («…») — браузер своих не добавляет (Н-1, Н5) */
+q { quotes: none; }
 @media (forced-colors: active) {
   :focus-visible, .как-фокус { outline-color: Highlight; box-shadow: none; }
 }

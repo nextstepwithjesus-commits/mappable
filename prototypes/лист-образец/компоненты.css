@@ -45,7 +45,7 @@
 .кн--плотная:active { box-shadow: inset 0 0 0 var(--liniya-silnaya) var(--tsvet-deystvie); background: var(--tsvet-chernila); }
 .кн--найти { background: var(--tsvet-list); border-color: var(--tsvet-deystvie); color: var(--tsvet-deystvie); font-weight: 600; }
 .кн--найти:hover { background: var(--tsvet-podlozhka); }
-.кн[aria-pressed="true"] { background: var(--tsvet-podlozhka); border-color: transparent; box-shadow: inset 0 calc(-1 * var(--liniya-silnaya)) 0 var(--tsvet-deystvie); font-weight: 600; }
+.кн[aria-pressed="true"] { --черта: inset 0 calc(-1 * var(--liniya-silnaya)) 0 var(--tsvet-deystvie); background: var(--tsvet-podlozhka); border-color: transparent; box-shadow: var(--черта); font-weight: 600; }
 .шапка__нав .кн[aria-current="page"] { box-shadow: inset 0 calc(-1 * var(--liniya-silnaya)) 0 var(--tsvet-deystvie); }
 @media (forced-colors: active) { .кн[aria-pressed="true"] { border: var(--liniya-silnaya) solid ButtonText; } }
 .кн--значок { padding: 0; min-width: var(--tsel-knopka); }
@@ -79,7 +79,8 @@
 .слой { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--otstup-8); }
 .слой__группа { display: inline-flex; border: var(--liniya-volosyanaya) solid var(--tsvet-liniya); }
 .слой__группа button { white-space: nowrap; min-height: var(--tsel-sloy); padding: 0 var(--otstup-12); border: var(--liniya-volosyanaya) solid transparent; margin: calc(-1 * var(--liniya-volosyanaya)); background: none; font-size: var(--tekst-interfeys-size); line-height: var(--tekst-interfeys-lh); }
-.слой__группа button[aria-pressed="true"] { background: var(--tsvet-podlozhka); font-weight: 600; position: relative; box-shadow: inset 0 calc(-1 * var(--liniya-silnaya)) 0 var(--tsvet-deystvie); }
+.слой__группа button[aria-pressed="true"] { --черта: inset 0 calc(-1 * var(--liniya-silnaya)) 0 var(--tsvet-deystvie); background: var(--tsvet-podlozhka); font-weight: 600; position: relative; box-shadow: var(--черта); }
+.кн[aria-pressed="true"]:focus-visible, .слой__группа button[aria-pressed="true"]:focus-visible, .кн[aria-pressed="true"].как-фокус, .слой__группа button[aria-pressed="true"].как-фокус { box-shadow: var(--черта), 0 0 0 calc(var(--liniya-zazor) * 2 + var(--liniya-fokus)) var(--tsvet-list); z-index: 1; }
 @media (forced-colors: active) {
   .слой__группа, .слой__группа button { border-color: ButtonText; }
   .слой__группа button[aria-pressed="true"] { forced-color-adjust: none; background: Highlight; color: HighlightText; }
@@ -330,3 +331,12 @@ dialog.диалог::backdrop { background: color-mix(in srgb, var(--tsvet-chern
   :root[data-text] .пункт-поиск { display: flex !important; }
 }
 @media (min-width: 37.5em) { .меню .пункт-поиск { display: none !important; } }
+.образ-время__края { display: flex; justify-content: space-between; gap: var(--otstup-8); margin-top: var(--otstup-4); }
+.образ-время__края .образ-время__имя { font-weight: 600; }
+/* ред. 3.2: составной адрес переносится между частями и не налезает на «Подробнее» (Н4) */
+.строка__адрес { white-space: normal; text-align: right; }
+.строка__адрес .адрес-текст { display: inline; }
+@media (max-width: 37.4375em) { .таблица thead th { position: static; } }
+@media (forced-colors: active) { .строка__зона:has(.строка__ссылка:focus-visible) { outline-color: Highlight; } }
+.строка-лица__имя a { display: inline-flex; align-items: center; min-height: var(--tsel-naimenshaya); min-width: var(--tsel-naimenshaya); }
+.поиск .кн { flex: none; }

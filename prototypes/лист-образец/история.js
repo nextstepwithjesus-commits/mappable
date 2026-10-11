@@ -41,12 +41,10 @@
       <div class="ряд-действий" role="group" aria-label="Работа с материалом">
         <button class="кн на-ноутбуке" type="button" aria-expanded="false" aria-controls="как-сослаться">${значок('сослаться')}Как сослаться</button>
         <button class="кн на-ноутбуке" type="button" data-ссылка>${значок('ссылка')}Ссылка на это место</button>
-        <button class="кн на-ноутбуке" type="button" onclick="print()">${значок('печать')}Печать</button>
-        <span class="меню-обёртка"><button class="кн" type="button" aria-haspopup="menu" aria-expanded="false" data-menu="меню-истории" aria-label="Ещё действия: Ной и потоп">${значок('действия')}Ещё действия</button>
-          <div class="меню" role="menu" id="меню-истории" hidden aria-label="Ещё действия: Ной и потоп">
-            <button role="menuitem" type="button" class="на-телефоне" data-раскрыть="как-сослаться">${значок('сослаться')}Как сослаться</button>
-            <button role="menuitem" type="button" class="на-телефоне" data-ссылка>${значок('ссылка')}Ссылка на это место</button>
-            <button role="menuitem" type="button" class="на-телефоне" onclick="print()">${значок('печать')}Печать</button>
+        <button class="кн на-ноутбуке от-1280" type="button" onclick="print()">${значок('печать')}Печать</button>
+        <span class="меню-обёртка на-ноутбуке"><button class="кн" type="button" aria-haspopup="menu" aria-expanded="false" data-menu="меню-истории" aria-label="Ещё действия: Ной и потоп">${значок('действия')}Ещё действия</button>
+          <div class="меню меню--справа" role="menu" id="меню-истории" hidden aria-label="Ещё действия: Ной и потоп">
+            <button role="menuitem" type="button" class="до-1280" onclick="print()">${значок('печать')}Печать</button>
             <button role="menuitem" type="button" data-заметка="Быт 6:9-9:17">${значок('заметка')}Заметка к истории</button>
             <button role="menuitem" type="button" data-закладка="Быт 6:9-9:17">${значок('закладка')}Закладка</button>
             ${естьГолос ? `<button role="menuitem" type="button" data-слушать>${значок('слушать')}Слушать</button>` : ''}
@@ -56,11 +54,20 @@
         <span class="слой-в-ряду">${О.переключательСлоя()}</span>
         ${О.показТелефон()}
       </div></div>
-    <div class="как-сослаться" id="как-сослаться" hidden>${какСослаться()}</div>
+    <!--ШАПКА--><div class="как-сослаться" id="как-сослаться" hidden>${какСослаться()}</div>
     <header class="шапка-истории">
-      <div class="шапка-истории__верх"><span class="шапка-истории__номер т-номер-истории ч-вз" aria-hidden="true">${ИСТ.номер}</span><h1 class="т-h1" id="h1" tabindex="-1"><span class="скрыто">История ${ИСТ.номер}. </span>Ной и потоп</h1></div>
-      <p class="шапка-истории__вид т-адрес"><span class="вид">${знакВида('событие')}событие</span><span>${О.слой2() ? адресТекст('Быт 6:9-9:17', '') : esc(полныйАдрес('Быт 6:9-9:17'))}</span><span class="тихая-строка">${esc(т)}</span></p>
-      <p class="коротко т-проза"><span class="подпись-голоса">Коротко, нашими словами. </span>${коротко.map((x) => `${esc(x.текст)} <span class="т-адрес">${адресТекст(x.стихи.join('; '), '')}</span>`).join(' ')}</p>
+      <div class="шапка-истории__верх"><h1 class="т-h1" id="h1" tabindex="-1">Ной и потоп</h1>
+      <span class="меню-обёртка на-телефоне-блок"><button class="кн" type="button" aria-haspopup="menu" aria-expanded="false" data-menu="меню-истории-т" aria-label="Ещё действия: Ной и потоп">${значок('действия')}Ещё действия</button>
+        <div class="меню меню--справа" role="menu" id="меню-истории-т" hidden aria-label="Ещё действия: Ной и потоп">
+          <button role="menuitem" type="button" data-раскрыть="как-сослаться">${значок('сослаться')}Как сослаться</button>
+          <button role="menuitem" type="button" data-ссылка>${значок('ссылка')}Ссылка на это место</button>
+          <button role="menuitem" type="button" onclick="print()">${значок('печать')}Печать</button>
+          <button role="menuitem" type="button" data-заметка="Быт 6:9-9:17">${значок('заметка')}Заметка к истории</button>
+          <button role="menuitem" type="button" data-закладка="Быт 6:9-9:17">${значок('закладка')}Закладка</button>
+          ${естьГолос ? `<button role="menuitem" type="button" data-слушать>${значок('слушать')}Слушать</button>` : ''}
+        </div></span></div>
+      <p class="шапка-истории__вид т-адрес"><span class="номер-истории ч3">История ${ИСТ.номер}</span><span class="вид">${знакВида('событие')}событие</span><span>${О.слой2() ? адресТекст('Быт 6:9-9:17', '') : `<span class="полный-адрес">${esc(полныйАдрес('Быт 6:9-9:17'))}</span><span class="краткий-адрес">${адресТекст('Быт 6:9-9:17', '')}</span>`}</span><span class="тихая-строка">${esc(т)}</span></p>
+      <p class="коротко т-проза"><span class="подпись-голоса">Коротко, нашими словами. </span>${О.коротко(коротко.slice(0, 1))}${коротко.length > 1 ? ` <button class="кн кн--текст кн-дальше" type="button" aria-expanded="false" aria-controls="коротко-дальше">дальше<span class="скрыто">: коротко, нашими словами</span></button><span id="коротко-дальше" hidden> ${О.коротко(коротко.slice(1))}</span>` : ''}</p>
     </header>`;
   }
   function какСослаться() {
@@ -96,12 +103,13 @@
         t = t.replace(new RegExp(`(^|[\\s(])${w}(?=[\\s,.;:])`, 'u'), (m, a) => `${a}<button class="слово-словаря" type="button" aria-expanded="false" aria-controls="${sid}" data-toggletip>${w}</button>`);
         сл += `<span class="раскрытие-на-месте" id="${sid}" hidden>${esc(СЛОВАРЬ[ключ] ?? '')}. <span class="ч2">Это пояснение, а не слова Библии.</span></span>`;
       }
-      const глава = s.г !== прежняяГлава ? `<span class="глава-номер т-номер-главы не-копировать" aria-hidden="true">${s.г}</span><span class="скрыто не-копировать">Глава ${s.г}. </span>` : '';
+      const новаяГлава = s.г !== прежняяГлава;
+      const глава = новаяГлава ? `<span class="глава-номер т-номер-главы не-копировать" aria-hidden="true">${s.г}</span><span class="скрыто не-копировать">Глава ${s.г}. </span>` : '';
       прежняяГлава = s.г;
-      return `<span class="стих" id="ст${s.г}.${s.с}">${глава}<span class="стих__номер не-копировать">${s.с} </span>${t} ${сл}</span>`;
+      return `<span class="стих" id="ст${s.г}.${s.с}">${глава}<span class="стих__номер не-копировать">${новаяГлава ? `<span class="глава-в-строке" aria-hidden="true">${s.г}:</span>` : ''}${s.с} </span>${t} ${сл}</span>`;
     }).join(' ');
     return `<section class="часть" aria-labelledby="${id}-з" id="${id}">
-      <h3 class="часть__заголовок" id="${id}-з"><button class="часть__кнопка" type="button" aria-expanded="${открыта}" aria-controls="${id}-т">${значок('раскрыть')}<span>Часть ${ч.n}. ${esc(ч.название)}</span> <span class="т-адрес">${адресТекст(ч.стихи, '')}</span>${трудная ? '<span class="т-адрес">трудное: здесь есть смерть</span>' : ''}</button></h3>
+      <h3 class="часть__заголовок" id="${id}-з"><button class="часть__кнопка" type="button" aria-expanded="${открыта}" aria-controls="${id}-т">${значок('раскрыть')}<span class="часть__текст">Часть ${ч.n}. ${esc(ч.название)} <span class="т-адрес">${адресТекст(ч.стихи, '')}</span>${трудная ? ' <span class="т-адрес">трудное: здесь есть смерть</span>' : ''}</span></button></h3>
       <div id="${id}-т" ${открыта ? '' : 'hidden'}>
         <div class="писание" lang="ru">${html}</div>
         ${ч.n === 1 && !О.слой2() ? `<p class="что-значат т-интерфейс"><span>Что значат слова:</span><button class="слово-словаря" type="button" aria-expanded="false" aria-controls="чз-1" data-toggletip>ковчег</button><button class="слово-словаря" type="button" aria-expanded="false" aria-controls="чз-2" data-toggletip>локоть</button></p><span class="раскрытие-на-месте" id="чз-1" hidden>${esc(СЛОВАРЬ.ковчег)}. <span class="ч2">Это пояснение, а не слова Библии.</span></span><span class="раскрытие-на-месте" id="чз-2" hidden>${esc(СЛОВАРЬ.локоть)}. <span class="ч2">Это пояснение, а не слова Библии.</span></span>` : ''}
@@ -145,7 +153,7 @@
   function инструменты() {
     const xs = [
       `<a class="малый-образ" href="#генеалогия"><span class="малый-образ__подпись">Генеалогия: 3 поколения</span>${О.слой2() ? '' : '<span class="малый-образ__вопрос">Чья это семья?</span>'}<span class="малый-образ__рисунок образ-без-рамки">${window.ОБРАЗЫ.генеалогия({ верх: 'Ламех', середина: 'Ной', низ: ['Сим', 'Хам', 'Иафет'] })}</span></a>`,
-      `<a class="малый-образ во-всю" href="#время"><span class="малый-образ__подпись">Время: до потопа</span>${О.слой2() ? '' : '<span class="малый-образ__вопрос">Когда это было?</span>'}<span class="малый-образ__рисунок образ-без-рамки">${window.ОБРАЗЫ.время(['antediluvian'], 'До Потопа')}</span></a>`,
+      `<a class="малый-образ во-всю" href="#время"><span class="малый-образ__подпись">Время: до потопа</span>${О.слой2() ? '' : '<span class="малый-образ__вопрос">Когда это было?</span>'}<span class="малый-образ__рисунок образ-без-рамки">${window.ОБРАЗЫ.время(['era-antediluvian'], 'До Потопа')}</span></a>`,
     ];
     return { html: `<div class="образы">${xs.join('')}</div><p class="голос-мы">География: место названо одно — горы Араратские (${адрес('Быт 8:4')}); карты на листе нет. Связи: этот раздел мы ещё не написали.</p>`, n: xs.length };
   }
@@ -171,10 +179,12 @@
   function отрисовать() {
     const части = Н.история.части;
     const открытаЛи = (ч) => (О.слой2() ? true : ч.n === 1 && !стихиДиапазона(ч.стихи).some((s) => ТРУДНЫЕ.has(s.адрес)));
-    document.getElementById('главное').innerHTML = `${шапкаИстории()}<div class="чтение">
-      <div class="чтение__текст">
-        <h2 class="строка-над-текстом подпись-голоса" id="так-написано">Так написано в Библии <button class="кн кн--тихо" type="button" data-части="1">Раскрыть все части</button></h2>
-        <div role="region" aria-labelledby="так-написано">${части.map((ч) => часть(ч, открытаЛи(ч))).join('')}</div>
+    const [полоса, ...шапка] = шапкаИстории().split('<!--ШАПКА-->');
+    document.getElementById('главное').innerHTML = `${полоса}<div class="чтение">
+      <div class="чтение__текст">${шапка.join('')}
+        <h2 class="подпись-голоса так-написано" id="так-написано">Так написано в Библии</h2>
+        <div class="части">${части.map((ч) => часть(ч, открытаЛи(ч))).join('')}</div>
+        <p><button class="кн кн--тихо" type="button" data-части="1">Раскрыть все части</button></p>
         <footer class="колофон т-адрес"><p>Ной и потоп — ${адрес('Быт 6:9-9:17')}. Текст: Синодальный перевод (1876); электронный текст: scrollmapper/bible_databases. ${esc(Д.эскиз)}. ${esc(Д.проба.плашка)}: сборка ${esc(Д.проба.коммит)}.</p><p><a href="#">Сообщить об ошибке</a></p></footer>
       </div>
       <div class="чтение__бок">
@@ -203,6 +213,7 @@
     } else if (t.dataset.закладка) { const на = t.getAttribute('aria-pressed') !== 'true'; t.setAttribute('aria-pressed', String(на)); О.объявить(на ? `Закладка: ${адрес(t.dataset.закладка)}` : 'Закладка убрана'); }
     else if (t.dataset.слушать !== undefined) О.слушать(document.querySelector('.коротко').textContent, document.getElementById('слушать-место'));
   });
+  document.addEventListener('click', (e) => { const b = e.target.closest('.кн-дальше'); if (!b) return; requestAnimationFrame(() => { b.firstChild.textContent = b.getAttribute('aria-expanded') === 'true' ? 'свернуть' : 'дальше'; }); });
   document.addEventListener('слой', отрисовать);
   document.addEventListener('DOMContentLoaded', () => {
     document.body.classList.add('страница-чтения');

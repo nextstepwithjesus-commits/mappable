@@ -13,23 +13,19 @@
     return `<span class="образ-генеалогия" style="aspect-ratio:${ширина}/${высота}"><svg viewBox="0 0 ${ширина} ${высота}" aria-hidden="true" class="образ-линии">${линии}</svg>${метка(верх, сер, y[0])}${метка(середина, сер, y[1], true)}${низ.map((н, i) => метка(н, xs[i], y[2])).join('')}</span>`;
   }
 
-  // указатель эпох: 16 равных клеток, клетка 16 — за знаком разрыва; залиты эпохи истории; имя — словом под лентой
+  // указатель эпох: одна полоса из 16 равных отрезков с волосной чертой между ними; залиты эпохи истории;
+  // подписаны крайние эпохи и залитая; клетка 16 — за знаком разрыва (08 § 7.5.1; арт Н-7)
   function время(залитые, подпись) {
-    const n = Д.эпохи.length; // 16
-    const w = 352, h = 24, разрыв = 10;
+    const n = Д.эпохи.length;
+    const w = 352, h = 16, разрыв = 10;
     const кл = (w - разрыв) / n;
-    let r = '';
-    Д.эпохи.forEach((e, i) => {
-      const x = i * кл + (i === n - 1 ? разрыв : 0);
-      const з = залитые.includes(e.id);
-      r += `<rect x="${(x + 0.5).toFixed(1)}" y="0.5" width="${(кл - 1.5).toFixed(1)}" height="${h - 1}" ${з ? 'fill="currentColor"' : 'fill="none" stroke="currentColor" stroke-width="1"'} class="${з ? '' : 'клетка-пустая'}"/>`;
-    });
+    let r = `<rect x="0.5" y="0.5" width="${((n - 1) * кл - 1).toFixed(1)}" height="${h - 1}" fill="none" stroke="currentColor" stroke-width="1" class="клетка-пустая"/>`;
+    r += `<rect x="${((n - 1) * кл + разрыв + 0.5).toFixed(1)}" y="0.5" width="${(кл - 1).toFixed(1)}" height="${h - 1}" fill="none" stroke="currentColor" stroke-width="1" class="клетка-пустая"/>`;
+    for (let i = 1; i < n - 1; i++) r += `<path d="M${(i * кл).toFixed(1)} 0V${h}" stroke="currentColor" stroke-width="1" class="клетка-пустая"/>`;
+    Д.эпохи.forEach((e, i) => { if (залитые.includes(e.id)) r += `<rect x="${(i * кл + (i === n - 1 ? разрыв : 0)).toFixed(1)}" y="0" width="${кл.toFixed(1)}" height="${h}" fill="currentColor"/>`; });
     const xr = (n - 1) * кл + 1;
-    r += `<path d="M${xr} ${h - 4}l4 -${h - 8}M${xr + 4} ${h - 4}l4 -${h - 8}" stroke="currentColor" stroke-width="1.5"/>`;
-    const первая = Д.эпохи.findIndex((e) => залитые.includes(e.id));
-    const xs = первая * кл + (кл * залитые.length) / 2;
-    r += `<path d="M${xs.toFixed(1)} ${h}v8" stroke="currentColor" stroke-width="1"/>`;
-    return `<span class="образ-время"><svg viewBox="0 0 ${w} ${h + 8}" aria-hidden="true">${r}</svg><span class="образ-время__имя т-адрес" style="padding-left:${Math.max(0, (xs / w) * 100 - 2)}%">${esc(подпись)}</span><span class="т-адрес образ-время__масштаб">не в масштабе</span></span>`;
+    r += `<path d="M${xr} ${h - 2}l3 -${h - 4}M${xr + 4} ${h - 2}l3 -${h - 4}" stroke="currentColor" stroke-width="1.5" class="клетка-пустая"/>`;
+    return `<span class="образ-время"><svg viewBox="0 0 ${w} ${h}" aria-hidden="true">${r}</svg><span class="образ-время__края т-адрес"><span>${esc(Д.эпохи[0].кратко)}</span><span class="образ-время__имя">${esc(подпись)}</span><span>${esc(Д.эпохи.at(-1).кратко)}</span></span><span class="т-адрес образ-время__масштаб">не в масштабе</span></span>`;
   }
 
   window.ОБРАЗЫ = { генеалогия, время };

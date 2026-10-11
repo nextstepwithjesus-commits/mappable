@@ -46,6 +46,7 @@
 
   // ---------- книги и адреса (08 § 6.1 п. 16) ----------
   const КНИГИ = Object.fromEntries(Д.книги.map((к) => [к.код, к]));
+  const КНИГИ_ПОРЯДОК = Object.fromEntries(Д.книги.map((к, i) => [к.код, i]));
   const кодВид = (код) => код.replace(/^(\d)/, `$1${NB}`); // «1Пар» → «1 Пар»
   function разобрать(адрес) {
     const m = адрес.replace(/\u00A0/g, ' ').replace(/\s*[–-]\s*/g, '-').match(/^(\d?\s?\S+?) (\d+):(\d+)(?:-(?:(\d+):)?(\d+))?$/);
@@ -87,6 +88,26 @@
       прежняя = p;
     }
     return out.map((x) => `${x.разд}<span class="нс">${x.t}</span>`).join('');
+  }
+  function поПорядку(адреса) {
+    const ключ = (a) => { const p = разобрать(a); return p ? [КНИГИ_ПОРЯДОК[p.код] ?? 99, p.г, p.с] : [99, 0, 0]; };
+    return [...адреса].sort((a, b) => { const x = ключ(a), y = ключ(b); return x[0] - y[0] || x[1] - y[1] || x[2] - y[2]; });
+  }
+  // сливает соседние стихи одной главы в диапазон: «Быт 7:2», «Быт 7:3» → «Быт 7:2-3»
+  function слить(адреса) {
+    const out = [];
+    for (const a of поПорядку(адреса)) {
+      const p = разобрать(a), q = out.length ? разобрать(out.at(-1)) : null;
+      if (q && p && q.код === p.код && q.г2 === p.г && q.г === p.г && p.с === q.с2 + 1 && p.г2 === p.г) out[out.length - 1] = `${q.код} ${q.г}:${q.с}-${p.с2}`;
+      else out.push(a);
+    }
+    return out;
+  }
+  function коротко(предложения) {
+    return предложения.map((x) => {
+      const слова = esc(x.текст).split(' '); const последнее = слова.pop();
+      return `${слова.join(' ')} <span class="нс">${последнее}${NB}<span class="т-адрес адрес-при-фразе">${адресТекст(слить(x.стихи).join('; '), '')}</span></span>`;
+    }).join(' ');
   }
   // имя адрес-кнопки: начинается с видимого адреса (2.5.3), без скрытого текста внутри (не попадает в копию)
   const имяАдреса = (a) => `${адрес(a).replace(/\u00A0/g, ' ')}, ${полныйАдрес(a)}`;
@@ -221,14 +242,15 @@
 
   // переключатель слоя на телефоне — кнопкой «Показ» в строке действий (решение координатора § 2): радиогруппа § 7.18
   function показТелефон() {
-    return `<span class="меню-обёртка показ-телефон"><button class="кн" type="button" aria-expanded="false" aria-controls="лист-показ" data-toggletip>${значок('слой')}<span>Показ</span></button>
+    return `<span class="меню-обёртка показ-телефон"><button class="кн" type="button" aria-expanded="false" aria-controls="лист-показ" data-toggletip>${значок('слой')}<span>Показать: ${слой2() ? 'для изучающих' : 'для начинающих'}</span></button>
       <span class="меню фасеты" id="лист-показ" hidden><fieldset class="радио"><legend>Показать</legend>${[['1', 'Для начинающих'], ['2', 'Для изучающих']].map(([v, п]) => `<label><input type="radio" name="показ" value="${v}" data-показ ${настройки.слой === v ? 'checked' : ''}> ${п}</label>`).join('')}</fieldset></span></span>`;
   }
   document.addEventListener('change', (e) => {
     const t = e.target; if (!t.matches?.('[data-показ]')) return;
     const v = t.value; document.querySelector(`[data-layer-set="${v}"]`)?.click();
-    document.querySelector('[aria-controls="лист-показ"]')?.setAttribute('aria-expanded', 'true');
+    const кн = document.querySelector('[aria-controls="лист-показ"]'); кн?.setAttribute('aria-expanded', 'true');
     const л = document.getElementById('лист-показ'); if (л) л.hidden = false;
+    if (кн && л) открытые.push({ кнопка: кн, цель: л });
     document.querySelector(`[data-показ][value="${v}"]`)?.focus();
   });
   // ---------- поведение (делегирование) ----------
@@ -259,6 +281,7 @@
     }
     if (!(t.getAttribute('role') || '').startsWith('menuitem')) закрытьМеню();
   });
+  const видимыеПункты = (м) => [...м.querySelectorAll('[role^="menuitem"]')].filter((x) => x.offsetParent !== null && getComputedStyle(x).visibility !== 'hidden');
   function переключитьМеню(кн) {
     const м = document.getElementById(кн.dataset.menu);
     const откр = кн.getAttribute('aria-expanded') !== 'true';
@@ -267,7 +290,7 @@
     кн.setAttribute('aria-expanded', 'true'); м.hidden = false;
     открытые.push({ кнопка: кн, цель: м, меню: true });
     м.querySelectorAll('[role^="menuitem"]').forEach((x) => { x.tabIndex = -1; });
-    м.querySelector('[role^="menuitem"]')?.focus();
+    видимыеПункты(м)[0]?.focus();
   }
   function закрытьМеню(вернуть = false) {
     for (let i = открытые.length - 1; i >= 0; i--) {
@@ -279,9 +302,16 @@
     }
   }
   document.addEventListener('keydown', (e) => {
+    const кнМ = e.target.closest?.('[data-menu]');
+    if (кнМ && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+      e.preventDefault();
+      if (кнМ.getAttribute('aria-expanded') !== 'true') переключитьМеню(кнМ);
+      const п = видимыеПункты(document.getElementById(кнМ.dataset.menu)); (e.key === 'ArrowUp' ? п.at(-1) : п[0])?.focus();
+      return;
+    }
     const м = e.target.closest?.('[role="menu"]');
     if (м) {
-      const пункты = [...м.querySelectorAll('[role^="menuitem"]')];
+      const пункты = видимыеПункты(м);
       const i = пункты.indexOf(e.target);
       if (e.key === 'ArrowDown') { e.preventDefault(); пункты[(i + 1) % пункты.length].focus(); }
       if (e.key === 'ArrowUp') { e.preventDefault(); пункты[(i - 1 + пункты.length) % пункты.length].focus(); }
@@ -387,5 +417,5 @@
   }
   const число = (n, формы) => `${n.toLocaleString('ru-RU').replace(/\s/g, NB)}${NB}${форма(n, формы)}`;
 
-  window.ОБЩЕЕ = { показТелефон, адресСписка, имяАдреса, обновитьОтступ, голоса, слушать, Д, NB, esc, значок, знакВида, настройки, записать, применить, слой2, детскиеПодсказки, объявить, КНИГИ, кодВид, разобрать, адрес, полныйАдрес, адресТекст, стихиДиапазона, показ, htmlСтиха, строкаКопии, вБуфер, шапка, плашкаПробы, переключательСлоя, полосаКниг, полка, знакПриложения, списокВыбор, оболочка, форма, число, открытые };
+  window.ОБЩЕЕ = { коротко, слить, видимыеПункты, показТелефон, адресСписка, имяАдреса, обновитьОтступ, голоса, слушать, Д, NB, esc, значок, знакВида, настройки, записать, применить, слой2, детскиеПодсказки, объявить, КНИГИ, кодВид, разобрать, адрес, полныйАдрес, адресТекст, стихиДиапазона, показ, htmlСтиха, строкаКопии, вБуфер, шапка, плашкаПробы, переключательСлоя, полосаКниг, полка, знакПриложения, списокВыбор, оболочка, форма, число, открытые };
 })();

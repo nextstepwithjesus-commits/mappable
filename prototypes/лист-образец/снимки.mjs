@@ -15,7 +15,7 @@ mkdirSync(СНИМКИ, { recursive: true });
 for (const f of readdirSync(СНИМКИ)) if (f.endsWith('.png')) unlinkSync(join(СНИМКИ, f));
 const AXE = readFileSync(join(ПАПКА, '..', '..', 'node_modules', 'axe-core', 'axe.min.js'), 'utf8');
 const url = (стр, q = '') => pathToFileURL(join(ПАПКА, стр)).href + (q ? `?${q}` : '');
-const И = { снимки: [], ошибкиJS: [], прокрутка: [], обрезка: [], шрифты: [], картинки: [], axe: [], контраст: [], цели: [], фокус: [], закрыт: [], раскрытие: [], знаков: [], номера: [], копия: {}, синопсис: [], строки: [] };
+const И = { снимки: [], ошибкиJS: [], прокрутка: [], обрезка: [], шрифты: [], картинки: [], axe: [], контраст: [], цели: [], фокус: [], закрыт: [], раскрытие: [], знаков: [], номера: [], копия: {}, синопсис: [], строки: [], р32: {}, пиксели: [], движки: [] };
 const тема_ = (т) => (т === 'light' ? 'светлая' : 'тёмная');
 
 const браузер = await chromium.launch();
@@ -141,7 +141,7 @@ const ЦЕЛИ_JS = (нужно) => {
   const вПредложении = (e) => {
     if (e.closest('.писание')) return true; // слово словаря и ссылки в тексте Писания — исключение «в строке текста»
     if (e.tagName !== 'A') return false;
-    const блок = e.closest('p, dd, li, td, blockquote, q'); if (!блок) return false;
+    const блок = e.closest('p, .т-проза'); if (!блок) return false;
     const свой = [...блок.querySelectorAll('a, button')].reduce((s, x) => s + x.textContent.length, 0);
     return блок.textContent.trim().length - свой >= 15; // в блоке есть текст предложения, кроме самих ссылок
   };
@@ -152,7 +152,8 @@ const ЦЕЛИ_JS = (нужно) => {
     if (e.matches('.скрыто-пропуск') && r.top < 0) return false;
     return !вПредложении(e);
   });
-  const мера = (e) => { const r = e.getBoundingClientRect(); const lab = e.closest('label'); return lab ? lab.getBoundingClientRect() : r; };
+  // цель растянутой ссылки строки — вся зона строки (08 § 7.27); цель радио и флажка — вся подпись
+  const мера = (e) => { if (e.matches('.строка__ссылка')) return e.closest('.строка__зона').getBoundingClientRect(); const lab = e.closest('label'); return lab ? lab.getBoundingClientRect() : e.getBoundingClientRect(); };
   const малые = xs.filter((e) => { const r = мера(e); return Math.round(r.height) < нужно || Math.round(r.width) < нужно; }).map((e) => { const r = мера(e); return { что: (e.getAttribute('aria-label') || e.textContent || e.tagName).trim().slice(0, 30), ш: Math.round(r.width), в: Math.round(r.height) }; });
   return { всего: xs.length, малые };
 };
@@ -186,13 +187,14 @@ for (const [ввод, нужно, w, h] of [['мышь', 24, 1280, 800], ['ка�
 { const { ctx, p } = await открыть('каталог.html', 'panel=0', { w: 1280, h: 800 }); await p.click('[aria-controls="фасеты"]'); await p.focus('[data-фильтр="родословие"]'); await p.keyboard.press('Space'); await p.keyboard.press('Escape'); И.фокус.push({ имя: '«Фильтры» скрыты после Esc', где: '', ок: await p.evaluate(() => document.getElementById('фасеты').hidden) }); await ctx.close(); }
 
 // ---------- фокус не закрыт: Shift + Tab, три точки (Л-8) ----------
-for (const [w, h, dpr, имя] of [[360, 640, 1, '360 × 640'], [320, 568, 1, '320 × 568'], [320, 256, 4, '400 %']]) for (const q of ['', 'view=table']) {
+for (const [w, h, dpr, имя] of [[360, 640, 1, '360 × 640'], [320, 568, 1, '320 × 568'], [320, 256, 4, '400 %'], [1280, 800, 1, '1280 × 800']]) for (const q of ['', 'view=table']) {
   const { ctx, p } = await открыть('каталог.html', `panel=0&${q}`, { w, h, dpr });
   await p.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
   await p.focus('#после-списка');
   let закрыто = 0, шагов = 0; const примеры = [];
-  for (let i = 0; i < 80; i++) {
+  for (let i = 0; i < 600; i++) {
     await p.keyboard.press('Shift+Tab'); шагов++;
+    if (await p.evaluate(() => document.activeElement?.matches?.('.скрыто-пропуск[href="#главное"]') || document.activeElement === document.body)) break;
     const r = await p.evaluate(() => {
       const a = document.activeElement; if (!a || a === document.body) return null;
       const b = a.getBoundingClientRect(); if (!b.width) return null;
@@ -275,11 +277,173 @@ for (const [w, h] of [[1280, 800], [1024, 768], [360, 640]]) for (const текс
 // ---------- строки каталога на первом экране (08 § 3.4; с плашкой пробы) ----------
 for (const [w, h, порог] of [[1280, 720, 12], [360, 560, 6], [1280, 800, 14], [360, 640, 8]]) for (const плотная of [false, true]) {
   const { ctx, p } = await открыть('каталог.html', `panel=0${плотная ? '&density=плотная' : ''}`, { w, h });
-  const r = await p.evaluate(() => { const xs = [...document.querySelectorAll('.список > .строка')]; return { n: xs.filter((r) => { const b = r.getBoundingClientRect(); return b.top >= 0 && b.bottom <= innerHeight; }).length, высоты: xs.slice(0, 12).map((r) => Math.round(r.getBoundingClientRect().height)) }; });
-  И.строки.push({ окно: `${w}×${h}`, плотная, строк: r.n, порог: плотная ? null : порог, высоты: r.высоты });
+  const r = await p.evaluate(() => { const xs = [...document.querySelectorAll('.список > .строка')]; const верх = (document.querySelector('.группа-заголовок') ?? xs[0]).getBoundingClientRect().top; const ряд = xs[0].getBoundingClientRect().height; return { область: Math.floor((innerHeight - верх) / ряд), n: xs.filter((r) => { const b = r.getBoundingClientRect(); return b.top >= 0 && b.bottom <= innerHeight; }).length, высоты: xs.slice(0, 12).map((r) => Math.round(r.getBoundingClientRect().height)) }; });
+  И.строки.push({ окно: `${w}×${h}`, плотная, строк: r.n, областьСтрок: r.область, порог: плотная ? null : порог, высоты: r.высоты });
   await ctx.close();
 }
+
+// ================= ред. 3.2: проверки по повторной проверке =================
+const R = И.р32;
+async function с(стр, q, w, h, fn, арг) { const { ctx, p } = await открыть(`${стр}.html`, `panel=0&${q}`, { w, h }); try { return await p.evaluate(fn, арг); } finally { await ctx.close(); } }
+// Н-1, Н5: двойных кавычек нет
+R.кавычки = [];
+for (const стр of ['история', 'карточка', 'лист']) for (const q of ['', 'layer=2']) R.кавычки.push({ стр, q, двойных: await с(стр, q, 1280, 800, () => (document.body.innerText.match(/««|»»/g) || []).length) });
+// Н-2, С3: адрес «Коротко» не рвётся и не стоит в начале строки
+R.коротко = [];
+for (const стр of ['история', 'карточка']) for (const [w, h] of [[1280, 800], [360, 640]]) for (const q of ['', 'layer=2']) {
+  R.коротко.push({ стр, w, q, ...(await с(стр, q, w, h, () => {
+    document.querySelectorAll('.кн-дальше').forEach((b) => b.click());
+    const xs = [...document.querySelectorAll('.коротко .адрес-при-фразе')];
+    let рвётся = 0, вНачале = 0;
+    for (const a of xs) {
+      const rs = [...a.getClientRects()].filter((r) => r.width > 0);
+      const строки = new Set(rs.map((r) => Math.round(r.top))); if (строки.size > 1) рвётся++;
+      const пред = a.parentElement.getClientRects()[0]; const мой = rs[0];
+      if (пред && мой && Math.abs(пред.top - мой.top) > 4 && a.parentElement.getClientRects().length === 1) вНачале++;
+    }
+    return { адресов: xs.length, рвётся, вНачале };
+  })) });
+}
+// Н-3: на телефоне в начале части — «6:9» одним куском, номер главы на поле скрыт
+R.главаТелефон = await с('история', '', 360, 640, () => { const н = document.querySelector('#часть-1-т .стих__номер'); const г = document.querySelector('#часть-1-т .глава-номер'); return { текст: н.innerText.replace(/\s/g, ''), строк: new Set([...н.getClientRects()].map((r) => Math.round(r.top))).size, главаНаПолеСкрыта: getComputedStyle(г).display === 'none' }; });
+// С2: номер истории — в строке адреса, «чернила-3», не за краем
+R.номерИстории = [];
+for (const w of [1024, 1280]) R.номерИстории.push({ w, ...(await с('история', '', w, 800, () => { const н = document.querySelector('.номер-истории'); const r = н.getBoundingClientRect(); return { текст: н.textContent, слева: Math.round(r.left), вСтрокеАдреса: !!н.closest('.шапка-истории__вид'), цвет: getComputedStyle(н).color }; })) });
+// Н-4, С9: на каталоге книги текущий пункт шапки не отмечен
+R.текущийПункт = await с('каталог', '', 1280, 800, () => document.querySelectorAll('.шапка [aria-current]').length);
+// С1: верх первого стиха без плашки пробы
+R.первыйСтих = [];
+for (const [w, h] of [[1280, 720], [1024, 768], [360, 560]]) R.первыйСтих.push({ окно: `${w}×${h}`, ...(await с('история', '', w, h, () => { const пл = document.querySelector('.плашка-пробы-полоса').getBoundingClientRect().height; const r = document.querySelector('#часть-1-т .стих').getClientRects()[0]; return { верхБезПлашки: Math.round(r.top - пл), виденСПлашкой: r.bottom <= innerHeight }; })) });
+// Н-5, Н-6: Карточка
+R.карточка = {
+  ноутбук: await с('карточка', '', 1280, 800, () => { const ф = [...document.querySelectorAll('.факт')].filter((x) => x.offsetParent && x.getBoundingClientRect().top >= 0 && x.getBoundingClientRect().bottom <= innerHeight).length; const блоки = [...document.querySelectorAll('.карточка-блоки .блок')]; let двойных = 0; for (const б of блоки) { const cs = getComputedStyle(б); if (parseFloat(cs.borderBottomWidth) > 0 && parseFloat(cs.borderTopWidth) > 0) двойных++; } const лиц = [...document.querySelectorAll('.карточка-блоки .строка-лица')].length; return { фактовНаПервомЭкране: ф, двойныхЧерт: двойных + лиц, переключательВПолосе: !!document.querySelector('.полоса-шапки .слой-в-ряду .слой') }; }),
+  телефон: await с('карточка', '', 360, 640, () => { const первый = document.querySelector('.карточка-блоки .блок'); const кн = [...document.querySelectorAll('.полоса-шапки .кн, .шапка-истории__верх .кн')].filter((x) => x.offsetParent); const строк = new Set(кн.map((x) => Math.round(x.getBoundingClientRect().top))).size; const портрет = document.querySelector('.портрет--телефон'); return { первыйБлокВиден: первый.getBoundingClientRect().top < innerHeight, строкДействий: строк, портретПослеПервыхБлоков: !!(портрет && портрет.compareDocumentPosition(первый) & Node.DOCUMENT_POSITION_PRECEDING) }; }),
+  цитатыРазмечены: await с('карточка', '', 1280, 800, () => { const ф = [...document.querySelectorAll('.факт .т-проза')]; const с = ф.filter((x) => /«/.test(x.textContent)); return { сКавычками: с.length, безQ: с.filter((x) => !x.querySelector('q')).length }; }),
+};
+// С4, Н7: синопсис — в простом слое отметок нет; во втором — отметка с контрастом ≥ 3 и чертой
+const КОНТРАСТ = (a, b) => { const L = (c) => { const [r, g, bb] = c.match(/\d+(\.\d+)?/g).map(Number); const f = (x) => { x /= 255; return x <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(bb); }; const [x, y] = [L(a), L(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+R.синопсис = {
+  простой: await с('лист', '', 1280, 800, () => document.querySelectorAll('mark.различие').length),
+  второй: await с('лист', 'layer=2', 1280, 800, () => { const m = document.querySelectorAll('mark.различие'); const cs = m[0] ? getComputedStyle(m[0]) : null; const td = m[0]?.closest('td'); let фон = 'rgb(255,255,255)'; for (let e = td; e; e = e.parentElement) { const b = getComputedStyle(e).backgroundColor; if (b && !/rgba\(0, 0, 0, 0\)|transparent/.test(b)) { фон = b; break; } } return { отметок: m.length, всегоСлов: [...document.querySelectorAll('.синопсис td')].reduce((s, t) => s + t.innerText.split(/\s+/).length, 0), черта: cs?.textDecorationLine, цветЧерты: cs?.textDecorationColor, фон }; }),
+};
+if (R.синопсис.второй.цветЧерты) R.синопсис.второй.контрастЧерты = Math.round(КОНТРАСТ(R.синопсис.второй.цветЧерты, R.синопсис.второй.фон) * 100) / 100;
+// С5, Н2: «Показ» говорит слой; Esc закрывает после смены слоя
+for (const стр of ['каталог', 'история', 'карточка']) {
+  const { ctx, p } = await открыть(`${стр}.html`, 'panel=0', { w: 360, h: 640 });
+  const подпись = await p.evaluate(() => document.querySelector('[aria-controls="лист-показ"]').innerText.trim());
+  await p.focus('[aria-controls="лист-показ"]'); await p.keyboard.press('Enter'); await p.focus('[data-показ][value="1"]'); await p.keyboard.press('ArrowDown'); await p.waitForTimeout(150); await p.keyboard.press('Escape'); await p.waitForTimeout(100);
+  const r = await p.evaluate(() => ({ скрыто: document.getElementById('лист-показ').hidden, фокус: document.activeElement?.getAttribute('aria-controls') === 'лист-показ', подписьПосле: document.querySelector('[aria-controls="лист-показ"]').innerText.trim() }));
+  (R.показ ??= []).push({ стр, подпись, ...r });
+  await ctx.close();
+}
+// Н1: меню шапки и «Ещё действия» с клавиатуры (APG)
+R.меню = [];
+for (const [w, h, т] of [[360, 640, ''], [800, 800, ''], [1280, 800, ''], [360, 640, 'text=самый']]) for (const стр of ['каталог', 'история', 'карточка', 'главная']) {
+  const { ctx, p } = await открыть(`${стр}.html`, `panel=0&${т}`, { w, h });
+  const кнопки = await p.evaluate(() => [...document.querySelectorAll('[data-menu]')].filter((b) => b.offsetParent).map((b) => b.dataset.menu));
+  for (const id of кнопки) {
+    await p.focus(`[data-menu="${id}"]`); await p.keyboard.press('Enter'); await p.waitForTimeout(60);
+    const вМеню = await p.evaluate((id) => !!document.activeElement.closest(`#${CSS.escape(id)}`), id);
+    const первый = await p.evaluate(() => document.activeElement.textContent.trim());
+    await p.keyboard.press('ArrowDown'); const второй = await p.evaluate(() => document.activeElement.textContent.trim());
+    await p.keyboard.press('Escape'); const вернулся = await p.evaluate((id) => document.activeElement?.dataset?.menu === id, id);
+    R.меню.push({ стр, окно: `${w}${т ? ' самый' : ''}`, id, вМеню, стрелка: первый !== второй, вернулся });
+  }
+  await ctx.close();
+}
+// Н3: первая строка таблицы видна на телефоне
+R.таблицаТелефон = [];
+for (const [w, h] of [[360, 640], [320, 568], [599, 800]]) R.таблицаТелефон.push({ w, ...(await с('каталог', 'view=table', w, h, () => { const a = document.querySelector('.таблица tbody tr:first-child a'); a.scrollIntoView({ block: 'center' }); const r = a.getBoundingClientRect(); const e = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return { видна: e === a || a.contains(e) }; })) });
+// Н4: буквы адреса не пересекают «Подробнее»
+R.адресКнопка = [];
+for (const w of [800, 1024, 1280]) for (const т of ['', 'text=самый']) R.адресКнопка.push({ w, т, пересечений: await с('каталог', т, w, 900, () => { let n = 0; for (const стр of document.querySelectorAll('.список > .строка')) { const a = стр.querySelector('.строка__адрес [aria-hidden="true"]'); const b = стр.querySelector('.строка__подробнее').getBoundingClientRect(); const rg = document.createRange(); rg.selectNodeContents(a); for (const r of rg.getClientRects()) if (r.width && r.left < b.right && b.left < r.right && r.top < b.bottom && b.top < r.bottom) { n++; break; } } return n; }) });
+// Н6: настоящий :focus-visible у нажатых сегментов — рамка и кайма вместе с чертой
+{
+  const { ctx, p } = await открыть('каталог.html', 'panel=0', { w: 1280, h: 800 });
+  await p.focus('[data-вид="список"]'); await p.keyboard.press('Shift+Tab'); await p.keyboard.press('Tab');
+  const сегмент = await p.evaluate(() => { const cs = getComputedStyle(document.activeElement); return { что: document.activeElement.textContent.trim(), рамка: cs.outlineWidth + ' ' + cs.outlineStyle, тени: (cs.boxShadow.match(/rgb/g) || []).length }; });
+  await p.focus('[data-layer-set="2"]'); await p.keyboard.press('Shift+Tab'); await p.keyboard.press('Tab');
+  const слой = await p.evaluate(() => { const cs = getComputedStyle(document.activeElement); return { что: document.activeElement.textContent.trim(), рамка: cs.outlineWidth + ' ' + cs.outlineStyle, тени: (cs.boxShadow.match(/rgb/g) || []).length }; });
+  R.фокусНажатых = { сегмент, слой };
+  await ctx.close();
+}
+// Н8: разбор axe incomplete по пикселям букв (снимок узла с текстом и с прозрачным текстом; 90-й процентиль контраста по точкам букв)
+{
+  const состояния = [['лист', '', 1280, 800], ['лист', '', 360, 640], ['каталог', 'view=table&layer=2', 360, 640], ['каталог', '', 1280, 800], ['главная', '', 360, 640], ['история', '', 1280, 800], ['карточка', '', 1280, 800]];
+  for (const [стр, q, w, h] of состояния) {
+    const { ctx, p } = await открыть(`${стр}.html`, `panel=0&${q}`, { w, h });
+    await p.addScriptTag({ content: AXE });
+    await p.addStyleTag({ content: '.пиксель-без-текста, .пиксель-без-текста * { color: transparent !important; text-decoration-color: transparent !important; }' });
+    const узлы = await p.evaluate(async () => { const res = await window.axe.run(document, { runOnly: { type: 'rule', values: ['color-contrast'] } }); return res.incomplete.flatMap((v) => v.nodes.map((n) => ({ sel: n.target[0], почему: n.any[0]?.data?.messageKey ?? n.any[0]?.message?.slice(0, 40) }))); });
+    for (const у of узлы) {
+      const л = p.locator(у.sel).first();
+      try {
+        await л.scrollIntoViewIfNeeded({ timeout: 2000 });
+        const box = await л.boundingBox(); if (!box || box.width < 2 || box.height < 2) { И.пиксели.push({ стр, w, sel: у.sel, почему: у.почему, итог: 'нет кадра' }); continue; }
+        const с1 = (await л.screenshot({ timeout: 3000 })).toString('base64');
+        await л.evaluate((e) => e.classList.add('пиксель-без-текста'));
+        const с2 = (await л.screenshot({ timeout: 3000 })).toString('base64');
+        await л.evaluate((e) => e.classList.remove('пиксель-без-текста'));
+        const k = await p.evaluate(async ([a, b]) => {
+          const img = (src) => new Promise((r) => { const i = new Image(); i.onload = () => r(i); i.src = `data:image/png;base64,${src}`; });
+          const [i1, i2] = await Promise.all([img(a), img(b)]);
+          const c = document.createElement('canvas'); c.width = i1.width; c.height = i1.height; const x = c.getContext('2d');
+          x.drawImage(i1, 0, 0); const d1 = x.getImageData(0, 0, c.width, c.height).data; x.clearRect(0, 0, c.width, c.height); x.drawImage(i2, 0, 0); const d2 = x.getImageData(0, 0, c.width, c.height).data;
+          const lin = (v) => { v /= 255; return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+          const L = (d, i) => 0.2126 * lin(d[i]) + 0.7152 * lin(d[i + 1]) + 0.0722 * lin(d[i + 2]);
+          const ks = [];
+          for (let i = 0; i < d1.length; i += 4) { if (Math.abs(d1[i] - d2[i]) + Math.abs(d1[i + 1] - d2[i + 1]) + Math.abs(d1[i + 2] - d2[i + 2]) < 40) continue; const a1 = L(d1, i), a2 = L(d2, i); ks.push((Math.max(a1, a2) + 0.05) / (Math.min(a1, a2) + 0.05)); }
+          if (!ks.length) return null; ks.sort((p, q) => p - q); return { точек: ks.length, к90: Math.round(ks[Math.floor(ks.length * 0.9)] * 100) / 100 };
+        }, [с1, с2]);
+        И.пиксели.push({ стр, w, sel: у.sel, почему: у.почему, итог: k ? (k.к90 >= 4.5 ? 'норма' : `НИЖЕ: ${k.к90}`) : 'букв в кадре нет', ...(k ?? {}) });
+      } catch (err) { И.пиксели.push({ стр, w, sel: у.sel, почему: у.почему, итог: 'не снят' }); }
+    }
+    await ctx.close();
+  }
+}
+// ---------- WebKit и Firefox: основные проверки ----------
+import('playwright').then(() => {});
 await браузер.close();
+{
+  const { webkit, firefox } = await import('playwright');
+  // браузеры из кэша Playwright на этой машине (своя версия у проекта не скачана; скачивание — только с согласия владельца)
+  const КЭШ = join(process.env.HOME, 'Library', 'Caches', 'ms-playwright');
+  const ПУТИ = { WebKit: join(КЭШ, 'webkit-2336', 'pw_run.sh'), Firefox: join(КЭШ, 'firefox-1538', 'firefox', 'Nightly.app', 'Contents', 'MacOS', 'firefox') };
+  for (const [имя, движок] of [['WebKit', webkit], ['Firefox', firefox]]) {
+    let б;
+    try { б = await движок.launch(); } catch { try { б = await движок.launch({ executablePath: ПУТИ[имя] }); } catch (e) { И.движки.push({ движок: имя, ошибка: String(e).split('\n')[0] }); continue; } }
+    const итог = { движок: имя, страниц: 0, ошибкиJS: 0, прокрутка: [], обрезка: [], шрифты: [], фокус: [], меню: [], показ: null, копия: null };
+    for (const стр of ЭКРАНЫ) for (const [w, h] of [[1280, 800], [360, 640]]) {
+      const ctx = await б.newContext({ viewport: { width: w, height: h } }); const p = await ctx.newPage(); const ош = [];
+      p.on('pageerror', (e) => ош.push(String(e)));
+      await p.goto(url(`${стр}.html`, 'panel=0'), { waitUntil: 'load' }); await p.evaluate(() => document.fonts.ready); await p.waitForTimeout(200);
+      итог.страниц++; итог.ошибкиJS += ош.length;
+      const [ш, пр, об] = await p.evaluate(([J]) => [document.fonts.check('600 30px Literata', 'ЙЁ') && document.fonts.check('450 14px "Golos Text"', 'ЙЁ'), document.documentElement.scrollWidth - innerWidth, eval(J)()], [`(${ОБРЕЗКА_JS})`]);
+      if (!ш) итог.шрифты.push(`${стр}-${w}`); if (пр > 0) итог.прокрутка.push(`${стр}-${w}: ${пр}`); if (об.length) итог.обрезка.push(`${стр}-${w}: ${об.join('|')}`);
+      if (стр === 'каталог' && w === 1280) {
+        await p.click('[aria-controls="фасеты"]'); await p.focus('[data-фильтр="родословие"]'); await p.keyboard.press('Space'); await p.waitForTimeout(100);
+        итог.фокус.push({ что: 'флажок', ок: await p.evaluate(() => document.activeElement !== document.body) });
+        await p.keyboard.press('Escape'); итог.фокус.push({ что: 'Esc «Фильтры»', ок: await p.evaluate(() => document.getElementById('фасеты').hidden) });
+        await p.focus('[data-layer-set="2"]'); await p.keyboard.press('Enter'); await p.waitForTimeout(150); итог.фокус.push({ что: 'слой', ок: await p.evaluate(() => document.activeElement?.dataset?.layerSet === '2') });
+      }
+      if (стр === 'каталог' && w === 360) {
+        await p.focus('[data-menu="меню-шапки"]'); await p.keyboard.press('Enter'); await p.waitForTimeout(60);
+        итог.меню.push({ что: 'меню шапки', вМеню: await p.evaluate(() => !!document.activeElement.closest('[role=menu]')) });
+        await p.keyboard.press('Escape');
+        await p.focus('[aria-controls="лист-показ"]'); await p.keyboard.press('Enter'); await p.focus('[data-показ][value="1"]'); await p.keyboard.press('ArrowDown'); await p.waitForTimeout(150); await p.keyboard.press('Escape'); await p.waitForTimeout(80);
+        итог.показ = await p.evaluate(() => ({ скрыто: document.getElementById('лист-показ').hidden }));
+      }
+      if (стр === 'история' && w === 1280) {
+        итог.копия = await p.evaluate(() => { const Д = window.ДАННЫЕ, О = window.ОБЩЕЕ; let ок = 0, всего = 0; for (const s of document.querySelectorAll('#часть-1-т .стих')) { const [г, с] = s.id.replace('ст', '').split('.'); const r = document.createRange(); r.selectNodeContents(s); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); const t = sel.toString().replace(/\s+/g, ' ').trim(); всего++; if (t === О.показ(Д.стихи[`Быт ${г}:${с}`])) ок++; } return `${ок}/${всего}`; });
+        await p.focus('[data-menu="меню-истории"]'); await p.keyboard.press('Enter'); await p.waitForTimeout(60);
+        итог.меню.push({ что: 'Ещё действия', вМеню: await p.evaluate(() => !!document.activeElement.closest('[role=menu]')) });
+      }
+      await ctx.close();
+    }
+    await б.close();
+    И.движки.push(итог);
+  }
+}
 writeFileSync(join(СНИМКИ, 'проверки.json'), JSON.stringify(И, null, 1));
 const axeН = И.axe.reduce((s, x) => s + x.нарушения.reduce((a, v) => a + v.n, 0), 0);
 console.log(`снимков: ${И.снимки.length}; ошибок JS: ${И.ошибкиJS.length}; прокрутка: ${И.прокрутка.map((x) => `${x.имя} ${x.px}`).join(', ') || 0}; обрезка: ${И.обрезка.map((x) => `${x.имя}: ${x.обрезка.join('|')}`).join('; ') || 0}; без шрифтов: ${И.шрифты.length}; картинки не загружены: ${И.картинки.map((x) => x.имя).join(', ') || 0}`);
@@ -292,4 +456,7 @@ console.log(`раскрытие под ссылкой: ${И.раскрытие.m
 console.log(`знаков в строке: ${И.знаков.map((x) => `${x.окно}/${x.текст} ${x.знаков} (колонка ${x.колонка}, ${x.кегль} ${x.насыщенность}, пересечений номеров ${x.пересечений})`).join('; ')}`);
 console.log(`копия: стихи ${И.копия.стихиОк}/${И.копия.стихов}; строка лица без раскрытия адреса: ${!/Бытие, глава/.test(И.копия.лицо)}; строка каталога без раскрытия: ${И.копия.строкаКаталогаБезРаскрытия}`);
 console.log(`синопсис 360: ${JSON.stringify(И.синопсис)}`);
-console.log(`строки каталога: ${И.строки.map((x) => `${x.окно}${x.плотная ? ' плотная' : ''} ${x.строк}${x.порог ? `/${x.порог}` : ''}`).join('; ')}`);
+console.log(`ред. 3.2: ${JSON.stringify(И.р32)}`);
+console.log(`пиксели incomplete: всего ${И.пиксели.length}; ${Object.entries(И.пиксели.reduce((m, x) => { const k = x.итог.startsWith('НИЖЕ') ? 'НИЖЕ' : x.итог; m[k] = (m[k] ?? 0) + 1; return m; }, {})).map(([k, v]) => `${k} ${v}`).join(', ')}; ниже: ${И.пиксели.filter((x) => x.итог.startsWith('НИЖЕ')).map((x) => `${x.стр} ${x.sel} ${x.итог}`).slice(0, 8).join('; ')}`);
+console.log(`движки: ${JSON.stringify(И.движки)}`);
+console.log(`строки каталога (видно / по области списка / порог): ${И.строки.map((x) => `${x.окно}${x.плотная ? ' плотная' : ''} ${x.строк} / ${x.областьСтрок}${x.порог ? ` / ${x.порог}` : ''}`).join('; ')}`);

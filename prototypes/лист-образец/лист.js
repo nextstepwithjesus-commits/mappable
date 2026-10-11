@@ -191,13 +191,14 @@
       const фок = сост.includes('фокус');
       const кл = `${выбр ? ' выбран' : ''}${фок ? ' как-фокус' : ''}`;
       if (вид === 'залитый' || вид === 'полый') return `<button type="button" tabindex="-1" class="эл-цель${кл}" aria-label="Знак: ${вид}, ${сост}"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><circle cx="12" cy="12" r="7" ${вид === 'залитый' ? 'fill="currentColor"' : 'fill="none" stroke="currentColor" stroke-width="2"'}/>${выбр ? '<circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>' : ''}</svg></button>`;
-      if (вид === 'плотная') return `<button type="button" tabindex="-1" class="эл-кн эл-кн--плотная${кл}">Начать</button>`;
-      return `<button type="button" tabindex="-1" class="эл-кн эл-кн--нажата${кл}" aria-pressed="true">Нажато</button>`;
+      // кнопки — классы и правила продукта: выбор = aria-pressed, фокус = то же правило, что :focus-visible (Н6)
+      if (вид === 'кнопка') return `<button type="button" tabindex="-1" class="кн${фок ? ' как-фокус' : ''}" aria-pressed="${выбр}">Список</button>`;
+      return `<span class="слой__группа"><button type="button" tabindex="-1" class="${фок ? 'как-фокус' : ''}" aria-pressed="${выбр}">Для изучающих</button></span>`;
     };
     const СОСТ = ['нет', 'выбран', 'фокус', 'выбран и фокус'];
-    const ВИДЫ = [['залитый', 'залитый знак'], ['полый', 'полый знак'], ['плотная', 'плотная кнопка'], ['нажатая', 'нажатая кнопка']];
+    const ВИДЫ = [['залитый', 'залитый знак'], ['полый', 'полый знак'], ['кнопка', 'кнопка-сегмент «Список / Таблица»'], ['сегмент', 'сегмент переключателя слоя']];
     const сетка = (тема) => `<div class="образец" data-theme="${тема}"><span class="образец__подпись т-адрес">${тема === 'dark' ? 'Тёмная' : 'Светлая'} тема. Столбцы: нет, выбран, фокус, выбран и фокус</span>${ВИДЫ.map(([в, имя]) => `<p class="т-адрес" style="margin-top:var(--otstup-8)">${имя}</p>${ПОДЛОЖКИ.map(([п, к]) => `<div class="подложка-ряд ${к}"><span class="т-адрес">${п}</span>${СОСТ.map((с) => `<span class="состояние-элемент">${эл(в, с)}</span>`).join('')}</div>`).join('')}`).join('')}</div>`;
-    return `<p class="т-проза">4 вида элемента × 4 состояния на 7 подложках, на настоящих кнопках. Фокус — то же правило CSS, что у <code>:focus-visible</code>: прямоугольная рамка 3 px по краю цели, зазор и кайма «лист». Выбор — кольцо 2 px по форме знака (у знака) или черта цветом действия и рамка внутрь (у кнопки): рамка фокуса им не занята.</p>
+    return `<p class="т-проза">4 вида элемента × 4 состояния на 7 подложках, на настоящих кнопках. Фокус — то же правило CSS, что у <code>:focus-visible</code>: прямоугольная рамка 3 px по краю цели, зазор и кайма «лист». Выбор — кольцо 2 px по форме знака (у знака) или нажатое состояние продукта (подложка и черта цветом действия) у кнопок; «выбран и фокус» у кнопок — то же правило, что в продукте: черта и кайма складываются.</p>
       <div class="рядом">${сетка('light')}${сетка('dark')}</div>
       <h3 class="т-книга" style="margin-top:var(--otstup-24)">Все 16 при 400 %</h3>
       <div class="таблица-обёртка увеличение-обёртка" tabindex="0" role="region" aria-label="16 состояний при 400 %"><div class="увеличено-400">${ВИДЫ.map(([в]) => `<div class="подложка-ряд фон-лист" style="grid-template-columns:repeat(4,max-content);column-gap:var(--otstup-12)">${СОСТ.map((с) => `<span class="состояние-элемент">${эл(в, с)}</span>`).join('')}</div>`).join('')}</div></div>
@@ -284,13 +285,14 @@
     const ячейкаС = (сц, к) => {
       const свои = слова(текст(к, сц[к])).filter((x) => !/^\s+$/.test(x));
       const другие = К3.filter((x) => x !== к).map((x) => слова(текст(x, сц[x])).filter((y) => !/^\s+$/.test(y)));
-      const с = другие.map((д) => общие(свои, д));
-      return свои.map((w, i) => (норм(w) && !с.every((set) => set.has(i)) ? `<mark class="различие">${esc(w)}</mark>` : esc(w))).join(' ');
+      // своё: нормализованного слова нет ни в одном другом рассказе этой сцены (С4, Н-9); в простом слое отметок нет
+      const чужие = new Set(другие.flat().map(норм));
+      return свои.map((w) => (О.слой2() && норм(w) && !чужие.has(норм(w)) ? `<mark class="различие">${esc(w)}</mark>` : esc(w))).join(' ');
     };
-    const синопсис = `<div class="синопсис-обёртка"><p class="т-интерфейс">Расслабленного спускают через кровлю: три рассказа по сценам (разметка сцен — эскиз шага 0). <span class="ч2">Подложкой отмечены слова, которых нет хотя бы в одном другом рассказе сцены (второй слой).</span></p>
-      <div class="вкладки синопсис-вкладки" role="tablist" aria-label="Рассказы">${К3.map((к, i) => `<button role="tab" type="button" id="вк-${к}" data-вкладка="${к}" aria-selected="${i === 1}" tabindex="${i === 1 ? 0 : -1}">${esc(р.рассказы[i].строка.replace('Евангелие от ', ''))}</button>`).join('')}</div>
-      <table class="синопсис"><caption class="скрыто">Три рассказа по сценам</caption><thead><tr>${р.рассказы.map((x, i) => `<th scope="col" class="кол-${К3[i]}">${esc(x.строка)} <span class="т-адрес">${адрес(x.стихи)}</span></th>`).join('')}</tr></thead><tbody>
-      ${сцены.map((сц) => `<tr><th colspan="3" scope="colgroup" class="сцена">Сцена: ${esc(сц.сцена)}</th></tr><tr>${К3.map((к) => `<td class="кол-${к}"><span class="т-адрес">${адрес(`${к} ${сц[к].replace('–', '-')}`)}</span><br>${ячейкаС(сц, к)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+    const синопсис = `<div class="синопсис-обёртка"><p class="т-интерфейс">Расслабленного спускают через кровлю: три рассказа по сценам (разметка сцен — эскиз шага 0). ${О.слой2() ? '<span class="ч2">Подчёркнуто — слова, которых нет ни в одном другом рассказе этой сцены.</span>' : ''}</p>
+      <div class="вкладки синопсис-вкладки" role="tablist" aria-label="Рассказы">${К3.map((к, i) => `<button role="tab" type="button" id="вк-${к}" data-вкладка="${к}" aria-controls="синопсис-панель" aria-selected="${i === 1}" tabindex="${i === 1 ? 0 : -1}">${esc(р.рассказы[i].строка.replace('Евангелие от ', ''))}</button>`).join('')}</div>
+      <div id="синопсис-панель" class="синопсис-панель"><table class="синопсис"><caption class="скрыто">Три рассказа по сценам</caption><thead><tr>${р.рассказы.map((x, i) => `<th scope="col" class="кол-${К3[i]}">${esc(x.строка)} <span class="т-адрес">${адрес(x.стихи)}</span></th>`).join('')}</tr></thead><tbody>
+      ${сцены.map((сц) => `<tr><th colspan="3" scope="colgroup" class="сцена">Сцена: ${esc(сц.сцена)}</th></tr><tr>${К3.map((к) => `<td class="кол-${к}"><span class="т-адрес">${адрес(`${к} ${сц[к].replace('–', '-')}`)}</span><br>${ячейкаС(сц, к)}</td>`).join('')}</tr>`).join('')}</tbody></table></div></div>`;
     return `<p class="т-проза">Матрица — ключевые компоненты в обеих темах. Остальные оси (ширина, способ ввода, плотность, слой) — переключатели вверху и снимки; полный каталог компонентов по 08 § 10.1 делается в коде продукта.</p>
       <div class="стопка">${таблица("light")}${таблица("dark")}</div>
       <h3 class="т-книга" style="margin-top:var(--otstup-24)">Меню, диалог, подсказка</h3>
@@ -380,7 +382,7 @@
     const м = document.getElementById('главное');
     м.classList.add('лист');
     м.innerHTML = `<header style="padding-top:var(--otstup-24)"><h1 class="т-h1" id="h1" tabindex="-1">Лист-образец редакции 3</h1>
-      <p class="т-проза">По 08 ред. 3.2 (В-27; поправки В-28, В-29). Прототип для команды и рецензентов: владельцу как облик не показывается, проверки § 10.3 ещё не было. ${esc(Д.проба.плашка)}.</p>
+      <p class="т-проза">По 08 ред. 3.2 (В-27; поправки В-28, В-29). Прототип для команды и рецензентов. Редакция 3.2 — после панели и повторной проверки (рецензии в docs/app/reviews/). ${esc(Д.проба.плашка)}.</p>
       <nav class="ссылки-экранов т-интерфейс" aria-label="Разделы листа" style="margin-top:var(--otstup-8)">${[['цвет', 'Цвет'], ['шкала', 'Шкала'], ['действие', 'Цвет действия'], ['сетка', 'Сетка'], ['экраны', 'Экраны и строки'], ['узоры', 'Узоры'], ['достоверность', 'Достоверность'], ['состояния', '16 состояний'], ['знаки', 'Знаки'], ['нет', 'Нет сведений'], ['матрица', 'Компоненты'], ['голоса', 'Голоса'], ['материал', 'Работа с материалом'], ['движение', 'Движение'], ['зрение', 'Зрение'], ['простой', 'Простой слой'], ['образцы', 'Образцы'], ['знак', 'Знак приложения']].map(([id, т]) => `<a href="#${id}">${т}</a>`).join('')}</nav></header>
       ${раздел('цвет', 1, 'Токены цвета и контраст', цвет(), '1')}
       ${раздел('шкала', 2, 'Шкала кеглей на настоящем тексте', шкала(), '2')}
@@ -484,7 +486,7 @@
   function выбратьВкладку(b) {
     const об = b.closest('.синопсис-обёртка');
     об.querySelectorAll('[role="tab"]').forEach((x) => { const да = x === b; x.setAttribute('aria-selected', String(да)); x.tabIndex = да ? 0 : -1; });
-    об.dataset.вкладка = b.dataset.вкладка; b.focus();
+    об.dataset.вкладка = b.dataset.вкладка; if (об.querySelector('.синопсис-панель')?.getAttribute('role')) об.querySelector('.синопсис-панель').setAttribute('aria-labelledby', b.id); b.focus();
   }
   document.addEventListener('click', (e) => { const b = e.target.closest('.синопсис-вкладки [role="tab"]'); if (b) выбратьВкладку(b); });
   document.addEventListener('keydown', (e) => {
@@ -492,7 +494,13 @@
     const все = [...b.parentElement.children]; const i = все.indexOf(b);
     if (e.key === 'ArrowRight') { e.preventDefault(); выбратьВкладку(все[(i + 1) % все.length]); }
     if (e.key === 'ArrowLeft') { e.preventDefault(); выбратьВкладку(все[(i - 1 + все.length) % все.length]); }
+    if (e.key === 'Home') { e.preventDefault(); выбратьВкладку(все[0]); }
+    if (e.key === 'End') { e.preventDefault(); выбратьВкладку(все.at(-1)); }
   });
+  function рольПанели() { document.querySelectorAll('.синопсис-обёртка').forEach((о) => { const видно = getComputedStyle(о.querySelector('.синопсис-вкладки')).display !== 'none'; const п = о.querySelector('.синопсис-панель'); if (видно) { п.setAttribute('role', 'tabpanel'); п.setAttribute('aria-labelledby', о.querySelector('[role=tab][aria-selected=true]').id); } else { п.removeAttribute('role'); п.removeAttribute('aria-labelledby'); } }); }
+  addEventListener('resize', рольПанели);
+  document.addEventListener('DOMContentLoaded', () => requestAnimationFrame(рольПанели));
+  document.addEventListener('слой', () => requestAnimationFrame(рольПанели));
   document.addEventListener('слой', отрисовать);
   addEventListener('resize', () => { const кл = document.getElementById('класс-окна'); if (кл) кл.textContent = `${innerWidth} px`; });
   void полныйАдрес; void адресТекст;
