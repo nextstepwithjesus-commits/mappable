@@ -1,0 +1,491 @@
+{
+ "tag": "chromium-real-360-x6-zoom_css",
+ "browser": "chromium",
+ "version": "153.0.8010.12",
+ "dataset": "real",
+ "window": "360×640@2",
+ "cpu": 6,
+ "extra": "zoom=css",
+ "load": {
+  "k": 1,
+  "sx": 40409.4375,
+  "sy": 2609.5,
+  "renderer": "svgpath",
+  "last": {
+   "labels": 67,
+   "segs": 97,
+   "elements": 6,
+   "buildMs": 14.600000143051147,
+   "builds": 1,
+   "far": false,
+   "canvasMB": 0
+  },
+  "v": {
+   "w": 360,
+   "h": 555
+  },
+  "geomW": 63057.6875,
+  "geomH": 16124,
+  "persons": 2373,
+  "timings": {
+   "fetch": 16.5,
+   "forest": 8.799999952316284,
+   "fonts": 4.6000001430511475,
+   "measure": 10,
+   "layout": 5.200000047683716,
+   "grid": 1.7999999523162842,
+   "workerTotal": 153.40000009536743,
+   "fontsWait": 0,
+   "firstBuild": 17.799999952316284,
+   "twin": 64.39999985694885,
+   "firstFrameFromRequest": 283.5,
+   "firstFrameFromNav": 328.5,
+   "moduleStart": 41.200000047683716,
+   "measuredInWorker": 1
+  },
+  "selected": -1,
+  "dom": {
+   "total": 7324,
+   "rendered": 407,
+   "schema": 208
+  },
+  "heap": {
+   "jsHeapMB": 4.9,
+   "jsHeapTotalMB": 8.8,
+   "nodes": 12198
+  }
+ },
+ "scroll": [
+  {
+   "k": 1,
+   "render": "svgpath",
+   "frames": 173,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.700000000000273,
+   "maxms": 16.800000000000182,
+   "longTasks": 0,
+   "longestTask": 0,
+   "segs": 97,
+   "labels": 67,
+   "layerElements": 6,
+   "buildMs": 3.7,
+   "builds": 8,
+   "canvasMB": 0,
+   "dom": {
+    "total": 7324,
+    "rendered": 407,
+    "schema": 208
+   }
+  },
+  {
+   "k": 1,
+   "render": "canvas",
+   "frames": 174,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.700000000000728,
+   "maxms": 16.800000000000182,
+   "longTasks": 0,
+   "longestTask": 0,
+   "segs": 97,
+   "labels": 67,
+   "layerElements": 1,
+   "buildMs": 2.9,
+   "builds": 15,
+   "canvasMB": 12.2,
+   "dom": {
+    "total": 7319,
+    "rendered": 402,
+    "schema": 203
+   }
+  },
+  {
+   "k": 0.5,
+   "render": "svgpath",
+   "frames": 174,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.799999999999272,
+   "maxms": 16.80000000000109,
+   "longTasks": 0,
+   "longestTask": 0,
+   "segs": 160,
+   "labels": 12,
+   "layerElements": 6,
+   "buildMs": 2.2,
+   "builds": 23,
+   "canvasMB": 0,
+   "dom": {
+    "total": 7150,
+    "rendered": 233,
+    "schema": 34
+   }
+  },
+  {
+   "k": 0.5,
+   "render": "canvas",
+   "frames": 174,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.799999999999272,
+   "maxms": 16.80000000000109,
+   "longTasks": 0,
+   "longestTask": 0,
+   "segs": 160,
+   "labels": 12,
+   "layerElements": 1,
+   "buildMs": 1.3,
+   "builds": 30,
+   "canvasMB": 12.2,
+   "dom": {
+    "total": 7145,
+    "rendered": 228,
+    "schema": 29
+   }
+  },
+  {
+   "k": 0.25,
+   "render": "svgpath",
+   "frames": 174,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.700000000000728,
+   "maxms": 16.80000000000109,
+   "longTasks": 0,
+   "longestTask": 0,
+   "segs": 317,
+   "labels": 19,
+   "layerElements": 6,
+   "buildMs": 3.1,
+   "builds": 38,
+   "canvasMB": 0,
+   "dom": {
+    "total": 7164,
+    "rendered": 247,
+    "schema": 48
+   },
+   "pinch": {
+    "frames": 53,
+    "dropped": 1,
+    "droppedShare": 0.018518518518518517,
+    "p95ms": 16.700000000000728,
+    "maxms": 33.29999999999927,
+    "longTasks": 0,
+    "longestTask": 0,
+    "latency": {
+     "n": 36,
+     "p75": 6.199999952317739,
+     "max": 22.89999995231483
+    },
+    "segsEnd": 317,
+    "buildMsEnd": 3.1
+   }
+  },
+  {
+   "k": 0.25,
+   "render": "canvas",
+   "frames": 172,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.799999999999272,
+   "maxms": 16.80000000000291,
+   "longTasks": 0,
+   "longestTask": 0,
+   "segs": 317,
+   "labels": 19,
+   "layerElements": 1,
+   "buildMs": 1.7,
+   "builds": 45,
+   "canvasMB": 12.2,
+   "dom": {
+    "total": 7159,
+    "rendered": 242,
+    "schema": 43
+   },
+   "pinch": {
+    "frames": 52,
+    "dropped": 0,
+    "droppedShare": 0,
+    "p95ms": 16.700000000000728,
+    "maxms": 16.700000000000728,
+    "longTasks": 0,
+    "longestTask": 0,
+    "latency": {
+     "n": 36,
+     "p75": 6.099999999998545,
+     "max": 15.19999995231774
+    },
+    "segsEnd": 330,
+    "buildMsEnd": 1
+   }
+  },
+  {
+   "k": 0.12,
+   "render": "svgpath",
+   "frames": 174,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.700000000000728,
+   "maxms": 16.80000000000291,
+   "longTasks": 0,
+   "longestTask": 0,
+   "segs": 438,
+   "labels": 14,
+   "layerElements": 6,
+   "buildMs": 2.9,
+   "builds": 57,
+   "canvasMB": 0,
+   "dom": {
+    "total": 7154,
+    "rendered": 237,
+    "schema": 38
+   },
+   "pinch": {
+    "frames": 52,
+    "dropped": 0,
+    "droppedShare": 0,
+    "p95ms": 16.700000000000728,
+    "maxms": 16.700000000000728,
+    "longTasks": 0,
+    "longestTask": 0,
+    "latency": {
+     "n": 36,
+     "p75": 6.000000047682988,
+     "max": 15.399999856948853
+    },
+    "segsEnd": 438,
+    "buildMsEnd": 2.9
+   }
+  },
+  {
+   "k": 0.12,
+   "render": "canvas",
+   "frames": 173,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.799999999999272,
+   "maxms": 16.80000000000291,
+   "longTasks": 0,
+   "longestTask": 0,
+   "segs": 438,
+   "labels": 14,
+   "layerElements": 1,
+   "buildMs": 2.2,
+   "builds": 64,
+   "canvasMB": 12.2,
+   "dom": {
+    "total": 7149,
+    "rendered": 232,
+    "schema": 33
+   },
+   "pinch": {
+    "frames": 53,
+    "dropped": 0,
+    "droppedShare": 0,
+    "p95ms": 16.799999999999272,
+    "maxms": 16.799999999999272,
+    "longTasks": 0,
+    "longestTask": 0,
+    "latency": {
+     "n": 37,
+     "p75": 6.299999999999272,
+     "max": 15.199999856948125
+    },
+    "segsEnd": 438,
+    "buildMsEnd": 1.6
+   }
+  },
+  {
+   "k": 0.005,
+   "render": "svgpath",
+   "frames": 172,
+   "dropped": 3,
+   "droppedShare": 0.017142857142857144,
+   "p95ms": 16.799999999999272,
+   "maxms": 33.29999999999927,
+   "longTasks": 0,
+   "longestTask": 0,
+   "segs": 3160,
+   "labels": 12,
+   "layerElements": 6,
+   "buildMs": 15.4,
+   "builds": 73,
+   "canvasMB": 0,
+   "dom": {
+    "total": 7146,
+    "rendered": 229,
+    "schema": 30
+   }
+  },
+  {
+   "k": 0.005,
+   "render": "canvas",
+   "frames": 174,
+   "dropped": 2,
+   "droppedShare": 0.011363636363636364,
+   "p95ms": 16.700000000004366,
+   "maxms": 33.400000000001455,
+   "longTasks": 0,
+   "longestTask": 0,
+   "segs": 3160,
+   "labels": 12,
+   "layerElements": 1,
+   "buildMs": 5.3,
+   "builds": 78,
+   "canvasMB": 12.2,
+   "dom": {
+    "total": 7141,
+    "rendered": 224,
+    "schema": 25
+   }
+  }
+ ],
+ "pinch": {
+  "frames": {
+   "frames": 101,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.700000000004366,
+   "maxms": 16.80000000000291,
+   "longTasks": 0,
+   "longestTask": 0
+  },
+  "anchor": {
+   "maxFocal": 0.6258927142123479,
+   "maxGlyph": 1.2316851384366543,
+   "steps": 82
+  },
+  "latency": {
+   "n": 82,
+   "p75": 5.999999952313374,
+   "max": 20.999999856947397
+  },
+  "kAfter": 2.7182571428571434,
+  "kMax": 0
+ },
+ "buttons": {
+  "frames": {
+   "frames": 183,
+   "dropped": 1,
+   "droppedShare": 0.005434782608695652,
+   "p95ms": 16.700000000004366,
+   "maxms": 33.30000000000291,
+   "longTasks": 0,
+   "longestTask": 0
+  },
+  "anchor": {
+   "maxFocal": 0.6769268674816352,
+   "maxGlyph": 4.464001327729498,
+   "steps": 128
+  },
+  "inp": {
+   "interactions": 8,
+   "p75": 24,
+   "max": 24,
+   "supported": true
+  }
+ },
+ "select": {
+  "clicks": 20,
+  "interactions": 20,
+  "p75": 24,
+  "max": 40,
+  "supported": true
+ },
+ "keyboard": {
+  "steps": 22,
+  "ok": 22,
+  "visible": 22,
+  "moved": 13,
+  "fails": [],
+  "farTarget": {
+   "focused": "iosif-muzh-marii",
+   "visible": true
+  },
+  "inp": {
+   "interactions": 4,
+   "p75": 24,
+   "max": 24,
+   "supported": true
+  }
+ },
+ "memory": {
+  "fitAll": {
+   "jsHeapMB": 5.2,
+   "jsHeapTotalMB": 12.9,
+   "nodes": 13142
+  },
+  "dom": {
+   "total": 7145,
+   "rendered": 228,
+   "schema": 29
+  },
+  "state": {
+   "labels": 14,
+   "segs": 3160,
+   "elements": 1,
+   "buildMs": 9.100000143051147,
+   "builds": 134,
+   "far": true,
+   "canvasMB": 12.19482421875
+  }
+ },
+ "text200": {
+  "relayoutMs": 64,
+  "worker": {
+   "fonts": 0,
+   "measure": 10.700000047683716,
+   "layout": 4.099999904632568,
+   "grid": 1.3000001907348633
+  },
+  "geomW": 123825,
+  "geomH": 32248,
+  "scroll": {
+   "frames": 173,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.799999999995634,
+   "maxms": 16.80000000000291,
+   "longTasks": 0,
+   "longestTask": 0,
+   "render": "svgpath",
+   "segs": 24,
+   "labels": 18
+  },
+  "dom": {
+   "total": 7180,
+   "rendered": 263,
+   "schema": 64
+  },
+  "heap": {
+   "jsHeapMB": 5.4,
+   "jsHeapTotalMB": 10.9,
+   "nodes": 12085
+  },
+  "pinch": {
+   "frames": {
+    "frames": 100,
+    "dropped": 0,
+    "droppedShare": 0,
+    "p95ms": 16.700000000004366,
+    "maxms": 16.80000000000291,
+    "longTasks": 0,
+    "longestTask": 0
+   },
+   "anchor": {
+    "maxFocal": 0.680303643654338,
+    "maxGlyph": 0.7389899932422187,
+    "steps": 81
+   },
+   "latency": {
+    "n": 81,
+    "p75": 7.000000047686626,
+    "max": 21.60000004768517
+   },
+   "kAfter": 2.7182571428571434,
+   "kMax": 0
+  }
+ },
+ "errors": []
+}

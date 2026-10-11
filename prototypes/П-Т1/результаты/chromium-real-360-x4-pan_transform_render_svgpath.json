@@ -1,0 +1,34 @@
+{
+ "tag": "chromium-real-360-x4-pan_transform_render_svgpath",
+ "variant": "pan=transform&render=svgpath",
+ "window": "360",
+ "cpu": 4,
+ "rows": [
+  {
+   "k": 1,
+   "frames": 129,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.700000000000273,
+   "maxms": 16.800000000000068,
+   "longTasks": 0,
+   "longestTask": 0,
+   "builds": 6,
+   "buildMs": 3.1,
+   "segs": 106
+  },
+  {
+   "k": 0.25,
+   "frames": 130,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.799999999999727,
+   "maxms": 16.800000000000182,
+   "longTasks": 0,
+   "longestTask": 0,
+   "builds": 11,
+   "buildMs": 2.2,
+   "segs": 179
+  }
+ ]
+}

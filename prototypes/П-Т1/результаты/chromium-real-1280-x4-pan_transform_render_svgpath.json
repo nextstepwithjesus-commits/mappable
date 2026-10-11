@@ -1,0 +1,47 @@
+{
+ "tag": "chromium-real-1280-x4-pan_transform_render_svgpath",
+ "variant": "pan=transform&render=svgpath",
+ "window": "1280",
+ "cpu": 4,
+ "rows": [
+  {
+   "k": 1,
+   "frames": 129,
+   "dropped": 1,
+   "droppedShare": 0.007692307692307693,
+   "p95ms": 16.799999999999727,
+   "maxms": 33.299999999999955,
+   "longTasks": 0,
+   "longestTask": 0,
+   "builds": 4,
+   "buildMs": 4.3,
+   "segs": 71
+  },
+  {
+   "k": 0.25,
+   "frames": 129,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.799999999999727,
+   "maxms": 16.800000000000182,
+   "longTasks": 0,
+   "longestTask": 0,
+   "builds": 7,
+   "buildMs": 1.7,
+   "segs": 192
+  },
+  {
+   "k": 0.12,
+   "frames": 130,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.799999999999272,
+   "maxms": 16.800000000000182,
+   "longTasks": 0,
+   "longestTask": 0,
+   "builds": 10,
+   "buildMs": 2.2,
+   "segs": 221
+  }
+ ]
+}

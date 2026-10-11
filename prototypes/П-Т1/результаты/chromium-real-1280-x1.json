@@ -1,0 +1,746 @@
+{
+ "tag": "chromium-real-1280-x1",
+ "browser": "chromium",
+ "version": "153.0.8010.12",
+ "dataset": "real",
+ "window": "1280×800@1",
+ "cpu": 1,
+ "load": {
+  "k": 1,
+  "sx": 40869.4375,
+  "sy": 2693.5,
+  "renderer": "svgpath",
+  "last": {
+   "labels": 112,
+   "segs": 148,
+   "elements": 6,
+   "buildMs": 2.8000001907348633,
+   "builds": 1,
+   "far": false,
+   "canvasMB": 0
+  },
+  "v": {
+   "w": 1280,
+   "h": 723
+  },
+  "geomW": 63057.6875,
+  "geomH": 16124,
+  "persons": 2373,
+  "timings": {
+   "fetch": 22.5,
+   "forest": 13,
+   "fonts": 6.700000047683716,
+   "measure": 12.600000143051147,
+   "layout": 4.3999998569488525,
+   "grid": 1.4000000953674316,
+   "workerTotal": 120.10000014305115,
+   "fontsWait": 0,
+   "firstBuild": 4.300000190734863,
+   "twin": 9,
+   "firstFrameFromRequest": 144.40000009536743,
+   "firstFrameFromNav": 174.90000009536743,
+   "moduleStart": 26.600000143051147,
+   "measuredInWorker": 1
+  },
+  "selected": -1,
+  "dom": {
+   "total": 7454,
+   "rendered": 537,
+   "schema": 338
+  },
+  "heap": {
+   "jsHeapMB": 4.9,
+   "jsHeapTotalMB": 9.8,
+   "nodes": 12418
+  }
+ },
+ "scroll": [
+  {
+   "k": 1,
+   "render": "svg",
+   "frames": 129,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.700000000000273,
+   "maxms": 16.800000000000182,
+   "longTasks": 0,
+   "longestTask": 0,
+   "segs": 71,
+   "labels": 65,
+   "layerElements": 132,
+   "buildMs": 1.1,
+   "builds": 5,
+   "canvasMB": 0,
+   "dom": {
+    "total": 7436,
+    "rendered": 519,
+    "schema": 320
+   }
+  },
+  {
+   "k": 1,
+   "render": "svgpath",
+   "frames": 130,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.700000000000728,
+   "maxms": 16.800000000000182,
+   "longTasks": 0,
+   "longestTask": 0,
+   "segs": 71,
+   "labels": 65,
+   "layerElements": 6,
+   "buildMs": 2.3,
+   "builds": 9,
+   "canvasMB": 0,
+   "dom": {
+    "total": 7310,
+    "rendered": 393,
+    "schema": 194
+   }
+  },
+  {
+   "k": 1,
+   "render": "canvas",
+   "frames": 130,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.800000000000182,
+   "maxms": 16.800000000000182,
+   "longTasks": 0,
+   "longestTask": 0,
+   "segs": 71,
+   "labels": 65,
+   "layerElements": 1,
+   "buildMs": 1.3,
+   "builds": 13,
+   "canvasMB": 14.1,
+   "dom": {
+    "total": 7305,
+    "rendered": 388,
+    "schema": 189
+   }
+  },
+  {
+   "k": 0.5,
+   "render": "svg",
+   "frames": 130,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.799999999999272,
+   "maxms": 16.80000000000109,
+   "longTasks": 0,
+   "longestTask": 0,
+   "segs": 82,
+   "labels": 7,
+   "layerElements": 171,
+   "buildMs": 2.7,
+   "builds": 17,
+   "canvasMB": 0,
+   "dom": {
+    "total": 7304,
+    "rendered": 387,
+    "schema": 188
+   }
+  },
+  {
+   "k": 0.5,
+   "render": "svgpath",
+   "frames": 130,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.799999999999272,
+   "maxms": 16.80000000000109,
+   "longTasks": 0,
+   "longestTask": 0,
+   "segs": 82,
+   "labels": 7,
+   "layerElements": 6,
+   "buildMs": 0.3,
+   "builds": 21,
+   "canvasMB": 0,
+   "dom": {
+    "total": 7139,
+    "rendered": 222,
+    "schema": 23
+   }
+  },
+  {
+   "k": 0.5,
+   "render": "canvas",
+   "frames": 130,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.700000000000728,
+   "maxms": 16.80000000000109,
+   "longTasks": 0,
+   "longestTask": 0,
+   "segs": 82,
+   "labels": 7,
+   "layerElements": 1,
+   "buildMs": 0.6,
+   "builds": 25,
+   "canvasMB": 14.1,
+   "dom": {
+    "total": 7134,
+    "rendered": 217,
+    "schema": 18
+   }
+  },
+  {
+   "k": 0.25,
+   "render": "svg",
+   "frames": 130,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.700000000000728,
+   "maxms": 16.80000000000109,
+   "longTasks": 0,
+   "longestTask": 0,
+   "segs": 192,
+   "labels": 15,
+   "layerElements": 326,
+   "buildMs": 1.9,
+   "builds": 29,
+   "canvasMB": 0,
+   "dom": {
+    "total": 7475,
+    "rendered": 558,
+    "schema": 359
+   },
+   "pinch": {
+    "frames": 60,
+    "dropped": 0,
+    "droppedShare": 0,
+    "p95ms": 16.80000000000291,
+    "maxms": 16.80000000000291,
+    "longTasks": 0,
+    "longestTask": 0,
+    "latency": {
+     "n": 42,
+     "p75": 20.899999809265864,
+     "max": 29.199999809265137
+    },
+    "segsEnd": 574,
+    "buildMsEnd": 1.1
+   }
+  },
+  {
+   "k": 0.25,
+   "render": "svgpath",
+   "frames": 130,
+   "dropped": 1,
+   "droppedShare": 0.007633587786259542,
+   "p95ms": 16.799999999999272,
+   "maxms": 33.400000000001455,
+   "longTasks": 0,
+   "longestTask": 0,
+   "segs": 192,
+   "labels": 15,
+   "layerElements": 6,
+   "buildMs": 0.6,
+   "builds": 76,
+   "canvasMB": 0,
+   "dom": {
+    "total": 7155,
+    "rendered": 238,
+    "schema": 39
+   },
+   "pinch": {
+    "frames": 57,
+    "dropped": 0,
+    "droppedShare": 0,
+    "p95ms": 16.799999999999272,
+    "maxms": 16.80000000000291,
+    "longTasks": 0,
+    "longestTask": 0,
+    "latency": {
+     "n": 42,
+     "p75": 20.700000000000728,
+     "max": 29
+    },
+    "segsEnd": 574,
+    "buildMsEnd": 0.5
+   }
+  },
+  {
+   "k": 0.25,
+   "render": "canvas",
+   "frames": 131,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.700000000000728,
+   "maxms": 16.80000000000291,
+   "longTasks": 0,
+   "longestTask": 0,
+   "segs": 192,
+   "labels": 15,
+   "layerElements": 1,
+   "buildMs": 0.6,
+   "builds": 123,
+   "canvasMB": 14.1,
+   "dom": {
+    "total": 7150,
+    "rendered": 233,
+    "schema": 34
+   },
+   "pinch": {
+    "frames": 57,
+    "dropped": 0,
+    "droppedShare": 0,
+    "p95ms": 16.700000000000728,
+    "maxms": 16.700000000000728,
+    "longTasks": 0,
+    "longestTask": 0,
+    "latency": {
+     "n": 42,
+     "p75": 20.59999985694958,
+     "max": 28.999999904634024
+    },
+    "segsEnd": 574,
+    "buildMsEnd": 0.1
+   }
+  },
+  {
+   "k": 0.12,
+   "render": "svg",
+   "frames": 130,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.799999999999272,
+   "maxms": 16.80000000000291,
+   "longTasks": 0,
+   "longestTask": 0,
+   "segs": 221,
+   "labels": 7,
+   "layerElements": 383,
+   "buildMs": 3.8,
+   "builds": 170,
+   "canvasMB": 0,
+   "dom": {
+    "total": 7516,
+    "rendered": 599,
+    "schema": 400
+   },
+   "pinch": {
+    "frames": 56,
+    "dropped": 0,
+    "droppedShare": 0,
+    "p95ms": 16.700000000000728,
+    "maxms": 16.799999999999272,
+    "longTasks": 0,
+    "longestTask": 0,
+    "latency": {
+     "n": 41,
+     "p75": 20.499999856947397,
+     "max": 28.700000000000728
+    },
+    "segsEnd": 900,
+    "buildMsEnd": 2
+   }
+  },
+  {
+   "k": 0.12,
+   "render": "svgpath",
+   "frames": 130,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.799999999999272,
+   "maxms": 16.80000000000291,
+   "longTasks": 0,
+   "longestTask": 0,
+   "segs": 221,
+   "labels": 7,
+   "layerElements": 6,
+   "buildMs": 0.9,
+   "builds": 216,
+   "canvasMB": 0,
+   "dom": {
+    "total": 7139,
+    "rendered": 222,
+    "schema": 23
+   },
+   "pinch": {
+    "frames": 57,
+    "dropped": 0,
+    "droppedShare": 0,
+    "p95ms": 16.799999999999272,
+    "maxms": 16.80000000000291,
+    "longTasks": 0,
+    "longestTask": 0,
+    "latency": {
+     "n": 42,
+     "p75": 20.39999990463184,
+     "max": 28.699999856948125
+    },
+    "segsEnd": 900,
+    "buildMsEnd": 1
+   }
+  },
+  {
+   "k": 0.12,
+   "render": "canvas",
+   "frames": 130,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.700000000004366,
+   "maxms": 16.80000000000291,
+   "longTasks": 0,
+   "longestTask": 0,
+   "segs": 221,
+   "labels": 7,
+   "layerElements": 1,
+   "buildMs": 0.7,
+   "builds": 263,
+   "canvasMB": 14.1,
+   "dom": {
+    "total": 7134,
+    "rendered": 217,
+    "schema": 18
+   },
+   "pinch": {
+    "frames": 56,
+    "dropped": 0,
+    "droppedShare": 0,
+    "p95ms": 16.799999999995634,
+    "maxms": 16.80000000000291,
+    "longTasks": 0,
+    "longestTask": 0,
+    "latency": {
+     "n": 41,
+     "p75": 20.199999904631113,
+     "max": 22.699999809265137
+    },
+    "segsEnd": 900,
+    "buildMsEnd": 0.3
+   }
+  },
+  {
+   "k": 0.06,
+   "render": "svg",
+   "frames": 130,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.700000000004366,
+   "maxms": 16.80000000000291,
+   "longTasks": 0,
+   "longestTask": 0,
+   "segs": 507,
+   "labels": 11,
+   "layerElements": 926,
+   "buildMs": 3.6,
+   "builds": 309,
+   "canvasMB": 0,
+   "dom": {
+    "total": 8067,
+    "rendered": 1150,
+    "schema": 951
+   },
+   "pinch": {
+    "frames": 57,
+    "dropped": 1,
+    "droppedShare": 0.017241379310344827,
+    "p95ms": 16.799999999995634,
+    "maxms": 33.30000000000291,
+    "longTasks": 0,
+    "longestTask": 0,
+    "latency": {
+     "n": 40,
+     "p75": 20,
+     "max": 28.399999856948853
+    },
+    "segsEnd": 2062,
+    "buildMsEnd": 5.5
+   }
+  },
+  {
+   "k": 0.06,
+   "render": "svgpath",
+   "frames": 130,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.799999999995634,
+   "maxms": 16.80000000000291,
+   "longTasks": 0,
+   "longestTask": 0,
+   "segs": 507,
+   "labels": 11,
+   "layerElements": 6,
+   "buildMs": 1.2,
+   "builds": 354,
+   "canvasMB": 0,
+   "dom": {
+    "total": 7147,
+    "rendered": 230,
+    "schema": 31
+   },
+   "pinch": {
+    "frames": 57,
+    "dropped": 0,
+    "droppedShare": 0,
+    "p95ms": 16.700000000004366,
+    "maxms": 16.700000000004366,
+    "longTasks": 0,
+    "longestTask": 0,
+    "latency": {
+     "n": 42,
+     "p75": 20,
+     "max": 28.30000000000291
+    },
+    "segsEnd": 2062,
+    "buildMsEnd": 1.2
+   }
+  },
+  {
+   "k": 0.06,
+   "render": "canvas",
+   "frames": 130,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.700000000004366,
+   "maxms": 16.80000000000291,
+   "longTasks": 0,
+   "longestTask": 0,
+   "segs": 507,
+   "labels": 11,
+   "layerElements": 1,
+   "buildMs": 0.4,
+   "builds": 401,
+   "canvasMB": 14.1,
+   "dom": {
+    "total": 7142,
+    "rendered": 225,
+    "schema": 26
+   },
+   "pinch": {
+    "frames": 58,
+    "dropped": 0,
+    "droppedShare": 0,
+    "p95ms": 16.799999999995634,
+    "maxms": 16.799999999995634,
+    "longTasks": 0,
+    "longestTask": 0,
+    "latency": {
+     "n": 42,
+     "p75": 20.699999809265137,
+     "max": 30.099999952319195
+    },
+    "segsEnd": 2062,
+    "buildMsEnd": 0.6
+   }
+  },
+  {
+   "k": 0.018,
+   "render": "svg",
+   "frames": 130,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.799999999995634,
+   "maxms": 16.80000000000291,
+   "longTasks": 0,
+   "longestTask": 0,
+   "segs": 0,
+   "labels": 0,
+   "layerElements": 1,
+   "buildMs": 3.1,
+   "builds": 448,
+   "canvasMB": 0,
+   "dom": {
+    "total": 7120,
+    "rendered": 203,
+    "schema": 4
+   }
+  },
+  {
+   "k": 0.018,
+   "render": "svgpath",
+   "frames": 130,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.700000000004366,
+   "maxms": 16.80000000000291,
+   "longTasks": 0,
+   "longestTask": 0,
+   "segs": 0,
+   "labels": 0,
+   "layerElements": 6,
+   "buildMs": 0.2,
+   "builds": 452,
+   "canvasMB": 0,
+   "dom": {
+    "total": 7125,
+    "rendered": 208,
+    "schema": 9
+   }
+  },
+  {
+   "k": 0.018,
+   "render": "canvas",
+   "frames": 130,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.700000000004366,
+   "maxms": 16.80000000000291,
+   "longTasks": 0,
+   "longestTask": 0,
+   "segs": 0,
+   "labels": 0,
+   "layerElements": 1,
+   "buildMs": 0.3,
+   "builds": 456,
+   "canvasMB": 14.1,
+   "dom": {
+    "total": 7120,
+    "rendered": 203,
+    "schema": 4
+   }
+  }
+ ],
+ "pinch": {
+  "frames": {
+   "frames": 177,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.700000000004366,
+   "maxms": 16.80000000000291,
+   "longTasks": 0,
+   "longestTask": 0
+  },
+  "anchor": {
+   "maxFocal": 0.6732330454998593,
+   "maxGlyph": 0.9750768328396515,
+   "steps": 156
+  },
+  "latency": {
+   "n": 156,
+   "p75": 20.19999999999709,
+   "max": 31.099999999998545
+  },
+  "kAfter": 0.989999358779494,
+  "kMax": 0
+ },
+ "buttons": {
+  "frames": {
+   "frames": 170,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.799999999995634,
+   "maxms": 16.80000000000291,
+   "longTasks": 0,
+   "longestTask": 0
+  },
+  "anchor": {
+   "maxFocal": 0.6654720748530343,
+   "maxGlyph": 0.6656262337599648,
+   "steps": 128
+  },
+  "inp": {
+   "interactions": 8,
+   "p75": 24,
+   "max": 24,
+   "supported": true
+  }
+ },
+ "select": {
+  "clicks": 14,
+  "interactions": 0,
+  "p75": 0,
+  "max": 0,
+  "supported": true
+ },
+ "keyboard": {
+  "steps": 22,
+  "ok": 22,
+  "visible": 22,
+  "moved": 13,
+  "fails": [],
+  "farTarget": {
+   "focused": "iosif-muzh-marii",
+   "visible": true
+  },
+  "inp": {
+   "interactions": 2,
+   "p75": 24,
+   "max": 24,
+   "supported": true
+  }
+ },
+ "memory": {
+  "fitAll": {
+   "jsHeapMB": 5.1,
+   "jsHeapTotalMB": 21.9,
+   "nodes": 11947
+  },
+  "dom": {
+   "total": 7190,
+   "rendered": 273,
+   "schema": 74
+  },
+  "state": {
+   "labels": 40,
+   "segs": 3160,
+   "elements": 1,
+   "buildMs": 2.9000000953674316,
+   "builds": 790,
+   "far": true,
+   "canvasMB": 14.12109375
+  }
+ },
+ "text200": {
+  "relayoutMs": 42,
+  "worker": {
+   "fonts": 0.09999990463256836,
+   "measure": 15.099999904632568,
+   "layout": 3.6000001430511475,
+   "grid": 1.5999999046325684
+  },
+  "geomW": 123825,
+  "geomH": 32248,
+  "scroll": {
+   "frames": 100,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.70000000001164,
+   "maxms": 16.80000000000291,
+   "longTasks": 0,
+   "longestTask": 0,
+   "render": "svgpath",
+   "segs": 44,
+   "labels": 35
+  },
+  "dom": {
+   "total": 7226,
+   "rendered": 309,
+   "schema": 110
+  },
+  "heap": {
+   "jsHeapMB": 7.6,
+   "jsHeapTotalMB": 21.9,
+   "nodes": 12359
+  },
+  "pinch": {
+   "frames": {
+    "frames": 177,
+    "dropped": 0,
+    "droppedShare": 0,
+    "p95ms": 16.80000000000291,
+    "maxms": 16.80000000000291,
+    "longTasks": 0,
+    "longestTask": 0
+   },
+   "anchor": {
+    "maxFocal": 0.6589782049278289,
+    "maxGlyph": 0.708782452650875,
+    "steps": 156
+   },
+   "latency": {
+    "n": 156,
+    "p75": 20.89999999999418,
+    "max": 31.10000000000582
+   },
+   "kAfter": 0.9899993119794841,
+   "kMax": 0
+  }
+ },
+ "errors": []
+}

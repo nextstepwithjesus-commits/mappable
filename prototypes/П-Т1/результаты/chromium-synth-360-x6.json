@@ -1,0 +1,434 @@
+{
+ "tag": "chromium-synth-360-x6",
+ "browser": "chromium",
+ "version": "153.0.8010.12",
+ "dataset": "synth",
+ "window": "360×640@2",
+ "cpu": 6,
+ "load": {
+  "k": 1,
+  "sx": 263555.21875,
+  "sy": 305.5,
+  "renderer": "svgpath",
+  "last": {
+   "labels": 17,
+   "segs": 24,
+   "elements": 6,
+   "buildMs": 9.099999904632568,
+   "builds": 1,
+   "far": false,
+   "canvasMB": 0
+  },
+  "v": {
+   "w": 360,
+   "h": 555
+  },
+  "geomW": 269513.71875,
+  "geomH": 8408,
+  "persons": 9933,
+  "timings": {
+   "fetch": 17.100000143051147,
+   "forest": 30.299999952316284,
+   "fonts": 4.299999952316284,
+   "measure": 10,
+   "layout": 9.099999904632568,
+   "grid": 3.6000001430511475,
+   "workerTotal": 227.90000009536743,
+   "fontsWait": 0,
+   "firstBuild": 12.099999904632568,
+   "twin": 182.59999990463257,
+   "firstFrameFromRequest": 467.59999990463257,
+   "firstFrameFromNav": 523.5,
+   "moduleStart": 51.700000047683716,
+   "measuredInWorker": 1
+  },
+  "selected": -1,
+  "dom": {
+   "total": 22598,
+   "rendered": 383,
+   "schema": 49
+  },
+  "heap": {
+   "jsHeapMB": 11.6,
+   "jsHeapTotalMB": 17.5,
+   "nodes": 35081
+  }
+ },
+ "scroll": [
+  {
+   "k": 1,
+   "render": "svgpath",
+   "frames": 175,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.700000000000273,
+   "maxms": 16.800000000000182,
+   "longTasks": 0,
+   "longestTask": 0,
+   "segs": 37,
+   "labels": 25,
+   "layerElements": 6,
+   "buildMs": 2.3,
+   "builds": 9,
+   "canvasMB": 0,
+   "dom": {
+    "total": 22616,
+    "rendered": 401,
+    "schema": 67
+   }
+  },
+  {
+   "k": 1,
+   "render": "canvas",
+   "frames": 174,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.700000000000728,
+   "maxms": 16.800000000000182,
+   "longTasks": 0,
+   "longestTask": 0,
+   "segs": 37,
+   "labels": 25,
+   "layerElements": 1,
+   "buildMs": 0.6,
+   "builds": 17,
+   "canvasMB": 12.2,
+   "dom": {
+    "total": 22611,
+    "rendered": 396,
+    "schema": 62
+   }
+  },
+  {
+   "k": 0.5,
+   "render": "svgpath",
+   "frames": 174,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.799999999999272,
+   "maxms": 16.80000000000109,
+   "longTasks": 0,
+   "longestTask": 0,
+   "segs": 136,
+   "labels": 8,
+   "layerElements": 6,
+   "buildMs": 2.4,
+   "builds": 25,
+   "canvasMB": 0,
+   "dom": {
+    "total": 22574,
+    "rendered": 359,
+    "schema": 25
+   }
+  },
+  {
+   "k": 0.5,
+   "render": "canvas",
+   "frames": 174,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.700000000000728,
+   "maxms": 16.80000000000109,
+   "longTasks": 0,
+   "longestTask": 0,
+   "segs": 136,
+   "labels": 8,
+   "layerElements": 1,
+   "buildMs": 1.6,
+   "builds": 33,
+   "canvasMB": 12.2,
+   "dom": {
+    "total": 22569,
+    "rendered": 354,
+    "schema": 20
+   }
+  },
+  {
+   "k": 0.25,
+   "render": "svgpath",
+   "frames": 174,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.700000000000728,
+   "maxms": 16.80000000000291,
+   "longTasks": 0,
+   "longestTask": 0,
+   "segs": 201,
+   "labels": 11,
+   "layerElements": 6,
+   "buildMs": 3,
+   "builds": 41,
+   "canvasMB": 0,
+   "dom": {
+    "total": 22580,
+    "rendered": 365,
+    "schema": 31
+   },
+   "pinch": {
+    "frames": 49,
+    "dropped": 0,
+    "droppedShare": 0,
+    "p95ms": 16.700000000000728,
+    "maxms": 16.799999999999272,
+    "longTasks": 0,
+    "longestTask": 0,
+    "latency": {
+     "n": 36,
+     "p75": -0.7000001430496923,
+     "max": 7.699999904631113
+    },
+    "segsEnd": 170,
+    "buildMsEnd": 0.7
+   }
+  },
+  {
+   "k": 0.25,
+   "render": "canvas",
+   "frames": 172,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.700000000000728,
+   "maxms": 16.80000000000291,
+   "longTasks": 0,
+   "longestTask": 0,
+   "segs": 208,
+   "labels": 12,
+   "layerElements": 1,
+   "buildMs": 1,
+   "builds": 85,
+   "canvasMB": 12.2,
+   "dom": {
+    "total": 22577,
+    "rendered": 362,
+    "schema": 28
+   },
+   "pinch": {
+    "frames": 51,
+    "dropped": 0,
+    "droppedShare": 0,
+    "p95ms": 16.700000000000728,
+    "maxms": 16.799999999999272,
+    "longTasks": 0,
+    "longestTask": 0,
+    "latency": {
+     "n": 37,
+     "p75": -0.10000014305114746,
+     "max": 8.700000000000728
+    },
+    "segsEnd": 170,
+    "buildMsEnd": 1
+   }
+  },
+  {
+   "k": 0.12,
+   "render": "svgpath",
+   "frames": 171,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.700000000000728,
+   "maxms": 16.799999999999272,
+   "longTasks": 0,
+   "longestTask": 0,
+   "segs": 374,
+   "labels": 13,
+   "layerElements": 6,
+   "buildMs": 3.1,
+   "builds": 131,
+   "canvasMB": 0,
+   "dom": {
+    "total": 22584,
+    "rendered": 369,
+    "schema": 35
+   },
+   "pinch": {
+    "frames": 50,
+    "dropped": 0,
+    "droppedShare": 0,
+    "p95ms": 16.700000000000728,
+    "maxms": 16.799999999999272,
+    "longTasks": 0,
+    "longestTask": 0,
+    "latency": {
+     "n": 35,
+     "p75": 7,
+     "max": 8.699999856948125
+    },
+    "segsEnd": 344,
+    "buildMsEnd": 3
+   }
+  },
+  {
+   "k": 0.12,
+   "render": "canvas",
+   "frames": 173,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.799999999999272,
+   "maxms": 16.80000000000291,
+   "longTasks": 0,
+   "longestTask": 0,
+   "segs": 374,
+   "labels": 13,
+   "layerElements": 1,
+   "buildMs": 1.9,
+   "builds": 175,
+   "canvasMB": 12.2,
+   "dom": {
+    "total": 22579,
+    "rendered": 364,
+    "schema": 30
+   },
+   "pinch": {
+    "frames": 50,
+    "dropped": 1,
+    "droppedShare": 0.0196078431372549,
+    "p95ms": 16.700000000000728,
+    "maxms": 33.29999999999927,
+    "longTasks": 0,
+    "longestTask": 0,
+    "latency": {
+     "n": 35,
+     "p75": -0.3000001907348633,
+     "max": 8.799999999999272
+    },
+    "segsEnd": 344,
+    "buildMsEnd": 2
+   }
+  },
+  {
+   "k": 0.001,
+   "render": "svgpath",
+   "frames": 162,
+   "dropped": 10,
+   "droppedShare": 0.05813953488372093,
+   "p95ms": 16.799999999999272,
+   "maxms": 83.30000000000291,
+   "longTasks": 3,
+   "longestTask": 66,
+   "segs": 13791,
+   "labels": 6,
+   "layerElements": 6,
+   "buildMs": 44.5,
+   "builds": 216,
+   "canvasMB": 0,
+   "dom": {
+    "total": 22569,
+    "rendered": 354,
+    "schema": 20
+   }
+  },
+  {
+   "k": 0.001,
+   "render": "canvas",
+   "frames": 172,
+   "dropped": 3,
+   "droppedShare": 0.017142857142857144,
+   "p95ms": 16.80000000000291,
+   "maxms": 33.299999999995634,
+   "longTasks": 0,
+   "longestTask": 0,
+   "segs": 13791,
+   "labels": 6,
+   "layerElements": 1,
+   "buildMs": 12.5,
+   "builds": 221,
+   "canvasMB": 12.2,
+   "dom": {
+    "total": 22564,
+    "rendered": 349,
+    "schema": 15
+   }
+  }
+ ],
+ "pinch": {
+  "frames": {
+   "frames": 102,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.799999999995634,
+   "maxms": 16.80000000000291,
+   "longTasks": 0,
+   "longestTask": 0
+  },
+  "anchor": {
+   "maxFocal": 0.6974635345767224,
+   "maxGlyph": 0.6973897406272411,
+   "steps": 80
+  },
+  "latency": {
+   "n": 80,
+   "p75": -0.4000000000014552,
+   "max": 8.699999856951763
+  },
+  "kAfter": 2.7182571428571434,
+  "kMax": 0
+ },
+ "buttons": {
+  "frames": {
+   "frames": 190,
+   "dropped": 7,
+   "droppedShare": 0.03553299492385787,
+   "p95ms": 16.80000000000291,
+   "maxms": 66.69999999999709,
+   "longTasks": 1,
+   "longestTask": 65
+  },
+  "anchor": {
+   "maxFocal": 0.7071067811865476,
+   "maxGlyph": 0.7071067811865476,
+   "steps": 122
+  },
+  "inp": {
+   "interactions": 8,
+   "p75": 32,
+   "max": 32,
+   "supported": true
+  }
+ },
+ "select": {
+  "clicks": 4,
+  "interactions": 4,
+  "p75": 32,
+  "max": 32,
+  "supported": true
+ },
+ "keyboard": {
+  "steps": 22,
+  "ok": 22,
+  "visible": 22,
+  "moved": 14,
+  "fails": [],
+  "farTarget": {
+   "focused": "s5500",
+   "visible": true
+  },
+  "inp": {
+   "interactions": 5,
+   "p75": 16,
+   "max": 16,
+   "supported": true
+  }
+ },
+ "memory": {
+  "fitAll": {
+   "jsHeapMB": 10,
+   "jsHeapTotalMB": 24.6,
+   "nodes": 35015
+  },
+  "dom": {
+   "total": 22568,
+   "rendered": 353,
+   "schema": 19
+  },
+  "state": {
+   "labels": 8,
+   "segs": 13791,
+   "elements": 1,
+   "buildMs": 20.600000143051147,
+   "builds": 459,
+   "far": true,
+   "canvasMB": 12.19482421875
+  }
+ },
+ "errors": []
+}

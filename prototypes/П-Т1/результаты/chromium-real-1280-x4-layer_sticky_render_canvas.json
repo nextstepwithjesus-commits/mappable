@@ -1,0 +1,47 @@
+{
+ "tag": "chromium-real-1280-x4-layer_sticky_render_canvas",
+ "variant": "layer=sticky&render=canvas",
+ "window": "1280",
+ "cpu": 4,
+ "rows": [
+  {
+   "k": 1,
+   "frames": 128,
+   "dropped": 1,
+   "droppedShare": 0.007751937984496124,
+   "p95ms": 16.700000000000273,
+   "maxms": 33.322,
+   "longTasks": 0,
+   "longestTask": 0,
+   "builds": 62,
+   "buildMs": 0.6,
+   "segs": 59
+  },
+  {
+   "k": 0.25,
+   "frames": 129,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.700000000000728,
+   "maxms": 16.800000000000182,
+   "longTasks": 0,
+   "longestTask": 0,
+   "builds": 124,
+   "buildMs": 0.7,
+   "segs": 82
+  },
+  {
+   "k": 0.12,
+   "frames": 129,
+   "dropped": 0,
+   "droppedShare": 0,
+   "p95ms": 16.700000000000728,
+   "maxms": 16.800000000000182,
+   "longTasks": 0,
+   "longestTask": 0,
+   "builds": 186,
+   "buildMs": 0.2,
+   "segs": 130
+  }
+ ]
+}
