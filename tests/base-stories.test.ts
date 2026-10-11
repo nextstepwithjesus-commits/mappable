@@ -392,3 +392,71 @@ describe('истории: ред. 4.3 (задача 23; 11 § 11.3 п. 5б–5д
   });
 });
 
+describe('истории: правка по второму ключу В-32 (решения координатора В32-1)', () => {
+  const by = new Map(src.stories.map((x) => [x.id, x]));
+  const role = (sid: string, actor: string, label?: string) => by.get(sid)!.actors.filter((a) => a.actor === actor && (label === undefined || a.label === label)).map((a) => a.roles.map((r) => r.role).join(','));
+
+  it('исцелённые и умершие — undergoer, в том числе итоговое «и умер» в родословиях', () => {
+    expect(role('e-iisus-i-prokazhennyy', 'new:prokazhennyy-mk1')).toEqual(['undergoer', 'undergoer']);
+    expect(role('e-zhenshchina-s-krovotecheniem', 'new:zhenshchina-s-krovotecheniem')).toEqual(['undergoer']);
+    expect(role('e-dvoe-slepykh-v-dome', 'new:dvoe-slepykh-mf9')).toEqual(['undergoer']);
+    expect(role('e-mnozhestvo-naroda-u-morya', 'new:mnozhestvo-naroda')).toEqual(['undergoer']);
+    for (const x of ['p-adam', 'p-sif', 'p-enos', 'p-kainan', 'p-maleleil', 'p-iared', 'p-mafusal', 'p-lamekh']) expect([x, role('e-rodoslovie-adama', x)]).toEqual([x, ['undergoer']]);
+    expect(role('e-rodoslovie-adama', 'p-enokh')).toEqual(['agent']); // «не стало его, потому что Бог взял его» (Быт 5:24) — смерть не названа
+    expect(role('e-rodoslovie-farry', 'p-aran')).toEqual(['undergoer']);
+    expect(role('e-farra-i-avram-v-kharrane', 'p-farra')).toEqual(['undergoer']);
+    expect(role('e-noy-sazhaet-vinogradnik', 'p-noy')).toEqual(['undergoer']);
+    expect(role('e-gospod-vozvrashchaet-iovu-vdvoe', 'p-iov')).toEqual(['undergoer']);
+  });
+
+  it('действующие в стихе — agent: «родила», «теснился», Елифаз; Симон в Мк 1:29 — как Андрей', () => {
+    expect(role('e-kain-i-gorod-enokh', 'p-ada-zhena-lamekha')).toEqual(['agent']);
+    expect(role('e-kain-i-gorod-enokh', 'p-tsilla')).toEqual(['agent']);
+    expect(role('e-syny-bozhii-i-docheri-chelovecheskie', 'new:docheri-chelovecheskie')).toEqual(['agent']);
+    expect(role('e-gospod-vozvrashchaet-iovu-vdvoe', 'p-elifaz-femanityanin')).toEqual(['agent']);
+    expect(role('e-velikoe-mnozhestvo-ryby', 'new:narod-u-ozera')).toEqual(['agent']);
+    const t = by.get('e-tyoshcha-simona')!.actors;
+    expect(t.filter((a) => a.actor === 'p-petr' && a.account !== 0).map((a) => [a.account, a.roles[0].role])).toEqual([[1, 'agent'], [2, 'mentioned']]);
+    expect(t.find((a) => a.actor === 'p-andrey')!.roles[0].role).toBe('agent');
+  });
+
+  it('у строки Голиафа — стих 1 Цар 17:16 (часть 2) и стих каждой части с ролью', () => {
+    const g = by.get('e-david-i-goliaf')!.actors.find((a) => a.actor === 'p-goliaf')!;
+    expect(g.refs).toEqual(expect.arrayContaining(['1Цар 17:16', '1Цар 17:51']));
+  });
+
+  it('пары завязки и развязки: дочь Иаира, «Какою властью» — встречный вопрос', () => {
+    expect(by.get('e-doch-iaira')!.plot!.map((p) => [p.setup, p.resolution])).toEqual([['Мф 9:18', 'Мф 9:25'], ['Мк 5:23', 'Мк 5:42'], ['Лк 8:42', 'Лк 8:55']]);
+    expect(by.get('e-kakoyu-vlastyu-ty-eto-delaesh')!.plot!.map((p) => p.resolution)).toEqual(['Мф 21:24', 'Мк 11:29', 'Лк 20:3']);
+  });
+
+  it('п. 26: в пакете 1 у каждого лица из названия — main (по подписи и формам карточки); «Сын» в названии не срабатывает', () => {
+    const base: Base = { ...disk };
+    attachStories(base, src);
+    const w: string[] = [];
+    validateStories(base, () => {}, (c, wh, m) => c === 'история: главные лица' && w.push(`${wh}: ${m}`));
+    const pack1 = new Set(src.stories.filter((x) => src.fileOf[x.id] !== '06-p7-zhrebiy.json').map((x) => x.id));
+    expect(w.filter((x) => pack1.has(x.split(' ')[0]))).toEqual([]);
+    // «Сын Человеческий предан будет»: форма «Сын…» карточки — родовое слово, лицо по ней главным не становится
+    const s = mk({ id: 'e-s', title: { short: 'Сын Человеческий предан будет', by: 'atlas', manual: ['Сын', 'Человеческий', 'предан', 'будет'] }, accounts: [{ refs: ['Мф 17:22-23'], cert: 'scripture' }], actors: [{ actor: 'p-iisus', roles: [{ role: 'agent' }], refs: ['Мф 17:22'], cert: 'scripture' }] });
+    const ww: string[] = [];
+    validateStories({ ...disk, stories: [s], verseClasses: [], textParallels: [], storyChapters: [] }, () => {}, (c, wh) => c === 'история: главные лица' && ww.push(wh));
+    expect(ww).toEqual([]);
+    // подпись из названия без main — замечание
+    const z = mk({ id: 'e-z2', title: { short: 'Змей и плод дерева', by: 'atlas' }, accounts: [{ refs: ['Быт 3:1-24'], cert: 'scripture' }], actors: [{ actor: 'new:zmey', label: 'змей', kind: 'animal', roles: [{ role: 'agent' }], refs: ['Быт 3:1'], cert: 'scripture' }] });
+    const zw: string[] = [];
+    validateStories({ ...disk, stories: [z], verseClasses: [], textParallels: [], storyChapters: [] }, () => {}, (c, wh) => c === 'история: главные лица' && zw.push(wh));
+    expect(zw).toEqual(['e-z2 участник new:zmey «змей»']);
+  });
+
+  it('п. 5д: «Авдия», «женщины» — ошибка (в стихах лица стоят «Авдий», «женщина»); «сына» — ошибка; «рабы» группы — нет', () => {
+    const row = (sid: string, refs: string[], acc: string, label: string, kind: string) => mk({ id: sid, title: { short: 'Илия и Авдий', by: 'atlas', manual: ['Илия', 'Авдий'] }, accounts: [{ refs: [acc], cert: 'scripture' }], actors: [{ actor: 'new:x', label, kind: kind as any, roles: [{ role: 'agent' }], refs, cert: 'scripture' }] });
+    expect(errorsOf([row('e-a1', ['3Цар 18:3', '3Цар 18:7'], '3Цар 18:1-18', 'Авдия', 'human')]).join('\n')).toMatch(/«Авдия» не в именительном падеже/);
+    expect(errorsOf([row('e-a2', ['3Цар 18:3', '3Цар 18:7'], '3Цар 18:1-18', 'Авдий', 'human')]).join('\n')).not.toMatch(/падеж/);
+    expect(errorsOf([row('e-a3', ['3Цар 17:17', '3Цар 17:24'], '3Цар 17:17-24', 'женщины', 'unnamed')]).join('\n')).toMatch(/«женщины» не в именительном падеже/);
+    expect(errorsOf([row('e-a4', ['3Цар 17:17', '3Цар 17:24'], '3Цар 17:17-24', 'женщина', 'unnamed')]).join('\n')).not.toMatch(/падеж/);
+    expect(errorsOf([row('e-a5', ['3Цар 17:19'], '3Цар 17:17-24', 'сына', 'unnamed')]).join('\n')).toMatch(/«сына» не в именительном падеже/);
+    expect(errorsOf([row('e-a6', ['Лк 20:10', 'Лк 20:11'], 'Лк 20:9-19', 'рабы', 'parable')]).join('\n')).not.toMatch(/падеж/);
+  });
+});
+

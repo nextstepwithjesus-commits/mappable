@@ -313,7 +313,7 @@
     },
     {
      "actor": "new:sputniki-savla",
-     "label": "Люди же, шедшие с ним",
+     "label": "люди, шедшие с ним",
      "kind": "group",
      "roles": [
       {
@@ -1218,7 +1218,7 @@
       },
       {
        "part": 3,
-       "role": "addressed"
+       "role": "mentioned"
       }
      ],
      "main": true,
@@ -1275,6 +1275,7 @@
        "role": "agent"
       }
      ],
+     "main": true,
      "roleText": {
       "text": "истреби от земли такого! ибо ему не должно жить",
       "refs": [

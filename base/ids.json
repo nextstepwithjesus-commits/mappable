@@ -4380,7 +4380,7 @@
   {"id":"a-4375","kind":"fact","key":"fact:p-sepfora|original|8ceb948515b3a4ca","at":"2026-10-11","state":"active"},
   {"id":"a-4376","kind":"fact","key":"fact:p-sepfora|status|310a7af2d2a1588e","at":"2026-10-11","state":"active"},
   {"id":"a-4377","kind":"fact","key":"fact:p-sepfora|parentsNote|dd7977a63754b21c","at":"2026-10-11","state":"active"},
-  {"id":"a-4378","kind":"fact","key":"fact:p-sepfora|parentsNote|eb100784fca9bc9d","at":"2026-10-11","state":"active"},
+  {"id":"a-4378","kind":"fact","key":"fact:p-sepfora|parentsNote|eb100784fca9bc9d","at":"2026-10-11","state":"retired"},
   {"id":"a-4379","kind":"fact","key":"fact:p-sepfora|childrenNote|b58f8b96eeb66af9","at":"2026-10-11","state":"active"},
   {"id":"a-4380","kind":"fact","key":"fact:p-sepfora|places|317c783467316321","at":"2026-10-11","state":"active"},
   {"id":"a-4381","kind":"fact","key":"fact:p-sepfora|places|81f4dc66c709ca08","at":"2026-10-11","state":"active"},

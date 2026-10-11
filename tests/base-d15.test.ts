@@ -172,3 +172,24 @@ describe('Д-15: начало — данные', () => {
     expect(ids.size).toBe(2699);
   });
 });
+
+describe('Д-15: правка по второму ключу В-32 (D15-4)', () => {
+  const fact = (actor: string, id: string) => card(base, actor).facts.find((f) => f.id === id);
+  it('Сепфора: Иофор не назван её отцом (Исх 18:2 — «тесть Моисеев»); запись «родители» a-4378 сведена в событие', () => {
+    expect(JSON.stringify(fact('p-sepfora', 'a-4390')!.value)).not.toMatch(/в Исх 18:2 — Иофор/);
+    expect(JSON.stringify(fact('p-sepfora', 'a-4386')!.value)).not.toMatch(/к отцу/);
+    expect(fact('p-sepfora', 'a-4378')).toBeUndefined();
+    expect(base.redirects.find((r) => r.from === 'a-4378')?.to).toEqual(['a-4386']);
+    expect(card(base, 'p-sepfora').facts.filter((f) => f.field === 'parentsNote').map((f) => JSON.stringify(f.value)).join()).not.toMatch(/Иофор/);
+  });
+  it('Фаддей: толкование об Иакове — needsSources; Ин 14:22 — не среди ключевых мест; Рагуил «велел дочерям позвать»', () => {
+    expect(fact('p-faddey', 'a-12969')).toMatchObject({ cert: 'interpretation', needsSources: true });
+    expect((fact('p-faddey', 'a-16295')!.value as any).key).not.toContain('Ин 14:22');
+    expect((fact('p-raguil', 'a-16297')!.value as any).text).toMatch(/^велел дочерям позвать его есть хлеб/);
+  });
+  it('лицо Есевон — без стихов города Есевона (Суд 11:19, 26)', () => {
+    const s = JSON.stringify(card(base, 'p-esevon-iz-vifleema'));
+    expect(s).not.toMatch(/Суд 11:(19|26)/);
+  });
+});
+

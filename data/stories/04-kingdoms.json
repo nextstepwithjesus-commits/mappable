@@ -168,7 +168,8 @@
       "1Цар 17:32",
       "1Цар 17:49",
       "1Цар 17:50",
-      "1Цар 17:58"
+      "1Цар 17:58",
+      "1Цар 17:20"
      ],
      "cert": "scripture"
     },
@@ -209,7 +210,11 @@
      },
      "refs": [
       "1Цар 17:4",
-      "1Цар 17:23"
+      "1Цар 17:23",
+      "1Цар 17:16",
+      "1Цар 17:33",
+      "1Цар 17:51",
+      "1Цар 17:57"
      ],
      "cert": "scripture"
     },
@@ -222,10 +227,6 @@
       },
       {
        "part": 2,
-       "role": "mentioned"
-      },
-      {
-       "part": 3,
        "role": "mentioned"
       },
       {
@@ -319,7 +320,8 @@
       }
      ],
      "refs": [
-      "1Цар 17:13"
+      "1Цар 17:13",
+      "1Цар 17:22"
      ],
      "cert": "scripture"
     },
@@ -336,7 +338,8 @@
       }
      ],
      "refs": [
-      "1Цар 17:13"
+      "1Цар 17:13",
+      "1Цар 17:22"
      ],
      "cert": "scripture"
     },
@@ -1098,7 +1101,7 @@
      "actor": "p-akhinoama",
      "roles": [
       {
-       "role": "mentioned"
+       "role": "addressed"
       }
      ],
      "refs": [
@@ -1128,7 +1131,7 @@
      "actor": "p-melkhola",
      "roles": [
       {
-       "role": "mentioned"
+       "role": "addressed"
       }
      ],
      "refs": [
@@ -1140,7 +1143,7 @@
      "actor": "p-faltiy-syn-laisha",
      "roles": [
       {
-       "role": "mentioned"
+       "role": "addressed"
       }
      ],
      "refs": [
@@ -1262,6 +1265,7 @@
        "role": "agent"
       }
      ],
+     "main": true,
      "roleText": {
       "text": "не нужно нам ни серебра, ни золота от Саула",
       "refs": [
@@ -1293,7 +1297,7 @@
      "actor": "p-memfivosfey",
      "roles": [
       {
-       "role": "mentioned"
+       "role": "addressed"
       }
      ],
      "roleText": {
@@ -1743,7 +1747,7 @@
      "label": "Голиаф Гефянин",
      "roles": [
       {
-       "role": "mentioned"
+       "role": "undergoer"
       }
      ],
      "account": 0,
@@ -2058,6 +2062,7 @@
        "role": "agent"
       }
      ],
+     "main": true,
      "roleText": {
       "text": "И вороны приносили ему хлеб и мясо поутру",
       "refs": [
@@ -2291,7 +2296,7 @@
     },
     {
      "actor": "new:vdova-sareptskaya",
-     "label": "женщины",
+     "label": "женщина",
      "kind": "unnamed",
      "roles": [
       {
@@ -2427,7 +2432,7 @@
     },
     {
      "actor": "new:avdiy-nad-dvortsom",
-     "label": "Авдия",
+     "label": "Авдий",
      "kind": "human",
      "roles": [
       {
@@ -2610,7 +2615,8 @@
      "refs": [
       "3Цар 18:21",
       "3Цар 18:30",
-      "3Цар 18:36"
+      "3Цар 18:36",
+      "3Цар 18:25"
      ],
      "cert": "scripture"
     },
@@ -2651,6 +2657,7 @@
        "role": "undergoer"
       }
      ],
+     "main": true,
      "roleText": {
       "text": "Ваале, услышь нас!",
       "refs": [

@@ -138,6 +138,8 @@ const OLD_ROLES = new Set(['participant', 'acts', 'speaks', 'suffers']);
 /** Имя Бога в строке Бога (11 § 4.3; § 11.3 п. 5г): из списка протокола И0. */
 export const GOD_LABELS = new Set(['Бог', 'Господь', 'Господь Бог']);
 const VAGUE = /примерн|около/i;
+/** Родовые слова: по формам карточки они в названии главного лица не дают (п. 26). */
+const GENERIC = new Set(['сын', 'сыны', 'дочь', 'жена', 'муж', 'отец', 'мать', 'матерь', 'брат', 'сестра', 'царь', 'человек', 'господь', 'бог', 'раб', 'отрок']);
 
 /** Роли лица во всех частях. */
 export const rolesOf = (a: Pick<StoryActor, 'roles'>): StoryRole[] => (Array.isArray(a.roles) ? a.roles.map((r) => r.role) : []);
@@ -149,7 +151,7 @@ export const rolesOf = (a: Pick<StoryActor, 'roles'>): StoryRole[] => (Array.isA
  * существительных мужского рода — винительный «-а», «-я» (словарь `MASC_ANIMATE`: «ворона» при «ворон»).
  */
 const MASC_ANIMATE = new Set(['ворон', 'голубь', 'жених', 'мальчик', 'человек', 'эней', 'стефан', 'гамалиил', 'херувим', 'симон', 'оруженосец', 'осел', 'тысяченачальник', 'первосвященник', 'отрок', 'сотник', 'сын', 'дух', 'змей', 'лев', 'медведь', 'вестник', 'расслабленный', 'бесноватый', 'начальник', 'фарисей', 'книжник', 'ученик', 'слуга', 'народ', 'юноша', 'старец', 'муж', 'царь', 'пророк', 'ангел', 'голиаф', 'савл', 'павел', 'петр', 'анания']);
-export function obliqueLabel(label: string, forms: string[] = []): string | null {
+export function obliqueLabel(label: string, forms: string[] = [], context = '', single = false): string | null {
   const head = label.split(/[\s,]+/).find((x) => x && !STOP.has(norm(x)));
   if (!head) return null;
   const h = norm(head).replace(/[^а-я-]/g, '');
@@ -162,6 +164,15 @@ export function obliqueLabel(label: string, forms: string[] = []): string | null
   if (/(ою|ею)$/.test(h) && h.length > 4) return `«${head}» — творительный падеж`;
   if (h.length > 3 && /[^аеиоуыэюя][ую]$/.test(h)) return `«${head}» — дательный или винительный падеж`;
   if (/^[А-ЯЁ]/.test(head) && /(ова|ева|ина)$/.test(h)) return `«${head}» — притяжательное слово, а не имя`;
+  // форма стиха на -ия / -ы, а в стихах того же лица стоит форма на -ий / -а: «Авдия» при «Авдий же был…» (3 Цар 18:3),
+  // «женщины» при «сказала та женщина» (3 Цар 17:24) — второй ключ В-32, № 5
+  // только у одного лица (вид human, unnamed, angel, spirit, animal): у группы и в притче форма на -ы / -ия — обычно
+  // именительный множественного или собирательное («рабы», Лк 20:10–11; «братия»)
+  if (context && single) {
+    const words = new Set(clean(context).trim().split(' '));
+    if (h.endsWith('ия') && words.has(`${h.slice(0, -2)}ий`)) return `«${head}» — родительный или винительный падеж: в стихах лица стоит «${h.slice(0, -2)}ий»`;
+    if (/[^аеиоуыэюя]ы$/.test(h) && words.has(`${h.slice(0, -1)}а`)) return `«${head}» — родительный падеж: в стихах лица стоит «${h.slice(0, -1)}а»`;
+  }
   if (/[ая]$/.test(h)) {
     const base = h.slice(0, -1);
     const cands = h.endsWith('я') ? [`${base}ь`, `${base}й`] : [base, base.replace(/([бвгджзклмнпрстфхцчшщ])([бвгджзклмнпрстфхцчшщ])$/, '$1е$2'), base.replace(/([бвгджзклмнпрстфхцчшщ])([бвгджзклмнпрстфхцчшщ])$/, '$1о$2')];
@@ -423,7 +434,7 @@ export function validateStories(base: Base, err: Err, warn: Err) {
         }
         // 5д: именительный падеж
         if (a.label) {
-          const why = obliqueLabel(a.label, names ?? []);
+          const why = obliqueLabel(a.label, names ?? [], txt, true);
           if (why) err('история: падеж', aw, `подпись «${a.label}» не в именительном падеже: ${why} (11 § 4.3; § 11.3 п. 5д)`);
         }
       } else if (a.actor === 'god' || a.actor.startsWith('new:')) {
@@ -434,7 +445,7 @@ export function validateStories(base: Base, err: Err, warn: Err) {
           if (a.actor === 'god') {
             if (!GOD_LABELS.has(a.label)) err('история: строка Бога', aw, `подпись «${a.label}» — не из списка протокола И0 (${[...GOD_LABELS].join(', ')}); «глас» и обрывки слова — в roleText (11 § 11.3 п. 5г)`);
           } else {
-            const why = obliqueLabel(a.label);
+            const why = obliqueLabel(a.label, [], txt, ['human', 'unnamed', 'angel', 'angel-of-the-lord', 'spirit', 'animal'].includes(a.kind ?? ''));
             if (why) err('история: падеж', aw, `подпись «${a.label}» не в именительном падеже: ${why} (11 § 4.3; § 11.3 п. 5д)`);
           }
         }
@@ -452,13 +463,25 @@ export function validateStories(base: Base, err: Err, warn: Err) {
         if (onHard.length) err('история: трудное', aw, `цитата роли стоит на стихе трудного (${onHard.join(', ')}): строка лица видна и при закрытой трудной части (11 § 11.3 п. 25)`);
       }
     }
-    // п. 26: главные лица — названные в простом названии (кроме групп вне названия); пока замечание
+    // п. 26: главные лица — названные в простом названии: по подписи строки (label) или по формам карточки. Родовые слова
+    // («Сын», «Бог», «жена», «человек»…) по формам карточки не считаются: «Сын Человеческий предан будет» не делает главным
+    // всякого, у кого есть форма «Сын…»; по подписи строки («жена» в «Адам и жена его в раю») — считаются. Строка Бога — над
+    // лицами (11 § 4.3), правилом не охвачена. Все строки одного лица — вместе.
     if (s.level === 'story' && s.title?.short) {
+      const tt = clean(s.title.short);
+      const inTitle = new Set<string>();
       for (const a of s.actors ?? []) {
-        if (a.main || !a.actor.startsWith('p-') || a.label) continue;
-        const forms = actorIds.get(a.actor) ?? [];
-        if (forms.some((f) => nameMatcher(f).test(clean(s.title.short)))) warn('история: главные лица', `${w} участник ${a.actor}`, `назван в названии «${s.title.short}», а не main (11 § 11.3 п. 26)`);
+        if (a.actor === 'god') continue;
+        // подпись — все значимые слова в названии («ученики Иоанновы» в «Почему ученики не постятся» — нет)
+        const sig = (a.label ?? '').split(/[\s,]+/).filter((x) => x && !STOP.has(norm(x)));
+        if (sig.length && sig.every((x) => wordIn(x, s.title.short))) inTitle.add(a.actor);
+        if (!a.label && a.actor.startsWith('p-')) {
+          const forms = (actorIds.get(a.actor) ?? []).filter((f) => !GENERIC.has(norm(f.split(/[\s,]+/)[0])));
+          if (forms.some((f) => nameMatcher(f).test(tt))) inTitle.add(a.actor);
+        }
       }
+      // замечание, пока не исправлены главы жребия П7 (data/stories/06-p7-zhrebiy.json, по нему идёт замер); пакет 1 — без замечаний (тест)
+      for (const a of s.actors ?? []) if (inTitle.has(a.actor) && !a.main) warn('история: главные лица', `${w} участник ${a.actor}${a.label ? ` «${a.label}»` : ''}`, `назван в названии «${s.title.short}», а не main (11 § 11.3 п. 26)`);
     }
     for (const p of s.places ?? []) {
       const pw = `${w} место ${p.place}`;

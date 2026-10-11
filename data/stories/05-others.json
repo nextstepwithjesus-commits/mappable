@@ -138,7 +138,7 @@
      ],
      "main": true,
      "roleText": {
-      "text": "Господь предал всю землю сию в руки наши",
+      "text": "Господь… предал всю землю сию в руки наши",
       "refs": [
        "Нав 2:24"
       ]
@@ -428,6 +428,7 @@
        "role": "agent"
       }
      ],
+     "main": true,
      "roleText": {
       "text": "разве даром богобоязнен Иов?",
       "refs": [
@@ -437,7 +438,8 @@
      "refs": [
       "Иов 1:6",
       "Иов 1:9",
-      "Иов 2:7"
+      "Иов 2:7",
+      "Иов 2:1"
      ],
      "cert": "scripture"
     },
@@ -625,7 +627,7 @@
      "actor": "p-iov",
      "roles": [
       {
-       "role": "agent"
+       "role": "undergoer"
       }
      ],
      "main": true,
@@ -646,7 +648,7 @@
      "actor": "p-elifaz-femanityanin",
      "roles": [
       {
-       "role": "addressed"
+       "role": "agent"
       }
      ],
      "refs": [

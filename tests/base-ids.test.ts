@@ -77,14 +77,14 @@ describe('таблица выданных номеров base/ids.json (К-1)', 
     // Д-4, партия 2: +7 утверждений карточек Левия и Фаддея, 2 отношения «возможно, то же лицо»
     const n = (k: string) => all.filter(([kind]) => kind === k).length;
     // Д-15 (D15-1, D15-2): у Рагуила 4 новых утверждения, у Фаддея три повторных записи Иуды Иаковлева сведены в одну (−3);
-    // связь ar-8 снята, связь Рагуил — Иофор добавлена
-    expect([n('origin'), n('fact'), n('kin'), n('epoch'), n('anchor'), n('relation')]).toEqual([2147, 16296, 82, 16, 22, 8]);
+    // связь ar-8 снята, связь Рагуил — Иофор добавлена; D15-4: у Сепфоры запись a-4378 сведена в событие a-4386 (−1)
+    expect([n('origin'), n('fact'), n('kin'), n('epoch'), n('anchor'), n('relation')]).toEqual([2147, 16295, 82, 16, 22, 8]);
     // каждый действующий номер — у записи; выбывший — со строкой переадресации
     expect(base.ids!.filter((e) => e.state === 'active').length).toBe(all.length);
     const red = new Set(base.redirects.map((r) => r.from));
     // Д-15: три повторные записи Иуды Иаковлева (a-12961, a-12963, a-12967), связь ar-8, рёбра Сепфоры и Ховава от Иофора
     expect(base.ids!.filter((e) => e.state === 'retired').map((e) => [e.id, red.has(e.id)]).sort()).toEqual(
-      [['a-12961', true], ['a-12963', true], ['a-12967', true], ['ar-8', true], ['k-57', true], ['k-66', true], ['k-67', true], ['o-alfey-otets-leviya--matfey', true], ['o-iofor--khovav', true], ['o-iofor--sepfora', true]],
+      [['a-12961', true], ['a-12963', true], ['a-12967', true], ['a-4378', true], ['ar-8', true], ['k-57', true], ['k-66', true], ['k-67', true], ['o-alfey-otets-leviya--matfey', true], ['o-iofor--khovav', true], ['o-iofor--sepfora', true]],
     );
   });
 
