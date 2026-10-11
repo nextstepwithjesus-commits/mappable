@@ -8,12 +8,71 @@
  *   - NOTICE: собирается из реестра при сборке — источники допущенных записей и части приложения (шрифты).
  */
 import type { Base } from './migrate.ts';
-import type { Source } from './types.ts';
+import type { Cite, Source, Tradition } from './types.ts';
 import { records, recordSources, type Admission } from './admit.ts';
 
 export interface RegistryIssue { level: 'error' | 'warn'; where: string; msg: string }
 
-const USES = new Set<Source['use']>(['basis', 'reference', 'check-only', 'component']);
+const USES = new Set<Source['use']>(['basis', 'reference', 'check-only', 'component', 'citation']);
+
+/** Четыре группы состава разбора (R9 Г-1; 02 § 3.14.3, `notFound`; К-17). */
+export type Group = 'orthodox' | 'catholic' | 'protestant' | 'historical-critical';
+export const GROUPS: Group[] = ['orthodox', 'catholic', 'protestant', 'historical-critical'];
+export const GROUP_WORD: Record<Group, string> = {
+  orthodox: 'православная', catholic: 'католическая', protestant: 'протестантская', 'historical-critical': 'историко-критическая',
+};
+/** Закрытый словарь традиций и отнесение к группам Г-1 (02 § 5.1 [4.2]); `jewish` — вне четырёх групп. */
+export const TRADITION_GROUP: Record<Tradition, Group | null> = {
+  orthodox: 'orthodox', catholic: 'catholic',
+  lutheran: 'protestant', reformed: 'protestant', anglican: 'protestant', evangelical: 'protestant',
+  'historical-critical': 'historical-critical', jewish: null,
+};
+export const WEIGHTS = new Set<Cite['weight']>(['checked', 'approx', 'excluded']);
+
+/** Группы Г-1, чьи голоса есть в ссылках (`excluded` — не голос: в выпуск не идёт). */
+export function citedGroups(works: Cite[], reg: Map<string, Source>): Group[] {
+  const out = new Set<Group>();
+  for (const c of works) {
+    if (c.weight === 'excluded') continue;
+    for (const t of reg.get(c.work)?.tradition ?? []) {
+      const g = TRADITION_GROUP[t];
+      if (g) out.add(g);
+    }
+  }
+  return GROUPS.filter((g) => out.has(g));
+}
+
+/**
+ * Проверка состава разбора (02 § 3.14.3, `notFound`; R9 Г-1; К-17): каждая из четырёх групп есть в `works` или названа в
+ * `notFound` («православного толкования не найдено»). Возвращает группы, которых нет ни там, ни там: пусто — состав полон,
+ * и только тогда понимание показывается и вычисляется подпись Г-3.
+ */
+export function missingGroups(works: Cite[], notFound: string[] | undefined, reg: Map<string, Source>): Group[] {
+  const have = new Set<string>([...citedGroups(works, reg), ...(notFound ?? [])]);
+  return GROUPS.filter((g) => !have.has(g));
+}
+
+/**
+ * Ссылки на труды (02 § 5.2; К-3): труд есть в реестре, это труд `w-…` (`use: citation`), есть страница или место, вес и
+ * кто сверил — из своих словарей. `where` — где ссылка.
+ */
+export function citeIssues(works: unknown, reg: Map<string, Source>, where: string): RegistryIssue[] {
+  const out: RegistryIssue[] = [];
+  const err = (msg: string) => out.push({ level: 'error', where, msg });
+  if (!Array.isArray(works)) return [{ level: 'error', where, msg: 'поле works — список ссылок на труды' }];
+  for (const c of works as Cite[]) {
+    if (!c || typeof c !== 'object') { err('ссылка на труд — запись {work, page, weight, checkedBy}'); continue; }
+    const w = reg.get(c.work);
+    if (!/^w-[a-z0-9-]+$/.test(c.work ?? '')) err(`«${c.work}» — не номер труда вида «w-…»`);
+    else if (!w) err(`труда «${c.work}» нет в реестре base/sources.json`);
+    else if (w.use !== 'citation') err(`«${c.work}» в реестре не труд (use: ${w.use})`);
+    if (!c.page?.trim()) err(`у ссылки на «${c.work}» нет страницы или места (page)`);
+    if (!WEIGHTS.has(c.weight)) err(`у ссылки на «${c.work}» вес «${c.weight}» — нужен checked, approx или excluded`);
+    if (c.checkedBy !== 'agent' && c.checkedBy !== 'human') err(`у ссылки на «${c.work}» нет «кто сверил» (checkedBy: agent или human)`);
+    for (const k of Object.keys(c)) if (!['work', 'volume', 'page', 'locus', 'weight', 'checkedBy'].includes(k)) err(`у ссылки на «${c.work}» лишнее поле «${k}» (издание и традиция — только в записи труда)`);
+  }
+  return out;
+}
 /** Слова «ещё не проверено» в полях источника. */
 const UNSURE = /провер(ить|ке|ка)|уточнить|\?/i;
 /** Идентификатор SPDX или свой «LicenseRef-…»; выражение — через AND, OR, WITH, скобки. */
@@ -54,7 +113,14 @@ export function validateRegistry(base: Base): RegistryIssue[] {
   const reg = new Map<string, Source>();
   for (const s of items) {
     const w = s.id || '(без номера)';
-    if (!/^src-[a-z0-9-]+$/.test(s.id ?? '')) err(w, 'номер источника — вида «src-…» (строчные латинские буквы, цифры, дефис)');
+    if (!/^(src|w)-[a-z0-9-]+$/.test(s.id ?? '')) err(w, 'номер источника — вида «src-…», труда — «w-…» (строчные латинские буквы, цифры, дефис)');
+    // труд (02 § 5.1; Р-2; К-3): `w-…` — только `use: citation`, и наоборот; традиция — из закрытого словаря, обязательна
+    if (s.id?.startsWith('w-') !== (s.use === 'citation')) err(w, s.use === 'citation' ? 'труд (use: citation) — номер вида «w-…»' : 'номер «w-…» — только у труда (use: citation)');
+    if (s.use === 'citation') {
+      if (!s.author?.trim() && !s.org?.trim()) err(w, 'у труда нет автора или учреждения');
+      if (!Array.isArray(s.tradition) || !s.tradition.length) err(w, 'у труда нет традиции (tradition; 02 § 5.1, Г-1)');
+    }
+    for (const t of s.tradition ?? []) if (!(t in TRADITION_GROUP)) err(w, `традиция «${t}» не из словаря (${Object.keys(TRADITION_GROUP).join(', ')})`);
     if (reg.has(s.id)) err(w, 'номер источника повторяется');
     reg.set(s.id, s);
     for (const k of ['title', 'license', 'spdx', 'licenseSource'] as const) if (!s[k]?.trim()) err(w, `нет поля «${k}»`);
@@ -98,6 +164,17 @@ export function validateRegistry(base: Base): RegistryIssue[] {
   }
   for (const r of records(base)) {
     for (const id of recordSources(r, base)) if (!reg.has(id)) err(r.key, `источник «${id}» — нет в реестре base/sources.json`);
+    // ссылки на труды на любой глубине записи (К-3)
+    const go = (x: any, path: string) => {
+      if (Array.isArray(x)) return x.forEach((y) => go(y, path));
+      if (!x || typeof x !== 'object') return;
+      for (const [k, v] of Object.entries(x)) {
+        if (k === 'works') out.push(...citeIssues(v, reg, `${r.key}${path}`));
+        else if (k === 'facts' && x === r.rec) continue;
+        else go(v, x.id && typeof x.id === 'string' && x !== r.rec ? `${path} ${x.id}` : path);
+      }
+    };
+    if (r.coll !== 'cite') go(r.rec, '');
   }
   return out;
 }
@@ -111,7 +188,9 @@ export interface NoticeEntry { id: string; title: string; who: string; version: 
 export function noticeEntries(base: Base, A: Admission): NoticeEntry[] {
   const reg = new Map((base.sources ?? []).map((s) => [s.id, s]));
   const used = new Map<string, number>();
-  for (const r of records(base)) if (A.ok(r.rec)) for (const id of recordSources(r, base)) used.set(id, (used.get(id) ?? 0) + 1);
+  // источники допущенных записей — какой их видит уровень: снятые закрытые части (К-15) в NOTICE не идут, а источник
+  // координат допущенной точки (`coordSource.source`, К-14) идёт со своей надписью
+  for (const r of records(base)) if (A.ok(r.rec)) for (const id of recordSources({ ...r, rec: A.view(r.rec) }, base)) used.set(id, (used.get(id) ?? 0) + 1);
   for (const s of base.sources ?? []) if (s.use === 'component') used.set(s.id, used.get(s.id) ?? 0);
   const out: NoticeEntry[] = [];
   const bad: string[] = [];

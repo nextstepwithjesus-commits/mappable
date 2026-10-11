@@ -9,12 +9,14 @@
  *   npm run -s base:mark -- --stale                             подписи, которые больше не действуют, и почему
  *   npm run -s base:mark -- --unmark <ключ> …                   снять подпись
  *   npm run -s base:mark -- --rekey                             перенести подписи с прежних ключей на номера (02 § 3.3.3; К-2)
+ *                                                               и подпись набора прочтений после замены авторов на works (п. 6; К-3)
  *
  * Подписать можно только запись не в карантине, при базе без ошибок проверки (кроме устаревших подписей) и не
  * составителю записи. Повторная подпись переносит прежнюю в историю.
  */
 import { pathToFileURL } from 'node:url';
 import { loadBase, validate } from './validate.ts';
+import { buildBase } from './migrate.ts';
 import { ledger, records, rekey, saveChecks, sign, statusOf, staleReason, inputsOf } from './admit.ts';
 
 function arg(name: string): string | undefined {
@@ -58,7 +60,9 @@ function main() {
     return;
   }
   if (process.argv.includes('--rekey')) {
-    const r = rekey(base);
+    // сборка «до шага K3» (02 § 3.3.3, п. 6): по ней сверяется отпечаток набора прочтений прежнего вида
+    const before = Object.assign(buildBase({ skip: ['K3'] }), { sources: base.sources, files: base.files, fileSources: base.fileSources, checks: base.checks });
+    const r = rekey(base, undefined, before);
     for (const m of r.moved) console.log(`перенесено: ${m.from} → ${m.to}`);
     for (const f of r.failed) console.log(`НЕ перенесено: ${f.key} — ${f.why}`);
     if (r.moved.length) saveChecks(r.entries);

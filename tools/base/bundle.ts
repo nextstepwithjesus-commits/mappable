@@ -3,6 +3,9 @@
  *
  *   npm run -s base:bundle                 уровень «выпуск»: только проверенное → dist-data/
  *   npm run -s base:bundle -- --probe      уровень «проба»: и черновики → dist-data-probe/ (только для прототипов)
+ *   npm run -s base:bundle -- --release 2026.10.2
+ *                                          номер выпуска: changes.json (что изменилось с прошлого выпуска) и номер выпуска
+ *                                          у новых строк base/redirects.json (02 § 8.2; К-12)
  *
  * Исходная модель (base/) — полная, с происхождением; сборка — только нужное для показа:
  *   index.json        — номера, имена, виды, основные связи, наборы прочтений, области: не больше 200 КБ в gzip;
@@ -20,17 +23,41 @@ import { gzipSync } from 'node:zlib';
 import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync, existsSync, statSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { execSync } from 'node:child_process';
-import { loadBase, validate } from './validate.ts';
+import { loadBase, validate, yearIn } from './validate.ts';
 import { loadBible } from '../bible.ts';
 import { parseRef, verseId, BOOKS } from '../../src/engine/books.ts';
 import { admission, LEVEL_WORD, PROBE_BANNER, type Admission, type Level } from './admit.ts';
 import type { Base } from './migrate.ts';
+import type { Cite, Origin } from './types.ts';
+import { prefixOf, redirectRow, shortId } from './prefixes.ts';
+import { buildChanges, digests, releaseOk, stampRelease, whyNotAdmitted, type Changes, type Digests } from './release.ts';
 import { noticeEntries, noticeText } from './sources.ts';
 
 const ROOT = join(import.meta.dirname, '..', '..');
 /** Папки сборки по уровням: выпуск и проба никогда не пишутся в одну папку. */
 export const OUT_DIR: Record<Level, string> = { release: join(ROOT, 'dist-data'), probe: join(ROOT, 'dist-data-probe') };
 export const BUDGET_INDEX_GZ = 200 * 1024;
+
+/**
+ * Бюджеты всех пакетов в gzip (02 § 8.1; Р-11; К-9). Пока индекс один (ядро и указатель инструментов ещё не разделены),
+ * он держит бюджет ядра. Пакет без бюджета — ошибка сборки: бюджет есть у каждого.
+ */
+export const BUDGETS: { pattern: RegExp; name: string; max: number; required: boolean }[] = [
+  { pattern: /^index\.json$/, name: 'индекс (ядро)', max: BUDGET_INDEX_GZ, required: true },
+  { pattern: /^cards\/[^/]+\.json$/, name: 'карточки тома', max: 64 * 1024, required: false },
+  { pattern: /^verses\/[^/]+\.json$/, name: 'текст книги', max: 96 * 1024, required: false },
+  { pattern: /^tsk\/[^/]+\.json$/, name: 'параллельные места, часть', max: 96 * 1024, required: false },
+  { pattern: /^changes\.json$/, name: 'журнал изменений выпуска', max: 64 * 1024, required: false },
+];
+
+/** Проверка бюджетов: каждый файл сборки — с бюджетом и в нём (служебные NOTICE и опись — вне пакетов). */
+export function budgetCheck(sizes: Record<string, { raw: number; gz: number }>) {
+  const packages = Object.entries(sizes).map(([file, s]) => {
+    const b = BUDGETS.find((x) => x.pattern.test(file));
+    return { file, gz: s.gz, budget: b?.max ?? null, name: b?.name ?? null, required: b?.required ?? false, ok: !!b && s.gz <= b.max };
+  });
+  return { packages, over: packages.filter((p) => !p.ok) };
+}
 
 const sha = (buf: string | Buffer) => createHash('sha256').update(buf).digest('hex');
 /** Отметка уровня в каждом файле сборки. */
@@ -47,45 +74,86 @@ export function assertOut(level: Level, dir: string) {
 export function buildIndex(base: Base, level: Level | Admission) {
   const A = asAdmission(base, level);
   const ok = (x: object) => A.ok(x);
+  const P = (id: string) => shortId(id, 'p-');
   const actors = base.volumes.flatMap((v) =>
     v.actors.filter(ok).map((a) => {
       const names = a.names.filter((n: any) => A.part(n));
       return {
-        id: a.id.slice(2), k: a.kind, ...(a.subkind && { sk: a.subkind }), ...(a.sex && { s: a.sex }),
+        id: P(a.id), k: a.kind, ...(a.subkind && { sk: a.subkind }), ...(a.sex && { s: a.sex }),
         n: names[0]?.form ?? a.names[0].form, ...(names.length > 1 && { o: names.slice(1).map((n) => n.form) }),
         ...(a.disambig && { d: a.disambig }), ...(a.roles?.length && { r: a.roles }), ...(a.prominence && { p: a.prominence }),
         ...(a.count && { c: a.count.n }), v: v.vol,
       };
     }),
   );
-  const short = (id?: string) => id?.slice(2);
+  const short = (id?: string) => (id === undefined ? undefined : P(id));
   const saidBy = (s: { actor: string; ref: string; label: string }) => ({ a: short(s.actor), r: s.ref, l: s.label });
+  // ребро с кандидатами или с тождеством «предположительно» — не ребро: отдельным списком (02 § 3.3.4, § 8; К-6). Его не
+  // рисует схема, оно не входит в путь родства и счётчики. Неуверенный конец «родитель» не называется: строка у ребёнка —
+  // слова стиха и «к кому относится, текст не говорит»; кандидаты — списком
+  const isCand = (o: Origin) => !!o.candidates?.length || o.identity?.degree === 'possible';
+  const admittedOrigins = base.origins.filter(ok);
   return {
     schema: 1,
     ...mark(A),
     actors,
-    origins: base.origins.filter(ok).map((o) => ({
+    origins: admittedOrigins.filter((o) => !isCand(o)).map((o) => ({
       c: short(o.child), ...(o.parent ? { p: short(o.parent) } : { u: o.unnamedParent?.words }), r: o.role === 'father' ? 'f' : 'm',
-      k: o.kind, ...(o.primary && { pr: 1 }), ...(o.gap && { g: 1 }), ...(o.gapPossible && { gv: o.gapPossible.via.map(short) }),
+      k: o.kind, ...(o.degree && { dg: o.degree }), ...(o.primary && { pr: 1 }), ...(o.gap && { g: 1 }), ...(o.gapPossible && { gv: o.gapPossible.via.map(short) }),
       ...(o.reading && { rs: o.reading.set, ri: o.reading.in }), ...(o.cert !== 'scripture' && { ce: o.cert }), ...(o.order !== undefined && { or: o.order }),
       ...(o.skipped && { sk: o.skipped.actors.map(short) }), ...(o.outsideLists && { ol: 1 }),
       ...(o.saidBy && { sb: saidBy(o.saidBy) }),
-      // тождество конца ребра (Р4-8, Р5-2): «предположительно» схема не рисует, у ребёнка — строка с примечанием и стихами
-      ...(o.identity && { id: { o: o.identity.of, d: o.identity.degree, n: o.identity.note, r: o.identity.refs } }),
+      // тождество конца ребра «весомо» (Р4-8): поле `idt`, а не `id` — номер записи и тождество не путаются (К-6)
+      ...(o.identity && { idt: { o: o.identity.of, d: o.identity.degree, n: o.identity.note, r: o.identity.refs } }),
+    })),
+    cand: admittedOrigins.filter(isCand).map((o) => ({
+      c: short(o.child), r: o.role === 'father' ? 'f' : 'm', ...(o.cert !== 'scripture' && { ce: o.cert }), rf: o.refs,
+      ...(o.candidates?.length && { k: o.candidates.map(short) }),
+      // известный конец называется: при неуверенном ребёнке родитель сказан текстом
+      ...(o.identity?.of === 'child' && o.parent && { p: short(o.parent) }),
+      ...(o.identity && { idt: { o: o.identity.of, d: o.identity.degree, n: o.identity.note, r: o.identity.refs } }),
     })),
     unions: base.unions.filter(ok).map((u) => ({ u, terms: u.terms.filter((t) => A.part(t)) })).filter((x) => x.terms.length)
       .map(({ u, terms }) => ({ h: short(u.husband), w: short(u.wife), k: [...new Set(terms.map((t) => t.kind))] })),
     // пометка «по словам …» (02 § 3.6) и авторы толкований (02 § 3.4 [R9]) идут в выпуск вместе с записью
     kin: base.kin.filter(ok).map((k) => ({ f: short(k.from), t: short(k.to), r: k.rel, ...(k.saidBy && { sb: saidBy(k.saidBy) }) })),
-    readings: base.readings.filter(ok).map((r) => ({
-      id: r.id, t: r.title, d: r.default,
-      r: r.readings.map((x) => ({ id: x.id, l: x.label, ce: x.cert, ...(x.authors?.length && { au: x.authors }) })),
-    })),
-    areas: base.areas.filter(ok).map((a) => ({ id: a.id.slice(2), n: a.name, k: a.kind, ...(a.founder && { f: short(a.founder) }), ...(a.parent && { pa: a.parent.slice(2) }) })),
-    members: base.memberships.filter(ok).map((m) => [short(m.actor), m.area.slice(2), ...(m.role ? [m.role] : [])]),
+    // ссылки на труды — только с подписанной записью `reading:<номер>#works` (02 § 3.3.3, п. 6; К-3); ✱ в выпуск не идёт
+    readings: base.readings.filter(ok).map((r) => {
+      const cites = A.okKey(`reading:${r.id}#works`);
+      return {
+        id: r.id, t: r.title, d: r.default,
+        r: r.readings.map((x) => {
+          const w = cites ? (x.works ?? []).filter((c) => c.weight !== 'excluded') : [];
+          return { id: x.id, l: x.label, ce: x.cert, ...(w.length && { w: w.map(citeOut) }) };
+        }),
+      };
+    }),
+    works: worksOut(base, A),
+    areas: base.areas.filter(ok).map((a) => ({ id: shortId(a.id, 'g-'), n: a.name, k: a.kind, ...(a.founder && { f: short(a.founder) }), ...(a.parent && { pa: shortId(a.parent, 'g-') }) })),
+    // членство: область — без `g-`, группа-лицо — полным номером `p-…` (виды смешаны)
+    members: base.memberships.filter(ok).map((m) => [short(m.actor), prefixOf(m.area) === 'g-' ? shortId(m.area, 'g-') : m.area, ...(m.role ? [m.role] : [])]),
     lines: Object.fromEntries(Object.entries<any>(base.lines).filter(([, l]) => ok(l)).map(([k, l]) => [k, { n: l.name, st: l.subtitle, rd: l.readings, ids: l.persons.map((s: any) => short(s.id)) }])),
-    redirects: base.redirects.filter(ok).map((r) => [short(r.from), r.to.map(short)]),
+    // переадресация: виды смешаны — строка лиц короткая, иначе полные номера с меткой 0 (prefixes.ts; К-6)
+    redirects: base.redirects.filter(ok).map((r) => redirectRow(r.from, r.to)),
   };
+}
+
+/** Ссылка на труд в пакете: номер труда, том, страница, место, знак (✔ ≈), кто сверил. */
+const citeOut = (c: Cite) => ({ w: c.work, ...(c.volume && { v: c.volume }), p: c.page, ...(c.locus && { l: c.locus }), g: c.weight === 'checked' ? '✔' : '≈', cb: c.checkedBy });
+
+/** Труды, на которые ссылаются допущенные ссылки: издание, год и традиция — из записи труда (02 § 5.2). */
+function worksOut(base: Base, A: Admission) {
+  const used = new Set<string>();
+  for (const r of base.readings) {
+    if (!A.ok(r) || !A.okKey(`reading:${r.id}#works`)) continue;
+    for (const x of r.readings) for (const c of x.works ?? []) if (c.weight !== 'excluded') used.add(c.work);
+  }
+  const reg = new Map((base.sources ?? []).map((s) => [s.id, s]));
+  return [...used].sort().map((id) => {
+    const w = reg.get(id);
+    if (!w) return { id, tr: [] }; // база в памяти без реестра (проверка реестра — у базы с диска)
+    return { id, t: w.title, ...(w.author && { a: w.author }), ...(w.year && { y: w.year }), ...(w.edition && { e: w.edition }), ...(w.publisher && { pb: w.publisher }), tr: w.tradition ?? [] };
+  });
 }
 
 /** Карточки по томам: только допущенные лица, их допущенные утверждения и «нет сведений». */
@@ -97,10 +165,11 @@ export function buildCards(base: Base, level: Level | Admission) {
     const cards: Record<string, unknown> = {};
     for (const a of v.actors) {
       if (!A.ok(a)) continue;
-      // толкование без авторов (needsSources) читателю не показывается (R9 Г-2, Г-4; Р5-1)
-      const facts = a.facts.filter((f) => (A.ok(f) && !f.needsSources) || (excludedFacts++, false));
+      // толкование без авторов (needsSources) читателю не показывается (R9 Г-2, Г-4; Р5-1); год в записи без модели — тоже,
+      // до замены ссылкой calc (02 § 3.10; 07 § 21.1; К-8, Д-7)
+      const facts = a.facts.filter((f) => (A.ok(f) && !f.needsSources && (f.cert === 'calc' || !yearIn(f.value))) || (excludedFacts++, false));
       const nod = base.nodata.filter((n) => n.actor === a.id && A.ok(n)).map((n) => ({ s: n.sec, k: n.kind, ...(n.what && { w: n.what }), ...(n.refs.length && { r: n.refs }), ...(n.words && { q: n.words }) }));
-      cards[a.id.slice(2)] = { f: facts.map((f) => ({ s: f.sec, f: f.field, v: f.value, ...(f.cert && { c: f.cert }) })), ...(nod.length && { nd: nod }) };
+      cards[shortId(a.id, 'p-')] = { f: facts.map((f) => ({ s: f.sec, f: f.field, v: f.value, ...(f.cert && { c: f.cert }) })), ...(nod.length && { nd: nod }) };
     }
     out[v.file] = { schema: 1, ...mark(A), cards };
   }
@@ -143,6 +212,13 @@ function main() {
   const level: Level = process.argv.includes('--probe') ? 'probe' : 'release';
   const OUT = OUT_DIR[level];
   assertOut(level, OUT);
+  // номер выпуска (02 § 8.2; К-12): --release 2026.10.2
+  const ri = process.argv.indexOf('--release');
+  const release = ri >= 0 ? process.argv[ri + 1] : undefined;
+  if (release !== undefined && !releaseOk(release)) {
+    console.error(`!! номер выпуска «${release}» — нужен вид 2026.10.2`);
+    process.exit(1);
+  }
   const base = loadBase();
   const errors = validate(base).filter((i) => i.level === 'error');
   if (errors.length) {
@@ -150,6 +226,9 @@ function main() {
     process.exit(1);
   }
   const A = admission(base, level);
+  // отпечатки прошлого выпуска — до очистки папки: по ним строится журнал изменений
+  const prevFile = join(OUT, 'digests.json');
+  const prev: Digests | null = existsSync(prevFile) ? JSON.parse(readFileSync(prevFile, 'utf8')) : null;
   rmSync(OUT, { recursive: true, force: true });
   mkdirSync(join(OUT, 'cards'), { recursive: true });
   mkdirSync(join(OUT, 'verses'), { recursive: true });
@@ -186,6 +265,26 @@ function main() {
   const noticeTxt = noticeText(notice, level);
   writeFileSync(join(OUT, 'NOTICE.txt'), noticeTxt);
 
+  // журнал изменений выпуска и переадресация с номером выпуска (02 § 8.2; К-12)
+  let changes: Changes | null = null;
+  if (release) {
+    if (level === 'release') {
+      const { items, stamped } = stampRelease(base.redirects, release);
+      if (stamped) {
+        const f = join(ROOT, 'base', 'redirects.json');
+        const cur = JSON.parse(readFileSync(f, 'utf8'));
+        writeFileSync(f, JSON.stringify({ ...cur, items }, null, 1) + '\n');
+        base.redirects = items;
+        console.log(`переадресация: номер выпуска ${release} у ${stamped} строк`);
+      }
+    }
+    const cur = digests(base, A, release);
+    changes = buildChanges(prev?.release === release ? null : prev, cur, base.redirects, (id) => whyNotAdmitted(base, A, id));
+    write('changes.json', { ...m, ...changes });
+    writeFileSync(prevFile, JSON.stringify(cur));
+  }
+  const budgets = budgetCheck(sizes);
+
   // опись выпуска
   const fileSha = (rel: string) => (existsSync(join(ROOT, rel)) ? sha(readFileSync(join(ROOT, rel))) : null);
   const idx = sizes['index.json'];
@@ -193,6 +292,7 @@ function main() {
   const manifest = {
     schema: 2,
     ...m,
+    release: release ?? null,
     admitLevel: LEVEL_WORD[level],
     built: new Date().toISOString(),
     commit: execSync('git rev-parse --short HEAD', { cwd: ROOT }).toString().trim(),
@@ -214,7 +314,9 @@ function main() {
       kin: A.counts.kin.admitted, readings: A.counts.reading.admitted, citedVerses: [...byBook.values()].reduce((n, b) => n + Object.keys(b).length, 0),
       excludedFacts,
     },
-    budget: { indexGzipMax: BUDGET_INDEX_GZ, indexGzip: idx.gz, ok: idx.gz <= BUDGET_INDEX_GZ },
+    budget: { indexGzipMax: BUDGET_INDEX_GZ, indexGzip: idx.gz, ok: idx.gz <= BUDGET_INDEX_GZ && !budgets.over.length },
+    packages: budgets.packages,
+    changes: changes ? { file: 'changes.json', since: changes.since, records: Object.keys(changes.items).length } : null,
     sizesGzip: { index: idx.gz, cards: total('cards/'), verses: total('verses/') },
     files: sizes,
   };
@@ -226,6 +328,8 @@ function main() {
   console.log(`индекс: ${kb(idx.gz)} в gzip (бюджет ${kb(BUDGET_INDEX_GZ)}) — ${manifest.budget.ok ? 'в бюджете' : 'ПРЕВЫШЕН'}`);
   console.log(`карточки: ${kb(manifest.sizesGzip.cards)} в gzip, ${base.volumes.length} частей; стихи: ${kb(manifest.sizesGzip.verses)} в gzip, ${byBook.size} книг, ${manifest.counts.citedVerses} стихов`);
   console.log(`утверждений не в сборке: ${excludedFacts}`);
+  for (const p of budgets.over) console.error(`!! бюджет: ${p.file} — ${kb(p.gz)}${p.budget ? ` при бюджете ${kb(p.budget)}` : ', бюджета нет'}`);
+  if (changes) console.log(`выпуск ${release}: изменений записей ${Object.keys(changes.items).length}${changes.since ? ` с выпуска ${changes.since}` : ' (первый выпуск)'}`);
   if (!manifest.budget.ok) process.exit(1);
 }
 

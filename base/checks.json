@@ -2918,7 +2918,7 @@
    "by": "сверщик-агент",
    "kind": "agent",
    "at": "2026-10-10",
-   "hash": "7fa88a41559ea1ce88262e6502b58006e0687a51062634bda49d960b2e2762ae",
+   "hash": "b045e2c43606675a53320325005557b0087c2c5c2d08fd198e261053df04c16f",
    "inputs": {
     "verses": [
      "Втор 25:5",
@@ -2934,7 +2934,32 @@
     "sources": {
      "src-synodal": "tools/bible/synodal.tsv"
     }
-   }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "7fa88a41559ea1ce88262e6502b58006e0687a51062634bda49d960b2e2762ae",
+     "inputs": {
+      "verses": [
+       "Втор 25:5",
+       "Втор 25:6",
+       "Лк 1:32",
+       "Лк 3:23",
+       "Мф 1:16",
+       "Рим 1:3"
+      ],
+      "text": "c189aa5b90a28384bc042f8f967973def959af59e0692a320b2562680a24e61e",
+      "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос: авторы строками → works (К-3); ссылки на труды подписываются отдельно"
+    }
+   ]
   },
   {
    "key": "union:u-avraam--agar",

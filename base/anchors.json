@@ -7,13 +7,13 @@
   "status": "draft",
   "from": {
    "vol": "data/anchors.json",
-   "commit": "a2afb08"
+   "commit": "cb38e3c"
   }
  },
  "about": "Внебиблейские опоры, без которых библейские числа нельзя перевести в годы до / по Р. Х. (ТЗ П-6). Все годы, зависящие от них, имеют класс «расчёт по реконструкции».",
  "anchors": [
   {
-   "id": "solomon-4",
+   "id": "an-solomon-4",
    "event": "4-й год Соломона, закладка храма",
    "value": -967,
    "verse": "3Цар 6:1",
@@ -23,7 +23,7 @@
    ]
   },
   {
-   "id": "qarqar",
+   "id": "an-qarqar",
    "event": "Ахав при Каркаре (не упомянуто в Писании)",
    "value": -853,
    "verse": "3Цар 22:40",
@@ -31,7 +31,7 @@
    "alternatives": []
   },
   {
-   "id": "jehu-tribute",
+   "id": "an-jehu-tribute",
    "event": "Дань Ииуя Салманасару III (не упомянута в Писании)",
    "value": -841,
    "verse": "4Цар 10:36",
@@ -39,7 +39,7 @@
    "alternatives": []
   },
   {
-   "id": "samaria",
+   "id": "an-samaria",
    "event": "Падение Самарии",
    "value": -722,
    "verse": "4Цар 17:6",
@@ -49,7 +49,7 @@
    ]
   },
   {
-   "id": "sennacherib",
+   "id": "an-sennacherib",
    "event": "Нашествие Сеннахирима, 14-й год Езекии",
    "value": -701,
    "verse": "4Цар 18:13",
@@ -57,7 +57,7 @@
    "alternatives": []
   },
   {
-   "id": "first-captivity",
+   "id": "an-first-captivity",
    "event": "Первое пленение, 3-й год Иоакима",
    "value": -605,
    "verse": "Дан 1:1",
@@ -65,7 +65,7 @@
    "alternatives": []
   },
   {
-   "id": "jeconiah-exile",
+   "id": "an-jeconiah-exile",
    "event": "Иехония уведён в Вавилон",
    "value": -597,
    "verse": "4Цар 24:12",
@@ -73,7 +73,7 @@
    "alternatives": []
   },
   {
-   "id": "jerusalem-fall",
+   "id": "an-jerusalem-fall",
    "event": "Разрушение Иерусалима",
    "value": -586,
    "verse": "4Цар 25:8-9",
@@ -83,7 +83,7 @@
    ]
   },
   {
-   "id": "babylon-fall",
+   "id": "an-babylon-fall",
    "event": "Падение Вавилона",
    "value": -539,
    "verse": "Дан 5:30-31",
@@ -91,7 +91,7 @@
    "alternatives": []
   },
   {
-   "id": "cyrus-decree",
+   "id": "an-cyrus-decree",
    "event": "Указ Кира",
    "value": -538,
    "verse": "Езд 1:1",
@@ -101,7 +101,7 @@
    ]
   },
   {
-   "id": "darius-2",
+   "id": "an-darius-2",
    "event": "2-й год Дария, пророчество Аггея",
    "value": -520,
    "verse": "Агг 1:1",
@@ -109,7 +109,7 @@
    "alternatives": []
   },
   {
-   "id": "ezra",
+   "id": "an-ezra",
    "event": "7-й год Артаксеркса, приход Ездры",
    "value": -458,
    "verse": "Езд 7:7-8",
@@ -119,7 +119,7 @@
    ]
   },
   {
-   "id": "nehemiah",
+   "id": "an-nehemiah",
    "event": "20-й год Артаксеркса, Неемия",
    "value": -445,
    "verse": "Неем 2:1",
@@ -129,7 +129,7 @@
    ]
   },
   {
-   "id": "herod-death",
+   "id": "an-herod-death",
    "event": "Смерть Ирода Великого",
    "value": -4,
    "verse": "Мф 2:19",
@@ -157,7 +157,7 @@
    ]
   },
   {
-   "id": "tiberius-15",
+   "id": "an-tiberius-15",
    "event": "15-й год Тиверия, начало проповеди Иоанна",
    "value": 26,
    "verse": "Лк 3:1",
@@ -173,7 +173,7 @@
    ]
   },
   {
-   "id": "crucifixion",
+   "id": "an-crucifixion",
    "event": "Распятие",
    "value": 30,
    "verse": "Мф 27:35",
@@ -183,7 +183,7 @@
    ]
   },
   {
-   "id": "paul-conversion",
+   "id": "an-paul-conversion",
    "event": "Обращение Савла на пути в Дамаск",
    "value": 34,
    "verse": "Деян 9:3-6",
@@ -194,7 +194,7 @@
    ]
   },
   {
-   "id": "agrippa-death",
+   "id": "an-agrippa-death",
    "event": "Смерть Ирода Агриппы в Кесарии",
    "value": 44,
    "verse": "Деян 12:23",
@@ -208,7 +208,7 @@
    ]
   },
   {
-   "id": "jerusalem-council",
+   "id": "an-jerusalem-council",
    "event": "Иерусалимский собор",
    "value": 49,
    "verse": "Деян 15:6",
@@ -219,7 +219,7 @@
    ]
   },
   {
-   "id": "festus",
+   "id": "an-festus",
    "event": "Порций Фест сменяет Феликса",
    "value": 59,
    "verse": "Деян 24:27",
@@ -236,7 +236,7 @@
    ]
   },
   {
-   "id": "paul-rome",
+   "id": "an-paul-rome",
    "event": "Павел в Риме «целых два года», 60–62",
    "value": 60,
    "verse": "Деян 28:30",
@@ -252,7 +252,7 @@
    ]
   },
   {
-   "id": "revelation",
+   "id": "an-revelation",
    "event": "Откровение Иоанну на Патмосе — черта «Завершение канона»",
    "value": 95,
    "verse": "Откр 1:9",

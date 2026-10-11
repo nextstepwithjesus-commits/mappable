@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data",
-   "commit": "a2afb08"
+   "commit": "cb38e3c"
   }
  },
  "sources": [
@@ -47,10 +47,29 @@
       "Лк 1:32",
       "Рим 1:3"
      ],
-     "authors": [
-      "Matthew Henry, «An Exposition of the Old and New Testament» (1708–1710), на Лк 3:23–38",
-      "John MacArthur, проповедь «The Messiah’s Royal Lineage» (Grace to You, 42-48), на Лк 3:23–38",
-      "«Толковая Библия» под ред. А. П. Лопухина (преемники), т. 9 (1912), на Лк 3:23"
+     "works": [
+      {
+       "work": "w-henry-exposition",
+       "locus": "Лк 3:23-38",
+       "page": "на Лк 3:23–38",
+       "weight": "approx",
+       "checkedBy": "agent"
+      },
+      {
+       "work": "w-macarthur-royal-lineage",
+       "locus": "Лк 3:23-38",
+       "page": "проповедь 42-48",
+       "weight": "approx",
+       "checkedBy": "agent"
+      },
+      {
+       "work": "w-lopukhin-tolkovaya-bibliya",
+       "volume": "9 (1912)",
+       "locus": "Лк 3:23",
+       "page": "на Лк 3:23",
+       "weight": "approx",
+       "checkedBy": "agent"
+      }
      ]
     },
     {
@@ -62,10 +81,26 @@
       "Втор 25:5-6"
      ],
      "label": "Толкование: левират — Иосиф сын Иакова по рождению и сын Илия по закону: Иаков взял вдову брата Илия, умершего бездетным",
-     "authors": [
-      "Юлий Африкан, «Послание к Аристиду» (в передаче Евсевия)",
-      "Евсевий Кесарийский, «Церковная история» I.7",
-      "Феофилакт Болгарский, «Толкование на Евангелие от Луки», на Лк 3:23–38"
+     "works": [
+      {
+       "work": "w-africanus-aristides",
+       "page": "в передаче Евсевия, «Церковная история» I.7",
+       "weight": "checked",
+       "checkedBy": "agent"
+      },
+      {
+       "work": "w-eusebius-historia",
+       "page": "I.7",
+       "weight": "checked",
+       "checkedBy": "agent"
+      },
+      {
+       "work": "w-theophylact-luke",
+       "locus": "Лк 3:23-38",
+       "page": "на Лк 3:23–38",
+       "weight": "checked",
+       "checkedBy": "agent"
+      }
      ]
     },
     {
@@ -76,8 +111,19 @@
       "Лк 3:23"
      ],
      "label": "Толкование: усыновление — Иосиф сын Иакова по рождению, Илий усыновил его",
-     "authors": [
-      "Августин, «О согласии евангелистов» II.3–4; «Вопросы на Евангелия» II.5"
+     "works": [
+      {
+       "work": "w-augustine-de-consensu",
+       "page": "II.3–4",
+       "weight": "checked",
+       "checkedBy": "agent"
+      },
+      {
+       "work": "w-augustine-quaestiones-ev",
+       "page": "II.5",
+       "weight": "checked",
+       "checkedBy": "agent"
+      }
      ]
     }
    ],
@@ -428,10 +474,26 @@
       "Мф 1:16",
       "Мф 1:25"
      ],
-     "authors": [
-      "R. E. Brown, «The Birth of the Messiah» (1977; 1993), с. 139 — наречение имени (Мф 1:25) как признание отцовства",
-      "John MacArthur, проповедь «The Gracious King» (Grace to You)",
-      "Августин, «О согласии евангелистов» II — отец по усыновлению"
+     "works": [
+      {
+       "work": "w-brown-birth-messiah",
+       "locus": "Мф 1:25",
+       "page": "с. 139",
+       "weight": "approx",
+       "checkedBy": "agent"
+      },
+      {
+       "work": "w-macarthur-gracious-king",
+       "page": "место в проповеди не указано (вторичная цитата)",
+       "weight": "approx",
+       "checkedBy": "agent"
+      },
+      {
+       "work": "w-augustine-de-consensu",
+       "page": "II",
+       "weight": "checked",
+       "checkedBy": "agent"
+      }
      ]
     }
    ],

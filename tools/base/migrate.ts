@@ -18,11 +18,12 @@ import { execSync } from 'node:child_process';
 import { join } from 'node:path';
 import type {
   Actor, ActorKind, Assertion, Area, BaseFile, CheckEntry, ChronoRecord, Correction, KinTerm, Membership, Name, NoData, Origin,
-  Prov, ReadingSet, Redirect, Source, Union, UnionTerm,
+  Place, Prov, ReadingSet, Redirect, Source, Union, UnionTerm,
 } from './types.ts';
 import { applyCorrections, makeCtx, STEPS, type Step } from './corrections.ts';
 import { ADDITIONS } from './additions.ts';
 import { STEPS_D3 } from './corrections-d3.ts';
+import { STEPS_K } from './corrections-k.ts';
 import { project, canon, type Hints } from './project.ts';
 import { loadBible } from '../bible.ts';
 import { parseRef } from '../../src/engine/books.ts';
@@ -76,6 +77,11 @@ export interface Base {
   lines: Record<string, any>;
   epochs: any[];
   anchors: any;
+  /**
+   * Места (02 § 3.13; К-11). Исходный файл новой коллекции base/places.json лежит вне области, которую пишет перенос:
+   * пересборка его не трогает и берёт с диска.
+   */
+  places?: Place[];
   /**
    * Происхождение файлов base/ по умолчанию (02 § 3.1: у файла — значение по умолчанию, у записи — уточнение): путь от
    * base/ («actors/04-abraham.json», «origins.json», «lines/luke.json») → prov файла. Нет — как у переноса: черновик.
@@ -345,6 +351,11 @@ export interface BuildOptions {
   at?: string;
   /** Шаги после всех шагов правки (для тестов выдачи номеров). */
   extraSteps?: Step[];
+  /**
+   * Шаги, которые пропустить: сборка «до шага» (02 § 3.3.3, п. 6) — по ней `base:mark --rekey` сверяет отпечаток записи
+   * прежнего вида с подписью (набор r-lk3-23 до замены авторов на `works`).
+   */
+  skip?: string[];
 }
 
 const readItems = (rel: string) => (existsSync(join(OUT, rel)) ? JSON.parse(readFileSync(join(OUT, rel), 'utf8')).items : []);
@@ -358,11 +369,13 @@ export function buildBase(opts: BuildOptions = {}) {
   const { base, hints } = toBase(old.vols, old.groups, old.epochs, old.anchors, old.lines);
   startIds(base, opts.ids ?? loadIds(OUT), opts.at ?? new Date().toISOString().slice(0, 10));
   applyCorrections(base, hints);
-  applyAll(base, hints, [ADDITIONS, ...STEPS_D3, ...(opts.extraSteps ?? [])]);
+  const skip = new Set(opts.skip ?? []);
+  applyAll(base, hints, [ADDITIONS, ...STEPS_D3, ...STEPS_K, ...(opts.extraSteps ?? [])].filter((s) => !skip.has(s.id)));
   const iss = finishIds(base)!;
   if (iss.errors.length) throw new Error(`номера: ${iss.errors.slice(0, 5).join('; ')}`);
   base.redirects = mergeRedirects(opts.redirects ?? readItems('redirects.json'), base.redirects);
   base.ids = iss.table;
+  base.places = readItems('places.json');
   return base;
 }
 
@@ -442,7 +455,7 @@ function main() {
   // 2. исправления по одному: всё, что изменилось, — в объявленной области шага (и поля, которых не было в прежних данных)
   const steps: Record<string, string[]> = {};
   let bad = 0;
-  for (const step of [...STEPS, ADDITIONS, ...STEPS_D3]) {
+  for (const step of [...STEPS, ADDITIONS, ...STEPS_D3, ...STEPS_K]) {
     const { changed, stray } = stepChanges(base, hints, step);
     steps[step.id] = changed;
     console.log(`   ${step.id}: изменено записей ${changed.length}${stray.length ? `, ВНЕ ОБЛАСТИ ${stray.length}: ${stray.slice(0, 8).join('; ')}` : ''}`);
@@ -451,7 +464,7 @@ function main() {
   // номера рёбер (по концам) и эпох; переадресация с прежних номеров эпох
   const iss = finishIds(base)!;
   const byKind = (k: string) => iss.added.filter((e) => e.kind === k).length;
-  console.log(`номера: выдано раньше ${iss.table.length - iss.added.length}, новых ${iss.added.length} (рёбер ${byKind('origin')}, утверждений ${byKind('fact')}, родства ${byKind('kin')}, эпох ${byKind('epoch')})`);
+  console.log(`номера: выдано раньше ${iss.table.length - iss.added.length}, новых ${iss.added.length} (рёбер ${byKind('origin')}, утверждений ${byKind('fact')}, родства ${byKind('kin')}, эпох ${byKind('epoch')}, опор ${byKind('anchor')}); выбыло ${iss.retired.length}`);
   if (iss.errors.length) {
     for (const e of iss.errors.slice(0, 20)) console.error(`!! номера: ${e}`);
     process.exit(1);

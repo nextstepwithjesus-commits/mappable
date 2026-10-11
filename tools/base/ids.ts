@@ -21,7 +21,7 @@ import type { Base } from './migrate.ts';
 import type { Redirect } from './types.ts';
 
 export const IDS_FILE = 'ids.json';
-export type IdKind = 'origin' | 'fact' | 'kin' | 'epoch';
+export type IdKind = 'origin' | 'fact' | 'kin' | 'epoch' | 'anchor';
 export interface IdEntry {
   id: string;
   kind: IdKind;
@@ -32,8 +32,10 @@ export interface IdEntry {
   /** «Действует» или «выбыл»; куда переадресован — только в redirects.json. */
   state: 'active' | 'retired';
 }
-export const PREFIX: Record<IdKind, string> = { origin: 'o-', fact: 'a-', kin: 'k-', epoch: 'era-' };
+export const PREFIX: Record<IdKind, string> = { origin: 'o-', fact: 'a-', kin: 'k-', epoch: 'era-', anchor: 'an-' };
 export const EPOCH_REDIRECT_REASON = 'номер эпохи получил префикс era- (02 § 3.3.2; К-1)';
+export const ANCHOR_REDIRECT_REASON = 'номер опоры получил префикс an- (02 § 3.3.1; К-1, К-10)';
+export const ORIGIN_REDIRECT_REASON = 'у ребра сменился конец или номер лица — новая запись (02 § 3.3.1 [4.2]; К-12)';
 
 const h16 = (x: unknown) => createHash('sha256').update(canon(x)).digest('hex').slice(0, 16);
 const short = (id: string) => id.replace(/^p-/, '');
@@ -142,6 +144,24 @@ export class Issuer {
     return this.byId.has(id);
   }
 
+  /** Выданная запись таблицы по ключу. */
+  entry(key: string): IdEntry | undefined {
+    return this.byKey.get(key);
+  }
+
+  /** Номер выбывает (запись сменила ключ): строка таблицы остаётся, номер второй раз не выдаётся. */
+  retire(id: string) {
+    const e = this.byId.get(id);
+    if (!e || e.state === 'retired') return;
+    const r: IdEntry = { ...e, state: 'retired' };
+    this.byId.set(id, r);
+    this.byKey.set(e.key, r);
+    const i = (this.table as IdEntry[]).indexOf(e);
+    if (i >= 0) (this.table as IdEntry[])[i] = r;
+    this.retired.push(id);
+  }
+  readonly retired: string[] = [];
+
   /** Номер, который запись принесла сама (шаг правки дал его явно): заносится в таблицу, если его там нет. */
   claim(kind: IdKind, id: string, key: string, where: string) {
     const have = this.byId.get(id);
@@ -177,6 +197,8 @@ export function startIds(base: Base, table: IdEntry[], at: string): Issuer {
   ISSUERS.set(base, iss);
   for (const v of base.volumes) for (const a of v.actors) a.facts = a.facts.map((f) => (f.id ? f : withId(pending(factKey(a.id, f)), f)));
   base.kin = base.kin.map((k) => (k.id ? k : withId(pending(kinKey(k)), k)));
+  // ребро помнит свои концы по data/ (К-12): если шаг сменит конец, прежний номер получит переадресацию на новый
+  base.origins = base.origins.map((o) => (o.id ? o : withId(pending(originKey(o)), o)));
   return iss;
 }
 
@@ -206,11 +228,24 @@ export function finishIds(base: Base): Issuer | undefined {
   };
   for (const v of base.volumes) for (const a of v.actors) a.facts = a.facts.map((f) => fix('fact', f, `${a.id} § ${f.sec} ${f.field}`));
   base.kin = base.kin.map((k) => fix('kin', k, `${k.from} — ${k.to}`));
+  // рёбра — по нынешним концам. Конец сменился (смена родителя, ребёнка, роли или номера лица) — новая запись и новый
+  // номер; прежний номер, если он выдан и больше ни у кого не стоит, выбывает со строкой переадресации (02 § 3.3.1; К-12)
+  const moved: { old: string; key: string }[] = [];
   base.origins = base.origins.map((o) => {
     const where = `${o.child} ← ${o.parent ?? '?'}`;
-    if (o.id) return fix('origin', o, where);
-    return withId(iss.issue('origin', originKey(o), where, originId(o)), o);
+    const cur = originKey(o);
+    if (o.id && !o.id.startsWith(PENDING)) return fix('origin', o, where);
+    if (o.id && o.id.slice(1) !== cur) moved.push({ old: o.id.slice(1), key: cur });
+    return withId(iss.issue('origin', cur, where, originId(o)), o);
   });
+  const usedIds = new Set(base.origins.map((o) => o.id));
+  for (const m of moved) {
+    const was = iss.entry(m.old);
+    const now = iss.entry(m.key);
+    if (!was || !now || was.kind !== 'origin' || usedIds.has(was.id)) continue;
+    iss.retire(was.id);
+    if (!base.redirects.some((r) => r.from === was.id)) base.redirects.push({ from: was.id, to: [now.id], reason: ORIGIN_REDIRECT_REASON, refs: [], at: iss.at });
+  }
   base.epochs = base.epochs.map((e) => {
     if (typeof e.id === 'string' && e.id.startsWith(PREFIX.epoch)) {
       iss.claim('epoch', e.id, `epoch:${e.id}`, e.id);
@@ -221,6 +256,22 @@ export function finishIds(base: Base): Issuer | undefined {
     if (!base.redirects.some((r) => r.from === old)) base.redirects.push({ from: old, to: [id], reason: EPOCH_REDIRECT_REASON, refs: [], at: iss.at });
     return { ...e, id };
   });
+  // опоры (02 § 3.3.1; К-1, К-10): номер `an-<прежний>`, на прежний — строка переадресации
+  if (base.anchors?.anchors) {
+    base.anchors = {
+      ...base.anchors,
+      anchors: base.anchors.anchors.map((a: any) => {
+        if (typeof a.id === 'string' && a.id.startsWith(PREFIX.anchor)) {
+          iss.claim('anchor', a.id, `anchor:${a.id}`, a.id);
+          return a;
+        }
+        const old = a.id as string;
+        const id = iss.issue('anchor', `anchor:${old}`, old, `${PREFIX.anchor}${old}`);
+        if (!base.redirects.some((r) => r.from === old)) base.redirects.push({ from: old, to: [id], reason: ANCHOR_REDIRECT_REASON, refs: [], at: iss.at });
+        return { ...a, id };
+      }),
+    };
+  }
   // ссылки на эпоху во времени прежнего вида — на новый номер (прежний ведёт сюда же через переадресацию)
   const epochIds = new Set(base.epochs.map((e) => e.id as string));
   for (const c of base.chrono as { chrono: any }[]) {

@@ -17,7 +17,7 @@ import {
   admission, blockedSources, closedPart, legacyKey, openView, records, recordSources, rekey, sign,
 } from '../tools/base/admit.ts';
 import { buildIndex } from '../tools/base/bundle.ts';
-import { EPOCH_REDIRECT_REASON, Issuer, IDS_FILE, loadIds, mergeRedirects, PREFIX, saveIds, serializeIds, type IdEntry } from '../tools/base/ids.ts';
+import { ANCHOR_REDIRECT_REASON, EPOCH_REDIRECT_REASON, ORIGIN_REDIRECT_REASON, Issuer, IDS_FILE, loadIds, mergeRedirects, PREFIX, saveIds, serializeIds, type IdEntry } from '../tools/base/ids.ts';
 import type { Step } from '../tools/base/corrections.ts';
 import { canon } from '../tools/base/project.ts';
 import type { CheckEntry, Redirect } from '../tools/base/types.ts';
@@ -46,14 +46,15 @@ describe('таблица выданных номеров base/ids.json (К-1)', 
       ...facts(base).map(({ f }) => ['fact', f.id] as [string, string | undefined]),
       ...base.kin.map((k) => ['kin', k.id] as [string, string | undefined]),
       ...base.epochs.map((e) => ['epoch', e.id] as [string, string | undefined]),
+      ...base.anchors.anchors.map((a: any) => ['anchor', a.id] as [string, string | undefined]),
     ];
     expect(all.filter(([, id]) => !id)).toEqual([]);
     expect(all.filter(([kind, id]) => !id!.startsWith(PREFIX[kind as keyof typeof PREFIX]))).toEqual([]);
     expect(all.filter(([kind, id]) => issued.get(id!)?.kind !== kind)).toEqual([]);
     expect(new Set(all.map(([, id]) => id)).size).toBe(all.length);
-    // числа 02 § 3.3.1: рёбер 2 147, утверждений 16 274, родства 85, эпох 16
+    // числа 02 § 3.3.1: рёбер 2 147, утверждений 16 274, родства 85, эпох 16, опор 22 (К-10)
     const n = (k: string) => all.filter(([kind]) => kind === k).length;
-    expect([n('origin'), n('fact'), n('kin'), n('epoch')]).toEqual([2147, 16274, 85, 16]);
+    expect([n('origin'), n('fact'), n('kin'), n('epoch'), n('anchor')]).toEqual([2147, 16274, 85, 16, 22]);
     expect(base.ids!.length).toBe(all.length);
   });
 
@@ -139,10 +140,17 @@ describe('таблица выданных номеров base/ids.json (К-1)', 
     expect(added.map((e) => [e.kind, e.at])).toEqual([['fact', '2099-01-01'], ['origin', '2099-01-01']]);
     expect(added[0].key).toMatch(/\|T-вставка$/);
     expect(actorOf(after, 'p-adam').facts[0].id).toBe(added[0].id);
-    // ребро с новым концом — новая запись и новый номер; прежний номер в таблице не тронут
+    // ребро с новым концом — новая запись и новый номер; прежний номер выбывает со строкой переадресации (К-12),
+    // остальные строки таблицы не тронуты
     expect(added[1].id).toBe('o-farra--isaak');
     expect(after.origins.some((o) => o.id === edge.id)).toBe(false);
-    expect(after.ids!.slice(0, before.ids!.length)).toEqual(before.ids);
+    expect(after.ids!.slice(0, before.ids!.length)).toEqual(before.ids!.map((e) => (e.id === edge.id ? { ...e, state: 'retired' } : e)));
+    expect(after.redirects.filter((r) => r.from === edge.id).map((r) => [r.to, r.reason])).toEqual([[['o-farra--isaak'], ORIGIN_REDIRECT_REASON]]);
+    expect(after.redirects.slice(0, before.redirects.length)).toEqual(before.redirects);
+    // вторая сборка с той же таблицей — те же номера и та же переадресация
+    const again = buildBase({ ids: after.ids, redirects: after.redirects, at: '2099-01-02', extraSteps: steps });
+    expect(again.ids).toEqual(after.ids);
+    expect(again.redirects).toEqual(after.redirects);
     // родство и эпохи — те же номера
     expect(after.kin.map((k) => k.id)).toEqual(before.kin.map((k) => k.id));
     expect(after.epochs.map((e) => e.id)).toEqual(before.epochs.map((e) => e.id));
@@ -241,7 +249,8 @@ describe('перенос подписей base:mark --rekey (К-2)', () => {
     x.kin = x.kin.map(strip);
     for (const v of x.volumes) for (const a of v.actors) a.facts = a.facts.map(strip);
     x.epochs = x.epochs.map((e) => ({ ...e, id: e.id.replace(/^era-/, '') }));
-    x.redirects = x.redirects.filter((r) => r.reason !== EPOCH_REDIRECT_REASON);
+    x.anchors = { ...x.anchors, anchors: x.anchors.anchors.map((a: any) => ({ ...a, id: a.id.replace(/^an-/, '') })) };
+    x.redirects = x.redirects.filter((r) => r.reason !== EPOCH_REDIRECT_REASON && r.reason !== ANCHOR_REDIRECT_REASON);
     for (const c of x.chrono as any[]) if (c.chrono?.epoch) c.chrono.epoch = c.chrono.epoch.replace(/^era-/, '');
     x.checks = oldChecks(b);
     delete x.ids;

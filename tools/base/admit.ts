@@ -36,9 +36,25 @@ export const LEVEL_WORD: Record<Level, string> = {
 export const PROBE_BANNER = 'Данные не проверены: проба';
 
 export type Coll =
-  | 'actor' | 'fact' | 'origin' | 'union' | 'kin' | 'reading' | 'area' | 'membership' | 'nodata' | 'chrono' | 'redirect'
-  | 'line' | 'epoch';
-export const COLLS: Coll[] = ['actor', 'fact', 'origin', 'union', 'kin', 'reading', 'area', 'membership', 'nodata', 'chrono', 'redirect', 'line', 'epoch'];
+  | 'actor' | 'fact' | 'origin' | 'union' | 'kin' | 'reading' | 'cite' | 'area' | 'membership' | 'nodata' | 'chrono' | 'redirect'
+  | 'line' | 'epoch' | 'anchor' | 'place';
+export const COLLS: Coll[] = ['actor', 'fact', 'origin', 'union', 'kin', 'reading', 'cite', 'area', 'membership', 'nodata', 'chrono', 'redirect', 'line', 'epoch', 'anchor', 'place'];
+
+/**
+ * Файлы base/ по коллекциям допуска (02 § 3.17 [4.1]; К-10): каждый файл базы принадлежит коллекции допуска или списку
+ * служебных. Ссылки на труды (`cite`) живут в файле своего набора прочтений.
+ */
+export const COLL_FILES: Record<Coll, RegExp> = {
+  actor: /^actors\/[^/]+\.json$/, fact: /^actors\/[^/]+\.json$/, origin: /^origins\.json$/, union: /^unions\.json$/, kin: /^kin\.json$/,
+  reading: /^readings\.json$/, cite: /^readings\.json$/, area: /^areas\.json$/, membership: /^memberships\.json$/, nodata: /^nodata\.json$/,
+  chrono: /^chrono\.json$/, redirect: /^redirects\.json$/, line: /^lines\/[^/]+\.json$/, epoch: /^epochs\.json$/, anchor: /^anchors\.json$/,
+  place: /^places\.json$/,
+};
+/**
+ * Служебные файлы base/ — не коллекции допуска: реестр источников, журнал подписей, исправления, выданные номера,
+ * таблица нумерации стихов, отчёт и подсказки переноса.
+ */
+export const SERVICE_FILES: RegExp[] = [/^sources\.json$/, /^checks\.json$/, /^corrections\.json$/, /^ids\.json$/, /^versification\//, /^legacy\//];
 
 /** Запись базы для допуска: ключ, вид, сама запись, файл, содержащая запись и ключи записей, без которых её не показать. */
 export interface Rec {
@@ -64,6 +80,7 @@ export function legacyKey(coll: Coll, rec: any, parent?: any): string | undefine
     case 'fact': return `fact:${parent.id}|${rec.sec}|${rec.field}`;
     case 'kin': return `kin:${rec.from}|${rec.to}|${rec.rel}`;
     case 'epoch': return `epoch:${String(rec.id).replace(/^era-/, '')}`;
+    case 'anchor': return `anchor:${String(rec.id).replace(/^an-/, '')}`;
     default: return undefined;
   }
 }
@@ -97,6 +114,8 @@ export function records(base: Base): Rec[] {
   for (const r of base.readings) target.set(r.id, `reading:${r.id}`);
   for (const a of base.areas) target.set(a.id, `area:${a.id}`);
   for (const e of base.epochs) target.set(e.id, `epoch:${e.id}`);
+  for (const a of base.anchors?.anchors ?? []) target.set(a.id, `anchor:${a.id}`);
+  for (const p of base.places ?? []) target.set(p.id, `place:${p.id}`);
   for (const o of base.origins) if (o.id) target.set(o.id, `origin:${o.id}`);
   for (const k of base.kin) if (k.id) target.set(k.id, `kin:${k.id}`);
   for (const v of base.volumes) for (const a of v.actors) for (const f of a.facts) if (f.id) target.set(f.id, `fact:${f.id}`);
@@ -117,12 +136,29 @@ export function records(base: Base): Rec[] {
   }
   for (const o of base.origins) {
     add('origin', `origin:${o.child}|${o.parent ?? '?'}|${o.role}|${o.primary ? 'p' : 'o'}`, o, 'origins.json', [
-      A(o.child), A(o.parent), o.reading && `reading:${o.reading.set}`,
+      A(o.child), A(o.parent), o.reading && `reading:${o.reading.set}`, ...(o.candidates ?? []).map(A),
     ]);
   }
   for (const u of base.unions) add('union', `union:${u.id}`, u, 'unions.json', [A(u.husband), A(u.wife)]);
   for (const k of base.kin) add('kin', `kin:${k.from}|${k.to}|${k.rel}`, k, 'kin.json', [A(k.from), A(k.to)]);
-  for (const r of base.readings) add('reading', `reading:${r.id}`, r, 'readings.json', []);
+  // ссылки на труды набора — отдельная запись со своей подписью (02 § 3.3.3, п. 6; К-3): `works` в отпечаток набора не
+  // входит. В её содержимое входят и записи трудов реестра (издание, год, традиция): правка труда снимает подпись ссылок
+  const reg = new Map((base.sources ?? []).map((s) => [s.id, s]));
+  for (const r of base.readings) {
+    add('reading', `reading:${r.id}`, r, 'readings.json', []);
+    const ws = r.readings.filter((x) => x.works?.length);
+    if (!ws.length) continue;
+    const used = [...new Set(ws.flatMap((x) => x.works!.map((c) => c.work)))].sort();
+    const cite = {
+      set: r.id,
+      works: ws.map((x) => ({ reading: x.id, works: x.works })),
+      registry: used.map((id) => {
+        const w = reg.get(id);
+        return w ? { id, title: w.title, author: w.author, org: w.org, year: w.year, edition: w.edition, volume: w.volume, publisher: w.publisher, tradition: w.tradition } : { id, missing: true };
+      }),
+    };
+    add('cite', `reading:${r.id}#works`, cite, 'readings.json', [`reading:${r.id}`]);
+  }
   for (const a of base.areas) add('area', `area:${a.id}`, a, 'areas.json', [A(a.founder), a.parent && `area:${a.parent}`]);
   for (const m of base.memberships) {
     add('membership', `membership:${m.actor}|${m.area}`, m, 'memberships.json', [A(m.actor), m.area.startsWith('g-') ? `area:${m.area}` : A(m.area)]);
@@ -134,6 +170,10 @@ export function records(base: Base): Rec[] {
     add('line', `line:${k}`, l, `lines/${k}.json`, [...(l.persons ?? []).map((s: any) => A(s.id)), ...Object.keys(l.readings ?? {}).map((s) => `reading:${s}`)]);
   }
   for (const e of base.epochs) add('epoch', `epoch:${e.id}`, e, 'epochs.json', [A(e.startRule?.person), A(e.endRule?.person)]);
+  // опоры (02 § 3.15; К-10): в допуске, как эпохи
+  for (const a of base.anchors?.anchors ?? []) add('anchor', `anchor:${a.id}`, a, 'anchors.json', []);
+  // места (02 § 3.13; К-11): связи с другими местами — ссылки, а не зависимости (§ 3.17)
+  for (const p of base.places ?? []) add('place', `place:${p.id}`, p, 'places.json', []);
   return out;
 }
 
@@ -216,6 +256,8 @@ export function content(r: Pick<Rec, 'coll' | 'rec'>): unknown {
   };
   const c = strip(r.rec);
   if (r.coll === 'actor') delete c.facts;
+  // ссылки на труды в отпечаток набора не входят: они подписываются отдельно (02 § 3.3.3, п. 6; К-3)
+  if (r.coll === 'reading' && Array.isArray(c?.readings)) for (const x of c.readings) delete x.works;
   if (c && typeof c === 'object') delete c.sources;
   return c;
 }
@@ -249,7 +291,7 @@ export function recordSources(r: Pick<Rec, 'rec'> & Partial<Pick<Rec, 'file' | '
  * Части записи со своим источником (02 § 3.13.3; К-15): положения, имена в других источниках, современное название,
  * точка подписи, сопоставление со сводкой. Часть с закрытым источником снимается, запись остаётся.
  */
-export const PART_FIELDS = ['names', 'positions', 'modernName', 'labelPoint', 'match'] as const;
+export const PART_FIELDS = ['names', 'otherNames', 'positions', 'modernName', 'modernCyr', 'labelPoint', 'match'] as const;
 
 /** Номера источников самой части: `source`, `sources`, `coordSource.source`. */
 function partSourceIds(p: any): string[] {
@@ -442,6 +484,12 @@ export function sign(base: Base, key: string, who: { by: string; kind: 'human' |
   if (!r) throw new Error(`нет записи с ключом «${key}»`);
   const s = statusOf(r, base, new Map(), env);
   if (s.status === 'quarantine') throw new Error(`запись «${key}» в карантине: подписать нельзя`);
+  // эпоха прежнего вида (готовые годы, «предание» в основании) не подписывается до переработки (02 § 3.15; К-8, Д-11)
+  if (r.coll === 'epoch') {
+    const why = ['start', 'end', 'startEst', 'endEst'].filter((k) => typeof r.rec[k] === 'number').map((k) => `готовый год «${k}»`);
+    if (/предани/i.test(JSON.stringify([r.rec.basis, r.rec.basisBy, r.rec.summary]))) why.push('«предание» в основании');
+    if (why.length) throw new Error(`эпоху «${key}» подписать нельзя до переработки: ${why.join(', ')} (Д-11)`);
+  }
   const author = r.rec.prov?.by ?? r.parent?.prov?.by ?? base.files?.[r.file]?.by;
   if (author && author === who.by) throw new Error(`второй ключ — не составитель: «${who.by}» составил запись «${key}»`);
   const inputs = inputsOf(r, base, env);
@@ -487,15 +535,45 @@ export interface RekeyResult {
  * записи без поля номера. Совпал — подпись переписывается на новый ключ с новым отпечатком, прежняя уходит в историю с
  * пометкой «перенос номера». Не совпал — не переносится, причина печатается, запись остаётся черновиком.
  */
-export function rekey(base: Base, env: TextEnv = fileEnv()): RekeyResult {
+export function rekey(base: Base, env: TextEnv = fileEnv(), before?: Base): RekeyResult {
   const recs = records(base);
   const byKey = new Map(recs.map((r) => [r.key, r]));
   const byLegacy = new Map(recs.filter((r) => r.legacy !== r.key).map((r) => [r.legacy, r]));
   const out = new Map((base.checks ?? []).map((c) => [c.key, c]));
   const moved: RekeyResult['moved'] = [];
   const failed: RekeyResult['failed'] = [];
+  const prior = before && new Map(records(before).map((r) => [r.key, r]));
   for (const c of base.checks ?? []) {
-    if (byKey.has(c.key)) continue;
+    if (byKey.has(c.key)) {
+      // набор прочтений после замены `authors` на `works` (02 § 3.3.3, п. 6; К-3): отпечаток прежнего вида — из сборки до
+      // шага; подпись переносится, только если он совпал с подписью и наборы различаются одной этой заменой
+      const r = byKey.get(c.key)!;
+      if (!prior || r.coll !== 'reading') continue;
+      const inputs = inputsOf(r, base, env);
+      if (recordHash(r, inputs) === c.hash) continue;
+      const old = prior.get(c.key);
+      if (!old) {
+        failed.push({ key: c.key, why: 'в сборке до шага нет такой записи' });
+        continue;
+      }
+      if (recordHash(old, inputsOf(old, before!, env)) !== c.hash) {
+        failed.push({ key: c.key, why: `отпечаток прежнего вида не совпал с подписью: ${staleReason(c, inputsOf(old, before!, env))}` });
+        continue;
+      }
+      const noAuthors = (x: any) => {
+        const y = structuredClone(content(x)) as any;
+        for (const rd of y?.readings ?? []) delete rd.authors;
+        return canon(y);
+      };
+      if (noAuthors(old) !== noAuthors(r)) {
+        failed.push({ key: c.key, why: 'набор изменился не только заменой авторов строками на ссылки works' });
+        continue;
+      }
+      const prev = { by: c.by, kind: c.kind, at: c.at, hash: c.hash, ...(c.inputs && { inputs: c.inputs }), note: 'перенос: авторы строками → works (К-3); ссылки на труды подписываются отдельно' };
+      out.set(c.key, { key: c.key, by: c.by, kind: c.kind, at: c.at, hash: recordHash(r, inputs), inputs, history: [...(c.history ?? []), prev] });
+      moved.push({ from: c.key, to: c.key });
+      continue;
+    }
     const r = byLegacy.get(c.key);
     if (!r) {
       failed.push({ key: c.key, why: 'нет записи ни с этим ключом, ни с этим прежним ключом' });

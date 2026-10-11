@@ -201,7 +201,7 @@ export interface Union {
  * поколений, по другому родословию (Лк 3), иное прочтение (1Пар 3:19); `parents-word` — особое слово текста без
  * кровного смысла: Иосиф и Иисус Христос — «родители Его» (Лк 2:41), отца по плоти нет (Мф 1:20; шаг C47).
  */
-export type OriginKind = 'natural' | 'legal' | 'adoptive' | 'ancestor' | 'by-luke' | 'alternative' | 'levirate' | 'parents-word';
+export type OriginKind = 'natural' | 'legal' | 'adoptive' | 'ancestor' | 'by-luke' | 'alternative' | 'levirate' | 'parents-word' | 'text-word';
 
 /**
  * Происхождение — ребро к каждому названному родителю (02, § 3.2, уточнено по рецензии Д1). Союз родителей — запись
@@ -221,6 +221,18 @@ export interface Origin {
   cert: Cert;
   /** Основная линия (прежние поля father/mother) или дополнительная (otherParents). */
   primary: boolean;
+  /**
+   * Степень у вида `ancestor` (02 § 3.4; К-13): `inferred` — степень следует из двух стихов и больше (Лаван — внук Нахора,
+   * Быт 29:5 при 28:5 и 24:24), уровень «выв.»; `unstated` — текст говорит о происхождении, но степени не называет
+   * («из дома Ашбеи», 1Пар 4:21). У других видов поля нет.
+   */
+  degree?: 'inferred' | 'unstated';
+  /**
+   * Кандидаты в родители (02 § 3.3.4; К-13): «Сыновья его: Улам и Рекем» (1Пар 7:16) — «его» может относиться к Махиру,
+   * Керешу или Шерешу. Родитель не выбран: поля `parent` нет. Такое ребро не рисуется, не входит в путь родства и
+   * счётчики; сборка выносит его отдельным списком (К-6).
+   */
+  candidates?: string[];
   /** Пропуск поколений между ребёнком и родителем (Мф 1; Руф 4:18–22). */
   gap?: boolean;
   /**
@@ -240,8 +252,11 @@ export interface Origin {
    * Рувима его нет. Стихи — перечни, где его нет; схема ставит такое лицо отсылом, а не ребёнком в общей строке.
    */
   outsideLists?: { refs: Ref[] };
-  /** Слова текста для ребра, если связь названа не словом «родил» (Иосиф: «муж Марии», «как думали»). */
-  words?: { text: string; ref: Ref }[];
+  /**
+   * Слова текста для ребра, если связь названа не словом «родил» (Иосиф: «муж Марии», «как думали»). У вида `text-word` —
+   * у каждого слова свой стих и свой говорящий (02 § 3.4: Валтасар — Дан 5:2, 11, 13, 18, 22).
+   */
+  words?: { text: string; ref: Ref; saidBy?: SaidBy }[];
   /** Родство названо словами лица (02 § 3.6): Сарра — дочь Фарры по словам Авраама (Быт 20:11–12). */
   saidBy?: SaidBy;
   /**
@@ -268,6 +283,11 @@ export interface SaidBy {
   actor: string;
   ref: Ref;
   label: string;
+  /**
+   * Начало речи (02 § 3.4; К-7): стих, где говорящий назван перед речью, к которой относится `ref` (Дан 5:10 — царица,
+   * её слова — Дан 5:11). Нет поля — говорящий назван в самом стихе или не дальше двух стихов выше.
+   */
+  speechStart?: Ref;
 }
 
 /** Родство словами Писания, без выведения родителей (П-8). Слово должно быть в стихе. */
@@ -284,13 +304,37 @@ export interface KinTerm {
   prov?: Partial<Prov>;
 }
 
+/**
+ * Ссылка на труд (02 § 5.2; Р-2; К-3): `work` — номер труда `w-…` в реестре base/sources.json; издание, год и традиция
+ * хранятся только в записи труда. `page` — страница или место (стих, том, глава); `locus` — о каком месте Писания речь;
+ * `weight` — `checked` (✔ прочитано), `approx` (≈ по выдержке) или `excluded` (✱ — в выпуск не идёт; R9 Г-2);
+ * `checkedBy` — кто сверил ссылку: агент или человек. Поле называется `work`, а не `source`: допуск его не читает как
+ * источник материала, и закрытый труд запись не закрывает.
+ */
+export interface Cite {
+  work: string;
+  volume?: string;
+  page: string;
+  locus?: string;
+  weight: 'checked' | 'approx' | 'excluded';
+  checkedBy: 'agent' | 'human';
+}
+
 /** Набор взаимоисключающих прочтений (02, § 3.4): схемы и расчёт никогда не складывают два прочтения одного набора. */
 export interface ReadingSet {
   id: string;
   title: string;
   refs: Ref[];
-  /** У толкования (`interpretation`) — авторы по совету источников (02 § 3.4 [R9]; R9 Г-4): автор, труд, место. */
-  readings: { id: string; label: string; cert: Cert; refs: Ref[]; authors?: string[] }[];
+  /**
+   * У толкования (`interpretation`) — ссылки на труды `works` (02 § 3.4, § 5.2; R9 Г-4; К-3). Поле `works` в отпечаток
+   * набора не входит: оно подписывается отдельно (ключ `reading:<номер>#works`, 02 § 3.3.3 п. 6), и пока подписи нет,
+   * сборка ссылок на труды не выводит. Прежнее поле `authors` (строки) — ошибка проверки.
+   */
+  readings: {
+    id: string; label: string; cert: Cert; refs: Ref[]; works?: Cite[];
+    /** @deprecated Прежний вид: строки авторов пишут только шаги до K3; в готовой базе это ошибка проверки (К-3). */
+    authors?: string[];
+  }[];
   /** Прочтение по умолчанию — по букве текста. */
   default: string;
   note: string;
@@ -393,6 +437,13 @@ export interface Correction {
 }
 
 /**
+ * Традиция автора труда — закрытый словарь с отнесением к группам Г-1 (02 § 5.1 [4.2]; R9 Г-1; К-17): `orthodox` →
+ * православная; `catholic` → католическая; `lutheran`, `reformed`, `anglican`, `evangelical` → протестантская;
+ * `historical-critical` → историко-критическая; `jewish` — вне четырёх групп (только для передатчиков предания).
+ */
+export type Tradition = 'orthodox' | 'catholic' | 'lutheran' | 'reformed' | 'anglican' | 'evangelical' | 'historical-critical' | 'jewish';
+
+/**
  * Источник в реестре base/sources.json (02 § 5; 09 § 5.5; этап Д3-3, Д3-5). Права — машинно: `spdx`, `attributionRequired`,
  * `shareAlike`, `redistribute`; по ним собирается NOTICE и решается, может ли запись источника попасть в сборку.
  */
@@ -423,11 +474,97 @@ export interface Source {
    * `false` — запись с этим источником в сборку не попадает (только сверка, просьба не распространять, права не подтверждены).
    */
   redistribute: boolean;
-  /** basis — основа данных; reference — справочный слой; check-only — только сверка, в приложение не входит; component — часть приложения (шрифт). */
-  use: 'basis' | 'reference' | 'check-only' | 'component';
+  /**
+   * basis — основа данных; reference — справочный слой; check-only — только сверка, в приложение не входит; component —
+   * часть приложения (шрифт); citation — труд `w-…`, который только называется: на него ссылаются `works` (02 § 5.1).
+   */
+  use: 'basis' | 'reference' | 'check-only' | 'component' | 'citation';
+  /** Издание труда (02 § 5.1 [4.1]): без них опора и схема в выпуск не идут; по ним — выгрузка CSL-JSON и BibTeX. */
+  edition?: string;
+  year?: string;
+  volume?: string;
+  publisher?: string;
+  isbn?: string;
+  doi?: string;
+  url?: string;
+  /** Традиция автора — закрытый словарь (02 § 5.1 [4.2]); у трудов `w-…` обязательна. */
+  tradition?: Tradition[];
   read: string;
   /** Источники, из которых этот выведен: независимые подтверждения — разные корни графа (Д-база, Б-3). */
   dependsOn?: string[];
   limits: string;
   notProves: string;
+}
+
+// ---------- места (02 § 3.13; 05; К-11, К-14) ----------
+
+/** Вид места (02 § 3.13.1): по способу показа — точка, вода, земля. */
+export type PlaceKind =
+  | 'settlement' | 'campsite' | 'mountain' | 'hill' | 'spring' | 'well' | 'pool' | 'cave' | 'tree' | 'stone' | 'altar' | 'structure' | 'gate' | 'ford' | 'island'
+  | 'river' | 'stream' | 'sea' | 'lake'
+  | 'land' | 'region' | 'desert' | 'valley' | 'field' | 'mountain-range' | 'road';
+
+/** Имя места в Библии (02 § 3.13.2): синодальная форма со стихами; у каждого стиха — своё основание времени. */
+export interface PlaceName {
+  /** `l-…#n<число>`. */
+  id: string;
+  form: string;
+  refs: { ref: Ref; timeBasis: 'story' | 'narrator-now' | 'former-by-verse' | 'inferred' }[];
+  type: 'main' | 'former' | 'now' | 'that-is' | 'other-book' | 'in-speech';
+  /** Имя места — всегда слова стиха (Р-8): другого уровня нет. */
+  cert?: 'scripture';
+  saidBy?: SaidBy;
+}
+
+/**
+ * Положение кандидата (02 § 3.13.3). Источник координат — номер записи реестра `coordSource.source` (Р-10; К-14): по
+ * нему допуск решает, идёт ли точка в выпуск, и по нему надпись попадает в NOTICE. Положение с закрытым источником
+ * снимается как часть (К-15), место остаётся.
+ */
+export interface Position {
+  /** `l-…#pos<число>`. */
+  id: string;
+  label: string;
+  modernId?: string;
+  lat: number;
+  lon: number;
+  score?: number;
+  votes?: number;
+  rejected?: true;
+  coordSource: { source: string; id?: string };
+  precision?: { kind: 'visible' | 'tel' | 'settlement' | 'distance' | 'water' | 'terrain' | 'path' | 'region'; radiusM?: number };
+  period?: { words: string; source: string };
+  /** Сводка, из которой взят кандидат. */
+  source: string;
+}
+
+/** Связь мест (02 § 3.13.4). «Другое имя» по мнению сводки — не связь, а `match.otherNameOf`. */
+export interface PlaceLink {
+  /** `l-…#link<число>`. */
+  id: string;
+  kind: 'inferred-same' | 'part-of' | 'near';
+  to: string;
+  cert: Cert;
+  refs: Ref[];
+  km?: number;
+  when?: string;
+  note?: string;
+}
+
+export interface Place {
+  /** `l-…`. */
+  id: string;
+  kind: PlaceKind;
+  names: PlaceName[];
+  otherNames?: { form: string; lang: string; period?: string; source: string }[];
+  modernCyr?: { text: string; lang: string; rule: string; source: string };
+  positions?: Position[];
+  /** Степень отождествления — только вычисление по порогам выпуска (05 § 3.3). */
+  degree?: 'certain' | 'probable' | 'possible' | 'unknown';
+  links?: PlaceLink[];
+  labelPoint?: { lat: number; lon: number; by: string; source: string };
+  match?: { modernId: string; method: 'auto' | 'manual'; by: string; checkedBy?: string; at: string; otherNameOf?: string; source?: string };
+  vision?: true;
+  sources?: string[];
+  prov?: Partial<Prov>;
 }

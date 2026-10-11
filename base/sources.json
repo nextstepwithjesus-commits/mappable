@@ -670,6 +670,225 @@
    "read": "—",
    "limits": "Шрифт приложения (09 § 12). OFL: шрифт нельзя продавать отдельно; текст лицензии и надпись — вместе со шрифтом",
    "notProves": "—"
+  },
+  {
+   "id": "w-henry-exposition",
+   "title": "An Exposition of the Old and New Testament",
+   "org": "",
+   "author": "Matthew Henry",
+   "version": "",
+   "date": "1708–1710",
+   "license": "общественное достояние; цитаты допустимы",
+   "spdx": "LicenseRef-PublicDomain",
+   "licenseSource": "docs/app/research/R9-авторитеты.md (лицензия в этой задаче не перепроверялась)",
+   "attributionRequired": false,
+   "shareAlike": false,
+   "redistribute": false,
+   "use": "citation",
+   "year": "1708–1710",
+   "tradition": [
+    "reformed"
+   ],
+   "read": "≈ на Лк 3:23 — по выдержкам",
+   "limits": "R9 С4: английский пуританин, пресвитерианин-нонконформист. Выделен из src-r9-henry (Д-6). Совет источников — docs/app/research/R9-авторитеты.md. Труд только называется (works): мнение пересказывается своими словами (02 § 5.2)",
+   "notProves": "Толкование не становится фактом: не создаёт ребро, тождество или хронологический вход (R9, Г-5)"
+  },
+  {
+   "id": "w-macarthur-royal-lineage",
+   "title": "The Messiah’s Royal Lineage (проповедь 42-48, на Лк 3:23–38)",
+   "org": "Grace to You (gty.org)",
+   "author": "John MacArthur",
+   "version": "",
+   "date": "",
+   "license": "авторское право; только пересказ со ссылкой",
+   "spdx": "NOASSERTION",
+   "licenseSource": "docs/app/research/R9-авторитеты.md (лицензия в этой задаче не перепроверялась)",
+   "attributionRequired": false,
+   "shareAlike": false,
+   "redistribute": false,
+   "use": "citation",
+   "tradition": [
+    "evangelical",
+    "reformed"
+   ],
+   "read": "≈ по выдержкам поиска",
+   "limits": "R9 С1: евангеликальная, реформатско-баптистская традиция. Выделен из src-r9-macarthur (Д-6). Совет источников — docs/app/research/R9-авторитеты.md. Труд только называется (works): мнение пересказывается своими словами (02 § 5.2)",
+   "notProves": "Толкование не становится фактом: не создаёт ребро, тождество или хронологический вход (R9, Г-5)"
+  },
+  {
+   "id": "w-macarthur-gracious-king",
+   "title": "The Gracious King (проповедь)",
+   "org": "Grace to You (gty.org)",
+   "author": "John MacArthur",
+   "version": "",
+   "date": "",
+   "license": "авторское право; только пересказ со ссылкой",
+   "spdx": "NOASSERTION",
+   "licenseSource": "docs/app/research/R9-авторитеты.md (лицензия в этой задаче не перепроверялась)",
+   "attributionRequired": false,
+   "shareAlike": false,
+   "redistribute": false,
+   "use": "citation",
+   "tradition": [
+    "evangelical",
+    "reformed"
+   ],
+   "read": "≈ вторичная цитата в конспекте проповеди",
+   "limits": "R9 С1, § 2. Выделен из src-r9-macarthur (Д-6). Совет источников — docs/app/research/R9-авторитеты.md. Труд только называется (works): мнение пересказывается своими словами (02 § 5.2)",
+   "notProves": "Толкование не становится фактом: не создаёт ребро, тождество или хронологический вход (R9, Г-5)"
+  },
+  {
+   "id": "w-lopukhin-tolkovaya-bibliya",
+   "title": "Толковая Библия, т. 1–11",
+   "org": "",
+   "author": "под ред. А. П. Лопухина и его преемников",
+   "version": "",
+   "date": "1904–1913",
+   "license": "общественное достояние; цитаты допустимы",
+   "spdx": "LicenseRef-PublicDomain",
+   "licenseSource": "docs/app/research/R9-авторитеты.md (лицензия в этой задаче не перепроверялась)",
+   "attributionRequired": false,
+   "shareAlike": false,
+   "redistribute": false,
+   "use": "citation",
+   "year": "1904–1913",
+   "publisher": "СПб.",
+   "tradition": [
+    "orthodox"
+   ],
+   "read": "≈ т. 9 на Лк 3:23 — по выдержке",
+   "limits": "R9 С5: русская православная академическая. Евангелия (т. 8–9, 1911–1912) писали преемники Лопухина. Выделен из src-r9-lopukhin (Д-6). Совет источников — docs/app/research/R9-авторитеты.md. Труд только называется (works): мнение пересказывается своими словами (02 § 5.2)",
+   "notProves": "Толкование не становится фактом: не создаёт ребро, тождество или хронологический вход (R9, Г-5)"
+  },
+  {
+   "id": "w-africanus-aristides",
+   "title": "Послание к Аристиду",
+   "org": "",
+   "author": "Юлий Африкан",
+   "version": "",
+   "date": "сохранилось в «Церковной истории» Евсевия, I.7",
+   "license": "общественное достояние; цитаты допустимы",
+   "spdx": "LicenseRef-PublicDomain",
+   "licenseSource": "docs/app/research/R9-авторитеты.md (лицензия в этой задаче не перепроверялась)",
+   "attributionRequired": false,
+   "shareAlike": false,
+   "redistribute": false,
+   "use": "citation",
+   "tradition": [
+    "orthodox"
+   ],
+   "read": "✔ (в «Catena Aurea» на Мф 1:16)",
+   "limits": "R9 С6: древняя Церковь, восточный автор. Выделен из src-r9-fathers (Д-6). Совет источников — docs/app/research/R9-авторитеты.md. Труд только называется (works): мнение пересказывается своими словами (02 § 5.2)",
+   "notProves": "Толкование не становится фактом: не создаёт ребро, тождество или хронологический вход (R9, Г-5)"
+  },
+  {
+   "id": "w-eusebius-historia",
+   "title": "Церковная история",
+   "org": "",
+   "author": "Евсевий Кесарийский",
+   "version": "",
+   "date": "IV в.; переводы XIX в.",
+   "license": "общественное достояние; цитаты допустимы",
+   "spdx": "LicenseRef-PublicDomain",
+   "licenseSource": "docs/app/research/R9-авторитеты.md (лицензия в этой задаче не перепроверялась)",
+   "attributionRequired": false,
+   "shareAlike": false,
+   "redistribute": false,
+   "use": "citation",
+   "tradition": [
+    "orthodox"
+   ],
+   "read": "✔",
+   "limits": "R9 С6: древняя Церковь, восточный автор. Выделен из src-r9-fathers (Д-6). Совет источников — docs/app/research/R9-авторитеты.md. Труд только называется (works): мнение пересказывается своими словами (02 § 5.2)",
+   "notProves": "Толкование не становится фактом: не создаёт ребро, тождество или хронологический вход (R9, Г-5)"
+  },
+  {
+   "id": "w-theophylact-luke",
+   "title": "Толкование на Евангелие от Луки",
+   "org": "",
+   "author": "Феофилакт Болгарский",
+   "version": "",
+   "date": "XI–XII вв.; рус. пер. XIX в.",
+   "license": "общественное достояние; цитаты допустимы",
+   "spdx": "LicenseRef-PublicDomain",
+   "licenseSource": "docs/app/research/R9-авторитеты.md (лицензия в этой задаче не перепроверялась)",
+   "attributionRequired": false,
+   "shareAlike": false,
+   "redistribute": false,
+   "use": "citation",
+   "tradition": [
+    "orthodox"
+   ],
+   "read": "✔ английский пер.; ≈ русский",
+   "limits": "R9 С7: православная (византийская). Выделен из src-r9-theophylact (Д-6). Совет источников — docs/app/research/R9-авторитеты.md. Труд только называется (works): мнение пересказывается своими словами (02 § 5.2)",
+   "notProves": "Толкование не становится фактом: не создаёт ребро, тождество или хронологический вход (R9, Г-5)"
+  },
+  {
+   "id": "w-augustine-de-consensu",
+   "title": "О согласии евангелистов",
+   "org": "",
+   "author": "Августин",
+   "version": "",
+   "date": "V в.; переводы NPNF, XIX в.",
+   "license": "общественное достояние; цитаты допустимы",
+   "spdx": "LicenseRef-PublicDomain",
+   "licenseSource": "docs/app/research/R9-авторитеты.md (лицензия в этой задаче не перепроверялась)",
+   "attributionRequired": false,
+   "shareAlike": false,
+   "redistribute": false,
+   "use": "citation",
+   "tradition": [
+    "catholic"
+   ],
+   "read": "✔ (в «Catena Aurea» на Лк 3:23 и Мф 1:16)",
+   "limits": "R9 С6: на Западе — католическая преемственность. Выделен из src-r9-fathers (Д-6). Совет источников — docs/app/research/R9-авторитеты.md. Труд только называется (works): мнение пересказывается своими словами (02 § 5.2)",
+   "notProves": "Толкование не становится фактом: не создаёт ребро, тождество или хронологический вход (R9, Г-5)"
+  },
+  {
+   "id": "w-augustine-quaestiones-ev",
+   "title": "Вопросы на Евангелия",
+   "org": "",
+   "author": "Августин",
+   "version": "",
+   "date": "V в.",
+   "license": "общественное достояние; цитаты допустимы",
+   "spdx": "LicenseRef-PublicDomain",
+   "licenseSource": "docs/app/research/R9-авторитеты.md (лицензия в этой задаче не перепроверялась)",
+   "attributionRequired": false,
+   "shareAlike": false,
+   "redistribute": false,
+   "use": "citation",
+   "tradition": [
+    "catholic"
+   ],
+   "read": "✔ (в «Catena Aurea»)",
+   "limits": "R9 С6: на Западе — католическая преемственность. Выделен из src-r9-fathers (Д-6). Совет источников — docs/app/research/R9-авторитеты.md. Труд только называется (works): мнение пересказывается своими словами (02 § 5.2)",
+   "notProves": "Толкование не становится фактом: не создаёт ребро, тождество или хронологический вход (R9, Г-5)"
+  },
+  {
+   "id": "w-brown-birth-messiah",
+   "title": "The Birth of the Messiah",
+   "org": "Doubleday; Anchor Yale Bible Reference Library",
+   "author": "Raymond E. Brown",
+   "version": "",
+   "date": "1977; доп. изд. 1993",
+   "license": "авторское право; только пересказ",
+   "spdx": "NOASSERTION",
+   "licenseSource": "docs/app/research/R9-авторитеты.md (лицензия в этой задаче не перепроверялась)",
+   "attributionRequired": false,
+   "shareAlike": false,
+   "redistribute": false,
+   "use": "citation",
+   "year": "1977; 1993",
+   "edition": "доп. изд. 1993",
+   "publisher": "Doubleday",
+   "tradition": [
+    "catholic",
+    "historical-critical"
+   ],
+   "read": "≈ по рецензиям и вторичным цитатам; номер страницы — только для одного места (с. 139)",
+   "limits": "R9 С8: римско-католическая, историко-критическая. Выделен из src-r9-brown-birth (Д-6). Совет источников — docs/app/research/R9-авторитеты.md. Труд только называется (works): мнение пересказывается своими словами (02 § 5.2)",
+   "notProves": "Толкование не становится фактом: не создаёт ребро, тождество или хронологический вход (R9, Г-5)"
   }
  ]
 }

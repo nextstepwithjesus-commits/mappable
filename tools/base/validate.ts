@@ -20,6 +20,7 @@ import { checkSourceIssues, issuesAt, KIND_WORD } from './source-issues.ts';
 import { namedVerses, ownRefs } from './own-verses.ts';
 import { validateRegistry } from './sources.ts';
 import { loadIds, PREFIX, type IdKind } from './ids.ts';
+import { releaseOk } from './release.ts';
 
 export interface Issue { level: 'error' | 'warn'; check: string; where: string; msg: string }
 
@@ -78,9 +79,28 @@ export function loadBase(dir = join(ROOT, 'base')): Base {
     redirects: items('redirects.json'), corrections: items('corrections.json'), epochs: items('epochs.json'),
     files, fileSources,
     sources: existsSync(join(dir, 'sources.json')) ? items('sources.json') : [],
+    places: existsSync(join(dir, 'places.json')) ? items('places.json') : [],
     checks: loadChecks(dir),
     ids: loadIds(dir),
   };
+}
+
+/**
+ * Год внутри записи (02 § 3.10 «Годы внутри записей»; К-8): числовое поле `year`, `from` или `to` на любой глубине значения.
+ * До переработки (замена ссылкой `calc`, Д-7) такая запись не показывается и не выгружается (07 § 21.1).
+ */
+export function yearIn(x: unknown): boolean {
+  if (Array.isArray(x)) return x.some(yearIn);
+  if (!x || typeof x !== 'object') return false;
+  return Object.entries(x).some(([k, v]) => (['year', 'from', 'to'].includes(k) && typeof v === 'number') || yearIn(v));
+}
+
+/** Эпоха прежнего вида: готовые годы или «предание» в основании (02 § 3.15; Д-11) — подпись запрещена (К-8). */
+export function epochUnsignable(e: any): string | undefined {
+  const why: string[] = [];
+  for (const k of ['start', 'end', 'startEst', 'endEst']) if (typeof e?.[k] === 'number') why.push(`готовый год «${k}»`);
+  if (/предани/i.test(JSON.stringify([e?.basis, e?.basisBy, e?.summary]))) why.push('«предание» в основании');
+  return why.length ? why.join(', ') : undefined;
 }
 
 export function validate(base: Base): Issue[] {
@@ -211,13 +231,40 @@ export function validate(base: Base): Issue[] {
     if (!/^r-/.test(r.id)) err('номер', r.id, 'номер набора прочтений — «r-»');
     if (!r.readings.some((x) => x.id === r.default)) err('прочтения', r.id, `прочтение по умолчанию «${r.default}» не из набора`);
     // у каждого толкования — авторы по совету источников (02 § 3.4 [R9]; R9 Г-4)
-    for (const x of r.readings) if (x.cert === 'interpretation' && !x.authors?.filter((a) => a.trim()).length) err('прочтения', r.id, `у толкования «${x.id}» нет авторов (02 § 3.4, R9)`);
+    for (const x of r.readings) {
+      // авторы толкования — ссылками на труды works (02 § 3.4, § 5.2; К-3); строки авторов — прежний вид
+      if ('authors' in x) err('прочтения', r.id, `у прочтения «${x.id}» авторы строками (authors) — нужны ссылки на труды works (02 § 5.2; К-3)`);
+      if (x.cert === 'interpretation' && !x.works?.some((c) => c.weight !== 'excluded')) err('прочтения', r.id, `у толкования «${x.id}» нет ссылок на труды works (02 § 3.4, R9 Г-4)`);
+    }
     walk(r.id, r);
   }
   for (const o of base.origins) {
     const w = `${o.child} ← ${o.parent ?? o.unnamedParent?.words}`;
     has('целостность', w, o.child);
-    if (!o.parent && !o.unnamedParent) err('целостность', w, 'нет ни родителя, ни заместителя «не назван»');
+    if (!o.parent && !o.unnamedParent && !o.candidates?.length) err('целостность', w, 'нет ни родителя, ни заместителя «не назван», ни кандидатов');
+    // кандидаты (02 § 3.3.4; К-13): родитель не выбран; кандидатов не меньше двух, каждый — лицо подходящего пола
+    if (o.candidates) {
+      if (o.parent) err('кандидаты', w, 'у ребра с кандидатами родитель не выбирается: поле parent лишнее');
+      if (o.candidates.length < 2) err('кандидаты', w, 'кандидатов меньше двух — это не запись кандидатов');
+      if (new Set(o.candidates).size !== o.candidates.length) err('кандидаты', w, 'кандидат повторяется');
+      for (const c of o.candidates) {
+        has('целостность', `${w}, кандидат`, c);
+        const cs = actors.get(c)?.sex;
+        if (cs && cs !== (o.role === 'father' ? 'm' : 'f')) err('пол', w, `кандидат ${c} другого пола`);
+      }
+      if (o.identity?.of === 'parent') err('кандидаты', w, 'у ребра с кандидатами нет тождества выбранного родителя');
+    }
+    // степень у вида «предок» (02 § 3.4; К-13)
+    if (o.degree !== undefined) {
+      if (o.kind !== 'ancestor') err('степень', w, `степень (degree) — только у вида «предок», а вид «${o.kind}»`);
+      if (!['inferred', 'unstated'].includes(o.degree)) err('степень', w, `степень «${o.degree}» — нужна inferred или unstated`);
+      if (o.degree === 'inferred' && o.cert !== 'inference') err('степень', w, 'степень выведена (inferred) — уровень ребра «вывод»');
+    } else if (o.kind === 'ancestor') warn('степень', w, 'у вида «предок» нет степени (degree: inferred или unstated; Д-2)');
+    // «слово текста» (02 § 3.4; К-7): уровень «Писание», у каждого слова — стих и говорящий
+    if (o.kind === 'text-word') {
+      if (o.cert !== 'scripture' || !o.words?.length) err('происхождение', w, 'вид «слово текста» (text-word) — уровень «Писание» и слова стиха');
+      for (const x of o.words ?? []) if (!x.saidBy) err('по словам', w, `у слова «${x.text}» (${x.ref}) нет говорящего (words[].saidBy)`);
+    }
     has('целостность', w, o.parent);
     if (!o.refs.length) err('стих', w, 'происхождение без стиха');
     walk(w, o);
@@ -240,6 +287,23 @@ export function validate(base: Base): Issue[] {
       else for (const r of o.reading.in) if (!set.readings.some((x) => x.id === r)) err('прочтения', w, `нет прочтения «${r}» в наборе ${set.id}`);
     }
   }
+  // ---------- места (02 § 3.13; 05 § 10; К-11, К-14) ----------
+  validatePlaces(base, err, warn, (w, ref) => texts(w, ref));
+
+  // ---------- новые правила (К-8) ----------
+  // «толк.» у обозначения союза и родства словами: у них нет набора прочтений — толкование здесь не хранится (02 § 3.1).
+  // Сейчас 18 записей родства и 5 обозначений (остаток Д3-11) — замечание до разбора Д-5
+  for (const k of base.kin) if (k.cert === 'interpretation') warn('толкование', `${k.from} — ${k.to}`, 'родство словами уровня «толкование»: вне набора прочтений толкование не хранится (Д-5)');
+  for (const u of base.unions) for (const t of u.terms) if (t.cert === 'interpretation') warn('толкование', u.id, `обозначение союза «${t.kind}» уровня «толкование»: вне набора прочтений толкование не хранится (Д-5)`);
+  // эпоха с готовым годом или «преданием» не подписывается (02 § 3.15, § 7 [4.1])
+  const ledgerKeys = new Set((base.checks ?? []).map((c) => c.key));
+  for (const e of base.epochs) {
+    const why = epochUnsignable(e);
+    if (why && ledgerKeys.has(`epoch:${e.id}`)) err('эпоха', e.id, `подпись эпохи прежнего вида запрещена: ${why} (К-8; Д-11)`);
+  }
+  // переадресация лица — со стихами: слияние только при тождестве «сказано» (02 § 3.3.4)
+  for (const r of base.redirects) if (r.from.startsWith('p-') && !r.refs?.length) err('переадресация', r.from, 'переадресация лица без стихов: слияние — только при тождестве «сказано» (02 § 3.3.4)');
+
   for (const k of base.kin) {
     const w = `${k.from} — ${k.to}`;
     has('целостность', w, k.from);
@@ -309,6 +373,7 @@ export function validate(base: Base): Issue[] {
     ...base.kin.map((k) => ['kin', `${k.from} — ${k.to}`, k.id] as [IdKind, string, string | undefined]),
     ...[...actors.values()].flatMap((a) => a.facts.map((f) => ['fact', `${a.id} § ${f.sec} ${f.field}`, f.id] as [IdKind, string, string | undefined])),
     ...base.epochs.map((e) => ['epoch', `эпоха ${e.id}`, e.id] as [IdKind, string, string | undefined]),
+    ...(base.anchors?.anchors ?? []).map((a: any) => ['anchor', `опора ${a.id}`, a.id] as [IdKind, string, string | undefined]),
   ];
   const issued = base.ids?.length ? new Map(base.ids.map((e) => [e.id, e])) : undefined;
   for (const [kind, where, id] of numbered) {
@@ -327,6 +392,7 @@ export function validate(base: Base): Issue[] {
     const redirected = new Set(base.redirects.map((r) => r.from));
     for (const e of issued.values()) {
       if (e.state === 'active' && !allIds.has(e.id) && !redirected.has(e.id)) warn('номер', e.id, `выданный номер без записи и без переадресации (${e.key})`);
+      if (e.state === 'retired' && !redirected.has(e.id)) warn('номер', e.id, `выбывший номер без строки переадресации (${e.key})`);
     }
   }
   // переадресация: старый номер не занят, цели есть (запись любого вида), петель нет
@@ -336,6 +402,9 @@ export function validate(base: Base): Issue[] {
   const redirectFrom = new Map(base.redirects.map((r) => [r.from, r]));
   for (const r of base.redirects) {
     if (recordIds.has(r.from)) err('переадресация', r.from, 'переадресуемый номер занят записью');
+    // номер выпуска, с которого действует (02 § 3.3.1, § 8.2; К-12)
+    if (r.release !== undefined && !releaseOk(r.release)) err('переадресация', r.from, `номер выпуска «${r.release}» — нужен вид 2026.10.2`);
+    if (!r.reason?.trim()) err('переадресация', r.from, 'нет причины переадресации');
     for (const t of r.to) if (!recordIds.has(t) && !redirectFrom.has(t)) err('переадресация', r.from, `нет цели «${t}»`);
     const seen = new Set<string>([r.from]);
     let cur = r.to.length === 1 ? r.to[0] : undefined;
@@ -351,10 +420,12 @@ export function validate(base: Base): Issue[] {
   }
 
   // ---------- «по словам …»: говорящий есть и назван в своём стихе той же главы (02 § 3.6; шаг C33) ----------
-  const saidBys: [string, { saidBy?: { actor: string; ref: string; label: string }; refs: string[] }][] = [
+  const saidBys: [string, { saidBy?: { actor: string; ref: string; label: string; speechStart?: string }; refs: string[] }][] = [
     ...base.kin.map((k) => [`${k.from} — ${k.to}`, k] as [string, typeof k]),
     ...base.origins.map((o) => [`${o.child} ← ${o.parent ?? '?'}`, o] as [string, typeof o]),
     ...base.unions.flatMap((u) => u.terms.map((t) => [u.id, t] as [string, typeof t])),
+    // слова ребра вида «слово текста»: у каждого слова свой говорящий (02 § 3.4; К-7)
+    ...base.origins.flatMap((o) => (o.words ?? []).filter((x) => x.saidBy).map((x) => [`${o.child} ← ${o.parent ?? '?'} «${x.text}»`, { saidBy: x.saidBy, refs: [x.ref] }] as [string, { saidBy?: any; refs: string[] }])),
   ];
   for (const [w, x] of saidBys) {
     const sb = x.saidBy;
@@ -365,11 +436,18 @@ export function validate(base: Base): Issue[] {
       continue;
     }
     if (!/^по словам /.test(sb.label ?? '')) err('по словам', w, `пометка «${sb.label}» — не «по словам …»`);
-    // стих пометки — стих самих слов; говорящий назван в нём или не дальше двух стихов выше (Быт 20:11–12; Р4-11)
+    // стих пометки — стих самих слов; говорящий назван в нём или не дальше двух стихов выше (Быт 20:11–12; Р4-11), а при
+    // `speechStart` — в начале речи той же главы, не после стиха слов (Дан 5:10 → 5:11; К-7)
     const pr = parseRef(sb.ref, bible.chapterLength);
     const v0 = pr?.verses[0];
-    const around = v0 ? [0, 1, 2].map((d) => v0.verse - d).filter((n) => n > 0).map((n) => scriptureText(v0.book, v0.chapter, n) ?? '') : [];
-    if (!who.names.some((n) => nameMatcher(n.form).test(norm(around.join(' '))))) err('по словам', w, `говорящий ${sb.actor} не назван в ${sb.ref} и двух стихах выше`);
+    if (sb.speechStart) {
+      const ps = parseRef(sb.speechStart, bible.chapterLength)?.verses[0];
+      if (!ps || !v0 || ps.book !== v0.book || ps.chapter !== v0.chapter || ps.verse > v0.verse) err('по словам', w, `начало речи ${sb.speechStart} — не стих той же главы до ${sb.ref}`);
+      else if (!who.names.some((n) => nameMatcher(n.form).test(norm(scriptureText(ps.book, ps.chapter, ps.verse) ?? '')))) err('по словам', w, `говорящий ${sb.actor} не назван в начале речи ${sb.speechStart}`);
+    } else {
+      const around = v0 ? [0, 1, 2].map((d) => v0.verse - d).filter((n) => n > 0).map((n) => scriptureText(v0.book, v0.chapter, n) ?? '') : [];
+      if (!who.names.some((n) => nameMatcher(n.form).test(norm(around.join(' '))))) err('по словам', w, `говорящий ${sb.actor} не назван в ${sb.ref} и двух стихах выше`);
+    }
     const ch = (r: string) => r.replace(/:.*$/, '');
     if (!x.refs.some((r) => ch(r) === ch(sb.ref))) err('по словам', w, `стих говорящего ${sb.ref} не из главы стихов записи (${x.refs.join('; ')})`);
   }
@@ -389,6 +467,11 @@ export function validate(base: Base): Issue[] {
       if (f.cert === 'reference' && !q && !(f.value as any)?.source) err('справочно', w, 'справочное без источника и не в карантине');
       if (f.needsSources && f.cert !== 'interpretation') err('толкование', w, 'пометка «нужен совет источников» — только у толкования');
       if (f.field === 'met') has('целостность', w, (f.value as any).id);
+      // год в записи (К-8): до замены ссылкой calc (Д-7) не показывается и не выгружается; подписать такую запись — ошибка
+      if (yearIn(f.value) && f.cert !== 'calc') {
+        if (f.id && ledgerKeys.has(`fact:${f.id}`)) err('год', w, 'год в записи подписан: до замены ссылкой calc запись не выходит (Д-7)');
+        else warn('год', w, 'год в записи без модели: не выгружается до замены ссылкой calc (Д-7)');
+      }
       if (!q) addRefs(a.id, rs);
     }
   }
@@ -592,6 +675,77 @@ export function validate(base: Base): Issue[] {
 }
 
 type Err = (check: string, where: string, msg: string) => void;
+
+export const PLACE_KINDS = new Set([
+  'settlement', 'campsite', 'mountain', 'hill', 'spring', 'well', 'pool', 'cave', 'tree', 'stone', 'altar', 'structure', 'gate', 'ford', 'island',
+  'river', 'stream', 'sea', 'lake', 'land', 'region', 'desert', 'valley', 'field', 'mountain-range', 'road',
+]);
+/** Вода и земля — подпись без знака, только в точке подписи (02 § 3.13.1). */
+export const PLACE_AREAL = new Set(['river', 'stream', 'sea', 'lake', 'land', 'region', 'desert', 'valley', 'field', 'mountain-range', 'road']);
+const NAME_TYPES = new Set(['main', 'former', 'now', 'that-is', 'other-book', 'in-speech']);
+const TIME_BASES = new Set(['story', 'narrator-now', 'former-by-verse', 'inferred']);
+const PRECISION = new Set(['visible', 'tel', 'settlement', 'distance', 'water', 'terrain', 'path', 'region']);
+const LINK_KINDS = new Set(['inferred-same', 'part-of', 'near']);
+
+/**
+ * Проверки мест (02 § 3.13; 05 § 10). Коллекция регистрируется до первой записи (02 § 3.17; К-11): правила работают и на
+ * пустой коллекции — тест подкладывает испорченную запись на каждое правило.
+ */
+export function validatePlaces(base: Base, err: Err, warn: Err, texts: (where: string, ref: string) => unknown) {
+  const places = base.places ?? [];
+  const reg = new Map((base.sources ?? []).map((s) => [s.id, s]));
+  const ids = new Set<string>();
+  for (const p of places) {
+    const w = p.id || '(место без номера)';
+    if (!/^l-[a-z0-9-]+$/.test(p.id ?? '')) err('место', w, 'номер места — вида «l-…»');
+    if (ids.has(p.id)) err('место', w, 'номер места повторяется');
+    ids.add(p.id);
+  }
+  for (const p of places) {
+    const w = p.id;
+    if (!PLACE_KINDS.has(p.kind)) err('место', w, `вид «${p.kind}» не из словаря`);
+    // хотя бы одно имя со стихом; имя — всегда слова стиха (Р-8)
+    if (!p.names?.some((n) => n.refs?.length)) err('место', w, 'нет ни одного имени со стихом');
+    const parts = new Set<string>();
+    const part = (id: string, kind: string) => {
+      if (!new RegExp(`^${p.id.replace(/[-]/g, '\\-')}#${kind}\\d+$`).test(id ?? '')) err('место', w, `номер части «${id}» — вида ${p.id}#${kind}<число>`);
+      if (parts.has(id)) err('место', w, `номер части «${id}» повторяется`);
+      parts.add(id);
+    };
+    for (const n of p.names ?? []) {
+      part(n.id, 'n');
+      if (!n.form?.trim()) err('место', w, `имя ${n.id} без формы`);
+      if (!NAME_TYPES.has(n.type)) err('место', w, `вид имени «${n.type}» не из словаря`);
+      if (n.cert !== undefined && n.cert !== 'scripture') err('место', w, `имя ${n.id} уровня «${n.cert}»: имя места — только слова стиха (Р-8; К-8)`);
+      for (const r of n.refs ?? []) {
+        texts(`${w} ${n.id}`, r.ref);
+        if (!TIME_BASES.has(r.timeBasis)) err('место', w, `у стиха ${r.ref} имени ${n.id} основание времени «${r.timeBasis}» не из словаря`);
+      }
+    }
+    for (const x of p.positions ?? []) {
+      part(x.id, 'pos');
+      if (!(Math.abs(x.lat) <= 90 && Math.abs(x.lon) <= 180)) err('место', w, `положение ${x.id}: координаты вне WGS 84`);
+      // источник координат — номер реестра (Р-10; К-14); нет в реестре или закрыт — часть снимается до выпуска (К-15)
+      if (!x.coordSource?.source) err('место', w, `положение ${x.id} без источника координат (coordSource.source)`);
+      else if (!reg.has(x.coordSource.source)) warn('место', w, `источник координат «${x.coordSource.source}» положения ${x.id} не в реестре: точка снимается до выпуска (Д-10)`);
+      if (x.precision && !PRECISION.has(x.precision.kind)) err('место', w, `точность «${x.precision.kind}» не из словаря`);
+    }
+    for (const l of p.links ?? []) {
+      part(l.id, 'link');
+      if (!LINK_KINDS.has(l.kind)) err('место', w, `вид связи «${l.kind}» не из словаря (другое имя по сводке — match.otherNameOf, мнение учёных — понимание)`);
+      if (!ids.has(l.to)) err('место', w, `связь ${l.id}: нет места «${l.to}»`);
+      if (l.kind === 'inferred-same' && (l.cert !== 'inference' || l.refs.length < 2)) err('место', w, `связь ${l.id} «то же, что» — уровень «вывод» и стихи обеих сторон`);
+      if (l.kind !== 'inferred-same' && l.cert !== 'reference') err('место', w, `связь ${l.id} «${l.kind}» — уровень «справочно»`);
+      for (const r of l.refs ?? []) texts(`${w} ${l.id}`, r);
+    }
+    if (p.labelPoint && !PLACE_AREAL.has(p.kind)) err('место', w, 'точка подписи — только у земли и воды');
+    if (p.match) {
+      if (p.match.method === 'manual' && !p.match.checkedBy) err('место', w, 'ручное сопоставление со сводкой — со вторым ключом (checkedBy)');
+      if (p.match.otherNameOf && !ids.has(p.match.otherNameOf)) err('место', w, `«другое имя» по сводке: нет места «${p.match.otherNameOf}»`);
+    }
+    if (p.degree !== undefined && !['certain', 'probable', 'possible', 'unknown'].includes(p.degree)) err('место', w, `степень «${p.degree}» не из словаря`);
+  }
+}
 
 function stopList(base: Base, actors: Map<string, Actor>, err: Err) {
   const S = 'стоп-список';

@@ -9,10 +9,16 @@ describe('сборка для приложения', () => {
     const base = buildBase();
     const ix = buildIndex(base, 'probe');
     const { cards } = buildCards(base, 'probe');
-    const possible = ix.origins.filter((o: any) => o.id?.d === 'possible');
+    // «предположительно» — не ребро, а отдельный список (02 § 3.3.4, § 8; К-6): в списке рёбер его нет
+    expect(ix.origins.filter((o: any) => o.idt?.d === 'possible' || 'id' in o)).toEqual([]);
+    const possible: any[] = ix.cand.filter((o: any) => o.idt?.d === 'possible');
     expect(possible.length).toBe(base.origins.filter((o) => o.identity?.degree === 'possible').length);
     expect(possible.length).toBeGreaterThanOrEqual(48);
-    for (const o of possible) expect([o.c, !!o.id.n, o.id.r.length > 0]).toEqual([o.c, true, true]);
+    for (const o of possible) expect([o.c, !!o.idt.n, o.idt.r.length > 0]).toEqual([o.c, true, true]);
+    // неуверенный родитель не называется; при неуверенном ребёнке родитель сказан текстом и назван
+    for (const o of possible) expect([o.c, o.idt.o === 'parent' ? o.p : !!o.p]).toEqual([o.c, o.idt.o === 'parent' ? undefined : true]);
+    // «весомо» — у ребра, полем idt
+    expect(ix.origins.some((o: any) => o.idt?.d === 'weighty')).toBe(true);
     const card = (id: string) => Object.values(cards).map((v: any) => v.cards[id]).find(Boolean) as any;
     // дети, у которых рёбра к родителю сняты (C46) и в выпуске родителя нет, — строка «… текст не уточняет» со стихом
     const children = new Set(ix.origins.map((o: any) => o.c));
@@ -39,8 +45,11 @@ describe('сборка для приложения', () => {
     const said = { a: 'avraam', r: 'Быт 20:12', l: 'по словам Авраама' };
     expect(ix.kin.find((k: any) => k.f === 'sarra' && k.t === 'avraam' && k.r === 'сестра')?.sb).toEqual(said);
     expect(ix.origins.find((o: any) => o.c === 'sarra' && o.p === 'farra')?.sb).toEqual(said);
-    const r = ix.readings.find((x: any) => x.id === 'r-lk3-23')!.r;
-    for (const x of r.filter((y: any) => y.ce === 'interpretation')) expect([x.id, (x.au ?? []).length > 0]).toEqual([x.id, true]);
-    expect(r.filter((y: any) => y.ce === 'scripture').map((y: any) => y.au)).toEqual([undefined, undefined]);
+    // ссылки на труды (К-3): в пробе идут; труд — номером, издание и традиция — в списке трудов индекса
+    const r: any[] = ix.readings.find((x: any) => x.id === 'r-lk3-23')!.r;
+    for (const x of r.filter((y: any) => y.ce === 'interpretation')) expect([x.id, (x.w ?? []).length > 0]).toEqual([x.id, true]);
+    expect(r.filter((y: any) => y.ce === 'scripture').map((y: any) => y.w)).toEqual([undefined, undefined]);
+    expect(r.find((y: any) => y.id === 'adoption').w.map((c: any) => [c.w, c.p, c.g])).toEqual([['w-augustine-de-consensu', 'II.3–4', '✔'], ['w-augustine-quaestiones-ev', 'II.5', '✔']]);
+    expect(ix.works.map((w: any) => w.id)).toContain('w-brown-birth-messiah');
   }, 60_000);
 });

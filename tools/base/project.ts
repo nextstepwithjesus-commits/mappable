@@ -143,5 +143,7 @@ export function project(base: Base, hints: Hints) {
     ...(a.foreign !== undefined && { foreign: a.foreign }), ...(a.section !== undefined && { section: a.section }),
     ...(a.hue !== undefined && { hue: a.hue }),
   }));
-  return { vols, lines, epochs, groups, anchors: base.anchors };
+  // номер опоры в прежнем виде — без префикса an- (К-10)
+  const anchors = base.anchors?.anchors ? { ...base.anchors, anchors: base.anchors.anchors.map((a: any) => ({ ...a, id: String(a.id).replace(/^an-/, '') })) } : base.anchors;
+  return { vols, lines, epochs, groups, anchors };
 }

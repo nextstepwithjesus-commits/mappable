@@ -94,8 +94,10 @@ describe('контрольный набор', () => {
     expect(base.lines.luke.readings['r-lk3-23']).toBe('lk');
     // левират и усыновление — разные толкования; у каждого толкования — авторы (02 § 3.4 [R9]; шаг C36)
     expect(r.readings.map((x) => [x.id, x.cert])).toEqual([['mt', 'scripture'], ['lk', 'scripture'], ['mary', 'interpretation'], ['levirate', 'interpretation'], ['adoption', 'interpretation']]);
-    for (const x of r.readings.filter((y) => y.cert === 'interpretation')) expect([x.id, (x.authors ?? []).length > 0]).toEqual([x.id, true]);
-    expect(r.readings.find((x) => x.id === 'adoption')!.authors!.join()).toContain('Августин');
+    // авторы — ссылками на труды works (02 § 5.2; К-3): каждая ссылка — труд w-… с местом и знаком
+    for (const x of r.readings.filter((y) => y.cert === 'interpretation')) expect([x.id, (x.works ?? []).length > 0]).toEqual([x.id, true]);
+    expect(r.readings.find((x) => x.id === 'adoption')!.works!.map((c) => c.work)).toEqual(['w-augustine-de-consensu', 'w-augustine-quaestiones-ev']);
+    expect(r.readings.some((x) => 'authors' in x)).toBe(false);
     // толкование «Илий — отец Марии» — не ребро: у Марии нет отца в базе
     expect(base.origins.filter((o) => o.child === 'p-mariya' && o.role === 'father')).toEqual([]);
     for (const x of ['levirate', 'adoption']) expect(fathers(x, 'p-iosif-muzh-marii').sort()).toEqual(['p-iakov-otets-iosifa', 'p-iliy-syn-matfata']);
@@ -124,7 +126,8 @@ describe('контрольный набор', () => {
     expect(os.filter((o) => o.role === 'father').map((o) => [o.kind, o.cert])).toEqual([['parents-word', 'scripture']]);
     expect(os.find((o) => o.role === 'father')!.words![0]).toEqual({ text: 'родители Его', ref: 'Лк 2:41' });
     const r = base.readings.find((x) => x.id === 'r-iosif-iisus')!;
-    expect(r.readings.map((x) => [x.id, x.cert, (x.authors ?? []).length > 0])).toEqual([['words', 'scripture', false], ['legal', 'interpretation', true]]);
+    expect(r.readings.map((x) => [x.id, x.cert, (x.works ?? []).length > 0])).toEqual([['words', 'scripture', false], ['legal', 'interpretation', true]]);
+    expect(r.readings[1].works!.map((c) => c.work)).toEqual(['w-brown-birth-messiah', 'w-macarthur-gracious-king', 'w-augustine-de-consensu']);
     // «не от союза» — нейтральный вид «Писание говорит» со словами стихов (07 § 8.2; шаг C31)
     const nd = base.nodata.filter((n) => n.actor === 'p-iisus' && n.kind === 'scripture-says');
     expect(nd.map((n) => n.what)).toEqual(['отец по плоти']);
@@ -257,7 +260,7 @@ describe('правки Д3 (сверка контрольного набора �
     const u = (id: string) => b.unions.find((x) => x.id === id)!;
     u('u-filipp-brat-iroda--irodiada').terms[0].word = 'муж'; // слова нет в стихах
     u('u-iuda--famar').terms[0].word = 'жена'; // не подходит к виду «союз без брака»
-    b.readings.find((r) => r.id === 'r-lk3-23')!.readings.find((x) => x.id === 'adoption')!.authors = [];
+    b.readings.find((r) => r.id === 'r-lk3-23')!.readings.find((x) => x.id === 'adoption')!.works = [];
     const sk = b.kin.find((k) => k.from === 'p-sarra' && k.to === 'p-avraam')!;
     sk.saidBy = { actor: 'p-isaak', ref: 'Быт 20:11', label: 'по словам Исаака' }; // Исаак в Быт 20:11 не назван
     const so = b.origins.find((o) => o.child === 'p-sarra' && o.parent === 'p-farra')!;
