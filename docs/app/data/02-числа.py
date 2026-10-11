@@ -166,3 +166,29 @@ part('11. TSK')
 n = sum(1 for _ in open('tools/bible/tsk.tsv', encoding='utf-8')) - 1
 nq = sum(1 for _ in open('tools/bible/tsk-quarantine.tsv', encoding='utf-8')) - 1
 print('строк tsk.tsv (стих × группа):', n, '; строк карантина:', nq)
+
+# ---------------------------------------------------------------- 12 (ред. 4.1)
+part('12. Ред. 4.1: перенос подписей, скобки, опоры, прежние места и события')
+legacy = C(c['key'].split(':')[0] for c in checks)
+move = {k: legacy.get(k, 0) for k in ('origin', 'fact', 'kin', 'epoch', 'reading')}
+print('подписей со сменой ключа (рёбра, утверждения, родство словами, эпохи):',
+      move['origin'] + move['fact'] + move['kin'] + move['epoch'], '—', move)
+print('подпись набора прочтений (меняется содержимое при переходе на work):', move['reading'])
+import csv
+br = list(csv.DictReader(open('tools/bible/brackets.tsv', encoding='utf-8'), delimiter='\t'))
+byk = C((r['вид'], r['чем проверено']) for r in br)
+print('скобок всего:', len(br), '; по признакам: lxx', byk[('lxx', 'по признакам')], ', added', byk[('added', 'по признакам')])
+print('по видам:', ', '.join(f'{k} {v}' for k, v in C(r['вид'] for r in br).most_common()))
+an = anchors.get('anchors', [])
+print('опор:', len(an), '; с альтернативами:', sum(bool(a.get('alternatives')) for a in an), '; номера:', ', '.join(a['id'] for a in an[:5]), '…')
+pl = [f for _, f in facts if f['field'] == 'places']
+names = {json.dumps((f.get('value') or {}).get('name'), ensure_ascii=False) for f in pl}
+print('прежние записи раздела «места» в base:', len(pl), '; разных строк:', len(names))
+print('прежние записи «events» (раздел § 17):', sum(f['field'] == 'events' for _, f in facts))
+print('лиц по видам:', ', '.join(f'{k} {v}' for k, v in C(a['kind'] for a in actors.values()).most_common()))
+
+# ---------------------------------------------------------------- 13
+part('13. Бюджеты пакетов (Р-11): docs/app/data/02-составитель/бюджеты.ts')
+import subprocess, sys
+out = subprocess.run(['npx', 'tsx', 'docs/app/data/02-составитель/бюджеты.ts'], capture_output=True, text=True)
+print(out.stdout.rstrip() if out.returncode == 0 else out.stderr)
