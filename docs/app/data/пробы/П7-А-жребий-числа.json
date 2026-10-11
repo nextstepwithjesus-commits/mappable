@@ -1,0 +1,382 @@
+{
+ "bounds": {
+  "Евсевий": {
+   "n": 19,
+   "hit": 16,
+   "exact": 15,
+   "share": 0.842
+  },
+  "פ/ס": {
+   "n": 15,
+   "hit": 10,
+   "exact": 9,
+   "share": 0.667
+  },
+  "none": 5,
+  "misses": [
+   "Чис 13:31 e-sorok-let-za-sorok-dney (פ/ס)",
+   "Чис 14:40 e-derznuli-podnyatsya-na-vershinu-gory (פ/ס)",
+   "1Пар 8:6 e-gera-pereselyaet-v-manakhaf (פ/ס)",
+   "1Пар 8:12 e-shemer-stroit-ono-i-lod (פ/ס)",
+   "1Пар 8:13 e-beriya-i-shema-vygonyayut-zhiteley-gefa (פ/ס)",
+   "Мф 22:23 e-saddukei-o-voskresenii (Евсевий)",
+   "Мк 12:18 e-saddukei-o-voskresenii (Евсевий)",
+   "Лк 20:27 e-saddukei-o-voskresenii (Евсевий)"
+  ]
+ },
+ "persons_v2": {
+  "episodes": 10,
+  "tp": 9,
+  "fp": 5,
+  "fn": 5,
+  "precision": 0.643,
+  "recall": 0.643,
+  "f1": 0.643,
+  "rows": [
+   [
+    "e-fola-sudya-izrailya",
+    [],
+    []
+   ],
+   [
+    "e-iair-sudya-izrailya",
+    [],
+    []
+   ],
+   [
+    "e-ieffay-i-ammonityane",
+    [
+     "jephthah_839",
+     "new:tsar-ammonitskiy-sud11",
+     "p-doch-ieffaya"
+    ],
+    []
+   ],
+   [
+    "e-umer-ieffay",
+    [
+     "jephthah_839"
+    ],
+    [
+     "ibzan_1588"
+    ]
+   ],
+   [
+    "e-esevon-sudya-izrailya",
+    [],
+    []
+   ],
+   [
+    "e-elon-sudya-izrailya",
+    [],
+    []
+   ],
+   [
+    "e-avdon-sudya-izrailya",
+    [],
+    []
+   ],
+   [
+    "e-petr-v-dome-korniliya",
+    [
+     "new:angel-bozhiy-deyan10"
+    ],
+    [
+     "simon_2753"
+    ]
+   ],
+   [
+    "e-obrezannye-uprekayut-petra",
+    [],
+    []
+   ],
+   [
+    "e-ellinam-blagovestvuyut-v-antiokhii",
+    [],
+    [
+     "agabus_107",
+     "barnabas_1722",
+     "paul_2479"
+    ]
+   ]
+  ]
+ },
+ "persons_v1": {
+  "episodes": 10,
+  "tp": 10,
+  "fp": 23,
+  "fn": 4,
+  "precision": 0.303,
+  "recall": 0.714,
+  "f1": 0.426,
+  "rows": [
+   [
+    "e-fola-sudya-izrailya",
+    [
+     "abimelech_41",
+     "puah_2373"
+    ],
+    []
+   ],
+   [
+    "e-iair-sudya-izrailya",
+    [],
+    []
+   ],
+   [
+    "e-ieffay-i-ammonityane",
+    [
+     "balak_387",
+     "chemosh_931",
+     "gilead_1318",
+     "god_1324",
+     "jephthah_839",
+     "new:tsar-ammonitskiy-sud11",
+     "p-doch-ieffaya",
+     "p-mat-ieffaya",
+     "sihon_2739"
+    ],
+    []
+   ],
+   [
+    "e-umer-ieffay",
+    [
+     "jephthah_839"
+    ],
+    [
+     "ibzan_1588"
+    ]
+   ],
+   [
+    "e-esevon-sudya-izrailya",
+    [],
+    []
+   ],
+   [
+    "e-elon-sudya-izrailya",
+    [],
+    []
+   ],
+   [
+    "e-avdon-sudya-izrailya",
+    [
+     "hillel_1530"
+    ],
+    []
+   ],
+   [
+    "e-petr-v-dome-korniliya",
+    [
+     "god_1324",
+     "jesus_905",
+     "john_1676",
+     "new:angel-bozhiy-deyan10"
+    ],
+    []
+   ],
+   [
+    "e-obrezannye-uprekayut-petra",
+    [
+     "god_1324",
+     "jesus_905",
+     "john_1676"
+    ],
+    []
+   ],
+   [
+    "e-ellinam-blagovestvuyut-v-antiokhii",
+    [
+     "god_1324",
+     "jesus_905",
+     "stephen_2802"
+    ],
+    [
+     "agabus_107",
+     "barnabas_1722",
+     "paul_2479"
+    ]
+   ]
+  ]
+ },
+ "episodes": [
+  {
+   "story": "e-fola-sudya-izrailya",
+   "events": [
+    "143 Judgeship of Tola"
+   ],
+   "theirs": [
+    "tola_2879"
+   ],
+   "v2": {
+    "p-fola-syn-fui": "Фола"
+   },
+   "ours": {
+    "p-fola-syn-fui": "Фола",
+    "p-fua-syn-dodo": "Фуа",
+    "p-avimelekh-syn-gedeona": "Авимелех"
+   }
+  },
+  {
+   "story": "e-iair-sudya-izrailya",
+   "events": [
+    "67 Judgeship of Jair"
+   ],
+   "theirs": [
+    "jair_709"
+   ],
+   "v2": {
+    "p-iair-galaadityanin": "Иаир"
+   },
+   "ours": {
+    "p-iair-galaadityanin": "Иаир"
+   }
+  },
+  {
+   "story": "e-ieffay-i-ammonityane",
+   "events": [
+    "144 Oppression by Ammon and Philistia"
+   ],
+   "theirs": [],
+   "v2": {
+    "p-ieffay": "Иеффай",
+    "p-doch-ieffaya": "дочь",
+    "new:tsar-ammonitskiy-sud11": "царь Аммонитский"
+   },
+   "ours": {
+    "god": "Господь",
+    "p-ieffay": "Иеффай",
+    "p-doch-ieffaya": "дочь",
+    "new:tsar-ammonitskiy-sud11": "царь Аммонитский",
+    "p-galaad-otets-ieffaya": "Галаад",
+    "p-mat-ieffaya": "блудница",
+    "new:sigon": "Сигон",
+    "p-valak": "Валак",
+    "new:khamos": "Хамос"
+   }
+  },
+  {
+   "story": "e-umer-ieffay",
+   "events": [
+    "147 Judgeship of Ibzan"
+   ],
+   "theirs": [
+    "ibzan_1588"
+   ],
+   "v2": {
+    "p-ieffay": "Иеффай"
+   },
+   "ours": {
+    "p-ieffay": "Иеффай"
+   }
+  },
+  {
+   "story": "e-esevon-sudya-izrailya",
+   "events": [
+    "147 Judgeship of Ibzan"
+   ],
+   "theirs": [
+    "ibzan_1588"
+   ],
+   "v2": {
+    "p-esevon-iz-vifleema": "Есевон"
+   },
+   "ours": {
+    "p-esevon-iz-vifleema": "Есевон"
+   }
+  },
+  {
+   "story": "e-elon-sudya-izrailya",
+   "events": [
+    "149 Judgeship of Elon"
+   ],
+   "theirs": [
+    "elon_1184"
+   ],
+   "v2": {
+    "p-elon-zavulonyanin": "Елон"
+   },
+   "ours": {
+    "p-elon-zavulonyanin": "Елон"
+   }
+  },
+  {
+   "story": "e-avdon-sudya-izrailya",
+   "events": [
+    "151 Judgeship of Abdon"
+   ],
+   "theirs": [
+    "abdon_10"
+   ],
+   "v2": {
+    "p-avdon-syn-gillela": "Авдон"
+   },
+   "ours": {
+    "p-avdon-syn-gillela": "Авдон",
+    "p-gillel": "Гиллел"
+   }
+  },
+  {
+   "story": "e-petr-v-dome-korniliya",
+   "events": [
+    "329 Peter meets Cornelius"
+   ],
+   "theirs": [
+    "cornelius_956",
+    "holy_spirit_7400",
+    "peter_2745",
+    "simon_2753"
+   ],
+   "v2": {
+    "p-petr": "Пётр",
+    "new:korniliy": "Корнилий",
+    "new:angel-bozhiy-deyan10": "Ангел Божий",
+    "new:dukh-deyan10": "Дух"
+   },
+   "ours": {
+    "p-petr": "Пётр",
+    "new:korniliy": "Корнилий",
+    "god": "Бог",
+    "new:angel-bozhiy-deyan10": "Ангел Божий",
+    "new:dukh-deyan10": "Дух",
+    "new:simon-kozhevnik": "Симон кожевник",
+    "p-iisus": "Иисус Христос",
+    "p-ioann-krestitel": "Иоанн Креститель"
+   }
+  },
+  {
+   "story": "e-obrezannye-uprekayut-petra",
+   "events": [
+    "331 Peter defends Gentile salvation"
+   ],
+   "theirs": [
+    "peter_2745"
+   ],
+   "v2": {
+    "p-petr": "Пётр"
+   },
+   "ours": {
+    "p-petr": "Пётр",
+    "god": "Бог",
+    "p-iisus": "Иисус Христос",
+    "p-ioann-krestitel": "Иоанн Креститель"
+   }
+  },
+  {
+   "story": "e-ellinam-blagovestvuyut-v-antiokhii",
+   "events": [
+    "332 Disciples first called Christians"
+   ],
+   "theirs": [
+    "agabus_107",
+    "barnabas_1722",
+    "paul_2479"
+   ],
+   "v2": {},
+   "ours": {
+    "god": "Господь",
+    "p-iisus": "Иисус Христос",
+    "new:stefan": "Стефан"
+   }
+  }
+ ]
+}

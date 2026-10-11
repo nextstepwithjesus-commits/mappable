@@ -3,6 +3,8 @@
     python3 -I docs/app/data/пробы/П7-А.py            отчёт в stdout
     python3 -I docs/app/data/пробы/П7-А.py --json     числа в JSON (docs/app/data/пробы/П7-А-числа.json)
     … --base <папка>    stories.json и actors/ из выгрузки коммита (git archive <коммит> base | tar -x -C <папка>)
+    … --p7 [--json]     главы жребия, размеченные вслепую (data/stories/06-p7-zhrebiy.json), лица по протоколу v2 (П7-2);
+                        JSON — П7-А-жребий-числа.json
     … --rows            расхождения лиц по эпизодам; --suggest — предложить сопоставление новых лиц
 
 Входы (скачаны с разрешения владельца, только для сверки, в продукт не идут; реестр base/sources.json):
@@ -427,6 +429,7 @@ def main():
             continue
         ours = {}
         ment = set()
+        v2 = {}
         for a in s.get('actors', []):
             if a.get('kind') in SKIP:
                 continue
@@ -434,12 +437,15 @@ def main():
             rs = {a.get('role')} | {x.get('role') for x in a.get('roles', []) if isinstance(x, dict)}
             if rs - {None} == {'mentioned'}:
                 ment.add(a['actor'])
+            # протокол v2 (очередь спорных мест, П7-2): только «действует» и «с ним происходит», без Бога и групп
+            if a['actor'] != 'god' and a.get('kind') not in ('group', 'people') and rs & {'agent', 'undergoer'}:
+                v2[a['actor']] = a.get('label') or (forms(a['actor']) or [a['actor']])[0]
         theirs = set()
         for e in evs.values():
             theirs |= {x for x in e['participants'].split(',') if x}
         inex = all((t[0], t[1]) in EXAMPLES for t in my_starts)
         episodes.append({'story': sid, 'events': [f"{e['eventID']} {e['title']}" for e in evs.values()], 'ours': ours,
-                         'theirs': sorted(theirs), 'examplesOnly': inex, 'mentionedOnly': sorted(ment)})
+                         'theirs': sorted(theirs), 'examplesOnly': inex, 'mentionedOnly': sorted(ment), 'v2': v2})
     # предложение сопоставления: по всем стихам Theographic (не только участникам эпизода) и скелету имени
     vidx = defaultdict(set)
     for pid, p in pe.items():
@@ -451,9 +457,9 @@ def main():
         s = by_story[ep['story']]
         for a in s.get('actors', []):
             aid = a['actor']
-            if aid not in ep['ours'] or aid in NAMEMAP or aid in sugg:
+            if (aid not in ep['ours'] and aid not in ep['v2']) or aid in NAMEMAP or aid in sugg:
                 continue
-            lab = ep['ours'][aid]
+            lab = ep['ours'].get(aid) or ep['v2'][aid]
             it = ACT.get(aid)
             mine = set()
             for t in (all_refs(it) if it else set()) | all_refs({'refs': a.get('refs', [])}):
@@ -509,7 +515,28 @@ def main():
     if '--rows' in sys.argv:
         for st, a, b in R['persons_all']['rows']:
             print('    ', st, '| только у нас:', a, '| только у Theographic:', b)
-    if as_json:
+
+    if '--p7' in sys.argv:
+        # ---- 5. главы жребия, размеченные вслепую (data/stories/06-p7-zhrebiy.json; протокол v2 — П7-2)
+        V = {}
+        ids = {x['id'] for x in json.load(open(P('data/stories/06-p7-zhrebiy.json'), encoding='utf-8'))['stories']}
+        print('\n== 5. Главы жребия (v2) ==')
+        sel = [(i, t) for i, t in STARTS if i in ids]
+        print('историй жребия:', len(ids), '; уровня story в базе:', len({i for i in ids if i in by_story}), '; начал рассказов:', len(sel))
+        V['bounds'] = measure(sel, 'жребий — мера')
+        print('  несовпадения:')
+        for x in V['bounds']['misses']:
+            print('    ', x)
+        eps = [e for e in episodes if e['story'] in ids]
+        print('эпизодов с общим началом (±1):', len(eps), 'из', len({i for i, _ in sel}), 'историй с началом')
+        V['persons_v2'] = f1([dict(e, ours=e['v2']) for e in eps], 'жребий, лица по v2 — мера')
+        V['persons_v1'] = f1(eps, 'жребий, лица по v1 — справочно')
+        V['episodes'] = [{k: e[k] for k in ('story', 'events', 'theirs', 'v2', 'ours')} for e in eps]
+        for (st, a, b), (_, a1, b1) in zip(V['persons_v2']['rows'], V['persons_v1']['rows']):
+            print('    ', st, '| v2 только у нас:', a, '| только у Theographic:', b, '| v1 только у нас:', a1)
+        if as_json:
+            json.dump(V, open(P('docs/app/data/пробы/П7-А-жребий-числа.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+    elif as_json:
         json.dump(R, open(P('docs/app/data/пробы/П7-А-числа.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
 
 

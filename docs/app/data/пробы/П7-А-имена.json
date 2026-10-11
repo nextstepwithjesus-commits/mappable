@@ -1,5 +1,5 @@
 {
- "note": "Сопоставление лиц наших историй с personLookup Theographic для П7 (вариант А). Предложено скриптом П7-А.py --suggest (по стихам Theographic и скелету имени), проверено вручную по описаниям Theographic (dictText) и стихам; «-» — у Theographic такого лица нет. p-faddey и p-iuda-iakovlev оба → lebbaeus_1815: у Theographic это одно лицо (Judas, Thaddaeus); p-matfey и p-leviy-alfeev оба → matthew_1971 (alsoCalled Levi). Это рабочая таблица сверки, не тождество для базы.",
+ "note": "Сопоставление лиц наших историй с personLookup Theographic для П7 (вариант А). Предложено скриптом П7-А.py --suggest (по стихам Theographic и скелету имени), проверено вручную по описаниям Theographic (dictText) и стихам; «-» — у Theographic такого лица нет. p-faddey и p-iuda-iakovlev оба → lebbaeus_1815: у Theographic это одно лицо (Judas, Thaddaeus); p-matfey и p-leviy-alfeev оба → matthew_1971 (alsoCalled Levi). Это рабочая таблица сверки, не тождество для базы. Дополнено для глав жребия П7 (v2): 20 лиц, проверены вручную по dictText и стихам Theographic (ключ p7v2).",
  "fixed": [
   "god",
   "new:ananiya-damask",
@@ -148,6 +148,48 @@
   "p-akhav": "ahab_113",
   "p-iov": "job_1639",
   "new:satana-iov": "satan_2476",
-  "new:zhena-iova": "-"
- }
+  "new:zhena-iova": "-",
+  "p-fola-syn-fui": "tola_2879",
+  "p-fua-syn-dodo": "puah_2373",
+  "p-avimelekh-syn-gedeona": "abimelech_41",
+  "p-iair-galaadityanin": "jair_709",
+  "p-ieffay": "jephthah_839",
+  "p-doch-ieffaya": "-",
+  "new:tsar-ammonitskiy-sud11": "-",
+  "p-galaad-otets-ieffaya": "gilead_1318",
+  "p-mat-ieffaya": "-",
+  "new:sigon": "sihon_2739",
+  "p-valak": "balak_387",
+  "new:khamos": "chemosh_931",
+  "p-esevon-iz-vifleema": "ibzan_1588",
+  "p-elon-zavulonyanin": "elon_1184",
+  "p-avdon-syn-gillela": "abdon_10",
+  "p-gillel": "hillel_1530",
+  "new:korniliy": "cornelius_956",
+  "new:angel-bozhiy-deyan10": "-",
+  "new:dukh-deyan10": "holy_spirit_7400",
+  "new:simon-kozhevnik": "simon_2753"
+ },
+ "p7v2": [
+  "new:angel-bozhiy-deyan10",
+  "new:dukh-deyan10",
+  "new:khamos",
+  "new:korniliy",
+  "new:sigon",
+  "new:simon-kozhevnik",
+  "new:tsar-ammonitskiy-sud11",
+  "p-avdon-syn-gillela",
+  "p-avimelekh-syn-gedeona",
+  "p-doch-ieffaya",
+  "p-elon-zavulonyanin",
+  "p-esevon-iz-vifleema",
+  "p-fola-syn-fui",
+  "p-fua-syn-dodo",
+  "p-galaad-otets-ieffaya",
+  "p-gillel",
+  "p-iair-galaadityanin",
+  "p-ieffay",
+  "p-mat-ieffaya",
+  "p-valak"
+ ]
 }
